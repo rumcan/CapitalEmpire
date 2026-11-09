@@ -129,7 +129,7 @@ function ShotPanelBody({ game, s }: { game: Game; s: ShotState }) {
   const [result, setResult] = useState<string | null>(null);
   // (T336: the moves a card unlocks, and the cards in play; a stand-in game without cards: the legacy set, none shown)
   const can = typeof game.shotCan === 'function' ? game.shotCan() : { boost: true, airspin: true }, cards = typeof game.shotCards === 'function' ? game.shotCards() : [], tools = typeof game.shotTools === 'function' ? game.shotTools() : null;
-  const look: MeterLook = { sweet: sweetSpot(skill, 0, kit?.sweet ?? 1), aimMark: meterMark(fullM > 0 ? playsM / fullM : 1, putting), full: putting ? `100% · ${t.distM.toFixed(1)} m` : `100% · ${Math.round(fullM)} m`, putting, boost: can.boost, pace: tools?.paceHalf ?? null };
+  const look: MeterLook = { sweet: sweetSpot(skill, 0, kit?.sweet ?? 1, kit?.speed ?? 1), aimMark: meterMark(fullM > 0 ? playsM / fullM : 1, putting), full: putting ? `100% · ${t.distM.toFixed(1)} m` : `100% · ${Math.round(fullM)} m`, putting, boost: can.boost, pace: tools?.paceHalf ?? null };
   const swinging = phase === 'up' || phase === 'back', busy = phase !== 'ready';
   const boostOn = useRef(can.boost); boostOn.current = can.boost;
   const last = game.lastShotReport();
@@ -138,7 +138,7 @@ function ShotPanelBody({ game, s }: { game: Game; s: ShotState }) {
   const finish = (m: SwingMeter) => {
     const o = m.outcome(); if (!o || fired.current) return;
     fired.current = true;
-    const e = swingEffect(o, game.shotSkill(), putting, game.shotKit()?.sweet ?? 1, game.shotKit()?.miss ?? 1);
+    const e = swingEffect(o, game.shotSkill(), putting, game.shotKit()?.sweet ?? 1, game.shotKit()?.miss ?? 1, game.shotKit()?.speed ?? 1);
     setPhase('done'); setResult(`${shapeText(e)} · ${Math.round(e.power * 100)}%`);
     window.setTimeout(() => game.ownerSwing(o), HOLD_MS);
   };
@@ -188,7 +188,7 @@ function ShotPanelBody({ game, s }: { game: Game; s: ShotState }) {
     const frame = () => {
       const c = canvas.current, m = meter.current, now = performance.now() / 1000;
       if (m && (m.phase === 'up' || m.phase === 'back')) { m.tick(now); if ((m.phase as SwingPhase) === 'done') { setPhase('done'); api.current.finish(m); } }
-      if (c) drawMeter(c, m, now, { ...lookRef.current, sweet: sweetSpot(game.shotSkill(), m?.boost() ?? 0, game.shotKit()?.sweet ?? 1) }, resultRef.current);
+      if (c) drawMeter(c, m, now, { ...lookRef.current, sweet: sweetSpot(game.shotSkill(), m?.boost() ?? 0, game.shotKit()?.sweet ?? 1, game.shotKit()?.speed ?? 1) }, resultRef.current);
       if (m && (m.phase === 'up' || m.phase === 'back')) raf = requestAnimationFrame(frame);
     };
     frame();
@@ -253,10 +253,15 @@ function ShotPanelBody({ game, s }: { game: Game; s: ShotState }) {
             {levelOf(i.club) > 0 ? `${LEVEL_NAME[levelOf(i.club)]} ` : ''}{levelOf(i.club) > 0 ? CLUB_NAME[i.club].toLowerCase() : CLUB_NAME[i.club]}{i.club === suggested ? ' (suggested)' : ''}: {putting ? `putting scale, 100% is the hole (${t.distM.toFixed(1)} m)` : `full carry ${Math.round(fullM)} m (${Math.round(fullM * YARDS)} yd)`}
             {!putting && Math.abs(playsM - aimM) >= 3 ? <span className="text-cyan-200"> · the aim plays like {Math.round(playsM)} m</span> : null}
           </p>
-          <p className="mt-1 min-h-[4.5em] text-[12px] text-slate-400">
-            {phase === 'ready' ? `Enter or click the meter to swing: again for the power, once more at the snap line.${can.boost ? ' Space during the swing: more power, riskier.' : ''} Q / E or the wheel: club. Click the course to aim.`
-              : phase === 'up' ? 'Click (or Enter) to set the power…' : phase === 'back' ? 'Click (or Enter) at the snap line…' : ''}
-          </p>
+          {/* T348 (#990): the hint is what a first-time player needs, two lines at most (the swing's three clicks); the rest (the club keys, the aim, the boost) is the "?" tip */}
+          <div className="mt-1 flex min-h-[2.4em] items-start gap-1.5 text-[12px] text-slate-400" data-testid="shot-hint">
+            <p className="flex-1 leading-[1.2]" data-testid="shot-hint-text">
+              {phase === 'ready' ? 'Click the meter (or Enter): again for the power, again at the snap line.'
+                : phase === 'up' ? 'Click (or Enter) to set the power…' : phase === 'back' ? 'Click (or Enter) at the snap line…' : ''}
+            </p>
+            <button type="button" className="chip !px-1.5 !py-0 text-[11px]" aria-label="More controls" data-testid="shot-help"
+              title={`Q / E or the mouse wheel: change the club. Click the course: aim.${can.boost ? ' Space during the swing: more power, riskier.' : ''}`}>?</button>
+          </div>
           {last && <p className="mt-1 text-[12px] tabular-nums text-slate-300">Last shot: {last.text}</p>}
           <div className="mt-2 flex justify-end gap-2">
             <button className="btn" disabled={swinging || phase === 'done'} onClick={() => game.ownerCaddie()}>{s.mine ? 'Let the caddie finish the hole' : 'Let the caddie finish'}</button>

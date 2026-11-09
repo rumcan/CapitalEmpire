@@ -95,6 +95,9 @@ export interface GolfSave {
  /** T334 (#960): the weather: the first tournament (its key: the round's count) played in the day's wind and the lie's kinds. A save from before it has none: the
   *  engine stamps it on load with the next tournament's key, so a day in progress (and every day before) plays as it did; a new game has none and every day has it */
  weather?: { from: number };
+ /** T346 (#988): the first tournament (its key) whose model golfers' balls roll on by their clubs' run (shot.ts CLUB_RUN). A save from before it has none: the engine stamps it on load with the next tournament's key, so a day in progress (and every day
+  *  before) plays as it did; a new game has none and every day has it (golf/mode.ts runOn) */
+ runFrom?: number;
  /** the range business (range starts, plan P24, T129: golf/rangesave.ts): its upgrades, bucket price and counts; a range start's save without it
   *  loads as the starting range */
  range?: RangeBizSave;
@@ -138,6 +141,11 @@ export function weatherOn(g: { weather?: { from: number } }, key: number): boole
 /** T334: a save from before the weather has none, so its tournament in progress (and every day before) plays as it did: the weather starts with the next tournament (the key after the one
  *  in progress: `runs` counts the rounds done, and a day under way is not done yet). A save that has it keeps it */
 export function stampWeather(g: { weather?: { from: number } }, runs: number, dayInProgress: boolean): void { if (!g.weather) g.weather = { from: runs + (dayInProgress ? 1 : 0) }; }
+/** T346 (#988): whether the model golfers of the tournament of key `key` roll on by their clubs' run: from `runFrom` on; a game with none yet (a new one, nothing stamped) has it from the first (and is stamped: it keeps it through every save) */
+export function runOn(g: { runFrom?: number }, key: number): boolean { return key >= (g.runFrom ??= 0); }
+/** T346: a save from before the club's run has none, so its tournament in progress (and every day before) plays as it did: it starts with the next tournament, as the weather did (`runs` counts the rounds done, and a day under way is not done yet).
+ *  A save from T334 has the weather and no run: it is stamped too. A save that has it keeps it */
+export function stampRun(g: { runFrom?: number }, runs: number, dayInProgress: boolean): void { if (g.runFrom === undefined) g.runFrom = runs + (dayInProgress ? 1 : 0); }
 
 /** a saved owner's play, or null when it is not well formed (no key, sex or inputs list); a missing caddie count is null */
 function normalizePlaySave(p: Partial<GolfPlaySave> | null | undefined): GolfPlaySave | null {
@@ -160,7 +168,7 @@ export function normalizeGolfSave(g: Partial<GolfSave> | null | undefined): Golf
   if (!g || !g.town || !g.course || !g.clubhouse) return null;
   const parcel: Rect = g.parcel ?? g.parcels?.[0] ?? g.course;
   // the range start's fields (plan P22 2.6) are taken out and put back only when well formed, so an old start's save normalizes as before
-  const { start, exits, townBoost, invited, founding, play, weather, range, everyday, ponds, practiceLot, looks, myHoles, teeSets, grasses, teeBoxes, dayPins, crew, club, player, clubEvents, osm, estate, courseRects, ...rest } = g;
+  const { start, exits, townBoost, invited, founding, play, weather, runFrom, range, everyday, ponds, practiceLot, looks, myHoles, teeSets, grasses, teeBoxes, dayPins, crew, club, player, clubEvents, osm, estate, courseRects, ...rest } = g;
   const out: GolfSave = {
     ...rest,
     v: 1,
@@ -186,6 +194,7 @@ export function normalizeGolfSave(g: Partial<GolfSave> | null | undefined): Golf
   if (typeof founding === 'number' && Number.isFinite(founding) && founding > 0) out.founding = Math.floor(founding);
   const pl = normalizePlaySave(play); if (pl) out.play = pl;
   if (weather && typeof weather.from === 'number' && Number.isFinite(weather.from) && weather.from >= 0) out.weather = { from: Math.floor(weather.from) }; // T334
+  if (typeof runFrom === 'number' && Number.isFinite(runFrom) && runFrom >= 0) out.runFrom = Math.floor(runFrom); // T346
   const ed = normalizeDaySave(everyday); if (ed) out.everyday = ed;
   // T231: the pond marks, finite pairs only (golf/ponds.ts normalizePondMarks: none kept means the field stays out)
   if (Array.isArray(ponds)) { const m: number[] = []; for (let k = 0; k + 1 < ponds.length; k += 2) { const x = ponds[k], y = ponds[k + 1]; if (Number.isFinite(x) && Number.isFinite(y)) m.push(x!, y!); } if (m.length) out.ponds = m; }

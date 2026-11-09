@@ -19,7 +19,8 @@ import type { Club, CourseView, Landing, Lie, PlayHole, Pt, RoundPlan, Shot } fr
  *  play the shot and `power` is only the slider's (absent: a shot from before T316, played exactly as before). T318: spin, the ball's dot and the
  *  clicks added in the air (spin.ts; a full shot only; absent: no spin, a shot from before T318 played exactly as before). T334: env, the conditions the shot was
  *  struck in (conditions.ts: the wind, the lie's kind, the slope; a full shot only; absent: none, a shot from before T334 played exactly as before). T334: v, the version of the
- *  shot model the input was struck under (absent: 1, as before; 2: the putting's second version, shot.ts PUTT_V2); the engine writes MODEL_V on every input it plays. T334 part 2: shape,
+ *  shot model the input was struck under (absent: 1, as before; 2: the putting's second version, shot.ts PUTT_V2; 3, T346 #988: the club's own run after landing, shot.ts CLUB_RUN, for a shot with conditions); the engine writes
+ *  MODEL_V on every input it plays, and a replay keeps the version each input was played under (an input saved before 3 rolls as it did). T334 part 2: shape,
  *  the curve and the flight he picked before the swing (shape.ts; a full shot only; absent: none, a shot from before played exactly as before). T337 (#963): cad, the shot was played as the caddie
  *  said (his club on his line: the Mic'd-Up Caddie's mods for the moment `follow`); scr, a second ball was hit from the tee and the better stood (the Scramble Captain: once a nine); both only with the card, absent: none */
 export interface OwnerInput { holeIdx: number; stroke: number; club: Club; aim: Pt; power: number; swing?: SwingOutcome; spin?: SpinInput; env?: ShotEnv; v?: number; shape?: ShotShape; cad?: true; scr?: true }
@@ -43,8 +44,8 @@ function backToFairway(view: CourseView, hole: PlayHole, p: Pt, reach: number): 
   for (let s = 1; s <= reach && s <= bd + 1; s++) { const q = { x: p.x + ux * s, y: p.y + uy * s }; if (view.lieAt(q.x, q.y) === 'fairway') return q; }
   return null;
 }
-/** the shot model's current version (OwnerInput.v): 2 since T334 (the putting) */
-export const MODEL_V = 2;
+/** the shot model's current version (OwnerInput.v): 2 since T334 (the putting), 3 since T346 (the club's own run after landing: a shot with conditions rolls on by CLUB_RUN) */
+export const MODEL_V = 3;
 /** the owner's turn: his golfer, the hole (index, number, par), the stroke he plays, the minute he strikes, his lie, his ball and the pin (tiles), the
  *  distance to the pin (metres), and the suggested shot: the model's club and aim, and the power that carries to the aim (1 on the green) */
 export interface OwnerTurn { golfer: number; holeIdx: number; hole: number; par: number; stroke: number; t: number; lie: Lie; ball: Pt; pin: Pt; distM: number;
@@ -99,7 +100,7 @@ export class LiveGroup {
     const { to, lie, penalty, holed, landing, sw, spin, env, shape } = shotOutcome(this.ctx.view, this.ctx.view.holes[hr.h]!, p.ball, p.lie, p.sk, input, r, { last: hr.h === this.ctx.view.holes.length - 1 });
     const putting = input.club === 'putter';
     const s = hr.record(p, input.club, turn.t, putting ? PUTT_FLIGHT : FLIGHT_TIME, to, lie, penalty, holed, landing);
-    this.inputs.push({ holeIdx: input.holeIdx, stroke: input.stroke, club: input.club, aim: { x: input.aim.x, y: input.aim.y }, power: input.power, ...(sw ? { swing: sw } : {}), ...(spin ? { spin } : {}), ...(env ? { env } : {}), ...(shape ? { shape } : {}), ...(input.cad && hasMech(p.sk, 'caddie') ? { cad: true as const } : {}), ...(input.scr && hasMech(p.sk, 'scramble') ? { scr: true as const } : {}), ...((input.v ?? 1) >= 2 ? { v: MODEL_V } : {}) });
+    this.inputs.push({ holeIdx: input.holeIdx, stroke: input.stroke, club: input.club, aim: { x: input.aim.x, y: input.aim.y }, power: input.power, ...(sw ? { swing: sw } : {}), ...(spin ? { spin } : {}), ...(env ? { env } : {}), ...(shape ? { shape } : {}), ...(input.cad && hasMech(p.sk, 'caddie') ? { cad: true as const } : {}), ...(input.scr && hasMech(p.sk, 'scramble') ? { scr: true as const } : {}), ...((input.v ?? 1) >= 2 ? { v: Math.min(MODEL_V, Math.floor(input.v!)) } : {}) }); // (T346: the version it was played under, kept on a replay)
     this.field.settle(g);
     this.turn = null; this.player = null; this.due = null;
     this.flush();
@@ -148,7 +149,7 @@ export function shotOutcome(view: CourseView, hole: PlayHole, from: Pt, plie: Li
   const kit = kitOf(sk, input.club, mctx); // (his stats and mods for the club: the sweet spot, the scatter, the carry; neutral for a plain skill)
   // (T336: and the Space power-spam is Power Mash's: without the mechanic the boost is none)
   const sw0 = input.swing ? readSwing(input.swing) : null, sw = sw0 && sw0.boost > 0 && !hasMech(sk, 'boost') ? { ...sw0, boost: 0 } : sw0;
-  const eff = sw ? swingEffect(sw, kit.skill, putting, kit.sweet, kit.miss) : null, miss = eff ? eff.deg * Math.PI / 180 : 0; // (the kit's skill is skillFor's, with the moment's mods; kit.miss: the Self-Correcting Ball's half)
+  const eff = sw ? swingEffect(sw, kit.skill, putting, kit.sweet, kit.miss, kit.speed) : null, miss = eff ? eff.deg * Math.PI / 180 : 0; // (the kit's skill is skillFor's, with the moment's mods; kit.miss: the Self-Correcting Ball's half; T345: kit.speed turns the sweet window in time into the arc's width)
   if (putting) {
     const pw = eff ? clamp(eff.power, MIN_SWING_POWER, METER.top + BOOST.max) : clamp(input.power, PUTT_POWER[0]!, PUTT_POWER[1]!);
     const dx = hole.pin.x - from.x, dy = hole.pin.y - from.y, L = Math.hypot(dx, dy), ux = L > 0 ? dx / L : 1, uy = L > 0 ? dy / L : 0;
@@ -190,7 +191,8 @@ export function shotOutcome(view: CourseView, hole: PlayHole, from: Pt, plie: Li
     // model's direction spread, the meter's miss taking over the rest)
     // (T318: the spin, from the lie it is played from: the curve, the check, the release; none without it)
     const sp = spin ? spinEffect(spin, input.club, lieP, envP?.lie, kit.spin) : null; // (T334: the lie's finer kind scales the spin; T335: his clubs' grooves)
-    const mod = { ...(eff ? { maxF: Math.max(1, pw), spread: eff.spread, angF: METER_ANG, roll: eff.roll } : {}), ...(sp ? { spin: sp } : {}), ...(envP ? { env: envP } : {}), ...(shape ? { shape: fx } : {}), ctx: mctx };
+    // (T346: the club's own run after landing is version 3's: an input saved before it keeps its conditions and rolls as it did)
+    const mod = { ...(eff ? { maxF: Math.max(1, pw), spread: eff.spread, angF: METER_ANG, roll: eff.roll } : {}), ...(sp ? { spin: sp } : {}), ...(envP ? { env: envP } : {}), ...((input.v ?? 1) < 3 ? { run: false } : {}), ...(shape ? { shape: fx } : {}), ctx: mctx };
     let o = hitShot(r, sk, lieP, from, at, input.club, view, mod);
     // (T337: the Scramble Captain: a second ball from the tee, the same strike with its own luck: the one in play, then the nearer the cup, stands)
     if (input.scr === true && plie === 'tee' && hasMech(sk, 'scramble')) {

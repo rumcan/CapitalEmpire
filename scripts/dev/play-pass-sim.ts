@@ -3,13 +3,15 @@
 // and fairways found, penalties, the drive, each club's carry against its nominal, the approach's proximity. Courses: the town's (the dump of
 // scripts/dev/play-pass-playtest.mjs: --course <town-course.json>) and a hand-made one (the synthetic 18 of the tests: --course hand).
 //   npx esbuild scripts/dev/play-pass-sim.ts --bundle --platform=node --format=esm --loader:.webp=empty --loader:.png=empty --outfile=E:/ClaudeTemp/T334/sim.mjs --log-level=warning
-//   node E:/ClaudeTemp/T334/sim.mjs --course E:/ClaudeTemp/T334/playtest/town-course.json [--rounds 30] [--env wind=8,from=270] [--json out.json]
+//   node E:/ClaudeTemp/T334/sim.mjs --course E:/ClaudeTemp/T334/playtest/town-course.json [--rounds 30] [--env wind=8,from=270] [--meter 1|2] [--json out.json]
+// --meter: T345 (#987): the swing meter the bot swings: 2 (default) the sweet spot as a window in time, 1 the first meter (the before); each row prints `swings`, the share of swings straight, pulled, pushed, hooked
+// and sliced, for the full shots and the putts.
 // --env: the conditions of play pass (T334): wind (mph), from (compass degrees), gusty (0..1): the model's conditions are used when the build has them.
 import { readFileSync, writeFileSync } from 'node:fs';
 import { TILE_M } from '../../src/game/golf/types';
 import { botRound, HUMANS, mean, pct, type Human, type BotRound } from '../../tests/helpers/swing-bot';
 import { gameSkills, START_SKILLS, PRESSURE } from '../../src/game/golf/player';
-import { MODEL_V, envOf, type CourseView, type Lie, type OwnerInput, type PlayHole, type Pt } from '../../src/game/golf/play';
+import { METER_V, MODEL_V, envOf, type CourseView, type Lie, type OwnerInput, type PlayHole, type Pt } from '../../src/game/golf/play';
 import * as shot from '../../src/game/golf/play/shot';
 
 const args = process.argv.slice(2), opt = (k: string, d: string) => { const i = args.indexOf(`--${k}`); return i >= 0 ? args[i + 1]! : d; };
@@ -46,6 +48,8 @@ const courseArg = opt('course', 'hand'), view = courseArg === 'hand' ? hand() : 
 /** --v 1|2: the shot model's version the bot's inputs carry (the putting: shot.ts PUTT_V2; default the current MODEL_V); --env wind=mph,from=deg: the day's steady wind and the lie's kinds and slopes for every full shot */
 const STATS = Object.fromEntries(opt('stat', '').split(',').filter(Boolean).map(kv => kv.split('=')).map(([k, v]) => [k, +v!])) as Record<string, number>, SHAPE_ARG = opt('shape', '').split(',').map(Number);
 const V = +opt('v', String(MODEL_V)), envArg = opt('env', ''), [wmph, wfrom] = envArg.replace(/wind=/, '').split(',').map(Number);
+/** --meter 1|2: the swing meter the bot swings (T345: 2, the sweet spot as a window in time, is the game's; 1 is the first meter, its sweet spot a width on the arc: the before of the comparison) */
+const METER_ARG = +opt('meter', String(METER_V));
 const modOf = (t: { lie: Lie; ball: Pt; suggested: { aim: Pt; club: string } }): Partial<OwnerInput> => ({ ...(V >= 2 ? { v: V } : {}), ...(SHAPE_ARG.length === 2 && t.suggested.club !== 'putter' && (SHAPE_ARG[0] || SHAPE_ARG[1]) ? { shape: { curve: Math.sign(SHAPE_ARG[0]!) as -1 | 0 | 1, flight: Math.sign(SHAPE_ARG[1]!) as -1 | 0 | 1 } } : {}), ...(envArg && t.suggested.club !== 'putter' ? { env: envOf(wmph! > 0 ? { mph: wmph!, from: wfrom ?? 270 } : null, view.kindAt, view.heightAt, t.ball, t.lie, t.suggested.aim) } : {}) });
 /** a profile: the skills (0..100 each) the golfer plays at (your everyday game: nerve in it) */
 const PROFILES: { name: string; sk: ReturnType<typeof gameSkills> }[] = [
@@ -72,12 +76,17 @@ const ONLY = opt('only', '').split(':');
 for (const hname of ['novice', 'club', 'sharp'] as const) for (const [pi, p] of PROFILES.entries()) {
   if (ONLY[0] && (ONLY[0] !== hname || (ONLY[1] !== undefined && +ONLY[1] !== pi))) continue;
   const h: Human = HUMANS[hname], rounds: BotRound[] = [];
-  for (let k = 0; k < N; k++) rounds.push(botRound(view, p.sk, h, 1000 + k, 1 + (k % 28), t => modOf(t)));
+  for (let k = 0; k < N; k++) rounds.push(botRound(view, p.sk, h, 1000 + k, 1 + (k % 28), t => modOf(t), undefined, METER_ARG));
   const tot = rounds.map(r => r.total - r.par), putts = rounds.map(r => r.putts), girs = rounds.map(r => r.gir / r.pars.length * 100), fw = rounds.map(r => r.fairways / Math.max(1, r.fairwayHoles) * 100), pen = rounds.map(r => r.penalties);
   const all = rounds.flatMap(clubOf), drives = all.filter(s => s.club === 'driver' && s.stroke === 1 && s.totalM !== null), carries = (c: string) => all.filter(s => s.club === c && s.carryM !== null && s.lieBefore !== 'rough' && s.lieBefore !== 'bunker' && s.lieBefore !== 'fescue').map(s => s.carryM!);
   const row = { human: hname, profile: p.name, rounds: N, score: +mean(tot).toFixed(1), p10: pct(tot, 0.1), p90: pct(tot, 0.9), putts: +mean(putts).toFixed(1), gir: +mean(girs).toFixed(0), fw: +mean(fw).toFixed(0), pen: +mean(pen).toFixed(1),
-    drive: +mean(drives.map(s => s.totalM!)).toFixed(0), driveCarry: +mean(drives.map(s => s.carryM!)).toFixed(0), carry: Object.fromEntries(['driver', 'wood3', 'iron4', 'iron6', 'iron8', 'pw', 'sw'].map(c => [c, +mean(carries(c)).toFixed(0)])) };
-  const withPutts = { ...row, putting: puttTable(rounds).filter(q => q.n > 0).map(q => `${q.le > 1e8 ? '20+' : '<=' + q.le}m: ${q.make}% of ${q.n}`), perHole: puttsPerHole(rounds) };
+    drive: +mean(drives.map(s => s.totalM!)).toFixed(0), driveCarry: +mean(drives.map(s => s.carryM!)).toFixed(0), carry: Object.fromEntries(['driver', 'wood3', 'iron4', 'iron6', 'iron8', 'pw', 'sw'].map(c => [c, +mean(carries(c)).toFixed(0)])),
+    // T346: the roll after landing as a share of the carry (total minus carry over carry, %), by club, from the fairway or the tee onto whatever it lands on
+    rollPct: Object.fromEntries(['driver', 'wood3', 'iron4', 'iron6', 'iron8', 'pw', 'sw'].map(c => { const xs = all.filter(s => s.club === c && s.carryM !== null && s.totalM !== null && s.carryM > 20 && (s.lieBefore === 'fairway' || s.lieBefore === 'tee')); return [c, +mean(xs.map(s => 100 * (s.totalM! / s.carryM! - 1))).toFixed(1)]; })) };
+  // T345: the share of swings by the shape of the miss, for the full shots and for the putts (straight: the accuracy click inside the sweet spot's window)
+  const shares = (xs: typeof all) => { const n = Math.max(1, xs.length), by = (k: string) => +(100 * xs.filter(s => s.swing === k).length / n).toFixed(0); return { n: xs.length, straight: by('straight'), pull: by('pull'), push: by('push'), hook: by('hook'), slice: by('slice') }; };
+  const swings = { meter: METER_ARG, full: shares(all.filter(s => s.club !== 'putter')), putts: shares(all.filter(s => s.club === 'putter')) };
+  const withPutts = { ...row, swings, putting: puttTable(rounds).filter(q => q.n > 0).map(q => `${q.le > 1e8 ? '20+' : '<=' + q.le}m: ${q.make}% of ${q.n}`), perHole: puttsPerHole(rounds) };
   rows.push(withPutts); console.log(JSON.stringify(withPutts));
 }
 // a quick check of the nominal carries at these skills (shot.ts carryM)

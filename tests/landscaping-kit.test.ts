@@ -10,8 +10,9 @@ import { KIT_GREY_GRANITE, KIT_WATER_EDGE_PLANTS } from '../src/game/kit';
 import { drawnAs } from '../src/game/mirror';
 import { appendNewProps } from '../src/game/new-props-library';
 
-// T329: the owner's new props (new-props-library.ts, 2026-11-02) are appended at the library's very tail, after every other append, so no saved
-// index moves: the tail checks below leave them out (and check they are that tail)
+// T329: the owner's new props (new-props-library.ts, 2026-11-02) are appended after every other append of that day, so no saved index moves; later appends
+// (T309's animals, the reviewed eight-facing art, the next) go after them in turn (library.ts), so the checks below find each run by its own ids in place,
+// and never count back from the end of the library (T390: the old "very tail" counts failed the day the animals were appended)
 const NEW_PROPS: { id: string }[] = []; appendNewProps(NEW_PROPS as never[], []);
 
 
@@ -62,10 +63,11 @@ test('organic art is twelve unique tail records on the existing golf page and tw
   const masters = JSON.parse(await fs.readFile('art/landscaping-kit/items.json', 'utf8')).items;
   const ids = masters.map((x: { id: string }) => x.id), expected = [...KIT_GREY_GRANITE, ...KIT_WATER_EDGE_PLANTS].map(p => p.id);
   assert.deepEqual(ids, expected); assert.equal(new Set(ids).size, 12);
-  assert.deepEqual(LIBRARY.slice(-NEW_PROPS.length).map(p => p.id), NEW_PROPS.map(p => p.id), 'the new props are the tail');
-  assert.deepEqual(LIBRARY.slice(0, -NEW_PROPS.length).slice(-12).map(p => p.id), ids, 'new records append after every previous library, including supplemental views');
+  const np = LIBRARY.findIndex(p => p.id === NEW_PROPS[0]!.id); assert.ok(np >= 12, 'the new props are in the library');
+  assert.deepEqual(LIBRARY.slice(np, np + NEW_PROPS.length).map(p => p.id), NEW_PROPS.map(p => p.id), 'the new props are one run');
+  assert.deepEqual(LIBRARY.slice(np - 12, np).map(p => p.id), ids, 'new records append after every previous library, including supplemental views, and right before the new props');
   const golfPage = LIBRARY.find(p => p.id === 'kit:shrub-burning-bush')!.tex[0]; // tournament building pictures may be replaced by their views page
-  assert.equal(new Set(LIBRARY.slice(-12).map(p => p.tex[0])).size, 1);
+  assert.equal(new Set(LIBRARY.slice(np - 12, np).map(p => p.tex[0])).size, 1);
   for (const id of ids) {
     const matches = LIBRARY.filter(p => p.id === id); assert.equal(matches.length, 1);
     assert.equal(matches[0].tex[0], golfPage); assert.ok(matches[0].tex.slice(1).every(v => v >= 0 && v <= 1));

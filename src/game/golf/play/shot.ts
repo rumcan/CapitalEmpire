@@ -6,7 +6,7 @@ import { SPIN, curveOf, spinRollM, type SpinEffect } from './spin';
 import { FLIER, LIE_FX, flierChance, kindOfLie, slopeEffect } from './lies';
 import { windEffect } from './wind';
 import type { ShotEnv } from './conditions';
-import { PART_OF, applyMods, type ModCtx } from './mods';
+import { CLUB_BASE, PART_OF, applyMods, type ModCtx } from './mods';
 import type { ShapeFx } from './shape';
 
 /** the full carry in metres of each club at skill 1 (the putter has none); a skill s carries base * (0.75 + 0.25 s) */
@@ -17,6 +17,13 @@ export const CLUB_ORDER: readonly Club[] = ['driver', 'wood3', 'wood5', 'hybrid'
 const SHORT_TO_LONG: Club[] = ['sw', 'pw', 'iron8', 'iron6', 'iron4', 'wood3', 'driver'];
 /** the share of a shot's carry that rolls on, by the lie it lands on (the fairway runs, the rough and the sand stop it) */
 const ROLL: Record<Lie, number> = { tee: 0.08, fairway: 0.08, rough: 0.02, green: 0.03, fescue: 0.01, bunker: 0, water: 0, out: 0 };
+/** T346 (#988): the run each club has after landing, a factor on that share by what the club launches and spins. The playtest: ROLL is a share of the carry by the surface alone, so a driver and a sand wedge rolled the same 8% on
+ *  a fairway (an 80 m wedge 6 m, a 250 m drive only 20 m); real balls: a driver runs 8 to 12%, a wedge checks. A driver launches low (10.5 degrees, LOFT) with little backspin (SPIN_BACK_CAP 0.12) and runs on (x1.3: 10.4% of its carry
+ *  on a fairway), a sand wedge launches high (54 degrees) with all the spin it can take and checks (x0.3: 2.4%). It falls with the loft and with the backspin the club can take across the whole bag: the original seven clubs are the issue's
+ *  numbers (driver 1.3, 3-wood 1.2, 4-iron 1, 6-iron 0.85, 8-iron 0.65, pitching wedge 0.45, sand wedge 0.3), the clubs T335 added sit between their neighbours by loft and spin (a 5-wood between the 3-wood and the 4-iron, the hybrid
+ *  below it, the 5-, 7- and 9-irons between the irons, the gap wedge between the pitching and sand wedges, the lob wedge below the sand wedge). Applied by hitShot in a shot with conditions only (HitMod.env) and not when `run` is false (an input
+ *  saved before it, a field's day from before it): a shot without conditions rolls by the surface alone, as it always did. The putter's 1 is never read (a putt does not come through hitShot) */
+export const CLUB_RUN: Readonly<Record<Club, number>> = { driver: 1.3, wood3: 1.2, wood5: 1.12, hybrid: 1.07, iron4: 1, iron5: 0.93, iron6: 0.85, iron7: 0.75, iron8: 0.65, iron9: 0.55, pw: 0.45, gw: 0.375, sw: 0.3, lw: 0.22, putter: 1 };
 /** the carry factor by the lie the ball is played from (grass slows the ball) */
 const CARRY_F: Record<Lie, number> = { tee: 1, fairway: 1, rough: 0.88, green: 1, fescue: 0.75, bunker: 0.7, water: 1, out: 1 };
 /** the spread factor by the lie the ball is played from (the rough and the sand scatter it) */
@@ -121,6 +128,9 @@ export interface HitMod { maxF?: number; spread?: number; angF?: number; roll?: 
    *  strike from the grass, the slope's pull and carry, the wind's drift and carry. Absent: none of it, the same draws and the same numbers as before T334. The wind and
    *  the slope take no draws; the flier takes one only from a lie that can give it */
   env?: ShotEnv;
+  /** T346 (#988): false: the shot has its conditions but not the club's own run (CLUB_RUN): an input saved between T334 and T346 (OwnerInput.v below 3), a field's day from before it (Conditions.run false). Absent or true: with
+   *  conditions the ball rolls on by its club's run. Without conditions (no env) there is no club run either way */
+  run?: boolean;
   /** T334 part 2: the shot shape's effect (shape.ts shapeEffect: the curve, the carry, the run, the wind's multiplier, the scatter, the mishit chance); absent: none */
   shape?: ShapeFx;
   /** T337 (#963): the moment of the shot (mods.ts ModCtx: a tee shot, the driver off the deck, the rough, a bunker, the last hole, played as the caddie said): the mods for it apply; absent: only the mods for every shot, as before */
@@ -157,7 +167,9 @@ export function hitShot(r: () => number, sk: ShotSkill, lie: Lie, from: Pt, aim:
   if (wf) { flown *= wf.carry; drift = wf.drift * flown; }
   const land = drift ? { x: from.x + (cs * flown - sn * drift) / TILE_M, y: from.y + (sn * flown + cs * drift) / TILE_M } : { x: from.x + cs * flown / TILE_M, y: from.y + sn * flown / TILE_M };
   const landLie = view.lieAt(land.x, land.y);
-  let roll = flown * ROLL[landLie] * (mod?.roll ?? 1) * (lx && slope ? lx.run * slope.run * (flier ? FLIER.run : 1) : 1) * (kit ? kit.roll : 1) * (shape ? shape.run : 1) / TILE_M, rc = cs, rs = sn, spinM: number | undefined, check: Pt | undefined;
+  // T346: the club's own run (CLUB_RUN): with conditions (and not an old input's: mod.run false) the ball rolls on by what its club launches and spins; the bag's T335 character (CLUB_BASE.roll, in kit.roll) is replaced by it
+  const byClub = !!env && mod?.run !== false, baseRun = CLUB_BASE[club]?.roll ?? 1;
+  let roll = flown * ROLL[landLie] * (mod?.roll ?? 1) * (lx && slope ? lx.run * slope.run * (flier ? FLIER.run : 1) : 1) * (kit ? (byClub ? kit.roll / baseRun : kit.roll) : 1) * (byClub ? CLUB_RUN[club] : 1) * (shape ? shape.run : 1) / TILE_M, rc = cs, rs = sn, spinM: number | undefined, check: Pt | undefined;
   if (sp && landLie !== 'water' && landLie !== 'bunker') {
     // T318: the spin on the first bounce: topspin runs on, backspin checks (and spins back past the landing), side spin kicks the way of the spin
     const m0 = roll * TILE_M, m = spinRollM(sp, m0, landLie), k = sp.side * SPIN.kickDeg * Math.PI / 180, c = Math.cos(k), q = Math.sin(k);

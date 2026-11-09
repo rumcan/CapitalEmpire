@@ -3,7 +3,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
-  DEMAND_RATE, PRICE_MAX, PRICE_MIN, RANGE_UPGRADES, RangeSim, START_BAYS, arrivalRate, dayDemand, defaultRangeBiz, normalizeRangeBiz, priceFactor,
+  DEMAND_RATE, PRICE_MAX, legacyBalls, PRICE_MIN, RANGE_UPGRADES, RangeSim, START_BAYS, arrivalRate, dayDemand, defaultRangeBiz, normalizeRangeBiz, priceFactor,
   rangeScale, rangeScene, rangeStats, saleValue, skippedVisits, upgradeWhy, withPrice, withUpgrade, type CarSlot, type RangeBizSave, type RangeUpgradeId,
 } from '../src/game/golf/rangebiz';
 import { RANGE_STAND_INS } from '../src/game/golf/range-look';
@@ -24,8 +24,8 @@ test('a new range: 4 bays, $6, nothing bought, no counts; the save normalizes an
   // T223: a new range starts in the desert; a range saved before T223 (none, or no desert flag) keeps its grass
   assert.equal(d.desert, true); assert.deepEqual(normalizeRangeBiz(JSON.parse(JSON.stringify(d))), d);
   // (T239: and before the guided start: its greens, its paved lot and its walkway to lay)
-  assert.deepEqual(normalizeRangeBiz(undefined), { ...d, owned: ['teeturf', 'grass', 'greens', 'gravel', 'pave'], paths: false });
-  assert.deepEqual(normalizeRangeBiz('junk'), { ...d, owned: ['teeturf', 'grass', 'greens', 'gravel', 'pave'], paths: false });
+  assert.deepEqual(normalizeRangeBiz(undefined), { ...d, owned: ['teeturf', 'grass', 'greens', 'gravel', 'pave'], paths: false, balls: legacyBalls(START_BAYS, 0) });
+  assert.deepEqual(normalizeRangeBiz('junk'), { ...d, owned: ['teeturf', 'grass', 'greens', 'gravel', 'pave'], paths: false, balls: legacyBalls(START_BAYS, 0) });
   const n = normalizeRangeBiz({ owned: ['bays12', 'bays8', 'nope', 'lights', 'lights'], price: 40, season: { golfers: 3, takings: -5 }, paths: true, desert: true, guided: true });
   assert.deepEqual(n.owned, ['bays8', 'lights'], 'an unknown upgrade, a duplicate and one bought before its prerequisite are dropped');
   assert.equal(n.price, PRICE_MAX); assert.equal(n.season.golfers, 3); assert.equal(n.season.takings, 0); assert.equal(n.paths, true);
@@ -34,13 +34,13 @@ test('a new range: 4 bays, $6, nothing bought, no counts; the save normalizes an
   // start's save gets none
   const base = { v: 1, tier: 1, rep: 0, town: { x: 0, y: 0 }, course: [0, 0, 10, 10], parcel: [0, 0, 10, 10], dir: 2, tees: [], pins: [], aims: [], clubhouse: { x: 0, y: 0 } } as unknown as GolfSave;
   // (T239: and before the guided start: its greens, its paved lot and its walkway to lay)
-  assert.deepEqual(normalizeGolfSave({ ...base, start: 'range' })!.range, { ...d, owned: ['teeturf', 'grass', 'greens', 'gravel', 'pave'], paths: false });
+  assert.deepEqual(normalizeGolfSave({ ...base, start: 'range' })!.range, { ...d, owned: ['teeturf', 'grass', 'greens', 'gravel', 'pave'], paths: false, balls: legacyBalls(START_BAYS, 0) });
   assert.deepEqual(normalizeGolfSave(JSON.parse(JSON.stringify({ ...base, start: 'range', range: withPrice(withUpgrade(d, 'lights'), 9) })))!.range!.owned, ['lights']);
   assert.equal(normalizeGolfSave(base)!.range, undefined);
 });
 
 test('the upgrades: their order, their costs, and what each does to the stats', () => {
-  assert.equal(RANGE_UPGRADES.length, 18, 'the eight of Phase 1, the four World of Golf extras (T133: golf-range-extras.test.ts), the car park building (T146: golf-range-parking.test.ts), the desert start\'s two ground upgrades (T223: golf-range-desert.test.ts) and the guided start\'s greens, gravel and paving (T239: golf-range-guided.test.ts)');
+  assert.equal(RANGE_UPGRADES.length, 50, 'T386: six tools and a supplier for the ball loop (golf-range-balls.test.ts), ten staff and machines (golf-range-auto.test.ts), sixteen more nodes of the tree (golf-range-tree.test.ts), the eight of Phase 1, the four World of Golf extras (T133: golf-range-extras.test.ts), the car park building (T146: golf-range-parking.test.ts), the desert start\'s two ground upgrades (T223: golf-range-desert.test.ts) and the guided start\'s greens, gravel and paving (T239: golf-range-guided.test.ts)');
   const d = defaultRangeBiz();
   assert.equal(upgradeWhy(d, 'bays12', 1e9), 'Build 8 hitting bays first');
   assert.match(upgradeWhy(d, 'proshop', 1000), /Not enough money/);

@@ -20,7 +20,7 @@ import { LOT_DECALS, type LotDecal } from '../lot-decals';
 import decalSheet from '../../assets/ground/lot-decals.webp';
 import { cleanYards } from '../lots/clean-yards';
 import { auditLot, type LotAudit } from '../lots/lot-audit';
-import { placeable, spriteGroup } from '../lots/item-kinds';
+import { QUICK_PROPS, placeable, spriteGroup } from '../lots/item-kinds';
 import { CHECKS, CHECK_WORDS, parseReview, reviewId, standingOf, summaryOf, type Check, type ReviewFile, type ReviewOverride, type ReviewRecord, type Standing } from '../lots/review-file';
 import { ROAD_FILTERS, estateState, estateStreets, overrideComposition, readingOf, reviewLot, roadCounts, roadVisible, sampleState, sampleStreets, townState, wantedOf, type ReviewKind, type ReviewLot, type RoadFilter } from './review-set';
 import { LotGridLayer, type GridLot } from './lot-grid';
@@ -34,10 +34,6 @@ const FILL: Record<Standing, string> = { none: '#334155', touched: '#d97706', ok
 const STANDING_WORDS: Record<Standing, string> = { none: 'not looked at', touched: 'touched', ok: 'OK', bad: 'BAD' };
 const ARROW = ['↙', '↓', '↘', '→', '↗', '↑', '↖', '←'];
 const LIB_AT = new Map(LIBRARY.map((it, i) => [it.id, i] as const));
-/** the quick picks: the yard things an owner puts back on a lot (library ids; one the library lacks is left out) */
-const QUICK_PROPS = ['world:mailbox', 'gen:trash-cans-row', 'world:bench', 'town:hydrangea', 'town:fern', 'town:ornamental_grass', 'world:bush_1', 'capital:tree-oak-moderate', 'capital:tree-maple-open', 'world:tree_pine_1',
-  'gen:back-swingset', 'expansion:sandbox', 'expansion:trampoline', 'expansion:basketball-hoop', 'expansion:barbecue', 'town:picnic_table', 'expansion:lawn-chair', 'expansion:doghouse', 'gen:kids-bikes', 'expansion:washing-line',
-  'expansion:patio-swing', 'expansion:firepit', 'world:streetlamp', 'cars:burgundy-wagon:SW', 'cars:navy-wood-panel-wagon:SW', 'static:pickup_n'].filter(id => LIB_AT.has(id));
 type Filter = 'all' | 'todo' | 'bad';
 type Armed = { kind: 'prop' | 'decal'; id: string } | null;
 /** what the page keeps across a reload (the theme chips frame the page again): the set, the seed, the lot, the filter */

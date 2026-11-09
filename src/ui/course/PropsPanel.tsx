@@ -1,5 +1,5 @@
 import type { Game } from '../../game/engine';
-import { DECOR, PROPS_APPEAL_RADIUS, PROPS_DECAY, appealText, placeOf, placeableProps, propsCount, propsShown, sellBack, sizeText, sizedPrice, type DecorItem } from '../../game/golf/decor';
+import { DECOR, PROPS_APPEAL_RADIUS, PROPS_DECAY, PROP_KINDS, appealText, placeOf, placeableProps, propsCount, propsShown, sellBack, sizeText, sizedPrice, type DecorItem } from '../../game/golf/decor';
 import { PROPS_APPEAL_CAP } from '../../game/golf/rangesave';
 import { LIBRARY } from '../../game/library';
 import { Thumb } from '../Thumb';
@@ -19,23 +19,27 @@ export function PropsPanel({ game }: { game: Game }) {
   const town = t.where === 'town', buildings = town && t.group === 'buildings';
   // T193: a group the toolbar's flyout opened (Props ▸ Plants) shows alone. T369: All props shows every group (golf/decor.ts propsShown); the
   // line under the box counts what is shown against every prop the tool can place (T229: a frame tree is not sold here)
-  const view = { where: t.where, group: t.group, all: t.all, focus: t.focus }, groups = propsShown(view), shown = propsCount(view), placeable = placeableProps().length;
+  // T400 (#1078): the town's panel counts against the town's own props (the golf props are Facilities': Town decoration lists none of them, and has no All props box)
+  const view = { where: t.where, group: t.group, all: t.all, focus: t.focus }, groups = propsShown(view), shown = propsCount(view), placeable = town ? propsCount({ where: 'town', group: null, all: false, focus: null }) : placeableProps().length;
+  const kind = PROP_KINDS.find(k => k.id === t.focus);
   return (
     <div className="tp" data-panel="props" data-place={buildings ? 'town-buildings' : t.where}>
       {buildings
         ? <ToolHead icon="buildings" title="Town buildings" desc="A few buildings for the town's parks, squares and roadsides: off your land and off its lots, on the grass between them" />
         : town
           ? <ToolHead icon="leaf" title="Town props" desc="Benches, lamps, planters and beds for the town's streets and parks, off your land" />
-          : <ToolHead icon="leaf" title="Props" desc="Dress your venue: pot plants, fountains, statues, pillars and benches" />}
+          : kind
+            ? <ToolHead icon="leaf" title={kind.name} desc="The golf props for your course and its tournament days, by kind" />
+            : <ToolHead icon="leaf" title="Props" desc="Dress your venue: pot plants, fountains, statues, pillars and benches" />}
       {buildings && <p className="sub-line mb-2 leading-snug" data-testid="town-buildings-note">Decoration: the town has no land value or attractiveness for them to raise yet, so they add the look alone.</p>}
       {!buildings && (
         <div className="mb-2" data-testid="props-all-box">
-          <label className="flex items-center gap-2 text-xs" data-testid="props-all">
+          {!town && <label className="flex items-center gap-2 text-xs" data-testid="props-all">
             <input type="checkbox" checked={t.all} onChange={e => t.setAll(e.target.checked)} />
-            All props (not only the {town ? "town's" : "course's"})
-          </label>
+            All props (not only the course's)
+          </label>}
           <div className="sub-line mt-0.5" data-testid="props-count" data-shown={shown} data-placeable={placeable}>
-            {`Showing ${shown} of ${placeable} props${t.focus && !t.all ? ` (${groups[0]?.name ?? t.focus} only)` : ''}`}
+            {`Showing ${shown} of ${placeable} props${t.focus && !t.all ? ` (${kind?.name ?? groups[0]?.name ?? t.focus} only)` : ''}`}
           </div>
         </div>
       )}
