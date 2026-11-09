@@ -58,7 +58,8 @@ export interface CrewInputs {
   windows: readonly (readonly (readonly [number, number])[])[]; firstOn: readonly number[];
   pace: { walk: number; cart: number } | null;
   /** T377 (#1033): the way a drive takes from a to b (golf/walkfield.ts, the cart profile: the paths, never a tee, a green, a bunker or water): the waypoints after
-   *  a, the last b; null: straight. A drive is laid as one leg per piece of its way, its minutes shared by their lengths (absent: every drive straight) */
+   *  a, the last b; null: straight; an empty way: none (the water cuts the course in two there, with no bridge): the worker is carried across, not drawn (an `away` leg).
+   *  A drive is laid as one leg per piece of its way, its minutes shared by their lengths (absent: every drive straight) */
   route?: (ax: number, ay: number, bx: number, by: number) => Pt[] | null;
 }
 
@@ -74,6 +75,7 @@ class Shift {
     const d = Math.max(0, dur);
     if (d <= 0 && bx === this.x && by === this.y) return;
     const way = act === 'drive' && this.route && (bx !== this.x || by !== this.y) ? this.route(this.x, this.y, bx, by) : null;
+    if (way && way.length === 0) { this.leg(bx, by, 'away', 'none', d, park); return; } // (no way over the field: carried across)
     if (way && way.length > 1) {
       let L = 0, px = this.x, py = this.y;
       for (const w of way) { L += dist(px, py, w.x, w.y); px = w.x; py = w.y; }

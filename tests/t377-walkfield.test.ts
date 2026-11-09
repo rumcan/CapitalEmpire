@@ -167,6 +167,16 @@ describe('T377: the finer points of the walk field', () => {
     assert.equal(lineCost(f, SPECTATOR, { x: 2, y: 6 }, { x: 9, y: 6 }), Infinity, 'along the edge of the green (y = 6): touching');
     assert.equal(lineCost(f, SPECTATOR, { x: 2, y: 3 }, { x: 2, y: 3 }), 0, 'no length, no cost');
   });
+  it('ends in different pieces of the ground (cut apart by water, no bridge) have no way, found without a search; a bridge or a gap makes one piece of them; a diagonal gap is none', () => {
+    const f = field(400, 400, [[198, 0, 202, 400, G.water]]), a = { x: 10.5, y: 10.5 }, b = { x: 390.5, y: 390.5 };
+    assert.equal(findRoute(f, SPECTATOR, a, b), null, 'a river the whole height of the field'); assert.equal(findRoute(f, CART, a, b), null);
+    assert.ok(findRoute(f, SPECTATOR, a, { x: 150.5, y: 300.5 }), 'a way on the same side');
+    const g = field(400, 400, [[198, 0, 202, 399, G.water]]); assert.ok(findRoute(g, SPECTATOR, a, b), 'a gap at the foot: one piece');
+    const h = field(400, 400, [[198, 0, 202, 400, G.water], [198, 200, 202, 202, G.path]]); assert.ok(findRoute(h, SPECTATOR, a, b), 'a bridge: one piece');
+    // two open cells that touch at a corner only: the searches never cut a blocked corner, and the pieces agree
+    const d = field(6, 6, [[0, 0, 6, 6, G.water], [2, 2, 3, 3, G.open], [3, 3, 4, 4, G.open]]);
+    assert.equal(findRoute(d, SPECTATOR, { x: 2.5, y: 2.5 }, { x: 3.5, y: 3.5 }), null);
+  });
   it('a way round a wall that is longer than the box of the ends: found over the whole field; not with whole: false', () => {
     const f = field(300, 200, [[148, 0, 152, 180, G.water]]), a = { x: 10.5, y: 10.5 }, b = { x: 290.5, y: 10.5 };
     assert.equal(findRoute(f, SPECTATOR, a, b, { pad: 12, whole: false }), null, 'not within the grown box');

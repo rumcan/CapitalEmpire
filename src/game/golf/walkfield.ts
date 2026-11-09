@@ -116,6 +116,28 @@ const SQ2 = Math.SQRT2;
  *  whether a search that finds nothing in the box grown four times goes on over the whole field (true: a lake the way goes round is found however far round;
  *  false: it stops there, for the searches that must be cheap) */
 export interface RouteOpts { pad?: number; reach?: number; whole?: boolean }
+
+/** the connected pieces of the ground a profile may stand on (by the four neighbours: the searches' diagonal steps need both of their sides, so they join no pieces
+ *  the four neighbours do not): a label a cell, 0 for ground it may not stand on. Made once per field and profile, in one pass: two ends in different pieces have no
+ *  way between them, and a search is not made to find that out (it would flood the whole piece) */
+const PIECES = new WeakMap<WalkField, Map<string, Int32Array>>();
+function pieces(f: WalkField, p: Profile): Int32Array {
+  let m = PIECES.get(f); if (!m) PIECES.set(f, m = new Map());
+  const got = m.get(p.name); if (got) return got;
+  const { w, h, g } = f, cost = p.cost, n = w * h, lab = new Int32Array(n), stack = new Int32Array(n); let k = 0;
+  for (let s = 0; s < n; s++) {
+    if (lab[s] || cost[g[s]!]! <= 0) continue;
+    k++; let sp = 0; stack[sp++] = s; lab[s] = k;
+    while (sp) {
+      const u = stack[--sp]!, i = u % w;
+      if (i > 0 && !lab[u - 1] && cost[g[u - 1]!]! > 0) { lab[u - 1] = k; stack[sp++] = u - 1; }
+      if (i < w - 1 && !lab[u + 1] && cost[g[u + 1]!]! > 0) { lab[u + 1] = k; stack[sp++] = u + 1; }
+      if (u >= w && !lab[u - w] && cost[g[u - w]!]! > 0) { lab[u - w] = k; stack[sp++] = u - w; }
+      if (u < n - w && !lab[u + w] && cost[g[u + w]!]! > 0) { lab[u + w] = k; stack[sp++] = u + w; }
+    }
+  }
+  m.set(p.name, lab); return lab;
+}
 /** the cheapest route from a to b under a profile: the waypoints after a (the last is b itself), or null when there is none (an end outside the field or
  *  boxed in, or no way round). The ends are moved to the nearest ground the profile may stand on (reach tiles), the way found by A* over the eight
  *  neighbours of the raster inside the ends' box grown by `pad` tiles (grown once more when it finds nothing), the cells then pulled straight wherever the line
@@ -123,6 +145,7 @@ export interface RouteOpts { pad?: number; reach?: number; whole?: boolean }
 export function findRoute(f: WalkField, p: Profile, a: Pt, b: Pt, o: RouteOpts = {}): Pt[] | null {
   const reach = o.reach ?? 12, sa = nearestPassable(f, p, a.x, a.y, reach), sb = nearestPassable(f, p, b.x, b.y, reach);
   if (sa < 0 || sb < 0) return null;
+  const L = pieces(f, p); if (L[sa] !== L[sb]) return null; // (cut off: no way, and no search to find it out)
   const A = centre(f, sa);
   // the box of the ends grown by pad, then by four times it, then the whole field (a lake the way goes round, an end boxed in by water: found, however far round)
   const first = o.pad ?? 30, whole = Math.max(f.w, f.h) * f.cell, pads = first >= whole ? [whole] : first * 4 >= whole ? [first, whole] : o.whole === false ? [first, first * 4] : [first, first * 4, whole];

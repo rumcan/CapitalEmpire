@@ -87,6 +87,16 @@ test('T377: the crew\'s drives, laid with the course\'s cart routes, never cross
   assert.ok(b.tiles < a.tiles * 2.2, `and the ways are not wild: ${b.tiles.toFixed(0)} tiles against ${a.tiles.toFixed(0)} straight`);
 });
 
+test('T377: a drive with no way (the water cuts the course in two, no bridge) is an away leg: the worker is carried across, never drawn on the water', () => {
+  const c = course();
+  // a cut-off piece: the hole 9 end of the course, no way to it from the yard
+  const route: CrewInputs['route'] = (ax, _ay, bx, by) => (bx > 330 || ax > 330 ? [] : [{ x: bx, y: by }]);
+  const day = crewDay(inputs(c, route)), legs = day.workers.flatMap(w => w.legs);
+  assert.ok(legs.some(l => l.act === 'away' && (l.bx > 330 || l.ax > 330)), 'a drive to the cut-off end is an away leg');
+  assert.ok(!legs.some(l => l.act === 'drive' && (l.bx > 330 || l.ax > 330) && Math.hypot(l.bx - l.ax, l.by - l.ay) > 30), 'and not a drive across');
+  for (const w of day.workers) for (let i = 1; i < w.legs.length; i++) { assert.ok(Math.abs(w.legs[i]!.t0 - w.legs[i - 1]!.t1) < 1e-6, 'legs run end to end in time'); assert.ok(Math.hypot(w.legs[i]!.ax - w.legs[i - 1]!.bx, w.legs[i]!.ay - w.legs[i - 1]!.by) < 1e-6, 'and in place'); }
+});
+
 test('T377: the routes change the crew\'s drives and nothing else: the same cups, the same cut, the same jobs, legs end to end in time and in place', () => {
   const c = course(), f = fieldOf(c), rc = new RouteCache(f, CART, { pad: 12 });
   const route: CrewInputs['route'] = (ax, ay, bx, by) => rc.route({ x: ax, y: ay }, { x: bx, y: by }) ?? null;

@@ -6,7 +6,7 @@
 //   B. a walking crowd: groups of three from the clubhouse to the galleries by the game's Crowd (with its router when the game has one), every place of every group and
 //      every person drawn (walkerPeople) counted on a tee box, a green, a bunker, water; the shots are of the walk whose straight line crosses the most of them
 //   C. carts: the field's carts of the tournament day (the play view's CartPlay of the day: the engine's own, with its field when it has one), sampled over the whole day,
-//      counted on a tee box, a green, a bunker, water, at their stops and on a drive, and on a cart path; the shots follow one cart on a drive
+//      counted on a tee box, a green, a bunker, water, at their stops and on a drive, and on a cart path; the shots follow one cart on a drive (the game's own frames)
 // Both runs print the same lines, so the old code's numbers are the proof of what was wrong. The crowd and the galleries are put in the frame (the engine draws
 // traffic.walkers and traffic.gallery as the city worker last sent them: here they are the page's own, from the same classes the worker uses).
 //   node scripts/dev/t377-spectators-carts-shots.mjs --base http://localhost:5188/ --out E:/ClaudeTemp/T377 --tag after [--seed 7]
@@ -54,18 +54,19 @@ try {
       wf: await import('/src/game/golf/walkfield.ts').catch(() => null),
     };
     const SURF = M.grid.SURF, grid = g.courseGrid, cls = g.terrain.cls, MAP = Math.round(Math.sqrt(cls.length)), tees = g.golf.tees, pins = g.golf.pins, NP = M.lib.SPECTATOR_PEOPLE.length;
-    /** what a point is: water (the map's river, creek and the course's), green, tee (the surface and the marker's box), bunker, fairway, else rough */
-    const groundOf = (x, y) => {
+    /** what a point is by the ground: water (the map's river, creek and the course's), green, tee (the painted surface), bunker, fairway, else rough */
+    const surfOf = (x, y) => {
       const tx = Math.floor(x), ty = Math.floor(y);
       if (tx >= 0 && ty >= 0 && tx < MAP && ty < MAP) { const c = cls[ty * MAP + tx]; if (c === 3 || c === 4) return 'water'; }
-      for (const t of tees) if (Math.abs(x - t.x) <= 1.5 && Math.abs(y - t.y) <= 1.5) return 'tee';
       const k = grid ? M.grid.cellAt(grid, x, y) : -1;
       if (k >= 0) { const s = grid.surf[k]; if (s === SURF.water) return 'water'; if (s === SURF.green) return 'green'; if (s === SURF.tee) return 'tee'; if (s === SURF.bunker || s === SURF.waste) return 'bunker'; if (s === SURF.fairway) return 'fairway'; }
       return 'rough';
     };
+    /** surfOf, and a tee marker's box (3 x 3 tiles) is a tee box too */
+    const groundOf = (x, y) => { const s = surfOf(x, y); if (s === 'water') return s; for (const t of tees) if (Math.abs(x - t.x) <= 1.5 && Math.abs(y - t.y) <= 1.5) return 'tee'; return s; };
     const BLOCKED = new Set(['water', 'green', 'tee', 'bunker']);
     const field = () => (g.spectatorField ? g.spectatorField() : null);
-    window.__t377 = { M, g, groundOf, BLOCKED, NP, field, tees, pins };
+    window.__t377 = { M, g, groundOf, surfOf, BLOCKED, NP, field, tees, pins };
   });
   const T0 = await page.evaluate(() => { const T = window.__t377, g = T.g; return { holes: T.pins.length, tees: T.tees.length, hasField: !!g.walkFieldNow, clubhouse: g.golf.clubhouse }; });
   log('course', JSON.stringify(T0)); metrics.course = T0;
@@ -96,29 +97,33 @@ try {
         });
         return t;
       };
-      // the hole to shoot: the one whose tee gallery stood most on its tee box with the old rule (a place behind and beside the tee), the same for both runs
-      let best = null;
+      // the holes to shoot: the tee whose gallery stood most on the painted tee box, in water, on a green, a bunker or a fairway with the old rule (a place behind and beside
+      // the tee), and the green whose gallery stood most so (a place beside the pin): the same for both runs
+      const ill = (x, y) => surfOf(x, y) !== 'rough', best = { tee: null, green: null };
       for (const tee of tees) {
         const pin = pins.find(q => q.hole === tee.hole); if (!pin) continue;
-        const [ux, uy] = unit(pin.x - tee.x, pin.y - tee.y), nx = -uy, ny = ux, s = { x: tee.x - ux * 3 + nx * 4, y: tee.y - uy * 3 + ny * 4, kind: 'tee', fx: tee.x, fy: tee.y, ax: pin.x, ay: pin.y };
-        const n = fansOf(s, 0).filter(p => groundOf(p.x, p.y) === 'tee').length; if (!best || n > best.n) best = { hole: tee.hole, n };
+        const [ux, uy] = unit(pin.x - tee.x, pin.y - tee.y), nx = -uy, ny = ux;
+        const st = { x: tee.x - ux * 3 + nx * 4, y: tee.y - uy * 3 + ny * 4, kind: 'tee', fx: tee.x, fy: tee.y, ax: pin.x, ay: pin.y }, sg = { x: pin.x + nx * 7, y: pin.y + ny * 7, kind: 'green', fx: pin.x, fy: pin.y, ax: pin.x, ay: pin.y };
+        const nt = fansOf(st, 0).filter(p => ill(p.x, p.y)).length, ng = fansOf(sg, 0).filter(p => ill(p.x, p.y)).length;
+        if (!best.tee || nt > best.tee.n) best.tee = { hole: tee.hole, n: nt }; if (!best.green || ng > best.green.n) best.green = { hole: pin.hole, n: ng };
       }
       return { tee: tally('tee'), green: tally('green'), shoot: best, spots: spots.map(s => ({ hole: s.hole, kind: s.kind, x: +s.x.toFixed(1), y: +s.y.toFixed(1) })).slice(0, 6) };
     });
-    log('tee galleries  ', JSON.stringify(r.tee)); log('green galleries', JSON.stringify(r.green)); log('the hole to shoot', JSON.stringify(r.shoot));
+    log('tee galleries  ', JSON.stringify(r.tee)); log('green galleries', JSON.stringify(r.green)); log('the holes to shoot', JSON.stringify(r.shoot));
     metrics.galleries = r;
     // the shots: that hole's tee gallery and green gallery in the frame
     const pos = await page.evaluate(() => ({ tees: window.__t377.tees.map(t => ({ hole: t.hole, x: t.x, y: t.y })), pins: window.__t377.pins.map(p => ({ hole: p.hole, x: p.x, y: p.y })) }));
-    const hole = r.shoot.hole, tee = pos.tees.find(t => t.hole === hole), pin = pos.pins.find(p => p.hole === hole);
-    for (const [kind, at, zoom] of [['tee', tee, 0.5], ['green', pin, 0.5]]) {
+    // (the first frame loads the people's art: the green's shot first is a warm-up, taken again)
+    for (const [kind, hole, which, zoom, warm] of [['green', r.shoot.green.hole, 'green', 0.5, true], ['tee', r.shoot.tee.hole, 'tee', 0.5, false], ['green', r.shoot.green.hole, 'green', 0.5, false]]) {
+      const at = which === 'tee' ? pos.tees.find(t => t.hole === hole) : pos.pins.find(p => p.hole === hole);
       await page.evaluate(([hole]) => {
         const { M, g, field, tees, pins } = window.__t377, spots = M.gal.gallerySpots(tees, pins, g.golf.structures ?? [], field());
         const buf = new Float32Array(8 * 2); let n = 0;
         for (const s of spots) if (s.hole === hole && (s.kind === 'tee' || s.kind === 'green')) { buf.set([s.x, s.y, 60, 0, s.fx, s.fy, s.ax, s.ay], 8 * n); n++; }
         window.__galBuf = buf.slice(0, 8 * n); Object.defineProperty(g.traffic, 'gallery', { configurable: true, get: () => window.__galBuf, set: () => {} });
       }, [hole]);
-      await look(page, at.x, at.y, zoom); await settle(page, 1500);
-      await shot(page, `gallery-${kind}-hole${hole}`);
+      await look(page, at.x, at.y, zoom); await settle(page, warm ? 3500 : 1800);
+      if (!warm) await shot(page, `gallery-${kind}-hole${hole}`);
     }
     await page.evaluate(() => Object.defineProperty(window.__game.traffic, 'gallery', { configurable: true, writable: true, value: new Float32Array(0) }));
   });
@@ -128,14 +133,17 @@ try {
     const info = await page.evaluate(() => {
       const { M, g, groundOf, BLOCKED, NP, field, tees, pins } = window.__t377;
       const f = field(), spots = M.gal.gallerySpots(tees, pins, g.golf.structures ?? [], f).filter(s => s.kind === 'green');
-      const start = g.golf.clubhouse, line = (a, b) => { let bad = 0, n = 0, mid = null; const L = Math.hypot(b.x - a.x, b.y - a.y), k = Math.max(2, Math.ceil(L / 0.5)); for (let i = 0; i <= k; i++) { const x = a.x + (b.x - a.x) * i / k, y = a.y + (b.y - a.y) * i / k; n++; if (BLOCKED.has(groundOf(x, y))) { bad++; mid = { x, y }; } } return { bad, n, mid }; };
-      // the walk to shoot: the one whose straight line crosses the most tee boxes, greens, bunkers and water, the same for both runs
-      let best = null; spots.forEach((s, i) => { const l = line(start, s); if (!best || l.bad > best.bad) best = { i, hole: s.hole, ...l }; });
+      const start = g.golf.clubhouse, line = (a, b) => { let water = 0, other = 0, n = 0, mid = null; const L = Math.hypot(b.x - a.x, b.y - a.y), k = Math.max(2, Math.ceil(L / 0.5)); for (let i = 0; i <= k; i++) { const x = a.x + (b.x - a.x) * i / k, y = a.y + (b.y - a.y) * i / k, gr = groundOf(x, y); n++; if (gr === 'water') water++; else if (BLOCKED.has(gr)) { other++; mid = { x, y }; } } return { water, other, n, mid }; };
+      // the walk to shoot: the one whose straight line crosses the most tee boxes, greens and bunkers and no water (a river is crossed by a bridge or not at all: a way round
+      // the rest is always there), the same for both runs
+      let best = null, any = null; spots.forEach((s, i) => { const l = line(start, s); if (!any || l.water + l.other > any.water + any.other) any = { i, hole: s.hole, ...l }; if (!l.water && (!best || l.other > best.other)) best = { i, hole: s.hole, ...l }; });
+      best = best && best.other > 0 ? best : any;
       return { start, spots: spots.length, best, holes: spots.map(s => s.hole) };
     });
     log('walks from', JSON.stringify(info.start), 'to', info.spots, 'green galleries; the one to shoot', JSON.stringify(info.best)); metrics.walkInfo = info;
     // the crowd: groups of three to each green gallery, stepped as the City steps its crowd; sampled each step
-    const res = await page.evaluate(([bestI]) => {
+    const cam = info.best.mid ?? info.start;
+    const res = await page.evaluate(([bestI, cam]) => {
       const { M, g, groundOf, BLOCKED, NP, field, tees, pins } = window.__t377, f = field();
       const Crowd = M.crowd.Crowd, STRIDE = M.crowd.WALK_STRIDE ?? 6, spots = M.gal.gallerySpots(tees, pins, g.golf.structures ?? [], f).filter(s => s.kind === 'green');
       const C = new Crowd(1, 0); C.setSpots(spots.length);
@@ -149,8 +157,9 @@ try {
       };
       let steps = 0, places = 0, badPlaces = 0, fairway = 0, drawn = 0, badDrawn = 0, drawnFairway = 0; const byGround = {};
       const frames = [], snap = new Map(); const out = [];
-      // 40 groups of three to each green gallery, one more to each every 4 steps; the picture frames are taken of the chosen walk's groups at three moments
-      const want = new Set([150, 300, 450]); let added = 0;
+      // 40 groups of three to each green gallery, one more to each every 4 steps; the picture frames are taken of the chosen walk's groups when 5 or more of them are within
+      // 40 tiles of the place the camera will be over (where its straight line crosses the most), at most three, 60 steps apart
+      let added = 0, lastFrame = -1000;
       while ((C.walkers.length || added < 40) && steps < 6000) {
         if (steps % 4 === 0 && added < 40) { for (let i = 0; i < spots.length; i++) add(added, i); added++; }
         C.step(0.35); steps++;
@@ -159,18 +168,17 @@ try {
           const gr = groundOf(b[i], b[i + 1]); places++; byGround[gr] = (byGround[gr] ?? 0) + 1; if (BLOCKED.has(gr)) badPlaces++; if (gr === 'fairway') fairway++;
           if (steps % 5 === 0) { const k = M.view.walkerPeople(b, i, i / STRIDE, steps * 0.1, NP, out); for (let j = 0; j < k; j++) { drawn++; const gp = groundOf(out[j].x, out[j].y); if (BLOCKED.has(gp)) badDrawn++; if (gp === 'fairway') drawnFairway++; } }
         }
-        if (want.has(steps)) frames.push({ step: steps, buf: Array.from(buf(bestI)) });
+        if (frames.length < 3 && steps - lastFrame >= 60 && C.walkers.filter(w => w.route === bestI && Math.hypot(w.x - cam.x, w.y - cam.y) < 40).length >= 5) { frames.push({ step: steps, buf: Array.from(buf(bestI)) }); lastFrame = steps; }
       }
       window.__walkFrames = frames.map(f => ({ step: f.step, buf: Float32Array.from(f.buf) }));
       return { steps, places, badPlaces, fairway, drawn, badDrawn, drawnFairway, byGround, left: C.walkers.length, gallery: C.gallery.reduce((a, b) => a + b, 0), stride: STRIDE, routes: rc ? rc.size : 0, frames: frames.map(f => f.step), router: !!rc };
-    }, [info.best.i]);
+    }, [info.best.i, cam]);
     log('walking crowd', JSON.stringify(res)); metrics.walkers = res;
     check(res.left === 0, `every group arrives (${res.left} left after ${res.steps} steps)`);
     // the shots: the walk's groups at three moments, the camera over the blocked ground its straight line crosses
-    const cam = info.best.mid ?? info.start;
     for (let k = 0; k < 3; k++) {
       const has = await page.evaluate(k => { const f = window.__walkFrames?.[k]; if (!f) return false; window.__walkBuf = f.buf; Object.defineProperty(window.__game.traffic, 'walkers', { configurable: true, get: () => window.__walkBuf, set: () => {} }); return f.buf.length; }, k);
-      if (!has) { log(`  (no frame ${k + 1}: the walk ended first)`); continue; }
+      if (!has) { log(`  (no frame ${k + 1}: the groups were not near the place)`); continue; }
       await look(page, cam.x, cam.y, 0.3); await settle(page, 1200); await shot(page, `walkers-${k + 1}`);
     }
     await page.evaluate(() => { const T = window.__game.traffic; for (const k of ['walkers', 'gallery']) Object.defineProperty(T, k, { configurable: true, writable: true, value: new Float32Array(0) }); });
@@ -198,46 +206,36 @@ try {
           prev.set(q.cart, { x: q.x, y: q.y });
         }
       }
-      // the cart and drive to follow: the longest drive between two stops on one hole of the first cart that drives, the minutes of a quarter, half and three quarters of it
+      // the cart and drive to follow: among the drives of over 15 tiles between two stops of a hole, the one whose straight line crosses the most tee boxes, greens and bunkers and
+      // no water (the same for both runs; a drive over water has no way but a bridge), else the longest
       let pick = null;
-      for (let c = 0; c < cp.size && !pick; c++) for (let h = 1; h < N; h++) { const vs = cp.stops(c, h); for (let v = 0; v + 1 < vs.length; v++) { const d = Math.hypot(vs[v + 1].stop.x - vs[v].stop.x, vs[v + 1].stop.y - vs[v].stop.y); if (d > 25 && (!pick || d > pick.d)) pick = { c, h, d, t0: vs[v].dep, t1: vs[v + 1].arr }; } }
+      for (let c = 0; c < cp.size; c++) for (let h = 0; h < N; h++) {
+        const vs = cp.stops(c, h);
+        for (let v = 0; v + 1 < vs.length; v++) {
+          const A = vs[v].stop, B = vs[v + 1].stop, d = Math.hypot(B.x - A.x, B.y - A.y); if (d <= 15) continue;
+          let water = 0, other = 0; const k = Math.ceil(d / 0.5);
+          for (let i = 0; i <= k; i++) { const gr = groundOf(A.x + (B.x - A.x) * i / k, A.y + (B.y - A.y) * i / k); if (gr === 'water') water++; else if (BLOCKED.has(gr)) other++; }
+          const score = water ? -1 : other, cand = { c, h, d, score, t0: vs[v].dep, t1: vs[v + 1].arr };
+          if (!pick || cand.score > pick.score || (cand.score === pick.score && cand.d > pick.d)) pick = cand;
+        }
+      }
       return { carts: cp.size, samples: n, bad, byGround, moving, onPath, stops, stopsBad, minutes: [t0, t1], pick, paths: S.length / 4 };
     });
     log('carts', JSON.stringify(r)); metrics.carts = r;
     if (r.error || !r.pick) return;
-    // the shots: that cart on that drive at a quarter, half and three quarters of it, the camera on it (the clock held: a minute at a time)
+    // the shots: the game's own frames of that cart on that drive (the clock at the drive's start, running at 1x, the camera on the live cart): three shots 800 ms apart
+    // once it has moved (a cart carried over water with no way is not drawn: nothing to shoot then)
+    await jump(r.pick.t0 - 0.15); await page.evaluate(() => window.__game.setSpeed(1));
+    let k = 0, last = null;
+    for (let tries = 0; tries < 24 && k < 3; tries++) {
+      await page.waitForTimeout(500);
+      const c = await page.evaluate(n => { const o = window.__game.play?.pv.carts.find(q => q.cart === n); return o ? { x: o.x, y: o.y } : null; }, r.pick.c);
+      if (!c) continue;
+      if (last && Math.hypot(c.x - last.x, c.y - last.y) < 2.5) continue;
+      await look(page, c.x, c.y, 0.3); await page.waitForTimeout(350); k++; last = c; await shot(page, `carts-${k}`);
+    }
+    if (k < 3) log(`  (${k} of 3 shots: the cart was not drawn or did not move far enough)`);
     await page.evaluate(() => window.__game.setSpeed(0));
-    for (const [k, u] of [[1, 0.25], [2, 0.5], [3, 0.75]]) {
-      const m = r.pick.t0 + (r.pick.t1 - r.pick.t0) * u;
-      await jump(m); await page.waitForTimeout(600);
-      const at = await page.evaluate(([c, m]) => { const g = window.__game, cp = g.play.pv.cartPlay, o = []; const n = cp.update(m, o); for (let i = 0; i < n; i++) if (o[i].cart === c) return { x: o[i].x, y: o[i].y }; return null; }, [r.pick.c, m]);
-      if (!at) { log(`  (cart ${r.pick.c} not drawn at minute ${m.toFixed(1)})`); continue; }
-      await look(page, at.x, at.y, 0.35); await settle(page, 1200); await shot(page, `carts-${k}`);
-    }
-  });
-
-  // ---------------------------------------------------------------- D. the real crowd (the city worker's own walkers)
-  await run('The real crowd: the event started in the game, its walkers as the city worker sends them', async () => {
-    await page.evaluate(() => { const g = window.__game; g.setSpeed(0); });
-    const stage = await page.evaluate(async () => { const g = window.__game; g.startRound(); await new Promise(r => setTimeout(r, 800)); g.startNow(); await new Promise(r => setTimeout(r, 800)); return g.traffic.round?.stage ?? null; });
-    log('round stage after startRound and startNow:', stage);
-    await page.evaluate(() => window.__game.setSpeed(4));
-    const samples = []; const t0 = Date.now(); let taken = 0, lastShot = 0;
-    while (Date.now() - t0 < 75000) {
-      const s = await page.evaluate(() => {
-        const { M, g, groundOf, BLOCKED } = window.__t377, W = g.traffic.walkers, G = g.traffic.gallery, st = M.crowd.WALK_STRIDE ?? 6; let n = 0, bad = 0, fair = 0, cx = 0, cy = 0; const by = {};
-        for (let i = 0; i + st - 1 < W.length; i += st) { n++; const gr = groundOf(W[i], W[i + 1]); by[gr] = (by[gr] ?? 0) + 1; if (BLOCKED.has(gr)) bad++; if (gr === 'fairway') fair++; cx += W[i]; cy += W[i + 1]; }
-        let fans = 0; for (let i = 2; i < G.length; i += 8) fans += G[i];
-        return { n, bad, fair, fans: Math.round(fans), stage: g.traffic.round?.stage ?? null, stride: st, cx: n ? cx / n : 0, cy: n ? cy / n : 0, by };
-      });
-      samples.push(s);
-      if (s.n >= 12 && taken < 2 && Date.now() - lastShot > 12000) { await look(page, s.cx, s.cy, 0.22); await page.waitForTimeout(500); await shot(page, `crowd-real-${taken + 1}`); taken++; lastShot = Date.now(); }
-      await page.waitForTimeout(600);
-    }
-    const places = samples.reduce((a, s) => a + s.n, 0), bad = samples.reduce((a, s) => a + s.bad, 0), fair = samples.reduce((a, s) => a + s.fair, 0), peak = Math.max(0, ...samples.map(s => s.n)), fans = Math.max(0, ...samples.map(s => s.fans));
-    const r = { samples: samples.length, places, onBlocked: bad, onFairway: fair, peakWalkers: peak, peakFansAtGalleries: fans, stages: [...new Set(samples.map(s => s.stage))], stride: samples[0]?.stride };
-    log('the real crowd', JSON.stringify(r)); metrics.realCrowd = r;
-    if (!places) log('  (no walkers formed in this town in 75 s: the event has no crowd here; the City-level test covers the worker path)');
   });
 
   writeFileSync(join(out, `${tag}-metrics.json`), JSON.stringify(metrics, null, 1));

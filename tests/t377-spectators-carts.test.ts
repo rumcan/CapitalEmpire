@@ -213,4 +213,22 @@ describe('T377: the field\'s carts never stand or drive on a tee, a green, a bun
     assert.equal(bad, 0, `${bad} samples on a blocked ground`);
     assert.ok(nFramed >= nFree * 0.97, `a cart waits a drawing for its way now and then, not more: ${nFramed} of ${nFree} samples`);
   });
+  it('with no bridge over the creek no drive is made across the water: the cart is carried (not drawn on that drive) and is at its stop after it', () => {
+    // the same course with the paths' bridges taken away: the creek cuts the course in two, and a drive across it has no way
+    const cut = buildWalkField(-30, -30, 340, 1160, { surf: surfB, wet: wetB, ways: PATH_LINES.map(l => ({ ax: l.a.x, ay: l.a.y, bx: l.b.x, by: l.b.y, hw: 1, cart: true })), teeBoxes: HOLES_B.map(h => ({ x: h.tee.x, y: h.tee.y, r: 1.5 })), holes: HOLES_B.map(h => ({ tee: h.tee, aim: h.pin })) });
+    const f = makeField(1, 5), gs = teeTimes(f, 5); fieldEntourage(f, gs, 1);
+    const plan = playRound(viewB, f, gs, 5), old = new CartPlay(plan, viewB, cartPaths(PATH_LINES), { x: 0, y: 0 }, null), now = new CartPlay(plan, viewB, cartPaths(PATH_LINES), { x: 0, y: 0 }, cut);
+    const t0 = Math.min(...gs.map(g => g.tee)) - 12, t1 = Math.max(...gs.map(g => g.tee)) + 330, a: PlayCart[] = [], b: PlayCart[] = [];
+    let nOld = 0, nNow = 0, bad = 0, badOld = 0, stopsBad = 0;
+    for (let c = 0; c < now.size; c++) for (let h = 0; h < viewB.holes.length; h++) for (const v of now.stops(c, h)) if (blocked(cut, v.stop.x, v.stop.y)) stopsBad++;
+    for (let m = t0; m <= t1; m += 0.2) {
+      const ka = old.update(m, a), kb = now.update(m, b); nOld += ka; nNow += kb;
+      for (let i = 0; i < ka; i++) if (blocked(cut, a[i]!.x, a[i]!.y)) badOld++;
+      for (let i = 0; i < kb; i++) if (blocked(cut, b[i]!.x, b[i]!.y)) bad++;
+    }
+    console.log(`# no bridge: old ${badOld} of ${nOld} samples on a blocked ground; now ${bad} of ${nNow} (${nOld - nNow} not drawn: carried), ${stopsBad} stops on a blocked ground`);
+    assert.ok(badOld > 50, `the old drives cross the creek (${badOld} samples)`);
+    assert.equal(bad, 0, `no sample on a blocked ground (${bad})`); assert.equal(stopsBad, 0, 'nor a stop');
+    assert.ok(nNow < nOld * 0.97 && nNow > nOld * 0.4, `the carts carried across are not drawn on their drive: ${nNow} of ${nOld} samples`);
+  });
 });
