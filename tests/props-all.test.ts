@@ -9,6 +9,7 @@ import { DECOR, DECOR_GROUPS, placeableProps, propsCount, propsShown, shownIn, t
 import { PropsTool, type PropsHostCtx } from '../src/game/golf/propstool';
 import { PropsPanel } from '../src/ui/course/PropsPanel';
 import { LIBRARY } from '../src/game/library';
+import { isPerson } from '../src/game/person';
 import type { Game } from '../src/game/engine';
 
 const LIB = new Map(LIBRARY.map((it, i) => [it.id, i]));
@@ -26,7 +27,8 @@ test('the placeable props: every prop of the owner\'s new categories has its car
   assert.equal(new Set(placeable.map(d => d.key)).size, placeable.length, 'one card each');
   // the library's own list of the new props (every "New: " category: one card a prop, a tree one card for its four views): none is left out
   // (T375: the eight-view art's rows, category "New: Eight-view objects", are the views the lots draw a building with, not props: no card)
-  const fresh = LIBRARY.filter(i => i.cat.startsWith('New: ') && !i.id.startsWith('object8:') && (i.kind !== 'tree' || i.id.endsWith(':ne')));
+  // (T401: the People props are no card: people are never placed)
+  const fresh = LIBRARY.filter(i => i.cat.startsWith('New: ') && !isPerson(i) && !i.id.startsWith('object8:') && (i.kind !== 'tree' || i.id.endsWith(':ne')));
   const cards = new Set(placeable.map(d => d.id));
   for (const it of fresh) assert.ok(cards.has(it.id), `${it.id} (${it.cat}) has a card`);
   // ...and no more: a card in a new group is a library New: item (the tournament kit moves seven of them to its own group, and the eight-view sets get one card each, their first view)

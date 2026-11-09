@@ -32,6 +32,8 @@ const manifest = JSON.parse(fs.readFileSync(path.join(DIR, 'manifest.json'), 'ut
 const PAGE = 2048, GUT = 16, MIPS = 5;
 const STRONG = 24, SOFT = 8, GAP = 24, PAD = 4, MIN_SUBJECT = 200;
 const DIRS = ['ne', 'se', 'sw', 'nw'], DIR_NAMES = ['NE', 'SE', 'SW', 'NW'];
+/** the figures of other sheets that are people, by name (the People sheet is every item of its category) */
+const PERSON_PROPS = new Set(['Marshal', 'Course worker', 'Catering staff']);
 /** the library's price by manifest category ($): decor 50, stalls and tents 500, structures 1500, vehicles 800 */
 const COST = { 'Course props': 50, 'People': 50, 'Seating': 50, 'Stalls': 500, 'Stalls (shabby)': 500, 'Event structures': 500, 'Event structures (shabby)': 500, 'Lake props': 500, 'Vehicles': 800, 'Buildings': 1500, 'Range': 1500, 'Media': 1500 };
 /** the trees' species, by the sheet's id (the eight hex digits after exec-): its name, and its kind (conifer, maple, oak or birch: the reference) */
@@ -256,7 +258,9 @@ for (const it of items) {
     continue;
   }
   const groundH = 32 * (it.hx + it.hy), w = it.w, h = it.h;
-  lib.push({ id: it.id, name: it.name, cat: it.cat, kind: 'decor', w, h, ax: round(w / 2), ay: round(h - groundH / 2), boxes: [{ hx: it.hx, hy: it.hy, dx: 0, dy: 0 }],
+  // T401 (#1079): the People props, and the figures among the other sheets (the marshal, the course worker, the catering staff), are people: tagged here so a
+  // regeneration keeps them out of every placement menu (src/game/person.ts)
+  lib.push({ id: it.id, name: it.name, cat: it.cat, kind: 'decor', ...(it.cat === 'New: People' || PERSON_PROPS.has(it.name) ? { person: true } : {}), w, h, ax: round(w / 2), ay: round(h - groundH / 2), boxes: [{ hx: it.hx, hy: it.hy, dx: 0, dy: 0 }],
     solid: 2, big: it.hx > 3, door: false, cost: it.cost, tex, quad: [0, 0, w, h] });
 }
 // T289: the desert props' rows, after every other (each one picture, its own kind: palm, shrub, rock, pond or decal, as the concept kit's, so no

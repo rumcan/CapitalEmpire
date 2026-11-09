@@ -6,6 +6,7 @@
 import type { Pt } from '../network';
 import { PROPS_APPEAL_CAP } from './rangesave';
 import { LIBRARY } from '../library';
+import { isPerson, isPersonId } from '../person';
 import { OBJECT_EIGHT_SETS } from '../object-eight-library';
 import { FRAME_TREE_KEY, FRAME_TREE_PRICE } from './holeframe';
 import { DESERT, type DesertType } from '../desert-props';
@@ -14,7 +15,8 @@ import { KIT_BOULDERS, KIT_FLOWERS, KIT_FOUNTAIN, KIT_GREY_GRANITE, KIT_HEDGE, K
 /** the panel's groups, in order (T187: Buildings, the few the player adds to the town: Town decoration's) */
 export type DecorGroup = 'plants' | 'water' | 'stone' | 'desert' | 'furniture' | 'tournament' | 'buildings' | `new:${string}`;
 /** the owner's new props: one group per library category 'New: <category>' (art/new-props, prep-new-props.mjs), after Furniture */
-const NEW_GROUPS: { id: DecorGroup; name: string }[] = [...new Set(LIBRARY.filter(i => i.cat.startsWith('New: ')).map(i => i.cat))].map(cat => ({ id: `new:${cat.slice(5)}` as DecorGroup, name: cat }));
+// (T401: the People props are no card, so their category is no group)
+const NEW_GROUPS: { id: DecorGroup; name: string }[] = [...new Set(LIBRARY.filter(i => i.cat.startsWith('New: ') && !isPerson(i)).map(i => i.cat))].map(cat => ({ id: `new:${cat.slice(5)}` as DecorGroup, name: cat }));
 export const DECOR_GROUPS: readonly { id: DecorGroup; name: string }[] = [
   { id: 'plants', name: 'Plants' }, { id: 'water', name: 'Water' }, { id: 'stone', name: 'Stone' }, { id: 'desert', name: 'Desert & oasis' }, { id: 'furniture', name: 'Furniture' }, { id: 'tournament', name: 'Tournament dressing' }, ...NEW_GROUPS, { id: 'buildings', name: 'Buildings' },
 ];
@@ -155,9 +157,10 @@ const CATALOGUE: readonly DecorItem[] = [
 ];
 /** the owner's new props (library cat 'New: <category>'): plain placeable props, each its category's group, priced by the library's cost; no appeal yet */
 // the new trees (kind tree, four library views on one picture) are one card each: their north-east view (the engine's tree sun decides a mirror)
-const EIGHT_ACTIVE = new Map(OBJECT_EIGHT_SETS.map(s => [s.subject, s]));
+// (T401: an eight-view set of a person is never a card: the registry row's person tag, or a person's name)
+const EIGHT_ACTIVE = new Map(OBJECT_EIGHT_SETS.filter(s => !s.person && !isPersonId(s.subject)).map(s => [s.subject, s]));
 const EIGHT_FIRST = new Map([...EIGHT_ACTIVE.values()].map(s => [s.views.normalNE.id, s]));
-const NEW_PROP_ITEMS: DecorItem[] = LIBRARY.filter(i => i.cat.startsWith('New: ') && (!i.id.startsWith('object8:') || EIGHT_FIRST.has(i.id)) && (i.kind !== 'tree' || i.id.endsWith(':ne'))).map((i): DecorItem => i.kind === 'tree'
+const NEW_PROP_ITEMS: DecorItem[] = LIBRARY.filter(i => i.cat.startsWith('New: ') && !isPerson(i) && (!i.id.startsWith('object8:') || EIGHT_FIRST.has(i.id)) && (i.kind !== 'tree' || i.id.endsWith(':ne'))).map((i): DecorItem => i.kind === 'tree'
   ? { key: `newprop-${i.id.slice('gen:tree-'.length, -':ne'.length)}`, name: i.name.replace(/ \(NE\)$/, ''), group: `new:${i.cat.slice(5)}` as DecorGroup, kind: 'plant', id: i.id, price: i.cost, appeal: 0, desc: 'A tree: plant it in the grounds (no appeal yet)' }
   : { key: EIGHT_FIRST.has(i.id) ? `object8-${EIGHT_FIRST.get(i.id)!.subject}` : `newprop-${i.id.slice('newprop:'.length)}`, name: EIGHT_FIRST.get(i.id)?.name ?? i.name, group: `new:${i.cat.slice(5)}` as DecorGroup, kind: 'small', id: i.id, price: i.cost, appeal: 0, ...(EIGHT_FIRST.has(i.id) ? { scale: EIGHT_FIRST.get(i.id)!.baselineScale } : {}), desc: `${i.cat.slice(5)}: a new prop to place (no appeal yet)` });
 /** T289: the desert and oasis props (desert-props.ts, the owner's desert sheets): a card a type, R stepping through its pictures (never mirrored),
@@ -183,7 +186,9 @@ if (DESERT_MIX.length) DESERT_ITEMS.push({ key: 'desert-mixed', name: 'Desert sc
  *  not scattered over the new props' categories */
 const TOURNAMENT_DRESSING = new Set(['rope-barrier', 'rope-barrier-corner', 'rope-walkway', 'direction-signpost', 'course-map-board', 'hole-12-sign', 'water-tank-stall'].map(k => `newprop-${k}`));
 for (const it of NEW_PROP_ITEMS) if (TOURNAMENT_DRESSING.has(it.key)) it.group = 'tournament';
-export const DECOR: readonly DecorItem[] = [...CATALOGUE, ...DESERT_ITEMS, ...NEW_PROP_ITEMS];
+// T401 (#1079): never a person, whatever put the card here (isPerson: the picture's tag, category or id)
+const LIB_ITEM = new Map(LIBRARY.map(i => [i.id, i]));
+export const DECOR: readonly DecorItem[] = [...CATALOGUE, ...DESERT_ITEMS, ...NEW_PROP_ITEMS].filter(d => { const it = LIB_ITEM.get(d.id); return !isPersonId(d.id) && !(it && isPerson(it)); });
 export const DECOR_BY_KEY: ReadonlyMap<string, DecorItem> = new Map(DECOR.map(d => [d.key, d]));
 
 // ---------------------------------------------------------------- T257: size, mirror, families and the mixed brushes
