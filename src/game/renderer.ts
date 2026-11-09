@@ -690,7 +690,10 @@ export class GroundPainter {
   /** T265, the bench's cold bake check (bakeAB): the bands' kept alphas dropped, so the next paint makes its own */
   clearSwampMemos() { this.swampField.clearMemo(); this.riverField.clearMemo(); }
   /** T360: the natural river's point bars and cut banks reach into the tile box (the worker prepares the bars' texture for such a chunk) */
-  barsIn(b: BBox) { return this.waters.some(w => w.w.nat && w.box[2] >= b[0] && w.box[0] <= b[2] && w.box[3] >= b[1] && w.box[1] <= b[3]); }
+  barsIn(b: BBox) {
+    for (const w of this.waters) if (w.w.nat) for (const p of w.w.pts) { if (!p.bar) continue; const g = p.w / 2 + Math.abs(p.bar) + 2; if (p.x + g >= b[0] && p.x - g <= b[2] && p.y + g >= b[1] && p.y - g <= b[3]) return true; }
+    return false;
+  }
   /** T360: the texture a point bar is laid with (the owner: "sand or gravel, desert-aware"): the desert's pale unraked sand (the surface 'meadow' wears it
    *  there, desert-theme.ts DESERT_PALE), else the gravel of a river's bar (the waste area's sand, its warm painted look; the photo gravel without it) */
   barTex(): string { return this.tex.surfaces?.desert ? 'meadow' : 'wasteSand'; }
@@ -1762,11 +1765,12 @@ export class GroundPainter {
     if (this.shadeMask) { const d = hs.data.slice(); let any = false; for (let k = 3; k < d.length; k += 4) { if (d[k - 1]! >= 160) d[k] = 0; else if (d[k]! > 4) any = true; } if (any) this.onShadeMask(g => overlay(g, { data: d, W: hs.W, H: hs.H }, sres)); }
     // T360: the natural river's two banks differ: on the inside of a bend a point bar of sand or gravel (feathered, its inner edge under the water), on
     // the outside the steep cut bank's dark lip; both before the water, which covers their inner edge
-    const natRivers = rivers.filter(w => w.w.nat);
+    // (the river's box is the whole river's: a chunk that no bar or lip reaches lays no layer, as a chunk with no water at all lays none)
+    const natRivers = rivers.filter(w => w.w.nat), reaches = (mode: 'bar' | 'cut', f: number) => natRivers.some(w => barShape(new Path2D(), w.w.pts, box, mode, f));
     if (natRivers.length) {
       const strip = (g: C2D, mode: 'bar' | 'cut', f: number) => { g.setTransform(M); g.globalCompositeOperation = 'lighter'; g.fillStyle = 'rgba(0,0,0,0.25)'; for (let s = 0; s < 4; s++) { const p = new Path2D(); let any = false; for (const w of natRivers) any = barShape(p, w.w.pts, box, mode, f * (1 - (2 * s) / 3)) || any; if (any) g.fill(p); } g.globalCompositeOperation = 'source-over'; };
-      layer('gravel', g => strip(g, 'bar', 0.7), g => this.paintPhoto(g, this.barTex(), L));
-      layer('bank', g => strip(g, 'cut', 0.3));
+      if (reaches('bar', 0.7)) layer('gravel', g => strip(g, 'bar', 0.7), g => this.paintPhoto(g, this.barTex(), L));
+      if (reaches('cut', 0.3)) layer('bank', g => strip(g, 'cut', 0.3));
     }
     if (rivers.length) layer('water', g => shore(g, rivers, 0, 0.3), water);
     // T230: the river's depth, light edge and reflections (water-look.ts), clipped to its water; with the glint on, its gloss
