@@ -15,8 +15,8 @@ import { PUTT_IMPACT_S, clipFrame, golferRow, hash, rowToward, type CrowdPerson 
 import { mulberry } from '../iso';
 import { NO_PRACTICE, practiceArea, practiceAreaAt, type PracticeArea, type PracticeScan } from './practice';
 import { PRACTICE_FEE, PRACTICE_IDS, PRACTICE_SHARE, type PracticeId } from './rangesave';
-import { bucketsLeft, dropInPlay, fieldCount, landBalls, nearestBall, overnight, pickKit, pickNear, pickSwath, skipBalls, stockOf, stow, takeMix, visitBalls, wash, zeroCounts, type BallSave } from './rangeballs';
-import { NET_SHARE, autoKit, bucketBalls, bucketValue, onShift, robotBps, staffBps, washBps, type AutoKit } from './rangeauto';
+import { bucketsLeft, dropInPlay, fieldCount, landBalls, nearestBall, overnight, pickKit, pickNear, pickSwath, skipBalls, STAMP_KEEP, stockOf, stow, takeMix, visitBalls, wash, zeroCounts, type BallSave } from './rangeballs';
+import { NET_SHARE, POLISH_VALUE, autoKit, bucketBalls, bucketValue, onShift, robotBps, staffBps, washBps, type AutoKit } from './rangeauto';
 export * from './rangeballs';
 import { DEFAULT_RANGE_LOOK, type RangeLook } from './range-look';
 import { PIC_TILES } from './range-pics';
@@ -970,7 +970,7 @@ export class RangeSim {
     if (clock.day !== this.day) { this.day = clock.day; this.today.golfers = 0; this.today.lost = 0; this.today.coffees = 0; this.today.lessons = 0; this.today.noPark = 0; this.today.noBalls = 0; this.practiceToday.putting = 0; this.practiceToday.chipping = 0; }
     const B = this.book, auto = B ? autoKit(s.owned) : null, vb = auto ? bucketBalls(visitBalls(dayLen), auto) : visitBalls(dayLen); this.nets = !!auto?.nets;
     // T386: a new town day: the night's losses on the outfield and in the ball room (golf/rangeballs.ts overnight), the day's ball counts start again
-    if (B && clock.day !== B.dayNo) { const nights = B.dayNo < 0 ? 0 : clock.day - B.dayNo; if (nights > 0) overnight(B, nights, this.rnd); else if (B.dayNo >= 0) B.day = zeroCounts(); B.dayNo = clock.day; }
+    if (B && clock.day !== B.dayNo) { const nights = B.dayNo < 0 ? 0 : clock.day - B.dayNo; if (nights > 0) overnight(B, nights, this.rnd, s.owned.includes('stamp') ? STAMP_KEEP : 1); else if (B.dayNo >= 0) B.day = zeroCounts(); B.dayNo = clock.day; }
     const st = rangeStats(s, c), value = saleValue(s, dayLen, st), scale = rangeScale(dayLen); this.qMax = st.qMax; this.dayLen = dayLen;
     // the range's money, all of it here (T146): each sale, fee, coffee, lesson and lost golfer is counted in the save and told to onMoney with
     // where it happened (T147's floating money); booked is what step returns
@@ -998,7 +998,7 @@ export class RangeSim {
       let mixed = 1;
       if (B && auto && sc.aims.length) {
         this.settle(sc); const pk = pickKit(s.owned); let avg = 0; for (let h = 0; h < 24; h++) avg += staffBps(auto, pk, h, B.shift) / 24; // (the staff's day: each shift a third of it)
-        const o = skipBalls(B, r.served, vb, dt, dayLen, avg + robotBps(auto), washBps(auto), st.picker, () => this.aimPoint(sc), this.rnd, this.bounds()); served = o.served; mixed = o.value;
+        const o = skipBalls(B, r.served, vb, dt, dayLen, avg + robotBps(auto), washBps(auto), st.picker, () => this.aimPoint(sc), this.rnd, this.bounds(), auto.polish ? POLISH_VALUE : 1); served = o.served; mixed = o.value;
         if (r.served - served > 1e-6) lose(r.served - served, null, 'balls'); B.day.sold += Math.round(served * vb); B.total.sold += Math.round(served * vb);
       }
       sell(served, null, mixed); lose(r.lost, null, 'queue');
@@ -1044,7 +1044,7 @@ export class RangeSim {
       const mix = B ? takeMix(B, vb) : null;
       if (B && !mix) { if (v.bay >= 0) this.bayBusy[v.bay] = false; v.bay = -1; lose(1, at, 'balls'); this.walk(v, S.WalkCar, this.toCar(v, { x: v.x, y: v.y })); continue; }
       if (B) v.left = vb;
-      v.bought = true; sell(1, at, mix ? bucketValue(mix.clean, mix.dirty) : 1); v.served = this.t - st.serve;
+      v.bought = true; sell(1, at, mix ? bucketValue(mix.clean, mix.dirty, auto?.polish) : 1); v.served = this.t - st.serve;
       // the academy (T133): a golfer who wanted a lesson and got a lesson bay pays for it with the bucket
       const b = sc.bays[v.bay]!; if (v.lesson && b.academy) { v.taught = true; extra('academy', 1, at); }
       if (b.lift) v.up = { x: b.stand.x, y: b.stand.y, h: b.lift };

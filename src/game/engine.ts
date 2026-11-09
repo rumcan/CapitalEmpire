@@ -223,6 +223,7 @@ import { missingParts, missingWhy, practicePick, realHoleCount, type PracticeSco
 import { CLUB_EVENTS, MODE_OF, announceDue, entryWhy, eventBoard, eventDay, eventDue, eventOfMode, eventResult, eventWhen, fieldEntries, fieldIds, freshEvents, isEntered, resultLine, withTitle, type BoardEntry, type ClubEventsSave, type EventId, type EventResult } from './golf/clubevents';
 import { BOOK_LEAD, LESSON_BONUS, PRESSURE, bookRound, gearOf, handicapOf, bookedGolfer, clock, entryText, freeTee, gameSkills, hcpText, playedRound, playerCardView, practise, practiceWhy, rebook, startProfile, toParWord, withBag, withYou, youRangeView, type Booking, type Lesson, type PlayerCardView, type PlayerProfile, type PracticeCtx, type PracticeKind, type RoundState, type YouRangeView } from './golf/player';
 import { gearFor, withCards } from './golf/player'; // T336 (#962): your cards
+import { practiceGear } from './golf/rangegear'; // T386 part 3: the range's gear for your practice
 import { MECH_IDS, PUTT_V2, greenRead, hasMech, laserLines, laserReport, type MechId, type ModCtx } from './golf/play';
 import { hotNerve, scrambleLeft } from './golf/play/yours';
 import { addCard, addPull, bestGrade, cardById, cardEco, cardsInPlay, cardsView, createSpin, earnFromMatch, earnFromPlace, emptyCards, equipCard as equipInCards, equipWhy, grantWelcome, rollPrize, takePull, unequipCard as unequipFromCards, unequipWhy, vendingView, welcomeDue, type CardsSave, type CardsView, type Earn, type Grade, type PlayCard, type VendingSpin, type VendingView } from './golf/cards';
@@ -8842,9 +8843,9 @@ export class Game {
    *  fee and whether each green is open, your money, and whether you are out on the course */
   private practiceCtx(v: RangeCardView): Record<PracticeKind, PracticeCtx> {
     const at = this.townNow(), st = v.stats, money = this.money, onCourse = this.youOnCourse(at.day, at.dayMin);
-    const c = (price: number, facility: boolean): PracticeCtx => ({ day: at.day, minute: at.dayMin, open: st.open * 60, close: st.close * 60, price, facility, money, onCourse });
+    const gear = practiceGear(v.biz.owned), c = (kind: PracticeKind, price: number, facility: boolean): PracticeCtx => ({ day: at.day, minute: at.dayMin, open: st.open * 60, close: st.close * 60, price, facility, money, onCourse, gear: gear[kind] });
     const open = (id: 'putting' | 'chipping') => v.practice.some(f => f.id === id && f.state === 'open');
-    return { bucket: c(v.biz.price, v.biz.built !== false), /* T288: no bucket before the range is placed */ putting: c(v.fee, open('putting')), chipping: c(v.fee, open('chipping')) };
+    return { bucket: c('bucket', v.biz.price, v.biz.built !== false), /* T288: no bucket before the range is placed */ putting: c('putting', v.fee, open('putting')), chipping: c('chipping', v.fee, open('chipping')) };
   }
   /** the range card's "You" block and its practice greens' rows (golf/player.ts youRangeView), from the card's view; null with no card or profile */
   youRange(v: RangeCardView | null): YouRangeView | null { const p = v ? this.playerNow() : null; return p && v ? youRangeView(p, this.practiceCtx(v), this.lessonFor('bucket')) : null; }

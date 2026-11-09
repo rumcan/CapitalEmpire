@@ -9,8 +9,10 @@ import { BRANCH_NAME, type TreeBranch } from '../../game/golf/rangesave';
 
 const money = (n: number) => '$' + Math.round(n).toLocaleString();
 /** the branches in the order the first column lists them */
-export const BRANCHES: readonly TreeBranch[] = ['picking', 'staff', 'machines', 'supply'];
+export const BRANCHES: readonly TreeBranch[] = ['picking', 'staff', 'machines', 'supply', 'golf'];
 type Node = RangeCardView['upgrades'][number];
+/** the verb of a node's throughput line (T386 part 3: a staff or machine node's balls an hour, from the host's view) */
+const RATE_WORDS: Readonly<Record<string, string>> = { washer: 'Washes', robot: 'Picks', robot2: 'Picks', robot3: 'Picks', attendant: 'Picks', attendant2: 'Picks', attendant3: 'Picks' };
 
 /** a node's state: built, ready to buy, or waiting on its prerequisites (the tree's own words; the money is the till's) */
 export function nodeState(u: Pick<Node, 'owned' | 'why'>): 'built' | 'ready' | 'locked' { return u.owned ? 'built' : u.why ? 'locked' : 'ready'; }
@@ -20,7 +22,7 @@ export const nodesOf = (list: readonly Node[], branch: TreeBranch): Node[] => li
 export function BallTree({ view, onBuy, onClose, rightRem = 0.75 }: { view: RangeCardView; onBuy: (id: Node['id']) => void; onClose: () => void; /** the card's right edge (rem): the tree opens to its left */ rightRem?: number }) {
   const [branch, setBranch] = useState<TreeBranch>('picking');
   const nodes = nodesOf(view.upgrades, branch), [open, setOpen] = useState<Node['id'] | null>(null);
-  const node = nodes.find(n => n.id === open) ?? nodes.find(n => !n.owned) ?? nodes[0] ?? null, till = view.balls?.till ?? 0;
+  const node = nodes.find(n => n.id === open) ?? nodes.find(n => !n.owned) ?? nodes[0] ?? null, till = view.balls?.till ?? 0, rate = node ? view.balls?.rates?.[node.id] : undefined;
   return (
     // (the columns open to the card's left: the first, the branches, stands beside the card; each is its own height, scrolling up and down only)
     <div className="flyouts" style={{ top: 'var(--hud-top, 6rem)', left: 'auto', right: `calc(${rightRem}rem + 340px + 0.4rem)`, flexDirection: 'row-reverse', maxWidth: 'calc(100vw - 28rem)' }} data-testid="ball-tree">
@@ -49,6 +51,7 @@ export function BallTree({ view, onBuy, onClose, rightRem = 0.75 }: { view: Rang
         <div className="flyout glass" style={{ width: 232, maxHeight: 'calc(var(--vh-ui, 100vh) - var(--hud-top, 6rem) - 4.5rem)' }} data-flyout-col="2" data-testid="ball-tree-node">
           <div className="px-1.5 py-1 text-[14px] font-semibold text-amber-200">{node.name}</div>
           <div className="px-1.5 text-[12.5px] leading-snug text-slate-200">{node.effect}</div>
+          {rate !== undefined && <div className="px-1.5 pt-1 text-[12px] text-sky-200" data-testid="ball-tree-rate">{RATE_WORDS[node.id] ?? 'Takes'} about {rate.toLocaleString()} balls an hour{node.id.startsWith('robot') ? ' (a pair, over a charge)' : node.id.startsWith('attendant') ? ' (on his shift)' : ''}</div>}
           <div className="px-1.5 pt-1 text-[12px] text-slate-400">Price {money(node.cost)}{node.upkeep ? ` · upkeep ${money(node.upkeep)} a month` : ''}{view.needs[node.id].length ? ` · needs ${view.needs[node.id].join(' and ')}` : ''}</div>
           <div className="px-1.5 pt-2">
             {node.owned ? <span className="text-emerald-300">Bought</span>

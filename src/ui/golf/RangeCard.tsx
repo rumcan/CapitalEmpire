@@ -87,7 +87,7 @@ export function RangeCard({ view, places = [], onPlace, onClose, onPrice, onBuy,
             </div>
           )}
           <div className="flex flex-wrap items-center gap-1.5">
-            {onTree && <button className={`chip ${treeOpen ? 'chip-on' : ''}`} onClick={onTree} title="The ball room's tools, staff and machines: bought with the range's till" data-testid="range-balls-tree" data-guide="range-balls-tree">Ball room upgrades ▸</button>}
+            {onTree && <button className={`chip ${treeOpen ? 'chip-on' : ''}`} onClick={onTree} title="The ball room's tools, staff and machines: bought with the range's till" data-testid="range-balls-tree" data-guide="range-balls-tree">Ball room upgrades {view.upgrades.filter(u => u.branch && u.owned).length}/{view.upgrades.filter(u => u.branch).length} ▸</button>}
             {balls.supplier && onOrderBalls && <button className="chip disabled:opacity-40" disabled={balls.casesLeft <= 0} onClick={onOrderBalls} title={`A case of ${balls.caseBalls} balls from the supplier: ${money(balls.caseCost)}, ${balls.casesLeft} left today`} data-testid="range-balls-order">Order {balls.caseBalls} balls {money(balls.caseCost)}</button>}
           </div>
         </div>

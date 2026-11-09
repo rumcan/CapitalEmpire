@@ -16,11 +16,11 @@ import type { GolfSurface } from './types';
 import type { OffRoad } from '../offroad';
 import { homeScene } from './rangebiz';
 import { RangeSim, garageSlots, rangeCounter, rangeScene, rangeStats, upgradeWhy, walkwayOf, withPrice, withUpgrade, RANGE_UPGRADES, type CarSlot, type DemandCtx, type RangeBizSave, type RangeClock, type RangeScene, type RangeUpgradeId, type ScenePatch, type ScenePiece } from './rangebiz';
-import { BALL_COST, CASES_A_DAY, CASE_BALLS, DUMP_REACH, ballsNear, bucketsLeft, dump, fieldCount, nearestBall, orderBalls, perHour, pickAround, pickKit, pickSwath, visitBalls, type BallSave, type PickKit } from './rangeballs';
+import { CASE_BALLS, DUMP_REACH, STANDING_LOW, ballsNear, bucketsLeft, caseCost, dump, fieldCount, nearestBall, orderBalls, perHour, pickAround, pickKit, pickSwath, stockOf, supplyKit, visitBalls, type BallSave, type PickKit } from './rangeballs';
 import { worldX, worldY } from '../iso';
 import { SPECTATOR_BASE, SPECTATOR_CLIPS, SPECTATOR_FRAMES, SPECTATOR_PEOPLE } from '../library';
 import { clipFrame, rowToward } from '../crowdview';
-import { PLAYER_CART, PLAYER_RUN, PLAYER_WORKING, SHIFT_HOURS, SHIFT_STARTS, autoKit, bucketBalls, flowOf, onShift, robotBps, sellBps, staffBps, tripBps, washBps } from './rangeauto';
+import { PLAYER_CART, PLAYER_RUN, PLAYER_WORKING, SHIFT_HOURS, SHIFT_STARTS, autoKit, bucketBalls, flowOf, nodeRates, onShift, robotBps, sellBps, staffBps, tripBps, washBps } from './rangeauto';
 import { CELL_T, type Grid, type GridDiff } from '../ext/course-grid';
 import { inPractice, practiceWords, scanPractice, type PracticeScan, type PracticeState } from './practice';
 import { PRACTICE_APPEAL, PRACTICE_FEE, PRACTICE_IDS, practiceAppeal, rangeScale, rangeUpkeep, type PracticeId } from './rangesave';
@@ -254,6 +254,7 @@ export class RangeHost {
       this.owed = 0; this.owedT = 0; if (this.cardOpen) this.ctx.emit();
     }
     this.nFlying = this.sim.flying(this.flyingBuf);
+    if (b.balls && b.owned.includes('autoorder')) this.standing(b, b.balls);
     // T386: the first time the ball room is out and golfers drive on, say what to do (once a game)
     if (b.balls && this.sim.today.noBalls > 0 && this.ctx.once?.('balls-out')) this.ctx.toast('The ball room is out of balls: golfers are driving on. Walk out onto the range and pick the balls up (hold F over them, or click a pile), then empty your basket at the ball room.', 'warn');
   }
@@ -546,14 +547,21 @@ export class RangeHost {
   }
   /** an order of `cases` cases of balls from the supplier (the tree's Supplier's account): into the ball room, charged to the till and the treasury, booked as the
    *  books' Range balls line; false with the reason toasted when it cannot */
-  orderBalls(cases = 1): boolean {
+  orderBalls(cases = 1, standing = false): boolean {
     const b = this.ctx.biz(), bs = b?.balls; if (!b || !bs) return false;
-    if (!b.owned.includes('supplier')) { this.ctx.toast("Open the supplier's account first (Ball room upgrades)", 'warn'); return false; }
-    const today = Math.round(bs.day.bought / CASE_BALLS), o = orderBalls(bs, cases, today, Math.min(bs.till, this.ctx.money()));
-    if (!o.cases) { this.ctx.toast(today >= CASES_A_DAY ? "The supplier has delivered today's cases" : `A case costs $${Math.round(CASE_BALLS * BALL_COST).toLocaleString()}: not enough in the range's till`, 'warn'); return false; }
+    if (!b.owned.includes('supplier')) { if (!standing) this.ctx.toast("Open the supplier's account first (Ball room upgrades)", 'warn'); return false; }
+    const sup = supplyKit(b.owned), today = Math.round(bs.day.bought / CASE_BALLS), o = orderBalls(bs, cases, today, Math.min(bs.till, this.ctx.money()), sup);
+    if (!o.cases) { if (!standing) this.ctx.toast(today >= sup.perDay ? "The supplier has delivered today's cases" : `A case costs $${caseCost(sup).toLocaleString()}: not enough in the range's till`, 'warn'); return false; }
     bs.till = Math.max(0, bs.till - o.cost); this.ctx.balls?.(o.cost);
-    this.ctx.toast(`${(o.cases * CASE_BALLS).toLocaleString()} balls delivered (-$${o.cost.toLocaleString()})`, 'good'); this.ctx.save(); this.ctx.emit();
+    this.ctx.toast(`${standing ? 'Standing order: ' : ''}${(o.cases * CASE_BALLS).toLocaleString()} balls delivered (-$${o.cost.toLocaleString()})`, 'good'); this.ctx.save(); this.ctx.emit();
     return true;
+  }
+  /** T386 part 3: the Standing order: with the ball room down to STANDING_LOW buckets the supplier brings a case on his own (orderBalls: the till pays, the day's cases last), looked at every few sim seconds */
+  private standT = -99;
+  private standing(b: RangeBizSave, bs: BallSave): void {
+    const t = this.sim.clockT; if (t - this.standT < 5) return; this.standT = t;
+    if (stockOf(bs) >= STANDING_LOW * bucketBalls(visitBalls(this.ctx.dayLen()), autoKit(b.owned))) return;
+    this.orderBalls(1, true);
   }
   /** the lying balls as GL points for the engine's one instanced draw: the points' world px (iso) and colour, BALL_POINT_FLOATS each, the shadows first (a soft dark dot
    *  a little down and left of each ball: the sun is at the upper right) and then the balls (white). Only the balls inside the world box X0 Y0 X1 Y1, thinned to at
@@ -581,7 +589,7 @@ export class RangeHost {
   /** the ball loop as the card shows it (null: not a range start) */
   ballView() {
     const b = this.balls(), biz = this.ctx.biz(); if (!b || !biz) return null;
-    const dayLen = this.ctx.dayLen(), kit = pickKit(biz.owned), cases = Math.round(b.day.bought / CASE_BALLS), a = autoKit(biz.owned), vb = bucketBalls(visitBalls(dayLen), a);
+    const dayLen = this.ctx.dayLen(), kit = pickKit(biz.owned), cases = Math.round(b.day.bought / CASE_BALLS), a = autoKit(biz.owned), vb = bucketBalls(visitBalls(dayLen), a), sup = supplyKit(biz.owned);
     // T386 part 2: the flow (balls an hour at each stage and the bottleneck): you at a steady pace, the staff by the day's average, the robots; the tap and the washer; the bays
     const hour = this.ctx.clock().hour, st = rangeStats(biz, this.ctx.demand()), you = PLAYER_WORKING * tripBps(kit, { run: PLAYER_RUN, cart: PLAYER_CART });
     let staffAvg = 0; for (let h = 0; h < 24; h++) staffAvg += staffBps(a, kit, h, b.shift) / 24;
@@ -589,9 +597,9 @@ export class RangeHost {
     const flow = flowOf({ outfield: fieldCount(b), dirty: b.dirty, clean: b.clean, pickBps: you + staffAvg + robotBps(a), washBps: washBps(a), sellBps: sellBps(st.bays, vb, this.sim.bayHours(dayLen), dayLen), doing: { pick: doneToday / hrs, wash: b.day.washed / hrs, sell: b.day.sold / hrs }, dayLen });
     let onNow = 0; for (let i = 0; i < a.attendants; i++) if (onShift(i, hour, b.shift)) onNow++;
     return {
-      flow, dirty: b.dirty, staff: { attendants: a.attendants, shift: b.shift, starts: SHIFT_STARTS, hours: SHIFT_HOURS, onNow },
+      flow, dirty: b.dirty, staff: { attendants: a.attendants, shift: b.shift, starts: SHIFT_STARTS, hours: SHIFT_HOURS, onNow }, rates: nodeRates(kit, a, dayLen),
       clean: b.clean, buckets: bucketsLeft(b, vb), vb, field: fieldCount(b), inPlay: b.inPlay, basket: b.basket, hopper: b.hopper, kit, till: Math.floor(b.till),
-      out: b.clean + b.dirty < vb, noBalls: this.sim.today.noBalls, supplier: biz.owned.includes('supplier'), caseBalls: CASE_BALLS, caseCost: Math.round(CASE_BALLS * BALL_COST), casesLeft: Math.max(0, CASES_A_DAY - cases),
+      out: b.clean + b.dirty < vb, noBalls: this.sim.today.noBalls, supplier: biz.owned.includes('supplier'), caseBalls: CASE_BALLS, caseCost: caseCost(sup), casesLeft: Math.max(0, sup.perDay - cases),
       day: b.day, total: b.total, handHour: Math.round(perHour(kit.rate, dayLen)),
     };
   }
