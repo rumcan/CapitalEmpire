@@ -1,0 +1,101 @@
+{
+  "schema": 1,
+  "subject": "golf:event-tv-camera-tower",
+  "condition": "upgraded",
+  "family": "yaw8",
+  "review": "practical-main-face-four-source-candidate",
+  "sourceOnly": true,
+  "sourceSize": [
+    1254,
+    1254
+  ],
+  "views": {
+    "yaw8N": {
+      "nominalCameraKey": "yaw8N",
+      "sourceFile": "art/catalogue-completion-20261107/generated/golf-source-batch-01/native/golf-source-01-02-tv-camera-tower/upgraded-yaw8-v2.png",
+      "sourceFileSHA256": "715255c17ecb60ba9a81cfb53221c93dabba13c8916b8966989bd8dc7ca6478c",
+      "sourceFrameRectLTRB": [
+        0,
+        0,
+        627,
+        627
+      ],
+      "singleViewOverride": false,
+      "rgbaSHA256": "e7cc20686aad9041dcaca3f2fdda8c304dd8b5b8a1f55603263784403cdecba7",
+      "nativeSize": [
+        627,
+        627
+      ],
+      "nativeHeadingDegrees": null,
+      "nativeCameraCertified": false,
+      "runtimeReady": false,
+      "operation": "Metadata-only selection of unchanged native source; exact raw integer half-cell crop authorized for source bundle."
+    },
+    "yaw8E": {
+      "nominalCameraKey": "yaw8E",
+      "sourceFile": "art/catalogue-completion-20261107/generated/golf-source-batch-01/native/golf-source-01-02-tv-camera-tower/upgraded-yaw8-v2.png",
+      "sourceFileSHA256": "715255c17ecb60ba9a81cfb53221c93dabba13c8916b8966989bd8dc7ca6478c",
+      "sourceFrameRectLTRB": [
+        627,
+        0,
+        1254,
+        627
+      ],
+      "singleViewOverride": false,
+      "rgbaSHA256": "cc4da76e0b5397528affe9b4b83f6ddcf226fbc44714ea6dc46227dc2d42c3f3",
+      "nativeSize": [
+        627,
+        627
+      ],
+      "nativeHeadingDegrees": null,
+      "nativeCameraCertified": false,
+      "runtimeReady": false,
+      "operation": "Metadata-only selection of unchanged native source; exact raw integer half-cell crop authorized for source bundle."
+    },
+    "yaw8S": {
+      "nominalCameraKey": "yaw8S",
+      "sourceFile": "art/catalogue-completion-20261107/generated/golf-source-batch-01/native/golf-source-01-02-tv-camera-tower/upgraded-yaw8-v2.png",
+      "sourceFileSHA256": "715255c17ecb60ba9a81cfb53221c93dabba13c8916b8966989bd8dc7ca6478c",
+      "sourceFrameRectLTRB": [
+        0,
+        627,
+        627,
+        1254
+      ],
+      "singleViewOverride": false,
+      "rgbaSHA256": "5dc002485332b8f9d7b9b2eb144d4d15b539c81e0caa0c1e67c65e6753219110",
+      "nativeSize": [
+        627,
+        627
+      ],
+      "nativeHeadingDegrees": null,
+      "nativeCameraCertified": false,
+      "runtimeReady": false,
+      "operation": "Metadata-only selection of unchanged native source; exact raw integer half-cell crop authorized for source bundle."
+    },
+    "yaw8W": {
+      "nominalCameraKey": "yaw8W",
+      "sourceFile": "art/catalogue-completion-20261107/generated/golf-source-batch-01/native/golf-source-01-02-tv-camera-tower/upgraded-yaw8-v2.png",
+      "sourceFileSHA256": "715255c17ecb60ba9a81cfb53221c93dabba13c8916b8966989bd8dc7ca6478c",
+      "sourceFrameRectLTRB": [
+        627,
+        627,
+        1254,
+        1254
+      ],
+      "singleViewOverride": false,
+      "rgbaSHA256": "c0a0c7beb95235f43780b374da5c85072600aa1fc2fd15326bb7a1737327b4b3",
+      "nativeSize": [
+        627,
+        627
+      ],
+      "nativeHeadingDegrees": null,
+      "nativeCameraCertified": false,
+      "runtimeReady": false,
+      "operation": "Metadata-only selection of unchanged native source; exact raw integer half-cell crop authorized for source bundle."
+    }
+  },
+  "nativeCameraCertified": false,
+  "runtimeReady": false,
+  "holds": "Exact painted native angle, pixels-per-metre, ground anchors and physical scale remain unapproved."
+}

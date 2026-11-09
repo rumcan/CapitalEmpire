@@ -1,0 +1,29 @@
+{
+  "schema": 1,
+  "as_of_utc": "2026-11-07T11:36:22.036160+00:00",
+  "status": "80 source-only native views packaged and verified",
+  "models": 10,
+  "actual_screen_nose_views_each": 8,
+  "png_files": 80,
+  "zip_members": 81,
+  "zip": {
+    "path": "generated/vehicles/Town-vehicles-1980s-2020s-source.zip",
+    "sha256": "12addd95a227b10cd671804252123fcfc3d50ebe593612b981cf7ff7e8e94160",
+    "bytes": 34687497
+  },
+  "manifest": {
+    "path": "generated/vehicles/source-views-1980s-2020s-v1/manifest.json",
+    "sha256": "e1fd797b9b2b9e593c2f7e8dbdfb66c6fcb2b312ce93d413d4bdf1c69b178b66"
+  },
+  "atlas_native_crops": 60,
+  "single_source_byte_identical_copies": 20,
+  "all80_exports_native_pixels_exact": true,
+  "all80_source_silhouettes_clear_of_export_boundaries": true,
+  "all80_file_hashes_distinct": true,
+  "old_raw_sources_preserved": true,
+  "held_calibration_views_included": 0,
+  "runtime_integrated": false,
+  "owner_approved": false,
+  "exact30degree_certified": false,
+  "whole_catalogue_complete": false
+}

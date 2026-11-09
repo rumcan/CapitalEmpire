@@ -1,0 +1,38 @@
+{
+  "schema": 1,
+  "createdUtc": "2026-11-07T06:47:45.284562+00:00",
+  "exactRuntimeId": "business:fishing-dock-lifebuoy",
+  "source": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/src/assets/businesses/capital-v1/png/fishing-dock-lifebuoy.png",
+  "sourceSha256": "6282d0cee92aa6175cdbb6641cb318476b6ca54cdaa9f1739115c337ba4d99c0",
+  "output": "identity-references/business-fishing-dock-lifebuoy-07db82db/source.png",
+  "outputSha256": "6282d0cee92aa6175cdbb6641cb318476b6ca54cdaa9f1739115c337ba4d99c0",
+  "width": 530,
+  "height": 448,
+  "sourceCell": {
+    "kind": "already isolated native PNG; whole file",
+    "rectXYWH": [
+      0,
+      0,
+      530,
+      448
+    ]
+  },
+  "operation": "byte-for-byte PNG copy only; no resize, crop, recolour, key, repaint, registration or source mutation",
+  "selection": "retained exact-ID business source master PNG",
+  "registeredCornerDirection": null,
+  "sourceEvidence": null,
+  "sourceReview": null,
+  "sourceRegistration": null,
+  "originalInventorySource": null,
+  "originalBusinessSourceCell": {
+    "id": "fishing-dock-lifebuoy",
+    "sourceSheet": "sliced/builtin/fishing-props.png",
+    "sourceCrop": [
+      681,
+      143,
+      522,
+      440
+    ]
+  },
+  "nativeReferenceApprovalClaimed": false
+}

@@ -1,0 +1,62 @@
+{
+  "schema": 1,
+  "createdUtc": "2026-11-07T06:47:45.284562+00:00",
+  "exactRuntimeId": "variation:ref-building-barn-74bee205-plain:1",
+  "source": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/building-views/variation-ref-building-barn-74bee205-plain-1/NE.png",
+  "sourceSha256": "3b6adc5cc18f5ec3952eceb4069a59cd4dce731f8a30cb4878522eb8cf68cb5d",
+  "output": "identity-references/variation-ref-building-barn-74bee205-plain-1-d0d73450/source.png",
+  "outputSha256": "3b6adc5cc18f5ec3952eceb4069a59cd4dce731f8a30cb4878522eb8cf68cb5d",
+  "width": 552,
+  "height": 496,
+  "sourceCell": {
+    "kind": "already isolated native PNG; whole file",
+    "rectXYWH": [
+      0,
+      0,
+      552,
+      496
+    ]
+  },
+  "operation": "byte-for-byte PNG copy only; no resize, crop, recolour, key, repaint, registration or source mutation",
+  "selection": "registered corner NE native PNG for this exact subject",
+  "registeredCornerDirection": "NE",
+  "sourceEvidence": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\building-views\\variation-ref-building-barn-74bee205-plain-1\\provenance.json",
+  "sourceReview": {
+    "integrationStatus": "ready",
+    "integrationReason": "Targeted v2 fixed opposite NW; pixel-preserving v3 layout adds required margin while retaining all679650 nonzero-alpha source RGBA tuples. Door/front and plainrear corners distinct; matte redtimber/slate/upperright dusk coherent."
+  },
+  "sourceRegistration": {
+    "id": "variation:ref-building-barn-74bee205-plain:1",
+    "version": "variation-ref-building-barn-74bee205-plain-1-4views-v3",
+    "files": {
+      "NE": "3b6adc5cc18f5ec3952eceb4069a59cd4dce731f8a30cb4878522eb8cf68cb5d",
+      "SE": "f6c0d4c948fc7f3d9d46e1e05f28f8f2b02f866e004f8f521d424fc7c171ed1a",
+      "SW": "6e33479a552cc8a497cf0cd4b78139630af02a0709ebf4c5107abd6586dd1536",
+      "NW": "a0c6d65589776a95730307f101931f734e9f90c4df57ba1147afa8a47ac9f572"
+    }
+  },
+  "originalInventorySource": {
+    "library": "src/game/library.ts",
+    "librarySha256": "91b5190292c1005ac7b936f08e5e1ebf3be43c3aae99f92ea510775da83d9726",
+    "atlas": "src/assets/atlas/sprites-8-0.webp",
+    "atlasSha256": "3627e8012c994eb375699136eec4134215434643c5c267a76f1326638c2b9514",
+    "runtimePage": 8,
+    "localPage": 8,
+    "uv": [
+      0.617188,
+      0.609375,
+      0.797363,
+      0.785156
+    ],
+    "crop": {
+      "left": 1264,
+      "top": 1248,
+      "width": 369,
+      "height": 360
+    },
+    "native": "art/theme-consistency/exports/buildings/variation-ref-building-barn-74bee205-plain-1.native.png",
+    "nativeSha256": "e3d90fa505898986fe104c5ec2ec14fd19a42c8274e518cb3be6678525faa0ae"
+  },
+  "originalBusinessSourceCell": null,
+  "nativeReferenceApprovalClaimed": false
+}

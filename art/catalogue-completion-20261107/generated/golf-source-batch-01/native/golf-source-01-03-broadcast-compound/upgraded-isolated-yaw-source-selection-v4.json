@@ -1,0 +1,156 @@
+{
+  "schema": 1,
+  "sourceOnly": true,
+  "subject": "golf:event-broadcast-compound",
+  "condition": "upgraded",
+  "views": {
+    "yaw8N": {
+      "nominalCameraKey": "yaw8N",
+      "sourceFile": "art/catalogue-completion-20261107/generated/golf-source-batch-01/native/golf-source-01-03-broadcast-compound/upgraded-yaw8-N-v4.png",
+      "sourceFileSHA256": "b0cb1a52bb97dea4bf36654ee4394252cbfe0fecc913cfd0e948da7f996919a8",
+      "sourceFrameRectLTRB": [
+        0,
+        0,
+        1536,
+        1024
+      ],
+      "nativeSize": [
+        1536,
+        1024
+      ],
+      "rgbaSHA256": "a8da135ff4c052fd48caef4548790bb3d4138439d6a6c346e694547657aea7d4",
+      "singleViewOverride": true,
+      "nativeHeadingDegrees": null,
+      "nativeCameraCertified": false,
+      "runtimeReady": false,
+      "coreBBoxAlphaGT128": [
+        278,
+        73,
+        1280,
+        915
+      ],
+      "coreBoundaryPixelsAlphaGT128": 0,
+      "outerBorderAlphaMax": 1,
+      "zeroAlphaFraction": 0.6832720438639323,
+      "properGreyCompositeVisuallyInspected": true,
+      "mainFaceAndStairAndDishPracticalPass": true,
+      "completeFixedComponentPass": true,
+      "status": "PASS-practical-isolated-source-candidate",
+      "nativePixelsChanged": false
+    },
+    "yaw8E": {
+      "nominalCameraKey": "yaw8E",
+      "sourceFile": "art/catalogue-completion-20261107/generated/golf-source-batch-01/native/golf-source-01-03-broadcast-compound/upgraded-yaw8-E-v2.png",
+      "sourceFileSHA256": "4622c9a8cb98185baf330f7835fba0327415d624724a492095cbd9c1f982ae00",
+      "sourceFrameRectLTRB": [
+        0,
+        0,
+        1536,
+        1024
+      ],
+      "nativeSize": [
+        1536,
+        1024
+      ],
+      "rgbaSHA256": "6f60bd2b2ea25cbdfb704adc0b7f329262fe1337081fa14d384d30a3c26acc75",
+      "singleViewOverride": true,
+      "nativeHeadingDegrees": null,
+      "nativeCameraCertified": false,
+      "runtimeReady": false,
+      "coreBBoxAlphaGT128": [
+        275,
+        100,
+        1184,
+        882
+      ],
+      "coreBoundaryPixelsAlphaGT128": 0,
+      "outerBorderAlphaMax": 1,
+      "zeroAlphaFraction": 0.6813023885091146,
+      "properGreyCompositeVisuallyInspected": true,
+      "mainFaceAndStairAndDishPracticalPass": true,
+      "completeFixedComponentPass": true,
+      "status": "PASS-practical-isolated-source-candidate",
+      "nativePixelsChanged": false
+    },
+    "yaw8S": {
+      "nominalCameraKey": "yaw8S",
+      "sourceFile": "art/catalogue-completion-20261107/generated/golf-source-batch-01/native/golf-source-01-03-broadcast-compound/upgraded-yaw8-S-v2.png",
+      "sourceFileSHA256": "5e915a2a7e831caa1e4d0f411351ed77ed313e31617390f5bd49ae1ab217bb93",
+      "sourceFrameRectLTRB": [
+        0,
+        0,
+        1536,
+        1024
+      ],
+      "nativeSize": [
+        1536,
+        1024
+      ],
+      "rgbaSHA256": "2fa6a49d0eab994be148779b31e6646670a280cf37764dcd9e65b3108b803259",
+      "singleViewOverride": true,
+      "nativeHeadingDegrees": null,
+      "nativeCameraCertified": false,
+      "runtimeReady": false,
+      "coreBBoxAlphaGT128": [
+        297,
+        210,
+        1211,
+        810
+      ],
+      "coreBoundaryPixelsAlphaGT128": 0,
+      "outerBorderAlphaMax": 1,
+      "zeroAlphaFraction": 0.7436517079671224,
+      "properGreyCompositeVisuallyInspected": true,
+      "mainFaceAndStairAndDishPracticalPass": true,
+      "completeFixedComponentPass": true,
+      "status": "PASS-practical-isolated-source-candidate",
+      "nativePixelsChanged": false
+    },
+    "yaw8W": {
+      "nominalCameraKey": "yaw8W",
+      "sourceFile": "art/catalogue-completion-20261107/generated/golf-source-batch-01/native/golf-source-01-03-broadcast-compound/upgraded-yaw8-W-v4.png",
+      "sourceFileSHA256": "7105ea92ed1240aa82eefbac39cd61e34208d0b0540abee4617799e5fe0ebbb5",
+      "sourceFrameRectLTRB": [
+        0,
+        0,
+        1536,
+        1024
+      ],
+      "nativeSize": [
+        1536,
+        1024
+      ],
+      "rgbaSHA256": "f3950d13214ded71c649827c651aee02b935437d7b026bae4aa2207d990bf9ba",
+      "singleViewOverride": true,
+      "nativeHeadingDegrees": null,
+      "nativeCameraCertified": false,
+      "runtimeReady": false,
+      "coreBBoxAlphaGT128": [
+        270,
+        66,
+        1254,
+        949
+      ],
+      "coreBoundaryPixelsAlphaGT128": 0,
+      "outerBorderAlphaMax": 1,
+      "zeroAlphaFraction": 0.6627585093180338,
+      "properGreyCompositeVisuallyInspected": true,
+      "mainFaceAndStairAndDishPracticalPass": true,
+      "completeFixedComponentPass": true,
+      "status": "PASS-practical-isolated-source-candidate",
+      "nativePixelsChanged": false
+    }
+  },
+  "reviewEvidence": "art/catalogue-completion-20261107/audit/broadcast-compound-upgraded-isolated-yaw-v4-practical-review.json",
+  "runtimeReady": false,
+  "nativeCameraCertified": false,
+  "nativeScaleAndAnchorsApproved": false,
+  "allFourFullNativeCopies": true,
+  "selectedVersions": {
+    "N": 4,
+    "E": 2,
+    "S": 2,
+    "W": 4
+  },
+  "nativeSourcePixelsUnchanged": true
+}

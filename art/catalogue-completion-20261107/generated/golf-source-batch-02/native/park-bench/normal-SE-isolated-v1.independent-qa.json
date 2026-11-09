@@ -1,0 +1,72 @@
+{
+  "schema": 1,
+  "as_of_utc": "2026-11-07T13:57:01.992280+00:00",
+  "review_result": "HOLD-map-panel-arch-straightened;PASS-missing-SE-pose",
+  "source": {
+    "path": "generated/golf-source-batch-02/native/park-bench/normal-SE-isolated-v1.png",
+    "sha256": "e6cd6180b231e981d90188e5ffa7d2eaf3c11997cc673bfa189ad76fec103b94",
+    "bytes": 646558
+  },
+  "mode": "RGBA",
+  "dimensions": [
+    1254,
+    1254
+  ],
+  "source_original_hash_matches_parent": true,
+  "parent_provenance": {
+    "path": "generated/golf-source-batch-02/native/park-bench/normal-SE-isolated-v1.provenance.json",
+    "sha256": "8d52487332c056e97fe56222083236536e969e7f21143664527abf69967d7925",
+    "bytes": 2411
+  },
+  "exact_prompt_utf8_sha256": "1d56f2f3d8f859e56c0b8e57ecfe5c7fee37188a1b34683fa542a3176f92617b",
+  "actual_generation_references": [
+    {
+      "path": "generated/golf-source-batch-02/native/park-bench/camera-calibration-refs/normal-SE-world-guide-single-v1.png",
+      "sha256": "dd5cd10d1f9f2548856bacd4af9196a1d5931535479dd80f7d499ed9d11aa891",
+      "bytes": 13016
+    },
+    {
+      "path": "generated/golf-source-batch-02/native/park-bench/camera-calibration-refs/normal-SE-identity-from-v2-BR-NE.png",
+      "sha256": "39f79f0f4c8cfa82647d5f833bbffbe0b68b975b33878ec43c06203c25b7ebc1",
+      "bytes": 422376
+    }
+  ],
+  "zero_alpha_fraction": 0.8431449982066955,
+  "outer_4px_border_alpha_p50p95max": [
+    0.0,
+    0.0,
+    1.0
+  ],
+  "clear_horizontal_cut_y": null,
+  "clear_vertical_cut_by_row": null,
+  "cells": [
+    {
+      "cell": "single",
+      "rect_ltrb": [
+        0,
+        0,
+        1254,
+        1254
+      ],
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "minimum_core_margin_px": 185,
+      "boundary_core_pixels_alpha_gt128": 0,
+      "boundary_alpha_max": 1,
+      "native_rgba_rectangle_sha256": "a2cfed67b15a91456a5e03f871c2b28a07a736d67c5376a2fcee0531acf62a71"
+    }
+  ],
+  "all_cores_complete_at_reference_cuts": true,
+  "limited_source_identity_and_pose_pass": false,
+  "visual_observations": [
+    "Missing SE projection obtained: front seat/slat long edges rise screen-right and map remains at physical right end.",
+    "Identity drift: original native arched map-panel top becomes a straight crossbar. Both gold post finials remain; source is a pose candidate, not matching complete assembly yet."
+  ],
+  "source_crops_saved": false,
+  "native_image_bytes_changed": false,
+  "owner_approved": false,
+  "runtime_ready": false,
+  "exact_numerical_angle_certified": false
+}

@@ -1,0 +1,161 @@
+{
+  "schema": 1,
+  "as_of_utc": "2026-11-07T10:41:06.488911+00:00",
+  "review_result": "PASS-background-cleanup-source-candidate;HOLD-camera-consistency",
+  "source": {
+    "path": "generated/vehicles/town-blue-sedan/traffic8-v2.png",
+    "sha256": "479f9dc347debd301d5c76aa2f25c8add753065ebb6157162bd8ba2f5c18f5c2",
+    "bytes": 1885324
+  },
+  "source_original_hash_matches_parent_batch": true,
+  "dimensions": [
+    1774,
+    887
+  ],
+  "zero_alpha_fraction": 0.3105365107166144,
+  "outer_border_alpha_p50p95max": [
+    2.0,
+    4.0,
+    7.0
+  ],
+  "empty_center_gutter_alpha_p50p95max": [
+    1.0,
+    2.0,
+    4.0
+  ],
+  "actual_cells": [
+    {
+      "cell": 0,
+      "reference_rect_ltrb": [
+        0,
+        0,
+        443,
+        443
+      ],
+      "boundary_core_pixels": 0,
+      "minimum_core_margin_px": 12,
+      "boundary_alpha_max": 7,
+      "rgba_rectangle_sha256": "98895339a2851931014dc86a8c55aef540baef47d9edb857519c71a2d70e5ebc",
+      "actual_screen_nose": "lower-left"
+    },
+    {
+      "cell": 1,
+      "reference_rect_ltrb": [
+        443,
+        0,
+        887,
+        443
+      ],
+      "boundary_core_pixels": 0,
+      "minimum_core_margin_px": 74,
+      "boundary_alpha_max": 3,
+      "rgba_rectangle_sha256": "370315f1217339775ddc6a37025e919464670b32387f784ce32af0958b37f36c",
+      "actual_screen_nose": "down"
+    },
+    {
+      "cell": 2,
+      "reference_rect_ltrb": [
+        887,
+        0,
+        1330,
+        443
+      ],
+      "boundary_core_pixels": 0,
+      "minimum_core_margin_px": 12,
+      "boundary_alpha_max": 4,
+      "rgba_rectangle_sha256": "0b15ff9f972413d10ebccd2b13d17673c880cdadfa5e5f0eecf967ff36449dca",
+      "actual_screen_nose": "lower-right"
+    },
+    {
+      "cell": 3,
+      "reference_rect_ltrb": [
+        1330,
+        0,
+        1774,
+        443
+      ],
+      "boundary_core_pixels": 0,
+      "minimum_core_margin_px": 7,
+      "boundary_alpha_max": 6,
+      "rgba_rectangle_sha256": "8914de17ee41f6afe27b36cb575356d49a2adae84111aa0365884dc642f1bbf6",
+      "actual_screen_nose": "right"
+    },
+    {
+      "cell": 4,
+      "reference_rect_ltrb": [
+        0,
+        443,
+        443,
+        887
+      ],
+      "boundary_core_pixels": 0,
+      "minimum_core_margin_px": 12,
+      "boundary_alpha_max": 5,
+      "rgba_rectangle_sha256": "53b47ae4737f7df62a1046d02693e097197e9368000a9c978f4a9bebb412094c",
+      "actual_screen_nose": "upper-right"
+    },
+    {
+      "cell": 5,
+      "reference_rect_ltrb": [
+        443,
+        443,
+        887,
+        887
+      ],
+      "boundary_core_pixels": 0,
+      "minimum_core_margin_px": 74,
+      "boundary_alpha_max": 6,
+      "rgba_rectangle_sha256": "01323388816739194e1c35c1a12af627d1a246f62d2fac059caae67a8f46704f",
+      "actual_screen_nose": "up"
+    },
+    {
+      "cell": 6,
+      "reference_rect_ltrb": [
+        887,
+        443,
+        1330,
+        887
+      ],
+      "boundary_core_pixels": 0,
+      "minimum_core_margin_px": 13,
+      "boundary_alpha_max": 4,
+      "rgba_rectangle_sha256": "3e7c9015340c266c5c69907f9238b7fe8a3a1ae9ce08527bd47709bb904e2108",
+      "actual_screen_nose": "upper-left"
+    },
+    {
+      "cell": 7,
+      "reference_rect_ltrb": [
+        1330,
+        443,
+        1774,
+        887
+      ],
+      "boundary_core_pixels": 0,
+      "minimum_core_margin_px": 8,
+      "boundary_alpha_max": 5,
+      "rgba_rectangle_sha256": "d032ba24cd498bbbff6be6c9d52df01a22e9cca519375263b1cfa500360911aa",
+      "actual_screen_nose": "left"
+    }
+  ],
+  "all_cells_clear_core_boundaries": true,
+  "all_pixels_partitioned": true,
+  "native_source_crops_performed": false,
+  "notes": [
+    "Native cleanup substantially reduces real haze: background samples below8; sourcecandidate alpha pass after proper greycomposite. Preserve held v1.",
+    "Car retains separate boot, four side doors and true rear lamps; side-profile elevation issue persists, so uniform30degree set is held separately."
+  ],
+  "owner_approved": false,
+  "runtime_ready": false,
+  "exact8_certified": false,
+  "pixels_modified": false,
+  "exact_prompt": {
+    "path": "generated/vehicles/town-blue-sedan/traffic8-v2.prompt.txt",
+    "sha256": "332328fc91602db315e713eda2c51ab91ed459121608c01121f20bacc3fe9f41",
+    "bytes": 680
+  },
+  "parent_provenance": {
+    "path": "generated/vehicles/town-blue-sedan/traffic8-v2.provenance.json",
+    "sha256": "821b71b0ec6eb9a3e25926e919d524564fdb0602039ef4a4998ebc9acde972bb",
+    "bytes": 1312
+  }
+}

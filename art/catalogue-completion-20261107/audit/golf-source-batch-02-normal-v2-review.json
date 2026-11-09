@@ -1,0 +1,60 @@
+{
+  "schema": 1,
+  "as_of_utc": "2026-11-07T13:40:14.741147+00:00",
+  "sources_reviewed": 5,
+  "limited_source_passes": 3,
+  "held": 2,
+  "scope": "Source visual identity/pose and alpha only; no mathematical angle certification, runtime integration or owner approval.",
+  "records": [
+    {
+      "key": "ball-washer",
+      "source": "generated/golf-source-batch-02/native/ball-washer/normal-v2.png",
+      "review_result": "PASS-source-candidate-open-lid-fixed-sides",
+      "four_actual_corners_visually_verified": true,
+      "outer_border_alpha_max": 1,
+      "zero_alpha_fraction": 0.7266285366889749,
+      "core_boundaries_clear": true,
+      "qa": "generated/golf-source-batch-02/native/ball-washer/normal-v2.independent-qa.json"
+    },
+    {
+      "key": "rope-barrier-corner",
+      "source": "generated/golf-source-batch-02/native/rope-barrier-corner/normal-v2.png",
+      "review_result": "PASS-source-candidate-four-rigid-L-projections",
+      "four_actual_corners_visually_verified": true,
+      "outer_border_alpha_max": 6,
+      "zero_alpha_fraction": 0.6818353517547675,
+      "core_boundaries_clear": true,
+      "qa": "generated/golf-source-batch-02/native/rope-barrier-corner/normal-v2.independent-qa.json"
+    },
+    {
+      "key": "ball-bucket-stand",
+      "source": "generated/golf-source-batch-02/native/ball-bucket-stand/normal-v2.png",
+      "review_result": "PASS-source-candidate-opposite-front-and-rear-corners",
+      "four_actual_corners_visually_verified": true,
+      "outer_border_alpha_max": 1,
+      "zero_alpha_fraction": 0.5512478092432764,
+      "core_boundaries_clear": true,
+      "qa": "generated/golf-source-batch-02/native/ball-bucket-stand/normal-v2.independent-qa.json"
+    },
+    {
+      "key": "park-bench",
+      "source": "generated/golf-source-batch-02/native/park-bench/normal-v2.png",
+      "review_result": "HOLD-missing-SE-and-SW-guide-corners",
+      "four_actual_corners_visually_verified": false,
+      "outer_border_alpha_max": 1,
+      "zero_alpha_fraction": 0.565716342472827,
+      "core_boundaries_clear": true,
+      "qa": "generated/golf-source-batch-02/native/park-bench/normal-v2.independent-qa.json"
+    },
+    {
+      "key": "ball-dispenser",
+      "source": "generated/golf-source-batch-02/native/ball-dispenser/normal-v2.png",
+      "review_result": "HOLD-missing-SW-guide-corner-and-TR-basket-drift",
+      "four_actual_corners_visually_verified": false,
+      "outer_border_alpha_max": 1,
+      "zero_alpha_fraction": 0.7089943758918829,
+      "core_boundaries_clear": true,
+      "qa": "generated/golf-source-batch-02/native/ball-dispenser/normal-v2.independent-qa.json"
+    }
+  ]
+}

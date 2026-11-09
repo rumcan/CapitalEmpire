@@ -1,0 +1,22 @@
+[
+  {
+    "key": "newprop:direction-signpost",
+    "slug": "direction-signpost",
+    "family": "yaw8",
+    "condition": "base",
+    "version": 2,
+    "target": "generated/golf-source-batch-02/native/direction-signpost/yaw8-v2.png",
+    "refs": [
+      "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/golf-source-batch-02/native/direction-signpost/yaw8-v1.png"
+    ],
+    "prompt": "TARGETED correction to ONLY BOTTOM-RIGHT W cell of reference1 four-view direction signpostsheet. The visible arrow-board faces wronglyrepeat the white golfer/toilet/food/exit pictograms and direction arrows from the front. RemoveALLwhiteicons/printedarrows from the visible faces in Wcell, leaving4PLAINwornGREENboardbacks withbrassborders, same4arrow-shapedboardsandfixedmounts. Keeptop-leftN/top-rightEfronticons and bottom-leftSblankbacksunchanged. Keep ALLotherthreecells pixelappearance/cameras/materials/geometry unchanged. Samefourviews, detailedpaintedminiaturestyle, late-afternoonDAYTIME sunUPPERRIGHT/shadowsLOWERLEFT. Genuinezeroalpha transparentbackground/gutters, broadmargins; removeanysurroundingbrownhaze, noaddedobjects/textUI/scenery.",
+    "source": "C:/Users/RAMPAGE/.codex/generated_images/01a1b1fd-39ec-7220-8f11-86e4448833ea/exec-47f8131e-fd9f-4040-bdc0-e10eb1c5455c.png",
+    "references": [
+      "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/golf-source-batch-02/native/direction-signpost/yaw8-v1.png"
+    ],
+    "status": "native-source-candidate-pending-visual-review",
+    "runtime_imported": false,
+    "sha256": "d0f9d58c7a62a0409232d5ce6f4e25174129eb8ad8e5b0949466d56185eba5c6",
+    "native_bytes_preserved": true
+  }
+]

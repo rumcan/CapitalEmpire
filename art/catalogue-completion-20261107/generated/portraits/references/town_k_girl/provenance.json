@@ -1,0 +1,34 @@
+{
+  "look_id": "person:3d:town_k_girl",
+  "actual_runtime_look": {
+    "id": "person:3d:town_k_girl",
+    "size": "adult",
+    "w": 80,
+    "h": 104,
+    "ax": 40,
+    "ay": 99,
+    "m": 1.28,
+    "fps": 5.7
+  },
+  "animation_files_changed": false,
+  "resized": false,
+  "repainted": false,
+  "source_style_changed": false,
+  "method": "original-pics-native-PNG-copy",
+  "source": {
+    "path": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\people3d\\pics\\town_k_girl.png",
+    "sha256": "ad0120a78c99ee7763d0939580e938462fc6ea8032604632d941d90ca817e55f",
+    "bytes": 999124
+  },
+  "primary_reference": {
+    "path": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\portraits\\references\\town_k_girl\\identity-source.png",
+    "sha256": "ad0120a78c99ee7763d0939580e938462fc6ea8032604632d941d90ca817e55f",
+    "bytes": 999124
+  },
+  "dimensions": [
+    848,
+    1264
+  ],
+  "mode": "RGB",
+  "crop_records": []
+}

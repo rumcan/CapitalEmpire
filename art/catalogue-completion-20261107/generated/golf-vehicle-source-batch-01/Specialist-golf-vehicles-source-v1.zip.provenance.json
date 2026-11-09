@@ -1,0 +1,16 @@
+{
+  "schema": 1,
+  "sourceOnly": true,
+  "zip": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-vehicle-source-batch-01\\Specialist-golf-vehicles-source-v1.zip",
+  "zipSHA256": "ef3a0650957cee9dda42740616aef22b2485dea6465d124f3856d2d0339bdd8c",
+  "zipBytes": 48366562,
+  "zipPNGCount": 64,
+  "zipEntries": 77,
+  "zipAllEntriesCRCPassed": true,
+  "all64PNGAndRGBAHashesVerifiedInsideZIP": true,
+  "allOriginalNativeSourcesUnchanged": true,
+  "normal32SelectionsUnchanged": true,
+  "normalSelectionSHA256": "9da67bc76c1e6bc06b02cdfd1421efc4ae41ad6212bd7826a07e4b5657bcb0df",
+  "runtimeIntegrated": false,
+  "nativeCameraScaleAndAnchorsApproved": false
+}

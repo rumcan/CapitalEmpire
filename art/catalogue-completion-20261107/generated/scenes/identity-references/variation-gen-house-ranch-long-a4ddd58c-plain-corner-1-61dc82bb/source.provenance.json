@@ -1,0 +1,62 @@
+{
+  "schema": 1,
+  "createdUtc": "2026-11-07T06:47:45.284562+00:00",
+  "exactRuntimeId": "variation:gen-house-ranch-long-a4ddd58c-plain-corner:1",
+  "source": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/building-views/variation-gen-house-ranch-long-a4ddd58c-plain-corner-1/NE.png",
+  "sourceSha256": "a0398254e56a3a2a9f40fde5a5e63c55e027e93c5c0d3ec41e72faf7d5601d01",
+  "output": "identity-references/variation-gen-house-ranch-long-a4ddd58c-plain-corner-1-61dc82bb/source.png",
+  "outputSha256": "a0398254e56a3a2a9f40fde5a5e63c55e027e93c5c0d3ec41e72faf7d5601d01",
+  "width": 522,
+  "height": 295,
+  "sourceCell": {
+    "kind": "already isolated native PNG; whole file",
+    "rectXYWH": [
+      0,
+      0,
+      522,
+      295
+    ]
+  },
+  "operation": "byte-for-byte PNG copy only; no resize, crop, recolour, key, repaint, registration or source mutation",
+  "selection": "registered corner NE native PNG for this exact subject",
+  "registeredCornerDirection": "NE",
+  "sourceEvidence": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\building-views\\variation-gen-house-ranch-long-a4ddd58c-plain-corner-1\\provenance.json",
+  "sourceReview": {
+    "integrationStatus": "ready",
+    "integrationReason": "Targeted v2 successfully turns NW to opposite front-left corner: long front facade on screenLEFT, carport gable/basket hoop on screenRIGHT; NE carport remainsLEFT. Rear air conditioner, short sidewindows and structure follow quarterturns. Actual alpha and generous intact margins pass with no warnings; master materials/light retained."
+  },
+  "sourceRegistration": {
+    "id": "variation:gen-house-ranch-long-a4ddd58c-plain-corner:1",
+    "version": "variation-gen-house-ranch-long-a4ddd58c-plain-corner-1-4views-v2",
+    "files": {
+      "NE": "a0398254e56a3a2a9f40fde5a5e63c55e027e93c5c0d3ec41e72faf7d5601d01",
+      "SE": "807433b4a99c0689d0ae0712c5e44a06df38cffe71e7b994019f62f9842c6e9a",
+      "SW": "b20ef922be6964e6e93d3280164b1ba55f46a4fb2f68f8ca500333d8cf130ac4",
+      "NW": "84283903132367cb5df44dc1da0936a3122f4bc9082cefac34f97eb1d4adac1f"
+    }
+  },
+  "originalInventorySource": {
+    "library": "src/game/library.ts",
+    "librarySha256": "91b5190292c1005ac7b936f08e5e1ebf3be43c3aae99f92ea510775da83d9726",
+    "atlas": "src/assets/atlas/sprites-8-0.webp",
+    "atlasSha256": "3627e8012c994eb375699136eec4134215434643c5c267a76f1326638c2b9514",
+    "runtimePage": 8,
+    "localPage": 8,
+    "uv": [
+      0.664063,
+      0.804688,
+      0.893555,
+      0.976563
+    ],
+    "crop": {
+      "left": 1360,
+      "top": 1648,
+      "width": 470,
+      "height": 352
+    },
+    "native": "art/theme-consistency/exports/buildings/variation-gen-house-ranch-long-a4ddd58c-plain-corner-1.native.png",
+    "nativeSha256": "d5111b1b70bfb1ec572d2145d29289573e799b04807b915f6d11e7fbdc7a318c"
+  },
+  "originalBusinessSourceCell": null,
+  "nativeReferenceApprovalClaimed": false
+}

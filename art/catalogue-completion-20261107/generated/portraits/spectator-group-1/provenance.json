@@ -1,0 +1,285 @@
+{
+  "generator": "native imagegen",
+  "imported_utc": "2026-11-07T07:11:08.881636+00:00",
+  "full_original_source": {
+    "path": "C:\\Users\\RAMPAGE\\.codex\\generated_images\\01a1b1fd-39ec-7220-8f11-86e4448833ea\\exec-15920c09-489d-4b0f-9dbc-6cebba51cce0.png",
+    "sha256": "9d10ac71b9eb3c29ff8a93ea990288bd4e820fce3d037a610c22717172adefff",
+    "bytes": 3500709
+  },
+  "archived_full_sheet": {
+    "path": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\portraits\\spectator-group-1\\source.png",
+    "sha256": "9d10ac71b9eb3c29ff8a93ea990288bd4e820fce3d037a610c22717172adefff",
+    "bytes": 3500709
+  },
+  "exact_prompt": {
+    "path": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\portraits\\spectator-group-1\\prompt.txt",
+    "sha256": "976ec94dcfd2739b6a6346dec757130fc7509fc1d6096be84842a82eb9300164",
+    "bytes": 1818
+  },
+  "actual_reference_files": [],
+  "actual_references_complete": false,
+  "references_note": "Omitted reference paths are unknown, never inferred from expected identity files.",
+  "dimensions": [
+    1448,
+    1086
+  ],
+  "mode": "RGB",
+  "split_x": 724,
+  "split_y": 543,
+  "split_rule": "explicit reviewed coordinate if provided, otherwise floor half; right/bottom preserve remainder",
+  "central_RGB_transition_measurements": {
+    "x": [
+      {
+        "split_before_coordinate": 720,
+        "mean_absolute_RGB_difference": 10.199201964395336
+      },
+      {
+        "split_before_coordinate": 721,
+        "mean_absolute_RGB_difference": 12.731737262124001
+      },
+      {
+        "split_before_coordinate": 722,
+        "mean_absolute_RGB_difference": 13.20012277470841
+      },
+      {
+        "split_before_coordinate": 723,
+        "mean_absolute_RGB_difference": 16.15960712093309
+      },
+      {
+        "split_before_coordinate": 724,
+        "mean_absolute_RGB_difference": 50.47452424800491
+      },
+      {
+        "split_before_coordinate": 725,
+        "mean_absolute_RGB_difference": 17.04910988336403
+      },
+      {
+        "split_before_coordinate": 726,
+        "mean_absolute_RGB_difference": 12.182013505217924
+      },
+      {
+        "split_before_coordinate": 727,
+        "mean_absolute_RGB_difference": 13.29036218538981
+      },
+      {
+        "split_before_coordinate": 728,
+        "mean_absolute_RGB_difference": 11.206261510128913
+      }
+    ],
+    "y": [
+      {
+        "split_before_coordinate": 539,
+        "mean_absolute_RGB_difference": 8.649401473296502
+      },
+      {
+        "split_before_coordinate": 540,
+        "mean_absolute_RGB_difference": 8.94267955801105
+      },
+      {
+        "split_before_coordinate": 541,
+        "mean_absolute_RGB_difference": 9.279235727440147
+      },
+      {
+        "split_before_coordinate": 542,
+        "mean_absolute_RGB_difference": 17.69221915285451
+      },
+      {
+        "split_before_coordinate": 543,
+        "mean_absolute_RGB_difference": 52.57067219152854
+      },
+      {
+        "split_before_coordinate": 544,
+        "mean_absolute_RGB_difference": 14.980202578268875
+      },
+      {
+        "split_before_coordinate": 545,
+        "mean_absolute_RGB_difference": 11.741022099447514
+      },
+      {
+        "split_before_coordinate": 546,
+        "mean_absolute_RGB_difference": 13.349447513812157
+      },
+      {
+        "split_before_coordinate": 547,
+        "mean_absolute_RGB_difference": 15.14755985267035
+      }
+    ]
+  },
+  "cell_order": [
+    [
+      "spectator:spec_k_girl_pigtails",
+      "spectator:spec_m_bucket_hat"
+    ],
+    [
+      "spectator:spec_m_dad",
+      "spectator:spec_m_plaid"
+    ]
+  ],
+  "exact_reconstruction_verified": true,
+  "records": [
+    {
+      "look_id": "spectator:spec_k_girl_pigtails",
+      "cell_index": 0,
+      "cell_position": "top-left",
+      "source_crop_box": [
+        0,
+        0,
+        724,
+        543
+      ],
+      "dimensions": [
+        724,
+        543
+      ],
+      "mode": "RGB",
+      "source_file": {
+        "path": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\portraits\\spectator-group-1\\spectator-spec-k-girl-pigtails.native.png",
+        "sha256": "a994e3329e531c39d0841cbc731895e6d8bd33a847e631fea6e1547fa6aef988",
+        "bytes": 818324
+      },
+      "pixel_sha256": "6d16c90ea6252691aa14a3a4268d489d2c4233b11d84ed393f5b30de14cf8658",
+      "operation": "exact native rectangle; no resize/repaint/alpha reconstruction",
+      "parent_reviewed": true,
+      "owner_approved": false,
+      "runtime_ready": true,
+      "runtime_integrated": true,
+      "manifest_record": {
+        "lookId": "spectator:spec_k_girl_pigtails",
+        "file": "spec-k-girl-pigtails.png",
+        "w": 724,
+        "h": 543,
+        "bytes": 818324,
+        "state": "one"
+      },
+      "runtime_file": {
+        "path": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\src\\assets\\portraits\\spec-k-girl-pigtails.png",
+        "sha256": "a994e3329e531c39d0841cbc731895e6d8bd33a847e631fea6e1547fa6aef988",
+        "bytes": 818324
+      }
+    },
+    {
+      "look_id": "spectator:spec_m_bucket_hat",
+      "cell_index": 1,
+      "cell_position": "top-right",
+      "source_crop_box": [
+        724,
+        0,
+        1448,
+        543
+      ],
+      "dimensions": [
+        724,
+        543
+      ],
+      "mode": "RGB",
+      "source_file": {
+        "path": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\portraits\\spectator-group-1\\spectator-spec-m-bucket-hat.native.png",
+        "sha256": "ee49ce79b7b7e5564a7654d3f6c5cd3be1e464ea51dbe94d83613dedb4fd7554",
+        "bytes": 793522
+      },
+      "pixel_sha256": "a43ac0991a12fd9bcdc405b0f4bd2e9bc80cdccef97b982d0985bc4bf539db9d",
+      "operation": "exact native rectangle; no resize/repaint/alpha reconstruction",
+      "parent_reviewed": true,
+      "owner_approved": false,
+      "runtime_ready": true,
+      "runtime_integrated": true,
+      "manifest_record": {
+        "lookId": "spectator:spec_m_bucket_hat",
+        "file": "spec-m-bucket-hat.png",
+        "w": 724,
+        "h": 543,
+        "bytes": 793522,
+        "state": "one"
+      },
+      "runtime_file": {
+        "path": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\src\\assets\\portraits\\spec-m-bucket-hat.png",
+        "sha256": "ee49ce79b7b7e5564a7654d3f6c5cd3be1e464ea51dbe94d83613dedb4fd7554",
+        "bytes": 793522
+      }
+    },
+    {
+      "look_id": "spectator:spec_m_dad",
+      "cell_index": 2,
+      "cell_position": "bottom-left",
+      "source_crop_box": [
+        0,
+        543,
+        724,
+        1086
+      ],
+      "dimensions": [
+        724,
+        543
+      ],
+      "mode": "RGB",
+      "source_file": {
+        "path": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\portraits\\spectator-group-1\\spectator-spec-m-dad.native.png",
+        "sha256": "25bb6b9b862004601b2c8163154802cde00c77511b9a79a90347e6fd9f9a05a6",
+        "bytes": 814197
+      },
+      "pixel_sha256": "806abe01154acf514046847fe6723608b144ca932256bae310a1f1f8f318b6ed",
+      "operation": "exact native rectangle; no resize/repaint/alpha reconstruction",
+      "parent_reviewed": true,
+      "owner_approved": false,
+      "runtime_ready": true,
+      "runtime_integrated": true,
+      "manifest_record": {
+        "lookId": "spectator:spec_m_dad",
+        "file": "spec-m-dad.png",
+        "w": 724,
+        "h": 543,
+        "bytes": 814197,
+        "state": "one"
+      },
+      "runtime_file": {
+        "path": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\src\\assets\\portraits\\spec-m-dad.png",
+        "sha256": "25bb6b9b862004601b2c8163154802cde00c77511b9a79a90347e6fd9f9a05a6",
+        "bytes": 814197
+      }
+    },
+    {
+      "look_id": "spectator:spec_m_plaid",
+      "cell_index": 3,
+      "cell_position": "bottom-right",
+      "source_crop_box": [
+        724,
+        543,
+        1448,
+        1086
+      ],
+      "dimensions": [
+        724,
+        543
+      ],
+      "mode": "RGB",
+      "source_file": {
+        "path": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\portraits\\spectator-group-1\\spectator-spec-m-plaid.native.png",
+        "sha256": "bb311e2569394277a846211bbfff798abfd3c7bb58fc9e3593af60f008e12492",
+        "bytes": 809705
+      },
+      "pixel_sha256": "0aab0f2482fc68e1f69ce9d9313864bb7da412f956879a173e19b69c4bc59903",
+      "operation": "exact native rectangle; no resize/repaint/alpha reconstruction",
+      "parent_reviewed": true,
+      "owner_approved": false,
+      "runtime_ready": true,
+      "runtime_integrated": true,
+      "manifest_record": {
+        "lookId": "spectator:spec_m_plaid",
+        "file": "spec-m-plaid.png",
+        "w": 724,
+        "h": 543,
+        "bytes": 809705,
+        "state": "one"
+      },
+      "runtime_file": {
+        "path": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\src\\assets\\portraits\\spec-m-plaid.png",
+        "sha256": "bb311e2569394277a846211bbfff798abfd3c7bb58fc9e3593af60f008e12492",
+        "bytes": 809705
+      }
+    }
+  ],
+  "parent_reviewed": true,
+  "owner_approved": false,
+  "runtime_integrated": true,
+  "status": "imported-parent-reviewed-native-candidates"
+}

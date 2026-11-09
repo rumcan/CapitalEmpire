@@ -1,0 +1,187 @@
+{
+  "scope": "read-only technical guide ray tests, not final native art visibility approval",
+  "worldModel": "art/catalogue-completion-20261107/generated/seated-pavilion-24-budget/guides/seated-pavilion-24-budget-world-model-v1.json",
+  "method": "Ray from each supplied rotated seat/head anchor toward the per-view camera; triangulated supplied world faces, nearest positive triangle intersection. No runtime, image or source-guide changes.",
+  "results": [
+    {
+      "family": "normal",
+      "view": "SE",
+      "counts": {
+        "seat": {
+          "total": 24,
+          "blocked": 14,
+          "blockerFaces": {
+            "post-0-0/right": 1,
+            "roof-underside--1": 13
+          }
+        },
+        "head": {
+          "total": 24,
+          "blocked": 23,
+          "blockerFaces": {
+            "roof-support-beam--2.75/bottom": 8,
+            "roof-underside--1": 15
+          }
+        }
+      }
+    },
+    {
+      "family": "normal",
+      "view": "SW",
+      "counts": {
+        "seat": {
+          "total": 24,
+          "blocked": 24,
+          "blockerFaces": {
+            "bench-row-0-back/front": 8,
+            "bench-row-1-back/front": 8,
+            "bench-row-2-back/front": 8
+          }
+        },
+        "head": {
+          "total": 24,
+          "blocked": 23,
+          "blockerFaces": {
+            "roof-underside-1": 15,
+            "roof-support-beam-2.75/bottom": 8
+          }
+        }
+      }
+    },
+    {
+      "family": "normal",
+      "view": "NW",
+      "counts": {
+        "seat": {
+          "total": 24,
+          "blocked": 24,
+          "blockerFaces": {
+            "bench-row-0-back/front": 8,
+            "bench-row-1-back/front": 8,
+            "bench-row-2-back/front": 8
+          }
+        },
+        "head": {
+          "total": 24,
+          "blocked": 23,
+          "blockerFaces": {
+            "roof-underside-1": 15,
+            "roof-support-beam-2.75/bottom": 8
+          }
+        }
+      }
+    },
+    {
+      "family": "normal",
+      "view": "NE",
+      "counts": {
+        "seat": {
+          "total": 24,
+          "blocked": 14,
+          "blockerFaces": {
+            "post-2-0/left": 1,
+            "roof-underside--1": 13
+          }
+        },
+        "head": {
+          "total": 24,
+          "blocked": 23,
+          "blockerFaces": {
+            "roof-support-beam--2.75/bottom": 8,
+            "roof-underside--1": 15
+          }
+        }
+      }
+    },
+    {
+      "family": "yaw8",
+      "view": "N",
+      "counts": {
+        "seat": {
+          "total": 24,
+          "blocked": 16,
+          "blockerFaces": {
+            "eave-fascia--1/bottom": 7,
+            "post-1-0/back": 1,
+            "roof-underside--1": 8
+          }
+        },
+        "head": {
+          "total": 24,
+          "blocked": 24,
+          "blockerFaces": {
+            "eave-fascia--1/bottom": 8,
+            "roof-underside--1": 16
+          }
+        }
+      }
+    },
+    {
+      "family": "yaw8",
+      "view": "E",
+      "counts": {
+        "seat": {
+          "total": 24,
+          "blocked": 13,
+          "blockerFaces": {
+            "roof-underside--1": 9,
+            "roof-underside-1": 4
+          }
+        },
+        "head": {
+          "total": 24,
+          "blocked": 19,
+          "blockerFaces": {
+            "roof-underside--1": 13,
+            "roof-underside-1": 6
+          }
+        }
+      }
+    },
+    {
+      "family": "yaw8",
+      "view": "S",
+      "counts": {
+        "seat": {
+          "total": 24,
+          "blocked": 24,
+          "blockerFaces": {
+            "bench-row-0-back/front": 8,
+            "bench-row-1-back/front": 8,
+            "bench-row-2-back/front": 8
+          }
+        },
+        "head": {
+          "total": 24,
+          "blocked": 24,
+          "blockerFaces": {
+            "roof-underside-1": 16,
+            "eave-fascia-1/bottom": 8
+          }
+        }
+      }
+    },
+    {
+      "family": "yaw8",
+      "view": "W",
+      "counts": {
+        "seat": {
+          "total": 24,
+          "blocked": 13,
+          "blockerFaces": {
+            "roof-underside--1": 4,
+            "roof-underside-1": 9
+          }
+        },
+        "head": {
+          "total": 24,
+          "blocked": 19,
+          "blockerFaces": {
+            "roof-underside--1": 6,
+            "roof-underside-1": 13
+          }
+        }
+      }
+    }
+  ]
+}

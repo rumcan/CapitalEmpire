@@ -1,0 +1,62 @@
+{
+  "schema": 1,
+  "createdUtc": "2026-11-07T06:47:45.284562+00:00",
+  "exactRuntimeId": "variation:ref-building-shop-blue-941779e4-plain:1",
+  "source": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/building-views/variation-ref-building-shop-blue-941779e4-plain-1/NE.png",
+  "sourceSha256": "5227518ac7f032744046aa0624c4d4b62334bb5f5394bdbd5e5e53b6b6bfc78d",
+  "output": "identity-references/variation-ref-building-shop-blue-941779e4-plain-1-20a05e36/source.png",
+  "outputSha256": "5227518ac7f032744046aa0624c4d4b62334bb5f5394bdbd5e5e53b6b6bfc78d",
+  "width": 536,
+  "height": 532,
+  "sourceCell": {
+    "kind": "already isolated native PNG; whole file",
+    "rectXYWH": [
+      0,
+      0,
+      536,
+      532
+    ]
+  },
+  "operation": "byte-for-byte PNG copy only; no resize, crop, recolour, key, repaint, registration or source mutation",
+  "selection": "registered corner NE native PNG for this exact subject",
+  "registeredCornerDirection": "NE",
+  "sourceEvidence": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\building-views\\variation-ref-building-shop-blue-941779e4-plain-1\\provenance.json",
+  "sourceReview": {
+    "integrationStatus": "ready",
+    "integrationReason": "Front sign/bay-window face and service rear are distinct; side windows and three chimney cluster follow opposite corners. Matte blue brick, slate roof, amber glazing and fixed screen-right key match master. Exact component v2 repack preserves all source pixels; v1 already passed alpha/margins."
+  },
+  "sourceRegistration": {
+    "id": "variation:ref-building-shop-blue-941779e4-plain:1",
+    "version": "variation-ref-building-shop-blue-941779e4-plain-1-4views-v2",
+    "files": {
+      "NE": "5227518ac7f032744046aa0624c4d4b62334bb5f5394bdbd5e5e53b6b6bfc78d",
+      "SE": "92808ea37f8d95fdbbde0054a400345f17c953ce1a1283f50325f2e192de6f4d",
+      "SW": "3d5049021b3caa227d4f567d477107a0e5c95df87235c3f57ec8757a4d7feff7",
+      "NW": "4dcb726272fa51e3e5c45ec3249227049a567c354d020e1eda866b3629ac94cf"
+    }
+  },
+  "originalInventorySource": {
+    "library": "src/game/library.ts",
+    "librarySha256": "91b5190292c1005ac7b936f08e5e1ebf3be43c3aae99f92ea510775da83d9726",
+    "atlas": "src/assets/atlas/sprites-8-0.webp",
+    "atlasSha256": "3627e8012c994eb375699136eec4134215434643c5c267a76f1326638c2b9514",
+    "runtimePage": 8,
+    "localPage": 8,
+    "uv": [
+      0.007813,
+      0.210938,
+      0.189941,
+      0.394043
+    ],
+    "crop": {
+      "left": 16,
+      "top": 432,
+      "width": 373,
+      "height": 375
+    },
+    "native": "art/theme-consistency/exports/buildings/variation-ref-building-shop-blue-941779e4-plain-1.native.png",
+    "nativeSha256": "89677c7d040d5ec493936dcd267d4e68f49738abc3e9eb31ce964c2cfe6b3d01"
+  },
+  "originalBusinessSourceCell": null,
+  "nativeReferenceApprovalClaimed": false
+}

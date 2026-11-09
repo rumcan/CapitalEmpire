@@ -1,0 +1,33 @@
+{
+  "look_id": "spectator:spec_teen_girl",
+  "actual_runtime_look": {
+    "id": "spectator:spec_teen_girl",
+    "w": 80,
+    "h": 126,
+    "ax": 40,
+    "ay": 121,
+    "m": 1.62,
+    "seat": 0.67
+  },
+  "animation_files_changed": false,
+  "resized": false,
+  "repainted": false,
+  "source_style_changed": false,
+  "method": "original-pics-native-PNG-copy",
+  "source": {
+    "path": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\spectators\\pics\\spec_teen_girl.png",
+    "sha256": "428b20833d227f76c985ebb590cdd5bff2c3f84097a7f8be17f7337b0d1a452b",
+    "bytes": 1040182
+  },
+  "primary_reference": {
+    "path": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\portraits\\references\\spec_teen_girl\\identity-source.png",
+    "sha256": "428b20833d227f76c985ebb590cdd5bff2c3f84097a7f8be17f7337b0d1a452b",
+    "bytes": 1040182
+  },
+  "dimensions": [
+    848,
+    1264
+  ],
+  "mode": "RGB",
+  "crop_records": []
+}

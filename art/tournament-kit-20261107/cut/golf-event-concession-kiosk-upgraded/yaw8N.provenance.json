@@ -1,0 +1,29 @@
+{
+  "schema": 1,
+  "subject": "golf:event-concession-kiosk-upgraded",
+  "version": 1,
+  "key": "yaw8N",
+  "source": {
+    "file": "../../batch01/concession-kiosk/upgraded/yaw8-N.png",
+    "sha256": "c784030a8153b3ba1efc34211b02a1b028adf01a7ed32da4773ee966843a4eeb",
+    "width": 632,
+    "height": 627
+  },
+  "cell": 0,
+  "cellRect": {
+    "left": 0,
+    "top": 0,
+    "width": 632,
+    "height": 627
+  },
+  "crop": {
+    "left": 96,
+    "top": 77,
+    "width": 536,
+    "height": 459
+  },
+  "output": "yaw8N.native.png",
+  "sha256": "732cc4ab7e880c4eefc972e7e060cf02b347ae4e8cda79210663c61ac223638d",
+  "operation": "native RGBA cell crop only; no flip/repaint/view synthesis",
+  "review": "candidate"
+}

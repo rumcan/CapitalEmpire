@@ -1,0 +1,26 @@
+{
+  "runtimeSubjectId": "newprop:cart-ambulance",
+  "runtimeName": "Cart ambulance",
+  "png": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-vehicle-source-batch-01\\references\\cart-ambulance.source.png",
+  "originalNativePNG": "E:\\Repos\\CapitalEmpire\\All Generated Images\\exec-27b32ad3-011a-4678-a8a3-7950333efe30.png",
+  "copiedNativeSheet": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-vehicle-source-batch-01\\original-sheets\\exec-27b32ad3-011a-4678-a8a3-7950333efe30.png",
+  "sourceSheetSHA256": "a99d9e88357e720c6a7bf66e7139bb5a84e1818632b82f62d8d7ac8f1cfcde5c",
+  "cropRectXYWH": [
+    659,
+    126,
+    580,
+    510
+  ],
+  "sourceCell": "top right",
+  "pngSHA256": "233dfad803b1ceb32714f2b7725f491518dbd6d7e8452b6506bbbf85cfd2f70b",
+  "rgbaSHA256": "6a234ab986e9fe3be62382b458df51a5a97781bf7803371caf51fe63e19c9530",
+  "cropPixels": [
+    580,
+    510
+  ],
+  "sourceMetadataCutOff": false,
+  "operation": "Native original RGBA crop only; no resize, recolour, alpha cleanup or synthesis. Source sheet contains4different objects, not4rotations.",
+  "visualInspection": "inspected native crop",
+  "actualIdentityNotes": "Confirmed actual medical golf cart: orange strapped stretcher at rear and green roof beacon.",
+  "sourceOnlyNotReleaseProof": true
+}

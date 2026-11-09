@@ -1,0 +1,62 @@
+{
+  "schema": 1,
+  "createdUtc": "2026-11-07T06:47:45.284562+00:00",
+  "exactRuntimeId": "static:garage_brick",
+  "source": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/building-views/static-garage_brick/NE.png",
+  "sourceSha256": "098f12c22bb7f32075ad0cd0a5cb65d0037ff45138565a9cd6e74dea1b5ca843",
+  "output": "identity-references/static-garage-brick-db72ce3e/source.png",
+  "outputSha256": "098f12c22bb7f32075ad0cd0a5cb65d0037ff45138565a9cd6e74dea1b5ca843",
+  "width": 528,
+  "height": 460,
+  "sourceCell": {
+    "kind": "already isolated native PNG; whole file",
+    "rectXYWH": [
+      0,
+      0,
+      528,
+      460
+    ]
+  },
+  "operation": "byte-for-byte PNG copy only; no resize, crop, recolour, key, repaint, registration or source mutation",
+  "selection": "registered corner NE native PNG for this exact subject",
+  "registeredCornerDirection": "NE",
+  "sourceEvidence": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\building-views\\static-garage_brick\\provenance.json",
+  "sourceReview": {
+    "integrationStatus": "ready",
+    "integrationReason": "All4 visible physical corners form front/right/back/left cycle; actual magenta alpha has no surrounding floor/haze. Matte timber/masonry/metal, charcoal roofs, amber practical lights and fixed screen-upper-right dusk are coherent with master."
+  },
+  "sourceRegistration": {
+    "id": "static:garage_brick",
+    "version": "static-garage_brick-4views-v2",
+    "files": {
+      "NE": "098f12c22bb7f32075ad0cd0a5cb65d0037ff45138565a9cd6e74dea1b5ca843",
+      "SE": "5734c89be5fdcb51b9a98b908c3d30ab70a9be050d94dfaec68bc16058e6040c",
+      "SW": "c3776651beb3b100fb73ca022afcbf6a743b7c908f4bec979add3e7d11f20a31",
+      "NW": "fd1ad7e21ca7e3162b536416a6e1a5449da18031b5f1d1b8039c33df54cb4675"
+    }
+  },
+  "originalInventorySource": {
+    "library": "src/game/library.ts",
+    "librarySha256": "91b5190292c1005ac7b936f08e5e1ebf3be43c3aae99f92ea510775da83d9726",
+    "atlas": "src/assets/atlas/sprites-11-0.webp",
+    "atlasSha256": "a8946da0d9c9231cd8576b9ebf3662b2c449685064dd3d9af3cf40715c50f4a6",
+    "runtimePage": 11,
+    "localPage": 11,
+    "uv": [
+      0.617188,
+      0.484375,
+      0.770508,
+      0.614746
+    ],
+    "crop": {
+      "left": 1264,
+      "top": 992,
+      "width": 314,
+      "height": 267
+    },
+    "native": "art/theme-consistency/exports/buildings/static-garage_brick.native.png",
+    "nativeSha256": "03139db1be07c9fb596c7e50a7db9b04be4b607b48bbcd9dc83b74d014384036"
+  },
+  "originalBusinessSourceCell": null,
+  "nativeReferenceApprovalClaimed": false
+}

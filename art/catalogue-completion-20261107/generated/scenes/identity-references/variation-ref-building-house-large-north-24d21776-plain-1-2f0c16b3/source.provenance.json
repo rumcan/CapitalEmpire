@@ -1,0 +1,61 @@
+{
+  "schema": 1,
+  "createdUtc": "2026-11-07T06:47:45.284562+00:00",
+  "exactRuntimeId": "variation:ref-building-house-large-north-24d21776-plain:1",
+  "source": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/building-views/variation-ref-building-house-large-north-24d21776-plain-1/NE.png",
+  "sourceSha256": "c696bd415f27dfb2182734ecb22f50adf708e87989ecf1a631b2766e00898213",
+  "output": "identity-references/variation-ref-building-house-large-north-24d21776-plain-1-2f0c16b3/source.png",
+  "outputSha256": "c696bd415f27dfb2182734ecb22f50adf708e87989ecf1a631b2766e00898213",
+  "width": 530,
+  "height": 476,
+  "sourceCell": {
+    "kind": "already isolated native PNG; whole file",
+    "rectXYWH": [
+      0,
+      0,
+      530,
+      476
+    ]
+  },
+  "operation": "byte-for-byte PNG copy only; no resize, crop, recolour, key, repaint, registration or source mutation",
+  "selection": "registered corner NE native PNG for this exact subject",
+  "registeredCornerDirection": "NE",
+  "sourceEvidence": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\building-views\\variation-ref-building-house-large-north-24d21776-plain-1\\provenance.json",
+  "sourceReview": {
+    "status": "generated"
+  },
+  "sourceRegistration": {
+    "id": "variation:ref-building-house-large-north-24d21776-plain:1",
+    "version": "variation-ref-building-house-large-north-24d21776-plain-1-4views-v3",
+    "files": {
+      "NE": "c696bd415f27dfb2182734ecb22f50adf708e87989ecf1a631b2766e00898213",
+      "SE": "47bc2304cf33839cfac0a868448278e6d80c57a9700c488c2a9daf9750b7a126",
+      "SW": "6dddaa7788b90fc9e9f7a1c5897b18dc0ccc2dc56313cd3ee9884e29d667d55d",
+      "NW": "2f7228a88d3f7124d4ff7665cc160f7e92b0b620c966b35a77763929575a7e3f"
+    }
+  },
+  "originalInventorySource": {
+    "library": "src/game/library.ts",
+    "librarySha256": "91b5190292c1005ac7b936f08e5e1ebf3be43c3aae99f92ea510775da83d9726",
+    "atlas": "src/assets/atlas/sprites-4-0.webp",
+    "atlasSha256": "7cb439e61cdd5f48e2c1327386b33c854fa4e1e3e6a58e39ba137e00c48ee2cd",
+    "runtimePage": 4,
+    "localPage": 4,
+    "uv": [
+      0.007813,
+      0.007813,
+      0.26709,
+      0.241211
+    ],
+    "crop": {
+      "left": 16,
+      "top": 16,
+      "width": 531,
+      "height": 478
+    },
+    "native": "art/theme-consistency/exports/buildings/variation-ref-building-house-large-north-24d21776-plain-1.native.png",
+    "nativeSha256": "a44d1740e112ad3b3c4bf06ccf7a90e78936a0117391afdddfeb7628785f6684"
+  },
+  "originalBusinessSourceCell": null,
+  "nativeReferenceApprovalClaimed": false
+}

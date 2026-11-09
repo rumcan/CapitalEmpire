@@ -1,0 +1,21 @@
+{
+  "key": "golf-source-01-03-broadcast-compound",
+  "family": "normal",
+  "condition": "budget",
+  "version": 4,
+  "target": "generated/golf-source-batch-01/native/golf-source-01-03-broadcast-compound/budget-normal-v4.png",
+  "refs": [
+    "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-01\\native\\golf-source-01-03-broadcast-compound\\guides\\normal-world-v2.png",
+    "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/golf-source-batch-01/native/golf-source-01-03-broadcast-compound/budget-normal-v3.png"
+  ],
+  "prompt": "Reference1 is exact projected FIXED-WORLD geometry of four views of one broadcast compound. Paint that technical model as finely detailed hand-painted miniature game sprites matching worn green/cream vehicle identity and materials in Reference2. Preserve ALL4 guide cameras/object positions. Reference2's roof satellite dish incorrectly points toward viewer in all4cells; DO NOT COPY that aiming error. Guide has one real CURVED PARABOLIC DISH with fixed mounting and single fixed world axis. TOP-RIGHT SW: show the smooth convex curved BACK of the dish bowl. BOTTOM-LEFT NW: show a thin oblique near-edge view of its concave face, NOT a wide round front-facing bowl. Read and follow actual dish projection in reference1. Curved back with subtle reinforcing ribs and one supporting stalk; thick circular rim seen foreshortened, exactlyonebowl. No Yagi aerial, ladder, grid, lattice or flatrectangle. The dish rotates with van, never independently to faceviewer. Keep exactlysame2periodvehicles/generator/workbench/cablereel, matching reference1 fullassemblylayoutand cameras. Onepaintedsceneassemblypercell, noextraobjects. 45degreecorner viewscellorderasguide,orthographic30degreesDOWN. Late-afternoonDAYTIME sunSCREENUPPERRIGHT/shadowsLOWERLEFT, equipmentunlit. Genuinezeroalphatransparentbackground/gutters, broadmargins, nopeople/plants/road/groundplate/textUI/haze.",
+  "source": "C:/Users/RAMPAGE/.codex/generated_images/01a1b1fd-39ec-7220-8f11-86e4448833ea/exec-0de86846-2ef7-4a20-8b74-13b86a0f16c1.png",
+  "references": [
+    "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-01\\native\\golf-source-01-03-broadcast-compound\\guides\\normal-world-v2.png",
+    "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/golf-source-batch-01/native/golf-source-01-03-broadcast-compound/budget-normal-v3.png"
+  ],
+  "status": "native-source-candidate-pending-visual-review",
+  "runtime_imported": false,
+  "sha256": "91a98125388138b7445c4a66a49d1f5653b47f3dcc07036ef35ed4ec61b0ffbf",
+  "native_bytes_preserved": true
+}

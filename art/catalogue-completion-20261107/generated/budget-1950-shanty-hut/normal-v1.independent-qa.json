@@ -1,0 +1,119 @@
+{
+  "schema": 1,
+  "as_of_utc": "2026-11-07T10:42:31.771542+00:00",
+  "source": {
+    "path": "generated/budget-1950-shanty-hut/normal-v1.png",
+    "sha256": "e0ed3254a0ee5dba6975ddfc5a10a726ca32d1d861c8c666e47f953c4142072e"
+  },
+  "review_result": "PASS-native-source-candidate-identity-and-alpha; exact-camera-calibration-pending",
+  "per_cell_actual_visible_feature_pairs": [
+    "Front door/window with blank end",
+    "Rear vent with blank end",
+    "Rear vent with right-side window",
+    "Front door/window with right-side window"
+  ],
+  "manufactured1950s_appearance": "Ordinary straight timber/clapboard walls, corrugated pitched roof, restrained wear; no fantasy tarp/log construction.",
+  "all_four_corner_feature_combinations_present": true,
+  "alpha_evidence": {
+    "path": "art/catalogue-completion-20261107/generated/budget-1950-shanty-hut/normal-v1.png",
+    "sha256": "e0ed3254a0ee5dba6975ddfc5a10a726ca32d1d861c8c666e47f953c4142072e",
+    "bytes": 1155020,
+    "family": "budget-1950-shanty-hut",
+    "kind": "normal",
+    "width": 1254,
+    "height": 1254,
+    "mode": "RGBA",
+    "true_zero_alpha_fraction": 0.7371683340582862,
+    "has_transparency": true,
+    "opaque_core_fraction": 0.24649288147147627,
+    "cells": [
+      {
+        "view": "SE",
+        "rect_ltrb": [
+          0,
+          0,
+          627,
+          627
+        ],
+        "nonblank_core": true,
+        "core_bbox": [
+          124,
+          151,
+          510,
+          496
+        ],
+        "minimum_core_margin_pixels": 117,
+        "boundary_core_pixels_alpha_gt128": 0,
+        "boundary_alpha_max": 1,
+        "rgba_pixel_sha256": "b75ff53eb4c3d93d129b032415a6dfe89f8950eb7ce1eb3e43173c38d6fcb6ec"
+      },
+      {
+        "view": "SW",
+        "rect_ltrb": [
+          627,
+          0,
+          1254,
+          627
+        ],
+        "nonblank_core": true,
+        "core_bbox": [
+          114,
+          150,
+          499,
+          495
+        ],
+        "minimum_core_margin_pixels": 114,
+        "boundary_core_pixels_alpha_gt128": 0,
+        "boundary_alpha_max": 1,
+        "rgba_pixel_sha256": "3ae6e91abd5b5b7c94508e37c9b8b5ac9b344bac75790bb35683a46f86475b79"
+      },
+      {
+        "view": "NW",
+        "rect_ltrb": [
+          0,
+          627,
+          627,
+          1254
+        ],
+        "nonblank_core": true,
+        "core_bbox": [
+          120,
+          141,
+          517,
+          491
+        ],
+        "minimum_core_margin_pixels": 110,
+        "boundary_core_pixels_alpha_gt128": 0,
+        "boundary_alpha_max": 1,
+        "rgba_pixel_sha256": "4f8f14b856860130e51bf485f96a50db250be6f7a4f2fa7c277f98729c7a6a2d"
+      },
+      {
+        "view": "NE",
+        "rect_ltrb": [
+          627,
+          627,
+          1254,
+          1254
+        ],
+        "nonblank_core": true,
+        "core_bbox": [
+          97,
+          143,
+          497,
+          495
+        ],
+        "minimum_core_margin_pixels": 97,
+        "boundary_core_pixels_alpha_gt128": 0,
+        "boundary_alpha_max": 1,
+        "rgba_pixel_sha256": "91795b85ea30906deac8c3e9c7ccd85ea5c05bfe99706af96eda993d14cc868a"
+      }
+    ],
+    "all_four_core_nonblank": true,
+    "any_core_touches_cell_boundary": false,
+    "geometry_approval_inferred": false
+  },
+  "source_only": true,
+  "owner_approved": false,
+  "runtime_ready": false,
+  "source_pixels_modified": false
+}

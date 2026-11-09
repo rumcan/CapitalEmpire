@@ -1,0 +1,140 @@
+{
+  "schema": 1,
+  "as_of_utc": "2026-11-07T14:29:39.952183+00:00",
+  "review_result": "PASS-source-candidate-four-main-face-roles-alpha",
+  "source": {
+    "path": "generated/golf-source-batch-02/native/course-map-board/yaw8-v1.png",
+    "sha256": "e826361f9ae7cecc9d78ec292ced240e85e8e97a564ecbbb95863344c7e79c62",
+    "bytes": 1283894
+  },
+  "mode": "RGBA",
+  "dimensions": [
+    1254,
+    1254
+  ],
+  "source_original_hash_matches_parent": true,
+  "parent_provenance": {
+    "path": "generated/golf-source-batch-02/native/course-map-board/yaw8-v1.provenance.json",
+    "sha256": "26d6ea8e812f705d9c0eec38b2d78701130acda4c6d8ee8d3a9074291299769c",
+    "bytes": 2819
+  },
+  "exact_prompt_utf8_sha256": "6adaf568029e0715eddcacecbcfd1da64e3cd4d1361a2cd0a6da99ebe80e1262",
+  "actual_generation_references": [
+    {
+      "path": "generated/golf-source-batch-02/fixed-world-guides-v2/course-map-board/guides/yaw8-world-v1.png",
+      "sha256": "e0a3d54c40a7b06e9106b9a16b21c8f425442f88f1c4491b63ccb8c0dc95fe7f",
+      "bytes": 34788
+    },
+    {
+      "path": "generated/golf-source-batch-02/native/course-map-board/normal-v1.png",
+      "sha256": "9cad2e7a817441125f1c332d1f285164faf9de2ae655b8c17dc101266ea7e33e",
+      "bytes": 1745797
+    }
+  ],
+  "zero_alpha_fraction": 0.6741374968521783,
+  "outer_4px_border_alpha_p50p95max": [
+    0.0,
+    0.0,
+    1.0
+  ],
+  "clear_horizontal_cut_y": 626,
+  "clear_vertical_cut_by_row": [
+    627,
+    627
+  ],
+  "cut_alpha_maxima": {
+    "horizontal": 1,
+    "vertical_top": 0,
+    "vertical_bottom": 1
+  },
+  "cells": [
+    {
+      "cell": "TL",
+      "actual_role": "N map front",
+      "selected_guide_direction": "N",
+      "reference_rect_ltrb": [
+        0,
+        0,
+        627,
+        626
+      ],
+      "minimum_core_margin_px": 19,
+      "boundary_core_pixels_alpha_gt128": 0,
+      "boundary_alpha_max": 1,
+      "native_rgba_rectangle_sha256": "6d6db95ed2a9ade090182de9be169fbece8276cbe918789df459da77c61f66c2",
+      "functional_hold": false
+    },
+    {
+      "cell": "TR",
+      "actual_role": "E front side edge/two lamps",
+      "selected_guide_direction": "E",
+      "reference_rect_ltrb": [
+        627,
+        0,
+        1254,
+        626
+      ],
+      "minimum_core_margin_px": 19,
+      "boundary_core_pixels_alpha_gt128": 0,
+      "boundary_alpha_max": 1,
+      "native_rgba_rectangle_sha256": "c16b441c0f74cdf015e801be96e210c0cd9e9cee00a044caa05290b2f4784895",
+      "functional_hold": false
+    },
+    {
+      "cell": "BL",
+      "actual_role": "S rear planks/braces",
+      "selected_guide_direction": "S",
+      "reference_rect_ltrb": [
+        0,
+        626,
+        627,
+        1254
+      ],
+      "minimum_core_margin_px": 4,
+      "boundary_core_pixels_alpha_gt128": 0,
+      "boundary_alpha_max": 1,
+      "native_rgba_rectangle_sha256": "05aee4e6921fa23b3213a32d2b6ccf59fb96917f37b028e63484999149b6a426",
+      "functional_hold": false
+    },
+    {
+      "cell": "BR",
+      "actual_role": "W rear side edge/near lamp",
+      "selected_guide_direction": "W",
+      "reference_rect_ltrb": [
+        627,
+        626,
+        1254,
+        1254
+      ],
+      "minimum_core_margin_px": 16,
+      "boundary_core_pixels_alpha_gt128": 0,
+      "boundary_alpha_max": 1,
+      "native_rgba_rectangle_sha256": "74431e11663026bb4d33082db31efc785de0260ab22a13a6b28679c67fb305d8",
+      "functional_hold": false
+    }
+  ],
+  "all_cores_complete_at_reference_cuts": true,
+  "visual_observations": [
+    "Map front/plain braced back, front-map versus rear panel edge profiles and two front-side lantern positions match guide. Roof/cap and single gold top ornament retained. Fine map stroke and lamp-glass shading are source-art review limits."
+  ],
+  "intrinsic_rotational_symmetry": false,
+  "main_faces_functionally_accepted_for_source_candidate": true,
+  "owner_approved": false,
+  "runtime_ready": false,
+  "exact_numerical_angle_certified": false,
+  "native_image_bytes_changed": false,
+  "diagnostic_lossless_inspection_crop": {
+    "file": {
+      "path": "generated/golf-source-batch-02/native/course-map-board/qa/yaw8-v1-E-inspection-crop.png",
+      "sha256": "6906fa4a65f60f4c5f9c49c2f6bbb4cfa47b8a48790aecf6f16f7d8b64b00d11",
+      "bytes": 197897
+    },
+    "rectangle_ltrb": [
+      627,
+      0,
+      1254,
+      626
+    ],
+    "purpose": "native source inspection only; no repaint or alpha edits"
+  }
+}

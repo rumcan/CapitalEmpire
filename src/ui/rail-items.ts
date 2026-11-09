@@ -34,6 +34,8 @@ export interface RailExtra { id: GolfChipId; label: string; icon: IconName }
 export interface RailItem {
   id: string; label: string; icon: IconName; key: string; section: 'course' | 'town' | null; group: RailGroupId; tools: RailTool[];
   extras?: RailExtra[]; only?: 'golf' | 'classic'; action?: 'range';
+  /** T366: the words the rail button draws when the label is too long for one line (the tip and the aria-label keep the full label) */
+  short?: string;
 }
 
 /** the rail in order (the keys stay the tools' own: C Holes, Z Props, R roads, J junctions, U P T transport, A Paint, X Bulldoze, V Select) */
@@ -50,7 +52,7 @@ export const RAIL: readonly RailItem[] = [
   // T288 (#873, the owner 2026-10-31: "make cart paths and roads its own button above facilities in the main left menu"): the roads on the
   // player's own property (the course's cart paths and drives: the road tool on the course, T084; in Course since T206) and the town's roads
   // (Traffic's Build, a second home: Traffic stays lit for it unless opened from here), each class with its lock
-  { id: 'paths', label: 'Cart paths & roads', icon: 'sidewalk', key: '', section: 'course', group: 'course', tools: [
+  { id: 'paths', label: 'Cart paths & roads', short: 'Paths & roads', icon: 'sidewalk', key: '', section: 'course', group: 'course', tools: [
     { id: 'path', label: 'Cart paths & roads', key: '', icon: 'sidewalk' },
     { id: 'road', label: 'Roads', key: 'R', icon: 'road', alt: true },
   ] },
@@ -149,6 +151,8 @@ export const drawerEntries = (es: readonly RailEntry[], d: Drawer): RailEntry[] 
 export const toolDrawer = (t: Tool, active?: string | null): Drawer => { const r = railItemOf(t, active); return r ? drawerOf(r) : 'side'; };
 
 /** a rail item's tooltip (T179): its name, its key (if it has one) and, locked, what unlocks it (the stages' and the ramp's words) */
+/** T366 (#1021; the owner, 2026-11-08: "fix main menu. we can't have text going in 2 lines"): the words a rail button draws: its short name where it has one */
+export const railLabel = (r: RailItem): string => r.short ?? r.label;
 export function railTip(e: RailEntry): TipParts {
   return { name: e.item.label, ...(e.item.key ? { key: e.item.key } : {}), ...(e.locked ? { why: e.locked } : {}) };
 }

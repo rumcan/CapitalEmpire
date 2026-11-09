@@ -1,0 +1,23 @@
+[
+  {
+    "key": "golf-source-01-02-tv-camera-tower",
+    "family": "normal",
+    "condition": "upgraded",
+    "version": 2,
+    "target": "generated/golf-source-batch-01/native/golf-source-01-02-tv-camera-tower/upgraded-normal-v2.png",
+    "refs": [
+      "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/golf-source-batch-01/native/golf-source-01-02-tv-camera-tower/upgraded-normal-v1.png",
+      "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/golf-source-batch-01/native/golf-source-01-02-tv-camera-tower/budget-normal-v2.png"
+    ],
+    "prompt": "Precise camera-end correction to REFERENCE1 upgraded TVtower sheet. ONLY TOP-RIGHT SW view: the broadcast camera has incorrectly swivelled its front lens/black circular iris toward the viewer. It must stay pointed along the same fixed world axis as in the other three cells and reference2. Replace the viewer-facing end of the TOP-RIGHT camera with a plain flat REAR camera housing/controlpanel, matching the TOP-RIGHT camera orientation of reference2. No front lens or iris visible from this rear direction. Preserve tripod camera box position/body, tower, ladder, case, platform and all other3cells completely unchanged. Keep upgraded galvanized steel/freshgreen materials and painterly miniature detail; don'taddwear from reference2. Same30down45cornercamera andscale, late-afternoonDAYTIME sunUPPERRIGHT/shadowsLOWERLEFT, zeroalpha transparentbackground, broadmargins, no textUI/scenery. Remove the surrounding pale grey atmospheric halo entirely: only the solid tower/equipment and a small faint contact shadow immediately beneath its feet may have nonzero alpha; the wide background and all gutters must be true alpha0.",
+    "source": "C:/Users/RAMPAGE/.codex/generated_images/01a1b1fd-39ec-7220-8f11-86e4448833ea/exec-2fff953c-3d42-4508-8630-7463cf52a8e7.png",
+    "references": [
+      "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/golf-source-batch-01/native/golf-source-01-02-tv-camera-tower/upgraded-normal-v1.png",
+      "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/golf-source-batch-01/native/golf-source-01-02-tv-camera-tower/budget-normal-v2.png"
+    ],
+    "status": "native-source-candidate-pending-visual-review",
+    "runtime_imported": false,
+    "sha256": "f9eeb1a8be99b8c1a7bbe0825810b32dc6b2a6555dc337eb0e29aa24872a77ac",
+    "native_bytes_preserved": true
+  }
+]

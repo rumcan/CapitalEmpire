@@ -5,6 +5,7 @@
 import { SPECTATOR_CLIPS, type PeopleClip } from './library';
 import { facing } from './ext/pedestrians';
 import { WALK_STRIDE } from './event/crowd';
+import type { PlacedSeating } from './golf/event-seating';
 
 /** T212 (#557): the putt clip's impact, seconds into GOLFER_CLIPS.golf_putt (its sheet's impactSecs: render-person-3d.mjs --putt, a hand-keyed
  *  pendulum: the top of the backstroke at 0.5 s, the putter back at the address and the ball struck at 0.8 s, the finish held from 1.05 s) */
@@ -12,7 +13,7 @@ export const PUTT_IMPACT_S = 0.8;
 
 /** a person to draw: its tile position, group (0 spectator, 1 golfer), person (its index in the group's people), sheet row (0-7, the rows
  *  S SW W NW N NE E SE) and frame (absolute in that row: the clip's start + k) */
-export interface CrowdPerson { x: number; y: number; group: 0 | 1; person: number; row: number; frame: number }
+export interface CrowdPerson { x: number; y: number; group: 0 | 1; person: number; row: number; frame: number; /** Authored bench-top height, in metres, for aligning the person's seated hips. */ seatHeightMetres?: number; benchPixelsPerMetre?: number }
 
 /** a deterministic hash of two integers: a float in [0, 1) (the seeds of every person, place and time) */
 export function hash(a: number, b: number): number {
@@ -74,24 +75,29 @@ function seatFrame(spot: number, s: number, lt: number): number {
   return lt < 3 && hash(spot, s + 100) < 0.5 ? at(C.sit_clap, lt) : at(C.sit, lt);
 }
 
-/** the spectators of a gallery spot at float offset o of the 8-float gallery buffer (x, y, fans, kind, fx, fy, ax, ay; kind 2 a grandstand):
- *  min(fans, 60) standing fans (a grandstand: min(fans, 90) seated) in rows across the line to the focus (fx, fy), each row 0.6 tiles back from the
- *  one before, 0.55 tiles apart across it, jitter 0.12; each faces the focus (a grandstand's seats face fx, fy, each row a step higher). Seeded by
- *  the spot index and the slot. Writes into out from 0 (reusing its objects); returns the count (0 with no people). T213: `cheer` (>= 0: the real
- *  seconds since a golfer near it holed a birdie or better) has the fans cheer (the cheer clip, each a moment apart; seated fans clap) */
-export function galleryPeople(G: ArrayLike<number>, o: number, spot: number, now: number, people: number, out: CrowdPerson[], cheer = -1): number {
+/** Gallery buffer x/y/fans/kind/focus/aim at float offset o. Standing fans retain their seeded informal rows (up to 60); stands draw up to 90
+ *  samples of occupied authored seats, preserving exact positions, aisle gaps, bank facings and bench heights. Larger stands sample across
+ *  their occupied rows rather than changing gameplay capacity. Without supplied geometry the legacy stand view is only an estimate.
+ *  Reuses out objects; cheer >= 0 is seconds since a nearby birdie and keeps the existing clap/cheer animation clips. */
+export function galleryPeople(G: ArrayLike<number>, o: number, spot: number, now: number, people: number, out: CrowdPerson[], cheer = -1, seating?: PlacedSeating): number {
   const x = G[o]!, y = G[o + 1]!, stand = G[o + 3] === 2, fx = G[o + 4]!, fy = G[o + 5]!;
-  const n = Math.min(Math.round(G[o + 2]!), stand ? 90 : 60);
+  const occupied = Math.max(0, Math.min(Math.round(G[o + 2]!), stand && seating ? seating.count : Infinity));
+  const n = Math.min(occupied, stand ? 90 : 60);
   if (people <= 0 || n <= 0) return 0;
   unit(fx - x, fy - y);
-  const ux = U[0], uy = U[1], vx = -uy, vy = ux, perRow = stand ? 12 : 10, seatRow = rowToward(ux, uy);
+  const ux = U[0], uy = U[1], vx = -uy, vy = ux, perRow = stand ? Math.max(1, Math.ceil(Math.sqrt(n * 2))) : 10, seatRow = rowToward(ux, uy);
   for (let s = 0; s < n; s++) {
     const r = Math.floor(s / perRow), along = (s % perRow - (perRow - 1) / 2) * 0.55, back = r * 0.6;
     let px = x + vx * along - ux * back + (hash(spot, s * 3) - 0.5) * 0.24, py = y + vy * along - uy * back + (hash(spot, s * 3 + 1) - 0.5) * 0.24;
-    if (stand) { px -= r * 0.35; py -= r * 0.35; }   // a grandstand's rows also climb the screen
     const lt = ((now + hash(spot * 7 + 1, s) * 20) % 20 + 20) % 20, p = slot(out, s);
     p.x = px; p.y = py; p.group = 0; p.person = Math.floor(hash(spot, s * 3 + 2) * people);
     p.row = stand ? seatRow : rowToward(fx - px, fy - py);
+    p.seatHeightMetres = stand ? 0.45 + r * 0.35 : undefined;
+    p.benchPixelsPerMetre = stand ? seating?.verticalPixelsPerMetre ?? 32 : undefined;
+    if (stand && seating) {
+      const at = (occupied > n ? Math.floor((s + 0.5) * occupied / n) : s) * 5, seats = seating.seats;
+      p.x = seats[at]!; p.y = seats[at + 1]!; p.seatHeightMetres = seats[at + 2]!; p.row = rowToward(seats[at + 3]!, seats[at + 4]!);
+    }
     p.frame = stand ? seatFrame(spot, s, lt) : standFrame(spot, s, lt);
     if (cheer >= 0) { const ct = cheer - hash(spot, s + 300) * CHEER_SPREAD; if (ct >= 0) p.frame = stand ? at(SPECTATOR_CLIPS.sit_clap, ct) : at(SPECTATOR_CLIPS.cheer, ct); }
   }
@@ -108,7 +114,7 @@ export function queuePeople(x: number, y: number, fx: number, fy: number, count:
   for (let s = 0; s < n; s++) {
     const along = (s % 4 - 1.5) * 0.7, back = (Math.floor(s / 4) - (rows - 1) / 2) * 0.7;
     const px = x + vx * along - ux * back + (hash(key, s * 3) - 0.5) * 0.2, py = y + vy * along - uy * back + (hash(key, s * 3 + 1) - 0.5) * 0.2, p = slot(out, s);
-    p.x = px; p.y = py; p.group = 0; p.person = Math.floor(hash(key, s * 3 + 2) * people); p.row = rowToward(fx - px, fy - py); p.frame = SPECTATOR_CLIPS.idle.start;
+    p.x = px; p.y = py; p.group = 0; p.person = Math.floor(hash(key, s * 3 + 2) * people); p.row = rowToward(fx - px, fy - py); p.frame = SPECTATOR_CLIPS.idle.start; p.seatHeightMetres = undefined; p.benchPixelsPerMetre = undefined;
   }
   return n;
 }
@@ -130,7 +136,7 @@ export function walkerPeople(W: ArrayLike<number>, o: number, idx: number, now: 
     const frame = at(C, now * (0.85 + 0.3 * h1) + h2 * 3);
     // along the heading: his place in the party (0.35 to 0.75 tiles apart) and a slow drift of 0.45 (a period of 5 to 11 s); across it: 0.35 to 0.6 apart, drifting 0.15
     const along = c * (0.35 + 0.4 * h3) + Math.sin(now * (0.55 + 0.6 * h4) + h5 * 6.2832) * 0.45, across = c * (0.35 + 0.25 * h4) + Math.sin(now * (0.3 + 0.35 * h6) + h1 * 6.2832) * 0.15, p = slot(out, j);
-    p.x = x + ux * along + vx * across; p.y = y + uy * along + vy * across; p.group = 0; p.person = Math.floor(hash(id, j) * people); p.row = row; p.frame = frame;
+    p.x = x + ux * along + vx * across; p.y = y + uy * along + vy * across; p.group = 0; p.person = Math.floor(hash(id, j) * people); p.row = row; p.frame = frame; p.seatHeightMetres = undefined; p.benchPixelsPerMetre = undefined;
   }
   return k;
 }

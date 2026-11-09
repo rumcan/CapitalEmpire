@@ -1,0 +1,1313 @@
+{
+  "schema": 1,
+  "as_of_utc": "2026-11-07T10:35:58.897605+00:00",
+  "vehicle_sheets_reviewed": 10,
+  "source_candidate_pass_sheets": 8,
+  "held_sheets": [
+    {
+      "family": "town-blue-sedan",
+      "sheet": "traffic8-v1.png",
+      "review_result": "HOLD-background-alpha",
+      "qa": "generated/vehicles/town-blue-sedan/traffic8-v1.independent-qa.json"
+    },
+    {
+      "family": "golf-reel-mower",
+      "sheet": "yaw8-v1.png",
+      "review_result": "HOLD-exact8-geometry; all4nearcardinaldirections-present-with-actual-layout",
+      "qa": "generated/vehicles/golf-reel-mower/yaw8-v1.independent-qa.json"
+    }
+  ],
+  "all_source_hashes_preserved": true,
+  "root_corrections_in_progress": [
+    "town-blue-sedan native transparency v2",
+    "golf-player-cart cardinal4/yaw8",
+    "compact-bleacher60-upgraded sixrow yaw correction"
+  ],
+  "sheets": [
+    {
+      "family": "golf-reel-mower",
+      "sheet": "normal-v1.png",
+      "review_result": "PASS-source-candidate-identity-direction-alpha",
+      "cells": 4,
+      "source_sha256": "12b43ad803f5415d006b2aac178fef4fc9da0de8b596adb63ee2c7f8639d1b2b",
+      "prompt_sha256": "253ce7c64e9698dcab2945cc2b20ae9c93b10b8fbae9dbd124566fd8646f8baf",
+      "qa": "generated/vehicles/golf-reel-mower/normal-v1.independent-qa.json",
+      "actual_noses": [
+        "lower-left",
+        "lower-right",
+        "upper-right",
+        "upper-left"
+      ],
+      "raw_alpha": {
+        "target": "generated/vehicles/golf-reel-mower/normal-v1.png",
+        "size": [
+          1396,
+          1127
+        ],
+        "zero_alpha_fraction": 0.5065385192322849,
+        "outer_border_p50max": [
+          0.0,
+          1.0
+        ],
+        "center_gutter_p50p95max": [
+          0.0,
+          1.0,
+          1.0
+        ],
+        "row_cut_x": [
+          [
+            0,
+            698,
+            1396
+          ],
+          [
+            0,
+            698,
+            1396
+          ]
+        ],
+        "cells": [
+          {
+            "cell": 0,
+            "rect_ltrb": [
+              0,
+              0,
+              698,
+              563
+            ],
+            "core_margin": 17,
+            "boundary_core_pixels": 0,
+            "boundary_alpha_max": 1
+          },
+          {
+            "cell": 1,
+            "rect_ltrb": [
+              698,
+              0,
+              1396,
+              563
+            ],
+            "core_margin": 16,
+            "boundary_core_pixels": 0,
+            "boundary_alpha_max": 1
+          },
+          {
+            "cell": 2,
+            "rect_ltrb": [
+              0,
+              563,
+              698,
+              1127
+            ],
+            "core_margin": 33,
+            "boundary_core_pixels": 0,
+            "boundary_alpha_max": 1
+          },
+          {
+            "cell": 3,
+            "rect_ltrb": [
+              698,
+              563,
+              1396,
+              1127
+            ],
+            "core_margin": 34,
+            "boundary_core_pixels": 0,
+            "boundary_alpha_max": 1
+          }
+        ]
+      }
+    },
+    {
+      "family": "golf-player-cart",
+      "sheet": "normal-v1.png",
+      "review_result": "PASS-source-candidate-identity-direction-alpha",
+      "cells": 4,
+      "source_sha256": "2d5501d434040ee9130db24ba4f2bfaec43af8a01f380a9b519420c1316c8254",
+      "prompt_sha256": "6f50a5eaca1afdabdbced861f77f2bbc7807b3d599289ae0b5f33a2f4d5461a1",
+      "qa": "generated/vehicles/golf-player-cart/normal-v1.independent-qa.json",
+      "actual_noses": [
+        "lower-left",
+        "lower-right",
+        "upper-right",
+        "upper-left"
+      ],
+      "raw_alpha": {
+        "target": "generated/vehicles/golf-player-cart/normal-v1.png",
+        "size": [
+          1261,
+          1247
+        ],
+        "zero_alpha_fraction": 0.47365381912625193,
+        "outer_border_p50max": [
+          0.0,
+          1.0
+        ],
+        "center_gutter_p50p95max": [
+          0.0,
+          1.0,
+          170.0
+        ],
+        "row_cut_x": [
+          [
+            0,
+            630,
+            1261
+          ],
+          [
+            0,
+            630,
+            1261
+          ]
+        ],
+        "cells": [
+          {
+            "cell": 0,
+            "rect_ltrb": [
+              0,
+              0,
+              630,
+              623
+            ],
+            "core_margin": 27,
+            "boundary_core_pixels": 0,
+            "boundary_alpha_max": 2
+          },
+          {
+            "cell": 1,
+            "rect_ltrb": [
+              630,
+              0,
+              1261,
+              623
+            ],
+            "core_margin": 27,
+            "boundary_core_pixels": 0,
+            "boundary_alpha_max": 3
+          },
+          {
+            "cell": 2,
+            "rect_ltrb": [
+              0,
+              623,
+              630,
+              1247
+            ],
+            "core_margin": 3,
+            "boundary_core_pixels": 0,
+            "boundary_alpha_max": 4
+          },
+          {
+            "cell": 3,
+            "rect_ltrb": [
+              630,
+              623,
+              1261,
+              1247
+            ],
+            "core_margin": 3,
+            "boundary_core_pixels": 0,
+            "boundary_alpha_max": 5
+          }
+        ]
+      }
+    },
+    {
+      "family": "town-red-hatchback",
+      "sheet": "traffic8-v1.png",
+      "review_result": "PASS-source-candidate-identity-direction-alpha",
+      "cells": 8,
+      "source_sha256": "09e772f7de60d9352c404ce3c12d500a054a896a53aa1694a116a29aba11ac4f",
+      "prompt_sha256": "96b478897ca4963dd60887033ae542b6a94d199fe8bc48ebc8e56315fe125d58",
+      "qa": "generated/vehicles/town-red-hatchback/traffic8-v1.independent-qa.json",
+      "actual_noses": [
+        "lower-left",
+        "down",
+        "lower-right",
+        "right",
+        "upper-right",
+        "up",
+        "upper-left",
+        "left"
+      ],
+      "raw_alpha": {
+        "target": "generated/vehicles/town-red-hatchback/traffic8-v1.png",
+        "size": [
+          1774,
+          887
+        ],
+        "zero_alpha_fraction": 0.6335341122997983,
+        "outer_border_p50max": [
+          0.0,
+          1.0
+        ],
+        "center_gutter_p50p95max": [
+          0.0,
+          0.0,
+          1.0
+        ],
+        "row_cut_x": [
+          [
+            0,
+            443,
+            883,
+            1316,
+            1774
+          ],
+          [
+            0,
+            443,
+            875,
+            1315,
+            1774
+          ]
+        ],
+        "cells": [
+          {
+            "cell": 0,
+            "rect_ltrb": [
+              0,
+              0,
+              443,
+              443
+            ],
+            "core_margin": 11,
+            "boundary_core_pixels": 0,
+            "boundary_alpha_max": 1
+          },
+          {
+            "cell": 1,
+            "rect_ltrb": [
+              443,
+              0,
+              883,
+              443
+            ],
+            "core_margin": 57,
+            "boundary_core_pixels": 0,
+            "boundary_alpha_max": 2
+          },
+          {
+            "cell": 2,
+            "rect_ltrb": [
+              883,
+              0,
+              1316,
+              443
+            ],
+            "core_margin": 2,
+            "boundary_core_pixels": 0,
+            "boundary_alpha_max": 4
+          },
+          {
+            "cell": 3,
+            "rect_ltrb": [
+              1316,
+              0,
+              1774,
+              443
+            ],
+            "core_margin": 2,
+            "boundary_core_pixels": 0,
+            "boundary_alpha_max": 7
+          },
+          {
+            "cell": 4,
+            "rect_ltrb": [
+              0,
+              443,
+              443,
+              887
+            ],
+            "core_margin": 14,
+            "boundary_core_pixels": 0,
+            "boundary_alpha_max": 1
+          },
+          {
+            "cell": 5,
+            "rect_ltrb": [
+              443,
+              443,
+              875,
+              887
+            ],
+            "core_margin": 70,
+            "boundary_core_pixels": 0,
+            "boundary_alpha_max": 4
+          },
+          {
+            "cell": 6,
+            "rect_ltrb": [
+              875,
+              443,
+              1315,
+              887
+            ],
+            "core_margin": 2,
+            "boundary_core_pixels": 0,
+            "boundary_alpha_max": 7
+          },
+          {
+            "cell": 7,
+            "rect_ltrb": [
+              1315,
+              443,
+              1774,
+              887
+            ],
+            "core_margin": 2,
+            "boundary_core_pixels": 0,
+            "boundary_alpha_max": 5
+          }
+        ]
+      },
+      "camera_followup_hold": true
+    },
+    {
+      "family": "town-blue-sedan",
+      "sheet": "traffic8-v1.png",
+      "review_result": "HOLD-background-alpha",
+      "cells": 8,
+      "source_sha256": "598e27cab6ac910dc8fcc7a539e9e481af2d1175daec12b115f26daf65a020de",
+      "prompt_sha256": "0436af9327f42bfbfe846bf32330d17d1c534415a102ca91103a6fbccd1aad50",
+      "qa": "generated/vehicles/town-blue-sedan/traffic8-v1.independent-qa.json",
+      "actual_noses": [
+        "lower-left",
+        "down",
+        "lower-right",
+        "right",
+        "upper-right",
+        "up",
+        "upper-left",
+        "left"
+      ],
+      "raw_alpha": {
+        "target": "generated/vehicles/town-blue-sedan/traffic8-v1.png",
+        "size": [
+          1774,
+          887
+        ],
+        "zero_alpha_fraction": 0.0003012320007524445,
+        "outer_border_p50max": [
+          7.0,
+          33.0
+        ],
+        "center_gutter_p50p95max": [
+          6.0,
+          12.0,
+          17.0
+        ],
+        "row_cut_x": [
+          [
+            0,
+            443,
+            887,
+            1330,
+            1774
+          ],
+          [
+            0,
+            443,
+            887,
+            1330,
+            1774
+          ]
+        ],
+        "cells": [
+          {
+            "cell": 0,
+            "rect_ltrb": [
+              0,
+              0,
+              443,
+              443
+            ],
+            "core_margin": 12,
+            "boundary_core_pixels": 0,
+            "boundary_alpha_max": 27
+          },
+          {
+            "cell": 1,
+            "rect_ltrb": [
+              443,
+              0,
+              887,
+              443
+            ],
+            "core_margin": 74,
+            "boundary_core_pixels": 0,
+            "boundary_alpha_max": 33
+          },
+          {
+            "cell": 2,
+            "rect_ltrb": [
+              887,
+              0,
+              1330,
+              443
+            ],
+            "core_margin": 12,
+            "boundary_core_pixels": 0,
+            "boundary_alpha_max": 29
+          },
+          {
+            "cell": 3,
+            "rect_ltrb": [
+              1330,
+              0,
+              1774,
+              443
+            ],
+            "core_margin": 7,
+            "boundary_core_pixels": 0,
+            "boundary_alpha_max": 19
+          },
+          {
+            "cell": 4,
+            "rect_ltrb": [
+              0,
+              443,
+              443,
+              887
+            ],
+            "core_margin": 12,
+            "boundary_core_pixels": 0,
+            "boundary_alpha_max": 18
+          },
+          {
+            "cell": 5,
+            "rect_ltrb": [
+              443,
+              443,
+              887,
+              887
+            ],
+            "core_margin": 74,
+            "boundary_core_pixels": 0,
+            "boundary_alpha_max": 18
+          },
+          {
+            "cell": 6,
+            "rect_ltrb": [
+              887,
+              443,
+              1330,
+              887
+            ],
+            "core_margin": 13,
+            "boundary_core_pixels": 0,
+            "boundary_alpha_max": 14
+          },
+          {
+            "cell": 7,
+            "rect_ltrb": [
+              1330,
+              443,
+              1774,
+              887
+            ],
+            "core_margin": 9,
+            "boundary_core_pixels": 0,
+            "boundary_alpha_max": 11
+          }
+        ]
+      },
+      "camera_followup_hold": true
+    },
+    {
+      "family": "town-cream-coupe",
+      "sheet": "traffic8-v1.png",
+      "review_result": "PASS-source-candidate-identity-direction-alpha",
+      "cells": 8,
+      "source_sha256": "d52e18524de018f629aa82aee44148b5b8bf4ae6e9f0bbf673cc39b35cca20b3",
+      "prompt_sha256": "63cb6e5df35fa40a383356b14a01f22bbafc7c101ba116d2586b0cff0bda6e27",
+      "qa": "generated/vehicles/town-cream-coupe/traffic8-v1.independent-qa.json",
+      "actual_noses": [
+        "lower-left",
+        "down",
+        "lower-right",
+        "right",
+        "upper-right",
+        "up",
+        "upper-left",
+        "left"
+      ],
+      "raw_alpha": {
+        "target": "generated/vehicles/town-cream-coupe/traffic8-v1.png",
+        "size": [
+          1774,
+          887
+        ],
+        "zero_alpha_fraction": 0.5689942028727619,
+        "outer_border_p50max": [
+          0.0,
+          3.0
+        ],
+        "center_gutter_p50p95max": [
+          0.0,
+          1.0,
+          2.0
+        ],
+        "row_cut_x": [
+          [
+            0,
+            443,
+            886,
+            1322,
+            1774
+          ],
+          [
+            0,
+            443,
+            887,
+            1321,
+            1774
+          ]
+        ],
+        "cells": [
+          {
+            "cell": 0,
+            "rect_ltrb": [
+              0,
+              0,
+              443,
+              443
+            ],
+            "core_margin": 12,
+            "boundary_core_pixels": 0,
+            "boundary_alpha_max": 1
+          },
+          {
+            "cell": 1,
+            "rect_ltrb": [
+              443,
+              0,
+              886,
+              443
+            ],
+            "core_margin": 67,
+            "boundary_core_pixels": 0,
+            "boundary_alpha_max": 2
+          },
+          {
+            "cell": 2,
+            "rect_ltrb": [
+              886,
+              0,
+              1322,
+              443
+            ],
+            "core_margin": 2,
+            "boundary_core_pixels": 0,
+            "boundary_alpha_max": 7
+          },
+          {
+            "cell": 3,
+            "rect_ltrb": [
+              1322,
+              0,
+              1774,
+              443
+            ],
+            "core_margin": 2,
+            "boundary_core_pixels": 0,
+            "boundary_alpha_max": 5
+          },
+          {
+            "cell": 4,
+            "rect_ltrb": [
+              0,
+              443,
+              443,
+              887
+            ],
+            "core_margin": 12,
+            "boundary_core_pixels": 0,
+            "boundary_alpha_max": 1
+          },
+          {
+            "cell": 5,
+            "rect_ltrb": [
+              443,
+              443,
+              887,
+              887
+            ],
+            "core_margin": 81,
+            "boundary_core_pixels": 0,
+            "boundary_alpha_max": 3
+          },
+          {
+            "cell": 6,
+            "rect_ltrb": [
+              887,
+              443,
+              1321,
+              887
+            ],
+            "core_margin": 2,
+            "boundary_core_pixels": 0,
+            "boundary_alpha_max": 6
+          },
+          {
+            "cell": 7,
+            "rect_ltrb": [
+              1321,
+              443,
+              1774,
+              887
+            ],
+            "core_margin": 2,
+            "boundary_core_pixels": 0,
+            "boundary_alpha_max": 4
+          }
+        ]
+      },
+      "camera_followup_hold": true
+    },
+    {
+      "family": "town-tan-pickup",
+      "sheet": "traffic8-v1.png",
+      "review_result": "PASS-source-candidate-identity-direction-alpha",
+      "cells": 8,
+      "source_sha256": "8afa82548b08977bc397cbd87f7834e18124471dd1b9df4c80eacf1138740dd5",
+      "prompt_sha256": "843694ada477cf83a4e5d1d071469084f4e7bf574c10de12803cd7c9f1a5fad7",
+      "qa": "generated/vehicles/town-tan-pickup/traffic8-v1.independent-qa.json",
+      "actual_noses": [
+        "lower-left",
+        "down",
+        "lower-right",
+        "right",
+        "upper-right",
+        "up",
+        "upper-left",
+        "left"
+      ],
+      "raw_alpha": {
+        "target": "generated/vehicles/town-tan-pickup/traffic8-v1.png",
+        "size": [
+          1774,
+          887
+        ],
+        "zero_alpha_fraction": 0.6352004209621884,
+        "outer_border_p50max": [
+          0.0,
+          1.0
+        ],
+        "center_gutter_p50p95max": [
+          0.0,
+          0.0,
+          1.0
+        ],
+        "row_cut_x": [
+          [
+            0,
+            463,
+            864,
+            1307,
+            1774
+          ],
+          [
+            0,
+            456,
+            869,
+            1300,
+            1774
+          ]
+        ],
+        "cells": [
+          {
+            "cell": 0,
+            "rect_ltrb": [
+              0,
+              0,
+              463,
+              443
+            ],
+            "core_margin": 1,
+            "boundary_core_pixels": 0,
+            "boundary_alpha_max": 20
+          },
+          {
+            "cell": 1,
+            "rect_ltrb": [
+              463,
+              0,
+              864,
+              443
+            ],
+            "core_margin": 59,
+            "boundary_core_pixels": 0,
+            "boundary_alpha_max": 8
+          },
+          {
+            "cell": 2,
+            "rect_ltrb": [
+              864,
+              0,
+              1307,
+              443
+            ],
+            "core_margin": 2,
+            "boundary_core_pixels": 0,
+            "boundary_alpha_max": 7
+          },
+          {
+            "cell": 3,
+            "rect_ltrb": [
+              1307,
+              0,
+              1774,
+              443
+            ],
+            "core_margin": 2,
+            "boundary_core_pixels": 0,
+            "boundary_alpha_max": 6
+          },
+          {
+            "cell": 4,
+            "rect_ltrb": [
+              0,
+              443,
+              456,
+              887
+            ],
+            "core_margin": 1,
+            "boundary_core_pixels": 0,
+            "boundary_alpha_max": 28
+          },
+          {
+            "cell": 5,
+            "rect_ltrb": [
+              456,
+              443,
+              869,
+              887
+            ],
+            "core_margin": 67,
+            "boundary_core_pixels": 0,
+            "boundary_alpha_max": 6
+          },
+          {
+            "cell": 6,
+            "rect_ltrb": [
+              869,
+              443,
+              1300,
+              887
+            ],
+            "core_margin": 2,
+            "boundary_core_pixels": 0,
+            "boundary_alpha_max": 3
+          },
+          {
+            "cell": 7,
+            "rect_ltrb": [
+              1300,
+              443,
+              1774,
+              887
+            ],
+            "core_margin": 2,
+            "boundary_core_pixels": 0,
+            "boundary_alpha_max": 6
+          }
+        ]
+      },
+      "camera_followup_hold": true
+    },
+    {
+      "family": "town-ivory-panel-van",
+      "sheet": "traffic8-v1.png",
+      "review_result": "PASS-source-candidate-identity-direction-alpha",
+      "cells": 8,
+      "source_sha256": "35ceeab19fb6f752cd0aa0e4b8878c2ca131adf6e5d0891119b5556319a84cbe",
+      "prompt_sha256": "8bf5dab09f9c0ab6e65c2190c6dc81ffff20819c085a5ec55c596b33641c2ed9",
+      "qa": "generated/vehicles/town-ivory-panel-van/traffic8-v1.independent-qa.json",
+      "actual_noses": [
+        "lower-left",
+        "down",
+        "lower-right",
+        "right",
+        "upper-right",
+        "up",
+        "upper-left",
+        "left"
+      ],
+      "raw_alpha": {
+        "target": "generated/vehicles/town-ivory-panel-van/traffic8-v1.png",
+        "size": [
+          1774,
+          887
+        ],
+        "zero_alpha_fraction": 0.5440154607006631,
+        "outer_border_p50max": [
+          0.0,
+          1.0
+        ],
+        "center_gutter_p50p95max": [
+          0.0,
+          1.0,
+          1.0
+        ],
+        "row_cut_x": [
+          [
+            0,
+            443,
+            871,
+            1308,
+            1774
+          ],
+          [
+            0,
+            443,
+            858,
+            1302,
+            1774
+          ]
+        ],
+        "cells": [
+          {
+            "cell": 0,
+            "rect_ltrb": [
+              0,
+              0,
+              443,
+              443
+            ],
+            "core_margin": 22,
+            "boundary_core_pixels": 0,
+            "boundary_alpha_max": 1
+          },
+          {
+            "cell": 1,
+            "rect_ltrb": [
+              443,
+              0,
+              871,
+              443
+            ],
+            "core_margin": 43,
+            "boundary_core_pixels": 0,
+            "boundary_alpha_max": 1
+          },
+          {
+            "cell": 2,
+            "rect_ltrb": [
+              871,
+              0,
+              1308,
+              443
+            ],
+            "core_margin": 2,
+            "boundary_core_pixels": 0,
+            "boundary_alpha_max": 5
+          },
+          {
+            "cell": 3,
+            "rect_ltrb": [
+              1308,
+              0,
+              1774,
+              443
+            ],
+            "core_margin": 2,
+            "boundary_core_pixels": 0,
+            "boundary_alpha_max": 7
+          },
+          {
+            "cell": 4,
+            "rect_ltrb": [
+              0,
+              443,
+              443,
+              887
+            ],
+            "core_margin": 15,
+            "boundary_core_pixels": 0,
+            "boundary_alpha_max": 1
+          },
+          {
+            "cell": 5,
+            "rect_ltrb": [
+              443,
+              443,
+              858,
+              887
+            ],
+            "core_margin": 39,
+            "boundary_core_pixels": 0,
+            "boundary_alpha_max": 2
+          },
+          {
+            "cell": 6,
+            "rect_ltrb": [
+              858,
+              443,
+              1302,
+              887
+            ],
+            "core_margin": 2,
+            "boundary_core_pixels": 0,
+            "boundary_alpha_max": 5
+          },
+          {
+            "cell": 7,
+            "rect_ltrb": [
+              1302,
+              443,
+              1774,
+              887
+            ],
+            "core_margin": 2,
+            "boundary_core_pixels": 0,
+            "boundary_alpha_max": 6
+          }
+        ]
+      },
+      "camera_followup_hold": true
+    },
+    {
+      "family": "town-mustard-taxi",
+      "sheet": "traffic8-v1.png",
+      "review_result": "PASS-source-candidate-identity-direction-alpha",
+      "cells": 8,
+      "source_sha256": "e90fedc4b666774faf82639361695ee61ee7967bbc53fb5a12e152455c09b1fe",
+      "prompt_sha256": "3d8c9aa632292d64d3c498139d0561a2de02f49784098b90c5e9a8c5f13304d8",
+      "qa": "generated/vehicles/town-mustard-taxi/traffic8-v1.independent-qa.json",
+      "actual_noses": [
+        "lower-left",
+        "down",
+        "lower-right",
+        "right",
+        "upper-right",
+        "up",
+        "upper-left",
+        "left"
+      ],
+      "raw_alpha": {
+        "target": "generated/vehicles/town-mustard-taxi/traffic8-v1.png",
+        "size": [
+          1774,
+          887
+        ],
+        "zero_alpha_fraction": 0.6404929528235098,
+        "outer_border_p50max": [
+          0.0,
+          1.0
+        ],
+        "center_gutter_p50p95max": [
+          0.0,
+          0.0,
+          1.0
+        ],
+        "row_cut_x": [
+          [
+            0,
+            443,
+            832,
+            1282,
+            1774
+          ],
+          [
+            0,
+            443,
+            828,
+            1268,
+            1774
+          ]
+        ],
+        "cells": [
+          {
+            "cell": 0,
+            "rect_ltrb": [
+              0,
+              0,
+              443,
+              443
+            ],
+            "core_margin": 3,
+            "boundary_core_pixels": 0,
+            "boundary_alpha_max": 6
+          },
+          {
+            "cell": 1,
+            "rect_ltrb": [
+              443,
+              0,
+              832,
+              443
+            ],
+            "core_margin": 54,
+            "boundary_core_pixels": 0,
+            "boundary_alpha_max": 3
+          },
+          {
+            "cell": 2,
+            "rect_ltrb": [
+              832,
+              0,
+              1282,
+              443
+            ],
+            "core_margin": 2,
+            "boundary_core_pixels": 0,
+            "boundary_alpha_max": 5
+          },
+          {
+            "cell": 3,
+            "rect_ltrb": [
+              1282,
+              0,
+              1774,
+              443
+            ],
+            "core_margin": 1,
+            "boundary_core_pixels": 0,
+            "boundary_alpha_max": 7
+          },
+          {
+            "cell": 4,
+            "rect_ltrb": [
+              0,
+              443,
+              443,
+              887
+            ],
+            "core_margin": 11,
+            "boundary_core_pixels": 0,
+            "boundary_alpha_max": 1
+          },
+          {
+            "cell": 5,
+            "rect_ltrb": [
+              443,
+              443,
+              828,
+              887
+            ],
+            "core_margin": 80,
+            "boundary_core_pixels": 0,
+            "boundary_alpha_max": 9
+          },
+          {
+            "cell": 6,
+            "rect_ltrb": [
+              828,
+              443,
+              1268,
+              887
+            ],
+            "core_margin": 2,
+            "boundary_core_pixels": 0,
+            "boundary_alpha_max": 5
+          },
+          {
+            "cell": 7,
+            "rect_ltrb": [
+              1268,
+              443,
+              1774,
+              887
+            ],
+            "core_margin": 2,
+            "boundary_core_pixels": 0,
+            "boundary_alpha_max": 4
+          }
+        ]
+      },
+      "camera_followup_hold": true
+    },
+    {
+      "family": "golf-reel-mower",
+      "sheet": "cardinal-v1.png",
+      "review_result": "PASS-source-candidate-identity-direction-alpha",
+      "cells": 4,
+      "source_sha256": "418ebe44a637ee2688cc48d6e67f6de880f75c50b699fecefe6234370de3a77d",
+      "prompt_sha256": "e35dc4b5e3bc85b7e48622dd75b4c04b1b39c9c58917133e130e3bc957672089",
+      "qa": "generated/vehicles/golf-reel-mower/cardinal-v1.independent-qa.json",
+      "actual_noses": [
+        "down",
+        "right",
+        "up",
+        "left"
+      ],
+      "raw_alpha": {
+        "target": "generated/vehicles/golf-reel-mower/cardinal-v1.png",
+        "size": [
+          1396,
+          1127
+        ],
+        "zero_alpha_fraction": 0.584207508841334,
+        "outer_border_p50max": [
+          0.0,
+          1.0
+        ],
+        "center_gutter_p50p95max": [
+          0.0,
+          0.0,
+          1.0
+        ],
+        "row_cut_x": [
+          [
+            0,
+            698,
+            1396
+          ],
+          [
+            0,
+            698,
+            1396
+          ]
+        ],
+        "cells": [
+          {
+            "cell": 0,
+            "rect_ltrb": [
+              0,
+              0,
+              698,
+              563
+            ],
+            "core_margin": 32,
+            "boundary_core_pixels": 0,
+            "boundary_alpha_max": 1
+          },
+          {
+            "cell": 1,
+            "rect_ltrb": [
+              698,
+              0,
+              1396,
+              563
+            ],
+            "core_margin": 34,
+            "boundary_core_pixels": 0,
+            "boundary_alpha_max": 1
+          },
+          {
+            "cell": 2,
+            "rect_ltrb": [
+              0,
+              563,
+              698,
+              1127
+            ],
+            "core_margin": 24,
+            "boundary_core_pixels": 0,
+            "boundary_alpha_max": 1
+          },
+          {
+            "cell": 3,
+            "rect_ltrb": [
+              698,
+              563,
+              1396,
+              1127
+            ],
+            "core_margin": 31,
+            "boundary_core_pixels": 0,
+            "boundary_alpha_max": 1
+          }
+        ]
+      }
+    },
+    {
+      "family": "golf-reel-mower",
+      "sheet": "yaw8-v1.png",
+      "review_result": "HOLD-exact8-geometry; all4nearcardinaldirections-present-with-actual-layout",
+      "cells": 4,
+      "source_sha256": "bac7a4caf2154e39f8bde35af2c4d5f2cdb726c4007e821cb941d1c3699cc11d",
+      "prompt_sha256": "bdacd6ebff98a1a5d64db584ce301258e161701ea757630d381531d5fd46378c",
+      "qa": "generated/vehicles/golf-reel-mower/yaw8-v1.independent-qa.json",
+      "actual_noses": [
+        "almost down, angled lower-left",
+        "almost left, angled lower-left",
+        "almost up, angled upper-right",
+        "almost right, angled lower-right"
+      ],
+      "raw_alpha": {
+        "target": "generated/vehicles/golf-reel-mower/yaw8-v1.png",
+        "size": [
+          1396,
+          1127
+        ],
+        "zero_alpha_fraction": 0.48745496703726965,
+        "outer_border_p50max": [
+          0.0,
+          1.0
+        ],
+        "center_gutter_p50p95max": [
+          0.0,
+          1.0,
+          1.0
+        ],
+        "row_cut_x": [
+          [
+            0,
+            698,
+            1396
+          ],
+          [
+            0,
+            698,
+            1396
+          ]
+        ],
+        "cells": [
+          {
+            "cell": 0,
+            "rect_ltrb": [
+              0,
+              0,
+              698,
+              563
+            ],
+            "core_margin": 27,
+            "boundary_core_pixels": 0,
+            "boundary_alpha_max": 1
+          },
+          {
+            "cell": 1,
+            "rect_ltrb": [
+              698,
+              0,
+              1396,
+              563
+            ],
+            "core_margin": 32,
+            "boundary_core_pixels": 0,
+            "boundary_alpha_max": 1
+          },
+          {
+            "cell": 2,
+            "rect_ltrb": [
+              0,
+              563,
+              698,
+              1127
+            ],
+            "core_margin": 43,
+            "boundary_core_pixels": 0,
+            "boundary_alpha_max": 1
+          },
+          {
+            "cell": 3,
+            "rect_ltrb": [
+              698,
+              563,
+              1396,
+              1127
+            ],
+            "core_margin": 30,
+            "boundary_core_pixels": 0,
+            "boundary_alpha_max": 1
+          }
+        ]
+      }
+    }
+  ],
+  "no_runtime_changes": true,
+  "whole_catalogue_complete": false,
+  "camera_followup": "Visual review of side profiles in traffic8 atlases finds reduced apparent camera elevation vs corner/front/rear pictures. Earlier PASS means identity/directions/alpha only, not uniform fixed30degree camera. Fullsource-set geometry remains held pending correction/proof."
+}

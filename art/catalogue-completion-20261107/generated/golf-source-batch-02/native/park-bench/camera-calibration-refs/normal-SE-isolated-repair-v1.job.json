@@ -1,0 +1,94 @@
+{
+  "id": "park-bench-normal-SE-isolated-repair-v1",
+  "subject": "newprop:park-bench",
+  "target_guide_corner": "SE",
+  "target_intended_geometry": "orthographic 30 degrees down, 45 degree corner; technical guide is camera authority, not a native result certificate",
+  "state": "prepared-native-generation-not-run",
+  "technical_calibration": {
+    "path": "generated/golf-source-batch-02/fixed-world-guides-v1/park-bench/guides/normal-world-v1.calibration.json",
+    "sha256": "fb0e8b8076df0b49818f6053a0d81a24339db4b4ca901ff5c35d81dff12d8ef6",
+    "bytes": 100137
+  },
+  "source_native_identity_cell": "BR",
+  "source_native_identity_actual_guide_corner": "NE",
+  "references": [
+    "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/golf-source-batch-02/native/park-bench/camera-calibration-refs/normal-SE-world-guide-single-v1.png",
+    "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/golf-source-batch-02/native/park-bench/camera-calibration-refs/normal-SE-identity-from-v2-BR-NE.png"
+  ],
+  "reference_records": [
+    {
+      "role": "technical-camera-and-fixed-world-authority",
+      "source": {
+        "path": "generated/golf-source-batch-02/fixed-world-guides-v1/park-bench/guides/normal-world-v1.png",
+        "sha256": "24a6d201dd35f002348d0f0a6ff153e5c74cdf7e3d3949f1abd1401057945d37",
+        "bytes": 40858
+      },
+      "source_dimensions": [
+        1600,
+        1600
+      ],
+      "rectangle_ltrb": [
+        0,
+        0,
+        800,
+        800
+      ],
+      "crop": {
+        "path": "generated/golf-source-batch-02/native/park-bench/camera-calibration-refs/normal-SE-world-guide-single-v1.png",
+        "sha256": "dd5cd10d1f9f2548856bacd4af9196a1d5931535479dd80f7d499ed9d11aa891",
+        "bytes": 13016
+      },
+      "crop_dimensions": [
+        800,
+        800
+      ],
+      "mode": "RGBA",
+      "native_pixels_sha256": "89916c214c160dad9967e76d1ccbacb5a0fdfbebf9e91c5817e946a7239c82c7",
+      "pixel_identity_verified": true,
+      "resized": false,
+      "repainted": false,
+      "alpha_modified": false
+    },
+    {
+      "role": "native-material-identity-only-do-not-copy-input-camera",
+      "source": {
+        "path": "generated/golf-source-batch-02/native/park-bench/normal-v2.png",
+        "sha256": "0fc9e6e59578d34d44482cce1317cf77d15315612959a9f564cf990ce484fb7c",
+        "bytes": 1603986
+      },
+      "source_dimensions": [
+        1254,
+        1254
+      ],
+      "rectangle_ltrb": [
+        627,
+        627,
+        1254,
+        1254
+      ],
+      "crop": {
+        "path": "generated/golf-source-batch-02/native/park-bench/camera-calibration-refs/normal-SE-identity-from-v2-BR-NE.png",
+        "sha256": "39f79f0f4c8cfa82647d5f833bbffbe0b68b975b33878ec43c06203c25b7ebc1",
+        "bytes": 422376
+      },
+      "crop_dimensions": [
+        627,
+        627
+      ],
+      "mode": "RGBA",
+      "native_pixels_sha256": "ececb0e9488c2ea9bdd09538db7ced78ac30953f1539f49720cbb83bda5c9197",
+      "pixel_identity_verified": true,
+      "resized": false,
+      "repainted": false,
+      "alpha_modified": false
+    }
+  ],
+  "repair_instruction": "Front map face, opposite bench long-axis projection; guide SE long edge rises screen-right.",
+  "fixed_identity": "Three-place slatted bench, BACK on+Y, sitting FRONT on-Y. Tall attached course-map panel ALWAYS at physicalRIGHT+X. Panel FRONT has map, BACK bare wood; do not duplicate a front corner.",
+  "lighting": "late-afternoon daytime, sun screen upper-right, shadows lower-left, lamps off",
+  "target_output": "generated/golf-source-batch-02/native/park-bench/normal-SE-isolated-v1.png",
+  "owner_approved": false,
+  "runtime_imported": false,
+  "lossless_reference_crops_visually_inspected": true,
+  "reference_visual_review": "Guide label, complete subject, desired opposite projection, and correct identity-source physical side inspected; native source camera is not target camera authority."
+}

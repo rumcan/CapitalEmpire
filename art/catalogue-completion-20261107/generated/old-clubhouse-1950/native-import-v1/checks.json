@@ -1,0 +1,23 @@
+{
+  "schema": 1,
+  "date": "2026-11-07",
+  "importer": {
+    "command": "node --test scripts/assets/import-object-eight.test.mjs",
+    "passed": 4,
+    "failed": 0,
+    "generatedTypeScriptSemanticCompilation": true
+  },
+  "typecheck": {
+    "command": "npm run typecheck",
+    "exitCode": 0
+  },
+  "nativeRuntimeEvidence": "runtime-verification.json",
+  "fixedDuringImport": "Generated spread literals widened approval/projection discriminants. Emit a separately typed native array; semantic fixture checks real facing/seating types.",
+  "notRun": [
+    "full suite",
+    "build",
+    "dev server",
+    "owner-live deployment"
+  ],
+  "pending": "Standalone in-game scale/alignment check before old clubhouse alias."
+}

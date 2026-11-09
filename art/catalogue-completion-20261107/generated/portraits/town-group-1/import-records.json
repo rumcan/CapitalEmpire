@@ -1,0 +1,175 @@
+{
+  "sheet": {
+    "path": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\portraits\\town-group-1\\source.png",
+    "sha256": "3a8f1d9854c1ac078bb8ac9df5922e5cbc5064f1c014bf2e75dc72c94145ef89",
+    "bytes": 3392494
+  },
+  "records": [
+    {
+      "look_id": "person:3d:base_kid",
+      "cell_index": 0,
+      "cell_position": "top-left",
+      "source_crop_box": [
+        0,
+        0,
+        599,
+        656
+      ],
+      "dimensions": [
+        599,
+        656
+      ],
+      "mode": "RGB",
+      "source_file": {
+        "path": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\portraits\\town-group-1\\person-3d-base-kid.native.png",
+        "sha256": "bc387ed462eef8cae52385380b4624944d480d06766145fdfac337dc4bf29de0",
+        "bytes": 806533
+      },
+      "pixel_sha256": "a747672b356a2e418ff80ce1dcec8e93167725903fe5c9649f0996dd84c4733f",
+      "operation": "exact native rectangle; no resize/repaint/alpha reconstruction",
+      "parent_reviewed": true,
+      "owner_approved": false,
+      "runtime_ready": true,
+      "runtime_integrated": true,
+      "manifest_record": {
+        "lookId": "person:3d:base_kid",
+        "file": "base-kid.png",
+        "w": 599,
+        "h": 656,
+        "bytes": 806533,
+        "state": "one"
+      },
+      "runtime_file": {
+        "path": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\src\\assets\\portraits\\base-kid.png",
+        "sha256": "bc387ed462eef8cae52385380b4624944d480d06766145fdfac337dc4bf29de0",
+        "bytes": 806533
+      }
+    },
+    {
+      "look_id": "person:3d:base_man",
+      "cell_index": 1,
+      "cell_position": "top-right",
+      "source_crop_box": [
+        599,
+        0,
+        1199,
+        656
+      ],
+      "dimensions": [
+        600,
+        656
+      ],
+      "mode": "RGB",
+      "source_file": {
+        "path": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\portraits\\town-group-1\\person-3d-base-man.native.png",
+        "sha256": "77ee7b8bfa3ed53b95c8e665fc85a76a32aa7d07e90cd1c0b8a758824591208f",
+        "bytes": 767677
+      },
+      "pixel_sha256": "28a9520eb652475f0ba46e93da8f8802549bd20ba9fabc766b0bb879051021d2",
+      "operation": "exact native rectangle; no resize/repaint/alpha reconstruction",
+      "parent_reviewed": true,
+      "owner_approved": false,
+      "runtime_ready": true,
+      "runtime_integrated": true,
+      "manifest_record": {
+        "lookId": "person:3d:base_man",
+        "file": "base-man.png",
+        "w": 600,
+        "h": 656,
+        "bytes": 767677,
+        "state": "one"
+      },
+      "runtime_file": {
+        "path": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\src\\assets\\portraits\\base-man.png",
+        "sha256": "77ee7b8bfa3ed53b95c8e665fc85a76a32aa7d07e90cd1c0b8a758824591208f",
+        "bytes": 767677
+      }
+    },
+    {
+      "look_id": "person:3d:base_woman",
+      "cell_index": 2,
+      "cell_position": "bottom-left",
+      "source_crop_box": [
+        0,
+        656,
+        599,
+        1312
+      ],
+      "dimensions": [
+        599,
+        656
+      ],
+      "mode": "RGB",
+      "source_file": {
+        "path": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\portraits\\town-group-1\\person-3d-base-woman.native.png",
+        "sha256": "a41fe844723171b8d281a676f370f9d189bbac9868b9ea1f29ae244e9a8adfac",
+        "bytes": 771564
+      },
+      "pixel_sha256": "92a4d512364e142f5d6e17506daedf165ed6d52c1eb003aeace2c6a34f62ed11",
+      "operation": "exact native rectangle; no resize/repaint/alpha reconstruction",
+      "parent_reviewed": true,
+      "owner_approved": false,
+      "runtime_ready": true,
+      "runtime_integrated": true,
+      "manifest_record": {
+        "lookId": "person:3d:base_woman",
+        "file": "base-woman.png",
+        "w": 599,
+        "h": 656,
+        "bytes": 771564,
+        "state": "one"
+      },
+      "runtime_file": {
+        "path": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\src\\assets\\portraits\\base-woman.png",
+        "sha256": "a41fe844723171b8d281a676f370f9d189bbac9868b9ea1f29ae244e9a8adfac",
+        "bytes": 771564
+      }
+    },
+    {
+      "look_id": "person:3d:town_k_boy",
+      "cell_index": 3,
+      "cell_position": "bottom-right",
+      "source_crop_box": [
+        599,
+        656,
+        1199,
+        1312
+      ],
+      "dimensions": [
+        600,
+        656
+      ],
+      "mode": "RGB",
+      "source_file": {
+        "path": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\portraits\\town-group-1\\person-3d-town-k-boy.native.png",
+        "sha256": "b917581170f682a6851073d0fb81941c1fd27518296ad39d054904f72d7b5b8b",
+        "bytes": 814911
+      },
+      "pixel_sha256": "fb9633fd73a862e1f803bf0e478d5eb3fca2fa4dbd370afb8004ad4bfdc641a9",
+      "operation": "exact native rectangle; no resize/repaint/alpha reconstruction",
+      "parent_reviewed": true,
+      "owner_approved": false,
+      "runtime_ready": true,
+      "runtime_integrated": true,
+      "manifest_record": {
+        "lookId": "person:3d:town_k_boy",
+        "file": "town-k-boy.png",
+        "w": 600,
+        "h": 656,
+        "bytes": 814911,
+        "state": "one"
+      },
+      "runtime_file": {
+        "path": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\src\\assets\\portraits\\town-k-boy.png",
+        "sha256": "b917581170f682a6851073d0fb81941c1fd27518296ad39d054904f72d7b5b8b",
+        "bytes": 814911
+      }
+    }
+  ],
+  "runtime_writes_performed": true,
+  "manifest": {
+    "path": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\src\\assets\\portraits\\manifest.json",
+    "sha256": "99c69f9b89befca26a6e885a21bb1a11ee3a35e0303cff8403a75be2ab5ab804",
+    "bytes": 2214
+  }
+}

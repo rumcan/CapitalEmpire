@@ -1,0 +1,63 @@
+{
+  "schema": 1,
+  "createdUtc": "2026-11-07T06:47:45.284562+00:00",
+  "exactRuntimeId": "gen:back-patio-pool",
+  "source": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/building-views/gen-back-patio-pool/NE.png",
+  "sourceSha256": "d3dea6d17d1430f2991775efdaf271b4a54701965508349894a00dbfe461589d",
+  "output": "identity-references/gen-back-patio-pool-3b943d52/source.png",
+  "outputSha256": "d3dea6d17d1430f2991775efdaf271b4a54701965508349894a00dbfe461589d",
+  "width": 627,
+  "height": 598,
+  "sourceCell": {
+    "kind": "already isolated native PNG; whole file",
+    "rectXYWH": [
+      0,
+      0,
+      627,
+      598
+    ]
+  },
+  "operation": "byte-for-byte PNG copy only; no resize, crop, recolour, key, repaint, registration or source mutation",
+  "selection": "registered corner NE native PNG for this exact subject",
+  "registeredCornerDirection": "NE",
+  "sourceEvidence": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\building-views\\gen-back-patio-pool\\provenance.json",
+  "sourceReview": {
+    "status": "generated-awaiting-visual-review",
+    "integrationStatus": "ready",
+    "integrationReason": "Fivepure-reassignmentaudit: fourdistinctphysicalcornersalreadyexisted; canonicalclockwiseorderingcorrectedwithoutgeneration/resizing/mirroring. Actualmagentaalphaandpost-permutationgeometryreviewPASS; all4sourcePNGbytehashesconserved. RuntimecalibrationrequiresmatchingmeasurednativeSHA."
+  },
+  "sourceRegistration": {
+    "id": "gen:back-patio-pool",
+    "version": "gen-back-patio-pool-4views-v2",
+    "files": {
+      "NE": "d3dea6d17d1430f2991775efdaf271b4a54701965508349894a00dbfe461589d",
+      "SE": "9e3266f55891f86de19d9a595c48aa2d34319bebb317431dbbab19f5762ecdfc",
+      "SW": "ca33f0d26f8235632d2710d9d61a06cfcc588af2b191068eca9895a0ec3219b4",
+      "NW": "056676e8bf2a81f305d5dfebf3628720d1fa9e0275ed0a87798ec34a8e8e0f52"
+    }
+  },
+  "originalInventorySource": {
+    "library": "src/game/library.ts",
+    "librarySha256": "91b5190292c1005ac7b936f08e5e1ebf3be43c3aae99f92ea510775da83d9726",
+    "atlas": "src/assets/atlas/sprites-5-0.webp",
+    "atlasSha256": "ae625d1156c036112692eb54fa253620cd951de8603ee9b3458e9f609bd50bf6",
+    "runtimePage": 5,
+    "localPage": 5,
+    "uv": [
+      0.296875,
+      0.25,
+      0.545898,
+      0.465332
+    ],
+    "crop": {
+      "left": 608,
+      "top": 512,
+      "width": 510,
+      "height": 441
+    },
+    "native": "art/theme-consistency/exports/buildings/gen-back-patio-pool.native.png",
+    "nativeSha256": "a3a2d07e050a8ed6d6736240aa48d869305cc2825a7b262cd993f17fd090cd86"
+  },
+  "originalBusinessSourceCell": null,
+  "nativeReferenceApprovalClaimed": false
+}

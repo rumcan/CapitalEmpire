@@ -1,0 +1,230 @@
+{
+  "schema": 1,
+  "as_of_utc": "2026-11-07T12:22:07.194839+00:00",
+  "review_result": "PASS-source-candidate-open-front-mesh-rear-function",
+  "recommended_continue_yaw_source_generation": true,
+  "continuation_scope": "Sourceidentity/function/alpha only; not final8direction, owner/release, numericalangle or runtime approval.",
+  "source": {
+    "path": "generated/golf-source-batch-01/native/golf-source-01-11-practice-net/upgraded-normal-v1.png",
+    "sha256": "f11e2a553c43ea3202b5fec844fd6a745c273c8bc37505c73940cb18887be228",
+    "bytes": 2417621
+  },
+  "condition": "upgraded",
+  "runtime_target_proposal": {
+    "runtimeSubjectId": "business:golf-practice-net",
+    "name": "golf practice net",
+    "librarySource": "src/game/business-library.ts",
+    "baseBoxesInTiles": [
+      {
+        "hx": 1,
+        "hy": 1,
+        "dx": 0,
+        "dy": 0
+      }
+    ],
+    "baseBoxMetres": {
+      "width": 4,
+      "depth": 4
+    },
+    "dimensionsMeaning": "Generic base collision box only, not authored physical object measurement; placement/studio scale can change it. Proposed real object dimensions are explicit in functionalIdentity.",
+    "sourceDisplayPixels": {
+      "width": 508,
+      "height": 462
+    }
+  },
+  "source_original_hash_matches_parent_provenance": true,
+  "parent_provenance": {
+    "path": "generated/golf-source-batch-01/native/golf-source-01-11-practice-net/upgraded-normal-v1.provenance.json",
+    "sha256": "a8e93cd123519c8e9badd8ed360d336c04d08f96b6dcee4e87b6351392d108a6",
+    "bytes": 3521
+  },
+  "parent_archive": {
+    "path": "generated/golf-source-batch-01/native/golf-source-01-11-practice-net/upgraded-normal-v1.archive.json",
+    "sha256": "ce6c4d9d3885c4d3d53071c6dac15b64c9cc4e6faabbbbff5402a13e33f3e5c0",
+    "bytes": 3601
+  },
+  "actual_prompt_from_provenance_utf8_sha256": "212ad86c86e8495deeec1066a30ac14a4a83ed30edaa6aa09202be71d4a4ae59",
+  "actual_generation_references": [
+    {
+      "path": "generated/golf-source-batch-01/references/golf-practice-net.source.png",
+      "sha256": "ac1c8162bf7b832ff78f5992d68b0d6a07753ab5ad03841f900280d8c7fdf42a",
+      "bytes": 457088
+    },
+    {
+      "path": "generated/old-clubhouse-1950/normal-v5.png",
+      "sha256": "a996fb471f351cc35926c84090192a8b55cc3557bb1bf9fec24872218fa219a6",
+      "bytes": 1473832
+    }
+  ],
+  "dimensions": [
+    1254,
+    1254
+  ],
+  "mode": "RGBA",
+  "zero_alpha_fraction": 0.3211191491851275,
+  "outer_border_alpha_p95max": [
+    1.0,
+    2.0
+  ],
+  "center_gutter_alpha_p95max": [
+    1.0,
+    2.0
+  ],
+  "horizontal_clear_cut_row": 627,
+  "all_four_native_core_silhouettes_complete": true,
+  "four_distinct_core_pixel_hashes": true,
+  "cells": [
+    {
+      "cell": 0,
+      "function_corner": "front+left",
+      "proposed_lossless_rect_ltrb": [
+        0,
+        0,
+        627,
+        627
+      ],
+      "core_bbox_ltrb": [
+        74,
+        51,
+        557,
+        554
+      ],
+      "minimum_core_margin_px": 51,
+      "boundary_core_pixels_alpha_gt128": 0,
+      "boundary_alpha_max": 2,
+      "native_rgba_rectangle_sha256": "c73881ce2546c214129fc381958553f9e7c39eca7faeb4d39beeaaf3a4d527de",
+      "trimmed_core_pixel_hash_ignore_alpha_le128": "2978e8ea3fa9cb28cad10eeaafb30ab9cc674c907b410e613d10ca80681add5b"
+    },
+    {
+      "cell": 1,
+      "function_corner": "rear+left",
+      "proposed_lossless_rect_ltrb": [
+        627,
+        0,
+        1254,
+        627
+      ],
+      "core_bbox_ltrb": [
+        75,
+        51,
+        547,
+        554
+      ],
+      "minimum_core_margin_px": 51,
+      "boundary_core_pixels_alpha_gt128": 0,
+      "boundary_alpha_max": 2,
+      "native_rgba_rectangle_sha256": "690c55b5986482519f9186fbd2dfd8242befa8af4e3e1e3fe618e96aa22b454e",
+      "trimmed_core_pixel_hash_ignore_alpha_le128": "bcab9978151f3d563e310ee65019bf249583051b8250e2e41b3d8e5ebd192097"
+    },
+    {
+      "cell": 2,
+      "function_corner": "rear+right",
+      "proposed_lossless_rect_ltrb": [
+        0,
+        627,
+        627,
+        1254
+      ],
+      "core_bbox_ltrb": [
+        79,
+        48,
+        549,
+        558
+      ],
+      "minimum_core_margin_px": 48,
+      "boundary_core_pixels_alpha_gt128": 0,
+      "boundary_alpha_max": 2,
+      "native_rgba_rectangle_sha256": "258f5ebea41e792302d4343855a63502c1325752cabbd682bfde30751bfa8d61",
+      "trimmed_core_pixel_hash_ignore_alpha_le128": "6f526b2d089dc4b665353ead1db3dc2b7c8f0e5b2cd9a52f084c3ab52292b5eb"
+    },
+    {
+      "cell": 3,
+      "function_corner": "front+right",
+      "proposed_lossless_rect_ltrb": [
+        627,
+        627,
+        1254,
+        1254
+      ],
+      "core_bbox_ltrb": [
+        68,
+        49,
+        562,
+        548
+      ],
+      "minimum_core_margin_px": 49,
+      "boundary_core_pixels_alpha_gt128": 0,
+      "boundary_alpha_max": 1,
+      "native_rgba_rectangle_sha256": "5895fbc52593a53ef9ec36f573fc25e230194e67acaa7b195560abec0a249920",
+      "trimmed_core_pixel_hash_ignore_alpha_le128": "29c65c7bbf1df96bc96adc619f92b1602663d28b7bf3cd69978f80c30d08973e"
+    }
+  ],
+  "mesh_alpha_samples": [
+    {
+      "region": "backmesh",
+      "source_rect_ltrb": [
+        350,
+        280,
+        440,
+        370
+      ],
+      "alpha_p0p5p50p95p100": [
+        16.0,
+        37.0,
+        70.0,
+        229.0,
+        252.0
+      ],
+      "interpretation": "Semi-transparent painted netting; overlapping panels can increase opacity. No alpha editing performed."
+    },
+    {
+      "region": "leftmesh",
+      "source_rect_ltrb": [
+        150,
+        220,
+        220,
+        330
+      ],
+      "alpha_p0p5p50p95p100": [
+        138.0,
+        161.0,
+        184.0,
+        203.0,
+        238.0
+      ],
+      "interpretation": "Semi-transparent painted netting; overlapping panels can increase opacity. No alpha editing performed."
+    },
+    {
+      "region": "roofmesh",
+      "source_rect_ltrb": [
+        250,
+        110,
+        350,
+        160
+      ],
+      "alpha_p0p5p50p95p100": [
+        55.0,
+        96.0,
+        151.0,
+        250.0,
+        252.0
+      ],
+      "interpretation": "Semi-transparent painted netting; overlapping panels can increase opacity. No alpha editing performed."
+    }
+  ],
+  "visual_observations": [
+    "TL/BR show open entry and visible hittingmat/tee;TR/BL show rear mesh. Four corners, no opaque shed back.",
+    "Green tube frame, top/back/side mesh and side braces retained. Native mesh genuinely varies in alpha; net density is a release visual detail, not a reason to key/reconstruct alpha."
+  ],
+  "exact_numerical_angle_certified": false,
+  "release_anchors_authored": false,
+  "owner_approved": false,
+  "runtime_ready": false,
+  "runtime_imported": false,
+  "source_crops_or_pixel_changes": false,
+  "exact_prompt_file": {
+    "path": "generated/golf-source-batch-01/native/golf-source-01-11-practice-net/upgraded-normal-v1.prompt.txt",
+    "sha256": "788817211fce018183f9035ff1cb424c2483ec249115f0e9e08a7082c9599c48",
+    "bytes": 1959
+  }
+}

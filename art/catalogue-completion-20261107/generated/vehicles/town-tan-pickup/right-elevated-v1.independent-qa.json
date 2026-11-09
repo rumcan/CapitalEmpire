@@ -1,0 +1,67 @@
+{
+  "schema": 1,
+  "as_of_utc": "2026-11-07T11:26:36.499594+00:00",
+  "review_result": "PASS-elevated-single-source-candidate-direction-visual-camera-alpha;release-pending",
+  "source": {
+    "path": "generated/vehicles/town-tan-pickup/right-elevated-v1.png",
+    "sha256": "34b43657c79322b4a8735a550ba13d4c9a5cbbac1adeffdbe40433e7f543a9ee",
+    "bytes": 1221852
+  },
+  "parent_provenance": {
+    "path": "generated/vehicles/town-tan-pickup/right-elevated-v1.provenance.json",
+    "sha256": "7fa2339b32cb99f56e8b09deac75ce0647b10daeb00a24bf9ae623a7224ad64d",
+    "bytes": 2220
+  },
+  "source_original_hash_matches_parent_provenance": true,
+  "mode": "RGBA",
+  "dimensions": [
+    1774,
+    887
+  ],
+  "actual_screen_nose": "right",
+  "subject_model": "town-tan-pickup",
+  "is_single_sprite_not_sheet": true,
+  "core_bbox_ltrb": [
+    292,
+    174,
+    1480,
+    740
+  ],
+  "minimum_canvas_core_margin_px": 147,
+  "zero_alpha_fraction": 0.6032139039540195,
+  "outer_border_alpha_max": 1,
+  "outside_core_bbox10_alpha_p95max": [
+    1.0,
+    2.0
+  ],
+  "mid_alpha_fraction9to127": 0.0020196525282516215,
+  "identity_references": [
+    {
+      "path": "generated/vehicles/town-tan-pickup/camera-calibration-refs/right-camera-only.png",
+      "sha256": "96d62f3e7abff6fc3da6546ecc1dd6569975978e51e1ce3e8c2f279878ab87cb",
+      "bytes": 5357
+    },
+    {
+      "path": "generated/vehicles/town-tan-pickup/camera-calibration-refs/corner-identity-only.png",
+      "sha256": "8626ff979d1256b5b27145aeda0595656c549354c8cbc81343d23105286e8752",
+      "bytes": 201487
+    }
+  ],
+  "exact_prompt": {
+    "path": "generated/vehicles/town-tan-pickup/right-elevated-v1.prompt.txt",
+    "sha256": "ea1f965cac9eac541ad2772a6dcc4d5e2a5fe635a754c2f38b2c56c84446fb07",
+    "bytes": 1346
+  },
+  "notes": [
+    "Actual screen nose RIGHT; longitudinal body/wheelbase is horizontal, no broad front/rear grille plane is exposed.",
+    "Broad roof/hood/boot or open bed top surfaces are materially closer to isolated elevatedcamera reference than old traffic8 col4 profiles.",
+    "This is qualitative reference matching, not a numerical30degree certificate. Cross-view physical scale, anchors and full eight-heading release review remain pending.",
+    "Apparent raw-view RGB glow is not actual haze: native background alpha measured separately. No coded cleanup or source pixels changed.",
+    "Secondary identity review: new open bed interiors flatten away the wheelwell intrusions present in old rear/corner views. Overall standardcab/openbed identity remains distinct."
+  ],
+  "no_native_pixel_changes_or_source_crops": true,
+  "exact30degree_certified": false,
+  "owner_approved": false,
+  "runtime_ready": false,
+  "runtime_imported": false
+}

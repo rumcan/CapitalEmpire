@@ -9,8 +9,17 @@
 // engine makes (tree-sun.ts TREE_MIRROR): it is drawn mirrored so its light comes from the right.
 import type { LibItem } from './types';
 import { BUILDING_IDS, VIEW_ART, unmirror } from './views-library';
-import { AXIS_TURN } from './axis-library';
+import { AXIS_HEADING, AXIS_TURN } from './axis-library';
 import { extraUnmirror } from './extra-views';
+import { EXTRA_VIEW_SETS } from './extra-views-library';
+import { OBJECT_EIGHT_SETS } from './object-eight-library';
+import { objectNormalReplacements } from './object-eight-core';
+const OBJECT_EIGHT_IDS = new Set(OBJECT_EIGHT_SETS.flatMap(s => Object.values(s.views).map(v => v.id)));
+const OBJECT_REPLACE = objectNormalReplacements(OBJECT_EIGHT_SETS, base => {
+  const extra = EXTRA_VIEW_SETS[base];
+  // Square-axis art is not silently relabelled as normal or yaw8.
+  return AXIS_HEADING[base] !== undefined && !extra ? null : extra ?? [base, unmirror(base, true)[0], `view:${base}:sw`, `view:${base}:nw`];
+});
 
 /** the natural kinds: never mirrored (the sun stays at the upper right) */
 export const NATURAL_KINDS: ReadonlySet<string> = new Set(['tree', 'bush', 'shrub', 'flower', 'palm', 'rock']);
@@ -22,6 +31,8 @@ export const isBuilding = (it: LibItem) => BUILDING_IDS.has(it.id) || KINDS.has(
 /** the sprite and flip a library sprite is drawn with: a building, a screen-axis picture, a natural thing or a kit picture is never mirrored;
  *  anything else as it is */
 export function drawnAs(it: LibItem, flip: boolean): [string, boolean] {
+  if (OBJECT_EIGHT_IDS.has(it.id)) return [it.id, false];
+  const replacement = OBJECT_REPLACE.get(it.id); if (replacement) return [replacement[flip ? 1 : 0], false];
   const garage = extraUnmirror(it.id, flip); if (garage !== null) return [garage, false];
   const a = AXIS_TURN[it.id]; if (a !== undefined) return [flip ? a : it.id, false];
   if (it.id.startsWith('east:') && !VIEW_ART.has(it.id)) return [it.id.slice(5), false];

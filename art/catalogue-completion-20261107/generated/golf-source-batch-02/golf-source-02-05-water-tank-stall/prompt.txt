@@ -1,0 +1,4 @@
+Actual source has a large water tank, two front taps, front metal wash/drip trough and bucket below. Redesign as ordinary1950scourse water station: galvanized rectangular cistern on a bolted practical steel/timber stand, two taps, one drip trough, rear fill cap. Keep tank/plumbing roles; remove blue plastic tarp, ropes and modern IBC cage.
+Ordinary1950sbudget redesign required. Worn working cistern for budget; clean painted metal tank and tidy plumbing for upgraded; no makeshift goblin hut.
+Same painterly game style as style-authority.png, late-afternoon daylight, one sun upper-right, shadows lower-left, transparent background. No people, captions, brands, gridlines or generic ground plates. Functional ramps, buckets, mounting feet and attached panels remain part of their object.
+Keep one fixed physical object and all its feature positions across all eight source-camera views.

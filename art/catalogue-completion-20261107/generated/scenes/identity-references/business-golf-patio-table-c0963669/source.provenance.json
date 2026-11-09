@@ -1,0 +1,38 @@
+{
+  "schema": 1,
+  "createdUtc": "2026-11-07T06:47:45.284562+00:00",
+  "exactRuntimeId": "business:golf-patio-table",
+  "source": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/src/assets/businesses/capital-v1/png/golf-patio-table.png",
+  "sourceSha256": "c4019c9fdc1e53f3651cc8ceed71052549d0350861ce7824fe04038a8bac5e0c",
+  "output": "identity-references/business-golf-patio-table-c0963669/source.png",
+  "outputSha256": "c4019c9fdc1e53f3651cc8ceed71052549d0350861ce7824fe04038a8bac5e0c",
+  "width": 507,
+  "height": 536,
+  "sourceCell": {
+    "kind": "already isolated native PNG; whole file",
+    "rectXYWH": [
+      0,
+      0,
+      507,
+      536
+    ]
+  },
+  "operation": "byte-for-byte PNG copy only; no resize, crop, recolour, key, repaint, registration or source mutation",
+  "selection": "retained exact-ID business source master PNG",
+  "registeredCornerDirection": null,
+  "sourceEvidence": null,
+  "sourceReview": null,
+  "sourceRegistration": null,
+  "originalInventorySource": null,
+  "originalBusinessSourceCell": {
+    "id": "golf-patio-table",
+    "sourceSheet": "sliced/builtin/golf-furniture.png",
+    "sourceCrop": [
+      64,
+      641,
+      499,
+      528
+    ]
+  },
+  "nativeReferenceApprovalClaimed": false
+}

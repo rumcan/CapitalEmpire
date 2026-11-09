@@ -1,0 +1,67 @@
+{
+  "priority": 8,
+  "jobId": "golf-vehicle-01-08-shanty-broadcast-van",
+  "runtimeSubjectId": "newprop:shanty-broadcast-van",
+  "runtimeName": "Shanty broadcast van",
+  "sourceReferencePNG": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-vehicle-source-batch-01\\references\\shanty-broadcast-van.source.png",
+  "sourceProvenance": {
+    "runtimeSubjectId": "newprop:shanty-broadcast-van",
+    "runtimeName": "Shanty broadcast van",
+    "png": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-vehicle-source-batch-01\\references\\shanty-broadcast-van.source.png",
+    "originalNativePNG": "E:\\Repos\\CapitalEmpire\\All Generated Images\\exec-d37c5a9e-d629-4a76-a14e-d0cb88c0a7fb.png",
+    "copiedNativeSheet": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-vehicle-source-batch-01\\original-sheets\\exec-d37c5a9e-d629-4a76-a14e-d0cb88c0a7fb.png",
+    "sourceSheetSHA256": "ac18eba54cddd39aa23b3d0c6476eeab33a5c7b33aaccbfb1bbd452e3451e9f6",
+    "cropRectXYWH": [
+      604,
+      104,
+      633,
+      550
+    ],
+    "sourceCell": "top right",
+    "pngSHA256": "8002f99b4eda67e9472e6203f1c6988d1541f0fa54ddf477ebdfa2afe2435d6c",
+    "rgbaSHA256": "10efdf2a87b86a735ef4100fb8c552f7d00809ef7b22a0a3bbbeb97b94e23905",
+    "cropPixels": [
+      633,
+      550
+    ],
+    "sourceMetadataCutOff": false,
+    "operation": "Native original RGBA crop only; no resize, recolour, alpha cleanup or synthesis. Source sheet contains4different objects, not4rotations.",
+    "visualInspection": "inspected native crop",
+    "actualIdentityNotes": "Confirmed older cab van with roof cable reel and HVAC, plus inappropriate pallet/tarp/rope roof additions; no satellite dish.",
+    "sourceOnlyNotReleaseProof": true
+  },
+  "runtimeLibrarySource": "src/game/new-props-library.ts",
+  "runtimeBaseBoxesInTiles": [
+    {
+      "hx": 2.5,
+      "hy": 2.5,
+      "dx": 0,
+      "dy": 0
+    }
+  ],
+  "sourceDisplayPixels": [
+    320,
+    278.04
+  ],
+  "dimensionsCaution": "Existing library box/studio display dimensions are not measured physical vehicle dimensions. No runtime size or economy changes.",
+  "functionalBrief": "One older boxy cream/green broadcast van with one roof cable reel, one compact roof HVAC/generator box, aerial at front roof and fixed side equipment panel. Rebuild the roof equipment on a proper bolted steel rack; rear has cargo/service doors, front windshield/cab stays front. No driver, dish or multiple vehicles.",
+  "conditionAndEraBrief": "Ordinary old-budget redesign: retain worn working van, reel, aerial and cooling equipment; remove wooden pallet scaffolding, rope bindings, corrugated patch roof and blue tarp. This is a single broadcast van, not batch01broadcast-compound or the satellite-dish van.",
+  "ordinaryBudgetRedesignRequired": true,
+  "originalAuditCounts": {
+    "normal": 0,
+    "yaw8": 0
+  },
+  "nativeGeneratedByThisBrief": false,
+  "exactEightImagesAlreadyProvenForThisStableID": false,
+  "existingNormal4UsableRefs": 0,
+  "generatedCoreReuseClaimed": false,
+  "scope": "An exact existing parked/decor prop identity. Do not count compound components, generic player carts, core maintenance utility or unapproved aliases as this ID completed.",
+  "sourcePlan": {
+    "normal": "2x2 SE/SW then NW/NE; orthographic30degrees down; four real equal-wall45degreecorners",
+    "yaw8": "2x2 N/E then S/W; orthographic30degrees down; cardinal direction physically turned8degrees, not square-on",
+    "frozenState": "All wheels straight, parked/unoccupied, equipment/ramp/dish/cargo in one fixed state across all8views.",
+    "style": "Same painterly game style; late-afternoon daylight, sun upper-right/shadows lower-left, lamps off; true transparent background with no ground plate, haze, captions or logos."
+  },
+  "ownerApproved": false,
+  "runtimeIntegrated": false
+}

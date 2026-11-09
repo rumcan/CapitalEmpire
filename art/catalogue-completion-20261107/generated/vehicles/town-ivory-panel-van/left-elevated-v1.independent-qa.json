@@ -1,0 +1,67 @@
+{
+  "schema": 1,
+  "as_of_utc": "2026-11-07T11:26:36.499594+00:00",
+  "review_result": "PASS-elevated-single-source-candidate-direction-visual-camera-alpha;release-pending",
+  "source": {
+    "path": "generated/vehicles/town-ivory-panel-van/left-elevated-v1.png",
+    "sha256": "c1b6d84e5faf4a2e9708973e6bff48a0af2a5d9c1f4dc88c633615bacae185d1",
+    "bytes": 1852631
+  },
+  "parent_provenance": {
+    "path": "generated/vehicles/town-ivory-panel-van/left-elevated-v1.provenance.json",
+    "sha256": "a0a7d59f66fd1374fc602485dc980fcba3d6fe0607da9da9d00215dd71cc59d2",
+    "bytes": 2296
+  },
+  "source_original_hash_matches_parent_provenance": true,
+  "mode": "RGBA",
+  "dimensions": [
+    1536,
+    1024
+  ],
+  "actual_screen_nose": "left",
+  "subject_model": "town-ivory-panel-van",
+  "is_single_sprite_not_sheet": true,
+  "core_bbox_ltrb": [
+    206,
+    186,
+    1323,
+    866
+  ],
+  "minimum_canvas_core_margin_px": 158,
+  "zero_alpha_fraction": 0.5828698476155599,
+  "outer_border_alpha_max": 1,
+  "outside_core_bbox10_alpha_p95max": [
+    0.0,
+    1.0
+  ],
+  "mid_alpha_fraction9to127": 0.0019283294677734375,
+  "identity_references": [
+    {
+      "path": "generated/vehicles/town-ivory-panel-van/camera-calibration-refs/left-camera-only.png",
+      "sha256": "7b881d7f4c2d45a01729ed760423050e18a0668fb2d968c515edabc2932f812f",
+      "bytes": 5555
+    },
+    {
+      "path": "generated/vehicles/town-ivory-panel-van/camera-calibration-refs/corner-identity-only.png",
+      "sha256": "46e0d3e436560f9a17295a57feb133e87f7342da5bae26a485cf0a11bf58f811",
+      "bytes": 225554
+    }
+  ],
+  "exact_prompt": {
+    "path": "generated/vehicles/town-ivory-panel-van/left-elevated-v1.prompt.txt",
+    "sha256": "c61f43e75dd26520c4bb7550c51772da6dced9365169f70e551d2bf0f16b3b5e",
+    "bytes": 1404
+  },
+  "notes": [
+    "Actual screen nose LEFT; longitudinal body/wheelbase is horizontal, no broad front/rear grille plane is exposed.",
+    "Broad roof/hood/boot or open bed top surfaces are materially closer to isolated elevatedcamera reference than old traffic8 col4 profiles.",
+    "This is qualitative reference matching, not a numerical30degree certificate. Cross-view physical scale, anchors and full eight-heading release review remain pending.",
+    "Apparent raw-view RGB glow is not actual haze: native background alpha measured separately. No coded cleanup or source pixels changed.",
+    "Secondary identity review: sliding cargo door handle/divisions are less explicit than old right-side atlas profile; both new sides show a mostly uninterrupted panel and rail. Preserve candidate; verify correct asymmetric side details before release."
+  ],
+  "no_native_pixel_changes_or_source_crops": true,
+  "exact30degree_certified": false,
+  "owner_approved": false,
+  "runtime_ready": false,
+  "runtime_imported": false
+}

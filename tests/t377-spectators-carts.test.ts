@@ -54,7 +54,7 @@ describe('T377: the galleries stand round a tee and a green, not on them', () =>
     assert.ok(onTee > 20 && onGreen > 20, `${onTee} fans on tee boxes, ${onGreen} on greens`);
   });
   it('with the ground every fan of every gallery is on open ground: not on a tee, a green, a fairway, water, a bunker, nor in front of a tee', () => {
-    const spots = gallerySpots(TEES, PINS, [], sf); assert.equal(spots.length, 6);
+    const spots = gallerySpots(TEES, PINS, [], undefined, sf); assert.equal(spots.length, 6);
     spots.forEach((s, i) => {
       const ps = fans(s, i); assert.equal(ps.length, 60, `spot ${i}`);
       for (const p of ps) {
@@ -72,7 +72,7 @@ describe('T377: the spectators walk the day without crossing a tee, a green, a b
   const f0 = fieldA(), sf = dilate(f0, SPECTATOR_GROW, SPECTATOR_WATER_GROW);
   /** the crowd's day: 8 groups of 3 from the gate to each gallery spot, started a little apart; the router (or none: the old straight line); each step's places and people */
   function day(router: boolean) {
-    const rc = new RouteCache(sf, SPECTATOR), C = new Crowd(1, 0), spots = gallerySpots(TEES, PINS, [], router ? sf : null); C.varied = true;
+    const rc = new RouteCache(sf, SPECTATOR), C = new Crowd(1, 0), spots = gallerySpots(TEES, PINS, [], undefined, router ? sf : null); C.varied = true;
     C.setSpots(spots.length); if (router) C.router = (x, y, tx, ty) => rc.route({ x, y }, { x: tx, y: ty });
     const added: number[] = []; let step = 0, centres = 0, badCentres = 0, people = 0, badPeople = 0, fairway = 0;
     const frames: { t: number; fr: number[]; pos: { x: number; y: number }[] }[] = [];

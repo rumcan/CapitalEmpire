@@ -1,0 +1,23 @@
+{
+  "schema": 1,
+  "lookId": "golfer:golf_pro_m1",
+  "original_generation_output": {
+    "path": "C:/Users/RAMPAGE/.codex/generated_images/01a1b1fd-39ec-7220-8f11-86e4448833ea/exec-f1f9f570-ee12-45d0-a3a0-94aa6c39e62d.png",
+    "sha256": "1e4b798feb936b78de7fb9f38e24bcf723181366741b29c6660cfc5065b68832",
+    "bytes": 3337751
+  },
+  "archived_original": {
+    "path": "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/portraits/golf-pro-m1/source.png",
+    "sha256": "1e4b798feb936b78de7fb9f38e24bcf723181366741b29c6660cfc5065b68832",
+    "bytes": 3337751
+  },
+  "prompt": {
+    "path": "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/portraits/golf-pro-m1/prompt.txt",
+    "sha256": "bec1515098e2220ad85b75dd316a2442628e33b62b2d306624ac769e07588052",
+    "bytes": 1316
+  },
+  "sourceOnly": true,
+  "pixelEqualityWithOriginal": true,
+  "currentRuntimePortraitSelectionNotAsserted": true,
+  "note": "Retrospective provenance verified from the exact original generation path supplied in the delegated task; this earlier standalone version is separate from later four-character portrait source sheets. No new image generated or pixels changed."
+}

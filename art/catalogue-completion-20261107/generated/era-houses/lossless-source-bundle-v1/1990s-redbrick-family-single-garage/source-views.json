@@ -1,0 +1,240 @@
+{
+  "key": "1990s-redbrick-family-single-garage",
+  "name": "1990s redbrick family single garage",
+  "sourceViews": [
+    {
+      "sourceCameraKey": "normalSE",
+      "nominalCameraFamily": "normal",
+      "file": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\lossless-source-bundle-v1\\1990s-redbrick-family-single-garage\\normalSE.png",
+      "sourceFile": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\1990s-redbrick-family-single-garage\\normal-v1.png",
+      "sourceFileSHA256": "30cac9c191f62ea4ddd48c3d1a699494be5fdf661925f83b164e42bc0c133f1f",
+      "sourceFrameRectLTRB": [
+        0,
+        0,
+        627,
+        627
+      ],
+      "operation": "lossless source-cell crop at QA-recorded frame rectangle",
+      "singleViewOverride": false,
+      "nativeSize": [
+        627,
+        627
+      ],
+      "pngSHA256": "6c1ed4c8b3b2326284b59d236ad63937e005a763bba67c1926ee27403e39065d",
+      "rgbaSHA256": "7de4865dda9885f4bd04f7c7b673d10d79dfdd97d36c03bbd81f3ac3eeed980a",
+      "sourceRGBAEqual": true,
+      "identityFeaturesReviewed": "front main door/two main windows, left gable2windows, garage front at right",
+      "sourceQA": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\1990s-redbrick-family-single-garage\\normal-v1.independent-qa.json",
+      "sourceProvenance": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\1990s-redbrick-family-single-garage\\normal-v1.provenance.json",
+      "nativeHeadingDegrees": null,
+      "nativeCameraCertified": false,
+      "runtimeReady": false,
+      "fileRelativeToBundle": "1990s-redbrick-family-single-garage/normalSE.png"
+    },
+    {
+      "sourceCameraKey": "normalSW",
+      "nominalCameraFamily": "normal",
+      "file": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\lossless-source-bundle-v1\\1990s-redbrick-family-single-garage\\normalSW.png",
+      "sourceFile": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\1990s-redbrick-family-single-garage\\normal-v1.png",
+      "sourceFileSHA256": "30cac9c191f62ea4ddd48c3d1a699494be5fdf661925f83b164e42bc0c133f1f",
+      "sourceFrameRectLTRB": [
+        627,
+        0,
+        1254,
+        627
+      ],
+      "operation": "lossless source-cell crop at QA-recorded frame rectangle",
+      "singleViewOverride": false,
+      "nativeSize": [
+        627,
+        627
+      ],
+      "pngSHA256": "3679c85ae989a49a879deea4d2fe6727fe8b63a721d8dc6368c9a1d8d56e81df",
+      "rgbaSHA256": "8a687ff02e7bc3965a34c72d9ac1b643c01fdcc2fe9ae3c9783e8cc0d7d3ed51",
+      "sourceRGBAEqual": true,
+      "identityFeaturesReviewed": "rear main door/3windows and left gable2windows, garage rear service door at far left",
+      "sourceQA": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\1990s-redbrick-family-single-garage\\normal-v1.independent-qa.json",
+      "sourceProvenance": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\1990s-redbrick-family-single-garage\\normal-v1.provenance.json",
+      "nativeHeadingDegrees": null,
+      "nativeCameraCertified": false,
+      "runtimeReady": false,
+      "fileRelativeToBundle": "1990s-redbrick-family-single-garage/normalSW.png"
+    },
+    {
+      "sourceCameraKey": "normalNW",
+      "nominalCameraFamily": "normal",
+      "file": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\lossless-source-bundle-v1\\1990s-redbrick-family-single-garage\\normalNW.png",
+      "sourceFile": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\1990s-redbrick-family-single-garage\\normal-v1.png",
+      "sourceFileSHA256": "30cac9c191f62ea4ddd48c3d1a699494be5fdf661925f83b164e42bc0c133f1f",
+      "sourceFrameRectLTRB": [
+        0,
+        627,
+        627,
+        1254
+      ],
+      "operation": "lossless source-cell crop at QA-recorded frame rectangle",
+      "singleViewOverride": false,
+      "nativeSize": [
+        627,
+        627
+      ],
+      "pngSHA256": "fe358c0315a269a823632e57d7d18fa3158e46c6193d1d5eca0c08b92db78c8a",
+      "rgbaSHA256": "329dab2f177d4875e951945028d7f5caa5f8da324e73b0e0eaab9214f0284da4",
+      "sourceRGBAEqual": true,
+      "identityFeaturesReviewed": "rear main door/3windows, garage rear service door and outer high window",
+      "sourceQA": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\1990s-redbrick-family-single-garage\\normal-v1.independent-qa.json",
+      "sourceProvenance": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\1990s-redbrick-family-single-garage\\normal-v1.provenance.json",
+      "nativeHeadingDegrees": null,
+      "nativeCameraCertified": false,
+      "runtimeReady": false,
+      "fileRelativeToBundle": "1990s-redbrick-family-single-garage/normalNW.png"
+    },
+    {
+      "sourceCameraKey": "normalNE",
+      "nominalCameraFamily": "normal",
+      "file": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\lossless-source-bundle-v1\\1990s-redbrick-family-single-garage\\normalNE.png",
+      "sourceFile": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\1990s-redbrick-family-single-garage\\normal-v1.png",
+      "sourceFileSHA256": "30cac9c191f62ea4ddd48c3d1a699494be5fdf661925f83b164e42bc0c133f1f",
+      "sourceFrameRectLTRB": [
+        627,
+        627,
+        1254,
+        1254
+      ],
+      "operation": "lossless source-cell crop at QA-recorded frame rectangle",
+      "singleViewOverride": false,
+      "nativeSize": [
+        627,
+        627
+      ],
+      "pngSHA256": "5ec71f7ecd1e8290d732517ef8ea2e66dfc3cd7368dc43b9ef3f3cffc23471d9",
+      "rgbaSHA256": "b7b16aff31cfeff837253866fd2905a8d76919757383385486eb1349f2a4a0c4",
+      "sourceRGBAEqual": true,
+      "identityFeaturesReviewed": "front main entrance/windows, garage door and right outer high window",
+      "sourceQA": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\1990s-redbrick-family-single-garage\\normal-v1.independent-qa.json",
+      "sourceProvenance": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\1990s-redbrick-family-single-garage\\normal-v1.provenance.json",
+      "nativeHeadingDegrees": null,
+      "nativeCameraCertified": false,
+      "runtimeReady": false,
+      "fileRelativeToBundle": "1990s-redbrick-family-single-garage/normalNE.png"
+    },
+    {
+      "sourceCameraKey": "yaw8N",
+      "nominalCameraFamily": "yaw8",
+      "file": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\lossless-source-bundle-v1\\1990s-redbrick-family-single-garage\\yaw8N.png",
+      "sourceFile": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\1990s-redbrick-family-single-garage\\yaw8-v1.png",
+      "sourceFileSHA256": "ee2a4b2820230bdcebf2375d545296c2c9717330cb589dba90acc5ed17a1cdcf",
+      "sourceFrameRectLTRB": [
+        0,
+        0,
+        627,
+        627
+      ],
+      "operation": "lossless source-cell crop at QA-recorded frame rectangle",
+      "singleViewOverride": false,
+      "nativeSize": [
+        627,
+        627
+      ],
+      "pngSHA256": "20c92f9501199123b789a1297b05aaef3c81713076ec6f6f392f7fcba5d2c4ff",
+      "rgbaSHA256": "653842b988718b765eeb9518cb23933b1e4289471acf0cdbddbd20932bf743c8",
+      "sourceRGBAEqual": true,
+      "identityFeaturesReviewed": "front main entrance+two broad windows+single garage front",
+      "sourceQA": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\1990s-redbrick-family-single-garage\\yaw8-v1.independent-qa.json",
+      "sourceProvenance": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\1990s-redbrick-family-single-garage\\yaw8-v1.provenance.json",
+      "nativeHeadingDegrees": null,
+      "nativeCameraCertified": false,
+      "runtimeReady": false,
+      "fileRelativeToBundle": "1990s-redbrick-family-single-garage/yaw8N.png"
+    },
+    {
+      "sourceCameraKey": "yaw8E",
+      "nominalCameraFamily": "yaw8",
+      "file": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\lossless-source-bundle-v1\\1990s-redbrick-family-single-garage\\yaw8E.png",
+      "sourceFile": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\1990s-redbrick-family-single-garage\\yaw8-v1.png",
+      "sourceFileSHA256": "ee2a4b2820230bdcebf2375d545296c2c9717330cb589dba90acc5ed17a1cdcf",
+      "sourceFrameRectLTRB": [
+        627,
+        0,
+        1254,
+        627
+      ],
+      "operation": "lossless source-cell crop at QA-recorded frame rectangle",
+      "singleViewOverride": false,
+      "nativeSize": [
+        627,
+        627
+      ],
+      "pngSHA256": "3bfd8df68725ed1b68ee1c0ca525e468d349a5138206cb6acd39ffc24006963b",
+      "rgbaSHA256": "b9584877da73915092d51e53f5b01ba00a10e2b8a5938ac5ddb77e56f9702764",
+      "sourceRGBAEqual": true,
+      "identityFeaturesReviewed": "main left gable2windows, thin front facade sliver",
+      "sourceQA": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\1990s-redbrick-family-single-garage\\yaw8-v1.independent-qa.json",
+      "sourceProvenance": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\1990s-redbrick-family-single-garage\\yaw8-v1.provenance.json",
+      "nativeHeadingDegrees": null,
+      "nativeCameraCertified": false,
+      "runtimeReady": false,
+      "fileRelativeToBundle": "1990s-redbrick-family-single-garage/yaw8E.png"
+    },
+    {
+      "sourceCameraKey": "yaw8S",
+      "nominalCameraFamily": "yaw8",
+      "file": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\lossless-source-bundle-v1\\1990s-redbrick-family-single-garage\\yaw8S.png",
+      "sourceFile": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\1990s-redbrick-family-single-garage\\yaw8-v1.png",
+      "sourceFileSHA256": "ee2a4b2820230bdcebf2375d545296c2c9717330cb589dba90acc5ed17a1cdcf",
+      "sourceFrameRectLTRB": [
+        0,
+        627,
+        627,
+        1254
+      ],
+      "operation": "lossless source-cell crop at QA-recorded frame rectangle",
+      "singleViewOverride": false,
+      "nativeSize": [
+        627,
+        627
+      ],
+      "pngSHA256": "8fc4daf8f477cbcfcdbb97b9e78461f6ab3861270e44d973dbfec3963a8e3588",
+      "rgbaSHA256": "0c9f20b14132e51baf0ba8115d22d44512e5a58454a287d2c2add0a292e7f0f7",
+      "sourceRGBAEqual": true,
+      "identityFeaturesReviewed": "rear main entrance+3windows, garage rear service door",
+      "sourceQA": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\1990s-redbrick-family-single-garage\\yaw8-v1.independent-qa.json",
+      "sourceProvenance": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\1990s-redbrick-family-single-garage\\yaw8-v1.provenance.json",
+      "nativeHeadingDegrees": null,
+      "nativeCameraCertified": false,
+      "runtimeReady": false,
+      "fileRelativeToBundle": "1990s-redbrick-family-single-garage/yaw8S.png"
+    },
+    {
+      "sourceCameraKey": "yaw8W",
+      "nominalCameraFamily": "yaw8",
+      "file": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\lossless-source-bundle-v1\\1990s-redbrick-family-single-garage\\yaw8W.png",
+      "sourceFile": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\1990s-redbrick-family-single-garage\\yaw8-v1.png",
+      "sourceFileSHA256": "ee2a4b2820230bdcebf2375d545296c2c9717330cb589dba90acc5ed17a1cdcf",
+      "sourceFrameRectLTRB": [
+        627,
+        627,
+        1254,
+        1254
+      ],
+      "operation": "lossless source-cell crop at QA-recorded frame rectangle",
+      "singleViewOverride": false,
+      "nativeSize": [
+        627,
+        627
+      ],
+      "pngSHA256": "10ef0a3d3bae4d54984014d716b43c7326a6d7a8ad986f469e6d05cdb06f96f9",
+      "rgbaSHA256": "6ae2776056543a31fd577884c37a718d6337c979fa92220d3699d66b85bb61b3",
+      "sourceRGBAEqual": true,
+      "identityFeaturesReviewed": "garage outer high-window gable, main rear facade thin right",
+      "sourceQA": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\1990s-redbrick-family-single-garage\\yaw8-v1.independent-qa.json",
+      "sourceProvenance": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\1990s-redbrick-family-single-garage\\yaw8-v1.provenance.json",
+      "nativeHeadingDegrees": null,
+      "nativeCameraCertified": false,
+      "runtimeReady": false,
+      "fileRelativeToBundle": "1990s-redbrick-family-single-garage/yaw8W.png"
+    }
+  ],
+  "identityVisualReview": "All selected normal/yaw sheets and corrected single viewed; four distinct corners and four distinct primary facades; no repeated facade substituted for rear. Native angle/scale hold retained.",
+  "uniqueRGBAViewCount": 8
+}

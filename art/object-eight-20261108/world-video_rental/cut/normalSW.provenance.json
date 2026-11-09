@@ -1,0 +1,29 @@
+{
+  "schema": 1,
+  "subject": "world:video_rental",
+  "version": 1,
+  "key": "normalSW",
+  "source": {
+    "file": "../src/normalSW.png",
+    "sha256": "39a69b373b65ad00381ad013fe7f052c466ab59bf99fa1c39ec8bbd6ebe1fff6",
+    "width": 607,
+    "height": 480
+  },
+  "cell": 0,
+  "cellRect": {
+    "left": 0,
+    "top": 0,
+    "width": 607,
+    "height": 480
+  },
+  "crop": {
+    "left": 4,
+    "top": 4,
+    "width": 599,
+    "height": 472
+  },
+  "output": "normalSW.native.png",
+  "sha256": "9e8bcb3dc66ed130deab1dbd0e809289446f6c0eed7e2970dbcdb98e1cce7784",
+  "operation": "native RGBA cell crop only; no flip/repaint/view synthesis",
+  "review": "candidate"
+}

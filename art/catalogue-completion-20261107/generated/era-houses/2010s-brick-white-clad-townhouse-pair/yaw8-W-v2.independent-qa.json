@@ -1,0 +1,63 @@
+{
+  "schema": 1,
+  "as_of_utc": "2026-11-07T12:29:37.219894+00:00",
+  "review_result": "PASS-single-W-source-guide-rear-sliver-repair;HOLD-exact8-certification",
+  "source": {
+    "path": "generated/era-houses/2010s-brick-white-clad-townhouse-pair/yaw8-W-v2.png",
+    "sha256": "25aff37c8e06d14e3d73b3eb4f91db0e52b978e6b4ca26096c6ee3cccaefd706",
+    "bytes": 926230
+  },
+  "source_original_hash_matches_parent_archive": true,
+  "dimensions": [
+    1254,
+    1254
+  ],
+  "mode": "RGBA",
+  "is_single_sprite": true,
+  "actual_direction": "guide W",
+  "core_bbox_ltrb": [
+    351,
+    256,
+    901,
+    996
+  ],
+  "minimum_canvas_core_margin_px": 256,
+  "outer_border_alpha_max": 1,
+  "empty_exterior_alpha_p95max": [
+    0.0,
+    1.0
+  ],
+  "zero_alpha_fraction": 0.7820823444721707,
+  "actual_references": [
+    {
+      "path": "generated/era-houses/2010s-brick-white-clad-townhouse-pair/repair-references/W-camera-only.png",
+      "sha256": "8006a550de269a0ebc2cfc728cfab816ca95c53a8200bddec2d71f4ba9a6b90f",
+      "bytes": 9940
+    },
+    {
+      "path": "generated/era-houses/2010s-brick-white-clad-townhouse-pair/repair-references/rear-gable-identity-only.png",
+      "sha256": "a3c0b99826d1486beb4b23bef6c606e567efb5be120bcb22acd424644f87b7e0",
+      "bytes": 345944
+    }
+  ],
+  "exact_prompt": {
+    "path": "generated/era-houses/2010s-brick-white-clad-townhouse-pair/yaw8-W-v2.prompt.txt",
+    "sha256": "41889902029bc8df5d97b078e0f2b69e2419e73963e3b2e937c12707f8750757",
+    "bytes": 909
+  },
+  "parent_provenance": {
+    "path": "generated/era-houses/2010s-brick-white-clad-townhouse-pair/yaw8-W-v2.provenance.json",
+    "sha256": "a26d840a99c3b3e501b936c1356dfa375eb9cdb905ca7127fc0873c080383767",
+    "bytes": 1829
+  },
+  "notes": [
+    "Corrected W single exposes rear patio facade on narrow RIGHT side; tiny front awning projections remain onLEFT, matching the supplied guide.",
+    "Gable end keeps2stackedwindows and2roofventpipes; front entrances are no longer pasted onto the rear side.",
+    "Numerical8degree camera and cross-view scale/anchors remain unapproved; no runtime change."
+  ],
+  "source_crops_or_native_pixel_changes": false,
+  "owner_approved": false,
+  "runtime_ready": false,
+  "runtime_imported": false,
+  "exact_numerical_angle_certified": false
+}

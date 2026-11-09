@@ -58,8 +58,8 @@ test('the atlas: the kit is in the library on the golf page, packed apart from t
   // they: #582's supplemental views (extra-views-library.ts, on their own pages) and T258's range art (range:*, on the golf page). (#776: this
   // asked for the kit last, which #582 ended; the lead, 2026-10-28: no saved index may move, so the later appends stay after the kit)
   const organicTail = new Set<string>([...KIT_GREY_GRANITE, ...KIT_WATER_EDGE_PLANTS].map(p => p.id));
-  // (T309: the farm animals, animal:*, are the library's very tail, after the new props, on pages of their own)
-  const later = (it: (typeof LIBRARY)[number]) => EXTRA_VIEW_BASE.has(it.id) || it.id.startsWith('range:') || organicTail.has(it.id) || NEW_IDS.has(it.id) || it.id.startsWith('animal:');
+  // (T309: the farm animals, animal:*, follow the new props, on pages of their own; T375: the eight-view art, object8:*, is the very tail)
+  const later = (it: (typeof LIBRARY)[number]) => EXTRA_VIEW_BASE.has(it.id) || it.id.startsWith('range:') || organicTail.has(it.id) || NEW_IDS.has(it.id) || it.id.startsWith('animal:') || it.id.startsWith('object8:');
   const originalKit = new Set<string>(KIT_IDS);
   const kitAt = LIBRARY.flatMap((it, i) => (originalKit.has(it.id) ? [i] : [])), firstKit = kitAt[0]!, lastKit = kitAt[kitAt.length - 1]!;
   assert.equal(lastKit - firstKit + 1, kitAt.length, 'the kit is one run in the library');

@@ -1,0 +1,116 @@
+{
+  "schema": 1,
+  "as_of_utc": "2026-11-07T13:24:11.365118+00:00",
+  "review_result": "LIMITED-PASS-count-identity-alpha;rotation-symmetry",
+  "recommended_yaw_source_continuation": true,
+  "four_actual_corners_visually_verified": null,
+  "source": {
+    "path": "generated/golf-source-batch-02/native/rope-barrier/normal-v1.png",
+    "sha256": "f6a97871eeaf06a1d470485caef8caf02e2a98b3b98cd25ecee02677f9da3bd6",
+    "bytes": 901071
+  },
+  "parent_provenance": {
+    "path": "generated/golf-source-batch-02/native/rope-barrier/normal-v1.provenance.json",
+    "sha256": "e6934b4dda9365da3612ebf09218ddda56fdb65caba580e02a44056e2d0b387f",
+    "bytes": 2468
+  },
+  "source_original_hash_matches_parent": true,
+  "exact_prompt_utf8_sha256": "b0e3a5042809b72ee84653948a025b51212ffff53ee158cb793d708b8fe26cfc",
+  "actual_generation_references": [
+    {
+      "path": "generated/golf-source-batch-02/references/rope-barrier.source.png",
+      "sha256": "081eca194b4fd550a33a12920b5b7eab03c05ed5ed83a5c2159aef57b7af25d0",
+      "bytes": 134813
+    },
+    {
+      "path": "generated/old-clubhouse-1950/normal-v5.png",
+      "sha256": "a996fb471f351cc35926c84090192a8b55cc3557bb1bf9fec24872218fa219a6",
+      "bytes": 1473832
+    }
+  ],
+  "dimensions": [
+    1254,
+    1254
+  ],
+  "zero_alpha_fraction": 0.7805535841924661,
+  "outer_border_alpha_p50p95max": [
+    0.0,
+    0.0,
+    1.0
+  ],
+  "nominal_center_gap_alpha_p50p95max": [
+    0.0,
+    0.0,
+    1.0
+  ],
+  "clear_horizontal_cut_y": 627,
+  "clear_vertical_cut_by_row": [
+    627,
+    627
+  ],
+  "true_clear_gutters_found": true,
+  "cells": [
+    {
+      "cell": 0,
+      "reference_rect_ltrb": [
+        0,
+        0,
+        627,
+        627
+      ],
+      "minimum_core_margin_px": 70,
+      "boundary_core_pixels_alpha_gt128": 0,
+      "boundary_alpha_max": 1,
+      "native_rgba_rectangle_sha256": "1a4091980b48da25a6752ee21b37e8863d1a3812316a0e11aac89ae31814660a"
+    },
+    {
+      "cell": 1,
+      "reference_rect_ltrb": [
+        627,
+        0,
+        1254,
+        627
+      ],
+      "minimum_core_margin_px": 66,
+      "boundary_core_pixels_alpha_gt128": 0,
+      "boundary_alpha_max": 1,
+      "native_rgba_rectangle_sha256": "75fffdc3d85a3b1d9612c0b1820830cf68da24a58ff983cd0ce259a23cd84adf"
+    },
+    {
+      "cell": 2,
+      "reference_rect_ltrb": [
+        0,
+        627,
+        627,
+        1254
+      ],
+      "minimum_core_margin_px": 55,
+      "boundary_core_pixels_alpha_gt128": 0,
+      "boundary_alpha_max": 1,
+      "native_rgba_rectangle_sha256": "5a7fbc83bdd2bdb70f69b27a60ad8416be02bdb1ee7e4b281c0005bb0db3a3a2"
+    },
+    {
+      "cell": 3,
+      "reference_rect_ltrb": [
+        627,
+        627,
+        1254,
+        1254
+      ],
+      "minimum_core_margin_px": 59,
+      "boundary_core_pixels_alpha_gt128": 0,
+      "boundary_alpha_max": 1,
+      "native_rgba_rectangle_sha256": "8edb8e62a2e2c849b2f0ccd9965d8e109e5f377b5df164dd1cb7c5fe60a6fa81"
+    }
+  ],
+  "all_cores_complete_at_reference_cuts": true,
+  "visual_observations": [
+    "Exactlythreeposts/tworopespans retained, two diagonal line-orientation classes with front/back attachmentplate differences.",
+    "A straight repeated-post assembly has180degree symmetry. Filevariation alone cannot prove all physical rotations; preserve as sourcecandidate with no four-view geometrycertificate."
+  ],
+  "pixel_hash_uniqueness_is_not_pose_proof": true,
+  "source_crops_or_native_pixel_changes": false,
+  "owner_approved": false,
+  "runtime_ready": false,
+  "exact_numerical_angle_certified": false
+}

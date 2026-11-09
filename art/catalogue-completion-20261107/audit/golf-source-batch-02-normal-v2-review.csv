@@ -1,0 +1,6 @@
+key,source,review_result,four_actual_corners_visually_verified,outer_border_alpha_max,zero_alpha_fraction,core_boundaries_clear,qa
+ball-washer,generated/golf-source-batch-02/native/ball-washer/normal-v2.png,PASS-source-candidate-open-lid-fixed-sides,True,1,0.7266285366889749,True,generated/golf-source-batch-02/native/ball-washer/normal-v2.independent-qa.json
+rope-barrier-corner,generated/golf-source-batch-02/native/rope-barrier-corner/normal-v2.png,PASS-source-candidate-four-rigid-L-projections,True,6,0.6818353517547675,True,generated/golf-source-batch-02/native/rope-barrier-corner/normal-v2.independent-qa.json
+ball-bucket-stand,generated/golf-source-batch-02/native/ball-bucket-stand/normal-v2.png,PASS-source-candidate-opposite-front-and-rear-corners,True,1,0.5512478092432764,True,generated/golf-source-batch-02/native/ball-bucket-stand/normal-v2.independent-qa.json
+park-bench,generated/golf-source-batch-02/native/park-bench/normal-v2.png,HOLD-missing-SE-and-SW-guide-corners,False,1,0.565716342472827,True,generated/golf-source-batch-02/native/park-bench/normal-v2.independent-qa.json
+ball-dispenser,generated/golf-source-batch-02/native/ball-dispenser/normal-v2.png,HOLD-missing-SW-guide-corner-and-TR-basket-drift,False,1,0.7089943758918829,True,generated/golf-source-batch-02/native/ball-dispenser/normal-v2.independent-qa.json

@@ -1,0 +1,27 @@
+{
+  "id": "newprop:scaffold-booth",
+  "name": "Scaffold booth",
+  "referencePNG": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-01\\references\\scaffold-booth.source.png",
+  "originalSheet": "E:\\Repos\\CapitalEmpire\\All Generated Images\\exec-dfa9510a-0e47-40ed-89e4-3539b2afd505.png",
+  "copiedOriginalSheet": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-01\\original-sheets\\exec-dfa9510a-0e47-40ed-89e4-3539b2afd505.png",
+  "sourceSheetSHA256": "5d36b7204d7b36458aa1e6b025aede7a3cc64c0ce1b23c25c648d54a5d540f0b",
+  "referenceSHA256": "48498a86a4e976275cdf64f615656fff86d3895bbe7e916c1457754bd96f4b9e",
+  "sourcePixelRectXYWH": [
+    669,
+    140,
+    554,
+    507
+  ],
+  "originalCellLabel": "top right",
+  "referenceSize": [
+    554,
+    507
+  ],
+  "operation": "native RGBA pixel crop only; no resize, recolour, alpha cleanup or synthesis",
+  "sourceContainsFourDifferentSubjectsNotRotations": true,
+  "cutOffAccordingToSourceMetadata": false,
+  "sourceMetadata": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\new-props\\items.json",
+  "visualInspection": "inspected native source PNG",
+  "visualNotes": "Primitive timber/tarp/corrugated booth with microphone board and modern laptop on desk. Media-work function only. Reject shack construction and laptop for1985; use modular press building with paper/CRT-era equipment if visible.",
+  "sourceOnlyNotReleaseProof": true
+}

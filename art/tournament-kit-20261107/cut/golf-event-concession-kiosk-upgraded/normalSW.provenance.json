@@ -1,0 +1,29 @@
+{
+  "schema": 1,
+  "subject": "golf:event-concession-kiosk-upgraded",
+  "version": 1,
+  "key": "normalSW",
+  "source": {
+    "file": "../../batch01/concession-kiosk/upgraded/normal-SW.png",
+    "sha256": "dd1598925291f287ebc3f2e400f044d3282a659290ccb195178c28bf32ccc137",
+    "width": 627,
+    "height": 627
+  },
+  "cell": 0,
+  "cellRect": {
+    "left": 0,
+    "top": 0,
+    "width": 627,
+    "height": 627
+  },
+  "crop": {
+    "left": 50,
+    "top": 80,
+    "width": 515,
+    "height": 492
+  },
+  "output": "normalSW.native.png",
+  "sha256": "8fd253a351e94b22a47b93d8458eb140ea9a3dcf2cae0a9030a2c6c57d4433ac",
+  "operation": "native RGBA cell crop only; no flip/repaint/view synthesis",
+  "review": "candidate"
+}

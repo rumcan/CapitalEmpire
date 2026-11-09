@@ -1,0 +1,63 @@
+{
+  "schema": 1,
+  "createdUtc": "2026-11-07T06:47:45.284562+00:00",
+  "exactRuntimeId": "world:primary_school",
+  "source": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/building-views/world-primary_school/NE.png",
+  "sourceSha256": "c2b4143be02660071e2de8a3a940f854166c81b1a8d5e95ae83e08ce20353b98",
+  "output": "identity-references/world-primary-school-49016b3f/source.png",
+  "outputSha256": "c2b4143be02660071e2de8a3a940f854166c81b1a8d5e95ae83e08ce20353b98",
+  "width": 624,
+  "height": 488,
+  "sourceCell": {
+    "kind": "already isolated native PNG; whole file",
+    "rectXYWH": [
+      0,
+      0,
+      624,
+      488
+    ]
+  },
+  "operation": "byte-for-byte PNG copy only; no resize, crop, recolour, key, repaint, registration or source mutation",
+  "selection": "registered corner NE native PNG for this exact subject",
+  "registeredCornerDirection": "NE",
+  "sourceEvidence": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\building-views\\world-primary_school\\provenance.json",
+  "sourceReview": {
+    "integrationStatus": "ready",
+    "integrationReason": "Pixel-preserving layout correction retains all four complete views; prep reports no alpha boundary warnings.",
+    "review": "Four distinct front/rear facade views inspected; original identity retained and Halloween decoration omitted. Alpha/crop boundaries checked by preparation; game scale retains original width until door gauge is measured."
+  },
+  "sourceRegistration": {
+    "id": "world:primary_school",
+    "version": "world-primary_school-4views-v2",
+    "files": {
+      "NE": "c2b4143be02660071e2de8a3a940f854166c81b1a8d5e95ae83e08ce20353b98",
+      "SE": "84b8f8f4c6166d13541f68076ed69236cd58c5964ed33d6e0bbee8f6638f3437",
+      "SW": "c5f52b6050d907a697cc5cedd3467fd7fd82e9d2f37ba60dd5c18558b143ae09",
+      "NW": "525c6d33d98eb43048d21ed4950598b82ede0e7878898f6944e53b2a17d16c7d"
+    }
+  },
+  "originalInventorySource": {
+    "library": "src/game/library.ts",
+    "librarySha256": "91b5190292c1005ac7b936f08e5e1ebf3be43c3aae99f92ea510775da83d9726",
+    "atlas": "src/assets/atlas/sprites-1-0.webp",
+    "atlasSha256": "958733a68cd3ea18895adf4ca7e28b7f475bc3a9eb0484aa8bfa457db925ce64",
+    "runtimePage": 1,
+    "localPage": 1,
+    "uv": [
+      0.320313,
+      0.007813,
+      0.728516,
+      0.287598
+    ],
+    "crop": {
+      "left": 656,
+      "top": 16,
+      "width": 836,
+      "height": 573
+    },
+    "native": "art/theme-consistency/exports/buildings/world-primary_school.native.png",
+    "nativeSha256": "d4940977d5235bd320ff0970416e9df8583519ae45b06896c8d49010df8d0a24"
+  },
+  "originalBusinessSourceCell": null,
+  "nativeReferenceApprovalClaimed": false
+}

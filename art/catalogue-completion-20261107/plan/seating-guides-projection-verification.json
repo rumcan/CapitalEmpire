@@ -1,0 +1,507 @@
+{
+  "status": "runtime projection verified for all current technical seating guides",
+  "source_proof": {
+    "path": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\plan\\pavilion-guide-handedness-proof.json",
+    "sha256": "c07f415b3c6be0f9ecec4b9ec95185f8ce8fbb0f4dba07633a4283f649368ba0"
+  },
+  "actual_game_iso": {
+    "path": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\src\\game\\iso.ts",
+    "sha256": "f461ca3c32fd23989cfb5f6661550a41002b3a02c038b7357175a6061107243b",
+    "HW": 64.0,
+    "HH": 32.0
+  },
+  "runtime_local_basis": "(guide x,-guide y,guide z)",
+  "heading_formula": "(guideBeta-guideObjectTheta-45) modulo360",
+  "normal_heading_degrees_by_source_label": {
+    "NE": 0,
+    "SE": 270,
+    "SW": 180,
+    "NW": 90
+  },
+  "yaw8_heading_degrees_by_source_label": {
+    "N": 323,
+    "E": 233,
+    "S": 143,
+    "W": 53
+  },
+  "verticalPixelsPerMetreAfterCameraScaling": 39.191835884530846,
+  "guides_checked": 18,
+  "anchor_projections_checked": 12608,
+  "maxNormalizedResidual": 3.552713678800501e-15,
+  "maxGuidePixelResidual": 2.2737367544323206e-13,
+  "results": [
+    {
+      "guide": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\seated-pavilion-24-budget\\guides\\normal-world-v2.png",
+      "calibration": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\seated-pavilion-24-budget\\guides\\normal-world-v2.calibration.json",
+      "anchors_checked": 328,
+      "maxNormalizedResidual": 1.7763568394002505e-15,
+      "maxGuidePixelResidual": 2.2737367544323206e-13,
+      "verified_headings": [
+        {
+          "source_view_label": "SE",
+          "runtime_heading_degrees": 270
+        },
+        {
+          "source_view_label": "SW",
+          "runtime_heading_degrees": 180
+        },
+        {
+          "source_view_label": "NW",
+          "runtime_heading_degrees": 90
+        },
+        {
+          "source_view_label": "NE",
+          "runtime_heading_degrees": 0
+        }
+      ],
+      "status": "runtime projection verified; native art and release calibration pending"
+    },
+    {
+      "guide": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\seated-pavilion-24-budget\\guides\\yaw8-world-v2.png",
+      "calibration": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\seated-pavilion-24-budget\\guides\\yaw8-world-v2.calibration.json",
+      "anchors_checked": 328,
+      "maxNormalizedResidual": 1.7763568394002505e-15,
+      "maxGuidePixelResidual": 2.2737367544323206e-13,
+      "verified_headings": [
+        {
+          "source_view_label": "N",
+          "runtime_heading_degrees": 323
+        },
+        {
+          "source_view_label": "E",
+          "runtime_heading_degrees": 233
+        },
+        {
+          "source_view_label": "S",
+          "runtime_heading_degrees": 143
+        },
+        {
+          "source_view_label": "W",
+          "runtime_heading_degrees": 53
+        }
+      ],
+      "status": "runtime projection verified; native art and release calibration pending"
+    },
+    {
+      "guide": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\seated-pavilion-24-upgraded\\guides\\normal-world-v1.png",
+      "calibration": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\seated-pavilion-24-upgraded\\guides\\normal-world-v1.calibration.json",
+      "anchors_checked": 316,
+      "maxNormalizedResidual": 1.7763568394002505e-15,
+      "maxGuidePixelResidual": 2.2737367544323206e-13,
+      "verified_headings": [
+        {
+          "source_view_label": "SE",
+          "runtime_heading_degrees": 270
+        },
+        {
+          "source_view_label": "SW",
+          "runtime_heading_degrees": 180
+        },
+        {
+          "source_view_label": "NW",
+          "runtime_heading_degrees": 90
+        },
+        {
+          "source_view_label": "NE",
+          "runtime_heading_degrees": 0
+        }
+      ],
+      "status": "runtime projection verified; native art and release calibration pending"
+    },
+    {
+      "guide": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\seated-pavilion-24-upgraded\\guides\\yaw8-world-v1.png",
+      "calibration": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\seated-pavilion-24-upgraded\\guides\\yaw8-world-v1.calibration.json",
+      "anchors_checked": 316,
+      "maxNormalizedResidual": 1.7763568394002505e-15,
+      "maxGuidePixelResidual": 2.2737367544323206e-13,
+      "verified_headings": [
+        {
+          "source_view_label": "N",
+          "runtime_heading_degrees": 323
+        },
+        {
+          "source_view_label": "E",
+          "runtime_heading_degrees": 233
+        },
+        {
+          "source_view_label": "S",
+          "runtime_heading_degrees": 143
+        },
+        {
+          "source_view_label": "W",
+          "runtime_heading_degrees": 53
+        }
+      ],
+      "status": "runtime projection verified; native art and release calibration pending"
+    },
+    {
+      "guide": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\seated-pavilion-60-budget\\guides\\normal-world-v1.png",
+      "calibration": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\seated-pavilion-60-budget\\guides\\normal-world-v1.calibration.json",
+      "anchors_checked": 684,
+      "maxNormalizedResidual": 1.7763568394002505e-15,
+      "maxGuidePixelResidual": 2.2737367544323206e-13,
+      "verified_headings": [
+        {
+          "source_view_label": "SE",
+          "runtime_heading_degrees": 270
+        },
+        {
+          "source_view_label": "SW",
+          "runtime_heading_degrees": 180
+        },
+        {
+          "source_view_label": "NW",
+          "runtime_heading_degrees": 90
+        },
+        {
+          "source_view_label": "NE",
+          "runtime_heading_degrees": 0
+        }
+      ],
+      "status": "runtime projection verified; native art and release calibration pending"
+    },
+    {
+      "guide": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\seated-pavilion-60-budget\\guides\\yaw8-world-v1.png",
+      "calibration": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\seated-pavilion-60-budget\\guides\\yaw8-world-v1.calibration.json",
+      "anchors_checked": 684,
+      "maxNormalizedResidual": 1.7763568394002505e-15,
+      "maxGuidePixelResidual": 2.2737367544323206e-13,
+      "verified_headings": [
+        {
+          "source_view_label": "N",
+          "runtime_heading_degrees": 323
+        },
+        {
+          "source_view_label": "E",
+          "runtime_heading_degrees": 233
+        },
+        {
+          "source_view_label": "S",
+          "runtime_heading_degrees": 143
+        },
+        {
+          "source_view_label": "W",
+          "runtime_heading_degrees": 53
+        }
+      ],
+      "status": "runtime projection verified; native art and release calibration pending"
+    },
+    {
+      "guide": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\seated-pavilion-60-upgraded\\guides\\normal-world-v1.png",
+      "calibration": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\seated-pavilion-60-upgraded\\guides\\normal-world-v1.calibration.json",
+      "anchors_checked": 664,
+      "maxNormalizedResidual": 1.7763568394002505e-15,
+      "maxGuidePixelResidual": 2.2737367544323206e-13,
+      "verified_headings": [
+        {
+          "source_view_label": "SE",
+          "runtime_heading_degrees": 270
+        },
+        {
+          "source_view_label": "SW",
+          "runtime_heading_degrees": 180
+        },
+        {
+          "source_view_label": "NW",
+          "runtime_heading_degrees": 90
+        },
+        {
+          "source_view_label": "NE",
+          "runtime_heading_degrees": 0
+        }
+      ],
+      "status": "runtime projection verified; native art and release calibration pending"
+    },
+    {
+      "guide": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\seated-pavilion-60-upgraded\\guides\\yaw8-world-v1.png",
+      "calibration": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\seated-pavilion-60-upgraded\\guides\\yaw8-world-v1.calibration.json",
+      "anchors_checked": 664,
+      "maxNormalizedResidual": 1.7763568394002505e-15,
+      "maxGuidePixelResidual": 2.2737367544323206e-13,
+      "verified_headings": [
+        {
+          "source_view_label": "N",
+          "runtime_heading_degrees": 323
+        },
+        {
+          "source_view_label": "E",
+          "runtime_heading_degrees": 233
+        },
+        {
+          "source_view_label": "S",
+          "runtime_heading_degrees": 143
+        },
+        {
+          "source_view_label": "W",
+          "runtime_heading_degrees": 53
+        }
+      ],
+      "status": "runtime projection verified; native art and release calibration pending"
+    },
+    {
+      "guide": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\seated-pavilion-120-budget\\guides\\normal-world-v1.png",
+      "calibration": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\seated-pavilion-120-budget\\guides\\normal-world-v1.calibration.json",
+      "anchors_checked": 1252,
+      "maxNormalizedResidual": 3.552713678800501e-15,
+      "maxGuidePixelResidual": 2.2737367544323206e-13,
+      "verified_headings": [
+        {
+          "source_view_label": "SE",
+          "runtime_heading_degrees": 270
+        },
+        {
+          "source_view_label": "SW",
+          "runtime_heading_degrees": 180
+        },
+        {
+          "source_view_label": "NW",
+          "runtime_heading_degrees": 90
+        },
+        {
+          "source_view_label": "NE",
+          "runtime_heading_degrees": 0
+        }
+      ],
+      "status": "runtime projection verified; native art and release calibration pending"
+    },
+    {
+      "guide": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\seated-pavilion-120-budget\\guides\\yaw8-world-v1.png",
+      "calibration": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\seated-pavilion-120-budget\\guides\\yaw8-world-v1.calibration.json",
+      "anchors_checked": 1252,
+      "maxNormalizedResidual": 3.552713678800501e-15,
+      "maxGuidePixelResidual": 2.2737367544323206e-13,
+      "verified_headings": [
+        {
+          "source_view_label": "N",
+          "runtime_heading_degrees": 323
+        },
+        {
+          "source_view_label": "E",
+          "runtime_heading_degrees": 233
+        },
+        {
+          "source_view_label": "S",
+          "runtime_heading_degrees": 143
+        },
+        {
+          "source_view_label": "W",
+          "runtime_heading_degrees": 53
+        }
+      ],
+      "status": "runtime projection verified; native art and release calibration pending"
+    },
+    {
+      "guide": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\seated-pavilion-120-upgraded\\guides\\normal-world-v1.png",
+      "calibration": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\seated-pavilion-120-upgraded\\guides\\normal-world-v1.calibration.json",
+      "anchors_checked": 1228,
+      "maxNormalizedResidual": 3.552713678800501e-15,
+      "maxGuidePixelResidual": 2.2737367544323206e-13,
+      "verified_headings": [
+        {
+          "source_view_label": "SE",
+          "runtime_heading_degrees": 270
+        },
+        {
+          "source_view_label": "SW",
+          "runtime_heading_degrees": 180
+        },
+        {
+          "source_view_label": "NW",
+          "runtime_heading_degrees": 90
+        },
+        {
+          "source_view_label": "NE",
+          "runtime_heading_degrees": 0
+        }
+      ],
+      "status": "runtime projection verified; native art and release calibration pending"
+    },
+    {
+      "guide": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\seated-pavilion-120-upgraded\\guides\\yaw8-world-v1.png",
+      "calibration": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\seated-pavilion-120-upgraded\\guides\\yaw8-world-v1.calibration.json",
+      "anchors_checked": 1228,
+      "maxNormalizedResidual": 3.552713678800501e-15,
+      "maxGuidePixelResidual": 2.2737367544323206e-13,
+      "verified_headings": [
+        {
+          "source_view_label": "N",
+          "runtime_heading_degrees": 323
+        },
+        {
+          "source_view_label": "E",
+          "runtime_heading_degrees": 233
+        },
+        {
+          "source_view_label": "S",
+          "runtime_heading_degrees": 143
+        },
+        {
+          "source_view_label": "W",
+          "runtime_heading_degrees": 53
+        }
+      ],
+      "status": "runtime projection verified; native art and release calibration pending"
+    },
+    {
+      "guide": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\compact-bleacher-60-budget\\guides\\normal-world-v1.png",
+      "calibration": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\compact-bleacher-60-budget\\guides\\normal-world-v1.calibration.json",
+      "anchors_checked": 928,
+      "maxNormalizedResidual": 1.3322676295501878e-15,
+      "maxGuidePixelResidual": 2.2737367544323206e-13,
+      "verified_headings": [
+        {
+          "source_view_label": "SE",
+          "runtime_heading_degrees": 270
+        },
+        {
+          "source_view_label": "SW",
+          "runtime_heading_degrees": 180
+        },
+        {
+          "source_view_label": "NW",
+          "runtime_heading_degrees": 90
+        },
+        {
+          "source_view_label": "NE",
+          "runtime_heading_degrees": 0
+        }
+      ],
+      "status": "runtime projection verified; native art and release calibration pending"
+    },
+    {
+      "guide": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\compact-bleacher-60-budget\\guides\\yaw8-world-v1.png",
+      "calibration": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\compact-bleacher-60-budget\\guides\\yaw8-world-v1.calibration.json",
+      "anchors_checked": 928,
+      "maxNormalizedResidual": 1.7763568394002505e-15,
+      "maxGuidePixelResidual": 2.2737367544323206e-13,
+      "verified_headings": [
+        {
+          "source_view_label": "N",
+          "runtime_heading_degrees": 323
+        },
+        {
+          "source_view_label": "E",
+          "runtime_heading_degrees": 233
+        },
+        {
+          "source_view_label": "S",
+          "runtime_heading_degrees": 143
+        },
+        {
+          "source_view_label": "W",
+          "runtime_heading_degrees": 53
+        }
+      ],
+      "status": "runtime projection verified; native art and release calibration pending"
+    },
+    {
+      "guide": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\compact-bleacher-60-upgraded\\guides\\normal-world-v1.png",
+      "calibration": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\compact-bleacher-60-upgraded\\guides\\normal-world-v1.calibration.json",
+      "anchors_checked": 904,
+      "maxNormalizedResidual": 1.3322676295501878e-15,
+      "maxGuidePixelResidual": 2.2737367544323206e-13,
+      "verified_headings": [
+        {
+          "source_view_label": "SE",
+          "runtime_heading_degrees": 270
+        },
+        {
+          "source_view_label": "SW",
+          "runtime_heading_degrees": 180
+        },
+        {
+          "source_view_label": "NW",
+          "runtime_heading_degrees": 90
+        },
+        {
+          "source_view_label": "NE",
+          "runtime_heading_degrees": 0
+        }
+      ],
+      "status": "runtime projection verified; native art and release calibration pending"
+    },
+    {
+      "guide": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\compact-bleacher-60-upgraded\\guides\\yaw8-world-v1.png",
+      "calibration": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\compact-bleacher-60-upgraded\\guides\\yaw8-world-v1.calibration.json",
+      "anchors_checked": 904,
+      "maxNormalizedResidual": 1.7763568394002505e-15,
+      "maxGuidePixelResidual": 2.2737367544323206e-13,
+      "verified_headings": [
+        {
+          "source_view_label": "N",
+          "runtime_heading_degrees": 323
+        },
+        {
+          "source_view_label": "E",
+          "runtime_heading_degrees": 233
+        },
+        {
+          "source_view_label": "S",
+          "runtime_heading_degrees": 143
+        },
+        {
+          "source_view_label": "W",
+          "runtime_heading_degrees": 53
+        }
+      ],
+      "status": "runtime projection verified; native art and release calibration pending"
+    },
+    {
+      "guide": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\molded-chair-1985-cream-green\\guides\\normal-world-v1.png",
+      "calibration": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\molded-chair-1985-cream-green\\guides\\normal-world-v1.calibration.json",
+      "anchors_checked": 0,
+      "maxNormalizedResidual": 0,
+      "maxGuidePixelResidual": 0,
+      "verified_headings": [
+        {
+          "source_view_label": "SE",
+          "runtime_heading_degrees": 270
+        },
+        {
+          "source_view_label": "SW",
+          "runtime_heading_degrees": 180
+        },
+        {
+          "source_view_label": "NW",
+          "runtime_heading_degrees": 90
+        },
+        {
+          "source_view_label": "NE",
+          "runtime_heading_degrees": 0
+        }
+      ],
+      "status": "runtime projection verified; native art and release calibration pending"
+    },
+    {
+      "guide": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\molded-chair-1985-cream-green\\guides\\yaw8-world-v1.png",
+      "calibration": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\molded-chair-1985-cream-green\\guides\\yaw8-world-v1.calibration.json",
+      "anchors_checked": 0,
+      "maxNormalizedResidual": 0,
+      "maxGuidePixelResidual": 0,
+      "verified_headings": [
+        {
+          "source_view_label": "N",
+          "runtime_heading_degrees": 323
+        },
+        {
+          "source_view_label": "E",
+          "runtime_heading_degrees": 233
+        },
+        {
+          "source_view_label": "S",
+          "runtime_heading_degrees": 143
+        },
+        {
+          "source_view_label": "W",
+          "runtime_heading_degrees": 53
+        }
+      ],
+      "status": "runtime projection verified; native art and release calibration pending"
+    }
+  ],
+  "native_art_correspondence_verified": false,
+  "capacity_validated": false,
+  "release_anchors_authored": false,
+  "owner_approved": false,
+  "runtime_edited": false
+}

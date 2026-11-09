@@ -1,0 +1,174 @@
+{
+  "schema": 1,
+  "as_of_utc": "2026-11-07T12:22:07.194839+00:00",
+  "review_result": "PASS-source-candidate-front-rear-function-alpha",
+  "recommended_continue_yaw_source_generation": true,
+  "continuation_scope": "Sourceidentity/function/alpha only; not final8direction, owner/release, numericalangle or runtime approval.",
+  "source": {
+    "path": "generated/golf-source-batch-01/native/golf-source-01-04-first-aid-tent/budget-normal-v1.png",
+    "sha256": "51f956d7fb127ea54c16a3922d59950b68ae5fe9d05d0901da972c07901444c1",
+    "bytes": 2006539
+  },
+  "condition": "budget",
+  "runtime_target_proposal": {
+    "eventTypeId": "firstAid",
+    "eventName": "First aid tent",
+    "currentSpriteSubjectId": "expansion:backyard-tent",
+    "newArtSubjectProposal": "golf:event-first-aid-tent",
+    "newArtSubjectAlreadyRegistered": false,
+    "eventCatalogueSource": "src/game/golf/tents.ts",
+    "standInMappingSource": "src/game/golf/structure-art.ts",
+    "footprintTiles": {
+      "width": 3,
+      "depth": 3
+    },
+    "footprintMetres": {
+      "width": 6,
+      "depth": 6
+    },
+    "dimensionsMeaning": "Exact current event placement plot, not measured source sprite architecture. New design must fit plot; no runtime geometry changed."
+  },
+  "source_original_hash_matches_parent_provenance": true,
+  "parent_provenance": {
+    "path": "generated/golf-source-batch-01/native/golf-source-01-04-first-aid-tent/budget-normal-v1.provenance.json",
+    "sha256": "a7f2a9fd3cad2385f3981934cfd23790409766ab3936bb77abd6ad2fae5fd50e",
+    "bytes": 3711
+  },
+  "parent_archive": {
+    "path": "generated/golf-source-batch-01/native/golf-source-01-04-first-aid-tent/budget-normal-v1.archive.json",
+    "sha256": "399dd984c80a15092ada56066a50c2e49801aa6a7b38213931326fa301a4ac9f",
+    "bytes": 3783
+  },
+  "actual_prompt_from_provenance_utf8_sha256": "b64ce8597b154c9f8d0228810ca2bebae0b38d7b562e91990fed111fb58db1b2",
+  "actual_generation_references": [
+    {
+      "path": "generated/old-clubhouse-1950/normal-v5.png",
+      "sha256": "a996fb471f351cc35926c84090192a8b55cc3557bb1bf9fec24872218fa219a6",
+      "bytes": 1473832
+    },
+    {
+      "path": "generated/golf-source-batch-01/references/medical-tent.source.png",
+      "sha256": "114afbfdb978cf93a6465575099463ee1198633fc3a0d254bcc2baa39322058e",
+      "bytes": 600241
+    }
+  ],
+  "dimensions": [
+    1254,
+    1254
+  ],
+  "mode": "RGBA",
+  "zero_alpha_fraction": 0.4855499085541896,
+  "outer_border_alpha_p95max": [
+    1.0,
+    1.0
+  ],
+  "center_gutter_alpha_p95max": [
+    1.0,
+    1.0
+  ],
+  "horizontal_clear_cut_row": 627,
+  "all_four_native_core_silhouettes_complete": true,
+  "four_distinct_core_pixel_hashes": true,
+  "cells": [
+    {
+      "cell": 0,
+      "function_corner": "front+left",
+      "proposed_lossless_rect_ltrb": [
+        0,
+        0,
+        627,
+        627
+      ],
+      "core_bbox_ltrb": [
+        45,
+        103,
+        579,
+        559
+      ],
+      "minimum_core_margin_px": 45,
+      "boundary_core_pixels_alpha_gt128": 0,
+      "boundary_alpha_max": 1,
+      "native_rgba_rectangle_sha256": "069265b99da01d9b8380a836e75f51a20e5f5fd0d22c358b4c35eeb1d6bac933",
+      "trimmed_core_pixel_hash_ignore_alpha_le128": "a994de63f9edd2e8a9c6f5acdfb4faa781835e5498734b87a0d37d5868a0d7e1"
+    },
+    {
+      "cell": 1,
+      "function_corner": "rear+left",
+      "proposed_lossless_rect_ltrb": [
+        627,
+        0,
+        1254,
+        627
+      ],
+      "core_bbox_ltrb": [
+        47,
+        104,
+        578,
+        559
+      ],
+      "minimum_core_margin_px": 47,
+      "boundary_core_pixels_alpha_gt128": 0,
+      "boundary_alpha_max": 1,
+      "native_rgba_rectangle_sha256": "9c2c0b0edbb8d7c2e1379a0ff4eee801ec68ebd4de263347ba6f02c0a0e93d06",
+      "trimmed_core_pixel_hash_ignore_alpha_le128": "6291fd5a33d256c27e6d9743a1b53066987dc732486f6ddd9cb204fc24ce3a4b"
+    },
+    {
+      "cell": 2,
+      "function_corner": "rear+right",
+      "proposed_lossless_rect_ltrb": [
+        0,
+        627,
+        627,
+        1254
+      ],
+      "core_bbox_ltrb": [
+        45,
+        78,
+        578,
+        541
+      ],
+      "minimum_core_margin_px": 45,
+      "boundary_core_pixels_alpha_gt128": 0,
+      "boundary_alpha_max": 1,
+      "native_rgba_rectangle_sha256": "80d36fa9a459d3daf343b0e6a1a725bc11e9537a21a6b4ebb099a2c1645c6cba",
+      "trimmed_core_pixel_hash_ignore_alpha_le128": "1fc0a38a26194347c9cbc3124aef25a650063ddaf67fb766eeb02280328f9ebe"
+    },
+    {
+      "cell": 3,
+      "function_corner": "front+right",
+      "proposed_lossless_rect_ltrb": [
+        627,
+        627,
+        1254,
+        1254
+      ],
+      "core_bbox_ltrb": [
+        39,
+        69,
+        576,
+        539
+      ],
+      "minimum_core_margin_px": 39,
+      "boundary_core_pixels_alpha_gt128": 0,
+      "boundary_alpha_max": 1,
+      "native_rgba_rectangle_sha256": "c1071aabf5c8288ed8538e21cf3bd372ba10b18a85a483d5813949785ffc36cb",
+      "trimmed_core_pixel_hash_ignore_alpha_le128": "4730ac6ce04a1388bfaed84f8abbceeaf90c56f69a27fb2bf042535f408680fb"
+    }
+  ],
+  "mesh_alpha_samples": null,
+  "visual_observations": [
+    "TL/BR have open tied-back entrance with cot/cabinet/first-aid box;TR/BL have closed rear service flap.",
+    "Side ventilation panels and ridge-tent construction remain coherent across four corners; no duplicate front pasted onto back."
+  ],
+  "exact_numerical_angle_certified": false,
+  "release_anchors_authored": false,
+  "owner_approved": false,
+  "runtime_ready": false,
+  "runtime_imported": false,
+  "source_crops_or_pixel_changes": false,
+  "exact_prompt_file": {
+    "path": "generated/golf-source-batch-01/native/golf-source-01-04-first-aid-tent/budget-normal-v1.prompt.txt",
+    "sha256": "9c7e9e3c64382e8072713e04f6b7f2ac36b5c26ce2389854271b5d9a5a39285b",
+    "bytes": 2129
+  }
+}

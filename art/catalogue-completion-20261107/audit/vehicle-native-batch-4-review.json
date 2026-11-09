@@ -1,0 +1,156 @@
+{
+  "schema": 1,
+  "as_of_utc": "2026-11-07T10:40:25.151206+00:00",
+  "sheets_reviewed": 9,
+  "source_cells": 72,
+  "all_sources_byte_preserved": true,
+  "rows": [
+    {
+      "family": "era-1990s-teal-sedan",
+      "sheet": "traffic8-v1.png",
+      "review_result": "HOLD-camera-consistency;background-alpha",
+      "source_sha256": "76fcc53fe4d9b48c9336f2463e4c7bef3f1a22c797f809a3652dde032eb450bf",
+      "border_p95max": [
+        86.0,
+        97.0
+      ],
+      "gap_p95max": [
+        80.0,
+        86.0
+      ],
+      "all_eight_actual_noses": true,
+      "qa": "generated/vehicles/era-1990s-teal-sedan/traffic8-v1.independent-qa.json"
+    },
+    {
+      "family": "era-2000s-silver-mpv",
+      "sheet": "traffic8-v1.png",
+      "review_result": "HOLD-camera-consistency",
+      "source_sha256": "db5c0b607e2b0661b089d767d16de9c67a16a4215be08870bce6e0fc2ae7ae60",
+      "border_p95max": [
+        0.0,
+        1.0
+      ],
+      "gap_p95max": [
+        1.0,
+        1.0
+      ],
+      "all_eight_actual_noses": true,
+      "qa": "generated/vehicles/era-2000s-silver-mpv/traffic8-v1.independent-qa.json"
+    },
+    {
+      "family": "era-2010s-blue-crossover",
+      "sheet": "traffic8-v1.png",
+      "review_result": "HOLD-camera-consistency",
+      "source_sha256": "1bb715a34b7c6c243c9f8101a8e701bc47eb1cd866413150097d1d02e7a25c81",
+      "border_p95max": [
+        0.0,
+        2.0
+      ],
+      "gap_p95max": [
+        0.0,
+        1.0
+      ],
+      "all_eight_actual_noses": true,
+      "qa": "generated/vehicles/era-2010s-blue-crossover/traffic8-v1.independent-qa.json"
+    },
+    {
+      "family": "era-2020s-white-electric-hatch",
+      "sheet": "traffic8-v1.png",
+      "review_result": "HOLD-camera-consistency",
+      "source_sha256": "664d479618cc67c1b2e5983c7ebea0ba2adc7d7642fc9cf5c02e46048892c58c",
+      "border_p95max": [
+        0.0,
+        1.0
+      ],
+      "gap_p95max": [
+        0.0,
+        1.0
+      ],
+      "all_eight_actual_noses": true,
+      "qa": "generated/vehicles/era-2020s-white-electric-hatch/traffic8-v1.independent-qa.json"
+    },
+    {
+      "family": "golf-walkbehind-mower",
+      "sheet": "traffic8-v1.png",
+      "review_result": "HOLD-camera-consistency;invented-mower-rear-lamps",
+      "source_sha256": "6f45c883fedb27b8bc25890e88b837355f3311b52baa9192a805f9a9d99eaa31",
+      "border_p95max": [
+        0.0,
+        1.0
+      ],
+      "gap_p95max": [
+        0.0,
+        1.0
+      ],
+      "all_eight_actual_noses": true,
+      "qa": "generated/vehicles/golf-walkbehind-mower/traffic8-v1.independent-qa.json"
+    },
+    {
+      "family": "golf-rotary-tractor",
+      "sheet": "traffic8-v1.png",
+      "review_result": "HOLD-camera-consistency",
+      "source_sha256": "c33b9a97b1f3e4e40538bd8f3577fbf5578e6270a884080f5918aa60b63e377c",
+      "border_p95max": [
+        0.0,
+        2.0
+      ],
+      "gap_p95max": [
+        1.0,
+        2.0
+      ],
+      "all_eight_actual_noses": true,
+      "qa": "generated/vehicles/golf-rotary-tractor/traffic8-v1.independent-qa.json"
+    },
+    {
+      "family": "golf-range-ball-picker",
+      "sheet": "traffic8-v1.png",
+      "review_result": "HOLD-camera-consistency;background-alpha",
+      "source_sha256": "a3b7f3e3be1bda34916773e9aa081f0beec441de96f08b988534b8bbc8dd147b",
+      "border_p95max": [
+        12.0,
+        24.0
+      ],
+      "gap_p95max": [
+        13.0,
+        18.0
+      ],
+      "all_eight_actual_noses": true,
+      "qa": "generated/vehicles/golf-range-ball-picker/traffic8-v1.independent-qa.json"
+    },
+    {
+      "family": "golf-maintenance-utility",
+      "sheet": "traffic8-v1.png",
+      "review_result": "HOLD-camera-consistency",
+      "source_sha256": "4a9145c65c79e7a70cef2290a2142e8b702160e660f08e5a64e90b2e6f9fb80d",
+      "border_p95max": [
+        0.0,
+        1.0
+      ],
+      "gap_p95max": [
+        0.0,
+        1.0
+      ],
+      "all_eight_actual_noses": true,
+      "qa": "generated/vehicles/golf-maintenance-utility/traffic8-v1.independent-qa.json"
+    },
+    {
+      "family": "town-school-shuttle-bus",
+      "sheet": "traffic8-v1.png",
+      "review_result": "HOLD-camera-consistency;missing-nose-and-bus-side-identity",
+      "source_sha256": "4827ab92de2dff23cc409d8204241fe8cf28d72280d5ebaca65b08c3091886cb",
+      "border_p95max": [
+        1.0,
+        2.0
+      ],
+      "gap_p95max": [
+        1.0,
+        2.0
+      ],
+      "all_eight_actual_noses": false,
+      "qa": "generated/vehicles/town-school-shuttle-bus/traffic8-v1.independent-qa.json"
+    }
+  ],
+  "source_crops_performed": false,
+  "no_runtime_changes": true,
+  "overall_catalogue_complete": false
+}

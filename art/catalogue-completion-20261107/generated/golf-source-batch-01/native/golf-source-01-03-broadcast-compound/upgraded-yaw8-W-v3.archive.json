@@ -1,0 +1,23 @@
+[
+  {
+    "key": "golf-source-01-03-broadcast-compound",
+    "family": "yaw8-W",
+    "condition": "upgraded",
+    "version": 3,
+    "target": "generated/golf-source-batch-01/native/golf-source-01-03-broadcast-compound/upgraded-yaw8-W-v3.png",
+    "refs": [
+      "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/golf-source-batch-01/native/golf-source-01-03-broadcast-compound/upgraded-yaw8-W-v2.png",
+      "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/golf-source-batch-01/native/golf-source-01-03-broadcast-compound/upgraded-normal-v2.png"
+    ],
+    "prompt": "ONE precise ROOFTOP HVAC correction to the SMALL SATELLITE VAN ONLY inREFERENCE1. The small van currently lacks its rooftop HVAC box. ADD EXACTLY ONE low rectangular cream/grey finned HVAC unit on the van roof AHEAD of the satellite dish toward its FRONT CAB, as in reference2. This W view's van nose points SCREEN LEFT, so the HVAC goes on the exposed front/LEFT roof area BETWEEN the dish and the cab/windshield. One cream top panel, grey ventilation fins, practical metal footings, matching the same single van HVAC in reference2. Do NOT add a box behind the dish or onto the large truck. DoNOTaltertheLARGE broadcasttruck's TWOroofHVACunits: bothmustremainunchanged. Reference2onlyidentifiesfixedsmallvanHVACcomponent/location, NEVERitsdifferentcamera. Keep exactexistingnearcardinalcamera, allvehiclebodyshapes/doors/windows/wheels, satellitebowlfaceandaxis, antennas, truckstairvisibility, generator/workbench/reelpositions, colors/paint/materials/lighting/scaleandallotherdetailsunchanged. Finepaintedminiaturegameart, cleanupgradedperiod1980svehicles, late-afternoonDAYTIME sunUPPERRIGHT/shadowsLOWERLEFT. SameONEcompleteisolatedassembly,truezeroalphatransparency/broadmargins, noextraobjects/ground/UI/text/haze.",
+    "source": "C:/Users/RAMPAGE/.codex/generated_images/01a1b1fd-39ec-7220-8f11-86e4448833ea/exec-bc011761-3c7e-4d8c-9d57-5b801b32b634.png",
+    "references": [
+      "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/golf-source-batch-01/native/golf-source-01-03-broadcast-compound/upgraded-yaw8-W-v2.png",
+      "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/golf-source-batch-01/native/golf-source-01-03-broadcast-compound/upgraded-normal-v2.png"
+    ],
+    "status": "native-source-candidate-pending-visual-review",
+    "runtime_imported": false,
+    "sha256": "34d4fa38fbefeb5982a58afe91f2ba12acbfc8880e9efc3118d473d6ec2d915f",
+    "native_bytes_preserved": true
+  }
+]

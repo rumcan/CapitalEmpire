@@ -1,0 +1,11 @@
+{
+  "state": "176 source candidate PNGs exported and archive verified; camera/scale/runtime holds retained",
+  "expectedPNGCount": 176,
+  "actualExportedPNGCount": 176,
+  "zipCreated": true,
+  "existingSelectedSlots": 176,
+  "practicalCandidateSlots": 176,
+  "pendingOrHeldSlots": 0,
+  "archive": "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/golf-source-batch-01/Golf-event-facilities-and-practice-176-source-candidates.zip",
+  "archiveSHA256": "31c95365543b60a7b2b01be9966a283831a1846442d33911a63bd0e0f950a1a5"
+}

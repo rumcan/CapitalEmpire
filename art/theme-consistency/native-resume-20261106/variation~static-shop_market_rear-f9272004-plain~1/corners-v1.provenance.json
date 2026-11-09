@@ -1,0 +1,245 @@
+{
+  "id": "variation~static-shop_market_rear-f9272004-plain~1",
+  "kind": "corners",
+  "version": 1,
+  "generator": "native imagegen",
+  "imported_utc": "2026-11-06T18:46:04.506690+00:00",
+  "source": {
+    "path": "C:\\Users\\RAMPAGE\\.codex\\generated_images\\01a1b1fd-39ec-7220-8f11-86e4448833ea\\exec-10c77d79-6088-481e-96ee-6bfee3aa7151.png",
+    "sha256": "f101e4f501b3da225e99e132f9b40ebaf1540afc3caefb619f428a1a71d5ea1b",
+    "bytes": 1799678
+  },
+  "raw": {
+    "path": "E:\\Repos\\CapitalEmpire\\.claude\\worktrees\\art-repaint-20261106\\art\\theme-consistency\\native-resume-20261106\\variation~static-shop_market_rear-f9272004-plain~1\\corners-v1.png",
+    "sha256": "f101e4f501b3da225e99e132f9b40ebaf1540afc3caefb619f428a1a71d5ea1b",
+    "bytes": 1799678
+  },
+  "exact_prompt": {
+    "path": "E:\\Repos\\CapitalEmpire\\.claude\\worktrees\\art-repaint-20261106\\art\\theme-consistency\\native-resume-20261106\\variation~static-shop_market_rear-f9272004-plain~1\\corners-v1.prompt.txt",
+    "sha256": "491c6a746fe097fa1f58367d86aec66596a0b4660ae82010b683b1a48e4c6bc9",
+    "bytes": 1192
+  },
+  "queue": {
+    "path": "D:\\AI\\chatgpt-bridge\\queue-resume-corners-20261106.json",
+    "sha256": "be220aa1862ea65077a5b6cdbf5a823d5cd27b0f02d9721b2f4bd8af35321c5d",
+    "bytes": 12104
+  },
+  "references": [
+    {
+      "path": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\theme-consistency\\exports\\buildings\\variation-static-shop_market_rear-f9272004-plain-1.native.png",
+      "sha256": "b90cf24190fde880ecbabe1a354c919d34e62309bfcdbefea3b13a3f603f7769",
+      "bytes": 146222
+    },
+    {
+      "path": "D:\\AI\\chatgpt-bridge\\guides\\variation~static-shop_market_rear-f9272004-plain~1-corners.png",
+      "sha256": "839caef946fd4c35e4ba6ce12fa5a61e6d1011d432550f7494af1be51859ec19",
+      "bytes": 257669
+    }
+  ],
+  "original_queue_references": [
+    {
+      "path": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\theme-consistency\\exports\\buildings\\variation-static-shop_market_rear-f9272004-plain-1.native.png",
+      "sha256": "b90cf24190fde880ecbabe1a354c919d34e62309bfcdbefea3b13a3f603f7769",
+      "bytes": 146222
+    },
+    {
+      "path": "D:\\AI\\chatgpt-bridge\\guides\\variation~static-shop_market_rear-f9272004-plain~1-corners.png",
+      "sha256": "839caef946fd4c35e4ba6ce12fa5a61e6d1011d432550f7494af1be51859ec19",
+      "bytes": 257669
+    }
+  ],
+  "cell_order": [
+    [
+      "SE",
+      "SW"
+    ],
+    [
+      "NW",
+      "NE"
+    ]
+  ],
+  "validation": {
+    "mode": "RGBA",
+    "dimensions": [
+      1254,
+      1254
+    ],
+    "cells": [
+      {
+        "view": "SE",
+        "subject_bbox": [
+          56,
+          64,
+          569,
+          549
+        ],
+        "transparent_fraction": 0.5317058777144398,
+        "margins_px": [
+          56,
+          64,
+          58,
+          78
+        ]
+      },
+      {
+        "view": "SW",
+        "subject_bbox": [
+          54,
+          68,
+          572,
+          548
+        ],
+        "transparent_fraction": 0.5234617644589944,
+        "margins_px": [
+          54,
+          68,
+          55,
+          79
+        ]
+      },
+      {
+        "view": "NW",
+        "subject_bbox": [
+          58,
+          61,
+          569,
+          551
+        ],
+        "transparent_fraction": 0.5207374678540632,
+        "margins_px": [
+          58,
+          61,
+          58,
+          76
+        ]
+      },
+      {
+        "view": "NE",
+        "subject_bbox": [
+          56,
+          62,
+          581,
+          546
+        ],
+        "transparent_fraction": 0.5132106763937537,
+        "margins_px": [
+          56,
+          62,
+          46,
+          81
+        ]
+      }
+    ],
+    "cell_differences": [
+      {
+        "views": [
+          "SE",
+          "SW"
+        ],
+        "mean_rgb_difference": 37.061360677083336
+      },
+      {
+        "views": [
+          "SE",
+          "NW"
+        ],
+        "mean_rgb_difference": 29.037760416666668
+      },
+      {
+        "views": [
+          "SE",
+          "NE"
+        ],
+        "mean_rgb_difference": 37.345458984375
+      },
+      {
+        "views": [
+          "SW",
+          "NW"
+        ],
+        "mean_rgb_difference": 37.608235677083336
+      },
+      {
+        "views": [
+          "SW",
+          "NE"
+        ],
+        "mean_rgb_difference": 29.402913411458332
+      },
+      {
+        "views": [
+          "NW",
+          "NE"
+        ],
+        "mean_rgb_difference": 37.835042317708336
+      }
+    ],
+    "errors": [],
+    "warnings": [],
+    "visual_review": "Required: automatic checks cannot approve style, geometry, lighting, or fidelity."
+  },
+  "status": "imported-awaiting-visual-review",
+  "owner_approved": false,
+  "runtime_integrated": false,
+  "all_generated_views": false,
+  "compatible_NE": "generated bottom-right cell",
+  "cutter": {
+    "path": "D:\\AI\\chatgpt-bridge\\sheets.py",
+    "sha256": "eb40b531f94e59aa94412009307414a4a8f4dab5668786dcb077b9d0349852d9",
+    "bytes": 4578
+  },
+  "crops": [
+    {
+      "view": "SE",
+      "compatible": {
+        "path": "D:\\AI\\repaint\\out\\variation~static-shop_market_rear-f9272004-plain~1\\SE.png",
+        "sha256": "d45d7837bb35192d6c71cdf11519797795d60a70fb49efe44b79b20b07746d02",
+        "bytes": 416867
+      },
+      "project_copy": {
+        "path": "E:\\Repos\\CapitalEmpire\\.claude\\worktrees\\art-repaint-20261106\\art\\theme-consistency\\native-resume-20261106\\variation~static-shop_market_rear-f9272004-plain~1\\SE.native.png",
+        "sha256": "d45d7837bb35192d6c71cdf11519797795d60a70fb49efe44b79b20b07746d02",
+        "bytes": 416867
+      }
+    },
+    {
+      "view": "SW",
+      "compatible": {
+        "path": "D:\\AI\\repaint\\out\\variation~static-shop_market_rear-f9272004-plain~1\\SW.png",
+        "sha256": "a893fcfbd6309088fea77649a2d1718100ae9311cdafa2d34eefdc2d15db1299",
+        "bytes": 414398
+      },
+      "project_copy": {
+        "path": "E:\\Repos\\CapitalEmpire\\.claude\\worktrees\\art-repaint-20261106\\art\\theme-consistency\\native-resume-20261106\\variation~static-shop_market_rear-f9272004-plain~1\\SW.native.png",
+        "sha256": "a893fcfbd6309088fea77649a2d1718100ae9311cdafa2d34eefdc2d15db1299",
+        "bytes": 414398
+      }
+    },
+    {
+      "view": "NW",
+      "compatible": {
+        "path": "D:\\AI\\repaint\\out\\variation~static-shop_market_rear-f9272004-plain~1\\NW.png",
+        "sha256": "e3167cc19e525582b50036e47430eb16207a6f3bceaa5d0493d71f63d7e04582",
+        "bytes": 413971
+      },
+      "project_copy": {
+        "path": "E:\\Repos\\CapitalEmpire\\.claude\\worktrees\\art-repaint-20261106\\art\\theme-consistency\\native-resume-20261106\\variation~static-shop_market_rear-f9272004-plain~1\\NW.native.png",
+        "sha256": "e3167cc19e525582b50036e47430eb16207a6f3bceaa5d0493d71f63d7e04582",
+        "bytes": 413971
+      }
+    },
+    {
+      "view": "NE",
+      "compatible": {
+        "path": "D:\\AI\\repaint\\out\\variation~static-shop_market_rear-f9272004-plain~1\\NE.png",
+        "sha256": "a3ba1f3016d9e7597f531fb6157284641566da1950580805a564b1371b33fb9f",
+        "bytes": 434475
+      },
+      "project_copy": {
+        "path": "E:\\Repos\\CapitalEmpire\\.claude\\worktrees\\art-repaint-20261106\\art\\theme-consistency\\native-resume-20261106\\variation~static-shop_market_rear-f9272004-plain~1\\NE.native.png",
+        "sha256": "a3ba1f3016d9e7597f531fb6157284641566da1950580805a564b1371b33fb9f",
+        "bytes": 434475
+      }
+    }
+  ]
+}

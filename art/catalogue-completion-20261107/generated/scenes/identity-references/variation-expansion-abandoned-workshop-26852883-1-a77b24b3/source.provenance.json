@@ -1,0 +1,53 @@
+{
+  "schema": 1,
+  "createdUtc": "2026-11-07T06:47:45.284562+00:00",
+  "exactRuntimeId": "variation:expansion-abandoned-workshop-26852883:1",
+  "source": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/theme-consistency/exports/buildings/variation-expansion-abandoned-workshop-26852883-1.native.png",
+  "sourceSha256": "dda8048b18e64a838deebe5c65471f6d5ec02fda38073b56395ee92821bba3b3",
+  "output": "identity-references/variation-expansion-abandoned-workshop-26852883-1-a77b24b3/source.png",
+  "outputSha256": "dda8048b18e64a838deebe5c65471f6d5ec02fda38073b56395ee92821bba3b3",
+  "width": 444,
+  "height": 393,
+  "sourceCell": {
+    "kind": "already isolated native PNG; whole file",
+    "rectXYWH": [
+      0,
+      0,
+      444,
+      393
+    ]
+  },
+  "operation": "byte-for-byte PNG copy only; no resize, crop, recolour, key, repaint, registration or source mutation",
+  "selection": "retained exact-ID native original / atlas export",
+  "registeredCornerDirection": null,
+  "sourceEvidence": null,
+  "sourceReview": {
+    "flag": "more-angles",
+    "at": "2026-11-02T18:31:45.760Z"
+  },
+  "sourceRegistration": null,
+  "originalInventorySource": {
+    "library": "src/game/library.ts",
+    "librarySha256": "91b5190292c1005ac7b936f08e5e1ebf3be43c3aae99f92ea510775da83d9726",
+    "atlas": "src/assets/atlas/sprites-7-0.webp",
+    "atlasSha256": "4581a4f0eab4092db46557ade127a0a283989295ce6f5cd7921b16069f657d20",
+    "runtimePage": 7,
+    "localPage": 7,
+    "uv": [
+      0.648438,
+      0.007813,
+      0.865234,
+      0.199707
+    ],
+    "crop": {
+      "left": 1328,
+      "top": 16,
+      "width": 444,
+      "height": 393
+    },
+    "native": "art/theme-consistency/exports/buildings/variation-expansion-abandoned-workshop-26852883-1.native.png",
+    "nativeSha256": "dda8048b18e64a838deebe5c65471f6d5ec02fda38073b56395ee92821bba3b3"
+  },
+  "originalBusinessSourceCell": null,
+  "nativeReferenceApprovalClaimed": false
+}

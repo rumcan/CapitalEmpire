@@ -1,0 +1,61 @@
+{
+  "schema": 1,
+  "createdUtc": "2026-11-07T06:47:45.284562+00:00",
+  "exactRuntimeId": "gen:house-l-shape",
+  "source": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/building-views/gen-house-l-shape/NE.png",
+  "sourceSha256": "253966a487894e331e3ce9ea53550b730583ad0a7ca41cd42cd2cb65f8bbb272",
+  "output": "identity-references/gen-house-l-shape-e0e3b328/source.png",
+  "outputSha256": "253966a487894e331e3ce9ea53550b730583ad0a7ca41cd42cd2cb65f8bbb272",
+  "width": 574,
+  "height": 588,
+  "sourceCell": {
+    "kind": "already isolated native PNG; whole file",
+    "rectXYWH": [
+      0,
+      0,
+      574,
+      588
+    ]
+  },
+  "operation": "byte-for-byte PNG copy only; no resize, crop, recolour, key, repaint, registration or source mutation",
+  "selection": "registered corner NE native PNG for this exact subject",
+  "registeredCornerDirection": "NE",
+  "sourceEvidence": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\building-views\\gen-house-l-shape\\provenance.json",
+  "sourceReview": {
+    "status": "generated-awaiting-visual-review"
+  },
+  "sourceRegistration": {
+    "id": "gen:house-l-shape",
+    "version": "gen-house-l-shape-4views-v1",
+    "files": {
+      "NE": "253966a487894e331e3ce9ea53550b730583ad0a7ca41cd42cd2cb65f8bbb272",
+      "SE": "e30d7bac5ec2b47884b4dc3e48800da8b0cb4d5d23263e7a37c911c2c4144c8d",
+      "SW": "6b728d0e8ff3d76a552d51bd25617ab67099533783d1c4be37df68b34266a17b",
+      "NW": "65c58a7e84a9ed93f3590f4d040aac06e13dd40c9373e0a1becf70540d01103c"
+    }
+  },
+  "originalInventorySource": {
+    "library": "src/game/library.ts",
+    "librarySha256": "91b5190292c1005ac7b936f08e5e1ebf3be43c3aae99f92ea510775da83d9726",
+    "atlas": "src/assets/atlas/sprites-2-0.webp",
+    "atlasSha256": "7765354742f849f1de2a5a1f34c606a80c1a2b229251a5f6c00725fc7d0c8a52",
+    "runtimePage": 2,
+    "localPage": 2,
+    "uv": [
+      0.617188,
+      0.007813,
+      0.861328,
+      0.25293
+    ],
+    "crop": {
+      "left": 1264,
+      "top": 16,
+      "width": 500,
+      "height": 502
+    },
+    "native": "art/theme-consistency/exports/buildings/gen-house-l-shape.native.png",
+    "nativeSha256": "967d2cca120fd21d9865a80d36e590720586668a0bce20ee9fd8f46e2c3bd098"
+  },
+  "originalBusinessSourceCell": null,
+  "nativeReferenceApprovalClaimed": false
+}

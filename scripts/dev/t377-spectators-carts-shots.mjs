@@ -83,7 +83,7 @@ try {
       const { M, g, groundOf, surfOf, BLOCKED, NP, field, tees, pins } = window.__t377;
       const unit = (dx, dy) => { const L = Math.hypot(dx, dy) || 1; return [dx / L, dy / L]; };
       const fansOf = (s, i) => { const o = [], buf = Float32Array.of(s.x, s.y, 60, s.kind === 'stand' ? 2 : 0, s.fx, s.fy, s.ax, s.ay), n = M.view.galleryPeople(buf, 0, i, 100, NP, o); return o.slice(0, n).map(p => ({ x: p.x, y: p.y })); };
-      const spots = M.gal.gallerySpots(tees, pins, g.golf.structures ?? [], field());
+      const spots = M.gal.gallerySpots(tees, pins, g.golf.structures ?? [], undefined, field());
       const tally = (kind) => {
         const t = { spots: 0, fans: 0, onTee: 0, onGreen: 0, onFairway: 0, onWater: 0, onBunker: 0, ahead: 0 };
         spots.forEach((s, i) => {
@@ -117,7 +117,7 @@ try {
     for (const [kind, hole, which, zoom, warm] of [['green', r.shoot.green.hole, 'green', 0.5, true], ['tee', r.shoot.tee.hole, 'tee', 0.5, false], ['green', r.shoot.green.hole, 'green', 0.5, false]]) {
       const at = which === 'tee' ? pos.tees.find(t => t.hole === hole) : pos.pins.find(p => p.hole === hole);
       await page.evaluate(([hole]) => {
-        const { M, g, field, tees, pins } = window.__t377, spots = M.gal.gallerySpots(tees, pins, g.golf.structures ?? [], field());
+        const { M, g, field, tees, pins } = window.__t377, spots = M.gal.gallerySpots(tees, pins, g.golf.structures ?? [], undefined, field());
         const buf = new Float32Array(8 * 2); let n = 0;
         for (const s of spots) if (s.hole === hole && (s.kind === 'tee' || s.kind === 'green')) { buf.set([s.x, s.y, 60, 0, s.fx, s.fy, s.ax, s.ay], 8 * n); n++; }
         window.__galBuf = buf.slice(0, 8 * n); Object.defineProperty(g.traffic, 'gallery', { configurable: true, get: () => window.__galBuf, set: () => {} });
@@ -132,7 +132,7 @@ try {
   await run('A walking crowd from the clubhouse to the galleries', async () => {
     const info = await page.evaluate(() => {
       const { M, g, groundOf, BLOCKED, NP, field, tees, pins } = window.__t377;
-      const f = field(), spots = M.gal.gallerySpots(tees, pins, g.golf.structures ?? [], f).filter(s => s.kind === 'green');
+      const f = field(), spots = M.gal.gallerySpots(tees, pins, g.golf.structures ?? [], undefined, f).filter(s => s.kind === 'green');
       const start = g.golf.clubhouse, line = (a, b) => { let water = 0, other = 0, n = 0, mid = null; const L = Math.hypot(b.x - a.x, b.y - a.y), k = Math.max(2, Math.ceil(L / 0.5)); for (let i = 0; i <= k; i++) { const x = a.x + (b.x - a.x) * i / k, y = a.y + (b.y - a.y) * i / k, gr = groundOf(x, y); n++; if (gr === 'water') water++; else if (BLOCKED.has(gr)) { other++; mid = { x, y }; } } return { water, other, n, mid }; };
       // the walk to shoot: the one whose straight line crosses the most tee boxes, greens and bunkers and no water (a river is crossed by a bridge or not at all: a way round
       // the rest is always there), the same for both runs
@@ -147,7 +147,7 @@ try {
     const cam = info.best.mid ?? info.start;
     const res = await page.evaluate(([bestI, cam]) => {
       const { M, g, groundOf, BLOCKED, NP, field, tees, pins } = window.__t377, f = field();
-      const Crowd = M.crowd.Crowd, STRIDE = M.crowd.WALK_STRIDE ?? 6, spots = M.gal.gallerySpots(tees, pins, g.golf.structures ?? [], f).filter(s => s.kind === 'green');
+      const Crowd = M.crowd.Crowd, STRIDE = M.crowd.WALK_STRIDE ?? 6, spots = M.gal.gallerySpots(tees, pins, g.golf.structures ?? [], undefined, f).filter(s => s.kind === 'green');
       const C = new Crowd(1, 0); C.setSpots(spots.length);
       let rc = null; if (f && M.wf) { C.varied = true; rc = new M.wf.RouteCache(f, M.wf.SPECTATOR); C.router = (x, y, tx, ty) => rc.route({ x, y }, { x: tx, y: ty }); }
       const stand = (x, y) => f && M.wf ? M.wf.nearestStand(f, M.wf.SPECTATOR, x, y) ?? { x, y } : { x, y };

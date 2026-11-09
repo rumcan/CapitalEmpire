@@ -8,6 +8,7 @@ import { BUNKER_SETTING_FIELDS, BUNKER_TEXTURE_SLOTS, type BunkerSettingField, t
 import { bunkerSettingsOfLook, type BunkerLookFields, type BunkerLookKey } from '../game/ext/bunker-look/look-settings';
 import { bunkerTexture, bunkerTextureGroups, ownTextures } from '../game/ext/bunker-look/texture-library';
 import { addOwnTexture, removeOwnTexture } from '../game/ext/bunker-look/uploads';
+import { SideMenuRow } from './SideMenuRow';
 import type { BunkerTextureEntry } from '../game/ext/bunker-look/stage-materials';
 
 const fieldOf = (key: BunkerSettingKey) => BUNKER_SETTING_FIELDS.find(field => field.key === key)!;
@@ -175,8 +176,8 @@ function OwnTextures({ game, now, set }: { game: Game; now: ReturnType<typeof bu
 export function BunkerPickEntry({ game, looks = false, onLooks }: { game: Game; looks?: boolean; onLooks?: (open: boolean) => void }) {
   if (!game.golfMode || !game.courseGrid || !game.bunkers) return null;
   return (
-    <div className="mt-2 flex flex-wrap items-center gap-1.5" data-bunker-entry>
-      <button type="button" className={`chip ${looks ? 'chip-on' : ''}`} aria-pressed={looks} title="The bunkers' look on this hole: sand, edges, depth and walls, and the soil and wall pictures" onClick={() => { game.paint.closeGrass(); onLooks?.(!looks); }} data-bunker-look>Bunker look ▸</button>
+    <div className="mt-2 space-y-1.5" data-bunker-entry>
+      <SideMenuRow label="Bunker look" sub="Sand, edges, depth and walls, pictures" open={looks} aria-pressed={looks} title="The bunkers' look on this hole: sand, edges, depth and walls, and the soil and wall pictures" onClick={() => { game.paint.closeGrass(); onLooks?.(!looks); }} data-bunker-look />
       <button type="button" className="chip" title="Click a bunker on the map: its look opens (the bunkers of its hole wear it)" onClick={() => game.armBunkerPick()}>Pick bunker</button>
     </div>
   );

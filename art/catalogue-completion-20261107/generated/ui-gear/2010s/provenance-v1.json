@@ -1,0 +1,32 @@
+{
+  "generator": "native imagegen",
+  "era": "2010s",
+  "version": 1,
+  "status": "held-visible-background-haze",
+  "original_generation_output": {
+    "path": "C:\\Users\\RAMPAGE\\.codex\\generated_images\\01a1b1fd-39ec-7220-8f11-86e4448833ea\\exec-b550ced7-e34f-4ac2-a5e7-ec61cb86d146.png",
+    "sha256": "64ea7bb2abe09561acb9e9351fc83168e7f78fb795f3636aff09e0e55fbb6667"
+  },
+  "archived_original": {
+    "file": "2010s/source-v1.png",
+    "sha256": "64ea7bb2abe09561acb9e9351fc83168e7f78fb795f3636aff09e0e55fbb6667",
+    "bytes": 2909360
+  },
+  "exact_actual_prompt": {
+    "file": "2010s/prompt-v1.txt",
+    "sha256": "4e4f86185e36a336d5e00edc4e2441ce0c35a61bdc7f1f60dc3b283c44a9669d",
+    "bytes": 2057
+  },
+  "actual_reference_artifacts": [
+    {
+      "file": "1980s/source-v1.png",
+      "sha256": "22407b3e839896a3a3568d2590227ed944009c6dfb0c41a0486d14834410dfb3",
+      "bytes": 1363749
+    }
+  ],
+  "reference_binding_basis": "Exact source artifact identities supplied by parent; byte-identical archived references, not invented style inputs.",
+  "parent_visual_review": "Designs/order/style reviewed;2010v1 held for visible haze,2010v2 cleaned by native edit.",
+  "owner_approval_inferred": false,
+  "runtime_imported": false,
+  "source_pixels_edited": false
+}

@@ -1,0 +1,62 @@
+{
+  "schema": 1,
+  "createdUtc": "2026-11-07T06:47:45.284562+00:00",
+  "exactRuntimeId": "variation:ref-building-drive-in-screen-b0bccc2a-plain:1",
+  "source": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/building-views/variation-ref-building-drive-in-screen-b0bccc2a-plain-1/NE.png",
+  "sourceSha256": "ba01a8c50c66711ed946fa3583a1814eb223f2ee9b7a30e202cab2b004d45b27",
+  "output": "identity-references/variation-ref-building-drive-in-screen-b0bccc2a-plain-1-6d8b9c44/source.png",
+  "outputSha256": "ba01a8c50c66711ed946fa3583a1814eb223f2ee9b7a30e202cab2b004d45b27",
+  "width": 627,
+  "height": 586,
+  "sourceCell": {
+    "kind": "already isolated native PNG; whole file",
+    "rectXYWH": [
+      0,
+      0,
+      627,
+      586
+    ]
+  },
+  "operation": "byte-for-byte PNG copy only; no resize, crop, recolour, key, repaint, registration or source mutation",
+  "selection": "registered corner NE native PNG for this exact subject",
+  "registeredCornerDirection": "NE",
+  "sourceEvidence": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\building-views\\variation-ref-building-drive-in-screen-b0bccc2a-plain-1\\provenance.json",
+  "sourceReview": {
+    "integrationStatus": "ready",
+    "integrationReason": "Two SINGLE corrections fix SE rear and NW front to opposite rising-right slants, complementing retained falling-right NEfront/SWrear. Readable unmirrored sign, physical truss/catwalk/control equipment, fixed upper-right dusk; other original views preserved through exact native hash chain. Actual alpha clean."
+  },
+  "sourceRegistration": {
+    "id": "variation:ref-building-drive-in-screen-b0bccc2a-plain:1",
+    "version": "variation-ref-building-drive-in-screen-b0bccc2a-plain-1-4views-v4",
+    "files": {
+      "NE": "ba01a8c50c66711ed946fa3583a1814eb223f2ee9b7a30e202cab2b004d45b27",
+      "SE": "6dfa7b9744ca8649a4473d3c5df36572e4397d9d070186406f908b7c4f9505ca",
+      "SW": "c92400a1b16f539e6182b5cf220cec2b615688d3fc63460e2caabfea0cd7ce22",
+      "NW": "a52c14b05293efd2b556ecd3619ea038b430e5e21534c1af3a664b58d7a2a207"
+    }
+  },
+  "originalInventorySource": {
+    "library": "src/game/library.ts",
+    "librarySha256": "91b5190292c1005ac7b936f08e5e1ebf3be43c3aae99f92ea510775da83d9726",
+    "atlas": "src/assets/atlas/sprites-6-0.webp",
+    "atlasSha256": "5bf555ea578c014fa9e9f4e6119ae5f09128a07573eed569e85b1c5554f2ac51",
+    "runtimePage": 6,
+    "localPage": 6,
+    "uv": [
+      0.226563,
+      0.460938,
+      0.416992,
+      0.663574
+    ],
+    "crop": {
+      "left": 464,
+      "top": 944,
+      "width": 390,
+      "height": 415
+    },
+    "native": "art/theme-consistency/exports/buildings/variation-ref-building-drive-in-screen-b0bccc2a-plain-1.native.png",
+    "nativeSha256": "de6de5e33ecc25fe60af839ade22e949613b2b2bdad9d2d9a7af364e2c98806a"
+  },
+  "originalBusinessSourceCell": null,
+  "nativeReferenceApprovalClaimed": false
+}

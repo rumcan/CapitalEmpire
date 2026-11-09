@@ -1,0 +1,1104 @@
+[
+  {
+    "target": "generated/vehicles/golf-reel-mower/normal-v1.png",
+    "size": [
+      1396,
+      1127
+    ],
+    "zero_alpha_fraction": 0.5065385192322849,
+    "outer_border_p50max": [
+      0.0,
+      1.0
+    ],
+    "center_gutter_p50p95max": [
+      0.0,
+      1.0,
+      1.0
+    ],
+    "row_cut_x": [
+      [
+        0,
+        698,
+        1396
+      ],
+      [
+        0,
+        698,
+        1396
+      ]
+    ],
+    "cells": [
+      {
+        "cell": 0,
+        "rect_ltrb": [
+          0,
+          0,
+          698,
+          563
+        ],
+        "core_margin": 17,
+        "boundary_core_pixels": 0,
+        "boundary_alpha_max": 1
+      },
+      {
+        "cell": 1,
+        "rect_ltrb": [
+          698,
+          0,
+          1396,
+          563
+        ],
+        "core_margin": 16,
+        "boundary_core_pixels": 0,
+        "boundary_alpha_max": 1
+      },
+      {
+        "cell": 2,
+        "rect_ltrb": [
+          0,
+          563,
+          698,
+          1127
+        ],
+        "core_margin": 33,
+        "boundary_core_pixels": 0,
+        "boundary_alpha_max": 1
+      },
+      {
+        "cell": 3,
+        "rect_ltrb": [
+          698,
+          563,
+          1396,
+          1127
+        ],
+        "core_margin": 34,
+        "boundary_core_pixels": 0,
+        "boundary_alpha_max": 1
+      }
+    ]
+  },
+  {
+    "target": "generated/vehicles/golf-player-cart/normal-v1.png",
+    "size": [
+      1261,
+      1247
+    ],
+    "zero_alpha_fraction": 0.47365381912625193,
+    "outer_border_p50max": [
+      0.0,
+      1.0
+    ],
+    "center_gutter_p50p95max": [
+      0.0,
+      1.0,
+      170.0
+    ],
+    "row_cut_x": [
+      [
+        0,
+        630,
+        1261
+      ],
+      [
+        0,
+        630,
+        1261
+      ]
+    ],
+    "cells": [
+      {
+        "cell": 0,
+        "rect_ltrb": [
+          0,
+          0,
+          630,
+          623
+        ],
+        "core_margin": 27,
+        "boundary_core_pixels": 0,
+        "boundary_alpha_max": 2
+      },
+      {
+        "cell": 1,
+        "rect_ltrb": [
+          630,
+          0,
+          1261,
+          623
+        ],
+        "core_margin": 27,
+        "boundary_core_pixels": 0,
+        "boundary_alpha_max": 3
+      },
+      {
+        "cell": 2,
+        "rect_ltrb": [
+          0,
+          623,
+          630,
+          1247
+        ],
+        "core_margin": 3,
+        "boundary_core_pixels": 0,
+        "boundary_alpha_max": 4
+      },
+      {
+        "cell": 3,
+        "rect_ltrb": [
+          630,
+          623,
+          1261,
+          1247
+        ],
+        "core_margin": 3,
+        "boundary_core_pixels": 0,
+        "boundary_alpha_max": 5
+      }
+    ]
+  },
+  {
+    "target": "generated/vehicles/town-red-hatchback/traffic8-v1.png",
+    "size": [
+      1774,
+      887
+    ],
+    "zero_alpha_fraction": 0.6335341122997983,
+    "outer_border_p50max": [
+      0.0,
+      1.0
+    ],
+    "center_gutter_p50p95max": [
+      0.0,
+      0.0,
+      1.0
+    ],
+    "row_cut_x": [
+      [
+        0,
+        443,
+        883,
+        1316,
+        1774
+      ],
+      [
+        0,
+        443,
+        875,
+        1315,
+        1774
+      ]
+    ],
+    "cells": [
+      {
+        "cell": 0,
+        "rect_ltrb": [
+          0,
+          0,
+          443,
+          443
+        ],
+        "core_margin": 11,
+        "boundary_core_pixels": 0,
+        "boundary_alpha_max": 1
+      },
+      {
+        "cell": 1,
+        "rect_ltrb": [
+          443,
+          0,
+          883,
+          443
+        ],
+        "core_margin": 57,
+        "boundary_core_pixels": 0,
+        "boundary_alpha_max": 2
+      },
+      {
+        "cell": 2,
+        "rect_ltrb": [
+          883,
+          0,
+          1316,
+          443
+        ],
+        "core_margin": 2,
+        "boundary_core_pixels": 0,
+        "boundary_alpha_max": 4
+      },
+      {
+        "cell": 3,
+        "rect_ltrb": [
+          1316,
+          0,
+          1774,
+          443
+        ],
+        "core_margin": 2,
+        "boundary_core_pixels": 0,
+        "boundary_alpha_max": 7
+      },
+      {
+        "cell": 4,
+        "rect_ltrb": [
+          0,
+          443,
+          443,
+          887
+        ],
+        "core_margin": 14,
+        "boundary_core_pixels": 0,
+        "boundary_alpha_max": 1
+      },
+      {
+        "cell": 5,
+        "rect_ltrb": [
+          443,
+          443,
+          875,
+          887
+        ],
+        "core_margin": 70,
+        "boundary_core_pixels": 0,
+        "boundary_alpha_max": 4
+      },
+      {
+        "cell": 6,
+        "rect_ltrb": [
+          875,
+          443,
+          1315,
+          887
+        ],
+        "core_margin": 2,
+        "boundary_core_pixels": 0,
+        "boundary_alpha_max": 7
+      },
+      {
+        "cell": 7,
+        "rect_ltrb": [
+          1315,
+          443,
+          1774,
+          887
+        ],
+        "core_margin": 2,
+        "boundary_core_pixels": 0,
+        "boundary_alpha_max": 5
+      }
+    ]
+  },
+  {
+    "target": "generated/vehicles/town-blue-sedan/traffic8-v1.png",
+    "size": [
+      1774,
+      887
+    ],
+    "zero_alpha_fraction": 0.0003012320007524445,
+    "outer_border_p50max": [
+      7.0,
+      33.0
+    ],
+    "center_gutter_p50p95max": [
+      6.0,
+      12.0,
+      17.0
+    ],
+    "row_cut_x": [
+      [
+        0,
+        443,
+        887,
+        1330,
+        1774
+      ],
+      [
+        0,
+        443,
+        887,
+        1330,
+        1774
+      ]
+    ],
+    "cells": [
+      {
+        "cell": 0,
+        "rect_ltrb": [
+          0,
+          0,
+          443,
+          443
+        ],
+        "core_margin": 12,
+        "boundary_core_pixels": 0,
+        "boundary_alpha_max": 27
+      },
+      {
+        "cell": 1,
+        "rect_ltrb": [
+          443,
+          0,
+          887,
+          443
+        ],
+        "core_margin": 74,
+        "boundary_core_pixels": 0,
+        "boundary_alpha_max": 33
+      },
+      {
+        "cell": 2,
+        "rect_ltrb": [
+          887,
+          0,
+          1330,
+          443
+        ],
+        "core_margin": 12,
+        "boundary_core_pixels": 0,
+        "boundary_alpha_max": 29
+      },
+      {
+        "cell": 3,
+        "rect_ltrb": [
+          1330,
+          0,
+          1774,
+          443
+        ],
+        "core_margin": 7,
+        "boundary_core_pixels": 0,
+        "boundary_alpha_max": 19
+      },
+      {
+        "cell": 4,
+        "rect_ltrb": [
+          0,
+          443,
+          443,
+          887
+        ],
+        "core_margin": 12,
+        "boundary_core_pixels": 0,
+        "boundary_alpha_max": 18
+      },
+      {
+        "cell": 5,
+        "rect_ltrb": [
+          443,
+          443,
+          887,
+          887
+        ],
+        "core_margin": 74,
+        "boundary_core_pixels": 0,
+        "boundary_alpha_max": 18
+      },
+      {
+        "cell": 6,
+        "rect_ltrb": [
+          887,
+          443,
+          1330,
+          887
+        ],
+        "core_margin": 13,
+        "boundary_core_pixels": 0,
+        "boundary_alpha_max": 14
+      },
+      {
+        "cell": 7,
+        "rect_ltrb": [
+          1330,
+          443,
+          1774,
+          887
+        ],
+        "core_margin": 9,
+        "boundary_core_pixels": 0,
+        "boundary_alpha_max": 11
+      }
+    ]
+  },
+  {
+    "target": "generated/vehicles/town-cream-coupe/traffic8-v1.png",
+    "size": [
+      1774,
+      887
+    ],
+    "zero_alpha_fraction": 0.5689942028727619,
+    "outer_border_p50max": [
+      0.0,
+      3.0
+    ],
+    "center_gutter_p50p95max": [
+      0.0,
+      1.0,
+      2.0
+    ],
+    "row_cut_x": [
+      [
+        0,
+        443,
+        886,
+        1322,
+        1774
+      ],
+      [
+        0,
+        443,
+        887,
+        1321,
+        1774
+      ]
+    ],
+    "cells": [
+      {
+        "cell": 0,
+        "rect_ltrb": [
+          0,
+          0,
+          443,
+          443
+        ],
+        "core_margin": 12,
+        "boundary_core_pixels": 0,
+        "boundary_alpha_max": 1
+      },
+      {
+        "cell": 1,
+        "rect_ltrb": [
+          443,
+          0,
+          886,
+          443
+        ],
+        "core_margin": 67,
+        "boundary_core_pixels": 0,
+        "boundary_alpha_max": 2
+      },
+      {
+        "cell": 2,
+        "rect_ltrb": [
+          886,
+          0,
+          1322,
+          443
+        ],
+        "core_margin": 2,
+        "boundary_core_pixels": 0,
+        "boundary_alpha_max": 7
+      },
+      {
+        "cell": 3,
+        "rect_ltrb": [
+          1322,
+          0,
+          1774,
+          443
+        ],
+        "core_margin": 2,
+        "boundary_core_pixels": 0,
+        "boundary_alpha_max": 5
+      },
+      {
+        "cell": 4,
+        "rect_ltrb": [
+          0,
+          443,
+          443,
+          887
+        ],
+        "core_margin": 12,
+        "boundary_core_pixels": 0,
+        "boundary_alpha_max": 1
+      },
+      {
+        "cell": 5,
+        "rect_ltrb": [
+          443,
+          443,
+          887,
+          887
+        ],
+        "core_margin": 81,
+        "boundary_core_pixels": 0,
+        "boundary_alpha_max": 3
+      },
+      {
+        "cell": 6,
+        "rect_ltrb": [
+          887,
+          443,
+          1321,
+          887
+        ],
+        "core_margin": 2,
+        "boundary_core_pixels": 0,
+        "boundary_alpha_max": 6
+      },
+      {
+        "cell": 7,
+        "rect_ltrb": [
+          1321,
+          443,
+          1774,
+          887
+        ],
+        "core_margin": 2,
+        "boundary_core_pixels": 0,
+        "boundary_alpha_max": 4
+      }
+    ]
+  },
+  {
+    "target": "generated/vehicles/town-tan-pickup/traffic8-v1.png",
+    "size": [
+      1774,
+      887
+    ],
+    "zero_alpha_fraction": 0.6352004209621884,
+    "outer_border_p50max": [
+      0.0,
+      1.0
+    ],
+    "center_gutter_p50p95max": [
+      0.0,
+      0.0,
+      1.0
+    ],
+    "row_cut_x": [
+      [
+        0,
+        463,
+        864,
+        1307,
+        1774
+      ],
+      [
+        0,
+        456,
+        869,
+        1300,
+        1774
+      ]
+    ],
+    "cells": [
+      {
+        "cell": 0,
+        "rect_ltrb": [
+          0,
+          0,
+          463,
+          443
+        ],
+        "core_margin": 1,
+        "boundary_core_pixels": 0,
+        "boundary_alpha_max": 20
+      },
+      {
+        "cell": 1,
+        "rect_ltrb": [
+          463,
+          0,
+          864,
+          443
+        ],
+        "core_margin": 59,
+        "boundary_core_pixels": 0,
+        "boundary_alpha_max": 8
+      },
+      {
+        "cell": 2,
+        "rect_ltrb": [
+          864,
+          0,
+          1307,
+          443
+        ],
+        "core_margin": 2,
+        "boundary_core_pixels": 0,
+        "boundary_alpha_max": 7
+      },
+      {
+        "cell": 3,
+        "rect_ltrb": [
+          1307,
+          0,
+          1774,
+          443
+        ],
+        "core_margin": 2,
+        "boundary_core_pixels": 0,
+        "boundary_alpha_max": 6
+      },
+      {
+        "cell": 4,
+        "rect_ltrb": [
+          0,
+          443,
+          456,
+          887
+        ],
+        "core_margin": 1,
+        "boundary_core_pixels": 0,
+        "boundary_alpha_max": 28
+      },
+      {
+        "cell": 5,
+        "rect_ltrb": [
+          456,
+          443,
+          869,
+          887
+        ],
+        "core_margin": 67,
+        "boundary_core_pixels": 0,
+        "boundary_alpha_max": 6
+      },
+      {
+        "cell": 6,
+        "rect_ltrb": [
+          869,
+          443,
+          1300,
+          887
+        ],
+        "core_margin": 2,
+        "boundary_core_pixels": 0,
+        "boundary_alpha_max": 3
+      },
+      {
+        "cell": 7,
+        "rect_ltrb": [
+          1300,
+          443,
+          1774,
+          887
+        ],
+        "core_margin": 2,
+        "boundary_core_pixels": 0,
+        "boundary_alpha_max": 6
+      }
+    ]
+  },
+  {
+    "target": "generated/vehicles/town-ivory-panel-van/traffic8-v1.png",
+    "size": [
+      1774,
+      887
+    ],
+    "zero_alpha_fraction": 0.5440154607006631,
+    "outer_border_p50max": [
+      0.0,
+      1.0
+    ],
+    "center_gutter_p50p95max": [
+      0.0,
+      1.0,
+      1.0
+    ],
+    "row_cut_x": [
+      [
+        0,
+        443,
+        871,
+        1308,
+        1774
+      ],
+      [
+        0,
+        443,
+        858,
+        1302,
+        1774
+      ]
+    ],
+    "cells": [
+      {
+        "cell": 0,
+        "rect_ltrb": [
+          0,
+          0,
+          443,
+          443
+        ],
+        "core_margin": 22,
+        "boundary_core_pixels": 0,
+        "boundary_alpha_max": 1
+      },
+      {
+        "cell": 1,
+        "rect_ltrb": [
+          443,
+          0,
+          871,
+          443
+        ],
+        "core_margin": 43,
+        "boundary_core_pixels": 0,
+        "boundary_alpha_max": 1
+      },
+      {
+        "cell": 2,
+        "rect_ltrb": [
+          871,
+          0,
+          1308,
+          443
+        ],
+        "core_margin": 2,
+        "boundary_core_pixels": 0,
+        "boundary_alpha_max": 5
+      },
+      {
+        "cell": 3,
+        "rect_ltrb": [
+          1308,
+          0,
+          1774,
+          443
+        ],
+        "core_margin": 2,
+        "boundary_core_pixels": 0,
+        "boundary_alpha_max": 7
+      },
+      {
+        "cell": 4,
+        "rect_ltrb": [
+          0,
+          443,
+          443,
+          887
+        ],
+        "core_margin": 15,
+        "boundary_core_pixels": 0,
+        "boundary_alpha_max": 1
+      },
+      {
+        "cell": 5,
+        "rect_ltrb": [
+          443,
+          443,
+          858,
+          887
+        ],
+        "core_margin": 39,
+        "boundary_core_pixels": 0,
+        "boundary_alpha_max": 2
+      },
+      {
+        "cell": 6,
+        "rect_ltrb": [
+          858,
+          443,
+          1302,
+          887
+        ],
+        "core_margin": 2,
+        "boundary_core_pixels": 0,
+        "boundary_alpha_max": 5
+      },
+      {
+        "cell": 7,
+        "rect_ltrb": [
+          1302,
+          443,
+          1774,
+          887
+        ],
+        "core_margin": 2,
+        "boundary_core_pixels": 0,
+        "boundary_alpha_max": 6
+      }
+    ]
+  },
+  {
+    "target": "generated/vehicles/town-mustard-taxi/traffic8-v1.png",
+    "size": [
+      1774,
+      887
+    ],
+    "zero_alpha_fraction": 0.6404929528235098,
+    "outer_border_p50max": [
+      0.0,
+      1.0
+    ],
+    "center_gutter_p50p95max": [
+      0.0,
+      0.0,
+      1.0
+    ],
+    "row_cut_x": [
+      [
+        0,
+        443,
+        832,
+        1282,
+        1774
+      ],
+      [
+        0,
+        443,
+        828,
+        1268,
+        1774
+      ]
+    ],
+    "cells": [
+      {
+        "cell": 0,
+        "rect_ltrb": [
+          0,
+          0,
+          443,
+          443
+        ],
+        "core_margin": 3,
+        "boundary_core_pixels": 0,
+        "boundary_alpha_max": 6
+      },
+      {
+        "cell": 1,
+        "rect_ltrb": [
+          443,
+          0,
+          832,
+          443
+        ],
+        "core_margin": 54,
+        "boundary_core_pixels": 0,
+        "boundary_alpha_max": 3
+      },
+      {
+        "cell": 2,
+        "rect_ltrb": [
+          832,
+          0,
+          1282,
+          443
+        ],
+        "core_margin": 2,
+        "boundary_core_pixels": 0,
+        "boundary_alpha_max": 5
+      },
+      {
+        "cell": 3,
+        "rect_ltrb": [
+          1282,
+          0,
+          1774,
+          443
+        ],
+        "core_margin": 1,
+        "boundary_core_pixels": 0,
+        "boundary_alpha_max": 7
+      },
+      {
+        "cell": 4,
+        "rect_ltrb": [
+          0,
+          443,
+          443,
+          887
+        ],
+        "core_margin": 11,
+        "boundary_core_pixels": 0,
+        "boundary_alpha_max": 1
+      },
+      {
+        "cell": 5,
+        "rect_ltrb": [
+          443,
+          443,
+          828,
+          887
+        ],
+        "core_margin": 80,
+        "boundary_core_pixels": 0,
+        "boundary_alpha_max": 9
+      },
+      {
+        "cell": 6,
+        "rect_ltrb": [
+          828,
+          443,
+          1268,
+          887
+        ],
+        "core_margin": 2,
+        "boundary_core_pixels": 0,
+        "boundary_alpha_max": 5
+      },
+      {
+        "cell": 7,
+        "rect_ltrb": [
+          1268,
+          443,
+          1774,
+          887
+        ],
+        "core_margin": 2,
+        "boundary_core_pixels": 0,
+        "boundary_alpha_max": 4
+      }
+    ]
+  },
+  {
+    "target": "generated/vehicles/golf-reel-mower/cardinal-v1.png",
+    "size": [
+      1396,
+      1127
+    ],
+    "zero_alpha_fraction": 0.584207508841334,
+    "outer_border_p50max": [
+      0.0,
+      1.0
+    ],
+    "center_gutter_p50p95max": [
+      0.0,
+      0.0,
+      1.0
+    ],
+    "row_cut_x": [
+      [
+        0,
+        698,
+        1396
+      ],
+      [
+        0,
+        698,
+        1396
+      ]
+    ],
+    "cells": [
+      {
+        "cell": 0,
+        "rect_ltrb": [
+          0,
+          0,
+          698,
+          563
+        ],
+        "core_margin": 32,
+        "boundary_core_pixels": 0,
+        "boundary_alpha_max": 1
+      },
+      {
+        "cell": 1,
+        "rect_ltrb": [
+          698,
+          0,
+          1396,
+          563
+        ],
+        "core_margin": 34,
+        "boundary_core_pixels": 0,
+        "boundary_alpha_max": 1
+      },
+      {
+        "cell": 2,
+        "rect_ltrb": [
+          0,
+          563,
+          698,
+          1127
+        ],
+        "core_margin": 24,
+        "boundary_core_pixels": 0,
+        "boundary_alpha_max": 1
+      },
+      {
+        "cell": 3,
+        "rect_ltrb": [
+          698,
+          563,
+          1396,
+          1127
+        ],
+        "core_margin": 31,
+        "boundary_core_pixels": 0,
+        "boundary_alpha_max": 1
+      }
+    ]
+  },
+  {
+    "target": "generated/vehicles/golf-reel-mower/yaw8-v1.png",
+    "size": [
+      1396,
+      1127
+    ],
+    "zero_alpha_fraction": 0.48745496703726965,
+    "outer_border_p50max": [
+      0.0,
+      1.0
+    ],
+    "center_gutter_p50p95max": [
+      0.0,
+      1.0,
+      1.0
+    ],
+    "row_cut_x": [
+      [
+        0,
+        698,
+        1396
+      ],
+      [
+        0,
+        698,
+        1396
+      ]
+    ],
+    "cells": [
+      {
+        "cell": 0,
+        "rect_ltrb": [
+          0,
+          0,
+          698,
+          563
+        ],
+        "core_margin": 27,
+        "boundary_core_pixels": 0,
+        "boundary_alpha_max": 1
+      },
+      {
+        "cell": 1,
+        "rect_ltrb": [
+          698,
+          0,
+          1396,
+          563
+        ],
+        "core_margin": 32,
+        "boundary_core_pixels": 0,
+        "boundary_alpha_max": 1
+      },
+      {
+        "cell": 2,
+        "rect_ltrb": [
+          0,
+          563,
+          698,
+          1127
+        ],
+        "core_margin": 43,
+        "boundary_core_pixels": 0,
+        "boundary_alpha_max": 1
+      },
+      {
+        "cell": 3,
+        "rect_ltrb": [
+          698,
+          563,
+          1396,
+          1127
+        ],
+        "core_margin": 30,
+        "boundary_core_pixels": 0,
+        "boundary_alpha_max": 1
+      }
+    ]
+  }
+]

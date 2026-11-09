@@ -1,0 +1,177 @@
+{
+  "schema": 1,
+  "as_of_utc": "2026-11-07T10:55:47.829167+00:00",
+  "sources_reviewed": 11,
+  "records": [
+    {
+      "batch": 7,
+      "family": "era-1990s-teal-sedan",
+      "file": "generated/vehicles/era-1990s-teal-sedan/traffic8-v2.png",
+      "review_result": "PASS-native-alpha-cleanup-and-identity;HOLD-uniform30degree-camera",
+      "qa": "generated/vehicles/era-1990s-teal-sedan/traffic8-v2.independent-qa.json",
+      "border_p95max": [
+        1.0,
+        1.0
+      ],
+      "gap_p95max": [
+        0.0,
+        1.0
+      ]
+    },
+    {
+      "batch": 7,
+      "family": "golf-range-ball-picker",
+      "file": "generated/vehicles/golf-range-ball-picker/traffic8-v2.png",
+      "review_result": "PASS-native-alpha-cleanup-and-identity;HOLD-uniform30degree-camera",
+      "qa": "generated/vehicles/golf-range-ball-picker/traffic8-v2.independent-qa.json",
+      "border_p95max": [
+        0.0,
+        1.0
+      ],
+      "gap_p95max": [
+        0.0,
+        1.0
+      ]
+    },
+    {
+      "batch": 7,
+      "family": "golf-player-cart",
+      "file": "generated/vehicles/golf-player-cart/yaw8-v2.png",
+      "review_result": "PASS-near-right-and-fixed-bag-corrections;HOLD-exact8-geometry",
+      "qa": "generated/vehicles/golf-player-cart/yaw8-v2.independent-qa.json",
+      "border_p95max": [
+        0.0,
+        1.0
+      ],
+      "gap_p95max": [
+        1.0,
+        1.0
+      ]
+    },
+    {
+      "batch": 7,
+      "family": "golf-walkbehind-mower",
+      "file": "generated/vehicles/golf-walkbehind-mower/traffic8-v2.png",
+      "review_result": "PASS-invented-rear-lamp-removal;HOLD-uniform30degree-camera",
+      "qa": "generated/vehicles/golf-walkbehind-mower/traffic8-v2.independent-qa.json",
+      "border_p95max": [
+        0.0,
+        1.0
+      ],
+      "gap_p95max": [
+        0.0,
+        1.0
+      ]
+    },
+    {
+      "batch": 7,
+      "family": "town-school-shuttle-bus",
+      "file": "generated/vehicles/town-school-shuttle-bus/traffic8-v2.png",
+      "review_result": "PASS-eight-directions-and-separated-side-features;HOLD-heavy-background-alpha-and-camera",
+      "qa": "generated/vehicles/town-school-shuttle-bus/traffic8-v2.independent-qa.json",
+      "border_p95max": [
+        110.0,
+        123.0
+      ],
+      "gap_p95max": [
+        116.0,
+        125.0
+      ]
+    },
+    {
+      "batch": 8,
+      "family": "1990s-redbrick-family-single-garage",
+      "file": "generated/era-houses/1990s-redbrick-family-single-garage/yaw8-v1.png",
+      "review_result": "PASS-main-wall-opening-identity-and-alpha;HOLD-exact8-certification",
+      "qa": "generated/era-houses/1990s-redbrick-family-single-garage/yaw8-v1.independent-qa.json",
+      "border_p95max": [
+        0.0,
+        1.0
+      ],
+      "gap_p95max": [
+        1.0,
+        1.0
+      ]
+    },
+    {
+      "batch": 8,
+      "family": "2000s-cream-stucco-two-storey-garage",
+      "file": "generated/era-houses/2000s-cream-stucco-two-storey-garage/yaw8-v1.png",
+      "review_result": "PASS-main-wall-opening-identity-and-alpha;HOLD-exact8-certification",
+      "qa": "generated/era-houses/2000s-cream-stucco-two-storey-garage/yaw8-v1.independent-qa.json",
+      "border_p95max": [
+        0.0,
+        1.0
+      ],
+      "gap_p95max": [
+        0.0,
+        1.0
+      ]
+    },
+    {
+      "batch": 8,
+      "family": "2010s-brick-white-clad-townhouse-pair",
+      "file": "generated/era-houses/2010s-brick-white-clad-townhouse-pair/yaw8-v1.png",
+      "review_result": "HOLD-BR-source-guide-sliver-and-exact8;main-wall-identity-alpha-pass",
+      "qa": "generated/era-houses/2010s-brick-white-clad-townhouse-pair/yaw8-v1.independent-qa.json",
+      "border_p95max": [
+        1.0,
+        1.0
+      ],
+      "gap_p95max": [
+        1.0,
+        1.0
+      ]
+    },
+    {
+      "batch": 8,
+      "family": "2020s-white-charcoal-asymmetric-solar-home",
+      "file": "generated/era-houses/2020s-white-charcoal-asymmetric-solar-home/normal-v2.png",
+      "review_result": "PASS-native-glass-patio-opening-correction;camera-unverified",
+      "qa": "generated/era-houses/2020s-white-charcoal-asymmetric-solar-home/normal-v2.independent-qa.json",
+      "border_p95max": [
+        0.0,
+        1.0
+      ],
+      "gap_p95max": [
+        0.0,
+        1.0
+      ]
+    },
+    {
+      "batch": 8,
+      "family": "era-home-exteriors-01",
+      "file": "generated/scenes/batches/era-home-exteriors-01/source-v1.png",
+      "review_result": "PASS-source-illustration-candidate-and-lossless-extraction",
+      "qa": "generated/scenes/batches/era-home-exteriors-01/source-v1.independent-qa.json",
+      "border_p95max": [
+        255.0,
+        255.0
+      ],
+      "gap_p95max": [
+        255.0,
+        255.0
+      ]
+    },
+    {
+      "batch": 8,
+      "family": "era-home-interiors-01",
+      "file": "generated/scenes/batches/era-home-interiors-01/source-v1.png",
+      "review_result": "PASS-source-illustration-candidate-and-lossless-extraction",
+      "qa": "generated/scenes/batches/era-home-interiors-01/source-v1.independent-qa.json",
+      "border_p95max": [
+        255.0,
+        255.0
+      ],
+      "gap_p95max": [
+        255.0,
+        255.0
+      ]
+    }
+  ],
+  "lossless_source_scene_illustrations_extracted": 8,
+  "scene_manifest": "generated/scenes/era-home-source-crops.manifest.json",
+  "original_bytes_preserved": true,
+  "no_runtime_changes_tests_builds_servers_commits": true,
+  "whole_request_complete": false
+}

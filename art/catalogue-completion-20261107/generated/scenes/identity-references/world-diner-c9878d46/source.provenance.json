@@ -1,0 +1,71 @@
+{
+  "schema": 1,
+  "createdUtc": "2026-11-07T06:47:45.284562+00:00",
+  "exactRuntimeId": "world:diner",
+  "source": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/building-views/world-diner/NE.png",
+  "sourceSha256": "f493318cf0f534a611684c158f709821ef3507a1e4d68a59cec2ad704eea3e7e",
+  "output": "identity-references/world-diner-c9878d46/source.png",
+  "outputSha256": "f493318cf0f534a611684c158f709821ef3507a1e4d68a59cec2ad704eea3e7e",
+  "width": 563,
+  "height": 467,
+  "sourceCell": {
+    "kind": "already isolated native PNG; whole file",
+    "rectXYWH": [
+      0,
+      0,
+      563,
+      467
+    ]
+  },
+  "operation": "byte-for-byte PNG copy only; no resize, crop, recolour, key, repaint, registration or source mutation",
+  "selection": "registered corner NE native PNG for this exact subject",
+  "registeredCornerDirection": "NE",
+  "sourceEvidence": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\building-views\\world-diner\\provenance.json",
+  "sourceReview": {
+    "integrationStatus": "ready",
+    "integrationReason": "Source review passed actual-alpha blue composite, rigid visible-facade cycle, coherent Maple-master materials/detail/upper-right dusk light and clear equal-cell packing. Game scale/street integration remains to be reviewed.",
+    "integrationReview": {
+      "alpha": "passed",
+      "geometry": "passed",
+      "themeAssessment": "Cream/chrome/red diner identity remains distinct; slate flat roof, warm amber glazing and fixed right key match the master exposure/detail.",
+      "terrainOrCaptionsVisible": false,
+      "gameScaleRegistered": false,
+      "reviewContact": "output/building-priority/mixed-standalone-review-1.png",
+      "correctionBrief": null
+    }
+  },
+  "sourceRegistration": {
+    "id": "world:diner",
+    "version": "world-diner-4views-v1",
+    "files": {
+      "NE": "f493318cf0f534a611684c158f709821ef3507a1e4d68a59cec2ad704eea3e7e",
+      "SE": "55bce3b0ecaef711b66c88a6672afedbe8a4567f1f37bfc4c4375d0a011099fa",
+      "SW": "3e2b987fe49ccbedeb2f707394a8cf6077bff77a3940574d9e3e2977513b476d",
+      "NW": "3746d8d98bba82e1a6abd6d8a4e568568be497a9da1ab8ce4683aa01221d095c"
+    }
+  },
+  "originalInventorySource": {
+    "library": "src/game/library.ts",
+    "librarySha256": "91b5190292c1005ac7b936f08e5e1ebf3be43c3aae99f92ea510775da83d9726",
+    "atlas": "src/assets/atlas/sprites-8-0.webp",
+    "atlasSha256": "3627e8012c994eb375699136eec4134215434643c5c267a76f1326638c2b9514",
+    "runtimePage": 8,
+    "localPage": 8,
+    "uv": [
+      0.242188,
+      0.007813,
+      0.493164,
+      0.191406
+    ],
+    "crop": {
+      "left": 496,
+      "top": 16,
+      "width": 514,
+      "height": 376
+    },
+    "native": "art/theme-consistency/exports/buildings/world-diner.native.png",
+    "nativeSha256": "98f7d3ae5de90f8bfadfb00fbd5135fea2f985d0d5a096c2062a0bb8fe473588"
+  },
+  "originalBusinessSourceCell": null,
+  "nativeReferenceApprovalClaimed": false
+}

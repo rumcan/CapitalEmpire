@@ -1,0 +1,28 @@
+{
+  "id": "golf:clubhouse-shanty",
+  "kind": "yaw8-cardinals",
+  "version": 1,
+  "raw": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\old-clubhouse-1950\\yaw8-v1.png",
+  "source": "C:\\Users\\RAMPAGE\\.codex\\generated_images\\01a1b1fd-39ec-7220-8f11-86e4448833ea\\exec-0ea4ad7c-dc10-440f-91c2-c20514ffa39d.png",
+  "sha256": "749887b79335743832d3df9bc735151e28bb9b76abccd7ebc41822af9c4ec6cf",
+  "dimensions": [
+    1254,
+    1254
+  ],
+  "mode": "RGBA",
+  "alpha_extrema": [
+    0,
+    255
+  ],
+  "true_zero_alpha_fraction": 0.5050193447952199,
+  "status": "held-near-zero-yaw-not-eight-degrees",
+  "owner_approved": false,
+  "runtime_integrated": false,
+  "geometry_findings": [
+    "Front and rear main bottom edges are visually almost horizontal, unlike required4.01959degree projected slope for8degree yaw/30degree down camera.",
+    "Thin side faces are smaller than calibrated12x8m proxy: expected9.3694% narrow/main for N/S and21.0811% for E/W.",
+    "Roof identity is gabled as normal-v2, not hipped; obsolete prompt roof wording must not override source."
+  ],
+  "technical_camera_authority": "guides/yaw8-camera-v1.calibration.json",
+  "visual_measurement_status": "qualitative near-zero observation; expected ratios and slopes are exact technical-guide calculations"
+}

@@ -1,0 +1,2022 @@
+{
+  "schema": 2,
+  "date": "2026-11-07",
+  "purpose": "Eight modern-house designs,64 lossless source-view PNGs",
+  "sourceOnly": true,
+  "ownerApproved": false,
+  "runtimeIntegrated": false,
+  "runtimeReady": false,
+  "sourceCameraKeysAreNominal": true,
+  "cameraHoldFile": "camera-holds.json",
+  "pixelsPolicy": "Old32 PNGs copied byte-for-byte; new32 exact native half-cell crops. No resize, alpha cleanup, trim, flip, bitmap rotation or paint.",
+  "inheritedV1Index": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\lossless-source-bundle-v1\\index.json",
+  "inheritedV1IndexSHA256": "65d807ae279574dbb1c4e972bcdb889495d1e531378d3f77d9ac5ae138408900",
+  "houseReadinessReview": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\audit\\four-source-repairs-and-house-package-readiness.json",
+  "houseReadinessReviewSHA256": "61e31b1639323266023e92cbcfa99ea54a9349b07a86c9ebb16f5bae9dae721d",
+  "newHouseSourceSelection": {
+    "1990s-buff-brick-bay-bungalow": {
+      "normal": "normal-v2.png",
+      "yaw8": "yaw8-v2.png"
+    },
+    "2000s-redbrick-single-storey-duplex": {
+      "normal": "normal-v1.png",
+      "yaw8": "yaw8-v1.png"
+    },
+    "2010s-small-six-flat-walkup": {
+      "normal": "normal-v1.png",
+      "yaw8": "yaw8-v1.png"
+    },
+    "2020s-compact-gabled-solar-family-home": {
+      "normal": "normal-v2.png",
+      "yaw8": "yaw8-v1.png"
+    }
+  },
+  "rawOriginalSheetsIncluded": false,
+  "rawOriginalSheetsPreservedExternally": true,
+  "houses": [
+    {
+      "key": "1990s-redbrick-family-single-garage",
+      "name": "1990s redbrick family single garage",
+      "sourceViews": [
+        {
+          "sourceCameraKey": "normalSE",
+          "nominalCameraFamily": "normal",
+          "file": "1990s-redbrick-family-single-garage/normalSE.png",
+          "sourceFile": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\1990s-redbrick-family-single-garage\\normal-v1.png",
+          "sourceFileSHA256": "30cac9c191f62ea4ddd48c3d1a699494be5fdf661925f83b164e42bc0c133f1f",
+          "sourceFrameRectLTRB": [
+            0,
+            0,
+            627,
+            627
+          ],
+          "operation": "lossless source-cell crop at QA-recorded frame rectangle",
+          "singleViewOverride": false,
+          "nativeSize": [
+            627,
+            627
+          ],
+          "pngSHA256": "6c1ed4c8b3b2326284b59d236ad63937e005a763bba67c1926ee27403e39065d",
+          "rgbaSHA256": "7de4865dda9885f4bd04f7c7b673d10d79dfdd97d36c03bbd81f3ac3eeed980a",
+          "sourceRGBAEqual": true,
+          "identityFeaturesReviewed": "front main door/two main windows, left gable2windows, garage front at right",
+          "sourceQA": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\1990s-redbrick-family-single-garage\\normal-v1.independent-qa.json",
+          "sourceProvenance": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\1990s-redbrick-family-single-garage\\normal-v1.provenance.json",
+          "nativeHeadingDegrees": null,
+          "nativeCameraCertified": false,
+          "runtimeReady": false,
+          "fileRelativeToBundle": "1990s-redbrick-family-single-garage/normalSE.png",
+          "inheritedV1PNGBytesUnchanged": true,
+          "inheritedV1PNG": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\lossless-source-bundle-v1\\1990s-redbrick-family-single-garage\\normalSE.png"
+        },
+        {
+          "sourceCameraKey": "normalSW",
+          "nominalCameraFamily": "normal",
+          "file": "1990s-redbrick-family-single-garage/normalSW.png",
+          "sourceFile": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\1990s-redbrick-family-single-garage\\normal-v1.png",
+          "sourceFileSHA256": "30cac9c191f62ea4ddd48c3d1a699494be5fdf661925f83b164e42bc0c133f1f",
+          "sourceFrameRectLTRB": [
+            627,
+            0,
+            1254,
+            627
+          ],
+          "operation": "lossless source-cell crop at QA-recorded frame rectangle",
+          "singleViewOverride": false,
+          "nativeSize": [
+            627,
+            627
+          ],
+          "pngSHA256": "3679c85ae989a49a879deea4d2fe6727fe8b63a721d8dc6368c9a1d8d56e81df",
+          "rgbaSHA256": "8a687ff02e7bc3965a34c72d9ac1b643c01fdcc2fe9ae3c9783e8cc0d7d3ed51",
+          "sourceRGBAEqual": true,
+          "identityFeaturesReviewed": "rear main door/3windows and left gable2windows, garage rear service door at far left",
+          "sourceQA": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\1990s-redbrick-family-single-garage\\normal-v1.independent-qa.json",
+          "sourceProvenance": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\1990s-redbrick-family-single-garage\\normal-v1.provenance.json",
+          "nativeHeadingDegrees": null,
+          "nativeCameraCertified": false,
+          "runtimeReady": false,
+          "fileRelativeToBundle": "1990s-redbrick-family-single-garage/normalSW.png",
+          "inheritedV1PNGBytesUnchanged": true,
+          "inheritedV1PNG": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\lossless-source-bundle-v1\\1990s-redbrick-family-single-garage\\normalSW.png"
+        },
+        {
+          "sourceCameraKey": "normalNW",
+          "nominalCameraFamily": "normal",
+          "file": "1990s-redbrick-family-single-garage/normalNW.png",
+          "sourceFile": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\1990s-redbrick-family-single-garage\\normal-v1.png",
+          "sourceFileSHA256": "30cac9c191f62ea4ddd48c3d1a699494be5fdf661925f83b164e42bc0c133f1f",
+          "sourceFrameRectLTRB": [
+            0,
+            627,
+            627,
+            1254
+          ],
+          "operation": "lossless source-cell crop at QA-recorded frame rectangle",
+          "singleViewOverride": false,
+          "nativeSize": [
+            627,
+            627
+          ],
+          "pngSHA256": "fe358c0315a269a823632e57d7d18fa3158e46c6193d1d5eca0c08b92db78c8a",
+          "rgbaSHA256": "329dab2f177d4875e951945028d7f5caa5f8da324e73b0e0eaab9214f0284da4",
+          "sourceRGBAEqual": true,
+          "identityFeaturesReviewed": "rear main door/3windows, garage rear service door and outer high window",
+          "sourceQA": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\1990s-redbrick-family-single-garage\\normal-v1.independent-qa.json",
+          "sourceProvenance": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\1990s-redbrick-family-single-garage\\normal-v1.provenance.json",
+          "nativeHeadingDegrees": null,
+          "nativeCameraCertified": false,
+          "runtimeReady": false,
+          "fileRelativeToBundle": "1990s-redbrick-family-single-garage/normalNW.png",
+          "inheritedV1PNGBytesUnchanged": true,
+          "inheritedV1PNG": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\lossless-source-bundle-v1\\1990s-redbrick-family-single-garage\\normalNW.png"
+        },
+        {
+          "sourceCameraKey": "normalNE",
+          "nominalCameraFamily": "normal",
+          "file": "1990s-redbrick-family-single-garage/normalNE.png",
+          "sourceFile": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\1990s-redbrick-family-single-garage\\normal-v1.png",
+          "sourceFileSHA256": "30cac9c191f62ea4ddd48c3d1a699494be5fdf661925f83b164e42bc0c133f1f",
+          "sourceFrameRectLTRB": [
+            627,
+            627,
+            1254,
+            1254
+          ],
+          "operation": "lossless source-cell crop at QA-recorded frame rectangle",
+          "singleViewOverride": false,
+          "nativeSize": [
+            627,
+            627
+          ],
+          "pngSHA256": "5ec71f7ecd1e8290d732517ef8ea2e66dfc3cd7368dc43b9ef3f3cffc23471d9",
+          "rgbaSHA256": "b7b16aff31cfeff837253866fd2905a8d76919757383385486eb1349f2a4a0c4",
+          "sourceRGBAEqual": true,
+          "identityFeaturesReviewed": "front main entrance/windows, garage door and right outer high window",
+          "sourceQA": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\1990s-redbrick-family-single-garage\\normal-v1.independent-qa.json",
+          "sourceProvenance": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\1990s-redbrick-family-single-garage\\normal-v1.provenance.json",
+          "nativeHeadingDegrees": null,
+          "nativeCameraCertified": false,
+          "runtimeReady": false,
+          "fileRelativeToBundle": "1990s-redbrick-family-single-garage/normalNE.png",
+          "inheritedV1PNGBytesUnchanged": true,
+          "inheritedV1PNG": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\lossless-source-bundle-v1\\1990s-redbrick-family-single-garage\\normalNE.png"
+        },
+        {
+          "sourceCameraKey": "yaw8N",
+          "nominalCameraFamily": "yaw8",
+          "file": "1990s-redbrick-family-single-garage/yaw8N.png",
+          "sourceFile": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\1990s-redbrick-family-single-garage\\yaw8-v1.png",
+          "sourceFileSHA256": "ee2a4b2820230bdcebf2375d545296c2c9717330cb589dba90acc5ed17a1cdcf",
+          "sourceFrameRectLTRB": [
+            0,
+            0,
+            627,
+            627
+          ],
+          "operation": "lossless source-cell crop at QA-recorded frame rectangle",
+          "singleViewOverride": false,
+          "nativeSize": [
+            627,
+            627
+          ],
+          "pngSHA256": "20c92f9501199123b789a1297b05aaef3c81713076ec6f6f392f7fcba5d2c4ff",
+          "rgbaSHA256": "653842b988718b765eeb9518cb23933b1e4289471acf0cdbddbd20932bf743c8",
+          "sourceRGBAEqual": true,
+          "identityFeaturesReviewed": "front main entrance+two broad windows+single garage front",
+          "sourceQA": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\1990s-redbrick-family-single-garage\\yaw8-v1.independent-qa.json",
+          "sourceProvenance": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\1990s-redbrick-family-single-garage\\yaw8-v1.provenance.json",
+          "nativeHeadingDegrees": null,
+          "nativeCameraCertified": false,
+          "runtimeReady": false,
+          "fileRelativeToBundle": "1990s-redbrick-family-single-garage/yaw8N.png",
+          "inheritedV1PNGBytesUnchanged": true,
+          "inheritedV1PNG": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\lossless-source-bundle-v1\\1990s-redbrick-family-single-garage\\yaw8N.png"
+        },
+        {
+          "sourceCameraKey": "yaw8E",
+          "nominalCameraFamily": "yaw8",
+          "file": "1990s-redbrick-family-single-garage/yaw8E.png",
+          "sourceFile": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\1990s-redbrick-family-single-garage\\yaw8-v1.png",
+          "sourceFileSHA256": "ee2a4b2820230bdcebf2375d545296c2c9717330cb589dba90acc5ed17a1cdcf",
+          "sourceFrameRectLTRB": [
+            627,
+            0,
+            1254,
+            627
+          ],
+          "operation": "lossless source-cell crop at QA-recorded frame rectangle",
+          "singleViewOverride": false,
+          "nativeSize": [
+            627,
+            627
+          ],
+          "pngSHA256": "3bfd8df68725ed1b68ee1c0ca525e468d349a5138206cb6acd39ffc24006963b",
+          "rgbaSHA256": "b9584877da73915092d51e53f5b01ba00a10e2b8a5938ac5ddb77e56f9702764",
+          "sourceRGBAEqual": true,
+          "identityFeaturesReviewed": "main left gable2windows, thin front facade sliver",
+          "sourceQA": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\1990s-redbrick-family-single-garage\\yaw8-v1.independent-qa.json",
+          "sourceProvenance": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\1990s-redbrick-family-single-garage\\yaw8-v1.provenance.json",
+          "nativeHeadingDegrees": null,
+          "nativeCameraCertified": false,
+          "runtimeReady": false,
+          "fileRelativeToBundle": "1990s-redbrick-family-single-garage/yaw8E.png",
+          "inheritedV1PNGBytesUnchanged": true,
+          "inheritedV1PNG": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\lossless-source-bundle-v1\\1990s-redbrick-family-single-garage\\yaw8E.png"
+        },
+        {
+          "sourceCameraKey": "yaw8S",
+          "nominalCameraFamily": "yaw8",
+          "file": "1990s-redbrick-family-single-garage/yaw8S.png",
+          "sourceFile": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\1990s-redbrick-family-single-garage\\yaw8-v1.png",
+          "sourceFileSHA256": "ee2a4b2820230bdcebf2375d545296c2c9717330cb589dba90acc5ed17a1cdcf",
+          "sourceFrameRectLTRB": [
+            0,
+            627,
+            627,
+            1254
+          ],
+          "operation": "lossless source-cell crop at QA-recorded frame rectangle",
+          "singleViewOverride": false,
+          "nativeSize": [
+            627,
+            627
+          ],
+          "pngSHA256": "8fc4daf8f477cbcfcdbb97b9e78461f6ab3861270e44d973dbfec3963a8e3588",
+          "rgbaSHA256": "0c9f20b14132e51baf0ba8115d22d44512e5a58454a287d2c2add0a292e7f0f7",
+          "sourceRGBAEqual": true,
+          "identityFeaturesReviewed": "rear main entrance+3windows, garage rear service door",
+          "sourceQA": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\1990s-redbrick-family-single-garage\\yaw8-v1.independent-qa.json",
+          "sourceProvenance": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\1990s-redbrick-family-single-garage\\yaw8-v1.provenance.json",
+          "nativeHeadingDegrees": null,
+          "nativeCameraCertified": false,
+          "runtimeReady": false,
+          "fileRelativeToBundle": "1990s-redbrick-family-single-garage/yaw8S.png",
+          "inheritedV1PNGBytesUnchanged": true,
+          "inheritedV1PNG": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\lossless-source-bundle-v1\\1990s-redbrick-family-single-garage\\yaw8S.png"
+        },
+        {
+          "sourceCameraKey": "yaw8W",
+          "nominalCameraFamily": "yaw8",
+          "file": "1990s-redbrick-family-single-garage/yaw8W.png",
+          "sourceFile": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\1990s-redbrick-family-single-garage\\yaw8-v1.png",
+          "sourceFileSHA256": "ee2a4b2820230bdcebf2375d545296c2c9717330cb589dba90acc5ed17a1cdcf",
+          "sourceFrameRectLTRB": [
+            627,
+            627,
+            1254,
+            1254
+          ],
+          "operation": "lossless source-cell crop at QA-recorded frame rectangle",
+          "singleViewOverride": false,
+          "nativeSize": [
+            627,
+            627
+          ],
+          "pngSHA256": "10ef0a3d3bae4d54984014d716b43c7326a6d7a8ad986f469e6d05cdb06f96f9",
+          "rgbaSHA256": "6ae2776056543a31fd577884c37a718d6337c979fa92220d3699d66b85bb61b3",
+          "sourceRGBAEqual": true,
+          "identityFeaturesReviewed": "garage outer high-window gable, main rear facade thin right",
+          "sourceQA": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\1990s-redbrick-family-single-garage\\yaw8-v1.independent-qa.json",
+          "sourceProvenance": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\1990s-redbrick-family-single-garage\\yaw8-v1.provenance.json",
+          "nativeHeadingDegrees": null,
+          "nativeCameraCertified": false,
+          "runtimeReady": false,
+          "fileRelativeToBundle": "1990s-redbrick-family-single-garage/yaw8W.png",
+          "inheritedV1PNGBytesUnchanged": true,
+          "inheritedV1PNG": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\lossless-source-bundle-v1\\1990s-redbrick-family-single-garage\\yaw8W.png"
+        }
+      ],
+      "inheritedFromV1": true
+    },
+    {
+      "key": "2000s-cream-stucco-two-storey-garage",
+      "name": "2000s cream stucco two storey garage",
+      "sourceViews": [
+        {
+          "sourceCameraKey": "normalSE",
+          "nominalCameraFamily": "normal",
+          "file": "2000s-cream-stucco-two-storey-garage/normalSE.png",
+          "sourceFile": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\2000s-cream-stucco-two-storey-garage\\normal-v1.png",
+          "sourceFileSHA256": "06315f1697f9ebe70ba03122e3a26ddec6f4c5e5945cac2a802350d44b00b079",
+          "sourceFrameRectLTRB": [
+            0,
+            0,
+            627,
+            627
+          ],
+          "operation": "lossless source-cell crop at QA-recorded frame rectangle",
+          "singleViewOverride": false,
+          "nativeSize": [
+            627,
+            627
+          ],
+          "pngSHA256": "f48f98c6492f6eafe466d77c13d194d4ea649e77cb1b1ac5e08610a9d7a28cb6",
+          "rgbaSHA256": "6869da0d5f446e42bc148d46d1f905a23e3c98e70129f2cf4d4bb1f7c181bfd5",
+          "sourceRGBAEqual": true,
+          "identityFeaturesReviewed": "front entrance/canopy+3upper windows and ground living window, left side4windows, garage front",
+          "sourceQA": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\2000s-cream-stucco-two-storey-garage\\normal-v1.independent-qa.json",
+          "sourceProvenance": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\2000s-cream-stucco-two-storey-garage\\normal-v1.provenance.json",
+          "nativeHeadingDegrees": null,
+          "nativeCameraCertified": false,
+          "runtimeReady": false,
+          "fileRelativeToBundle": "2000s-cream-stucco-two-storey-garage/normalSE.png",
+          "inheritedV1PNGBytesUnchanged": true,
+          "inheritedV1PNG": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\lossless-source-bundle-v1\\2000s-cream-stucco-two-storey-garage\\normalSE.png"
+        },
+        {
+          "sourceCameraKey": "normalSW",
+          "nominalCameraFamily": "normal",
+          "file": "2000s-cream-stucco-two-storey-garage/normalSW.png",
+          "sourceFile": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\2000s-cream-stucco-two-storey-garage\\normal-v1.png",
+          "sourceFileSHA256": "06315f1697f9ebe70ba03122e3a26ddec6f4c5e5945cac2a802350d44b00b079",
+          "sourceFrameRectLTRB": [
+            627,
+            0,
+            1254,
+            627
+          ],
+          "operation": "lossless source-cell crop at QA-recorded frame rectangle",
+          "singleViewOverride": false,
+          "nativeSize": [
+            627,
+            627
+          ],
+          "pngSHA256": "b7b3a7f185fed293359357b5ad6439e8533a47d9773df9b768dc2a43ed783012",
+          "rgbaSHA256": "81bdd3f2e782536d1e651ad033b4d9a7ffcb1b7450972629cb2c5f49ce1c361a",
+          "sourceRGBAEqual": true,
+          "identityFeaturesReviewed": "rear patio door/kitchen window+3upper windows, left side4windows, garage rear service door",
+          "sourceQA": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\2000s-cream-stucco-two-storey-garage\\normal-v1.independent-qa.json",
+          "sourceProvenance": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\2000s-cream-stucco-two-storey-garage\\normal-v1.provenance.json",
+          "nativeHeadingDegrees": null,
+          "nativeCameraCertified": false,
+          "runtimeReady": false,
+          "fileRelativeToBundle": "2000s-cream-stucco-two-storey-garage/normalSW.png",
+          "inheritedV1PNGBytesUnchanged": true,
+          "inheritedV1PNG": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\lossless-source-bundle-v1\\2000s-cream-stucco-two-storey-garage\\normalSW.png"
+        },
+        {
+          "sourceCameraKey": "normalNW",
+          "nominalCameraFamily": "normal",
+          "file": "2000s-cream-stucco-two-storey-garage/normalNW.png",
+          "sourceFile": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\2000s-cream-stucco-two-storey-garage\\normal-v1.png",
+          "sourceFileSHA256": "06315f1697f9ebe70ba03122e3a26ddec6f4c5e5945cac2a802350d44b00b079",
+          "sourceFrameRectLTRB": [
+            0,
+            627,
+            627,
+            1254
+          ],
+          "operation": "lossless source-cell crop at QA-recorded frame rectangle",
+          "singleViewOverride": false,
+          "nativeSize": [
+            627,
+            627
+          ],
+          "pngSHA256": "aa7e064226580ea1a4be2181e76cc059c64ca745e5af21c9cc12f4f844e4f6c3",
+          "rgbaSHA256": "5c1034765e5cc26b99bcae943be0fc120ea71bec39b6fedb7f32e8c7b054c144",
+          "sourceRGBAEqual": true,
+          "identityFeaturesReviewed": "rear patio/kitchen+upper windows, garage rear and right side upper window",
+          "sourceQA": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\2000s-cream-stucco-two-storey-garage\\normal-v1.independent-qa.json",
+          "sourceProvenance": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\2000s-cream-stucco-two-storey-garage\\normal-v1.provenance.json",
+          "nativeHeadingDegrees": null,
+          "nativeCameraCertified": false,
+          "runtimeReady": false,
+          "fileRelativeToBundle": "2000s-cream-stucco-two-storey-garage/normalNW.png",
+          "inheritedV1PNGBytesUnchanged": true,
+          "inheritedV1PNG": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\lossless-source-bundle-v1\\2000s-cream-stucco-two-storey-garage\\normalNW.png"
+        },
+        {
+          "sourceCameraKey": "normalNE",
+          "nominalCameraFamily": "normal",
+          "file": "2000s-cream-stucco-two-storey-garage/normalNE.png",
+          "sourceFile": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\2000s-cream-stucco-two-storey-garage\\normal-v1.png",
+          "sourceFileSHA256": "06315f1697f9ebe70ba03122e3a26ddec6f4c5e5945cac2a802350d44b00b079",
+          "sourceFrameRectLTRB": [
+            627,
+            627,
+            1254,
+            1254
+          ],
+          "operation": "lossless source-cell crop at QA-recorded frame rectangle",
+          "singleViewOverride": false,
+          "nativeSize": [
+            627,
+            627
+          ],
+          "pngSHA256": "d63a9971edf6a910233c70157f2ce0780a87a31b2ede83544414e1e40cc30013",
+          "rgbaSHA256": "3f7517f85dd87c16de53f1a7945e92b4453b025225e7a451f243f355b0e8d2b9",
+          "sourceRGBAEqual": true,
+          "identityFeaturesReviewed": "front canopy/entrance/living+3upper windows, garage front and right side upper window",
+          "sourceQA": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\2000s-cream-stucco-two-storey-garage\\normal-v1.independent-qa.json",
+          "sourceProvenance": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\2000s-cream-stucco-two-storey-garage\\normal-v1.provenance.json",
+          "nativeHeadingDegrees": null,
+          "nativeCameraCertified": false,
+          "runtimeReady": false,
+          "fileRelativeToBundle": "2000s-cream-stucco-two-storey-garage/normalNE.png",
+          "inheritedV1PNGBytesUnchanged": true,
+          "inheritedV1PNG": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\lossless-source-bundle-v1\\2000s-cream-stucco-two-storey-garage\\normalNE.png"
+        },
+        {
+          "sourceCameraKey": "yaw8N",
+          "nominalCameraFamily": "yaw8",
+          "file": "2000s-cream-stucco-two-storey-garage/yaw8N.png",
+          "sourceFile": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\2000s-cream-stucco-two-storey-garage\\yaw8-v1.png",
+          "sourceFileSHA256": "0a0373b2dde993bd2f9c8e172d48b0da6299e93cf560bdbf80d7380e78fb59d3",
+          "sourceFrameRectLTRB": [
+            0,
+            0,
+            627,
+            627
+          ],
+          "operation": "lossless source-cell crop at QA-recorded frame rectangle",
+          "singleViewOverride": false,
+          "nativeSize": [
+            627,
+            627
+          ],
+          "pngSHA256": "230c1eac04f42c0608dfbb3a56ca0eaba026bdbb7a7b2e1e8c2505380ed83061",
+          "rgbaSHA256": "63203d7595b6e57d1223a7acd6c67fead271cbc4171ef0888d3b77e1e221376a",
+          "sourceRGBAEqual": true,
+          "identityFeaturesReviewed": "front3upper windows, ground living/door and garage front",
+          "sourceQA": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\2000s-cream-stucco-two-storey-garage\\yaw8-v1.independent-qa.json",
+          "sourceProvenance": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\2000s-cream-stucco-two-storey-garage\\yaw8-v1.provenance.json",
+          "nativeHeadingDegrees": null,
+          "nativeCameraCertified": false,
+          "runtimeReady": false,
+          "fileRelativeToBundle": "2000s-cream-stucco-two-storey-garage/yaw8N.png",
+          "inheritedV1PNGBytesUnchanged": true,
+          "inheritedV1PNG": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\lossless-source-bundle-v1\\2000s-cream-stucco-two-storey-garage\\yaw8N.png"
+        },
+        {
+          "sourceCameraKey": "yaw8E",
+          "nominalCameraFamily": "yaw8",
+          "file": "2000s-cream-stucco-two-storey-garage/yaw8E.png",
+          "sourceFile": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\2000s-cream-stucco-two-storey-garage\\yaw8-v1.png",
+          "sourceFileSHA256": "0a0373b2dde993bd2f9c8e172d48b0da6299e93cf560bdbf80d7380e78fb59d3",
+          "sourceFrameRectLTRB": [
+            627,
+            0,
+            1254,
+            627
+          ],
+          "operation": "lossless source-cell crop at QA-recorded frame rectangle",
+          "singleViewOverride": false,
+          "nativeSize": [
+            627,
+            627
+          ],
+          "pngSHA256": "837f386f934dd74858d9f99aa4b5be5d46576daf1df7a5ae7ab2cb745d06fffd",
+          "rgbaSHA256": "1617eba03393e4dd7598693ce00e2e833f1c5637facf564a428adf997bb957a8",
+          "sourceRGBAEqual": true,
+          "identityFeaturesReviewed": "left main side4windows with thin front canopy sliver",
+          "sourceQA": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\2000s-cream-stucco-two-storey-garage\\yaw8-v1.independent-qa.json",
+          "sourceProvenance": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\2000s-cream-stucco-two-storey-garage\\yaw8-v1.provenance.json",
+          "nativeHeadingDegrees": null,
+          "nativeCameraCertified": false,
+          "runtimeReady": false,
+          "fileRelativeToBundle": "2000s-cream-stucco-two-storey-garage/yaw8E.png",
+          "inheritedV1PNGBytesUnchanged": true,
+          "inheritedV1PNG": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\lossless-source-bundle-v1\\2000s-cream-stucco-two-storey-garage\\yaw8E.png"
+        },
+        {
+          "sourceCameraKey": "yaw8S",
+          "nominalCameraFamily": "yaw8",
+          "file": "2000s-cream-stucco-two-storey-garage/yaw8S.png",
+          "sourceFile": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\2000s-cream-stucco-two-storey-garage\\yaw8-v1.png",
+          "sourceFileSHA256": "0a0373b2dde993bd2f9c8e172d48b0da6299e93cf560bdbf80d7380e78fb59d3",
+          "sourceFrameRectLTRB": [
+            0,
+            627,
+            627,
+            1254
+          ],
+          "operation": "lossless source-cell crop at QA-recorded frame rectangle",
+          "singleViewOverride": false,
+          "nativeSize": [
+            627,
+            627
+          ],
+          "pngSHA256": "096d172b9bae9d96be6ba8ad0c3f46bfd2330093a3ec8b1d5210c765306a7c70",
+          "rgbaSHA256": "615dcea5fc70971988efbd8c07761dd6cb794cf6ab987e57d24342a9d3cdfcf3",
+          "sourceRGBAEqual": true,
+          "identityFeaturesReviewed": "rear3upper windows, rear patio/kitchen and garage rear door",
+          "sourceQA": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\2000s-cream-stucco-two-storey-garage\\yaw8-v1.independent-qa.json",
+          "sourceProvenance": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\2000s-cream-stucco-two-storey-garage\\yaw8-v1.provenance.json",
+          "nativeHeadingDegrees": null,
+          "nativeCameraCertified": false,
+          "runtimeReady": false,
+          "fileRelativeToBundle": "2000s-cream-stucco-two-storey-garage/yaw8S.png",
+          "inheritedV1PNGBytesUnchanged": true,
+          "inheritedV1PNG": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\lossless-source-bundle-v1\\2000s-cream-stucco-two-storey-garage\\yaw8S.png"
+        },
+        {
+          "sourceCameraKey": "yaw8W",
+          "nominalCameraFamily": "yaw8",
+          "file": "2000s-cream-stucco-two-storey-garage/yaw8W.png",
+          "sourceFile": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\2000s-cream-stucco-two-storey-garage\\yaw8-v1.png",
+          "sourceFileSHA256": "0a0373b2dde993bd2f9c8e172d48b0da6299e93cf560bdbf80d7380e78fb59d3",
+          "sourceFrameRectLTRB": [
+            627,
+            627,
+            1254,
+            1254
+          ],
+          "operation": "lossless source-cell crop at QA-recorded frame rectangle",
+          "singleViewOverride": false,
+          "nativeSize": [
+            627,
+            627
+          ],
+          "pngSHA256": "91759dfbf3789f402710cdf2c5f4b53694b285a2f798cf63bcc62b31337ed83a",
+          "rgbaSHA256": "cbcb7cd467c36332dca010976755ae9bd4e00dd828664757d1266324604cee07",
+          "sourceRGBAEqual": true,
+          "identityFeaturesReviewed": "garage outer blank gable, upper right main side window, thin rear openings",
+          "sourceQA": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\2000s-cream-stucco-two-storey-garage\\yaw8-v1.independent-qa.json",
+          "sourceProvenance": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\2000s-cream-stucco-two-storey-garage\\yaw8-v1.provenance.json",
+          "nativeHeadingDegrees": null,
+          "nativeCameraCertified": false,
+          "runtimeReady": false,
+          "fileRelativeToBundle": "2000s-cream-stucco-two-storey-garage/yaw8W.png",
+          "inheritedV1PNGBytesUnchanged": true,
+          "inheritedV1PNG": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\lossless-source-bundle-v1\\2000s-cream-stucco-two-storey-garage\\yaw8W.png"
+        }
+      ],
+      "inheritedFromV1": true
+    },
+    {
+      "key": "2010s-brick-white-clad-townhouse-pair",
+      "name": "2010s brick white clad townhouse pair",
+      "sourceViews": [
+        {
+          "sourceCameraKey": "normalSE",
+          "nominalCameraFamily": "normal",
+          "file": "2010s-brick-white-clad-townhouse-pair/normalSE.png",
+          "sourceFile": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\2010s-brick-white-clad-townhouse-pair\\normal-v1.png",
+          "sourceFileSHA256": "66252e5b3f9c25a8dc2e7a3b05888045b3de7b7b1dec1219d2aa5066abf9e190",
+          "sourceFrameRectLTRB": [
+            0,
+            0,
+            627,
+            627
+          ],
+          "operation": "lossless source-cell crop at QA-recorded frame rectangle",
+          "singleViewOverride": false,
+          "nativeSize": [
+            627,
+            627
+          ],
+          "pngSHA256": "7522111e7d15a6cbe812b670709dbeb21cdda037a817b2254d19a6b3944b1e6b",
+          "rgbaSHA256": "79ffd42dadc541aadceed4fef7186d1b16dc92129b21745688cffdfc50fd937b",
+          "sourceRGBAEqual": true,
+          "identityFeaturesReviewed": "two front entrances/awnings,4upper front windows,2ground front windows, left gable2windows",
+          "sourceQA": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\2010s-brick-white-clad-townhouse-pair\\normal-v1.independent-qa.json",
+          "sourceProvenance": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\2010s-brick-white-clad-townhouse-pair\\normal-v1.provenance.json",
+          "nativeHeadingDegrees": null,
+          "nativeCameraCertified": false,
+          "runtimeReady": false,
+          "fileRelativeToBundle": "2010s-brick-white-clad-townhouse-pair/normalSE.png",
+          "inheritedV1PNGBytesUnchanged": true,
+          "inheritedV1PNG": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\lossless-source-bundle-v1\\2010s-brick-white-clad-townhouse-pair\\normalSE.png"
+        },
+        {
+          "sourceCameraKey": "normalSW",
+          "nominalCameraFamily": "normal",
+          "file": "2010s-brick-white-clad-townhouse-pair/normalSW.png",
+          "sourceFile": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\2010s-brick-white-clad-townhouse-pair\\normal-v1.png",
+          "sourceFileSHA256": "66252e5b3f9c25a8dc2e7a3b05888045b3de7b7b1dec1219d2aa5066abf9e190",
+          "sourceFrameRectLTRB": [
+            627,
+            0,
+            1254,
+            627
+          ],
+          "operation": "lossless source-cell crop at QA-recorded frame rectangle",
+          "singleViewOverride": false,
+          "nativeSize": [
+            627,
+            627
+          ],
+          "pngSHA256": "eaf2677b7420a0bc4ef8ca232e0241d4b5d4264b0c0e9e9d046445a5de6379f7",
+          "rgbaSHA256": "66368bde5bf1538be6977c87c8dd13055420f9e2514366779d08f7a5da849caf",
+          "sourceRGBAEqual": true,
+          "identityFeaturesReviewed": "two rear patios,2large+2small upper rear windows, left gable2windows",
+          "sourceQA": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\2010s-brick-white-clad-townhouse-pair\\normal-v1.independent-qa.json",
+          "sourceProvenance": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\2010s-brick-white-clad-townhouse-pair\\normal-v1.provenance.json",
+          "nativeHeadingDegrees": null,
+          "nativeCameraCertified": false,
+          "runtimeReady": false,
+          "fileRelativeToBundle": "2010s-brick-white-clad-townhouse-pair/normalSW.png",
+          "inheritedV1PNGBytesUnchanged": true,
+          "inheritedV1PNG": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\lossless-source-bundle-v1\\2010s-brick-white-clad-townhouse-pair\\normalSW.png"
+        },
+        {
+          "sourceCameraKey": "normalNW",
+          "nominalCameraFamily": "normal",
+          "file": "2010s-brick-white-clad-townhouse-pair/normalNW.png",
+          "sourceFile": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\2010s-brick-white-clad-townhouse-pair\\normal-v1.png",
+          "sourceFileSHA256": "66252e5b3f9c25a8dc2e7a3b05888045b3de7b7b1dec1219d2aa5066abf9e190",
+          "sourceFrameRectLTRB": [
+            0,
+            627,
+            627,
+            1254
+          ],
+          "operation": "lossless source-cell crop at QA-recorded frame rectangle",
+          "singleViewOverride": false,
+          "nativeSize": [
+            627,
+            627
+          ],
+          "pngSHA256": "a3c0b99826d1486beb4b23bef6c606e567efb5be120bcb22acd424644f87b7e0",
+          "rgbaSHA256": "2750f281c7c8eb0eb4af0721737459ff5335184d51c214381af1d6b258ac81a7",
+          "sourceRGBAEqual": true,
+          "identityFeaturesReviewed": "two rear patios/rear upper pattern, right gable2windows",
+          "sourceQA": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\2010s-brick-white-clad-townhouse-pair\\normal-v1.independent-qa.json",
+          "sourceProvenance": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\2010s-brick-white-clad-townhouse-pair\\normal-v1.provenance.json",
+          "nativeHeadingDegrees": null,
+          "nativeCameraCertified": false,
+          "runtimeReady": false,
+          "fileRelativeToBundle": "2010s-brick-white-clad-townhouse-pair/normalNW.png",
+          "inheritedV1PNGBytesUnchanged": true,
+          "inheritedV1PNG": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\lossless-source-bundle-v1\\2010s-brick-white-clad-townhouse-pair\\normalNW.png"
+        },
+        {
+          "sourceCameraKey": "normalNE",
+          "nominalCameraFamily": "normal",
+          "file": "2010s-brick-white-clad-townhouse-pair/normalNE.png",
+          "sourceFile": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\2010s-brick-white-clad-townhouse-pair\\normal-v1.png",
+          "sourceFileSHA256": "66252e5b3f9c25a8dc2e7a3b05888045b3de7b7b1dec1219d2aa5066abf9e190",
+          "sourceFrameRectLTRB": [
+            627,
+            627,
+            1254,
+            1254
+          ],
+          "operation": "lossless source-cell crop at QA-recorded frame rectangle",
+          "singleViewOverride": false,
+          "nativeSize": [
+            627,
+            627
+          ],
+          "pngSHA256": "c8e720129b68316a966a43a55f9afb9a18b9c09e768dac727eb370a4e921d42e",
+          "rgbaSHA256": "ec215453676de918db285937d62151d9ac06a5e86957ed1ed8f91e44c39c56d9",
+          "sourceRGBAEqual": true,
+          "identityFeaturesReviewed": "two front entrances/front upper4windows, right gable2windows",
+          "sourceQA": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\2010s-brick-white-clad-townhouse-pair\\normal-v1.independent-qa.json",
+          "sourceProvenance": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\2010s-brick-white-clad-townhouse-pair\\normal-v1.provenance.json",
+          "nativeHeadingDegrees": null,
+          "nativeCameraCertified": false,
+          "runtimeReady": false,
+          "fileRelativeToBundle": "2010s-brick-white-clad-townhouse-pair/normalNE.png",
+          "inheritedV1PNGBytesUnchanged": true,
+          "inheritedV1PNG": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\lossless-source-bundle-v1\\2010s-brick-white-clad-townhouse-pair\\normalNE.png"
+        },
+        {
+          "sourceCameraKey": "yaw8N",
+          "nominalCameraFamily": "yaw8",
+          "file": "2010s-brick-white-clad-townhouse-pair/yaw8N.png",
+          "sourceFile": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\2010s-brick-white-clad-townhouse-pair\\yaw8-v1.png",
+          "sourceFileSHA256": "580f7bc6b458b7d8ccb8e90fa302fd677ff62a303e801db14f8799ccc40e12ca",
+          "sourceFrameRectLTRB": [
+            0,
+            0,
+            627,
+            627
+          ],
+          "operation": "lossless source-cell crop at QA-recorded frame rectangle",
+          "singleViewOverride": false,
+          "nativeSize": [
+            627,
+            627
+          ],
+          "pngSHA256": "1c5eef9d36382b62ff6992cf2a6c1ff5abf696f6fa6800b74441862dd0f66531",
+          "rgbaSHA256": "d002d408abbc35d72979eae8ed72a9fff55870e1ac8b7bfdb854a25d95907918",
+          "sourceRGBAEqual": true,
+          "identityFeaturesReviewed": "two main front doors/awnings and4upper front windows",
+          "sourceQA": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\2010s-brick-white-clad-townhouse-pair\\yaw8-v1.independent-qa.json",
+          "sourceProvenance": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\2010s-brick-white-clad-townhouse-pair\\yaw8-v1.provenance.json",
+          "nativeHeadingDegrees": null,
+          "nativeCameraCertified": false,
+          "runtimeReady": false,
+          "fileRelativeToBundle": "2010s-brick-white-clad-townhouse-pair/yaw8N.png",
+          "inheritedV1PNGBytesUnchanged": true,
+          "inheritedV1PNG": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\lossless-source-bundle-v1\\2010s-brick-white-clad-townhouse-pair\\yaw8N.png"
+        },
+        {
+          "sourceCameraKey": "yaw8E",
+          "nominalCameraFamily": "yaw8",
+          "file": "2010s-brick-white-clad-townhouse-pair/yaw8E.png",
+          "sourceFile": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\2010s-brick-white-clad-townhouse-pair\\yaw8-v1.png",
+          "sourceFileSHA256": "580f7bc6b458b7d8ccb8e90fa302fd677ff62a303e801db14f8799ccc40e12ca",
+          "sourceFrameRectLTRB": [
+            627,
+            0,
+            1254,
+            627
+          ],
+          "operation": "lossless source-cell crop at QA-recorded frame rectangle",
+          "singleViewOverride": false,
+          "nativeSize": [
+            627,
+            627
+          ],
+          "pngSHA256": "9f7aad7754274d62f35618f73b62cbc8f203834d8b60d0b42840b0f9a8f2e6c1",
+          "rgbaSHA256": "8e0e0bcc0c0c56c48590173b29e246b3df62d72c2f5cf62f10cc5545d1aa6bb7",
+          "sourceRGBAEqual": true,
+          "identityFeaturesReviewed": "left gable2stacked windows; front entrance awnings on thin right side",
+          "sourceQA": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\2010s-brick-white-clad-townhouse-pair\\yaw8-v1.independent-qa.json",
+          "sourceProvenance": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\2010s-brick-white-clad-townhouse-pair\\yaw8-v1.provenance.json",
+          "nativeHeadingDegrees": null,
+          "nativeCameraCertified": false,
+          "runtimeReady": false,
+          "fileRelativeToBundle": "2010s-brick-white-clad-townhouse-pair/yaw8E.png",
+          "inheritedV1PNGBytesUnchanged": true,
+          "inheritedV1PNG": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\lossless-source-bundle-v1\\2010s-brick-white-clad-townhouse-pair\\yaw8E.png"
+        },
+        {
+          "sourceCameraKey": "yaw8S",
+          "nominalCameraFamily": "yaw8",
+          "file": "2010s-brick-white-clad-townhouse-pair/yaw8S.png",
+          "sourceFile": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\2010s-brick-white-clad-townhouse-pair\\yaw8-v1.png",
+          "sourceFileSHA256": "580f7bc6b458b7d8ccb8e90fa302fd677ff62a303e801db14f8799ccc40e12ca",
+          "sourceFrameRectLTRB": [
+            0,
+            627,
+            627,
+            1254
+          ],
+          "operation": "lossless source-cell crop at QA-recorded frame rectangle",
+          "singleViewOverride": false,
+          "nativeSize": [
+            627,
+            627
+          ],
+          "pngSHA256": "09764ac4acc0458defb08231d026ec2b16d2a4d28fb88f8470b79775ba12a440",
+          "rgbaSHA256": "0eb3f84183439441b0a8afacd0b935c7285451449c60eff9d680840ad3b5b170",
+          "sourceRGBAEqual": true,
+          "identityFeaturesReviewed": "rear two patios and rear upper2large+2small window pattern",
+          "sourceQA": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\2010s-brick-white-clad-townhouse-pair\\yaw8-v1.independent-qa.json",
+          "sourceProvenance": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\2010s-brick-white-clad-townhouse-pair\\yaw8-v1.provenance.json",
+          "nativeHeadingDegrees": null,
+          "nativeCameraCertified": false,
+          "runtimeReady": false,
+          "fileRelativeToBundle": "2010s-brick-white-clad-townhouse-pair/yaw8S.png",
+          "inheritedV1PNGBytesUnchanged": true,
+          "inheritedV1PNG": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\lossless-source-bundle-v1\\2010s-brick-white-clad-townhouse-pair\\yaw8S.png"
+        },
+        {
+          "sourceCameraKey": "yaw8W",
+          "nominalCameraFamily": "yaw8",
+          "file": "2010s-brick-white-clad-townhouse-pair/yaw8W.png",
+          "sourceFile": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\2010s-brick-white-clad-townhouse-pair\\yaw8-W-v2.png",
+          "sourceFileSHA256": "25aff37c8e06d14e3d73b3eb4f91db0e52b978e6b4ca26096c6ee3cccaefd706",
+          "sourceFrameRectLTRB": [
+            0,
+            0,
+            1254,
+            1254
+          ],
+          "operation": "byte-for-byte corrected single PNG copy; full1254canvas preserved",
+          "singleViewOverride": true,
+          "nativeSize": [
+            1254,
+            1254
+          ],
+          "pngSHA256": "25aff37c8e06d14e3d73b3eb4f91db0e52b978e6b4ca26096c6ee3cccaefd706",
+          "rgbaSHA256": "9d4c0b5521229a2bfaaa2448fa7e668cf9d17e3ed8cf86c282219e04616f8396",
+          "sourceRGBAEqual": true,
+          "identityFeaturesReviewed": "CORRECTED right gable2stacked windows; rear patios on right sliver, tiny front awning projections left",
+          "sourceQA": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\2010s-brick-white-clad-townhouse-pair\\yaw8-W-v2.independent-qa.json",
+          "sourceProvenance": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\2010s-brick-white-clad-townhouse-pair\\yaw8-W-v2.provenance.json",
+          "nativeHeadingDegrees": null,
+          "nativeCameraCertified": false,
+          "runtimeReady": false,
+          "fileRelativeToBundle": "2010s-brick-white-clad-townhouse-pair/yaw8W.png",
+          "inheritedV1PNGBytesUnchanged": true,
+          "inheritedV1PNG": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\lossless-source-bundle-v1\\2010s-brick-white-clad-townhouse-pair\\yaw8W.png"
+        }
+      ],
+      "inheritedFromV1": true
+    },
+    {
+      "key": "2020s-white-charcoal-asymmetric-solar-home",
+      "name": "2020s white charcoal asymmetric solar home",
+      "sourceViews": [
+        {
+          "sourceCameraKey": "normalSE",
+          "nominalCameraFamily": "normal",
+          "file": "2020s-white-charcoal-asymmetric-solar-home/normalSE.png",
+          "sourceFile": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\2020s-white-charcoal-asymmetric-solar-home\\normal-v2.png",
+          "sourceFileSHA256": "4fc0f3fcd8540990e5a85e54bdadf35a4520dc5eb5fd5751d9944197d8c6cc6b",
+          "sourceFrameRectLTRB": [
+            0,
+            0,
+            627,
+            627
+          ],
+          "operation": "lossless source-cell crop at QA-recorded frame rectangle",
+          "singleViewOverride": false,
+          "nativeSize": [
+            627,
+            627
+          ],
+          "pngSHA256": "a779c0b7bb19e0b8037115e3b85d1b4dc8d496056de0ee99d53eba7a771a3f3a",
+          "rgbaSHA256": "0ec8173ab621d0ed525e6e8e0ee6d72f0a83e130dd1c1859a76ff4cb5ee209fc",
+          "sourceRGBAEqual": true,
+          "identityFeaturesReviewed": "timber front door, broad front window, left side2windows,6solar panels",
+          "sourceQA": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\2020s-white-charcoal-asymmetric-solar-home\\normal-v2.independent-qa.json",
+          "sourceProvenance": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\2020s-white-charcoal-asymmetric-solar-home\\normal-v2.provenance.json",
+          "nativeHeadingDegrees": null,
+          "nativeCameraCertified": false,
+          "runtimeReady": false,
+          "fileRelativeToBundle": "2020s-white-charcoal-asymmetric-solar-home/normalSE.png",
+          "inheritedV1PNGBytesUnchanged": true,
+          "inheritedV1PNG": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\lossless-source-bundle-v1\\2020s-white-charcoal-asymmetric-solar-home\\normalSE.png"
+        },
+        {
+          "sourceCameraKey": "normalSW",
+          "nominalCameraFamily": "normal",
+          "file": "2020s-white-charcoal-asymmetric-solar-home/normalSW.png",
+          "sourceFile": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\2020s-white-charcoal-asymmetric-solar-home\\normal-v2.png",
+          "sourceFileSHA256": "4fc0f3fcd8540990e5a85e54bdadf35a4520dc5eb5fd5751d9944197d8c6cc6b",
+          "sourceFrameRectLTRB": [
+            627,
+            0,
+            1254,
+            627
+          ],
+          "operation": "lossless source-cell crop at QA-recorded frame rectangle",
+          "singleViewOverride": false,
+          "nativeSize": [
+            627,
+            627
+          ],
+          "pngSHA256": "ea335a8ec208234178c1128ae198cfa1a9bc27b9c7468cc83543e2f7219dcf4f",
+          "rgbaSHA256": "60a54c7cfb28b70b761d25a795f48ac376e98976254e205bb45e177b37ab171a",
+          "sourceRGBAEqual": true,
+          "identityFeaturesReviewed": "rear GLASS sliding patio door, rear utility window, left side2windows,6panels",
+          "sourceQA": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\2020s-white-charcoal-asymmetric-solar-home\\normal-v2.independent-qa.json",
+          "sourceProvenance": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\2020s-white-charcoal-asymmetric-solar-home\\normal-v2.provenance.json",
+          "nativeHeadingDegrees": null,
+          "nativeCameraCertified": false,
+          "runtimeReady": false,
+          "fileRelativeToBundle": "2020s-white-charcoal-asymmetric-solar-home/normalSW.png",
+          "inheritedV1PNGBytesUnchanged": true,
+          "inheritedV1PNG": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\lossless-source-bundle-v1\\2020s-white-charcoal-asymmetric-solar-home\\normalSW.png"
+        },
+        {
+          "sourceCameraKey": "normalNW",
+          "nominalCameraFamily": "normal",
+          "file": "2020s-white-charcoal-asymmetric-solar-home/normalNW.png",
+          "sourceFile": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\2020s-white-charcoal-asymmetric-solar-home\\normal-v2.png",
+          "sourceFileSHA256": "4fc0f3fcd8540990e5a85e54bdadf35a4520dc5eb5fd5751d9944197d8c6cc6b",
+          "sourceFrameRectLTRB": [
+            0,
+            627,
+            627,
+            1254
+          ],
+          "operation": "lossless source-cell crop at QA-recorded frame rectangle",
+          "singleViewOverride": false,
+          "nativeSize": [
+            627,
+            627
+          ],
+          "pngSHA256": "25841b43f424020f113976bd57a56535e900972246877aa527ce5cb7b7a94083",
+          "rgbaSHA256": "1820ec6c5b0cb1678aa7493ef3223297d367c377dfd6ecb5ff4b7e51441225b1",
+          "sourceRGBAEqual": true,
+          "identityFeaturesReviewed": "rear GLASS patio door and right charcoal side window,6panels",
+          "sourceQA": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\2020s-white-charcoal-asymmetric-solar-home\\normal-v2.independent-qa.json",
+          "sourceProvenance": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\2020s-white-charcoal-asymmetric-solar-home\\normal-v2.provenance.json",
+          "nativeHeadingDegrees": null,
+          "nativeCameraCertified": false,
+          "runtimeReady": false,
+          "fileRelativeToBundle": "2020s-white-charcoal-asymmetric-solar-home/normalNW.png",
+          "inheritedV1PNGBytesUnchanged": true,
+          "inheritedV1PNG": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\lossless-source-bundle-v1\\2020s-white-charcoal-asymmetric-solar-home\\normalNW.png"
+        },
+        {
+          "sourceCameraKey": "normalNE",
+          "nominalCameraFamily": "normal",
+          "file": "2020s-white-charcoal-asymmetric-solar-home/normalNE.png",
+          "sourceFile": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\2020s-white-charcoal-asymmetric-solar-home\\normal-v2.png",
+          "sourceFileSHA256": "4fc0f3fcd8540990e5a85e54bdadf35a4520dc5eb5fd5751d9944197d8c6cc6b",
+          "sourceFrameRectLTRB": [
+            627,
+            627,
+            1254,
+            1254
+          ],
+          "operation": "lossless source-cell crop at QA-recorded frame rectangle",
+          "singleViewOverride": false,
+          "nativeSize": [
+            627,
+            627
+          ],
+          "pngSHA256": "993384b124c59e93767bfc2489eafb5582658ea3464a41e0583c560844e51873",
+          "rgbaSHA256": "24d864ecce81bdfb2845ab779e12500d1aef4363cd8c280139dd9fbe61b4c2fa",
+          "sourceRGBAEqual": true,
+          "identityFeaturesReviewed": "front timber entrance/broad window, right side window,6panels",
+          "sourceQA": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\2020s-white-charcoal-asymmetric-solar-home\\normal-v2.independent-qa.json",
+          "sourceProvenance": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\2020s-white-charcoal-asymmetric-solar-home\\normal-v2.provenance.json",
+          "nativeHeadingDegrees": null,
+          "nativeCameraCertified": false,
+          "runtimeReady": false,
+          "fileRelativeToBundle": "2020s-white-charcoal-asymmetric-solar-home/normalNE.png",
+          "inheritedV1PNGBytesUnchanged": true,
+          "inheritedV1PNG": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\lossless-source-bundle-v1\\2020s-white-charcoal-asymmetric-solar-home\\normalNE.png"
+        },
+        {
+          "sourceCameraKey": "yaw8N",
+          "nominalCameraFamily": "yaw8",
+          "file": "2020s-white-charcoal-asymmetric-solar-home/yaw8N.png",
+          "sourceFile": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\2020s-white-charcoal-asymmetric-solar-home\\yaw8-v1.png",
+          "sourceFileSHA256": "293ccfd862af61ac2233f00755cf78a5de063af620c9938208cc874f7dc3afa0",
+          "sourceFrameRectLTRB": [
+            0,
+            0,
+            627,
+            627
+          ],
+          "operation": "lossless source-cell crop at QA-recorded frame rectangle",
+          "singleViewOverride": false,
+          "nativeSize": [
+            627,
+            627
+          ],
+          "pngSHA256": "a7dcf27fc30d50e099f8f65963d63dc5760cdf6c86ccb8009b6de532aa3e6332",
+          "rgbaSHA256": "bebacdb0d641b8af612363b865e42ef4d7e64d8a2c8d8b177b9b3724f41d3f05",
+          "sourceRGBAEqual": true,
+          "identityFeaturesReviewed": "front timber door/broad window/narrow side-light,6solar panels",
+          "sourceQA": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\2020s-white-charcoal-asymmetric-solar-home\\yaw8-v1.independent-qa.json",
+          "sourceProvenance": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\2020s-white-charcoal-asymmetric-solar-home\\yaw8-v1.provenance.json",
+          "nativeHeadingDegrees": null,
+          "nativeCameraCertified": false,
+          "runtimeReady": false,
+          "fileRelativeToBundle": "2020s-white-charcoal-asymmetric-solar-home/yaw8N.png",
+          "inheritedV1PNGBytesUnchanged": true,
+          "inheritedV1PNG": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\lossless-source-bundle-v1\\2020s-white-charcoal-asymmetric-solar-home\\yaw8N.png"
+        },
+        {
+          "sourceCameraKey": "yaw8E",
+          "nominalCameraFamily": "yaw8",
+          "file": "2020s-white-charcoal-asymmetric-solar-home/yaw8E.png",
+          "sourceFile": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\2020s-white-charcoal-asymmetric-solar-home\\yaw8-v1.png",
+          "sourceFileSHA256": "293ccfd862af61ac2233f00755cf78a5de063af620c9938208cc874f7dc3afa0",
+          "sourceFrameRectLTRB": [
+            627,
+            0,
+            1254,
+            627
+          ],
+          "operation": "lossless source-cell crop at QA-recorded frame rectangle",
+          "singleViewOverride": false,
+          "nativeSize": [
+            627,
+            627
+          ],
+          "pngSHA256": "331849aa9f8ed39eea2aa3269cf7c5960c196544b2d316afa0c9ace23a660324",
+          "rgbaSHA256": "37f9255ee72d4c954259c0516256c5a88cb26d1b96ea8627d097b41785c1dc91",
+          "sourceRGBAEqual": true,
+          "identityFeaturesReviewed": "left white side2windows, thin front entrance sliver,6panels",
+          "sourceQA": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\2020s-white-charcoal-asymmetric-solar-home\\yaw8-v1.independent-qa.json",
+          "sourceProvenance": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\2020s-white-charcoal-asymmetric-solar-home\\yaw8-v1.provenance.json",
+          "nativeHeadingDegrees": null,
+          "nativeCameraCertified": false,
+          "runtimeReady": false,
+          "fileRelativeToBundle": "2020s-white-charcoal-asymmetric-solar-home/yaw8E.png",
+          "inheritedV1PNGBytesUnchanged": true,
+          "inheritedV1PNG": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\lossless-source-bundle-v1\\2020s-white-charcoal-asymmetric-solar-home\\yaw8E.png"
+        },
+        {
+          "sourceCameraKey": "yaw8S",
+          "nominalCameraFamily": "yaw8",
+          "file": "2020s-white-charcoal-asymmetric-solar-home/yaw8S.png",
+          "sourceFile": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\2020s-white-charcoal-asymmetric-solar-home\\yaw8-v1.png",
+          "sourceFileSHA256": "293ccfd862af61ac2233f00755cf78a5de063af620c9938208cc874f7dc3afa0",
+          "sourceFrameRectLTRB": [
+            0,
+            627,
+            627,
+            1254
+          ],
+          "operation": "lossless source-cell crop at QA-recorded frame rectangle",
+          "singleViewOverride": false,
+          "nativeSize": [
+            627,
+            627
+          ],
+          "pngSHA256": "eab553702aab5e3ef6ee6e5e38d5b64082c0f51442a7eb294d1aeb0754a151e3",
+          "rgbaSHA256": "b87f1764cd3a28988dc6f1721ac9712e0fe858195a74efdf18979d34b36be909",
+          "sourceRGBAEqual": true,
+          "identityFeaturesReviewed": "rear glass patio and utility window,6panels",
+          "sourceQA": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\2020s-white-charcoal-asymmetric-solar-home\\yaw8-v1.independent-qa.json",
+          "sourceProvenance": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\2020s-white-charcoal-asymmetric-solar-home\\yaw8-v1.provenance.json",
+          "nativeHeadingDegrees": null,
+          "nativeCameraCertified": false,
+          "runtimeReady": false,
+          "fileRelativeToBundle": "2020s-white-charcoal-asymmetric-solar-home/yaw8S.png",
+          "inheritedV1PNGBytesUnchanged": true,
+          "inheritedV1PNG": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\lossless-source-bundle-v1\\2020s-white-charcoal-asymmetric-solar-home\\yaw8S.png"
+        },
+        {
+          "sourceCameraKey": "yaw8W",
+          "nominalCameraFamily": "yaw8",
+          "file": "2020s-white-charcoal-asymmetric-solar-home/yaw8W.png",
+          "sourceFile": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\2020s-white-charcoal-asymmetric-solar-home\\yaw8-v1.png",
+          "sourceFileSHA256": "293ccfd862af61ac2233f00755cf78a5de063af620c9938208cc874f7dc3afa0",
+          "sourceFrameRectLTRB": [
+            627,
+            627,
+            1254,
+            1254
+          ],
+          "operation": "lossless source-cell crop at QA-recorded frame rectangle",
+          "singleViewOverride": false,
+          "nativeSize": [
+            627,
+            627
+          ],
+          "pngSHA256": "10fa45b00c4a38bbc88de5e839ada8ea74e6e0f6659d5ac4c3e008ba6c0a995d",
+          "rgbaSHA256": "aede9a76355488bbfe2d10d6cc0e2bbb93b90a1970812afff20a15dfa3a9428b",
+          "sourceRGBAEqual": true,
+          "identityFeaturesReviewed": "right charcoal side window, tiny rear/front edge projections,6panels",
+          "sourceQA": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\2020s-white-charcoal-asymmetric-solar-home\\yaw8-v1.independent-qa.json",
+          "sourceProvenance": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\2020s-white-charcoal-asymmetric-solar-home\\yaw8-v1.provenance.json",
+          "nativeHeadingDegrees": null,
+          "nativeCameraCertified": false,
+          "runtimeReady": false,
+          "fileRelativeToBundle": "2020s-white-charcoal-asymmetric-solar-home/yaw8W.png",
+          "inheritedV1PNGBytesUnchanged": true,
+          "inheritedV1PNG": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\lossless-source-bundle-v1\\2020s-white-charcoal-asymmetric-solar-home\\yaw8W.png"
+        }
+      ],
+      "inheritedFromV1": true
+    },
+    {
+      "key": "1990s-buff-brick-bay-bungalow",
+      "name": "Affordable buff-brick bay-window bungalow",
+      "sourceViews": [
+        {
+          "sourceCameraKey": "normalSE",
+          "nominalCameraFamily": "normal",
+          "file": "1990s-buff-brick-bay-bungalow/normalSE.png",
+          "fileRelativeToBundle": "1990s-buff-brick-bay-bungalow/normalSE.png",
+          "sourceFile": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\expansion-02\\1990s-buff-brick-bay-bungalow\\normal-v2.png",
+          "sourceFileSHA256": "edec4a6256003942c95b30f408a16180b7bd3b466e312d3f232864631308022d",
+          "sourceFrameRectLTRB": [
+            0,
+            0,
+            627,
+            627
+          ],
+          "sourceCell": 0,
+          "operation": "lossless raw integer half-cell crop; no trim, resize, colour, alpha, flip or paint change",
+          "singleViewOverride": false,
+          "nativeSize": [
+            627,
+            627
+          ],
+          "pngSHA256": "d494dc53557e901670aee7c2a1754f8577204a6fe6c139b1171f3c3aa551db4b",
+          "rgbaSHA256": "5898de60279ac957f8d3efc58a330019f135230854f745b82721d23eb5ec9421",
+          "sourceRGBAEqual": true,
+          "sourceProvenance": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\expansion-02\\1990s-buff-brick-bay-bungalow\\normal-v2.provenance.json",
+          "identityFeaturesReviewed": "Practical fixed facade openings and special features reviewed; see source identity QA evidence.",
+          "nativeHeadingDegrees": null,
+          "nativeCameraCertified": false,
+          "runtimeReady": false
+        },
+        {
+          "sourceCameraKey": "normalSW",
+          "nominalCameraFamily": "normal",
+          "file": "1990s-buff-brick-bay-bungalow/normalSW.png",
+          "fileRelativeToBundle": "1990s-buff-brick-bay-bungalow/normalSW.png",
+          "sourceFile": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\expansion-02\\1990s-buff-brick-bay-bungalow\\normal-v2.png",
+          "sourceFileSHA256": "edec4a6256003942c95b30f408a16180b7bd3b466e312d3f232864631308022d",
+          "sourceFrameRectLTRB": [
+            627,
+            0,
+            1254,
+            627
+          ],
+          "sourceCell": 1,
+          "operation": "lossless raw integer half-cell crop; no trim, resize, colour, alpha, flip or paint change",
+          "singleViewOverride": false,
+          "nativeSize": [
+            627,
+            627
+          ],
+          "pngSHA256": "5ae1262ef0a15b8df0aa72940dd9e9c81f88ec3ade323736e1a1e985cdc06405",
+          "rgbaSHA256": "ff2e93685110de5d5664e3654db60b0e631383d3229b19e8c76f0f9898e9f9e4",
+          "sourceRGBAEqual": true,
+          "sourceProvenance": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\expansion-02\\1990s-buff-brick-bay-bungalow\\normal-v2.provenance.json",
+          "identityFeaturesReviewed": "Practical fixed facade openings and special features reviewed; see source identity QA evidence.",
+          "nativeHeadingDegrees": null,
+          "nativeCameraCertified": false,
+          "runtimeReady": false
+        },
+        {
+          "sourceCameraKey": "normalNW",
+          "nominalCameraFamily": "normal",
+          "file": "1990s-buff-brick-bay-bungalow/normalNW.png",
+          "fileRelativeToBundle": "1990s-buff-brick-bay-bungalow/normalNW.png",
+          "sourceFile": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\expansion-02\\1990s-buff-brick-bay-bungalow\\normal-v2.png",
+          "sourceFileSHA256": "edec4a6256003942c95b30f408a16180b7bd3b466e312d3f232864631308022d",
+          "sourceFrameRectLTRB": [
+            0,
+            627,
+            627,
+            1254
+          ],
+          "sourceCell": 2,
+          "operation": "lossless raw integer half-cell crop; no trim, resize, colour, alpha, flip or paint change",
+          "singleViewOverride": false,
+          "nativeSize": [
+            627,
+            627
+          ],
+          "pngSHA256": "6549e7223fcae2e4c1b18990b150d6bd3aaecc84bbb82f4daad63d65f16b8ee5",
+          "rgbaSHA256": "9abaaaf438cdb0491f1102f954d099d650bd9ea8bf5779b011bce78e8a669842",
+          "sourceRGBAEqual": true,
+          "sourceProvenance": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\expansion-02\\1990s-buff-brick-bay-bungalow\\normal-v2.provenance.json",
+          "identityFeaturesReviewed": "Practical fixed facade openings and special features reviewed; see source identity QA evidence.",
+          "nativeHeadingDegrees": null,
+          "nativeCameraCertified": false,
+          "runtimeReady": false
+        },
+        {
+          "sourceCameraKey": "normalNE",
+          "nominalCameraFamily": "normal",
+          "file": "1990s-buff-brick-bay-bungalow/normalNE.png",
+          "fileRelativeToBundle": "1990s-buff-brick-bay-bungalow/normalNE.png",
+          "sourceFile": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\expansion-02\\1990s-buff-brick-bay-bungalow\\normal-v2.png",
+          "sourceFileSHA256": "edec4a6256003942c95b30f408a16180b7bd3b466e312d3f232864631308022d",
+          "sourceFrameRectLTRB": [
+            627,
+            627,
+            1254,
+            1254
+          ],
+          "sourceCell": 3,
+          "operation": "lossless raw integer half-cell crop; no trim, resize, colour, alpha, flip or paint change",
+          "singleViewOverride": false,
+          "nativeSize": [
+            627,
+            627
+          ],
+          "pngSHA256": "5047a6fd256a4d0c930c59c0a455868a262db4110c830f64d293af074aa7988c",
+          "rgbaSHA256": "3e6e937cc449dfb8bf724e784a01afddf201f6ab5a2b7ab7e3a56bad2e3879f4",
+          "sourceRGBAEqual": true,
+          "sourceProvenance": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\expansion-02\\1990s-buff-brick-bay-bungalow\\normal-v2.provenance.json",
+          "identityFeaturesReviewed": "Practical fixed facade openings and special features reviewed; see source identity QA evidence.",
+          "nativeHeadingDegrees": null,
+          "nativeCameraCertified": false,
+          "runtimeReady": false
+        },
+        {
+          "sourceCameraKey": "yaw8N",
+          "nominalCameraFamily": "yaw8",
+          "file": "1990s-buff-brick-bay-bungalow/yaw8N.png",
+          "fileRelativeToBundle": "1990s-buff-brick-bay-bungalow/yaw8N.png",
+          "sourceFile": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\expansion-02\\1990s-buff-brick-bay-bungalow\\yaw8-v2.png",
+          "sourceFileSHA256": "c13e6a5cf8d7f5c9babd132fbebd0e4a69e24e24e51b07c74f4cdacfbabe1351",
+          "sourceFrameRectLTRB": [
+            0,
+            0,
+            627,
+            627
+          ],
+          "sourceCell": 0,
+          "operation": "lossless raw integer half-cell crop; no trim, resize, colour, alpha, flip or paint change",
+          "singleViewOverride": false,
+          "nativeSize": [
+            627,
+            627
+          ],
+          "pngSHA256": "0fee9498446c6f4b5e09fdfbd32620381c9e3c8e3553f2b5d0a59788a024076f",
+          "rgbaSHA256": "2e63415f062176116375b643da7c91db72dd0c1ad7c8a2e02d01c998d162079a",
+          "sourceRGBAEqual": true,
+          "sourceProvenance": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\expansion-02\\1990s-buff-brick-bay-bungalow\\yaw8-v2.provenance.json",
+          "identityFeaturesReviewed": "Practical fixed facade openings and special features reviewed; see source identity QA evidence.",
+          "nativeHeadingDegrees": null,
+          "nativeCameraCertified": false,
+          "runtimeReady": false
+        },
+        {
+          "sourceCameraKey": "yaw8E",
+          "nominalCameraFamily": "yaw8",
+          "file": "1990s-buff-brick-bay-bungalow/yaw8E.png",
+          "fileRelativeToBundle": "1990s-buff-brick-bay-bungalow/yaw8E.png",
+          "sourceFile": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\expansion-02\\1990s-buff-brick-bay-bungalow\\yaw8-v2.png",
+          "sourceFileSHA256": "c13e6a5cf8d7f5c9babd132fbebd0e4a69e24e24e51b07c74f4cdacfbabe1351",
+          "sourceFrameRectLTRB": [
+            627,
+            0,
+            1254,
+            627
+          ],
+          "sourceCell": 1,
+          "operation": "lossless raw integer half-cell crop; no trim, resize, colour, alpha, flip or paint change",
+          "singleViewOverride": false,
+          "nativeSize": [
+            627,
+            627
+          ],
+          "pngSHA256": "d30d42ef67969ee62182055742490a34c711fc3d567fc6fd099fa3907325794c",
+          "rgbaSHA256": "e003715646ec306e0c8169c80aa63fe5720bbfbb20e6a9ae9d2dddf7c9c68aa0",
+          "sourceRGBAEqual": true,
+          "sourceProvenance": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\expansion-02\\1990s-buff-brick-bay-bungalow\\yaw8-v2.provenance.json",
+          "identityFeaturesReviewed": "Practical fixed facade openings and special features reviewed; see source identity QA evidence.",
+          "nativeHeadingDegrees": null,
+          "nativeCameraCertified": false,
+          "runtimeReady": false
+        },
+        {
+          "sourceCameraKey": "yaw8S",
+          "nominalCameraFamily": "yaw8",
+          "file": "1990s-buff-brick-bay-bungalow/yaw8S.png",
+          "fileRelativeToBundle": "1990s-buff-brick-bay-bungalow/yaw8S.png",
+          "sourceFile": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\expansion-02\\1990s-buff-brick-bay-bungalow\\yaw8-v2.png",
+          "sourceFileSHA256": "c13e6a5cf8d7f5c9babd132fbebd0e4a69e24e24e51b07c74f4cdacfbabe1351",
+          "sourceFrameRectLTRB": [
+            0,
+            627,
+            627,
+            1254
+          ],
+          "sourceCell": 2,
+          "operation": "lossless raw integer half-cell crop; no trim, resize, colour, alpha, flip or paint change",
+          "singleViewOverride": false,
+          "nativeSize": [
+            627,
+            627
+          ],
+          "pngSHA256": "570953085b64898f0234feb6604b58fbfc580348a4a77f81573f63976ed1355a",
+          "rgbaSHA256": "321166cb647affcec5fc65f0a351c5ce6eb28bf12287773aecb09a351db697b2",
+          "sourceRGBAEqual": true,
+          "sourceProvenance": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\expansion-02\\1990s-buff-brick-bay-bungalow\\yaw8-v2.provenance.json",
+          "identityFeaturesReviewed": "Practical fixed facade openings and special features reviewed; see source identity QA evidence.",
+          "nativeHeadingDegrees": null,
+          "nativeCameraCertified": false,
+          "runtimeReady": false
+        },
+        {
+          "sourceCameraKey": "yaw8W",
+          "nominalCameraFamily": "yaw8",
+          "file": "1990s-buff-brick-bay-bungalow/yaw8W.png",
+          "fileRelativeToBundle": "1990s-buff-brick-bay-bungalow/yaw8W.png",
+          "sourceFile": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\expansion-02\\1990s-buff-brick-bay-bungalow\\yaw8-v2.png",
+          "sourceFileSHA256": "c13e6a5cf8d7f5c9babd132fbebd0e4a69e24e24e51b07c74f4cdacfbabe1351",
+          "sourceFrameRectLTRB": [
+            627,
+            627,
+            1254,
+            1254
+          ],
+          "sourceCell": 3,
+          "operation": "lossless raw integer half-cell crop; no trim, resize, colour, alpha, flip or paint change",
+          "singleViewOverride": false,
+          "nativeSize": [
+            627,
+            627
+          ],
+          "pngSHA256": "dfc64a4a236408d42e0f47826df12608a2819f0cec34cc7395c6cf5f3bdb5f48",
+          "rgbaSHA256": "29581fb7433e8ca4bf4f629e42f3aac1d7d40e26c3b5b03a33545b3212142a7a",
+          "sourceRGBAEqual": true,
+          "sourceProvenance": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\expansion-02\\1990s-buff-brick-bay-bungalow\\yaw8-v2.provenance.json",
+          "identityFeaturesReviewed": "Practical fixed facade openings and special features reviewed; see source identity QA evidence.",
+          "nativeHeadingDegrees": null,
+          "nativeCameraCertified": false,
+          "runtimeReady": false
+        }
+      ],
+      "inheritedFromV1": false,
+      "identityReview": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\audit\\four-source-repairs-and-house-package-readiness.json",
+      "identityReviewSHA256": "61e31b1639323266023e92cbcfa99ea54a9349b07a86c9ebb16f5bae9dae721d"
+    },
+    {
+      "key": "2000s-redbrick-single-storey-duplex",
+      "name": "Affordable single-storey redbrick duplex",
+      "sourceViews": [
+        {
+          "sourceCameraKey": "normalSE",
+          "nominalCameraFamily": "normal",
+          "file": "2000s-redbrick-single-storey-duplex/normalSE.png",
+          "fileRelativeToBundle": "2000s-redbrick-single-storey-duplex/normalSE.png",
+          "sourceFile": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\expansion-02\\2000s-redbrick-single-storey-duplex\\normal-v1.png",
+          "sourceFileSHA256": "e065a5bc87e24022ee182a07179570b428ea060a4eaa30259b1d914f5e4cdef3",
+          "sourceFrameRectLTRB": [
+            0,
+            0,
+            627,
+            627
+          ],
+          "sourceCell": 0,
+          "operation": "lossless raw integer half-cell crop; no trim, resize, colour, alpha, flip or paint change",
+          "singleViewOverride": false,
+          "nativeSize": [
+            627,
+            627
+          ],
+          "pngSHA256": "3e0fb56f47df302622e6b736b06f846fd37855e6039a40dd2471e346291d9078",
+          "rgbaSHA256": "02db4bce0d7d7c000bff87b68931adb7784a3d140f3ff608785eb2569dc3eaf6",
+          "sourceRGBAEqual": true,
+          "sourceProvenance": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\expansion-02\\2000s-redbrick-single-storey-duplex\\normal-v1.provenance.json",
+          "identityFeaturesReviewed": "Practical fixed facade openings and special features reviewed; see source identity QA evidence.",
+          "nativeHeadingDegrees": null,
+          "nativeCameraCertified": false,
+          "runtimeReady": false
+        },
+        {
+          "sourceCameraKey": "normalSW",
+          "nominalCameraFamily": "normal",
+          "file": "2000s-redbrick-single-storey-duplex/normalSW.png",
+          "fileRelativeToBundle": "2000s-redbrick-single-storey-duplex/normalSW.png",
+          "sourceFile": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\expansion-02\\2000s-redbrick-single-storey-duplex\\normal-v1.png",
+          "sourceFileSHA256": "e065a5bc87e24022ee182a07179570b428ea060a4eaa30259b1d914f5e4cdef3",
+          "sourceFrameRectLTRB": [
+            627,
+            0,
+            1254,
+            627
+          ],
+          "sourceCell": 1,
+          "operation": "lossless raw integer half-cell crop; no trim, resize, colour, alpha, flip or paint change",
+          "singleViewOverride": false,
+          "nativeSize": [
+            627,
+            627
+          ],
+          "pngSHA256": "8eade0d1f5da59a5176bf3dcafd626ca52fd83af235f67a034ea1d52c8202bd1",
+          "rgbaSHA256": "575a48b1544cd80d4ed075aee48a2abfd7c8ebcca2834821307ad4c5fb8fd56c",
+          "sourceRGBAEqual": true,
+          "sourceProvenance": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\expansion-02\\2000s-redbrick-single-storey-duplex\\normal-v1.provenance.json",
+          "identityFeaturesReviewed": "Practical fixed facade openings and special features reviewed; see source identity QA evidence.",
+          "nativeHeadingDegrees": null,
+          "nativeCameraCertified": false,
+          "runtimeReady": false
+        },
+        {
+          "sourceCameraKey": "normalNW",
+          "nominalCameraFamily": "normal",
+          "file": "2000s-redbrick-single-storey-duplex/normalNW.png",
+          "fileRelativeToBundle": "2000s-redbrick-single-storey-duplex/normalNW.png",
+          "sourceFile": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\expansion-02\\2000s-redbrick-single-storey-duplex\\normal-v1.png",
+          "sourceFileSHA256": "e065a5bc87e24022ee182a07179570b428ea060a4eaa30259b1d914f5e4cdef3",
+          "sourceFrameRectLTRB": [
+            0,
+            627,
+            627,
+            1254
+          ],
+          "sourceCell": 2,
+          "operation": "lossless raw integer half-cell crop; no trim, resize, colour, alpha, flip or paint change",
+          "singleViewOverride": false,
+          "nativeSize": [
+            627,
+            627
+          ],
+          "pngSHA256": "43441b36a331e6a30b10b4d7fde9ddec92d2b3af486a0b6b9ed2a0bd1340d5a7",
+          "rgbaSHA256": "aaeb514d79aac94add54b1f4f40d7a231c036420917a037505088ca2dcc310c9",
+          "sourceRGBAEqual": true,
+          "sourceProvenance": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\expansion-02\\2000s-redbrick-single-storey-duplex\\normal-v1.provenance.json",
+          "identityFeaturesReviewed": "Practical fixed facade openings and special features reviewed; see source identity QA evidence.",
+          "nativeHeadingDegrees": null,
+          "nativeCameraCertified": false,
+          "runtimeReady": false
+        },
+        {
+          "sourceCameraKey": "normalNE",
+          "nominalCameraFamily": "normal",
+          "file": "2000s-redbrick-single-storey-duplex/normalNE.png",
+          "fileRelativeToBundle": "2000s-redbrick-single-storey-duplex/normalNE.png",
+          "sourceFile": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\expansion-02\\2000s-redbrick-single-storey-duplex\\normal-v1.png",
+          "sourceFileSHA256": "e065a5bc87e24022ee182a07179570b428ea060a4eaa30259b1d914f5e4cdef3",
+          "sourceFrameRectLTRB": [
+            627,
+            627,
+            1254,
+            1254
+          ],
+          "sourceCell": 3,
+          "operation": "lossless raw integer half-cell crop; no trim, resize, colour, alpha, flip or paint change",
+          "singleViewOverride": false,
+          "nativeSize": [
+            627,
+            627
+          ],
+          "pngSHA256": "80aa717f7c62a93e1ab260893f3dc9413ddd5f21767bc45d2b1220f099c54d76",
+          "rgbaSHA256": "fe48d7f7b494280202861b66d37af7160d8dc6dc87ecdd0a9a2878e52bf92be7",
+          "sourceRGBAEqual": true,
+          "sourceProvenance": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\expansion-02\\2000s-redbrick-single-storey-duplex\\normal-v1.provenance.json",
+          "identityFeaturesReviewed": "Practical fixed facade openings and special features reviewed; see source identity QA evidence.",
+          "nativeHeadingDegrees": null,
+          "nativeCameraCertified": false,
+          "runtimeReady": false
+        },
+        {
+          "sourceCameraKey": "yaw8N",
+          "nominalCameraFamily": "yaw8",
+          "file": "2000s-redbrick-single-storey-duplex/yaw8N.png",
+          "fileRelativeToBundle": "2000s-redbrick-single-storey-duplex/yaw8N.png",
+          "sourceFile": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\expansion-02\\2000s-redbrick-single-storey-duplex\\yaw8-v1.png",
+          "sourceFileSHA256": "e89184dda107ba78befaac2873956ac47c47e4a937964c244efb46c71b1956a2",
+          "sourceFrameRectLTRB": [
+            0,
+            0,
+            627,
+            627
+          ],
+          "sourceCell": 0,
+          "operation": "lossless raw integer half-cell crop; no trim, resize, colour, alpha, flip or paint change",
+          "singleViewOverride": false,
+          "nativeSize": [
+            627,
+            627
+          ],
+          "pngSHA256": "ad2393bcf56eb591a3af99048cc5990055b062410d5c57b6a0fb5ebdd68f22d0",
+          "rgbaSHA256": "a3895b84dae2eec14ef80949339c86299b1e48ab42eaa3ae22cc36b230018169",
+          "sourceRGBAEqual": true,
+          "sourceProvenance": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\expansion-02\\2000s-redbrick-single-storey-duplex\\yaw8-v1.provenance.json",
+          "identityFeaturesReviewed": "Practical fixed facade openings and special features reviewed; see source identity QA evidence.",
+          "nativeHeadingDegrees": null,
+          "nativeCameraCertified": false,
+          "runtimeReady": false
+        },
+        {
+          "sourceCameraKey": "yaw8E",
+          "nominalCameraFamily": "yaw8",
+          "file": "2000s-redbrick-single-storey-duplex/yaw8E.png",
+          "fileRelativeToBundle": "2000s-redbrick-single-storey-duplex/yaw8E.png",
+          "sourceFile": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\expansion-02\\2000s-redbrick-single-storey-duplex\\yaw8-v1.png",
+          "sourceFileSHA256": "e89184dda107ba78befaac2873956ac47c47e4a937964c244efb46c71b1956a2",
+          "sourceFrameRectLTRB": [
+            627,
+            0,
+            1254,
+            627
+          ],
+          "sourceCell": 1,
+          "operation": "lossless raw integer half-cell crop; no trim, resize, colour, alpha, flip or paint change",
+          "singleViewOverride": false,
+          "nativeSize": [
+            627,
+            627
+          ],
+          "pngSHA256": "cb54632d4ad9b957d63d7d590f52f78ab966247c0f0c5b17206478c1c996d31a",
+          "rgbaSHA256": "20eba9d1531ed39ee67d34851d229eae8836f1f6f0de62e18e76791066a637b2",
+          "sourceRGBAEqual": true,
+          "sourceProvenance": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\expansion-02\\2000s-redbrick-single-storey-duplex\\yaw8-v1.provenance.json",
+          "identityFeaturesReviewed": "Practical fixed facade openings and special features reviewed; see source identity QA evidence.",
+          "nativeHeadingDegrees": null,
+          "nativeCameraCertified": false,
+          "runtimeReady": false
+        },
+        {
+          "sourceCameraKey": "yaw8S",
+          "nominalCameraFamily": "yaw8",
+          "file": "2000s-redbrick-single-storey-duplex/yaw8S.png",
+          "fileRelativeToBundle": "2000s-redbrick-single-storey-duplex/yaw8S.png",
+          "sourceFile": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\expansion-02\\2000s-redbrick-single-storey-duplex\\yaw8-v1.png",
+          "sourceFileSHA256": "e89184dda107ba78befaac2873956ac47c47e4a937964c244efb46c71b1956a2",
+          "sourceFrameRectLTRB": [
+            0,
+            627,
+            627,
+            1254
+          ],
+          "sourceCell": 2,
+          "operation": "lossless raw integer half-cell crop; no trim, resize, colour, alpha, flip or paint change",
+          "singleViewOverride": false,
+          "nativeSize": [
+            627,
+            627
+          ],
+          "pngSHA256": "4ca862705ea8a0fbab7147a5b83b2f6a478aba6b49c23ef53bf573e19749b685",
+          "rgbaSHA256": "d86560355cd8ff278764e54ee2ba5e625c6abf89a4ad6eedec3204e7f4e09a01",
+          "sourceRGBAEqual": true,
+          "sourceProvenance": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\expansion-02\\2000s-redbrick-single-storey-duplex\\yaw8-v1.provenance.json",
+          "identityFeaturesReviewed": "Practical fixed facade openings and special features reviewed; see source identity QA evidence.",
+          "nativeHeadingDegrees": null,
+          "nativeCameraCertified": false,
+          "runtimeReady": false
+        },
+        {
+          "sourceCameraKey": "yaw8W",
+          "nominalCameraFamily": "yaw8",
+          "file": "2000s-redbrick-single-storey-duplex/yaw8W.png",
+          "fileRelativeToBundle": "2000s-redbrick-single-storey-duplex/yaw8W.png",
+          "sourceFile": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\expansion-02\\2000s-redbrick-single-storey-duplex\\yaw8-v1.png",
+          "sourceFileSHA256": "e89184dda107ba78befaac2873956ac47c47e4a937964c244efb46c71b1956a2",
+          "sourceFrameRectLTRB": [
+            627,
+            627,
+            1254,
+            1254
+          ],
+          "sourceCell": 3,
+          "operation": "lossless raw integer half-cell crop; no trim, resize, colour, alpha, flip or paint change",
+          "singleViewOverride": false,
+          "nativeSize": [
+            627,
+            627
+          ],
+          "pngSHA256": "d2412670a58fe370668f6fe438199011a1a108f8911fed0baa40c1c01e53d800",
+          "rgbaSHA256": "8cb9cc28c83d5705c68d257662d010ed275619d4c2213a931cfd27bcd0ebc3a9",
+          "sourceRGBAEqual": true,
+          "sourceProvenance": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\expansion-02\\2000s-redbrick-single-storey-duplex\\yaw8-v1.provenance.json",
+          "identityFeaturesReviewed": "Practical fixed facade openings and special features reviewed; see source identity QA evidence.",
+          "nativeHeadingDegrees": null,
+          "nativeCameraCertified": false,
+          "runtimeReady": false
+        }
+      ],
+      "inheritedFromV1": false,
+      "identityReview": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\audit\\four-source-repairs-and-house-package-readiness.json",
+      "identityReviewSHA256": "61e31b1639323266023e92cbcfa99ea54a9349b07a86c9ebb16f5bae9dae721d"
+    },
+    {
+      "key": "2010s-small-six-flat-walkup",
+      "name": "Small affordable six-flat walk-up",
+      "sourceViews": [
+        {
+          "sourceCameraKey": "normalSE",
+          "nominalCameraFamily": "normal",
+          "file": "2010s-small-six-flat-walkup/normalSE.png",
+          "fileRelativeToBundle": "2010s-small-six-flat-walkup/normalSE.png",
+          "sourceFile": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\expansion-02\\2010s-small-six-flat-walkup\\normal-v1.png",
+          "sourceFileSHA256": "30cbd2974e46fc5ec7123f5bdd55cff22280990122073e1d024aba2b9a4fdf52",
+          "sourceFrameRectLTRB": [
+            0,
+            0,
+            627,
+            627
+          ],
+          "sourceCell": 0,
+          "operation": "lossless raw integer half-cell crop; no trim, resize, colour, alpha, flip or paint change",
+          "singleViewOverride": false,
+          "nativeSize": [
+            627,
+            627
+          ],
+          "pngSHA256": "70e3df6cb12786a7784d4ade079e44fc5c3b1e52d77072b126e40e747f856581",
+          "rgbaSHA256": "db351dfc29442778aa93fc6650425608e1839d18db9c5713dd256937faf368b6",
+          "sourceRGBAEqual": true,
+          "sourceProvenance": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\expansion-02\\2010s-small-six-flat-walkup\\normal-v1.provenance.json",
+          "identityFeaturesReviewed": "Practical fixed facade openings and special features reviewed; see source identity QA evidence.",
+          "nativeHeadingDegrees": null,
+          "nativeCameraCertified": false,
+          "runtimeReady": false
+        },
+        {
+          "sourceCameraKey": "normalSW",
+          "nominalCameraFamily": "normal",
+          "file": "2010s-small-six-flat-walkup/normalSW.png",
+          "fileRelativeToBundle": "2010s-small-six-flat-walkup/normalSW.png",
+          "sourceFile": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\expansion-02\\2010s-small-six-flat-walkup\\normal-v1.png",
+          "sourceFileSHA256": "30cbd2974e46fc5ec7123f5bdd55cff22280990122073e1d024aba2b9a4fdf52",
+          "sourceFrameRectLTRB": [
+            627,
+            0,
+            1254,
+            627
+          ],
+          "sourceCell": 1,
+          "operation": "lossless raw integer half-cell crop; no trim, resize, colour, alpha, flip or paint change",
+          "singleViewOverride": false,
+          "nativeSize": [
+            627,
+            627
+          ],
+          "pngSHA256": "3859c0d2199971c0781645d30da7d8bab16990cd35dd799a1b1c4b178b03c223",
+          "rgbaSHA256": "2076446264caa937a971a1714a553ba581b6dde243c352c832ae1be13bf4e407",
+          "sourceRGBAEqual": true,
+          "sourceProvenance": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\expansion-02\\2010s-small-six-flat-walkup\\normal-v1.provenance.json",
+          "identityFeaturesReviewed": "Practical fixed facade openings and special features reviewed; see source identity QA evidence.",
+          "nativeHeadingDegrees": null,
+          "nativeCameraCertified": false,
+          "runtimeReady": false
+        },
+        {
+          "sourceCameraKey": "normalNW",
+          "nominalCameraFamily": "normal",
+          "file": "2010s-small-six-flat-walkup/normalNW.png",
+          "fileRelativeToBundle": "2010s-small-six-flat-walkup/normalNW.png",
+          "sourceFile": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\expansion-02\\2010s-small-six-flat-walkup\\normal-v1.png",
+          "sourceFileSHA256": "30cbd2974e46fc5ec7123f5bdd55cff22280990122073e1d024aba2b9a4fdf52",
+          "sourceFrameRectLTRB": [
+            0,
+            627,
+            627,
+            1254
+          ],
+          "sourceCell": 2,
+          "operation": "lossless raw integer half-cell crop; no trim, resize, colour, alpha, flip or paint change",
+          "singleViewOverride": false,
+          "nativeSize": [
+            627,
+            627
+          ],
+          "pngSHA256": "aa767db518a3caa50293c5efbec97a090d26158d530d3c7725add55bcd6ee901",
+          "rgbaSHA256": "edca0c17de11d521087df4e8dc40e4a804d1a16e6f74584c73070cd3e5a4fa39",
+          "sourceRGBAEqual": true,
+          "sourceProvenance": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\expansion-02\\2010s-small-six-flat-walkup\\normal-v1.provenance.json",
+          "identityFeaturesReviewed": "Practical fixed facade openings and special features reviewed; see source identity QA evidence.",
+          "nativeHeadingDegrees": null,
+          "nativeCameraCertified": false,
+          "runtimeReady": false
+        },
+        {
+          "sourceCameraKey": "normalNE",
+          "nominalCameraFamily": "normal",
+          "file": "2010s-small-six-flat-walkup/normalNE.png",
+          "fileRelativeToBundle": "2010s-small-six-flat-walkup/normalNE.png",
+          "sourceFile": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\expansion-02\\2010s-small-six-flat-walkup\\normal-v1.png",
+          "sourceFileSHA256": "30cbd2974e46fc5ec7123f5bdd55cff22280990122073e1d024aba2b9a4fdf52",
+          "sourceFrameRectLTRB": [
+            627,
+            627,
+            1254,
+            1254
+          ],
+          "sourceCell": 3,
+          "operation": "lossless raw integer half-cell crop; no trim, resize, colour, alpha, flip or paint change",
+          "singleViewOverride": false,
+          "nativeSize": [
+            627,
+            627
+          ],
+          "pngSHA256": "027efbc68ebb22b7dc351f14c0d6ae9f49ed7db3e32f22c9b3509206c6aa7015",
+          "rgbaSHA256": "4cd67e699a9ec2154b8607459769618eea0075a2bd3efff540d52a1b0f32d130",
+          "sourceRGBAEqual": true,
+          "sourceProvenance": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\expansion-02\\2010s-small-six-flat-walkup\\normal-v1.provenance.json",
+          "identityFeaturesReviewed": "Practical fixed facade openings and special features reviewed; see source identity QA evidence.",
+          "nativeHeadingDegrees": null,
+          "nativeCameraCertified": false,
+          "runtimeReady": false
+        },
+        {
+          "sourceCameraKey": "yaw8N",
+          "nominalCameraFamily": "yaw8",
+          "file": "2010s-small-six-flat-walkup/yaw8N.png",
+          "fileRelativeToBundle": "2010s-small-six-flat-walkup/yaw8N.png",
+          "sourceFile": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\expansion-02\\2010s-small-six-flat-walkup\\yaw8-v1.png",
+          "sourceFileSHA256": "8a7e8160727276c0b7556f5220f41046c45cdbbdd89f4aa2ef313acc7964cfb1",
+          "sourceFrameRectLTRB": [
+            0,
+            0,
+            627,
+            627
+          ],
+          "sourceCell": 0,
+          "operation": "lossless raw integer half-cell crop; no trim, resize, colour, alpha, flip or paint change",
+          "singleViewOverride": false,
+          "nativeSize": [
+            627,
+            627
+          ],
+          "pngSHA256": "bfde3a158470f090ce7f8e64b91c69d3aa3f824912bc28e8db2b5559159ffac0",
+          "rgbaSHA256": "6f319d6db2185f4142ad94c43ac3bf6efb16800f6e356c08fbed44ac7be5f56b",
+          "sourceRGBAEqual": true,
+          "sourceProvenance": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\expansion-02\\2010s-small-six-flat-walkup\\yaw8-v1.provenance.json",
+          "identityFeaturesReviewed": "Practical fixed facade openings and special features reviewed; see source identity QA evidence.",
+          "nativeHeadingDegrees": null,
+          "nativeCameraCertified": false,
+          "runtimeReady": false
+        },
+        {
+          "sourceCameraKey": "yaw8E",
+          "nominalCameraFamily": "yaw8",
+          "file": "2010s-small-six-flat-walkup/yaw8E.png",
+          "fileRelativeToBundle": "2010s-small-six-flat-walkup/yaw8E.png",
+          "sourceFile": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\expansion-02\\2010s-small-six-flat-walkup\\yaw8-v1.png",
+          "sourceFileSHA256": "8a7e8160727276c0b7556f5220f41046c45cdbbdd89f4aa2ef313acc7964cfb1",
+          "sourceFrameRectLTRB": [
+            627,
+            0,
+            1254,
+            627
+          ],
+          "sourceCell": 1,
+          "operation": "lossless raw integer half-cell crop; no trim, resize, colour, alpha, flip or paint change",
+          "singleViewOverride": false,
+          "nativeSize": [
+            627,
+            627
+          ],
+          "pngSHA256": "d935def7fc0c6fabe481002ef0272dabc051617e0c957b814969ed8266e66a6b",
+          "rgbaSHA256": "7033d5259092071f09f6ff111af5b5f11f09f0a20dba8bd2da6e04b797a735dc",
+          "sourceRGBAEqual": true,
+          "sourceProvenance": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\expansion-02\\2010s-small-six-flat-walkup\\yaw8-v1.provenance.json",
+          "identityFeaturesReviewed": "Practical fixed facade openings and special features reviewed; see source identity QA evidence.",
+          "nativeHeadingDegrees": null,
+          "nativeCameraCertified": false,
+          "runtimeReady": false
+        },
+        {
+          "sourceCameraKey": "yaw8S",
+          "nominalCameraFamily": "yaw8",
+          "file": "2010s-small-six-flat-walkup/yaw8S.png",
+          "fileRelativeToBundle": "2010s-small-six-flat-walkup/yaw8S.png",
+          "sourceFile": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\expansion-02\\2010s-small-six-flat-walkup\\yaw8-v1.png",
+          "sourceFileSHA256": "8a7e8160727276c0b7556f5220f41046c45cdbbdd89f4aa2ef313acc7964cfb1",
+          "sourceFrameRectLTRB": [
+            0,
+            627,
+            627,
+            1254
+          ],
+          "sourceCell": 2,
+          "operation": "lossless raw integer half-cell crop; no trim, resize, colour, alpha, flip or paint change",
+          "singleViewOverride": false,
+          "nativeSize": [
+            627,
+            627
+          ],
+          "pngSHA256": "d155ebf1b630230c2f73167d912557a75566d68b8344b2278c52add4533ca16f",
+          "rgbaSHA256": "266e049662eef108fe8de75865cc6f24210d0fc169388ba70a89b0cbc3a5366b",
+          "sourceRGBAEqual": true,
+          "sourceProvenance": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\expansion-02\\2010s-small-six-flat-walkup\\yaw8-v1.provenance.json",
+          "identityFeaturesReviewed": "Practical fixed facade openings and special features reviewed; see source identity QA evidence.",
+          "nativeHeadingDegrees": null,
+          "nativeCameraCertified": false,
+          "runtimeReady": false
+        },
+        {
+          "sourceCameraKey": "yaw8W",
+          "nominalCameraFamily": "yaw8",
+          "file": "2010s-small-six-flat-walkup/yaw8W.png",
+          "fileRelativeToBundle": "2010s-small-six-flat-walkup/yaw8W.png",
+          "sourceFile": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\expansion-02\\2010s-small-six-flat-walkup\\yaw8-v1.png",
+          "sourceFileSHA256": "8a7e8160727276c0b7556f5220f41046c45cdbbdd89f4aa2ef313acc7964cfb1",
+          "sourceFrameRectLTRB": [
+            627,
+            627,
+            1254,
+            1254
+          ],
+          "sourceCell": 3,
+          "operation": "lossless raw integer half-cell crop; no trim, resize, colour, alpha, flip or paint change",
+          "singleViewOverride": false,
+          "nativeSize": [
+            627,
+            627
+          ],
+          "pngSHA256": "42aa2fba5579d5dd617df197bd7b2b690a7fe24a8be2f5b7ce40093506f15d16",
+          "rgbaSHA256": "539156545843a29593392f067976ae9a0d63aec22f0b6933118c2a62b3b2c206",
+          "sourceRGBAEqual": true,
+          "sourceProvenance": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\expansion-02\\2010s-small-six-flat-walkup\\yaw8-v1.provenance.json",
+          "identityFeaturesReviewed": "Practical fixed facade openings and special features reviewed; see source identity QA evidence.",
+          "nativeHeadingDegrees": null,
+          "nativeCameraCertified": false,
+          "runtimeReady": false
+        }
+      ],
+      "inheritedFromV1": false,
+      "identityReview": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\audit\\four-source-repairs-and-house-package-readiness.json",
+      "identityReviewSHA256": "61e31b1639323266023e92cbcfa99ea54a9349b07a86c9ebb16f5bae9dae721d"
+    },
+    {
+      "key": "2020s-compact-gabled-solar-family-home",
+      "name": "Compact two-storey gabled solar family home",
+      "sourceViews": [
+        {
+          "sourceCameraKey": "normalSE",
+          "nominalCameraFamily": "normal",
+          "file": "2020s-compact-gabled-solar-family-home/normalSE.png",
+          "fileRelativeToBundle": "2020s-compact-gabled-solar-family-home/normalSE.png",
+          "sourceFile": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\expansion-02\\2020s-compact-gabled-solar-family-home\\normal-v2.png",
+          "sourceFileSHA256": "ca6549666c74f6e6a2e430187bc6c2c8d18e90d2a49b4f032a38ddac4c070f2f",
+          "sourceFrameRectLTRB": [
+            0,
+            0,
+            627,
+            627
+          ],
+          "sourceCell": 0,
+          "operation": "lossless raw integer half-cell crop; no trim, resize, colour, alpha, flip or paint change",
+          "singleViewOverride": false,
+          "nativeSize": [
+            627,
+            627
+          ],
+          "pngSHA256": "f3bedb5dc4a9e128eaa36923c06842b1a9abf3626cff457407d9f927ecbd7ccf",
+          "rgbaSHA256": "a331a029497ea32248298e567d6d8efe903443f3c5513635bc7951716c430ab6",
+          "sourceRGBAEqual": true,
+          "sourceProvenance": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\expansion-02\\2020s-compact-gabled-solar-family-home\\normal-v2.provenance.json",
+          "identityFeaturesReviewed": "Practical fixed facade openings and special features reviewed; see source identity QA evidence.",
+          "nativeHeadingDegrees": null,
+          "nativeCameraCertified": false,
+          "runtimeReady": false
+        },
+        {
+          "sourceCameraKey": "normalSW",
+          "nominalCameraFamily": "normal",
+          "file": "2020s-compact-gabled-solar-family-home/normalSW.png",
+          "fileRelativeToBundle": "2020s-compact-gabled-solar-family-home/normalSW.png",
+          "sourceFile": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\expansion-02\\2020s-compact-gabled-solar-family-home\\normal-v2.png",
+          "sourceFileSHA256": "ca6549666c74f6e6a2e430187bc6c2c8d18e90d2a49b4f032a38ddac4c070f2f",
+          "sourceFrameRectLTRB": [
+            627,
+            0,
+            1254,
+            627
+          ],
+          "sourceCell": 1,
+          "operation": "lossless raw integer half-cell crop; no trim, resize, colour, alpha, flip or paint change",
+          "singleViewOverride": false,
+          "nativeSize": [
+            627,
+            627
+          ],
+          "pngSHA256": "b0dead522e970f478469955cac27a7486d86ca46a9e030847b72ad9907a1d331",
+          "rgbaSHA256": "ea72a5a58387488d33cf2e95be88cd931a649e4d99ecdff5a73f8428552bf004",
+          "sourceRGBAEqual": true,
+          "sourceProvenance": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\expansion-02\\2020s-compact-gabled-solar-family-home\\normal-v2.provenance.json",
+          "identityFeaturesReviewed": "Practical fixed facade openings and special features reviewed; see source identity QA evidence.",
+          "nativeHeadingDegrees": null,
+          "nativeCameraCertified": false,
+          "runtimeReady": false
+        },
+        {
+          "sourceCameraKey": "normalNW",
+          "nominalCameraFamily": "normal",
+          "file": "2020s-compact-gabled-solar-family-home/normalNW.png",
+          "fileRelativeToBundle": "2020s-compact-gabled-solar-family-home/normalNW.png",
+          "sourceFile": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\expansion-02\\2020s-compact-gabled-solar-family-home\\normal-v2.png",
+          "sourceFileSHA256": "ca6549666c74f6e6a2e430187bc6c2c8d18e90d2a49b4f032a38ddac4c070f2f",
+          "sourceFrameRectLTRB": [
+            0,
+            627,
+            627,
+            1254
+          ],
+          "sourceCell": 2,
+          "operation": "lossless raw integer half-cell crop; no trim, resize, colour, alpha, flip or paint change",
+          "singleViewOverride": false,
+          "nativeSize": [
+            627,
+            627
+          ],
+          "pngSHA256": "66ccc14aa30d5dff39e712255462c754565424b2690273d8aba764dd3657e62d",
+          "rgbaSHA256": "6228a91d0fabecdb5181db4d1b12f274aaf447687cf248c47df57665b86ff1b6",
+          "sourceRGBAEqual": true,
+          "sourceProvenance": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\expansion-02\\2020s-compact-gabled-solar-family-home\\normal-v2.provenance.json",
+          "identityFeaturesReviewed": "Practical fixed facade openings and special features reviewed; see source identity QA evidence.",
+          "nativeHeadingDegrees": null,
+          "nativeCameraCertified": false,
+          "runtimeReady": false
+        },
+        {
+          "sourceCameraKey": "normalNE",
+          "nominalCameraFamily": "normal",
+          "file": "2020s-compact-gabled-solar-family-home/normalNE.png",
+          "fileRelativeToBundle": "2020s-compact-gabled-solar-family-home/normalNE.png",
+          "sourceFile": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\expansion-02\\2020s-compact-gabled-solar-family-home\\normal-v2.png",
+          "sourceFileSHA256": "ca6549666c74f6e6a2e430187bc6c2c8d18e90d2a49b4f032a38ddac4c070f2f",
+          "sourceFrameRectLTRB": [
+            627,
+            627,
+            1254,
+            1254
+          ],
+          "sourceCell": 3,
+          "operation": "lossless raw integer half-cell crop; no trim, resize, colour, alpha, flip or paint change",
+          "singleViewOverride": false,
+          "nativeSize": [
+            627,
+            627
+          ],
+          "pngSHA256": "6fe2428d526beaf1d57c44630f08da832057ec5f51080c9778faa009b74ca3aa",
+          "rgbaSHA256": "688ab94364ed2d9506a92baf40d3ebbdb50e18f177a9f7c96c06182cb00e024e",
+          "sourceRGBAEqual": true,
+          "sourceProvenance": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\expansion-02\\2020s-compact-gabled-solar-family-home\\normal-v2.provenance.json",
+          "identityFeaturesReviewed": "Practical fixed facade openings and special features reviewed; see source identity QA evidence.",
+          "nativeHeadingDegrees": null,
+          "nativeCameraCertified": false,
+          "runtimeReady": false
+        },
+        {
+          "sourceCameraKey": "yaw8N",
+          "nominalCameraFamily": "yaw8",
+          "file": "2020s-compact-gabled-solar-family-home/yaw8N.png",
+          "fileRelativeToBundle": "2020s-compact-gabled-solar-family-home/yaw8N.png",
+          "sourceFile": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\expansion-02\\2020s-compact-gabled-solar-family-home\\yaw8-v1.png",
+          "sourceFileSHA256": "41ff3d722cb01a598b2fdd48f93a8a1de5966f6ca737dedba8593d5ea961639d",
+          "sourceFrameRectLTRB": [
+            0,
+            0,
+            627,
+            627
+          ],
+          "sourceCell": 0,
+          "operation": "lossless raw integer half-cell crop; no trim, resize, colour, alpha, flip or paint change",
+          "singleViewOverride": false,
+          "nativeSize": [
+            627,
+            627
+          ],
+          "pngSHA256": "6983e3c8b3f642a1c49599ddd584d693039071046fa79750851cb9d09e905e18",
+          "rgbaSHA256": "1bc0534fb74452113d0ae7393df3a034ef16da9a746b25c797208db9e6d1f88f",
+          "sourceRGBAEqual": true,
+          "sourceProvenance": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\expansion-02\\2020s-compact-gabled-solar-family-home\\yaw8-v1.provenance.json",
+          "identityFeaturesReviewed": "Practical fixed facade openings and special features reviewed; see source identity QA evidence.",
+          "nativeHeadingDegrees": null,
+          "nativeCameraCertified": false,
+          "runtimeReady": false
+        },
+        {
+          "sourceCameraKey": "yaw8E",
+          "nominalCameraFamily": "yaw8",
+          "file": "2020s-compact-gabled-solar-family-home/yaw8E.png",
+          "fileRelativeToBundle": "2020s-compact-gabled-solar-family-home/yaw8E.png",
+          "sourceFile": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\expansion-02\\2020s-compact-gabled-solar-family-home\\yaw8-v1.png",
+          "sourceFileSHA256": "41ff3d722cb01a598b2fdd48f93a8a1de5966f6ca737dedba8593d5ea961639d",
+          "sourceFrameRectLTRB": [
+            627,
+            0,
+            1254,
+            627
+          ],
+          "sourceCell": 1,
+          "operation": "lossless raw integer half-cell crop; no trim, resize, colour, alpha, flip or paint change",
+          "singleViewOverride": false,
+          "nativeSize": [
+            627,
+            627
+          ],
+          "pngSHA256": "5430adfb20a27326ac3adf162f5920a13bde7568d29640941ee881281cc32075",
+          "rgbaSHA256": "a9a3e33aee6f172e355b9975206de4cdf97ab05c9766c7815b941456ac258d45",
+          "sourceRGBAEqual": true,
+          "sourceProvenance": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\expansion-02\\2020s-compact-gabled-solar-family-home\\yaw8-v1.provenance.json",
+          "identityFeaturesReviewed": "Practical fixed facade openings and special features reviewed; see source identity QA evidence.",
+          "nativeHeadingDegrees": null,
+          "nativeCameraCertified": false,
+          "runtimeReady": false
+        },
+        {
+          "sourceCameraKey": "yaw8S",
+          "nominalCameraFamily": "yaw8",
+          "file": "2020s-compact-gabled-solar-family-home/yaw8S.png",
+          "fileRelativeToBundle": "2020s-compact-gabled-solar-family-home/yaw8S.png",
+          "sourceFile": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\expansion-02\\2020s-compact-gabled-solar-family-home\\yaw8-v1.png",
+          "sourceFileSHA256": "41ff3d722cb01a598b2fdd48f93a8a1de5966f6ca737dedba8593d5ea961639d",
+          "sourceFrameRectLTRB": [
+            0,
+            627,
+            627,
+            1254
+          ],
+          "sourceCell": 2,
+          "operation": "lossless raw integer half-cell crop; no trim, resize, colour, alpha, flip or paint change",
+          "singleViewOverride": false,
+          "nativeSize": [
+            627,
+            627
+          ],
+          "pngSHA256": "696d58f1a9219232d5c2e0f365d81e9d63a46debe288e8dd89a9f8b97cd5bd33",
+          "rgbaSHA256": "cc8f806060d2f0e92fc1fa1f6114dff3c7e4d62347bb57c7d01fb652d65343ac",
+          "sourceRGBAEqual": true,
+          "sourceProvenance": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\expansion-02\\2020s-compact-gabled-solar-family-home\\yaw8-v1.provenance.json",
+          "identityFeaturesReviewed": "Practical fixed facade openings and special features reviewed; see source identity QA evidence.",
+          "nativeHeadingDegrees": null,
+          "nativeCameraCertified": false,
+          "runtimeReady": false
+        },
+        {
+          "sourceCameraKey": "yaw8W",
+          "nominalCameraFamily": "yaw8",
+          "file": "2020s-compact-gabled-solar-family-home/yaw8W.png",
+          "fileRelativeToBundle": "2020s-compact-gabled-solar-family-home/yaw8W.png",
+          "sourceFile": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\expansion-02\\2020s-compact-gabled-solar-family-home\\yaw8-v1.png",
+          "sourceFileSHA256": "41ff3d722cb01a598b2fdd48f93a8a1de5966f6ca737dedba8593d5ea961639d",
+          "sourceFrameRectLTRB": [
+            627,
+            627,
+            1254,
+            1254
+          ],
+          "sourceCell": 3,
+          "operation": "lossless raw integer half-cell crop; no trim, resize, colour, alpha, flip or paint change",
+          "singleViewOverride": false,
+          "nativeSize": [
+            627,
+            627
+          ],
+          "pngSHA256": "c5a719e0458fd38ec4180470db5f6ab58c34272923809edb589b1ea63af97d59",
+          "rgbaSHA256": "9d918d95092ebb52a19256b61e829b9e777d33e4401251d4ebf677de96d4f318",
+          "sourceRGBAEqual": true,
+          "sourceProvenance": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\expansion-02\\2020s-compact-gabled-solar-family-home\\yaw8-v1.provenance.json",
+          "identityFeaturesReviewed": "Practical fixed facade openings and special features reviewed; see source identity QA evidence.",
+          "nativeHeadingDegrees": null,
+          "nativeCameraCertified": false,
+          "runtimeReady": false
+        }
+      ],
+      "inheritedFromV1": false,
+      "identityReview": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\audit\\four-source-repairs-and-house-package-readiness.json",
+      "identityReviewSHA256": "61e31b1639323266023e92cbcfa99ea54a9349b07a86c9ebb16f5bae9dae721d"
+    }
+  ]
+}

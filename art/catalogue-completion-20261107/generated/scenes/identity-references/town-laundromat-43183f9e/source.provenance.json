@@ -1,0 +1,63 @@
+{
+  "schema": 1,
+  "createdUtc": "2026-11-07T06:47:45.284562+00:00",
+  "exactRuntimeId": "town:laundromat",
+  "source": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/building-views/town-laundromat/NE.png",
+  "sourceSha256": "8b94bf0667d32345b1a7e5a65c3da614d6be55055ca19e80467682bbc0b636ea",
+  "output": "identity-references/town-laundromat-43183f9e/source.png",
+  "outputSha256": "8b94bf0667d32345b1a7e5a65c3da614d6be55055ca19e80467682bbc0b636ea",
+  "width": 546,
+  "height": 470,
+  "sourceCell": {
+    "kind": "already isolated native PNG; whole file",
+    "rectXYWH": [
+      0,
+      0,
+      546,
+      470
+    ]
+  },
+  "operation": "byte-for-byte PNG copy only; no resize, crop, recolour, key, repaint, registration or source mutation",
+  "selection": "registered corner NE native PNG for this exact subject",
+  "registeredCornerDirection": "NE",
+  "sourceEvidence": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\building-views\\town-laundromat\\provenance.json",
+  "sourceReview": {
+    "integrationStatus": "ready",
+    "integrationReason": "Distinct front/rear views inspected; alpha and all four crop-boundary checks passed. Original-width scale pending door gauges.",
+    "review": "Four distinct facades present, front sign only NE/NW; rear service door present SE/SW. Preserve raw output. File and game-size review follow preparation."
+  },
+  "sourceRegistration": {
+    "id": "town:laundromat",
+    "version": "town-laundromat-4views-v1",
+    "files": {
+      "NE": "8b94bf0667d32345b1a7e5a65c3da614d6be55055ca19e80467682bbc0b636ea",
+      "SE": "cc3e108c847a91b64155f39d908653b0ca6ee4bcf4904bba454cc49d190d5a2b",
+      "SW": "076793a3263a65b2ef93a0ff4634b4a5308d98b66d8f20435be747b3dff6d885",
+      "NW": "f7e18cddab91fdd7815eb672387a88234c6f491ba56cea692233ed1ef2ecfa18"
+    }
+  },
+  "originalInventorySource": {
+    "library": "src/game/library.ts",
+    "librarySha256": "91b5190292c1005ac7b936f08e5e1ebf3be43c3aae99f92ea510775da83d9726",
+    "atlas": "src/assets/atlas/sprites-7-0.webp",
+    "atlasSha256": "4581a4f0eab4092db46557ade127a0a283989295ce6f5cd7921b16069f657d20",
+    "runtimePage": 7,
+    "localPage": 7,
+    "uv": [
+      0.007813,
+      0.21875,
+      0.237793,
+      0.409668
+    ],
+    "crop": {
+      "left": 16,
+      "top": 448,
+      "width": 471,
+      "height": 391
+    },
+    "native": "art/theme-consistency/exports/buildings/town-laundromat.native.png",
+    "nativeSha256": "0141263f650a5ae9f5bf707d38913f8bde63d79eb74514bc5cc7da6a99c4f8ae"
+  },
+  "originalBusinessSourceCell": null,
+  "nativeReferenceApprovalClaimed": false
+}

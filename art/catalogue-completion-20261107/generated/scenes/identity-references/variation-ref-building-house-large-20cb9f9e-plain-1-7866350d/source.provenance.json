@@ -1,0 +1,62 @@
+{
+  "schema": 1,
+  "createdUtc": "2026-11-07T06:47:45.284562+00:00",
+  "exactRuntimeId": "variation:ref-building-house-large-20cb9f9e-plain:1",
+  "source": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/building-views/variation-ref-building-house-large-20cb9f9e-plain-1/NE.png",
+  "sourceSha256": "5827fd40dc45c7758441472bc29899ff536b05ea3d9abf87bfe38813beefde1e",
+  "output": "identity-references/variation-ref-building-house-large-20cb9f9e-plain-1-7866350d/source.png",
+  "outputSha256": "5827fd40dc45c7758441472bc29899ff536b05ea3d9abf87bfe38813beefde1e",
+  "width": 482,
+  "height": 500,
+  "sourceCell": {
+    "kind": "already isolated native PNG; whole file",
+    "rectXYWH": [
+      0,
+      0,
+      482,
+      500
+    ]
+  },
+  "operation": "byte-for-byte PNG copy only; no resize, crop, recolour, key, repaint, registration or source mutation",
+  "selection": "registered corner NE native PNG for this exact subject",
+  "registeredCornerDirection": "NE",
+  "sourceEvidence": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\building-views\\variation-ref-building-house-large-20cb9f9e-plain-1\\provenance.json",
+  "sourceReview": {
+    "integrationStatus": "ready",
+    "integrationReason": "Single NE presents actual opposite frontLEFT/right-sideRIGHT at a coherent isometric camera; original cream two-storey front porch, three upper sash windows, right dormer/wing, bay and chimney retained. Original SE/SW/NWnative PNG bytes preserved exactly; newview scaled to unaffected-height proxy, actualalpha/lighting/materials coherent."
+  },
+  "sourceRegistration": {
+    "id": "variation:ref-building-house-large-20cb9f9e-plain:1",
+    "version": "variation-ref-building-house-large-20cb9f9e-plain-1-4views-v4",
+    "files": {
+      "NE": "5827fd40dc45c7758441472bc29899ff536b05ea3d9abf87bfe38813beefde1e",
+      "SE": "23ca1bc23e96e9646f65a3c978e6eb2e22316e9ffffe7d745aeb1b968c81f997",
+      "SW": "fd39d46a91e285f9f639dc4b51d14ac99e199037d87fcf051b185f5d4c641bba",
+      "NW": "8e0b6f377980adb988dcec03575fc1f90ecf04f4104ac970ed87ca14a2ba70c1"
+    }
+  },
+  "originalInventorySource": {
+    "library": "src/game/library.ts",
+    "librarySha256": "91b5190292c1005ac7b936f08e5e1ebf3be43c3aae99f92ea510775da83d9726",
+    "atlas": "src/assets/atlas/sprites-8-0.webp",
+    "atlasSha256": "3627e8012c994eb375699136eec4134215434643c5c267a76f1326638c2b9514",
+    "runtimePage": 8,
+    "localPage": 8,
+    "uv": [
+      0.195313,
+      0.609375,
+      0.385742,
+      0.788086
+    ],
+    "crop": {
+      "left": 400,
+      "top": 1248,
+      "width": 390,
+      "height": 366
+    },
+    "native": "art/theme-consistency/exports/buildings/variation-ref-building-house-large-20cb9f9e-plain-1.native.png",
+    "nativeSha256": "3687d76dab5e9b6e7690cef958fa17abbf9ab4171de665ff374fee2e15288ba2"
+  },
+  "originalBusinessSourceCell": null,
+  "nativeReferenceApprovalClaimed": false
+}

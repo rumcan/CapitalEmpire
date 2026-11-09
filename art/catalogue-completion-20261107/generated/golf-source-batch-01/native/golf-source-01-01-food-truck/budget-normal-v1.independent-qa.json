@@ -1,0 +1,178 @@
+{
+  "schema": 1,
+  "as_of_utc": "2026-11-07T12:22:07.194839+00:00",
+  "review_result": "HOLD-extractor-visibility-review-before-further-poses",
+  "recommended_continue_yaw_source_generation": false,
+  "continuation_scope": "Sourceidentity/function/alpha only; not final8direction, owner/release, numericalangle or runtime approval.",
+  "source": {
+    "path": "generated/golf-source-batch-01/native/golf-source-01-01-food-truck/budget-normal-v1.png",
+    "sha256": "6f52ae1851feb1ddb97a67c9d5bc78158d5fba5727a9dc4269f72f260d65a974",
+    "bytes": 1588982
+  },
+  "condition": "budget",
+  "runtime_target_proposal": {
+    "eventTypeId": "foodTruck",
+    "eventName": "Food truck",
+    "currentSpriteSubjectId": "golf:food-tent",
+    "newArtSubjectProposal": "golf:event-food-truck",
+    "newArtSubjectAlreadyRegistered": false,
+    "eventCatalogueSource": "src/game/golf/tents.ts",
+    "standInMappingSource": "src/game/golf/structure-art.ts",
+    "footprintTiles": {
+      "width": 3,
+      "depth": 2
+    },
+    "footprintMetres": {
+      "width": 6,
+      "depth": 4
+    },
+    "dimensionsMeaning": "Exact current event placement plot, not measured source sprite architecture. New design must fit plot; no runtime geometry changed.",
+    "currentSpriteBaseBoxesInTiles": [
+      {
+        "hx": 4,
+        "hy": 4,
+        "dx": 0,
+        "dy": 0
+      }
+    ]
+  },
+  "source_original_hash_matches_parent_provenance": true,
+  "parent_provenance": {
+    "path": "generated/golf-source-batch-01/native/golf-source-01-01-food-truck/budget-normal-v1.provenance.json",
+    "sha256": "55ccf7b656fe1f9f0c3732f0c8cecc0d06c9928adb5a6ced87365cd576187e39",
+    "bytes": 3671
+  },
+  "parent_archive": {
+    "path": "generated/golf-source-batch-01/native/golf-source-01-01-food-truck/budget-normal-v1.archive.json",
+    "sha256": "84eefe3c5fe8760081be4aec4804dbad434d64c111ca83049415a4e04ac31e45",
+    "bytes": 3757
+  },
+  "actual_prompt_from_provenance_utf8_sha256": "1ffcb68a81f126f2568722ad9d833203b76b35fa0badce2173449593d736ad21",
+  "actual_generation_references": [
+    {
+      "path": "generated/old-clubhouse-1950/normal-v5.png",
+      "sha256": "a996fb471f351cc35926c84090192a8b55cc3557bb1bf9fec24872218fa219a6",
+      "bytes": 1473832
+    }
+  ],
+  "dimensions": [
+    1254,
+    1254
+  ],
+  "mode": "RGBA",
+  "zero_alpha_fraction": 0.6001853081304102,
+  "outer_border_alpha_p95max": [
+    1.0,
+    1.0
+  ],
+  "center_gutter_alpha_p95max": [
+    0.0,
+    1.0
+  ],
+  "horizontal_clear_cut_row": 627,
+  "all_four_native_core_silhouettes_complete": true,
+  "four_distinct_core_pixel_hashes": true,
+  "cells": [
+    {
+      "cell": 0,
+      "function_corner": "front+left",
+      "proposed_lossless_rect_ltrb": [
+        0,
+        0,
+        627,
+        627
+      ],
+      "core_bbox_ltrb": [
+        73,
+        104,
+        597,
+        550
+      ],
+      "minimum_core_margin_px": 30,
+      "boundary_core_pixels_alpha_gt128": 0,
+      "boundary_alpha_max": 1,
+      "native_rgba_rectangle_sha256": "b7936ef4f40c3765f165c90fa5e3dc097873dda1c5c606e6fef1fd46da1a80a1",
+      "trimmed_core_pixel_hash_ignore_alpha_le128": "083ffc42de13deafda86124534a1d556c67f55de08f33941d535ba34f157a7e4"
+    },
+    {
+      "cell": 1,
+      "function_corner": "rear+left",
+      "proposed_lossless_rect_ltrb": [
+        627,
+        0,
+        1254,
+        627
+      ],
+      "core_bbox_ltrb": [
+        33,
+        132,
+        542,
+        526
+      ],
+      "minimum_core_margin_px": 33,
+      "boundary_core_pixels_alpha_gt128": 0,
+      "boundary_alpha_max": 1,
+      "native_rgba_rectangle_sha256": "6483653f8ac2fccde83881683da61c556a0b21f897e2a8a7c3ebd7b16ecf3d0c",
+      "trimmed_core_pixel_hash_ignore_alpha_le128": "3b1feafc2ec28e0512e3d32eb815f3511c2ec4596cfbbd62cf1f4c7ace9c4f63"
+    },
+    {
+      "cell": 2,
+      "function_corner": "rear+right",
+      "proposed_lossless_rect_ltrb": [
+        0,
+        627,
+        627,
+        1254
+      ],
+      "core_bbox_ltrb": [
+        102,
+        67,
+        580,
+        476
+      ],
+      "minimum_core_margin_px": 47,
+      "boundary_core_pixels_alpha_gt128": 0,
+      "boundary_alpha_max": 1,
+      "native_rgba_rectangle_sha256": "1f4c67e9dff55a006fb8cde34a0b5316c9283a31912e254c1b729c01e0f1f80e",
+      "trimmed_core_pixel_hash_ignore_alpha_le128": "8f33c248022fb168106a1047052619328db1d3cc28c8575caa727c7b66014100"
+    },
+    {
+      "cell": 3,
+      "function_corner": "front+right",
+      "proposed_lossless_rect_ltrb": [
+        627,
+        627,
+        1254,
+        1254
+      ],
+      "core_bbox_ltrb": [
+        62,
+        80,
+        549,
+        511
+      ],
+      "minimum_core_margin_px": 62,
+      "boundary_core_pixels_alpha_gt128": 0,
+      "boundary_alpha_max": 1,
+      "native_rgba_rectangle_sha256": "bd3b9f596480085610cd4ac4081dbfa8166cf046670920fee60c2ae988104279",
+      "trimmed_core_pixel_hash_ignore_alpha_le128": "e0d7779f15dad24c16955516bc2a9cdf02a7a83be161b01db44141493790fe8d"
+    }
+  ],
+  "mesh_alpha_samples": null,
+  "visual_observations": [
+    "Four genuinely different corner combinations: front+serving side, rear+serving side, rear+plain side, front+plain side.",
+    "Raised serving hatch and rear service door stay on distinct faces; old stepvan function readable.",
+    "Roof extractor is obvious inTL/TR/BL but not visibly present inBR plain-side/front view despite roof exposure. Preserve candidate; verify visibility/repair BR before using it as identity authority for new poses."
+  ],
+  "exact_numerical_angle_certified": false,
+  "release_anchors_authored": false,
+  "owner_approved": false,
+  "runtime_ready": false,
+  "runtime_imported": false,
+  "source_crops_or_pixel_changes": false,
+  "exact_prompt_file": {
+    "path": "generated/golf-source-batch-01/native/golf-source-01-01-food-truck/budget-normal-v1.prompt.txt",
+    "sha256": "ee90ce19a3eeaaf38d081e26fc5392ccba1ea36fb09ef8dfe3f48b34fb143aec",
+    "bytes": 2138
+  }
+}

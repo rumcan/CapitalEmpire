@@ -1,0 +1,50 @@
+{
+  "schema": 1,
+  "createdUtc": "2026-11-07T06:47:45.284562+00:00",
+  "exactRuntimeId": "lot:8x15-front-5",
+  "source": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/theme-consistency/exports/composite-lots/lot-8x15-front-5.native.png",
+  "sourceSha256": "a12cca566326fd9fc5a6c72c0f3a009b8f57f4de54f3688090344ae0ac821394",
+  "output": "identity-references/lot-8x15-front-5-9fbc7af3/source.png",
+  "outputSha256": "a12cca566326fd9fc5a6c72c0f3a009b8f57f4de54f3688090344ae0ac821394",
+  "width": 836,
+  "height": 450,
+  "sourceCell": {
+    "kind": "already isolated native PNG; whole file",
+    "rectXYWH": [
+      0,
+      0,
+      836,
+      450
+    ]
+  },
+  "operation": "byte-for-byte PNG copy only; no resize, crop, recolour, key, repaint, registration or source mutation",
+  "selection": "retained exact-ID native original / atlas export",
+  "registeredCornerDirection": null,
+  "sourceEvidence": null,
+  "sourceReview": null,
+  "sourceRegistration": null,
+  "originalInventorySource": {
+    "library": "src/game/library.ts",
+    "librarySha256": "91b5190292c1005ac7b936f08e5e1ebf3be43c3aae99f92ea510775da83d9726",
+    "atlas": "src/assets/atlas/sprites-5-0.webp",
+    "atlasSha256": "ae625d1156c036112692eb54fa253620cd951de8603ee9b3458e9f609bd50bf6",
+    "runtimePage": 5,
+    "localPage": 5,
+    "uv": [
+      0.007813,
+      0.007813,
+      0.416016,
+      0.227539
+    ],
+    "crop": {
+      "left": 16,
+      "top": 16,
+      "width": 836,
+      "height": 450
+    },
+    "native": "art/theme-consistency/exports/composite-lots/lot-8x15-front-5.native.png",
+    "nativeSha256": "a12cca566326fd9fc5a6c72c0f3a009b8f57f4de54f3688090344ae0ac821394"
+  },
+  "originalBusinessSourceCell": null,
+  "nativeReferenceApprovalClaimed": false
+}

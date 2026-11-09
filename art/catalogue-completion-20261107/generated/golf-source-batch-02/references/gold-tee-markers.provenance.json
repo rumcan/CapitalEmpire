@@ -1,0 +1,44 @@
+{
+  "id": "newprop:gold-tee-markers",
+  "name": "Gold tee markers",
+  "referencePNG": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-02\\references\\gold-tee-markers.source.png",
+  "originalSourcePNG": "E:\\Repos\\CapitalEmpire\\All Generated Images\\exec-205ea8bd-da55-489e-b193-a36ed9f17e4b.png",
+  "copiedOriginalSheet": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-02\\original-sheets\\exec-205ea8bd-da55-489e-b193-a36ed9f17e4b.png",
+  "originalSheetSHA256": "252ee9747b1f9513b0fda88f9781d4e5edf7fdcdf52fe7211f8c9d84841484b8",
+  "referenceSHA256": "67bf38a38112160400120a8e35fe73985096b9650a54a14e2505c5422edfb26c",
+  "sourceRectXYWH": [
+    709,
+    198,
+    514,
+    396
+  ],
+  "sourceCell": "top right",
+  "sourceSheetContainsFourDifferentSubjectsNotRotations": true,
+  "sourceCropSize": [
+    514,
+    396
+  ],
+  "cropOperation": "lossless native RGBA crop, no resize, recolour, cleanup or synthesis",
+  "sourceMetadataCutOff": false,
+  "runtimeLibrarySource": "src/game/new-props-library.ts",
+  "runtimeBaseBoxesInTiles": [
+    {
+      "hx": 0.4,
+      "hy": 0.4,
+      "dx": 0,
+      "dy": 0
+    }
+  ],
+  "runtimeDisplayPixels": [
+    51.2,
+    39.45
+  ],
+  "manifestHalfExtentsMetresFirstGuess": [
+    0.4,
+    0.4
+  ],
+  "dimensionCaution": "Manifest first-guess dimensions and runtime boxes are not measured native physical dimensions; any new real-object size is a source-design proposal only. No runtime changes.",
+  "visualInspection": "inspected",
+  "visualNotes": "Confirmed pair of gold ball markers. Source includes an integrated grass/soil plate, which should not be baked into new physical prop.",
+  "sourceOnlyNotReleaseProof": true
+}

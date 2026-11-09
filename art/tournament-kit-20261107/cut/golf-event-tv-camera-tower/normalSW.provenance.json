@@ -1,0 +1,29 @@
+{
+  "schema": 1,
+  "subject": "golf:event-tv-camera-tower",
+  "version": 1,
+  "key": "normalSW",
+  "source": {
+    "file": "../../batch01/tv-camera-tower/budget/normal-SW.png",
+    "sha256": "78b8406dc6e87cef5fc946a847a76ec50a11afb1b5eabf4fae57a09d36e07190",
+    "width": 627,
+    "height": 627
+  },
+  "cell": 0,
+  "cellRect": {
+    "left": 0,
+    "top": 0,
+    "width": 627,
+    "height": 627
+  },
+  "crop": {
+    "left": 186,
+    "top": 43,
+    "width": 255,
+    "height": 506
+  },
+  "output": "normalSW.native.png",
+  "sha256": "4e4973e72e4febaeb12c15cdc1a5909a30183ec711c94fb19b677de0867b0f04",
+  "operation": "native RGBA cell crop only; no flip/repaint/view synthesis",
+  "review": "candidate"
+}

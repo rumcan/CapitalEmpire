@@ -1,0 +1,62 @@
+{
+  "schema": 1,
+  "createdUtc": "2026-11-07T06:47:45.284562+00:00",
+  "exactRuntimeId": "variation:gen-house-duplex-c39d1a23-plain-corner:1",
+  "source": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/building-views/variation-gen-house-duplex-c39d1a23-plain-corner-1/NE.png",
+  "sourceSha256": "c2ad67bf553810fa1b61024d206f02974947c087f7de3f9b47e0db3dd56922fd",
+  "output": "identity-references/variation-gen-house-duplex-c39d1a23-plain-corner-1-84774b2f/source.png",
+  "outputSha256": "c2ad67bf553810fa1b61024d206f02974947c087f7de3f9b47e0db3dd56922fd",
+  "width": 571,
+  "height": 564,
+  "sourceCell": {
+    "kind": "already isolated native PNG; whole file",
+    "rectXYWH": [
+      0,
+      0,
+      571,
+      564
+    ]
+  },
+  "operation": "byte-for-byte PNG copy only; no resize, crop, recolour, key, repaint, registration or source mutation",
+  "selection": "registered corner NE native PNG for this exact subject",
+  "registeredCornerDirection": "NE",
+  "sourceEvidence": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\building-views\\variation-gen-house-duplex-c39d1a23-plain-corner-1\\provenance.json",
+  "sourceReview": {
+    "integrationStatus": "ready",
+    "integrationReason": "Approved physical-identity reuse of selected existing theme artwork; copied delivery explicitly recorded, not fresh generation."
+  },
+  "sourceRegistration": {
+    "id": "variation:gen-house-duplex-c39d1a23-plain-corner:1",
+    "version": "variation-gen-house-duplex-c39d1a23-plain-corner-1-4views-v1",
+    "files": {
+      "NE": "c2ad67bf553810fa1b61024d206f02974947c087f7de3f9b47e0db3dd56922fd",
+      "SE": "aec668427ce8e7ab365120a23796ea60bd8274af0cc5c7299f6c34ab17bdd5b8",
+      "SW": "9c5d8b82853cb8f98cad462e838d11c0161611c376f1ad09ddc0cbcfe130b3a2",
+      "NW": "7c5080bdd5a1e8e3861d9c2ff1d74595bf457dbd5b49199a21b5533879829eb5"
+    }
+  },
+  "originalInventorySource": {
+    "library": "src/game/library.ts",
+    "librarySha256": "91b5190292c1005ac7b936f08e5e1ebf3be43c3aae99f92ea510775da83d9726",
+    "atlas": "src/assets/atlas/sprites-3-0.webp",
+    "atlasSha256": "2fc83a268c62030dfbfbd7b95621bbee98621258acf3580154f943542c867e7d",
+    "runtimePage": 3,
+    "localPage": 3,
+    "uv": [
+      0.710938,
+      0.007813,
+      0.958008,
+      0.24707
+    ],
+    "crop": {
+      "left": 1456,
+      "top": 16,
+      "width": 506,
+      "height": 490
+    },
+    "native": "art/theme-consistency/exports/buildings/variation-gen-house-duplex-c39d1a23-plain-corner-1.native.png",
+    "nativeSha256": "398de2037e774d688aa5f5cc5e96602d7e85c37586a8b1031ecefc7df257612c"
+  },
+  "originalBusinessSourceCell": null,
+  "nativeReferenceApprovalClaimed": false
+}

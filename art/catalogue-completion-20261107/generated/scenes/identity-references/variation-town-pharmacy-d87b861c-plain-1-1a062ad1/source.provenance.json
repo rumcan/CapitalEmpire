@@ -1,0 +1,62 @@
+{
+  "schema": 1,
+  "createdUtc": "2026-11-07T06:47:45.284562+00:00",
+  "exactRuntimeId": "variation:town-pharmacy-d87b861c-plain:1",
+  "source": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/building-views/variation-town-pharmacy-d87b861c-plain-1/NE.png",
+  "sourceSha256": "3f0ec1ce93afe9001456e642e6dc68ff0ea68643c7c1741f881cfc077ccbc421",
+  "output": "identity-references/variation-town-pharmacy-d87b861c-plain-1-1a062ad1/source.png",
+  "outputSha256": "3f0ec1ce93afe9001456e642e6dc68ff0ea68643c7c1741f881cfc077ccbc421",
+  "width": 521,
+  "height": 524,
+  "sourceCell": {
+    "kind": "already isolated native PNG; whole file",
+    "rectXYWH": [
+      0,
+      0,
+      521,
+      524
+    ]
+  },
+  "operation": "byte-for-byte PNG copy only; no resize, crop, recolour, key, repaint, registration or source mutation",
+  "selection": "registered corner NE native PNG for this exact subject",
+  "registeredCornerDirection": "NE",
+  "sourceEvidence": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\building-views\\variation-town-pharmacy-d87b861c-plain-1\\provenance.json",
+  "sourceReview": {
+    "integrationStatus": "ready",
+    "integrationReason": "Parent explicitly approved proven physical-identity reuse from clean selected existing base; no generation/pixel changes."
+  },
+  "sourceRegistration": {
+    "id": "variation:town-pharmacy-d87b861c-plain:1",
+    "version": "variation-town-pharmacy-d87b861c-plain-1-4views-v1",
+    "files": {
+      "NE": "3f0ec1ce93afe9001456e642e6dc68ff0ea68643c7c1741f881cfc077ccbc421",
+      "SE": "5226bdae4f6f40ef4ccb442f146cc5fa46ac39c845fba3e4df4b8b8ee60d7e33",
+      "SW": "d7af845c39a93fb82445c4b70865c257412805734edb4e7ea4ac7f0915eee8be",
+      "NW": "ae53097c94959f93fd9a3764a391d07971e7533896c8e7521e2f7c73c6bc787e"
+    }
+  },
+  "originalInventorySource": {
+    "library": "src/game/library.ts",
+    "librarySha256": "91b5190292c1005ac7b936f08e5e1ebf3be43c3aae99f92ea510775da83d9726",
+    "atlas": "src/assets/atlas/sprites-7-0.webp",
+    "atlasSha256": "4581a4f0eab4092db46557ade127a0a283989295ce6f5cd7921b16069f657d20",
+    "runtimePage": 7,
+    "localPage": 7,
+    "uv": [
+      0.757813,
+      0.640625,
+      0.930176,
+      0.824707
+    ],
+    "crop": {
+      "left": 1552,
+      "top": 1312,
+      "width": 353,
+      "height": 377
+    },
+    "native": "art/theme-consistency/exports/buildings/variation-town-pharmacy-d87b861c-plain-1.native.png",
+    "nativeSha256": "a1e724152af00ef6fc3cf15e58ac408067a355fe31d047808737245ee8b5083c"
+  },
+  "originalBusinessSourceCell": null,
+  "nativeReferenceApprovalClaimed": false
+}

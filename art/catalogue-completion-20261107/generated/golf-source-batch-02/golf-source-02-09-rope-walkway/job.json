@@ -1,0 +1,93 @@
+{
+  "jobId": "golf-source-02-09-rope-walkway",
+  "runtimeSubjectId": "newprop:rope-walkway",
+  "runtimeName": "Rope walkway",
+  "displayName": "Rope walkway",
+  "sourceReferencePNG": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-02\\references\\rope-walkway.source.png",
+  "sourceProvenance": {
+    "id": "newprop:rope-walkway",
+    "name": "Rope walkway",
+    "referencePNG": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-02\\references\\rope-walkway.source.png",
+    "originalSourcePNG": "E:\\Repos\\CapitalEmpire\\All Generated Images\\exec-5944b53f-4b43-44dc-a10e-7eae61417bf9.png",
+    "copiedOriginalSheet": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-02\\original-sheets\\exec-5944b53f-4b43-44dc-a10e-7eae61417bf9.png",
+    "originalSheetSHA256": "af41568faaa6af5c89f8a06cc03b0304d781020607e81aea822001ef1952e49b",
+    "referenceSHA256": "7ffe2072f61cff60abb48631948f9df608d4c66256b6282a144506847c4acca6",
+    "sourceRectXYWH": [
+      24,
+      752,
+      662,
+      385
+    ],
+    "sourceCell": "bottom left",
+    "sourceSheetContainsFourDifferentSubjectsNotRotations": true,
+    "sourceCropSize": [
+      662,
+      385
+    ],
+    "cropOperation": "lossless native RGBA crop, no resize, recolour, cleanup or synthesis",
+    "sourceMetadataCutOff": false,
+    "runtimeLibrarySource": "src/game/new-props-library.ts",
+    "runtimeBaseBoxesInTiles": [
+      {
+        "hx": 0.8,
+        "hy": 0.8,
+        "dx": 0,
+        "dy": 0
+      }
+    ],
+    "runtimeDisplayPixels": [
+      102.4,
+      59.55
+    ],
+    "manifestHalfExtentsMetresFirstGuess": [
+      0.8,
+      0.8
+    ],
+    "dimensionCaution": "Manifest first-guess dimensions and runtime boxes are not measured native physical dimensions; any new real-object size is a source-design proposal only. No runtime changes.",
+    "visualInspection": "inspected",
+    "visualNotes": "Confirmed two open swing gates, four posts and perforated ramp; not a generic rope walkway.",
+    "sourceOnlyNotReleaseProof": true
+  },
+  "sourceDimensions": {
+    "runtimeBaseBoxesInTiles": [
+      {
+        "hx": 0.8,
+        "hy": 0.8,
+        "dx": 0,
+        "dy": 0
+      }
+    ],
+    "manifestHalfExtentsMetresFirstGuess": [
+      0.8,
+      0.8
+    ],
+    "sourceCropPixels": [
+      662,
+      385
+    ],
+    "newPhysicalDimensionsProposal": "Proposed clear opening1.5m wide with1m ramp depth; source-design proposal, accessibility certification not asserted.",
+    "notRuntimeBalanceOrGeometryChange": true
+  },
+  "functionalBrief": "Actual source is a pedestrian access assembly: four green posts, two short open swing-gate leaves with diagonal rails/rope, and one rectangular perforated metal threshold/ramp with yellow edge strips. Preserve gate/ramp geometry; do not generate a long generic rope corridor. Gate leaves remain fixed open at the same angles.",
+  "ordinary1950sRedesignRequired": false,
+  "conditionBrief": "Identity-preserving access equipment. Practical green/cream hardware and intact ramp; no decorative ground slab beyond the functional ramp.",
+  "visualNotes": "Confirmed two open swing gates, four posts and perforated ramp; not a generic rope walkway.",
+  "existingNormalFourReferences": {
+    "candidateCount": 0,
+    "usableCount": 0,
+    "paths": [],
+    "note": "Only one original exact subject is available; original source sheet contains four different props, not four angles."
+  },
+  "existingYaw8Candidates": 0,
+  "historicallyApprovedEightSet": false,
+  "generationPlan": {
+    "normal": "2x2 SE/SW then NW/NE, orthographic30degrees down, equal45degreecorner walls",
+    "yaw8": "2x2 N/E then S/W, each cardinal physically turned8degrees, never square-on",
+    "conditions": "Generate one requested condition consistently through both sheets; source-only variants do not imply runtime upgrades."
+  },
+  "style": "Same painterly game style as style-authority.png, late-afternoon daylight, one sun upper-right, shadows lower-left, transparent background. No people, captions, brands, gridlines or generic ground plates. Functional ramps, buckets, mounting feet and attached panels remain part of their object.",
+  "approvalClaimed": false,
+  "runtimeIntegrated": false,
+  "nativeGeneratedHere": false,
+  "scopeNote": "Exact existing baseline subject only. Eight new view images still require generation and review; no related IDs, aliases or completion are inferred."
+}

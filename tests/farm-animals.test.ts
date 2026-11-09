@@ -42,8 +42,9 @@ test('every animal has all 8 headings and every clip, in the library, each frame
       assert.ok(hasVectorShadow(it.id), `${it.id} casts a vector shadow`);
     }
   });
-  // (the animals are the library's tail: no saved index moved)
-  assert.equal(animalItem(ANIMALS.length - 1, 7, ANIMAL_FRAMES - 1), LIBRARY.length - 1);
+  // (the animals are the library's tail but for the eight-view art (T375: object-eight-library.ts appends after them, so no lead/live saved index moved))
+  assert.equal(animalItem(ANIMALS.length - 1, 7, ANIMAL_FRAMES - 1), LIBRARY.length - 1 - LIBRARY.filter(i => i.id.startsWith('object8:')).length);
+  assert.ok(LIBRARY.slice(animalItem(ANIMALS.length - 1, 7, ANIMAL_FRAMES - 1) + 1).every(i => i.id.startsWith('object8:')), 'only the eight-view art follows the animals');
 });
 
 test('the farms get a few animals, cows or horses in the paddock and sheep in the other fields', () => {

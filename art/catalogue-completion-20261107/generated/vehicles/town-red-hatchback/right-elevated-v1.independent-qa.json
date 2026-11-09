@@ -1,0 +1,66 @@
+{
+  "schema": 1,
+  "as_of_utc": "2026-11-07T11:26:36.499594+00:00",
+  "review_result": "PASS-elevated-single-source-candidate-direction-visual-camera-alpha;release-pending",
+  "source": {
+    "path": "generated/vehicles/town-red-hatchback/right-elevated-v1.png",
+    "sha256": "b1df50553e453843857650872d59cc96b3c21dd67548beda07b9347f3a8974e7",
+    "bytes": 605572
+  },
+  "parent_provenance": {
+    "path": "generated/vehicles/town-red-hatchback/right-elevated-v1.provenance.json",
+    "sha256": "72ebef2c8a414a12a5e64691ec6f30c91a9438e9a8a5b93b347d35b421ed6da6",
+    "bytes": 1982
+  },
+  "source_original_hash_matches_parent_provenance": true,
+  "mode": "RGBA",
+  "dimensions": [
+    1254,
+    1254
+  ],
+  "actual_screen_nose": "right",
+  "subject_model": "town-red-hatchback",
+  "is_single_sprite_not_sheet": true,
+  "core_bbox_ltrb": [
+    230,
+    410,
+    1035,
+    840
+  ],
+  "minimum_canvas_core_margin_px": 219,
+  "zero_alpha_fraction": 0.8236068822193224,
+  "outer_border_alpha_max": 1,
+  "outside_core_bbox10_alpha_p95max": [
+    0.0,
+    1.0
+  ],
+  "mid_alpha_fraction9to127": 0.0012197014211620103,
+  "identity_references": [
+    {
+      "path": "generated/vehicles/town-red-hatchback/camera-calibration-refs/right-camera-only.png",
+      "sha256": "7b3fc20c8c04aba8f22f7914f6886fc5d4d23d8e2ddc8739b119162a8b8744dd",
+      "bytes": 5706
+    },
+    {
+      "path": "generated/vehicles/town-red-hatchback/camera-calibration-refs/corner-identity-only.png",
+      "sha256": "318a26c017416656b6cce61da93191f9cbd044456d57d1b1bce35e5b105ea89e",
+      "bytes": 192937
+    }
+  ],
+  "exact_prompt": {
+    "path": "generated/vehicles/town-red-hatchback/right-elevated-v1.prompt.txt",
+    "sha256": "16f2b6d0d4c949b9ed8c428e7df081d40af899301f505b0457b7c827312c205a",
+    "bytes": 1088
+  },
+  "notes": [
+    "Actual screen nose RIGHT; longitudinal body/wheelbase is horizontal, no broad front/rear grille plane is exposed.",
+    "Broad roof/hood/boot or open bed top surfaces are materially closer to isolated elevatedcamera reference than old traffic8 col4 profiles.",
+    "This is qualitative reference matching, not a numerical30degree certificate. Cross-view physical scale, anchors and full eight-heading release review remain pending.",
+    "Apparent raw-view RGB glow is not actual haze: native background alpha measured separately. No coded cleanup or source pixels changed."
+  ],
+  "no_native_pixel_changes_or_source_crops": true,
+  "exact30degree_certified": false,
+  "owner_approved": false,
+  "runtime_ready": false,
+  "runtime_imported": false
+}

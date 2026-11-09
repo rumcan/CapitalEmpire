@@ -1,0 +1,107 @@
+{
+ "schema": 1,
+ "projection": "normal+yaw8",
+ "version": 1,
+ "review": "candidate",
+ "footprintMetres": {
+  "width": 10,
+  "depth": 3
+ },
+ "pixelsPerMetre": 53.07,
+ "pixelCalibrationSpace": "orthographic-camera",
+ "baselineScale": 1,
+ "views": {
+  "normalNE": {
+   "anchor": {
+    "x": 311.5,
+    "y": 396
+   },
+   "headingDegrees": 0,
+   "pixelsPerMetre": 53.07,
+   "calibrationEvidence": "Silhouette fit, 2026-11-07: physical body 10 x 3 m, height 3.2 m. Scale per sheet (and per full-size override file) from the alpha bbox height (>128) = ground diamond + 0.866 x height at the view's heading (rotation-invariant); width ratio checked per view. Anchor = projected body centre from the bbox bottom/centre."
+  },
+  "normalSE": {
+   "anchor": {
+    "x": 313.5,
+    "y": 396
+   },
+   "headingDegrees": 270,
+   "pixelsPerMetre": 53.07,
+   "calibrationEvidence": "Silhouette fit, 2026-11-07: physical body 10 x 3 m, height 3.2 m. Scale per sheet (and per full-size override file) from the alpha bbox height (>128) = ground diamond + 0.866 x height at the view's heading (rotation-invariant); width ratio checked per view. Anchor = projected body centre from the bbox bottom/centre."
+  },
+  "normalSW": {
+   "anchor": {
+    "x": 311,
+    "y": 389
+   },
+   "headingDegrees": 180,
+   "pixelsPerMetre": 53.07,
+   "calibrationEvidence": "Silhouette fit, 2026-11-07: physical body 10 x 3 m, height 3.2 m. Scale per sheet (and per full-size override file) from the alpha bbox height (>128) = ground diamond + 0.866 x height at the view's heading (rotation-invariant); width ratio checked per view. Anchor = projected body centre from the bbox bottom/centre."
+  },
+  "normalNW": {
+   "anchor": {
+    "x": 316.5,
+    "y": 390
+   },
+   "headingDegrees": 90,
+   "pixelsPerMetre": 53.07,
+   "calibrationEvidence": "Silhouette fit, 2026-11-07: physical body 10 x 3 m, height 3.2 m. Scale per sheet (and per full-size override file) from the alpha bbox height (>128) = ground diamond + 0.866 x height at the view's heading (rotation-invariant); width ratio checked per view. Anchor = projected body centre from the bbox bottom/centre."
+  },
+  "yaw8N": {
+   "anchor": {
+    "x": 316.5,
+    "y": 386.5
+   },
+   "headingDegrees": 323,
+   "pixelsPerMetre": 52.68,
+   "calibrationEvidence": "Silhouette fit, 2026-11-07: physical body 10 x 3 m, height 3.2 m. Scale per sheet (and per full-size override file) from the alpha bbox height (>128) = ground diamond + 0.866 x height at the view's heading (rotation-invariant); width ratio checked per view. Anchor = projected body centre from the bbox bottom/centre."
+  },
+  "yaw8E": {
+   "anchor": {
+    "x": 311,
+    "y": 396.1
+   },
+   "headingDegrees": 233,
+   "pixelsPerMetre": 52.68,
+   "calibrationEvidence": "Silhouette fit, 2026-11-07: physical body 10 x 3 m, height 3.2 m. Scale per sheet (and per full-size override file) from the alpha bbox height (>128) = ground diamond + 0.866 x height at the view's heading (rotation-invariant); width ratio checked per view. Anchor = projected body centre from the bbox bottom/centre."
+  },
+  "yaw8S": {
+   "anchor": {
+    "x": 315.5,
+    "y": 381.5
+   },
+   "headingDegrees": 143,
+   "pixelsPerMetre": 52.68,
+   "calibrationEvidence": "Silhouette fit, 2026-11-07: physical body 10 x 3 m, height 3.2 m. Scale per sheet (and per full-size override file) from the alpha bbox height (>128) = ground diamond + 0.866 x height at the view's heading (rotation-invariant); width ratio checked per view. Anchor = projected body centre from the bbox bottom/centre."
+  },
+  "yaw8W": {
+   "anchor": {
+    "x": 313,
+    "y": 392.1
+   },
+   "headingDegrees": 53,
+   "pixelsPerMetre": 52.68,
+   "calibrationEvidence": "Silhouette fit, 2026-11-07: physical body 10 x 3 m, height 3.2 m. Scale per sheet (and per full-size override file) from the alpha bbox height (>128) = ground diamond + 0.866 x height at the view's heading (rotation-invariant); width ratio checked per view. Anchor = projected body centre from the bbox bottom/centre."
+  }
+ },
+ "source": {
+  "views": {
+   "normalNE": "../batch01/four-lane-entrance/upgraded/normal-NE.png",
+   "normalSE": "../batch01/four-lane-entrance/upgraded/normal-SE.png",
+   "normalSW": "../batch01/four-lane-entrance/upgraded/normal-SW.png",
+   "normalNW": "../batch01/four-lane-entrance/upgraded/normal-NW.png",
+   "yaw8N": "../batch01/four-lane-entrance/upgraded/yaw8-N.png",
+   "yaw8E": "../batch01/four-lane-entrance/upgraded/yaw8-E.png",
+   "yaw8S": "../batch01/four-lane-entrance/upgraded/yaw8-S.png",
+   "yaw8W": "../batch01/four-lane-entrance/upgraded/yaw8-W.png"
+  }
+ },
+ "subject": "golf:event-four-lane-entrance-upgraded",
+ "name": "Four-lane entrance gate (upgraded)",
+ "kind": "building",
+ "category": "Golf tournament",
+ "visualTier": "upgraded",
+ "eventTypes": [
+  "gate"
+ ]
+}

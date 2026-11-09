@@ -1,0 +1,29 @@
+{
+  "schema": 1,
+  "subject": "golf:course-ball-washer",
+  "version": 1,
+  "key": "yaw8S",
+  "source": {
+    "file": "../../batch02/ball-washer/yaw8-S.png",
+    "sha256": "9184d3c2e0715fd9e01507da71bd09fec1db1e37cdeaf1eed8b8affb731bcb6e",
+    "width": 627,
+    "height": 627
+  },
+  "cell": 0,
+  "cellRect": {
+    "left": 0,
+    "top": 0,
+    "width": 627,
+    "height": 627
+  },
+  "crop": {
+    "left": 126,
+    "top": 20,
+    "width": 351,
+    "height": 567
+  },
+  "output": "yaw8S.native.png",
+  "sha256": "d286849b145b3ae06f5175b1caac85b5b759739b395cb3e2a9cde9c9c479f4f8",
+  "operation": "native RGBA cell crop only; no flip/repaint/view synthesis",
+  "review": "candidate"
+}

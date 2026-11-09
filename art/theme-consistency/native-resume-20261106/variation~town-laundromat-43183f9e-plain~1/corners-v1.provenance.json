@@ -1,0 +1,271 @@
+{
+  "id": "variation~town-laundromat-43183f9e-plain~1",
+  "kind": "corners",
+  "version": 1,
+  "generator": "native imagegen",
+  "imported_utc": "2026-11-06T19:04:45.936005+00:00",
+  "source": {
+    "path": "C:\\Users\\RAMPAGE\\.codex\\generated_images\\01a1b1fd-39ec-7220-8f11-86e4448833ea\\exec-35f21267-96bb-4a27-8e6e-4b9a67d9f35c.png",
+    "sha256": "6cceb964f79c1cb444b941baed88acf51fe43cd73ffeea0435f8c94a8f626b00",
+    "bytes": 2068138
+  },
+  "raw": {
+    "path": "E:\\Repos\\CapitalEmpire\\.claude\\worktrees\\art-repaint-20261106\\art\\theme-consistency\\native-resume-20261106\\variation~town-laundromat-43183f9e-plain~1\\corners-v1.png",
+    "sha256": "6cceb964f79c1cb444b941baed88acf51fe43cd73ffeea0435f8c94a8f626b00",
+    "bytes": 2068138
+  },
+  "exact_prompt": {
+    "path": "E:\\Repos\\CapitalEmpire\\.claude\\worktrees\\art-repaint-20261106\\art\\theme-consistency\\native-resume-20261106\\variation~town-laundromat-43183f9e-plain~1\\corners-v1.prompt.txt",
+    "sha256": "a2703b887c193b99179d8a1e083832dfcea6c8abc5da65b6d584532ccc0fb32d",
+    "bytes": 1818
+  },
+  "queue": {
+    "path": "D:\\AI\\chatgpt-bridge\\queue-resume-corners-20261106.json",
+    "sha256": "be220aa1862ea65077a5b6cdbf5a823d5cd27b0f02d9721b2f4bd8af35321c5d",
+    "bytes": 12104
+  },
+  "references": [
+    {
+      "path": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\theme-consistency\\exports\\buildings\\variation-town-laundromat-43183f9e-plain-1.native.png",
+      "sha256": "a540e11817efcfcdea42585c5e72cd070fcc90fd72d7bb83fc3b83fe53360252",
+      "bytes": 225925
+    },
+    {
+      "path": "D:\\AI\\chatgpt-bridge\\guides\\variation~town-laundromat-43183f9e-plain~1-corners.png",
+      "sha256": "f853650e754ee54cd447d5b8fc52a5d1acb479ef85e5fee7b5e4d6bacdcb4163",
+      "bytes": 379504
+    }
+  ],
+  "original_queue_references": [
+    {
+      "path": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\theme-consistency\\exports\\buildings\\variation-town-laundromat-43183f9e-plain-1.native.png",
+      "sha256": "a540e11817efcfcdea42585c5e72cd070fcc90fd72d7bb83fc3b83fe53360252",
+      "bytes": 225925
+    },
+    {
+      "path": "D:\\AI\\chatgpt-bridge\\guides\\variation~town-laundromat-43183f9e-plain~1-corners.png",
+      "sha256": "f853650e754ee54cd447d5b8fc52a5d1acb479ef85e5fee7b5e4d6bacdcb4163",
+      "bytes": 379504
+    }
+  ],
+  "cell_order": [
+    [
+      "SE",
+      "SW"
+    ],
+    [
+      "NW",
+      "NE"
+    ]
+  ],
+  "validation": {
+    "mode": "RGBA",
+    "dimensions": [
+      1261,
+      1247
+    ],
+    "split_x": 630,
+    "split_y": 623,
+    "cells": [
+      {
+        "view": "SE",
+        "cell_box": [
+          0,
+          0,
+          630,
+          623
+        ],
+        "subject_bbox": [
+          62,
+          50,
+          582,
+          578
+        ],
+        "transparent_fraction": 0.4874850314657698,
+        "margins_px": [
+          62,
+          50,
+          48,
+          45
+        ]
+      },
+      {
+        "view": "SW",
+        "cell_box": [
+          630,
+          0,
+          1261,
+          623
+        ],
+        "subject_bbox": [
+          19,
+          71,
+          573,
+          569
+        ],
+        "transparent_fraction": 0.47166845156481724,
+        "margins_px": [
+          19,
+          71,
+          58,
+          54
+        ]
+      },
+      {
+        "view": "NW",
+        "cell_box": [
+          0,
+          623,
+          630,
+          1247
+        ],
+        "subject_bbox": [
+          54,
+          35,
+          565,
+          584
+        ],
+        "transparent_fraction": 0.46966320716320714,
+        "margins_px": [
+          54,
+          35,
+          65,
+          40
+        ]
+      },
+      {
+        "view": "NE",
+        "cell_box": [
+          630,
+          623,
+          1261,
+          1247
+        ],
+        "subject_bbox": [
+          22,
+          31,
+          590,
+          558
+        ],
+        "transparent_fraction": 0.4469579218984924,
+        "margins_px": [
+          22,
+          31,
+          41,
+          66
+        ]
+      }
+    ],
+    "cell_differences": [
+      {
+        "views": [
+          "SE",
+          "SW"
+        ],
+        "mean_rgb_difference": 56.482259114583336
+      },
+      {
+        "views": [
+          "SE",
+          "NW"
+        ],
+        "mean_rgb_difference": 43.4208984375
+      },
+      {
+        "views": [
+          "SE",
+          "NE"
+        ],
+        "mean_rgb_difference": 54.562337239583336
+      },
+      {
+        "views": [
+          "SW",
+          "NW"
+        ],
+        "mean_rgb_difference": 55.903157552083336
+      },
+      {
+        "views": [
+          "SW",
+          "NE"
+        ],
+        "mean_rgb_difference": 47.109049479166664
+      },
+      {
+        "views": [
+          "NW",
+          "NE"
+        ],
+        "mean_rgb_difference": 54.432291666666664
+      }
+    ],
+    "errors": [],
+    "warnings": [],
+    "visual_review": "Required: automatic checks cannot approve style, geometry, lighting, or fidelity."
+  },
+  "status": "imported-awaiting-visual-review",
+  "owner_approved": false,
+  "runtime_integrated": false,
+  "all_generated_views": false,
+  "compatible_NE": "generated bottom-right cell",
+  "cutter": {
+    "path": "D:\\AI\\chatgpt-bridge\\sheets.py",
+    "sha256": "eb40b531f94e59aa94412009307414a4a8f4dab5668786dcb077b9d0349852d9",
+    "bytes": 4578
+  },
+  "crops": [
+    {
+      "view": "SE",
+      "compatible": {
+        "path": "D:\\AI\\repaint\\out\\variation~town-laundromat-43183f9e-plain~1\\SE.png",
+        "sha256": "d419982b0704096cb43c4a9a5e0f16384c6cf5a18c09f611e588bbcaec26fe13",
+        "bytes": 490358
+      },
+      "project_copy": {
+        "path": "E:\\Repos\\CapitalEmpire\\.claude\\worktrees\\art-repaint-20261106\\art\\theme-consistency\\native-resume-20261106\\variation~town-laundromat-43183f9e-plain~1\\SE.native.png",
+        "sha256": "d419982b0704096cb43c4a9a5e0f16384c6cf5a18c09f611e588bbcaec26fe13",
+        "bytes": 490358
+      }
+    },
+    {
+      "view": "SW",
+      "compatible": {
+        "path": "D:\\AI\\repaint\\out\\variation~town-laundromat-43183f9e-plain~1\\SW.png",
+        "sha256": "ea9937a050da8ce14b9544356fe6de94678322b3f33a8857457ffd97c5d3f26a",
+        "bytes": 473560
+      },
+      "project_copy": {
+        "path": "E:\\Repos\\CapitalEmpire\\.claude\\worktrees\\art-repaint-20261106\\art\\theme-consistency\\native-resume-20261106\\variation~town-laundromat-43183f9e-plain~1\\SW.native.png",
+        "sha256": "ea9937a050da8ce14b9544356fe6de94678322b3f33a8857457ffd97c5d3f26a",
+        "bytes": 473560
+      }
+    },
+    {
+      "view": "NW",
+      "compatible": {
+        "path": "D:\\AI\\repaint\\out\\variation~town-laundromat-43183f9e-plain~1\\NW.png",
+        "sha256": "6ffbb1471a02b8120403113dc6e1d001ed5ff4c19e9711318e2a9a4fb3aba36a",
+        "bytes": 474797
+      },
+      "project_copy": {
+        "path": "E:\\Repos\\CapitalEmpire\\.claude\\worktrees\\art-repaint-20261106\\art\\theme-consistency\\native-resume-20261106\\variation~town-laundromat-43183f9e-plain~1\\NW.native.png",
+        "sha256": "6ffbb1471a02b8120403113dc6e1d001ed5ff4c19e9711318e2a9a4fb3aba36a",
+        "bytes": 474797
+      }
+    },
+    {
+      "view": "NE",
+      "compatible": {
+        "path": "D:\\AI\\repaint\\out\\variation~town-laundromat-43183f9e-plain~1\\NE.png",
+        "sha256": "77ab0bdeca788ddffba75398c4a70cbfd16ea59932475c9310f4ae5812466b84",
+        "bytes": 528056
+      },
+      "project_copy": {
+        "path": "E:\\Repos\\CapitalEmpire\\.claude\\worktrees\\art-repaint-20261106\\art\\theme-consistency\\native-resume-20261106\\variation~town-laundromat-43183f9e-plain~1\\NE.native.png",
+        "sha256": "77ab0bdeca788ddffba75398c4a70cbfd16ea59932475c9310f4ae5812466b84",
+        "bytes": 528056
+      }
+    }
+  ]
+}

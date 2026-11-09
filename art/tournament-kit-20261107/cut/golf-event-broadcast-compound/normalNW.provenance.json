@@ -1,0 +1,29 @@
+{
+  "schema": 1,
+  "subject": "golf:event-broadcast-compound",
+  "version": 1,
+  "key": "normalNW",
+  "source": {
+    "file": "../../batch01/broadcast-compound/budget/normal-NW.png",
+    "sha256": "f32fc9720c3a7a08f01189e071637eabc20aa43fe66ae8fa3ad16873584d8f55",
+    "width": 627,
+    "height": 627
+  },
+  "cell": 0,
+  "cellRect": {
+    "left": 0,
+    "top": 0,
+    "width": 627,
+    "height": 627
+  },
+  "crop": {
+    "left": 38,
+    "top": 118,
+    "width": 544,
+    "height": 361
+  },
+  "output": "normalNW.native.png",
+  "sha256": "9ee806e9c3a043b9fb0994786854b637d6556dc08b4ce4e1d2875b0b0cd84f45",
+  "operation": "native RGBA cell crop only; no flip/repaint/view synthesis",
+  "review": "candidate"
+}

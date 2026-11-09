@@ -1,0 +1,62 @@
+{
+  "schema": 1,
+  "createdUtc": "2026-11-07T06:47:45.284562+00:00",
+  "exactRuntimeId": "static:shop_brick_rear",
+  "source": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/building-views/static-shop_brick_rear/NE.png",
+  "sourceSha256": "8699b4241c8d0bbe68fef7bbfb4cae5fb937e360c036473e381d95e631bdaaae",
+  "output": "identity-references/static-shop-brick-rear-04db4dfa/source.png",
+  "outputSha256": "8699b4241c8d0bbe68fef7bbfb4cae5fb937e360c036473e381d95e631bdaaae",
+  "width": 528,
+  "height": 559,
+  "sourceCell": {
+    "kind": "already isolated native PNG; whole file",
+    "rectXYWH": [
+      0,
+      0,
+      528,
+      559
+    ]
+  },
+  "operation": "byte-for-byte PNG copy only; no resize, crop, recolour, key, repaint, registration or source mutation",
+  "selection": "registered corner NE native PNG for this exact subject",
+  "registeredCornerDirection": "NE",
+  "sourceEvidence": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\building-views\\static-shop_brick_rear\\provenance.json",
+  "sourceReview": {
+    "integrationStatus": "ready",
+    "integrationReason": "All4 visible physical corners form front/right/back/left cycle; actual magenta alpha has no surrounding floor/haze. Matte timber/masonry/metal, charcoal roofs, amber practical lights and fixed screen-upper-right dusk are coherent with master."
+  },
+  "sourceRegistration": {
+    "id": "static:shop_brick_rear",
+    "version": "static-shop_brick_rear-4views-v2",
+    "files": {
+      "NE": "8699b4241c8d0bbe68fef7bbfb4cae5fb937e360c036473e381d95e631bdaaae",
+      "SE": "486ab473607d139f5d24c49c506aac901f94d46df43afb15d22d01c9e9a4583e",
+      "SW": "a738230f616abf09f4cccbda32f100911098977a2470b2bc4b14f0c2081f92ad",
+      "NW": "1065e5e50e2da7827da55139ec1bb4d94891046843df3908d20787db4a1544f5"
+    }
+  },
+  "originalInventorySource": {
+    "library": "src/game/library.ts",
+    "librarySha256": "91b5190292c1005ac7b936f08e5e1ebf3be43c3aae99f92ea510775da83d9726",
+    "atlas": "src/assets/atlas/sprites-6-0.webp",
+    "atlasSha256": "5bf555ea578c014fa9e9f4e6119ae5f09128a07573eed569e85b1c5554f2ac51",
+    "runtimePage": 6,
+    "localPage": 6,
+    "uv": [
+      0.007813,
+      0.460938,
+      0.208008,
+      0.663574
+    ],
+    "crop": {
+      "left": 16,
+      "top": 944,
+      "width": 410,
+      "height": 415
+    },
+    "native": "art/theme-consistency/exports/buildings/static-shop_brick_rear.native.png",
+    "nativeSha256": "bc821e587b65197c04d02269fa4de70deb825d8058004aa29122228491f06332"
+  },
+  "originalBusinessSourceCell": null,
+  "nativeReferenceApprovalClaimed": false
+}

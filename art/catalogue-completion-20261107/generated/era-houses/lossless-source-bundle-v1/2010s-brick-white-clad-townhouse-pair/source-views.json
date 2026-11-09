@@ -1,0 +1,240 @@
+{
+  "key": "2010s-brick-white-clad-townhouse-pair",
+  "name": "2010s brick white clad townhouse pair",
+  "sourceViews": [
+    {
+      "sourceCameraKey": "normalSE",
+      "nominalCameraFamily": "normal",
+      "file": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\lossless-source-bundle-v1\\2010s-brick-white-clad-townhouse-pair\\normalSE.png",
+      "sourceFile": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\2010s-brick-white-clad-townhouse-pair\\normal-v1.png",
+      "sourceFileSHA256": "66252e5b3f9c25a8dc2e7a3b05888045b3de7b7b1dec1219d2aa5066abf9e190",
+      "sourceFrameRectLTRB": [
+        0,
+        0,
+        627,
+        627
+      ],
+      "operation": "lossless source-cell crop at QA-recorded frame rectangle",
+      "singleViewOverride": false,
+      "nativeSize": [
+        627,
+        627
+      ],
+      "pngSHA256": "7522111e7d15a6cbe812b670709dbeb21cdda037a817b2254d19a6b3944b1e6b",
+      "rgbaSHA256": "79ffd42dadc541aadceed4fef7186d1b16dc92129b21745688cffdfc50fd937b",
+      "sourceRGBAEqual": true,
+      "identityFeaturesReviewed": "two front entrances/awnings,4upper front windows,2ground front windows, left gable2windows",
+      "sourceQA": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\2010s-brick-white-clad-townhouse-pair\\normal-v1.independent-qa.json",
+      "sourceProvenance": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\2010s-brick-white-clad-townhouse-pair\\normal-v1.provenance.json",
+      "nativeHeadingDegrees": null,
+      "nativeCameraCertified": false,
+      "runtimeReady": false,
+      "fileRelativeToBundle": "2010s-brick-white-clad-townhouse-pair/normalSE.png"
+    },
+    {
+      "sourceCameraKey": "normalSW",
+      "nominalCameraFamily": "normal",
+      "file": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\lossless-source-bundle-v1\\2010s-brick-white-clad-townhouse-pair\\normalSW.png",
+      "sourceFile": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\2010s-brick-white-clad-townhouse-pair\\normal-v1.png",
+      "sourceFileSHA256": "66252e5b3f9c25a8dc2e7a3b05888045b3de7b7b1dec1219d2aa5066abf9e190",
+      "sourceFrameRectLTRB": [
+        627,
+        0,
+        1254,
+        627
+      ],
+      "operation": "lossless source-cell crop at QA-recorded frame rectangle",
+      "singleViewOverride": false,
+      "nativeSize": [
+        627,
+        627
+      ],
+      "pngSHA256": "eaf2677b7420a0bc4ef8ca232e0241d4b5d4264b0c0e9e9d046445a5de6379f7",
+      "rgbaSHA256": "66368bde5bf1538be6977c87c8dd13055420f9e2514366779d08f7a5da849caf",
+      "sourceRGBAEqual": true,
+      "identityFeaturesReviewed": "two rear patios,2large+2small upper rear windows, left gable2windows",
+      "sourceQA": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\2010s-brick-white-clad-townhouse-pair\\normal-v1.independent-qa.json",
+      "sourceProvenance": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\2010s-brick-white-clad-townhouse-pair\\normal-v1.provenance.json",
+      "nativeHeadingDegrees": null,
+      "nativeCameraCertified": false,
+      "runtimeReady": false,
+      "fileRelativeToBundle": "2010s-brick-white-clad-townhouse-pair/normalSW.png"
+    },
+    {
+      "sourceCameraKey": "normalNW",
+      "nominalCameraFamily": "normal",
+      "file": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\lossless-source-bundle-v1\\2010s-brick-white-clad-townhouse-pair\\normalNW.png",
+      "sourceFile": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\2010s-brick-white-clad-townhouse-pair\\normal-v1.png",
+      "sourceFileSHA256": "66252e5b3f9c25a8dc2e7a3b05888045b3de7b7b1dec1219d2aa5066abf9e190",
+      "sourceFrameRectLTRB": [
+        0,
+        627,
+        627,
+        1254
+      ],
+      "operation": "lossless source-cell crop at QA-recorded frame rectangle",
+      "singleViewOverride": false,
+      "nativeSize": [
+        627,
+        627
+      ],
+      "pngSHA256": "a3c0b99826d1486beb4b23bef6c606e567efb5be120bcb22acd424644f87b7e0",
+      "rgbaSHA256": "2750f281c7c8eb0eb4af0721737459ff5335184d51c214381af1d6b258ac81a7",
+      "sourceRGBAEqual": true,
+      "identityFeaturesReviewed": "two rear patios/rear upper pattern, right gable2windows",
+      "sourceQA": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\2010s-brick-white-clad-townhouse-pair\\normal-v1.independent-qa.json",
+      "sourceProvenance": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\2010s-brick-white-clad-townhouse-pair\\normal-v1.provenance.json",
+      "nativeHeadingDegrees": null,
+      "nativeCameraCertified": false,
+      "runtimeReady": false,
+      "fileRelativeToBundle": "2010s-brick-white-clad-townhouse-pair/normalNW.png"
+    },
+    {
+      "sourceCameraKey": "normalNE",
+      "nominalCameraFamily": "normal",
+      "file": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\lossless-source-bundle-v1\\2010s-brick-white-clad-townhouse-pair\\normalNE.png",
+      "sourceFile": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\2010s-brick-white-clad-townhouse-pair\\normal-v1.png",
+      "sourceFileSHA256": "66252e5b3f9c25a8dc2e7a3b05888045b3de7b7b1dec1219d2aa5066abf9e190",
+      "sourceFrameRectLTRB": [
+        627,
+        627,
+        1254,
+        1254
+      ],
+      "operation": "lossless source-cell crop at QA-recorded frame rectangle",
+      "singleViewOverride": false,
+      "nativeSize": [
+        627,
+        627
+      ],
+      "pngSHA256": "c8e720129b68316a966a43a55f9afb9a18b9c09e768dac727eb370a4e921d42e",
+      "rgbaSHA256": "ec215453676de918db285937d62151d9ac06a5e86957ed1ed8f91e44c39c56d9",
+      "sourceRGBAEqual": true,
+      "identityFeaturesReviewed": "two front entrances/front upper4windows, right gable2windows",
+      "sourceQA": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\2010s-brick-white-clad-townhouse-pair\\normal-v1.independent-qa.json",
+      "sourceProvenance": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\2010s-brick-white-clad-townhouse-pair\\normal-v1.provenance.json",
+      "nativeHeadingDegrees": null,
+      "nativeCameraCertified": false,
+      "runtimeReady": false,
+      "fileRelativeToBundle": "2010s-brick-white-clad-townhouse-pair/normalNE.png"
+    },
+    {
+      "sourceCameraKey": "yaw8N",
+      "nominalCameraFamily": "yaw8",
+      "file": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\lossless-source-bundle-v1\\2010s-brick-white-clad-townhouse-pair\\yaw8N.png",
+      "sourceFile": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\2010s-brick-white-clad-townhouse-pair\\yaw8-v1.png",
+      "sourceFileSHA256": "580f7bc6b458b7d8ccb8e90fa302fd677ff62a303e801db14f8799ccc40e12ca",
+      "sourceFrameRectLTRB": [
+        0,
+        0,
+        627,
+        627
+      ],
+      "operation": "lossless source-cell crop at QA-recorded frame rectangle",
+      "singleViewOverride": false,
+      "nativeSize": [
+        627,
+        627
+      ],
+      "pngSHA256": "1c5eef9d36382b62ff6992cf2a6c1ff5abf696f6fa6800b74441862dd0f66531",
+      "rgbaSHA256": "d002d408abbc35d72979eae8ed72a9fff55870e1ac8b7bfdb854a25d95907918",
+      "sourceRGBAEqual": true,
+      "identityFeaturesReviewed": "two main front doors/awnings and4upper front windows",
+      "sourceQA": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\2010s-brick-white-clad-townhouse-pair\\yaw8-v1.independent-qa.json",
+      "sourceProvenance": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\2010s-brick-white-clad-townhouse-pair\\yaw8-v1.provenance.json",
+      "nativeHeadingDegrees": null,
+      "nativeCameraCertified": false,
+      "runtimeReady": false,
+      "fileRelativeToBundle": "2010s-brick-white-clad-townhouse-pair/yaw8N.png"
+    },
+    {
+      "sourceCameraKey": "yaw8E",
+      "nominalCameraFamily": "yaw8",
+      "file": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\lossless-source-bundle-v1\\2010s-brick-white-clad-townhouse-pair\\yaw8E.png",
+      "sourceFile": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\2010s-brick-white-clad-townhouse-pair\\yaw8-v1.png",
+      "sourceFileSHA256": "580f7bc6b458b7d8ccb8e90fa302fd677ff62a303e801db14f8799ccc40e12ca",
+      "sourceFrameRectLTRB": [
+        627,
+        0,
+        1254,
+        627
+      ],
+      "operation": "lossless source-cell crop at QA-recorded frame rectangle",
+      "singleViewOverride": false,
+      "nativeSize": [
+        627,
+        627
+      ],
+      "pngSHA256": "9f7aad7754274d62f35618f73b62cbc8f203834d8b60d0b42840b0f9a8f2e6c1",
+      "rgbaSHA256": "8e0e0bcc0c0c56c48590173b29e246b3df62d72c2f5cf62f10cc5545d1aa6bb7",
+      "sourceRGBAEqual": true,
+      "identityFeaturesReviewed": "left gable2stacked windows; front entrance awnings on thin right side",
+      "sourceQA": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\2010s-brick-white-clad-townhouse-pair\\yaw8-v1.independent-qa.json",
+      "sourceProvenance": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\2010s-brick-white-clad-townhouse-pair\\yaw8-v1.provenance.json",
+      "nativeHeadingDegrees": null,
+      "nativeCameraCertified": false,
+      "runtimeReady": false,
+      "fileRelativeToBundle": "2010s-brick-white-clad-townhouse-pair/yaw8E.png"
+    },
+    {
+      "sourceCameraKey": "yaw8S",
+      "nominalCameraFamily": "yaw8",
+      "file": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\lossless-source-bundle-v1\\2010s-brick-white-clad-townhouse-pair\\yaw8S.png",
+      "sourceFile": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\2010s-brick-white-clad-townhouse-pair\\yaw8-v1.png",
+      "sourceFileSHA256": "580f7bc6b458b7d8ccb8e90fa302fd677ff62a303e801db14f8799ccc40e12ca",
+      "sourceFrameRectLTRB": [
+        0,
+        627,
+        627,
+        1254
+      ],
+      "operation": "lossless source-cell crop at QA-recorded frame rectangle",
+      "singleViewOverride": false,
+      "nativeSize": [
+        627,
+        627
+      ],
+      "pngSHA256": "09764ac4acc0458defb08231d026ec2b16d2a4d28fb88f8470b79775ba12a440",
+      "rgbaSHA256": "0eb3f84183439441b0a8afacd0b935c7285451449c60eff9d680840ad3b5b170",
+      "sourceRGBAEqual": true,
+      "identityFeaturesReviewed": "rear two patios and rear upper2large+2small window pattern",
+      "sourceQA": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\2010s-brick-white-clad-townhouse-pair\\yaw8-v1.independent-qa.json",
+      "sourceProvenance": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\2010s-brick-white-clad-townhouse-pair\\yaw8-v1.provenance.json",
+      "nativeHeadingDegrees": null,
+      "nativeCameraCertified": false,
+      "runtimeReady": false,
+      "fileRelativeToBundle": "2010s-brick-white-clad-townhouse-pair/yaw8S.png"
+    },
+    {
+      "sourceCameraKey": "yaw8W",
+      "nominalCameraFamily": "yaw8",
+      "file": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\lossless-source-bundle-v1\\2010s-brick-white-clad-townhouse-pair\\yaw8W.png",
+      "sourceFile": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\2010s-brick-white-clad-townhouse-pair\\yaw8-W-v2.png",
+      "sourceFileSHA256": "25aff37c8e06d14e3d73b3eb4f91db0e52b978e6b4ca26096c6ee3cccaefd706",
+      "sourceFrameRectLTRB": [
+        0,
+        0,
+        1254,
+        1254
+      ],
+      "operation": "byte-for-byte corrected single PNG copy; full1254canvas preserved",
+      "singleViewOverride": true,
+      "nativeSize": [
+        1254,
+        1254
+      ],
+      "pngSHA256": "25aff37c8e06d14e3d73b3eb4f91db0e52b978e6b4ca26096c6ee3cccaefd706",
+      "rgbaSHA256": "9d4c0b5521229a2bfaaa2448fa7e668cf9d17e3ed8cf86c282219e04616f8396",
+      "sourceRGBAEqual": true,
+      "identityFeaturesReviewed": "CORRECTED right gable2stacked windows; rear patios on right sliver, tiny front awning projections left",
+      "sourceQA": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\2010s-brick-white-clad-townhouse-pair\\yaw8-W-v2.independent-qa.json",
+      "sourceProvenance": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\2010s-brick-white-clad-townhouse-pair\\yaw8-W-v2.provenance.json",
+      "nativeHeadingDegrees": null,
+      "nativeCameraCertified": false,
+      "runtimeReady": false,
+      "fileRelativeToBundle": "2010s-brick-white-clad-townhouse-pair/yaw8W.png"
+    }
+  ],
+  "identityVisualReview": "All selected normal/yaw sheets and corrected single viewed; four distinct corners and four distinct primary facades; no repeated facade substituted for rear. Native angle/scale hold retained.",
+  "uniqueRGBAViewCount": 8
+}

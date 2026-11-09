@@ -1,0 +1,247 @@
+{
+  "schema": 1,
+  "created_utc": "2026-11-07T05:17:55.392986+00:00",
+  "live_checkout_read_only": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency",
+  "scope": "All statically registered building/prop stable subject IDs across every active generated library, including props omitted from T017; separate source-only/design catalogue and exclusions.",
+  "counts": {
+    "eligible_runtime_subjects": 1208,
+    "eligible_buildings": 203,
+    "eligible_props": 1005,
+    "golf_priority_subjects": 206,
+    "candidate_four_corners": 185,
+    "candidate_four_yawed8_cardinals": 160,
+    "candidate_full_eight": 160,
+    "runtime_eight_player_selectable": 0,
+    "golf_missing_any_eight_views": 199,
+    "explicit_alias_records": 810,
+    "excluded_runtime_subjects": 506,
+    "supplemental_source_or_design_records": 137,
+    "excluded_source_only_records": 2,
+    "runtime_registered_corners_and_yawed8_cardinals": 32
+  },
+  "limitations": [
+    "File/alpha/hash checks do not certify visual camera yaw, style fidelity, or owner approval.",
+    "Eight-degree generated classification uses explicit turned directory/metadata or actual generation provenance; square N/E/S/W and Idol rough renders never count.",
+    "Current PropsTool has four rotation positions; eight file candidates do not imply eight player-selectable facings.",
+    "Certain manifests are multi-subject designs without stable runtime IDs; mapped separately instead of inventing IDs.",
+    "Nested geometry-review holds/conflicts are retained in review evidence even when legacy integrationStatus says ready.",
+    "No full tests, builds, game servers or runtime modifications."
+  ],
+  "owner_approval_claimed": false,
+  "golf_primary_missing": [
+    {
+      "id": "business:golf-bag-trolley",
+      "name": "golf bag trolley",
+      "missing_corners": [
+        "NE",
+        "SE",
+        "SW",
+        "NW"
+      ],
+      "missing_turned_8degree": [
+        "N",
+        "E",
+        "S",
+        "W"
+      ]
+    },
+    {
+      "id": "business:golf-bench-course-map",
+      "name": "golf bench course map",
+      "missing_corners": [
+        "NE",
+        "SE",
+        "SW",
+        "NW"
+      ],
+      "missing_turned_8degree": [
+        "N",
+        "E",
+        "S",
+        "W"
+      ]
+    },
+    {
+      "id": "business:golf-cart-se",
+      "name": "golf cart se",
+      "missing_corners": [
+        "NE",
+        "SE",
+        "SW",
+        "NW"
+      ],
+      "missing_turned_8degree": [
+        "N",
+        "E",
+        "S",
+        "W"
+      ]
+    },
+    {
+      "id": "business:golf-cart-sw",
+      "name": "golf cart sw",
+      "missing_corners": [
+        "NE",
+        "SE",
+        "SW",
+        "NW"
+      ],
+      "missing_turned_8degree": [
+        "N",
+        "E",
+        "S",
+        "W"
+      ]
+    },
+    {
+      "id": "business:golf-footbridge",
+      "name": "golf footbridge",
+      "missing_corners": [
+        "NE",
+        "SE",
+        "SW",
+        "NW"
+      ],
+      "missing_turned_8degree": [
+        "N",
+        "E",
+        "S",
+        "W"
+      ]
+    },
+    {
+      "id": "business:golf-mower",
+      "name": "golf mower",
+      "missing_corners": [
+        "NE",
+        "SE",
+        "SW",
+        "NW"
+      ],
+      "missing_turned_8degree": [
+        "N",
+        "E",
+        "S",
+        "W"
+      ]
+    },
+    {
+      "id": "business:golf-patio-table",
+      "name": "golf patio table",
+      "missing_corners": [
+        "NE",
+        "SE",
+        "SW",
+        "NW"
+      ],
+      "missing_turned_8degree": [
+        "N",
+        "E",
+        "S",
+        "W"
+      ]
+    },
+    {
+      "id": "business:golf-pin-red",
+      "name": "golf pin red",
+      "missing_corners": [
+        "NE",
+        "SE",
+        "SW",
+        "NW"
+      ],
+      "missing_turned_8degree": [
+        "N",
+        "E",
+        "S",
+        "W"
+      ]
+    },
+    {
+      "id": "business:golf-pin-red-equipment",
+      "name": "golf pin red equipment",
+      "missing_corners": [
+        "NE",
+        "SE",
+        "SW",
+        "NW"
+      ],
+      "missing_turned_8degree": [
+        "N",
+        "E",
+        "S",
+        "W"
+      ]
+    },
+    {
+      "id": "business:golf-pin-yellow",
+      "name": "golf pin yellow",
+      "missing_corners": [
+        "NE",
+        "SE",
+        "SW",
+        "NW"
+      ],
+      "missing_turned_8degree": [
+        "N",
+        "E",
+        "S",
+        "W"
+      ]
+    },
+    {
+      "id": "business:golf-practice-net",
+      "name": "golf practice net",
+      "missing_corners": [
+        "NE",
+        "SE",
+        "SW",
+        "NW"
+      ],
+      "missing_turned_8degree": [
+        "N",
+        "E",
+        "S",
+        "W"
+      ]
+    },
+    {
+      "id": "golf:leaderboard",
+      "name": "Main leaderboard (blank)",
+      "missing_corners": [],
+      "missing_turned_8degree": [
+        "N",
+        "E",
+        "S",
+        "W"
+      ]
+    },
+    {
+      "id": "golf:toilet-block",
+      "name": "Toilet block (portable toilets)",
+      "missing_corners": [],
+      "missing_turned_8degree": [
+        "N",
+        "E",
+        "S",
+        "W"
+      ]
+    }
+  ],
+  "additional_golf_manifest_without_cutouts": [
+    "Hospitality tent",
+    "Trophy pavilion",
+    "Club tent",
+    "Club arch sign"
+  ],
+  "known_clipped_golf_originals": [
+    "newprop:covered-bleacher",
+    "newprop:practice-cage"
+  ],
+  "blocking_schema_ambiguities": [
+    "T017 explicitly excluded693 non-subjects under its old scope; those props cannot be omitted in this new scope.",
+    "Golf manifest has17 designs but only5 golf-library registrations; unregistered designs are supplemental records, not fabricated runtime IDs.",
+    "Budget golf prop sets and tournament multi-object sheets do not supply authoritative per-object stable runtime mappings.",
+    "Some legacy integrationStatus ready records contain nested held geometry reviews; registration never implies owner approval."
+  ]
+}

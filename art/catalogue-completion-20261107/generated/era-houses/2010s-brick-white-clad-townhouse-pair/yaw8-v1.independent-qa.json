@@ -1,0 +1,112 @@
+{
+  "schema": 1,
+  "as_of_utc": "2026-11-07T10:55:47.829167+00:00",
+  "review_result": "HOLD-BR-source-guide-sliver-and-exact8;main-wall-identity-alpha-pass",
+  "source": {
+    "path": "generated/era-houses/2010s-brick-white-clad-townhouse-pair/yaw8-v1.png",
+    "sha256": "580f7bc6b458b7d8ccb8e90fa302fd677ff62a303e801db14f8799ccc40e12ca",
+    "bytes": 1076327
+  },
+  "source_original_hash_matches_parent_batch": true,
+  "dimensions": [
+    1254,
+    1254
+  ],
+  "mode": "RGBA",
+  "is_opaque_scene": false,
+  "zero_alpha_fraction": 0.719856586514859,
+  "outer_border_alpha_p50p95max": [
+    0.0,
+    1.0,
+    1.0
+  ],
+  "empty_center_gutter_alpha_p50p95max": [
+    0.0,
+    1.0,
+    1.0
+  ],
+  "cells": [
+    {
+      "cell": 0,
+      "reference_rect_ltrb": [
+        0,
+        0,
+        627,
+        627
+      ],
+      "rgba_rectangle_sha256": "d002d408abbc35d72979eae8ed72a9fff55870e1ac8b7bfdb854a25d95907918",
+      "core_boundary_pixels": 0,
+      "minimum_core_margin_px": 98
+    },
+    {
+      "cell": 1,
+      "reference_rect_ltrb": [
+        627,
+        0,
+        1254,
+        627
+      ],
+      "rgba_rectangle_sha256": "8e0e0bcc0c0c56c48590173b29e246b3df62d72c2f5cf62f10cc5545d1aa6bb7",
+      "core_boundary_pixels": 0,
+      "minimum_core_margin_px": 121
+    },
+    {
+      "cell": 2,
+      "reference_rect_ltrb": [
+        0,
+        627,
+        627,
+        1254
+      ],
+      "rgba_rectangle_sha256": "0eb3f84183439441b0a8afacd0b935c7285451449c60eff9d680840ad3b5b170",
+      "core_boundary_pixels": 0,
+      "minimum_core_margin_px": 92
+    },
+    {
+      "cell": 3,
+      "reference_rect_ltrb": [
+        627,
+        627,
+        1254,
+        1254
+      ],
+      "rgba_rectangle_sha256": "6b1504c588e22a69d390120c3c17306b70fdac8f940e0dae1c54567d92cd4112",
+      "core_boundary_pixels": 0,
+      "minimum_core_margin_px": 124
+    }
+  ],
+  "all_pixels_partitioned": true,
+  "reference_cut_columns_by_row": [
+    [
+      0,
+      627,
+      1254
+    ],
+    [
+      0,
+      627,
+      1254
+    ]
+  ],
+  "notes": [
+    "Main front/rear/side openings and garage/partywall identity remain coherent with normal source.",
+    "Exact8 camera is not established by technical guide labels; independent native measurement remains pending.",
+    "BR right-hand side sliver appears to repeat front entrance awning/steps instead of rear patio facade; compare exact guide which puts tiny front awning projections on LEFT. Preserve draft; side geometry requires further review/native correction."
+  ],
+  "source_crops_performed": false,
+  "no_vehicle_or_house_sprite_crops": true,
+  "no_original_pixels_modified": true,
+  "owner_approved": false,
+  "runtime_ready": false,
+  "exact8_certified": false,
+  "exact_prompt": {
+    "path": "generated/era-houses/2010s-brick-white-clad-townhouse-pair/yaw8-v1.prompt.txt",
+    "sha256": "cbfc0efbe35a9050e22a619c7f2cdf09cc2e06e06d60cdf568dbe6f9ee1ad609",
+    "bytes": 1208
+  },
+  "parent_provenance": {
+    "path": "generated/era-houses/2010s-brick-white-clad-townhouse-pair/yaw8-v1.provenance.json",
+    "sha256": "cbf547e87d29c4a11b01c0c2fc8eb5321cbe7d45acb213cfbbc12671835b68b1",
+    "bytes": 2089
+  }
+}

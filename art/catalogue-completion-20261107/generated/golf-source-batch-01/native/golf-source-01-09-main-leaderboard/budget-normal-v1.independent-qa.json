@@ -1,0 +1,183 @@
+{
+  "schema": 1,
+  "as_of_utc": "2026-11-07T12:22:07.194839+00:00",
+  "review_result": "HOLD-fixed-staircase-end-guide-pending",
+  "recommended_continue_yaw_source_generation": false,
+  "continuation_scope": "Sourceidentity/function/alpha only; not final8direction, owner/release, numericalangle or runtime approval.",
+  "source": {
+    "path": "generated/golf-source-batch-01/native/golf-source-01-09-main-leaderboard/budget-normal-v1.png",
+    "sha256": "a6bd4e8b85fdbc8aff52bdc01b878aef46feadaf557cc9d683db811dc16031d4",
+    "bytes": 2394199
+  },
+  "condition": "budget",
+  "runtime_target_proposal": {
+    "eventTypeId": "leaderboard",
+    "eventName": "Main leaderboard",
+    "currentSpriteSubjectId": "golf:leaderboard",
+    "newArtSubjectProposal": "golf:event-main-leaderboard",
+    "newArtSubjectAlreadyRegistered": false,
+    "eventCatalogueSource": "src/game/golf/tents.ts",
+    "standInMappingSource": "src/game/golf/structure-art.ts",
+    "footprintTiles": {
+      "width": 4,
+      "depth": 2
+    },
+    "footprintMetres": {
+      "width": 8,
+      "depth": 4
+    },
+    "dimensionsMeaning": "Exact current event placement plot, not measured source sprite architecture. New design must fit plot; no runtime geometry changed.",
+    "currentSpriteBaseBoxesInTiles": [
+      {
+        "hx": 4,
+        "hy": 1.5,
+        "dx": 0,
+        "dy": 0
+      }
+    ]
+  },
+  "source_original_hash_matches_parent_provenance": true,
+  "parent_provenance": {
+    "path": "generated/golf-source-batch-01/native/golf-source-01-09-main-leaderboard/budget-normal-v1.provenance.json",
+    "sha256": "5e269ba0f43c7ab0b187c96be52a8b653c59e83b3b9d90977558140bc4ed7802",
+    "bytes": 3813
+  },
+  "parent_archive": {
+    "path": "generated/golf-source-batch-01/native/golf-source-01-09-main-leaderboard/budget-normal-v1.archive.json",
+    "sha256": "fd5b1f24bba499e0045cc8ea1848e8fa8cdb15b053a64f1e72a4260b4f464b3a",
+    "bytes": 3901
+  },
+  "actual_prompt_from_provenance_utf8_sha256": "dd766bcbdffed098c235271dd07daf73f0b5776dc07be2d1017f4d5da2d63daf",
+  "actual_generation_references": [
+    {
+      "path": "generated/old-clubhouse-1950/normal-v5.png",
+      "sha256": "a996fb471f351cc35926c84090192a8b55cc3557bb1bf9fec24872218fa219a6",
+      "bytes": 1473832
+    },
+    {
+      "path": "generated/golf-source-batch-01/references/golf-leaderboard.source.png",
+      "sha256": "b93efb59577a2b0180c789d5230fef8acef5a7b08371b5e80510342f5f3fc85f",
+      "bytes": 1658702
+    }
+  ],
+  "dimensions": [
+    1254,
+    1254
+  ],
+  "mode": "RGBA",
+  "zero_alpha_fraction": 0.40109989341920843,
+  "outer_border_alpha_p95max": [
+    1.0,
+    1.0
+  ],
+  "center_gutter_alpha_p95max": [
+    1.0,
+    249.0
+  ],
+  "horizontal_clear_cut_row": 626,
+  "all_four_native_core_silhouettes_complete": true,
+  "four_distinct_core_pixel_hashes": true,
+  "cells": [
+    {
+      "cell": 0,
+      "function_corner": "front+left",
+      "proposed_lossless_rect_ltrb": [
+        0,
+        0,
+        627,
+        626
+      ],
+      "core_bbox_ltrb": [
+        44,
+        13,
+        570,
+        603
+      ],
+      "minimum_core_margin_px": 13,
+      "boundary_core_pixels_alpha_gt128": 0,
+      "boundary_alpha_max": 1,
+      "native_rgba_rectangle_sha256": "344195edfaed32d1facfb977e37bea9f63e2be2f280b149f418b7e2e696b50b5",
+      "trimmed_core_pixel_hash_ignore_alpha_le128": "528a93df247a64b596328dc61935881c8400fb1eb2518e68a069602316a9c95b"
+    },
+    {
+      "cell": 1,
+      "function_corner": "rear+left",
+      "proposed_lossless_rect_ltrb": [
+        627,
+        0,
+        1254,
+        626
+      ],
+      "core_bbox_ltrb": [
+        51,
+        17,
+        582,
+        591
+      ],
+      "minimum_core_margin_px": 17,
+      "boundary_core_pixels_alpha_gt128": 0,
+      "boundary_alpha_max": 2,
+      "native_rgba_rectangle_sha256": "9f6986060f8ea8ba1f0750c91450838ed42e6a9086980f7fe102f9c7550fdc45",
+      "trimmed_core_pixel_hash_ignore_alpha_le128": "f1d39d9076ccfd62668d6ae7bbf8480af34c07e2c7b7dfbe3d60316f56c4027e"
+    },
+    {
+      "cell": 2,
+      "function_corner": "rear+right",
+      "proposed_lossless_rect_ltrb": [
+        0,
+        626,
+        627,
+        1254
+      ],
+      "core_bbox_ltrb": [
+        27,
+        5,
+        565,
+        599
+      ],
+      "minimum_core_margin_px": 5,
+      "boundary_core_pixels_alpha_gt128": 0,
+      "boundary_alpha_max": 1,
+      "native_rgba_rectangle_sha256": "c0cbc9cf364fa1f164f541eba8049641301bd526bf635dee922548657b6316c3",
+      "trimmed_core_pixel_hash_ignore_alpha_le128": "79e5888cd286415abdf001fc79cc9023a8ec0a27127415d070ab963f83ca97ed"
+    },
+    {
+      "cell": 3,
+      "function_corner": "front+right",
+      "proposed_lossless_rect_ltrb": [
+        627,
+        626,
+        1254,
+        1254
+      ],
+      "core_bbox_ltrb": [
+        35,
+        2,
+        582,
+        612
+      ],
+      "minimum_core_margin_px": 2,
+      "boundary_core_pixels_alpha_gt128": 0,
+      "boundary_alpha_max": 2,
+      "native_rgba_rectangle_sha256": "47d8bc7c3eeb57adb8787cc7da48b79e079ea477c240b542828fab888825af57",
+      "trimmed_core_pixel_hash_ignore_alpha_le128": "3139d31013fb1243a26024b233b1c5cad75ab724e461f55e751250fb5862bc2a"
+    }
+  ],
+  "mesh_alpha_samples": null,
+  "visual_observations": [
+    "Front grid/three-part cap/twoflags differ correctly from structural slat backs.",
+    "FrontTL/BR stairs are screenright; rearBL also shows staircase on screenright rather than the consistent physical end suggested by rearTR platform. Root fixed-coordinate guide required.",
+    "No opaque core clipping at nominal 2x2 boundaries; lower-row flag tip comes within1pixel and midpointalpha125. Future losslesscrop should use clear row626 instead of assuming627 for safer antialias margin."
+  ],
+  "exact_numerical_angle_certified": false,
+  "release_anchors_authored": false,
+  "owner_approved": false,
+  "runtime_ready": false,
+  "runtime_imported": false,
+  "source_crops_or_pixel_changes": false,
+  "exact_prompt_file": {
+    "path": "generated/golf-source-batch-01/native/golf-source-01-09-main-leaderboard/budget-normal-v1.prompt.txt",
+    "sha256": "1b34eb6c9ec8bc6571d98a3fb2e60ce5de7a0af98200bc8e025868645896fae3",
+    "bytes": 2084
+  }
+}

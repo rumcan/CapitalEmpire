@@ -1,0 +1,245 @@
+{
+  "source_only": true,
+  "count": 4,
+  "jobs": [
+    {
+      "jobId": "golf-source-01-02-tv-camera-tower",
+      "functionalIdentity": "Compact2x2m four-leg braced TV scaffold tower, proposed platform about4m high and one period broadcast camera on a tripod; platform has simple guard rails, internal/face ladder and fixed equipment case. Camera points toward model front. No water tank, gazebo, operator or camera lens changing sides. Height is an art proposal, not accepted runtime measurement.",
+      "exact_placement_plot_metres": {
+        "width": 2.0,
+        "depth": 2.0
+      },
+      "model_bounds_metres": {
+        "min": [
+          -0.95,
+          -0.9874999999999999,
+          0.0
+        ],
+        "max": [
+          0.95,
+          0.95,
+          5.395
+        ]
+      },
+      "fixedIdentity": "One2x2m tower, platform z4m; front/right ladder, rear/right case, lens points front-Y.",
+      "geometry_is_proposed_not_measured_native": true,
+      "ground_plate": false,
+      "world_convention": "x right, y rear, z up; model front-Y. Rotate entire mesh, never relocate features for visibility.",
+      "source_art_modified": false,
+      "runtime_modified": false,
+      "outputs": {
+        "normal": {
+          "png": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-01\\native\\golf-source-01-02-tv-camera-tower\\guides\\normal-world-v1.png",
+          "sha256": "43e9a9613d8770d661f5632fb9de6241ab58503281bbb56d785d413fba388548",
+          "calibration": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-01\\native\\golf-source-01-02-tv-camera-tower\\guides\\normal-world-v1.calibration.json"
+        },
+        "yaw8": {
+          "png": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-01\\native\\golf-source-01-02-tv-camera-tower\\guides\\yaw8-world-v1.png",
+          "sha256": "3a5320d5fef40fe67a11772650021215286cfff7465cfd913c85703d803b0cec",
+          "calibration": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-01\\native\\golf-source-01-02-tv-camera-tower\\guides\\yaw8-world-v1.calibration.json"
+        }
+      }
+    },
+    {
+      "jobId": "golf-source-01-09-main-leaderboard",
+      "functionalIdentity": "Large freestanding blank green leaderboard with white score grid, braced timber frame, a narrow service platform with railings, exactly one fixed right-hand staircase, three-part shingle rain cap and two fixed green flags. Target existing8x4m event plot. Rear must show structural braces and slat backs; stair stays on the same physical end. Lamps off in daylight.",
+      "exact_placement_plot_metres": {
+        "width": 8.0,
+        "depth": 4.0
+      },
+      "model_bounds_metres": {
+        "min": [
+          -3.825,
+          -1.9936461202575873,
+          -0.003507914126190538
+        ],
+        "max": [
+          3.8850000000000002,
+          1.679499331883784,
+          5.72
+        ]
+      },
+      "fixedIdentity": "Front grid-Y; rear slats/braces+Y; one staircase permanently+X; front deck-Y; three rain caps and exactly2flags.",
+      "geometry_is_proposed_not_measured_native": true,
+      "ground_plate": false,
+      "world_convention": "x right, y rear, z up; model front-Y. Rotate entire mesh, never relocate features for visibility.",
+      "source_art_modified": false,
+      "runtime_modified": false,
+      "outputs": {
+        "normal": {
+          "png": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-01\\native\\golf-source-01-09-main-leaderboard\\guides\\normal-world-v1.png",
+          "sha256": "e4712399e7051e9730fd11b947eb3bb390effcf5b89f9b0bc6a16b1e14fbbe40",
+          "calibration": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-01\\native\\golf-source-01-09-main-leaderboard\\guides\\normal-world-v1.calibration.json"
+        },
+        "yaw8": {
+          "png": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-01\\native\\golf-source-01-09-main-leaderboard\\guides\\yaw8-world-v1.png",
+          "sha256": "48682ccd0b1ad6af0535f7f46b1a9866e0259f717a2d69c0d9d7a134abe1f0df",
+          "calibration": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-01\\native\\golf-source-01-09-main-leaderboard\\guides\\yaw8-world-v1.calibration.json"
+        }
+      }
+    },
+    {
+      "jobId": "golf-source-01-06-four-lane-entrance",
+      "functionalIdentity": "A12x6m nominal event entrance arrangement with exactly four pedestrian admission lanes across the width: three simple manual turnstiles and one visibly wider accessible swing gate, supported by low dividers and a restrained blank overhead sign frame. Keep queues/ground surface outside the artwork. Front and back must remain genuinely different.",
+      "exact_placement_plot_metres": {
+        "width": 12.0,
+        "depth": 6.0
+      },
+      "model_bounds_metres": {
+        "min": [
+          -5.71,
+          -1.9600000000000002,
+          0.0
+        ],
+        "max": [
+          5.71,
+          1.9600000000000002,
+          3.715
+        ]
+      },
+      "fixedIdentity": "Exactly4lanes acrossX:3manual turnstiles then1wider swing gate at+X. No ground slab. Sign frame only, no added roof required by brief.",
+      "geometry_is_proposed_not_measured_native": true,
+      "ground_plate": false,
+      "world_convention": "x right, y rear, z up; model front-Y. Rotate entire mesh, never relocate features for visibility.",
+      "source_art_modified": false,
+      "runtime_modified": false,
+      "outputs": {
+        "normal": {
+          "png": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-01\\native\\golf-source-01-06-four-lane-entrance\\guides\\normal-world-v2.png",
+          "sha256": "92a81394c1e6630741f62f9b71520420b77e72b006ab38c058c5d7dfbad4368e",
+          "calibration": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-01\\native\\golf-source-01-06-four-lane-entrance\\guides\\normal-world-v2.calibration.json"
+        },
+        "yaw8": {
+          "png": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-01\\native\\golf-source-01-06-four-lane-entrance\\guides\\yaw8-world-v2.png",
+          "sha256": "29479b56926760ac6db7aaedef66edbcddfe6d16cd76f2bd5a007fb4b9e37a22",
+          "calibration": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-01\\native\\golf-source-01-06-four-lane-entrance\\guides\\yaw8-world-v2.calibration.json"
+        }
+      },
+      "previous_tight_reference_outputs_preserved": {
+        "normal": {
+          "png": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-01\\native\\golf-source-01-06-four-lane-entrance\\guides\\normal-world-v1.png",
+          "sha256": "9c4d637fa55943dde74087bb95de355952e1507528fd76f79c83e309b6677263",
+          "calibration": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-01\\native\\golf-source-01-06-four-lane-entrance\\guides\\normal-world-v1.calibration.json"
+        },
+        "yaw8": {
+          "png": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-01\\native\\golf-source-01-06-four-lane-entrance\\guides\\yaw8-world-v1.png",
+          "sha256": "b813825722697a26bc267e372e5ba8ec1da0c0aac134a6886644bd6ea8a9fac6",
+          "calibration": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-01\\native\\golf-source-01-06-four-lane-entrance\\guides\\yaw8-world-v1.calibration.json"
+        }
+      },
+      "recommended_guide_version": 2,
+      "padding_revision": "59px/m for generous image margins; unchanged physical model/12x6m plot."
+    },
+    {
+      "jobId": "golf-source-01-03-broadcast-compound",
+      "functionalIdentity": "A30x20m event broadcast compound consisting of one period box broadcast truck, one uplink van with a roof dish, a generator box, cable reels and a small practical equipment workbench. Arrange truck left, van rear-right, generator front-right, with one open service gap at model front; fixed component layout rotates as one object. Separate physical feet/wheels and no painted ground slab. It must read as support vehicles, not a garage.",
+      "exact_placement_plot_metres": {
+        "width": 30.0,
+        "depth": 20.0
+      },
+      "model_bounds_metres": {
+        "min": [
+          -8.517,
+          -6.773034474781388,
+          0.0
+        ],
+        "max": [
+          7.7,
+          7.220000000000001,
+          3.8690019370347657
+        ]
+      },
+      "fixedIdentity": "Exactly2period vehicles: truck left-X, van rear/right+X/+Y; both nose-Y. Generator front/right, bench/reel positions fixed; front service gap remains open; no slab.",
+      "geometry_is_proposed_not_measured_native": true,
+      "ground_plate": false,
+      "world_convention": "x right, y rear, z up; model front-Y. Rotate entire mesh, never relocate features for visibility.",
+      "source_art_modified": false,
+      "runtime_modified": false,
+      "outputs": {
+        "normal": {
+          "png": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-01\\native\\golf-source-01-03-broadcast-compound\\guides\\normal-world-v1.png",
+          "sha256": "ebc961b0176c4c4f254a3b5da1708f45f044cdba7b88b9cde55894d5f9942338",
+          "calibration": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-01\\native\\golf-source-01-03-broadcast-compound\\guides\\normal-world-v1.calibration.json"
+        },
+        "yaw8": {
+          "png": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-01\\native\\golf-source-01-03-broadcast-compound\\guides\\yaw8-world-v1.png",
+          "sha256": "d2caf57f23317a682e0000b009f4c271fefa6c66ab19e272089e29317c63a441",
+          "calibration": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-01\\native\\golf-source-01-03-broadcast-compound\\guides\\yaw8-world-v1.calibration.json"
+        }
+      }
+    }
+  ],
+  "technical_reference_inspection": {
+    "sheets": 8,
+    "cells": 32,
+    "checks": [
+      {
+        "jobId": "golf-source-01-02-tv-camera-tower",
+        "family": "normal",
+        "rgba": true,
+        "outer_border_alpha_max": 0,
+        "minimum_cell_margin_pixels": 103,
+        "all_four_views_visually_inspected": true
+      },
+      {
+        "jobId": "golf-source-01-02-tv-camera-tower",
+        "family": "yaw8",
+        "rgba": true,
+        "outer_border_alpha_max": 0,
+        "minimum_cell_margin_pixels": 112,
+        "all_four_views_visually_inspected": true
+      },
+      {
+        "jobId": "golf-source-01-09-main-leaderboard",
+        "family": "normal",
+        "rgba": true,
+        "outer_border_alpha_max": 0,
+        "minimum_cell_margin_pixels": 139,
+        "all_four_views_visually_inspected": true
+      },
+      {
+        "jobId": "golf-source-01-09-main-leaderboard",
+        "family": "yaw8",
+        "rgba": true,
+        "outer_border_alpha_max": 0,
+        "minimum_cell_margin_pixels": 127,
+        "all_four_views_visually_inspected": true
+      },
+      {
+        "jobId": "golf-source-01-06-four-lane-entrance",
+        "family": "normal",
+        "rgba": true,
+        "outer_border_alpha_max": 0,
+        "minimum_cell_margin_pixels": 80,
+        "all_four_views_visually_inspected": true,
+        "guide_version": 2
+      },
+      {
+        "jobId": "golf-source-01-06-four-lane-entrance",
+        "family": "yaw8",
+        "rgba": true,
+        "outer_border_alpha_max": 0,
+        "minimum_cell_margin_pixels": 50,
+        "all_four_views_visually_inspected": true,
+        "guide_version": 2
+      },
+      {
+        "jobId": "golf-source-01-03-broadcast-compound",
+        "family": "normal",
+        "rgba": true,
+        "outer_border_alpha_max": 0,
+        "minimum_cell_margin_pixels": 122,
+        "all_four_views_visually_inspected": true
+      },
+      {
+        "jobId": "golf-source-01-03-broadcast-compound",
+        "family": "yaw8",
+        "rgba": true,
+        "outer_border_alpha_max": 0,
+        "minimum_cell_margin_pixels": 167,
+        "all_four_views_visually_inspected": true
+      }
+    ],
+    "note": "Reference geometry only. No native art approval or runtime change."
+  }
+}

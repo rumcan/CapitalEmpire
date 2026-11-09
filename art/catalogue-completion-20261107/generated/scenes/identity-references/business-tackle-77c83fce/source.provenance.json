@@ -1,0 +1,70 @@
+{
+  "schema": 1,
+  "createdUtc": "2026-11-07T06:47:45.284562+00:00",
+  "exactRuntimeId": "business:tackle",
+  "source": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/building-views/business-tackle/NE.png",
+  "sourceSha256": "1c3e1111b42a1624405aa9b805e09d4b5f199b7f63bec236535f04f8ba6eaaf9",
+  "output": "identity-references/business-tackle-77c83fce/source.png",
+  "outputSha256": "1c3e1111b42a1624405aa9b805e09d4b5f199b7f63bec236535f04f8ba6eaaf9",
+  "width": 605,
+  "height": 539,
+  "sourceCell": {
+    "kind": "already isolated native PNG; whole file",
+    "rectXYWH": [
+      0,
+      0,
+      605,
+      539
+    ]
+  },
+  "operation": "byte-for-byte PNG copy only; no resize, crop, recolour, key, repaint, registration or source mutation",
+  "selection": "registered corner NE native PNG for this exact subject",
+  "registeredCornerDirection": "NE",
+  "sourceEvidence": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\building-views\\business-tackle\\provenance.json",
+  "sourceReview": {
+    "status": "generated-awaiting-visual-review"
+  },
+  "sourceRegistration": {
+    "id": "business:tackle",
+    "version": "business-tackle-4views-v1",
+    "files": {
+      "NE": "1c3e1111b42a1624405aa9b805e09d4b5f199b7f63bec236535f04f8ba6eaaf9",
+      "SE": "acebb91a0e2d433c1cef80a10d3f2b5bd3e001c4fa38358e2b48de7d46fdec7f",
+      "SW": "b831c9a8b03f8056512990f79bbd693ae84b1888eb8a98ffb50f06623e8cf451",
+      "NW": "0d95e0fef17485233e6aec82175127196a5178030ac02b19f92cb89f4a9c8583"
+    }
+  },
+  "originalInventorySource": {
+    "library": "src/game/business-library.ts",
+    "librarySha256": "fb72152bd5621325034acefc23e10101ad36dbd73548a06ab87285cf73652a4c",
+    "atlas": "src/assets/businesses/integrated/business-1-0.webp",
+    "atlasSha256": "aa782da3ea205d00d59b9d94528cd5fc11a02dbc97cd18a4e6336792ea6899ff",
+    "runtimePage": 19,
+    "localPage": 1,
+    "uv": [
+      0.5234375,
+      0.265625,
+      0.7734375,
+      0.4931640625
+    ],
+    "crop": {
+      "left": 1072,
+      "top": 544,
+      "width": 512,
+      "height": 466
+    },
+    "native": "art/theme-consistency/exports/buildings/business-tackle.native.png",
+    "nativeSha256": "dba5a45972ba299f391a24cd6445587bea90d54e2dacb78940afc1097fb18a77"
+  },
+  "originalBusinessSourceCell": {
+    "id": "tackle",
+    "sourceSheet": "sliced/builtin/fishing-buildings.png",
+    "sourceCrop": [
+      703,
+      196,
+      534,
+      485
+    ]
+  },
+  "nativeReferenceApprovalClaimed": false
+}

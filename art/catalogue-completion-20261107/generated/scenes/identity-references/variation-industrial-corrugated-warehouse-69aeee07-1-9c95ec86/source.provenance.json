@@ -1,0 +1,62 @@
+{
+  "schema": 1,
+  "createdUtc": "2026-11-07T06:47:45.284562+00:00",
+  "exactRuntimeId": "variation:industrial-corrugated-warehouse-69aeee07:1",
+  "source": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/building-views/variation-industrial-corrugated-warehouse-69aeee07-1/NE.png",
+  "sourceSha256": "b54f990e772f2819ed00f59c7ecc495ad2f5491d2e79828cf80e5f81f25eb47a",
+  "output": "identity-references/variation-industrial-corrugated-warehouse-69aeee07-1-9c95ec86/source.png",
+  "outputSha256": "b54f990e772f2819ed00f59c7ecc495ad2f5491d2e79828cf80e5f81f25eb47a",
+  "width": 676,
+  "height": 433,
+  "sourceCell": {
+    "kind": "already isolated native PNG; whole file",
+    "rectXYWH": [
+      0,
+      0,
+      676,
+      433
+    ]
+  },
+  "operation": "byte-for-byte PNG copy only; no resize, crop, recolour, key, repaint, registration or source mutation",
+  "selection": "registered corner NE native PNG for this exact subject",
+  "registeredCornerDirection": "NE",
+  "sourceEvidence": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\building-views\\variation-industrial-corrugated-warehouse-69aeee07-1\\provenance.json",
+  "sourceReview": {
+    "integrationStatus": "ready",
+    "integrationReason": "All4 visible physical corners form front/right/back/left cycle; actual magenta alpha has no surrounding floor/haze. Matte timber/masonry/metal, charcoal roofs, amber practical lights and fixed screen-upper-right dusk are coherent with master. Layout-only repack preserves every nonzero source RGBA pixel without generation/repainting. Original low-alpha edge fringe does not truncate physical silhouette."
+  },
+  "sourceRegistration": {
+    "id": "variation:industrial-corrugated-warehouse-69aeee07:1",
+    "version": "variation-industrial-corrugated-warehouse-69aeee07-1-4views-v2",
+    "files": {
+      "NE": "b54f990e772f2819ed00f59c7ecc495ad2f5491d2e79828cf80e5f81f25eb47a",
+      "SE": "27e423978884eaee49825e682e78858438484779056628001aed142d581728cd",
+      "SW": "5a002f6d710592c7ef8d7b328faf641bfb1f2eeaba490d8b993e73a880cb8ed0",
+      "NW": "0aa60919bd68bad09aabf66efc975746ec143a0c9807750b4fd86aec2b81e519"
+    }
+  },
+  "originalInventorySource": {
+    "library": "src/game/library.ts",
+    "librarySha256": "91b5190292c1005ac7b936f08e5e1ebf3be43c3aae99f92ea510775da83d9726",
+    "atlas": "src/assets/atlas/sprites-7-0.webp",
+    "atlasSha256": "4581a4f0eab4092db46557ade127a0a283989295ce6f5cd7921b16069f657d20",
+    "runtimePage": 7,
+    "localPage": 7,
+    "uv": [
+      0.007813,
+      0.640625,
+      0.259277,
+      0.82666
+    ],
+    "crop": {
+      "left": 16,
+      "top": 1312,
+      "width": 515,
+      "height": 381
+    },
+    "native": "art/theme-consistency/exports/buildings/variation-industrial-corrugated-warehouse-69aeee07-1.native.png",
+    "nativeSha256": "7d824d9bca39375a285ccf028204de52b8f74c7d48af9f6e7c1c522badeade96"
+  },
+  "originalBusinessSourceCell": null,
+  "nativeReferenceApprovalClaimed": false
+}

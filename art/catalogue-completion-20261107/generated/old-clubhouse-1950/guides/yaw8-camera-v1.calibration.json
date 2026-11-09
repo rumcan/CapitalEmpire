@@ -1,0 +1,485 @@
+{
+  "purpose": "technical camera proxy only; never final art or automatic runtime input",
+  "native_identity_reference": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\old-clubhouse-1950\\normal-v2.png",
+  "identity_roof": "GABLED with ridge along 12m front width, not hipped. Native normal-v2 identity overrides obsolete prose.",
+  "body_dimensions_metres": [
+    12.0,
+    8.0,
+    3.0
+  ],
+  "roof_rise_metres_proxy": 1.2,
+  "roof_overhang_metres_proxy": 0.25,
+  "height_dimensions_are_proxy_only": true,
+  "camera": "orthographic; fixed 30 degrees down; 8 degree yaw offset from facing wall",
+  "view_order": [
+    [
+      "N",
+      "E"
+    ],
+    [
+      "S",
+      "W"
+    ]
+  ],
+  "rotation_steps_degrees": [
+    0,
+    90,
+    180,
+    270
+  ],
+  "runtime_yaw_metadata": -8,
+  "camera_horizontal_offset_degrees": 8,
+  "basis": {
+    "screen_right": [
+      0.9902680687415704,
+      0.13917310096006544,
+      0.0
+    ],
+    "screen_down": [
+      0.0695865504800327,
+      -0.4951340343707851,
+      -0.8660254037844387
+    ],
+    "toward_camera": [
+      0.12052744095487312,
+      -0.8575973040867548,
+      0.49999999999999994
+    ]
+  },
+  "projection": "screen_x=dot(world,screen_right); screen_y=dot(world,screen_down); shared44px/m; center each complete projected proxy in its cell",
+  "source_geometry_policy": "Use source for door/window/hatch/chimney/roof identity, this guide only for exact near-cardinal projection and body proportions; do not inherit proxy colors or labels.",
+  "cells": [
+    {
+      "view": "N",
+      "quarter_rotation_degrees_about_Z": 0,
+      "cell_box": [
+        0,
+        0,
+        800,
+        800
+      ],
+      "screen_offset_px": [
+        400.0,
+        458.8346979502081
+      ],
+      "scale_px_per_metre": 44.0,
+      "projected_main_wall_width_m": 11.883216824898845,
+      "projected_narrow_wall_width_m": 1.1133848076805235,
+      "narrow_to_main_width_ratio": 0.09369388980159428,
+      "narrow_fraction_of_total_body_width": 0.08566737976253226,
+      "main_bottom_edge_slope": 0.07027041735119571,
+      "main_bottom_edge_screen_degrees": 4.019590873545775,
+      "visible_faces": [
+        "front",
+        "right-gable",
+        "front-roof",
+        "back-roof"
+      ],
+      "projected_vertices_m": {
+        "front": [
+          [
+            -6.498300816289684,
+            1.5630168346029443
+          ],
+          [
+            5.384916008609161,
+            2.3980554403633367
+          ],
+          [
+            5.384916008609161,
+            -0.20002077098997928
+          ],
+          [
+            -6.498300816289684,
+            -1.0350593767503717
+          ]
+        ],
+        "right-gable": [
+          [
+            5.384916008609161,
+            2.3980554403633367
+          ],
+          [
+            6.498300816289684,
+            -1.5630168346029443
+          ],
+          [
+            6.498300816289684,
+            -4.16109304595626
+          ],
+          [
+            5.941608412449423,
+            -3.219787393014446
+          ],
+          [
+            5.384916008609161,
+            -0.20002077098997928
+          ]
+        ],
+        "front-roof": [
+          [
+            -6.780661108715092,
+            -0.8637206004938509
+          ],
+          [
+            5.597689750554537,
+            0.006111280506558181
+          ],
+          [
+            6.1891754296348145,
+            -3.202390755394438
+          ],
+          [
+            -6.1891754296348145,
+            -4.072222636394847
+          ]
+        ],
+        "back-roof": [
+          [
+            -6.1891754296348145,
+            -4.072222636394847
+          ],
+          [
+            6.1891754296348145,
+            -3.202390755394438
+          ],
+          [
+            6.780661108715092,
+            -4.202528011645115
+          ],
+          [
+            -5.597689750554537,
+            -5.072359892645524
+          ]
+        ]
+      }
+    },
+    {
+      "view": "E",
+      "quarter_rotation_degrees_about_Z": 90,
+      "cell_box": [
+        800,
+        0,
+        1600,
+        800
+      ],
+      "screen_offset_px": [
+        1200.0,
+        476.6203680564786
+      ],
+      "scale_px_per_metre": 44.0,
+      "projected_main_wall_width_m": 7.922144549932563,
+      "projected_narrow_wall_width_m": 1.6700772115207854,
+      "narrow_to_main_width_ratio": 0.21081125205358717,
+      "narrow_fraction_of_total_body_width": 0.17410744382829474,
+      "main_bottom_edge_slope": 0.07027041735119571,
+      "main_bottom_edge_screen_degrees": 4.019590873545775,
+      "visible_faces": [
+        "front",
+        "left-gable",
+        "front-roof",
+        "back-roof"
+      ],
+      "projected_vertices_m": {
+        "front": [
+          [
+            3.1260336692058885,
+            3.2491504081448417
+          ],
+          [
+            4.796110880726674,
+            -2.69245800430458
+          ],
+          [
+            4.796110880726674,
+            -5.290534215657896
+          ],
+          [
+            3.1260336692058885,
+            0.6510741967915257
+          ]
+        ],
+        "left-gable": [
+          [
+            -4.796110880726674,
+            2.69245800430458
+          ],
+          [
+            3.1260336692058885,
+            3.2491504081448417
+          ],
+          [
+            3.1260336692058885,
+            0.6510741967915257
+          ],
+          [
+            -0.835038605760393,
+            -0.6665024896699316
+          ],
+          [
+            -4.796110880726674,
+            0.09438179295126403
+          ]
+        ],
+        "front-roof": [
+          [
+            3.338807411151265,
+            0.8572062482880631
+          ],
+          [
+            5.078471173152083,
+            -5.331969181346752
+          ],
+          [
+            0.8698318810004093,
+            -6.73189441071205
+          ],
+          [
+            -0.8698318810004093,
+            -0.5427189810772353
+          ]
+        ],
+        "back-roof": [
+          [
+            -0.8698318810004093,
+            -0.5427189810772353
+          ],
+          [
+            0.8698318810004093,
+            -6.73189441071205
+          ],
+          [
+            -3.338807411151265,
+            -5.923454860427029
+          ],
+          [
+            -5.078471173152083,
+            0.2657205692077853
+          ]
+        ]
+      }
+    },
+    {
+      "view": "S",
+      "quarter_rotation_degrees_about_Z": 180,
+      "cell_box": [
+        0,
+        800,
+        800,
+        1600
+      ],
+      "screen_offset_px": [
+        400.0,
+        1258.834697950208
+      ],
+      "scale_px_per_metre": 44.0,
+      "projected_main_wall_width_m": 11.883216824898845,
+      "projected_narrow_wall_width_m": 1.1133848076805235,
+      "narrow_to_main_width_ratio": 0.09369388980159428,
+      "narrow_fraction_of_total_body_width": 0.08566737976253226,
+      "main_bottom_edge_slope": 0.07027041735119571,
+      "main_bottom_edge_screen_degrees": 4.019590873545775,
+      "visible_faces": [
+        "back",
+        "left-gable",
+        "front-roof",
+        "back-roof"
+      ],
+      "projected_vertices_m": {
+        "back": [
+          [
+            -6.498300816289684,
+            1.5630168346029438
+          ],
+          [
+            5.38491600860916,
+            2.398055440363337
+          ],
+          [
+            5.38491600860916,
+            -0.20002077098997884
+          ],
+          [
+            -6.498300816289684,
+            -1.0350593767503722
+          ]
+        ],
+        "left-gable": [
+          [
+            5.38491600860916,
+            2.398055440363337
+          ],
+          [
+            6.498300816289684,
+            -1.5630168346029438
+          ],
+          [
+            6.498300816289684,
+            -4.16109304595626
+          ],
+          [
+            5.941608412449423,
+            -3.219787393014446
+          ],
+          [
+            5.38491600860916,
+            -0.20002077098997884
+          ]
+        ],
+        "front-roof": [
+          [
+            6.780661108715093,
+            -4.202528011645114
+          ],
+          [
+            -5.597689750554535,
+            -5.072359892645524
+          ],
+          [
+            -6.1891754296348145,
+            -4.072222636394847
+          ],
+          [
+            6.1891754296348145,
+            -3.2023907553944375
+          ]
+        ],
+        "back-roof": [
+          [
+            6.1891754296348145,
+            -3.2023907553944375
+          ],
+          [
+            -6.1891754296348145,
+            -4.072222636394847
+          ],
+          [
+            -6.780661108715093,
+            -0.8637206004938514
+          ],
+          [
+            5.597689750554535,
+            0.006111280506558625
+          ]
+        ]
+      }
+    },
+    {
+      "view": "W",
+      "quarter_rotation_degrees_about_Z": 270,
+      "cell_box": [
+        800,
+        800,
+        1600,
+        1600
+      ],
+      "screen_offset_px": [
+        1200.0,
+        1276.6203680564786
+      ],
+      "scale_px_per_metre": 44.0,
+      "projected_main_wall_width_m": 7.922144549932563,
+      "projected_narrow_wall_width_m": 1.6700772115207854,
+      "narrow_to_main_width_ratio": 0.21081125205358717,
+      "narrow_fraction_of_total_body_width": 0.17410744382829474,
+      "main_bottom_edge_slope": 0.07027041735119571,
+      "main_bottom_edge_screen_degrees": 4.019590873545775,
+      "visible_faces": [
+        "right-gable",
+        "back",
+        "front-roof",
+        "back-roof"
+      ],
+      "projected_vertices_m": {
+        "right-gable": [
+          [
+            -4.796110880726674,
+            2.6924580043045796
+          ],
+          [
+            3.1260336692058877,
+            3.249150408144842
+          ],
+          [
+            3.1260336692058877,
+            0.6510741967915261
+          ],
+          [
+            -0.8350386057603938,
+            -0.6665024896699316
+          ],
+          [
+            -4.796110880726674,
+            0.09438179295126359
+          ]
+        ],
+        "back": [
+          [
+            3.1260336692058877,
+            3.249150408144842
+          ],
+          [
+            4.796110880726674,
+            -2.6924580043045796
+          ],
+          [
+            4.796110880726674,
+            -5.290534215657896
+          ],
+          [
+            3.1260336692058877,
+            0.6510741967915261
+          ]
+        ],
+        "front-roof": [
+          [
+            -3.3388074111512642,
+            -5.92345486042703
+          ],
+          [
+            -5.078471173152084,
+            0.26572056920778486
+          ],
+          [
+            -0.8698318810004101,
+            -0.5427189810772353
+          ],
+          [
+            0.8698318810004101,
+            -6.73189441071205
+          ]
+        ],
+        "back-roof": [
+          [
+            0.8698318810004101,
+            -6.73189441071205
+          ],
+          [
+            -0.8698318810004101,
+            -0.5427189810772353
+          ],
+          [
+            3.3388074111512642,
+            0.8572062482880636
+          ],
+          [
+            5.078471173152084,
+            -5.331969181346751
+          ]
+        ]
+      }
+    }
+  ],
+  "outputs": [
+    {
+      "path": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\old-clubhouse-1950\\guides\\yaw8-camera-v1.svg",
+      "sha256": "230e35f8d8e86da12a6e780c3852efa02cb69ecbd4ae30be580cecfc84b0fed4"
+    },
+    {
+      "path": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\old-clubhouse-1950\\guides\\yaw8-camera-v1.png",
+      "sha256": "b3b2edeed322bb744e2ceb2cf4e02bcd54083831efc4cab2f1b26f7aa54178cf"
+    }
+  ],
+  "owner_approved": false,
+  "runtime_integrated": false
+}

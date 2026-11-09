@@ -1,0 +1,22 @@
+{
+  "key": "newprop:satellite-van",
+  "slug": "satellite-van",
+  "family": "yaw8",
+  "condition": "base",
+  "version": 1,
+  "target": "generated/golf-vehicle-source-batch-01/native/satellite-van/yaw8-v1.png",
+  "refs": [
+    "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-vehicle-source-batch-01\\fixed-world-guides-v2\\satellite-van\\guides\\yaw8-world-v2.png",
+    "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/golf-vehicle-source-batch-01/native/satellite-van/normal-NW-v2.png"
+  ],
+  "prompt": "Paint FOUR missing nearcardinal views of ONE exact specialist golf mobileprop from REFERENCE1 fixedworldguide. Guide controls allcameras/physicalattachments/occlusion. REFERENCE2 supplies finishedsubjectidentity/finepaintedmaterialsONLY; nevercopyitscornercamera. Functionalidentity: One cream/green uplink PANEL VAN with large fixed roof satellite dish on rear roof, roof HVAC box just forward of dish, two roof antennas, sliding cargo side door and twin rear cargo doors. Dish azimuth/elevation fixed to the vehicle, never turned toward viewer independently. No driver, stairs or cable compound included.. Fixedstate: One curved dish, unchanged fixed aim; HVAC and two aerials unchanged. ONE LEFT -X sliding cargo door, twin rear doors. Right +X body plain.. Slidingcargodoor hasbeenadoptedonphysicalLEFT-X, oppositeRIGHTbodyplain. Dish MUST rotatewithvehicle: showconvexback/obliqueconcavefront exactlywhereguideindicates, neverturnbowltofaceviewerinall4.  FourgenuineMAINfacesN E / S W asguide, eachnominal8degreesoffcardinal, orthographic30degreesDOWN. Fixedroofequipment/cargo, wheellayout, seatrowcount, canopy/bench positions neverchange.  Finepainterlyminiaturegameartmatchreference2wood/enamel/metals/glass, notlowpolyguide. Late-afternoonDAYTIME sunSCREENUPPERRIGHT/shadowsLOWERLEFT, lights/beaconsOFF. CompleteisolatedequallyscaledopaqueobjectswithwideZEROALPHAtransparentgutters/margins, smallcontactshadowonly. Nopeopledrivers/patients, road/groundplate, scenery, plants, captions/UI/grid/halo. Intrinsiccross/accesssymbolsretained wherephysicalbodyhas them.",
+  "source": "C:/Users/RAMPAGE/.codex/generated_images/01a1b1fd-39ec-7220-8f11-86e4448833ea/exec-b31b57bb-5069-4dee-9d15-428ab4bdac80.png",
+  "references": [
+    "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-vehicle-source-batch-01\\fixed-world-guides-v2\\satellite-van\\guides\\yaw8-world-v2.png",
+    "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/golf-vehicle-source-batch-01/native/satellite-van/normal-NW-v2.png"
+  ],
+  "status": "native-source-candidate-pending-visual-review",
+  "runtime_imported": false,
+  "sha256": "75c05cb5db7f078b7d025b81f77ed214d9b06a985110d74fc2c9b5d5b2403d9d",
+  "native_bytes_preserved": true
+}

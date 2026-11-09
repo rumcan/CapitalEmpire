@@ -1,0 +1,15 @@
+{
+  "key": "era-2020s-white-electric-hatch",
+  "source": "C:/Users/RAMPAGE/.codex/generated_images/01a1b1fd-39ec-7220-8f11-86e4448833ea/exec-b2b56d75-4ea6-4788-ae6e-2d14cd7e3dce.png",
+  "target": "generated/vehicles/era-2020s-white-electric-hatch/traffic8-v1.png",
+  "prompt": "Generate a wide4-column x2-row transparent sprite atlas containing EIGHT genuinely different directions of ONE identical emptylater-era road vehicle. Reference image is MATERIAL/PAINTERLY MINIATURE STYLE ONLY, not a vehicle model to copy. Fixed orthographic camera30degrees down, turn ONLY the vehicle about vertical axis, no perspective lens, consistent wheelbase/body/paint/wheel sizes at all headings. Cell order by where the NOSE POINTS ON SCREEN: top row LOWER LEFT, DOWN, LOWER RIGHT, RIGHT; bottom row UPPER RIGHT, UP, UPPER LEFT, LEFT. Front in the first three cells, rear in bottom first three, true opposite left/right profiles at end of rows. Rear has rear glass/tailgate or boot and RED tail lenses; front has grille and headlamps; side profiles must face opposite ways. Reconstruct all faces independently, no mirrored light/shadow or same front pasted at rear. All eight pictures must be the SAME vehicle identity. Detailed illustrated hand-painted game materials, daylight from SCREEN UPPER RIGHT, shadows LOWER LEFT in all eight.Match the specified era for later-game town renewal; era-appropriate technology and body design. No occupants, no brands/logos, no words, captions, grids, frames, road, parking bay, buildings or other cars. No plants. Fully opaque objects on genuinely transparent zero-alpha background, no haze or background wash. All eight complete vehicles centred within their own cells with generous margins, same physical scale, clean readable silhouettes.\nVehicle identity and era: A2024-style pearl-white compact ELECTRIC hatchback with five doors, short smooth enclosed nose with no grille, slim front LED lenses, charcoal panoramic roof, dark lower sill and aerodynamic five-spoke wheel covers, clean red rear light bar. Unbranded, ordinary affordable town car, no science-fiction shapes.",
+  "references": [
+    "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/cars/burgundy-wagon/burgundy-wagon__SE.png"
+  ],
+  "replacement_target": null,
+  "era": "2020s",
+  "status": "native source candidate; alpha/actual directions/camera/identity QA pending",
+  "runtime_imported": false,
+  "sha256": "664d479618cc67c1b2e5983c7ebea0ba2adc7d7642fc9cf5c02e46048892c58c",
+  "native_bytes_preserved": true
+}

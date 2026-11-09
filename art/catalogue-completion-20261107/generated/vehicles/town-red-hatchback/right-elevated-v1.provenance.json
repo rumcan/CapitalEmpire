@@ -1,0 +1,14 @@
+{
+  "key": "town-red-hatchback",
+  "source": "C:/Users/RAMPAGE/.codex/generated_images/01a1b1fd-39ec-7220-8f11-86e4448833ea/exec-b09530c1-c852-457f-a21c-441c6b0fac13.png",
+  "target": "generated/vehicles/town-red-hatchback/right-elevated-v1.png",
+  "prompt": "Paint the exact projected car in REFERENCE1 as the red three-door hatchback from REFERENCE2. Produce ONE SINGLE vehicle sprite only. The orientation, orthographic camera and plane visibility come EXCLUSIVELY from reference1: car nose points EXACTLY SCREEN RIGHT, longitudinal axis exactly horizontal, camera looks DOWN30degrees from ABOVE the side. The roof and bonnet show their full upper surfaces as broad planes at this projection; wheel discs are ellipses0.866height/width. No front-facing grille plane visible except thin endedge; do not turn nose diagonallytowardtheviewer. Reference2givescaridentity/paint/trim/detailsONLY: redpaint/goldstripe, blackbumpers, two side doors total plusrearhatch, roundheadlamps, steelwheels, rearwiper. Do not copy reference2'sdiagonal orientation. Applythevehicle'scorrectshapeoverreference1proxywhilepreservingthe exactcamera/projection. Detailedhandpaintedminiature, naturalupperrightdaylightsun, shadowdownleft, lampsoff. OnefullyopaquecompletecarcentredwithamplemarginonTRUEzeroalpha transparentbackground. No groundplate, text, grid orhaze.",
+  "references": [
+    "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/vehicles/town-red-hatchback/camera-calibration-refs/right-camera-only.png",
+    "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/vehicles/town-red-hatchback/camera-calibration-refs/corner-identity-only.png"
+  ],
+  "status": "single-view calibration visually improves30degree side camera; independent measurement pending",
+  "runtime_imported": false,
+  "sha256": "b1df50553e453843857650872d59cc96b3c21dd67548beda07b9347f3a8974e7",
+  "native_bytes_preserved": true
+}

@@ -1,0 +1,71 @@
+{
+  "schema": 1,
+  "createdUtc": "2026-11-07T06:47:45.284562+00:00",
+  "exactRuntimeId": "static:shop_market_rear-v2",
+  "source": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/building-views/static-shop_market_rear-v2/NE.png",
+  "sourceSha256": "ed4cf2dfa3142fd083f384ceec0c606c19b4c6574b5b29a8b23d7ddeca4071e0",
+  "output": "identity-references/static-shop-market-rear-v2-0888bd32/source.png",
+  "outputSha256": "ed4cf2dfa3142fd083f384ceec0c606c19b4c6574b5b29a8b23d7ddeca4071e0",
+  "width": 552,
+  "height": 469,
+  "sourceCell": {
+    "kind": "already isolated native PNG; whole file",
+    "rectXYWH": [
+      0,
+      0,
+      552,
+      469
+    ]
+  },
+  "operation": "byte-for-byte PNG copy only; no resize, crop, recolour, key, repaint, registration or source mutation",
+  "selection": "registered corner NE native PNG for this exact subject",
+  "registeredCornerDirection": "NE",
+  "sourceEvidence": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\building-views\\static-shop_market_rear-v2\\provenance.json",
+  "sourceReview": {
+    "integrationStatus": "ready",
+    "integrationReason": "Source review passed actual-alpha blue composite, rigid visible-facade cycle, coherent Maple-master materials/detail/upper-right dusk light and clear equal-cell packing. Game scale/street integration remains to be reviewed.",
+    "integrationReview": {
+      "alpha": "passed",
+      "geometry": "passed",
+      "themeAssessment": "Aged brick/whitewashed masonry or muted timber, slate roof, warm practical windows and fixed screen-upper-right dusk highlights match master material/exposure; geometry checked independently.",
+      "terrainOrCaptionsVisible": false,
+      "gameScaleRegistered": false,
+      "reviewContact": "output/building-priority/mixed-standalone-review-3.png",
+      "correctionBrief": null
+    }
+  },
+  "sourceRegistration": {
+    "id": "static:shop_market_rear-v2",
+    "version": "static-shop_market_rear-v2-4views-v1",
+    "files": {
+      "NE": "ed4cf2dfa3142fd083f384ceec0c606c19b4c6574b5b29a8b23d7ddeca4071e0",
+      "SE": "f753b1a4ad93af0f5a1144d912f1af41931f91625f11afa2fe883d69ba781305",
+      "SW": "58e149bb86effe99b48f11cf9cf011b9bfc82d427ac04f94c7af448f6eb9abf3",
+      "NW": "5c37c031666e5bfa1182c6623847ecb9865415ffc7a7330dbe8b76df5aa0a078"
+    }
+  },
+  "originalInventorySource": {
+    "library": "src/game/library.ts",
+    "librarySha256": "91b5190292c1005ac7b936f08e5e1ebf3be43c3aae99f92ea510775da83d9726",
+    "atlas": "src/assets/atlas/sprites-9-0.webp",
+    "atlasSha256": "484f5473a887995bfea39685a9993bd57d4c9711217f53187510326bcc954a5b",
+    "runtimePage": 9,
+    "localPage": 9,
+    "uv": [
+      0.203125,
+      0.570313,
+      0.40625,
+      0.731934
+    ],
+    "crop": {
+      "left": 416,
+      "top": 1168,
+      "width": 416,
+      "height": 331
+    },
+    "native": "art/theme-consistency/exports/buildings/static-shop_market_rear-v2.native.png",
+    "nativeSha256": "5cf59ee345cb1a5da58d6cf081e89bcbf27113d4e4c422d4f2f84d17859236c9"
+  },
+  "originalBusinessSourceCell": null,
+  "nativeReferenceApprovalClaimed": false
+}

@@ -1,0 +1,244 @@
+{
+  "id": "variation~ref-building-gas-shop-3326e70f-plain~1",
+  "version": 1,
+  "generator": "native imagegen",
+  "imported_utc": "2026-11-06T18:35:39.416590+00:00",
+  "source": {
+    "path": "C:\\Users\\RAMPAGE\\.codex\\generated_images\\01a1b1fd-39ec-7220-8f11-86e4448833ea\\exec-8bed4aae-992a-4d5e-b4e5-feb9818d4c5b.png",
+    "sha256": "0ce7d775b1c76467c716362fe137538b4b5d06a5ce7e5eaeb8e4ffab16f038fa",
+    "bytes": 1869565
+  },
+  "raw": {
+    "path": "E:\\Repos\\CapitalEmpire\\.claude\\worktrees\\art-repaint-20261106\\art\\theme-consistency\\native-resume-20261106\\variation~ref-building-gas-shop-3326e70f-plain~1\\corners-v1.png",
+    "sha256": "0ce7d775b1c76467c716362fe137538b4b5d06a5ce7e5eaeb8e4ffab16f038fa",
+    "bytes": 1869565
+  },
+  "exact_prompt": {
+    "path": "E:\\Repos\\CapitalEmpire\\.claude\\worktrees\\art-repaint-20261106\\art\\theme-consistency\\native-resume-20261106\\variation~ref-building-gas-shop-3326e70f-plain~1\\corners-v1.prompt.txt",
+    "sha256": "491c6a746fe097fa1f58367d86aec66596a0b4660ae82010b683b1a48e4c6bc9",
+    "bytes": 1192
+  },
+  "queue": {
+    "path": "D:\\AI\\chatgpt-bridge\\queue-resume-corners-20261106.json",
+    "sha256": "be220aa1862ea65077a5b6cdbf5a823d5cd27b0f02d9721b2f4bd8af35321c5d",
+    "bytes": 12104
+  },
+  "references": [
+    {
+      "path": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\theme-consistency\\exports\\buildings\\variation-ref-building-gas-shop-3326e70f-plain-1.native.png",
+      "sha256": "de702a01b7d6c0bc88fb70f5464abff4d0b84da18d062bfb5532b91f896894c8",
+      "bytes": 249655
+    },
+    {
+      "path": "D:\\AI\\chatgpt-bridge\\guides\\variation~ref-building-gas-shop-3326e70f-plain~1-corners.png",
+      "sha256": "70a81676cbcf794e516c722c2afc493d386a3731c5b4a166f291ff38fbd3b88a",
+      "bytes": 567234
+    }
+  ],
+  "original_queue_references": [
+    {
+      "path": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\theme-consistency\\exports\\buildings\\variation-ref-building-gas-shop-3326e70f-plain-1.native.png",
+      "sha256": "de702a01b7d6c0bc88fb70f5464abff4d0b84da18d062bfb5532b91f896894c8",
+      "bytes": 249655
+    },
+    {
+      "path": "D:\\AI\\chatgpt-bridge\\guides\\variation~ref-building-gas-shop-3326e70f-plain~1-corners.png",
+      "sha256": "70a81676cbcf794e516c722c2afc493d386a3731c5b4a166f291ff38fbd3b88a",
+      "bytes": 567234
+    }
+  ],
+  "cell_order": [
+    [
+      "SE",
+      "SW"
+    ],
+    [
+      "NW",
+      "NE"
+    ]
+  ],
+  "validation": {
+    "mode": "RGBA",
+    "dimensions": [
+      1254,
+      1254
+    ],
+    "cells": [
+      {
+        "view": "SE",
+        "subject_bbox": [
+          33,
+          131,
+          611,
+          532
+        ],
+        "transparent_fraction": 0.6003550997255354,
+        "margins_px": [
+          33,
+          131,
+          16,
+          95
+        ]
+      },
+      {
+        "view": "SW",
+        "subject_bbox": [
+          72,
+          84,
+          580,
+          570
+        ],
+        "transparent_fraction": 0.5736310473152578,
+        "margins_px": [
+          72,
+          84,
+          47,
+          57
+        ]
+      },
+      {
+        "view": "NW",
+        "subject_bbox": [
+          34,
+          103,
+          607,
+          516
+        ],
+        "transparent_fraction": 0.5688260087655705,
+        "margins_px": [
+          34,
+          103,
+          20,
+          111
+        ]
+      },
+      {
+        "view": "NE",
+        "subject_bbox": [
+          63,
+          81,
+          555,
+          569
+        ],
+        "transparent_fraction": 0.5934718629254011,
+        "margins_px": [
+          63,
+          81,
+          72,
+          58
+        ]
+      }
+    ],
+    "cell_differences": [
+      {
+        "views": [
+          "SE",
+          "SW"
+        ],
+        "mean_rgb_difference": 45.363688151041664
+      },
+      {
+        "views": [
+          "SE",
+          "NW"
+        ],
+        "mean_rgb_difference": 50.417724609375
+      },
+      {
+        "views": [
+          "SE",
+          "NE"
+        ],
+        "mean_rgb_difference": 39.494303385416664
+      },
+      {
+        "views": [
+          "SW",
+          "NW"
+        ],
+        "mean_rgb_difference": 42.119791666666664
+      },
+      {
+        "views": [
+          "SW",
+          "NE"
+        ],
+        "mean_rgb_difference": 44.454020182291664
+      },
+      {
+        "views": [
+          "NW",
+          "NE"
+        ],
+        "mean_rgb_difference": 43.899332682291664
+      }
+    ],
+    "errors": [],
+    "warnings": [],
+    "visual_review": "Required: automatic checks cannot approve style, geometry, lighting, or fidelity."
+  },
+  "status": "imported-awaiting-visual-review",
+  "owner_approved": false,
+  "runtime_integrated": false,
+  "all_generated_views": false,
+  "compatible_NE": "generated bottom-right cell",
+  "cutter": {
+    "path": "D:\\AI\\chatgpt-bridge\\sheets.py",
+    "sha256": "eb40b531f94e59aa94412009307414a4a8f4dab5668786dcb077b9d0349852d9",
+    "bytes": 4578
+  },
+  "crops": [
+    {
+      "view": "SE",
+      "compatible": {
+        "path": "D:\\AI\\repaint\\out\\variation~ref-building-gas-shop-3326e70f-plain~1\\SE.png",
+        "sha256": "3138e9542b346545d839b91978847c302f6b6899558bd7079402557ab074fce0",
+        "bytes": 411153
+      },
+      "project_copy": {
+        "path": "E:\\Repos\\CapitalEmpire\\.claude\\worktrees\\art-repaint-20261106\\art\\theme-consistency\\native-resume-20261106\\variation~ref-building-gas-shop-3326e70f-plain~1\\SE.native.png",
+        "sha256": "3138e9542b346545d839b91978847c302f6b6899558bd7079402557ab074fce0",
+        "bytes": 411153
+      }
+    },
+    {
+      "view": "SW",
+      "compatible": {
+        "path": "D:\\AI\\repaint\\out\\variation~ref-building-gas-shop-3326e70f-plain~1\\SW.png",
+        "sha256": "4676187117c6d745000ec0b0ecf81f3275eb393bf5844fcc9287bf10985c17bd",
+        "bytes": 434253
+      },
+      "project_copy": {
+        "path": "E:\\Repos\\CapitalEmpire\\.claude\\worktrees\\art-repaint-20261106\\art\\theme-consistency\\native-resume-20261106\\variation~ref-building-gas-shop-3326e70f-plain~1\\SW.native.png",
+        "sha256": "4676187117c6d745000ec0b0ecf81f3275eb393bf5844fcc9287bf10985c17bd",
+        "bytes": 434253
+      }
+    },
+    {
+      "view": "NW",
+      "compatible": {
+        "path": "D:\\AI\\repaint\\out\\variation~ref-building-gas-shop-3326e70f-plain~1\\NW.png",
+        "sha256": "9ede5760d3f313ead207595400f1bd499a6f3be78780698712bc8c627acee511",
+        "bytes": 425804
+      },
+      "project_copy": {
+        "path": "E:\\Repos\\CapitalEmpire\\.claude\\worktrees\\art-repaint-20261106\\art\\theme-consistency\\native-resume-20261106\\variation~ref-building-gas-shop-3326e70f-plain~1\\NW.native.png",
+        "sha256": "9ede5760d3f313ead207595400f1bd499a6f3be78780698712bc8c627acee511",
+        "bytes": 425804
+      }
+    },
+    {
+      "view": "NE",
+      "compatible": {
+        "path": "D:\\AI\\repaint\\out\\variation~ref-building-gas-shop-3326e70f-plain~1\\NE.png",
+        "sha256": "f26ff36bd52578d5ffc9bea2cd64178d89d7549664f68451455df9f52c8867e9",
+        "bytes": 414131
+      },
+      "project_copy": {
+        "path": "E:\\Repos\\CapitalEmpire\\.claude\\worktrees\\art-repaint-20261106\\art\\theme-consistency\\native-resume-20261106\\variation~ref-building-gas-shop-3326e70f-plain~1\\NE.native.png",
+        "sha256": "f26ff36bd52578d5ffc9bea2cd64178d89d7549664f68451455df9f52c8867e9",
+        "bytes": 414131
+      }
+    }
+  ]
+}

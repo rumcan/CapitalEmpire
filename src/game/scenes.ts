@@ -13,14 +13,16 @@ import MANIFEST_FILE from '../assets/scenes/manifest.json';
 import type { RangeUpgradeId } from './golf/rangesave';
 
 /** one picture of the manifest: a place's slug, the state it shows, its file under src/assets/scenes and its size (px, bytes) */
-export interface ScenePic { slug: string; state: string; file: string; w: number; h: number; bytes: number }
+export interface ScenePic { slug: string; state: string; file: string; w: number; h: number; bytes: number;
+  /** Optional exact building appearance or placed instance; prevents another house/business's scene being borrowed. */ subject?: string; instanceKey?: string;
+  /** Optional explicit view for subject-scoped art; old entries encode this in their slug. */ view?: 'outside' | 'inside' }
 export interface SceneManifest { v: number; pictures: readonly ScenePic[] }
 export const SCENE_MANIFEST: SceneManifest = MANIFEST_FILE as SceneManifest;
 
 /** a number under the picture */
 export interface SceneTile { label: string; value: string; sub?: string; tone?: 'good' | 'bad' }
 /** one view of a place (the range from the road, the video store inside): its picture for the state now, the state, its line and its numbers */
-export interface SceneView { id: string; label: string; slug: string; state: string; good: boolean; line: string; pic: ScenePic; tiles: SceneTile[] }
+export interface SceneView { id: string; label: string; slug: string; state: string; good: boolean; line: string; pic: ScenePic; tiles: SceneTile[]; /** No picture exists for this exact identity/condition yet. */ pendingArt?: boolean }
 /** the card: the place's name, the small line over it, its views with a picture (at least one) and the one shown */
 export interface SceneCardView { title: string; kicker: string; views: SceneView[]; at: number }
 
@@ -29,6 +31,9 @@ export type SceneRef =
   | { kind: 'range'; view?: string }
   | { kind: 'club'; view?: string }
   | { kind: 'lot'; key: string; place: string; view?: string }
+  | { kind: 'property'; key: string; subject: string; name: string; home: boolean; place?: string; uid?: number; view?: string }
+  | { kind: 'object'; uid: number; view?: string }
+  | { kind: 'event'; id: number; view?: string }
   | { kind: 'farm'; key: string }
   | { kind: 'place'; id: string; view?: string };
 
@@ -36,7 +41,7 @@ export type SceneRef =
 export const GOOD_TIMES: readonly string[] = ['upgraded', 'rundown', 'one'], HARD_TIMES: readonly string[] = ['rundown', 'one'];
 /** the picture of a slug in the first of the wanted states the art has, or null */
 export function pickPicture(slug: string, want: readonly string[], m: SceneManifest = SCENE_MANIFEST): ScenePic | null {
-  for (const s of want) { const p = m.pictures.find(q => q.slug === slug && q.state === s); if (p) return p; }
+  for (const s of want) { const p = m.pictures.find(q => q.slug === slug && q.state === s && !q.subject && !q.instanceKey); if (p) return p; }
   return null;
 }
 /** the slugs the manifest has (a place's buttons show only when one of its views has art) */
@@ -245,6 +250,64 @@ export function lotScene(p: LotPlace, f: LotSceneFacts, want?: string): SceneCar
     viewOf('inside', 'Inside', `${p.slug}-inside`, good, tiles, LINES[`${p.slug}-inside`] ? undefined : p.lines),
     viewOf('one', p.name, p.slug, good, tiles, LINES[p.slug] ? undefined : p.lines),
   ], want);
+}
+
+/** The exact identity and real condition of an ordinary home, business or event facility; no economy changes are made by its card. */
+export interface PropertySceneFacts {
+  key: string; subject: string; name: string; slug: string; good: boolean; home?: boolean; tiles: SceneTile[];
+  lines?: Readonly<Record<'rundown' | 'upgraded', string>>;
+}
+
+/** Select the same subject/instance and requested condition. A general house image is never silently borrowed for a different house. */
+export function propertyPicture(f: Pick<PropertySceneFacts, 'key' | 'subject' | 'slug' | 'good' | 'home'>, view: 'outside' | 'inside', m: SceneManifest = SCENE_MANIFEST): ScenePic | null {
+  const slug = `${f.slug}-${view}`;
+  const matching = m.pictures.filter(p => (!p.view || p.view === view) && (p.view === view && (p.subject === f.subject || p.instanceKey === f.key) || p.slug === slug || (p.slug === f.slug && p.view === view))
+    && (!p.instanceKey || p.instanceKey === f.key) && (!p.subject || p.subject === f.subject));
+  const instances = matching.filter(p => p.instanceKey === f.key), subjects = matching.filter(p => p.subject === f.subject && !p.instanceKey);
+  // An explicit identity owns its condition variants. Do not fall through to an unrelated general scene if its worn view is missing.
+  const candidates = instances.length ? instances : subjects.length ? subjects
+    : f.home || f.slug === 'town-business' ? [] : matching.filter(p => !p.subject && !p.instanceKey);
+  for (const state of f.good ? GOOD_TIMES : HARD_TIMES) {
+    const pic = candidates.find(p => p.state === state); if (pic) return pic;
+  }
+  return null;
+}
+
+/** Exact-scoped art only: a descriptive slug is not an identity, and another instance never supplies this object's picture. */
+export function exactScenePictures(key: string, subject: string, m: SceneManifest = SCENE_MANIFEST): readonly ScenePic[] {
+  const matching = m.pictures.filter(p => p.subject === subject && (!p.instanceKey || p.instanceKey === key) && (p.view === 'outside' || p.view === 'inside'));
+  const instances = matching.filter(p => p.instanceKey === key);
+  return instances.length ? instances : matching.filter(p => !p.instanceKey);
+}
+
+/** Placed decoration has no simulated repair/upgrade state. Expose exact approved illustration variants, not invented business facts.
+ * Known facility states still filter pictures through the same hard/good-times policy as ordinary properties. */
+export function objectScene(f: { key: string; subject: string; name: string; good?: boolean; tiles?: SceneTile[] }, want?: string, m: SceneManifest = SCENE_MANIFEST): SceneCardView | null {
+  const pictures = exactScenePictures(f.key, f.subject, m);
+  const views: SceneView[] = [];
+  for (const id of ['outside', 'inside'] as const) {
+    const candidates = pictures.filter(p => p.view === id);
+    const selected = f.good === undefined ? candidates.filter((p, i) => candidates.findIndex(q => q.state === p.state) === i)
+      : [propertyPicture({ ...f, slug: '__exact-object__', good: f.good, home: true }, id, m)].filter((p): p is ScenePic => !!p);
+    for (const pic of selected) {
+      const condition = pic.state === 'upgraded' ? 'Upgraded' : pic.state === 'rundown' ? 'Run-down' : pic.state;
+      views.push({ id: f.good === undefined ? `${id}:${pic.state}` : id, label: `${id === 'outside' ? 'Outside' : 'Inside'}${f.good === undefined && pic.state !== 'one' ? ` · ${condition}` : ''}`,
+        slug: pic.slug, state: pic.state, good: pic.state === 'upgraded', pic, tiles: f.tiles ?? [],
+        line: f.good === undefined ? 'An illustrated look at this building.' : lineOf(pic.slug, pic.state) });
+    }
+  }
+  return card(f.name, f.good === undefined ? 'Illustrated property views' : 'Set the scene', views, want);
+}
+
+/** A house/business/facility card with identity-specific pictures, or an honest pending-art view with the actual property details. */
+export function propertyScene(f: PropertySceneFacts, want?: string, m: SceneManifest = SCENE_MANIFEST): SceneCardView {
+  const views = (['outside', 'inside'] as const).map(id => {
+    const pic = propertyPicture(f, id, m), state = pic?.state ?? (f.good ? 'upgraded' : 'rundown');
+    return { id, label: id === 'outside' ? 'Outside' : 'Inside', slug: pic?.slug ?? `${f.slug}-${id}`, state, good: state === 'upgraded',
+      line: pic ? lineOf(pic.slug, state, f.lines) : 'A matching picture of this place is still being prepared.',
+      pic: pic ?? { slug: `${f.slug}-${id}`, state, file: '', w: 1024, h: 576, bytes: 0 }, tiles: f.tiles, ...(!pic ? { pendingArt: true } : {}) };
+  });
+  return { title: f.name, kicker: 'Set the scene', views, at: Math.max(0, views.findIndex(v => v.id === want)) };
 }
 
 // ---------- the town's fortunes: farms and iconic places have no state of their own; they do as well as the town does (T245 deepens this)

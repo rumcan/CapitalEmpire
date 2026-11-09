@@ -1,0 +1,29 @@
+{
+  "schema": 1,
+  "subject": "golf:course-course-map-board",
+  "version": 1,
+  "key": "normalNW",
+  "source": {
+    "file": "../../batch02/course-map-board/normal-NW.png",
+    "sha256": "ec3ef3b4469bb7f882e875b0894de282c05eb6335508f2f338067a893d501584",
+    "width": 627,
+    "height": 627
+  },
+  "cell": 0,
+  "cellRect": {
+    "left": 0,
+    "top": 0,
+    "width": 627,
+    "height": 627
+  },
+  "crop": {
+    "left": 83,
+    "top": 16,
+    "width": 419,
+    "height": 582
+  },
+  "output": "normalNW.native.png",
+  "sha256": "6bab1cced4fb4257a8d020e515e4068c1359077e43d6702a8adebf81b97b9ddb",
+  "operation": "native RGBA cell crop only; no flip/repaint/view synthesis",
+  "review": "candidate"
+}

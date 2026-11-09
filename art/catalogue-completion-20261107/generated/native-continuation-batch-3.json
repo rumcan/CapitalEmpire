@@ -1,0 +1,106 @@
+[
+  {
+    "key": "town-red-hatchback",
+    "source": "C:/Users/RAMPAGE/.codex/generated_images/01a1b1fd-39ec-7220-8f11-86e4448833ea/exec-6b7dc6cc-ab83-4359-a410-d7a64643773d.png",
+    "target": "generated/vehicles/town-red-hatchback/traffic8-v1.png",
+    "prompt": "Generate a wide4-column x2-row transparent sprite atlas containing EIGHT genuinely different directions of ONE identical empty1980s road vehicle. Reference image is MATERIAL/PAINTERLY MINIATURE STYLE ONLY, not a vehicle model to copy. Fixed orthographic camera30degrees down, turn ONLY the vehicle about vertical axis, no perspective lens, consistent wheelbase/body/paint/wheel sizes at all headings. Cell order by where the NOSE POINTS ON SCREEN: top row LOWER LEFT, DOWN, LOWER RIGHT, RIGHT; bottom row UPPER RIGHT, UP, UPPER LEFT, LEFT. Front in the first three cells, rear in bottom first three, true opposite left/right profiles at end of rows. Rear has rear glass/tailgate or boot and RED tail lenses; front has grille and headlamps; side profiles must face opposite ways. Reconstruct all faces independently, no mirrored light/shadow or same front pasted at rear. All eight pictures must be the SAME vehicle identity. Detailed illustrated hand-painted game materials, daylight from SCREEN UPPER RIGHT, shadows LOWER LEFT in all eight.1985 small-town setting, PERIOD CORRECT. No occupants, no brands/logos, no words, captions, grids, frames, road, parking bay, buildings or other cars. No plants. Fully opaque objects on genuinely transparent zero-alpha background, no haze or background wash. All eight complete vehicles centred within their own cells with generous margins, same physical scale, clean readable silhouettes.\nVehicle identity: A small1983-style red THREE-DOOR hatchback (two side doors plus steep rear hatch), black rubber bumpers/side trim, simple silver steel wheels, compact short wheelbase, small round front headlamps and a rear wiper. Different short body from any station wagon.",
+    "references": [
+      "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/cars/burgundy-wagon/burgundy-wagon__SE.png"
+    ],
+    "status": "native candidate; source-alpha/identity/direction QA pending",
+    "runtime_imported": false,
+    "sha256": "09e772f7de60d9352c404ce3c12d500a054a896a53aa1694a116a29aba11ac4f",
+    "native_bytes_preserved": true
+  },
+  {
+    "key": "town-blue-sedan",
+    "source": "C:/Users/RAMPAGE/.codex/generated_images/01a1b1fd-39ec-7220-8f11-86e4448833ea/exec-87b1828a-9f9a-4020-acc1-f16a44a6030e.png",
+    "target": "generated/vehicles/town-blue-sedan/traffic8-v1.png",
+    "prompt": "Generate a wide4-column x2-row transparent sprite atlas containing EIGHT genuinely different directions of ONE identical empty1980s road vehicle. Reference image is MATERIAL/PAINTERLY MINIATURE STYLE ONLY, not a vehicle model to copy. Fixed orthographic camera30degrees down, turn ONLY the vehicle about vertical axis, no perspective lens, consistent wheelbase/body/paint/wheel sizes at all headings. Cell order by where the NOSE POINTS ON SCREEN: top row LOWER LEFT, DOWN, LOWER RIGHT, RIGHT; bottom row UPPER RIGHT, UP, UPPER LEFT, LEFT. Front in the first three cells, rear in bottom first three, true opposite left/right profiles at end of rows. Rear has rear glass/tailgate or boot and RED tail lenses; front has grille and headlamps; side profiles must face opposite ways. Reconstruct all faces independently, no mirrored light/shadow or same front pasted at rear. All eight pictures must be the SAME vehicle identity. Detailed illustrated hand-painted game materials, daylight from SCREEN UPPER RIGHT, shadows LOWER LEFT in all eight.1985 small-town setting, PERIOD CORRECT. No occupants, no brands/logos, no words, captions, grids, frames, road, parking bay, buildings or other cars. No plants. Fully opaque objects on genuinely transparent zero-alpha background, no haze or background wash. All eight complete vehicles centred within their own cells with generous margins, same physical scale, clean readable silhouettes.\nVehicle identity: A boxy1980-style pale powder-blue FOUR-DOOR midsize sedan with a separate rectangular boot/trunk, thin chrome bumpers, rectangular headlamps, plain small wheel hubcaps and blue-grey glazing. No roof rack, no estate rear.",
+    "references": [
+      "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/cars/burgundy-wagon/burgundy-wagon__SE.png"
+    ],
+    "status": "native candidate; source-alpha/identity/direction QA pending",
+    "runtime_imported": false,
+    "sha256": "598e27cab6ac910dc8fcc7a539e9e481af2d1175daec12b115f26daf65a020de",
+    "native_bytes_preserved": true
+  },
+  {
+    "key": "town-cream-coupe",
+    "source": "C:/Users/RAMPAGE/.codex/generated_images/01a1b1fd-39ec-7220-8f11-86e4448833ea/exec-19983607-7c7b-4528-923b-1c95c0fd5938.png",
+    "target": "generated/vehicles/town-cream-coupe/traffic8-v1.png",
+    "prompt": "Generate a wide4-column x2-row transparent sprite atlas containing EIGHT genuinely different directions of ONE identical empty1980s road vehicle. Reference image is MATERIAL/PAINTERLY MINIATURE STYLE ONLY, not a vehicle model to copy. Fixed orthographic camera30degrees down, turn ONLY the vehicle about vertical axis, no perspective lens, consistent wheelbase/body/paint/wheel sizes at all headings. Cell order by where the NOSE POINTS ON SCREEN: top row LOWER LEFT, DOWN, LOWER RIGHT, RIGHT; bottom row UPPER RIGHT, UP, UPPER LEFT, LEFT. Front in the first three cells, rear in bottom first three, true opposite left/right profiles at end of rows. Rear has rear glass/tailgate or boot and RED tail lenses; front has grille and headlamps; side profiles must face opposite ways. Reconstruct all faces independently, no mirrored light/shadow or same front pasted at rear. All eight pictures must be the SAME vehicle identity. Detailed illustrated hand-painted game materials, daylight from SCREEN UPPER RIGHT, shadows LOWER LEFT in all eight.1985 small-town setting, PERIOD CORRECT. No occupants, no brands/logos, no words, captions, grids, frames, road, parking bay, buildings or other cars. No plants. Fully opaque objects on genuinely transparent zero-alpha background, no haze or background wash. All eight complete vehicles centred within their own cells with generous margins, same physical scale, clean readable silhouettes.\nVehicle identity: A long low1978-style cream TWO-DOOR coupe with brown vinyl roof, broad separate rear boot, thin chrome bumpers and plain period steel hubcaps. One long door per side, small rear quarter window. No station wagon or hatchback body.",
+    "references": [
+      "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/cars/burgundy-wagon/burgundy-wagon__SE.png"
+    ],
+    "status": "native candidate; source-alpha/identity/direction QA pending",
+    "runtime_imported": false,
+    "sha256": "d52e18524de018f629aa82aee44148b5b8bf4ae6e9f0bbf673cc39b35cca20b3",
+    "native_bytes_preserved": true
+  },
+  {
+    "key": "town-tan-pickup",
+    "source": "C:/Users/RAMPAGE/.codex/generated_images/01a1b1fd-39ec-7220-8f11-86e4448833ea/exec-b4175d2a-464a-400b-bcf7-d462172cb1b4.png",
+    "target": "generated/vehicles/town-tan-pickup/traffic8-v1.png",
+    "prompt": "Generate a wide4-column x2-row transparent sprite atlas containing EIGHT genuinely different directions of ONE identical empty1980s road vehicle. Reference image is MATERIAL/PAINTERLY MINIATURE STYLE ONLY, not a vehicle model to copy. Fixed orthographic camera30degrees down, turn ONLY the vehicle about vertical axis, no perspective lens, consistent wheelbase/body/paint/wheel sizes at all headings. Cell order by where the NOSE POINTS ON SCREEN: top row LOWER LEFT, DOWN, LOWER RIGHT, RIGHT; bottom row UPPER RIGHT, UP, UPPER LEFT, LEFT. Front in the first three cells, rear in bottom first three, true opposite left/right profiles at end of rows. Rear has rear glass/tailgate or boot and RED tail lenses; front has grille and headlamps; side profiles must face opposite ways. Reconstruct all faces independently, no mirrored light/shadow or same front pasted at rear. All eight pictures must be the SAME vehicle identity. Detailed illustrated hand-painted game materials, daylight from SCREEN UPPER RIGHT, shadows LOWER LEFT in all eight.1985 small-town setting, PERIOD CORRECT. No occupants, no brands/logos, no words, captions, grids, frames, road, parking bay, buildings or other cars. No plants. Fully opaque objects on genuinely transparent zero-alpha background, no haze or background wash. All eight complete vehicles centred within their own cells with generous margins, same physical scale, clean readable silhouettes.\nVehicle identity: A1982-style two-tone tan and dark-brown standard-cab PICKUP with one door per side, OPEN empty rectangular cargo bed, simple metal tailgate, steel wheels and rugged black tyres. No crew cab, no canopy and no modern SUV body.",
+    "references": [
+      "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/cars/burgundy-wagon/burgundy-wagon__SE.png"
+    ],
+    "status": "native candidate; source-alpha/identity/direction QA pending",
+    "runtime_imported": false,
+    "sha256": "8afa82548b08977bc397cbd87f7834e18124471dd1b9df4c80eacf1138740dd5",
+    "native_bytes_preserved": true
+  },
+  {
+    "key": "town-ivory-panel-van",
+    "source": "C:/Users/RAMPAGE/.codex/generated_images/01a1b1fd-39ec-7220-8f11-86e4448833ea/exec-e483962d-f77b-40e5-b485-f7cc49b8125e.png",
+    "target": "generated/vehicles/town-ivory-panel-van/traffic8-v1.png",
+    "prompt": "Generate a wide4-column x2-row transparent sprite atlas containing EIGHT genuinely different directions of ONE identical empty1980s road vehicle. Reference image is MATERIAL/PAINTERLY MINIATURE STYLE ONLY, not a vehicle model to copy. Fixed orthographic camera30degrees down, turn ONLY the vehicle about vertical axis, no perspective lens, consistent wheelbase/body/paint/wheel sizes at all headings. Cell order by where the NOSE POINTS ON SCREEN: top row LOWER LEFT, DOWN, LOWER RIGHT, RIGHT; bottom row UPPER RIGHT, UP, UPPER LEFT, LEFT. Front in the first three cells, rear in bottom first three, true opposite left/right profiles at end of rows. Rear has rear glass/tailgate or boot and RED tail lenses; front has grille and headlamps; side profiles must face opposite ways. Reconstruct all faces independently, no mirrored light/shadow or same front pasted at rear. All eight pictures must be the SAME vehicle identity. Detailed illustrated hand-painted game materials, daylight from SCREEN UPPER RIGHT, shadows LOWER LEFT in all eight.1985 small-town setting, PERIOD CORRECT. No occupants, no brands/logos, no words, captions, grids, frames, road, parking bay, buildings or other cars. No plants. Fully opaque objects on genuinely transparent zero-alpha background, no haze or background wash. All eight complete vehicles centred within their own cells with generous margins, same physical scale, clean readable silhouettes.\nVehicle identity: An1981-style short-wheelbase ivory commercial PANEL VAN, single front cab doors and rectangular side sliding cargo door, solid cargo side panels without rear passenger windows, split twin rear cargo doors, plain black bumpers and simple steel wheels. No lettering or roof attachments.",
+    "references": [
+      "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/cars/burgundy-wagon/burgundy-wagon__SE.png"
+    ],
+    "status": "native candidate; source-alpha/identity/direction QA pending",
+    "runtime_imported": false,
+    "sha256": "35ceeab19fb6f752cd0aa0e4b8878c2ca131adf6e5d0891119b5556319a84cbe",
+    "native_bytes_preserved": true
+  },
+  {
+    "key": "town-mustard-taxi",
+    "source": "C:/Users/RAMPAGE/.codex/generated_images/01a1b1fd-39ec-7220-8f11-86e4448833ea/exec-84cf9765-cb8a-4cef-8b6a-00a4074b6c2d.png",
+    "target": "generated/vehicles/town-mustard-taxi/traffic8-v1.png",
+    "prompt": "Generate a wide4-column x2-row transparent sprite atlas containing EIGHT genuinely different directions of ONE identical empty1980s road vehicle. Reference image is MATERIAL/PAINTERLY MINIATURE STYLE ONLY, not a vehicle model to copy. Fixed orthographic camera30degrees down, turn ONLY the vehicle about vertical axis, no perspective lens, consistent wheelbase/body/paint/wheel sizes at all headings. Cell order by where the NOSE POINTS ON SCREEN: top row LOWER LEFT, DOWN, LOWER RIGHT, RIGHT; bottom row UPPER RIGHT, UP, UPPER LEFT, LEFT. Front in the first three cells, rear in bottom first three, true opposite left/right profiles at end of rows. Rear has rear glass/tailgate or boot and RED tail lenses; front has grille and headlamps; side profiles must face opposite ways. Reconstruct all faces independently, no mirrored light/shadow or same front pasted at rear. All eight pictures must be the SAME vehicle identity. Detailed illustrated hand-painted game materials, daylight from SCREEN UPPER RIGHT, shadows LOWER LEFT in all eight.1985 small-town setting, PERIOD CORRECT. No occupants, no brands/logos, no words, captions, grids, frames, road, parking bay, buildings or other cars. No plants. Fully opaque objects on genuinely transparent zero-alpha background, no haze or background wash. All eight complete vehicles centred within their own cells with generous margins, same physical scale, clean readable silhouettes.\nVehicle identity: A1984-style large mustard-yellow FOUR-DOOR taxi sedan, squared separate trunk, black-and-yellow checker stripe along both body sides, small plain cream roof taxi box without any text, dark bumpers and simple chrome hubcaps. No station wagon body.",
+    "references": [
+      "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/cars/burgundy-wagon/burgundy-wagon__SE.png"
+    ],
+    "status": "native candidate; source-alpha/identity/direction QA pending",
+    "runtime_imported": false,
+    "sha256": "e90fedc4b666774faf82639361695ee61ee7967bbc53fb5a12e152455c09b1fe",
+    "native_bytes_preserved": true
+  },
+  {
+    "key": "golf-reel-mower",
+    "source": "C:/Users/RAMPAGE/.codex/generated_images/01a1b1fd-39ec-7220-8f11-86e4448833ea/exec-c2178429-06c7-4c62-8ee1-cb505dac28c9.png",
+    "target": "generated/vehicles/golf-reel-mower/cardinal-v1.png",
+    "prompt": "Make a2x2 sprite sheet of the EXACT same mower in the reference, Exactly the same dark-green professional reel mower as the reference: tan single seat, black steering wheel, roll hoop, rear green engine/filler/grille, large cream-rim tyres and two front cylindrical reels with rollers/linkages. Keep front attachments at FRONT only; rear grille and tail lenses at REAR only. No driver. Show four missing true SCREEN CARDINAL directions: TOP LEFT nose DOWN = front view; TOP RIGHT nose RIGHT = side profile; BOTTOM LEFT nose UP = rear view; BOTTOM RIGHT nose LEFT = opposite side profile. These are real four quarter turns, never four diagonal corners. At the front/rear the main axle is perfectly horizontal on screen. Fixed orthographic30degree-down camera. Same vehicle physical scale and detail across four complete sprites, never mirror lighting. Finely hand-painted illustrated miniature materials. Late-afternoon DAYTIME sun fixed SCREEN UPPER RIGHT, shadows LOWER LEFT. No words, labels, brands, other objects, people, grass, groundplate or background wash. True transparent zero-alpha background, fully opaque vehicle surfaces, generous cell margins. Reference1 is vehicle identity and style, change only viewing direction.",
+    "references": [
+      "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/vehicles/golf-reel-mower/normal-v1.png"
+    ],
+    "status": "native candidate; source-alpha/identity/direction QA pending",
+    "runtime_imported": false,
+    "sha256": "418ebe44a637ee2688cc48d6e67f6de880f75c50b699fecefe6234370de3a77d",
+    "native_bytes_preserved": true
+  },
+  {
+    "key": "golf-reel-mower",
+    "source": "C:/Users/RAMPAGE/.codex/generated_images/01a1b1fd-39ec-7220-8f11-86e4448833ea/exec-bbabdf41-2395-4a24-84ef-ce7ae25f7b27.png",
+    "target": "generated/vehicles/golf-reel-mower/yaw8-v1.png",
+    "prompt": "Make a2x2 sprite sheet of the EXACT same mower in the reference, Exactly the same dark-green professional reel mower as the reference: tan single seat, black steering wheel, roll hoop, rear green engine/filler/grille, large cream-rim tyres and two front cylindrical reels with rollers/linkages. Keep front attachments at FRONT only; rear grille and tail lenses at REAR only. No driver. Show four near-cardinal directions EACH genuinely turned8degrees from square-on, orthographic30degrees down: TOP LEFT almost FRONT, TOP RIGHT almost RIGHT SIDE, BOTTOM LEFT almost REAR, BOTTOM RIGHT almost LEFT SIDE.8degree yaw means a very narrow secondary side visible and a slightly slanted main base; main transverse ground edges slope0.07027 screen rise/run. Neither zero-yaw flat views nor45degree broad corners. Fixed orthographic30degree-down camera. Same vehicle physical scale and detail across four complete sprites, never mirror lighting. Finely hand-painted illustrated miniature materials. Late-afternoon DAYTIME sun fixed SCREEN UPPER RIGHT, shadows LOWER LEFT. No words, labels, brands, other objects, people, grass, groundplate or background wash. True transparent zero-alpha background, fully opaque vehicle surfaces, generous cell margins. Reference1 is vehicle identity and style, change only viewing direction.",
+    "references": [
+      "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/vehicles/golf-reel-mower/normal-v1.png"
+    ],
+    "status": "native candidate; source-alpha/identity/direction QA pending",
+    "runtime_imported": false,
+    "sha256": "bac7a4caf2154e39f8bde35af2c4d5f2cdb726c4007e821cb941d1c3699cc11d",
+    "native_bytes_preserved": true
+  }
+]

@@ -1,0 +1,59 @@
+{
+  "schema": 1,
+  "createdUtc": "2026-11-07T06:47:45.284562+00:00",
+  "exactRuntimeId": "business:golf-cart-se",
+  "source": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/theme-consistency/exports/cars/business-golf-cart-se.native.png",
+  "sourceSha256": "51d80caf4ef730590c576afcb026af6790ebb6f4ea294f83c87aaa38f84d05dc",
+  "output": "identity-references/business-golf-cart-se-fe59e78e/source.png",
+  "outputSha256": "51d80caf4ef730590c576afcb026af6790ebb6f4ea294f83c87aaa38f84d05dc",
+  "width": 382,
+  "height": 384,
+  "sourceCell": {
+    "kind": "already isolated native PNG; whole file",
+    "rectXYWH": [
+      0,
+      0,
+      382,
+      384
+    ]
+  },
+  "operation": "byte-for-byte PNG copy only; no resize, crop, recolour, key, repaint, registration or source mutation",
+  "selection": "retained exact-ID native original / atlas export",
+  "registeredCornerDirection": null,
+  "sourceEvidence": null,
+  "sourceReview": null,
+  "sourceRegistration": null,
+  "originalInventorySource": {
+    "library": "src/game/business-library.ts",
+    "librarySha256": "fb72152bd5621325034acefc23e10101ad36dbd73548a06ab87285cf73652a4c",
+    "atlas": "src/assets/businesses/integrated/business-0-0.webp",
+    "atlasSha256": "7345eb8787ac146688e3a811ad9005a42c01ce29f619897f360dc82938fbf093",
+    "runtimePage": 18,
+    "localPage": 0,
+    "uv": [
+      0.5927734375,
+      0.52880859375,
+      0.779296875,
+      0.71630859375
+    ],
+    "crop": {
+      "left": 1214,
+      "top": 1083,
+      "width": 382,
+      "height": 384
+    },
+    "native": "art/theme-consistency/exports/cars/business-golf-cart-se.native.png",
+    "nativeSha256": "51d80caf4ef730590c576afcb026af6790ebb6f4ea294f83c87aaa38f84d05dc"
+  },
+  "originalBusinessSourceCell": {
+    "id": "golf-cart-se",
+    "sourceSheet": "sliced/builtin/golf-equipment.png",
+    "sourceCrop": [
+      694,
+      115,
+      522,
+      525
+    ]
+  },
+  "nativeReferenceApprovalClaimed": false
+}

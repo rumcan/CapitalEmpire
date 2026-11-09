@@ -1,0 +1,23 @@
+{
+  "schema": 1,
+  "createdUtc": "2026-11-07T06:47:45.284562+00:00",
+  "exactRuntimeId": "world:arcade",
+  "source": "E:/Repos/CapitalEmpire/.claude/worktrees/art-repaint-20261106/art/theme-consistency/native-resume-20261106/world~arcade/NE.native.png",
+  "sourceSha256": "2026f277dbfae8e6a81ed519e29951c85914baecb3a11ce41d040568e421929b",
+  "output": "unregistered-daytime-alternates/world-arcade-f5b7f5eb/NE.png",
+  "outputSha256": "2026f277dbfae8e6a81ed519e29951c85914baecb3a11ce41d040568e421929b",
+  "width": 572,
+  "height": 451,
+  "sourceCell": {
+    "kind": "already isolated native PNG; whole file",
+    "rectXYWH": [
+      0,
+      0,
+      572,
+      451
+    ]
+  },
+  "operation": "byte-for-byte PNG copy only; no resize, crop, recolour, key, repaint, registration or source mutation",
+  "referenceRole": "unregistered daytime candidate for this base ID only; never an automatic reference for a variation ID",
+  "runtimeIdentityMatchApproved": false
+}

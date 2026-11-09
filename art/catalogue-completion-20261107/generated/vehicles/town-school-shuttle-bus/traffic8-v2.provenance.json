@@ -1,0 +1,13 @@
+{
+  "key": "town-school-shuttle-bus",
+  "source": "C:/Users/RAMPAGE/.codex/generated_images/01a1b1fd-39ec-7220-8f11-86e4448833ea/exec-5e9d20db-e754-4724-ac15-63d9121e71ac.png",
+  "target": "generated/vehicles/town-school-shuttle-bus/traffic8-v2.png",
+  "prompt": "Repair this eight-direction schoolbus sheet. Top-left cell currently duplicates top-third's noseLOWERRIGHT. TOP-LEFT MUST show the same bus with nose SCREEN LOWER LEFT, the opposite front corner. KeeptopthirdnoseLOWERRIGHT. Bothtruefrontcornerandbothtruerearcornerheadings needed. Physical sideidentity: exactlyONE folding passenger entrance at frontRIGHT side of bus; STOPpaddle belongs LEFTside only, never on same side as passengerdoor. Correct this on all visible sides: noseRIGHT sidecelltopfour shows driverLEFTside/STOPpaddle and NO passengerdoor; noseLEFT sidecellbottomfour shows passengerRIGHTside/frontdoor and NO STOPpaddle. Same yellowbody, bonnet, wheelbase/windowcount/roofhatches. BottomrowfirstnoseUPPERRIGHT, bottomsecondnoseUPflatREAR, bottomthirdnoseUPPERLEFT, bottomfourLEFT; topsecondDOWNflatFRONT. Camera30degreesdownfromabove consistently, includingbothhorizontalnoseviews: showroofaswideplane, never level-eye sideelevation. Nopeople, nolightsonglow, nogroundplateorhaze. Detailedpaintedminiature daylightfromUPPERRIGHT/shadowsLOWERLEFT. Genuinealphatransparentbackground, generouscellmargins.",
+  "references": [
+    "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/vehicles/town-school-shuttle-bus/traffic8-v1.png"
+  ],
+  "status": "native correction candidate; alpha/direction/identity QA pending",
+  "runtime_imported": false,
+  "sha256": "bbb25651d1225cd3aa89ac829febc75a550120c679ddb4943be5bea9c6fdf032",
+  "native_bytes_preserved": true
+}

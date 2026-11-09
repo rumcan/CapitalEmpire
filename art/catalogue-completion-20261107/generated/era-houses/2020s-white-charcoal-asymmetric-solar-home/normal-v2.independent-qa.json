@@ -1,0 +1,111 @@
+{
+  "schema": 1,
+  "as_of_utc": "2026-11-07T10:55:47.829167+00:00",
+  "review_result": "PASS-native-glass-patio-opening-correction;camera-unverified",
+  "source": {
+    "path": "generated/era-houses/2020s-white-charcoal-asymmetric-solar-home/normal-v2.png",
+    "sha256": "4fc0f3fcd8540990e5a85e54bdadf35a4520dc5eb5fd5751d9944197d8c6cc6b",
+    "bytes": 742405
+  },
+  "source_original_hash_matches_parent_batch": true,
+  "dimensions": [
+    1254,
+    1254
+  ],
+  "mode": "RGBA",
+  "is_opaque_scene": false,
+  "zero_alpha_fraction": 0.8207382309623559,
+  "outer_border_alpha_p50p95max": [
+    0.0,
+    0.0,
+    1.0
+  ],
+  "empty_center_gutter_alpha_p50p95max": [
+    0.0,
+    0.0,
+    1.0
+  ],
+  "cells": [
+    {
+      "cell": 0,
+      "reference_rect_ltrb": [
+        0,
+        0,
+        627,
+        627
+      ],
+      "rgba_rectangle_sha256": "0ec8173ab621d0ed525e6e8e0ee6d72f0a83e130dd1c1859a76ff4cb5ee209fc",
+      "core_boundary_pixels": 0,
+      "minimum_core_margin_px": 136
+    },
+    {
+      "cell": 1,
+      "reference_rect_ltrb": [
+        627,
+        0,
+        1254,
+        627
+      ],
+      "rgba_rectangle_sha256": "60a54c7cfb28b70b761d25a795f48ac376e98976254e205bb45e177b37ab171a",
+      "core_boundary_pixels": 0,
+      "minimum_core_margin_px": 136
+    },
+    {
+      "cell": 2,
+      "reference_rect_ltrb": [
+        0,
+        627,
+        627,
+        1254
+      ],
+      "rgba_rectangle_sha256": "1820ec6c5b0cb1678aa7493ef3223297d367c377dfd6ecb5ff4b7e51441225b1",
+      "core_boundary_pixels": 0,
+      "minimum_core_margin_px": 136
+    },
+    {
+      "cell": 3,
+      "reference_rect_ltrb": [
+        627,
+        627,
+        1254,
+        1254
+      ],
+      "rgba_rectangle_sha256": "24d864ecce81bdfb2845ab779e12500d1aef4363cd8c280139dd9fbe61b4c2fa",
+      "core_boundary_pixels": 0,
+      "minimum_core_margin_px": 136
+    }
+  ],
+  "all_pixels_partitioned": true,
+  "reference_cut_columns_by_row": [
+    [
+      0,
+      627,
+      1254
+    ],
+    [
+      0,
+      627,
+      1254
+    ]
+  ],
+  "notes": [
+    "TR andBL rear opaque shutter replaced by visible sliding glass patio doors; front entrance/asymmetric roofs/sixsolar panels and other openings retained.",
+    "Native alpha clear, no core clipping; no exact-camera certificate inferred."
+  ],
+  "source_crops_performed": false,
+  "no_vehicle_or_house_sprite_crops": true,
+  "no_original_pixels_modified": true,
+  "owner_approved": false,
+  "runtime_ready": false,
+  "exact8_certified": false,
+  "exact_prompt": {
+    "path": "generated/era-houses/2020s-white-charcoal-asymmetric-solar-home/normal-v2.prompt.txt",
+    "sha256": "a96b2d3457b6a38d74fa3b4a07df516ad6b75078a3dc7dbdeab0c076efe371eb",
+    "bytes": 817
+  },
+  "parent_provenance": {
+    "path": "generated/era-houses/2020s-white-charcoal-asymmetric-solar-home/normal-v2.provenance.json",
+    "sha256": "e1bdf7b683bbc6d66df1fdff7e2f1bc3cff59495d14466a1bbb13a1eb85cf58a",
+    "bytes": 1722
+  }
+}

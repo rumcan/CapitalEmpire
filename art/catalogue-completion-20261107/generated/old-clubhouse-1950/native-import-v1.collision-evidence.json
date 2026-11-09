@@ -1,0 +1,426 @@
+{
+  "schema": 1,
+  "model": "guides/old-clubhouse-1950-world-model-v2.json",
+  "modelSha256": "63f6e566ea3782720ed9514bd6adca195e499d2aace3961cc56990309ffbd07a",
+  "method": "Union exact named component face vertices in guide XY; runtime local F(x,y)=(x,-y); rotate each component with actual heading and store conservative per-component axis-aligned boxes in metres. No alpha bounding-box inference. Body origin remains anchor even though furniture extends farther.",
+  "precision": "Guide physical dimensions authoritative for collision; native painterly foundation alignment has 0.337–4.564px RMS residual, E depth less constrained. These are conservative guide-model collision bounds, not independently measured exact native mesh.",
+  "excluded": "Roof/eaves/chimney/awning/glazing do not occupy ground footprint; furniture tops and legs share their component footprint.",
+  "components": [
+    {
+      "name": "body",
+      "sourceFaceNames": [
+        "enclosed-body/bottom",
+        "enclosed-body/front",
+        "enclosed-body/right",
+        "enclosed-body/back",
+        "enclosed-body/left",
+        "enclosed-body/top"
+      ],
+      "guideBoundsMetres": {
+        "min": [
+          -6,
+          -4,
+          0
+        ],
+        "max": [
+          6,
+          4,
+          3
+        ]
+      },
+      "runtimeLocalBox": {
+        "hx": 6,
+        "hy": 4,
+        "dx": 0,
+        "dy": 0
+      }
+    },
+    {
+      "name": "bench",
+      "sourceFaceNames": [
+        "front-bench-seat/bottom",
+        "front-bench-seat/front",
+        "front-bench-seat/right",
+        "front-bench-seat/back",
+        "front-bench-seat/left",
+        "front-bench-seat/top",
+        "front-bench-back/bottom",
+        "front-bench-back/front",
+        "front-bench-back/right",
+        "front-bench-back/back",
+        "front-bench-back/left",
+        "front-bench-back/top",
+        "bench-leg--4.4/bottom",
+        "bench-leg--4.4/front",
+        "bench-leg--4.4/right",
+        "bench-leg--4.4/back",
+        "bench-leg--4.4/left",
+        "bench-leg--4.4/top",
+        "bench-leg--1.6/bottom",
+        "bench-leg--1.6/front",
+        "bench-leg--1.6/right",
+        "bench-leg--1.6/back",
+        "bench-leg--1.6/left",
+        "bench-leg--1.6/top"
+      ],
+      "guideBoundsMetres": {
+        "min": [
+          -4.75,
+          -4.995,
+          0
+        ],
+        "max": [
+          -1.25,
+          -4.38,
+          1.135
+        ]
+      },
+      "runtimeLocalBox": {
+        "hx": 1.75,
+        "hy": 0.3075000000000001,
+        "dx": -3,
+        "dy": 4.6875
+      }
+    },
+    {
+      "name": "steps",
+      "sourceFaceNames": [
+        "front-step-lower/bottom",
+        "front-step-lower/front",
+        "front-step-lower/right",
+        "front-step-lower/back",
+        "front-step-lower/left",
+        "front-step-lower/top",
+        "front-step-upper/bottom",
+        "front-step-upper/front",
+        "front-step-upper/right",
+        "front-step-upper/back",
+        "front-step-upper/left",
+        "front-step-upper/top"
+      ],
+      "guideBoundsMetres": {
+        "min": [
+          -0.85,
+          -5.6499999999999995,
+          0
+        ],
+        "max": [
+          1.05,
+          -4.25,
+          0.35
+        ]
+      },
+      "runtimeLocalBox": {
+        "hx": 0.95,
+        "hy": 0.6999999999999997,
+        "dx": 0.10000000000000003,
+        "dy": 4.949999999999999
+      }
+    },
+    {
+      "name": "crate",
+      "sourceFaceNames": [
+        "ball-crate/bottom",
+        "ball-crate/front",
+        "ball-crate/right",
+        "ball-crate/back",
+        "ball-crate/left",
+        "ball-crate/top",
+        "crate-open-top/bottom",
+        "crate-open-top/front",
+        "crate-open-top/right",
+        "crate-open-top/back",
+        "crate-open-top/left",
+        "crate-open-top/top",
+        "range-ball-0-0/bottom",
+        "range-ball-0-0/front",
+        "range-ball-0-0/right",
+        "range-ball-0-0/back",
+        "range-ball-0-0/left",
+        "range-ball-0-0/top",
+        "range-ball-0-1/bottom",
+        "range-ball-0-1/front",
+        "range-ball-0-1/right",
+        "range-ball-0-1/back",
+        "range-ball-0-1/left",
+        "range-ball-0-1/top",
+        "range-ball-1-0/bottom",
+        "range-ball-1-0/front",
+        "range-ball-1-0/right",
+        "range-ball-1-0/back",
+        "range-ball-1-0/left",
+        "range-ball-1-0/top",
+        "range-ball-1-1/bottom",
+        "range-ball-1-1/front",
+        "range-ball-1-1/right",
+        "range-ball-1-1/back",
+        "range-ball-1-1/left",
+        "range-ball-1-1/top",
+        "range-ball-2-0/bottom",
+        "range-ball-2-0/front",
+        "range-ball-2-0/right",
+        "range-ball-2-0/back",
+        "range-ball-2-0/left",
+        "range-ball-2-0/top",
+        "range-ball-2-1/bottom",
+        "range-ball-2-1/front",
+        "range-ball-2-1/right",
+        "range-ball-2-1/back",
+        "range-ball-2-1/left",
+        "range-ball-2-1/top"
+      ],
+      "guideBoundsMetres": {
+        "min": [
+          1.225,
+          -5.05,
+          0
+        ],
+        "max": [
+          1.875,
+          -4.47,
+          0.6725
+        ]
+      },
+      "runtimeLocalBox": {
+        "hx": 0.32499999999999996,
+        "hy": 0.29000000000000004,
+        "dx": 1.55,
+        "dy": 4.76
+      }
+    }
+  ],
+  "views": {
+    "normalSE": {
+      "headingDegrees": 270,
+      "boxes": [
+        {
+          "hx": 4,
+          "hy": 6,
+          "dx": 0,
+          "dy": 0
+        },
+        {
+          "hx": 0.3075,
+          "hy": 1.75,
+          "dx": 4.6875,
+          "dy": 3
+        },
+        {
+          "hx": 0.7,
+          "hy": 0.95,
+          "dx": 4.95,
+          "dy": -0.1
+        },
+        {
+          "hx": 0.29,
+          "hy": 0.325,
+          "dx": 4.76,
+          "dy": -1.55
+        }
+      ]
+    },
+    "normalSW": {
+      "headingDegrees": 180,
+      "boxes": [
+        {
+          "hx": 6,
+          "hy": 4,
+          "dx": 0,
+          "dy": 0
+        },
+        {
+          "hx": 1.75,
+          "hy": 0.3075,
+          "dx": 3,
+          "dy": -4.6875
+        },
+        {
+          "hx": 0.95,
+          "hy": 0.7,
+          "dx": -0.1,
+          "dy": -4.95
+        },
+        {
+          "hx": 0.325,
+          "hy": 0.29,
+          "dx": -1.55,
+          "dy": -4.76
+        }
+      ]
+    },
+    "normalNW": {
+      "headingDegrees": 90,
+      "boxes": [
+        {
+          "hx": 4,
+          "hy": 6,
+          "dx": 0,
+          "dy": 0
+        },
+        {
+          "hx": 0.3075,
+          "hy": 1.75,
+          "dx": -4.6875,
+          "dy": -3
+        },
+        {
+          "hx": 0.7,
+          "hy": 0.95,
+          "dx": -4.95,
+          "dy": 0.1
+        },
+        {
+          "hx": 0.29,
+          "hy": 0.325,
+          "dx": -4.76,
+          "dy": 1.55
+        }
+      ]
+    },
+    "normalNE": {
+      "headingDegrees": 0,
+      "boxes": [
+        {
+          "hx": 6,
+          "hy": 4,
+          "dx": 0,
+          "dy": 0
+        },
+        {
+          "hx": 1.75,
+          "hy": 0.3075,
+          "dx": -3,
+          "dy": 4.6875
+        },
+        {
+          "hx": 0.95,
+          "hy": 0.7,
+          "dx": 0.1,
+          "dy": 4.95
+        },
+        {
+          "hx": 0.325,
+          "hy": 0.29,
+          "dx": 1.55,
+          "dy": 4.76
+        }
+      ]
+    },
+    "yaw8N": {
+      "headingDegrees": 323,
+      "boxes": [
+        {
+          "hx": 7.199073152892,
+          "hy": 6.805432179101,
+          "dx": 0,
+          "dy": 0
+        },
+        {
+          "hx": 1.582670262202,
+          "hy": 1.298756709856,
+          "dx": 0.425101390883,
+          "dy": 5.549049022803
+        },
+        {
+          "hx": 1.179974250751,
+          "hy": 1.130769129028,
+          "dx": 3.058847915607,
+          "dy": 3.893064272419
+        },
+        {
+          "hx": 0.434082897479,
+          "hy": 0.427194180438,
+          "dx": 4.102524550777,
+          "dy": 2.868691741939
+        }
+      ]
+    },
+    "yaw8E": {
+      "headingDegrees": 233,
+      "boxes": [
+        {
+          "hx": 6.805432179101,
+          "hy": 7.199073152892,
+          "dx": 0,
+          "dy": 0
+        },
+        {
+          "hx": 1.298756709856,
+          "hy": 1.582670262202,
+          "dx": 5.549049022803,
+          "dy": -0.425101390883
+        },
+        {
+          "hx": 1.130769129028,
+          "hy": 1.179974250751,
+          "dx": 3.893064272419,
+          "dy": -3.058847915607
+        },
+        {
+          "hx": 0.427194180438,
+          "hy": 0.434082897479,
+          "dx": 2.868691741939,
+          "dy": -4.102524550777
+        }
+      ]
+    },
+    "yaw8S": {
+      "headingDegrees": 143,
+      "boxes": [
+        {
+          "hx": 7.199073152892,
+          "hy": 6.805432179101,
+          "dx": 0,
+          "dy": 0
+        },
+        {
+          "hx": 1.582670262202,
+          "hy": 1.298756709856,
+          "dx": -0.425101390883,
+          "dy": -5.549049022803
+        },
+        {
+          "hx": 1.179974250751,
+          "hy": 1.130769129028,
+          "dx": -3.058847915607,
+          "dy": -3.893064272419
+        },
+        {
+          "hx": 0.434082897479,
+          "hy": 0.427194180438,
+          "dx": -4.102524550777,
+          "dy": -2.868691741939
+        }
+      ]
+    },
+    "yaw8W": {
+      "headingDegrees": 53,
+      "boxes": [
+        {
+          "hx": 6.805432179101,
+          "hy": 7.199073152892,
+          "dx": 0,
+          "dy": 0
+        },
+        {
+          "hx": 1.298756709856,
+          "hy": 1.582670262202,
+          "dx": -5.549049022803,
+          "dy": 0.425101390883
+        },
+        {
+          "hx": 1.130769129028,
+          "hy": 1.179974250751,
+          "dx": -3.893064272419,
+          "dy": 3.058847915607
+        },
+        {
+          "hx": 0.427194180438,
+          "hy": 0.434082897479,
+          "dx": -2.868691741939,
+          "dy": 4.102524550777
+        }
+      ]
+    }
+  }
+}

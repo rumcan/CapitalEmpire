@@ -1,0 +1,22 @@
+{
+  "key": "newprop:rope-barrier-corner",
+  "slug": "rope-barrier-corner",
+  "family": "yaw8",
+  "condition": "base",
+  "version": 1,
+  "target": "generated/golf-source-batch-02/native/rope-barrier-corner/yaw8-v1.png",
+  "refs": [
+    "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-02\\fixed-world-guides-v1\\rope-barrier-corner\\guides\\yaw8-world-v1.png",
+    "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/golf-source-batch-02/native/rope-barrier-corner/normal-v2.png"
+  ],
+  "prompt": "Paint FOUR exact near-cardinal views of ONE SAME golfprop from fixed-world REFERENCE1 as finished native painterlygameart matchingidentity/materialsofREFERENCE2. Guidecontrols camera andphysicalsidepositions; reference2 is finelypainted material/assemblyidentityONLY, doNOTrepeatitscornercameras. Fixedrequirements: EXACTLY5posts and4rope spans, rigid90degreeL in ground plane. Corner shared post0=(-1.5,-1.5); armXposts1/2=(0,-1.5)/(1.5,-1.5); armYposts3/4=(-1.5,0)/(-1.5,1.5). Do not flatten, mirror or duplicate corners.. Allattachments remainonSAMEphysicalside andsameoperatingstate throughthe4quarterturns. Frontlabels/maps/coinslots/taps neverappearonrearbacks. Rearbraces/basket/towel/crank mustobeyguideocclusion. Preserveallidentity details, including archedcaps andgoldfinials whenpresent. FourviewcellsN E / S W asguide, orthographic30degreesDOWN andnominal8degreesoffcardinal; broadmainface/narrowside, not45corner. Matchtheexistingdetailed hand-paintedminiaturegolf-townstyle: wood/enamel/rope/brass/galvanizedsteel/cloth/dimpledgolfballs, notflatlowpolyguidefacets. Late-afternoonDAYTIME sunfixedSCREENUPPERRIGHT/shadowsLOWERLEFT,lampsOFF. Equalphysicalscale, completeisolatedopaqueobjects/generousZEROALPHAtransparentmargins/gutters; no atmosphericgreyhalo, groundtile, grass/plants/people/textlabels/UI/grid. Actualfunctionalrampretained. Symmetricobjectsmayhavenaturallysimilarsilhouettes; donotaddpartstofakeuniqueness.",
+  "source": "C:/Users/RAMPAGE/.codex/generated_images/01a1b1fd-39ec-7220-8f11-86e4448833ea/exec-f85eb1f8-adb7-4e80-8b1a-99a446921b8d.png",
+  "references": [
+    "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-02\\fixed-world-guides-v1\\rope-barrier-corner\\guides\\yaw8-world-v1.png",
+    "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/golf-source-batch-02/native/rope-barrier-corner/normal-v2.png"
+  ],
+  "status": "native-source-candidate-pending-visual-review",
+  "runtime_imported": false,
+  "sha256": "071878c1d0f2214d891b51ba03fda869ad12acbca11b5a310624ec7eb5351d28",
+  "native_bytes_preserved": true
+}

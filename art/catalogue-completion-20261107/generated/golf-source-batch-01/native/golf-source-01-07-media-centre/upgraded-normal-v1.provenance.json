@@ -1,0 +1,45 @@
+{
+  "key": "golf-source-01-07-media-centre",
+  "family": "normal",
+  "condition": "upgraded",
+  "version": 1,
+  "target": "generated/golf-source-batch-01/native/golf-source-01-07-media-centre/upgraded-normal-v1.png",
+  "refs": [
+    "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/golf-source-batch-01/native/golf-source-01-07-media-centre/budget-normal-v1.png"
+  ],
+  "runtimeTarget": {
+    "eventTypeId": "media",
+    "eventName": "Media centre",
+    "currentSpriteSubjectId": "business:golf-clubhouse",
+    "newArtSubjectProposal": "golf:event-media-centre",
+    "newArtSubjectAlreadyRegistered": false,
+    "eventCatalogueSource": "src/game/golf/tents.ts",
+    "standInMappingSource": "src/game/golf/structure-art.ts",
+    "footprintTiles": {
+      "width": 12,
+      "depth": 8
+    },
+    "footprintMetres": {
+      "width": 24,
+      "depth": 16
+    },
+    "dimensionsMeaning": "Exact current event placement plot, not measured source sprite architecture. New design must fit plot; no runtime geometry changed.",
+    "currentSpriteBaseBoxesInTiles": [
+      {
+        "hx": 1,
+        "hy": 1,
+        "dx": 0,
+        "dy": 0
+      }
+    ]
+  },
+  "prompt": "Create the UPGRADED condition of this exact golf event facility in reference1. This is a restrained practical renovation of the same physical assembly; preserve the four exact cameras and all doors, roof shapes, post/stair/vent positions, and functional layout. Upgrade condition: Clean maintained1980sprefab press centre with green trim, neat windows, proper entrance canopy and antennas. No futuristic glazed office or luxury mansion.. Functional identity to retain: A24x16m low single-storey modular press centre: plain joined prefab units under one shallow gabled/corrugated roof, double central front entrance, three window groups on each side of the entrance, rear service door, two rear vents and two small roof antenna masts. Practical press-work building, not grand clubhouse or tiny microphone shack. No media staff/vehicles baked in.. Match the reference's detailed painterly miniature materials and proportions; fresh clean finishes, professionally maintained structure, sound canvas, no rust or ragged holes. Four actual corners in the same cells, same physical size and even scale, orthographic 30 degrees down. Late-afternoon DAYTIME sun fixed SCREEN UPPER RIGHT and shadows LOWER LEFT, windows and lamps OFF. Complete separate sprites with wide zero-alpha transparent margins and gutters. No scene, groundplate, plants, people, UI, captions or decorative extra objects. ",
+  "source": "C:/Users/RAMPAGE/.codex/generated_images/01a1b1fd-39ec-7220-8f11-86e4448833ea/exec-fe3496f8-7707-41c4-8a51-2a5982a90758.png",
+  "references": [
+    "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/golf-source-batch-01/native/golf-source-01-07-media-centre/budget-normal-v1.png"
+  ],
+  "status": "native-source-candidate-pending-visual-review",
+  "runtime_imported": false,
+  "sha256": "82adee171a484e448fd1bf160824324992e584b1bd09f7d0c625f4e80907cc81",
+  "native_bytes_preserved": true
+}

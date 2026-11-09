@@ -1,0 +1,71 @@
+{
+  "schema": 1,
+  "createdUtc": "2026-11-07T06:47:45.284562+00:00",
+  "exactRuntimeId": "world:drivein_marquee",
+  "source": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/building-views/world-drivein_marquee/NE.png",
+  "sourceSha256": "f98c4cde9bdcb8b99b95aa2a11cb487bfdc1e53c7fde39fb546fc06c28657bd9",
+  "output": "identity-references/world-drivein-marquee-2c35be93/source.png",
+  "outputSha256": "f98c4cde9bdcb8b99b95aa2a11cb487bfdc1e53c7fde39fb546fc06c28657bd9",
+  "width": 349,
+  "height": 544,
+  "sourceCell": {
+    "kind": "already isolated native PNG; whole file",
+    "rectXYWH": [
+      0,
+      0,
+      349,
+      544
+    ]
+  },
+  "operation": "byte-for-byte PNG copy only; no resize, crop, recolour, key, repaint, registration or source mutation",
+  "selection": "registered corner NE native PNG for this exact subject",
+  "registeredCornerDirection": "NE",
+  "sourceEvidence": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\building-views\\world-drivein_marquee\\provenance.json",
+  "sourceReview": {
+    "integrationStatus": "ready",
+    "integrationReason": "Source review passed actual-alpha blue composite, rigid visible-facade cycle, coherent Maple-master materials/detail/upper-right dusk light and clear equal-cell packing. Game scale/street integration remains to be reviewed.",
+    "integrationReview": {
+      "alpha": "passed",
+      "geometry": "passed",
+      "themeAssessment": "Warm bulb lettering and aged dark metal supports fit master lamps/metalwork; lettering belongs to the physical sign, not a rotation caption.",
+      "terrainOrCaptionsVisible": false,
+      "gameScaleRegistered": false,
+      "reviewContact": "output/building-priority/mixed-standalone-review-1.png",
+      "correctionBrief": null
+    }
+  },
+  "sourceRegistration": {
+    "id": "world:drivein_marquee",
+    "version": "world-drivein_marquee-4views-v1",
+    "files": {
+      "NE": "f98c4cde9bdcb8b99b95aa2a11cb487bfdc1e53c7fde39fb546fc06c28657bd9",
+      "SE": "0798d075dd5c4b13c341f9d2fe10aa753f047b85ee7e70c82f642b4ec2d889b2",
+      "SW": "95e81f8ce35aef0d34956cd082d5048262c20ea64cf2bde3f818091898477438",
+      "NW": "92d84623a35334b923240b0d315fe704123a92870817ef1307e1442a12f5aa99"
+    }
+  },
+  "originalInventorySource": {
+    "library": "src/game/library.ts",
+    "librarySha256": "91b5190292c1005ac7b936f08e5e1ebf3be43c3aae99f92ea510775da83d9726",
+    "atlas": "src/assets/atlas/sprites-11-0.webp",
+    "atlasSha256": "a8946da0d9c9231cd8576b9ebf3662b2c449685064dd3d9af3cf40715c50f4a6",
+    "runtimePage": 11,
+    "localPage": 11,
+    "uv": [
+      0.875,
+      0.007813,
+      0.955078,
+      0.145508
+    ],
+    "crop": {
+      "left": 1792,
+      "top": 16,
+      "width": 164,
+      "height": 282
+    },
+    "native": "art/theme-consistency/exports/buildings/world-drivein_marquee.native.png",
+    "nativeSha256": "e4246384478d6053469bae6c0c95e304db0b1ae3484067fb574b80f9c21b748a"
+  },
+  "originalBusinessSourceCell": null,
+  "nativeReferenceApprovalClaimed": false
+}

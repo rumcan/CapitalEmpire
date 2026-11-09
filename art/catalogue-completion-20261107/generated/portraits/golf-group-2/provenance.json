@@ -1,0 +1,285 @@
+{
+  "generator": "native imagegen",
+  "imported_utc": "2026-11-07T06:08:49.621358+00:00",
+  "full_original_source": {
+    "path": "C:\\Users\\RAMPAGE\\.codex\\generated_images\\01a1b1fd-39ec-7220-8f11-86e4448833ea\\exec-87a20deb-e5c0-49d0-86d1-957a7d4b650d.png",
+    "sha256": "cfd11e1e160eaf56448becefe104b85c68f7c11e2664432296193453d4960e7a",
+    "bytes": 3518465
+  },
+  "archived_full_sheet": {
+    "path": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\portraits\\golf-group-2\\source.png",
+    "sha256": "cfd11e1e160eaf56448becefe104b85c68f7c11e2664432296193453d4960e7a",
+    "bytes": 3518465
+  },
+  "exact_prompt": {
+    "path": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\portraits\\golf-group-2\\prompt.txt",
+    "sha256": "ce89fc4f12455688b389cf1e2493f0884f4b7d12a7ab939cee3ddc3aef7f60ac",
+    "bytes": 1578
+  },
+  "actual_reference_files": [],
+  "actual_references_complete": false,
+  "references_note": "Omitted reference paths are unknown, never inferred from expected identity files.",
+  "dimensions": [
+    1774,
+    887
+  ],
+  "mode": "RGB",
+  "split_x": 887,
+  "split_y": 443,
+  "split_rule": "explicit reviewed coordinate if provided, otherwise floor half; right/bottom preserve remainder",
+  "central_RGB_transition_measurements": {
+    "x": [
+      {
+        "split_before_coordinate": 883,
+        "mean_absolute_RGB_difference": 8.755355129650509
+      },
+      {
+        "split_before_coordinate": 884,
+        "mean_absolute_RGB_difference": 9.798196166854567
+      },
+      {
+        "split_before_coordinate": 885,
+        "mean_absolute_RGB_difference": 8.876362269823375
+      },
+      {
+        "split_before_coordinate": 886,
+        "mean_absolute_RGB_difference": 11.93836903419767
+      },
+      {
+        "split_before_coordinate": 887,
+        "mean_absolute_RGB_difference": 51.87485907553551
+      },
+      {
+        "split_before_coordinate": 888,
+        "mean_absolute_RGB_difference": 13.765125892521608
+      },
+      {
+        "split_before_coordinate": 889,
+        "mean_absolute_RGB_difference": 11.93010146561443
+      },
+      {
+        "split_before_coordinate": 890,
+        "mean_absolute_RGB_difference": 12.503194287861705
+      },
+      {
+        "split_before_coordinate": 891,
+        "mean_absolute_RGB_difference": 9.951146185644495
+      }
+    ],
+    "y": [
+      {
+        "split_before_coordinate": 439,
+        "mean_absolute_RGB_difference": 10.332581736189402
+      },
+      {
+        "split_before_coordinate": 440,
+        "mean_absolute_RGB_difference": 11.33521232619316
+      },
+      {
+        "split_before_coordinate": 441,
+        "mean_absolute_RGB_difference": 10.00281848928974
+      },
+      {
+        "split_before_coordinate": 442,
+        "mean_absolute_RGB_difference": 11.451146185644495
+      },
+      {
+        "split_before_coordinate": 443,
+        "mean_absolute_RGB_difference": 48.13754227733934
+      },
+      {
+        "split_before_coordinate": 444,
+        "mean_absolute_RGB_difference": 41.94438181134912
+      },
+      {
+        "split_before_coordinate": 445,
+        "mean_absolute_RGB_difference": 12.974633596392332
+      },
+      {
+        "split_before_coordinate": 446,
+        "mean_absolute_RGB_difference": 8.582675685832394
+      },
+      {
+        "split_before_coordinate": 447,
+        "mean_absolute_RGB_difference": 7.920142803457346
+      }
+    ]
+  },
+  "cell_order": [
+    [
+      "golfer:golf_pro_w2",
+      "golfer:golf_am_m1"
+    ],
+    [
+      "golfer:golf_am_w1",
+      "golfer:golf_am_m2"
+    ]
+  ],
+  "exact_reconstruction_verified": true,
+  "records": [
+    {
+      "look_id": "golfer:golf_pro_w2",
+      "cell_index": 0,
+      "cell_position": "top-left",
+      "source_crop_box": [
+        0,
+        0,
+        887,
+        443
+      ],
+      "dimensions": [
+        887,
+        443
+      ],
+      "mode": "RGB",
+      "source_file": {
+        "path": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\portraits\\golf-group-2\\golfer-golf-pro-w2.native.png",
+        "sha256": "5fac9366100b038d43372e1dfe6b7429b0b6c0d1bc3d3704666fe13377edd439",
+        "bytes": 814402
+      },
+      "pixel_sha256": "87c1948910b6d69fbb83bd143bb154216380e0c419615f1893e5a9c3141c2734",
+      "operation": "exact native rectangle; no resize/repaint/alpha reconstruction",
+      "parent_reviewed": true,
+      "owner_approved": false,
+      "runtime_ready": true,
+      "runtime_integrated": true,
+      "manifest_record": {
+        "lookId": "golfer:golf_pro_w2",
+        "file": "golf-pro-w2.png",
+        "w": 887,
+        "h": 443,
+        "bytes": 814402,
+        "state": "one"
+      },
+      "runtime_file": {
+        "path": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\src\\assets\\portraits\\golf-pro-w2.png",
+        "sha256": "5fac9366100b038d43372e1dfe6b7429b0b6c0d1bc3d3704666fe13377edd439",
+        "bytes": 814402
+      }
+    },
+    {
+      "look_id": "golfer:golf_am_m1",
+      "cell_index": 1,
+      "cell_position": "top-right",
+      "source_crop_box": [
+        887,
+        0,
+        1774,
+        443
+      ],
+      "dimensions": [
+        887,
+        443
+      ],
+      "mode": "RGB",
+      "source_file": {
+        "path": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\portraits\\golf-group-2\\golfer-golf-am-m1.native.png",
+        "sha256": "f7995c87ae726e20cfae12d89e8d1d1e500117f61dad986ca8b9fdb192d1e325",
+        "bytes": 817473
+      },
+      "pixel_sha256": "8539bb6dfdea7e68b39eeb77ccfbd31a7f020e1ce6c99aae962d0693196d086a",
+      "operation": "exact native rectangle; no resize/repaint/alpha reconstruction",
+      "parent_reviewed": true,
+      "owner_approved": false,
+      "runtime_ready": true,
+      "runtime_integrated": true,
+      "manifest_record": {
+        "lookId": "golfer:golf_am_m1",
+        "file": "golf-am-m1.png",
+        "w": 887,
+        "h": 443,
+        "bytes": 817473,
+        "state": "one"
+      },
+      "runtime_file": {
+        "path": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\src\\assets\\portraits\\golf-am-m1.png",
+        "sha256": "f7995c87ae726e20cfae12d89e8d1d1e500117f61dad986ca8b9fdb192d1e325",
+        "bytes": 817473
+      }
+    },
+    {
+      "look_id": "golfer:golf_am_w1",
+      "cell_index": 2,
+      "cell_position": "bottom-left",
+      "source_crop_box": [
+        0,
+        443,
+        887,
+        887
+      ],
+      "dimensions": [
+        887,
+        444
+      ],
+      "mode": "RGB",
+      "source_file": {
+        "path": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\portraits\\golf-group-2\\golfer-golf-am-w1.native.png",
+        "sha256": "8d527fef91bf6e831998aca90ce323f5e0a2007872b38eff26c091c142829fc5",
+        "bytes": 811642
+      },
+      "pixel_sha256": "f81dc60ac1e851e73e61c40cc02e57c79909389add1a2368828ed0984c48dd60",
+      "operation": "exact native rectangle; no resize/repaint/alpha reconstruction",
+      "parent_reviewed": true,
+      "owner_approved": false,
+      "runtime_ready": true,
+      "runtime_integrated": true,
+      "manifest_record": {
+        "lookId": "golfer:golf_am_w1",
+        "file": "golf-am-w1.png",
+        "w": 887,
+        "h": 444,
+        "bytes": 811642,
+        "state": "one"
+      },
+      "runtime_file": {
+        "path": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\src\\assets\\portraits\\golf-am-w1.png",
+        "sha256": "8d527fef91bf6e831998aca90ce323f5e0a2007872b38eff26c091c142829fc5",
+        "bytes": 811642
+      }
+    },
+    {
+      "look_id": "golfer:golf_am_m2",
+      "cell_index": 3,
+      "cell_position": "bottom-right",
+      "source_crop_box": [
+        887,
+        443,
+        1774,
+        887
+      ],
+      "dimensions": [
+        887,
+        444
+      ],
+      "mode": "RGB",
+      "source_file": {
+        "path": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\portraits\\golf-group-2\\golfer-golf-am-m2.native.png",
+        "sha256": "a18d72dab70310361357e2e5fe3571590b9386cd6e23aa04ceda284d1335e139",
+        "bytes": 816377
+      },
+      "pixel_sha256": "318501b5d4cef142901a823e7e215324591cb7bbbea601f1f86b9df8d755e565",
+      "operation": "exact native rectangle; no resize/repaint/alpha reconstruction",
+      "parent_reviewed": true,
+      "owner_approved": false,
+      "runtime_ready": true,
+      "runtime_integrated": true,
+      "manifest_record": {
+        "lookId": "golfer:golf_am_m2",
+        "file": "golf-am-m2.png",
+        "w": 887,
+        "h": 444,
+        "bytes": 816377,
+        "state": "one"
+      },
+      "runtime_file": {
+        "path": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\src\\assets\\portraits\\golf-am-m2.png",
+        "sha256": "a18d72dab70310361357e2e5fe3571590b9386cd6e23aa04ceda284d1335e139",
+        "bytes": 816377
+      }
+    }
+  ],
+  "parent_reviewed": true,
+  "owner_approved": false,
+  "runtime_integrated": true,
+  "status": "imported-parent-reviewed-native-candidates"
+}

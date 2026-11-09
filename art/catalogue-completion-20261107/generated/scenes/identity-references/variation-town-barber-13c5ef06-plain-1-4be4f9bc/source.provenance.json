@@ -1,0 +1,62 @@
+{
+  "schema": 1,
+  "createdUtc": "2026-11-07T06:47:45.284562+00:00",
+  "exactRuntimeId": "variation:town-barber-13c5ef06-plain:1",
+  "source": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/building-views/variation-town-barber-13c5ef06-plain-1/NE.png",
+  "sourceSha256": "f9e48dd649b9a359a6405d8e890da0aaca6567bd245cff490db5b3d5fd6943e7",
+  "output": "identity-references/variation-town-barber-13c5ef06-plain-1-4be4f9bc/source.png",
+  "outputSha256": "f9e48dd649b9a359a6405d8e890da0aaca6567bd245cff490db5b3d5fd6943e7",
+  "width": 537,
+  "height": 483,
+  "sourceCell": {
+    "kind": "already isolated native PNG; whole file",
+    "rectXYWH": [
+      0,
+      0,
+      537,
+      483
+    ]
+  },
+  "operation": "byte-for-byte PNG copy only; no resize, crop, recolour, key, repaint, registration or source mutation",
+  "selection": "registered corner NE native PNG for this exact subject",
+  "registeredCornerDirection": "NE",
+  "sourceEvidence": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\building-views\\variation-town-barber-13c5ef06-plain-1\\provenance.json",
+  "sourceReview": {
+    "integrationStatus": "ready",
+    "integrationReason": "Parent explicitly approved proven physical-identity reuse from clean selected existing base; no generation/pixel changes."
+  },
+  "sourceRegistration": {
+    "id": "variation:town-barber-13c5ef06-plain:1",
+    "version": "variation-town-barber-13c5ef06-plain-1-4views-v1",
+    "files": {
+      "NE": "f9e48dd649b9a359a6405d8e890da0aaca6567bd245cff490db5b3d5fd6943e7",
+      "SE": "ddfdb5318b21e7e719788dd080c92de8ff135809b7c43f95854fcff2944e447a",
+      "SW": "7388ed9c3b5ac5561116b004a916cc144ea9caa897cf845cb34f2b7aa30b2e89",
+      "NW": "21e3275ab735a1dfe25c8658cca6ce0fd25c3292b8884925d102afb52700d3a9"
+    }
+  },
+  "originalInventorySource": {
+    "library": "src/game/library.ts",
+    "librarySha256": "91b5190292c1005ac7b936f08e5e1ebf3be43c3aae99f92ea510775da83d9726",
+    "atlas": "src/assets/atlas/sprites-11-0.webp",
+    "atlasSha256": "a8946da0d9c9231cd8576b9ebf3662b2c449685064dd3d9af3cf40715c50f4a6",
+    "runtimePage": 11,
+    "localPage": 11,
+    "uv": [
+      0.359375,
+      0.78125,
+      0.493652,
+      0.904785
+    ],
+    "crop": {
+      "left": 736,
+      "top": 1600,
+      "width": 275,
+      "height": 253
+    },
+    "native": "art/theme-consistency/exports/buildings/variation-town-barber-13c5ef06-plain-1.native.png",
+    "nativeSha256": "43a719415616e24122fccff2a2be5fcca7942c9625a65b5bee746a4ac18e16c0"
+  },
+  "originalBusinessSourceCell": null,
+  "nativeReferenceApprovalClaimed": false
+}

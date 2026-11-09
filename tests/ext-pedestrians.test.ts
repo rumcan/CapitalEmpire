@@ -110,7 +110,7 @@ test('determinism, and a road edit leaves the walkers on unchanged sidewalks exa
   let kept = 0; for (let i = 0; i < P.n; i++) if (wasOut[i] && P.isOut(i)) { kept++; assert.equal(P.x[i], xs[i]); }
   assert.ok(kept > 0);
   assert.equal(P.n, 500);
-  const out: { x: number; y: number; face: number; frame: number; person: number }[] = [];
+  const out: { x: number; y: number; face: number; frame: number; person: number; id: number }[] = [];
   assert.equal(P.inBox(-5, -5, 95, 95, out), P.out);
   assert.ok(ARRIVE > 0);
 });
@@ -129,7 +129,7 @@ test('the townspeople (T203): the last seven are in the walker table with all th
   // the engine's walkers draw on the whole table (engine.ts: new Pedestrians(seed, WALKER_PEOPLE.length, ...))
   const P = new Pedestrians(11, WALKER_PEOPLE.length, 1000); P.setDoors(doorsOf(3, 40)); P.setSidewalks(sidewalks(grid(3, 40))); P.populate(1000);
   for (let k = 0; k < 200; k++) P.step(0.1);
-  const out: { x: number; y: number; face: number; frame: number; person: number }[] = [], seen = new Set<number>();
+  const out: { x: number; y: number; face: number; frame: number; person: number; id: number }[] = [], seen = new Set<number>();
   for (let i = 0, n = P.inBox(-5, -5, 125, 125, out); i < n; i++) seen.add(out[i]!.person);
   assert.equal(seen.size, WALKER_PEOPLE.length, `people out walking: ${seen.size} of ${WALKER_PEOPLE.length}`);
 });

@@ -1,0 +1,38 @@
+{
+  "schema": 1,
+  "createdUtc": "2026-11-07T06:47:45.284562+00:00",
+  "exactRuntimeId": "business:golf-practice-net",
+  "source": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/src/assets/businesses/capital-v1/png/golf-practice-net.png",
+  "sourceSha256": "ac1c8162bf7b832ff78f5992d68b0d6a07753ab5ad03841f900280d8c7fdf42a",
+  "output": "identity-references/business-golf-practice-net-4b96bf34/source.png",
+  "outputSha256": "ac1c8162bf7b832ff78f5992d68b0d6a07753ab5ad03841f900280d8c7fdf42a",
+  "width": 508,
+  "height": 462,
+  "sourceCell": {
+    "kind": "already isolated native PNG; whole file",
+    "rectXYWH": [
+      0,
+      0,
+      508,
+      462
+    ]
+  },
+  "operation": "byte-for-byte PNG copy only; no resize, crop, recolour, key, repaint, registration or source mutation",
+  "selection": "retained exact-ID business source master PNG",
+  "registeredCornerDirection": null,
+  "sourceEvidence": null,
+  "sourceReview": null,
+  "sourceRegistration": null,
+  "originalInventorySource": null,
+  "originalBusinessSourceCell": {
+    "id": "golf-practice-net",
+    "sourceSheet": "sliced/builtin/golf-practice.png",
+    "sourceCrop": [
+      740,
+      682,
+      500,
+      454
+    ]
+  },
+  "nativeReferenceApprovalClaimed": false
+}

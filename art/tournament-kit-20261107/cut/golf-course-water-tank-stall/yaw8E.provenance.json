@@ -1,0 +1,29 @@
+{
+  "schema": 1,
+  "subject": "golf:course-water-tank-stall",
+  "version": 1,
+  "key": "yaw8E",
+  "source": {
+    "file": "../../batch02/water-tank-stall/yaw8-E.png",
+    "sha256": "6984c1a54c62df74b55290dc9031494e1415e0e987ff5502ef26a6fcfc5d0f24",
+    "width": 627,
+    "height": 627
+  },
+  "cell": 0,
+  "cellRect": {
+    "left": 0,
+    "top": 0,
+    "width": 627,
+    "height": 627
+  },
+  "crop": {
+    "left": 154,
+    "top": 63,
+    "width": 367,
+    "height": 502
+  },
+  "output": "yaw8E.native.png",
+  "sha256": "5568cff88cb73788c75cedeaa961e4719b3996bc2d53d9711231232ee2a1f4bd",
+  "operation": "native RGBA cell crop only; no flip/repaint/view synthesis",
+  "review": "candidate"
+}

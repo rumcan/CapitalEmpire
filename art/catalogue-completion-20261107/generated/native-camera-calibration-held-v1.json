@@ -1,0 +1,16 @@
+[
+  {
+    "key": "town-red-hatchback",
+    "source": "C:/Users/RAMPAGE/.codex/generated_images/01a1b1fd-39ec-7220-8f11-86e4448833ea/exec-e2d1b5b7-87b5-4432-a758-feab693f4f78.png",
+    "target": "generated/vehicles/town-red-hatchback/cardinal-v2.png",
+    "prompt": "Paint the FOUR technical car models in REFERENCE1 as the exact red THREE-DOOR hatchback illustrated in REFERENCE2. Reference1 is the CAMERA/TURN LAYOUT that MUST be preserved; reference2 is only painted VEHICLE IDENTITY. Keep exactly the four orientations shown in reference1: TOP-LEFT front nose DOWN, TOP-RIGHT SIDE nose exactly RIGHT, BOTTOM-LEFT rear nose UP, BOTTOM-RIGHT OPPOSITE SIDE nose exactly LEFT. The nose/vehicle length is truly horizontal in both side cells. Do not turn those cells diagonally toward camera. The camera looks30degreesDOWN in everycell, so the roof/hood is visible from above while the vehicle length stays exactly horizontal at right/left. This is orthographic3Dprojection, NOT a45degreecorner substituted for a side. Match the techmodel's groundwheelbaseline horizontal and elliptical wheel faces. Apply reference2's redpaint/goldside stripe, blackrubbertrim, THREE-DOOR body, roundfrontlamps, rearhatchwiper and wheels, without copying its old viewingangles. Four complete distinctopaque paintedminiaturecars separatedin2x2. Late-afternoonDAYTIME sunUPPERRIGHT/shadowsLOWERLEFT, no glowinglamps/groundplate/haze/text. Genuinezeroalpha transparentbackground. Thisisacamera-corrected paintedrender ofreference1, notacollage ofreference2.",
+    "references": [
+      "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/technical-vehicle-hatch/guides/cardinal-world-v1.png",
+      "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/vehicles/town-red-hatchback/traffic8-v1.png"
+    ],
+    "status": "held: right/left camera still too level despite correct four nose directions",
+    "runtime_imported": false,
+    "sha256": "a8ef62a7bb2cb8c1ed599b78740932982b8feb554e93389e503ccd0d4569ccf1",
+    "native_bytes_preserved": true
+  }
+]

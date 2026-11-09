@@ -1,0 +1,126 @@
+{
+  "schema": 1,
+  "as_of_utc": "2026-11-07T14:29:39.952183+00:00",
+  "review_result": "PASS-source-candidate-four-main-face-roles-alpha",
+  "source": {
+    "path": "generated/golf-source-batch-02/native/ball-dispenser/yaw8-v1.png",
+    "sha256": "4ba069e17fc6d053a846dc5066ee28254415fd57f6a349234b6692d47df92307",
+    "bytes": 1016128
+  },
+  "mode": "RGBA",
+  "dimensions": [
+    1254,
+    1254
+  ],
+  "source_original_hash_matches_parent": true,
+  "parent_provenance": {
+    "path": "generated/golf-source-batch-02/native/ball-dispenser/yaw8-v1.provenance.json",
+    "sha256": "9720c6e998ce065fc96eb1fa7ce6e35eb3643667ec626423d7c4e8b7bccb1ee9",
+    "bytes": 2761
+  },
+  "exact_prompt_utf8_sha256": "96bff97e316677f8b82a29bec08966a44a4b98e4e468155ceb367d999b55d6d2",
+  "actual_generation_references": [
+    {
+      "path": "generated/golf-source-batch-02/fixed-world-guides-v1/ball-dispenser/guides/yaw8-world-v1.png",
+      "sha256": "3926563ed158e41211f0b241c6d90306687092af363d029be7acb051b240ce8b",
+      "bytes": 56269
+    },
+    {
+      "path": "generated/golf-source-batch-02/native/ball-dispenser/normal-v2.png",
+      "sha256": "0e447f2ca36a5895370c4178a6fda86eb29afbdc97536db3b0a12422632371a3",
+      "bytes": 1167889
+    }
+  ],
+  "zero_alpha_fraction": 0.7442302653836272,
+  "outer_4px_border_alpha_p50p95max": [
+    0.0,
+    0.0,
+    1.0
+  ],
+  "clear_horizontal_cut_y": 627,
+  "clear_vertical_cut_by_row": [
+    627,
+    627
+  ],
+  "cut_alpha_maxima": {
+    "horizontal": 0,
+    "vertical_top": 1,
+    "vertical_bottom": 1
+  },
+  "cells": [
+    {
+      "cell": "TL",
+      "actual_role": "N ball window/coin/chute/basket",
+      "selected_guide_direction": "N",
+      "reference_rect_ltrb": [
+        0,
+        0,
+        627,
+        627
+      ],
+      "minimum_core_margin_px": 74,
+      "boundary_core_pixels_alpha_gt128": 0,
+      "boundary_alpha_max": 1,
+      "native_rgba_rectangle_sha256": "dc4741d22560dde41105994c0f462daaeb44cbf6254877819d2fb0537c24ce0a",
+      "functional_hold": false
+    },
+    {
+      "cell": "TR",
+      "actual_role": "E blank side; front basket right",
+      "selected_guide_direction": "E",
+      "reference_rect_ltrb": [
+        627,
+        0,
+        1254,
+        627
+      ],
+      "minimum_core_margin_px": 90,
+      "boundary_core_pixels_alpha_gt128": 0,
+      "boundary_alpha_max": 1,
+      "native_rgba_rectangle_sha256": "e659f100e1df85ea135ae3ce0120207764ff1b03f92ed283cd1e14a46da23fed",
+      "functional_hold": false
+    },
+    {
+      "cell": "BL",
+      "actual_role": "S rear service panel",
+      "selected_guide_direction": "S",
+      "reference_rect_ltrb": [
+        0,
+        627,
+        627,
+        1254
+      ],
+      "minimum_core_margin_px": 95,
+      "boundary_core_pixels_alpha_gt128": 0,
+      "boundary_alpha_max": 1,
+      "native_rgba_rectangle_sha256": "48d9eef3d300d79bc798637e81e866736715da00c41cc12971609190f00ebc52",
+      "functional_hold": false
+    },
+    {
+      "cell": "BR",
+      "actual_role": "W opposite blank side; front basket left",
+      "selected_guide_direction": "W",
+      "reference_rect_ltrb": [
+        627,
+        627,
+        1254,
+        1254
+      ],
+      "minimum_core_margin_px": 79,
+      "boundary_core_pixels_alpha_gt128": 0,
+      "boundary_alpha_max": 1,
+      "native_rgba_rectangle_sha256": "c79d4a3f5d424ad8b2772ece03f7e3853af4b92eaf2c9db784aea4315a23eecd",
+      "functional_hold": false
+    }
+  ],
+  "all_cores_complete_at_reference_cuts": true,
+  "visual_observations": [
+    "Front display/control/chute/basket, plain rear service door, opposite side basket silhouettes match fixed-world roles. No rear-front apparatus duplication."
+  ],
+  "intrinsic_rotational_symmetry": false,
+  "main_faces_functionally_accepted_for_source_candidate": true,
+  "owner_approved": false,
+  "runtime_ready": false,
+  "exact_numerical_angle_certified": false,
+  "native_image_bytes_changed": false
+}

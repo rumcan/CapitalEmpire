@@ -1,0 +1,93 @@
+{
+  "look_id": "person:3d:town_m_business",
+  "actual_runtime_look": {
+    "id": "person:3d:town_m_business",
+    "size": "adult",
+    "w": 80,
+    "h": 136,
+    "ax": 40,
+    "ay": 131,
+    "m": 1.78,
+    "fps": 5.7
+  },
+  "animation_files_changed": false,
+  "resized": false,
+  "repainted": false,
+  "source_style_changed": false,
+  "source_grid_id": "person:3d:town_m_business",
+  "runtime_namespace_differs_from_source_grid": false,
+  "method": "lossless-native-preview-idle-crops",
+  "source": {
+    "path": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\people3d\\town_m_business\\preview.png",
+    "sha256": "6c1297dbdb4efb73dc77a7f489c220d49b66851693cfdd444ff00d6334daa22f",
+    "bytes": 1856277
+  },
+  "source_grid_metadata": {
+    "path": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\people3d\\town_m_business\\sheet.json",
+    "sha256": "81cf06d53ff5f0b2a8255eca9250f566a4d6e4b38eaadec9a83aac94287f501d",
+    "bytes": 668
+  },
+  "source_grid": {
+    "columns": 9,
+    "rows": 8,
+    "frame_width": 160,
+    "frame_height": 272
+  },
+  "primary_reference": {
+    "path": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\portraits\\references\\town_m_business\\identity-idle-pair.native.png",
+    "sha256": "429d24f86097c5d7369751871654b0c138d55844f17816381be0b8d0843f6dc4",
+    "bytes": 48306
+  },
+  "dimensions": [
+    320,
+    272
+  ],
+  "crop_records": [
+    {
+      "direction": "S",
+      "column": 0,
+      "row": 0,
+      "frame": "idle",
+      "source_crop_box": [
+        0,
+        0,
+        160,
+        272
+      ],
+      "dimensions": [
+        160,
+        272
+      ],
+      "native_file": {
+        "path": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\portraits\\references\\town_m_business\\idle-S.native.png",
+        "sha256": "94088fe6441561d8f9af84d3a68963ce99654fdc1c6656ed85990cb1f822cc8b",
+        "bytes": 25846
+      },
+      "pixel_sha256": "04c3dbea2087e4d5991195103eaf47100ea89f121b315c02b6ec830aa182b567"
+    },
+    {
+      "direction": "SW",
+      "column": 0,
+      "row": 1,
+      "frame": "idle",
+      "source_crop_box": [
+        0,
+        272,
+        160,
+        544
+      ],
+      "dimensions": [
+        160,
+        272
+      ],
+      "native_file": {
+        "path": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\portraits\\references\\town_m_business\\idle-SW.native.png",
+        "sha256": "0f05a3ac8d31be2f06f1f856d23b6e74e773210fed03879e7525ab6ef715021c",
+        "bytes": 23596
+      },
+      "pixel_sha256": "bae2499651bf8126e5da38d39bff9acdd6bda2a7e7206082cb719863523b923f"
+    }
+  ],
+  "review_background_and_labels": "Original preview green background and S/SW idle labels are preserved, not new portrait styling.",
+  "resolution_limit": "Native frame width160 pixels; no artificial enlargement or generated face detail was introduced."
+}

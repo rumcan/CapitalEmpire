@@ -22,7 +22,7 @@ export function RangeCard({ view, places = [], onPlace, onClose, onPrice, onBuy,
   const demandWord = pf >= 1.15 ? 'cheap: more golfers' : pf <= 0.85 ? 'dear: fewer golfers' : 'fair';
   return (
     <div className={`pointer-events-auto absolute ${right} top-[var(--hud-top,6rem)] z-20 max-h-[calc(var(--vh-ui,100vh)-var(--hud-top,6rem)-4.5rem)] w-[340px] space-y-2 overflow-y-auto overflow-x-hidden rounded-xl border border-white/10 bg-slate-950/90 p-3 text-slate-200 shadow-2xl backdrop-blur`} data-testid="range-card">
-      <div className="flex items-center justify-between border-b border-white/10 pb-2">
+      <div className="win-head win-head-slate flex items-center justify-between">
         <div>
           <div className="font-semibold text-amber-200">Driving range</div>
           <div className="text-[12px] text-slate-400">{st.proShop ? 'Pro shop' : 'The shack (a crappy pro shop)'} · {st.tier2 ? `${st.lowerBays} + ${st.bays - st.lowerBays} upstairs` : st.bays} bays · {st.counters} {st.counters === 1 ? 'counter' : 'counters'} · open {view.hours}</div>

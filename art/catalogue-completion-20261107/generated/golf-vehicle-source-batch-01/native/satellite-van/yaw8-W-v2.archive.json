@@ -1,0 +1,23 @@
+[
+  {
+    "key": "newprop:satellite-van",
+    "family": "yaw8-W",
+    "condition": "base",
+    "version": 2,
+    "target": "generated/golf-vehicle-source-batch-01/native/satellite-van/yaw8-W-v2.png",
+    "refs": [
+      "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/golf-vehicle-source-batch-01/yaw-isolated-repairs-v1/satellite-van/yaw8W-guide.png",
+      "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/golf-vehicle-source-batch-01/native/satellite-van/normal-NW-v2.png"
+    ],
+    "prompt": "Render ONE SINGLE missing nearcardinal sprite, exactcamera/occlusioninREFERENCE1. Reference2isfinishednativeidentityandpaintedmaterialsonly, notcamera. Cream/greenroundedpanelvan, fixedcurvedroofsatellitedish/HVAC/twoaerials. SlidingcargodoorhasbeenadoptedonphysicalLEFT-X. In THIS Wview broadRIGHTsideisPLAINcontinuouspaintedmetal, absolutelyNOslidingcargodoor/rail/seam/handle. TwinrearcargodoorsonlyatvehicleREAR. Fixedroofbowlazimuth/elevation/faceasguide, neverturntowardviewer. Matchrealvanbodycurvefromreference2. Followguideprojectedbase/roofedges, cameraorthographic30degreesDOWNandnominal8degreesoffcardinal\u2014broadmainface+narrowsecondaryface. Believabledetailedhandpaintedminiaturegameart, samefinecream/forestgreenpaint/metal/glass/rubberasreference2, noflatlowpoly. ONEcompletevehiclecentredwithbroadZEROALPHAtransparentmargins, nogreyhalo/groundplate/road/scene/people/plants/labelsUI/grid. Late-afternoonDAYTIME sunSCREENUPPERRIGHT/shadowsLOWERLEFT, lightsOFF. No2Dmirroring, noindependentswivellingequipment, nootherperspectivesintheimage.",
+    "source": "C:/Users/RAMPAGE/.codex/generated_images/01a1b1fd-39ec-7220-8f11-86e4448833ea/exec-77beec8d-d443-47cc-9ecd-2a1735a52f73.png",
+    "references": [
+      "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/golf-vehicle-source-batch-01/yaw-isolated-repairs-v1/satellite-van/yaw8W-guide.png",
+      "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/golf-vehicle-source-batch-01/native/satellite-van/normal-NW-v2.png"
+    ],
+    "status": "native-source-candidate-pending-visual-review",
+    "runtime_imported": false,
+    "sha256": "bca20d06a8df734f45da9dcbaa83ea13dd3facab5a1f9b4b8e7a1c23dc67d60f",
+    "native_bytes_preserved": true
+  }
+]

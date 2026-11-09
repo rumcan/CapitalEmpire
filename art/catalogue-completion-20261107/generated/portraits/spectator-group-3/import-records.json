@@ -1,0 +1,175 @@
+{
+  "sheet": {
+    "path": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\portraits\\spectator-group-3\\source.png",
+    "sha256": "caa1932ec2c348c322c3df1b9fd6fad5294536f058df19962d499aedc2f6a1dc",
+    "bytes": 3374935
+  },
+  "records": [
+    {
+      "look_id": "spectator:spec_teen_girl",
+      "cell_index": 0,
+      "cell_position": "top-left",
+      "source_crop_box": [
+        0,
+        0,
+        623,
+        630
+      ],
+      "dimensions": [
+        623,
+        630
+      ],
+      "mode": "RGB",
+      "source_file": {
+        "path": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\portraits\\spectator-group-3\\spectator-spec-teen-girl.native.png",
+        "sha256": "64e6f13fef61fe2722e2de0daf65bef2ce6b6ae40033bc21f68c188c862c4be8",
+        "bytes": 797752
+      },
+      "pixel_sha256": "e5e351f803b9a818f1d4a0b9e4c4dd1e39a1f88de3c954e2ad57b2994ab9b0a5",
+      "operation": "exact native rectangle; no resize/repaint/alpha reconstruction",
+      "parent_reviewed": true,
+      "owner_approved": false,
+      "runtime_ready": true,
+      "runtime_integrated": true,
+      "manifest_record": {
+        "lookId": "spectator:spec_teen_girl",
+        "file": "spec-teen-girl.png",
+        "w": 623,
+        "h": 630,
+        "bytes": 797752,
+        "state": "one"
+      },
+      "runtime_file": {
+        "path": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\src\\assets\\portraits\\spec-teen-girl.png",
+        "sha256": "64e6f13fef61fe2722e2de0daf65bef2ce6b6ae40033bc21f68c188c862c4be8",
+        "bytes": 797752
+      }
+    },
+    {
+      "look_id": "spectator:spec_w_older_cardigan",
+      "cell_index": 1,
+      "cell_position": "top-right",
+      "source_crop_box": [
+        623,
+        0,
+        1247,
+        630
+      ],
+      "dimensions": [
+        624,
+        630
+      ],
+      "mode": "RGB",
+      "source_file": {
+        "path": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\portraits\\spectator-group-3\\spectator-spec-w-older-cardigan.native.png",
+        "sha256": "a291feb2292dab8db9c626137a635f8bf71def7e5764337bde7341cdcbbcdf09",
+        "bytes": 795925
+      },
+      "pixel_sha256": "9460cf7a8a15ccbceba4fe549f5d7a4a2bf9ef912581f116fd3f7b76ded95c46",
+      "operation": "exact native rectangle; no resize/repaint/alpha reconstruction",
+      "parent_reviewed": true,
+      "owner_approved": false,
+      "runtime_ready": true,
+      "runtime_integrated": true,
+      "manifest_record": {
+        "lookId": "spectator:spec_w_older_cardigan",
+        "file": "spec-w-older-cardigan.png",
+        "w": 624,
+        "h": 630,
+        "bytes": 795925,
+        "state": "one"
+      },
+      "runtime_file": {
+        "path": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\src\\assets\\portraits\\spec-w-older-cardigan.png",
+        "sha256": "a291feb2292dab8db9c626137a635f8bf71def7e5764337bde7341cdcbbcdf09",
+        "bytes": 795925
+      }
+    },
+    {
+      "look_id": "spectator:spec_w_sunhat_dress",
+      "cell_index": 2,
+      "cell_position": "bottom-left",
+      "source_crop_box": [
+        0,
+        630,
+        623,
+        1261
+      ],
+      "dimensions": [
+        623,
+        631
+      ],
+      "mode": "RGB",
+      "source_file": {
+        "path": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\portraits\\spectator-group-3\\spectator-spec-w-sunhat-dress.native.png",
+        "sha256": "fb816764b6f46048517fa535067761d736b387c98a7def734f92aabfca32f7d7",
+        "bytes": 769016
+      },
+      "pixel_sha256": "a3b28922c7ff0f6544e802d0fa3e7e1770802ce5eb4ce09d7802d0048c250666",
+      "operation": "exact native rectangle; no resize/repaint/alpha reconstruction",
+      "parent_reviewed": true,
+      "owner_approved": false,
+      "runtime_ready": true,
+      "runtime_integrated": true,
+      "manifest_record": {
+        "lookId": "spectator:spec_w_sunhat_dress",
+        "file": "spec-w-sunhat-dress.png",
+        "w": 623,
+        "h": 631,
+        "bytes": 769016,
+        "state": "one"
+      },
+      "runtime_file": {
+        "path": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\src\\assets\\portraits\\spec-w-sunhat-dress.png",
+        "sha256": "fb816764b6f46048517fa535067761d736b387c98a7def734f92aabfca32f7d7",
+        "bytes": 769016
+      }
+    },
+    {
+      "look_id": "spectator:spec_w_visor_pastel",
+      "cell_index": 3,
+      "cell_position": "bottom-right",
+      "source_crop_box": [
+        623,
+        630,
+        1247,
+        1261
+      ],
+      "dimensions": [
+        624,
+        631
+      ],
+      "mode": "RGB",
+      "source_file": {
+        "path": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\portraits\\spectator-group-3\\spectator-spec-w-visor-pastel.native.png",
+        "sha256": "3ebe9c6b4650c625f4d88d74685bce29617181ed6dc2214879a975fed3b092f7",
+        "bytes": 780379
+      },
+      "pixel_sha256": "78e82b5b748919278083a3dbbbbe1881f38a13e5b56da79ca415392d972c71a0",
+      "operation": "exact native rectangle; no resize/repaint/alpha reconstruction",
+      "parent_reviewed": true,
+      "owner_approved": false,
+      "runtime_ready": true,
+      "runtime_integrated": true,
+      "manifest_record": {
+        "lookId": "spectator:spec_w_visor_pastel",
+        "file": "spec-w-visor-pastel.png",
+        "w": 624,
+        "h": 631,
+        "bytes": 780379,
+        "state": "one"
+      },
+      "runtime_file": {
+        "path": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\src\\assets\\portraits\\spec-w-visor-pastel.png",
+        "sha256": "3ebe9c6b4650c625f4d88d74685bce29617181ed6dc2214879a975fed3b092f7",
+        "bytes": 780379
+      }
+    }
+  ],
+  "runtime_writes_performed": true,
+  "manifest": {
+    "path": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\src\\assets\\portraits\\manifest.json",
+    "sha256": "5bd3996114d069e52713f93f0f42b446503e8a2cc07211750051ec120c12ce55",
+    "bytes": 6496
+  }
+}

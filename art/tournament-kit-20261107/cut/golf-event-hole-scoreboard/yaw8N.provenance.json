@@ -1,0 +1,29 @@
+{
+  "schema": 1,
+  "subject": "golf:event-hole-scoreboard",
+  "version": 1,
+  "key": "yaw8N",
+  "source": {
+    "file": "../../batch01/hole-scoreboard/budget/yaw8-N.png",
+    "sha256": "326b12c9ff6de64524785f975586d9a2762987eb49591ca3b07bbc5927f56d88",
+    "width": 627,
+    "height": 627
+  },
+  "cell": 0,
+  "cellRect": {
+    "left": 0,
+    "top": 0,
+    "width": 627,
+    "height": 627
+  },
+  "crop": {
+    "left": 120,
+    "top": 92,
+    "width": 399,
+    "height": 451
+  },
+  "output": "yaw8N.native.png",
+  "sha256": "3e5ff4677410bdc6984bbf37e64ddc0492f2de3d7a2792b575ddcef72a46b22a",
+  "operation": "native RGBA cell crop only; no flip/repaint/view synthesis",
+  "review": "candidate"
+}

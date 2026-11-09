@@ -1,0 +1,271 @@
+{
+  "id": "world~barn",
+  "kind": "corners",
+  "version": 1,
+  "generator": "native imagegen",
+  "imported_utc": "2026-11-06T19:17:16.310701+00:00",
+  "source": {
+    "path": "C:\\Users\\RAMPAGE\\.codex\\generated_images\\01a1b1fd-39ec-7220-8f11-86e4448833ea\\exec-4b79d52a-ebac-4c1a-81c9-55a522a266e9.png",
+    "sha256": "93ecedebc9586b67cdff07bb95f0c7e9419bcc8a6207a8991eb59b639ccfd2ee",
+    "bytes": 1876346
+  },
+  "raw": {
+    "path": "E:\\Repos\\CapitalEmpire\\.claude\\worktrees\\art-repaint-20261106\\art\\theme-consistency\\native-resume-20261106\\world~barn\\corners-v1.png",
+    "sha256": "93ecedebc9586b67cdff07bb95f0c7e9419bcc8a6207a8991eb59b639ccfd2ee",
+    "bytes": 1876346
+  },
+  "exact_prompt": {
+    "path": "E:\\Repos\\CapitalEmpire\\.claude\\worktrees\\art-repaint-20261106\\art\\theme-consistency\\native-resume-20261106\\world~barn\\corners-v1.prompt.txt",
+    "sha256": "a2703b887c193b99179d8a1e083832dfcea6c8abc5da65b6d584532ccc0fb32d",
+    "bytes": 1818
+  },
+  "queue": {
+    "path": "D:\\AI\\chatgpt-bridge\\queue-resume-corners-20261106.json",
+    "sha256": "be220aa1862ea65077a5b6cdbf5a823d5cd27b0f02d9721b2f4bd8af35321c5d",
+    "bytes": 12104
+  },
+  "references": [
+    {
+      "path": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\theme-consistency\\exports\\buildings\\world-barn.native.png",
+      "sha256": "d29e62f3b0a200a69ae6f1de3d04598ec971fc0e011051c7055a0ab48504e155",
+      "bytes": 357526
+    },
+    {
+      "path": "D:\\AI\\chatgpt-bridge\\guides\\world~barn-corners.png",
+      "sha256": "0b918726ae712e21f9d86947abcdb90f41b9f4380aca061f678c7dea8eb31fd0",
+      "bytes": 650750
+    }
+  ],
+  "original_queue_references": [
+    {
+      "path": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\theme-consistency\\exports\\buildings\\world-barn.native.png",
+      "sha256": "d29e62f3b0a200a69ae6f1de3d04598ec971fc0e011051c7055a0ab48504e155",
+      "bytes": 357526
+    },
+    {
+      "path": "D:\\AI\\chatgpt-bridge\\guides\\world~barn-corners.png",
+      "sha256": "0b918726ae712e21f9d86947abcdb90f41b9f4380aca061f678c7dea8eb31fd0",
+      "bytes": 650750
+    }
+  ],
+  "cell_order": [
+    [
+      "SE",
+      "SW"
+    ],
+    [
+      "NW",
+      "NE"
+    ]
+  ],
+  "validation": {
+    "mode": "RGBA",
+    "dimensions": [
+      1254,
+      1254
+    ],
+    "split_x": 627,
+    "split_y": 627,
+    "cells": [
+      {
+        "view": "SE",
+        "cell_box": [
+          0,
+          0,
+          627,
+          627
+        ],
+        "subject_bbox": [
+          33,
+          84,
+          596,
+          515
+        ],
+        "transparent_fraction": 0.5668953447850451,
+        "margins_px": [
+          33,
+          84,
+          31,
+          112
+        ]
+      },
+      {
+        "view": "SW",
+        "cell_box": [
+          627,
+          0,
+          1254,
+          627
+        ],
+        "subject_bbox": [
+          32,
+          64,
+          593,
+          521
+        ],
+        "transparent_fraction": 0.5163648573369046,
+        "margins_px": [
+          32,
+          64,
+          34,
+          106
+        ]
+      },
+      {
+        "view": "NW",
+        "cell_box": [
+          0,
+          627,
+          627,
+          1254
+        ],
+        "subject_bbox": [
+          32,
+          25,
+          596,
+          552
+        ],
+        "transparent_fraction": 0.5139483477433616,
+        "margins_px": [
+          32,
+          25,
+          31,
+          75
+        ]
+      },
+      {
+        "view": "NE",
+        "cell_box": [
+          627,
+          627,
+          1254,
+          1254
+        ],
+        "subject_bbox": [
+          30,
+          36,
+          594,
+          554
+        ],
+        "transparent_fraction": 0.5635274935199387,
+        "margins_px": [
+          30,
+          36,
+          33,
+          73
+        ]
+      }
+    ],
+    "cell_differences": [
+      {
+        "views": [
+          "SE",
+          "SW"
+        ],
+        "mean_rgb_difference": 39.1826171875
+      },
+      {
+        "views": [
+          "SE",
+          "NW"
+        ],
+        "mean_rgb_difference": 31.623372395833332
+      },
+      {
+        "views": [
+          "SE",
+          "NE"
+        ],
+        "mean_rgb_difference": 42.686767578125
+      },
+      {
+        "views": [
+          "SW",
+          "NW"
+        ],
+        "mean_rgb_difference": 30.506022135416668
+      },
+      {
+        "views": [
+          "SW",
+          "NE"
+        ],
+        "mean_rgb_difference": 35.356526692708336
+      },
+      {
+        "views": [
+          "NW",
+          "NE"
+        ],
+        "mean_rgb_difference": 32.305094401041664
+      }
+    ],
+    "errors": [],
+    "warnings": [],
+    "visual_review": "Required: automatic checks cannot approve style, geometry, lighting, or fidelity."
+  },
+  "status": "imported-awaiting-visual-review",
+  "owner_approved": false,
+  "runtime_integrated": false,
+  "all_generated_views": false,
+  "compatible_NE": "original export, intentionally retained by sheets.py",
+  "cutter": {
+    "path": "D:\\AI\\chatgpt-bridge\\sheets.py",
+    "sha256": "eb40b531f94e59aa94412009307414a4a8f4dab5668786dcb077b9d0349852d9",
+    "bytes": 4578
+  },
+  "crops": [
+    {
+      "view": "SE",
+      "compatible": {
+        "path": "D:\\AI\\repaint\\out\\world~barn\\SE.png",
+        "sha256": "2ffb10d6d2e2eaf6043cec462a9eb45060ed26b39939a42fc4f0252379d6f8c8",
+        "bytes": 430676
+      },
+      "project_copy": {
+        "path": "E:\\Repos\\CapitalEmpire\\.claude\\worktrees\\art-repaint-20261106\\art\\theme-consistency\\native-resume-20261106\\world~barn\\SE.native.png",
+        "sha256": "2ffb10d6d2e2eaf6043cec462a9eb45060ed26b39939a42fc4f0252379d6f8c8",
+        "bytes": 430676
+      }
+    },
+    {
+      "view": "SW",
+      "compatible": {
+        "path": "D:\\AI\\repaint\\out\\world~barn\\SW.png",
+        "sha256": "9e73392d0db7921cb8a5af9f939676f84dd46364c2d3b78fbc0e61fae17a8e4c",
+        "bytes": 478915
+      },
+      "project_copy": {
+        "path": "E:\\Repos\\CapitalEmpire\\.claude\\worktrees\\art-repaint-20261106\\art\\theme-consistency\\native-resume-20261106\\world~barn\\SW.native.png",
+        "sha256": "9e73392d0db7921cb8a5af9f939676f84dd46364c2d3b78fbc0e61fae17a8e4c",
+        "bytes": 478915
+      }
+    },
+    {
+      "view": "NW",
+      "compatible": {
+        "path": "D:\\AI\\repaint\\out\\world~barn\\NW.png",
+        "sha256": "23cdae2cba0aae23cfe871bcd14e7e380b613206b0943195e97879cac9e57c4e",
+        "bytes": 478555
+      },
+      "project_copy": {
+        "path": "E:\\Repos\\CapitalEmpire\\.claude\\worktrees\\art-repaint-20261106\\art\\theme-consistency\\native-resume-20261106\\world~barn\\NW.native.png",
+        "sha256": "23cdae2cba0aae23cfe871bcd14e7e380b613206b0943195e97879cac9e57c4e",
+        "bytes": 478555
+      }
+    },
+    {
+      "view": "NE",
+      "compatible": {
+        "path": "D:\\AI\\repaint\\out\\world~barn\\NE.png",
+        "sha256": "d29e62f3b0a200a69ae6f1de3d04598ec971fc0e011051c7055a0ab48504e155",
+        "bytes": 357526
+      },
+      "project_copy": {
+        "path": "E:\\Repos\\CapitalEmpire\\.claude\\worktrees\\art-repaint-20261106\\art\\theme-consistency\\native-resume-20261106\\world~barn\\NE.native.png",
+        "sha256": "d29e62f3b0a200a69ae6f1de3d04598ec971fc0e011051c7055a0ab48504e155",
+        "bytes": 357526
+      }
+    }
+  ]
+}

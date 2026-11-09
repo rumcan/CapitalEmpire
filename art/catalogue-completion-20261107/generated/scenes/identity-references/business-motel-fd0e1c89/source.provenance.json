@@ -1,0 +1,70 @@
+{
+  "schema": 1,
+  "createdUtc": "2026-11-07T06:47:45.284562+00:00",
+  "exactRuntimeId": "business:motel",
+  "source": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/building-views/business-motel/NE.png",
+  "sourceSha256": "c7b227175c2dfff90a0543fcf97baf8e22558bb007e57af89f4956a1926892d5",
+  "output": "identity-references/business-motel-fd0e1c89/source.png",
+  "outputSha256": "c7b227175c2dfff90a0543fcf97baf8e22558bb007e57af89f4956a1926892d5",
+  "width": 605,
+  "height": 481,
+  "sourceCell": {
+    "kind": "already isolated native PNG; whole file",
+    "rectXYWH": [
+      0,
+      0,
+      605,
+      481
+    ]
+  },
+  "operation": "byte-for-byte PNG copy only; no resize, crop, recolour, key, repaint, registration or source mutation",
+  "selection": "registered corner NE native PNG for this exact subject",
+  "registeredCornerDirection": "NE",
+  "sourceEvidence": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\building-views\\business-motel\\provenance.json",
+  "sourceReview": {
+    "status": "generated-awaiting-visual-review"
+  },
+  "sourceRegistration": {
+    "id": "business:motel",
+    "version": "business-motel-4views-v1",
+    "files": {
+      "NE": "c7b227175c2dfff90a0543fcf97baf8e22558bb007e57af89f4956a1926892d5",
+      "SE": "95dd8e369db27ef9f9f0093f573796739feef2609ad2961868854083c2c8794f",
+      "SW": "a4bc0f2e363e905a8b451b10e2bcd40c379d6eef33e1e73af06b6c29609fc1f8",
+      "NW": "06df0ccf31e93e6c173e4a2e243f946804aa67cfb880ecaf229deba49bff78d4"
+    }
+  },
+  "originalInventorySource": {
+    "library": "src/game/business-library.ts",
+    "librarySha256": "fb72152bd5621325034acefc23e10101ad36dbd73548a06ab87285cf73652a4c",
+    "atlas": "src/assets/businesses/integrated/business-1-0.webp",
+    "atlasSha256": "aa782da3ea205d00d59b9d94528cd5fc11a02dbc97cd18a4e6336792ea6899ff",
+    "runtimePage": 19,
+    "localPage": 1,
+    "uv": [
+      0.72412109375,
+      0.0078125,
+      0.97412109375,
+      0.16943359375
+    ],
+    "crop": {
+      "left": 1483,
+      "top": 16,
+      "width": 512,
+      "height": 331
+    },
+    "native": "art/theme-consistency/exports/buildings/business-motel.native.png",
+    "nativeSha256": "c5e9377c76108ef1b3a6f708a6cbb402774f7f725f2b180bf233d37e639a0041"
+  },
+  "originalBusinessSourceCell": {
+    "id": "motel",
+    "sourceSheet": "sliced/builtin/business-tourism.png",
+    "sourceCrop": [
+      41,
+      780,
+      584,
+      374
+    ]
+  },
+  "nativeReferenceApprovalClaimed": false
+}

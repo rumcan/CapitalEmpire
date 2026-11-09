@@ -12,8 +12,22 @@ import { hasLettering } from './lettering';
 import { CAR_DIRECTIONS, CAR_SCALE, carFootprint, carOwnerScale } from '../ext/car-art';
 import { isBuilding } from '../mirror';
 import { roadOf } from './preset-frame';
+import { OBJECT_EIGHT_SETS } from '../object-eight-library';
+import { OBJECT_FACING_KEYS } from '../object-eight-types';
 
 const BY = new Map<string, LibItem>(LIBRARY.map(i => [i.id, i]));
+/** T375: the approved eight-view sets (object-eight-library.ts: four corner views and four 8-degree straight-on ones, from the owner's art) as rings
+ *  [NE, N, SE, E, SW, S, NW, W], by every id that names a set: its subject, the catalogue ids it replaces (aliases) and each of its views. A ring's
+ *  place is the road it faces: road 0 NE, 1 N, 2 SE, 3 E, 4 SW, 5 S, 6 NW, 7 W (a set missing a view, or a picture the library lacks, is not one) */
+const RINGS = new Map<string, readonly string[]>();
+for (const s of OBJECT_EIGHT_SETS) {
+  if (s.review !== 'approved' || s.projection !== 'normal+yaw8') continue;
+  const ring = OBJECT_FACING_KEYS.map(k => s.views[k]?.id);
+  if (!ring.every((id): id is string => !!id && BY.has(id)) || new Set(ring).size !== ring.length) continue;
+  for (const id of [s.subject, ...(s.aliases ?? []), ...ring]) if (!RINGS.has(id)) RINGS.set(id, ring);
+}
+/** the eight-view ring of a building (any one of its pictures: the four-view ones go by their NE view), or null */
+export const eightRingOf = (id: string): readonly string[] | null => RINGS.get(id) ?? RINGS.get(EXTRA_VIEW_BASE.get(id) ?? fourViews(id)?.views[0] ?? id) ?? null;
 /** a footprint relative to its anchor (tiles): x0, y0, x1, y1 */
 export type Box4 = [number, number, number, number];
 
@@ -81,7 +95,11 @@ export function roadView(id: string, road: number, view: number): string | null 
     return set && set.every(v => BY.has(v)) ? set[(((road / 2 + view) % 4) + 4) % 4]! : null;
   }
   const it = BY.get(baseView(id).id) ?? BY.get(id), set = it && isBuilding(it) ? axisSetOf(id) : null;
-  return set ? set[((((road - 1) / 2 + view) % 4) + 4) % 4]! : null;
+  if (set) return set[((((road - 1) / 2 + view) % 4) + 4) % 4]!;
+  // T375: no screen-axis set of the old art: an approved eight-view set (the owner's 8-view art) draws its 8-degree straight-on view whose front faces the
+  // street (the ring's place is the road; a quarter turn of the prop's own view is two places on)
+  const ring = it && isBuilding(it) ? eightRingOf(id) : null;
+  return ring ? ring[(((road + 2 * view) % 8) + 8) % 8]! : null;
 }
 /** whether a picture faces the street of a road (T305 autolot's rule, shared with the composer's facing, T308): on a screen-straight road (odd) it has a
  *  screen-axis set (roadView, view 0 faces the street), on any other road it has four views to turn (turned) */

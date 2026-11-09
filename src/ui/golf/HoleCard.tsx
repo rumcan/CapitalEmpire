@@ -35,7 +35,7 @@ export function HoleCard({ game, right = 'right-3' }: { game: Game; right?: stri
   const editing = game.paint.editingHole === c.n;
   return (
     <section className={`pointer-events-auto absolute ${right} top-[var(--hud-top,6rem)] z-20 max-h-[calc(var(--vh-ui,100vh)-var(--hud-top,6rem)-4.5rem)] w-[340px] overflow-y-auto overflow-x-hidden rounded-xl border border-[var(--gold-line)] bg-slate-950/90 p-3 text-[13px] text-slate-200 shadow-2xl backdrop-blur`} data-testid="hole-card" aria-label={`Hole ${c.n}`}>
-      <div className="flex items-start justify-between gap-2 border-b border-white/10 pb-2">
+      <div className="win-head win-head-slate flex items-start justify-between gap-2">
         <div>
           <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
             <span className="wiz-title">Hole {c.n}</span>

@@ -1,0 +1,43 @@
+[
+  {
+    "key": "golf-source-01-09-main-leaderboard",
+    "condition": "budget",
+    "runtimeTarget": {
+      "eventTypeId": "leaderboard",
+      "eventName": "Main leaderboard",
+      "currentSpriteSubjectId": "golf:leaderboard",
+      "newArtSubjectProposal": "golf:event-main-leaderboard",
+      "newArtSubjectAlreadyRegistered": false,
+      "eventCatalogueSource": "src/game/golf/tents.ts",
+      "standInMappingSource": "src/game/golf/structure-art.ts",
+      "footprintTiles": {
+        "width": 4,
+        "depth": 2
+      },
+      "footprintMetres": {
+        "width": 8,
+        "depth": 4
+      },
+      "dimensionsMeaning": "Exact current event placement plot, not measured source sprite architecture. New design must fit plot; no runtime geometry changed.",
+      "currentSpriteBaseBoxesInTiles": [
+        {
+          "hx": 4,
+          "hy": 1.5,
+          "dx": 0,
+          "dy": 0
+        }
+      ]
+    },
+    "source": "C:/Users/RAMPAGE/.codex/generated_images/01a1b1fd-39ec-7220-8f11-86e4448833ea/exec-6e04733f-5127-49ba-a23d-9fc8b74a17c9.png",
+    "target": "generated/golf-source-batch-01/native/golf-source-01-09-main-leaderboard/budget-normal-v2.png",
+    "prompt": "Paint the FOUR exact technical world-model views in REFERENCE1 as finished hand-painted miniature game art, with material/style/condition ofREFERENCE2 ONLY. Reference1controlsALLgeometry/cameras/featurepositions; reference2's earlier spatialerrorsmustnotbe copied. ONE staircase stays at physicalRIGHT+X in ALL turns. Letitbeoccludedwhereguideoccludesit; never moveit toavisibleend oraddasecondstair. Frontscoringgrid-Y, rearplanks/braces+Y, frontwalkway-Y,3roofcaps, exactlyTWOflags. No scoringfaceonrear. Weathered ordinary timber/painted-green scoreboard and service platform, worn but sound staircase and plain roof cap. Avoid elaborate fantasy trim. Keep exactprojectedfootprint/silhouette/componentlayout ineachquarter. Four genuine45degreecorners, orthographic30degreesDOWN, same SE SW / NW NE cellsasguide. Late-afternoonDAYTIME sunUPPERRIGHT/shadowsLOWERLEFT, lamps/screensoff. Complete separatedopaqueobjects on genuinelyzeroalpha transparentbackground, generouscellmargins/equalphysicalscale. No people, plants, groundplate, road, scenery, UI/text/labels/grid/haze. Raiseddeck onlywhereexplicitlyshowninguide. Preserveoriginalnativequality/detail.",
+    "references": [
+      "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-01\\native\\golf-source-01-09-main-leaderboard\\guides\\normal-world-v1.png",
+      "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/golf-source-batch-01/native/golf-source-01-09-main-leaderboard/budget-normal-v1.png"
+    ],
+    "status": "native guided correction candidate; independent physical feature/alpha review pending",
+    "runtime_imported": false,
+    "sha256": "93c055d92057dc431a1c826f97457130180b0fa7f6071e92619f992d4fcc40d9",
+    "native_bytes_preserved": true
+  }
+]

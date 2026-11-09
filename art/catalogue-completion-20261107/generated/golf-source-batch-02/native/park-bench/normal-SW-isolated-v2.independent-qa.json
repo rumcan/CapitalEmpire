@@ -1,0 +1,54 @@
+{
+  "schema": 1,
+  "as_of_utc": "2026-11-07T14:10:53.936532+00:00",
+  "review_result": "PASS-source-candidate-corrected-component-identity-and-pose",
+  "guide_corner": "SW",
+  "source": {
+    "path": "generated/golf-source-batch-02/native/park-bench/normal-SW-isolated-v2.png",
+    "sha256": "65a43e7d32a3ccacc6360cf1ef3503191a7ca82bd7bf8b57b6983ea7c492e033",
+    "bytes": 652310
+  },
+  "mode": "RGBA",
+  "dimensions": [
+    1254,
+    1254
+  ],
+  "source_original_hash_matches_parent": true,
+  "parent_provenance": {
+    "path": "generated/golf-source-batch-02/native/park-bench/normal-SW-isolated-v2.provenance.json",
+    "sha256": "1a7c2744270481bc4435c028c121368dc10d1e9ed254e423b1aaf7693bbac34d",
+    "bytes": 2201
+  },
+  "exact_prompt_utf8_sha256": "e43a55cd72c9fe3c87b1b2d87b90839e8ab946f1392326c1898ea9c674014e39",
+  "actual_generation_references": [
+    {
+      "path": "generated/golf-source-batch-02/native/park-bench/normal-SW-isolated-v1.png",
+      "sha256": "229bfb8923d9a643de943c464ac8995cce56cddf708fcde4f5688bd970904785",
+      "bytes": 676401
+    },
+    {
+      "path": "generated/golf-source-batch-02/native/park-bench/camera-calibration-refs/normal-SW-identity-from-v2-BL-NW.png",
+      "sha256": "383efc946948c8c6beeca241b710c8450afaa7db6c15aaaffa32b75ed3aac5cb",
+      "bytes": 357702
+    }
+  ],
+  "zero_alpha_fraction": 0.8356531825431347,
+  "outer_4px_border_alpha_p50p95max": [
+    0.0,
+    0.0,
+    0.0
+  ],
+  "minimum_core_margin_px": 119,
+  "boundary_core_pixels_alpha_gt128": 0,
+  "native_rgba_pixels_sha256": "c3abf7b9ecb32b6d4c56ade4501ecc34620687641c8ee2685cb57a81d4b38b4a",
+  "all_cores_complete": true,
+  "visual_observations": [
+    "Opposite rear SW projection maintained; rear slat long edges descend screen-right; plain map backing at left. Arched cap and exactly two gold finials restored.",
+    "Map remains plain on back; no duplicated front map. Fine ornament, scale/anchors and final art review remain pending."
+  ],
+  "main_component_identity_and_pose_pass": true,
+  "native_image_bytes_changed": false,
+  "owner_approved": false,
+  "runtime_ready": false,
+  "exact_numerical_angle_certified": false
+}

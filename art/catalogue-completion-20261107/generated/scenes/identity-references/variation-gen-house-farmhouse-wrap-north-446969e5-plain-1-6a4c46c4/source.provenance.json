@@ -1,0 +1,62 @@
+{
+  "schema": 1,
+  "createdUtc": "2026-11-07T06:47:45.284562+00:00",
+  "exactRuntimeId": "variation:gen-house-farmhouse-wrap-north-446969e5-plain:1",
+  "source": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/building-views/variation-gen-house-farmhouse-wrap-north-446969e5-plain-1/NE.png",
+  "sourceSha256": "9c93144486a53ef622385712edc2fcd7e4899621645b4ad2d46ec771bef3ae85",
+  "output": "identity-references/variation-gen-house-farmhouse-wrap-north-446969e5-plain-1-6a4c46c4/source.png",
+  "outputSha256": "9c93144486a53ef622385712edc2fcd7e4899621645b4ad2d46ec771bef3ae85",
+  "width": 681,
+  "height": 476,
+  "sourceCell": {
+    "kind": "already isolated native PNG; whole file",
+    "rectXYWH": [
+      0,
+      0,
+      681,
+      476
+    ]
+  },
+  "operation": "byte-for-byte PNG copy only; no resize, crop, recolour, key, repaint, registration or source mutation",
+  "selection": "registered corner NE native PNG for this exact subject",
+  "registeredCornerDirection": "NE",
+  "sourceEvidence": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\building-views\\variation-gen-house-farmhouse-wrap-north-446969e5-plain-1\\provenance.json",
+  "sourceReview": {
+    "integrationStatus": "ready",
+    "integrationReason": "Native edge re-review shows complete physical silhouette; original boundary warning concerns antialias fringe only. Exact-pixel component extraction adds ample transparent padding, preserving all nonzero source RGBA tuples. All4 views, magenta post-repack composite, theme and clean alpha audit reviewed."
+  },
+  "sourceRegistration": {
+    "id": "variation:gen-house-farmhouse-wrap-north-446969e5-plain:1",
+    "version": "variation-gen-house-farmhouse-wrap-north-446969e5-plain-1-4views-v2",
+    "files": {
+      "NE": "9c93144486a53ef622385712edc2fcd7e4899621645b4ad2d46ec771bef3ae85",
+      "SE": "9fd7cd4f9a2e3adbe5ab28b3b0193f6f1579388b3631ca52d3c45eeff1f37c5e",
+      "SW": "e1de444abe9e00459a8b61c72143e1368dfadb30a4b46f711b5b141b049de718",
+      "NW": "f6439356d9fb60431bb765e8faf9c3ee065a92413059cd9e898d7ee829e6018c"
+    }
+  },
+  "originalInventorySource": {
+    "library": "src/game/library.ts",
+    "librarySha256": "91b5190292c1005ac7b936f08e5e1ebf3be43c3aae99f92ea510775da83d9726",
+    "atlas": "src/assets/atlas/sprites-2-0.webp",
+    "atlasSha256": "7765354742f849f1de2a5a1f34c606a80c1a2b229251a5f6c00725fc7d0c8a52",
+    "runtimePage": 2,
+    "localPage": 2,
+    "uv": [
+      0.539063,
+      0.546875,
+      0.78418,
+      0.790039
+    ],
+    "crop": {
+      "left": 1104,
+      "top": 1120,
+      "width": 502,
+      "height": 498
+    },
+    "native": "art/theme-consistency/exports/buildings/variation-gen-house-farmhouse-wrap-north-446969e5-plain-1.native.png",
+    "nativeSha256": "c2adaca8796027d7bb282a1cb2ef1c90be97730cdbe768ec27b05e13be906f65"
+  },
+  "originalBusinessSourceCell": null,
+  "nativeReferenceApprovalClaimed": false
+}

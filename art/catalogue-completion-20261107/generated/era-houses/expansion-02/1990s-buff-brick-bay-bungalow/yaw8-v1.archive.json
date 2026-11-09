@@ -1,0 +1,23 @@
+[
+  {
+    "key": "1990s-buff-brick-bay-bungalow",
+    "family": "yaw8",
+    "condition": "modern-era",
+    "version": 1,
+    "target": "generated/era-houses/expansion-02/1990s-buff-brick-bay-bungalow/yaw8-v1.png",
+    "refs": [
+      "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\expansion-02\\1990s-buff-brick-bay-bungalow\\guides\\yaw8-world-v1.png",
+      "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/era-houses/expansion-02/1990s-buff-brick-bay-bungalow/normal-v1.png"
+    ],
+    "prompt": "Render FOUR missing near-cardinal directions of ONE exact fixed house. REFERENCE1 is camera/geometry/door-window-occlusion authority; REFERENCE2 is its finished identity, matching detailed painterly miniature materials ONLY. Do NOT copy reference2's corner cameras. Subject: A modest low buff-brick bungalow with one small projecting front bay window, one front door to its right, a shallow grey-brown tiled hip roof and one rear-left chimney. No garage, no extra wings, no columns. Different low compact silhouette from the first1990sredbrick garage house.. Preserve every door/window/balcony/roof feature's actual world position as it rotates90degrees each time. Follow guide N E / S W cells, sameorthographic30degreesDOWN and nominal8degrees off cardinal; mainface broad, thin secondary side. Smooth consistent architectural lines and true rear surfaces, glazed patio sliders remain glass, not garage shutters. Solar panels ONLYwhere shown in guide, no migrating to opposite roof slope. Equal physical size across4cells. Late-afternoon DAYTIME sun fixed SCREEN UPPER RIGHT, shadowsLOWERLEFT; lamps/windowsOFF. Nativefinelypainted believable brick,render,timber,roofmaterials match reference2 exactly. Fourcomplete isolatedsprites, broadZEROALPHAtransparentmargins/gutters. No technicaltext, labels, groundplate, landscape, vegetation, people, scene, UI or haze.",
+    "source": "C:/Users/RAMPAGE/.codex/generated_images/01a1b1fd-39ec-7220-8f11-86e4448833ea/exec-0312e532-7091-4d97-b43e-eab2c79047dd.png",
+    "references": [
+      "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\expansion-02\\1990s-buff-brick-bay-bungalow\\guides\\yaw8-world-v1.png",
+      "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/era-houses/expansion-02/1990s-buff-brick-bay-bungalow/normal-v1.png"
+    ],
+    "status": "native-source-candidate-pending-visual-review",
+    "runtime_imported": false,
+    "sha256": "e7268cb806916879051773218aa7ad67664d309692336c997012276aed83daf3",
+    "native_bytes_preserved": true
+  }
+]

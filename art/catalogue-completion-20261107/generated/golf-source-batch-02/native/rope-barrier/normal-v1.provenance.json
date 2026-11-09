@@ -1,0 +1,14 @@
+{
+  "key": "newprop:rope-barrier",
+  "source": "C:/Users/RAMPAGE/.codex/generated_images/01a1b1fd-39ec-7220-8f11-86e4448833ea/exec-a546d579-8a2c-48fb-b0db-86a1b8b49e9c.png",
+  "target": "generated/golf-source-batch-02/native/rope-barrier/normal-v1.png",
+  "prompt": "Create a native 2x2 sprite sheet of this ONE SAME golf-course prop in four real orthographic 45-degree corner views, camera 30 degrees down. Reference1 is exact subject identity and assembly; reference2 is hand-painted miniature material style only. Preserve reference1's actual object, colour, attachment counts and functional geometry. Subject: Exactly three green round-foot stanchions in one straight line connected by two sagging cream rope spans. Maintain post order, spacing and rope attachment height; back views show actual hardware. No ground strip. Four different views: top-left FRONT+LEFT, top-right REAR+LEFT, bottom-left REAR+RIGHT, bottom-right FRONT+RIGHT. The entire single physical assembly rotates rigidly; keep every handle, crank, towel, map panel, arrow, ramp, rope, tap, basket and support on its same physical side. Reconstruct true rear backing and brackets; do not paste front labels/pockets/coin slots onto back views. Fixed late-afternoon DAYTIME sunlight SCREEN UPPER RIGHT, shadows LOWER LEFT. Detailed hand-painted miniature materials matching the existing golf-town art; no new brands, no people. Four complete separate sprites centred in their own quarters, same physical scale, generous transparent margins. Objects opaque on a genuinely zero-alpha transparent background, including gutters. No baked grass/soil/groundplate or external scenery, no plants, haze, captions/grid/UI or invented text. Intrinsic tiny pictograms and existing hole number12 are allowed only where the identity brief requires them. Actual equipment ramp/mat is retained when explicitly part of the subject.",
+  "references": [
+    "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-02\\references\\rope-barrier.source.png",
+    "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/old-clubhouse-1950/normal-v5.png"
+  ],
+  "status": "native normal4 source candidate; rear/attachment counts/alpha and remaining4views review pending",
+  "runtime_imported": false,
+  "sha256": "f6a97871eeaf06a1d470485caef8caf02e2a98b3b98cd25ecee02677f9da3bd6",
+  "native_bytes_preserved": true
+}

@@ -1,0 +1,61 @@
+{
+  "schema": 1,
+  "createdUtc": "2026-11-07T06:47:45.284562+00:00",
+  "exactRuntimeId": "golf:clubhouse-shanty",
+  "source": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/building-views/golf-clubhouse-shanty/NE.png",
+  "sourceSha256": "fbd77aaed5ea2a0c50c05f21161c17bf2e3e2c63b545e4f3e2f963c3497abfcc",
+  "output": "identity-references/golf-clubhouse-shanty-2dbc3724/source.png",
+  "outputSha256": "fbd77aaed5ea2a0c50c05f21161c17bf2e3e2c63b545e4f3e2f963c3497abfcc",
+  "width": 326,
+  "height": 209,
+  "sourceCell": {
+    "kind": "already isolated native PNG; whole file",
+    "rectXYWH": [
+      0,
+      0,
+      326,
+      209
+    ]
+  },
+  "operation": "byte-for-byte PNG copy only; no resize, crop, recolour, key, repaint, registration or source mutation",
+  "selection": "registered corner NE native PNG for this exact subject",
+  "registeredCornerDirection": "NE",
+  "sourceEvidence": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\building-views\\golf-clubhouse-shanty\\provenance.json",
+  "sourceReview": {
+    "status": "generated"
+  },
+  "sourceRegistration": {
+    "id": "golf:clubhouse-shanty",
+    "version": "golf-clubhouse-shanty-4views-v3",
+    "files": {
+      "NE": "fbd77aaed5ea2a0c50c05f21161c17bf2e3e2c63b545e4f3e2f963c3497abfcc",
+      "SE": "ada37ea1a6baf3c88e052da94160e8b7b48af5af3d77d7a093c9ec4f952e43f0",
+      "SW": "bf15a229ecd2426db8d895a911881ce9d36899861ead7c7938651c18b4c1c8fc",
+      "NW": "4ce772b865eefb814feb4e7723ecc2d659ce91ceee75eabce2a67354ee2cfb6a"
+    }
+  },
+  "originalInventorySource": {
+    "library": "src/game/golf-library.ts",
+    "librarySha256": "f5d0a29bfdd14b84e8f49462ca5b93bd2a8cf914202ae9f1cc857fe6237eca45",
+    "atlas": "src/assets/golf/golf-0.webp",
+    "atlasSha256": "d648cfc5275d577289b8714b2ff18fcd2d2532ee26a204d08d90659123e821d0",
+    "runtimePage": 22,
+    "localPage": 0,
+    "uv": [
+      0.68896484375,
+      0.0078125,
+      0.84814453125,
+      0.10986328125
+    ],
+    "crop": {
+      "left": 1411,
+      "top": 16,
+      "width": 326,
+      "height": 209
+    },
+    "native": "art/theme-consistency/exports/buildings/golf-clubhouse-shanty.native.png",
+    "nativeSha256": "f5d7c921f272605636d4ac427f5a3fef091fa6b5bcbb52e841b247df0617d7d4"
+  },
+  "originalBusinessSourceCell": null,
+  "nativeReferenceApprovalClaimed": false
+}

@@ -1,0 +1,29 @@
+{
+  "schema": 1,
+  "subject": "golf:event-hole-scoreboard",
+  "version": 1,
+  "key": "normalSW",
+  "source": {
+    "file": "../../batch01/hole-scoreboard/budget/normal-SW.png",
+    "sha256": "9260dec5c0d8ee23e217f44002abe5b7deb64f2b3b76ef8e169ec3b74280b7e4",
+    "width": 627,
+    "height": 627
+  },
+  "cell": 0,
+  "cellRect": {
+    "left": 0,
+    "top": 0,
+    "width": 627,
+    "height": 627
+  },
+  "crop": {
+    "left": 138,
+    "top": 16,
+    "width": 434,
+    "height": 608
+  },
+  "output": "normalSW.native.png",
+  "sha256": "e4ea21e57b608ec1f593d94d689077454101c6773ee52b18e28f48d3ff8d36c2",
+  "operation": "native RGBA cell crop only; no flip/repaint/view synthesis",
+  "review": "candidate"
+}

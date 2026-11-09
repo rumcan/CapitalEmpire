@@ -1,0 +1,70 @@
+{
+  "schema": 1,
+  "createdUtc": "2026-11-07T06:47:45.284562+00:00",
+  "exactRuntimeId": "business:sportsbar",
+  "source": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/building-views/business-sportsbar/NE.png",
+  "sourceSha256": "e30239ae7c0f68fd018ae2445501c9a80a5530f62ec2d9fb33c68910ac941c91",
+  "output": "identity-references/business-sportsbar-c2af91cb/source.png",
+  "outputSha256": "e30239ae7c0f68fd018ae2445501c9a80a5530f62ec2d9fb33c68910ac941c91",
+  "width": 606,
+  "height": 561,
+  "sourceCell": {
+    "kind": "already isolated native PNG; whole file",
+    "rectXYWH": [
+      0,
+      0,
+      606,
+      561
+    ]
+  },
+  "operation": "byte-for-byte PNG copy only; no resize, crop, recolour, key, repaint, registration or source mutation",
+  "selection": "registered corner NE native PNG for this exact subject",
+  "registeredCornerDirection": "NE",
+  "sourceEvidence": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\building-views\\business-sportsbar\\provenance.json",
+  "sourceReview": {
+    "status": "generated-awaiting-visual-review"
+  },
+  "sourceRegistration": {
+    "id": "business:sportsbar",
+    "version": "business-sportsbar-4views-v1",
+    "files": {
+      "NE": "e30239ae7c0f68fd018ae2445501c9a80a5530f62ec2d9fb33c68910ac941c91",
+      "SE": "fa63b9942ee2c751c27a2fc008391b1b9547733db4b135d2006f64317ccde8a9",
+      "SW": "240de00ef80db870c3601b79fa8af1f482837a00b0ae674e47dafac8719c6383",
+      "NW": "b7c6dbe3ef2244b8e0a41217659bfc87e93aa51f8070bc4627cc4e3c4736d4b0"
+    }
+  },
+  "originalInventorySource": {
+    "library": "src/game/business-library.ts",
+    "librarySha256": "fb72152bd5621325034acefc23e10101ad36dbd73548a06ab87285cf73652a4c",
+    "atlas": "src/assets/businesses/integrated/business-0-0.webp",
+    "atlasSha256": "7345eb8787ac146688e3a811ad9005a42c01ce29f619897f360dc82938fbf093",
+    "runtimePage": 18,
+    "localPage": 0,
+    "uv": [
+      0.1572265625,
+      0.72412109375,
+      0.4072265625,
+      0.9462890625
+    ],
+    "crop": {
+      "left": 322,
+      "top": 1483,
+      "width": 512,
+      "height": 455
+    },
+    "native": "art/theme-consistency/exports/buildings/business-sportsbar.native.png",
+    "nativeSha256": "09ed186e035df30f7123d67cd3ebdfb78d75282ccd9b5eb53608b7a5f103c5f6"
+  },
+  "originalBusinessSourceCell": {
+    "id": "sportsbar",
+    "sourceSheet": "sliced/builtin/business-core.png",
+    "sourceCrop": [
+      20,
+      88,
+      655,
+      581
+    ]
+  },
+  "nativeReferenceApprovalClaimed": false
+}

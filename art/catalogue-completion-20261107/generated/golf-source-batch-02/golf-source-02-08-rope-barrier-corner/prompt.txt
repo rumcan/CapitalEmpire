@@ -1,0 +1,4 @@
+Exactly five green round-foot stanchions and four cream rope spans making one90degreecorner: centre corner post shared by two arms, with one intermediate and one end post on each arm. Preserve L-shaped ground layout and five-post count in every view; do not flatten it into a straight barrier.
+Identity-preserving modular corner matching straight rope barrier materials and post design.
+Same painterly game style as style-authority.png, late-afternoon daylight, one sun upper-right, shadows lower-left, transparent background. No people, captions, brands, gridlines or generic ground plates. Functional ramps, buckets, mounting feet and attached panels remain part of their object.
+Keep one fixed physical object and all its feature positions across all eight source-camera views.

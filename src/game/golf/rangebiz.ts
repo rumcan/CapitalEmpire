@@ -794,7 +794,7 @@ interface Ball { x0: number; y0: number; x1: number; y1: number; t0: number; T: 
   /** T251: its bounce and roll after it lands (it lies where that stops); absent: it lies where it lands */
   after?: BallRoll }
 /** a golfer, the pro or a coffee drinker as the engine draws it: a crowd person, lifted onto the upper deck (world px, T133) */
-export type RangePerson = CrowdPerson & { lift: number };
+export type RangePerson = CrowdPerson & { lift: number; /** Stable visit id; zero is the academy pro. */ id: number };
 /** what the engine sees of the sim each frame */
 export interface RangeDraw {
   /** the golfers on foot (walking, queued, hitting) as crowd people (group 1), the academy's pro among them (T133) */
@@ -1445,8 +1445,8 @@ export class RangeSim {
         if (sl && !sl.inside) { const c = C[nc] ?? (C[nc] = { x: 0, y: 0, ang: 0, type: 0, id: -1 }); nc++; c.x = sl.x; c.y = sl.y; c.ang = Math.atan2(sl.hy, sl.hx); c.type = v.car; c.id = v.id; }
       }
       if (v.stage < S.WalkShop || v.stage > S.WalkCar) continue;
-      const p = P[np] ?? (P[np] = { x: 0, y: 0, group: 1, person: 0, row: 0, frame: 0, lift: 0 }); np++;
-      p.x = v.x; p.y = v.y; p.group = 1; p.person = v.person;
+      const p = P[np] ?? (P[np] = { x: 0, y: 0, group: 1, person: 0, row: 0, frame: 0, lift: 0, id: 0 }); np++;
+      p.id = v.id; p.x = v.x; p.y = v.y; p.group = 1; p.person = v.person;
       // on the upper deck (T133): full height at its bay, ramping on the stairs from the path behind it
       p.lift = v.up ? v.up.h * Math.max(0, Math.min(1, 1 - Math.hypot(v.x - v.up.x, v.y - v.up.y) / STAIR)) : 0;
       if (v.stage === S.Hit) {
@@ -1474,8 +1474,8 @@ export class RangeSim {
     // the academy's pro (T133): walking over, standing by its pupil facing it, every other swing of the pupil's showing the swing down the range
     const pr = this.pro;
     if (sc?.academy && pr.placed) {
-      const p = P[np] ?? (P[np] = { x: 0, y: 0, group: 1, person: 0, row: 0, frame: 0, lift: 0 }); np++;
-      p.x = pr.x; p.y = pr.y; p.group = 1; p.person = PRO_PERSON % Math.max(1, this.golfers); p.lift = 0;
+      const p = P[np] ?? (P[np] = { x: 0, y: 0, group: 1, person: 0, row: 0, frame: 0, lift: 0, id: 0 }); np++;
+      p.id = 0; p.x = pr.x; p.y = pr.y; p.group = 1; p.person = PRO_PERSON % Math.max(1, this.golfers); p.lift = 0;
       const lt = (this.t - pr.since) % (2 * SWING);
       if (pr.walking) { p.row = rowToward(Math.cos(pr.ang), Math.sin(pr.ang)); p.frame = clipFrame(G.walk, G.walk.times[0]! + (this.t % 1.4)); }
       else if (pr.coach >= 0 && lt >= SWING) { const k = lt - SWING; p.row = golferRow(sc.aim.x, sc.aim.y); p.frame = k < ADDRESS ? G.golf_drive.start : k < ADDRESS + CLIP ? clipFrame(G.golf_drive, G.golf_drive.times[0]! + k - ADDRESS) : G.idle.start; }

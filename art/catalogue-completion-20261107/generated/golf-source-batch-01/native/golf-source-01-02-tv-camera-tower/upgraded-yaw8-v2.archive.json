@@ -1,0 +1,21 @@
+[
+  {
+    "key": "golf-source-01-02-tv-camera-tower",
+    "family": "yaw8",
+    "condition": "upgraded",
+    "version": 2,
+    "target": "generated/golf-source-batch-01/native/golf-source-01-02-tv-camera-tower/upgraded-yaw8-v2.png",
+    "refs": [
+      "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/golf-source-batch-01/native/golf-source-01-02-tv-camera-tower/budget-yaw8-v1.png"
+    ],
+    "prompt": "MATERIAL/CONDITION UPGRADE ONLY to these four exact near-cardinal TVtower views. Preserve every silhouette, all four exact camera projections, camera aim, plain rear end, equipment case/ladder/tripod/guardrail locations and natural occlusion EXACTLY as reference1. Do not change objectgeometry, crop, scale, poses or camera. Repaint the worn corroded scaffold as CLEAN BRIGHT GALVANIZED SILVER STEEL with neatforest-green canvas, soundtidy timber platform, maintained grey equipment case/camera. Remove rust, flakingpaint and fabricfraying, professionalupgradedcondition. Samefinepainterlyminiature materialstyle, realisticpaintedtextures, no extra ornament or new parts. Keep the narrow side slivers/near-cardinal dominant faces, NOT broader normal corners. Late-afternoonDAYTIME sun fixedUPPERRIGHT/shadowsLOWERLEFT;lightsOFF. Fourcomplete isolated equallyscaledobjects, genuinezeroalpha transparentbackground/gutters, wideclearmargins, no broadhalo/groundplate/scenery/people/plants/textUI.",
+    "source": "C:/Users/RAMPAGE/.codex/generated_images/01a1b1fd-39ec-7220-8f11-86e4448833ea/exec-f22cd377-824c-4d94-8c4d-eb04012c0dad.png",
+    "references": [
+      "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/golf-source-batch-01/native/golf-source-01-02-tv-camera-tower/budget-yaw8-v1.png"
+    ],
+    "status": "native-source-candidate-pending-visual-review",
+    "runtime_imported": false,
+    "sha256": "715255c17ecb60ba9a81cfb53221c93dabba13c8916b8966989bd8dc7ca6478c",
+    "native_bytes_preserved": true
+  }
+]

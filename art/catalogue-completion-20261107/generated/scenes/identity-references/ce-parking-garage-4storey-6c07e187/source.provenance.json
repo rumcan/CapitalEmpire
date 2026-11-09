@@ -1,0 +1,71 @@
+{
+  "schema": 1,
+  "createdUtc": "2026-11-07T06:47:45.284562+00:00",
+  "exactRuntimeId": "ce:parking-garage-4storey",
+  "source": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/building-views/parking-garage-4storey/NE.png",
+  "sourceSha256": "166c757c87fa4779f316ca678385fedb075c4ce0c5ec79926705eef42f2f2c48",
+  "output": "identity-references/ce-parking-garage-4storey-6c07e187/source.png",
+  "outputSha256": "166c757c87fa4779f316ca678385fedb075c4ce0c5ec79926705eef42f2f2c48",
+  "width": 1254,
+  "height": 1254,
+  "sourceCell": {
+    "kind": "already isolated native PNG; whole file",
+    "rectXYWH": [
+      0,
+      0,
+      1254,
+      1254
+    ]
+  },
+  "operation": "byte-for-byte PNG copy only; no resize, crop, recolour, key, repaint, registration or source mutation",
+  "selection": "registered corner NE native PNG for this exact subject",
+  "registeredCornerDirection": "NE",
+  "sourceEvidence": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\building-views\\parking-garage-4storey\\provenance.json",
+  "sourceReview": {
+    "integrationStatus": "ready",
+    "geometryReview": {
+      "status": "accepted-for-art-appearance",
+      "proof": "output/garage-angle-export/road-proofs-v3/review.json",
+      "targetSlopes": [
+        0.5,
+        -0.5
+      ],
+      "note": "Measured slopes are approximate. No declaration of exact road alignment or runtime integration.",
+      "reviewDate": "2026-10-27",
+      "reviewer": "Primary art agent",
+      "scope": "Primary inspected the full native sheet and road-overlay proofs: distinct physical quarter-turns, correct storeys, clear alpha. Art review only; not owner approval or live integration.",
+      "measuredTolerance": "Painterly lower-footing fits vary by approximately 0.3â€“3.0 degrees from the 26.565 degree road directions. No mathematical-exactness claim.",
+      "evidence": [
+        {
+          "file": "art/theme-consistency/generated/buildings/parking-garage-4storey-4views-v3/review/NE.road-proof.png",
+          "sha256": "188b82aef93ddc3259d9e921af64b5494affcf16ce082f3b9b3c4fcec08f7719"
+        },
+        {
+          "file": "art/theme-consistency/generated/buildings/parking-garage-4storey-4views-v3/review/SE.road-proof.png",
+          "sha256": "10cda6936be90decfaed5dc0b9ef8260eee206af7f8ff010ccdfd062d7bb610c"
+        },
+        {
+          "file": "art/theme-consistency/generated/buildings/parking-garage-4storey-4views-v3/review/SW.road-proof.png",
+          "sha256": "e3d95299d28af1bbe1218f8aedccf08aff8860fdb31cd929973f05f4efe530ec"
+        },
+        {
+          "file": "art/theme-consistency/generated/buildings/parking-garage-4storey-4views-v3/review/NW.road-proof.png",
+          "sha256": "adec43314e24fd68d32dbd30ac2c40500fd14a3a65cc07eb52572069c0553b02"
+        }
+      ]
+    }
+  },
+  "sourceRegistration": {
+    "id": "ce:parking-garage-4storey",
+    "version": "parking-garage-4storey-4views-v3",
+    "files": {
+      "NE": "166c757c87fa4779f316ca678385fedb075c4ce0c5ec79926705eef42f2f2c48",
+      "SE": "96f0b6365fdfbd834b3fa662b6119522d60098096ef3bf47ef5aa27f88674136",
+      "SW": "ad635fb1cab532589b0fc6fd5635d904bec7e65d2345c90a4ec23fd9a4bf3b26",
+      "NW": "51f5ee4bbfad2c4649bde218d6923e632717b0599c7ad52aaa0413f28006e476"
+    }
+  },
+  "originalInventorySource": null,
+  "originalBusinessSourceCell": null,
+  "nativeReferenceApprovalClaimed": false
+}

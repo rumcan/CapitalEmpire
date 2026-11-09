@@ -1,0 +1,103 @@
+{
+  "jobId": "golf-source-01-08-hole-scoreboard",
+  "priority": 8,
+  "status": "brief-ready-for-root-native-generation",
+  "sourceOnly": true,
+  "nativeGeneratedByThisJob": false,
+  "ownerApproved": false,
+  "runtimeIntegrated": false,
+  "action": "New correct hole score display replacing a fishing chalkboard.",
+  "requiresOrdinary1950sBudgetRedesign": false,
+  "functionalIdentity": "A compact2x2m footprint hole scoreboard on two plain uprights with rear diagonal supports; one blank green/cream face subdivided into score/name slat rows, about2m high as a proposed art size. A scoreboard, not a course map or baked hole12yardage marker. Rear view has slat backs/braces and no duplicated scoring face.",
+  "referenceImages": [
+    {
+      "runtimeSubjectId": "newprop:leaderboard",
+      "referencePNG": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-01\\references\\leaderboard.source.png",
+      "referenceRole": "functional/identity reference",
+      "visualNotes": "Green/cream multi-hole scoreboard with clock, score rows and support legs. Correct scoreboard function but many baked numbers and ornate scrollwork. Secondary small-board reference; new faces blank for game data. Native crop contains detached neighbour gold fragment below.",
+      "provenance": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-01\\references\\leaderboard.provenance.json"
+    },
+    {
+      "runtimeSubjectId": "golf:leaderboard",
+      "referencePNG": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-01\\references\\golf-leaderboard.source.png",
+      "referenceRole": "functional/identity reference",
+      "visualNotes": "Large blank green scoring grid on braced timber supports, rear/service walkway, right-side staircase, three-part pitched shingle rain cap and two green flags; lamps currently glow. Good exact subject reference; future sheets are late-afternoon with lamps off.",
+      "provenance": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-01\\references\\golf-leaderboard.provenance.json"
+    }
+  ],
+  "conditions": {
+    "budget": {
+      "role": "source art design only; no runtime economy upgrade implied",
+      "brief": "Old1950spainted timber uprights and worn chalk/slat board; keep supports simple and practical."
+    },
+    "upgraded": {
+      "role": "source art design only; no runtime economy upgrade implied",
+      "brief": "Clean green metal/timber frame and crisp blank removable score slats; same role, readable simple silhouette without ornate scrollwork."
+    }
+  },
+  "sourceSheetsPerCondition": [
+    {
+      "kind": "normal",
+      "grid": "2x2",
+      "cellOrder": [
+        [
+          "SE",
+          "SW"
+        ],
+        [
+          "NW",
+          "NE"
+        ]
+      ],
+      "camera": "orthographic30degrees down; true45degreecorner views; two walls equal in each corner view"
+    },
+    {
+      "kind": "yaw8",
+      "grid": "2x2",
+      "cellOrder": [
+        [
+          "N",
+          "E"
+        ],
+        [
+          "S",
+          "W"
+        ]
+      ],
+      "camera": "orthographic30degrees down; each cardinal view turned8degrees, never square-on"
+    }
+  ],
+  "lateAfternoonDaylight": "one sun upper-right; faces toward upper-right lit; shadows lower-left; no night glow",
+  "generationConstraints": [
+    "Same one physical object/layout in all eight cells; doors, windows, serving openings, rear braces, stairs, wheels, dishes and equipment never teleport between sides.",
+    "Empty functional facilities; no people stamped into sprites. Transparent background, ample cell margins, equal scale within each sheet, no labels or gridlines.",
+    "No generic ground plates. Functional hitting mat, vehicle wheels, structure supports and admission hardware are part of their actual objects.",
+    "Use the separate style-authority PNG for painterly material/color style; role references may be photoreal, ornate, mislabeled, modern or shanty and are not style authorities.",
+    "Budget means ordinary worn1950sreal-world construction; upgraded means attractive maintained period facilities. No goblin village, rope-lashed logs, gratuitous torn tarps or gold filigree.",
+    "No captions, brand names or baked score/name/yardage text; scoring and information faces remain blank for data. A simple medical symbol may identify first aid."
+  ],
+  "notACompletenessClaim": "No approval, alias, import, camera calibration, seating readiness or completion of related catalogue IDs is inferred from this source brief.",
+  "runtimeTarget": {
+    "eventTypeId": "holeBoard",
+    "eventName": "Hole scoreboard",
+    "currentSpriteSubjectId": "poi:fishing-board",
+    "newArtSubjectProposal": "golf:event-hole-scoreboard",
+    "newArtSubjectAlreadyRegistered": false,
+    "eventCatalogueSource": "src/game/golf/tents.ts",
+    "standInMappingSource": "src/game/golf/structure-art.ts",
+    "footprintTiles": {
+      "width": 1.0,
+      "depth": 1.0
+    },
+    "footprintMetres": {
+      "width": 2.0,
+      "depth": 2.0
+    },
+    "dimensionsMeaning": "Exact current event placement plot, not measured source sprite architecture. New design must fit plot; no runtime geometry changed."
+  },
+  "existingFourCorners": {
+    "usableCorrectTargetCornersFound": false,
+    "reason": "Any corners of the current wrong stand-in describe another object and do not count for this target."
+  },
+  "promptCore": "A compact2x2m footprint hole scoreboard on two plain uprights with rear diagonal supports; one blank green/cream face subdivided into score/name slat rows, about2m high as a proposed art size. A scoreboard, not a course map or baked hole12yardage marker. Rear view has slat backs/braces and no duplicated scoring face. For budget: Old1950spainted timber uprights and worn chalk/slat board; keep supports simple and practical. For upgraded: Clean green metal/timber frame and crisp blank removable score slats; same role, readable simple silhouette without ornate scrollwork. Use only the requested condition for one sheet; do not mix conditions between its four camera cells. Late-afternoon daytime, upper-right sunlight/lower-left shadows. Match painterly style authority, not rejected reference construction."
+}

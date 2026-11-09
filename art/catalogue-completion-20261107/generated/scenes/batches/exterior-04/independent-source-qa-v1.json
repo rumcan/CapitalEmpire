@@ -1,0 +1,83 @@
+{
+  "schema": 1,
+  "source": {
+    "path": "art/catalogue-completion-20261107/generated/scenes/batches/exterior-04/source-v1.png",
+    "sha256": "ab92a671005b4271cd0ad1c4f1692daf72bc85f24bb2c0b697fb944031238a12",
+    "bytes": 3424114
+  },
+  "mode": "RGB",
+  "dimensions": [
+    1672,
+    941
+  ],
+  "opaque_scene_alpha_minmax": [
+    255,
+    255
+  ],
+  "transparent_map_sprite_rules_not_applicable": true,
+  "cells": [
+    {
+      "cell": 0,
+      "rect_ltrb": [
+        0,
+        0,
+        836,
+        470
+      ],
+      "dimensions": [
+        836,
+        470
+      ],
+      "rgba_pixel_sha256": "ec0c87f5b180bcda7de7ffb0d08ca5507ac0864523726ddbcb427127e402e4a1"
+    },
+    {
+      "cell": 1,
+      "rect_ltrb": [
+        836,
+        0,
+        1672,
+        470
+      ],
+      "dimensions": [
+        836,
+        470
+      ],
+      "rgba_pixel_sha256": "51bf1dad98ad95ff9a298f89ce2dc7963ef713b8cb28c4d60f943aacf0bc1ce1"
+    },
+    {
+      "cell": 2,
+      "rect_ltrb": [
+        0,
+        470,
+        836,
+        941
+      ],
+      "dimensions": [
+        836,
+        471
+      ],
+      "rgba_pixel_sha256": "9b71f7ed459e64a6b03ef8c4aa47b88f320481aeaab3edb0197b585008bc5045"
+    },
+    {
+      "cell": 3,
+      "rect_ltrb": [
+        836,
+        470,
+        1672,
+        941
+      ],
+      "dimensions": [
+        836,
+        471
+      ],
+      "rgba_pixel_sha256": "02ab93a68155383881c241f57afcfce40d7bd8ab10d132b20ecdda4887bddd18"
+    }
+  ],
+  "partition_covers_every_pixel": true,
+  "visual_observation": "Four distinctpropertypanels; principalfacade/roof/entrance contained perpanel; no crosspanelbuilding clipping.",
+  "lighting_observation": "Daylit naturalfacades; brightneon/glowingwindows and litwalllamps remain; reconcile earlier global lampsoff direction before acceptance.",
+  "native_identity_full_comparison_pending": true,
+  "source_only": true,
+  "runtime_imported_by_this_qa": false,
+  "owner_approved": false
+}

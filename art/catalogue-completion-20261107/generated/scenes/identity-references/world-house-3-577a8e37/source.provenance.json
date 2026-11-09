@@ -1,0 +1,59 @@
+{
+  "schema": 1,
+  "createdUtc": "2026-11-07T06:47:45.284562+00:00",
+  "exactRuntimeId": "world:house_3",
+  "source": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/building-views/world-house_3/NE.png",
+  "sourceSha256": "d9cea894433a5f88ce7d0ead3e0bcf4835db587077c05e19562648bb97e3dae4",
+  "output": "identity-references/world-house-3-577a8e37/source.png",
+  "outputSha256": "d9cea894433a5f88ce7d0ead3e0bcf4835db587077c05e19562648bb97e3dae4",
+  "width": 561,
+  "height": 411,
+  "sourceCell": {
+    "kind": "already isolated native PNG; whole file",
+    "rectXYWH": [
+      0,
+      0,
+      561,
+      411
+    ]
+  },
+  "operation": "byte-for-byte PNG copy only; no resize, crop, recolour, key, repaint, registration or source mutation",
+  "selection": "registered corner NE native PNG for this exact subject",
+  "registeredCornerDirection": "NE",
+  "sourceEvidence": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\building-views\\world-house_3\\provenance.json",
+  "sourceReview": {},
+  "sourceRegistration": {
+    "id": "world:house_3",
+    "version": "world-house_3-4views-v2",
+    "files": {
+      "NE": "d9cea894433a5f88ce7d0ead3e0bcf4835db587077c05e19562648bb97e3dae4",
+      "SE": "268bb87e84b5987d3c0dd47c24ca5a7c9b099fcb2d9c107e672b981c0d856b2a",
+      "SW": "6bc7ff21db864a1ed8bf7aabfd67eb1da247225398b987f57b5245a394a8da09",
+      "NW": "f3684c37820d4b5228b67b254db102728e20b40ee674ca2831def805a24b6624"
+    }
+  },
+  "originalInventorySource": {
+    "library": "src/game/library.ts",
+    "librarySha256": "91b5190292c1005ac7b936f08e5e1ebf3be43c3aae99f92ea510775da83d9726",
+    "atlas": "src/assets/atlas/sprites-10-0.webp",
+    "atlasSha256": "6ca370227e33f5f4eab6c0abe7cfcf952ed2ff26a21472925e105f582f2922ac",
+    "runtimePage": 10,
+    "localPage": 10,
+    "uv": [
+      0.421875,
+      0.1875,
+      0.632813,
+      0.343262
+    ],
+    "crop": {
+      "left": 864,
+      "top": 384,
+      "width": 432,
+      "height": 319
+    },
+    "native": "art/theme-consistency/exports/buildings/world-house_3.native.png",
+    "nativeSha256": "7a2d106b52f500ab767e0f230c7464770ca83eeca747e7f80d97e07f848e4da5"
+  },
+  "originalBusinessSourceCell": null,
+  "nativeReferenceApprovalClaimed": false
+}

@@ -1,0 +1,244 @@
+{
+  "schema": 1,
+  "as_of_utc": "2026-11-07T10:55:47.829167+00:00",
+  "review_result": "PASS-source-illustration-candidate-and-lossless-extraction",
+  "source": {
+    "path": "generated/scenes/batches/era-home-interiors-01/source-v1.png",
+    "sha256": "7636918e44e0627ec3d9bb8bda7306b821b592616422787d79efee4153bcf214",
+    "bytes": 2658725
+  },
+  "source_original_hash_matches_parent_batch": true,
+  "dimensions": [
+    1672,
+    941
+  ],
+  "mode": "RGB",
+  "is_opaque_scene": true,
+  "zero_alpha_fraction": 0.0,
+  "outer_border_alpha_p50p95max": [
+    255.0,
+    255.0,
+    255.0
+  ],
+  "empty_center_gutter_alpha_p50p95max": [
+    255.0,
+    255.0,
+    255.0
+  ],
+  "cells": [
+    {
+      "cell": 0,
+      "reference_rect_ltrb": [
+        0,
+        0,
+        836,
+        470
+      ],
+      "rgba_rectangle_sha256": "4f2dbe3ded69a9bdf25f6252c8241fd4fc224d4831fb6a8aa947a3d8ccfd81e3",
+      "core_boundary_pixels": null,
+      "minimum_core_margin_px": null,
+      "source_crop": {
+        "source_design_key": "1990s-redbrick-family-single-garage",
+        "runtime_subject": null,
+        "era": "1990s",
+        "view": "inside",
+        "illustration_state": "maintained source candidate",
+        "file": {
+          "path": "generated/scenes/batches/era-home-interiors-01/native-v1/1990s-redbrick-family-single-garage.inside.native.png",
+          "sha256": "b389529c272f71cf03522539e8192af8ba1ba7ce0a397f017a7cee9e9a3506ec",
+          "bytes": 699359
+        },
+        "source_full_sheet": {
+          "path": "generated/scenes/batches/era-home-interiors-01/source-v1.png",
+          "sha256": "7636918e44e0627ec3d9bb8bda7306b821b592616422787d79efee4153bcf214",
+          "bytes": 2658725
+        },
+        "rect_ltrb": [
+          0,
+          0,
+          836,
+          470
+        ],
+        "mode": "RGB",
+        "dimensions": [
+          836,
+          470
+        ],
+        "native_pixels_sha256": "146cce1d881f6d891ff9463ddb831d37ba8431908a10a5e4a9f875ef6d6a6427",
+        "lossless_pixel_verification": true,
+        "operation": "Native integer rectangle only; no resize/repaint/alpha changes",
+        "owner_approved": false,
+        "runtime_imported": false
+      }
+    },
+    {
+      "cell": 1,
+      "reference_rect_ltrb": [
+        836,
+        0,
+        1672,
+        470
+      ],
+      "rgba_rectangle_sha256": "3aa3383d6fb83cfecb292efd7f3b5dd185443f24478d5ae7937e3c5b6e26ebe9",
+      "core_boundary_pixels": null,
+      "minimum_core_margin_px": null,
+      "source_crop": {
+        "source_design_key": "2000s-cream-stucco-two-storey-garage",
+        "runtime_subject": null,
+        "era": "2000s",
+        "view": "inside",
+        "illustration_state": "maintained source candidate",
+        "file": {
+          "path": "generated/scenes/batches/era-home-interiors-01/native-v1/2000s-cream-stucco-two-storey-garage.inside.native.png",
+          "sha256": "3d966eda55692d973d3b7f41af6d6d5a25e6a3efb1f03ad759a172294899dc71",
+          "bytes": 635026
+        },
+        "source_full_sheet": {
+          "path": "generated/scenes/batches/era-home-interiors-01/source-v1.png",
+          "sha256": "7636918e44e0627ec3d9bb8bda7306b821b592616422787d79efee4153bcf214",
+          "bytes": 2658725
+        },
+        "rect_ltrb": [
+          836,
+          0,
+          1672,
+          470
+        ],
+        "mode": "RGB",
+        "dimensions": [
+          836,
+          470
+        ],
+        "native_pixels_sha256": "38aafb3a24dc0336e0b6146e630be1bf8b236aa4ea64a669d85fbec9bb56dee9",
+        "lossless_pixel_verification": true,
+        "operation": "Native integer rectangle only; no resize/repaint/alpha changes",
+        "owner_approved": false,
+        "runtime_imported": false
+      }
+    },
+    {
+      "cell": 2,
+      "reference_rect_ltrb": [
+        0,
+        470,
+        836,
+        941
+      ],
+      "rgba_rectangle_sha256": "be6203913f31d1183a396f8746dd7f5ecc36209c40db99648d94d07115e338eb",
+      "core_boundary_pixels": null,
+      "minimum_core_margin_px": null,
+      "source_crop": {
+        "source_design_key": "2010s-brick-white-clad-townhouse-pair",
+        "runtime_subject": null,
+        "era": "2010s",
+        "view": "inside",
+        "illustration_state": "maintained source candidate",
+        "file": {
+          "path": "generated/scenes/batches/era-home-interiors-01/native-v1/2010s-brick-white-clad-townhouse-pair.inside.native.png",
+          "sha256": "fe2343a2f8a706f314681c11be5eab0e6bef114d107dc46ae9dbc5df968ddad6",
+          "bytes": 614009
+        },
+        "source_full_sheet": {
+          "path": "generated/scenes/batches/era-home-interiors-01/source-v1.png",
+          "sha256": "7636918e44e0627ec3d9bb8bda7306b821b592616422787d79efee4153bcf214",
+          "bytes": 2658725
+        },
+        "rect_ltrb": [
+          0,
+          470,
+          836,
+          941
+        ],
+        "mode": "RGB",
+        "dimensions": [
+          836,
+          471
+        ],
+        "native_pixels_sha256": "5ea44e10de9f43e923ac9aa72ae7512f6ceef24e23d98c6010faf0e4f12fe780",
+        "lossless_pixel_verification": true,
+        "operation": "Native integer rectangle only; no resize/repaint/alpha changes",
+        "owner_approved": false,
+        "runtime_imported": false
+      }
+    },
+    {
+      "cell": 3,
+      "reference_rect_ltrb": [
+        836,
+        470,
+        1672,
+        941
+      ],
+      "rgba_rectangle_sha256": "533df19234f5fb1e77410282f21f7827a33ff548a654165d329dc02ab967461f",
+      "core_boundary_pixels": null,
+      "minimum_core_margin_px": null,
+      "source_crop": {
+        "source_design_key": "2020s-white-charcoal-asymmetric-solar-home",
+        "runtime_subject": null,
+        "era": "2020s",
+        "view": "inside",
+        "illustration_state": "maintained source candidate",
+        "file": {
+          "path": "generated/scenes/batches/era-home-interiors-01/native-v1/2020s-white-charcoal-asymmetric-solar-home.inside.native.png",
+          "sha256": "3fc1612a9463f01bd3de84d9fb46b1dd6012c4cbdd3477d151541f1cb68c4182",
+          "bytes": 623556
+        },
+        "source_full_sheet": {
+          "path": "generated/scenes/batches/era-home-interiors-01/source-v1.png",
+          "sha256": "7636918e44e0627ec3d9bb8bda7306b821b592616422787d79efee4153bcf214",
+          "bytes": 2658725
+        },
+        "rect_ltrb": [
+          836,
+          470,
+          1672,
+          941
+        ],
+        "mode": "RGB",
+        "dimensions": [
+          836,
+          471
+        ],
+        "native_pixels_sha256": "8fa86459b1a584e2f3d5cda8fdb3d10f3d9c56f936095281d11bdebaf87662e2",
+        "lossless_pixel_verification": true,
+        "operation": "Native integer rectangle only; no resize/repaint/alpha changes",
+        "owner_approved": false,
+        "runtime_imported": false
+      }
+    }
+  ],
+  "all_pixels_partitioned": true,
+  "reference_cut_columns_by_row": [
+    [
+      0,
+      836,
+      1672
+    ],
+    [
+      0,
+      836,
+      1672
+    ]
+  ],
+  "notes": [
+    "Four separate coherent era home illustrations in exact1990/2000/2010/2020 order.",
+    "Exterior scenes preserve characteristic facade/garage/paired-entrance/solar-volume identities; interiors are era-themed rooms, not a measured floorplan proof.",
+    "These are intentionally opaque RGB scenes; map-sprite transparency requirements do not apply."
+  ],
+  "source_crops_performed": true,
+  "no_vehicle_or_house_sprite_crops": true,
+  "no_original_pixels_modified": true,
+  "owner_approved": false,
+  "runtime_ready": false,
+  "exact8_certified": false,
+  "exact_prompt": {
+    "path": "generated/scenes/batches/era-home-interiors-01/source-v1.prompt.txt",
+    "sha256": "439afeea4aaf163564cafc3b21fc2978a4c2bfc4654df7fbed9969bc30dc6a9a",
+    "bytes": 2779
+  },
+  "parent_provenance": {
+    "path": "generated/scenes/batches/era-home-interiors-01/source-v1.provenance.json",
+    "sha256": "6b187dc64e33a979705aea942572cba100bff278ba2f4660d05151158e9f36ad",
+    "bytes": 4096
+  }
+}

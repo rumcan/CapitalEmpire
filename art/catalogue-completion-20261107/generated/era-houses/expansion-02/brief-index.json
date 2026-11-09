@@ -1,0 +1,510 @@
+{
+  "schema": 1,
+  "technicalOnly": true,
+  "nativeArtGenerated": false,
+  "runtimeIntegrated": false,
+  "ownerApproved": false,
+  "scope": "Four additional ordinary affordable later-era dwelling model proposals",
+  "commonFinalStyle": "Match existing painted miniature game style. Late-afternoon daylight, upper-right sun/lower-left shadows, no window glow; transparent background and no ground plates, cars, people, plants, captions or technical labels in final art.",
+  "geometryBasis": "One fixed world model; front y negative, right x positive, height z positive. Technical30degree-down camera; normal beta=-45 and yaw beta=+8, object rotated0/90/180/270. Runtime local basis would reflectY, but no runtime integration or native yaw certification is implied.",
+  "models": [
+    {
+      "era": "1990s",
+      "name": "Affordable buff-brick bay-window bungalow",
+      "bodyFootprintMetres": [
+        10,
+        7
+      ],
+      "overallApproxMetres": [
+        10,
+        8
+      ],
+      "storeys": 1,
+      "proposedDwellingUnits": 1,
+      "ppm": 38,
+      "brief": "A modest low buff-brick bungalow with one small projecting front bay window, one front door to its right, a shallow grey-brown tiled hip roof and one rear-left chimney. No garage, no extra wings, no columns. Different low compact silhouette from the first1990sredbrick garage house.",
+      "key": "1990s-buff-brick-bay-bungalow",
+      "status": "proposed-source-geometry-only",
+      "mesh": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\expansion-02\\1990s-buff-brick-bay-bungalow\\guides\\1990s-buff-brick-bay-bungalow-world-model-v1.json",
+      "meshSHA256": "4e11e92b17ab871a7d2320ee91b97f23aa33fce9a9054ddaeaeff383eccc8187",
+      "guides": {
+        "normal": {
+          "png": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\expansion-02\\1990s-buff-brick-bay-bungalow\\guides\\normal-world-v1.png",
+          "svg": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\expansion-02\\1990s-buff-brick-bay-bungalow\\guides\\normal-world-v1.svg",
+          "calibration": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\expansion-02\\1990s-buff-brick-bay-bungalow\\guides\\normal-world-v1.calibration.json",
+          "sha256": "27ab3ef9742e2749487b98a2302c092dbccf7c7c0a45e419e95f0709e83abfe2",
+          "normalOrYawCameraApproval": false,
+          "objectBoundsPerCell": [
+            [
+              159,
+              231,
+              642,
+              569
+            ],
+            [
+              152,
+              234,
+              649,
+              566
+            ],
+            [
+              159,
+              232,
+              642,
+              568
+            ],
+            [
+              151,
+              229,
+              648,
+              571
+            ]
+          ],
+          "geometryClipped": false
+        },
+        "yaw8": {
+          "png": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\expansion-02\\1990s-buff-brick-bay-bungalow\\guides\\yaw8-world-v1.png",
+          "svg": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\expansion-02\\1990s-buff-brick-bay-bungalow\\guides\\yaw8-world-v1.svg",
+          "calibration": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\expansion-02\\1990s-buff-brick-bay-bungalow\\guides\\yaw8-world-v1.calibration.json",
+          "sha256": "cabfedd62964c07ead80accd48ce4ba3f0d7d7c0e4e7c0d71806025d85a0a00f",
+          "normalOrYawCameraApproval": false,
+          "objectBoundsPerCell": [
+            [
+              183,
+              263,
+              617,
+              537
+            ],
+            [
+              231,
+              246,
+              569,
+              554
+            ],
+            [
+              183,
+              270,
+              617,
+              530
+            ],
+            [
+              231,
+              234,
+              569,
+              566
+            ]
+          ],
+          "geometryClipped": false
+        }
+      },
+      "frontDoorAnchors": {
+        "front-door/threshold": [
+          0.9,
+          -3.025,
+          0.05
+        ]
+      },
+      "featureAnchorCount": 56,
+      "normalCells": [
+        [
+          "SE",
+          "SW"
+        ],
+        [
+          "NW",
+          "NE"
+        ]
+      ],
+      "yaw8Cells": [
+        [
+          "N",
+          "E"
+        ],
+        [
+          "S",
+          "W"
+        ]
+      ]
+    },
+    {
+      "era": "2000s",
+      "name": "Affordable single-storey redbrick duplex",
+      "bodyFootprintMetres": [
+        12,
+        8
+      ],
+      "overallApproxMetres": [
+        12,
+        8.8
+      ],
+      "storeys": 1,
+      "proposedDwellingUnits": 2,
+      "ppm": 38,
+      "brief": "Two compact side-by-side one-storey redbrick homes under one shared charcoal pitched roof. Exactly two front doors near the middle, two broad outer front living windows, separate rear GLASS patio sliders, two roof vents. No upstairs floor or garage. An ordinary affordable duplex, distinct from the two-storey2010stownhouse pair.",
+      "key": "2000s-redbrick-single-storey-duplex",
+      "status": "proposed-source-geometry-only",
+      "mesh": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\expansion-02\\2000s-redbrick-single-storey-duplex\\guides\\2000s-redbrick-single-storey-duplex-world-model-v1.json",
+      "meshSHA256": "5f67f856487880a142784414669721ce4696a98ec61c5fd2817ff56379a990bc",
+      "guides": {
+        "normal": {
+          "png": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\expansion-02\\2000s-redbrick-single-storey-duplex\\guides\\normal-world-v1.png",
+          "svg": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\expansion-02\\2000s-redbrick-single-storey-duplex\\guides\\normal-world-v1.svg",
+          "calibration": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\expansion-02\\2000s-redbrick-single-storey-duplex\\guides\\normal-world-v1.calibration.json",
+          "sha256": "0bb72ee34470753ab89f8fd09416314fdc704a5caf15dce0f2e9b9e79b7cefa5",
+          "normalOrYawCameraApproval": false,
+          "objectBoundsPerCell": [
+            [
+              118,
+              214,
+              682,
+              586
+            ],
+            [
+              118,
+              214,
+              682,
+              586
+            ],
+            [
+              118,
+              214,
+              682,
+              586
+            ],
+            [
+              118,
+              214,
+              682,
+              586
+            ]
+          ],
+          "geometryClipped": false
+        },
+        "yaw8": {
+          "png": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\expansion-02\\2000s-redbrick-single-storey-duplex\\guides\\yaw8-world-v1.png",
+          "svg": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\expansion-02\\2000s-redbrick-single-storey-duplex\\guides\\yaw8-world-v1.svg",
+          "calibration": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\expansion-02\\2000s-redbrick-single-storey-duplex\\guides\\yaw8-world-v1.calibration.json",
+          "sha256": "7f738f822fbec274a896f46d6fed0f88f4dfe58a4bd3d6d839dbf8f9986ae290",
+          "normalOrYawCameraApproval": false,
+          "objectBoundsPerCell": [
+            [
+              143,
+              257,
+              657,
+              543
+            ],
+            [
+              207,
+              209,
+              593,
+              591
+            ],
+            [
+              143,
+              258,
+              657,
+              542
+            ],
+            [
+              207,
+              209,
+              593,
+              591
+            ]
+          ],
+          "geometryClipped": false
+        }
+      },
+      "frontDoorAnchors": {
+        "front-unit-door--1.25/threshold": [
+          -1.25,
+          -4.025,
+          0.05
+        ],
+        "front-unit-door-1.25/threshold": [
+          1.25,
+          -4.025,
+          0.05
+        ]
+      },
+      "featureAnchorCount": 62,
+      "normalCells": [
+        [
+          "SE",
+          "SW"
+        ],
+        [
+          "NW",
+          "NE"
+        ]
+      ],
+      "yaw8Cells": [
+        [
+          "N",
+          "E"
+        ],
+        [
+          "S",
+          "W"
+        ]
+      ]
+    },
+    {
+      "era": "2010s",
+      "name": "Small affordable six-flat walk-up",
+      "bodyFootprintMetres": [
+        18,
+        10
+      ],
+      "overallApproxMetres": [
+        18.2,
+        11.2
+      ],
+      "storeys": 3,
+      "proposedDwellingUnits": 6,
+      "ppm": 28,
+      "brief": "A modest rectangular three-storey six-flat walk-up: brick lower storey, cream upper render, shallow flat parapet roof, ONE shared central front entrance, two small balconies per floor (six total) with plain metal rails, fixed rear/end window grids, one rear service door. No tower, lifts in glass shafts, luxury roof terraces or giant glazing. Dwelling count is an art/design proposal, never game population balance.",
+      "key": "2010s-small-six-flat-walkup",
+      "status": "proposed-source-geometry-only",
+      "mesh": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\expansion-02\\2010s-small-six-flat-walkup\\guides\\2010s-small-six-flat-walkup-world-model-v1.json",
+      "meshSHA256": "dc334cb5639e93a2f1cf953256fa41d950ec3a4fbfc35ced58ee520e2a723e84",
+      "guides": {
+        "normal": {
+          "png": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\expansion-02\\2010s-small-six-flat-walkup\\guides\\normal-world-v1.png",
+          "svg": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\expansion-02\\2010s-small-six-flat-walkup\\guides\\normal-world-v1.svg",
+          "calibration": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\expansion-02\\2010s-small-six-flat-walkup\\guides\\normal-world-v1.calibration.json",
+          "sha256": "eb746871bdbacbef615a45804dff204bdbe9aa858a14f1de238d0ed9017a997d",
+          "normalOrYawCameraApproval": false,
+          "objectBoundsPerCell": [
+            [
+              120,
+              150,
+              680,
+              650
+            ],
+            [
+              120,
+              150,
+              680,
+              650
+            ],
+            [
+              120,
+              150,
+              680,
+              650
+            ],
+            [
+              120,
+              150,
+              680,
+              650
+            ]
+          ],
+          "geometryClipped": false
+        },
+        "yaw8": {
+          "png": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\expansion-02\\2010s-small-six-flat-walkup\\guides\\yaw8-world-v1.png",
+          "svg": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\expansion-02\\2010s-small-six-flat-walkup\\guides\\yaw8-world-v1.svg",
+          "calibration": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\expansion-02\\2010s-small-six-flat-walkup\\guides\\yaw8-world-v1.calibration.json",
+          "sha256": "0493d0a985d8a71c8040268bad98344dd4a2217369e48448d1fd7def6c540c4e",
+          "normalOrYawCameraApproval": false,
+          "objectBoundsPerCell": [
+            [
+              129,
+              199,
+              671,
+              601
+            ],
+            [
+              213,
+              154,
+              587,
+              646
+            ],
+            [
+              129,
+              202,
+              671,
+              598
+            ],
+            [
+              213,
+              154,
+              587,
+              646
+            ]
+          ],
+          "geometryClipped": false
+        }
+      },
+      "frontDoorAnchors": {
+        "single-shared-front-entrance/threshold": [
+          0,
+          -5.05,
+          0.05
+        ]
+      },
+      "featureAnchorCount": 220,
+      "normalCells": [
+        [
+          "SE",
+          "SW"
+        ],
+        [
+          "NW",
+          "NE"
+        ]
+      ],
+      "yaw8Cells": [
+        [
+          "N",
+          "E"
+        ],
+        [
+          "S",
+          "W"
+        ]
+      ]
+    },
+    {
+      "era": "2020s",
+      "name": "Compact two-storey gabled solar family home",
+      "bodyFootprintMetres": [
+        7.5,
+        8.5
+      ],
+      "overallApproxMetres": [
+        7.5,
+        9.0
+      ],
+      "storeys": 2,
+      "proposedDwellingUnits": 1,
+      "ppm": 38,
+      "solarPanels": 4,
+      "brief": "Affordable compact two-storey family infill home: white lower walls, charcoal upper front/rear cladding, one ordinary pitched gable roof, timber front door with a narrow side-light, broad front living window, rear GLASS patio slider and FOUR solar modules in two rows of two ONLY on the fixed front roof slope. Rear roof does not acquire the solar panels when turned. No garage, flat-roof sci-fi shapes or mansion scale.",
+      "key": "2020s-compact-gabled-solar-family-home",
+      "status": "proposed-source-geometry-only",
+      "mesh": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\expansion-02\\2020s-compact-gabled-solar-family-home\\guides\\2020s-compact-gabled-solar-family-home-world-model-v1.json",
+      "meshSHA256": "a601047ec7458410c9ce594b95da53c99d222b32b5c6fc59f62e08f74fc4e17c",
+      "guides": {
+        "normal": {
+          "png": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\expansion-02\\2020s-compact-gabled-solar-family-home\\guides\\normal-world-v1.png",
+          "svg": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\expansion-02\\2020s-compact-gabled-solar-family-home\\guides\\normal-world-v1.svg",
+          "calibration": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\expansion-02\\2020s-compact-gabled-solar-family-home\\guides\\normal-world-v1.calibration.json",
+          "sha256": "df802c1bd705f20c1eef12c04accca2e589ddf68642052e7ea9b04c84f69e701",
+          "normalOrYawCameraApproval": false,
+          "objectBoundsPerCell": [
+            [
+              172,
+              196,
+              628,
+              604
+            ],
+            [
+              172,
+              196,
+              628,
+              604
+            ],
+            [
+              172,
+              196,
+              628,
+              604
+            ],
+            [
+              172,
+              196,
+              628,
+              604
+            ]
+          ],
+          "geometryClipped": false
+        },
+        "yaw8": {
+          "png": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\expansion-02\\2020s-compact-gabled-solar-family-home\\guides\\yaw8-world-v1.png",
+          "svg": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\expansion-02\\2020s-compact-gabled-solar-family-home\\guides\\yaw8-world-v1.svg",
+          "calibration": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\expansion-02\\2020s-compact-gabled-solar-family-home\\guides\\yaw8-world-v1.calibration.json",
+          "sha256": "288327d5a369f4191faf868639c5dab74093487847ea2c1641379d854db9507d",
+          "normalOrYawCameraApproval": false,
+          "objectBoundsPerCell": [
+            [
+              227,
+              210,
+              573,
+              590
+            ],
+            [
+              204,
+              205,
+              596,
+              595
+            ],
+            [
+              227,
+              215,
+              573,
+              585
+            ],
+            [
+              204,
+              205,
+              596,
+              595
+            ]
+          ],
+          "geometryClipped": false
+        }
+      },
+      "frontDoorAnchors": {
+        "front-timber-door/threshold": [
+          2.1,
+          -4.3,
+          0.05
+        ]
+      },
+      "featureAnchorCount": 73,
+      "normalCells": [
+        [
+          "SE",
+          "SW"
+        ],
+        [
+          "NW",
+          "NE"
+        ]
+      ],
+      "yaw8Cells": [
+        [
+          "N",
+          "E"
+        ],
+        [
+          "S",
+          "W"
+        ]
+      ]
+    }
+  ],
+  "generatorSource": {
+    "path": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\expansion-02\\build_extra_house_guides.py",
+    "sha256": "ef3b675c3d04c39a07f43e71859d230eff5094883de42f1661d27e68331929cc"
+  },
+  "helperSource": {
+    "path": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\build_era_house_guides.py",
+    "sha256": "7811312d8894cbe9a0f5f081a4ba072119a0d4528d16f9d2795649b370f205cc"
+  },
+  "technicalVisualInspection": {
+    "allEightSheetsViewed": true,
+    "totalTechnicalViews": 32,
+    "nativeSpriteGenerationPerformed": false,
+    "runtimeApprovalClaimed": false,
+    "notes": [
+      "Bungalow keeps front bay projection and different rear kitchen door/windows.",
+      "One-storey duplex keeps two front entries and two rear glass patio sliders.",
+      "Small apartment keeps six balcony assemblies on front only, one common entry and fixed side/rear windows.",
+      "2020scompact family home keeps four solar modules on the fixed front roof plane; the far plane can be seen from above in rear views, so visible panels do not teleport."
+    ]
+  }
+}

@@ -1,0 +1,39 @@
+{
+  "schema": 1,
+  "as_of_utc": "2026-11-07T11:26:36.499594+00:00",
+  "sources_reviewed": 5,
+  "records": [
+    {
+      "file": "generated/era-houses/2020s-white-charcoal-asymmetric-solar-home/yaw8-v1.png",
+      "review_result": "PASS-main-opening-identity-and-alpha;HOLD-exact8-certification",
+      "qa": "generated/era-houses/2020s-white-charcoal-asymmetric-solar-home/yaw8-v1.independent-qa.json",
+      "alpha_border_max": 1.0
+    },
+    {
+      "file": "generated/vehicles/town-school-shuttle-bus/traffic8-v3.png",
+      "review_result": "PASS-native-alpha-cleanup-and-eight-noses;HOLD-side-feature-regression-camera",
+      "qa": "generated/vehicles/town-school-shuttle-bus/traffic8-v3.independent-qa.json",
+      "alpha_border_max": 1.0
+    },
+    {
+      "file": "generated/budget-1950-shanty-hut/yaw8-v2.png",
+      "review_result": "PASS-BR-rear-sliver-repair-and-alpha;HOLD-existing-under-yaw",
+      "qa": "generated/budget-1950-shanty-hut/yaw8-v2.independent-qa.json",
+      "alpha_border_max": 1.0
+    },
+    {
+      "file": "generated/budget-1950-shanty-shed/yaw8-v2.png",
+      "review_result": "PASS-BR-rear-sliver-repair-and-alpha;HOLD-existing-under-yaw",
+      "qa": "generated/budget-1950-shanty-shed/yaw8-v2.independent-qa.json",
+      "alpha_border_max": 1.0
+    },
+    {
+      "file": "generated/vehicles/town-red-hatchback/right-elevated-v1.png",
+      "review_result": "PASS-single-source-candidate;see20single-review",
+      "qa": "generated/vehicles/town-red-hatchback/right-elevated-v1.independent-qa.json"
+    }
+  ],
+  "single_profile_review": "audit/single-elevated-vehicle-source-review-v1.json",
+  "whole_catalogue_complete": false,
+  "no_runtime_changes": true
+}

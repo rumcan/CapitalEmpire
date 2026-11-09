@@ -1,0 +1,24 @@
+[
+  {
+    "key": "newprop:cart-ambulance",
+    "slug": "cart-ambulance",
+    "family": "normal",
+    "condition": "base",
+    "version": 1,
+    "target": "generated/golf-vehicle-source-batch-01/native/cart-ambulance/normal-v1.png",
+    "refs": [
+      "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-vehicle-source-batch-01\\fixed-world-guides-v1\\cart-ambulance\\guides\\normal-world-v1.png",
+      "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-vehicle-source-batch-01\\references\\cart-ambulance.source.png"
+    ],
+    "prompt": "Create a native2x2 sheet of FOUR actual corner views of ONE specialist golf vehicle or mobile vending prop. REFERENCE1 is fixed-world assembly/camera/occlusion authority. REFERENCE2 is subject identity and detailed painterly miniature MATERIALS/BODY DETAIL only; never repeat its one camera. Preserve recognizable vehicle shape, wheels, restrained cream-green finishes and fine metal/glass/canvas texture, not flatlowpolyguide surfaces. Function: Cream compact medical golf cart with four wheels, front two-person cream bench/steering wheel, short cab canopy with green beacon and one fixed orange stretcher strapped lengthwise on rear medical platform. Keep stretcher at rear, cab at front, cross markings on fixed hood/side panels. No patient, driver or extra benches.. Fixedphysicalrules: One front two-place bench/short canopy/green beacon; exactly ONE orange stretcher with TWO straps at REAR+Y. No patient or operator. Four road wheels, straight steering.. Identity-preserving medical utility. Source is an actual stretcher cart, distinct from generated basic player cart. Later-style body can be preserved as a later-era model; do not assign an unverified release year.. Keep authentic wear modest and plausible; no gratuitous holes or fantasy filigree. Fourdistinct45degreecorner poses in exact SE SW / NW NE cellsasguide, orthographic30degreesDOWN; equalphysicalscale. Rearmustshowtrueback, no inventedfrontheadlights/steering onrear. Allroofequipment/seatrows/ramps/cargo/stretcher stayonfixedworldside; nooperatingstatechanges. Satellitebowlbackconvexwhenviewedfromrear, neverrepanaimingtofaceviewer. Late-afternoon DAYTIME sunlightfixedSCREENUPPERRIGHT/shadowsLOWERLEFT, allheadlamps/beaconsOFF. CompleteisolatedopaqueobjectswithgenerousZEROALPHAtransparentmargins/gutters, smallcontactshadowonly; no broadgreyhalo/scenery/groundtile/road/people/plants/labels/UI/grid. Intrinsicmedicalcross/accesssymbolallowed, no extrabrands/text.",
+    "source": "C:/Users/RAMPAGE/.codex/generated_images/01a1b1fd-39ec-7220-8f11-86e4448833ea/exec-896bf69b-0a1b-4d58-8b06-61e2c80fae42.png",
+    "references": [
+      "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-vehicle-source-batch-01\\fixed-world-guides-v1\\cart-ambulance\\guides\\normal-world-v1.png",
+      "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-vehicle-source-batch-01\\references\\cart-ambulance.source.png"
+    ],
+    "status": "native-source-candidate-pending-visual-review",
+    "runtime_imported": false,
+    "sha256": "925e7252dd08fc110c26f81b3cd5198f56c1eb9c47fe529ad44fb3f98e235699",
+    "native_bytes_preserved": true
+  }
+]

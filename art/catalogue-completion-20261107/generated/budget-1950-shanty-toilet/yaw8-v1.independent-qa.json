@@ -1,0 +1,113 @@
+{
+  "schema": 1,
+  "as_of_utc": "2026-11-07T10:47:07.678072+00:00",
+  "review_result": "HOLD-exact-yaw8-geometry;main-face-identity-and-alpha-pass",
+  "source": {
+    "path": "generated/budget-1950-shanty-toilet/yaw8-v1.png",
+    "sha256": "18b9b38ea8de06b0fc1cb0966942e206ef9971642c5fb1b45c6f88d3bed33ca8",
+    "bytes": 1139214
+  },
+  "source_original_hash_matches_parent_batch": true,
+  "dimensions": [
+    1254,
+    1254
+  ],
+  "mode": "RGBA",
+  "references": [
+    {
+      "path": "generated/budget-1950-shanty-toilet/guides/yaw8-world-v1.png",
+      "sha256": "225aa8d0eaa791a47a49ec418c265591cb8f4c12a1fb97529de085cc08a0e727",
+      "bytes": 24704
+    },
+    {
+      "path": "generated/budget-1950-shanty-toilet/normal-v1.png",
+      "sha256": "ba87f754b41a14c803131b3ea0e9f56156c448a8b86b162c84b3be4e5452bb42",
+      "bytes": 1599692
+    }
+  ],
+  "source_core_clipping": false,
+  "outer_border_alpha_p50p95max": [
+    0.0,
+    0.0,
+    1.0
+  ],
+  "empty_center_gutter_alpha_p50p95max": [
+    0.0,
+    1.0,
+    1.0
+  ],
+  "zero_alpha_fraction": 0.7085206128268329,
+  "cells": [
+    {
+      "guide_cell_label_only": "N",
+      "rect_ltrb": [
+        0,
+        0,
+        627,
+        627
+      ],
+      "native_core_margin_pixels": 106,
+      "boundary_core_pixels": 0,
+      "boundary_alpha_max": 1,
+      "rgba_rectangle_sha256": "99b27470729c8285aaa147f2c6774944e31227d5183bd4e4be8cb28e267deed0"
+    },
+    {
+      "guide_cell_label_only": "E",
+      "rect_ltrb": [
+        627,
+        0,
+        1254,
+        627
+      ],
+      "native_core_margin_pixels": 99,
+      "boundary_core_pixels": 0,
+      "boundary_alpha_max": 1,
+      "rgba_rectangle_sha256": "8b6ced0968971a2b5e8c65082c572ab83b6a6bd59e4842808428200f71fd303b"
+    },
+    {
+      "guide_cell_label_only": "S",
+      "rect_ltrb": [
+        0,
+        627,
+        627,
+        1254
+      ],
+      "native_core_margin_pixels": 107,
+      "boundary_core_pixels": 0,
+      "boundary_alpha_max": 1,
+      "rgba_rectangle_sha256": "4a3e19c0936e2f6dc3fc3f1ed25185a705a92619abfee77c03125056bcbc52ee"
+    },
+    {
+      "guide_cell_label_only": "W",
+      "rect_ltrb": [
+        627,
+        627,
+        1254,
+        1254
+      ],
+      "native_core_margin_pixels": 99,
+      "boundary_core_pixels": 0,
+      "boundary_alpha_max": 1,
+      "rgba_rectangle_sha256": "67ea5c19255367b1e9accb24a70bc2d6f6bbd7f58c972947f85fc29b186b826f"
+    }
+  ],
+  "notes": [
+    "All four principal wall identities present and consistent with normal source. Ordinary1950s cladding/corrugatedroof/paint remains coherent.",
+    "Direct native foundation-edge slopes recorded in audit/cabin-native-yaw-baseline-measurements-v1.json; not an8degree proof inferred from technical guide.",
+    "Exactly2front doors/2rear vents, blankgableends retained. NativeN baseline close to target, Sshallower; no whole-set exact8 certificate."
+  ],
+  "exact8_certified": false,
+  "owner_approved": false,
+  "runtime_ready": false,
+  "no_native_pixel_changes_or_source_crops": true,
+  "exact_prompt": {
+    "path": "generated/budget-1950-shanty-toilet/yaw8-v1.prompt.txt",
+    "sha256": "68d492b243af568f829a5afbb51d4642062635836a6ecd8825c3d3717d48fcd3",
+    "bytes": 1452
+  },
+  "parent_provenance": {
+    "path": "generated/budget-1950-shanty-toilet/yaw8-v1.provenance.json",
+    "sha256": "7b2d167b46e51d7145d299828f3fe1d5e63f5f5d4f81d2353978362611b3fe0b",
+    "bytes": 2272
+  }
+}

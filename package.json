@@ -18,6 +18,7 @@
     "typecheck": "tsc --noEmit -p .",
     "ui:overflow": "node scripts/dev/ui-overflow.mjs",
     "bench": "node scripts/perf/bench.mjs",
+    "heap": "node scripts/perf/heap-trace.mjs",
     "worker:test": "bash scripts/worker/run.sh \"npm test\"",
     "worker:bench": "bash scripts/worker/run.sh \"npm run build && node scripts/perf/bench.mjs --serve --channel chrome --size 1\"",
     "sim:gate": "esbuild scripts/sim/gate.ts --bundle --platform=node --format=esm --loader:.webp=empty --loader:.png=empty --outfile=output/sim/gate.mjs --log-level=warning && node output/sim/gate.mjs",

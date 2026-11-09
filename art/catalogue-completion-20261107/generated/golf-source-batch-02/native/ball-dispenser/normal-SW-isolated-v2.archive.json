@@ -1,0 +1,23 @@
+[
+  {
+    "key": "newprop:ball-dispenser",
+    "family": "normal-SW",
+    "condition": "base",
+    "version": 2,
+    "target": "generated/golf-source-batch-02/native/ball-dispenser/normal-SW-isolated-v2.png",
+    "refs": [
+      "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/golf-source-batch-02/native/ball-dispenser/normal-SW-isolated-v1.png",
+      "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/golf-source-batch-02/native/ball-dispenser/camera-calibration-refs/normal-SW-identity-from-v2-BL-NW.png"
+    ],
+    "prompt": "Correct ONLY the broad visible REAR PANEL in reference1 single golf-ball dispenser sprite. It incorrectly has an oval glass ball window, coin-slot/button controls and a protruding ball chute. REMOVE ALL of these rear-front fixtures and restore a PLAIN GREEN RECTANGULAR LATCHED SERVICE DOOR, like reference2: solid worn painted metal, thin rectangular door seam, small plain latch/handle, subtle hinges/bolts. NO oval/round hole/window, no balls visible through rear, no coin panel, no projecting chute on this broad rear plane. Keep the actual single front basket glimpsed BEHIND the far RIGHT edge unchanged; its location is correct. Keep exact body projection/camera, upper sloping hood, blank narrow side, base, texture, scale, light and entire silhouette except removing the erroneous rear chute. Reference2 door detail/material only, do NOT copy its othercamera/basketside. Oneisolatedfinesprite, late-afternoonDAYTIME sunUPPERRIGHT/shadowsLOWERLEFT, truezeroalpha transparentbackground/clearmargins, noextraobjects/textUI/haze.",
+    "source": "C:/Users/RAMPAGE/.codex/generated_images/01a1b1fd-39ec-7220-8f11-86e4448833ea/exec-7a71a9d4-9820-4096-8f1b-6d56b09f7946.png",
+    "references": [
+      "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/golf-source-batch-02/native/ball-dispenser/normal-SW-isolated-v1.png",
+      "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/golf-source-batch-02/native/ball-dispenser/camera-calibration-refs/normal-SW-identity-from-v2-BL-NW.png"
+    ],
+    "status": "native-source-candidate-pending-visual-review",
+    "runtime_imported": false,
+    "sha256": "c8b2025139ed0235a0a50530453dc40818783cb2b440df742846dc2a2022c7c6",
+    "native_bytes_preserved": true
+  }
+]

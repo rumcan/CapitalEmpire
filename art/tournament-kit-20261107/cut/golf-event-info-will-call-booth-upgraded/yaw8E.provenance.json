@@ -1,0 +1,29 @@
+{
+  "schema": 1,
+  "subject": "golf:event-info-will-call-booth-upgraded",
+  "version": 1,
+  "key": "yaw8E",
+  "source": {
+    "file": "../../batch01/info-will-call-booth/upgraded/yaw8-E.png",
+    "sha256": "9c5a7e16e3a0683011b9b0e2f820e27e19eea67d053f6411293548c037b0dffc",
+    "width": 627,
+    "height": 627
+  },
+  "cell": 0,
+  "cellRect": {
+    "left": 0,
+    "top": 0,
+    "width": 627,
+    "height": 627
+  },
+  "crop": {
+    "left": 62,
+    "top": 50,
+    "width": 496,
+    "height": 528
+  },
+  "output": "yaw8E.native.png",
+  "sha256": "f6e861f9d6811f019b8ca7106b561cbc1e19e4f78584b4e5806875867a85c37a",
+  "operation": "native RGBA cell crop only; no flip/repaint/view synthesis",
+  "review": "candidate"
+}

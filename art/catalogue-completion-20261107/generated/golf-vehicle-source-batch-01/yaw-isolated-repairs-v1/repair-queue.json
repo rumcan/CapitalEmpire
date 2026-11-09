@@ -1,0 +1,173 @@
+{
+  "schema": 1,
+  "sourceOnly": true,
+  "sets": [
+    {
+      "key": "shuttle-cart",
+      "subject": "newprop:shuttle-cart",
+      "hold": {
+        "cells": [
+          "yaw8N",
+          "yaw8E",
+          "yaw8S",
+          "yaw8W"
+        ],
+        "reason": "All four are diagonal corner views, with long side exposed in nominal front/rear cells. Missing near-front, near-rear and dominant-side camera family. Three seat rows and basic body identity remain correct.",
+        "repair": "Paint guide-controlled main faces N E / S W; do not copy identity corner camera."
+      },
+      "guideCrops": [
+        {
+          "camera": "yaw8N",
+          "guideFile": "art/catalogue-completion-20261107/generated/golf-vehicle-source-batch-01/yaw-isolated-repairs-v1/shuttle-cart/yaw8N-guide.png",
+          "guideSource": "art/catalogue-completion-20261107/generated/golf-vehicle-source-batch-01/fixed-world-guides-v1/shuttle-cart/guides/yaw8-world-v1.png",
+          "guideSourceRectLTRB": [
+            0,
+            0,
+            800,
+            800
+          ],
+          "guidePNG_SHA256": "f549be8f1cedf93746ef2e0cd6c04af001165b25cec745c6debb951b9d82d1d2",
+          "guideCropRGBAExact": true
+        },
+        {
+          "camera": "yaw8E",
+          "guideFile": "art/catalogue-completion-20261107/generated/golf-vehicle-source-batch-01/yaw-isolated-repairs-v1/shuttle-cart/yaw8E-guide.png",
+          "guideSource": "art/catalogue-completion-20261107/generated/golf-vehicle-source-batch-01/fixed-world-guides-v1/shuttle-cart/guides/yaw8-world-v1.png",
+          "guideSourceRectLTRB": [
+            800,
+            0,
+            1600,
+            800
+          ],
+          "guidePNG_SHA256": "99caa42e68d96edc6d81568a113529b65d55150fb5ab9765292c3f13a13b2464",
+          "guideCropRGBAExact": true
+        },
+        {
+          "camera": "yaw8S",
+          "guideFile": "art/catalogue-completion-20261107/generated/golf-vehicle-source-batch-01/yaw-isolated-repairs-v1/shuttle-cart/yaw8S-guide.png",
+          "guideSource": "art/catalogue-completion-20261107/generated/golf-vehicle-source-batch-01/fixed-world-guides-v1/shuttle-cart/guides/yaw8-world-v1.png",
+          "guideSourceRectLTRB": [
+            0,
+            800,
+            800,
+            1600
+          ],
+          "guidePNG_SHA256": "ca0bcf3ab9dd718b2a0dc503db5aaa9319879bc6a22d8e85bdeb0b4ba56cce90",
+          "guideCropRGBAExact": true
+        },
+        {
+          "camera": "yaw8W",
+          "guideFile": "art/catalogue-completion-20261107/generated/golf-vehicle-source-batch-01/yaw-isolated-repairs-v1/shuttle-cart/yaw8W-guide.png",
+          "guideSource": "art/catalogue-completion-20261107/generated/golf-vehicle-source-batch-01/fixed-world-guides-v1/shuttle-cart/guides/yaw8-world-v1.png",
+          "guideSourceRectLTRB": [
+            800,
+            800,
+            1600,
+            1600
+          ],
+          "guidePNG_SHA256": "375e54649897158384e51312134edb3970521a45c0bb59ebbef2f02339aaf6d2",
+          "guideCropRGBAExact": true
+        }
+      ],
+      "repairPolicy": "Use guide first for geometry; accepted normal identity second for material style. Single target view only, source alpha, no game import."
+    },
+    {
+      "key": "satellite-van",
+      "subject": "newprop:satellite-van",
+      "hold": {
+        "cells": [
+          "yaw8E",
+          "yaw8W"
+        ],
+        "reason": "Nominal W shows sliding-door vertical seams and handle on physical RIGHT, which must be plain after explicit LEFT-door adoption; nominal E does not clearly carry the required LEFT sliding handle/rail. Dish front/back classes are otherwise coherent.",
+        "repair": "E primary LEFT side has one sliding door/handle/rail; W primary RIGHT side plain. Preserve dish and all other equipment."
+      },
+      "guideCrops": [
+        {
+          "camera": "yaw8E",
+          "guideFile": "art/catalogue-completion-20261107/generated/golf-vehicle-source-batch-01/yaw-isolated-repairs-v1/satellite-van/yaw8E-guide.png",
+          "guideSource": "art/catalogue-completion-20261107/generated/golf-vehicle-source-batch-01/fixed-world-guides-v2/satellite-van/guides/yaw8-world-v2.png",
+          "guideSourceRectLTRB": [
+            800,
+            0,
+            1600,
+            800
+          ],
+          "guidePNG_SHA256": "803999472f06e5a2c4f73d6a5efc9dcadb70024c07be5d1d2658ef048266ecc2",
+          "guideCropRGBAExact": true
+        },
+        {
+          "camera": "yaw8W",
+          "guideFile": "art/catalogue-completion-20261107/generated/golf-vehicle-source-batch-01/yaw-isolated-repairs-v1/satellite-van/yaw8W-guide.png",
+          "guideSource": "art/catalogue-completion-20261107/generated/golf-vehicle-source-batch-01/fixed-world-guides-v2/satellite-van/guides/yaw8-world-v2.png",
+          "guideSourceRectLTRB": [
+            800,
+            800,
+            1600,
+            1600
+          ],
+          "guidePNG_SHA256": "cc6eb0551194115f37582b046272918b2b63ea313f789c1db9a66dfd7de72fe1",
+          "guideCropRGBAExact": true
+        }
+      ],
+      "repairPolicy": "Use guide first for geometry; accepted normal identity second for material style. Single target view only, source alpha, no game import."
+    },
+    {
+      "key": "shanty-broadcast-van",
+      "subject": "newprop:shanty-broadcast-van",
+      "hold": {
+        "cells": [
+          "yaw8E",
+          "yaw8S",
+          "yaw8W"
+        ],
+        "reason": "Roof cable-reel axis changes relative to van: S rear shows circular end disc; E/W dominant sides show coiled barrel. Fixed transverse-X axle requires N/S barrel and E/W circular end discs. N is consistent.",
+        "repair": "Keep transverse-X axle. S rear sees barrel with discs left/right; E/W side sees circular reel end faces. HVAC, front aerial and RIGHT-only equipment hatch stay fixed."
+      },
+      "guideCrops": [
+        {
+          "camera": "yaw8E",
+          "guideFile": "art/catalogue-completion-20261107/generated/golf-vehicle-source-batch-01/yaw-isolated-repairs-v1/shanty-broadcast-van/yaw8E-guide.png",
+          "guideSource": "art/catalogue-completion-20261107/generated/golf-vehicle-source-batch-01/fixed-world-guides-v1/shanty-broadcast-van/guides/yaw8-world-v1.png",
+          "guideSourceRectLTRB": [
+            800,
+            0,
+            1600,
+            800
+          ],
+          "guidePNG_SHA256": "c63f6a39ea70fe6ae6987be3bac0cf94a3f8adefd665158752b63b98149c7eb4",
+          "guideCropRGBAExact": true
+        },
+        {
+          "camera": "yaw8S",
+          "guideFile": "art/catalogue-completion-20261107/generated/golf-vehicle-source-batch-01/yaw-isolated-repairs-v1/shanty-broadcast-van/yaw8S-guide.png",
+          "guideSource": "art/catalogue-completion-20261107/generated/golf-vehicle-source-batch-01/fixed-world-guides-v1/shanty-broadcast-van/guides/yaw8-world-v1.png",
+          "guideSourceRectLTRB": [
+            0,
+            800,
+            800,
+            1600
+          ],
+          "guidePNG_SHA256": "a9344049fcee21613485032c7a549f70b97822a991c03c1b6625ac5b1dd0aff3",
+          "guideCropRGBAExact": true
+        },
+        {
+          "camera": "yaw8W",
+          "guideFile": "art/catalogue-completion-20261107/generated/golf-vehicle-source-batch-01/yaw-isolated-repairs-v1/shanty-broadcast-van/yaw8W-guide.png",
+          "guideSource": "art/catalogue-completion-20261107/generated/golf-vehicle-source-batch-01/fixed-world-guides-v1/shanty-broadcast-van/guides/yaw8-world-v1.png",
+          "guideSourceRectLTRB": [
+            800,
+            800,
+            1600,
+            1600
+          ],
+          "guidePNG_SHA256": "5a30e4aa9e9e488c8fc838d47278ef26265cd3fe1084a21adf4542106274158a",
+          "guideCropRGBAExact": true
+        }
+      ],
+      "repairPolicy": "Use guide first for geometry; accepted normal identity second for material style. Single target view only, source alpha, no game import."
+    }
+  ],
+  "nativeCameraCertified": false,
+  "runtimeReady": false
+}

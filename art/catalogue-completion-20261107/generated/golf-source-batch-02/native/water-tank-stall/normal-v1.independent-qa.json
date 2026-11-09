@@ -1,0 +1,112 @@
+{
+  "schema": 1,
+  "as_of_utc": "2026-11-07T13:24:11.365118+00:00",
+  "review_result": "HOLD-invented-hole12-and-map-annex;main-corners-pass",
+  "recommended_yaw_source_continuation": false,
+  "four_actual_corners_visually_verified": true,
+  "source": {
+    "path": "generated/golf-source-batch-02/native/water-tank-stall/normal-v1.png",
+    "sha256": "3fea9724ef5aab171a1846157ba58674b0a5fa154cc32ba4b505db0df19e3ac9",
+    "bytes": 1733101
+  },
+  "parent_provenance": {
+    "path": "generated/golf-source-batch-02/native/water-tank-stall/normal-v1.provenance.json",
+    "sha256": "eb11fc53addfc4808d2ab692eda9af89ecd43c30b77deea3053aea78ec1009b3",
+    "bytes": 2399
+  },
+  "source_original_hash_matches_parent": true,
+  "exact_prompt_utf8_sha256": "59c29101f065795c8be7da6dddef5b2071532a1528658a97869ff74483f3c380",
+  "actual_generation_references": [
+    {
+      "path": "generated/old-clubhouse-1950/normal-v5.png",
+      "sha256": "a996fb471f351cc35926c84090192a8b55cc3557bb1bf9fec24872218fa219a6",
+      "bytes": 1473832
+    }
+  ],
+  "dimensions": [
+    1254,
+    1254
+  ],
+  "zero_alpha_fraction": 0.5594117961279885,
+  "outer_border_alpha_p50p95max": [
+    0.0,
+    0.0,
+    1.0
+  ],
+  "nominal_center_gap_alpha_p50p95max": [
+    0.0,
+    1.0,
+    1.0
+  ],
+  "clear_horizontal_cut_y": 627,
+  "clear_vertical_cut_by_row": [
+    627,
+    627
+  ],
+  "true_clear_gutters_found": true,
+  "cells": [
+    {
+      "cell": 0,
+      "reference_rect_ltrb": [
+        0,
+        0,
+        627,
+        627
+      ],
+      "minimum_core_margin_px": 58,
+      "boundary_core_pixels_alpha_gt128": 0,
+      "boundary_alpha_max": 1,
+      "native_rgba_rectangle_sha256": "733f7e72e5cca91c2d19a07d7fad47ce36a3876adcc757d2e74546b876aa3332"
+    },
+    {
+      "cell": 1,
+      "reference_rect_ltrb": [
+        627,
+        0,
+        1254,
+        627
+      ],
+      "minimum_core_margin_px": 58,
+      "boundary_core_pixels_alpha_gt128": 0,
+      "boundary_alpha_max": 1,
+      "native_rgba_rectangle_sha256": "6d97c09995cdc7480425839a8a6c12eaaeb2c92a51763dc4171dcc367597d0f9"
+    },
+    {
+      "cell": 2,
+      "reference_rect_ltrb": [
+        0,
+        627,
+        627,
+        1254
+      ],
+      "minimum_core_margin_px": 60,
+      "boundary_core_pixels_alpha_gt128": 0,
+      "boundary_alpha_max": 1,
+      "native_rgba_rectangle_sha256": "e1cc3ef27f5d8dd4c29a897fabcfa4d7808dbe0bf34f68702d9ff61d793dec2b"
+    },
+    {
+      "cell": 3,
+      "reference_rect_ltrb": [
+        627,
+        627,
+        1254,
+        1254
+      ],
+      "minimum_core_margin_px": 58,
+      "boundary_core_pixels_alpha_gt128": 0,
+      "boundary_alpha_max": 1,
+      "native_rgba_rectangle_sha256": "3c99e92ba42b2a8ac037960a64e77fec0ad31dd7ffd6914b7a0e657a04657457"
+    }
+  ],
+  "all_cores_complete_at_reference_cuts": true,
+  "visual_observations": [
+    "Two taps, trough, bucket, galvanized tank and real rear bracing produce coherent opposite front/rear corners.",
+    "But source invents hard-coded12direction plaque plus attached holemap board absent from actual original waterstation/reference and functional brief. Generic course waterstation must not acquire hole12identity.",
+    "Remove unrequested signage/annex or explicitly approve design change before using as fixed identity."
+  ],
+  "pixel_hash_uniqueness_is_not_pose_proof": true,
+  "source_crops_or_native_pixel_changes": false,
+  "owner_approved": false,
+  "runtime_ready": false,
+  "exact_numerical_angle_certified": false
+}

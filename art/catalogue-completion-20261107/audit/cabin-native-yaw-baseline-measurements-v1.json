@@ -1,0 +1,947 @@
+{
+  "schema": 1,
+  "as_of_utc": "2026-11-07T10:47:06.782678+00:00",
+  "target_abs_transverse_slope": 0.07027041735119573,
+  "method": "Fit y=m*x+b to last native alpha pixel above thresholds64/128/192 perx, full and10%trimmed source-local baseline runs. No image edits.",
+  "conditional_relation": "m=sin(pitch)*tan(yaw); ifpitch30 then yaw=atan(2*abs(m)).",
+  "limits": "Raster/painted edge fit, not camera certification. Pitch/yaw confounded; runs were selected from clear foundation geometry by actual visual inspection. Guide labels never count as pixel evidence. Threshold/subrange variability is sensitivity, not a confidence interval.",
+  "records": [
+    {
+      "family": "budget-1950-shanty-hut",
+      "view": "N",
+      "source": {
+        "path": "generated/budget-1950-shanty-hut/yaw8-v1.png",
+        "sha256": "3abc1b0a617c29b7336ab9a9ade9b087740953e9b9be1ad19e42b457201184fc",
+        "bytes": 1056657
+      },
+      "cell_rect_ltrb": [
+        0,
+        0,
+        627,
+        627
+      ],
+      "feature": "Lowest nativealpha silhouette along visible front/rear foundation transverse run, excluding receding end side.",
+      "primary": {
+        "alpha_threshold": 128,
+        "trim_fraction_each_end": 0,
+        "x_range_half_open": [
+          163,
+          448
+        ],
+        "samples": 285,
+        "slope": 0.020558611144230937,
+        "intercept": 482.1155885132901,
+        "rms_px": 0.3756159866191288,
+        "conditional_yaw_if_pitch30_degrees": 2.354517030886086
+      },
+      "sensitivity_fits": [
+        {
+          "alpha_threshold": 64,
+          "trim_fraction_each_end": 0,
+          "x_range_half_open": [
+            163,
+            448
+          ],
+          "samples": 285,
+          "slope": 0.019257984417362196,
+          "intercept": 482.933332296564,
+          "rms_px": 0.37906553526479736,
+          "conditional_yaw_if_pitch30_degrees": 2.2057121793695726
+        },
+        {
+          "alpha_threshold": 64,
+          "trim_fraction_each_end": 0.1,
+          "x_range_half_open": [
+            191,
+            420
+          ],
+          "samples": 229,
+          "slope": 0.01847051652293822,
+          "intercept": 483.2223876570102,
+          "rms_px": 0.35485106091920166,
+          "conditional_yaw_if_pitch30_degrees": 2.1156032887639626
+        },
+        {
+          "alpha_threshold": 128,
+          "trim_fraction_each_end": 0,
+          "x_range_half_open": [
+            163,
+            448
+          ],
+          "samples": 285,
+          "slope": 0.020558611144230937,
+          "intercept": 482.1155885132901,
+          "rms_px": 0.3756159866191288,
+          "conditional_yaw_if_pitch30_degrees": 2.354517030886086
+        },
+        {
+          "alpha_threshold": 128,
+          "trim_fraction_each_end": 0.1,
+          "x_range_half_open": [
+            191,
+            420
+          ],
+          "samples": 229,
+          "slope": 0.0187623035184316,
+          "intercept": 482.731645898494,
+          "rms_px": 0.3270053889617417,
+          "conditional_yaw_if_pitch30_degrees": 2.1489933265007997
+        },
+        {
+          "alpha_threshold": 192,
+          "trim_fraction_each_end": 0,
+          "x_range_half_open": [
+            163,
+            448
+          ],
+          "samples": 285,
+          "slope": 0.020244988517783776,
+          "intercept": 481.8147521862862,
+          "rms_px": 0.3470205994144886,
+          "conditional_yaw_if_pitch30_degrees": 2.318638262117006
+        },
+        {
+          "alpha_threshold": 192,
+          "trim_fraction_each_end": 0.1,
+          "x_range_half_open": [
+            191,
+            420
+          ],
+          "samples": 229,
+          "slope": 0.01886322984221506,
+          "intercept": 482.2423480858973,
+          "rms_px": 0.32984344212917044,
+          "conditional_yaw_if_pitch30_degrees": 2.16054228161737
+        }
+      ],
+      "slope_range": [
+        0.01847051652293822,
+        0.020558611144230937
+      ],
+      "conditional_yaw_range_if_pitch30": [
+        2.1156032887639626,
+        2.354517030886086
+      ]
+    },
+    {
+      "family": "budget-1950-shanty-hut",
+      "view": "S",
+      "source": {
+        "path": "generated/budget-1950-shanty-hut/yaw8-v1.png",
+        "sha256": "3abc1b0a617c29b7336ab9a9ade9b087740953e9b9be1ad19e42b457201184fc",
+        "bytes": 1056657
+      },
+      "cell_rect_ltrb": [
+        0,
+        627,
+        627,
+        1254
+      ],
+      "feature": "Lowest nativealpha silhouette along visible front/rear foundation transverse run, excluding receding end side.",
+      "primary": {
+        "alpha_threshold": 128,
+        "trim_fraction_each_end": 0,
+        "x_range_half_open": [
+          159,
+          442
+        ],
+        "samples": 283,
+        "slope": 0.022351914660658067,
+        "intercept": 463.9728708314845,
+        "rms_px": 0.3037325787705648,
+        "conditional_yaw_if_pitch30_degrees": 2.5596365690551024
+      },
+      "sensitivity_fits": [
+        {
+          "alpha_threshold": 64,
+          "trim_fraction_each_end": 0,
+          "x_range_half_open": [
+            159,
+            442
+          ],
+          "samples": 283,
+          "slope": 0.022386329101593043,
+          "intercept": 464.379507629946,
+          "rms_px": 0.2905171530853413,
+          "conditional_yaw_if_pitch30_degrees": 2.5635722960944967
+        },
+        {
+          "alpha_threshold": 64,
+          "trim_fraction_each_end": 0.1,
+          "x_range_half_open": [
+            187,
+            414
+          ],
+          "samples": 227,
+          "slope": 0.021519628864371892,
+          "intercept": 464.65864878562246,
+          "rms_px": 0.29403984995186955,
+          "conditional_yaw_if_pitch30_degrees": 2.4644468766884398
+        },
+        {
+          "alpha_threshold": 128,
+          "trim_fraction_each_end": 0,
+          "x_range_half_open": [
+            159,
+            442
+          ],
+          "samples": 283,
+          "slope": 0.022351914660658067,
+          "intercept": 463.9728708314845,
+          "rms_px": 0.3037325787705648,
+          "conditional_yaw_if_pitch30_degrees": 2.5596365690551024
+        },
+        {
+          "alpha_threshold": 128,
+          "trim_fraction_each_end": 0.1,
+          "x_range_half_open": [
+            187,
+            414
+          ],
+          "samples": 227,
+          "slope": 0.023161095596970986,
+          "intercept": 463.75211184954316,
+          "rms_px": 0.28736277514166975,
+          "conditional_yaw_if_pitch30_degrees": 2.6521701767815644
+        },
+        {
+          "alpha_threshold": 192,
+          "trim_fraction_each_end": 0,
+          "x_range_half_open": [
+            159,
+            442
+          ],
+          "samples": 283,
+          "slope": 0.022423920260152264,
+          "intercept": 463.5943786922722,
+          "rms_px": 0.30321143961354363,
+          "conditional_yaw_if_pitch30_degrees": 2.567871293349534
+        },
+        {
+          "alpha_threshold": 192,
+          "trim_fraction_each_end": 0.1,
+          "x_range_half_open": [
+            187,
+            414
+          ],
+          "samples": 227,
+          "slope": 0.023075944510217404,
+          "intercept": 463.42082898173663,
+          "rms_px": 0.2979446332472416,
+          "conditional_yaw_if_pitch30_degrees": 2.6424333969309606
+        }
+      ],
+      "slope_range": [
+        0.021519628864371892,
+        0.023161095596970986
+      ],
+      "conditional_yaw_range_if_pitch30": [
+        2.4644468766884398,
+        2.6521701767815644
+      ]
+    },
+    {
+      "family": "budget-1950-shanty-shed",
+      "view": "N",
+      "source": {
+        "path": "generated/budget-1950-shanty-shed/yaw8-v1.png",
+        "sha256": "59cdde1f61b47fe0c43b3f9e80bac7dcdab8bb1e37e430398d01ac855e0a52ec",
+        "bytes": 1334949
+      },
+      "cell_rect_ltrb": [
+        0,
+        0,
+        627,
+        627
+      ],
+      "feature": "Lowest nativealpha silhouette along visible front/rear foundation transverse run, excluding receding end side.",
+      "primary": {
+        "alpha_threshold": 128,
+        "trim_fraction_each_end": 0,
+        "x_range_half_open": [
+          135,
+          450
+        ],
+        "samples": 315,
+        "slope": 0.057058776102555844,
+        "intercept": 472.77375801297427,
+        "rms_px": 0.3162867143245179,
+        "conditional_yaw_if_pitch30_degrees": 6.51029081593327
+      },
+      "sensitivity_fits": [
+        {
+          "alpha_threshold": 64,
+          "trim_fraction_each_end": 0,
+          "x_range_half_open": [
+            135,
+            450
+          ],
+          "samples": 315,
+          "slope": 0.057145928596384184,
+          "intercept": 473.1483094847765,
+          "rms_px": 0.31666554894877164,
+          "conditional_yaw_if_pitch30_degrees": 6.520149176270345
+        },
+        {
+          "alpha_threshold": 64,
+          "trim_fraction_each_end": 0.1,
+          "x_range_half_open": [
+            166,
+            419
+          ],
+          "samples": 253,
+          "slope": 0.05749306040302242,
+          "intercept": 473.0776390105388,
+          "rms_px": 0.31256147253214533,
+          "conditional_yaw_if_pitch30_degrees": 6.559411559603789
+        },
+        {
+          "alpha_threshold": 128,
+          "trim_fraction_each_end": 0,
+          "x_range_half_open": [
+            135,
+            450
+          ],
+          "samples": 315,
+          "slope": 0.057058776102555844,
+          "intercept": 472.77375801297427,
+          "rms_px": 0.3162867143245179,
+          "conditional_yaw_if_pitch30_degrees": 6.51029081593327
+        },
+        {
+          "alpha_threshold": 128,
+          "trim_fraction_each_end": 0.1,
+          "x_range_half_open": [
+            166,
+            419
+          ],
+          "samples": 253,
+          "slope": 0.057553082544523404,
+          "intercept": 472.63323507486484,
+          "rms_px": 0.32221798153404513,
+          "conditional_yaw_if_pitch30_degrees": 6.5661997445640194
+        },
+        {
+          "alpha_threshold": 192,
+          "trim_fraction_each_end": 0,
+          "x_range_half_open": [
+            135,
+            450
+          ],
+          "samples": 315,
+          "slope": 0.05671861262444159,
+          "intercept": 472.47308574858374,
+          "rms_px": 0.3262023492876818,
+          "conditional_yaw_if_pitch30_degrees": 6.4718091110512335
+        },
+        {
+          "alpha_threshold": 192,
+          "trim_fraction_each_end": 0.1,
+          "x_range_half_open": [
+            166,
+            419
+          ],
+          "samples": 253,
+          "slope": 0.05729817369666711,
+          "intercept": 472.3124115414429,
+          "rms_px": 0.32055877726422666,
+          "conditional_yaw_if_pitch30_degrees": 6.537369635393444
+        }
+      ],
+      "slope_range": [
+        0.05671861262444159,
+        0.057553082544523404
+      ],
+      "conditional_yaw_range_if_pitch30": [
+        6.4718091110512335,
+        6.5661997445640194
+      ]
+    },
+    {
+      "family": "budget-1950-shanty-shed",
+      "view": "S",
+      "source": {
+        "path": "generated/budget-1950-shanty-shed/yaw8-v1.png",
+        "sha256": "59cdde1f61b47fe0c43b3f9e80bac7dcdab8bb1e37e430398d01ac855e0a52ec",
+        "bytes": 1334949
+      },
+      "cell_rect_ltrb": [
+        0,
+        627,
+        627,
+        1254
+      ],
+      "feature": "Lowest nativealpha silhouette along visible front/rear foundation transverse run, excluding receding end side.",
+      "primary": {
+        "alpha_threshold": 128,
+        "trim_fraction_each_end": 0,
+        "x_range_half_open": [
+          133,
+          450
+        ],
+        "samples": 317,
+        "slope": 0.05941064388120355,
+        "intercept": 449.42443638451294,
+        "rms_px": 0.3141446538756782,
+        "conditional_yaw_if_pitch30_degrees": 6.776187623663207
+      },
+      "sensitivity_fits": [
+        {
+          "alpha_threshold": 64,
+          "trim_fraction_each_end": 0,
+          "x_range_half_open": [
+            133,
+            450
+          ],
+          "samples": 317,
+          "slope": 0.05893410503744872,
+          "intercept": 449.925885213282,
+          "rms_px": 0.29876632155061694,
+          "conditional_yaw_if_pitch30_degrees": 6.722334536781617
+        },
+        {
+          "alpha_threshold": 64,
+          "trim_fraction_each_end": 0.1,
+          "x_range_half_open": [
+            164,
+            419
+          ],
+          "samples": 255,
+          "slope": 0.05881194997684123,
+          "intercept": 449.9563107920333,
+          "rms_px": 0.30315406583793636,
+          "conditional_yaw_if_pitch30_degrees": 6.708528013490273
+        },
+        {
+          "alpha_threshold": 128,
+          "trim_fraction_each_end": 0,
+          "x_range_half_open": [
+            133,
+            450
+          ],
+          "samples": 317,
+          "slope": 0.05941064388120355,
+          "intercept": 449.42443638451294,
+          "rms_px": 0.3141446538756782,
+          "conditional_yaw_if_pitch30_degrees": 6.776187623663207
+        },
+        {
+          "alpha_threshold": 128,
+          "trim_fraction_each_end": 0.1,
+          "x_range_half_open": [
+            164,
+            419
+          ],
+          "samples": 255,
+          "slope": 0.05887708429828651,
+          "intercept": 449.55696454762995,
+          "rms_px": 0.31084435417543327,
+          "conditional_yaw_if_pitch30_degrees": 6.715889889717201
+        },
+        {
+          "alpha_threshold": 192,
+          "trim_fraction_each_end": 0,
+          "x_range_half_open": [
+            133,
+            450
+          ],
+          "samples": 317,
+          "slope": 0.05899174175135772,
+          "intercept": 449.17094258253144,
+          "rms_px": 0.30221838949997537,
+          "conditional_yaw_if_pitch30_degrees": 6.728848629414784
+        },
+        {
+          "alpha_threshold": 192,
+          "trim_fraction_each_end": 0.1,
+          "x_range_half_open": [
+            164,
+            419
+          ],
+          "samples": 255,
+          "slope": 0.05878661996294632,
+          "intercept": 449.24603476725326,
+          "rms_px": 0.30069814939421485,
+          "conditional_yaw_if_pitch30_degrees": 6.705665001514021
+        }
+      ],
+      "slope_range": [
+        0.05878661996294632,
+        0.05941064388120355
+      ],
+      "conditional_yaw_range_if_pitch30": [
+        6.705665001514021,
+        6.776187623663207
+      ]
+    },
+    {
+      "family": "budget-1950-shanty-ticket-hut",
+      "view": "N",
+      "source": {
+        "path": "generated/budget-1950-shanty-ticket-hut/yaw8-v1.png",
+        "sha256": "091203a9c0e2da09af1c3994fc17e96ef20bfe3f435af0a974f659922c5f199b",
+        "bytes": 1148273
+      },
+      "cell_rect_ltrb": [
+        0,
+        0,
+        627,
+        627
+      ],
+      "feature": "Lowest nativealpha silhouette along visible front/rear foundation transverse run, excluding receding end side.",
+      "primary": {
+        "alpha_threshold": 128,
+        "trim_fraction_each_end": 0,
+        "x_range_half_open": [
+          179,
+          454
+        ],
+        "samples": 275,
+        "slope": 0.03490262831424366,
+        "intercept": 503.3307694526989,
+        "rms_px": 0.32005578222910747,
+        "conditional_yaw_if_pitch30_degrees": 3.993069224416822
+      },
+      "sensitivity_fits": [
+        {
+          "alpha_threshold": 64,
+          "trim_fraction_each_end": 0,
+          "x_range_half_open": [
+            179,
+            454
+          ],
+          "samples": 275,
+          "slope": 0.03538732292778655,
+          "intercept": 503.6648786820922,
+          "rms_px": 0.32670094209273914,
+          "conditional_yaw_if_pitch30_degrees": 4.048338066082908
+        },
+        {
+          "alpha_threshold": 64,
+          "trim_fraction_each_end": 0.1,
+          "x_range_half_open": [
+            206,
+            427
+          ],
+          "samples": 221,
+          "slope": 0.03545977075388952,
+          "intercept": 503.5956174191465,
+          "rms_px": 0.31730219412228444,
+          "conditional_yaw_if_pitch30_degrees": 4.056598513657184
+        },
+        {
+          "alpha_threshold": 128,
+          "trim_fraction_each_end": 0,
+          "x_range_half_open": [
+            179,
+            454
+          ],
+          "samples": 275,
+          "slope": 0.03490262831424366,
+          "intercept": 503.3307694526989,
+          "rms_px": 0.32005578222910747,
+          "conditional_yaw_if_pitch30_degrees": 3.993069224416822
+        },
+        {
+          "alpha_threshold": 128,
+          "trim_fraction_each_end": 0.1,
+          "x_range_half_open": [
+            206,
+            427
+          ],
+          "samples": 221,
+          "slope": 0.03427685192391118,
+          "intercept": 503.4897817603699,
+          "rms_px": 0.29628486646133506,
+          "conditional_yaw_if_pitch30_degrees": 3.921702090250451
+        },
+        {
+          "alpha_threshold": 192,
+          "trim_fraction_each_end": 0,
+          "x_range_half_open": [
+            179,
+            454
+          ],
+          "samples": 275,
+          "slope": 0.0354709904503625,
+          "intercept": 502.74753065404917,
+          "rms_px": 0.3131550163983879,
+          "conditional_yaw_if_pitch30_degrees": 4.057877760057965
+        },
+        {
+          "alpha_threshold": 192,
+          "trim_fraction_each_end": 0.1,
+          "x_range_half_open": [
+            206,
+            427
+          ],
+          "samples": 221,
+          "slope": 0.035629870923989,
+          "intercept": 502.6595128242184,
+          "rms_px": 0.30580975720207343,
+          "conditional_yaw_if_pitch30_degrees": 4.075992544820358
+        }
+      ],
+      "slope_range": [
+        0.03427685192391118,
+        0.035629870923989
+      ],
+      "conditional_yaw_range_if_pitch30": [
+        3.921702090250451,
+        4.075992544820358
+      ]
+    },
+    {
+      "family": "budget-1950-shanty-ticket-hut",
+      "view": "S",
+      "source": {
+        "path": "generated/budget-1950-shanty-ticket-hut/yaw8-v1.png",
+        "sha256": "091203a9c0e2da09af1c3994fc17e96ef20bfe3f435af0a974f659922c5f199b",
+        "bytes": 1148273
+      },
+      "cell_rect_ltrb": [
+        0,
+        627,
+        627,
+        1254
+      ],
+      "feature": "Lowest nativealpha silhouette along visible front/rear foundation transverse run, excluding receding end side.",
+      "primary": {
+        "alpha_threshold": 128,
+        "trim_fraction_each_end": 0,
+        "x_range_half_open": [
+          179,
+          454
+        ],
+        "samples": 275,
+        "slope": 0.03767808199417259,
+        "intercept": 476.5519079080232,
+        "rms_px": 0.307279516541474,
+        "conditional_yaw_if_pitch30_degrees": 4.309445336721895
+      },
+      "sensitivity_fits": [
+        {
+          "alpha_threshold": 64,
+          "trim_fraction_each_end": 0,
+          "x_range_half_open": [
+            179,
+            454
+          ],
+          "samples": 275,
+          "slope": 0.037442081878769254,
+          "intercept": 477.0083021263088,
+          "rms_px": 0.3155413758697116,
+          "conditional_yaw_if_pitch30_degrees": 4.282553467920498
+        },
+        {
+          "alpha_threshold": 64,
+          "trim_fraction_each_end": 0.1,
+          "x_range_half_open": [
+            206,
+            427
+          ],
+          "samples": 221,
+          "slope": 0.03799237328649135,
+          "intercept": 476.8812878695231,
+          "rms_px": 0.2997629031569151,
+          "conditional_yaw_if_pitch30_degrees": 4.3452554155956715
+        },
+        {
+          "alpha_threshold": 128,
+          "trim_fraction_each_end": 0,
+          "x_range_half_open": [
+            179,
+            454
+          ],
+          "samples": 275,
+          "slope": 0.03767808199417259,
+          "intercept": 476.5519079080232,
+          "rms_px": 0.307279516541474,
+          "conditional_yaw_if_pitch30_degrees": 4.309445336721895
+        },
+        {
+          "alpha_threshold": 128,
+          "trim_fraction_each_end": 0.1,
+          "x_range_half_open": [
+            206,
+            427
+          ],
+          "samples": 221,
+          "slope": 0.037303078479549744,
+          "intercept": 476.66924077512294,
+          "rms_px": 0.3098053449214982,
+          "conditional_yaw_if_pitch30_degrees": 4.266713347993476
+        },
+        {
+          "alpha_threshold": 192,
+          "trim_fraction_each_end": 0,
+          "x_range_half_open": [
+            179,
+            454
+          ],
+          "samples": 275,
+          "slope": 0.038066991719801095,
+          "intercept": 476.05446698017914,
+          "rms_px": 0.293696106995556,
+          "conditional_yaw_if_pitch30_degrees": 4.353756877001493
+        },
+        {
+          "alpha_threshold": 192,
+          "trim_fraction_each_end": 0.1,
+          "x_range_half_open": [
+            206,
+            427
+          ],
+          "samples": 221,
+          "slope": 0.03829588535470932,
+          "intercept": 475.98899796546846,
+          "rms_px": 0.2935966568706815,
+          "conditional_yaw_if_pitch30_degrees": 4.379834091259414
+        }
+      ],
+      "slope_range": [
+        0.037303078479549744,
+        0.03829588535470932
+      ],
+      "conditional_yaw_range_if_pitch30": [
+        4.266713347993476,
+        4.379834091259414
+      ]
+    },
+    {
+      "family": "budget-1950-shanty-toilet",
+      "view": "N",
+      "source": {
+        "path": "generated/budget-1950-shanty-toilet/yaw8-v1.png",
+        "sha256": "18b9b38ea8de06b0fc1cb0966942e206ef9971642c5fb1b45c6f88d3bed33ca8",
+        "bytes": 1139214
+      },
+      "cell_rect_ltrb": [
+        0,
+        0,
+        627,
+        627
+      ],
+      "feature": "Lowest nativealpha silhouette along visible front/rear foundation transverse run, excluding receding end side.",
+      "primary": {
+        "alpha_threshold": 128,
+        "trim_fraction_each_end": 0,
+        "x_range_half_open": [
+          153,
+          465
+        ],
+        "samples": 312,
+        "slope": 0.0723903342581629,
+        "intercept": 464.097069060844,
+        "rms_px": 0.34680786621656334,
+        "conditional_yaw_if_pitch30_degrees": 8.238078852930723
+      },
+      "sensitivity_fits": [
+        {
+          "alpha_threshold": 64,
+          "trim_fraction_each_end": 0,
+          "x_range_half_open": [
+            153,
+            465
+          ],
+          "samples": 312,
+          "slope": 0.07248298838603255,
+          "intercept": 464.53322885213987,
+          "rms_px": 0.3517999524860035,
+          "conditional_yaw_if_pitch30_degrees": 8.24847797420124
+        },
+        {
+          "alpha_threshold": 64,
+          "trim_fraction_each_end": 0.1,
+          "x_range_half_open": [
+            184,
+            434
+          ],
+          "samples": 250,
+          "slope": 0.07261671386742141,
+          "intercept": 464.5697437719004,
+          "rms_px": 0.31486364518286564,
+          "conditional_yaw_if_pitch30_degrees": 8.263485811650073
+        },
+        {
+          "alpha_threshold": 128,
+          "trim_fraction_each_end": 0,
+          "x_range_half_open": [
+            153,
+            465
+          ],
+          "samples": 312,
+          "slope": 0.0723903342581629,
+          "intercept": 464.097069060844,
+          "rms_px": 0.34680786621656334,
+          "conditional_yaw_if_pitch30_degrees": 8.238078852930723
+        },
+        {
+          "alpha_threshold": 128,
+          "trim_fraction_each_end": 0.1,
+          "x_range_half_open": [
+            184,
+            434
+          ],
+          "samples": 250,
+          "slope": 0.07255220083521353,
+          "intercept": 464.1096460423366,
+          "rms_px": 0.326551482002343,
+          "conditional_yaw_if_pitch30_degrees": 8.256245740089044
+        },
+        {
+          "alpha_threshold": 192,
+          "trim_fraction_each_end": 0,
+          "x_range_half_open": [
+            153,
+            465
+          ],
+          "samples": 312,
+          "slope": 0.07203690518618132,
+          "intercept": 463.88238398083234,
+          "rms_px": 0.33862978183108167,
+          "conditional_yaw_if_pitch30_degrees": 8.198406402747626
+        },
+        {
+          "alpha_threshold": 192,
+          "trim_fraction_each_end": 0.1,
+          "x_range_half_open": [
+            184,
+            434
+          ],
+          "samples": 250,
+          "slope": 0.07251956031296503,
+          "intercept": 463.7957156434502,
+          "rms_px": 0.31802212154678894,
+          "conditional_yaw_if_pitch30_degrees": 8.252582507477433
+        }
+      ],
+      "slope_range": [
+        0.07203690518618132,
+        0.07261671386742141
+      ],
+      "conditional_yaw_range_if_pitch30": [
+        8.198406402747626,
+        8.263485811650073
+      ]
+    },
+    {
+      "family": "budget-1950-shanty-toilet",
+      "view": "S",
+      "source": {
+        "path": "generated/budget-1950-shanty-toilet/yaw8-v1.png",
+        "sha256": "18b9b38ea8de06b0fc1cb0966942e206ef9971642c5fb1b45c6f88d3bed33ca8",
+        "bytes": 1139214
+      },
+      "cell_rect_ltrb": [
+        0,
+        627,
+        627,
+        1254
+      ],
+      "feature": "Lowest nativealpha silhouette along visible front/rear foundation transverse run, excluding receding end side.",
+      "primary": {
+        "alpha_threshold": 128,
+        "trim_fraction_each_end": 0,
+        "x_range_half_open": [
+          151,
+          464
+        ],
+        "samples": 313,
+        "slope": 0.054458676993830724,
+        "intercept": 469.73805517247894,
+        "rms_px": 0.31571330651424667,
+        "conditional_yaw_if_pitch30_degrees": 6.216001855441467
+      },
+      "sensitivity_fits": [
+        {
+          "alpha_threshold": 64,
+          "trim_fraction_each_end": 0,
+          "x_range_half_open": [
+            151,
+            464
+          ],
+          "samples": 313,
+          "slope": 0.054724004552050017,
+          "intercept": 470.0655452990063,
+          "rms_px": 0.32894870155037575,
+          "conditional_yaw_if_pitch30_degrees": 6.246047977762453
+        },
+        {
+          "alpha_threshold": 64,
+          "trim_fraction_each_end": 0.1,
+          "x_range_half_open": [
+            182,
+            433
+          ],
+          "samples": 251,
+          "slope": 0.054728893948017415,
+          "intercept": 470.04683513564805,
+          "rms_px": 0.32951678563076564,
+          "conditional_yaw_if_pitch30_degrees": 6.2466016285672925
+        },
+        {
+          "alpha_threshold": 128,
+          "trim_fraction_each_end": 0,
+          "x_range_half_open": [
+            151,
+            464
+          ],
+          "samples": 313,
+          "slope": 0.054458676993830724,
+          "intercept": 469.73805517247894,
+          "rms_px": 0.31571330651424667,
+          "conditional_yaw_if_pitch30_degrees": 6.216001855441467
+        },
+        {
+          "alpha_threshold": 128,
+          "trim_fraction_each_end": 0.1,
+          "x_range_half_open": [
+            182,
+            433
+          ],
+          "samples": 251,
+          "slope": 0.054964143426294944,
+          "intercept": 469.5722231075697,
+          "rms_px": 0.3028809882861408,
+          "conditional_yaw_if_pitch30_degrees": 6.273238720107785
+        },
+        {
+          "alpha_threshold": 192,
+          "trim_fraction_each_end": 0,
+          "x_range_half_open": [
+            151,
+            464
+          ],
+          "samples": 313,
+          "slope": 0.05403133526289297,
+          "intercept": 469.4794727260494,
+          "rms_px": 0.31770270244922844,
+          "conditional_yaw_if_pitch30_degrees": 6.16760177600608
+        },
+        {
+          "alpha_threshold": 192,
+          "trim_fraction_each_end": 0.1,
+          "x_range_half_open": [
+            182,
+            433
+          ],
+          "samples": 251,
+          "slope": 0.054037564029596946,
+          "intercept": 469.47819692657913,
+          "rms_px": 0.3214865010408543,
+          "conditional_yaw_if_pitch30_degrees": 6.168307300354355
+        }
+      ],
+      "slope_range": [
+        0.05403133526289297,
+        0.054964143426294944
+      ],
+      "conditional_yaw_range_if_pitch30": [
+        6.16760177600608,
+        6.273238720107785
+      ]
+    }
+  ],
+  "runtime_approval": false
+}

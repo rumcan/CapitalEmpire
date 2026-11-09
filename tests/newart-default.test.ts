@@ -3,11 +3,11 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { LIBRARY } from '../src/game/library';
 import { NEW_ART_ONLY, NEW_BUILDINGS_ONLY, OLD_ART, lookOf, standInFamily, thumbItem } from '../src/game/newart';
-import { isBuilding } from '../src/game/mirror';
+import { drawnAs, isBuilding } from '../src/game/mirror';
 import { BUILDING_IDS, VIEW_ART } from '../src/game/views-library';
 import type { LibItem } from '../src/game/types';
 
-const isNew = (id: string) => VIEW_ART.has(id) || id.startsWith('view:');
+const isNew = (id: string) => VIEW_ART.has(id) || id.startsWith('view:') || id.startsWith('object8:'); // (T375: the eight-view art is new art, drawn as itself)
 /** a building of the art inventory (the pictures that get four views): the only ones swapped; the props packed with the business art are drawn
  *  as themselves (tests/course-props.test.ts) */
 const inventory = (it: LibItem) => BUILDING_IDS.has(it.id) || isNew(it.id);
@@ -57,7 +57,8 @@ test('thumbItem: an old building is thumbnailed as its new-art stand-in, a new-a
   LIBRARY.forEach(it => {
     if (!isBuilding(it) || it.kind === 'lot') return;
     if (!inventory(it)) { assert.equal(thumbItem(it), it, `${it.id} is a prop: thumbnails as itself`); return; }
-    if (isNew(it.id)) { assert.equal(thumbItem(it), it, `${it.id} thumbnails as itself`); return; }
+    // (T375: an old picture the owner's eight-view art replaces (mirror.ts OBJECT_REPLACE: the Video Vault, the Arcade) is thumbnailed as that art)
+    if (isNew(it.id)) { const r = drawnAs(it, false)[0]; assert.equal(thumbItem(it).id, r.startsWith('object8:') ? r : it.id, `${it.id} thumbnails as itself, or as the eight-view art that replaces it`); return; }
     old++;
     assert.ok(isNew(thumbItem(it).id), `${it.id} thumbnails as ${thumbItem(it).id}`);
   });

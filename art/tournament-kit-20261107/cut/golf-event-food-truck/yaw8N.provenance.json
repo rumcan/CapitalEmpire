@@ -1,0 +1,29 @@
+{
+  "schema": 1,
+  "subject": "golf:event-food-truck",
+  "version": 1,
+  "key": "yaw8N",
+  "source": {
+    "file": "../../batch01/food-truck/budget/yaw8-N.png",
+    "sha256": "9358d7217abf75acd223b26138d230f260c16b010aad629522bf875d1b2dd853",
+    "width": 654,
+    "height": 627
+  },
+  "cell": 0,
+  "cellRect": {
+    "left": 0,
+    "top": 0,
+    "width": 654,
+    "height": 627
+  },
+  "crop": {
+    "left": 37,
+    "top": 116,
+    "width": 617,
+    "height": 413
+  },
+  "output": "yaw8N.native.png",
+  "sha256": "57d58c57ac146177d075d359b35688676d78c492f627f62963e804ecaf1d0ce7",
+  "operation": "native RGBA cell crop only; no flip/repaint/view synthesis",
+  "review": "candidate"
+}

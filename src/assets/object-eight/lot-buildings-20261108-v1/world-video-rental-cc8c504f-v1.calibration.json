@@ -1,0 +1,86 @@
+{
+  "schema": 1,
+  "space": "orthographic-camera",
+  "engineProjection": {
+    "HW": 64,
+    "HH": 32,
+    "tileMetres": 2
+  },
+  "targetCameraPixelsPerMetre": 45.254833995939045,
+  "sourcePixelsPerMetre": 45.2548339959,
+  "views": {
+    "normalNE": {
+      "sourcePixelsPerMetre": 45.2548339959,
+      "displayScale": 1.0000000000008629,
+      "anchorSourcePixels": {
+        "x": 318.5,
+        "y": 328.52
+      },
+      "atlasResize": 0.6000000000005177
+    },
+    "yaw8N": {
+      "sourcePixelsPerMetre": 45.2548339959,
+      "displayScale": 1.0000000000008629,
+      "anchorSourcePixels": {
+        "x": 298.5,
+        "y": 292.46
+      },
+      "atlasResize": 0.6000000000005177
+    },
+    "normalSE": {
+      "sourcePixelsPerMetre": 45.2548339959,
+      "displayScale": 1.0000000000008629,
+      "anchorSourcePixels": {
+        "x": 315,
+        "y": 323.34
+      },
+      "atlasResize": 0.6000000000005177
+    },
+    "yaw8E": {
+      "sourcePixelsPerMetre": 45.2548339959,
+      "displayScale": 1.0000000000008629,
+      "anchorSourcePixels": {
+        "x": 211.5,
+        "y": 338.89
+      },
+      "atlasResize": 0.6000000000005177
+    },
+    "normalSW": {
+      "sourcePixelsPerMetre": 45.2548339959,
+      "displayScale": 1.0000000000008629,
+      "anchorSourcePixels": {
+        "x": 317.5,
+        "y": 339.68
+      },
+      "atlasResize": 0.6000000000005177
+    },
+    "yaw8S": {
+      "sourcePixelsPerMetre": 45.2548339959,
+      "displayScale": 1.0000000000008629,
+      "anchorSourcePixels": {
+        "x": 292,
+        "y": 339.99
+      },
+      "atlasResize": 0.6000000000005177
+    },
+    "normalNW": {
+      "sourcePixelsPerMetre": 45.2548339959,
+      "displayScale": 1.0000000000008629,
+      "anchorSourcePixels": {
+        "x": 302.75,
+        "y": 345.13
+      },
+      "atlasResize": 0.6000000000005177
+    },
+    "yaw8W": {
+      "sourcePixelsPerMetre": 45.2548339959,
+      "displayScale": 1.0000000000008629,
+      "anchorSourcePixels": {
+        "x": 200,
+        "y": 333.58
+      },
+      "atlasResize": 0.6000000000005177
+    }
+  },
+  "atlasDensity": 0.6
+}

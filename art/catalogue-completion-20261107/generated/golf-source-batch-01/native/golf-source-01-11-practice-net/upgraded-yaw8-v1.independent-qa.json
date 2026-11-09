@@ -1,0 +1,107 @@
+{
+  "schema": 1,
+  "as_of_utc": "2026-11-07T13:26:24.560621+00:00",
+  "review_result": "PASS-distinct-main-face-source-candidate;exact8-unverified",
+  "four_distinct_main_faces_present": true,
+  "actual_main_face_by_cell": [
+    "openfront",
+    "meshsidebraceA",
+    "rearnet",
+    "oppositemeshsidebraceB"
+  ],
+  "source": {
+    "path": "generated/golf-source-batch-01/native/golf-source-01-11-practice-net/upgraded-yaw8-v1.png",
+    "sha256": "52909b1a9366d948b03cc941e6f0d948599c4b6a19d36cfab2e37c61da32fee9",
+    "bytes": 1623161
+  },
+  "parent_provenance": {
+    "path": "generated/golf-source-batch-01/native/golf-source-01-11-practice-net/upgraded-yaw8-v1.provenance.json",
+    "sha256": "46c8c2bcf636716e85e46a64cad5b9b183451c120c8a261aa965dfd33c9f3764",
+    "bytes": 3095
+  },
+  "source_original_hash_matches_parent": true,
+  "exact_prompt_utf8_sha256": "8e501d0eb78f7db30327c60caafa417607e054d954baef8b122fffb64bb25d83",
+  "dimensions": [
+    1254,
+    1254
+  ],
+  "zero_alpha_fraction": 0.5480764583635397,
+  "outer_border_alpha_p50p95max": [
+    0.0,
+    1.0,
+    1.0
+  ],
+  "nominal_center_gap_alpha_p50p95max": [
+    0.0,
+    1.0,
+    1.0
+  ],
+  "clear_horizontal_cut_y": 627,
+  "clear_vertical_cut_by_row": [
+    627,
+    627
+  ],
+  "true_clear_gutters_found": true,
+  "cells": [
+    {
+      "cell": 0,
+      "reference_rect_ltrb": [
+        0,
+        0,
+        627,
+        627
+      ],
+      "minimum_core_margin_px": 48,
+      "boundary_core_pixels_alpha_gt128": 0,
+      "boundary_alpha_max": 1,
+      "native_rgba_rectangle_sha256": "159b93d15729e18293d96eddb31cf45139e3ed9ce0326cff85905d7c6d9a951f"
+    },
+    {
+      "cell": 1,
+      "reference_rect_ltrb": [
+        627,
+        0,
+        1254,
+        627
+      ],
+      "minimum_core_margin_px": 66,
+      "boundary_core_pixels_alpha_gt128": 0,
+      "boundary_alpha_max": 1,
+      "native_rgba_rectangle_sha256": "149ec0e01d2e4054468f17f3db78afcb54f50033b38939d78c97a4799e8adff3"
+    },
+    {
+      "cell": 2,
+      "reference_rect_ltrb": [
+        0,
+        627,
+        627,
+        1254
+      ],
+      "minimum_core_margin_px": 50,
+      "boundary_core_pixels_alpha_gt128": 0,
+      "boundary_alpha_max": 1,
+      "native_rgba_rectangle_sha256": "aae2984aa91d3e3e568aa81397d275ae2a5c1d6d2fbbdb886d8526c4a1b5d3b4"
+    },
+    {
+      "cell": 3,
+      "reference_rect_ltrb": [
+        627,
+        627,
+        1254,
+        1254
+      ],
+      "minimum_core_margin_px": 39,
+      "boundary_core_pixels_alpha_gt128": 0,
+      "boundary_alpha_max": 1,
+      "native_rgba_rectangle_sha256": "2afe97c78a776b355b4a3ec6508c4e5ad66d473b9946fb598cabee2c8c58205a"
+    }
+  ],
+  "all_cores_complete_at_reference_cuts": true,
+  "visual_observations": [
+    "Four distinct functional main-face classes present. Exact8/pitch/physicalscale unverified; no native source pixels edited."
+  ],
+  "source_crops_or_native_pixel_changes": false,
+  "owner_approved": false,
+  "runtime_ready": false,
+  "exact_numerical_angle_certified": false
+}

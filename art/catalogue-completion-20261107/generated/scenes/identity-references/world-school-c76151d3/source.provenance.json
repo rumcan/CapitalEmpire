@@ -1,0 +1,63 @@
+{
+  "schema": 1,
+  "createdUtc": "2026-11-07T06:47:45.284562+00:00",
+  "exactRuntimeId": "world:school",
+  "source": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/building-views/world-school/NE.png",
+  "sourceSha256": "1fd478376888b52dd45abc53c105337d86aac2506681cf8e03bd87346a5e6963",
+  "output": "identity-references/world-school-c76151d3/source.png",
+  "outputSha256": "1fd478376888b52dd45abc53c105337d86aac2506681cf8e03bd87346a5e6963",
+  "width": 561,
+  "height": 494,
+  "sourceCell": {
+    "kind": "already isolated native PNG; whole file",
+    "rectXYWH": [
+      0,
+      0,
+      561,
+      494
+    ]
+  },
+  "operation": "byte-for-byte PNG copy only; no resize, crop, recolour, key, repaint, registration or source mutation",
+  "selection": "registered corner NE native PNG for this exact subject",
+  "registeredCornerDirection": "NE",
+  "sourceEvidence": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\building-views\\world-school\\provenance.json",
+  "sourceReview": {
+    "integrationStatus": "ready",
+    "integrationReason": "Distinct front/rear views inspected; alpha and all four crop-boundary checks passed. Original-width scale pending door gauges.",
+    "review": "Four distinct front/rear facade views inspected; original identity retained and Halloween decoration omitted. Alpha/crop boundaries checked by preparation; game scale retains original width until door gauge is measured."
+  },
+  "sourceRegistration": {
+    "id": "world:school",
+    "version": "world-school-4views-v1",
+    "files": {
+      "NE": "1fd478376888b52dd45abc53c105337d86aac2506681cf8e03bd87346a5e6963",
+      "SE": "f3d247df9f52bd680798687e94ce5ff21b7a01853d725ef1d66f110015366b8f",
+      "SW": "a5f32eba92bccd7fd0286c26898b3bb1c746134d35c088d363c00edab48bf061",
+      "NW": "6525af8436ddf2ccc416651d7f132e9aba7614f4668c341acd300dd4e47895f3"
+    }
+  },
+  "originalInventorySource": {
+    "library": "src/game/library.ts",
+    "librarySha256": "91b5190292c1005ac7b936f08e5e1ebf3be43c3aae99f92ea510775da83d9726",
+    "atlas": "src/assets/atlas/sprites-0-0.webp",
+    "atlasSha256": "4f6a19b3cd438ac9a523997823be9dae1646eec031518d554471ed276eecc2a5",
+    "runtimePage": 0,
+    "localPage": 0,
+    "uv": [
+      0.007813,
+      0.007813,
+      0.500488,
+      0.375977
+    ],
+    "crop": {
+      "left": 16,
+      "top": 16,
+      "width": 1009,
+      "height": 754
+    },
+    "native": "art/theme-consistency/exports/buildings/world-school.native.png",
+    "nativeSha256": "b33f05199a1d52f4ed28bd54ad6087d169ea0f39814ece120439de3507ee9e0e"
+  },
+  "originalBusinessSourceCell": null,
+  "nativeReferenceApprovalClaimed": false
+}

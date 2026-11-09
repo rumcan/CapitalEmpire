@@ -1,0 +1,29 @@
+{
+  "schema": 1,
+  "subject": "golf:course-rope-barrier-corner",
+  "version": 1,
+  "key": "yaw8N",
+  "source": {
+    "file": "../../batch02/rope-barrier-corner/yaw8-N.png",
+    "sha256": "089e24bcba49600a411f0138efcc99da3aa5bb79a6c7726b58ef62c868d30df3",
+    "width": 627,
+    "height": 627
+  },
+  "cell": 0,
+  "cellRect": {
+    "left": 0,
+    "top": 0,
+    "width": 627,
+    "height": 627
+  },
+  "crop": {
+    "left": 51,
+    "top": 79,
+    "width": 479,
+    "height": 418
+  },
+  "output": "yaw8N.native.png",
+  "sha256": "c2c5c048409253439e4a7f4ee05b87b2cb208e476a7071ffeeef4436a363a7a8",
+  "operation": "native RGBA cell crop only; no flip/repaint/view synthesis",
+  "review": "candidate"
+}

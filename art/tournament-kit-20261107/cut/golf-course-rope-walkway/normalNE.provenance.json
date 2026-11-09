@@ -1,0 +1,29 @@
+{
+  "schema": 1,
+  "subject": "golf:course-rope-walkway",
+  "version": 1,
+  "key": "normalNE",
+  "source": {
+    "file": "../../batch02/rope-walkway/normal-NE.png",
+    "sha256": "cac8e1d939a4091255ff865777531d8c0493c69a1aa3cad16ba68c12ad788e91",
+    "width": 627,
+    "height": 627
+  },
+  "cell": 0,
+  "cellRect": {
+    "left": 0,
+    "top": 0,
+    "width": 627,
+    "height": 627
+  },
+  "crop": {
+    "left": 67,
+    "top": 79,
+    "width": 490,
+    "height": 426
+  },
+  "output": "normalNE.native.png",
+  "sha256": "750de81ebb959c84b505d20885b713dff72ac856209dc7a90fe10094a73fe8f0",
+  "operation": "native RGBA cell crop only; no flip/repaint/view synthesis",
+  "review": "candidate"
+}

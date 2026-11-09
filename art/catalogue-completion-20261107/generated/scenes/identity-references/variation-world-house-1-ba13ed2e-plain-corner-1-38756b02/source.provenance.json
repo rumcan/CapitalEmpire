@@ -1,0 +1,61 @@
+{
+  "schema": 1,
+  "createdUtc": "2026-11-07T06:47:45.284562+00:00",
+  "exactRuntimeId": "variation:world-house_1-ba13ed2e-plain-corner:1",
+  "source": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/building-views/variation-world-house_1-ba13ed2e-plain-corner-1/NE.png",
+  "sourceSha256": "cc1d09488968388c1e2f3c0bd86a0d9f170581e76958e7d2c5501f3f011f6e02",
+  "output": "identity-references/variation-world-house-1-ba13ed2e-plain-corner-1-38756b02/source.png",
+  "outputSha256": "cc1d09488968388c1e2f3c0bd86a0d9f170581e76958e7d2c5501f3f011f6e02",
+  "width": 470,
+  "height": 464,
+  "sourceCell": {
+    "kind": "already isolated native PNG; whole file",
+    "rectXYWH": [
+      0,
+      0,
+      470,
+      464
+    ]
+  },
+  "operation": "byte-for-byte PNG copy only; no resize, crop, recolour, key, repaint, registration or source mutation",
+  "selection": "registered corner NE native PNG for this exact subject",
+  "registeredCornerDirection": "NE",
+  "sourceEvidence": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\building-views\\variation-world-house_1-ba13ed2e-plain-corner-1\\provenance.json",
+  "sourceReview": {
+    "status": "generated"
+  },
+  "sourceRegistration": {
+    "id": "variation:world-house_1-ba13ed2e-plain-corner:1",
+    "version": "variation-world-house_1-ba13ed2e-plain-corner-1-4views-v2",
+    "files": {
+      "NE": "cc1d09488968388c1e2f3c0bd86a0d9f170581e76958e7d2c5501f3f011f6e02",
+      "SE": "56cff622e33f8476cc4ec99836876f3e60330e2d652e7f5753429380eb37fb37",
+      "SW": "40a9d856c91068cfea5dfab0aff8dc3b79cef26f3b0cf047beb49f16e0aa30c1",
+      "NW": "7c82e7cf96f2bd530dac91110a17ad5e346afc8526ad9fb6c6c3618126680993"
+    }
+  },
+  "originalInventorySource": {
+    "library": "src/game/library.ts",
+    "librarySha256": "91b5190292c1005ac7b936f08e5e1ebf3be43c3aae99f92ea510775da83d9726",
+    "atlas": "src/assets/atlas/sprites-4-0.webp",
+    "atlasSha256": "7cb439e61cdd5f48e2c1327386b33c854fa4e1e3e6a58e39ba137e00c48ee2cd",
+    "runtimePage": 4,
+    "localPage": 4,
+    "uv": [
+      0.632813,
+      0.257813,
+      0.862793,
+      0.484375
+    ],
+    "crop": {
+      "left": 1296,
+      "top": 528,
+      "width": 471,
+      "height": 464
+    },
+    "native": "art/theme-consistency/exports/buildings/variation-world-house_1-ba13ed2e-plain-corner-1.native.png",
+    "nativeSha256": "6666332fec044bf4e65ad67f15c0fd04e2c2ac3e6a149270f893c658e234e08d"
+  },
+  "originalBusinessSourceCell": null,
+  "nativeReferenceApprovalClaimed": false
+}

@@ -1,0 +1,196 @@
+{
+  "generator": "native imagegen",
+  "full_original_source": {
+    "path": "C:\\Users\\RAMPAGE\\.codex\\generated_images\\01a1b1fd-39ec-7220-8f11-86e4448833ea\\exec-5597e7b3-c49f-4f22-9605-30e991a06fdb.png",
+    "sha256": "993ce77d2e5956b5c6e1e7c9861cfbbb749d21f0c7184ab22fea93ee93d58c76",
+    "bytes": 3455295
+  },
+  "archived_full_sheet": {
+    "path": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\portraits\\golf-group-1\\source.png",
+    "sha256": "993ce77d2e5956b5c6e1e7c9861cfbbb749d21f0c7184ab22fea93ee93d58c76",
+    "bytes": 3455295
+  },
+  "dimensions": [
+    1448,
+    1086
+  ],
+  "mode": "RGB",
+  "cell_order": [
+    [
+      "golfer:golf_pro_m2",
+      "golfer:golf_pro_w1"
+    ],
+    [
+      "golfer:golf_pro_m3",
+      "golfer:golf_pro_m4"
+    ]
+  ],
+  "exact_prompt": {
+    "path": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\portraits\\golf-group-1\\prompt.txt",
+    "sha256": "a6b81ff0bc9c48aba713b5e6cc3ac21fb70e00eb7c0d4ef3eba00e4977069daa",
+    "bytes": 1847
+  },
+  "records": [
+    {
+      "look_id": "golfer:golf_pro_m2",
+      "cell_index": 0,
+      "cell_position": "top-left",
+      "source_crop_box": [
+        0,
+        0,
+        724,
+        543
+      ],
+      "dimensions": [
+        724,
+        543
+      ],
+      "mode": "RGB",
+      "source_file": {
+        "path": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\portraits\\golf-group-1\\golfer-golf_pro_m2.native.png",
+        "sha256": "4dc27b1d625492cb2781bb50549187b81abb8005983bc534b32541e2bb776b11",
+        "bytes": 811203
+      },
+      "runtime_file": {
+        "path": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\src\\assets\\portraits\\golf-pro-m2.png",
+        "sha256": "4dc27b1d625492cb2781bb50549187b81abb8005983bc534b32541e2bb776b11",
+        "bytes": 811203
+      },
+      "manifest_record": {
+        "lookId": "golfer:golf_pro_m2",
+        "file": "golf-pro-m2.png",
+        "w": 724,
+        "h": 543,
+        "bytes": 811203,
+        "state": "one"
+      },
+      "pixel_sha256": "d10a7278adcdc823ecc5a49e007222179d9bf874952b3ad328024466d68afc35",
+      "crop_operation": "lossless native integer quarter; no resize/repaint/alpha reconstruction",
+      "parent_visual_review": "parent compared actual source faces/clothing and judged output style/sun coherent; explicitly authorized this runtime portrait import",
+      "owner_approved": false,
+      "runtime_integrated": true
+    },
+    {
+      "look_id": "golfer:golf_pro_w1",
+      "cell_index": 1,
+      "cell_position": "top-right",
+      "source_crop_box": [
+        724,
+        0,
+        1448,
+        543
+      ],
+      "dimensions": [
+        724,
+        543
+      ],
+      "mode": "RGB",
+      "source_file": {
+        "path": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\portraits\\golf-group-1\\golfer-golf_pro_w1.native.png",
+        "sha256": "6df81479b25faa950ba693d68cd8ff36258e7561a9561ccdfa24d043c86710a6",
+        "bytes": 802893
+      },
+      "runtime_file": {
+        "path": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\src\\assets\\portraits\\golf-pro-w1.png",
+        "sha256": "6df81479b25faa950ba693d68cd8ff36258e7561a9561ccdfa24d043c86710a6",
+        "bytes": 802893
+      },
+      "manifest_record": {
+        "lookId": "golfer:golf_pro_w1",
+        "file": "golf-pro-w1.png",
+        "w": 724,
+        "h": 543,
+        "bytes": 802893,
+        "state": "one"
+      },
+      "pixel_sha256": "bc90e7a3e164fedf0f60d5b955ebefe625d63d777d6576b2cbcc2f28d6ab68ae",
+      "crop_operation": "lossless native integer quarter; no resize/repaint/alpha reconstruction",
+      "parent_visual_review": "parent compared actual source faces/clothing and judged output style/sun coherent; explicitly authorized this runtime portrait import",
+      "owner_approved": false,
+      "runtime_integrated": true
+    },
+    {
+      "look_id": "golfer:golf_pro_m3",
+      "cell_index": 2,
+      "cell_position": "bottom-left",
+      "source_crop_box": [
+        0,
+        543,
+        724,
+        1086
+      ],
+      "dimensions": [
+        724,
+        543
+      ],
+      "mode": "RGB",
+      "source_file": {
+        "path": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\portraits\\golf-group-1\\golfer-golf_pro_m3.native.png",
+        "sha256": "ae6a82c8e6647a151b97728e161b4413f7592b60a073f08963effed40f72f64e",
+        "bytes": 810503
+      },
+      "runtime_file": {
+        "path": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\src\\assets\\portraits\\golf-pro-m3.png",
+        "sha256": "ae6a82c8e6647a151b97728e161b4413f7592b60a073f08963effed40f72f64e",
+        "bytes": 810503
+      },
+      "manifest_record": {
+        "lookId": "golfer:golf_pro_m3",
+        "file": "golf-pro-m3.png",
+        "w": 724,
+        "h": 543,
+        "bytes": 810503,
+        "state": "one"
+      },
+      "pixel_sha256": "b9a9aba7396c54785adf91807ae90f5c8ca21f519bb41882bd0480dfaa7860aa",
+      "crop_operation": "lossless native integer quarter; no resize/repaint/alpha reconstruction",
+      "parent_visual_review": "parent compared actual source faces/clothing and judged output style/sun coherent; explicitly authorized this runtime portrait import",
+      "owner_approved": false,
+      "runtime_integrated": true
+    },
+    {
+      "look_id": "golfer:golf_pro_m4",
+      "cell_index": 3,
+      "cell_position": "bottom-right",
+      "source_crop_box": [
+        724,
+        543,
+        1448,
+        1086
+      ],
+      "dimensions": [
+        724,
+        543
+      ],
+      "mode": "RGB",
+      "source_file": {
+        "path": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\portraits\\golf-group-1\\golfer-golf_pro_m4.native.png",
+        "sha256": "eb5af400448f8c792b969af74a1b247b15a43b374a2ea4ff4fbad882831c1e8c",
+        "bytes": 792614
+      },
+      "runtime_file": {
+        "path": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\src\\assets\\portraits\\golf-pro-m4.png",
+        "sha256": "eb5af400448f8c792b969af74a1b247b15a43b374a2ea4ff4fbad882831c1e8c",
+        "bytes": 792614
+      },
+      "manifest_record": {
+        "lookId": "golfer:golf_pro_m4",
+        "file": "golf-pro-m4.png",
+        "w": 724,
+        "h": 543,
+        "bytes": 792614,
+        "state": "one"
+      },
+      "pixel_sha256": "195aca5571667897b97a56680a2200f606c4c42fd1cbb10c4a0f058db801c6f3",
+      "crop_operation": "lossless native integer quarter; no resize/repaint/alpha reconstruction",
+      "parent_visual_review": "parent compared actual source faces/clothing and judged output style/sun coherent; explicitly authorized this runtime portrait import",
+      "owner_approved": false,
+      "runtime_integrated": true
+    }
+  ],
+  "validation": "Lossless integer quarter crops reconstruct every source pixel exactly; native crop bytes copied unchanged into runtime assets. Existing manifest records/files preserved.",
+  "actual_generation_reference_paths": "Attachment paths not supplied in this delegated brief; exact identities/order and source-look visual review were reported by parent. Do not infer actual attachments from expected look references.",
+  "status": "four-native-portrait-candidates-imported-by-parent-authorization",
+  "owner_approved": false,
+  "runtime_integrated": true
+}

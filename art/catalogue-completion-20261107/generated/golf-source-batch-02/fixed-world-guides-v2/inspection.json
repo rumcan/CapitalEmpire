@@ -1,0 +1,704 @@
+{
+  "schema": 1,
+  "asOfUTC": "2026-11-07T14:00:06.235828+00:00",
+  "technicalOnly": true,
+  "sheetsInspected": 10,
+  "projectedViews": 40,
+  "allUnclipped": true,
+  "nativeGenerationCount": 0,
+  "runtimeChanges": false,
+  "models": [
+    {
+      "id": "newprop:water-tank-stall",
+      "sheets": [
+        {
+          "kind": "normal",
+          "file": "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/golf-source-batch-02/fixed-world-guides-v2/water-tank-stall/guides/normal-world-v1.png",
+          "sha256": "af93768dc925f387526ed61ec391f93066e7e62c7c44e6d1d18edd2a9f5a0bdc",
+          "size": [
+            1600,
+            1600
+          ],
+          "cellSize": [
+            800,
+            800
+          ],
+          "visuallyInspected": true,
+          "cells": [
+            {
+              "cellIndex": 0,
+              "sourceCameraKey": "SE",
+              "alphaBoundsLTRB": [
+                146,
+                79,
+                654,
+                721
+              ],
+              "rawRGBAHash": "e92ceeac2048e94b8c75e77db3fcf9f1e8cd8600cc8b9b321c2f9f62954566be",
+              "notClipped": true
+            },
+            {
+              "cellIndex": 1,
+              "sourceCameraKey": "SW",
+              "alphaBoundsLTRB": [
+                146,
+                98,
+                654,
+                702
+              ],
+              "rawRGBAHash": "df53e78b4455b5fab650d8d95362a2f7ca4d7cf2e642e08db669677af7b5bea0",
+              "notClipped": true
+            },
+            {
+              "cellIndex": 2,
+              "sourceCameraKey": "NW",
+              "alphaBoundsLTRB": [
+                146,
+                98,
+                654,
+                702
+              ],
+              "rawRGBAHash": "9694d198358dd053295f41eab79458e5f60003fef932ed4225650406d1c4beae",
+              "notClipped": true
+            },
+            {
+              "cellIndex": 3,
+              "sourceCameraKey": "NE",
+              "alphaBoundsLTRB": [
+                146,
+                79,
+                654,
+                721
+              ],
+              "rawRGBAHash": "06f6f232705c9af0d7902bf8540f7ca1518d43b575f624d31673019f2b770a95",
+              "notClipped": true
+            }
+          ]
+        },
+        {
+          "kind": "yaw8",
+          "file": "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/golf-source-batch-02/fixed-world-guides-v2/water-tank-stall/guides/yaw8-world-v1.png",
+          "sha256": "0ab98b8202ebe9d1aedd265b98d847399f46edac6f64d922c635e9fe3b0fcb55",
+          "size": [
+            1600,
+            1600
+          ],
+          "cellSize": [
+            800,
+            800
+          ],
+          "visuallyInspected": true,
+          "cells": [
+            {
+              "cellIndex": 0,
+              "sourceCameraKey": "N",
+              "alphaBoundsLTRB": [
+                165,
+                99,
+                635,
+                701
+              ],
+              "rawRGBAHash": "e83c686ed5638ae2436f086ba5cef0e86889c7973434d9f3a5833778dc0daef4",
+              "notClipped": true
+            },
+            {
+              "cellIndex": 1,
+              "sourceCameraKey": "E",
+              "alphaBoundsLTRB": [
+                193,
+                100,
+                607,
+                700
+              ],
+              "rawRGBAHash": "3ea7a20ce44e276637970ebc6a397a2a15b11b3decd6fe2ae17730eb3c555667",
+              "notClipped": true
+            },
+            {
+              "cellIndex": 2,
+              "sourceCameraKey": "S",
+              "alphaBoundsLTRB": [
+                165,
+                138,
+                635,
+                662
+              ],
+              "rawRGBAHash": "67438dfbd3eacebe5e44c1859e9d6df74c8b4f240a81c6626c03f2e31bfe9d54",
+              "notClipped": true
+            },
+            {
+              "cellIndex": 3,
+              "sourceCameraKey": "W",
+              "alphaBoundsLTRB": [
+                193,
+                100,
+                607,
+                700
+              ],
+              "rawRGBAHash": "0512efb4fe71b1999a7356dc5070267b8d2294cacb630891d127668ec7910970",
+              "notClipped": true
+            }
+          ]
+        }
+      ],
+      "uniqueRenderedCellRGBAHashes": 8,
+      "fixedIdentityInspected": true,
+      "nativeArtApproval": false,
+      "symmetryNote": "Front taps/trough and rear braces distinguish front and rear views."
+    },
+    {
+      "id": "newprop:direction-signpost",
+      "sheets": [
+        {
+          "kind": "normal",
+          "file": "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/golf-source-batch-02/fixed-world-guides-v2/direction-signpost/guides/normal-world-v1.png",
+          "sha256": "e933de05e8d7fa4baeab9e509efeb21365c6ec4ed12c2e80699a2ebceb128851",
+          "size": [
+            1600,
+            1600
+          ],
+          "cellSize": [
+            800,
+            800
+          ],
+          "visuallyInspected": true,
+          "cells": [
+            {
+              "cellIndex": 0,
+              "sourceCameraKey": "SE",
+              "alphaBoundsLTRB": [
+                261,
+                162,
+                539,
+                638
+              ],
+              "rawRGBAHash": "6b71f71de63432fd37f105bfbd57184d1b0c954e2fc342f89508be7c24469095",
+              "notClipped": true
+            },
+            {
+              "cellIndex": 1,
+              "sourceCameraKey": "SW",
+              "alphaBoundsLTRB": [
+                261,
+                162,
+                539,
+                638
+              ],
+              "rawRGBAHash": "a325a1d9844a09a5a40cc1bf9bc1cdae993f3304d89b9ea69fab618db47c4404",
+              "notClipped": true
+            },
+            {
+              "cellIndex": 2,
+              "sourceCameraKey": "NW",
+              "alphaBoundsLTRB": [
+                261,
+                162,
+                539,
+                638
+              ],
+              "rawRGBAHash": "82bd283049bf31d6b8e6e3871f5dd56a97a7322e79ea6a2582f41feca35d9b01",
+              "notClipped": true
+            },
+            {
+              "cellIndex": 3,
+              "sourceCameraKey": "NE",
+              "alphaBoundsLTRB": [
+                261,
+                162,
+                539,
+                638
+              ],
+              "rawRGBAHash": "d7aaa2b2a339b0155a406bdd87a5b4b0cd89042dd762a21355a4ff96b189f395",
+              "notClipped": true
+            }
+          ]
+        },
+        {
+          "kind": "yaw8",
+          "file": "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/golf-source-batch-02/fixed-world-guides-v2/direction-signpost/guides/yaw8-world-v1.png",
+          "sha256": "bd7bda4ceddb309a7377caeb658bc477ff5f8579206730e1312d387a42d31fb8",
+          "size": [
+            1600,
+            1600
+          ],
+          "cellSize": [
+            800,
+            800
+          ],
+          "visuallyInspected": true,
+          "cells": [
+            {
+              "cellIndex": 0,
+              "sourceCameraKey": "N",
+              "alphaBoundsLTRB": [
+                214,
+                165,
+                586,
+                635
+              ],
+              "rawRGBAHash": "c4ac994e7133c663c0c85e95c8e14cd7f4d42ba346c02993d35bb0aa3db572eb",
+              "notClipped": true
+            },
+            {
+              "cellIndex": 1,
+              "sourceCameraKey": "E",
+              "alphaBoundsLTRB": [
+                348,
+                165,
+                452,
+                635
+              ],
+              "rawRGBAHash": "68c97755e894413ab6c00cea7ab2177224e99337f1c8610da72ac53df0c9ffef",
+              "notClipped": true
+            },
+            {
+              "cellIndex": 2,
+              "sourceCameraKey": "S",
+              "alphaBoundsLTRB": [
+                214,
+                165,
+                586,
+                635
+              ],
+              "rawRGBAHash": "e78c7f6250157e1897cc19243065a8f690c75f075e4ebe31947c8f2c21521b77",
+              "notClipped": true
+            },
+            {
+              "cellIndex": 3,
+              "sourceCameraKey": "W",
+              "alphaBoundsLTRB": [
+                348,
+                165,
+                452,
+                635
+              ],
+              "rawRGBAHash": "91fe1fd0ca9ac5de165a4bc07bdb326a823d40b8d8603d619c4a37c623112efa",
+              "notClipped": true
+            }
+          ]
+        }
+      ],
+      "uniqueRenderedCellRGBAHashes": 8,
+      "fixedIdentityInspected": true,
+      "nativeArtApproval": false,
+      "symmetryNote": "Board silhouettes are bilaterally symmetric; front-only pictograms and plain backs distinguish front and rear."
+    },
+    {
+      "id": "newprop:course-map-board",
+      "sheets": [
+        {
+          "kind": "normal",
+          "file": "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/golf-source-batch-02/fixed-world-guides-v2/course-map-board/guides/normal-world-v1.png",
+          "sha256": "68facf8d13f4417d12007c5e4381d905e9122d197c112fe156aa723dc6b2ce87",
+          "size": [
+            1600,
+            1600
+          ],
+          "cellSize": [
+            800,
+            800
+          ],
+          "visuallyInspected": true,
+          "cells": [
+            {
+              "cellIndex": 0,
+              "sourceCameraKey": "SE",
+              "alphaBoundsLTRB": [
+                186,
+                129,
+                614,
+                671
+              ],
+              "rawRGBAHash": "bc82eb817bba19684b7b779864bf0624c897eb265f72ec11f1e95bdb5e40cff5",
+              "notClipped": true
+            },
+            {
+              "cellIndex": 1,
+              "sourceCameraKey": "SW",
+              "alphaBoundsLTRB": [
+                186,
+                129,
+                614,
+                671
+              ],
+              "rawRGBAHash": "8838a7394ba94bbd6b0529e903745438ebb111f0a04b31f38d367d06989a788f",
+              "notClipped": true
+            },
+            {
+              "cellIndex": 2,
+              "sourceCameraKey": "NW",
+              "alphaBoundsLTRB": [
+                186,
+                129,
+                614,
+                671
+              ],
+              "rawRGBAHash": "6b3646cf19baa9ab4cd287042287fe339d96b635982247a54da926e0172a708d",
+              "notClipped": true
+            },
+            {
+              "cellIndex": 3,
+              "sourceCameraKey": "NE",
+              "alphaBoundsLTRB": [
+                186,
+                129,
+                614,
+                671
+              ],
+              "rawRGBAHash": "cf9ded9e28c45d94b5d708726f88a98596e42e911809312ac7b7c7786c598c93",
+              "notClipped": true
+            }
+          ]
+        },
+        {
+          "kind": "yaw8",
+          "file": "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/golf-source-batch-02/fixed-world-guides-v2/course-map-board/guides/yaw8-world-v1.png",
+          "sha256": "e0a3d54c40a7b06e9106b9a16b21c8f425442f88f1c4491b63ccb8c0dc95fe7f",
+          "size": [
+            1600,
+            1600
+          ],
+          "cellSize": [
+            800,
+            800
+          ],
+          "visuallyInspected": true,
+          "cells": [
+            {
+              "cellIndex": 0,
+              "sourceCameraKey": "N",
+              "alphaBoundsLTRB": [
+                164,
+                157,
+                635,
+                643
+              ],
+              "rawRGBAHash": "64aa9c5bc8f87106ac66ddfa9669c2f54ebbd84f2b7cee5f0898b9475c9c2cdd",
+              "notClipped": true
+            },
+            {
+              "cellIndex": 1,
+              "sourceCameraKey": "E",
+              "alphaBoundsLTRB": [
+                289,
+                114,
+                511,
+                686
+              ],
+              "rawRGBAHash": "da114af58cd45ddeffe3c7e15107432c7a3ff201fec3bd3c5106732596d7c4ac",
+              "notClipped": true
+            },
+            {
+              "cellIndex": 2,
+              "sourceCameraKey": "S",
+              "alphaBoundsLTRB": [
+                164,
+                157,
+                635,
+                643
+              ],
+              "rawRGBAHash": "584725b7b206aff026732a4e90dc7a2208a50c7a2aaa06b74946c27f1e5bae22",
+              "notClipped": true
+            },
+            {
+              "cellIndex": 3,
+              "sourceCameraKey": "W",
+              "alphaBoundsLTRB": [
+                289,
+                114,
+                511,
+                686
+              ],
+              "rawRGBAHash": "f3a7898932a5686b5def93b546fd10a582a64dadac598313ab0beec9194c7e16",
+              "notClipped": true
+            }
+          ]
+        }
+      ],
+      "uniqueRenderedCellRGBAHashes": 8,
+      "fixedIdentityInspected": true,
+      "nativeArtApproval": false,
+      "symmetryNote": "Map/front lanterns and plain rear braces distinguish opposite cameras; do not move lamps onto rear."
+    },
+    {
+      "id": "newprop:rope-barrier",
+      "sheets": [
+        {
+          "kind": "normal",
+          "file": "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/golf-source-batch-02/fixed-world-guides-v2/rope-barrier/guides/normal-world-v1.png",
+          "sha256": "1b0e543c83926f6a22d170bd3575148412c94ffa251e4154d3eed2ba09a24449",
+          "size": [
+            1600,
+            1600
+          ],
+          "cellSize": [
+            800,
+            800
+          ],
+          "visuallyInspected": true,
+          "cells": [
+            {
+              "cellIndex": 0,
+              "sourceCameraKey": "SE",
+              "alphaBoundsLTRB": [
+                166,
+                207,
+                634,
+                594
+              ],
+              "rawRGBAHash": "6db1308561250698d4909fd50d9bd4e66ab195190ba0de2140724529811fb830",
+              "notClipped": true
+            },
+            {
+              "cellIndex": 1,
+              "sourceCameraKey": "SW",
+              "alphaBoundsLTRB": [
+                166,
+                207,
+                634,
+                594
+              ],
+              "rawRGBAHash": "7337d3120f2e4ed20ba3f3b1a0076cd7e28c3d4bca58e219d4a615af564da323",
+              "notClipped": true
+            },
+            {
+              "cellIndex": 2,
+              "sourceCameraKey": "NW",
+              "alphaBoundsLTRB": [
+                166,
+                207,
+                634,
+                594
+              ],
+              "rawRGBAHash": "42b3054a738dbdb1d7c20de8e07a0d164c85ee2937329176d950e7a90efb8ee3",
+              "notClipped": true
+            },
+            {
+              "cellIndex": 3,
+              "sourceCameraKey": "NE",
+              "alphaBoundsLTRB": [
+                166,
+                207,
+                634,
+                594
+              ],
+              "rawRGBAHash": "2d09a8a9ee7f2ada6fc700b07cb9f7ee1be97748bda5f31aa4579d1f42f2c61c",
+              "notClipped": true
+            }
+          ]
+        },
+        {
+          "kind": "yaw8",
+          "file": "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/golf-source-batch-02/fixed-world-guides-v2/rope-barrier/guides/yaw8-world-v1.png",
+          "sha256": "1277cf9dad25379d01e3f909c9fa031fe218fb5d7d57906e8685d873e56d35db",
+          "size": [
+            1600,
+            1600
+          ],
+          "cellSize": [
+            800,
+            800
+          ],
+          "visuallyInspected": true,
+          "cells": [
+            {
+              "cellIndex": 0,
+              "sourceCameraKey": "N",
+              "alphaBoundsLTRB": [
+                83,
+                290,
+                717,
+                510
+              ],
+              "rawRGBAHash": "385469508a8443b2b5000396def05b5178345fff789918ae8be98acaf048e062",
+              "notClipped": true
+            },
+            {
+              "cellIndex": 1,
+              "sourceCameraKey": "E",
+              "alphaBoundsLTRB": [
+                332,
+                165,
+                468,
+                635
+              ],
+              "rawRGBAHash": "ce83bac65eefb6b4544da41a6852c1e179a3021ea590bcc31a872a50626f2ce0",
+              "notClipped": true
+            },
+            {
+              "cellIndex": 2,
+              "sourceCameraKey": "S",
+              "alphaBoundsLTRB": [
+                83,
+                290,
+                717,
+                510
+              ],
+              "rawRGBAHash": "22862eef61de305155b30699001fa600fe3df9926b0c835d16f2710ded463b07",
+              "notClipped": true
+            },
+            {
+              "cellIndex": 3,
+              "sourceCameraKey": "W",
+              "alphaBoundsLTRB": [
+                332,
+                165,
+                468,
+                635
+              ],
+              "rawRGBAHash": "a0f4a381e57b42959859f00a88e661735bf853f570900b9a5164c047a490399f",
+              "notClipped": true
+            }
+          ]
+        }
+      ],
+      "uniqueRenderedCellRGBAHashes": 8,
+      "fixedIdentityInspected": true,
+      "nativeArtApproval": false,
+      "symmetryNote": "Simple barrier is largely symmetric. Opposite views can naturally have similar silhouettes; fixed front brass plates are visible only from appropriate sides. Do not invent new parts merely to force uniqueness."
+    },
+    {
+      "id": "newprop:gold-tee-markers",
+      "sheets": [
+        {
+          "kind": "normal",
+          "file": "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/golf-source-batch-02/fixed-world-guides-v2/gold-tee-markers/guides/normal-world-v1.png",
+          "sha256": "1d4eae137dec1a564db3930bdd652dc1f6529e9deafa972c66ba65ea4684cdc3",
+          "size": [
+            1600,
+            1600
+          ],
+          "cellSize": [
+            800,
+            800
+          ],
+          "visuallyInspected": true,
+          "cells": [
+            {
+              "cellIndex": 0,
+              "sourceCameraKey": "SE",
+              "alphaBoundsLTRB": [
+                211,
+                230,
+                589,
+                570
+              ],
+              "rawRGBAHash": "c2e16f11ae3cba4858a07816b70fb5e912b33722e247ab167769d09ad4f82274",
+              "notClipped": true
+            },
+            {
+              "cellIndex": 1,
+              "sourceCameraKey": "SW",
+              "alphaBoundsLTRB": [
+                211,
+                230,
+                589,
+                570
+              ],
+              "rawRGBAHash": "43e1e466cea586059e8fe03c50534289dd742aeb629c78d08d87731e22a55a4b",
+              "notClipped": true
+            },
+            {
+              "cellIndex": 2,
+              "sourceCameraKey": "NW",
+              "alphaBoundsLTRB": [
+                211,
+                230,
+                589,
+                570
+              ],
+              "rawRGBAHash": "4497df3a9ef126fc4f3bbf3e1b2fe6a60c7bd5e59d2c60d7cc705e2f298d72b7",
+              "notClipped": true
+            },
+            {
+              "cellIndex": 3,
+              "sourceCameraKey": "NE",
+              "alphaBoundsLTRB": [
+                211,
+                230,
+                589,
+                570
+              ],
+              "rawRGBAHash": "e16555367b422fa237b17bc8192f4433d38c1a316bfbd0c387caca977dffc89f",
+              "notClipped": true
+            }
+          ]
+        },
+        {
+          "kind": "yaw8",
+          "file": "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/golf-source-batch-02/fixed-world-guides-v2/gold-tee-markers/guides/yaw8-world-v1.png",
+          "sha256": "d6f37fa0dceafc7f2246d493706d8e32c73dcdbd6a039d4b12561ea9b65ccb84",
+          "size": [
+            1600,
+            1600
+          ],
+          "cellSize": [
+            800,
+            800
+          ],
+          "visuallyInspected": true,
+          "cells": [
+            {
+              "cellIndex": 0,
+              "sourceCameraKey": "N",
+              "alphaBoundsLTRB": [
+                166,
+                275,
+                634,
+                525
+              ],
+              "rawRGBAHash": "2aa5432c1894d000f309578dccdd6d00dc8a0198ee70dfaa5159ca10b3a36b92",
+              "notClipped": true
+            },
+            {
+              "cellIndex": 1,
+              "sourceCameraKey": "E",
+              "alphaBoundsLTRB": [
+                303,
+                207,
+                497,
+                593
+              ],
+              "rawRGBAHash": "8f9e33ed1fd55a1b2fd8f36a9e2e777d94300fef859fb895e91f6e5edb7b2a20",
+              "notClipped": true
+            },
+            {
+              "cellIndex": 2,
+              "sourceCameraKey": "S",
+              "alphaBoundsLTRB": [
+                166,
+                275,
+                634,
+                525
+              ],
+              "rawRGBAHash": "1b75ef09489132064fa9788d4cf95575ee3a075eef683a3b2ab5ba636afc928f",
+              "notClipped": true
+            },
+            {
+              "cellIndex": 3,
+              "sourceCameraKey": "W",
+              "alphaBoundsLTRB": [
+                303,
+                207,
+                497,
+                593
+              ],
+              "rawRGBAHash": "2d1d9eaf74dec957dc01d759c0b94452e1799cde8696a2a78e218c14a9588a3d",
+              "notClipped": true
+            }
+          ]
+        }
+      ],
+      "uniqueRenderedCellRGBAHashes": 8,
+      "fixedIdentityInspected": true,
+      "nativeArtApproval": false,
+      "symmetryNote": "Two matching spherical markers are genuinely symmetric; some opposite-camera silhouettes naturally repeat. Do not add asymmetry to make fake unique faces. Fixed bolts, world spacing and lighting remain consistent."
+    }
+  ],
+  "notes": [
+    "All source native references were inspected before geometry construction.",
+    "Map badge and basket bracket were corrected in the technical mesh, then affected sheets re-rendered and re-inspected.",
+    "Map schematics, simple pictograms and faceted balls are technical placeholders for feature locations; final painted identity/material comes from archived native reference.",
+    "Source-camera names are recorded exactly; shared calibration includes measured/proven physical headings. Native painted camera conformity remains a separate review.",
+    "Straight barriers and spherical paired tee markers have genuine physical symmetries; similar opposite silhouettes are not proof of copied cameras."
+  ]
+}

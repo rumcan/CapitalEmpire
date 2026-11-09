@@ -1,0 +1,71 @@
+{
+  "schema": 1,
+  "createdUtc": "2026-11-07T06:47:45.284562+00:00",
+  "exactRuntimeId": "world:video",
+  "source": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/building-views/world-video/NE.png",
+  "sourceSha256": "034e755910fc3f99a9afe3049b6e189f4c86ecdf9a1ed7307cbdc9cd3e44505d",
+  "output": "identity-references/world-video-bf85dfb9/source.png",
+  "outputSha256": "034e755910fc3f99a9afe3049b6e189f4c86ecdf9a1ed7307cbdc9cd3e44505d",
+  "width": 550,
+  "height": 475,
+  "sourceCell": {
+    "kind": "already isolated native PNG; whole file",
+    "rectXYWH": [
+      0,
+      0,
+      550,
+      475
+    ]
+  },
+  "operation": "byte-for-byte PNG copy only; no resize, crop, recolour, key, repaint, registration or source mutation",
+  "selection": "registered corner NE native PNG for this exact subject",
+  "registeredCornerDirection": "NE",
+  "sourceEvidence": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\building-views\\world-video\\provenance.json",
+  "sourceReview": {
+    "integrationStatus": "ready",
+    "integrationReason": "Source review passed actual-alpha blue composite, rigid visible-facade cycle, coherent Maple-master materials/detail/upper-right dusk light and clear equal-cell packing. Game scale/street integration remains to be reviewed.",
+    "integrationReview": {
+      "alpha": "passed",
+      "geometry": "passed",
+      "themeAssessment": "Brown timber/brick plinth, blue trim and warm display windows fit master; purple neon is business identity, not a global colour cast.",
+      "terrainOrCaptionsVisible": false,
+      "gameScaleRegistered": false,
+      "reviewContact": "output/building-priority/mixed-standalone-review-1.png",
+      "correctionBrief": null
+    }
+  },
+  "sourceRegistration": {
+    "id": "world:video",
+    "version": "world-video-4views-v1",
+    "files": {
+      "NE": "034e755910fc3f99a9afe3049b6e189f4c86ecdf9a1ed7307cbdc9cd3e44505d",
+      "SE": "b76825095ee9476f8288f622141c2cc5353c3661b75e8519619d13b0b2186cab",
+      "SW": "2251fe45d69f53e00ee47f92d84ad58414317b3854fbf2a115efc0978c7e0b6c",
+      "NW": "d0f1a7b632628cb546ecb7f1b0e9ed37de64cd0f50a40c5eb887f6cf8f8b53b4"
+    }
+  },
+  "originalInventorySource": {
+    "library": "src/game/library.ts",
+    "librarySha256": "91b5190292c1005ac7b936f08e5e1ebf3be43c3aae99f92ea510775da83d9726",
+    "atlas": "src/assets/atlas/sprites-9-0.webp",
+    "atlasSha256": "484f5473a887995bfea39685a9993bd57d4c9711217f53187510326bcc954a5b",
+    "runtimePage": 9,
+    "localPage": 9,
+    "uv": [
+      0.421875,
+      0.570313,
+      0.633301,
+      0.731445
+    ],
+    "crop": {
+      "left": 864,
+      "top": 1168,
+      "width": 433,
+      "height": 330
+    },
+    "native": "art/theme-consistency/exports/buildings/world-video.native.png",
+    "nativeSha256": "bbacc88e324db0a35eb4df6cb161219b0056c2b0d62c7e4dbd540fb3457dfbb3"
+  },
+  "originalBusinessSourceCell": null,
+  "nativeReferenceApprovalClaimed": false
+}

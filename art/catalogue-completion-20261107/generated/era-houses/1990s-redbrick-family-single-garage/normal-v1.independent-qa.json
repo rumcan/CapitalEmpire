@@ -1,0 +1,111 @@
+{
+  "schema": 1,
+  "as_of_utc": "2026-11-07T10:47:06.951285+00:00",
+  "review_result": "PASS-source-candidate-openings-and-alpha;exact-camera-unverified",
+  "source": {
+    "path": "generated/era-houses/1990s-redbrick-family-single-garage/normal-v1.png",
+    "sha256": "30cac9c191f62ea4ddd48c3d1a699494be5fdf661925f83b164e42bc0c133f1f",
+    "bytes": 1178316
+  },
+  "source_original_hash_matches_parent_batch": true,
+  "dimensions": [
+    1254,
+    1254
+  ],
+  "mode": "RGBA",
+  "references": [
+    {
+      "path": "generated/era-houses/1990s-redbrick-family-single-garage/guides/normal-world-v1.png",
+      "sha256": "9d4fac2475457efe9e59891da5a7258077f0f41780e5865b57e118234fc41acf",
+      "bytes": 41900
+    },
+    {
+      "path": "generated/scenes/identity-references/gen-house-farmhouse-wrap-2b0eea83/source.png",
+      "sha256": "aaddc4f69472fd8bede578d003a52874550292df445d8f6987944badddb7bd1a",
+      "bytes": 618401
+    }
+  ],
+  "source_core_clipping": false,
+  "outer_border_alpha_p50p95max": [
+    0.0,
+    0.0,
+    1.0
+  ],
+  "empty_center_gutter_alpha_p50p95max": [
+    0.0,
+    0.0,
+    1.0
+  ],
+  "zero_alpha_fraction": 0.7334189286468309,
+  "cells": [
+    {
+      "guide_cell_label_only": "SE",
+      "rect_ltrb": [
+        0,
+        0,
+        627,
+        627
+      ],
+      "native_core_margin_pixels": 71,
+      "boundary_core_pixels": 0,
+      "boundary_alpha_max": 1,
+      "rgba_rectangle_sha256": "7de4865dda9885f4bd04f7c7b673d10d79dfdd97d36c03bbd81f3ac3eeed980a"
+    },
+    {
+      "guide_cell_label_only": "SW",
+      "rect_ltrb": [
+        627,
+        0,
+        1254,
+        627
+      ],
+      "native_core_margin_pixels": 83,
+      "boundary_core_pixels": 0,
+      "boundary_alpha_max": 1,
+      "rgba_rectangle_sha256": "8a687ff02e7bc3965a34c72d9ac1b643c01fdcc2fe9ae3c9783e8cc0d7d3ed51"
+    },
+    {
+      "guide_cell_label_only": "NW",
+      "rect_ltrb": [
+        0,
+        627,
+        627,
+        1254
+      ],
+      "native_core_margin_pixels": 70,
+      "boundary_core_pixels": 0,
+      "boundary_alpha_max": 1,
+      "rgba_rectangle_sha256": "329dab2f177d4875e951945028d7f5caa5f8da324e73b0e0eaab9214f0284da4"
+    },
+    {
+      "guide_cell_label_only": "NE",
+      "rect_ltrb": [
+        627,
+        627,
+        1254,
+        1254
+      ],
+      "native_core_margin_pixels": 84,
+      "boundary_core_pixels": 0,
+      "boundary_alpha_max": 1,
+      "rgba_rectangle_sha256": "b7b16aff31cfeff837253866fd2905a8d76919757383385486eb1349f2a4a0c4"
+    }
+  ],
+  "notes": [
+    "Single front garage and opposite garage service door/high window retained; front and rear house doors/windows, fixed chimney and attached lower roof positions agree with supplied guide."
+  ],
+  "exact8_certified": false,
+  "owner_approved": false,
+  "runtime_ready": false,
+  "no_native_pixel_changes_or_source_crops": true,
+  "exact_prompt": {
+    "path": "generated/era-houses/1990s-redbrick-family-single-garage/normal-v1.prompt.txt",
+    "sha256": "19e70f8ada39569be77f1a7ca2a599bf6104fde3e91706829249114cebded76c",
+    "bytes": 1433
+  },
+  "parent_provenance": {
+    "path": "generated/era-houses/1990s-redbrick-family-single-garage/normal-v1.provenance.json",
+    "sha256": "b8f51b3a020393ff946f1175e7f15e5994bd4ce8a364267e90ce8899ce2406a7",
+    "bytes": 2342
+  }
+}

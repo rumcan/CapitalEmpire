@@ -1,0 +1,112 @@
+{
+  "schema": 1,
+  "as_of_utc": "2026-11-07T10:47:07.235563+00:00",
+  "review_result": "HOLD-rear-patio-door-misdrawn-as-garage",
+  "source": {
+    "path": "generated/era-houses/2020s-white-charcoal-asymmetric-solar-home/normal-v1.png",
+    "sha256": "9f6851c3debf5e05c2c5612b95db259ec328f4308f235741ca5523881c80fc30",
+    "bytes": 819860
+  },
+  "source_original_hash_matches_parent_batch": true,
+  "dimensions": [
+    1254,
+    1254
+  ],
+  "mode": "RGBA",
+  "references": [
+    {
+      "path": "generated/era-houses/2020s-white-charcoal-asymmetric-solar-home/guides/normal-world-v1.png",
+      "sha256": "cd717927f9b892455f0b479534be5a272de4eed23486448e10251101668f359b",
+      "bytes": 39051
+    },
+    {
+      "path": "generated/scenes/identity-references/gen-house-farmhouse-wrap-2b0eea83/source.png",
+      "sha256": "aaddc4f69472fd8bede578d003a52874550292df445d8f6987944badddb7bd1a",
+      "bytes": 618401
+    }
+  ],
+  "source_core_clipping": false,
+  "outer_border_alpha_p50p95max": [
+    0.0,
+    0.0,
+    1.0
+  ],
+  "empty_center_gutter_alpha_p50p95max": [
+    0.0,
+    0.0,
+    1.0
+  ],
+  "zero_alpha_fraction": 0.806443304869394,
+  "cells": [
+    {
+      "guide_cell_label_only": "SE",
+      "rect_ltrb": [
+        0,
+        0,
+        627,
+        627
+      ],
+      "native_core_margin_pixels": 136,
+      "boundary_core_pixels": 0,
+      "boundary_alpha_max": 1,
+      "rgba_rectangle_sha256": "a6f54498648e1243ca0b642644c1a1f95d610ee6f05dea1a5d143b417a265965"
+    },
+    {
+      "guide_cell_label_only": "SW",
+      "rect_ltrb": [
+        627,
+        0,
+        1254,
+        627
+      ],
+      "native_core_margin_pixels": 137,
+      "boundary_core_pixels": 0,
+      "boundary_alpha_max": 1,
+      "rgba_rectangle_sha256": "e9c60e2c1d1eaf2c5099341648aa105119763c8f9183e1c344c8e21ba576b438"
+    },
+    {
+      "guide_cell_label_only": "NW",
+      "rect_ltrb": [
+        0,
+        627,
+        627,
+        1254
+      ],
+      "native_core_margin_pixels": 137,
+      "boundary_core_pixels": 0,
+      "boundary_alpha_max": 1,
+      "rgba_rectangle_sha256": "859b42663fdfa9fa5ef057f543981ef3f93bc514c15fcf6e0ea645901e29c23b"
+    },
+    {
+      "guide_cell_label_only": "NE",
+      "rect_ltrb": [
+        627,
+        627,
+        1254,
+        1254
+      ],
+      "native_core_margin_pixels": 137,
+      "boundary_core_pixels": 0,
+      "boundary_alpha_max": 1,
+      "rgba_rectangle_sha256": "824fcc467c1e09d8b6875af206b4f9e560fb34ceb83499a6b50f9e78deb650ff"
+    }
+  ],
+  "notes": [
+    "TR and BL rear opening is an opaque grey horizontal garage shutter. Guide/intended design requires sliding glass patio door. Root native v2 repair in flight.",
+    "Six solar panels/asymmetric two-volume identity retained; do not accept wrong rear opening merely because silhouette matches."
+  ],
+  "exact8_certified": false,
+  "owner_approved": false,
+  "runtime_ready": false,
+  "no_native_pixel_changes_or_source_crops": true,
+  "exact_prompt": {
+    "path": "generated/era-houses/2020s-white-charcoal-asymmetric-solar-home/normal-v1.prompt.txt",
+    "sha256": "52c6dc6fb86ecfec18a7d2757fcbf0163130a06713f193023caef387321ab3c7",
+    "bytes": 1499
+  },
+  "parent_provenance": {
+    "path": "generated/era-houses/2020s-white-charcoal-asymmetric-solar-home/normal-v1.provenance.json",
+    "sha256": "f2d178048afbcef5373458efed8998aada69339cbdfab7c6d0990a201fa0b368",
+    "bytes": 2429
+  }
+}

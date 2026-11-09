@@ -1,0 +1,116 @@
+{
+  "schema": 1,
+  "as_of_utc": "2026-11-07T13:24:11.365118+00:00",
+  "review_result": "CONDITIONAL-source-identity-alpha;HOLD-arrow-plane-rotation-proof",
+  "recommended_yaw_source_continuation": true,
+  "four_actual_corners_visually_verified": null,
+  "source": {
+    "path": "generated/golf-source-batch-02/native/direction-signpost/normal-v1.png",
+    "sha256": "317b54ad6750cd145f7a7772b7fcc7a1e5cf6b5773aca951fea839e0d1c1ee00",
+    "bytes": 1147434
+  },
+  "parent_provenance": {
+    "path": "generated/golf-source-batch-02/native/direction-signpost/normal-v1.provenance.json",
+    "sha256": "4265e079f4dbbc6132f6cc23de67d84afaec73a558e3a873b8f24a9f4884ddf0",
+    "bytes": 2624
+  },
+  "source_original_hash_matches_parent": true,
+  "exact_prompt_utf8_sha256": "825df9f18a089baf8915be1aed97b3818b9f10ee9f5343aa7c9d946191c7a7d7",
+  "actual_generation_references": [
+    {
+      "path": "generated/golf-source-batch-02/references/direction-signpost.source.png",
+      "sha256": "9f794b546fb239c7faf22edf24017fc93e51470e7d618d4232f963f49daae1b0",
+      "bytes": 320515
+    },
+    {
+      "path": "generated/old-clubhouse-1950/normal-v5.png",
+      "sha256": "a996fb471f351cc35926c84090192a8b55cc3557bb1bf9fec24872218fa219a6",
+      "bytes": 1473832
+    }
+  ],
+  "dimensions": [
+    1254,
+    1254
+  ],
+  "zero_alpha_fraction": 0.743629953526705,
+  "outer_border_alpha_p50p95max": [
+    0.0,
+    0.0,
+    1.0
+  ],
+  "nominal_center_gap_alpha_p50p95max": [
+    0.0,
+    0.0,
+    1.0
+  ],
+  "clear_horizontal_cut_y": 627,
+  "clear_vertical_cut_by_row": [
+    627,
+    627
+  ],
+  "true_clear_gutters_found": true,
+  "cells": [
+    {
+      "cell": 0,
+      "reference_rect_ltrb": [
+        0,
+        0,
+        627,
+        627
+      ],
+      "minimum_core_margin_px": 15,
+      "boundary_core_pixels_alpha_gt128": 0,
+      "boundary_alpha_max": 1,
+      "native_rgba_rectangle_sha256": "b0c26445056f51710dac07d9f90edf6dda50275a19648e6855ddccafc08fcd6e"
+    },
+    {
+      "cell": 1,
+      "reference_rect_ltrb": [
+        627,
+        0,
+        1254,
+        627
+      ],
+      "minimum_core_margin_px": 13,
+      "boundary_core_pixels_alpha_gt128": 0,
+      "boundary_alpha_max": 1,
+      "native_rgba_rectangle_sha256": "12ee84235b23e2e69d2ad774a7cc3a4432f4c14e39c2e649f55e9a99ba36332a"
+    },
+    {
+      "cell": 2,
+      "reference_rect_ltrb": [
+        0,
+        627,
+        627,
+        1254
+      ],
+      "minimum_core_margin_px": 8,
+      "boundary_core_pixels_alpha_gt128": 0,
+      "boundary_alpha_max": 1,
+      "native_rgba_rectangle_sha256": "a8ed2c8ddba9a9875bfadf2efd4dea4450c5476e6d54abe99b6b5c4565a14443"
+    },
+    {
+      "cell": 3,
+      "reference_rect_ltrb": [
+        627,
+        627,
+        1254,
+        1254
+      ],
+      "minimum_core_margin_px": 9,
+      "boundary_core_pixels_alpha_gt128": 0,
+      "boundary_alpha_max": 1,
+      "native_rgba_rectangle_sha256": "09b189a6f97b527378334ef8f5be12d9fb3add0356212ce8bfd1116d6cedcc00"
+    }
+  ],
+  "all_cores_complete_at_reference_cuts": true,
+  "visual_observations": [
+    "Fourarrowboards and golf/food/toilets/exit grouping retained; rearboards blank.",
+    "Fronts/backs exist, but fixed physicalarrowplanes/orientations cannot be certified from ambiguous sourcealone; use a worldguide if unique rigidturn proof is required."
+  ],
+  "pixel_hash_uniqueness_is_not_pose_proof": true,
+  "source_crops_or_native_pixel_changes": false,
+  "owner_approved": false,
+  "runtime_ready": false,
+  "exact_numerical_angle_certified": false
+}

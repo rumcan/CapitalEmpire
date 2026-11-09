@@ -1,0 +1,62 @@
+{
+  "schema": 1,
+  "createdUtc": "2026-11-07T06:47:45.284562+00:00",
+  "exactRuntimeId": "variation:gen-house-farmhouse-wrap-2b0eea83-plain-corner:1",
+  "source": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/building-views/variation-gen-house-farmhouse-wrap-2b0eea83-plain-corner-1/NE.png",
+  "sourceSha256": "aaddc4f69472fd8bede578d003a52874550292df445d8f6987944badddb7bd1a",
+  "output": "identity-references/variation-gen-house-farmhouse-wrap-2b0eea83-plain-corner-1-b0adf6b0/source.png",
+  "outputSha256": "aaddc4f69472fd8bede578d003a52874550292df445d8f6987944badddb7bd1a",
+  "width": 568,
+  "height": 514,
+  "sourceCell": {
+    "kind": "already isolated native PNG; whole file",
+    "rectXYWH": [
+      0,
+      0,
+      568,
+      514
+    ]
+  },
+  "operation": "byte-for-byte PNG copy only; no resize, crop, recolour, key, repaint, registration or source mutation",
+  "selection": "registered corner NE native PNG for this exact subject",
+  "registeredCornerDirection": "NE",
+  "sourceEvidence": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\building-views\\variation-gen-house-farmhouse-wrap-2b0eea83-plain-corner-1\\provenance.json",
+  "sourceReview": {
+    "integrationStatus": "ready",
+    "integrationReason": "Parent explicitly approved proven physical-identity reuse from clean selected existing base; no generation/pixel changes."
+  },
+  "sourceRegistration": {
+    "id": "variation:gen-house-farmhouse-wrap-2b0eea83-plain-corner:1",
+    "version": "variation-gen-house-farmhouse-wrap-2b0eea83-plain-corner-1-4views-v1",
+    "files": {
+      "NE": "aaddc4f69472fd8bede578d003a52874550292df445d8f6987944badddb7bd1a",
+      "SE": "fd9c3293d31e188fbe54dfb7eab7cc2aae303b04ba33d9494bb7e1cc5629199a",
+      "SW": "4bb78489a71479f6bd2fa44f0a5fa9812793f88826e4cd22dcf4fcc41e2c25dc",
+      "NW": "764764a6251d504212a4088cc139106c2c7dfa547ef67402fe336064a4e7ca40"
+    }
+  },
+  "originalInventorySource": {
+    "library": "src/game/library.ts",
+    "librarySha256": "91b5190292c1005ac7b936f08e5e1ebf3be43c3aae99f92ea510775da83d9726",
+    "atlas": "src/assets/atlas/sprites-1-0.webp",
+    "atlasSha256": "958733a68cd3ea18895adf4ca7e28b7f475bc3a9eb0484aa8bfa457db925ce64",
+    "runtimePage": 1,
+    "localPage": 1,
+    "uv": [
+      0.007813,
+      0.3125,
+      0.293457,
+      0.585449
+    ],
+    "crop": {
+      "left": 16,
+      "top": 640,
+      "width": 585,
+      "height": 559
+    },
+    "native": "art/theme-consistency/exports/buildings/variation-gen-house-farmhouse-wrap-2b0eea83-plain-corner-1.native.png",
+    "nativeSha256": "9cfd3355a65abc34d8dc07fd8d3a63bf40f5291ab745e73cb6d137ea2a8ac652"
+  },
+  "originalBusinessSourceCell": null,
+  "nativeReferenceApprovalClaimed": false
+}

@@ -1,0 +1,47 @@
+{
+  "key": "golf-source-01-09-main-leaderboard",
+  "family": "yaw8",
+  "condition": "upgraded",
+  "version": 1,
+  "target": "generated/golf-source-batch-01/native/golf-source-01-09-main-leaderboard/upgraded-yaw8-v1.png",
+  "refs": [
+    "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-01\\native\\golf-source-01-09-main-leaderboard\\guides\\yaw8-world-v1.png",
+    "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/golf-source-batch-01/native/golf-source-01-09-main-leaderboard/upgraded-normal-v1.png"
+  ],
+  "runtimeTarget": {
+    "eventTypeId": "leaderboard",
+    "eventName": "Main leaderboard",
+    "currentSpriteSubjectId": "golf:leaderboard",
+    "newArtSubjectProposal": "golf:event-main-leaderboard",
+    "newArtSubjectAlreadyRegistered": false,
+    "eventCatalogueSource": "src/game/golf/tents.ts",
+    "standInMappingSource": "src/game/golf/structure-art.ts",
+    "footprintTiles": {
+      "width": 4,
+      "depth": 2
+    },
+    "footprintMetres": {
+      "width": 8,
+      "depth": 4
+    },
+    "dimensionsMeaning": "Exact current event placement plot, not measured source sprite architecture. New design must fit plot; no runtime geometry changed.",
+    "currentSpriteBaseBoxesInTiles": [
+      {
+        "hx": 4,
+        "hy": 1.5,
+        "dx": 0,
+        "dy": 0
+      }
+    ]
+  },
+  "prompt": "Paint the four exact technical fixed-world camera views in Reference1 as UPGRADEDpainterly game art matchingReference2materials/identity. Guide controls ALLgeometry/cameras/occlusion, NEVERrepeatcornercamera fromReference2. Front grid-Y; rear slats/braces+Y; one staircase permanently+X; front deck-Y; three rain caps and exactly2flags.. Cleanprofessionallymaintainedwood/galvanizedsteel/forestgreenpaint/creamtrim. Same physical construction, precise fixedfeaturesoncorrectsides. No rust/torncloth/rot/addedfantasyornament. Fourdifferent nearcardinalmainfaces N E / S W inguidecells, orthographic30degreesDOWN, nominal8degreeoffcardinal. Late-afternoonDAYTIME sunSCREENUPPERRIGHT/shadowsLOWERLEFT, lamps/screensOFF. Fourcomplete equallyscaled sprites withwidezeroalpha transparentmargins/gutters. Nopeople/groundplate/slab/plants/textUI/scene/halo.",
+  "source": "C:/Users/RAMPAGE/.codex/generated_images/01a1b1fd-39ec-7220-8f11-86e4448833ea/exec-e698b5ad-d13a-4f76-ae2f-7912d0ddbcee.png",
+  "references": [
+    "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-01\\native\\golf-source-01-09-main-leaderboard\\guides\\yaw8-world-v1.png",
+    "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/golf-source-batch-01/native/golf-source-01-09-main-leaderboard/upgraded-normal-v1.png"
+  ],
+  "status": "native-source-candidate-pending-visual-review",
+  "runtime_imported": false,
+  "sha256": "448627a87594716d0a9e40c770c086b89b53c05a61ba540c72b1ab5009fbbd0b",
+  "native_bytes_preserved": true
+}

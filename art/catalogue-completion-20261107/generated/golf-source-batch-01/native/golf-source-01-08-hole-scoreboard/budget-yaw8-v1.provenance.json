@@ -1,0 +1,32 @@
+{
+  "key": "golf-source-01-08-hole-scoreboard",
+  "condition": "budget",
+  "runtimeTarget": {
+    "eventTypeId": "holeBoard",
+    "eventName": "Hole scoreboard",
+    "currentSpriteSubjectId": "poi:fishing-board",
+    "newArtSubjectProposal": "golf:event-hole-scoreboard",
+    "newArtSubjectAlreadyRegistered": false,
+    "eventCatalogueSource": "src/game/golf/tents.ts",
+    "standInMappingSource": "src/game/golf/structure-art.ts",
+    "footprintTiles": {
+      "width": 1,
+      "depth": 1
+    },
+    "footprintMetres": {
+      "width": 2,
+      "depth": 2
+    },
+    "dimensionsMeaning": "Exact current event placement plot, not measured source sprite architecture. New design must fit plot; no runtime geometry changed."
+  },
+  "source": "C:/Users/RAMPAGE/.codex/generated_images/01a1b1fd-39ec-7220-8f11-86e4448833ea/exec-97a03139-9cbc-4667-9bd9-4573f433a11a.png",
+  "target": "generated/golf-source-batch-01/native/golf-source-01-08-hole-scoreboard/budget-yaw8-v1.png",
+  "prompt": "Create the missing FOUR near-cardinal views of the EXACT SAME budget golf item in reference1, not a redesign. Reference1 supplies its fixed physical identity, materials and normal corners. Functional design: A compact2x2m footprint hole scoreboard on two plain uprights with rear diagonal supports; one blank green/cream face subdivided into score/name slat rows, about2m high as a proposed art size. A scoreboard, not a course map or baked hole12yardage marker. Rear view has slat backs/braces and no duplicated scoring face. Four distinct2x2 main faces in order N E / S W: N blank green scoring face and score/name slats; E thin board edge with rear support brace; S plain REAR slat backs and braces, NO scoring face; W opposite thin board edge. Same single object rotated by quarter turns, each viewed8degrees off its cardinal, orthographic30degreesDOWN. Near-cardinal means subtlysloping main bases and a NARROWsecondaryside, not broad45degreecorners and not square-on elevation. Keep all attachments/roof/doors/windows/reels/pockets/handle locations fixed; reconstruct actual rear faces without pasting frontfeatures onto the back. Match reference1's detailed hand-painted miniature material style and budget condition exactly. Late-afternoon DAYTIME sun fixed SCREEN UPPER RIGHT/shadows LOWER LEFT in all cells, lamps/screens OFF. Four complete separate equallyscaled opaque sprites, truly zero-alpha transparentbackground/gutters, generousmargins. Meshopenings stay transparent where applicable. No people/plants/groundplate/road/terrain, scenehaze, labels/text/grid/UI.",
+  "references": [
+    "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/golf-source-batch-01/native/golf-source-01-08-hole-scoreboard/budget-normal-v1.png"
+  ],
+  "status": "native yaw4 candidate; source identity/alpha/actual main faces/camera review pending",
+  "runtime_imported": false,
+  "sha256": "aeb2580c86e2e4fe16fb0571ef9e8e326d4512b7ce7a086b196ce73fb759493d",
+  "native_bytes_preserved": true
+}

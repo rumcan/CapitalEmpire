@@ -1,0 +1,61 @@
+{
+  "schema": 1,
+  "createdUtc": "2026-11-07T06:47:45.284562+00:00",
+  "exactRuntimeId": "variation:static-garage_timber-v2-22fab891-plain:1",
+  "source": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/building-views/variation-static-garage_timber-v2-22fab891-plain-1/NE.png",
+  "sourceSha256": "b5bf84d14c15cbdd15126c0331083d2243862cb74e8debf852546674b8b462b8",
+  "output": "identity-references/variation-static-garage-timber-v2-22fab891-plain-1-b259b008/source.png",
+  "outputSha256": "b5bf84d14c15cbdd15126c0331083d2243862cb74e8debf852546674b8b462b8",
+  "width": 244,
+  "height": 215,
+  "sourceCell": {
+    "kind": "already isolated native PNG; whole file",
+    "rectXYWH": [
+      0,
+      0,
+      244,
+      215
+    ]
+  },
+  "operation": "byte-for-byte PNG copy only; no resize, crop, recolour, key, repaint, registration or source mutation",
+  "selection": "registered corner NE native PNG for this exact subject",
+  "registeredCornerDirection": "NE",
+  "sourceEvidence": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\building-views\\variation-static-garage_timber-v2-22fab891-plain-1\\provenance.json",
+  "sourceReview": {
+    "status": "generated"
+  },
+  "sourceRegistration": {
+    "id": "variation:static-garage_timber-v2-22fab891-plain:1",
+    "version": "variation-static-garage_timber-v2-22fab891-plain-1-4views-v2",
+    "files": {
+      "NE": "b5bf84d14c15cbdd15126c0331083d2243862cb74e8debf852546674b8b462b8",
+      "SE": "7a001f03b75e16b4e81678dfc6c16a99339a203d2957588053a224769a320e26",
+      "SW": "b14a12dda2dc93d8e9ce0a844446b3d4653bb3a6a74968b774e493bfde57c194",
+      "NW": "b1e2257111b7410630e9d7f235dc184f490fc98ea083abee8108971e3496cabd"
+    }
+  },
+  "originalInventorySource": {
+    "library": "src/game/library.ts",
+    "librarySha256": "91b5190292c1005ac7b936f08e5e1ebf3be43c3aae99f92ea510775da83d9726",
+    "atlas": "src/assets/atlas/sprites-12-0.webp",
+    "atlasSha256": "31dde0992d4d538ce56a04bf6d0c60db791aca99c04fad6259f266ba9c973a58",
+    "runtimePage": 12,
+    "localPage": 12,
+    "uv": [
+      0.164063,
+      0.28125,
+      0.273926,
+      0.38623
+    ],
+    "crop": {
+      "left": 336,
+      "top": 576,
+      "width": 225,
+      "height": 215
+    },
+    "native": "art/theme-consistency/exports/buildings/variation-static-garage_timber-v2-22fab891-plain-1.native.png",
+    "nativeSha256": "dffcecf466c86186182ce9b9ef5e816499d869dc7f85c7aac87e44a017d49f69"
+  },
+  "originalBusinessSourceCell": null,
+  "nativeReferenceApprovalClaimed": false
+}

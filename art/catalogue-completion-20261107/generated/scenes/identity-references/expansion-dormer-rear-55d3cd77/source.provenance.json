@@ -1,0 +1,61 @@
+{
+  "schema": 1,
+  "createdUtc": "2026-11-07T06:47:45.284562+00:00",
+  "exactRuntimeId": "expansion:dormer-rear",
+  "source": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/building-views/expansion-dormer-rear/NE.png",
+  "sourceSha256": "ab3fc209bd8fd7db2153c71169135dab15030fe7013ddc5e3d75dada965d9eaf",
+  "output": "identity-references/expansion-dormer-rear-55d3cd77/source.png",
+  "outputSha256": "ab3fc209bd8fd7db2153c71169135dab15030fe7013ddc5e3d75dada965d9eaf",
+  "width": 401,
+  "height": 329,
+  "sourceCell": {
+    "kind": "already isolated native PNG; whole file",
+    "rectXYWH": [
+      0,
+      0,
+      401,
+      329
+    ]
+  },
+  "operation": "byte-for-byte PNG copy only; no resize, crop, recolour, key, repaint, registration or source mutation",
+  "selection": "registered corner NE native PNG for this exact subject",
+  "registeredCornerDirection": "NE",
+  "sourceEvidence": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\building-views\\expansion-dormer-rear\\provenance.json",
+  "sourceReview": {
+    "status": "generated"
+  },
+  "sourceRegistration": {
+    "id": "expansion:dormer-rear",
+    "version": "expansion-dormer-rear-4views-v3",
+    "files": {
+      "NE": "ab3fc209bd8fd7db2153c71169135dab15030fe7013ddc5e3d75dada965d9eaf",
+      "SE": "c4216f689799e8b116d90872ebeb2591b4973eeac20d669ad5e03fae2828c341",
+      "SW": "640b0dd327ed566344711f8c399eb3e745721a94ab8cb30e0c2dbc79457f80f6",
+      "NW": "7c84fcf159c141133b6d45df05e15f14eb9d6417c3b8eb487f5e9befd63fec44"
+    }
+  },
+  "originalInventorySource": {
+    "library": "src/game/library.ts",
+    "librarySha256": "91b5190292c1005ac7b936f08e5e1ebf3be43c3aae99f92ea510775da83d9726",
+    "atlas": "src/assets/atlas/sprites-9-0.webp",
+    "atlasSha256": "484f5473a887995bfea39685a9993bd57d4c9711217f53187510326bcc954a5b",
+    "runtimePage": 9,
+    "localPage": 9,
+    "uv": [
+      0.007813,
+      0.757813,
+      0.203613,
+      0.918457
+    ],
+    "crop": {
+      "left": 16,
+      "top": 1552,
+      "width": 401,
+      "height": 329
+    },
+    "native": "art/theme-consistency/exports/buildings/expansion-dormer-rear.native.png",
+    "nativeSha256": "caf6686988cb08f2c4bcad218586f85d03eb03a95868afd0df7a27dce4db78dc"
+  },
+  "originalBusinessSourceCell": null,
+  "nativeReferenceApprovalClaimed": false
+}

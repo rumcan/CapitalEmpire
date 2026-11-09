@@ -1,0 +1,62 @@
+{
+  "schema": 1,
+  "createdUtc": "2026-11-07T06:47:45.284562+00:00",
+  "exactRuntimeId": "variation:ref-building-grocery-79498713-plain:1",
+  "source": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/building-views/variation-ref-building-grocery-79498713-plain-1/NE.png",
+  "sourceSha256": "cdecd8027679340ac7c333f69617c2ec3d554665fd152fc8038b7b17fa0532fb",
+  "output": "identity-references/variation-ref-building-grocery-79498713-plain-1-108a286d/source.png",
+  "outputSha256": "cdecd8027679340ac7c333f69617c2ec3d554665fd152fc8038b7b17fa0532fb",
+  "width": 633,
+  "height": 564,
+  "sourceCell": {
+    "kind": "already isolated native PNG; whole file",
+    "rectXYWH": [
+      0,
+      0,
+      633,
+      564
+    ]
+  },
+  "operation": "byte-for-byte PNG copy only; no resize, crop, recolour, key, repaint, registration or source mutation",
+  "selection": "registered corner NE native PNG for this exact subject",
+  "registeredCornerDirection": "NE",
+  "sourceEvidence": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\building-views\\variation-ref-building-grocery-79498713-plain-1\\provenance.json",
+  "sourceReview": {
+    "integrationStatus": "ready",
+    "integrationReason": "Single NW shows grocery gablefront LEFT and opposite longside RIGHT, complementary NE frontRIGHT; sign unmirrored, latest metal roof/HVAC/porch identity retained. Layout-only intermediate v3 conserved oldsheet; finalv4 changes NW alone, other3PNGs retained."
+  },
+  "sourceRegistration": {
+    "id": "variation:ref-building-grocery-79498713-plain:1",
+    "version": "variation-ref-building-grocery-79498713-plain-1-4views-v4",
+    "files": {
+      "NE": "cdecd8027679340ac7c333f69617c2ec3d554665fd152fc8038b7b17fa0532fb",
+      "SE": "40543dbcccd83413b955bf982b40e5fe9225febc3bcb3f3ee0c673ba2bfd664c",
+      "SW": "3d17090f2a32f7b5cf8975c02918c1afeb523ee813ffbea071de4fd35ded1867",
+      "NW": "b1bc389d81144f10be803f17655b504dcf7c44d6789c1b253c9e023fb6d5b208"
+    }
+  },
+  "originalInventorySource": {
+    "library": "src/game/library.ts",
+    "librarySha256": "91b5190292c1005ac7b936f08e5e1ebf3be43c3aae99f92ea510775da83d9726",
+    "atlas": "src/assets/atlas/sprites-4-0.webp",
+    "atlasSha256": "7cb439e61cdd5f48e2c1327386b33c854fa4e1e3e6a58e39ba137e00c48ee2cd",
+    "runtimePage": 4,
+    "localPage": 4,
+    "uv": [
+      0.6875,
+      0.507813,
+      0.88916,
+      0.730957
+    ],
+    "crop": {
+      "left": 1408,
+      "top": 1040,
+      "width": 413,
+      "height": 457
+    },
+    "native": "art/theme-consistency/exports/buildings/variation-ref-building-grocery-79498713-plain-1.native.png",
+    "nativeSha256": "85662d52ca721d471061bab7b69bce174eeca69c326758066a35ce0718a579f5"
+  },
+  "originalBusinessSourceCell": null,
+  "nativeReferenceApprovalClaimed": false
+}

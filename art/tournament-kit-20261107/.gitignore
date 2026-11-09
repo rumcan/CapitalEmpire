@@ -1,0 +1,4 @@
+# Source copies and native crops stay on F: (E: holds .git and is nearly full). Originals: F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated
+*.png
+!review/*.png
+batch01/*.zip

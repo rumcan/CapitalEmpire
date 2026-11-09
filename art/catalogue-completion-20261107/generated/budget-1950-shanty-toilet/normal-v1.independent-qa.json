@@ -1,0 +1,119 @@
+{
+  "schema": 1,
+  "as_of_utc": "2026-11-07T10:42:31.835072+00:00",
+  "source": {
+    "path": "generated/budget-1950-shanty-toilet/normal-v1.png",
+    "sha256": "ba87f754b41a14c803131b3ea0e9f56156c448a8b86b162c84b3be4e5452bb42"
+  },
+  "review_result": "PASS-native-source-candidate-identity-and-alpha; exact-camera-calibration-pending",
+  "per_cell_actual_visible_feature_pairs": [
+    "Exactly two front doors with blank end",
+    "Two rear vents with blank end",
+    "Two rear vents with opposite blank end",
+    "Exactly two front doors with opposite blank end"
+  ],
+  "manufactured1950s_appearance": "Ordinary straight timber/clapboard walls, corrugated pitched roof, restrained wear; no fantasy tarp/log construction.",
+  "all_four_corner_feature_combinations_present": true,
+  "alpha_evidence": {
+    "path": "art/catalogue-completion-20261107/generated/budget-1950-shanty-toilet/normal-v1.png",
+    "sha256": "ba87f754b41a14c803131b3ea0e9f56156c448a8b86b162c84b3be4e5452bb42",
+    "bytes": 1599692,
+    "family": "budget-1950-shanty-toilet",
+    "kind": "normal",
+    "width": 1254,
+    "height": 1254,
+    "mode": "RGBA",
+    "true_zero_alpha_fraction": 0.6360965484611921,
+    "has_transparency": true,
+    "opaque_core_fraction": 0.3414489900261746,
+    "cells": [
+      {
+        "view": "SE",
+        "rect_ltrb": [
+          0,
+          0,
+          627,
+          627
+        ],
+        "nonblank_core": true,
+        "core_bbox": [
+          75,
+          142,
+          544,
+          558
+        ],
+        "minimum_core_margin_pixels": 69,
+        "boundary_core_pixels_alpha_gt128": 0,
+        "boundary_alpha_max": 1,
+        "rgba_pixel_sha256": "614b13a1bd971c2fabfad4346a9d1c43cb3192a0d2b15893791a962696fc8ae8"
+      },
+      {
+        "view": "SW",
+        "rect_ltrb": [
+          627,
+          0,
+          1254,
+          627
+        ],
+        "nonblank_core": true,
+        "core_bbox": [
+          79,
+          144,
+          545,
+          558
+        ],
+        "minimum_core_margin_pixels": 69,
+        "boundary_core_pixels_alpha_gt128": 0,
+        "boundary_alpha_max": 1,
+        "rgba_pixel_sha256": "dc765fcefb997bb14e43cbf3089f767cb177bb91c313d094180caab8d910dec1"
+      },
+      {
+        "view": "NW",
+        "rect_ltrb": [
+          0,
+          627,
+          627,
+          1254
+        ],
+        "nonblank_core": true,
+        "core_bbox": [
+          76,
+          108,
+          548,
+          529
+        ],
+        "minimum_core_margin_pixels": 76,
+        "boundary_core_pixels_alpha_gt128": 0,
+        "boundary_alpha_max": 1,
+        "rgba_pixel_sha256": "0af7b6eb3538f5ae62247cc23154424f39b338e650d3d295a95d2c8014db078a"
+      },
+      {
+        "view": "NE",
+        "rect_ltrb": [
+          627,
+          627,
+          1254,
+          1254
+        ],
+        "nonblank_core": true,
+        "core_bbox": [
+          72,
+          110,
+          543,
+          529
+        ],
+        "minimum_core_margin_pixels": 72,
+        "boundary_core_pixels_alpha_gt128": 0,
+        "boundary_alpha_max": 1,
+        "rgba_pixel_sha256": "a34e74b2818cf0cf8b2a3335722609157981fa8de5962f1b0c1b4b472ed69e82"
+      }
+    ],
+    "all_four_core_nonblank": true,
+    "any_core_touches_cell_boundary": false,
+    "geometry_approval_inferred": false
+  },
+  "source_only": true,
+  "owner_approved": false,
+  "runtime_ready": false,
+  "source_pixels_modified": false
+}

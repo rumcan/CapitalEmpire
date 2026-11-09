@@ -101,7 +101,7 @@ export const GUIDE: readonly GuideStep[] = Object.freeze([
     id: 'guide-tournament',
     n: 6,
     title: 'Play the tournament',
-    body: 'Skip to the tournament and watch the spectator crowd arrive.',
+    body: 'Open the Season card and skip to the tournament, then watch the spectator crowd arrive.',
     done: 'auto',
     target: { ui: 'chip-skip' },
   },

@@ -1,0 +1,101 @@
+{
+  "schema": 1,
+  "batchId": "exterior-04",
+  "status": "prepared-not-generated",
+  "view": "outside",
+  "condition": "upgraded",
+  "sourcePrompt": "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/scenes/batches/exterior-04/prompt.txt",
+  "referenceImages": [
+    "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/scenes/identity-references/style-authority.png",
+    "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/scenes/identity-references/world-video-rental-cc8c504f/source.png",
+    "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/scenes/identity-references/world-arcade-f5b7f5eb/source.png",
+    "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/scenes/identity-references/town-grocery-46d5dc39/source.png",
+    "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/scenes/identity-references/town-bakery-af15d7f5/source.png"
+  ],
+  "referenceRoles": [
+    "style-only",
+    "exact-building-identity",
+    "exact-building-identity",
+    "exact-building-identity",
+    "exact-building-identity"
+  ],
+  "cells": [
+    {
+      "cell": "top-left",
+      "cellIndex": 0,
+      "identityReferenceNumber": 2,
+      "runtimeId": "world:video_rental",
+      "condition": "upgraded",
+      "view": "outside",
+      "description": "Distinct larger blue VIDEO VAULT rental shop with a flat parapet roof, a large central box-and-curved-duct roof unit, smaller roof vents, a yellow VIDEO VAULT fascia with BE KIND - REWIND below, glazed front display bays and glass entrance doors. Keep this base shop distinct from world:video and from every variation ID.",
+      "referencePNG": "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/scenes/identity-references/world-video-rental-cc8c504f/source.png",
+      "referenceSha256": "4e909c83906d4a80792b33e196532c6c210ecfaac009b79415297839b70b60c3",
+      "manifestEntryAfterReview": {
+        "slug": "video-store-outside",
+        "subject": "world:video_rental",
+        "state": "upgraded",
+        "view": "outside"
+      },
+      "mustPreserve": "This exact building architecture, proportions, roof/cupola/chimneys, door and window placement, sign identity and its building type. Condition changes do not redesign the building."
+    },
+    {
+      "cell": "top-right",
+      "cellIndex": 1,
+      "identityReferenceNumber": 3,
+      "runtimeId": "world:arcade",
+      "condition": "upgraded",
+      "view": "outside",
+      "description": "Single-storey brown masonry arcade with a flat parapet roof, two box air-conditioning units with connecting pipework and a roof flue, a cyan-and-pink ARCADE marquee with star motifs and a line of bulbs, glazed front arcade-cabinet windows and central double doors. This is the base world:arcade identity, not its variation.",
+      "referencePNG": "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/scenes/identity-references/world-arcade-f5b7f5eb/source.png",
+      "referenceSha256": "ac48c283b864bcf2ca334aea0b33c08f582369ea12734e1926e41f9e29c26e2a",
+      "manifestEntryAfterReview": {
+        "slug": "arcade-outside",
+        "subject": "world:arcade",
+        "state": "upgraded",
+        "view": "outside"
+      },
+      "mustPreserve": "This exact building architecture, proportions, roof/cupola/chimneys, door and window placement, sign identity and its building type. Condition changes do not redesign the building."
+    },
+    {
+      "cell": "bottom-left",
+      "cellIndex": 2,
+      "identityReferenceNumber": 4,
+      "runtimeId": "town:grocery",
+      "condition": "upgraded",
+      "view": "outside",
+      "description": "Two-storey red-brick grocery with pale stone lintels and corner trim, a flat parapet roof with its chimney/vents/air unit, a dark green MAPLE FALLS GROCERY fascia, a green-and-cream striped awning, produce displays and glazed shop entrance beneath upper sash windows.",
+      "referencePNG": "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/scenes/identity-references/town-grocery-46d5dc39/source.png",
+      "referenceSha256": "f660671f8b3ed4c82715e532db57646940120c311d2a9b262ef862c1ac8775f9",
+      "manifestEntryAfterReview": {
+        "slug": "grocery-store-outside",
+        "subject": "town:grocery",
+        "state": "upgraded",
+        "view": "outside"
+      },
+      "mustPreserve": "This exact building architecture, proportions, roof/cupola/chimneys, door and window placement, sign identity and its building type. Condition changes do not redesign the building."
+    },
+    {
+      "cell": "bottom-right",
+      "cellIndex": 3,
+      "identityReferenceNumber": 5,
+      "runtimeId": "town:bakery",
+      "condition": "upgraded",
+      "view": "outside",
+      "description": "Pale cream clapboard ROSE'S BAKERY with a flat parapet roof, roof chimney and air unit, red-and-cream striped front awning, curved red-and-gold bakery sign, glazed front display windows full of bread, a red shop door and flower boxes on the right-side windows.",
+      "referencePNG": "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/scenes/identity-references/town-bakery-af15d7f5/source.png",
+      "referenceSha256": "29b411b0e050769e6ece08db9d7cf8e015e966076ae66430e632bf42b135ff48",
+      "manifestEntryAfterReview": {
+        "slug": "bakery-outside",
+        "subject": "town:bakery",
+        "state": "upgraded",
+        "view": "outside"
+      },
+      "mustPreserve": "This exact building architecture, proportions, roof/cupola/chimneys, door and window placement, sign identity and its building type. Condition changes do not redesign the building."
+    }
+  ],
+  "pairedBatch": null,
+  "appendAcceptedPairOutputAsCompositionReference": false,
+  "outputPolicy": "four independent opaque cinematic property cells; native crop only after review, never count as rotations",
+  "sameCameraRequiredForFutureConditionPair": true,
+  "registrationAutomatic": false
+}

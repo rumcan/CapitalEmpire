@@ -1,0 +1,102 @@
+{
+  "sourceOnly": true,
+  "subject": "newprop:satellite-van",
+  "adoptedDoorSide": "LEFT -X",
+  "nativeSourcePixelsChanged": false,
+  "nonDoorFacesIdenticalToV1": true,
+  "dishNWNativeFaceHoldRemains": true,
+  "outputs": {
+    "normal": {
+      "png": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-vehicle-source-batch-01\\fixed-world-guides-v2\\satellite-van\\guides\\normal-world-v2.png",
+      "svg": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-vehicle-source-batch-01\\fixed-world-guides-v2\\satellite-van\\guides\\normal-world-v2.svg",
+      "calibration": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-vehicle-source-batch-01\\fixed-world-guides-v2\\satellite-van\\guides\\normal-world-v2.calibration.json",
+      "sha256": "bf90329ff86c65bcb971c1b06566d64c70be3005ed03ac1d45df560cad278aaa",
+      "objectBoundsPerCell": [
+        [
+          140,
+          158,
+          660,
+          641
+        ],
+        [
+          140,
+          199,
+          660,
+          601
+        ],
+        [
+          140,
+          199,
+          660,
+          601
+        ],
+        [
+          140,
+          156,
+          660,
+          643
+        ]
+      ],
+      "geometryClipped": false,
+      "sourceCellRGBAHashes": [
+        "35788d4d8897e1d96049013d6fbd44d8fa7ae7bbc30b575ad1a4127af992e8a0",
+        "5a715e0fec3ffad750480716dde1ed49e2aed358cd33056643fc593b492d738b",
+        "ec19a20897a3b7297a7f627a756ca4669a72009a13740058de78dba1cca6e3ad",
+        "e3bd8a1903ba25398fe58f0ec37ce59d4b897987a92825fa796ef410a05e2928"
+      ]
+    },
+    "yaw8": {
+      "png": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-vehicle-source-batch-01\\fixed-world-guides-v2\\satellite-van\\guides\\yaw8-world-v2.png",
+      "svg": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-vehicle-source-batch-01\\fixed-world-guides-v2\\satellite-van\\guides\\yaw8-world-v2.svg",
+      "calibration": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-vehicle-source-batch-01\\fixed-world-guides-v2\\satellite-van\\guides\\yaw8-world-v2.calibration.json",
+      "sha256": "45ee151fc0e4ebc6820355d66d56cfa9b6ff6932b5c7d1b0e75964ae19a3bc50",
+      "objectBoundsPerCell": [
+        [
+          266,
+          143,
+          534,
+          657
+        ],
+        [
+          115,
+          199,
+          685,
+          601
+        ],
+        [
+          266,
+          193,
+          534,
+          607
+        ],
+        [
+          115,
+          202,
+          685,
+          598
+        ]
+      ],
+      "geometryClipped": false,
+      "sourceCellRGBAHashes": [
+        "ff6f4b0c2ee57661916f99854dbd71a08088b5c0a430fd07c412b863abf75f03",
+        "a1afd5e1c259ad0c03ed6ddc958d04abf3bde2f119f07035c48bcb261ee2eb4f",
+        "4379921825bcb0c8f7872cd46a706600579f2a1bafc1ace3197a9f6130834958",
+        "606073b62dfa1b46ec152fd290e7746965b324381661f1f4a167dfa0945df9f8"
+      ]
+    }
+  },
+  "runtimeIntegrated": false,
+  "technicalVisualCheck": {
+    "normalAndYaw8BothInspected": true,
+    "doorVisibleNormalFaces": [
+      "SE",
+      "SW"
+    ],
+    "plainRightNormalFaces": [
+      "NW",
+      "NE"
+    ],
+    "dishGeometryAndAimUnchanged": true,
+    "nativePixelsUnchanged": true
+  }
+}

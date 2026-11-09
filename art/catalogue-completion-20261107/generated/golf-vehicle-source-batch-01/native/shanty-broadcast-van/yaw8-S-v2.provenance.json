@@ -1,0 +1,21 @@
+{
+  "key": "newprop:shanty-broadcast-van",
+  "family": "yaw8-S",
+  "condition": "base",
+  "version": 2,
+  "target": "generated/golf-vehicle-source-batch-01/native/shanty-broadcast-van/yaw8-S-v2.png",
+  "refs": [
+    "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/golf-vehicle-source-batch-01/yaw-isolated-repairs-v1/shanty-broadcast-van/yaw8S-guide.png",
+    "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/golf-vehicle-source-batch-01/native/shanty-broadcast-van/normal-SE-v2.png"
+  ],
+  "prompt": "Render ONE SINGLE missing nearcardinal sprite, exactcamera/occlusioninREFERENCE1. Reference2isfinishednativeidentityandpaintedmaterialsonly, notcamera. Ordinaryworn1980scream/greenboxybroadcastvan, ONEtransverseX-AXLEroofcablereel, ONEHVACunit, ONEaerial, boltedsteelrack. ReelAXLEfixedLEFT-RIGHTacrossvehicle, neverfront-to-back. InTHISSview show the coiled CABLE BARREL spanningthefront/rearview horizontally, withenddiscsonlyatfarleft/rightedges. REARhasTWINcargodoors,nofrontwindowsorheadlights. Preservepaintwear/cab/roofpositions/identity fromreference2; ignoreitspreviousdifferentcamera. Followguideprojectedbase/roofedges, cameraorthographic30degreesDOWNandnominal8degreesoffcardinal\u2014broadmainface+narrowsecondaryface. Believabledetailedhandpaintedminiaturegameart, samefinecream/forestgreenpaint/metal/glass/rubberasreference2, noflatlowpoly. ONEcompletevehiclecentredwithbroadZEROALPHAtransparentmargins, nogreyhalo/groundplate/road/scene/people/plants/labelsUI/grid. Late-afternoonDAYTIME sunSCREENUPPERRIGHT/shadowsLOWERLEFT, lightsOFF. No2Dmirroring, noindependentswivellingequipment, nootherperspectivesintheimage.",
+  "source": "C:/Users/RAMPAGE/.codex/generated_images/01a1b1fd-39ec-7220-8f11-86e4448833ea/exec-091691c4-9535-4850-b7cc-fb07cd31df59.png",
+  "references": [
+    "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/golf-vehicle-source-batch-01/yaw-isolated-repairs-v1/shanty-broadcast-van/yaw8S-guide.png",
+    "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/golf-vehicle-source-batch-01/native/shanty-broadcast-van/normal-SE-v2.png"
+  ],
+  "status": "native-source-candidate-pending-visual-review",
+  "runtime_imported": false,
+  "sha256": "13d2236908d14376d52d9f16a9ddbc492037230d9d9d7d5f9f02f4444df0ea26",
+  "native_bytes_preserved": true
+}

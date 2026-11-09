@@ -1,0 +1,1785 @@
+{
+  "schema": 1,
+  "as_of_utc": "2026-11-07T14:29:39.952183+00:00",
+  "state": "blocked-two-targeted-W-repairs",
+  "subject_count": 12,
+  "view_slots": 96,
+  "current_source_candidate_slots": 94,
+  "created_export_pngs": 0,
+  "created_zip": false,
+  "policy": "Lossless native rectangles only, no resize/key/repaint. Original native singles stay1254, oldquarters627, unusualyaw canvases preserved; scale/calibration unverified. Directions follow guide roles, washerTR/BR remapped by actual attachments.",
+  "subjects": [
+    {
+      "subject": "newprop:ball-washer",
+      "normal": [
+        {
+          "guide_corner": "SE",
+          "source": {
+            "path": "generated/golf-source-batch-02/native/ball-washer/normal-v2.png",
+            "sha256": "cd8d39dbb650303dd4e705561625566c2ff55fb415ecbb95f90fb86f025ed9aa",
+            "bytes": 1126333
+          },
+          "cell": "TL",
+          "rectangle_ltrb": [
+            0,
+            0,
+            627,
+            627
+          ],
+          "native_rgba_rectangle_sha256": "4bfabba5dae0694e4daef6455d41733387852c4d674cea0a2414309d923ca1e9",
+          "status": "limited-source-candidate"
+        },
+        {
+          "guide_corner": "SW",
+          "source": {
+            "path": "generated/golf-source-batch-02/native/ball-washer/normal-v2.png",
+            "sha256": "cd8d39dbb650303dd4e705561625566c2ff55fb415ecbb95f90fb86f025ed9aa",
+            "bytes": 1126333
+          },
+          "cell": "TR",
+          "rectangle_ltrb": [
+            627,
+            0,
+            1254,
+            627
+          ],
+          "native_rgba_rectangle_sha256": "891d4efa9739697c6f07db59dd3f29656a17fa837a6e93925e5048edbd46f7d5",
+          "status": "limited-source-candidate"
+        },
+        {
+          "guide_corner": "NW",
+          "source": {
+            "path": "generated/golf-source-batch-02/native/ball-washer/normal-v2.png",
+            "sha256": "cd8d39dbb650303dd4e705561625566c2ff55fb415ecbb95f90fb86f025ed9aa",
+            "bytes": 1126333
+          },
+          "cell": "BL",
+          "rectangle_ltrb": [
+            0,
+            627,
+            627,
+            1254
+          ],
+          "native_rgba_rectangle_sha256": "1986efde32d05902ff844b061c952f838c1595a2d682267dcc482ee93ddb4795",
+          "status": "limited-source-candidate"
+        },
+        {
+          "guide_corner": "NE",
+          "source": {
+            "path": "generated/golf-source-batch-02/native/ball-washer/normal-v2.png",
+            "sha256": "cd8d39dbb650303dd4e705561625566c2ff55fb415ecbb95f90fb86f025ed9aa",
+            "bytes": 1126333
+          },
+          "cell": "BR",
+          "rectangle_ltrb": [
+            627,
+            627,
+            1254,
+            1254
+          ],
+          "native_rgba_rectangle_sha256": "e7ae530654bb49adae99a1064b3bdf47709723da708ac0168f6e8c774a38b111",
+          "status": "limited-source-candidate"
+        }
+      ],
+      "yaw8": [
+        {
+          "direction": "N",
+          "source": {
+            "path": "generated/golf-source-batch-02/native/ball-washer/yaw8-v1.png",
+            "sha256": "1306b1294963719eb0a0e9f35e154403fa83bdede82a40a7839a4fb78c187aa5",
+            "bytes": 1012719
+          },
+          "cell": "TL",
+          "rectangle_ltrb": [
+            0,
+            0,
+            627,
+            627
+          ],
+          "native_rgba_rectangle_sha256": "cda02e86ac43fb0ea5bab3190df7da39bfee3064f1eacceeb16c922f28cd8cc6",
+          "status": "limited-source-candidate"
+        },
+        {
+          "direction": "W",
+          "source": {
+            "path": "generated/golf-source-batch-02/native/ball-washer/yaw8-v1.png",
+            "sha256": "1306b1294963719eb0a0e9f35e154403fa83bdede82a40a7839a4fb78c187aa5",
+            "bytes": 1012719
+          },
+          "cell": "TR",
+          "rectangle_ltrb": [
+            627,
+            0,
+            1254,
+            627
+          ],
+          "native_rgba_rectangle_sha256": "9591416a509568d7acd1a24c5f62d7c9c2645548cd9580a3538fefff85034971",
+          "status": "limited-source-candidate"
+        },
+        {
+          "direction": "S",
+          "source": {
+            "path": "generated/golf-source-batch-02/native/ball-washer/yaw8-v1.png",
+            "sha256": "1306b1294963719eb0a0e9f35e154403fa83bdede82a40a7839a4fb78c187aa5",
+            "bytes": 1012719
+          },
+          "cell": "BL",
+          "rectangle_ltrb": [
+            0,
+            627,
+            627,
+            1254
+          ],
+          "native_rgba_rectangle_sha256": "85692dd13c204227cf48251253769a73c2b58f5fb59a97d24f557f22960d89d8",
+          "status": "limited-source-candidate"
+        },
+        {
+          "direction": "E",
+          "source": {
+            "path": "generated/golf-source-batch-02/native/ball-washer/yaw8-v1.png",
+            "sha256": "1306b1294963719eb0a0e9f35e154403fa83bdede82a40a7839a4fb78c187aa5",
+            "bytes": 1012719
+          },
+          "cell": "BR",
+          "rectangle_ltrb": [
+            627,
+            627,
+            1254,
+            1254
+          ],
+          "native_rgba_rectangle_sha256": "4a2270a7935b62b09d300df44bea2d6539780ff932d0243fa291f55d173df22c",
+          "status": "limited-source-candidate"
+        }
+      ],
+      "owner_approved": false,
+      "runtime_ready": false
+    },
+    {
+      "subject": "newprop:ball-bucket-stand",
+      "normal": [
+        {
+          "guide_corner": "SE",
+          "source": {
+            "path": "generated/golf-source-batch-02/native/ball-bucket-stand/normal-v2.png",
+            "sha256": "8c11d7d6ac9da5b2efad2d46aa926df1fbcc545ba1ebe402fd88b849e1376ab0",
+            "bytes": 1810123
+          },
+          "cell": "TL",
+          "rectangle_ltrb": [
+            0,
+            0,
+            627,
+            627
+          ],
+          "native_rgba_rectangle_sha256": "626dc1f16064d065c881cde942284b33f3a725e1465483ea5ba8d8301e755b53",
+          "status": "limited-source-candidate"
+        },
+        {
+          "guide_corner": "SW",
+          "source": {
+            "path": "generated/golf-source-batch-02/native/ball-bucket-stand/normal-v2.png",
+            "sha256": "8c11d7d6ac9da5b2efad2d46aa926df1fbcc545ba1ebe402fd88b849e1376ab0",
+            "bytes": 1810123
+          },
+          "cell": "TR",
+          "rectangle_ltrb": [
+            627,
+            0,
+            1254,
+            627
+          ],
+          "native_rgba_rectangle_sha256": "bf264f0c4b59a3e999bfec97fb90c0a54397285b0b060e4a21cf420c340545ce",
+          "status": "limited-source-candidate"
+        },
+        {
+          "guide_corner": "NW",
+          "source": {
+            "path": "generated/golf-source-batch-02/native/ball-bucket-stand/normal-v2.png",
+            "sha256": "8c11d7d6ac9da5b2efad2d46aa926df1fbcc545ba1ebe402fd88b849e1376ab0",
+            "bytes": 1810123
+          },
+          "cell": "BL",
+          "rectangle_ltrb": [
+            0,
+            627,
+            627,
+            1254
+          ],
+          "native_rgba_rectangle_sha256": "f0b6c5eba0a0705929d18b819e7b776ed25cf3b252af548c6c2d989a60fa6c26",
+          "status": "limited-source-candidate"
+        },
+        {
+          "guide_corner": "NE",
+          "source": {
+            "path": "generated/golf-source-batch-02/native/ball-bucket-stand/normal-v2.png",
+            "sha256": "8c11d7d6ac9da5b2efad2d46aa926df1fbcc545ba1ebe402fd88b849e1376ab0",
+            "bytes": 1810123
+          },
+          "cell": "BR",
+          "rectangle_ltrb": [
+            627,
+            627,
+            1254,
+            1254
+          ],
+          "native_rgba_rectangle_sha256": "fe36d6a90e06e7ba43cd20a87e38b0ee8105cd2005d6ee78cd6ce823a61d428d",
+          "status": "limited-source-candidate"
+        }
+      ],
+      "yaw8": [
+        {
+          "direction": "N",
+          "source": {
+            "path": "generated/golf-source-batch-02/native/ball-bucket-stand/yaw8-v1.png",
+            "sha256": "3c24a75e447a47ce15c6bc902a0b8e2c3e158ee49c6335f3c9dbccaef4957e91",
+            "bytes": 1518753
+          },
+          "cell": "TL",
+          "rectangle_ltrb": [
+            0,
+            0,
+            627,
+            627
+          ],
+          "native_rgba_rectangle_sha256": "cdd2864c83eaad2de54175945f15eafe8a3b7ff80296d4c91fd938c8a4da6ccf",
+          "status": "limited-source-candidate"
+        },
+        {
+          "direction": "E",
+          "source": {
+            "path": "generated/golf-source-batch-02/native/ball-bucket-stand/yaw8-v1.png",
+            "sha256": "3c24a75e447a47ce15c6bc902a0b8e2c3e158ee49c6335f3c9dbccaef4957e91",
+            "bytes": 1518753
+          },
+          "cell": "TR",
+          "rectangle_ltrb": [
+            627,
+            0,
+            1254,
+            627
+          ],
+          "native_rgba_rectangle_sha256": "9f75258c187f4e6c92517ba47552534a2b2a06f3f2685f32c995e6932ab78202",
+          "status": "limited-source-candidate"
+        },
+        {
+          "direction": "S",
+          "source": {
+            "path": "generated/golf-source-batch-02/native/ball-bucket-stand/yaw8-v1.png",
+            "sha256": "3c24a75e447a47ce15c6bc902a0b8e2c3e158ee49c6335f3c9dbccaef4957e91",
+            "bytes": 1518753
+          },
+          "cell": "BL",
+          "rectangle_ltrb": [
+            0,
+            627,
+            627,
+            1254
+          ],
+          "native_rgba_rectangle_sha256": "7cb6c4b5d0e087c1ec518d80b91688d82841e58f8acea5a470862ec3e87fc524",
+          "status": "limited-source-candidate"
+        },
+        {
+          "direction": "W",
+          "source": {
+            "path": "generated/golf-source-batch-02/native/ball-bucket-stand/yaw8-v1.png",
+            "sha256": "3c24a75e447a47ce15c6bc902a0b8e2c3e158ee49c6335f3c9dbccaef4957e91",
+            "bytes": 1518753
+          },
+          "cell": "BR",
+          "rectangle_ltrb": [
+            627,
+            627,
+            1254,
+            1254
+          ],
+          "native_rgba_rectangle_sha256": "5f0252fe6d8ab638f36151d88c441a6e2e5904bc7e2af1e3cdbda2680011f18d",
+          "status": "limited-source-candidate"
+        }
+      ],
+      "owner_approved": false,
+      "runtime_ready": false
+    },
+    {
+      "subject": "newprop:ball-dispenser",
+      "normal": [
+        {
+          "guide_corner": "SE",
+          "source": {
+            "path": "generated/golf-source-batch-02/native/ball-dispenser/normal-v2.png",
+            "sha256": "0e447f2ca36a5895370c4178a6fda86eb29afbdc97536db3b0a12422632371a3",
+            "bytes": 1167889
+          },
+          "cell": "TL",
+          "rectangle_ltrb": [
+            0,
+            0,
+            627,
+            627
+          ],
+          "dimensions": [
+            627,
+            627
+          ],
+          "native_rgba_rectangle_sha256": "16d068d494ee559bc4a8964067380a74a77b09f07d06471e75d63444bc834355",
+          "status": "limited-source-main-component-identity-and-pose-pass"
+        },
+        {
+          "guide_corner": "SW",
+          "source": {
+            "path": "generated/golf-source-batch-02/native/ball-dispenser/normal-SW-isolated-v2.png",
+            "sha256": "c8b2025139ed0235a0a50530453dc40818783cb2b440df742846dc2a2022c7c6",
+            "bytes": 729955
+          },
+          "cell": "single",
+          "rectangle_ltrb": [
+            0,
+            0,
+            1254,
+            1254
+          ],
+          "dimensions": [
+            1254,
+            1254
+          ],
+          "native_rgba_rectangle_sha256": "1b2b252b8226396e55e3515cc6a2f013608e3227b9a5e8c40d973b5d0f05a892",
+          "status": "limited-source-main-component-identity-and-pose-pass"
+        },
+        {
+          "guide_corner": "NW",
+          "source": {
+            "path": "generated/golf-source-batch-02/native/ball-dispenser/normal-v2.png",
+            "sha256": "0e447f2ca36a5895370c4178a6fda86eb29afbdc97536db3b0a12422632371a3",
+            "bytes": 1167889
+          },
+          "cell": "BL",
+          "rectangle_ltrb": [
+            0,
+            627,
+            627,
+            1254
+          ],
+          "dimensions": [
+            627,
+            627
+          ],
+          "native_rgba_rectangle_sha256": "9fde9692b75cb9d989325e505f9d94e8f04879683c8b2faa0aac8b0be3fa0252",
+          "status": "limited-source-main-component-identity-and-pose-pass"
+        },
+        {
+          "guide_corner": "NE",
+          "source": {
+            "path": "generated/golf-source-batch-02/native/ball-dispenser/normal-v2.png",
+            "sha256": "0e447f2ca36a5895370c4178a6fda86eb29afbdc97536db3b0a12422632371a3",
+            "bytes": 1167889
+          },
+          "cell": "BR",
+          "rectangle_ltrb": [
+            627,
+            627,
+            1254,
+            1254
+          ],
+          "dimensions": [
+            627,
+            627
+          ],
+          "native_rgba_rectangle_sha256": "44f578b772259cc060d12fa8a65163d790d5400486c6983a4e6e349b9c2b91c9",
+          "status": "limited-source-main-component-identity-and-pose-pass"
+        }
+      ],
+      "yaw8": [
+        {
+          "direction": "N",
+          "source": {
+            "path": "generated/golf-source-batch-02/native/ball-dispenser/yaw8-v1.png",
+            "sha256": "4ba069e17fc6d053a846dc5066ee28254415fd57f6a349234b6692d47df92307",
+            "bytes": 1016128
+          },
+          "cell": "TL",
+          "rectangle_ltrb": [
+            0,
+            0,
+            627,
+            627
+          ],
+          "native_rgba_rectangle_sha256": "dc4741d22560dde41105994c0f462daaeb44cbf6254877819d2fb0537c24ce0a",
+          "status": "limited-source-candidate"
+        },
+        {
+          "direction": "E",
+          "source": {
+            "path": "generated/golf-source-batch-02/native/ball-dispenser/yaw8-v1.png",
+            "sha256": "4ba069e17fc6d053a846dc5066ee28254415fd57f6a349234b6692d47df92307",
+            "bytes": 1016128
+          },
+          "cell": "TR",
+          "rectangle_ltrb": [
+            627,
+            0,
+            1254,
+            627
+          ],
+          "native_rgba_rectangle_sha256": "e659f100e1df85ea135ae3ce0120207764ff1b03f92ed283cd1e14a46da23fed",
+          "status": "limited-source-candidate"
+        },
+        {
+          "direction": "S",
+          "source": {
+            "path": "generated/golf-source-batch-02/native/ball-dispenser/yaw8-v1.png",
+            "sha256": "4ba069e17fc6d053a846dc5066ee28254415fd57f6a349234b6692d47df92307",
+            "bytes": 1016128
+          },
+          "cell": "BL",
+          "rectangle_ltrb": [
+            0,
+            627,
+            627,
+            1254
+          ],
+          "native_rgba_rectangle_sha256": "48d9eef3d300d79bc798637e81e866736715da00c41cc12971609190f00ebc52",
+          "status": "limited-source-candidate"
+        },
+        {
+          "direction": "W",
+          "source": {
+            "path": "generated/golf-source-batch-02/native/ball-dispenser/yaw8-v1.png",
+            "sha256": "4ba069e17fc6d053a846dc5066ee28254415fd57f6a349234b6692d47df92307",
+            "bytes": 1016128
+          },
+          "cell": "BR",
+          "rectangle_ltrb": [
+            627,
+            627,
+            1254,
+            1254
+          ],
+          "native_rgba_rectangle_sha256": "c79d4a3f5d424ad8b2772ece03f7e3853af4b92eaf2c9db784aea4315a23eecd",
+          "status": "limited-source-candidate"
+        }
+      ],
+      "owner_approved": false,
+      "runtime_ready": false
+    },
+    {
+      "subject": "newprop:park-bench",
+      "normal": [
+        {
+          "guide_corner": "SE",
+          "source": {
+            "path": "generated/golf-source-batch-02/native/park-bench/normal-SE-isolated-v2.png",
+            "sha256": "aea9a17d72edc74499a3a62f841d5852e086b8bda6ad53fd30e8ebf245142aae",
+            "bytes": 597597
+          },
+          "cell": "single",
+          "rectangle_ltrb": [
+            0,
+            0,
+            1254,
+            1254
+          ],
+          "dimensions": [
+            1254,
+            1254
+          ],
+          "native_rgba_rectangle_sha256": "994f5a16285727d5c7c8a18eaea637285e683a711147d251aa7d4502da0f863c",
+          "status": "limited-source-main-component-identity-and-pose-pass"
+        },
+        {
+          "guide_corner": "SW",
+          "source": {
+            "path": "generated/golf-source-batch-02/native/park-bench/normal-SW-isolated-v2.png",
+            "sha256": "65a43e7d32a3ccacc6360cf1ef3503191a7ca82bd7bf8b57b6983ea7c492e033",
+            "bytes": 652310
+          },
+          "cell": "single",
+          "rectangle_ltrb": [
+            0,
+            0,
+            1254,
+            1254
+          ],
+          "dimensions": [
+            1254,
+            1254
+          ],
+          "native_rgba_rectangle_sha256": "c3abf7b9ecb32b6d4c56ade4501ecc34620687641c8ee2685cb57a81d4b38b4a",
+          "status": "limited-source-main-component-identity-and-pose-pass"
+        },
+        {
+          "guide_corner": "NW",
+          "source": {
+            "path": "generated/golf-source-batch-02/native/park-bench/normal-v2.png",
+            "sha256": "0fc9e6e59578d34d44482cce1317cf77d15315612959a9f564cf990ce484fb7c",
+            "bytes": 1603986
+          },
+          "cell": "BL",
+          "rectangle_ltrb": [
+            0,
+            627,
+            627,
+            1254
+          ],
+          "dimensions": [
+            627,
+            627
+          ],
+          "native_rgba_rectangle_sha256": "ba44b1c73d5e169e816cb373e431661fbf0274f041015239ef47097fbc2ecefd",
+          "status": "limited-source-main-component-identity-and-pose-pass"
+        },
+        {
+          "guide_corner": "NE",
+          "source": {
+            "path": "generated/golf-source-batch-02/native/park-bench/normal-v2.png",
+            "sha256": "0fc9e6e59578d34d44482cce1317cf77d15315612959a9f564cf990ce484fb7c",
+            "bytes": 1603986
+          },
+          "cell": "BR",
+          "rectangle_ltrb": [
+            627,
+            627,
+            1254,
+            1254
+          ],
+          "dimensions": [
+            627,
+            627
+          ],
+          "native_rgba_rectangle_sha256": "ececb0e9488c2ea9bdd09538db7ced78ac30953f1539f49720cbb83bda5c9197",
+          "status": "limited-source-main-component-identity-and-pose-pass"
+        }
+      ],
+      "yaw8": [
+        {
+          "direction": "N",
+          "source": {
+            "path": "generated/golf-source-batch-02/native/park-bench/yaw8-v1.png",
+            "sha256": "0dcecf6800741f11709b5031baa787a4c8fac20c168ff2a4474e861fcbe8f55a",
+            "bytes": 1822653
+          },
+          "cell": "TL",
+          "rectangle_ltrb": [
+            0,
+            0,
+            768,
+            512
+          ],
+          "native_rgba_rectangle_sha256": "fd97e687edac943fea65fe507136a9882a634b88e522ae32eb5cb6d13ae96926",
+          "status": "limited-source-candidate"
+        },
+        {
+          "direction": "E",
+          "source": {
+            "path": "generated/golf-source-batch-02/native/park-bench/yaw8-v1.png",
+            "sha256": "0dcecf6800741f11709b5031baa787a4c8fac20c168ff2a4474e861fcbe8f55a",
+            "bytes": 1822653
+          },
+          "cell": "TR",
+          "rectangle_ltrb": [
+            768,
+            0,
+            1536,
+            512
+          ],
+          "native_rgba_rectangle_sha256": "a1da18aeb3f4d2a34882050ca7b7af27b0370d0cfbe0005a2095e44d22c84deb",
+          "status": "limited-source-candidate"
+        },
+        {
+          "direction": "S",
+          "source": {
+            "path": "generated/golf-source-batch-02/native/park-bench/yaw8-v1.png",
+            "sha256": "0dcecf6800741f11709b5031baa787a4c8fac20c168ff2a4474e861fcbe8f55a",
+            "bytes": 1822653
+          },
+          "cell": "BL",
+          "rectangle_ltrb": [
+            0,
+            512,
+            776,
+            1024
+          ],
+          "native_rgba_rectangle_sha256": "3cbc03febefe005e97cbb080dc528aa845c4cf9c24db125cb66d77af9f4e27ad",
+          "status": "limited-source-candidate"
+        },
+        {
+          "direction": "W",
+          "source": {
+            "path": "generated/golf-source-batch-02/native/park-bench/yaw8-v1.png",
+            "sha256": "0dcecf6800741f11709b5031baa787a4c8fac20c168ff2a4474e861fcbe8f55a",
+            "bytes": 1822653
+          },
+          "cell": "BR",
+          "rectangle_ltrb": [
+            776,
+            512,
+            1536,
+            1024
+          ],
+          "native_rgba_rectangle_sha256": "509144a48d6fc0be8259a125ac36b9e752dd3528cc8c813f08f0b663b1a463b1",
+          "status": "held-functional-repair"
+        }
+      ],
+      "owner_approved": false,
+      "runtime_ready": false
+    },
+    {
+      "subject": "newprop:water-tank-stall",
+      "normal": [
+        {
+          "guide_corner": "SE",
+          "source": {
+            "path": "generated/golf-source-batch-02/native/water-tank-stall/normal-v2.png",
+            "sha256": "5d4d43d95409d6a55fc8c821cb5c96fa503d6999f5edb8e5de4906a4cd41524b",
+            "bytes": 1648387
+          },
+          "cell": "TL",
+          "rectangle_ltrb": [
+            0,
+            0,
+            627,
+            627
+          ],
+          "native_rgba_rectangle_sha256": "63db29ba54a45772105ae8317da1776697faeda61ee863ed43ba099cbba7b07c",
+          "status": "limited-source-candidate"
+        },
+        {
+          "guide_corner": "SW",
+          "source": {
+            "path": "generated/golf-source-batch-02/native/water-tank-stall/normal-v2.png",
+            "sha256": "5d4d43d95409d6a55fc8c821cb5c96fa503d6999f5edb8e5de4906a4cd41524b",
+            "bytes": 1648387
+          },
+          "cell": "TR",
+          "rectangle_ltrb": [
+            627,
+            0,
+            1254,
+            627
+          ],
+          "native_rgba_rectangle_sha256": "c0dab2b252346209ad7a94cdea7db8c1808e4ef65ca39c85465ba5579c7fc8cf",
+          "status": "limited-source-candidate"
+        },
+        {
+          "guide_corner": "NW",
+          "source": {
+            "path": "generated/golf-source-batch-02/native/water-tank-stall/normal-v2.png",
+            "sha256": "5d4d43d95409d6a55fc8c821cb5c96fa503d6999f5edb8e5de4906a4cd41524b",
+            "bytes": 1648387
+          },
+          "cell": "BL",
+          "rectangle_ltrb": [
+            0,
+            627,
+            627,
+            1254
+          ],
+          "native_rgba_rectangle_sha256": "27848cf8af12bcfae961a95d7f8c6420a50ddd23a8cdbdac93a3df2e0eb5e1c7",
+          "status": "limited-source-candidate"
+        },
+        {
+          "guide_corner": "NE",
+          "source": {
+            "path": "generated/golf-source-batch-02/native/water-tank-stall/normal-v2.png",
+            "sha256": "5d4d43d95409d6a55fc8c821cb5c96fa503d6999f5edb8e5de4906a4cd41524b",
+            "bytes": 1648387
+          },
+          "cell": "BR",
+          "rectangle_ltrb": [
+            627,
+            627,
+            1254,
+            1254
+          ],
+          "native_rgba_rectangle_sha256": "9b965ac9cacb5493aeb959784dc2a64c27b6b4ff5cfdc99a66338fcb29e7dbbd",
+          "status": "limited-source-candidate"
+        }
+      ],
+      "yaw8": [
+        {
+          "direction": "N",
+          "source": {
+            "path": "generated/golf-source-batch-02/native/water-tank-stall/yaw8-v1.png",
+            "sha256": "856b1736cdccfa93df744f4e2b244385b4cdb6f29884b32ddda8b95c4d4cd124",
+            "bytes": 1571292
+          },
+          "cell": "TL",
+          "rectangle_ltrb": [
+            0,
+            0,
+            627,
+            627
+          ],
+          "native_rgba_rectangle_sha256": "39fff4dff37b1d99f4557c3f5d8a937a5e100bd0259d962bc93c1321aaf1b2ea",
+          "status": "limited-source-candidate"
+        },
+        {
+          "direction": "E",
+          "source": {
+            "path": "generated/golf-source-batch-02/native/water-tank-stall/yaw8-v1.png",
+            "sha256": "856b1736cdccfa93df744f4e2b244385b4cdb6f29884b32ddda8b95c4d4cd124",
+            "bytes": 1571292
+          },
+          "cell": "TR",
+          "rectangle_ltrb": [
+            627,
+            0,
+            1254,
+            627
+          ],
+          "native_rgba_rectangle_sha256": "98a71e3bfa8d35721e012e328caf4f1de8dff32e1f89436f41413bdfe67f9eb9",
+          "status": "limited-source-candidate"
+        },
+        {
+          "direction": "S",
+          "source": {
+            "path": "generated/golf-source-batch-02/native/water-tank-stall/yaw8-v1.png",
+            "sha256": "856b1736cdccfa93df744f4e2b244385b4cdb6f29884b32ddda8b95c4d4cd124",
+            "bytes": 1571292
+          },
+          "cell": "BL",
+          "rectangle_ltrb": [
+            0,
+            627,
+            627,
+            1254
+          ],
+          "native_rgba_rectangle_sha256": "7a055f416ff34a2737046a50008a62c6d0cedd4821cf659c5a3f36701cbf69e3",
+          "status": "limited-source-candidate"
+        },
+        {
+          "direction": "W",
+          "source": {
+            "path": "generated/golf-source-batch-02/native/water-tank-stall/yaw8-v1.png",
+            "sha256": "856b1736cdccfa93df744f4e2b244385b4cdb6f29884b32ddda8b95c4d4cd124",
+            "bytes": 1571292
+          },
+          "cell": "BR",
+          "rectangle_ltrb": [
+            627,
+            627,
+            1254,
+            1254
+          ],
+          "native_rgba_rectangle_sha256": "96b7ee52a2ab456166d50fc883df78f08479d3ef7a00f4796587ccb92101a274",
+          "status": "limited-source-candidate"
+        }
+      ],
+      "owner_approved": false,
+      "runtime_ready": false
+    },
+    {
+      "subject": "newprop:rope-barrier",
+      "normal": [
+        {
+          "guide_corner": "SE",
+          "source": {
+            "path": "generated/golf-source-batch-02/native/rope-barrier/normal-v1.png",
+            "sha256": "f6a97871eeaf06a1d470485caef8caf02e2a98b3b98cd25ecee02677f9da3bd6",
+            "bytes": 901071
+          },
+          "cell": "TL",
+          "rectangle_ltrb": [
+            0,
+            0,
+            627,
+            627
+          ],
+          "native_rgba_rectangle_sha256": "1a4091980b48da25a6752ee21b37e8863d1a3812316a0e11aac89ae31814660a",
+          "status": "limited-source-candidate"
+        },
+        {
+          "guide_corner": "SW",
+          "source": {
+            "path": "generated/golf-source-batch-02/native/rope-barrier/normal-v1.png",
+            "sha256": "f6a97871eeaf06a1d470485caef8caf02e2a98b3b98cd25ecee02677f9da3bd6",
+            "bytes": 901071
+          },
+          "cell": "TR",
+          "rectangle_ltrb": [
+            627,
+            0,
+            1254,
+            627
+          ],
+          "native_rgba_rectangle_sha256": "75fffdc3d85a3b1d9612c0b1820830cf68da24a58ff983cd0ce259a23cd84adf",
+          "status": "limited-source-candidate"
+        },
+        {
+          "guide_corner": "NW",
+          "source": {
+            "path": "generated/golf-source-batch-02/native/rope-barrier/normal-v1.png",
+            "sha256": "f6a97871eeaf06a1d470485caef8caf02e2a98b3b98cd25ecee02677f9da3bd6",
+            "bytes": 901071
+          },
+          "cell": "BL",
+          "rectangle_ltrb": [
+            0,
+            627,
+            627,
+            1254
+          ],
+          "native_rgba_rectangle_sha256": "5a7fbc83bdd2bdb70f69b27a60ad8416be02bdb1ee7e4b281c0005bb0db3a3a2",
+          "status": "limited-source-candidate"
+        },
+        {
+          "guide_corner": "NE",
+          "source": {
+            "path": "generated/golf-source-batch-02/native/rope-barrier/normal-v1.png",
+            "sha256": "f6a97871eeaf06a1d470485caef8caf02e2a98b3b98cd25ecee02677f9da3bd6",
+            "bytes": 901071
+          },
+          "cell": "BR",
+          "rectangle_ltrb": [
+            627,
+            627,
+            1254,
+            1254
+          ],
+          "native_rgba_rectangle_sha256": "8edb8e62a2e2c849b2f0ccd9965d8e109e5f377b5df164dd1cb7c5fe60a6fa81",
+          "status": "limited-source-candidate"
+        }
+      ],
+      "yaw8": [
+        {
+          "direction": "N",
+          "source": {
+            "path": "generated/golf-source-batch-02/native/rope-barrier/yaw8-v1.png",
+            "sha256": "cbfde471bf05680abedc150ef53ffcda10430424c3dcc27e3c9f7b0068e5c6f8",
+            "bytes": 758292
+          },
+          "cell": "TL",
+          "rectangle_ltrb": [
+            0,
+            0,
+            695,
+            627
+          ],
+          "native_rgba_rectangle_sha256": "c73e76e50eed52539b06cfb18b7e311de3acc17556a3e6070d4b67b95d45ddf6",
+          "status": "limited-source-candidate"
+        },
+        {
+          "direction": "E",
+          "source": {
+            "path": "generated/golf-source-batch-02/native/rope-barrier/yaw8-v1.png",
+            "sha256": "cbfde471bf05680abedc150ef53ffcda10430424c3dcc27e3c9f7b0068e5c6f8",
+            "bytes": 758292
+          },
+          "cell": "TR",
+          "rectangle_ltrb": [
+            695,
+            0,
+            1254,
+            627
+          ],
+          "native_rgba_rectangle_sha256": "787c655830ae805e7e3aab3da8eccb28d9f63d5631ada4626577ea1a3c4fadfb",
+          "status": "limited-source-candidate"
+        },
+        {
+          "direction": "S",
+          "source": {
+            "path": "generated/golf-source-batch-02/native/rope-barrier/yaw8-v1.png",
+            "sha256": "cbfde471bf05680abedc150ef53ffcda10430424c3dcc27e3c9f7b0068e5c6f8",
+            "bytes": 758292
+          },
+          "cell": "BL",
+          "rectangle_ltrb": [
+            0,
+            627,
+            701,
+            1254
+          ],
+          "native_rgba_rectangle_sha256": "35ef30c40001bc579989e158cea14b8bc9fc8fed4f4b26f8195b351cec1ccf05",
+          "status": "limited-source-candidate"
+        },
+        {
+          "direction": "W",
+          "source": {
+            "path": "generated/golf-source-batch-02/native/rope-barrier/yaw8-v1.png",
+            "sha256": "cbfde471bf05680abedc150ef53ffcda10430424c3dcc27e3c9f7b0068e5c6f8",
+            "bytes": 758292
+          },
+          "cell": "BR",
+          "rectangle_ltrb": [
+            701,
+            627,
+            1254,
+            1254
+          ],
+          "native_rgba_rectangle_sha256": "34acaaa57ac630f9e43abc1bc76c565538e0f31d543130c0ce1a3b2328acdc23",
+          "status": "limited-source-candidate"
+        }
+      ],
+      "owner_approved": false,
+      "runtime_ready": false
+    },
+    {
+      "subject": "newprop:rope-barrier-corner",
+      "normal": [
+        {
+          "guide_corner": "SE",
+          "source": {
+            "path": "generated/golf-source-batch-02/native/rope-barrier-corner/normal-v2.png",
+            "sha256": "5b2bc88fb3c87a6e1304d33460d54b615ac0228ae6b8c2afddbfc2716e67d98d",
+            "bytes": 935658
+          },
+          "cell": "TL",
+          "rectangle_ltrb": [
+            0,
+            0,
+            627,
+            627
+          ],
+          "native_rgba_rectangle_sha256": "97411f274d36814323cfa0335af0e8e7d9d5163abc117be09985773c06984b4b",
+          "status": "limited-source-candidate"
+        },
+        {
+          "guide_corner": "SW",
+          "source": {
+            "path": "generated/golf-source-batch-02/native/rope-barrier-corner/normal-v2.png",
+            "sha256": "5b2bc88fb3c87a6e1304d33460d54b615ac0228ae6b8c2afddbfc2716e67d98d",
+            "bytes": 935658
+          },
+          "cell": "TR",
+          "rectangle_ltrb": [
+            627,
+            0,
+            1254,
+            627
+          ],
+          "native_rgba_rectangle_sha256": "7064add1740f0f8ab516bd0b63cd793e0922c91c2f6ac66e06c3d44656d94462",
+          "status": "limited-source-candidate"
+        },
+        {
+          "guide_corner": "NW",
+          "source": {
+            "path": "generated/golf-source-batch-02/native/rope-barrier-corner/normal-v2.png",
+            "sha256": "5b2bc88fb3c87a6e1304d33460d54b615ac0228ae6b8c2afddbfc2716e67d98d",
+            "bytes": 935658
+          },
+          "cell": "BL",
+          "rectangle_ltrb": [
+            0,
+            627,
+            627,
+            1254
+          ],
+          "native_rgba_rectangle_sha256": "b3295928b533cf69ce191aed99d181ed897cf6e15351015978ddaabcc6d99312",
+          "status": "limited-source-candidate"
+        },
+        {
+          "guide_corner": "NE",
+          "source": {
+            "path": "generated/golf-source-batch-02/native/rope-barrier-corner/normal-v2.png",
+            "sha256": "5b2bc88fb3c87a6e1304d33460d54b615ac0228ae6b8c2afddbfc2716e67d98d",
+            "bytes": 935658
+          },
+          "cell": "BR",
+          "rectangle_ltrb": [
+            627,
+            627,
+            1254,
+            1254
+          ],
+          "native_rgba_rectangle_sha256": "ec51f9d89f0e4d08e9237347a5c290a13b6f81f779e108dd07ab7472762476a8",
+          "status": "limited-source-candidate"
+        }
+      ],
+      "yaw8": [
+        {
+          "direction": "N",
+          "source": {
+            "path": "generated/golf-source-batch-02/native/rope-barrier-corner/yaw8-v1.png",
+            "sha256": "071878c1d0f2214d891b51ba03fda869ad12acbca11b5a310624ec7eb5351d28",
+            "bytes": 732435
+          },
+          "cell": "TL",
+          "rectangle_ltrb": [
+            0,
+            0,
+            627,
+            627
+          ],
+          "native_rgba_rectangle_sha256": "1b2ef7f6ccb086d34f9c21933876651fd4ffa92fad840294281ce87794484769",
+          "status": "limited-source-candidate"
+        },
+        {
+          "direction": "E",
+          "source": {
+            "path": "generated/golf-source-batch-02/native/rope-barrier-corner/yaw8-v1.png",
+            "sha256": "071878c1d0f2214d891b51ba03fda869ad12acbca11b5a310624ec7eb5351d28",
+            "bytes": 732435
+          },
+          "cell": "TR",
+          "rectangle_ltrb": [
+            627,
+            0,
+            1254,
+            627
+          ],
+          "native_rgba_rectangle_sha256": "8c52606c0af0a34af145eaa806689b24ab4415f1eb34e7bacb74be464ace4ad1",
+          "status": "limited-source-candidate"
+        },
+        {
+          "direction": "S",
+          "source": {
+            "path": "generated/golf-source-batch-02/native/rope-barrier-corner/yaw8-v1.png",
+            "sha256": "071878c1d0f2214d891b51ba03fda869ad12acbca11b5a310624ec7eb5351d28",
+            "bytes": 732435
+          },
+          "cell": "BL",
+          "rectangle_ltrb": [
+            0,
+            627,
+            627,
+            1254
+          ],
+          "native_rgba_rectangle_sha256": "7ef1c93779e3376d3b67acf9687ba72d0c197bb023b7cf08776935d041f76262",
+          "status": "limited-source-candidate"
+        },
+        {
+          "direction": "W",
+          "source": {
+            "path": "generated/golf-source-batch-02/native/rope-barrier-corner/yaw8-v1.png",
+            "sha256": "071878c1d0f2214d891b51ba03fda869ad12acbca11b5a310624ec7eb5351d28",
+            "bytes": 732435
+          },
+          "cell": "BR",
+          "rectangle_ltrb": [
+            627,
+            627,
+            1254,
+            1254
+          ],
+          "native_rgba_rectangle_sha256": "2345749539a4c64274a82391433911b09ac15b22cff1bebe63f62f1e88513071",
+          "status": "limited-source-candidate"
+        }
+      ],
+      "owner_approved": false,
+      "runtime_ready": false
+    },
+    {
+      "subject": "newprop:rope-walkway",
+      "normal": [
+        {
+          "guide_corner": "SE",
+          "source": {
+            "path": "generated/golf-source-batch-02/native/rope-walkway/normal-v2.png",
+            "sha256": "4667e69c8dbb673bd7b8cff7ae2a0a3717bd463511da9af1123e1ec8297b49a2",
+            "bytes": 1298781
+          },
+          "cell": "TL",
+          "rectangle_ltrb": [
+            0,
+            0,
+            627,
+            627
+          ],
+          "native_rgba_rectangle_sha256": "bc57e94c65e96d431a166be94b37ad2f04bd842d4658236e944c428e850abb45",
+          "status": "limited-source-candidate"
+        },
+        {
+          "guide_corner": "SW",
+          "source": {
+            "path": "generated/golf-source-batch-02/native/rope-walkway/normal-v2.png",
+            "sha256": "4667e69c8dbb673bd7b8cff7ae2a0a3717bd463511da9af1123e1ec8297b49a2",
+            "bytes": 1298781
+          },
+          "cell": "TR",
+          "rectangle_ltrb": [
+            627,
+            0,
+            1254,
+            627
+          ],
+          "native_rgba_rectangle_sha256": "b82ec54856c5232f3d4ab6689250ece9773c21471a3b8fbee63d67f5e2bad496",
+          "status": "limited-source-candidate"
+        },
+        {
+          "guide_corner": "NW",
+          "source": {
+            "path": "generated/golf-source-batch-02/native/rope-walkway/normal-v2.png",
+            "sha256": "4667e69c8dbb673bd7b8cff7ae2a0a3717bd463511da9af1123e1ec8297b49a2",
+            "bytes": 1298781
+          },
+          "cell": "BL",
+          "rectangle_ltrb": [
+            0,
+            627,
+            627,
+            1254
+          ],
+          "native_rgba_rectangle_sha256": "cf26b17de648c7809d5a46580ce081ce48fba3aba1869699a08426239c5c4e29",
+          "status": "limited-source-candidate"
+        },
+        {
+          "guide_corner": "NE",
+          "source": {
+            "path": "generated/golf-source-batch-02/native/rope-walkway/normal-v2.png",
+            "sha256": "4667e69c8dbb673bd7b8cff7ae2a0a3717bd463511da9af1123e1ec8297b49a2",
+            "bytes": 1298781
+          },
+          "cell": "BR",
+          "rectangle_ltrb": [
+            627,
+            627,
+            1254,
+            1254
+          ],
+          "native_rgba_rectangle_sha256": "e9552a793d09102adb8a326d978ab9f094195813d307e9d82f72887633b7d4b5",
+          "status": "limited-source-candidate"
+        }
+      ],
+      "yaw8": [
+        {
+          "direction": "N",
+          "source": {
+            "path": "generated/golf-source-batch-02/native/rope-walkway/yaw8-v1.png",
+            "sha256": "4fd4a314d7442c5ad546ffb49b7876b97f1dc7bab4bd9c95fd536f0399de8778",
+            "bytes": 1378381
+          },
+          "cell": "TL",
+          "rectangle_ltrb": [
+            0,
+            0,
+            627,
+            627
+          ],
+          "native_rgba_rectangle_sha256": "62bfb1328583d823497a718aefbd0b86168bc7846e38319a72827105a98036cc",
+          "status": "limited-source-candidate"
+        },
+        {
+          "direction": "E",
+          "source": {
+            "path": "generated/golf-source-batch-02/native/rope-walkway/yaw8-v1.png",
+            "sha256": "4fd4a314d7442c5ad546ffb49b7876b97f1dc7bab4bd9c95fd536f0399de8778",
+            "bytes": 1378381
+          },
+          "cell": "TR",
+          "rectangle_ltrb": [
+            627,
+            0,
+            1254,
+            627
+          ],
+          "native_rgba_rectangle_sha256": "09b8e710f01476e268744e40edea7c8a857865d472abb8caf97f1ed057d0d982",
+          "status": "limited-source-candidate"
+        },
+        {
+          "direction": "S",
+          "source": {
+            "path": "generated/golf-source-batch-02/native/rope-walkway/yaw8-v1.png",
+            "sha256": "4fd4a314d7442c5ad546ffb49b7876b97f1dc7bab4bd9c95fd536f0399de8778",
+            "bytes": 1378381
+          },
+          "cell": "BL",
+          "rectangle_ltrb": [
+            0,
+            627,
+            627,
+            1254
+          ],
+          "native_rgba_rectangle_sha256": "27d8c5f4c2d341c14d3e89c7790237d8c2dbe9012c98f92c87840774c5425c9d",
+          "status": "limited-source-candidate"
+        },
+        {
+          "direction": "W",
+          "source": {
+            "path": "generated/golf-source-batch-02/native/rope-walkway/yaw8-v1.png",
+            "sha256": "4fd4a314d7442c5ad546ffb49b7876b97f1dc7bab4bd9c95fd536f0399de8778",
+            "bytes": 1378381
+          },
+          "cell": "BR",
+          "rectangle_ltrb": [
+            627,
+            627,
+            1254,
+            1254
+          ],
+          "native_rgba_rectangle_sha256": "6a6b60f0d150c5e5459da9ec2d4fd42ee848c0f317ea9a3d7a59b4de8a0eb258",
+          "status": "limited-source-candidate"
+        }
+      ],
+      "owner_approved": false,
+      "runtime_ready": false
+    },
+    {
+      "subject": "newprop:direction-signpost",
+      "normal": [
+        {
+          "guide_corner": "SE",
+          "source": {
+            "path": "generated/golf-source-batch-02/native/direction-signpost/normal-v1.png",
+            "sha256": "317b54ad6750cd145f7a7772b7fcc7a1e5cf6b5773aca951fea839e0d1c1ee00",
+            "bytes": 1147434
+          },
+          "cell": "TL",
+          "rectangle_ltrb": [
+            0,
+            0,
+            627,
+            627
+          ],
+          "native_rgba_rectangle_sha256": "b0c26445056f51710dac07d9f90edf6dda50275a19648e6855ddccafc08fcd6e",
+          "status": "limited-source-candidate"
+        },
+        {
+          "guide_corner": "SW",
+          "source": {
+            "path": "generated/golf-source-batch-02/native/direction-signpost/normal-v1.png",
+            "sha256": "317b54ad6750cd145f7a7772b7fcc7a1e5cf6b5773aca951fea839e0d1c1ee00",
+            "bytes": 1147434
+          },
+          "cell": "TR",
+          "rectangle_ltrb": [
+            627,
+            0,
+            1254,
+            627
+          ],
+          "native_rgba_rectangle_sha256": "12ee84235b23e2e69d2ad774a7cc3a4432f4c14e39c2e649f55e9a99ba36332a",
+          "status": "limited-source-candidate"
+        },
+        {
+          "guide_corner": "NW",
+          "source": {
+            "path": "generated/golf-source-batch-02/native/direction-signpost/normal-v1.png",
+            "sha256": "317b54ad6750cd145f7a7772b7fcc7a1e5cf6b5773aca951fea839e0d1c1ee00",
+            "bytes": 1147434
+          },
+          "cell": "BL",
+          "rectangle_ltrb": [
+            0,
+            627,
+            627,
+            1254
+          ],
+          "native_rgba_rectangle_sha256": "a8ed2c8ddba9a9875bfadf2efd4dea4450c5476e6d54abe99b6b5c4565a14443",
+          "status": "limited-source-candidate"
+        },
+        {
+          "guide_corner": "NE",
+          "source": {
+            "path": "generated/golf-source-batch-02/native/direction-signpost/normal-v1.png",
+            "sha256": "317b54ad6750cd145f7a7772b7fcc7a1e5cf6b5773aca951fea839e0d1c1ee00",
+            "bytes": 1147434
+          },
+          "cell": "BR",
+          "rectangle_ltrb": [
+            627,
+            627,
+            1254,
+            1254
+          ],
+          "native_rgba_rectangle_sha256": "09b189a6f97b527378334ef8f5be12d9fb3add0356212ce8bfd1116d6cedcc00",
+          "status": "limited-source-candidate"
+        }
+      ],
+      "yaw8": [
+        {
+          "direction": "N",
+          "source": {
+            "path": "generated/golf-source-batch-02/native/direction-signpost/yaw8-v1.png",
+            "sha256": "55a005747397a2283c22b449a5042bfa596d4bad251ebdcd35862af96c5ae08e",
+            "bytes": 831140
+          },
+          "cell": "TL",
+          "rectangle_ltrb": [
+            0,
+            0,
+            627,
+            627
+          ],
+          "native_rgba_rectangle_sha256": "fab64af31060d15c670945280c7a4d5030076c498bb5dee6effe6ca54cd48a21",
+          "status": "limited-source-candidate"
+        },
+        {
+          "direction": "E",
+          "source": {
+            "path": "generated/golf-source-batch-02/native/direction-signpost/yaw8-v1.png",
+            "sha256": "55a005747397a2283c22b449a5042bfa596d4bad251ebdcd35862af96c5ae08e",
+            "bytes": 831140
+          },
+          "cell": "TR",
+          "rectangle_ltrb": [
+            627,
+            0,
+            1254,
+            627
+          ],
+          "native_rgba_rectangle_sha256": "7640b1f5b7a9977417c6a0e9f1e89399b1f2740f46baa6c619573b010f4f7323",
+          "status": "limited-source-candidate"
+        },
+        {
+          "direction": "S",
+          "source": {
+            "path": "generated/golf-source-batch-02/native/direction-signpost/yaw8-v1.png",
+            "sha256": "55a005747397a2283c22b449a5042bfa596d4bad251ebdcd35862af96c5ae08e",
+            "bytes": 831140
+          },
+          "cell": "BL",
+          "rectangle_ltrb": [
+            0,
+            627,
+            627,
+            1254
+          ],
+          "native_rgba_rectangle_sha256": "d97d6e0e331886762c191f77a87dfa3bc388a2bfbdbbfd26923e856d16dc938a",
+          "status": "limited-source-candidate"
+        },
+        {
+          "direction": "W",
+          "source": {
+            "path": "generated/golf-source-batch-02/native/direction-signpost/yaw8-v1.png",
+            "sha256": "55a005747397a2283c22b449a5042bfa596d4bad251ebdcd35862af96c5ae08e",
+            "bytes": 831140
+          },
+          "cell": "BR",
+          "rectangle_ltrb": [
+            627,
+            627,
+            1254,
+            1254
+          ],
+          "native_rgba_rectangle_sha256": "1b042667b51721b8ebc6cc4041c1752c46bc2821b728f29d42340b5b252e2ae2",
+          "status": "held-functional-repair"
+        }
+      ],
+      "owner_approved": false,
+      "runtime_ready": false
+    },
+    {
+      "subject": "newprop:gold-tee-markers",
+      "normal": [
+        {
+          "guide_corner": "SE",
+          "source": {
+            "path": "generated/golf-source-batch-02/native/gold-tee-markers/normal-v1.png",
+            "sha256": "f1dd757238cb786feeff82a858c46dc9a9aaa22dcbf5a68d4f12c6b3873d874d",
+            "bytes": 1290365
+          },
+          "cell": "TL",
+          "rectangle_ltrb": [
+            0,
+            0,
+            627,
+            627
+          ],
+          "native_rgba_rectangle_sha256": "1bd4632006591315c9995f72a572e3347359d55756cf16538992d5d46de2d7af",
+          "status": "limited-source-candidate"
+        },
+        {
+          "guide_corner": "SW",
+          "source": {
+            "path": "generated/golf-source-batch-02/native/gold-tee-markers/normal-v1.png",
+            "sha256": "f1dd757238cb786feeff82a858c46dc9a9aaa22dcbf5a68d4f12c6b3873d874d",
+            "bytes": 1290365
+          },
+          "cell": "TR",
+          "rectangle_ltrb": [
+            627,
+            0,
+            1254,
+            627
+          ],
+          "native_rgba_rectangle_sha256": "ed35035b3249dc7e9d8e5ad4c23f2bd2e256aaaefffd6572874799009adf9e5b",
+          "status": "limited-source-candidate"
+        },
+        {
+          "guide_corner": "NW",
+          "source": {
+            "path": "generated/golf-source-batch-02/native/gold-tee-markers/normal-v1.png",
+            "sha256": "f1dd757238cb786feeff82a858c46dc9a9aaa22dcbf5a68d4f12c6b3873d874d",
+            "bytes": 1290365
+          },
+          "cell": "BL",
+          "rectangle_ltrb": [
+            0,
+            627,
+            627,
+            1254
+          ],
+          "native_rgba_rectangle_sha256": "bb5d6e38ce4bcd5638705ebb6195d4354ec9444a6a8cfdb147bafdcd00cf61b8",
+          "status": "limited-source-candidate"
+        },
+        {
+          "guide_corner": "NE",
+          "source": {
+            "path": "generated/golf-source-batch-02/native/gold-tee-markers/normal-v1.png",
+            "sha256": "f1dd757238cb786feeff82a858c46dc9a9aaa22dcbf5a68d4f12c6b3873d874d",
+            "bytes": 1290365
+          },
+          "cell": "BR",
+          "rectangle_ltrb": [
+            627,
+            627,
+            1254,
+            1254
+          ],
+          "native_rgba_rectangle_sha256": "a2bbeb410fa4a0e83bc19686698253d8205982e7ce2acfa660417ffb042a5c52",
+          "status": "limited-source-candidate"
+        }
+      ],
+      "yaw8": [
+        {
+          "direction": "N",
+          "source": {
+            "path": "generated/golf-source-batch-02/native/gold-tee-markers/yaw8-v1.png",
+            "sha256": "bc06623d914c7cb0ba987029b799204cc9a4de7c2d64903a959b314a0f9be531",
+            "bytes": 1846153
+          },
+          "cell": "TL",
+          "rectangle_ltrb": [
+            0,
+            0,
+            768,
+            512
+          ],
+          "native_rgba_rectangle_sha256": "d6c5b2627264e70915bac13c9c3647aacb2441c109d5afa9c6f8f6332fa5ba23",
+          "status": "limited-source-candidate"
+        },
+        {
+          "direction": "E",
+          "source": {
+            "path": "generated/golf-source-batch-02/native/gold-tee-markers/yaw8-v1.png",
+            "sha256": "bc06623d914c7cb0ba987029b799204cc9a4de7c2d64903a959b314a0f9be531",
+            "bytes": 1846153
+          },
+          "cell": "TR",
+          "rectangle_ltrb": [
+            768,
+            0,
+            1536,
+            512
+          ],
+          "native_rgba_rectangle_sha256": "98933b8ac9754a411a3a77524ab406ce9234329a794f1f312ba059323c939c0a",
+          "status": "limited-source-candidate"
+        },
+        {
+          "direction": "S",
+          "source": {
+            "path": "generated/golf-source-batch-02/native/gold-tee-markers/yaw8-v1.png",
+            "sha256": "bc06623d914c7cb0ba987029b799204cc9a4de7c2d64903a959b314a0f9be531",
+            "bytes": 1846153
+          },
+          "cell": "BL",
+          "rectangle_ltrb": [
+            0,
+            512,
+            768,
+            1024
+          ],
+          "native_rgba_rectangle_sha256": "ff9130950173179ad27ccf8db804941f730db3c87f9323518cf7e0521c6599f7",
+          "status": "limited-source-candidate"
+        },
+        {
+          "direction": "W",
+          "source": {
+            "path": "generated/golf-source-batch-02/native/gold-tee-markers/yaw8-v1.png",
+            "sha256": "bc06623d914c7cb0ba987029b799204cc9a4de7c2d64903a959b314a0f9be531",
+            "bytes": 1846153
+          },
+          "cell": "BR",
+          "rectangle_ltrb": [
+            768,
+            512,
+            1536,
+            1024
+          ],
+          "native_rgba_rectangle_sha256": "adbfbf0084f2e6d42eebcef69e445a8057f639d7f25a51f015a8e80ce13cf30e",
+          "status": "limited-source-candidate"
+        }
+      ],
+      "owner_approved": false,
+      "runtime_ready": false
+    },
+    {
+      "subject": "newprop:hole-12-sign",
+      "normal": [
+        {
+          "guide_corner": "SE",
+          "source": {
+            "path": "generated/golf-source-batch-02/native/hole-12-sign/normal-v2.png",
+            "sha256": "bbd5e42167f4b04f05a43679eb609df5a0e84e878bb18f3b84eaf61f74d97271",
+            "bytes": 941680
+          },
+          "cell": "TL",
+          "rectangle_ltrb": [
+            0,
+            0,
+            627,
+            627
+          ],
+          "native_rgba_rectangle_sha256": "649d4e7ea514dc47cc9358a05610896bed8b0fef03d8a678d89183feba321c72",
+          "status": "limited-source-candidate"
+        },
+        {
+          "guide_corner": "SW",
+          "source": {
+            "path": "generated/golf-source-batch-02/native/hole-12-sign/normal-v2.png",
+            "sha256": "bbd5e42167f4b04f05a43679eb609df5a0e84e878bb18f3b84eaf61f74d97271",
+            "bytes": 941680
+          },
+          "cell": "TR",
+          "rectangle_ltrb": [
+            627,
+            0,
+            1254,
+            627
+          ],
+          "native_rgba_rectangle_sha256": "8aa2505cb2091602ffca7c778be290f52eb29529f735a27a530e2e05b4691c1f",
+          "status": "limited-source-candidate"
+        },
+        {
+          "guide_corner": "NW",
+          "source": {
+            "path": "generated/golf-source-batch-02/native/hole-12-sign/normal-v2.png",
+            "sha256": "bbd5e42167f4b04f05a43679eb609df5a0e84e878bb18f3b84eaf61f74d97271",
+            "bytes": 941680
+          },
+          "cell": "BL",
+          "rectangle_ltrb": [
+            0,
+            627,
+            627,
+            1254
+          ],
+          "native_rgba_rectangle_sha256": "ee50e04fbda172cff79b139fec240d4614fad7731d77824dd591e2e0d3489dcb",
+          "status": "limited-source-candidate"
+        },
+        {
+          "guide_corner": "NE",
+          "source": {
+            "path": "generated/golf-source-batch-02/native/hole-12-sign/normal-v2.png",
+            "sha256": "bbd5e42167f4b04f05a43679eb609df5a0e84e878bb18f3b84eaf61f74d97271",
+            "bytes": 941680
+          },
+          "cell": "BR",
+          "rectangle_ltrb": [
+            627,
+            627,
+            1254,
+            1254
+          ],
+          "native_rgba_rectangle_sha256": "147169c31e5d4fd082de932c6eb7712638b99814ee33a354441ca4ca30907108",
+          "status": "limited-source-candidate"
+        }
+      ],
+      "yaw8": [
+        {
+          "direction": "N",
+          "source": {
+            "path": "generated/golf-source-batch-02/native/hole-12-sign/yaw8-v1.png",
+            "sha256": "fcc401adb26dffa0ac6fb5ff2718eb426781199fff35c2f2ef2ec1a1130e2042",
+            "bytes": 790192
+          },
+          "cell": "TL",
+          "rectangle_ltrb": [
+            0,
+            0,
+            627,
+            627
+          ],
+          "native_rgba_rectangle_sha256": "f04296aa6c16603b517dd167859113a7939b1a6cc0addf1e2684903c1b0c21a1",
+          "status": "limited-source-candidate"
+        },
+        {
+          "direction": "E",
+          "source": {
+            "path": "generated/golf-source-batch-02/native/hole-12-sign/yaw8-v1.png",
+            "sha256": "fcc401adb26dffa0ac6fb5ff2718eb426781199fff35c2f2ef2ec1a1130e2042",
+            "bytes": 790192
+          },
+          "cell": "TR",
+          "rectangle_ltrb": [
+            627,
+            0,
+            1254,
+            627
+          ],
+          "native_rgba_rectangle_sha256": "9eaab75e9fb54d718a9d64a07100ddec0afd6738b707da1bdc994ad570035f5d",
+          "status": "limited-source-candidate"
+        },
+        {
+          "direction": "S",
+          "source": {
+            "path": "generated/golf-source-batch-02/native/hole-12-sign/yaw8-v1.png",
+            "sha256": "fcc401adb26dffa0ac6fb5ff2718eb426781199fff35c2f2ef2ec1a1130e2042",
+            "bytes": 790192
+          },
+          "cell": "BL",
+          "rectangle_ltrb": [
+            0,
+            627,
+            627,
+            1254
+          ],
+          "native_rgba_rectangle_sha256": "4af21b9d0b0d5bce53d0f64dc12b5345c52cf6c9c3539575e875850135fb14d0",
+          "status": "limited-source-candidate"
+        },
+        {
+          "direction": "W",
+          "source": {
+            "path": "generated/golf-source-batch-02/native/hole-12-sign/yaw8-v1.png",
+            "sha256": "fcc401adb26dffa0ac6fb5ff2718eb426781199fff35c2f2ef2ec1a1130e2042",
+            "bytes": 790192
+          },
+          "cell": "BR",
+          "rectangle_ltrb": [
+            627,
+            627,
+            1254,
+            1254
+          ],
+          "native_rgba_rectangle_sha256": "70de36e0e98c017e3ba54aa11701f7ae1d405e2b602a2551085449cbaf3d304d",
+          "status": "limited-source-candidate"
+        }
+      ],
+      "owner_approved": false,
+      "runtime_ready": false
+    },
+    {
+      "subject": "newprop:course-map-board",
+      "normal": [
+        {
+          "guide_corner": "SE",
+          "source": {
+            "path": "generated/golf-source-batch-02/native/course-map-board/normal-v1.png",
+            "sha256": "9cad2e7a817441125f1c332d1f285164faf9de2ae655b8c17dc101266ea7e33e",
+            "bytes": 1745797
+          },
+          "cell": "TL",
+          "rectangle_ltrb": [
+            0,
+            0,
+            627,
+            627
+          ],
+          "native_rgba_rectangle_sha256": "9d0256f8a8171247aa45c7aa4f6ee02d2dc10f6fae765950ea711de80d390a91",
+          "status": "limited-source-candidate"
+        },
+        {
+          "guide_corner": "SW",
+          "source": {
+            "path": "generated/golf-source-batch-02/native/course-map-board/normal-v1.png",
+            "sha256": "9cad2e7a817441125f1c332d1f285164faf9de2ae655b8c17dc101266ea7e33e",
+            "bytes": 1745797
+          },
+          "cell": "TR",
+          "rectangle_ltrb": [
+            627,
+            0,
+            1254,
+            627
+          ],
+          "native_rgba_rectangle_sha256": "ceb60a1d5460275d73f1a245bd8c2b0096fed0ea4de76f5bfe556c03bb497c51",
+          "status": "limited-source-candidate"
+        },
+        {
+          "guide_corner": "NW",
+          "source": {
+            "path": "generated/golf-source-batch-02/native/course-map-board/normal-v1.png",
+            "sha256": "9cad2e7a817441125f1c332d1f285164faf9de2ae655b8c17dc101266ea7e33e",
+            "bytes": 1745797
+          },
+          "cell": "BL",
+          "rectangle_ltrb": [
+            0,
+            627,
+            627,
+            1254
+          ],
+          "native_rgba_rectangle_sha256": "fe8a5369a2e605866d03fea4037bbae9896952a6c72c02bcf78ea2983f564dce",
+          "status": "limited-source-candidate"
+        },
+        {
+          "guide_corner": "NE",
+          "source": {
+            "path": "generated/golf-source-batch-02/native/course-map-board/normal-v1.png",
+            "sha256": "9cad2e7a817441125f1c332d1f285164faf9de2ae655b8c17dc101266ea7e33e",
+            "bytes": 1745797
+          },
+          "cell": "BR",
+          "rectangle_ltrb": [
+            627,
+            627,
+            1254,
+            1254
+          ],
+          "native_rgba_rectangle_sha256": "17eb7ae10d9ae81e7b0a930e3d5f3933288dd3563eb269f0664f754798d00a9d",
+          "status": "limited-source-candidate"
+        }
+      ],
+      "yaw8": [
+        {
+          "direction": "N",
+          "source": {
+            "path": "generated/golf-source-batch-02/native/course-map-board/yaw8-v1.png",
+            "sha256": "e826361f9ae7cecc9d78ec292ced240e85e8e97a564ecbbb95863344c7e79c62",
+            "bytes": 1283894
+          },
+          "cell": "TL",
+          "rectangle_ltrb": [
+            0,
+            0,
+            627,
+            626
+          ],
+          "native_rgba_rectangle_sha256": "6d6db95ed2a9ade090182de9be169fbece8276cbe918789df459da77c61f66c2",
+          "status": "limited-source-candidate"
+        },
+        {
+          "direction": "E",
+          "source": {
+            "path": "generated/golf-source-batch-02/native/course-map-board/yaw8-v1.png",
+            "sha256": "e826361f9ae7cecc9d78ec292ced240e85e8e97a564ecbbb95863344c7e79c62",
+            "bytes": 1283894
+          },
+          "cell": "TR",
+          "rectangle_ltrb": [
+            627,
+            0,
+            1254,
+            626
+          ],
+          "native_rgba_rectangle_sha256": "c16b441c0f74cdf015e801be96e210c0cd9e9cee00a044caa05290b2f4784895",
+          "status": "limited-source-candidate"
+        },
+        {
+          "direction": "S",
+          "source": {
+            "path": "generated/golf-source-batch-02/native/course-map-board/yaw8-v1.png",
+            "sha256": "e826361f9ae7cecc9d78ec292ced240e85e8e97a564ecbbb95863344c7e79c62",
+            "bytes": 1283894
+          },
+          "cell": "BL",
+          "rectangle_ltrb": [
+            0,
+            626,
+            627,
+            1254
+          ],
+          "native_rgba_rectangle_sha256": "05aee4e6921fa23b3213a32d2b6ccf59fb96917f37b028e63484999149b6a426",
+          "status": "limited-source-candidate"
+        },
+        {
+          "direction": "W",
+          "source": {
+            "path": "generated/golf-source-batch-02/native/course-map-board/yaw8-v1.png",
+            "sha256": "e826361f9ae7cecc9d78ec292ced240e85e8e97a564ecbbb95863344c7e79c62",
+            "bytes": 1283894
+          },
+          "cell": "BR",
+          "rectangle_ltrb": [
+            627,
+            626,
+            1254,
+            1254
+          ],
+          "native_rgba_rectangle_sha256": "74431e11663026bb4d33082db31efc785de0260ab22a13a6b28679c67fb305d8",
+          "status": "limited-source-candidate"
+        }
+      ],
+      "owner_approved": false,
+      "runtime_ready": false
+    }
+  ]
+}

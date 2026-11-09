@@ -1,0 +1,22 @@
+{
+  "key": "newprop:drinks-cart-green",
+  "slug": "drinks-cart-green",
+  "family": "yaw8",
+  "condition": "base",
+  "version": 1,
+  "target": "generated/golf-vehicle-source-batch-01/native/drinks-cart-green/yaw8-v1.png",
+  "refs": [
+    "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-vehicle-source-batch-01\\fixed-world-guides-v1\\drinks-cart-green\\guides\\yaw8-world-v1.png",
+    "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/golf-vehicle-source-batch-01/native/drinks-cart-green/normal-v1.png"
+  ],
+  "prompt": "Paint FOUR missing nearcardinal views of ONE exact specialist golf mobileprop from REFERENCE1 fixedworldguide. Guide controls allcameras/physicalattachments/occlusion. REFERENCE2 supplies finishedsubjectidentity/finepaintedmaterialsONLY; nevercopyitscornercamera. Functionalidentity: Green four-wheel motorized beverage utility cart with cream two-place front bench/short canopy and open rear cargo tray. Fixed load: two orange cylindrical drink coolers, two rectangular green/white coolboxes and one crate of bottled water. Keep driver/canopy at front and all refreshment cargo at rear; no people.. Fixedstate: FRONTbench/canopy/controls, REARloadedbed. EXACT load:2orange round jugs,2rectangular white-lid coolboxes,1bottle crate. Fixed cargo positions across8views; no passengers or loose cargo movement. Green painted utility bed; source later-era nose is identity-only, geometry proxy does not bind an era..   FourgenuineMAINfacesN E / S W asguide, eachnominal8degreesoffcardinal, orthographic30degreesDOWN. Fixedroofequipment/cargo, wheellayout, seatrowcount, canopy/bench positions neverchange.  Finepainterlyminiaturegameartmatchreference2wood/enamel/metals/glass, notlowpolyguide. Late-afternoonDAYTIME sunSCREENUPPERRIGHT/shadowsLOWERLEFT, lights/beaconsOFF. CompleteisolatedequallyscaledopaqueobjectswithwideZEROALPHAtransparentgutters/margins, smallcontactshadowonly. Nopeopledrivers/patients, road/groundplate, scenery, plants, captions/UI/grid/halo. Intrinsiccross/accesssymbolsretained wherephysicalbodyhas them.",
+  "source": "C:/Users/RAMPAGE/.codex/generated_images/01a1b1fd-39ec-7220-8f11-86e4448833ea/exec-ff74ae4c-1c2d-42bc-8fa9-47a8c7ea04a2.png",
+  "references": [
+    "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-vehicle-source-batch-01\\fixed-world-guides-v1\\drinks-cart-green\\guides\\yaw8-world-v1.png",
+    "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/golf-vehicle-source-batch-01/native/drinks-cart-green/normal-v1.png"
+  ],
+  "status": "native-source-candidate-pending-visual-review",
+  "runtime_imported": false,
+  "sha256": "775c38c890ce27d253a87424f5291e4a0b994b1523d880d1d7b54ccf108fc062",
+  "native_bytes_preserved": true
+}

@@ -9,6 +9,7 @@ import { appendConstruction } from './construction-library';
 import { appendGolf, appendKit, appendRangeArt, appendLandscapeArt } from './golf-library';
 import { appendNewProps } from './new-props-library';
 import { appendAnimals } from './animals-library';
+import { appendObjectEight } from './object-eight-library';
 import { appendViews } from './views-library';
 import { appendTrees } from './trees-library';
 import { appendAxisViews } from './axis-library';
@@ -1095,4 +1096,5 @@ appendExtraViews(LIBRARY, ATLAS_PAGES);
 appendRangeArt(LIBRARY); // T258: range art on the existing golf page
 appendLandscapeArt(LIBRARY); // T274: accepted organic art at the tail, on the same golf page
 appendNewProps(LIBRARY, ATLAS_PAGES); // the owner's new props (art/new-props): their own pages, at the tail so no saved index moves
-appendAnimals(LIBRARY, ATLAS_PAGES); // T309: the farm animals (art/animals, prep-animals.mjs): their own page, at the very tail
+appendAnimals(LIBRARY, ATLAS_PAGES); // T309: the farm animals (art/animals, prep-animals.mjs): their own page, after the new props (lead/live's saved indices stay put)
+appendObjectEight(LIBRARY, ATLAS_PAGES); // reviewed eight-facing art is always appended, after the animals; existing save indices stay stable

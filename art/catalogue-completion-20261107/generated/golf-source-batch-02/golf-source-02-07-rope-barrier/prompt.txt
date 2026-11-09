@@ -1,0 +1,4 @@
+Exactly three green round-foot stanchions in one straight line connected by two sagging cream rope spans. Maintain post order, spacing and rope attachment height; back views show actual hardware. No ground strip.
+Identity-preserving event barrier; worn green painted metal/wood with ordinary fittings, not rope-lashed structural logs.
+Same painterly game style as style-authority.png, late-afternoon daylight, one sun upper-right, shadows lower-left, transparent background. No people, captions, brands, gridlines or generic ground plates. Functional ramps, buckets, mounting feet and attached panels remain part of their object.
+Keep one fixed physical object and all its feature positions across all eight source-camera views.

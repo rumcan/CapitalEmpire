@@ -1,0 +1,24 @@
+[
+  {
+    "key": "newprop:satellite-van",
+    "slug": "satellite-van",
+    "family": "normal",
+    "condition": "base",
+    "version": 1,
+    "target": "generated/golf-vehicle-source-batch-01/native/satellite-van/normal-v1.png",
+    "refs": [
+      "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-vehicle-source-batch-01\\fixed-world-guides-v1\\satellite-van\\guides\\normal-world-v1.png",
+      "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-vehicle-source-batch-01\\references\\satellite-van.source.png"
+    ],
+    "prompt": "Create a native2x2 sheet of FOUR actual corner views of ONE specialist golf vehicle or mobile vending prop. REFERENCE1 is fixed-world assembly/camera/occlusion authority. REFERENCE2 is subject identity and detailed painterly miniature MATERIALS/BODY DETAIL only; never repeat its one camera. Preserve recognizable vehicle shape, wheels, restrained cream-green finishes and fine metal/glass/canvas texture, not flatlowpolyguide surfaces. Function: One cream/green uplink PANEL VAN with large fixed roof satellite dish on rear roof, roof HVAC box just forward of dish, two roof antennas, sliding cargo side door and twin rear cargo doors. Dish azimuth/elevation fixed to the vehicle, never turned toward viewer independently. No driver, stairs or cable compound included.. Fixedphysicalrules: ONE genuinely curved parabolic roof dish, fixed axis rotates ONLYwithvan. Show convex ribbed back in cameras where dish faces away, never turn dish toward viewer. HVAC lies forward of dish, two aerials at front roof, one right sliding door/twin rear doors.. Preserve actual later-era rounded panel-van identity for later-era source art. For a1985-specific variant, request separate older boxy cab design rather than calling this modern van period-correct. Ignore tiny detached gold neighbour fragment at upper source edge.. Keep authentic wear modest and plausible; no gratuitous holes or fantasy filigree. Fourdistinct45degreecorner poses in exact SE SW / NW NE cellsasguide, orthographic30degreesDOWN; equalphysicalscale. Rearmustshowtrueback, no inventedfrontheadlights/steering onrear. Allroofequipment/seatrows/ramps/cargo/stretcher stayonfixedworldside; nooperatingstatechanges. Satellitebowlbackconvexwhenviewedfromrear, neverrepanaimingtofaceviewer. Late-afternoon DAYTIME sunlightfixedSCREENUPPERRIGHT/shadowsLOWERLEFT, allheadlamps/beaconsOFF. CompleteisolatedopaqueobjectswithgenerousZEROALPHAtransparentmargins/gutters, smallcontactshadowonly; no broadgreyhalo/scenery/groundtile/road/people/plants/labels/UI/grid. Intrinsicmedicalcross/accesssymbolallowed, no extrabrands/text.",
+    "source": "C:/Users/RAMPAGE/.codex/generated_images/01a1b1fd-39ec-7220-8f11-86e4448833ea/exec-c6529a04-ad4e-4fda-a9e8-cbd31be4731c.png",
+    "references": [
+      "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-vehicle-source-batch-01\\fixed-world-guides-v1\\satellite-van\\guides\\normal-world-v1.png",
+      "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-vehicle-source-batch-01\\references\\satellite-van.source.png"
+    ],
+    "status": "native-source-candidate-pending-visual-review",
+    "runtime_imported": false,
+    "sha256": "85dc8d224bdac96ba595dded5b1fbef4e962a116d95c1abbfbeb9d89df5bd754",
+    "native_bytes_preserved": true
+  }
+]

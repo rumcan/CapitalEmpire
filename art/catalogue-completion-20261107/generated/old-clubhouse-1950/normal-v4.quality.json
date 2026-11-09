@@ -1,0 +1,26 @@
+{
+  "id": "golf:clubhouse-shanty",
+  "variant": "1950s-budget-redesign",
+  "version": 4,
+  "source": "C:\\Users\\RAMPAGE\\.codex\\generated_images\\01a1b1fd-39ec-7220-8f11-86e4448833ea\\exec-e7bd701a-b52e-498b-ba9f-d09effd62f36.png",
+  "archived_raw": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\old-clubhouse-1950\\normal-v4.png",
+  "sha256": "1ef6ef59725085f1c3c792bc77f18f28a32f792547bcb0629efc6150f0ddd61e",
+  "dimensions": [
+    1254,
+    1254
+  ],
+  "mode": "RGBA",
+  "alpha_extrema": [
+    0,
+    255
+  ],
+  "status": "source-candidate-needs-world-identity-review",
+  "parent_observation": "Camera from GUIDEONLY is closer; detailed single-world guides required for fixed chimney/endwall identity.",
+  "owner_approved": false,
+  "runtime_integrated": false,
+  "native_pixels_unchanged": true,
+  "exact_prompt": {
+    "path": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\old-clubhouse-1950\\normal-v4.prompt.txt",
+    "sha256": "92f829ea5b3c0025b9baa26498796ab22c5396767d3086cca379399622c5da87"
+  }
+}

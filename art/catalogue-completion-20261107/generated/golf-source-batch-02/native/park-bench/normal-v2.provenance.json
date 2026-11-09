@@ -1,0 +1,22 @@
+{
+  "key": "newprop:park-bench",
+  "slug": "park-bench",
+  "family": "normal",
+  "version": 2,
+  "condition": "base",
+  "target": "generated/golf-source-batch-02/native/park-bench/normal-v2.png",
+  "refs": [
+    "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-02\\fixed-world-guides-v1\\park-bench\\guides\\normal-world-v1.png",
+    "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/golf-source-batch-02/native/park-bench/normal-v1.png"
+  ],
+  "prompt": "Paint FOUR real corner views of the one fixed physical golf prop in REFERENCE1 as finished game art, matching material identity and detailed painterly miniature style of REFERENCE2. Reference1 is the projected geometry/side/occlusion/camera authority. Reference2 supplies material texture/color only; its earlier duplicate cameras and state mistakes must NOT be copied. Fixed object: Three-place slatted bench, BACK on+Y, sitting FRONT on-Y. Tall attached course-map panel ALWAYS at physicalRIGHT+X. Panel FRONT has map, BACK bare wood; do not duplicate a front corner.. Preserve exactly the guide's four quarterturns SE SW / NW NE, orthographic30degreesDOWN,45degreecorners, equal physical scale. Source assembly identity: Actual source is a three-seat timber-slat bench with black cast-metal arms/legs PLUS one tall attached hole-map panel at its model right end. Preserve the bench/map combined assembly and map side. Back has slat backs and panel backing, not another front seating face. No people. . Ordinary practical golf equipment, no inventedornament. Keep ALL apparatus on fixed physical sides while the whole object rotates; true rear and opposite corner views, never repeat a front corner. Late-afternoon DAYTIME sun SCREEN UPPER RIGHT, shadowsLOWERLEFT,lampsOFF. Four complete separatedsprites with broad zeroalpha transparent margins/gutters, no haze/white/grey background, no groundtile, plants, people, UI/captions/grid. Retain functional mesh/holes/ball/brass/castmetal textures.",
+  "source": "C:/Users/RAMPAGE/.codex/generated_images/01a1b1fd-39ec-7220-8f11-86e4448833ea/exec-2e9ebfb3-85aa-4969-b337-11d8fc40c77c.png",
+  "references": [
+    "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-02\\fixed-world-guides-v1\\park-bench\\guides\\normal-world-v1.png",
+    "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/golf-source-batch-02/native/park-bench/normal-v1.png"
+  ],
+  "status": "native-source-candidate-pending-visual-review",
+  "runtime_imported": false,
+  "sha256": "0fc9e6e59578d34d44482cce1317cf77d15315612959a9f564cf990ce484fb7c",
+  "native_bytes_preserved": true
+}

@@ -1,0 +1,62 @@
+{
+  "schema": 1,
+  "createdUtc": "2026-11-07T06:47:45.284562+00:00",
+  "exactRuntimeId": "variation:industrial-rail-repair-shed-fbe2c8d9:1",
+  "source": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/building-views/variation-industrial-rail-repair-shed-fbe2c8d9-1/NE.png",
+  "sourceSha256": "07646cf3d249e84b1216372d7b70f604113084fa1490993b149a0e59f5089b4a",
+  "output": "identity-references/variation-industrial-rail-repair-shed-fbe2c8d9-1-a2b2841a/source.png",
+  "outputSha256": "07646cf3d249e84b1216372d7b70f604113084fa1490993b149a0e59f5089b4a",
+  "width": 551,
+  "height": 437,
+  "sourceCell": {
+    "kind": "already isolated native PNG; whole file",
+    "rectXYWH": [
+      0,
+      0,
+      551,
+      437
+    ]
+  },
+  "operation": "byte-for-byte PNG copy only; no resize, crop, recolour, key, repaint, registration or source mutation",
+  "selection": "registered corner NE native PNG for this exact subject",
+  "registeredCornerDirection": "NE",
+  "sourceEvidence": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\building-views\\variation-industrial-rail-repair-shed-fbe2c8d9-1\\provenance.json",
+  "sourceReview": {
+    "integrationStatus": "ready",
+    "integrationReason": "All4 visible physical corners form front/right/back/left cycle; actual magenta alpha has no surrounding floor/haze. Matte timber/masonry/metal, charcoal roofs, amber practical lights and fixed screen-upper-right dusk are coherent with master. Layout-only repack preserves every nonzero source RGBA pixel without generation/repainting. Original low-alpha edge fringe does not truncate physical silhouette."
+  },
+  "sourceRegistration": {
+    "id": "variation:industrial-rail-repair-shed-fbe2c8d9:1",
+    "version": "variation-industrial-rail-repair-shed-fbe2c8d9-1-4views-v2",
+    "files": {
+      "NE": "07646cf3d249e84b1216372d7b70f604113084fa1490993b149a0e59f5089b4a",
+      "SE": "f726d91fc8ebcbcedf97fcb33ad7b933cb61af477b57821f7e1b39ebec16f713",
+      "SW": "fce7dfd7c6576b697b089330810580aada818f2a6c935c1cbc791fd78fa16dba",
+      "NW": "a3e01b0be00c75321f3f9c5a5bd5cfe72a610bbaacd2fc36521068be56b95ce5"
+    }
+  },
+  "originalInventorySource": {
+    "library": "src/game/library.ts",
+    "librarySha256": "91b5190292c1005ac7b936f08e5e1ebf3be43c3aae99f92ea510775da83d9726",
+    "atlas": "src/assets/atlas/sprites-6-0.webp",
+    "atlasSha256": "5bf555ea578c014fa9e9f4e6119ae5f09128a07573eed569e85b1c5554f2ac51",
+    "runtimePage": 6,
+    "localPage": 6,
+    "uv": [
+      0.4375,
+      0.460938,
+      0.661621,
+      0.662598
+    ],
+    "crop": {
+      "left": 896,
+      "top": 944,
+      "width": 459,
+      "height": 413
+    },
+    "native": "art/theme-consistency/exports/buildings/variation-industrial-rail-repair-shed-fbe2c8d9-1.native.png",
+    "nativeSha256": "f542f106a5bf20b1449ec255c932aa7e342a13484a9e051c1636ab0986abee75"
+  },
+  "originalBusinessSourceCell": null,
+  "nativeReferenceApprovalClaimed": false
+}

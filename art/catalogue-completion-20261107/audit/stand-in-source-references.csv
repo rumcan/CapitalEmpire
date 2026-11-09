@@ -1,0 +1,224 @@
+path,line,record_kind,source
+src/App.tsx,547,runtime expression/config,"<label className=""flex cursor-pointer items-center gap-2 px-2 py-2 text-sm"" data-tip=""A small label over each building drawn as a stand-in (another building of its kind) until its own art arrives: Stand In for Church"">"
+src/App.tsx,549,runtime expression/config,Show stand-in labels
+src/App.tsx,1980,runtime expression/config,"<div><div className=""text-sm font-semibold"">{d.name}</div><div className=""text-[12px] text-slate-400"">{d.group} · bought for {money(d.price)} · sells for {money(d.sell)}{d.standIn ? ` · Stand In for ${d.standIn}` : ''}</div></div>"
+src/game/desert-planting.ts,16,comment/reference,"/** the bigger rocks (outcrops, boulder groups, ledges): a tree's stand-in */"
+src/game/desert-theme.ts,78,comment/reference,/** the big rocks (a tree's stand-in): the wider half of the desert rocks; the small ones go with the bushes */
+src/game/label-place.ts,3,comment/reference,"// stand-in labels last), each label takes its anchor if free, else the nearest free slot just above or below within a small radius, else it is"
+src/game/label-place.ts,22,comment/reference,"*  a warning, the range's distance markers, an area's label, the growth figures, and the stand-in pills last (they give way to real names) */"
+src/game/label-place.ts,23,runtime expression/config,"export const PRI = { hint: 200, name: 100, count: 90, warn: 80, marker: 70, area: 60, growth: 50, standIn: 10 } as const;"
+src/game/newart.ts,3,comment/reference,// on the same footprint (a building with no stand-in at all is not drawn). Only the buildings of the art inventory are swapped: props (the golf
+src/game/newart.ts,11,comment/reference,"//   closest zoom (sizes.ts PIXEL_LIMIT), whatever asked for the size (a stand-in filling a bigger footprint, the player's resize, a studio size"
+src/game/newart.ts,13,comment/reference,//   The packs size the pictures for this: prep-views.mjs packs each stand-in for the largest size any building drawn as it needs (standInNeeds).
+src/game/newart.ts,36,comment/reference,"/** what a prop is drawn as: its item, flip and scale; hidden: draw nothing (a building with no stand-in at all); x, y: the anchor it is drawn at"
+src/game/newart.ts,37,comment/reference,*  (tiles) when that is not the prop's own (a stand-in is centred on its building's footprint) */
+src/game/newart.ts,46,comment/reference,"*  ones a stand-in replaces until theirs land. The props and vehicles packed with the business art (flagsticks, the bag trolley, the course-map"
+src/game/newart.ts,56,comment/reference,"/** the family a picture can stand in for, so a house is only ever drawn as a house (the owner, 2026-10-24: tents and industrial garages turned up on"
+src/game/newart.ts,75,comment/reference,"/** the stand-ins of each family: new art, the front (NE) views only for buildings (a flip turns them, unmirror) */"
+src/game/newart.ts,84,comment/reference,"/** how much nearer than the nearest a stand-in may be and still be picked (by place, for variety): 10% (was 25%, the owner, 2026-10-24: stand-ins"
+src/game/newart.ts,88,comment/reference,/** a building's stand-in for a prop at scale k: the new-art building of its family that fills the footprint nearest its own size (its owner
+src/game/newart.ts,106,comment/reference,"/** the stand-ins a building (a library index) may be drawn as at scale k, by place: standIn's choice once every one of them is packed for it (the"
+src/game/newart.ts,115,comment/reference,"*  scale, to fill its footprint without stretching: id -> the largest of those buildings' scale x span(building) / span(stand-in). Only the"
+src/game/newart.ts,116,comment/reference,*  stand-ins some building needs are listed */
+src/game/newart.ts,136,comment/reference,"/** which items are drawn as a stand-in (the flags above): an old tree with ?newart, an old building of the art inventory by default (or with"
+src/game/newart.ts,140,comment/reference,/** a library item the game never draws as itself: an old building drawn as a new-art stand-in picked by where it stands (the lot lab's palette leaves these out: a placed one would look different on every lot) */
+src/game/newart.ts,191,comment/reference,"/** what a drawable is drawn as: itself, unless its art is swapped for a stand-in (centred on its footprint) or it would be drawn past its pixels"
+src/game/newart.ts,218,comment/reference,"/** the largest scale a library item is placed at with its picture filling it (its pixel limit, sizes.ts); a stand-in fills any footprint (drawn"
+src/game/newart.ts,222,comment/reference,"/** the item a library item is thumbnailed as (its stand-in at its owner scale, or itself when it is drawn as itself) */"
+src/game/newart.ts,240,comment/reference,"/** the label over a stand-in (the owner, 2026-10-25: ""if stand ins are required add a little text above it that says 'Stand In for Church'""):"
+src/game/newart.ts,241,comment/reference,"*  'Stand In for <its plain name>' for an item drawn as a stand-in (a building of the art inventory waiting for its four views, with a new-art"
+src/game/newart.ts,248,runtime expression/config,"s = it && SWAP[item] && it.kind !== 'tree' && standIn(it, 0, 0, own(it)) !== undefined ? `Stand In for ${plainName(it)}` : null;"
+src/game/painted-surfaces.ts,22,runtime expression/config,export interface SurfaceDef { key: string; name: string; group: SurfaceGroup; tex: readonly string[]; kinds: readonly PaintedKind[]; /** T259: an art slot waiting for its art (no look until it lands: its stand-in draws meanwhile) */ slot?: true }
+src/game/painted-surfaces.ts,49,comment/reference,"// Unset, a field of that state is its soil (Farm fields) with the stand-in rows; naming a family here swaps the art in"
+src/game/painted-surfaces.ts,78,comment/reference,"*  T258: the range's ground art (golf/range-look.ts: the mats and the target greens as their pictures or their stand-ins, and the bullseye"
+src/game/renderer.ts,789,comment/reference,*  null while that surface has no look in painted-surfaces.json (the stand-in: its soil and drawCrops' rows) */
+src/game/renderer.ts,794,comment/reference,"/** T259: the crop fields' stand-in rows (ext/farms/crops.ts ROW_LOOK, the stand-ins for 185 and 186) over their soil, a state at a time:"
+src/game/renderer.ts,1728,comment/reference,"// T259: a crop field wears its state's art once it lands (cropArt), else its soil (tex 'field') under the stand-in rows (drawCrops)"
+src/game/renderer.ts,1777,comment/reference,// T259: the crop fields' stand-in rows (those whose state has no art yet)
+src/game/soft-edges.ts,24,comment/reference,*  - sd: the summed waves' spread about 0.5 (value noise bunches near its middle): the noise is evened out by it (a logistic stand-in for
+src/game/sprites.ts,65,comment/reference,"// the picture drawn for it (newart.ts: a stand-in for an old building, the drawable itself otherwise); a hidden one is a zero-area rect at its anchor"
+src/game/sprites.ts,69,comment/reference,"// a parked car shrinks about the middle of its footprint, so it stays in its bay; a stand-in is drawn at its own anchor (centred on the footprint)"
+src/game/sprites.ts,99,comment/reference,"// the picture drawn for it (newart.ts: a stand-in on the same footprint for an old building, the drawable itself otherwise)"
+src/game/world-labels.ts,2,comment/reference,"// names, the car parks' ""P · n/N"", the stand-in pills, the counts, the town names, the range's markers), then places them in one pass"
+src/game/world-labels.ts,73,comment/reference,"/** text on a rounded plate (w x h, corner radius) centred on (x, y): the stand-in pills and the range's markers; ty nudges the text */"
+src/game/engine.ts,308,comment/reference,/** T240: what a person says when you walk up (the stand-in talk until T243's cards) */
+src/game/engine.ts,332,comment/reference,"/** T213: the caddie's stand-in (no caddie is packed yet: GOLF-ART-LIST item 176; the made `staff_caddie_m` waits in art/spectators), a spectator in a"
+src/game/engine.ts,336,runtime expression/config,"const CADDIE_ART = Math.max(0, SPECTATOR_PEOPLE.findIndex(p => p.id === 'spectator:spec_m_polo_visor')), CADDIE_LABEL = 'Stand In for caddie';"
+src/game/engine.ts,469,comment/reference,"/** the stand-in labels (T114) fade out between these zooms (gone below 8%, whole from 12%: the district view stays clear), and the view's query"
+src/game/engine.ts,473,comment/reference,*  that sprite from the studio (OWNER_SCALE). The stand-in sprites are much bigger than the structures they stand for; a smaller one keeps
+src/game/engine.ts,486,runtime expression/config,"return (fw > 0 && fh > 0 ? Math.min(1, w / fw, h / fh) : 1) * own; // shrink to fit, never blow up: an upscaled stand-in is huge and blurry (past its 0.6x mip)"
+src/game/engine.ts,605,comment/reference,"/** the stand-in labels (T114, newart.ts standInLabel): ""Stand In for Church"" over each building drawn as a stand-in until its own art lands; on"
+src/game/engine.ts,2574,comment/reference,*  stood); the ground each farm last sent; the month the farms show; each farm's season (farmSeason) as composed; its stand-in labels */
+src/game/engine.ts,3885,comment/reference,"/** the stand-in labels of the places' props (the first prop of each stand-in id of a place: ""Stand In for <its art>"") */"
+src/game/engine.ts,3906,runtime expression/config,"if (src && si && !seen.has(src)) { seen.add(src); this.placeStandIns.push({ p, text: `Stand In for ${si}` }); }"
+src/game/engine.ts,3923,comment/reference,"/** the open place card (T219): the place's name, what it is, the residents it opened at, its size (m) and its stand-ins; null when none is open */"
+src/game/engine.ts,4148,comment/reference,"// T259: the model 2 farm's stand-in labels (""Stand In for <art>"": the windbreak's and the orchard's first tree, each crop state's biggest field, the lane)"
+src/game/engine.ts,6082,runtime expression/config,this.labelBizProps(); // T214: the club buildings' stand-in labels
+src/game/engine.ts,7853,comment/reference,"// T213: the caddies (the stand-in spectator, labelled) with their bags, and the carts"
+src/game/engine.ts,7864,comment/reference,"/** T213: the tournament's carts as movers (reused Drawables), and the caddies' stand-in labels (drawStandIns) */"
+src/game/engine.ts,8364,comment/reference,"/** your character as a mover (the street tier): your look's frame for your facing (walk, swing or idle), labelled ""Stand In for <name>"""
+src/game/engine.ts,8387,comment/reference,"/** ""Stand In for <name>"" (cached: no string per frame) */"
+src/game/engine.ts,9504,comment/reference,"/** the stand-in labels of the club buildings' pictures (drawStandIns), made with the business props (setBizDefs) */"
+src/game/engine.ts,9616,comment/reference,"/** the stand-ins (until art 136-138): the head pro golf_pro_m2, the teaching pro golf_pro_w1 (golfers: they have the drive clip), the secretary"
+src/game/engine.ts,9619,runtime expression/config,"head: { group: 1, person: Math.max(0, GOLFER_PEOPLE.findIndex(p => p.id === 'golfer:golf_pro_m2')), label: 'Stand In for head pro' },"
+src/game/engine.ts,9620,runtime expression/config,"teach: { group: 1, person: Math.max(0, GOLFER_PEOPLE.findIndex(p => p.id === 'golfer:golf_pro_w1')), label: 'Stand In for teaching pro' },"
+src/game/engine.ts,9621,runtime expression/config,"sec: { group: 0, person: Math.max(0, SPECTATOR_PEOPLE.findIndex(p => p.id === 'spectator:spec_w_older_cardigan')), label: 'Stand In for membership secretary' },"
+src/game/engine.ts,9648,comment/reference,*  stand-in labelled. Returns the next mover index */
+src/game/engine.ts,9759,comment/reference,"/** the crew's stand-ins (until the art: GOLF-SPRITES.md ""Grounds crew""): the greenkeeper a spectator in a bucket hat, the mower operator one in a cap */"
+src/game/engine.ts,9763,comment/reference,"/** the crew's vehicles' stand-ins (the hire cart's two facings, the golf mower, the push mower, the ride-on), their footprints' half sides and labels */"
+src/game/engine.ts,9765,runtime expression/config,"cart: { items: [libIndexOf('business:golf-cart-sw'), libIndexOf('business:golf-cart-se')], label: 'Stand In for utility cart', r: 0.6 },"
+src/game/engine.ts,9766,runtime expression/config,"reel: { items: [libIndexOf('business:golf-mower')], label: 'Stand In for ride-on reel mower', r: 0.7 },"
+src/game/engine.ts,9767,runtime expression/config,"push: { items: [libIndexOf('gen:lawnmower')], label: 'Stand In for walk-behind mower', r: 0.3 },"
+src/game/engine.ts,9768,runtime expression/config,"rotary: { items: [libIndexOf('expansion:rideon-mower')], label: 'Stand In for rotary mower', r: 0.6 },"
+src/game/engine.ts,9770,comment/reference,"/** T269: the grounds crew in the tile box, from mover m on (as dayMovers): each worker as his stand-in person (labelled), his vehicles to crewOut."
+src/game/engine.ts,9780,runtime expression/config,"this.caddieLabels.push({ p: out[m]!, text: p.role === 'gk' ? 'Stand In for greenkeeper' : 'Stand In for mower operator' }); m++;"
+src/game/engine.ts,11072,comment/reference,"/** the stand-in labels (T114): each building on screen drawn as a stand-in (the view's props and the businesses' pictures) carries ""Stand In"
+src/game/engine.ts,11092,comment/reference,"// T259: the farms' stand-ins (the windbreak, the orchard, the crop fields, the lane) in the view's box"
+src/game/engine.ts,11096,runtime expression/config,"for (const l of this.caddieLabels) this.standInPill(l.p, l.p, ze, l.text); // T213: the caddies' stand-in"
+src/game/engine.ts,11098,comment/reference,"/** one stand-in's label pill (drawStandIns), if p is drawn as a stand-in and its label is on screen: a world label (key: the prop, or the"
+src/game/engine.ts,11119,comment/reference,"// the picture the placed business draws (newart.ts: a stand-in, capped at its pixels), cut from its full-size page (mip 0, loaded on first use)"
+src/game/business/art.ts,35,comment/reference,"// T214 (P26 3.1): the pro's office (Stand In: the pro shop, fitted to its 8 m, with the membership desk sign's stand-in at its door) and the"
+src/game/dev/lot-editor.ts,91,comment/reference,"/** paints a library sprite's atlas picture (its stand-in for an old building, as the game draws it) over an element of w x h px */"
+src/game/dev/lot-editor.ts,759,comment/reference,// a sprite with no picture (a hidden stand-in) shows a ring at its anchor
+src/game/dev/lot-houses.ts,3,comment/reference,"// as themselves (no stand-in), as their base view (presets store the NE view and a turn), front views only (no ""-north-"", back-of-house or rear"
+src/game/dev/lot-houses.ts,17,comment/reference,"*  smallest of its four views, since a preset or a library size draws it in any of them; Infinity for a stand-in (it fills any footprint) */"
+src/game/dev/lot-lab.ts,246,comment/reference,"/** T167: a badge on each prop drawn as a stand-in for a picture the owner removed (the lab lot and its neighbours), so the owner sees where to"
+src/game/dev/lot-lab.ts,257,runtime expression/config,"badgeLayer.replaceChildren(...out.map(b => { const e = el('div', 'position:fixed;transform:translate(-50%,-50%);background:rgba(146,64,14,.92);color:#fde68a;border:1px solid #f59e0b;border-radius:999px;padding:1px 7px;font:600 11px system-ui,sans-serif;white-space:nowrap', 'stand-in for a removed picture'); e.title = `${b.id} drawn in place of ${b.was} (removed in the studio): re-lay the preset to choose another`; return e; }));"
+src/game/dev/shadow-audit-items.ts,34,comment/reference,"/** is the sprite drawn as itself (not swapped for a stand-in by newart.ts, not hidden) */"
+src/game/dev/shadow-audit-items.ts,126,comment/reference,/** the library sprites the audit leaves out because the game never draws them as themselves (old buildings drawn as a new-art stand-in) */
+src/game/dev/shadow-draft-items.ts,17,comment/reference,"/** is a picture drawn as itself (not swapped for a stand-in by newart.ts, not hidden, not an east view drawn as its mirrored front) */"
+src/game/ext/bunker-look/stage-registry.ts,24,comment/reference,"/** The key whose bake failed or was evicted, by component: only then does the native drawing stand in for it. */"
+src/game/ext/farms/crops.ts,11,comment/reference,"*    along the field's direction (rowSegments), each state in its own rows (ROW_LOOK). These are the stand-ins for the art items 185 (corn:"
+src/game/ext/farms/crops.ts,13,comment/reference,"*    line), and the fields of that state wear it in place of the stand-in rows."
+src/game/ext/farms/crops.ts,46,comment/reference,"*  painted in; a field takes the axis nearest its rows). Unnamed in painted-surfaces.json, the stand-in rows are drawn. The swap is one line"
+src/game/ext/farms/crops.ts,60,comment/reference,/** the stand-in rows of each state (tiles; renderer.ts drawCrops):
+src/game/ext/farms/crops.ts,77,comment/reference,"/** the least spacing (device px) the stand-in rows are drawn at: further out the rows are drawn every second, fourth ... one, wider (no moire) */"
+src/game/ext/farms/farms.ts,479,comment/reference,"/** the windbreak (stand-ins for GOLF-ART-LIST 188, the poplars): its rows' offset either side of the lane's centre, the trees' spacing"
+src/game/ext/farms/farms.ts,482,comment/reference,"/** the farm lane's half width (tiles: a 4.8 m dirt lane, the stand-in for GOLF-ART-LIST 189) */"
+src/game/ext/farms/farms.ts,484,comment/reference,"/** the orchard (stand-ins for 187): the grid's pitch between rows and between the trees of a row (tiles: 6 m), the most trees across and"
+src/game/ext/farms/farms.ts,489,comment/reference,"/** the windbreak's trees: the gold birch (Stand In for the poplars: their shape and autumn gold) on most farms, else a row of spruces; one tree a row */"
+src/game/ext/farms/farms.ts,499,comment/reference,"/** the orchard's species: the library's round broadleaf capital trees (Stand In for the orchard trees), through their leaf stages by the month"
+src/game/ext/farms/farms.ts,505,comment/reference,"*  in those months, wears it in place of the stand-in. The ground's swaps (185, 186, 189) are lines in painted-surfaces.json (crops.ts) */"
+src/game/ext/farms/farms.ts,519,comment/reference,"/** an orchard tree in a month: its stage's art (ORCHARD_ART) once it lands, else the stand-in species' leaf stage */"
+src/game/ext/farms/farms.ts,521,comment/reference,"/** T329: the stand-in species' tree at a leaf stage; a stage the library no longer has (the owner removed capital:tree-maple-open, 2026-11-02)"
+src/game/ext/farms/farms.ts,528,comment/reference,"/** a windbreak's tree in a month: a poplar row's stage art (POPLAR_ART) once it lands, else its stand-in (one tree all year) */"
+src/game/ext/farms/farms.ts,749,comment/reference,"/** T259: a farm's stand-ins (model 2) for their labels (""Stand In for <art>""): the windbreak's and the orchard's first tree (id: the prop the"
+src/game/ext/farms/farms.ts,753,runtime expression/config,"if (L.wind) { const c = world(p, L.laneA + L.wind.sides[0]! * WIND_OFF, L.wind.b0 + WIND_STEP * 2); if (windTreeId(L.wind.id, month) === L.wind.id) out.push({ ...c, text: 'Stand In for windbreak poplars', id: L.wind.id }); }"
+src/game/ext/farms/farms.ts,754,runtime expression/config,"if (L.orchard && !ORCHARD_ART[orchardStage(month)]) { const c = world(p, L.orchard.a0, L.orchard.b0); out.push({ ...c, text: 'Stand In for orchard trees', id: orchardTreeId(L.orchard.sp, month) }); }"
+src/game/ext/farms/farms.ts,758,comment/reference,// (T289: the ploughed field wears the owner's painting now: no stand-in label for it)
+src/game/ext/farms/farms.ts,759,runtime expression/config,"for (const [st, q] of best) if (st !== 'plough') out.push({ ...world(p, (q.a0 + q.a1) / 2, (q.b0 + q.b1) / 2), text: `Stand In for ${NAME[st]}` });"
+src/game/ext/farms/farms.ts,760,runtime expression/config,"out.push({ ...world(p, L.laneA, L.yardB0 / 2), text: 'Stand In for farm lane' });"
+src/game/golf/club.ts,23,comment/reference,"*  the fair price); an old save's members keep LEGACY_DUES, what T208's stand-in priced a member at */"
+src/game/golf/club.ts,60,comment/reference,"/** the members T208's stand-in counted (an old save's: the legacy dues a month over LEGACY_DUES; a float, the card rounded it) */"
+src/game/golf/crewview.ts,3,comment/reference,"// cart cap (play/pacer.ts: a long drive between holes is faded, as the golfers' walks are). Pure TS, no DOM: the engine draws the people (stand-ins"
+src/game/golf/decor.ts,23,comment/reference,"*  fraction), its size (absent: the studio's or the library's own) and, for a stand-in picture, the real thing it stands in for (the card and the"
+src/game/golf/decor.ts,24,comment/reference,"*  map's pill say ""Stand In for <standIn>"": the art is requested in docs/GOLF-SPRITES.md ""Props kit"") */"
+src/game/golf/decor.ts,79,comment/reference,"*  stand-ins. T154: the art model's new shrubs, beds, bench, bin and lamp post are screen-axis sets (axis-library.ts: four genuine quarter turns, R"
+src/game/golf/decor.ts,126,runtime expression/config,"{ key: 'statue', name: 'Golfer statue', group: 'stone', kind: 'statue', id: 'expansion:coin-horse-ride', price: 6000, appeal: APPEAL.statue, standIn: 'Bronze golfer statue', desc: 'A bronze golfer at the top of his swing, on a stone plinth' },"
+src/game/golf/decor.ts,127,runtime expression/config,"{ key: 'pillar', name: 'Stone pillar', group: 'stone', kind: 'stone', id: 'world:grave_2', price: 400, appeal: APPEAL.pillar, standIn: 'Stone pillar', desc: 'A dressed stone column with a ball finial: pair them at a gate' },"
+src/game/golf/decor.ts,146,runtime expression/config,"{ key: 'flagpole', name: 'Flag pole', group: 'furniture', kind: 'sign', id: 'business:golf-pin-red', price: 500, appeal: APPEAL.flagpole, scale: 0.6, standIn: 'Club flag pole', desc: 'A tall white pole flying the club flag' },"
+src/game/golf/decor.ts,149,comment/reference,"//      the range's appeal counts the props near it alone). A bandstand (the library's gazebo is a stand-in), a statue and a town hall annex"
+src/game/golf/decor.ts,219,comment/reference,*  things are both's; golf's and the stand-ins' own the course's */
+src/game/golf/decor.ts,244,runtime expression/config,"return { name: d.name, group: GROUP_NAME[d.group], price: sizedPrice(d.price, size), sell: sellBack(d, size), ...(d.standIn ? { standIn: d.standIn } : {}) };"
+src/game/golf/dressing.ts,17,comment/reference,*  stand-in: the flagsticks and the bag trolley that stood in were a pin on the tee and a trolley */
+src/game/golf/everyday.ts,43,comment/reference,"*  golf/club.ts: rounded; missing: a day saved before T214, whose roster is rebuilt with T208's stand-in, dayMembers), and an optional busy day (the"
+src/game/golf/mode.ts,95,comment/reference,"*  season's books. Missing: an older save, whose members the engine seeds from T208's stand-in (club.ts legacyClub; P26 section 8) */"
+src/game/golf/propstool.ts,95,comment/reference,/** the props tool's stand-in labels: the first placed prop of each stand-in kind */
+src/game/golf/propstool.ts,447,runtime expression/config,"if (d.standIn && !seen.has(d.key)) { seen.add(d.key); labels.push({ p, text: `Stand In for ${d.standIn}` }); }"
+src/game/golf/pros.ts,25,comment/reference,"/** the stand-ins' labels (docs/AGENT-BRIEF.md: ""Stand In for <name>"") until art 53-55 lands (GOLF-SPRITES.md) */"
+src/game/golf/pros.ts,26,runtime expression/config,"export const OFFICE_LABEL = ""Stand In for pro's office"", HUT_LABEL = 'Stand In for teaching hut', DESK_SIGN_LABEL = 'Stand In for membership desk sign';"
+src/game/golf/pros.ts,119,comment/reference,"/** the stand-ins' sexes (P26 3.5: the head pro golf_pro_m2, the teaching pro golf_pro_w1, the secretary spec_w_older_cardigan) */"
+src/game/golf/range-look.ts,3,comment/reference,"// on the ground (rangebiz.ts rangeScene, golf/range-pics.ts), or the stand-ins before them (the mats: a dark pad and a turf square a bay on"
+src/game/golf/range-look.ts,8,comment/reference,"/** the range's ground art: each of the mats and the greens as its picture or its old stand-in, and which target green (0..4) is the bullseye */"
+src/game/golf/range-look.ts,9,runtime expression/config,export interface RangeLook { mats: 'picture' | 'stand-in'; greens: 'picture' | 'stand-in'; bullseye: number }
+src/game/golf/range-look.ts,12,comment/reference,/** the stand-ins as before T258 (the studio's option; a test's) */
+src/game/golf/range-look.ts,13,runtime expression/config,"export const RANGE_STAND_INS: Readonly<RangeLook> = { mats: 'stand-in', greens: 'stand-in', bullseye: -1 };"
+src/game/golf/range-look.ts,15,runtime expression/config,"export const RANGE_LOOK_CHOICES = { mats: ['picture', 'stand-in'], greens: ['picture', 'stand-in'], bullseye: [-1, 0, 1, 2, 3, 4] } as const;"
+src/game/golf/rangehost.ts,103,comment/reference,"/** the world labels' keys of the range's own stand-in pills (T151: the moving picker cart's and the practice strokes'), kept from frame to frame */"
+src/game/golf/rangehost.ts,111,comment/reference,"/** the scene's auto props by key, and its stand-in labels (prop, text) */"
+src/game/golf/rangehost.ts,127,comment/reference,"/** T258: the range's ground art: the mats and the target greens as their pictures or their stand-ins, and the bullseye green (the studio's"
+src/game/golf/rangehost.ts,138,comment/reference,"// stand-ins, the bullseye) re-lays the ground when the owner saves it"
+src/game/golf/rangehost.ts,279,comment/reference,"*  The labels (the numbers, the car park building's count, the stand-in pills, the area's and the range's names) are world labels (T151):"
+src/game/golf/rangehost.ts,308,comment/reference,// the ball picker cart's stand-in pill (T133: the eight-way wagon stands in for it)
+src/game/golf/rangehost.ts,312,runtime expression/config,"if (on(q)) this.standInPill(labels, PICKER_KEY, 'Stand In for Ball picker cart', q.x, q.y - 40 * dpr, dpr);"
+src/game/golf/rangehost.ts,320,comment/reference,"/** a stand-in pill of the range's own (the picker cart, the practice strokes): amber words on a dark pill centred on (x, y), a world label of the"
+src/game/golf/rangehost.ts,382,comment/reference,"*  points at it: hint), and at the street tier the stand-in pills of the practice strokes once golfers use a facility */"
+src/game/golf/rangehost.ts,409,comment/reference,// the stand-in pills of the strokes (the 3D golfers have no putting or chipping clip yet: GOLF-SPRITES)
+src/game/golf/rangehost.ts,413,runtime expression/config,"this.standInPill(labels, id === 'putting' ? PUTT_KEY : CHIP_KEY, id === 'putting' ? 'Stand In for golfer putting clip' : 'Stand In for golfer chipping clip', q.x, q.y - 34 * dpr, dpr);"
+src/game/golf/structure-art.ts,1,comment/reference,"// The pictures the Event tool's structures are drawn with (golf/tents.ts STRUCTURES), by structure type. Most are stand-ins until each structure has"
+src/game/golf/structure-art.ts,5,comment/reference,/** the library sprite each structure type is drawn with (the engine falls back to FALLBACK_STRUCTURE_SPRITE for a type not listed). T329: the TV
+src/game/golf/structure-art.ts,16,runtime expression/config,export const FALLBACK_STRUCTURE_SPRITE = 'expansion:backyard-tent';
+src/game/golf/structure-art.ts,18,comment/reference,"*  drop-off as the produce crates, which the new-art stand-in drew as a bus shelter): a save's prop of one on its structure is replaced by"
+src/game/golf/you.ts,198,comment/reference,"/** a stand-in's label (docs/AGENT-BRIEF.md: stand-ins are labelled ""Stand In for <name>"") */"
+src/game/golf/you.ts,199,runtime expression/config,export const standInText = (name: string): string => `Stand In for ${name || 'you'}`;
+src/game/golf/rangebiz.ts,96,comment/reference,"*  that (6.7 m), its middle MATS_V (where the stand-in's turf square was) */"
+src/game/golf/rangebiz.ts,107,comment/reference,"*  scale (absent: the library's own size) or fit (the footprint's W + D in tiles the picture spans: business art), and its stand-in label */"
+src/game/golf/rangebiz.ts,133,comment/reference,"/** T258: the patch that is a target green's own green, one a green whatever the look: the stand-in's 'target', the picture's raised inner disc"
+src/game/golf/rangebiz.ts,225,comment/reference,/** T258: a piece's ChatGPT picture once it has landed (null: its stand-in still stands): view 1 (the front and right side) for a piece whose
+src/game/golf/rangebiz.ts,291,runtime expression/config,"else { const a = art('golf-clubhouse-shanty', toRange); if (a) put('shop', a, SHOP.u, SHOP.v); else put('shop', 'expansion:lean-to-shed', SHOP.u, SHOP.v, toRange, { label: 'Stand In for the tin-and-tarp pro shop' }); }"
+src/game/golf/rangebiz.ts,311,runtime expression/config,"{ const a = art('golf-range-sign', toRoad); if (a) put('sign', a, SU, SV); else put('sign', 'golf:leaderboard', SU, SV, toRoad, { fit: 4.5, label: 'Stand In for Driving Range sign' }); }"
+src/game/golf/rangebiz.ts,317,runtime expression/config,"else put(`mark${k}-${j}`, 'ce:parking-sign', u, STAND_V + 25 * k, 0, k === 1 && j === 0 ? { label: 'Stand In for Range distance marker' } : {});"
+src/game/golf/rangebiz.ts,324,runtime expression/config,"else put(`board${i}`, 'poi:fishing-board', TARGET_U[i]! + TARGET_R[i]! + 2.4, STAND_V + TARGET_D[i]! - 1, toRoad, { scale: 1.6, ...(i === 0 ? { label: 'Stand In for Range yardage board' } : {}) });"
+src/game/golf/rangebiz.ts,342,runtime expression/config,"spots.forEach(([u, v], i) => { if (a) put(`light${i}`, a, u, v); else put(`light${i}`, 'world:streetlamp', u, v, 0, { scale: 1, ...(i === 0 ? { label: 'Stand In for Range floodlight' } : {}) }); });"
+src/game/golf/rangebiz.ts,344,runtime expression/config,"if (st.dispenser) { const a = art('golf-range-ball-dispenser', toRange); if (a) put('dispenser', a, 39.6, 12.6); else put('dispenser', 'expansion:utility-cabinet', 39.6, 12.6, 0, { label: 'Stand In for Ball dispenser' }); }"
+src/game/golf/rangebiz.ts,346,comment/reference,"// the second tier: the covered-bay building again over each lower roof under the middle twelve slots, drawn DECK_H up (its stand-in: a double"
+src/game/golf/rangebiz.ts,355,runtime expression/config,"pieces.push({ key: `deck${g}`, id: 'business:golf-driving-range', x: p.x + 0.05, y: p.y + 0.05, q: toRange, fit: 10.5, lift: DECK_H, foot: [f[0] + 0.05, f[1] + 0.05, f[2] + 0.05, f[3] + 0.05], ...(pieces.some(q => q.key.startsWith('deck')) ? {} : { label: 'Stand In for the double-deck hitting stand' }) });"
+src/game/golf/rangebiz.ts,360,runtime expression/config,"put('academy-sign', 'poi:fishing-board', slotU(open[0]!) - 1.6, STAND_V + 2.8, toRoad, { scale: 1.6, label: 'Stand In for Golf academy sign' });"
+src/game/golf/rangebiz.ts,367,runtime expression/config,"if (ka) put('kiosk', ka, KIOSK.u, KIOSK.v); else put('kiosk', 'business:fishing-rental-kiosk', KIOSK.u, KIOSK.v, toRange, { fit: 5, label: 'Stand In for Coffee kiosk' });"
+src/game/golf/rangebiz.ts,500,comment/reference,"*  shack's stand-in), the player's home by stage, the coffee kiosk; the covered bays' roofs run from just behind the path behind them (a cart"
+src/game/golf/rangebiz.ts,596,comment/reference,"*  house facing the road, a stand-in) with a brick braai, a swing seat, a birdhouse and flower beds; the house (the farmhouse with its porch) with"
+src/game/golf/rangebiz.ts,607,runtime expression/config,"put('cottage', 'world:house_4', 9.6, 7.4, toRoad, { label: ""Stand In for the player's cottage"" });"
+src/game/golf/rangebiz.ts,650,comment/reference,"/** the academy's pro is drawn as this golfer (T133), and the ball picker cart as this car type (a stand-in: the eight-way wagon, never mirrored) */"
+src/game/golf/rangebiz.ts,655,comment/reference,"*  s, the ball leaving at its impact PUTT_HIT, the next putt after PUTT_T) and a chip's (the drive clip as the stand-in swing: SWING) */"
+src/game/golf/rangebiz.ts,1457,comment/reference,"// at a practice facility, facing the cup: a putt is the drive clip's address, its takeaway and its impact frame (a stand-in until the"
+src/game/golf/rangebiz.ts,1458,comment/reference,"// putting clip, GOLF-SPRITES), a chip the whole drive clip (a stand-in until the chipping clip)"
+src/game/golf/structure-facing.ts,5,runtime expression/config,"import { STRUCTURE_SPRITE, FALLBACK_STRUCTURE_SPRITE } from './structure-art';"
+src/game/golf/structure-facing.ts,13,runtime expression/config,return lookup(set?.subject ?? STRUCTURE_SPRITE[s.typeId] ?? FALLBACK_STRUCTURE_SPRITE);
+src/game/golf/structure-facing.ts,28,comment/reference,"/** New facility availability follows reviewed native art AND valid seating for every authored facing, never a scaled legacy stand-in. */"
+src/game/golf/tents.ts,13,comment/reference,/** New facilities cannot be placed with a stand-in; require complete reviewed art and authored seating. */ requiresEightArt?: boolean;
+src/game/golf/play/celebrate.ts,2,comment/reference,"// drops: a short fist pump stand-in (the golfer clips have no fist pump or cap tip: the swing's high finish, turned to the camera, with a little hop; the"
+src/game/golf/play/view.ts,24,comment/reference,"/** T213: a pro's caddie to draw: his position (tiles), his sheet row and frame (the spectator clips' frames: the stand-in is a spectator), the pro he"
+src/game/lots/autolot.ts,451,runtime expression/config,"return { ...fit, props: L.props, from, patches: L.patches, ...(fit.standIn ? { standIn: fit.standIn.concat(Array.from({ length: added }, () => undefined)) } : {}) };"
+src/game/lots/autolot.ts,486,runtime expression/config,"const from: number[] = [], standIn: (string | undefined)[] = [];"
+src/game/lots/autolot.ts,498,runtime expression/config,"return { ...fit, props: L.props, patches: L.patches, from: from.concat(Array.from({ length: added }, () => -1)), ...(fit.standIn ? { standIn: standIn.concat(Array.from({ length: added }, () => undefined)) } : {}) };"
+src/game/lots/compose-core.ts,214,runtime expression/config,"const item: Item = { id: g.id, x, y, flip: g.flip, s: g.s, fp: [x + h[0], y + h[1], x + h[2], y + h[3]], car, wheel: g.id === WHEEL, fence: it.kind === 'fencex' || it.kind === 'fencey' || g.id === 'world:hedge', boundary: !!o.boundary, street: !!o.street, plant: !!o.plant, ...(o.paved ? { paved: true } : {}), ...(o.from ? { from: o.from } : {}), ...(o.standIn ? { standIn: o.standIn } : {}), ...(o.diag ? { diag: true } : {}), ...(o.foot ? { foot: true as const } : {}) };"
+src/game/lots/compose.ts,423,comment/reference,"// T167: a picture the owner removed is never drawn: a stand-in takes its place (or it is left out), before the house finds its yards"
+src/game/lots/compose.ts,424,comment/reference,"// T297 (#882): the remix comes last, on the props as drawn (the stand-ins and the shop in place); its main building is the shop's spot"
+src/game/lots/compose.ts,509,comment/reference,"// a house swapped in suits the lot's road and state (the house allocations, T155), as a stand-in house does"
+src/game/lots/compose.ts,530,comment/reference,"*  inside the lot, marked as standing in for the preset's (standIn, as a T167 stand-in: the lot lab's badge); unchanged without a swap or when"
+src/game/lots/compose.ts,590,comment/reference,"/** a fitted preset with its props remixed (T297, #882): each prop that is not the main building (mainK), a stand-in, a fence, a gate, a patch or a"
+src/game/lots/compose.ts,607,comment/reference,// the starter home: a tier-0 res lot's house spot (a removed house's stand-in keeps its own place: the owner's picture is the one removed)
+src/game/lots/compose.ts,633,comment/reference,// ---------- T167: stand-ins for the pictures the owner removed
+src/game/lots/compose.ts,643,comment/reference,"/** the house allocations (T155, read only): a stand-in house is one that suits the lot's road angle and state */"
+src/game/lots/compose.ts,647,comment/reference,"*  by a building of its kind and about its footprint, else left out; an expansion or a prop left out. Each stand-in is marked (standIn: the"
+src/game/lots/compose.ts,664,comment/reference,"// the stand-in keeps the removed one's street edge (its front, a square base) and its spot along the street; houseYards then keeps its yards"
+src/game/lots/compose.ts,668,runtime expression/config,"return { ...fit, props, from, standIn: mark };"
+src/game/lots/compose.ts,670,comment/reference,"/** a stand-in house: a dwelling (house-class.ts) not removed, that suits the lot's road and state, of the removed one's size class, whose footprint"
+src/game/lots/compose.ts,687,comment/reference,"/** a stand-in building of another use (a fire station): one of the library's buildings of the removed one's kind (not removed, drawn as itself, a"
+src/game/lots/compose.ts,743,runtime expression/config,"const item = B.atW({ id: pa ? pa.id : t.id, s, flip: t.flip, h: fx ? fx.h : pa!.h }, c, { ...(fx || (pa && pa.id !== t.id) ? { foot: true } : {}), plant: it.kind === 'tree' || it.kind === 'bush', ...(fit.from[k]! >= 0 ? { from: { preset: preset.id, prop: fit.from[k]! } } : { paved: true }), street: preset.whole === true && q.y < 0, ...(fit.standIn?.[k] ? { standIn: fit.standIn[k] } : {}), ...(t.diag ? { diag: true } : {}) });"
+src/game/lots/compose.ts,817,runtime expression/config,"const fit: Fitted = { ...p.fit, props: [...street.map(i => p.fit.props[i]!), ...plan.props], from: [...street.map(i => p.fit.from[i]!), ...plan.props.map(() => -1)], patches: plan.patches, decals: [], ...(stand ? { standIn: [...street.map(i => stand[i]), ...plan.props.map(() => undefined)] } : {}) };"
+src/game/lots/compose.ts,823,runtime expression/config,"const fit: Fitted = { ...p.fit, props: m.props, from: idx.map(i => p.fit.from[i]!), decals: [], ...(stand ? { standIn: idx.map(i => stand[i]) } : {}) };"
+src/game/lots/compose.ts,840,comment/reference,"// the stand-in marks (T167) follow the props kept, index for index"
+src/game/lots/compose.ts,841,runtime expression/config,"const fit: Fitted = { ...p.fit, props: keep.map(i => p.fit.props[i]!), from: keep.map(i => p.fit.from[i]!), decals: [], ...(p.fit.standIn ? { standIn: keep.map(i => p.fit.standIn![i]) } : {}) };"
+src/game/lots/iconic.ts,15,comment/reference,"*  its town needs before it opens, the stand-ins (library id: the art it waits for; the map labels the first of each), and its whole preset */"
+src/game/lots/item-kinds.ts,31,comment/reference,"*  one of the people, not an old building drawn as a stand-in */"
+src/game/lots/variety.ts,50,comment/reference,"*  drawn as a stand-in, a barn or the video shop: newart.ts) is an arcade's spot, always drawn as a palette venue."
+src/ui/PlaceCard.tsx,2,comment/reference,"// size, and the art it still waits for (its stand-ins). Opened by clicking any of its props with the select tool. No economy yet."
+src/ui/PlaceCard.tsx,26,runtime expression/config,"{view.standIns.length > 0 && <p className=""text-[12px] text-slate-400"" data-testid=""place-standins"">Stand-ins until their art is drawn: {view.standIns.join(', ')}.</p>}"
+src/ui/Rail.tsx,32,comment/reference,"/** the pointer (an arrow) and the walking figure: simple line drawings in the rail's colour (stand-ins until icon art lands, GOLF-SPRITES.md) */"
+src/ui/ShotPanel.tsx,6,comment/reference,// The meter is a plain canvas (no atlas page): a labelled stand-in until meter art exists.
+src/ui/ShotPanel.tsx,74,runtime expression/config,"ctx.font = '500 8px system-ui, sans-serif'; ctx.fillStyle = 'rgba(226,232,240,0.4)'; ctx.textAlign = 'left'; ctx.fillText('Stand In for swing meter art', 4, CH - 4);"
+src/ui/SpinBall.tsx,4,comment/reference,// mounts it while a full shot is open or a spun ball flies. A plain canvas (no atlas page): a labelled stand-in until spin ball art exists.
+src/ui/SpinBall.tsx,45,runtime expression/config,"ctx.font = '500 7px system-ui, sans-serif'; ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic'; ctx.fillStyle = 'rgba(226,232,240,0.4)'; ctx.fillText('Stand In for spin ball art', 1, 7);"
+src/ui/Thumb.tsx,53,comment/reference,/** a library sprite's thumbnail fitted in a square of side size (css px); an old building's thumbnail is its new-art stand-in (newart.ts);
+src/ui/tool-tiles.ts,23,comment/reference,// T214: stand-in tiles until GOLF-SPRITES' Build-tool tiles for the pro's office and the teaching hut land
+src/ui/course/BuildingsPanel.tsx,13,comment/reference,/** T214: the pro's office's and the teaching hut's stand-ins (business/art.ts) */
+src/ui/course/BuildingsPanel.tsx,72,comment/reference,"/** T214 (P26 3.1, golf/pros.ts): the pro's office's or a teaching hut's card: its stand-in picture, price and upkeep, how many; picking it arms"
+src/ui/course/PropsPanel.tsx,93,runtime expression/config,"{d.standIn && <div className=""w-full truncate rounded bg-amber-500/15 px-1 text-[12px] leading-tight text-amber-200"" title=""This picture stands in until the real art is drawn"">Stand In for {d.standIn}</div>}"
+src/ui/golf/EventCard.tsx,3,comment/reference,// mayor. The mayor's picture is a labelled stand-in until GOLF-ART-LIST 222 (the town hall and the mayor) is drawn.
+src/ui/golf/EventCard.tsx,7,comment/reference,"/** the mayor's stand-in: a framed figure with the label the owner's rule asks for (""Stand In for <name>"") */"
+src/ui/golf/EventCard.tsx,16,runtime expression/config,"<div className=""relative z-10 w-full bg-amber-500/25 px-0.5 text-center text-[9px] leading-tight text-amber-100"">Stand In for the Mayor</div>"
+src/ui/golf/StaffCard.tsx,2,comment/reference,"// the head pro and the membership secretary; each teaching hut: its teaching pro); a filled row has the person's stand-in picture, name, wage and"
+src/ui/golf/StaffCard.tsx,13,comment/reference,"/** each role's stand-in picture (P26 3.5: the head pro golf_pro_m2, the teaching pro golf_pro_w1, the secretary spec_w_older_cardigan) */"
+src/ui/golf/StaffCard.tsx,15,comment/reference,/** the stand-in's idle frame facing you (the engine's crowd frames: base + (person x directions + row) x frames + frame) */
+src/ui/golf/YouCards.tsx,50,runtime expression/config,"<div className=""mb-1 text-xs text-slate-400"">Your look <span className=""text-slate-500"">(stand-ins until the player looks are made)</span></div>"

@@ -1,0 +1,92 @@
+{
+  "look_id": "spectator:spec_m_dad",
+  "actual_runtime_look": {
+    "id": "spectator:spec_m_dad",
+    "w": 80,
+    "h": 136,
+    "ax": 40,
+    "ay": 131,
+    "m": 1.78,
+    "seat": 0.65
+  },
+  "animation_files_changed": false,
+  "resized": false,
+  "repainted": false,
+  "source_style_changed": false,
+  "source_grid_id": "person:3d:spec_m_dad",
+  "runtime_namespace_differs_from_source_grid": true,
+  "method": "lossless-native-preview-idle-crops",
+  "source": {
+    "path": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\spectators\\spec_m_dad\\preview.png",
+    "sha256": "440e03f1aaa26d30b8e84870f6aed2b264a51ef20f90d940635346b862cea1ba",
+    "bytes": 2101312
+  },
+  "source_grid_metadata": {
+    "path": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\spectators\\spec_m_dad\\sheet.json",
+    "sha256": "7b4112b4fe694f47460530b1ff3f5dad5be7ab9015cdada961b58e48150d8d6d",
+    "bytes": 656
+  },
+  "source_grid": {
+    "columns": 9,
+    "rows": 8,
+    "frame_width": 160,
+    "frame_height": 272
+  },
+  "primary_reference": {
+    "path": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\portraits\\references\\spec_m_dad\\identity-idle-pair.native.png",
+    "sha256": "0d42e3469f58231927c3e8afdff09d537e5b37e2a01ce56be1e67eaac350e19d",
+    "bytes": 49179
+  },
+  "dimensions": [
+    320,
+    272
+  ],
+  "crop_records": [
+    {
+      "direction": "S",
+      "column": 0,
+      "row": 0,
+      "frame": "idle",
+      "source_crop_box": [
+        0,
+        0,
+        160,
+        272
+      ],
+      "dimensions": [
+        160,
+        272
+      ],
+      "native_file": {
+        "path": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\portraits\\references\\spec_m_dad\\idle-S.native.png",
+        "sha256": "e02a9bad92214ab4b52fc869227c7ad8580087f85c3637db4645ee40262b074a",
+        "bytes": 26226
+      },
+      "pixel_sha256": "9044416de55bee0f8b024769389effb5f0e8c753b1dd7d186f20161cfaa17dd4"
+    },
+    {
+      "direction": "SW",
+      "column": 0,
+      "row": 1,
+      "frame": "idle",
+      "source_crop_box": [
+        0,
+        272,
+        160,
+        544
+      ],
+      "dimensions": [
+        160,
+        272
+      ],
+      "native_file": {
+        "path": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\portraits\\references\\spec_m_dad\\idle-SW.native.png",
+        "sha256": "266fa4670a9fc1195bd2a3c68c81e42774043d9f37f5c9c4408ad0941d4fbef2",
+        "bytes": 24160
+      },
+      "pixel_sha256": "a19eadd00b0fbcf175eb3118f85474896059f1292414ae225fe194586e139801"
+    }
+  ],
+  "review_background_and_labels": "Original preview green background and S/SW idle labels are preserved, not new portrait styling.",
+  "resolution_limit": "Native frame width160 pixels; no artificial enlargement or generated face detail was introduced."
+}

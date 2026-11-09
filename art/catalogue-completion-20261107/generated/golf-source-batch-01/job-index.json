@@ -1,0 +1,1347 @@
+{
+  "schema": 1,
+  "date": "2026-11-07",
+  "scope": "Next12 golf-priority exact source-art jobs only; root performs native generation",
+  "jobCount": 12,
+  "referencesVisuallyInspected": 21,
+  "policy": "Source briefs and lossless source copies/crops only. No runtime edits, native generation, tests, imports, builds, servers or commits.",
+  "styleAuthority": {
+    "file": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-01\\style-authority.png",
+    "sha256": "23338f2cf3f635ad4ec1fb18e9084f4e486d449d547bd8d22aecd250601a9db2",
+    "source": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\scenes\\identity-references\\style-authority.png",
+    "operation": "byte-for-byte copy"
+  },
+  "auditInputs": [
+    "art/catalogue-completion-20261107/audit/next-golf-native-sets.json",
+    "art/catalogue-completion-20261107/audit/missing-golf-views.json",
+    "art/catalogue-completion-20261107/audit/catalogue-audit.json"
+  ],
+  "selectionRationale": "Prioritize live event types with unrelated stand-ins, then exact missing practice-net/trolley props. Existing runtime event footprints are retained as facts; missing physical prop dimensions are labelled proposals.",
+  "excludedAlreadyGenerated": [
+    "eight budget/upgraded seating families",
+    "old1950sclubhouse",
+    "four budget1950scabins:shanty-hut,shanty-shed,shanty-ticket-hut,shanty-toilet",
+    "core mowers/player cart/ball picker/maintenance cart/schoolbus",
+    "four later-era house models",
+    "latest modern car native sets",
+    "plants,decals,actors and removed/retired runtime subjects"
+  ],
+  "referenceWarnings": [
+    {
+      "id": "newprop:course-map-stand",
+      "reason": "MISLABELLED: actual image is an ornate round patio table with four chairs and striped umbrella. Excluded from all job generation references; does not depict a map stand."
+    },
+    {
+      "id": "newprop:white-tent-booth",
+      "reason": "MISLABELLED FOR MEDIA USE: canopy shelter contains security scanner arch, inspection table and baggage trays. Security function only; excluded as media-centre architectural identity."
+    },
+    {
+      "id": "newprop:delivery-truck",
+      "reason": "Cream/green modern cab-over refrigerated box truck with roof refrigeration unit, one side cargo door and visible modern rounded cab. Functional vehicle proportions only; change to period1950s/1980s food-truck body, add serving hatch and cooking extractor. Not a food truck as drawn."
+    },
+    {
+      "id": "newprop:broadcast-truck",
+      "reason": "Long cream/green three-axle broadcast truck, roof HVAC/vents, cable reels over cab and equipment doors. Cab styling is later than1985; keep functional equipment layout but use period body in event compound."
+    },
+    {
+      "id": "newprop:satellite-van",
+      "reason": "Cream/green modern panel van with large roof satellite dish, HVAC and antennas. Later-era cab unsuitable for base1985set. Native crop contains a small neighbouring gold foot at its upper edge: ignore fragment; reference is van only."
+    },
+    {
+      "id": "newprop:gate-arch",
+      "reason": "Rope-lashed log arch with crossed-club board, scrap-corrugated side fences, baked brown background and grass base. Reject as architecture/style; only conceptual pedestrian entrance reference for ordinary1950sreplacement."
+    }
+  ],
+  "jobs": [
+    {
+      "jobId": "golf-source-01-01-food-truck",
+      "priority": 1,
+      "status": "brief-ready-for-root-native-generation",
+      "sourceOnly": true,
+      "nativeGeneratedByThisJob": false,
+      "ownerApproved": false,
+      "runtimeIntegrated": false,
+      "action": "New role-specific vehicle design replacing a wrong food-tent stand-in.",
+      "requiresOrdinary1950sBudgetRedesign": true,
+      "functionalIdentity": "A self-propelled catering step van, proposed body5.4m long along localX and2.2m wide along localY, with cab at negativeX, four road wheels, one raised serving hatch/counter on negativeY, a small roof cooking-extraction vent toward the rear positiveX, rear service door at positiveX and plain equipment side at positiveY. Vehicle plus opened0.8m serving hatch fits the exact6x4m event plot. These physical body dimensions are design proposals. Do not draw a tent or ordinary delivery box.",
+      "referenceImages": [
+        {
+          "runtimeSubjectId": "newprop:delivery-truck",
+          "referencePNG": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-01\\references\\delivery-truck.source.png",
+          "referenceRole": "functional/identity reference",
+          "visualNotes": "Cream/green modern cab-over refrigerated box truck with roof refrigeration unit, one side cargo door and visible modern rounded cab. Functional vehicle proportions only; change to period1950s/1980s food-truck body, add serving hatch and cooking extractor. Not a food truck as drawn.",
+          "provenance": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-01\\references\\delivery-truck.provenance.json"
+        },
+        {
+          "runtimeSubjectId": "newprop:green-food-kiosk",
+          "referencePNG": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-01\\references\\green-food-kiosk.source.png",
+          "referenceRole": "functional/identity reference",
+          "visualNotes": "Small green plank counter kiosk with sagging green canvas roof, brass corner balls, display shelves and upright glass drinks fridge. Useful service-counter identity. Remove ornamental gold finials and integrated flower planters; do not reproduce large ripped holes in upgraded tier.",
+          "provenance": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-01\\references\\green-food-kiosk.provenance.json"
+        }
+      ],
+      "conditions": {
+        "budget": {
+          "role": "source art design only; no runtime economy upgrade implied",
+          "brief": "Worn ordinary1950s/1960scream-and-green step van, faded paint and light rust; sound chassis, functional serving hatch. No rope/log/tarp shack attached."
+        },
+        "upgraded": {
+          "role": "source art design only; no runtime economy upgrade implied",
+          "brief": "Well-maintained period1980swhite/green catering step van, clean counter, restrained awning and stainless roof extraction. Same identifiable side/door/wheel layout across its eight views."
+        }
+      },
+      "sourceSheetsPerCondition": [
+        {
+          "kind": "normal",
+          "grid": "2x2",
+          "cellOrder": [
+            [
+              "SE",
+              "SW"
+            ],
+            [
+              "NW",
+              "NE"
+            ]
+          ],
+          "camera": "orthographic30degrees down; true45degreecorner views; two walls equal in each corner view"
+        },
+        {
+          "kind": "yaw8",
+          "grid": "2x2",
+          "cellOrder": [
+            [
+              "N",
+              "E"
+            ],
+            [
+              "S",
+              "W"
+            ]
+          ],
+          "camera": "orthographic30degrees down; each cardinal view turned8degrees, never square-on"
+        }
+      ],
+      "lateAfternoonDaylight": "one sun upper-right; faces toward upper-right lit; shadows lower-left; no night glow",
+      "generationConstraints": [
+        "Same one physical object/layout in all eight cells; doors, windows, serving openings, rear braces, stairs, wheels, dishes and equipment never teleport between sides.",
+        "Empty functional facilities; no people stamped into sprites. Transparent background, ample cell margins, equal scale within each sheet, no labels or gridlines.",
+        "No generic ground plates. Functional hitting mat, vehicle wheels, structure supports and admission hardware are part of their actual objects.",
+        "Use the separate style-authority PNG for painterly material/color style; role references may be photoreal, ornate, mislabeled, modern or shanty and are not style authorities.",
+        "Budget means ordinary worn1950sreal-world construction; upgraded means attractive maintained period facilities. No goblin village, rope-lashed logs, gratuitous torn tarps or gold filigree.",
+        "No captions, brand names or baked score/name/yardage text; scoring and information faces remain blank for data. A simple medical symbol may identify first aid."
+      ],
+      "notACompletenessClaim": "No approval, alias, import, camera calibration, seating readiness or completion of related catalogue IDs is inferred from this source brief.",
+      "runtimeTarget": {
+        "eventTypeId": "foodTruck",
+        "eventName": "Food truck",
+        "currentSpriteSubjectId": "golf:food-tent",
+        "newArtSubjectProposal": "golf:event-food-truck",
+        "newArtSubjectAlreadyRegistered": false,
+        "eventCatalogueSource": "src/game/golf/tents.ts",
+        "standInMappingSource": "src/game/golf/structure-art.ts",
+        "footprintTiles": {
+          "width": 3.0,
+          "depth": 2.0
+        },
+        "footprintMetres": {
+          "width": 6.0,
+          "depth": 4.0
+        },
+        "dimensionsMeaning": "Exact current event placement plot, not measured source sprite architecture. New design must fit plot; no runtime geometry changed.",
+        "currentSpriteBaseBoxesInTiles": [
+          {
+            "hx": 4,
+            "hy": 4,
+            "dx": 0,
+            "dy": 0
+          }
+        ]
+      },
+      "existingFourCorners": {
+        "usableCorrectTargetCornersFound": false,
+        "reason": "Any corners of the current wrong stand-in describe another object and do not count for this target."
+      },
+      "promptCore": "A self-propelled catering step van, proposed body5.4m long along localX and2.2m wide along localY, with cab at negativeX, four road wheels, one raised serving hatch/counter on negativeY, a small roof cooking-extraction vent toward the rear positiveX, rear service door at positiveX and plain equipment side at positiveY. Vehicle plus opened0.8m serving hatch fits the exact6x4m event plot. These physical body dimensions are design proposals. Do not draw a tent or ordinary delivery box. For budget: Worn ordinary1950s/1960scream-and-green step van, faded paint and light rust; sound chassis, functional serving hatch. No rope/log/tarp shack attached. For upgraded: Well-maintained period1980swhite/green catering step van, clean counter, restrained awning and stainless roof extraction. Same identifiable side/door/wheel layout across its eight views. Use only the requested condition for one sheet; do not mix conditions between its four camera cells. Late-afternoon daytime, upper-right sunlight/lower-left shadows. Match painterly style authority, not rejected reference construction."
+    },
+    {
+      "jobId": "golf-source-01-02-tv-camera-tower",
+      "priority": 2,
+      "status": "brief-ready-for-root-native-generation",
+      "sourceOnly": true,
+      "nativeGeneratedByThisJob": false,
+      "ownerApproved": false,
+      "runtimeIntegrated": false,
+      "action": "New actual camera-tower design replacing a water-tower stand-in.",
+      "requiresOrdinary1950sBudgetRedesign": true,
+      "functionalIdentity": "Compact2x2m four-leg braced TV scaffold tower, proposed platform about4m high and one period broadcast camera on a tripod; platform has simple guard rails, internal/face ladder and fixed equipment case. Camera points toward model front. No water tank, gazebo, operator or camera lens changing sides. Height is an art proposal, not accepted runtime measurement.",
+      "referenceImages": [
+        {
+          "runtimeSubjectId": "newprop:camera-tower",
+          "referencePNG": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-01\\references\\camera-tower.source.png",
+          "referenceRole": "functional/identity reference",
+          "visualNotes": "Four-corner scaffold tower, green fabric cladding, ladder on one face, roofless guarded camera platform with broadcast camera and equipment case. Correct role but ornate brass fittings/torn cloth need ordinary practical steel/timber treatment.",
+          "provenance": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-01\\references\\camera-tower.provenance.json"
+        },
+        {
+          "runtimeSubjectId": "newprop:tv-camera",
+          "referencePNG": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-01\\references\\tv-camera.source.png",
+          "referenceRole": "functional/identity reference",
+          "visualNotes": "Large black camera on three-legged tripod with rain cover and cabled pedestal head. Functional camera reference, not complete TV tower. Use period1985broadcast hardware and no visible operator.",
+          "provenance": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-01\\references\\tv-camera.provenance.json"
+        }
+      ],
+      "conditions": {
+        "budget": {
+          "role": "source art design only; no runtime economy upgrade implied",
+          "brief": "Worn painted steel scaffold and plain timber platform, grey fittings, weathered small canvas windscreen. Real1950sbudget construction; no ornate brass balls, ropes or patchwork fortress."
+        },
+        "upgraded": {
+          "role": "source art design only; no runtime economy upgrade implied",
+          "brief": "Clean galvanized modular scaffold, green guardrail skirt and neat equipment case, same functional camera platform and ladder."
+        }
+      },
+      "sourceSheetsPerCondition": [
+        {
+          "kind": "normal",
+          "grid": "2x2",
+          "cellOrder": [
+            [
+              "SE",
+              "SW"
+            ],
+            [
+              "NW",
+              "NE"
+            ]
+          ],
+          "camera": "orthographic30degrees down; true45degreecorner views; two walls equal in each corner view"
+        },
+        {
+          "kind": "yaw8",
+          "grid": "2x2",
+          "cellOrder": [
+            [
+              "N",
+              "E"
+            ],
+            [
+              "S",
+              "W"
+            ]
+          ],
+          "camera": "orthographic30degrees down; each cardinal view turned8degrees, never square-on"
+        }
+      ],
+      "lateAfternoonDaylight": "one sun upper-right; faces toward upper-right lit; shadows lower-left; no night glow",
+      "generationConstraints": [
+        "Same one physical object/layout in all eight cells; doors, windows, serving openings, rear braces, stairs, wheels, dishes and equipment never teleport between sides.",
+        "Empty functional facilities; no people stamped into sprites. Transparent background, ample cell margins, equal scale within each sheet, no labels or gridlines.",
+        "No generic ground plates. Functional hitting mat, vehicle wheels, structure supports and admission hardware are part of their actual objects.",
+        "Use the separate style-authority PNG for painterly material/color style; role references may be photoreal, ornate, mislabeled, modern or shanty and are not style authorities.",
+        "Budget means ordinary worn1950sreal-world construction; upgraded means attractive maintained period facilities. No goblin village, rope-lashed logs, gratuitous torn tarps or gold filigree.",
+        "No captions, brand names or baked score/name/yardage text; scoring and information faces remain blank for data. A simple medical symbol may identify first aid."
+      ],
+      "notACompletenessClaim": "No approval, alias, import, camera calibration, seating readiness or completion of related catalogue IDs is inferred from this source brief.",
+      "runtimeTarget": {
+        "eventTypeId": "tvTower",
+        "eventName": "TV camera tower",
+        "currentSpriteSubjectId": "ref:landmark-water-tower",
+        "newArtSubjectProposal": "golf:event-tv-camera-tower",
+        "newArtSubjectAlreadyRegistered": false,
+        "eventCatalogueSource": "src/game/golf/tents.ts",
+        "standInMappingSource": "src/game/golf/structure-art.ts",
+        "footprintTiles": {
+          "width": 1.0,
+          "depth": 1.0
+        },
+        "footprintMetres": {
+          "width": 2.0,
+          "depth": 2.0
+        },
+        "dimensionsMeaning": "Exact current event placement plot, not measured source sprite architecture. New design must fit plot; no runtime geometry changed."
+      },
+      "existingFourCorners": {
+        "usableCorrectTargetCornersFound": false,
+        "reason": "Any corners of the current wrong stand-in describe another object and do not count for this target."
+      },
+      "promptCore": "Compact2x2m four-leg braced TV scaffold tower, proposed platform about4m high and one period broadcast camera on a tripod; platform has simple guard rails, internal/face ladder and fixed equipment case. Camera points toward model front. No water tank, gazebo, operator or camera lens changing sides. Height is an art proposal, not accepted runtime measurement. For budget: Worn painted steel scaffold and plain timber platform, grey fittings, weathered small canvas windscreen. Real1950sbudget construction; no ornate brass balls, ropes or patchwork fortress. For upgraded: Clean galvanized modular scaffold, green guardrail skirt and neat equipment case, same functional camera platform and ladder. Use only the requested condition for one sheet; do not mix conditions between its four camera cells. Late-afternoon daytime, upper-right sunlight/lower-left shadows. Match painterly style authority, not rejected reference construction."
+    },
+    {
+      "jobId": "golf-source-01-03-broadcast-compound",
+      "priority": 3,
+      "status": "brief-ready-for-root-native-generation",
+      "sourceOnly": true,
+      "nativeGeneratedByThisJob": false,
+      "ownerApproved": false,
+      "runtimeIntegrated": false,
+      "action": "New compound layout replacing a golf-cart garage stand-in.",
+      "requiresOrdinary1950sBudgetRedesign": true,
+      "functionalIdentity": "A30x20m event broadcast compound consisting of one period box broadcast truck, one uplink van with a roof dish, a generator box, cable reels and a small practical equipment workbench. Arrange truck left, van rear-right, generator front-right, with one open service gap at model front; fixed component layout rotates as one object. Separate physical feet/wheels and no painted ground slab. It must read as support vehicles, not a garage.",
+      "referenceImages": [
+        {
+          "runtimeSubjectId": "newprop:broadcast-truck",
+          "referencePNG": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-01\\references\\broadcast-truck.source.png",
+          "referenceRole": "functional/identity reference",
+          "visualNotes": "Long cream/green three-axle broadcast truck, roof HVAC/vents, cable reels over cab and equipment doors. Cab styling is later than1985; keep functional equipment layout but use period body in event compound.",
+          "provenance": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-01\\references\\broadcast-truck.provenance.json"
+        },
+        {
+          "runtimeSubjectId": "newprop:satellite-van",
+          "referencePNG": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-01\\references\\satellite-van.source.png",
+          "referenceRole": "functional/identity reference",
+          "visualNotes": "Cream/green modern panel van with large roof satellite dish, HVAC and antennas. Later-era cab unsuitable for base1985set. Native crop contains a small neighbouring gold foot at its upper edge: ignore fragment; reference is van only.",
+          "provenance": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-01\\references\\satellite-van.provenance.json"
+        }
+      ],
+      "conditions": {
+        "budget": {
+          "role": "source art design only; no runtime economy upgrade implied",
+          "brief": "Tired1950s/1960struck bodies with repainted cream/green panels, repair patches and older cable equipment. Use ordinary working equipment, not fantasy shanties."
+        },
+        "upgraded": {
+          "role": "source art design only; no runtime economy upgrade implied",
+          "brief": "Maintained period1980sbroadcast truck and uplink van with tidy antennas/HVAC and cable boxes. Reject the source modernMercedes-like cabs."
+        }
+      },
+      "sourceSheetsPerCondition": [
+        {
+          "kind": "normal",
+          "grid": "2x2",
+          "cellOrder": [
+            [
+              "SE",
+              "SW"
+            ],
+            [
+              "NW",
+              "NE"
+            ]
+          ],
+          "camera": "orthographic30degrees down; true45degreecorner views; two walls equal in each corner view"
+        },
+        {
+          "kind": "yaw8",
+          "grid": "2x2",
+          "cellOrder": [
+            [
+              "N",
+              "E"
+            ],
+            [
+              "S",
+              "W"
+            ]
+          ],
+          "camera": "orthographic30degrees down; each cardinal view turned8degrees, never square-on"
+        }
+      ],
+      "lateAfternoonDaylight": "one sun upper-right; faces toward upper-right lit; shadows lower-left; no night glow",
+      "generationConstraints": [
+        "Same one physical object/layout in all eight cells; doors, windows, serving openings, rear braces, stairs, wheels, dishes and equipment never teleport between sides.",
+        "Empty functional facilities; no people stamped into sprites. Transparent background, ample cell margins, equal scale within each sheet, no labels or gridlines.",
+        "No generic ground plates. Functional hitting mat, vehicle wheels, structure supports and admission hardware are part of their actual objects.",
+        "Use the separate style-authority PNG for painterly material/color style; role references may be photoreal, ornate, mislabeled, modern or shanty and are not style authorities.",
+        "Budget means ordinary worn1950sreal-world construction; upgraded means attractive maintained period facilities. No goblin village, rope-lashed logs, gratuitous torn tarps or gold filigree.",
+        "No captions, brand names or baked score/name/yardage text; scoring and information faces remain blank for data. A simple medical symbol may identify first aid."
+      ],
+      "notACompletenessClaim": "No approval, alias, import, camera calibration, seating readiness or completion of related catalogue IDs is inferred from this source brief.",
+      "runtimeTarget": {
+        "eventTypeId": "broadcast",
+        "eventName": "Broadcast compound",
+        "currentSpriteSubjectId": "business:golf-cart-garage",
+        "newArtSubjectProposal": "golf:event-broadcast-compound",
+        "newArtSubjectAlreadyRegistered": false,
+        "eventCatalogueSource": "src/game/golf/tents.ts",
+        "standInMappingSource": "src/game/golf/structure-art.ts",
+        "footprintTiles": {
+          "width": 15.0,
+          "depth": 10.0
+        },
+        "footprintMetres": {
+          "width": 30.0,
+          "depth": 20.0
+        },
+        "dimensionsMeaning": "Exact current event placement plot, not measured source sprite architecture. New design must fit plot; no runtime geometry changed.",
+        "currentSpriteBaseBoxesInTiles": [
+          {
+            "hx": 1,
+            "hy": 1,
+            "dx": 0,
+            "dy": 0
+          }
+        ]
+      },
+      "existingFourCorners": {
+        "usableCorrectTargetCornersFound": false,
+        "reason": "Any corners of the current wrong stand-in describe another object and do not count for this target."
+      },
+      "promptCore": "A30x20m event broadcast compound consisting of one period box broadcast truck, one uplink van with a roof dish, a generator box, cable reels and a small practical equipment workbench. Arrange truck left, van rear-right, generator front-right, with one open service gap at model front; fixed component layout rotates as one object. Separate physical feet/wheels and no painted ground slab. It must read as support vehicles, not a garage. For budget: Tired1950s/1960struck bodies with repainted cream/green panels, repair patches and older cable equipment. Use ordinary working equipment, not fantasy shanties. For upgraded: Maintained period1980sbroadcast truck and uplink van with tidy antennas/HVAC and cable boxes. Reject the source modernMercedes-like cabs. Use only the requested condition for one sheet; do not mix conditions between its four camera cells. Late-afternoon daytime, upper-right sunlight/lower-left shadows. Match painterly style authority, not rejected reference construction."
+    },
+    {
+      "jobId": "golf-source-01-04-first-aid-tent",
+      "priority": 4,
+      "status": "brief-ready-for-root-native-generation",
+      "sourceOnly": true,
+      "nativeGeneratedByThisJob": false,
+      "ownerApproved": false,
+      "runtimeIntegrated": false,
+      "action": "Ordinary1950sbudget redesign plus upgraded medical shelter; replace generic backyard camp tent.",
+      "requiresOrdinary1950sBudgetRedesign": true,
+      "functionalIdentity": "A6x6m rectangular first-aid tent, low ridge roof, plain metal or sawn-timber uprights, one broad front opening with tied-back flaps, two simple side ventilation/window panels and closed rear wall with a small service flap. A visible cot, medical cabinet and plain first-aid box establish function where camera permits. Ground-level accessible entrance; no stamped staff, no garden planters.",
+      "referenceImages": [
+        {
+          "runtimeSubjectId": "newprop:medical-tent",
+          "referencePNG": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-01\\references\\medical-tent.source.png",
+          "referenceRole": "functional/identity reference",
+          "visualNotes": "Cream/green pointed marquee, front open flaps, visible cot and medicine cabinet, arched side windows. Gold finials and ornate garden planters are not required; use ordinary rectangular first-aid shelter. Maintains medical function.",
+          "provenance": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-01\\references\\medical-tent.provenance.json"
+        },
+        {
+          "runtimeSubjectId": "newprop:shanty-medical-tent",
+          "referencePNG": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-01\\references\\shanty-medical-tent.source.png",
+          "referenceRole": "functional/identity reference",
+          "visualNotes": "Blue tarp/log-and-rope fantasy shack containing medical cot, bottles and first-aid box. Reject architectural treatment; retain only practical medical equipment/function in a worn1950sreal-world shelter.",
+          "provenance": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-01\\references\\shanty-medical-tent.provenance.json"
+        }
+      ],
+      "conditions": {
+        "budget": {
+          "role": "source art design only; no runtime economy upgrade implied",
+          "brief": "Faded tan1950smilitary/community medical canvas, patched seams and ordinary hardware, clean enough to function. No blue plastic tarps, rope-lashed logs or goblin hut."
+        },
+        "upgraded": {
+          "role": "source art design only; no runtime economy upgrade implied",
+          "brief": "Clean cream canvas medical marquee with green trim and simple medical symbol; same functional entrances, vents and equipment locations within this condition."
+        }
+      },
+      "sourceSheetsPerCondition": [
+        {
+          "kind": "normal",
+          "grid": "2x2",
+          "cellOrder": [
+            [
+              "SE",
+              "SW"
+            ],
+            [
+              "NW",
+              "NE"
+            ]
+          ],
+          "camera": "orthographic30degrees down; true45degreecorner views; two walls equal in each corner view"
+        },
+        {
+          "kind": "yaw8",
+          "grid": "2x2",
+          "cellOrder": [
+            [
+              "N",
+              "E"
+            ],
+            [
+              "S",
+              "W"
+            ]
+          ],
+          "camera": "orthographic30degrees down; each cardinal view turned8degrees, never square-on"
+        }
+      ],
+      "lateAfternoonDaylight": "one sun upper-right; faces toward upper-right lit; shadows lower-left; no night glow",
+      "generationConstraints": [
+        "Same one physical object/layout in all eight cells; doors, windows, serving openings, rear braces, stairs, wheels, dishes and equipment never teleport between sides.",
+        "Empty functional facilities; no people stamped into sprites. Transparent background, ample cell margins, equal scale within each sheet, no labels or gridlines.",
+        "No generic ground plates. Functional hitting mat, vehicle wheels, structure supports and admission hardware are part of their actual objects.",
+        "Use the separate style-authority PNG for painterly material/color style; role references may be photoreal, ornate, mislabeled, modern or shanty and are not style authorities.",
+        "Budget means ordinary worn1950sreal-world construction; upgraded means attractive maintained period facilities. No goblin village, rope-lashed logs, gratuitous torn tarps or gold filigree.",
+        "No captions, brand names or baked score/name/yardage text; scoring and information faces remain blank for data. A simple medical symbol may identify first aid."
+      ],
+      "notACompletenessClaim": "No approval, alias, import, camera calibration, seating readiness or completion of related catalogue IDs is inferred from this source brief.",
+      "runtimeTarget": {
+        "eventTypeId": "firstAid",
+        "eventName": "First aid tent",
+        "currentSpriteSubjectId": "expansion:backyard-tent",
+        "newArtSubjectProposal": "golf:event-first-aid-tent",
+        "newArtSubjectAlreadyRegistered": false,
+        "eventCatalogueSource": "src/game/golf/tents.ts",
+        "standInMappingSource": "src/game/golf/structure-art.ts",
+        "footprintTiles": {
+          "width": 3.0,
+          "depth": 3.0
+        },
+        "footprintMetres": {
+          "width": 6.0,
+          "depth": 6.0
+        },
+        "dimensionsMeaning": "Exact current event placement plot, not measured source sprite architecture. New design must fit plot; no runtime geometry changed."
+      },
+      "existingFourCorners": {
+        "usableCorrectTargetCornersFound": false,
+        "reason": "Any corners of the current wrong stand-in describe another object and do not count for this target."
+      },
+      "promptCore": "A6x6m rectangular first-aid tent, low ridge roof, plain metal or sawn-timber uprights, one broad front opening with tied-back flaps, two simple side ventilation/window panels and closed rear wall with a small service flap. A visible cot, medical cabinet and plain first-aid box establish function where camera permits. Ground-level accessible entrance; no stamped staff, no garden planters. For budget: Faded tan1950smilitary/community medical canvas, patched seams and ordinary hardware, clean enough to function. No blue plastic tarps, rope-lashed logs or goblin hut. For upgraded: Clean cream canvas medical marquee with green trim and simple medical symbol; same functional entrances, vents and equipment locations within this condition. Use only the requested condition for one sheet; do not mix conditions between its four camera cells. Late-afternoon daytime, upper-right sunlight/lower-left shadows. Match painterly style authority, not rejected reference construction."
+    },
+    {
+      "jobId": "golf-source-01-05-info-will-call-booth",
+      "priority": 5,
+      "status": "brief-ready-for-root-native-generation",
+      "sourceOnly": true,
+      "nativeGeneratedByThisJob": false,
+      "ownerApproved": false,
+      "runtimeIntegrated": false,
+      "action": "Distinct info/will-call booth replacing a parking attendant kiosk; do not regenerate the completed budget ticket cabin.",
+      "requiresOrdinary1950sBudgetRedesign": true,
+      "functionalIdentity": "A4x4m information and will-call booth with two front counter windows, shallow practical roof, one paper-ticket pickup shelf, folded-map rack on the left counter and a blank information panel on the right side; one rear staff door. It serves spectators on foot, not parking-car drivers. No plants/queues/people baked in.",
+      "referenceImages": [
+        {
+          "runtimeSubjectId": "newprop:ticket-booth",
+          "referencePNG": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-01\\references\\ticket-booth.source.png",
+          "referenceRole": "functional/identity reference",
+          "visualNotes": "Green clapboard ticket office with two front service windows, hipped roof/cupola and queue posts. Correct service-counter function; info/will-call redesign uses paper lists/maps, plain practical roof and rear staff door. Do not duplicate already-generated budget ticket cabin.",
+          "provenance": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-01\\references\\ticket-booth.provenance.json"
+        },
+        {
+          "runtimeSubjectId": "newprop:course-map-board",
+          "referencePNG": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-01\\references\\course-map-board.source.png",
+          "referenceRole": "functional/identity reference",
+          "visualNotes": "Actual roofed green information/map board with course plan, information symbol, lanterns and flower planters. Map/data display reference only; omit planters, ground plinth and night lamp glow from info booth scene.",
+          "provenance": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-01\\references\\course-map-board.provenance.json"
+        }
+      ],
+      "conditions": {
+        "budget": {
+          "role": "source art design only; no runtime economy upgrade implied",
+          "brief": "Weathered but ordinary1950spainted-board booth, modest corrugated roof, paper lists and simple shuttered windows. No cupola/gold finials or fantasy construction."
+        },
+        "upgraded": {
+          "role": "source art design only; no runtime economy upgrade implied",
+          "brief": "Fresh green/cream spectator service booth with durable counters and neat map/ticket storage. Preserve clear paper service function rather than modern touchscreen kiosks."
+        }
+      },
+      "sourceSheetsPerCondition": [
+        {
+          "kind": "normal",
+          "grid": "2x2",
+          "cellOrder": [
+            [
+              "SE",
+              "SW"
+            ],
+            [
+              "NW",
+              "NE"
+            ]
+          ],
+          "camera": "orthographic30degrees down; true45degreecorner views; two walls equal in each corner view"
+        },
+        {
+          "kind": "yaw8",
+          "grid": "2x2",
+          "cellOrder": [
+            [
+              "N",
+              "E"
+            ],
+            [
+              "S",
+              "W"
+            ]
+          ],
+          "camera": "orthographic30degrees down; each cardinal view turned8degrees, never square-on"
+        }
+      ],
+      "lateAfternoonDaylight": "one sun upper-right; faces toward upper-right lit; shadows lower-left; no night glow",
+      "generationConstraints": [
+        "Same one physical object/layout in all eight cells; doors, windows, serving openings, rear braces, stairs, wheels, dishes and equipment never teleport between sides.",
+        "Empty functional facilities; no people stamped into sprites. Transparent background, ample cell margins, equal scale within each sheet, no labels or gridlines.",
+        "No generic ground plates. Functional hitting mat, vehicle wheels, structure supports and admission hardware are part of their actual objects.",
+        "Use the separate style-authority PNG for painterly material/color style; role references may be photoreal, ornate, mislabeled, modern or shanty and are not style authorities.",
+        "Budget means ordinary worn1950sreal-world construction; upgraded means attractive maintained period facilities. No goblin village, rope-lashed logs, gratuitous torn tarps or gold filigree.",
+        "No captions, brand names or baked score/name/yardage text; scoring and information faces remain blank for data. A simple medical symbol may identify first aid."
+      ],
+      "notACompletenessClaim": "No approval, alias, import, camera calibration, seating readiness or completion of related catalogue IDs is inferred from this source brief.",
+      "runtimeTarget": {
+        "eventTypeId": "info",
+        "eventName": "Info and will-call booth",
+        "currentSpriteSubjectId": "ce:parking-kiosk",
+        "newArtSubjectProposal": "golf:event-info-will-call-booth",
+        "newArtSubjectAlreadyRegistered": false,
+        "eventCatalogueSource": "src/game/golf/tents.ts",
+        "standInMappingSource": "src/game/golf/structure-art.ts",
+        "footprintTiles": {
+          "width": 2.0,
+          "depth": 2.0
+        },
+        "footprintMetres": {
+          "width": 4.0,
+          "depth": 4.0
+        },
+        "dimensionsMeaning": "Exact current event placement plot, not measured source sprite architecture. New design must fit plot; no runtime geometry changed."
+      },
+      "existingFourCorners": {
+        "usableCorrectTargetCornersFound": false,
+        "reason": "Any corners of the current wrong stand-in describe another object and do not count for this target."
+      },
+      "promptCore": "A4x4m information and will-call booth with two front counter windows, shallow practical roof, one paper-ticket pickup shelf, folded-map rack on the left counter and a blank information panel on the right side; one rear staff door. It serves spectators on foot, not parking-car drivers. No plants/queues/people baked in. For budget: Weathered but ordinary1950spainted-board booth, modest corrugated roof, paper lists and simple shuttered windows. No cupola/gold finials or fantasy construction. For upgraded: Fresh green/cream spectator service booth with durable counters and neat map/ticket storage. Preserve clear paper service function rather than modern touchscreen kiosks. Use only the requested condition for one sheet; do not mix conditions between its four camera cells. Late-afternoon daytime, upper-right sunlight/lower-left shadows. Match painterly style authority, not rejected reference construction."
+    },
+    {
+      "jobId": "golf-source-01-06-four-lane-entrance",
+      "priority": 6,
+      "status": "brief-ready-for-root-native-generation",
+      "sourceOnly": true,
+      "nativeGeneratedByThisJob": false,
+      "ownerApproved": false,
+      "runtimeIntegrated": false,
+      "action": "New pedestrian admission structure replacing a single vehicle parking boom.",
+      "requiresOrdinary1950sBudgetRedesign": true,
+      "functionalIdentity": "A12x6m nominal event entrance arrangement with exactly four pedestrian admission lanes across the width: three simple manual turnstiles and one visibly wider accessible swing gate, supported by low dividers and a restrained blank overhead sign frame. Keep queues/ground surface outside the artwork. Front and back must remain genuinely different.",
+      "referenceImages": [
+        {
+          "runtimeSubjectId": "newprop:shanty-turnstiles",
+          "referencePNG": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-01\\references\\shanty-turnstiles.source.png",
+          "referenceRole": "functional/identity reference",
+          "visualNotes": "Four primitive timber admission lanes with tarps, ropes and arrow boards. Preserve four-lane function, replace fantasy build with practical manual turnstiles plus one wide accessible gate. Arrows/text are not identity-critical.",
+          "provenance": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-01\\references\\shanty-turnstiles.provenance.json"
+        },
+        {
+          "runtimeSubjectId": "newprop:gate-arch",
+          "referencePNG": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-01\\references\\gate-arch.source.png",
+          "referenceRole": "functional/identity reference",
+          "visualNotes": "Rope-lashed log arch with crossed-club board, scrap-corrugated side fences, baked brown background and grass base. Reject as architecture/style; only conceptual pedestrian entrance reference for ordinary1950sreplacement.",
+          "provenance": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-01\\references\\gate-arch.provenance.json"
+        }
+      ],
+      "conditions": {
+        "budget": {
+          "role": "source art design only; no runtime economy upgrade implied",
+          "brief": "Faded1950ssawn timber/painted steel ticket gates, ordinary bolts and worn handrails. No log arch, ropes, scrap-metal fortress, blue tarp or brown background."
+        },
+        "upgraded": {
+          "role": "source art design only; no runtime economy upgrade implied",
+          "brief": "Neat period modular metal turnstiles, clean green/cream sign frame and wide accessible gate. Still four physical lanes; not a highway toll plaza."
+        }
+      },
+      "sourceSheetsPerCondition": [
+        {
+          "kind": "normal",
+          "grid": "2x2",
+          "cellOrder": [
+            [
+              "SE",
+              "SW"
+            ],
+            [
+              "NW",
+              "NE"
+            ]
+          ],
+          "camera": "orthographic30degrees down; true45degreecorner views; two walls equal in each corner view"
+        },
+        {
+          "kind": "yaw8",
+          "grid": "2x2",
+          "cellOrder": [
+            [
+              "N",
+              "E"
+            ],
+            [
+              "S",
+              "W"
+            ]
+          ],
+          "camera": "orthographic30degrees down; each cardinal view turned8degrees, never square-on"
+        }
+      ],
+      "lateAfternoonDaylight": "one sun upper-right; faces toward upper-right lit; shadows lower-left; no night glow",
+      "generationConstraints": [
+        "Same one physical object/layout in all eight cells; doors, windows, serving openings, rear braces, stairs, wheels, dishes and equipment never teleport between sides.",
+        "Empty functional facilities; no people stamped into sprites. Transparent background, ample cell margins, equal scale within each sheet, no labels or gridlines.",
+        "No generic ground plates. Functional hitting mat, vehicle wheels, structure supports and admission hardware are part of their actual objects.",
+        "Use the separate style-authority PNG for painterly material/color style; role references may be photoreal, ornate, mislabeled, modern or shanty and are not style authorities.",
+        "Budget means ordinary worn1950sreal-world construction; upgraded means attractive maintained period facilities. No goblin village, rope-lashed logs, gratuitous torn tarps or gold filigree.",
+        "No captions, brand names or baked score/name/yardage text; scoring and information faces remain blank for data. A simple medical symbol may identify first aid."
+      ],
+      "notACompletenessClaim": "No approval, alias, import, camera calibration, seating readiness or completion of related catalogue IDs is inferred from this source brief.",
+      "runtimeTarget": {
+        "eventTypeId": "gate",
+        "eventName": "Entrance gate",
+        "currentSpriteSubjectId": "ce:parking-entry",
+        "newArtSubjectProposal": "golf:event-four-lane-entrance",
+        "newArtSubjectAlreadyRegistered": false,
+        "eventCatalogueSource": "src/game/golf/tents.ts",
+        "standInMappingSource": "src/game/golf/structure-art.ts",
+        "footprintTiles": {
+          "width": 6.0,
+          "depth": 3.0
+        },
+        "footprintMetres": {
+          "width": 12.0,
+          "depth": 6.0
+        },
+        "dimensionsMeaning": "Exact current event placement plot, not measured source sprite architecture. New design must fit plot; no runtime geometry changed."
+      },
+      "existingFourCorners": {
+        "usableCorrectTargetCornersFound": false,
+        "reason": "Any corners of the current wrong stand-in describe another object and do not count for this target."
+      },
+      "promptCore": "A12x6m nominal event entrance arrangement with exactly four pedestrian admission lanes across the width: three simple manual turnstiles and one visibly wider accessible swing gate, supported by low dividers and a restrained blank overhead sign frame. Keep queues/ground surface outside the artwork. Front and back must remain genuinely different. For budget: Faded1950ssawn timber/painted steel ticket gates, ordinary bolts and worn handrails. No log arch, ropes, scrap-metal fortress, blue tarp or brown background. For upgraded: Neat period modular metal turnstiles, clean green/cream sign frame and wide accessible gate. Still four physical lanes; not a highway toll plaza. Use only the requested condition for one sheet; do not mix conditions between its four camera cells. Late-afternoon daytime, upper-right sunlight/lower-left shadows. Match painterly style authority, not rejected reference construction."
+    },
+    {
+      "jobId": "golf-source-01-07-media-centre",
+      "priority": 7,
+      "status": "brief-ready-for-root-native-generation",
+      "sourceOnly": true,
+      "nativeGeneratedByThisJob": false,
+      "ownerApproved": false,
+      "runtimeIntegrated": false,
+      "action": "New purpose-built media centre replacing the clubhouse stand-in.",
+      "requiresOrdinary1950sBudgetRedesign": true,
+      "functionalIdentity": "A24x16m low single-storey modular press centre: plain joined prefab units under one shallow gabled/corrugated roof, double central front entrance, three window groups on each side of the entrance, rear service door, two rear vents and two small roof antenna masts. Practical press-work building, not grand clubhouse or tiny microphone shack. No media staff/vehicles baked in.",
+      "referenceImages": [
+        {
+          "runtimeSubjectId": "newprop:scaffold-booth",
+          "referencePNG": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-01\\references\\scaffold-booth.source.png",
+          "referenceRole": "functional/identity reference",
+          "visualNotes": "Primitive timber/tarp/corrugated booth with microphone board and modern laptop on desk. Media-work function only. Reject shack construction and laptop for1985; use modular press building with paper/CRT-era equipment if visible.",
+          "provenance": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-01\\references\\scaffold-booth.provenance.json"
+        }
+      ],
+      "conditions": {
+        "budget": {
+          "role": "source art design only; no runtime economy upgrade implied",
+          "brief": "Older1950scommunity-event prefab: faded cream boards, patched corrugated roof and basic windows; structurally ordinary and believable. Source shack is function-only reference; reject its laptop/log/tarp architecture."
+        },
+        "upgraded": {
+          "role": "source art design only; no runtime economy upgrade implied",
+          "brief": "Clean maintained1980sprefab press centre with green trim, neat windows, proper entrance canopy and antennas. No futuristic glazed office or luxury mansion."
+        }
+      },
+      "sourceSheetsPerCondition": [
+        {
+          "kind": "normal",
+          "grid": "2x2",
+          "cellOrder": [
+            [
+              "SE",
+              "SW"
+            ],
+            [
+              "NW",
+              "NE"
+            ]
+          ],
+          "camera": "orthographic30degrees down; true45degreecorner views; two walls equal in each corner view"
+        },
+        {
+          "kind": "yaw8",
+          "grid": "2x2",
+          "cellOrder": [
+            [
+              "N",
+              "E"
+            ],
+            [
+              "S",
+              "W"
+            ]
+          ],
+          "camera": "orthographic30degrees down; each cardinal view turned8degrees, never square-on"
+        }
+      ],
+      "lateAfternoonDaylight": "one sun upper-right; faces toward upper-right lit; shadows lower-left; no night glow",
+      "generationConstraints": [
+        "Same one physical object/layout in all eight cells; doors, windows, serving openings, rear braces, stairs, wheels, dishes and equipment never teleport between sides.",
+        "Empty functional facilities; no people stamped into sprites. Transparent background, ample cell margins, equal scale within each sheet, no labels or gridlines.",
+        "No generic ground plates. Functional hitting mat, vehicle wheels, structure supports and admission hardware are part of their actual objects.",
+        "Use the separate style-authority PNG for painterly material/color style; role references may be photoreal, ornate, mislabeled, modern or shanty and are not style authorities.",
+        "Budget means ordinary worn1950sreal-world construction; upgraded means attractive maintained period facilities. No goblin village, rope-lashed logs, gratuitous torn tarps or gold filigree.",
+        "No captions, brand names or baked score/name/yardage text; scoring and information faces remain blank for data. A simple medical symbol may identify first aid."
+      ],
+      "notACompletenessClaim": "No approval, alias, import, camera calibration, seating readiness or completion of related catalogue IDs is inferred from this source brief.",
+      "runtimeTarget": {
+        "eventTypeId": "media",
+        "eventName": "Media centre",
+        "currentSpriteSubjectId": "business:golf-clubhouse",
+        "newArtSubjectProposal": "golf:event-media-centre",
+        "newArtSubjectAlreadyRegistered": false,
+        "eventCatalogueSource": "src/game/golf/tents.ts",
+        "standInMappingSource": "src/game/golf/structure-art.ts",
+        "footprintTiles": {
+          "width": 12.0,
+          "depth": 8.0
+        },
+        "footprintMetres": {
+          "width": 24.0,
+          "depth": 16.0
+        },
+        "dimensionsMeaning": "Exact current event placement plot, not measured source sprite architecture. New design must fit plot; no runtime geometry changed.",
+        "currentSpriteBaseBoxesInTiles": [
+          {
+            "hx": 1,
+            "hy": 1,
+            "dx": 0,
+            "dy": 0
+          }
+        ]
+      },
+      "existingFourCorners": {
+        "usableCorrectTargetCornersFound": false,
+        "reason": "Any corners of the current wrong stand-in describe another object and do not count for this target."
+      },
+      "promptCore": "A24x16m low single-storey modular press centre: plain joined prefab units under one shallow gabled/corrugated roof, double central front entrance, three window groups on each side of the entrance, rear service door, two rear vents and two small roof antenna masts. Practical press-work building, not grand clubhouse or tiny microphone shack. No media staff/vehicles baked in. For budget: Older1950scommunity-event prefab: faded cream boards, patched corrugated roof and basic windows; structurally ordinary and believable. Source shack is function-only reference; reject its laptop/log/tarp architecture. For upgraded: Clean maintained1980sprefab press centre with green trim, neat windows, proper entrance canopy and antennas. No futuristic glazed office or luxury mansion. Use only the requested condition for one sheet; do not mix conditions between its four camera cells. Late-afternoon daytime, upper-right sunlight/lower-left shadows. Match painterly style authority, not rejected reference construction."
+    },
+    {
+      "jobId": "golf-source-01-08-hole-scoreboard",
+      "priority": 8,
+      "status": "brief-ready-for-root-native-generation",
+      "sourceOnly": true,
+      "nativeGeneratedByThisJob": false,
+      "ownerApproved": false,
+      "runtimeIntegrated": false,
+      "action": "New correct hole score display replacing a fishing chalkboard.",
+      "requiresOrdinary1950sBudgetRedesign": false,
+      "functionalIdentity": "A compact2x2m footprint hole scoreboard on two plain uprights with rear diagonal supports; one blank green/cream face subdivided into score/name slat rows, about2m high as a proposed art size. A scoreboard, not a course map or baked hole12yardage marker. Rear view has slat backs/braces and no duplicated scoring face.",
+      "referenceImages": [
+        {
+          "runtimeSubjectId": "newprop:leaderboard",
+          "referencePNG": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-01\\references\\leaderboard.source.png",
+          "referenceRole": "functional/identity reference",
+          "visualNotes": "Green/cream multi-hole scoreboard with clock, score rows and support legs. Correct scoreboard function but many baked numbers and ornate scrollwork. Secondary small-board reference; new faces blank for game data. Native crop contains detached neighbour gold fragment below.",
+          "provenance": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-01\\references\\leaderboard.provenance.json"
+        },
+        {
+          "runtimeSubjectId": "golf:leaderboard",
+          "referencePNG": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-01\\references\\golf-leaderboard.source.png",
+          "referenceRole": "functional/identity reference",
+          "visualNotes": "Large blank green scoring grid on braced timber supports, rear/service walkway, right-side staircase, three-part pitched shingle rain cap and two green flags; lamps currently glow. Good exact subject reference; future sheets are late-afternoon with lamps off.",
+          "provenance": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-01\\references\\golf-leaderboard.provenance.json"
+        }
+      ],
+      "conditions": {
+        "budget": {
+          "role": "source art design only; no runtime economy upgrade implied",
+          "brief": "Old1950spainted timber uprights and worn chalk/slat board; keep supports simple and practical."
+        },
+        "upgraded": {
+          "role": "source art design only; no runtime economy upgrade implied",
+          "brief": "Clean green metal/timber frame and crisp blank removable score slats; same role, readable simple silhouette without ornate scrollwork."
+        }
+      },
+      "sourceSheetsPerCondition": [
+        {
+          "kind": "normal",
+          "grid": "2x2",
+          "cellOrder": [
+            [
+              "SE",
+              "SW"
+            ],
+            [
+              "NW",
+              "NE"
+            ]
+          ],
+          "camera": "orthographic30degrees down; true45degreecorner views; two walls equal in each corner view"
+        },
+        {
+          "kind": "yaw8",
+          "grid": "2x2",
+          "cellOrder": [
+            [
+              "N",
+              "E"
+            ],
+            [
+              "S",
+              "W"
+            ]
+          ],
+          "camera": "orthographic30degrees down; each cardinal view turned8degrees, never square-on"
+        }
+      ],
+      "lateAfternoonDaylight": "one sun upper-right; faces toward upper-right lit; shadows lower-left; no night glow",
+      "generationConstraints": [
+        "Same one physical object/layout in all eight cells; doors, windows, serving openings, rear braces, stairs, wheels, dishes and equipment never teleport between sides.",
+        "Empty functional facilities; no people stamped into sprites. Transparent background, ample cell margins, equal scale within each sheet, no labels or gridlines.",
+        "No generic ground plates. Functional hitting mat, vehicle wheels, structure supports and admission hardware are part of their actual objects.",
+        "Use the separate style-authority PNG for painterly material/color style; role references may be photoreal, ornate, mislabeled, modern or shanty and are not style authorities.",
+        "Budget means ordinary worn1950sreal-world construction; upgraded means attractive maintained period facilities. No goblin village, rope-lashed logs, gratuitous torn tarps or gold filigree.",
+        "No captions, brand names or baked score/name/yardage text; scoring and information faces remain blank for data. A simple medical symbol may identify first aid."
+      ],
+      "notACompletenessClaim": "No approval, alias, import, camera calibration, seating readiness or completion of related catalogue IDs is inferred from this source brief.",
+      "runtimeTarget": {
+        "eventTypeId": "holeBoard",
+        "eventName": "Hole scoreboard",
+        "currentSpriteSubjectId": "poi:fishing-board",
+        "newArtSubjectProposal": "golf:event-hole-scoreboard",
+        "newArtSubjectAlreadyRegistered": false,
+        "eventCatalogueSource": "src/game/golf/tents.ts",
+        "standInMappingSource": "src/game/golf/structure-art.ts",
+        "footprintTiles": {
+          "width": 1.0,
+          "depth": 1.0
+        },
+        "footprintMetres": {
+          "width": 2.0,
+          "depth": 2.0
+        },
+        "dimensionsMeaning": "Exact current event placement plot, not measured source sprite architecture. New design must fit plot; no runtime geometry changed."
+      },
+      "existingFourCorners": {
+        "usableCorrectTargetCornersFound": false,
+        "reason": "Any corners of the current wrong stand-in describe another object and do not count for this target."
+      },
+      "promptCore": "A compact2x2m footprint hole scoreboard on two plain uprights with rear diagonal supports; one blank green/cream face subdivided into score/name slat rows, about2m high as a proposed art size. A scoreboard, not a course map or baked hole12yardage marker. Rear view has slat backs/braces and no duplicated scoring face. For budget: Old1950spainted timber uprights and worn chalk/slat board; keep supports simple and practical. For upgraded: Clean green metal/timber frame and crisp blank removable score slats; same role, readable simple silhouette without ornate scrollwork. Use only the requested condition for one sheet; do not mix conditions between its four camera cells. Late-afternoon daytime, upper-right sunlight/lower-left shadows. Match painterly style authority, not rejected reference construction."
+    },
+    {
+      "jobId": "golf-source-01-09-main-leaderboard",
+      "priority": 9,
+      "status": "brief-ready-for-root-native-generation",
+      "sourceOnly": true,
+      "nativeGeneratedByThisJob": false,
+      "ownerApproved": false,
+      "runtimeIntegrated": false,
+      "action": "Maintain exact leaderboard subject; complete a fresh daytime full eight-view set using old corners as references only.",
+      "requiresOrdinary1950sBudgetRedesign": false,
+      "functionalIdentity": "Large freestanding blank green leaderboard with white score grid, braced timber frame, a narrow service platform with railings, exactly one fixed right-hand staircase, three-part shingle rain cap and two fixed green flags. Target existing8x4m event plot. Rear must show structural braces and slat backs; stair stays on the same physical end. Lamps off in daylight.",
+      "referenceImages": [
+        {
+          "runtimeSubjectId": "golf:leaderboard",
+          "referencePNG": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-01\\references\\golf-leaderboard.source.png",
+          "referenceRole": "functional/identity reference",
+          "visualNotes": "Large blank green scoring grid on braced timber supports, rear/service walkway, right-side staircase, three-part pitched shingle rain cap and two green flags; lamps currently glow. Good exact subject reference; future sheets are late-afternoon with lamps off.",
+          "provenance": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-01\\references\\golf-leaderboard.provenance.json"
+        }
+      ],
+      "conditions": {
+        "budget": {
+          "role": "source art design only; no runtime economy upgrade implied",
+          "brief": "Weathered ordinary timber/painted-green scoreboard and service platform, worn but sound staircase and plain roof cap. Avoid elaborate fantasy trim."
+        },
+        "upgraded": {
+          "role": "source art design only; no runtime economy upgrade implied",
+          "brief": "Maintained green/cream board with clean grid, repaired timber, neat safety railings and the same basic platform/stair/flag identity."
+        }
+      },
+      "sourceSheetsPerCondition": [
+        {
+          "kind": "normal",
+          "grid": "2x2",
+          "cellOrder": [
+            [
+              "SE",
+              "SW"
+            ],
+            [
+              "NW",
+              "NE"
+            ]
+          ],
+          "camera": "orthographic30degrees down; true45degreecorner views; two walls equal in each corner view"
+        },
+        {
+          "kind": "yaw8",
+          "grid": "2x2",
+          "cellOrder": [
+            [
+              "N",
+              "E"
+            ],
+            [
+              "S",
+              "W"
+            ]
+          ],
+          "camera": "orthographic30degrees down; each cardinal view turned8degrees, never square-on"
+        }
+      ],
+      "lateAfternoonDaylight": "one sun upper-right; faces toward upper-right lit; shadows lower-left; no night glow",
+      "generationConstraints": [
+        "Same one physical object/layout in all eight cells; doors, windows, serving openings, rear braces, stairs, wheels, dishes and equipment never teleport between sides.",
+        "Empty functional facilities; no people stamped into sprites. Transparent background, ample cell margins, equal scale within each sheet, no labels or gridlines.",
+        "No generic ground plates. Functional hitting mat, vehicle wheels, structure supports and admission hardware are part of their actual objects.",
+        "Use the separate style-authority PNG for painterly material/color style; role references may be photoreal, ornate, mislabeled, modern or shanty and are not style authorities.",
+        "Budget means ordinary worn1950sreal-world construction; upgraded means attractive maintained period facilities. No goblin village, rope-lashed logs, gratuitous torn tarps or gold filigree.",
+        "No captions, brand names or baked score/name/yardage text; scoring and information faces remain blank for data. A simple medical symbol may identify first aid."
+      ],
+      "notACompletenessClaim": "No approval, alias, import, camera calibration, seating readiness or completion of related catalogue IDs is inferred from this source brief.",
+      "runtimeTarget": {
+        "eventTypeId": "leaderboard",
+        "eventName": "Main leaderboard",
+        "currentSpriteSubjectId": "golf:leaderboard",
+        "newArtSubjectProposal": "golf:event-main-leaderboard",
+        "newArtSubjectAlreadyRegistered": false,
+        "eventCatalogueSource": "src/game/golf/tents.ts",
+        "standInMappingSource": "src/game/golf/structure-art.ts",
+        "footprintTiles": {
+          "width": 4.0,
+          "depth": 2.0
+        },
+        "footprintMetres": {
+          "width": 8.0,
+          "depth": 4.0
+        },
+        "dimensionsMeaning": "Exact current event placement plot, not measured source sprite architecture. New design must fit plot; no runtime geometry changed.",
+        "currentSpriteBaseBoxesInTiles": [
+          {
+            "hx": 4,
+            "hy": 1.5,
+            "dx": 0,
+            "dy": 0
+          }
+        ]
+      },
+      "existingFourCorners": {
+        "references": {
+          "NE": {
+            "referencePNG": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-01\\references\\golf-leaderboard-NE.png",
+            "source": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\building-views\\golf-leaderboard\\NE.png",
+            "sha256": "7637d784f6a8a9215a3d9f875a64407f3b090fbd7db539e723015ec7b832d914",
+            "visualInspection": "inspected: correct leaderboard subject, front/back service structure shown, but warm/night lamp glow and nontransparent-looking brown background; reference-only, not approved runtime art",
+            "approvalClaimed": false,
+            "usableForIdentityReference": true,
+            "usableAsFinishedDaytimeView": false
+          },
+          "SE": {
+            "referencePNG": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-01\\references\\golf-leaderboard-SE.png",
+            "source": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\building-views\\golf-leaderboard\\SE.png",
+            "sha256": "f293c7bb71886a259047b2d972bedb470ba98547ad406921f6b962cc84205668",
+            "visualInspection": "inspected: correct leaderboard subject, front/back service structure shown, but warm/night lamp glow and nontransparent-looking brown background; reference-only, not approved runtime art",
+            "approvalClaimed": false,
+            "usableForIdentityReference": true,
+            "usableAsFinishedDaytimeView": false
+          },
+          "SW": {
+            "referencePNG": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-01\\references\\golf-leaderboard-SW.png",
+            "source": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\building-views\\golf-leaderboard\\SW.png",
+            "sha256": "20e9872b07ddfd305a0b8ef49a6cf61dbe6e16afb1bd9c60133c15a00df3df12",
+            "visualInspection": "inspected: correct leaderboard subject, front/back service structure shown, but warm/night lamp glow and nontransparent-looking brown background; reference-only, not approved runtime art",
+            "approvalClaimed": false,
+            "usableForIdentityReference": true,
+            "usableAsFinishedDaytimeView": false
+          },
+          "NW": {
+            "referencePNG": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-01\\references\\golf-leaderboard-NW.png",
+            "source": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\building-views\\golf-leaderboard\\NW.png",
+            "sha256": "a71489c64a04849166b8b528e06dcb6a0a854e6f13a61c85686be9bc0db7a9a0",
+            "visualInspection": "inspected: correct leaderboard subject, front/back service structure shown, but warm/night lamp glow and nontransparent-looking brown background; reference-only, not approved runtime art",
+            "approvalClaimed": false,
+            "usableForIdentityReference": true,
+            "usableAsFinishedDaytimeView": false
+          }
+        },
+        "usableForIdentityReference": true,
+        "usableAsFinalDaytimeNative": false,
+        "reason": "Inspected old corners show subject and front/back, but warm/night lighting and brown backdrops; staircase/platform consistency still needs careful shared-world review. Regenerate full8 rather than declaring existing corners release-ready."
+      },
+      "promptCore": "Large freestanding blank green leaderboard with white score grid, braced timber frame, a narrow service platform with railings, exactly one fixed right-hand staircase, three-part shingle rain cap and two fixed green flags. Target existing8x4m event plot. Rear must show structural braces and slat backs; stair stays on the same physical end. Lamps off in daylight. For budget: Weathered ordinary timber/painted-green scoreboard and service platform, worn but sound staircase and plain roof cap. Avoid elaborate fantasy trim. For upgraded: Maintained green/cream board with clean grid, repaired timber, neat safety railings and the same basic platform/stair/flag identity. Use only the requested condition for one sheet; do not mix conditions between its four camera cells. Late-afternoon daytime, upper-right sunlight/lower-left shadows. Match painterly style authority, not rejected reference construction."
+    },
+    {
+      "jobId": "golf-source-01-10-concession-kiosk",
+      "priority": 10,
+      "status": "brief-ready-for-root-native-generation",
+      "sourceOnly": true,
+      "nativeGeneratedByThisJob": false,
+      "ownerApproved": false,
+      "runtimeIntegrated": false,
+      "action": "Maintain green concession function at correct event scale; replace fishing-rental kiosk stand-in.",
+      "requiresOrdinary1950sBudgetRedesign": false,
+      "functionalIdentity": "A4x4m nominal snack-and-water concession kiosk: one wide front counter, display shelves, right-side drinks fridge, rear staff door and small plain canopy roof. Keep its long serving face and fridge on fixed sides; no vehicle wheels, no rental fishing tackle, no built-in flower planters or external terrain plate.",
+      "referenceImages": [
+        {
+          "runtimeSubjectId": "newprop:green-food-kiosk",
+          "referencePNG": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-01\\references\\green-food-kiosk.source.png",
+          "referenceRole": "functional/identity reference",
+          "visualNotes": "Small green plank counter kiosk with sagging green canvas roof, brass corner balls, display shelves and upright glass drinks fridge. Useful service-counter identity. Remove ornamental gold finials and integrated flower planters; do not reproduce large ripped holes in upgraded tier.",
+          "provenance": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-01\\references\\green-food-kiosk.provenance.json"
+        }
+      ],
+      "conditions": {
+        "budget": {
+          "role": "source art design only; no runtime economy upgrade implied",
+          "brief": "Weathered1950sgreen-painted timber stall and faded intact canvas/corrugated cover; modest wear, ordinary fittings and useful counter. Remove huge ripped roof holes and gold ornamental balls."
+        },
+        "upgraded": {
+          "role": "source art design only; no runtime economy upgrade implied",
+          "brief": "Clean green/cream kiosk with neat canopy, full snack shelves and the same fridge/service-door arrangement. Period1985stock, no touchscreen vending wall."
+        }
+      },
+      "sourceSheetsPerCondition": [
+        {
+          "kind": "normal",
+          "grid": "2x2",
+          "cellOrder": [
+            [
+              "SE",
+              "SW"
+            ],
+            [
+              "NW",
+              "NE"
+            ]
+          ],
+          "camera": "orthographic30degrees down; true45degreecorner views; two walls equal in each corner view"
+        },
+        {
+          "kind": "yaw8",
+          "grid": "2x2",
+          "cellOrder": [
+            [
+              "N",
+              "E"
+            ],
+            [
+              "S",
+              "W"
+            ]
+          ],
+          "camera": "orthographic30degrees down; each cardinal view turned8degrees, never square-on"
+        }
+      ],
+      "lateAfternoonDaylight": "one sun upper-right; faces toward upper-right lit; shadows lower-left; no night glow",
+      "generationConstraints": [
+        "Same one physical object/layout in all eight cells; doors, windows, serving openings, rear braces, stairs, wheels, dishes and equipment never teleport between sides.",
+        "Empty functional facilities; no people stamped into sprites. Transparent background, ample cell margins, equal scale within each sheet, no labels or gridlines.",
+        "No generic ground plates. Functional hitting mat, vehicle wheels, structure supports and admission hardware are part of their actual objects.",
+        "Use the separate style-authority PNG for painterly material/color style; role references may be photoreal, ornate, mislabeled, modern or shanty and are not style authorities.",
+        "Budget means ordinary worn1950sreal-world construction; upgraded means attractive maintained period facilities. No goblin village, rope-lashed logs, gratuitous torn tarps or gold filigree.",
+        "No captions, brand names or baked score/name/yardage text; scoring and information faces remain blank for data. A simple medical symbol may identify first aid."
+      ],
+      "notACompletenessClaim": "No approval, alias, import, camera calibration, seating readiness or completion of related catalogue IDs is inferred from this source brief.",
+      "runtimeTarget": {
+        "eventTypeId": "kiosk",
+        "eventName": "Concession kiosk",
+        "currentSpriteSubjectId": "business:fishing-rental-kiosk",
+        "newArtSubjectProposal": "golf:event-concession-kiosk",
+        "newArtSubjectAlreadyRegistered": false,
+        "eventCatalogueSource": "src/game/golf/tents.ts",
+        "standInMappingSource": "src/game/golf/structure-art.ts",
+        "footprintTiles": {
+          "width": 2.0,
+          "depth": 2.0
+        },
+        "footprintMetres": {
+          "width": 4.0,
+          "depth": 4.0
+        },
+        "dimensionsMeaning": "Exact current event placement plot, not measured source sprite architecture. New design must fit plot; no runtime geometry changed.",
+        "currentSpriteBaseBoxesInTiles": [
+          {
+            "hx": 1,
+            "hy": 1,
+            "dx": 0,
+            "dy": 0
+          }
+        ]
+      },
+      "existingFourCorners": {
+        "usableCorrectTargetCornersFound": false,
+        "reason": "Any corners of the current wrong stand-in describe another object and do not count for this target."
+      },
+      "promptCore": "A4x4m nominal snack-and-water concession kiosk: one wide front counter, display shelves, right-side drinks fridge, rear staff door and small plain canopy roof. Keep its long serving face and fridge on fixed sides; no vehicle wheels, no rental fishing tackle, no built-in flower planters or external terrain plate. For budget: Weathered1950sgreen-painted timber stall and faded intact canvas/corrugated cover; modest wear, ordinary fittings and useful counter. Remove huge ripped roof holes and gold ornamental balls. For upgraded: Clean green/cream kiosk with neat canopy, full snack shelves and the same fridge/service-door arrangement. Period1985stock, no touchscreen vending wall. Use only the requested condition for one sheet; do not mix conditions between its four camera cells. Late-afternoon daytime, upper-right sunlight/lower-left shadows. Match painterly style authority, not rejected reference construction."
+    },
+    {
+      "jobId": "golf-source-01-11-practice-net",
+      "priority": 11,
+      "status": "brief-ready-for-root-native-generation",
+      "sourceOnly": true,
+      "nativeGeneratedByThisJob": false,
+      "ownerApproved": false,
+      "runtimeIntegrated": false,
+      "action": "Maintain exact existing practice-net subject; generate missing independent views.",
+      "requiresOrdinary1950sBudgetRedesign": false,
+      "functionalIdentity": "Green tubular golf hitting cage with open front, netted left/right/back/top, diagonally braced posts and an internal rectangular hitting mat with a tee. Proposed physical net3m wide x3.5m deep x3m high, fitting a4x4m nominal base collision box before contextual scaling. The opening and tee face the same model front in every camera. Transparent mesh remains mesh, never an opaque shed wall.",
+      "referenceImages": [
+        {
+          "runtimeSubjectId": "business:golf-practice-net",
+          "referencePNG": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-01\\references\\golf-practice-net.source.png",
+          "referenceRole": "functional/identity reference",
+          "visualNotes": "Standalone square green tubular hitting cage, rear/side/roof netting, open front, internal green hitting mat and tee. Preserve open side and real net transparency across all views; mat is equipment, not a generic terrain plate.",
+          "provenance": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-01\\references\\golf-practice-net.provenance.json"
+        }
+      ],
+      "conditions": {
+        "budget": {
+          "role": "source art design only; no runtime economy upgrade implied",
+          "brief": "Optional later variant: older but sound green steel frame, worn mat and mended net; no ripped holes that defeat ball containment."
+        },
+        "upgraded": {
+          "role": "source art design only; no runtime economy upgrade implied",
+          "brief": "Initial identity-preserving set: clean green frame, real mesh, deep-green mat and small tee. No golfer, bag or ball-picker vehicle."
+        }
+      },
+      "sourceSheetsPerCondition": [
+        {
+          "kind": "normal",
+          "grid": "2x2",
+          "cellOrder": [
+            [
+              "SE",
+              "SW"
+            ],
+            [
+              "NW",
+              "NE"
+            ]
+          ],
+          "camera": "orthographic30degrees down; true45degreecorner views; two walls equal in each corner view"
+        },
+        {
+          "kind": "yaw8",
+          "grid": "2x2",
+          "cellOrder": [
+            [
+              "N",
+              "E"
+            ],
+            [
+              "S",
+              "W"
+            ]
+          ],
+          "camera": "orthographic30degrees down; each cardinal view turned8degrees, never square-on"
+        }
+      ],
+      "lateAfternoonDaylight": "one sun upper-right; faces toward upper-right lit; shadows lower-left; no night glow",
+      "generationConstraints": [
+        "Same one physical object/layout in all eight cells; doors, windows, serving openings, rear braces, stairs, wheels, dishes and equipment never teleport between sides.",
+        "Empty functional facilities; no people stamped into sprites. Transparent background, ample cell margins, equal scale within each sheet, no labels or gridlines.",
+        "No generic ground plates. Functional hitting mat, vehicle wheels, structure supports and admission hardware are part of their actual objects.",
+        "Use the separate style-authority PNG for painterly material/color style; role references may be photoreal, ornate, mislabeled, modern or shanty and are not style authorities.",
+        "Budget means ordinary worn1950sreal-world construction; upgraded means attractive maintained period facilities. No goblin village, rope-lashed logs, gratuitous torn tarps or gold filigree.",
+        "No captions, brand names or baked score/name/yardage text; scoring and information faces remain blank for data. A simple medical symbol may identify first aid."
+      ],
+      "notACompletenessClaim": "No approval, alias, import, camera calibration, seating readiness or completion of related catalogue IDs is inferred from this source brief.",
+      "runtimeTarget": {
+        "runtimeSubjectId": "business:golf-practice-net",
+        "name": "golf practice net",
+        "librarySource": "src/game/business-library.ts",
+        "baseBoxesInTiles": [
+          {
+            "hx": 1,
+            "hy": 1,
+            "dx": 0,
+            "dy": 0
+          }
+        ],
+        "baseBoxMetres": {
+          "width": 4,
+          "depth": 4
+        },
+        "dimensionsMeaning": "Generic base collision box only, not authored physical object measurement; placement/studio scale can change it. Proposed real object dimensions are explicit in functionalIdentity.",
+        "sourceDisplayPixels": {
+          "width": 508,
+          "height": 462
+        }
+      },
+      "initialGenerationCondition": "upgraded identity-preserving set; budget optional later",
+      "existingFourCorners": {
+        "usableCorrectTargetCornersFound": false,
+        "reason": "Catalogue audit has no independent normal corner candidates for this exact subject."
+      },
+      "promptCore": "Green tubular golf hitting cage with open front, netted left/right/back/top, diagonally braced posts and an internal rectangular hitting mat with a tee. Proposed physical net3m wide x3.5m deep x3m high, fitting a4x4m nominal base collision box before contextual scaling. The opening and tee face the same model front in every camera. Transparent mesh remains mesh, never an opaque shed wall. For budget: Optional later variant: older but sound green steel frame, worn mat and mended net; no ripped holes that defeat ball containment. For upgraded: Initial identity-preserving set: clean green frame, real mesh, deep-green mat and small tee. No golfer, bag or ball-picker vehicle. Use only the requested condition for one sheet; do not mix conditions between its four camera cells. Late-afternoon daytime, upper-right sunlight/lower-left shadows. Match painterly style authority, not rejected reference construction."
+    },
+    {
+      "jobId": "golf-source-01-12-bag-trolley",
+      "priority": 12,
+      "status": "brief-ready-for-root-native-generation",
+      "sourceOnly": true,
+      "nativeGeneratedByThisJob": false,
+      "ownerApproved": false,
+      "runtimeIntegrated": false,
+      "action": "Maintain exact existing brown-bag manual trolley subject; generate missing independent views.",
+      "requiresOrdinary1950sBudgetRedesign": false,
+      "functionalIdentity": "One brown leather golf bag strapped to a black two-wheel manual pull trolley, curved upper handle, lower metal foot and the same protruding club/headcover grouping. Proposed real object about0.65m wide x1.1m long x1.3m high including clubs; existing4x4m dummy library box is not a physical trolley measurement. No electric cart, canopy or person.",
+      "referenceImages": [
+        {
+          "runtimeSubjectId": "business:golf-bag-trolley",
+          "referencePNG": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-01\\references\\golf-bag-trolley.source.png",
+          "referenceRole": "functional/identity reference",
+          "visualNotes": "Brown leather golf bag carrying clubs, strapped onto a black manual two-wheel pull trolley with curved handle and metal lower foot. Preserve bag/club/handle/wheel assembly, no motor or seat.",
+          "provenance": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-01\\references\\golf-bag-trolley.provenance.json"
+        }
+      ],
+      "conditions": {
+        "budget": {
+          "role": "source art design only; no runtime economy upgrade implied",
+          "brief": "Optional later variant: worn brown leather, scuffed metal and intact straps/wheels, ordinary working equipment."
+        },
+        "upgraded": {
+          "role": "source art design only; no runtime economy upgrade implied",
+          "brief": "Initial identity-preserving set: cared-for brown leather and black trolley with matching clubs. Do not replace with a different bag color or three-wheel motorized design."
+        }
+      },
+      "sourceSheetsPerCondition": [
+        {
+          "kind": "normal",
+          "grid": "2x2",
+          "cellOrder": [
+            [
+              "SE",
+              "SW"
+            ],
+            [
+              "NW",
+              "NE"
+            ]
+          ],
+          "camera": "orthographic30degrees down; true45degreecorner views; two walls equal in each corner view"
+        },
+        {
+          "kind": "yaw8",
+          "grid": "2x2",
+          "cellOrder": [
+            [
+              "N",
+              "E"
+            ],
+            [
+              "S",
+              "W"
+            ]
+          ],
+          "camera": "orthographic30degrees down; each cardinal view turned8degrees, never square-on"
+        }
+      ],
+      "lateAfternoonDaylight": "one sun upper-right; faces toward upper-right lit; shadows lower-left; no night glow",
+      "generationConstraints": [
+        "Same one physical object/layout in all eight cells; doors, windows, serving openings, rear braces, stairs, wheels, dishes and equipment never teleport between sides.",
+        "Empty functional facilities; no people stamped into sprites. Transparent background, ample cell margins, equal scale within each sheet, no labels or gridlines.",
+        "No generic ground plates. Functional hitting mat, vehicle wheels, structure supports and admission hardware are part of their actual objects.",
+        "Use the separate style-authority PNG for painterly material/color style; role references may be photoreal, ornate, mislabeled, modern or shanty and are not style authorities.",
+        "Budget means ordinary worn1950sreal-world construction; upgraded means attractive maintained period facilities. No goblin village, rope-lashed logs, gratuitous torn tarps or gold filigree.",
+        "No captions, brand names or baked score/name/yardage text; scoring and information faces remain blank for data. A simple medical symbol may identify first aid."
+      ],
+      "notACompletenessClaim": "No approval, alias, import, camera calibration, seating readiness or completion of related catalogue IDs is inferred from this source brief.",
+      "runtimeTarget": {
+        "runtimeSubjectId": "business:golf-bag-trolley",
+        "name": "golf bag trolley",
+        "librarySource": "src/game/business-library.ts",
+        "baseBoxesInTiles": [
+          {
+            "hx": 1,
+            "hy": 1,
+            "dx": 0,
+            "dy": 0
+          }
+        ],
+        "baseBoxMetres": {
+          "width": 4,
+          "depth": 4
+        },
+        "dimensionsMeaning": "Generic base collision box only, not authored physical object measurement; placement/studio scale can change it. Proposed real object dimensions are explicit in functionalIdentity.",
+        "sourceDisplayPixels": {
+          "width": 362,
+          "height": 480
+        }
+      },
+      "initialGenerationCondition": "upgraded identity-preserving set; budget optional later",
+      "existingFourCorners": {
+        "usableCorrectTargetCornersFound": false,
+        "reason": "Catalogue audit has no independent normal corner candidates for this exact subject."
+      },
+      "promptCore": "One brown leather golf bag strapped to a black two-wheel manual pull trolley, curved upper handle, lower metal foot and the same protruding club/headcover grouping. Proposed real object about0.65m wide x1.1m long x1.3m high including clubs; existing4x4m dummy library box is not a physical trolley measurement. No electric cart, canopy or person. For budget: Optional later variant: worn brown leather, scuffed metal and intact straps/wheels, ordinary working equipment. For upgraded: Initial identity-preserving set: cared-for brown leather and black trolley with matching clubs. Do not replace with a different bag color or three-wheel motorized design. Use only the requested condition for one sheet; do not mix conditions between its four camera cells. Late-afternoon daytime, upper-right sunlight/lower-left shadows. Match painterly style authority, not rejected reference construction."
+    }
+  ]
+}

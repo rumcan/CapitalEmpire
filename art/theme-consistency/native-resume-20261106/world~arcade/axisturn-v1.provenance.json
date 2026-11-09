@@ -1,0 +1,214 @@
+{
+  "id": "world~arcade",
+  "kind": "axisturn",
+  "version": 1,
+  "generator": "native imagegen",
+  "imported_utc": "2026-11-06T19:33:51.129706+00:00",
+  "source": {
+    "path": "C:\\Users\\RAMPAGE\\.codex\\generated_images\\01a1b1fd-39ec-7220-8f11-86e4448833ea\\exec-ff7a3edf-fbc0-4e14-b3b8-ce6cafc77e9e.png",
+    "sha256": "fabb92ed5efdcefb5e430a2b0036c82cd7ea84bfc3c84cf1104640a0b04b470e",
+    "bytes": 1462903
+  },
+  "raw": {
+    "path": "E:\\Repos\\CapitalEmpire\\.claude\\worktrees\\art-repaint-20261106\\art\\theme-consistency\\native-resume-20261106\\world~arcade\\axisturn-v1.png",
+    "sha256": "fabb92ed5efdcefb5e430a2b0036c82cd7ea84bfc3c84cf1104640a0b04b470e",
+    "bytes": 1462903
+  },
+  "exact_prompt": {
+    "path": "E:\\Repos\\CapitalEmpire\\.claude\\worktrees\\art-repaint-20261106\\art\\theme-consistency\\native-resume-20261106\\world~arcade\\axisturn-v1.prompt.txt",
+    "sha256": "82e69537398b941052a9a8ede8eb81ccd6d1f14a19477b2cee640d4747f83b6c",
+    "bytes": 2501
+  },
+  "queue": {
+    "path": "D:\\AI\\chatgpt-bridge\\queue-axisturn.json",
+    "sha256": "e536657d44bf355c7f620799660b0df1dc684a67da41e96aaaf62fe2998feb44",
+    "bytes": 12837
+  },
+  "references": [
+    {
+      "path": "E:\\Repos\\CapitalEmpire\\.claude\\worktrees\\art-repaint-20261106\\art\\theme-consistency\\native-resume-20261106\\world~arcade\\corners-v2.png",
+      "sha256": "144579a2e4a4b847b0058651c5dec21f839d581378d3695bac074cf7bccc2949",
+      "bytes": 1928335
+    },
+    {
+      "path": "D:\\AI\\chatgpt-bridge\\guides\\world~arcade-axisturn.png",
+      "sha256": "9b1a147b38fab33b124cbf6f4dc95eff56884f4712f526ad3dc08e4c111fa33d",
+      "bytes": 763861
+    }
+  ],
+  "original_queue_references": [
+    {
+      "path": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\theme-consistency\\exports\\buildings\\world-arcade.native.png",
+      "sha256": "35b2168b719017937f4992ccbefa761237b571d564f9201b0b34e8a9bd0b9dfe",
+      "bytes": 330599
+    },
+    {
+      "path": "D:\\AI\\chatgpt-bridge\\guides\\world~arcade-axisturn.png",
+      "sha256": "9b1a147b38fab33b124cbf6f4dc95eff56884f4712f526ad3dc08e4c111fa33d",
+      "bytes": 763861
+    }
+  ],
+  "cell_order": [
+    [
+      "N",
+      "E"
+    ],
+    [
+      "S",
+      "W"
+    ]
+  ],
+  "validation": {
+    "mode": "RGBA",
+    "dimensions": [
+      1254,
+      1254
+    ],
+    "split_x": 627,
+    "split_y": 627,
+    "cells": [
+      {
+        "view": "N",
+        "cell_box": [
+          0,
+          0,
+          627,
+          627
+        ],
+        "subject_bbox": [
+          25,
+          137,
+          589,
+          475
+        ],
+        "transparent_fraction": 0.6044021173711428,
+        "margins_px": [
+          25,
+          137,
+          38,
+          152
+        ]
+      },
+      {
+        "view": "E",
+        "cell_box": [
+          627,
+          0,
+          1254,
+          627
+        ],
+        "subject_bbox": [
+          129,
+          60,
+          515,
+          556
+        ],
+        "transparent_fraction": 0.6250670899373997,
+        "margins_px": [
+          129,
+          60,
+          112,
+          71
+        ]
+      },
+      {
+        "view": "S",
+        "cell_box": [
+          0,
+          627,
+          627,
+          1254
+        ],
+        "subject_bbox": [
+          35,
+          88,
+          627,
+          444
+        ],
+        "transparent_fraction": 0.5369484316852738,
+        "margins_px": [
+          35,
+          88,
+          0,
+          183
+        ]
+      },
+      {
+        "view": "W",
+        "cell_box": [
+          627,
+          627,
+          1254,
+          1254
+        ],
+        "subject_bbox": [
+          0,
+          64,
+          506,
+          473
+        ],
+        "transparent_fraction": 0.6276463959667183,
+        "margins_px": [
+          0,
+          64,
+          121,
+          154
+        ]
+      }
+    ],
+    "cell_differences": [
+      {
+        "views": [
+          "N",
+          "E"
+        ],
+        "mean_rgb_difference": 48.655517578125
+      },
+      {
+        "views": [
+          "N",
+          "S"
+        ],
+        "mean_rgb_difference": 53.975504557291664
+      },
+      {
+        "views": [
+          "N",
+          "W"
+        ],
+        "mean_rgb_difference": 42.003824869791664
+      },
+      {
+        "views": [
+          "E",
+          "S"
+        ],
+        "mean_rgb_difference": 48.5888671875
+      },
+      {
+        "views": [
+          "E",
+          "W"
+        ],
+        "mean_rgb_difference": 53.400065104166664
+      },
+      {
+        "views": [
+          "S",
+          "W"
+        ],
+        "mean_rgb_difference": 58.562662760416664
+      }
+    ],
+    "errors": [
+      "S: visible subject touches a cell boundary (margins [35, 88, 0, 183]).",
+      "W: visible subject touches a cell boundary (margins [0, 64, 121, 154])."
+    ],
+    "warnings": [],
+    "visual_review": "Required: automatic checks cannot approve style, geometry, lighting, or fidelity."
+  },
+  "status": "rejected-validation",
+  "owner_approved": false,
+  "runtime_integrated": false,
+  "all_generated_views": true
+}

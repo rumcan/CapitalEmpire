@@ -1,0 +1,15 @@
+{
+  "key": "town-school-shuttle-bus",
+  "source": "C:/Users/RAMPAGE/.codex/generated_images/01a1b1fd-39ec-7220-8f11-86e4448833ea/exec-d8313c6e-ed53-4486-a5a9-62851fe39640.png",
+  "target": "generated/vehicles/town-school-shuttle-bus/traffic8-v1.png",
+  "prompt": "Generate a wide4-column x2-row transparent sprite atlas containing EIGHT genuinely different directions of ONE identical emptygolf maintenance vehicle. Reference1 defines the subject/model; any tiny reference is just structural identity, reconstruct clean higher detail. Preserve the same mechanical layout in all views. Fixed orthographic camera30degrees down, turn ONLY the vehicle about vertical axis, no perspective lens, consistent wheelbase/body/paint/wheel sizes at all headings. Cell order by where the NOSE POINTS ON SCREEN: top row LOWER LEFT, DOWN, LOWER RIGHT, RIGHT; bottom row UPPER RIGHT, UP, UPPER LEFT, LEFT. Front in the first three cells, rear in bottom first three, true opposite left/right profiles at end of rows. Rear has rear glass/tailgate or boot and RED tail lenses; front has grille and headlamps; side profiles must face opposite ways. Reconstruct all faces independently, no mirrored light/shadow or same front pasted at rear. All eight pictures must be the SAME vehicle identity. Detailed illustrated hand-painted game materials, daylight from SCREEN UPPER RIGHT, shadows LOWER LEFT in all eight.1985 golf-course setting, period-appropriate machinery. No occupants, no brands/logos, no words, captions, grids, frames, road, parking bay, buildings or other cars. No plants. Fully opaque objects on genuinely transparent zero-alpha background, no haze or background wash. All eight complete vehicles centred within their own cells with generous margins, same physical scale, clean readable silhouettes.\nVehicle identity: The EXACT conventional yellow schoolbus in reference1: long rectangular passenger body with black window band and rubrails, yellow bonnet/front engine, black chassis, one FRONT folding passenger door on the correct RIGHT side, opposite side stop-paddle, two large rear emergency doors/windows as appropriate. Keep its body length, axle positions, number of passenger windows and side asymmetry identical between headings. Real rear view is flat with red lenses/emergency exit, never a second bonnet. Generic SCHOOL BUS wording optional; no other text, no brand, no people.",
+  "references": [
+    "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/theme-consistency/exports/cars/world-schoolbus.native.png"
+  ],
+  "replacement_target": "world:schoolbus",
+  "era": "1980s",
+  "status": "native source candidate; alpha/actual directions/camera/identity QA pending",
+  "runtime_imported": false,
+  "sha256": "4827ab92de2dff23cc409d8204241fe8cf28d72280d5ebaca65b08c3091886cb",
+  "native_bytes_preserved": true
+}

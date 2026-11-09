@@ -1,0 +1,67 @@
+{
+  "jobId": "golf-source-02-12-course-map-board",
+  "runtimeSubjectId": "newprop:course-map-board",
+  "runtimeName": "Course map board",
+  "displayName": "Course map board",
+  "sourceReferencePNG": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-02\\references\\course-map-board.source.png",
+  "sourceProvenance": {
+    "id": "newprop:course-map-board",
+    "name": "Course map board",
+    "referencePNG": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-02\\references\\course-map-board.source.png",
+    "originalSheet": "E:\\Repos\\CapitalEmpire\\All Generated Images\\exec-3a7ff403-4e2d-49a3-8154-0835d67ade80.png",
+    "copiedOriginalSheet": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-01\\original-sheets\\exec-3a7ff403-4e2d-49a3-8154-0835d67ade80.png",
+    "sourceSheetSHA256": "8d3a7260b7ec4b810ea709271c0f84e3103ac1bb25d769e9ad9361c46b02c2bb",
+    "referenceSHA256": "68399b1762dc542bae34d9b6d217a8e42759cc6011cd16f6f0c958c76c03ebd1",
+    "sourcePixelRectXYWH": [
+      49,
+      18,
+      520,
+      629
+    ],
+    "originalCellLabel": "top left",
+    "referenceSize": [
+      520,
+      629
+    ],
+    "operation": "native RGBA pixel crop only; no resize, recolour, alpha cleanup or synthesis",
+    "sourceContainsFourDifferentSubjectsNotRotations": true,
+    "cutOffAccordingToSourceMetadata": false,
+    "visualInspection": "inspected",
+    "visualNotes": "Confirmed roofed course-map information board, lanterns and planter/paving extras. The board itself is the desired physical prop.",
+    "sourceOnlyNotReleaseProof": true,
+    "sourceCopyOperation": "byte-for-byte copy of prior native-RGBA crop; original source/provenance retained",
+    "sourcePriorProvenance": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-01\\references\\course-map-board.provenance.json"
+  },
+  "sourceDimensions": {
+    "runtimeBaseBoxesInTiles": null,
+    "manifestHalfExtentsMetresFirstGuess": null,
+    "sourceCropPixels": [
+      520,
+      629
+    ],
+    "newPhysicalDimensionsProposal": "Proposed board2.1m wide x0.65m deep x2.2m high; source-design proposal.",
+    "notRuntimeBalanceOrGeometryChange": true
+  },
+  "functionalBrief": "One freestanding roofed course information/map board with green timber surround, broad cream map panel, shallow pitched roof and information symbol above. Preserve the actual board and back structure; switch lanterns off for daylight. Omit the integrated flower planters and paving slab, retaining only structural supports.",
+  "ordinary1950sRedesignRequired": false,
+  "conditionBrief": "Identity-preserving course map furniture, practical green/cream wood and dark shingle rain cap. This is the actual map board, unlike the mislabelled course-map-stand patio table.",
+  "visualNotes": "Confirmed roofed course-map information board, lanterns and planter/paving extras. The board itself is the desired physical prop.",
+  "existingNormalFourReferences": {
+    "candidateCount": 0,
+    "usableCount": 0,
+    "paths": [],
+    "note": "Only one original exact subject is available; original source sheet contains four different props, not four angles."
+  },
+  "existingYaw8Candidates": 0,
+  "historicallyApprovedEightSet": false,
+  "generationPlan": {
+    "normal": "2x2 SE/SW then NW/NE, orthographic30degrees down, equal45degreecorner walls",
+    "yaw8": "2x2 N/E then S/W, each cardinal physically turned8degrees, never square-on",
+    "conditions": "Generate one requested condition consistently through both sheets; source-only variants do not imply runtime upgrades."
+  },
+  "style": "Same painterly game style as style-authority.png, late-afternoon daylight, one sun upper-right, shadows lower-left, transparent background. No people, captions, brands, gridlines or generic ground plates. Functional ramps, buckets, mounting feet and attached panels remain part of their object.",
+  "approvalClaimed": false,
+  "runtimeIntegrated": false,
+  "nativeGeneratedHere": false,
+  "scopeNote": "Exact existing baseline subject only. Eight new view images still require generation and review; no related IDs, aliases or completion are inferred."
+}

@@ -1,0 +1,107 @@
+{
+ "schema": 1,
+ "projection": "normal+yaw8",
+ "version": 1,
+ "review": "candidate",
+ "footprintMetres": {
+  "width": 7,
+  "depth": 2.5
+ },
+ "pixelsPerMetre": 72.44,
+ "pixelCalibrationSpace": "orthographic-camera",
+ "baselineScale": 1,
+ "views": {
+  "normalNE": {
+   "anchor": {
+    "x": 305.5,
+    "y": 392.3
+   },
+   "headingDegrees": 0,
+   "pixelsPerMetre": 72.44,
+   "calibrationEvidence": "Silhouette fit, 2026-11-07: physical body 7 x 2.5 m, height 3 m. Scale per sheet (and per full-size override file) from the alpha bbox height (>128) = ground diamond + 0.866 x height at the view's heading (rotation-invariant); width ratio checked per view. Anchor = projected body centre from the bbox bottom/centre."
+  },
+  "normalSE": {
+   "anchor": {
+    "x": 335,
+    "y": 430.3
+   },
+   "headingDegrees": 270,
+   "pixelsPerMetre": 72.44,
+   "calibrationEvidence": "Silhouette fit, 2026-11-07: physical body 7 x 2.5 m, height 3 m. Scale per sheet (and per full-size override file) from the alpha bbox height (>128) = ground diamond + 0.866 x height at the view's heading (rotation-invariant); width ratio checked per view. Anchor = projected body centre from the bbox bottom/centre."
+  },
+  "normalSW": {
+   "anchor": {
+    "x": 288.5,
+    "y": 407.3
+   },
+   "headingDegrees": 180,
+   "pixelsPerMetre": 72.44,
+   "calibrationEvidence": "Silhouette fit, 2026-11-07: physical body 7 x 2.5 m, height 3 m. Scale per sheet (and per full-size override file) from the alpha bbox height (>128) = ground diamond + 0.866 x height at the view's heading (rotation-invariant); width ratio checked per view. Anchor = projected body centre from the bbox bottom/centre."
+  },
+  "normalNW": {
+   "anchor": {
+    "x": 342,
+    "y": 357.3
+   },
+   "headingDegrees": 90,
+   "pixelsPerMetre": 72.44,
+   "calibrationEvidence": "Silhouette fit, 2026-11-07: physical body 7 x 2.5 m, height 3 m. Scale per sheet (and per full-size override file) from the alpha bbox height (>128) = ground diamond + 0.866 x height at the view's heading (rotation-invariant); width ratio checked per view. Anchor = projected body centre from the bbox bottom/centre."
+  },
+  "yaw8N": {
+   "anchor": {
+    "x": 353.5,
+    "y": 443.4
+   },
+   "headingDegrees": 323,
+   "pixelsPerMetre": 93.45,
+   "calibrationEvidence": "Silhouette fit, 2026-11-07: physical body 7 x 2.5 m, height 3 m. Scale per sheet (and per full-size override file) from the alpha bbox height (>128) = ground diamond + 0.866 x height at the view's heading (rotation-invariant); width ratio checked per view. Anchor = projected body centre from the bbox bottom/centre."
+  },
+  "yaw8E": {
+   "anchor": {
+    "x": 327,
+    "y": 416.6
+   },
+   "headingDegrees": 233,
+   "pixelsPerMetre": 74.38,
+   "calibrationEvidence": "Silhouette fit, 2026-11-07: physical body 7 x 2.5 m, height 3 m. Scale per sheet (and per full-size override file) from the alpha bbox height (>128) = ground diamond + 0.866 x height at the view's heading (rotation-invariant); width ratio checked per view. Anchor = projected body centre from the bbox bottom/centre."
+  },
+  "yaw8S": {
+   "anchor": {
+    "x": 351,
+    "y": 410.4
+   },
+   "headingDegrees": 143,
+   "pixelsPerMetre": 91.14,
+   "calibrationEvidence": "Silhouette fit, 2026-11-07: physical body 7 x 2.5 m, height 3 m. Scale per sheet (and per full-size override file) from the alpha bbox height (>128) = ground diamond + 0.866 x height at the view's heading (rotation-invariant); width ratio checked per view. Anchor = projected body centre from the bbox bottom/centre."
+  },
+  "yaw8W": {
+   "anchor": {
+    "x": 313,
+    "y": 384.5
+   },
+   "headingDegrees": 53,
+   "pixelsPerMetre": 71.18,
+   "calibrationEvidence": "Silhouette fit, 2026-11-07: physical body 7 x 2.5 m, height 3 m. Scale per sheet (and per full-size override file) from the alpha bbox height (>128) = ground diamond + 0.866 x height at the view's heading (rotation-invariant); width ratio checked per view. Anchor = projected body centre from the bbox bottom/centre."
+  }
+ },
+ "source": {
+  "views": {
+   "normalNE": "../batch01/food-truck/budget/normal-NE.png",
+   "normalSE": "../batch01/food-truck/budget/normal-SE.png",
+   "normalSW": "../batch01/food-truck/budget/normal-SW.png",
+   "normalNW": "../batch01/food-truck/budget/normal-NW.png",
+   "yaw8N": "../batch01/food-truck/budget/yaw8-N.png",
+   "yaw8E": "../batch01/food-truck/budget/yaw8-E.png",
+   "yaw8S": "../batch01/food-truck/budget/yaw8-S.png",
+   "yaw8W": "../batch01/food-truck/budget/yaw8-W.png"
+  }
+ },
+ "subject": "golf:event-food-truck",
+ "name": "Food truck (budget)",
+ "kind": "building",
+ "category": "Golf tournament",
+ "visualTier": "budget",
+ "eventTypes": [
+  "foodTruck"
+ ]
+}

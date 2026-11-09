@@ -1,0 +1,29 @@
+{
+  "schema": 1,
+  "subject": "golf:course-course-map-board",
+  "version": 1,
+  "key": "normalSE",
+  "source": {
+    "file": "../../batch02/course-map-board/normal-SE.png",
+    "sha256": "524499f343c042f6f8011735a929794542a877f089116fd838aeeb2cc7a50c9d",
+    "width": 627,
+    "height": 627
+  },
+  "cell": 0,
+  "cellRect": {
+    "left": 0,
+    "top": 0,
+    "width": 627,
+    "height": 627
+  },
+  "crop": {
+    "left": 75,
+    "top": 8,
+    "width": 479,
+    "height": 580
+  },
+  "output": "normalSE.native.png",
+  "sha256": "7de09cab404691823eadac1c4c9a6806d7ab8e51a44f90128c6ee1a271b5cdd3",
+  "operation": "native RGBA cell crop only; no flip/repaint/view synthesis",
+  "review": "candidate"
+}

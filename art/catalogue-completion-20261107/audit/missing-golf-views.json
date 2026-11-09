@@ -1,0 +1,5929 @@
+[
+  {
+    "id": "business:golf-bag-trolley",
+    "name": "golf bag trolley",
+    "category": "Business artwork",
+    "missing_corners": [
+      "NE",
+      "SE",
+      "SW",
+      "NW"
+    ],
+    "missing_turned_8degree": [
+      "N",
+      "E",
+      "S",
+      "W"
+    ],
+    "registered_mapping": {
+      "subject": "business:golf-bag-trolley",
+      "cornerViewIds": [],
+      "axisViewIds": [],
+      "cornerIdsPresent": false,
+      "axisIdsPresent": false,
+      "propsToolRotations": 4,
+      "eightPlayerSelectableFacings": false
+    },
+    "known_review": null,
+    "known_cutoff": null,
+    "source": {
+      "atlas_definition": "src\\game\\business-library.ts",
+      "tex": [
+        0,
+        0.0078125,
+        0.72412109375,
+        0.1494140625,
+        0.91162109375
+      ],
+      "note": "single original atlas sprite; not asserted to be an independently labelled angle"
+    }
+  },
+  {
+    "id": "business:golf-bench-course-map",
+    "name": "golf bench course map",
+    "category": "Business artwork",
+    "missing_corners": [
+      "NE",
+      "SE",
+      "SW",
+      "NW"
+    ],
+    "missing_turned_8degree": [
+      "N",
+      "E",
+      "S",
+      "W"
+    ],
+    "registered_mapping": {
+      "subject": "business:golf-bench-course-map",
+      "cornerViewIds": [],
+      "axisViewIds": [],
+      "cornerIdsPresent": false,
+      "axisIdsPresent": false,
+      "propsToolRotations": 4,
+      "eightPlayerSelectableFacings": false
+    },
+    "known_review": null,
+    "known_cutoff": null,
+    "source": {
+      "atlas_definition": "src\\game\\business-library.ts",
+      "tex": [
+        2,
+        0.59375,
+        0.0078125,
+        0.78125,
+        0.1728515625
+      ],
+      "note": "single original atlas sprite; not asserted to be an independently labelled angle"
+    }
+  },
+  {
+    "id": "business:golf-cart-se",
+    "name": "golf cart se",
+    "category": "Business artwork",
+    "missing_corners": [
+      "NE",
+      "SE",
+      "SW",
+      "NW"
+    ],
+    "missing_turned_8degree": [
+      "N",
+      "E",
+      "S",
+      "W"
+    ],
+    "registered_mapping": {
+      "subject": "business:golf-cart-se",
+      "cornerViewIds": [],
+      "axisViewIds": [],
+      "cornerIdsPresent": false,
+      "axisIdsPresent": false,
+      "propsToolRotations": 4,
+      "eightPlayerSelectableFacings": false
+    },
+    "known_review": null,
+    "known_cutoff": null,
+    "source": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\theme-consistency\\exports\\cars\\business-golf-cart-se.native.png"
+  },
+  {
+    "id": "business:golf-cart-sw",
+    "name": "golf cart sw",
+    "category": "Business artwork",
+    "missing_corners": [
+      "NE",
+      "SE",
+      "SW",
+      "NW"
+    ],
+    "missing_turned_8degree": [
+      "N",
+      "E",
+      "S",
+      "W"
+    ],
+    "registered_mapping": {
+      "subject": "business:golf-cart-sw",
+      "cornerViewIds": [],
+      "axisViewIds": [],
+      "cornerIdsPresent": false,
+      "axisIdsPresent": false,
+      "propsToolRotations": 4,
+      "eightPlayerSelectableFacings": false
+    },
+    "known_review": null,
+    "known_cutoff": null,
+    "source": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\theme-consistency\\exports\\cars\\business-golf-cart-sw.native.png"
+  },
+  {
+    "id": "business:golf-footbridge",
+    "name": "golf footbridge",
+    "category": "Business artwork",
+    "missing_corners": [
+      "NE",
+      "SE",
+      "SW",
+      "NW"
+    ],
+    "missing_turned_8degree": [
+      "N",
+      "E",
+      "S",
+      "W"
+    ],
+    "registered_mapping": {
+      "subject": "business:golf-footbridge",
+      "cornerViewIds": [],
+      "axisViewIds": [],
+      "cornerIdsPresent": false,
+      "axisIdsPresent": false,
+      "propsToolRotations": 4,
+      "eightPlayerSelectableFacings": false
+    },
+    "known_review": null,
+    "known_cutoff": null,
+    "source": {
+      "atlas_definition": "src\\game\\business-library.ts",
+      "tex": [
+        2,
+        0.3984375,
+        0.0078125,
+        0.5859375,
+        0.16064453125
+      ],
+      "note": "single original atlas sprite; not asserted to be an independently labelled angle"
+    }
+  },
+  {
+    "id": "business:golf-mower",
+    "name": "golf mower",
+    "category": "Business artwork",
+    "missing_corners": [
+      "NE",
+      "SE",
+      "SW",
+      "NW"
+    ],
+    "missing_turned_8degree": [
+      "N",
+      "E",
+      "S",
+      "W"
+    ],
+    "registered_mapping": {
+      "subject": "business:golf-mower",
+      "cornerViewIds": [],
+      "axisViewIds": [],
+      "cornerIdsPresent": false,
+      "axisIdsPresent": false,
+      "propsToolRotations": 4,
+      "eightPlayerSelectableFacings": false
+    },
+    "known_review": null,
+    "known_cutoff": null,
+    "source": {
+      "atlas_definition": "src\\game\\business-library.ts",
+      "tex": [
+        2,
+        0.0078125,
+        0.203125,
+        0.19580078125,
+        0.3544921875
+      ],
+      "note": "single original atlas sprite; not asserted to be an independently labelled angle"
+    }
+  },
+  {
+    "id": "business:golf-patio-table",
+    "name": "golf patio table",
+    "category": "Business artwork",
+    "missing_corners": [
+      "NE",
+      "SE",
+      "SW",
+      "NW"
+    ],
+    "missing_turned_8degree": [
+      "N",
+      "E",
+      "S",
+      "W"
+    ],
+    "registered_mapping": {
+      "subject": "business:golf-patio-table",
+      "cornerViewIds": [],
+      "axisViewIds": [],
+      "cornerIdsPresent": false,
+      "axisIdsPresent": false,
+      "propsToolRotations": 4,
+      "eightPlayerSelectableFacings": false
+    },
+    "known_review": null,
+    "known_cutoff": null,
+    "source": {
+      "atlas_definition": "src\\game\\business-library.ts",
+      "tex": [
+        2,
+        0.7890625,
+        0.0078125,
+        0.966796875,
+        0.1953125
+      ],
+      "note": "single original atlas sprite; not asserted to be an independently labelled angle"
+    }
+  },
+  {
+    "id": "business:golf-pin-red",
+    "name": "golf pin red",
+    "category": "Business artwork",
+    "missing_corners": [
+      "NE",
+      "SE",
+      "SW",
+      "NW"
+    ],
+    "missing_turned_8degree": [
+      "N",
+      "E",
+      "S",
+      "W"
+    ],
+    "registered_mapping": {
+      "subject": "business:golf-pin-red",
+      "cornerViewIds": [],
+      "axisViewIds": [],
+      "cornerIdsPresent": false,
+      "axisIdsPresent": false,
+      "propsToolRotations": 4,
+      "eightPlayerSelectableFacings": false
+    },
+    "known_review": null,
+    "known_cutoff": null,
+    "source": {
+      "atlas_definition": "src\\game\\business-library.ts",
+      "tex": [
+        2,
+        0.20361328125,
+        0.203125,
+        0.28515625,
+        0.390625
+      ],
+      "note": "single original atlas sprite; not asserted to be an independently labelled angle"
+    }
+  },
+  {
+    "id": "business:golf-pin-red-equipment",
+    "name": "golf pin red equipment",
+    "category": "Business artwork",
+    "missing_corners": [
+      "NE",
+      "SE",
+      "SW",
+      "NW"
+    ],
+    "missing_turned_8degree": [
+      "N",
+      "E",
+      "S",
+      "W"
+    ],
+    "registered_mapping": {
+      "subject": "business:golf-pin-red-equipment",
+      "cornerViewIds": [],
+      "axisViewIds": [],
+      "cornerIdsPresent": false,
+      "axisIdsPresent": false,
+      "propsToolRotations": 4,
+      "eightPlayerSelectableFacings": false
+    },
+    "known_review": null,
+    "known_cutoff": null,
+    "source": {
+      "atlas_definition": "src\\game\\business-library.ts",
+      "tex": [
+        0,
+        0.787109375,
+        0.52880859375,
+        0.87939453125,
+        0.71630859375
+      ],
+      "note": "single original atlas sprite; not asserted to be an independently labelled angle"
+    }
+  },
+  {
+    "id": "business:golf-pin-yellow",
+    "name": "golf pin yellow",
+    "category": "Business artwork",
+    "missing_corners": [
+      "NE",
+      "SE",
+      "SW",
+      "NW"
+    ],
+    "missing_turned_8degree": [
+      "N",
+      "E",
+      "S",
+      "W"
+    ],
+    "registered_mapping": {
+      "subject": "business:golf-pin-yellow",
+      "cornerViewIds": [],
+      "axisViewIds": [],
+      "cornerIdsPresent": false,
+      "axisIdsPresent": false,
+      "propsToolRotations": 4,
+      "eightPlayerSelectableFacings": false
+    },
+    "known_review": null,
+    "known_cutoff": null,
+    "source": {
+      "atlas_definition": "src\\game\\business-library.ts",
+      "tex": [
+        2,
+        0.29296875,
+        0.203125,
+        0.37451171875,
+        0.390625
+      ],
+      "note": "single original atlas sprite; not asserted to be an independently labelled angle"
+    }
+  },
+  {
+    "id": "business:golf-practice-net",
+    "name": "golf practice net",
+    "category": "Business artwork",
+    "missing_corners": [
+      "NE",
+      "SE",
+      "SW",
+      "NW"
+    ],
+    "missing_turned_8degree": [
+      "N",
+      "E",
+      "S",
+      "W"
+    ],
+    "registered_mapping": {
+      "subject": "business:golf-practice-net",
+      "cornerViewIds": [],
+      "axisViewIds": [],
+      "cornerIdsPresent": false,
+      "axisIdsPresent": false,
+      "propsToolRotations": 4,
+      "eightPlayerSelectableFacings": false
+    },
+    "known_review": null,
+    "known_cutoff": null,
+    "source": {
+      "atlas_definition": "src\\game\\business-library.ts",
+      "tex": [
+        2,
+        0.578125,
+        0.203125,
+        0.765625,
+        0.3740234375
+      ],
+      "note": "single original atlas sprite; not asserted to be an independently labelled angle"
+    }
+  },
+  {
+    "id": "kit:boulder-large-a",
+    "name": "Large boulder (a)",
+    "category": "Concept kit",
+    "missing_corners": [
+      "NE",
+      "SE",
+      "SW",
+      "NW"
+    ],
+    "missing_turned_8degree": [
+      "N",
+      "E",
+      "S",
+      "W"
+    ],
+    "registered_mapping": {
+      "subject": "kit:boulder-large-a",
+      "cornerViewIds": [],
+      "axisViewIds": [],
+      "cornerIdsPresent": false,
+      "axisIdsPresent": false,
+      "propsToolRotations": 4,
+      "eightPlayerSelectableFacings": false
+    },
+    "known_review": null,
+    "known_cutoff": null,
+    "source": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\concept-kit\\boulder-large-a.webp"
+  },
+  {
+    "id": "kit:boulder-large-b",
+    "name": "Large boulder (b)",
+    "category": "Concept kit",
+    "missing_corners": [
+      "NE",
+      "SE",
+      "SW",
+      "NW"
+    ],
+    "missing_turned_8degree": [
+      "N",
+      "E",
+      "S",
+      "W"
+    ],
+    "registered_mapping": {
+      "subject": "kit:boulder-large-b",
+      "cornerViewIds": [],
+      "axisViewIds": [],
+      "cornerIdsPresent": false,
+      "axisIdsPresent": false,
+      "propsToolRotations": 4,
+      "eightPlayerSelectableFacings": false
+    },
+    "known_review": null,
+    "known_cutoff": null,
+    "source": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\concept-kit\\boulder-large-b.webp"
+  },
+  {
+    "id": "kit:boulder-large-c",
+    "name": "Large boulder (c)",
+    "category": "Concept kit",
+    "missing_corners": [
+      "NE",
+      "SE",
+      "SW",
+      "NW"
+    ],
+    "missing_turned_8degree": [
+      "N",
+      "E",
+      "S",
+      "W"
+    ],
+    "registered_mapping": {
+      "subject": "kit:boulder-large-c",
+      "cornerViewIds": [],
+      "axisViewIds": [],
+      "cornerIdsPresent": false,
+      "axisIdsPresent": false,
+      "propsToolRotations": 4,
+      "eightPlayerSelectableFacings": false
+    },
+    "known_review": null,
+    "known_cutoff": null,
+    "source": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\concept-kit\\boulder-large-c.webp"
+  },
+  {
+    "id": "kit:boulder-medium-a",
+    "name": "Boulder (a)",
+    "category": "Concept kit",
+    "missing_corners": [
+      "NE",
+      "SE",
+      "SW",
+      "NW"
+    ],
+    "missing_turned_8degree": [
+      "N",
+      "E",
+      "S",
+      "W"
+    ],
+    "registered_mapping": {
+      "subject": "kit:boulder-medium-a",
+      "cornerViewIds": [],
+      "axisViewIds": [],
+      "cornerIdsPresent": false,
+      "axisIdsPresent": false,
+      "propsToolRotations": 4,
+      "eightPlayerSelectableFacings": false
+    },
+    "known_review": null,
+    "known_cutoff": null,
+    "source": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\concept-kit\\boulder-medium-a.webp"
+  },
+  {
+    "id": "kit:boulder-medium-b",
+    "name": "Boulder (b)",
+    "category": "Concept kit",
+    "missing_corners": [
+      "NE",
+      "SE",
+      "SW",
+      "NW"
+    ],
+    "missing_turned_8degree": [
+      "N",
+      "E",
+      "S",
+      "W"
+    ],
+    "registered_mapping": {
+      "subject": "kit:boulder-medium-b",
+      "cornerViewIds": [],
+      "axisViewIds": [],
+      "cornerIdsPresent": false,
+      "axisIdsPresent": false,
+      "propsToolRotations": 4,
+      "eightPlayerSelectableFacings": false
+    },
+    "known_review": null,
+    "known_cutoff": null,
+    "source": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\concept-kit\\boulder-medium-b.webp"
+  },
+  {
+    "id": "kit:boulder-medium-c",
+    "name": "Boulder (c)",
+    "category": "Concept kit",
+    "missing_corners": [
+      "NE",
+      "SE",
+      "SW",
+      "NW"
+    ],
+    "missing_turned_8degree": [
+      "N",
+      "E",
+      "S",
+      "W"
+    ],
+    "registered_mapping": {
+      "subject": "kit:boulder-medium-c",
+      "cornerViewIds": [],
+      "axisViewIds": [],
+      "cornerIdsPresent": false,
+      "axisIdsPresent": false,
+      "propsToolRotations": 4,
+      "eightPlayerSelectableFacings": false
+    },
+    "known_review": null,
+    "known_cutoff": null,
+    "source": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\concept-kit\\boulder-medium-c.webp"
+  },
+  {
+    "id": "kit:boulder-small-a",
+    "name": "Small boulder (a)",
+    "category": "Concept kit",
+    "missing_corners": [
+      "NE",
+      "SE",
+      "SW",
+      "NW"
+    ],
+    "missing_turned_8degree": [
+      "N",
+      "E",
+      "S",
+      "W"
+    ],
+    "registered_mapping": {
+      "subject": "kit:boulder-small-a",
+      "cornerViewIds": [],
+      "axisViewIds": [],
+      "cornerIdsPresent": false,
+      "axisIdsPresent": false,
+      "propsToolRotations": 4,
+      "eightPlayerSelectableFacings": false
+    },
+    "known_review": null,
+    "known_cutoff": null,
+    "source": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\concept-kit\\boulder-small-a.webp"
+  },
+  {
+    "id": "kit:boulder-small-b",
+    "name": "Small boulder (b)",
+    "category": "Concept kit",
+    "missing_corners": [
+      "NE",
+      "SE",
+      "SW",
+      "NW"
+    ],
+    "missing_turned_8degree": [
+      "N",
+      "E",
+      "S",
+      "W"
+    ],
+    "registered_mapping": {
+      "subject": "kit:boulder-small-b",
+      "cornerViewIds": [],
+      "axisViewIds": [],
+      "cornerIdsPresent": false,
+      "axisIdsPresent": false,
+      "propsToolRotations": 4,
+      "eightPlayerSelectableFacings": false
+    },
+    "known_review": null,
+    "known_cutoff": null,
+    "source": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\concept-kit\\boulder-small-b.webp"
+  },
+  {
+    "id": "kit:boulder-small-c",
+    "name": "Small boulder (c)",
+    "category": "Concept kit",
+    "missing_corners": [
+      "NE",
+      "SE",
+      "SW",
+      "NW"
+    ],
+    "missing_turned_8degree": [
+      "N",
+      "E",
+      "S",
+      "W"
+    ],
+    "registered_mapping": {
+      "subject": "kit:boulder-small-c",
+      "cornerViewIds": [],
+      "axisViewIds": [],
+      "cornerIdsPresent": false,
+      "axisIdsPresent": false,
+      "propsToolRotations": 4,
+      "eightPlayerSelectableFacings": false
+    },
+    "known_review": null,
+    "known_cutoff": null,
+    "source": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\concept-kit\\boulder-small-c.webp"
+  },
+  {
+    "id": "kit:fountain-jet-0",
+    "name": "Fountain jet (frame 1)",
+    "category": "Concept kit",
+    "missing_corners": [
+      "NE",
+      "SE",
+      "SW",
+      "NW"
+    ],
+    "missing_turned_8degree": [
+      "N",
+      "E",
+      "S",
+      "W"
+    ],
+    "registered_mapping": {
+      "subject": "kit:fountain-jet-0",
+      "cornerViewIds": [],
+      "axisViewIds": [],
+      "cornerIdsPresent": false,
+      "axisIdsPresent": false,
+      "propsToolRotations": 4,
+      "eightPlayerSelectableFacings": false
+    },
+    "known_review": null,
+    "known_cutoff": null,
+    "source": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\concept-kit\\fountain-jet-0.webp"
+  },
+  {
+    "id": "kit:fountain-jet-1",
+    "name": "Fountain jet (frame 2)",
+    "category": "Concept kit",
+    "missing_corners": [
+      "NE",
+      "SE",
+      "SW",
+      "NW"
+    ],
+    "missing_turned_8degree": [
+      "N",
+      "E",
+      "S",
+      "W"
+    ],
+    "registered_mapping": {
+      "subject": "kit:fountain-jet-1",
+      "cornerViewIds": [],
+      "axisViewIds": [],
+      "cornerIdsPresent": false,
+      "axisIdsPresent": false,
+      "propsToolRotations": 4,
+      "eightPlayerSelectableFacings": false
+    },
+    "known_review": null,
+    "known_cutoff": null,
+    "source": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\concept-kit\\fountain-jet-1.webp"
+  },
+  {
+    "id": "kit:fountain-jet-2",
+    "name": "Fountain jet (frame 3)",
+    "category": "Concept kit",
+    "missing_corners": [
+      "NE",
+      "SE",
+      "SW",
+      "NW"
+    ],
+    "missing_turned_8degree": [
+      "N",
+      "E",
+      "S",
+      "W"
+    ],
+    "registered_mapping": {
+      "subject": "kit:fountain-jet-2",
+      "cornerViewIds": [],
+      "axisViewIds": [],
+      "cornerIdsPresent": false,
+      "axisIdsPresent": false,
+      "propsToolRotations": 4,
+      "eightPlayerSelectableFacings": false
+    },
+    "known_review": null,
+    "known_cutoff": null,
+    "source": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\concept-kit\\fountain-jet-2.webp"
+  },
+  {
+    "id": "kit:fountain-jet-3",
+    "name": "Fountain jet (frame 4)",
+    "category": "Concept kit",
+    "missing_corners": [
+      "NE",
+      "SE",
+      "SW",
+      "NW"
+    ],
+    "missing_turned_8degree": [
+      "N",
+      "E",
+      "S",
+      "W"
+    ],
+    "registered_mapping": {
+      "subject": "kit:fountain-jet-3",
+      "cornerViewIds": [],
+      "axisViewIds": [],
+      "cornerIdsPresent": false,
+      "axisIdsPresent": false,
+      "propsToolRotations": 4,
+      "eightPlayerSelectableFacings": false
+    },
+    "known_review": null,
+    "known_cutoff": null,
+    "source": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\concept-kit\\fountain-jet-3.webp"
+  },
+  {
+    "id": "kit:hedge-x",
+    "name": "Clipped hedge (along x)",
+    "category": "Concept kit",
+    "missing_corners": [
+      "NE",
+      "SE",
+      "SW",
+      "NW"
+    ],
+    "missing_turned_8degree": [
+      "N",
+      "E",
+      "S",
+      "W"
+    ],
+    "registered_mapping": {
+      "subject": "kit:hedge-x",
+      "cornerViewIds": [],
+      "axisViewIds": [],
+      "cornerIdsPresent": false,
+      "axisIdsPresent": false,
+      "propsToolRotations": 4,
+      "eightPlayerSelectableFacings": false
+    },
+    "known_review": null,
+    "known_cutoff": null,
+    "source": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\concept-kit\\hedge-x.webp"
+  },
+  {
+    "id": "kit:hedge-y",
+    "name": "Clipped hedge (along y)",
+    "category": "Concept kit",
+    "missing_corners": [
+      "NE",
+      "SE",
+      "SW",
+      "NW"
+    ],
+    "missing_turned_8degree": [
+      "N",
+      "E",
+      "S",
+      "W"
+    ],
+    "registered_mapping": {
+      "subject": "kit:hedge-y",
+      "cornerViewIds": [],
+      "axisViewIds": [],
+      "cornerIdsPresent": false,
+      "axisIdsPresent": false,
+      "propsToolRotations": 4,
+      "eightPlayerSelectableFacings": false
+    },
+    "known_review": null,
+    "known_cutoff": null,
+    "source": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\concept-kit\\hedge-y.webp"
+  },
+  {
+    "id": "kit:lamp-post-single",
+    "name": "Practice green lamp post",
+    "category": "Concept kit",
+    "missing_corners": [
+      "NE",
+      "SE",
+      "SW",
+      "NW"
+    ],
+    "missing_turned_8degree": [
+      "N",
+      "E",
+      "S",
+      "W"
+    ],
+    "registered_mapping": {
+      "subject": "kit:lamp-post-single",
+      "cornerViewIds": [],
+      "axisViewIds": [],
+      "cornerIdsPresent": false,
+      "axisIdsPresent": false,
+      "propsToolRotations": 4,
+      "eightPlayerSelectableFacings": false
+    },
+    "known_review": null,
+    "known_cutoff": null,
+    "source": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\concept-kit\\lamp-post-single.webp"
+  },
+  {
+    "id": "kit:lamp-post-twin",
+    "name": "Practice green lamp post, twin",
+    "category": "Concept kit",
+    "missing_corners": [
+      "NE",
+      "SE",
+      "SW",
+      "NW"
+    ],
+    "missing_turned_8degree": [
+      "N",
+      "E",
+      "S",
+      "W"
+    ],
+    "registered_mapping": {
+      "subject": "kit:lamp-post-twin",
+      "cornerViewIds": [],
+      "axisViewIds": [],
+      "cornerIdsPresent": false,
+      "axisIdsPresent": false,
+      "propsToolRotations": 4,
+      "eightPlayerSelectableFacings": false
+    },
+    "known_review": null,
+    "known_cutoff": null,
+    "source": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\concept-kit\\lamp-post-twin.webp"
+  },
+  {
+    "id": "kit:pond-edge-inner",
+    "name": "Pond-edge stones (inner corner)",
+    "category": "Concept kit",
+    "missing_corners": [
+      "NE",
+      "SE",
+      "SW",
+      "NW"
+    ],
+    "missing_turned_8degree": [
+      "N",
+      "E",
+      "S",
+      "W"
+    ],
+    "registered_mapping": {
+      "subject": "kit:pond-edge-inner",
+      "cornerViewIds": [],
+      "axisViewIds": [],
+      "cornerIdsPresent": false,
+      "axisIdsPresent": false,
+      "propsToolRotations": 4,
+      "eightPlayerSelectableFacings": false
+    },
+    "known_review": null,
+    "known_cutoff": null,
+    "source": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\concept-kit\\pond-edge-inner.webp"
+  },
+  {
+    "id": "kit:pond-edge-outer",
+    "name": "Pond-edge stones (outer corner)",
+    "category": "Concept kit",
+    "missing_corners": [
+      "NE",
+      "SE",
+      "SW",
+      "NW"
+    ],
+    "missing_turned_8degree": [
+      "N",
+      "E",
+      "S",
+      "W"
+    ],
+    "registered_mapping": {
+      "subject": "kit:pond-edge-outer",
+      "cornerViewIds": [],
+      "axisViewIds": [],
+      "cornerIdsPresent": false,
+      "axisIdsPresent": false,
+      "propsToolRotations": 4,
+      "eightPlayerSelectableFacings": false
+    },
+    "known_review": null,
+    "known_cutoff": null,
+    "source": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\concept-kit\\pond-edge-outer.webp"
+  },
+  {
+    "id": "kit:pond-edge-x",
+    "name": "Pond-edge stones (along x)",
+    "category": "Concept kit",
+    "missing_corners": [
+      "NE",
+      "SE",
+      "SW",
+      "NW"
+    ],
+    "missing_turned_8degree": [
+      "N",
+      "E",
+      "S",
+      "W"
+    ],
+    "registered_mapping": {
+      "subject": "kit:pond-edge-x",
+      "cornerViewIds": [],
+      "axisViewIds": [],
+      "cornerIdsPresent": false,
+      "axisIdsPresent": false,
+      "propsToolRotations": 4,
+      "eightPlayerSelectableFacings": false
+    },
+    "known_review": null,
+    "known_cutoff": null,
+    "source": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\concept-kit\\pond-edge-x.webp"
+  },
+  {
+    "id": "kit:pond-edge-y",
+    "name": "Pond-edge stones (along y)",
+    "category": "Concept kit",
+    "missing_corners": [
+      "NE",
+      "SE",
+      "SW",
+      "NW"
+    ],
+    "missing_turned_8degree": [
+      "N",
+      "E",
+      "S",
+      "W"
+    ],
+    "registered_mapping": {
+      "subject": "kit:pond-edge-y",
+      "cornerViewIds": [],
+      "axisViewIds": [],
+      "cornerIdsPresent": false,
+      "axisIdsPresent": false,
+      "propsToolRotations": 4,
+      "eightPlayerSelectableFacings": false
+    },
+    "known_review": null,
+    "known_cutoff": null,
+    "source": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\concept-kit\\pond-edge-y.webp"
+  },
+  {
+    "id": "golf:leaderboard",
+    "name": "Main leaderboard (blank)",
+    "category": "Golf tournament",
+    "missing_corners": [],
+    "missing_turned_8degree": [
+      "N",
+      "E",
+      "S",
+      "W"
+    ],
+    "registered_mapping": {
+      "subject": "golf:leaderboard",
+      "cornerViewIds": [
+        "golf:leaderboard",
+        "view:golf:leaderboard:se",
+        "view:golf:leaderboard:sw",
+        "view:golf:leaderboard:nw"
+      ],
+      "axisViewIds": [],
+      "cornerIdsPresent": true,
+      "axisIdsPresent": false,
+      "removedByStudio": false,
+      "missingActiveViewIds": [],
+      "propsToolRotations": 4,
+      "sourceImageQuality": "not assessed by runtime registration",
+      "eightPlayerSelectableFacings": false
+    },
+    "known_review": null,
+    "known_cutoff": null,
+    "source": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\golf\\leaderboard.png"
+  },
+  {
+    "id": "golf:toilet-block",
+    "name": "Toilet block (portable toilets)",
+    "category": "Golf tournament",
+    "missing_corners": [],
+    "missing_turned_8degree": [
+      "N",
+      "E",
+      "S",
+      "W"
+    ],
+    "registered_mapping": {
+      "subject": "golf:toilet-block",
+      "cornerViewIds": [
+        "golf:toilet-block",
+        "view:golf:toilet-block:se",
+        "view:golf:toilet-block:sw",
+        "view:golf:toilet-block:nw"
+      ],
+      "axisViewIds": [],
+      "cornerIdsPresent": true,
+      "axisIdsPresent": false,
+      "removedByStudio": false,
+      "missingActiveViewIds": [],
+      "propsToolRotations": 4,
+      "sourceImageQuality": "not assessed by runtime registration",
+      "eightPlayerSelectableFacings": false
+    },
+    "known_review": null,
+    "known_cutoff": null,
+    "source": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\golf\\toilet-block.png"
+  },
+  {
+    "id": "newprop:ball-washer",
+    "name": "Ball washer",
+    "category": "New: Course props",
+    "missing_corners": [
+      "NE",
+      "SE",
+      "SW",
+      "NW"
+    ],
+    "missing_turned_8degree": [
+      "N",
+      "E",
+      "S",
+      "W"
+    ],
+    "registered_mapping": {
+      "subject": "newprop:ball-washer",
+      "cornerViewIds": [],
+      "axisViewIds": [],
+      "cornerIdsPresent": false,
+      "axisIdsPresent": false,
+      "propsToolRotations": 4,
+      "eightPlayerSelectableFacings": false
+    },
+    "known_review": null,
+    "known_cutoff": false,
+    "source": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\new-props\\ball-washer.webp"
+  },
+  {
+    "id": "newprop:clock-post",
+    "name": "Clock post",
+    "category": "New: Course props",
+    "missing_corners": [
+      "NE",
+      "SE",
+      "SW",
+      "NW"
+    ],
+    "missing_turned_8degree": [
+      "N",
+      "E",
+      "S",
+      "W"
+    ],
+    "registered_mapping": {
+      "subject": "newprop:clock-post",
+      "cornerViewIds": [],
+      "axisViewIds": [],
+      "cornerIdsPresent": false,
+      "axisIdsPresent": false,
+      "propsToolRotations": 4,
+      "eightPlayerSelectableFacings": false
+    },
+    "known_review": null,
+    "known_cutoff": false,
+    "source": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\new-props\\clock-post.webp"
+  },
+  {
+    "id": "newprop:course-map-stand",
+    "name": "Course map stand",
+    "category": "New: Course props",
+    "missing_corners": [
+      "NE",
+      "SE",
+      "SW",
+      "NW"
+    ],
+    "missing_turned_8degree": [
+      "N",
+      "E",
+      "S",
+      "W"
+    ],
+    "registered_mapping": {
+      "subject": "newprop:course-map-stand",
+      "cornerViewIds": [],
+      "axisViewIds": [],
+      "cornerIdsPresent": false,
+      "axisIdsPresent": false,
+      "propsToolRotations": 4,
+      "eightPlayerSelectableFacings": false
+    },
+    "known_review": null,
+    "known_cutoff": false,
+    "source": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\new-props\\course-map-stand.webp"
+  },
+  {
+    "id": "newprop:direction-signpost",
+    "name": "Direction signpost",
+    "category": "New: Course props",
+    "missing_corners": [
+      "NE",
+      "SE",
+      "SW",
+      "NW"
+    ],
+    "missing_turned_8degree": [
+      "N",
+      "E",
+      "S",
+      "W"
+    ],
+    "registered_mapping": {
+      "subject": "newprop:direction-signpost",
+      "cornerViewIds": [],
+      "axisViewIds": [],
+      "cornerIdsPresent": false,
+      "axisIdsPresent": false,
+      "propsToolRotations": 4,
+      "eightPlayerSelectableFacings": false
+    },
+    "known_review": null,
+    "known_cutoff": false,
+    "source": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\new-props\\direction-signpost.webp"
+  },
+  {
+    "id": "newprop:flag-pin",
+    "name": "Flag pin",
+    "category": "New: Course props",
+    "missing_corners": [
+      "NE",
+      "SE",
+      "SW",
+      "NW"
+    ],
+    "missing_turned_8degree": [
+      "N",
+      "E",
+      "S",
+      "W"
+    ],
+    "registered_mapping": {
+      "subject": "newprop:flag-pin",
+      "cornerViewIds": [],
+      "axisViewIds": [],
+      "cornerIdsPresent": false,
+      "axisIdsPresent": false,
+      "propsToolRotations": 4,
+      "eightPlayerSelectableFacings": false
+    },
+    "known_review": null,
+    "known_cutoff": false,
+    "source": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\new-props\\flag-pin.webp"
+  },
+  {
+    "id": "newprop:flower-bed",
+    "name": "Flower bed",
+    "category": "New: Course props",
+    "missing_corners": [
+      "NE",
+      "SE",
+      "SW",
+      "NW"
+    ],
+    "missing_turned_8degree": [
+      "N",
+      "E",
+      "S",
+      "W"
+    ],
+    "registered_mapping": {
+      "subject": "newprop:flower-bed",
+      "cornerViewIds": [],
+      "axisViewIds": [],
+      "cornerIdsPresent": false,
+      "axisIdsPresent": false,
+      "propsToolRotations": 4,
+      "eightPlayerSelectableFacings": false
+    },
+    "known_review": null,
+    "known_cutoff": false,
+    "source": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\new-props\\flower-bed.webp"
+  },
+  {
+    "id": "newprop:flower-planter",
+    "name": "Flower planter",
+    "category": "New: Course props",
+    "missing_corners": [
+      "NE",
+      "SE",
+      "SW",
+      "NW"
+    ],
+    "missing_turned_8degree": [
+      "N",
+      "E",
+      "S",
+      "W"
+    ],
+    "registered_mapping": {
+      "subject": "newprop:flower-planter",
+      "cornerViewIds": [],
+      "axisViewIds": [],
+      "cornerIdsPresent": false,
+      "axisIdsPresent": false,
+      "propsToolRotations": 4,
+      "eightPlayerSelectableFacings": false
+    },
+    "known_review": null,
+    "known_cutoff": false,
+    "source": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\new-props\\flower-planter.webp"
+  },
+  {
+    "id": "newprop:flowering-tree",
+    "name": "Flowering tree",
+    "category": "New: Course props",
+    "missing_corners": [
+      "NE",
+      "SE",
+      "SW",
+      "NW"
+    ],
+    "missing_turned_8degree": [
+      "N",
+      "E",
+      "S",
+      "W"
+    ],
+    "registered_mapping": {
+      "subject": "newprop:flowering-tree",
+      "cornerViewIds": [],
+      "axisViewIds": [],
+      "cornerIdsPresent": false,
+      "axisIdsPresent": false,
+      "propsToolRotations": 4,
+      "eightPlayerSelectableFacings": false
+    },
+    "known_review": null,
+    "known_cutoff": false,
+    "source": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\new-props\\flowering-tree.webp"
+  },
+  {
+    "id": "newprop:gold-tee-markers",
+    "name": "Gold tee markers",
+    "category": "New: Course props",
+    "missing_corners": [
+      "NE",
+      "SE",
+      "SW",
+      "NW"
+    ],
+    "missing_turned_8degree": [
+      "N",
+      "E",
+      "S",
+      "W"
+    ],
+    "registered_mapping": {
+      "subject": "newprop:gold-tee-markers",
+      "cornerViewIds": [],
+      "axisViewIds": [],
+      "cornerIdsPresent": false,
+      "axisIdsPresent": false,
+      "propsToolRotations": 4,
+      "eightPlayerSelectableFacings": false
+    },
+    "known_review": null,
+    "known_cutoff": false,
+    "source": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\new-props\\gold-tee-markers.webp"
+  },
+  {
+    "id": "newprop:golf-bag-trolley",
+    "name": "Golf bag trolley",
+    "category": "New: Course props",
+    "missing_corners": [
+      "NE",
+      "SE",
+      "SW",
+      "NW"
+    ],
+    "missing_turned_8degree": [
+      "N",
+      "E",
+      "S",
+      "W"
+    ],
+    "registered_mapping": {
+      "subject": "newprop:golf-bag-trolley",
+      "cornerViewIds": [],
+      "axisViewIds": [],
+      "cornerIdsPresent": false,
+      "axisIdsPresent": false,
+      "propsToolRotations": 4,
+      "eightPlayerSelectableFacings": false
+    },
+    "known_review": null,
+    "known_cutoff": false,
+    "source": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\new-props\\golf-bag-trolley.webp"
+  },
+  {
+    "id": "newprop:golf-cart",
+    "name": "Golf cart",
+    "category": "New: Course props",
+    "missing_corners": [
+      "NE",
+      "SE",
+      "SW",
+      "NW"
+    ],
+    "missing_turned_8degree": [
+      "N",
+      "E",
+      "S",
+      "W"
+    ],
+    "registered_mapping": {
+      "subject": "newprop:golf-cart",
+      "cornerViewIds": [],
+      "axisViewIds": [],
+      "cornerIdsPresent": false,
+      "axisIdsPresent": false,
+      "propsToolRotations": 4,
+      "eightPlayerSelectableFacings": false
+    },
+    "known_review": null,
+    "known_cutoff": false,
+    "source": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\new-props\\golf-cart.webp"
+  },
+  {
+    "id": "newprop:golf-cart-2",
+    "name": "Golf cart 2",
+    "category": "New: Course props",
+    "missing_corners": [
+      "NE",
+      "SE",
+      "SW",
+      "NW"
+    ],
+    "missing_turned_8degree": [
+      "N",
+      "E",
+      "S",
+      "W"
+    ],
+    "registered_mapping": {
+      "subject": "newprop:golf-cart-2",
+      "cornerViewIds": [],
+      "axisViewIds": [],
+      "cornerIdsPresent": false,
+      "axisIdsPresent": false,
+      "propsToolRotations": 4,
+      "eightPlayerSelectableFacings": false
+    },
+    "known_review": null,
+    "known_cutoff": false,
+    "source": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\new-props\\golf-cart-2.webp"
+  },
+  {
+    "id": "newprop:hole-12-sign",
+    "name": "Hole 12 sign",
+    "category": "New: Course props",
+    "missing_corners": [
+      "NE",
+      "SE",
+      "SW",
+      "NW"
+    ],
+    "missing_turned_8degree": [
+      "N",
+      "E",
+      "S",
+      "W"
+    ],
+    "registered_mapping": {
+      "subject": "newprop:hole-12-sign",
+      "cornerViewIds": [],
+      "axisViewIds": [],
+      "cornerIdsPresent": false,
+      "axisIdsPresent": false,
+      "propsToolRotations": 4,
+      "eightPlayerSelectableFacings": false
+    },
+    "known_review": null,
+    "known_cutoff": false,
+    "source": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\new-props\\hole-12-sign.webp"
+  },
+  {
+    "id": "newprop:leaderboard",
+    "name": "Leaderboard",
+    "category": "New: Course props",
+    "missing_corners": [
+      "NE",
+      "SE",
+      "SW",
+      "NW"
+    ],
+    "missing_turned_8degree": [
+      "N",
+      "E",
+      "S",
+      "W"
+    ],
+    "registered_mapping": {
+      "subject": "newprop:leaderboard",
+      "cornerViewIds": [],
+      "axisViewIds": [],
+      "cornerIdsPresent": false,
+      "axisIdsPresent": false,
+      "propsToolRotations": 4,
+      "eightPlayerSelectableFacings": false
+    },
+    "known_review": null,
+    "known_cutoff": false,
+    "source": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\new-props\\leaderboard.webp"
+  },
+  {
+    "id": "newprop:log-footbridge",
+    "name": "Log footbridge",
+    "category": "New: Course props",
+    "missing_corners": [
+      "NE",
+      "SE",
+      "SW",
+      "NW"
+    ],
+    "missing_turned_8degree": [
+      "N",
+      "E",
+      "S",
+      "W"
+    ],
+    "registered_mapping": {
+      "subject": "newprop:log-footbridge",
+      "cornerViewIds": [],
+      "axisViewIds": [],
+      "cornerIdsPresent": false,
+      "axisIdsPresent": false,
+      "propsToolRotations": 4,
+      "eightPlayerSelectableFacings": false
+    },
+    "known_review": null,
+    "known_cutoff": false,
+    "source": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\new-props\\log-footbridge.webp"
+  },
+  {
+    "id": "newprop:marshal",
+    "name": "Marshal",
+    "category": "New: Course props",
+    "missing_corners": [
+      "NE",
+      "SE",
+      "SW",
+      "NW"
+    ],
+    "missing_turned_8degree": [
+      "N",
+      "E",
+      "S",
+      "W"
+    ],
+    "registered_mapping": {
+      "subject": "newprop:marshal",
+      "cornerViewIds": [],
+      "axisViewIds": [],
+      "cornerIdsPresent": false,
+      "axisIdsPresent": false,
+      "propsToolRotations": 4,
+      "eightPlayerSelectableFacings": false
+    },
+    "known_review": null,
+    "known_cutoff": false,
+    "source": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\new-props\\marshal.webp"
+  },
+  {
+    "id": "newprop:park-bench",
+    "name": "Park bench",
+    "category": "New: Course props",
+    "missing_corners": [
+      "NE",
+      "SE",
+      "SW",
+      "NW"
+    ],
+    "missing_turned_8degree": [
+      "N",
+      "E",
+      "S",
+      "W"
+    ],
+    "registered_mapping": {
+      "subject": "newprop:park-bench",
+      "cornerViewIds": [],
+      "axisViewIds": [],
+      "cornerIdsPresent": false,
+      "axisIdsPresent": false,
+      "propsToolRotations": 4,
+      "eightPlayerSelectableFacings": false
+    },
+    "known_review": null,
+    "known_cutoff": false,
+    "source": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\new-props\\park-bench.webp"
+  },
+  {
+    "id": "newprop:plank-bridge",
+    "name": "Plank bridge",
+    "category": "New: Course props",
+    "missing_corners": [
+      "NE",
+      "SE",
+      "SW",
+      "NW"
+    ],
+    "missing_turned_8degree": [
+      "N",
+      "E",
+      "S",
+      "W"
+    ],
+    "registered_mapping": {
+      "subject": "newprop:plank-bridge",
+      "cornerViewIds": [],
+      "axisViewIds": [],
+      "cornerIdsPresent": false,
+      "axisIdsPresent": false,
+      "propsToolRotations": 4,
+      "eightPlayerSelectableFacings": false
+    },
+    "known_review": null,
+    "known_cutoff": false,
+    "source": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\new-props\\plank-bridge.webp"
+  },
+  {
+    "id": "newprop:ride-mower-2",
+    "name": "Ride mower 2",
+    "category": "New: Course props",
+    "missing_corners": [
+      "NE",
+      "SE",
+      "SW",
+      "NW"
+    ],
+    "missing_turned_8degree": [
+      "N",
+      "E",
+      "S",
+      "W"
+    ],
+    "registered_mapping": {
+      "subject": "newprop:ride-mower-2",
+      "cornerViewIds": [],
+      "axisViewIds": [],
+      "cornerIdsPresent": false,
+      "axisIdsPresent": false,
+      "propsToolRotations": 4,
+      "eightPlayerSelectableFacings": false
+    },
+    "known_review": null,
+    "known_cutoff": false,
+    "source": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\new-props\\ride-mower-2.webp"
+  },
+  {
+    "id": "newprop:rope-barrier",
+    "name": "Rope barrier",
+    "category": "New: Course props",
+    "missing_corners": [
+      "NE",
+      "SE",
+      "SW",
+      "NW"
+    ],
+    "missing_turned_8degree": [
+      "N",
+      "E",
+      "S",
+      "W"
+    ],
+    "registered_mapping": {
+      "subject": "newprop:rope-barrier",
+      "cornerViewIds": [],
+      "axisViewIds": [],
+      "cornerIdsPresent": false,
+      "axisIdsPresent": false,
+      "propsToolRotations": 4,
+      "eightPlayerSelectableFacings": false
+    },
+    "known_review": null,
+    "known_cutoff": false,
+    "source": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\new-props\\rope-barrier.webp"
+  },
+  {
+    "id": "newprop:rope-barrier-corner",
+    "name": "Rope barrier corner",
+    "category": "New: Course props",
+    "missing_corners": [
+      "NE",
+      "SE",
+      "SW",
+      "NW"
+    ],
+    "missing_turned_8degree": [
+      "N",
+      "E",
+      "S",
+      "W"
+    ],
+    "registered_mapping": {
+      "subject": "newprop:rope-barrier-corner",
+      "cornerViewIds": [],
+      "axisViewIds": [],
+      "cornerIdsPresent": false,
+      "axisIdsPresent": false,
+      "propsToolRotations": 4,
+      "eightPlayerSelectableFacings": false
+    },
+    "known_review": null,
+    "known_cutoff": false,
+    "source": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\new-props\\rope-barrier-corner.webp"
+  },
+  {
+    "id": "newprop:rope-walkway",
+    "name": "Rope walkway",
+    "category": "New: Course props",
+    "missing_corners": [
+      "NE",
+      "SE",
+      "SW",
+      "NW"
+    ],
+    "missing_turned_8degree": [
+      "N",
+      "E",
+      "S",
+      "W"
+    ],
+    "registered_mapping": {
+      "subject": "newprop:rope-walkway",
+      "cornerViewIds": [],
+      "axisViewIds": [],
+      "cornerIdsPresent": false,
+      "axisIdsPresent": false,
+      "propsToolRotations": 4,
+      "eightPlayerSelectableFacings": false
+    },
+    "known_review": null,
+    "known_cutoff": false,
+    "source": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\new-props\\rope-walkway.webp"
+  },
+  {
+    "id": "newprop:shanty-clock",
+    "name": "Shanty clock",
+    "category": "New: Course props",
+    "missing_corners": [
+      "NE",
+      "SE",
+      "SW",
+      "NW"
+    ],
+    "missing_turned_8degree": [
+      "N",
+      "E",
+      "S",
+      "W"
+    ],
+    "registered_mapping": {
+      "subject": "newprop:shanty-clock",
+      "cornerViewIds": [],
+      "axisViewIds": [],
+      "cornerIdsPresent": false,
+      "axisIdsPresent": false,
+      "propsToolRotations": 4,
+      "eightPlayerSelectableFacings": false
+    },
+    "known_review": null,
+    "known_cutoff": false,
+    "source": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\new-props\\shanty-clock.webp"
+  },
+  {
+    "id": "newprop:shanty-hole-sign",
+    "name": "Shanty hole sign",
+    "category": "New: Course props",
+    "missing_corners": [
+      "NE",
+      "SE",
+      "SW",
+      "NW"
+    ],
+    "missing_turned_8degree": [
+      "N",
+      "E",
+      "S",
+      "W"
+    ],
+    "registered_mapping": {
+      "subject": "newprop:shanty-hole-sign",
+      "cornerViewIds": [],
+      "axisViewIds": [],
+      "cornerIdsPresent": false,
+      "axisIdsPresent": false,
+      "propsToolRotations": 4,
+      "eightPlayerSelectableFacings": false
+    },
+    "known_review": null,
+    "known_cutoff": false,
+    "source": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\new-props\\shanty-hole-sign.webp"
+  },
+  {
+    "id": "newprop:shanty-leaderboard",
+    "name": "Shanty leaderboard",
+    "category": "New: Course props",
+    "missing_corners": [
+      "NE",
+      "SE",
+      "SW",
+      "NW"
+    ],
+    "missing_turned_8degree": [
+      "N",
+      "E",
+      "S",
+      "W"
+    ],
+    "registered_mapping": {
+      "subject": "newprop:shanty-leaderboard",
+      "cornerViewIds": [],
+      "axisViewIds": [],
+      "cornerIdsPresent": false,
+      "axisIdsPresent": false,
+      "propsToolRotations": 4,
+      "eightPlayerSelectableFacings": false
+    },
+    "known_review": null,
+    "known_cutoff": false,
+    "source": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\new-props\\shanty-leaderboard.webp"
+  },
+  {
+    "id": "newprop:shanty-signpost",
+    "name": "Shanty signpost",
+    "category": "New: Course props",
+    "missing_corners": [
+      "NE",
+      "SE",
+      "SW",
+      "NW"
+    ],
+    "missing_turned_8degree": [
+      "N",
+      "E",
+      "S",
+      "W"
+    ],
+    "registered_mapping": {
+      "subject": "newprop:shanty-signpost",
+      "cornerViewIds": [],
+      "axisViewIds": [],
+      "cornerIdsPresent": false,
+      "axisIdsPresent": false,
+      "propsToolRotations": 4,
+      "eightPlayerSelectableFacings": false
+    },
+    "known_review": null,
+    "known_cutoff": false,
+    "source": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\new-props\\shanty-signpost.webp"
+  },
+  {
+    "id": "newprop:small-tree",
+    "name": "Small tree",
+    "category": "New: Course props",
+    "missing_corners": [
+      "NE",
+      "SE",
+      "SW",
+      "NW"
+    ],
+    "missing_turned_8degree": [
+      "N",
+      "E",
+      "S",
+      "W"
+    ],
+    "registered_mapping": {
+      "subject": "newprop:small-tree",
+      "cornerViewIds": [],
+      "axisViewIds": [],
+      "cornerIdsPresent": false,
+      "axisIdsPresent": false,
+      "propsToolRotations": 4,
+      "eightPlayerSelectableFacings": false
+    },
+    "known_review": null,
+    "known_cutoff": false,
+    "source": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\new-props\\small-tree.webp"
+  },
+  {
+    "id": "newprop:sprinkler",
+    "name": "Sprinkler",
+    "category": "New: Course props",
+    "missing_corners": [
+      "NE",
+      "SE",
+      "SW",
+      "NW"
+    ],
+    "missing_turned_8degree": [
+      "N",
+      "E",
+      "S",
+      "W"
+    ],
+    "registered_mapping": {
+      "subject": "newprop:sprinkler",
+      "cornerViewIds": [],
+      "axisViewIds": [],
+      "cornerIdsPresent": false,
+      "axisIdsPresent": false,
+      "propsToolRotations": 4,
+      "eightPlayerSelectableFacings": false
+    },
+    "known_review": null,
+    "known_cutoff": false,
+    "source": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\new-props\\sprinkler.webp"
+  },
+  {
+    "id": "newprop:stone-bridge",
+    "name": "Stone bridge",
+    "category": "New: Course props",
+    "missing_corners": [
+      "NE",
+      "SE",
+      "SW",
+      "NW"
+    ],
+    "missing_turned_8degree": [
+      "N",
+      "E",
+      "S",
+      "W"
+    ],
+    "registered_mapping": {
+      "subject": "newprop:stone-bridge",
+      "cornerViewIds": [],
+      "axisViewIds": [],
+      "cornerIdsPresent": false,
+      "axisIdsPresent": false,
+      "propsToolRotations": 4,
+      "eightPlayerSelectableFacings": false
+    },
+    "known_review": null,
+    "known_cutoff": false,
+    "source": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\new-props\\stone-bridge.webp"
+  },
+  {
+    "id": "newprop:white-footbridge",
+    "name": "White footbridge",
+    "category": "New: Course props",
+    "missing_corners": [
+      "NE",
+      "SE",
+      "SW",
+      "NW"
+    ],
+    "missing_turned_8degree": [
+      "N",
+      "E",
+      "S",
+      "W"
+    ],
+    "registered_mapping": {
+      "subject": "newprop:white-footbridge",
+      "cornerViewIds": [],
+      "axisViewIds": [],
+      "cornerIdsPresent": false,
+      "axisIdsPresent": false,
+      "propsToolRotations": 4,
+      "eightPlayerSelectableFacings": false
+    },
+    "known_review": null,
+    "known_cutoff": false,
+    "source": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\new-props\\white-footbridge.webp"
+  },
+  {
+    "id": "newprop:wooden-footbridge",
+    "name": "Wooden footbridge",
+    "category": "New: Course props",
+    "missing_corners": [
+      "NE",
+      "SE",
+      "SW",
+      "NW"
+    ],
+    "missing_turned_8degree": [
+      "N",
+      "E",
+      "S",
+      "W"
+    ],
+    "registered_mapping": {
+      "subject": "newprop:wooden-footbridge",
+      "cornerViewIds": [],
+      "axisViewIds": [],
+      "cornerIdsPresent": false,
+      "axisIdsPresent": false,
+      "propsToolRotations": 4,
+      "eightPlayerSelectableFacings": false
+    },
+    "known_review": null,
+    "known_cutoff": false,
+    "source": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\new-props\\wooden-footbridge.webp"
+  },
+  {
+    "id": "newprop:yardage-posts",
+    "name": "Yardage posts",
+    "category": "New: Course props",
+    "missing_corners": [
+      "NE",
+      "SE",
+      "SW",
+      "NW"
+    ],
+    "missing_turned_8degree": [
+      "N",
+      "E",
+      "S",
+      "W"
+    ],
+    "registered_mapping": {
+      "subject": "newprop:yardage-posts",
+      "cornerViewIds": [],
+      "axisViewIds": [],
+      "cornerIdsPresent": false,
+      "axisIdsPresent": false,
+      "propsToolRotations": 4,
+      "eightPlayerSelectableFacings": false
+    },
+    "known_review": null,
+    "known_cutoff": false,
+    "source": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\new-props\\yardage-posts.webp"
+  },
+  {
+    "id": "newprop:buffet-tent",
+    "name": "Buffet tent",
+    "category": "New: Event structures",
+    "missing_corners": [
+      "NE",
+      "SE",
+      "SW",
+      "NW"
+    ],
+    "missing_turned_8degree": [
+      "N",
+      "E",
+      "S",
+      "W"
+    ],
+    "registered_mapping": {
+      "subject": "newprop:buffet-tent",
+      "cornerViewIds": [],
+      "axisViewIds": [],
+      "cornerIdsPresent": false,
+      "axisIdsPresent": false,
+      "propsToolRotations": 4,
+      "eightPlayerSelectableFacings": false
+    },
+    "known_review": null,
+    "known_cutoff": false,
+    "source": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\new-props\\buffet-tent.webp"
+  },
+  {
+    "id": "newprop:cart-ambulance",
+    "name": "Cart ambulance",
+    "category": "New: Event structures",
+    "missing_corners": [
+      "NE",
+      "SE",
+      "SW",
+      "NW"
+    ],
+    "missing_turned_8degree": [
+      "N",
+      "E",
+      "S",
+      "W"
+    ],
+    "registered_mapping": {
+      "subject": "newprop:cart-ambulance",
+      "cornerViewIds": [],
+      "axisViewIds": [],
+      "cornerIdsPresent": false,
+      "axisIdsPresent": false,
+      "propsToolRotations": 4,
+      "eightPlayerSelectableFacings": false
+    },
+    "known_review": null,
+    "known_cutoff": false,
+    "source": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\new-props\\cart-ambulance.webp"
+  },
+  {
+    "id": "newprop:catering-staff",
+    "name": "Catering staff",
+    "category": "New: Event structures",
+    "missing_corners": [
+      "NE",
+      "SE",
+      "SW",
+      "NW"
+    ],
+    "missing_turned_8degree": [
+      "N",
+      "E",
+      "S",
+      "W"
+    ],
+    "registered_mapping": {
+      "subject": "newprop:catering-staff",
+      "cornerViewIds": [],
+      "axisViewIds": [],
+      "cornerIdsPresent": false,
+      "axisIdsPresent": false,
+      "propsToolRotations": 4,
+      "eightPlayerSelectableFacings": false
+    },
+    "known_review": null,
+    "known_cutoff": false,
+    "source": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\new-props\\catering-staff.webp"
+  },
+  {
+    "id": "newprop:catering-tent",
+    "name": "Catering tent",
+    "category": "New: Event structures",
+    "missing_corners": [
+      "NE",
+      "SE",
+      "SW",
+      "NW"
+    ],
+    "missing_turned_8degree": [
+      "N",
+      "E",
+      "S",
+      "W"
+    ],
+    "registered_mapping": {
+      "subject": "newprop:catering-tent",
+      "cornerViewIds": [],
+      "axisViewIds": [],
+      "cornerIdsPresent": false,
+      "axisIdsPresent": false,
+      "propsToolRotations": 4,
+      "eightPlayerSelectableFacings": false
+    },
+    "known_review": null,
+    "known_cutoff": false,
+    "source": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\new-props\\catering-tent.webp"
+  },
+  {
+    "id": "newprop:catering-trailer",
+    "name": "Catering trailer",
+    "category": "New: Event structures",
+    "missing_corners": [
+      "NE",
+      "SE",
+      "SW",
+      "NW"
+    ],
+    "missing_turned_8degree": [
+      "N",
+      "E",
+      "S",
+      "W"
+    ],
+    "registered_mapping": {
+      "subject": "newprop:catering-trailer",
+      "cornerViewIds": [],
+      "axisViewIds": [],
+      "cornerIdsPresent": false,
+      "axisIdsPresent": false,
+      "propsToolRotations": 4,
+      "eightPlayerSelectableFacings": false
+    },
+    "known_review": null,
+    "known_cutoff": false,
+    "source": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\new-props\\catering-trailer.webp"
+  },
+  {
+    "id": "newprop:clubhouse-cottage",
+    "name": "Clubhouse cottage",
+    "category": "New: Event structures",
+    "missing_corners": [
+      "NE",
+      "SE",
+      "SW",
+      "NW"
+    ],
+    "missing_turned_8degree": [
+      "N",
+      "E",
+      "S",
+      "W"
+    ],
+    "registered_mapping": {
+      "subject": "newprop:clubhouse-cottage",
+      "cornerViewIds": [],
+      "axisViewIds": [],
+      "cornerIdsPresent": false,
+      "axisIdsPresent": false,
+      "propsToolRotations": 4,
+      "eightPlayerSelectableFacings": false
+    },
+    "known_review": null,
+    "known_cutoff": false,
+    "source": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\new-props\\clubhouse-cottage.webp"
+  },
+  {
+    "id": "newprop:course-map-board",
+    "name": "Course map board",
+    "category": "New: Event structures",
+    "missing_corners": [
+      "NE",
+      "SE",
+      "SW",
+      "NW"
+    ],
+    "missing_turned_8degree": [
+      "N",
+      "E",
+      "S",
+      "W"
+    ],
+    "registered_mapping": {
+      "subject": "newprop:course-map-board",
+      "cornerViewIds": [],
+      "axisViewIds": [],
+      "cornerIdsPresent": false,
+      "axisIdsPresent": false,
+      "propsToolRotations": 4,
+      "eightPlayerSelectableFacings": false
+    },
+    "known_review": null,
+    "known_cutoff": false,
+    "source": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\new-props\\course-map-board.webp"
+  },
+  {
+    "id": "newprop:covered-grandstand",
+    "name": "Covered grandstand",
+    "category": "New: Event structures",
+    "missing_corners": [
+      "NE",
+      "SE",
+      "SW",
+      "NW"
+    ],
+    "missing_turned_8degree": [
+      "N",
+      "E",
+      "S",
+      "W"
+    ],
+    "registered_mapping": {
+      "subject": "newprop:covered-grandstand",
+      "cornerViewIds": [],
+      "axisViewIds": [],
+      "cornerIdsPresent": false,
+      "axisIdsPresent": false,
+      "propsToolRotations": 4,
+      "eightPlayerSelectableFacings": false
+    },
+    "known_review": null,
+    "known_cutoff": false,
+    "source": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\new-props\\covered-grandstand.webp"
+  },
+  {
+    "id": "newprop:first-aid-trailer",
+    "name": "First aid trailer",
+    "category": "New: Event structures",
+    "missing_corners": [
+      "NE",
+      "SE",
+      "SW",
+      "NW"
+    ],
+    "missing_turned_8degree": [
+      "N",
+      "E",
+      "S",
+      "W"
+    ],
+    "registered_mapping": {
+      "subject": "newprop:first-aid-trailer",
+      "cornerViewIds": [],
+      "axisViewIds": [],
+      "cornerIdsPresent": false,
+      "axisIdsPresent": false,
+      "propsToolRotations": 4,
+      "eightPlayerSelectableFacings": false
+    },
+    "known_review": null,
+    "known_cutoff": false,
+    "source": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\new-props\\first-aid-trailer.webp"
+  },
+  {
+    "id": "newprop:grandstand-small",
+    "name": "Grandstand small",
+    "category": "New: Event structures",
+    "missing_corners": [
+      "NE",
+      "SE",
+      "SW",
+      "NW"
+    ],
+    "missing_turned_8degree": [
+      "N",
+      "E",
+      "S",
+      "W"
+    ],
+    "registered_mapping": {
+      "subject": "newprop:grandstand-small",
+      "cornerViewIds": [],
+      "axisViewIds": [],
+      "cornerIdsPresent": false,
+      "axisIdsPresent": false,
+      "propsToolRotations": 4,
+      "eightPlayerSelectableFacings": false
+    },
+    "known_review": null,
+    "known_cutoff": false,
+    "source": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\new-props\\grandstand-small.webp"
+  },
+  {
+    "id": "newprop:grandstand-wide",
+    "name": "Grandstand wide",
+    "category": "New: Event structures",
+    "missing_corners": [
+      "NE",
+      "SE",
+      "SW",
+      "NW"
+    ],
+    "missing_turned_8degree": [
+      "N",
+      "E",
+      "S",
+      "W"
+    ],
+    "registered_mapping": {
+      "subject": "newprop:grandstand-wide",
+      "cornerViewIds": [],
+      "axisViewIds": [],
+      "cornerIdsPresent": false,
+      "axisIdsPresent": false,
+      "propsToolRotations": 4,
+      "eightPlayerSelectableFacings": false
+    },
+    "known_review": null,
+    "known_cutoff": false,
+    "source": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\new-props\\grandstand-wide.webp"
+  },
+  {
+    "id": "newprop:green-booth",
+    "name": "Green booth",
+    "category": "New: Event structures",
+    "missing_corners": [
+      "NE",
+      "SE",
+      "SW",
+      "NW"
+    ],
+    "missing_turned_8degree": [
+      "N",
+      "E",
+      "S",
+      "W"
+    ],
+    "registered_mapping": {
+      "subject": "newprop:green-booth",
+      "cornerViewIds": [],
+      "axisViewIds": [],
+      "cornerIdsPresent": false,
+      "axisIdsPresent": false,
+      "propsToolRotations": 4,
+      "eightPlayerSelectableFacings": false
+    },
+    "known_review": null,
+    "known_cutoff": false,
+    "source": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\new-props\\green-booth.webp"
+  },
+  {
+    "id": "newprop:green-kiosk",
+    "name": "Green kiosk",
+    "category": "New: Event structures",
+    "missing_corners": [
+      "NE",
+      "SE",
+      "SW",
+      "NW"
+    ],
+    "missing_turned_8degree": [
+      "N",
+      "E",
+      "S",
+      "W"
+    ],
+    "registered_mapping": {
+      "subject": "newprop:green-kiosk",
+      "cornerViewIds": [],
+      "axisViewIds": [],
+      "cornerIdsPresent": false,
+      "axisIdsPresent": false,
+      "propsToolRotations": 4,
+      "eightPlayerSelectableFacings": false
+    },
+    "known_review": null,
+    "known_cutoff": false,
+    "source": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\new-props\\green-kiosk.webp"
+  },
+  {
+    "id": "newprop:marquee",
+    "name": "Marquee",
+    "category": "New: Event structures",
+    "missing_corners": [
+      "NE",
+      "SE",
+      "SW",
+      "NW"
+    ],
+    "missing_turned_8degree": [
+      "N",
+      "E",
+      "S",
+      "W"
+    ],
+    "registered_mapping": {
+      "subject": "newprop:marquee",
+      "cornerViewIds": [],
+      "axisViewIds": [],
+      "cornerIdsPresent": false,
+      "axisIdsPresent": false,
+      "propsToolRotations": 4,
+      "eightPlayerSelectableFacings": false
+    },
+    "known_review": null,
+    "known_cutoff": false,
+    "source": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\new-props\\marquee.webp"
+  },
+  {
+    "id": "newprop:medical-tent",
+    "name": "Medical tent",
+    "category": "New: Event structures",
+    "missing_corners": [
+      "NE",
+      "SE",
+      "SW",
+      "NW"
+    ],
+    "missing_turned_8degree": [
+      "N",
+      "E",
+      "S",
+      "W"
+    ],
+    "registered_mapping": {
+      "subject": "newprop:medical-tent",
+      "cornerViewIds": [],
+      "axisViewIds": [],
+      "cornerIdsPresent": false,
+      "axisIdsPresent": false,
+      "propsToolRotations": 4,
+      "eightPlayerSelectableFacings": false
+    },
+    "known_review": null,
+    "known_cutoff": false,
+    "source": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\new-props\\medical-tent.webp"
+  },
+  {
+    "id": "newprop:portable-toilets",
+    "name": "Portable toilets",
+    "category": "New: Event structures",
+    "missing_corners": [
+      "NE",
+      "SE",
+      "SW",
+      "NW"
+    ],
+    "missing_turned_8degree": [
+      "N",
+      "E",
+      "S",
+      "W"
+    ],
+    "registered_mapping": {
+      "subject": "newprop:portable-toilets",
+      "cornerViewIds": [],
+      "axisViewIds": [],
+      "cornerIdsPresent": false,
+      "axisIdsPresent": false,
+      "propsToolRotations": 4,
+      "eightPlayerSelectableFacings": false
+    },
+    "known_review": null,
+    "known_cutoff": false,
+    "source": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\new-props\\portable-toilets.webp"
+  },
+  {
+    "id": "newprop:pro-shop-kiosk",
+    "name": "Pro shop kiosk",
+    "category": "New: Event structures",
+    "missing_corners": [
+      "NE",
+      "SE",
+      "SW",
+      "NW"
+    ],
+    "missing_turned_8degree": [
+      "N",
+      "E",
+      "S",
+      "W"
+    ],
+    "registered_mapping": {
+      "subject": "newprop:pro-shop-kiosk",
+      "cornerViewIds": [],
+      "axisViewIds": [],
+      "cornerIdsPresent": false,
+      "axisIdsPresent": false,
+      "propsToolRotations": 4,
+      "eightPlayerSelectableFacings": false
+    },
+    "known_review": null,
+    "known_cutoff": false,
+    "source": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\new-props\\pro-shop-kiosk.webp"
+  },
+  {
+    "id": "newprop:stage",
+    "name": "Stage",
+    "category": "New: Event structures",
+    "missing_corners": [
+      "NE",
+      "SE",
+      "SW",
+      "NW"
+    ],
+    "missing_turned_8degree": [
+      "N",
+      "E",
+      "S",
+      "W"
+    ],
+    "registered_mapping": {
+      "subject": "newprop:stage",
+      "cornerViewIds": [],
+      "axisViewIds": [],
+      "cornerIdsPresent": false,
+      "axisIdsPresent": false,
+      "propsToolRotations": 4,
+      "eightPlayerSelectableFacings": false
+    },
+    "known_review": null,
+    "known_cutoff": false,
+    "source": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\new-props\\stage.webp"
+  },
+  {
+    "id": "newprop:starter-hut",
+    "name": "Starter hut",
+    "category": "New: Event structures",
+    "missing_corners": [
+      "NE",
+      "SE",
+      "SW",
+      "NW"
+    ],
+    "missing_turned_8degree": [
+      "N",
+      "E",
+      "S",
+      "W"
+    ],
+    "registered_mapping": {
+      "subject": "newprop:starter-hut",
+      "cornerViewIds": [],
+      "axisViewIds": [],
+      "cornerIdsPresent": false,
+      "axisIdsPresent": false,
+      "propsToolRotations": 4,
+      "eightPlayerSelectableFacings": false
+    },
+    "known_review": null,
+    "known_cutoff": false,
+    "source": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\new-props\\starter-hut.webp"
+  },
+  {
+    "id": "newprop:ticket-booth",
+    "name": "Ticket booth",
+    "category": "New: Event structures",
+    "missing_corners": [
+      "NE",
+      "SE",
+      "SW",
+      "NW"
+    ],
+    "missing_turned_8degree": [
+      "N",
+      "E",
+      "S",
+      "W"
+    ],
+    "registered_mapping": {
+      "subject": "newprop:ticket-booth",
+      "cornerViewIds": [],
+      "axisViewIds": [],
+      "cornerIdsPresent": false,
+      "axisIdsPresent": false,
+      "propsToolRotations": 4,
+      "eightPlayerSelectableFacings": false
+    },
+    "known_review": null,
+    "known_cutoff": false,
+    "source": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\new-props\\ticket-booth.webp"
+  },
+  {
+    "id": "newprop:tv-tower",
+    "name": "TV tower",
+    "category": "New: Event structures",
+    "missing_corners": [
+      "NE",
+      "SE",
+      "SW",
+      "NW"
+    ],
+    "missing_turned_8degree": [
+      "N",
+      "E",
+      "S",
+      "W"
+    ],
+    "registered_mapping": {
+      "subject": "newprop:tv-tower",
+      "cornerViewIds": [],
+      "axisViewIds": [],
+      "cornerIdsPresent": false,
+      "axisIdsPresent": false,
+      "propsToolRotations": 4,
+      "eightPlayerSelectableFacings": false
+    },
+    "known_review": null,
+    "known_cutoff": false,
+    "source": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\new-props\\tv-tower.webp"
+  },
+  {
+    "id": "newprop:wash-station",
+    "name": "Wash station",
+    "category": "New: Event structures",
+    "missing_corners": [
+      "NE",
+      "SE",
+      "SW",
+      "NW"
+    ],
+    "missing_turned_8degree": [
+      "N",
+      "E",
+      "S",
+      "W"
+    ],
+    "registered_mapping": {
+      "subject": "newprop:wash-station",
+      "cornerViewIds": [],
+      "axisViewIds": [],
+      "cornerIdsPresent": false,
+      "axisIdsPresent": false,
+      "propsToolRotations": 4,
+      "eightPlayerSelectableFacings": false
+    },
+    "known_review": null,
+    "known_cutoff": false,
+    "source": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\new-props\\wash-station.webp"
+  },
+  {
+    "id": "newprop:weather-station",
+    "name": "Weather station",
+    "category": "New: Event structures",
+    "missing_corners": [
+      "NE",
+      "SE",
+      "SW",
+      "NW"
+    ],
+    "missing_turned_8degree": [
+      "N",
+      "E",
+      "S",
+      "W"
+    ],
+    "registered_mapping": {
+      "subject": "newprop:weather-station",
+      "cornerViewIds": [],
+      "axisViewIds": [],
+      "cornerIdsPresent": false,
+      "axisIdsPresent": false,
+      "propsToolRotations": 4,
+      "eightPlayerSelectableFacings": false
+    },
+    "known_review": null,
+    "known_cutoff": false,
+    "source": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\new-props\\weather-station.webp"
+  },
+  {
+    "id": "newprop:white-tent-booth",
+    "name": "White tent booth",
+    "category": "New: Event structures",
+    "missing_corners": [
+      "NE",
+      "SE",
+      "SW",
+      "NW"
+    ],
+    "missing_turned_8degree": [
+      "N",
+      "E",
+      "S",
+      "W"
+    ],
+    "registered_mapping": {
+      "subject": "newprop:white-tent-booth",
+      "cornerViewIds": [],
+      "axisViewIds": [],
+      "cornerIdsPresent": false,
+      "axisIdsPresent": false,
+      "propsToolRotations": 4,
+      "eightPlayerSelectableFacings": false
+    },
+    "known_review": null,
+    "known_cutoff": false,
+    "source": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\new-props\\white-tent-booth.webp"
+  },
+  {
+    "id": "newprop:bleacher-deck",
+    "name": "Bleacher deck",
+    "category": "New: Event structures (shabby)",
+    "missing_corners": [
+      "NE",
+      "SE",
+      "SW",
+      "NW"
+    ],
+    "missing_turned_8degree": [
+      "N",
+      "E",
+      "S",
+      "W"
+    ],
+    "registered_mapping": {
+      "subject": "newprop:bleacher-deck",
+      "cornerViewIds": [],
+      "axisViewIds": [],
+      "cornerIdsPresent": false,
+      "axisIdsPresent": false,
+      "propsToolRotations": 4,
+      "eightPlayerSelectableFacings": false
+    },
+    "known_review": null,
+    "known_cutoff": false,
+    "source": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\new-props\\bleacher-deck.webp"
+  },
+  {
+    "id": "newprop:bleacher-platform",
+    "name": "Bleacher platform",
+    "category": "New: Event structures (shabby)",
+    "missing_corners": [
+      "NE",
+      "SE",
+      "SW",
+      "NW"
+    ],
+    "missing_turned_8degree": [
+      "N",
+      "E",
+      "S",
+      "W"
+    ],
+    "registered_mapping": {
+      "subject": "newprop:bleacher-platform",
+      "cornerViewIds": [],
+      "axisViewIds": [],
+      "cornerIdsPresent": false,
+      "axisIdsPresent": false,
+      "propsToolRotations": 4,
+      "eightPlayerSelectableFacings": false
+    },
+    "known_review": null,
+    "known_cutoff": false,
+    "source": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\new-props\\bleacher-platform.webp"
+  },
+  {
+    "id": "newprop:bleacher-stairs",
+    "name": "Bleacher stairs",
+    "category": "New: Event structures (shabby)",
+    "missing_corners": [
+      "NE",
+      "SE",
+      "SW",
+      "NW"
+    ],
+    "missing_turned_8degree": [
+      "N",
+      "E",
+      "S",
+      "W"
+    ],
+    "registered_mapping": {
+      "subject": "newprop:bleacher-stairs",
+      "cornerViewIds": [],
+      "axisViewIds": [],
+      "cornerIdsPresent": false,
+      "axisIdsPresent": false,
+      "propsToolRotations": 4,
+      "eightPlayerSelectableFacings": false
+    },
+    "known_review": null,
+    "known_cutoff": false,
+    "source": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\new-props\\bleacher-stairs.webp"
+  },
+  {
+    "id": "newprop:bleacher-tower",
+    "name": "Bleacher tower",
+    "category": "New: Event structures (shabby)",
+    "missing_corners": [
+      "NE",
+      "SE",
+      "SW",
+      "NW"
+    ],
+    "missing_turned_8degree": [
+      "N",
+      "E",
+      "S",
+      "W"
+    ],
+    "registered_mapping": {
+      "subject": "newprop:bleacher-tower",
+      "cornerViewIds": [],
+      "axisViewIds": [],
+      "cornerIdsPresent": false,
+      "axisIdsPresent": false,
+      "propsToolRotations": 4,
+      "eightPlayerSelectableFacings": false
+    },
+    "known_review": null,
+    "known_cutoff": false,
+    "source": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\new-props\\bleacher-tower.webp"
+  },
+  {
+    "id": "newprop:covered-bleacher",
+    "name": "Covered bleacher",
+    "category": "New: Event structures (shabby)",
+    "missing_corners": [
+      "NE",
+      "SE",
+      "SW",
+      "NW"
+    ],
+    "missing_turned_8degree": [
+      "N",
+      "E",
+      "S",
+      "W"
+    ],
+    "registered_mapping": {
+      "subject": "newprop:covered-bleacher",
+      "cornerViewIds": [],
+      "axisViewIds": [],
+      "cornerIdsPresent": false,
+      "axisIdsPresent": false,
+      "propsToolRotations": 4,
+      "eightPlayerSelectableFacings": false
+    },
+    "known_review": null,
+    "known_cutoff": true,
+    "source": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\new-props\\covered-bleacher.webp"
+  },
+  {
+    "id": "newprop:scaffold-booth",
+    "name": "Scaffold booth",
+    "category": "New: Event structures (shabby)",
+    "missing_corners": [
+      "NE",
+      "SE",
+      "SW",
+      "NW"
+    ],
+    "missing_turned_8degree": [
+      "N",
+      "E",
+      "S",
+      "W"
+    ],
+    "registered_mapping": {
+      "subject": "newprop:scaffold-booth",
+      "cornerViewIds": [],
+      "axisViewIds": [],
+      "cornerIdsPresent": false,
+      "axisIdsPresent": false,
+      "propsToolRotations": 4,
+      "eightPlayerSelectableFacings": false
+    },
+    "known_review": null,
+    "known_cutoff": false,
+    "source": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\new-props\\scaffold-booth.webp"
+  },
+  {
+    "id": "newprop:scaffold-counter",
+    "name": "Scaffold counter",
+    "category": "New: Event structures (shabby)",
+    "missing_corners": [
+      "NE",
+      "SE",
+      "SW",
+      "NW"
+    ],
+    "missing_turned_8degree": [
+      "N",
+      "E",
+      "S",
+      "W"
+    ],
+    "registered_mapping": {
+      "subject": "newprop:scaffold-counter",
+      "cornerViewIds": [],
+      "axisViewIds": [],
+      "cornerIdsPresent": false,
+      "axisIdsPresent": false,
+      "propsToolRotations": 4,
+      "eightPlayerSelectableFacings": false
+    },
+    "known_review": null,
+    "known_cutoff": false,
+    "source": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\new-props\\scaffold-counter.webp"
+  },
+  {
+    "id": "newprop:scaffold-stand",
+    "name": "Scaffold stand",
+    "category": "New: Event structures (shabby)",
+    "missing_corners": [
+      "NE",
+      "SE",
+      "SW",
+      "NW"
+    ],
+    "missing_turned_8degree": [
+      "N",
+      "E",
+      "S",
+      "W"
+    ],
+    "registered_mapping": {
+      "subject": "newprop:scaffold-stand",
+      "cornerViewIds": [],
+      "axisViewIds": [],
+      "cornerIdsPresent": false,
+      "axisIdsPresent": false,
+      "propsToolRotations": 4,
+      "eightPlayerSelectableFacings": false
+    },
+    "known_review": null,
+    "known_cutoff": false,
+    "source": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\new-props\\scaffold-stand.webp"
+  },
+  {
+    "id": "newprop:scaffold-tower",
+    "name": "Scaffold tower",
+    "category": "New: Event structures (shabby)",
+    "missing_corners": [
+      "NE",
+      "SE",
+      "SW",
+      "NW"
+    ],
+    "missing_turned_8degree": [
+      "N",
+      "E",
+      "S",
+      "W"
+    ],
+    "registered_mapping": {
+      "subject": "newprop:scaffold-tower",
+      "cornerViewIds": [],
+      "axisViewIds": [],
+      "cornerIdsPresent": false,
+      "axisIdsPresent": false,
+      "propsToolRotations": 4,
+      "eightPlayerSelectableFacings": false
+    },
+    "known_review": null,
+    "known_cutoff": false,
+    "source": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\new-props\\scaffold-tower.webp"
+  },
+  {
+    "id": "newprop:shanty-booth",
+    "name": "Shanty booth",
+    "category": "New: Event structures (shabby)",
+    "missing_corners": [
+      "NE",
+      "SE",
+      "SW",
+      "NW"
+    ],
+    "missing_turned_8degree": [
+      "N",
+      "E",
+      "S",
+      "W"
+    ],
+    "registered_mapping": {
+      "subject": "newprop:shanty-booth",
+      "cornerViewIds": [],
+      "axisViewIds": [],
+      "cornerIdsPresent": false,
+      "axisIdsPresent": false,
+      "propsToolRotations": 4,
+      "eightPlayerSelectableFacings": false
+    },
+    "known_review": null,
+    "known_cutoff": false,
+    "source": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\new-props\\shanty-booth.webp"
+  },
+  {
+    "id": "newprop:shanty-cart-ambulance",
+    "name": "Shanty cart ambulance",
+    "category": "New: Event structures (shabby)",
+    "missing_corners": [
+      "NE",
+      "SE",
+      "SW",
+      "NW"
+    ],
+    "missing_turned_8degree": [
+      "N",
+      "E",
+      "S",
+      "W"
+    ],
+    "registered_mapping": {
+      "subject": "newprop:shanty-cart-ambulance",
+      "cornerViewIds": [],
+      "axisViewIds": [],
+      "cornerIdsPresent": false,
+      "axisIdsPresent": false,
+      "propsToolRotations": 4,
+      "eightPlayerSelectableFacings": false
+    },
+    "known_review": null,
+    "known_cutoff": false,
+    "source": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\new-props\\shanty-cart-ambulance.webp"
+  },
+  {
+    "id": "newprop:shanty-counter-2",
+    "name": "Shanty counter 2",
+    "category": "New: Event structures (shabby)",
+    "missing_corners": [
+      "NE",
+      "SE",
+      "SW",
+      "NW"
+    ],
+    "missing_turned_8degree": [
+      "N",
+      "E",
+      "S",
+      "W"
+    ],
+    "registered_mapping": {
+      "subject": "newprop:shanty-counter-2",
+      "cornerViewIds": [],
+      "axisViewIds": [],
+      "cornerIdsPresent": false,
+      "axisIdsPresent": false,
+      "propsToolRotations": 4,
+      "eightPlayerSelectableFacings": false
+    },
+    "known_review": null,
+    "known_cutoff": false,
+    "source": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\new-props\\shanty-counter-2.webp"
+  },
+  {
+    "id": "newprop:shanty-medical-tent",
+    "name": "Shanty medical tent",
+    "category": "New: Event structures (shabby)",
+    "missing_corners": [
+      "NE",
+      "SE",
+      "SW",
+      "NW"
+    ],
+    "missing_turned_8degree": [
+      "N",
+      "E",
+      "S",
+      "W"
+    ],
+    "registered_mapping": {
+      "subject": "newprop:shanty-medical-tent",
+      "cornerViewIds": [],
+      "axisViewIds": [],
+      "cornerIdsPresent": false,
+      "axisIdsPresent": false,
+      "propsToolRotations": 4,
+      "eightPlayerSelectableFacings": false
+    },
+    "known_review": null,
+    "known_cutoff": false,
+    "source": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\new-props\\shanty-medical-tent.webp"
+  },
+  {
+    "id": "newprop:shanty-ticket-hut",
+    "name": "Shanty ticket hut",
+    "category": "New: Event structures (shabby)",
+    "missing_corners": [
+      "NE",
+      "SE",
+      "SW",
+      "NW"
+    ],
+    "missing_turned_8degree": [
+      "N",
+      "E",
+      "S",
+      "W"
+    ],
+    "registered_mapping": {
+      "subject": "newprop:shanty-ticket-hut",
+      "cornerViewIds": [],
+      "axisViewIds": [],
+      "cornerIdsPresent": false,
+      "axisIdsPresent": false,
+      "propsToolRotations": 4,
+      "eightPlayerSelectableFacings": false
+    },
+    "known_review": null,
+    "known_cutoff": false,
+    "source": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\new-props\\shanty-ticket-hut.webp"
+  },
+  {
+    "id": "newprop:shanty-toilet",
+    "name": "Shanty toilet",
+    "category": "New: Event structures (shabby)",
+    "missing_corners": [
+      "NE",
+      "SE",
+      "SW",
+      "NW"
+    ],
+    "missing_turned_8degree": [
+      "N",
+      "E",
+      "S",
+      "W"
+    ],
+    "registered_mapping": {
+      "subject": "newprop:shanty-toilet",
+      "cornerViewIds": [],
+      "axisViewIds": [],
+      "cornerIdsPresent": false,
+      "axisIdsPresent": false,
+      "propsToolRotations": 4,
+      "eightPlayerSelectableFacings": false
+    },
+    "known_review": null,
+    "known_cutoff": false,
+    "source": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\new-props\\shanty-toilet.webp"
+  },
+  {
+    "id": "newprop:shanty-turnstiles",
+    "name": "Shanty turnstiles",
+    "category": "New: Event structures (shabby)",
+    "missing_corners": [
+      "NE",
+      "SE",
+      "SW",
+      "NW"
+    ],
+    "missing_turned_8degree": [
+      "N",
+      "E",
+      "S",
+      "W"
+    ],
+    "registered_mapping": {
+      "subject": "newprop:shanty-turnstiles",
+      "cornerViewIds": [],
+      "axisViewIds": [],
+      "cornerIdsPresent": false,
+      "axisIdsPresent": false,
+      "propsToolRotations": 4,
+      "eightPlayerSelectableFacings": false
+    },
+    "known_review": null,
+    "known_cutoff": false,
+    "source": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\new-props\\shanty-turnstiles.webp"
+  },
+  {
+    "id": "newprop:shanty-weather-mast",
+    "name": "Shanty weather mast",
+    "category": "New: Event structures (shabby)",
+    "missing_corners": [
+      "NE",
+      "SE",
+      "SW",
+      "NW"
+    ],
+    "missing_turned_8degree": [
+      "N",
+      "E",
+      "S",
+      "W"
+    ],
+    "registered_mapping": {
+      "subject": "newprop:shanty-weather-mast",
+      "cornerViewIds": [],
+      "axisViewIds": [],
+      "cornerIdsPresent": false,
+      "axisIdsPresent": false,
+      "propsToolRotations": 4,
+      "eightPlayerSelectableFacings": false
+    },
+    "known_review": null,
+    "known_cutoff": false,
+    "source": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\new-props\\shanty-weather-mast.webp"
+  },
+  {
+    "id": "newprop:small-bleacher",
+    "name": "Small bleacher",
+    "category": "New: Event structures (shabby)",
+    "missing_corners": [
+      "NE",
+      "SE",
+      "SW",
+      "NW"
+    ],
+    "missing_turned_8degree": [
+      "N",
+      "E",
+      "S",
+      "W"
+    ],
+    "registered_mapping": {
+      "subject": "newprop:small-bleacher",
+      "cornerViewIds": [],
+      "axisViewIds": [],
+      "cornerIdsPresent": false,
+      "axisIdsPresent": false,
+      "propsToolRotations": 4,
+      "eightPlayerSelectableFacings": false
+    },
+    "known_review": null,
+    "known_cutoff": false,
+    "source": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\new-props\\small-bleacher.webp"
+  },
+  {
+    "id": "newprop:wooden-bleacher",
+    "name": "Wooden bleacher",
+    "category": "New: Event structures (shabby)",
+    "missing_corners": [
+      "NE",
+      "SE",
+      "SW",
+      "NW"
+    ],
+    "missing_turned_8degree": [
+      "N",
+      "E",
+      "S",
+      "W"
+    ],
+    "registered_mapping": {
+      "subject": "newprop:wooden-bleacher",
+      "cornerViewIds": [],
+      "axisViewIds": [],
+      "cornerIdsPresent": false,
+      "axisIdsPresent": false,
+      "propsToolRotations": 4,
+      "eightPlayerSelectableFacings": false
+    },
+    "known_review": null,
+    "known_cutoff": false,
+    "source": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\new-props\\wooden-bleacher.webp"
+  },
+  {
+    "id": "newprop:wooden-bleacher-big",
+    "name": "Wooden bleacher big",
+    "category": "New: Event structures (shabby)",
+    "missing_corners": [
+      "NE",
+      "SE",
+      "SW",
+      "NW"
+    ],
+    "missing_turned_8degree": [
+      "N",
+      "E",
+      "S",
+      "W"
+    ],
+    "registered_mapping": {
+      "subject": "newprop:wooden-bleacher-big",
+      "cornerViewIds": [],
+      "axisViewIds": [],
+      "cornerIdsPresent": false,
+      "axisIdsPresent": false,
+      "propsToolRotations": 4,
+      "eightPlayerSelectableFacings": false
+    },
+    "known_review": null,
+    "known_cutoff": false,
+    "source": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\new-props\\wooden-bleacher-big.webp"
+  },
+  {
+    "id": "newprop:bait-shack",
+    "name": "Bait shack",
+    "category": "New: Lake props",
+    "missing_corners": [
+      "NE",
+      "SE",
+      "SW",
+      "NW"
+    ],
+    "missing_turned_8degree": [
+      "N",
+      "E",
+      "S",
+      "W"
+    ],
+    "registered_mapping": {
+      "subject": "newprop:bait-shack",
+      "cornerViewIds": [],
+      "axisViewIds": [],
+      "cornerIdsPresent": false,
+      "axisIdsPresent": false,
+      "propsToolRotations": 4,
+      "eightPlayerSelectableFacings": false
+    },
+    "known_review": null,
+    "known_cutoff": false,
+    "source": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\new-props\\bait-shack.webp"
+  },
+  {
+    "id": "newprop:rowboat",
+    "name": "Rowboat",
+    "category": "New: Lake props",
+    "missing_corners": [
+      "NE",
+      "SE",
+      "SW",
+      "NW"
+    ],
+    "missing_turned_8degree": [
+      "N",
+      "E",
+      "S",
+      "W"
+    ],
+    "registered_mapping": {
+      "subject": "newprop:rowboat",
+      "cornerViewIds": [],
+      "axisViewIds": [],
+      "cornerIdsPresent": false,
+      "axisIdsPresent": false,
+      "propsToolRotations": 4,
+      "eightPlayerSelectableFacings": false
+    },
+    "known_review": null,
+    "known_cutoff": false,
+    "source": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\new-props\\rowboat.webp"
+  },
+  {
+    "id": "newprop:wooden-dock",
+    "name": "Wooden dock",
+    "category": "New: Lake props",
+    "missing_corners": [
+      "NE",
+      "SE",
+      "SW",
+      "NW"
+    ],
+    "missing_turned_8degree": [
+      "N",
+      "E",
+      "S",
+      "W"
+    ],
+    "registered_mapping": {
+      "subject": "newprop:wooden-dock",
+      "cornerViewIds": [],
+      "axisViewIds": [],
+      "cornerIdsPresent": false,
+      "axisIdsPresent": false,
+      "propsToolRotations": 4,
+      "eightPlayerSelectableFacings": false
+    },
+    "known_review": null,
+    "known_cutoff": false,
+    "source": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\new-props\\wooden-dock.webp"
+  },
+  {
+    "id": "newprop:wooden-dock-2",
+    "name": "Wooden dock 2",
+    "category": "New: Lake props",
+    "missing_corners": [
+      "NE",
+      "SE",
+      "SW",
+      "NW"
+    ],
+    "missing_turned_8degree": [
+      "N",
+      "E",
+      "S",
+      "W"
+    ],
+    "registered_mapping": {
+      "subject": "newprop:wooden-dock-2",
+      "cornerViewIds": [],
+      "axisViewIds": [],
+      "cornerIdsPresent": false,
+      "axisIdsPresent": false,
+      "propsToolRotations": 4,
+      "eightPlayerSelectableFacings": false
+    },
+    "known_review": null,
+    "known_cutoff": false,
+    "source": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\new-props\\wooden-dock-2.webp"
+  },
+  {
+    "id": "newprop:broadcast-truck",
+    "name": "Broadcast truck",
+    "category": "New: Media",
+    "missing_corners": [
+      "NE",
+      "SE",
+      "SW",
+      "NW"
+    ],
+    "missing_turned_8degree": [
+      "N",
+      "E",
+      "S",
+      "W"
+    ],
+    "registered_mapping": {
+      "subject": "newprop:broadcast-truck",
+      "cornerViewIds": [],
+      "axisViewIds": [],
+      "cornerIdsPresent": false,
+      "axisIdsPresent": false,
+      "propsToolRotations": 4,
+      "eightPlayerSelectableFacings": false
+    },
+    "known_review": null,
+    "known_cutoff": false,
+    "source": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\new-props\\broadcast-truck.webp"
+  },
+  {
+    "id": "newprop:camera-tower",
+    "name": "Camera tower",
+    "category": "New: Media",
+    "missing_corners": [
+      "NE",
+      "SE",
+      "SW",
+      "NW"
+    ],
+    "missing_turned_8degree": [
+      "N",
+      "E",
+      "S",
+      "W"
+    ],
+    "registered_mapping": {
+      "subject": "newprop:camera-tower",
+      "cornerViewIds": [],
+      "axisViewIds": [],
+      "cornerIdsPresent": false,
+      "axisIdsPresent": false,
+      "propsToolRotations": 4,
+      "eightPlayerSelectableFacings": false
+    },
+    "known_review": null,
+    "known_cutoff": false,
+    "source": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\new-props\\camera-tower.webp"
+  },
+  {
+    "id": "newprop:satellite-van",
+    "name": "Satellite van",
+    "category": "New: Media",
+    "missing_corners": [
+      "NE",
+      "SE",
+      "SW",
+      "NW"
+    ],
+    "missing_turned_8degree": [
+      "N",
+      "E",
+      "S",
+      "W"
+    ],
+    "registered_mapping": {
+      "subject": "newprop:satellite-van",
+      "cornerViewIds": [],
+      "axisViewIds": [],
+      "cornerIdsPresent": false,
+      "axisIdsPresent": false,
+      "propsToolRotations": 4,
+      "eightPlayerSelectableFacings": false
+    },
+    "known_review": null,
+    "known_cutoff": false,
+    "source": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\new-props\\satellite-van.webp"
+  },
+  {
+    "id": "newprop:shanty-broadcast-van",
+    "name": "Shanty broadcast van",
+    "category": "New: Media",
+    "missing_corners": [
+      "NE",
+      "SE",
+      "SW",
+      "NW"
+    ],
+    "missing_turned_8degree": [
+      "N",
+      "E",
+      "S",
+      "W"
+    ],
+    "registered_mapping": {
+      "subject": "newprop:shanty-broadcast-van",
+      "cornerViewIds": [],
+      "axisViewIds": [],
+      "cornerIdsPresent": false,
+      "axisIdsPresent": false,
+      "propsToolRotations": 4,
+      "eightPlayerSelectableFacings": false
+    },
+    "known_review": null,
+    "known_cutoff": false,
+    "source": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\new-props\\shanty-broadcast-van.webp"
+  },
+  {
+    "id": "newprop:shanty-camera",
+    "name": "Shanty camera",
+    "category": "New: Media",
+    "missing_corners": [
+      "NE",
+      "SE",
+      "SW",
+      "NW"
+    ],
+    "missing_turned_8degree": [
+      "N",
+      "E",
+      "S",
+      "W"
+    ],
+    "registered_mapping": {
+      "subject": "newprop:shanty-camera",
+      "cornerViewIds": [],
+      "axisViewIds": [],
+      "cornerIdsPresent": false,
+      "axisIdsPresent": false,
+      "propsToolRotations": 4,
+      "eightPlayerSelectableFacings": false
+    },
+    "known_review": null,
+    "known_cutoff": false,
+    "source": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\new-props\\shanty-camera.webp"
+  },
+  {
+    "id": "newprop:shanty-camera-tower",
+    "name": "Shanty camera tower",
+    "category": "New: Media",
+    "missing_corners": [
+      "NE",
+      "SE",
+      "SW",
+      "NW"
+    ],
+    "missing_turned_8degree": [
+      "N",
+      "E",
+      "S",
+      "W"
+    ],
+    "registered_mapping": {
+      "subject": "newprop:shanty-camera-tower",
+      "cornerViewIds": [],
+      "axisViewIds": [],
+      "cornerIdsPresent": false,
+      "axisIdsPresent": false,
+      "propsToolRotations": 4,
+      "eightPlayerSelectableFacings": false
+    },
+    "known_review": null,
+    "known_cutoff": false,
+    "source": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\new-props\\shanty-camera-tower.webp"
+  },
+  {
+    "id": "newprop:shanty-satellite-van",
+    "name": "Shanty satellite van",
+    "category": "New: Media",
+    "missing_corners": [
+      "NE",
+      "SE",
+      "SW",
+      "NW"
+    ],
+    "missing_turned_8degree": [
+      "N",
+      "E",
+      "S",
+      "W"
+    ],
+    "registered_mapping": {
+      "subject": "newprop:shanty-satellite-van",
+      "cornerViewIds": [],
+      "axisViewIds": [],
+      "cornerIdsPresent": false,
+      "axisIdsPresent": false,
+      "propsToolRotations": 4,
+      "eightPlayerSelectableFacings": false
+    },
+    "known_review": null,
+    "known_cutoff": false,
+    "source": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\new-props\\shanty-satellite-van.webp"
+  },
+  {
+    "id": "newprop:tv-camera",
+    "name": "TV camera",
+    "category": "New: Media",
+    "missing_corners": [
+      "NE",
+      "SE",
+      "SW",
+      "NW"
+    ],
+    "missing_turned_8degree": [
+      "N",
+      "E",
+      "S",
+      "W"
+    ],
+    "registered_mapping": {
+      "subject": "newprop:tv-camera",
+      "cornerViewIds": [],
+      "axisViewIds": [],
+      "cornerIdsPresent": false,
+      "axisIdsPresent": false,
+      "propsToolRotations": 4,
+      "eightPlayerSelectableFacings": false
+    },
+    "known_review": null,
+    "known_cutoff": false,
+    "source": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\new-props\\tv-camera.webp"
+  },
+  {
+    "id": "newprop:ball-bucket-stand",
+    "name": "Ball bucket stand",
+    "category": "New: Range",
+    "missing_corners": [
+      "NE",
+      "SE",
+      "SW",
+      "NW"
+    ],
+    "missing_turned_8degree": [
+      "N",
+      "E",
+      "S",
+      "W"
+    ],
+    "registered_mapping": {
+      "subject": "newprop:ball-bucket-stand",
+      "cornerViewIds": [],
+      "axisViewIds": [],
+      "cornerIdsPresent": false,
+      "axisIdsPresent": false,
+      "propsToolRotations": 4,
+      "eightPlayerSelectableFacings": false
+    },
+    "known_review": null,
+    "known_cutoff": false,
+    "source": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\new-props\\ball-bucket-stand.webp"
+  },
+  {
+    "id": "newprop:ball-dispenser",
+    "name": "Ball dispenser",
+    "category": "New: Range",
+    "missing_corners": [
+      "NE",
+      "SE",
+      "SW",
+      "NW"
+    ],
+    "missing_turned_8degree": [
+      "N",
+      "E",
+      "S",
+      "W"
+    ],
+    "registered_mapping": {
+      "subject": "newprop:ball-dispenser",
+      "cornerViewIds": [],
+      "axisViewIds": [],
+      "cornerIdsPresent": false,
+      "axisIdsPresent": false,
+      "propsToolRotations": 4,
+      "eightPlayerSelectableFacings": false
+    },
+    "known_review": null,
+    "known_cutoff": false,
+    "source": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\new-props\\ball-dispenser.webp"
+  },
+  {
+    "id": "newprop:equipment-stall",
+    "name": "Equipment stall",
+    "category": "New: Range",
+    "missing_corners": [
+      "NE",
+      "SE",
+      "SW",
+      "NW"
+    ],
+    "missing_turned_8degree": [
+      "N",
+      "E",
+      "S",
+      "W"
+    ],
+    "registered_mapping": {
+      "subject": "newprop:equipment-stall",
+      "cornerViewIds": [],
+      "axisViewIds": [],
+      "cornerIdsPresent": false,
+      "axisIdsPresent": false,
+      "propsToolRotations": 4,
+      "eightPlayerSelectableFacings": false
+    },
+    "known_review": null,
+    "known_cutoff": false,
+    "source": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\new-props\\equipment-stall.webp"
+  },
+  {
+    "id": "newprop:practice-cage",
+    "name": "Practice cage",
+    "category": "New: Range",
+    "missing_corners": [
+      "NE",
+      "SE",
+      "SW",
+      "NW"
+    ],
+    "missing_turned_8degree": [
+      "N",
+      "E",
+      "S",
+      "W"
+    ],
+    "registered_mapping": {
+      "subject": "newprop:practice-cage",
+      "cornerViewIds": [],
+      "axisViewIds": [],
+      "cornerIdsPresent": false,
+      "axisIdsPresent": false,
+      "propsToolRotations": 4,
+      "eightPlayerSelectableFacings": false
+    },
+    "known_review": null,
+    "known_cutoff": true,
+    "source": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\new-props\\practice-cage.webp"
+  },
+  {
+    "id": "newprop:practice-net",
+    "name": "Practice net",
+    "category": "New: Range",
+    "missing_corners": [
+      "NE",
+      "SE",
+      "SW",
+      "NW"
+    ],
+    "missing_turned_8degree": [
+      "N",
+      "E",
+      "S",
+      "W"
+    ],
+    "registered_mapping": {
+      "subject": "newprop:practice-net",
+      "cornerViewIds": [],
+      "axisViewIds": [],
+      "cornerIdsPresent": false,
+      "axisIdsPresent": false,
+      "propsToolRotations": 4,
+      "eightPlayerSelectableFacings": false
+    },
+    "known_review": null,
+    "known_cutoff": false,
+    "source": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\new-props\\practice-net.webp"
+  },
+  {
+    "id": "newprop:range-bay",
+    "name": "Range bay",
+    "category": "New: Range",
+    "missing_corners": [
+      "NE",
+      "SE",
+      "SW",
+      "NW"
+    ],
+    "missing_turned_8degree": [
+      "N",
+      "E",
+      "S",
+      "W"
+    ],
+    "registered_mapping": {
+      "subject": "newprop:range-bay",
+      "cornerViewIds": [],
+      "axisViewIds": [],
+      "cornerIdsPresent": false,
+      "axisIdsPresent": false,
+      "propsToolRotations": 4,
+      "eightPlayerSelectableFacings": false
+    },
+    "known_review": null,
+    "known_cutoff": false,
+    "source": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\new-props\\range-bay.webp"
+  },
+  {
+    "id": "newprop:shanty-range-bay",
+    "name": "Shanty range bay",
+    "category": "New: Range",
+    "missing_corners": [
+      "NE",
+      "SE",
+      "SW",
+      "NW"
+    ],
+    "missing_turned_8degree": [
+      "N",
+      "E",
+      "S",
+      "W"
+    ],
+    "registered_mapping": {
+      "subject": "newprop:shanty-range-bay",
+      "cornerViewIds": [],
+      "axisViewIds": [],
+      "cornerIdsPresent": false,
+      "axisIdsPresent": false,
+      "propsToolRotations": 4,
+      "eightPlayerSelectableFacings": false
+    },
+    "known_review": null,
+    "known_cutoff": false,
+    "source": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\new-props\\shanty-range-bay.webp"
+  },
+  {
+    "id": "newprop:tent-bay",
+    "name": "Tent bay",
+    "category": "New: Range",
+    "missing_corners": [
+      "NE",
+      "SE",
+      "SW",
+      "NW"
+    ],
+    "missing_turned_8degree": [
+      "N",
+      "E",
+      "S",
+      "W"
+    ],
+    "registered_mapping": {
+      "subject": "newprop:tent-bay",
+      "cornerViewIds": [],
+      "axisViewIds": [],
+      "cornerIdsPresent": false,
+      "axisIdsPresent": false,
+      "propsToolRotations": 4,
+      "eightPlayerSelectableFacings": false
+    },
+    "known_review": null,
+    "known_cutoff": false,
+    "source": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\new-props\\tent-bay.webp"
+  },
+  {
+    "id": "newprop:dining-pavilion",
+    "name": "Dining pavilion",
+    "category": "New: Seating",
+    "missing_corners": [
+      "NE",
+      "SE",
+      "SW",
+      "NW"
+    ],
+    "missing_turned_8degree": [
+      "N",
+      "E",
+      "S",
+      "W"
+    ],
+    "registered_mapping": {
+      "subject": "newprop:dining-pavilion",
+      "cornerViewIds": [],
+      "axisViewIds": [],
+      "cornerIdsPresent": false,
+      "axisIdsPresent": false,
+      "propsToolRotations": 4,
+      "eightPlayerSelectableFacings": false
+    },
+    "known_review": null,
+    "known_cutoff": false,
+    "source": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\new-props\\dining-pavilion.webp"
+  },
+  {
+    "id": "newprop:hospitality-marquee",
+    "name": "Hospitality marquee",
+    "category": "New: Seating",
+    "missing_corners": [
+      "NE",
+      "SE",
+      "SW",
+      "NW"
+    ],
+    "missing_turned_8degree": [
+      "N",
+      "E",
+      "S",
+      "W"
+    ],
+    "registered_mapping": {
+      "subject": "newprop:hospitality-marquee",
+      "cornerViewIds": [],
+      "axisViewIds": [],
+      "cornerIdsPresent": false,
+      "axisIdsPresent": false,
+      "propsToolRotations": 4,
+      "eightPlayerSelectableFacings": false
+    },
+    "known_review": null,
+    "known_cutoff": false,
+    "source": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\new-props\\hospitality-marquee.webp"
+  },
+  {
+    "id": "newprop:long-picnic-table",
+    "name": "Long picnic table",
+    "category": "New: Seating",
+    "missing_corners": [
+      "NE",
+      "SE",
+      "SW",
+      "NW"
+    ],
+    "missing_turned_8degree": [
+      "N",
+      "E",
+      "S",
+      "W"
+    ],
+    "registered_mapping": {
+      "subject": "newprop:long-picnic-table",
+      "cornerViewIds": [],
+      "axisViewIds": [],
+      "cornerIdsPresent": false,
+      "axisIdsPresent": false,
+      "propsToolRotations": 4,
+      "eightPlayerSelectableFacings": false
+    },
+    "known_review": null,
+    "known_cutoff": false,
+    "source": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\new-props\\long-picnic-table.webp"
+  },
+  {
+    "id": "newprop:picnic-table",
+    "name": "Picnic table",
+    "category": "New: Seating",
+    "missing_corners": [
+      "NE",
+      "SE",
+      "SW",
+      "NW"
+    ],
+    "missing_turned_8degree": [
+      "N",
+      "E",
+      "S",
+      "W"
+    ],
+    "registered_mapping": {
+      "subject": "newprop:picnic-table",
+      "cornerViewIds": [],
+      "axisViewIds": [],
+      "cornerIdsPresent": false,
+      "axisIdsPresent": false,
+      "propsToolRotations": 4,
+      "eightPlayerSelectableFacings": false
+    },
+    "known_review": null,
+    "known_cutoff": false,
+    "source": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\new-props\\picnic-table.webp"
+  },
+  {
+    "id": "newprop:round-table-set",
+    "name": "Round table set",
+    "category": "New: Seating",
+    "missing_corners": [
+      "NE",
+      "SE",
+      "SW",
+      "NW"
+    ],
+    "missing_turned_8degree": [
+      "N",
+      "E",
+      "S",
+      "W"
+    ],
+    "registered_mapping": {
+      "subject": "newprop:round-table-set",
+      "cornerViewIds": [],
+      "axisViewIds": [],
+      "cornerIdsPresent": false,
+      "axisIdsPresent": false,
+      "propsToolRotations": 4,
+      "eightPlayerSelectableFacings": false
+    },
+    "known_review": null,
+    "known_cutoff": false,
+    "source": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\new-props\\round-table-set.webp"
+  },
+  {
+    "id": "newprop:tarp-seating",
+    "name": "Tarp seating",
+    "category": "New: Seating",
+    "missing_corners": [
+      "NE",
+      "SE",
+      "SW",
+      "NW"
+    ],
+    "missing_turned_8degree": [
+      "N",
+      "E",
+      "S",
+      "W"
+    ],
+    "registered_mapping": {
+      "subject": "newprop:tarp-seating",
+      "cornerViewIds": [],
+      "axisViewIds": [],
+      "cornerIdsPresent": false,
+      "axisIdsPresent": false,
+      "propsToolRotations": 4,
+      "eightPlayerSelectableFacings": false
+    },
+    "known_review": null,
+    "known_cutoff": false,
+    "source": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\new-props\\tarp-seating.webp"
+  },
+  {
+    "id": "newprop:umbrella-table-green",
+    "name": "Umbrella table green",
+    "category": "New: Seating",
+    "missing_corners": [
+      "NE",
+      "SE",
+      "SW",
+      "NW"
+    ],
+    "missing_turned_8degree": [
+      "N",
+      "E",
+      "S",
+      "W"
+    ],
+    "registered_mapping": {
+      "subject": "newprop:umbrella-table-green",
+      "cornerViewIds": [],
+      "axisViewIds": [],
+      "cornerIdsPresent": false,
+      "axisIdsPresent": false,
+      "propsToolRotations": 4,
+      "eightPlayerSelectableFacings": false
+    },
+    "known_review": null,
+    "known_cutoff": false,
+    "source": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\new-props\\umbrella-table-green.webp"
+  },
+  {
+    "id": "newprop:umbrella-tables",
+    "name": "Umbrella tables",
+    "category": "New: Seating",
+    "missing_corners": [
+      "NE",
+      "SE",
+      "SW",
+      "NW"
+    ],
+    "missing_turned_8degree": [
+      "N",
+      "E",
+      "S",
+      "W"
+    ],
+    "registered_mapping": {
+      "subject": "newprop:umbrella-tables",
+      "cornerViewIds": [],
+      "axisViewIds": [],
+      "cornerIdsPresent": false,
+      "axisIdsPresent": false,
+      "propsToolRotations": 4,
+      "eightPlayerSelectableFacings": false
+    },
+    "known_review": null,
+    "known_cutoff": false,
+    "source": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\new-props\\umbrella-tables.webp"
+  },
+  {
+    "id": "newprop:bag-stand-stall",
+    "name": "Bag stand stall",
+    "category": "New: Stalls",
+    "missing_corners": [
+      "NE",
+      "SE",
+      "SW",
+      "NW"
+    ],
+    "missing_turned_8degree": [
+      "N",
+      "E",
+      "S",
+      "W"
+    ],
+    "registered_mapping": {
+      "subject": "newprop:bag-stand-stall",
+      "cornerViewIds": [],
+      "axisViewIds": [],
+      "cornerIdsPresent": false,
+      "axisIdsPresent": false,
+      "propsToolRotations": 4,
+      "eightPlayerSelectableFacings": false
+    },
+    "known_review": null,
+    "known_cutoff": false,
+    "source": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\new-props\\bag-stand-stall.webp"
+  },
+  {
+    "id": "newprop:club-display",
+    "name": "Club display",
+    "category": "New: Stalls",
+    "missing_corners": [
+      "NE",
+      "SE",
+      "SW",
+      "NW"
+    ],
+    "missing_turned_8degree": [
+      "N",
+      "E",
+      "S",
+      "W"
+    ],
+    "registered_mapping": {
+      "subject": "newprop:club-display",
+      "cornerViewIds": [],
+      "axisViewIds": [],
+      "cornerIdsPresent": false,
+      "axisIdsPresent": false,
+      "propsToolRotations": 4,
+      "eightPlayerSelectableFacings": false
+    },
+    "known_review": null,
+    "known_cutoff": false,
+    "source": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\new-props\\club-display.webp"
+  },
+  {
+    "id": "newprop:club-rack-stall",
+    "name": "Club rack stall",
+    "category": "New: Stalls",
+    "missing_corners": [
+      "NE",
+      "SE",
+      "SW",
+      "NW"
+    ],
+    "missing_turned_8degree": [
+      "N",
+      "E",
+      "S",
+      "W"
+    ],
+    "registered_mapping": {
+      "subject": "newprop:club-rack-stall",
+      "cornerViewIds": [],
+      "axisViewIds": [],
+      "cornerIdsPresent": false,
+      "axisIdsPresent": false,
+      "propsToolRotations": 4,
+      "eightPlayerSelectableFacings": false
+    },
+    "known_review": null,
+    "known_cutoff": false,
+    "source": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\new-props\\club-rack-stall.webp"
+  },
+  {
+    "id": "newprop:drinks-stand-with-canopy",
+    "name": "Drinks stand with canopy",
+    "category": "New: Stalls",
+    "missing_corners": [
+      "NE",
+      "SE",
+      "SW",
+      "NW"
+    ],
+    "missing_turned_8degree": [
+      "N",
+      "E",
+      "S",
+      "W"
+    ],
+    "registered_mapping": {
+      "subject": "newprop:drinks-stand-with-canopy",
+      "cornerViewIds": [],
+      "axisViewIds": [],
+      "cornerIdsPresent": false,
+      "axisIdsPresent": false,
+      "propsToolRotations": 4,
+      "eightPlayerSelectableFacings": false
+    },
+    "known_review": null,
+    "known_cutoff": false,
+    "source": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\new-props\\drinks-stand-with-canopy.webp"
+  },
+  {
+    "id": "newprop:food-pavilion",
+    "name": "Food pavilion",
+    "category": "New: Stalls",
+    "missing_corners": [
+      "NE",
+      "SE",
+      "SW",
+      "NW"
+    ],
+    "missing_turned_8degree": [
+      "N",
+      "E",
+      "S",
+      "W"
+    ],
+    "registered_mapping": {
+      "subject": "newprop:food-pavilion",
+      "cornerViewIds": [],
+      "axisViewIds": [],
+      "cornerIdsPresent": false,
+      "axisIdsPresent": false,
+      "propsToolRotations": 4,
+      "eightPlayerSelectableFacings": false
+    },
+    "known_review": null,
+    "known_cutoff": false,
+    "source": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\new-props\\food-pavilion.webp"
+  },
+  {
+    "id": "newprop:garden-shed",
+    "name": "Garden shed",
+    "category": "New: Stalls",
+    "missing_corners": [
+      "NE",
+      "SE",
+      "SW",
+      "NW"
+    ],
+    "missing_turned_8degree": [
+      "N",
+      "E",
+      "S",
+      "W"
+    ],
+    "registered_mapping": {
+      "subject": "newprop:garden-shed",
+      "cornerViewIds": [],
+      "axisViewIds": [],
+      "cornerIdsPresent": false,
+      "axisIdsPresent": false,
+      "propsToolRotations": 4,
+      "eightPlayerSelectableFacings": false
+    },
+    "known_review": null,
+    "known_cutoff": false,
+    "source": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\new-props\\garden-shed.webp"
+  },
+  {
+    "id": "newprop:green-food-kiosk",
+    "name": "Green food kiosk",
+    "category": "New: Stalls",
+    "missing_corners": [
+      "NE",
+      "SE",
+      "SW",
+      "NW"
+    ],
+    "missing_turned_8degree": [
+      "N",
+      "E",
+      "S",
+      "W"
+    ],
+    "registered_mapping": {
+      "subject": "newprop:green-food-kiosk",
+      "cornerViewIds": [],
+      "axisViewIds": [],
+      "cornerIdsPresent": false,
+      "axisIdsPresent": false,
+      "propsToolRotations": 4,
+      "eightPlayerSelectableFacings": false
+    },
+    "known_review": null,
+    "known_cutoff": false,
+    "source": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\new-props\\green-food-kiosk.webp"
+  },
+  {
+    "id": "newprop:ice-cream-cart",
+    "name": "Ice cream cart",
+    "category": "New: Stalls",
+    "missing_corners": [
+      "NE",
+      "SE",
+      "SW",
+      "NW"
+    ],
+    "missing_turned_8degree": [
+      "N",
+      "E",
+      "S",
+      "W"
+    ],
+    "registered_mapping": {
+      "subject": "newprop:ice-cream-cart",
+      "cornerViewIds": [],
+      "axisViewIds": [],
+      "cornerIdsPresent": false,
+      "axisIdsPresent": false,
+      "propsToolRotations": 4,
+      "eightPlayerSelectableFacings": false
+    },
+    "known_review": null,
+    "known_cutoff": false,
+    "source": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\new-props\\ice-cream-cart.webp"
+  },
+  {
+    "id": "newprop:cap-stall",
+    "name": "Cap stall",
+    "category": "New: Stalls (shabby)",
+    "missing_corners": [
+      "NE",
+      "SE",
+      "SW",
+      "NW"
+    ],
+    "missing_turned_8degree": [
+      "N",
+      "E",
+      "S",
+      "W"
+    ],
+    "registered_mapping": {
+      "subject": "newprop:cap-stall",
+      "cornerViewIds": [],
+      "axisViewIds": [],
+      "cornerIdsPresent": false,
+      "axisIdsPresent": false,
+      "propsToolRotations": 4,
+      "eightPlayerSelectableFacings": false
+    },
+    "known_review": null,
+    "known_cutoff": false,
+    "source": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\new-props\\cap-stall.webp"
+  },
+  {
+    "id": "newprop:club-badge-stall",
+    "name": "Club badge stall",
+    "category": "New: Stalls (shabby)",
+    "missing_corners": [
+      "NE",
+      "SE",
+      "SW",
+      "NW"
+    ],
+    "missing_turned_8degree": [
+      "N",
+      "E",
+      "S",
+      "W"
+    ],
+    "registered_mapping": {
+      "subject": "newprop:club-badge-stall",
+      "cornerViewIds": [],
+      "axisViewIds": [],
+      "cornerIdsPresent": false,
+      "axisIdsPresent": false,
+      "propsToolRotations": 4,
+      "eightPlayerSelectableFacings": false
+    },
+    "known_review": null,
+    "known_cutoff": false,
+    "source": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\new-props\\club-badge-stall.webp"
+  },
+  {
+    "id": "newprop:cooler-drinks-stall",
+    "name": "Cooler drinks stall",
+    "category": "New: Stalls (shabby)",
+    "missing_corners": [
+      "NE",
+      "SE",
+      "SW",
+      "NW"
+    ],
+    "missing_turned_8degree": [
+      "N",
+      "E",
+      "S",
+      "W"
+    ],
+    "registered_mapping": {
+      "subject": "newprop:cooler-drinks-stall",
+      "cornerViewIds": [],
+      "axisViewIds": [],
+      "cornerIdsPresent": false,
+      "axisIdsPresent": false,
+      "propsToolRotations": 4,
+      "eightPlayerSelectableFacings": false
+    },
+    "known_review": null,
+    "known_cutoff": false,
+    "source": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\new-props\\cooler-drinks-stall.webp"
+  },
+  {
+    "id": "newprop:drinks-cart",
+    "name": "Drinks cart",
+    "category": "New: Stalls (shabby)",
+    "missing_corners": [
+      "NE",
+      "SE",
+      "SW",
+      "NW"
+    ],
+    "missing_turned_8degree": [
+      "N",
+      "E",
+      "S",
+      "W"
+    ],
+    "registered_mapping": {
+      "subject": "newprop:drinks-cart",
+      "cornerViewIds": [],
+      "axisViewIds": [],
+      "cornerIdsPresent": false,
+      "axisIdsPresent": false,
+      "propsToolRotations": 4,
+      "eightPlayerSelectableFacings": false
+    },
+    "known_review": null,
+    "known_cutoff": false,
+    "source": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\new-props\\drinks-cart.webp"
+  },
+  {
+    "id": "newprop:flag-stall",
+    "name": "Flag stall",
+    "category": "New: Stalls (shabby)",
+    "missing_corners": [
+      "NE",
+      "SE",
+      "SW",
+      "NW"
+    ],
+    "missing_turned_8degree": [
+      "N",
+      "E",
+      "S",
+      "W"
+    ],
+    "registered_mapping": {
+      "subject": "newprop:flag-stall",
+      "cornerViewIds": [],
+      "axisViewIds": [],
+      "cornerIdsPresent": false,
+      "axisIdsPresent": false,
+      "propsToolRotations": 4,
+      "eightPlayerSelectableFacings": false
+    },
+    "known_review": null,
+    "known_cutoff": false,
+    "source": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\new-props\\flag-stall.webp"
+  },
+  {
+    "id": "newprop:gate-arch",
+    "name": "Gate arch",
+    "category": "New: Stalls (shabby)",
+    "missing_corners": [
+      "NE",
+      "SE",
+      "SW",
+      "NW"
+    ],
+    "missing_turned_8degree": [
+      "N",
+      "E",
+      "S",
+      "W"
+    ],
+    "registered_mapping": {
+      "subject": "newprop:gate-arch",
+      "cornerViewIds": [],
+      "axisViewIds": [],
+      "cornerIdsPresent": false,
+      "axisIdsPresent": false,
+      "propsToolRotations": 4,
+      "eightPlayerSelectableFacings": false
+    },
+    "known_review": null,
+    "known_cutoff": false,
+    "source": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\new-props\\gate-arch.webp"
+  },
+  {
+    "id": "newprop:market-tents",
+    "name": "Market tents",
+    "category": "New: Stalls (shabby)",
+    "missing_corners": [
+      "NE",
+      "SE",
+      "SW",
+      "NW"
+    ],
+    "missing_turned_8degree": [
+      "N",
+      "E",
+      "S",
+      "W"
+    ],
+    "registered_mapping": {
+      "subject": "newprop:market-tents",
+      "cornerViewIds": [],
+      "axisViewIds": [],
+      "cornerIdsPresent": false,
+      "axisIdsPresent": false,
+      "propsToolRotations": 4,
+      "eightPlayerSelectableFacings": false
+    },
+    "known_review": null,
+    "known_cutoff": false,
+    "source": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\new-props\\market-tents.webp"
+  },
+  {
+    "id": "newprop:shack-map-board",
+    "name": "Shack map board",
+    "category": "New: Stalls (shabby)",
+    "missing_corners": [
+      "NE",
+      "SE",
+      "SW",
+      "NW"
+    ],
+    "missing_turned_8degree": [
+      "N",
+      "E",
+      "S",
+      "W"
+    ],
+    "registered_mapping": {
+      "subject": "newprop:shack-map-board",
+      "cornerViewIds": [],
+      "axisViewIds": [],
+      "cornerIdsPresent": false,
+      "axisIdsPresent": false,
+      "propsToolRotations": 4,
+      "eightPlayerSelectableFacings": false
+    },
+    "known_review": null,
+    "known_cutoff": false,
+    "source": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\new-props\\shack-map-board.webp"
+  },
+  {
+    "id": "newprop:shack-stall",
+    "name": "Shack stall",
+    "category": "New: Stalls (shabby)",
+    "missing_corners": [
+      "NE",
+      "SE",
+      "SW",
+      "NW"
+    ],
+    "missing_turned_8degree": [
+      "N",
+      "E",
+      "S",
+      "W"
+    ],
+    "registered_mapping": {
+      "subject": "newprop:shack-stall",
+      "cornerViewIds": [],
+      "axisViewIds": [],
+      "cornerIdsPresent": false,
+      "axisIdsPresent": false,
+      "propsToolRotations": 4,
+      "eightPlayerSelectableFacings": false
+    },
+    "known_review": null,
+    "known_cutoff": false,
+    "source": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\new-props\\shack-stall.webp"
+  },
+  {
+    "id": "newprop:shanty-counter",
+    "name": "Shanty counter",
+    "category": "New: Stalls (shabby)",
+    "missing_corners": [
+      "NE",
+      "SE",
+      "SW",
+      "NW"
+    ],
+    "missing_turned_8degree": [
+      "N",
+      "E",
+      "S",
+      "W"
+    ],
+    "registered_mapping": {
+      "subject": "newprop:shanty-counter",
+      "cornerViewIds": [],
+      "axisViewIds": [],
+      "cornerIdsPresent": false,
+      "axisIdsPresent": false,
+      "propsToolRotations": 4,
+      "eightPlayerSelectableFacings": false
+    },
+    "known_review": null,
+    "known_cutoff": false,
+    "source": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\new-props\\shanty-counter.webp"
+  },
+  {
+    "id": "newprop:shanty-hut",
+    "name": "Shanty hut",
+    "category": "New: Stalls (shabby)",
+    "missing_corners": [
+      "NE",
+      "SE",
+      "SW",
+      "NW"
+    ],
+    "missing_turned_8degree": [
+      "N",
+      "E",
+      "S",
+      "W"
+    ],
+    "registered_mapping": {
+      "subject": "newprop:shanty-hut",
+      "cornerViewIds": [],
+      "axisViewIds": [],
+      "cornerIdsPresent": false,
+      "axisIdsPresent": false,
+      "propsToolRotations": 4,
+      "eightPlayerSelectableFacings": false
+    },
+    "known_review": null,
+    "known_cutoff": false,
+    "source": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\new-props\\shanty-hut.webp"
+  },
+  {
+    "id": "newprop:shanty-shed",
+    "name": "Shanty shed",
+    "category": "New: Stalls (shabby)",
+    "missing_corners": [
+      "NE",
+      "SE",
+      "SW",
+      "NW"
+    ],
+    "missing_turned_8degree": [
+      "N",
+      "E",
+      "S",
+      "W"
+    ],
+    "registered_mapping": {
+      "subject": "newprop:shanty-shed",
+      "cornerViewIds": [],
+      "axisViewIds": [],
+      "cornerIdsPresent": false,
+      "axisIdsPresent": false,
+      "propsToolRotations": 4,
+      "eightPlayerSelectableFacings": false
+    },
+    "known_review": null,
+    "known_cutoff": false,
+    "source": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\new-props\\shanty-shed.webp"
+  },
+  {
+    "id": "newprop:shanty-stall",
+    "name": "Shanty stall",
+    "category": "New: Stalls (shabby)",
+    "missing_corners": [
+      "NE",
+      "SE",
+      "SW",
+      "NW"
+    ],
+    "missing_turned_8degree": [
+      "N",
+      "E",
+      "S",
+      "W"
+    ],
+    "registered_mapping": {
+      "subject": "newprop:shanty-stall",
+      "cornerViewIds": [],
+      "axisViewIds": [],
+      "cornerIdsPresent": false,
+      "axisIdsPresent": false,
+      "propsToolRotations": 4,
+      "eightPlayerSelectableFacings": false
+    },
+    "known_review": null,
+    "known_cutoff": false,
+    "source": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\new-props\\shanty-stall.webp"
+  },
+  {
+    "id": "newprop:shirt-stall",
+    "name": "Shirt stall",
+    "category": "New: Stalls (shabby)",
+    "missing_corners": [
+      "NE",
+      "SE",
+      "SW",
+      "NW"
+    ],
+    "missing_turned_8degree": [
+      "N",
+      "E",
+      "S",
+      "W"
+    ],
+    "registered_mapping": {
+      "subject": "newprop:shirt-stall",
+      "cornerViewIds": [],
+      "axisViewIds": [],
+      "cornerIdsPresent": false,
+      "axisIdsPresent": false,
+      "propsToolRotations": 4,
+      "eightPlayerSelectableFacings": false
+    },
+    "known_review": null,
+    "known_cutoff": false,
+    "source": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\new-props\\shirt-stall.webp"
+  },
+  {
+    "id": "newprop:snack-shack",
+    "name": "Snack shack",
+    "category": "New: Stalls (shabby)",
+    "missing_corners": [
+      "NE",
+      "SE",
+      "SW",
+      "NW"
+    ],
+    "missing_turned_8degree": [
+      "N",
+      "E",
+      "S",
+      "W"
+    ],
+    "registered_mapping": {
+      "subject": "newprop:snack-shack",
+      "cornerViewIds": [],
+      "axisViewIds": [],
+      "cornerIdsPresent": false,
+      "axisIdsPresent": false,
+      "propsToolRotations": 4,
+      "eightPlayerSelectableFacings": false
+    },
+    "known_review": null,
+    "known_cutoff": false,
+    "source": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\new-props\\snack-shack.webp"
+  },
+  {
+    "id": "newprop:snack-stall",
+    "name": "Snack stall",
+    "category": "New: Stalls (shabby)",
+    "missing_corners": [
+      "NE",
+      "SE",
+      "SW",
+      "NW"
+    ],
+    "missing_turned_8degree": [
+      "N",
+      "E",
+      "S",
+      "W"
+    ],
+    "registered_mapping": {
+      "subject": "newprop:snack-stall",
+      "cornerViewIds": [],
+      "axisViewIds": [],
+      "cornerIdsPresent": false,
+      "axisIdsPresent": false,
+      "propsToolRotations": 4,
+      "eightPlayerSelectableFacings": false
+    },
+    "known_review": null,
+    "known_cutoff": false,
+    "source": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\new-props\\snack-stall.webp"
+  },
+  {
+    "id": "newprop:snack-trolley",
+    "name": "Snack trolley",
+    "category": "New: Stalls (shabby)",
+    "missing_corners": [
+      "NE",
+      "SE",
+      "SW",
+      "NW"
+    ],
+    "missing_turned_8degree": [
+      "N",
+      "E",
+      "S",
+      "W"
+    ],
+    "registered_mapping": {
+      "subject": "newprop:snack-trolley",
+      "cornerViewIds": [],
+      "axisViewIds": [],
+      "cornerIdsPresent": false,
+      "axisIdsPresent": false,
+      "propsToolRotations": 4,
+      "eightPlayerSelectableFacings": false
+    },
+    "known_review": null,
+    "known_cutoff": false,
+    "source": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\new-props\\snack-trolley.webp"
+  },
+  {
+    "id": "newprop:tarp-counter",
+    "name": "Tarp counter",
+    "category": "New: Stalls (shabby)",
+    "missing_corners": [
+      "NE",
+      "SE",
+      "SW",
+      "NW"
+    ],
+    "missing_turned_8degree": [
+      "N",
+      "E",
+      "S",
+      "W"
+    ],
+    "registered_mapping": {
+      "subject": "newprop:tarp-counter",
+      "cornerViewIds": [],
+      "axisViewIds": [],
+      "cornerIdsPresent": false,
+      "axisIdsPresent": false,
+      "propsToolRotations": 4,
+      "eightPlayerSelectableFacings": false
+    },
+    "known_review": null,
+    "known_cutoff": false,
+    "source": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\new-props\\tarp-counter.webp"
+  },
+  {
+    "id": "newprop:tarp-market-stall",
+    "name": "Tarp market stall",
+    "category": "New: Stalls (shabby)",
+    "missing_corners": [
+      "NE",
+      "SE",
+      "SW",
+      "NW"
+    ],
+    "missing_turned_8degree": [
+      "N",
+      "E",
+      "S",
+      "W"
+    ],
+    "registered_mapping": {
+      "subject": "newprop:tarp-market-stall",
+      "cornerViewIds": [],
+      "axisViewIds": [],
+      "cornerIdsPresent": false,
+      "axisIdsPresent": false,
+      "propsToolRotations": 4,
+      "eightPlayerSelectableFacings": false
+    },
+    "known_review": null,
+    "known_cutoff": false,
+    "source": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\new-props\\tarp-market-stall.webp"
+  },
+  {
+    "id": "newprop:tarp-shelter",
+    "name": "Tarp shelter",
+    "category": "New: Stalls (shabby)",
+    "missing_corners": [
+      "NE",
+      "SE",
+      "SW",
+      "NW"
+    ],
+    "missing_turned_8degree": [
+      "N",
+      "E",
+      "S",
+      "W"
+    ],
+    "registered_mapping": {
+      "subject": "newprop:tarp-shelter",
+      "cornerViewIds": [],
+      "axisViewIds": [],
+      "cornerIdsPresent": false,
+      "axisIdsPresent": false,
+      "propsToolRotations": 4,
+      "eightPlayerSelectableFacings": false
+    },
+    "known_review": null,
+    "known_cutoff": false,
+    "source": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\new-props\\tarp-shelter.webp"
+  },
+  {
+    "id": "newprop:toilet-booth",
+    "name": "Toilet booth",
+    "category": "New: Stalls (shabby)",
+    "missing_corners": [
+      "NE",
+      "SE",
+      "SW",
+      "NW"
+    ],
+    "missing_turned_8degree": [
+      "N",
+      "E",
+      "S",
+      "W"
+    ],
+    "registered_mapping": {
+      "subject": "newprop:toilet-booth",
+      "cornerViewIds": [],
+      "axisViewIds": [],
+      "cornerIdsPresent": false,
+      "axisIdsPresent": false,
+      "propsToolRotations": 4,
+      "eightPlayerSelectableFacings": false
+    },
+    "known_review": null,
+    "known_cutoff": false,
+    "source": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\new-props\\toilet-booth.webp"
+  },
+  {
+    "id": "newprop:tool-stall",
+    "name": "Tool stall",
+    "category": "New: Stalls (shabby)",
+    "missing_corners": [
+      "NE",
+      "SE",
+      "SW",
+      "NW"
+    ],
+    "missing_turned_8degree": [
+      "N",
+      "E",
+      "S",
+      "W"
+    ],
+    "registered_mapping": {
+      "subject": "newprop:tool-stall",
+      "cornerViewIds": [],
+      "axisViewIds": [],
+      "cornerIdsPresent": false,
+      "axisIdsPresent": false,
+      "propsToolRotations": 4,
+      "eightPlayerSelectableFacings": false
+    },
+    "known_review": null,
+    "known_cutoff": false,
+    "source": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\new-props\\tool-stall.webp"
+  },
+  {
+    "id": "newprop:water-tank-stall",
+    "name": "Water tank stall",
+    "category": "New: Stalls (shabby)",
+    "missing_corners": [
+      "NE",
+      "SE",
+      "SW",
+      "NW"
+    ],
+    "missing_turned_8degree": [
+      "N",
+      "E",
+      "S",
+      "W"
+    ],
+    "registered_mapping": {
+      "subject": "newprop:water-tank-stall",
+      "cornerViewIds": [],
+      "axisViewIds": [],
+      "cornerIdsPresent": false,
+      "axisIdsPresent": false,
+      "propsToolRotations": 4,
+      "eightPlayerSelectableFacings": false
+    },
+    "known_review": null,
+    "known_cutoff": false,
+    "source": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\new-props\\water-tank-stall.webp"
+  },
+  {
+    "id": "newprop:delivery-truck",
+    "name": "Delivery truck",
+    "category": "New: Vehicles",
+    "missing_corners": [
+      "NE",
+      "SE",
+      "SW",
+      "NW"
+    ],
+    "missing_turned_8degree": [
+      "N",
+      "E",
+      "S",
+      "W"
+    ],
+    "registered_mapping": {
+      "subject": "newprop:delivery-truck",
+      "cornerViewIds": [],
+      "axisViewIds": [],
+      "cornerIdsPresent": false,
+      "axisIdsPresent": false,
+      "propsToolRotations": 4,
+      "eightPlayerSelectableFacings": false
+    },
+    "known_review": null,
+    "known_cutoff": false,
+    "source": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\new-props\\delivery-truck.webp"
+  },
+  {
+    "id": "newprop:drinks-cart-green",
+    "name": "Drinks cart green",
+    "category": "New: Vehicles",
+    "missing_corners": [
+      "NE",
+      "SE",
+      "SW",
+      "NW"
+    ],
+    "missing_turned_8degree": [
+      "N",
+      "E",
+      "S",
+      "W"
+    ],
+    "registered_mapping": {
+      "subject": "newprop:drinks-cart-green",
+      "cornerViewIds": [],
+      "axisViewIds": [],
+      "cornerIdsPresent": false,
+      "axisIdsPresent": false,
+      "propsToolRotations": 4,
+      "eightPlayerSelectableFacings": false
+    },
+    "known_review": null,
+    "known_cutoff": false,
+    "source": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\new-props\\drinks-cart-green.webp"
+  },
+  {
+    "id": "newprop:forklift-with-pallets",
+    "name": "Forklift with pallets",
+    "category": "New: Vehicles",
+    "missing_corners": [
+      "NE",
+      "SE",
+      "SW",
+      "NW"
+    ],
+    "missing_turned_8degree": [
+      "N",
+      "E",
+      "S",
+      "W"
+    ],
+    "registered_mapping": {
+      "subject": "newprop:forklift-with-pallets",
+      "cornerViewIds": [],
+      "axisViewIds": [],
+      "cornerIdsPresent": false,
+      "axisIdsPresent": false,
+      "propsToolRotations": 4,
+      "eightPlayerSelectableFacings": false
+    },
+    "known_review": null,
+    "known_cutoff": false,
+    "source": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\new-props\\forklift-with-pallets.webp"
+  },
+  {
+    "id": "newprop:gang-mower",
+    "name": "Gang mower",
+    "category": "New: Vehicles",
+    "missing_corners": [
+      "NE",
+      "SE",
+      "SW",
+      "NW"
+    ],
+    "missing_turned_8degree": [
+      "N",
+      "E",
+      "S",
+      "W"
+    ],
+    "registered_mapping": {
+      "subject": "newprop:gang-mower",
+      "cornerViewIds": [],
+      "axisViewIds": [],
+      "cornerIdsPresent": false,
+      "axisIdsPresent": false,
+      "propsToolRotations": 4,
+      "eightPlayerSelectableFacings": false
+    },
+    "known_review": null,
+    "known_cutoff": false,
+    "source": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\new-props\\gang-mower.webp"
+  },
+  {
+    "id": "newprop:green-gang-mower",
+    "name": "Green gang mower",
+    "category": "New: Vehicles",
+    "missing_corners": [
+      "NE",
+      "SE",
+      "SW",
+      "NW"
+    ],
+    "missing_turned_8degree": [
+      "N",
+      "E",
+      "S",
+      "W"
+    ],
+    "registered_mapping": {
+      "subject": "newprop:green-gang-mower",
+      "cornerViewIds": [],
+      "axisViewIds": [],
+      "cornerIdsPresent": false,
+      "axisIdsPresent": false,
+      "propsToolRotations": 4,
+      "eightPlayerSelectableFacings": false
+    },
+    "known_review": null,
+    "known_cutoff": false,
+    "source": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\new-props\\green-gang-mower.webp"
+  },
+  {
+    "id": "newprop:green-golf-cart",
+    "name": "Green golf cart",
+    "category": "New: Vehicles",
+    "missing_corners": [
+      "NE",
+      "SE",
+      "SW",
+      "NW"
+    ],
+    "missing_turned_8degree": [
+      "N",
+      "E",
+      "S",
+      "W"
+    ],
+    "registered_mapping": {
+      "subject": "newprop:green-golf-cart",
+      "cornerViewIds": [],
+      "axisViewIds": [],
+      "cornerIdsPresent": false,
+      "axisIdsPresent": false,
+      "propsToolRotations": 4,
+      "eightPlayerSelectableFacings": false
+    },
+    "known_review": null,
+    "known_cutoff": false,
+    "source": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\new-props\\green-golf-cart.webp"
+  },
+  {
+    "id": "newprop:green-greens-mower",
+    "name": "Green greens mower",
+    "category": "New: Vehicles",
+    "missing_corners": [
+      "NE",
+      "SE",
+      "SW",
+      "NW"
+    ],
+    "missing_turned_8degree": [
+      "N",
+      "E",
+      "S",
+      "W"
+    ],
+    "registered_mapping": {
+      "subject": "newprop:green-greens-mower",
+      "cornerViewIds": [],
+      "axisViewIds": [],
+      "cornerIdsPresent": false,
+      "axisIdsPresent": false,
+      "propsToolRotations": 4,
+      "eightPlayerSelectableFacings": false
+    },
+    "known_review": null,
+    "known_cutoff": false,
+    "source": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\new-props\\green-greens-mower.webp"
+  },
+  {
+    "id": "newprop:green-ride-mower",
+    "name": "Green ride mower",
+    "category": "New: Vehicles",
+    "missing_corners": [
+      "NE",
+      "SE",
+      "SW",
+      "NW"
+    ],
+    "missing_turned_8degree": [
+      "N",
+      "E",
+      "S",
+      "W"
+    ],
+    "registered_mapping": {
+      "subject": "newprop:green-ride-mower",
+      "cornerViewIds": [],
+      "axisViewIds": [],
+      "cornerIdsPresent": false,
+      "axisIdsPresent": false,
+      "propsToolRotations": 4,
+      "eightPlayerSelectableFacings": false
+    },
+    "known_review": null,
+    "known_cutoff": false,
+    "source": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\new-props\\green-ride-mower.webp"
+  },
+  {
+    "id": "newprop:green-spray-rig",
+    "name": "Green spray rig",
+    "category": "New: Vehicles",
+    "missing_corners": [
+      "NE",
+      "SE",
+      "SW",
+      "NW"
+    ],
+    "missing_turned_8degree": [
+      "N",
+      "E",
+      "S",
+      "W"
+    ],
+    "registered_mapping": {
+      "subject": "newprop:green-spray-rig",
+      "cornerViewIds": [],
+      "axisViewIds": [],
+      "cornerIdsPresent": false,
+      "axisIdsPresent": false,
+      "propsToolRotations": 4,
+      "eightPlayerSelectableFacings": false
+    },
+    "known_review": null,
+    "known_cutoff": false,
+    "source": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\new-props\\green-spray-rig.webp"
+  },
+  {
+    "id": "newprop:greens-mower",
+    "name": "Greens mower",
+    "category": "New: Vehicles",
+    "missing_corners": [
+      "NE",
+      "SE",
+      "SW",
+      "NW"
+    ],
+    "missing_turned_8degree": [
+      "N",
+      "E",
+      "S",
+      "W"
+    ],
+    "registered_mapping": {
+      "subject": "newprop:greens-mower",
+      "cornerViewIds": [],
+      "axisViewIds": [],
+      "cornerIdsPresent": false,
+      "axisIdsPresent": false,
+      "propsToolRotations": 4,
+      "eightPlayerSelectableFacings": false
+    },
+    "known_review": null,
+    "known_cutoff": false,
+    "source": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\new-props\\greens-mower.webp"
+  },
+  {
+    "id": "newprop:ride-mower",
+    "name": "Ride mower",
+    "category": "New: Vehicles",
+    "missing_corners": [
+      "NE",
+      "SE",
+      "SW",
+      "NW"
+    ],
+    "missing_turned_8degree": [
+      "N",
+      "E",
+      "S",
+      "W"
+    ],
+    "registered_mapping": {
+      "subject": "newprop:ride-mower",
+      "cornerViewIds": [],
+      "axisViewIds": [],
+      "cornerIdsPresent": false,
+      "axisIdsPresent": false,
+      "propsToolRotations": 4,
+      "eightPlayerSelectableFacings": false
+    },
+    "known_review": null,
+    "known_cutoff": false,
+    "source": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\new-props\\ride-mower.webp"
+  },
+  {
+    "id": "newprop:roofed-cart",
+    "name": "Roofed cart",
+    "category": "New: Vehicles",
+    "missing_corners": [
+      "NE",
+      "SE",
+      "SW",
+      "NW"
+    ],
+    "missing_turned_8degree": [
+      "N",
+      "E",
+      "S",
+      "W"
+    ],
+    "registered_mapping": {
+      "subject": "newprop:roofed-cart",
+      "cornerViewIds": [],
+      "axisViewIds": [],
+      "cornerIdsPresent": false,
+      "axisIdsPresent": false,
+      "propsToolRotations": 4,
+      "eightPlayerSelectableFacings": false
+    },
+    "known_review": null,
+    "known_cutoff": false,
+    "source": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\new-props\\roofed-cart.webp"
+  },
+  {
+    "id": "newprop:shuttle-bus",
+    "name": "Shuttle bus",
+    "category": "New: Vehicles",
+    "missing_corners": [
+      "NE",
+      "SE",
+      "SW",
+      "NW"
+    ],
+    "missing_turned_8degree": [
+      "N",
+      "E",
+      "S",
+      "W"
+    ],
+    "registered_mapping": {
+      "subject": "newprop:shuttle-bus",
+      "cornerViewIds": [],
+      "axisViewIds": [],
+      "cornerIdsPresent": false,
+      "axisIdsPresent": false,
+      "propsToolRotations": 4,
+      "eightPlayerSelectableFacings": false
+    },
+    "known_review": null,
+    "known_cutoff": false,
+    "source": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\new-props\\shuttle-bus.webp"
+  },
+  {
+    "id": "newprop:shuttle-bus-2",
+    "name": "Shuttle bus 2",
+    "category": "New: Vehicles",
+    "missing_corners": [
+      "NE",
+      "SE",
+      "SW",
+      "NW"
+    ],
+    "missing_turned_8degree": [
+      "N",
+      "E",
+      "S",
+      "W"
+    ],
+    "registered_mapping": {
+      "subject": "newprop:shuttle-bus-2",
+      "cornerViewIds": [],
+      "axisViewIds": [],
+      "cornerIdsPresent": false,
+      "axisIdsPresent": false,
+      "propsToolRotations": 4,
+      "eightPlayerSelectableFacings": false
+    },
+    "known_review": null,
+    "known_cutoff": false,
+    "source": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\new-props\\shuttle-bus-2.webp"
+  },
+  {
+    "id": "newprop:shuttle-cart",
+    "name": "Shuttle cart",
+    "category": "New: Vehicles",
+    "missing_corners": [
+      "NE",
+      "SE",
+      "SW",
+      "NW"
+    ],
+    "missing_turned_8degree": [
+      "N",
+      "E",
+      "S",
+      "W"
+    ],
+    "registered_mapping": {
+      "subject": "newprop:shuttle-cart",
+      "cornerViewIds": [],
+      "axisViewIds": [],
+      "cornerIdsPresent": false,
+      "axisIdsPresent": false,
+      "propsToolRotations": 4,
+      "eightPlayerSelectableFacings": false
+    },
+    "known_review": null,
+    "known_cutoff": false,
+    "source": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\new-props\\shuttle-cart.webp"
+  },
+  {
+    "id": "newprop:shuttle-cart-white",
+    "name": "Shuttle cart white",
+    "category": "New: Vehicles",
+    "missing_corners": [
+      "NE",
+      "SE",
+      "SW",
+      "NW"
+    ],
+    "missing_turned_8degree": [
+      "N",
+      "E",
+      "S",
+      "W"
+    ],
+    "registered_mapping": {
+      "subject": "newprop:shuttle-cart-white",
+      "cornerViewIds": [],
+      "axisViewIds": [],
+      "cornerIdsPresent": false,
+      "axisIdsPresent": false,
+      "propsToolRotations": 4,
+      "eightPlayerSelectableFacings": false
+    },
+    "known_review": null,
+    "known_cutoff": false,
+    "source": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\new-props\\shuttle-cart-white.webp"
+  },
+  {
+    "id": "newprop:spray-rig",
+    "name": "Spray rig",
+    "category": "New: Vehicles",
+    "missing_corners": [
+      "NE",
+      "SE",
+      "SW",
+      "NW"
+    ],
+    "missing_turned_8degree": [
+      "N",
+      "E",
+      "S",
+      "W"
+    ],
+    "registered_mapping": {
+      "subject": "newprop:spray-rig",
+      "cornerViewIds": [],
+      "axisViewIds": [],
+      "cornerIdsPresent": false,
+      "axisIdsPresent": false,
+      "propsToolRotations": 4,
+      "eightPlayerSelectableFacings": false
+    },
+    "known_review": null,
+    "known_cutoff": false,
+    "source": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\new-props\\spray-rig.webp"
+  },
+  {
+    "id": "newprop:supply-cart",
+    "name": "Supply cart",
+    "category": "New: Vehicles",
+    "missing_corners": [
+      "NE",
+      "SE",
+      "SW",
+      "NW"
+    ],
+    "missing_turned_8degree": [
+      "N",
+      "E",
+      "S",
+      "W"
+    ],
+    "registered_mapping": {
+      "subject": "newprop:supply-cart",
+      "cornerViewIds": [],
+      "axisViewIds": [],
+      "cornerIdsPresent": false,
+      "axisIdsPresent": false,
+      "propsToolRotations": 4,
+      "eightPlayerSelectableFacings": false
+    },
+    "known_review": null,
+    "known_cutoff": false,
+    "source": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\new-props\\supply-cart.webp"
+  },
+  {
+    "id": "newprop:taxi",
+    "name": "Taxi",
+    "category": "New: Vehicles",
+    "missing_corners": [
+      "NE",
+      "SE",
+      "SW",
+      "NW"
+    ],
+    "missing_turned_8degree": [
+      "N",
+      "E",
+      "S",
+      "W"
+    ],
+    "registered_mapping": {
+      "subject": "newprop:taxi",
+      "cornerViewIds": [],
+      "axisViewIds": [],
+      "cornerIdsPresent": false,
+      "axisIdsPresent": false,
+      "propsToolRotations": 4,
+      "eightPlayerSelectableFacings": false
+    },
+    "known_review": null,
+    "known_cutoff": false,
+    "source": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\new-props\\taxi.webp"
+  },
+  {
+    "id": "newprop:taxi-2",
+    "name": "Taxi 2",
+    "category": "New: Vehicles",
+    "missing_corners": [
+      "NE",
+      "SE",
+      "SW",
+      "NW"
+    ],
+    "missing_turned_8degree": [
+      "N",
+      "E",
+      "S",
+      "W"
+    ],
+    "registered_mapping": {
+      "subject": "newprop:taxi-2",
+      "cornerViewIds": [],
+      "axisViewIds": [],
+      "cornerIdsPresent": false,
+      "axisIdsPresent": false,
+      "propsToolRotations": 4,
+      "eightPlayerSelectableFacings": false
+    },
+    "known_review": null,
+    "known_cutoff": false,
+    "source": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\new-props\\taxi-2.webp"
+  },
+  {
+    "id": "newprop:utility-cart",
+    "name": "Utility cart",
+    "category": "New: Vehicles",
+    "missing_corners": [
+      "NE",
+      "SE",
+      "SW",
+      "NW"
+    ],
+    "missing_turned_8degree": [
+      "N",
+      "E",
+      "S",
+      "W"
+    ],
+    "registered_mapping": {
+      "subject": "newprop:utility-cart",
+      "cornerViewIds": [],
+      "axisViewIds": [],
+      "cornerIdsPresent": false,
+      "axisIdsPresent": false,
+      "propsToolRotations": 4,
+      "eightPlayerSelectableFacings": false
+    },
+    "known_review": null,
+    "known_cutoff": false,
+    "source": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\new-props\\utility-cart.webp"
+  },
+  {
+    "id": "newprop:utility-cart-green",
+    "name": "Utility cart green",
+    "category": "New: Vehicles",
+    "missing_corners": [
+      "NE",
+      "SE",
+      "SW",
+      "NW"
+    ],
+    "missing_turned_8degree": [
+      "N",
+      "E",
+      "S",
+      "W"
+    ],
+    "registered_mapping": {
+      "subject": "newprop:utility-cart-green",
+      "cornerViewIds": [],
+      "axisViewIds": [],
+      "cornerIdsPresent": false,
+      "axisIdsPresent": false,
+      "propsToolRotations": 4,
+      "eightPlayerSelectableFacings": false
+    },
+    "known_review": null,
+    "known_cutoff": false,
+    "source": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\new-props\\utility-cart-green.webp"
+  },
+  {
+    "id": "newprop:water-truck",
+    "name": "Water truck",
+    "category": "New: Vehicles",
+    "missing_corners": [
+      "NE",
+      "SE",
+      "SW",
+      "NW"
+    ],
+    "missing_turned_8degree": [
+      "N",
+      "E",
+      "S",
+      "W"
+    ],
+    "registered_mapping": {
+      "subject": "newprop:water-truck",
+      "cornerViewIds": [],
+      "axisViewIds": [],
+      "cornerIdsPresent": false,
+      "axisIdsPresent": false,
+      "propsToolRotations": 4,
+      "eightPlayerSelectableFacings": false
+    },
+    "known_review": null,
+    "known_cutoff": false,
+    "source": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\new-props\\water-truck.webp"
+  },
+  {
+    "id": "newprop:wheelchair-cart",
+    "name": "Wheelchair cart",
+    "category": "New: Vehicles",
+    "missing_corners": [
+      "NE",
+      "SE",
+      "SW",
+      "NW"
+    ],
+    "missing_turned_8degree": [
+      "N",
+      "E",
+      "S",
+      "W"
+    ],
+    "registered_mapping": {
+      "subject": "newprop:wheelchair-cart",
+      "cornerViewIds": [],
+      "axisViewIds": [],
+      "cornerIdsPresent": false,
+      "axisIdsPresent": false,
+      "propsToolRotations": 4,
+      "eightPlayerSelectableFacings": false
+    },
+    "known_review": null,
+    "known_cutoff": false,
+    "source": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\new-props\\wheelchair-cart.webp"
+  },
+  {
+    "id": "kit:granite-broad-rosegrey",
+    "name": "Broad rose-grey granite boulder",
+    "category": "Painted landscaping",
+    "missing_corners": [
+      "NE",
+      "SE",
+      "SW",
+      "NW"
+    ],
+    "missing_turned_8degree": [
+      "N",
+      "E",
+      "S",
+      "W"
+    ],
+    "registered_mapping": {
+      "subject": "kit:granite-broad-rosegrey",
+      "cornerViewIds": [],
+      "axisViewIds": [],
+      "cornerIdsPresent": false,
+      "axisIdsPresent": false,
+      "propsToolRotations": 4,
+      "eightPlayerSelectableFacings": false
+    },
+    "known_review": null,
+    "known_cutoff": null,
+    "source": {
+      "atlas_definition": "src\\game\\golf-library.ts",
+      "tex": [
+        0,
+        0.33544921875,
+        0.46826171875,
+        0.361328125,
+        0.49169921875
+      ],
+      "note": "single original atlas sprite; not asserted to be an independently labelled angle"
+    }
+  },
+  {
+    "id": "kit:granite-golden-grass",
+    "name": "Granite boulder with golden grass",
+    "category": "Painted landscaping",
+    "missing_corners": [
+      "NE",
+      "SE",
+      "SW",
+      "NW"
+    ],
+    "missing_turned_8degree": [
+      "N",
+      "E",
+      "S",
+      "W"
+    ],
+    "registered_mapping": {
+      "subject": "kit:granite-golden-grass",
+      "cornerViewIds": [],
+      "axisViewIds": [],
+      "cornerIdsPresent": false,
+      "axisIdsPresent": false,
+      "propsToolRotations": 4,
+      "eightPlayerSelectableFacings": false
+    },
+    "known_review": null,
+    "known_cutoff": null,
+    "source": {
+      "atlas_definition": "src\\game\\golf-library.ts",
+      "tex": [
+        0,
+        0.44677734375,
+        0.46826171875,
+        0.478515625,
+        0.49365234375
+      ],
+      "note": "single original atlas sprite; not asserted to be an independently labelled angle"
+    }
+  },
+  {
+    "id": "kit:granite-moss-split",
+    "name": "Mossy split granite boulder",
+    "category": "Painted landscaping",
+    "missing_corners": [
+      "NE",
+      "SE",
+      "SW",
+      "NW"
+    ],
+    "missing_turned_8degree": [
+      "N",
+      "E",
+      "S",
+      "W"
+    ],
+    "registered_mapping": {
+      "subject": "kit:granite-moss-split",
+      "cornerViewIds": [],
+      "axisViewIds": [],
+      "cornerIdsPresent": false,
+      "axisIdsPresent": false,
+      "propsToolRotations": 4,
+      "eightPlayerSelectableFacings": false
+    },
+    "known_review": null,
+    "known_cutoff": null,
+    "source": {
+      "atlas_definition": "src\\game\\golf-library.ts",
+      "tex": [
+        0,
+        0.4189453125,
+        0.46826171875,
+        0.43896484375,
+        0.490234375
+      ],
+      "note": "single original atlas sprite; not asserted to be an independently labelled angle"
+    }
+  },
+  {
+    "id": "kit:granite-pale-fern",
+    "name": "Pale granite boulder with fern",
+    "category": "Painted landscaping",
+    "missing_corners": [
+      "NE",
+      "SE",
+      "SW",
+      "NW"
+    ],
+    "missing_turned_8degree": [
+      "N",
+      "E",
+      "S",
+      "W"
+    ],
+    "registered_mapping": {
+      "subject": "kit:granite-pale-fern",
+      "cornerViewIds": [],
+      "axisViewIds": [],
+      "cornerIdsPresent": false,
+      "axisIdsPresent": false,
+      "propsToolRotations": 4,
+      "eightPlayerSelectableFacings": false
+    },
+    "known_review": null,
+    "known_cutoff": null,
+    "source": {
+      "atlas_definition": "src\\game\\golf-library.ts",
+      "tex": [
+        0,
+        0.486328125,
+        0.46826171875,
+        0.52978515625,
+        0.51220703125
+      ],
+      "note": "single original atlas sprite; not asserted to be an independently labelled angle"
+    }
+  },
+  {
+    "id": "kit:granite-small-grey",
+    "name": "Small grey granite boulder",
+    "category": "Painted landscaping",
+    "missing_corners": [
+      "NE",
+      "SE",
+      "SW",
+      "NW"
+    ],
+    "missing_turned_8degree": [
+      "N",
+      "E",
+      "S",
+      "W"
+    ],
+    "registered_mapping": {
+      "subject": "kit:granite-small-grey",
+      "cornerViewIds": [],
+      "axisViewIds": [],
+      "cornerIdsPresent": false,
+      "axisIdsPresent": false,
+      "propsToolRotations": 4,
+      "eightPlayerSelectableFacings": false
+    },
+    "known_review": null,
+    "known_cutoff": null,
+    "source": {
+      "atlas_definition": "src\\game\\golf-library.ts",
+      "tex": [
+        0,
+        0.3095703125,
+        0.46826171875,
+        0.32763671875,
+        0.48974609375
+      ],
+      "note": "single original atlas sprite; not asserted to be an independently labelled angle"
+    }
+  },
+  {
+    "id": "kit:granite-tall-fern",
+    "name": "Tall granite boulder with fern",
+    "category": "Painted landscaping",
+    "missing_corners": [
+      "NE",
+      "SE",
+      "SW",
+      "NW"
+    ],
+    "missing_turned_8degree": [
+      "N",
+      "E",
+      "S",
+      "W"
+    ],
+    "registered_mapping": {
+      "subject": "kit:granite-tall-fern",
+      "cornerViewIds": [],
+      "axisViewIds": [],
+      "cornerIdsPresent": false,
+      "axisIdsPresent": false,
+      "propsToolRotations": 4,
+      "eightPlayerSelectableFacings": false
+    },
+    "known_review": null,
+    "known_cutoff": null,
+    "source": {
+      "atlas_definition": "src\\game\\golf-library.ts",
+      "tex": [
+        0,
+        0.369140625,
+        0.46826171875,
+        0.4111328125,
+        0.505859375
+      ],
+      "note": "single original atlas sprite; not asserted to be an independently labelled angle"
+    }
+  }
+]

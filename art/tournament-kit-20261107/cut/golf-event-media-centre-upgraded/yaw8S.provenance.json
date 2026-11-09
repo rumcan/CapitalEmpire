@@ -1,0 +1,29 @@
+{
+  "schema": 1,
+  "subject": "golf:event-media-centre-upgraded",
+  "version": 1,
+  "key": "yaw8S",
+  "source": {
+    "file": "../../batch01/media-centre/upgraded/yaw8-S.png",
+    "sha256": "7923ff4f2977fea10dbbde4638de3f28df53b7b9039e2173ee3ed6a1a53812d3",
+    "width": 627,
+    "height": 627
+  },
+  "cell": 0,
+  "cellRect": {
+    "left": 0,
+    "top": 0,
+    "width": 627,
+    "height": 627
+  },
+  "crop": {
+    "left": 25,
+    "top": 109,
+    "width": 594,
+    "height": 412
+  },
+  "output": "yaw8S.native.png",
+  "sha256": "1a8460129865d469cf9c7bb260da3575f74ec587ea3fd64fa5f99968a92b2f0c",
+  "operation": "native RGBA cell crop only; no flip/repaint/view synthesis",
+  "review": "candidate"
+}

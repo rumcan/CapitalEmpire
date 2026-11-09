@@ -1,0 +1,101 @@
+{
+  "schema": 1,
+  "as_of_utc": "2026-11-07T13:44:58.247610+00:00",
+  "sources_reviewed": 7,
+  "limited_source_passes": 7,
+  "held": 0,
+  "scope": "Seven newly generated UPGRADED yaw source sheets; distinct main faces/fixed details/alpha/cut safety only. Older practice-net/trolley yaw already reviewed separately. Exact angle and runtime/owner acceptance remain pending.",
+  "records": [
+    {
+      "key": "golf-source-01-01-food-truck",
+      "source": "generated/golf-source-batch-01/native/golf-source-01-01-food-truck/upgraded-yaw8-v1.png",
+      "review_result": "PASS-source-candidate-four-distinct-main-faces-alpha",
+      "four_actual_main_faces_visually_verified": true,
+      "outer_border_alpha_max": 1,
+      "zero_alpha_fraction": 0.6069515349923308,
+      "core_boundaries_clear": true,
+      "horizontal_cut_y": 627,
+      "vertical_top_cut_x": 658,
+      "vertical_bottom_cut_x": 660,
+      "qa": "generated/golf-source-batch-01/native/golf-source-01-01-food-truck/upgraded-yaw8-v1.independent-qa.json"
+    },
+    {
+      "key": "golf-source-01-04-first-aid-tent",
+      "source": "generated/golf-source-batch-01/native/golf-source-01-04-first-aid-tent/upgraded-yaw8-v1.png",
+      "review_result": "PASS-source-candidate-four-distinct-main-faces-alpha",
+      "four_actual_main_faces_visually_verified": true,
+      "outer_border_alpha_max": 1,
+      "zero_alpha_fraction": 0.5541813247051223,
+      "core_boundaries_clear": true,
+      "horizontal_cut_y": 627,
+      "vertical_top_cut_x": 627,
+      "vertical_bottom_cut_x": 627,
+      "qa": "generated/golf-source-batch-01/native/golf-source-01-04-first-aid-tent/upgraded-yaw8-v1.independent-qa.json"
+    },
+    {
+      "key": "golf-source-01-05-info-will-call-booth",
+      "source": "generated/golf-source-batch-01/native/golf-source-01-05-info-will-call-booth/upgraded-yaw8-v1.png",
+      "review_result": "PASS-source-candidate-four-distinct-main-faces-alpha",
+      "four_actual_main_faces_visually_verified": true,
+      "outer_border_alpha_max": 1,
+      "zero_alpha_fraction": 0.4327529894767366,
+      "core_boundaries_clear": true,
+      "horizontal_cut_y": 627,
+      "vertical_top_cut_x": 627,
+      "vertical_bottom_cut_x": 627,
+      "qa": "generated/golf-source-batch-01/native/golf-source-01-05-info-will-call-booth/upgraded-yaw8-v1.independent-qa.json"
+    },
+    {
+      "key": "golf-source-01-06-four-lane-entrance",
+      "source": "generated/golf-source-batch-01/native/golf-source-01-06-four-lane-entrance/upgraded-yaw8-v1.png",
+      "review_result": "PASS-source-candidate-four-distinct-main-faces-alpha",
+      "four_actual_main_faces_visually_verified": true,
+      "outer_border_alpha_max": 1,
+      "zero_alpha_fraction": 0.7873554227747126,
+      "core_boundaries_clear": true,
+      "horizontal_cut_y": 627,
+      "vertical_top_cut_x": 627,
+      "vertical_bottom_cut_x": 627,
+      "qa": "generated/golf-source-batch-01/native/golf-source-01-06-four-lane-entrance/upgraded-yaw8-v1.independent-qa.json"
+    },
+    {
+      "key": "golf-source-01-07-media-centre",
+      "source": "generated/golf-source-batch-01/native/golf-source-01-07-media-centre/upgraded-yaw8-v1.png",
+      "review_result": "PASS-source-candidate-four-distinct-main-faces-alpha",
+      "four_actual_main_faces_visually_verified": true,
+      "outer_border_alpha_max": 1,
+      "zero_alpha_fraction": 0.5888506062895386,
+      "core_boundaries_clear": true,
+      "horizontal_cut_y": 627,
+      "vertical_top_cut_x": 636,
+      "vertical_bottom_cut_x": 627,
+      "qa": "generated/golf-source-batch-01/native/golf-source-01-07-media-centre/upgraded-yaw8-v1.independent-qa.json"
+    },
+    {
+      "key": "golf-source-01-09-main-leaderboard",
+      "source": "generated/golf-source-batch-01/native/golf-source-01-09-main-leaderboard/upgraded-yaw8-v1.png",
+      "review_result": "PASS-source-candidate-four-distinct-main-faces-alpha",
+      "four_actual_main_faces_visually_verified": true,
+      "outer_border_alpha_max": 1,
+      "zero_alpha_fraction": 0.7071648237601398,
+      "core_boundaries_clear": true,
+      "horizontal_cut_y": 627,
+      "vertical_top_cut_x": 627,
+      "vertical_bottom_cut_x": 627,
+      "qa": "generated/golf-source-batch-01/native/golf-source-01-09-main-leaderboard/upgraded-yaw8-v1.independent-qa.json"
+    },
+    {
+      "key": "golf-source-01-10-concession-kiosk",
+      "source": "generated/golf-source-batch-01/native/golf-source-01-10-concession-kiosk/upgraded-yaw8-v1.png",
+      "review_result": "PASS-source-candidate-four-distinct-main-faces-alpha",
+      "four_actual_main_faces_visually_verified": true,
+      "outer_border_alpha_max": 1,
+      "zero_alpha_fraction": 0.5820093404455027,
+      "core_boundaries_clear": true,
+      "horizontal_cut_y": 627,
+      "vertical_top_cut_x": 632,
+      "vertical_bottom_cut_x": 627,
+      "qa": "generated/golf-source-batch-01/native/golf-source-01-10-concession-kiosk/upgraded-yaw8-v1.independent-qa.json"
+    }
+  ]
+}

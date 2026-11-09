@@ -1,0 +1,21 @@
+{
+  "key": "2020s-compact-gabled-solar-family-home",
+  "family": "yaw8",
+  "condition": "modern-era",
+  "version": 1,
+  "target": "generated/era-houses/expansion-02/2020s-compact-gabled-solar-family-home/yaw8-v1.png",
+  "refs": [
+    "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\expansion-02\\2020s-compact-gabled-solar-family-home\\guides\\yaw8-world-v1.png",
+    "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/era-houses/expansion-02/2020s-compact-gabled-solar-family-home/normal-v1.png"
+  ],
+  "prompt": "Render FOUR missing near-cardinal directions of ONE exact fixed house. REFERENCE1 is camera/geometry/door-window-occlusion authority; REFERENCE2 is its finished identity, matching detailed painterly miniature materials ONLY. Do NOT copy reference2's corner cameras. Subject: Affordable compact two-storey family infill home: white lower walls, charcoal upper front/rear cladding, one ordinary pitched gable roof, timber front door with a narrow side-light, broad front living window, rear GLASS patio slider and FOUR solar modules in two rows of two ONLY on the fixed front roof slope. Rear roof does not acquire the solar panels when turned. No garage, flat-roof sci-fi shapes or mansion scale.. Preserve every door/window/balcony/roof feature's actual world position as it rotates90degrees each time. Follow guide N E / S W cells, sameorthographic30degreesDOWN and nominal8degrees off cardinal; mainface broad, thin secondary side. Smooth consistent architectural lines and true rear surfaces, glazed patio sliders remain glass, not garage shutters. Solar panels ONLYwhere shown in guide, no migrating to opposite roof slope. Equal physical size across4cells. Late-afternoon DAYTIME sun fixed SCREEN UPPER RIGHT, shadowsLOWERLEFT; lamps/windowsOFF. Nativefinelypainted believable brick,render,timber,roofmaterials match reference2 exactly. Fourcomplete isolatedsprites, broadZEROALPHAtransparentmargins/gutters. No technicaltext, labels, groundplate, landscape, vegetation, people, scene, UI or haze.",
+  "source": "C:/Users/RAMPAGE/.codex/generated_images/01a1b1fd-39ec-7220-8f11-86e4448833ea/exec-0e301dab-f596-4f1c-8590-4eec0cf9054b.png",
+  "references": [
+    "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\expansion-02\\2020s-compact-gabled-solar-family-home\\guides\\yaw8-world-v1.png",
+    "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/era-houses/expansion-02/2020s-compact-gabled-solar-family-home/normal-v1.png"
+  ],
+  "status": "native-source-candidate-pending-visual-review",
+  "runtime_imported": false,
+  "sha256": "41ff3d722cb01a598b2fdd48f93a8a1de5966f6ca737dedba8593d5ea961639d",
+  "native_bytes_preserved": true
+}

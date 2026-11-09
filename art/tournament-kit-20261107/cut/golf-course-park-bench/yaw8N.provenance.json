@@ -1,0 +1,29 @@
+{
+  "schema": 1,
+  "subject": "golf:course-park-bench",
+  "version": 1,
+  "key": "yaw8N",
+  "source": {
+    "file": "../../batch02/park-bench/yaw8-N.png",
+    "sha256": "6f69f727f1e7f6da691435364db730756a56b2c966038c8197c0777ec53014a0",
+    "width": 768,
+    "height": 512
+  },
+  "cell": 0,
+  "cellRect": {
+    "left": 0,
+    "top": 0,
+    "width": 768,
+    "height": 512
+  },
+  "crop": {
+    "left": 156,
+    "top": 37,
+    "width": 551,
+    "height": 437
+  },
+  "output": "yaw8N.native.png",
+  "sha256": "bad7540ea99916355611c1a59076bd72b5d9e233b949e778a9c1026a3eb73714",
+  "operation": "native RGBA cell crop only; no flip/repaint/view synthesis",
+  "review": "candidate"
+}

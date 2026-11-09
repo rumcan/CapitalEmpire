@@ -1,0 +1,119 @@
+{
+  "sourceOnly": true,
+  "allCropsLosslessRGBA": true,
+  "nativeOriginalsUnchanged": true,
+  "records": [
+    {
+      "file": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-vehicle-source-batch-01\\isolated-repairs-v1\\cart-ambulance\\guide-normalSE.png",
+      "pngSHA256": "1a050e8daeec95ca9a650d56d24e0c2849d9ef643baa1ef024fd07ddaf23c320",
+      "rgbaSHA256": "76a446e1587da0957f670c71c0e7e8b388a28504a38a718fa4aa8fdfc59ab670",
+      "source": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-vehicle-source-batch-01\\fixed-world-guides-v1\\cart-ambulance\\guides\\normal-world-v1.png",
+      "sourceSHA256": "81f732fd16999d786dedb61a3d663e834753c04f7210672154fcdd00572185b9",
+      "rectLTRB": [
+        0,
+        0,
+        800,
+        800
+      ],
+      "role": "Exact missing opposite front corner; nose lower-right.",
+      "operation": "Lossless integer rectangle only; no resize, repaint, key, alpha cleanup or bitmap flip",
+      "sourceRGBAEqual": true
+    },
+    {
+      "file": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-vehicle-source-batch-01\\isolated-repairs-v1\\cart-ambulance\\identity-normalNE.png",
+      "pngSHA256": "01f82474efe75ad00c9b514e7c7da2a14941db9f127328cb2504907195f0a33c",
+      "rgbaSHA256": "e05310b07d884606d15c40173b26fce0f8e8e904223be2d723ab79b3e98cbaf9",
+      "source": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-vehicle-source-batch-01\\native\\cart-ambulance\\normal-v1.png",
+      "sourceSHA256": "925e7252dd08fc110c26f81b3cd5198f56c1eb9c47fe529ad44fb3f98e235699",
+      "rectLTRB": [
+        627,
+        627,
+        1254,
+        1254
+      ],
+      "role": "Actual paint/body identity ONLY; this nose-lower-left camera must not repeat.",
+      "operation": "Lossless integer rectangle only; no resize, repaint, key, alpha cleanup or bitmap flip",
+      "sourceRGBAEqual": true
+    },
+    {
+      "file": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-vehicle-source-batch-01\\isolated-repairs-v1\\satellite-van\\guide-normalNW-left-door-adopted.png",
+      "pngSHA256": "5258dff830b69288eb675a4a7468ba204e03a2f7cff1172e4f412c44fc94ac78",
+      "rgbaSHA256": "ec19a20897a3b7297a7f627a756ca4669a72009a13740058de78dba1cca6e3ad",
+      "source": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-vehicle-source-batch-01\\fixed-world-guides-v2\\satellite-van\\guides\\normal-world-v2.png",
+      "sourceSHA256": "bf90329ff86c65bcb971c1b06566d64c70be3005ed03ac1d45df560cad278aaa",
+      "rectLTRB": [
+        0,
+        800,
+        800,
+        1600
+      ],
+      "role": "NW rear/right corner; thin oblique concave-front dish; visible right side plain.",
+      "operation": "Lossless integer rectangle only; no resize, repaint, key, alpha cleanup or bitmap flip",
+      "sourceRGBAEqual": true
+    },
+    {
+      "file": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-vehicle-source-batch-01\\isolated-repairs-v1\\satellite-van\\target-normalNW-wrong-dish-face.png",
+      "pngSHA256": "d311fcb8935fd666fd581fdb3e7e5602f3b9f4f8972db9b1cc2238c7a8c38f4a",
+      "rgbaSHA256": "fc7e896f4895d2453425898544da4592cf610d4b3ef1ac3727f24b3fe54699f3",
+      "source": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-vehicle-source-batch-01\\native\\satellite-van\\normal-v1.png",
+      "sourceSHA256": "85dc8d224bdac96ba595dded5b1fbef4e962a116d95c1abbfbeb9d89df5bd754",
+      "rectLTRB": [
+        0,
+        627,
+        627,
+        1254
+      ],
+      "role": "Target body/material identity and pose; its dish back face is held and must be replaced.",
+      "operation": "Lossless integer rectangle only; no resize, repaint, key, alpha cleanup or bitmap flip",
+      "sourceRGBAEqual": true
+    },
+    {
+      "file": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-vehicle-source-batch-01\\isolated-repairs-v1\\satellite-van\\concave-front-dish-material-only.png",
+      "pngSHA256": "8a75ef16edec13831047a8c105530e285c61568fc35fec8fd4bb38a2c786eb8d",
+      "rgbaSHA256": "dd3cdc2b31a5fb9784657440f8433791c6a65c45d7dbdb3d5905a65c86095a95",
+      "source": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-vehicle-source-batch-01\\native\\satellite-van\\normal-v1.png",
+      "sourceSHA256": "85dc8d224bdac96ba595dded5b1fbef4e962a116d95c1abbfbeb9d89df5bd754",
+      "rectLTRB": [
+        135,
+        20,
+        310,
+        220
+      ],
+      "role": "Actual pale concave dish/rim/feed material only; not the requested camera angle.",
+      "operation": "Lossless integer rectangle only; no resize, repaint, key, alpha cleanup or bitmap flip",
+      "sourceRGBAEqual": true
+    },
+    {
+      "file": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-vehicle-source-batch-01\\isolated-repairs-v1\\shanty-broadcast-van\\guide-normalSE.png",
+      "pngSHA256": "0835ccfacaa9f1a2172df09725b10e6572bc8f7a5f4a10ce9810441a2cc79c54",
+      "rgbaSHA256": "8278cd5fe52f85367478ca2c4232b11a840db39cd7a2278e6aaa4d5eb7775782",
+      "source": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-vehicle-source-batch-01\\fixed-world-guides-v1\\shanty-broadcast-van\\guides\\normal-world-v1.png",
+      "sourceSHA256": "9ae9bc34b5ed6aac1da237b3deab6c8716cee2f9b9cd02a7f8c8bfe8daed7a31",
+      "rectLTRB": [
+        0,
+        0,
+        800,
+        800
+      ],
+      "role": "Exact front-left corner; physicalLEFT side plain",
+      "operation": "lossless integer crop only; no resize/paint/alpha/flip",
+      "sourceRGBAEqual": true
+    },
+    {
+      "file": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-vehicle-source-batch-01\\isolated-repairs-v1\\shanty-broadcast-van\\target-normalSE-extra-hatch.png",
+      "pngSHA256": "4197c706785a503ec764c4dfc67588ad9b03d69cccf662cd97e04f066cf847a8",
+      "rgbaSHA256": "acc3d79bbfe6b92995662a7ef302428ff747bcfddbe618d1ea0ab36543f09796",
+      "source": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-vehicle-source-batch-01\\native\\shanty-broadcast-van\\normal-v1.png",
+      "sourceSHA256": "3552bec92c1d80ebc58a9c17c711394404d2251ecde32a0811632c471540cc88",
+      "rectLTRB": [
+        0,
+        0,
+        627,
+        627
+      ],
+      "role": "Target body/materials; extra visibleLEFT hatch must be removed",
+      "operation": "lossless integer crop only; no resize/paint/alpha/flip",
+      "sourceRGBAEqual": true
+    }
+  ]
+}

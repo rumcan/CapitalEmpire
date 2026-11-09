@@ -1,0 +1,62 @@
+{
+  "schema": 1,
+  "createdUtc": "2026-11-07T06:47:45.284562+00:00",
+  "exactRuntimeId": "static:garage_timber",
+  "source": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/building-views/static-garage_timber/NE.png",
+  "sourceSha256": "0af35eb5e07892e25fcd5579a005d3fd3f9b3016d95a0d5a35d518b9ef11df48",
+  "output": "identity-references/static-garage-timber-c8cdaada/source.png",
+  "outputSha256": "0af35eb5e07892e25fcd5579a005d3fd3f9b3016d95a0d5a35d518b9ef11df48",
+  "width": 545,
+  "height": 485,
+  "sourceCell": {
+    "kind": "already isolated native PNG; whole file",
+    "rectXYWH": [
+      0,
+      0,
+      545,
+      485
+    ]
+  },
+  "operation": "byte-for-byte PNG copy only; no resize, crop, recolour, key, repaint, registration or source mutation",
+  "selection": "registered corner NE native PNG for this exact subject",
+  "registeredCornerDirection": "NE",
+  "sourceEvidence": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\building-views\\static-garage_timber\\provenance.json",
+  "sourceReview": {
+    "integrationStatus": "ready",
+    "integrationReason": "All4 visible physical corners form front/right/back/left cycle; actual magenta alpha has no surrounding floor/haze. Matte timber/masonry/metal, charcoal roofs, amber practical lights and fixed screen-upper-right dusk are coherent with master."
+  },
+  "sourceRegistration": {
+    "id": "static:garage_timber",
+    "version": "static-garage_timber-4views-v2",
+    "files": {
+      "NE": "0af35eb5e07892e25fcd5579a005d3fd3f9b3016d95a0d5a35d518b9ef11df48",
+      "SE": "02e450615fdc5ce73eced1f8b2e00560fef49223692899e0007fa52c7589d349",
+      "SW": "dfa0d228daf5f346267be2245460d9119a9345737ef2dc5eb7f3706930180adc",
+      "NW": "2e9666562b3f0402e30854241a3c2f799863809e9750545a481310931067f95c"
+    }
+  },
+  "originalInventorySource": {
+    "library": "src/game/library.ts",
+    "librarySha256": "91b5190292c1005ac7b936f08e5e1ebf3be43c3aae99f92ea510775da83d9726",
+    "atlas": "src/assets/atlas/sprites-11-0.webp",
+    "atlasSha256": "a8946da0d9c9231cd8576b9ebf3662b2c449685064dd3d9af3cf40715c50f4a6",
+    "runtimePage": 11,
+    "localPage": 11,
+    "uv": [
+      0.765625,
+      0.632813,
+      0.914063,
+      0.757324
+    ],
+    "crop": {
+      "left": 1568,
+      "top": 1296,
+      "width": 304,
+      "height": 255
+    },
+    "native": "art/theme-consistency/exports/buildings/static-garage_timber.native.png",
+    "nativeSha256": "3c83297b27d7950ae0f230afda019fa6bffda3bef447c8ac51e999e1e41c9ec5"
+  },
+  "originalBusinessSourceCell": null,
+  "nativeReferenceApprovalClaimed": false
+}

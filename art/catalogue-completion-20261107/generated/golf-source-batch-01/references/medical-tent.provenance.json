@@ -1,0 +1,27 @@
+{
+  "id": "newprop:medical-tent",
+  "name": "Medical tent",
+  "referencePNG": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-01\\references\\medical-tent.source.png",
+  "originalSheet": "E:\\Repos\\CapitalEmpire\\All Generated Images\\exec-27b32ad3-011a-4678-a8a3-7950333efe30.png",
+  "copiedOriginalSheet": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-01\\original-sheets\\exec-27b32ad3-011a-4678-a8a3-7950333efe30.png",
+  "sourceSheetSHA256": "a99d9e88357e720c6a7bf66e7139bb5a84e1818632b82f62d8d7ac8f1cfcde5c",
+  "referenceSHA256": "114afbfdb978cf93a6465575099463ee1198633fc3a0d254bcc2baa39322058e",
+  "sourcePixelRectXYWH": [
+    17,
+    41,
+    642,
+    591
+  ],
+  "originalCellLabel": "top left",
+  "referenceSize": [
+    642,
+    591
+  ],
+  "operation": "native RGBA pixel crop only; no resize, recolour, alpha cleanup or synthesis",
+  "sourceContainsFourDifferentSubjectsNotRotations": true,
+  "cutOffAccordingToSourceMetadata": false,
+  "sourceMetadata": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\new-props\\items.json",
+  "visualInspection": "inspected native source PNG",
+  "visualNotes": "Cream/green pointed marquee, front open flaps, visible cot and medicine cabinet, arched side windows. Gold finials and ornate garden planters are not required; use ordinary rectangular first-aid shelter. Maintains medical function.",
+  "sourceOnlyNotReleaseProof": true
+}

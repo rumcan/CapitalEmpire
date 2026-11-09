@@ -1,0 +1,298 @@
+{
+  "schema": 1,
+  "projection": "normal+yaw8",
+  "subject": "world:video_rental",
+  "name": "Video Vault",
+  "version": 1,
+  "review": "approved",
+  "source": {
+    "views": {
+      "normalNE": {
+        "file": "../src/normalNE.png",
+        "sha256": "44734473681765f9d5b73feff78ee776c0caedf74d226f22d6d998aea055b2d8",
+        "width": 609,
+        "height": 462
+      },
+      "yaw8N": {
+        "file": "../src/yaw8N.png",
+        "sha256": "33c0484db9303e05754775659417ed15f13a7baab5337274417e0fdec5225db7",
+        "width": 590,
+        "height": 399
+      },
+      "normalSE": {
+        "file": "../src/normalSE.png",
+        "sha256": "78f37b2998d7e1355668b8826eaf76ba50cf7297f7ccfafdeb2d9443a8cebc44",
+        "width": 596,
+        "height": 473
+      },
+      "yaw8E": {
+        "file": "../src/yaw8E.png",
+        "sha256": "2f46b51dcb6dba9235cb8e4532b59587b04272e69b55d9929e5bae1953699fb8",
+        "width": 428,
+        "height": 463
+      },
+      "normalSW": {
+        "file": "../src/normalSW.png",
+        "sha256": "39a69b373b65ad00381ad013fe7f052c466ab59bf99fa1c39ec8bbd6ebe1fff6",
+        "width": 607,
+        "height": 480
+      },
+      "yaw8S": {
+        "file": "../src/yaw8S.png",
+        "sha256": "a0016d7bfe3d482589352eab5a707583dd794adab78b7d7a8ecc3a7019e14c7f",
+        "width": 586,
+        "height": 443
+      },
+      "normalNW": {
+        "file": "../src/normalNW.png",
+        "sha256": "f87af04a16908ea21372087a2f3371132380d4888bc25086b4e8c05d9f5de651",
+        "width": 597,
+        "height": 490
+      },
+      "yaw8W": {
+        "file": "../src/yaw8W.png",
+        "sha256": "447ea061461a8e3024b4c65320eb44386c98d60807f1034567995506c8b00f14",
+        "width": 402,
+        "height": 475
+      }
+    }
+  },
+  "footprintMetres": {
+    "width": 10.74,
+    "depth": 5.74
+  },
+  "pixelsPerMetre": 45.2548339959,
+  "pixelCalibrationSpace": "orthographic-camera",
+  "baselineScale": 1.239,
+  "kind": "building",
+  "category": "Eight-view buildings",
+  "aliases": [],
+  "views": {
+    "normalNE": {
+      "file": "normalNE.native.png",
+      "sha256": "e90b678e9474f357c0fd3c23cd31f38b451c1b4134cb996b693a12ae03c61607",
+      "width": 601,
+      "height": 454,
+      "anchor": {
+        "x": 318.5,
+        "y": 328.52
+      },
+      "headingDegrees": 0,
+      "boxes": null,
+      "sourceFamily": "view",
+      "sourceSha256": "44734473681765f9d5b73feff78ee776c0caedf74d226f22d6d998aea055b2d8",
+      "cell": 0,
+      "cellRect": {
+        "left": 0,
+        "top": 0,
+        "width": 609,
+        "height": 462
+      },
+      "crop": {
+        "left": 4,
+        "top": 4,
+        "width": 601,
+        "height": 454
+      }
+    },
+    "yaw8N": {
+      "file": "yaw8N.native.png",
+      "sha256": "00fed7aaa439eec68cb570d1372f92b8c28aedba2e3f0a0b75cfdf69a522b0c0",
+      "width": 582,
+      "height": 391,
+      "anchor": {
+        "x": 298.5,
+        "y": 292.46
+      },
+      "headingDegrees": 37,
+      "boxes": null,
+      "sourceFamily": "view",
+      "sourceSha256": "33c0484db9303e05754775659417ed15f13a7baab5337274417e0fdec5225db7",
+      "cell": 0,
+      "cellRect": {
+        "left": 0,
+        "top": 0,
+        "width": 590,
+        "height": 399
+      },
+      "crop": {
+        "left": 4,
+        "top": 4,
+        "width": 582,
+        "height": 391
+      }
+    },
+    "normalSE": {
+      "file": "normalSE.native.png",
+      "sha256": "2433d3c183698050a96ddbef9c2ed6c7422497783d2eb432d68601b9a025cc9b",
+      "width": 588,
+      "height": 465,
+      "anchor": {
+        "x": 315,
+        "y": 323.34
+      },
+      "headingDegrees": 90,
+      "boxes": null,
+      "sourceFamily": "view",
+      "sourceSha256": "78f37b2998d7e1355668b8826eaf76ba50cf7297f7ccfafdeb2d9443a8cebc44",
+      "cell": 0,
+      "cellRect": {
+        "left": 0,
+        "top": 0,
+        "width": 596,
+        "height": 473
+      },
+      "crop": {
+        "left": 4,
+        "top": 4,
+        "width": 588,
+        "height": 465
+      }
+    },
+    "yaw8E": {
+      "file": "yaw8E.native.png",
+      "sha256": "044640bd092b7172b18f36467d7de89385700ee725a61b71a40da9a32c305f6b",
+      "width": 420,
+      "height": 455,
+      "anchor": {
+        "x": 211.5,
+        "y": 338.89
+      },
+      "headingDegrees": 127,
+      "boxes": null,
+      "sourceFamily": "view",
+      "sourceSha256": "2f46b51dcb6dba9235cb8e4532b59587b04272e69b55d9929e5bae1953699fb8",
+      "cell": 0,
+      "cellRect": {
+        "left": 0,
+        "top": 0,
+        "width": 428,
+        "height": 463
+      },
+      "crop": {
+        "left": 4,
+        "top": 4,
+        "width": 420,
+        "height": 455
+      }
+    },
+    "normalSW": {
+      "file": "normalSW.native.png",
+      "sha256": "9e8bcb3dc66ed130deab1dbd0e809289446f6c0eed7e2970dbcdb98e1cce7784",
+      "width": 599,
+      "height": 472,
+      "anchor": {
+        "x": 317.5,
+        "y": 339.68
+      },
+      "headingDegrees": 180,
+      "boxes": null,
+      "sourceFamily": "view",
+      "sourceSha256": "39a69b373b65ad00381ad013fe7f052c466ab59bf99fa1c39ec8bbd6ebe1fff6",
+      "cell": 0,
+      "cellRect": {
+        "left": 0,
+        "top": 0,
+        "width": 607,
+        "height": 480
+      },
+      "crop": {
+        "left": 4,
+        "top": 4,
+        "width": 599,
+        "height": 472
+      }
+    },
+    "yaw8S": {
+      "file": "yaw8S.native.png",
+      "sha256": "269a5175818c8af98032b11625f1e804dee88e0904af1a43434ff24cc11b585e",
+      "width": 578,
+      "height": 435,
+      "anchor": {
+        "x": 292,
+        "y": 339.99
+      },
+      "headingDegrees": 217,
+      "boxes": null,
+      "sourceFamily": "view",
+      "sourceSha256": "a0016d7bfe3d482589352eab5a707583dd794adab78b7d7a8ecc3a7019e14c7f",
+      "cell": 0,
+      "cellRect": {
+        "left": 0,
+        "top": 0,
+        "width": 586,
+        "height": 443
+      },
+      "crop": {
+        "left": 4,
+        "top": 4,
+        "width": 578,
+        "height": 435
+      }
+    },
+    "normalNW": {
+      "file": "normalNW.native.png",
+      "sha256": "39c3edaadaec923812953aeb996ff4bdfb7f0a9ff7b9c4be0ba9ce307b4075fc",
+      "width": 589,
+      "height": 482,
+      "anchor": {
+        "x": 302.75,
+        "y": 345.13
+      },
+      "headingDegrees": 270,
+      "boxes": null,
+      "sourceFamily": "view",
+      "sourceSha256": "f87af04a16908ea21372087a2f3371132380d4888bc25086b4e8c05d9f5de651",
+      "cell": 0,
+      "cellRect": {
+        "left": 0,
+        "top": 0,
+        "width": 597,
+        "height": 490
+      },
+      "crop": {
+        "left": 4,
+        "top": 4,
+        "width": 589,
+        "height": 482
+      }
+    },
+    "yaw8W": {
+      "file": "yaw8W.native.png",
+      "sha256": "fa17a21c92bab88b127b3c421f449b7868e19a82e0f3f7be3c7775e7d73fccd0",
+      "width": 394,
+      "height": 467,
+      "anchor": {
+        "x": 200,
+        "y": 333.58
+      },
+      "headingDegrees": 307,
+      "boxes": null,
+      "sourceFamily": "view",
+      "sourceSha256": "447ea061461a8e3024b4c65320eb44386c98d60807f1034567995506c8b00f14",
+      "cell": 0,
+      "cellRect": {
+        "left": 0,
+        "top": 0,
+        "width": 402,
+        "height": 475
+      },
+      "crop": {
+        "left": 4,
+        "top": 4,
+        "width": 394,
+        "height": 467
+      }
+    }
+  },
+  "calibrationNotes": "Scale: 45.2548 px/m (the game's native camera scale: the sheets were painted from the game's native exports); the same on every view of the subject, as one sheet's cells are. Anchors: the 10.74 x 5.74 m footprint's centre fitted to each silhouette (scripts/assets/fit-box-silhouette.mjs, wall 4.6 m, eave 0.45 m, IoU 0.9385 0.915 0.9472 0.9191 0.8807 0.8359 0.9059 0.9378), not owner-measured. Art: world~video_rental selection.json (corners-v2.png, axisturn-v1.png), owner_approved false.",
+  "artReviewRequired": [
+    "same subject across all eight views",
+    "normal and actual yaw8 geometry",
+    "upper-right daylight and lower-left shadows",
+    "true alpha and complete silhouette",
+    "per-view ground anchors and physical footprint",
+    "no duplicates or fake mirror views"
+  ],
+  "reviewNote": "T375 2026-11-08: the eight crops viewed together (one building, daylight, sun upper right, no mirrored view); anchors and scale fitted (calibrationNotes), not owner-measured. The art itself stays owner_approved=false in native-resume-20261106/<id>/selection.json: the owner reviews it on the check sheet."
+}

@@ -1,0 +1,93 @@
+{
+  "jobId": "golf-source-02-08-rope-barrier-corner",
+  "runtimeSubjectId": "newprop:rope-barrier-corner",
+  "runtimeName": "Rope barrier corner",
+  "displayName": "Rope barrier corner",
+  "sourceReferencePNG": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-02\\references\\rope-barrier-corner.source.png",
+  "sourceProvenance": {
+    "id": "newprop:rope-barrier-corner",
+    "name": "Rope barrier corner",
+    "referencePNG": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-02\\references\\rope-barrier-corner.source.png",
+    "originalSourcePNG": "E:\\Repos\\CapitalEmpire\\All Generated Images\\exec-5944b53f-4b43-44dc-a10e-7eae61417bf9.png",
+    "copiedOriginalSheet": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-02\\original-sheets\\exec-5944b53f-4b43-44dc-a10e-7eae61417bf9.png",
+    "originalSheetSHA256": "af41568faaa6af5c89f8a06cc03b0304d781020607e81aea822001ef1952e49b",
+    "referenceSHA256": "c289149eb4e23dd5eaaf8b54cece8dd8ce9aedfe81ec1226d515014a5ff73d07",
+    "sourceRectXYWH": [
+      674,
+      157,
+      538,
+      352
+    ],
+    "sourceCell": "top right",
+    "sourceSheetContainsFourDifferentSubjectsNotRotations": true,
+    "sourceCropSize": [
+      538,
+      352
+    ],
+    "cropOperation": "lossless native RGBA crop, no resize, recolour, cleanup or synthesis",
+    "sourceMetadataCutOff": false,
+    "runtimeLibrarySource": "src/game/new-props-library.ts",
+    "runtimeBaseBoxesInTiles": [
+      {
+        "hx": 0.8,
+        "hy": 0.8,
+        "dx": 0,
+        "dy": 0
+      }
+    ],
+    "runtimeDisplayPixels": [
+      102.4,
+      67
+    ],
+    "manifestHalfExtentsMetresFirstGuess": [
+      0.8,
+      0.8
+    ],
+    "dimensionCaution": "Manifest first-guess dimensions and runtime boxes are not measured native physical dimensions; any new real-object size is a source-design proposal only. No runtime changes.",
+    "visualInspection": "inspected",
+    "visualNotes": "Confirmed five stanchions, four spans in a two-arm corner, not only three posts.",
+    "sourceOnlyNotReleaseProof": true
+  },
+  "sourceDimensions": {
+    "runtimeBaseBoxesInTiles": [
+      {
+        "hx": 0.8,
+        "hy": 0.8,
+        "dx": 0,
+        "dy": 0
+      }
+    ],
+    "manifestHalfExtentsMetresFirstGuess": [
+      0.8,
+      0.8
+    ],
+    "sourceCropPixels": [
+      538,
+      352
+    ],
+    "newPhysicalDimensionsProposal": "Proposed each corner arm3m long, posts0.9m high; source-design proposal.",
+    "notRuntimeBalanceOrGeometryChange": true
+  },
+  "functionalBrief": "Exactly five green round-foot stanchions and four cream rope spans making one90degreecorner: centre corner post shared by two arms, with one intermediate and one end post on each arm. Preserve L-shaped ground layout and five-post count in every view; do not flatten it into a straight barrier.",
+  "ordinary1950sRedesignRequired": false,
+  "conditionBrief": "Identity-preserving modular corner matching straight rope barrier materials and post design.",
+  "visualNotes": "Confirmed five stanchions, four spans in a two-arm corner, not only three posts.",
+  "existingNormalFourReferences": {
+    "candidateCount": 0,
+    "usableCount": 0,
+    "paths": [],
+    "note": "Only one original exact subject is available; original source sheet contains four different props, not four angles."
+  },
+  "existingYaw8Candidates": 0,
+  "historicallyApprovedEightSet": false,
+  "generationPlan": {
+    "normal": "2x2 SE/SW then NW/NE, orthographic30degrees down, equal45degreecorner walls",
+    "yaw8": "2x2 N/E then S/W, each cardinal physically turned8degrees, never square-on",
+    "conditions": "Generate one requested condition consistently through both sheets; source-only variants do not imply runtime upgrades."
+  },
+  "style": "Same painterly game style as style-authority.png, late-afternoon daylight, one sun upper-right, shadows lower-left, transparent background. No people, captions, brands, gridlines or generic ground plates. Functional ramps, buckets, mounting feet and attached panels remain part of their object.",
+  "approvalClaimed": false,
+  "runtimeIntegrated": false,
+  "nativeGeneratedHere": false,
+  "scopeNote": "Exact existing baseline subject only. Eight new view images still require generation and review; no related IDs, aliases or completion are inferred."
+}

@@ -1,0 +1,528 @@
+{
+  "schema": 1,
+  "date": "2026-11-07",
+  "scope": "Source-only practical QA of6upgraded normal-v1 sheets, four corners/functional features/alpha. No exact angle metrology.",
+  "sheetsReviewed": 6,
+  "candidateViews": 24,
+  "practicalSourceCandidates": 6,
+  "repairsRequired": 0,
+  "rows": [
+    {
+      "jobId": "golf-source-01-01-food-truck",
+      "condition": "upgraded",
+      "source": "art/catalogue-completion-20261107/generated/golf-source-batch-01/native/golf-source-01-01-food-truck/upgraded-normal-v1.png",
+      "sha256": "d2788a4b9b94ca357b3bc5d01fd1c32b54cf78faef9383521a3b2b276b0430e3",
+      "originalHashMatchesProvenance": true,
+      "review": "PASS-practical-normal4-source-candidate",
+      "continueYawSourceGeneration": true,
+      "repairRequired": false,
+      "notes": [
+        "Four real corners; first2show serving side, last2plain equipment side; front cab versus rear door remain distinct.",
+        "One roof extractor stays near rear and appears all4poses; cleaner cream/green body preserves service function."
+      ],
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "nativeRGBA": true,
+      "distinctPixelCells": 4,
+      "alpha": {
+        "trueZeroAlphaFraction": 0.592974570687993,
+        "faintAlpha1to8Fraction": 0.02913992608024338,
+        "outerBorderAlphaMax": 1,
+        "hiddenBrightRGBAtAlpha0": 0,
+        "brightRGBAtAlpha1to8": 11136,
+        "redPixelsAtAlphaGreaterThan32": 490
+      },
+      "cells": [
+        {
+          "view": "SE",
+          "cell": 0,
+          "coreBBoxExclusive": [
+            72,
+            101,
+            599,
+            553
+          ],
+          "minimumCoreMargin": 28,
+          "coreBoundaryPixels": 0,
+          "rgbaSha256": "b647e46b9088567580c4dcb31b2ecadb59232685b1a8bcf97e5b522cc7492186"
+        },
+        {
+          "view": "SW",
+          "cell": 1,
+          "coreBBoxExclusive": [
+            32,
+            127,
+            546,
+            530
+          ],
+          "minimumCoreMargin": 32,
+          "coreBoundaryPixels": 0,
+          "rgbaSha256": "f07a2ed4177fbeea9f86b4acc0be66cc9d406a9d2bec6153236dbac9fa9f8da7"
+        },
+        {
+          "view": "NW",
+          "cell": 2,
+          "coreBBoxExclusive": [
+            99,
+            66,
+            585,
+            480
+          ],
+          "minimumCoreMargin": 42,
+          "coreBoundaryPixels": 0,
+          "rgbaSha256": "48ed7dcc7c8de0ff900e538a034581a38a3f8c526ca6623e198fff7bb12c04bd"
+        },
+        {
+          "view": "NE",
+          "cell": 3,
+          "coreBBoxExclusive": [
+            59,
+            62,
+            552,
+            515
+          ],
+          "minimumCoreMargin": 59,
+          "coreBoundaryPixels": 0,
+          "rgbaSha256": "fa5a7cdfb166ada9f3648048f66d4d36b45f74457c4d58c4ab66ad877364eabd"
+        }
+      ],
+      "numericalCameraCertification": false,
+      "runtimeReady": false
+    },
+    {
+      "jobId": "golf-source-01-04-first-aid-tent",
+      "condition": "upgraded",
+      "source": "art/catalogue-completion-20261107/generated/golf-source-batch-01/native/golf-source-01-04-first-aid-tent/upgraded-normal-v1.png",
+      "sha256": "9a1921bbd0b0fed62e43cb515010c497b1da952f0fb502446fab8c765288f1cb",
+      "originalHashMatchesProvenance": true,
+      "review": "PASS-practical-normal4-source-candidate",
+      "continueYawSourceGeneration": true,
+      "repairRequired": false,
+      "notes": [
+        "Broad tied-back front opening and medical symbol onlyfront; closed rear with one small service flap; side vents remain coherent.",
+        "Cot left and cabinet/firstaidbox right within front opening, naturally hidden in rear views. Clean canopy/trim, no staff/gardens/terrain."
+      ],
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "nativeRGBA": true,
+      "distinctPixelCells": 4,
+      "alpha": {
+        "trueZeroAlphaFraction": 0.5286388183013718,
+        "faintAlpha1to8Fraction": 0.02550816653057902,
+        "outerBorderAlphaMax": 1,
+        "hiddenBrightRGBAtAlpha0": 0,
+        "brightRGBAtAlpha1to8": 10311,
+        "redPixelsAtAlphaGreaterThan32": 0
+      },
+      "cells": [
+        {
+          "view": "SE",
+          "cell": 0,
+          "coreBBoxExclusive": [
+            46,
+            101,
+            579,
+            559
+          ],
+          "minimumCoreMargin": 46,
+          "coreBoundaryPixels": 0,
+          "rgbaSha256": "647356df426034952906e4d132d51a2163619659f8007b5b3c156b02ff4ecc2e"
+        },
+        {
+          "view": "SW",
+          "cell": 1,
+          "coreBBoxExclusive": [
+            46,
+            102,
+            577,
+            561
+          ],
+          "minimumCoreMargin": 46,
+          "coreBoundaryPixels": 0,
+          "rgbaSha256": "fdebbc594135454b99fa3735d42d1eb2c3036c2535bf8faefcbb7849600741a5"
+        },
+        {
+          "view": "NW",
+          "cell": 2,
+          "coreBBoxExclusive": [
+            46,
+            76,
+            579,
+            543
+          ],
+          "minimumCoreMargin": 46,
+          "coreBoundaryPixels": 0,
+          "rgbaSha256": "bb36fd3d0495230b3ad580c231cf93c6bec0027d7e5c8b47767310c103ebdbaf"
+        },
+        {
+          "view": "NE",
+          "cell": 3,
+          "coreBBoxExclusive": [
+            43,
+            69,
+            577,
+            541
+          ],
+          "minimumCoreMargin": 43,
+          "coreBoundaryPixels": 0,
+          "rgbaSha256": "f7d30f057a391be61cb3e622bde2dbf099b465913281900ed17b075c6ff7e6bc"
+        }
+      ],
+      "numericalCameraCertification": false,
+      "runtimeReady": false
+    },
+    {
+      "jobId": "golf-source-01-05-info-will-call-booth",
+      "condition": "upgraded",
+      "source": "art/catalogue-completion-20261107/generated/golf-source-batch-01/native/golf-source-01-05-info-will-call-booth/upgraded-normal-v1.png",
+      "sha256": "f12eef44409e5c21e335120ee95e70e8e7d3a577f681bdb419e681f0b4a703d9",
+      "originalHashMatchesProvenance": true,
+      "review": "PASS-practical-normal4-source-candidate",
+      "continueYawSourceGeneration": true,
+      "repairRequired": false,
+      "notes": [
+        "Two front counter openings with maprack on physicalleft and paper-ticket tray onright; one rear staffdoor.",
+        "Physicalleft gable has window/vent; physicalright has blank info panel/vent. Front counters do not appear on rear."
+      ],
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "nativeRGBA": true,
+      "distinctPixelCells": 4,
+      "alpha": {
+        "trueZeroAlphaFraction": 0.42332160690256887,
+        "faintAlpha1to8Fraction": 0.009187823844081714,
+        "outerBorderAlphaMax": 1,
+        "hiddenBrightRGBAtAlpha0": 0,
+        "brightRGBAtAlpha1to8": 2307,
+        "redPixelsAtAlphaGreaterThan32": 0
+      },
+      "cells": [
+        {
+          "view": "SE",
+          "cell": 0,
+          "coreBBoxExclusive": [
+            47,
+            67,
+            598,
+            583
+          ],
+          "minimumCoreMargin": 29,
+          "coreBoundaryPixels": 0,
+          "rgbaSha256": "a07e50c99e564c9773b9b644c436474c0e35b110394b00312edd04e137797f22"
+        },
+        {
+          "view": "SW",
+          "cell": 1,
+          "coreBBoxExclusive": [
+            31,
+            67,
+            583,
+            583
+          ],
+          "minimumCoreMargin": 31,
+          "coreBoundaryPixels": 0,
+          "rgbaSha256": "394a08276e762ec51ced956f562ad1de92d89aacf8e738eb38161f36a523061a"
+        },
+        {
+          "view": "NW",
+          "cell": 2,
+          "coreBBoxExclusive": [
+            46,
+            49,
+            598,
+            563
+          ],
+          "minimumCoreMargin": 29,
+          "coreBoundaryPixels": 0,
+          "rgbaSha256": "9867e5bed58ad42c805a201c5a28182fa0d82f31a99f460f50f29f5b64403c62"
+        },
+        {
+          "view": "NE",
+          "cell": 3,
+          "coreBBoxExclusive": [
+            30,
+            48,
+            580,
+            566
+          ],
+          "minimumCoreMargin": 30,
+          "coreBoundaryPixels": 0,
+          "rgbaSha256": "8b616c889dd912c16e299eee0de1059fb60d7b4325f4b69c3dddd5e889130d43"
+        }
+      ],
+      "numericalCameraCertification": false,
+      "runtimeReady": false
+    },
+    {
+      "jobId": "golf-source-01-07-media-centre",
+      "condition": "upgraded",
+      "source": "art/catalogue-completion-20261107/generated/golf-source-batch-01/native/golf-source-01-07-media-centre/upgraded-normal-v1.png",
+      "sha256": "82adee171a484e448fd1bf160824324992e584b1bd09f7d0c625f4e80907cc81",
+      "originalHashMatchesProvenance": true,
+      "review": "PASS-practical-normal4-source-candidate",
+      "continueYawSourceGeneration": true,
+      "repairRequired": false,
+      "notes": [
+        "Low modular building, front central double entrance plus3windowgroups eachside; rear single service door and2vents.",
+        "Two roof masts and front roof hatch keep positions; gable windowpairs and entrance canopy consistent across genuine corners."
+      ],
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "nativeRGBA": true,
+      "distinctPixelCells": 4,
+      "alpha": {
+        "trueZeroAlphaFraction": 0.5579720651490987,
+        "faintAlpha1to8Fraction": 0.06524194348419984,
+        "outerBorderAlphaMax": 2,
+        "hiddenBrightRGBAtAlpha0": 0,
+        "brightRGBAtAlpha1to8": 5227,
+        "redPixelsAtAlphaGreaterThan32": 0
+      },
+      "cells": [
+        {
+          "view": "SE",
+          "cell": 0,
+          "coreBBoxExclusive": [
+            31,
+            101,
+            599,
+            529
+          ],
+          "minimumCoreMargin": 28,
+          "coreBoundaryPixels": 0,
+          "rgbaSha256": "83bf8117eadfb61edbdf403d012a643d1ec05231f5fbabc6e307a3671de0874c"
+        },
+        {
+          "view": "SW",
+          "cell": 1,
+          "coreBBoxExclusive": [
+            24,
+            95,
+            595,
+            528
+          ],
+          "minimumCoreMargin": 24,
+          "coreBoundaryPixels": 0,
+          "rgbaSha256": "ffc74bceb3e178d3015a118873d5888adce753da1c949c71abcacc7510c11735"
+        },
+        {
+          "view": "NW",
+          "cell": 2,
+          "coreBBoxExclusive": [
+            31,
+            92,
+            599,
+            518
+          ],
+          "minimumCoreMargin": 28,
+          "coreBoundaryPixels": 0,
+          "rgbaSha256": "78ed09b5a6cbbca98c03fb28b15a7b5788c01aeb65723426f55d0e87ec33a13a"
+        },
+        {
+          "view": "NE",
+          "cell": 3,
+          "coreBBoxExclusive": [
+            19,
+            97,
+            597,
+            523
+          ],
+          "minimumCoreMargin": 19,
+          "coreBoundaryPixels": 0,
+          "rgbaSha256": "41685f33719c5743e4157040a4fc6bdf9df1fbe776bec8b5a25eb819b3b2082d"
+        }
+      ],
+      "numericalCameraCertification": false,
+      "runtimeReady": false
+    },
+    {
+      "jobId": "golf-source-01-08-hole-scoreboard",
+      "condition": "upgraded",
+      "source": "art/catalogue-completion-20261107/generated/golf-source-batch-01/native/golf-source-01-08-hole-scoreboard/upgraded-normal-v1.png",
+      "sha256": "128b4bde9b54eaeb1138200d4ad4798ae5391ead7b441b26ab44d456c941b24d",
+      "originalHashMatchesProvenance": true,
+      "review": "PASS-practical-normal4-source-candidate",
+      "continueYawSourceGeneration": true,
+      "repairRequired": false,
+      "notes": [
+        "One blank green face with removable score slats; rear uses slat backs/centralbrace and2diagonal supports, not duplicate scoringface.",
+        "Two uprights and simple rear braced feet remain physicalsame; no baked hole/name text. Grey composite shows no opaque coloured background.",
+        "Core minimum margin6px: tight framing but no clipped opaque core; preserve original and allow extra padding during later candidate packaging.",
+        "No redRGB pixels atalpha>32 anywhere in holeboard; any red-looking native-view fringe is hidden/very low-alpha RGB, not an opaque painted ground layer. Outer border reachesalpha4/255, so exterior is not uniformly exactzero."
+      ],
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "nativeRGBA": true,
+      "distinctPixelCells": 4,
+      "alpha": {
+        "trueZeroAlphaFraction": 0.4203550234147061,
+        "faintAlpha1to8Fraction": 0.1729985577253268,
+        "outerBorderAlphaMax": 4,
+        "hiddenBrightRGBAtAlpha0": 0,
+        "brightRGBAtAlpha1to8": 114399,
+        "redPixelsAtAlphaGreaterThan32": 0
+      },
+      "cells": [
+        {
+          "view": "SE",
+          "cell": 0,
+          "coreBBoxExclusive": [
+            68,
+            6,
+            541,
+            612
+          ],
+          "minimumCoreMargin": 6,
+          "coreBoundaryPixels": 0,
+          "rgbaSha256": "6e020cce472334d91d74d235e8bbbba5992e47a434a4a31df239c0826f4aab0a"
+        },
+        {
+          "view": "SW",
+          "cell": 1,
+          "coreBBoxExclusive": [
+            137,
+            15,
+            572,
+            620
+          ],
+          "minimumCoreMargin": 7,
+          "coreBoundaryPixels": 0,
+          "rgbaSha256": "ca51810c0c1d5129131b19191c4160be77b8e14e631b9e1d2b07d8991717a70a"
+        },
+        {
+          "view": "NW",
+          "cell": 2,
+          "coreBBoxExclusive": [
+            53,
+            15,
+            521,
+            617
+          ],
+          "minimumCoreMargin": 10,
+          "coreBoundaryPixels": 0,
+          "rgbaSha256": "ec872a5e43ce4af9c8b174bb3af79c66502778ef086e77323fb84464f97e8725"
+        },
+        {
+          "view": "NE",
+          "cell": 3,
+          "coreBBoxExclusive": [
+            116,
+            18,
+            576,
+            607
+          ],
+          "minimumCoreMargin": 18,
+          "coreBoundaryPixels": 0,
+          "rgbaSha256": "728df3cf07c88a2a06c5030afc75070133f66c4c80d0011497b0f571141a17de"
+        }
+      ],
+      "numericalCameraCertification": false,
+      "runtimeReady": false
+    },
+    {
+      "jobId": "golf-source-01-10-concession-kiosk",
+      "condition": "upgraded",
+      "source": "art/catalogue-completion-20261107/generated/golf-source-batch-01/native/golf-source-01-10-concession-kiosk/upgraded-normal-v1.png",
+      "sha256": "f780ff50e2d63b09af8ce68f0c1854d41e9497cff045914cba5c99a9dbb4c1df",
+      "originalHashMatchesProvenance": true,
+      "review": "PASS-practical-normal4-source-candidate",
+      "continueYawSourceGeneration": true,
+      "repairRequired": false,
+      "notes": [
+        "Front counter/snackshelves and rear staffdoor remain fixed; one right-front corner fridge.",
+        "Fridge has2perpendicular glazed faces: SEfrontpane, NEbothpanes, NWrightpane; this is ONE corner unit, not2independentfridges. Physicalleft gable plain; serving face not pasted onto rear."
+      ],
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "nativeRGBA": true,
+      "distinctPixelCells": 4,
+      "alpha": {
+        "trueZeroAlphaFraction": 0.5306883999908427,
+        "faintAlpha1to8Fraction": 0.038846027639782364,
+        "outerBorderAlphaMax": 1,
+        "hiddenBrightRGBAtAlpha0": 0,
+        "brightRGBAtAlpha1to8": 17524,
+        "redPixelsAtAlphaGreaterThan32": 2313
+      },
+      "cells": [
+        {
+          "view": "SE",
+          "cell": 0,
+          "coreBBoxExclusive": [
+            70,
+            83,
+            571,
+            572
+          ],
+          "minimumCoreMargin": 55,
+          "coreBoundaryPixels": 0,
+          "rgbaSha256": "45431777437c0c5c3376534f230f2e4e58fb092c33b22b0b5adc7b032636bb0e"
+        },
+        {
+          "view": "SW",
+          "cell": 1,
+          "coreBBoxExclusive": [
+            54,
+            84,
+            560,
+            567
+          ],
+          "minimumCoreMargin": 54,
+          "coreBoundaryPixels": 0,
+          "rgbaSha256": "4a2dd1dd75d4ae981fd48e058f0c7bf34956cc13b13d9762270f1b7eec3a7a7c"
+        },
+        {
+          "view": "NW",
+          "cell": 2,
+          "coreBBoxExclusive": [
+            70,
+            63,
+            565,
+            546
+          ],
+          "minimumCoreMargin": 62,
+          "coreBoundaryPixels": 0,
+          "rgbaSha256": "d80d67319e9690458ff7b5cb0135389ff6a1a628422855f104f3090df1c7465d"
+        },
+        {
+          "view": "NE",
+          "cell": 3,
+          "coreBBoxExclusive": [
+            63,
+            61,
+            560,
+            554
+          ],
+          "minimumCoreMargin": 61,
+          "coreBoundaryPixels": 0,
+          "rgbaSha256": "10da3481cdcde2ddcedfa62f8adc20fed13277be3a9ecada3c104784f80ff4e6"
+        }
+      ],
+      "numericalCameraCertification": false,
+      "runtimeReady": false
+    }
+  ],
+  "alphaConclusion": "All6native RGBA sources contain real zero-alpha regions and all24opaque cores clear equal-half boundaries. Near-transparent alpha1–8residue and bright RGB under lowalpha remain; no opaque coloured halo was found on grey composites. Holeboard haszero redRGB pixels atalpha>32; outerborder max4/255 and minimum core margin6px. Original pixels preserved; this is source-candidate status, not final runtime mask approval.",
+  "kioskInterpretation": "One two-faced glazed fridge at physical right/front corner; do not count NEtwo visible panes as2fridges.",
+  "sourceConditionsOnly": true,
+  "runtimeEconomyOrUpgradeBehaviorChanged": false,
+  "nativeSourcePixelsChanged": false,
+  "runtimeModified": false,
+  "importsRun": false,
+  "testsRun": false,
+  "buildRun": false,
+  "serverStarted": false,
+  "commitCreated": false
+}

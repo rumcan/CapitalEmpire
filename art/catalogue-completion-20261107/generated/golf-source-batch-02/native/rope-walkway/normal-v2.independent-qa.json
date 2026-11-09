@@ -1,0 +1,126 @@
+{
+  "schema": 1,
+  "as_of_utc": "2026-11-07T13:57:01.992280+00:00",
+  "review_result": "PASS-source-candidate-four-fixed-gate-projections",
+  "source": {
+    "path": "generated/golf-source-batch-02/native/rope-walkway/normal-v2.png",
+    "sha256": "4667e69c8dbb673bd7b8cff7ae2a0a3717bd463511da9af1123e1ec8297b49a2",
+    "bytes": 1298781
+  },
+  "mode": "RGBA",
+  "dimensions": [
+    1254,
+    1254
+  ],
+  "source_original_hash_matches_parent": true,
+  "parent_provenance": {
+    "path": "generated/golf-source-batch-02/native/rope-walkway/normal-v2.provenance.json",
+    "sha256": "a199ad27a529cc3a455b2233b3178559511ac0d1864e9518ab36528ec78ccfe1",
+    "bytes": 2369
+  },
+  "exact_prompt_utf8_sha256": "c4b0888b98554aa92fd09a7f97445386bd9f5e2bb0f1bef082b3a8a4d7d0f03d",
+  "actual_generation_references": [
+    {
+      "path": "generated/golf-small-prop-correction-guides-v1/rope-walkway/guides/normal-world-v1.png",
+      "sha256": "701f4167e399c04eb97b20830ac56c020e9ed5c176f7e7c098e50ac6fb369c91",
+      "bytes": 72994
+    },
+    {
+      "path": "generated/golf-source-batch-02/native/rope-walkway/normal-v1.png",
+      "sha256": "484d8689a00469e4508fd84e005743160f3106bc841caa6ddbd07b0589b89c89",
+      "bytes": 1915634
+    }
+  ],
+  "zero_alpha_fraction": 0.6824496539303893,
+  "outer_4px_border_alpha_p50p95max": [
+    0.0,
+    0.0,
+    2.0
+  ],
+  "clear_horizontal_cut_y": 627,
+  "clear_vertical_cut_by_row": [
+    627,
+    627
+  ],
+  "cells": [
+    {
+      "cell": "TL",
+      "rect_ltrb": [
+        0,
+        0,
+        627,
+        627
+      ],
+      "dimensions": [
+        627,
+        627
+      ],
+      "minimum_core_margin_px": 57,
+      "boundary_core_pixels_alpha_gt128": 0,
+      "boundary_alpha_max": 1,
+      "native_rgba_rectangle_sha256": "bc57e94c65e96d431a166be94b37ad2f04bd842d4658236e944c428e850abb45"
+    },
+    {
+      "cell": "TR",
+      "rect_ltrb": [
+        627,
+        0,
+        1254,
+        627
+      ],
+      "dimensions": [
+        627,
+        627
+      ],
+      "minimum_core_margin_px": 54,
+      "boundary_core_pixels_alpha_gt128": 0,
+      "boundary_alpha_max": 1,
+      "native_rgba_rectangle_sha256": "b82ec54856c5232f3d4ab6689250ece9773c21471a3b8fbee63d67f5e2bad496"
+    },
+    {
+      "cell": "BL",
+      "rect_ltrb": [
+        0,
+        627,
+        627,
+        1254
+      ],
+      "dimensions": [
+        627,
+        627
+      ],
+      "minimum_core_margin_px": 65,
+      "boundary_core_pixels_alpha_gt128": 0,
+      "boundary_alpha_max": 2,
+      "native_rgba_rectangle_sha256": "cf26b17de648c7809d5a46580ce081ce48fba3aba1869699a08426239c5c4e29"
+    },
+    {
+      "cell": "BR",
+      "rect_ltrb": [
+        627,
+        627,
+        1254,
+        1254
+      ],
+      "dimensions": [
+        627,
+        627
+      ],
+      "minimum_core_margin_px": 72,
+      "boundary_core_pixels_alpha_gt128": 0,
+      "boundary_alpha_max": 1,
+      "native_rgba_rectangle_sha256": "e9552a793d09102adb8a326d978ab9f094195813d307e9d82f72887633b7d4b5"
+    }
+  ],
+  "all_cores_complete_at_reference_cuts": true,
+  "limited_source_identity_and_pose_pass": true,
+  "visual_observations": [
+    "Four distinct guide-matching rigid quarterturn projections now present. Four posts, two fixed-open leaves, rear hinges and functional perforated ramp retained.",
+    "Gate leaves remain on same physical hinge ends and open state. Exact numerical camera angle not certified."
+  ],
+  "source_crops_saved": false,
+  "native_image_bytes_changed": false,
+  "owner_approved": false,
+  "runtime_ready": false,
+  "exact_numerical_angle_certified": false
+}

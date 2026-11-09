@@ -1,0 +1,42 @@
+[
+  {
+    "key": "golf-source-01-01-food-truck",
+    "condition": "budget",
+    "runtimeTarget": {
+      "eventTypeId": "foodTruck",
+      "eventName": "Food truck",
+      "currentSpriteSubjectId": "golf:food-tent",
+      "newArtSubjectProposal": "golf:event-food-truck",
+      "newArtSubjectAlreadyRegistered": false,
+      "eventCatalogueSource": "src/game/golf/tents.ts",
+      "standInMappingSource": "src/game/golf/structure-art.ts",
+      "footprintTiles": {
+        "width": 3,
+        "depth": 2
+      },
+      "footprintMetres": {
+        "width": 6,
+        "depth": 4
+      },
+      "dimensionsMeaning": "Exact current event placement plot, not measured source sprite architecture. New design must fit plot; no runtime geometry changed.",
+      "currentSpriteBaseBoxesInTiles": [
+        {
+          "hx": 4,
+          "hy": 4,
+          "dx": 0,
+          "dy": 0
+        }
+      ]
+    },
+    "source": "C:/Users/RAMPAGE/.codex/generated_images/01a1b1fd-39ec-7220-8f11-86e4448833ea/exec-8c99cb8a-1f02-408a-8441-ae14d8cdfdb8.png",
+    "target": "generated/golf-source-batch-01/native/golf-source-01-01-food-truck/budget-normal-v2.png",
+    "prompt": "Precise object correction to this four-corner food-truck sheet: BOTTOM-RIGHT plain-side/front-cab view is MISSING the short roof cooking-extraction vent. Add the exact same metal cap/vent shown on the other3views at the same physical roofREARposition towardthetruck'sback, notabovethecab. Preserve ALLfourcellcameras, body/servinghatch/reardoor/wheels/condition/colours/scale/lighting andotherdetails. ExactlyONE extractor ineachview unlessphysicallyoccluded; inthisfourthviewthelowrooftopdoesnotoccludeit. Oldcream/green1950sstepvansameidentity, lateafternoondaylightUPPERRIGHT/shadowsLOWERLEFT. Same2x2nativepaintedsprites onTRUEzeroalpha transparentbackground, no text/grid/haze/groundplate.",
+    "references": [
+      "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/golf-source-batch-01/native/golf-source-01-01-food-truck/budget-normal-v1.png"
+    ],
+    "status": "native guided correction candidate; independent physical feature/alpha review pending",
+    "runtime_imported": false,
+    "sha256": "2708408b20af272d91fb4805f6a74510dd0aec85a693ffe64b14c821f09c9417",
+    "native_bytes_preserved": true
+  }
+]

@@ -1,0 +1,103 @@
+{
+  "jobId": "golf-source-01-05-info-will-call-booth",
+  "priority": 5,
+  "status": "brief-ready-for-root-native-generation",
+  "sourceOnly": true,
+  "nativeGeneratedByThisJob": false,
+  "ownerApproved": false,
+  "runtimeIntegrated": false,
+  "action": "Distinct info/will-call booth replacing a parking attendant kiosk; do not regenerate the completed budget ticket cabin.",
+  "requiresOrdinary1950sBudgetRedesign": true,
+  "functionalIdentity": "A4x4m information and will-call booth with two front counter windows, shallow practical roof, one paper-ticket pickup shelf, folded-map rack on the left counter and a blank information panel on the right side; one rear staff door. It serves spectators on foot, not parking-car drivers. No plants/queues/people baked in.",
+  "referenceImages": [
+    {
+      "runtimeSubjectId": "newprop:ticket-booth",
+      "referencePNG": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-01\\references\\ticket-booth.source.png",
+      "referenceRole": "functional/identity reference",
+      "visualNotes": "Green clapboard ticket office with two front service windows, hipped roof/cupola and queue posts. Correct service-counter function; info/will-call redesign uses paper lists/maps, plain practical roof and rear staff door. Do not duplicate already-generated budget ticket cabin.",
+      "provenance": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-01\\references\\ticket-booth.provenance.json"
+    },
+    {
+      "runtimeSubjectId": "newprop:course-map-board",
+      "referencePNG": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-01\\references\\course-map-board.source.png",
+      "referenceRole": "functional/identity reference",
+      "visualNotes": "Actual roofed green information/map board with course plan, information symbol, lanterns and flower planters. Map/data display reference only; omit planters, ground plinth and night lamp glow from info booth scene.",
+      "provenance": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-01\\references\\course-map-board.provenance.json"
+    }
+  ],
+  "conditions": {
+    "budget": {
+      "role": "source art design only; no runtime economy upgrade implied",
+      "brief": "Weathered but ordinary1950spainted-board booth, modest corrugated roof, paper lists and simple shuttered windows. No cupola/gold finials or fantasy construction."
+    },
+    "upgraded": {
+      "role": "source art design only; no runtime economy upgrade implied",
+      "brief": "Fresh green/cream spectator service booth with durable counters and neat map/ticket storage. Preserve clear paper service function rather than modern touchscreen kiosks."
+    }
+  },
+  "sourceSheetsPerCondition": [
+    {
+      "kind": "normal",
+      "grid": "2x2",
+      "cellOrder": [
+        [
+          "SE",
+          "SW"
+        ],
+        [
+          "NW",
+          "NE"
+        ]
+      ],
+      "camera": "orthographic30degrees down; true45degreecorner views; two walls equal in each corner view"
+    },
+    {
+      "kind": "yaw8",
+      "grid": "2x2",
+      "cellOrder": [
+        [
+          "N",
+          "E"
+        ],
+        [
+          "S",
+          "W"
+        ]
+      ],
+      "camera": "orthographic30degrees down; each cardinal view turned8degrees, never square-on"
+    }
+  ],
+  "lateAfternoonDaylight": "one sun upper-right; faces toward upper-right lit; shadows lower-left; no night glow",
+  "generationConstraints": [
+    "Same one physical object/layout in all eight cells; doors, windows, serving openings, rear braces, stairs, wheels, dishes and equipment never teleport between sides.",
+    "Empty functional facilities; no people stamped into sprites. Transparent background, ample cell margins, equal scale within each sheet, no labels or gridlines.",
+    "No generic ground plates. Functional hitting mat, vehicle wheels, structure supports and admission hardware are part of their actual objects.",
+    "Use the separate style-authority PNG for painterly material/color style; role references may be photoreal, ornate, mislabeled, modern or shanty and are not style authorities.",
+    "Budget means ordinary worn1950sreal-world construction; upgraded means attractive maintained period facilities. No goblin village, rope-lashed logs, gratuitous torn tarps or gold filigree.",
+    "No captions, brand names or baked score/name/yardage text; scoring and information faces remain blank for data. A simple medical symbol may identify first aid."
+  ],
+  "notACompletenessClaim": "No approval, alias, import, camera calibration, seating readiness or completion of related catalogue IDs is inferred from this source brief.",
+  "runtimeTarget": {
+    "eventTypeId": "info",
+    "eventName": "Info and will-call booth",
+    "currentSpriteSubjectId": "ce:parking-kiosk",
+    "newArtSubjectProposal": "golf:event-info-will-call-booth",
+    "newArtSubjectAlreadyRegistered": false,
+    "eventCatalogueSource": "src/game/golf/tents.ts",
+    "standInMappingSource": "src/game/golf/structure-art.ts",
+    "footprintTiles": {
+      "width": 2.0,
+      "depth": 2.0
+    },
+    "footprintMetres": {
+      "width": 4.0,
+      "depth": 4.0
+    },
+    "dimensionsMeaning": "Exact current event placement plot, not measured source sprite architecture. New design must fit plot; no runtime geometry changed."
+  },
+  "existingFourCorners": {
+    "usableCorrectTargetCornersFound": false,
+    "reason": "Any corners of the current wrong stand-in describe another object and do not count for this target."
+  },
+  "promptCore": "A4x4m information and will-call booth with two front counter windows, shallow practical roof, one paper-ticket pickup shelf, folded-map rack on the left counter and a blank information panel on the right side; one rear staff door. It serves spectators on foot, not parking-car drivers. No plants/queues/people baked in. For budget: Weathered but ordinary1950spainted-board booth, modest corrugated roof, paper lists and simple shuttered windows. No cupola/gold finials or fantasy construction. For upgraded: Fresh green/cream spectator service booth with durable counters and neat map/ticket storage. Preserve clear paper service function rather than modern touchscreen kiosks. Use only the requested condition for one sheet; do not mix conditions between its four camera cells. Late-afternoon daytime, upper-right sunlight/lower-left shadows. Match painterly style authority, not rejected reference construction."
+}

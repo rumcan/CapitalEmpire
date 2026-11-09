@@ -1,0 +1,63 @@
+{
+  "schema": 1,
+  "createdUtc": "2026-11-07T06:47:45.284562+00:00",
+  "exactRuntimeId": "variation:world-house_5-north-bffd2c68-plain:1",
+  "source": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/building-views/variation-world-house_5-north-bffd2c68-plain-1/NE.png",
+  "sourceSha256": "54adaea58c1d0d0feb5dbc272807e930047f682d132f7d846ad79fcabfda2090",
+  "output": "identity-references/variation-world-house-5-north-bffd2c68-plain-1-3f3948f6/source.png",
+  "outputSha256": "54adaea58c1d0d0feb5dbc272807e930047f682d132f7d846ad79fcabfda2090",
+  "width": 569,
+  "height": 534,
+  "sourceCell": {
+    "kind": "already isolated native PNG; whole file",
+    "rectXYWH": [
+      0,
+      0,
+      569,
+      534
+    ]
+  },
+  "operation": "byte-for-byte PNG copy only; no resize, crop, recolour, key, repaint, registration or source mutation",
+  "selection": "registered corner NE native PNG for this exact subject",
+  "registeredCornerDirection": "NE",
+  "sourceEvidence": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\building-views\\variation-world-house_5-north-bffd2c68-plain-1\\provenance.json",
+  "sourceReview": {
+    "integrationStatus": "blocked",
+    "integrationReason": "Rear SE/SW keep same visible corner and same off-centre chimney position despite nominal quarter turn; square similar window walls do not prove a changed viewpoint."
+  },
+  "sourceRegistration": {
+    "id": "variation:world-house_5-north-bffd2c68-plain:1",
+    "version": "variation-world-house_5-north-bffd2c68-plain-1-4views-v1",
+    "files": {
+      "NE": "54adaea58c1d0d0feb5dbc272807e930047f682d132f7d846ad79fcabfda2090",
+      "SE": "fb83f95153063888e09b4f851ebd07bd4c7b802e0e277f6f16f8f4e0aa07b51b",
+      "SW": "f21a272215c5fd591a064240441c40cb2bdfb40c46a7209585294369e9c96a84",
+      "NW": "bd60aa5d6ac3f44506af82eb167f11f407a6bdd912e4fe1cd63aa515806c7c2d"
+    },
+    "cropsBy": "prep-views (four-view-cells.mjs)"
+  },
+  "originalInventorySource": {
+    "library": "src/game/library.ts",
+    "librarySha256": "91b5190292c1005ac7b936f08e5e1ebf3be43c3aae99f92ea510775da83d9726",
+    "atlas": "src/assets/atlas/sprites-6-0.webp",
+    "atlasSha256": "5bf555ea578c014fa9e9f4e6119ae5f09128a07573eed569e85b1c5554f2ac51",
+    "runtimePage": 6,
+    "localPage": 6,
+    "uv": [
+      0.265625,
+      0.234375,
+      0.45166,
+      0.437988
+    ],
+    "crop": {
+      "left": 544,
+      "top": 480,
+      "width": 381,
+      "height": 417
+    },
+    "native": "art/theme-consistency/exports/buildings/variation-world-house_5-north-bffd2c68-plain-1.native.png",
+    "nativeSha256": "7cbd7963f775e00bf833ce641300b85f0d52807e00f5acbd13609da1df66aa3b"
+  },
+  "originalBusinessSourceCell": null,
+  "nativeReferenceApprovalClaimed": false
+}

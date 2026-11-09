@@ -1,0 +1,67 @@
+{
+  "priority": 2,
+  "jobId": "golf-vehicle-01-02-wheelchair-cart",
+  "runtimeSubjectId": "newprop:wheelchair-cart",
+  "runtimeName": "Wheelchair cart",
+  "sourceReferencePNG": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-vehicle-source-batch-01\\references\\wheelchair-cart.source.png",
+  "sourceProvenance": {
+    "runtimeSubjectId": "newprop:wheelchair-cart",
+    "runtimeName": "Wheelchair cart",
+    "png": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-vehicle-source-batch-01\\references\\wheelchair-cart.source.png",
+    "originalNativePNG": "E:\\Repos\\CapitalEmpire\\All Generated Images\\exec-6b0d52b0-9f48-4bbd-a4b4-b0bc885809a9.png",
+    "copiedNativeSheet": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-vehicle-source-batch-01\\original-sheets\\exec-6b0d52b0-9f48-4bbd-a4b4-b0bc885809a9.png",
+    "sourceSheetSHA256": "eae0daeb83966cdc4004902ed719d9997dce86f2b2fdfaa1ffea68788e308b8c",
+    "cropRectXYWH": [
+      649,
+      639,
+      601,
+      551
+    ],
+    "sourceCell": "bottom right",
+    "pngSHA256": "60cb3c06c513598a454e72d9ff7a70e789dcf3f18fd88ee93eb4c99fe4877a77",
+    "rgbaSHA256": "6d38a785bfce99aa09e8989ed7bd20a0f064310c6bb3f7d7d44edb9c35400418",
+    "cropPixels": [
+      601,
+      551
+    ],
+    "sourceMetadataCutOff": false,
+    "operation": "Native original RGBA crop only; no resize, recolour, alpha cleanup or synthesis. Source sheet contains4different objects, not4rotations.",
+    "visualInspection": "inspected native crop",
+    "actualIdentityNotes": "Confirmed accessible cart/ramp function, but improvised rope/tarp/wood body must be replaced with ordinary practical construction.",
+    "sourceOnlyNotReleaseProof": true
+  },
+  "runtimeLibrarySource": "src/game/new-props-library.ts",
+  "runtimeBaseBoxesInTiles": [
+    {
+      "hx": 1.3,
+      "hy": 1.3,
+      "dx": 0,
+      "dy": 0
+    }
+  ],
+  "sourceDisplayPixels": [
+    166.4,
+    152.56
+  ],
+  "dimensionsCaution": "Existing library box/studio display dimensions are not measured physical vehicle dimensions. No runtime size or economy changes.",
+  "functionalBrief": "Actual four-wheel accessible transport cart with driver seat/control at front, a clear wheelchair bay at middle/rear, folding SIDE access ramp, handrails and one small rear passenger bench under a full canopy. Ramp stays on the SAME physical side and deployed at fixed angle in every source view. Empty wheelchair space; no person.",
+  "conditionAndEraBrief": "Replace source rope-lashed posts, blue patched tarp, scrap wood and corrugated bonnet with an ordinary sound older metal transport-cart chassis, simple canopy and practical side ramp. Preserve access role, not fantasy construction. Geometry/clearances remain design proposals, not accessibility certification.",
+  "ordinaryBudgetRedesignRequired": true,
+  "originalAuditCounts": {
+    "normal": 0,
+    "yaw8": 0
+  },
+  "nativeGeneratedByThisBrief": false,
+  "exactEightImagesAlreadyProvenForThisStableID": false,
+  "existingNormal4UsableRefs": 0,
+  "generatedCoreReuseClaimed": false,
+  "scope": "An exact existing parked/decor prop identity. Do not count compound components, generic player carts, core maintenance utility or unapproved aliases as this ID completed.",
+  "sourcePlan": {
+    "normal": "2x2 SE/SW then NW/NE; orthographic30degrees down; four real equal-wall45degreecorners",
+    "yaw8": "2x2 N/E then S/W; orthographic30degrees down; cardinal direction physically turned8degrees, not square-on",
+    "frozenState": "All wheels straight, parked/unoccupied, equipment/ramp/dish/cargo in one fixed state across all8views.",
+    "style": "Same painterly game style; late-afternoon daylight, sun upper-right/shadows lower-left, lamps off; true transparent background with no ground plate, haze, captions or logos."
+  },
+  "ownerApproved": false,
+  "runtimeIntegrated": false
+}

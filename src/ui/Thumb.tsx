@@ -1,8 +1,10 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { ATLAS_PAGES, ATLAS_SIZE } from '../game/library';
 import { thumbItem } from '../game/newart';
 import type { LibItem } from '../game/types';
 import { thumbBox, thumbSource } from './thumb-source';
+import { taskLimiter } from '../game/ext/asset-residency';
+import { onceVisible } from './thumb-visibility';
 
 // T257 (#747): a thumbnail is drawn once from its picture's full-resolution master (or its atlas page's mip 0; thumb-source.ts) at the screen's
 // device pixel ratio, with a high-quality downscale, and kept as a small PNG (a blob URL) for every card that shows it again. Until it is
@@ -10,6 +12,7 @@ import { thumbBox, thumbSource } from './thumb-source';
 
 /** the drawn thumbnails (blob URLs) by picture, box and device pixel ratio; the ones being drawn */
 const DRAWN = new Map<string, string>(), PENDING = new Map<string, Promise<string | null>>();
+const decodeThumbnail = taskLimiter(2);
 /** the pictures being drawn from, by URL, and how many thumbnails still wait on each: let go when none does (an atlas page is 16 MB decoded) */
 const SOURCES = new Map<string, { img: Promise<HTMLImageElement>; n: number }>();
 function hold(url: string) {
@@ -43,7 +46,7 @@ async function draw(it: LibItem, w: number, h: number, dpr: number): Promise<str
 }
 function drawn(key: string, it: LibItem, w: number, h: number, dpr: number): Promise<string | null> {
   let p = PENDING.get(key);
-  if (!p) { p = draw(it, w, h, dpr).then(u => { PENDING.delete(key); if (u) DRAWN.set(key, u); return u; }); PENDING.set(key, p); }
+  if (!p) { p = decodeThumbnail(() => draw(it, w, h, dpr)).then(u => { PENDING.delete(key); if (u) DRAWN.set(key, u); return u; }); PENDING.set(key, p); }
   return p;
 }
 
@@ -52,16 +55,18 @@ function drawn(key: string, it: LibItem, w: number, h: number, dpr: number): Pro
 export function Thumb({ it, size, flip = false }: { it: LibItem; size: number; flip?: boolean }) {
   const t = thumbItem(it), { w, h } = thumbBox(t, size), dpr = typeof window !== 'undefined' ? window.devicePixelRatio || 1 : 1;
   const key = `${t.id}|${w}x${h}@${dpr}`;
+  const target = useRef<HTMLElement | null>(null), [seen, setSeen] = useState<string | null>(null), visible = seen === key;
   const [got, setGot] = useState<{ key: string; url: string } | null>(null);
+  useEffect(() => { const element = target.current; return element ? onceVisible(element, () => setSeen(key)) : undefined; }, [key]);
   useEffect(() => {
-    if (DRAWN.has(key)) return;
+    if (!visible || DRAWN.has(key)) return;
     let live = true;
     void drawn(key, t, w, h, dpr).then(u => { if (live && u) setGot({ key, url: u }); });
     return () => { live = false; };
-  }, [key]); // (the key names the picture, its box and the dpr: all the drawing depends on)
+  }, [key, visible]); // Only viewport-near cards start image work; at most two large sources decode together.
   const url = DRAWN.get(key) ?? (got?.key === key ? got.url : null), mirror = flip ? { transform: 'scaleX(-1)' } : null;
-  if (url) return <img src={url} width={w} height={h} alt="" draggable={false} className="pointer-events-none select-none" style={{ width: w, height: h, ...mirror }} data-thumb="sharp" />;
+  if (url) return <img ref={element => { target.current = element; }} src={url} width={w} height={h} alt="" draggable={false} className="pointer-events-none select-none" style={{ width: w, height: h, ...mirror }} data-thumb="sharp" />;
   // while it is drawn, and under node: the atlas page's mip 1 cut out with CSS
   const [page, u0, v0, u1, v1] = t.tex, P = ATLAS_SIZE / 2, cw = Math.abs(u1 - u0) * P, ch = (v1 - v0) * P, k = Math.min(size / cw, size / ch);
-  return <div data-thumb="mip" style={{ width: cw * k, height: ch * k, backgroundImage: `url(${ATLAS_PAGES[page]![1]})`, backgroundSize: `${P * k}px ${P * k}px`, backgroundPosition: `${-Math.min(u0, u1) * P * k}px ${-v0 * P * k}px`, ...(flip !== (u0 > u1) ? { transform: 'scaleX(-1)' } : null) }} />;
+  return <div ref={element => { target.current = element; }} data-thumb="mip" style={{ width: cw * k, height: ch * k, backgroundImage: visible ? `url(${ATLAS_PAGES[page]![1]})` : undefined, backgroundSize: `${P * k}px ${P * k}px`, backgroundPosition: `${-Math.min(u0, u1) * P * k}px ${-v0 * P * k}px`, ...(flip !== (u0 > u1) ? { transform: 'scaleX(-1)' } : null) }} />;
 }
