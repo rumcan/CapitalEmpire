@@ -277,7 +277,11 @@ class FB {
   }
   /** T402 (#1080, T361 #1016): the parcel frame's turn from the map's axes in degrees, folded to -45..45 (a parcel on the axes: 0; on a road at 45 degrees to the grid: 45; a
    *  field's grain follows its own sides, and a quarter turn of it is the same grain), the angle a grass patch's texture is laid at */
-  get turn(): number { const a = Math.atan2(this.u.y, this.u.x) * 180 / Math.PI, t = Math.round((((a % 90) + 135) % 90 - 45) * 1e4) / 1e4; return t === 0 ? 0 : t; }
+  get turn(): number {
+    // (a parcel at exactly 45 degrees is -45 whichever way the float rounds: 44.99999999999999 and 45.00000000000001 both fold to -45)
+    let t = (Math.atan2(this.u.y, this.u.x) * 180 / Math.PI) % 90; if (t >= 45 - 1e-6) t -= 90; else if (t < -45 - 1e-6) t += 90;
+    t = Math.round(t * 1e4) / 1e4; return t === 0 ? 0 : t;
+  }
   /** T402 (#1080, T361 #1016): a field of grass over a parcel-frame rectangle, laid as a painted area (the way the course lays its long grass): through the iso ground path,
    *  its texture at the course's own scale and turned with the field (FieldGrass.a), its edge feathered into the ground round it (the flat profile: the feather the course's
    *  rough and fescue have) in place of the hard cut edge of a lot patch, under every area the player paints (z). `i` keeps the fields' order */

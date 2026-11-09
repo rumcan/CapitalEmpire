@@ -19,7 +19,7 @@ const parcel = (i: number, deg: number, w = 40 + (i * 13) % 41, d = 80 + (i * 29
   return { key: `t402tex:${i}`, o: { x: 600 + i * 11, y: 700 + i * 5 }, u, n, w, d, side: 1 };
 };
 /** an angle folded to -45..45 (a quarter turn of a field's grain is the same grain) */
-const fold = (deg: number) => { let t = deg % 90; if (t >= 45) t -= 90; if (t < -45) t += 90; return t; };
+const fold = (deg: number) => { let t = deg % 90; if (t >= 45 - 1e-6) t -= 90; else if (t < -45 - 1e-6) t += 90; return t; };
 /** the angle a pair of lines meet at, folded to 0..90 (a line and its reverse are the same line) */
 const between = (a: number, b: number) => { const r = ((a - b) % 180 + 180) % 180; return Math.min(r, 180 - r); };
 /** the rows' angle on the map (degrees) of a crop patch: its own direction */
