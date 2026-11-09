@@ -1,7 +1,7 @@
 // The filter list of real golf course names (T378, #1034; the owner: "the course search should get a course names catalog. so first you find the name of the course in a
 // filter list"): the first thing in the picker's Find a real course. The player types, the list narrows as they type (locally, over the catalogue's files as far as they
 // have loaded: golf/osm/catalogue.ts), a row shows the name, the town and the country, and a row imports that course by its OpenStreetMap id. A country button opens a
-// flyout beside the card, in two levels (the continents, then the countries of one: not one long column); the list scrolls inside its box with its count stuck at the top, and nothing scrolls sideways. This file is
+// flyout beside the card, in two levels (the continents, each opening in place into its countries: not one long column of a hundred); the list scrolls inside its box with its count stuck at the top, and nothing scrolls sideways. This file is
 // markup over what CoursePicker gives it (so tests render it with no network).
 import { useEffect, useState, type KeyboardEvent, type ReactElement } from 'react';
 import { Icon } from '../Icon';
@@ -79,9 +79,9 @@ export function CatalogueFinder(p: CatalogueFinderProps): ReactElement {
 /** a continent of the countries flyout: its code, name, number of courses and its countries */
 export interface FlyoutContinent { id: string; name: string; n: number; countries: CatalogueCountry[] }
 
-/** the countries flyout, in two levels (a hundred countries are not one long column): it opens beside the picker with All countries, the player's own country and the
- *  continents; a continent opens a second column beside it with its countries, each with its number of courses. Each column has its title stuck at the top and scrolls
- *  up and down alone */
+/** the countries flyout, in two levels (a hundred countries are not one long column): it opens beside the picker, one narrow column (so it fits beside the Who card and the picker
+ *  on a screen of 1366 px, where a second column would wrap below them out of sight), with All countries, the player's own country and the continents; a continent opens
+ *  in place, its countries under it, each with its number of courses, one continent at a time. The title is stuck at the top and the column scrolls up and down alone */
 export function CountryFlyout({ continents, cc, total, prefer, startOpen, onPick, onClose }: {
   continents: FlyoutContinent[]; cc: string; total: number;
   /** the player's own country (from the browser's languages): a row of its own at the top */ prefer?: string;
@@ -90,35 +90,32 @@ export function CountryFlyout({ continents, cc, total, prefer, startOpen, onPick
 }): ReactElement {
   const own = prefer ? continents.flatMap(k => k.countries).find(c => c.cc === prefer) : undefined;
   const [open, setOpen] = useState<string | null>(startOpen ?? continents.find(k => k.countries.some(c => c.cc === cc))?.id ?? null);
-  const shown = continents.find(k => k.id === open);
   const row = (on: boolean) => `flex w-full items-center justify-between gap-2 rounded-lg px-2 py-1 text-left text-xs ${on ? 'bg-amber-300/15 text-amber-100' : 'hover:bg-white/10'}`;
-  const card = 'pointer-events-auto max-h-[calc(100vh-2rem)] max-w-full space-y-0.5 overflow-y-auto overflow-x-hidden rounded-2xl border border-white/10 bg-slate-950/90 p-3 text-slate-200 shadow-2xl backdrop-blur';
   return (
-    <>
-      <div className={`${card} w-[230px]`} role="menu" data-testid="cat-countries">
-        <div className="win-head win-head-slate flex items-center justify-between gap-2">
-          <div className="font-display text-base font-bold leading-tight text-[var(--gold-hi)]">Country</div>
-          <button className="btn-icon" onClick={onClose} title="Close" aria-label="Close the country list" data-testid="cat-countries-close"><Icon name="close" size={16} /></button>
-        </div>
-        <button role="menuitem" className={row(!cc)} onClick={() => onPick('')} data-testid="cat-country-all"><span className="font-semibold text-white">All countries</span><span className="text-slate-400">{total.toLocaleString('en-US')}</span></button>
-        {own && <button role="menuitem" className={row(cc === own.cc)} onClick={() => onPick(own.cc)} data-testid={`cat-country-${own.cc}`}><span className="min-w-0 truncate">{own.country} <span className="text-slate-500">(your region)</span></span><span className="shrink-0 text-slate-400">{own.n.toLocaleString('en-US')}</span></button>}
-        <div className="px-2 pt-1 text-[10px] uppercase tracking-wide text-slate-500">Continents</div>
-        {continents.map(k => (
-          <button key={k.id} role="menuitem" aria-haspopup="menu" aria-expanded={k.id === open} className={row(k.id === open)} onClick={() => setOpen(o => (o === k.id ? null : k.id))} data-testid={`cat-continent-${k.id}`}>
-            <span className="font-semibold text-white">{k.name}</span><span className="shrink-0 text-slate-400">{k.countries.length} · {k.n.toLocaleString('en-US')} ›</span>
-          </button>
-        ))}
+    <div className="pointer-events-auto max-h-[calc(100vh-2rem)] w-[250px] max-w-full space-y-0.5 overflow-y-auto overflow-x-hidden rounded-2xl border border-white/10 bg-slate-950/90 p-3 text-slate-200 shadow-2xl backdrop-blur" role="menu" data-testid="cat-countries">
+      <div className="win-head win-head-slate flex items-center justify-between gap-2">
+        <div className="font-display text-base font-bold leading-tight text-[var(--gold-hi)]">Country</div>
+        <button className="btn-icon" onClick={onClose} title="Close" aria-label="Close the country list" data-testid="cat-countries-close"><Icon name="close" size={16} /></button>
       </div>
-      {shown && (
-        <div className={`${card} w-[250px]`} role="menu" data-testid="cat-continent-countries">
-          <div className="win-head win-head-slate flex items-center justify-between gap-2"><div className="font-display text-base font-bold leading-tight text-[var(--gold-hi)]">{shown.name}</div></div>
-          {shown.countries.map(c => (
-            <button key={c.cc} role="menuitem" className={row(c.cc === cc)} onClick={() => onPick(c.cc)} data-testid={c.cc === prefer ? `cat-country-${c.cc}-in-list` : `cat-country-${c.cc}`}>
-              <span className="min-w-0 truncate">{c.country}</span><span className="shrink-0 text-slate-400">{c.n.toLocaleString('en-US')}</span>
-            </button>
-          ))}
+      <button role="menuitem" className={row(!cc)} onClick={() => onPick('')} data-testid="cat-country-all"><span className="font-semibold text-white">All countries</span><span className="text-slate-400">{total.toLocaleString('en-US')}</span></button>
+      {own && <button role="menuitem" className={row(cc === own.cc)} onClick={() => onPick(own.cc)} data-testid={`cat-country-${own.cc}`}><span className="min-w-0 truncate">{own.country} <span className="text-slate-500">(your region)</span></span><span className="shrink-0 text-slate-400">{own.n.toLocaleString('en-US')}</span></button>}
+      <div className="px-2 pt-1 text-[10px] uppercase tracking-wide text-slate-500">Continents</div>
+      {continents.map(k => (
+        <div key={k.id}>
+          <button role="menuitem" aria-haspopup="menu" aria-expanded={k.id === open} className={row(k.id === open)} onClick={() => setOpen(o => (o === k.id ? null : k.id))} data-testid={`cat-continent-${k.id}`}>
+            <span className="font-semibold text-white">{k.name}</span><span className="shrink-0 text-slate-400">{k.countries.length} · {k.n.toLocaleString('en-US')} {k.id === open ? '⌄' : '›'}</span>
+          </button>
+          {k.id === open && (
+            <div className="ml-2 space-y-0.5 border-l border-white/10 pl-1" role="menu" data-testid="cat-continent-countries">
+              {k.countries.map(c => (
+                <button key={c.cc} role="menuitem" className={row(c.cc === cc)} onClick={() => onPick(c.cc)} data-testid={c.cc === prefer ? `cat-country-${c.cc}-in-list` : `cat-country-${c.cc}`}>
+                  <span className="min-w-0 truncate">{c.country}</span><span className="shrink-0 text-slate-400">{c.n.toLocaleString('en-US')}</span>
+                </button>
+              ))}
+            </div>
+          )}
         </div>
-      )}
-    </>
+      ))}
+    </div>
   );
 }

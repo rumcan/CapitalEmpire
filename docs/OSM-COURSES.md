@@ -506,7 +506,15 @@ maps from the dev server. not sure if bug." (It was not a bug: that evening the 
   snapshot: 139 courses of some 900). The script asks the main server and maps.mail.ru (kumi and private.coffee hung or were stale that day); a request that the main server turns away at once (502 in under 5 s: one of its two backends was down that day) is asked again, up to four times, before the mirror.
 - The countries are asked in the owner's order (South Africa, the US, the UK and Ireland, Australia, Canada, New Zealand, then by number of courses); the script prints what is not asked yet and finishes it on its next run.
 
-<<SIZES>>
+## What is in it (the run of 2026-11-09)
+**29,935 named golf courses in 35 countries**, 28 chunk files, 2.4 MB raw and **884 KB gzipped** in all, the biggest chunk 135 KB gzipped (the US is cut into three of about 4 400 courses). By country:
+US 13,152, GB 3,012, JP 2,205, CA 1,843, AU 1,458, DE 882, KR 845, FR 776, ES 504, SE 464, IE 435, NZ 406, CN 376, AR 354, IT 307, ZA 306, NL 279, DK 198, TH 194, AT 189, MX 163, MY 157, ID 157, FI 156,
+NO 149, CZ 142, CH 128, PH 123, TW 113, IN 111, PT 100, BE 97, BR 75, IS 73, LU 6 (the countries under 150 courses share two packs). That is the owner's order (South Africa, the US, the UK and Ireland, Australia,
+Canada, New Zealand) and then every country down to the twentieth by number of courses and twelve more; **97 countries are not asked yet** (Poland, Vietnam, Colombia and on: the script lists them and does them on its next run).
+The run: 42 answers (61 MB of JSON and text), about 1 h 45 min in requests over about 2.5 h of running (116 attempts were turned away at once with a 502 or 504, the rest was the 10 s gaps and the back-offs, and
+restarts to fix the script); the main server stopped answering from this PC part-way (a TCP time-out), maps.mail.ru gave most of the answers, in batches. The build step (cache to chunks) takes 3.5 s.
+**Town names** (the nearest named place, or the course's own address): South Africa, the US, the UK, Ireland and New Zealand have them; Australia and Canada (their places queries answered 504) and the other countries
+show the country and, where the map gives one, the address's town, until the script's next run asks for their places.
 
 ## Part 1: the Overpass servers asked in the order of their measured health (`overpass.ts`)
 The mirror list (main, maps.mail.ru, kumi, private.coffee) and the per-server time limits were in T358/PR #1041. Now the order in which they are asked is **their measured health**, not the order they are listed
@@ -522,7 +530,7 @@ Tests: `tests/golf-osm-mirrors.test.ts` (the order, what is kept and forgotten, 
 imports `way/4261725` by its id with no Nominatim request, the main server's 502 and the card's two sentences, the preview, Place it in my map).
 
 ## Left for later
-The countries the script has not asked yet (the build says which); the catalogue is as old as its last run (the index says the date); the place is a guess from the nearest named place when the course has no address;
+The 97 countries the script has not asked yet (the build says which), and the places (the town of a course with no address) of Australia, Canada and the countries after them; the catalogue is as old as its last run (the index says the date); the place is a guess from the nearest named place when the course has no address;
 Full is a count of hole lines inside a bounding box (the preview's grade is the true one); a course with no name on the map is not listed (the name search and a pasted link still find it).
 
 ---

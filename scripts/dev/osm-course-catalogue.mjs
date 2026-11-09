@@ -135,7 +135,7 @@ async function ask(query, kind, label, timeoutS) {
           }
         } else if (/runtime error|<html|<\?xml|Error/i.test(text.slice(0, 2000)) && !/^-?\d/.test(text)) why = `not a table (${text.replace(/\s+/g, ' ').slice(0, 120)})`;
       }
-      if (hung) h.until = Date.now() + 600_000;
+      if (hung) h.until = Date.now() + 150_000; // (two servers: a long wait on one that hung would starve the run when the other is down)
       if (!why) { h.okAt = Date.now(); h.until = 0; stats.ok++; stats.byServer[host(url)].ok++; log(`${tag}: ${text.length} bytes in ${s} s`); return { text, server: host(url), base }; }
       stats.byServer[host(url)].bad++; log(`${tag}: ${why} after ${s} s`);
       // a gateway that turns the request away at once (a 502 in under 5 s: on 2026-11-09 one of overpass-api.de's two backends was down, and the answer depended on which one the request met)
@@ -228,8 +228,10 @@ async function fetchAll() {
   const complete = cc => regions.filter(r => r.cc === cc).every(have);
   const wantPlaces = cc => complete(cc) && !placesCovered(cc) && !pending.includes(cc) && needsPlaces(cc, regions.filter(r => r.cc === cc));
   const flush = async all => {
-    while (pending.length && (all || pending.length >= 5 || pending.includes('US'))) {
-      const group = pending.includes('US') ? ['US'] : pending.slice(0, 5);
+    // (the countries with the most courses have the most places: each is a request of its own, the others three to a request)
+    const heavy = cc => approxOf({ cc }) >= 800;
+    while (pending.length && (all || pending.includes('US'))) {
+      const group = pending.includes('US') ? ['US'] : heavy(pending[0]) ? [pending[0]] : pending.filter(c => !heavy(c)).slice(0, 3);
       for (const cc of group) pending.splice(pending.indexOf(cc), 1);
       try { await placesStep(group); } catch (e) { if (!(e instanceof Failed)) throw e; noteFailure(`places-${group.join('-')}`, 'every server failed'); log(`places of ${group.join(' ')}: failed, left for later`); }
     }
@@ -243,8 +245,7 @@ async function fetchAll() {
       await flush(false);
       for (const b of L.batchPlan(todo, r => !have(r))) {
         bad.push(...await coursesTask(b));
-        for (const cc of new Set(b.map(r => r.cc))) if (wantPlaces(cc)) pending.push(cc);
-        await flush(false);
+        for (const cc of new Set(b.map(r => r.cc))) if (wantPlaces(cc)) pending.push(cc); // (the places come after all the courses: the names first)
       }
       for (const cc of ccs) if (wantPlaces(cc)) pending.push(cc); // (countries that were kept by an earlier run and have no places yet)
       await flush(true);
