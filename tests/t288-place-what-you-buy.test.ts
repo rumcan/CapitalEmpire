@@ -133,7 +133,10 @@ describe('T288: the placement helper (golf/placing.ts)', () => {
     assert.match(eng, /if \(this\.placing && !this\.keys\.has\(' '\) && \(e\.button === 0 \|\| e\.button === 2\)\) \{ this\.hover = this\.tileAt\(mx, my\); if \(e\.button === 0\) this\.placeAt\(\); else this\.cancelPlacing\(\); return; \}/);
     assert.match(eng, /if \(this\.placing\) \{ this\.cancelPlacing\(\); return true; \} \/\/ T288/);
     assert.match(eng, /this\.drawPlacing\(ctx\); \/\/ T288/);
-    assert.match(eng, /buyRangeUpgrade\(id: RangeUpgradeId\) \{ const p = this\.upgradePlaceable\(id\); if \(p\) this\.startPlacing\(p\); \}/);
+    // (T386, #1043: the ball room's upgrade tree, the upgrades with a `branch` (the picking tools, the supply, staff and machines: gear, not buildings), is bought at once from the range's till; the buildings of the Upgrades list
+    // are still placed: a bought upgrade takes the ghost in hand, a click builds it. buyRangeUpgrade keeps the T288 lines after the tree's exit)
+    assert.match(eng, /buyRangeUpgrade\(id: RangeUpgradeId\) \{\n\s+\/\/ T386[^\n]*\n\s+if \(RANGE_UPGRADES\.find\(q => q\.id === id\)\?\.branch\) \{ this\.range\.buy\(id\); return; \}\n\s+const p = this\.upgradePlaceable\(id\); if \(p\) this\.startPlacing\(p\);\n\s+\}/);
+    assert.ok(RANGE_UPGRADES.some(u => u.branch) && RANGE_UPGRADES.some(u => !u.branch), 'the tree\'s upgrades and the placed ones are both there');
     // the car park placed becomes the range's own lot (packed dirt: gravel and paving are upgrades)
     assert.match(eng, /this\.parkDefs\.push\(\{ \.\.\.d, id, ground: 'dirt' \}\); b\.lot = \[d\.x, d\.y, d\.w, d\.h\];/);
     // a pre-T288 save loads with its placement steps done (no reward)

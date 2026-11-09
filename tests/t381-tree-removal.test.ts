@@ -111,7 +111,9 @@ describe('T381: the game uses it (the engine, the paint tool, the bulldozer)', (
   it('the bulldozer takes a tree by a click and trees by a drag, as one undo step, and says how many', () => {
     const eng = src('src/game/engine.ts');
     assert.match(eng, /if \(this\.bulldozeTree\(mx, my\)\) return;/, 'the click'); assert.match(eng, /\} else this\.bladeTrees\(t\);/, 'the drag');
-    assert.match(eng, /this\.paint\.openStep\('bulldoze trees'\)/); assert.match(eng, /if \(this\.treeStroke\) this\.treeStrokeEnd\(\);/, 'closed at the release');
+    // (T396, #1064: the stroke is one undo step for the roads the bulldozer takes too, so its step is opened by treeStrokeOpen(label), labelled by what the stroke takes first: the trees' label is the default, 'bulldoze trees')
+    assert.match(eng, /private treeStrokeOpen\(label = 'bulldoze trees'\) \{ if \(!this\.treeStroke\) \{ this\.paint\.openStep\(label\); this\.treeStroke = \{ n: 0 \}; \} \}/, 'one undo step, opened before the first tree goes');
+    assert.match(eng, /const begin = \(\) => this\.treeStrokeOpen\(\)/, 'a tree goes inside it'); assert.match(eng, /if \(this\.treeStroke\) this\.treeStrokeEnd\(\);/, 'closed at the release');
     assert.match(eng, /Removed \$\{s\.n\} tree\$\{s\.n === 1 \? '' : 's'\}/);
     assert.ok(BLADE_R > 0.5 && BLADE_R < 4);
     assert.ok(BELT.reach > 0 && TC.HILL === 2);
