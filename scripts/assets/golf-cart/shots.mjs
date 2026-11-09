@@ -141,7 +141,7 @@ try {
   const bendWanted = (st, pts, memo) => {
     memo.last ??= new Map(); let want = false;
     for (let k = 1; k < pts.length - 1; k++) {
-      const near = Math.hypot(st.x - pts[k][0], st.y - pts[k][1]) < 1.6 && Math.abs(st.seg - 1 - k) <= 1, prev = memo.last.get(k);
+      const near = Math.hypot(st.x - pts[k][0], st.y - pts[k][1]) < 1.6 && (st.seg - 1 === k - 1 || st.seg - 1 === k), prev = memo.last.get(k); // (the legs either side of the vertex: the hairpin's way back passes the one before it)
       if (near) { if (prev === undefined || prev.item !== st.item) want = true; memo.last.set(k, { item: st.item, near: true }); } else if (prev && prev.near) { want = true; memo.last.set(k, { item: st.item, near: false }); }
     }
     return want;
@@ -201,7 +201,7 @@ try {
       // turn that steps through its neighbours is a row of different pictures, and one that snaps is two
       const rows = [];
       for (let leg = 1; leg < sq.legs.length; leg++) {
-        const v = sq.pts[leg], near = sq.frames.filter(f => Math.hypot(f.st.x - v[0], f.st.y - v[1]) < 1.7 && Math.abs(f.st.seg - 1 - leg) <= 1), pick = []; let last = null;
+        const v = sq.pts[leg], near = sq.frames.filter(f => Math.hypot(f.st.x - v[0], f.st.y - v[1]) < 1.7 && (f.st.seg - 1 === leg - 1 || f.st.seg - 1 === leg)), pick = []; let last = null;
         for (const f of near) if (f.st.item !== last) { pick.push(f); last = f.st.item; }
         const name = `${sq.legs[leg - 1][0]} to ${sq.legs[leg][0]}`; bends.push({ name, frames: near.length, pictures: pick.length });
         rows.push(pick.slice(0, 7).map((f, k) => ({ f, label: `${name} ${k + 1}: picture ${f.st.item}` })));
