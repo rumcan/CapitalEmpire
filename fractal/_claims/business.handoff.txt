@@ -1,0 +1,7 @@
+src/game/lots/tiers.ts -> town
+src/game/event/crowd.ts -> people
+src/game/golf/practicetool.ts -> ui
+src/game/moneyfloats.ts -> ui
+src/game/business-library.ts -> art
+src/game/golf-library.ts -> art
+src/game/business/art.ts -> art

@@ -1,0 +1,4 @@
+src/game/budget.ts -> business
+src/App.tsx -> ui
+src/PaintPanel.tsx -> ui
+src/index.css -> ui

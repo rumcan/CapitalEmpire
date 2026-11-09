@@ -1,0 +1,13 @@
+src/game/library.ts -> art
+src/assets/portraits/manifest.json -> art
+src/game/dev/lot-gallery.ts -> art
+src/game/golf/play/view.ts -> play
+src/game/lots/house-facing.ts -> town
+src/game/golf/structure-facing.ts -> course
+src/game/ext/farms/animals.ts -> town
+src/game/ext/farms/herd.ts -> town
+src/game/ext/farms/farms.ts -> town
+src/game/ext/farms/paddock.ts -> town
+src/game/ext/farms/crops.ts -> town
+src/game/ext/farms/farmmap.ts -> town
+src/game/ext/farms/index.ts -> town
