@@ -2,7 +2,7 @@ import { MAP, clamp, mulberry } from '../iso';
 import { TC, HS, HSTEP, TERRAIN_MODEL, sampleField, type Edge, type Terrain, type Waterway, type WaterPoint, type Chokepoint } from './types';
 import { makeNoise, fbm, ridged, smoothstep, hash2, type Noise } from './noise';
 import { priorityFlood, flowDirs, flowAccum, traceDown } from './flow';
-import { lineCells, meanderLine, rasterRiverNat, shapeCreek, shapeRiver, valleyDist } from './river';
+import { creekSwing, lineCells, meanderLine, rasterRiverNat, shapeCreek, shapeRiver, valleyDist } from './river';
 
 /** creeks: a channel cell needs this many upstream samples to count as a channel */
 const CREEK_MIN_ACC = 60;
@@ -384,16 +384,19 @@ function build(genSeed: number, model: number): Terrain {
     // arc length, then meander: interior points offset perpendicular to the path
     const sArc = [0];
     for (let k = 1; k < line.length; k++) sArc.push(sArc[k - 1] + Math.hypot(line[k].x - line[k - 1].x, line[k].y - line[k - 1].y));
+    // (T360, model 2: the grid's straight runs get a sine of their own (river.ts creekSwing) over a smaller noise drift, and the corners it makes are cut)
+    const swing = nat ? creekSwing(nMeander, sArc, idx) : null;
     const moved: P[] = line.map((p, k) => {
       if (k === 0 || k === line.length - 1) return p;
       // tangent over +-4 points so the offset doesn't flip at the D8 corners; the meander fades out over 60 tiles at both ends
       const a = line[Math.max(0, k - 4)], b = line[Math.min(line.length - 1, k + 4)], L = Math.hypot(b.x - a.x, b.y - a.y) || 1;
       const fade = smoothstep(0, 60, sArc[k]) * smoothstep(0, 60, sArc[line.length - 1] - sArc[k]);
-      const off = fade * (16 * fbm(nMeander, sArc[k] / 160, idx * 7.3, 3) + 3 * nMeander(sArc[k] / 30, idx * 7.3 + 50));
+      const off = fade * (swing ? 8 * fbm(nMeander, sArc[k] / 160, idx * 7.3, 3) + 2 * nMeander(sArc[k] / 30, idx * 7.3 + 50) + swing[k]! : 16 * fbm(nMeander, sArc[k] / 160, idx * 7.3, 3) + 3 * nMeander(sArc[k] / 30, idx * 7.3 + 50));
       return { x: p.x - (b.y - a.y) / L * off, y: p.y + (b.x - a.x) / L * off };
     });
+    const smooth = nat ? chaikin(chaikin(moved)) : moved;
     // width from the accumulation of the nearest original cell
-    const cpts: WaterPoint[] = moved.map(p => {
+    const cpts: WaterPoint[] = smooth.map(p => {
       let best = 0, bd = Infinity;
       for (let j = 0; j < cellPts.length; j++) {
         const d = (cellPts[j].x - p.x) ** 2 + (cellPts[j].y - p.y) ** 2;

@@ -33,7 +33,9 @@ export type P = { x: number; y: number };
  *  - bank: each bank's bays and points: the amplitude 0.14 of the width plus bankBase tiles, over three waves (the shares sum to 1); the cut
  *    side's share of it cutRough (a steep bank is clean), the bar side's barRough
  *  - bar: the point bar's width, the share of the water's width at the apex of a bend, its slow swing over barWave, and the bend below which
- *    there is none (a crossing has no bar) */
+ *    there is none (a crossing has no bar)
+ *  - creek: the creeks' own meander (shapeCreek's, creekSwing): a sine of the arc along the flow path, about creekWave tiles a swing and creekAmp tiles
+ *    wide, both swinging by a third and two-fifths, so no creek runs a straight line as the flow's grid left it */
 /** the point bar's width as a share of the water's width at the apex of a bend, and the widest the water gets (tiles): the band look and the belt read them */
 export const BAR_SHARE = 0.27, W_MAX = 52;
 export const NAT = {
@@ -42,6 +44,7 @@ export const NAT = {
   widthBase: [22, 38] as const, widthWave: 260, pool: [0.8, 0.34, 0.1] as const, poolWave: 70, wMin: 14, wMax: W_MAX, bendRadius: 80,
   bankWaves: [[60, 0.5], [22, 0.3], [9, 0.2]] as const, bankAmp: 0.14, bankBase: 0.8, cutRough: 0.55, barRough: 1.15,
   bar: BAR_SHARE, barWave: 48, barFrom: [0.3, 0.65] as const,
+  creekWave: 90, creekAmp: 8,
 } as const;
 /** the wander's numbers (see NAT.wander); a spec to try others */
 export interface WanderSpec { med: readonly number[]; large: readonly number[]; small: readonly number[] }
@@ -152,8 +155,8 @@ export function shapeRiver(line: readonly P[], nz: RiverNoise): WaterPoint[] {
 /** the distance (map fractions) from each height sample's centre (HS x HS samples HSTEP tiles apart) to the line: the valley's V, which
  *  generate.ts cuts 70 m a map's width deep round the river as it did round the old guide */
 export function valleyDist(line: readonly P[], HS: number, HSTEP: number, map: number): Float32Array {
-  // (every third point: a chord 12 tiles long sits 0.3 tile off a bend of the tightest radius)
-  const sp: P[] = []; for (let i = 0; i < line.length; i += 3) sp.push(line[i]!); if (sp[sp.length - 1] !== line[line.length - 1]) sp.push(line[line.length - 1]!);
+  // (every fifth point: a chord 20 tiles long sits a tile off a bend of the tightest radius, a hundredth of a metre of valley)
+  const sp: P[] = []; for (let i = 0; i < line.length; i += 5) sp.push(line[i]!); if (sp[sp.length - 1] !== line[line.length - 1]) sp.push(line[line.length - 1]!);
   const out = new Float32Array(HS * HS);
   for (let j = 0; j < HS; j++) for (let i = 0; i < HS; i++) {
     const x = (i + 0.5) * HSTEP, y = (j + 0.5) * HSTEP; let best = Infinity;
@@ -176,26 +179,39 @@ export function lineCells(line: readonly P[], HS: number, HSTEP: number): number
   return [...seen];
 }
 
-/** the natural river's classes: its water (a tile whose centre is within half the local width of the line, TC.WATER) and its bank, 3 tiles past the
- *  water and, on the inside of a bend, as far past it as the point bar there is wide (TC.BANK; never over water). cls is the map's class grid;
- *  the old river's raster (generate.ts) is this with no bars */
+/** the natural river's classes: its water (a tile whose centre is within half the local width of a point, TC.WATER: the points are 3 tiles apart, so
+ *  the discs' union is the river to a tenth of a tile) and its bank, 3 tiles past the water and, on the inside of a bend, as far past it as the point
+ *  bar there is wide (TC.BANK; never over water). cls is the map's class grid. Row by row, a fill of each disc's span: about 4 ms for a river */
 export function rasterRiverNat(cls: Uint8Array, pts: readonly WaterPoint[], map: number, bank = 3): void {
-  for (let k = 0; k + 1 < pts.length; k++) {
-    const a = pts[k]!, b = pts[k + 1]!, dx = b.x - a.x, dy = b.y - a.y, l2 = dx * dx + dy * dy, ba = a.bar ?? 0, bb = b.bar ?? 0;
-    const mw = Math.max(a.w, b.w) / 2 + bank + Math.max(Math.abs(ba), Math.abs(bb)) + 1;
-    const x0 = Math.max(0, Math.floor(Math.min(a.x, b.x) - mw)), x1 = Math.min(map - 1, Math.ceil(Math.max(a.x, b.x) + mw));
-    const y0 = Math.max(0, Math.floor(Math.min(a.y, b.y) - mw)), y1 = Math.min(map - 1, Math.ceil(Math.max(a.y, b.y) + mw));
-    for (let y = y0; y <= y1; y++) for (let x = x0; x <= x1; x++) {
-      const px = x + 0.5, py = y + 0.5, t = l2 > 0 ? clamp(((px - a.x) * dx + (py - a.y) * dy) / l2, 0, 1) : 0, cx = a.x + dx * t, cy = a.y + dy * t;
-      const e = Math.hypot(cx - px, cy - py) - (a.w + (b.w - a.w) * t) / 2, idx = y * map + x;
-      if (e <= 0) cls[idx] = TC.WATER;
-      else if (cls[idx] !== TC.WATER) {
-        // the bar lies on one side of the line (its sign): past the water there as far as it is wide
-        const side = dx * (py - cy) - dy * (px - cx) > 0 ? 1 : -1, bar = Math.max(0, (ba + (bb - ba) * t) * side);
-        if (e <= bank + bar) cls[idx] = TC.BANK;
-      }
-    }
+  /** a disc's rows: f(y, x0, x1) for each row's span of tile centres within r of (px, py) */
+  const disc = (px: number, py: number, r: number, f: (y: number, x0: number, x1: number) => void) => {
+    const y0 = Math.max(0, Math.ceil(py - r - 0.5)), y1 = Math.min(map - 1, Math.floor(py + r - 0.5));
+    for (let y = y0; y <= y1; y++) { const dy = y + 0.5 - py, h = Math.sqrt(Math.max(0, r * r - dy * dy)); f(y, Math.max(0, Math.ceil(px - h - 0.5)), Math.min(map - 1, Math.floor(px + h - 0.5))); }
+  };
+  // the banks first (the water is laid over them): every point's disc grown by the bank, and on its bar's side, the strip out to the bar's width
+  for (let i = 0; i < pts.length; i++) {
+    const p = pts[i]!, r = p.w / 2, bar = p.bar ?? 0;
+    disc(p.x, p.y, r + bank, (y, x0, x1) => { if (x1 >= x0) cls.fill(TC.BANK, y * map + x0, y * map + x1 + 1); });
+    if (Math.abs(bar) < 1e-6) continue;
+    const a = pts[Math.max(0, i - 2)]!, b = pts[Math.min(pts.length - 1, i + 2)]!, l = Math.hypot(b.x - a.x, b.y - a.y) || 1, nx = -(b.y - a.y) / l, ny = (b.x - a.x) / l, side = Math.sign(bar);
+    const R2 = (r + bank + Math.abs(bar)) ** 2, R1 = (r + bank) ** 2;
+    disc(p.x, p.y, r + bank + Math.abs(bar), (y, x0, x1) => {
+      const dy = y + 0.5 - p.y;
+      for (let x = x0; x <= x1; x++) { const dx = x + 0.5 - p.x, d2 = dx * dx + dy * dy; if (d2 > R2) continue; if (d2 > R1 && (dx * nx + dy * ny) * side > 0) cls[y * map + x] = TC.BANK; }
+    });
   }
+  for (const p of pts) disc(p.x, p.y, p.w / 2, (y, x0, x1) => { if (x1 >= x0) cls.fill(TC.WATER, y * map + x0, y * map + x1 + 1); });
+}
+
+/** the natural creek's lateral swing (tiles) at each point of its line (arc: the arc length of each): a sine whose phase runs at 2 pi a wavelength
+ *  (NAT.creekWave, swinging by a third over 200 tiles) and whose amplitude (NAT.creekAmp) swings by 40% over 120; row picks this creek's part of the noise */
+export function creekSwing(nz: Noise, arc: readonly number[], row: number): number[] {
+  const out: number[] = [], TAU = 2 * Math.PI; let ph = TAU * (0.5 + 0.5 * nz(row * 4.3 + 0.7, 9.1));
+  for (let k = 0; k < arc.length; k++) {
+    if (k > 0) ph += TAU * (arc[k]! - arc[k - 1]!) / (NAT.creekWave * Math.exp(0.3 * nz(arc[k]! / 200 + row * 2.1, 11.3)));
+    out.push(NAT.creekAmp * (1 + 0.4 * nz(arc[k]! / 120 + row * 3.1, 7.7)) * Math.sin(ph));
+  }
+  return out;
 }
 
 /** a creek's stored points made natural (model 2): the line at NAT.step, its width (the old one from the water it carries, 3 to 8) swinging

@@ -43,8 +43,8 @@ function headings(p: readonly { x: number; y: number }[], s: readonly number[], 
   return th;
 }
 /** the longest run of the river (tiles of arc) whose heading stays within dTheta radians in all: a ruler-straight reach, a canal */
-function longestStraight(river: readonly WaterPoint[], dTheta = 0.35): number {
-  const sp = smoothed(river, 2), s = arcsOf(sp), th = headings(sp, s, 10);
+function longestStraight(river: readonly WaterPoint[], dTheta = 0.35, half = 10): number {
+  const sp = smoothed(river, 2), s = arcsOf(sp), th = headings(sp, s, half);
   let best = 0;
   for (let i = 0; i < th.length; i++) {
     let lo = th[i]!, hi = th[i]!, e = i;
@@ -136,6 +136,17 @@ test('the river enters at one border and leaves at the opposite one, and keeps o
       assert.ok(Math.hypot(r[i]!.x - r[j]!.x, r[i]!.y - r[j]!.y) > (r[i]!.w + r[j]!.w) / 2 + 6, `seed ${seed}: the river runs into itself between ${i} and ${j}`);
     }
   }
+});
+
+test('the creeks meander too: no straight run longer than the flow grid left (the old ones had reaches of 200 tiles), their width swings within 2.5 to 9', () => {
+  let n = 0, worst = 0, oldWorst = 0;
+  for (let seed = 1; seed <= 12; seed++) {
+    for (const w of gen(seed).waters) if (w.kind === 'creek' && w.pts.length > 20) { n++; worst = Math.max(worst, longestStraight(w.pts, 0.35, 8)); for (const p of w.pts) assert.ok(p.w >= 2.5 - 1e-9 && p.w <= 9 + 1e-9, `seed ${seed}: creek width ${p.w}`); }
+    for (const w of gen(seed, 1).waters) if (w.kind === 'creek' && w.pts.length > 20) oldWorst = Math.max(oldWorst, longestStraight(w.pts, 0.35, 8));
+  }
+  assert.ok(n >= 20, `${n} creeks`);
+  assert.ok(worst <= 130, `a creek runs straight for ${worst.toFixed(0)} tiles`);
+  assert.ok(oldWorst > worst + 30, `the old creeks' longest straight run ${oldWorst.toFixed(0)} against ${worst.toFixed(0)}`);
 });
 
 // ---- the width swings: wider in the bends
