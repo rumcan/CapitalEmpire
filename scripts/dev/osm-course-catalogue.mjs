@@ -9,14 +9,14 @@
 //     its own. On 2026-11-09 every query took 50 to 95 s whatever its size (Luxembourg, six courses: 79 s; Florida, 10 000 hole lines: 76 s), so five US states or up to twelve small
 //     countries go in ONE request, an `out count` after each set saying where one region's courses and hole lines end (osm-catalogue-lib.mjs batchQuery / splitBatch: a count
 //     that disagrees with what came refuses the answer). A batch that fails is asked again in two halves, down to one region. Each region's part is kept on its own.
-//   - the places (city, town, village, suburb nodes, as tab-separated text) where a course with no address takes its town from: once for the US, five countries to a request
-//     for the rest, for the countries in which at least 20 courses have no address.
+//   - the places (city, town, village, suburb nodes, as tab-separated text) where a course with no address takes its town from, asked after the courses: the US eight states to a request, a country of 800 courses
+//     or more alone, the others three to a request, for the countries in which at least 20 courses have no address.
 //   - at least --gap seconds (10, never less) between any two requests; one request at a time; the User-Agent "CapitalEmpire-catalogue/1.0 (dev script)", no personal address.
 //   - every answer is kept on disk under the cache (gzipped, with the server and the time), so a rerun asks nothing twice; a run that stops (a server down, the time up, Ctrl-C)
 //     carries on where it was; what failed is asked again after a pause (twice).
 //   - the servers: overpass-api.de and maps.mail.ru (kumi and private.coffee hung, or answered from a July snapshot, on 2026-11-09; --overpass takes another list). A request the main
 //     server turns away at once (a 502 in under 5 s: one of its two backends was down that day) is asked again up to four times; 429 and other 5xx: back-off (Retry-After, else 30 s
-//     doubling to 5 min) and the next server; a server that hung is left alone 10 minutes, one that was busy a minute, and the one that answered last is asked first (the health
+//     doubling to 5 min) and the next server; a server that hung is left alone 2.5 minutes, one that was busy a minute, and the one that answered last is asked first (the health
 //     ordering the game's own course import uses, overpass.ts). An answer older than --max-age-days (3) is refused (a mirror's old snapshot would be a quietly incomplete catalogue).
 //   - an answer with an Overpass "remark" (runtime error, timed out, out of memory) is a failure, never kept (Overpass answers those with HTTP 200 and half a result).
 // The build (always at the end, or alone with --build-only) turns the cache into the chunks: nothing is asked. The countries not asked yet (the time ran out, a server
