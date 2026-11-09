@@ -151,20 +151,28 @@ export function desertBank(x: number, y: number, d: number): number {
 
 /** T382 (the owner, 2026-11-08: "some sand texture was added to the map for desert mode but it isn't there enough. we need more small sand blotches but no big sandy spaces. sand should be blended"): the desert's sand is MANY SMALL
  *  BLOTCHES over the dirt, 2 to 12 m across, from three octaves of value noise (waves of about 8 m, 4 m and 2 m) bent by a slow warp of the world and stretched along the wind (the fallen leaves' wind: the drifts run one way), thresholded through a
- *  smoothstep about 0.085 wide (a feather of about half a metre to a metre at the finest octave, wider along the slower ones) so each blotch fades into the dirt along an irregular edge (the finest octave breaks it up at the metre). World-space noise only: deterministic, never periodic, and neighbouring chunks agree at their seams. On open ground
- *  about a fifth of the ground is sand and no disc of it is wider than about 12 m (a test measures both); `bias` lowers the threshold where sand collects (road verges, the lee of plants, doors, fences) or raises it (the yards, the damp dirt) */
-export const SAND = { stretch: 1.7, waves: [4.2, 2.1, 1.0], weights: [0.34, 0.36, 0.3], warp: 0.9, lo: 0.575, hi: 0.66 } as const;
+ *  smoothstep 0.06 wide (a feather of about half a metre to a metre at the finest octave, wider along the slower ones) so each blotch fades into the dirt along an irregular edge (the finest octave breaks it up at the metre). World-space noise only: deterministic, never periodic, and neighbouring chunks agree at their seams. On open ground
+ *  about an eighth of the ground is sand and no disc of it is wider than about 10 m (a test measures both); `bias` lowers the threshold where sand collects (road verges, the lee of plants, doors, fences) or raises it (the yards, the damp dirt) */
+export const SAND = { stretch: 1.7, waves: [4.2, 2.1, 1.0], weights: [0.34, 0.36, 0.3], warp: 0.9, lo: 0.62, hi: 0.68 } as const;
 /** how far the context moves the threshold (a blotch's reach and share): the road verge, plants and doors and worn ground, fences and walls, a house lot's yard, the damp dirt by water */
-export const SAND_BIAS = { road: 0.05, worn: 0.05, line: 0.03, yard: -0.075, damp: -0.14 } as const;
+export const SAND_BIAS = { road: 0.04, worn: 0.035, line: 0.025, yard: -0.075, damp: -0.22 } as const;
 const WIND_X = 1 / Math.hypot(1, 0.25), WIND_Y = -0.25 / Math.hypot(1, 0.25);
-/** the sand's raw field at tile (x, y), about 0.5 on average, the blotches where it rises past SAND.lo */
-export function sandField(x: number, y: number): number {
+/** how much of an octave `res` samples a tile resolve: all of it from 2.5 samples a wavelength, none below 1 (an octave finer than the samples would alias into speckle: the far levels bake with fewer samples a tile, one at 15%, two at 30%) */
+const resolved = (wave: number, res: number) => sm(1, 2.5, wave * res);
+/** the sand's raw field at tile (x, y), about 0.5 on average, the blotches where it rises past SAND.lo. `res`: the samples a tile the caller takes it at (the default: all of it): the octaves the samples cannot resolve fade out
+ *  (the pattern of the coarse ones stays where it is, so a chunk baked at another zoom lays the same blotches with less fine edge), and cost nothing */
+export function sandField(x: number, y: number, res = 1e9): number {
+  const a0 = resolved(SAND.waves[0], res), a1 = resolved(SAND.waves[1], res), a2 = resolved(SAND.waves[2], res);
   const u = (x * WIND_X + y * WIND_Y) / SAND.stretch, v = -x * WIND_Y + y * WIND_X;
   const wx = (vnoise(x / 9 + 11.3, y / 9 - 4.7, 91) - 0.5) * SAND.warp, wy = (vnoise(x / 9 - 7.1, y / 9 + 9.9, 93) - 0.5) * SAND.warp;
-  return vnoise((u + wx) / SAND.waves[0] + 5.1, (v + wy) / SAND.waves[0] - 3.7, 83) * SAND.weights[0] + vnoise((u + wy) / SAND.waves[1] - 2.2, (v - wx) / SAND.waves[1] + 8.4, 85) * SAND.weights[1] + vnoise(u / SAND.waves[2] + 6.3, v / SAND.waves[2] - 1.9, 87) * SAND.weights[2];
+  let f = 0.5;
+  if (a0 > 0) f += (vnoise((u + wx) / SAND.waves[0] + 5.1, (v + wy) / SAND.waves[0] - 3.7, 83) - 0.5) * SAND.weights[0] * a0;
+  if (a1 > 0) f += (vnoise((u + wy) / SAND.waves[1] - 2.2, (v - wx) / SAND.waves[1] + 8.4, 85) - 0.5) * SAND.weights[1] * a1;
+  if (a2 > 0) f += (vnoise(u / SAND.waves[2] + 6.3, v / SAND.waves[2] - 1.9, 87) - 0.5) * SAND.weights[2] * a2;
+  return f;
 }
-/** the sand's cover at tile (x, y), 0..1: a blotch whole inside, fading to nothing across its irregular edge (bias: the threshold moved by it) */
-export function sandBlotch(x: number, y: number, bias = 0): number { return sm(SAND.lo - bias, SAND.hi - bias, sandField(x, y)); }
+/** the sand's cover at tile (x, y), 0..1: a blotch whole inside, fading to nothing across its irregular edge (bias: the threshold moved by it; res: sandField's) */
+export function sandBlotch(x: number, y: number, bias = 0, res = 1e9): number { return sm(SAND.lo - bias, SAND.hi - bias, sandField(x, y, res)); }
 
 /* ---- noise: value noise on the world grid (never periodic) ---- */
 const hash2 = (x: number, y: number, s: number) => { let h = Math.imul(x | 0, 374761393) ^ Math.imul(y | 0, 668265263) ^ Math.imul(s, 2246822519); h = Math.imul(h ^ (h >>> 13), 1274126177); return ((h ^ (h >>> 16)) >>> 0) / 4294967296; };
@@ -400,7 +408,7 @@ export function influence(box: Box, res: number, src: LivingSources): InfluenceG
         for (const f of [fence, hedge, wallL]) if (f) { const d = f[q]!; if (d < BIG) bias += SAND_BIAS.line * near(0.4, 3, d); }
         if (yard && yard[q]) bias += SAND_BIAS.yard;
         if (damp) bias += SAND_BIAS.damp * damp[q]!;
-        sand[q] = sandBlotch(X(i), Y(j), bias);
+        sand[q] = sandBlotch(X(i), Y(j), bias, res);
       }
       lush[q] = L; thin[q] = T; bare[q] = B; ao[q] = A;
     }

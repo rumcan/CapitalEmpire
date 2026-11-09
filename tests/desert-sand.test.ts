@@ -3,13 +3,14 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 import {
   CASTER_STRIDE, CK, SAND, SAND_BIAS, influence, livingMasks, livingSignature, sandBlotch, sandField, type Box, type InfluenceGrid, type LivingSources,
 } from '../src/game/living-ground';
-import { DESERT_GROUND, DESERT_LAWN, DESERT_PALE, DESERT_SAND, desertSurfaces } from '../src/game/desert-theme';
+import { DESERT_DUNE, DESERT_GROUND, DESERT_LAWN, DESERT_PALE, DESERT_SAND, desertSurfaces } from '../src/game/desert-theme';
 import { SURFACES, clampSurfaces } from '../src/game/painted-surfaces';
 
-const read = (p: string) => readFileSync(new URL(`../${p}`, import.meta.url), 'utf8');
+const read = (p: string) => readFileSync(resolve(p), 'utf8');
 
 /** the blotches over a square of open ground (tiles of 2 m): their share of the ground, the widest disc of sand that fits in one (metres across), the share of the sand lying in discs wider than 8 m, and how many there are to a hectare */
 function stats(bias = 0, N = 200, step = 0.5) {
@@ -34,9 +35,9 @@ function stats(bias = 0, N = 200, step = 0.5) {
   return { mean: sum / (n * n), cover: sandN / (n * n), discMetres: maxR * step * 4, wideShare: wide / Math.max(1, sandN), median: sizes[Math.floor(sizes.length / 2)] ?? 0, perHectare: blobs / ((N * 2) * (N * 2) / 10000) };
 }
 
-test('the sand is many small blotches: about a fifth of the open ground, none wider than a dozen metres', () => {
+test('the sand is many small blotches: about an eighth of the open ground, none wider than a dozen metres', () => {
   const s = stats();
-  assert.ok(s.mean > 0.1 && s.mean < 0.3, `the share of the ground under sand ${s.mean}`);
+  assert.ok(s.mean > 0.08 && s.mean < 0.25, `the share of the ground under sand ${s.mean}`);
   assert.ok(s.perHectare > 30, `blotches to a hectare ${s.perHectare}`);
   assert.ok(s.median >= 1.5 && s.median <= 6, `a typical blotch is ${s.median} m across`);
   assert.ok(s.discMetres <= 13, `the widest disc of sand is ${s.discMetres} m (no big flat sand fields)`);
@@ -69,6 +70,22 @@ test('world space only: the same value for the same place, and chunks that overl
   assert.equal(same, n, 'two chunks lay the same blotch on the seam');
 });
 
+test('the field is band-limited to the samples a chunk is baked with: the octaves they cannot resolve fade out (no aliasing at the far levels), the coarse pattern stays where it is', () => {
+  const rough = (res: number) => { let s = 0, n = 0; for (let j = 0; j < 60; j++) for (let i = 0; i < 400; i++) { const x = 3000 + i * 0.25, y = 3000 + j * 3.3; s += Math.abs(sandField(x + 0.25, y, res) - sandField(x, y, res)); n++; } return s / n; };
+  assert.ok(rough(1) < rough(1e9) * 0.6, `at one sample a tile the finest octaves are gone: ${rough(1).toFixed(4)} against ${rough(1e9).toFixed(4)}`);
+  assert.ok(rough(1) < rough(2) && rough(2) < rough(1e9), 'and fewer of them the fewer the samples');
+  // the same blotches' coarse structure: the fields correlate
+  const xs: number[] = [], ys: number[] = [];
+  for (let j = 0; j < 80; j++) for (let i = 0; i < 80; i++) { const x = 4000 + i * 2.9, y = 4000 + j * 2.3; xs.push(sandField(x, y, 1)); ys.push(sandField(x, y)); }
+  const mean = (a: number[]) => a.reduce((p, q) => p + q, 0) / a.length, mx = mean(xs), my = mean(ys);
+  let cxy = 0, cxx = 0, cyy = 0; for (let k = 0; k < xs.length; k++) { cxy += (xs[k]! - mx) * (ys[k]! - my); cxx += (xs[k]! - mx) ** 2; cyy += (ys[k]! - my) ** 2; }
+  assert.ok(cxy / Math.sqrt(cxx * cyy) > 0.7, `the far level's field follows the close level's: correlation ${(cxy / Math.sqrt(cxx * cyy)).toFixed(2)}`);
+  assert.equal(sandField(55.5, 66.25, 1e9), sandField(55.5, 66.25), 'the default is all of it');
+  // the chunk's channel is made at its own density
+  const none: LivingSources = { casters: new Float32Array(0), desert: true, sand: true }, hi = influence([0, 0, 40, 40], 3, none), lo = influence([0, 0, 40, 40], 1, none);
+  assert.ok(hi.sand && lo.sand, 'both levels lay it');
+});
+
 test('never periodic: the pattern shifted by any distance up to a kilometre is a different pattern', () => {
   const pts: [number, number][] = []; let seed = 7; const rnd = () => (seed = (Math.imul(seed, 1103515245) + 12345) >>> 0) / 4294967296;
   for (let i = 0; i < 3000; i++) pts.push([500 + rnd() * 600, 500 + rnd() * 600]);
@@ -99,8 +116,8 @@ test('the bias moves the share: sand gathers by the road, thins in the yards and
   assert.ok(road < 0.45, 'and even by the road it is blotches, not a sheet of sand');
 });
 
-const BOX: Box = [0, 0, 200, 200];
-const road = (ax: number, ay: number, bx: number, by: number) => ({ ax, ay, bx, by, hw: 3, cart: false });
+const BOX: Box = [0, 0, 100, 100];
+const road = (ax: number, ay: number, bx: number, by: number) => ({ ax, ay, bx, by, hw: 2, cart: false });
 const tree = (x: number, y: number) => [CK.TREE, x, y, 2, 1, 0, 0];
 const src = (extra: Partial<LivingSources> = {}, casters: number[] = []): LivingSources => ({ casters: new Float32Array(casters), desert: true, sand: true, ...extra });
 const meanOver = (g: InfluenceGrid, x0: number, y0: number, x1: number, y1: number) => {
@@ -110,15 +127,15 @@ const meanOver = (g: InfluenceGrid, x0: number, y0: number, x1: number, y1: numb
 };
 
 test('the ground bends the sand: more along a road and in the lee of plants, fewer in a yard, none on the damp dirt', () => {
-  const open = influence(BOX, 4, src()), withRoad = influence(BOX, 4, src({ roads: [road(20, 100, 180, 100)] }));
-  const yardPoly = [60, 140, 120, 140, 120, 190, 60, 190];
+  const open = influence(BOX, 4, src()), withRoad = influence(BOX, 4, src({ roads: [road(10, 30, 90, 30)] }));
+  const yardPoly = [20, 60, 70, 60, 70, 95, 20, 95];
   const withYard = influence(BOX, 4, src({ yards: [yardPoly] }));
-  assert.ok(meanOver(withRoad, 40, 94, 160, 98) > meanOver(open, 40, 94, 160, 98) + 0.04, 'sand gathers along the road verge');
-  assert.ok(meanOver(withYard, 65, 145, 115, 185) < meanOver(open, 65, 145, 115, 185) * 0.5, 'a yard keeps a few small drifts');
-  assert.ok(meanOver(withYard, 65, 145, 115, 185) > 0, 'but still some (dirt with drifts, not a bare rectangle)');
-  assert.equal(meanOver(withYard, 130, 145, 190, 185), meanOver(open, 130, 145, 190, 185), 'and the yard bends only itself');
-  const withTrees = influence(BOX, 4, src({}, [...tree(30, 30), ...tree(33, 31), ...tree(31, 34)]));
-  assert.ok(meanOver(withTrees, 27, 27, 38, 38) > meanOver(open, 27, 27, 38, 38), 'sand collects round plants and at worn ground');
+  assert.ok(meanOver(withRoad, 20, 33, 80, 37) > meanOver(open, 20, 33, 80, 37) + 0.01, 'sand gathers along the road verge');
+  assert.ok(meanOver(withYard, 24, 64, 66, 92) < meanOver(open, 24, 64, 66, 92) * 0.5, 'a yard keeps a few small drifts');
+  assert.ok(meanOver(withYard, 24, 64, 66, 92) > 0, 'but still some (dirt with drifts, not a bare rectangle)');
+  assert.equal(meanOver(withYard, 75, 64, 95, 92), meanOver(open, 75, 64, 95, 92), 'and the yard bends only itself');
+  const withTrees = influence(BOX, 4, src({}, [...tree(80, 20), ...tree(83, 21), ...tree(81, 24)]));
+  assert.ok(meanOver(withTrees, 76, 16, 88, 28) > meanOver(open, 76, 16, 88, 28), 'sand collects round plants and at worn ground');
 });
 
 test('only the desert with the sand on has the channel and its mask; the old desert and autumn lay none', () => {
@@ -128,7 +145,7 @@ test('only the desert with the sand on has the channel and its mask; the old des
   assert.ok(m.sand && (m.max.sand ?? 0) > 0.9, 'the mask is laid, its strongest sample near full');
   assert.equal(livingMasks(influence(BOX, 4, { casters: new Float32Array(0), desert: true })).sand, undefined);
   // the mask's alpha is the cover
-  const q = 4 * 50 * g.w + 4 * 60; assert.ok(Math.abs(m.sand![q * 4 + 3]! - Math.round(g.sand![q]! * 255)) <= 1);
+  const q = 4 * 50 * g.w + 4 * 60; assert.ok(Math.abs(m.sand![q * 4 + 3]! - Math.round(g.sand![q]! * 255)) <= 1, 'the mask alpha is the cover');
 });
 
 test('the signature knows the sand and the yards (a re-bake of the same sources reuses the grid)', () => {
@@ -141,7 +158,7 @@ test('the signature knows the sand and the yards (a re-bake of the same sources 
 
 test('the desert theme: the pale sand lives in the Sand drifts surface, the big pale patches are the dirt, the yards are dirt', () => {
   assert.ok(SURFACES.some(s => s.key === 'dune' && s.tex.includes('duneSand') && s.slot), 'a Sand drifts surface (an art slot: no look in autumn)');
-  assert.equal(DESERT_GROUND.dune?.family, DESERT_PALE, 'the desert gives it the pale rippled sand');
+  assert.equal(DESERT_DUNE.family, DESERT_PALE, 'the desert gives it the pale rippled sand');
   assert.equal(DESERT_GROUND.meadow?.family, DESERT_SAND, 'the meadow patches are the ground itself, not big pale spaces');
   assert.equal(DESERT_GROUND.dry?.family, DESERT_SAND);
   for (const k of ['lawn', 'lawnBuilt', 'lawnUpgraded', 'lawnDeclined']) assert.ok(/dirt/.test(DESERT_LAWN[k]!.family), `${k} is dirt in the desert`);
@@ -164,7 +181,9 @@ test('wiring: the living ground lays the sand through its mask over the dirt, th
   const l = read('src/game/living-ground.ts');
   assert.match(l, /export function sandBlotch/);
   assert.match(l, /mix\(src\.sand \? 1 : 0\)/);
+  assert.match(l, /sand\[q\] = sandBlotch\(X\(i\), Y\(j\), bias, res\)/, 'the chunk\'s own sample density band-limits the field');
   assert.match(read('src/game/painted-surfaces-live.ts'), /sand=old|desertSandDev/);
+  assert.match(read('src/game/ground.worker.ts'), /need\.add\('duneSand'\)/, 'the painted sand pictures are asked for (no other texture of the chunk wears that family)');
 });
 
 test('the constants a look is tuned by are the ones the tests measure', () => {

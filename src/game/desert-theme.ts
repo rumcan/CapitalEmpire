@@ -45,7 +45,7 @@ export const DESERT_LAWN: Readonly<Record<string, PaintedLook>> = {
   lawn: look(DESERT_DIRT), lawnBuilt: look(DESERT_DIRT), lawnUpgraded: look(DESERT_DIRT, 1, 0.03), lawnDeclined: look(DESERT_DIRT, 1, -0.04),
 };
 /** T382: the sand blotches' look, the pale rippled sand over the dirt (the surfaces file's `dune`, an art slot: autumn has none and lays none) */
-export const DESERT_DUNE: PaintedLook = look(DESERT_PALE, 1, 0, PALE_TINT);
+export const DESERT_DUNE: PaintedLook = look(DESERT_PALE, 1, 0, '#efd0a2'); // (the family's golden sand brought toward the dirt it lies on: pale, but a soft blend; at the family's own gold the blotches read as bright yellow patches)
 /** the desert as it was before T382 (the dev server's ?sand=old, the A/B of the shots and the bench): big pale patches over the meadow and dry grass classes, golden fescue yards, no blotches */
 const OLD_SAND: Readonly<Record<string, PaintedLook>> = {
   meadow: look(DESERT_PALE, 1, -0.04, PALE_TINT), dry: look(DESERT_PALE, 1, -0.08, PALE_TINT),

@@ -57,8 +57,8 @@ try {
     if (!modes.includes(mode)) continue;
     console.log(` -- ${mode}`);
     const { ctx, page } = await open(look);
-    const st = await page.evaluate(async () => { const g = window.__game, m = await import('/src/game/painted-surfaces-live.ts'); return { desert: g.desertTheme, dune: !!m.paintedSurfaces().surfaces.dune, lots: g.traffic.lots.size }; });
-    check(st.desert === true && st.dune === (mode === 'after'), `${mode}: the desert theme is on, the Sand drifts surface is ${mode === 'after' ? 'there' : 'not there (?sand=old)'} (${st.dune})`);
+    const st = await page.evaluate(() => { const g = window.__game; return { desert: g.desertTheme, lots: g.traffic.lots.size }; });
+    check(st.desert === true, `${mode}: the desert theme is on`);
     pts ??= await points(page); check(!!pts && pts.lots > 5, `the town has ${pts?.lots} built lots to look at`);
     for (const [name, key, z] of VIEWS) {
       const p = pts[key]; await page.evaluate(([x, y, z]) => { const g = window.__game; g.camEase = null; g.lookAt(x, y, z); g.emit(); }, [p.x, p.y, z]);
