@@ -531,3 +531,21 @@ the Course flyout's other tiles (`ui/tool-tiles.ts ROW_TILE`, art 174: the 4:3 i
 | Sprite (id to use) | Size | Today | Prompt (short) | P |
 | --- | --- | --- | --- | --- |
 | Course flyout tile "Place a real course" (`ROW_TILE.real`) | 4:3 tile | the trophy glyph | an aerial view of a real golf course's outline laid over a town's streets, a green dashed boundary and a few fairways and greens drawn faintly inside it, a small rotate arrow at one corner | P3 |
+
+## The range ball loop (T386, #1043: art requests)
+The driving range's balls are an economy now (`docs/plans/T386-range-ball-loop.md`): you pick them up by hand, then buy tools, staff and machines. The lying balls are one instanced draw of white dots with a soft shadow
+(no art needed). Everything below is a stand-in today, labelled "Stand In for <name>" on the map. Same rules as the range kit above (sun at the upper right, shadows at 145°, nothing mirrored, no lettering, four views or the
+eight facings as marked).
+| Sprite (id to use) | Size | Today | Prompt (short) | P |
+| --- | --- | --- | --- | --- |
+| Ball room (`golf:range-ball-room`, front and rear, four views) | 3 x 2.5 m, 2.5 high | the ball trolley (`business:golf-bag-trolley`) with a "Ball room · N balls" pill at the shop's front | a lean-to ball store built on the side of the shack: corrugated tin roof, a half door open on a wooden bin heaped with white range balls, a wire basket on the step, a hose coiled on the wall | P1 |
+| You picking balls up by hand (clips `golf_pickup`, the player's eight facings) | the golfer sheets' frame | your walk and idle frames, a "Stand In for pick-up clip" pill | a golfer in a 1985 polo and slacks stooping to scoop range balls into a wire basket held in one hand, then standing; a loop of 1.6 s | P1 |
+| You picking balls up with the ball tube (`tube_pick`, staff_range_m and the player's eight facings) | the golfer sheets' frame | your frames, a "Stand In for tube_pick clip" pill | standing upright, pushing a clear plastic ball tube down onto a ball and lifting it, the ball riding up inside; a loop of 1.2 s | P1 |
+| Carrying a basket (`carry_bucket`) and emptying it (`dump_bucket`) (eight facings) | the golfer sheets' frame | your walk frames, the basket's count in a pill over you | walking with a wire basket of white balls held against the hip; tipping it into a bin, the balls pouring | P2 |
+| Ball tube (`golf:range-ball-tube`, prop in hand and standing) | 1.4 m long | none | a 1.4 m clear plastic tube with a rubber ring at the mouth and a wooden handle | P3 |
+| Wire basket (`golf:practice-balls`, above) | 0.4 m | the basket's count in a pill | as the range kit's basket of balls, with a carry handle | P2 |
+| Push picker (`golf:range-push-picker`, eight facings) | 1.2 x 0.9 m | none: a "Stand In for push picker" pill over you | a hand-pushed ball picker: a wheeled frame with a wire roller cage that rolls balls up into a basket behind it, a tubular handle | P1 |
+| Pull-behind picker (`golf:range-tow-picker`, eight facings, behind your golf cart) | 2 x 1.4 m | a "Stand In for pull-behind picker" pill over the cart | a small trailer with a single row of ball-picking discs between two wheels and a wire hopper, a tow bar to the golf cart | P1 |
+| Gang picker (`golf:range-gang-picker`, eight facings) | 4 x 1.6 m | the same pill | three picking units abreast on a folding frame behind the cart, each with its own hopper, a wide swath | P2 |
+| Night picking cart (`golf:range-picker`, the ball-picker cart row above) | 2.5 x 1.5 m | the wagon with a "Stand In for Ball picker cart" pill | as above: it drives the lanes by itself after closing, a flashing amber light | P2 |
+| Out-of-balls sign (`golf:range-sign-out`) | 1 x 0.8 m | a red "OUT OF BALLS" pill at the ball room | a blank red board hung on the ball room's half door (no lettering: a crossed-out ball) | P3 |
