@@ -14,6 +14,8 @@ export interface ObjectEightSet {
   seating?: AuthoredSeating;
   /** Reuses existing atlas pixels through appended IDs; does not replace normal road-lot pictures. */
   runtimeReuse?: true;
+  /** The library pictures whose atlas cells these views alias (T398: the four normal views of a building whose straight-on views are new: its own corner pictures, never repacked). */
+  sourceIds?: Partial<Record<ObjectFacingKey, string>>;
 }
 export const isObjectFacing = (v: unknown): v is ObjectFacingKey => typeof v === 'string' && (OBJECT_FACING_KEYS as readonly string[]).includes(v);
 export const objectFacingLabel = (key: ObjectFacingKey): string => key.startsWith('normal') ? key.slice(6) : `${key.slice(4)} (8°)`;

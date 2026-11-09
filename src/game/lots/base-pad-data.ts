@@ -38,6 +38,30 @@ export const BASE_PAD: Readonly<Record<string, readonly [number, number, number]
   "object8:registered:variation:world-arcade-f5b7f5eb-plain:1:yaw8N": [0.00, 0.00, 0.01], // straight-on
   "object8:registered:variation:world-arcade-f5b7f5eb-plain:1:yaw8S": [0.24, 0.00, 0.00], // straight-on
   "object8:registered:variation:world-arcade-f5b7f5eb-plain:1:yaw8W": [0.08, 0.85, 0.00], // straight-on
+  "object8:variation-town-bakery-af15d7f5-plain-1-7323dcba-v1:normalNE": [0.49, 0.05, 0.09],
+  "object8:variation-town-bakery-af15d7f5-plain-1-7323dcba-v1:normalNW": [0.04, 0.03, 0.10],
+  "object8:variation-town-bakery-af15d7f5-plain-1-7323dcba-v1:normalSE": [0.09, 0.00, 0.47],
+  "object8:variation-town-bakery-af15d7f5-plain-1-7323dcba-v1:normalSW": [0.16, 0.01, 0.57],
+  "object8:variation-town-bakery-af15d7f5-plain-1-7323dcba-v1:yaw8E": [0.05, 0.00, 0.00], // straight-on
+  "object8:variation-town-bakery-af15d7f5-plain-1-7323dcba-v1:yaw8N": [0.00, 0.00, 0.00], // straight-on
+  "object8:variation-town-bakery-af15d7f5-plain-1-7323dcba-v1:yaw8S": [0.00, 0.00, 0.00], // straight-on
+  "object8:variation-town-bakery-af15d7f5-plain-1-7323dcba-v1:yaw8W": [0.00, 0.00, 0.00], // straight-on
+  "object8:variation-town-hardware-bf36737f-plain-1-dd7f6890-v1:normalNE": [3.84, 0.00, 0.13],
+  "object8:variation-town-hardware-bf36737f-plain-1-dd7f6890-v1:normalNW": [0.35, 0.05, 4.02],
+  "object8:variation-town-hardware-bf36737f-plain-1-dd7f6890-v1:normalSE": [2.40, 0.01, 1.11],
+  "object8:variation-town-hardware-bf36737f-plain-1-dd7f6890-v1:normalSW": [3.71, 0.08, 0.07],
+  "object8:variation-town-hardware-bf36737f-plain-1-dd7f6890-v1:yaw8E": [1.36, 1.62, 1.30], // straight-on
+  "object8:variation-town-hardware-bf36737f-plain-1-dd7f6890-v1:yaw8N": [1.41, 1.76, 1.02], // straight-on
+  "object8:variation-town-hardware-bf36737f-plain-1-dd7f6890-v1:yaw8S": [1.31, 1.13, 0.94], // straight-on
+  "object8:variation-town-hardware-bf36737f-plain-1-dd7f6890-v1:yaw8W": [1.69, 1.69, 0.62], // straight-on
+  "object8:variation-town-pharmacy-d87b861c-plain-1-1a062ad1-v1:normalNE": [0.27, 0.03, 0.22],
+  "object8:variation-town-pharmacy-d87b861c-plain-1-1a062ad1-v1:normalNW": [0.48, 0.00, 0.21],
+  "object8:variation-town-pharmacy-d87b861c-plain-1-1a062ad1-v1:normalSE": [0.23, 0.08, 0.37],
+  "object8:variation-town-pharmacy-d87b861c-plain-1-1a062ad1-v1:normalSW": [0.14, 0.03, 0.49],
+  "object8:variation-town-pharmacy-d87b861c-plain-1-1a062ad1-v1:yaw8E": [0.46, 0.00, 0.00], // straight-on
+  "object8:variation-town-pharmacy-d87b861c-plain-1-1a062ad1-v1:yaw8N": [0.00, 0.01, 0.00], // straight-on
+  "object8:variation-town-pharmacy-d87b861c-plain-1-1a062ad1-v1:yaw8S": [0.45, 0.53, 0.00], // straight-on
+  "object8:variation-town-pharmacy-d87b861c-plain-1-1a062ad1-v1:yaw8W": [0.08, 0.05, 0.60], // straight-on
   "object8:world-arcade-f5b7f5eb-v1:normalNE": [0.61, 0.33, 0.51],
   "object8:world-arcade-f5b7f5eb-v1:normalNW": [0.67, 0.26, 0.38],
   "object8:world-arcade-f5b7f5eb-v1:normalSE": [2.58, 0.00, 0.00],
@@ -46,6 +70,22 @@ export const BASE_PAD: Readonly<Record<string, readonly [number, number, number]
   "object8:world-arcade-f5b7f5eb-v1:yaw8N": [0.00, 0.00, 0.00], // straight-on
   "object8:world-arcade-f5b7f5eb-v1:yaw8S": [0.00, 0.00, 0.00], // straight-on
   "object8:world-arcade-f5b7f5eb-v1:yaw8W": [0.13, 1.30, 0.18], // straight-on
+  "object8:world-snack-bar-04875b6f-v1:normalNE": [0.57, 0.01, 0.35],
+  "object8:world-snack-bar-04875b6f-v1:normalNW": [0.02, 0.01, 0.43],
+  "object8:world-snack-bar-04875b6f-v1:normalSE": [0.06, 0.08, 0.83],
+  "object8:world-snack-bar-04875b6f-v1:normalSW": [0.04, 0.02, 0.34],
+  "object8:world-snack-bar-04875b6f-v1:yaw8E": [0.15, 0.70, 0.17], // straight-on
+  "object8:world-snack-bar-04875b6f-v1:yaw8N": [0.35, 0.24, 0.01], // straight-on
+  "object8:world-snack-bar-04875b6f-v1:yaw8S": [0.22, 0.23, 0.00], // straight-on
+  "object8:world-snack-bar-04875b6f-v1:yaw8W": [0.10, 0.23, 0.00], // straight-on
+  "object8:world-video-bf85dfb9-v1:normalNE": [0.03, 0.02, 0.05],
+  "object8:world-video-bf85dfb9-v1:normalNW": [0.02, 0.00, 0.05],
+  "object8:world-video-bf85dfb9-v1:normalSE": [0.01, 0.00, 0.02],
+  "object8:world-video-bf85dfb9-v1:normalSW": [0.03, 0.01, 0.04],
+  "object8:world-video-bf85dfb9-v1:yaw8E": [0.12, 0.06, 0.00], // straight-on
+  "object8:world-video-bf85dfb9-v1:yaw8N": [0.09, 0.51, 0.00], // straight-on
+  "object8:world-video-bf85dfb9-v1:yaw8S": [0.00, 0.09, 0.00], // straight-on
+  "object8:world-video-bf85dfb9-v1:yaw8W": [0.00, 0.00, 0.00], // straight-on
   "object8:world-video-rental-cc8c504f-v1:normalNE": [0.69, 0.00, 0.00],
   "object8:world-video-rental-cc8c504f-v1:normalNW": [0.55, 0.09, 0.60],
   "object8:world-video-rental-cc8c504f-v1:normalSE": [0.67, 0.21, 0.85],
