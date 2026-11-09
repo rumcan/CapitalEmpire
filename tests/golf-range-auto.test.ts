@@ -177,5 +177,6 @@ test('the host: the flow panel reads the stages and the bottleneck; the shift is
   assert.equal(d.nAgents, 1 + ROBOTS_A_NODE, 'an attendant and two robots'); assert.deepEqual(d.agents.slice(0, d.nAgents).map(g => g.kind).sort(), ['attendant', 'robot', 'robot']);
   for (let i = 0; i < d.nAgents; i++) assert.ok(Number.isFinite(d.agents[i]!.x) && Number.isFinite(d.agents[i]!.y));
   const plain = makeHost([], 0); plain.h.sim.step(1, { hour: 9, day: 1 }, plain.biz, busy, 600); assert.equal(plain.h.sim.view().nAgents, 0, 'nobody without staff or robots');
+  const dirt = makeHost([], 0); dirt.bs.clean = 0; dirt.bs.dirty = 200; assert.equal(dirt.h.view()!.balls!.out, false, 'dirty balls sell: the ball room is not out'); dirt.bs.dirty = 10; assert.equal(dirt.h.view()!.balls!.out, true, 'less than a bucket of both: out');
   assert.ok(HAND.rate > 0 && stockOf(newBalls()) === 200);
 });
