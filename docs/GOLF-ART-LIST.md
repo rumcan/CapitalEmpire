@@ -775,9 +775,10 @@ concept, the large brick building behind the patio with the red umbrellas.
 > Subject: a wooden survey stake with orange flagging tape tied at the top, driven into bare earth.
 
 ### On the course
-**173. Hire golf cart** · **D** · 1.2 x 2.4 m, 1.8 m high · P1. The fleet cart (item 56 is the pro's own). **Art gap (T213 #558):** the carts in the
-field (the small events' amateurs, the everyday visitors) are drawn with `business:golf-cart-sw` and `-se`, the only two facings there are (the front to
-the screen's lower left or lower right); a cart driving up the screen shows the nearer of the two. The eight facings fix that (`CART_ART` in `engine.ts`).
+**173. Hire golf cart** · **D** · 1.2 x 2.4 m, 1.8 m high · P1. The fleet cart (item 56 is the pro's own). **Done (T351 #994):** the carts in the field (the small events' amateurs, the
+everyday visitors) and your own were drawn with `business:golf-cart-sw` and `-se`, the only two facings there were, so a cart driving up the screen showed its front. They now have all eight
+(the object-eight set `business:golf-cart`: the two old pictures as the SW and SE headings, six new from the animation runner's sheets; art/golf-cart-20261109/README.md); the nearest of eight to the
+cart's heading is drawn (`golf/cartart.ts`), turning through its neighbours on a bend.
 > Subject: a white 1985 two-seater golf cart with a cream canopy on four posts, a bag rack at the back holding two golf bags, small headlights. No people and no lettering.
 
 ### Vehicles (T236, #693: colour in the streets and car parks)

@@ -1,0 +1,252 @@
+{
+  "schema": 1,
+  "projection": "normal+yaw8",
+  "subject": "business:golf-cart",
+  "name": "Hire golf cart",
+  "version": 1,
+  "review": "approved",
+  "source": {
+    "views": {
+      "normalNE": {
+        "reuse": "business:golf-cart-sw"
+      },
+      "yaw8N": {
+        "file": "../src/yaw8N.png",
+        "sha256": "26a478899445810e9b7cc110cadc89b3b0b77f45bd8f8fb20c71c190e084272d",
+        "width": 287,
+        "height": 538
+      },
+      "normalSE": {
+        "reuse": "business:golf-cart-se"
+      },
+      "yaw8E": {
+        "file": "../src/yaw8E.png",
+        "sha256": "362a3f148faa35f421396a024cc440dcd9e38b738e6f13dcd524b35d043177ce",
+        "width": 515,
+        "height": 478
+      },
+      "normalSW": {
+        "file": "../src/normalSW.png",
+        "sha256": "ef48b8af10fa542bd006520d512b3f0eec3df83a6103ff85f09a1e4b438e635e",
+        "width": 575,
+        "height": 529
+      },
+      "yaw8S": {
+        "file": "../src/yaw8S.png",
+        "sha256": "586fd05752820e917b3a2b882bf232f9d945d1dfe6ddc1eb040c7c940fba41db",
+        "width": 297,
+        "height": 499
+      },
+      "normalNW": {
+        "file": "../src/normalNW.png",
+        "sha256": "f185f5ab367316d19e320b068415203f3ffc6fa68031d0462dd476a96d3b9888",
+        "width": 528,
+        "height": 537
+      },
+      "yaw8W": {
+        "file": "../src/yaw8W.png",
+        "sha256": "f2bb7ef07d98eadfb5ce1ccf6e882eda57db8f0e71a76de46a28691c35d0f118",
+        "width": 535,
+        "height": 490
+      }
+    }
+  },
+  "footprintMetres": {
+    "width": 1.2,
+    "depth": 2.4
+  },
+  "pixelsPerMetre": 42.7335542927,
+  "pixelCalibrationSpace": "orthographic-camera",
+  "baselineScale": 0.294,
+  "kind": "decor",
+  "solid": 0,
+  "category": "Eight-view carts",
+  "aliases": [],
+  "views": {
+    "yaw8N": {
+      "file": "yaw8N.native.png",
+      "sha256": "c6938e52c85c34fe6e6d39d1d57b629c821890b1b6cb299ae79ad7d62ded7662",
+      "width": 279,
+      "height": 530,
+      "anchor": {
+        "x": 137,
+        "y": 413.2
+      },
+      "headingDegrees": 37,
+      "boxes": null,
+      "sourceFamily": "view",
+      "sourceSha256": "26a478899445810e9b7cc110cadc89b3b0b77f45bd8f8fb20c71c190e084272d",
+      "cell": 0,
+      "cellRect": {
+        "left": 0,
+        "top": 0,
+        "width": 287,
+        "height": 538
+      },
+      "crop": {
+        "left": 4,
+        "top": 4,
+        "width": 279,
+        "height": 530
+      }
+    },
+    "yaw8E": {
+      "file": "yaw8E.native.png",
+      "sha256": "756516fdd1666f7076777d3d81bd3515670463573bbb98b063cd1066ebfe29ce",
+      "width": 507,
+      "height": 470,
+      "anchor": {
+        "x": 258.4,
+        "y": 364.8
+      },
+      "headingDegrees": 127,
+      "boxes": null,
+      "sourceFamily": "view",
+      "sourceSha256": "362a3f148faa35f421396a024cc440dcd9e38b738e6f13dcd524b35d043177ce",
+      "cell": 0,
+      "cellRect": {
+        "left": 0,
+        "top": 0,
+        "width": 515,
+        "height": 478
+      },
+      "crop": {
+        "left": 4,
+        "top": 4,
+        "width": 507,
+        "height": 470
+      }
+    },
+    "normalSW": {
+      "file": "normalSW.native.png",
+      "sha256": "0f0b0f52472ba34487357e9bc15481d0437fcdd40abb894423da01c8b6613e8a",
+      "width": 567,
+      "height": 521,
+      "anchor": {
+        "x": 301.6,
+        "y": 377.6
+      },
+      "headingDegrees": 180,
+      "boxes": null,
+      "sourceFamily": "view",
+      "sourceSha256": "ef48b8af10fa542bd006520d512b3f0eec3df83a6103ff85f09a1e4b438e635e",
+      "cell": 0,
+      "cellRect": {
+        "left": 0,
+        "top": 0,
+        "width": 575,
+        "height": 529
+      },
+      "crop": {
+        "left": 4,
+        "top": 4,
+        "width": 567,
+        "height": 521
+      }
+    },
+    "yaw8S": {
+      "file": "yaw8S.native.png",
+      "sha256": "92cc975b1e68d1da2969f1415c290fb0d184c89cf3d6fa34d48ebbf8d107aed6",
+      "width": 289,
+      "height": 491,
+      "anchor": {
+        "x": 144.9,
+        "y": 367.3
+      },
+      "headingDegrees": 217,
+      "boxes": null,
+      "sourceFamily": "view",
+      "sourceSha256": "586fd05752820e917b3a2b882bf232f9d945d1dfe6ddc1eb040c7c940fba41db",
+      "cell": 0,
+      "cellRect": {
+        "left": 0,
+        "top": 0,
+        "width": 297,
+        "height": 499
+      },
+      "crop": {
+        "left": 4,
+        "top": 4,
+        "width": 289,
+        "height": 491
+      }
+    },
+    "normalNW": {
+      "file": "normalNW.native.png",
+      "sha256": "18f10d9a8fe4a1d94913efb33ce79648140cf2e40358291f088250220c562046",
+      "width": 520,
+      "height": 529,
+      "anchor": {
+        "x": 269.4,
+        "y": 380.2
+      },
+      "headingDegrees": 270,
+      "boxes": null,
+      "sourceFamily": "view",
+      "sourceSha256": "f185f5ab367316d19e320b068415203f3ffc6fa68031d0462dd476a96d3b9888",
+      "cell": 0,
+      "cellRect": {
+        "left": 0,
+        "top": 0,
+        "width": 528,
+        "height": 537
+      },
+      "crop": {
+        "left": 4,
+        "top": 4,
+        "width": 520,
+        "height": 529
+      }
+    },
+    "yaw8W": {
+      "file": "yaw8W.native.png",
+      "sha256": "5d65123169e7e97b71062a1cee25e5115a71c56aeb3f997d6b738aa5b33c555d",
+      "width": 526,
+      "height": 480,
+      "anchor": {
+        "x": 255.60000000000002,
+        "y": 361.3
+      },
+      "headingDegrees": 307,
+      "boxes": null,
+      "sourceFamily": "view",
+      "sourceSha256": "f2bb7ef07d98eadfb5ce1ccf6e882eda57db8f0e71a76de46a28691c35d0f118",
+      "cell": 0,
+      "cellRect": {
+        "left": 0,
+        "top": 0,
+        "width": 535,
+        "height": 490
+      },
+      "crop": {
+        "left": 5,
+        "top": 4,
+        "width": 526,
+        "height": 480
+      }
+    },
+    "normalNE": {
+      "reuse": "business:golf-cart-sw",
+      "anchor": null,
+      "headingDegrees": 0,
+      "boxes": null,
+      "sourceFamily": "reuse"
+    },
+    "normalSE": {
+      "reuse": "business:golf-cart-se",
+      "anchor": null,
+      "headingDegrees": 90,
+      "boxes": null,
+      "sourceFamily": "reuse"
+    }
+  },
+  "calibrationNotes": "The hire cart (GOLF-ART-LIST item 173: 1.2 x 2.4 m). SE and SW headings: the game's own golf-cart-se and golf-cart-sw, reused (their atlas cells). The other six: the lead's two sheets (F:/Art/newArt/animations/buildings/business~golf-cart/{corners,axisturn}.png) keyed and cleaned (scripts/assets/golf-cart/prep_cart.py), at 1.059 library px per native px = the existing pictures' 1.4063 x 0.753 (the roof's horizontal width, which does not depend on the camera's pitch: measure.py), drawn at the existing cart's owner size 0.294. Anchors: the roof's centroid and the old pictures' roof-to-floor drop at that scale (measure.py). The corners sheet's bottom row is not used (drawn from a camera 9 degrees higher than every other picture).",
+  "artReviewRequired": [
+    "same subject across all eight views",
+    "normal and actual yaw8 geometry",
+    "upper-right daylight and lower-left shadows",
+    "true alpha and complete silhouette",
+    "per-view ground anchors and physical footprint",
+    "no duplicates or fake mirror views"
+  ]
+}
