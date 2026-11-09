@@ -509,14 +509,14 @@ function build(genSeed: number, model: number): Terrain {
   // 9. chokepoints: the narrowest river crossing with buildable banks, and the longest run of hill-walled points
   const chokepoints: Chokepoint[] = [];
   const buildableXY = (x: number, y: number) => { const ix = Math.floor(x), iy = Math.floor(y); return ix >= 0 && iy >= 0 && ix < MAP && iy < MAP && buildable(cls[iy * MAP + ix]); };
-  const PK = nat ? 4 : 1; // (model 2: points 3 tiles apart: the tangent over four either side)
+  const PK = nat ? 4 : 1; // (model 2: points 1.5 tiles apart: the tangent over four either side, 6 tiles)
   const perp = (k: number) => {
     const a = pts[Math.max(0, k - PK)], b = pts[Math.min(pts.length - 1, k + PK)];
     const tx = b.x - a.x, ty = b.y - a.y, L = Math.hypot(tx, ty) || 1;
     return { nx: -ty / L, ny: tx / L };
   };
   let bridge: Chokepoint | null = null;
-  for (let k = nat ? 30 : 10; k < pts.length - (nat ? 30 : 10); k++) {
+  for (let k = nat ? 60 : 10; k < pts.length - (nat ? 60 : 10); k++) { // (about 90 tiles of the river's arc from each end, as the old river's 10 points of 8 tiles)
     const p = pts[k], { nx, ny } = perp(k), off = p.w / 2 + 6;
     if (buildableXY(p.x + nx * off, p.y + ny * off) && buildableXY(p.x - nx * off, p.y - ny * off) && (!bridge || p.w < bridge.width))
       bridge = { kind: 'bridge', x: p.x, y: p.y, width: p.w };

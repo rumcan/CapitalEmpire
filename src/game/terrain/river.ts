@@ -196,9 +196,9 @@ export function lineCells(line: readonly P[], HS: number, HSTEP: number): number
   return [...seen];
 }
 
-/** the natural river's classes: its water (a tile whose centre is within half the local width of a point, TC.WATER: the points are 3 tiles apart, so
- *  the discs' union is the river to a tenth of a tile) and its bank, 3 tiles past the water and, on the inside of a bend, as far past it as the point
- *  bar there is wide (TC.BANK; never over water). cls is the map's class grid. Row by row, a fill of each disc's span: about 4 ms for a river */
+/** the natural river's classes: its water (a tile whose centre is within half the local width of a point, TC.WATER: the points are 1.5 tiles apart, so
+ *  the discs' union is the river to a few hundredths of a tile) and its bank, 3 tiles past the water and, on the inside of a bend, as far past it as the point
+ *  bar there is wide (TC.BANK; never over water). cls is the map's class grid. Row by row, a fill of each disc's span: about 6 ms for a river */
 export function rasterRiverNat(cls: Uint8Array, pts: readonly WaterPoint[], map: number, bank = 3): void {
   /** a disc's rows: f(y, x0, x1) for each row's span of tile centres within r of (px, py) */
   const disc = (px: number, py: number, r: number, f: (y: number, x0: number, x1: number) => void) => {
