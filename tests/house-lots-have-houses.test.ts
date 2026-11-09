@@ -1,9 +1,10 @@
 // T405 (#1088; the owner, 2026-11-09: "why is there a lot with no house?"): a built house lot always has a house. T398 (PRs 1098 to 1100) made the clean house lots stricter: a house whose garage door faces
 // sideways, whose picture the owner marked, or that is too wide for the 3 m side gaps is left out (compose.ts cleanBase, pick.bad), and when no candidate passed the lot fell back to an EMPTY lot (its fence and nothing
-// else). Now a last pass (compose.ts lastHouse, autolot.ts houseOnlyLot) gives the lot any dwelling that passes the owner's rules for its road and state and fits between the side gaps; a lot stays empty only where no
-// such dwelling fits (a lot narrower than any house and its gaps). Headless: the town a new game lays (the Lot review's 'town' set) and streets at all eight road headings and the three lot widths
-// (tests/helpers/house-census.ts), each lot composed as the game composes it.
-import { describe, it } from 'node:test';
+// else). The lots left empty were all starter lots (tier 0): the house palette holds no tier 0 dwelling, and a swap for another house keeps to the lot's tier, so when every candidate's picture was marked there was nothing
+// to swap in. Now a last pass (compose.ts lastHouse, autolot.ts houseOnlyLot) gives the lot any dwelling that passes the owner's rules for its road and state and fits between the side gaps; a lot stays empty only where no
+// such dwelling fits (a lot narrower than any house and its gaps: none in a town, whose narrowest lots are 10 tiles wide). Headless, each lot composed as the game composes it: the town a new game lays (the Lot review's 'town'
+// set), streets at all eight road headings and the three lot widths (tests/helpers/house-census.ts), the Lot review's sample set (a house type forced on every road heading), and a sweep of starter lots.
+import { afterEach, describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 import { compose, housePalette, setLastHouse, type ComposeState } from '../src/game/lots/compose';
 import { LV } from '../src/game/lots/town';
@@ -55,6 +56,7 @@ function houseFits(l: CensusLot): boolean {
 }
 
 describe('a built house lot always has a house (T405)', () => {
+  afterEach(() => { setLastHouse(true); });   // (the before and after runs switch it off: a test that fails between them must not leave it off for the next)
   it('1. the town a new game lays (the Lot review\'s town set): not one built house lot composes with no building, on four seeds', () => {
     for (const seed of [1, 2, 3, 4]) {
       const lots = townLots(seed), c = census(lots);
@@ -100,7 +102,8 @@ describe('a built house lot always has a house (T405)', () => {
         if (now.has(l)) continue;
         rescued++;
         const c = compose(l.g, l.st), a = auditLot(l.g, c); got.set(a.houseId ?? '(none)', (got.get(a.houseId ?? '(none)') ?? 0) + 1);
-        if (!a.house || a.facingOff !== 0 || a.garageSideways || a.marked || !a.driveOk || !a.pathAtDoor) bad.push(`${describe1(l)}: house ${a.house} facing off ${a.facingOff} sideways ${a.garageSideways} marked ${a.marked} drive ok ${a.driveOk} path at the door ${a.pathAtDoor}`);
+        // (facingOff null: a picture the heading tables do not know, an eight-view ring's: not off the road, which lastHouse's facingView ok already holds)
+        if (!a.house || (a.facingOff ?? 0) !== 0 || a.garageSideways || a.marked || !a.driveOk || !a.pathAtDoor) bad.push(`${describe1(l)}: house ${a.house} facing off ${a.facingOff} sideways ${a.garageSideways} marked ${a.marked} drive ok ${a.driveOk} path at the door ${a.pathAtDoor}`);
         let lo = Infinity, hi = -Infinity; for (const b of c.anchors?.boxes ?? []) { lo = Math.min(lo, b[0]); hi = Math.max(hi, b[2]); }
         if (lo < SIDE_GAP - TOL || hi > l.g.w - SIDE_GAP + TOL) bad.push(`${describe1(l)}: buildings from ${lo.toFixed(2)} to ${hi.toFixed(2)} of ${l.g.w}`);
       }
