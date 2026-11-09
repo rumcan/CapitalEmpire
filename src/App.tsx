@@ -841,7 +841,8 @@ export default function App() {
           {(game.showAccess || (dev && game.cam.z < PLANNER_Z)) && <AccessLegend game={game} />}
           {game.showFlow && <HeatLegend raised={game.showAccess || (dev && game.cam.z < PLANNER_Z)} time={game.flowMode === 'time'} />}
 
-          <div className="pointer-events-none absolute left-1/2 top-20 z-30 flex -translate-x-1/2 flex-col items-center gap-1">
+          {/* T348 (#990): the toasts start under the top bar, however many rows it wraps to (--hud-top), so they never sit on the speed bar's row (they were at a fixed 5rem: on the second row at a narrow window) */}
+          <div className="pointer-events-none absolute left-1/2 top-[calc(var(--hud-top,4.75rem)+0.25rem)] z-30 flex -translate-x-1/2 flex-col items-center gap-1" data-testid="toasts">
             {toasts.map(t => (
               <div key={t.id} className="glass px-3 py-1.5 text-sm"><span className={t.kind === 'warn' ? 'text-red-300' : t.kind === 'good' ? 'text-emerald-300' : ''}>{t.text}</span>
                 {t.scene && <button className="chip pointer-events-auto ml-2 py-0.5" onClick={() => game.openScene(t.scene!)} data-testid="toast-scene"><Icon name="camera" size={16} />Set the scene</button>}</div>

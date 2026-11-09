@@ -261,6 +261,7 @@ changes the flight, the slope under the ball, and the playtest's fixes. `play/wi
     stand in one column, the range card and the clubhouse card in another); a card you open by hand during the shot is yours and stays. Nothing of it is saved: the open cards are the game's state as before.
   - **The hint** (`ShotPanel.tsx`): "Click the meter (or Enter): again for the power, again at the snap line." (the next two phases keep their one line), in a box two lines tall (it was 4.5 lines of room); the club keys, the aim and the Space boost (only with Power Mash)
     are the tip of a "?" button beside it.
+  - **The toasts** (`App.tsx`): the stack starts under the top bar (`--hud-top`, a quarter rem below it) instead of at a fixed 5rem, so it never sits on the speed bar's row when the top bar wraps to two rows (a narrow window); on a wide window the bar is one row and the stack is where it was.
   - Tests: `tests/golf-card-fold.test.ts`, `tests/ui-shot-panel.test.ts` (the hint and the tip), `tests/ui-cards-card.test.ts`.
 - **The flags and the trees** (`gl.ts` VS_SPRITE / FS_SPRITE, `sprites.ts swayOf`): a uniform (`uWind`: time, the wind's direction on the screen, strength) and a sway code in the
   sprite's cullable slot (bit 0 stays the cull flag): the top of a tree or a shrub leans downwind and breathes with the gusts (the picture sheared about its foot: four vertices
