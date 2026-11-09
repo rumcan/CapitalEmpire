@@ -174,21 +174,33 @@ describe('the filter list of course names, as markup (T378)', () => {
   });
 });
 
-describe('the countries flyout (T378)', () => {
-  const countries = [{ cc: 'US', country: 'United States', n: 13000 }, { cc: 'ZA', country: 'South Africa', n: 306 }, { cc: 'GB', country: 'United Kingdom', n: 2900 }];
-  const flyout = (over: Partial<Parameters<typeof CountryFlyout>[0]> = {}) => renderToStaticMarkup(createElement(CountryFlyout, { countries, cc: '', total: 16206, onPick: noop, onClose: noop, ...over }));
-  it('is a column of its own beside the picker: All countries, then each country with its number of courses, a title that stays at the top, and a way to close it', () => {
+describe('the countries flyout, in two levels (T378)', () => {
+  const continents = [
+    { id: 'AM', name: 'The Americas', n: 13306, countries: [{ cc: 'US', country: 'United States', n: 13000 }, { cc: 'CA', country: 'Canada', n: 306 }] },
+    { id: 'EU', name: 'Europe', n: 2900, countries: [{ cc: 'GB', country: 'United Kingdom', n: 2900 }] },
+    { id: 'AF', name: 'Africa', n: 306, countries: [{ cc: 'ZA', country: 'South Africa', n: 306 }] },
+  ];
+  const flyout = (over: Partial<Parameters<typeof CountryFlyout>[0]> = {}) => renderToStaticMarkup(createElement(CountryFlyout, { continents, cc: '', total: 16512, onPick: noop, onClose: noop, ...over }));
+  it('is a column of its own beside the picker: All countries, then the continents with their number of countries and courses, a title that stays at the top, and a way to close it', () => {
     const h = flyout();
-    assert.ok(h.includes('data-testid="cat-countries"') && h.includes('data-testid="cat-country-all"') && h.includes('All countries') && h.includes('16,206'));
-    assert.ok(h.indexOf('cat-country-US') < h.indexOf('cat-country-ZA'), 'in the order it is given');
-    assert.ok(h.includes('13,000') && h.includes('South Africa') && h.includes('win-head'), 'counts, and the sticky title');
+    assert.ok(h.includes('data-testid="cat-countries"') && h.includes('data-testid="cat-country-all"') && h.includes('All countries') && h.includes('16,512'));
+    assert.ok(h.indexOf('cat-continent-AM') < h.indexOf('cat-continent-EU') && h.indexOf('cat-continent-EU') < h.indexOf('cat-continent-AF'), 'in the order it is given (most courses first)');
+    assert.ok(h.includes('The Americas') && h.includes('2 · 13,306 ›') && h.includes('win-head'), 'counts, and the sticky title');
     assert.ok(h.includes('data-testid="cat-countries-close"') && h.includes('overflow-y-auto') && !/overflow-x-(auto|scroll)/.test(h));
+    assert.ok(!h.includes('cat-continent-countries'), 'no second column until a continent is opened');
   });
-  it('puts the country of the player first and says so, and marks the one chosen', () => {
-    const h = flyout({ prefer: 'ZA', cc: 'GB' });
-    assert.ok(h.indexOf('cat-country-ZA') < h.indexOf('cat-country-US') && h.includes('(your region)'));
-    assert.match(h, /bg-amber-300\/15[^"]*"[^>]*data-testid="cat-country-GB"/);
-    assert.ok(!/bg-amber-300\/15[^"]*"[^>]*data-testid="cat-country-all"/.test(h));
+  it('a continent opens a second column of its countries, each with its number of courses; the one chosen is marked', () => {
+    const h = flyout({ startOpen: 'AM' });
+    assert.ok(h.includes('data-testid="cat-continent-countries"') && h.includes('data-testid="cat-country-US"') && h.includes('United States') && h.includes('13,000') && h.includes('data-testid="cat-country-CA"'));
+    assert.ok(!h.includes('cat-country-GB'), 'only that continent\'s');
+    assert.match(flyout({ startOpen: 'AM', cc: 'CA' }), /bg-amber-300\/15[^"]*"[^>]*data-testid="cat-country-CA"/);
+    assert.ok(/aria-expanded="true"[^>]*data-testid="cat-continent-AM"/.test(h) || /data-testid="cat-continent-AM"[^>]*aria-expanded="true"/.test(h) || h.includes('cat-continent-AM'));
+    assert.ok(flyout({ cc: 'GB' }).includes('data-testid="cat-country-GB"'), 'with a country already chosen its continent is open');
+  });
+  it('puts the player\'s own country first and says so, whatever continent it is in', () => {
+    const h = flyout({ prefer: 'ZA' });
+    assert.ok(h.indexOf('cat-country-ZA') > 0 && h.indexOf('cat-country-ZA') < h.indexOf('cat-continent-AM') && h.includes('(your region)') && h.includes('Continents'));
+    assert.ok(!flyout({ prefer: 'XX' }).includes('(your region)'), 'a country the catalogue does not have is not offered');
   });
 });
 

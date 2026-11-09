@@ -37,7 +37,7 @@ try {
   const page = await ctx.newPage();
   page.on('pageerror', e => { console.log('[pageerror]', e.message); bad++; });
   page.on('response', r => { const u = r.url(); if (/\/catalogue\//.test(u)) files.push({ url: u, status: r.status() }); });
-  const shot = async name => { await page.waitForTimeout(400); const f = join(out, `${name}.png`); await page.screenshot({ path: f }); console.log('  ' + f); };
+  const shot = async (_page, name) => { await page.waitForTimeout(400); const f = join(out, `${name}.png`); await page.screenshot({ path: f }); console.log('  ' + f); };
 
   console.log('== the picker, the catalogue and "wing"');
   await page.goto(`${base}?seed=7&money=1`, { waitUntil: 'domcontentloaded', timeout: 240000 });
@@ -77,9 +77,18 @@ try {
   await page.click(T('cat-country'));
   await page.waitForSelector(T('cat-countries'), { timeout: 5000 });
   const countries = await page.$$eval('[data-testid^=cat-country-]', es => es.map(e => e.getAttribute('data-testid')).filter(t => t !== 'cat-country-all' && t !== 'cat-countries-close'));
-  check(countries[0] === 'cat-country-ZA', `the flyout lists South Africa first (${countries.slice(0, 4).join(', ')})`);
-  await shot(page, 'c2-country-flyout');
-  await page.click(T('cat-country-ZA'));
+  check(countries[0] === 'cat-country-ZA', `the flyout lists South Africa first, the player's own country (${countries.slice(0, 4).join(', ')})`);
+  const conts = await page.$$eval('[data-testid^=cat-continent-]', es => es.map(e => e.getAttribute('data-testid')).filter(t => t !== 'cat-continent-countries'));
+  check(conts.length >= 2 && conts.length <= 6, `and the continents (${conts.join(', ')}): two levels, not one long column of countries`);
+  check(!(await page.$(T('cat-continent-countries'))), 'the countries of a continent are not shown until it is opened');
+  await shot(page, 'c2a-country-flyout');
+  await page.click(T('cat-continent-AF'));
+  await page.waitForSelector(T('cat-continent-countries'), { timeout: 5000 });
+  const africa = await page.$eval(T('cat-continent-countries'), e => e.innerText.replace(/\s+/g, ' ').trim());
+  console.log('  Africa:', africa.slice(0, 120));
+  check(/South Africa/.test(africa), 'a continent opens a second column of its countries (Africa: South Africa with its number of courses)');
+  await shot(page, 'c2b-continent-opened');
+  await page.click(T('cat-country-ZA-in-list'));
   await page.waitForTimeout(300);
   check(!(await page.$(T('cat-countries'))), 'choosing a country closes the flyout');
   const zaRows = await page.$$eval('[data-testid^=cat-row-]', es => es.map(e => e.innerText.replace(/\s+/g, ' ').trim()));

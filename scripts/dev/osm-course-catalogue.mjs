@@ -78,8 +78,10 @@ async function ask(query, kind, label, timeoutS) {
       const h = health.get(url);
       if (h.until > Date.now() && tried > 0) continue; // (all of them left alone: the one left alone the shortest is still tried, the others wait)
       if (left() < 60_000) throw new TimeUp();
+      tried++;
+      for (let attempt = 1; attempt <= 4; attempt++) {
       await gap();
-      tried++; stats.requests++;
+      stats.requests++;
       const t0 = Date.now(), tag = `${label} on ${host(url)}`;
       let res = null, text = '', why = '', hung = false, retryAfter = 0;
       try {
@@ -92,7 +94,7 @@ async function ask(query, kind, label, timeoutS) {
       let base = '';
       if (!why && res.status === 429) { why = 'HTTP 429 (too many requests)'; h.until = Date.now() + 180_000; wait = Math.max(wait, (retryAfter || 60) * 1000); }
       else if (!why && [502, 503, 504, 509].includes(res.status)) { why = `HTTP ${res.status}`; h.until = Date.now() + 60_000; }
-      else if (!why && res.status === 400) throw new Error(`${tag}: HTTP 400, the query is wrong: ${text.replace(/\s+/g, ' ').slice(0, 300)}`);
+      else if (!why && res.status === 400) { log(`${tag}: HTTP 400, the query is wrong (not asked again): ${text.replace(/\s+/g, ' ').slice(0, 300)}`); throw new Failed(label); }
       else if (!why && !res.ok) why = `HTTP ${res.status}`;
       else if (!why) {
         if (kind === 'json') {
@@ -109,6 +111,11 @@ async function ask(query, kind, label, timeoutS) {
       if (hung) h.until = Date.now() + 600_000;
       if (!why) { h.okAt = Date.now(); h.until = 0; stats.ok++; stats.byServer[host(url)].ok++; log(`${tag}: ${text.length} bytes in ${s} s`); return { text, server: host(url), base }; }
       stats.byServer[host(url)].bad++; log(`${tag}: ${why} after ${s} s`);
+      // a gateway that turns the request away at once (a 502 in under 5 s: on 2026-11-09 one of overpass-api.de's two backends was down, and the answer depended on which one the request met)
+      // is not a server to leave alone: the same server is asked again (after the gap), up to four times
+      if (attempt < 4 && res && [502, 503, 504, 509].includes(res.status) && lastEnd - t0 < 5000) { h.until = 0; continue; }
+      break;
+      }
     }
     if (round < 2) { log(`every server failed ${label}: waiting ${Math.round(wait / 1000)} s`); await sleep(Math.min(wait, left())); wait = Math.min(wait * 2, 300_000); }
   }
@@ -211,17 +218,18 @@ function build() {
   // (the places of every file kept, as one index: a course takes the nearest, whichever request brought it)
   const pl = new L.Places(placeFiles().flatMap(n => L.parsePlacesCsv(readCached(n, 'csv')?.text ?? '')));
   for (const cc of [...new Set(regions.map(r => r.cc))]) {
-    const mine = regions.filter(r => r.cc === cc), entries = [];
+    const mine = regions.filter(r => r.cc === cc), entries = [], group = new Map(); // (group: an entry's region, to split a big country into chunks by region)
     let at = '', missing = 0;
     for (const r of mine) {
       const k = readCached(`${r.id}.courses`, 'json');
       if (!k) { missing++; todo.push(r.id); continue; }
       const es = L.entriesOf(JSON.parse(k.text), { places: pl, suffix: r.state?.[0] ?? '', cc });
-      for (const e of es) entries.push(e);
+      for (const e of es) { entries.push(e); group.set(e[0], mine.indexOf(r)); }
       const b = k.meta.base || k.meta.fetchedAt; if (b && (!at || b < at)) at = b;
     }
     if (!mine.length || (missing === mine.length)) continue;
-    countries.push({ cc, entries: L.dedupe(entries), at: at ? at.slice(0, 10) : built, regions: mine.length, missing });
+    const kept = L.dedupe(entries);
+    countries.push({ cc, entries: kept, parts: L.splitByRegion(kept, group, mine.length), at: at ? at.slice(0, 10) : built, regions: mine.length, missing });
     names[cc] = L.countryName(cc);
   }
   const chunks = L.packChunks(countries), files = [], index = {

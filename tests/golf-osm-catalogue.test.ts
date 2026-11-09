@@ -8,7 +8,7 @@ import { readdirSync, readFileSync, statSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import * as L from '../scripts/dev/osm-catalogue-lib.mjs';
 import {
-  Catalogue, CATALOGUE_DIR, LIST_MAX, catalogueBase, chunkOrder, countriesByCount, filterCatalogue, fold, fullOf, parseChunk, parseIndex, refOfTag, regionOfLocale, wordsOf,
+  Catalogue, CATALOGUE_DIR, LIST_MAX, catalogueBase, chunkOrder, continentOf, continentsOf, countriesByCount, filterCatalogue, fold, fullOf, parseChunk, parseIndex, refOfTag, regionOfLocale, wordsOf,
   type CatalogueEntry, type CatalogueIndex,
 } from '../src/game/golf/osm/catalogue';
 
@@ -209,6 +209,30 @@ describe('the catalogue script: regions asked in batches (T378)', () => {
     const left = ids(L.batchPlan(plan, r => !['za', 'us-fl', 'us-ca'].includes(r.id)));
     assert.equal(left[0], 'us-tx+us-mi+us-ny+us-oh+us-pa', 'the ones kept are skipped, the rest batched from the front');
     assert.ok(all.length < 40, `${all.length} requests for ${plan.length} regions`);
+  });
+});
+
+describe('the catalogue script: a big country in several chunks (T378: "the US may need splitting by state")', () => {
+  const mk = (n: number, cc = ''): L.Entry[] => Array.from({ length: n }, (_, i) => [`w${i + 1}`, `Course ${String(i).padStart(5, '0')}`, '', 1, 2, 10, 10, 0, '', cc] as L.Entry);
+  it('cuts a country of more than 6000 courses into groups of about 4500, whole regions to a group, in the order they were asked', () => {
+    const es = mk(9000, 'US'), group = new Map(es.map((e, i) => [e[0], Math.floor(i / 1000)] as const)); // nine states of a thousand
+    const parts = L.splitByRegion(es, group, 9)!;
+    assert.deepEqual(parts.map(p => p.length), [4000, 4000, 1000], 'a state is never cut: groups of whole states, the next state not fitting 4500 starts a group');
+    assert.equal(parts.flat().length, 9000);
+    assert.equal(L.splitByRegion(mk(6000), new Map(), 9), null, '6000 or fewer is one chunk'); assert.equal(L.splitByRegion(mk(9000), new Map(), 1), null, 'a country asked in one piece cannot be cut by region');
+  });
+  it('a country given parts is a chunk to a part (us1, us2, ...), each with the country\'s code once on the chunk and not on its entries', () => {
+    const es = mk(9000, 'US'), parts = L.splitByRegion(es, new Map(es.map((e, i) => [e[0], Math.floor(i / 1000)] as const)), 9)!;
+    const chunks = L.packChunks([{ cc: 'ZA', entries: mk(200, 'ZA') }, { cc: 'US', entries: es, parts }, { cc: 'LU', entries: mk(5, 'LU') }]);
+    assert.deepEqual(chunks.map(c => [c.id, c.cc, c.entries.length]), [['za', 'ZA', 200], ['us1', 'US', 4000], ['us2', 'US', 4000], ['us3', 'US', 1000], ['rest1', '', 5]]);
+    assert.ok(chunks.filter(c => c.cc === 'US').every(c => c.entries.every(e => e[9] === '')));
+    assert.ok(chunks.filter(c => c.cc === 'US').every(c => c.entries.every((e, i, a) => i === 0 || L.fold(a[i - 1]![1]) <= L.fold(e[1]))), 'each sorted by name');
+  });
+  it('the game finds the player\'s country in each of its chunks, the first of them first', () => {
+    const index: CatalogueIndex = { v: 1, built: 'x', credit: 'c', licence: 'l', total: 10, countries: [{ cc: 'ZA', country: 'South Africa', n: 2 }, { cc: 'US', country: 'United States', n: 8 }],
+      chunks: [{ file: 'za.1.json', id: 'za', cc: 'ZA', n: 2, ccs: { ZA: 2 }, bytes: 1, gz: 1, at: '' }, { file: 'us1.1.json', id: 'us1', cc: 'US', n: 4, ccs: { US: 4 }, bytes: 1, gz: 1, at: '' }, { file: 'us2.1.json', id: 'us2', cc: 'US', n: 4, ccs: { US: 4 }, bytes: 1, gz: 1, at: '' }] };
+    assert.deepEqual(chunkOrder(index, 'US').map(c => c.id), ['us1', 'us2', 'za']);
+    assert.deepEqual(chunkOrder(index, 'ZA').map(c => c.id), ['za', 'us1', 'us2']);
   });
 });
 
@@ -415,6 +439,21 @@ describe('the loader: lazy, the player\'s country first, three files at a time (
   });
   it('looks for its files under the page\'s base: catalogue/ (public/catalogue/ in the repository)', () => {
     assert.equal(CATALOGUE_DIR, 'catalogue/'); assert.equal(catalogueBase(), './catalogue/', 'with no bundler, the page\'s own folder');
+  });
+});
+
+describe('the continents of the countries flyout (T378)', () => {
+  it('knows the continent of every country the script asks for (none is "elsewhere"), and says "elsewhere" for one it does not know', () => {
+    for (const [cc] of L.COUNTRIES) assert.notEqual(continentOf(cc), 'XX', `${cc} has a continent`);
+    assert.deepEqual(['ZA', 'US', 'GB', 'JP', 'AU', 'ZZ'].map(continentOf), ['AF', 'AM', 'EU', 'AS', 'OC', 'XX']);
+  });
+  it('groups the countries of an index by continent, the continent with the most courses first, its countries by their courses', () => {
+    const country = (cc: string, n: number) => ({ cc, country: NAMES.get(cc) ?? cc, n });
+    const index = { v: 1, built: 'x', credit: 'c', licence: 'l', total: 0, chunks: [], countries: [country('ZA', 306), country('US', 13000), country('CA', 2000), country('GB', 2900), country('FR', 800), country('ZZ', 3)] } as CatalogueIndex;
+    const k = continentsOf(index);
+    assert.deepEqual(k.map(c => [c.id, c.n]), [['AM', 15000], ['EU', 3700], ['AF', 306], ['XX', 3]]);
+    assert.deepEqual(k[0]!.countries.map(c => c.cc), ['US', 'CA']); assert.deepEqual(k[1]!.countries.map(c => c.cc), ['GB', 'FR']);
+    assert.equal(k[0]!.name, 'The Americas'); assert.equal(k.at(-1)!.name, 'Elsewhere');
   });
 });
 

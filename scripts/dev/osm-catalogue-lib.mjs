@@ -176,7 +176,7 @@ export function holesOf(courses, holeEls) {
     if ((y1 - y0 + 1) * (x1 - x0 + 1) > 400) continue; // (a "course" the size of a county: not a place the holes can be told to)
     for (let y = y0; y <= y1; y++) for (let x = x0; x <= x1; x++) add(`${y},${x}`, c);
   }
-  const nums = new Map(), pad = 0.0003;
+  const nums = new Map(), pad = 0.0003; // (about 30 m: the more room, the more a neighbouring course's holes are taken for this one's. Rondebosch, with 17 of its 18 hole lines inside its outline, is not called Full: Full is a cheap guess that errs on the safe side, and the preview has the last word)
   for (const h of holeEls) {
     const lat = h.center?.lat ?? h.lat, lon = h.center?.lon ?? h.lon, m = /^\s*(\d{1,2})\s*$/.exec(h.tags?.ref ?? '');
     if (!Number.isFinite(lat) || !Number.isFinite(lon) || !m) continue;
@@ -248,14 +248,16 @@ export function dedupe(entries) {
 /** the entry tuple's fields, for the readers */
 export const ENTRY = ['ref', 'name', 'place', 'lat', 'lon', 'w10', 'h10', 'holes', 'alt', 'cc'];
 
-/** the chunks of a catalogue: each country with MIN_OWN or more courses is a chunk on its own; the smaller ones are packed together, in the order they are asked, up
- *  to PACK_MAX entries to a pack (a pack's entries carry their country code). `countries`: [{ cc, entries }] in asking order. Returns [{ id, cc ('' for a pack), entries }] */
+/** the chunks of a catalogue: each country with MIN_OWN or more courses is a chunk on its own (a country given `parts`, its entries in groups, is a chunk to a group: the US, whose 13 000 courses are too many for one file); the smaller ones are packed together, in the order they are asked, up
+ *  to PACK_MAX entries to a pack (a pack's entries carry their country code). `countries`: [{ cc, entries, parts? }] in asking order. Returns [{ id, cc ('' for a pack), entries }] */
 export const MIN_OWN = 150, PACK_MAX = 700;
 export function packChunks(countries) {
   const out = [], small = [];
   for (const c of countries) {
     if (!c.entries.length) continue;
-    if (c.entries.length >= MIN_OWN) out.push({ id: c.cc.toLowerCase(), cc: c.cc, entries: c.entries.map(e => { const t = e.slice(); t[9] = ''; return t; }), at: c.at });
+    const bare = es => es.map(e => { const t = e.slice(); t[9] = ''; return t; });
+    if (c.parts && c.parts.length > 1) c.parts.forEach((part, i) => out.push({ id: `${c.cc.toLowerCase()}${i + 1}`, cc: c.cc, entries: bare(part), at: c.at })); // (a big country in several chunks: the US)
+    else if (c.entries.length >= MIN_OWN) out.push({ id: c.cc.toLowerCase(), cc: c.cc, entries: bare(c.entries), at: c.at });
     else small.push(c);
   }
   let pack = null, n = 0;
@@ -266,6 +268,19 @@ export function packChunks(countries) {
   }
   for (const k of out) k.entries.sort((a, b) => (fold(a[1]) < fold(b[1]) ? -1 : fold(a[1]) > fold(b[1]) ? 1 : a[0] < b[0] ? -1 : 1));
   return out;
+}
+
+/** a country of more than `splitAt` courses that was asked in several regions (the US: states) is cut into groups of about `chunkAt` courses, whole regions to a group, in the order
+ *  they were asked; null when it is not big enough to need it. `groupOf`: a Map from an entry's reference to the index of its region */
+export function splitByRegion(entries, groupOf, nRegions, splitAt = 6000, chunkAt = 4500) {
+  if (entries.length <= splitAt || nRegions < 2) return null;
+  const byRegion = Array.from({ length: nRegions }, () => []);
+  for (const e of entries) byRegion[groupOf.get(e[0]) ?? 0].push(e);
+  const parts = [];
+  let cur = [];
+  for (const es of byRegion) { if (cur.length && cur.length + es.length > chunkAt) { parts.push(cur); cur = []; } cur.push(...es); }
+  if (cur.length) parts.push(cur);
+  return parts;
 }
 
 /** a chunk's file text: compact JSON, one entry a line (so a diff of two builds reads) */

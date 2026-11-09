@@ -129,6 +129,26 @@ export function filterCatalogue(all: readonly CatalogueEntry[], query: string, o
 /** the countries of an index, the one with the most courses first (the list the country flyout shows) */
 export const countriesByCount = (index: CatalogueIndex): CatalogueCountry[] => index.countries.slice().sort((a, b) => b.n - a.n || alike(a.country, b.country));
 
+/** the continents the countries flyout groups the countries by (its first level; the countries are its second: levels, not one long column of a hundred countries) */
+export type Continent = 'AM' | 'EU' | 'AS' | 'OC' | 'AF' | 'XX';
+export const CONTINENT_NAMES: Record<Continent, string> = { AM: 'The Americas', EU: 'Europe', AS: 'Asia', OC: 'Oceania', AF: 'Africa', XX: 'Elsewhere' };
+const CONTINENT_OF: Record<string, Continent> = {};
+for (const [k, list] of [
+  ['AF', 'ZA ZW KE NA BW MU EG MA ZM TZ UG MW MZ GH NG SN CI TN DZ AO SZ LS ET SC'],
+  ['AM', 'US CA MX AR BR CL CO PE UY PY EC VE BO CR PA GT SV HN NI BZ CU HT DO JM BS BB BM TT KY AW CW PR'],
+  ['AS', 'JP KR CN TH MY IN ID TW PH VN SG HK PK LK MM KH LA BN MN MO KZ UZ NP BD IL JO QA OM KW LB SA AE BH TR'],
+  ['EU', 'GB IE DE FR SE ES IT NL DK FI NO AT CH PT BE IS PL CZ HU SK SI HR RO BG GR UA BY LT LV EE LU CY MT RS RU LI'],
+  ['OC', 'AU NZ FJ PG NC PF GU'],
+] as const) for (const cc of list.split(' ')) CONTINENT_OF[cc] = k;
+/** the continent of a country by its code ('XX' for one this table does not know) */
+export const continentOf = (cc: string): Continent => CONTINENT_OF[cc] ?? 'XX';
+/** the countries of an index grouped by continent, the continent with the most courses first, each with its countries by number of courses */
+export function continentsOf(index: CatalogueIndex): { id: Continent; name: string; n: number; countries: CatalogueCountry[] }[] {
+  const by = new Map<Continent, CatalogueCountry[]>();
+  for (const c of countriesByCount(index)) { const k = continentOf(c.cc), a = by.get(k); if (a) a.push(c); else by.set(k, [c]); }
+  return [...by].map(([id, countries]) => ({ id, name: CONTINENT_NAMES[id], n: countries.reduce((s, c) => s + c.n, 0), countries })).sort((a, b) => b.n - a.n || alike(a.name, b.name));
+}
+
 /** the region of a locale tag ("en-ZA" is "ZA"), '' when it names none (or is not one); the first of a list that names one */
 export function regionOfLocale(tags: readonly string[] | string | null | undefined): string {
   for (const t of Array.isArray(tags) ? tags : [tags]) {

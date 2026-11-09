@@ -194,7 +194,7 @@ export function CoursePicker({ featured, current, onOwn, onFeatured, onBuild, on
     }, here);
   };
   const working = view.v === 'working';
-  const countries = cat?.c.index ? cat.mod.countriesByCount(cat.c.index) : [], countryName = countries.find(c => c.cc === cc)?.country ?? cc;
+  const continents = cat?.c.index ? cat.mod.continentsOf(cat.c.index) : [], countryName = continents.flatMap(k => k.countries).find(c => c.cc === cc)?.country ?? cc;
 
   const row = 'rounded-lg border px-2 py-1 text-left text-xs';
   const pickRow = (on: boolean) => `${row} ${on ? 'border-amber-300 bg-amber-300/15' : 'border-white/10 bg-white/5 hover:bg-white/10'}`;
@@ -314,6 +314,7 @@ export function CoursePicker({ featured, current, onOwn, onFeatured, onBuild, on
           text={catText} onText={setCatText} onKey={onCatKey} countryLabel={cc ? `${countryName} (${(cat?.c.index?.countries.find(c => c.cc === cc)?.n ?? 0).toLocaleString('en-US')})` : 'All countries'} countryOn={!!cc} flyoutOpen={flyout} onCountry={() => setFlyout(o => !o)}
           filtered={filtered} active={active} onActive={setActive} onPick={pickEntry} disabled={working || !deps} onRetry={cat ? () => void cat.c.retry(cat.prefer) : undefined}
           credit={`Course names, towns and positions: ${OSM_CREDIT}, ODbL${cat?.c.index?.built ? `, as of ${date(cat.c.index.built)}` : ''}. Picking one fetches its map data (one request).`} />
+        {msg && <div className="rounded-lg border border-amber-300/30 bg-amber-300/10 px-2 py-1 text-xs text-amber-100" data-testid="find-msg" role="status">{msg}</div>}
         <div>
           <div className="mb-1 text-xs text-slate-400">Not in the list? <span className="text-slate-500">Search the map by name (or an openstreetmap.org link, or way/123)</span></div>
           <div className="flex gap-1.5">
@@ -321,7 +322,6 @@ export function CoursePicker({ featured, current, onOwn, onFeatured, onBuild, on
               onChange={e => setText(e.target.value)} onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); submit(); } }} disabled={working || !deps} data-testid="find-input" aria-label="Find a real course" />
             <button className="btn-gold px-3 text-sm disabled:opacity-40" onClick={submit} disabled={working || !deps} data-testid="find-go">Search</button>
           </div>
-          {msg && <div className="mt-1 rounded-lg border border-amber-300/30 bg-amber-300/10 px-2 py-1 text-xs text-amber-100" data-testid="find-msg" role="status">{msg}</div>}
           <div className="mt-1 text-[10px] leading-tight text-slate-500">One request to the public map servers per search, only when you press Search; what is found is kept so it is not asked twice.</div>
         </div>
       </div>
@@ -333,7 +333,7 @@ export function CoursePicker({ featured, current, onOwn, onFeatured, onBuild, on
         {body}
         <div className="border-t border-white/10 pt-1.5 text-[10px] leading-tight text-slate-500" data-testid="find-footer">Real courses are built from map data {OSM_CREDIT}. Their ground height is public elevation data: {DEM_CREDIT_DEFAULT}, via Tilezen's terrain tiles.</div>
       </div>
-      {flyout && view.v === 'home' && countries.length > 0 && <CountryFlyout countries={countries} cc={cc} total={cat?.c.index?.total ?? 0} prefer={cat?.prefer} onPick={c => { setCc(c); setFlyout(false); }} onClose={() => setFlyout(false)} />}
+      {flyout && view.v === 'home' && continents.length > 0 && <CountryFlyout continents={continents} cc={cc} total={cat?.c.index?.total ?? 0} prefer={cat?.prefer} onPick={c => { setCc(c); setFlyout(false); }} onClose={() => setFlyout(false)} />}
     </>
   );
 }

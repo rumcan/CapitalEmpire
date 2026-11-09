@@ -462,6 +462,71 @@ boundary to build (the converter builds the fullest; the others are named in the
 
 ---
 
+# The course names catalogue (T378, #1034): find the name first, then import by its id
+
+The owner, 2026-11-08: "the course search should get a course names catalog. so first you find the name of the course in a filter list. at the moment the thing can't reach the open street
+maps from the dev server. not sure if bug." (It was not a bug: that evening the main Overpass server answered 502, two mirrors hung and only maps.mail.ru answered, in about 14 s.)
+
+## What the player sees (`src/ui/golf/CourseNames.tsx`, `CoursePicker.tsx`)
+**Find a real course** now starts with a **filter list** of real golf course names, and the old name search is under it ("Not in the list? Search the map by name"), for a course the list does not have.
+- Typing narrows the list as you type, **locally** (no map server is asked, and the check in `scripts/dev/osm-catalogue-shots.mjs` counts the requests): every word typed must match a word of the course's name or
+  other names (`alt_name`, `name:en`, ...), its town or its country, as the start of a word or inside one ("wing" finds Wingatepark and Swinging Hills), case and accents blind (ß, ø, æ, ł, đ too),
+  an apostrophe joins ("andrews" finds St Andrew's). Ranking: a name's first word over a later word over the town, every word in the name, the player's own country (from `navigator.languages`),
+  Full, a bigger course, then the name. The best 60 are listed with the count ("1,284 golf courses match "golf": type more to narrow them").
+- A row shows the **name, the town and the country** (and the size, and a **Full** chip when the map numbers all 9 or 18 holes). A **country button** opens a flyout beside the card in two levels (a hundred countries are not one long column): All countries, the player's own country,
+  and the continents; a continent opens a second column of its countries, each with its number of courses; choosing one narrows the list to it (with nothing typed it lists that country's courses by name). Arrows and Enter work in the input. The list scrolls up and down
+  inside its box with its count stuck at the top; nothing scrolls sideways.
+- **A pick imports by its OpenStreetMap id**: `hintOfEntry` gives `fetchPreview` the id, the name, the place and the centre, so nothing is guessed at Nominatim (the "Wingate" against "Wingatepark"
+  problem: Nominatim's index is word based). One Overpass query for the course, then the preview with **Build this course** and **Place it in my map** (T356), exactly as for a search hit.
+- Credit: "Course names, towns and positions: © OpenStreetMap contributors, ODbL, as of <date>" under the list, and the card's footer as before.
+
+## The data (`public/catalogue/`, built by `scripts/dev/osm-course-catalogue.mjs`)
+- **Not in the game's code.** The files are plain JSON under `public/catalogue/` (copied as they are into `dist/`); the picker loads the catalogue's code with a dynamic `import()` and its files with `fetch` **when
+  it opens** (`src/game/golf/osm/catalogue.ts`: the index first, then the chunks, the player's own country's first, three at a time; the list narrows over what has arrived and the line under the filter says how
+  far the loading is). The game's start-up bundle gets nothing from it; `tests/golf-osm-catalogue.test.ts` checks that no module of `src` imports the catalogue statically or a catalogue file at all.
+- **The format.** `index.json`: the countries (code, name, number of courses) and the chunks (file name with a content hash, courses per country, bytes, gzipped bytes, date of the map data). A chunk: a
+  country with 150 courses or more is a chunk of its own, the smaller ones are packed together (700 courses to a pack, each entry carrying its country code); an entry is a tuple
+  `[ref, name, place, lat, lon, w, h, holes, alt, cc]` ("w4261725": a way, "r" a relation, "n" a node; the centre to 4 decimals; the size in 10 m; `holes` the hole lines numbered 1..18 the map has inside it:
+  9 or 18 is **Full**, the grade the preview will give; `alt` other names for the filter). One entry a line, so a rebuild's diff reads.
+- **How the entries are made** (`scripts/dev/osm-catalogue-lib.mjs`, pure, tested): every `leisure=golf_course` with a name (`nwr`, tags and bounding box, no geometry); the **place** is the course's own `addr:*`, else the
+  nearest named place on the map (a suburb or village within its reach, and the town: a city within 20 km, else the nearest town; "Wingate Park, Pretoria"; the US adds the state: "Alpharetta, GA"); **Full** is
+  counted from the golf=hole ways with a ref that come in the same request (to the smallest course outline that holds them: a cheap guess, the preview has the last word); a point and an outline of the same name
+  within 600 m are one course; a name in a script the player cannot read shows `name:en` when the map has it and keeps the native name for the filter.
+- **The credit**: ODbL 1.0; the index and every chunk carry "© OpenStreetMap contributors".
+
+## Building it (the lead runs it, not the players)
+`node scripts/dev/osm-course-catalogue.mjs [--countries ZA,US] [--max-minutes 150] [--build-only]`. Politely:
+- **One Overpass request for a region, and regions in batches**: `area["ISO3166-1"="XX"]` (the US: `ISO3166-2` per state), `out tags bb` (no geometry), the numbered hole lines (`out tags center`) in the same
+  answer. On 2026-11-09 every query cost 50 to 95 s whatever its size (Luxembourg, six courses, 79 s; Florida, 895 courses and 10 000 hole lines, 76 s): the cost is the query's, so regions are asked
+  together, five US states or up to twelve small countries to a request, with an `out count` after each set to say where one region's courses and hole lines end (a count that disagrees with what came
+  refuses the whole answer). A batch that fails is asked in two halves. The places (the named city, town, village and suburb nodes, as tab-separated text) are asked five countries to a request, the US once.
+- **At least 10 s between two requests**, one at a time, User-Agent `CapitalEmpire-catalogue/1.0 (dev script)` (no address of the owner's), every answer **cached gzipped** under `E:/ClaudeTemp/T378/cache` with
+  its server and time (a rerun asks nothing twice; a stopped run carries on), 429 and 5xx: back-off (Retry-After, else 30 s doubling) and the next server, a hung server left alone 10 minutes, the server that
+  answered last asked first; an answer with an Overpass remark (runtime error, timed out) is a failure; **an answer older than 3 days is refused** (on 2026-11-09 overpass.kumi.systems answered Texas from a July
+  snapshot: 139 courses of some 900). The script asks the main server and maps.mail.ru (kumi and private.coffee hung or were stale that day).
+- The countries are asked in the owner's order (South Africa, the US, the UK and Ireland, Australia, Canada, New Zealand, then by number of courses); the script prints what is not asked yet and finishes it on its next run.
+
+<<SIZES>>
+
+## Part 1: the Overpass servers asked in the order of their measured health (`overpass.ts`)
+The mirror list (main, maps.mail.ru, kumi, private.coffee) and the per-server time limits were in T358/PR #1041. Now the order in which they are asked is **their measured health**, not the order they are listed
+in: a server whose last answer was good first (the fastest first), then those not asked yet (as listed), then those whose last answer failed (the oldest failure first); a server that hung is still left alone for 5
+minutes and one that was busy for 1; the time limits stay by a server's place in the list. What a visit learns is **kept for half an hour in the library's answers** (`overpass:health`), so a reload does not wait 130 s on a
+dead main server again. **The card says which server it is asking** ("overpass-api.de was busy (HTTP 502): asking maps.mail.ru...") and, in its own box, **that the map servers are slow today** ("The map servers are slow today:
+overpass-api.de is being left alone for 4 min; maps.mail.ru took 26 s last time. This can take a minute or two."), when a server is being left alone or the fastest good answer took 20 s or more; after 5 s of waiting it counts the seconds.
+Tests: `tests/golf-osm-mirrors.test.ts` (the order, what is kept and forgotten, the sentences), and the changed expectation in `tests/golf-osm-find.test.ts` (a server that hung is, after its five minutes, asked behind the one that answered).
+
+## Checks
+`tests/golf-osm-catalogue.test.ts` (the script's library, the format read back, the filter, the loader, "not in the bundle"), `tests/golf-osm-mirrors.test.ts`, `tests/ui-course-picker.test.ts`, and
+`node scripts/dev/osm-catalogue-shots.mjs --base http://localhost:<port>/` (a headless Edge, the map servers mocked: the files load South Africa first, "wing" narrows the list with no map request, the country flyout, a pick
+imports `way/4261725` by its id with no Nominatim request, the main server's 502 and the card's two sentences, the preview, Place it in my map).
+
+## Left for later
+The countries the script has not asked yet (the build says which); the catalogue is as old as its last run (the index says the date); the place is a guess from the nearest named place when the course has no address;
+Full is a count of hole lines inside a bounding box (the preview's grade is the true one); a course with no name on the map is not listed (the name search and a pasted link still find it).
+
+---
+
 # Placing a real course into a game under way (T356, #998)
 
 The owner, 2026-11-08: "add a way for the user to place the golf course he imported into his map, seeing a outline and then having to rotate the course to fit.

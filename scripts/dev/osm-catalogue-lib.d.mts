@@ -39,7 +39,8 @@ export function entriesOf(json: { elements?: OverpassEl[] } | null, opt?: { plac
 export function fold(s: string): string;
 export function dedupe(entries: Entry[]): Entry[];
 export interface Chunk { id: string; cc: string; entries: Entry[]; at?: string }
-export function packChunks(countries: readonly { cc: string; entries: Entry[]; at?: string }[]): Chunk[];
+export function packChunks(countries: readonly { cc: string; entries: Entry[]; at?: string; parts?: Entry[][] | null }[]): Chunk[];
+export function splitByRegion(entries: Entry[], groupOf: ReadonlyMap<string, number>, nRegions: number, splitAt?: number, chunkAt?: number): Entry[][] | null;
 export function chunkText(chunk: Chunk, built: string): string;
 export function batchQuery(rs: readonly Region[], timeoutS?: number): string;
 export function splitBatch(json: { elements?: OverpassEl[] } | null, rs: readonly Region[]): { region: Region; answer: { elements: OverpassEl[] } & Record<string, unknown> }[];
