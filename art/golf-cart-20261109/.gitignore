@@ -1,0 +1,4 @@
+# the cut pictures and their sources are reproducible from the lead's two sheets (F:/Art/newArt/animations/buildings/business~golf-cart/{corners,axisturn}.png,
+# scripts/assets/golf-cart/prep_cart.py) and are archived at F:/Art/newArt/animations/t351-golf-cart/{src,cut}; the manifests, measurements and provenance stay
+src/
+cut/*.native.png

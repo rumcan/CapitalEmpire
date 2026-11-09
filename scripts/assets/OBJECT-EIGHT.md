@@ -128,7 +128,7 @@ A building the game already draws from its four corner pictures needs only the f
                        "yaw8N": "src/yaw8N.png", "yaw8E": "src/yaw8E.png", "yaw8S": "src/yaw8S.png", "yaw8W": "src/yaw8W.png" } }
 ```
 
-Reuse covers all four normal views or none, and never a yaw8 one (the importer rejects a half). Nothing is cut or packed for a reused view; its manifest row has no file or anchor, only the heading and boxes (the physical footprint at that heading when none is given). On
+Reuse is for the normal views, never a yaw8 one; T398 reused all four, T351 (the hire golf cart: `art/golf-cart-20261109/README.md`) any of them (its SE and SW are the existing pictures, its NE and NW new cells). Nothing is cut or packed for a reused view; its manifest row has no file or anchor, only the heading and boxes (the physical footprint at that heading when none is given). On
 integration the set is `runtimeReuse` with `sourceIds` naming the pictures, the ledger row of a reused view is `{ id, name, cat, boxes, reuse }` (no `tex`), and the generated `appendObjectEight` resolves it in place: a copy of the named library
 picture's row (the same atlas cell, size and anchor) under the new `object8:` id with the set's boxes. So the corners draw exactly as before (`runtimeReuse` keeps `objectNormalReplacements` from swapping them), no corner pixel is stored twice, the ring
 `[NE, N, SE, E, SW, S, NW, W]` is complete (`preset-art.ts roadView` draws the straight-on view on a screen-straight road) and `objectFacings` gives the Props tool eight facings. The straight-on views are ordinary per-view sources.

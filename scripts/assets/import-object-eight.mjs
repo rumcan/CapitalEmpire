@@ -10,8 +10,8 @@ import sharp from 'sharp';
 
 export const KEYS = ['normalNE','yaw8N','normalSE','yaw8E','normalSW','yaw8S','normalNW','yaw8W'];
 const LAYOUTS = { normal: ['normalSE','normalSW','normalNW','normalNE'], yaw8: ['yaw8N','yaw8E','yaw8S','yaw8W'] };
-const NORMALS = ['normalNE','normalSE','normalSW','normalNW'];
-/** T398: a per-view source may name an existing library picture instead of a file ({ "reuse": "<library id>" }, the four normal views only): the set's normal
+/** T398: a per-view source may name an existing library picture instead of a file ({ "reuse": "<library id>" }, the normal views only; T351: any of the four, so a set can
+ *  keep the pictures the game has and add the corners it lacks): the set's normal
  *  view is then an appended alias of that picture's atlas cell (no second copy of its pixels; the old picture still draws as before: the set is runtimeReuse) */
 const isReuse = v => typeof v?.reuse === 'string' && v.reuse.length > 0;
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
@@ -57,7 +57,6 @@ export function validateInput(m) {
   assert(m.review==='candidate'||m.review==='approved','explicit candidate/approved review required');
   // Input manifests give path strings; integrated manifests give the cut records (objects with a file).
   assert((m.source?.normal&&m.source?.yaw8)||(m.source?.views&&KEYS.every(k=>typeof m.source.views[k]==='string'||typeof m.source.views[k]?.file==='string'||(isReuse(m.source.views[k])&&k.startsWith('normal')))),'two actual source sheets or eight per-view source files required (a normal view may name an existing library picture to reuse)');
-  if(m.source?.views){const n=NORMALS.filter(k=>isReuse(m.source.views[k])).length;assert(n===0||n===4,'reuse covers all four normal views or none');}
 }
 /** Preserve local-metre seating only after checking real row counts, access and approval. No generated guesses unlock a facility. */
 export function validateSeating(layout,capacity,footprint) {

@@ -32,7 +32,7 @@ painted with the Paint tool (textures, section 6). Sprites are the objects that 
 | `business:golf-practice-net`, `golf-driving-range` | The practice area; `golf-driving-range` is also the range's covered bays (`rangeScene`, until the range kit below, P1) |
 | `business:golf-bench-course-map`, `golf-patio-table`, `golf-mower`, `golf-bag-trolley`, `golf-footbridge` | Course furniture |
 | `business:golf-pin-red`, `golf-pin-yellow`, `golf-pin-red-equipment` | Flagsticks (until the new pin set) |
-| `business:golf-cart-sw`, `golf-cart-se` | Golf carts (two facings: needs the 8-facing set, P1) |
+| `business:golf-cart-sw`, `golf-cart-se` | Golf carts: the SW and SE headings of the eight-facing set `business:golf-cart` (T351: art/golf-cart-20261109/README.md) |
 | `business:bus-sw`, `bus-se`, `taxi-sw`, `taxi-se`, the 8-direction cars | Shuttles, taxis, spectators' cars |
 | `ce:parking-*` (entrance and exit gates, P sign, kiosk, pay station, IN sign) | Spectator car parks |
 | `business:hotel`, `motel`, `diner`, `sportsbar` | Town growth with the tournament |

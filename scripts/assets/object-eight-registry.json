@@ -8738,6 +8738,122 @@
         "normalNW": "view:golf:toilet-block:nw"
       },
       "runtimeReuse": true
+    },
+    {
+      "subject": "business:golf-cart",
+      "name": "Hire golf cart",
+      "version": 1,
+      "review": "approved",
+      "projection": "normal+yaw8",
+      "views": {
+        "normalNE": {
+          "id": "object8:business-golf-cart-52f4b7a4-v1:normalNE",
+          "headingDegrees": 0,
+          "boxes": [
+            {
+              "hx": 0.6,
+              "hy": 1.2,
+              "dx": 0,
+              "dy": 0
+            }
+          ]
+        },
+        "normalSE": {
+          "id": "object8:business-golf-cart-52f4b7a4-v1:normalSE",
+          "headingDegrees": 90,
+          "boxes": [
+            {
+              "hx": 1.2,
+              "hy": 0.6000000000000001,
+              "dx": 0,
+              "dy": 0
+            }
+          ]
+        },
+        "yaw8N": {
+          "id": "object8:business-golf-cart-52f4b7a4-v1:yaw8N",
+          "headingDegrees": 37,
+          "boxes": [
+            {
+              "hx": 1.2013593338108335,
+              "hy": 1.3194516259479803,
+              "dx": 0,
+              "dy": 0
+            }
+          ]
+        },
+        "yaw8E": {
+          "id": "object8:business-golf-cart-52f4b7a4-v1:yaw8E",
+          "headingDegrees": 127,
+          "boxes": [
+            {
+              "hx": 1.3194516259479803,
+              "hy": 1.2013593338108337,
+              "dx": 0,
+              "dy": 0
+            }
+          ]
+        },
+        "normalSW": {
+          "id": "object8:business-golf-cart-52f4b7a4-v1:normalSW",
+          "headingDegrees": 180,
+          "boxes": [
+            {
+              "hx": 0.6000000000000001,
+              "hy": 1.2,
+              "dx": 0,
+              "dy": 0
+            }
+          ]
+        },
+        "yaw8S": {
+          "id": "object8:business-golf-cart-52f4b7a4-v1:yaw8S",
+          "headingDegrees": 217,
+          "boxes": [
+            {
+              "hx": 1.2013593338108335,
+              "hy": 1.3194516259479805,
+              "dx": 0,
+              "dy": 0
+            }
+          ]
+        },
+        "normalNW": {
+          "id": "object8:business-golf-cart-52f4b7a4-v1:normalNW",
+          "headingDegrees": 270,
+          "boxes": [
+            {
+              "hx": 1.2,
+              "hy": 0.6000000000000002,
+              "dx": 0,
+              "dy": 0
+            }
+          ]
+        },
+        "yaw8W": {
+          "id": "object8:business-golf-cart-52f4b7a4-v1:yaw8W",
+          "headingDegrees": 307,
+          "boxes": [
+            {
+              "hx": 1.3194516259479805,
+              "hy": 1.2013593338108333,
+              "dx": 0,
+              "dy": 0
+            }
+          ]
+        }
+      },
+      "footprintMetres": {
+        "width": 1.2,
+        "depth": 2.4
+      },
+      "baselineScale": 0.294,
+      "aliases": [],
+      "sourceIds": {
+        "normalNE": "business:golf-cart-sw",
+        "normalSE": "business:golf-cart-se"
+      },
+      "runtimeReuse": true
     }
   ],
   "items": [
@@ -26468,6 +26584,244 @@
         280.9455999999846,
         296.73839999998376
       ]
+    },
+    {
+      "id": "object8:business-golf-cart-52f4b7a4-v1:normalNE",
+      "name": "Hire golf cart (normalNE)",
+      "cat": "Eight-view carts",
+      "boxes": [
+        {
+          "hx": 0.6,
+          "hy": 1.2,
+          "dx": 0,
+          "dy": 0
+        }
+      ],
+      "reuse": "business:golf-cart-sw"
+    },
+    {
+      "id": "object8:business-golf-cart-52f4b7a4-v1:normalSE",
+      "name": "Hire golf cart (normalSE)",
+      "cat": "Eight-view carts",
+      "boxes": [
+        {
+          "hx": 1.2,
+          "hy": 0.6000000000000001,
+          "dx": 0,
+          "dy": 0
+        }
+      ],
+      "reuse": "business:golf-cart-se"
+    },
+    {
+      "id": "object8:business-golf-cart-52f4b7a4-v1:yaw8N",
+      "name": "Hire golf cart (yaw8N)",
+      "cat": "Eight-view carts",
+      "kind": "decor",
+      "w": 295.4609999998025,
+      "h": 561.2699999996248,
+      "ax": 145.08299999990302,
+      "ay": 437.5787999997075,
+      "boxes": [
+        {
+          "hx": 1.2013593338108335,
+          "hy": 1.3194516259479803,
+          "dx": 0,
+          "dy": 0
+        }
+      ],
+      "solid": 0,
+      "big": false,
+      "door": false,
+      "cost": 0,
+      "tex": [
+        8,
+        0.00390625,
+        0.00390625,
+        0.04736328125,
+        0.0859375
+      ],
+      "quad": [
+        0,
+        0,
+        295.4609999998025,
+        561.2699999996248
+      ]
+    },
+    {
+      "id": "object8:business-golf-cart-52f4b7a4-v1:yaw8E",
+      "name": "Hire golf cart (yaw8E)",
+      "cat": "Eight-view carts",
+      "kind": "decor",
+      "w": 536.9129999996411,
+      "h": 497.72999999966726,
+      "ax": 273.645599999817,
+      "ay": 386.32319999974175,
+      "boxes": [
+        {
+          "hx": 1.3194516259479803,
+          "hy": 1.2013593338108337,
+          "dx": 0,
+          "dy": 0
+        }
+      ],
+      "solid": 0,
+      "big": false,
+      "door": false,
+      "cost": 0,
+      "tex": [
+        8,
+        0.36181640625,
+        0.00390625,
+        0.4404296875,
+        0.07666015625
+      ],
+      "quad": [
+        0,
+        0,
+        536.9129999996411,
+        497.72999999966726
+      ]
+    },
+    {
+      "id": "object8:business-golf-cart-52f4b7a4-v1:normalSW",
+      "name": "Hire golf cart (normalSW)",
+      "cat": "Eight-view carts",
+      "kind": "decor",
+      "w": 600.4529999995985,
+      "h": 551.7389999996311,
+      "ax": 319.3943999997865,
+      "ay": 399.8783999997327,
+      "boxes": [
+        {
+          "hx": 0.6000000000000001,
+          "hy": 1.2,
+          "dx": 0,
+          "dy": 0
+        }
+      ],
+      "solid": 0,
+      "big": false,
+      "door": false,
+      "cost": 0,
+      "tex": [
+        8,
+        0.1357421875,
+        0.00390625,
+        0.2236328125,
+        0.0849609375
+      ],
+      "quad": [
+        0,
+        0,
+        600.4529999995985,
+        551.7389999996311
+      ]
+    },
+    {
+      "id": "object8:business-golf-cart-52f4b7a4-v1:yaw8S",
+      "name": "Hire golf cart (yaw8S)",
+      "cat": "Eight-view carts",
+      "kind": "decor",
+      "w": 306.0509999997954,
+      "h": 519.9689999996524,
+      "ax": 153.4490999998974,
+      "ay": 388.97069999973996,
+      "boxes": [
+        {
+          "hx": 1.2013593338108335,
+          "hy": 1.3194516259479805,
+          "dx": 0,
+          "dy": 0
+        }
+      ],
+      "solid": 0,
+      "big": false,
+      "door": false,
+      "cost": 0,
+      "tex": [
+        8,
+        0.2275390625,
+        0.00390625,
+        0.2724609375,
+        0.080078125
+      ],
+      "quad": [
+        0,
+        0,
+        306.0509999997954,
+        519.9689999996524
+      ]
+    },
+    {
+      "id": "object8:business-golf-cart-52f4b7a4-v1:normalNW",
+      "name": "Hire golf cart (normalNW)",
+      "cat": "Eight-view carts",
+      "kind": "decor",
+      "w": 550.6799999996318,
+      "h": 560.2109999996255,
+      "ax": 285.29459999980924,
+      "ay": 402.63179999973084,
+      "boxes": [
+        {
+          "hx": 1.2,
+          "hy": 0.6000000000000002,
+          "dx": 0,
+          "dy": 0
+        }
+      ],
+      "solid": 0,
+      "big": false,
+      "door": false,
+      "cost": 0,
+      "tex": [
+        8,
+        0.05126953125,
+        0.00390625,
+        0.1318359375,
+        0.0859375
+      ],
+      "quad": [
+        0,
+        0,
+        550.6799999996318,
+        560.2109999996255
+      ]
+    },
+    {
+      "id": "object8:business-golf-cart-52f4b7a4-v1:yaw8W",
+      "name": "Hire golf cart (yaw8W)",
+      "cat": "Eight-view carts",
+      "kind": "decor",
+      "w": 557.0339999996277,
+      "h": 508.3199999996602,
+      "ax": 270.6803999998191,
+      "ay": 382.61669999974424,
+      "boxes": [
+        {
+          "hx": 1.3194516259479805,
+          "hy": 1.2013593338108333,
+          "dx": 0,
+          "dy": 0
+        }
+      ],
+      "solid": 0,
+      "big": false,
+      "door": false,
+      "cost": 0,
+      "tex": [
+        8,
+        0.2763671875,
+        0.00390625,
+        0.35791015625,
+        0.078125
+      ],
+      "quad": [
+        0,
+        0,
+        557.0339999996277,
+        508.3199999996602
+      ]
     }
   ],
   "pages": [
@@ -26526,6 +26880,13 @@
       "../assets/object-eight/straight-views-golf-20261109-v1/page-0-2.webp",
       "../assets/object-eight/straight-views-golf-20261109-v1/page-0-3.webp",
       "../assets/object-eight/straight-views-golf-20261109-v1/page-0-4.webp"
+    ],
+    [
+      "../assets/object-eight/golf-cart-20261109-v1/page-0-0.webp",
+      "../assets/object-eight/golf-cart-20261109-v1/page-0-1.webp",
+      "../assets/object-eight/golf-cart-20261109-v1/page-0-2.webp",
+      "../assets/object-eight/golf-cart-20261109-v1/page-0-3.webp",
+      "../assets/object-eight/golf-cart-20261109-v1/page-0-4.webp"
     ]
   ]
 }
