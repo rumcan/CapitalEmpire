@@ -1,0 +1,44 @@
+{
+  "id": "newprop:ball-dispenser",
+  "name": "Ball dispenser",
+  "referencePNG": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-02\\references\\ball-dispenser.source.png",
+  "originalSourcePNG": "E:\\Repos\\CapitalEmpire\\All Generated Images\\exec-6cdac43a-edb2-4a57-abe6-76cf5a5309d7.png",
+  "copiedOriginalSheet": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-02\\original-sheets\\exec-6cdac43a-edb2-4a57-abe6-76cf5a5309d7.png",
+  "originalSheetSHA256": "603c5d0bf8d3206c56aa22b814d0012d3332ce9de5f7a5e9ac3a977058266ea0",
+  "referenceSHA256": "4659dc05fee23fc96f5f492595714837a6166f3a0410021538211897c242717d",
+  "sourceRectXYWH": [
+    781,
+    655,
+    376,
+    559
+  ],
+  "sourceCell": "bottom right",
+  "sourceSheetContainsFourDifferentSubjectsNotRotations": true,
+  "sourceCropSize": [
+    376,
+    559
+  ],
+  "cropOperation": "lossless native RGBA crop, no resize, recolour, cleanup or synthesis",
+  "sourceMetadataCutOff": false,
+  "runtimeLibrarySource": "src/game/new-props-library.ts",
+  "runtimeBaseBoxesInTiles": [
+    {
+      "hx": 2.5,
+      "hy": 2.5,
+      "dx": 0,
+      "dy": 0
+    }
+  ],
+  "runtimeDisplayPixels": [
+    320,
+    475.74
+  ],
+  "manifestHalfExtentsMetresFirstGuess": [
+    2.5,
+    2.5
+  ],
+  "dimensionCaution": "Manifest first-guess dimensions and runtime boxes are not measured native physical dimensions; any new real-object size is a source-design proposal only. No runtime changes.",
+  "visualInspection": "inspected",
+  "visualNotes": "Confirmed coin machine with lower front basket and upper ball window; no electronic touchscreen.",
+  "sourceOnlyNotReleaseProof": true
+}

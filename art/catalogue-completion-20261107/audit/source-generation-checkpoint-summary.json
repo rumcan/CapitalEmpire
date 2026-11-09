@@ -1,0 +1,51 @@
+{
+  "asOf": "2026-11-07T15:38:41.687218+00:00",
+  "archivedNativeVersions": 273,
+  "uniqueNativeGenerationHashes": 273,
+  "categories": {
+    "map_objects": {
+      "archivedNativeFileVersions": 167,
+      "uniqueNativeSHA256": 167,
+      "nominalFrameSlotsAcrossVersionsNotAcceptedViews": 617,
+      "families": 45
+    },
+    "vehicles": {
+      "archivedNativeFileVersions": 84,
+      "uniqueNativeSHA256": 84,
+      "nominalFrameSlotsAcrossVersionsNotAcceptedViews": 306,
+      "families": 25
+    },
+    "portraits": {
+      "archivedNativeFileVersions": 11,
+      "uniqueNativeSHA256": 11,
+      "nominalFrameSlotsAcrossVersionsNotAcceptedViews": 41,
+      "families": 11
+    },
+    "scenes": {
+      "archivedNativeFileVersions": 5,
+      "uniqueNativeSHA256": 5,
+      "nominalFrameSlotsAcrossVersionsNotAcceptedViews": 20,
+      "families": 5
+    },
+    "ui_gear": {
+      "archivedNativeFileVersions": 6,
+      "uniqueNativeSHA256": 6,
+      "nominalFrameSlotsAcrossVersionsNotAcceptedViews": 48,
+      "families": 5
+    }
+  },
+  "excludedNonNativePNGCounts": {
+    "technical_geometry_guides": 130,
+    "lossless_exports_and_import_crops": 568,
+    "existing_identity_sources_and_copies": 364,
+    "diagnostic_overlays": 50,
+    "other_crops_exports_or_unproven_source": 45,
+    "isolated_reference_crops": 65,
+    "selected_source_reference_atlases": 1
+  },
+  "privatePortraitLooks": 40,
+  "privateExactSceneRecords": 4,
+  "sourceIssues": 0,
+  "afterSnapshotExcluded": 0,
+  "overallRequestComplete": false
+}

@@ -1,0 +1,62 @@
+{
+  "schema": 1,
+  "createdUtc": "2026-11-07T06:47:45.284562+00:00",
+  "exactRuntimeId": "variation:gen-house-l-ranch-18552ce5-plain:1",
+  "source": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/building-views/variation-gen-house-l-ranch-18552ce5-plain-1/NE.png",
+  "sourceSha256": "9e548e9c08dace47d3daba8af439879bd9a0b5eaccc487a66248027659d0980e",
+  "output": "identity-references/variation-gen-house-l-ranch-18552ce5-plain-1-0a624241/source.png",
+  "outputSha256": "9e548e9c08dace47d3daba8af439879bd9a0b5eaccc487a66248027659d0980e",
+  "width": 628,
+  "height": 548,
+  "sourceCell": {
+    "kind": "already isolated native PNG; whole file",
+    "rectXYWH": [
+      0,
+      0,
+      628,
+      548
+    ]
+  },
+  "operation": "byte-for-byte PNG copy only; no resize, crop, recolour, key, repaint, registration or source mutation",
+  "selection": "registered corner NE native PNG for this exact subject",
+  "registeredCornerDirection": "NE",
+  "sourceEvidence": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\building-views\\variation-gen-house-l-ranch-18552ce5-plain-1\\provenance.json",
+  "sourceReview": {
+    "integrationStatus": "ready",
+    "integrationReason": "Four views keep tall main/low projecting wing and opposite front/back door faces consistent; pixel-preserving v2 repack."
+  },
+  "sourceRegistration": {
+    "id": "variation:gen-house-l-ranch-18552ce5-plain:1",
+    "version": "variation-gen-house-l-ranch-18552ce5-plain-1-4views-v2",
+    "files": {
+      "NE": "9e548e9c08dace47d3daba8af439879bd9a0b5eaccc487a66248027659d0980e",
+      "SE": "ed2cdda7412ae32d338bb79b31085ee318f4f1f76c1e4c08a6f904836762c204",
+      "SW": "fda9129c8c1a9b2c163d751858b9d17fd18d0d1e7d036d3f407a898d9eb60dbf",
+      "NW": "7ea3c0bc6147847ea06f3ce7f39acd6c9e53b26712a629ab73803e26709d10e9"
+    }
+  },
+  "originalInventorySource": {
+    "library": "src/game/library.ts",
+    "librarySha256": "91b5190292c1005ac7b936f08e5e1ebf3be43c3aae99f92ea510775da83d9726",
+    "atlas": "src/assets/atlas/sprites-8-0.webp",
+    "atlasSha256": "3627e8012c994eb375699136eec4134215434643c5c267a76f1326638c2b9514",
+    "runtimePage": 8,
+    "localPage": 8,
+    "uv": [
+      0.40625,
+      0.609375,
+      0.599121,
+      0.785645
+    ],
+    "crop": {
+      "left": 832,
+      "top": 1248,
+      "width": 395,
+      "height": 361
+    },
+    "native": "art/theme-consistency/exports/buildings/variation-gen-house-l-ranch-18552ce5-plain-1.native.png",
+    "nativeSha256": "1a6107fb56a68024743ada2e37dfd613365d52ea4b4bbe07d245fcec0ac01c24"
+  },
+  "originalBusinessSourceCell": null,
+  "nativeReferenceApprovalClaimed": false
+}

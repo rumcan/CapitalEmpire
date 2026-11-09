@@ -1,0 +1,255 @@
+{
+  "key": "2000s-cream-stucco-two-storey-garage",
+  "name": "2000s cream stucco two storey garage",
+  "sourceViews": [
+    {
+      "sourceCameraKey": "normalSE",
+      "nominalCameraFamily": "normal",
+      "file": "2000s-cream-stucco-two-storey-garage/normalSE.png",
+      "sourceFile": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\2000s-cream-stucco-two-storey-garage\\normal-v1.png",
+      "sourceFileSHA256": "06315f1697f9ebe70ba03122e3a26ddec6f4c5e5945cac2a802350d44b00b079",
+      "sourceFrameRectLTRB": [
+        0,
+        0,
+        627,
+        627
+      ],
+      "operation": "lossless source-cell crop at QA-recorded frame rectangle",
+      "singleViewOverride": false,
+      "nativeSize": [
+        627,
+        627
+      ],
+      "pngSHA256": "f48f98c6492f6eafe466d77c13d194d4ea649e77cb1b1ac5e08610a9d7a28cb6",
+      "rgbaSHA256": "6869da0d5f446e42bc148d46d1f905a23e3c98e70129f2cf4d4bb1f7c181bfd5",
+      "sourceRGBAEqual": true,
+      "identityFeaturesReviewed": "front entrance/canopy+3upper windows and ground living window, left side4windows, garage front",
+      "sourceQA": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\2000s-cream-stucco-two-storey-garage\\normal-v1.independent-qa.json",
+      "sourceProvenance": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\2000s-cream-stucco-two-storey-garage\\normal-v1.provenance.json",
+      "nativeHeadingDegrees": null,
+      "nativeCameraCertified": false,
+      "runtimeReady": false,
+      "fileRelativeToBundle": "2000s-cream-stucco-two-storey-garage/normalSE.png",
+      "inheritedV1PNGBytesUnchanged": true,
+      "inheritedV1PNG": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\lossless-source-bundle-v1\\2000s-cream-stucco-two-storey-garage\\normalSE.png"
+    },
+    {
+      "sourceCameraKey": "normalSW",
+      "nominalCameraFamily": "normal",
+      "file": "2000s-cream-stucco-two-storey-garage/normalSW.png",
+      "sourceFile": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\2000s-cream-stucco-two-storey-garage\\normal-v1.png",
+      "sourceFileSHA256": "06315f1697f9ebe70ba03122e3a26ddec6f4c5e5945cac2a802350d44b00b079",
+      "sourceFrameRectLTRB": [
+        627,
+        0,
+        1254,
+        627
+      ],
+      "operation": "lossless source-cell crop at QA-recorded frame rectangle",
+      "singleViewOverride": false,
+      "nativeSize": [
+        627,
+        627
+      ],
+      "pngSHA256": "b7b3a7f185fed293359357b5ad6439e8533a47d9773df9b768dc2a43ed783012",
+      "rgbaSHA256": "81bdd3f2e782536d1e651ad033b4d9a7ffcb1b7450972629cb2c5f49ce1c361a",
+      "sourceRGBAEqual": true,
+      "identityFeaturesReviewed": "rear patio door/kitchen window+3upper windows, left side4windows, garage rear service door",
+      "sourceQA": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\2000s-cream-stucco-two-storey-garage\\normal-v1.independent-qa.json",
+      "sourceProvenance": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\2000s-cream-stucco-two-storey-garage\\normal-v1.provenance.json",
+      "nativeHeadingDegrees": null,
+      "nativeCameraCertified": false,
+      "runtimeReady": false,
+      "fileRelativeToBundle": "2000s-cream-stucco-two-storey-garage/normalSW.png",
+      "inheritedV1PNGBytesUnchanged": true,
+      "inheritedV1PNG": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\lossless-source-bundle-v1\\2000s-cream-stucco-two-storey-garage\\normalSW.png"
+    },
+    {
+      "sourceCameraKey": "normalNW",
+      "nominalCameraFamily": "normal",
+      "file": "2000s-cream-stucco-two-storey-garage/normalNW.png",
+      "sourceFile": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\2000s-cream-stucco-two-storey-garage\\normal-v1.png",
+      "sourceFileSHA256": "06315f1697f9ebe70ba03122e3a26ddec6f4c5e5945cac2a802350d44b00b079",
+      "sourceFrameRectLTRB": [
+        0,
+        627,
+        627,
+        1254
+      ],
+      "operation": "lossless source-cell crop at QA-recorded frame rectangle",
+      "singleViewOverride": false,
+      "nativeSize": [
+        627,
+        627
+      ],
+      "pngSHA256": "aa7e064226580ea1a4be2181e76cc059c64ca745e5af21c9cc12f4f844e4f6c3",
+      "rgbaSHA256": "5c1034765e5cc26b99bcae943be0fc120ea71bec39b6fedb7f32e8c7b054c144",
+      "sourceRGBAEqual": true,
+      "identityFeaturesReviewed": "rear patio/kitchen+upper windows, garage rear and right side upper window",
+      "sourceQA": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\2000s-cream-stucco-two-storey-garage\\normal-v1.independent-qa.json",
+      "sourceProvenance": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\2000s-cream-stucco-two-storey-garage\\normal-v1.provenance.json",
+      "nativeHeadingDegrees": null,
+      "nativeCameraCertified": false,
+      "runtimeReady": false,
+      "fileRelativeToBundle": "2000s-cream-stucco-two-storey-garage/normalNW.png",
+      "inheritedV1PNGBytesUnchanged": true,
+      "inheritedV1PNG": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\lossless-source-bundle-v1\\2000s-cream-stucco-two-storey-garage\\normalNW.png"
+    },
+    {
+      "sourceCameraKey": "normalNE",
+      "nominalCameraFamily": "normal",
+      "file": "2000s-cream-stucco-two-storey-garage/normalNE.png",
+      "sourceFile": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\2000s-cream-stucco-two-storey-garage\\normal-v1.png",
+      "sourceFileSHA256": "06315f1697f9ebe70ba03122e3a26ddec6f4c5e5945cac2a802350d44b00b079",
+      "sourceFrameRectLTRB": [
+        627,
+        627,
+        1254,
+        1254
+      ],
+      "operation": "lossless source-cell crop at QA-recorded frame rectangle",
+      "singleViewOverride": false,
+      "nativeSize": [
+        627,
+        627
+      ],
+      "pngSHA256": "d63a9971edf6a910233c70157f2ce0780a87a31b2ede83544414e1e40cc30013",
+      "rgbaSHA256": "3f7517f85dd87c16de53f1a7945e92b4453b025225e7a451f243f355b0e8d2b9",
+      "sourceRGBAEqual": true,
+      "identityFeaturesReviewed": "front canopy/entrance/living+3upper windows, garage front and right side upper window",
+      "sourceQA": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\2000s-cream-stucco-two-storey-garage\\normal-v1.independent-qa.json",
+      "sourceProvenance": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\2000s-cream-stucco-two-storey-garage\\normal-v1.provenance.json",
+      "nativeHeadingDegrees": null,
+      "nativeCameraCertified": false,
+      "runtimeReady": false,
+      "fileRelativeToBundle": "2000s-cream-stucco-two-storey-garage/normalNE.png",
+      "inheritedV1PNGBytesUnchanged": true,
+      "inheritedV1PNG": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\lossless-source-bundle-v1\\2000s-cream-stucco-two-storey-garage\\normalNE.png"
+    },
+    {
+      "sourceCameraKey": "yaw8N",
+      "nominalCameraFamily": "yaw8",
+      "file": "2000s-cream-stucco-two-storey-garage/yaw8N.png",
+      "sourceFile": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\2000s-cream-stucco-two-storey-garage\\yaw8-v1.png",
+      "sourceFileSHA256": "0a0373b2dde993bd2f9c8e172d48b0da6299e93cf560bdbf80d7380e78fb59d3",
+      "sourceFrameRectLTRB": [
+        0,
+        0,
+        627,
+        627
+      ],
+      "operation": "lossless source-cell crop at QA-recorded frame rectangle",
+      "singleViewOverride": false,
+      "nativeSize": [
+        627,
+        627
+      ],
+      "pngSHA256": "230c1eac04f42c0608dfbb3a56ca0eaba026bdbb7a7b2e1e8c2505380ed83061",
+      "rgbaSHA256": "63203d7595b6e57d1223a7acd6c67fead271cbc4171ef0888d3b77e1e221376a",
+      "sourceRGBAEqual": true,
+      "identityFeaturesReviewed": "front3upper windows, ground living/door and garage front",
+      "sourceQA": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\2000s-cream-stucco-two-storey-garage\\yaw8-v1.independent-qa.json",
+      "sourceProvenance": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\2000s-cream-stucco-two-storey-garage\\yaw8-v1.provenance.json",
+      "nativeHeadingDegrees": null,
+      "nativeCameraCertified": false,
+      "runtimeReady": false,
+      "fileRelativeToBundle": "2000s-cream-stucco-two-storey-garage/yaw8N.png",
+      "inheritedV1PNGBytesUnchanged": true,
+      "inheritedV1PNG": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\lossless-source-bundle-v1\\2000s-cream-stucco-two-storey-garage\\yaw8N.png"
+    },
+    {
+      "sourceCameraKey": "yaw8E",
+      "nominalCameraFamily": "yaw8",
+      "file": "2000s-cream-stucco-two-storey-garage/yaw8E.png",
+      "sourceFile": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\2000s-cream-stucco-two-storey-garage\\yaw8-v1.png",
+      "sourceFileSHA256": "0a0373b2dde993bd2f9c8e172d48b0da6299e93cf560bdbf80d7380e78fb59d3",
+      "sourceFrameRectLTRB": [
+        627,
+        0,
+        1254,
+        627
+      ],
+      "operation": "lossless source-cell crop at QA-recorded frame rectangle",
+      "singleViewOverride": false,
+      "nativeSize": [
+        627,
+        627
+      ],
+      "pngSHA256": "837f386f934dd74858d9f99aa4b5be5d46576daf1df7a5ae7ab2cb745d06fffd",
+      "rgbaSHA256": "1617eba03393e4dd7598693ce00e2e833f1c5637facf564a428adf997bb957a8",
+      "sourceRGBAEqual": true,
+      "identityFeaturesReviewed": "left main side4windows with thin front canopy sliver",
+      "sourceQA": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\2000s-cream-stucco-two-storey-garage\\yaw8-v1.independent-qa.json",
+      "sourceProvenance": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\2000s-cream-stucco-two-storey-garage\\yaw8-v1.provenance.json",
+      "nativeHeadingDegrees": null,
+      "nativeCameraCertified": false,
+      "runtimeReady": false,
+      "fileRelativeToBundle": "2000s-cream-stucco-two-storey-garage/yaw8E.png",
+      "inheritedV1PNGBytesUnchanged": true,
+      "inheritedV1PNG": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\lossless-source-bundle-v1\\2000s-cream-stucco-two-storey-garage\\yaw8E.png"
+    },
+    {
+      "sourceCameraKey": "yaw8S",
+      "nominalCameraFamily": "yaw8",
+      "file": "2000s-cream-stucco-two-storey-garage/yaw8S.png",
+      "sourceFile": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\2000s-cream-stucco-two-storey-garage\\yaw8-v1.png",
+      "sourceFileSHA256": "0a0373b2dde993bd2f9c8e172d48b0da6299e93cf560bdbf80d7380e78fb59d3",
+      "sourceFrameRectLTRB": [
+        0,
+        627,
+        627,
+        1254
+      ],
+      "operation": "lossless source-cell crop at QA-recorded frame rectangle",
+      "singleViewOverride": false,
+      "nativeSize": [
+        627,
+        627
+      ],
+      "pngSHA256": "096d172b9bae9d96be6ba8ad0c3f46bfd2330093a3ec8b1d5210c765306a7c70",
+      "rgbaSHA256": "615dcea5fc70971988efbd8c07761dd6cb794cf6ab987e57d24342a9d3cdfcf3",
+      "sourceRGBAEqual": true,
+      "identityFeaturesReviewed": "rear3upper windows, rear patio/kitchen and garage rear door",
+      "sourceQA": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\2000s-cream-stucco-two-storey-garage\\yaw8-v1.independent-qa.json",
+      "sourceProvenance": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\2000s-cream-stucco-two-storey-garage\\yaw8-v1.provenance.json",
+      "nativeHeadingDegrees": null,
+      "nativeCameraCertified": false,
+      "runtimeReady": false,
+      "fileRelativeToBundle": "2000s-cream-stucco-two-storey-garage/yaw8S.png",
+      "inheritedV1PNGBytesUnchanged": true,
+      "inheritedV1PNG": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\lossless-source-bundle-v1\\2000s-cream-stucco-two-storey-garage\\yaw8S.png"
+    },
+    {
+      "sourceCameraKey": "yaw8W",
+      "nominalCameraFamily": "yaw8",
+      "file": "2000s-cream-stucco-two-storey-garage/yaw8W.png",
+      "sourceFile": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\2000s-cream-stucco-two-storey-garage\\yaw8-v1.png",
+      "sourceFileSHA256": "0a0373b2dde993bd2f9c8e172d48b0da6299e93cf560bdbf80d7380e78fb59d3",
+      "sourceFrameRectLTRB": [
+        627,
+        627,
+        1254,
+        1254
+      ],
+      "operation": "lossless source-cell crop at QA-recorded frame rectangle",
+      "singleViewOverride": false,
+      "nativeSize": [
+        627,
+        627
+      ],
+      "pngSHA256": "91759dfbf3789f402710cdf2c5f4b53694b285a2f798cf63bcc62b31337ed83a",
+      "rgbaSHA256": "cbcb7cd467c36332dca010976755ae9bd4e00dd828664757d1266324604cee07",
+      "sourceRGBAEqual": true,
+      "identityFeaturesReviewed": "garage outer blank gable, upper right main side window, thin rear openings",
+      "sourceQA": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\2000s-cream-stucco-two-storey-garage\\yaw8-v1.independent-qa.json",
+      "sourceProvenance": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\2000s-cream-stucco-two-storey-garage\\yaw8-v1.provenance.json",
+      "nativeHeadingDegrees": null,
+      "nativeCameraCertified": false,
+      "runtimeReady": false,
+      "fileRelativeToBundle": "2000s-cream-stucco-two-storey-garage/yaw8W.png",
+      "inheritedV1PNGBytesUnchanged": true,
+      "inheritedV1PNG": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\lossless-source-bundle-v1\\2000s-cream-stucco-two-storey-garage\\yaw8W.png"
+    }
+  ],
+  "inheritedFromV1": true
+}

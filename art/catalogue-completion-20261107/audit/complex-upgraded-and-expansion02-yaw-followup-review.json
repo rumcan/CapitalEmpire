@@ -1,0 +1,733 @@
+{
+  "schema": 1,
+  "date": "2026-11-07",
+  "sourceOnly": true,
+  "scope": "3upgradedcomplexnormal sheets,4expansion02yaw sheets,2targetednormalopening corrections; functional identity/occlusion/alpha only, no numerical camera metrology.",
+  "sheetsReviewed": 9,
+  "sourceViews": 36,
+  "sourceCandidateSheets": 7,
+  "heldSheets": 2,
+  "upgradedComplexNormals": [
+    {
+      "jobId": "golf-source-01-02-tv-camera-tower",
+      "review": "HOLD-SW-camera-aim-lens-only",
+      "repairFrames": [
+        "SW"
+      ],
+      "notes": [
+        "Ladder/case/fourlegtower remain fixed; clean galvanized material upgrade is coherent.",
+        "SW top-right near camera end shows large green front lens towardviewer although guideSW expects rear without that iris. Restore fixed aim-Y, no repan merely to expose lens; other3cells coherent."
+      ],
+      "source": {
+        "file": "art/catalogue-completion-20261107/generated/golf-source-batch-01/native/golf-source-01-02-tv-camera-tower/upgraded-normal-v1.png",
+        "sha256": "583b1a30c01a15a4c3b9521794bad9c4abf634b49578505c07385bbd231e4823",
+        "originalHashMatchesProvenance": true,
+        "nativeRGBA": true,
+        "dimensions": [
+          1254,
+          1254
+        ],
+        "trueZeroAlphaFraction": 0.10877599973545579,
+        "faintAlpha1to8Fraction": 0.506562095393624,
+        "outerBorderAlphaMax": 12,
+        "cells": [
+          {
+            "view": "SE",
+            "cell": 0,
+            "coreBBoxExclusive": [
+              189,
+              70,
+              437,
+              554
+            ],
+            "minimumCoreMargin": 70,
+            "coreBoundaryPixels": 0,
+            "rgbaSha256": "957279825660cb063a1bc0240ff92440d114973972739d367f92f55c1150b8f5"
+          },
+          {
+            "view": "SW",
+            "cell": 1,
+            "coreBBoxExclusive": [
+              191,
+              72,
+              439,
+              554
+            ],
+            "minimumCoreMargin": 72,
+            "coreBoundaryPixels": 0,
+            "rgbaSha256": "cc18cdba7d938f9cff4d42c8a930ba5140cabf58e3e1f772b2bbd197b73b1c78"
+          },
+          {
+            "view": "NW",
+            "cell": 2,
+            "coreBBoxExclusive": [
+              190,
+              71,
+              438,
+              554
+            ],
+            "minimumCoreMargin": 71,
+            "coreBoundaryPixels": 0,
+            "rgbaSha256": "074e61d5fb693683bf62f135dab67e6ed81a8bf13263701bc3f2df07d5d09d2a"
+          },
+          {
+            "view": "NE",
+            "cell": 3,
+            "coreBBoxExclusive": [
+              190,
+              70,
+              439,
+              554
+            ],
+            "minimumCoreMargin": 70,
+            "coreBoundaryPixels": 0,
+            "rgbaSha256": "b69c8dcd02debe13c7bc52cf6ec4626784abb2793c55b2e67c374d46a9e10801"
+          }
+        ]
+      }
+    },
+    {
+      "jobId": "golf-source-01-06-four-lane-entrance",
+      "review": "PASS-practical-source-candidate",
+      "repairFrames": [],
+      "notes": [
+        "Exactly3manual turnstiles plus1wideaccessible gate, fixed side/signfaces, no concrete groundslab."
+      ],
+      "source": {
+        "file": "art/catalogue-completion-20261107/generated/golf-source-batch-01/native/golf-source-01-06-four-lane-entrance/upgraded-normal-v1.png",
+        "sha256": "d953c11148397b0914ae521069ff4ac1ce6eb6b863e1e1f4fdfb8a9a320a1a03",
+        "originalHashMatchesProvenance": true,
+        "nativeRGBA": true,
+        "dimensions": [
+          1254,
+          1254
+        ],
+        "trueZeroAlphaFraction": 0.7712970806020416,
+        "faintAlpha1to8Fraction": 0.06574941049884389,
+        "outerBorderAlphaMax": 1,
+        "cells": [
+          {
+            "view": "SE",
+            "cell": 0,
+            "coreBBoxExclusive": [
+              57,
+              121,
+              570,
+              518
+            ],
+            "minimumCoreMargin": 57,
+            "coreBoundaryPixels": 0,
+            "rgbaSha256": "d6ec009cb1d2bee1d764d4dd45f027f0feaeb076337b2a7ed255e98dceb015ef"
+          },
+          {
+            "view": "SW",
+            "cell": 1,
+            "coreBBoxExclusive": [
+              54,
+              127,
+              568,
+              511
+            ],
+            "minimumCoreMargin": 54,
+            "coreBoundaryPixels": 0,
+            "rgbaSha256": "00805436008c7e080af50565e067df6bf8bfa651d0dac3aa02bc994bc67b2e11"
+          },
+          {
+            "view": "NW",
+            "cell": 2,
+            "coreBBoxExclusive": [
+              59,
+              127,
+              574,
+              512
+            ],
+            "minimumCoreMargin": 53,
+            "coreBoundaryPixels": 0,
+            "rgbaSha256": "fd56cd9d2199aa07bbf8dc24c9cf8a38e43f7c89b614e2e705f730e961a7d606"
+          },
+          {
+            "view": "NE",
+            "cell": 3,
+            "coreBBoxExclusive": [
+              55,
+              118,
+              568,
+              518
+            ],
+            "minimumCoreMargin": 55,
+            "coreBoundaryPixels": 0,
+            "rgbaSha256": "c52370f5599c06c2566284fb811a5764978b94b00bd6fd7519ef7c40c125c424"
+          }
+        ]
+      }
+    },
+    {
+      "jobId": "golf-source-01-09-main-leaderboard",
+      "review": "PASS-practical-source-candidate",
+      "repairFrames": [],
+      "notes": [
+        "Frontscoregrid versus rearbacking/braces distinct; one+Xstair,3caps,2flags fixed.",
+        "Natural stair occlusion and apparent end changes retained; material condition upgrade only."
+      ],
+      "source": {
+        "file": "art/catalogue-completion-20261107/generated/golf-source-batch-01/native/golf-source-01-09-main-leaderboard/upgraded-normal-v1.png",
+        "sha256": "59fc3d8903f17ca51f8e2dc89333bfcac2d3a958d8dc3bb297e4b0fb13573b75",
+        "originalHashMatchesProvenance": true,
+        "nativeRGBA": true,
+        "dimensions": [
+          1254,
+          1254
+        ],
+        "trueZeroAlphaFraction": 0.3737291067308695,
+        "faintAlpha1to8Fraction": 0.3869009917864111,
+        "outerBorderAlphaMax": 1,
+        "cells": [
+          {
+            "view": "SE",
+            "cell": 0,
+            "coreBBoxExclusive": [
+              96,
+              80,
+              544,
+              536
+            ],
+            "minimumCoreMargin": 80,
+            "coreBoundaryPixels": 0,
+            "rgbaSha256": "4d93c8c650d1a6b631d2a065521fc7114804166a41a21c1640a04f497a905d07"
+          },
+          {
+            "view": "SW",
+            "cell": 1,
+            "coreBBoxExclusive": [
+              109,
+              82,
+              523,
+              536
+            ],
+            "minimumCoreMargin": 82,
+            "coreBoundaryPixels": 0,
+            "rgbaSha256": "d03c02bd828998df18280a5e32d745a31f3aa0abf578611aa16362515d93fcc1"
+          },
+          {
+            "view": "NW",
+            "cell": 2,
+            "coreBBoxExclusive": [
+              96,
+              65,
+              535,
+              528
+            ],
+            "minimumCoreMargin": 65,
+            "coreBoundaryPixels": 0,
+            "rgbaSha256": "498221b1b63ed9525685be9cf78568b5218a3bcd61de7a78bfb0e1406a84d52c"
+          },
+          {
+            "view": "NE",
+            "cell": 3,
+            "coreBBoxExclusive": [
+              96,
+              63,
+              513,
+              552
+            ],
+            "minimumCoreMargin": 63,
+            "coreBoundaryPixels": 0,
+            "rgbaSha256": "263ecaf4339b0e0f5765a379a82df47271eea52017051708ea32c1c67579ea48"
+          }
+        ]
+      }
+    }
+  ],
+  "expansion02Yaw": [
+    {
+      "key": "1990s-buff-brick-bay-bungalow",
+      "review": "HOLD-S-rear-opening-layout",
+      "repairFrames": [
+        "S"
+      ],
+      "notes": [
+        "Frontbay/door, sidewindowpairs, chimney consistent.",
+        "S rear still2windows+widepatioslider; guide and correctednormal-v2 need3windows+singlekitchendoor. N/E/W retained."
+      ],
+      "source": {
+        "file": "art/catalogue-completion-20261107/generated/era-houses/expansion-02/1990s-buff-brick-bay-bungalow/yaw8-v1.png",
+        "sha256": "e7268cb806916879051773218aa7ad67664d309692336c997012276aed83daf3",
+        "originalHashMatchesProvenance": true,
+        "nativeRGBA": true,
+        "dimensions": [
+          1254,
+          1254
+        ],
+        "trueZeroAlphaFraction": 0.7150947907684246,
+        "faintAlpha1to8Fraction": 0.020186758036166246,
+        "outerBorderAlphaMax": 1,
+        "cells": [
+          {
+            "view": "N",
+            "cell": 0,
+            "coreBBoxExclusive": [
+              91,
+              174,
+              537,
+              471
+            ],
+            "minimumCoreMargin": 90,
+            "coreBoundaryPixels": 0,
+            "rgbaSha256": "353264e270ae356fc895e054f7037ec51dc18efeb6a7c26144545d3e97efb604"
+          },
+          {
+            "view": "E",
+            "cell": 1,
+            "coreBBoxExclusive": [
+              144,
+              162,
+              499,
+              479
+            ],
+            "minimumCoreMargin": 128,
+            "coreBoundaryPixels": 0,
+            "rgbaSha256": "3783fc05d289af2a122423f847b3bed2efb059b2da0ab609feb434e15a913db1"
+          },
+          {
+            "view": "S",
+            "cell": 2,
+            "coreBBoxExclusive": [
+              94,
+              161,
+              531,
+              441
+            ],
+            "minimumCoreMargin": 94,
+            "coreBoundaryPixels": 0,
+            "rgbaSha256": "d5471938eb591163e260280f17697b7e4d630f88f359179545e50a97153902c5"
+          },
+          {
+            "view": "W",
+            "cell": 3,
+            "coreBBoxExclusive": [
+              147,
+              116,
+              500,
+              481
+            ],
+            "minimumCoreMargin": 116,
+            "coreBoundaryPixels": 0,
+            "rgbaSha256": "8696c5c39aee5e05c0c99614adc749192031ace4b7c61cc4c410ca38ab321d66"
+          }
+        ]
+      }
+    },
+    {
+      "key": "2000s-redbrick-single-storey-duplex",
+      "review": "PASS-practical-source-candidate",
+      "repairFrames": [],
+      "notes": [
+        "N2frontdoors+outerwindows; S2glasspatios+2centralwindows; E/Wfixedgablepairs; singlefloor and2roofvents."
+      ],
+      "source": {
+        "file": "art/catalogue-completion-20261107/generated/era-houses/expansion-02/2000s-redbrick-single-storey-duplex/yaw8-v1.png",
+        "sha256": "e89184dda107ba78befaac2873956ac47c47e4a937964c244efb46c71b1956a2",
+        "originalHashMatchesProvenance": true,
+        "nativeRGBA": true,
+        "dimensions": [
+          1254,
+          1254
+        ],
+        "trueZeroAlphaFraction": 0.7196410084221718,
+        "faintAlpha1to8Fraction": 0.046224012983015754,
+        "outerBorderAlphaMax": 1,
+        "cells": [
+          {
+            "view": "N",
+            "cell": 0,
+            "coreBBoxExclusive": [
+              89,
+              200,
+              548,
+              445
+            ],
+            "minimumCoreMargin": 79,
+            "coreBoundaryPixels": 0,
+            "rgbaSha256": "a3895b84dae2eec14ef80949339c86299b1e48ab42eaa3ae22cc36b230018169"
+          },
+          {
+            "view": "E",
+            "cell": 1,
+            "coreBBoxExclusive": [
+              149,
+              149,
+              483,
+              478
+            ],
+            "minimumCoreMargin": 144,
+            "coreBoundaryPixels": 0,
+            "rgbaSha256": "20eba9d1531ed39ee67d34851d229eae8836f1f6f0de62e18e76791066a637b2"
+          },
+          {
+            "view": "S",
+            "cell": 2,
+            "coreBBoxExclusive": [
+              90,
+              177,
+              547,
+              421
+            ],
+            "minimumCoreMargin": 80,
+            "coreBoundaryPixels": 0,
+            "rgbaSha256": "d86560355cd8ff278764e54ee2ba5e625c6abf89a4ad6eedec3204e7f4e09a01"
+          },
+          {
+            "view": "W",
+            "cell": 3,
+            "coreBBoxExclusive": [
+              151,
+              123,
+              483,
+              451
+            ],
+            "minimumCoreMargin": 123,
+            "coreBoundaryPixels": 0,
+            "rgbaSha256": "8cb9cc28c83d5705c68d257662d010ed275619d4c2213a931cfd27bcd0ebc3a9"
+          }
+        ]
+      }
+    },
+    {
+      "key": "2010s-small-six-flat-walkup",
+      "review": "PASS-practical-source-candidate",
+      "repairFrames": [],
+      "notes": [
+        "Nfront has6balconies=2perfloor×3 and1sharedentrance; Srearservice/windowgrid distinct.",
+        "E/Wgablegrids and frontbalcony protrusions/occlusion remain physicalconsistent; no rear-facing balconyfront pasted."
+      ],
+      "source": {
+        "file": "art/catalogue-completion-20261107/generated/era-houses/expansion-02/2010s-small-six-flat-walkup/yaw8-v1.png",
+        "sha256": "8a7e8160727276c0b7556f5220f41046c45cdbbdd89f4aa2ef313acc7964cfb1",
+        "originalHashMatchesProvenance": true,
+        "nativeRGBA": true,
+        "dimensions": [
+          1254,
+          1254
+        ],
+        "trueZeroAlphaFraction": 0.5629875944028551,
+        "faintAlpha1to8Fraction": 0.071830111744491,
+        "outerBorderAlphaMax": 1,
+        "cells": [
+          {
+            "view": "N",
+            "cell": 0,
+            "coreBBoxExclusive": [
+              71,
+              134,
+              541,
+              510
+            ],
+            "minimumCoreMargin": 71,
+            "coreBoundaryPixels": 0,
+            "rgbaSha256": "6f319d6db2185f4142ad94c43ac3bf6efb16800f6e356c08fbed44ac7be5f56b"
+          },
+          {
+            "view": "E",
+            "cell": 1,
+            "coreBBoxExclusive": [
+              171,
+              104,
+              506,
+              545
+            ],
+            "minimumCoreMargin": 82,
+            "coreBoundaryPixels": 0,
+            "rgbaSha256": "7033d5259092071f09f6ff111af5b5f11f09f0a20dba8bd2da6e04b797a735dc"
+          },
+          {
+            "view": "S",
+            "cell": 2,
+            "coreBBoxExclusive": [
+              72,
+              127,
+              542,
+              498
+            ],
+            "minimumCoreMargin": 72,
+            "coreBoundaryPixels": 0,
+            "rgbaSha256": "266e049662eef108fe8de75865cc6f24210d0fc169388ba70a89b0cbc3a5366b"
+          },
+          {
+            "view": "W",
+            "cell": 3,
+            "coreBBoxExclusive": [
+              150,
+              78,
+              487,
+              525
+            ],
+            "minimumCoreMargin": 78,
+            "coreBoundaryPixels": 0,
+            "rgbaSha256": "539156545843a29593392f067976ae9a0d63aec22f0b6933118c2a62b3b2c206"
+          }
+        ]
+      }
+    },
+    {
+      "key": "2020s-compact-gabled-solar-family-home",
+      "review": "PASS-practical-source-candidate",
+      "repairFrames": [],
+      "notes": [
+        "Exactly4solar modules onlyfrontroof; Nfrontdoor+sidelight/livingwindow, Srearglassslider distinct.",
+        "Eleftgable has4windows; Wphysicalrightgable correctly hasupperwindow pluslowerbathroomwindow; repairednormal-v2 now agrees."
+      ],
+      "source": {
+        "file": "art/catalogue-completion-20261107/generated/era-houses/expansion-02/2020s-compact-gabled-solar-family-home/yaw8-v1.png",
+        "sha256": "41ff3d722cb01a598b2fdd48f93a8a1de5966f6ca737dedba8593d5ea961639d",
+        "originalHashMatchesProvenance": true,
+        "nativeRGBA": true,
+        "dimensions": [
+          1254,
+          1254
+        ],
+        "trueZeroAlphaFraction": 0.701395089143767,
+        "faintAlpha1to8Fraction": 0.023534259746800668,
+        "outerBorderAlphaMax": 1,
+        "cells": [
+          {
+            "view": "N",
+            "cell": 0,
+            "coreBBoxExclusive": [
+              153,
+              159,
+              467,
+              524
+            ],
+            "minimumCoreMargin": 103,
+            "coreBoundaryPixels": 0,
+            "rgbaSha256": "1bc0534fb74452113d0ae7393df3a034ef16da9a746b25c797208db9e6d1f88f"
+          },
+          {
+            "view": "E",
+            "cell": 1,
+            "coreBBoxExclusive": [
+              137,
+              152,
+              497,
+              523
+            ],
+            "minimumCoreMargin": 104,
+            "coreBoundaryPixels": 0,
+            "rgbaSha256": "a9a3e33aee6f172e355b9975206de4cdf97ab05c9766c7815b941456ac258d45"
+          },
+          {
+            "view": "S",
+            "cell": 2,
+            "coreBBoxExclusive": [
+              147,
+              126,
+              474,
+              492
+            ],
+            "minimumCoreMargin": 126,
+            "coreBoundaryPixels": 0,
+            "rgbaSha256": "cc8f806060d2f0e92fc1fa1f6114dff3c7e4d62347bb57c7d01fb652d65343ac"
+          },
+          {
+            "view": "W",
+            "cell": 3,
+            "coreBBoxExclusive": [
+              110,
+              112,
+              485,
+              491
+            ],
+            "minimumCoreMargin": 110,
+            "coreBoundaryPixels": 0,
+            "rgbaSha256": "9d918d95092ebb52a19256b61e829b9e777d33e4401251d4ebf677de96d4f318"
+          }
+        ]
+      }
+    }
+  ],
+  "correctedExpansion02Normals": [
+    {
+      "key": "1990s-buff-brick-bay-bungalow",
+      "review": "PASS-practical-corrected-normal-source-candidate",
+      "notes": [
+        "NormalSW/NW now3rearwindows+singlekitchendoor exactlyasguide; formerwidepatioslider removed. Frontbay/door/chimney preserved."
+      ],
+      "source": {
+        "file": "art/catalogue-completion-20261107/generated/era-houses/expansion-02/1990s-buff-brick-bay-bungalow/normal-v2.png",
+        "sha256": "edec4a6256003942c95b30f408a16180b7bd3b466e312d3f232864631308022d",
+        "originalHashMatchesProvenance": true,
+        "nativeRGBA": true,
+        "dimensions": [
+          1254,
+          1254
+        ],
+        "trueZeroAlphaFraction": 0.7443002169771246,
+        "faintAlpha1to8Fraction": 0.016935916709273545,
+        "outerBorderAlphaMax": 1,
+        "cells": [
+          {
+            "view": "SE",
+            "cell": 0,
+            "coreBBoxExclusive": [
+              96,
+              159,
+              543,
+              486
+            ],
+            "minimumCoreMargin": 84,
+            "coreBoundaryPixels": 0,
+            "rgbaSha256": "5898de60279ac957f8d3efc58a330019f135230854f745b82721d23eb5ec9421"
+          },
+          {
+            "view": "SW",
+            "cell": 1,
+            "coreBBoxExclusive": [
+              83,
+              159,
+              532,
+              486
+            ],
+            "minimumCoreMargin": 83,
+            "coreBoundaryPixels": 0,
+            "rgbaSha256": "ff2e93685110de5d5664e3654db60b0e631383d3229b19e8c76f0f9898e9f9e4"
+          },
+          {
+            "view": "NW",
+            "cell": 2,
+            "coreBBoxExclusive": [
+              96,
+              135,
+              541,
+              464
+            ],
+            "minimumCoreMargin": 86,
+            "coreBoundaryPixels": 0,
+            "rgbaSha256": "9abaaaf438cdb0491f1102f954d099d650bd9ea8bf5779b011bce78e8a669842"
+          },
+          {
+            "view": "NE",
+            "cell": 3,
+            "coreBBoxExclusive": [
+              80,
+              131,
+              532,
+              465
+            ],
+            "minimumCoreMargin": 80,
+            "coreBoundaryPixels": 0,
+            "rgbaSha256": "3e6e937cc449dfb8bf724e784a01afddf201f6ab5a2b7ab7e3a56bad2e3879f4"
+          }
+        ]
+      }
+    },
+    {
+      "key": "2020s-compact-gabled-solar-family-home",
+      "review": "PASS-practical-corrected-normal-source-candidate",
+      "notes": [
+        "NEupperphysicalrightgablewindow restored atguideposition; lowerbathwindow and4frontroofsolar retained."
+      ],
+      "source": {
+        "file": "art/catalogue-completion-20261107/generated/era-houses/expansion-02/2020s-compact-gabled-solar-family-home/normal-v2.png",
+        "sha256": "ca6549666c74f6e6a2e430187bc6c2c8d18e90d2a49b4f032a38ddac4c070f2f",
+        "originalHashMatchesProvenance": true,
+        "nativeRGBA": true,
+        "dimensions": [
+          1254,
+          1254
+        ],
+        "trueZeroAlphaFraction": 0.7194146196286715,
+        "faintAlpha1to8Fraction": 0.019875155483314637,
+        "outerBorderAlphaMax": 1,
+        "cells": [
+          {
+            "view": "SE",
+            "cell": 0,
+            "coreBBoxExclusive": [
+              124,
+              144,
+              507,
+              496
+            ],
+            "minimumCoreMargin": 120,
+            "coreBoundaryPixels": 0,
+            "rgbaSha256": "a331a029497ea32248298e567d6d8efe903443f3c5513635bc7951716c430ab6"
+          },
+          {
+            "view": "SW",
+            "cell": 1,
+            "coreBBoxExclusive": [
+              119,
+              141,
+              504,
+              497
+            ],
+            "minimumCoreMargin": 119,
+            "coreBoundaryPixels": 0,
+            "rgbaSha256": "ea72a5a58387488d33cf2e95be88cd931a649e4d99ecdff5a73f8428552bf004"
+          },
+          {
+            "view": "NW",
+            "cell": 2,
+            "coreBBoxExclusive": [
+              120,
+              107,
+              517,
+              475
+            ],
+            "minimumCoreMargin": 107,
+            "coreBoundaryPixels": 0,
+            "rgbaSha256": "6228a91d0fabecdb5181db4d1b12f274aaf447687cf248c47df57665b86ff1b6"
+          },
+          {
+            "view": "NE",
+            "cell": 3,
+            "coreBBoxExclusive": [
+              114,
+              108,
+              509,
+              476
+            ],
+            "minimumCoreMargin": 108,
+            "coreBoundaryPixels": 0,
+            "rgbaSha256": "688ab94364ed2d9506a92baf40d3ebbdb50e18f177a9f7c96c06182cb00e024e"
+          }
+        ]
+      }
+    }
+  ],
+  "currentNormalExpansion02FamiliesAllCandidate": true,
+  "currentEightSourceExpansion02FamiliesCandidate": 3,
+  "currentEightSourceExpansion02FamilyHold": "1990sbungalow yawS rearopening needs correction.",
+  "concreteHolds": [
+    {
+      "family": "golf-source-01-02-tv-camera-tower",
+      "source": "upgraded-normal-v1.png",
+      "frame": "SW",
+      "part": "camera near-end frontlens/aim only",
+      "instruction": "Keep rear endplain asguide; frontlens belongs opposite hiddenend. Preserve scaffold/ladder/case and otherframes."
+    },
+    {
+      "family": "1990s-buff-brick-bay-bungalow",
+      "source": "yaw8-v1.png",
+      "frame": "S",
+      "part": "rear facade openings only",
+      "instruction": "Match guide/correctednormal-v2:3windows+singlekitchendoor, no widepatioslider. Keepother3yawframes."
+    }
+  ],
+  "separateUnresolvedCompoundHold": {
+    "sources": [
+      "budget-normal-v3.png",
+      "budget-yaw8-v2.png"
+    ],
+    "part": "dish fixed aim",
+    "reference": "Use newlycurvedv2technicalguidefirst; normalSW/yawSconvexback, normalNW/yawEthinobliquefront. Not new generalcompoundlayout hold."
+  },
+  "alphaPolicy": "Every strong opaque core must clear cell boundaries; per-source evidence below. Real zeroalpha present; faintalpha1–8exterior residue may remain. Source candidate is not final runtime mask/camera approval.",
+  "nativeSourcePixelsChanged": false,
+  "runtimeModified": false,
+  "importsRun": false,
+  "testsRun": false,
+  "buildRun": false,
+  "serverStarted": false,
+  "commitCreated": false
+}

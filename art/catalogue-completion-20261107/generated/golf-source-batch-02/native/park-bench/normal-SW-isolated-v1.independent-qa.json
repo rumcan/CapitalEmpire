@@ -1,0 +1,72 @@
+{
+  "schema": 1,
+  "as_of_utc": "2026-11-07T13:57:01.992280+00:00",
+  "review_result": "HOLD-both-finials-and-arch-lost;PASS-missing-SW-pose",
+  "source": {
+    "path": "generated/golf-source-batch-02/native/park-bench/normal-SW-isolated-v1.png",
+    "sha256": "229bfb8923d9a643de943c464ac8995cce56cddf708fcde4f5688bd970904785",
+    "bytes": 676401
+  },
+  "mode": "RGBA",
+  "dimensions": [
+    1254,
+    1254
+  ],
+  "source_original_hash_matches_parent": true,
+  "parent_provenance": {
+    "path": "generated/golf-source-batch-02/native/park-bench/normal-SW-isolated-v1.provenance.json",
+    "sha256": "d5306df73a6c226aefbd555fbcf97cce44211bd7f0a24b7385dce84b076c90a5",
+    "bytes": 2413
+  },
+  "exact_prompt_utf8_sha256": "b9c0a13e9877437e07208cbd7f5e1075b68fee9bfeae89571fd84ddf5b22a3ca",
+  "actual_generation_references": [
+    {
+      "path": "generated/golf-source-batch-02/native/park-bench/camera-calibration-refs/normal-SW-world-guide-single-v1.png",
+      "sha256": "894c7d5c20598045921252464010ce309a66e5fa3a8341e5cc2a45e44198f92a",
+      "bytes": 12237
+    },
+    {
+      "path": "generated/golf-source-batch-02/native/park-bench/camera-calibration-refs/normal-SW-identity-from-v2-BL-NW.png",
+      "sha256": "383efc946948c8c6beeca241b710c8450afaa7db6c15aaaffa32b75ed3aac5cb",
+      "bytes": 357702
+    }
+  ],
+  "zero_alpha_fraction": 0.8178028077297783,
+  "outer_4px_border_alpha_p50p95max": [
+    0.0,
+    0.0,
+    1.0
+  ],
+  "clear_horizontal_cut_y": null,
+  "clear_vertical_cut_by_row": null,
+  "cells": [
+    {
+      "cell": "single",
+      "rect_ltrb": [
+        0,
+        0,
+        1254,
+        1254
+      ],
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "minimum_core_margin_px": 159,
+      "boundary_core_pixels_alpha_gt128": 0,
+      "boundary_alpha_max": 1,
+      "native_rgba_rectangle_sha256": "d92aca2bc0c24d9a252186507a565b43fe7217f3f7018f287449dac67b6bb5cd"
+    }
+  ],
+  "all_cores_complete_at_reference_cuts": true,
+  "limited_source_identity_and_pose_pass": false,
+  "visual_observations": [
+    "Missing SW projection obtained: rear bench/slat long edge descends screen-right, map backing at left.",
+    "Identity drift: both original gold post finials absent and arched map-panel cap becomes straight. Needs native identity-only edit preserving this camera."
+  ],
+  "source_crops_saved": false,
+  "native_image_bytes_changed": false,
+  "owner_approved": false,
+  "runtime_ready": false,
+  "exact_numerical_angle_certified": false
+}

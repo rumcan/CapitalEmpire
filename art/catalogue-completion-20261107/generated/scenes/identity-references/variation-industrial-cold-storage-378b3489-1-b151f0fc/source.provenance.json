@@ -1,0 +1,62 @@
+{
+  "schema": 1,
+  "createdUtc": "2026-11-07T06:47:45.284562+00:00",
+  "exactRuntimeId": "variation:industrial-cold-storage-378b3489:1",
+  "source": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/building-views/variation-industrial-cold-storage-378b3489-1/NE.png",
+  "sourceSha256": "b3f9e9b8b34b890517e9242f5b2a5b290595e833c67cdd5af2764a67dd585d17",
+  "output": "identity-references/variation-industrial-cold-storage-378b3489-1-b151f0fc/source.png",
+  "outputSha256": "b3f9e9b8b34b890517e9242f5b2a5b290595e833c67cdd5af2764a67dd585d17",
+  "width": 570,
+  "height": 462,
+  "sourceCell": {
+    "kind": "already isolated native PNG; whole file",
+    "rectXYWH": [
+      0,
+      0,
+      570,
+      462
+    ]
+  },
+  "operation": "byte-for-byte PNG copy only; no resize, crop, recolour, key, repaint, registration or source mutation",
+  "selection": "registered corner NE native PNG for this exact subject",
+  "registeredCornerDirection": "NE",
+  "sourceEvidence": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\building-views\\variation-industrial-cold-storage-378b3489-1\\provenance.json",
+  "sourceReview": {
+    "integrationStatus": "ready",
+    "integrationReason": "All4 visible physical corners form front/right/back/left cycle; actual magenta alpha has no surrounding floor/haze. Matte timber/masonry/metal, charcoal roofs, amber practical lights and fixed screen-upper-right dusk are coherent with master. Layout-only repack preserves every nonzero source RGBA pixel without generation/repainting. Original low-alpha edge fringe does not truncate physical silhouette."
+  },
+  "sourceRegistration": {
+    "id": "variation:industrial-cold-storage-378b3489:1",
+    "version": "variation-industrial-cold-storage-378b3489-1-4views-v2",
+    "files": {
+      "NE": "b3f9e9b8b34b890517e9242f5b2a5b290595e833c67cdd5af2764a67dd585d17",
+      "SE": "d504f4a632a709bf81b445f61dd8d7dca2209871a113d636d7e24a89c4b770a9",
+      "SW": "d0e0471b54c08f034ff188127097e712a9acc50088512c9568464c20f829c9b6",
+      "NW": "a06b8e120e2337d4542b2bbd1dabe72e7008fb48a2cae76782b81ba2f39854d1"
+    }
+  },
+  "originalInventorySource": {
+    "library": "src/game/library.ts",
+    "librarySha256": "91b5190292c1005ac7b936f08e5e1ebf3be43c3aae99f92ea510775da83d9726",
+    "atlas": "src/assets/atlas/sprites-8-0.webp",
+    "atlasSha256": "3627e8012c994eb375699136eec4134215434643c5c267a76f1326638c2b9514",
+    "runtimePage": 8,
+    "localPage": 8,
+    "uv": [
+      0.265625,
+      0.804688,
+      0.442871,
+      0.979492
+    ],
+    "crop": {
+      "left": 544,
+      "top": 1648,
+      "width": 363,
+      "height": 358
+    },
+    "native": "art/theme-consistency/exports/buildings/variation-industrial-cold-storage-378b3489-1.native.png",
+    "nativeSha256": "92e2aed7fd964ee9338c4b79e80501729b6c9975372ca1cd41ddf7f014bce0f6"
+  },
+  "originalBusinessSourceCell": null,
+  "nativeReferenceApprovalClaimed": false
+}

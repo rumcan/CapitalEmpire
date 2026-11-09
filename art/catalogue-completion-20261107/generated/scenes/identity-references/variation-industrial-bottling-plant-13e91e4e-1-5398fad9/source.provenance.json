@@ -1,0 +1,62 @@
+{
+  "schema": 1,
+  "createdUtc": "2026-11-07T06:47:45.284562+00:00",
+  "exactRuntimeId": "variation:industrial-bottling-plant-13e91e4e:1",
+  "source": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/building-views/variation-industrial-bottling-plant-13e91e4e-1/NE.png",
+  "sourceSha256": "609ef2d5651ca3d9c18cc8dd9142e7ca0b8b200f704aa4cba42fc3207f1ab67e",
+  "output": "identity-references/variation-industrial-bottling-plant-13e91e4e-1-5398fad9/source.png",
+  "outputSha256": "609ef2d5651ca3d9c18cc8dd9142e7ca0b8b200f704aa4cba42fc3207f1ab67e",
+  "width": 543,
+  "height": 461,
+  "sourceCell": {
+    "kind": "already isolated native PNG; whole file",
+    "rectXYWH": [
+      0,
+      0,
+      543,
+      461
+    ]
+  },
+  "operation": "byte-for-byte PNG copy only; no resize, crop, recolour, key, repaint, registration or source mutation",
+  "selection": "registered corner NE native PNG for this exact subject",
+  "registeredCornerDirection": "NE",
+  "sourceEvidence": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\building-views\\variation-industrial-bottling-plant-13e91e4e-1\\provenance.json",
+  "sourceReview": {
+    "integrationStatus": "ready",
+    "integrationReason": "All4 visible physical corners form front/right/back/left cycle; actual magenta alpha has no surrounding floor/haze. Matte timber/masonry/metal, charcoal roofs, amber practical lights and fixed screen-upper-right dusk are coherent with master. Layout-only repack preserves every nonzero source RGBA pixel without generation/repainting. Original low-alpha edge fringe does not truncate physical silhouette."
+  },
+  "sourceRegistration": {
+    "id": "variation:industrial-bottling-plant-13e91e4e:1",
+    "version": "variation-industrial-bottling-plant-13e91e4e-1-4views-v2",
+    "files": {
+      "NE": "609ef2d5651ca3d9c18cc8dd9142e7ca0b8b200f704aa4cba42fc3207f1ab67e",
+      "SE": "b5f6f8a0a10f6498bd242c7895accb94bddfff05f774a453340a3aed63f94a69",
+      "SW": "f1b081560335db07415f074d7865dd0ed680eecb3e71880415954cb4f9e1fdf0",
+      "NW": "370f2235b4cb00a38f435718062d6a1e4f2402e0974a8c18639770ca833c53dc"
+    }
+  },
+  "originalInventorySource": {
+    "library": "src/game/library.ts",
+    "librarySha256": "91b5190292c1005ac7b936f08e5e1ebf3be43c3aae99f92ea510775da83d9726",
+    "atlas": "src/assets/atlas/sprites-5-0.webp",
+    "atlasSha256": "ae625d1156c036112692eb54fa253620cd951de8603ee9b3458e9f609bd50bf6",
+    "runtimePage": 5,
+    "localPage": 5,
+    "uv": [
+      0.460938,
+      0.71875,
+      0.666016,
+      0.926758
+    ],
+    "crop": {
+      "left": 944,
+      "top": 1472,
+      "width": 420,
+      "height": 426
+    },
+    "native": "art/theme-consistency/exports/buildings/variation-industrial-bottling-plant-13e91e4e-1.native.png",
+    "nativeSha256": "9ed37facaac66d6bc6f5064a8ae7e7f3a47cbf04f592c0670f905edf2ad5dd54"
+  },
+  "originalBusinessSourceCell": null,
+  "nativeReferenceApprovalClaimed": false
+}

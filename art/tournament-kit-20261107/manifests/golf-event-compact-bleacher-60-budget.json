@@ -1,0 +1,175 @@
+{
+ "schema": 1,
+ "projection": "normal+yaw8",
+ "version": 1,
+ "review": "candidate",
+ "footprintMetres": {
+  "width": 8,
+  "depth": 4
+ },
+ "pixelsPerMetre": 47.43,
+ "pixelCalibrationSpace": "orthographic-camera",
+ "baselineScale": 1,
+ "views": {
+  "normalNE": {
+   "anchor": {
+    "x": 300,
+    "y": 382.4
+   },
+   "headingDegrees": 0,
+   "pixelsPerMetre": 47.43,
+   "calibrationEvidence": "Silhouette fit, 2026-11-07: physical body 8 x 4 m, height 2.6 m. Scale per sheet (and per full-size override file) from the alpha bbox height (>128) = ground diamond + 0.866 x height at the view's heading (rotation-invariant); width ratio checked per view. Anchor = projected body centre from the bbox bottom/centre."
+  },
+  "normalSE": {
+   "anchor": {
+    "x": 319.5,
+    "y": 398.4
+   },
+   "headingDegrees": 270,
+   "pixelsPerMetre": 47.43,
+   "calibrationEvidence": "Silhouette fit, 2026-11-07: physical body 8 x 4 m, height 2.6 m. Scale per sheet (and per full-size override file) from the alpha bbox height (>128) = ground diamond + 0.866 x height at the view's heading (rotation-invariant); width ratio checked per view. Anchor = projected body centre from the bbox bottom/centre."
+  },
+  "normalSW": {
+   "anchor": {
+    "x": 317,
+    "y": 360.4
+   },
+   "headingDegrees": 180,
+   "pixelsPerMetre": 47.43,
+   "calibrationEvidence": "Silhouette fit, 2026-11-07: physical body 8 x 4 m, height 2.6 m. Scale per sheet (and per full-size override file) from the alpha bbox height (>128) = ground diamond + 0.866 x height at the view's heading (rotation-invariant); width ratio checked per view. Anchor = projected body centre from the bbox bottom/centre."
+  },
+  "normalNW": {
+   "anchor": {
+    "x": 311.5,
+    "y": 344.4
+   },
+   "headingDegrees": 90,
+   "pixelsPerMetre": 47.43,
+   "calibrationEvidence": "Silhouette fit, 2026-11-07: physical body 8 x 4 m, height 2.6 m. Scale per sheet (and per full-size override file) from the alpha bbox height (>128) = ground diamond + 0.866 x height at the view's heading (rotation-invariant); width ratio checked per view. Anchor = projected body centre from the bbox bottom/centre."
+  },
+  "yaw8N": {
+   "anchor": {
+    "x": 310,
+    "y": 385.4
+   },
+   "headingDegrees": 323,
+   "pixelsPerMetre": 58.79,
+   "calibrationEvidence": "Silhouette fit, 2026-11-07: physical body 8 x 4 m, height 2.6 m. Scale per sheet (and per full-size override file) from the alpha bbox height (>128) = ground diamond + 0.866 x height at the view's heading (rotation-invariant); width ratio checked per view. Anchor = projected body centre from the bbox bottom/centre."
+  },
+  "yaw8E": {
+   "anchor": {
+    "x": 318.5,
+    "y": 395.4
+   },
+   "headingDegrees": 233,
+   "pixelsPerMetre": 58.79,
+   "calibrationEvidence": "Silhouette fit, 2026-11-07: physical body 8 x 4 m, height 2.6 m. Scale per sheet (and per full-size override file) from the alpha bbox height (>128) = ground diamond + 0.866 x height at the view's heading (rotation-invariant); width ratio checked per view. Anchor = projected body centre from the bbox bottom/centre."
+  },
+  "yaw8S": {
+   "anchor": {
+    "x": 313.5,
+    "y": 335.4
+   },
+   "headingDegrees": 143,
+   "pixelsPerMetre": 58.79,
+   "calibrationEvidence": "Silhouette fit, 2026-11-07: physical body 8 x 4 m, height 2.6 m. Scale per sheet (and per full-size override file) from the alpha bbox height (>128) = ground diamond + 0.866 x height at the view's heading (rotation-invariant); width ratio checked per view. Anchor = projected body centre from the bbox bottom/centre."
+  },
+  "yaw8W": {
+   "anchor": {
+    "x": 291.5,
+    "y": 373.4
+   },
+   "headingDegrees": 53,
+   "pixelsPerMetre": 58.79,
+   "calibrationEvidence": "Silhouette fit, 2026-11-07: physical body 8 x 4 m, height 2.6 m. Scale per sheet (and per full-size override file) from the alpha bbox height (>128) = ground diamond + 0.866 x height at the view's heading (rotation-invariant); width ratio checked per view. Anchor = projected body centre from the bbox bottom/centre."
+  }
+ },
+ "subject": "golf:event-compact-bleacher-60-budget",
+ "name": "Compact bleacher 60 (budget)",
+ "source": {
+  "normal": "../bleachers/budget/normal-v1.png",
+  "yaw8": "../bleachers/budget/yaw8-v1.png"
+ },
+ "kind": "building",
+ "category": "Golf tournament",
+ "capacity": 60,
+ "visualTier": "budget",
+ "eventTypes": [
+  "compactBleacher60"
+ ],
+ "seating": {
+  "review": "approved",
+  "front": {
+   "x": 0,
+   "y": 1
+  },
+  "rows": [
+   {
+    "start": {
+     "x": -3.575,
+     "y": 1.8
+    },
+    "step": {
+     "x": 0.65,
+     "y": 0
+    },
+    "seats": 12,
+    "seatHeightMetres": 0.45
+   },
+   {
+    "start": {
+     "x": -3.575,
+     "y": 0.9
+    },
+    "step": {
+     "x": 0.65,
+     "y": 0
+    },
+    "seats": 12,
+    "seatHeightMetres": 0.8
+   },
+   {
+    "start": {
+     "x": -3.575,
+     "y": 0
+    },
+    "step": {
+     "x": 0.65,
+     "y": 0
+    },
+    "seats": 12,
+    "seatHeightMetres": 1.15
+   },
+   {
+    "start": {
+     "x": -3.575,
+     "y": -0.9000000000000001
+    },
+    "step": {
+     "x": 0.65,
+     "y": 0
+    },
+    "seats": 12,
+    "seatHeightMetres": 1.4999999999999998
+   },
+   {
+    "start": {
+     "x": -3.575,
+     "y": -1.8
+    },
+    "step": {
+     "x": 0.65,
+     "y": 0
+    },
+    "seats": 12,
+    "seatHeightMetres": 1.8499999999999999
+   }
+  ],
+  "entries": [
+   {
+    "x": 4.4,
+    "y": 1.8
+   }
+  ]
+ }
+}

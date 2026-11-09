@@ -1,0 +1,38 @@
+{
+  "schema": 1,
+  "createdUtc": "2026-11-07T06:47:45.284562+00:00",
+  "exactRuntimeId": "business:taxi-se",
+  "source": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/src/assets/businesses/capital-v1/png/taxi-se.png",
+  "sourceSha256": "d449e266dde95822ac8d7352313fa87b4cecb0027a489c75b70ba79d804369cc",
+  "output": "identity-references/business-taxi-se-db101f94/source.png",
+  "outputSha256": "d449e266dde95822ac8d7352313fa87b4cecb0027a489c75b70ba79d804369cc",
+  "width": 591,
+  "height": 343,
+  "sourceCell": {
+    "kind": "already isolated native PNG; whole file",
+    "rectXYWH": [
+      0,
+      0,
+      591,
+      343
+    ]
+  },
+  "operation": "byte-for-byte PNG copy only; no resize, crop, recolour, key, repaint, registration or source mutation",
+  "selection": "retained exact-ID business source master PNG",
+  "registeredCornerDirection": null,
+  "sourceEvidence": null,
+  "sourceReview": null,
+  "sourceRegistration": null,
+  "originalInventorySource": null,
+  "originalBusinessSourceCell": {
+    "id": "taxi-se",
+    "sourceSheet": "sliced/builtin/transport-vehicles.png",
+    "sourceCrop": [
+      644,
+      814,
+      583,
+      335
+    ]
+  },
+  "nativeReferenceApprovalClaimed": false
+}

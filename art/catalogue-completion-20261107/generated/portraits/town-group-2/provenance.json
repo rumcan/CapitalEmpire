@@ -1,0 +1,285 @@
+{
+  "generator": "native imagegen",
+  "imported_utc": "2026-11-07T06:36:06.868368+00:00",
+  "full_original_source": {
+    "path": "C:\\Users\\RAMPAGE\\.codex\\generated_images\\01a1b1fd-39ec-7220-8f11-86e4448833ea\\exec-8f171597-bb4a-48cb-b1e0-446af30b6944.png",
+    "sha256": "83ff1639650bc5fb94aef599964997e7140a6b6b85d5680123f33f3556df3309",
+    "bytes": 3671774
+  },
+  "archived_full_sheet": {
+    "path": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\portraits\\town-group-2\\source.png",
+    "sha256": "83ff1639650bc5fb94aef599964997e7140a6b6b85d5680123f33f3556df3309",
+    "bytes": 3671774
+  },
+  "exact_prompt": {
+    "path": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\portraits\\town-group-2\\prompt.txt",
+    "sha256": "3c58633250209c8980666798752ebf05a4275e9435ce4f00183a0fb9c5f7371f",
+    "bytes": 1653
+  },
+  "actual_reference_files": [],
+  "actual_references_complete": false,
+  "references_note": "Omitted reference paths are unknown, never inferred from expected identity files.",
+  "dimensions": [
+    1448,
+    1086
+  ],
+  "mode": "RGB",
+  "split_x": 724,
+  "split_y": 543,
+  "split_rule": "explicit reviewed coordinate if provided, otherwise floor half; right/bottom preserve remainder",
+  "central_RGB_transition_measurements": {
+    "x": [
+      {
+        "split_before_coordinate": 720,
+        "mean_absolute_RGB_difference": 11.064456721915287
+      },
+      {
+        "split_before_coordinate": 721,
+        "mean_absolute_RGB_difference": 14.866789441375076
+      },
+      {
+        "split_before_coordinate": 722,
+        "mean_absolute_RGB_difference": 13.014119091467158
+      },
+      {
+        "split_before_coordinate": 723,
+        "mean_absolute_RGB_difference": 15.732351135666056
+      },
+      {
+        "split_before_coordinate": 724,
+        "mean_absolute_RGB_difference": 53.046961325966855
+      },
+      {
+        "split_before_coordinate": 725,
+        "mean_absolute_RGB_difference": 25.30601596071209
+      },
+      {
+        "split_before_coordinate": 726,
+        "mean_absolute_RGB_difference": 16.92879066912216
+      },
+      {
+        "split_before_coordinate": 727,
+        "mean_absolute_RGB_difference": 18.79404542664211
+      },
+      {
+        "split_before_coordinate": 728,
+        "mean_absolute_RGB_difference": 14.604665438919582
+      }
+    ],
+    "y": [
+      {
+        "split_before_coordinate": 539,
+        "mean_absolute_RGB_difference": 9.081721915285451
+      },
+      {
+        "split_before_coordinate": 540,
+        "mean_absolute_RGB_difference": 9.986187845303867
+      },
+      {
+        "split_before_coordinate": 541,
+        "mean_absolute_RGB_difference": 10.976519337016574
+      },
+      {
+        "split_before_coordinate": 542,
+        "mean_absolute_RGB_difference": 31.201657458563535
+      },
+      {
+        "split_before_coordinate": 543,
+        "mean_absolute_RGB_difference": 61.02578268876611
+      },
+      {
+        "split_before_coordinate": 544,
+        "mean_absolute_RGB_difference": 13.943830570902394
+      },
+      {
+        "split_before_coordinate": 545,
+        "mean_absolute_RGB_difference": 10.950046040515653
+      },
+      {
+        "split_before_coordinate": 546,
+        "mean_absolute_RGB_difference": 10.79903314917127
+      },
+      {
+        "split_before_coordinate": 547,
+        "mean_absolute_RGB_difference": 10.979051565377532
+      }
+    ]
+  },
+  "cell_order": [
+    [
+      "person:3d:town_k_girl",
+      "person:3d:town_m_business"
+    ],
+    [
+      "person:3d:town_m_elder",
+      "person:3d:town_m_jogger"
+    ]
+  ],
+  "exact_reconstruction_verified": true,
+  "records": [
+    {
+      "look_id": "person:3d:town_k_girl",
+      "cell_index": 0,
+      "cell_position": "top-left",
+      "source_crop_box": [
+        0,
+        0,
+        724,
+        543
+      ],
+      "dimensions": [
+        724,
+        543
+      ],
+      "mode": "RGB",
+      "source_file": {
+        "path": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\portraits\\town-group-2\\person-3d-town-k-girl.native.png",
+        "sha256": "66115ff9d29f10be9a833017a3a87d8bc062204fc3319c11bbeb686444e722ab",
+        "bytes": 846065
+      },
+      "pixel_sha256": "b2ec7a652c778dab6a0b47714fbb8573e0c8b04a4a0d4cd4c75d7e0539f1f711",
+      "operation": "exact native rectangle; no resize/repaint/alpha reconstruction",
+      "parent_reviewed": true,
+      "owner_approved": false,
+      "runtime_ready": true,
+      "runtime_integrated": true,
+      "manifest_record": {
+        "lookId": "person:3d:town_k_girl",
+        "file": "town-k-girl.png",
+        "w": 724,
+        "h": 543,
+        "bytes": 846065,
+        "state": "one"
+      },
+      "runtime_file": {
+        "path": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\src\\assets\\portraits\\town-k-girl.png",
+        "sha256": "66115ff9d29f10be9a833017a3a87d8bc062204fc3319c11bbeb686444e722ab",
+        "bytes": 846065
+      }
+    },
+    {
+      "look_id": "person:3d:town_m_business",
+      "cell_index": 1,
+      "cell_position": "top-right",
+      "source_crop_box": [
+        724,
+        0,
+        1448,
+        543
+      ],
+      "dimensions": [
+        724,
+        543
+      ],
+      "mode": "RGB",
+      "source_file": {
+        "path": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\portraits\\town-group-2\\person-3d-town-m-business.native.png",
+        "sha256": "677195dca24325dc4e1ddb7cd59957baea4b590fdc8769c17fc715249a97463c",
+        "bytes": 788939
+      },
+      "pixel_sha256": "87ff2f633f2fdde901858728aa455d731f72b7d9e020ebf66c461d38886bf20f",
+      "operation": "exact native rectangle; no resize/repaint/alpha reconstruction",
+      "parent_reviewed": true,
+      "owner_approved": false,
+      "runtime_ready": true,
+      "runtime_integrated": true,
+      "manifest_record": {
+        "lookId": "person:3d:town_m_business",
+        "file": "town-m-business.png",
+        "w": 724,
+        "h": 543,
+        "bytes": 788939,
+        "state": "one"
+      },
+      "runtime_file": {
+        "path": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\src\\assets\\portraits\\town-m-business.png",
+        "sha256": "677195dca24325dc4e1ddb7cd59957baea4b590fdc8769c17fc715249a97463c",
+        "bytes": 788939
+      }
+    },
+    {
+      "look_id": "person:3d:town_m_elder",
+      "cell_index": 2,
+      "cell_position": "bottom-left",
+      "source_crop_box": [
+        0,
+        543,
+        724,
+        1086
+      ],
+      "dimensions": [
+        724,
+        543
+      ],
+      "mode": "RGB",
+      "source_file": {
+        "path": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\portraits\\town-group-2\\person-3d-town-m-elder.native.png",
+        "sha256": "89788ec1b9148c2a52e46bf5c573ae19a6c196e13f2fa83ff2487eea315fbdbd",
+        "bytes": 838748
+      },
+      "pixel_sha256": "736c0ed77f9fa78d42f010d7ab5fabdfb26753cf220862142bbaa2971be2e839",
+      "operation": "exact native rectangle; no resize/repaint/alpha reconstruction",
+      "parent_reviewed": true,
+      "owner_approved": false,
+      "runtime_ready": true,
+      "runtime_integrated": true,
+      "manifest_record": {
+        "lookId": "person:3d:town_m_elder",
+        "file": "town-m-elder.png",
+        "w": 724,
+        "h": 543,
+        "bytes": 838748,
+        "state": "one"
+      },
+      "runtime_file": {
+        "path": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\src\\assets\\portraits\\town-m-elder.png",
+        "sha256": "89788ec1b9148c2a52e46bf5c573ae19a6c196e13f2fa83ff2487eea315fbdbd",
+        "bytes": 838748
+      }
+    },
+    {
+      "look_id": "person:3d:town_m_jogger",
+      "cell_index": 3,
+      "cell_position": "bottom-right",
+      "source_crop_box": [
+        724,
+        543,
+        1448,
+        1086
+      ],
+      "dimensions": [
+        724,
+        543
+      ],
+      "mode": "RGB",
+      "source_file": {
+        "path": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\portraits\\town-group-2\\person-3d-town-m-jogger.native.png",
+        "sha256": "aef69c7f4514f07427829309dc6b7f0d1e7246acb4effe2f3173eb145f6b3a42",
+        "bytes": 852079
+      },
+      "pixel_sha256": "11513f71db905974f4e3d88f1cf5be3ee327a08223c803fa441c8ef429aee17c",
+      "operation": "exact native rectangle; no resize/repaint/alpha reconstruction",
+      "parent_reviewed": true,
+      "owner_approved": false,
+      "runtime_ready": true,
+      "runtime_integrated": true,
+      "manifest_record": {
+        "lookId": "person:3d:town_m_jogger",
+        "file": "town-m-jogger.png",
+        "w": 724,
+        "h": 543,
+        "bytes": 852079,
+        "state": "one"
+      },
+      "runtime_file": {
+        "path": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\src\\assets\\portraits\\town-m-jogger.png",
+        "sha256": "aef69c7f4514f07427829309dc6b7f0d1e7246acb4effe2f3173eb145f6b3a42",
+        "bytes": 852079
+      }
+    }
+  ],
+  "parent_reviewed": true,
+  "owner_approved": false,
+  "runtime_integrated": true,
+  "status": "imported-parent-reviewed-native-candidates"
+}

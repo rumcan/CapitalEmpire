@@ -1,0 +1,62 @@
+{
+  "schema": 1,
+  "createdUtc": "2026-11-07T06:47:45.284562+00:00",
+  "exactRuntimeId": "variation:static-shop_market_rear-f9272004-plain:1",
+  "source": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/building-views/variation-static-shop_market_rear-f9272004-plain-1/NE.png",
+  "sourceSha256": "b334a0bfeea43e1741a86db47d090c3e86c06b2855266da47f074dafa1f0d717",
+  "output": "identity-references/variation-static-shop-market-rear-f9272004-plain-1-2f9e23e4/source.png",
+  "outputSha256": "b334a0bfeea43e1741a86db47d090c3e86c06b2855266da47f074dafa1f0d717",
+  "width": 572,
+  "height": 479,
+  "sourceCell": {
+    "kind": "already isolated native PNG; whole file",
+    "rectXYWH": [
+      0,
+      0,
+      572,
+      479
+    ]
+  },
+  "operation": "byte-for-byte PNG copy only; no resize, crop, recolour, key, repaint, registration or source mutation",
+  "selection": "registered corner NE native PNG for this exact subject",
+  "registeredCornerDirection": "NE",
+  "sourceEvidence": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\building-views\\variation-static-shop_market_rear-f9272004-plain-1\\provenance.json",
+  "sourceReview": {
+    "integrationStatus": "ready",
+    "integrationReason": "Loading door/window/vent face occurs NE/NW opposite corners; blank rear and utility side faces SE/SW are distinct. Roof equipment follows turns, no grey floors."
+  },
+  "sourceRegistration": {
+    "id": "variation:static-shop_market_rear-f9272004-plain:1",
+    "version": "variation-static-shop_market_rear-f9272004-plain-1-4views-v1",
+    "files": {
+      "NE": "b334a0bfeea43e1741a86db47d090c3e86c06b2855266da47f074dafa1f0d717",
+      "SE": "0367ba067fe35e67b1400f1b6f2d8c0f142761bcfb890faab1c1cbebe03386e4",
+      "SW": "f0b470997b685162b69553745054172a91bb16f35d2e072b4c2b1831ae501dcc",
+      "NW": "81de68b0d0a2318ee3718236cc88ae6fce8e1ffe6f198b39ae43666f190880b5"
+    }
+  },
+  "originalInventorySource": {
+    "library": "src/game/library.ts",
+    "librarySha256": "91b5190292c1005ac7b936f08e5e1ebf3be43c3aae99f92ea510775da83d9726",
+    "atlas": "src/assets/atlas/sprites-11-0.webp",
+    "atlasSha256": "a8946da0d9c9231cd8576b9ebf3662b2c449685064dd3d9af3cf40715c50f4a6",
+    "runtimePage": 11,
+    "localPage": 11,
+    "uv": [
+      0.515625,
+      0.78125,
+      0.656738,
+      0.903809
+    ],
+    "crop": {
+      "left": 1056,
+      "top": 1600,
+      "width": 289,
+      "height": 251
+    },
+    "native": "art/theme-consistency/exports/buildings/variation-static-shop_market_rear-f9272004-plain-1.native.png",
+    "nativeSha256": "b90cf24190fde880ecbabe1a354c919d34e62309bfcdbefea3b13a3f603f7769"
+  },
+  "originalBusinessSourceCell": null,
+  "nativeReferenceApprovalClaimed": false
+}

@@ -1,0 +1,44 @@
+{
+  "id": "newprop:rope-walkway",
+  "name": "Rope walkway",
+  "referencePNG": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-02\\references\\rope-walkway.source.png",
+  "originalSourcePNG": "E:\\Repos\\CapitalEmpire\\All Generated Images\\exec-5944b53f-4b43-44dc-a10e-7eae61417bf9.png",
+  "copiedOriginalSheet": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-02\\original-sheets\\exec-5944b53f-4b43-44dc-a10e-7eae61417bf9.png",
+  "originalSheetSHA256": "af41568faaa6af5c89f8a06cc03b0304d781020607e81aea822001ef1952e49b",
+  "referenceSHA256": "7ffe2072f61cff60abb48631948f9df608d4c66256b6282a144506847c4acca6",
+  "sourceRectXYWH": [
+    24,
+    752,
+    662,
+    385
+  ],
+  "sourceCell": "bottom left",
+  "sourceSheetContainsFourDifferentSubjectsNotRotations": true,
+  "sourceCropSize": [
+    662,
+    385
+  ],
+  "cropOperation": "lossless native RGBA crop, no resize, recolour, cleanup or synthesis",
+  "sourceMetadataCutOff": false,
+  "runtimeLibrarySource": "src/game/new-props-library.ts",
+  "runtimeBaseBoxesInTiles": [
+    {
+      "hx": 0.8,
+      "hy": 0.8,
+      "dx": 0,
+      "dy": 0
+    }
+  ],
+  "runtimeDisplayPixels": [
+    102.4,
+    59.55
+  ],
+  "manifestHalfExtentsMetresFirstGuess": [
+    0.8,
+    0.8
+  ],
+  "dimensionCaution": "Manifest first-guess dimensions and runtime boxes are not measured native physical dimensions; any new real-object size is a source-design proposal only. No runtime changes.",
+  "visualInspection": "inspected",
+  "visualNotes": "Confirmed two open swing gates, four posts and perforated ramp; not a generic rope walkway.",
+  "sourceOnlyNotReleaseProof": true
+}

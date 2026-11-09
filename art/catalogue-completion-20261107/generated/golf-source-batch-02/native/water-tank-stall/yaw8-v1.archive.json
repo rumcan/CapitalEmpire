@@ -1,0 +1,24 @@
+[
+  {
+    "key": "newprop:water-tank-stall",
+    "slug": "water-tank-stall",
+    "family": "yaw8",
+    "condition": "base",
+    "version": 1,
+    "target": "generated/golf-source-batch-02/native/water-tank-stall/yaw8-v1.png",
+    "refs": [
+      "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-02\\fixed-world-guides-v2\\water-tank-stall\\guides\\yaw8-world-v1.png",
+      "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/golf-source-batch-02/native/water-tank-stall/normal-v2.png"
+    ],
+    "prompt": "Paint FOUR exact near-cardinal views of ONE SAME golfprop from fixed-world REFERENCE1 as finished native painterlygameart matchingidentity/materialsofREFERENCE2. Guidecontrols camera andphysicalsidepositions; reference2 is finelypainted material/assemblyidentityONLY, doNOTrepeatitscornercameras. Fixedrequirements: Closed galvanized cistern; exactly two FRONT (-Y) taps above an open trough. Fill cap stays REAR-LEFT (-X,+Y); towel and basket stay physical RIGHT (+X); bucket stays FRONT-RIGHT. Four legs, rear V braces. No sign, 12 plaque, map, tarp, plants or floor slab.. Allattachments remainonSAMEphysicalside andsameoperatingstate throughthe4quarterturns. Frontlabels/maps/coinslots/taps neverappearonrearbacks. Rearbraces/basket/towel/crank mustobeyguideocclusion. Preserveallidentity details, including archedcaps andgoldfinials whenpresent. FourviewcellsN E / S W asguide, orthographic30degreesDOWN andnominal8degreesoffcardinal; broadmainface/narrowside, not45corner. Matchtheexistingdetailed hand-paintedminiaturegolf-townstyle: wood/enamel/rope/brass/galvanizedsteel/cloth/dimpledgolfballs, notflatlowpolyguidefacets. Late-afternoonDAYTIME sunfixedSCREENUPPERRIGHT/shadowsLOWERLEFT,lampsOFF. Equalphysicalscale, completeisolatedopaqueobjects/generousZEROALPHAtransparentmargins/gutters; no atmosphericgreyhalo, groundtile, grass/plants/people/textlabels/UI/grid. Actualfunctionalrampretained. Symmetricobjectsmayhavenaturallysimilarsilhouettes; donotaddpartstofakeuniqueness.",
+    "source": "C:/Users/RAMPAGE/.codex/generated_images/01a1b1fd-39ec-7220-8f11-86e4448833ea/exec-61cb1732-9af6-4896-8a6c-a144b787e120.png",
+    "references": [
+      "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-02\\fixed-world-guides-v2\\water-tank-stall\\guides\\yaw8-world-v1.png",
+      "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/golf-source-batch-02/native/water-tank-stall/normal-v2.png"
+    ],
+    "status": "native-source-candidate-pending-visual-review",
+    "runtime_imported": false,
+    "sha256": "856b1736cdccfa93df744f4e2b244385b4cdb6f29884b32ddda8b95c4d4cd124",
+    "native_bytes_preserved": true
+  }
+]

@@ -1,0 +1,15 @@
+{
+  "key": "budget-1950-shanty-hut",
+  "source": "C:/Users/RAMPAGE/.codex/generated_images/01a1b1fd-39ec-7220-8f11-86e4448833ea/exec-3c5f90ba-de45-4d32-84b4-974b983c13cd.png",
+  "target": "generated/budget-1950-shanty-hut/yaw8-v1.png",
+  "prompt": "Create the matching near-cardinal2x2 sprite sheet for this exact ordinary1950s budget building. Reference1 is exact single-world geometry and8degree-yaw/30degree-down camera. Reference2 is this building's selected painted identity, materials and condition. Small ordinary1950s cream-painted clapboard caretaker cabin. One green front door at left and one small front window at right; one right-side window and one high rear vent. Straight manufactured lumber, grey corrugated gable roof, modest peeling paint and age. Keep the exact same footprint, height, roof, worn paint, door/window/vent count and physical locations across all cells. Match reference1 cells N E / S W. Main bases slant subtly by0.07027rise/run; narrow secondary side only, never square-on or45degree corners. Carefully retain any door/window sliver visible on a narrow side. No invented additional windows/doors or chimney. Cheap old manufactured real-world building used in1985, straight timber/steel construction, no goblin village, crooked logs, ropes or patchwork tarps. Detailed hand-painted miniature game materials matching reference2. Late-afternoon DAYTIME sun SCREEN UPPER RIGHT, shadows LOWER LEFT, lamps/windows not glowing. Four complete separate opaque sprites on exactly zero-alpha transparent background, same scale, generous cell margins. No text, technical lines, grid, plants, people, cars, ground plates, outside shadow puddles, scenery or haze.",
+  "references": [
+    "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\budget-1950-shanty-hut\\guides\\yaw8-world-v1.png",
+    "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/budget-1950-shanty-hut/normal-v1.png"
+  ],
+  "era": "1950s",
+  "status": "native source candidate; alpha/geometry/camera QA pending",
+  "runtime_imported": false,
+  "sha256": "3abc1b0a617c29b7336ab9a9ade9b087740953e9b9be1ad19e42b457201184fc",
+  "native_bytes_preserved": true
+}

@@ -1,0 +1,458 @@
+{
+  "schema": 1,
+  "sourceOnly": true,
+  "cameraCertification": "NOT CERTIFIED",
+  "physicalScaleAndAnchorCalibration": "NOT APPROVED",
+  "runtimeReady": false,
+  "ownerApprovalInferred": false,
+  "holds": [
+    "View labels name requested source cameras; numerical 30-degree pitch/8-degree yaw conformity is not certified by these source crops.",
+    "Native per-view scale and ground anchors need calibration; no scaling, trimming or anchor guesses were applied.",
+    "The TV upgraded normal SW isolated original remains1254x1254; all four compound upgraded yaw isolated originals remain1536x1024. Most sheet cells are around627px and some authored unequal crops differ. Native sizes intentionally remain unequal.",
+    "Original faint alpha residue and hidden RGB are preserved. Source practical review is not final alpha-mask release approval.",
+    "Event art subject IDs are proposals distinct from old incorrect stand-in subjects; no runtime aliases, imports, capacity or economy changes are included.",
+    "No claim that the whole baseline building/prop catalogue is complete or that this bundle is deployed."
+  ],
+  "sets": [
+    {
+      "jobId": "golf-source-01-01-food-truck",
+      "artSubjectId": "golf:event-food-truck",
+      "condition": "budget",
+      "slotIds": [
+        "golf-source-01-01-food-truck:budget:normalSE",
+        "golf-source-01-01-food-truck:budget:normalSW",
+        "golf-source-01-01-food-truck:budget:normalNW",
+        "golf-source-01-01-food-truck:budget:normalNE",
+        "golf-source-01-01-food-truck:budget:yaw8N",
+        "golf-source-01-01-food-truck:budget:yaw8E",
+        "golf-source-01-01-food-truck:budget:yaw8S",
+        "golf-source-01-01-food-truck:budget:yaw8W"
+      ],
+      "requiredViews": 8,
+      "slotsWithExistingSelection": 8,
+      "pendingOrHeldSlots": 0,
+      "cameraCertification": false,
+      "runtimeReady": false
+    },
+    {
+      "jobId": "golf-source-01-01-food-truck",
+      "artSubjectId": "golf:event-food-truck",
+      "condition": "upgraded",
+      "slotIds": [
+        "golf-source-01-01-food-truck:upgraded:normalSE",
+        "golf-source-01-01-food-truck:upgraded:normalSW",
+        "golf-source-01-01-food-truck:upgraded:normalNW",
+        "golf-source-01-01-food-truck:upgraded:normalNE",
+        "golf-source-01-01-food-truck:upgraded:yaw8N",
+        "golf-source-01-01-food-truck:upgraded:yaw8E",
+        "golf-source-01-01-food-truck:upgraded:yaw8S",
+        "golf-source-01-01-food-truck:upgraded:yaw8W"
+      ],
+      "requiredViews": 8,
+      "slotsWithExistingSelection": 8,
+      "pendingOrHeldSlots": 0,
+      "cameraCertification": false,
+      "runtimeReady": false
+    },
+    {
+      "jobId": "golf-source-01-02-tv-camera-tower",
+      "artSubjectId": "golf:event-tv-camera-tower",
+      "condition": "budget",
+      "slotIds": [
+        "golf-source-01-02-tv-camera-tower:budget:normalSE",
+        "golf-source-01-02-tv-camera-tower:budget:normalSW",
+        "golf-source-01-02-tv-camera-tower:budget:normalNW",
+        "golf-source-01-02-tv-camera-tower:budget:normalNE",
+        "golf-source-01-02-tv-camera-tower:budget:yaw8N",
+        "golf-source-01-02-tv-camera-tower:budget:yaw8E",
+        "golf-source-01-02-tv-camera-tower:budget:yaw8S",
+        "golf-source-01-02-tv-camera-tower:budget:yaw8W"
+      ],
+      "requiredViews": 8,
+      "slotsWithExistingSelection": 8,
+      "pendingOrHeldSlots": 0,
+      "cameraCertification": false,
+      "runtimeReady": false
+    },
+    {
+      "jobId": "golf-source-01-02-tv-camera-tower",
+      "artSubjectId": "golf:event-tv-camera-tower",
+      "condition": "upgraded",
+      "slotIds": [
+        "golf-source-01-02-tv-camera-tower:upgraded:normalSE",
+        "golf-source-01-02-tv-camera-tower:upgraded:normalSW",
+        "golf-source-01-02-tv-camera-tower:upgraded:normalNW",
+        "golf-source-01-02-tv-camera-tower:upgraded:normalNE",
+        "golf-source-01-02-tv-camera-tower:upgraded:yaw8N",
+        "golf-source-01-02-tv-camera-tower:upgraded:yaw8E",
+        "golf-source-01-02-tv-camera-tower:upgraded:yaw8S",
+        "golf-source-01-02-tv-camera-tower:upgraded:yaw8W"
+      ],
+      "requiredViews": 8,
+      "slotsWithExistingSelection": 8,
+      "pendingOrHeldSlots": 0,
+      "cameraCertification": false,
+      "runtimeReady": false
+    },
+    {
+      "jobId": "golf-source-01-03-broadcast-compound",
+      "artSubjectId": "golf:event-broadcast-compound",
+      "condition": "budget",
+      "slotIds": [
+        "golf-source-01-03-broadcast-compound:budget:normalSE",
+        "golf-source-01-03-broadcast-compound:budget:normalSW",
+        "golf-source-01-03-broadcast-compound:budget:normalNW",
+        "golf-source-01-03-broadcast-compound:budget:normalNE",
+        "golf-source-01-03-broadcast-compound:budget:yaw8N",
+        "golf-source-01-03-broadcast-compound:budget:yaw8E",
+        "golf-source-01-03-broadcast-compound:budget:yaw8S",
+        "golf-source-01-03-broadcast-compound:budget:yaw8W"
+      ],
+      "requiredViews": 8,
+      "slotsWithExistingSelection": 8,
+      "pendingOrHeldSlots": 0,
+      "cameraCertification": false,
+      "runtimeReady": false
+    },
+    {
+      "jobId": "golf-source-01-03-broadcast-compound",
+      "artSubjectId": "golf:event-broadcast-compound",
+      "condition": "upgraded",
+      "slotIds": [
+        "golf-source-01-03-broadcast-compound:upgraded:normalSE",
+        "golf-source-01-03-broadcast-compound:upgraded:normalSW",
+        "golf-source-01-03-broadcast-compound:upgraded:normalNW",
+        "golf-source-01-03-broadcast-compound:upgraded:normalNE",
+        "golf-source-01-03-broadcast-compound:upgraded:yaw8N",
+        "golf-source-01-03-broadcast-compound:upgraded:yaw8E",
+        "golf-source-01-03-broadcast-compound:upgraded:yaw8S",
+        "golf-source-01-03-broadcast-compound:upgraded:yaw8W"
+      ],
+      "requiredViews": 8,
+      "slotsWithExistingSelection": 8,
+      "pendingOrHeldSlots": 0,
+      "cameraCertification": false,
+      "runtimeReady": false
+    },
+    {
+      "jobId": "golf-source-01-04-first-aid-tent",
+      "artSubjectId": "golf:event-first-aid-tent",
+      "condition": "budget",
+      "slotIds": [
+        "golf-source-01-04-first-aid-tent:budget:normalSE",
+        "golf-source-01-04-first-aid-tent:budget:normalSW",
+        "golf-source-01-04-first-aid-tent:budget:normalNW",
+        "golf-source-01-04-first-aid-tent:budget:normalNE",
+        "golf-source-01-04-first-aid-tent:budget:yaw8N",
+        "golf-source-01-04-first-aid-tent:budget:yaw8E",
+        "golf-source-01-04-first-aid-tent:budget:yaw8S",
+        "golf-source-01-04-first-aid-tent:budget:yaw8W"
+      ],
+      "requiredViews": 8,
+      "slotsWithExistingSelection": 8,
+      "pendingOrHeldSlots": 0,
+      "cameraCertification": false,
+      "runtimeReady": false
+    },
+    {
+      "jobId": "golf-source-01-04-first-aid-tent",
+      "artSubjectId": "golf:event-first-aid-tent",
+      "condition": "upgraded",
+      "slotIds": [
+        "golf-source-01-04-first-aid-tent:upgraded:normalSE",
+        "golf-source-01-04-first-aid-tent:upgraded:normalSW",
+        "golf-source-01-04-first-aid-tent:upgraded:normalNW",
+        "golf-source-01-04-first-aid-tent:upgraded:normalNE",
+        "golf-source-01-04-first-aid-tent:upgraded:yaw8N",
+        "golf-source-01-04-first-aid-tent:upgraded:yaw8E",
+        "golf-source-01-04-first-aid-tent:upgraded:yaw8S",
+        "golf-source-01-04-first-aid-tent:upgraded:yaw8W"
+      ],
+      "requiredViews": 8,
+      "slotsWithExistingSelection": 8,
+      "pendingOrHeldSlots": 0,
+      "cameraCertification": false,
+      "runtimeReady": false
+    },
+    {
+      "jobId": "golf-source-01-05-info-will-call-booth",
+      "artSubjectId": "golf:event-info-will-call-booth",
+      "condition": "budget",
+      "slotIds": [
+        "golf-source-01-05-info-will-call-booth:budget:normalSE",
+        "golf-source-01-05-info-will-call-booth:budget:normalSW",
+        "golf-source-01-05-info-will-call-booth:budget:normalNW",
+        "golf-source-01-05-info-will-call-booth:budget:normalNE",
+        "golf-source-01-05-info-will-call-booth:budget:yaw8N",
+        "golf-source-01-05-info-will-call-booth:budget:yaw8E",
+        "golf-source-01-05-info-will-call-booth:budget:yaw8S",
+        "golf-source-01-05-info-will-call-booth:budget:yaw8W"
+      ],
+      "requiredViews": 8,
+      "slotsWithExistingSelection": 8,
+      "pendingOrHeldSlots": 0,
+      "cameraCertification": false,
+      "runtimeReady": false
+    },
+    {
+      "jobId": "golf-source-01-05-info-will-call-booth",
+      "artSubjectId": "golf:event-info-will-call-booth",
+      "condition": "upgraded",
+      "slotIds": [
+        "golf-source-01-05-info-will-call-booth:upgraded:normalSE",
+        "golf-source-01-05-info-will-call-booth:upgraded:normalSW",
+        "golf-source-01-05-info-will-call-booth:upgraded:normalNW",
+        "golf-source-01-05-info-will-call-booth:upgraded:normalNE",
+        "golf-source-01-05-info-will-call-booth:upgraded:yaw8N",
+        "golf-source-01-05-info-will-call-booth:upgraded:yaw8E",
+        "golf-source-01-05-info-will-call-booth:upgraded:yaw8S",
+        "golf-source-01-05-info-will-call-booth:upgraded:yaw8W"
+      ],
+      "requiredViews": 8,
+      "slotsWithExistingSelection": 8,
+      "pendingOrHeldSlots": 0,
+      "cameraCertification": false,
+      "runtimeReady": false
+    },
+    {
+      "jobId": "golf-source-01-06-four-lane-entrance",
+      "artSubjectId": "golf:event-four-lane-entrance",
+      "condition": "budget",
+      "slotIds": [
+        "golf-source-01-06-four-lane-entrance:budget:normalSE",
+        "golf-source-01-06-four-lane-entrance:budget:normalSW",
+        "golf-source-01-06-four-lane-entrance:budget:normalNW",
+        "golf-source-01-06-four-lane-entrance:budget:normalNE",
+        "golf-source-01-06-four-lane-entrance:budget:yaw8N",
+        "golf-source-01-06-four-lane-entrance:budget:yaw8E",
+        "golf-source-01-06-four-lane-entrance:budget:yaw8S",
+        "golf-source-01-06-four-lane-entrance:budget:yaw8W"
+      ],
+      "requiredViews": 8,
+      "slotsWithExistingSelection": 8,
+      "pendingOrHeldSlots": 0,
+      "cameraCertification": false,
+      "runtimeReady": false
+    },
+    {
+      "jobId": "golf-source-01-06-four-lane-entrance",
+      "artSubjectId": "golf:event-four-lane-entrance",
+      "condition": "upgraded",
+      "slotIds": [
+        "golf-source-01-06-four-lane-entrance:upgraded:normalSE",
+        "golf-source-01-06-four-lane-entrance:upgraded:normalSW",
+        "golf-source-01-06-four-lane-entrance:upgraded:normalNW",
+        "golf-source-01-06-four-lane-entrance:upgraded:normalNE",
+        "golf-source-01-06-four-lane-entrance:upgraded:yaw8N",
+        "golf-source-01-06-four-lane-entrance:upgraded:yaw8E",
+        "golf-source-01-06-four-lane-entrance:upgraded:yaw8S",
+        "golf-source-01-06-four-lane-entrance:upgraded:yaw8W"
+      ],
+      "requiredViews": 8,
+      "slotsWithExistingSelection": 8,
+      "pendingOrHeldSlots": 0,
+      "cameraCertification": false,
+      "runtimeReady": false
+    },
+    {
+      "jobId": "golf-source-01-07-media-centre",
+      "artSubjectId": "golf:event-media-centre",
+      "condition": "budget",
+      "slotIds": [
+        "golf-source-01-07-media-centre:budget:normalSE",
+        "golf-source-01-07-media-centre:budget:normalSW",
+        "golf-source-01-07-media-centre:budget:normalNW",
+        "golf-source-01-07-media-centre:budget:normalNE",
+        "golf-source-01-07-media-centre:budget:yaw8N",
+        "golf-source-01-07-media-centre:budget:yaw8E",
+        "golf-source-01-07-media-centre:budget:yaw8S",
+        "golf-source-01-07-media-centre:budget:yaw8W"
+      ],
+      "requiredViews": 8,
+      "slotsWithExistingSelection": 8,
+      "pendingOrHeldSlots": 0,
+      "cameraCertification": false,
+      "runtimeReady": false
+    },
+    {
+      "jobId": "golf-source-01-07-media-centre",
+      "artSubjectId": "golf:event-media-centre",
+      "condition": "upgraded",
+      "slotIds": [
+        "golf-source-01-07-media-centre:upgraded:normalSE",
+        "golf-source-01-07-media-centre:upgraded:normalSW",
+        "golf-source-01-07-media-centre:upgraded:normalNW",
+        "golf-source-01-07-media-centre:upgraded:normalNE",
+        "golf-source-01-07-media-centre:upgraded:yaw8N",
+        "golf-source-01-07-media-centre:upgraded:yaw8E",
+        "golf-source-01-07-media-centre:upgraded:yaw8S",
+        "golf-source-01-07-media-centre:upgraded:yaw8W"
+      ],
+      "requiredViews": 8,
+      "slotsWithExistingSelection": 8,
+      "pendingOrHeldSlots": 0,
+      "cameraCertification": false,
+      "runtimeReady": false
+    },
+    {
+      "jobId": "golf-source-01-08-hole-scoreboard",
+      "artSubjectId": "golf:event-hole-scoreboard",
+      "condition": "budget",
+      "slotIds": [
+        "golf-source-01-08-hole-scoreboard:budget:normalSE",
+        "golf-source-01-08-hole-scoreboard:budget:normalSW",
+        "golf-source-01-08-hole-scoreboard:budget:normalNW",
+        "golf-source-01-08-hole-scoreboard:budget:normalNE",
+        "golf-source-01-08-hole-scoreboard:budget:yaw8N",
+        "golf-source-01-08-hole-scoreboard:budget:yaw8E",
+        "golf-source-01-08-hole-scoreboard:budget:yaw8S",
+        "golf-source-01-08-hole-scoreboard:budget:yaw8W"
+      ],
+      "requiredViews": 8,
+      "slotsWithExistingSelection": 8,
+      "pendingOrHeldSlots": 0,
+      "cameraCertification": false,
+      "runtimeReady": false
+    },
+    {
+      "jobId": "golf-source-01-08-hole-scoreboard",
+      "artSubjectId": "golf:event-hole-scoreboard",
+      "condition": "upgraded",
+      "slotIds": [
+        "golf-source-01-08-hole-scoreboard:upgraded:normalSE",
+        "golf-source-01-08-hole-scoreboard:upgraded:normalSW",
+        "golf-source-01-08-hole-scoreboard:upgraded:normalNW",
+        "golf-source-01-08-hole-scoreboard:upgraded:normalNE",
+        "golf-source-01-08-hole-scoreboard:upgraded:yaw8N",
+        "golf-source-01-08-hole-scoreboard:upgraded:yaw8E",
+        "golf-source-01-08-hole-scoreboard:upgraded:yaw8S",
+        "golf-source-01-08-hole-scoreboard:upgraded:yaw8W"
+      ],
+      "requiredViews": 8,
+      "slotsWithExistingSelection": 8,
+      "pendingOrHeldSlots": 0,
+      "cameraCertification": false,
+      "runtimeReady": false
+    },
+    {
+      "jobId": "golf-source-01-09-main-leaderboard",
+      "artSubjectId": "golf:event-main-leaderboard",
+      "condition": "budget",
+      "slotIds": [
+        "golf-source-01-09-main-leaderboard:budget:normalSE",
+        "golf-source-01-09-main-leaderboard:budget:normalSW",
+        "golf-source-01-09-main-leaderboard:budget:normalNW",
+        "golf-source-01-09-main-leaderboard:budget:normalNE",
+        "golf-source-01-09-main-leaderboard:budget:yaw8N",
+        "golf-source-01-09-main-leaderboard:budget:yaw8E",
+        "golf-source-01-09-main-leaderboard:budget:yaw8S",
+        "golf-source-01-09-main-leaderboard:budget:yaw8W"
+      ],
+      "requiredViews": 8,
+      "slotsWithExistingSelection": 8,
+      "pendingOrHeldSlots": 0,
+      "cameraCertification": false,
+      "runtimeReady": false
+    },
+    {
+      "jobId": "golf-source-01-09-main-leaderboard",
+      "artSubjectId": "golf:event-main-leaderboard",
+      "condition": "upgraded",
+      "slotIds": [
+        "golf-source-01-09-main-leaderboard:upgraded:normalSE",
+        "golf-source-01-09-main-leaderboard:upgraded:normalSW",
+        "golf-source-01-09-main-leaderboard:upgraded:normalNW",
+        "golf-source-01-09-main-leaderboard:upgraded:normalNE",
+        "golf-source-01-09-main-leaderboard:upgraded:yaw8N",
+        "golf-source-01-09-main-leaderboard:upgraded:yaw8E",
+        "golf-source-01-09-main-leaderboard:upgraded:yaw8S",
+        "golf-source-01-09-main-leaderboard:upgraded:yaw8W"
+      ],
+      "requiredViews": 8,
+      "slotsWithExistingSelection": 8,
+      "pendingOrHeldSlots": 0,
+      "cameraCertification": false,
+      "runtimeReady": false
+    },
+    {
+      "jobId": "golf-source-01-10-concession-kiosk",
+      "artSubjectId": "golf:event-concession-kiosk",
+      "condition": "budget",
+      "slotIds": [
+        "golf-source-01-10-concession-kiosk:budget:normalSE",
+        "golf-source-01-10-concession-kiosk:budget:normalSW",
+        "golf-source-01-10-concession-kiosk:budget:normalNW",
+        "golf-source-01-10-concession-kiosk:budget:normalNE",
+        "golf-source-01-10-concession-kiosk:budget:yaw8N",
+        "golf-source-01-10-concession-kiosk:budget:yaw8E",
+        "golf-source-01-10-concession-kiosk:budget:yaw8S",
+        "golf-source-01-10-concession-kiosk:budget:yaw8W"
+      ],
+      "requiredViews": 8,
+      "slotsWithExistingSelection": 8,
+      "pendingOrHeldSlots": 0,
+      "cameraCertification": false,
+      "runtimeReady": false
+    },
+    {
+      "jobId": "golf-source-01-10-concession-kiosk",
+      "artSubjectId": "golf:event-concession-kiosk",
+      "condition": "upgraded",
+      "slotIds": [
+        "golf-source-01-10-concession-kiosk:upgraded:normalSE",
+        "golf-source-01-10-concession-kiosk:upgraded:normalSW",
+        "golf-source-01-10-concession-kiosk:upgraded:normalNW",
+        "golf-source-01-10-concession-kiosk:upgraded:normalNE",
+        "golf-source-01-10-concession-kiosk:upgraded:yaw8N",
+        "golf-source-01-10-concession-kiosk:upgraded:yaw8E",
+        "golf-source-01-10-concession-kiosk:upgraded:yaw8S",
+        "golf-source-01-10-concession-kiosk:upgraded:yaw8W"
+      ],
+      "requiredViews": 8,
+      "slotsWithExistingSelection": 8,
+      "pendingOrHeldSlots": 0,
+      "cameraCertification": false,
+      "runtimeReady": false
+    },
+    {
+      "jobId": "golf-source-01-11-practice-net",
+      "artSubjectId": "business:golf-practice-net",
+      "condition": "upgraded",
+      "slotIds": [
+        "golf-source-01-11-practice-net:upgraded:normalSE",
+        "golf-source-01-11-practice-net:upgraded:normalSW",
+        "golf-source-01-11-practice-net:upgraded:normalNW",
+        "golf-source-01-11-practice-net:upgraded:normalNE",
+        "golf-source-01-11-practice-net:upgraded:yaw8N",
+        "golf-source-01-11-practice-net:upgraded:yaw8E",
+        "golf-source-01-11-practice-net:upgraded:yaw8S",
+        "golf-source-01-11-practice-net:upgraded:yaw8W"
+      ],
+      "requiredViews": 8,
+      "slotsWithExistingSelection": 8,
+      "pendingOrHeldSlots": 0,
+      "cameraCertification": false,
+      "runtimeReady": false
+    },
+    {
+      "jobId": "golf-source-01-12-bag-trolley",
+      "artSubjectId": "business:golf-bag-trolley",
+      "condition": "upgraded",
+      "slotIds": [
+        "golf-source-01-12-bag-trolley:upgraded:normalSE",
+        "golf-source-01-12-bag-trolley:upgraded:normalSW",
+        "golf-source-01-12-bag-trolley:upgraded:normalNW",
+        "golf-source-01-12-bag-trolley:upgraded:normalNE",
+        "golf-source-01-12-bag-trolley:upgraded:yaw8N",
+        "golf-source-01-12-bag-trolley:upgraded:yaw8E",
+        "golf-source-01-12-bag-trolley:upgraded:yaw8S",
+        "golf-source-01-12-bag-trolley:upgraded:yaw8W"
+      ],
+      "requiredViews": 8,
+      "slotsWithExistingSelection": 8,
+      "pendingOrHeldSlots": 0,
+      "cameraCertification": false,
+      "runtimeReady": false
+    }
+  ]
+}

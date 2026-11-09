@@ -1,0 +1,29 @@
+{
+  "schema": 1,
+  "subject": "golf:course-park-bench",
+  "version": 1,
+  "key": "normalSE",
+  "source": {
+    "file": "../../batch02/park-bench/normal-SE.png",
+    "sha256": "aea9a17d72edc74499a3a62f841d5852e086b8bda6ad53fd30e8ebf245142aae",
+    "width": 1254,
+    "height": 1254
+  },
+  "cell": 0,
+  "cellRect": {
+    "left": 0,
+    "top": 0,
+    "width": 1254,
+    "height": 1254
+  },
+  "crop": {
+    "left": 283,
+    "top": 191,
+    "width": 643,
+    "height": 875
+  },
+  "output": "normalSE.native.png",
+  "sha256": "39bd009c3e2098d9c4dc5031b8117cfec1653d6add4d83ee953f1a7385328261",
+  "operation": "native RGBA cell crop only; no flip/repaint/view synthesis",
+  "review": "candidate"
+}

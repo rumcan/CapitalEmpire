@@ -1,0 +1,29 @@
+{
+  "schema": 1,
+  "subject": "golf:event-main-leaderboard-upgraded",
+  "version": 1,
+  "key": "yaw8S",
+  "source": {
+    "file": "../../batch01/main-leaderboard/upgraded/yaw8-S.png",
+    "sha256": "8fe683f1e9d93da4403cde6fb1c801d6fdbcf83f820dd562de3b122dd72171f0",
+    "width": 627,
+    "height": 627
+  },
+  "cell": 0,
+  "cellRect": {
+    "left": 0,
+    "top": 0,
+    "width": 627,
+    "height": 627
+  },
+  "crop": {
+    "left": 84,
+    "top": 130,
+    "width": 474,
+    "height": 339
+  },
+  "output": "yaw8S.native.png",
+  "sha256": "7cf7bf5fddaa18e7515371fee090fc2ab0d407393ff5e864bcf48e410e7d1dc5",
+  "operation": "native RGBA cell crop only; no flip/repaint/view synthesis",
+  "review": "candidate"
+}

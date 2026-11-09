@@ -1,0 +1,14 @@
+{
+  "key": "2020s-white-charcoal-asymmetric-solar-home",
+  "source": "C:/Users/RAMPAGE/.codex/generated_images/01a1b1fd-39ec-7220-8f11-86e4448833ea/exec-8ca9934e-c5c2-42d7-b26d-3cd3e2aae03a.png",
+  "target": "generated/era-houses/2020s-white-charcoal-asymmetric-solar-home/yaw8-v1.png",
+  "prompt": "Paint the four exact technical models of reference1 as the exact modern2020s house in reference2. Preserve guide1 viewingdirections, full outlines, proportions, roofsteps, windows/doors andSIXsolarpanels in theirfixedpositions. HigherWHITEvolume andlowerCHARCOALentryvolume, timberfrontdoor, reflectiveglazedrear SLIDING PATIO DOOR, NO GARAGE orshutter. Match reference2finishedmaterials/brushwork/colours but camera comesfromreference1:orthographic30degreesdown, fournearcardinalviews8degreeoffset, layout N E / S W, subtlyslantingbases/narrowsides. Native2x2spritesheet, samephysicalscale, completebuildingineachquarter, generousmargins. Late-afternoonDAYTIME sunUPPERRIGHT/shadowsLOWERLEFT, windowsunlit, nopeople/trees/cars/groundplate/technicaltext/labels/grid/haze. Completelytransparentzeroalphabackgroundwithopaquebuildings.",
+  "references": [
+    "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\2020s-white-charcoal-asymmetric-solar-home\\guides\\yaw8-world-v1.png",
+    "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/era-houses/2020s-white-charcoal-asymmetric-solar-home/normal-v2.png"
+  ],
+  "status": "native correction candidate; independent review pending",
+  "runtime_imported": false,
+  "sha256": "293ccfd862af61ac2233f00755cf78a5de063af620c9938208cc874f7dc3afa0",
+  "native_bytes_preserved": true
+}

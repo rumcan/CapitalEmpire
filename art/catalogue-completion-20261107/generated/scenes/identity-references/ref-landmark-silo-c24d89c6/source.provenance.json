@@ -1,0 +1,71 @@
+{
+  "schema": 1,
+  "createdUtc": "2026-11-07T06:47:45.284562+00:00",
+  "exactRuntimeId": "ref:landmark-silo",
+  "source": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/building-views/ref-landmark-silo/NE.png",
+  "sourceSha256": "05bb49da9fbaa0ff480aef423ba052af7ad10d2ce87e2fe8845c33dadca80ca8",
+  "output": "identity-references/ref-landmark-silo-c24d89c6/source.png",
+  "outputSha256": "05bb49da9fbaa0ff480aef423ba052af7ad10d2ce87e2fe8845c33dadca80ca8",
+  "width": 279,
+  "height": 594,
+  "sourceCell": {
+    "kind": "already isolated native PNG; whole file",
+    "rectXYWH": [
+      0,
+      0,
+      279,
+      594
+    ]
+  },
+  "operation": "byte-for-byte PNG copy only; no resize, crop, recolour, key, repaint, registration or source mutation",
+  "selection": "registered corner NE native PNG for this exact subject",
+  "registeredCornerDirection": "NE",
+  "sourceEvidence": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\building-views\\ref-landmark-silo\\provenance.json",
+  "sourceReview": {
+    "integrationStatus": "ready",
+    "integrationReason": "Source review passed actual-alpha blue composite, rigid visible-facade cycle, coherent Maple-master materials/detail/upper-right dusk light and clear equal-cell packing. Game scale/street integration remains to be reviewed.",
+    "integrationReview": {
+      "alpha": "passed",
+      "geometry": "passed",
+      "themeAssessment": "Muted steel with warm right/cool left reflections matches master metal lighting; corrected actual composite is 2x2, no surrounding terrain.",
+      "terrainOrCaptionsVisible": false,
+      "gameScaleRegistered": false,
+      "reviewContact": "output/building-priority/mixed-standalone-review-2.png",
+      "correctionBrief": null
+    }
+  },
+  "sourceRegistration": {
+    "id": "ref:landmark-silo",
+    "version": "ref-landmark-silo-4views-v2",
+    "files": {
+      "NE": "05bb49da9fbaa0ff480aef423ba052af7ad10d2ce87e2fe8845c33dadca80ca8",
+      "SE": "7517a8a6b497c7bd704f90a8669e643d829dfba4c3f4ba8b7c7580f2e989e4ee",
+      "SW": "503459a85d80601f8b54beb5146ef8872557e0b8745fe4a44185d6f860fdf8e6",
+      "NW": "5c7c8e5c9abd7ce2e4931e2021cbe6fd9f363c787e570eb10f7e5df141ec6e2f"
+    }
+  },
+  "originalInventorySource": {
+    "library": "src/game/library.ts",
+    "librarySha256": "91b5190292c1005ac7b936f08e5e1ebf3be43c3aae99f92ea510775da83d9726",
+    "atlas": "src/assets/atlas/sprites-8-0.webp",
+    "atlasSha256": "3627e8012c994eb375699136eec4134215434643c5c267a76f1326638c2b9514",
+    "runtimePage": 8,
+    "localPage": 8,
+    "uv": [
+      0.632813,
+      0.210938,
+      0.708496,
+      0.393066
+    ],
+    "crop": {
+      "left": 1296,
+      "top": 432,
+      "width": 155,
+      "height": 373
+    },
+    "native": "art/theme-consistency/exports/buildings/ref-landmark-silo.native.png",
+    "nativeSha256": "94902c93552a765161b88c7fd4da244e7ed6737a8f8837e106f5b6049d6b2bf7"
+  },
+  "originalBusinessSourceCell": null,
+  "nativeReferenceApprovalClaimed": false
+}

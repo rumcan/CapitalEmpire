@@ -1,0 +1,80 @@
+{
+  "status": "technical-coordinate/file verification PASS; not art approval or runtime capacity validation",
+  "variants": [
+    {
+      "design": "seated-pavilion-24-budget",
+      "proposed_places": 24,
+      "molded_chair_instances": 0,
+      "all8projections_verified": true,
+      "physical_access_geometry_present": true,
+      "release_anchors_authored": false
+    },
+    {
+      "design": "seated-pavilion-24-upgraded",
+      "proposed_places": 24,
+      "molded_chair_instances": 24,
+      "all8projections_verified": true,
+      "physical_access_geometry_present": true,
+      "release_anchors_authored": false
+    },
+    {
+      "design": "seated-pavilion-60-budget",
+      "proposed_places": 60,
+      "molded_chair_instances": 0,
+      "all8projections_verified": true,
+      "physical_access_geometry_present": true,
+      "release_anchors_authored": false
+    },
+    {
+      "design": "seated-pavilion-60-upgraded",
+      "proposed_places": 60,
+      "molded_chair_instances": 60,
+      "all8projections_verified": true,
+      "physical_access_geometry_present": true,
+      "release_anchors_authored": false
+    },
+    {
+      "design": "seated-pavilion-120-budget",
+      "proposed_places": 120,
+      "molded_chair_instances": 0,
+      "all8projections_verified": true,
+      "physical_access_geometry_present": true,
+      "release_anchors_authored": false
+    },
+    {
+      "design": "seated-pavilion-120-upgraded",
+      "proposed_places": 120,
+      "molded_chair_instances": 120,
+      "all8projections_verified": true,
+      "physical_access_geometry_present": true,
+      "release_anchors_authored": false
+    },
+    {
+      "design": "compact-bleacher-60-budget",
+      "proposed_places": 60,
+      "molded_chair_instances": 0,
+      "all8projections_verified": true,
+      "physical_access_geometry_present": true,
+      "release_anchors_authored": false
+    },
+    {
+      "design": "compact-bleacher-60-upgraded",
+      "proposed_places": 60,
+      "molded_chair_instances": 60,
+      "all8projections_verified": true,
+      "physical_access_geometry_present": true,
+      "release_anchors_authored": false
+    }
+  ],
+  "variant_count": 8,
+  "normal_and_yaw8_guide_pages": 16,
+  "chair_closeup_guide_pages": 2,
+  "seating_top_plans": 8,
+  "proposed_places_total": 528,
+  "individual_molded_chairs_total": 264,
+  "old_24_budget_v1_files_preserved": 7,
+  "heading_labels_provisional_until_scene_handedness_proof": true,
+  "runtime_edited": false,
+  "release_anchors_authored": false,
+  "owner_approved": false
+}

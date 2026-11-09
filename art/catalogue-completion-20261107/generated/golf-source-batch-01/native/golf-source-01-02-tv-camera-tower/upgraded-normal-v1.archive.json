@@ -1,0 +1,41 @@
+[
+  {
+    "key": "golf-source-01-02-tv-camera-tower",
+    "family": "normal",
+    "condition": "upgraded",
+    "version": 1,
+    "target": "generated/golf-source-batch-01/native/golf-source-01-02-tv-camera-tower/upgraded-normal-v1.png",
+    "refs": [
+      "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-01\\native\\golf-source-01-02-tv-camera-tower\\guides\\normal-world-v1.png",
+      "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/golf-source-batch-01/native/golf-source-01-02-tv-camera-tower/budget-normal-v2.png"
+    ],
+    "runtimeTarget": {
+      "eventTypeId": "tvTower",
+      "eventName": "TV camera tower",
+      "currentSpriteSubjectId": "ref:landmark-water-tower",
+      "newArtSubjectProposal": "golf:event-tv-camera-tower",
+      "newArtSubjectAlreadyRegistered": false,
+      "eventCatalogueSource": "src/game/golf/tents.ts",
+      "standInMappingSource": "src/game/golf/structure-art.ts",
+      "footprintTiles": {
+        "width": 1,
+        "depth": 1
+      },
+      "footprintMetres": {
+        "width": 2,
+        "depth": 2
+      },
+      "dimensionsMeaning": "Exact current event placement plot, not measured source sprite architecture. New design must fit plot; no runtime geometry changed."
+    },
+    "prompt": "Paint the four exact guide corners of REFERENCE1 as the UPGRADED version of the same physical event facility in REFERENCE2. Reference1 controls ALLgeometry/cameras/occlusion; reference2 identity/styleonly. UPGRADED condition: Clean galvanized modular scaffold, green guardrail skirt and neat equipment case, same functional camera platform and ladder.. Fixed model: One2x2m tower, platform z4m; front/right ladder, rear/right case, lens points front-Y.. Oneidenticalfunctionallayoutinall4cells. Clean professionally made steel, fresh forestgreen/creamtrim, maintained timber, sound equipment. Remove rust, torncloth, flakingpaint, brokentimber; no ornatebrassorballfinials. Allfeatures remainfixedasguide, includingstairs/ladder/camera/case/gatelanes and backs. SameSE SW / NW NE45degreecorners, orthographic30degreesDOWN. Late-afternoonDAYTIME sunSCREENUPPERRIGHT/shadowsLOWERLEFT; lamps/screensOFF. Detailed painterly miniature town-game materialstylematchesreference2. Complete separate equallyscaled sprites, generouszeroalpha transparentmargins andgutters. No groundplate/slab/roof exceptactualstructureinguide; noperson/plants/labels/UI/grid/scenery/haze. Raiseddeckonlywhereguideexplicitlyshows.",
+    "source": "C:/Users/RAMPAGE/.codex/generated_images/01a1b1fd-39ec-7220-8f11-86e4448833ea/exec-6da43289-9cb9-473e-b718-fc5194e5b314.png",
+    "references": [
+      "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-01\\native\\golf-source-01-02-tv-camera-tower\\guides\\normal-world-v1.png",
+      "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/golf-source-batch-01/native/golf-source-01-02-tv-camera-tower/budget-normal-v2.png"
+    ],
+    "status": "native-source-candidate-pending-visual-review",
+    "runtime_imported": false,
+    "sha256": "583b1a30c01a15a4c3b9521794bad9c4abf634b49578505c07385bbd231e4823",
+    "native_bytes_preserved": true
+  }
+]

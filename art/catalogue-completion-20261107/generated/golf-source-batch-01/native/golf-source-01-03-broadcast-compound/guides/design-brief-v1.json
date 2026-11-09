@@ -1,0 +1,38 @@
+{
+  "jobId": "golf-source-01-03-broadcast-compound",
+  "functionalIdentity": "A30x20m event broadcast compound consisting of one period box broadcast truck, one uplink van with a roof dish, a generator box, cable reels and a small practical equipment workbench. Arrange truck left, van rear-right, generator front-right, with one open service gap at model front; fixed component layout rotates as one object. Separate physical feet/wheels and no painted ground slab. It must read as support vehicles, not a garage.",
+  "exact_placement_plot_metres": {
+    "width": 30.0,
+    "depth": 20.0
+  },
+  "model_bounds_metres": {
+    "min": [
+      -8.517,
+      -6.773034474781388,
+      0.0
+    ],
+    "max": [
+      7.7,
+      7.220000000000001,
+      3.8690019370347657
+    ]
+  },
+  "fixedIdentity": "Exactly2period vehicles: truck left-X, van rear/right+X/+Y; both nose-Y. Generator front/right, bench/reel positions fixed; front service gap remains open; no slab.",
+  "geometry_is_proposed_not_measured_native": true,
+  "ground_plate": false,
+  "world_convention": "x right, y rear, z up; model front-Y. Rotate entire mesh, never relocate features for visibility.",
+  "source_art_modified": false,
+  "runtime_modified": false,
+  "outputs": {
+    "normal": {
+      "png": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-01\\native\\golf-source-01-03-broadcast-compound\\guides\\normal-world-v1.png",
+      "sha256": "ebc961b0176c4c4f254a3b5da1708f45f044cdba7b88b9cde55894d5f9942338",
+      "calibration": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-01\\native\\golf-source-01-03-broadcast-compound\\guides\\normal-world-v1.calibration.json"
+    },
+    "yaw8": {
+      "png": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-01\\native\\golf-source-01-03-broadcast-compound\\guides\\yaw8-world-v1.png",
+      "sha256": "d2caf57f23317a682e0000b009f4c271fefa6c66ab19e272089e29317c63a441",
+      "calibration": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-01\\native\\golf-source-01-03-broadcast-compound\\guides\\yaw8-world-v1.calibration.json"
+    }
+  }
+}

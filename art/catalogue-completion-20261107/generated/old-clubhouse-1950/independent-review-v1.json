@@ -1,0 +1,354 @@
+{
+  "schema": 1,
+  "date": "2026-11-07",
+  "task": "Independent review only; source art and runtime not modified.",
+  "approvalClaimed": false,
+  "overallDisposition": "held-candidate",
+  "targetPhysicalDimensionsMetres": {
+    "width": 12,
+    "depth": 8
+  },
+  "pixelsPerMetre": null,
+  "calibrationReason": "Normal views fail geometry guide; all eight cannot share an asserted camera/scale. Physical ground-plane anchors need corrected angles and observed foundation corners. Do not replace nulls with bounding-box bottom centres.",
+  "observations": {
+    "style": "Cream weathered clapboard, green trim, rusty corrugated gable roof, brick chimney and practical1950sbuilding coherent across candidate sheets.",
+    "facades": "Front large window / glazed door / green service awning, bench and ball crate remain identifiable; rear has two vents; gables have two windows. W wrongly exposes service sliver.",
+    "light": "Broad late-afternoon daylight; upper-right roof illumination and leftward chimney shadows generally plausible; no exterior lamps/glowing windows. Not independently physically light-calibrated.",
+    "alpha": "Both sources1254x1254RGBA; every cell627x627, alpha range0..255. Strong alpha>8 silhouette stays inside each cell. Low alpha<=8 residuals reach cell edges, so transparent-pixel bbox alone is not a ground anchor."
+  },
+  "measuredFloorLines": [
+    {
+      "family": "normal",
+      "cell": 1,
+      "rangesXCell": [
+        [
+          65,
+          195
+        ],
+        [
+          260,
+          540
+        ]
+      ],
+      "slopesYPerX": [
+        0.569369561735974,
+        -0.23881653668509123
+      ],
+      "maxResidualPixels": [
+        0.6601,
+        0.8042
+      ],
+      "expectedAt45Corner30Down": [
+        0.5,
+        -0.5
+      ],
+      "conditionalOrthographicPitchEstimateDegrees": 21.6384
+    },
+    {
+      "family": "normal",
+      "cell": 2,
+      "rangesXCell": [
+        [
+          90,
+          370
+        ],
+        [
+          425,
+          550
+        ]
+      ],
+      "slopesYPerX": [
+        0.2461302988674837,
+        -0.5322294713160854
+      ],
+      "maxResidualPixels": [
+        0.7171,
+        0.6733
+      ],
+      "expectedAt45Corner30Down": [
+        0.5,
+        -0.5
+      ],
+      "conditionalOrthographicPitchEstimateDegrees": 21.2192
+    },
+    {
+      "family": "yaw8",
+      "cell": 1,
+      "rangesXCell": [
+        [
+          175,
+          395
+        ],
+        [
+          430,
+          475
+        ]
+      ],
+      "slopesYPerX": [
+        0.06076022546610782,
+        -3.376688251618871
+      ],
+      "maxResidualPixels": [
+        0.6672,
+        2.2319
+      ],
+      "conditionalOrthographicPitchEstimateDegrees": 26.9334,
+      "note": "Near-cardinal yaw appears substantially closer to the8degreeguide; not a complete dimensions/scale certificate."
+    }
+  ],
+  "views": [
+    {
+      "key": "normalSE",
+      "intendedHeadingDegrees": 90,
+      "sourceFamily": "normal",
+      "sourceFile": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\old-clubhouse-1950\\normal-v2.png",
+      "sourceSha256": "9087e51bbc73b445381427a4627b54308aca0089f7b1f8712a487729eae99f74",
+      "cell": 0,
+      "cellRect": {
+        "left": 0,
+        "top": 0,
+        "width": 627,
+        "height": 627
+      },
+      "strongAlphaBBoxCellExclusive": [
+        48,
+        146,
+        593,
+        502
+      ],
+      "suggestedCropRectCell": {
+        "left": 44,
+        "top": 142,
+        "width": 553,
+        "height": 364
+      },
+      "anchor": null,
+      "pixelsPerMetre": null,
+      "reviewDisposition": "held",
+      "blockingIssues": [
+        "Foundation edge slopes differ materially from45degree corner /30degree down guide; no trustworthy common physical calibration."
+      ]
+    },
+    {
+      "key": "normalSW",
+      "intendedHeadingDegrees": 180,
+      "sourceFamily": "normal",
+      "sourceFile": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\old-clubhouse-1950\\normal-v2.png",
+      "sourceSha256": "9087e51bbc73b445381427a4627b54308aca0089f7b1f8712a487729eae99f74",
+      "cell": 1,
+      "cellRect": {
+        "left": 627,
+        "top": 0,
+        "width": 627,
+        "height": 627
+      },
+      "strongAlphaBBoxCellExclusive": [
+        31,
+        156,
+        585,
+        505
+      ],
+      "suggestedCropRectCell": {
+        "left": 27,
+        "top": 152,
+        "width": 562,
+        "height": 357
+      },
+      "anchor": null,
+      "pixelsPerMetre": null,
+      "reviewDisposition": "held",
+      "blockingIssues": [
+        "Foundation edge slopes differ materially from45degree corner /30degree down guide; no trustworthy common physical calibration.",
+        "Actual gable LEFT/back facade RIGHT matches NW guide cell; intended SW cell expects back facade LEFT/gable RIGHT."
+      ]
+    },
+    {
+      "key": "normalNW",
+      "intendedHeadingDegrees": 270,
+      "sourceFamily": "normal",
+      "sourceFile": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\old-clubhouse-1950\\normal-v2.png",
+      "sourceSha256": "9087e51bbc73b445381427a4627b54308aca0089f7b1f8712a487729eae99f74",
+      "cell": 2,
+      "cellRect": {
+        "left": 0,
+        "top": 627,
+        "width": 627,
+        "height": 627
+      },
+      "strongAlphaBBoxCellExclusive": [
+        48,
+        123,
+        591,
+        481
+      ],
+      "suggestedCropRectCell": {
+        "left": 44,
+        "top": 119,
+        "width": 551,
+        "height": 366
+      },
+      "anchor": null,
+      "pixelsPerMetre": null,
+      "reviewDisposition": "held",
+      "blockingIssues": [
+        "Foundation edge slopes differ materially from45degree corner /30degree down guide; no trustworthy common physical calibration.",
+        "Actual back facade LEFT/gable RIGHT matches SW guide cell; intended NW cell expects gable LEFT/back facade RIGHT."
+      ]
+    },
+    {
+      "key": "normalNE",
+      "intendedHeadingDegrees": 0,
+      "sourceFamily": "normal",
+      "sourceFile": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\old-clubhouse-1950\\normal-v2.png",
+      "sourceSha256": "9087e51bbc73b445381427a4627b54308aca0089f7b1f8712a487729eae99f74",
+      "cell": 3,
+      "cellRect": {
+        "left": 627,
+        "top": 627,
+        "width": 627,
+        "height": 627
+      },
+      "strongAlphaBBoxCellExclusive": [
+        35,
+        97,
+        579,
+        480
+      ],
+      "suggestedCropRectCell": {
+        "left": 31,
+        "top": 93,
+        "width": 552,
+        "height": 391
+      },
+      "anchor": null,
+      "pixelsPerMetre": null,
+      "reviewDisposition": "held",
+      "blockingIssues": [
+        "Foundation edge slopes differ materially from45degree corner /30degree down guide; no trustworthy common physical calibration."
+      ]
+    },
+    {
+      "key": "yaw8N",
+      "intendedHeadingDegrees": 37,
+      "sourceFamily": "yaw8",
+      "sourceFile": "C:\\Users\\RAMPAGE\\.codex\\generated_images\\01a1b1fd-39ec-7220-8f11-86e4448833ea\\exec-fe32bb97-90a8-4774-9ba9-cb771155517a.png",
+      "sourceSha256": "9b7e43d34e9b1465cac05e065be6ec5016269774ddc0060f980603d4c6f7beca",
+      "cell": 0,
+      "cellRect": {
+        "left": 0,
+        "top": 0,
+        "width": 627,
+        "height": 627
+      },
+      "strongAlphaBBoxCellExclusive": [
+        64,
+        151,
+        559,
+        532
+      ],
+      "suggestedCropRectCell": {
+        "left": 60,
+        "top": 147,
+        "width": 503,
+        "height": 389
+      },
+      "anchor": null,
+      "pixelsPerMetre": null,
+      "reviewDisposition": "candidate-preserve-unapproved",
+      "blockingIssues": []
+    },
+    {
+      "key": "yaw8E",
+      "intendedHeadingDegrees": 127,
+      "sourceFamily": "yaw8",
+      "sourceFile": "C:\\Users\\RAMPAGE\\.codex\\generated_images\\01a1b1fd-39ec-7220-8f11-86e4448833ea\\exec-fe32bb97-90a8-4774-9ba9-cb771155517a.png",
+      "sourceSha256": "9b7e43d34e9b1465cac05e065be6ec5016269774ddc0060f980603d4c6f7beca",
+      "cell": 1,
+      "cellRect": {
+        "left": 627,
+        "top": 0,
+        "width": 627,
+        "height": 627
+      },
+      "strongAlphaBBoxCellExclusive": [
+        125,
+        129,
+        496,
+        546
+      ],
+      "suggestedCropRectCell": {
+        "left": 121,
+        "top": 125,
+        "width": 379,
+        "height": 425
+      },
+      "anchor": null,
+      "pixelsPerMetre": null,
+      "reviewDisposition": "candidate-preserve-unapproved",
+      "blockingIssues": []
+    },
+    {
+      "key": "yaw8S",
+      "intendedHeadingDegrees": 217,
+      "sourceFamily": "yaw8",
+      "sourceFile": "C:\\Users\\RAMPAGE\\.codex\\generated_images\\01a1b1fd-39ec-7220-8f11-86e4448833ea\\exec-fe32bb97-90a8-4774-9ba9-cb771155517a.png",
+      "sourceSha256": "9b7e43d34e9b1465cac05e065be6ec5016269774ddc0060f980603d4c6f7beca",
+      "cell": 2,
+      "cellRect": {
+        "left": 0,
+        "top": 627,
+        "width": 627,
+        "height": 627
+      },
+      "strongAlphaBBoxCellExclusive": [
+        56,
+        151,
+        549,
+        494
+      ],
+      "suggestedCropRectCell": {
+        "left": 52,
+        "top": 147,
+        "width": 501,
+        "height": 351
+      },
+      "anchor": null,
+      "pixelsPerMetre": null,
+      "reviewDisposition": "candidate-preserve-unapproved",
+      "blockingIssues": []
+    },
+    {
+      "key": "yaw8W",
+      "intendedHeadingDegrees": 307,
+      "sourceFamily": "yaw8",
+      "sourceFile": "C:\\Users\\RAMPAGE\\.codex\\generated_images\\01a1b1fd-39ec-7220-8f11-86e4448833ea\\exec-fe32bb97-90a8-4774-9ba9-cb771155517a.png",
+      "sourceSha256": "9b7e43d34e9b1465cac05e065be6ec5016269774ddc0060f980603d4c6f7beca",
+      "cell": 3,
+      "cellRect": {
+        "left": 627,
+        "top": 627,
+        "width": 627,
+        "height": 627
+      },
+      "strongAlphaBBoxCellExclusive": [
+        115,
+        105,
+        506,
+        538
+      ],
+      "suggestedCropRectCell": {
+        "left": 111,
+        "top": 101,
+        "width": 399,
+        "height": 441
+      },
+      "anchor": null,
+      "pixelsPerMetre": null,
+      "reviewDisposition": "held",
+      "blockingIssues": [
+        "Visible right-side sliver repeats service/front awning as in E; W should show opposite gable and rear-facade sliver."
+      ]
+    }
+  ],
+  "nextAction": "Redo/correct all normal corners to exact guide camera and correct SW/NW cells; repair W rear-facade sliver, preserve good N/E/S candidates, then remeasure physical footprint centres and a shared pixels-per-metre before import."
+}

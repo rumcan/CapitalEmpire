@@ -1,0 +1,22 @@
+{
+  "key": "newprop:shuttle-cart",
+  "slug": "shuttle-cart",
+  "family": "normal",
+  "condition": "base",
+  "version": 1,
+  "target": "generated/golf-vehicle-source-batch-01/native/shuttle-cart/normal-v1.png",
+  "refs": [
+    "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-vehicle-source-batch-01\\fixed-world-guides-v1\\shuttle-cart\\guides\\normal-world-v1.png",
+    "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-vehicle-source-batch-01\\references\\shuttle-cart.source.png"
+  ],
+  "prompt": "Create a native2x2 sheet of FOUR actual corner views of ONE specialist golf vehicle or mobile vending prop. REFERENCE1 is fixed-world assembly/camera/occlusion authority. REFERENCE2 is subject identity and detailed painterly miniature MATERIALS/BODY DETAIL only; never repeat its one camera. Preserve recognizable vehicle shape, wheels, restrained cream-green finishes and fine metal/glass/canvas texture, not flatlowpolyguide surfaces. Function: Long cream/green four-wheel open-sided passenger shuttle cart with three transverse two-place bench rows, full-length cream canopy, front steering wheel/windshield and fixed rear rail. Preserve exactly three bench rows and long wheelbase; no front row copied to rear, no people or side doors added.. Fixedphysicalrules: EXACTLY3transverse two-place bench rows, all facingFRONT-Y, ONE full-length canopy,4road wheels and long wheelbase. No bus walls/doors or people; displayed seats are source design, not gameplay capacity.. Identity-preserving six-place-looking passenger body, different from generated two-place player cart and schoolbus. Seating shown is source geometry, not an accepted runtime capacity. Source rounded nose is later-era styling; timeline binding remains separate.. Keep authentic wear modest and plausible; no gratuitous holes or fantasy filigree. Fourdistinct45degreecorner poses in exact SE SW / NW NE cellsasguide, orthographic30degreesDOWN; equalphysicalscale. Rearmustshowtrueback, no inventedfrontheadlights/steering onrear. Allroofequipment/seatrows/ramps/cargo/stretcher stayonfixedworldside; nooperatingstatechanges. Satellitebowlbackconvexwhenviewedfromrear, neverrepanaimingtofaceviewer. Late-afternoon DAYTIME sunlightfixedSCREENUPPERRIGHT/shadowsLOWERLEFT, allheadlamps/beaconsOFF. CompleteisolatedopaqueobjectswithgenerousZEROALPHAtransparentmargins/gutters, smallcontactshadowonly; no broadgreyhalo/scenery/groundtile/road/people/plants/labels/UI/grid. Intrinsicmedicalcross/accesssymbolallowed, no extrabrands/text.",
+  "source": "C:/Users/RAMPAGE/.codex/generated_images/01a1b1fd-39ec-7220-8f11-86e4448833ea/exec-c1f8416b-4c18-4c4f-8164-242f23c3f69f.png",
+  "references": [
+    "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-vehicle-source-batch-01\\fixed-world-guides-v1\\shuttle-cart\\guides\\normal-world-v1.png",
+    "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-vehicle-source-batch-01\\references\\shuttle-cart.source.png"
+  ],
+  "status": "native-source-candidate-pending-visual-review",
+  "runtime_imported": false,
+  "sha256": "5bd46bc2e3e3e1f0b2e5d630a929233e896d40acc6f4e64a3d5c87e40d3ef40f",
+  "native_bytes_preserved": true
+}

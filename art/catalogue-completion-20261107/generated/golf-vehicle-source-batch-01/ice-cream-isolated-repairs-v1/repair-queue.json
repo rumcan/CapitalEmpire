@@ -1,0 +1,76 @@
+{
+  "schema": 1,
+  "sourceOnly": true,
+  "jobs": [
+    {
+      "key": "ice-cream-cart-normalSE-repair",
+      "subject": "newprop:ice-cream-cart",
+      "kind": "single-normal-corner-replacement",
+      "targetProposal": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-vehicle-source-batch-01\\native\\ice-cream-cart\\normal-SE-v2.png",
+      "references": [
+        "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-vehicle-source-batch-01\\ice-cream-isolated-repairs-v1\\guide-normalSE.png",
+        "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-vehicle-source-batch-01\\ice-cream-isolated-repairs-v1\\original-ice-cream-identity.png"
+      ],
+      "referenceOrder": [
+        "Exact guide camera/fixed geometry FIRST",
+        "Original single native identity/materials SECOND"
+      ],
+      "fixedRearEndProjection": "FAR UPPER LEFT; caster can be occluded behind chest",
+      "prompt": "Generate ONE SINGLE SE corner view of the same manual ice-cream pushcart. Reference1 is exact 3D camera/assembly authority; reference2 is the ORIGINAL one-view identity/material reference only, never a camera to repeat. Model REAR+Y contains the push handle, cone rack, cup stack and ONE small caster, all on the SAME physical end in every view. In THIS SE guide view that complete rear/handle end projects FAR UPPER LEFT; caster can be occluded behind chest. TWO large spoked wheels share one transverse axle at the chest; never move the small caster to the opposite end. One fixed striped green/cream umbrella and four freezer tubs under glass lids, same compartment layout and fixed pole. Preserve old enamel chest, restrained worn metalwork and detailed painted-miniature texture from reference2, but repair unnecessary holes into intact worn umbrella and avoid ornamental fantasy additions. Reconstruct this guide corner independently; do not mirror pixels or place the handle toward viewer by habit. Give generous margins around umbrella and every wheel. Late-afternoon DAYTIME sun SCREEN UPPER RIGHT and shadows LOWER LEFT, all lamps off. One complete opaque object on true zero-alpha background, transparent spoke gaps, no people, motor, extra cab, ground plate, scenery, text, UI or grid. Source candidate only; no runtime or numerical camera release is implied.",
+      "nativeCameraOrScaleApproved": false
+    },
+    {
+      "key": "ice-cream-cart-normalSW-repair",
+      "subject": "newprop:ice-cream-cart",
+      "kind": "single-normal-corner-replacement",
+      "targetProposal": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-vehicle-source-batch-01\\native\\ice-cream-cart\\normal-SW-v2.png",
+      "references": [
+        "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-vehicle-source-batch-01\\ice-cream-isolated-repairs-v1\\guide-normalSW.png",
+        "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-vehicle-source-batch-01\\ice-cream-isolated-repairs-v1\\original-ice-cream-identity.png"
+      ],
+      "referenceOrder": [
+        "Exact guide camera/fixed geometry FIRST",
+        "Original single native identity/materials SECOND"
+      ],
+      "fixedRearEndProjection": "NEAR LOWER LEFT, including the caster beneath that same handle end",
+      "prompt": "Generate ONE SINGLE SW corner view of the same manual ice-cream pushcart. Reference1 is exact 3D camera/assembly authority; reference2 is the ORIGINAL one-view identity/material reference only, never a camera to repeat. Model REAR+Y contains the push handle, cone rack, cup stack and ONE small caster, all on the SAME physical end in every view. In THIS SW guide view that complete rear/handle end projects NEAR LOWER LEFT, including the caster beneath that same handle end. TWO large spoked wheels share one transverse axle at the chest; never move the small caster to the opposite end. One fixed striped green/cream umbrella and four freezer tubs under glass lids, same compartment layout and fixed pole. Preserve old enamel chest, restrained worn metalwork and detailed painted-miniature texture from reference2, but repair unnecessary holes into intact worn umbrella and avoid ornamental fantasy additions. Reconstruct this guide corner independently; do not mirror pixels or place the handle toward viewer by habit. Give generous margins around umbrella and every wheel. Late-afternoon DAYTIME sun SCREEN UPPER RIGHT and shadows LOWER LEFT, all lamps off. One complete opaque object on true zero-alpha background, transparent spoke gaps, no people, motor, extra cab, ground plate, scenery, text, UI or grid. Source candidate only; no runtime or numerical camera release is implied.",
+      "nativeCameraOrScaleApproved": false
+    },
+    {
+      "key": "ice-cream-cart-normalNW-repair",
+      "subject": "newprop:ice-cream-cart",
+      "kind": "single-normal-corner-replacement",
+      "targetProposal": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-vehicle-source-batch-01\\native\\ice-cream-cart\\normal-NW-v2.png",
+      "references": [
+        "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-vehicle-source-batch-01\\ice-cream-isolated-repairs-v1\\guide-normalNW.png",
+        "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-vehicle-source-batch-01\\ice-cream-isolated-repairs-v1\\original-ice-cream-identity.png"
+      ],
+      "referenceOrder": [
+        "Exact guide camera/fixed geometry FIRST",
+        "Original single native identity/materials SECOND"
+      ],
+      "fixedRearEndProjection": "NEAR LOWER RIGHT, including caster beneath the handle end",
+      "prompt": "Generate ONE SINGLE NW corner view of the same manual ice-cream pushcart. Reference1 is exact 3D camera/assembly authority; reference2 is the ORIGINAL one-view identity/material reference only, never a camera to repeat. Model REAR+Y contains the push handle, cone rack, cup stack and ONE small caster, all on the SAME physical end in every view. In THIS NW guide view that complete rear/handle end projects NEAR LOWER RIGHT, including caster beneath the handle end. TWO large spoked wheels share one transverse axle at the chest; never move the small caster to the opposite end. One fixed striped green/cream umbrella and four freezer tubs under glass lids, same compartment layout and fixed pole. Preserve old enamel chest, restrained worn metalwork and detailed painted-miniature texture from reference2, but repair unnecessary holes into intact worn umbrella and avoid ornamental fantasy additions. Reconstruct this guide corner independently; do not mirror pixels or place the handle toward viewer by habit. Give generous margins around umbrella and every wheel. Late-afternoon DAYTIME sun SCREEN UPPER RIGHT and shadows LOWER LEFT, all lamps off. One complete opaque object on true zero-alpha background, transparent spoke gaps, no people, motor, extra cab, ground plate, scenery, text, UI or grid. Source candidate only; no runtime or numerical camera release is implied.",
+      "nativeCameraOrScaleApproved": false
+    },
+    {
+      "key": "ice-cream-cart-normalNE-repair",
+      "subject": "newprop:ice-cream-cart",
+      "kind": "single-normal-corner-replacement",
+      "targetProposal": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-vehicle-source-batch-01\\native\\ice-cream-cart\\normal-NE-v2.png",
+      "references": [
+        "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-vehicle-source-batch-01\\ice-cream-isolated-repairs-v1\\guide-normalNE.png",
+        "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-vehicle-source-batch-01\\ice-cream-isolated-repairs-v1\\original-ice-cream-identity.png"
+      ],
+      "referenceOrder": [
+        "Exact guide camera/fixed geometry FIRST",
+        "Original single native identity/materials SECOND"
+      ],
+      "fixedRearEndProjection": "FAR UPPER RIGHT; caster can be occluded behind chest",
+      "prompt": "Generate ONE SINGLE NE corner view of the same manual ice-cream pushcart. Reference1 is exact 3D camera/assembly authority; reference2 is the ORIGINAL one-view identity/material reference only, never a camera to repeat. Model REAR+Y contains the push handle, cone rack, cup stack and ONE small caster, all on the SAME physical end in every view. In THIS NE guide view that complete rear/handle end projects FAR UPPER RIGHT; caster can be occluded behind chest. TWO large spoked wheels share one transverse axle at the chest; never move the small caster to the opposite end. One fixed striped green/cream umbrella and four freezer tubs under glass lids, same compartment layout and fixed pole. Preserve old enamel chest, restrained worn metalwork and detailed painted-miniature texture from reference2, but repair unnecessary holes into intact worn umbrella and avoid ornamental fantasy additions. Reconstruct this guide corner independently; do not mirror pixels or place the handle toward viewer by habit. Give generous margins around umbrella and every wheel. Late-afternoon DAYTIME sun SCREEN UPPER RIGHT and shadows LOWER LEFT, all lamps off. One complete opaque object on true zero-alpha background, transparent spoke gaps, no people, motor, extra cab, ground plate, scenery, text, UI or grid. Source candidate only; no runtime or numerical camera release is implied.",
+      "nativeCameraOrScaleApproved": false
+    }
+  ],
+  "generationPerformed": false,
+  "runtimeIntegrated": false
+}

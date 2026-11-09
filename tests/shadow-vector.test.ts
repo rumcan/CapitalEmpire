@@ -44,6 +44,25 @@ test('the mesh: a contact ring and a cast ring with a hole are filled and rimmed
   for (let v = 0; v < m.nVerts; v++) { const o = v * VERTEX_FLOATS; assert.ok(m.verts[o + 3] === 0 || m.verts[o + 3] === 1); assert.ok(m.verts[o + 4]! > 0 && m.verts[o + 4]! <= 1); assert.ok(m.verts[o + 5] === 0 || m.verts[o + 5] === 1); }
 });
 
+test('the mesh builder: a big entry makes its typed arrays grow (the old bytes given back), and the mesh is the one a builder that never grows makes', () => {
+  // T375: the builder's Float64Array / Uint32Array start at a size for the game's pictures (about 1 300 floats and 650 indices each) and are replaced when an entry needs more
+  const n = 600, c: number[] = [], s: number[] = [];
+  for (let i = 0; i < n; i++) { const a = (i / n) * Math.PI * 2; c.push(Math.cos(a) * 100, Math.sin(a) * 50); s.push(Math.cos(a) * 100, Math.sin(a) * 50, 20 + 10 * Math.sin(a * 3)); }
+  const big: VectorShadow = { c: [c], s: [s] };
+  const grown = buildVectorMesh({ big });
+  // normal and mirrored copy: each ring's points and as many rim points (8 n); far copies: each ring cut to at most 8 points, no rim (up to 32)
+  assert.ok(grown.nVerts >= 8 * n && grown.nVerts <= 8 * n + 32, `${grown.nVerts} vertices`);
+  assert.ok(grown.nVerts * VERTEX_FLOATS > 4096, 'more than the builder starts with: it grew');
+  assert.equal(grown.verts.length, grown.nVerts * VERTEX_FLOATS, 'exact-size copies, not the builder\'s room'); assert.equal(grown.idx.length, grown.nIdx);
+  for (let i = 0; i < grown.nIdx; i++) assert.ok(grown.idx[i]! < grown.nVerts);
+  for (let v = 0; v < grown.nVerts; v++) { const o = v * VERTEX_FLOATS; assert.ok(grown.verts[o + 3] === 0 || grown.verts[o + 3] === 1); assert.ok(grown.verts[o + 4]! > 0 && grown.verts[o + 4]! <= 1); assert.ok(grown.verts[o + 6] === 0 && grown.verts[o + 7] === 0, 'the two spare floats stay 0'); }
+  // the same entry among 100 pictures that share it: the builder starts with room for it, so it never grows: the same mesh
+  const fillers = Object.fromEntries(Array.from({ length: 100 }, (_, i) => ['f' + i, { same: 'big' } as VectorShadow]));
+  const roomy = buildVectorMesh({ big, ...fillers });
+  assert.equal(roomy.nVerts, grown.nVerts); assert.equal(roomy.nIdx, grown.nIdx);
+  assert.deepEqual([...roomy.verts], [...grown.verts]); assert.deepEqual([...roomy.idx], [...grown.idx]);
+});
+
 test('every picture the game draws has its own vector shadow, or is on the fallback list', () => {
   const items = draftItems(), missing: string[] = [];
   for (const i of items) if (!VECTOR_SHADOWS[LIBRARY[i]!.id]) missing.push(LIBRARY[i]!.id);

@@ -1,0 +1,43 @@
+[
+  {
+    "key": "golf-source-01-09-main-leaderboard",
+    "condition": "budget",
+    "runtimeTarget": {
+      "eventTypeId": "leaderboard",
+      "eventName": "Main leaderboard",
+      "currentSpriteSubjectId": "golf:leaderboard",
+      "newArtSubjectProposal": "golf:event-main-leaderboard",
+      "newArtSubjectAlreadyRegistered": false,
+      "eventCatalogueSource": "src/game/golf/tents.ts",
+      "standInMappingSource": "src/game/golf/structure-art.ts",
+      "footprintTiles": {
+        "width": 4,
+        "depth": 2
+      },
+      "footprintMetres": {
+        "width": 8,
+        "depth": 4
+      },
+      "dimensionsMeaning": "Exact current event placement plot, not measured source sprite architecture. New design must fit plot; no runtime geometry changed.",
+      "currentSpriteBaseBoxesInTiles": [
+        {
+          "hx": 4,
+          "hy": 1.5,
+          "dx": 0,
+          "dy": 0
+        }
+      ]
+    },
+    "source": "C:/Users/RAMPAGE/.codex/generated_images/01a1b1fd-39ec-7220-8f11-86e4448833ea/exec-16f3fc3b-3d1b-4c9f-aeed-5883cde73a69.png",
+    "target": "generated/golf-source-batch-01/native/golf-source-01-09-main-leaderboard/budget-normal-v1.png",
+    "prompt": "Generate a high-detail2x2 sheet of ONE SAME golf-event item in FOUR genuinely different orthographic45degree CORNER views, camera30degrees down. Reference1 is painted miniature materials/brushwork ONLY, do not copy its building. Reference2 is functional equipment reference ONLY; obey the design brief and reject all ornamental/goblin/modern details described below. Functional identity: Large freestanding blank green leaderboard with white score grid, braced timber frame, a narrow service platform with railings, exactly one fixed right-hand staircase, three-part shingle rain cap and two fixed green flags. Target existing8x4m event plot. Rear must show structural braces and slat backs; stair stays on the same physical end. Lamps off in daylight. Condition: Weathered ordinary timber/painted-green scoreboard and service platform, worn but sound staircase and plain roof cap. Avoid elaborate fantasy trim. It is1985; budget means ordinary old1950smanufactured equipment stillusednow, no fantasyarchitecture/rope-lashedlogs/patchworkblueplastic/ornatebrassfinials. Four camera cells: TOP LEFT FRONT+LEFT sides, TOP RIGHT REAR+LEFT sides, BOTTOM LEFT REAR+RIGHT sides, BOTTOM RIGHT FRONT+RIGHT sides, corresponding SE SW / NW NE. Reconstruct real REAR faces, don't pastefront servicehatches/screens/lenses onto theback. Keep ALL doors/windows/vents/equipment/ladder/stair/camera/servingcounter positions fixed in localphysicalspace across the four turns. Structuralbodies andfunctionalattachments are same in every view. Finely hand-painted miniature game style consistent with source authority, realistic materials and readable silhouettes. LATE-AFTERNOON DAYTIME sunfixedSCREEN UPPER RIGHT, shadowsLOWER LEFT; all electriclamps/screensoff. Nopeople, plants, groundplate/roads/terrain, UI/captions/grid/text orhaze. Equipment's owndeck/mat is allowed onlyifpartofbrief. Fullyopaqueobjects on genuinelyzeroalpha transparentbackground includingallgutters; netting/railopeningsremaintransparent. Four complete separate sprites, equal physicalscale, centredwithgenerouscellmargins.",
+    "references": [
+      "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/old-clubhouse-1950/normal-v5.png",
+      "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-01\\references\\golf-leaderboard.source.png"
+    ],
+    "status": "native normal4 candidate; yaw4 and independent identity/alpha/geometry review pending",
+    "runtime_imported": false,
+    "sha256": "a6bd4e8b85fdbc8aff52bdc01b878aef46feadaf557cc9d683db811dc16031d4",
+    "native_bytes_preserved": true
+  }
+]

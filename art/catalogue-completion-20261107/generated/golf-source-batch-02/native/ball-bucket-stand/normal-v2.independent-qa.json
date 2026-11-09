@@ -1,0 +1,108 @@
+{
+  "schema": 1,
+  "as_of_utc": "2026-11-07T13:40:14.741147+00:00",
+  "review_result": "PASS-source-candidate-opposite-front-and-rear-corners",
+  "four_actual_corners_visually_verified": true,
+  "source": {
+    "path": "generated/golf-source-batch-02/native/ball-bucket-stand/normal-v2.png",
+    "sha256": "8c11d7d6ac9da5b2efad2d46aa926df1fbcc545ba1ebe402fd88b849e1376ab0",
+    "bytes": 1810123
+  },
+  "mode": "RGBA",
+  "dimensions": [
+    1254,
+    1254
+  ],
+  "source_original_hash_matches_parent": true,
+  "parent_provenance": {
+    "path": "generated/golf-source-batch-02/native/ball-bucket-stand/normal-v2.provenance.json",
+    "sha256": "d8a0a2e5544616f18964f53adf6438b4d43a0dc17304b3bf7246364efe7f96d8",
+    "bytes": 2901
+  },
+  "exact_prompt_utf8_sha256": "f62fdb0eabaf5c1ce0b00c4eee32d253e99c6d44042d7d2c74084e85b99af83d",
+  "actual_generation_references": [
+    {
+      "path": "generated/golf-source-batch-02/fixed-world-guides-v1/ball-bucket-stand/guides/normal-world-v1.png",
+      "sha256": "59ee1e90af660e61126b6a79caed51d6a833797d94d2f237ded292953ee654e6",
+      "bytes": 68342
+    },
+    {
+      "path": "generated/golf-source-batch-02/native/ball-bucket-stand/normal-v1.png",
+      "sha256": "72a69fad909156b40b5e375b8dfe5629862f9d3a9ccd64ca73abcd3f4fdbb843",
+      "bytes": 1893589
+    }
+  ],
+  "zero_alpha_fraction": 0.5512478092432764,
+  "outer_4px_border_alpha_p50p95max": [
+    0.0,
+    0.0,
+    1.0
+  ],
+  "nominal_10px_center_gap_alpha_p50p95max": [
+    0.0,
+    1.0,
+    7.0
+  ],
+  "cells": [
+    {
+      "cell": "TL",
+      "rect_ltrb": [
+        0,
+        0,
+        627,
+        627
+      ],
+      "minimum_core_margin_px": 24,
+      "boundary_core_pixels_alpha_gt128": 0,
+      "boundary_alpha_max": 1,
+      "native_rgba_rectangle_sha256": "626dc1f16064d065c881cde942284b33f3a725e1465483ea5ba8d8301e755b53"
+    },
+    {
+      "cell": "TR",
+      "rect_ltrb": [
+        627,
+        0,
+        1254,
+        627
+      ],
+      "minimum_core_margin_px": 39,
+      "boundary_core_pixels_alpha_gt128": 0,
+      "boundary_alpha_max": 1,
+      "native_rgba_rectangle_sha256": "bf264f0c4b59a3e999bfec97fb90c0a54397285b0b060e4a21cf420c340545ce"
+    },
+    {
+      "cell": "BL",
+      "rect_ltrb": [
+        0,
+        627,
+        627,
+        1254
+      ],
+      "minimum_core_margin_px": 36,
+      "boundary_core_pixels_alpha_gt128": 0,
+      "boundary_alpha_max": 1,
+      "native_rgba_rectangle_sha256": "f0b6c5eba0a0705929d18b819e7b776ed25cf3b252af548c6c2d989a60fa6c26"
+    },
+    {
+      "cell": "BR",
+      "rect_ltrb": [
+        627,
+        627,
+        1254,
+        1254
+      ],
+      "minimum_core_margin_px": 7,
+      "boundary_core_pixels_alpha_gt128": 0,
+      "boundary_alpha_max": 1,
+      "native_rgba_rectangle_sha256": "fe36d6a90e06e7ba43cd20a87e38b0ee8105cd2005d6ee78cd6ce823a61d428d"
+    }
+  ],
+  "all_cores_complete_at_reference_cuts": true,
+  "visual_observations": [
+    "Front chute/ball window seen on opposite front planes in TL and BR. TR and BL show opposite rear panels/brace views. Crank remains attached to one front-side assembly; angle and exact structural calibration remain unverified."
+  ],
+  "alpha_policy": "Actual alpha measured. Hidden RGB at zero/very low alpha is not visible haze. No alpha reconstruction, keying or pixel edits.",
+  "owner_approved": false,
+  "runtime_ready": false,
+  "exact_numerical_angle_certified": false
+}

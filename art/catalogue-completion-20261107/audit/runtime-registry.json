@@ -1,0 +1,4110 @@
+{
+  "schema": 1,
+  "auditDate": "2026-11-07",
+  "checkout": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency",
+  "scope": "Read-only static runtime audit; no server/build/rebuild invoked",
+  "counts": {
+    "cornerMappings": 171,
+    "axisSets": 60,
+    "supplementalCornerSets": 9,
+    "importedScenes": 17,
+    "walkerLooks": 15,
+    "spectatorLooks": 15,
+    "golferLooks": 10
+  },
+  "importantLimit": "Registry membership does not prove accepted images, alpha/crop/light consistency, atlas content, or eight user selectable orientations. Newly generated unimported sources may exist. Do not equate counts with completion.",
+  "rotationSubjects": [
+    {
+      "subject": "business:buscompany",
+      "cornerViewIds": [
+        "business:buscompany",
+        "view:business:buscompany:se",
+        "view:business:buscompany:sw",
+        "view:business:buscompany:nw"
+      ],
+      "axisViewIds": [],
+      "cornerIdsPresent": true,
+      "axisIdsPresent": false,
+      "removedByStudio": false,
+      "missingActiveViewIds": [],
+      "propsToolRotations": 4,
+      "sourceImageQuality": "not assessed by runtime registration",
+      "eightPlayerSelectableFacings": false
+    },
+    {
+      "subject": "business:casino",
+      "cornerViewIds": [
+        "business:casino",
+        "view:business:casino:se",
+        "view:business:casino:sw",
+        "view:business:casino:nw"
+      ],
+      "axisViewIds": [],
+      "cornerIdsPresent": true,
+      "axisIdsPresent": false,
+      "removedByStudio": false,
+      "missingActiveViewIds": [],
+      "propsToolRotations": 4,
+      "sourceImageQuality": "not assessed by runtime registration",
+      "eightPlayerSelectableFacings": false
+    },
+    {
+      "subject": "business:diner",
+      "cornerViewIds": [
+        "business:diner",
+        "view:business:diner:se",
+        "view:business:diner:sw",
+        "view:business:diner:nw"
+      ],
+      "axisViewIds": [],
+      "cornerIdsPresent": true,
+      "axisIdsPresent": false,
+      "removedByStudio": false,
+      "missingActiveViewIds": [],
+      "propsToolRotations": 4,
+      "sourceImageQuality": "not assessed by runtime registration",
+      "eightPlayerSelectableFacings": false
+    },
+    {
+      "subject": "business:estate-villa",
+      "cornerViewIds": [
+        "business:estate-villa",
+        "view:business:estate-villa:se",
+        "view:business:estate-villa:sw",
+        "view:business:estate-villa:nw"
+      ],
+      "axisViewIds": [],
+      "cornerIdsPresent": true,
+      "axisIdsPresent": false,
+      "removedByStudio": false,
+      "missingActiveViewIds": [],
+      "propsToolRotations": 4,
+      "sourceImageQuality": "not assessed by runtime registration",
+      "eightPlayerSelectableFacings": false
+    },
+    {
+      "subject": "business:fishing-boathouse",
+      "cornerViewIds": [
+        "business:fishing-boathouse",
+        "view:business:fishing-boathouse:se",
+        "view:business:fishing-boathouse:sw",
+        "view:business:fishing-boathouse:nw"
+      ],
+      "axisViewIds": [],
+      "cornerIdsPresent": true,
+      "axisIdsPresent": false,
+      "removedByStudio": false,
+      "missingActiveViewIds": [],
+      "propsToolRotations": 4,
+      "sourceImageQuality": "not assessed by runtime registration",
+      "eightPlayerSelectableFacings": false
+    },
+    {
+      "subject": "business:fishing-cabin",
+      "cornerViewIds": [
+        "business:fishing-cabin",
+        "view:business:fishing-cabin:se",
+        "view:business:fishing-cabin:sw",
+        "view:business:fishing-cabin:nw"
+      ],
+      "axisViewIds": [],
+      "cornerIdsPresent": true,
+      "axisIdsPresent": false,
+      "removedByStudio": false,
+      "missingActiveViewIds": [],
+      "propsToolRotations": 4,
+      "sourceImageQuality": "not assessed by runtime registration",
+      "eightPlayerSelectableFacings": false
+    },
+    {
+      "subject": "business:fishing-lodge",
+      "cornerViewIds": [
+        "business:fishing-lodge",
+        "view:business:fishing-lodge:se",
+        "view:business:fishing-lodge:sw",
+        "view:business:fishing-lodge:nw"
+      ],
+      "axisViewIds": [],
+      "cornerIdsPresent": true,
+      "axisIdsPresent": false,
+      "removedByStudio": false,
+      "missingActiveViewIds": [],
+      "propsToolRotations": 4,
+      "sourceImageQuality": "not assessed by runtime registration",
+      "eightPlayerSelectableFacings": false
+    },
+    {
+      "subject": "business:fishing-rental-kiosk",
+      "cornerViewIds": [
+        "business:fishing-rental-kiosk",
+        "view:business:fishing-rental-kiosk:se",
+        "view:business:fishing-rental-kiosk:sw",
+        "view:business:fishing-rental-kiosk:nw"
+      ],
+      "axisViewIds": [],
+      "cornerIdsPresent": true,
+      "axisIdsPresent": false,
+      "removedByStudio": false,
+      "missingActiveViewIds": [],
+      "propsToolRotations": 4,
+      "sourceImageQuality": "not assessed by runtime registration",
+      "eightPlayerSelectableFacings": false
+    },
+    {
+      "subject": "business:golf-cart-garage",
+      "cornerViewIds": [
+        "business:golf-cart-garage",
+        "view:business:golf-cart-garage:se",
+        "view:business:golf-cart-garage:sw",
+        "view:business:golf-cart-garage:nw"
+      ],
+      "axisViewIds": [],
+      "cornerIdsPresent": true,
+      "axisIdsPresent": false,
+      "removedByStudio": false,
+      "missingActiveViewIds": [],
+      "propsToolRotations": 4,
+      "sourceImageQuality": "not assessed by runtime registration",
+      "eightPlayerSelectableFacings": false
+    },
+    {
+      "subject": "business:golf-clubhouse",
+      "cornerViewIds": [
+        "business:golf-clubhouse",
+        "view:business:golf-clubhouse:se",
+        "view:business:golf-clubhouse:sw",
+        "view:business:golf-clubhouse:nw"
+      ],
+      "axisViewIds": [],
+      "cornerIdsPresent": true,
+      "axisIdsPresent": false,
+      "removedByStudio": false,
+      "missingActiveViewIds": [],
+      "propsToolRotations": 4,
+      "sourceImageQuality": "not assessed by runtime registration",
+      "eightPlayerSelectableFacings": false
+    },
+    {
+      "subject": "business:golf-driving-range",
+      "cornerViewIds": [
+        "business:golf-driving-range",
+        "view:business:golf-driving-range:se",
+        "view:business:golf-driving-range:sw",
+        "view:business:golf-driving-range:nw"
+      ],
+      "axisViewIds": [],
+      "cornerIdsPresent": true,
+      "axisIdsPresent": false,
+      "removedByStudio": true,
+      "missingActiveViewIds": [
+        "business:golf-driving-range"
+      ],
+      "propsToolRotations": 4,
+      "sourceImageQuality": "not assessed by runtime registration",
+      "eightPlayerSelectableFacings": false
+    },
+    {
+      "subject": "business:golf-halfway-pavilion",
+      "cornerViewIds": [
+        "business:golf-halfway-pavilion",
+        "view:business:golf-halfway-pavilion:se",
+        "view:business:golf-halfway-pavilion:sw",
+        "view:business:golf-halfway-pavilion:nw"
+      ],
+      "axisViewIds": [],
+      "cornerIdsPresent": true,
+      "axisIdsPresent": false,
+      "removedByStudio": false,
+      "missingActiveViewIds": [],
+      "propsToolRotations": 4,
+      "sourceImageQuality": "not assessed by runtime registration",
+      "eightPlayerSelectableFacings": false
+    },
+    {
+      "subject": "business:golf-pro-shop",
+      "cornerViewIds": [
+        "business:golf-pro-shop",
+        "view:business:golf-pro-shop:se",
+        "view:business:golf-pro-shop:sw",
+        "view:business:golf-pro-shop:nw"
+      ],
+      "axisViewIds": [],
+      "cornerIdsPresent": true,
+      "axisIdsPresent": false,
+      "removedByStudio": false,
+      "missingActiveViewIds": [],
+      "propsToolRotations": 4,
+      "sourceImageQuality": "not assessed by runtime registration",
+      "eightPlayerSelectableFacings": false
+    },
+    {
+      "subject": "business:hotel",
+      "cornerViewIds": [
+        "business:hotel",
+        "view:business:hotel:se",
+        "view:business:hotel:sw",
+        "view:business:hotel:nw"
+      ],
+      "axisViewIds": [],
+      "cornerIdsPresent": true,
+      "axisIdsPresent": false,
+      "removedByStudio": false,
+      "missingActiveViewIds": [],
+      "propsToolRotations": 4,
+      "sourceImageQuality": "not assessed by runtime registration",
+      "eightPlayerSelectableFacings": false
+    },
+    {
+      "subject": "business:motel",
+      "cornerViewIds": [
+        "business:motel",
+        "view:business:motel:se",
+        "view:business:motel:sw",
+        "view:business:motel:nw"
+      ],
+      "axisViewIds": [],
+      "cornerIdsPresent": true,
+      "axisIdsPresent": false,
+      "removedByStudio": false,
+      "missingActiveViewIds": [],
+      "propsToolRotations": 4,
+      "sourceImageQuality": "not assessed by runtime registration",
+      "eightPlayerSelectableFacings": false
+    },
+    {
+      "subject": "business:sportsbar",
+      "cornerViewIds": [
+        "business:sportsbar",
+        "view:business:sportsbar:se",
+        "view:business:sportsbar:sw",
+        "view:business:sportsbar:nw"
+      ],
+      "axisViewIds": [],
+      "cornerIdsPresent": true,
+      "axisIdsPresent": false,
+      "removedByStudio": false,
+      "missingActiveViewIds": [],
+      "propsToolRotations": 4,
+      "sourceImageQuality": "not assessed by runtime registration",
+      "eightPlayerSelectableFacings": false
+    },
+    {
+      "subject": "business:stadium",
+      "cornerViewIds": [
+        "business:stadium",
+        "view:business:stadium:se",
+        "view:business:stadium:sw",
+        "view:business:stadium:nw"
+      ],
+      "axisViewIds": [],
+      "cornerIdsPresent": true,
+      "axisIdsPresent": false,
+      "removedByStudio": true,
+      "missingActiveViewIds": [
+        "business:stadium"
+      ],
+      "propsToolRotations": 4,
+      "sourceImageQuality": "not assessed by runtime registration",
+      "eightPlayerSelectableFacings": false
+    },
+    {
+      "subject": "business:tackle",
+      "cornerViewIds": [
+        "business:tackle",
+        "view:business:tackle:se",
+        "view:business:tackle:sw",
+        "view:business:tackle:nw"
+      ],
+      "axisViewIds": [],
+      "cornerIdsPresent": true,
+      "axisIdsPresent": false,
+      "removedByStudio": false,
+      "missingActiveViewIds": [],
+      "propsToolRotations": 4,
+      "sourceImageQuality": "not assessed by runtime registration",
+      "eightPlayerSelectableFacings": false
+    },
+    {
+      "subject": "business:taxi",
+      "cornerViewIds": [
+        "business:taxi",
+        "view:business:taxi:se",
+        "view:business:taxi:sw",
+        "view:business:taxi:nw"
+      ],
+      "axisViewIds": [],
+      "cornerIdsPresent": true,
+      "axisIdsPresent": false,
+      "removedByStudio": false,
+      "missingActiveViewIds": [],
+      "propsToolRotations": 4,
+      "sourceImageQuality": "not assessed by runtime registration",
+      "eightPlayerSelectableFacings": false
+    },
+    {
+      "subject": "ce:parking-entry",
+      "cornerViewIds": [],
+      "axisViewIds": [
+        "view:ce:parking-entry:n",
+        "view:ce:parking-entry:e",
+        "view:ce:parking-entry:s",
+        "view:ce:parking-entry:w"
+      ],
+      "cornerIdsPresent": false,
+      "axisIdsPresent": true,
+      "removedByStudio": false,
+      "missingActiveViewIds": [],
+      "propsToolRotations": 4,
+      "sourceImageQuality": "not assessed by runtime registration",
+      "eightPlayerSelectableFacings": false
+    },
+    {
+      "subject": "ce:parking-garage-2storey",
+      "cornerViewIds": [
+        "view:ce:parking-garage-2storey:ne",
+        "view:ce:parking-garage-2storey:se",
+        "view:ce:parking-garage-2storey:sw",
+        "view:ce:parking-garage-2storey:nw"
+      ],
+      "axisViewIds": [
+        "ce:parking-garage-2storey",
+        "view:ce:parking-garage-2storey:e",
+        "view:ce:parking-garage-2storey:s",
+        "view:ce:parking-garage-2storey:w"
+      ],
+      "cornerIdsPresent": true,
+      "axisIdsPresent": true,
+      "removedByStudio": false,
+      "missingActiveViewIds": [],
+      "propsToolRotations": 4,
+      "sourceImageQuality": "not assessed by runtime registration",
+      "eightPlayerSelectableFacings": false
+    },
+    {
+      "subject": "ce:parking-garage-3storey",
+      "cornerViewIds": [
+        "view:ce:parking-garage-3storey:ne",
+        "view:ce:parking-garage-3storey:se",
+        "view:ce:parking-garage-3storey:sw",
+        "view:ce:parking-garage-3storey:nw"
+      ],
+      "axisViewIds": [
+        "ce:parking-garage-3storey",
+        "view:ce:parking-garage-3storey:e",
+        "view:ce:parking-garage-3storey:s",
+        "view:ce:parking-garage-3storey:w"
+      ],
+      "cornerIdsPresent": true,
+      "axisIdsPresent": true,
+      "removedByStudio": false,
+      "missingActiveViewIds": [],
+      "propsToolRotations": 4,
+      "sourceImageQuality": "not assessed by runtime registration",
+      "eightPlayerSelectableFacings": false
+    },
+    {
+      "subject": "ce:parking-garage-4storey",
+      "cornerViewIds": [
+        "view:ce:parking-garage-4storey:ne",
+        "view:ce:parking-garage-4storey:se",
+        "view:ce:parking-garage-4storey:sw",
+        "view:ce:parking-garage-4storey:nw"
+      ],
+      "axisViewIds": [
+        "ce:parking-garage-4storey",
+        "view:ce:parking-garage-4storey:e",
+        "view:ce:parking-garage-4storey:s",
+        "view:ce:parking-garage-4storey:w"
+      ],
+      "cornerIdsPresent": true,
+      "axisIdsPresent": true,
+      "removedByStudio": false,
+      "missingActiveViewIds": [],
+      "propsToolRotations": 4,
+      "sourceImageQuality": "not assessed by runtime registration",
+      "eightPlayerSelectableFacings": false
+    },
+    {
+      "subject": "ce:parking-garage-5storey",
+      "cornerViewIds": [
+        "view:ce:parking-garage-5storey:ne",
+        "view:ce:parking-garage-5storey:se",
+        "view:ce:parking-garage-5storey:sw",
+        "view:ce:parking-garage-5storey:nw"
+      ],
+      "axisViewIds": [
+        "ce:parking-garage-5storey",
+        "view:ce:parking-garage-5storey:e",
+        "view:ce:parking-garage-5storey:s",
+        "view:ce:parking-garage-5storey:w"
+      ],
+      "cornerIdsPresent": true,
+      "axisIdsPresent": true,
+      "removedByStudio": false,
+      "missingActiveViewIds": [],
+      "propsToolRotations": 4,
+      "sourceImageQuality": "not assessed by runtime registration",
+      "eightPlayerSelectableFacings": false
+    },
+    {
+      "subject": "ce:parking-garage-6storey",
+      "cornerViewIds": [
+        "view:ce:parking-garage-6storey:ne",
+        "view:ce:parking-garage-6storey:se",
+        "view:ce:parking-garage-6storey:sw",
+        "view:ce:parking-garage-6storey:nw"
+      ],
+      "axisViewIds": [
+        "ce:parking-garage-6storey",
+        "view:ce:parking-garage-6storey:e",
+        "view:ce:parking-garage-6storey:s",
+        "view:ce:parking-garage-6storey:w"
+      ],
+      "cornerIdsPresent": true,
+      "axisIdsPresent": true,
+      "removedByStudio": false,
+      "missingActiveViewIds": [],
+      "propsToolRotations": 4,
+      "sourceImageQuality": "not assessed by runtime registration",
+      "eightPlayerSelectableFacings": false
+    },
+    {
+      "subject": "ce:parking-kiosk",
+      "cornerViewIds": [
+        "ce:parking-kiosk",
+        "view:ce:parking-kiosk:se",
+        "view:ce:parking-kiosk:sw",
+        "view:ce:parking-kiosk:nw"
+      ],
+      "axisViewIds": [],
+      "cornerIdsPresent": true,
+      "axisIdsPresent": false,
+      "removedByStudio": false,
+      "missingActiveViewIds": [],
+      "propsToolRotations": 4,
+      "sourceImageQuality": "not assessed by runtime registration",
+      "eightPlayerSelectableFacings": false
+    },
+    {
+      "subject": "expansion:backyard-tent",
+      "cornerViewIds": [
+        "expansion:backyard-tent",
+        "view:expansion:backyard-tent:se",
+        "view:expansion:backyard-tent:sw",
+        "view:expansion:backyard-tent:nw"
+      ],
+      "axisViewIds": [],
+      "cornerIdsPresent": true,
+      "axisIdsPresent": false,
+      "removedByStudio": false,
+      "missingActiveViewIds": [],
+      "propsToolRotations": 4,
+      "sourceImageQuality": "not assessed by runtime registration",
+      "eightPlayerSelectableFacings": false
+    },
+    {
+      "subject": "expansion:boarded-store-rear",
+      "cornerViewIds": [
+        "expansion:boarded-store-rear",
+        "view:expansion:boarded-store-rear:se",
+        "view:expansion:boarded-store-rear:sw",
+        "view:expansion:boarded-store-rear:nw"
+      ],
+      "axisViewIds": [],
+      "cornerIdsPresent": true,
+      "axisIdsPresent": false,
+      "removedByStudio": false,
+      "missingActiveViewIds": [],
+      "propsToolRotations": 4,
+      "sourceImageQuality": "not assessed by runtime registration",
+      "eightPlayerSelectableFacings": false
+    },
+    {
+      "subject": "expansion:derelict-two-storey",
+      "cornerViewIds": [
+        "expansion:derelict-two-storey",
+        "view:expansion:derelict-two-storey:se",
+        "view:expansion:derelict-two-storey:sw",
+        "view:expansion:derelict-two-storey:nw"
+      ],
+      "axisViewIds": [],
+      "cornerIdsPresent": true,
+      "axisIdsPresent": false,
+      "removedByStudio": false,
+      "missingActiveViewIds": [],
+      "propsToolRotations": 4,
+      "sourceImageQuality": "not assessed by runtime registration",
+      "eightPlayerSelectableFacings": false
+    },
+    {
+      "subject": "expansion:dormer-rear",
+      "cornerViewIds": [
+        "expansion:dormer-rear",
+        "view:expansion:dormer-rear:se",
+        "view:expansion:dormer-rear:sw",
+        "view:expansion:dormer-rear:nw"
+      ],
+      "axisViewIds": [
+        "view:expansion:dormer-rear:n",
+        "view:expansion:dormer-rear:e",
+        "view:expansion:dormer-rear:s",
+        "view:expansion:dormer-rear:w"
+      ],
+      "cornerIdsPresent": true,
+      "axisIdsPresent": true,
+      "removedByStudio": false,
+      "missingActiveViewIds": [],
+      "propsToolRotations": 4,
+      "sourceImageQuality": "not assessed by runtime registration",
+      "eightPlayerSelectableFacings": false
+    },
+    {
+      "subject": "expansion:duplex-rear",
+      "cornerViewIds": [
+        "expansion:duplex-rear",
+        "view:expansion:duplex-rear:se",
+        "view:expansion:duplex-rear:sw",
+        "view:expansion:duplex-rear:nw"
+      ],
+      "axisViewIds": [],
+      "cornerIdsPresent": true,
+      "axisIdsPresent": false,
+      "removedByStudio": false,
+      "missingActiveViewIds": [],
+      "propsToolRotations": 4,
+      "sourceImageQuality": "not assessed by runtime registration",
+      "eightPlayerSelectableFacings": false
+    },
+    {
+      "subject": "expansion:glasshouse",
+      "cornerViewIds": [
+        "expansion:glasshouse",
+        "view:expansion:glasshouse:se",
+        "view:expansion:glasshouse:sw",
+        "view:expansion:glasshouse:nw"
+      ],
+      "axisViewIds": [],
+      "cornerIdsPresent": true,
+      "axisIdsPresent": false,
+      "removedByStudio": false,
+      "missingActiveViewIds": [],
+      "propsToolRotations": 4,
+      "sourceImageQuality": "not assessed by runtime registration",
+      "eightPlayerSelectableFacings": false
+    },
+    {
+      "subject": "expansion:lean-to-shed",
+      "cornerViewIds": [
+        "expansion:lean-to-shed",
+        "view:expansion:lean-to-shed:se",
+        "view:expansion:lean-to-shed:sw",
+        "view:expansion:lean-to-shed:nw"
+      ],
+      "axisViewIds": [],
+      "cornerIdsPresent": true,
+      "axisIdsPresent": false,
+      "removedByStudio": false,
+      "missingActiveViewIds": [],
+      "propsToolRotations": 4,
+      "sourceImageQuality": "not assessed by runtime registration",
+      "eightPlayerSelectableFacings": false
+    },
+    {
+      "subject": "expansion:outhouse",
+      "cornerViewIds": [
+        "expansion:outhouse",
+        "view:expansion:outhouse:se",
+        "view:expansion:outhouse:sw",
+        "view:expansion:outhouse:nw"
+      ],
+      "axisViewIds": [],
+      "cornerIdsPresent": true,
+      "axisIdsPresent": false,
+      "removedByStudio": false,
+      "missingActiveViewIds": [],
+      "propsToolRotations": 4,
+      "sourceImageQuality": "not assessed by runtime registration",
+      "eightPlayerSelectableFacings": false
+    },
+    {
+      "subject": "expansion:rundown-house",
+      "cornerViewIds": [
+        "expansion:rundown-house",
+        "view:expansion:rundown-house:se",
+        "view:expansion:rundown-house:sw",
+        "view:expansion:rundown-house:nw"
+      ],
+      "axisViewIds": [],
+      "cornerIdsPresent": true,
+      "axisIdsPresent": false,
+      "removedByStudio": false,
+      "missingActiveViewIds": [],
+      "propsToolRotations": 4,
+      "sourceImageQuality": "not assessed by runtime registration",
+      "eightPlayerSelectableFacings": false
+    },
+    {
+      "subject": "expansion:treehouse",
+      "cornerViewIds": [
+        "expansion:treehouse",
+        "view:expansion:treehouse:se",
+        "view:expansion:treehouse:sw",
+        "view:expansion:treehouse:nw"
+      ],
+      "axisViewIds": [],
+      "cornerIdsPresent": true,
+      "axisIdsPresent": false,
+      "removedByStudio": false,
+      "missingActiveViewIds": [],
+      "propsToolRotations": 4,
+      "sourceImageQuality": "not assessed by runtime registration",
+      "eightPlayerSelectableFacings": false
+    },
+    {
+      "subject": "gen:back-bbq-deck",
+      "cornerViewIds": [
+        "gen:back-bbq-deck",
+        "view:gen:back-bbq-deck:se",
+        "view:gen:back-bbq-deck:sw",
+        "view:gen:back-bbq-deck:nw"
+      ],
+      "axisViewIds": [
+        "view:gen:back-bbq-deck:n",
+        "view:gen:back-bbq-deck:e",
+        "view:gen:back-bbq-deck:s",
+        "view:gen:back-bbq-deck:w"
+      ],
+      "cornerIdsPresent": true,
+      "axisIdsPresent": true,
+      "removedByStudio": false,
+      "missingActiveViewIds": [],
+      "propsToolRotations": 4,
+      "sourceImageQuality": "not assessed by runtime registration",
+      "eightPlayerSelectableFacings": false
+    },
+    {
+      "subject": "gen:back-patio-pool",
+      "cornerViewIds": [
+        "gen:back-patio-pool",
+        "view:gen:back-patio-pool:se",
+        "view:gen:back-patio-pool:sw",
+        "view:gen:back-patio-pool:nw"
+      ],
+      "axisViewIds": [],
+      "cornerIdsPresent": true,
+      "axisIdsPresent": false,
+      "removedByStudio": false,
+      "missingActiveViewIds": [],
+      "propsToolRotations": 4,
+      "sourceImageQuality": "not assessed by runtime registration",
+      "eightPlayerSelectableFacings": false
+    },
+    {
+      "subject": "gen:back-screened-porch",
+      "cornerViewIds": [
+        "gen:back-screened-porch",
+        "view:gen:back-screened-porch:se",
+        "view:gen:back-screened-porch:sw",
+        "view:gen:back-screened-porch:nw"
+      ],
+      "axisViewIds": [],
+      "cornerIdsPresent": true,
+      "axisIdsPresent": false,
+      "removedByStudio": false,
+      "missingActiveViewIds": [],
+      "propsToolRotations": 4,
+      "sourceImageQuality": "not assessed by runtime registration",
+      "eightPlayerSelectableFacings": false
+    },
+    {
+      "subject": "gen:back-shed-garden",
+      "cornerViewIds": [
+        "gen:back-shed-garden",
+        "view:gen:back-shed-garden:se",
+        "view:gen:back-shed-garden:sw",
+        "view:gen:back-shed-garden:nw"
+      ],
+      "axisViewIds": [],
+      "cornerIdsPresent": true,
+      "axisIdsPresent": false,
+      "removedByStudio": false,
+      "missingActiveViewIds": [],
+      "propsToolRotations": 4,
+      "sourceImageQuality": "not assessed by runtime registration",
+      "eightPlayerSelectableFacings": false
+    },
+    {
+      "subject": "gen:back-swingset",
+      "cornerViewIds": [
+        "gen:back-swingset",
+        "view:gen:back-swingset:se",
+        "view:gen:back-swingset:sw",
+        "view:gen:back-swingset:nw"
+      ],
+      "axisViewIds": [],
+      "cornerIdsPresent": true,
+      "axisIdsPresent": false,
+      "removedByStudio": false,
+      "missingActiveViewIds": [],
+      "propsToolRotations": 4,
+      "sourceImageQuality": "not assessed by runtime registration",
+      "eightPlayerSelectableFacings": false
+    },
+    {
+      "subject": "gen:house-duplex",
+      "cornerViewIds": [
+        "gen:house-duplex",
+        "view:gen:house-duplex:se",
+        "view:gen:house-duplex:sw",
+        "view:gen:house-duplex:nw"
+      ],
+      "axisViewIds": [],
+      "cornerIdsPresent": true,
+      "axisIdsPresent": false,
+      "removedByStudio": false,
+      "missingActiveViewIds": [],
+      "propsToolRotations": 4,
+      "sourceImageQuality": "not assessed by runtime registration",
+      "eightPlayerSelectableFacings": false
+    },
+    {
+      "subject": "gen:house-farmhouse-wrap",
+      "cornerViewIds": [
+        "gen:house-farmhouse-wrap",
+        "view:gen:house-farmhouse-wrap:se",
+        "view:gen:house-farmhouse-wrap:sw",
+        "view:gen:house-farmhouse-wrap:nw"
+      ],
+      "axisViewIds": [],
+      "cornerIdsPresent": true,
+      "axisIdsPresent": false,
+      "removedByStudio": false,
+      "missingActiveViewIds": [],
+      "propsToolRotations": 4,
+      "sourceImageQuality": "not assessed by runtime registration",
+      "eightPlayerSelectableFacings": false
+    },
+    {
+      "subject": "gen:house-l-shape",
+      "cornerViewIds": [
+        "gen:house-l-shape",
+        "view:gen:house-l-shape:se",
+        "view:gen:house-l-shape:sw",
+        "view:gen:house-l-shape:nw"
+      ],
+      "axisViewIds": [],
+      "cornerIdsPresent": true,
+      "axisIdsPresent": false,
+      "removedByStudio": false,
+      "missingActiveViewIds": [],
+      "propsToolRotations": 4,
+      "sourceImageQuality": "not assessed by runtime registration",
+      "eightPlayerSelectableFacings": false
+    },
+    {
+      "subject": "gen:house-ranch-long",
+      "cornerViewIds": [
+        "gen:house-ranch-long",
+        "view:gen:house-ranch-long:se",
+        "view:gen:house-ranch-long:sw",
+        "view:gen:house-ranch-long:nw"
+      ],
+      "axisViewIds": [],
+      "cornerIdsPresent": true,
+      "axisIdsPresent": false,
+      "removedByStudio": false,
+      "missingActiveViewIds": [],
+      "propsToolRotations": 4,
+      "sourceImageQuality": "not assessed by runtime registration",
+      "eightPlayerSelectableFacings": false
+    },
+    {
+      "subject": "gen:house-splitlevel",
+      "cornerViewIds": [
+        "gen:house-splitlevel",
+        "view:gen:house-splitlevel:se",
+        "view:gen:house-splitlevel:sw",
+        "view:gen:house-splitlevel:nw"
+      ],
+      "axisViewIds": [],
+      "cornerIdsPresent": true,
+      "axisIdsPresent": false,
+      "removedByStudio": false,
+      "missingActiveViewIds": [],
+      "propsToolRotations": 4,
+      "sourceImageQuality": "not assessed by runtime registration",
+      "eightPlayerSelectableFacings": false
+    },
+    {
+      "subject": "golf:clubhouse-shanty",
+      "cornerViewIds": [
+        "golf:clubhouse-shanty",
+        "view:golf:clubhouse-shanty:se",
+        "view:golf:clubhouse-shanty:sw",
+        "view:golf:clubhouse-shanty:nw"
+      ],
+      "axisViewIds": [
+        "view:golf:clubhouse-shanty:n",
+        "view:golf:clubhouse-shanty:e",
+        "view:golf:clubhouse-shanty:s",
+        "view:golf:clubhouse-shanty:w"
+      ],
+      "cornerIdsPresent": true,
+      "axisIdsPresent": true,
+      "removedByStudio": false,
+      "missingActiveViewIds": [],
+      "propsToolRotations": 4,
+      "sourceImageQuality": "not assessed by runtime registration",
+      "eightPlayerSelectableFacings": false
+    },
+    {
+      "subject": "golf:food-tent",
+      "cornerViewIds": [
+        "golf:food-tent",
+        "view:golf:food-tent:se",
+        "view:golf:food-tent:sw",
+        "view:golf:food-tent:nw"
+      ],
+      "axisViewIds": [],
+      "cornerIdsPresent": true,
+      "axisIdsPresent": false,
+      "removedByStudio": false,
+      "missingActiveViewIds": [],
+      "propsToolRotations": 4,
+      "sourceImageQuality": "not assessed by runtime registration",
+      "eightPlayerSelectableFacings": false
+    },
+    {
+      "subject": "golf:grandstand-s",
+      "cornerViewIds": [
+        "golf:grandstand-s",
+        "view:golf:grandstand-s:se",
+        "view:golf:grandstand-s:sw",
+        "view:golf:grandstand-s:nw"
+      ],
+      "axisViewIds": [],
+      "cornerIdsPresent": true,
+      "axisIdsPresent": false,
+      "removedByStudio": false,
+      "missingActiveViewIds": [],
+      "propsToolRotations": 4,
+      "sourceImageQuality": "not assessed by runtime registration",
+      "eightPlayerSelectableFacings": false
+    },
+    {
+      "subject": "golf:leaderboard",
+      "cornerViewIds": [
+        "golf:leaderboard",
+        "view:golf:leaderboard:se",
+        "view:golf:leaderboard:sw",
+        "view:golf:leaderboard:nw"
+      ],
+      "axisViewIds": [],
+      "cornerIdsPresent": true,
+      "axisIdsPresent": false,
+      "removedByStudio": false,
+      "missingActiveViewIds": [],
+      "propsToolRotations": 4,
+      "sourceImageQuality": "not assessed by runtime registration",
+      "eightPlayerSelectableFacings": false
+    },
+    {
+      "subject": "golf:toilet-block",
+      "cornerViewIds": [
+        "golf:toilet-block",
+        "view:golf:toilet-block:se",
+        "view:golf:toilet-block:sw",
+        "view:golf:toilet-block:nw"
+      ],
+      "axisViewIds": [],
+      "cornerIdsPresent": true,
+      "axisIdsPresent": false,
+      "removedByStudio": false,
+      "missingActiveViewIds": [],
+      "propsToolRotations": 4,
+      "sourceImageQuality": "not assessed by runtime registration",
+      "eightPlayerSelectableFacings": false
+    },
+    {
+      "subject": "landscape:bush-deep-green",
+      "cornerViewIds": [
+        "view:landscape:bush-deep-green:ne",
+        "view:landscape:bush-deep-green:se",
+        "view:landscape:bush-deep-green:sw",
+        "view:landscape:bush-deep-green:nw"
+      ],
+      "axisViewIds": [
+        "landscape:bush-deep-green",
+        "view:landscape:bush-deep-green:e",
+        "view:landscape:bush-deep-green:s",
+        "view:landscape:bush-deep-green:w"
+      ],
+      "cornerIdsPresent": true,
+      "axisIdsPresent": true,
+      "removedByStudio": false,
+      "missingActiveViewIds": [],
+      "propsToolRotations": 4,
+      "sourceImageQuality": "not assessed by runtime registration",
+      "eightPlayerSelectableFacings": false
+    },
+    {
+      "subject": "landscape:bush-golden-russet",
+      "cornerViewIds": [
+        "view:landscape:bush-golden-russet:ne",
+        "view:landscape:bush-golden-russet:se",
+        "view:landscape:bush-golden-russet:sw",
+        "view:landscape:bush-golden-russet:nw"
+      ],
+      "axisViewIds": [
+        "landscape:bush-golden-russet",
+        "view:landscape:bush-golden-russet:e",
+        "view:landscape:bush-golden-russet:s",
+        "view:landscape:bush-golden-russet:w"
+      ],
+      "cornerIdsPresent": true,
+      "axisIdsPresent": true,
+      "removedByStudio": false,
+      "missingActiveViewIds": [],
+      "propsToolRotations": 4,
+      "sourceImageQuality": "not assessed by runtime registration",
+      "eightPlayerSelectableFacings": false
+    },
+    {
+      "subject": "landscape:bush-sage-round",
+      "cornerViewIds": [
+        "view:landscape:bush-sage-round:ne",
+        "view:landscape:bush-sage-round:se",
+        "view:landscape:bush-sage-round:sw",
+        "view:landscape:bush-sage-round:nw"
+      ],
+      "axisViewIds": [
+        "landscape:bush-sage-round",
+        "view:landscape:bush-sage-round:e",
+        "view:landscape:bush-sage-round:s",
+        "view:landscape:bush-sage-round:w"
+      ],
+      "cornerIdsPresent": true,
+      "axisIdsPresent": true,
+      "removedByStudio": false,
+      "missingActiveViewIds": [],
+      "propsToolRotations": 4,
+      "sourceImageQuality": "not assessed by runtime registration",
+      "eightPlayerSelectableFacings": false
+    },
+    {
+      "subject": "landscape:flowerbed-daisies",
+      "cornerViewIds": [],
+      "axisViewIds": [
+        "landscape:flowerbed-daisies",
+        "view:landscape:flowerbed-daisies:e",
+        "view:landscape:flowerbed-daisies:s",
+        "view:landscape:flowerbed-daisies:w"
+      ],
+      "cornerIdsPresent": false,
+      "axisIdsPresent": true,
+      "removedByStudio": false,
+      "missingActiveViewIds": [],
+      "propsToolRotations": 4,
+      "sourceImageQuality": "not assessed by runtime registration",
+      "eightPlayerSelectableFacings": false
+    },
+    {
+      "subject": "landscape:flowerbed-lavender",
+      "cornerViewIds": [],
+      "axisViewIds": [
+        "landscape:flowerbed-lavender",
+        "view:landscape:flowerbed-lavender:e",
+        "view:landscape:flowerbed-lavender:s",
+        "view:landscape:flowerbed-lavender:w"
+      ],
+      "cornerIdsPresent": false,
+      "axisIdsPresent": true,
+      "removedByStudio": false,
+      "missingActiveViewIds": [],
+      "propsToolRotations": 4,
+      "sourceImageQuality": "not assessed by runtime registration",
+      "eightPlayerSelectableFacings": false
+    },
+    {
+      "subject": "landscape:flowerbed-marigolds",
+      "cornerViewIds": [],
+      "axisViewIds": [
+        "landscape:flowerbed-marigolds",
+        "view:landscape:flowerbed-marigolds:e",
+        "view:landscape:flowerbed-marigolds:s",
+        "view:landscape:flowerbed-marigolds:w"
+      ],
+      "cornerIdsPresent": false,
+      "axisIdsPresent": true,
+      "removedByStudio": false,
+      "missingActiveViewIds": [],
+      "propsToolRotations": 4,
+      "sourceImageQuality": "not assessed by runtime registration",
+      "eightPlayerSelectableFacings": false
+    },
+    {
+      "subject": "landscape:hydrangea-pale",
+      "cornerViewIds": [
+        "view:landscape:hydrangea-pale:ne",
+        "view:landscape:hydrangea-pale:se",
+        "view:landscape:hydrangea-pale:sw",
+        "view:landscape:hydrangea-pale:nw"
+      ],
+      "axisViewIds": [
+        "landscape:hydrangea-pale",
+        "view:landscape:hydrangea-pale:e",
+        "view:landscape:hydrangea-pale:s",
+        "view:landscape:hydrangea-pale:w"
+      ],
+      "cornerIdsPresent": true,
+      "axisIdsPresent": true,
+      "removedByStudio": false,
+      "missingActiveViewIds": [],
+      "propsToolRotations": 4,
+      "sourceImageQuality": "not assessed by runtime registration",
+      "eightPlayerSelectableFacings": false
+    },
+    {
+      "subject": "ref:landmark-fountain-v2",
+      "cornerViewIds": [
+        "ref:landmark-fountain-v2",
+        "view:ref:landmark-fountain-v2:se",
+        "view:ref:landmark-fountain-v2:sw",
+        "view:ref:landmark-fountain-v2:nw"
+      ],
+      "axisViewIds": [],
+      "cornerIdsPresent": true,
+      "axisIdsPresent": false,
+      "removedByStudio": false,
+      "missingActiveViewIds": [],
+      "propsToolRotations": 4,
+      "sourceImageQuality": "not assessed by runtime registration",
+      "eightPlayerSelectableFacings": false
+    },
+    {
+      "subject": "ref:landmark-silo",
+      "cornerViewIds": [
+        "ref:landmark-silo",
+        "view:ref:landmark-silo:se",
+        "view:ref:landmark-silo:sw",
+        "view:ref:landmark-silo:nw"
+      ],
+      "axisViewIds": [],
+      "cornerIdsPresent": true,
+      "axisIdsPresent": false,
+      "removedByStudio": false,
+      "missingActiveViewIds": [],
+      "propsToolRotations": 4,
+      "sourceImageQuality": "not assessed by runtime registration",
+      "eightPlayerSelectableFacings": false
+    },
+    {
+      "subject": "ref:landmark-water-tower",
+      "cornerViewIds": [
+        "ref:landmark-water-tower",
+        "view:ref:landmark-water-tower:se",
+        "view:ref:landmark-water-tower:sw",
+        "view:ref:landmark-water-tower:nw"
+      ],
+      "axisViewIds": [],
+      "cornerIdsPresent": true,
+      "axisIdsPresent": false,
+      "removedByStudio": false,
+      "missingActiveViewIds": [],
+      "propsToolRotations": 4,
+      "sourceImageQuality": "not assessed by runtime registration",
+      "eightPlayerSelectableFacings": false
+    },
+    {
+      "subject": "ref:landmark-windmill",
+      "cornerViewIds": [
+        "ref:landmark-windmill",
+        "view:ref:landmark-windmill:se",
+        "view:ref:landmark-windmill:sw",
+        "view:ref:landmark-windmill:nw"
+      ],
+      "axisViewIds": [],
+      "cornerIdsPresent": true,
+      "axisIdsPresent": false,
+      "removedByStudio": false,
+      "missingActiveViewIds": [],
+      "propsToolRotations": 4,
+      "sourceImageQuality": "not assessed by runtime registration",
+      "eightPlayerSelectableFacings": false
+    },
+    {
+      "subject": "static:garage_brick",
+      "cornerViewIds": [
+        "static:garage_brick",
+        "view:static:garage_brick:se",
+        "view:static:garage_brick:sw",
+        "view:static:garage_brick:nw"
+      ],
+      "axisViewIds": [],
+      "cornerIdsPresent": true,
+      "axisIdsPresent": false,
+      "removedByStudio": false,
+      "missingActiveViewIds": [],
+      "propsToolRotations": 4,
+      "sourceImageQuality": "not assessed by runtime registration",
+      "eightPlayerSelectableFacings": false
+    },
+    {
+      "subject": "static:garage_brick-v2",
+      "cornerViewIds": [
+        "static:garage_brick-v2",
+        "view:static:garage_brick-v2:se",
+        "view:static:garage_brick-v2:sw",
+        "view:static:garage_brick-v2:nw"
+      ],
+      "axisViewIds": [],
+      "cornerIdsPresent": true,
+      "axisIdsPresent": false,
+      "removedByStudio": false,
+      "missingActiveViewIds": [],
+      "propsToolRotations": 4,
+      "sourceImageQuality": "not assessed by runtime registration",
+      "eightPlayerSelectableFacings": false
+    },
+    {
+      "subject": "static:garage_timber",
+      "cornerViewIds": [
+        "static:garage_timber",
+        "view:static:garage_timber:se",
+        "view:static:garage_timber:sw",
+        "view:static:garage_timber:nw"
+      ],
+      "axisViewIds": [],
+      "cornerIdsPresent": true,
+      "axisIdsPresent": false,
+      "removedByStudio": false,
+      "missingActiveViewIds": [],
+      "propsToolRotations": 4,
+      "sourceImageQuality": "not assessed by runtime registration",
+      "eightPlayerSelectableFacings": false
+    },
+    {
+      "subject": "static:pickup_n",
+      "cornerViewIds": [],
+      "axisViewIds": [
+        "view:static:pickup_n:n",
+        "view:static:pickup_n:e",
+        "view:static:pickup_n:s",
+        "view:static:pickup_n:w"
+      ],
+      "cornerIdsPresent": false,
+      "axisIdsPresent": true,
+      "removedByStudio": false,
+      "missingActiveViewIds": [],
+      "propsToolRotations": 4,
+      "sourceImageQuality": "not assessed by runtime registration",
+      "eightPlayerSelectableFacings": false
+    },
+    {
+      "subject": "static:shop_brick_rear",
+      "cornerViewIds": [
+        "static:shop_brick_rear",
+        "view:static:shop_brick_rear:se",
+        "view:static:shop_brick_rear:sw",
+        "view:static:shop_brick_rear:nw"
+      ],
+      "axisViewIds": [],
+      "cornerIdsPresent": true,
+      "axisIdsPresent": false,
+      "removedByStudio": false,
+      "missingActiveViewIds": [],
+      "propsToolRotations": 4,
+      "sourceImageQuality": "not assessed by runtime registration",
+      "eightPlayerSelectableFacings": false
+    },
+    {
+      "subject": "static:shop_brick_rear-v2",
+      "cornerViewIds": [
+        "static:shop_brick_rear-v2",
+        "view:static:shop_brick_rear-v2:se",
+        "view:static:shop_brick_rear-v2:sw",
+        "view:static:shop_brick_rear-v2:nw"
+      ],
+      "axisViewIds": [],
+      "cornerIdsPresent": true,
+      "axisIdsPresent": false,
+      "removedByStudio": false,
+      "missingActiveViewIds": [],
+      "propsToolRotations": 4,
+      "sourceImageQuality": "not assessed by runtime registration",
+      "eightPlayerSelectableFacings": false
+    },
+    {
+      "subject": "static:shop_market_rear",
+      "cornerViewIds": [
+        "static:shop_market_rear",
+        "view:static:shop_market_rear:se",
+        "view:static:shop_market_rear:sw",
+        "view:static:shop_market_rear:nw"
+      ],
+      "axisViewIds": [],
+      "cornerIdsPresent": true,
+      "axisIdsPresent": false,
+      "removedByStudio": false,
+      "missingActiveViewIds": [],
+      "propsToolRotations": 4,
+      "sourceImageQuality": "not assessed by runtime registration",
+      "eightPlayerSelectableFacings": false
+    },
+    {
+      "subject": "static:shop_market_rear-v2",
+      "cornerViewIds": [
+        "static:shop_market_rear-v2",
+        "view:static:shop_market_rear-v2:se",
+        "view:static:shop_market_rear-v2:sw",
+        "view:static:shop_market_rear-v2:nw"
+      ],
+      "axisViewIds": [],
+      "cornerIdsPresent": true,
+      "axisIdsPresent": false,
+      "removedByStudio": false,
+      "missingActiveViewIds": [],
+      "propsToolRotations": 4,
+      "sourceImageQuality": "not assessed by runtime registration",
+      "eightPlayerSelectableFacings": false
+    },
+    {
+      "subject": "town:bakery",
+      "cornerViewIds": [],
+      "axisViewIds": [
+        "view:town:bakery:n",
+        "view:town:bakery:e",
+        "view:town:bakery:s",
+        "view:town:bakery:w"
+      ],
+      "cornerIdsPresent": false,
+      "axisIdsPresent": true,
+      "removedByStudio": false,
+      "missingActiveViewIds": [],
+      "propsToolRotations": 4,
+      "sourceImageQuality": "not assessed by runtime registration",
+      "eightPlayerSelectableFacings": false
+    },
+    {
+      "subject": "town:bus_stop",
+      "cornerViewIds": [
+        "town:bus_stop",
+        "view:town:bus_stop:se",
+        "view:town:bus_stop:sw",
+        "view:town:bus_stop:nw"
+      ],
+      "axisViewIds": [],
+      "cornerIdsPresent": true,
+      "axisIdsPresent": false,
+      "removedByStudio": false,
+      "missingActiveViewIds": [],
+      "propsToolRotations": 4,
+      "sourceImageQuality": "not assessed by runtime registration",
+      "eightPlayerSelectableFacings": false
+    },
+    {
+      "subject": "town:firestation",
+      "cornerViewIds": [
+        "town:firestation",
+        "view:town:firestation:se",
+        "view:town:firestation:sw",
+        "view:town:firestation:nw"
+      ],
+      "axisViewIds": [
+        "view:town:firestation:n",
+        "view:town:firestation:e",
+        "view:town:firestation:s",
+        "view:town:firestation:w"
+      ],
+      "cornerIdsPresent": true,
+      "axisIdsPresent": true,
+      "removedByStudio": false,
+      "missingActiveViewIds": [],
+      "propsToolRotations": 4,
+      "sourceImageQuality": "not assessed by runtime registration",
+      "eightPlayerSelectableFacings": false
+    },
+    {
+      "subject": "town:grocery",
+      "cornerViewIds": [],
+      "axisViewIds": [
+        "view:town:grocery:n",
+        "view:town:grocery:e",
+        "view:town:grocery:s",
+        "view:town:grocery:w"
+      ],
+      "cornerIdsPresent": false,
+      "axisIdsPresent": true,
+      "removedByStudio": false,
+      "missingActiveViewIds": [],
+      "propsToolRotations": 4,
+      "sourceImageQuality": "not assessed by runtime registration",
+      "eightPlayerSelectableFacings": false
+    },
+    {
+      "subject": "town:pharmacy",
+      "cornerViewIds": [],
+      "axisViewIds": [
+        "view:town:pharmacy:n",
+        "view:town:pharmacy:e",
+        "view:town:pharmacy:s",
+        "view:town:pharmacy:w"
+      ],
+      "cornerIdsPresent": false,
+      "axisIdsPresent": true,
+      "removedByStudio": false,
+      "missingActiveViewIds": [],
+      "propsToolRotations": 4,
+      "sourceImageQuality": "not assessed by runtime registration",
+      "eightPlayerSelectableFacings": false
+    },
+    {
+      "subject": "town:phone_booth",
+      "cornerViewIds": [
+        "town:phone_booth",
+        "view:town:phone_booth:se",
+        "view:town:phone_booth:sw",
+        "view:town:phone_booth:nw"
+      ],
+      "axisViewIds": [],
+      "cornerIdsPresent": true,
+      "axisIdsPresent": false,
+      "removedByStudio": false,
+      "missingActiveViewIds": [],
+      "propsToolRotations": 4,
+      "sourceImageQuality": "not assessed by runtime registration",
+      "eightPlayerSelectableFacings": false
+    },
+    {
+      "subject": "variation:expansion-backyard-tent-a621b6c8:1",
+      "cornerViewIds": [
+        "variation:expansion-backyard-tent-a621b6c8:1",
+        "view:variation:expansion-backyard-tent-a621b6c8:1:se",
+        "view:variation:expansion-backyard-tent-a621b6c8:1:sw",
+        "view:variation:expansion-backyard-tent-a621b6c8:1:nw"
+      ],
+      "axisViewIds": [],
+      "cornerIdsPresent": true,
+      "axisIdsPresent": false,
+      "removedByStudio": false,
+      "missingActiveViewIds": [],
+      "propsToolRotations": 4,
+      "sourceImageQuality": "not assessed by runtime registration",
+      "eightPlayerSelectableFacings": false
+    },
+    {
+      "subject": "variation:expansion-boarded-store-rear-d09a309a:1",
+      "cornerViewIds": [
+        "variation:expansion-boarded-store-rear-d09a309a:1",
+        "view:variation:expansion-boarded-store-rear-d09a309a:1:se",
+        "view:variation:expansion-boarded-store-rear-d09a309a:1:sw",
+        "view:variation:expansion-boarded-store-rear-d09a309a:1:nw"
+      ],
+      "axisViewIds": [
+        "view:variation:expansion-boarded-store-rear-d09a309a:1:n",
+        "view:variation:expansion-boarded-store-rear-d09a309a:1:e",
+        "view:variation:expansion-boarded-store-rear-d09a309a:1:s",
+        "view:variation:expansion-boarded-store-rear-d09a309a:1:w"
+      ],
+      "cornerIdsPresent": true,
+      "axisIdsPresent": true,
+      "removedByStudio": false,
+      "missingActiveViewIds": [],
+      "propsToolRotations": 4,
+      "sourceImageQuality": "not assessed by runtime registration",
+      "eightPlayerSelectableFacings": false
+    },
+    {
+      "subject": "variation:expansion-cottage-rear-e52a10bb-plain:1",
+      "cornerViewIds": [
+        "variation:expansion-cottage-rear-e52a10bb-plain:1",
+        "view:variation:expansion-cottage-rear-e52a10bb-plain:1:se",
+        "view:variation:expansion-cottage-rear-e52a10bb-plain:1:sw",
+        "view:variation:expansion-cottage-rear-e52a10bb-plain:1:nw"
+      ],
+      "axisViewIds": [
+        "view:variation:expansion-cottage-rear-e52a10bb-plain:1:n",
+        "view:variation:expansion-cottage-rear-e52a10bb-plain:1:e",
+        "view:variation:expansion-cottage-rear-e52a10bb-plain:1:s",
+        "view:variation:expansion-cottage-rear-e52a10bb-plain:1:w"
+      ],
+      "cornerIdsPresent": true,
+      "axisIdsPresent": true,
+      "removedByStudio": false,
+      "missingActiveViewIds": [],
+      "propsToolRotations": 4,
+      "sourceImageQuality": "not assessed by runtime registration",
+      "eightPlayerSelectableFacings": false
+    },
+    {
+      "subject": "variation:expansion-derelict-two-storey-012bed48:1",
+      "cornerViewIds": [
+        "variation:expansion-derelict-two-storey-012bed48:1",
+        "view:variation:expansion-derelict-two-storey-012bed48:1:se",
+        "view:variation:expansion-derelict-two-storey-012bed48:1:sw",
+        "view:variation:expansion-derelict-two-storey-012bed48:1:nw"
+      ],
+      "axisViewIds": [
+        "view:variation:expansion-derelict-two-storey-012bed48:1:n",
+        "view:variation:expansion-derelict-two-storey-012bed48:1:e",
+        "view:variation:expansion-derelict-two-storey-012bed48:1:s",
+        "view:variation:expansion-derelict-two-storey-012bed48:1:w"
+      ],
+      "cornerIdsPresent": true,
+      "axisIdsPresent": true,
+      "removedByStudio": false,
+      "missingActiveViewIds": [],
+      "propsToolRotations": 4,
+      "sourceImageQuality": "not assessed by runtime registration",
+      "eightPlayerSelectableFacings": false
+    },
+    {
+      "subject": "variation:expansion-dormer-rear-55d3cd77-plain:1",
+      "cornerViewIds": [
+        "variation:expansion-dormer-rear-55d3cd77-plain:1",
+        "view:variation:expansion-dormer-rear-55d3cd77-plain:1:se",
+        "view:variation:expansion-dormer-rear-55d3cd77-plain:1:sw",
+        "view:variation:expansion-dormer-rear-55d3cd77-plain:1:nw"
+      ],
+      "axisViewIds": [
+        "view:variation:expansion-dormer-rear-55d3cd77-plain:1:n",
+        "view:variation:expansion-dormer-rear-55d3cd77-plain:1:e",
+        "view:variation:expansion-dormer-rear-55d3cd77-plain:1:s",
+        "view:variation:expansion-dormer-rear-55d3cd77-plain:1:w"
+      ],
+      "cornerIdsPresent": true,
+      "axisIdsPresent": true,
+      "removedByStudio": false,
+      "missingActiveViewIds": [],
+      "propsToolRotations": 4,
+      "sourceImageQuality": "not assessed by runtime registration",
+      "eightPlayerSelectableFacings": false
+    },
+    {
+      "subject": "variation:expansion-garage-rear-91bcbe45:1",
+      "cornerViewIds": [
+        "variation:expansion-garage-rear-91bcbe45:1",
+        "view:variation:expansion-garage-rear-91bcbe45:1:se",
+        "view:variation:expansion-garage-rear-91bcbe45:1:sw",
+        "view:variation:expansion-garage-rear-91bcbe45:1:nw"
+      ],
+      "axisViewIds": [
+        "view:variation:expansion-garage-rear-91bcbe45:1:n",
+        "view:variation:expansion-garage-rear-91bcbe45:1:e",
+        "view:variation:expansion-garage-rear-91bcbe45:1:s",
+        "view:variation:expansion-garage-rear-91bcbe45:1:w"
+      ],
+      "cornerIdsPresent": true,
+      "axisIdsPresent": true,
+      "removedByStudio": false,
+      "missingActiveViewIds": [],
+      "propsToolRotations": 4,
+      "sourceImageQuality": "not assessed by runtime registration",
+      "eightPlayerSelectableFacings": false
+    },
+    {
+      "subject": "variation:expansion-lean-to-shed-0b83bbf7-plain-corner:1",
+      "cornerViewIds": [
+        "variation:expansion-lean-to-shed-0b83bbf7-plain-corner:1",
+        "view:variation:expansion-lean-to-shed-0b83bbf7-plain-corner:1:se",
+        "view:variation:expansion-lean-to-shed-0b83bbf7-plain-corner:1:sw",
+        "view:variation:expansion-lean-to-shed-0b83bbf7-plain-corner:1:nw"
+      ],
+      "axisViewIds": [],
+      "cornerIdsPresent": true,
+      "axisIdsPresent": false,
+      "removedByStudio": false,
+      "missingActiveViewIds": [],
+      "propsToolRotations": 4,
+      "sourceImageQuality": "not assessed by runtime registration",
+      "eightPlayerSelectableFacings": false
+    },
+    {
+      "subject": "variation:expansion-lean-to-shed-0b83bbf7-plain:1",
+      "cornerViewIds": [
+        "variation:expansion-lean-to-shed-0b83bbf7-plain:1",
+        "view:variation:expansion-lean-to-shed-0b83bbf7-plain:1:se",
+        "view:variation:expansion-lean-to-shed-0b83bbf7-plain:1:sw",
+        "view:variation:expansion-lean-to-shed-0b83bbf7-plain:1:nw"
+      ],
+      "axisViewIds": [],
+      "cornerIdsPresent": true,
+      "axisIdsPresent": false,
+      "removedByStudio": false,
+      "missingActiveViewIds": [],
+      "propsToolRotations": 4,
+      "sourceImageQuality": "not assessed by runtime registration",
+      "eightPlayerSelectableFacings": false
+    },
+    {
+      "subject": "variation:expansion-rundown-house-a7c17683-plain-corner:1",
+      "cornerViewIds": [
+        "variation:expansion-rundown-house-a7c17683-plain-corner:1",
+        "view:variation:expansion-rundown-house-a7c17683-plain-corner:1:se",
+        "view:variation:expansion-rundown-house-a7c17683-plain-corner:1:sw",
+        "view:variation:expansion-rundown-house-a7c17683-plain-corner:1:nw"
+      ],
+      "axisViewIds": [
+        "view:variation:expansion-rundown-house-a7c17683-plain-corner:1:n",
+        "view:variation:expansion-rundown-house-a7c17683-plain-corner:1:e",
+        "view:variation:expansion-rundown-house-a7c17683-plain-corner:1:s",
+        "view:variation:expansion-rundown-house-a7c17683-plain-corner:1:w"
+      ],
+      "cornerIdsPresent": true,
+      "axisIdsPresent": true,
+      "removedByStudio": false,
+      "missingActiveViewIds": [],
+      "propsToolRotations": 4,
+      "sourceImageQuality": "not assessed by runtime registration",
+      "eightPlayerSelectableFacings": false
+    },
+    {
+      "subject": "variation:expansion-rundown-house-a7c17683-plain:1",
+      "cornerViewIds": [
+        "variation:expansion-rundown-house-a7c17683-plain:1",
+        "view:variation:expansion-rundown-house-a7c17683-plain:1:se",
+        "view:variation:expansion-rundown-house-a7c17683-plain:1:sw",
+        "view:variation:expansion-rundown-house-a7c17683-plain:1:nw"
+      ],
+      "axisViewIds": [],
+      "cornerIdsPresent": true,
+      "axisIdsPresent": false,
+      "removedByStudio": false,
+      "missingActiveViewIds": [],
+      "propsToolRotations": 4,
+      "sourceImageQuality": "not assessed by runtime registration",
+      "eightPlayerSelectableFacings": false
+    },
+    {
+      "subject": "variation:expansion-rundown-house-north-24ae3116-plain:1",
+      "cornerViewIds": [
+        "variation:expansion-rundown-house-north-24ae3116-plain:1",
+        "view:variation:expansion-rundown-house-north-24ae3116-plain:1:se",
+        "view:variation:expansion-rundown-house-north-24ae3116-plain:1:sw",
+        "view:variation:expansion-rundown-house-north-24ae3116-plain:1:nw"
+      ],
+      "axisViewIds": [
+        "view:variation:expansion-rundown-house-north-24ae3116-plain:1:n",
+        "view:variation:expansion-rundown-house-north-24ae3116-plain:1:e",
+        "view:variation:expansion-rundown-house-north-24ae3116-plain:1:s",
+        "view:variation:expansion-rundown-house-north-24ae3116-plain:1:w"
+      ],
+      "cornerIdsPresent": true,
+      "axisIdsPresent": true,
+      "removedByStudio": false,
+      "missingActiveViewIds": [],
+      "propsToolRotations": 4,
+      "sourceImageQuality": "not assessed by runtime registration",
+      "eightPlayerSelectableFacings": false
+    },
+    {
+      "subject": "variation:expansion-treehouse-north-1d02f68a-plain:1",
+      "cornerViewIds": [
+        "variation:expansion-treehouse-north-1d02f68a-plain:1",
+        "view:variation:expansion-treehouse-north-1d02f68a-plain:1:se",
+        "view:variation:expansion-treehouse-north-1d02f68a-plain:1:sw",
+        "view:variation:expansion-treehouse-north-1d02f68a-plain:1:nw"
+      ],
+      "axisViewIds": [],
+      "cornerIdsPresent": true,
+      "axisIdsPresent": false,
+      "removedByStudio": false,
+      "missingActiveViewIds": [],
+      "propsToolRotations": 4,
+      "sourceImageQuality": "not assessed by runtime registration",
+      "eightPlayerSelectableFacings": false
+    },
+    {
+      "subject": "variation:gen-back-bbq-deck-b546df1a-plain:1",
+      "cornerViewIds": [
+        "variation:gen-back-bbq-deck-b546df1a-plain:1",
+        "view:variation:gen-back-bbq-deck-b546df1a-plain:1:se",
+        "view:variation:gen-back-bbq-deck-b546df1a-plain:1:sw",
+        "view:variation:gen-back-bbq-deck-b546df1a-plain:1:nw"
+      ],
+      "axisViewIds": [
+        "view:variation:gen-back-bbq-deck-b546df1a-plain:1:n",
+        "view:variation:gen-back-bbq-deck-b546df1a-plain:1:e",
+        "view:variation:gen-back-bbq-deck-b546df1a-plain:1:s",
+        "view:variation:gen-back-bbq-deck-b546df1a-plain:1:w"
+      ],
+      "cornerIdsPresent": true,
+      "axisIdsPresent": true,
+      "removedByStudio": false,
+      "missingActiveViewIds": [],
+      "propsToolRotations": 4,
+      "sourceImageQuality": "not assessed by runtime registration",
+      "eightPlayerSelectableFacings": false
+    },
+    {
+      "subject": "variation:gen-back-patio-pool-3b943d52-plain-corner:1",
+      "cornerViewIds": [
+        "variation:gen-back-patio-pool-3b943d52-plain-corner:1",
+        "view:variation:gen-back-patio-pool-3b943d52-plain-corner:1:se",
+        "view:variation:gen-back-patio-pool-3b943d52-plain-corner:1:sw",
+        "view:variation:gen-back-patio-pool-3b943d52-plain-corner:1:nw"
+      ],
+      "axisViewIds": [
+        "view:variation:gen-back-patio-pool-3b943d52-plain-corner:1:n",
+        "view:variation:gen-back-patio-pool-3b943d52-plain-corner:1:e",
+        "view:variation:gen-back-patio-pool-3b943d52-plain-corner:1:s",
+        "view:variation:gen-back-patio-pool-3b943d52-plain-corner:1:w"
+      ],
+      "cornerIdsPresent": true,
+      "axisIdsPresent": true,
+      "removedByStudio": false,
+      "missingActiveViewIds": [],
+      "propsToolRotations": 4,
+      "sourceImageQuality": "not assessed by runtime registration",
+      "eightPlayerSelectableFacings": false
+    },
+    {
+      "subject": "variation:gen-back-screened-porch-8c31c391-plain:1",
+      "cornerViewIds": [
+        "variation:gen-back-screened-porch-8c31c391-plain:1",
+        "view:variation:gen-back-screened-porch-8c31c391-plain:1:se",
+        "view:variation:gen-back-screened-porch-8c31c391-plain:1:sw",
+        "view:variation:gen-back-screened-porch-8c31c391-plain:1:nw"
+      ],
+      "axisViewIds": [
+        "view:variation:gen-back-screened-porch-8c31c391-plain:1:n",
+        "view:variation:gen-back-screened-porch-8c31c391-plain:1:e",
+        "view:variation:gen-back-screened-porch-8c31c391-plain:1:s",
+        "view:variation:gen-back-screened-porch-8c31c391-plain:1:w"
+      ],
+      "cornerIdsPresent": true,
+      "axisIdsPresent": true,
+      "removedByStudio": false,
+      "missingActiveViewIds": [],
+      "propsToolRotations": 4,
+      "sourceImageQuality": "not assessed by runtime registration",
+      "eightPlayerSelectableFacings": false
+    },
+    {
+      "subject": "variation:gen-back-shed-garden-ac94c81e-plain-corner:1",
+      "cornerViewIds": [
+        "variation:gen-back-shed-garden-ac94c81e-plain-corner:1",
+        "view:variation:gen-back-shed-garden-ac94c81e-plain-corner:1:se",
+        "view:variation:gen-back-shed-garden-ac94c81e-plain-corner:1:sw",
+        "view:variation:gen-back-shed-garden-ac94c81e-plain-corner:1:nw"
+      ],
+      "axisViewIds": [],
+      "cornerIdsPresent": true,
+      "axisIdsPresent": false,
+      "removedByStudio": false,
+      "missingActiveViewIds": [],
+      "propsToolRotations": 4,
+      "sourceImageQuality": "not assessed by runtime registration",
+      "eightPlayerSelectableFacings": false
+    },
+    {
+      "subject": "variation:gen-back-shed-garden-ac94c81e-plain:1",
+      "cornerViewIds": [
+        "variation:gen-back-shed-garden-ac94c81e-plain:1",
+        "view:variation:gen-back-shed-garden-ac94c81e-plain:1:se",
+        "view:variation:gen-back-shed-garden-ac94c81e-plain:1:sw",
+        "view:variation:gen-back-shed-garden-ac94c81e-plain:1:nw"
+      ],
+      "axisViewIds": [],
+      "cornerIdsPresent": true,
+      "axisIdsPresent": false,
+      "removedByStudio": false,
+      "missingActiveViewIds": [],
+      "propsToolRotations": 4,
+      "sourceImageQuality": "not assessed by runtime registration",
+      "eightPlayerSelectableFacings": false
+    },
+    {
+      "subject": "variation:gen-back-swingset-a10c81b7-plain-corner:1",
+      "cornerViewIds": [
+        "variation:gen-back-swingset-a10c81b7-plain-corner:1",
+        "view:variation:gen-back-swingset-a10c81b7-plain-corner:1:se",
+        "view:variation:gen-back-swingset-a10c81b7-plain-corner:1:sw",
+        "view:variation:gen-back-swingset-a10c81b7-plain-corner:1:nw"
+      ],
+      "axisViewIds": [
+        "view:variation:gen-back-swingset-a10c81b7-plain-corner:1:n",
+        "view:variation:gen-back-swingset-a10c81b7-plain-corner:1:e",
+        "view:variation:gen-back-swingset-a10c81b7-plain-corner:1:s",
+        "view:variation:gen-back-swingset-a10c81b7-plain-corner:1:w"
+      ],
+      "cornerIdsPresent": true,
+      "axisIdsPresent": true,
+      "removedByStudio": false,
+      "missingActiveViewIds": [],
+      "propsToolRotations": 4,
+      "sourceImageQuality": "not assessed by runtime registration",
+      "eightPlayerSelectableFacings": false
+    },
+    {
+      "subject": "variation:gen-back-swingset-a10c81b7-plain:1",
+      "cornerViewIds": [
+        "variation:gen-back-swingset-a10c81b7-plain:1",
+        "view:variation:gen-back-swingset-a10c81b7-plain:1:se",
+        "view:variation:gen-back-swingset-a10c81b7-plain:1:sw",
+        "view:variation:gen-back-swingset-a10c81b7-plain:1:nw"
+      ],
+      "axisViewIds": [
+        "view:variation:gen-back-swingset-a10c81b7-plain:1:n",
+        "view:variation:gen-back-swingset-a10c81b7-plain:1:e",
+        "view:variation:gen-back-swingset-a10c81b7-plain:1:s",
+        "view:variation:gen-back-swingset-a10c81b7-plain:1:w"
+      ],
+      "cornerIdsPresent": true,
+      "axisIdsPresent": true,
+      "removedByStudio": false,
+      "missingActiveViewIds": [],
+      "propsToolRotations": 4,
+      "sourceImageQuality": "not assessed by runtime registration",
+      "eightPlayerSelectableFacings": false
+    },
+    {
+      "subject": "variation:gen-house-duplex-c39d1a23-plain-corner:1",
+      "cornerViewIds": [
+        "variation:gen-house-duplex-c39d1a23-plain-corner:1",
+        "view:variation:gen-house-duplex-c39d1a23-plain-corner:1:se",
+        "view:variation:gen-house-duplex-c39d1a23-plain-corner:1:sw",
+        "view:variation:gen-house-duplex-c39d1a23-plain-corner:1:nw"
+      ],
+      "axisViewIds": [],
+      "cornerIdsPresent": true,
+      "axisIdsPresent": false,
+      "removedByStudio": false,
+      "missingActiveViewIds": [],
+      "propsToolRotations": 4,
+      "sourceImageQuality": "not assessed by runtime registration",
+      "eightPlayerSelectableFacings": false
+    },
+    {
+      "subject": "variation:gen-house-duplex-north-521714ac-plain:1",
+      "cornerViewIds": [
+        "variation:gen-house-duplex-north-521714ac-plain:1",
+        "view:variation:gen-house-duplex-north-521714ac-plain:1:se",
+        "view:variation:gen-house-duplex-north-521714ac-plain:1:sw",
+        "view:variation:gen-house-duplex-north-521714ac-plain:1:nw"
+      ],
+      "axisViewIds": [],
+      "cornerIdsPresent": true,
+      "axisIdsPresent": false,
+      "removedByStudio": false,
+      "missingActiveViewIds": [],
+      "propsToolRotations": 4,
+      "sourceImageQuality": "not assessed by runtime registration",
+      "eightPlayerSelectableFacings": false
+    },
+    {
+      "subject": "variation:gen-house-farmhouse-wrap-2b0eea83-plain-corner:1",
+      "cornerViewIds": [
+        "variation:gen-house-farmhouse-wrap-2b0eea83-plain-corner:1",
+        "view:variation:gen-house-farmhouse-wrap-2b0eea83-plain-corner:1:se",
+        "view:variation:gen-house-farmhouse-wrap-2b0eea83-plain-corner:1:sw",
+        "view:variation:gen-house-farmhouse-wrap-2b0eea83-plain-corner:1:nw"
+      ],
+      "axisViewIds": [],
+      "cornerIdsPresent": true,
+      "axisIdsPresent": false,
+      "removedByStudio": false,
+      "missingActiveViewIds": [],
+      "propsToolRotations": 4,
+      "sourceImageQuality": "not assessed by runtime registration",
+      "eightPlayerSelectableFacings": false
+    },
+    {
+      "subject": "variation:gen-house-farmhouse-wrap-2b0eea83-plain:1",
+      "cornerViewIds": [
+        "variation:gen-house-farmhouse-wrap-2b0eea83-plain:1",
+        "view:variation:gen-house-farmhouse-wrap-2b0eea83-plain:1:se",
+        "view:variation:gen-house-farmhouse-wrap-2b0eea83-plain:1:sw",
+        "view:variation:gen-house-farmhouse-wrap-2b0eea83-plain:1:nw"
+      ],
+      "axisViewIds": [],
+      "cornerIdsPresent": true,
+      "axisIdsPresent": false,
+      "removedByStudio": false,
+      "missingActiveViewIds": [],
+      "propsToolRotations": 4,
+      "sourceImageQuality": "not assessed by runtime registration",
+      "eightPlayerSelectableFacings": false
+    },
+    {
+      "subject": "variation:gen-house-farmhouse-wrap-north-446969e5-plain:1",
+      "cornerViewIds": [
+        "variation:gen-house-farmhouse-wrap-north-446969e5-plain:1",
+        "view:variation:gen-house-farmhouse-wrap-north-446969e5-plain:1:se",
+        "view:variation:gen-house-farmhouse-wrap-north-446969e5-plain:1:sw",
+        "view:variation:gen-house-farmhouse-wrap-north-446969e5-plain:1:nw"
+      ],
+      "axisViewIds": [],
+      "cornerIdsPresent": true,
+      "axisIdsPresent": false,
+      "removedByStudio": false,
+      "missingActiveViewIds": [],
+      "propsToolRotations": 4,
+      "sourceImageQuality": "not assessed by runtime registration",
+      "eightPlayerSelectableFacings": false
+    },
+    {
+      "subject": "variation:gen-house-l-ranch-18552ce5-plain-corner:1",
+      "cornerViewIds": [
+        "variation:gen-house-l-ranch-18552ce5-plain-corner:1",
+        "view:variation:gen-house-l-ranch-18552ce5-plain-corner:1:se",
+        "view:variation:gen-house-l-ranch-18552ce5-plain-corner:1:sw",
+        "view:variation:gen-house-l-ranch-18552ce5-plain-corner:1:nw"
+      ],
+      "axisViewIds": [
+        "view:variation:gen-house-l-ranch-18552ce5-plain-corner:1:n",
+        "view:variation:gen-house-l-ranch-18552ce5-plain-corner:1:e",
+        "view:variation:gen-house-l-ranch-18552ce5-plain-corner:1:s",
+        "view:variation:gen-house-l-ranch-18552ce5-plain-corner:1:w"
+      ],
+      "cornerIdsPresent": true,
+      "axisIdsPresent": true,
+      "removedByStudio": false,
+      "missingActiveViewIds": [],
+      "propsToolRotations": 4,
+      "sourceImageQuality": "not assessed by runtime registration",
+      "eightPlayerSelectableFacings": false
+    },
+    {
+      "subject": "variation:gen-house-l-ranch-18552ce5-plain:1",
+      "cornerViewIds": [
+        "variation:gen-house-l-ranch-18552ce5-plain:1",
+        "view:variation:gen-house-l-ranch-18552ce5-plain:1:se",
+        "view:variation:gen-house-l-ranch-18552ce5-plain:1:sw",
+        "view:variation:gen-house-l-ranch-18552ce5-plain:1:nw"
+      ],
+      "axisViewIds": [],
+      "cornerIdsPresent": true,
+      "axisIdsPresent": false,
+      "removedByStudio": false,
+      "missingActiveViewIds": [],
+      "propsToolRotations": 4,
+      "sourceImageQuality": "not assessed by runtime registration",
+      "eightPlayerSelectableFacings": false
+    },
+    {
+      "subject": "variation:gen-house-l-ranch-north-2edc5f59-plain:1",
+      "cornerViewIds": [
+        "variation:gen-house-l-ranch-north-2edc5f59-plain:1",
+        "view:variation:gen-house-l-ranch-north-2edc5f59-plain:1:se",
+        "view:variation:gen-house-l-ranch-north-2edc5f59-plain:1:sw",
+        "view:variation:gen-house-l-ranch-north-2edc5f59-plain:1:nw"
+      ],
+      "axisViewIds": [
+        "view:variation:gen-house-l-ranch-north-2edc5f59-plain:1:n",
+        "view:variation:gen-house-l-ranch-north-2edc5f59-plain:1:e",
+        "view:variation:gen-house-l-ranch-north-2edc5f59-plain:1:s",
+        "view:variation:gen-house-l-ranch-north-2edc5f59-plain:1:w"
+      ],
+      "cornerIdsPresent": true,
+      "axisIdsPresent": true,
+      "removedByStudio": false,
+      "missingActiveViewIds": [],
+      "propsToolRotations": 4,
+      "sourceImageQuality": "not assessed by runtime registration",
+      "eightPlayerSelectableFacings": false
+    },
+    {
+      "subject": "variation:gen-house-l-shape-e0e3b328-plain-corner:1",
+      "cornerViewIds": [
+        "variation:gen-house-l-shape-e0e3b328-plain-corner:1",
+        "view:variation:gen-house-l-shape-e0e3b328-plain-corner:1:se",
+        "view:variation:gen-house-l-shape-e0e3b328-plain-corner:1:sw",
+        "view:variation:gen-house-l-shape-e0e3b328-plain-corner:1:nw"
+      ],
+      "axisViewIds": [],
+      "cornerIdsPresent": true,
+      "axisIdsPresent": false,
+      "removedByStudio": false,
+      "missingActiveViewIds": [],
+      "propsToolRotations": 4,
+      "sourceImageQuality": "not assessed by runtime registration",
+      "eightPlayerSelectableFacings": false
+    },
+    {
+      "subject": "variation:gen-house-l-shape-e0e3b328-plain:1",
+      "cornerViewIds": [
+        "variation:gen-house-l-shape-e0e3b328-plain:1",
+        "view:variation:gen-house-l-shape-e0e3b328-plain:1:se",
+        "view:variation:gen-house-l-shape-e0e3b328-plain:1:sw",
+        "view:variation:gen-house-l-shape-e0e3b328-plain:1:nw"
+      ],
+      "axisViewIds": [],
+      "cornerIdsPresent": true,
+      "axisIdsPresent": false,
+      "removedByStudio": false,
+      "missingActiveViewIds": [],
+      "propsToolRotations": 4,
+      "sourceImageQuality": "not assessed by runtime registration",
+      "eightPlayerSelectableFacings": false
+    },
+    {
+      "subject": "variation:gen-house-l-shape-north-79eba705-plain:1",
+      "cornerViewIds": [
+        "variation:gen-house-l-shape-north-79eba705-plain:1",
+        "view:variation:gen-house-l-shape-north-79eba705-plain:1:se",
+        "view:variation:gen-house-l-shape-north-79eba705-plain:1:sw",
+        "view:variation:gen-house-l-shape-north-79eba705-plain:1:nw"
+      ],
+      "axisViewIds": [],
+      "cornerIdsPresent": true,
+      "axisIdsPresent": false,
+      "removedByStudio": false,
+      "missingActiveViewIds": [],
+      "propsToolRotations": 4,
+      "sourceImageQuality": "not assessed by runtime registration",
+      "eightPlayerSelectableFacings": false
+    },
+    {
+      "subject": "variation:gen-house-ranch-long-a4ddd58c-plain-corner:1",
+      "cornerViewIds": [
+        "variation:gen-house-ranch-long-a4ddd58c-plain-corner:1",
+        "view:variation:gen-house-ranch-long-a4ddd58c-plain-corner:1:se",
+        "view:variation:gen-house-ranch-long-a4ddd58c-plain-corner:1:sw",
+        "view:variation:gen-house-ranch-long-a4ddd58c-plain-corner:1:nw"
+      ],
+      "axisViewIds": [],
+      "cornerIdsPresent": true,
+      "axisIdsPresent": false,
+      "removedByStudio": false,
+      "missingActiveViewIds": [],
+      "propsToolRotations": 4,
+      "sourceImageQuality": "not assessed by runtime registration",
+      "eightPlayerSelectableFacings": false
+    },
+    {
+      "subject": "variation:gen-house-ranch-long-a4ddd58c-plain:1",
+      "cornerViewIds": [
+        "variation:gen-house-ranch-long-a4ddd58c-plain:1",
+        "view:variation:gen-house-ranch-long-a4ddd58c-plain:1:se",
+        "view:variation:gen-house-ranch-long-a4ddd58c-plain:1:sw",
+        "view:variation:gen-house-ranch-long-a4ddd58c-plain:1:nw"
+      ],
+      "axisViewIds": [],
+      "cornerIdsPresent": true,
+      "axisIdsPresent": false,
+      "removedByStudio": false,
+      "missingActiveViewIds": [],
+      "propsToolRotations": 4,
+      "sourceImageQuality": "not assessed by runtime registration",
+      "eightPlayerSelectableFacings": false
+    },
+    {
+      "subject": "variation:gen-house-splitlevel-8b6b4aa4-plain:1",
+      "cornerViewIds": [
+        "variation:gen-house-splitlevel-8b6b4aa4-plain:1",
+        "view:variation:gen-house-splitlevel-8b6b4aa4-plain:1:se",
+        "view:variation:gen-house-splitlevel-8b6b4aa4-plain:1:sw",
+        "view:variation:gen-house-splitlevel-8b6b4aa4-plain:1:nw"
+      ],
+      "axisViewIds": [],
+      "cornerIdsPresent": true,
+      "axisIdsPresent": false,
+      "removedByStudio": false,
+      "missingActiveViewIds": [],
+      "propsToolRotations": 4,
+      "sourceImageQuality": "not assessed by runtime registration",
+      "eightPlayerSelectableFacings": false
+    },
+    {
+      "subject": "variation:gen-house-splitlevel-north-63bc759e-plain:1",
+      "cornerViewIds": [
+        "variation:gen-house-splitlevel-north-63bc759e-plain:1",
+        "view:variation:gen-house-splitlevel-north-63bc759e-plain:1:se",
+        "view:variation:gen-house-splitlevel-north-63bc759e-plain:1:sw",
+        "view:variation:gen-house-splitlevel-north-63bc759e-plain:1:nw"
+      ],
+      "axisViewIds": [],
+      "cornerIdsPresent": true,
+      "axisIdsPresent": false,
+      "removedByStudio": false,
+      "missingActiveViewIds": [],
+      "propsToolRotations": 4,
+      "sourceImageQuality": "not assessed by runtime registration",
+      "eightPlayerSelectableFacings": false
+    },
+    {
+      "subject": "variation:industrial-auto-body-shop-63875699:1",
+      "cornerViewIds": [
+        "variation:industrial-auto-body-shop-63875699:1",
+        "view:variation:industrial-auto-body-shop-63875699:1:se",
+        "view:variation:industrial-auto-body-shop-63875699:1:sw",
+        "view:variation:industrial-auto-body-shop-63875699:1:nw"
+      ],
+      "axisViewIds": [
+        "view:variation:industrial-auto-body-shop-63875699:1:n",
+        "view:variation:industrial-auto-body-shop-63875699:1:e",
+        "view:variation:industrial-auto-body-shop-63875699:1:s",
+        "view:variation:industrial-auto-body-shop-63875699:1:w"
+      ],
+      "cornerIdsPresent": true,
+      "axisIdsPresent": true,
+      "removedByStudio": false,
+      "missingActiveViewIds": [],
+      "propsToolRotations": 4,
+      "sourceImageQuality": "not assessed by runtime registration",
+      "eightPlayerSelectableFacings": false
+    },
+    {
+      "subject": "variation:industrial-bottling-plant-13e91e4e:1",
+      "cornerViewIds": [
+        "variation:industrial-bottling-plant-13e91e4e:1",
+        "view:variation:industrial-bottling-plant-13e91e4e:1:se",
+        "view:variation:industrial-bottling-plant-13e91e4e:1:sw",
+        "view:variation:industrial-bottling-plant-13e91e4e:1:nw"
+      ],
+      "axisViewIds": [],
+      "cornerIdsPresent": true,
+      "axisIdsPresent": false,
+      "removedByStudio": false,
+      "missingActiveViewIds": [],
+      "propsToolRotations": 4,
+      "sourceImageQuality": "not assessed by runtime registration",
+      "eightPlayerSelectableFacings": false
+    },
+    {
+      "subject": "variation:industrial-brick-machine-shop-34206b23:1",
+      "cornerViewIds": [
+        "variation:industrial-brick-machine-shop-34206b23:1",
+        "view:variation:industrial-brick-machine-shop-34206b23:1:se",
+        "view:variation:industrial-brick-machine-shop-34206b23:1:sw",
+        "view:variation:industrial-brick-machine-shop-34206b23:1:nw"
+      ],
+      "axisViewIds": [
+        "view:variation:industrial-brick-machine-shop-34206b23:1:n",
+        "view:variation:industrial-brick-machine-shop-34206b23:1:e",
+        "view:variation:industrial-brick-machine-shop-34206b23:1:s",
+        "view:variation:industrial-brick-machine-shop-34206b23:1:w"
+      ],
+      "cornerIdsPresent": true,
+      "axisIdsPresent": true,
+      "removedByStudio": false,
+      "missingActiveViewIds": [],
+      "propsToolRotations": 4,
+      "sourceImageQuality": "not assessed by runtime registration",
+      "eightPlayerSelectableFacings": false
+    },
+    {
+      "subject": "variation:industrial-cold-storage-378b3489:1",
+      "cornerViewIds": [
+        "variation:industrial-cold-storage-378b3489:1",
+        "view:variation:industrial-cold-storage-378b3489:1:se",
+        "view:variation:industrial-cold-storage-378b3489:1:sw",
+        "view:variation:industrial-cold-storage-378b3489:1:nw"
+      ],
+      "axisViewIds": [],
+      "cornerIdsPresent": true,
+      "axisIdsPresent": false,
+      "removedByStudio": false,
+      "missingActiveViewIds": [],
+      "propsToolRotations": 4,
+      "sourceImageQuality": "not assessed by runtime registration",
+      "eightPlayerSelectableFacings": false
+    },
+    {
+      "subject": "variation:industrial-corrugated-warehouse-69aeee07:1",
+      "cornerViewIds": [
+        "variation:industrial-corrugated-warehouse-69aeee07:1",
+        "view:variation:industrial-corrugated-warehouse-69aeee07:1:se",
+        "view:variation:industrial-corrugated-warehouse-69aeee07:1:sw",
+        "view:variation:industrial-corrugated-warehouse-69aeee07:1:nw"
+      ],
+      "axisViewIds": [
+        "view:variation:industrial-corrugated-warehouse-69aeee07:1:n",
+        "view:variation:industrial-corrugated-warehouse-69aeee07:1:e",
+        "view:variation:industrial-corrugated-warehouse-69aeee07:1:s",
+        "view:variation:industrial-corrugated-warehouse-69aeee07:1:w"
+      ],
+      "cornerIdsPresent": true,
+      "axisIdsPresent": true,
+      "removedByStudio": false,
+      "missingActiveViewIds": [],
+      "propsToolRotations": 4,
+      "sourceImageQuality": "not assessed by runtime registration",
+      "eightPlayerSelectableFacings": false
+    },
+    {
+      "subject": "variation:industrial-foundry-606f1084:1",
+      "cornerViewIds": [
+        "variation:industrial-foundry-606f1084:1",
+        "view:variation:industrial-foundry-606f1084:1:se",
+        "view:variation:industrial-foundry-606f1084:1:sw",
+        "view:variation:industrial-foundry-606f1084:1:nw"
+      ],
+      "axisViewIds": [],
+      "cornerIdsPresent": true,
+      "axisIdsPresent": false,
+      "removedByStudio": false,
+      "missingActiveViewIds": [],
+      "propsToolRotations": 4,
+      "sourceImageQuality": "not assessed by runtime registration",
+      "eightPlayerSelectableFacings": false
+    },
+    {
+      "subject": "variation:industrial-freight-depot-a030c919:1",
+      "cornerViewIds": [
+        "variation:industrial-freight-depot-a030c919:1",
+        "view:variation:industrial-freight-depot-a030c919:1:se",
+        "view:variation:industrial-freight-depot-a030c919:1:sw",
+        "view:variation:industrial-freight-depot-a030c919:1:nw"
+      ],
+      "axisViewIds": [],
+      "cornerIdsPresent": true,
+      "axisIdsPresent": false,
+      "removedByStudio": false,
+      "missingActiveViewIds": [],
+      "propsToolRotations": 4,
+      "sourceImageQuality": "not assessed by runtime registration",
+      "eightPlayerSelectableFacings": false
+    },
+    {
+      "subject": "variation:industrial-lumber-workshop-8a43a691:1",
+      "cornerViewIds": [
+        "variation:industrial-lumber-workshop-8a43a691:1",
+        "view:variation:industrial-lumber-workshop-8a43a691:1:se",
+        "view:variation:industrial-lumber-workshop-8a43a691:1:sw",
+        "view:variation:industrial-lumber-workshop-8a43a691:1:nw"
+      ],
+      "axisViewIds": [],
+      "cornerIdsPresent": true,
+      "axisIdsPresent": false,
+      "removedByStudio": false,
+      "missingActiveViewIds": [],
+      "propsToolRotations": 4,
+      "sourceImageQuality": "not assessed by runtime registration",
+      "eightPlayerSelectableFacings": false
+    },
+    {
+      "subject": "variation:industrial-printing-works-2be751ae:1",
+      "cornerViewIds": [
+        "variation:industrial-printing-works-2be751ae:1",
+        "view:variation:industrial-printing-works-2be751ae:1:se",
+        "view:variation:industrial-printing-works-2be751ae:1:sw",
+        "view:variation:industrial-printing-works-2be751ae:1:nw"
+      ],
+      "axisViewIds": [],
+      "cornerIdsPresent": true,
+      "axisIdsPresent": false,
+      "removedByStudio": false,
+      "missingActiveViewIds": [],
+      "propsToolRotations": 4,
+      "sourceImageQuality": "not assessed by runtime registration",
+      "eightPlayerSelectableFacings": false
+    },
+    {
+      "subject": "variation:industrial-rail-repair-shed-fbe2c8d9:1",
+      "cornerViewIds": [
+        "variation:industrial-rail-repair-shed-fbe2c8d9:1",
+        "view:variation:industrial-rail-repair-shed-fbe2c8d9:1:se",
+        "view:variation:industrial-rail-repair-shed-fbe2c8d9:1:sw",
+        "view:variation:industrial-rail-repair-shed-fbe2c8d9:1:nw"
+      ],
+      "axisViewIds": [],
+      "cornerIdsPresent": true,
+      "axisIdsPresent": false,
+      "removedByStudio": false,
+      "missingActiveViewIds": [],
+      "propsToolRotations": 4,
+      "sourceImageQuality": "not assessed by runtime registration",
+      "eightPlayerSelectableFacings": false
+    },
+    {
+      "subject": "variation:industrial-textile-mill-eedf9576:1",
+      "cornerViewIds": [
+        "variation:industrial-textile-mill-eedf9576:1",
+        "view:variation:industrial-textile-mill-eedf9576:1:se",
+        "view:variation:industrial-textile-mill-eedf9576:1:sw",
+        "view:variation:industrial-textile-mill-eedf9576:1:nw"
+      ],
+      "axisViewIds": [],
+      "cornerIdsPresent": true,
+      "axisIdsPresent": false,
+      "removedByStudio": false,
+      "missingActiveViewIds": [],
+      "propsToolRotations": 4,
+      "sourceImageQuality": "not assessed by runtime registration",
+      "eightPlayerSelectableFacings": false
+    },
+    {
+      "subject": "variation:industrial-utility-substation-54820c2b:1",
+      "cornerViewIds": [
+        "variation:industrial-utility-substation-54820c2b:1",
+        "view:variation:industrial-utility-substation-54820c2b:1:se",
+        "view:variation:industrial-utility-substation-54820c2b:1:sw",
+        "view:variation:industrial-utility-substation-54820c2b:1:nw"
+      ],
+      "axisViewIds": [],
+      "cornerIdsPresent": true,
+      "axisIdsPresent": false,
+      "removedByStudio": false,
+      "missingActiveViewIds": [],
+      "propsToolRotations": 4,
+      "sourceImageQuality": "not assessed by runtime registration",
+      "eightPlayerSelectableFacings": false
+    },
+    {
+      "subject": "variation:ref-building-barn-74bee205-plain:1",
+      "cornerViewIds": [
+        "variation:ref-building-barn-74bee205-plain:1",
+        "view:variation:ref-building-barn-74bee205-plain:1:se",
+        "view:variation:ref-building-barn-74bee205-plain:1:sw",
+        "view:variation:ref-building-barn-74bee205-plain:1:nw"
+      ],
+      "axisViewIds": [],
+      "cornerIdsPresent": true,
+      "axisIdsPresent": false,
+      "removedByStudio": false,
+      "missingActiveViewIds": [],
+      "propsToolRotations": 4,
+      "sourceImageQuality": "not assessed by runtime registration",
+      "eightPlayerSelectableFacings": false
+    },
+    {
+      "subject": "variation:ref-building-barn-v2-b96e34dc-plain:1",
+      "cornerViewIds": [
+        "variation:ref-building-barn-v2-b96e34dc-plain:1",
+        "view:variation:ref-building-barn-v2-b96e34dc-plain:1:se",
+        "view:variation:ref-building-barn-v2-b96e34dc-plain:1:sw",
+        "view:variation:ref-building-barn-v2-b96e34dc-plain:1:nw"
+      ],
+      "axisViewIds": [],
+      "cornerIdsPresent": true,
+      "axisIdsPresent": false,
+      "removedByStudio": false,
+      "missingActiveViewIds": [],
+      "propsToolRotations": 4,
+      "sourceImageQuality": "not assessed by runtime registration",
+      "eightPlayerSelectableFacings": false
+    },
+    {
+      "subject": "variation:ref-building-church-1df07e15-plain:1",
+      "cornerViewIds": [
+        "variation:ref-building-church-1df07e15-plain:1",
+        "view:variation:ref-building-church-1df07e15-plain:1:se",
+        "view:variation:ref-building-church-1df07e15-plain:1:sw",
+        "view:variation:ref-building-church-1df07e15-plain:1:nw"
+      ],
+      "axisViewIds": [],
+      "cornerIdsPresent": true,
+      "axisIdsPresent": false,
+      "removedByStudio": false,
+      "missingActiveViewIds": [],
+      "propsToolRotations": 4,
+      "sourceImageQuality": "not assessed by runtime registration",
+      "eightPlayerSelectableFacings": false
+    },
+    {
+      "subject": "variation:ref-building-corner-shop-2ffc6ab7-plain:1",
+      "cornerViewIds": [
+        "variation:ref-building-corner-shop-2ffc6ab7-plain:1",
+        "view:variation:ref-building-corner-shop-2ffc6ab7-plain:1:se",
+        "view:variation:ref-building-corner-shop-2ffc6ab7-plain:1:sw",
+        "view:variation:ref-building-corner-shop-2ffc6ab7-plain:1:nw"
+      ],
+      "axisViewIds": [],
+      "cornerIdsPresent": true,
+      "axisIdsPresent": false,
+      "removedByStudio": false,
+      "missingActiveViewIds": [],
+      "propsToolRotations": 4,
+      "sourceImageQuality": "not assessed by runtime registration",
+      "eightPlayerSelectableFacings": false
+    },
+    {
+      "subject": "variation:ref-building-corner-store-a89c59c0-plain:1",
+      "cornerViewIds": [
+        "variation:ref-building-corner-store-a89c59c0-plain:1",
+        "view:variation:ref-building-corner-store-a89c59c0-plain:1:se",
+        "view:variation:ref-building-corner-store-a89c59c0-plain:1:sw",
+        "view:variation:ref-building-corner-store-a89c59c0-plain:1:nw"
+      ],
+      "axisViewIds": [
+        "view:variation:ref-building-corner-store-a89c59c0-plain:1:n",
+        "view:variation:ref-building-corner-store-a89c59c0-plain:1:e",
+        "view:variation:ref-building-corner-store-a89c59c0-plain:1:s",
+        "view:variation:ref-building-corner-store-a89c59c0-plain:1:w"
+      ],
+      "cornerIdsPresent": true,
+      "axisIdsPresent": true,
+      "removedByStudio": false,
+      "missingActiveViewIds": [],
+      "propsToolRotations": 4,
+      "sourceImageQuality": "not assessed by runtime registration",
+      "eightPlayerSelectableFacings": false
+    },
+    {
+      "subject": "variation:ref-building-diner-1e19ec22-plain:1",
+      "cornerViewIds": [
+        "variation:ref-building-diner-1e19ec22-plain:1",
+        "view:variation:ref-building-diner-1e19ec22-plain:1:se",
+        "view:variation:ref-building-diner-1e19ec22-plain:1:sw",
+        "view:variation:ref-building-diner-1e19ec22-plain:1:nw"
+      ],
+      "axisViewIds": [],
+      "cornerIdsPresent": true,
+      "axisIdsPresent": false,
+      "removedByStudio": false,
+      "missingActiveViewIds": [],
+      "propsToolRotations": 4,
+      "sourceImageQuality": "not assessed by runtime registration",
+      "eightPlayerSelectableFacings": false
+    },
+    {
+      "subject": "variation:ref-building-drive-in-screen-b0bccc2a-plain:1",
+      "cornerViewIds": [
+        "variation:ref-building-drive-in-screen-b0bccc2a-plain:1",
+        "view:variation:ref-building-drive-in-screen-b0bccc2a-plain:1:se",
+        "view:variation:ref-building-drive-in-screen-b0bccc2a-plain:1:sw",
+        "view:variation:ref-building-drive-in-screen-b0bccc2a-plain:1:nw"
+      ],
+      "axisViewIds": [],
+      "cornerIdsPresent": true,
+      "axisIdsPresent": false,
+      "removedByStudio": false,
+      "missingActiveViewIds": [],
+      "propsToolRotations": 4,
+      "sourceImageQuality": "not assessed by runtime registration",
+      "eightPlayerSelectableFacings": false
+    },
+    {
+      "subject": "variation:ref-building-farm-shed-0280794d-plain:1",
+      "cornerViewIds": [
+        "variation:ref-building-farm-shed-0280794d-plain:1",
+        "view:variation:ref-building-farm-shed-0280794d-plain:1:se",
+        "view:variation:ref-building-farm-shed-0280794d-plain:1:sw",
+        "view:variation:ref-building-farm-shed-0280794d-plain:1:nw"
+      ],
+      "axisViewIds": [],
+      "cornerIdsPresent": true,
+      "axisIdsPresent": false,
+      "removedByStudio": false,
+      "missingActiveViewIds": [],
+      "propsToolRotations": 4,
+      "sourceImageQuality": "not assessed by runtime registration",
+      "eightPlayerSelectableFacings": false
+    },
+    {
+      "subject": "variation:ref-building-farmhouse-ef501a21-plain:1",
+      "cornerViewIds": [
+        "variation:ref-building-farmhouse-ef501a21-plain:1",
+        "view:variation:ref-building-farmhouse-ef501a21-plain:1:se",
+        "view:variation:ref-building-farmhouse-ef501a21-plain:1:sw",
+        "view:variation:ref-building-farmhouse-ef501a21-plain:1:nw"
+      ],
+      "axisViewIds": [],
+      "cornerIdsPresent": true,
+      "axisIdsPresent": false,
+      "removedByStudio": false,
+      "missingActiveViewIds": [],
+      "propsToolRotations": 4,
+      "sourceImageQuality": "not assessed by runtime registration",
+      "eightPlayerSelectableFacings": false
+    },
+    {
+      "subject": "variation:ref-building-farmhouse-north-408a9ca6-plain:1",
+      "cornerViewIds": [
+        "variation:ref-building-farmhouse-north-408a9ca6-plain:1",
+        "view:variation:ref-building-farmhouse-north-408a9ca6-plain:1:se",
+        "view:variation:ref-building-farmhouse-north-408a9ca6-plain:1:sw",
+        "view:variation:ref-building-farmhouse-north-408a9ca6-plain:1:nw"
+      ],
+      "axisViewIds": [
+        "view:variation:ref-building-farmhouse-north-408a9ca6-plain:1:n",
+        "view:variation:ref-building-farmhouse-north-408a9ca6-plain:1:e",
+        "view:variation:ref-building-farmhouse-north-408a9ca6-plain:1:s",
+        "view:variation:ref-building-farmhouse-north-408a9ca6-plain:1:w"
+      ],
+      "cornerIdsPresent": true,
+      "axisIdsPresent": true,
+      "removedByStudio": false,
+      "missingActiveViewIds": [],
+      "propsToolRotations": 4,
+      "sourceImageQuality": "not assessed by runtime registration",
+      "eightPlayerSelectableFacings": false
+    },
+    {
+      "subject": "variation:ref-building-garage-0f7895a1-plain:1",
+      "cornerViewIds": [
+        "variation:ref-building-garage-0f7895a1-plain:1",
+        "view:variation:ref-building-garage-0f7895a1-plain:1:se",
+        "view:variation:ref-building-garage-0f7895a1-plain:1:sw",
+        "view:variation:ref-building-garage-0f7895a1-plain:1:nw"
+      ],
+      "axisViewIds": [],
+      "cornerIdsPresent": true,
+      "axisIdsPresent": false,
+      "removedByStudio": false,
+      "missingActiveViewIds": [],
+      "propsToolRotations": 4,
+      "sourceImageQuality": "not assessed by runtime registration",
+      "eightPlayerSelectableFacings": false
+    },
+    {
+      "subject": "variation:ref-building-gas-canopy-543306a0-plain:1",
+      "cornerViewIds": [
+        "variation:ref-building-gas-canopy-543306a0-plain:1",
+        "view:variation:ref-building-gas-canopy-543306a0-plain:1:se",
+        "view:variation:ref-building-gas-canopy-543306a0-plain:1:sw",
+        "view:variation:ref-building-gas-canopy-543306a0-plain:1:nw"
+      ],
+      "axisViewIds": [],
+      "cornerIdsPresent": true,
+      "axisIdsPresent": false,
+      "removedByStudio": false,
+      "missingActiveViewIds": [],
+      "propsToolRotations": 4,
+      "sourceImageQuality": "not assessed by runtime registration",
+      "eightPlayerSelectableFacings": false
+    },
+    {
+      "subject": "variation:ref-building-gas-shop-3326e70f-plain:1",
+      "cornerViewIds": [
+        "variation:ref-building-gas-shop-3326e70f-plain:1",
+        "view:variation:ref-building-gas-shop-3326e70f-plain:1:se",
+        "view:variation:ref-building-gas-shop-3326e70f-plain:1:sw",
+        "view:variation:ref-building-gas-shop-3326e70f-plain:1:nw"
+      ],
+      "axisViewIds": [],
+      "cornerIdsPresent": true,
+      "axisIdsPresent": false,
+      "removedByStudio": false,
+      "missingActiveViewIds": [],
+      "propsToolRotations": 4,
+      "sourceImageQuality": "not assessed by runtime registration",
+      "eightPlayerSelectableFacings": false
+    },
+    {
+      "subject": "variation:ref-building-grocery-79498713-plain:1",
+      "cornerViewIds": [
+        "variation:ref-building-grocery-79498713-plain:1",
+        "view:variation:ref-building-grocery-79498713-plain:1:se",
+        "view:variation:ref-building-grocery-79498713-plain:1:sw",
+        "view:variation:ref-building-grocery-79498713-plain:1:nw"
+      ],
+      "axisViewIds": [],
+      "cornerIdsPresent": true,
+      "axisIdsPresent": false,
+      "removedByStudio": false,
+      "missingActiveViewIds": [],
+      "propsToolRotations": 4,
+      "sourceImageQuality": "not assessed by runtime registration",
+      "eightPlayerSelectableFacings": false
+    },
+    {
+      "subject": "variation:ref-building-house-cottage-fc52ce66-plain:1",
+      "cornerViewIds": [
+        "variation:ref-building-house-cottage-fc52ce66-plain:1",
+        "view:variation:ref-building-house-cottage-fc52ce66-plain:1:se",
+        "view:variation:ref-building-house-cottage-fc52ce66-plain:1:sw",
+        "view:variation:ref-building-house-cottage-fc52ce66-plain:1:nw"
+      ],
+      "axisViewIds": [],
+      "cornerIdsPresent": true,
+      "axisIdsPresent": false,
+      "removedByStudio": false,
+      "missingActiveViewIds": [],
+      "propsToolRotations": 4,
+      "sourceImageQuality": "not assessed by runtime registration",
+      "eightPlayerSelectableFacings": false
+    },
+    {
+      "subject": "variation:ref-building-house-cottage-north-304e5431-plain:1",
+      "cornerViewIds": [
+        "variation:ref-building-house-cottage-north-304e5431-plain:1",
+        "view:variation:ref-building-house-cottage-north-304e5431-plain:1:se",
+        "view:variation:ref-building-house-cottage-north-304e5431-plain:1:sw",
+        "view:variation:ref-building-house-cottage-north-304e5431-plain:1:nw"
+      ],
+      "axisViewIds": [
+        "view:variation:ref-building-house-cottage-north-304e5431-plain:1:n",
+        "view:variation:ref-building-house-cottage-north-304e5431-plain:1:e",
+        "view:variation:ref-building-house-cottage-north-304e5431-plain:1:s",
+        "view:variation:ref-building-house-cottage-north-304e5431-plain:1:w"
+      ],
+      "cornerIdsPresent": true,
+      "axisIdsPresent": true,
+      "removedByStudio": false,
+      "missingActiveViewIds": [],
+      "propsToolRotations": 4,
+      "sourceImageQuality": "not assessed by runtime registration",
+      "eightPlayerSelectableFacings": false
+    },
+    {
+      "subject": "variation:ref-building-house-dormer-b4413f08-plain:1",
+      "cornerViewIds": [
+        "variation:ref-building-house-dormer-b4413f08-plain:1",
+        "view:variation:ref-building-house-dormer-b4413f08-plain:1:se",
+        "view:variation:ref-building-house-dormer-b4413f08-plain:1:sw",
+        "view:variation:ref-building-house-dormer-b4413f08-plain:1:nw"
+      ],
+      "axisViewIds": [],
+      "cornerIdsPresent": true,
+      "axisIdsPresent": false,
+      "removedByStudio": false,
+      "missingActiveViewIds": [],
+      "propsToolRotations": 4,
+      "sourceImageQuality": "not assessed by runtime registration",
+      "eightPlayerSelectableFacings": false
+    },
+    {
+      "subject": "variation:ref-building-house-dormer-north-6952cea5-plain:1",
+      "cornerViewIds": [
+        "variation:ref-building-house-dormer-north-6952cea5-plain:1",
+        "view:variation:ref-building-house-dormer-north-6952cea5-plain:1:se",
+        "view:variation:ref-building-house-dormer-north-6952cea5-plain:1:sw",
+        "view:variation:ref-building-house-dormer-north-6952cea5-plain:1:nw"
+      ],
+      "axisViewIds": [],
+      "cornerIdsPresent": true,
+      "axisIdsPresent": false,
+      "removedByStudio": false,
+      "missingActiveViewIds": [],
+      "propsToolRotations": 4,
+      "sourceImageQuality": "not assessed by runtime registration",
+      "eightPlayerSelectableFacings": false
+    },
+    {
+      "subject": "variation:ref-building-house-garage-a1d986d3-plain:1",
+      "cornerViewIds": [
+        "variation:ref-building-house-garage-a1d986d3-plain:1",
+        "view:variation:ref-building-house-garage-a1d986d3-plain:1:se",
+        "view:variation:ref-building-house-garage-a1d986d3-plain:1:sw",
+        "view:variation:ref-building-house-garage-a1d986d3-plain:1:nw"
+      ],
+      "axisViewIds": [],
+      "cornerIdsPresent": true,
+      "axisIdsPresent": false,
+      "removedByStudio": false,
+      "missingActiveViewIds": [],
+      "propsToolRotations": 4,
+      "sourceImageQuality": "not assessed by runtime registration",
+      "eightPlayerSelectableFacings": false
+    },
+    {
+      "subject": "variation:ref-building-house-garage-north-a7184edf-plain:1",
+      "cornerViewIds": [
+        "variation:ref-building-house-garage-north-a7184edf-plain:1",
+        "view:variation:ref-building-house-garage-north-a7184edf-plain:1:se",
+        "view:variation:ref-building-house-garage-north-a7184edf-plain:1:sw",
+        "view:variation:ref-building-house-garage-north-a7184edf-plain:1:nw"
+      ],
+      "axisViewIds": [
+        "view:variation:ref-building-house-garage-north-a7184edf-plain:1:n",
+        "view:variation:ref-building-house-garage-north-a7184edf-plain:1:e",
+        "view:variation:ref-building-house-garage-north-a7184edf-plain:1:s",
+        "view:variation:ref-building-house-garage-north-a7184edf-plain:1:w"
+      ],
+      "cornerIdsPresent": true,
+      "axisIdsPresent": true,
+      "removedByStudio": false,
+      "missingActiveViewIds": [],
+      "propsToolRotations": 4,
+      "sourceImageQuality": "not assessed by runtime registration",
+      "eightPlayerSelectableFacings": false
+    },
+    {
+      "subject": "variation:ref-building-house-large-20cb9f9e-plain:1",
+      "cornerViewIds": [
+        "variation:ref-building-house-large-20cb9f9e-plain:1",
+        "view:variation:ref-building-house-large-20cb9f9e-plain:1:se",
+        "view:variation:ref-building-house-large-20cb9f9e-plain:1:sw",
+        "view:variation:ref-building-house-large-20cb9f9e-plain:1:nw"
+      ],
+      "axisViewIds": [],
+      "cornerIdsPresent": true,
+      "axisIdsPresent": false,
+      "removedByStudio": false,
+      "missingActiveViewIds": [],
+      "propsToolRotations": 4,
+      "sourceImageQuality": "not assessed by runtime registration",
+      "eightPlayerSelectableFacings": false
+    },
+    {
+      "subject": "variation:ref-building-house-large-north-24d21776-plain:1",
+      "cornerViewIds": [
+        "variation:ref-building-house-large-north-24d21776-plain:1",
+        "view:variation:ref-building-house-large-north-24d21776-plain:1:se",
+        "view:variation:ref-building-house-large-north-24d21776-plain:1:sw",
+        "view:variation:ref-building-house-large-north-24d21776-plain:1:nw"
+      ],
+      "axisViewIds": [
+        "view:variation:ref-building-house-large-north-24d21776-plain:1:n",
+        "view:variation:ref-building-house-large-north-24d21776-plain:1:e",
+        "view:variation:ref-building-house-large-north-24d21776-plain:1:s",
+        "view:variation:ref-building-house-large-north-24d21776-plain:1:w"
+      ],
+      "cornerIdsPresent": true,
+      "axisIdsPresent": true,
+      "removedByStudio": false,
+      "missingActiveViewIds": [],
+      "propsToolRotations": 4,
+      "sourceImageQuality": "not assessed by runtime registration",
+      "eightPlayerSelectableFacings": false
+    },
+    {
+      "subject": "variation:ref-building-mausoleum-719fd618-plain:1",
+      "cornerViewIds": [
+        "variation:ref-building-mausoleum-719fd618-plain:1",
+        "view:variation:ref-building-mausoleum-719fd618-plain:1:se",
+        "view:variation:ref-building-mausoleum-719fd618-plain:1:sw",
+        "view:variation:ref-building-mausoleum-719fd618-plain:1:nw"
+      ],
+      "axisViewIds": [],
+      "cornerIdsPresent": true,
+      "axisIdsPresent": false,
+      "removedByStudio": false,
+      "missingActiveViewIds": [],
+      "propsToolRotations": 4,
+      "sourceImageQuality": "not assessed by runtime registration",
+      "eightPlayerSelectableFacings": false
+    },
+    {
+      "subject": "variation:ref-building-shop-blue-941779e4-plain:1",
+      "cornerViewIds": [
+        "variation:ref-building-shop-blue-941779e4-plain:1",
+        "view:variation:ref-building-shop-blue-941779e4-plain:1:se",
+        "view:variation:ref-building-shop-blue-941779e4-plain:1:sw",
+        "view:variation:ref-building-shop-blue-941779e4-plain:1:nw"
+      ],
+      "axisViewIds": [],
+      "cornerIdsPresent": true,
+      "axisIdsPresent": false,
+      "removedByStudio": false,
+      "missingActiveViewIds": [],
+      "propsToolRotations": 4,
+      "sourceImageQuality": "not assessed by runtime registration",
+      "eightPlayerSelectableFacings": false
+    },
+    {
+      "subject": "variation:ref-building-snack-bar-4e0d11f7-plain:1",
+      "cornerViewIds": [
+        "variation:ref-building-snack-bar-4e0d11f7-plain:1",
+        "view:variation:ref-building-snack-bar-4e0d11f7-plain:1:se",
+        "view:variation:ref-building-snack-bar-4e0d11f7-plain:1:sw",
+        "view:variation:ref-building-snack-bar-4e0d11f7-plain:1:nw"
+      ],
+      "axisViewIds": [
+        "view:variation:ref-building-snack-bar-4e0d11f7-plain:1:n",
+        "view:variation:ref-building-snack-bar-4e0d11f7-plain:1:e",
+        "view:variation:ref-building-snack-bar-4e0d11f7-plain:1:s",
+        "view:variation:ref-building-snack-bar-4e0d11f7-plain:1:w"
+      ],
+      "cornerIdsPresent": true,
+      "axisIdsPresent": true,
+      "removedByStudio": false,
+      "missingActiveViewIds": [],
+      "propsToolRotations": 4,
+      "sourceImageQuality": "not assessed by runtime registration",
+      "eightPlayerSelectableFacings": false
+    },
+    {
+      "subject": "variation:static-garage_brick-v2-be1ee461-plain:1",
+      "cornerViewIds": [
+        "variation:static-garage_brick-v2-be1ee461-plain:1",
+        "view:variation:static-garage_brick-v2-be1ee461-plain:1:se",
+        "view:variation:static-garage_brick-v2-be1ee461-plain:1:sw",
+        "view:variation:static-garage_brick-v2-be1ee461-plain:1:nw"
+      ],
+      "axisViewIds": [],
+      "cornerIdsPresent": true,
+      "axisIdsPresent": false,
+      "removedByStudio": false,
+      "missingActiveViewIds": [],
+      "propsToolRotations": 4,
+      "sourceImageQuality": "not assessed by runtime registration",
+      "eightPlayerSelectableFacings": false
+    },
+    {
+      "subject": "variation:static-garage_timber-v2-22fab891-plain:1",
+      "cornerViewIds": [
+        "variation:static-garage_timber-v2-22fab891-plain:1",
+        "view:variation:static-garage_timber-v2-22fab891-plain:1:se",
+        "view:variation:static-garage_timber-v2-22fab891-plain:1:sw",
+        "view:variation:static-garage_timber-v2-22fab891-plain:1:nw"
+      ],
+      "axisViewIds": [
+        "view:variation:static-garage_timber-v2-22fab891-plain:1:n",
+        "view:variation:static-garage_timber-v2-22fab891-plain:1:e",
+        "view:variation:static-garage_timber-v2-22fab891-plain:1:s",
+        "view:variation:static-garage_timber-v2-22fab891-plain:1:w"
+      ],
+      "cornerIdsPresent": true,
+      "axisIdsPresent": true,
+      "removedByStudio": false,
+      "missingActiveViewIds": [],
+      "propsToolRotations": 4,
+      "sourceImageQuality": "not assessed by runtime registration",
+      "eightPlayerSelectableFacings": false
+    },
+    {
+      "subject": "variation:static-shop_brick_rear-04db4dfa-plain:1",
+      "cornerViewIds": [
+        "variation:static-shop_brick_rear-04db4dfa-plain:1",
+        "view:variation:static-shop_brick_rear-04db4dfa-plain:1:se",
+        "view:variation:static-shop_brick_rear-04db4dfa-plain:1:sw",
+        "view:variation:static-shop_brick_rear-04db4dfa-plain:1:nw"
+      ],
+      "axisViewIds": [],
+      "cornerIdsPresent": true,
+      "axisIdsPresent": false,
+      "removedByStudio": false,
+      "missingActiveViewIds": [],
+      "propsToolRotations": 4,
+      "sourceImageQuality": "not assessed by runtime registration",
+      "eightPlayerSelectableFacings": false
+    },
+    {
+      "subject": "variation:static-shop_market_rear-f9272004-plain:1",
+      "cornerViewIds": [
+        "variation:static-shop_market_rear-f9272004-plain:1",
+        "view:variation:static-shop_market_rear-f9272004-plain:1:se",
+        "view:variation:static-shop_market_rear-f9272004-plain:1:sw",
+        "view:variation:static-shop_market_rear-f9272004-plain:1:nw"
+      ],
+      "axisViewIds": [],
+      "cornerIdsPresent": true,
+      "axisIdsPresent": false,
+      "removedByStudio": false,
+      "missingActiveViewIds": [],
+      "propsToolRotations": 4,
+      "sourceImageQuality": "not assessed by runtime registration",
+      "eightPlayerSelectableFacings": false
+    },
+    {
+      "subject": "variation:town-bakery-af15d7f5-plain:1",
+      "cornerViewIds": [
+        "variation:town-bakery-af15d7f5-plain:1",
+        "view:variation:town-bakery-af15d7f5-plain:1:se",
+        "view:variation:town-bakery-af15d7f5-plain:1:sw",
+        "view:variation:town-bakery-af15d7f5-plain:1:nw"
+      ],
+      "axisViewIds": [],
+      "cornerIdsPresent": true,
+      "axisIdsPresent": false,
+      "removedByStudio": false,
+      "missingActiveViewIds": [],
+      "propsToolRotations": 4,
+      "sourceImageQuality": "not assessed by runtime registration",
+      "eightPlayerSelectableFacings": false
+    },
+    {
+      "subject": "variation:town-barber-13c5ef06-plain:1",
+      "cornerViewIds": [
+        "variation:town-barber-13c5ef06-plain:1",
+        "view:variation:town-barber-13c5ef06-plain:1:se",
+        "view:variation:town-barber-13c5ef06-plain:1:sw",
+        "view:variation:town-barber-13c5ef06-plain:1:nw"
+      ],
+      "axisViewIds": [],
+      "cornerIdsPresent": true,
+      "axisIdsPresent": false,
+      "removedByStudio": false,
+      "missingActiveViewIds": [],
+      "propsToolRotations": 4,
+      "sourceImageQuality": "not assessed by runtime registration",
+      "eightPlayerSelectableFacings": false
+    },
+    {
+      "subject": "variation:town-fish_tackle-99c1401c-plain:1",
+      "cornerViewIds": [
+        "variation:town-fish_tackle-99c1401c-plain:1",
+        "view:variation:town-fish_tackle-99c1401c-plain:1:se",
+        "view:variation:town-fish_tackle-99c1401c-plain:1:sw",
+        "view:variation:town-fish_tackle-99c1401c-plain:1:nw"
+      ],
+      "axisViewIds": [],
+      "cornerIdsPresent": true,
+      "axisIdsPresent": false,
+      "removedByStudio": false,
+      "missingActiveViewIds": [],
+      "propsToolRotations": 4,
+      "sourceImageQuality": "not assessed by runtime registration",
+      "eightPlayerSelectableFacings": false
+    },
+    {
+      "subject": "variation:town-grocery-46d5dc39-plain:1",
+      "cornerViewIds": [
+        "variation:town-grocery-46d5dc39-plain:1",
+        "view:variation:town-grocery-46d5dc39-plain:1:se",
+        "view:variation:town-grocery-46d5dc39-plain:1:sw",
+        "view:variation:town-grocery-46d5dc39-plain:1:nw"
+      ],
+      "axisViewIds": [],
+      "cornerIdsPresent": true,
+      "axisIdsPresent": false,
+      "removedByStudio": false,
+      "missingActiveViewIds": [],
+      "propsToolRotations": 4,
+      "sourceImageQuality": "not assessed by runtime registration",
+      "eightPlayerSelectableFacings": false
+    },
+    {
+      "subject": "variation:town-hardware-bf36737f-plain:1",
+      "cornerViewIds": [
+        "variation:town-hardware-bf36737f-plain:1",
+        "view:variation:town-hardware-bf36737f-plain:1:se",
+        "view:variation:town-hardware-bf36737f-plain:1:sw",
+        "view:variation:town-hardware-bf36737f-plain:1:nw"
+      ],
+      "axisViewIds": [],
+      "cornerIdsPresent": true,
+      "axisIdsPresent": false,
+      "removedByStudio": false,
+      "missingActiveViewIds": [],
+      "propsToolRotations": 4,
+      "sourceImageQuality": "not assessed by runtime registration",
+      "eightPlayerSelectableFacings": false
+    },
+    {
+      "subject": "variation:town-laundromat-43183f9e-plain:1",
+      "cornerViewIds": [
+        "variation:town-laundromat-43183f9e-plain:1",
+        "view:variation:town-laundromat-43183f9e-plain:1:se",
+        "view:variation:town-laundromat-43183f9e-plain:1:sw",
+        "view:variation:town-laundromat-43183f9e-plain:1:nw"
+      ],
+      "axisViewIds": [],
+      "cornerIdsPresent": true,
+      "axisIdsPresent": false,
+      "removedByStudio": false,
+      "missingActiveViewIds": [],
+      "propsToolRotations": 4,
+      "sourceImageQuality": "not assessed by runtime registration",
+      "eightPlayerSelectableFacings": false
+    },
+    {
+      "subject": "variation:town-pharmacy-d87b861c-plain:1",
+      "cornerViewIds": [
+        "variation:town-pharmacy-d87b861c-plain:1",
+        "view:variation:town-pharmacy-d87b861c-plain:1:se",
+        "view:variation:town-pharmacy-d87b861c-plain:1:sw",
+        "view:variation:town-pharmacy-d87b861c-plain:1:nw"
+      ],
+      "axisViewIds": [],
+      "cornerIdsPresent": true,
+      "axisIdsPresent": false,
+      "removedByStudio": false,
+      "missingActiveViewIds": [],
+      "propsToolRotations": 4,
+      "sourceImageQuality": "not assessed by runtime registration",
+      "eightPlayerSelectableFacings": false
+    },
+    {
+      "subject": "variation:town-postoffice-1c7025b8-plain:1",
+      "cornerViewIds": [
+        "variation:town-postoffice-1c7025b8-plain:1",
+        "view:variation:town-postoffice-1c7025b8-plain:1:se",
+        "view:variation:town-postoffice-1c7025b8-plain:1:sw",
+        "view:variation:town-postoffice-1c7025b8-plain:1:nw"
+      ],
+      "axisViewIds": [],
+      "cornerIdsPresent": true,
+      "axisIdsPresent": false,
+      "removedByStudio": false,
+      "missingActiveViewIds": [],
+      "propsToolRotations": 4,
+      "sourceImageQuality": "not assessed by runtime registration",
+      "eightPlayerSelectableFacings": false
+    },
+    {
+      "subject": "variation:world-arcade-f5b7f5eb-plain:1",
+      "cornerViewIds": [
+        "variation:world-arcade-f5b7f5eb-plain:1",
+        "view:variation:world-arcade-f5b7f5eb-plain:1:se",
+        "view:variation:world-arcade-f5b7f5eb-plain:1:sw",
+        "view:variation:world-arcade-f5b7f5eb-plain:1:nw"
+      ],
+      "axisViewIds": [
+        "view:variation:world-arcade-f5b7f5eb-plain:1:n",
+        "view:variation:world-arcade-f5b7f5eb-plain:1:e",
+        "view:variation:world-arcade-f5b7f5eb-plain:1:s",
+        "view:variation:world-arcade-f5b7f5eb-plain:1:w"
+      ],
+      "cornerIdsPresent": true,
+      "axisIdsPresent": true,
+      "removedByStudio": false,
+      "missingActiveViewIds": [],
+      "propsToolRotations": 4,
+      "sourceImageQuality": "not assessed by runtime registration",
+      "eightPlayerSelectableFacings": false
+    },
+    {
+      "subject": "variation:world-barn-ae80f6c9-plain:1",
+      "cornerViewIds": [
+        "variation:world-barn-ae80f6c9-plain:1",
+        "view:variation:world-barn-ae80f6c9-plain:1:se",
+        "view:variation:world-barn-ae80f6c9-plain:1:sw",
+        "view:variation:world-barn-ae80f6c9-plain:1:nw"
+      ],
+      "axisViewIds": [],
+      "cornerIdsPresent": true,
+      "axisIdsPresent": false,
+      "removedByStudio": false,
+      "missingActiveViewIds": [],
+      "propsToolRotations": 4,
+      "sourceImageQuality": "not assessed by runtime registration",
+      "eightPlayerSelectableFacings": false
+    },
+    {
+      "subject": "variation:world-church-44e76535-plain:1",
+      "cornerViewIds": [
+        "variation:world-church-44e76535-plain:1",
+        "view:variation:world-church-44e76535-plain:1:se",
+        "view:variation:world-church-44e76535-plain:1:sw",
+        "view:variation:world-church-44e76535-plain:1:nw"
+      ],
+      "axisViewIds": [],
+      "cornerIdsPresent": true,
+      "axisIdsPresent": false,
+      "removedByStudio": false,
+      "missingActiveViewIds": [],
+      "propsToolRotations": 4,
+      "sourceImageQuality": "not assessed by runtime registration",
+      "eightPlayerSelectableFacings": false
+    },
+    {
+      "subject": "variation:world-diner-c9878d46-plain:1",
+      "cornerViewIds": [
+        "variation:world-diner-c9878d46-plain:1",
+        "view:variation:world-diner-c9878d46-plain:1:se",
+        "view:variation:world-diner-c9878d46-plain:1:sw",
+        "view:variation:world-diner-c9878d46-plain:1:nw"
+      ],
+      "axisViewIds": [
+        "view:variation:world-diner-c9878d46-plain:1:n",
+        "view:variation:world-diner-c9878d46-plain:1:e",
+        "view:variation:world-diner-c9878d46-plain:1:s",
+        "view:variation:world-diner-c9878d46-plain:1:w"
+      ],
+      "cornerIdsPresent": true,
+      "axisIdsPresent": true,
+      "removedByStudio": false,
+      "missingActiveViewIds": [],
+      "propsToolRotations": 4,
+      "sourceImageQuality": "not assessed by runtime registration",
+      "eightPlayerSelectableFacings": false
+    },
+    {
+      "subject": "variation:world-house_0-51fa4b80-plain:1",
+      "cornerViewIds": [
+        "variation:world-house_0-51fa4b80-plain:1",
+        "view:variation:world-house_0-51fa4b80-plain:1:se",
+        "view:variation:world-house_0-51fa4b80-plain:1:sw",
+        "view:variation:world-house_0-51fa4b80-plain:1:nw"
+      ],
+      "axisViewIds": [],
+      "cornerIdsPresent": true,
+      "axisIdsPresent": false,
+      "removedByStudio": false,
+      "missingActiveViewIds": [],
+      "propsToolRotations": 4,
+      "sourceImageQuality": "not assessed by runtime registration",
+      "eightPlayerSelectableFacings": false
+    },
+    {
+      "subject": "variation:world-house_0-north-1dde6f56-plain:1",
+      "cornerViewIds": [
+        "variation:world-house_0-north-1dde6f56-plain:1",
+        "view:variation:world-house_0-north-1dde6f56-plain:1:se",
+        "view:variation:world-house_0-north-1dde6f56-plain:1:sw",
+        "view:variation:world-house_0-north-1dde6f56-plain:1:nw"
+      ],
+      "axisViewIds": [],
+      "cornerIdsPresent": true,
+      "axisIdsPresent": false,
+      "removedByStudio": false,
+      "missingActiveViewIds": [],
+      "propsToolRotations": 4,
+      "sourceImageQuality": "not assessed by runtime registration",
+      "eightPlayerSelectableFacings": false
+    },
+    {
+      "subject": "variation:world-house_1-ba13ed2e-plain-corner:1",
+      "cornerViewIds": [
+        "variation:world-house_1-ba13ed2e-plain-corner:1",
+        "view:variation:world-house_1-ba13ed2e-plain-corner:1:se",
+        "view:variation:world-house_1-ba13ed2e-plain-corner:1:sw",
+        "view:variation:world-house_1-ba13ed2e-plain-corner:1:nw"
+      ],
+      "axisViewIds": [
+        "view:variation:world-house_1-ba13ed2e-plain-corner:1:n",
+        "view:variation:world-house_1-ba13ed2e-plain-corner:1:e",
+        "view:variation:world-house_1-ba13ed2e-plain-corner:1:s",
+        "view:variation:world-house_1-ba13ed2e-plain-corner:1:w"
+      ],
+      "cornerIdsPresent": true,
+      "axisIdsPresent": true,
+      "removedByStudio": false,
+      "missingActiveViewIds": [],
+      "propsToolRotations": 4,
+      "sourceImageQuality": "not assessed by runtime registration",
+      "eightPlayerSelectableFacings": false
+    },
+    {
+      "subject": "variation:world-house_1-ba13ed2e-plain:1",
+      "cornerViewIds": [
+        "variation:world-house_1-ba13ed2e-plain:1",
+        "view:variation:world-house_1-ba13ed2e-plain:1:se",
+        "view:variation:world-house_1-ba13ed2e-plain:1:sw",
+        "view:variation:world-house_1-ba13ed2e-plain:1:nw"
+      ],
+      "axisViewIds": [
+        "view:variation:world-house_1-ba13ed2e-plain:1:n",
+        "view:variation:world-house_1-ba13ed2e-plain:1:e",
+        "view:variation:world-house_1-ba13ed2e-plain:1:s",
+        "view:variation:world-house_1-ba13ed2e-plain:1:w"
+      ],
+      "cornerIdsPresent": true,
+      "axisIdsPresent": true,
+      "removedByStudio": false,
+      "missingActiveViewIds": [],
+      "propsToolRotations": 4,
+      "sourceImageQuality": "not assessed by runtime registration",
+      "eightPlayerSelectableFacings": false
+    },
+    {
+      "subject": "variation:world-house_1-north-2521eca8-plain:1",
+      "cornerViewIds": [
+        "variation:world-house_1-north-2521eca8-plain:1",
+        "view:variation:world-house_1-north-2521eca8-plain:1:se",
+        "view:variation:world-house_1-north-2521eca8-plain:1:sw",
+        "view:variation:world-house_1-north-2521eca8-plain:1:nw"
+      ],
+      "axisViewIds": [
+        "view:variation:world-house_1-north-2521eca8-plain:1:n",
+        "view:variation:world-house_1-north-2521eca8-plain:1:e",
+        "view:variation:world-house_1-north-2521eca8-plain:1:s",
+        "view:variation:world-house_1-north-2521eca8-plain:1:w"
+      ],
+      "cornerIdsPresent": true,
+      "axisIdsPresent": true,
+      "removedByStudio": false,
+      "missingActiveViewIds": [],
+      "propsToolRotations": 4,
+      "sourceImageQuality": "not assessed by runtime registration",
+      "eightPlayerSelectableFacings": false
+    },
+    {
+      "subject": "variation:world-house_2-north-332663ab-plain:1",
+      "cornerViewIds": [
+        "variation:world-house_2-north-332663ab-plain:1",
+        "view:variation:world-house_2-north-332663ab-plain:1:se",
+        "view:variation:world-house_2-north-332663ab-plain:1:sw",
+        "view:variation:world-house_2-north-332663ab-plain:1:nw"
+      ],
+      "axisViewIds": [],
+      "cornerIdsPresent": true,
+      "axisIdsPresent": false,
+      "removedByStudio": false,
+      "missingActiveViewIds": [],
+      "propsToolRotations": 4,
+      "sourceImageQuality": "not assessed by runtime registration",
+      "eightPlayerSelectableFacings": false
+    },
+    {
+      "subject": "variation:world-house_3-north-2638a034-plain:1",
+      "cornerViewIds": [
+        "variation:world-house_3-north-2638a034-plain:1",
+        "view:variation:world-house_3-north-2638a034-plain:1:se",
+        "view:variation:world-house_3-north-2638a034-plain:1:sw",
+        "view:variation:world-house_3-north-2638a034-plain:1:nw"
+      ],
+      "axisViewIds": [
+        "view:variation:world-house_3-north-2638a034-plain:1:n",
+        "view:variation:world-house_3-north-2638a034-plain:1:e",
+        "view:variation:world-house_3-north-2638a034-plain:1:s",
+        "view:variation:world-house_3-north-2638a034-plain:1:w"
+      ],
+      "cornerIdsPresent": true,
+      "axisIdsPresent": true,
+      "removedByStudio": false,
+      "missingActiveViewIds": [],
+      "propsToolRotations": 4,
+      "sourceImageQuality": "not assessed by runtime registration",
+      "eightPlayerSelectableFacings": false
+    },
+    {
+      "subject": "variation:world-house_4-north-630f880a-plain:1",
+      "cornerViewIds": [
+        "variation:world-house_4-north-630f880a-plain:1",
+        "view:variation:world-house_4-north-630f880a-plain:1:se",
+        "view:variation:world-house_4-north-630f880a-plain:1:sw",
+        "view:variation:world-house_4-north-630f880a-plain:1:nw"
+      ],
+      "axisViewIds": [
+        "view:variation:world-house_4-north-630f880a-plain:1:n",
+        "view:variation:world-house_4-north-630f880a-plain:1:e",
+        "view:variation:world-house_4-north-630f880a-plain:1:s",
+        "view:variation:world-house_4-north-630f880a-plain:1:w"
+      ],
+      "cornerIdsPresent": true,
+      "axisIdsPresent": true,
+      "removedByStudio": false,
+      "missingActiveViewIds": [],
+      "propsToolRotations": 4,
+      "sourceImageQuality": "not assessed by runtime registration",
+      "eightPlayerSelectableFacings": false
+    },
+    {
+      "subject": "variation:world-house_5-d6198cb0-plain:1",
+      "cornerViewIds": [
+        "variation:world-house_5-d6198cb0-plain:1",
+        "view:variation:world-house_5-d6198cb0-plain:1:se",
+        "view:variation:world-house_5-d6198cb0-plain:1:sw",
+        "view:variation:world-house_5-d6198cb0-plain:1:nw"
+      ],
+      "axisViewIds": [],
+      "cornerIdsPresent": true,
+      "axisIdsPresent": false,
+      "removedByStudio": false,
+      "missingActiveViewIds": [],
+      "propsToolRotations": 4,
+      "sourceImageQuality": "not assessed by runtime registration",
+      "eightPlayerSelectableFacings": false
+    },
+    {
+      "subject": "variation:world-house_5-north-bffd2c68-plain:1",
+      "cornerViewIds": [
+        "variation:world-house_5-north-bffd2c68-plain:1",
+        "view:variation:world-house_5-north-bffd2c68-plain:1:se",
+        "view:variation:world-house_5-north-bffd2c68-plain:1:sw",
+        "view:variation:world-house_5-north-bffd2c68-plain:1:nw"
+      ],
+      "axisViewIds": [],
+      "cornerIdsPresent": true,
+      "axisIdsPresent": false,
+      "removedByStudio": false,
+      "missingActiveViewIds": [],
+      "propsToolRotations": 4,
+      "sourceImageQuality": "not assessed by runtime registration",
+      "eightPlayerSelectableFacings": false
+    },
+    {
+      "subject": "variation:world-video-bf85dfb9-plain:1",
+      "cornerViewIds": [
+        "variation:world-video-bf85dfb9-plain:1",
+        "view:variation:world-video-bf85dfb9-plain:1:se",
+        "view:variation:world-video-bf85dfb9-plain:1:sw",
+        "view:variation:world-video-bf85dfb9-plain:1:nw"
+      ],
+      "axisViewIds": [
+        "view:variation:world-video-bf85dfb9-plain:1:n",
+        "view:variation:world-video-bf85dfb9-plain:1:e",
+        "view:variation:world-video-bf85dfb9-plain:1:s",
+        "view:variation:world-video-bf85dfb9-plain:1:w"
+      ],
+      "cornerIdsPresent": true,
+      "axisIdsPresent": true,
+      "removedByStudio": false,
+      "missingActiveViewIds": [],
+      "propsToolRotations": 4,
+      "sourceImageQuality": "not assessed by runtime registration",
+      "eightPlayerSelectableFacings": false
+    },
+    {
+      "subject": "world:arcade",
+      "cornerViewIds": [
+        "world:arcade",
+        "view:world:arcade:se",
+        "view:world:arcade:sw",
+        "view:world:arcade:nw"
+      ],
+      "axisViewIds": [],
+      "cornerIdsPresent": true,
+      "axisIdsPresent": false,
+      "removedByStudio": false,
+      "missingActiveViewIds": [],
+      "propsToolRotations": 4,
+      "sourceImageQuality": "not assessed by runtime registration",
+      "eightPlayerSelectableFacings": false
+    },
+    {
+      "subject": "world:barn",
+      "cornerViewIds": [
+        "world:barn",
+        "view:world:barn:se",
+        "view:world:barn:sw",
+        "view:world:barn:nw"
+      ],
+      "axisViewIds": [],
+      "cornerIdsPresent": true,
+      "axisIdsPresent": false,
+      "removedByStudio": false,
+      "missingActiveViewIds": [],
+      "propsToolRotations": 4,
+      "sourceImageQuality": "not assessed by runtime registration",
+      "eightPlayerSelectableFacings": false
+    },
+    {
+      "subject": "world:bench",
+      "cornerViewIds": [],
+      "axisViewIds": [
+        "view:world:bench:n",
+        "view:world:bench:e",
+        "view:world:bench:s",
+        "view:world:bench:w"
+      ],
+      "cornerIdsPresent": false,
+      "axisIdsPresent": true,
+      "removedByStudio": false,
+      "missingActiveViewIds": [],
+      "propsToolRotations": 4,
+      "sourceImageQuality": "not assessed by runtime registration",
+      "eightPlayerSelectableFacings": false
+    },
+    {
+      "subject": "world:bleachers",
+      "cornerViewIds": [
+        "world:bleachers",
+        "view:world:bleachers:se",
+        "view:world:bleachers:sw",
+        "view:world:bleachers:nw"
+      ],
+      "axisViewIds": [],
+      "cornerIdsPresent": true,
+      "axisIdsPresent": false,
+      "removedByStudio": false,
+      "missingActiveViewIds": [],
+      "propsToolRotations": 4,
+      "sourceImageQuality": "not assessed by runtime registration",
+      "eightPlayerSelectableFacings": false
+    },
+    {
+      "subject": "world:drivein_marquee",
+      "cornerViewIds": [
+        "world:drivein_marquee",
+        "view:world:drivein_marquee:se",
+        "view:world:drivein_marquee:sw",
+        "view:world:drivein_marquee:nw"
+      ],
+      "axisViewIds": [],
+      "cornerIdsPresent": true,
+      "axisIdsPresent": false,
+      "removedByStudio": false,
+      "missingActiveViewIds": [],
+      "propsToolRotations": 4,
+      "sourceImageQuality": "not assessed by runtime registration",
+      "eightPlayerSelectableFacings": false
+    },
+    {
+      "subject": "world:gazebo",
+      "cornerViewIds": [
+        "world:gazebo",
+        "view:world:gazebo:se",
+        "view:world:gazebo:sw",
+        "view:world:gazebo:nw"
+      ],
+      "axisViewIds": [
+        "view:world:gazebo:n",
+        "view:world:gazebo:e",
+        "view:world:gazebo:s",
+        "view:world:gazebo:w"
+      ],
+      "cornerIdsPresent": true,
+      "axisIdsPresent": true,
+      "removedByStudio": false,
+      "missingActiveViewIds": [],
+      "propsToolRotations": 4,
+      "sourceImageQuality": "not assessed by runtime registration",
+      "eightPlayerSelectableFacings": false
+    },
+    {
+      "subject": "world:house_0",
+      "cornerViewIds": [
+        "world:house_0",
+        "view:world:house_0:se",
+        "view:world:house_0:sw",
+        "view:world:house_0:nw"
+      ],
+      "axisViewIds": [
+        "view:world:house_0:n",
+        "view:world:house_0:e",
+        "view:world:house_0:s",
+        "view:world:house_0:w"
+      ],
+      "cornerIdsPresent": true,
+      "axisIdsPresent": true,
+      "removedByStudio": false,
+      "missingActiveViewIds": [],
+      "propsToolRotations": 4,
+      "sourceImageQuality": "not assessed by runtime registration",
+      "eightPlayerSelectableFacings": false
+    },
+    {
+      "subject": "world:house_1",
+      "cornerViewIds": [
+        "world:house_1",
+        "view:world:house_1:se",
+        "view:world:house_1:sw",
+        "view:world:house_1:nw"
+      ],
+      "axisViewIds": [
+        "view:world:house_1:n",
+        "view:world:house_1:e",
+        "view:world:house_1:s",
+        "view:world:house_1:w"
+      ],
+      "cornerIdsPresent": true,
+      "axisIdsPresent": true,
+      "removedByStudio": false,
+      "missingActiveViewIds": [],
+      "propsToolRotations": 4,
+      "sourceImageQuality": "not assessed by runtime registration",
+      "eightPlayerSelectableFacings": false
+    },
+    {
+      "subject": "world:house_2",
+      "cornerViewIds": [
+        "world:house_2",
+        "view:world:house_2:se",
+        "view:world:house_2:sw",
+        "view:world:house_2:nw"
+      ],
+      "axisViewIds": [],
+      "cornerIdsPresent": true,
+      "axisIdsPresent": false,
+      "removedByStudio": false,
+      "missingActiveViewIds": [],
+      "propsToolRotations": 4,
+      "sourceImageQuality": "not assessed by runtime registration",
+      "eightPlayerSelectableFacings": false
+    },
+    {
+      "subject": "world:house_3",
+      "cornerViewIds": [
+        "world:house_3",
+        "view:world:house_3:se",
+        "view:world:house_3:sw",
+        "view:world:house_3:nw"
+      ],
+      "axisViewIds": [
+        "view:world:house_3:n",
+        "view:world:house_3:e",
+        "view:world:house_3:s",
+        "view:world:house_3:w"
+      ],
+      "cornerIdsPresent": true,
+      "axisIdsPresent": true,
+      "removedByStudio": false,
+      "missingActiveViewIds": [],
+      "propsToolRotations": 4,
+      "sourceImageQuality": "not assessed by runtime registration",
+      "eightPlayerSelectableFacings": false
+    },
+    {
+      "subject": "world:house_4",
+      "cornerViewIds": [
+        "world:house_4",
+        "view:world:house_4:se",
+        "view:world:house_4:sw",
+        "view:world:house_4:nw"
+      ],
+      "axisViewIds": [],
+      "cornerIdsPresent": true,
+      "axisIdsPresent": false,
+      "removedByStudio": false,
+      "missingActiveViewIds": [],
+      "propsToolRotations": 4,
+      "sourceImageQuality": "not assessed by runtime registration",
+      "eightPlayerSelectableFacings": false
+    },
+    {
+      "subject": "world:house_5",
+      "cornerViewIds": [
+        "world:house_5",
+        "view:world:house_5:se",
+        "view:world:house_5:sw",
+        "view:world:house_5:nw"
+      ],
+      "axisViewIds": [],
+      "cornerIdsPresent": true,
+      "axisIdsPresent": false,
+      "removedByStudio": false,
+      "missingActiveViewIds": [],
+      "propsToolRotations": 4,
+      "sourceImageQuality": "not assessed by runtime registration",
+      "eightPlayerSelectableFacings": false
+    },
+    {
+      "subject": "world:primary_school",
+      "cornerViewIds": [
+        "world:primary_school",
+        "view:world:primary_school:se",
+        "view:world:primary_school:sw",
+        "view:world:primary_school:nw"
+      ],
+      "axisViewIds": [],
+      "cornerIdsPresent": true,
+      "axisIdsPresent": false,
+      "removedByStudio": false,
+      "missingActiveViewIds": [],
+      "propsToolRotations": 4,
+      "sourceImageQuality": "not assessed by runtime registration",
+      "eightPlayerSelectableFacings": false
+    },
+    {
+      "subject": "world:school",
+      "cornerViewIds": [
+        "world:school",
+        "view:world:school:se",
+        "view:world:school:sw",
+        "view:world:school:nw"
+      ],
+      "axisViewIds": [],
+      "cornerIdsPresent": true,
+      "axisIdsPresent": false,
+      "removedByStudio": false,
+      "missingActiveViewIds": [],
+      "propsToolRotations": 4,
+      "sourceImageQuality": "not assessed by runtime registration",
+      "eightPlayerSelectableFacings": false
+    },
+    {
+      "subject": "world:streetlamp",
+      "cornerViewIds": [],
+      "axisViewIds": [
+        "view:world:streetlamp:n",
+        "view:world:streetlamp:e",
+        "view:world:streetlamp:s",
+        "view:world:streetlamp:w"
+      ],
+      "cornerIdsPresent": false,
+      "axisIdsPresent": true,
+      "removedByStudio": false,
+      "missingActiveViewIds": [],
+      "propsToolRotations": 4,
+      "sourceImageQuality": "not assessed by runtime registration",
+      "eightPlayerSelectableFacings": false
+    },
+    {
+      "subject": "world:trashcan",
+      "cornerViewIds": [],
+      "axisViewIds": [
+        "view:world:trashcan:n",
+        "view:world:trashcan:e",
+        "view:world:trashcan:s",
+        "view:world:trashcan:w"
+      ],
+      "cornerIdsPresent": false,
+      "axisIdsPresent": true,
+      "removedByStudio": false,
+      "missingActiveViewIds": [],
+      "propsToolRotations": 4,
+      "sourceImageQuality": "not assessed by runtime registration",
+      "eightPlayerSelectableFacings": false
+    },
+    {
+      "subject": "world:video_rental",
+      "cornerViewIds": [
+        "world:video_rental",
+        "view:world:video_rental:se",
+        "view:world:video_rental:sw",
+        "view:world:video_rental:nw"
+      ],
+      "axisViewIds": [],
+      "cornerIdsPresent": true,
+      "axisIdsPresent": false,
+      "removedByStudio": false,
+      "missingActiveViewIds": [],
+      "propsToolRotations": 4,
+      "sourceImageQuality": "not assessed by runtime registration",
+      "eightPlayerSelectableFacings": false
+    }
+  ],
+  "sceneManifest": [
+    {
+      "slug": "hitting-bays",
+      "state": "rundown",
+      "file": "hitting-bays-rundown.webp",
+      "w": 1024,
+      "h": 572,
+      "bytes": 153298,
+      "width": 1024,
+      "quality": 80,
+      "version": 1,
+      "source": "art/theme-consistency/generated/scenes/hitting-bays/hitting-bays-rundown-v1.png",
+      "sha256": "fba486656f1247d27ba63555b4a928a43130ca4fb7f9d89e41aebba3f26efd0c"
+    },
+    {
+      "slug": "hitting-bays",
+      "state": "upgraded",
+      "file": "hitting-bays-upgraded.webp",
+      "w": 1024,
+      "h": 572,
+      "bytes": 117702,
+      "width": 1024,
+      "quality": 80,
+      "version": 1,
+      "source": "art/theme-consistency/generated/scenes/hitting-bays/hitting-bays-upgraded-v1.png",
+      "sha256": "69b6fc0c7a17e8c79a1bce0894e60e04ae656e71edf4c84fd21ff4cf2b878271"
+    },
+    {
+      "slug": "home-caravan",
+      "state": "rundown",
+      "file": "home-caravan-rundown.webp",
+      "w": 1024,
+      "h": 572,
+      "bytes": 81526,
+      "width": 1024,
+      "quality": 80,
+      "version": 1,
+      "source": "art/theme-consistency/generated/scenes/home-caravan/home-caravan-rundown-v1.png",
+      "sha256": "1f41abbaa8d5bd1998a2a275ad2ef463a402183342e6b039d2db82af0636b203"
+    },
+    {
+      "slug": "home-caravan",
+      "state": "upgraded",
+      "file": "home-caravan-upgraded.webp",
+      "w": 1024,
+      "h": 572,
+      "bytes": 106162,
+      "width": 1024,
+      "quality": 80,
+      "version": 1,
+      "source": "art/theme-consistency/generated/scenes/home-caravan/home-caravan-upgraded-v1.png",
+      "sha256": "160c3bbd8d5400f403e91af75c2e442d639f982f0cc3946463674123a30ebafb"
+    },
+    {
+      "slug": "home-cottage",
+      "state": "rundown",
+      "file": "home-cottage-rundown.webp",
+      "w": 1024,
+      "h": 572,
+      "bytes": 115352,
+      "width": 1024,
+      "quality": 80,
+      "version": 1,
+      "source": "art/theme-consistency/generated/scenes/home-cottage/home-cottage-rundown-v1.png",
+      "sha256": "42e926ee9030a3d1235a7553a04644da4af3d02747664943a256b69c4fad0cc1"
+    },
+    {
+      "slug": "home-farmhouse",
+      "state": "rundown",
+      "file": "home-farmhouse-rundown.webp",
+      "w": 1024,
+      "h": 572,
+      "bytes": 100680,
+      "width": 1024,
+      "quality": 80,
+      "version": 1,
+      "source": "art/theme-consistency/generated/scenes/home-farmhouse/home-farmhouse-rundown-v1.png",
+      "sha256": "d77ff644419cf33eb8562268f55d41d586f82a3442521119db2c47b91d5f7779"
+    },
+    {
+      "slug": "home-farmhouse",
+      "state": "upgraded",
+      "file": "home-farmhouse-upgraded.webp",
+      "w": 1024,
+      "h": 572,
+      "bytes": 117516,
+      "width": 1024,
+      "quality": 80,
+      "version": 1,
+      "source": "art/theme-consistency/generated/scenes/home-farmhouse/home-farmhouse-upgraded-v1.png",
+      "sha256": "283e18feeeae598a01378d52f0fe25f3e9af60dce4f548a72f743ba9ba7026ac"
+    },
+    {
+      "slug": "practice-green",
+      "state": "rundown",
+      "file": "practice-green-rundown.webp",
+      "w": 1024,
+      "h": 572,
+      "bytes": 160624,
+      "width": 1024,
+      "quality": 80,
+      "version": 1,
+      "source": "art/theme-consistency/generated/scenes/practice-green/practice-green-rundown-v1.png",
+      "sha256": "588a9847accbe65a14acf42db220ed199d92be91c5871ff65458a333aeb77e75"
+    },
+    {
+      "slug": "practice-green",
+      "state": "upgraded",
+      "file": "practice-green-upgraded.webp",
+      "w": 1024,
+      "h": 572,
+      "bytes": 127038,
+      "width": 1024,
+      "quality": 80,
+      "version": 1,
+      "source": "art/theme-consistency/generated/scenes/practice-green/practice-green-upgraded-v1.png",
+      "sha256": "15d9bf973ca5d20af492f05b88859968febd552e424509f879289ef2f3187445"
+    },
+    {
+      "slug": "pro-shop-inside",
+      "state": "rundown",
+      "file": "pro-shop-inside-rundown.webp",
+      "w": 1024,
+      "h": 572,
+      "bytes": 115604,
+      "width": 1024,
+      "quality": 80,
+      "version": 1,
+      "source": "art/theme-consistency/generated/scenes/pro-shop-inside/pro-shop-inside-rundown-v1.png",
+      "sha256": "3a3a1a829f481234cce76917093ff799d4573ff11194a44d8dc2f3d1665b764c"
+    },
+    {
+      "slug": "pro-shop-inside",
+      "state": "upgraded",
+      "file": "pro-shop-inside-upgraded.webp",
+      "w": 1024,
+      "h": 572,
+      "bytes": 110458,
+      "width": 1024,
+      "quality": 80,
+      "version": 1,
+      "source": "art/theme-consistency/generated/scenes/pro-shop-inside/pro-shop-inside-upgraded-v1.png",
+      "sha256": "b6ac721e0d12078d38b20233c76aaad519c68cb0eb2528a822c00821b8df749f"
+    },
+    {
+      "slug": "range-road",
+      "state": "rundown",
+      "file": "range-road-rundown.webp",
+      "w": 1024,
+      "h": 572,
+      "bytes": 131586,
+      "width": 1024,
+      "quality": 80,
+      "version": 1,
+      "source": "art/theme-consistency/generated/scenes/range-road/range-road-rundown-v1.png",
+      "sha256": "5c982e3cee6e54c73c05dcabe01958d2ff2b93765494ce14d31f198db640bd7e"
+    },
+    {
+      "slug": "range-road",
+      "state": "upgraded",
+      "file": "range-road-upgraded.webp",
+      "w": 1024,
+      "h": 572,
+      "bytes": 119478,
+      "width": 1024,
+      "quality": 80,
+      "version": 1,
+      "source": "art/theme-consistency/generated/scenes/range-road/range-road-upgraded-v1.png",
+      "sha256": "94ffa5e7ae9b195abaecb80d65aefaf6d3e2536d7f44af1e595baec1b9afa901"
+    },
+    {
+      "slug": "video-store-inside",
+      "state": "rundown",
+      "file": "video-store-inside-rundown.webp",
+      "w": 1024,
+      "h": 572,
+      "bytes": 120454,
+      "width": 1024,
+      "quality": 80,
+      "version": 1,
+      "source": "art/theme-consistency/generated/scenes/video-store-inside/video-store-inside-rundown-v1.png",
+      "sha256": "874e2300bedc8d01f202fa84110b7d38f12fd069afabbcf576032c554fa5db37"
+    },
+    {
+      "slug": "video-store-inside",
+      "state": "upgraded",
+      "file": "video-store-inside-upgraded.webp",
+      "w": 1024,
+      "h": 572,
+      "bytes": 124822,
+      "width": 1024,
+      "quality": 80,
+      "version": 1,
+      "source": "art/theme-consistency/generated/scenes/video-store-inside/video-store-inside-upgraded-v1.png",
+      "sha256": "f7ce5cb9643f1500375681d30e711aa6cfb66b736778fef5c975703974a3630e"
+    },
+    {
+      "slug": "video-store-outside",
+      "state": "rundown",
+      "file": "video-store-outside-rundown.webp",
+      "w": 1024,
+      "h": 572,
+      "bytes": 128098,
+      "width": 1024,
+      "quality": 80,
+      "version": 1,
+      "source": "art/theme-consistency/generated/scenes/video-store-outside/video-store-outside-rundown-v1.png",
+      "sha256": "48345ea780fb8cdbb9147d8080016b8424627a4e1ceb2f1833f0b4121f35afe7"
+    },
+    {
+      "slug": "video-store-outside",
+      "state": "upgraded",
+      "file": "video-store-outside-upgraded.webp",
+      "w": 1024,
+      "h": 572,
+      "bytes": 128186,
+      "width": 1024,
+      "quality": 80,
+      "version": 1,
+      "source": "art/theme-consistency/generated/scenes/video-store-outside/video-store-outside-upgraded-v1.png",
+      "sha256": "56a0661c5ab5089012a3b817cc6a39bfae7a99487e7953f6f6dbde68dcc1a752"
+    }
+  ],
+  "people": {
+    "WALKER_PEOPLE": [
+      {
+        "id": "person:3d:base_kid",
+        "size": "adult",
+        "w": 80,
+        "h": 110.5,
+        "ax": 40,
+        "ay": 105.5,
+        "m": 1.38,
+        "fps": 5.7
+      },
+      {
+        "id": "person:3d:base_man",
+        "size": "adult",
+        "w": 80,
+        "h": 136,
+        "ax": 40,
+        "ay": 131,
+        "m": 1.78,
+        "fps": 5.7
+      },
+      {
+        "id": "person:3d:base_woman",
+        "size": "adult",
+        "w": 80,
+        "h": 128,
+        "ax": 40,
+        "ay": 123,
+        "m": 1.65,
+        "fps": 5.7
+      },
+      {
+        "id": "person:3d:town_k_boy",
+        "size": "adult",
+        "w": 80,
+        "h": 108.5,
+        "ax": 40,
+        "ay": 103.5,
+        "m": 1.35,
+        "fps": 5.7
+      },
+      {
+        "id": "person:3d:town_k_girl",
+        "size": "adult",
+        "w": 80,
+        "h": 104,
+        "ax": 40,
+        "ay": 99,
+        "m": 1.28,
+        "fps": 5.7
+      },
+      {
+        "id": "person:3d:town_m_business",
+        "size": "adult",
+        "w": 80,
+        "h": 136,
+        "ax": 40,
+        "ay": 131,
+        "m": 1.78,
+        "fps": 5.7
+      },
+      {
+        "id": "person:3d:town_m_elder",
+        "size": "adult",
+        "w": 80,
+        "h": 132.5,
+        "ax": 40,
+        "ay": 127.5,
+        "m": 1.72,
+        "fps": 5.7
+      },
+      {
+        "id": "person:3d:town_m_jogger",
+        "size": "adult",
+        "w": 80,
+        "h": 138.5,
+        "ax": 40,
+        "ay": 133.5,
+        "m": 1.82,
+        "fps": 5.7
+      },
+      {
+        "id": "person:3d:town_m_mechanic",
+        "size": "adult",
+        "w": 80,
+        "h": 137.5,
+        "ax": 40,
+        "ay": 132.5,
+        "m": 1.8,
+        "fps": 5.7
+      },
+      {
+        "id": "person:3d:town_m_postman",
+        "size": "adult",
+        "w": 80,
+        "h": 136,
+        "ax": 40,
+        "ay": 131,
+        "m": 1.78,
+        "fps": 5.7
+      },
+      {
+        "id": "person:3d:town_w_elder",
+        "size": "adult",
+        "w": 80,
+        "h": 123.5,
+        "ax": 40,
+        "ay": 118.5,
+        "m": 1.58,
+        "fps": 5.7
+      },
+      {
+        "id": "person:3d:town_w_nurse",
+        "size": "adult",
+        "w": 80,
+        "h": 128,
+        "ax": 40,
+        "ay": 123,
+        "m": 1.65,
+        "fps": 5.7
+      },
+      {
+        "id": "person:3d:town_w_shopper",
+        "size": "adult",
+        "w": 80,
+        "h": 126.5,
+        "ax": 40,
+        "ay": 121.5,
+        "m": 1.63,
+        "fps": 5.7
+      },
+      {
+        "id": "person:3d:town_w_student",
+        "size": "adult",
+        "w": 80,
+        "h": 127,
+        "ax": 40,
+        "ay": 122,
+        "m": 1.64,
+        "fps": 5.7
+      },
+      {
+        "id": "person:3d:town_w_waitress",
+        "size": "adult",
+        "w": 80,
+        "h": 128.5,
+        "ax": 40,
+        "ay": 123.5,
+        "m": 1.66,
+        "fps": 5.7
+      }
+    ],
+    "SPECTATOR_PEOPLE": [
+      {
+        "id": "spectator:spec_k_boy_cap",
+        "w": 80,
+        "h": 110.5,
+        "ax": 40,
+        "ay": 105.5,
+        "m": 1.38,
+        "seat": 0.34
+      },
+      {
+        "id": "spectator:spec_k_girl_pigtails",
+        "w": 80,
+        "h": 104,
+        "ax": 40,
+        "ay": 99,
+        "m": 1.28,
+        "seat": 0.32
+      },
+      {
+        "id": "spectator:spec_m_bucket_hat",
+        "w": 80,
+        "h": 135,
+        "ax": 40,
+        "ay": 130,
+        "m": 1.76,
+        "seat": 0.64
+      },
+      {
+        "id": "spectator:spec_m_dad",
+        "w": 80,
+        "h": 136,
+        "ax": 40,
+        "ay": 131,
+        "m": 1.78,
+        "seat": 0.65
+      },
+      {
+        "id": "spectator:spec_m_plaid",
+        "w": 80,
+        "h": 133.5,
+        "ax": 40,
+        "ay": 128.5,
+        "m": 1.74,
+        "seat": 0.64
+      },
+      {
+        "id": "spectator:spec_m_polo_visor",
+        "w": 80,
+        "h": 137.5,
+        "ax": 40,
+        "ay": 132.5,
+        "m": 1.8,
+        "seat": 0.66
+      },
+      {
+        "id": "spectator:spec_m_sun_hat",
+        "w": 80,
+        "h": 132.5,
+        "ax": 40,
+        "ay": 127.5,
+        "m": 1.72,
+        "seat": 0.63
+      },
+      {
+        "id": "spectator:spec_m_young_cap",
+        "w": 80,
+        "h": 138.5,
+        "ax": 40,
+        "ay": 133.5,
+        "m": 1.82,
+        "seat": 0.67
+      },
+      {
+        "id": "spectator:spec_teen_boy",
+        "w": 80,
+        "h": 130,
+        "ax": 40,
+        "ay": 125,
+        "m": 1.68,
+        "seat": 0.62
+      },
+      {
+        "id": "spectator:spec_teen_girl",
+        "w": 80,
+        "h": 126,
+        "ax": 40,
+        "ay": 121,
+        "m": 1.62,
+        "seat": 0.67
+      },
+      {
+        "id": "spectator:spec_w_older_cardigan",
+        "w": 80,
+        "h": 123.5,
+        "ax": 40,
+        "ay": 118.5,
+        "m": 1.58,
+        "seat": 0.67
+      },
+      {
+        "id": "spectator:spec_w_sunhat_dress",
+        "w": 80,
+        "h": 127,
+        "ax": 40,
+        "ay": 122,
+        "m": 1.64,
+        "seat": 0.67
+      },
+      {
+        "id": "spectator:spec_w_visor_pastel",
+        "w": 80,
+        "h": 128.5,
+        "ax": 40,
+        "ay": 123.5,
+        "m": 1.66,
+        "seat": 0.68
+      },
+      {
+        "id": "spectator:spec_w_windbreaker",
+        "w": 80,
+        "h": 126,
+        "ax": 40,
+        "ay": 121,
+        "m": 1.62,
+        "seat": 0.67
+      },
+      {
+        "id": "spectator:spec_w_young_shorts",
+        "w": 80,
+        "h": 130,
+        "ax": 40,
+        "ay": 125,
+        "m": 1.68,
+        "seat": 0.69
+      }
+    ],
+    "GOLFER_PEOPLE": [
+      {
+        "id": "golfer:golf_am_m1",
+        "w": 80,
+        "h": 135,
+        "ax": 40,
+        "ay": 130,
+        "m": 1.76
+      },
+      {
+        "id": "golfer:golf_am_m2",
+        "w": 80,
+        "h": 133.5,
+        "ax": 40,
+        "ay": 128.5,
+        "m": 1.74
+      },
+      {
+        "id": "golfer:golf_am_m3",
+        "w": 80,
+        "h": 134,
+        "ax": 40,
+        "ay": 129,
+        "m": 1.75
+      },
+      {
+        "id": "golfer:golf_am_w1",
+        "w": 80,
+        "h": 126.5,
+        "ax": 40,
+        "ay": 121.5,
+        "m": 1.63
+      },
+      {
+        "id": "golfer:golf_pro_m1",
+        "w": 80,
+        "h": 139.5,
+        "ax": 40,
+        "ay": 134.5,
+        "m": 1.83
+      },
+      {
+        "id": "golfer:golf_pro_m2",
+        "w": 80,
+        "h": 137.5,
+        "ax": 40,
+        "ay": 132.5,
+        "m": 1.8
+      },
+      {
+        "id": "golfer:golf_pro_m3",
+        "w": 80,
+        "h": 136,
+        "ax": 40,
+        "ay": 131,
+        "m": 1.78
+      },
+      {
+        "id": "golfer:golf_pro_m4",
+        "w": 80,
+        "h": 141.5,
+        "ax": 40,
+        "ay": 136.5,
+        "m": 1.86
+      },
+      {
+        "id": "golfer:golf_pro_w1",
+        "w": 80,
+        "h": 131,
+        "ax": 40,
+        "ay": 126,
+        "m": 1.7
+      },
+      {
+        "id": "golfer:golf_pro_w2",
+        "w": 80,
+        "h": 128.5,
+        "ax": 40,
+        "ay": 123.5,
+        "m": 1.66
+      }
+    ]
+  }
+}

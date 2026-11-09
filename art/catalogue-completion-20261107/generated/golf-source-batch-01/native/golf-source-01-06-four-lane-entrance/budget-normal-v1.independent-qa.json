@@ -1,0 +1,170 @@
+{
+  "schema": 1,
+  "as_of_utc": "2026-11-07T12:22:07.194839+00:00",
+  "review_result": "HOLD-unrequested-concrete-ground-slab-guide-pending",
+  "recommended_continue_yaw_source_generation": false,
+  "continuation_scope": "Sourceidentity/function/alpha only; not final8direction, owner/release, numericalangle or runtime approval.",
+  "source": {
+    "path": "generated/golf-source-batch-01/native/golf-source-01-06-four-lane-entrance/budget-normal-v1.png",
+    "sha256": "15852897f25cb3fe0d6728a35092f5560e5facde45cebd68f0d084b5ab577149",
+    "bytes": 2110872
+  },
+  "condition": "budget",
+  "runtime_target_proposal": {
+    "eventTypeId": "gate",
+    "eventName": "Entrance gate",
+    "currentSpriteSubjectId": "ce:parking-entry",
+    "newArtSubjectProposal": "golf:event-four-lane-entrance",
+    "newArtSubjectAlreadyRegistered": false,
+    "eventCatalogueSource": "src/game/golf/tents.ts",
+    "standInMappingSource": "src/game/golf/structure-art.ts",
+    "footprintTiles": {
+      "width": 6,
+      "depth": 3
+    },
+    "footprintMetres": {
+      "width": 12,
+      "depth": 6
+    },
+    "dimensionsMeaning": "Exact current event placement plot, not measured source sprite architecture. New design must fit plot; no runtime geometry changed."
+  },
+  "source_original_hash_matches_parent_provenance": true,
+  "parent_provenance": {
+    "path": "generated/golf-source-batch-01/native/golf-source-01-06-four-lane-entrance/budget-normal-v1.provenance.json",
+    "sha256": "94b81bd57aac6f2225e76bbda3461c7fa53308be802d845e797e318a1f1bd268",
+    "bytes": 3424
+  },
+  "parent_archive": {
+    "path": "generated/golf-source-batch-01/native/golf-source-01-06-four-lane-entrance/budget-normal-v1.archive.json",
+    "sha256": "bb4e33add3409329b6a9652f20e47976570ccdbd6542af553706f62976d1feaa",
+    "bytes": 3494
+  },
+  "actual_prompt_from_provenance_utf8_sha256": "9d2e51d32a83f74167a7ae72f9597e698fc96c47216629de40d7f335479d8e39",
+  "actual_generation_references": [
+    {
+      "path": "generated/old-clubhouse-1950/normal-v5.png",
+      "sha256": "a996fb471f351cc35926c84090192a8b55cc3557bb1bf9fec24872218fa219a6",
+      "bytes": 1473832
+    }
+  ],
+  "dimensions": [
+    1254,
+    1254
+  ],
+  "mode": "RGBA",
+  "zero_alpha_fraction": 0.4898939025103719,
+  "outer_border_alpha_p95max": [
+    0.0,
+    1.0
+  ],
+  "center_gutter_alpha_p95max": [
+    1.0,
+    1.0
+  ],
+  "horizontal_clear_cut_row": 627,
+  "all_four_native_core_silhouettes_complete": true,
+  "four_distinct_core_pixel_hashes": true,
+  "cells": [
+    {
+      "cell": 0,
+      "function_corner": "front+left",
+      "proposed_lossless_rect_ltrb": [
+        0,
+        0,
+        627,
+        627
+      ],
+      "core_bbox_ltrb": [
+        41,
+        89,
+        596,
+        564
+      ],
+      "minimum_core_margin_px": 31,
+      "boundary_core_pixels_alpha_gt128": 0,
+      "boundary_alpha_max": 1,
+      "native_rgba_rectangle_sha256": "6fb34a00763af1977e8babf05a5cdbc0624876dd57aaf098fcb5a39b0044f084",
+      "trimmed_core_pixel_hash_ignore_alpha_le128": "0003006da721f5d2ebe89ba04675bf0ac7c4aa91dc79a2a1f3b674c20462c892"
+    },
+    {
+      "cell": 1,
+      "function_corner": "rear+left",
+      "proposed_lossless_rect_ltrb": [
+        627,
+        0,
+        1254,
+        627
+      ],
+      "core_bbox_ltrb": [
+        30,
+        94,
+        587,
+        563
+      ],
+      "minimum_core_margin_px": 30,
+      "boundary_core_pixels_alpha_gt128": 0,
+      "boundary_alpha_max": 1,
+      "native_rgba_rectangle_sha256": "23635bda623344146b0a0981e4a63cca0a0cda42e110f56a30860da92af1bbd6",
+      "trimmed_core_pixel_hash_ignore_alpha_le128": "6da35359ea7c025fddaefa8b52e88d642bc74448116adad0ba8eb1d131d10dc8"
+    },
+    {
+      "cell": 2,
+      "function_corner": "rear+right",
+      "proposed_lossless_rect_ltrb": [
+        0,
+        627,
+        627,
+        1254
+      ],
+      "core_bbox_ltrb": [
+        55,
+        71,
+        594,
+        554
+      ],
+      "minimum_core_margin_px": 33,
+      "boundary_core_pixels_alpha_gt128": 0,
+      "boundary_alpha_max": 1,
+      "native_rgba_rectangle_sha256": "b77b5de341d95e09433bbf9d5d450493040b401aea9ef17cfe68a6b558e57cf3",
+      "trimmed_core_pixel_hash_ignore_alpha_le128": "8557c5502d7b5ae80ae619430e2764dc5874fa0702a965bcac31162acda5a910"
+    },
+    {
+      "cell": 3,
+      "function_corner": "front+right",
+      "proposed_lossless_rect_ltrb": [
+        627,
+        627,
+        1254,
+        1254
+      ],
+      "core_bbox_ltrb": [
+        31,
+        64,
+        587,
+        550
+      ],
+      "minimum_core_margin_px": 31,
+      "boundary_core_pixels_alpha_gt128": 0,
+      "boundary_alpha_max": 1,
+      "native_rgba_rectangle_sha256": "9ff2c1bdd2a6c967be11f5c25f1f7a781f8f9c21ab30bd352ea01d36846bbc1f",
+      "trimmed_core_pixel_hash_ignore_alpha_le128": "51f525fba21e6e0be211189804c4f7b783427ea1f16927bfa8e03d34efe8dd8c"
+    }
+  ],
+  "mesh_alpha_samples": null,
+  "visual_observations": [
+    "Exactly3manual turnstiles plus1wider swing gate are visible; front/rear arms and gate change corner coherently.",
+    "All four carry a large concrete ground slab, contrary to no-groundplate/queuesurface brief. Existing surface is not merely small individual feet.",
+    "Root shared-world guide should fix the intended roof/sign/frame and lane topology before new poses."
+  ],
+  "exact_numerical_angle_certified": false,
+  "release_anchors_authored": false,
+  "owner_approved": false,
+  "runtime_ready": false,
+  "runtime_imported": false,
+  "source_crops_or_pixel_changes": false,
+  "exact_prompt_file": {
+    "path": "generated/golf-source-batch-01/native/golf-source-01-06-four-lane-entrance/budget-normal-v1.prompt.txt",
+    "sha256": "5c25bf49d1f1976456ef6305f9bf439c845820e1034c18ae29a5dbc3704a6fe8",
+    "bytes": 2003
+  }
+}

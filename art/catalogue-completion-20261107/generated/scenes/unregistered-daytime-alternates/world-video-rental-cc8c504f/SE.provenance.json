@@ -1,0 +1,23 @@
+{
+  "schema": 1,
+  "createdUtc": "2026-11-07T06:47:45.284562+00:00",
+  "exactRuntimeId": "world:video_rental",
+  "source": "E:/Repos/CapitalEmpire/.claude/worktrees/art-repaint-20261106/art/theme-consistency/native-resume-20261106/world~video_rental/SE.native.png",
+  "sourceSha256": "12148275bedb8f2b0d56fd0318fa8bdd9c5d74ccd1fbfff150fd63607140076a",
+  "output": "unregistered-daytime-alternates/world-video-rental-cc8c504f/SE.png",
+  "outputSha256": "12148275bedb8f2b0d56fd0318fa8bdd9c5d74ccd1fbfff150fd63607140076a",
+  "width": 580,
+  "height": 457,
+  "sourceCell": {
+    "kind": "already isolated native PNG; whole file",
+    "rectXYWH": [
+      0,
+      0,
+      580,
+      457
+    ]
+  },
+  "operation": "byte-for-byte PNG copy only; no resize, crop, recolour, key, repaint, registration or source mutation",
+  "referenceRole": "unregistered daytime candidate for this base ID only; never an automatic reference for a variation ID",
+  "runtimeIdentityMatchApproved": false
+}

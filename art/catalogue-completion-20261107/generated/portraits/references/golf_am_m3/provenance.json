@@ -1,0 +1,32 @@
+{
+  "look_id": "golfer:golf_am_m3",
+  "actual_runtime_look": {
+    "id": "golfer:golf_am_m3",
+    "w": 80,
+    "h": 134,
+    "ax": 40,
+    "ay": 129,
+    "m": 1.75
+  },
+  "animation_files_changed": false,
+  "resized": false,
+  "repainted": false,
+  "source_style_changed": false,
+  "method": "original-pics-native-PNG-copy",
+  "source": {
+    "path": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\golfers\\pics\\golf_am_m3.png",
+    "sha256": "b5a40924ff218d46c3c98d244df430bd57afb3e4100c18fa92e23ce343d2afb6",
+    "bytes": 1032899
+  },
+  "primary_reference": {
+    "path": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\portraits\\references\\golf_am_m3\\identity-source.png",
+    "sha256": "b5a40924ff218d46c3c98d244df430bd57afb3e4100c18fa92e23ce343d2afb6",
+    "bytes": 1032899
+  },
+  "dimensions": [
+    848,
+    1264
+  ],
+  "mode": "RGB",
+  "crop_records": []
+}

@@ -1,0 +1,29 @@
+{
+  "schema": 1,
+  "subject": "golf:event-main-leaderboard-upgraded",
+  "version": 1,
+  "key": "normalNE",
+  "source": {
+    "file": "../../batch01/main-leaderboard/upgraded/normal-NE.png",
+    "sha256": "82985b361d6b13ef2b61adda802595d2a867c371c799a56c4a9cb035914c9029",
+    "width": 627,
+    "height": 627
+  },
+  "cell": 0,
+  "cellRect": {
+    "left": 0,
+    "top": 0,
+    "width": 627,
+    "height": 627
+  },
+  "crop": {
+    "left": 87,
+    "top": 58,
+    "width": 431,
+    "height": 498
+  },
+  "output": "normalNE.native.png",
+  "sha256": "572dbccb577f3571c8b679d8b5b6f04390ea6d495eabdb5f5135957885ee8489",
+  "operation": "native RGBA cell crop only; no flip/repaint/view synthesis",
+  "review": "candidate"
+}

@@ -1,0 +1,16 @@
+{
+  "key": "golf-rotary-tractor",
+  "source": "C:/Users/RAMPAGE/.codex/generated_images/01a1b1fd-39ec-7220-8f11-86e4448833ea/exec-fa577be8-40c9-4665-82bd-4ae970f5adb8.png",
+  "target": "generated/vehicles/golf-rotary-tractor/traffic8-v1.png",
+  "prompt": "Generate a wide4-column x2-row transparent sprite atlas containing EIGHT genuinely different directions of ONE identical emptygolf maintenance vehicle. Reference1 defines the subject/model; any tiny reference is just structural identity, reconstruct clean higher detail. Preserve the same mechanical layout in all views. Fixed orthographic camera30degrees down, turn ONLY the vehicle about vertical axis, no perspective lens, consistent wheelbase/body/paint/wheel sizes at all headings. Cell order by where the NOSE POINTS ON SCREEN: top row LOWER LEFT, DOWN, LOWER RIGHT, RIGHT; bottom row UPPER RIGHT, UP, UPPER LEFT, LEFT. Front in the first three cells, rear in bottom first three, true opposite left/right profiles at end of rows. Rear has rear glass/tailgate or boot and RED tail lenses; front has grille and headlamps; side profiles must face opposite ways. Reconstruct all faces independently, no mirrored light/shadow or same front pasted at rear. All eight pictures must be the SAME vehicle identity. Detailed illustrated hand-painted game materials, daylight from SCREEN UPPER RIGHT, shadows LOWER LEFT in all eight.1985 golf-course setting, period-appropriate machinery. No occupants, no brands/logos, no words, captions, grids, frames, road, parking bay, buildings or other cars. No plants. Fully opaque objects on genuinely transparent zero-alpha background, no haze or background wash. All eight complete vehicles centred within their own cells with generous margins, same physical scale, clean readable silhouettes.\nVehicle identity: A small dark-green lawn tractor with yellow underbody rotary cutting deck, black single seat and steering wheel, front green engine bonnet, two larger REAR wheels and two smaller FRONT wheels, yellow wheel rims. Reference1 gives exact basic structure/colours; reference2 only painted material quality. This is a rotary tractor mower, NOT the wide FRONT-REEL golf mower. No loader, no cab, no driver.",
+  "references": [
+    "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/audit/vehicle-references/expansion-rideon-mower.runtime-atlas-reference.png",
+    "F:/Repos/ce-wt/eight-facing-runtime-20261107/src/assets/businesses/capital-v1/png/golf-mower.png"
+  ],
+  "replacement_target": "expansion:rideon-mower",
+  "era": "1980s",
+  "status": "native source candidate; alpha/actual directions/camera/identity QA pending",
+  "runtime_imported": false,
+  "sha256": "c33b9a97b1f3e4e40538bd8f3577fbf5578e6270a884080f5918aa60b63e377c",
+  "native_bytes_preserved": true
+}

@@ -1,0 +1,28 @@
+{
+  "id": "newprop:course-map-board",
+  "name": "Course map board",
+  "referencePNG": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-02\\references\\course-map-board.source.png",
+  "originalSheet": "E:\\Repos\\CapitalEmpire\\All Generated Images\\exec-3a7ff403-4e2d-49a3-8154-0835d67ade80.png",
+  "copiedOriginalSheet": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-01\\original-sheets\\exec-3a7ff403-4e2d-49a3-8154-0835d67ade80.png",
+  "sourceSheetSHA256": "8d3a7260b7ec4b810ea709271c0f84e3103ac1bb25d769e9ad9361c46b02c2bb",
+  "referenceSHA256": "68399b1762dc542bae34d9b6d217a8e42759cc6011cd16f6f0c958c76c03ebd1",
+  "sourcePixelRectXYWH": [
+    49,
+    18,
+    520,
+    629
+  ],
+  "originalCellLabel": "top left",
+  "referenceSize": [
+    520,
+    629
+  ],
+  "operation": "native RGBA pixel crop only; no resize, recolour, alpha cleanup or synthesis",
+  "sourceContainsFourDifferentSubjectsNotRotations": true,
+  "cutOffAccordingToSourceMetadata": false,
+  "visualInspection": "inspected",
+  "visualNotes": "Confirmed roofed course-map information board, lanterns and planter/paving extras. The board itself is the desired physical prop.",
+  "sourceOnlyNotReleaseProof": true,
+  "sourceCopyOperation": "byte-for-byte copy of prior native-RGBA crop; original source/provenance retained",
+  "sourcePriorProvenance": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-01\\references\\course-map-board.provenance.json"
+}

@@ -1,0 +1,66 @@
+{
+  "schema": 1,
+  "as_of_utc": "2026-11-07T11:26:36.499594+00:00",
+  "review_result": "PASS-elevated-single-source-candidate-direction-visual-camera-alpha;release-pending",
+  "source": {
+    "path": "generated/vehicles/town-cream-coupe/left-elevated-v1.png",
+    "sha256": "13567019de7acfdc2ecd3e90c3b1f3d04dd99ba6413760b7598ea625b8b02976",
+    "bytes": 995391
+  },
+  "parent_provenance": {
+    "path": "generated/vehicles/town-cream-coupe/left-elevated-v1.provenance.json",
+    "sha256": "21add2fcd124775f19a80f86047b4be41cae08359fe377821f097888bb061038",
+    "bytes": 2225
+  },
+  "source_original_hash_matches_parent_provenance": true,
+  "mode": "RGBA",
+  "dimensions": [
+    1774,
+    887
+  ],
+  "actual_screen_nose": "left",
+  "subject_model": "town-cream-coupe",
+  "is_single_sprite_not_sheet": true,
+  "core_bbox_ltrb": [
+    289,
+    226,
+    1493,
+    719
+  ],
+  "minimum_canvas_core_margin_px": 168,
+  "zero_alpha_fraction": 0.703153022043319,
+  "outer_border_alpha_max": 1,
+  "outside_core_bbox10_alpha_p95max": [
+    0.0,
+    1.0
+  ],
+  "mid_alpha_fraction9to127": 0.0020107553805500727,
+  "identity_references": [
+    {
+      "path": "generated/vehicles/town-cream-coupe/camera-calibration-refs/left-camera-only.png",
+      "sha256": "8f26ab81ab55cb7ad6d4761ee4feef448efc01372c9b1922562b242803a29281",
+      "bytes": 5514
+    },
+    {
+      "path": "generated/vehicles/town-cream-coupe/camera-calibration-refs/corner-identity-only.png",
+      "sha256": "2d312dfba358a28e1a6af179fd9bd1c9dab672309e0fb586ed57148342fb28d5",
+      "bytes": 189406
+    }
+  ],
+  "exact_prompt": {
+    "path": "generated/vehicles/town-cream-coupe/left-elevated-v1.prompt.txt",
+    "sha256": "6310ddbc6ad95f983d0f58ed39b9fa5c2c9ed922df5ce4e2ae1c5ab24eabb325",
+    "bytes": 1349
+  },
+  "notes": [
+    "Actual screen nose LEFT; longitudinal body/wheelbase is horizontal, no broad front/rear grille plane is exposed.",
+    "Broad roof/hood/boot or open bed top surfaces are materially closer to isolated elevatedcamera reference than old traffic8 col4 profiles.",
+    "This is qualitative reference matching, not a numerical30degree certificate. Cross-view physical scale, anchors and full eight-heading release review remain pending.",
+    "Apparent raw-view RGB glow is not actual haze: native background alpha measured separately. No coded cleanup or source pixels changed."
+  ],
+  "no_native_pixel_changes_or_source_crops": true,
+  "exact30degree_certified": false,
+  "owner_approved": false,
+  "runtime_ready": false,
+  "runtime_imported": false
+}

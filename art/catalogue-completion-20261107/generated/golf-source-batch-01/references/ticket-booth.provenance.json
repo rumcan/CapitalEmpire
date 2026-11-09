@@ -1,0 +1,27 @@
+{
+  "id": "newprop:ticket-booth",
+  "name": "Ticket booth",
+  "referencePNG": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-01\\references\\ticket-booth.source.png",
+  "originalSheet": "E:\\Repos\\CapitalEmpire\\All Generated Images\\exec-d3e937e2-f01a-4702-80de-99b6564ef4a7.png",
+  "copiedOriginalSheet": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-01\\original-sheets\\exec-d3e937e2-f01a-4702-80de-99b6564ef4a7.png",
+  "sourceSheetSHA256": "1a726bd22fc3d14f4a1a9cbccb248011e743fbe1ec00d61c0487953ca5be24fc",
+  "referenceSHA256": "7603bd35ab39928c2f7e0738e8de9ba7557be90f7657d531588a757f9445776b",
+  "sourcePixelRectXYWH": [
+    36,
+    45,
+    563,
+    605
+  ],
+  "originalCellLabel": "top left",
+  "referenceSize": [
+    563,
+    605
+  ],
+  "operation": "native RGBA pixel crop only; no resize, recolour, alpha cleanup or synthesis",
+  "sourceContainsFourDifferentSubjectsNotRotations": true,
+  "cutOffAccordingToSourceMetadata": false,
+  "sourceMetadata": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\new-props\\items.json",
+  "visualInspection": "inspected native source PNG",
+  "visualNotes": "Green clapboard ticket office with two front service windows, hipped roof/cupola and queue posts. Correct service-counter function; info/will-call redesign uses paper lists/maps, plain practical roof and rear staff door. Do not duplicate already-generated budget ticket cabin.",
+  "sourceOnlyNotReleaseProof": true
+}

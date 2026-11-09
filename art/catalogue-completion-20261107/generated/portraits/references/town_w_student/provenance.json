@@ -1,0 +1,34 @@
+{
+  "look_id": "person:3d:town_w_student",
+  "actual_runtime_look": {
+    "id": "person:3d:town_w_student",
+    "size": "adult",
+    "w": 80,
+    "h": 127,
+    "ax": 40,
+    "ay": 122,
+    "m": 1.64,
+    "fps": 5.7
+  },
+  "animation_files_changed": false,
+  "resized": false,
+  "repainted": false,
+  "source_style_changed": false,
+  "method": "original-pics-native-PNG-copy",
+  "source": {
+    "path": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\people3d\\pics\\town_w_student.png",
+    "sha256": "eb5466af7f70551b74df6e60d1590c01a970191a3198159230a2f57687a16aec",
+    "bytes": 1206660
+  },
+  "primary_reference": {
+    "path": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\portraits\\references\\town_w_student\\identity-source.png",
+    "sha256": "eb5466af7f70551b74df6e60d1590c01a970191a3198159230a2f57687a16aec",
+    "bytes": 1206660
+  },
+  "dimensions": [
+    848,
+    1264
+  ],
+  "mode": "RGB",
+  "crop_records": []
+}

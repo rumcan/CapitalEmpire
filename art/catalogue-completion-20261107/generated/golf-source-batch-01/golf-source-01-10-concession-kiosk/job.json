@@ -1,0 +1,104 @@
+{
+  "jobId": "golf-source-01-10-concession-kiosk",
+  "priority": 10,
+  "status": "brief-ready-for-root-native-generation",
+  "sourceOnly": true,
+  "nativeGeneratedByThisJob": false,
+  "ownerApproved": false,
+  "runtimeIntegrated": false,
+  "action": "Maintain green concession function at correct event scale; replace fishing-rental kiosk stand-in.",
+  "requiresOrdinary1950sBudgetRedesign": false,
+  "functionalIdentity": "A4x4m nominal snack-and-water concession kiosk: one wide front counter, display shelves, right-side drinks fridge, rear staff door and small plain canopy roof. Keep its long serving face and fridge on fixed sides; no vehicle wheels, no rental fishing tackle, no built-in flower planters or external terrain plate.",
+  "referenceImages": [
+    {
+      "runtimeSubjectId": "newprop:green-food-kiosk",
+      "referencePNG": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-01\\references\\green-food-kiosk.source.png",
+      "referenceRole": "functional/identity reference",
+      "visualNotes": "Small green plank counter kiosk with sagging green canvas roof, brass corner balls, display shelves and upright glass drinks fridge. Useful service-counter identity. Remove ornamental gold finials and integrated flower planters; do not reproduce large ripped holes in upgraded tier.",
+      "provenance": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-01\\references\\green-food-kiosk.provenance.json"
+    }
+  ],
+  "conditions": {
+    "budget": {
+      "role": "source art design only; no runtime economy upgrade implied",
+      "brief": "Weathered1950sgreen-painted timber stall and faded intact canvas/corrugated cover; modest wear, ordinary fittings and useful counter. Remove huge ripped roof holes and gold ornamental balls."
+    },
+    "upgraded": {
+      "role": "source art design only; no runtime economy upgrade implied",
+      "brief": "Clean green/cream kiosk with neat canopy, full snack shelves and the same fridge/service-door arrangement. Period1985stock, no touchscreen vending wall."
+    }
+  },
+  "sourceSheetsPerCondition": [
+    {
+      "kind": "normal",
+      "grid": "2x2",
+      "cellOrder": [
+        [
+          "SE",
+          "SW"
+        ],
+        [
+          "NW",
+          "NE"
+        ]
+      ],
+      "camera": "orthographic30degrees down; true45degreecorner views; two walls equal in each corner view"
+    },
+    {
+      "kind": "yaw8",
+      "grid": "2x2",
+      "cellOrder": [
+        [
+          "N",
+          "E"
+        ],
+        [
+          "S",
+          "W"
+        ]
+      ],
+      "camera": "orthographic30degrees down; each cardinal view turned8degrees, never square-on"
+    }
+  ],
+  "lateAfternoonDaylight": "one sun upper-right; faces toward upper-right lit; shadows lower-left; no night glow",
+  "generationConstraints": [
+    "Same one physical object/layout in all eight cells; doors, windows, serving openings, rear braces, stairs, wheels, dishes and equipment never teleport between sides.",
+    "Empty functional facilities; no people stamped into sprites. Transparent background, ample cell margins, equal scale within each sheet, no labels or gridlines.",
+    "No generic ground plates. Functional hitting mat, vehicle wheels, structure supports and admission hardware are part of their actual objects.",
+    "Use the separate style-authority PNG for painterly material/color style; role references may be photoreal, ornate, mislabeled, modern or shanty and are not style authorities.",
+    "Budget means ordinary worn1950sreal-world construction; upgraded means attractive maintained period facilities. No goblin village, rope-lashed logs, gratuitous torn tarps or gold filigree.",
+    "No captions, brand names or baked score/name/yardage text; scoring and information faces remain blank for data. A simple medical symbol may identify first aid."
+  ],
+  "notACompletenessClaim": "No approval, alias, import, camera calibration, seating readiness or completion of related catalogue IDs is inferred from this source brief.",
+  "runtimeTarget": {
+    "eventTypeId": "kiosk",
+    "eventName": "Concession kiosk",
+    "currentSpriteSubjectId": "business:fishing-rental-kiosk",
+    "newArtSubjectProposal": "golf:event-concession-kiosk",
+    "newArtSubjectAlreadyRegistered": false,
+    "eventCatalogueSource": "src/game/golf/tents.ts",
+    "standInMappingSource": "src/game/golf/structure-art.ts",
+    "footprintTiles": {
+      "width": 2.0,
+      "depth": 2.0
+    },
+    "footprintMetres": {
+      "width": 4.0,
+      "depth": 4.0
+    },
+    "dimensionsMeaning": "Exact current event placement plot, not measured source sprite architecture. New design must fit plot; no runtime geometry changed.",
+    "currentSpriteBaseBoxesInTiles": [
+      {
+        "hx": 1,
+        "hy": 1,
+        "dx": 0,
+        "dy": 0
+      }
+    ]
+  },
+  "existingFourCorners": {
+    "usableCorrectTargetCornersFound": false,
+    "reason": "Any corners of the current wrong stand-in describe another object and do not count for this target."
+  },
+  "promptCore": "A4x4m nominal snack-and-water concession kiosk: one wide front counter, display shelves, right-side drinks fridge, rear staff door and small plain canopy roof. Keep its long serving face and fridge on fixed sides; no vehicle wheels, no rental fishing tackle, no built-in flower planters or external terrain plate. For budget: Weathered1950sgreen-painted timber stall and faded intact canvas/corrugated cover; modest wear, ordinary fittings and useful counter. Remove huge ripped roof holes and gold ornamental balls. For upgraded: Clean green/cream kiosk with neat canopy, full snack shelves and the same fridge/service-door arrangement. Period1985stock, no touchscreen vending wall. Use only the requested condition for one sheet; do not mix conditions between its four camera cells. Late-afternoon daytime, upper-right sunlight/lower-left shadows. Match painterly style authority, not rejected reference construction."
+}

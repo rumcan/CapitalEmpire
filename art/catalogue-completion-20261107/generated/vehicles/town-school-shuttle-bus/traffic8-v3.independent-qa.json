@@ -1,0 +1,143 @@
+{
+  "schema": 1,
+  "as_of_utc": "2026-11-07T11:26:36.499594+00:00",
+  "review_result": "PASS-native-alpha-cleanup-and-eight-noses;HOLD-side-feature-regression-camera",
+  "source": {
+    "path": "generated/vehicles/town-school-shuttle-bus/traffic8-v3.png",
+    "sha256": "2346f2399e0dc571be66b5861f69b5d2e6995717e509e0b55f37e9b5bad1dceb",
+    "bytes": 1348580
+  },
+  "source_original_hash_matches_parent_batch": true,
+  "exact_prompt": {
+    "path": "generated/vehicles/town-school-shuttle-bus/traffic8-v3.prompt.txt",
+    "sha256": "566ad72dd009d43050ac8bf0c5081af97e7d6a9204c4d2db9e13c224c278d2e4",
+    "bytes": 974
+  },
+  "parent_provenance": {
+    "path": "generated/vehicles/town-school-shuttle-bus/traffic8-v3.provenance.json",
+    "sha256": "61e5ad7e488c6a2c600dfee9af56e355040c4cbcf3538111be4cb03e07d00938",
+    "bytes": 1789
+  },
+  "dimensions": [
+    1774,
+    887
+  ],
+  "zero_alpha_fraction": 0.6307296042421601,
+  "outer_border_alpha_p95max": [
+    0.0,
+    1.0
+  ],
+  "center_gap_alpha_p95max": [
+    0.0,
+    1.0
+  ],
+  "nominal_cells": [
+    {
+      "cell": 0,
+      "nominal_rect_ltrb": [
+        0,
+        0,
+        443,
+        443
+      ],
+      "core_boundary_pixels": 0,
+      "minimum_core_margin_px": 42,
+      "rgba_rectangle_sha256": "3ff19952eda7b4ad2900a78066ff5441388e0dad50a6504e80b148935d0eb11d"
+    },
+    {
+      "cell": 1,
+      "nominal_rect_ltrb": [
+        443,
+        0,
+        887,
+        443
+      ],
+      "core_boundary_pixels": 0,
+      "minimum_core_margin_px": 42,
+      "rgba_rectangle_sha256": "1a6fe6a591d73eeb4e1f5437ebe9d8d73608c02b224abd4a05c93d782f512041"
+    },
+    {
+      "cell": 2,
+      "nominal_rect_ltrb": [
+        887,
+        0,
+        1330,
+        443
+      ],
+      "core_boundary_pixels": 141,
+      "minimum_core_margin_px": 0,
+      "rgba_rectangle_sha256": "5c31449abe4d6b5248def4b117734a8ebee8008b87836fb6f49478f962801f1f"
+    },
+    {
+      "cell": 3,
+      "nominal_rect_ltrb": [
+        1330,
+        0,
+        1774,
+        443
+      ],
+      "core_boundary_pixels": 143,
+      "minimum_core_margin_px": 0,
+      "rgba_rectangle_sha256": "613f178762f902254b84f985286dd55d98d9b17ae3eef67bb320a7085706ec0d"
+    },
+    {
+      "cell": 4,
+      "nominal_rect_ltrb": [
+        0,
+        443,
+        443,
+        887
+      ],
+      "core_boundary_pixels": 0,
+      "minimum_core_margin_px": 23,
+      "rgba_rectangle_sha256": "be287fa83f55a0c706fa1353ff6b0db2f8f046da7bc3c2baf88e531f6fd24eb5"
+    },
+    {
+      "cell": 5,
+      "nominal_rect_ltrb": [
+        443,
+        443,
+        887,
+        887
+      ],
+      "core_boundary_pixels": 43,
+      "minimum_core_margin_px": 0,
+      "rgba_rectangle_sha256": "1cdccb334e5a60b71d8aef27d792126ddbbaab1baf27492f8314d48745f8041c"
+    },
+    {
+      "cell": 6,
+      "nominal_rect_ltrb": [
+        887,
+        443,
+        1330,
+        887
+      ],
+      "core_boundary_pixels": 129,
+      "minimum_core_margin_px": 0,
+      "rgba_rectangle_sha256": "f501459280292aa336e94c9da9a6337d93fc7e666596c7feed50bb433872dea3"
+    },
+    {
+      "cell": 7,
+      "nominal_rect_ltrb": [
+        1330,
+        443,
+        1774,
+        887
+      ],
+      "core_boundary_pixels": 84,
+      "minimum_core_margin_px": 0,
+      "rgba_rectangle_sha256": "7f6d4b8d5f8ee6f6bd9b91ffe7edfe836d47c38407ddc4ffc2a19459a076efa5"
+    }
+  ],
+  "native_baseline_measurements": [],
+  "notes": [
+    "Truealpha restored, known empty background alpha≤1. All8nose directions exist.",
+    "Topcol4 noseRIGHT now wrongly shows passengerentrydoor; bottomcol4 noseLEFT showsSTOPandentrydoor, conflicting with guide and corner sides. Root isolatedside corrections planned; do not promote fullsheet.",
+    "Source original nose geometry/roofleafstyle remains; uniform30degree native proof pending."
+  ],
+  "source_only": true,
+  "no_native_pixel_changes_or_source_crops": true,
+  "owner_approved": false,
+  "runtime_ready": false,
+  "exact8_certified": false
+}

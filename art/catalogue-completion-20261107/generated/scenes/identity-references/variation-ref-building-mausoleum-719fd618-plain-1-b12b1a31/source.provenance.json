@@ -1,0 +1,62 @@
+{
+  "schema": 1,
+  "createdUtc": "2026-11-07T06:47:45.284562+00:00",
+  "exactRuntimeId": "variation:ref-building-mausoleum-719fd618-plain:1",
+  "source": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/building-views/variation-ref-building-mausoleum-719fd618-plain-1/NE.png",
+  "sourceSha256": "a6c948cc572bef28eb65f868633193e9a51959d1a24c5ddda1438e2fcf019eab",
+  "output": "identity-references/variation-ref-building-mausoleum-719fd618-plain-1-b12b1a31/source.png",
+  "outputSha256": "a6c948cc572bef28eb65f868633193e9a51959d1a24c5ddda1438e2fcf019eab",
+  "width": 473,
+  "height": 498,
+  "sourceCell": {
+    "kind": "already isolated native PNG; whole file",
+    "rectXYWH": [
+      0,
+      0,
+      473,
+      498
+    ]
+  },
+  "operation": "byte-for-byte PNG copy only; no resize, crop, recolour, key, repaint, registration or source mutation",
+  "selection": "registered corner NE native PNG for this exact subject",
+  "registeredCornerDirection": "NE",
+  "sourceEvidence": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\building-views\\variation-ref-building-mausoleum-719fd618-plain-1\\provenance.json",
+  "sourceReview": {
+    "integrationStatus": "ready",
+    "integrationReason": "All four physical facade pairs are distinct; front carved pediment/door versus plain rear and two side lancet windows/one side chimney remain coherent. Existing lossless v2 repack preserves all source RGBA; alpha audit passes zero warnings."
+  },
+  "sourceRegistration": {
+    "id": "variation:ref-building-mausoleum-719fd618-plain:1",
+    "version": "variation-ref-building-mausoleum-719fd618-plain-1-4views-v2",
+    "files": {
+      "NE": "a6c948cc572bef28eb65f868633193e9a51959d1a24c5ddda1438e2fcf019eab",
+      "SE": "477290d11bb2f67053213c113f3a16bf50ea7faa1007b7f98fc4924885f6597b",
+      "SW": "c649088c0855d720754ce8bb0f8df5762c9fdea533cef7e0aef98616d0ea31f0",
+      "NW": "f6244314410748afe225a7f22070ff1ea5351c8f953d2aac14371ea736e6e753"
+    }
+  },
+  "originalInventorySource": {
+    "library": "src/game/library.ts",
+    "librarySha256": "91b5190292c1005ac7b936f08e5e1ebf3be43c3aae99f92ea510775da83d9726",
+    "atlas": "src/assets/atlas/sprites-12-0.webp",
+    "atlasSha256": "31dde0992d4d538ce56a04bf6d0c60db791aca99c04fad6259f266ba9c973a58",
+    "runtimePage": 12,
+    "localPage": 12,
+    "uv": [
+      0.085938,
+      0.53125,
+      0.166992,
+      0.619629
+    ],
+    "crop": {
+      "left": 176,
+      "top": 1088,
+      "width": 166,
+      "height": 181
+    },
+    "native": "art/theme-consistency/exports/buildings/variation-ref-building-mausoleum-719fd618-plain-1.native.png",
+    "nativeSha256": "1775701069cc51a77820cbe9a014d893d3ac3d845b626f25708bf0e884699cad"
+  },
+  "originalBusinessSourceCell": null,
+  "nativeReferenceApprovalClaimed": false
+}

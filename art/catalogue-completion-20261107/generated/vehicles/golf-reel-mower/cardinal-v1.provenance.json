@@ -1,0 +1,13 @@
+{
+  "key": "golf-reel-mower",
+  "source": "C:/Users/RAMPAGE/.codex/generated_images/01a1b1fd-39ec-7220-8f11-86e4448833ea/exec-c2178429-06c7-4c62-8ee1-cb505dac28c9.png",
+  "target": "generated/vehicles/golf-reel-mower/cardinal-v1.png",
+  "prompt": "Make a2x2 sprite sheet of the EXACT same mower in the reference, Exactly the same dark-green professional reel mower as the reference: tan single seat, black steering wheel, roll hoop, rear green engine/filler/grille, large cream-rim tyres and two front cylindrical reels with rollers/linkages. Keep front attachments at FRONT only; rear grille and tail lenses at REAR only. No driver. Show four missing true SCREEN CARDINAL directions: TOP LEFT nose DOWN = front view; TOP RIGHT nose RIGHT = side profile; BOTTOM LEFT nose UP = rear view; BOTTOM RIGHT nose LEFT = opposite side profile. These are real four quarter turns, never four diagonal corners. At the front/rear the main axle is perfectly horizontal on screen. Fixed orthographic30degree-down camera. Same vehicle physical scale and detail across four complete sprites, never mirror lighting. Finely hand-painted illustrated miniature materials. Late-afternoon DAYTIME sun fixed SCREEN UPPER RIGHT, shadows LOWER LEFT. No words, labels, brands, other objects, people, grass, groundplate or background wash. True transparent zero-alpha background, fully opaque vehicle surfaces, generous cell margins. Reference1 is vehicle identity and style, change only viewing direction.",
+  "references": [
+    "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/vehicles/golf-reel-mower/normal-v1.png"
+  ],
+  "status": "native candidate; source-alpha/identity/direction QA pending",
+  "runtime_imported": false,
+  "sha256": "418ebe44a637ee2688cc48d6e67f6de880f75c50b699fecefe6234370de3a77d",
+  "native_bytes_preserved": true
+}

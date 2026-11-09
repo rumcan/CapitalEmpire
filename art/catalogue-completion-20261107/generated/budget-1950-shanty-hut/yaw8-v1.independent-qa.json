@@ -1,0 +1,113 @@
+{
+  "schema": 1,
+  "as_of_utc": "2026-11-07T10:47:07.304118+00:00",
+  "review_result": "HOLD-exact-yaw8-geometry;main-face-identity-and-alpha-pass",
+  "source": {
+    "path": "generated/budget-1950-shanty-hut/yaw8-v1.png",
+    "sha256": "3abc1b0a617c29b7336ab9a9ade9b087740953e9b9be1ad19e42b457201184fc",
+    "bytes": 1056657
+  },
+  "source_original_hash_matches_parent_batch": true,
+  "dimensions": [
+    1254,
+    1254
+  ],
+  "mode": "RGBA",
+  "references": [
+    {
+      "path": "generated/budget-1950-shanty-hut/guides/yaw8-world-v1.png",
+      "sha256": "59e8054cecf45d7e95a335ac7492604986c2035c9c2c08fc9b858c2b3f5c4d82",
+      "bytes": 25601
+    },
+    {
+      "path": "generated/budget-1950-shanty-hut/normal-v1.png",
+      "sha256": "e0ed3254a0ee5dba6975ddfc5a10a726ca32d1d861c8c666e47f953c4142072e",
+      "bytes": 1155020
+    }
+  ],
+  "source_core_clipping": false,
+  "outer_border_alpha_p50p95max": [
+    0.0,
+    0.0,
+    1.0
+  ],
+  "empty_center_gutter_alpha_p50p95max": [
+    0.0,
+    0.0,
+    1.0
+  ],
+  "zero_alpha_fraction": 0.7240371481116885,
+  "cells": [
+    {
+      "guide_cell_label_only": "N",
+      "rect_ltrb": [
+        0,
+        0,
+        627,
+        627
+      ],
+      "native_core_margin_pixels": 123,
+      "boundary_core_pixels": 0,
+      "boundary_alpha_max": 1,
+      "rgba_rectangle_sha256": "7e276f43c600a6846386616706fba859ffa67dcfa6a1d11ed7bdf38089d40cab"
+    },
+    {
+      "guide_cell_label_only": "E",
+      "rect_ltrb": [
+        627,
+        0,
+        1254,
+        627
+      ],
+      "native_core_margin_pixels": 120,
+      "boundary_core_pixels": 0,
+      "boundary_alpha_max": 1,
+      "rgba_rectangle_sha256": "0b96f75ec2b258fb6885a5229718c5637c8837abcd82cf954d016ea07aa8513e"
+    },
+    {
+      "guide_cell_label_only": "S",
+      "rect_ltrb": [
+        0,
+        627,
+        627,
+        1254
+      ],
+      "native_core_margin_pixels": 124,
+      "boundary_core_pixels": 0,
+      "boundary_alpha_max": 1,
+      "rgba_rectangle_sha256": "2a66fc63a9ba90316fb76ba865f72a015fbd00e02ff9dc75679f0105dc72cc9b"
+    },
+    {
+      "guide_cell_label_only": "W",
+      "rect_ltrb": [
+        627,
+        627,
+        1254,
+        1254
+      ],
+      "native_core_margin_pixels": 115,
+      "boundary_core_pixels": 0,
+      "boundary_alpha_max": 1,
+      "rgba_rectangle_sha256": "a262cf9f17c831874269b3a0a712856bfc07be31d83701462852107d7767277e"
+    }
+  ],
+  "notes": [
+    "All four principal wall identities present and consistent with normal source. Ordinary1950s cladding/corrugatedroof/paint remains coherent.",
+    "Direct native foundation-edge slopes recorded in audit/cabin-native-yaw-baseline-measurements-v1.json; not an8degree proof inferred from technical guide.",
+    "BR windowed gable view incorrectly reveals FRONT green door/tool doors on right sliver; exact guide wants REAR sliver. Side camera/yaw sign differs from authority; correct opening visibility in native generation."
+  ],
+  "exact8_certified": false,
+  "owner_approved": false,
+  "runtime_ready": false,
+  "no_native_pixel_changes_or_source_crops": true,
+  "exact_prompt": {
+    "path": "generated/budget-1950-shanty-hut/yaw8-v1.prompt.txt",
+    "sha256": "9870eb7e2fadd9d350e34035bdad8b91601ea1407a608951eb72921a7ecd3ec0",
+    "bytes": 1438
+  },
+  "parent_provenance": {
+    "path": "generated/budget-1950-shanty-hut/yaw8-v1.provenance.json",
+    "sha256": "9c8b5bf064dad7bcd8b7a6baf26656eb26a1b0135e9397396860b1f561fa64b9",
+    "bytes": 2246
+  }
+}

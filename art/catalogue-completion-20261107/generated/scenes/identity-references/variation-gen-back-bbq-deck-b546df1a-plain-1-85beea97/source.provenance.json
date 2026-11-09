@@ -1,0 +1,61 @@
+{
+  "schema": 1,
+  "createdUtc": "2026-11-07T06:47:45.284562+00:00",
+  "exactRuntimeId": "variation:gen-back-bbq-deck-b546df1a-plain:1",
+  "source": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/building-views/variation-gen-back-bbq-deck-b546df1a-plain-1/NE.png",
+  "sourceSha256": "458c207a5a3723ce59dd89a18d0d457eb8ef4f9859fb44778fd169ebd13c6342",
+  "output": "identity-references/variation-gen-back-bbq-deck-b546df1a-plain-1-85beea97/source.png",
+  "outputSha256": "458c207a5a3723ce59dd89a18d0d457eb8ef4f9859fb44778fd169ebd13c6342",
+  "width": 415,
+  "height": 428,
+  "sourceCell": {
+    "kind": "already isolated native PNG; whole file",
+    "rectXYWH": [
+      0,
+      0,
+      415,
+      428
+    ]
+  },
+  "operation": "byte-for-byte PNG copy only; no resize, crop, recolour, key, repaint, registration or source mutation",
+  "selection": "registered corner NE native PNG for this exact subject",
+  "registeredCornerDirection": "NE",
+  "sourceEvidence": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\building-views\\variation-gen-back-bbq-deck-b546df1a-plain-1\\provenance.json",
+  "sourceReview": {
+    "status": "generated"
+  },
+  "sourceRegistration": {
+    "id": "variation:gen-back-bbq-deck-b546df1a-plain:1",
+    "version": "variation-gen-back-bbq-deck-b546df1a-plain-1-4views-v2",
+    "files": {
+      "NE": "458c207a5a3723ce59dd89a18d0d457eb8ef4f9859fb44778fd169ebd13c6342",
+      "SE": "7c7a45105d923e45c95ded39c4333f73930dc888adf654f2edc6abeb1ff0b7fd",
+      "SW": "15499160d240e76cc2b1b3bebb86fda7cef6bc374645761b94fcd3c43d48f198",
+      "NW": "b25593a35ebc5329bab682ca0602c0c18b3d72a25c57f8763963039709d1595c"
+    }
+  },
+  "originalInventorySource": {
+    "library": "src/game/library.ts",
+    "librarySha256": "91b5190292c1005ac7b936f08e5e1ebf3be43c3aae99f92ea510775da83d9726",
+    "atlas": "src/assets/atlas/sprites-5-0.webp",
+    "atlasSha256": "ae625d1156c036112692eb54fa253620cd951de8603ee9b3458e9f609bd50bf6",
+    "runtimePage": 5,
+    "localPage": 5,
+    "uv": [
+      0.242188,
+      0.71875,
+      0.444824,
+      0.927734
+    ],
+    "crop": {
+      "left": 496,
+      "top": 1472,
+      "width": 415,
+      "height": 428
+    },
+    "native": "art/theme-consistency/exports/buildings/variation-gen-back-bbq-deck-b546df1a-plain-1.native.png",
+    "nativeSha256": "db2378ec4e795d466a6f10b884eb4e77fd4e393ca2fbc91dc4d8ae1bb3f691a3"
+  },
+  "originalBusinessSourceCell": null,
+  "nativeReferenceApprovalClaimed": false
+}

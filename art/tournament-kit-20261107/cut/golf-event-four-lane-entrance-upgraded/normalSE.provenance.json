@@ -1,0 +1,29 @@
+{
+  "schema": 1,
+  "subject": "golf:event-four-lane-entrance-upgraded",
+  "version": 1,
+  "key": "normalSE",
+  "source": {
+    "file": "../../batch01/four-lane-entrance/upgraded/normal-SE.png",
+    "sha256": "9df84725c7b682f89969b956f379681ba04f5290df207a6d406ff07d436c9e89",
+    "width": 627,
+    "height": 627
+  },
+  "cell": 0,
+  "cellRect": {
+    "left": 0,
+    "top": 0,
+    "width": 627,
+    "height": 627
+  },
+  "crop": {
+    "left": 53,
+    "top": 116,
+    "width": 522,
+    "height": 408
+  },
+  "output": "normalSE.native.png",
+  "sha256": "1d6d779d5f29b4ff9a5bb1591398caa644b1d1d8ea0169197416afe4d4b4b5d7",
+  "operation": "native RGBA cell crop only; no flip/repaint/view synthesis",
+  "review": "candidate"
+}

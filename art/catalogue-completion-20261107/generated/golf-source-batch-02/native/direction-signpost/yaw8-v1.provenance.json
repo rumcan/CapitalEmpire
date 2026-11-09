@@ -1,0 +1,22 @@
+{
+  "key": "newprop:direction-signpost",
+  "slug": "direction-signpost",
+  "family": "yaw8",
+  "condition": "base",
+  "version": 1,
+  "target": "generated/golf-source-batch-02/native/direction-signpost/yaw8-v1.png",
+  "refs": [
+    "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-02\\fixed-world-guides-v2\\direction-signpost\\guides\\yaw8-world-v1.png",
+    "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/golf-source-batch-02/native/direction-signpost/normal-v1.png"
+  ],
+  "prompt": "Paint FOUR exact near-cardinal views of ONE SAME golfprop from fixed-world REFERENCE1 as finished native painterlygameart matchingidentity/materialsofREFERENCE2. Guidecontrols camera andphysicalsidepositions; reference2 is finelypainted material/assemblyidentityONLY, doNOTrepeatitscornercameras. Fixedrequirements: Exactly four arrow boards: two point physical LEFT (-X), two RIGHT (+X), all in one fixed XZ plane. FRONT (-Y) icons: upper-left golf, upper-right food, lower-left toilets, lower-right exit. REAR (+Y) has four plain backs. Never radial or re-aimed arrows.. Allattachments remainonSAMEphysicalside andsameoperatingstate throughthe4quarterturns. Frontlabels/maps/coinslots/taps neverappearonrearbacks. Rearbraces/basket/towel/crank mustobeyguideocclusion. Preserveallidentity details, including archedcaps andgoldfinials whenpresent. FourviewcellsN E / S W asguide, orthographic30degreesDOWN andnominal8degreesoffcardinal; broadmainface/narrowside, not45corner. Matchtheexistingdetailed hand-paintedminiaturegolf-townstyle: wood/enamel/rope/brass/galvanizedsteel/cloth/dimpledgolfballs, notflatlowpolyguidefacets. Late-afternoonDAYTIME sunfixedSCREENUPPERRIGHT/shadowsLOWERLEFT,lampsOFF. Equalphysicalscale, completeisolatedopaqueobjects/generousZEROALPHAtransparentmargins/gutters; no atmosphericgreyhalo, groundtile, grass/plants/people/textlabels/UI/grid. Actualfunctionalrampretained. Symmetricobjectsmayhavenaturallysimilarsilhouettes; donotaddpartstofakeuniqueness.",
+  "source": "C:/Users/RAMPAGE/.codex/generated_images/01a1b1fd-39ec-7220-8f11-86e4448833ea/exec-3cb05d7f-68e5-4a74-b8f9-e1759e569376.png",
+  "references": [
+    "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-02\\fixed-world-guides-v2\\direction-signpost\\guides\\yaw8-world-v1.png",
+    "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/golf-source-batch-02/native/direction-signpost/normal-v1.png"
+  ],
+  "status": "native-source-candidate-pending-visual-review",
+  "runtime_imported": false,
+  "sha256": "55a005747397a2283c22b449a5042bfa596d4bad251ebdcd35862af96c5ae08e",
+  "native_bytes_preserved": true
+}

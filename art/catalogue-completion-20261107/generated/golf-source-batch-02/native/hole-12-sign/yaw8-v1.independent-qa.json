@@ -1,0 +1,126 @@
+{
+  "schema": 1,
+  "as_of_utc": "2026-11-07T14:29:39.952183+00:00",
+  "review_result": "PASS-source-candidate-four-main-face-roles-alpha",
+  "source": {
+    "path": "generated/golf-source-batch-02/native/hole-12-sign/yaw8-v1.png",
+    "sha256": "fcc401adb26dffa0ac6fb5ff2718eb426781199fff35c2f2ef2ec1a1130e2042",
+    "bytes": 790192
+  },
+  "mode": "RGBA",
+  "dimensions": [
+    1254,
+    1254
+  ],
+  "source_original_hash_matches_parent": true,
+  "parent_provenance": {
+    "path": "generated/golf-source-batch-02/native/hole-12-sign/yaw8-v1.provenance.json",
+    "sha256": "ea90ad0188bf8a9f616d5f528e6df68fac8b4d2449e4ae0e6ec35d6c07be3afb",
+    "bytes": 2723
+  },
+  "exact_prompt_utf8_sha256": "14acedfb2d015625074a13858e793e5c15f9814791326fcab2f05287d93034f8",
+  "actual_generation_references": [
+    {
+      "path": "generated/golf-small-prop-correction-guides-v1/hole-12-sign/guides/yaw8-world-v1.png",
+      "sha256": "c09cc1a4dd7f6c9023b4d25bd66361f52e2273595805a5e3989a47a1f7923a7f",
+      "bytes": 28805
+    },
+    {
+      "path": "generated/golf-source-batch-02/native/hole-12-sign/normal-v2.png",
+      "sha256": "bbd5e42167f4b04f05a43679eb609df5a0e84e878bb18f3b84eaf61f74d97271",
+      "bytes": 941680
+    }
+  ],
+  "zero_alpha_fraction": 0.803640153740884,
+  "outer_4px_border_alpha_p50p95max": [
+    0.0,
+    0.0,
+    1.0
+  ],
+  "clear_horizontal_cut_y": 627,
+  "clear_vertical_cut_by_row": [
+    627,
+    627
+  ],
+  "cut_alpha_maxima": {
+    "horizontal": 0,
+    "vertical_top": 0,
+    "vertical_bottom": 1
+  },
+  "cells": [
+    {
+      "cell": "TL",
+      "actual_role": "N12/map/dots front",
+      "selected_guide_direction": "N",
+      "reference_rect_ltrb": [
+        0,
+        0,
+        627,
+        627
+      ],
+      "minimum_core_margin_px": 91,
+      "boundary_core_pixels_alpha_gt128": 0,
+      "boundary_alpha_max": 1,
+      "native_rgba_rectangle_sha256": "f04296aa6c16603b517dd167859113a7939b1a6cc0addf1e2684903c1b0c21a1",
+      "functional_hold": false
+    },
+    {
+      "cell": "TR",
+      "actual_role": "E front panel edge",
+      "selected_guide_direction": "E",
+      "reference_rect_ltrb": [
+        627,
+        0,
+        1254,
+        627
+      ],
+      "minimum_core_margin_px": 68,
+      "boundary_core_pixels_alpha_gt128": 0,
+      "boundary_alpha_max": 1,
+      "native_rgba_rectangle_sha256": "9eaab75e9fb54d718a9d64a07100ddec0afd6738b707da1bdc994ad570035f5d",
+      "functional_hold": false
+    },
+    {
+      "cell": "BL",
+      "actual_role": "S rear braces",
+      "selected_guide_direction": "S",
+      "reference_rect_ltrb": [
+        0,
+        627,
+        627,
+        1254
+      ],
+      "minimum_core_margin_px": 89,
+      "boundary_core_pixels_alpha_gt128": 0,
+      "boundary_alpha_max": 1,
+      "native_rgba_rectangle_sha256": "4af21b9d0b0d5bce53d0f64dc12b5345c52cf6c9c3539575e875850135fb14d0",
+      "functional_hold": false
+    },
+    {
+      "cell": "BR",
+      "actual_role": "W rear panel edge",
+      "selected_guide_direction": "W",
+      "reference_rect_ltrb": [
+        627,
+        627,
+        1254,
+        1254
+      ],
+      "minimum_core_margin_px": 41,
+      "boundary_core_pixels_alpha_gt128": 0,
+      "boundary_alpha_max": 1,
+      "native_rgba_rectangle_sha256": "70de36e0e98c017e3ba54aa11701f7ae1d405e2b602a2551085449cbaf3d304d",
+      "functional_hold": false
+    }
+  ],
+  "all_cores_complete_at_reference_cuts": true,
+  "visual_observations": [
+    "Front12/map/five ordered colour dots, plain rear braces and opposite front/back edge profiles match fixed-world guide. Two finials retained."
+  ],
+  "intrinsic_rotational_symmetry": false,
+  "main_faces_functionally_accepted_for_source_candidate": true,
+  "owner_approved": false,
+  "runtime_ready": false,
+  "exact_numerical_angle_certified": false,
+  "native_image_bytes_changed": false
+}

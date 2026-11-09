@@ -1,0 +1,192 @@
+{
+  "schema": 1,
+  "asOfUTC": "2026-11-07T15:40:31.721909+00:00",
+  "sourceOnly": true,
+  "overallRequestComplete": false,
+  "nativeOriginalCheckpoint": {
+    "asOf": "2026-11-07T15:38:41.687218+00:00",
+    "archivedNativeVersions": 273,
+    "uniqueNativeGenerationHashes": 273,
+    "categories": {
+      "map_objects": {
+        "archivedNativeFileVersions": 167,
+        "uniqueNativeSHA256": 167,
+        "nominalFrameSlotsAcrossVersionsNotAcceptedViews": 617,
+        "families": 45
+      },
+      "vehicles": {
+        "archivedNativeFileVersions": 84,
+        "uniqueNativeSHA256": 84,
+        "nominalFrameSlotsAcrossVersionsNotAcceptedViews": 306,
+        "families": 25
+      },
+      "portraits": {
+        "archivedNativeFileVersions": 11,
+        "uniqueNativeSHA256": 11,
+        "nominalFrameSlotsAcrossVersionsNotAcceptedViews": 41,
+        "families": 11
+      },
+      "scenes": {
+        "archivedNativeFileVersions": 5,
+        "uniqueNativeSHA256": 5,
+        "nominalFrameSlotsAcrossVersionsNotAcceptedViews": 20,
+        "families": 5
+      },
+      "ui_gear": {
+        "archivedNativeFileVersions": 6,
+        "uniqueNativeSHA256": 6,
+        "nominalFrameSlotsAcrossVersionsNotAcceptedViews": 48,
+        "families": 5
+      }
+    },
+    "excludedNonNativePNGCounts": {
+      "technical_geometry_guides": 130,
+      "lossless_exports_and_import_crops": 568,
+      "existing_identity_sources_and_copies": 364,
+      "diagnostic_overlays": 50,
+      "other_crops_exports_or_unproven_source": 45,
+      "isolated_reference_crops": 65,
+      "selected_source_reference_atlases": 1
+    },
+    "privatePortraitLooks": 40,
+    "privateExactSceneRecords": 4,
+    "sourceIssues": 0,
+    "afterSnapshotExcluded": 0,
+    "overallRequestComplete": false
+  },
+  "currentCandidatePackageCount": 6,
+  "currentPackagePNGCount": 520,
+  "packagePNGCountIsExportsNotNativeGenerationsOrAcceptedBaselineViews": true,
+  "currentPackages": [
+    {
+      "key": "golf_event_and_practice",
+      "archive": "art/catalogue-completion-20261107/generated/golf-source-batch-01/Golf-event-facilities-and-practice-176-source-candidates.zip",
+      "bytes": 67035318,
+      "sha256": "31c95365543b60a7b2b01be9966a283831a1846442d33911a63bd0e0f950a1a5",
+      "PNGCount": 176,
+      "archiveEntryCount": 181,
+      "sourceOnly": true,
+      "generationCountAddedByPackaging": 0,
+      "runtimeReadyClaimed": false,
+      "chatRegistrationOwner": "root",
+      "registrationStateNotInspectedHere": true,
+      "archiveCRCAndPixelEqualityVerifiedByThisDelegatedStep": true
+    },
+    {
+      "key": "golf_course_props",
+      "archive": "art/catalogue-completion-20261107/generated/golf-source-batch-02/Golf-course-props-batch02-96-source-views.zip",
+      "bytes": 30004525,
+      "sha256": "a8fb23903722dbe0721508dd5e5e48ad341d44e55fa9415d460653a75335b078",
+      "PNGCount": 96,
+      "archiveEntryCount": 97,
+      "sourceOnly": true,
+      "generationCountAddedByPackaging": 0,
+      "runtimeReadyClaimed": false,
+      "chatRegistrationOwner": "root",
+      "registrationStateNotInspectedHere": true,
+      "archiveCRCAndPixelEqualityVerifiedByThisDelegatedStep": false
+    },
+    {
+      "key": "specialist_golf_vehicles",
+      "archive": "art/catalogue-completion-20261107/generated/golf-vehicle-source-batch-01/Specialist-golf-vehicles-source-v1.zip",
+      "bytes": 48366562,
+      "sha256": "ef3a0650957cee9dda42740616aef22b2485dea6465d124f3856d2d0339bdd8c",
+      "PNGCount": 64,
+      "archiveEntryCount": 77,
+      "sourceOnly": true,
+      "generationCountAddedByPackaging": 0,
+      "runtimeReadyClaimed": false,
+      "chatRegistrationOwner": "root",
+      "registrationStateNotInspectedHere": true,
+      "archiveCRCAndPixelEqualityVerifiedByThisDelegatedStep": false
+    },
+    {
+      "key": "town_road_vehicles",
+      "archive": "art/catalogue-completion-20261107/generated/vehicles/Town-vehicles-1980s-2020s-source.zip",
+      "bytes": 34687497,
+      "sha256": "12addd95a227b10cd671804252123fcfc3d50ebe593612b981cf7ff7e8e94160",
+      "PNGCount": 80,
+      "archiveEntryCount": 81,
+      "sourceOnly": true,
+      "generationCountAddedByPackaging": 0,
+      "runtimeReadyClaimed": false,
+      "chatRegistrationOwner": "root",
+      "registrationStateNotInspectedHere": true,
+      "archiveCRCAndPixelEqualityVerifiedByThisDelegatedStep": false
+    },
+    {
+      "key": "later_era_houses",
+      "archive": "art/catalogue-completion-20261107/generated/era-houses/Modern-houses-1990s-2020s-source-v2.zip",
+      "bytes": 17875151,
+      "sha256": "9dd48f893bb228d85fbd70a64002e00f8c9e4da088d5aa75f515331006ca330e",
+      "PNGCount": 64,
+      "archiveEntryCount": 76,
+      "sourceOnly": true,
+      "generationCountAddedByPackaging": 0,
+      "runtimeReadyClaimed": false,
+      "chatRegistrationOwner": "root",
+      "registrationStateNotInspectedHere": true,
+      "archiveCRCAndPixelEqualityVerifiedByThisDelegatedStep": false
+    },
+    {
+      "key": "ui_gear",
+      "archive": "art/catalogue-completion-20261107/generated/ui-gear/UI-gear-1980s-2020s.zip",
+      "bytes": 6445692,
+      "sha256": "0ff6d9090b3b4ebd2c98c3b50b73a98d1c618d146447d0469889b384b5f4e812",
+      "PNGCount": 40,
+      "archiveEntryCount": 41,
+      "sourceOnly": true,
+      "generationCountAddedByPackaging": 0,
+      "runtimeReadyClaimed": false,
+      "chatRegistrationOwner": "root",
+      "registrationStateNotInspectedHere": true,
+      "archiveCRCAndPixelEqualityVerifiedByThisDelegatedStep": false
+    }
+  ],
+  "historicalPackageRetainedNotAddedToCurrentTotal": "generated/era-houses/Modern-houses-1990s-2020s-source.zip (32 earlier house PNGs; current64-view v2 supersedes export scope)",
+  "golfBatch01": {
+    "subjects": 12,
+    "eventRoles": 10,
+    "eventConditionSets": 20,
+    "practicePropSingleConditionSets": 2,
+    "totalConditionSets": 22,
+    "PNGCount": 176,
+    "allSourcePracticalSelectionsComplete": true,
+    "compoundSelectedIsolatedVersions": {
+      "N": 4,
+      "E": 2,
+      "S": 2,
+      "W": 4
+    },
+    "TVUpgradedNormalSW": "full1254 isolated v2 override",
+    "TVUpgradedYaw": "v2 four627 native cells",
+    "compoundUpgradedYaw": "full1536x1024 native single originals, byte-for-byte copied",
+    "nativeCameraScaleAnchorsCertified": false,
+    "sourceReceipt": {
+      "schema": 1,
+      "asOfUTC": "2026-11-07T15:35:34.316489+00:00",
+      "archive": "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/golf-source-batch-01/Golf-event-facilities-and-practice-176-source-candidates.zip",
+      "bytes": 67035318,
+      "sha256": "31c95365543b60a7b2b01be9966a283831a1846442d33911a63bd0e0f950a1a5",
+      "archiveEntryCount": 181,
+      "PNGCount": 176,
+      "CRCAllEntriesValid": true,
+      "allArchivedPNGHashesMatchIndex": true,
+      "allArchivedDecodedRGBAHashesMatchNativeSourceCrops": true,
+      "allOriginalNativeSourceHashesUnchangedAfterExport": true,
+      "sourceOnly": true,
+      "nativeGenerationCount": 0,
+      "runtimeIntegrated": false,
+      "cameraAndScaleApproved": false
+    },
+    "index": "generated/golf-source-batch-01/candidate-source-bundle-v1/index.json",
+    "holds": "generated/golf-source-batch-01/candidate-source-bundle-v1/camera-holds.json"
+  },
+  "remaining": [
+    "Baseline whole-catalogue accepted eight-view coverage has not been reaudited or completed; new source roles do not silently cover wrong stand-in IDs.",
+    "Numerical native camera angles, shared physical scale/ground anchors, final masks and runtime imports remain separate later review work.",
+    "Buildings/props beyond these source cohorts, broader exact-subject property interior/exterior scenes, seating capacity/occlusion calibration and legacy shanty replacement/runtime mapping remain unfinished or unverified.",
+    "Private portrait/scene imports are not a deployment claim.",
+    "No runtime code, tests, builds, services, commits, pushes or owner-live changes were performed in this source packaging/checkpoint step. Background LLM untouched."
+  ]
+}

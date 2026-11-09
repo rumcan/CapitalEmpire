@@ -1,0 +1,86 @@
+{
+  "schema": 1,
+  "space": "orthographic-camera",
+  "engineProjection": {
+    "HW": 64,
+    "HH": 32,
+    "tileMetres": 2
+  },
+  "targetCameraPixelsPerMetre": 45.254833995939045,
+  "sourcePixelsPerMetre": 48,
+  "views": {
+    "normalNE": {
+      "sourcePixelsPerMetre": 48,
+      "displayScale": 0.9428090415820635,
+      "anchorSourcePixels": {
+        "x": 299,
+        "y": 333.12
+      },
+      "atlasResize": 0.565685424949238
+    },
+    "yaw8N": {
+      "sourcePixelsPerMetre": 48,
+      "displayScale": 0.9428090415820635,
+      "anchorSourcePixels": {
+        "x": 263.75,
+        "y": 226.64
+      },
+      "atlasResize": 0.565685424949238
+    },
+    "normalSE": {
+      "sourcePixelsPerMetre": 48,
+      "displayScale": 0.9428090415820635,
+      "anchorSourcePixels": {
+        "x": 319,
+        "y": 350.34
+      },
+      "atlasResize": 0.565685424949238
+    },
+    "yaw8E": {
+      "sourcePixelsPerMetre": 48,
+      "displayScale": 0.9428090415820635,
+      "anchorSourcePixels": {
+        "x": 166.5,
+        "y": 307.44
+      },
+      "atlasResize": 0.565685424949238
+    },
+    "normalSW": {
+      "sourcePixelsPerMetre": 48,
+      "displayScale": 0.9428090415820635,
+      "anchorSourcePixels": {
+        "x": 295.5,
+        "y": 336.26
+      },
+      "atlasResize": 0.565685424949238
+    },
+    "yaw8S": {
+      "sourcePixelsPerMetre": 48,
+      "displayScale": 0.9428090415820635,
+      "anchorSourcePixels": {
+        "x": 193.25,
+        "y": 235.71
+      },
+      "atlasResize": 0.565685424949238
+    },
+    "normalNW": {
+      "sourcePixelsPerMetre": 48,
+      "displayScale": 0.9428090415820635,
+      "anchorSourcePixels": {
+        "x": 277,
+        "y": 329.14
+      },
+      "atlasResize": 0.565685424949238
+    },
+    "yaw8W": {
+      "sourcePixelsPerMetre": 48,
+      "displayScale": 0.9428090415820635,
+      "anchorSourcePixels": {
+        "x": 140.5,
+        "y": 216.62
+      },
+      "atlasResize": 0.565685424949238
+    }
+  },
+  "atlasDensity": 0.6
+}

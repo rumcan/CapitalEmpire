@@ -1,0 +1,61 @@
+{
+  "schema": 1,
+  "createdUtc": "2026-11-07T06:47:45.284562+00:00",
+  "exactRuntimeId": "town:firestation",
+  "source": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/building-views/town-firestation/NE.png",
+  "sourceSha256": "a6c559cbbe8785fad0237a1d3e34a7d6cb4e7087c79c6c7883d746e8108ad77f",
+  "output": "identity-references/town-firestation-0dd5cdae/source.png",
+  "outputSha256": "a6c559cbbe8785fad0237a1d3e34a7d6cb4e7087c79c6c7883d746e8108ad77f",
+  "width": 598,
+  "height": 511,
+  "sourceCell": {
+    "kind": "already isolated native PNG; whole file",
+    "rectXYWH": [
+      0,
+      0,
+      598,
+      511
+    ]
+  },
+  "operation": "byte-for-byte PNG copy only; no resize, crop, recolour, key, repaint, registration or source mutation",
+  "selection": "registered corner NE native PNG for this exact subject",
+  "registeredCornerDirection": "NE",
+  "sourceEvidence": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\building-views\\town-firestation\\provenance.json",
+  "sourceReview": {
+    "status": "generated"
+  },
+  "sourceRegistration": {
+    "id": "town:firestation",
+    "version": "town-firestation-4views-v2",
+    "files": {
+      "NE": "a6c559cbbe8785fad0237a1d3e34a7d6cb4e7087c79c6c7883d746e8108ad77f",
+      "SE": "07924f6bd486f6ee9f39561cec35483d2f7d4f80624199b536535eaa16e8909a",
+      "SW": "726c843eac9ba714d85c57c65244df171fe48063d8e5da5984ae5df20d85c24a",
+      "NW": "274c602a7251eb3f98c288b595d601bedd61f8043e9af20e890e9bdcbf259ee0"
+    }
+  },
+  "originalInventorySource": {
+    "library": "src/game/library.ts",
+    "librarySha256": "91b5190292c1005ac7b936f08e5e1ebf3be43c3aae99f92ea510775da83d9726",
+    "atlas": "src/assets/atlas/sprites-2-0.webp",
+    "atlasSha256": "7765354742f849f1de2a5a1f34c606a80c1a2b229251a5f6c00725fc7d0c8a52",
+    "runtimePage": 2,
+    "localPage": 2,
+    "uv": [
+      0.304688,
+      0.007813,
+      0.597168,
+      0.257813
+    ],
+    "crop": {
+      "left": 624,
+      "top": 16,
+      "width": 599,
+      "height": 512
+    },
+    "native": "art/theme-consistency/exports/buildings/town-firestation.native.png",
+    "nativeSha256": "d54afeed3f7cd48d9d2811c7cc4f6a1fa9da5814c1351c95269c32f364438811"
+  },
+  "originalBusinessSourceCell": null,
+  "nativeReferenceApprovalClaimed": false
+}

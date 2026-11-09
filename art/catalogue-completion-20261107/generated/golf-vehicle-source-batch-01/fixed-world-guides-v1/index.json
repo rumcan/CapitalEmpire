@@ -1,0 +1,834 @@
+{
+  "schema": 1,
+  "technicalOnly": true,
+  "nativeArtGenerated": false,
+  "runtimeIntegrated": false,
+  "ownerApproved": false,
+  "geometryDimensionsAreDesignProposals": true,
+  "commonWorld": "Modelright+X,left-X,front-Y,rear+Y,up+Z. Each parked/fixed-state object rotates0/90/180/270degrees, camera fixed.",
+  "camera": "Normal2x2SE/SW/NW/NE at30down/beta-45. Yaw8N/E/S/W at30down/beta+8. Source camera labels are not runtime or native-camera approval.",
+  "nativePaintInstruction": "Reference1guide controls exact geometry/camera/fixedstate; reference2original PNG controls recognizable identity/materials only, with explicitly required ordinary-budget redesign. Match painterly game style, late-afternoon upper-right sun/lower-left shadows, zero-alpha background, no scenery/people/text/logos/haze.",
+  "models": [
+    {
+      "dimensions": [
+        1.5,
+        3.55,
+        2.05
+      ],
+      "ppm": 155,
+      "fixed": "One front two-place bench/short canopy/green beacon; exactly ONE orange stretcher with TWO straps at REAR+Y. No patient or operator. Four road wheels, straight steering.",
+      "key": "cart-ambulance",
+      "runtimeSubjectId": "newprop:cart-ambulance",
+      "sourceIdentityPNG": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-vehicle-source-batch-01\\references\\cart-ambulance.source.png",
+      "sourceConditionAndEraBrief": "Identity-preserving medical utility. Source is an actual stretcher cart, distinct from generated basic player cart. Later-style body can be preserved as a later-era model; do not assign an unverified release year.",
+      "mesh": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-vehicle-source-batch-01\\fixed-world-guides-v1\\cart-ambulance\\guides\\cart-ambulance-world-model-v1.json",
+      "meshSHA256": "1037861dc454ed0a0844084ae0cc7b6889b43735679b03ebdb8ba7ba41fba923",
+      "guides": {
+        "normal": {
+          "png": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-vehicle-source-batch-01\\fixed-world-guides-v1\\cart-ambulance\\guides\\normal-world-v1.png",
+          "svg": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-vehicle-source-batch-01\\fixed-world-guides-v1\\cart-ambulance\\guides\\normal-world-v1.svg",
+          "calibration": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-vehicle-source-batch-01\\fixed-world-guides-v1\\cart-ambulance\\guides\\normal-world-v1.calibration.json",
+          "sha256": "81f732fd16999d786dedb61a3d663e834753c04f7210672154fcdd00572185b9",
+          "objectBoundsPerCell": [
+            [
+              128,
+              198,
+              672,
+              602
+            ],
+            [
+              128,
+              169,
+              672,
+              631
+            ],
+            [
+              128,
+              169,
+              672,
+              631
+            ],
+            [
+              128,
+              198,
+              672,
+              602
+            ]
+          ],
+          "geometryClipped": false,
+          "sourceCellRGBAHashes": [
+            "76a446e1587da0957f670c71c0e7e8b388a28504a38a718fa4aa8fdfc59ab670",
+            "bad0887b18ff225ddd48d2d5c3525c68d099dad5f94affd407c1d57dc5a2bbe6",
+            "f171fd1933123c070f1bff523eee26590ca2c3c176aabff9cfa5c004237dd62e",
+            "9923185fadba5d8cf26724fcc632048bda2ad7f33ad7cba9d8f4d9b96c4de0f2"
+          ]
+        },
+        "yaw8": {
+          "png": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-vehicle-source-batch-01\\fixed-world-guides-v1\\cart-ambulance\\guides\\yaw8-world-v1.png",
+          "svg": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-vehicle-source-batch-01\\fixed-world-guides-v1\\cart-ambulance\\guides\\yaw8-world-v1.svg",
+          "calibration": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-vehicle-source-batch-01\\fixed-world-guides-v1\\cart-ambulance\\guides\\yaw8-world-v1.calibration.json",
+          "sha256": "cc84941addbf8d56ed99433726648703e07792be085b2dc16301c0fe7457cbc7",
+          "objectBoundsPerCell": [
+            [
+              249,
+              210,
+              551,
+              590
+            ],
+            [
+              106,
+              210,
+              694,
+              590
+            ],
+            [
+              249,
+              175,
+              551,
+              625
+            ],
+            [
+              106,
+              205,
+              694,
+              595
+            ]
+          ],
+          "geometryClipped": false,
+          "sourceCellRGBAHashes": [
+            "aa01aaeebb82ba872465aeec30d7d393c641dce6ae1c7fe8f2311153f9a99818",
+            "ff95fffaaddd892481ca382bcaffe8def3fb13a2c915d77cbbd06d4630b9ce60",
+            "9d00f398e51d7658fd2ba6238d0db3d5af93dd7edf6e341c6b768abbfb829941",
+            "4b5e36dd47d7358f7c7dade52a9a7d6506b2d410a63d979eda98aaf73d4d32c7"
+          ]
+        }
+      },
+      "finalArtApproval": false,
+      "distinctTechnicalViewHashes": 8
+    },
+    {
+      "dimensions": [
+        2.95,
+        3.7,
+        2.02
+      ],
+      "ppm": 130,
+      "fixed": "Ramp ALWAYS deployed on physicalLEFT-X, same angle; one front driver seat, empty central wheelchair bay, one rear bench. Four wheels, intact simple canopy. No wheelchair user; technical dimensions are not accessibility certification.",
+      "key": "wheelchair-cart",
+      "runtimeSubjectId": "newprop:wheelchair-cart",
+      "sourceIdentityPNG": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-vehicle-source-batch-01\\references\\wheelchair-cart.source.png",
+      "sourceConditionAndEraBrief": "Replace source rope-lashed posts, blue patched tarp, scrap wood and corrugated bonnet with an ordinary sound older metal transport-cart chassis, simple canopy and practical side ramp. Preserve access role, not fantasy construction. Geometry/clearances remain design proposals, not accessibility certification.",
+      "mesh": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-vehicle-source-batch-01\\fixed-world-guides-v1\\wheelchair-cart\\guides\\wheelchair-cart-world-model-v1.json",
+      "meshSHA256": "c93591576d126ed7de8389cc387062a888334040a905eda0c6982216b533c9bf",
+      "guides": {
+        "normal": {
+          "png": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-vehicle-source-batch-01\\fixed-world-guides-v1\\wheelchair-cart\\guides\\normal-world-v1.png",
+          "svg": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-vehicle-source-batch-01\\fixed-world-guides-v1\\wheelchair-cart\\guides\\normal-world-v1.svg",
+          "calibration": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-vehicle-source-batch-01\\fixed-world-guides-v1\\wheelchair-cart\\guides\\normal-world-v1.calibration.json",
+          "sha256": "044995a24fa5df3d5f4d1ac48a4ca1b3379c87d149a1434d536d53c2597b3373",
+          "objectBoundsPerCell": [
+            [
+              148,
+              182,
+              652,
+              619
+            ],
+            [
+              159,
+              173,
+              641,
+              627
+            ],
+            [
+              148,
+              190,
+              652,
+              610
+            ],
+            [
+              159,
+              186,
+              641,
+              614
+            ]
+          ],
+          "geometryClipped": false,
+          "sourceCellRGBAHashes": [
+            "20eaad26db8d7d4d791536902e9de60d0a3e28236810e0c7134e028d3f3195d8",
+            "9319fa499102f7d3920e6557e084e6a527113d4658768681dff21de026814151",
+            "a0e8460d019cf23c27acabb7291034fe8761f5f65e5c8252b97cfc64619bcb92",
+            "8ae1192e7d406b86ef504396f67866bcca4db54148b51f49bd4816eb51429fc7"
+          ]
+        },
+        "yaw8": {
+          "png": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-vehicle-source-batch-01\\fixed-world-guides-v1\\wheelchair-cart\\guides\\yaw8-world-v1.png",
+          "svg": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-vehicle-source-batch-01\\fixed-world-guides-v1\\wheelchair-cart\\guides\\yaw8-world-v1.svg",
+          "calibration": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-vehicle-source-batch-01\\fixed-world-guides-v1\\wheelchair-cart\\guides\\yaw8-world-v1.calibration.json",
+          "sha256": "981e6ddb893b20adf1edb3f7afcaa0078238f363603e6448a51c2c9d7aaaabd9",
+          "objectBoundsPerCell": [
+            [
+              198,
+              188,
+              602,
+              612
+            ],
+            [
+              143,
+              191,
+              657,
+              609
+            ],
+            [
+              198,
+              195,
+              602,
+              605
+            ],
+            [
+              143,
+              223,
+              657,
+              577
+            ]
+          ],
+          "geometryClipped": false,
+          "sourceCellRGBAHashes": [
+            "4af6954506d5a113ccc0200b929547de3bb973bc54c28d13594265184d3433a4",
+            "3ae69a27dd8c734e44846e6a206e2362e72a35e60c0e1b9f3694d4e0a975ae7e",
+            "915b624d13ff2954d6226af858fe2da47d194a61bf2718c9c74b4b813e585d55",
+            "e4e14027e5ebca8416ec21d5fc4e661c99d85200d79b013e46342d595e587c7c"
+          ]
+        }
+      },
+      "finalArtApproval": false,
+      "distinctTechnicalViewHashes": 8
+    },
+    {
+      "dimensions": [
+        1.58,
+        4.7,
+        2.0
+      ],
+      "ppm": 125,
+      "fixed": "EXACTLY3transverse two-place bench rows, all facingFRONT-Y, ONE full-length canopy,4road wheels and long wheelbase. No bus walls/doors or people; displayed seats are source design, not gameplay capacity.",
+      "key": "shuttle-cart",
+      "runtimeSubjectId": "newprop:shuttle-cart",
+      "sourceIdentityPNG": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-vehicle-source-batch-01\\references\\shuttle-cart.source.png",
+      "sourceConditionAndEraBrief": "Identity-preserving six-place-looking passenger body, different from generated two-place player cart and schoolbus. Seating shown is source geometry, not an accepted runtime capacity. Source rounded nose is later-era styling; timeline binding remains separate.",
+      "mesh": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-vehicle-source-batch-01\\fixed-world-guides-v1\\shuttle-cart\\guides\\shuttle-cart-world-model-v1.json",
+      "meshSHA256": "f63fd8e9bbca952cbd43044ffa11d65b5368f67ac47ff2ffe197d13d4e0d6db4",
+      "guides": {
+        "normal": {
+          "png": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-vehicle-source-batch-01\\fixed-world-guides-v1\\shuttle-cart\\guides\\normal-world-v1.png",
+          "svg": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-vehicle-source-batch-01\\fixed-world-guides-v1\\shuttle-cart\\guides\\normal-world-v1.svg",
+          "calibration": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-vehicle-source-batch-01\\fixed-world-guides-v1\\shuttle-cart\\guides\\normal-world-v1.calibration.json",
+          "sha256": "85accc453cd937525d37b29ec6dcb429c1b34d0e5b7537d666a031e5420ad268",
+          "objectBoundsPerCell": [
+            [
+              128,
+              176,
+              672,
+              624
+            ],
+            [
+              128,
+              176,
+              672,
+              624
+            ],
+            [
+              128,
+              176,
+              672,
+              624
+            ],
+            [
+              128,
+              176,
+              672,
+              624
+            ]
+          ],
+          "geometryClipped": false,
+          "sourceCellRGBAHashes": [
+            "e0acd7cc1af218317c8bcef49a7a60862660e2f6bdc4125ba1d64fba37f50d1a",
+            "b2795e5d80633e33e2a58a944e23e507aaae088ce1d162b8d750fc1e2e7bdc0c",
+            "864edc86c0ae317bce5dec4da44f4a1adb37e80a6621d8548cd508d4b15041c8",
+            "7ca9ad35d8d5dec53f985c1ed777b834f151e72bc7478b2a285310e4e5eb39c4"
+          ]
+        },
+        "yaw8": {
+          "png": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-vehicle-source-batch-01\\fixed-world-guides-v1\\shuttle-cart\\guides\\yaw8-world-v1.png",
+          "svg": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-vehicle-source-batch-01\\fixed-world-guides-v1\\shuttle-cart\\guides\\yaw8-world-v1.svg",
+          "calibration": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-vehicle-source-batch-01\\fixed-world-guides-v1\\shuttle-cart\\guides\\yaw8-world-v1.calibration.json",
+          "sha256": "44d61c7c890c06d2b7bc79cce70999aac99c55a2529fe0f70faebacdc8f7104a",
+          "objectBoundsPerCell": [
+            [
+              267,
+              167,
+              533,
+              633
+            ],
+            [
+              92,
+              228,
+              708,
+              572
+            ],
+            [
+              267,
+              167,
+              533,
+              633
+            ],
+            [
+              92,
+              228,
+              708,
+              572
+            ]
+          ],
+          "geometryClipped": false,
+          "sourceCellRGBAHashes": [
+            "644dbdec28683944fee8b7efc658d0e7843afc2b8ab789f9c42c1380f4cecafc",
+            "c9f6add46198b5daf41e35a79ffb0876bfddb485853ae47dd285abb9a89995c6",
+            "e319ce0739b58e5330f89fe3041be549890eef34c496780fb63da192228dfde0",
+            "224422a5902f1b596868e95632dc4bb076724b02cbae30e2c976f3940cdbd169"
+          ]
+        }
+      },
+      "finalArtApproval": false,
+      "distinctTechnicalViewHashes": 8
+    },
+    {
+      "dimensions": [
+        2.0,
+        2.0,
+        2.4
+      ],
+      "ppm": 210,
+      "fixed": "Manual chest pushcart, TWO large axle wheels+ONE small rear caster; handle/cone rack/cups all atREAR+Y, ONE fixed striped umbrella,4top freezer tubs. No engine or driver.",
+      "key": "ice-cream-cart",
+      "runtimeSubjectId": "newprop:ice-cream-cart",
+      "sourceIdentityPNG": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-vehicle-source-batch-01\\references\\ice-cream-cart.source.png",
+      "sourceConditionAndEraBrief": "Identity-preserving mobile vending pushcart. Repair gratuitous tarp holes into ordinary worn intact umbrella; keep old enamel/timber chest and restrained metalwork, with no gold fantasy filigree.",
+      "mesh": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-vehicle-source-batch-01\\fixed-world-guides-v1\\ice-cream-cart\\guides\\ice-cream-cart-world-model-v1.json",
+      "meshSHA256": "501d7f2d34c30fcbe8039b62e6fee4c20e60322d42ba94038e5fff72e3636443",
+      "guides": {
+        "normal": {
+          "png": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-vehicle-source-batch-01\\fixed-world-guides-v1\\ice-cream-cart\\guides\\normal-world-v1.png",
+          "svg": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-vehicle-source-batch-01\\fixed-world-guides-v1\\ice-cream-cart\\guides\\normal-world-v1.svg",
+          "calibration": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-vehicle-source-batch-01\\fixed-world-guides-v1\\ice-cream-cart\\guides\\normal-world-v1.calibration.json",
+          "sha256": "132b0a2c6255634ba23e23f4f255391fc28c5e26514775676662b1520596a51b",
+          "objectBoundsPerCell": [
+            [
+              189,
+              127,
+              611,
+              673
+            ],
+            [
+              189,
+              126,
+              611,
+              674
+            ],
+            [
+              189,
+              126,
+              611,
+              674
+            ],
+            [
+              189,
+              127,
+              611,
+              673
+            ]
+          ],
+          "geometryClipped": false,
+          "sourceCellRGBAHashes": [
+            "cb8172e081d90d7840c8fe8bf8e56b9e9974f25c64ba3c4047162b6854f5c151",
+            "f450547dbe229524e792ad3b7c2cefab767e35ae531e4bdfb07a3ba69e1f5fc2",
+            "a0e2071d1b30828f92f46ebaa6886332147d28a94b6b125293e5b60a47a83b73",
+            "ab0391445edc5aaee5705c05715bfdfe84827c5edde0a82b23d9bf5fbaa77ac5"
+          ]
+        },
+        "yaw8": {
+          "png": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-vehicle-source-batch-01\\fixed-world-guides-v1\\ice-cream-cart\\guides\\yaw8-world-v1.png",
+          "svg": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-vehicle-source-batch-01\\fixed-world-guides-v1\\ice-cream-cart\\guides\\yaw8-world-v1.svg",
+          "calibration": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-vehicle-source-batch-01\\fixed-world-guides-v1\\ice-cream-cart\\guides\\yaw8-world-v1.calibration.json",
+          "sha256": "936e9fb670e643405599b32aaf238f14fc489d6a113d9822797e64fc89e94a78",
+          "objectBoundsPerCell": [
+            [
+              192,
+              144,
+              608,
+              656
+            ],
+            [
+              183,
+              119,
+              617,
+              681
+            ],
+            [
+              192,
+              114,
+              608,
+              686
+            ],
+            [
+              183,
+              119,
+              617,
+              681
+            ]
+          ],
+          "geometryClipped": false,
+          "sourceCellRGBAHashes": [
+            "95893fd1cc32f6d2fc28ee94b3a85a1ab42f9a9cef79e5bcb175a75bb7c2341f",
+            "1f631f5c80e34644762164f16508f820f2cbf8fce74dd802bbdfec9fdacda67f",
+            "1764a5bdb1f1143b3befee9c94df42a648f568e98cd99ddc04f1751297838b18",
+            "b69d7c22052de5e175840ba9e078bfb3151d5d61805d6d4c9032d6da8b1f8364"
+          ]
+        }
+      },
+      "finalArtApproval": false,
+      "distinctTechnicalViewHashes": 8
+    },
+    {
+      "dimensions": [
+        1.55,
+        3.4,
+        1.92
+      ],
+      "ppm": 160,
+      "fixed": "FRONTbench/canopy/controls, REARloadedbed. EXACT load:2orange round jugs,2rectangular white-lid coolboxes,1bottle crate. Fixed cargo positions across8views; no passengers or loose cargo movement. Green painted utility bed; source later-era nose is identity-only, geometry proxy does not bind an era.",
+      "key": "drinks-cart-green",
+      "runtimeSubjectId": "newprop:drinks-cart-green",
+      "sourceIdentityPNG": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-vehicle-source-batch-01\\references\\drinks-cart-green.source.png",
+      "sourceConditionAndEraBrief": "Identity-preserving loaded beverage-service vehicle. Distinct actual load from generic maintenance utility core. Match its source later-style nose if producing a later-era model; no invented runtime upgrade or capacity.",
+      "mesh": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-vehicle-source-batch-01\\fixed-world-guides-v1\\drinks-cart-green\\guides\\drinks-cart-green-world-model-v1.json",
+      "meshSHA256": "2f299f3fb2dc4140820df83de2c08eded641fb5745466b3fc65655b2afce48eb",
+      "guides": {
+        "normal": {
+          "png": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-vehicle-source-batch-01\\fixed-world-guides-v1\\drinks-cart-green\\guides\\normal-world-v1.png",
+          "svg": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-vehicle-source-batch-01\\fixed-world-guides-v1\\drinks-cart-green\\guides\\normal-world-v1.svg",
+          "calibration": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-vehicle-source-batch-01\\fixed-world-guides-v1\\drinks-cart-green\\guides\\normal-world-v1.calibration.json",
+          "sha256": "610e3600f0e0aaec239a06ae25739561d9caac1de1a0d79aed92607fc0687b1c",
+          "objectBoundsPerCell": [
+            [
+              124,
+              194,
+              676,
+              606
+            ],
+            [
+              124,
+              160,
+              676,
+              640
+            ],
+            [
+              124,
+              160,
+              676,
+              640
+            ],
+            [
+              124,
+              194,
+              676,
+              606
+            ]
+          ],
+          "geometryClipped": false,
+          "sourceCellRGBAHashes": [
+            "c095246be52e0f748f6187ff9eed03761da6cae1f9e4716cc68c63d8896f0cd6",
+            "92d8b8abc9af4ebf59070eafb2412fcd1825633479f3fa06f7f05856512c6e56",
+            "accc4b14e1737cc6a418455f39cdd9145b68f9559e86a1523a473a6debfebe5d",
+            "913fb9d7afc95a7c2aaa892d6833076412d3a8ecafd03891b02233e726adf4cf"
+          ]
+        },
+        "yaw8": {
+          "png": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-vehicle-source-batch-01\\fixed-world-guides-v1\\drinks-cart-green\\guides\\yaw8-world-v1.png",
+          "svg": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-vehicle-source-batch-01\\fixed-world-guides-v1\\drinks-cart-green\\guides\\yaw8-world-v1.svg",
+          "calibration": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-vehicle-source-batch-01\\fixed-world-guides-v1\\drinks-cart-green\\guides\\yaw8-world-v1.calibration.json",
+          "sha256": "81ca3bd2c6f6478acd8e48bd532ec1705e97d74b558777afa69bf1e0b36e3578",
+          "objectBoundsPerCell": [
+            [
+              239,
+              206,
+              561,
+              594
+            ],
+            [
+              108,
+              202,
+              692,
+              598
+            ],
+            [
+              239,
+              168,
+              561,
+              632
+            ],
+            [
+              108,
+              195,
+              692,
+              605
+            ]
+          ],
+          "geometryClipped": false,
+          "sourceCellRGBAHashes": [
+            "8ce0c6a6102cf8f20f45bc956f6620a513e46f2da10591db9aa76708580d9b72",
+            "0f893535be0d269bc2e85dda18f6d405f5a6b8451df6dc5b28300d209ccbc368",
+            "df4b91293b2ab14a2430d481e55bc4bda1b52e74ded11deb0eb81062aa70876c",
+            "725dea92c8550271068452b809df7209d656c64f81c7ee76f76fdc5d449e1602"
+          ]
+        }
+      },
+      "finalArtApproval": false,
+      "distinctTechnicalViewHashes": 8
+    },
+    {
+      "dimensions": [
+        1.55,
+        3.4,
+        1.92
+      ],
+      "ppm": 160,
+      "fixed": "FRONTbench/canopy/controls, REARloadedbed. EXACT load:2orange round jugs,2rectangular white-lid coolboxes,1bottle crate. Fixed cargo positions across8views; no passengers or loose cargo movement. Older plain bolted-board/metal utility, intact canopy; no rope/tarp shack.",
+      "key": "supply-cart",
+      "runtimeSubjectId": "newprop:supply-cart",
+      "sourceIdentityPNG": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-vehicle-source-batch-01\\references\\supply-cart.source.png",
+      "sourceConditionAndEraBrief": "Ordinary older-utility redesign: replace rope-lashed raw timber and patched blue tarp with simple bolted metal/painted-board cargo sides and intact practical canopy. This source shares beverage load with drinks-cart-green but remains a separate exact catalogue ID; never claim one file completes both.",
+      "mesh": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-vehicle-source-batch-01\\fixed-world-guides-v1\\supply-cart\\guides\\supply-cart-world-model-v1.json",
+      "meshSHA256": "65a34f90d19ac7d827638cd58c22e511304c7674a3163fc75819c1fe3d33ac3e",
+      "guides": {
+        "normal": {
+          "png": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-vehicle-source-batch-01\\fixed-world-guides-v1\\supply-cart\\guides\\normal-world-v1.png",
+          "svg": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-vehicle-source-batch-01\\fixed-world-guides-v1\\supply-cart\\guides\\normal-world-v1.svg",
+          "calibration": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-vehicle-source-batch-01\\fixed-world-guides-v1\\supply-cart\\guides\\normal-world-v1.calibration.json",
+          "sha256": "a8e0b4e426411f28cfcab5f404098a71fc47e96ad3433579ac6346dead396f2b",
+          "objectBoundsPerCell": [
+            [
+              124,
+              194,
+              676,
+              606
+            ],
+            [
+              124,
+              160,
+              676,
+              640
+            ],
+            [
+              124,
+              160,
+              676,
+              640
+            ],
+            [
+              124,
+              194,
+              676,
+              606
+            ]
+          ],
+          "geometryClipped": false,
+          "sourceCellRGBAHashes": [
+            "a9025f85bffd3353356afb20f609230908964d4e82f369905433c24107dfcd39",
+            "3c559be890c1569ef452599a58787dd3e605089718fcd744e3014128e57daaa4",
+            "807439f583e8f4f74a6f1025d2a2555b067fdc6d9f14f3b4ebc346b76995bfaf",
+            "cd11f7923100c0bd22301ab80f49d208628a08c5ab2b91496aba90cf2d8677da"
+          ]
+        },
+        "yaw8": {
+          "png": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-vehicle-source-batch-01\\fixed-world-guides-v1\\supply-cart\\guides\\yaw8-world-v1.png",
+          "svg": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-vehicle-source-batch-01\\fixed-world-guides-v1\\supply-cart\\guides\\yaw8-world-v1.svg",
+          "calibration": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-vehicle-source-batch-01\\fixed-world-guides-v1\\supply-cart\\guides\\yaw8-world-v1.calibration.json",
+          "sha256": "3924ff5292f1e89ad772dab01f35e02774f524dd56d82bf2010196e44d6d5a50",
+          "objectBoundsPerCell": [
+            [
+              239,
+              206,
+              561,
+              594
+            ],
+            [
+              108,
+              202,
+              692,
+              598
+            ],
+            [
+              239,
+              168,
+              561,
+              632
+            ],
+            [
+              108,
+              195,
+              692,
+              605
+            ]
+          ],
+          "geometryClipped": false,
+          "sourceCellRGBAHashes": [
+            "f9ad860baa5fd22ac63e49e38ae870c2259ed4a87877a936e96ab5041685f22c",
+            "58df51b41c6df1872f305604eefb5861bca33eceb56b7aa56f984b15472b2464",
+            "02b692a5b7e1572c03ddd7ba6ea61c2f11fe5e070ca50b61c4202ac35fc771ea",
+            "655d9a4825014ce7ef660654ad8562ba2e0c493db6f8bbe61a6189962296269f"
+          ]
+        }
+      },
+      "finalArtApproval": false,
+      "distinctTechnicalViewHashes": 8
+    },
+    {
+      "dimensions": [
+        2.2,
+        5.75,
+        3.95
+      ],
+      "ppm": 94,
+      "fixed": "One curved dish, unchanged fixed aim; HVAC and two aerials unchanged. ONE LEFT -X sliding cargo door, twin rear doors. Right +X body plain.",
+      "dishFixedAimUnitVector": [
+        0.24997387909438062,
+        -0.5499425340076375,
+        0.7969167265528855
+      ],
+      "dishHelperSource": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\audit\\build_broadcast_dish_world_v2.py",
+      "dishHelperOffsetMetres": [
+        -4.5,
+        -3.9000000000000004,
+        -0.029999999999999805
+      ],
+      "key": "satellite-van",
+      "runtimeSubjectId": "newprop:satellite-van",
+      "sourceIdentityPNG": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-vehicle-source-batch-01\\references\\satellite-van.source.png",
+      "sourceConditionAndEraBrief": "Preserve actual later-era rounded panel-van identity for later-era source art. For a1985-specific variant, request separate older boxy cab design rather than calling this modern van period-correct. Ignore tiny detached gold neighbour fragment at upper source edge.",
+      "mesh": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-vehicle-source-batch-01\\fixed-world-guides-v2\\satellite-van\\guides\\satellite-van-world-model-v2.json",
+      "meshSHA256": "3d01f395aea0a5f206b90bdd0fba1487ea869513a08471ecf6fe9e1aa33f9ece",
+      "guides": {
+        "normal": {
+          "png": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-vehicle-source-batch-01\\fixed-world-guides-v2\\satellite-van\\guides\\normal-world-v2.png",
+          "svg": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-vehicle-source-batch-01\\fixed-world-guides-v2\\satellite-van\\guides\\normal-world-v2.svg",
+          "calibration": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-vehicle-source-batch-01\\fixed-world-guides-v2\\satellite-van\\guides\\normal-world-v2.calibration.json",
+          "sha256": "bf90329ff86c65bcb971c1b06566d64c70be3005ed03ac1d45df560cad278aaa",
+          "objectBoundsPerCell": [
+            [
+              140,
+              158,
+              660,
+              641
+            ],
+            [
+              140,
+              199,
+              660,
+              601
+            ],
+            [
+              140,
+              199,
+              660,
+              601
+            ],
+            [
+              140,
+              156,
+              660,
+              643
+            ]
+          ],
+          "geometryClipped": false,
+          "sourceCellRGBAHashes": [
+            "35788d4d8897e1d96049013d6fbd44d8fa7ae7bbc30b575ad1a4127af992e8a0",
+            "5a715e0fec3ffad750480716dde1ed49e2aed358cd33056643fc593b492d738b",
+            "ec19a20897a3b7297a7f627a756ca4669a72009a13740058de78dba1cca6e3ad",
+            "e3bd8a1903ba25398fe58f0ec37ce59d4b897987a92825fa796ef410a05e2928"
+          ]
+        },
+        "yaw8": {
+          "png": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-vehicle-source-batch-01\\fixed-world-guides-v2\\satellite-van\\guides\\yaw8-world-v2.png",
+          "svg": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-vehicle-source-batch-01\\fixed-world-guides-v2\\satellite-van\\guides\\yaw8-world-v2.svg",
+          "calibration": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-vehicle-source-batch-01\\fixed-world-guides-v2\\satellite-van\\guides\\yaw8-world-v2.calibration.json",
+          "sha256": "45ee151fc0e4ebc6820355d66d56cfa9b6ff6932b5c7d1b0e75964ae19a3bc50",
+          "objectBoundsPerCell": [
+            [
+              266,
+              143,
+              534,
+              657
+            ],
+            [
+              115,
+              199,
+              685,
+              601
+            ],
+            [
+              266,
+              193,
+              534,
+              607
+            ],
+            [
+              115,
+              202,
+              685,
+              598
+            ]
+          ],
+          "geometryClipped": false,
+          "sourceCellRGBAHashes": [
+            "ff6f4b0c2ee57661916f99854dbd71a08088b5c0a430fd07c412b863abf75f03",
+            "a1afd5e1c259ad0c03ed6ddc958d04abf3bde2f119f07035c48bcb261ee2eb4f",
+            "4379921825bcb0c8f7872cd46a706600579f2a1bafc1ace3197a9f6130834958",
+            "606073b62dfa1b46ec152fd290e7746965b324381661f1f4a167dfa0945df9f8"
+          ]
+        }
+      },
+      "finalArtApproval": false,
+      "distinctTechnicalViewHashes": 8,
+      "adoptedDoorSide": "LEFT -X",
+      "guideVersion": 2
+    },
+    {
+      "dimensions": [
+        2.2,
+        5.75,
+        3.43
+      ],
+      "ppm": 98,
+      "fixed": "ONEroof cable reel on transverseXaxle, ONEHVAC box front/right of reel, ONEfront aerial. Closed cargo body/twinrear doors. Ordinary bolted steel roof rack; no satellite dish, log pallets, ropes, tarp or corrugated roof patch.",
+      "key": "shanty-broadcast-van",
+      "runtimeSubjectId": "newprop:shanty-broadcast-van",
+      "sourceIdentityPNG": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-vehicle-source-batch-01\\references\\shanty-broadcast-van.source.png",
+      "sourceConditionAndEraBrief": "Ordinary old-budget redesign: retain worn working van, reel, aerial and cooling equipment; remove wooden pallet scaffolding, rope bindings, corrugated patch roof and blue tarp. This is a single broadcast van, not batch01broadcast-compound or the satellite-dish van.",
+      "mesh": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-vehicle-source-batch-01\\fixed-world-guides-v1\\shanty-broadcast-van\\guides\\shanty-broadcast-van-world-model-v1.json",
+      "meshSHA256": "94b0a401431759dda8466317e7b135573ae6006d356b7675e643ad4804e45221",
+      "guides": {
+        "normal": {
+          "png": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-vehicle-source-batch-01\\fixed-world-guides-v1\\shanty-broadcast-van\\guides\\normal-world-v1.png",
+          "svg": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-vehicle-source-batch-01\\fixed-world-guides-v1\\shanty-broadcast-van\\guides\\normal-world-v1.svg",
+          "calibration": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-vehicle-source-batch-01\\fixed-world-guides-v1\\shanty-broadcast-van\\guides\\normal-world-v1.calibration.json",
+          "sha256": "9ae9bc34b5ed6aac1da237b3deab6c8716cee2f9b9cd02a7f8c8bfe8daed7a31",
+          "objectBoundsPerCell": [
+            [
+              128,
+              179,
+              672,
+              621
+            ],
+            [
+              128,
+              191,
+              672,
+              609
+            ],
+            [
+              128,
+              185,
+              672,
+              615
+            ],
+            [
+              128,
+              179,
+              672,
+              621
+            ]
+          ],
+          "geometryClipped": false,
+          "sourceCellRGBAHashes": [
+            "8278cd5fe52f85367478ca2c4232b11a840db39cd7a2278e6aaa4d5eb7775782",
+            "c446cbb2dd938f100270be7c85d7f5b3a112c93c0a67e665e02b56fdefb70878",
+            "10f4ccfe72e118995a32a4189325d0328815822e4247af7fd9df6efe6b0c6950",
+            "4c8c59db4045b0205c4d25466792faee89b653b7f0154d06ca28bd1bce9ba57b"
+          ]
+        },
+        "yaw8": {
+          "png": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-vehicle-source-batch-01\\fixed-world-guides-v1\\shanty-broadcast-van\\guides\\yaw8-world-v1.png",
+          "svg": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-vehicle-source-batch-01\\fixed-world-guides-v1\\shanty-broadcast-van\\guides\\yaw8-world-v1.svg",
+          "calibration": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-vehicle-source-batch-01\\fixed-world-guides-v1\\shanty-broadcast-van\\guides\\yaw8-world-v1.calibration.json",
+          "sha256": "d832ed87379b85119069f66c78aeda398c0b6d392beb09c951ef081f755802cc",
+          "objectBoundsPerCell": [
+            [
+              260,
+              169,
+              540,
+              631
+            ],
+            [
+              103,
+              210,
+              697,
+              590
+            ],
+            [
+              260,
+              184,
+              540,
+              616
+            ],
+            [
+              103,
+              209,
+              697,
+              591
+            ]
+          ],
+          "geometryClipped": false,
+          "sourceCellRGBAHashes": [
+            "4f4f701c31d5e37683991d5f8331f25d5b0de119b7cc0c7412dc4b6c1806ad64",
+            "e20053c3ec74b339b7294bf2983ebd32089130c979c378bbf18e088b04744bb8",
+            "43e801c6f2a85278659691181ca9a0a4e5a0599f3c625e86a515a091bf196cd3",
+            "fc306729ba5f18f148fa656125706399365047a60674254a78351fbca27bf77a"
+          ]
+        }
+      },
+      "finalArtApproval": false,
+      "distinctTechnicalViewHashes": 8
+    }
+  ],
+  "generatorSource": {
+    "path": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-vehicle-source-batch-01\\fixed-world-guides-v1\\build_mobile_prop_guides.py",
+    "sha256": "abcdc680d5e85a366605557d79a0478b2fa24aff767c3a62e4b1dfbadd9911b8"
+  },
+  "helperProvenance": [
+    {
+      "file": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\audit\\build_world_geometry_guides.py",
+      "sha256": "6edef695ad509c96fdacd31b06f380400034c31c42127c5764c3da2c23375c30"
+    },
+    {
+      "file": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\audit\\build_vehicle_camera_guides.py",
+      "sha256": "1a2f78afbc5580609a0544031cf68ad796b2d3b6ba16257e3459f8ddf9925196"
+    },
+    {
+      "file": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\audit\\build_broadcast_dish_world_v2.py",
+      "sha256": "6989397c9f495184b3d4e4574b342d7301c135f2d0166d58b6b26f66ca0a5b06"
+    }
+  ],
+  "technicalVisualInspection": {
+    "allSixteenSheetsViewed": true,
+    "technicalViews": 64,
+    "geometryClipped": false,
+    "nativeArtApproval": false,
+    "notes": [
+      "Every model uses one fixed world and parked component state for all8cameras. Front/rear and left/right components rotate with it, not toward the viewer.",
+      "Medical cart keeps rear stretcher/two straps; accessible cart keeps its deployed ramp on physicalLEFT-X, with ramp heel meeting the bay floor.",
+      "Passenger shuttle retains3bench rows; ice-cream cart retains2large axle wheels+1small caster and fixed rear handle/cone rack.",
+      "Both loaded utility designs retain2orange jugs,2white-lid coolboxes and1bottle crate in fixed rear positions.",
+      "Satellite dish uses the imported curved-shell helper including separate concave front/convex ribbed back, round rim and feed tripod. Dish aims at one fixed vehicle-relative vector in every view.",
+      "Broadcast van retains1roof cable reel on transverseXaxis,1HVAC box and1front aerial on an ordinary steel rack."
+    ]
+  }
+}

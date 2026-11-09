@@ -1,0 +1,210 @@
+{
+  "schema": 1,
+  "as_of_utc": "2026-11-07T10:35:58.087022+00:00",
+  "review_result": "HOLD-background-alpha",
+  "source": {
+    "path": "generated/vehicles/town-blue-sedan/traffic8-v1.png",
+    "sha256": "598e27cab6ac910dc8fcc7a539e9e481af2d1175daec12b115f26daf65a020de",
+    "bytes": 2848829
+  },
+  "source_original_hash_matches_parent_batch": true,
+  "prompt": {
+    "path": "generated/vehicles/town-blue-sedan/traffic8-v1.prompt.txt",
+    "sha256": "0436af9327f42bfbfe846bf32330d17d1c534415a102ca91103a6fbccd1aad50",
+    "bytes": 1672
+  },
+  "parent_provenance": {
+    "path": "generated/vehicles/town-blue-sedan/traffic8-v1.provenance.json",
+    "sha256": "2c05f6946bf01b52e2aace670b377040dd1b6c85674e2d3c30b2e20b16fb1a2b",
+    "bytes": 2281
+  },
+  "identity_observation": "Four-door pale blue sedan, separate boot and rectangular front lamps remain consistent; cloudy background is actual alpha haze.",
+  "actual_cell_mapping": [
+    {
+      "cell": 0,
+      "rect_ltrb": [
+        0,
+        0,
+        443,
+        443
+      ],
+      "core_margin": 12,
+      "boundary_core_pixels": 0,
+      "boundary_alpha_max": 27,
+      "actual_screen_nose": "lower-left",
+      "rgba_crop_sha256": "43ca3bfa42482ea92a967f49f67a95737827c8c06e42f2dac01fd68756b12876",
+      "core_trim_dimensions": [
+        403,
+        293
+      ],
+      "core_trim_rgba_sha256_alpha_le128_ignored": "be0836e290c09accb845ffd87e0d49190e68f34641b538528f0a8e10b686cfe9"
+    },
+    {
+      "cell": 1,
+      "rect_ltrb": [
+        443,
+        0,
+        887,
+        443
+      ],
+      "core_margin": 74,
+      "boundary_core_pixels": 0,
+      "boundary_alpha_max": 33,
+      "actual_screen_nose": "down",
+      "rgba_crop_sha256": "de5fde5aab5d6d0848f05dcfef1de298819d75e52d74341744303ad5c123c1e0",
+      "core_trim_dimensions": [
+        229,
+        293
+      ],
+      "core_trim_rgba_sha256_alpha_le128_ignored": "ac07182d204a0b279eb8eac873d491ed3f518f8b4a0caa74173c796a53ba86cd"
+    },
+    {
+      "cell": 2,
+      "rect_ltrb": [
+        887,
+        0,
+        1330,
+        443
+      ],
+      "core_margin": 12,
+      "boundary_core_pixels": 0,
+      "boundary_alpha_max": 29,
+      "actual_screen_nose": "lower-right",
+      "rgba_crop_sha256": "081bf287caae07b91032538e617adce98f3c3ed33b3c3c8fc94c15f8a6dfcf22",
+      "core_trim_dimensions": [
+        400,
+        292
+      ],
+      "core_trim_rgba_sha256_alpha_le128_ignored": "2254e1e2fb5998d1cdddd204edbb7c16f05ba684fa3397565708853b56aecf51"
+    },
+    {
+      "cell": 3,
+      "rect_ltrb": [
+        1330,
+        0,
+        1774,
+        443
+      ],
+      "core_margin": 7,
+      "boundary_core_pixels": 0,
+      "boundary_alpha_max": 19,
+      "actual_screen_nose": "right",
+      "rgba_crop_sha256": "98581cf3b4f214c3b78b696dd91b7ac280154d67e52975781d753fd87f49c97b",
+      "core_trim_dimensions": [
+        421,
+        187
+      ],
+      "core_trim_rgba_sha256_alpha_le128_ignored": "5116eec1d9220feb01941a8062d0a83df550a97a1d1cf6169d7cf4dc9eed78aa"
+    },
+    {
+      "cell": 4,
+      "rect_ltrb": [
+        0,
+        443,
+        443,
+        887
+      ],
+      "core_margin": 12,
+      "boundary_core_pixels": 0,
+      "boundary_alpha_max": 18,
+      "actual_screen_nose": "upper-right",
+      "rgba_crop_sha256": "ff0a3ba6f1e70641593ff16714748869f11c895dc92021b70c9eef494b4f89e5",
+      "core_trim_dimensions": [
+        403,
+        274
+      ],
+      "core_trim_rgba_sha256_alpha_le128_ignored": "384c318e2a3fc22b9fa525b1d5447b3a178ba8ff2eefffa353b774f8998cc665"
+    },
+    {
+      "cell": 5,
+      "rect_ltrb": [
+        443,
+        443,
+        887,
+        887
+      ],
+      "core_margin": 74,
+      "boundary_core_pixels": 0,
+      "boundary_alpha_max": 18,
+      "actual_screen_nose": "up",
+      "rgba_crop_sha256": "a9a2221e9cbf1570fc46d290cfd9bc8b52124e221bdade0ac4af8daf3ca83818",
+      "core_trim_dimensions": [
+        225,
+        284
+      ],
+      "core_trim_rgba_sha256_alpha_le128_ignored": "1e2279bb664f881967b11688c3b77fd8a1d65539c20dcb32bfe69ac1c761f636"
+    },
+    {
+      "cell": 6,
+      "rect_ltrb": [
+        887,
+        443,
+        1330,
+        887
+      ],
+      "core_margin": 13,
+      "boundary_core_pixels": 0,
+      "boundary_alpha_max": 14,
+      "actual_screen_nose": "upper-left",
+      "rgba_crop_sha256": "8517071790220b44b5fe1b03996fe53aaab448764c24903caad29e874dd742f8",
+      "core_trim_dimensions": [
+        399,
+        275
+      ],
+      "core_trim_rgba_sha256_alpha_le128_ignored": "a841d1bfb3bfc8bd8de44dbf305fe724c909e38380c2fc33b9698095b56542e4"
+    },
+    {
+      "cell": 7,
+      "rect_ltrb": [
+        1330,
+        443,
+        1774,
+        887
+      ],
+      "core_margin": 9,
+      "boundary_core_pixels": 0,
+      "boundary_alpha_max": 11,
+      "actual_screen_nose": "left",
+      "rgba_crop_sha256": "d71f85d82ba4d9d9d3f40d6d2c4f41acdff572bc4df219c9f34cf8ecb4356166",
+      "core_trim_dimensions": [
+        422,
+        187
+      ],
+      "core_trim_rgba_sha256_alpha_le128_ignored": "e2ec242700c4385eaca60ddac0f0d2a72cd24372f714e04a43faef9c5f720bc1"
+    }
+  ],
+  "background": {
+    "zero_alpha_fraction": 0.0003012320007524445,
+    "outer_border_p50max": [
+      7.0,
+      33.0
+    ],
+    "center_gutter_p50p95max": [
+      6.0,
+      12.0,
+      17.0
+    ]
+  },
+  "canvas_dimensions": [
+    1774,
+    887
+  ],
+  "actual_clear_gutter_crops_needed": false,
+  "crop_operation_performed": false,
+  "all_cells_core_clear_of_accepted_cut_boundaries": true,
+  "partition_covers_all_pixels": true,
+  "no_duplicate_core_cell_hashes": true,
+  "exact_duplicate_core_pairs": [],
+  "exact_mirrored_core_pairs": [],
+  "mirror_limit": "Only exact pixel duplicate/mirror detection; conceptual/model mirroring needs visual judgment. All cells visually inspected.",
+  "notes": [
+    "HOLD native background haze: known empty center gutter alpha median6/p95=12/max17, outer border max33. Native cleanup v2 pending; never code-key or reconstruct alpha."
+  ],
+  "source_only": true,
+  "owner_approved": false,
+  "runtime_ready": false,
+  "exact8_certified": false,
+  "vehicle_physical_scale_calibration_pending": true,
+  "camera_followup_hold": "Sideprofiles nearly level vs30degree corners/front/rear; source identity/alpha result is not camera approval.",
+  "uniform30degree_camera_certified": false
+}

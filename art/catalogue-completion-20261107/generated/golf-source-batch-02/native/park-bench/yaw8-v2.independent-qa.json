@@ -1,0 +1,125 @@
+{
+  "schema": 1,
+  "as_of_utc": "2026-11-07T14:42:37.359837+00:00",
+  "source": {
+    "path": "generated/golf-source-batch-02/native/park-bench/yaw8-v2.png",
+    "sha256": "b8022ef2aa96119ff82eb02e6559e0cbcd340a5a1a8abde1f9d0b387f0462005",
+    "bytes": 1746264
+  },
+  "mode": "RGBA",
+  "dimensions": [
+    1536,
+    1024
+  ],
+  "review_result": "PASS-W;HOLD-E-regression-select-v1-E",
+  "source_original_hash_matches_parent": true,
+  "parent_provenance": {
+    "path": "generated/golf-source-batch-02/native/park-bench/yaw8-v2.provenance.json",
+    "sha256": "419989b3752996f2102f207d1ae2d04ea9113989b6bf0f6f4ef96330558d4153",
+    "bytes": 1672
+  },
+  "exact_prompt_utf8_sha256": "6fb72ccf29847a77d4c66db11b73534ff3068a8fe9568fd3b5c2dc56d9803c04",
+  "actual_generation_references": [
+    {
+      "path": "generated/golf-source-batch-02/native/park-bench/yaw8-v1.png",
+      "sha256": "0dcecf6800741f11709b5031baa787a4c8fac20c168ff2a4474e861fcbe8f55a",
+      "bytes": 1822653
+    }
+  ],
+  "zero_alpha_fraction": 0.7510585784912109,
+  "outer_4px_border_alpha_p50p95max": [
+    0.0,
+    0.0,
+    1.0
+  ],
+  "distant_background_alpha_p50p95max": [
+    0.0,
+    0.0,
+    84.0
+  ],
+  "proper_grey_composite": {
+    "path": "generated/golf-source-batch-02/native/park-bench/qa/yaw8-v2-on-grey.diagnostic.png",
+    "sha256": "28775fad35830d3df266a89c3e053f7a8c9a37b8a0af78310f48668ea369f724",
+    "bytes": 658904
+  },
+  "clear_horizontal_cut_y": 512,
+  "clear_vertical_cut_by_row": [
+    768,
+    768
+  ],
+  "cells": [
+    {
+      "cell": "TL",
+      "direction": "N",
+      "reference_rect_ltrb": [
+        0,
+        0,
+        768,
+        512
+      ],
+      "native_rgba_rectangle_sha256": "cf5be5eafb2137628e001140d41a209c775f2f2645d183b56a8ce86854a4cde0",
+      "boundary_core_pixels_alpha_gt128": 0,
+      "boundary_alpha_max": 1,
+      "minimum_core_margin_px": 40,
+      "functional_hold": false,
+      "review": "limited-source-main-face-component-pass"
+    },
+    {
+      "cell": "TR",
+      "direction": "E",
+      "reference_rect_ltrb": [
+        768,
+        0,
+        1536,
+        512
+      ],
+      "native_rgba_rectangle_sha256": "30e9dc1ffaec8ce91786abfabd9d1195f0fd1601efebc130c6ca517f5ad2aa11",
+      "boundary_core_pixels_alpha_gt128": 0,
+      "boundary_alpha_max": 1,
+      "minimum_core_margin_px": 7,
+      "functional_hold": true,
+      "review": "HOLD-front-map-removed-in-E-regression"
+    },
+    {
+      "cell": "BL",
+      "direction": "S",
+      "reference_rect_ltrb": [
+        0,
+        512,
+        768,
+        1024
+      ],
+      "native_rgba_rectangle_sha256": "8f1a10bd0c0b17ae092d0dde0d412b3d48831ec9ba88ea2f7d6667b84beca945",
+      "boundary_core_pixels_alpha_gt128": 0,
+      "boundary_alpha_max": 1,
+      "minimum_core_margin_px": 26,
+      "functional_hold": false,
+      "review": "limited-source-main-face-component-pass"
+    },
+    {
+      "cell": "BR",
+      "direction": "W",
+      "reference_rect_ltrb": [
+        768,
+        512,
+        1536,
+        1024
+      ],
+      "native_rgba_rectangle_sha256": "1549fcfeac8f49ccbfca49c2416f37424dc1db76b4dc14fe04430cdffd17ce56",
+      "boundary_core_pixels_alpha_gt128": 0,
+      "boundary_alpha_max": 1,
+      "minimum_core_margin_px": 26,
+      "functional_hold": false,
+      "review": "limited-source-main-face-component-pass"
+    }
+  ],
+  "visual_observations": [
+    "W front map removed; plain vertical backing now correct.",
+    "N map/seat, S plain back retained. E front map also erased unintentionally: retain previously accepted v1 E instead."
+  ],
+  "selection_policy": "Keep accepted v1 N/E/S, select only corrected v2 W; no native atlas repaint/composition.",
+  "native_image_bytes_changed": false,
+  "owner_approved": false,
+  "runtime_ready": false,
+  "exact_numerical_angle_certified": false
+}

@@ -1,0 +1,29 @@
+{
+  "schema": 1,
+  "subject": "golf:range-practice-net",
+  "version": 1,
+  "key": "yaw8N",
+  "source": {
+    "file": "../../batch01/practice-net/upgraded/yaw8-N.png",
+    "sha256": "a98dbbeed3ca71201751132d7bd3b31a9caa38da7d11354826908ff446862806",
+    "width": 627,
+    "height": 627
+  },
+  "cell": 0,
+  "cellRect": {
+    "left": 0,
+    "top": 0,
+    "width": 627,
+    "height": 627
+  },
+  "crop": {
+    "left": 94,
+    "top": 43,
+    "width": 447,
+    "height": 477
+  },
+  "output": "yaw8N.native.png",
+  "sha256": "d6967719c9962eada73625c1ade996a1bd603c3dd8a736e59659dd9adbf9546a",
+  "operation": "native RGBA cell crop only; no flip/repaint/view synthesis",
+  "review": "candidate"
+}

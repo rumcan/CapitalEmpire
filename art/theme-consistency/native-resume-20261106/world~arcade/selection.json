@@ -1,0 +1,183 @@
+{
+  "id": "world~arcade",
+  "selected_utc": "2026-11-06T19:38:45.302372+00:00",
+  "selection": {
+    "corners": "corners-v2.png",
+    "axisturn": "axisturn-v2.png"
+  },
+  "lighting": "late-afternoon daytime",
+  "timeOfDay": "late-afternoon",
+  "sunlight": "upper-right",
+  "shadows": "lower-left",
+  "owner_approved": false,
+  "runtime_integrated": false,
+  "status": "candidate-art-awaiting-owner-review",
+  "historical_rejection": {
+    "sheet": "axisturn-v1.png",
+    "provenance": "axisturn-v1.provenance.json",
+    "reason": "S and W sprites crossed central cell boundaries; raw, prompt and rejection retained."
+  },
+  "validation_note": "All eight native RGBA crops contain true transparent pixels, match compatible output/provenance SHA256, and have clear source-sheet cell boundaries. Crops retain the existing cutter trim threshold.",
+  "crops": [
+    {
+      "view": "NE",
+      "kind": "corners",
+      "version": 2,
+      "path": "NE.native.png",
+      "sha256": "2026f277dbfae8e6a81ed519e29951c85914baecb3a11ce41d040568e421929b",
+      "compatible_path": "D:\\AI\\repaint\\out\\world~arcade\\NE.png",
+      "dimensions": [
+        572,
+        451
+      ],
+      "mode": "RGBA",
+      "transparent_fraction": 0.2753709704929217,
+      "source_cell_margins_px": [
+        5,
+        84,
+        50,
+        92
+      ]
+    },
+    {
+      "view": "SE",
+      "kind": "corners",
+      "version": 2,
+      "path": "SE.native.png",
+      "sha256": "ce927876c23b601c67267ae30e0c177d61656ea32e90440f1721ef7e0ea79ec3",
+      "compatible_path": "D:\\AI\\repaint\\out\\world~arcade\\SE.png",
+      "dimensions": [
+        582,
+        457
+      ],
+      "mode": "RGBA",
+      "transparent_fraction": 0.33246106762315114,
+      "source_cell_margins_px": [
+        22,
+        100,
+        23,
+        70
+      ]
+    },
+    {
+      "view": "SW",
+      "kind": "corners",
+      "version": 2,
+      "path": "SW.native.png",
+      "sha256": "d4b384393a5185cee193b27396b2913446c9fd388049ed181e4ea74865b156e3",
+      "compatible_path": "D:\\AI\\repaint\\out\\world~arcade\\SW.png",
+      "dimensions": [
+        553,
+        473
+      ],
+      "mode": "RGBA",
+      "transparent_fraction": 0.25649063918124854,
+      "source_cell_margins_px": [
+        21,
+        94,
+        53,
+        60
+      ]
+    },
+    {
+      "view": "NW",
+      "kind": "corners",
+      "version": 2,
+      "path": "NW.native.png",
+      "sha256": "039c1c7868068e9e78550b05085c8095a828503eae5e317c05c9435d80c7c2e8",
+      "compatible_path": "D:\\AI\\repaint\\out\\world~arcade\\NW.png",
+      "dimensions": [
+        591,
+        447
+      ],
+      "mode": "RGBA",
+      "transparent_fraction": 0.3158715558129587,
+      "source_cell_margins_px": [
+        17,
+        86,
+        19,
+        94
+      ]
+    },
+    {
+      "view": "N",
+      "kind": "axisturn",
+      "version": 2,
+      "path": "turned/N.native.png",
+      "sha256": "8cf4a86e4673cd4547bf44e70e96f84abae1fcf047d5dc3505c9bd188c0dd6f4",
+      "compatible_path": "D:\\AI\\repaint\\out\\world~arcade\\turned\\N.png",
+      "dimensions": [
+        452,
+        272
+      ],
+      "mode": "RGBA",
+      "transparent_fraction": 0.19556871421134825,
+      "source_cell_margins_px": [
+        77,
+        179,
+        98,
+        176
+      ]
+    },
+    {
+      "view": "E",
+      "kind": "axisturn",
+      "version": 2,
+      "path": "turned/E.native.png",
+      "sha256": "927d4f0cfa8b077b93b4e361fc20972d01eed0a5e8a6ce1727d4a7430f717c2d",
+      "compatible_path": "D:\\AI\\repaint\\out\\world~arcade\\turned\\E.png",
+      "dimensions": [
+        325,
+        412
+      ],
+      "mode": "RGBA",
+      "transparent_fraction": 0.24876026885735625,
+      "source_cell_margins_px": [
+        161,
+        114,
+        141,
+        101
+      ]
+    },
+    {
+      "view": "S",
+      "kind": "axisturn",
+      "version": 2,
+      "path": "turned/S.native.png",
+      "sha256": "fd228ed9fa477ba9b948cc5300c357136bb6a6421808e1fd97271b9418900294",
+      "compatible_path": "D:\\AI\\repaint\\out\\world~arcade\\turned\\S.png",
+      "dimensions": [
+        473,
+        283
+      ],
+      "mode": "RGBA",
+      "transparent_fraction": 0.16486003929507914,
+      "source_cell_margins_px": [
+        97,
+        170,
+        57,
+        174
+      ]
+    },
+    {
+      "view": "W",
+      "kind": "axisturn",
+      "version": 2,
+      "path": "turned/W.native.png",
+      "sha256": "7798e3c388b33ff8b88efb91b9da7385a6018286e28d88d79e94d3f7572b2d5f",
+      "compatible_path": "D:\\AI\\repaint\\out\\world~arcade\\turned\\W.png",
+      "dimensions": [
+        312,
+        326
+      ],
+      "mode": "RGBA",
+      "transparent_fraction": 0.09603586597451629,
+      "source_cell_margins_px": [
+        164,
+        152,
+        151,
+        149
+      ]
+    }
+  ]
+}

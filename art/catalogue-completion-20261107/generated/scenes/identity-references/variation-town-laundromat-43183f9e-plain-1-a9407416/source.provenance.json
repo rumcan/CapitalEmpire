@@ -1,0 +1,62 @@
+{
+  "schema": 1,
+  "createdUtc": "2026-11-07T06:47:45.284562+00:00",
+  "exactRuntimeId": "variation:town-laundromat-43183f9e-plain:1",
+  "source": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/building-views/variation-town-laundromat-43183f9e-plain-1/NE.png",
+  "sourceSha256": "19c78242036dcb5e6fb0c05a37bb57a2b3c0e146a053b29fd3e4c709151068bf",
+  "output": "identity-references/variation-town-laundromat-43183f9e-plain-1-a9407416/source.png",
+  "outputSha256": "19c78242036dcb5e6fb0c05a37bb57a2b3c0e146a053b29fd3e4c709151068bf",
+  "width": 598,
+  "height": 509,
+  "sourceCell": {
+    "kind": "already isolated native PNG; whole file",
+    "rectXYWH": [
+      0,
+      0,
+      598,
+      509
+    ]
+  },
+  "operation": "byte-for-byte PNG copy only; no resize, crop, recolour, key, repaint, registration or source mutation",
+  "selection": "registered corner NE native PNG for this exact subject",
+  "registeredCornerDirection": "NE",
+  "sourceEvidence": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\building-views\\variation-town-laundromat-43183f9e-plain-1\\provenance.json",
+  "sourceReview": {
+    "integrationStatus": "blocked",
+    "integrationReason": "Laundry front views have nearly horizontal front base and compressed side plane, close to a frontal elevation unlike rear corners."
+  },
+  "sourceRegistration": {
+    "id": "variation:town-laundromat-43183f9e-plain:1",
+    "version": "variation-town-laundromat-43183f9e-plain-1-4views-v1",
+    "files": {
+      "NE": "19c78242036dcb5e6fb0c05a37bb57a2b3c0e146a053b29fd3e4c709151068bf",
+      "SE": "e1f223e219538848521492c94840a54fdf077109ec5287b5889a26bc5de902b3",
+      "SW": "cafb8bef9d02074cfaacb29728f00354ec6c6b8a132d79bc9d5f1bebbcb0791d",
+      "NW": "4e13104696f4118528e13915b0a482f1a28d74e1441442d86283e5e3cdf779d7"
+    }
+  },
+  "originalInventorySource": {
+    "library": "src/game/library.ts",
+    "librarySha256": "91b5190292c1005ac7b936f08e5e1ebf3be43c3aae99f92ea510775da83d9726",
+    "atlas": "src/assets/atlas/sprites-11-0.webp",
+    "atlasSha256": "a8946da0d9c9231cd8576b9ebf3662b2c449685064dd3d9af3cf40715c50f4a6",
+    "runtimePage": 11,
+    "localPage": 11,
+    "uv": [
+      0.179688,
+      0.007813,
+      0.361328,
+      0.150879
+    ],
+    "crop": {
+      "left": 368,
+      "top": 16,
+      "width": 372,
+      "height": 293
+    },
+    "native": "art/theme-consistency/exports/buildings/variation-town-laundromat-43183f9e-plain-1.native.png",
+    "nativeSha256": "a540e11817efcfcdea42585c5e72cd070fcc90fd72d7bb83fc3b83fe53360252"
+  },
+  "originalBusinessSourceCell": null,
+  "nativeReferenceApprovalClaimed": false
+}

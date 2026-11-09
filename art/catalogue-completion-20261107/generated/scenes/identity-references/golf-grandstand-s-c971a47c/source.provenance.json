@@ -1,0 +1,71 @@
+{
+  "schema": 1,
+  "createdUtc": "2026-11-07T06:47:45.284562+00:00",
+  "exactRuntimeId": "golf:grandstand-s",
+  "source": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/building-views/golf-grandstand-s/NE.png",
+  "sourceSha256": "405c5d55ed21f07d95a46a34ccc03321861f8e451a5123980114cd3b16afb573",
+  "output": "identity-references/golf-grandstand-s-c971a47c/source.png",
+  "outputSha256": "405c5d55ed21f07d95a46a34ccc03321861f8e451a5123980114cd3b16afb573",
+  "width": 683,
+  "height": 488,
+  "sourceCell": {
+    "kind": "already isolated native PNG; whole file",
+    "rectXYWH": [
+      0,
+      0,
+      683,
+      488
+    ]
+  },
+  "operation": "byte-for-byte PNG copy only; no resize, crop, recolour, key, repaint, registration or source mutation",
+  "selection": "registered corner NE native PNG for this exact subject",
+  "registeredCornerDirection": "NE",
+  "sourceEvidence": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\building-views\\golf-grandstand-s\\provenance.json",
+  "sourceReview": {
+    "integrationStatus": "ready",
+    "integrationReason": "Four physical stand corners and actual magenta transparency reviewed; empty seat blocks, structural rail/stair/supports, fixed upper-right dusk and coherent master materials. Lossless4component extraction preserves every nonzero RGBA pixel, fixes packing without generation.",
+    "integrationReview": {
+      "alpha": "passed",
+      "geometry": "held-for-correction-or-parent-decision",
+      "themeAssessment": "Muted green seats/tarp, grey metal and warm practical stair lamps share master palette; packing held.",
+      "terrainOrCaptionsVisible": false,
+      "gameScaleRegistered": false,
+      "reviewContact": "output/building-priority/mixed-standalone-review-2.png",
+      "correctionBrief": null
+    }
+  },
+  "sourceRegistration": {
+    "id": "golf:grandstand-s",
+    "version": "golf-grandstand-s-4views-v3",
+    "files": {
+      "NE": "405c5d55ed21f07d95a46a34ccc03321861f8e451a5123980114cd3b16afb573",
+      "SE": "b44eeb2194d480265e6d4d558f06a02bb01bbf052534b2e1f7106914aa605d09",
+      "SW": "33514846f256c6772ae575dbdc5d0fd47a88a827981fb55552740df872fd5fb5",
+      "NW": "26e80b0e0f8799bdd6b4e9a1888c6dd8413bdc9f7220cb4e0f2e7c3e8d59decf"
+    }
+  },
+  "originalInventorySource": {
+    "library": "src/game/golf-library.ts",
+    "librarySha256": "f5d0a29bfdd14b84e8f49462ca5b93bd2a8cf914202ae9f1cc857fe6237eca45",
+    "atlas": "src/assets/golf/golf-0.webp",
+    "atlasSha256": "d648cfc5275d577289b8714b2ff18fcd2d2532ee26a204d08d90659123e821d0",
+    "runtimePage": 22,
+    "localPage": 0,
+    "uv": [
+      0.0078125,
+      0.0078125,
+      0.2509765625,
+      0.19189453125
+    ],
+    "crop": {
+      "left": 16,
+      "top": 16,
+      "width": 498,
+      "height": 377
+    },
+    "native": "art/theme-consistency/exports/buildings/golf-grandstand-s.native.png",
+    "nativeSha256": "85d2b1d4039dc92b1324c90f6708de2290706f3d39c776b0e2f4e129e54f5acc"
+  },
+  "originalBusinessSourceCell": null,
+  "nativeReferenceApprovalClaimed": false
+}

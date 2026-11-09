@@ -1,0 +1,62 @@
+{
+  "schema": 1,
+  "createdUtc": "2026-11-07T06:47:45.284562+00:00",
+  "exactRuntimeId": "variation:ref-building-church-1df07e15-plain:1",
+  "source": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/building-views/variation-ref-building-church-1df07e15-plain-1/NE.png",
+  "sourceSha256": "a5ab3f85f5bf9ece48f6f68b27ea01a1c6c8200d0b3941757a66b05f06eebfd6",
+  "output": "identity-references/variation-ref-building-church-1df07e15-plain-1-99fd885a/source.png",
+  "outputSha256": "a5ab3f85f5bf9ece48f6f68b27ea01a1c6c8200d0b3941757a66b05f06eebfd6",
+  "width": 486,
+  "height": 455,
+  "sourceCell": {
+    "kind": "already isolated native PNG; whole file",
+    "rectXYWH": [
+      0,
+      0,
+      486,
+      455
+    ]
+  },
+  "operation": "byte-for-byte PNG copy only; no resize, crop, recolour, key, repaint, registration or source mutation",
+  "selection": "registered corner NE native PNG for this exact subject",
+  "registeredCornerDirection": "NE",
+  "sourceEvidence": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\building-views\\variation-ref-building-church-1df07e15-plain-1\\provenance.json",
+  "sourceReview": {
+    "integrationStatus": "ready",
+    "integrationReason": "Targeted v2 successfully shows opposite front corner NW (entry/front LEFT, nave sideRIGHT), distinct rear gable views SE/SW; front bell tower/cross and lancet windows follow rigid quarterturns. Complete cross tips, actual alpha/margins pass withoutwarnings; Maple Bean matte redtimber/slate/amber matched."
+  },
+  "sourceRegistration": {
+    "id": "variation:ref-building-church-1df07e15-plain:1",
+    "version": "variation-ref-building-church-1df07e15-plain-1-4views-v2",
+    "files": {
+      "NE": "a5ab3f85f5bf9ece48f6f68b27ea01a1c6c8200d0b3941757a66b05f06eebfd6",
+      "SE": "00ba9e6fd2dca95e9774347081ad585e4c0882491e4bd2e5798d06cedaf8ca4e",
+      "SW": "7cb10026d641e41ad4391a151beaeaa78b64de42a24c0a71983f7aabdfea6bed",
+      "NW": "6e684c4f562cf45b86668c1b67e0b3caf41def22c92a9965ae221107e18ffd87"
+    }
+  },
+  "originalInventorySource": {
+    "library": "src/game/library.ts",
+    "librarySha256": "91b5190292c1005ac7b936f08e5e1ebf3be43c3aae99f92ea510775da83d9726",
+    "atlas": "src/assets/atlas/sprites-4-0.webp",
+    "atlasSha256": "7cb439e61cdd5f48e2c1327386b33c854fa4e1e3e6a58e39ba137e00c48ee2cd",
+    "runtimePage": 4,
+    "localPage": 4,
+    "uv": [
+      0.007813,
+      0.75,
+      0.200195,
+      0.973145
+    ],
+    "crop": {
+      "left": 16,
+      "top": 1536,
+      "width": 394,
+      "height": 457
+    },
+    "native": "art/theme-consistency/exports/buildings/variation-ref-building-church-1df07e15-plain-1.native.png",
+    "nativeSha256": "3b68f8cf44b1807c47bb6e2b1c3152f2b1bcd054a90b0036fecb6945537e812e"
+  },
+  "originalBusinessSourceCell": null,
+  "nativeReferenceApprovalClaimed": false
+}

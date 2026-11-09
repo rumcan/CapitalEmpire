@@ -1,0 +1,93 @@
+{
+  "jobId": "golf-source-02-04-park-bench",
+  "runtimeSubjectId": "newprop:park-bench",
+  "runtimeName": "Park bench",
+  "displayName": "Park bench",
+  "sourceReferencePNG": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-02\\references\\park-bench.source.png",
+  "sourceProvenance": {
+    "id": "newprop:park-bench",
+    "name": "Park bench",
+    "referencePNG": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-02\\references\\park-bench.source.png",
+    "originalSourcePNG": "E:\\Repos\\CapitalEmpire\\All Generated Images\\exec-38f5f6f7-74a5-47ad-8644-7b595e335890.png",
+    "copiedOriginalSheet": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-02\\original-sheets\\exec-38f5f6f7-74a5-47ad-8644-7b595e335890.png",
+    "originalSheetSHA256": "cb1440cc480d50703ec0decdc2a284a059f2a5a20828240edc8c001c759c0c6f",
+    "referenceSHA256": "7f47f7f13847a5858b4feb068973c5ca3523bd2a5043de1a867bf1bcc82dba29",
+    "sourceRectXYWH": [
+      665,
+      96,
+      562,
+      494
+    ],
+    "sourceCell": "top right",
+    "sourceSheetContainsFourDifferentSubjectsNotRotations": true,
+    "sourceCropSize": [
+      562,
+      494
+    ],
+    "cropOperation": "lossless native RGBA crop, no resize, recolour, cleanup or synthesis",
+    "sourceMetadataCutOff": false,
+    "runtimeLibrarySource": "src/game/new-props-library.ts",
+    "runtimeBaseBoxesInTiles": [
+      {
+        "hx": 1,
+        "hy": 1,
+        "dx": 0,
+        "dy": 0
+      }
+    ],
+    "runtimeDisplayPixels": [
+      128,
+      112.51
+    ],
+    "manifestHalfExtentsMetresFirstGuess": [
+      1,
+      1
+    ],
+    "dimensionCaution": "Manifest first-guess dimensions and runtime boxes are not measured native physical dimensions; any new real-object size is a source-design proposal only. No runtime changes.",
+    "visualInspection": "inspected",
+    "visualNotes": "Confirmed bench with attached tall hole-map panel. Name alone understates combined object.",
+    "sourceOnlyNotReleaseProof": true
+  },
+  "sourceDimensions": {
+    "runtimeBaseBoxesInTiles": [
+      {
+        "hx": 1,
+        "hy": 1,
+        "dx": 0,
+        "dy": 0
+      }
+    ],
+    "manifestHalfExtentsMetresFirstGuess": [
+      1,
+      1
+    ],
+    "sourceCropPixels": [
+      562,
+      494
+    ],
+    "newPhysicalDimensionsProposal": "Proposed combined assembly about2.7m wide x0.75m deep x2.0m high; source-design proposal, no claimed runtime seat capacity.",
+    "notRuntimeBalanceOrGeometryChange": true
+  },
+  "functionalBrief": "Actual source is a three-seat timber-slat bench with black cast-metal arms/legs PLUS one tall attached hole-map panel at its model right end. Preserve the bench/map combined assembly and map side. Back has slat backs and panel backing, not another front seating face. No people.",
+  "ordinary1950sRedesignRequired": false,
+  "conditionBrief": "Identity-preserving course furniture with warm wood, black metal and simple map board. Trim excessive gold ornaments; do not omit attached panel.",
+  "visualNotes": "Confirmed bench with attached tall hole-map panel. Name alone understates combined object.",
+  "existingNormalFourReferences": {
+    "candidateCount": 0,
+    "usableCount": 0,
+    "paths": [],
+    "note": "Only one original exact subject is available; original source sheet contains four different props, not four angles."
+  },
+  "existingYaw8Candidates": 0,
+  "historicallyApprovedEightSet": false,
+  "generationPlan": {
+    "normal": "2x2 SE/SW then NW/NE, orthographic30degrees down, equal45degreecorner walls",
+    "yaw8": "2x2 N/E then S/W, each cardinal physically turned8degrees, never square-on",
+    "conditions": "Generate one requested condition consistently through both sheets; source-only variants do not imply runtime upgrades."
+  },
+  "style": "Same painterly game style as style-authority.png, late-afternoon daylight, one sun upper-right, shadows lower-left, transparent background. No people, captions, brands, gridlines or generic ground plates. Functional ramps, buckets, mounting feet and attached panels remain part of their object.",
+  "approvalClaimed": false,
+  "runtimeIntegrated": false,
+  "nativeGeneratedHere": false,
+  "scopeNote": "Exact existing baseline subject only. Eight new view images still require generation and review; no related IDs, aliases or completion are inferred."
+}

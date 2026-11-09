@@ -1,0 +1,38 @@
+{
+  "schema": 1,
+  "createdUtc": "2026-11-07T06:47:45.284562+00:00",
+  "exactRuntimeId": "business:golf-pin-red-equipment",
+  "source": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/src/assets/businesses/capital-v1/png/golf-pin-red-equipment.png",
+  "sourceSha256": "7b2457581797e976d85c44c22d86730d0798183191fd9a224511cbbfccd429df",
+  "output": "identity-references/business-golf-pin-red-equipment-176c1d7f/source.png",
+  "outputSha256": "7b2457581797e976d85c44c22d86730d0798183191fd9a224511cbbfccd429df",
+  "width": 211,
+  "height": 429,
+  "sourceCell": {
+    "kind": "already isolated native PNG; whole file",
+    "rectXYWH": [
+      0,
+      0,
+      211,
+      429
+    ]
+  },
+  "operation": "byte-for-byte PNG copy only; no resize, crop, recolour, key, repaint, registration or source mutation",
+  "selection": "retained exact-ID business source master PNG",
+  "registeredCornerDirection": null,
+  "sourceEvidence": null,
+  "sourceReview": null,
+  "sourceRegistration": null,
+  "originalInventorySource": null,
+  "originalBusinessSourceCell": {
+    "id": "golf-pin-red-equipment",
+    "sourceSheet": "sliced/builtin/golf-equipment.png",
+    "sourceCrop": [
+      257,
+      718,
+      203,
+      421
+    ]
+  },
+  "nativeReferenceApprovalClaimed": false
+}

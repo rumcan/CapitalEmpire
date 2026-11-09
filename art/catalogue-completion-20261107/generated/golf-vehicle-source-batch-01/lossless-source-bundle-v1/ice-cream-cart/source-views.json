@@ -1,0 +1,206 @@
+{
+  "subject": "newprop:ice-cream-cart",
+  "key": "ice-cream-cart",
+  "views": {
+    "normalSE": {
+      "nominalCameraKey": "normalSE",
+      "sourceFile": "art/catalogue-completion-20261107/generated/golf-vehicle-source-batch-01/native/ice-cream-cart/normal-SE-v2.png",
+      "sourceFileSHA256": "f33d7f9e4e47f58a62a3295a88526aedb5950a0f15a1d37ed992f3aae9fef33d",
+      "sourceFrameRectLTRB": [
+        0,
+        0,
+        1254,
+        1254
+      ],
+      "singleViewOverride": true,
+      "rgbaSHA256": "7b6a08dfe7dbf912a13af08a5614cdffd0bf755c06aabb9213536ba6f5747cba",
+      "nativeHeadingDegrees": null,
+      "nativeCameraCertified": false,
+      "runtimeReady": false,
+      "operation": "Whole source PNG byte copy",
+      "file": "ice-cream-cart/normalSE.png",
+      "nativeSize": [
+        1254,
+        1254
+      ],
+      "pngSHA256": "f33d7f9e4e47f58a62a3295a88526aedb5950a0f15a1d37ed992f3aae9fef33d",
+      "sourceRGBAEqual": true,
+      "singleSourcePNGBytesUnchanged": true
+    },
+    "normalSW": {
+      "nominalCameraKey": "normalSW",
+      "sourceFile": "art/catalogue-completion-20261107/generated/golf-vehicle-source-batch-01/native/ice-cream-cart/normal-SW-v2.png",
+      "sourceFileSHA256": "b9618a547aab75ed736897611543174f2cb8d8362b26993f499547e2e6ddb8ef",
+      "sourceFrameRectLTRB": [
+        0,
+        0,
+        1254,
+        1254
+      ],
+      "singleViewOverride": true,
+      "rgbaSHA256": "9f48a21b557b3a2be1713462ab087b44144ec18bad0e3f5f21935298fe044ab9",
+      "nativeHeadingDegrees": null,
+      "nativeCameraCertified": false,
+      "runtimeReady": false,
+      "operation": "Whole source PNG byte copy",
+      "file": "ice-cream-cart/normalSW.png",
+      "nativeSize": [
+        1254,
+        1254
+      ],
+      "pngSHA256": "b9618a547aab75ed736897611543174f2cb8d8362b26993f499547e2e6ddb8ef",
+      "sourceRGBAEqual": true,
+      "singleSourcePNGBytesUnchanged": true
+    },
+    "normalNW": {
+      "nominalCameraKey": "normalNW",
+      "sourceFile": "art/catalogue-completion-20261107/generated/golf-vehicle-source-batch-01/native/ice-cream-cart/normal-NW-v2.png",
+      "sourceFileSHA256": "c45d8ecab2ea805fd7a0d31dab13e208bb7dc7a4148258590c812eb7a6aec676",
+      "sourceFrameRectLTRB": [
+        0,
+        0,
+        1254,
+        1254
+      ],
+      "singleViewOverride": true,
+      "rgbaSHA256": "4eb416afa7b198777f8b65a87d19038b1075d3b63602e50825d6dd564f73a5be",
+      "nativeHeadingDegrees": null,
+      "nativeCameraCertified": false,
+      "runtimeReady": false,
+      "operation": "Whole source PNG byte copy",
+      "file": "ice-cream-cart/normalNW.png",
+      "nativeSize": [
+        1254,
+        1254
+      ],
+      "pngSHA256": "c45d8ecab2ea805fd7a0d31dab13e208bb7dc7a4148258590c812eb7a6aec676",
+      "sourceRGBAEqual": true,
+      "singleSourcePNGBytesUnchanged": true
+    },
+    "normalNE": {
+      "nominalCameraKey": "normalNE",
+      "sourceFile": "art/catalogue-completion-20261107/generated/golf-vehicle-source-batch-01/native/ice-cream-cart/normal-NE-v2.png",
+      "sourceFileSHA256": "c0834956a97a5c6c82c6d3fac864230c1a41b80d60f1a6d0284a33a8d0ea6bed",
+      "sourceFrameRectLTRB": [
+        0,
+        0,
+        1254,
+        1254
+      ],
+      "singleViewOverride": true,
+      "rgbaSHA256": "2474af5e6e1be26be62e7111a3ac21d809d7d1393b6f4db52f04350eee3870ac",
+      "nativeHeadingDegrees": null,
+      "nativeCameraCertified": false,
+      "runtimeReady": false,
+      "operation": "Whole source PNG byte copy",
+      "file": "ice-cream-cart/normalNE.png",
+      "nativeSize": [
+        1254,
+        1254
+      ],
+      "pngSHA256": "c0834956a97a5c6c82c6d3fac864230c1a41b80d60f1a6d0284a33a8d0ea6bed",
+      "sourceRGBAEqual": true,
+      "singleSourcePNGBytesUnchanged": true
+    },
+    "yaw8N": {
+      "nominalCameraKey": "yaw8N",
+      "sourceFile": "art/catalogue-completion-20261107/generated/golf-vehicle-source-batch-01/native/ice-cream-cart/yaw8-v1.png",
+      "sourceFileSHA256": "9d47ed8c3bc77801ae9e6fd77c6f90946daf15ff6e418a987d7a7d03b56bdca7",
+      "sourceFrameRectLTRB": [
+        0,
+        0,
+        627,
+        627
+      ],
+      "singleViewOverride": false,
+      "rgbaSHA256": "f3a3b18fdc18959ac88259b5fcab278b11d8194a1bc939522c9600201bb22f01",
+      "file": "ice-cream-cart/yaw8N.png",
+      "nativeSize": [
+        627,
+        627
+      ],
+      "pngSHA256": "1ffaa1ef7cf5da6420853cda0d349ad3475cfb77b156a6f59d6505461ec60583",
+      "sourceRGBAEqual": true,
+      "singleSourcePNGBytesUnchanged": false,
+      "nativeHeadingDegrees": null,
+      "nativeCameraCertified": false,
+      "runtimeReady": false,
+      "operation": "Exact raw integer half-cell crop; native RGBA unchanged"
+    },
+    "yaw8E": {
+      "nominalCameraKey": "yaw8E",
+      "sourceFile": "art/catalogue-completion-20261107/generated/golf-vehicle-source-batch-01/native/ice-cream-cart/yaw8-v1.png",
+      "sourceFileSHA256": "9d47ed8c3bc77801ae9e6fd77c6f90946daf15ff6e418a987d7a7d03b56bdca7",
+      "sourceFrameRectLTRB": [
+        627,
+        0,
+        1254,
+        627
+      ],
+      "singleViewOverride": false,
+      "rgbaSHA256": "acb5a215419f68f7c8d975bb87822a2e88af552bb419417f7f2372bca7b71760",
+      "file": "ice-cream-cart/yaw8E.png",
+      "nativeSize": [
+        627,
+        627
+      ],
+      "pngSHA256": "faaf0eb8634c2090644e453caadd1889b432fe777652aafaac505f9638d46bde",
+      "sourceRGBAEqual": true,
+      "singleSourcePNGBytesUnchanged": false,
+      "nativeHeadingDegrees": null,
+      "nativeCameraCertified": false,
+      "runtimeReady": false,
+      "operation": "Exact raw integer half-cell crop; native RGBA unchanged"
+    },
+    "yaw8S": {
+      "nominalCameraKey": "yaw8S",
+      "sourceFile": "art/catalogue-completion-20261107/generated/golf-vehicle-source-batch-01/native/ice-cream-cart/yaw8-v1.png",
+      "sourceFileSHA256": "9d47ed8c3bc77801ae9e6fd77c6f90946daf15ff6e418a987d7a7d03b56bdca7",
+      "sourceFrameRectLTRB": [
+        0,
+        627,
+        627,
+        1254
+      ],
+      "singleViewOverride": false,
+      "rgbaSHA256": "3e42bc4cc02a517403ab250885b5ca492672b2ca6730e647032253456102e173",
+      "file": "ice-cream-cart/yaw8S.png",
+      "nativeSize": [
+        627,
+        627
+      ],
+      "pngSHA256": "a946ffc16249496d00e4daeee9119432bc69067ed0daa3603a42520d3bee624d",
+      "sourceRGBAEqual": true,
+      "singleSourcePNGBytesUnchanged": false,
+      "nativeHeadingDegrees": null,
+      "nativeCameraCertified": false,
+      "runtimeReady": false,
+      "operation": "Exact raw integer half-cell crop; native RGBA unchanged"
+    },
+    "yaw8W": {
+      "nominalCameraKey": "yaw8W",
+      "sourceFile": "art/catalogue-completion-20261107/generated/golf-vehicle-source-batch-01/native/ice-cream-cart/yaw8-v1.png",
+      "sourceFileSHA256": "9d47ed8c3bc77801ae9e6fd77c6f90946daf15ff6e418a987d7a7d03b56bdca7",
+      "sourceFrameRectLTRB": [
+        627,
+        627,
+        1254,
+        1254
+      ],
+      "singleViewOverride": false,
+      "rgbaSHA256": "bf6997696d8848f0b4595641d40dbf54fbbdf1c04982e2bc144ffe2479965259",
+      "file": "ice-cream-cart/yaw8W.png",
+      "nativeSize": [
+        627,
+        627
+      ],
+      "pngSHA256": "54dad4d1809f5ed6a24cb9a8a13902925a4a9409331d6bcb47b6ae012856c64b",
+      "sourceRGBAEqual": true,
+      "singleSourcePNGBytesUnchanged": false,
+      "nativeHeadingDegrees": null,
+      "nativeCameraCertified": false,
+      "runtimeReady": false,
+      "operation": "Exact raw integer half-cell crop; native RGBA unchanged"
+    }
+  }
+}

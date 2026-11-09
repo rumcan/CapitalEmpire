@@ -1,0 +1,29 @@
+{
+  "schema": 1,
+  "subject": "golf:event-info-will-call-booth",
+  "version": 1,
+  "key": "yaw8N",
+  "source": {
+    "file": "../../batch01/info-will-call-booth/budget/yaw8-N.png",
+    "sha256": "6e5a0f3a2651c17b39b2a63784bfd75e905dc365bedb6feb38409c8ddfc794d2",
+    "width": 627,
+    "height": 627
+  },
+  "cell": 0,
+  "cellRect": {
+    "left": 0,
+    "top": 0,
+    "width": 627,
+    "height": 627
+  },
+  "crop": {
+    "left": 72,
+    "top": 47,
+    "width": 539,
+    "height": 536
+  },
+  "output": "yaw8N.native.png",
+  "sha256": "588ae4da0a7fd84b2e6464affa859c027d9d15593bcc8f3dd1e1879b9b46a342",
+  "operation": "native RGBA cell crop only; no flip/repaint/view synthesis",
+  "review": "candidate"
+}

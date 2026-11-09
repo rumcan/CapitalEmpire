@@ -1,0 +1,105 @@
+{
+  "schema": 1,
+  "as_of_utc": "2026-11-07T10:41:06.254838+00:00",
+  "review_result": "PASS-source-identity-direction-alpha;camera-measurement-pending",
+  "source": {
+    "path": "generated/vehicles/golf-player-cart/cardinal-v1.png",
+    "sha256": "8ba8796301702ac5b40e6dace1cc74eece9801e0f3eba229e3abbf87c4a43e5e",
+    "bytes": 1716168
+  },
+  "source_original_hash_matches_parent_batch": true,
+  "dimensions": [
+    1261,
+    1247
+  ],
+  "zero_alpha_fraction": 0.4785149704254525,
+  "outer_border_alpha_p50p95max": [
+    0.0,
+    0.0,
+    1.0
+  ],
+  "empty_center_gutter_alpha_p50p95max": [
+    0.0,
+    0.0,
+    4.0
+  ],
+  "actual_cells": [
+    {
+      "cell": 0,
+      "reference_rect_ltrb": [
+        0,
+        0,
+        608,
+        623
+      ],
+      "boundary_core_pixels": 0,
+      "minimum_core_margin_px": 6,
+      "boundary_alpha_max": 7,
+      "rgba_rectangle_sha256": "533c03885213acbf78f4951e804927466eedde732c349d0ac34cea0a9ec5f99f",
+      "actual_screen_nose": "down"
+    },
+    {
+      "cell": 1,
+      "reference_rect_ltrb": [
+        608,
+        0,
+        1261,
+        623
+      ],
+      "boundary_core_pixels": 0,
+      "minimum_core_margin_px": 2,
+      "boundary_alpha_max": 8,
+      "rgba_rectangle_sha256": "36c7f88cee0124c29700cfa7503fa3b407e2b262a17399ba74c8c6f183d183d2",
+      "actual_screen_nose": "right"
+    },
+    {
+      "cell": 2,
+      "reference_rect_ltrb": [
+        0,
+        623,
+        570,
+        1247
+      ],
+      "boundary_core_pixels": 0,
+      "minimum_core_margin_px": 27,
+      "boundary_alpha_max": 4,
+      "rgba_rectangle_sha256": "3797b5c9882629d18582dc22958a02d978fb33763ae508ef59bdf14bd092761c",
+      "actual_screen_nose": "up"
+    },
+    {
+      "cell": 3,
+      "reference_rect_ltrb": [
+        570,
+        623,
+        1261,
+        1247
+      ],
+      "boundary_core_pixels": 0,
+      "minimum_core_margin_px": 3,
+      "boundary_alpha_max": 6,
+      "rgba_rectangle_sha256": "f32fb7e7d6c1452f099967eaa094d5abf25b0240eaab9a7e4942402bd52d2618",
+      "actual_screen_nose": "left"
+    }
+  ],
+  "all_cells_clear_core_boundaries": true,
+  "all_pixels_partitioned": true,
+  "native_source_crops_performed": false,
+  "notes": [
+    "All four correct screen-cardinal directions; real rear bag holders and single passenger bench coherent.",
+    "Side profiles still need fixed30degree elevation calibration; sourcecandidate does not certify camera angle."
+  ],
+  "owner_approved": false,
+  "runtime_ready": false,
+  "exact8_certified": false,
+  "pixels_modified": false,
+  "exact_prompt": {
+    "path": "generated/vehicles/golf-player-cart/cardinal-v1.prompt.txt",
+    "sha256": "e273589fac92df84c7e90fc8a90e867c2de9f8c84bfa2202cbd74f6dd3c63fa6",
+    "bytes": 991
+  },
+  "parent_provenance": {
+    "path": "generated/vehicles/golf-player-cart/cardinal-v1.provenance.json",
+    "sha256": "545b8259a74fb8d96c8f7c3f32150f13f1c374bac993300ea6156ed6bbf0b6dc",
+    "bytes": 1624
+  }
+}

@@ -1,0 +1,174 @@
+{
+  "schema": 1,
+  "as_of_utc": "2026-11-07T12:22:07.194839+00:00",
+  "review_result": "PASS-source-candidate-front-rear-function-alpha",
+  "recommended_continue_yaw_source_generation": true,
+  "continuation_scope": "Sourceidentity/function/alpha only; not final8direction, owner/release, numericalangle or runtime approval.",
+  "source": {
+    "path": "generated/golf-source-batch-01/native/golf-source-01-08-hole-scoreboard/budget-normal-v1.png",
+    "sha256": "cc834765e5f2fb9cecbd6953e0306d4640f7723251e636edecb28af3f2b66bb2",
+    "bytes": 2008698
+  },
+  "condition": "budget",
+  "runtime_target_proposal": {
+    "eventTypeId": "holeBoard",
+    "eventName": "Hole scoreboard",
+    "currentSpriteSubjectId": "poi:fishing-board",
+    "newArtSubjectProposal": "golf:event-hole-scoreboard",
+    "newArtSubjectAlreadyRegistered": false,
+    "eventCatalogueSource": "src/game/golf/tents.ts",
+    "standInMappingSource": "src/game/golf/structure-art.ts",
+    "footprintTiles": {
+      "width": 1,
+      "depth": 1
+    },
+    "footprintMetres": {
+      "width": 2,
+      "depth": 2
+    },
+    "dimensionsMeaning": "Exact current event placement plot, not measured source sprite architecture. New design must fit plot; no runtime geometry changed."
+  },
+  "source_original_hash_matches_parent_provenance": true,
+  "parent_provenance": {
+    "path": "generated/golf-source-batch-01/native/golf-source-01-08-hole-scoreboard/budget-normal-v1.provenance.json",
+    "sha256": "81fef3cc7a15ed0d5115f27657d3c3b5238069372f7aa9cfe0d0bfb201226feb",
+    "bytes": 3570
+  },
+  "parent_archive": {
+    "path": "generated/golf-source-batch-01/native/golf-source-01-08-hole-scoreboard/budget-normal-v1.archive.json",
+    "sha256": "ea1ce83ab6bbc62057f5dc2d02d9a0dbc6ef48a2b31050aa7fac6448878d4ccb",
+    "bytes": 3642
+  },
+  "actual_prompt_from_provenance_utf8_sha256": "57f0932c1ae099f2a8b617fd42db0c660ffb846bed1340f1990b6c20c595df93",
+  "actual_generation_references": [
+    {
+      "path": "generated/old-clubhouse-1950/normal-v5.png",
+      "sha256": "a996fb471f351cc35926c84090192a8b55cc3557bb1bf9fec24872218fa219a6",
+      "bytes": 1473832
+    },
+    {
+      "path": "generated/golf-source-batch-01/references/golf-leaderboard.source.png",
+      "sha256": "b93efb59577a2b0180c789d5230fef8acef5a7b08371b5e80510342f5f3fc85f",
+      "bytes": 1658702
+    }
+  ],
+  "dimensions": [
+    1254,
+    1254
+  ],
+  "mode": "RGBA",
+  "zero_alpha_fraction": 0.4908808559022611,
+  "outer_border_alpha_p95max": [
+    1.0,
+    2.0
+  ],
+  "center_gutter_alpha_p95max": [
+    1.0,
+    2.0
+  ],
+  "horizontal_clear_cut_row": 627,
+  "all_four_native_core_silhouettes_complete": true,
+  "four_distinct_core_pixel_hashes": true,
+  "cells": [
+    {
+      "cell": 0,
+      "function_corner": "front+left",
+      "proposed_lossless_rect_ltrb": [
+        0,
+        0,
+        627,
+        627
+      ],
+      "core_bbox_ltrb": [
+        73,
+        12,
+        538,
+        611
+      ],
+      "minimum_core_margin_px": 12,
+      "boundary_core_pixels_alpha_gt128": 0,
+      "boundary_alpha_max": 2,
+      "native_rgba_rectangle_sha256": "bf64e46f8ef50bb4a232d2b7b893a9bb718d4efbf729e4829507201fd1f34f40",
+      "trimmed_core_pixel_hash_ignore_alpha_le128": "520c9f46f0e44444c816c976d714093d1d59e73252dd444a479c19a0d887c87f"
+    },
+    {
+      "cell": 1,
+      "function_corner": "rear+left",
+      "proposed_lossless_rect_ltrb": [
+        627,
+        0,
+        1254,
+        627
+      ],
+      "core_bbox_ltrb": [
+        143,
+        21,
+        568,
+        619
+      ],
+      "minimum_core_margin_px": 8,
+      "boundary_core_pixels_alpha_gt128": 0,
+      "boundary_alpha_max": 1,
+      "native_rgba_rectangle_sha256": "c2fdcfd3fb6662b99eb478cddc4270c7e0e273be9c539095477bf24f05df7d87",
+      "trimmed_core_pixel_hash_ignore_alpha_le128": "f8bfc046fbf4cfbabdbbeba42119259eb7f64be7d4d5b949085d68f324098d76"
+    },
+    {
+      "cell": 2,
+      "function_corner": "rear+right",
+      "proposed_lossless_rect_ltrb": [
+        0,
+        627,
+        627,
+        1254
+      ],
+      "core_bbox_ltrb": [
+        55,
+        16,
+        521,
+        616
+      ],
+      "minimum_core_margin_px": 11,
+      "boundary_core_pixels_alpha_gt128": 0,
+      "boundary_alpha_max": 2,
+      "native_rgba_rectangle_sha256": "0c595decf08ab3c2512a4d6082e15770e71fa3314258af8e6b7ea1f52c626900",
+      "trimmed_core_pixel_hash_ignore_alpha_le128": "6e74e62fdc6910d8889de6781959a0b93e7984042be78224b60f83bdd6020ac0"
+    },
+    {
+      "cell": 3,
+      "function_corner": "front+right",
+      "proposed_lossless_rect_ltrb": [
+        627,
+        627,
+        1254,
+        1254
+      ],
+      "core_bbox_ltrb": [
+        136,
+        23,
+        579,
+        603
+      ],
+      "minimum_core_margin_px": 23,
+      "boundary_core_pixels_alpha_gt128": 0,
+      "boundary_alpha_max": 1,
+      "native_rgba_rectangle_sha256": "74bb7bdf09a26d01fc5b9f92a581ff759f7f6394bc8a23157e245d69401dc498",
+      "trimmed_core_pixel_hash_ignore_alpha_le128": "06fe81d26d62dec309919e7de1ee42460c28344f241894a1b349afa76d788df8"
+    }
+  ],
+  "mesh_alpha_samples": null,
+  "visual_observations": [
+    "TL/BR scoring slat face,TR/BL plain rear slat backs/diagonal braces; four distinct corners.",
+    "Two uprights and rear supports remain functional; no baked course-map or duplicate scoringface onrear."
+  ],
+  "exact_numerical_angle_certified": false,
+  "release_anchors_authored": false,
+  "owner_approved": false,
+  "runtime_ready": false,
+  "runtime_imported": false,
+  "source_crops_or_pixel_changes": false,
+  "exact_prompt_file": {
+    "path": "generated/golf-source-batch-01/native/golf-source-01-08-hole-scoreboard/budget-normal-v1.prompt.txt",
+    "sha256": "1e8db539a66809274ac6c95f4f6108c60f537b06e616b8661379fd34bae39b75",
+    "bytes": 1985
+  }
+}

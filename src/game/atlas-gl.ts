@@ -69,6 +69,12 @@ export class AtlasGL {
     const fmt = o.source.format, maxLayers = gl.getParameter(gl.MAX_ARRAY_TEXTURE_LAYERS) as number;
     // the budget is GAME-PLAN's in compressed bytes; an RGBA8 fallback keeps the same cells resident at 4x the bytes
     const plan = planAtlas({ pages: o.pages, size: o.size, levels: o.levels, bpp: fmt.bpp, budget: (o.budget ?? atlasBudget(o.dpr)) * fmt.bpp, finest: o.finest, maxLayers });
+    if (plan.pages > maxLayers || plan.lowBytes > plan.budget) {
+      o.source.dispose?.();
+      throw new Error(plan.pages > maxLayers
+        ? `Atlas has ${plan.pages} pages but this GPU permits ${maxLayers} texture-array layers. Pack approved sprites into shared pages before importing more art.`
+        : `Atlas coarse pages require ${Math.ceil(plan.lowBytes / 1048576)} MiB, above the ${Math.floor(plan.budget / 1048576)} MiB atlas budget. Pack approved sprites into shared pages.`);
+    }
     const a = new AtlasGL(gl, o.source, plan);
     if (o.keep !== undefined) a.keepLevels = o.keep;
     await a.loadLow();

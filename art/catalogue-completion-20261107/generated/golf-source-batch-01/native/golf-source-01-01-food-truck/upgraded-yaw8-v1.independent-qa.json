@@ -1,0 +1,120 @@
+{
+  "schema": 1,
+  "as_of_utc": "2026-11-07T13:44:57.344915+00:00",
+  "review_result": "PASS-source-candidate-four-distinct-main-faces-alpha",
+  "source": {
+    "path": "generated/golf-source-batch-01/native/golf-source-01-01-food-truck/upgraded-yaw8-v1.png",
+    "sha256": "49ee11decee85f6f1f6b7b692af819da65fa5cdb4456ca000705d93fc8204d71",
+    "bytes": 1206966
+  },
+  "mode": "RGBA",
+  "dimensions": [
+    1254,
+    1254
+  ],
+  "source_original_hash_matches_parent": true,
+  "parent_provenance": {
+    "path": "generated/golf-source-batch-01/native/golf-source-01-01-food-truck/upgraded-yaw8-v1.provenance.json",
+    "sha256": "29a074dc1ae2ee7fdc4675684725646a4232d6bdb303e366193779bb85232bdc",
+    "bytes": 3174
+  },
+  "exact_prompt_utf8_sha256": "9e585cfcf6293881fa82b2e3bf5d4dda3a7e6b644f66516e0cd49141a05144ed",
+  "actual_generation_references": [
+    {
+      "path": "generated/golf-source-batch-01/native/golf-source-01-01-food-truck/budget-yaw8-v1.png",
+      "sha256": "f8168a6621f6c6f57ae41304f3970b33085a07432224ba8f3ece5a5a66565c6c",
+      "bytes": 1493948
+    },
+    {
+      "path": "generated/golf-source-batch-01/native/golf-source-01-01-food-truck/upgraded-normal-v1.png",
+      "sha256": "d2788a4b9b94ca357b3bc5d01fd1c32b54cf78faef9383521a3b2b276b0430e3",
+      "bytes": 1406497
+    }
+  ],
+  "four_actual_main_faces_visually_verified": true,
+  "zero_alpha_fraction": 0.6069515349923308,
+  "outer_4px_border_alpha_p50p95max": [
+    0.0,
+    0.0,
+    1.0
+  ],
+  "clear_horizontal_cut_y": 627,
+  "clear_vertical_cut_by_row": [
+    658,
+    660
+  ],
+  "cut_alpha_maxima": {
+    "horizontal": 1,
+    "vertical_top": 2,
+    "vertical_bottom": 1
+  },
+  "cells": [
+    {
+      "cell": "TL",
+      "actual_visible_main_face": "serving side; nose screen-left",
+      "reference_rect_ltrb": [
+        0,
+        0,
+        658,
+        627
+      ],
+      "minimum_core_margin_px": 1,
+      "boundary_core_pixels_alpha_gt128": 0,
+      "boundary_alpha_max": 24,
+      "native_rgba_rectangle_sha256": "2673e0948a9606350ea1f8c2b3ab1e4847c66f4cb0e9fad2c64c31fb3a36f1f3"
+    },
+    {
+      "cell": "TR",
+      "actual_visible_main_face": "cab front",
+      "reference_rect_ltrb": [
+        658,
+        0,
+        1254,
+        627
+      ],
+      "minimum_core_margin_px": 82,
+      "boundary_core_pixels_alpha_gt128": 0,
+      "boundary_alpha_max": 2,
+      "native_rgba_rectangle_sha256": "faaf7ee74985053318480b56b7b6ba6de10ab5f1380e6864c445790633654ea6"
+    },
+    {
+      "cell": "BL",
+      "actual_visible_main_face": "plain vented side; nose screen-right",
+      "reference_rect_ltrb": [
+        0,
+        627,
+        660,
+        1254
+      ],
+      "minimum_core_margin_px": 1,
+      "boundary_core_pixels_alpha_gt128": 0,
+      "boundary_alpha_max": 38,
+      "native_rgba_rectangle_sha256": "a6a29b6e7128d4eca5de05127bf9341a494fe4d6aaea7de528804878e5a709f6"
+    },
+    {
+      "cell": "BR",
+      "actual_visible_main_face": "rear service door",
+      "reference_rect_ltrb": [
+        660,
+        627,
+        1254,
+        1254
+      ],
+      "minimum_core_margin_px": 70,
+      "boundary_core_pixels_alpha_gt128": 0,
+      "boundary_alpha_max": 1,
+      "native_rgba_rectangle_sha256": "c00a5a6e2b383fa1b45bd44c78c1fbcb35a5da71b9d5b8440b538049afae07aa"
+    }
+  ],
+  "all_cores_complete_at_reference_cuts": true,
+  "visual_observations": [
+    "Serving hatch/counter on one long side, vent on opposite side, cab and rear door distinct. Roof extraction near same rear portion. Food truck exceeds nominal center cut; gutter-aware cut used."
+  ],
+  "pixel_hash_uniqueness_is_not_pose_proof": true,
+  "native_image_bytes_changed": false,
+  "source_crops_saved": false,
+  "owner_approved": false,
+  "runtime_ready": false,
+  "exact_numerical_angle_certified": false,
+  "limits": "Limited source visual face/state/alpha review; labels are main faces, not measured native camera angles. No release or exact 8 degree certification."
+}

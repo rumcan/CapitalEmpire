@@ -1,0 +1,93 @@
+{
+  "jobId": "golf-source-02-05-water-tank-stall",
+  "runtimeSubjectId": "newprop:water-tank-stall",
+  "runtimeName": "Water tank stall",
+  "displayName": "Water tank stall",
+  "sourceReferencePNG": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-02\\references\\water-tank-stall.source.png",
+  "sourceProvenance": {
+    "id": "newprop:water-tank-stall",
+    "name": "Water tank stall",
+    "referencePNG": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-02\\references\\water-tank-stall.source.png",
+    "originalSourcePNG": "E:\\Repos\\CapitalEmpire\\All Generated Images\\exec-460492fe-afcf-4a00-9c35-66d88ced8501.png",
+    "copiedOriginalSheet": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-02\\original-sheets\\exec-460492fe-afcf-4a00-9c35-66d88ced8501.png",
+    "originalSheetSHA256": "cd5cc17e639f6a0dc65e703f567c681d5b05b3910841090744961f0738251b4d",
+    "referenceSHA256": "6a61327dfe20364214768682655d10804bf937fae1d1e4d5dceaabaa15fb7c49",
+    "sourceRectXYWH": [
+      710,
+      683,
+      507,
+      516
+    ],
+    "sourceCell": "bottom right",
+    "sourceSheetContainsFourDifferentSubjectsNotRotations": true,
+    "sourceCropSize": [
+      507,
+      516
+    ],
+    "cropOperation": "lossless native RGBA crop, no resize, recolour, cleanup or synthesis",
+    "sourceMetadataCutOff": false,
+    "runtimeLibrarySource": "src/game/new-props-library.ts",
+    "runtimeBaseBoxesInTiles": [
+      {
+        "hx": 2,
+        "hy": 2,
+        "dx": 0,
+        "dy": 0
+      }
+    ],
+    "runtimeDisplayPixels": [
+      256,
+      260.54
+    ],
+    "manifestHalfExtentsMetresFirstGuess": [
+      2,
+      2
+    ],
+    "dimensionCaution": "Manifest first-guess dimensions and runtime boxes are not measured native physical dimensions; any new real-object size is a source-design proposal only. No runtime changes.",
+    "visualInspection": "inspected",
+    "visualNotes": "Confirmed modern white IBC tank/cage on wood/rope stand under blue tarp, two taps/trough. Requires ordinary1950sredesign.",
+    "sourceOnlyNotReleaseProof": true
+  },
+  "sourceDimensions": {
+    "runtimeBaseBoxesInTiles": [
+      {
+        "hx": 2,
+        "hy": 2,
+        "dx": 0,
+        "dy": 0
+      }
+    ],
+    "manifestHalfExtentsMetresFirstGuess": [
+      2,
+      2
+    ],
+    "sourceCropPixels": [
+      507,
+      516
+    ],
+    "newPhysicalDimensionsProposal": "Proposed station1.6m wide x1.0m deep x1.7m high; source-design proposal, potable status not asserted.",
+    "notRuntimeBalanceOrGeometryChange": true
+  },
+  "functionalBrief": "Actual source has a large water tank, two front taps, front metal wash/drip trough and bucket below. Redesign as ordinary1950scourse water station: galvanized rectangular cistern on a bolted practical steel/timber stand, two taps, one drip trough, rear fill cap. Keep tank/plumbing roles; remove blue plastic tarp, ropes and modern IBC cage.",
+  "ordinary1950sRedesignRequired": true,
+  "conditionBrief": "Ordinary1950sbudget redesign required. Worn working cistern for budget; clean painted metal tank and tidy plumbing for upgraded; no makeshift goblin hut.",
+  "visualNotes": "Confirmed modern white IBC tank/cage on wood/rope stand under blue tarp, two taps/trough. Requires ordinary1950sredesign.",
+  "existingNormalFourReferences": {
+    "candidateCount": 0,
+    "usableCount": 0,
+    "paths": [],
+    "note": "Only one original exact subject is available; original source sheet contains four different props, not four angles."
+  },
+  "existingYaw8Candidates": 0,
+  "historicallyApprovedEightSet": false,
+  "generationPlan": {
+    "normal": "2x2 SE/SW then NW/NE, orthographic30degrees down, equal45degreecorner walls",
+    "yaw8": "2x2 N/E then S/W, each cardinal physically turned8degrees, never square-on",
+    "conditions": "Generate one requested condition consistently through both sheets; source-only variants do not imply runtime upgrades."
+  },
+  "style": "Same painterly game style as style-authority.png, late-afternoon daylight, one sun upper-right, shadows lower-left, transparent background. No people, captions, brands, gridlines or generic ground plates. Functional ramps, buckets, mounting feet and attached panels remain part of their object.",
+  "approvalClaimed": false,
+  "runtimeIntegrated": false,
+  "nativeGeneratedHere": false,
+  "scopeNote": "Exact existing baseline subject only. Eight new view images still require generation and review; no related IDs, aliases or completion are inferred."
+}

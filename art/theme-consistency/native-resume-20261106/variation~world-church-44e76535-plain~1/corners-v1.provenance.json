@@ -1,0 +1,271 @@
+{
+  "id": "variation~world-church-44e76535-plain~1",
+  "kind": "corners",
+  "version": 1,
+  "generator": "native imagegen",
+  "imported_utc": "2026-11-06T19:09:27.847755+00:00",
+  "source": {
+    "path": "C:\\Users\\RAMPAGE\\.codex\\generated_images\\01a1b1fd-39ec-7220-8f11-86e4448833ea\\exec-5810b17e-3f62-4eb8-b78c-96a66f9096cd.png",
+    "sha256": "c43bf05d25a783f5d9902d21adbcd0f416872c054ef0358edd366b042c1082b8",
+    "bytes": 1485987
+  },
+  "raw": {
+    "path": "E:\\Repos\\CapitalEmpire\\.claude\\worktrees\\art-repaint-20261106\\art\\theme-consistency\\native-resume-20261106\\variation~world-church-44e76535-plain~1\\corners-v1.png",
+    "sha256": "c43bf05d25a783f5d9902d21adbcd0f416872c054ef0358edd366b042c1082b8",
+    "bytes": 1485987
+  },
+  "exact_prompt": {
+    "path": "E:\\Repos\\CapitalEmpire\\.claude\\worktrees\\art-repaint-20261106\\art\\theme-consistency\\native-resume-20261106\\variation~world-church-44e76535-plain~1\\corners-v1.prompt.txt",
+    "sha256": "a2703b887c193b99179d8a1e083832dfcea6c8abc5da65b6d584532ccc0fb32d",
+    "bytes": 1818
+  },
+  "queue": {
+    "path": "D:\\AI\\chatgpt-bridge\\queue-resume-corners-20261106.json",
+    "sha256": "be220aa1862ea65077a5b6cdbf5a823d5cd27b0f02d9721b2f4bd8af35321c5d",
+    "bytes": 12104
+  },
+  "references": [
+    {
+      "path": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\theme-consistency\\exports\\buildings\\variation-world-church-44e76535-plain-1.native.png",
+      "sha256": "5f5bdea8bddfb19f80bf7ceff27d09437454c99d44ea548b6c4b1193112a4d21",
+      "bytes": 215873
+    },
+    {
+      "path": "D:\\AI\\chatgpt-bridge\\guides\\variation~world-church-44e76535-plain~1-corners.png",
+      "sha256": "39f1ab230e68ff69874dbbf32785d265cca6dc1295e8e05809160e01b1fc513c",
+      "bytes": 420424
+    }
+  ],
+  "original_queue_references": [
+    {
+      "path": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\theme-consistency\\exports\\buildings\\variation-world-church-44e76535-plain-1.native.png",
+      "sha256": "5f5bdea8bddfb19f80bf7ceff27d09437454c99d44ea548b6c4b1193112a4d21",
+      "bytes": 215873
+    },
+    {
+      "path": "D:\\AI\\chatgpt-bridge\\guides\\variation~world-church-44e76535-plain~1-corners.png",
+      "sha256": "39f1ab230e68ff69874dbbf32785d265cca6dc1295e8e05809160e01b1fc513c",
+      "bytes": 420424
+    }
+  ],
+  "cell_order": [
+    [
+      "SE",
+      "SW"
+    ],
+    [
+      "NW",
+      "NE"
+    ]
+  ],
+  "validation": {
+    "mode": "RGBA",
+    "dimensions": [
+      1254,
+      1254
+    ],
+    "split_x": 627,
+    "split_y": 627,
+    "cells": [
+      {
+        "view": "SE",
+        "cell_box": [
+          0,
+          0,
+          627,
+          627
+        ],
+        "subject_bbox": [
+          81,
+          68,
+          545,
+          550
+        ],
+        "transparent_fraction": 0.6290886706399171,
+        "margins_px": [
+          81,
+          68,
+          82,
+          77
+        ]
+      },
+      {
+        "view": "SW",
+        "cell_box": [
+          627,
+          0,
+          1254,
+          627
+        ],
+        "subject_bbox": [
+          88,
+          29,
+          554,
+          591
+        ],
+        "transparent_fraction": 0.6608492377820003,
+        "margins_px": [
+          88,
+          29,
+          73,
+          36
+        ]
+      },
+      {
+        "view": "NW",
+        "cell_box": [
+          0,
+          627,
+          627,
+          1254
+        ],
+        "subject_bbox": [
+          87,
+          35,
+          547,
+          588
+        ],
+        "transparent_fraction": 0.6439743697361426,
+        "margins_px": [
+          87,
+          35,
+          80,
+          39
+        ]
+      },
+      {
+        "view": "NE",
+        "cell_box": [
+          627,
+          627,
+          1254,
+          1254
+        ],
+        "subject_bbox": [
+          73,
+          83,
+          565,
+          552
+        ],
+        "transparent_fraction": 0.6142334958753997,
+        "margins_px": [
+          73,
+          83,
+          62,
+          75
+        ]
+      }
+    ],
+    "cell_differences": [
+      {
+        "views": [
+          "SE",
+          "SW"
+        ],
+        "mean_rgb_difference": 32.530517578125
+      },
+      {
+        "views": [
+          "SE",
+          "NW"
+        ],
+        "mean_rgb_difference": 36.3037109375
+      },
+      {
+        "views": [
+          "SE",
+          "NE"
+        ],
+        "mean_rgb_difference": 38.92724609375
+      },
+      {
+        "views": [
+          "SW",
+          "NW"
+        ],
+        "mean_rgb_difference": 31.660400390625
+      },
+      {
+        "views": [
+          "SW",
+          "NE"
+        ],
+        "mean_rgb_difference": 38.110595703125
+      },
+      {
+        "views": [
+          "NW",
+          "NE"
+        ],
+        "mean_rgb_difference": 38.533528645833336
+      }
+    ],
+    "errors": [],
+    "warnings": [],
+    "visual_review": "Required: automatic checks cannot approve style, geometry, lighting, or fidelity."
+  },
+  "status": "imported-awaiting-visual-review",
+  "owner_approved": false,
+  "runtime_integrated": false,
+  "all_generated_views": false,
+  "compatible_NE": "original export, intentionally retained by sheets.py",
+  "cutter": {
+    "path": "D:\\AI\\chatgpt-bridge\\sheets.py",
+    "sha256": "eb40b531f94e59aa94412009307414a4a8f4dab5668786dcb077b9d0349852d9",
+    "bytes": 4578
+  },
+  "crops": [
+    {
+      "view": "SE",
+      "compatible": {
+        "path": "D:\\AI\\repaint\\out\\variation~world-church-44e76535-plain~1\\SE.png",
+        "sha256": "551dba46b4c516c22c755f844f9708b3e56d3fd44f861be47160a33ddc4aa461",
+        "bytes": 337608
+      },
+      "project_copy": {
+        "path": "E:\\Repos\\CapitalEmpire\\.claude\\worktrees\\art-repaint-20261106\\art\\theme-consistency\\native-resume-20261106\\variation~world-church-44e76535-plain~1\\SE.native.png",
+        "sha256": "551dba46b4c516c22c755f844f9708b3e56d3fd44f861be47160a33ddc4aa461",
+        "bytes": 337608
+      }
+    },
+    {
+      "view": "SW",
+      "compatible": {
+        "path": "D:\\AI\\repaint\\out\\variation~world-church-44e76535-plain~1\\SW.png",
+        "sha256": "68979e3c031abcdd74e471bf2eb831ff9c17f0503554898f88d2928c3ccae954",
+        "bytes": 319984
+      },
+      "project_copy": {
+        "path": "E:\\Repos\\CapitalEmpire\\.claude\\worktrees\\art-repaint-20261106\\art\\theme-consistency\\native-resume-20261106\\variation~world-church-44e76535-plain~1\\SW.native.png",
+        "sha256": "68979e3c031abcdd74e471bf2eb831ff9c17f0503554898f88d2928c3ccae954",
+        "bytes": 319984
+      }
+    },
+    {
+      "view": "NW",
+      "compatible": {
+        "path": "D:\\AI\\repaint\\out\\variation~world-church-44e76535-plain~1\\NW.png",
+        "sha256": "466881192044ed235f9914aba60aeaba6eec1d3febb014170466713595216d94",
+        "bytes": 323630
+      },
+      "project_copy": {
+        "path": "E:\\Repos\\CapitalEmpire\\.claude\\worktrees\\art-repaint-20261106\\art\\theme-consistency\\native-resume-20261106\\variation~world-church-44e76535-plain~1\\NW.native.png",
+        "sha256": "466881192044ed235f9914aba60aeaba6eec1d3febb014170466713595216d94",
+        "bytes": 323630
+      }
+    },
+    {
+      "view": "NE",
+      "compatible": {
+        "path": "D:\\AI\\repaint\\out\\variation~world-church-44e76535-plain~1\\NE.png",
+        "sha256": "5f5bdea8bddfb19f80bf7ceff27d09437454c99d44ea548b6c4b1193112a4d21",
+        "bytes": 215873
+      },
+      "project_copy": {
+        "path": "E:\\Repos\\CapitalEmpire\\.claude\\worktrees\\art-repaint-20261106\\art\\theme-consistency\\native-resume-20261106\\variation~world-church-44e76535-plain~1\\NE.native.png",
+        "sha256": "5f5bdea8bddfb19f80bf7ceff27d09437454c99d44ea548b6c4b1193112a4d21",
+        "bytes": 215873
+      }
+    }
+  ]
+}

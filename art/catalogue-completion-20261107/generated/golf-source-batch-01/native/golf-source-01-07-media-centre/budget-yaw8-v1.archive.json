@@ -1,0 +1,42 @@
+[
+  {
+    "key": "golf-source-01-07-media-centre",
+    "condition": "budget",
+    "runtimeTarget": {
+      "eventTypeId": "media",
+      "eventName": "Media centre",
+      "currentSpriteSubjectId": "business:golf-clubhouse",
+      "newArtSubjectProposal": "golf:event-media-centre",
+      "newArtSubjectAlreadyRegistered": false,
+      "eventCatalogueSource": "src/game/golf/tents.ts",
+      "standInMappingSource": "src/game/golf/structure-art.ts",
+      "footprintTiles": {
+        "width": 12,
+        "depth": 8
+      },
+      "footprintMetres": {
+        "width": 24,
+        "depth": 16
+      },
+      "dimensionsMeaning": "Exact current event placement plot, not measured source sprite architecture. New design must fit plot; no runtime geometry changed.",
+      "currentSpriteBaseBoxesInTiles": [
+        {
+          "hx": 1,
+          "hy": 1,
+          "dx": 0,
+          "dy": 0
+        }
+      ]
+    },
+    "source": "C:/Users/RAMPAGE/.codex/generated_images/01a1b1fd-39ec-7220-8f11-86e4448833ea/exec-623a1b28-2781-4f1f-b032-9ae815a1f61f.png",
+    "target": "generated/golf-source-batch-01/native/golf-source-01-07-media-centre/budget-yaw8-v1.png",
+    "prompt": "Create the missing FOUR near-cardinal views of the EXACT SAME budget golf item in reference1, not a redesign. Reference1 supplies its fixed physical identity, materials and normal corners. Functional design: A24x16m low single-storey modular press centre: plain joined prefab units under one shallow gabled/corrugated roof, double central front entrance, three window groups on each side of the entrance, rear service door, two rear vents and two small roof antenna masts. Practical press-work building, not grand clubhouse or tiny microphone shack. No media staff/vehicles baked in. Four distinct2x2 main faces in order N E / S W: N central double entrance/six window groups; E left end windows; S rear staff door/two vents; W right end windows. Same single object rotated by quarter turns, each viewed8degrees off its cardinal, orthographic30degreesDOWN. Near-cardinal means subtlysloping main bases and a NARROWsecondaryside, not broad45degreecorners and not square-on elevation. Keep all attachments/roof/doors/windows/reels/pockets/handle locations fixed; reconstruct actual rear faces without pasting frontfeatures onto the back. Match reference1's detailed hand-painted miniature material style and budget condition exactly. Late-afternoon DAYTIME sun fixed SCREEN UPPER RIGHT/shadows LOWER LEFT in all cells, lamps/screens OFF. Four complete separate equallyscaled opaque sprites, truly zero-alpha transparentbackground/gutters, generousmargins. Meshopenings stay transparent where applicable. No people/plants/groundplate/road/terrain, scenehaze, labels/text/grid/UI.",
+    "references": [
+      "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/golf-source-batch-01/native/golf-source-01-07-media-centre/budget-normal-v1.png"
+    ],
+    "status": "native yaw4 candidate; source identity/alpha/actual main faces/camera review pending",
+    "runtime_imported": false,
+    "sha256": "5f5832f76e24c381c1e25b22d43a70f8fc17485e4897e0f47f28078d9f715b97",
+    "native_bytes_preserved": true
+  }
+]

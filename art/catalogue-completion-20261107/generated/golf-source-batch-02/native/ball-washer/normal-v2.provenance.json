@@ -1,0 +1,22 @@
+{
+  "key": "newprop:ball-washer",
+  "slug": "ball-washer",
+  "family": "normal",
+  "version": 2,
+  "condition": "base",
+  "target": "generated/golf-source-batch-02/native/ball-washer/normal-v2.png",
+  "refs": [
+    "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-02\\fixed-world-guides-v1\\ball-washer\\guides\\normal-world-v1.png",
+    "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/golf-source-batch-02/native/ball-washer/normal-v1.png"
+  ],
+  "prompt": "Paint FOUR real corner views of the one fixed physical golf prop in REFERENCE1 as finished game art, matching material identity and detailed painterly miniature style of REFERENCE2. Reference1 is the projected geometry/side/occlusion/camera authority. Reference2 supplies material texture/color only; its earlier duplicate cameras and state mistakes must NOT be copied. Fixed object: Lid OPEN70degrees in every view; one ball in opening; crank on physical+XRIGHT; towel on physical-XLEFT. No state changes or mirroring.. Preserve exactly the guide's four quarterturns SE SW / NW NE, orthographic30degreesDOWN,45degreecorners, equal physical scale. Source assembly identity: One dark-green pedestal ball washer with round base, cylindrical brush cup, hinged lid, ball opening, wooden-grip hand crank on model right and white towel hanging model left. Keep lid/crank/towel on those same physical sides across8views; no person. . Ordinary practical golf equipment, no inventedornament. Keep ALL apparatus on fixed physical sides while the whole object rotates; true rear and opposite corner views, never repeat a front corner. Late-afternoon DAYTIME sun SCREEN UPPER RIGHT, shadowsLOWERLEFT,lampsOFF. Four complete separatedsprites with broad zeroalpha transparent margins/gutters, no haze/white/grey background, no groundtile, plants, people, UI/captions/grid. Retain functional mesh/holes/ball/brass/castmetal textures.",
+  "source": "C:/Users/RAMPAGE/.codex/generated_images/01a1b1fd-39ec-7220-8f11-86e4448833ea/exec-d3e1faca-d419-43b7-834e-cd816c291fe8.png",
+  "references": [
+    "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-02\\fixed-world-guides-v1\\ball-washer\\guides\\normal-world-v1.png",
+    "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/golf-source-batch-02/native/ball-washer/normal-v1.png"
+  ],
+  "status": "native-source-candidate-pending-visual-review",
+  "runtime_imported": false,
+  "sha256": "cd8d39dbb650303dd4e705561625566c2ff55fb415ecbb95f90fb86f025ed9aa",
+  "native_bytes_preserved": true
+}

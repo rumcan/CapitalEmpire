@@ -1,0 +1,116 @@
+{
+  "schema": 1,
+  "as_of_utc": "2026-11-07T10:55:47.829167+00:00",
+  "review_result": "PASS-near-right-and-fixed-bag-corrections;HOLD-exact8-geometry",
+  "source": {
+    "path": "generated/vehicles/golf-player-cart/yaw8-v2.png",
+    "sha256": "d5e8de91baefde8ffdb9abaa1026c542c5c42b9b2398199ef57edc5635e4078b",
+    "bytes": 1673213
+  },
+  "source_original_hash_matches_parent_batch": true,
+  "dimensions": [
+    1261,
+    1247
+  ],
+  "mode": "RGBA",
+  "is_opaque_scene": false,
+  "zero_alpha_fraction": 0.5076583483150998,
+  "outer_border_alpha_p50p95max": [
+    0.0,
+    0.0,
+    1.0
+  ],
+  "empty_center_gutter_alpha_p50p95max": [
+    0.0,
+    1.0,
+    1.0
+  ],
+  "cells": [
+    {
+      "cell": 0,
+      "reference_rect_ltrb": [
+        0,
+        0,
+        601,
+        623
+      ],
+      "rgba_rectangle_sha256": "886f8618626264c1d8b79d8bccf081514c44e022a5dc9bf1476d0badc3195f6e",
+      "core_boundary_pixels": 0,
+      "minimum_core_margin_px": 17,
+      "actual_screen_nose": "almost down"
+    },
+    {
+      "cell": 1,
+      "reference_rect_ltrb": [
+        601,
+        0,
+        1261,
+        623
+      ],
+      "rgba_rectangle_sha256": "5f997a3b5d806dbc4c0f3c5122a7a9a57f766abd018d02332be06c3738166017",
+      "core_boundary_pixels": 0,
+      "minimum_core_margin_px": 3,
+      "actual_screen_nose": "almost right"
+    },
+    {
+      "cell": 2,
+      "reference_rect_ltrb": [
+        0,
+        623,
+        580,
+        1247
+      ],
+      "rgba_rectangle_sha256": "f8fa7f69f2db973dcc4fcca2558506aace1900b0104d8814a6c841c10aef1e45",
+      "core_boundary_pixels": 0,
+      "minimum_core_margin_px": 15,
+      "actual_screen_nose": "almost up"
+    },
+    {
+      "cell": 3,
+      "reference_rect_ltrb": [
+        580,
+        623,
+        1261,
+        1247
+      ],
+      "rgba_rectangle_sha256": "08578f0fa5bec68518e9afbc20c9129f03aa107908921919cb55a601fb6b653a",
+      "core_boundary_pixels": 0,
+      "minimum_core_margin_px": 2,
+      "actual_screen_nose": "almost left"
+    }
+  ],
+  "all_pixels_partitioned": true,
+  "reference_cut_columns_by_row": [
+    [
+      0,
+      601,
+      1261
+    ],
+    [
+      0,
+      580,
+      1261
+    ]
+  ],
+  "notes": [
+    "Top-right now genuinely points nearRIGHT; bottom-right nearLEFT. Main four directions present.",
+    "Rear lower-left bag colours now brownLEFT/blueRIGHT, consistent with fixed blue/brown physical identities when viewed from rear. Single passenger bench/no extra rear bench.",
+    "Exact8 yaw and uniform30degree pitch remain independently unverified."
+  ],
+  "source_crops_performed": false,
+  "no_vehicle_or_house_sprite_crops": true,
+  "no_original_pixels_modified": true,
+  "owner_approved": false,
+  "runtime_ready": false,
+  "exact8_certified": false,
+  "exact_prompt": {
+    "path": "generated/vehicles/golf-player-cart/yaw8-v2.prompt.txt",
+    "sha256": "5b44f8b3de3f68d526a35bb3e417d1ac761f46f455e514af773ff793c8eae6f1",
+    "bytes": 1137
+  },
+  "parent_provenance": {
+    "path": "generated/vehicles/golf-player-cart/yaw8-v2.provenance.json",
+    "sha256": "8c7e3efbdfe26c1a8237cb10fa1c9e61e341d27b597d097f6867d19b1848fa93",
+    "bytes": 1916
+  }
+}

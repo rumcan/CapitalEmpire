@@ -1,0 +1,113 @@
+{
+  "schema": 1,
+  "as_of_utc": "2026-11-07T10:47:07.417014+00:00",
+  "review_result": "HOLD-exact-yaw8-geometry;main-face-identity-and-alpha-pass",
+  "source": {
+    "path": "generated/budget-1950-shanty-shed/yaw8-v1.png",
+    "sha256": "59cdde1f61b47fe0c43b3f9e80bac7dcdab8bb1e37e430398d01ac855e0a52ec",
+    "bytes": 1334949
+  },
+  "source_original_hash_matches_parent_batch": true,
+  "dimensions": [
+    1254,
+    1254
+  ],
+  "mode": "RGBA",
+  "references": [
+    {
+      "path": "generated/budget-1950-shanty-shed/guides/yaw8-world-v1.png",
+      "sha256": "403c22bb230addde5282aa6b54591fcfdee72d7c2d0868807296f9fd3cdf5173",
+      "bytes": 26659
+    },
+    {
+      "path": "generated/budget-1950-shanty-shed/normal-v1.png",
+      "sha256": "44a22033fd772071e4a4325c93633638b9d29f47f651d3676b9ce46bacebe382",
+      "bytes": 1579157
+    }
+  ],
+  "source_core_clipping": false,
+  "outer_border_alpha_p50p95max": [
+    0.0,
+    0.0,
+    1.0
+  ],
+  "empty_center_gutter_alpha_p50p95max": [
+    0.0,
+    0.0,
+    1.0
+  ],
+  "zero_alpha_fraction": 0.6562896657331309,
+  "cells": [
+    {
+      "guide_cell_label_only": "N",
+      "rect_ltrb": [
+        0,
+        0,
+        627,
+        627
+      ],
+      "native_core_margin_pixels": 80,
+      "boundary_core_pixels": 0,
+      "boundary_alpha_max": 1,
+      "rgba_rectangle_sha256": "1f1932c5c981d41c8d37883f2c7cd9b693fb177b9624f6b4f48fd551b7dc0dc3"
+    },
+    {
+      "guide_cell_label_only": "E",
+      "rect_ltrb": [
+        627,
+        0,
+        1254,
+        627
+      ],
+      "native_core_margin_pixels": 100,
+      "boundary_core_pixels": 0,
+      "boundary_alpha_max": 1,
+      "rgba_rectangle_sha256": "231427539a6974718035839fe8fc09d9ef6ef2a3d696701ec2df6ab63c13cf7c"
+    },
+    {
+      "guide_cell_label_only": "S",
+      "rect_ltrb": [
+        0,
+        627,
+        627,
+        1254
+      ],
+      "native_core_margin_pixels": 84,
+      "boundary_core_pixels": 0,
+      "boundary_alpha_max": 1,
+      "rgba_rectangle_sha256": "e22d7a07754b24fe6aeed06c992c412ca4db70830ffc2b17bb47c15c18f3b6a6"
+    },
+    {
+      "guide_cell_label_only": "W",
+      "rect_ltrb": [
+        627,
+        627,
+        1254,
+        1254
+      ],
+      "native_core_margin_pixels": 83,
+      "boundary_core_pixels": 0,
+      "boundary_alpha_max": 1,
+      "rgba_rectangle_sha256": "66619e99a09424b6b48aaedbb97a16fcb5c7a245f21d656c7a5899b2612f5767"
+    }
+  ],
+  "notes": [
+    "All four principal wall identities present and consistent with normal source. Ordinary1950s cladding/corrugatedroof/paint remains coherent.",
+    "Direct native foundation-edge slopes recorded in audit/cabin-native-yaw-baseline-measurements-v1.json; not an8degree proof inferred from technical guide.",
+    "BR windowed gable view incorrectly reveals FRONT green door/tool doors on right sliver; exact guide wants REAR sliver. Side camera/yaw sign differs from authority; correct opening visibility in native generation."
+  ],
+  "exact8_certified": false,
+  "owner_approved": false,
+  "runtime_ready": false,
+  "no_native_pixel_changes_or_source_crops": true,
+  "exact_prompt": {
+    "path": "generated/budget-1950-shanty-shed/yaw8-v1.prompt.txt",
+    "sha256": "8f67262e4ac7d0d6c830e7d7e0a59ed9ba1df5b6fbf57bb87943e186b52d9168",
+    "bytes": 1398
+  },
+  "parent_provenance": {
+    "path": "generated/budget-1950-shanty-shed/yaw8-v1.provenance.json",
+    "sha256": "f6c19995a3ea33dbb1e9df2fc0513ad40900f0b6b9272a3e0e0fdb25f1d268c5",
+    "bytes": 2210
+  }
+}

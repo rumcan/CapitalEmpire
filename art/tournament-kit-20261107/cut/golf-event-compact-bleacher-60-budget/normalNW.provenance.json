@@ -1,0 +1,29 @@
+{
+  "schema": 1,
+  "subject": "golf:event-compact-bleacher-60-budget",
+  "version": 1,
+  "key": "normalNW",
+  "source": {
+    "file": "../../bleachers/budget/normal-v1.png",
+    "sha256": "9165087afbc70b2f962a57d03817b9682f53efe532cb25499e58bb796f7fb99b",
+    "width": 1254,
+    "height": 1254
+  },
+  "cell": 2,
+  "cellRect": {
+    "left": 0,
+    "top": 627,
+    "width": 627,
+    "height": 627
+  },
+  "crop": {
+    "left": 102,
+    "top": 176,
+    "width": 419,
+    "height": 275
+  },
+  "output": "normalNW.native.png",
+  "sha256": "11cb8ddd1a889f0b8a81f806bf2a3e44f958df32b651c2ac372d7346384d24ce",
+  "operation": "native RGBA cell crop only; no flip/repaint/view synthesis",
+  "review": "candidate"
+}

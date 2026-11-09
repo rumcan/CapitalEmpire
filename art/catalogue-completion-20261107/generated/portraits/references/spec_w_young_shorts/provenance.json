@@ -1,0 +1,33 @@
+{
+  "look_id": "spectator:spec_w_young_shorts",
+  "actual_runtime_look": {
+    "id": "spectator:spec_w_young_shorts",
+    "w": 80,
+    "h": 130,
+    "ax": 40,
+    "ay": 125,
+    "m": 1.68,
+    "seat": 0.69
+  },
+  "animation_files_changed": false,
+  "resized": false,
+  "repainted": false,
+  "source_style_changed": false,
+  "method": "original-pics-native-PNG-copy",
+  "source": {
+    "path": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\spectators\\pics\\spec_w_young_shorts.png",
+    "sha256": "0920decabd108d9ada2563b454a2be48ea741d3ee4ea8fd149fcad82d7241ed9",
+    "bytes": 931064
+  },
+  "primary_reference": {
+    "path": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\portraits\\references\\spec_w_young_shorts\\identity-source.png",
+    "sha256": "0920decabd108d9ada2563b454a2be48ea741d3ee4ea8fd149fcad82d7241ed9",
+    "bytes": 931064
+  },
+  "dimensions": [
+    848,
+    1264
+  ],
+  "mode": "RGB",
+  "crop_records": []
+}

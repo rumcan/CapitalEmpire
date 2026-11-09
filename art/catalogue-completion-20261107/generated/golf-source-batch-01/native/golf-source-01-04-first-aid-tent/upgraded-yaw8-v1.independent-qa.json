@@ -1,0 +1,120 @@
+{
+  "schema": 1,
+  "as_of_utc": "2026-11-07T13:44:57.522558+00:00",
+  "review_result": "PASS-source-candidate-four-distinct-main-faces-alpha",
+  "source": {
+    "path": "generated/golf-source-batch-01/native/golf-source-01-04-first-aid-tent/upgraded-yaw8-v1.png",
+    "sha256": "a16f44816f281c07d30dc1c9b969e87d9397df22f7a97dd531d6e87b3cb78cfa",
+    "bytes": 1344183
+  },
+  "mode": "RGBA",
+  "dimensions": [
+    1254,
+    1254
+  ],
+  "source_original_hash_matches_parent": true,
+  "parent_provenance": {
+    "path": "generated/golf-source-batch-01/native/golf-source-01-04-first-aid-tent/upgraded-yaw8-v1.provenance.json",
+    "sha256": "a36bdc3d7e55449b196b31ecdab01f55c6229b6cdaa8d014e374e7cf89d1d0e7",
+    "bytes": 3048
+  },
+  "exact_prompt_utf8_sha256": "7f4a63646eb5f83a34883a9f21c3bcafeef455a331f7b455096363901398807c",
+  "actual_generation_references": [
+    {
+      "path": "generated/golf-source-batch-01/native/golf-source-01-04-first-aid-tent/budget-yaw8-v1.png",
+      "sha256": "2521ec8adb9ac12ccb3651694a463d7775d12160325e15cc81766ebae8122844",
+      "bytes": 1581750
+    },
+    {
+      "path": "generated/golf-source-batch-01/native/golf-source-01-04-first-aid-tent/upgraded-normal-v1.png",
+      "sha256": "9a1921bbd0b0fed62e43cb515010c497b1da952f0fb502446fab8c765288f1cb",
+      "bytes": 1526955
+    }
+  ],
+  "four_actual_main_faces_visually_verified": true,
+  "zero_alpha_fraction": 0.5541813247051223,
+  "outer_4px_border_alpha_p50p95max": [
+    0.0,
+    0.0,
+    1.0
+  ],
+  "clear_horizontal_cut_y": 627,
+  "clear_vertical_cut_by_row": [
+    627,
+    627
+  ],
+  "cut_alpha_maxima": {
+    "horizontal": 1,
+    "vertical_top": 0,
+    "vertical_bottom": 0
+  },
+  "cells": [
+    {
+      "cell": "TL",
+      "actual_visible_main_face": "open treatment entrance",
+      "reference_rect_ltrb": [
+        0,
+        0,
+        627,
+        627
+      ],
+      "minimum_core_margin_px": 76,
+      "boundary_core_pixels_alpha_gt128": 0,
+      "boundary_alpha_max": 1,
+      "native_rgba_rectangle_sha256": "77ec672c03fcd1ccdd0df6a64b58daffdae26691a2b3a53b1542ee9b983d767f"
+    },
+    {
+      "cell": "TR",
+      "actual_visible_main_face": "two-vent side A; entrance sliver right",
+      "reference_rect_ltrb": [
+        627,
+        0,
+        1254,
+        627
+      ],
+      "minimum_core_margin_px": 47,
+      "boundary_core_pixels_alpha_gt128": 0,
+      "boundary_alpha_max": 1,
+      "native_rgba_rectangle_sha256": "507ee7be0c523fb89ae09ade17d2b4bcf3b77247c72597b525f5e7a42ce55b77"
+    },
+    {
+      "cell": "BL",
+      "actual_visible_main_face": "closed rear flap",
+      "reference_rect_ltrb": [
+        0,
+        627,
+        627,
+        1254
+      ],
+      "minimum_core_margin_px": 48,
+      "boundary_core_pixels_alpha_gt128": 0,
+      "boundary_alpha_max": 1,
+      "native_rgba_rectangle_sha256": "3b895c79e24b31ac60669eb35951961423bad6fdd3b3222edf9688e8e58ca7cb"
+    },
+    {
+      "cell": "BR",
+      "actual_visible_main_face": "two-vent side B; entrance sliver left",
+      "reference_rect_ltrb": [
+        627,
+        627,
+        1254,
+        1254
+      ],
+      "minimum_core_margin_px": 65,
+      "boundary_core_pixels_alpha_gt128": 0,
+      "boundary_alpha_max": 1,
+      "native_rgba_rectangle_sha256": "9120544d43512a3224b1a9770e2de326ad57758afa06446a8b35d1c6f5cb0cfd"
+    }
+  ],
+  "all_cores_complete_at_reference_cuts": true,
+  "visual_observations": [
+    "Open front and closed rear distinct; two vent windows on each long side; entrance slivers on opposite physical ends. One treatment cot/cabinet remain inside."
+  ],
+  "pixel_hash_uniqueness_is_not_pose_proof": true,
+  "native_image_bytes_changed": false,
+  "source_crops_saved": false,
+  "owner_approved": false,
+  "runtime_ready": false,
+  "exact_numerical_angle_certified": false,
+  "limits": "Limited source visual face/state/alpha review; labels are main faces, not measured native camera angles. No release or exact 8 degree certification."
+}

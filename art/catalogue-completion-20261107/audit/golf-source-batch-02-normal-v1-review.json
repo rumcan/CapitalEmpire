@@ -1,0 +1,143 @@
+{
+  "schema": 1,
+  "as_of_utc": "2026-11-07T13:26:24.560621+00:00",
+  "sources_reviewed": 12,
+  "records": [
+    {
+      "key": "ball-bucket-stand",
+      "source": "generated/golf-source-batch-02/native/ball-bucket-stand/normal-v1.png",
+      "review_result": "HOLD-repeated-front-corner",
+      "continue_yaw_candidate": false,
+      "four_actual_corners_visually_verified": false,
+      "outer_alpha_max": 1.0,
+      "zero_alpha_fraction": 0.5568153201620842,
+      "core_boundaries_clear": true,
+      "qa": "generated/golf-source-batch-02/native/ball-bucket-stand/normal-v1.independent-qa.json"
+    },
+    {
+      "key": "ball-dispenser",
+      "source": "generated/golf-source-batch-02/native/ball-dispenser/normal-v1.png",
+      "review_result": "HOLD-repeated-front-corner",
+      "continue_yaw_candidate": false,
+      "four_actual_corners_visually_verified": false,
+      "outer_alpha_max": 1.0,
+      "zero_alpha_fraction": 0.619451248826721,
+      "core_boundaries_clear": true,
+      "qa": "generated/golf-source-batch-02/native/ball-dispenser/normal-v1.independent-qa.json"
+    },
+    {
+      "key": "ball-washer",
+      "source": "generated/golf-source-batch-02/native/ball-washer/normal-v1.png",
+      "review_result": "HOLD-lid-state-changes",
+      "continue_yaw_candidate": false,
+      "four_actual_corners_visually_verified": false,
+      "outer_alpha_max": 1.0,
+      "zero_alpha_fraction": 0.6772306291319135,
+      "core_boundaries_clear": true,
+      "qa": "generated/golf-source-batch-02/native/ball-washer/normal-v1.independent-qa.json"
+    },
+    {
+      "key": "course-map-board",
+      "source": "generated/golf-source-batch-02/native/course-map-board/normal-v1.png",
+      "review_result": "PASS-source-candidate-main-faces-and-alpha",
+      "continue_yaw_candidate": true,
+      "four_actual_corners_visually_verified": true,
+      "outer_alpha_max": 1.0,
+      "zero_alpha_fraction": 0.5461864934919581,
+      "core_boundaries_clear": true,
+      "qa": "generated/golf-source-batch-02/native/course-map-board/normal-v1.independent-qa.json"
+    },
+    {
+      "key": "direction-signpost",
+      "source": "generated/golf-source-batch-02/native/direction-signpost/normal-v1.png",
+      "review_result": "CONDITIONAL-source-identity-alpha;HOLD-arrow-plane-rotation-proof",
+      "continue_yaw_candidate": true,
+      "four_actual_corners_visually_verified": null,
+      "outer_alpha_max": 1.0,
+      "zero_alpha_fraction": 0.743629953526705,
+      "core_boundaries_clear": true,
+      "qa": "generated/golf-source-batch-02/native/direction-signpost/normal-v1.independent-qa.json"
+    },
+    {
+      "key": "gold-tee-markers",
+      "source": "generated/golf-source-batch-02/native/gold-tee-markers/normal-v1.png",
+      "review_result": "LIMITED-PASS-pair-identity-alpha;rotation-symmetry",
+      "continue_yaw_candidate": true,
+      "four_actual_corners_visually_verified": null,
+      "outer_alpha_max": 1.0,
+      "zero_alpha_fraction": 0.6286556066838112,
+      "core_boundaries_clear": true,
+      "qa": "generated/golf-source-batch-02/native/gold-tee-markers/normal-v1.independent-qa.json"
+    },
+    {
+      "key": "hole-12-sign",
+      "source": "generated/golf-source-batch-02/native/hole-12-sign/normal-v1.png",
+      "review_result": "HOLD-repeated-front-corner",
+      "continue_yaw_candidate": false,
+      "four_actual_corners_visually_verified": false,
+      "outer_alpha_max": 1.0,
+      "zero_alpha_fraction": 0.6423807452515586,
+      "core_boundaries_clear": true,
+      "qa": "generated/golf-source-batch-02/native/hole-12-sign/normal-v1.independent-qa.json"
+    },
+    {
+      "key": "park-bench",
+      "source": "generated/golf-source-batch-02/native/park-bench/normal-v1.png",
+      "review_result": "HOLD-repeated-front-and-rear-corner-pairs",
+      "continue_yaw_candidate": false,
+      "four_actual_corners_visually_verified": false,
+      "outer_alpha_max": 1.0,
+      "zero_alpha_fraction": 0.622239137789377,
+      "core_boundaries_clear": true,
+      "qa": "generated/golf-source-batch-02/native/park-bench/normal-v1.independent-qa.json"
+    },
+    {
+      "key": "rope-barrier",
+      "source": "generated/golf-source-batch-02/native/rope-barrier/normal-v1.png",
+      "review_result": "LIMITED-PASS-count-identity-alpha;rotation-symmetry",
+      "continue_yaw_candidate": true,
+      "four_actual_corners_visually_verified": null,
+      "outer_alpha_max": 1.0,
+      "zero_alpha_fraction": 0.7805535841924661,
+      "core_boundaries_clear": true,
+      "qa": "generated/golf-source-batch-02/native/rope-barrier/normal-v1.independent-qa.json"
+    },
+    {
+      "key": "rope-barrier-corner",
+      "source": "generated/golf-source-batch-02/native/rope-barrier-corner/normal-v1.png",
+      "review_result": "HOLD-real-alpha-haze-and-repeated-L-layouts",
+      "continue_yaw_candidate": false,
+      "four_actual_corners_visually_verified": false,
+      "outer_alpha_max": 53.0,
+      "zero_alpha_fraction": 0.0,
+      "core_boundaries_clear": true,
+      "qa": "generated/golf-source-batch-02/native/rope-barrier-corner/normal-v1.independent-qa.json"
+    },
+    {
+      "key": "rope-walkway",
+      "source": "generated/golf-source-batch-02/native/rope-walkway/normal-v1.png",
+      "review_result": "HOLD-inconsistent-corner-camera-and-gate-pose-review",
+      "continue_yaw_candidate": false,
+      "four_actual_corners_visually_verified": false,
+      "outer_alpha_max": 3.0,
+      "zero_alpha_fraction": 0.30181378122702723,
+      "core_boundaries_clear": true,
+      "qa": "generated/golf-source-batch-02/native/rope-walkway/normal-v1.independent-qa.json"
+    },
+    {
+      "key": "water-tank-stall",
+      "source": "generated/golf-source-batch-02/native/water-tank-stall/normal-v1.png",
+      "review_result": "HOLD-invented-hole12-and-map-annex;main-corners-pass",
+      "continue_yaw_candidate": false,
+      "four_actual_corners_visually_verified": true,
+      "outer_alpha_max": 1.0,
+      "zero_alpha_fraction": 0.5594117961279885,
+      "core_boundaries_clear": true,
+      "qa": "generated/golf-source-batch-02/native/water-tank-stall/normal-v1.independent-qa.json"
+    }
+  ],
+  "native_originals_preserved": true,
+  "no_exact8_certification": true,
+  "no_runtime_tests_build_server_commit": true,
+  "whole_catalogue_complete": false
+}

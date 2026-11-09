@@ -1,0 +1,33 @@
+{
+  "look_id": "spectator:spec_k_boy_cap",
+  "actual_runtime_look": {
+    "id": "spectator:spec_k_boy_cap",
+    "w": 80,
+    "h": 110.5,
+    "ax": 40,
+    "ay": 105.5,
+    "m": 1.38,
+    "seat": 0.34
+  },
+  "animation_files_changed": false,
+  "resized": false,
+  "repainted": false,
+  "source_style_changed": false,
+  "method": "original-pics-native-PNG-copy",
+  "source": {
+    "path": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\spectators\\pics\\spec_k_boy_cap.png",
+    "sha256": "16e8788a95e066f74a0182f5e18351764ca596eadb7c77f67778e514f4fbb2db",
+    "bytes": 1033964
+  },
+  "primary_reference": {
+    "path": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\portraits\\references\\spec_k_boy_cap\\identity-source.png",
+    "sha256": "16e8788a95e066f74a0182f5e18351764ca596eadb7c77f67778e514f4fbb2db",
+    "bytes": 1033964
+  },
+  "dimensions": [
+    848,
+    1264
+  ],
+  "mode": "RGB",
+  "crop_records": []
+}

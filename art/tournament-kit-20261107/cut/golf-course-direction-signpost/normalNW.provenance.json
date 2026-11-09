@@ -1,0 +1,29 @@
+{
+  "schema": 1,
+  "subject": "golf:course-direction-signpost",
+  "version": 1,
+  "key": "normalNW",
+  "source": {
+    "file": "../../batch02/direction-signpost/normal-NW.png",
+    "sha256": "bbef66ab53d51fe63501482b612c77183d2d96c956a1bd0f23603b36336029ba",
+    "width": 627,
+    "height": 627
+  },
+  "cell": 0,
+  "cellRect": {
+    "left": 0,
+    "top": 0,
+    "width": 627,
+    "height": 627
+  },
+  "crop": {
+    "left": 152,
+    "top": 3,
+    "width": 343,
+    "height": 592
+  },
+  "output": "normalNW.native.png",
+  "sha256": "01095d01c84a6e818b219beb3e968b0493c3982adf2de17b2d979290969725c7",
+  "operation": "native RGBA cell crop only; no flip/repaint/view synthesis",
+  "review": "candidate"
+}

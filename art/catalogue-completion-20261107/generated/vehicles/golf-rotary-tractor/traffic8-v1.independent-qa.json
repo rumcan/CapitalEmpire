@@ -1,0 +1,180 @@
+{
+  "schema": 1,
+  "as_of_utc": "2026-11-07T10:40:24.609723+00:00",
+  "review_result": "HOLD-camera-consistency",
+  "identity_direction_alpha_result": "PASS candidate subject to separate camera hold",
+  "source": {
+    "path": "generated/vehicles/golf-rotary-tractor/traffic8-v1.png",
+    "sha256": "c33b9a97b1f3e4e40538bd8f3577fbf5578e6270a884080f5918aa60b63e377c",
+    "bytes": 1821371
+  },
+  "source_original_hash_matches_parent_batch": true,
+  "dimensions": [
+    1774,
+    887
+  ],
+  "mode": "RGBA",
+  "zero_alpha_fraction": 0.5140911754276033,
+  "outer_border_alpha_p50p95max": [
+    0.0,
+    0.0,
+    2.0
+  ],
+  "empty_center_gutter_alpha_p50p95max": [
+    0.0,
+    1.0,
+    2.0
+  ],
+  "actual_cells": [
+    {
+      "cell": 0,
+      "actual_screen_nose": "lower-left",
+      "reference_rect_ltrb": [
+        0,
+        0,
+        443,
+        443
+      ],
+      "native_core_margin_pixels": 11,
+      "boundary_core_pixels": 0,
+      "boundary_alpha_max": 1,
+      "rgba_rectangle_sha256": "a7ab8de68b2f78da9445d38675ecdae2dbeb646e19d69b31778ff4530d42628f"
+    },
+    {
+      "cell": 1,
+      "actual_screen_nose": "down",
+      "reference_rect_ltrb": [
+        443,
+        0,
+        887,
+        443
+      ],
+      "native_core_margin_pixels": 40,
+      "boundary_core_pixels": 0,
+      "boundary_alpha_max": 1,
+      "rgba_rectangle_sha256": "95668c838aed7feeefcb6c0808822a9c4ead01f20da47fee9e0b3e3dfbaedd03"
+    },
+    {
+      "cell": 2,
+      "actual_screen_nose": "lower-right",
+      "reference_rect_ltrb": [
+        887,
+        0,
+        1330,
+        443
+      ],
+      "native_core_margin_pixels": 11,
+      "boundary_core_pixels": 0,
+      "boundary_alpha_max": 1,
+      "rgba_rectangle_sha256": "f84599f23b010d30347ea47c76ad7b3c29419e7ebef634d346dbf6c1708c7117"
+    },
+    {
+      "cell": 3,
+      "actual_screen_nose": "left",
+      "reference_rect_ltrb": [
+        1330,
+        0,
+        1774,
+        443
+      ],
+      "native_core_margin_pixels": 22,
+      "boundary_core_pixels": 0,
+      "boundary_alpha_max": 1,
+      "rgba_rectangle_sha256": "25a899083da4800d1fb057f4e03be817169c24ab4c957337631213141b43589f"
+    },
+    {
+      "cell": 4,
+      "actual_screen_nose": "upper-right",
+      "reference_rect_ltrb": [
+        0,
+        443,
+        443,
+        887
+      ],
+      "native_core_margin_pixels": 15,
+      "boundary_core_pixels": 0,
+      "boundary_alpha_max": 2,
+      "rgba_rectangle_sha256": "db4173d1ed43171bbf03d32bc77f5df984c0e16ddec8c99c73ddab0ab2aa57eb"
+    },
+    {
+      "cell": 5,
+      "actual_screen_nose": "up",
+      "reference_rect_ltrb": [
+        443,
+        443,
+        887,
+        887
+      ],
+      "native_core_margin_pixels": 46,
+      "boundary_core_pixels": 0,
+      "boundary_alpha_max": 1,
+      "rgba_rectangle_sha256": "28b14fcca089df26d1b1a0e041254ee9da8b94c15a1b4b2de2bbaab5df1185a2"
+    },
+    {
+      "cell": 6,
+      "actual_screen_nose": "upper-left",
+      "reference_rect_ltrb": [
+        887,
+        443,
+        1330,
+        887
+      ],
+      "native_core_margin_pixels": 8,
+      "boundary_core_pixels": 0,
+      "boundary_alpha_max": 1,
+      "rgba_rectangle_sha256": "b52c0a9d7eaa1f1676e3c8a42f4df887b88449171aa48a816bcf594a24810fea"
+    },
+    {
+      "cell": 7,
+      "actual_screen_nose": "right",
+      "reference_rect_ltrb": [
+        1330,
+        443,
+        1774,
+        887
+      ],
+      "native_core_margin_pixels": 23,
+      "boundary_core_pixels": 0,
+      "boundary_alpha_max": 1,
+      "rgba_rectangle_sha256": "2a91baff3e04c91125b025d97295c6f829ebe1fba5a44bba55eb143275054bd5"
+    }
+  ],
+  "all_eight_distinct_nose_directions_present": true,
+  "side_cell_order_is_remappable": true,
+  "native_core_clipped_at_canvas_border": false,
+  "actual_clear_gutter_crops_reference_only": [
+    [
+      0,
+      443,
+      887,
+      1330,
+      1774
+    ],
+    [
+      0,
+      443,
+      887,
+      1330,
+      1774
+    ]
+  ],
+  "source_crops_performed": false,
+  "notes": [
+    "Both side directions exist but col4 is reversed versus prompt. Actual top col4 LEFT; bottom col4 RIGHT. Map source cells; not a missing direction by itself.",
+    "HOLD visually inconsistent elevation: col4 side profiles show nearly level body/roof and near-circular side wheels; diagonal/front/rear cells show substantially more top planes. Need shared fixed30degree camera proof or native correction, not relabelling."
+  ],
+  "camera_measurement_scope": "Visual inconsistency established; exact percell camera degrees not numerically certified. Do not present approximate appearance as an8degree/30degree measured proof.",
+  "owner_approved": false,
+  "runtime_ready": false,
+  "source_only": true,
+  "exact_prompt": {
+    "path": "generated/vehicles/golf-rotary-tractor/traffic8-v1.prompt.txt",
+    "sha256": "3514b309c16a96f16055e30b3d808f990dd4cf4c3a8e2b82d1b69ba18624994c",
+    "bytes": 1952
+  },
+  "parent_provenance": {
+    "path": "generated/vehicles/golf-rotary-tractor/traffic8-v1.provenance.json",
+    "sha256": "b6477b4b392a72c2e95e78a9388a7ada3064a4877d550ecd607f22f7fe1c0d60",
+    "bytes": 2816
+  }
+}

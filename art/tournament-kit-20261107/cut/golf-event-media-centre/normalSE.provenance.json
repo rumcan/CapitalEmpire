@@ -1,0 +1,29 @@
+{
+  "schema": 1,
+  "subject": "golf:event-media-centre",
+  "version": 1,
+  "key": "normalSE",
+  "source": {
+    "file": "../../batch01/media-centre/budget/normal-SE.png",
+    "sha256": "1ae6113d46b5601e37236843a5faa19805028f6eda0461f16ce06b12d2477e10",
+    "width": 627,
+    "height": 627
+  },
+  "cell": 0,
+  "cellRect": {
+    "left": 0,
+    "top": 0,
+    "width": 627,
+    "height": 627
+  },
+  "crop": {
+    "left": 29,
+    "top": 98,
+    "width": 572,
+    "height": 436
+  },
+  "output": "normalSE.native.png",
+  "sha256": "396b8e92448391a54da989c44916aba42b60f2b163d16d379a96eec8a150e4c4",
+  "operation": "native RGBA cell crop only; no flip/repaint/view synthesis",
+  "review": "candidate"
+}

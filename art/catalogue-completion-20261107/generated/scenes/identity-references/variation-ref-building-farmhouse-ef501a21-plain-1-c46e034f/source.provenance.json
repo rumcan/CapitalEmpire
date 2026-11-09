@@ -1,0 +1,62 @@
+{
+  "schema": 1,
+  "createdUtc": "2026-11-07T06:47:45.284562+00:00",
+  "exactRuntimeId": "variation:ref-building-farmhouse-ef501a21-plain:1",
+  "source": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/building-views/variation-ref-building-farmhouse-ef501a21-plain-1/NE.png",
+  "sourceSha256": "9b85720a8e154b1578d85c38fe73239e3a62e38c1b8e8140c8c4bd4d6e9a5579",
+  "output": "identity-references/variation-ref-building-farmhouse-ef501a21-plain-1-c46e034f/source.png",
+  "outputSha256": "9b85720a8e154b1578d85c38fe73239e3a62e38c1b8e8140c8c4bd4d6e9a5579",
+  "width": 585,
+  "height": 448,
+  "sourceCell": {
+    "kind": "already isolated native PNG; whole file",
+    "rectXYWH": [
+      0,
+      0,
+      585,
+      448
+    ]
+  },
+  "operation": "byte-for-byte PNG copy only; no resize, crop, recolour, key, repaint, registration or source mutation",
+  "selection": "registered corner NE native PNG for this exact subject",
+  "registeredCornerDirection": "NE",
+  "sourceEvidence": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\building-views\\variation-ref-building-farmhouse-ef501a21-plain-1\\provenance.json",
+  "sourceReview": {
+    "integrationStatus": "ready",
+    "integrationReason": "Porch-front gable changes slant NE/NW; rear gable windows SE/SW and lower side annexes coherent. Requires repack inspection. Lossless disconnected-silhouette v2 extraction passed every nonzero RGBA copy/conservation assertion, alpha audit with no warnings, and post-repack magenta/theme visual review."
+  },
+  "sourceRegistration": {
+    "id": "variation:ref-building-farmhouse-ef501a21-plain:1",
+    "version": "variation-ref-building-farmhouse-ef501a21-plain-1-4views-v2",
+    "files": {
+      "NE": "9b85720a8e154b1578d85c38fe73239e3a62e38c1b8e8140c8c4bd4d6e9a5579",
+      "SE": "a7b183aef8d13b68b45baada38c7c4f42f74d1c5ff0b579987d83d4ab5dd46d9",
+      "SW": "374d38e03eb0ea9fdd273fde92288e8ef71cc28dff0188e2f016fc086502941d",
+      "NW": "cc8d813fa764852224cb7493e054e9d8eb788c6388a5ac7823acfa94207802a3"
+    }
+  },
+  "originalInventorySource": {
+    "library": "src/game/library.ts",
+    "librarySha256": "91b5190292c1005ac7b936f08e5e1ebf3be43c3aae99f92ea510775da83d9726",
+    "atlas": "src/assets/atlas/sprites-6-0.webp",
+    "atlasSha256": "5bf555ea578c014fa9e9f4e6119ae5f09128a07573eed569e85b1c5554f2ac51",
+    "runtimePage": 6,
+    "localPage": 6,
+    "uv": [
+      0.679688,
+      0.460938,
+      0.875977,
+      0.661621
+    ],
+    "crop": {
+      "left": 1392,
+      "top": 944,
+      "width": 402,
+      "height": 411
+    },
+    "native": "art/theme-consistency/exports/buildings/variation-ref-building-farmhouse-ef501a21-plain-1.native.png",
+    "nativeSha256": "8ca2eada3cefa16e1ee9a1f32511d4b535dc2716b1d3aded336882882c281a37"
+  },
+  "originalBusinessSourceCell": null,
+  "nativeReferenceApprovalClaimed": false
+}

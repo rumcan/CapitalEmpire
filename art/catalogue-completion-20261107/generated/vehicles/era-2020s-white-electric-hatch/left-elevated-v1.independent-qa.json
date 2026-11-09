@@ -1,0 +1,66 @@
+{
+  "schema": 1,
+  "as_of_utc": "2026-11-07T11:26:36.499594+00:00",
+  "review_result": "PASS-elevated-single-source-candidate-direction-visual-camera-alpha;release-pending",
+  "source": {
+    "path": "generated/vehicles/era-2020s-white-electric-hatch/left-elevated-v1.png",
+    "sha256": "e044a5f011c9ea340b15d8b16005406956528202beedb6d894fa2c16962dbbf2",
+    "bytes": 998554
+  },
+  "parent_provenance": {
+    "path": "generated/vehicles/era-2020s-white-electric-hatch/left-elevated-v1.provenance.json",
+    "sha256": "b01ce904a44fd880b77006fadf08a7e7d2fef766aa913a7d5d69b1690c7d5062",
+    "bytes": 2361
+  },
+  "source_original_hash_matches_parent_provenance": true,
+  "mode": "RGBA",
+  "dimensions": [
+    1774,
+    887
+  ],
+  "actual_screen_nose": "left",
+  "subject_model": "era-2020s-white-electric-hatch",
+  "is_single_sprite_not_sheet": true,
+  "core_bbox_ltrb": [
+    335,
+    158,
+    1435,
+    732
+  ],
+  "minimum_canvas_core_margin_px": 155,
+  "zero_alpha_fraction": 0.6727489263049256,
+  "outer_border_alpha_max": 1,
+  "outside_core_bbox10_alpha_p95max": [
+    0.0,
+    1.0
+  ],
+  "mid_alpha_fraction9to127": 0.0017355793123521644,
+  "identity_references": [
+    {
+      "path": "generated/vehicles/era-2020s-white-electric-hatch/camera-calibration-refs/left-camera-only.png",
+      "sha256": "8fbe148e71098ee59f7c04b83ccbc99d781f8526f467c22eae36bcd94afa7f00",
+      "bytes": 5779
+    },
+    {
+      "path": "generated/vehicles/era-2020s-white-electric-hatch/camera-calibration-refs/corner-identity-only.png",
+      "sha256": "5c5655519e8e6c956a33e60c1db4a7d73318eeb140bdd8d234a6c0e6f30309bc",
+      "bytes": 183180
+    }
+  ],
+  "exact_prompt": {
+    "path": "generated/vehicles/era-2020s-white-electric-hatch/left-elevated-v1.prompt.txt",
+    "sha256": "c7e6917fc8968ab7d466ea3ea606df1a598c72f082493376125ed4c93a86eb2d",
+    "bytes": 1429
+  },
+  "notes": [
+    "Actual screen nose LEFT; longitudinal body/wheelbase is horizontal, no broad front/rear grille plane is exposed.",
+    "Broad roof/hood/boot or open bed top surfaces are materially closer to isolated elevatedcamera reference than old traffic8 col4 profiles.",
+    "This is qualitative reference matching, not a numerical30degree certificate. Cross-view physical scale, anchors and full eight-heading release review remain pending.",
+    "Apparent raw-view RGB glow is not actual haze: native background alpha measured separately. No coded cleanup or source pixels changed."
+  ],
+  "no_native_pixel_changes_or_source_crops": true,
+  "exact30degree_certified": false,
+  "owner_approved": false,
+  "runtime_ready": false,
+  "runtime_imported": false
+}

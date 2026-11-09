@@ -1,0 +1,14 @@
+{
+  "key": "2020s-white-charcoal-asymmetric-solar-home",
+  "source": "C:/Users/RAMPAGE/.codex/generated_images/01a1b1fd-39ec-7220-8f11-86e4448833ea/exec-013e98da-44a5-4072-b9a4-0102f146ea9a.png",
+  "target": "generated/era-houses/2020s-white-charcoal-asymmetric-solar-home/normal-v2.png",
+  "prompt": "Make a precise correction to the first reference's four-view modern2020s solar house sheet. In TOP-RIGHT and BOTTOM-LEFT cells the large rear opening was wrongly painted like a grey shutter/garage door. Replace this exact opening with a two-panel aluminium-framed SLIDING GLASS PATIO DOOR: dark blue-grey reflective glazing with a central vertical frame, fullheight, no horizontal shutter slats. This small home has NO GARAGE. Keep identical opening position/size, housefootprint, steppedwhite/charcoalflatroofs, exactSIXsolarpanels, vent, otherdoors/windows,30degreeisometriccameras, fourcellplacement, style/scale andsunupperrightdaylight. No other redesign or scenery. Reference2technicalmodelconfirmsrearopening. Return same2x2opaquehouse sprites on genuinezeroalpha transparentbackground, no outsidegroundwash.",
+  "references": [
+    "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/era-houses/2020s-white-charcoal-asymmetric-solar-home/normal-v1.png",
+    "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\2020s-white-charcoal-asymmetric-solar-home\\guides\\normal-world-v1.png"
+  ],
+  "status": "native house candidate; identity/alpha/angle QA pending",
+  "runtime_imported": false,
+  "sha256": "4fc0f3fcd8540990e5a85e54bdadf35a4520dc5eb5fd5751d9944197d8c6cc6b",
+  "native_bytes_preserved": true
+}

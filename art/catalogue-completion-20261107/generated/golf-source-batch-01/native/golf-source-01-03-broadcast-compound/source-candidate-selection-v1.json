@@ -1,0 +1,129 @@
+{
+  "schema": 1,
+  "subject": "golf:event-broadcast-compound",
+  "review": "practical-eight-view-source-candidate",
+  "sourceOnly": true,
+  "nativeCameraCertified": false,
+  "nativeScaleAndAnchorsApproved": false,
+  "runtimeReady": false,
+  "runtimeIntegrated": false,
+  "sourceViews": {
+    "normalSE": {
+      "sourceFile": "art/catalogue-completion-20261107/generated/golf-source-batch-01/native/golf-source-01-03-broadcast-compound/budget-normal-v4.png",
+      "sourceFileSHA256": "91a98125388138b7445c4a66a49d1f5653b47f3dcc07036ef35ed4ec61b0ffbf",
+      "sourceFrameRectLTRB": [
+        0,
+        0,
+        627,
+        627
+      ],
+      "rgbaSHA256": "acd4812ba09be1b4250f1d6ef573556789714c41cc01a9bfe0f446d1cb554a91",
+      "operation": "metadata selection only; no new sprite image produced",
+      "nominalCameraKey": "normalSE",
+      "nativeHeadingDegrees": null
+    },
+    "normalSW": {
+      "sourceFile": "art/catalogue-completion-20261107/generated/golf-source-batch-01/native/golf-source-01-03-broadcast-compound/budget-normal-v4.png",
+      "sourceFileSHA256": "91a98125388138b7445c4a66a49d1f5653b47f3dcc07036ef35ed4ec61b0ffbf",
+      "sourceFrameRectLTRB": [
+        627,
+        0,
+        1254,
+        627
+      ],
+      "rgbaSHA256": "c07294467f1c3d0dd9fd709587126eba218b6df0b881fb360eda8d8584ad5fed",
+      "operation": "metadata selection only; no new sprite image produced",
+      "nominalCameraKey": "normalSW",
+      "nativeHeadingDegrees": null
+    },
+    "normalNW": {
+      "sourceFile": "art/catalogue-completion-20261107/generated/golf-source-batch-01/native/golf-source-01-03-broadcast-compound/budget-normal-v4.png",
+      "sourceFileSHA256": "91a98125388138b7445c4a66a49d1f5653b47f3dcc07036ef35ed4ec61b0ffbf",
+      "sourceFrameRectLTRB": [
+        0,
+        627,
+        627,
+        1254
+      ],
+      "rgbaSHA256": "9d00ec2c5746e75806f1bef44cbc19ceaff496f68d39e5e93582c3f01c41e5e3",
+      "operation": "metadata selection only; no new sprite image produced",
+      "nominalCameraKey": "normalNW",
+      "nativeHeadingDegrees": null
+    },
+    "normalNE": {
+      "sourceFile": "art/catalogue-completion-20261107/generated/golf-source-batch-01/native/golf-source-01-03-broadcast-compound/budget-normal-v3.png",
+      "sourceFileSHA256": "c3ba33c5a46a6f26661c20484a812b919549fa9bf4a1a18d1dcf1e7a377f9316",
+      "sourceFrameRectLTRB": [
+        627,
+        627,
+        1254,
+        1254
+      ],
+      "rgbaSHA256": "76f8707bed3892a63cff1acaef269977a8be9b41141f67b1fa0898af7d8b72c4",
+      "operation": "metadata selection only; no new sprite image produced",
+      "nominalCameraKey": "normalNE",
+      "nativeHeadingDegrees": null
+    },
+    "yaw8N": {
+      "sourceFile": "art/catalogue-completion-20261107/generated/golf-source-batch-01/native/golf-source-01-03-broadcast-compound/budget-yaw8-v3.png",
+      "sourceFileSHA256": "08c2c9dcc4e28382c143a965d72485e378dd940b19dcb3a9327896b96e6ad7fc",
+      "sourceFrameRectLTRB": [
+        0,
+        0,
+        627,
+        627
+      ],
+      "rgbaSHA256": "0e2e7cff8de287bc922c5031bb76850d6127963325bbc1c28c35fa91a58ba08b",
+      "operation": "metadata selection only; no new sprite image produced",
+      "nominalCameraKey": "yaw8N",
+      "nativeHeadingDegrees": null
+    },
+    "yaw8E": {
+      "sourceFile": "art/catalogue-completion-20261107/generated/golf-source-batch-01/native/golf-source-01-03-broadcast-compound/budget-yaw8-v3.png",
+      "sourceFileSHA256": "08c2c9dcc4e28382c143a965d72485e378dd940b19dcb3a9327896b96e6ad7fc",
+      "sourceFrameRectLTRB": [
+        627,
+        0,
+        1254,
+        627
+      ],
+      "rgbaSHA256": "c583e2c890b0112c79e31f9229eec436f9515482de2b388c12f7efa6831e32f3",
+      "operation": "metadata selection only; no new sprite image produced",
+      "nominalCameraKey": "yaw8E",
+      "nativeHeadingDegrees": null
+    },
+    "yaw8S": {
+      "sourceFile": "art/catalogue-completion-20261107/generated/golf-source-batch-01/native/golf-source-01-03-broadcast-compound/budget-yaw8-v3.png",
+      "sourceFileSHA256": "08c2c9dcc4e28382c143a965d72485e378dd940b19dcb3a9327896b96e6ad7fc",
+      "sourceFrameRectLTRB": [
+        0,
+        627,
+        627,
+        1254
+      ],
+      "rgbaSHA256": "bd2a49a652c3b835febaa3b2019b3a17fc1dc638256e2b88af3f647f7322231b",
+      "operation": "metadata selection only; no new sprite image produced",
+      "nominalCameraKey": "yaw8S",
+      "nativeHeadingDegrees": null
+    },
+    "yaw8W": {
+      "sourceFile": "art/catalogue-completion-20261107/generated/golf-source-batch-01/native/golf-source-01-03-broadcast-compound/budget-yaw8-v3.png",
+      "sourceFileSHA256": "08c2c9dcc4e28382c143a965d72485e378dd940b19dcb3a9327896b96e6ad7fc",
+      "sourceFrameRectLTRB": [
+        627,
+        627,
+        1254,
+        1254
+      ],
+      "rgbaSHA256": "cca5fde54fb3155db07a5859da898c9239931734751a357ace79ec7216f01fbe",
+      "operation": "metadata selection only; no new sprite image produced",
+      "nominalCameraKey": "yaw8W",
+      "nativeHeadingDegrees": null
+    }
+  },
+  "notes": [
+    "Normalv4SE/SW/NW + normalv3NE; yaw8v3all4. Selected existing native cells only; no image edits, resizing or compositing performed.",
+    "v4NEconvexback is held; v3NEhas appropriate broadconcavefront. v4SWback and v4NWthinfront correct; yawv3Sback/Eobliquefront consistent.",
+    "Separate nativecamera/scaleholds remain. No event capacity or economic changes."
+  ]
+}

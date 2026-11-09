@@ -1,0 +1,27 @@
+{
+  "id": "newprop:hole-12-sign",
+  "name": "Hole 12 sign",
+  "referencePNG": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-01\\references\\hole-12-sign.source.png",
+  "originalSheet": "E:\\Repos\\CapitalEmpire\\All Generated Images\\exec-1f28de2a-95b9-4895-aeed-8f32f5b208b8.png",
+  "copiedOriginalSheet": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-01\\original-sheets\\exec-1f28de2a-95b9-4895-aeed-8f32f5b208b8.png",
+  "sourceSheetSHA256": "83a3451b8bc46ff7893c891178b21bf25f1baf0b1fa9d6213a9163fc39e509e6",
+  "referenceSHA256": "1b694824de74d4a7ce7c55266cd5dc579934a337c8bfbeecd89f467ce2bd1de7",
+  "sourcePixelRectXYWH": [
+    749,
+    20,
+    476,
+    627
+  ],
+  "originalCellLabel": "top right",
+  "referenceSize": [
+    476,
+    627
+  ],
+  "operation": "native RGBA pixel crop only; no resize, recolour, alpha cleanup or synthesis",
+  "sourceContainsFourDifferentSubjectsNotRotations": true,
+  "cutOffAccordingToSourceMetadata": false,
+  "sourceMetadata": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\new-props\\items.json",
+  "visualInspection": "inspected native source PNG",
+  "visualNotes": "Hole12course-map marker with yardage dots and ornate green frame. Not a hole SCOREBOARD. Use as scale/context only; do not copy static hole number/map into the new score display. Native crop has small detached neighbouring gold fragment at bottom.",
+  "sourceOnlyNotReleaseProof": true
+}

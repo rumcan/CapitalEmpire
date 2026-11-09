@@ -1,0 +1,175 @@
+{
+  "sheet": {
+    "path": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\portraits\\spectator-group-2\\source.png",
+    "sha256": "bb2a9be124692d2214609b4b73a64e3461189b3b265175fc99123fabc723681c",
+    "bytes": 3535070
+  },
+  "records": [
+    {
+      "look_id": "spectator:spec_m_polo_visor",
+      "cell_index": 0,
+      "cell_position": "top-left",
+      "source_crop_box": [
+        0,
+        0,
+        631,
+        623
+      ],
+      "dimensions": [
+        631,
+        623
+      ],
+      "mode": "RGB",
+      "source_file": {
+        "path": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\portraits\\spectator-group-2\\spectator-spec-m-polo-visor.native.png",
+        "sha256": "e45f6ab5f34b2ce790861787de36903be08e5470b4cbd6d1b7f198e3d377eb62",
+        "bytes": 812568
+      },
+      "pixel_sha256": "f8b250ad88a82b59c61298d4ad35b3d4bfb3fc49043fc58722418f9163527d01",
+      "operation": "exact native rectangle; no resize/repaint/alpha reconstruction",
+      "parent_reviewed": true,
+      "owner_approved": false,
+      "runtime_ready": true,
+      "runtime_integrated": true,
+      "manifest_record": {
+        "lookId": "spectator:spec_m_polo_visor",
+        "file": "spec-m-polo-visor.png",
+        "w": 631,
+        "h": 623,
+        "bytes": 812568,
+        "state": "one"
+      },
+      "runtime_file": {
+        "path": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\src\\assets\\portraits\\spec-m-polo-visor.png",
+        "sha256": "e45f6ab5f34b2ce790861787de36903be08e5470b4cbd6d1b7f198e3d377eb62",
+        "bytes": 812568
+      }
+    },
+    {
+      "look_id": "spectator:spec_m_sun_hat",
+      "cell_index": 1,
+      "cell_position": "top-right",
+      "source_crop_box": [
+        631,
+        0,
+        1263,
+        623
+      ],
+      "dimensions": [
+        632,
+        623
+      ],
+      "mode": "RGB",
+      "source_file": {
+        "path": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\portraits\\spectator-group-2\\spectator-spec-m-sun-hat.native.png",
+        "sha256": "497ccc2bd2e8eb64fa78fb3fd77c1310a78463c1da7219d3a0b86ddffc28b6c9",
+        "bytes": 799938
+      },
+      "pixel_sha256": "9d6da06e1843269a5025ee2398804e7459db01f5eaebbefe4680bd73b3a3e71b",
+      "operation": "exact native rectangle; no resize/repaint/alpha reconstruction",
+      "parent_reviewed": true,
+      "owner_approved": false,
+      "runtime_ready": true,
+      "runtime_integrated": true,
+      "manifest_record": {
+        "lookId": "spectator:spec_m_sun_hat",
+        "file": "spec-m-sun-hat.png",
+        "w": 632,
+        "h": 623,
+        "bytes": 799938,
+        "state": "one"
+      },
+      "runtime_file": {
+        "path": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\src\\assets\\portraits\\spec-m-sun-hat.png",
+        "sha256": "497ccc2bd2e8eb64fa78fb3fd77c1310a78463c1da7219d3a0b86ddffc28b6c9",
+        "bytes": 799938
+      }
+    },
+    {
+      "look_id": "spectator:spec_m_young_cap",
+      "cell_index": 2,
+      "cell_position": "bottom-left",
+      "source_crop_box": [
+        0,
+        623,
+        631,
+        1246
+      ],
+      "dimensions": [
+        631,
+        623
+      ],
+      "mode": "RGB",
+      "source_file": {
+        "path": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\portraits\\spectator-group-2\\spectator-spec-m-young-cap.native.png",
+        "sha256": "c9466ce26583d53db4ad070f1fe050828df6de1d5457105e83502453bd073147",
+        "bytes": 804281
+      },
+      "pixel_sha256": "670e4b9ee3452db907bb65610d2fd02d2e961acee92aa7f3c96e170c724f41b2",
+      "operation": "exact native rectangle; no resize/repaint/alpha reconstruction",
+      "parent_reviewed": true,
+      "owner_approved": false,
+      "runtime_ready": true,
+      "runtime_integrated": true,
+      "manifest_record": {
+        "lookId": "spectator:spec_m_young_cap",
+        "file": "spec-m-young-cap.png",
+        "w": 631,
+        "h": 623,
+        "bytes": 804281,
+        "state": "one"
+      },
+      "runtime_file": {
+        "path": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\src\\assets\\portraits\\spec-m-young-cap.png",
+        "sha256": "c9466ce26583d53db4ad070f1fe050828df6de1d5457105e83502453bd073147",
+        "bytes": 804281
+      }
+    },
+    {
+      "look_id": "spectator:spec_teen_boy",
+      "cell_index": 3,
+      "cell_position": "bottom-right",
+      "source_crop_box": [
+        631,
+        623,
+        1263,
+        1246
+      ],
+      "dimensions": [
+        632,
+        623
+      ],
+      "mode": "RGB",
+      "source_file": {
+        "path": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\portraits\\spectator-group-2\\spectator-spec-teen-boy.native.png",
+        "sha256": "7d066c1078665566aa61cc35eb08dc5180f8fa5c8e4bca10410f89c589c9d52a",
+        "bytes": 810258
+      },
+      "pixel_sha256": "7b240b2ccfc690fd140df773c4acf5f8844e69233a02f3b44990b0b1f28b2286",
+      "operation": "exact native rectangle; no resize/repaint/alpha reconstruction",
+      "parent_reviewed": true,
+      "owner_approved": false,
+      "runtime_ready": true,
+      "runtime_integrated": true,
+      "manifest_record": {
+        "lookId": "spectator:spec_teen_boy",
+        "file": "spec-teen-boy.png",
+        "w": 632,
+        "h": 623,
+        "bytes": 810258,
+        "state": "one"
+      },
+      "runtime_file": {
+        "path": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\src\\assets\\portraits\\spec-teen-boy.png",
+        "sha256": "7d066c1078665566aa61cc35eb08dc5180f8fa5c8e4bca10410f89c589c9d52a",
+        "bytes": 810258
+      }
+    }
+  ],
+  "runtime_writes_performed": true,
+  "manifest": {
+    "path": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\src\\assets\\portraits\\manifest.json",
+    "sha256": "de85b631506db69940b8b9916943d7683eb51b6a456c025098121963502c51d7",
+    "bytes": 5754
+  }
+}

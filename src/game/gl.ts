@@ -11,6 +11,7 @@ import { AtlasGL, type AtlasSource } from './atlas-gl';
 import { atlasMip0 } from './sizes';
 import { CONTACT_LEAN } from './shadow-shape';
 import { CONTACT_AO, VERTEX_FLOATS, type VectorMesh } from './shadow-vector';
+import { releaseBuffer } from './release-buffer';
 import { SHADOW_AMBIENT } from './cast-shadow';
 import { BRAKE_LIGHT } from './sim/car-lamps';
 import { CAMERA_FALLOFF_GLSL, SPEC_LIGHT_GLSL, SPEC_MASK_K } from './lamp-reflect';
@@ -820,6 +821,7 @@ export class GLRenderer {
       const h = Math.max(1, Math.ceil(texels / MESH_W)), t = tex ?? gl.createTexture()!;
       const buf = new (data.constructor as Float32ArrayConstructor | Uint32ArrayConstructor)(MESH_W * h * per); buf.set(data as Float32Array & Uint32Array);
       gl.bindTexture(gl.TEXTURE_2D, t); gl.texImage2D(gl.TEXTURE_2D, 0, ifmt, MESH_W, h, 0, fmt, type, buf);
+      releaseBuffer(buf); // T375: the padded copy is on the GPU: its 13 and 6 MB go back now, not at a full collection
       gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
       gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
       return t;

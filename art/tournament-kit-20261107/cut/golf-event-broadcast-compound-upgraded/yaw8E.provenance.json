@@ -1,0 +1,29 @@
+{
+  "schema": 1,
+  "subject": "golf:event-broadcast-compound-upgraded",
+  "version": 1,
+  "key": "yaw8E",
+  "source": {
+    "file": "../../batch01/broadcast-compound/upgraded/yaw8-E.png",
+    "sha256": "4622c9a8cb98185baf330f7835fba0327415d624724a492095cbd9c1f982ae00",
+    "width": 1536,
+    "height": 1024
+  },
+  "cell": 0,
+  "cellRect": {
+    "left": 0,
+    "top": 0,
+    "width": 1536,
+    "height": 1024
+  },
+  "crop": {
+    "left": 262,
+    "top": 95,
+    "width": 927,
+    "height": 792
+  },
+  "output": "yaw8E.native.png",
+  "sha256": "125a2a4aa788abad303230df5a90d089c0fa74ed26bc28c8800b93f3641ad723",
+  "operation": "native RGBA cell crop only; no flip/repaint/view synthesis",
+  "review": "candidate"
+}

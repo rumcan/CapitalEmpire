@@ -2562,3 +2562,13 @@ Gates before (main 9974d10) and after:
 - **Screenshots of a jam:** not taken.
   - The dev game, loading the no-player fixture and running 12 town hours at 4x, showed no red zone (access at most 1.11, about 950 cars).
   - The headless jam builds over seasons of trips that are not saved with the town.
+
+## Tournament kit (2026-11-07)
+
+- **Art in the game:** 36 eight-view sets from the 2026-11-07 golf source packs (event roles in two conditions, compact bleacher, range and
+  course props), calibrated to real sizes and packed in 3 shared atlas pages. See art/tournament-kit-20261107/README.md.
+- **Progression:** tournament prep quests per tier with one-time rewards and a suggested first spot; a grouped Event panel with "Needed
+  for" badges and locked teasers; budget/upgraded condition with a paid Improve on every role that has both pictures.
+- **Checks:** typecheck clean; focused suites pass; full suite has the same 11 failures as the base commit (none new); browser-checked.
+- **Decisions:** suggestions never place anything; a hidden checklist comes back with the next chapter; an old save's already built steps
+  are marked done without pay; event structures are never town stand-ins.

@@ -1,0 +1,62 @@
+{
+  "schema": 1,
+  "createdUtc": "2026-11-07T06:47:45.284562+00:00",
+  "exactRuntimeId": "variation:industrial-brick-machine-shop-34206b23:1",
+  "source": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/building-views/variation-industrial-brick-machine-shop-34206b23-1/NE.png",
+  "sourceSha256": "214084cee56a3015f89dba71e94b7b92febede176b2571fc0619ec696590cd54",
+  "output": "identity-references/variation-industrial-brick-machine-shop-34206b23-1-3eb4820f/source.png",
+  "outputSha256": "214084cee56a3015f89dba71e94b7b92febede176b2571fc0619ec696590cd54",
+  "width": 572,
+  "height": 478,
+  "sourceCell": {
+    "kind": "already isolated native PNG; whole file",
+    "rectXYWH": [
+      0,
+      0,
+      572,
+      478
+    ]
+  },
+  "operation": "byte-for-byte PNG copy only; no resize, crop, recolour, key, repaint, registration or source mutation",
+  "selection": "registered corner NE native PNG for this exact subject",
+  "registeredCornerDirection": "NE",
+  "sourceEvidence": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\building-views\\variation-industrial-brick-machine-shop-34206b23-1\\provenance.json",
+  "sourceReview": {
+    "integrationStatus": "ready",
+    "integrationReason": "All4 visible physical corners form front/right/back/left cycle; actual magenta alpha has no surrounding floor/haze. Matte timber/masonry/metal, charcoal roofs, amber practical lights and fixed screen-upper-right dusk are coherent with master. Layout-only repack preserves every nonzero source RGBA pixel without generation/repainting. Original low-alpha edge fringe does not truncate physical silhouette."
+  },
+  "sourceRegistration": {
+    "id": "variation:industrial-brick-machine-shop-34206b23:1",
+    "version": "variation-industrial-brick-machine-shop-34206b23-1-4views-v2",
+    "files": {
+      "NE": "214084cee56a3015f89dba71e94b7b92febede176b2571fc0619ec696590cd54",
+      "SE": "c785b8b5db3df1ac1f524b44f33ad04245f9e49bd2b6403af0650c08609620a3",
+      "SW": "1d1260f98d4c846caaa400cc96d86c6cd71d41b77f4623b5967ff55b6da91e3a",
+      "NW": "39c71212be47601e9b421f3ca04a2d7fa2316f0c812cd5d80089ce55d17a5e09"
+    }
+  },
+  "originalInventorySource": {
+    "library": "src/game/library.ts",
+    "librarySha256": "91b5190292c1005ac7b936f08e5e1ebf3be43c3aae99f92ea510775da83d9726",
+    "atlas": "src/assets/atlas/sprites-9-0.webp",
+    "atlasSha256": "484f5473a887995bfea39685a9993bd57d4c9711217f53187510326bcc954a5b",
+    "runtimePage": 9,
+    "localPage": 9,
+    "uv": [
+      0.578125,
+      0.007813,
+      0.758301,
+      0.176758
+    ],
+    "crop": {
+      "left": 1184,
+      "top": 16,
+      "width": 369,
+      "height": 346
+    },
+    "native": "art/theme-consistency/exports/buildings/variation-industrial-brick-machine-shop-34206b23-1.native.png",
+    "nativeSha256": "1ff406970d199a84897d734c3d48282d73f306d1e7e4aa7b9163315f57927942"
+  },
+  "originalBusinessSourceCell": null,
+  "nativeReferenceApprovalClaimed": false
+}

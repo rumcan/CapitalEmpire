@@ -1,0 +1,139 @@
+{
+  "schema": 1,
+  "review": "approved",
+  "reviewedOn": "2026-11-07",
+  "approvalAuthority": "Delegating lead /root explicitly approved coherent normal-v5/yaw8-v4 for first native standalone import; user authorized new art integration after review. Owner-live deployment not authorized here.",
+  "subject": "golf:clubhouse-1950-budget",
+  "sourceHashes": {
+    "normal": "a996fb471f351cc35926c84090192a8b55cc3557bb1bf9fec24872218fa219a6",
+    "yaw8": "091557a616f9ac6153c9160b19415ff3d7a94b19e1786bba3adc57aca7c5b862"
+  },
+  "visualEvidence": {
+    "file": "../independent-review-normal-v5-yaw8-v4.json",
+    "sha256": "77c115ceb0ef789ac54ddf56e9e78b671ce420b4684d3f39ed416743f9ecb125",
+    "registrationRmsPixelsRange": [
+      0.337,
+      4.564
+    ],
+    "maximumObservedCornerResidualPixels": 5.593,
+    "uncertainty": "Painted foundation positions manually located within approximately 2–4px. yaw8E fit uses two visible gable corners; depth alignment less constrained. Guide-model component boxes are conservative, not exact painted geometry."
+  },
+  "handedness": {
+    "file": "../../../plan/pavilion-guide-handedness-proof.json",
+    "sha256": "c07f415b3c6be0f9ecec4b9ec95185f8ce8fbb0f4dba07633a4283f649368ba0",
+    "localBasis": "runtime local=(guide x,-guide y)",
+    "headingDegrees": "(guide beta-guide theta-45) modulo360"
+  },
+  "nativeVerification": [
+    {
+      "key": "normalSE",
+      "cropSha256": "d9434150dd450deef88d9f4245842f062b5799b3a0f16ac1a7773a2b8fdab2ce",
+      "rawRgbaSha256": "aba46f034fc595d53d4d3fe614cd918ba9a89ba06b30dc833018a4912b3018fb",
+      "nativePixelsIdentical": true,
+      "headingDegrees": 270,
+      "cameraPixelsPerMetre": 34.3075,
+      "anchorCropPixels": {
+        "x": 259.506,
+        "y": 242.235
+      },
+      "boxes": 4
+    },
+    {
+      "key": "normalSW",
+      "cropSha256": "4c2da637cef1f694c6c42fe5ebf08760740e99959bc248545e521973b9b475c2",
+      "rawRgbaSha256": "efb982c8f04ce83c5d8ed0f48e033757c97ac5d2a08d49aa0bac5947a6610e39",
+      "nativePixelsIdentical": true,
+      "headingDegrees": 180,
+      "cameraPixelsPerMetre": 34.448,
+      "anchorCropPixels": {
+        "x": 261.428,
+        "y": 241.06900000000002
+      },
+      "boxes": 4
+    },
+    {
+      "key": "normalNW",
+      "cropSha256": "756fae413ab1165b63cda19f2c38d19f638729a014ac1a78f08c955231ad07fa",
+      "rawRgbaSha256": "4666d8b9eb305154b6864e074136bd2ef1085cf2383fec25b34e1f1ecab85fc7",
+      "nativePixelsIdentical": true,
+      "headingDegrees": 90,
+      "cameraPixelsPerMetre": 34.8612,
+      "anchorCropPixels": {
+        "x": 264.767,
+        "y": 241.24900000000002
+      },
+      "boxes": 4
+    },
+    {
+      "key": "normalNE",
+      "cropSha256": "9f5736ce8cd2d7d8f65bd3dd0c9c35ff2bdd7896aec98e01e5f6570fa4e8b36f",
+      "rawRgbaSha256": "932037a175cf9b0e4b19a5eab159d00a14c0261fe2512c0b0b38d2cdc7f68db4",
+      "nativePixelsIdentical": true,
+      "headingDegrees": 0,
+      "cameraPixelsPerMetre": 34.6568,
+      "anchorCropPixels": {
+        "x": 264.663,
+        "y": 245.15699999999998
+      },
+      "boxes": 4
+    },
+    {
+      "key": "yaw8N",
+      "cropSha256": "bbae742110225d17ff70bb0f3fde9b5841d2beb0089998dbdacfbe6aec724422",
+      "rawRgbaSha256": "b92b65801fa8856f43a474fc936f6231bdc6eb904fb08903590e163ad33f7c6b",
+      "nativePixelsIdentical": true,
+      "headingDegrees": 323,
+      "cameraPixelsPerMetre": 35.3027,
+      "anchorCropPixels": {
+        "x": 248.29899999999998,
+        "y": 194.781
+      },
+      "boxes": 4
+    },
+    {
+      "key": "yaw8E",
+      "cropSha256": "8bd96816f6b9d092abcc873bb84ee1c75187f3eb4cc3b2e36023344b2b6c47cb",
+      "rawRgbaSha256": "0a6e1456e16429084b309cac64b4b8a52df09a9ba05b2b0db0ccdd3f4d569af6",
+      "nativePixelsIdentical": true,
+      "headingDegrees": 233,
+      "cameraPixelsPerMetre": 35.338,
+      "anchorCropPixels": {
+        "x": 190.50900000000001,
+        "y": 249.51799999999997
+      },
+      "boxes": 4
+    },
+    {
+      "key": "yaw8S",
+      "cropSha256": "0fbcaa934b8bc742701b80eb54846ae4ee96c4713a6a129e2818cfbf0b2db342",
+      "rawRgbaSha256": "d4ef1accd1dcbd795e6a02a9b9bad25060ed5c0f29cfb412f4d07182e2038f2c",
+      "nativePixelsIdentical": true,
+      "headingDegrees": 143,
+      "cameraPixelsPerMetre": 35.1693,
+      "anchorCropPixels": {
+        "x": 248.539,
+        "y": 191.887
+      },
+      "boxes": 4
+    },
+    {
+      "key": "yaw8W",
+      "cropSha256": "7c40785cd281d3ff96cf9503776e6e86f55011e88194386df660615f39469917",
+      "rawRgbaSha256": "605c55f2affa99423c8f1b3494ccb3c359d78a6f841738242603ea083f93e162",
+      "nativePixelsIdentical": true,
+      "headingDegrees": 53,
+      "cameraPixelsPerMetre": 35.0057,
+      "anchorCropPixels": {
+        "x": 210.524,
+        "y": 248.42000000000002
+      },
+      "boxes": 4
+    }
+  ],
+  "limits": [
+    "No legacy alias or starter/event binding: old 10x7m clubhouse needs separate in-game fit review against new 12x8m body.",
+    "No event capacity or seating metadata.",
+    "Original native PNGs and candidate provenance retained unchanged; approval recorded separately here.",
+    "One immutable 2048 atlas with five lossless mips; no bulk catalogue import or owner-live deployment."
+  ]
+}

@@ -1,0 +1,29 @@
+{
+  "schema": 1,
+  "subject": "golf:course-ball-dispenser",
+  "version": 1,
+  "key": "normalNW",
+  "source": {
+    "file": "../../batch02/ball-dispenser/normal-NW.png",
+    "sha256": "f0fe7d4003cf361348c4391d1057fe7dfccd31dac9cfd15d521f71238bd8503f",
+    "width": 627,
+    "height": 627
+  },
+  "cell": 0,
+  "cellRect": {
+    "left": 0,
+    "top": 0,
+    "width": 627,
+    "height": 627
+  },
+  "crop": {
+    "left": 129,
+    "top": 71,
+    "width": 345,
+    "height": 453
+  },
+  "output": "normalNW.native.png",
+  "sha256": "9f2b92d8ba167208e5607648aef087ca22966d5ddafbd364ba6e3f9d3383baf0",
+  "operation": "native RGBA cell crop only; no flip/repaint/view synthesis",
+  "review": "candidate"
+}

@@ -1,0 +1,47 @@
+{
+  "key": "golf-source-01-09-main-leaderboard",
+  "family": "normal",
+  "condition": "upgraded",
+  "version": 1,
+  "target": "generated/golf-source-batch-01/native/golf-source-01-09-main-leaderboard/upgraded-normal-v1.png",
+  "refs": [
+    "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-01\\native\\golf-source-01-09-main-leaderboard\\guides\\normal-world-v1.png",
+    "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/golf-source-batch-01/native/golf-source-01-09-main-leaderboard/budget-normal-v2.png"
+  ],
+  "runtimeTarget": {
+    "eventTypeId": "leaderboard",
+    "eventName": "Main leaderboard",
+    "currentSpriteSubjectId": "golf:leaderboard",
+    "newArtSubjectProposal": "golf:event-main-leaderboard",
+    "newArtSubjectAlreadyRegistered": false,
+    "eventCatalogueSource": "src/game/golf/tents.ts",
+    "standInMappingSource": "src/game/golf/structure-art.ts",
+    "footprintTiles": {
+      "width": 4,
+      "depth": 2
+    },
+    "footprintMetres": {
+      "width": 8,
+      "depth": 4
+    },
+    "dimensionsMeaning": "Exact current event placement plot, not measured source sprite architecture. New design must fit plot; no runtime geometry changed.",
+    "currentSpriteBaseBoxesInTiles": [
+      {
+        "hx": 4,
+        "hy": 1.5,
+        "dx": 0,
+        "dy": 0
+      }
+    ]
+  },
+  "prompt": "Paint the four exact guide corners of REFERENCE1 as the UPGRADED version of the same physical event facility in REFERENCE2. Reference1 controls ALLgeometry/cameras/occlusion; reference2 identity/styleonly. UPGRADED condition: Maintained green/cream board with clean grid, repaired timber, neat safety railings and the same basic platform/stair/flag identity.. Fixed model: Front grid-Y; rear slats/braces+Y; one staircase permanently+X; front deck-Y; three rain caps and exactly2flags.. Oneidenticalfunctionallayoutinall4cells. Clean professionally made steel, fresh forestgreen/creamtrim, maintained timber, sound equipment. Remove rust, torncloth, flakingpaint, brokentimber; no ornatebrassorballfinials. Allfeatures remainfixedasguide, includingstairs/ladder/camera/case/gatelanes and backs. SameSE SW / NW NE45degreecorners, orthographic30degreesDOWN. Late-afternoonDAYTIME sunSCREENUPPERRIGHT/shadowsLOWERLEFT; lamps/screensOFF. Detailed painterly miniature town-game materialstylematchesreference2. Complete separate equallyscaled sprites, generouszeroalpha transparentmargins andgutters. No groundplate/slab/roof exceptactualstructureinguide; noperson/plants/labels/UI/grid/scenery/haze. Raiseddeckonlywhereguideexplicitlyshows.",
+  "source": "C:/Users/RAMPAGE/.codex/generated_images/01a1b1fd-39ec-7220-8f11-86e4448833ea/exec-f3521065-2548-433a-b75f-0e86a0b19cbc.png",
+  "references": [
+    "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-01\\native\\golf-source-01-09-main-leaderboard\\guides\\normal-world-v1.png",
+    "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/golf-source-batch-01/native/golf-source-01-09-main-leaderboard/budget-normal-v2.png"
+  ],
+  "status": "native-source-candidate-pending-visual-review",
+  "runtime_imported": false,
+  "sha256": "59fc3d8903f17ca51f8e2dc89333bfcac2d3a958d8dc3bb297e4b0fb13573b75",
+  "native_bytes_preserved": true
+}

@@ -1,0 +1,14 @@
+{
+  "key": "budget-1950-shanty-shed",
+  "source": "C:/Users/RAMPAGE/.codex/generated_images/01a1b1fd-39ec-7220-8f11-86e4448833ea/exec-05561186-2b17-47fa-b055-1e46375e9bd8.png",
+  "target": "generated/budget-1950-shanty-shed/yaw8-v2.png",
+  "prompt": "Precisely correct reference2's BOTTOM-RIGHT sprite to match the same BOTTOM-RIGHT TECHNICAL CAMERA ofreference1. Main visible face is the windowedgableend. Its narrow SCREENRIGHT wall is the REAR WALL, so it must have NO greenfrontdoor/tooldoors, no frontwindow, no frontawning. Preserveonlythecorrecthighrearventsliverfromguide1wherevisible. The frontdoorwall is ontheoppositeside and is occluded in thiscamera. Repaint thisviewfromthecorrectyawSIGN/side, do notjusthideadoorwhilekeepingwronggeometry. Cheap old1950s garden maintenance shed, faded brown horizontal timber siding, paired green front tool doors, one small right-side window and one high rear vent, grey corrugated gable roof, restrained rust and weathering. Keepotherthreecells/identity/materials unchanged, mainbases shouldslant0.07027rise/runfor8degreeyaw/30degreedown. Correct N E / S W cellsasguide1, samebuilding scale. Finelyhand-paintedminiature, lateafternoonDAYTIME sunlightUPPERRIGHT/shadowsLOWERLEFT. FullyopaquebuildingsonTRUEzeroalphatransparentbackground, nomattehaze/groundplate/labels/extraobjects.",
+  "references": [
+    "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\budget-1950-shanty-shed\\guides\\yaw8-world-v1.png",
+    "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/budget-1950-shanty-shed/yaw8-v1.png"
+  ],
+  "status": "native correction candidate; independent review pending",
+  "runtime_imported": false,
+  "sha256": "5fd10aa2beae60c9959b3d06572b8859df457c2aafeb1e1ea5013eecec388f8e",
+  "native_bytes_preserved": true
+}

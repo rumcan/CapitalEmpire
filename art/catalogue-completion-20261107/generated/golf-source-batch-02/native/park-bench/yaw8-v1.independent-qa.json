@@ -1,0 +1,151 @@
+{
+  "schema": 1,
+  "as_of_utc": "2026-11-07T14:29:39.952183+00:00",
+  "review_result": "HOLD-W-front-features-on-back",
+  "source": {
+    "path": "generated/golf-source-batch-02/native/park-bench/yaw8-v1.png",
+    "sha256": "0dcecf6800741f11709b5031baa787a4c8fac20c168ff2a4474e861fcbe8f55a",
+    "bytes": 1822653
+  },
+  "mode": "RGBA",
+  "dimensions": [
+    1536,
+    1024
+  ],
+  "source_original_hash_matches_parent": true,
+  "parent_provenance": {
+    "path": "generated/golf-source-batch-02/native/park-bench/yaw8-v1.provenance.json",
+    "sha256": "7f9b688e074ddd5a814b192b17e8283e4d349bf69cfba4c868503ec7664182c0",
+    "bytes": 2766
+  },
+  "exact_prompt_utf8_sha256": "55c15271fb2d9544563695e68aacf8323d511e193afd17849618fdaf63f32a19",
+  "actual_generation_references": [
+    {
+      "path": "generated/golf-source-batch-02/fixed-world-guides-v1/park-bench/guides/yaw8-world-v2.png",
+      "sha256": "0448bd833c2b26d460e752a996785c92e757e3266ceeb5cf0c93eaf52bbc2373",
+      "bytes": 40669
+    },
+    {
+      "path": "generated/golf-source-batch-02/native/park-bench/normal-v2.png",
+      "sha256": "0fc9e6e59578d34d44482cce1317cf77d15315612959a9f564cf990ce484fb7c",
+      "bytes": 1603986
+    }
+  ],
+  "zero_alpha_fraction": 0.5422649383544922,
+  "outer_4px_border_alpha_p50p95max": [
+    0.0,
+    2.0,
+    3.0
+  ],
+  "clear_horizontal_cut_y": 512,
+  "clear_vertical_cut_by_row": [
+    768,
+    776
+  ],
+  "cut_alpha_maxima": {
+    "horizontal": 2,
+    "vertical_top": 1,
+    "vertical_bottom": 2
+  },
+  "cells": [
+    {
+      "cell": "TL",
+      "actual_role": "N front seat/map",
+      "selected_guide_direction": "N",
+      "reference_rect_ltrb": [
+        0,
+        0,
+        768,
+        512
+      ],
+      "minimum_core_margin_px": 42,
+      "boundary_core_pixels_alpha_gt128": 0,
+      "boundary_alpha_max": 2,
+      "native_rgba_rectangle_sha256": "fd97e687edac943fea65fe507136a9882a634b88e522ae32eb5cb6d13ae96926",
+      "functional_hold": false
+    },
+    {
+      "cell": "TR",
+      "actual_role": "E side; front map sliver",
+      "selected_guide_direction": "E",
+      "reference_rect_ltrb": [
+        768,
+        0,
+        1536,
+        512
+      ],
+      "minimum_core_margin_px": 8,
+      "boundary_core_pixels_alpha_gt128": 0,
+      "boundary_alpha_max": 2,
+      "native_rgba_rectangle_sha256": "a1da18aeb3f4d2a34882050ca7b7af27b0370d0cfbe0005a2095e44d22c84deb",
+      "functional_hold": false
+    },
+    {
+      "cell": "BL",
+      "actual_role": "S rear slats/plain map back",
+      "selected_guide_direction": "S",
+      "reference_rect_ltrb": [
+        0,
+        512,
+        776,
+        1024
+      ],
+      "minimum_core_margin_px": 27,
+      "boundary_core_pixels_alpha_gt128": 0,
+      "boundary_alpha_max": 3,
+      "native_rgba_rectangle_sha256": "3cbc03febefe005e97cbb080dc528aa845c4cf9c24db125cb66d77af9f4e27ad",
+      "functional_hold": false
+    },
+    {
+      "cell": "BR",
+      "actual_role": "W pose; INCORRECT front map visible",
+      "selected_guide_direction": "W",
+      "reference_rect_ltrb": [
+        776,
+        512,
+        1536,
+        1024
+      ],
+      "minimum_core_margin_px": 27,
+      "boundary_core_pixels_alpha_gt128": 0,
+      "boundary_alpha_max": 3,
+      "native_rgba_rectangle_sha256": "509144a48d6fc0be8259a125ac36b9e752dd3528cc8c813f08f0b663b1a463b1",
+      "functional_hold": true
+    }
+  ],
+  "all_cores_complete_at_reference_cuts": true,
+  "visual_observations": [
+    "Nfront/Emapsliver/Splainback correct; W/BR incorrectly displays coloured FRONT map facing viewer instead of plain map backing in W guide. Hold W only; rest are source candidates. Arched top/two finials retained.",
+    "Brown background visible in raw RGB viewer is predominantly hidden/very-low-alpha RGB; proper composite is clean, distant background maximum alpha6/p951."
+  ],
+  "intrinsic_rotational_symmetry": false,
+  "main_faces_functionally_accepted_for_source_candidate": false,
+  "owner_approved": false,
+  "runtime_ready": false,
+  "exact_numerical_angle_certified": false,
+  "native_image_bytes_changed": false,
+  "distant_background_alpha_p50p95max": [
+    0.0,
+    1.0,
+    6.0
+  ],
+  "proper_grey_composite": {
+    "path": "generated/golf-source-batch-02/native/park-bench/qa/yaw8-v1-on-grey.diagnostic.png",
+    "sha256": "627e81b08adbbc3b2924b67fbaba4b5f03798ca6ddfae36a8aebd040ddc756a2",
+    "bytes": 734949
+  },
+  "diagnostic_lossless_inspection_crop": {
+    "file": {
+      "path": "generated/golf-source-batch-02/native/park-bench/qa/yaw8-v1-W-inspection-crop.png",
+      "sha256": "dcc846f4caaad63e064d775de8d9d3f7d252a883635a6c9d1a27a1d6c64b43c0",
+      "bytes": 403817
+    },
+    "rectangle_ltrb": [
+      776,
+      512,
+      1536,
+      1024
+    ],
+    "purpose": "native source inspection only; no repaint or alpha edits"
+  }
+}

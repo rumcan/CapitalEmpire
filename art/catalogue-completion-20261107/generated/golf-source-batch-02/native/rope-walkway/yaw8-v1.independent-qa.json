@@ -1,0 +1,126 @@
+{
+  "schema": 1,
+  "as_of_utc": "2026-11-07T14:29:39.952183+00:00",
+  "review_result": "PASS-source-candidate-four-main-face-roles-alpha",
+  "source": {
+    "path": "generated/golf-source-batch-02/native/rope-walkway/yaw8-v1.png",
+    "sha256": "4fd4a314d7442c5ad546ffb49b7876b97f1dc7bab4bd9c95fd536f0399de8778",
+    "bytes": 1378381
+  },
+  "mode": "RGBA",
+  "dimensions": [
+    1254,
+    1254
+  ],
+  "source_original_hash_matches_parent": true,
+  "parent_provenance": {
+    "path": "generated/golf-source-batch-02/native/rope-walkway/yaw8-v1.provenance.json",
+    "sha256": "d35416856c8a9e1d9fafe8d4b186e11b3ad5615c4830bb074c2796ccd7e3132c",
+    "bytes": 2790
+  },
+  "exact_prompt_utf8_sha256": "73144cd4a07a0e1667d2dee1eb4c12a52f18614cfa9699c8c7abdb9a913f6046",
+  "actual_generation_references": [
+    {
+      "path": "generated/golf-small-prop-correction-guides-v1/rope-walkway/guides/yaw8-world-v1.png",
+      "sha256": "1fbfe268de8466a74b297ac8024feaa24d22f58994a3467ef0226a7c1b278f4b",
+      "bytes": 56765
+    },
+    {
+      "path": "generated/golf-source-batch-02/native/rope-walkway/normal-v2.png",
+      "sha256": "4667e69c8dbb673bd7b8cff7ae2a0a3717bd463511da9af1123e1ec8297b49a2",
+      "bytes": 1298781
+    }
+  ],
+  "zero_alpha_fraction": 0.5197085435060756,
+  "outer_4px_border_alpha_p50p95max": [
+    0.0,
+    1.0,
+    1.0
+  ],
+  "clear_horizontal_cut_y": 627,
+  "clear_vertical_cut_by_row": [
+    627,
+    627
+  ],
+  "cut_alpha_maxima": {
+    "horizontal": 1,
+    "vertical_top": 1,
+    "vertical_bottom": 1
+  },
+  "cells": [
+    {
+      "cell": "TL",
+      "actual_role": "N through opening/ramp",
+      "selected_guide_direction": "N",
+      "reference_rect_ltrb": [
+        0,
+        0,
+        627,
+        627
+      ],
+      "minimum_core_margin_px": 65,
+      "boundary_core_pixels_alpha_gt128": 0,
+      "boundary_alpha_max": 1,
+      "native_rgba_rectangle_sha256": "62bfb1328583d823497a718aefbd0b86168bc7846e38319a72827105a98036cc",
+      "functional_hold": false
+    },
+    {
+      "cell": "TR",
+      "actual_role": "E side leaf faces",
+      "selected_guide_direction": "E",
+      "reference_rect_ltrb": [
+        627,
+        0,
+        1254,
+        627
+      ],
+      "minimum_core_margin_px": 65,
+      "boundary_core_pixels_alpha_gt128": 0,
+      "boundary_alpha_max": 1,
+      "native_rgba_rectangle_sha256": "09b8e710f01476e268744e40edea7c8a857865d472abb8caf97f1ed057d0d982",
+      "functional_hold": false
+    },
+    {
+      "cell": "BL",
+      "actual_role": "S opposite hinge/back face",
+      "selected_guide_direction": "S",
+      "reference_rect_ltrb": [
+        0,
+        627,
+        627,
+        1254
+      ],
+      "minimum_core_margin_px": 58,
+      "boundary_core_pixels_alpha_gt128": 0,
+      "boundary_alpha_max": 1,
+      "native_rgba_rectangle_sha256": "27d8c5f4c2d341c14d3e89c7790237d8c2dbe9012c98f92c87840774c5425c9d",
+      "functional_hold": false
+    },
+    {
+      "cell": "BR",
+      "actual_role": "W opposite leaf backs",
+      "selected_guide_direction": "W",
+      "reference_rect_ltrb": [
+        627,
+        627,
+        1254,
+        1254
+      ],
+      "minimum_core_margin_px": 53,
+      "boundary_core_pixels_alpha_gt128": 0,
+      "boundary_alpha_max": 1,
+      "native_rgba_rectangle_sha256": "6a6b60f0d150c5e5459da9ec2d4fd42ee848c0f317ea9a3d7a59b4de8a0eb258",
+      "functional_hold": false
+    }
+  ],
+  "all_cores_complete_at_reference_cuts": true,
+  "visual_observations": [
+    "Four posts/two leaves and functional perforated ramp retained; front/rear hinge-end/diagonal-brace projections match guide. Leaves stay open; no added slab."
+  ],
+  "intrinsic_rotational_symmetry": false,
+  "main_faces_functionally_accepted_for_source_candidate": true,
+  "owner_approved": false,
+  "runtime_ready": false,
+  "exact_numerical_angle_certified": false,
+  "native_image_bytes_changed": false
+}

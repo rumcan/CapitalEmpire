@@ -1,0 +1,202 @@
+[
+  {
+    "key": "compact-bleacher-60-upgraded",
+    "source": "C:/Users/RAMPAGE/.codex/generated_images/01a1b1fd-39ec-7220-8f11-86e4448833ea/exec-091f1ce8-3d70-49e8-9f8d-351396694954.png",
+    "target": "generated/compact-bleacher-60-upgraded/normal-v1.png",
+    "prompt": "Finish the four technical models in the reference as finely hand-painted miniature game sprites, preserving their exact structural silhouettes and projected views. One attractive upgraded1985 golf spectator bleacher:8x4metres, SIX tiered rows of TEN separate cream molded seats each,60seats total, dark-green engineered tubular-steel supports and rails, clean light-grey decks. Preserve the wide side stair, twelve half-riser steps, six access landings, supports, guardrails and correct front versus back. NO ROOF, no people. Four45degree corner views, orthographic30degrees down, arrangement SE SW / NW NE, match the technical reference. Warm natural late-afternoon DAYTIME light SCREEN UPPER RIGHT and shadows LOWER LEFT, painterly materials consistent with a detailed illustrated golf-town game. Fully opaque objects on genuinely zero-alpha transparent background. Remove technical labels; no text, captions, grid, UI, ground plate, grass, haze or backdrop. Four complete separate sprites, each fully in its quarter, equal physical scale, generous empty margins.",
+    "references": [
+      "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/compact-bleacher-60-upgraded/guides/normal-world-v1.png"
+    ],
+    "status": "native candidate; geometry/count/alpha review pending",
+    "sha256": "55639fff1bcc61e963755694942ccea358a3fc1cbe348266153a550bbff7456b"
+  },
+  {
+    "key": "compact-bleacher-60-upgraded",
+    "source": "C:/Users/RAMPAGE/.codex/generated_images/01a1b1fd-39ec-7220-8f11-86e4448833ea/exec-82d97c24-7f44-4259-a24d-96c0d222f43b.png",
+    "target": "generated/compact-bleacher-60-upgraded/yaw8-v1.png",
+    "prompt": "Finish the four technical models in the reference as finely hand-painted miniature game sprites, preserving their exact structural silhouettes and projected views. One attractive upgraded1985 golf spectator bleacher:8x4metres, SIX tiered rows of TEN separate cream molded seats each,60seats total, dark-green engineered tubular-steel supports and rails, clean light-grey decks. Preserve the wide side stair, twelve half-riser steps, six access landings, supports, guardrails and correct front versus back. NO ROOF, no people. Four near-cardinal8degree yaw views, orthographic30degrees down, arrangement N E / S W. Match the slightly slanted main bases and narrow receding side of the technical reference; preserve their slopes and do not flatten square-on. Warm natural late-afternoon DAYTIME light SCREEN UPPER RIGHT and shadows LOWER LEFT, painterly materials consistent with a detailed illustrated golf-town game. Fully opaque objects on genuinely zero-alpha transparent background. Remove technical labels; no text, captions, grid, UI, ground plate, grass, haze or backdrop. Four complete separate sprites, each fully in its quarter, equal physical scale, generous empty margins.",
+    "references": [
+      "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/compact-bleacher-60-upgraded/guides/yaw8-world-v1.png"
+    ],
+    "status": "native candidate; geometry/count/alpha review pending",
+    "sha256": "fd9a233c2cc4ee29e0460038a6fa1013e0b86e3756f3b3d72171c54d93724f37"
+  },
+  {
+    "key": "exterior-03",
+    "source": "C:/Users/RAMPAGE/.codex/generated_images/01a1b1fd-39ec-7220-8f11-86e4448833ea/exec-b0f5ceb8-c760-4679-ba49-a049bee64e26.png",
+    "target": "generated/scenes/batches/exterior-03/source-v1.png",
+    "prompt": "Create one high-resolution wide 16:9 painted property-scene sheet for Capital Empire, with exactly FOUR independent wide 16:9 property-detail pictures in a strict 2x2 layout. These four cells are FOUR DIFFERENT PROPERTIES, not four rotations or a contact sheet of isometric sprites. Each cell is a full opaque cinematic eye-level or slightly raised front exterior scene, with its own small natural surroundings and a clearly readable principal facade/entrance. Keep a clean simple separation for native cropping, no captions, labels, UI, frames or composite panorama between cells. Use the largest native image resolution available; do not simulate resolution by upscaling. Reference 1 gives the detailed hand-painted illustrated miniature materials, proportions and brushwork only. References 2, 3, 4, 5 identify the four EXACT buildings, in row-major order; keep their individual architecture and readable signs. It is 1985. LATE-AFTERNOON DAYTIME in all four cells: warm sun fixed at screen UPPER RIGHT, soft shadows toward LOWER LEFT, readable daytime facades and roofs. Relight the identity references for this daylight; their dusk lamps are not a time-of-day instruction. Same coherent style across houses, shops and golf buildings, realistic period details, no modern technology or Halloween dressing. Hard times: faded or peeling paint, restrained dirt and wear, modest repairs, patchy approaches and few visitors; preserve all rooflines, openings, storeys and the same actual physical building. Ordinary real-world worn architecture, never a fantasy shack or goblin village.\n\nCELL 1 (top-left), exact subject world:house_0, condition rundown: Single-storey grey clapboard cottage with a dark blue gabled shingle roof, one brick chimney, a small round window in the right gable, black shutters, a red front door, short front steps and low planting against the walls.\nCELL 2 (top-right), exact subject world:house_1, condition rundown: Two-storey dark teal clapboard house with pale corner trim, a dark blue gable roof, one tall brick chimney, a round right-gable window, black shutters, a centred timber front door and short front steps. Preserve the actual window grid and two-storey height.\nCELL 3 (bottom-left), exact subject gen:house-duplex, condition rundown: Two-storey side-by-side clapboard duplex: blue-grey left half and cream right half, two front-facing gables, matching dark shingle roofs, separate small covered entrances and two distinct front doors with their own steps. Keep both units and both entrances.\nCELL 4 (bottom-right), exact subject gen:house-farmhouse-wrap, condition rundown: Two-storey pale clapboard farmhouse with a long wraparound timber veranda, many slender veranda posts, a dark blue pitched/gabled roof, one brick chimney, a round gable window and several sash windows. Preserve the porch depth and all sides visible in the native reference.\n\nEvery final crop needs visual review against its own identity PNG and its condition. No reference to a base building substitutes for a different variation ID. Keep the native generated sheet unchanged.\n",
+    "references": [
+      "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/portraits/golf-pro-m1/source.png",
+      "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/scenes/identity-references/world-house-0-51fa4b80/source.png",
+      "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/scenes/identity-references/world-house-1-ba13ed2e/source.png",
+      "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/scenes/identity-references/gen-house-duplex-c39d1a23/source.png",
+      "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/scenes/identity-references/gen-house-farmhouse-wrap-2b0eea83/source.png"
+    ],
+    "cells": [
+      {
+        "cell": "top-left",
+        "cellIndex": 0,
+        "identityReferenceNumber": 2,
+        "runtimeId": "world:house_0",
+        "condition": "rundown",
+        "view": "outside",
+        "description": "Single-storey grey clapboard cottage with a dark blue gabled shingle roof, one brick chimney, a small round window in the right gable, black shutters, a red front door, short front steps and low planting against the walls.",
+        "referencePNG": "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/scenes/identity-references/world-house-0-51fa4b80/source.png",
+        "referenceSha256": "f877eeeba0204786429c2f86a837125652626a845497983a47893adb095d9f9f",
+        "manifestEntryAfterReview": {
+          "slug": "town-home-outside",
+          "subject": "world:house_0",
+          "state": "rundown",
+          "view": "outside"
+        },
+        "mustPreserve": "This exact building architecture, proportions, roof/cupola/chimneys, door and window placement, sign identity and its building type. Condition changes do not redesign the building."
+      },
+      {
+        "cell": "top-right",
+        "cellIndex": 1,
+        "identityReferenceNumber": 3,
+        "runtimeId": "world:house_1",
+        "condition": "rundown",
+        "view": "outside",
+        "description": "Two-storey dark teal clapboard house with pale corner trim, a dark blue gable roof, one tall brick chimney, a round right-gable window, black shutters, a centred timber front door and short front steps. Preserve the actual window grid and two-storey height.",
+        "referencePNG": "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/scenes/identity-references/world-house-1-ba13ed2e/source.png",
+        "referenceSha256": "c735558cce077de207f19c34a24ce9b17cf8223319f7f8ffc1c2381f41c5f9c1",
+        "manifestEntryAfterReview": {
+          "slug": "town-home-outside",
+          "subject": "world:house_1",
+          "state": "rundown",
+          "view": "outside"
+        },
+        "mustPreserve": "This exact building architecture, proportions, roof/cupola/chimneys, door and window placement, sign identity and its building type. Condition changes do not redesign the building."
+      },
+      {
+        "cell": "bottom-left",
+        "cellIndex": 2,
+        "identityReferenceNumber": 4,
+        "runtimeId": "gen:house-duplex",
+        "condition": "rundown",
+        "view": "outside",
+        "description": "Two-storey side-by-side clapboard duplex: blue-grey left half and cream right half, two front-facing gables, matching dark shingle roofs, separate small covered entrances and two distinct front doors with their own steps. Keep both units and both entrances.",
+        "referencePNG": "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/scenes/identity-references/gen-house-duplex-c39d1a23/source.png",
+        "referenceSha256": "3a26467971eefdb541488318ec100967e29ae2cf916ec2572036985dc4ca9c85",
+        "manifestEntryAfterReview": {
+          "slug": "town-home-outside",
+          "subject": "gen:house-duplex",
+          "state": "rundown",
+          "view": "outside"
+        },
+        "mustPreserve": "This exact building architecture, proportions, roof/cupola/chimneys, door and window placement, sign identity and its building type. Condition changes do not redesign the building."
+      },
+      {
+        "cell": "bottom-right",
+        "cellIndex": 3,
+        "identityReferenceNumber": 5,
+        "runtimeId": "gen:house-farmhouse-wrap",
+        "condition": "rundown",
+        "view": "outside",
+        "description": "Two-storey pale clapboard farmhouse with a long wraparound timber veranda, many slender veranda posts, a dark blue pitched/gabled roof, one brick chimney, a round gable window and several sash windows. Preserve the porch depth and all sides visible in the native reference.",
+        "referencePNG": "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/scenes/identity-references/gen-house-farmhouse-wrap-2b0eea83/source.png",
+        "referenceSha256": "aaddc4f69472fd8bede578d003a52874550292df445d8f6987944badddb7bd1a",
+        "manifestEntryAfterReview": {
+          "slug": "town-home-outside",
+          "subject": "gen:house-farmhouse-wrap",
+          "state": "rundown",
+          "view": "outside"
+        },
+        "mustPreserve": "This exact building architecture, proportions, roof/cupola/chimneys, door and window placement, sign identity and its building type. Condition changes do not redesign the building."
+      }
+    ],
+    "status": "native scene candidate; exact identity review pending",
+    "sha256": "7dca765931bf2453e6b291d232506f9992fe68c838de18a9afd1000c6a5cb709"
+  },
+  {
+    "key": "exterior-04",
+    "source": "C:/Users/RAMPAGE/.codex/generated_images/01a1b1fd-39ec-7220-8f11-86e4448833ea/exec-12bc2676-ebf7-4207-a6ad-5f4c393d60a7.png",
+    "target": "generated/scenes/batches/exterior-04/source-v1.png",
+    "prompt": "Create one high-resolution wide 16:9 painted property-scene sheet for Capital Empire, with exactly FOUR independent wide 16:9 property-detail pictures in a strict 2x2 layout. These four cells are FOUR DIFFERENT PROPERTIES, not four rotations or a contact sheet of isometric sprites. Each cell is a full opaque cinematic eye-level or slightly raised front exterior scene, with its own small natural surroundings and a clearly readable principal facade/entrance. Keep a clean simple separation for native cropping, no captions, labels, UI, frames or composite panorama between cells. Use the largest native image resolution available; do not simulate resolution by upscaling. Reference 1 gives the detailed hand-painted illustrated miniature materials, proportions and brushwork only. References 2, 3, 4, 5 identify the four EXACT buildings, in row-major order; keep their individual architecture and readable signs. It is 1985. LATE-AFTERNOON DAYTIME in all four cells: warm sun fixed at screen UPPER RIGHT, soft shadows toward LOWER LEFT, readable daytime facades and roofs. Relight the identity references for this daylight; their dusk lamps are not a time-of-day instruction. Same coherent style across houses, shops and golf buildings, realistic period details, no modern technology or Halloween dressing. Good times: maintained surfaces, repaired paint, tidy approaches and a few appropriate period visitors; the same actual building, not a redesigned modern replacement.\n\nCELL 1 (top-left), exact subject world:video_rental, condition upgraded: Distinct larger blue VIDEO VAULT rental shop with a flat parapet roof, a large central box-and-curved-duct roof unit, smaller roof vents, a yellow VIDEO VAULT fascia with BE KIND - REWIND below, glazed front display bays and glass entrance doors. Keep this base shop distinct from world:video and from every variation ID.\nCELL 2 (top-right), exact subject world:arcade, condition upgraded: Single-storey brown masonry arcade with a flat parapet roof, two box air-conditioning units with connecting pipework and a roof flue, a cyan-and-pink ARCADE marquee with star motifs and a line of bulbs, glazed front arcade-cabinet windows and central double doors. This is the base world:arcade identity, not its variation.\nCELL 3 (bottom-left), exact subject town:grocery, condition upgraded: Two-storey red-brick grocery with pale stone lintels and corner trim, a flat parapet roof with its chimney/vents/air unit, a dark green MAPLE FALLS GROCERY fascia, a green-and-cream striped awning, produce displays and glazed shop entrance beneath upper sash windows.\nCELL 4 (bottom-right), exact subject town:bakery, condition upgraded: Pale cream clapboard ROSE'S BAKERY with a flat parapet roof, roof chimney and air unit, red-and-cream striped front awning, curved red-and-gold bakery sign, glazed front display windows full of bread, a red shop door and flower boxes on the right-side windows.\n\nEvery final crop needs visual review against its own identity PNG and its condition. No reference to a base building substitutes for a different variation ID. Keep the native generated sheet unchanged.\n",
+    "references": [
+      "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/portraits/golf-pro-m1/source.png",
+      "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/scenes/identity-references/world-video-rental-cc8c504f/source.png",
+      "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/scenes/identity-references/world-arcade-f5b7f5eb/source.png",
+      "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/scenes/identity-references/town-grocery-46d5dc39/source.png",
+      "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/scenes/identity-references/town-bakery-af15d7f5/source.png"
+    ],
+    "cells": [
+      {
+        "cell": "top-left",
+        "cellIndex": 0,
+        "identityReferenceNumber": 2,
+        "runtimeId": "world:video_rental",
+        "condition": "upgraded",
+        "view": "outside",
+        "description": "Distinct larger blue VIDEO VAULT rental shop with a flat parapet roof, a large central box-and-curved-duct roof unit, smaller roof vents, a yellow VIDEO VAULT fascia with BE KIND - REWIND below, glazed front display bays and glass entrance doors. Keep this base shop distinct from world:video and from every variation ID.",
+        "referencePNG": "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/scenes/identity-references/world-video-rental-cc8c504f/source.png",
+        "referenceSha256": "4e909c83906d4a80792b33e196532c6c210ecfaac009b79415297839b70b60c3",
+        "manifestEntryAfterReview": {
+          "slug": "video-store-outside",
+          "subject": "world:video_rental",
+          "state": "upgraded",
+          "view": "outside"
+        },
+        "mustPreserve": "This exact building architecture, proportions, roof/cupola/chimneys, door and window placement, sign identity and its building type. Condition changes do not redesign the building."
+      },
+      {
+        "cell": "top-right",
+        "cellIndex": 1,
+        "identityReferenceNumber": 3,
+        "runtimeId": "world:arcade",
+        "condition": "upgraded",
+        "view": "outside",
+        "description": "Single-storey brown masonry arcade with a flat parapet roof, two box air-conditioning units with connecting pipework and a roof flue, a cyan-and-pink ARCADE marquee with star motifs and a line of bulbs, glazed front arcade-cabinet windows and central double doors. This is the base world:arcade identity, not its variation.",
+        "referencePNG": "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/scenes/identity-references/world-arcade-f5b7f5eb/source.png",
+        "referenceSha256": "ac48c283b864bcf2ca334aea0b33c08f582369ea12734e1926e41f9e29c26e2a",
+        "manifestEntryAfterReview": {
+          "slug": "arcade-outside",
+          "subject": "world:arcade",
+          "state": "upgraded",
+          "view": "outside"
+        },
+        "mustPreserve": "This exact building architecture, proportions, roof/cupola/chimneys, door and window placement, sign identity and its building type. Condition changes do not redesign the building."
+      },
+      {
+        "cell": "bottom-left",
+        "cellIndex": 2,
+        "identityReferenceNumber": 4,
+        "runtimeId": "town:grocery",
+        "condition": "upgraded",
+        "view": "outside",
+        "description": "Two-storey red-brick grocery with pale stone lintels and corner trim, a flat parapet roof with its chimney/vents/air unit, a dark green MAPLE FALLS GROCERY fascia, a green-and-cream striped awning, produce displays and glazed shop entrance beneath upper sash windows.",
+        "referencePNG": "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/scenes/identity-references/town-grocery-46d5dc39/source.png",
+        "referenceSha256": "f660671f8b3ed4c82715e532db57646940120c311d2a9b262ef862c1ac8775f9",
+        "manifestEntryAfterReview": {
+          "slug": "grocery-store-outside",
+          "subject": "town:grocery",
+          "state": "upgraded",
+          "view": "outside"
+        },
+        "mustPreserve": "This exact building architecture, proportions, roof/cupola/chimneys, door and window placement, sign identity and its building type. Condition changes do not redesign the building."
+      },
+      {
+        "cell": "bottom-right",
+        "cellIndex": 3,
+        "identityReferenceNumber": 5,
+        "runtimeId": "town:bakery",
+        "condition": "upgraded",
+        "view": "outside",
+        "description": "Pale cream clapboard ROSE'S BAKERY with a flat parapet roof, roof chimney and air unit, red-and-cream striped front awning, curved red-and-gold bakery sign, glazed front display windows full of bread, a red shop door and flower boxes on the right-side windows.",
+        "referencePNG": "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/scenes/identity-references/town-bakery-af15d7f5/source.png",
+        "referenceSha256": "29b411b0e050769e6ece08db9d7cf8e015e966076ae66430e632bf42b135ff48",
+        "manifestEntryAfterReview": {
+          "slug": "bakery-outside",
+          "subject": "town:bakery",
+          "state": "upgraded",
+          "view": "outside"
+        },
+        "mustPreserve": "This exact building architecture, proportions, roof/cupola/chimneys, door and window placement, sign identity and its building type. Condition changes do not redesign the building."
+      }
+    ],
+    "status": "native scene candidate; exact identity review pending",
+    "sha256": "ab92a671005b4271cd0ad1c4f1692daf72bc85f24bb2c0b697fb944031238a12"
+  }
+]

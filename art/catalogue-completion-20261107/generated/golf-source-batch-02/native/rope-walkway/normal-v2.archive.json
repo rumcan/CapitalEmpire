@@ -1,0 +1,23 @@
+[
+  {
+    "key": "newprop:rope-walkway",
+    "family": "normal",
+    "condition": "base",
+    "version": 2,
+    "target": "generated/golf-source-batch-02/native/rope-walkway/normal-v2.png",
+    "refs": [
+      "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-small-prop-correction-guides-v1\\rope-walkway\\guides\\normal-world-v1.png",
+      "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/golf-source-batch-02/native/rope-walkway/normal-v1.png"
+    ],
+    "prompt": "Paint FOUR exact fixed-world 45degreecorner views inREFERENCE1 as finished detailedpainterlygameartmatchingidentity/materials inREFERENCE2. Reference1controls ALLcameras/sidegeometry/attachments/occlusion; reference2styleONLY, donotcopyduplicateposes. Exactly4green posts,2gate leaves fixed90degreesOPEN, rear+Yhinges and leaves extendingtowardFRONT-Y; ONEperforated metal ramp/threshold with yellow long-side edges. Two leaves never change angle, swap hinge ends or become closed. No generic ground plate outside functional ramp.. Retainbelievableordinarywear/materials matchingnativeidentity, nofantasychanges. Onefixedassemblyrotatedfourquarterturns; Preserveexactguide front/rear/mainfaceincells, neverrepeatfrontcornerTLforBR. Orthographic30degreesDOWN, same4cellsasguide. Late-afternoonDAYTIME sunSCREENUPPERRIGHT/shadowsLOWERLEFT, lampsOFF. Completeequallyscaledobjects,broadgenuinelyzeroalpha transparentgutters/margins; nopavement/groundplate/plants/people/haze/UI/captions/grid. Functionalrampretainedwhenpresentinguide. Keep7blankscorerows orintrinsichole12/map/dots ONLYasfixedidentityrequires.",
+    "source": "C:/Users/RAMPAGE/.codex/generated_images/01a1b1fd-39ec-7220-8f11-86e4448833ea/exec-f413035b-a292-4992-b80a-1aecee680f85.png",
+    "references": [
+      "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-small-prop-correction-guides-v1\\rope-walkway\\guides\\normal-world-v1.png",
+      "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/golf-source-batch-02/native/rope-walkway/normal-v1.png"
+    ],
+    "status": "native-source-candidate-pending-visual-review",
+    "runtime_imported": false,
+    "sha256": "4667e69c8dbb673bd7b8cff7ae2a0a3717bd463511da9af1123e1ec8297b49a2",
+    "native_bytes_preserved": true
+  }
+]

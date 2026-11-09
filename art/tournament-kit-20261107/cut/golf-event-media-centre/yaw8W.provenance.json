@@ -1,0 +1,29 @@
+{
+  "schema": 1,
+  "subject": "golf:event-media-centre",
+  "version": 1,
+  "key": "yaw8W",
+  "source": {
+    "file": "../../batch01/media-centre/budget/yaw8-W.png",
+    "sha256": "94f99a537f8b3a11ba1f9ef75c303eaa3bdb26d51a81bce101ae1238a86b2c10",
+    "width": 627,
+    "height": 627
+  },
+  "cell": 0,
+  "cellRect": {
+    "left": 0,
+    "top": 0,
+    "width": 627,
+    "height": 627
+  },
+  "crop": {
+    "left": 168,
+    "top": 82,
+    "width": 349,
+    "height": 450
+  },
+  "output": "yaw8W.native.png",
+  "sha256": "d15281f77511f6744525c6d2db10247547515565923f36b4497f5a6a2d170cc2",
+  "operation": "native RGBA cell crop only; no flip/repaint/view synthesis",
+  "review": "candidate"
+}

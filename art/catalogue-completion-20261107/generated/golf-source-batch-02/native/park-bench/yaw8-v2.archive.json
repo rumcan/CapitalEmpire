@@ -1,0 +1,22 @@
+[
+  {
+    "key": "newprop:park-bench",
+    "slug": "park-bench",
+    "family": "yaw8",
+    "condition": "base",
+    "version": 2,
+    "target": "generated/golf-source-batch-02/native/park-bench/yaw8-v2.png",
+    "refs": [
+      "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/golf-source-batch-02/native/park-bench/yaw8-v1.png"
+    ],
+    "prompt": "TARGETED correction to ONLY BOTTOM-RIGHT W cell of reference1 four-view bench/mapsheet. The thinvisibleface of the tall attached mapboard wrongly shows a colored printed map. Replace that visible panel interior ONLY with plain vertical wooden BACKING planks, matching the panel back in bottom-left S view. No green map graphic/blue pond/red flag on Wback. Keep archedcap, bothgoldfinials, postcollars, rails, benchseat/backslats/feet/arms and exact camera unchanged. Keep ALLotherthreecells pixelappearance/cameras/materials/geometry unchanged. Samefourviews, detailedpaintedminiaturestyle, late-afternoonDAYTIME sunUPPERRIGHT/shadowsLOWERLEFT. Genuinezeroalpha transparentbackground/gutters, broadmargins; removeanysurroundingbrownhaze, noaddedobjects/textUI/scenery.",
+    "source": "C:/Users/RAMPAGE/.codex/generated_images/01a1b1fd-39ec-7220-8f11-86e4448833ea/exec-3dabd7e3-af6e-4d88-b1bf-97db2850120f.png",
+    "references": [
+      "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/golf-source-batch-02/native/park-bench/yaw8-v1.png"
+    ],
+    "status": "native-source-candidate-pending-visual-review",
+    "runtime_imported": false,
+    "sha256": "b8022ef2aa96119ff82eb02e6559e0cbcd340a5a1a8abde1f9d0b387f0462005",
+    "native_bytes_preserved": true
+  }
+]

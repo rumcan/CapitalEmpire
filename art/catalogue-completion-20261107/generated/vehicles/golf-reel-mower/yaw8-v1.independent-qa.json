@@ -1,0 +1,133 @@
+{
+  "schema": 1,
+  "as_of_utc": "2026-11-07T10:35:58.663317+00:00",
+  "review_result": "HOLD-exact8-geometry; all4nearcardinaldirections-present-with-actual-layout",
+  "source": {
+    "path": "generated/vehicles/golf-reel-mower/yaw8-v1.png",
+    "sha256": "bac7a4caf2154e39f8bde35af2c4d5f2cdb726c4007e821cb941d1c3699cc11d",
+    "bytes": 1713350
+  },
+  "source_original_hash_matches_parent_batch": true,
+  "prompt": {
+    "path": "generated/vehicles/golf-reel-mower/yaw8-v1.prompt.txt",
+    "sha256": "bdacd6ebff98a1a5d64db584ce301258e161701ea757630d381531d5fd46378c",
+    "bytes": 1319
+  },
+  "parent_provenance": {
+    "path": "generated/vehicles/golf-reel-mower/yaw8-v1.provenance.json",
+    "sha256": "f645adb3bd77d8509ebcf0026b079d94c2e1006272cda9cfd78aca8aaa16e9fe",
+    "bytes": 1954
+  },
+  "identity_observation": "Tan single seat, roll hoop, rear engine with black filler cap, rear grille and two FRONT cylindrical reels remain coherent; no rear front-grille duplication.",
+  "actual_cell_mapping": [
+    {
+      "cell": 0,
+      "rect_ltrb": [
+        0,
+        0,
+        698,
+        563
+      ],
+      "core_margin": 27,
+      "boundary_core_pixels": 0,
+      "boundary_alpha_max": 1,
+      "actual_screen_nose": "almost down, angled lower-left",
+      "rgba_crop_sha256": "e82645d9aaf9e0080ef1827edbdd88bb7774b424914dcf5457a57227bbd6519a",
+      "core_trim_dimensions": [
+        480,
+        509
+      ],
+      "core_trim_rgba_sha256_alpha_le128_ignored": "0e79233185b1dfe118d503308df0ace67bd79b05dca9c75881163ea72870dff0"
+    },
+    {
+      "cell": 1,
+      "rect_ltrb": [
+        698,
+        0,
+        1396,
+        563
+      ],
+      "core_margin": 32,
+      "boundary_core_pixels": 0,
+      "boundary_alpha_max": 1,
+      "actual_screen_nose": "almost left, angled lower-left",
+      "rgba_crop_sha256": "b55336281ce72585e7eac524c01a41b3d0b1d17b6abb467886a59645538fbe78",
+      "core_trim_dimensions": [
+        582,
+        496
+      ],
+      "core_trim_rgba_sha256_alpha_le128_ignored": "6d5881e666ff0da9aef807893938f80b6492436189857cca42de0c1597fe8cac"
+    },
+    {
+      "cell": 2,
+      "rect_ltrb": [
+        0,
+        563,
+        698,
+        1127
+      ],
+      "core_margin": 43,
+      "boundary_core_pixels": 0,
+      "boundary_alpha_max": 1,
+      "actual_screen_nose": "almost up, angled upper-right",
+      "rgba_crop_sha256": "5df4f8338f76ac660254084a430b0767c3ea1831a44da32c656ddbb0c457742f",
+      "core_trim_dimensions": [
+        470,
+        446
+      ],
+      "core_trim_rgba_sha256_alpha_le128_ignored": "37bbf1d2ac32223839de9e03fb28e3192f5087a0f9e01e48e1a474e9ca1eb438"
+    },
+    {
+      "cell": 3,
+      "rect_ltrb": [
+        698,
+        563,
+        1396,
+        1127
+      ],
+      "core_margin": 30,
+      "boundary_core_pixels": 0,
+      "boundary_alpha_max": 1,
+      "actual_screen_nose": "almost right, angled lower-right",
+      "rgba_crop_sha256": "b7dac7ecffb73730036a7cf6fdef71a0b212dc8c76179a44c059393a3215c6f8",
+      "core_trim_dimensions": [
+        563,
+        487
+      ],
+      "core_trim_rgba_sha256_alpha_le128_ignored": "5965b099365ddf70debe4deacfe9169b37bd450402359cc3214ad78b205aedeb"
+    }
+  ],
+  "background": {
+    "zero_alpha_fraction": 0.48745496703726965,
+    "outer_border_p50max": [
+      0.0,
+      1.0
+    ],
+    "center_gutter_p50p95max": [
+      0.0,
+      1.0,
+      1.0
+    ]
+  },
+  "canvas_dimensions": [
+    1396,
+    1127
+  ],
+  "actual_clear_gutter_crops_needed": false,
+  "crop_operation_performed": false,
+  "all_cells_core_clear_of_accepted_cut_boundaries": true,
+  "partition_covers_all_pixels": true,
+  "no_duplicate_core_cell_hashes": true,
+  "exact_duplicate_core_pairs": [],
+  "exact_mirrored_core_pairs": [],
+  "mirror_limit": "Only exact pixel duplicate/mirror detection; conceptual/model mirroring needs visual judgment. All cells visually inspected.",
+  "notes": [
+    "Four near-cardinal directions exist, but side cells are reversed relative to prompt: TR actual LEFT, BR actual RIGHT. Preserve actual source-cell mapping; do not call these directions missing merely because layout differs.",
+    "HOLD exact8 certification: broad offset appears stronger than requested; no calibrated independent8degree proof. Source labels are not geometry evidence."
+  ],
+  "source_only": true,
+  "owner_approved": false,
+  "runtime_ready": false,
+  "exact8_certified": false,
+  "vehicle_physical_scale_calibration_pending": true
+}

@@ -1,0 +1,29 @@
+{
+  "schema": 1,
+  "subject": "golf:event-food-truck-upgraded",
+  "version": 1,
+  "key": "yaw8W",
+  "source": {
+    "file": "../../batch01/food-truck/upgraded/yaw8-W.png",
+    "sha256": "331e86cd8e0fdc11f7a9ded0b27a2d2a091336194bcddf5b784f53416f89ed68",
+    "width": 594,
+    "height": 627
+  },
+  "cell": 0,
+  "cellRect": {
+    "left": 0,
+    "top": 0,
+    "width": 594,
+    "height": 627
+  },
+  "crop": {
+    "left": 164,
+    "top": 64,
+    "width": 308,
+    "height": 444
+  },
+  "output": "yaw8W.native.png",
+  "sha256": "6cb65318290d465f8a5adb8ae6ba2aee04f2f74de5479d288c40b7cf77bb38d7",
+  "operation": "native RGBA cell crop only; no flip/repaint/view synthesis",
+  "review": "candidate"
+}

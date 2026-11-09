@@ -1,0 +1,15 @@
+{
+  "key": "2020s-white-charcoal-asymmetric-solar-home",
+  "source": "C:/Users/RAMPAGE/.codex/generated_images/01a1b1fd-39ec-7220-8f11-86e4448833ea/exec-f2bfdda9-c727-4a8f-bdd1-93f298d5519a.png",
+  "target": "generated/era-houses/2020s-white-charcoal-asymmetric-solar-home/normal-v1.png",
+  "prompt": "Turn the FOUR exact technical house models in reference1 into a finished2x2 sprite sheet in the detailed hand-painted miniature style of reference2. Image1 is EXACT geometry and camera; image2 only painted material/brushwork quality, never old house architecture or dusk lighting. House from the 2020s: An ordinary compact single-storey home, higher white left volume and lower charcoal right entry volume. Asymmetrical stepped flat parapet roofs, timber front door and six rectangular solar modules in two rows of three on the higher roof. No science-fiction canopy, no huge glazing walls, no mansion scale. Preserve each guide's precise body proportions, storeys, roof masses, garage location, chimney or solar panels, and EXACT visible door/window positions. No extra doors or windows. The same new maintained later-era house in all four views. Four true45degree corner views in guide's same cells SE SW / NW NE, orthographic30degrees down, ground footprint edges form a V and show two walls equally. Late-afternoon DAYTIME sun fixed SCREEN UPPER RIGHT with shadows LOWER LEFT; windows/lights OFF. Natural believable building materials with painted texture detail, coherent same-game style. Keep the building complete and centred in its own quarter, all at equal scale, generous transparent margins. Fully opaque building on genuinely transparent zero-alpha background. No ground plate, driveway, terrain, people, cars, trees, plants, scene background, haze, technical labels, captions or grid.",
+  "references": [
+    "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\2020s-white-charcoal-asymmetric-solar-home\\guides\\normal-world-v1.png",
+    "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/scenes/identity-references/gen-house-farmhouse-wrap-2b0eea83/source.png"
+  ],
+  "era": "2020s",
+  "status": "native source candidate; alpha/geometry/camera QA pending",
+  "runtime_imported": false,
+  "sha256": "9f6851c3debf5e05c2c5612b95db259ec328f4308f235741ca5523881c80fc30",
+  "native_bytes_preserved": true
+}

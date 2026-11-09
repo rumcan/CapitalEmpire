@@ -1,0 +1,206 @@
+{
+  "subject": "newprop:satellite-van",
+  "key": "satellite-van",
+  "views": {
+    "normalSE": {
+      "nominalCameraKey": "normalSE",
+      "sourceFile": "art/catalogue-completion-20261107/generated/golf-vehicle-source-batch-01/native/satellite-van/normal-v1.png",
+      "sourceFileSHA256": "85dc8d224bdac96ba595dded5b1fbef4e962a116d95c1abbfbeb9d89df5bd754",
+      "sourceFrameRectLTRB": [
+        0,
+        0,
+        627,
+        627
+      ],
+      "singleViewOverride": false,
+      "rgbaSHA256": "bc54fa193f58726d02843076c37036fd3e74c11e3acbca0de50deffc48e9838f",
+      "nativeHeadingDegrees": null,
+      "nativeCameraCertified": false,
+      "runtimeReady": false,
+      "operation": "Exact raw integer half-cell crop; native RGBA unchanged",
+      "file": "satellite-van/normalSE.png",
+      "nativeSize": [
+        627,
+        627
+      ],
+      "pngSHA256": "5cec86c9bee1eb4f073fa5fafdfec2a7efe7457aaa799c3ebadf12f841f839d8",
+      "sourceRGBAEqual": true,
+      "singleSourcePNGBytesUnchanged": false
+    },
+    "normalSW": {
+      "nominalCameraKey": "normalSW",
+      "sourceFile": "art/catalogue-completion-20261107/generated/golf-vehicle-source-batch-01/native/satellite-van/normal-v1.png",
+      "sourceFileSHA256": "85dc8d224bdac96ba595dded5b1fbef4e962a116d95c1abbfbeb9d89df5bd754",
+      "sourceFrameRectLTRB": [
+        627,
+        0,
+        1254,
+        627
+      ],
+      "singleViewOverride": false,
+      "rgbaSHA256": "3c960ee9fab7e21503d197187e5bd75348fad48e8cc87be91cf5ef6f42ddfe00",
+      "nativeHeadingDegrees": null,
+      "nativeCameraCertified": false,
+      "runtimeReady": false,
+      "operation": "Exact raw integer half-cell crop; native RGBA unchanged",
+      "file": "satellite-van/normalSW.png",
+      "nativeSize": [
+        627,
+        627
+      ],
+      "pngSHA256": "f02fafadf6523fc8427fbb450d988dd199760bd904a8ecec6dda33f3341a251b",
+      "sourceRGBAEqual": true,
+      "singleSourcePNGBytesUnchanged": false
+    },
+    "normalNW": {
+      "nominalCameraKey": "normalNW",
+      "sourceFile": "art/catalogue-completion-20261107/generated/golf-vehicle-source-batch-01/native/satellite-van/normal-NW-v2.png",
+      "sourceFileSHA256": "ec7f14759eeae13bf003303b3d344b732229fd8cf5b651be48f069985055ed6d",
+      "sourceFrameRectLTRB": [
+        0,
+        0,
+        1254,
+        1254
+      ],
+      "singleViewOverride": true,
+      "rgbaSHA256": "1d509dc18449200c93c1acdcdc48b7e93995f5c7a4db7955ddce94515f19d708",
+      "nativeHeadingDegrees": null,
+      "nativeCameraCertified": false,
+      "runtimeReady": false,
+      "operation": "Whole source PNG byte copy",
+      "file": "satellite-van/normalNW.png",
+      "nativeSize": [
+        1254,
+        1254
+      ],
+      "pngSHA256": "ec7f14759eeae13bf003303b3d344b732229fd8cf5b651be48f069985055ed6d",
+      "sourceRGBAEqual": true,
+      "singleSourcePNGBytesUnchanged": true
+    },
+    "normalNE": {
+      "nominalCameraKey": "normalNE",
+      "sourceFile": "art/catalogue-completion-20261107/generated/golf-vehicle-source-batch-01/native/satellite-van/normal-v1.png",
+      "sourceFileSHA256": "85dc8d224bdac96ba595dded5b1fbef4e962a116d95c1abbfbeb9d89df5bd754",
+      "sourceFrameRectLTRB": [
+        627,
+        627,
+        1254,
+        1254
+      ],
+      "singleViewOverride": false,
+      "rgbaSHA256": "c0c6814c1aa7ff900a9bfb21a58dfd73eccede23adeaddf35561d7fa7eee5437",
+      "nativeHeadingDegrees": null,
+      "nativeCameraCertified": false,
+      "runtimeReady": false,
+      "operation": "Exact raw integer half-cell crop; native RGBA unchanged",
+      "file": "satellite-van/normalNE.png",
+      "nativeSize": [
+        627,
+        627
+      ],
+      "pngSHA256": "bc84a9b2fbf91dc85d27f2b39a330223b08ee4004e0af1b1324e6a633e9618d0",
+      "sourceRGBAEqual": true,
+      "singleSourcePNGBytesUnchanged": false
+    },
+    "yaw8N": {
+      "nominalCameraKey": "yaw8N",
+      "sourceFile": "art/catalogue-completion-20261107/generated/golf-vehicle-source-batch-01/native/satellite-van/yaw8-v1.png",
+      "sourceFileSHA256": "75c05cb5db7f078b7d025b81f77ed214d9b06a985110d74fc2c9b5d5b2403d9d",
+      "sourceFrameRectLTRB": [
+        0,
+        0,
+        627,
+        627
+      ],
+      "singleViewOverride": false,
+      "rgbaSHA256": "def39d60c0610bfe4812eb6180848e9423d4979a8471b032173bf4dd7aec9c22",
+      "file": "satellite-van/yaw8N.png",
+      "nativeSize": [
+        627,
+        627
+      ],
+      "pngSHA256": "2867e62f6857160d24264431f3b8c9274f227bdd7fd7566045aaa5471b0499aa",
+      "sourceRGBAEqual": true,
+      "singleSourcePNGBytesUnchanged": false,
+      "nativeHeadingDegrees": null,
+      "nativeCameraCertified": false,
+      "runtimeReady": false,
+      "operation": "Exact raw integer half-cell crop; native RGBA unchanged"
+    },
+    "yaw8E": {
+      "nominalCameraKey": "yaw8E",
+      "sourceFile": "art/catalogue-completion-20261107/generated/golf-vehicle-source-batch-01/native/satellite-van/yaw8-E-v2.png",
+      "sourceFileSHA256": "0ff6c9c084a670cdb110084c679beeae5973085bffbe76dc6f78deb4f8a1e927",
+      "sourceFrameRectLTRB": [
+        0,
+        0,
+        1254,
+        1254
+      ],
+      "singleViewOverride": true,
+      "rgbaSHA256": "6873a6001063b4abd4e6d4fb6f9bdbb5c3ce7cc54f0910336995131a0e2c48d8",
+      "file": "satellite-van/yaw8E.png",
+      "nativeSize": [
+        1254,
+        1254
+      ],
+      "pngSHA256": "0ff6c9c084a670cdb110084c679beeae5973085bffbe76dc6f78deb4f8a1e927",
+      "sourceRGBAEqual": true,
+      "singleSourcePNGBytesUnchanged": true,
+      "nativeHeadingDegrees": null,
+      "nativeCameraCertified": false,
+      "runtimeReady": false,
+      "operation": "Whole source PNG byte copy"
+    },
+    "yaw8S": {
+      "nominalCameraKey": "yaw8S",
+      "sourceFile": "art/catalogue-completion-20261107/generated/golf-vehicle-source-batch-01/native/satellite-van/yaw8-v1.png",
+      "sourceFileSHA256": "75c05cb5db7f078b7d025b81f77ed214d9b06a985110d74fc2c9b5d5b2403d9d",
+      "sourceFrameRectLTRB": [
+        0,
+        627,
+        627,
+        1254
+      ],
+      "singleViewOverride": false,
+      "rgbaSHA256": "cafb2b069602e9a7276caf439baca8593b67f16d7e82773ac53dcbee64def6d2",
+      "file": "satellite-van/yaw8S.png",
+      "nativeSize": [
+        627,
+        627
+      ],
+      "pngSHA256": "68d3d521c5530dae5288800f765122ec65520b689c3a3c135f0cf7300a397801",
+      "sourceRGBAEqual": true,
+      "singleSourcePNGBytesUnchanged": false,
+      "nativeHeadingDegrees": null,
+      "nativeCameraCertified": false,
+      "runtimeReady": false,
+      "operation": "Exact raw integer half-cell crop; native RGBA unchanged"
+    },
+    "yaw8W": {
+      "nominalCameraKey": "yaw8W",
+      "sourceFile": "art/catalogue-completion-20261107/generated/golf-vehicle-source-batch-01/native/satellite-van/yaw8-W-v2.png",
+      "sourceFileSHA256": "bca20d06a8df734f45da9dcbaa83ea13dd3facab5a1f9b4b8e7a1c23dc67d60f",
+      "sourceFrameRectLTRB": [
+        0,
+        0,
+        1536,
+        1024
+      ],
+      "singleViewOverride": true,
+      "rgbaSHA256": "0e867b3999c518433df1efed356b7173cfc9173ce641051112f583cbffb2d267",
+      "file": "satellite-van/yaw8W.png",
+      "nativeSize": [
+        1536,
+        1024
+      ],
+      "pngSHA256": "bca20d06a8df734f45da9dcbaa83ea13dd3facab5a1f9b4b8e7a1c23dc67d60f",
+      "sourceRGBAEqual": true,
+      "singleSourcePNGBytesUnchanged": true,
+      "nativeHeadingDegrees": null,
+      "nativeCameraCertified": false,
+      "runtimeReady": false,
+      "operation": "Whole source PNG byte copy"
+    }
+  }
+}

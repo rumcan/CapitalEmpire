@@ -1,0 +1,122 @@
+[
+  {
+    "key": "1990s-redbrick-family-single-garage",
+    "source": "C:/Users/RAMPAGE/.codex/generated_images/01a1b1fd-39ec-7220-8f11-86e4448833ea/exec-39863950-6c8e-4d97-a0d6-1785c12f2809.png",
+    "target": "generated/era-houses/1990s-redbrick-family-single-garage/normal-v1.png",
+    "prompt": "Turn the FOUR exact technical house models in reference1 into a finished2x2 sprite sheet in the detailed hand-painted miniature style of reference2. Image1 is EXACT geometry and camera; image2 only painted material/brushwork quality, never old house architecture or dusk lighting. House from the 1990s: Ordinary modest redbrick family house, cream frames, charcoal pitched tile roof, one lower attached single garage on model right. Main front door at x=-1.8,y=-4. One brick chimney on rear-left main roof. No luxury entrance, no extra wings. Preserve each guide's precise body proportions, storeys, roof masses, garage location, chimney or solar panels, and EXACT visible door/window positions. No extra doors or windows. The same new maintained later-era house in all four views. Four true45degree corner views in guide's same cells SE SW / NW NE, orthographic30degrees down, ground footprint edges form a V and show two walls equally. Late-afternoon DAYTIME sun fixed SCREEN UPPER RIGHT with shadows LOWER LEFT; windows/lights OFF. Natural believable building materials with painted texture detail, coherent same-game style. Keep the building complete and centred in its own quarter, all at equal scale, generous transparent margins. Fully opaque building on genuinely transparent zero-alpha background. No ground plate, driveway, terrain, people, cars, trees, plants, scene background, haze, technical labels, captions or grid.",
+    "references": [
+      "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\1990s-redbrick-family-single-garage\\guides\\normal-world-v1.png",
+      "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/scenes/identity-references/gen-house-farmhouse-wrap-2b0eea83/source.png"
+    ],
+    "era": "1990s",
+    "status": "native source candidate; alpha/geometry/camera QA pending",
+    "runtime_imported": false,
+    "sha256": "30cac9c191f62ea4ddd48c3d1a699494be5fdf661925f83b164e42bc0c133f1f",
+    "native_bytes_preserved": true
+  },
+  {
+    "key": "2000s-cream-stucco-two-storey-garage",
+    "source": "C:/Users/RAMPAGE/.codex/generated_images/01a1b1fd-39ec-7220-8f11-86e4448833ea/exec-0c92d8bc-6937-41f7-b5a5-dd5d9ef55338.png",
+    "target": "generated/era-houses/2000s-cream-stucco-two-storey-garage/normal-v1.png",
+    "prompt": "Turn the FOUR exact technical house models in reference1 into a finished2x2 sprite sheet in the detailed hand-painted miniature style of reference2. Image1 is EXACT geometry and camera; image2 only painted material/brushwork quality, never old house architecture or dusk lighting. House from the 2000s: Ordinary compact two-storey cream stucco family house with modest brown tile hip roof, one single garage attached at right and a small door canopy. Three upper front windows, one broad ground living window. No mansion columns or double-height glazing. Preserve each guide's precise body proportions, storeys, roof masses, garage location, chimney or solar panels, and EXACT visible door/window positions. No extra doors or windows. The same new maintained later-era house in all four views. Four true45degree corner views in guide's same cells SE SW / NW NE, orthographic30degrees down, ground footprint edges form a V and show two walls equally. Late-afternoon DAYTIME sun fixed SCREEN UPPER RIGHT with shadows LOWER LEFT; windows/lights OFF. Natural believable building materials with painted texture detail, coherent same-game style. Keep the building complete and centred in its own quarter, all at equal scale, generous transparent margins. Fully opaque building on genuinely transparent zero-alpha background. No ground plate, driveway, terrain, people, cars, trees, plants, scene background, haze, technical labels, captions or grid.",
+    "references": [
+      "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\2000s-cream-stucco-two-storey-garage\\guides\\normal-world-v1.png",
+      "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/scenes/identity-references/gen-house-farmhouse-wrap-2b0eea83/source.png"
+    ],
+    "era": "2000s",
+    "status": "native source candidate; alpha/geometry/camera QA pending",
+    "runtime_imported": false,
+    "sha256": "06315f1697f9ebe70ba03122e3a26ddec6f4c5e5945cac2a802350d44b00b079",
+    "native_bytes_preserved": true
+  },
+  {
+    "key": "2010s-brick-white-clad-townhouse-pair",
+    "source": "C:/Users/RAMPAGE/.codex/generated_images/01a1b1fd-39ec-7220-8f11-86e4448833ea/exec-9a6a74b2-fba0-433f-85ba-cd631357a001.png",
+    "target": "generated/era-houses/2010s-brick-white-clad-townhouse-pair/normal-v1.png",
+    "prompt": "Turn the FOUR exact technical house models in reference1 into a finished2x2 sprite sheet in the detailed hand-painted miniature style of reference2. Image1 is EXACT geometry and camera; image2 only painted material/brushwork quality, never old house architecture or dusk lighting. House from the 2010s: A modest attached pair, two equal 6m-wide units and exactly two distinct front doors near the central party wall. Brick ground floor, white upper cladding, simple charcoal pitched roof; four upper front windows and separate rear patio doors. No detached gap, no garage doors mistaken for front doors. Preserve each guide's precise body proportions, storeys, roof masses, garage location, chimney or solar panels, and EXACT visible door/window positions. No extra doors or windows. The same new maintained later-era house in all four views. Four true45degree corner views in guide's same cells SE SW / NW NE, orthographic30degrees down, ground footprint edges form a V and show two walls equally. Late-afternoon DAYTIME sun fixed SCREEN UPPER RIGHT with shadows LOWER LEFT; windows/lights OFF. Natural believable building materials with painted texture detail, coherent same-game style. Keep the building complete and centred in its own quarter, all at equal scale, generous transparent margins. Fully opaque building on genuinely transparent zero-alpha background. No ground plate, driveway, terrain, people, cars, trees, plants, scene background, haze, technical labels, captions or grid.",
+    "references": [
+      "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\2010s-brick-white-clad-townhouse-pair\\guides\\normal-world-v1.png",
+      "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/scenes/identity-references/gen-house-farmhouse-wrap-2b0eea83/source.png"
+    ],
+    "era": "2010s",
+    "status": "native source candidate; alpha/geometry/camera QA pending",
+    "runtime_imported": false,
+    "sha256": "66252e5b3f9c25a8dc2e7a3b05888045b3de7b7b1dec1219d2aa5066abf9e190",
+    "native_bytes_preserved": true
+  },
+  {
+    "key": "2020s-white-charcoal-asymmetric-solar-home",
+    "source": "C:/Users/RAMPAGE/.codex/generated_images/01a1b1fd-39ec-7220-8f11-86e4448833ea/exec-f2bfdda9-c727-4a8f-bdd1-93f298d5519a.png",
+    "target": "generated/era-houses/2020s-white-charcoal-asymmetric-solar-home/normal-v1.png",
+    "prompt": "Turn the FOUR exact technical house models in reference1 into a finished2x2 sprite sheet in the detailed hand-painted miniature style of reference2. Image1 is EXACT geometry and camera; image2 only painted material/brushwork quality, never old house architecture or dusk lighting. House from the 2020s: An ordinary compact single-storey home, higher white left volume and lower charcoal right entry volume. Asymmetrical stepped flat parapet roofs, timber front door and six rectangular solar modules in two rows of three on the higher roof. No science-fiction canopy, no huge glazing walls, no mansion scale. Preserve each guide's precise body proportions, storeys, roof masses, garage location, chimney or solar panels, and EXACT visible door/window positions. No extra doors or windows. The same new maintained later-era house in all four views. Four true45degree corner views in guide's same cells SE SW / NW NE, orthographic30degrees down, ground footprint edges form a V and show two walls equally. Late-afternoon DAYTIME sun fixed SCREEN UPPER RIGHT with shadows LOWER LEFT; windows/lights OFF. Natural believable building materials with painted texture detail, coherent same-game style. Keep the building complete and centred in its own quarter, all at equal scale, generous transparent margins. Fully opaque building on genuinely transparent zero-alpha background. No ground plate, driveway, terrain, people, cars, trees, plants, scene background, haze, technical labels, captions or grid.",
+    "references": [
+      "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\2020s-white-charcoal-asymmetric-solar-home\\guides\\normal-world-v1.png",
+      "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/scenes/identity-references/gen-house-farmhouse-wrap-2b0eea83/source.png"
+    ],
+    "era": "2020s",
+    "status": "native source candidate; alpha/geometry/camera QA pending",
+    "runtime_imported": false,
+    "sha256": "9f6851c3debf5e05c2c5612b95db259ec328f4308f235741ca5523881c80fc30",
+    "native_bytes_preserved": true
+  },
+  {
+    "key": "budget-1950-shanty-hut",
+    "source": "C:/Users/RAMPAGE/.codex/generated_images/01a1b1fd-39ec-7220-8f11-86e4448833ea/exec-3c5f90ba-de45-4d32-84b4-974b983c13cd.png",
+    "target": "generated/budget-1950-shanty-hut/yaw8-v1.png",
+    "prompt": "Create the matching near-cardinal2x2 sprite sheet for this exact ordinary1950s budget building. Reference1 is exact single-world geometry and8degree-yaw/30degree-down camera. Reference2 is this building's selected painted identity, materials and condition. Small ordinary1950s cream-painted clapboard caretaker cabin. One green front door at left and one small front window at right; one right-side window and one high rear vent. Straight manufactured lumber, grey corrugated gable roof, modest peeling paint and age. Keep the exact same footprint, height, roof, worn paint, door/window/vent count and physical locations across all cells. Match reference1 cells N E / S W. Main bases slant subtly by0.07027rise/run; narrow secondary side only, never square-on or45degree corners. Carefully retain any door/window sliver visible on a narrow side. No invented additional windows/doors or chimney. Cheap old manufactured real-world building used in1985, straight timber/steel construction, no goblin village, crooked logs, ropes or patchwork tarps. Detailed hand-painted miniature game materials matching reference2. Late-afternoon DAYTIME sun SCREEN UPPER RIGHT, shadows LOWER LEFT, lamps/windows not glowing. Four complete separate opaque sprites on exactly zero-alpha transparent background, same scale, generous cell margins. No text, technical lines, grid, plants, people, cars, ground plates, outside shadow puddles, scenery or haze.",
+    "references": [
+      "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\budget-1950-shanty-hut\\guides\\yaw8-world-v1.png",
+      "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/budget-1950-shanty-hut/normal-v1.png"
+    ],
+    "era": "1950s",
+    "status": "native source candidate; alpha/geometry/camera QA pending",
+    "runtime_imported": false,
+    "sha256": "3abc1b0a617c29b7336ab9a9ade9b087740953e9b9be1ad19e42b457201184fc",
+    "native_bytes_preserved": true
+  },
+  {
+    "key": "budget-1950-shanty-shed",
+    "source": "C:/Users/RAMPAGE/.codex/generated_images/01a1b1fd-39ec-7220-8f11-86e4448833ea/exec-eaf37f09-37b6-41c6-9542-b5ceeb7b166a.png",
+    "target": "generated/budget-1950-shanty-shed/yaw8-v1.png",
+    "prompt": "Create the matching near-cardinal2x2 sprite sheet for this exact ordinary1950s budget building. Reference1 is exact single-world geometry and8degree-yaw/30degree-down camera. Reference2 is this building's selected painted identity, materials and condition. Cheap old1950s garden maintenance shed, faded brown horizontal timber siding, paired green front tool doors, one small right-side window and one high rear vent, grey corrugated gable roof, restrained rust and weathering. Keep the exact same footprint, height, roof, worn paint, door/window/vent count and physical locations across all cells. Match reference1 cells N E / S W. Main bases slant subtly by0.07027rise/run; narrow secondary side only, never square-on or45degree corners. Carefully retain any door/window sliver visible on a narrow side. No invented additional windows/doors or chimney. Cheap old manufactured real-world building used in1985, straight timber/steel construction, no goblin village, crooked logs, ropes or patchwork tarps. Detailed hand-painted miniature game materials matching reference2. Late-afternoon DAYTIME sun SCREEN UPPER RIGHT, shadows LOWER LEFT, lamps/windows not glowing. Four complete separate opaque sprites on exactly zero-alpha transparent background, same scale, generous cell margins. No text, technical lines, grid, plants, people, cars, ground plates, outside shadow puddles, scenery or haze.",
+    "references": [
+      "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\budget-1950-shanty-shed\\guides\\yaw8-world-v1.png",
+      "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/budget-1950-shanty-shed/normal-v1.png"
+    ],
+    "era": "1950s",
+    "status": "native source candidate; alpha/geometry/camera QA pending",
+    "runtime_imported": false,
+    "sha256": "59cdde1f61b47fe0c43b3f9e80bac7dcdab8bb1e37e430398d01ac855e0a52ec",
+    "native_bytes_preserved": true
+  },
+  {
+    "key": "budget-1950-shanty-ticket-hut",
+    "source": "C:/Users/RAMPAGE/.codex/generated_images/01a1b1fd-39ec-7220-8f11-86e4448833ea/exec-beab25ef-2628-432d-b7b5-f08950eeb83e.png",
+    "target": "generated/budget-1950-shanty-ticket-hut/yaw8-v1.png",
+    "prompt": "Create the matching near-cardinal2x2 sprite sheet for this exact ordinary1950s budget building. Reference1 is exact single-world geometry and8degree-yaw/30degree-down camera. Reference2 is this building's selected painted identity, materials and condition. Ordinary1950s ticket office cabin, faded cream clapboard and blue-green trim, a wide front ticket hatch with small projecting sill, one service door on the right wall, a high rear vent and grey corrugated gable roof. Cheap and old but structurally sound. Keep the exact same footprint, height, roof, worn paint, door/window/vent count and physical locations across all cells. Match reference1 cells N E / S W. Main bases slant subtly by0.07027rise/run; narrow secondary side only, never square-on or45degree corners. Carefully retain any door/window sliver visible on a narrow side. No invented additional windows/doors or chimney. Cheap old manufactured real-world building used in1985, straight timber/steel construction, no goblin village, crooked logs, ropes or patchwork tarps. Detailed hand-painted miniature game materials matching reference2. Late-afternoon DAYTIME sun SCREEN UPPER RIGHT, shadows LOWER LEFT, lamps/windows not glowing. Four complete separate opaque sprites on exactly zero-alpha transparent background, same scale, generous cell margins. No text, technical lines, grid, plants, people, cars, ground plates, outside shadow puddles, scenery or haze.",
+    "references": [
+      "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\budget-1950-shanty-ticket-hut\\guides\\yaw8-world-v1.png",
+      "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/budget-1950-shanty-ticket-hut/normal-v1.png"
+    ],
+    "era": "1950s",
+    "status": "native source candidate; alpha/geometry/camera QA pending",
+    "runtime_imported": false,
+    "sha256": "091203a9c0e2da09af1c3994fc17e96ef20bfe3f435af0a974f659922c5f199b",
+    "native_bytes_preserved": true
+  },
+  {
+    "key": "budget-1950-shanty-toilet",
+    "source": "C:/Users/RAMPAGE/.codex/generated_images/01a1b1fd-39ec-7220-8f11-86e4448833ea/exec-135206b7-328b-4764-ac65-6583177a0404.png",
+    "target": "generated/budget-1950-shanty-toilet/yaw8-v1.png",
+    "prompt": "Create the matching near-cardinal2x2 sprite sheet for this exact ordinary1950s budget building. Reference1 is exact single-world geometry and8degree-yaw/30degree-down camera. Reference2 is this building's selected painted identity, materials and condition. Plain1950s budget golf-course toilet block, faded pale-grey painted timber, exactly two separate front cubicle doors in muted green, two high rear ventilation grilles, plain grey corrugated gable roof. Ordinary municipal construction with scuffed paint; no fantasy outhouse. Keep the exact same footprint, height, roof, worn paint, door/window/vent count and physical locations across all cells. Match reference1 cells N E / S W. Main bases slant subtly by0.07027rise/run; narrow secondary side only, never square-on or45degree corners. Carefully retain any door/window sliver visible on a narrow side. No invented additional windows/doors or chimney. Cheap old manufactured real-world building used in1985, straight timber/steel construction, no goblin village, crooked logs, ropes or patchwork tarps. Detailed hand-painted miniature game materials matching reference2. Late-afternoon DAYTIME sun SCREEN UPPER RIGHT, shadows LOWER LEFT, lamps/windows not glowing. Four complete separate opaque sprites on exactly zero-alpha transparent background, same scale, generous cell margins. No text, technical lines, grid, plants, people, cars, ground plates, outside shadow puddles, scenery or haze.",
+    "references": [
+      "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\budget-1950-shanty-toilet\\guides\\yaw8-world-v1.png",
+      "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/budget-1950-shanty-toilet/normal-v1.png"
+    ],
+    "era": "1950s",
+    "status": "native source candidate; alpha/geometry/camera QA pending",
+    "runtime_imported": false,
+    "sha256": "18b9b38ea8de06b0fc1cb0966942e206ef9971642c5fb1b45c6f88d3bed33ca8",
+    "native_bytes_preserved": true
+  }
+]

@@ -1,0 +1,107 @@
+{
+  "schema": 1,
+  "as_of_utc": "2026-11-07T10:47:07.752943+00:00",
+  "sheets_reviewed": 8,
+  "native_source_cells": 32,
+  "records": [
+    {
+      "family": "1990s-redbrick-family-single-garage",
+      "sheet": "normal-v1.png",
+      "review_result": "PASS-source-candidate-openings-and-alpha;exact-camera-unverified",
+      "source_sha256": "30cac9c191f62ea4ddd48c3d1a699494be5fdf661925f83b164e42bc0c133f1f",
+      "border_p95max": [
+        0.0,
+        1.0
+      ],
+      "core_clipping": false,
+      "qa": "generated/era-houses/1990s-redbrick-family-single-garage/normal-v1.independent-qa.json"
+    },
+    {
+      "family": "2000s-cream-stucco-two-storey-garage",
+      "sheet": "normal-v1.png",
+      "review_result": "PASS-source-candidate-openings-and-alpha;exact-camera-unverified",
+      "source_sha256": "06315f1697f9ebe70ba03122e3a26ddec6f4c5e5945cac2a802350d44b00b079",
+      "border_p95max": [
+        1.0,
+        1.0
+      ],
+      "core_clipping": false,
+      "qa": "generated/era-houses/2000s-cream-stucco-two-storey-garage/normal-v1.independent-qa.json"
+    },
+    {
+      "family": "2010s-brick-white-clad-townhouse-pair",
+      "sheet": "normal-v1.png",
+      "review_result": "PASS-source-candidate-openings-and-alpha;exact-camera-unverified",
+      "source_sha256": "66252e5b3f9c25a8dc2e7a3b05888045b3de7b7b1dec1219d2aa5066abf9e190",
+      "border_p95max": [
+        1.0,
+        1.0
+      ],
+      "core_clipping": false,
+      "qa": "generated/era-houses/2010s-brick-white-clad-townhouse-pair/normal-v1.independent-qa.json"
+    },
+    {
+      "family": "2020s-white-charcoal-asymmetric-solar-home",
+      "sheet": "normal-v1.png",
+      "review_result": "HOLD-rear-patio-door-misdrawn-as-garage",
+      "source_sha256": "9f6851c3debf5e05c2c5612b95db259ec328f4308f235741ca5523881c80fc30",
+      "border_p95max": [
+        0.0,
+        1.0
+      ],
+      "core_clipping": false,
+      "qa": "generated/era-houses/2020s-white-charcoal-asymmetric-solar-home/normal-v1.independent-qa.json"
+    },
+    {
+      "family": "budget-1950-shanty-hut",
+      "sheet": "yaw8-v1.png",
+      "review_result": "HOLD-exact-yaw8-geometry;main-face-identity-and-alpha-pass",
+      "source_sha256": "3abc1b0a617c29b7336ab9a9ade9b087740953e9b9be1ad19e42b457201184fc",
+      "border_p95max": [
+        0.0,
+        1.0
+      ],
+      "core_clipping": false,
+      "qa": "generated/budget-1950-shanty-hut/yaw8-v1.independent-qa.json"
+    },
+    {
+      "family": "budget-1950-shanty-shed",
+      "sheet": "yaw8-v1.png",
+      "review_result": "HOLD-exact-yaw8-geometry;main-face-identity-and-alpha-pass",
+      "source_sha256": "59cdde1f61b47fe0c43b3f9e80bac7dcdab8bb1e37e430398d01ac855e0a52ec",
+      "border_p95max": [
+        0.0,
+        1.0
+      ],
+      "core_clipping": false,
+      "qa": "generated/budget-1950-shanty-shed/yaw8-v1.independent-qa.json"
+    },
+    {
+      "family": "budget-1950-shanty-ticket-hut",
+      "sheet": "yaw8-v1.png",
+      "review_result": "HOLD-exact-yaw8-geometry;main-face-identity-and-alpha-pass",
+      "source_sha256": "091203a9c0e2da09af1c3994fc17e96ef20bfe3f435af0a974f659922c5f199b",
+      "border_p95max": [
+        0.0,
+        1.0
+      ],
+      "core_clipping": false,
+      "qa": "generated/budget-1950-shanty-ticket-hut/yaw8-v1.independent-qa.json"
+    },
+    {
+      "family": "budget-1950-shanty-toilet",
+      "sheet": "yaw8-v1.png",
+      "review_result": "HOLD-exact-yaw8-geometry;main-face-identity-and-alpha-pass",
+      "source_sha256": "18b9b38ea8de06b0fc1cb0966942e206ef9971642c5fb1b45c6f88d3bed33ca8",
+      "border_p95max": [
+        0.0,
+        1.0
+      ],
+      "core_clipping": false,
+      "qa": "generated/budget-1950-shanty-toilet/yaw8-v1.independent-qa.json"
+    }
+  ],
+  "camera_certificate_from_guide": false,
+  "no_runtime_changes": true,
+  "whole_request_complete": false
+}

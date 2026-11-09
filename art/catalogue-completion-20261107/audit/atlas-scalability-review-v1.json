@@ -1,0 +1,68 @@
+{
+  "schema": 1,
+  "date": "2026-11-07",
+  "scope": "Read renderer code, then parent-authorized targeted auxiliary-cache and allocation guards. No runtime benchmark, browser, build or server.",
+  "upfrontFullResolutionAllocation": false,
+  "gpuBehavior": {
+    "sources": [
+      "src/game/atlas-pages.ts:planAtlas",
+      "src/game/atlas-gl.ts:AtlasGL.create/loadLow/want/pump",
+      "src/game/engine.ts:streamAtlas",
+      "src/game/boot.ts:GAME_BOOT"
+    ],
+    "compressedBudgetsMiB": {
+      "dpr1": 32,
+      "hiDpi": 96
+    },
+    "rgbaFallbackBudgetsMiB": {
+      "dpr1": 128,
+      "hiDpi": 384
+    },
+    "coarsePages": "Every page retains a low mip chain; can coarsen as far as128px in the current2048/5mip chain.",
+    "fineCells": "Visible cells and nearby cells stream into fixed GPU slots, with LRU eviction; offscreen mip0 pages are not globally resident.",
+    "compressedProductionDiscovery": "scripts/assets/atlas-ktx2.mjs bundles actual ATLAS_PAGES, so object-eight imports are included automatically. Development uses RGBA WebP fallback."
+  },
+  "scenarios": [
+    {
+      "pageCount": 1208,
+      "low128CompressedMiB": 18.875,
+      "low128RgbaMiB": 75.5,
+      "picking512BitmaskMiB": 37.75,
+      "hypotheticalAllMip0RgbaGiB": 18.875,
+      "note": "These are formula estimates, not measured process memory. Existing atlas pages/older runtime versions add to this count."
+    },
+    {
+      "pageCount": 2416,
+      "low128CompressedMiB": 37.75,
+      "low128RgbaMiB": 151,
+      "picking512BitmaskMiB": 75.5,
+      "dpr1BudgetFits": false,
+      "fits2048ArrayLayers": false
+    }
+  ],
+  "implementedBounds": {
+    "startupPicking": "Two concurrent page fetch/decode/readbacks; bit-packed opacity preserves exact threshold and page indices. ImageBitmap closed and canvas backing explicitly zeroed.",
+    "previewImages": "Two-page LRU for full2048px2D ghost sources, about32MiB raw pixels. Eviction removes src; Game.destroy clears retained elements. Browser-managed caches are separate.",
+    "thumbnails": "IntersectionObserver gates source/mip1 requests to viewport-visible cards; two concurrent source-to-thumbnail tasks. Small finished thumbnails remain reusable.",
+    "pickingFailure": "Missing alpha data cannot substitute an opaque rectangle; those unavailable masks do not intercept clicks.",
+    "arrayLimit": "AtlasGL rejects pages>actualMAX_ARRAY_TEXTURE_LAYERS before allocating textures/decoding. Source workers disposed. Does not split arrays.",
+    "minimumCoarseBudget": "Rejects a minimum coarse set above atlas byte budget before allocation. Error directs approved shared-page packing.",
+    "startupRejection": "Atlas rejection is attached immediately, stops subsequent alpha jobs and propagates as a real init failure; no invalid blank-page fallback."
+  },
+  "remainingLimits": [
+    "One low-mip array still has one layer per catalogue page. Unsupported catalogues now fail clearly instead of allocating invalid textures.",
+    "Per-subject/version2048pages still waste space and increase startup I/O, low mip residency and picking bits. Shared batch packing at calibrated display density is still needed for catalogue-wide imports.",
+    "Existing streamed-level decode cache keeps two idle levels in the game; referenced/in-flight levels and browser decode working sets can temporarily exceed that. These changes do not claim a strict total process-RAM ceiling.",
+    "No GPU maximum or actual combined RAM usage was measured on this PC. The background LLM was not touched."
+  ],
+  "nextSmallestPipelineWork": "Pack multiple approved native subjects into shared immutable atlas pages, preserving native originals/provenance/IDs; preserve full native masters outside GPU assets and target existing0.6atlas-pixel/display-pixel packing convention where appropriate. Keep explicit layer/coarse-budget preflight guard; implement array banks only if efficiently packed actual data still exceeds device limits.",
+  "validation": {
+    "focusedTests": 23,
+    "focusedPassed": 23,
+    "typecheck": "clean",
+    "fullSuiteRun": false,
+    "buildRun": false,
+    "benchmarkRun": false,
+    "serverStarted": false
+  }
+}

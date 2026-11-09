@@ -1,0 +1,899 @@
+{
+  "sources": [
+    {
+      "era": "1980s",
+      "version": 1,
+      "selected": true,
+      "dimensions": [
+        1774,
+        887
+      ],
+      "mode": "RGBA",
+      "alpha_extrema": [
+        0,
+        255
+      ],
+      "true_zero_alpha_fraction": 0.6450127038558967,
+      "alpha_le8_fraction": 0.7073772606699044,
+      "row450_background_gap_alpha": {
+        "min": 0,
+        "max": 1,
+        "median": 0.0
+      },
+      "outer_border_alpha_max": 1,
+      "status": "native-alpha-and-complete-cell-check-pass",
+      "actual_row_column_boundaries": [
+        [
+          0,
+          443,
+          887,
+          1330,
+          1774
+        ],
+        [
+          0,
+          443,
+          887,
+          1330,
+          1774
+        ]
+      ],
+      "row_boundary": 443,
+      "gutter_selection": "Nearest clear native column to nominal division; boundary alpha<=8. Actual rectangles retain complete silhouettes; no pixel masking or padding generated.",
+      "cells": [
+        {
+          "item": "driver",
+          "rectangle_ltrb": [
+            0,
+            0,
+            443,
+            443
+          ],
+          "margins128": [
+            28,
+            19,
+            16,
+            15
+          ],
+          "core_clipped": false
+        },
+        {
+          "item": "iron",
+          "rectangle_ltrb": [
+            443,
+            0,
+            887,
+            443
+          ],
+          "margins128": [
+            25,
+            17,
+            22,
+            28
+          ],
+          "core_clipped": false
+        },
+        {
+          "item": "wedge",
+          "rectangle_ltrb": [
+            887,
+            0,
+            1330,
+            443
+          ],
+          "margins128": [
+            28,
+            17,
+            20,
+            17
+          ],
+          "core_clipped": false
+        },
+        {
+          "item": "putter",
+          "rectangle_ltrb": [
+            1330,
+            0,
+            1774,
+            443
+          ],
+          "margins128": [
+            30,
+            16,
+            21,
+            21
+          ],
+          "core_clipped": false
+        },
+        {
+          "item": "tee-pegs-pack",
+          "rectangle_ltrb": [
+            0,
+            443,
+            443,
+            887
+          ],
+          "margins128": [
+            47,
+            68,
+            39,
+            60
+          ],
+          "core_clipped": false
+        },
+        {
+          "item": "mens-outfit",
+          "rectangle_ltrb": [
+            443,
+            443,
+            887,
+            887
+          ],
+          "margins128": [
+            7,
+            27,
+            26,
+            18
+          ],
+          "core_clipped": false
+        },
+        {
+          "item": "womens-outfit",
+          "rectangle_ltrb": [
+            887,
+            443,
+            1330,
+            887
+          ],
+          "margins128": [
+            16,
+            29,
+            3,
+            20
+          ],
+          "core_clipped": false
+        },
+        {
+          "item": "golf-bag",
+          "rectangle_ltrb": [
+            1330,
+            443,
+            1774,
+            887
+          ],
+          "margins128": [
+            109,
+            15,
+            69,
+            18
+          ],
+          "core_clipped": false
+        }
+      ],
+      "all_source_pixels_reconstruct_exactly": true,
+      "prompt_padding_not_used_as_rejection_rule": true
+    },
+    {
+      "era": "1990s",
+      "version": 1,
+      "selected": true,
+      "dimensions": [
+        1774,
+        887
+      ],
+      "mode": "RGBA",
+      "alpha_extrema": [
+        0,
+        255
+      ],
+      "true_zero_alpha_fraction": 0.6323654083981448,
+      "alpha_le8_fraction": 0.6848604863689343,
+      "row450_background_gap_alpha": {
+        "min": 0,
+        "max": 98,
+        "median": 0.0
+      },
+      "outer_border_alpha_max": 1,
+      "status": "native-alpha-and-complete-cell-check-pass",
+      "actual_row_column_boundaries": [
+        [
+          0,
+          443,
+          887,
+          1330,
+          1774
+        ],
+        [
+          0,
+          441,
+          887,
+          1330,
+          1774
+        ]
+      ],
+      "row_boundary": 443,
+      "gutter_selection": "Nearest clear native column to nominal division; boundary alpha<=8. Actual rectangles retain complete silhouettes; no pixel masking or padding generated.",
+      "cells": [
+        {
+          "item": "driver",
+          "rectangle_ltrb": [
+            0,
+            0,
+            443,
+            443
+          ],
+          "margins128": [
+            35,
+            13,
+            12,
+            8
+          ],
+          "core_clipped": false
+        },
+        {
+          "item": "iron",
+          "rectangle_ltrb": [
+            443,
+            0,
+            887,
+            443
+          ],
+          "margins128": [
+            19,
+            13,
+            20,
+            15
+          ],
+          "core_clipped": false
+        },
+        {
+          "item": "wedge",
+          "rectangle_ltrb": [
+            887,
+            0,
+            1330,
+            443
+          ],
+          "margins128": [
+            19,
+            13,
+            19,
+            13
+          ],
+          "core_clipped": false
+        },
+        {
+          "item": "putter",
+          "rectangle_ltrb": [
+            1330,
+            0,
+            1774,
+            443
+          ],
+          "margins128": [
+            28,
+            13,
+            19,
+            17
+          ],
+          "core_clipped": false
+        },
+        {
+          "item": "tee-pegs-pack",
+          "rectangle_ltrb": [
+            0,
+            443,
+            441,
+            887
+          ],
+          "margins128": [
+            49,
+            65,
+            42,
+            60
+          ],
+          "core_clipped": false
+        },
+        {
+          "item": "mens-outfit",
+          "rectangle_ltrb": [
+            441,
+            443,
+            887,
+            887
+          ],
+          "margins128": [
+            2,
+            23,
+            22,
+            17
+          ],
+          "core_clipped": false
+        },
+        {
+          "item": "womens-outfit",
+          "rectangle_ltrb": [
+            887,
+            443,
+            1330,
+            887
+          ],
+          "margins128": [
+            17,
+            31,
+            11,
+            19
+          ],
+          "core_clipped": false
+        },
+        {
+          "item": "golf-bag",
+          "rectangle_ltrb": [
+            1330,
+            443,
+            1774,
+            887
+          ],
+          "margins128": [
+            104,
+            8,
+            48,
+            13
+          ],
+          "core_clipped": false
+        }
+      ],
+      "all_source_pixels_reconstruct_exactly": true,
+      "prompt_padding_not_used_as_rejection_rule": true
+    },
+    {
+      "era": "2000s",
+      "version": 1,
+      "selected": true,
+      "dimensions": [
+        1774,
+        887
+      ],
+      "mode": "RGBA",
+      "alpha_extrema": [
+        0,
+        255
+      ],
+      "true_zero_alpha_fraction": 0.6325007721453184,
+      "alpha_le8_fraction": 0.666547614356946,
+      "row450_background_gap_alpha": {
+        "min": 0,
+        "max": 1,
+        "median": 0.0
+      },
+      "outer_border_alpha_max": 1,
+      "status": "native-alpha-and-complete-cell-check-pass",
+      "actual_row_column_boundaries": [
+        [
+          0,
+          443,
+          887,
+          1330,
+          1774
+        ],
+        [
+          0,
+          431,
+          887,
+          1330,
+          1774
+        ]
+      ],
+      "row_boundary": 443,
+      "gutter_selection": "Nearest clear native column to nominal division; boundary alpha<=8. Actual rectangles retain complete silhouettes; no pixel masking or padding generated.",
+      "cells": [
+        {
+          "item": "driver",
+          "rectangle_ltrb": [
+            0,
+            0,
+            443,
+            443
+          ],
+          "margins128": [
+            27,
+            15,
+            13,
+            10
+          ],
+          "core_clipped": false
+        },
+        {
+          "item": "iron",
+          "rectangle_ltrb": [
+            443,
+            0,
+            887,
+            443
+          ],
+          "margins128": [
+            27,
+            15,
+            19,
+            17
+          ],
+          "core_clipped": false
+        },
+        {
+          "item": "wedge",
+          "rectangle_ltrb": [
+            887,
+            0,
+            1330,
+            443
+          ],
+          "margins128": [
+            34,
+            17,
+            24,
+            9
+          ],
+          "core_clipped": false
+        },
+        {
+          "item": "putter",
+          "rectangle_ltrb": [
+            1330,
+            0,
+            1774,
+            443
+          ],
+          "margins128": [
+            60,
+            17,
+            21,
+            12
+          ],
+          "core_clipped": false
+        },
+        {
+          "item": "tee-pegs-pack",
+          "rectangle_ltrb": [
+            0,
+            443,
+            431,
+            887
+          ],
+          "margins128": [
+            48,
+            55,
+            33,
+            42
+          ],
+          "core_clipped": false
+        },
+        {
+          "item": "mens-outfit",
+          "rectangle_ltrb": [
+            431,
+            443,
+            887,
+            887
+          ],
+          "margins128": [
+            2,
+            27,
+            31,
+            16
+          ],
+          "core_clipped": false
+        },
+        {
+          "item": "womens-outfit",
+          "rectangle_ltrb": [
+            887,
+            443,
+            1330,
+            887
+          ],
+          "margins128": [
+            16,
+            30,
+            8,
+            16
+          ],
+          "core_clipped": false
+        },
+        {
+          "item": "golf-bag",
+          "rectangle_ltrb": [
+            1330,
+            443,
+            1774,
+            887
+          ],
+          "margins128": [
+            50,
+            27,
+            25,
+            25
+          ],
+          "core_clipped": false
+        }
+      ],
+      "all_source_pixels_reconstruct_exactly": true,
+      "prompt_padding_not_used_as_rejection_rule": true
+    },
+    {
+      "era": "2010s",
+      "version": 1,
+      "selected": false,
+      "dimensions": [
+        1774,
+        887
+      ],
+      "mode": "RGBA",
+      "alpha_extrema": [
+        0,
+        255
+      ],
+      "true_zero_alpha_fraction": 0.005092981548586688,
+      "alpha_le8_fraction": 0.4309460591355277,
+      "row450_background_gap_alpha": {
+        "min": 1,
+        "max": 32,
+        "median": 17.0
+      },
+      "outer_border_alpha_max": 19,
+      "status": "held-visible-background-haze"
+    },
+    {
+      "era": "2010s",
+      "version": 2,
+      "selected": true,
+      "dimensions": [
+        1774,
+        887
+      ],
+      "mode": "RGBA",
+      "alpha_extrema": [
+        0,
+        255
+      ],
+      "true_zero_alpha_fraction": 0.6061328039106777,
+      "alpha_le8_fraction": 0.668219642614287,
+      "row450_background_gap_alpha": {
+        "min": 0,
+        "max": 1,
+        "median": 0.0
+      },
+      "outer_border_alpha_max": 1,
+      "status": "native-alpha-and-complete-cell-check-pass",
+      "actual_row_column_boundaries": [
+        [
+          0,
+          443,
+          887,
+          1330,
+          1774
+        ],
+        [
+          0,
+          434,
+          887,
+          1333,
+          1774
+        ]
+      ],
+      "row_boundary": 443,
+      "gutter_selection": "Nearest clear native column to nominal division; boundary alpha<=8. Actual rectangles retain complete silhouettes; no pixel masking or padding generated.",
+      "cells": [
+        {
+          "item": "driver",
+          "rectangle_ltrb": [
+            0,
+            0,
+            443,
+            443
+          ],
+          "margins128": [
+            22,
+            12,
+            41,
+            5
+          ],
+          "core_clipped": false
+        },
+        {
+          "item": "iron",
+          "rectangle_ltrb": [
+            443,
+            0,
+            887,
+            443
+          ],
+          "margins128": [
+            6,
+            12,
+            40,
+            13
+          ],
+          "core_clipped": false
+        },
+        {
+          "item": "wedge",
+          "rectangle_ltrb": [
+            887,
+            0,
+            1330,
+            443
+          ],
+          "margins128": [
+            6,
+            12,
+            34,
+            10
+          ],
+          "core_clipped": false
+        },
+        {
+          "item": "putter",
+          "rectangle_ltrb": [
+            1330,
+            0,
+            1774,
+            443
+          ],
+          "margins128": [
+            42,
+            12,
+            30,
+            7
+          ],
+          "core_clipped": false
+        },
+        {
+          "item": "tee-pegs-pack",
+          "rectangle_ltrb": [
+            0,
+            443,
+            434,
+            887
+          ],
+          "margins128": [
+            46,
+            58,
+            46,
+            50
+          ],
+          "core_clipped": false
+        },
+        {
+          "item": "mens-outfit",
+          "rectangle_ltrb": [
+            434,
+            443,
+            887,
+            887
+          ],
+          "margins128": [
+            2,
+            22,
+            37,
+            20
+          ],
+          "core_clipped": false
+        },
+        {
+          "item": "womens-outfit",
+          "rectangle_ltrb": [
+            887,
+            443,
+            1333,
+            887
+          ],
+          "margins128": [
+            8,
+            25,
+            2,
+            17
+          ],
+          "core_clipped": false
+        },
+        {
+          "item": "golf-bag",
+          "rectangle_ltrb": [
+            1333,
+            443,
+            1774,
+            887
+          ],
+          "margins128": [
+            53,
+            17,
+            20,
+            26
+          ],
+          "core_clipped": false
+        }
+      ],
+      "all_source_pixels_reconstruct_exactly": true,
+      "prompt_padding_not_used_as_rejection_rule": true
+    },
+    {
+      "era": "2020s",
+      "version": 1,
+      "selected": true,
+      "dimensions": [
+        1774,
+        887
+      ],
+      "mode": "RGBA",
+      "alpha_extrema": [
+        0,
+        255
+      ],
+      "true_zero_alpha_fraction": 0.664985529424774,
+      "alpha_le8_fraction": 0.6945157981567652,
+      "row450_background_gap_alpha": {
+        "min": 0,
+        "max": 1,
+        "median": 0.0
+      },
+      "outer_border_alpha_max": 1,
+      "status": "native-alpha-and-complete-cell-check-pass",
+      "actual_row_column_boundaries": [
+        [
+          0,
+          443,
+          887,
+          1330,
+          1774
+        ],
+        [
+          0,
+          443,
+          887,
+          1330,
+          1774
+        ]
+      ],
+      "row_boundary": 443,
+      "gutter_selection": "Nearest clear native column to nominal division; boundary alpha<=8. Actual rectangles retain complete silhouettes; no pixel masking or padding generated.",
+      "cells": [
+        {
+          "item": "driver",
+          "rectangle_ltrb": [
+            0,
+            0,
+            443,
+            443
+          ],
+          "margins128": [
+            25,
+            17,
+            21,
+            8
+          ],
+          "core_clipped": false
+        },
+        {
+          "item": "iron",
+          "rectangle_ltrb": [
+            443,
+            0,
+            887,
+            443
+          ],
+          "margins128": [
+            35,
+            17,
+            22,
+            18
+          ],
+          "core_clipped": false
+        },
+        {
+          "item": "wedge",
+          "rectangle_ltrb": [
+            887,
+            0,
+            1330,
+            443
+          ],
+          "margins128": [
+            42,
+            17,
+            20,
+            12
+          ],
+          "core_clipped": false
+        },
+        {
+          "item": "putter",
+          "rectangle_ltrb": [
+            1330,
+            0,
+            1774,
+            443
+          ],
+          "margins128": [
+            62,
+            17,
+            21,
+            16
+          ],
+          "core_clipped": false
+        },
+        {
+          "item": "tee-pegs-pack",
+          "rectangle_ltrb": [
+            0,
+            443,
+            443,
+            887
+          ],
+          "margins128": [
+            39,
+            69,
+            46,
+            51
+          ],
+          "core_clipped": false
+        },
+        {
+          "item": "mens-outfit",
+          "rectangle_ltrb": [
+            443,
+            443,
+            887,
+            887
+          ],
+          "margins128": [
+            3,
+            25,
+            34,
+            23
+          ],
+          "core_clipped": false
+        },
+        {
+          "item": "womens-outfit",
+          "rectangle_ltrb": [
+            887,
+            443,
+            1330,
+            887
+          ],
+          "margins128": [
+            31,
+            30,
+            6,
+            19
+          ],
+          "core_clipped": false
+        },
+        {
+          "item": "golf-bag",
+          "rectangle_ltrb": [
+            1330,
+            443,
+            1774,
+            887
+          ],
+          "margins128": [
+            66,
+            19,
+            23,
+            18
+          ],
+          "core_clipped": false
+        }
+      ],
+      "all_source_pixels_reconstruct_exactly": true,
+      "prompt_padding_not_used_as_rejection_rule": true
+    }
+  ],
+  "held_sources": [
+    "2010s/source-v1.png"
+  ],
+  "selected_asset_count": 40,
+  "all_selected_core_clipping_checks_passed": true,
+  "native_reconstruction_all5atlases_verified": true,
+  "no_keying_resize_repaint": true
+}

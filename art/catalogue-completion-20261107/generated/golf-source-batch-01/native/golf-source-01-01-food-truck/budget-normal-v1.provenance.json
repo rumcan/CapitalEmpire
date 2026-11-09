@@ -1,0 +1,40 @@
+{
+  "key": "golf-source-01-01-food-truck",
+  "condition": "budget",
+  "runtimeTarget": {
+    "eventTypeId": "foodTruck",
+    "eventName": "Food truck",
+    "currentSpriteSubjectId": "golf:food-tent",
+    "newArtSubjectProposal": "golf:event-food-truck",
+    "newArtSubjectAlreadyRegistered": false,
+    "eventCatalogueSource": "src/game/golf/tents.ts",
+    "standInMappingSource": "src/game/golf/structure-art.ts",
+    "footprintTiles": {
+      "width": 3,
+      "depth": 2
+    },
+    "footprintMetres": {
+      "width": 6,
+      "depth": 4
+    },
+    "dimensionsMeaning": "Exact current event placement plot, not measured source sprite architecture. New design must fit plot; no runtime geometry changed.",
+    "currentSpriteBaseBoxesInTiles": [
+      {
+        "hx": 4,
+        "hy": 4,
+        "dx": 0,
+        "dy": 0
+      }
+    ]
+  },
+  "source": "C:/Users/RAMPAGE/.codex/generated_images/01a1b1fd-39ec-7220-8f11-86e4448833ea/exec-b6d33422-a7cf-42d2-b6f3-e55de00a98f5.png",
+  "target": "generated/golf-source-batch-01/native/golf-source-01-01-food-truck/budget-normal-v1.png",
+  "prompt": "Generate a high-detail2x2 sheet of ONE SAME golf-event item in FOUR genuinely different orthographic45degree CORNER views, camera30degrees down. Reference1 is painted miniature materials/brushwork ONLY, do not copy its building. This is a new role-specific design; follow the functional brief. Functional identity: A self-propelled catering step van, proposed body5.4m long along localX and2.2m wide along localY, with cab at negativeX, four road wheels, one raised serving hatch/counter on negativeY, a small roof cooking-extraction vent toward the rear positiveX, rear service door at positiveX and plain equipment side at positiveY. Vehicle plus opened0.8m serving hatch fits the exact6x4m event plot. These physical body dimensions are design proposals. Do not draw a tent or ordinary delivery box. Condition: Worn ordinary1950s/1960scream-and-green step van, faded paint and light rust; sound chassis, functional serving hatch. No rope/log/tarp shack attached. It is1985; budget means ordinary old1950smanufactured equipment stillusednow, no fantasyarchitecture/rope-lashedlogs/patchworkblueplastic/ornatebrassfinials. Four camera cells: TOP LEFT FRONT+LEFT sides, TOP RIGHT REAR+LEFT sides, BOTTOM LEFT REAR+RIGHT sides, BOTTOM RIGHT FRONT+RIGHT sides, corresponding SE SW / NW NE. Reconstruct real REAR faces, don't pastefront servicehatches/screens/lenses onto theback. Keep ALL doors/windows/vents/equipment/ladder/stair/camera/servingcounter positions fixed in localphysicalspace across the four turns. Structuralbodies andfunctionalattachments are same in every view. Finely hand-painted miniature game style consistent with source authority, realistic materials and readable silhouettes. LATE-AFTERNOON DAYTIME sunfixedSCREEN UPPER RIGHT, shadowsLOWER LEFT; all electriclamps/screensoff. Nopeople, plants, groundplate/roads/terrain, UI/captions/grid/text orhaze. Equipment's owndeck/mat is allowed onlyifpartofbrief. Fullyopaqueobjects on genuinelyzeroalpha transparentbackground includingallgutters; netting/railopeningsremaintransparent. Four complete separate sprites, equal physicalscale, centredwithgenerouscellmargins.",
+  "references": [
+    "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/old-clubhouse-1950/normal-v5.png"
+  ],
+  "status": "native normal4 candidate; yaw4 and independent identity/alpha/geometry review pending",
+  "runtime_imported": false,
+  "sha256": "6f52ae1851feb1ddb97a67c9d5bc78158d5fba5727a9dc4269f72f260d65a974",
+  "native_bytes_preserved": true
+}

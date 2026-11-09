@@ -1,0 +1,38 @@
+{
+  "schema": 1,
+  "createdUtc": "2026-11-07T06:47:45.284562+00:00",
+  "exactRuntimeId": "business:golf-mower",
+  "source": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/src/assets/businesses/capital-v1/png/golf-mower.png",
+  "sourceSha256": "d2d283d9b0896d9a5369e7f5add9f7455e41fa6b542efe34a74f902f61d6b9e0",
+  "output": "identity-references/business-golf-mower-dc916060/source.png",
+  "outputSha256": "d2d283d9b0896d9a5369e7f5add9f7455e41fa6b542efe34a74f902f61d6b9e0",
+  "width": 581,
+  "height": 469,
+  "sourceCell": {
+    "kind": "already isolated native PNG; whole file",
+    "rectXYWH": [
+      0,
+      0,
+      581,
+      469
+    ]
+  },
+  "operation": "byte-for-byte PNG copy only; no resize, crop, recolour, key, repaint, registration or source mutation",
+  "selection": "retained exact-ID business source master PNG",
+  "registeredCornerDirection": null,
+  "sourceEvidence": null,
+  "sourceReview": null,
+  "sourceRegistration": null,
+  "originalInventorySource": null,
+  "originalBusinessSourceCell": {
+    "id": "golf-mower",
+    "sourceSheet": "sliced/builtin/golf-furniture.png",
+    "sourceCrop": [
+      634,
+      710,
+      573,
+      461
+    ]
+  },
+  "nativeReferenceApprovalClaimed": false
+}

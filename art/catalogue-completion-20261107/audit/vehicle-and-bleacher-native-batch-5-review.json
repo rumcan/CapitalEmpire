@@ -1,0 +1,66 @@
+{
+  "schema": 1,
+  "as_of_utc": "2026-11-07T10:41:06.689269+00:00",
+  "sheets_reviewed": 4,
+  "records": [
+    {
+      "family": "golf-player-cart",
+      "sheet": "cardinal-v1.png",
+      "review_result": "PASS-source-identity-direction-alpha;camera-measurement-pending",
+      "border_p95max": [
+        0.0,
+        1.0
+      ],
+      "gap_p95max": [
+        0.0,
+        4.0
+      ],
+      "qa": "generated/vehicles/golf-player-cart/cardinal-v1.independent-qa.json"
+    },
+    {
+      "family": "golf-player-cart",
+      "sheet": "yaw8-v1.png",
+      "review_result": "HOLD-missing-near-right-and-fixed-bag-identity",
+      "border_p95max": [
+        0.0,
+        1.0
+      ],
+      "gap_p95max": [
+        1.0,
+        1.0
+      ],
+      "qa": "generated/vehicles/golf-player-cart/yaw8-v1.independent-qa.json"
+    },
+    {
+      "family": "town-blue-sedan",
+      "sheet": "traffic8-v2.png",
+      "review_result": "PASS-background-cleanup-source-candidate;HOLD-camera-consistency",
+      "border_p95max": [
+        4.0,
+        7.0
+      ],
+      "gap_p95max": [
+        2.0,
+        4.0
+      ],
+      "qa": "generated/vehicles/town-blue-sedan/traffic8-v2.independent-qa.json"
+    },
+    {
+      "family": "compact-bleacher-60-upgraded",
+      "sheet": "yaw8-v2.png",
+      "review_result": "PASS-front-visible-six-by-ten-count-and-alpha;HOLD-exact8-certification",
+      "border_p95max": [
+        0.0,
+        1.0
+      ],
+      "gap_p95max": [
+        1.0,
+        1.0
+      ],
+      "qa": "generated/compact-bleacher-60-upgraded/yaw8-v2.independent-qa.json"
+    }
+  ],
+  "no_runtime_changes": true,
+  "no_source_crops": true,
+  "whole_request_complete": false
+}

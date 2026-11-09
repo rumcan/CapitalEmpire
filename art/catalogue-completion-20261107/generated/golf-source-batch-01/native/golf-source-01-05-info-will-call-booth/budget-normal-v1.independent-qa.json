@@ -1,0 +1,174 @@
+{
+  "schema": 1,
+  "as_of_utc": "2026-11-07T12:22:07.194839+00:00",
+  "review_result": "PASS-source-candidate-front-rear-function-alpha",
+  "recommended_continue_yaw_source_generation": true,
+  "continuation_scope": "Sourceidentity/function/alpha only; not final8direction, owner/release, numericalangle or runtime approval.",
+  "source": {
+    "path": "generated/golf-source-batch-01/native/golf-source-01-05-info-will-call-booth/budget-normal-v1.png",
+    "sha256": "640400b359ad0cec56f81c74fd4eda63973391970f6c4362cc4f4913d0a76b46",
+    "bytes": 2403734
+  },
+  "condition": "budget",
+  "runtime_target_proposal": {
+    "eventTypeId": "info",
+    "eventName": "Info and will-call booth",
+    "currentSpriteSubjectId": "ce:parking-kiosk",
+    "newArtSubjectProposal": "golf:event-info-will-call-booth",
+    "newArtSubjectAlreadyRegistered": false,
+    "eventCatalogueSource": "src/game/golf/tents.ts",
+    "standInMappingSource": "src/game/golf/structure-art.ts",
+    "footprintTiles": {
+      "width": 2,
+      "depth": 2
+    },
+    "footprintMetres": {
+      "width": 4,
+      "depth": 4
+    },
+    "dimensionsMeaning": "Exact current event placement plot, not measured source sprite architecture. New design must fit plot; no runtime geometry changed."
+  },
+  "source_original_hash_matches_parent_provenance": true,
+  "parent_provenance": {
+    "path": "generated/golf-source-batch-01/native/golf-source-01-05-info-will-call-booth/budget-normal-v1.provenance.json",
+    "sha256": "ff71b9e612be28dfcafc2b0efe30a361970ad0001330d894518635be793097c7",
+    "bytes": 3652
+  },
+  "parent_archive": {
+    "path": "generated/golf-source-batch-01/native/golf-source-01-05-info-will-call-booth/budget-normal-v1.archive.json",
+    "sha256": "9bbb5c5a312d3c2bf746970c6f733f009193461239c076e301b53477aa101386",
+    "bytes": 3724
+  },
+  "actual_prompt_from_provenance_utf8_sha256": "d0f029349b586779a7e992ff36241d4653a0d3bafae37631f91ce76ebd946e2e",
+  "actual_generation_references": [
+    {
+      "path": "generated/old-clubhouse-1950/normal-v5.png",
+      "sha256": "a996fb471f351cc35926c84090192a8b55cc3557bb1bf9fec24872218fa219a6",
+      "bytes": 1473832
+    },
+    {
+      "path": "generated/golf-source-batch-01/references/ticket-booth.source.png",
+      "sha256": "7603bd35ab39928c2f7e0738e8de9ba7557be90f7657d531588a757f9445776b",
+      "bytes": 494961
+    }
+  ],
+  "dimensions": [
+    1254,
+    1254
+  ],
+  "mode": "RGBA",
+  "zero_alpha_fraction": 0.4149420419251696,
+  "outer_border_alpha_p95max": [
+    0.0,
+    1.0
+  ],
+  "center_gutter_alpha_p95max": [
+    0.0,
+    1.0
+  ],
+  "horizontal_clear_cut_row": 627,
+  "all_four_native_core_silhouettes_complete": true,
+  "four_distinct_core_pixel_hashes": true,
+  "cells": [
+    {
+      "cell": 0,
+      "function_corner": "front+left",
+      "proposed_lossless_rect_ltrb": [
+        0,
+        0,
+        627,
+        627
+      ],
+      "core_bbox_ltrb": [
+        47,
+        65,
+        598,
+        581
+      ],
+      "minimum_core_margin_px": 29,
+      "boundary_core_pixels_alpha_gt128": 0,
+      "boundary_alpha_max": 1,
+      "native_rgba_rectangle_sha256": "2b462424d58e68ea9e99a0fafe1a3c4489705399dc661cfe4f75a13babbfbe15",
+      "trimmed_core_pixel_hash_ignore_alpha_le128": "4d0a3059db680bda430ecb4bf285f2f3901a1383b23aaae5b255dfa5a6e6097b"
+    },
+    {
+      "cell": 1,
+      "function_corner": "rear+left",
+      "proposed_lossless_rect_ltrb": [
+        627,
+        0,
+        1254,
+        627
+      ],
+      "core_bbox_ltrb": [
+        32,
+        66,
+        584,
+        581
+      ],
+      "minimum_core_margin_px": 32,
+      "boundary_core_pixels_alpha_gt128": 0,
+      "boundary_alpha_max": 1,
+      "native_rgba_rectangle_sha256": "c9822696491bc822c5dcff51a8493312d6b06b45d00a5a928a15043933c4a32e",
+      "trimmed_core_pixel_hash_ignore_alpha_le128": "6951616bc6c691c8f32feefbd7b24f868dfce9cbcb05724b6ff80d29e2058c97"
+    },
+    {
+      "cell": 2,
+      "function_corner": "rear+right",
+      "proposed_lossless_rect_ltrb": [
+        0,
+        627,
+        627,
+        1254
+      ],
+      "core_bbox_ltrb": [
+        46,
+        48,
+        597,
+        562
+      ],
+      "minimum_core_margin_px": 30,
+      "boundary_core_pixels_alpha_gt128": 0,
+      "boundary_alpha_max": 1,
+      "native_rgba_rectangle_sha256": "b4312921e395366355d75e8594fe211a70bf3e37cf0bfa0d739d9b0d4eeb4ff8",
+      "trimmed_core_pixel_hash_ignore_alpha_le128": "5d0ca18f38f10eb3e95a3258693d1b9a2375bd82fc75fef01156a2095ab6cf7c"
+    },
+    {
+      "cell": 3,
+      "function_corner": "front+right",
+      "proposed_lossless_rect_ltrb": [
+        627,
+        627,
+        1254,
+        1254
+      ],
+      "core_bbox_ltrb": [
+        31,
+        46,
+        579,
+        564
+      ],
+      "minimum_core_margin_px": 31,
+      "boundary_core_pixels_alpha_gt128": 0,
+      "boundary_alpha_max": 1,
+      "native_rgba_rectangle_sha256": "e5d4f271285afb5d24193e42c65136a3e964ac321110bffecb82cb3717960d4e",
+      "trimmed_core_pixel_hash_ignore_alpha_le128": "0253676606ba183f528c6b643495aee8bbcf38d58cb578fb54e8aacab65b5f69"
+    }
+  ],
+  "mesh_alpha_samples": null,
+  "visual_observations": [
+    "TL/BR preserve two counter hatches, left map rack and pickup shelf;TR/BL have one rear staff door.",
+    "Left end window/vent and right blank information panel/vent remain distinct at correct face combinations."
+  ],
+  "exact_numerical_angle_certified": false,
+  "release_anchors_authored": false,
+  "owner_approved": false,
+  "runtime_ready": false,
+  "runtime_imported": false,
+  "source_crops_or_pixel_changes": false,
+  "exact_prompt_file": {
+    "path": "generated/golf-source-batch-01/native/golf-source-01-05-info-will-call-booth/budget-normal-v1.prompt.txt",
+    "sha256": "e61b444a19a6e10acac1a111d4a71cffaf8390ab64ddc12529ea43782b6da60a",
+    "bytes": 2053
+  }
+}

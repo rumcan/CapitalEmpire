@@ -1,0 +1,14 @@
+{
+  "key": "town-blue-sedan",
+  "source": "C:/Users/RAMPAGE/.codex/generated_images/01a1b1fd-39ec-7220-8f11-86e4448833ea/exec-acfd5bc7-6a18-4d54-996e-e5efb472f8bc.png",
+  "target": "generated/vehicles/town-blue-sedan/right-elevated-v1.png",
+  "prompt": "Paint the exact projected vehicle of REFERENCE1 as the precise vehicle from REFERENCE2. Produce ONE SINGLE vehicle sprite, NOT a sheet. Orientation/camera/plane visibility comes EXCLUSIVELY from reference1: nose points exactly SCREEN RIGHT, longitudinal axis precisely horizontal, orthographic camera looks DOWN30degrees from ABOVE the side. The roof/bonnet/boot or pickup bed show their full upper surfaces as broad planes at this projection; wheels are vertical ellipses0.866height/width, not perfectcircles. No broad front/rear grille plane visible, only thinendrim. Do NOT turn diagonally. Reference2 provides only exactidentity/materials/body/trim/wheels: A boxy1980-style pale powder-blue FOUR-DOOR midsize sedan with a separate rectangular boot/trunk, thin chrome bumpers, rectangular headlamps, plain small wheel hubcaps and blue-grey glazing. No roof rack, no estate rear. Preserve this SAME model/paint/doorcount/roofline/wheelbase; don'tcopytechnicalproxyboxshape oritscolour. Don't copy reference2's diagonal orientation. Draw the actual rightward-facing physical side, never mirror lighting. Detailed paintedminiature style, natural late-afternoon DAYTIME sunUPPERRIGHT/shadowsLOWERLEFT, lampsoff. One completeopaquevehicle centredwithamplemargins on TRUEzeroalpha transparentbackground, no groundplate/road/haze/text/logos/UI.",
+  "references": [
+    "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/vehicles/town-blue-sedan/camera-calibration-refs/right-camera-only.png",
+    "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/vehicles/town-blue-sedan/camera-calibration-refs/corner-identity-only.png"
+  ],
+  "status": "single-side30degree camera candidate; independent alpha/identity/projection QA pending",
+  "runtime_imported": false,
+  "sha256": "32d749863c1b45901f877d9a9e02a5813edefdfe4da1759419ee17881a542f21",
+  "native_bytes_preserved": true
+}

@@ -1,0 +1,271 @@
+{
+  "id": "variation~town-postoffice-1c7025b8-plain~1",
+  "kind": "corners",
+  "version": 1,
+  "generator": "native imagegen",
+  "imported_utc": "2026-11-06T19:07:23.049508+00:00",
+  "source": {
+    "path": "C:\\Users\\RAMPAGE\\.codex\\generated_images\\01a1b1fd-39ec-7220-8f11-86e4448833ea\\exec-3426d971-17de-48de-8730-7757bec15e77.png",
+    "sha256": "8084bb07a349e3a44b971c4298b88754bced50559a4a571c57f2cfa453b9ca23",
+    "bytes": 1980266
+  },
+  "raw": {
+    "path": "E:\\Repos\\CapitalEmpire\\.claude\\worktrees\\art-repaint-20261106\\art\\theme-consistency\\native-resume-20261106\\variation~town-postoffice-1c7025b8-plain~1\\corners-v1.png",
+    "sha256": "8084bb07a349e3a44b971c4298b88754bced50559a4a571c57f2cfa453b9ca23",
+    "bytes": 1980266
+  },
+  "exact_prompt": {
+    "path": "E:\\Repos\\CapitalEmpire\\.claude\\worktrees\\art-repaint-20261106\\art\\theme-consistency\\native-resume-20261106\\variation~town-postoffice-1c7025b8-plain~1\\corners-v1.prompt.txt",
+    "sha256": "a2703b887c193b99179d8a1e083832dfcea6c8abc5da65b6d584532ccc0fb32d",
+    "bytes": 1818
+  },
+  "queue": {
+    "path": "D:\\AI\\chatgpt-bridge\\queue-resume-corners-20261106.json",
+    "sha256": "be220aa1862ea65077a5b6cdbf5a823d5cd27b0f02d9721b2f4bd8af35321c5d",
+    "bytes": 12104
+  },
+  "references": [
+    {
+      "path": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\theme-consistency\\exports\\buildings\\variation-town-postoffice-1c7025b8-plain-1.native.png",
+      "sha256": "c0c9ebbeb90a5aa3d4e853304e58f8df2e2b86aca1e1777489bb881f6c7b2c01",
+      "bytes": 236397
+    },
+    {
+      "path": "D:\\AI\\chatgpt-bridge\\guides\\variation~town-postoffice-1c7025b8-plain~1-corners.png",
+      "sha256": "bff08029fe63e9805c7ff8c1951d490af36536226802e85b592583b7fa06a536",
+      "bytes": 436085
+    }
+  ],
+  "original_queue_references": [
+    {
+      "path": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\theme-consistency\\exports\\buildings\\variation-town-postoffice-1c7025b8-plain-1.native.png",
+      "sha256": "c0c9ebbeb90a5aa3d4e853304e58f8df2e2b86aca1e1777489bb881f6c7b2c01",
+      "bytes": 236397
+    },
+    {
+      "path": "D:\\AI\\chatgpt-bridge\\guides\\variation~town-postoffice-1c7025b8-plain~1-corners.png",
+      "sha256": "bff08029fe63e9805c7ff8c1951d490af36536226802e85b592583b7fa06a536",
+      "bytes": 436085
+    }
+  ],
+  "cell_order": [
+    [
+      "SE",
+      "SW"
+    ],
+    [
+      "NW",
+      "NE"
+    ]
+  ],
+  "validation": {
+    "mode": "RGBA",
+    "dimensions": [
+      1254,
+      1254
+    ],
+    "split_x": 627,
+    "split_y": 627,
+    "cells": [
+      {
+        "view": "SE",
+        "cell_box": [
+          0,
+          0,
+          627,
+          627
+        ],
+        "subject_bbox": [
+          102,
+          67,
+          596,
+          560
+        ],
+        "transparent_fraction": 0.5688921448176044,
+        "margins_px": [
+          102,
+          67,
+          31,
+          67
+        ]
+      },
+      {
+        "view": "SW",
+        "cell_box": [
+          627,
+          0,
+          1254,
+          627
+        ],
+        "subject_bbox": [
+          97,
+          55,
+          591,
+          555
+        ],
+        "transparent_fraction": 0.5511422459294532,
+        "margins_px": [
+          97,
+          55,
+          36,
+          72
+        ]
+      },
+      {
+        "view": "NW",
+        "cell_box": [
+          0,
+          627,
+          627,
+          1254
+        ],
+        "subject_bbox": [
+          36,
+          70,
+          523,
+          542
+        ],
+        "transparent_fraction": 0.552963531054692,
+        "margins_px": [
+          36,
+          70,
+          104,
+          85
+        ]
+      },
+      {
+        "view": "NE",
+        "cell_box": [
+          627,
+          627,
+          1254,
+          1254
+        ],
+        "subject_bbox": [
+          37,
+          77,
+          538,
+          551
+        ],
+        "transparent_fraction": 0.5548229715945656,
+        "margins_px": [
+          37,
+          77,
+          89,
+          76
+        ]
+      }
+    ],
+    "cell_differences": [
+      {
+        "views": [
+          "SE",
+          "SW"
+        ],
+        "mean_rgb_difference": 35.102864583333336
+      },
+      {
+        "views": [
+          "SE",
+          "NW"
+        ],
+        "mean_rgb_difference": 22.096761067708332
+      },
+      {
+        "views": [
+          "SE",
+          "NE"
+        ],
+        "mean_rgb_difference": 39.184326171875
+      },
+      {
+        "views": [
+          "SW",
+          "NW"
+        ],
+        "mean_rgb_difference": 34.889729817708336
+      },
+      {
+        "views": [
+          "SW",
+          "NE"
+        ],
+        "mean_rgb_difference": 23.313232421875
+      },
+      {
+        "views": [
+          "NW",
+          "NE"
+        ],
+        "mean_rgb_difference": 37.658203125
+      }
+    ],
+    "errors": [],
+    "warnings": [],
+    "visual_review": "Required: automatic checks cannot approve style, geometry, lighting, or fidelity."
+  },
+  "status": "imported-awaiting-visual-review",
+  "owner_approved": false,
+  "runtime_integrated": false,
+  "all_generated_views": false,
+  "compatible_NE": "generated bottom-right cell",
+  "cutter": {
+    "path": "D:\\AI\\chatgpt-bridge\\sheets.py",
+    "sha256": "eb40b531f94e59aa94412009307414a4a8f4dab5668786dcb077b9d0349852d9",
+    "bytes": 4578
+  },
+  "crops": [
+    {
+      "view": "SE",
+      "compatible": {
+        "path": "D:\\AI\\repaint\\out\\variation~town-postoffice-1c7025b8-plain~1\\SE.png",
+        "sha256": "6cf3d02a50a6a62f7d5cba5052f8f8c9a9a7509ba19a1b1b221a5ba79e462d9e",
+        "bytes": 440286
+      },
+      "project_copy": {
+        "path": "E:\\Repos\\CapitalEmpire\\.claude\\worktrees\\art-repaint-20261106\\art\\theme-consistency\\native-resume-20261106\\variation~town-postoffice-1c7025b8-plain~1\\SE.native.png",
+        "sha256": "6cf3d02a50a6a62f7d5cba5052f8f8c9a9a7509ba19a1b1b221a5ba79e462d9e",
+        "bytes": 440286
+      }
+    },
+    {
+      "view": "SW",
+      "compatible": {
+        "path": "D:\\AI\\repaint\\out\\variation~town-postoffice-1c7025b8-plain~1\\SW.png",
+        "sha256": "a0b1e87afc002b1c8ccf99560fc3de9d43a47307f8bc13698e4d30897bda34f5",
+        "bytes": 446167
+      },
+      "project_copy": {
+        "path": "E:\\Repos\\CapitalEmpire\\.claude\\worktrees\\art-repaint-20261106\\art\\theme-consistency\\native-resume-20261106\\variation~town-postoffice-1c7025b8-plain~1\\SW.native.png",
+        "sha256": "a0b1e87afc002b1c8ccf99560fc3de9d43a47307f8bc13698e4d30897bda34f5",
+        "bytes": 446167
+      }
+    },
+    {
+      "view": "NW",
+      "compatible": {
+        "path": "D:\\AI\\repaint\\out\\variation~town-postoffice-1c7025b8-plain~1\\NW.png",
+        "sha256": "522c0983b35c10bdd4f89501e88cebe86afa918e2470b64cb5cb8f036baeb82c",
+        "bytes": 441737
+      },
+      "project_copy": {
+        "path": "E:\\Repos\\CapitalEmpire\\.claude\\worktrees\\art-repaint-20261106\\art\\theme-consistency\\native-resume-20261106\\variation~town-postoffice-1c7025b8-plain~1\\NW.native.png",
+        "sha256": "522c0983b35c10bdd4f89501e88cebe86afa918e2470b64cb5cb8f036baeb82c",
+        "bytes": 441737
+      }
+    },
+    {
+      "view": "NE",
+      "compatible": {
+        "path": "D:\\AI\\repaint\\out\\variation~town-postoffice-1c7025b8-plain~1\\NE.png",
+        "sha256": "3188f55462d463e1e849c5cea3faa98ae4b1cf6aafc69526030767fe958b939d",
+        "bytes": 451895
+      },
+      "project_copy": {
+        "path": "E:\\Repos\\CapitalEmpire\\.claude\\worktrees\\art-repaint-20261106\\art\\theme-consistency\\native-resume-20261106\\variation~town-postoffice-1c7025b8-plain~1\\NE.native.png",
+        "sha256": "3188f55462d463e1e849c5cea3faa98ae4b1cf6aafc69526030767fe958b939d",
+        "bytes": 451895
+      }
+    }
+  ]
+}

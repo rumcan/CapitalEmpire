@@ -1,0 +1,34 @@
+{
+  "look_id": "person:3d:town_m_postman",
+  "actual_runtime_look": {
+    "id": "person:3d:town_m_postman",
+    "size": "adult",
+    "w": 80,
+    "h": 136,
+    "ax": 40,
+    "ay": 131,
+    "m": 1.78,
+    "fps": 5.7
+  },
+  "animation_files_changed": false,
+  "resized": false,
+  "repainted": false,
+  "source_style_changed": false,
+  "method": "original-pics-native-PNG-copy",
+  "source": {
+    "path": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\people3d\\pics\\town_m_postman.png",
+    "sha256": "2b9adaf99e4280aa01b4b4c65932cdae0088b0ce525e4487d816bd9bb6d98bde",
+    "bytes": 1012133
+  },
+  "primary_reference": {
+    "path": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\portraits\\references\\town_m_postman\\identity-source.png",
+    "sha256": "2b9adaf99e4280aa01b4b4c65932cdae0088b0ce525e4487d816bd9bb6d98bde",
+    "bytes": 1012133
+  },
+  "dimensions": [
+    848,
+    1264
+  ],
+  "mode": "RGB",
+  "crop_records": []
+}

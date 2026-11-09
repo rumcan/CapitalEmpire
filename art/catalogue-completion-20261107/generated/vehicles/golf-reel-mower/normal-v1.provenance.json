@@ -1,0 +1,13 @@
+{
+  "key": "golf-reel-mower",
+  "source": "C:/Users/RAMPAGE/.codex/generated_images/01a1b1fd-39ec-7220-8f11-86e4448833ea/exec-369ad19f-4ae4-4034-a764-f79159c38315.png",
+  "target": "generated/vehicles/golf-reel-mower/normal-v1.png",
+  "prompt": "A high-quality native2x2 sprite sheet of ONE IDENTICAL empty vehicle seen from four true orthographic isometric45degree corner headings,30degrees down. Layout top-left FRONT-LEFT (nose screen lower left),top-right FRONT-RIGHT (nose lower right),bottom-left REAR-RIGHT (nose upper right),bottom-right REAR-LEFT (nose upper left). Keep the same wheelbase, wheel size, bodywork, seats, attachments, paint and scale across all four. Show actual rear structure, never put headlights on rear or mirror one view. Detailed hand-painted miniature game style, late-afternoon DAYTIME sunlight fixed SCREEN UPPER RIGHT and shadows LOWER LEFT in EVERY CELL. No occupants, logos, text, grid, ground plate, road, scenery, haze or vignette. True transparent zero-alpha background with four complete separate centred sprites and wide margins.\nUse the reference as exact vehicle identity and painterly style. A dark-green professional compact ride-on golf REEL mower with tan single bucket seat, black steering wheel, rear green engine cover with black filler cap and louvres, roll hoop, large rear tyres with cream rims, two clearly visible front cylindrical reel cutting heads with small rollers and metal linkages. Preserve this low narrow machine and correct mechanical layout on all sides; plausible rear engine grille and no headlamps added. It is1985.",
+  "references": [
+    "F:/Repos/ce-wt/eight-facing-runtime-20261107/src/assets/businesses/capital-v1/png/golf-mower.png"
+  ],
+  "replacement_target": "business:golf-mower",
+  "status": "source candidate; camera and alpha QA pending",
+  "sha256": "12b43ad803f5415d006b2aac178fef4fc9da0de8b596adb63ee2c7f8639d1b2b",
+  "native_bytes_preserved": true
+}

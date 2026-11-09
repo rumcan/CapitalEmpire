@@ -1,0 +1,120 @@
+{
+  "schema": 1,
+  "as_of_utc": "2026-11-07T13:44:58.240610+00:00",
+  "review_result": "PASS-source-candidate-four-distinct-main-faces-alpha",
+  "source": {
+    "path": "generated/golf-source-batch-01/native/golf-source-01-10-concession-kiosk/upgraded-yaw8-v1.png",
+    "sha256": "91d53b31bc6b7c46d549fb091636d775ad34dd618e990a2ae02d7ff1b96fd962",
+    "bytes": 1323829
+  },
+  "mode": "RGBA",
+  "dimensions": [
+    1254,
+    1254
+  ],
+  "source_original_hash_matches_parent": true,
+  "parent_provenance": {
+    "path": "generated/golf-source-batch-01/native/golf-source-01-10-concession-kiosk/upgraded-yaw8-v1.provenance.json",
+    "sha256": "e93d62c84543bfdd2422bf363b8bfacbf9170e7a7661ad04cf75494b56b5e9de",
+    "bytes": 3286
+  },
+  "exact_prompt_utf8_sha256": "f555b9b83bca06ce2990ab45635f5b708cf2d1c8fd019f632dfd8f8bc8b43864",
+  "actual_generation_references": [
+    {
+      "path": "generated/golf-source-batch-01/native/golf-source-01-10-concession-kiosk/budget-yaw8-v1.png",
+      "sha256": "2264bf6e6b3cb31cfeac7d30cd3848747036fc8b227eb133731c073d04957607",
+      "bytes": 1700926
+    },
+    {
+      "path": "generated/golf-source-batch-01/native/golf-source-01-10-concession-kiosk/upgraded-normal-v1.png",
+      "sha256": "f780ff50e2d63b09af8ce68f0c1854d41e9497cff045914cba5c99a9dbb4c1df",
+      "bytes": 1599498
+    }
+  ],
+  "four_actual_main_faces_visually_verified": true,
+  "zero_alpha_fraction": 0.5820093404455027,
+  "outer_4px_border_alpha_p50p95max": [
+    0.0,
+    0.0,
+    1.0
+  ],
+  "clear_horizontal_cut_y": 627,
+  "clear_vertical_cut_by_row": [
+    632,
+    627
+  ],
+  "cut_alpha_maxima": {
+    "horizontal": 1,
+    "vertical_top": 2,
+    "vertical_bottom": 0
+  },
+  "cells": [
+    {
+      "cell": "TL",
+      "actual_visible_main_face": "open serving face and fridge front",
+      "reference_rect_ltrb": [
+        0,
+        0,
+        632,
+        627
+      ],
+      "minimum_core_margin_px": 1,
+      "boundary_core_pixels_alpha_gt128": 0,
+      "boundary_alpha_max": 53,
+      "native_rgba_rectangle_sha256": "e55711b7cc803ff48c169852ad251a04092509a5200bfc3dccbcc7ed38b48e11"
+    },
+    {
+      "cell": "TR",
+      "actual_visible_main_face": "plain gable end",
+      "reference_rect_ltrb": [
+        632,
+        0,
+        1254,
+        627
+      ],
+      "minimum_core_margin_px": 58,
+      "boundary_core_pixels_alpha_gt128": 0,
+      "boundary_alpha_max": 2,
+      "native_rgba_rectangle_sha256": "cd710e2dcef13a3c5f07fe8315f96a621dd1741b81fc2885e5e0865354fccba6"
+    },
+    {
+      "cell": "BL",
+      "actual_visible_main_face": "rear door",
+      "reference_rect_ltrb": [
+        0,
+        627,
+        627,
+        1254
+      ],
+      "minimum_core_margin_px": 17,
+      "boundary_core_pixels_alpha_gt128": 0,
+      "boundary_alpha_max": 1,
+      "native_rgba_rectangle_sha256": "52496bd72c0fc405a5fcf7c16300fda3238a84392c0ef03a075a1c12dfe9bba1"
+    },
+    {
+      "cell": "BR",
+      "actual_visible_main_face": "opposite gable/fridge side",
+      "reference_rect_ltrb": [
+        627,
+        627,
+        1254,
+        1254
+      ],
+      "minimum_core_margin_px": 19,
+      "boundary_core_pixels_alpha_gt128": 0,
+      "boundary_alpha_max": 1,
+      "native_rgba_rectangle_sha256": "25c0ecc0bf5925ca2fd3fdc53e947a9a328003c5aaf40bc619992a8bd3d62bcf"
+    }
+  ],
+  "all_cores_complete_at_reference_cuts": true,
+  "visual_observations": [
+    "Different main faces retained. Front glass display and side glass form one two-faced corner refrigerator; not counted as a second duplicated appliance. Rear door retained."
+  ],
+  "pixel_hash_uniqueness_is_not_pose_proof": true,
+  "native_image_bytes_changed": false,
+  "source_crops_saved": false,
+  "owner_approved": false,
+  "runtime_ready": false,
+  "exact_numerical_angle_certified": false,
+  "limits": "Limited source visual face/state/alpha review; labels are main faces, not measured native camera angles. No release or exact 8 degree certification."
+}

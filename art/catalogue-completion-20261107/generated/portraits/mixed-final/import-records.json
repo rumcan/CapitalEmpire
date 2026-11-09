@@ -1,0 +1,162 @@
+{
+  "sheet": {
+    "path": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\portraits\\mixed-final\\source.png",
+    "sha256": "f3e79bcf8a00a930b3355a628f15b42b2c113ee22ce747d4ef55f95ffc0cca9f",
+    "bytes": 3562790
+  },
+  "records": [
+    {
+      "look_id": "spectator:spec_w_windbreaker",
+      "cell_index": 0,
+      "cell_position": "top-left",
+      "source_crop_box": [
+        0,
+        0,
+        630,
+        623
+      ],
+      "dimensions": [
+        630,
+        623
+      ],
+      "mode": "RGB",
+      "source_file": {
+        "path": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\portraits\\mixed-final\\spectator-spec-w-windbreaker.native.png",
+        "sha256": "638311369df2d6b2b29405f92ecff919bf724eeab7322aae5cbfb93d295f1558",
+        "bytes": 812653
+      },
+      "pixel_sha256": "303b772900b691ae124af7b668271c7c2b4a078973119cbc361d59bc4ddeab3e",
+      "operation": "exact native rectangle; no resize/repaint/alpha reconstruction",
+      "parent_reviewed": true,
+      "owner_approved": false,
+      "runtime_ready": true,
+      "runtime_integrated": true,
+      "manifest_record": {
+        "lookId": "spectator:spec_w_windbreaker",
+        "file": "spec-w-windbreaker.png",
+        "w": 630,
+        "h": 623,
+        "bytes": 812653,
+        "state": "one"
+      },
+      "runtime_file": {
+        "path": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\src\\assets\\portraits\\spec-w-windbreaker.png",
+        "sha256": "638311369df2d6b2b29405f92ecff919bf724eeab7322aae5cbfb93d295f1558",
+        "bytes": 812653
+      }
+    },
+    {
+      "look_id": "spectator:spec_w_young_shorts",
+      "cell_index": 1,
+      "cell_position": "top-right",
+      "source_crop_box": [
+        630,
+        0,
+        1261,
+        623
+      ],
+      "dimensions": [
+        631,
+        623
+      ],
+      "mode": "RGB",
+      "source_file": {
+        "path": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\portraits\\mixed-final\\spectator-spec-w-young-shorts.native.png",
+        "sha256": "b2e36b84a2cdd46b951dd7431a0e5ffe88cc7bbf7bcc17df0f5baf52daea6f78",
+        "bytes": 809415
+      },
+      "pixel_sha256": "394a0f26903b0519e15eabe72d7f8872a0738bd3ce1b2a8e0c989a32037185fd",
+      "operation": "exact native rectangle; no resize/repaint/alpha reconstruction",
+      "parent_reviewed": true,
+      "owner_approved": false,
+      "runtime_ready": true,
+      "runtime_integrated": true,
+      "manifest_record": {
+        "lookId": "spectator:spec_w_young_shorts",
+        "file": "spec-w-young-shorts.png",
+        "w": 631,
+        "h": 623,
+        "bytes": 809415,
+        "state": "one"
+      },
+      "runtime_file": {
+        "path": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\src\\assets\\portraits\\spec-w-young-shorts.png",
+        "sha256": "b2e36b84a2cdd46b951dd7431a0e5ffe88cc7bbf7bcc17df0f5baf52daea6f78",
+        "bytes": 809415
+      }
+    },
+    {
+      "look_id": "golfer:golf_am_m3",
+      "cell_index": 2,
+      "cell_position": "bottom-left",
+      "source_crop_box": [
+        0,
+        623,
+        630,
+        1247
+      ],
+      "dimensions": [
+        630,
+        624
+      ],
+      "mode": "RGB",
+      "source_file": {
+        "path": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\portraits\\mixed-final\\golfer-golf-am-m3.native.png",
+        "sha256": "2e3080963b9724f14da8d68993408ff88600b53ec50363c1a563b9c4584c627e",
+        "bytes": 804663
+      },
+      "pixel_sha256": "f2ed18af1f73103b9627222b3444fa91a82fee9f932ee298b24414eac1b939a8",
+      "operation": "exact native rectangle; no resize/repaint/alpha reconstruction",
+      "parent_reviewed": true,
+      "owner_approved": false,
+      "runtime_ready": true,
+      "runtime_integrated": true,
+      "manifest_record": {
+        "lookId": "golfer:golf_am_m3",
+        "file": "golf-am-m3.png",
+        "w": 630,
+        "h": 624,
+        "bytes": 804663,
+        "state": "one"
+      },
+      "runtime_file": {
+        "path": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\src\\assets\\portraits\\golf-am-m3.png",
+        "sha256": "2e3080963b9724f14da8d68993408ff88600b53ec50363c1a563b9c4584c627e",
+        "bytes": 804663
+      }
+    },
+    {
+      "look_id": null,
+      "cell_index": 3,
+      "cell_position": "bottom-right",
+      "source_crop_box": [
+        630,
+        623,
+        1261,
+        1247
+      ],
+      "dimensions": [
+        631,
+        624
+      ],
+      "mode": "RGB",
+      "source_file": {
+        "path": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\portraits\\mixed-final\\unused-cell-3.native.png",
+        "sha256": "8ad7d003df1fbebb07020b47314520de54f38b35c6e7d0cb9ff8a1a98120df8b",
+        "bytes": 841362
+      },
+      "pixel_sha256": "37a57958ff96fd2879e2efdcbce23eb4bd1345d12701e1e42c6a3d52d79f0090",
+      "operation": "exact native rectangle; no resize/repaint/alpha reconstruction",
+      "parent_reviewed": true,
+      "owner_approved": false,
+      "runtime_ready": false,
+      "runtime_integrated": false
+    }
+  ],
+  "runtime_writes_performed": true,
+  "manifest": {
+    "path": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\src\\assets\\portraits\\manifest.json",
+    "sha256": "6e1bbfb8e143e83179ca8075e55d89e72613924e435f2ce6caf58d9466150966",
+    "bytes": 7034
+  }
+}

@@ -1,0 +1,1767 @@
+{
+  "schema": 1,
+  "as_of_utc": "2026-11-07T10:27:52.436911+00:00",
+  "source_only_read_only_runtime_audit": true,
+  "runtime_source_files_unchanged": true,
+  "owner_request_complete": false,
+  "priority_vehicle_roles": [
+    {
+      "role": "ride-on reel mower",
+      "runtime_ids": [
+        "business:golf-mower"
+      ],
+      "direction_rule": "single fixed item all travel headings; engine9764/9787",
+      "distinct_runtime_art_views": 1,
+      "available_direction_labels": [
+        "single unlabelled original"
+      ],
+      "priority": 1,
+      "references": [
+        {
+          "id": "business:golf-mower",
+          "reference": {
+            "path": "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/scenes/identity-references/business-golf-mower-dc916060/source.png",
+            "sha256": "d2d283d9b0896d9a5369e7f5add9f7455e41fa6b542efe34a74f902f61d6b9e0",
+            "bytes": 377731
+          },
+          "active_registered": true,
+          "definition": "src/game/business-library.ts",
+          "tex": [
+            2,
+            0.0078125,
+            0.203125,
+            0.19580078125,
+            0.3544921875
+          ]
+        }
+      ],
+      "future_native_target": {
+        "moving_headings": [
+          "SE",
+          "S",
+          "SW",
+          "W",
+          "NW",
+          "N",
+          "NE",
+          "E"
+        ],
+        "additional_owner_yawed8_cardinals": [
+          "N8",
+          "E8",
+          "S8",
+          "W8"
+        ],
+        "total_independent_views": 12,
+        "critical": "car heading labels mean screen nose; exact-cardinal moving sprites and8degree yawed cardinal building-style views are distinct. Do not substitute yaw8 for motioncardinals."
+      },
+      "runtime_renderer_flip_for_golf": false,
+      "owner_approval_inferred": false
+    },
+    {
+      "role": "player / hire / everyday / tournament golf cart",
+      "runtime_ids": [
+        "business:golf-cart-sw",
+        "business:golf-cart-se"
+      ],
+      "direction_rule": "hx-hy<0 selects SW else SE; up-screen travel reuses front facing; engine340/7874/7882/8370",
+      "distinct_runtime_art_views": 2,
+      "available_direction_labels": [
+        "SW",
+        "SE"
+      ],
+      "priority": 2,
+      "references": [
+        {
+          "id": "business:golf-cart-sw",
+          "reference": {
+            "path": "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/scenes/identity-references/business-golf-cart-sw-325df122/source.png",
+            "sha256": "9a4f55f93631eef98043fc27b247af71babec837cf01f58894468448500b9f8a",
+            "bytes": 286210
+          },
+          "active_registered": true,
+          "definition": "src/game/business-library.ts",
+          "tex": [
+            0,
+            0.39892578125,
+            0.52880859375,
+            0.5849609375,
+            0.71630859375
+          ]
+        },
+        {
+          "id": "business:golf-cart-se",
+          "reference": {
+            "path": "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/scenes/identity-references/business-golf-cart-se-fe59e78e/source.png",
+            "sha256": "51d80caf4ef730590c576afcb026af6790ebb6f4ea294f83c87aaa38f84d05dc",
+            "bytes": 291651
+          },
+          "active_registered": true,
+          "definition": "src/game/business-library.ts",
+          "tex": [
+            0,
+            0.5927734375,
+            0.52880859375,
+            0.779296875,
+            0.71630859375
+          ]
+        }
+      ],
+      "future_native_target": {
+        "moving_headings": [
+          "SE",
+          "S",
+          "SW",
+          "W",
+          "NW",
+          "N",
+          "NE",
+          "E"
+        ],
+        "additional_owner_yawed8_cardinals": [
+          "N8",
+          "E8",
+          "S8",
+          "W8"
+        ],
+        "total_independent_views": 12,
+        "critical": "car heading labels mean screen nose; exact-cardinal moving sprites and8degree yawed cardinal building-style views are distinct. Do not substitute yaw8 for motioncardinals."
+      },
+      "runtime_renderer_flip_for_golf": false,
+      "owner_approval_inferred": false
+    },
+    {
+      "role": "utility crew cart",
+      "runtime_ids": [
+        "business:golf-cart-sw",
+        "business:golf-cart-se"
+      ],
+      "direction_rule": "same two hire-cart facings reused; engine9765/9787",
+      "distinct_runtime_art_views": 2,
+      "available_direction_labels": [
+        "SW",
+        "SE"
+      ],
+      "priority": 3,
+      "references": [
+        {
+          "id": "business:golf-cart-sw",
+          "reference": {
+            "path": "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/scenes/identity-references/business-golf-cart-sw-325df122/source.png",
+            "sha256": "9a4f55f93631eef98043fc27b247af71babec837cf01f58894468448500b9f8a",
+            "bytes": 286210
+          },
+          "active_registered": true,
+          "definition": "src/game/business-library.ts",
+          "tex": [
+            0,
+            0.39892578125,
+            0.52880859375,
+            0.5849609375,
+            0.71630859375
+          ]
+        },
+        {
+          "id": "business:golf-cart-se",
+          "reference": {
+            "path": "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/scenes/identity-references/business-golf-cart-se-fe59e78e/source.png",
+            "sha256": "51d80caf4ef730590c576afcb026af6790ebb6f4ea294f83c87aaa38f84d05dc",
+            "bytes": 291651
+          },
+          "active_registered": true,
+          "definition": "src/game/business-library.ts",
+          "tex": [
+            0,
+            0.5927734375,
+            0.52880859375,
+            0.779296875,
+            0.71630859375
+          ]
+        }
+      ],
+      "future_native_target": {
+        "moving_headings": [
+          "SE",
+          "S",
+          "SW",
+          "W",
+          "NW",
+          "N",
+          "NE",
+          "E"
+        ],
+        "additional_owner_yawed8_cardinals": [
+          "N8",
+          "E8",
+          "S8",
+          "W8"
+        ],
+        "total_independent_views": 12,
+        "critical": "car heading labels mean screen nose; exact-cardinal moving sprites and8degree yawed cardinal building-style views are distinct. Do not substitute yaw8 for motioncardinals."
+      },
+      "runtime_renderer_flip_for_golf": false,
+      "owner_approval_inferred": false
+    },
+    {
+      "role": "walk-behind mower",
+      "runtime_ids": [
+        "gen:lawnmower"
+      ],
+      "direction_rule": "single fixed item all travel headings; engine9767/9787",
+      "distinct_runtime_art_views": 1,
+      "available_direction_labels": [
+        "single unlabelled original"
+      ],
+      "priority": 4,
+      "references": [
+        {
+          "id": "gen:lawnmower",
+          "reference": {
+            "path": "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/audit/vehicle-references/gen-lawnmower.runtime-atlas-reference.png",
+            "sha256": "b72fc8bd1eccb8687d10a6715bef014614bab97aea0d5e1901e3fcb158bae4dd",
+            "bytes": 7231
+          },
+          "active_registered": true,
+          "definition": "src/game/library.ts",
+          "tex": [
+            15,
+            0.476563,
+            0.757813,
+            0.504395,
+            0.789063
+          ]
+        }
+      ],
+      "future_native_target": {
+        "moving_headings": [
+          "SE",
+          "S",
+          "SW",
+          "W",
+          "NW",
+          "N",
+          "NE",
+          "E"
+        ],
+        "additional_owner_yawed8_cardinals": [
+          "N8",
+          "E8",
+          "S8",
+          "W8"
+        ],
+        "total_independent_views": 12,
+        "critical": "car heading labels mean screen nose; exact-cardinal moving sprites and8degree yawed cardinal building-style views are distinct. Do not substitute yaw8 for motioncardinals."
+      },
+      "runtime_renderer_flip_for_golf": false,
+      "owner_approval_inferred": false
+    },
+    {
+      "role": "rotary ride-on mower",
+      "runtime_ids": [
+        "expansion:rideon-mower"
+      ],
+      "direction_rule": "single fixed original all travel headings; other historical variations not selected by crew",
+      "distinct_runtime_art_views": 1,
+      "available_direction_labels": [
+        "single unlabelled original"
+      ],
+      "priority": 5,
+      "references": [
+        {
+          "id": "expansion:rideon-mower",
+          "reference": {
+            "path": "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/audit/vehicle-references/expansion-rideon-mower.runtime-atlas-reference.png",
+            "sha256": "d2c9344aed0db7efe0fe7138dee926d63d69b57013c8bac9677b349e6288f34f",
+            "bytes": 14508
+          },
+          "active_registered": true,
+          "definition": "src/game/library.ts",
+          "tex": [
+            15,
+            0.195313,
+            0.703125,
+            0.239258,
+            0.736816
+          ]
+        }
+      ],
+      "future_native_target": {
+        "moving_headings": [
+          "SE",
+          "S",
+          "SW",
+          "W",
+          "NW",
+          "N",
+          "NE",
+          "E"
+        ],
+        "additional_owner_yawed8_cardinals": [
+          "N8",
+          "E8",
+          "S8",
+          "W8"
+        ],
+        "total_independent_views": 12,
+        "critical": "car heading labels mean screen nose; exact-cardinal moving sprites and8degree yawed cardinal building-style views are distinct. Do not substitute yaw8 for motioncardinals."
+      },
+      "runtime_renderer_flip_for_golf": false,
+      "owner_approval_inferred": false
+    },
+    {
+      "role": "range ball-picker cart",
+      "runtime_ids": [
+        "cars:navy-wood-panel-wagon:SE",
+        "cars:navy-wood-panel-wagon:S",
+        "cars:navy-wood-panel-wagon:SW",
+        "cars:navy-wood-panel-wagon:W",
+        "cars:navy-wood-panel-wagon:NW",
+        "cars:navy-wood-panel-wagon:N",
+        "cars:navy-wood-panel-wagon:NE",
+        "cars:navy-wood-panel-wagon:E"
+      ],
+      "direction_rule": "rangebizPICKER_CAR=1 -> trafficfacings type1 navy wagon, genuine8headings but WRONGvehicle identity",
+      "distinct_runtime_art_views": 8,
+      "available_direction_labels": [
+        "SE",
+        "S",
+        "SW",
+        "W",
+        "NW",
+        "N",
+        "NE",
+        "E"
+      ],
+      "desired_picker_native_identity_source": {
+        "path": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/new-props/utility-cart-green.webp",
+        "sha256": "02ddd11f9d62e9869a5dd05577cfc5f90b616c32f45ddd03b465b3fe52dcf75c",
+        "catalogue_id": "newprop:utility-cart-green",
+        "visually_verified": "Front cylindrical wire collection cage filled with white golf balls, rear green cargo box, black single seat, cream canopy. Existing source is mislabeled utility cart; correct actual picker identity."
+      },
+      "desired_picker_design_requirement": "Preserve existing utility-cart-green ball-collection design; root native8heading sheet in flight. Runtime moving picker still uses navywagon stand-in until explicitly integrated.",
+      "priority": 6,
+      "references": [],
+      "future_native_target": {
+        "moving_headings": [
+          "SE",
+          "S",
+          "SW",
+          "W",
+          "NW",
+          "N",
+          "NE",
+          "E"
+        ],
+        "additional_owner_yawed8_cardinals": [
+          "N8",
+          "E8",
+          "S8",
+          "W8"
+        ],
+        "total_independent_views": 12,
+        "critical": "car heading labels mean screen nose; exact-cardinal moving sprites and8degree yawed cardinal building-style views are distinct. Do not substitute yaw8 for motioncardinals."
+      },
+      "runtime_renderer_flip_for_golf": null,
+      "owner_approval_inferred": false,
+      "correction_note": "Earlier sourceaudit overlooked this existing design because catalogue label did not say ballpicker; corrected by actual visual inspection, not invented original identity."
+    },
+    {
+      "role": "town shuttle school bus",
+      "runtime_ids": [
+        "world:schoolbus"
+      ],
+      "direction_rule": "trafficfacings type5 repeats SAMEsprite at8headings; flip=Math.round(heading/2)%2===1",
+      "distinct_runtime_art_views": 1,
+      "mirrored_repeats": true,
+      "available_direction_labels": [
+        "single original, repeated/mirrored"
+      ],
+      "priority": 7,
+      "references": [
+        {
+          "id": "world:schoolbus",
+          "reference": {
+            "path": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/theme-consistency/exports/cars/world-schoolbus.native.png",
+            "sha256": "1f6e170a5463d934e923869d9fe3f0be7ab04c98ac057b7b8d97d9da26d62f07",
+            "bytes": 155927
+          },
+          "active_registered": true,
+          "definition": "src/game/library.ts",
+          "tex": [
+            13,
+            0.304688,
+            0.320313,
+            0.496094,
+            0.45166
+          ]
+        }
+      ],
+      "future_native_target": {
+        "moving_headings": [
+          "SE",
+          "S",
+          "SW",
+          "W",
+          "NW",
+          "N",
+          "NE",
+          "E"
+        ],
+        "additional_owner_yawed8_cardinals": [
+          "N8",
+          "E8",
+          "S8",
+          "W8"
+        ],
+        "total_independent_views": 12,
+        "critical": "car heading labels mean screen nose; exact-cardinal moving sprites and8degree yawed cardinal building-style views are distinct. Do not substitute yaw8 for motioncardinals."
+      },
+      "runtime_renderer_flip_for_golf": null,
+      "owner_approval_inferred": false
+    }
+  ],
+  "town_model_pool": [
+    {
+      "model": "cars:burgundy-wagon",
+      "name": "burgundy wagon",
+      "directions": {
+        "SE": "cars:burgundy-wagon:SE",
+        "S": "cars:burgundy-wagon:S",
+        "SW": "cars:burgundy-wagon:SW",
+        "W": "cars:burgundy-wagon:W",
+        "NW": "cars:burgundy-wagon:NW",
+        "N": "cars:burgundy-wagon:N",
+        "NE": "cars:burgundy-wagon:NE",
+        "E": "cars:burgundy-wagon:E"
+      },
+      "direction_count": 8,
+      "missing_directions": [],
+      "driving_eligible": true,
+      "pool": "town vehicles",
+      "mirrored_in_current_pool": false,
+      "available_ids_not_registered_or_removed": []
+    },
+    {
+      "model": "cars:navy-wood-panel-wagon",
+      "name": "navy wagon",
+      "directions": {
+        "SE": "cars:navy-wood-panel-wagon:SE",
+        "S": "cars:navy-wood-panel-wagon:S",
+        "SW": "cars:navy-wood-panel-wagon:SW",
+        "W": "cars:navy-wood-panel-wagon:W",
+        "NW": "cars:navy-wood-panel-wagon:NW",
+        "N": "cars:navy-wood-panel-wagon:N",
+        "NE": "cars:navy-wood-panel-wagon:NE",
+        "E": "cars:navy-wood-panel-wagon:E"
+      },
+      "direction_count": 8,
+      "missing_directions": [],
+      "driving_eligible": true,
+      "pool": "town vehicles",
+      "mirrored_in_current_pool": false,
+      "available_ids_not_registered_or_removed": []
+    },
+    {
+      "model": "static:pickup",
+      "name": "yellow pickup",
+      "directions": {
+        "S": "view:static:pickup_n:n",
+        "SW": "variation:static-pickup_n-b8165928:4",
+        "W": "view:static:pickup_n:w",
+        "N": "view:static:pickup_n:s",
+        "NE": "static:pickup_n",
+        "E": "view:static:pickup_n:e"
+      },
+      "direction_count": 6,
+      "missing_directions": [
+        "SE",
+        "NW"
+      ],
+      "driving_eligible": false,
+      "pool": "town vehicles",
+      "mirrored_in_current_pool": false,
+      "available_ids_not_registered_or_removed": []
+    },
+    {
+      "model": "world:car_0",
+      "name": "red wagon",
+      "directions": {
+        "SE": "world:car_0",
+        "E": "variation:world-car_0-cf8f927b:1"
+      },
+      "direction_count": 2,
+      "missing_directions": [
+        "S",
+        "SW",
+        "W",
+        "NW",
+        "N",
+        "NE"
+      ],
+      "driving_eligible": false,
+      "pool": "town vehicles",
+      "mirrored_in_current_pool": false,
+      "available_ids_not_registered_or_removed": []
+    },
+    {
+      "model": "world:car_1",
+      "name": "blue wagon",
+      "directions": {
+        "SE": "world:car_1",
+        "SW": "variation:world-car_1-a53c4fd9:4",
+        "E": "variation:world-car_1-a53c4fd9:1"
+      },
+      "direction_count": 3,
+      "missing_directions": [
+        "S",
+        "W",
+        "NW",
+        "N",
+        "NE"
+      ],
+      "driving_eligible": false,
+      "pool": "town vehicles",
+      "mirrored_in_current_pool": false,
+      "available_ids_not_registered_or_removed": []
+    },
+    {
+      "model": "world:car_2",
+      "name": "green wagon",
+      "directions": {
+        "SE": "world:car_2",
+        "SW": "variation:world-car_2-3ef8eade:4",
+        "E": "variation:world-car_2-3ef8eade:1"
+      },
+      "direction_count": 3,
+      "missing_directions": [
+        "S",
+        "W",
+        "NW",
+        "N",
+        "NE"
+      ],
+      "driving_eligible": false,
+      "pool": "town vehicles",
+      "mirrored_in_current_pool": false,
+      "available_ids_not_registered_or_removed": []
+    },
+    {
+      "model": "world:car_3",
+      "name": "cream wagon",
+      "directions": {
+        "SE": "world:car_3",
+        "SW": "variation:world-car_3-22c3340d:4",
+        "E": "variation:world-car_3-22c3340d:1"
+      },
+      "direction_count": 3,
+      "missing_directions": [
+        "S",
+        "W",
+        "NW",
+        "N",
+        "NE"
+      ],
+      "driving_eligible": false,
+      "pool": "town vehicles",
+      "mirrored_in_current_pool": false,
+      "available_ids_not_registered_or_removed": []
+    },
+    {
+      "model": "static:compact_e",
+      "name": "red compact",
+      "directions": {
+        "SE": "static:compact_e",
+        "SW": "variation:static-compact_e-c2ad7436:4",
+        "E": "variation:static-compact_e-c2ad7436:1"
+      },
+      "direction_count": 3,
+      "missing_directions": [
+        "S",
+        "W",
+        "NW",
+        "N",
+        "NE"
+      ],
+      "driving_eligible": false,
+      "pool": "town vehicles",
+      "mirrored_in_current_pool": false,
+      "available_ids_not_registered_or_removed": []
+    },
+    {
+      "model": "static:compact_w",
+      "name": "light blue compact",
+      "directions": {
+        "SE": "variation:static-compact_w-3465d046:4",
+        "NW": "static:compact_w",
+        "E": "variation:static-compact_w-3465d046:1"
+      },
+      "direction_count": 3,
+      "missing_directions": [
+        "S",
+        "SW",
+        "W",
+        "N",
+        "NE"
+      ],
+      "driving_eligible": false,
+      "pool": "town vehicles",
+      "mirrored_in_current_pool": false,
+      "available_ids_not_registered_or_removed": []
+    },
+    {
+      "model": "static:compact_n",
+      "name": "teal compact",
+      "directions": {
+        "SW": "variation:static-compact_n-82988799:4",
+        "NE": "static:compact_n",
+        "E": "variation:static-compact_n-82988799:1"
+      },
+      "direction_count": 3,
+      "missing_directions": [
+        "SE",
+        "S",
+        "W",
+        "NW",
+        "N"
+      ],
+      "driving_eligible": false,
+      "pool": "town vehicles",
+      "mirrored_in_current_pool": false,
+      "available_ids_not_registered_or_removed": []
+    },
+    {
+      "model": "static:compact_n-v2",
+      "name": "dark teal compact",
+      "directions": {
+        "SW": "variation:static-compact_n-v2-ea89d6fd:4",
+        "NE": "static:compact_n-v2",
+        "E": "variation:static-compact_n-v2-ea89d6fd:1"
+      },
+      "direction_count": 3,
+      "missing_directions": [
+        "SE",
+        "S",
+        "W",
+        "NW",
+        "N"
+      ],
+      "driving_eligible": false,
+      "pool": "town vehicles",
+      "mirrored_in_current_pool": false,
+      "available_ids_not_registered_or_removed": []
+    },
+    {
+      "model": "static:compact_s",
+      "name": "cream compact",
+      "directions": {
+        "SW": "variation:static-compact_s-0c90743f:4",
+        "E": "variation:static-compact_s-0c90743f:1"
+      },
+      "direction_count": 2,
+      "missing_directions": [
+        "SE",
+        "S",
+        "W",
+        "NW",
+        "N",
+        "NE"
+      ],
+      "driving_eligible": false,
+      "pool": "town vehicles",
+      "mirrored_in_current_pool": false,
+      "available_ids_not_registered_or_removed": []
+    },
+    {
+      "model": "expansion:scrap-pickup-rear",
+      "name": "rusty pickup",
+      "directions": {
+        "SW": "variation:expansion-scrap-pickup-rear-7e2d1193:4",
+        "NE": "expansion:scrap-pickup-rear",
+        "E": "variation:expansion-scrap-pickup-rear-7e2d1193:1"
+      },
+      "direction_count": 3,
+      "missing_directions": [
+        "SE",
+        "S",
+        "W",
+        "NW",
+        "N"
+      ],
+      "driving_eligible": false,
+      "pool": "farm/junk only",
+      "mirrored_in_current_pool": false,
+      "available_ids_not_registered_or_removed": []
+    }
+  ],
+  "current_town_driving_variation": {
+    "simulated_normal_car_types": 5,
+    "actual_distinct_driving_models": 2,
+    "types_in_order": [
+      "burgundy-wagon",
+      "navy-wood-panel-wagon",
+      "burgundy-wagon",
+      "navy-wood-panel-wagon",
+      "burgundy-wagon"
+    ],
+    "new_six_model_generation_root_owned": true,
+    "school_shuttle_type5": "ONE schoolbus repeated8times, mirrored at4/8directions (headings1,2,5,6 under JavaScriptMath.round)",
+    "parked_vehicles_can_use_partial_view_models": true,
+    "old_front_rear_variant_camera_mismatch": "vehicles.ts12 explicitly excludes older :2/:3front/rear vehicle renders for steeper camera; original legacy files not validated as newangles"
+  },
+  "wagon_active_sources": [
+    {
+      "model": "burgundy-wagon",
+      "views": [
+        {
+          "direction": "N",
+          "nose_on_screen": "up",
+          "runtime_id": "cars:burgundy-wagon:N",
+          "active_source": {
+            "path": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/axis-views/cars-burgundy-wagon/S.png",
+            "sha256": "638fc0a495f1a833fbd11c207a8def9ba4d2414e3acc0c79dd23717616043df1",
+            "bytes": 352243
+          },
+          "active_source_is_axis_override": true,
+          "legacy_manifest_mirror_of": null,
+          "legacy_flip": false,
+          "trimmed_native_rgba_sha256": "2a58756a5dcc4354727c300e4306e10c7470e71e9d49e4d45fda0fa380158455",
+          "size": [
+            411,
+            604
+          ]
+        },
+        {
+          "direction": "NE",
+          "nose_on_screen": "up-right",
+          "runtime_id": "cars:burgundy-wagon:NE",
+          "active_source": {
+            "path": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/cars/burgundy-wagon/burgundy-wagon__NE.png",
+            "sha256": "fddba4bd6c3309eaf470df7bfaf17d057e7704f9f4a5f72f62e89cd21cdbed62",
+            "bytes": 212077
+          },
+          "active_source_is_axis_override": false,
+          "legacy_manifest_mirror_of": null,
+          "legacy_flip": false,
+          "trimmed_native_rgba_sha256": "8bb70daab7c43d3a84523185235927766955f58d7d76262298b1ac0acfbeccbe",
+          "size": [
+            499,
+            267
+          ]
+        },
+        {
+          "direction": "E",
+          "nose_on_screen": "right",
+          "runtime_id": "cars:burgundy-wagon:E",
+          "active_source": {
+            "path": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/axis-views/cars-burgundy-wagon/E.png",
+            "sha256": "8a731740d4e2bf84189e9a714cf09ab65650b8f2b6747557f5804bbbbf3af55c",
+            "bytes": 474576
+          },
+          "active_source_is_axis_override": true,
+          "legacy_manifest_mirror_of": null,
+          "legacy_flip": false,
+          "trimmed_native_rgba_sha256": "9b183bd89db06001ea35955ac42b67f20257107586c5ed03d337f56f38596763",
+          "size": [
+            786,
+            606
+          ]
+        },
+        {
+          "direction": "SE",
+          "nose_on_screen": "down-right",
+          "runtime_id": "cars:burgundy-wagon:SE",
+          "active_source": {
+            "path": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/cars/burgundy-wagon/burgundy-wagon__SE.png",
+            "sha256": "636b3a3d5b56a100f10599e8729a97a269ca4a4b87556f3c6bfd38f1aa88807a",
+            "bytes": 234886
+          },
+          "active_source_is_axis_override": false,
+          "legacy_manifest_mirror_of": null,
+          "legacy_flip": false,
+          "trimmed_native_rgba_sha256": "b9a7035ab2d127f9061ab54db33d202084cf942a3b88e2fdef5549d0c1c51718",
+          "size": [
+            499,
+            340
+          ]
+        },
+        {
+          "direction": "S",
+          "nose_on_screen": "down",
+          "runtime_id": "cars:burgundy-wagon:S",
+          "active_source": {
+            "path": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/axis-views/cars-burgundy-wagon/N.png",
+            "sha256": "1988294bfab3e2f30040c0df54f96a7a6a31b2d02805a44ef16c855847e398ce",
+            "bytes": 393373
+          },
+          "active_source_is_axis_override": true,
+          "legacy_manifest_mirror_of": null,
+          "legacy_flip": false,
+          "trimmed_native_rgba_sha256": "5dc4f6754ec75f3294b158606959dafa6b90de145a1f30e1e3681541c3520cfe",
+          "size": [
+            401,
+            571
+          ]
+        },
+        {
+          "direction": "SW",
+          "nose_on_screen": "down-left",
+          "runtime_id": "cars:burgundy-wagon:SW",
+          "active_source": {
+            "path": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/cars/burgundy-wagon/burgundy-wagon__SW.png",
+            "sha256": "220b8d7a6b9cc6a543af9d0bef6ce7360c5e5ca3eb9fe6f7b545671a787c77bf",
+            "bytes": 233113
+          },
+          "active_source_is_axis_override": false,
+          "legacy_manifest_mirror_of": "SE",
+          "legacy_flip": true,
+          "trimmed_native_rgba_sha256": "22035902b2d380f175f3343c5fbf9372adffa9546155168878a71eedd9354544",
+          "size": [
+            499,
+            340
+          ]
+        },
+        {
+          "direction": "W",
+          "nose_on_screen": "left",
+          "runtime_id": "cars:burgundy-wagon:W",
+          "active_source": {
+            "path": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/axis-views/cars-burgundy-wagon/W.png",
+            "sha256": "ec6b49b68ffb6ae608a84d893e3fb5c87fcae95cc1990f0cb8e1539982bd1b68",
+            "bytes": 456683
+          },
+          "active_source_is_axis_override": true,
+          "legacy_manifest_mirror_of": "E",
+          "legacy_flip": true,
+          "trimmed_native_rgba_sha256": "6052834d4604999dc774f51cc973687137e3a6d12b83b3d5752d22a5a5174f12",
+          "size": [
+            794,
+            627
+          ]
+        },
+        {
+          "direction": "NW",
+          "nose_on_screen": "up-left",
+          "runtime_id": "cars:burgundy-wagon:NW",
+          "active_source": {
+            "path": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/cars/burgundy-wagon/burgundy-wagon__NW.png",
+            "sha256": "636e7e458acdf52a1257139e8cd5d2eec744de02f724465a50c6e2a092a39da1",
+            "bytes": 213540
+          },
+          "active_source_is_axis_override": false,
+          "legacy_manifest_mirror_of": "NE",
+          "legacy_flip": true,
+          "trimmed_native_rgba_sha256": "a910af3934bba8b6f8fd103a86249b70835baee371e3bbe47f1059f8ed5dead6",
+          "size": [
+            499,
+            267
+          ]
+        }
+      ],
+      "identical_trimmed_native_groups": [],
+      "source_manifest": {
+        "path": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/cars/burgundy-wagon/manifest.json",
+        "sha256": "7f7e461f940c9e2a4634493b705949a4a317b77d0517cc17071b40799dabc5ef",
+        "bytes": 11550
+      },
+      "axis_source": {
+        "path": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/axis-views/cars-burgundy-wagon/source.json",
+        "sha256": "7d0692666c2f6bf623f5b8e27a7873ee380a62e730f35d509d3c5724a9a5e8e6",
+        "bytes": 2284
+      },
+      "axis_override_policy_evidence": "scripts/assets/prep-cars.mjs28–37; Nsource=>screenDown, Ssource=>screenUp; retain nose mapping"
+    },
+    {
+      "model": "navy-wood-panel-wagon",
+      "views": [
+        {
+          "direction": "N",
+          "nose_on_screen": "up",
+          "runtime_id": "cars:navy-wood-panel-wagon:N",
+          "active_source": {
+            "path": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/axis-views/cars-navy-wood-panel-wagon/S.png",
+            "sha256": "c494bd88fbc3a7859261021a58c3d3990902f1cc719a0fcfad54a2c618a06b2b",
+            "bytes": 343097
+          },
+          "active_source_is_axis_override": true,
+          "legacy_manifest_mirror_of": null,
+          "legacy_flip": false,
+          "trimmed_native_rgba_sha256": "77d7520e4761d1d2b991ae123d9d1ea644858e624b99c01741bb7e882564b23e",
+          "size": [
+            437,
+            626
+          ]
+        },
+        {
+          "direction": "NE",
+          "nose_on_screen": "up-right",
+          "runtime_id": "cars:navy-wood-panel-wagon:NE",
+          "active_source": {
+            "path": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/cars/navy-wood-panel-wagon/navy-wood-panel-wagon__NE.png",
+            "sha256": "01a0c220b7ca3605a0ed7acdc61a2861736467eb05379d2ff134c15e602452e6",
+            "bytes": 217422
+          },
+          "active_source_is_axis_override": false,
+          "legacy_manifest_mirror_of": null,
+          "legacy_flip": false,
+          "trimmed_native_rgba_sha256": "aeae737c35c02664660885d87af5b07da7ada8a81776caf5292dd4723218b6c0",
+          "size": [
+            506,
+            257
+          ]
+        },
+        {
+          "direction": "E",
+          "nose_on_screen": "right",
+          "runtime_id": "cars:navy-wood-panel-wagon:E",
+          "active_source": {
+            "path": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/axis-views/cars-navy-wood-panel-wagon/E.png",
+            "sha256": "f52cd45132c6fd64f050641966175f33f7e42e1aba38d31ed5ac6378e63a16b1",
+            "bytes": 438467
+          },
+          "active_source_is_axis_override": true,
+          "legacy_manifest_mirror_of": null,
+          "legacy_flip": false,
+          "trimmed_native_rgba_sha256": "2be58ffa0cfb1d365840886a4cc0f89b5ffeef75a79d8c74b6a59107b77e87c2",
+          "size": [
+            759,
+            598
+          ]
+        },
+        {
+          "direction": "SE",
+          "nose_on_screen": "down-right",
+          "runtime_id": "cars:navy-wood-panel-wagon:SE",
+          "active_source": {
+            "path": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/cars/navy-wood-panel-wagon/navy-wood-panel-wagon__SE.png",
+            "sha256": "1f76c143379ee374a44191e648eb1d590631782ac25f92118d87cd312cb92b97",
+            "bytes": 257497
+          },
+          "active_source_is_axis_override": false,
+          "legacy_manifest_mirror_of": null,
+          "legacy_flip": true,
+          "trimmed_native_rgba_sha256": "300dc32ad7303cf5a3a754cf7b724f573464fc91c344f7ef1122305d66c653bb",
+          "size": [
+            506,
+            366
+          ]
+        },
+        {
+          "direction": "S",
+          "nose_on_screen": "down",
+          "runtime_id": "cars:navy-wood-panel-wagon:S",
+          "active_source": {
+            "path": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/axis-views/cars-navy-wood-panel-wagon/N.png",
+            "sha256": "4d8f244b7f677026e5a9bf71cee8a696ad2900dbfcae95e35a431b2c4dbd9c1e",
+            "bytes": 374743
+          },
+          "active_source_is_axis_override": true,
+          "legacy_manifest_mirror_of": null,
+          "legacy_flip": false,
+          "trimmed_native_rgba_sha256": "cab72b08e9f92b4b66fb5c2da6c38df0bdffa624523ca0dc74eb5c647649b5bc",
+          "size": [
+            478,
+            606
+          ]
+        },
+        {
+          "direction": "SW",
+          "nose_on_screen": "down-left",
+          "runtime_id": "cars:navy-wood-panel-wagon:SW",
+          "active_source": {
+            "path": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/cars/navy-wood-panel-wagon/navy-wood-panel-wagon__SW.png",
+            "sha256": "858209de2c40007d8c53a28c9398806c181916876761d4502ce675494e96bde6",
+            "bytes": 255623
+          },
+          "active_source_is_axis_override": false,
+          "legacy_manifest_mirror_of": "SE",
+          "legacy_flip": false,
+          "trimmed_native_rgba_sha256": "a0fdabfd167e497255867f71383a37e093902157d87a951bf4143094575ab6c5",
+          "size": [
+            506,
+            366
+          ]
+        },
+        {
+          "direction": "W",
+          "nose_on_screen": "left",
+          "runtime_id": "cars:navy-wood-panel-wagon:W",
+          "active_source": {
+            "path": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/axis-views/cars-navy-wood-panel-wagon/W.png",
+            "sha256": "444d8f05d033f238f7c40e34fc0d0d3bc999064f88699eb06cac699d5dd50615",
+            "bytes": 439524
+          },
+          "active_source_is_axis_override": true,
+          "legacy_manifest_mirror_of": "E",
+          "legacy_flip": true,
+          "trimmed_native_rgba_sha256": "dddc9d071e94140a432455621dbbf1209b02810d61875735f386d3b2f2b20d29",
+          "size": [
+            771,
+            626
+          ]
+        },
+        {
+          "direction": "NW",
+          "nose_on_screen": "up-left",
+          "runtime_id": "cars:navy-wood-panel-wagon:NW",
+          "active_source": {
+            "path": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/cars/navy-wood-panel-wagon/navy-wood-panel-wagon__NW.png",
+            "sha256": "8b33fa0e74add2b67f23e735166f8623b3a6c02fff44bffb3806aae0fce8e318",
+            "bytes": 218995
+          },
+          "active_source_is_axis_override": false,
+          "legacy_manifest_mirror_of": "NE",
+          "legacy_flip": true,
+          "trimmed_native_rgba_sha256": "a2f0ea2854d144af775e4ecbe1b6746d89ac4175eb447638c1351a260163b9df",
+          "size": [
+            506,
+            257
+          ]
+        }
+      ],
+      "identical_trimmed_native_groups": [],
+      "source_manifest": {
+        "path": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/cars/navy-wood-panel-wagon/manifest.json",
+        "sha256": "1225e79e1250b764b38029653e3cae3d26572571c59a26a31b3d484b6eb2bbc5",
+        "bytes": 11740
+      },
+      "axis_source": {
+        "path": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/axis-views/cars-navy-wood-panel-wagon/source.json",
+        "sha256": "87c8bbfdbe291a08105a6608107295f7ab71c97eb2a20c5b6e350d43a557fc24",
+        "bytes": 2306
+      },
+      "axis_override_policy_evidence": "scripts/assets/prep-cars.mjs28–37; Nsource=>screenDown, Ssource=>screenUp; retain nose mapping"
+    }
+  ],
+  "additional_golf_vehicle_like_subjects": [
+    {
+      "id": "business:golf-cart-se",
+      "name": "golf cart se",
+      "current_original": {
+        "path": "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/scenes/identity-references/business-golf-cart-se-fe59e78e/source.png",
+        "sha256": "51d80caf4ef730590c576afcb026af6790ebb6f4ea294f83c87aaa38f84d05dc",
+        "bytes": 291651
+      },
+      "normal_generated_count": 0,
+      "yaw8_generated_count": 0,
+      "moving_role_mapping_inferred": false,
+      "known_scope": "decorative registeredprop unless crew/gameexplicitly maps it; do not conflate similarly named cart/mower types"
+    },
+    {
+      "id": "business:golf-cart-sw",
+      "name": "golf cart sw",
+      "current_original": {
+        "path": "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/scenes/identity-references/business-golf-cart-sw-325df122/source.png",
+        "sha256": "9a4f55f93631eef98043fc27b247af71babec837cf01f58894468448500b9f8a",
+        "bytes": 286210
+      },
+      "normal_generated_count": 0,
+      "yaw8_generated_count": 0,
+      "moving_role_mapping_inferred": false,
+      "known_scope": "decorative registeredprop unless crew/gameexplicitly maps it; do not conflate similarly named cart/mower types"
+    },
+    {
+      "id": "business:golf-mower",
+      "name": "golf mower",
+      "current_original": {
+        "path": "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/scenes/identity-references/business-golf-mower-dc916060/source.png",
+        "sha256": "d2d283d9b0896d9a5369e7f5add9f7455e41fa6b542efe34a74f902f61d6b9e0",
+        "bytes": 377731
+      },
+      "normal_generated_count": 0,
+      "yaw8_generated_count": 0,
+      "moving_role_mapping_inferred": false,
+      "known_scope": "decorative registeredprop unless crew/gameexplicitly maps it; do not conflate similarly named cart/mower types"
+    },
+    {
+      "id": "newprop:golf-cart",
+      "name": "Golf cart",
+      "current_original": {
+        "path": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/new-props/golf-cart.webp",
+        "sha256": "476682f5b84dfaa9d26435a6323191b690cc2d3d155baf237bdecd5291ebdc8b",
+        "bytes": 112942
+      },
+      "normal_generated_count": 0,
+      "yaw8_generated_count": 0,
+      "moving_role_mapping_inferred": false,
+      "known_scope": "decorative registeredprop unless crew/gameexplicitly maps it; do not conflate similarly named cart/mower types"
+    },
+    {
+      "id": "newprop:golf-cart-2",
+      "name": "Golf cart 2",
+      "current_original": {
+        "path": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/new-props/golf-cart-2.webp",
+        "sha256": "a590fd09c8cd7af9f721f4c8167b39f9fa1368aaf676cb37c17405871ad54a5a",
+        "bytes": 113768
+      },
+      "normal_generated_count": 0,
+      "yaw8_generated_count": 0,
+      "moving_role_mapping_inferred": false,
+      "known_scope": "decorative registeredprop unless crew/gameexplicitly maps it; do not conflate similarly named cart/mower types"
+    },
+    {
+      "id": "newprop:ride-mower-2",
+      "name": "Ride mower 2",
+      "current_original": {
+        "path": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/new-props/ride-mower-2.webp",
+        "sha256": "30b0dd78b758e3bc7004507534503ed280db1ca4079c499159ac0a60c24bfd7c",
+        "bytes": 103166
+      },
+      "normal_generated_count": 0,
+      "yaw8_generated_count": 0,
+      "moving_role_mapping_inferred": false,
+      "known_scope": "decorative registeredprop unless crew/gameexplicitly maps it; do not conflate similarly named cart/mower types"
+    },
+    {
+      "id": "newprop:cart-ambulance",
+      "name": "Cart ambulance",
+      "current_original": {
+        "path": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/new-props/cart-ambulance.webp",
+        "sha256": "f987f59451d0badd2ffd35d85ad82c297629c3bd69b3c62c8ff6da45edadb46f",
+        "bytes": 127622
+      },
+      "normal_generated_count": 0,
+      "yaw8_generated_count": 0,
+      "moving_role_mapping_inferred": false,
+      "known_scope": "decorative registeredprop unless crew/gameexplicitly maps it; do not conflate similarly named cart/mower types"
+    },
+    {
+      "id": "newprop:shanty-cart-ambulance",
+      "name": "Shanty cart ambulance",
+      "current_original": {
+        "path": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/new-props/shanty-cart-ambulance.webp",
+        "sha256": "82af2335a5a188ec96d7d9774be1e1c21e0928e54c1934913e04ab10700cf631",
+        "bytes": 121366
+      },
+      "normal_generated_count": 0,
+      "yaw8_generated_count": 0,
+      "moving_role_mapping_inferred": false,
+      "known_scope": "decorative registeredprop unless crew/gameexplicitly maps it; do not conflate similarly named cart/mower types"
+    },
+    {
+      "id": "newprop:satellite-van",
+      "name": "Satellite van",
+      "current_original": {
+        "path": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/new-props/satellite-van.webp",
+        "sha256": "afa1f52fa0094b4919ea366c64932eebbc2a4ac99148c77d02c7189fa8930fdb",
+        "bytes": 127442
+      },
+      "normal_generated_count": 0,
+      "yaw8_generated_count": 0,
+      "moving_role_mapping_inferred": false,
+      "known_scope": "decorative registeredprop unless crew/gameexplicitly maps it; do not conflate similarly named cart/mower types"
+    },
+    {
+      "id": "newprop:shanty-broadcast-van",
+      "name": "Shanty broadcast van",
+      "current_original": {
+        "path": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/new-props/shanty-broadcast-van.webp",
+        "sha256": "65b15098b99953ac3de8322bb0345712f0ebe0b271e4137507daad8d6d58945d",
+        "bytes": 147074
+      },
+      "normal_generated_count": 0,
+      "yaw8_generated_count": 0,
+      "moving_role_mapping_inferred": false,
+      "known_scope": "decorative registeredprop unless crew/gameexplicitly maps it; do not conflate similarly named cart/mower types"
+    },
+    {
+      "id": "newprop:shanty-satellite-van",
+      "name": "Shanty satellite van",
+      "current_original": {
+        "path": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/new-props/shanty-satellite-van.webp",
+        "sha256": "b71324e476d80aa893aa3e605c593771f1aefb61595bfc94716dd3c85a8efe54",
+        "bytes": 146534
+      },
+      "normal_generated_count": 0,
+      "yaw8_generated_count": 0,
+      "moving_role_mapping_inferred": false,
+      "known_scope": "decorative registeredprop unless crew/gameexplicitly maps it; do not conflate similarly named cart/mower types"
+    },
+    {
+      "id": "newprop:ice-cream-cart",
+      "name": "Ice cream cart",
+      "current_original": {
+        "path": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/new-props/ice-cream-cart.webp",
+        "sha256": "5302f90f50216a47853bef6237dd79d4e6f8083b27d33e99dc78e27c3207e187",
+        "bytes": 110164
+      },
+      "normal_generated_count": 0,
+      "yaw8_generated_count": 0,
+      "moving_role_mapping_inferred": false,
+      "known_scope": "decorative registeredprop unless crew/gameexplicitly maps it; do not conflate similarly named cart/mower types"
+    },
+    {
+      "id": "newprop:drinks-cart",
+      "name": "Drinks cart",
+      "current_original": {
+        "path": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/new-props/drinks-cart.webp",
+        "sha256": "907b58dd63a3008a722b8e97f8c5c072bc960733cddfe74ca599809f8da6ced6",
+        "bytes": 121062
+      },
+      "normal_generated_count": 0,
+      "yaw8_generated_count": 0,
+      "moving_role_mapping_inferred": false,
+      "known_scope": "decorative registeredprop unless crew/gameexplicitly maps it; do not conflate similarly named cart/mower types"
+    },
+    {
+      "id": "newprop:drinks-cart-green",
+      "name": "Drinks cart green",
+      "current_original": {
+        "path": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/new-props/drinks-cart-green.webp",
+        "sha256": "5d0fe95ac3d402ebd6693772d9534a07c3042da38c3a5fd0334d9a3fe0e260ee",
+        "bytes": 124018
+      },
+      "normal_generated_count": 0,
+      "yaw8_generated_count": 0,
+      "moving_role_mapping_inferred": false,
+      "known_scope": "decorative registeredprop unless crew/gameexplicitly maps it; do not conflate similarly named cart/mower types"
+    },
+    {
+      "id": "newprop:gang-mower",
+      "name": "Gang mower",
+      "current_original": {
+        "path": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/new-props/gang-mower.webp",
+        "sha256": "0e64d25a3476b40e30fffaba57e47fce6363276864cb08ca4e615a8c12cd87c5",
+        "bytes": 86150
+      },
+      "normal_generated_count": 0,
+      "yaw8_generated_count": 0,
+      "moving_role_mapping_inferred": false,
+      "known_scope": "decorative registeredprop unless crew/gameexplicitly maps it; do not conflate similarly named cart/mower types"
+    },
+    {
+      "id": "newprop:green-gang-mower",
+      "name": "Green gang mower",
+      "current_original": {
+        "path": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/new-props/green-gang-mower.webp",
+        "sha256": "defd0409d3e703f15b8231553778d975cbb75cc47a9dfdbe63cc5ad8c10d6512",
+        "bytes": 87386
+      },
+      "normal_generated_count": 0,
+      "yaw8_generated_count": 0,
+      "moving_role_mapping_inferred": false,
+      "known_scope": "decorative registeredprop unless crew/gameexplicitly maps it; do not conflate similarly named cart/mower types"
+    },
+    {
+      "id": "newprop:green-golf-cart",
+      "name": "Green golf cart",
+      "current_original": {
+        "path": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/new-props/green-golf-cart.webp",
+        "sha256": "7f8553c4b64a8210870110ae200295ff9dec3ba0de812bba3d3e60a1ec572324",
+        "bytes": 127284
+      },
+      "normal_generated_count": 0,
+      "yaw8_generated_count": 0,
+      "moving_role_mapping_inferred": false,
+      "known_scope": "decorative registeredprop unless crew/gameexplicitly maps it; do not conflate similarly named cart/mower types"
+    },
+    {
+      "id": "newprop:green-greens-mower",
+      "name": "Green greens mower",
+      "current_original": {
+        "path": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/new-props/green-greens-mower.webp",
+        "sha256": "384bbebcbd57dd67492f692fd299277c3f1e35af2c01c50b3321877160cbf3ac",
+        "bytes": 110022
+      },
+      "normal_generated_count": 0,
+      "yaw8_generated_count": 0,
+      "moving_role_mapping_inferred": false,
+      "known_scope": "decorative registeredprop unless crew/gameexplicitly maps it; do not conflate similarly named cart/mower types"
+    },
+    {
+      "id": "newprop:green-ride-mower",
+      "name": "Green ride mower",
+      "current_original": {
+        "path": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/new-props/green-ride-mower.webp",
+        "sha256": "96d0e3bcbffacd827171312120b4f01bb97e1838faf9e77cc26c6e01a2ce45ab",
+        "bytes": 97530
+      },
+      "normal_generated_count": 0,
+      "yaw8_generated_count": 0,
+      "moving_role_mapping_inferred": false,
+      "known_scope": "decorative registeredprop unless crew/gameexplicitly maps it; do not conflate similarly named cart/mower types"
+    },
+    {
+      "id": "newprop:greens-mower",
+      "name": "Greens mower",
+      "current_original": {
+        "path": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/new-props/greens-mower.webp",
+        "sha256": "b2ad3370cff0e67e5e3e90292edcdf25350b3dce516c3203835dee43ce09b6dd",
+        "bytes": 103888
+      },
+      "normal_generated_count": 0,
+      "yaw8_generated_count": 0,
+      "moving_role_mapping_inferred": false,
+      "known_scope": "decorative registeredprop unless crew/gameexplicitly maps it; do not conflate similarly named cart/mower types"
+    },
+    {
+      "id": "newprop:ride-mower",
+      "name": "Ride mower",
+      "current_original": {
+        "path": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/new-props/ride-mower.webp",
+        "sha256": "960ca8e695df3dd06b0ae4ec5f0014b4e9accdca255ecb0fca89f60a5d51996f",
+        "bytes": 90136
+      },
+      "normal_generated_count": 0,
+      "yaw8_generated_count": 0,
+      "moving_role_mapping_inferred": false,
+      "known_scope": "decorative registeredprop unless crew/gameexplicitly maps it; do not conflate similarly named cart/mower types"
+    },
+    {
+      "id": "newprop:roofed-cart",
+      "name": "Roofed cart",
+      "current_original": {
+        "path": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/new-props/roofed-cart.webp",
+        "sha256": "9e86aad71c2f7c07b21e3b1f6aa04805a488622342050f394b2ce1e4f6c3ed78",
+        "bytes": 132666
+      },
+      "normal_generated_count": 0,
+      "yaw8_generated_count": 0,
+      "moving_role_mapping_inferred": false,
+      "known_scope": "decorative registeredprop unless crew/gameexplicitly maps it; do not conflate similarly named cart/mower types"
+    },
+    {
+      "id": "newprop:shuttle-cart",
+      "name": "Shuttle cart",
+      "current_original": {
+        "path": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/new-props/shuttle-cart.webp",
+        "sha256": "d8cdc3a9e8e760c5a37e288ab4876875d4a6cc9fc219d25ef67c356237a04ff3",
+        "bytes": 132640
+      },
+      "normal_generated_count": 0,
+      "yaw8_generated_count": 0,
+      "moving_role_mapping_inferred": false,
+      "known_scope": "decorative registeredprop unless crew/gameexplicitly maps it; do not conflate similarly named cart/mower types"
+    },
+    {
+      "id": "newprop:shuttle-cart-white",
+      "name": "Shuttle cart white",
+      "current_original": {
+        "path": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/new-props/shuttle-cart-white.webp",
+        "sha256": "3c8b9e216d8fbca1e7047160d6acbe9da047eef03d6b6aa35d36a2572621fd05",
+        "bytes": 132260
+      },
+      "normal_generated_count": 0,
+      "yaw8_generated_count": 0,
+      "moving_role_mapping_inferred": false,
+      "known_scope": "decorative registeredprop unless crew/gameexplicitly maps it; do not conflate similarly named cart/mower types"
+    },
+    {
+      "id": "newprop:supply-cart",
+      "name": "Supply cart",
+      "current_original": {
+        "path": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/new-props/supply-cart.webp",
+        "sha256": "67632e29cee29722e4b63e4012af7e95f9f8cef391a99643a0cb29669358c6c6",
+        "bytes": 134848
+      },
+      "normal_generated_count": 0,
+      "yaw8_generated_count": 0,
+      "moving_role_mapping_inferred": false,
+      "known_scope": "decorative registeredprop unless crew/gameexplicitly maps it; do not conflate similarly named cart/mower types"
+    },
+    {
+      "id": "newprop:utility-cart",
+      "name": "Utility cart",
+      "current_original": {
+        "path": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/new-props/utility-cart.webp",
+        "sha256": "f0271c59f3ab343c70c78da931e2a1705c6e70196791734b4630708a4eb5c2e0",
+        "bytes": 150858
+      },
+      "normal_generated_count": 0,
+      "yaw8_generated_count": 0,
+      "moving_role_mapping_inferred": false,
+      "known_scope": "decorative registeredprop unless crew/gameexplicitly maps it; do not conflate similarly named cart/mower types"
+    },
+    {
+      "id": "newprop:utility-cart-green",
+      "name": "Utility cart green",
+      "current_original": {
+        "path": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/new-props/utility-cart-green.webp",
+        "sha256": "02ddd11f9d62e9869a5dd05577cfc5f90b616c32f45ddd03b465b3fe52dcf75c",
+        "bytes": 99818
+      },
+      "normal_generated_count": 0,
+      "yaw8_generated_count": 0,
+      "moving_role_mapping_inferred": false,
+      "known_scope": "decorative registeredprop unless crew/gameexplicitly maps it; do not conflate similarly named cart/mower types"
+    },
+    {
+      "id": "newprop:wheelchair-cart",
+      "name": "Wheelchair cart",
+      "current_original": {
+        "path": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/new-props/wheelchair-cart.webp",
+        "sha256": "00bf6f104d881015886c3c6a052a28ad08c972172729a56e1d9a1d332b189280",
+        "bytes": 164774
+      },
+      "normal_generated_count": 0,
+      "yaw8_generated_count": 0,
+      "moving_role_mapping_inferred": false,
+      "known_scope": "decorative registeredprop unless crew/gameexplicitly maps it; do not conflate similarly named cart/mower types"
+    }
+  ],
+  "structure_substitutes": [
+    {
+      "type_id": "foodTent",
+      "current_substitute_art": "golf:food-tent",
+      "native_identity_reference": {
+        "path": "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/scenes/identity-references/golf-food-tent-1ce18edd/source.png",
+        "sha256": "81cd525fb0bfacbdfcb803906ec9572d7671902356fea800d324de06c10bdf24",
+        "bytes": 682120
+      },
+      "conditional_policy": "structure-facing first uses eventArtSet if present; legacy mapping below otherwise. NewrequiresEightArt with no set returns no drawable, not fallback.",
+      "evidence": "src/game/golf/structure-art.ts7;src/game/golf/structure-facing.ts12–20"
+    },
+    {
+      "type_id": "drinksTent",
+      "current_substitute_art": "expansion:backyard-tent",
+      "native_identity_reference": {
+        "path": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/theme-consistency/exports/buildings/expansion-backyard-tent.native.png",
+        "sha256": "209cd8a9eee70157ce9936ab4998d8b76de9ae3dad04717f2fd9046bb43404b7",
+        "bytes": 17244
+      },
+      "conditional_policy": "structure-facing first uses eventArtSet if present; legacy mapping below otherwise. NewrequiresEightArt with no set returns no drawable, not fallback.",
+      "evidence": "src/game/golf/structure-art.ts7;src/game/golf/structure-facing.ts12–20"
+    },
+    {
+      "type_id": "kiosk",
+      "current_substitute_art": "business:fishing-rental-kiosk",
+      "native_identity_reference": {
+        "path": "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/scenes/identity-references/business-fishing-rental-kiosk-06b71234/source.png",
+        "sha256": "75073ac5c2756739448094ebf81a2368afb4d06055f9ab32746e53c45a8dfc35",
+        "bytes": 676881
+      },
+      "conditional_policy": "structure-facing first uses eventArtSet if present; legacy mapping below otherwise. NewrequiresEightArt with no set returns no drawable, not fallback.",
+      "evidence": "src/game/golf/structure-art.ts7;src/game/golf/structure-facing.ts12–20"
+    },
+    {
+      "type_id": "foodTruck",
+      "current_substitute_art": "golf:food-tent",
+      "native_identity_reference": {
+        "path": "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/scenes/identity-references/golf-food-tent-1ce18edd/source.png",
+        "sha256": "81cd525fb0bfacbdfcb803906ec9572d7671902356fea800d324de06c10bdf24",
+        "bytes": 682120
+      },
+      "conditional_policy": "structure-facing first uses eventArtSet if present; legacy mapping below otherwise. NewrequiresEightArt with no set returns no drawable, not fallback.",
+      "evidence": "src/game/golf/structure-art.ts7;src/game/golf/structure-facing.ts12–20"
+    },
+    {
+      "type_id": "merchTent",
+      "current_substitute_art": "expansion:backyard-tent",
+      "native_identity_reference": {
+        "path": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/theme-consistency/exports/buildings/expansion-backyard-tent.native.png",
+        "sha256": "209cd8a9eee70157ce9936ab4998d8b76de9ae3dad04717f2fd9046bb43404b7",
+        "bytes": 17244
+      },
+      "conditional_policy": "structure-facing first uses eventArtSet if present; legacy mapping below otherwise. NewrequiresEightArt with no set returns no drawable, not fallback.",
+      "evidence": "src/game/golf/structure-art.ts7;src/game/golf/structure-facing.ts12–20"
+    },
+    {
+      "type_id": "merchPavilion",
+      "current_substitute_art": "business:golf-halfway-pavilion",
+      "native_identity_reference": {
+        "path": "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/scenes/identity-references/business-golf-halfway-pavilion-d89d56ad/source.png",
+        "sha256": "0783e2307c1fcc4df9d131edec709e4800efe8e2dd86abfd929bb7fafd60f15b",
+        "bytes": 628838
+      },
+      "conditional_policy": "structure-facing first uses eventArtSet if present; legacy mapping below otherwise. NewrequiresEightArt with no set returns no drawable, not fallback.",
+      "evidence": "src/game/golf/structure-art.ts7;src/game/golf/structure-facing.ts12–20"
+    },
+    {
+      "type_id": "chalet",
+      "current_substitute_art": "business:golf-halfway-pavilion",
+      "native_identity_reference": {
+        "path": "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/scenes/identity-references/business-golf-halfway-pavilion-d89d56ad/source.png",
+        "sha256": "0783e2307c1fcc4df9d131edec709e4800efe8e2dd86abfd929bb7fafd60f15b",
+        "bytes": 628838
+      },
+      "conditional_policy": "structure-facing first uses eventArtSet if present; legacy mapping below otherwise. NewrequiresEightArt with no set returns no drawable, not fallback.",
+      "evidence": "src/game/golf/structure-art.ts7;src/game/golf/structure-facing.ts12–20"
+    },
+    {
+      "type_id": "village",
+      "current_substitute_art": "business:golf-halfway-pavilion",
+      "native_identity_reference": {
+        "path": "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/scenes/identity-references/business-golf-halfway-pavilion-d89d56ad/source.png",
+        "sha256": "0783e2307c1fcc4df9d131edec709e4800efe8e2dd86abfd929bb7fafd60f15b",
+        "bytes": 628838
+      },
+      "conditional_policy": "structure-facing first uses eventArtSet if present; legacy mapping below otherwise. NewrequiresEightArt with no set returns no drawable, not fallback.",
+      "evidence": "src/game/golf/structure-art.ts7;src/game/golf/structure-facing.ts12–20"
+    },
+    {
+      "type_id": "standS",
+      "current_substitute_art": "golf:grandstand-s",
+      "native_identity_reference": {
+        "path": "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/scenes/identity-references/golf-grandstand-s-c971a47c/source.png",
+        "sha256": "405c5d55ed21f07d95a46a34ccc03321861f8e451a5123980114cd3b16afb573",
+        "bytes": 727163
+      },
+      "conditional_policy": "structure-facing first uses eventArtSet if present; legacy mapping below otherwise. NewrequiresEightArt with no set returns no drawable, not fallback.",
+      "evidence": "src/game/golf/structure-art.ts7;src/game/golf/structure-facing.ts12–20"
+    },
+    {
+      "type_id": "standM",
+      "current_substitute_art": "golf:grandstand-s",
+      "native_identity_reference": {
+        "path": "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/scenes/identity-references/golf-grandstand-s-c971a47c/source.png",
+        "sha256": "405c5d55ed21f07d95a46a34ccc03321861f8e451a5123980114cd3b16afb573",
+        "bytes": 727163
+      },
+      "conditional_policy": "structure-facing first uses eventArtSet if present; legacy mapping below otherwise. NewrequiresEightArt with no set returns no drawable, not fallback.",
+      "evidence": "src/game/golf/structure-art.ts7;src/game/golf/structure-facing.ts12–20"
+    },
+    {
+      "type_id": "standL",
+      "current_substitute_art": "golf:grandstand-s",
+      "native_identity_reference": {
+        "path": "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/scenes/identity-references/golf-grandstand-s-c971a47c/source.png",
+        "sha256": "405c5d55ed21f07d95a46a34ccc03321861f8e451a5123980114cd3b16afb573",
+        "bytes": 727163
+      },
+      "conditional_policy": "structure-facing first uses eventArtSet if present; legacy mapping below otherwise. NewrequiresEightArt with no set returns no drawable, not fallback.",
+      "evidence": "src/game/golf/structure-art.ts7;src/game/golf/structure-facing.ts12–20"
+    },
+    {
+      "type_id": "leaderboard",
+      "current_substitute_art": "golf:leaderboard",
+      "native_identity_reference": {
+        "path": "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/scenes/identity-references/golf-leaderboard-de548983/source.png",
+        "sha256": "7637d784f6a8a9215a3d9f875a64407f3b090fbd7db539e723015ec7b832d914",
+        "bytes": 641989
+      },
+      "conditional_policy": "structure-facing first uses eventArtSet if present; legacy mapping below otherwise. NewrequiresEightArt with no set returns no drawable, not fallback.",
+      "evidence": "src/game/golf/structure-art.ts7;src/game/golf/structure-facing.ts12–20"
+    },
+    {
+      "type_id": "holeBoard",
+      "current_substitute_art": "poi:fishing-board",
+      "native_identity_reference": null,
+      "conditional_policy": "structure-facing first uses eventArtSet if present; legacy mapping below otherwise. NewrequiresEightArt with no set returns no drawable, not fallback.",
+      "evidence": "src/game/golf/structure-art.ts7;src/game/golf/structure-facing.ts12–20"
+    },
+    {
+      "type_id": "screen",
+      "current_substitute_art": "poi:movie-display",
+      "native_identity_reference": null,
+      "conditional_policy": "structure-facing first uses eventArtSet if present; legacy mapping below otherwise. NewrequiresEightArt with no set returns no drawable, not fallback.",
+      "evidence": "src/game/golf/structure-art.ts7;src/game/golf/structure-facing.ts12–20"
+    },
+    {
+      "type_id": "tvTower",
+      "current_substitute_art": "ref:landmark-water-tower",
+      "native_identity_reference": {
+        "path": "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/scenes/identity-references/ref-landmark-water-tower-ddb4183c/source.png",
+        "sha256": "7081bcf84a15c947845e8b3c7d492d1d7828bd8512157f8a67e460df9d58ca10",
+        "bytes": 488333
+      },
+      "conditional_policy": "structure-facing first uses eventArtSet if present; legacy mapping below otherwise. NewrequiresEightArt with no set returns no drawable, not fallback.",
+      "evidence": "src/game/golf/structure-art.ts7;src/game/golf/structure-facing.ts12–20"
+    },
+    {
+      "type_id": "broadcast",
+      "current_substitute_art": "business:golf-cart-garage",
+      "native_identity_reference": {
+        "path": "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/scenes/identity-references/business-golf-cart-garage-1a3cdb4c/source.png",
+        "sha256": "24a447b9e44c0dac40426aa87b668108c65dbfe33bab3f9b4ac6b5ec20c5acdb",
+        "bytes": 522710
+      },
+      "conditional_policy": "structure-facing first uses eventArtSet if present; legacy mapping below otherwise. NewrequiresEightArt with no set returns no drawable, not fallback.",
+      "evidence": "src/game/golf/structure-art.ts7;src/game/golf/structure-facing.ts12–20"
+    },
+    {
+      "type_id": "media",
+      "current_substitute_art": "business:golf-clubhouse",
+      "native_identity_reference": {
+        "path": "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/scenes/identity-references/business-golf-clubhouse-343e3275/source.png",
+        "sha256": "80145907925e5693b77ffb2250948d30a48dc050fd973c5d6de52b50041e9fb3",
+        "bytes": 700713
+      },
+      "conditional_policy": "structure-facing first uses eventArtSet if present; legacy mapping below otherwise. NewrequiresEightArt with no set returns no drawable, not fallback.",
+      "evidence": "src/game/golf/structure-art.ts7;src/game/golf/structure-facing.ts12–20"
+    },
+    {
+      "type_id": "gate",
+      "current_substitute_art": "ce:parking-entry",
+      "native_identity_reference": null,
+      "conditional_policy": "structure-facing first uses eventArtSet if present; legacy mapping below otherwise. NewrequiresEightArt with no set returns no drawable, not fallback.",
+      "evidence": "src/game/golf/structure-art.ts7;src/game/golf/structure-facing.ts12–20"
+    },
+    {
+      "type_id": "toilets",
+      "current_substitute_art": "golf:toilet-block",
+      "native_identity_reference": {
+        "path": "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/scenes/identity-references/golf-toilet-block-8f941e26/source.png",
+        "sha256": "807a8ce07db9052f58d27f0fa46fa382979d2a88e2f796a9e1e267289eedd1d2",
+        "bytes": 800147
+      },
+      "conditional_policy": "structure-facing first uses eventArtSet if present; legacy mapping below otherwise. NewrequiresEightArt with no set returns no drawable, not fallback.",
+      "evidence": "src/game/golf/structure-art.ts7;src/game/golf/structure-facing.ts12–20"
+    },
+    {
+      "type_id": "firstAid",
+      "current_substitute_art": "expansion:backyard-tent",
+      "native_identity_reference": {
+        "path": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/theme-consistency/exports/buildings/expansion-backyard-tent.native.png",
+        "sha256": "209cd8a9eee70157ce9936ab4998d8b76de9ae3dad04717f2fd9046bb43404b7",
+        "bytes": 17244
+      },
+      "conditional_policy": "structure-facing first uses eventArtSet if present; legacy mapping below otherwise. NewrequiresEightArt with no set returns no drawable, not fallback.",
+      "evidence": "src/game/golf/structure-art.ts7;src/game/golf/structure-facing.ts12–20"
+    },
+    {
+      "type_id": "info",
+      "current_substitute_art": "ce:parking-kiosk",
+      "native_identity_reference": {
+        "path": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/theme-consistency/exports/buildings/ce-parking-kiosk.native.png",
+        "sha256": "15d8f3108ee31228758400e8019679c2c2b384196ccb6d5c3a9306f504e0b72c",
+        "bytes": 25077
+      },
+      "conditional_policy": "structure-facing first uses eventArtSet if present; legacy mapping below otherwise. NewrequiresEightArt with no set returns no drawable, not fallback.",
+      "evidence": "src/game/golf/structure-art.ts7;src/game/golf/structure-facing.ts12–20"
+    },
+    {
+      "type_id": "rideshare",
+      "current_substitute_art": "town:bus_stop",
+      "native_identity_reference": {
+        "path": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/theme-consistency/exports/buildings/town-bus_stop.native.png",
+        "sha256": "bcef8487d4af6feb3038d8b5e3f4915c4662c00f1a128989c4855109df5ed200",
+        "bytes": 33359
+      },
+      "conditional_policy": "structure-facing first uses eventArtSet if present; legacy mapping below otherwise. NewrequiresEightArt with no set returns no drawable, not fallback.",
+      "evidence": "src/game/golf/structure-art.ts7;src/game/golf/structure-facing.ts12–20"
+    },
+    {
+      "type_id": "coach",
+      "current_substitute_art": "business:golf-cart-garage",
+      "native_identity_reference": {
+        "path": "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/scenes/identity-references/business-golf-cart-garage-1a3cdb4c/source.png",
+        "sha256": "24a447b9e44c0dac40426aa87b668108c65dbfe33bab3f9b4ac6b5ec20c5acdb",
+        "bytes": 522710
+      },
+      "conditional_policy": "structure-facing first uses eventArtSet if present; legacy mapping below otherwise. NewrequiresEightArt with no set returns no drawable, not fallback.",
+      "evidence": "src/game/golf/structure-art.ts7;src/game/golf/structure-facing.ts12–20"
+    },
+    {
+      "type_id": "hotel",
+      "current_substitute_art": "business:golf-clubhouse",
+      "native_identity_reference": {
+        "path": "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/scenes/identity-references/business-golf-clubhouse-343e3275/source.png",
+        "sha256": "80145907925e5693b77ffb2250948d30a48dc050fd973c5d6de52b50041e9fb3",
+        "bytes": 700713
+      },
+      "conditional_policy": "structure-facing first uses eventArtSet if present; legacy mapping below otherwise. NewrequiresEightArt with no set returns no drawable, not fallback.",
+      "evidence": "src/game/golf/structure-art.ts7;src/game/golf/structure-facing.ts12–20"
+    },
+    {
+      "type_id": "interchange",
+      "current_substitute_art": "ce:parking-entry",
+      "native_identity_reference": null,
+      "conditional_policy": "structure-facing first uses eventArtSet if present; legacy mapping below otherwise. NewrequiresEightArt with no set returns no drawable, not fallback.",
+      "evidence": "src/game/golf/structure-art.ts7;src/game/golf/structure-facing.ts12–20"
+    },
+    {
+      "type_id": "rangeStand",
+      "current_substitute_art": "golf:grandstand-s",
+      "native_identity_reference": {
+        "path": "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/scenes/identity-references/golf-grandstand-s-c971a47c/source.png",
+        "sha256": "405c5d55ed21f07d95a46a34ccc03321861f8e451a5123980114cd3b16afb573",
+        "bytes": 727163
+      },
+      "conditional_policy": "structure-facing first uses eventArtSet if present; legacy mapping below otherwise. NewrequiresEightArt with no set returns no drawable, not fallback.",
+      "evidence": "src/game/golf/structure-art.ts7;src/game/golf/structure-facing.ts12–20"
+    },
+    {
+      "type_id": "sponsorDisplay",
+      "current_substitute_art": "poi:movie-display",
+      "native_identity_reference": null,
+      "conditional_policy": "structure-facing first uses eventArtSet if present; legacy mapping below otherwise. NewrequiresEightArt with no set returns no drawable, not fallback.",
+      "evidence": "src/game/golf/structure-art.ts7;src/game/golf/structure-facing.ts12–20"
+    },
+    {
+      "type_id": "helipad",
+      "current_substitute_art": "business:golf-halfway-pavilion",
+      "native_identity_reference": {
+        "path": "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/scenes/identity-references/business-golf-halfway-pavilion-d89d56ad/source.png",
+        "sha256": "0783e2307c1fcc4df9d131edec709e4800efe8e2dd86abfd929bb7fafd60f15b",
+        "bytes": 628838
+      },
+      "conditional_policy": "structure-facing first uses eventArtSet if present; legacy mapping below otherwise. NewrequiresEightArt with no set returns no drawable, not fallback.",
+      "evidence": "src/game/golf/structure-art.ts7;src/game/golf/structure-facing.ts12–20"
+    }
+  ],
+  "fallback_structure": "expansion:backyard-tent for legacy unmapped type; newfacilityrequiresEightArt missing set draws no placeholder",
+  "stand_in_reference_count": 223,
+  "stand_in_reference_csv": "audit/stand-in-source-references.csv",
+  "dynamic_fallback_policy": {
+    "source": "src/game/newart.ts50–141,245–249",
+    "default": "Unreplaced old BUILDING_IDS/VIEW_ARTinventory buildings swap by samefamily nearestfootprint; candidatechosenbyposition/scale/pixellimits; nofamilycandidate meanshidden. Props/vehicles outside buildinginventory retain own art.",
+    "exhaustive_active_instances_unavailable": "No runninggame/save inspected. Source references do not prove placeholders visible in any particular loadedgame.",
+    "plants_decals_not_generation_targets": true
+  },
+  "runtime_atlas_reference_crops": [
+    {
+      "id": "gen:lawnmower",
+      "source_atlas": {
+        "path": "F:/Repos/ce-wt/eight-facing-runtime-20261107/src/assets/atlas/sprites-15-0.webp",
+        "sha256": "683636fa25e0cb119b5148e4ca4f7a347956de27156d37d435b624a1c2c11a9b",
+        "bytes": 889440
+      },
+      "runtime_tex": [
+        15,
+        0.476563,
+        0.757813,
+        0.504395,
+        0.789063
+      ],
+      "rect_ltrb": [
+        976,
+        1552,
+        1033,
+        1616
+      ],
+      "crop": {
+        "path": "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/audit/vehicle-references/gen-lawnmower.runtime-atlas-reference.png",
+        "sha256": "b72fc8bd1eccb8687d10a6715bef014614bab97aea0d5e1901e3fcb158bae4dd",
+        "bytes": 7231
+      },
+      "decoded_rgba_sha256": "fcf4a80076bcd45ddb468489bb2aad215a878a57ce9e70246ad30ff72f3b7c7a",
+      "operation": "lossless native rectangle crop of decoded current runtime atlas; no resize/repaint/keying; retained original source PNG unavailable in searched live art/assets",
+      "display_size_not_source_pixels": [
+        64,
+        72
+      ]
+    },
+    {
+      "id": "expansion:rideon-mower",
+      "source_atlas": {
+        "path": "F:/Repos/ce-wt/eight-facing-runtime-20261107/src/assets/atlas/sprites-15-0.webp",
+        "sha256": "683636fa25e0cb119b5148e4ca4f7a347956de27156d37d435b624a1c2c11a9b",
+        "bytes": 889440
+      },
+      "runtime_tex": [
+        15,
+        0.195313,
+        0.703125,
+        0.239258,
+        0.736816
+      ],
+      "rect_ltrb": [
+        400,
+        1440,
+        490,
+        1509
+      ],
+      "crop": {
+        "path": "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/audit/vehicle-references/expansion-rideon-mower.runtime-atlas-reference.png",
+        "sha256": "d2c9344aed0db7efe0fe7138dee926d63d69b57013c8bac9677b349e6288f34f",
+        "bytes": 14508
+      },
+      "decoded_rgba_sha256": "3d7bf12ea6ef64709c85389c98f470079fd6eb52fb7a85930ac461cf7371af27",
+      "operation": "lossless native rectangle crop of decoded current runtime atlas; no resize/repaint/keying; retained original source PNG unavailable in searched live art/assets",
+      "display_size_not_source_pixels": [
+        89.6,
+        68.85128205128204
+      ]
+    }
+  ],
+  "no_test_build_server_commit": true
+}

@@ -1,0 +1,39 @@
+{
+  "key": "golf-source-01-06-four-lane-entrance",
+  "family": "normal",
+  "condition": "upgraded",
+  "version": 1,
+  "target": "generated/golf-source-batch-01/native/golf-source-01-06-four-lane-entrance/upgraded-normal-v1.png",
+  "refs": [
+    "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-01\\native\\golf-source-01-06-four-lane-entrance\\guides\\normal-world-v2.png",
+    "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/golf-source-batch-01/native/golf-source-01-06-four-lane-entrance/budget-normal-v2.png"
+  ],
+  "runtimeTarget": {
+    "eventTypeId": "gate",
+    "eventName": "Entrance gate",
+    "currentSpriteSubjectId": "ce:parking-entry",
+    "newArtSubjectProposal": "golf:event-four-lane-entrance",
+    "newArtSubjectAlreadyRegistered": false,
+    "eventCatalogueSource": "src/game/golf/tents.ts",
+    "standInMappingSource": "src/game/golf/structure-art.ts",
+    "footprintTiles": {
+      "width": 6,
+      "depth": 3
+    },
+    "footprintMetres": {
+      "width": 12,
+      "depth": 6
+    },
+    "dimensionsMeaning": "Exact current event placement plot, not measured source sprite architecture. New design must fit plot; no runtime geometry changed."
+  },
+  "prompt": "Paint the four exact guide corners of REFERENCE1 as the UPGRADED version of the same physical event facility in REFERENCE2. Reference1 controls ALLgeometry/cameras/occlusion; reference2 identity/styleonly. UPGRADED condition: Neat period modular metal turnstiles, clean green/cream sign frame and wide accessible gate. Still four physical lanes; not a highway toll plaza.. Fixed model: Exactly4lanes acrossX:3manual turnstiles then1wider swing gate at+X. No ground slab. Sign frame only, no added roof required by brief.. Oneidenticalfunctionallayoutinall4cells. Clean professionally made steel, fresh forestgreen/creamtrim, maintained timber, sound equipment. Remove rust, torncloth, flakingpaint, brokentimber; no ornatebrassorballfinials. Allfeatures remainfixedasguide, includingstairs/ladder/camera/case/gatelanes and backs. SameSE SW / NW NE45degreecorners, orthographic30degreesDOWN. Late-afternoonDAYTIME sunSCREENUPPERRIGHT/shadowsLOWERLEFT; lamps/screensOFF. Detailed painterly miniature town-game materialstylematchesreference2. Complete separate equallyscaled sprites, generouszeroalpha transparentmargins andgutters. No groundplate/slab/roof exceptactualstructureinguide; noperson/plants/labels/UI/grid/scenery/haze. Raiseddeckonlywhereguideexplicitlyshows.",
+  "source": "C:/Users/RAMPAGE/.codex/generated_images/01a1b1fd-39ec-7220-8f11-86e4448833ea/exec-eecaab99-23cb-41b5-98fd-cb433ff95415.png",
+  "references": [
+    "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-01\\native\\golf-source-01-06-four-lane-entrance\\guides\\normal-world-v2.png",
+    "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/golf-source-batch-01/native/golf-source-01-06-four-lane-entrance/budget-normal-v2.png"
+  ],
+  "status": "native-source-candidate-pending-visual-review",
+  "runtime_imported": false,
+  "sha256": "d953c11148397b0914ae521069ff4ac1ce6eb6b863e1e1f4fdfb8a9a320a1a03",
+  "native_bytes_preserved": true
+}

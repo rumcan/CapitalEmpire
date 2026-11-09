@@ -1,0 +1,14 @@
+{
+  "key": "2010s-brick-white-clad-townhouse-pair",
+  "source": "C:/Users/RAMPAGE/.codex/generated_images/01a1b1fd-39ec-7220-8f11-86e4448833ea/exec-5c9f6340-1cd5-4c35-b958-e57efd1a240f.png",
+  "target": "generated/era-houses/2010s-brick-white-clad-townhouse-pair/yaw8-W-v2.png",
+  "prompt": "Paint ONLY the exact SINGLE house view in REFERENCE1 using the identity/materials of REFERENCE2. A2010sattachedtownhousePAIR, brickgroundfloor/whiteuppercladding, darkgable roof withTWOsmallvents, two smallwindowsstackedonthisprimaryGABLEface. Reference1definesEXACT30degree-downcamera/8degreeoffset and visiblewalls: thinSCREENRIGHTside is the REARwithglasspatiodoors, NOTthefront. NO frontdoors/entranceawnings on thatRIGHTsliver. Frontawningsonlyprojectasverysmallhiddenleft-edgeprotrusionswhereguide1shows. Reference2showscorrectwindowedgableplusrearidentitywithtwoglasspatiodoors, nofrontentrances, so preserveit. Samegeometry/roofproportions/framecountasguide1, keepgroundbottomedgetilt0.07027slope. Detailedhandpaintedminiaturematerials, lateafternoonDAYTIME sunUPPERRIGHT/shadowsLOWERLEFT, opaquespriteonTRUEzeroalpha transparentbackground, no scenery/people/cars/grass/groundplate/labels/text/haze.",
+  "references": [
+    "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/era-houses/2010s-brick-white-clad-townhouse-pair/repair-references/W-camera-only.png",
+    "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/era-houses/2010s-brick-white-clad-townhouse-pair/repair-references/rear-gable-identity-only.png"
+  ],
+  "status": "isolated view correction candidate; independent QA pending",
+  "runtime_imported": false,
+  "sha256": "25aff37c8e06d14e3d73b3eb4f91db0e52b978e6b4ca26096c6ee3cccaefd706",
+  "native_bytes_preserved": true
+}

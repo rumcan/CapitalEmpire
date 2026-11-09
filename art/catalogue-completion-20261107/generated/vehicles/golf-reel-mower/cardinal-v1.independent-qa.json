@@ -1,0 +1,130 @@
+{
+  "schema": 1,
+  "as_of_utc": "2026-11-07T10:35:58.558179+00:00",
+  "review_result": "PASS-source-candidate-identity-direction-alpha",
+  "source": {
+    "path": "generated/vehicles/golf-reel-mower/cardinal-v1.png",
+    "sha256": "418ebe44a637ee2688cc48d6e67f6de880f75c50b699fecefe6234370de3a77d",
+    "bytes": 1500234
+  },
+  "source_original_hash_matches_parent_batch": true,
+  "prompt": {
+    "path": "generated/vehicles/golf-reel-mower/cardinal-v1.prompt.txt",
+    "sha256": "e35dc4b5e3bc85b7e48622dd75b4c04b1b39c9c58917133e130e3bc957672089",
+    "bytes": 1233
+  },
+  "parent_provenance": {
+    "path": "generated/vehicles/golf-reel-mower/cardinal-v1.provenance.json",
+    "sha256": "88245ce666e7d0c33b18bdc296512ef545f13ed29edd9720b9a67f56956a312a",
+    "bytes": 1872
+  },
+  "identity_observation": "Tan single seat, roll hoop, rear engine with black filler cap, rear grille and two FRONT cylindrical reels remain coherent; no rear front-grille duplication.",
+  "actual_cell_mapping": [
+    {
+      "cell": 0,
+      "rect_ltrb": [
+        0,
+        0,
+        698,
+        563
+      ],
+      "core_margin": 32,
+      "boundary_core_pixels": 0,
+      "boundary_alpha_max": 1,
+      "actual_screen_nose": "down",
+      "rgba_crop_sha256": "1b9e981bf2c53ae0ab9e076622cef9a657947f9f9492f3523a0ab66de9cc0d21",
+      "core_trim_dimensions": [
+        478,
+        498
+      ],
+      "core_trim_rgba_sha256_alpha_le128_ignored": "0e62a16a2439d7c48ee455f2c6de6071394334a3c71011cd8c564d32b5fefe54"
+    },
+    {
+      "cell": 1,
+      "rect_ltrb": [
+        698,
+        0,
+        1396,
+        563
+      ],
+      "core_margin": 34,
+      "boundary_core_pixels": 0,
+      "boundary_alpha_max": 1,
+      "actual_screen_nose": "right",
+      "rgba_crop_sha256": "768e67ca57995fc0301d97e73d58e1be514379d261d6b383e925da4617e00ed0",
+      "core_trim_dimensions": [
+        565,
+        478
+      ],
+      "core_trim_rgba_sha256_alpha_le128_ignored": "2e57ff601b43712a6a8220b02cb1424784310e278deba828d9b3cfd1cafa6989"
+    },
+    {
+      "cell": 2,
+      "rect_ltrb": [
+        0,
+        563,
+        698,
+        1127
+      ],
+      "core_margin": 24,
+      "boundary_core_pixels": 0,
+      "boundary_alpha_max": 1,
+      "actual_screen_nose": "up",
+      "rgba_crop_sha256": "81426e38803f10452086700123547eace5d2d9d15a0fc709ccec0cbcc1e345ba",
+      "core_trim_dimensions": [
+        422,
+        471
+      ],
+      "core_trim_rgba_sha256_alpha_le128_ignored": "31d608e3b8d72e3d016d9771c8b80cb6acfbac1f562b001a35c4d4abe4d247a1"
+    },
+    {
+      "cell": 3,
+      "rect_ltrb": [
+        698,
+        563,
+        1396,
+        1127
+      ],
+      "core_margin": 31,
+      "boundary_core_pixels": 0,
+      "boundary_alpha_max": 1,
+      "actual_screen_nose": "left",
+      "rgba_crop_sha256": "623ceb890266675d5779f555b93d8277d983d8eb463ad497bb7b63905274a206",
+      "core_trim_dimensions": [
+        569,
+        480
+      ],
+      "core_trim_rgba_sha256_alpha_le128_ignored": "0126e4e43af1ff5aeee983e448d4631c4127643984cfe2a5d4196440b17c51ff"
+    }
+  ],
+  "background": {
+    "zero_alpha_fraction": 0.584207508841334,
+    "outer_border_p50max": [
+      0.0,
+      1.0
+    ],
+    "center_gutter_p50p95max": [
+      0.0,
+      0.0,
+      1.0
+    ]
+  },
+  "canvas_dimensions": [
+    1396,
+    1127
+  ],
+  "actual_clear_gutter_crops_needed": false,
+  "crop_operation_performed": false,
+  "all_cells_core_clear_of_accepted_cut_boundaries": true,
+  "partition_covers_all_pixels": true,
+  "no_duplicate_core_cell_hashes": true,
+  "exact_duplicate_core_pairs": [],
+  "exact_mirrored_core_pairs": [],
+  "mirror_limit": "Only exact pixel duplicate/mirror detection; conceptual/model mirroring needs visual judgment. All cells visually inspected.",
+  "notes": [],
+  "source_only": true,
+  "owner_approved": false,
+  "runtime_ready": false,
+  "exact8_certified": false,
+  "vehicle_physical_scale_calibration_pending": true
+}

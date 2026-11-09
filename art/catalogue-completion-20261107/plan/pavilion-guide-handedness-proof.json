@@ -1,0 +1,192 @@
+{
+  "purpose": "Proof of technical-guide coordinates against the actual game projection, not approval of native painted seat locations or visibility",
+  "status": "mathematically verified for supplied technical calibration; native correspondence unverified",
+  "source": [
+    {
+      "path": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\seated-pavilion-24-budget\\guides\\normal-world-v1.calibration.json",
+      "sha256": "2dad57d8d1f955c9ed2e98ba0c962416293ba62022f605b1dda8b1eabd31acfa"
+    },
+    {
+      "path": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\seated-pavilion-24-budget\\guides\\yaw8-world-v1.calibration.json",
+      "sha256": "139a89cfc97e2910d0e0f9f42d4001ccb474579d733a892c14a9126f8f66c1be"
+    }
+  ],
+  "game": {
+    "HW": 64,
+    "HH": 32,
+    "tileMetres": 2,
+    "cameraPixelsPerMetre": 45.254833995939045
+  },
+  "formula": {
+    "guideGround": "right=(cos(beta),sin(beta)); down=(0.5sin(beta),-0.5cos(beta)); object rotates counter-clockwise theta",
+    "localBasis": "F=diag(1,-1); runtime local metres=(guide x, -guide y)",
+    "runtimeHeadingDegrees": "(beta-theta-45) modulo 360",
+    "gameNormalizedProjection": "[(X-Y)/sqrt(2), (X+Y)/(2sqrt(2))-sqrt(3)z/2], where [X,Y]=R(heading)*F*[x,y]",
+    "gameGroundPixels": "[(X-Y)*32,(X+Y)*16] for local metre coordinates",
+    "gameHeightPixelsPerMetre": 39.19183588453085,
+    "note": "Native importer scales source camera ppm to game camera ppm. Bench height therefore needs explicit 39.1918358845 world px/m metadata for this source camera, not the legacy uncalibrated 32 default."
+  },
+  "views": [
+    {
+      "key": "normalSE",
+      "sourceCell": 0,
+      "guideBetaDegrees": -45,
+      "guideObjectRotationDegrees": 0,
+      "runtimeHeadingDegrees": 270,
+      "anchorsChecked": 82,
+      "maxNormalizedProjectionResidual": 8.881784197001252e-16,
+      "maxPixelResidualAtGuideScale": 4.973799150320701e-14,
+      "oldAssumedHeadingDegrees": 90,
+      "oldMaxNormalizedResidual": 9.475230867899736
+    },
+    {
+      "key": "normalSW",
+      "sourceCell": 1,
+      "guideBetaDegrees": -45,
+      "guideObjectRotationDegrees": 90,
+      "runtimeHeadingDegrees": 180,
+      "anchorsChecked": 82,
+      "maxNormalizedProjectionResidual": 1.7763568394002505e-15,
+      "maxPixelResidualAtGuideScale": 9.947598300641403e-14,
+      "oldAssumedHeadingDegrees": 180,
+      "oldMaxNormalizedResidual": 1.7763568394002505e-15
+    },
+    {
+      "key": "normalNW",
+      "sourceCell": 2,
+      "guideBetaDegrees": -45,
+      "guideObjectRotationDegrees": 180,
+      "runtimeHeadingDegrees": 90,
+      "anchorsChecked": 82,
+      "maxNormalizedProjectionResidual": 1.7763568394002505e-15,
+      "maxPixelResidualAtGuideScale": 9.947598300641403e-14,
+      "oldAssumedHeadingDegrees": 270,
+      "oldMaxNormalizedResidual": 9.475230867899738
+    },
+    {
+      "key": "normalNE",
+      "sourceCell": 3,
+      "guideBetaDegrees": -45,
+      "guideObjectRotationDegrees": 270,
+      "runtimeHeadingDegrees": 0,
+      "anchorsChecked": 82,
+      "maxNormalizedProjectionResidual": 1.7763568394002505e-15,
+      "maxPixelResidualAtGuideScale": 9.947598300641403e-14,
+      "oldAssumedHeadingDegrees": 0,
+      "oldMaxNormalizedResidual": 1.7763568394002505e-15
+    },
+    {
+      "key": "yaw8N",
+      "sourceCell": 0,
+      "guideBetaDegrees": 8,
+      "guideObjectRotationDegrees": 0,
+      "runtimeHeadingDegrees": 323,
+      "anchorsChecked": 82,
+      "maxNormalizedProjectionResidual": 1.3322676295501878e-15,
+      "maxPixelResidualAtGuideScale": 7.460698725481052e-14,
+      "oldAssumedHeadingDegrees": 37,
+      "oldMaxNormalizedResidual": 5.7023362841360825
+    },
+    {
+      "key": "yaw8E",
+      "sourceCell": 1,
+      "guideBetaDegrees": 8,
+      "guideObjectRotationDegrees": 90,
+      "runtimeHeadingDegrees": 233,
+      "anchorsChecked": 82,
+      "maxNormalizedProjectionResidual": 8.881784197001252e-16,
+      "maxPixelResidualAtGuideScale": 4.973799150320701e-14,
+      "oldAssumedHeadingDegrees": 127,
+      "oldMaxNormalizedResidual": 7.567255837000959
+    },
+    {
+      "key": "yaw8S",
+      "sourceCell": 2,
+      "guideBetaDegrees": 8,
+      "guideObjectRotationDegrees": 180,
+      "runtimeHeadingDegrees": 143,
+      "anchorsChecked": 82,
+      "maxNormalizedProjectionResidual": 8.881784197001252e-16,
+      "maxPixelResidualAtGuideScale": 4.973799150320701e-14,
+      "oldAssumedHeadingDegrees": 217,
+      "oldMaxNormalizedResidual": 5.7023362841360825
+    },
+    {
+      "key": "yaw8W",
+      "sourceCell": 3,
+      "guideBetaDegrees": 8,
+      "guideObjectRotationDegrees": 270,
+      "runtimeHeadingDegrees": 53,
+      "anchorsChecked": 82,
+      "maxNormalizedProjectionResidual": 1.7763568394002505e-15,
+      "maxPixelResidualAtGuideScale": 9.947598300641403e-14,
+      "oldAssumedHeadingDegrees": 307,
+      "oldMaxNormalizedResidual": 7.56725583700096
+    }
+  ],
+  "totalAnchorProjectionsChecked": 656,
+  "maxNormalizedProjectionResidual": 1.7763568394002505e-15,
+  "draftBaseSeatingMetadata": {
+    "review": "draft",
+    "front": {
+      "x": 0,
+      "y": 1
+    },
+    "rows": [
+      {
+        "start": {
+          "x": -2.275,
+          "y": 1.4
+        },
+        "step": {
+          "x": 0.65,
+          "y": 0
+        },
+        "seats": 8,
+        "seatHeightMetres": 0.7
+      },
+      {
+        "start": {
+          "x": -2.275,
+          "y": 0
+        },
+        "step": {
+          "x": 0.65,
+          "y": 0
+        },
+        "seats": 8,
+        "seatHeightMetres": 0.7
+      },
+      {
+        "start": {
+          "x": -2.275,
+          "y": -1.4
+        },
+        "step": {
+          "x": 0.65,
+          "y": 0
+        },
+        "seats": 8,
+        "seatHeightMetres": 0.7
+      }
+    ],
+    "entries": [
+      {
+        "x": -3.1,
+        "y": -3
+      },
+      {
+        "x": 3.1,
+        "y": -3
+      }
+    ],
+    "verticalPixelsPerMetre": 39.19183588453085
+  },
+  "releaseRequirements": [
+    "Verify actual native paintings retain the guide physical feature and row locations in all eight source cells.",
+    "Measure each native source camera ppm and anchor before import; technical 56 ppm is not automatically the painted image ppm.",
+    "Keep these explicit physical headings even though source camera keys follow legacy cell names; do not force 37 from filename.",
+    "Review visible/hidden/partial seat status against native roof, floor, benches and posts; technical anchors alone do not prove usable seating.",
+    "If the actual native art differs, author per-view local seating/front/entry calibration or redo the mismatching view. Do not approve merely by matching nominal capacity."
+  ]
+}

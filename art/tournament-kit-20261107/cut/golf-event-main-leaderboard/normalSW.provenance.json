@@ -1,0 +1,29 @@
+{
+  "schema": 1,
+  "subject": "golf:event-main-leaderboard",
+  "version": 1,
+  "key": "normalSW",
+  "source": {
+    "file": "../../batch01/main-leaderboard/budget/normal-SW.png",
+    "sha256": "cdc630820a33c45fa3118597a2c898113bc14d87ff228b51d34800312fbcbd7f",
+    "width": 627,
+    "height": 610
+  },
+  "cell": 0,
+  "cellRect": {
+    "left": 0,
+    "top": 0,
+    "width": 627,
+    "height": 610
+  },
+  "crop": {
+    "left": 79,
+    "top": 30,
+    "width": 485,
+    "height": 533
+  },
+  "output": "normalSW.native.png",
+  "sha256": "c72054f11392f23760ee6fde0aed5d63a8c694d12d64566924a587bb7801f317",
+  "operation": "native RGBA cell crop only; no flip/repaint/view synthesis",
+  "review": "candidate"
+}

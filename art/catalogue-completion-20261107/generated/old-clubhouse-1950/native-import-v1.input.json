@@ -1,0 +1,313 @@
+{
+  "schema": 1,
+  "projection": "normal+yaw8",
+  "subject": "golf:clubhouse-1950-budget",
+  "name": "Old budget clubhouse",
+  "version": 1,
+  "review": "candidate",
+  "source": {
+    "normal": "normal-v5.png",
+    "yaw8": "yaw8-v4.png"
+  },
+  "footprintMetres": {
+    "width": 12,
+    "depth": 8
+  },
+  "pixelsPerMetre": 35,
+  "pixelCalibrationSpace": "orthographic-camera",
+  "baselineScale": 1,
+  "kind": "building",
+  "category": "New: Buildings",
+  "visualTier": "budget",
+  "aliases": [],
+  "views": {
+    "normalSE": {
+      "anchor": {
+        "x": 310.506,
+        "y": 380.235
+      },
+      "headingDegrees": 270,
+      "pixelsPerMetre": 34.3075,
+      "calibrationEvidence": "independent-review-normal-v5-yaw8-v4.json: 3 observed 12x8m foundation corners, source SHA256 a996fb471f351cc35926c84090192a8b55cc3557bb1bf9fec24872218fa219a6, isotropic camera fit RMS 4.564px; Approximate painted foundation/outline positions; retain parent review before import. Runtime local F(x,y)=(x,-y), heading 270 degrees proved by pavilion-guide-handedness-proof.json.",
+      "boxes": [
+        {
+          "hx": 4,
+          "hy": 6,
+          "dx": 0,
+          "dy": 0
+        },
+        {
+          "hx": 0.3075,
+          "hy": 1.75,
+          "dx": 4.6875,
+          "dy": 3
+        },
+        {
+          "hx": 0.7,
+          "hy": 0.95,
+          "dx": 4.95,
+          "dy": -0.1
+        },
+        {
+          "hx": 0.29,
+          "hy": 0.325,
+          "dx": 4.76,
+          "dy": -1.55
+        }
+      ]
+    },
+    "normalSW": {
+      "anchor": {
+        "x": 313.428,
+        "y": 380.069
+      },
+      "headingDegrees": 180,
+      "pixelsPerMetre": 34.448,
+      "calibrationEvidence": "independent-review-normal-v5-yaw8-v4.json: 3 observed 12x8m foundation corners, source SHA256 a996fb471f351cc35926c84090192a8b55cc3557bb1bf9fec24872218fa219a6, isotropic camera fit RMS 3.104px; Approximate painted foundation/outline positions; retain parent review before import. Runtime local F(x,y)=(x,-y), heading 180 degrees proved by pavilion-guide-handedness-proof.json.",
+      "boxes": [
+        {
+          "hx": 6,
+          "hy": 4,
+          "dx": 0,
+          "dy": 0
+        },
+        {
+          "hx": 1.75,
+          "hy": 0.3075,
+          "dx": 3,
+          "dy": -4.6875
+        },
+        {
+          "hx": 0.95,
+          "hy": 0.7,
+          "dx": -0.1,
+          "dy": -4.95
+        },
+        {
+          "hx": 0.325,
+          "hy": 0.29,
+          "dx": -1.55,
+          "dy": -4.76
+        }
+      ]
+    },
+    "normalNW": {
+      "anchor": {
+        "x": 312.767,
+        "y": 376.249
+      },
+      "headingDegrees": 90,
+      "pixelsPerMetre": 34.8612,
+      "calibrationEvidence": "independent-review-normal-v5-yaw8-v4.json: 3 observed 12x8m foundation corners, source SHA256 a996fb471f351cc35926c84090192a8b55cc3557bb1bf9fec24872218fa219a6, isotropic camera fit RMS 2.133px; Approximate painted foundation/outline positions; retain parent review before import. Runtime local F(x,y)=(x,-y), heading 90 degrees proved by pavilion-guide-handedness-proof.json.",
+      "boxes": [
+        {
+          "hx": 4,
+          "hy": 6,
+          "dx": 0,
+          "dy": 0
+        },
+        {
+          "hx": 0.3075,
+          "hy": 1.75,
+          "dx": -4.6875,
+          "dy": -3
+        },
+        {
+          "hx": 0.7,
+          "hy": 0.95,
+          "dx": -4.95,
+          "dy": 0.1
+        },
+        {
+          "hx": 0.29,
+          "hy": 0.325,
+          "dx": -4.76,
+          "dy": 1.55
+        }
+      ]
+    },
+    "normalNE": {
+      "anchor": {
+        "x": 311.663,
+        "y": 379.157
+      },
+      "headingDegrees": 0,
+      "pixelsPerMetre": 34.6568,
+      "calibrationEvidence": "independent-review-normal-v5-yaw8-v4.json: 3 observed 12x8m foundation corners, source SHA256 a996fb471f351cc35926c84090192a8b55cc3557bb1bf9fec24872218fa219a6, isotropic camera fit RMS 2.538px; Approximate painted foundation/outline positions; retain parent review before import. Runtime local F(x,y)=(x,-y), heading 0 degrees proved by pavilion-guide-handedness-proof.json.",
+      "boxes": [
+        {
+          "hx": 6,
+          "hy": 4,
+          "dx": 0,
+          "dy": 0
+        },
+        {
+          "hx": 1.75,
+          "hy": 0.3075,
+          "dx": -3,
+          "dy": 4.6875
+        },
+        {
+          "hx": 0.95,
+          "hy": 0.7,
+          "dx": 0.1,
+          "dy": 4.95
+        },
+        {
+          "hx": 0.325,
+          "hy": 0.29,
+          "dx": 1.55,
+          "dy": 4.76
+        }
+      ]
+    },
+    "yaw8N": {
+      "anchor": {
+        "x": 311.299,
+        "y": 363.781
+      },
+      "headingDegrees": 323,
+      "pixelsPerMetre": 35.3027,
+      "calibrationEvidence": "independent-review-normal-v5-yaw8-v4.json: 3 observed 12x8m foundation corners, source SHA256 091557a616f9ac6153c9160b19415ff3d7a94b19e1786bba3adc57aca7c5b862, isotropic camera fit RMS 3.225px; Approximate painted foundation/outline positions; retain parent review before import. Runtime local F(x,y)=(x,-y), heading 323 degrees proved by pavilion-guide-handedness-proof.json.",
+      "boxes": [
+        {
+          "hx": 7.199073152892,
+          "hy": 6.805432179101,
+          "dx": 0,
+          "dy": 0
+        },
+        {
+          "hx": 1.582670262202,
+          "hy": 1.298756709856,
+          "dx": 0.425101390883,
+          "dy": 5.549049022803
+        },
+        {
+          "hx": 1.179974250751,
+          "hy": 1.130769129028,
+          "dx": 3.058847915607,
+          "dy": 3.893064272419
+        },
+        {
+          "hx": 0.434082897479,
+          "hy": 0.427194180438,
+          "dx": 4.102524550777,
+          "dy": 2.868691741939
+        }
+      ]
+    },
+    "yaw8E": {
+      "anchor": {
+        "x": 302.509,
+        "y": 382.518
+      },
+      "headingDegrees": 233,
+      "pixelsPerMetre": 35.338,
+      "calibrationEvidence": "independent-review-normal-v5-yaw8-v4.json: 2 observed 12x8m foundation corners, source SHA256 091557a616f9ac6153c9160b19415ff3d7a94b19e1786bba3adc57aca7c5b862, isotropic camera fit RMS 0.337px; E uses two visible gable-floor corners; front furniture hides far floor, so full-depth validation is less constrained. Runtime local F(x,y)=(x,-y), heading 233 degrees proved by pavilion-guide-handedness-proof.json.",
+      "boxes": [
+        {
+          "hx": 6.805432179101,
+          "hy": 7.199073152892,
+          "dx": 0,
+          "dy": 0
+        },
+        {
+          "hx": 1.298756709856,
+          "hy": 1.582670262202,
+          "dx": 5.549049022803,
+          "dy": -0.425101390883
+        },
+        {
+          "hx": 1.130769129028,
+          "hy": 1.179974250751,
+          "dx": 3.893064272419,
+          "dy": -3.058847915607
+        },
+        {
+          "hx": 0.427194180438,
+          "hy": 0.434082897479,
+          "dx": 2.868691741939,
+          "dy": -4.102524550777
+        }
+      ]
+    },
+    "yaw8S": {
+      "anchor": {
+        "x": 311.539,
+        "y": 366.887
+      },
+      "headingDegrees": 143,
+      "pixelsPerMetre": 35.1693,
+      "calibrationEvidence": "independent-review-normal-v5-yaw8-v4.json: 3 observed 12x8m foundation corners, source SHA256 091557a616f9ac6153c9160b19415ff3d7a94b19e1786bba3adc57aca7c5b862, isotropic camera fit RMS 2.376px; Approximate painted foundation/outline positions; retain parent review before import. Runtime local F(x,y)=(x,-y), heading 143 degrees proved by pavilion-guide-handedness-proof.json.",
+      "boxes": [
+        {
+          "hx": 7.199073152892,
+          "hy": 6.805432179101,
+          "dx": 0,
+          "dy": 0
+        },
+        {
+          "hx": 1.582670262202,
+          "hy": 1.298756709856,
+          "dx": -0.425101390883,
+          "dy": -5.549049022803
+        },
+        {
+          "hx": 1.179974250751,
+          "hy": 1.130769129028,
+          "dx": -3.058847915607,
+          "dy": -3.893064272419
+        },
+        {
+          "hx": 0.434082897479,
+          "hy": 0.427194180438,
+          "dx": -4.102524550777,
+          "dy": -2.868691741939
+        }
+      ]
+    },
+    "yaw8W": {
+      "anchor": {
+        "x": 322.524,
+        "y": 380.42
+      },
+      "headingDegrees": 53,
+      "pixelsPerMetre": 35.0057,
+      "calibrationEvidence": "independent-review-normal-v5-yaw8-v4.json: 3 observed 12x8m foundation corners, source SHA256 091557a616f9ac6153c9160b19415ff3d7a94b19e1786bba3adc57aca7c5b862, isotropic camera fit RMS 1.789px; Approximate painted foundation/outline positions; retain parent review before import. Runtime local F(x,y)=(x,-y), heading 53 degrees proved by pavilion-guide-handedness-proof.json.",
+      "boxes": [
+        {
+          "hx": 6.805432179101,
+          "hy": 7.199073152892,
+          "dx": 0,
+          "dy": 0
+        },
+        {
+          "hx": 1.298756709856,
+          "hy": 1.582670262202,
+          "dx": -5.549049022803,
+          "dy": 0.425101390883
+        },
+        {
+          "hx": 1.130769129028,
+          "hy": 1.179974250751,
+          "dx": -3.893064272419,
+          "dy": 3.058847915607
+        },
+        {
+          "hx": 0.427194180438,
+          "hy": 0.434082897479,
+          "dx": -2.868691741939,
+          "dy": 4.102524550777
+        }
+      ]
+    }
+  },
+  "reviewEvidence": {
+    "visualReview": "independent-review-normal-v5-yaw8-v4.json",
+    "visualReviewSha256": "77c115ceb0ef789ac54ddf56e9e78b671ce420b4684d3f39ed416743f9ecb125",
+    "collisionEvidence": "native-import-v1.collision-evidence.json",
+    "cameraProof": "../../plan/pavilion-guide-handedness-proof.json",
+    "cameraProofSha256": "c07f415b3c6be0f9ecec4b9ec95185f8ce8fbb0f4dba07633a4283f649368ba0"
+  },
+  "integrationLimit": "Standalone subject only. No golf:clubhouse-shanty alias until separate in-game scale/alignment review. No event capacity."
+}

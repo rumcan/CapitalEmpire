@@ -1,0 +1,11 @@
+{
+  "key": "compact-bleacher-60-upgraded",
+  "source": "C:/Users/RAMPAGE/.codex/generated_images/01a1b1fd-39ec-7220-8f11-86e4448833ea/exec-82d97c24-7f44-4259-a24d-96c0d222f43b.png",
+  "target": "generated/compact-bleacher-60-upgraded/yaw8-v1.png",
+  "prompt": "Finish the four technical models in the reference as finely hand-painted miniature game sprites, preserving their exact structural silhouettes and projected views. One attractive upgraded1985 golf spectator bleacher:8x4metres, SIX tiered rows of TEN separate cream molded seats each,60seats total, dark-green engineered tubular-steel supports and rails, clean light-grey decks. Preserve the wide side stair, twelve half-riser steps, six access landings, supports, guardrails and correct front versus back. NO ROOF, no people. Four near-cardinal8degree yaw views, orthographic30degrees down, arrangement N E / S W. Match the slightly slanted main bases and narrow receding side of the technical reference; preserve their slopes and do not flatten square-on. Warm natural late-afternoon DAYTIME light SCREEN UPPER RIGHT and shadows LOWER LEFT, painterly materials consistent with a detailed illustrated golf-town game. Fully opaque objects on genuinely zero-alpha transparent background. Remove technical labels; no text, captions, grid, UI, ground plate, grass, haze or backdrop. Four complete separate sprites, each fully in its quarter, equal physical scale, generous empty margins.",
+  "references": [
+    "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/compact-bleacher-60-upgraded/guides/yaw8-world-v1.png"
+  ],
+  "status": "native candidate; geometry/count/alpha review pending",
+  "sha256": "fd9a233c2cc4ee29e0460038a6fa1013e0b86e3756f3b3d72171c54d93724f37"
+}

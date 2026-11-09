@@ -1,0 +1,121 @@
+{
+  "schema": 1,
+  "as_of_utc": "2026-11-07T13:57:01.992280+00:00",
+  "review_result": "PASS-source-candidate-sign-removal-main-faces",
+  "source": {
+    "path": "generated/golf-source-batch-02/native/water-tank-stall/normal-v2.png",
+    "sha256": "5d4d43d95409d6a55fc8c821cb5c96fa503d6999f5edb8e5de4906a4cd41524b",
+    "bytes": 1648387
+  },
+  "mode": "RGBA",
+  "dimensions": [
+    1254,
+    1254
+  ],
+  "source_original_hash_matches_parent": true,
+  "parent_provenance": {
+    "path": "generated/golf-source-batch-02/native/water-tank-stall/normal-v2.provenance.json",
+    "sha256": "cd44b9c764fdc1e4fa926e04b5da854535431e0fd808c3a83f6eb39fd28373dd",
+    "bytes": 1950
+  },
+  "exact_prompt_utf8_sha256": "9eb4af3059f154be1fe391fed94bd298d205551ddd02778e0af8ddf73dd7a3f0",
+  "actual_generation_references": [
+    {
+      "path": "generated/golf-source-batch-02/native/water-tank-stall/normal-v1.png",
+      "sha256": "3fea9724ef5aab171a1846157ba58674b0a5fa154cc32ba4b505db0df19e3ac9",
+      "bytes": 1733101
+    }
+  ],
+  "zero_alpha_fraction": 0.5504516329245617,
+  "outer_4px_border_alpha_p50p95max": [
+    0.0,
+    0.0,
+    1.0
+  ],
+  "clear_horizontal_cut_y": 627,
+  "clear_vertical_cut_by_row": [
+    627,
+    627
+  ],
+  "cells": [
+    {
+      "cell": "TL",
+      "rect_ltrb": [
+        0,
+        0,
+        627,
+        627
+      ],
+      "dimensions": [
+        627,
+        627
+      ],
+      "minimum_core_margin_px": 57,
+      "boundary_core_pixels_alpha_gt128": 0,
+      "boundary_alpha_max": 1,
+      "native_rgba_rectangle_sha256": "63db29ba54a45772105ae8317da1776697faeda61ee863ed43ba099cbba7b07c"
+    },
+    {
+      "cell": "TR",
+      "rect_ltrb": [
+        627,
+        0,
+        1254,
+        627
+      ],
+      "dimensions": [
+        627,
+        627
+      ],
+      "minimum_core_margin_px": 58,
+      "boundary_core_pixels_alpha_gt128": 0,
+      "boundary_alpha_max": 1,
+      "native_rgba_rectangle_sha256": "c0dab2b252346209ad7a94cdea7db8c1808e4ef65ca39c85465ba5579c7fc8cf"
+    },
+    {
+      "cell": "BL",
+      "rect_ltrb": [
+        0,
+        627,
+        627,
+        1254
+      ],
+      "dimensions": [
+        627,
+        627
+      ],
+      "minimum_core_margin_px": 57,
+      "boundary_core_pixels_alpha_gt128": 0,
+      "boundary_alpha_max": 1,
+      "native_rgba_rectangle_sha256": "27848cf8af12bcfae961a95d7f8c6420a50ddd23a8cdbdac93a3df2e0eb5e1c7"
+    },
+    {
+      "cell": "BR",
+      "rect_ltrb": [
+        627,
+        627,
+        1254,
+        1254
+      ],
+      "dimensions": [
+        627,
+        627
+      ],
+      "minimum_core_margin_px": 56,
+      "boundary_core_pixels_alpha_gt128": 0,
+      "boundary_alpha_max": 1,
+      "native_rgba_rectangle_sha256": "9b965ac9cacb5493aeb959784dc2a64c27b6b4ff5cfdc99a66338fcb29e7dbbd"
+    }
+  ],
+  "all_cores_complete_at_reference_cuts": true,
+  "limited_source_identity_and_pose_pass": true,
+  "visual_observations": [
+    "Invented front hole12 directional plaque removed and side hole-map assembly/frame removed in all four cells.",
+    "Two front taps/trough, bucket/towel/hanging basket/footgrate, rear braces remain. Two fronts and two rears distinguishable. Fill-cap/attachment calibration beyond this visual identity review remains pending."
+  ],
+  "source_crops_saved": false,
+  "native_image_bytes_changed": false,
+  "owner_approved": false,
+  "runtime_ready": false,
+  "exact_numerical_angle_certified": false
+}

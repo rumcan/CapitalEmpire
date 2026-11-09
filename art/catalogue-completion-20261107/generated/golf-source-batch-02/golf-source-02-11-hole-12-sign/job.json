@@ -1,0 +1,93 @@
+{
+  "jobId": "golf-source-02-11-hole-12-sign",
+  "runtimeSubjectId": "newprop:hole-12-sign",
+  "runtimeName": "Hole 12 sign",
+  "displayName": "Hole12sign",
+  "sourceReferencePNG": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-02\\references\\hole-12-sign.source.png",
+  "sourceProvenance": {
+    "id": "newprop:hole-12-sign",
+    "name": "Hole 12 sign",
+    "referencePNG": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-02\\references\\hole-12-sign.source.png",
+    "originalSourcePNG": "E:\\Repos\\CapitalEmpire\\All Generated Images\\exec-1f28de2a-95b9-4895-aeed-8f32f5b208b8.png",
+    "copiedOriginalSheet": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-02\\original-sheets\\exec-1f28de2a-95b9-4895-aeed-8f32f5b208b8.png",
+    "originalSheetSHA256": "83a3451b8bc46ff7893c891178b21bf25f1baf0b1fa9d6213a9163fc39e509e6",
+    "referenceSHA256": "1b694824de74d4a7ce7c55266cd5dc579934a337c8bfbeecd89f467ce2bd1de7",
+    "sourceRectXYWH": [
+      749,
+      20,
+      476,
+      627
+    ],
+    "sourceCell": "top right",
+    "sourceSheetContainsFourDifferentSubjectsNotRotations": true,
+    "sourceCropSize": [
+      476,
+      627
+    ],
+    "cropOperation": "lossless native RGBA crop, no resize, recolour, cleanup or synthesis",
+    "sourceMetadataCutOff": false,
+    "runtimeLibrarySource": "src/game/new-props-library.ts",
+    "runtimeBaseBoxesInTiles": [
+      {
+        "hx": 0.6,
+        "hy": 0.6,
+        "dx": 0,
+        "dy": 0
+      }
+    ],
+    "runtimeDisplayPixels": [
+      76.8,
+      101.16
+    ],
+    "manifestHalfExtentsMetresFirstGuess": [
+      0.6,
+      0.6
+    ],
+    "dimensionCaution": "Manifest first-guess dimensions and runtime boxes are not measured native physical dimensions; any new real-object size is a source-design proposal only. No runtime changes.",
+    "visualInspection": "inspected",
+    "visualNotes": "Confirmed tee hole-map sign with12and five dots; unrelated detached neighbouring gold finial below crop must be ignored.",
+    "sourceOnlyNotReleaseProof": true
+  },
+  "sourceDimensions": {
+    "runtimeBaseBoxesInTiles": [
+      {
+        "hx": 0.6,
+        "hy": 0.6,
+        "dx": 0,
+        "dy": 0
+      }
+    ],
+    "manifestHalfExtentsMetresFirstGuess": [
+      0.6,
+      0.6
+    ],
+    "sourceCropPixels": [
+      476,
+      627
+    ],
+    "newPhysicalDimensionsProposal": "Proposed board1.0m wide x0.25m deep x1.7m high; source-design proposal.",
+    "notRuntimeBalanceOrGeometryChange": true
+  },
+  "functionalBrief": "One two-upright green tee-information board with arched top marked12, a single hole map and five small coloured yardage dots/rows on its front. Rear shows backing and braces. Preserve board architecture and fixed12identity, but tiny yardage numerals may stay blank for data. Remove baked grass/soil apron and ignore detached bottom neighbour fragment.",
+  "ordinary1950sRedesignRequired": false,
+  "conditionBrief": "Identity-preserving physical tee board; restrained green/cream frame, ordinary supports. Not the separate event hole scoreboard from batch01.",
+  "visualNotes": "Confirmed tee hole-map sign with12and five dots; unrelated detached neighbouring gold finial below crop must be ignored.",
+  "existingNormalFourReferences": {
+    "candidateCount": 0,
+    "usableCount": 0,
+    "paths": [],
+    "note": "Only one original exact subject is available; original source sheet contains four different props, not four angles."
+  },
+  "existingYaw8Candidates": 0,
+  "historicallyApprovedEightSet": false,
+  "generationPlan": {
+    "normal": "2x2 SE/SW then NW/NE, orthographic30degrees down, equal45degreecorner walls",
+    "yaw8": "2x2 N/E then S/W, each cardinal physically turned8degrees, never square-on",
+    "conditions": "Generate one requested condition consistently through both sheets; source-only variants do not imply runtime upgrades."
+  },
+  "style": "Same painterly game style as style-authority.png, late-afternoon daylight, one sun upper-right, shadows lower-left, transparent background. No people, captions, brands, gridlines or generic ground plates. Functional ramps, buckets, mounting feet and attached panels remain part of their object.",
+  "approvalClaimed": false,
+  "runtimeIntegrated": false,
+  "nativeGeneratedHere": false,
+  "scopeNote": "Exact existing baseline subject only. Eight new view images still require generation and review; no related IDs, aliases or completion are inferred."
+}

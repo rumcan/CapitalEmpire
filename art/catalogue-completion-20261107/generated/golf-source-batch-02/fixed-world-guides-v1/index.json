@@ -1,0 +1,461 @@
+{
+  "schema": 1,
+  "technicalOnly": true,
+  "sourceOnly": true,
+  "nativeGeneratedHere": false,
+  "runtimeIntegrated": false,
+  "ownerApproved": false,
+  "purpose": "Fixed-world correction guides for four native-held batch02course props",
+  "sourceCoordinates": "metres; modelRIGHT+X, LEFT-X, FRONT-Y, BACK+Y, height+Z. Each source sheet shows one fixed model rotated0/90/180/270degrees.",
+  "camera": "30degree down, normal beta=-45degrees withSE/SW/NW/NEcells; yaw8beta+8degrees withN/E/S/Wcells. Labels do not certify native camera yaw.",
+  "finalStyle": "Same painterly game style, late-afternoon upper-right sun/lower-left shadows; transparent background with no haze. Technical meshes are not finished game art.",
+  "models": [
+    {
+      "runtimeSubjectId": "newprop:ball-washer",
+      "ppm": 410,
+      "fixedIdentity": "Lid OPEN70degrees in every view; one ball in opening; crank on physical+XRIGHT; towel on physical-XLEFT. No state changes or mirroring.",
+      "proposedOverallMetres": [
+        0.72,
+        0.42,
+        1.26
+      ],
+      "components": "Round foot, green pedestal/cup, fixed open lid and hinge, one right-hand crank and left white towel. Technical surfaces only; final painterly enamel/metal/cloth from native source.",
+      "key": "ball-washer",
+      "mesh": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-02\\fixed-world-guides-v1\\ball-washer\\guides\\ball-washer-world-model-v1.json",
+      "meshSHA256": "04056f49f8d344d11ce5643d3d739e12bf2a776949ea99e16a97eef5fbd08005",
+      "guides": {
+        "normal": {
+          "png": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-02\\fixed-world-guides-v1\\ball-washer\\guides\\normal-world-v1.png",
+          "svg": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-02\\fixed-world-guides-v1\\ball-washer\\guides\\normal-world-v1.svg",
+          "calibration": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-02\\fixed-world-guides-v1\\ball-washer\\guides\\normal-world-v1.calibration.json",
+          "sha256": "708837111f417beef86df77de7f417880f9eb760b603e2d3581ee8bc9b60534b",
+          "objectBoundsPerCell": [
+            [
+              276,
+              133,
+              524,
+              667
+            ],
+            [
+              276,
+              140,
+              524,
+              660
+            ],
+            [
+              276,
+              140,
+              524,
+              660
+            ],
+            [
+              276,
+              133,
+              524,
+              667
+            ]
+          ],
+          "geometryClipped": false
+        },
+        "yaw8": {
+          "png": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-02\\fixed-world-guides-v1\\ball-washer\\guides\\yaw8-world-v1.png",
+          "svg": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-02\\fixed-world-guides-v1\\ball-washer\\guides\\yaw8-world-v1.svg",
+          "calibration": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-02\\fixed-world-guides-v1\\ball-washer\\guides\\yaw8-world-v1.calibration.json",
+          "sha256": "b40b2392053e9436916f0b9d901bd75f91a1607988ce3223175efc3bad13f698",
+          "objectBoundsPerCell": [
+            [
+              252,
+              135,
+              548,
+              665
+            ],
+            [
+              323,
+              134,
+              477,
+              666
+            ],
+            [
+              252,
+              143,
+              548,
+              657
+            ],
+            [
+              323,
+              135,
+              477,
+              665
+            ]
+          ],
+          "geometryClipped": false
+        }
+      },
+      "originalReferencePNG": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-02\\references\\ball-washer.source.png",
+      "nativeHeldSource": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-02\\native\\ball-washer\\normal-v1.png",
+      "nativeArtApproval": false
+    },
+    {
+      "runtimeSubjectId": "newprop:park-bench",
+      "ppm": 180,
+      "fixedIdentity": "Three-place slatted bench, BACK on+Y, sitting FRONT on-Y. Tall attached course-map panel ALWAYS at physicalRIGHT+X. Panel FRONT has map, BACK bare wood; do not duplicate a front corner.",
+      "proposedOverallMetres": [
+        2.82,
+        0.62,
+        2.1
+      ],
+      "components": "Four seat slats, three backrest slats, black legs/arms, exactly one attached right-hand map board. No people; proposed size is not runtime seating capacity.",
+      "key": "park-bench",
+      "mesh": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-02\\fixed-world-guides-v1\\park-bench\\guides\\park-bench-world-model-v1.json",
+      "meshSHA256": "f43e47942f7e6185f8dee032fb3f4db2990ee998ebb2ee2e05bf32069fe44cfa",
+      "guides": {
+        "normal": {
+          "png": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-02\\fixed-world-guides-v1\\park-bench\\guides\\normal-world-v1.png",
+          "svg": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-02\\fixed-world-guides-v1\\park-bench\\guides\\normal-world-v1.svg",
+          "calibration": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-02\\fixed-world-guides-v1\\park-bench\\guides\\normal-world-v1.calibration.json",
+          "sha256": "24a6d201dd35f002348d0f0a6ff153e5c74cdf7e3d3949f1abd1401057945d37",
+          "objectBoundsPerCell": [
+            [
+              212,
+              138,
+              588,
+              662
+            ],
+            [
+              191,
+              148,
+              609,
+              652
+            ],
+            [
+              212,
+              207,
+              588,
+              593
+            ],
+            [
+              191,
+              207,
+              609,
+              593
+            ]
+          ],
+          "geometryClipped": false
+        },
+        "yaw8": {
+          "png": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-02\\fixed-world-guides-v1\\park-bench\\guides\\yaw8-world-v1.png",
+          "svg": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-02\\fixed-world-guides-v1\\park-bench\\guides\\yaw8-world-v1.svg",
+          "calibration": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-02\\fixed-world-guides-v1\\park-bench\\guides\\yaw8-world-v1.calibration.json",
+          "sha256": "b9c08866e7bda10f0f9887d18c4422ee3e96c843aa3cc4c18003c8133260d168",
+          "objectBoundsPerCell": [
+            [
+              147,
+              217,
+              653,
+              583
+            ],
+            [
+              320,
+              116,
+              480,
+              684
+            ],
+            [
+              147,
+              214,
+              653,
+              586
+            ],
+            [
+              320,
+              196,
+              480,
+              604
+            ]
+          ],
+          "geometryClipped": false
+        }
+      },
+      "originalReferencePNG": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-02\\references\\park-bench.source.png",
+      "nativeHeldSource": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-02\\native\\park-bench\\normal-v1.png",
+      "nativeArtApproval": false
+    },
+    {
+      "runtimeSubjectId": "newprop:ball-dispenser",
+      "ppm": 300,
+      "fixedIdentity": "Only physicalFRONT-Yhas ball window/coin controls/chute and the single wire basket. PhysicalREAR+Yis plain latched service panel. Sloping hood is lower at front, higher at rear. Fronts must not be repeated for rear views.",
+      "proposedOverallMetres": [
+        0.72,
+        1.19,
+        1.5
+      ],
+      "components": "Green casing, front ball window8balls, coin slot/button, chute, one wire basket, plain rear panel. No touchscreen, no mirror reuse.",
+      "key": "ball-dispenser",
+      "mesh": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-02\\fixed-world-guides-v1\\ball-dispenser\\guides\\ball-dispenser-world-model-v1.json",
+      "meshSHA256": "ebdde0ae64242219d565d8dbfa60c954bfdb9e678f9bd16dae502d36b98b7c04",
+      "guides": {
+        "normal": {
+          "png": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-02\\fixed-world-guides-v1\\ball-dispenser\\guides\\normal-world-v1.png",
+          "svg": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-02\\fixed-world-guides-v1\\ball-dispenser\\guides\\normal-world-v1.svg",
+          "calibration": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-02\\fixed-world-guides-v1\\ball-dispenser\\guides\\normal-world-v1.calibration.json",
+          "sha256": "47cec4bf76113066ab2461546ef48ab7d0505d31ab9bf3845009ac293d60456a",
+          "objectBoundsPerCell": [
+            [
+              224,
+              135,
+              576,
+              665
+            ],
+            [
+              224,
+              166,
+              576,
+              634
+            ],
+            [
+              224,
+              166,
+              576,
+              634
+            ],
+            [
+              224,
+              135,
+              576,
+              665
+            ]
+          ],
+          "geometryClipped": false
+        },
+        "yaw8": {
+          "png": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-02\\fixed-world-guides-v1\\ball-dispenser\\guides\\yaw8-world-v1.png",
+          "svg": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-02\\fixed-world-guides-v1\\ball-dispenser\\guides\\yaw8-world-v1.svg",
+          "calibration": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-02\\fixed-world-guides-v1\\ball-dispenser\\guides\\yaw8-world-v1.calibration.json",
+          "sha256": "3926563ed158e41211f0b241c6d90306687092af363d029be7acb051b240ce8b",
+          "objectBoundsPerCell": [
+            [
+              279,
+              133,
+              521,
+              667
+            ],
+            [
+              214,
+              148,
+              586,
+              652
+            ],
+            [
+              279,
+              182,
+              521,
+              618
+            ],
+            [
+              214,
+              154,
+              586,
+              646
+            ]
+          ],
+          "geometryClipped": false
+        }
+      },
+      "originalReferencePNG": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-02\\references\\ball-dispenser.source.png",
+      "nativeHeldSource": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-02\\native\\ball-dispenser\\normal-v1.png",
+      "nativeArtApproval": false
+    },
+    {
+      "runtimeSubjectId": "newprop:rope-barrier-corner",
+      "ppm": 145,
+      "fixedIdentity": "EXACTLY5posts and4rope spans, rigid90degreeL in ground plane. Corner shared post0=(-1.5,-1.5); armXposts1/2=(0,-1.5)/(1.5,-1.5); armYposts3/4=(-1.5,0)/(-1.5,1.5). Do not flatten, mirror or duplicate corners.",
+      "proposedOverallMetres": [
+        3.28,
+        3.28,
+        0.98
+      ],
+      "components": "Five same green stanchions with round feet/caps; four cream ropes, each with fixed sag. No ground plate or opaque/grey alpha haze.",
+      "key": "rope-barrier-corner",
+      "mesh": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-02\\fixed-world-guides-v1\\rope-barrier-corner\\guides\\rope-barrier-corner-world-model-v1.json",
+      "meshSHA256": "cda8929330a9b9969c6c22a1e805c2e0fe92bc3bf8e734bc2c31604ecbc96be9",
+      "guides": {
+        "normal": {
+          "png": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-02\\fixed-world-guides-v1\\rope-barrier-corner\\guides\\normal-world-v1.png",
+          "svg": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-02\\fixed-world-guides-v1\\rope-barrier-corner\\guides\\normal-world-v1.svg",
+          "calibration": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-02\\fixed-world-guides-v1\\rope-barrier-corner\\guides\\normal-world-v1.calibration.json",
+          "sha256": "018f6355dc932fc7e90b34b9c573cb8c5b471ec488ff481f7723880d21e0ef19",
+          "objectBoundsPerCell": [
+            [
+              72,
+              256,
+              728,
+              544
+            ],
+            [
+              226,
+              179,
+              574,
+              621
+            ],
+            [
+              72,
+              256,
+              728,
+              544
+            ],
+            [
+              226,
+              179,
+              574,
+              621
+            ]
+          ],
+          "geometryClipped": false
+        },
+        "yaw8": {
+          "png": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-02\\fixed-world-guides-v1\\rope-barrier-corner\\guides\\yaw8-world-v1.png",
+          "svg": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-02\\fixed-world-guides-v1\\rope-barrier-corner\\guides\\yaw8-world-v1.svg",
+          "calibration": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-02\\fixed-world-guides-v1\\rope-barrier-corner\\guides\\yaw8-world-v1.calibration.json",
+          "sha256": "a8df18627c574404cdcf45b22f7246146f727c7a28dd4e0216e6924816edbf4d",
+          "objectBoundsPerCell": [
+            [
+              165,
+              210,
+              635,
+              590
+            ],
+            [
+              134,
+              225,
+              666,
+              575
+            ],
+            [
+              165,
+              210,
+              635,
+              590
+            ],
+            [
+              134,
+              225,
+              666,
+              575
+            ]
+          ],
+          "geometryClipped": false
+        }
+      },
+      "originalReferencePNG": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-02\\references\\rope-barrier-corner.source.png",
+      "nativeHeldSource": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-02\\native\\rope-barrier-corner\\normal-v1.png",
+      "nativeArtApproval": false
+    },
+    {
+      "runtimeSubjectId": "newprop:ball-bucket-stand",
+      "key": "ball-bucket-stand",
+      "ppm": 300,
+      "fixedIdentity": "Manual ball hopper with sloping rain cap, four sawn-timber legs, front-Yball window/outlet/chute/manual crank and exactly one front-Ymetal bucket. Rear+Yplain riveted metal and rear diagonal timber brace. No duplicated front corners.",
+      "proposedOverallMetres": [
+        0.92,
+        1.41,
+        1.64
+      ],
+      "components": "Metal bulk hopper, four plain bolted timber legs, front chute/crank/bucket, rear plain panel and fixed brace.",
+      "mesh": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-02\\fixed-world-guides-v1\\ball-bucket-stand\\guides\\ball-bucket-stand-world-model-v1.json",
+      "meshSHA256": "cd55fb82480d58c877f88a39bc601589ee7f6a351e9129de4344d33121ab7026",
+      "guides": {
+        "normal": {
+          "png": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-02\\fixed-world-guides-v1\\ball-bucket-stand\\guides\\normal-world-v1.png",
+          "svg": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-02\\fixed-world-guides-v1\\ball-bucket-stand\\guides\\normal-world-v1.svg",
+          "calibration": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-02\\fixed-world-guides-v1\\ball-bucket-stand\\guides\\normal-world-v1.calibration.json",
+          "sha256": "59ee1e90af660e61126b6a79caed51d6a833797d94d2f237ded292953ee654e6",
+          "objectBoundsPerCell": [
+            [
+              189,
+              93,
+              611,
+              707
+            ],
+            [
+              189,
+              121,
+              611,
+              679
+            ],
+            [
+              189,
+              121,
+              611,
+              679
+            ],
+            [
+              189,
+              93,
+              611,
+              707
+            ]
+          ],
+          "geometryClipped": false
+        },
+        "yaw8": {
+          "png": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-02\\fixed-world-guides-v1\\ball-bucket-stand\\guides\\yaw8-world-v1.png",
+          "svg": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-02\\fixed-world-guides-v1\\ball-bucket-stand\\guides\\yaw8-world-v1.svg",
+          "calibration": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-02\\fixed-world-guides-v1\\ball-bucket-stand\\guides\\yaw8-world-v1.calibration.json",
+          "sha256": "a3a62bffccbf90fedbe1f9ea9c2cae1a5a8b99a480e04c75ea74a26cdb6c1de0",
+          "objectBoundsPerCell": [
+            [
+              247,
+              89,
+              553,
+              711
+            ],
+            [
+              177,
+              115,
+              623,
+              686
+            ],
+            [
+              247,
+              141,
+              553,
+              659
+            ],
+            [
+              177,
+              122,
+              623,
+              678
+            ]
+          ],
+          "geometryClipped": false
+        }
+      },
+      "originalReferencePNG": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-02\\references\\ball-bucket-stand.source.png",
+      "nativeHeldSource": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-02\\native\\ball-bucket-stand\\normal-v1.png",
+      "nativeArtApproval": false,
+      "technicalVisualInspection": "Both normal and yaw sheets inspected: front chute/crank/bucket distinct from rear riveted panel/brace; fixed sloping cap seats directly on wedge-sided hopper body, no floating cap."
+    }
+  ],
+  "generatorProvenance": {
+    "path": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-02\\fixed-world-guides-v1\\build_fixed_prop_guides.py",
+    "sha256": "8a9bebccd714566d6f1de18207abc58bc43551d44bf6bb866abf81732c5c3d6b"
+  },
+  "technicalVisualInspection": {
+    "allEightSheetsViewed": true,
+    "technicalViews": 40,
+    "notes": [
+      "Washer lid stays open in all views; crank and towel exchange screen sides naturally when the object turns, while their world sides remain fixed.",
+      "Bench front/back are distinct; map front/back is distinct and remains attached at physical+Xright.",
+      "Dispenser front has controls and basket; rear shows plain service panel. Basket only peeks around proper side in rear views.",
+      "RopeLhas5posts/4spans in all views; 90degreecorner and sag lengths fixed in world coordinates."
+    ],
+    "nativeArtApproval": false,
+    "nativeCameraCertification": false,
+    "allTenSheetsViewed": true
+  },
+  "extensionGenerator": {
+    "path": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-02\\fixed-world-guides-v1\\extend_ball_hopper_guide.py",
+    "sha256": "779f99e761c7bae3c7f94a977d33660b195b3efd1af7f077698def2356438b5e"
+  }
+}

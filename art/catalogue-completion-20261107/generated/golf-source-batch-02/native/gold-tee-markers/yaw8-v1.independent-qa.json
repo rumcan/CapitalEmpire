@@ -1,0 +1,136 @@
+{
+  "schema": 1,
+  "as_of_utc": "2026-11-07T14:29:39.952183+00:00",
+  "review_result": "LIMITED-PASS-symmetric-source-identity-alpha",
+  "source": {
+    "path": "generated/golf-source-batch-02/native/gold-tee-markers/yaw8-v1.png",
+    "sha256": "bc06623d914c7cb0ba987029b799204cc9a4de7c2d64903a959b314a0f9be531",
+    "bytes": 1846153
+  },
+  "mode": "RGBA",
+  "dimensions": [
+    1536,
+    1024
+  ],
+  "source_original_hash_matches_parent": true,
+  "parent_provenance": {
+    "path": "generated/golf-source-batch-02/native/gold-tee-markers/yaw8-v1.provenance.json",
+    "sha256": "49cd7587ead0895d5106629091ab9d6feeb82dc78c5f7687e1a290b911384324",
+    "bytes": 2851
+  },
+  "exact_prompt_utf8_sha256": "0b10c5b8ab967b95ce55295f7e70d41abc7bfddd0d6dd026f14e2f29d0f2e1db",
+  "actual_generation_references": [
+    {
+      "path": "generated/golf-source-batch-02/fixed-world-guides-v2/gold-tee-markers/guides/yaw8-world-v1.png",
+      "sha256": "d6f37fa0dceafc7f2246d493706d8e32c73dcdbd6a039d4b12561ea9b65ccb84",
+      "bytes": 50955
+    },
+    {
+      "path": "generated/golf-source-batch-02/native/gold-tee-markers/normal-v1.png",
+      "sha256": "f1dd757238cb786feeff82a858c46dc9a9aaa22dcbf5a68d4f12c6b3873d874d",
+      "bytes": 1290365
+    }
+  ],
+  "zero_alpha_fraction": 0.755560557047526,
+  "outer_4px_border_alpha_p50p95max": [
+    0.0,
+    0.0,
+    1.0
+  ],
+  "clear_horizontal_cut_y": 512,
+  "clear_vertical_cut_by_row": [
+    768,
+    768
+  ],
+  "cut_alpha_maxima": {
+    "horizontal": 1,
+    "vertical_top": 0,
+    "vertical_bottom": 0
+  },
+  "cells": [
+    {
+      "cell": "TL",
+      "actual_role": "N broad pair",
+      "selected_guide_direction": "N",
+      "reference_rect_ltrb": [
+        0,
+        0,
+        768,
+        512
+      ],
+      "minimum_core_margin_px": 89,
+      "boundary_core_pixels_alpha_gt128": 0,
+      "boundary_alpha_max": 1,
+      "native_rgba_rectangle_sha256": "d6c5b2627264e70915bac13c9c3647aacb2441c109d5afa9c6f8f6332fa5ba23",
+      "functional_hold": false
+    },
+    {
+      "cell": "TR",
+      "actual_role": "E foreshortened pair",
+      "selected_guide_direction": "E",
+      "reference_rect_ltrb": [
+        768,
+        0,
+        1536,
+        512
+      ],
+      "minimum_core_margin_px": 49,
+      "boundary_core_pixels_alpha_gt128": 0,
+      "boundary_alpha_max": 1,
+      "native_rgba_rectangle_sha256": "98933b8ac9754a411a3a77524ab406ce9234329a794f1f312ba059323c939c0a",
+      "functional_hold": false
+    },
+    {
+      "cell": "BL",
+      "actual_role": "S symmetric broad pair",
+      "selected_guide_direction": "S",
+      "reference_rect_ltrb": [
+        0,
+        512,
+        768,
+        1024
+      ],
+      "minimum_core_margin_px": 95,
+      "boundary_core_pixels_alpha_gt128": 0,
+      "boundary_alpha_max": 1,
+      "native_rgba_rectangle_sha256": "ff9130950173179ad27ccf8db804941f730db3c87f9323518cf7e0521c6599f7",
+      "functional_hold": false
+    },
+    {
+      "cell": "BR",
+      "actual_role": "W symmetric foreshortened pair",
+      "selected_guide_direction": "W",
+      "reference_rect_ltrb": [
+        768,
+        512,
+        1536,
+        1024
+      ],
+      "minimum_core_margin_px": 51,
+      "boundary_core_pixels_alpha_gt128": 0,
+      "boundary_alpha_max": 1,
+      "native_rgba_rectangle_sha256": "adbfbf0084f2e6d42eebcef69e445a8057f639d7f25a51f015a8e80ce13cf30e",
+      "functional_hold": false
+    }
+  ],
+  "all_cores_complete_at_reference_cuts": true,
+  "visual_observations": [
+    "Exactly two dimpled gold markers per cell. Broad pair and foreshortened pair projections match symmetric guide;180-degree similarity intrinsic. Hidden RGB glow disappears on proper composite; distant alpha max1."
+  ],
+  "intrinsic_rotational_symmetry": true,
+  "main_faces_functionally_accepted_for_source_candidate": true,
+  "owner_approved": false,
+  "runtime_ready": false,
+  "exact_numerical_angle_certified": false,
+  "native_image_bytes_changed": false,
+  "distant_background_alpha_p50p95max": [
+    0.0,
+    0.0,
+    1.0
+  ],
+  "proper_grey_composite": {
+    "path": "generated/golf-source-batch-02/native/gold-tee-markers/qa/yaw8-v1-on-grey.diagnostic.png",
+    "sha256": "de5d5319424367bae051aabe14422ce3415532af4e0781d97a48e087c8202878",
+    "bytes": 694638
+  }
+}

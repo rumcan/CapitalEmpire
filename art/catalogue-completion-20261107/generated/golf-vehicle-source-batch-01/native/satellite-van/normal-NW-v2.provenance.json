@@ -1,0 +1,23 @@
+{
+  "key": "newprop:satellite-van",
+  "family": "normal-NW",
+  "condition": "base",
+  "version": 2,
+  "target": "generated/golf-vehicle-source-batch-01/native/satellite-van/normal-NW-v2.png",
+  "refs": [
+    "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-vehicle-source-batch-01\\isolated-repairs-v1\\satellite-van\\guide-normalNW-left-door-adopted.png",
+    "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-vehicle-source-batch-01\\isolated-repairs-v1\\satellite-van\\target-normalNW-wrong-dish-face.png",
+    "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-vehicle-source-batch-01\\isolated-repairs-v1\\satellite-van\\concave-front-dish-material-only.png"
+  ],
+  "prompt": "Generate ONE SINGLE NW rear/right corner of the same uplink panel van. Nose points SCREEN UPPER LEFT; twin rear cargo doors face lower-right. Reference1 fixes exact camera and roof dish pose. Reference2 is the exact target van identity: preserve body, wheels, paint, rear doors, roof HVAC, antennas and their positions. Its currently visible convex ribbed dish BACK is WRONG in this particular NW pose: replace ONLY that roof dish geometry with the guide's THIN OBLIQUE CONCAVE FRONT and curved rim/feed support. Do not make a full round bowl face the camera; do not swivel its azimuth/elevation. Reference3 supplies the pale concave interior/rim/feed material, not the output angle. The coherent cargo door has been explicitly adopted on physical LEFT -X: the visible RIGHT side in this NW view stays plain, with no invented sliding-door handle. One fixed curved parabolic dish, not a rectangular aerial or separate moving parts. Detailed hand-painted miniature game art, opaque equipment on genuinely zero-alpha transparent background, generous margins, late-afternoon daylight with sun SCREEN UPPER RIGHT and shadows LOWER LEFT. No people, patient, scenery, ground plate, text, brands, grid or UI. Reconstruct the actual 3D view; never mirror the bitmap or turn independent parts toward the viewer.",
+  "source": "C:/Users/RAMPAGE/.codex/generated_images/01a1b1fd-39ec-7220-8f11-86e4448833ea/exec-19528267-9890-4dc9-98cb-9869ab6d8cbc.png",
+  "references": [
+    "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-vehicle-source-batch-01\\isolated-repairs-v1\\satellite-van\\guide-normalNW-left-door-adopted.png",
+    "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-vehicle-source-batch-01\\isolated-repairs-v1\\satellite-van\\target-normalNW-wrong-dish-face.png",
+    "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-vehicle-source-batch-01\\isolated-repairs-v1\\satellite-van\\concave-front-dish-material-only.png"
+  ],
+  "status": "native-source-candidate-pending-visual-review",
+  "runtime_imported": false,
+  "sha256": "ec7f14759eeae13bf003303b3d344b732229fd8cf5b651be48f069985055ed6d",
+  "native_bytes_preserved": true
+}

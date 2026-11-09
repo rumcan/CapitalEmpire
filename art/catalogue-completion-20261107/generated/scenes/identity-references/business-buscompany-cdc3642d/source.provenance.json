@@ -1,0 +1,70 @@
+{
+  "schema": 1,
+  "createdUtc": "2026-11-07T06:47:45.284562+00:00",
+  "exactRuntimeId": "business:buscompany",
+  "source": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/building-views/business-buscompany/NE.png",
+  "sourceSha256": "1cb914c3fa9a01ab63233ccd45a6af3f274291eb3d71d84d650603ed7b95d113",
+  "output": "identity-references/business-buscompany-cdc3642d/source.png",
+  "outputSha256": "1cb914c3fa9a01ab63233ccd45a6af3f274291eb3d71d84d650603ed7b95d113",
+  "width": 618,
+  "height": 515,
+  "sourceCell": {
+    "kind": "already isolated native PNG; whole file",
+    "rectXYWH": [
+      0,
+      0,
+      618,
+      515
+    ]
+  },
+  "operation": "byte-for-byte PNG copy only; no resize, crop, recolour, key, repaint, registration or source mutation",
+  "selection": "registered corner NE native PNG for this exact subject",
+  "registeredCornerDirection": "NE",
+  "sourceEvidence": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\building-views\\business-buscompany\\provenance.json",
+  "sourceReview": {
+    "status": "generated-awaiting-visual-review"
+  },
+  "sourceRegistration": {
+    "id": "business:buscompany",
+    "version": "business-buscompany-4views-v1",
+    "files": {
+      "NE": "1cb914c3fa9a01ab63233ccd45a6af3f274291eb3d71d84d650603ed7b95d113",
+      "SE": "80cd589bb77fe449cd5ea36306655112ac7f85d99e4a3ff9a3f1bd74e17045f0",
+      "SW": "6bb977cb0fa3036af8f19ae1cc422ff6fe943586cd910aace44e6aa74352583e",
+      "NW": "23d195df73539bf342b6c40b76b368ecdcaa6de4698547fa360e2312fef67ba2"
+    }
+  },
+  "originalInventorySource": {
+    "library": "src/game/business-library.ts",
+    "librarySha256": "fb72152bd5621325034acefc23e10101ad36dbd73548a06ab87285cf73652a4c",
+    "atlas": "src/assets/businesses/integrated/business-0-0.webp",
+    "atlasSha256": "7345eb8787ac146688e3a811ad9005a42c01ce29f619897f360dc82938fbf093",
+    "runtimePage": 18,
+    "localPage": 0,
+    "uv": [
+      0.6728515625,
+      0.72412109375,
+      0.9228515625,
+      0.89599609375
+    ],
+    "crop": {
+      "left": 1378,
+      "top": 1483,
+      "width": 512,
+      "height": 352
+    },
+    "native": "art/theme-consistency/exports/buildings/business-buscompany.native.png",
+    "nativeSha256": "559b402643e58296c926c8c116930a119b7ec1238c965a8b9a537da1a7f70b9c"
+  },
+  "originalBusinessSourceCell": {
+    "id": "buscompany",
+    "sourceSheet": "sliced/builtin/business-core.png",
+    "sourceCrop": [
+      8,
+      709,
+      693,
+      473
+    ]
+  },
+  "nativeReferenceApprovalClaimed": false
+}

@@ -1,0 +1,62 @@
+{
+  "schema": 1,
+  "createdUtc": "2026-11-07T06:47:45.284562+00:00",
+  "exactRuntimeId": "variation:gen-back-shed-garden-ac94c81e-plain-corner:1",
+  "source": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/building-views/variation-gen-back-shed-garden-ac94c81e-plain-corner-1/NE.png",
+  "sourceSha256": "561fa71d96d99dfab7a1d6739358312cb8c01a8e342819ccf06c69257229f820",
+  "output": "identity-references/variation-gen-back-shed-garden-ac94c81e-plain-corner-1-b657a90a/source.png",
+  "outputSha256": "561fa71d96d99dfab7a1d6739358312cb8c01a8e342819ccf06c69257229f820",
+  "width": 596,
+  "height": 433,
+  "sourceCell": {
+    "kind": "already isolated native PNG; whole file",
+    "rectXYWH": [
+      0,
+      0,
+      596,
+      433
+    ]
+  },
+  "operation": "byte-for-byte PNG copy only; no resize, crop, recolour, key, repaint, registration or source mutation",
+  "selection": "registered corner NE native PNG for this exact subject",
+  "registeredCornerDirection": "NE",
+  "sourceEvidence": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\building-views\\variation-gen-back-shed-garden-ac94c81e-plain-corner-1\\provenance.json",
+  "sourceReview": {
+    "integrationStatus": "ready",
+    "integrationReason": "All4 visible physical corners form front/right/back/left cycle; actual magenta alpha has no surrounding floor/haze. Matte timber/masonry/metal, charcoal roofs, amber practical lights and fixed screen-upper-right dusk are coherent with master. Layout-only repack preserves every nonzero source RGBA pixel without generation/repainting. Original low-alpha edge fringe does not truncate physical silhouette."
+  },
+  "sourceRegistration": {
+    "id": "variation:gen-back-shed-garden-ac94c81e-plain-corner:1",
+    "version": "variation-gen-back-shed-garden-ac94c81e-plain-corner-1-4views-v2",
+    "files": {
+      "NE": "561fa71d96d99dfab7a1d6739358312cb8c01a8e342819ccf06c69257229f820",
+      "SE": "b4175a57f20354e123fff3ea4ee9537f8eb20208d5c453d375fd95fa2c00eb46",
+      "SW": "639ddfb1c16862bbea6e25fa263743ebe4f7bb091b67e4965a17a6f2df67af52",
+      "NW": "9ac069da43371ee3ece3bddd5bbc9bdc8ace088e1050e56dab5d1f2c0da4cbc6"
+    }
+  },
+  "originalInventorySource": {
+    "library": "src/game/library.ts",
+    "librarySha256": "91b5190292c1005ac7b936f08e5e1ebf3be43c3aae99f92ea510775da83d9726",
+    "atlas": "src/assets/atlas/sprites-6-0.webp",
+    "atlasSha256": "5bf555ea578c014fa9e9f4e6119ae5f09128a07573eed569e85b1c5554f2ac51",
+    "runtimePage": 6,
+    "localPage": 6,
+    "uv": [
+      0.46875,
+      0.679688,
+      0.665527,
+      0.876953
+    ],
+    "crop": {
+      "left": 960,
+      "top": 1392,
+      "width": 403,
+      "height": 404
+    },
+    "native": "art/theme-consistency/exports/buildings/variation-gen-back-shed-garden-ac94c81e-plain-corner-1.native.png",
+    "nativeSha256": "7512c9b09896b2525bf3d6cc351182da55f52382ec8ae91454d7a29feb1bc0e6"
+  },
+  "originalBusinessSourceCell": null,
+  "nativeReferenceApprovalClaimed": false
+}

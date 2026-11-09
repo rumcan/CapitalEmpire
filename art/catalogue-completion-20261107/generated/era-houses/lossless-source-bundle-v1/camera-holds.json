@@ -1,0 +1,65 @@
+{
+  "schema": 1,
+  "purpose": "Keep native camera/scale release holds separate from source identity packaging",
+  "exactNative8DegreeCertified": false,
+  "runtimeReady": false,
+  "notes": [
+    "Guide labels and proven guide headings are not measurements of native painted camera angles.",
+    "Numerical native camera yaw, pixels-per-metre and ground anchors remain unapproved.",
+    "Corrected2010Wsingle is1254x1254while sheet cells are627x627; preserved without rescaling. Cross-view scale must be calibrated before runtime import."
+  ],
+  "houses": [
+    {
+      "key": "1990s-redbrick-family-single-garage",
+      "heldViews": [
+        "yaw8N",
+        "yaw8E",
+        "yaw8S",
+        "yaw8W"
+      ],
+      "cameraHold": "Exact numerical native8degree yaw unverified",
+      "normalCameraHold": "Nominal45degreecorner source labels; native calibration not approved",
+      "crossViewScaleHold": false,
+      "selected2020Normal": null
+    },
+    {
+      "key": "2000s-cream-stucco-two-storey-garage",
+      "heldViews": [
+        "yaw8N",
+        "yaw8E",
+        "yaw8S",
+        "yaw8W"
+      ],
+      "cameraHold": "Exact numerical native8degree yaw unverified",
+      "normalCameraHold": "Nominal45degreecorner source labels; native calibration not approved",
+      "crossViewScaleHold": false,
+      "selected2020Normal": null
+    },
+    {
+      "key": "2010s-brick-white-clad-townhouse-pair",
+      "heldViews": [
+        "yaw8N",
+        "yaw8E",
+        "yaw8S",
+        "yaw8W"
+      ],
+      "cameraHold": "Exact numerical native8degree yaw unverified",
+      "normalCameraHold": "Nominal45degreecorner source labels; native calibration not approved",
+      "crossViewScaleHold": true,
+      "selected2020Normal": null
+    },
+    {
+      "key": "2020s-white-charcoal-asymmetric-solar-home",
+      "heldViews": [
+        "yaw8N",
+        "yaw8E",
+        "yaw8S",
+        "yaw8W"
+      ],
+      "cameraHold": "Exact numerical native8degree yaw unverified",
+      "normalCameraHold": "Nominal45degreecorner source labels; native calibration not approved",
+      "crossViewScaleHold": false,
+      "selected2020Normal": "normal-v2; held shutter v1 excluded"
+    }
+  ]
+}

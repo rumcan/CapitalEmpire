@@ -1,0 +1,71 @@
+{
+  "schema": 1,
+  "createdUtc": "2026-11-07T06:47:45.284562+00:00",
+  "exactRuntimeId": "ref:landmark-fountain-v2",
+  "source": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/building-views/ref-landmark-fountain-v2/NE.png",
+  "sourceSha256": "6c7f82ff13edd1899115666aa6d4ba4cb21e8f6bd16261f3c4f9edfb627ae150",
+  "output": "identity-references/ref-landmark-fountain-v2-23e8e991/source.png",
+  "outputSha256": "6c7f82ff13edd1899115666aa6d4ba4cb21e8f6bd16261f3c4f9edfb627ae150",
+  "width": 441,
+  "height": 447,
+  "sourceCell": {
+    "kind": "already isolated native PNG; whole file",
+    "rectXYWH": [
+      0,
+      0,
+      441,
+      447
+    ]
+  },
+  "operation": "byte-for-byte PNG copy only; no resize, crop, recolour, key, repaint, registration or source mutation",
+  "selection": "registered corner NE native PNG for this exact subject",
+  "registeredCornerDirection": "NE",
+  "sourceEvidence": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\building-views\\ref-landmark-fountain-v2\\provenance.json",
+  "sourceReview": {
+    "integrationStatus": "ready",
+    "integrationReason": "Source review passed actual-alpha blue composite, rigid visible-facade cycle, coherent Maple-master materials/detail/upper-right dusk light and clear equal-cell packing. Game scale/street integration remains to be reviewed.",
+    "integrationReview": {
+      "alpha": "passed",
+      "geometry": "passed",
+      "themeAssessment": "Warm pale stone, restrained blue water and gold highlight fit master material detail; detached paving/foliage/captions removed.",
+      "terrainOrCaptionsVisible": false,
+      "gameScaleRegistered": false,
+      "reviewContact": "output/building-priority/mixed-standalone-review-2.png",
+      "correctionBrief": null
+    }
+  },
+  "sourceRegistration": {
+    "id": "ref:landmark-fountain-v2",
+    "version": "ref-landmark-fountain-v2-4views-v3",
+    "files": {
+      "NE": "6c7f82ff13edd1899115666aa6d4ba4cb21e8f6bd16261f3c4f9edfb627ae150",
+      "SE": "e9bdc63e688f4b05c05a6954a9a5ef2f625abb7dbf329dd3ef4ffd67a764a6b2",
+      "SW": "e68ccde8342a2a3faef51ac1a387ed7d3389d2eb951424485b4dc7c71201ad6c",
+      "NW": "c533d5dbb81e8f9632434a8ffb8ea7db5eea45745cf13e9a893cd2105a452a77"
+    }
+  },
+  "originalInventorySource": {
+    "library": "src/game/library.ts",
+    "librarySha256": "91b5190292c1005ac7b936f08e5e1ebf3be43c3aae99f92ea510775da83d9726",
+    "atlas": "src/assets/atlas/sprites-12-0.webp",
+    "atlasSha256": "31dde0992d4d538ce56a04bf6d0c60db791aca99c04fad6259f266ba9c973a58",
+    "runtimePage": 12,
+    "localPage": 12,
+    "uv": [
+      0.578125,
+      0.53125,
+      0.655273,
+      0.61377
+    ],
+    "crop": {
+      "left": 1184,
+      "top": 1088,
+      "width": 158,
+      "height": 169
+    },
+    "native": "art/theme-consistency/exports/buildings/ref-landmark-fountain-v2.native.png",
+    "nativeSha256": "d56b4bec410a8abd0fae25f87bdd1f2e73ec84355e3877d349e2649a26b2361d"
+  },
+  "originalBusinessSourceCell": null,
+  "nativeReferenceApprovalClaimed": false
+}

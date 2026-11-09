@@ -1,0 +1,21 @@
+{
+  "key": "newprop:cart-ambulance",
+  "family": "normal-SE",
+  "condition": "base",
+  "version": 2,
+  "target": "generated/golf-vehicle-source-batch-01/native/cart-ambulance/normal-SE-v2.png",
+  "refs": [
+    "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-vehicle-source-batch-01\\isolated-repairs-v1\\cart-ambulance\\guide-normalSE.png",
+    "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-vehicle-source-batch-01\\isolated-repairs-v1\\cart-ambulance\\identity-normalNE.png"
+  ],
+  "prompt": "Generate ONE SINGLE opposite FRONT corner view of this medical golf cart. Reference1 controls geometry, camera and fixed component positions exactly: NOSE points SCREEN LOWER RIGHT, rear stretcher points UPPER LEFT. Reference2 supplies the exact vehicle body/paint/glass/metal identity ONLY; its nose-lower-left angle is already present and MUST NOT be copied. One cream front two-place bench, steering and short canopy with unlit green beacon; four road wheels; exactly one orange stretcher on REAR platform with TWO black transverse straps. Same wheelbase and medical-cross locations. No patient, no added rear bench. Show this missing physical corner independently, not another copy of the existing front-left view. Detailed hand-painted miniature game art, opaque equipment on genuinely zero-alpha transparent background, generous margins, late-afternoon daylight with sun SCREEN UPPER RIGHT and shadows LOWER LEFT. No people, patient, scenery, ground plate, text, brands, grid or UI. Reconstruct the actual 3D view; never mirror the bitmap or turn independent parts toward the viewer.",
+  "source": "C:/Users/RAMPAGE/.codex/generated_images/01a1b1fd-39ec-7220-8f11-86e4448833ea/exec-a385edc5-aa09-4512-a628-717ed496e884.png",
+  "references": [
+    "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-vehicle-source-batch-01\\isolated-repairs-v1\\cart-ambulance\\guide-normalSE.png",
+    "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-vehicle-source-batch-01\\isolated-repairs-v1\\cart-ambulance\\identity-normalNE.png"
+  ],
+  "status": "native-source-candidate-pending-visual-review",
+  "runtime_imported": false,
+  "sha256": "e4867c26cf150a42ea6feb8f26f13bf78955c31d968c16cbdda4842b18caa71d",
+  "native_bytes_preserved": true
+}

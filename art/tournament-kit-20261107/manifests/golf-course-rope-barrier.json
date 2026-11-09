@@ -1,0 +1,107 @@
+{
+ "schema": 1,
+ "projection": "normal+yaw8",
+ "version": 1,
+ "review": "candidate",
+ "footprintMetres": {
+  "width": 3,
+  "depth": 0.3
+ },
+ "pixelsPerMetre": 214,
+ "pixelCalibrationSpace": "orthographic-camera",
+ "baselineScale": 1,
+ "views": {
+  "normalNE": {
+   "anchor": {
+    "x": 319.5,
+    "y": 406.2
+   },
+   "headingDegrees": 0,
+   "pixelsPerMetre": 214,
+   "calibrationEvidence": "Silhouette fit, 2026-11-07: physical body 3 x 0.3 m, height 1 m. Scale per sheet (and per full-size override file) from the alpha bbox height (>128) = ground diamond + 0.866 x height at the view's heading (rotation-invariant); width ratio checked per view. Anchor = projected body centre from the bbox bottom/centre."
+  },
+  "normalSE": {
+   "anchor": {
+    "x": 322.5,
+    "y": 428.2
+   },
+   "headingDegrees": 270,
+   "pixelsPerMetre": 214,
+   "calibrationEvidence": "Silhouette fit, 2026-11-07: physical body 3 x 0.3 m, height 1 m. Scale per sheet (and per full-size override file) from the alpha bbox height (>128) = ground diamond + 0.866 x height at the view's heading (rotation-invariant); width ratio checked per view. Anchor = projected body centre from the bbox bottom/centre."
+  },
+  "normalSW": {
+   "anchor": {
+    "x": 322.5,
+    "y": 422.2
+   },
+   "headingDegrees": 180,
+   "pixelsPerMetre": 214,
+   "calibrationEvidence": "Silhouette fit, 2026-11-07: physical body 3 x 0.3 m, height 1 m. Scale per sheet (and per full-size override file) from the alpha bbox height (>128) = ground diamond + 0.866 x height at the view's heading (rotation-invariant); width ratio checked per view. Anchor = projected body centre from the bbox bottom/centre."
+  },
+  "normalNW": {
+   "anchor": {
+    "x": 322.5,
+    "y": 401.2
+   },
+   "headingDegrees": 90,
+   "pixelsPerMetre": 214,
+   "calibrationEvidence": "Silhouette fit, 2026-11-07: physical body 3 x 0.3 m, height 1 m. Scale per sheet (and per full-size override file) from the alpha bbox height (>128) = ground diamond + 0.866 x height at the view's heading (rotation-invariant); width ratio checked per view. Anchor = projected body centre from the bbox bottom/centre."
+  },
+  "yaw8N": {
+   "anchor": {
+    "x": 375.5,
+    "y": 425.1
+   },
+   "headingDegrees": 323,
+   "pixelsPerMetre": 201.1,
+   "calibrationEvidence": "Silhouette fit, 2026-11-07: physical body 3 x 0.3 m, height 1 m. Scale per sheet (and per full-size override file) from the alpha bbox height (>128) = ground diamond + 0.866 x height at the view's heading (rotation-invariant); width ratio checked per view. Anchor = projected body centre from the bbox bottom/centre."
+  },
+  "yaw8E": {
+   "anchor": {
+    "x": 300.5,
+    "y": 429.2
+   },
+   "headingDegrees": 233,
+   "pixelsPerMetre": 201.49,
+   "calibrationEvidence": "Silhouette fit, 2026-11-07: physical body 3 x 0.3 m, height 1 m. Scale per sheet (and per full-size override file) from the alpha bbox height (>128) = ground diamond + 0.866 x height at the view's heading (rotation-invariant); width ratio checked per view. Anchor = projected body centre from the bbox bottom/centre."
+  },
+  "yaw8S": {
+   "anchor": {
+    "x": 378,
+    "y": 349.2
+   },
+   "headingDegrees": 143,
+   "pixelsPerMetre": 200.28,
+   "calibrationEvidence": "Silhouette fit, 2026-11-07: physical body 3 x 0.3 m, height 1 m. Scale per sheet (and per full-size override file) from the alpha bbox height (>128) = ground diamond + 0.866 x height at the view's heading (rotation-invariant); width ratio checked per view. Anchor = projected body centre from the bbox bottom/centre."
+  },
+  "yaw8W": {
+   "anchor": {
+    "x": 297,
+    "y": 349.7
+   },
+   "headingDegrees": 53,
+   "pixelsPerMetre": 204.87,
+   "calibrationEvidence": "Silhouette fit, 2026-11-07: physical body 3 x 0.3 m, height 1 m. Scale per sheet (and per full-size override file) from the alpha bbox height (>128) = ground diamond + 0.866 x height at the view's heading (rotation-invariant); width ratio checked per view. Anchor = projected body centre from the bbox bottom/centre."
+  }
+ },
+ "source": {
+  "views": {
+   "normalNE": "../batch02/rope-barrier/normal-NE.png",
+   "normalSE": "../batch02/rope-barrier/normal-SE.png",
+   "normalSW": "../batch02/rope-barrier/normal-SW.png",
+   "normalNW": "../batch02/rope-barrier/normal-NW.png",
+   "yaw8N": "../batch02/rope-barrier/yaw8-N.png",
+   "yaw8E": "../batch02/rope-barrier/yaw8-E.png",
+   "yaw8S": "../batch02/rope-barrier/yaw8-S.png",
+   "yaw8W": "../batch02/rope-barrier/yaw8-W.png"
+  }
+ },
+ "subject": "golf:course-rope-barrier",
+ "name": "Rope barrier",
+ "kind": "decor",
+ "category": "Eight-view props",
+ "aliases": [
+  "newprop:rope-barrier"
+ ],
+ "solid": 1
+}

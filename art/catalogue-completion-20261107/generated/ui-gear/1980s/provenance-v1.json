@@ -1,0 +1,26 @@
+{
+  "generator": "native imagegen",
+  "era": "1980s",
+  "version": 1,
+  "status": "selected-source-only-parent-visually-reviewed",
+  "original_generation_output": {
+    "path": "C:\\Users\\RAMPAGE\\.codex\\generated_images\\01a1b1fd-39ec-7220-8f11-86e4448833ea\\exec-20ce8ec6-6e5d-4291-9538-f45195f566ec.png",
+    "sha256": "22407b3e839896a3a3568d2590227ed944009c6dfb0c41a0486d14834410dfb3"
+  },
+  "archived_original": {
+    "file": "1980s/source-v1.png",
+    "sha256": "22407b3e839896a3a3568d2590227ed944009c6dfb0c41a0486d14834410dfb3",
+    "bytes": 1363749
+  },
+  "exact_actual_prompt": {
+    "file": "1980s/prompt-v1.txt",
+    "sha256": "fab60af671749498071e9eba0ec52df270407e9b61413a10d15b5c04ebb339fd",
+    "bytes": 2295
+  },
+  "actual_reference_artifacts": [],
+  "reference_binding_basis": "Exact source artifact identities supplied by parent; byte-identical archived references, not invented style inputs.",
+  "parent_visual_review": "Designs/order/style reviewed;2010v1 held for visible haze,2010v2 cleaned by native edit.",
+  "owner_approval_inferred": false,
+  "runtime_imported": false,
+  "source_pixels_edited": false
+}

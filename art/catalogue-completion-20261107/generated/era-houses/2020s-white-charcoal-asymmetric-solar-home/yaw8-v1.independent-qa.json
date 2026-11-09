@@ -1,0 +1,94 @@
+{
+  "schema": 1,
+  "as_of_utc": "2026-11-07T11:26:36.499594+00:00",
+  "review_result": "PASS-main-opening-identity-and-alpha;HOLD-exact8-certification",
+  "source": {
+    "path": "generated/era-houses/2020s-white-charcoal-asymmetric-solar-home/yaw8-v1.png",
+    "sha256": "293ccfd862af61ac2233f00755cf78a5de063af620c9938208cc874f7dc3afa0",
+    "bytes": 705877
+  },
+  "source_original_hash_matches_parent_batch": true,
+  "exact_prompt": {
+    "path": "generated/era-houses/2020s-white-charcoal-asymmetric-solar-home/yaw8-v1.prompt.txt",
+    "sha256": "00e414fc97ae29a01b2db0b1b4543d5d7ee41fe0dce2aa36d44417b5bbc63847",
+    "bytes": 834
+  },
+  "parent_provenance": {
+    "path": "generated/era-houses/2020s-white-charcoal-asymmetric-solar-home/yaw8-v1.provenance.json",
+    "sha256": "232f706ab71fe6c5e39aed4008a1454d01ffb008a675c3d6242888b5d329b00e",
+    "bytes": 1735
+  },
+  "dimensions": [
+    1254,
+    1254
+  ],
+  "zero_alpha_fraction": 0.8071879713783516,
+  "outer_border_alpha_p95max": [
+    0.0,
+    1.0
+  ],
+  "center_gap_alpha_p95max": [
+    0.0,
+    1.0
+  ],
+  "nominal_cells": [
+    {
+      "cell": 0,
+      "nominal_rect_ltrb": [
+        0,
+        0,
+        627,
+        627
+      ],
+      "core_boundary_pixels": 0,
+      "minimum_core_margin_px": 140,
+      "rgba_rectangle_sha256": "bebacdb0d641b8af612363b865e42ef4d7e64d8a2c8d8b177b9b3724f41d3f05"
+    },
+    {
+      "cell": 1,
+      "nominal_rect_ltrb": [
+        627,
+        0,
+        1254,
+        627
+      ],
+      "core_boundary_pixels": 0,
+      "minimum_core_margin_px": 165,
+      "rgba_rectangle_sha256": "37f9255ee72d4c954259c0516256c5a88cb26d1b96ea8627d097b41785c1dc91"
+    },
+    {
+      "cell": 2,
+      "nominal_rect_ltrb": [
+        0,
+        627,
+        627,
+        1254
+      ],
+      "core_boundary_pixels": 0,
+      "minimum_core_margin_px": 135,
+      "rgba_rectangle_sha256": "b87f1764cd3a28988dc6f1721ac9712e0fe858195a74efdf18979d34b36be909"
+    },
+    {
+      "cell": 3,
+      "nominal_rect_ltrb": [
+        627,
+        627,
+        1254,
+        1254
+      ],
+      "core_boundary_pixels": 0,
+      "minimum_core_margin_px": 151,
+      "rgba_rectangle_sha256": "aede9a76355488bbfe2d10d6cc0e2bbb93b90a1970812afff20a15dfa3a9428b"
+    }
+  ],
+  "native_baseline_measurements": [],
+  "notes": [
+    "Front timberentrance and rear glasspatioopening preserved, unlike held normalv1 shutters. Six roofsolar modules retained across all4mainfaces.",
+    "Mainwindow/sidevolume placement visually coherent with guide/normalv2; exact8 native camera not certified."
+  ],
+  "source_only": true,
+  "no_native_pixel_changes_or_source_crops": true,
+  "owner_approved": false,
+  "runtime_ready": false,
+  "exact8_certified": false
+}

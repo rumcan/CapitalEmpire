@@ -1,0 +1,29 @@
+{
+  "schema": 1,
+  "subject": "golf:course-ball-dispenser",
+  "version": 1,
+  "key": "yaw8S",
+  "source": {
+    "file": "../../batch02/ball-dispenser/yaw8-S.png",
+    "sha256": "b84192aeae0ae4ec9e35c894a9788db95a10a98dfe70063940fec92b1c630b94",
+    "width": 627,
+    "height": 627
+  },
+  "cell": 0,
+  "cellRect": {
+    "left": 0,
+    "top": 0,
+    "width": 627,
+    "height": 627
+  },
+  "crop": {
+    "left": 193,
+    "top": 91,
+    "width": 248,
+    "height": 433
+  },
+  "output": "yaw8S.native.png",
+  "sha256": "876ae862b8ee540cc63bca67ebc9f4c520559a8256488547c01812ed41b31d90",
+  "operation": "native RGBA cell crop only; no flip/repaint/view synthesis",
+  "review": "candidate"
+}

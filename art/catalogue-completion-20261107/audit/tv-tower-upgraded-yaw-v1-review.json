@@ -1,0 +1,85 @@
+{
+  "schema": 1,
+  "sourceOnly": true,
+  "sourceFile": "art/catalogue-completion-20261107/generated/golf-source-batch-01/native/golf-source-01-02-tv-camera-tower/upgraded-yaw8-v1.png",
+  "sourceSHA256": "4e5b82287f85c0b0e3089bd4b350c6bddd84301f8f8f74da507ec3618e66a7c4",
+  "provenanceHashMatches": true,
+  "practicalFixedEquipmentReview": "candidate",
+  "cameraLens": "N front lens, E side lens toward screen right, S plain rear camera body, W side lens toward screen left; no repeated front iris on rear.",
+  "ladder": "On front/right edge: visible N and W, far/occluded E/S.",
+  "case": "Rear/right location projects right/back in N, left/front in E/S and right/front W.",
+  "condition": "Fresh galvanized scaffold, new green fabric, clean deck; same functional design.",
+  "cameraFamilyHold": "Native square tower shows broad adjacent faces versus the narrow-sliver technical yaw guide. Functional source identity accepted only; exact yaw8 camera family and native angle remain unverified.",
+  "nativeCameraCertified": false,
+  "runtimeReady": false,
+  "views": [
+    {
+      "view": "yaw8N",
+      "rectLTRB": [
+        0,
+        0,
+        627,
+        627
+      ],
+      "alphaGT128BBox": [
+        190,
+        52,
+        447,
+        569
+      ],
+      "coreMinMargin": 52,
+      "opaqueBoundaryPixels": 0
+    },
+    {
+      "view": "yaw8E",
+      "rectLTRB": [
+        627,
+        0,
+        1254,
+        627
+      ],
+      "alphaGT128BBox": [
+        172,
+        51,
+        440,
+        568
+      ],
+      "coreMinMargin": 51,
+      "opaqueBoundaryPixels": 0
+    },
+    {
+      "view": "yaw8S",
+      "rectLTRB": [
+        0,
+        627,
+        627,
+        1254
+      ],
+      "alphaGT128BBox": [
+        182,
+        36,
+        458,
+        556
+      ],
+      "coreMinMargin": 36,
+      "opaqueBoundaryPixels": 0
+    },
+    {
+      "view": "yaw8W",
+      "rectLTRB": [
+        627,
+        627,
+        1254,
+        1254
+      ],
+      "alphaGT128BBox": [
+        168,
+        39,
+        450,
+        561
+      ],
+      "coreMinMargin": 39,
+      "opaqueBoundaryPixels": 0
+    }
+  ]
+}

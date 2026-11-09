@@ -1,0 +1,325 @@
+{
+  "v": 1,
+  "pictures": [
+    {
+      "lookId": "golfer:golf_pro_m1",
+      "file": "golf-pro-m1.png",
+      "w": 1672,
+      "h": 941,
+      "bytes": 3337751,
+      "state": "one"
+    },
+    {
+      "lookId": "golfer:golf_pro_m2",
+      "file": "golf-pro-m2.png",
+      "w": 724,
+      "h": 543,
+      "bytes": 811203,
+      "state": "one"
+    },
+    {
+      "lookId": "golfer:golf_pro_w1",
+      "file": "golf-pro-w1.png",
+      "w": 724,
+      "h": 543,
+      "bytes": 802893,
+      "state": "one"
+    },
+    {
+      "lookId": "golfer:golf_pro_m3",
+      "file": "golf-pro-m3.png",
+      "w": 724,
+      "h": 543,
+      "bytes": 810503,
+      "state": "one"
+    },
+    {
+      "lookId": "golfer:golf_pro_m4",
+      "file": "golf-pro-m4.png",
+      "w": 724,
+      "h": 543,
+      "bytes": 792614,
+      "state": "one"
+    },
+    {
+      "lookId": "golfer:golf_pro_w2",
+      "file": "golf-pro-w2.png",
+      "w": 887,
+      "h": 443,
+      "bytes": 814402,
+      "state": "one"
+    },
+    {
+      "lookId": "golfer:golf_am_m1",
+      "file": "golf-am-m1.png",
+      "w": 887,
+      "h": 443,
+      "bytes": 817473,
+      "state": "one"
+    },
+    {
+      "lookId": "golfer:golf_am_w1",
+      "file": "golf-am-w1.png",
+      "w": 887,
+      "h": 444,
+      "bytes": 811642,
+      "state": "one"
+    },
+    {
+      "lookId": "golfer:golf_am_m2",
+      "file": "golf-am-m2.png",
+      "w": 887,
+      "h": 444,
+      "bytes": 816377,
+      "state": "one"
+    },
+    {
+      "lookId": "person:3d:base_kid",
+      "file": "base-kid.png",
+      "w": 599,
+      "h": 656,
+      "bytes": 806533,
+      "state": "one"
+    },
+    {
+      "lookId": "person:3d:base_man",
+      "file": "base-man.png",
+      "w": 600,
+      "h": 656,
+      "bytes": 767677,
+      "state": "one"
+    },
+    {
+      "lookId": "person:3d:base_woman",
+      "file": "base-woman.png",
+      "w": 599,
+      "h": 656,
+      "bytes": 771564,
+      "state": "one"
+    },
+    {
+      "lookId": "person:3d:town_k_boy",
+      "file": "town-k-boy.png",
+      "w": 600,
+      "h": 656,
+      "bytes": 814911,
+      "state": "one"
+    },
+    {
+      "lookId": "person:3d:town_k_girl",
+      "file": "town-k-girl.png",
+      "w": 724,
+      "h": 543,
+      "bytes": 846065,
+      "state": "one"
+    },
+    {
+      "lookId": "person:3d:town_m_business",
+      "file": "town-m-business.png",
+      "w": 724,
+      "h": 543,
+      "bytes": 788939,
+      "state": "one"
+    },
+    {
+      "lookId": "person:3d:town_m_elder",
+      "file": "town-m-elder.png",
+      "w": 724,
+      "h": 543,
+      "bytes": 838748,
+      "state": "one"
+    },
+    {
+      "lookId": "person:3d:town_m_jogger",
+      "file": "town-m-jogger.png",
+      "w": 724,
+      "h": 543,
+      "bytes": 852079,
+      "state": "one"
+    },
+    {
+      "lookId": "person:3d:town_m_mechanic",
+      "file": "town-m-mechanic.png",
+      "w": 631,
+      "h": 623,
+      "bytes": 758724,
+      "state": "one"
+    },
+    {
+      "lookId": "person:3d:town_m_postman",
+      "file": "town-m-postman.png",
+      "w": 632,
+      "h": 623,
+      "bytes": 763196,
+      "state": "one"
+    },
+    {
+      "lookId": "person:3d:town_w_elder",
+      "file": "town-w-elder.png",
+      "w": 631,
+      "h": 623,
+      "bytes": 802883,
+      "state": "one"
+    },
+    {
+      "lookId": "person:3d:town_w_nurse",
+      "file": "town-w-nurse.png",
+      "w": 632,
+      "h": 623,
+      "bytes": 763803,
+      "state": "one"
+    },
+    {
+      "lookId": "person:3d:town_w_shopper",
+      "file": "town-w-shopper.png",
+      "w": 631,
+      "h": 623,
+      "bytes": 780380,
+      "state": "one"
+    },
+    {
+      "lookId": "person:3d:town_w_student",
+      "file": "town-w-student.png",
+      "w": 632,
+      "h": 623,
+      "bytes": 835764,
+      "state": "one"
+    },
+    {
+      "lookId": "person:3d:town_w_waitress",
+      "file": "town-w-waitress.png",
+      "w": 631,
+      "h": 623,
+      "bytes": 745601,
+      "state": "one"
+    },
+    {
+      "lookId": "spectator:spec_k_boy_cap",
+      "file": "spec-k-boy-cap.png",
+      "w": 632,
+      "h": 623,
+      "bytes": 778438,
+      "state": "one"
+    },
+    {
+      "lookId": "spectator:spec_k_girl_pigtails",
+      "file": "spec-k-girl-pigtails.png",
+      "w": 724,
+      "h": 543,
+      "bytes": 818324,
+      "state": "one"
+    },
+    {
+      "lookId": "spectator:spec_m_bucket_hat",
+      "file": "spec-m-bucket-hat.png",
+      "w": 724,
+      "h": 543,
+      "bytes": 793522,
+      "state": "one"
+    },
+    {
+      "lookId": "spectator:spec_m_dad",
+      "file": "spec-m-dad.png",
+      "w": 724,
+      "h": 543,
+      "bytes": 814197,
+      "state": "one"
+    },
+    {
+      "lookId": "spectator:spec_m_plaid",
+      "file": "spec-m-plaid.png",
+      "w": 724,
+      "h": 543,
+      "bytes": 809705,
+      "state": "one"
+    },
+    {
+      "lookId": "spectator:spec_m_polo_visor",
+      "file": "spec-m-polo-visor.png",
+      "w": 631,
+      "h": 623,
+      "bytes": 812568,
+      "state": "one"
+    },
+    {
+      "lookId": "spectator:spec_m_sun_hat",
+      "file": "spec-m-sun-hat.png",
+      "w": 632,
+      "h": 623,
+      "bytes": 799938,
+      "state": "one"
+    },
+    {
+      "lookId": "spectator:spec_m_young_cap",
+      "file": "spec-m-young-cap.png",
+      "w": 631,
+      "h": 623,
+      "bytes": 804281,
+      "state": "one"
+    },
+    {
+      "lookId": "spectator:spec_teen_boy",
+      "file": "spec-teen-boy.png",
+      "w": 632,
+      "h": 623,
+      "bytes": 810258,
+      "state": "one"
+    },
+    {
+      "lookId": "spectator:spec_teen_girl",
+      "file": "spec-teen-girl.png",
+      "w": 623,
+      "h": 630,
+      "bytes": 797752,
+      "state": "one"
+    },
+    {
+      "lookId": "spectator:spec_w_older_cardigan",
+      "file": "spec-w-older-cardigan.png",
+      "w": 624,
+      "h": 630,
+      "bytes": 795925,
+      "state": "one"
+    },
+    {
+      "lookId": "spectator:spec_w_sunhat_dress",
+      "file": "spec-w-sunhat-dress.png",
+      "w": 623,
+      "h": 631,
+      "bytes": 769016,
+      "state": "one"
+    },
+    {
+      "lookId": "spectator:spec_w_visor_pastel",
+      "file": "spec-w-visor-pastel.png",
+      "w": 624,
+      "h": 631,
+      "bytes": 780379,
+      "state": "one"
+    },
+    {
+      "lookId": "spectator:spec_w_windbreaker",
+      "file": "spec-w-windbreaker.png",
+      "w": 630,
+      "h": 623,
+      "bytes": 812653,
+      "state": "one"
+    },
+    {
+      "lookId": "spectator:spec_w_young_shorts",
+      "file": "spec-w-young-shorts.png",
+      "w": 631,
+      "h": 623,
+      "bytes": 809415,
+      "state": "one"
+    },
+    {
+      "lookId": "golfer:golf_am_m3",
+      "file": "golf-am-m3.png",
+      "w": 630,
+      "h": 624,
+      "bytes": 804663,
+      "state": "one"
+    }
+  ]
+}

@@ -1,0 +1,29 @@
+{
+  "schema": 1,
+  "subject": "world:arcade",
+  "version": 1,
+  "key": "normalNW",
+  "source": {
+    "file": "../src/normalNW.png",
+    "sha256": "b4f2993da3c606e9141bd9ce285737eb5656dd7b7569dc6d1bdec95c599182a7",
+    "width": 607,
+    "height": 463
+  },
+  "cell": 0,
+  "cellRect": {
+    "left": 0,
+    "top": 0,
+    "width": 607,
+    "height": 463
+  },
+  "crop": {
+    "left": 4,
+    "top": 4,
+    "width": 599,
+    "height": 455
+  },
+  "output": "normalNW.native.png",
+  "sha256": "fae30cfbf0300bfdef132d7dcbb75251ede8db1e348223ea0f610b15f4f354b4",
+  "operation": "native RGBA cell crop only; no flip/repaint/view synthesis",
+  "review": "candidate"
+}

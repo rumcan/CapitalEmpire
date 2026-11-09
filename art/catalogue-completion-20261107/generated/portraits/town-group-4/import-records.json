@@ -1,0 +1,175 @@
+{
+  "sheet": {
+    "path": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\portraits\\town-group-4\\source.png",
+    "sha256": "4d82809747fd10c023960ee0517765837687b048418ab37e0fa3d3da7a259f0a",
+    "bytes": 3368311
+  },
+  "records": [
+    {
+      "look_id": "person:3d:town_w_shopper",
+      "cell_index": 0,
+      "cell_position": "top-left",
+      "source_crop_box": [
+        0,
+        0,
+        631,
+        623
+      ],
+      "dimensions": [
+        631,
+        623
+      ],
+      "mode": "RGB",
+      "source_file": {
+        "path": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\portraits\\town-group-4\\person-3d-town-w-shopper.native.png",
+        "sha256": "d47501666dee8b59b5fd89a0e240562790b30f919006609347efc46daca54dfd",
+        "bytes": 780380
+      },
+      "pixel_sha256": "30b1da2e4e7be63b488d1ae9c53824cbab65c709e28b6a30b5d157c5318ee545",
+      "operation": "exact native rectangle; no resize/repaint/alpha reconstruction",
+      "parent_reviewed": true,
+      "owner_approved": false,
+      "runtime_ready": true,
+      "runtime_integrated": true,
+      "manifest_record": {
+        "lookId": "person:3d:town_w_shopper",
+        "file": "town-w-shopper.png",
+        "w": 631,
+        "h": 623,
+        "bytes": 780380,
+        "state": "one"
+      },
+      "runtime_file": {
+        "path": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\src\\assets\\portraits\\town-w-shopper.png",
+        "sha256": "d47501666dee8b59b5fd89a0e240562790b30f919006609347efc46daca54dfd",
+        "bytes": 780380
+      }
+    },
+    {
+      "look_id": "person:3d:town_w_student",
+      "cell_index": 1,
+      "cell_position": "top-right",
+      "source_crop_box": [
+        631,
+        0,
+        1263,
+        623
+      ],
+      "dimensions": [
+        632,
+        623
+      ],
+      "mode": "RGB",
+      "source_file": {
+        "path": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\portraits\\town-group-4\\person-3d-town-w-student.native.png",
+        "sha256": "f174f692744e702915b582eba3c244fdc65af492e15be8f7a2d47d6cc2c0ebaa",
+        "bytes": 835764
+      },
+      "pixel_sha256": "d1042521641b27bf0caee6620b5d83697bb7d404f6d860b0ae32e60659f0e1b5",
+      "operation": "exact native rectangle; no resize/repaint/alpha reconstruction",
+      "parent_reviewed": true,
+      "owner_approved": false,
+      "runtime_ready": true,
+      "runtime_integrated": true,
+      "manifest_record": {
+        "lookId": "person:3d:town_w_student",
+        "file": "town-w-student.png",
+        "w": 632,
+        "h": 623,
+        "bytes": 835764,
+        "state": "one"
+      },
+      "runtime_file": {
+        "path": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\src\\assets\\portraits\\town-w-student.png",
+        "sha256": "f174f692744e702915b582eba3c244fdc65af492e15be8f7a2d47d6cc2c0ebaa",
+        "bytes": 835764
+      }
+    },
+    {
+      "look_id": "person:3d:town_w_waitress",
+      "cell_index": 2,
+      "cell_position": "bottom-left",
+      "source_crop_box": [
+        0,
+        623,
+        631,
+        1246
+      ],
+      "dimensions": [
+        631,
+        623
+      ],
+      "mode": "RGB",
+      "source_file": {
+        "path": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\portraits\\town-group-4\\person-3d-town-w-waitress.native.png",
+        "sha256": "137cf185c006c660e59050e966d34a8de06eec5ba25152e8775d3e74e09d6779",
+        "bytes": 745601
+      },
+      "pixel_sha256": "2accb01e32b93dced975b9bdd618ec04abe1708689b614d64e4e8f761c94c1b5",
+      "operation": "exact native rectangle; no resize/repaint/alpha reconstruction",
+      "parent_reviewed": true,
+      "owner_approved": false,
+      "runtime_ready": true,
+      "runtime_integrated": true,
+      "manifest_record": {
+        "lookId": "person:3d:town_w_waitress",
+        "file": "town-w-waitress.png",
+        "w": 631,
+        "h": 623,
+        "bytes": 745601,
+        "state": "one"
+      },
+      "runtime_file": {
+        "path": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\src\\assets\\portraits\\town-w-waitress.png",
+        "sha256": "137cf185c006c660e59050e966d34a8de06eec5ba25152e8775d3e74e09d6779",
+        "bytes": 745601
+      }
+    },
+    {
+      "look_id": "spectator:spec_k_boy_cap",
+      "cell_index": 3,
+      "cell_position": "bottom-right",
+      "source_crop_box": [
+        631,
+        623,
+        1263,
+        1246
+      ],
+      "dimensions": [
+        632,
+        623
+      ],
+      "mode": "RGB",
+      "source_file": {
+        "path": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\portraits\\town-group-4\\spectator-spec-k-boy-cap.native.png",
+        "sha256": "ea847a5651c199b1b0bf22648bbbc1826abdbfaffc35b27f71ebdef07595dde2",
+        "bytes": 778438
+      },
+      "pixel_sha256": "ec29ecbcb8260d6c701837f201e87b477e6673fd265c8bd01296accd25c1ad12",
+      "operation": "exact native rectangle; no resize/repaint/alpha reconstruction",
+      "parent_reviewed": true,
+      "owner_approved": false,
+      "runtime_ready": true,
+      "runtime_integrated": true,
+      "manifest_record": {
+        "lookId": "spectator:spec_k_boy_cap",
+        "file": "spec-k-boy-cap.png",
+        "w": 632,
+        "h": 623,
+        "bytes": 778438,
+        "state": "one"
+      },
+      "runtime_file": {
+        "path": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\src\\assets\\portraits\\spec-k-boy-cap.png",
+        "sha256": "ea847a5651c199b1b0bf22648bbbc1826abdbfaffc35b27f71ebdef07595dde2",
+        "bytes": 778438
+      }
+    }
+  ],
+  "runtime_writes_performed": true,
+  "manifest": {
+    "path": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\src\\assets\\portraits\\manifest.json",
+    "sha256": "731f491ff195d579254e45779d1ec75782123d9847d89b6452e3965d3b3ea9a7",
+    "bytes": 4324
+  }
+}

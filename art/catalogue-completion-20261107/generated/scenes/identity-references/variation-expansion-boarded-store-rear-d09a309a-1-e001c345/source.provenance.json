@@ -1,0 +1,61 @@
+{
+  "schema": 1,
+  "createdUtc": "2026-11-07T06:47:45.284562+00:00",
+  "exactRuntimeId": "variation:expansion-boarded-store-rear-d09a309a:1",
+  "source": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/building-views/variation-expansion-boarded-store-rear-d09a309a-1/NE.png",
+  "sourceSha256": "d817eab530332ec00c2d546240fd8d7f511d13634c6569f53ccea51d1a5193a9",
+  "output": "identity-references/variation-expansion-boarded-store-rear-d09a309a-1-e001c345/source.png",
+  "outputSha256": "d817eab530332ec00c2d546240fd8d7f511d13634c6569f53ccea51d1a5193a9",
+  "width": 427,
+  "height": 406,
+  "sourceCell": {
+    "kind": "already isolated native PNG; whole file",
+    "rectXYWH": [
+      0,
+      0,
+      427,
+      406
+    ]
+  },
+  "operation": "byte-for-byte PNG copy only; no resize, crop, recolour, key, repaint, registration or source mutation",
+  "selection": "registered corner NE native PNG for this exact subject",
+  "registeredCornerDirection": "NE",
+  "sourceEvidence": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\building-views\\variation-expansion-boarded-store-rear-d09a309a-1\\provenance.json",
+  "sourceReview": {
+    "status": "generated"
+  },
+  "sourceRegistration": {
+    "id": "variation:expansion-boarded-store-rear-d09a309a:1",
+    "version": "variation-expansion-boarded-store-rear-d09a309a-1-4views-v4",
+    "files": {
+      "NE": "d817eab530332ec00c2d546240fd8d7f511d13634c6569f53ccea51d1a5193a9",
+      "SE": "54646258a123c8b856b39e9e9ee810f4e4dc9ab610ec3c04323c434e6bd9a8f1",
+      "SW": "7713fcc1e43e1750dfa2915604890fa1ec2371f12994db1e9b4caed8bc27fe7d",
+      "NW": "a89f4b3890584ab267992b5fbca3c34509bdf20d84348daca481a4ad9888ea85"
+    }
+  },
+  "originalInventorySource": {
+    "library": "src/game/library.ts",
+    "librarySha256": "91b5190292c1005ac7b936f08e5e1ebf3be43c3aae99f92ea510775da83d9726",
+    "atlas": "src/assets/atlas/sprites-6-0.webp",
+    "atlasSha256": "5bf555ea578c014fa9e9f4e6119ae5f09128a07573eed569e85b1c5554f2ac51",
+    "runtimePage": 6,
+    "localPage": 6,
+    "uv": [
+      0.007813,
+      0.679688,
+      0.216797,
+      0.878906
+    ],
+    "crop": {
+      "left": 16,
+      "top": 1392,
+      "width": 428,
+      "height": 408
+    },
+    "native": "art/theme-consistency/exports/buildings/variation-expansion-boarded-store-rear-d09a309a-1.native.png",
+    "nativeSha256": "b4b8a4c8884fc3001be314569deed3e30f6b0f4ecc2d1c224da44b89557c88b7"
+  },
+  "originalBusinessSourceCell": null,
+  "nativeReferenceApprovalClaimed": false
+}

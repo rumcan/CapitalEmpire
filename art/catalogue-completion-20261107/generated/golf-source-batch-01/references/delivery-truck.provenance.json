@@ -1,0 +1,27 @@
+{
+  "id": "newprop:delivery-truck",
+  "name": "Delivery truck",
+  "referencePNG": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-01\\references\\delivery-truck.source.png",
+  "originalSheet": "E:\\Repos\\CapitalEmpire\\All Generated Images\\exec-97d89997-1616-48fd-aba8-408d7a929af3.png",
+  "copiedOriginalSheet": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-01\\original-sheets\\exec-97d89997-1616-48fd-aba8-408d7a929af3.png",
+  "sourceSheetSHA256": "244d4c32605d22f33a9ff2c4c1cef289fe29bcf7fcdee485e2410ad5b9f8518e",
+  "referenceSHA256": "649271639453451cc83d34ca2bb09c7a300b2df2afacd267379db9c05b6c3578",
+  "sourcePixelRectXYWH": [
+    17,
+    46,
+    604,
+    567
+  ],
+  "originalCellLabel": "top left",
+  "referenceSize": [
+    604,
+    567
+  ],
+  "operation": "native RGBA pixel crop only; no resize, recolour, alpha cleanup or synthesis",
+  "sourceContainsFourDifferentSubjectsNotRotations": true,
+  "cutOffAccordingToSourceMetadata": false,
+  "sourceMetadata": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\new-props\\items.json",
+  "visualInspection": "inspected native source PNG",
+  "visualNotes": "Cream/green modern cab-over refrigerated box truck with roof refrigeration unit, one side cargo door and visible modern rounded cab. Functional vehicle proportions only; change to period1950s/1980s food-truck body, add serving hatch and cooking extractor. Not a food truck as drawn.",
+  "sourceOnlyNotReleaseProof": true
+}

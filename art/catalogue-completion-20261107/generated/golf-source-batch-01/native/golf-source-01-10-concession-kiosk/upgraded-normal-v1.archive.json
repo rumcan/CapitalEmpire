@@ -1,0 +1,47 @@
+[
+  {
+    "key": "golf-source-01-10-concession-kiosk",
+    "family": "normal",
+    "condition": "upgraded",
+    "version": 1,
+    "target": "generated/golf-source-batch-01/native/golf-source-01-10-concession-kiosk/upgraded-normal-v1.png",
+    "refs": [
+      "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/golf-source-batch-01/native/golf-source-01-10-concession-kiosk/budget-normal-v1.png"
+    ],
+    "runtimeTarget": {
+      "eventTypeId": "kiosk",
+      "eventName": "Concession kiosk",
+      "currentSpriteSubjectId": "business:fishing-rental-kiosk",
+      "newArtSubjectProposal": "golf:event-concession-kiosk",
+      "newArtSubjectAlreadyRegistered": false,
+      "eventCatalogueSource": "src/game/golf/tents.ts",
+      "standInMappingSource": "src/game/golf/structure-art.ts",
+      "footprintTiles": {
+        "width": 2,
+        "depth": 2
+      },
+      "footprintMetres": {
+        "width": 4,
+        "depth": 4
+      },
+      "dimensionsMeaning": "Exact current event placement plot, not measured source sprite architecture. New design must fit plot; no runtime geometry changed.",
+      "currentSpriteBaseBoxesInTiles": [
+        {
+          "hx": 1,
+          "hy": 1,
+          "dx": 0,
+          "dy": 0
+        }
+      ]
+    },
+    "prompt": "Create the UPGRADED condition of this exact golf event facility in reference1. This is a restrained practical renovation of the same physical assembly; preserve the four exact cameras and all doors, roof shapes, post/stair/vent positions, and functional layout. Upgrade condition: Clean green/cream kiosk with neat canopy, full snack shelves and the same fridge/service-door arrangement. Period1985stock, no touchscreen vending wall.. Functional identity to retain: A4x4m nominal snack-and-water concession kiosk: one wide front counter, display shelves, right-side drinks fridge, rear staff door and small plain canopy roof. Keep its long serving face and fridge on fixed sides; no vehicle wheels, no rental fishing tackle, no built-in flower planters or external terrain plate.. Match the reference's detailed painterly miniature materials and proportions; fresh clean finishes, professionally maintained structure, sound canvas, no rust or ragged holes. Four actual corners in the same cells, same physical size and even scale, orthographic 30 degrees down. Late-afternoon DAYTIME sun fixed SCREEN UPPER RIGHT and shadows LOWER LEFT, windows and lamps OFF. Complete separate sprites with wide zero-alpha transparent margins and gutters. No scene, groundplate, plants, people, UI, captions or decorative extra objects. The one drinks fridge at the physical right is a corner unit glazed on TWO adjacent faces. It stays fixed, never turns into two fridges.",
+    "source": "C:/Users/RAMPAGE/.codex/generated_images/01a1b1fd-39ec-7220-8f11-86e4448833ea/exec-bf71ea30-7c43-4313-a35b-d0bde02559b2.png",
+    "references": [
+      "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/golf-source-batch-01/native/golf-source-01-10-concession-kiosk/budget-normal-v1.png"
+    ],
+    "status": "native-source-candidate-pending-visual-review",
+    "runtime_imported": false,
+    "sha256": "f780ff50e2d63b09af8ce68f0c1854d41e9497cff045914cba5c99a9dbb4c1df",
+    "native_bytes_preserved": true
+  }
+]

@@ -1,0 +1,241 @@
+{
+  "key": "2000s-redbrick-single-storey-duplex",
+  "name": "Affordable single-storey redbrick duplex",
+  "sourceViews": [
+    {
+      "sourceCameraKey": "normalSE",
+      "nominalCameraFamily": "normal",
+      "file": "2000s-redbrick-single-storey-duplex/normalSE.png",
+      "fileRelativeToBundle": "2000s-redbrick-single-storey-duplex/normalSE.png",
+      "sourceFile": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\expansion-02\\2000s-redbrick-single-storey-duplex\\normal-v1.png",
+      "sourceFileSHA256": "e065a5bc87e24022ee182a07179570b428ea060a4eaa30259b1d914f5e4cdef3",
+      "sourceFrameRectLTRB": [
+        0,
+        0,
+        627,
+        627
+      ],
+      "sourceCell": 0,
+      "operation": "lossless raw integer half-cell crop; no trim, resize, colour, alpha, flip or paint change",
+      "singleViewOverride": false,
+      "nativeSize": [
+        627,
+        627
+      ],
+      "pngSHA256": "3e0fb56f47df302622e6b736b06f846fd37855e6039a40dd2471e346291d9078",
+      "rgbaSHA256": "02db4bce0d7d7c000bff87b68931adb7784a3d140f3ff608785eb2569dc3eaf6",
+      "sourceRGBAEqual": true,
+      "sourceProvenance": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\expansion-02\\2000s-redbrick-single-storey-duplex\\normal-v1.provenance.json",
+      "identityFeaturesReviewed": "Practical fixed facade openings and special features reviewed; see source identity QA evidence.",
+      "nativeHeadingDegrees": null,
+      "nativeCameraCertified": false,
+      "runtimeReady": false
+    },
+    {
+      "sourceCameraKey": "normalSW",
+      "nominalCameraFamily": "normal",
+      "file": "2000s-redbrick-single-storey-duplex/normalSW.png",
+      "fileRelativeToBundle": "2000s-redbrick-single-storey-duplex/normalSW.png",
+      "sourceFile": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\expansion-02\\2000s-redbrick-single-storey-duplex\\normal-v1.png",
+      "sourceFileSHA256": "e065a5bc87e24022ee182a07179570b428ea060a4eaa30259b1d914f5e4cdef3",
+      "sourceFrameRectLTRB": [
+        627,
+        0,
+        1254,
+        627
+      ],
+      "sourceCell": 1,
+      "operation": "lossless raw integer half-cell crop; no trim, resize, colour, alpha, flip or paint change",
+      "singleViewOverride": false,
+      "nativeSize": [
+        627,
+        627
+      ],
+      "pngSHA256": "8eade0d1f5da59a5176bf3dcafd626ca52fd83af235f67a034ea1d52c8202bd1",
+      "rgbaSHA256": "575a48b1544cd80d4ed075aee48a2abfd7c8ebcca2834821307ad4c5fb8fd56c",
+      "sourceRGBAEqual": true,
+      "sourceProvenance": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\expansion-02\\2000s-redbrick-single-storey-duplex\\normal-v1.provenance.json",
+      "identityFeaturesReviewed": "Practical fixed facade openings and special features reviewed; see source identity QA evidence.",
+      "nativeHeadingDegrees": null,
+      "nativeCameraCertified": false,
+      "runtimeReady": false
+    },
+    {
+      "sourceCameraKey": "normalNW",
+      "nominalCameraFamily": "normal",
+      "file": "2000s-redbrick-single-storey-duplex/normalNW.png",
+      "fileRelativeToBundle": "2000s-redbrick-single-storey-duplex/normalNW.png",
+      "sourceFile": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\expansion-02\\2000s-redbrick-single-storey-duplex\\normal-v1.png",
+      "sourceFileSHA256": "e065a5bc87e24022ee182a07179570b428ea060a4eaa30259b1d914f5e4cdef3",
+      "sourceFrameRectLTRB": [
+        0,
+        627,
+        627,
+        1254
+      ],
+      "sourceCell": 2,
+      "operation": "lossless raw integer half-cell crop; no trim, resize, colour, alpha, flip or paint change",
+      "singleViewOverride": false,
+      "nativeSize": [
+        627,
+        627
+      ],
+      "pngSHA256": "43441b36a331e6a30b10b4d7fde9ddec92d2b3af486a0b6b9ed2a0bd1340d5a7",
+      "rgbaSHA256": "aaeb514d79aac94add54b1f4f40d7a231c036420917a037505088ca2dcc310c9",
+      "sourceRGBAEqual": true,
+      "sourceProvenance": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\expansion-02\\2000s-redbrick-single-storey-duplex\\normal-v1.provenance.json",
+      "identityFeaturesReviewed": "Practical fixed facade openings and special features reviewed; see source identity QA evidence.",
+      "nativeHeadingDegrees": null,
+      "nativeCameraCertified": false,
+      "runtimeReady": false
+    },
+    {
+      "sourceCameraKey": "normalNE",
+      "nominalCameraFamily": "normal",
+      "file": "2000s-redbrick-single-storey-duplex/normalNE.png",
+      "fileRelativeToBundle": "2000s-redbrick-single-storey-duplex/normalNE.png",
+      "sourceFile": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\expansion-02\\2000s-redbrick-single-storey-duplex\\normal-v1.png",
+      "sourceFileSHA256": "e065a5bc87e24022ee182a07179570b428ea060a4eaa30259b1d914f5e4cdef3",
+      "sourceFrameRectLTRB": [
+        627,
+        627,
+        1254,
+        1254
+      ],
+      "sourceCell": 3,
+      "operation": "lossless raw integer half-cell crop; no trim, resize, colour, alpha, flip or paint change",
+      "singleViewOverride": false,
+      "nativeSize": [
+        627,
+        627
+      ],
+      "pngSHA256": "80aa717f7c62a93e1ab260893f3dc9413ddd5f21767bc45d2b1220f099c54d76",
+      "rgbaSHA256": "fe48d7f7b494280202861b66d37af7160d8dc6dc87ecdd0a9a2878e52bf92be7",
+      "sourceRGBAEqual": true,
+      "sourceProvenance": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\expansion-02\\2000s-redbrick-single-storey-duplex\\normal-v1.provenance.json",
+      "identityFeaturesReviewed": "Practical fixed facade openings and special features reviewed; see source identity QA evidence.",
+      "nativeHeadingDegrees": null,
+      "nativeCameraCertified": false,
+      "runtimeReady": false
+    },
+    {
+      "sourceCameraKey": "yaw8N",
+      "nominalCameraFamily": "yaw8",
+      "file": "2000s-redbrick-single-storey-duplex/yaw8N.png",
+      "fileRelativeToBundle": "2000s-redbrick-single-storey-duplex/yaw8N.png",
+      "sourceFile": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\expansion-02\\2000s-redbrick-single-storey-duplex\\yaw8-v1.png",
+      "sourceFileSHA256": "e89184dda107ba78befaac2873956ac47c47e4a937964c244efb46c71b1956a2",
+      "sourceFrameRectLTRB": [
+        0,
+        0,
+        627,
+        627
+      ],
+      "sourceCell": 0,
+      "operation": "lossless raw integer half-cell crop; no trim, resize, colour, alpha, flip or paint change",
+      "singleViewOverride": false,
+      "nativeSize": [
+        627,
+        627
+      ],
+      "pngSHA256": "ad2393bcf56eb591a3af99048cc5990055b062410d5c57b6a0fb5ebdd68f22d0",
+      "rgbaSHA256": "a3895b84dae2eec14ef80949339c86299b1e48ab42eaa3ae22cc36b230018169",
+      "sourceRGBAEqual": true,
+      "sourceProvenance": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\expansion-02\\2000s-redbrick-single-storey-duplex\\yaw8-v1.provenance.json",
+      "identityFeaturesReviewed": "Practical fixed facade openings and special features reviewed; see source identity QA evidence.",
+      "nativeHeadingDegrees": null,
+      "nativeCameraCertified": false,
+      "runtimeReady": false
+    },
+    {
+      "sourceCameraKey": "yaw8E",
+      "nominalCameraFamily": "yaw8",
+      "file": "2000s-redbrick-single-storey-duplex/yaw8E.png",
+      "fileRelativeToBundle": "2000s-redbrick-single-storey-duplex/yaw8E.png",
+      "sourceFile": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\expansion-02\\2000s-redbrick-single-storey-duplex\\yaw8-v1.png",
+      "sourceFileSHA256": "e89184dda107ba78befaac2873956ac47c47e4a937964c244efb46c71b1956a2",
+      "sourceFrameRectLTRB": [
+        627,
+        0,
+        1254,
+        627
+      ],
+      "sourceCell": 1,
+      "operation": "lossless raw integer half-cell crop; no trim, resize, colour, alpha, flip or paint change",
+      "singleViewOverride": false,
+      "nativeSize": [
+        627,
+        627
+      ],
+      "pngSHA256": "cb54632d4ad9b957d63d7d590f52f78ab966247c0f0c5b17206478c1c996d31a",
+      "rgbaSHA256": "20eba9d1531ed39ee67d34851d229eae8836f1f6f0de62e18e76791066a637b2",
+      "sourceRGBAEqual": true,
+      "sourceProvenance": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\expansion-02\\2000s-redbrick-single-storey-duplex\\yaw8-v1.provenance.json",
+      "identityFeaturesReviewed": "Practical fixed facade openings and special features reviewed; see source identity QA evidence.",
+      "nativeHeadingDegrees": null,
+      "nativeCameraCertified": false,
+      "runtimeReady": false
+    },
+    {
+      "sourceCameraKey": "yaw8S",
+      "nominalCameraFamily": "yaw8",
+      "file": "2000s-redbrick-single-storey-duplex/yaw8S.png",
+      "fileRelativeToBundle": "2000s-redbrick-single-storey-duplex/yaw8S.png",
+      "sourceFile": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\expansion-02\\2000s-redbrick-single-storey-duplex\\yaw8-v1.png",
+      "sourceFileSHA256": "e89184dda107ba78befaac2873956ac47c47e4a937964c244efb46c71b1956a2",
+      "sourceFrameRectLTRB": [
+        0,
+        627,
+        627,
+        1254
+      ],
+      "sourceCell": 2,
+      "operation": "lossless raw integer half-cell crop; no trim, resize, colour, alpha, flip or paint change",
+      "singleViewOverride": false,
+      "nativeSize": [
+        627,
+        627
+      ],
+      "pngSHA256": "4ca862705ea8a0fbab7147a5b83b2f6a478aba6b49c23ef53bf573e19749b685",
+      "rgbaSHA256": "d86560355cd8ff278764e54ee2ba5e625c6abf89a4ad6eedec3204e7f4e09a01",
+      "sourceRGBAEqual": true,
+      "sourceProvenance": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\expansion-02\\2000s-redbrick-single-storey-duplex\\yaw8-v1.provenance.json",
+      "identityFeaturesReviewed": "Practical fixed facade openings and special features reviewed; see source identity QA evidence.",
+      "nativeHeadingDegrees": null,
+      "nativeCameraCertified": false,
+      "runtimeReady": false
+    },
+    {
+      "sourceCameraKey": "yaw8W",
+      "nominalCameraFamily": "yaw8",
+      "file": "2000s-redbrick-single-storey-duplex/yaw8W.png",
+      "fileRelativeToBundle": "2000s-redbrick-single-storey-duplex/yaw8W.png",
+      "sourceFile": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\expansion-02\\2000s-redbrick-single-storey-duplex\\yaw8-v1.png",
+      "sourceFileSHA256": "e89184dda107ba78befaac2873956ac47c47e4a937964c244efb46c71b1956a2",
+      "sourceFrameRectLTRB": [
+        627,
+        627,
+        1254,
+        1254
+      ],
+      "sourceCell": 3,
+      "operation": "lossless raw integer half-cell crop; no trim, resize, colour, alpha, flip or paint change",
+      "singleViewOverride": false,
+      "nativeSize": [
+        627,
+        627
+      ],
+      "pngSHA256": "d2412670a58fe370668f6fe438199011a1a108f8911fed0baa40c1c01e53d800",
+      "rgbaSHA256": "8cb9cc28c83d5705c68d257662d010ed275619d4c2213a931cfd27bcd0ebc3a9",
+      "sourceRGBAEqual": true,
+      "sourceProvenance": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\expansion-02\\2000s-redbrick-single-storey-duplex\\yaw8-v1.provenance.json",
+      "identityFeaturesReviewed": "Practical fixed facade openings and special features reviewed; see source identity QA evidence.",
+      "nativeHeadingDegrees": null,
+      "nativeCameraCertified": false,
+      "runtimeReady": false
+    }
+  ],
+  "inheritedFromV1": false,
+  "identityReview": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\audit\\four-source-repairs-and-house-package-readiness.json",
+  "identityReviewSHA256": "61e31b1639323266023e92cbcfa99ea54a9349b07a86c9ebb16f5bae9dae721d"
+}

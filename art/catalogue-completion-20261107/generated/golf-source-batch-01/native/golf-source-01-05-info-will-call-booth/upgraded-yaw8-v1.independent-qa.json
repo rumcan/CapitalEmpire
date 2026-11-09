@@ -1,0 +1,120 @@
+{
+  "schema": 1,
+  "as_of_utc": "2026-11-07T13:44:57.695228+00:00",
+  "review_result": "PASS-source-candidate-four-distinct-main-faces-alpha",
+  "source": {
+    "path": "generated/golf-source-batch-01/native/golf-source-01-05-info-will-call-booth/upgraded-yaw8-v1.png",
+    "sha256": "38e0cf2d610e6eabf1fcbcdecaeef747c455be5c0cd83eba93ab58908d1bf5c7",
+    "bytes": 1683406
+  },
+  "mode": "RGBA",
+  "dimensions": [
+    1254,
+    1254
+  ],
+  "source_original_hash_matches_parent": true,
+  "parent_provenance": {
+    "path": "generated/golf-source-batch-01/native/golf-source-01-05-info-will-call-booth/upgraded-yaw8-v1.provenance.json",
+    "sha256": "8b9f5d9a7e3c2106f1cc378d9a42faa13283d75417189ba6b3891d8a34e58ed0",
+    "bytes": 3101
+  },
+  "exact_prompt_utf8_sha256": "70c8f9358b6a5f087759c3f4809636eb6c9cfd2aab574ff675e5e6831d694960",
+  "actual_generation_references": [
+    {
+      "path": "generated/golf-source-batch-01/native/golf-source-01-05-info-will-call-booth/budget-yaw8-v1.png",
+      "sha256": "23ca3680fc214a8ab6ccb81be40e5cf4dc2820b44b68ad09b8dfe7c3b3febba2",
+      "bytes": 2111761
+    },
+    {
+      "path": "generated/golf-source-batch-01/native/golf-source-01-05-info-will-call-booth/upgraded-normal-v1.png",
+      "sha256": "f12eef44409e5c21e335120ee95e70e8e7d3a577f681bdb419e681f0b4a703d9",
+      "bytes": 1944803
+    }
+  ],
+  "four_actual_main_faces_visually_verified": true,
+  "zero_alpha_fraction": 0.4327529894767366,
+  "outer_4px_border_alpha_p50p95max": [
+    0.0,
+    0.0,
+    1.0
+  ],
+  "clear_horizontal_cut_y": 627,
+  "clear_vertical_cut_by_row": [
+    627,
+    627
+  ],
+  "cut_alpha_maxima": {
+    "horizontal": 1,
+    "vertical_top": 1,
+    "vertical_bottom": 1
+  },
+  "cells": [
+    {
+      "cell": "TL",
+      "actual_visible_main_face": "two open service hatches",
+      "reference_rect_ltrb": [
+        0,
+        0,
+        627,
+        627
+      ],
+      "minimum_core_margin_px": 19,
+      "boundary_core_pixels_alpha_gt128": 0,
+      "boundary_alpha_max": 1,
+      "native_rgba_rectangle_sha256": "4d449ed07272ed5e0695deecc64f3e61ca4aa83b1258c74970aca203bc72db05"
+    },
+    {
+      "cell": "TR",
+      "actual_visible_main_face": "window-and-vent end",
+      "reference_rect_ltrb": [
+        627,
+        0,
+        1254,
+        627
+      ],
+      "minimum_core_margin_px": 55,
+      "boundary_core_pixels_alpha_gt128": 0,
+      "boundary_alpha_max": 1,
+      "native_rgba_rectangle_sha256": "9d141980aed07f36286b03ee27ff407c49cdfb2d49122ee24498bbee66edf7c4"
+    },
+    {
+      "cell": "BL",
+      "actual_visible_main_face": "rear single door",
+      "reference_rect_ltrb": [
+        0,
+        627,
+        627,
+        1254
+      ],
+      "minimum_core_margin_px": 31,
+      "boundary_core_pixels_alpha_gt128": 0,
+      "boundary_alpha_max": 1,
+      "native_rgba_rectangle_sha256": "06678f99c332a8868a0e3d9898650c1514ecefa196a0e50e1f4303a1496ee65e"
+    },
+    {
+      "cell": "BR",
+      "actual_visible_main_face": "blank noticeboard-and-vent end",
+      "reference_rect_ltrb": [
+        627,
+        627,
+        1254,
+        1254
+      ],
+      "minimum_core_margin_px": 28,
+      "boundary_core_pixels_alpha_gt128": 0,
+      "boundary_alpha_max": 1,
+      "native_rgba_rectangle_sha256": "6871ef52fb446d1ef5f53f38a89ba521082e05ae481c7d2498054e00256dea02"
+    }
+  ],
+  "all_cores_complete_at_reference_cuts": true,
+  "visual_observations": [
+    "Four different functional elevations present; hatches/side window/rear door/noticeboard retain respective physical sides."
+  ],
+  "pixel_hash_uniqueness_is_not_pose_proof": true,
+  "native_image_bytes_changed": false,
+  "source_crops_saved": false,
+  "owner_approved": false,
+  "runtime_ready": false,
+  "exact_numerical_angle_certified": false,
+  "limits": "Limited source visual face/state/alpha review; labels are main faces, not measured native camera angles. No release or exact 8 degree certification."
+}

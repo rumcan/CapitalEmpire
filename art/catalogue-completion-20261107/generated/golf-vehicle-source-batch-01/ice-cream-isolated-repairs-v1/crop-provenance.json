@@ -1,0 +1,74 @@
+{
+  "sourceOnly": true,
+  "records": [
+    {
+      "file": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-vehicle-source-batch-01\\ice-cream-isolated-repairs-v1\\original-ice-cream-identity.png",
+      "pngSHA256": "42278282306fd77bf5902dfa93468be869f0f97659dc2c7a955147cdc7da1bf6",
+      "source": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-vehicle-source-batch-01\\references\\ice-cream-cart.source.png",
+      "sourceSHA256": "42278282306fd77bf5902dfa93468be869f0f97659dc2c7a955147cdc7da1bf6",
+      "operation": "byte-for-byte original single-view identity copy",
+      "exactPNGBytes": true
+    },
+    {
+      "file": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-vehicle-source-batch-01\\ice-cream-isolated-repairs-v1\\guide-normalSE.png",
+      "pngSHA256": "b3a7ea6a8002fd6791de089522b77142b7f3461438c55696e96306c45ec09587",
+      "rgbaSHA256": "cb8172e081d90d7840c8fe8bf8e56b9e9974f25c64ba3c4047162b6854f5c151",
+      "source": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-vehicle-source-batch-01\\fixed-world-guides-v1\\ice-cream-cart\\guides\\normal-world-v1.png",
+      "sourceSHA256": "132b0a2c6255634ba23e23f4f255391fc28c5e26514775676662b1520596a51b",
+      "sourceFrameRectLTRB": [
+        0,
+        0,
+        800,
+        800
+      ],
+      "operation": "lossless integer guide-cell crop only",
+      "sourceRGBAEqual": true
+    },
+    {
+      "file": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-vehicle-source-batch-01\\ice-cream-isolated-repairs-v1\\guide-normalSW.png",
+      "pngSHA256": "3b7fd7b7e7eb7e4bd861a8c2b9cc530865766b0a3d755e92173de0eca61decc9",
+      "rgbaSHA256": "f450547dbe229524e792ad3b7c2cefab767e35ae531e4bdfb07a3ba69e1f5fc2",
+      "source": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-vehicle-source-batch-01\\fixed-world-guides-v1\\ice-cream-cart\\guides\\normal-world-v1.png",
+      "sourceSHA256": "132b0a2c6255634ba23e23f4f255391fc28c5e26514775676662b1520596a51b",
+      "sourceFrameRectLTRB": [
+        800,
+        0,
+        1600,
+        800
+      ],
+      "operation": "lossless integer guide-cell crop only",
+      "sourceRGBAEqual": true
+    },
+    {
+      "file": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-vehicle-source-batch-01\\ice-cream-isolated-repairs-v1\\guide-normalNW.png",
+      "pngSHA256": "26965c78114e093d6f68f29d6989752866c779b9b926d57c5fc0bb3f1229df1f",
+      "rgbaSHA256": "a0e2071d1b30828f92f46ebaa6886332147d28a94b6b125293e5b60a47a83b73",
+      "source": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-vehicle-source-batch-01\\fixed-world-guides-v1\\ice-cream-cart\\guides\\normal-world-v1.png",
+      "sourceSHA256": "132b0a2c6255634ba23e23f4f255391fc28c5e26514775676662b1520596a51b",
+      "sourceFrameRectLTRB": [
+        0,
+        800,
+        800,
+        1600
+      ],
+      "operation": "lossless integer guide-cell crop only",
+      "sourceRGBAEqual": true
+    },
+    {
+      "file": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-vehicle-source-batch-01\\ice-cream-isolated-repairs-v1\\guide-normalNE.png",
+      "pngSHA256": "7dc2db4a8a042dfb735ad6a04a12db1a9fdb653a0a0711f817cf8a5026aba727",
+      "rgbaSHA256": "ab0391445edc5aaee5705c05715bfdfe84827c5edde0a82b23d9bf5fbaa77ac5",
+      "source": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-vehicle-source-batch-01\\fixed-world-guides-v1\\ice-cream-cart\\guides\\normal-world-v1.png",
+      "sourceSHA256": "132b0a2c6255634ba23e23f4f255391fc28c5e26514775676662b1520596a51b",
+      "sourceFrameRectLTRB": [
+        800,
+        800,
+        1600,
+        1600
+      ],
+      "operation": "lossless integer guide-cell crop only",
+      "sourceRGBAEqual": true
+    }
+  ],
+  "allOriginalsUnchanged": true
+}

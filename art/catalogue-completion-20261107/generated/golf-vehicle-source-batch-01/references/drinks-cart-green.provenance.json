@@ -1,0 +1,26 @@
+{
+  "runtimeSubjectId": "newprop:drinks-cart-green",
+  "runtimeName": "Drinks cart green",
+  "png": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-vehicle-source-batch-01\\references\\drinks-cart-green.source.png",
+  "originalNativePNG": "E:\\Repos\\CapitalEmpire\\All Generated Images\\exec-e012e4ef-a480-4c02-9d5a-43cdf89dc8cf.png",
+  "copiedNativeSheet": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-vehicle-source-batch-01\\original-sheets\\exec-e012e4ef-a480-4c02-9d5a-43cdf89dc8cf.png",
+  "sourceSheetSHA256": "7cc4f106aa4a8a0aeec4a14bbcc3ff9a0b79c92c8a1053fddcdb5f319bfeb765",
+  "cropRectXYWH": [
+    26,
+    723,
+    609,
+    468
+  ],
+  "sourceCell": "bottom left",
+  "pngSHA256": "26fe8734ed4508c700d3c907ea5c7f525c9dd46de6063149cceaf9867d7f15ec",
+  "rgbaSHA256": "59a122e331b8f357f6c6772ed0318963e59c98239e5dcd785d2abf7809e5cb4d",
+  "cropPixels": [
+    609,
+    468
+  ],
+  "sourceMetadataCutOff": false,
+  "operation": "Native original RGBA crop only; no resize, recolour, alpha cleanup or synthesis. Source sheet contains4different objects, not4rotations.",
+  "visualInspection": "inspected native crop",
+  "actualIdentityNotes": "Confirmed powered utility with two front seats and loaded rear refreshment bed, not a simple passenger cart.",
+  "sourceOnlyNotReleaseProof": true
+}

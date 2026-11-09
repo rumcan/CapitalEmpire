@@ -1,0 +1,63 @@
+{
+  "schema": 1,
+  "createdUtc": "2026-11-07T06:47:45.284562+00:00",
+  "exactRuntimeId": "world:arcade",
+  "source": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/building-views/world-arcade/NE.png",
+  "sourceSha256": "ac48c283b864bcf2ca334aea0b33c08f582369ea12734e1926e41f9e29c26e2a",
+  "output": "identity-references/world-arcade-f5b7f5eb/source.png",
+  "outputSha256": "ac48c283b864bcf2ca334aea0b33c08f582369ea12734e1926e41f9e29c26e2a",
+  "width": 531,
+  "height": 446,
+  "sourceCell": {
+    "kind": "already isolated native PNG; whole file",
+    "rectXYWH": [
+      0,
+      0,
+      531,
+      446
+    ]
+  },
+  "operation": "byte-for-byte PNG copy only; no resize, crop, recolour, key, repaint, registration or source mutation",
+  "selection": "registered corner NE native PNG for this exact subject",
+  "registeredCornerDirection": "NE",
+  "sourceEvidence": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\building-views\\world-arcade\\provenance.json",
+  "sourceReview": {
+    "integrationStatus": "ready",
+    "integrationReason": "Distinct front/rear views inspected; alpha and all four crop-boundary checks passed. Original-width scale pending door gauges.",
+    "review": "Four distinct front/rear facade views inspected; original identity retained and Halloween decoration omitted. Alpha/crop boundaries checked by preparation; game scale retains original width until door gauge is measured."
+  },
+  "sourceRegistration": {
+    "id": "world:arcade",
+    "version": "world-arcade-4views-v1",
+    "files": {
+      "NE": "ac48c283b864bcf2ca334aea0b33c08f582369ea12734e1926e41f9e29c26e2a",
+      "SE": "14fde216282568b20d0d673a6c2330322e2518aee834982981db7b040deab71e",
+      "SW": "a08559af29bb513018943de0f6e9db0c094121c620a179a4b76f5481b7e7f341",
+      "NW": "e103056d5d071c3eaf4b4e3c1e0125cebba6e13e4323258fd0243f420ee4e615"
+    }
+  },
+  "originalInventorySource": {
+    "library": "src/game/library.ts",
+    "librarySha256": "91b5190292c1005ac7b936f08e5e1ebf3be43c3aae99f92ea510775da83d9726",
+    "atlas": "src/assets/atlas/sprites-7-0.webp",
+    "atlasSha256": "4581a4f0eab4092db46557ade127a0a283989295ce6f5cd7921b16069f657d20",
+    "runtimePage": 7,
+    "localPage": 7,
+    "uv": [
+      0.460938,
+      0.21875,
+      0.696289,
+      0.408203
+    ],
+    "crop": {
+      "left": 944,
+      "top": 448,
+      "width": 482,
+      "height": 388
+    },
+    "native": "art/theme-consistency/exports/buildings/world-arcade.native.png",
+    "nativeSha256": "35b2168b719017937f4992ccbefa761237b571d564f9201b0b34e8a9bd0b9dfe"
+  },
+  "originalBusinessSourceCell": null,
+  "nativeReferenceApprovalClaimed": false
+}

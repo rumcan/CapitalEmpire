@@ -1,0 +1,1117 @@
+{
+  "schema": 1,
+  "date": "2026-11-07",
+  "scope": "Next12 exact existing golf-priority prop source jobs, no new event designs",
+  "jobCount": 12,
+  "nativeGenerationByRootOnly": true,
+  "runtimeChanges": false,
+  "styleAuthorityPNG": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-02\\style-authority.png",
+  "sourcePolicy": "Native original PNG subject crops or byte-for-byte prior native-crop copies; no resizing, recolouring, alpha editing or synthesis. No runtime/test/build/server/import/commit.",
+  "auditInputs": [
+    "audit/next-golf-native-sets.json",
+    "audit/missing-golf-views.json",
+    "audit/catalogue-audit.json",
+    "src/game/object-eight-existing.json",
+    "src/game/lots/scales.ts"
+  ],
+  "excludedScope": "Active batch01target IDs; generated vehicles/seating/clubhouse/cabins/houses; plants/decals/actors/removed subjects;24historicallyenabledapproved8sets.",
+  "selectionCorrection": {
+    "excludedID": "newprop:bag-stand-stall",
+    "actualSource": "Three material bins containing sand/gravel/soil, stacked sacks and a shovel. No golf bag rack. This ID remains a deferred maintenance-material rack rather than inventing a bag stand replacement.",
+    "replacementExistingID": "newprop:course-map-board",
+    "note": "Catalogue names are not trusted over visual source contents."
+  },
+  "jobs": [
+    {
+      "jobId": "golf-source-02-01-ball-washer",
+      "runtimeSubjectId": "newprop:ball-washer",
+      "runtimeName": "Ball washer",
+      "displayName": "Ball washer",
+      "sourceReferencePNG": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-02\\references\\ball-washer.source.png",
+      "sourceProvenance": {
+        "id": "newprop:ball-washer",
+        "name": "Ball washer",
+        "referencePNG": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-02\\references\\ball-washer.source.png",
+        "originalSourcePNG": "E:\\Repos\\CapitalEmpire\\All Generated Images\\exec-205ea8bd-da55-489e-b193-a36ed9f17e4b.png",
+        "copiedOriginalSheet": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-02\\original-sheets\\exec-205ea8bd-da55-489e-b193-a36ed9f17e4b.png",
+        "originalSheetSHA256": "252ee9747b1f9513b0fda88f9781d4e5edf7fdcdf52fe7211f8c9d84841484b8",
+        "referenceSHA256": "3733415ef6c52354fae9c19f30b386d51a9ec30caba2b982138b0658a0700941",
+        "sourceRectXYWH": [
+          95,
+          5,
+          449,
+          600
+        ],
+        "sourceCell": "top left",
+        "sourceSheetContainsFourDifferentSubjectsNotRotations": true,
+        "sourceCropSize": [
+          449,
+          600
+        ],
+        "cropOperation": "lossless native RGBA crop, no resize, recolour, cleanup or synthesis",
+        "sourceMetadataCutOff": false,
+        "runtimeLibrarySource": "src/game/new-props-library.ts",
+        "runtimeBaseBoxesInTiles": [
+          {
+            "hx": 0.4,
+            "hy": 0.4,
+            "dx": 0,
+            "dy": 0
+          }
+        ],
+        "runtimeDisplayPixels": [
+          51.2,
+          68.42
+        ],
+        "manifestHalfExtentsMetresFirstGuess": [
+          0.4,
+          0.4
+        ],
+        "dimensionCaution": "Manifest first-guess dimensions and runtime boxes are not measured native physical dimensions; any new real-object size is a source-design proposal only. No runtime changes.",
+        "visualInspection": "inspected",
+        "visualNotes": "Confirmed pedestal washer with hand crank and towel; two features on opposite sides make reliable turning identity cues.",
+        "sourceOnlyNotReleaseProof": true
+      },
+      "sourceDimensions": {
+        "runtimeBaseBoxesInTiles": [
+          {
+            "hx": 0.4,
+            "hy": 0.4,
+            "dx": 0,
+            "dy": 0
+          }
+        ],
+        "manifestHalfExtentsMetresFirstGuess": [
+          0.4,
+          0.4
+        ],
+        "sourceCropPixels": [
+          449,
+          600
+        ],
+        "newPhysicalDimensionsProposal": "Proposed object about0.45m wide x0.5m deep x1.1m high; not accepted runtime scale.",
+        "notRuntimeBalanceOrGeometryChange": true
+      },
+      "functionalBrief": "One dark-green pedestal ball washer with round base, cylindrical brush cup, hinged lid, ball opening, wooden-grip hand crank on model right and white towel hanging model left. Keep lid/crank/towel on those same physical sides across8views; no person.",
+      "ordinary1950sRedesignRequired": false,
+      "conditionBrief": "Identity-preserving cast-metal equipment. Worn green enamel and modest brass fittings are plausible; avoid turning it into a fantasy urn.",
+      "visualNotes": "Confirmed pedestal washer with hand crank and towel; two features on opposite sides make reliable turning identity cues.",
+      "existingNormalFourReferences": {
+        "candidateCount": 0,
+        "usableCount": 0,
+        "paths": [],
+        "note": "Only one original exact subject is available; original source sheet contains four different props, not four angles."
+      },
+      "existingYaw8Candidates": 0,
+      "historicallyApprovedEightSet": false,
+      "generationPlan": {
+        "normal": "2x2 SE/SW then NW/NE, orthographic30degrees down, equal45degreecorner walls",
+        "yaw8": "2x2 N/E then S/W, each cardinal physically turned8degrees, never square-on",
+        "conditions": "Generate one requested condition consistently through both sheets; source-only variants do not imply runtime upgrades."
+      },
+      "style": "Same painterly game style as style-authority.png, late-afternoon daylight, one sun upper-right, shadows lower-left, transparent background. No people, captions, brands, gridlines or generic ground plates. Functional ramps, buckets, mounting feet and attached panels remain part of their object.",
+      "approvalClaimed": false,
+      "runtimeIntegrated": false,
+      "nativeGeneratedHere": false,
+      "scopeNote": "Exact existing baseline subject only. Eight new view images still require generation and review; no related IDs, aliases or completion are inferred."
+    },
+    {
+      "jobId": "golf-source-02-02-ball-bucket-stand",
+      "runtimeSubjectId": "newprop:ball-bucket-stand",
+      "runtimeName": "Ball bucket stand",
+      "displayName": "Ball bucket stand",
+      "sourceReferencePNG": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-02\\references\\ball-bucket-stand.source.png",
+      "sourceProvenance": {
+        "id": "newprop:ball-bucket-stand",
+        "name": "Ball bucket stand",
+        "referencePNG": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-02\\references\\ball-bucket-stand.source.png",
+        "originalSourcePNG": "E:\\Repos\\CapitalEmpire\\All Generated Images\\exec-6458815a-8d31-4e7a-9af4-67b13874c528.png",
+        "copiedOriginalSheet": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-02\\original-sheets\\exec-6458815a-8d31-4e7a-9af4-67b13874c528.png",
+        "originalSheetSHA256": "923ff2d5fce8d9553d97045286bba84a25f9f7ecbd58e2aa96fc850966e7a684",
+        "referenceSHA256": "8cc5a4030df385a964f07ab0e48bae4a7913a7215f749ff112e327ac4f8a7371",
+        "sourceRectXYWH": [
+          768,
+          626,
+          408,
+          579
+        ],
+        "sourceCell": "bottom right",
+        "sourceSheetContainsFourDifferentSubjectsNotRotations": true,
+        "sourceCropSize": [
+          408,
+          579
+        ],
+        "cropOperation": "lossless native RGBA crop, no resize, recolour, cleanup or synthesis",
+        "sourceMetadataCutOff": false,
+        "runtimeLibrarySource": "src/game/new-props-library.ts",
+        "runtimeBaseBoxesInTiles": [
+          {
+            "hx": 2.5,
+            "hy": 2.5,
+            "dx": 0,
+            "dy": 0
+          }
+        ],
+        "runtimeDisplayPixels": [
+          320,
+          454.12
+        ],
+        "manifestHalfExtentsMetresFirstGuess": [
+          2.5,
+          2.5
+        ],
+        "dimensionCaution": "Manifest first-guess dimensions and runtime boxes are not measured native physical dimensions; any new real-object size is a source-design proposal only. No runtime changes.",
+        "visualInspection": "inspected",
+        "visualNotes": "Confirmed manual ball hopper and front bucket, not simple bucket shelf. Bolted timber framing is ordinary rather than fantasy logs.",
+        "sourceOnlyNotReleaseProof": true
+      },
+      "sourceDimensions": {
+        "runtimeBaseBoxesInTiles": [
+          {
+            "hx": 2.5,
+            "hy": 2.5,
+            "dx": 0,
+            "dy": 0
+          }
+        ],
+        "manifestHalfExtentsMetresFirstGuess": [
+          2.5,
+          2.5
+        ],
+        "sourceCropPixels": [
+          408,
+          579
+        ],
+        "newPhysicalDimensionsProposal": "Proposed hopper about0.8m wide x0.8m deep x1.5m high, plus front bucket; source-design proposal.",
+        "notRuntimeBalanceOrGeometryChange": true
+      },
+      "functionalBrief": "Actual source is a manual bulk golf-ball hopper: rusty sheet-metal box under sloping rain cap on bolted sawn-timber legs, front ball outlet/chute with manual crank and one metal bucket beneath/in front. Preserve hopper, front outlet and bucket position; do not replace it with a bare bucket rack.",
+      "ordinary1950sRedesignRequired": false,
+      "conditionBrief": "Identity-preserving ordinary old equipment; light rust and repaired boards, no rope/log framing.",
+      "visualNotes": "Confirmed manual ball hopper and front bucket, not simple bucket shelf. Bolted timber framing is ordinary rather than fantasy logs.",
+      "existingNormalFourReferences": {
+        "candidateCount": 0,
+        "usableCount": 0,
+        "paths": [],
+        "note": "Only one original exact subject is available; original source sheet contains four different props, not four angles."
+      },
+      "existingYaw8Candidates": 0,
+      "historicallyApprovedEightSet": false,
+      "generationPlan": {
+        "normal": "2x2 SE/SW then NW/NE, orthographic30degrees down, equal45degreecorner walls",
+        "yaw8": "2x2 N/E then S/W, each cardinal physically turned8degrees, never square-on",
+        "conditions": "Generate one requested condition consistently through both sheets; source-only variants do not imply runtime upgrades."
+      },
+      "style": "Same painterly game style as style-authority.png, late-afternoon daylight, one sun upper-right, shadows lower-left, transparent background. No people, captions, brands, gridlines or generic ground plates. Functional ramps, buckets, mounting feet and attached panels remain part of their object.",
+      "approvalClaimed": false,
+      "runtimeIntegrated": false,
+      "nativeGeneratedHere": false,
+      "scopeNote": "Exact existing baseline subject only. Eight new view images still require generation and review; no related IDs, aliases or completion are inferred."
+    },
+    {
+      "jobId": "golf-source-02-03-ball-dispenser",
+      "runtimeSubjectId": "newprop:ball-dispenser",
+      "runtimeName": "Ball dispenser",
+      "displayName": "Ball dispenser",
+      "sourceReferencePNG": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-02\\references\\ball-dispenser.source.png",
+      "sourceProvenance": {
+        "id": "newprop:ball-dispenser",
+        "name": "Ball dispenser",
+        "referencePNG": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-02\\references\\ball-dispenser.source.png",
+        "originalSourcePNG": "E:\\Repos\\CapitalEmpire\\All Generated Images\\exec-6cdac43a-edb2-4a57-abe6-76cf5a5309d7.png",
+        "copiedOriginalSheet": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-02\\original-sheets\\exec-6cdac43a-edb2-4a57-abe6-76cf5a5309d7.png",
+        "originalSheetSHA256": "603c5d0bf8d3206c56aa22b814d0012d3332ce9de5f7a5e9ac3a977058266ea0",
+        "referenceSHA256": "4659dc05fee23fc96f5f492595714837a6166f3a0410021538211897c242717d",
+        "sourceRectXYWH": [
+          781,
+          655,
+          376,
+          559
+        ],
+        "sourceCell": "bottom right",
+        "sourceSheetContainsFourDifferentSubjectsNotRotations": true,
+        "sourceCropSize": [
+          376,
+          559
+        ],
+        "cropOperation": "lossless native RGBA crop, no resize, recolour, cleanup or synthesis",
+        "sourceMetadataCutOff": false,
+        "runtimeLibrarySource": "src/game/new-props-library.ts",
+        "runtimeBaseBoxesInTiles": [
+          {
+            "hx": 2.5,
+            "hy": 2.5,
+            "dx": 0,
+            "dy": 0
+          }
+        ],
+        "runtimeDisplayPixels": [
+          320,
+          475.74
+        ],
+        "manifestHalfExtentsMetresFirstGuess": [
+          2.5,
+          2.5
+        ],
+        "dimensionCaution": "Manifest first-guess dimensions and runtime boxes are not measured native physical dimensions; any new real-object size is a source-design proposal only. No runtime changes.",
+        "visualInspection": "inspected",
+        "visualNotes": "Confirmed coin machine with lower front basket and upper ball window; no electronic touchscreen.",
+        "sourceOnlyNotReleaseProof": true
+      },
+      "sourceDimensions": {
+        "runtimeBaseBoxesInTiles": [
+          {
+            "hx": 2.5,
+            "hy": 2.5,
+            "dx": 0,
+            "dy": 0
+          }
+        ],
+        "manifestHalfExtentsMetresFirstGuess": [
+          2.5,
+          2.5
+        ],
+        "sourceCropPixels": [
+          376,
+          559
+        ],
+        "newPhysicalDimensionsProposal": "Proposed machine0.65m wide x0.6m deep x1.5m high plus basket; source-design proposal.",
+        "notRuntimeBalanceOrGeometryChange": true
+      },
+      "functionalBrief": "One green upright coin-operated golf-ball dispenser: sloping top hood, upper front window showing golf balls, coin slot/button panel below, lower ball chute and one green wire basket on front. Back is plain service panel; basket never moves to rear in turned views.",
+      "ordinary1950sRedesignRequired": false,
+      "conditionBrief": "Identity-preserving period range machine, worn1950s/1960sgreen enamel or attractive maintained1980scondition. No touchscreen.",
+      "visualNotes": "Confirmed coin machine with lower front basket and upper ball window; no electronic touchscreen.",
+      "existingNormalFourReferences": {
+        "candidateCount": 0,
+        "usableCount": 0,
+        "paths": [],
+        "note": "Only one original exact subject is available; original source sheet contains four different props, not four angles."
+      },
+      "existingYaw8Candidates": 0,
+      "historicallyApprovedEightSet": false,
+      "generationPlan": {
+        "normal": "2x2 SE/SW then NW/NE, orthographic30degrees down, equal45degreecorner walls",
+        "yaw8": "2x2 N/E then S/W, each cardinal physically turned8degrees, never square-on",
+        "conditions": "Generate one requested condition consistently through both sheets; source-only variants do not imply runtime upgrades."
+      },
+      "style": "Same painterly game style as style-authority.png, late-afternoon daylight, one sun upper-right, shadows lower-left, transparent background. No people, captions, brands, gridlines or generic ground plates. Functional ramps, buckets, mounting feet and attached panels remain part of their object.",
+      "approvalClaimed": false,
+      "runtimeIntegrated": false,
+      "nativeGeneratedHere": false,
+      "scopeNote": "Exact existing baseline subject only. Eight new view images still require generation and review; no related IDs, aliases or completion are inferred."
+    },
+    {
+      "jobId": "golf-source-02-04-park-bench",
+      "runtimeSubjectId": "newprop:park-bench",
+      "runtimeName": "Park bench",
+      "displayName": "Park bench",
+      "sourceReferencePNG": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-02\\references\\park-bench.source.png",
+      "sourceProvenance": {
+        "id": "newprop:park-bench",
+        "name": "Park bench",
+        "referencePNG": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-02\\references\\park-bench.source.png",
+        "originalSourcePNG": "E:\\Repos\\CapitalEmpire\\All Generated Images\\exec-38f5f6f7-74a5-47ad-8644-7b595e335890.png",
+        "copiedOriginalSheet": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-02\\original-sheets\\exec-38f5f6f7-74a5-47ad-8644-7b595e335890.png",
+        "originalSheetSHA256": "cb1440cc480d50703ec0decdc2a284a059f2a5a20828240edc8c001c759c0c6f",
+        "referenceSHA256": "7f47f7f13847a5858b4feb068973c5ca3523bd2a5043de1a867bf1bcc82dba29",
+        "sourceRectXYWH": [
+          665,
+          96,
+          562,
+          494
+        ],
+        "sourceCell": "top right",
+        "sourceSheetContainsFourDifferentSubjectsNotRotations": true,
+        "sourceCropSize": [
+          562,
+          494
+        ],
+        "cropOperation": "lossless native RGBA crop, no resize, recolour, cleanup or synthesis",
+        "sourceMetadataCutOff": false,
+        "runtimeLibrarySource": "src/game/new-props-library.ts",
+        "runtimeBaseBoxesInTiles": [
+          {
+            "hx": 1,
+            "hy": 1,
+            "dx": 0,
+            "dy": 0
+          }
+        ],
+        "runtimeDisplayPixels": [
+          128,
+          112.51
+        ],
+        "manifestHalfExtentsMetresFirstGuess": [
+          1,
+          1
+        ],
+        "dimensionCaution": "Manifest first-guess dimensions and runtime boxes are not measured native physical dimensions; any new real-object size is a source-design proposal only. No runtime changes.",
+        "visualInspection": "inspected",
+        "visualNotes": "Confirmed bench with attached tall hole-map panel. Name alone understates combined object.",
+        "sourceOnlyNotReleaseProof": true
+      },
+      "sourceDimensions": {
+        "runtimeBaseBoxesInTiles": [
+          {
+            "hx": 1,
+            "hy": 1,
+            "dx": 0,
+            "dy": 0
+          }
+        ],
+        "manifestHalfExtentsMetresFirstGuess": [
+          1,
+          1
+        ],
+        "sourceCropPixels": [
+          562,
+          494
+        ],
+        "newPhysicalDimensionsProposal": "Proposed combined assembly about2.7m wide x0.75m deep x2.0m high; source-design proposal, no claimed runtime seat capacity.",
+        "notRuntimeBalanceOrGeometryChange": true
+      },
+      "functionalBrief": "Actual source is a three-seat timber-slat bench with black cast-metal arms/legs PLUS one tall attached hole-map panel at its model right end. Preserve the bench/map combined assembly and map side. Back has slat backs and panel backing, not another front seating face. No people.",
+      "ordinary1950sRedesignRequired": false,
+      "conditionBrief": "Identity-preserving course furniture with warm wood, black metal and simple map board. Trim excessive gold ornaments; do not omit attached panel.",
+      "visualNotes": "Confirmed bench with attached tall hole-map panel. Name alone understates combined object.",
+      "existingNormalFourReferences": {
+        "candidateCount": 0,
+        "usableCount": 0,
+        "paths": [],
+        "note": "Only one original exact subject is available; original source sheet contains four different props, not four angles."
+      },
+      "existingYaw8Candidates": 0,
+      "historicallyApprovedEightSet": false,
+      "generationPlan": {
+        "normal": "2x2 SE/SW then NW/NE, orthographic30degrees down, equal45degreecorner walls",
+        "yaw8": "2x2 N/E then S/W, each cardinal physically turned8degrees, never square-on",
+        "conditions": "Generate one requested condition consistently through both sheets; source-only variants do not imply runtime upgrades."
+      },
+      "style": "Same painterly game style as style-authority.png, late-afternoon daylight, one sun upper-right, shadows lower-left, transparent background. No people, captions, brands, gridlines or generic ground plates. Functional ramps, buckets, mounting feet and attached panels remain part of their object.",
+      "approvalClaimed": false,
+      "runtimeIntegrated": false,
+      "nativeGeneratedHere": false,
+      "scopeNote": "Exact existing baseline subject only. Eight new view images still require generation and review; no related IDs, aliases or completion are inferred."
+    },
+    {
+      "jobId": "golf-source-02-05-water-tank-stall",
+      "runtimeSubjectId": "newprop:water-tank-stall",
+      "runtimeName": "Water tank stall",
+      "displayName": "Water tank stall",
+      "sourceReferencePNG": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-02\\references\\water-tank-stall.source.png",
+      "sourceProvenance": {
+        "id": "newprop:water-tank-stall",
+        "name": "Water tank stall",
+        "referencePNG": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-02\\references\\water-tank-stall.source.png",
+        "originalSourcePNG": "E:\\Repos\\CapitalEmpire\\All Generated Images\\exec-460492fe-afcf-4a00-9c35-66d88ced8501.png",
+        "copiedOriginalSheet": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-02\\original-sheets\\exec-460492fe-afcf-4a00-9c35-66d88ced8501.png",
+        "originalSheetSHA256": "cd5cc17e639f6a0dc65e703f567c681d5b05b3910841090744961f0738251b4d",
+        "referenceSHA256": "6a61327dfe20364214768682655d10804bf937fae1d1e4d5dceaabaa15fb7c49",
+        "sourceRectXYWH": [
+          710,
+          683,
+          507,
+          516
+        ],
+        "sourceCell": "bottom right",
+        "sourceSheetContainsFourDifferentSubjectsNotRotations": true,
+        "sourceCropSize": [
+          507,
+          516
+        ],
+        "cropOperation": "lossless native RGBA crop, no resize, recolour, cleanup or synthesis",
+        "sourceMetadataCutOff": false,
+        "runtimeLibrarySource": "src/game/new-props-library.ts",
+        "runtimeBaseBoxesInTiles": [
+          {
+            "hx": 2,
+            "hy": 2,
+            "dx": 0,
+            "dy": 0
+          }
+        ],
+        "runtimeDisplayPixels": [
+          256,
+          260.54
+        ],
+        "manifestHalfExtentsMetresFirstGuess": [
+          2,
+          2
+        ],
+        "dimensionCaution": "Manifest first-guess dimensions and runtime boxes are not measured native physical dimensions; any new real-object size is a source-design proposal only. No runtime changes.",
+        "visualInspection": "inspected",
+        "visualNotes": "Confirmed modern white IBC tank/cage on wood/rope stand under blue tarp, two taps/trough. Requires ordinary1950sredesign.",
+        "sourceOnlyNotReleaseProof": true
+      },
+      "sourceDimensions": {
+        "runtimeBaseBoxesInTiles": [
+          {
+            "hx": 2,
+            "hy": 2,
+            "dx": 0,
+            "dy": 0
+          }
+        ],
+        "manifestHalfExtentsMetresFirstGuess": [
+          2,
+          2
+        ],
+        "sourceCropPixels": [
+          507,
+          516
+        ],
+        "newPhysicalDimensionsProposal": "Proposed station1.6m wide x1.0m deep x1.7m high; source-design proposal, potable status not asserted.",
+        "notRuntimeBalanceOrGeometryChange": true
+      },
+      "functionalBrief": "Actual source has a large water tank, two front taps, front metal wash/drip trough and bucket below. Redesign as ordinary1950scourse water station: galvanized rectangular cistern on a bolted practical steel/timber stand, two taps, one drip trough, rear fill cap. Keep tank/plumbing roles; remove blue plastic tarp, ropes and modern IBC cage.",
+      "ordinary1950sRedesignRequired": true,
+      "conditionBrief": "Ordinary1950sbudget redesign required. Worn working cistern for budget; clean painted metal tank and tidy plumbing for upgraded; no makeshift goblin hut.",
+      "visualNotes": "Confirmed modern white IBC tank/cage on wood/rope stand under blue tarp, two taps/trough. Requires ordinary1950sredesign.",
+      "existingNormalFourReferences": {
+        "candidateCount": 0,
+        "usableCount": 0,
+        "paths": [],
+        "note": "Only one original exact subject is available; original source sheet contains four different props, not four angles."
+      },
+      "existingYaw8Candidates": 0,
+      "historicallyApprovedEightSet": false,
+      "generationPlan": {
+        "normal": "2x2 SE/SW then NW/NE, orthographic30degrees down, equal45degreecorner walls",
+        "yaw8": "2x2 N/E then S/W, each cardinal physically turned8degrees, never square-on",
+        "conditions": "Generate one requested condition consistently through both sheets; source-only variants do not imply runtime upgrades."
+      },
+      "style": "Same painterly game style as style-authority.png, late-afternoon daylight, one sun upper-right, shadows lower-left, transparent background. No people, captions, brands, gridlines or generic ground plates. Functional ramps, buckets, mounting feet and attached panels remain part of their object.",
+      "approvalClaimed": false,
+      "runtimeIntegrated": false,
+      "nativeGeneratedHere": false,
+      "scopeNote": "Exact existing baseline subject only. Eight new view images still require generation and review; no related IDs, aliases or completion are inferred."
+    },
+    {
+      "jobId": "golf-source-02-06-gold-tee-markers",
+      "runtimeSubjectId": "newprop:gold-tee-markers",
+      "runtimeName": "Gold tee markers",
+      "displayName": "Gold tee markers",
+      "sourceReferencePNG": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-02\\references\\gold-tee-markers.source.png",
+      "sourceProvenance": {
+        "id": "newprop:gold-tee-markers",
+        "name": "Gold tee markers",
+        "referencePNG": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-02\\references\\gold-tee-markers.source.png",
+        "originalSourcePNG": "E:\\Repos\\CapitalEmpire\\All Generated Images\\exec-205ea8bd-da55-489e-b193-a36ed9f17e4b.png",
+        "copiedOriginalSheet": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-02\\original-sheets\\exec-205ea8bd-da55-489e-b193-a36ed9f17e4b.png",
+        "originalSheetSHA256": "252ee9747b1f9513b0fda88f9781d4e5edf7fdcdf52fe7211f8c9d84841484b8",
+        "referenceSHA256": "67bf38a38112160400120a8e35fe73985096b9650a54a14e2505c5422edfb26c",
+        "sourceRectXYWH": [
+          709,
+          198,
+          514,
+          396
+        ],
+        "sourceCell": "top right",
+        "sourceSheetContainsFourDifferentSubjectsNotRotations": true,
+        "sourceCropSize": [
+          514,
+          396
+        ],
+        "cropOperation": "lossless native RGBA crop, no resize, recolour, cleanup or synthesis",
+        "sourceMetadataCutOff": false,
+        "runtimeLibrarySource": "src/game/new-props-library.ts",
+        "runtimeBaseBoxesInTiles": [
+          {
+            "hx": 0.4,
+            "hy": 0.4,
+            "dx": 0,
+            "dy": 0
+          }
+        ],
+        "runtimeDisplayPixels": [
+          51.2,
+          39.45
+        ],
+        "manifestHalfExtentsMetresFirstGuess": [
+          0.4,
+          0.4
+        ],
+        "dimensionCaution": "Manifest first-guess dimensions and runtime boxes are not measured native physical dimensions; any new real-object size is a source-design proposal only. No runtime changes.",
+        "visualInspection": "inspected",
+        "visualNotes": "Confirmed pair of gold ball markers. Source includes an integrated grass/soil plate, which should not be baked into new physical prop.",
+        "sourceOnlyNotReleaseProof": true
+      },
+      "sourceDimensions": {
+        "runtimeBaseBoxesInTiles": [
+          {
+            "hx": 0.4,
+            "hy": 0.4,
+            "dx": 0,
+            "dy": 0
+          }
+        ],
+        "manifestHalfExtentsMetresFirstGuess": [
+          0.4,
+          0.4
+        ],
+        "sourceCropPixels": [
+          514,
+          396
+        ],
+        "newPhysicalDimensionsProposal": "Proposed balls0.18m diameter, pair centres1m apart; source-design proposal, not current runtime tee width.",
+        "notRuntimeBalanceOrGeometryChange": true
+      },
+      "functionalBrief": "Exactly two gold dimpled golf-ball tee markers on small round individual mounting feet, separated by a fixed gap and aligned as one paired object. Preserve two markers and their physical relative positions across8views. Remove the baked grass/soil rectangle; no new plants or ground tile.",
+      "ordinary1950sRedesignRequired": false,
+      "conditionBrief": "Identity-preserving physical tee markers; restrained metallic finish with light wear, no fantasy decoration.",
+      "visualNotes": "Confirmed pair of gold ball markers. Source includes an integrated grass/soil plate, which should not be baked into new physical prop.",
+      "existingNormalFourReferences": {
+        "candidateCount": 0,
+        "usableCount": 0,
+        "paths": [],
+        "note": "Only one original exact subject is available; original source sheet contains four different props, not four angles."
+      },
+      "existingYaw8Candidates": 0,
+      "historicallyApprovedEightSet": false,
+      "generationPlan": {
+        "normal": "2x2 SE/SW then NW/NE, orthographic30degrees down, equal45degreecorner walls",
+        "yaw8": "2x2 N/E then S/W, each cardinal physically turned8degrees, never square-on",
+        "conditions": "Generate one requested condition consistently through both sheets; source-only variants do not imply runtime upgrades."
+      },
+      "style": "Same painterly game style as style-authority.png, late-afternoon daylight, one sun upper-right, shadows lower-left, transparent background. No people, captions, brands, gridlines or generic ground plates. Functional ramps, buckets, mounting feet and attached panels remain part of their object.",
+      "approvalClaimed": false,
+      "runtimeIntegrated": false,
+      "nativeGeneratedHere": false,
+      "scopeNote": "Exact existing baseline subject only. Eight new view images still require generation and review; no related IDs, aliases or completion are inferred."
+    },
+    {
+      "jobId": "golf-source-02-07-rope-barrier",
+      "runtimeSubjectId": "newprop:rope-barrier",
+      "runtimeName": "Rope barrier",
+      "displayName": "Rope barrier",
+      "sourceReferencePNG": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-02\\references\\rope-barrier.source.png",
+      "sourceProvenance": {
+        "id": "newprop:rope-barrier",
+        "name": "Rope barrier",
+        "referencePNG": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-02\\references\\rope-barrier.source.png",
+        "originalSourcePNG": "E:\\Repos\\CapitalEmpire\\All Generated Images\\exec-5944b53f-4b43-44dc-a10e-7eae61417bf9.png",
+        "copiedOriginalSheet": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-02\\original-sheets\\exec-5944b53f-4b43-44dc-a10e-7eae61417bf9.png",
+        "originalSheetSHA256": "af41568faaa6af5c89f8a06cc03b0304d781020607e81aea822001ef1952e49b",
+        "referenceSHA256": "081eca194b4fd550a33a12920b5b7eab03c05ed5ed83a5c2159aef57b7af25d0",
+        "sourceRectXYWH": [
+          40,
+          219,
+          552,
+          219
+        ],
+        "sourceCell": "top left",
+        "sourceSheetContainsFourDifferentSubjectsNotRotations": true,
+        "sourceCropSize": [
+          552,
+          219
+        ],
+        "cropOperation": "lossless native RGBA crop, no resize, recolour, cleanup or synthesis",
+        "sourceMetadataCutOff": false,
+        "runtimeLibrarySource": "src/game/new-props-library.ts",
+        "runtimeBaseBoxesInTiles": [
+          {
+            "hx": 0.8,
+            "hy": 0.8,
+            "dx": 0,
+            "dy": 0
+          }
+        ],
+        "runtimeDisplayPixels": [
+          102.4,
+          40.63
+        ],
+        "manifestHalfExtentsMetresFirstGuess": [
+          0.8,
+          0.8
+        ],
+        "dimensionCaution": "Manifest first-guess dimensions and runtime boxes are not measured native physical dimensions; any new real-object size is a source-design proposal only. No runtime changes.",
+        "visualInspection": "inspected",
+        "visualNotes": "Confirmed three stanchions, two rope spans; preserves straight modular geometry.",
+        "sourceOnlyNotReleaseProof": true
+      },
+      "sourceDimensions": {
+        "runtimeBaseBoxesInTiles": [
+          {
+            "hx": 0.8,
+            "hy": 0.8,
+            "dx": 0,
+            "dy": 0
+          }
+        ],
+        "manifestHalfExtentsMetresFirstGuess": [
+          0.8,
+          0.8
+        ],
+        "sourceCropPixels": [
+          552,
+          219
+        ],
+        "newPhysicalDimensionsProposal": "Proposed line3m long, posts0.9m high; source-design proposal.",
+        "notRuntimeBalanceOrGeometryChange": true
+      },
+      "functionalBrief": "Exactly three green round-foot stanchions in one straight line connected by two sagging cream rope spans. Maintain post order, spacing and rope attachment height; back views show actual hardware. No ground strip.",
+      "ordinary1950sRedesignRequired": false,
+      "conditionBrief": "Identity-preserving event barrier; worn green painted metal/wood with ordinary fittings, not rope-lashed structural logs.",
+      "visualNotes": "Confirmed three stanchions, two rope spans; preserves straight modular geometry.",
+      "existingNormalFourReferences": {
+        "candidateCount": 0,
+        "usableCount": 0,
+        "paths": [],
+        "note": "Only one original exact subject is available; original source sheet contains four different props, not four angles."
+      },
+      "existingYaw8Candidates": 0,
+      "historicallyApprovedEightSet": false,
+      "generationPlan": {
+        "normal": "2x2 SE/SW then NW/NE, orthographic30degrees down, equal45degreecorner walls",
+        "yaw8": "2x2 N/E then S/W, each cardinal physically turned8degrees, never square-on",
+        "conditions": "Generate one requested condition consistently through both sheets; source-only variants do not imply runtime upgrades."
+      },
+      "style": "Same painterly game style as style-authority.png, late-afternoon daylight, one sun upper-right, shadows lower-left, transparent background. No people, captions, brands, gridlines or generic ground plates. Functional ramps, buckets, mounting feet and attached panels remain part of their object.",
+      "approvalClaimed": false,
+      "runtimeIntegrated": false,
+      "nativeGeneratedHere": false,
+      "scopeNote": "Exact existing baseline subject only. Eight new view images still require generation and review; no related IDs, aliases or completion are inferred."
+    },
+    {
+      "jobId": "golf-source-02-08-rope-barrier-corner",
+      "runtimeSubjectId": "newprop:rope-barrier-corner",
+      "runtimeName": "Rope barrier corner",
+      "displayName": "Rope barrier corner",
+      "sourceReferencePNG": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-02\\references\\rope-barrier-corner.source.png",
+      "sourceProvenance": {
+        "id": "newprop:rope-barrier-corner",
+        "name": "Rope barrier corner",
+        "referencePNG": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-02\\references\\rope-barrier-corner.source.png",
+        "originalSourcePNG": "E:\\Repos\\CapitalEmpire\\All Generated Images\\exec-5944b53f-4b43-44dc-a10e-7eae61417bf9.png",
+        "copiedOriginalSheet": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-02\\original-sheets\\exec-5944b53f-4b43-44dc-a10e-7eae61417bf9.png",
+        "originalSheetSHA256": "af41568faaa6af5c89f8a06cc03b0304d781020607e81aea822001ef1952e49b",
+        "referenceSHA256": "c289149eb4e23dd5eaaf8b54cece8dd8ce9aedfe81ec1226d515014a5ff73d07",
+        "sourceRectXYWH": [
+          674,
+          157,
+          538,
+          352
+        ],
+        "sourceCell": "top right",
+        "sourceSheetContainsFourDifferentSubjectsNotRotations": true,
+        "sourceCropSize": [
+          538,
+          352
+        ],
+        "cropOperation": "lossless native RGBA crop, no resize, recolour, cleanup or synthesis",
+        "sourceMetadataCutOff": false,
+        "runtimeLibrarySource": "src/game/new-props-library.ts",
+        "runtimeBaseBoxesInTiles": [
+          {
+            "hx": 0.8,
+            "hy": 0.8,
+            "dx": 0,
+            "dy": 0
+          }
+        ],
+        "runtimeDisplayPixels": [
+          102.4,
+          67
+        ],
+        "manifestHalfExtentsMetresFirstGuess": [
+          0.8,
+          0.8
+        ],
+        "dimensionCaution": "Manifest first-guess dimensions and runtime boxes are not measured native physical dimensions; any new real-object size is a source-design proposal only. No runtime changes.",
+        "visualInspection": "inspected",
+        "visualNotes": "Confirmed five stanchions, four spans in a two-arm corner, not only three posts.",
+        "sourceOnlyNotReleaseProof": true
+      },
+      "sourceDimensions": {
+        "runtimeBaseBoxesInTiles": [
+          {
+            "hx": 0.8,
+            "hy": 0.8,
+            "dx": 0,
+            "dy": 0
+          }
+        ],
+        "manifestHalfExtentsMetresFirstGuess": [
+          0.8,
+          0.8
+        ],
+        "sourceCropPixels": [
+          538,
+          352
+        ],
+        "newPhysicalDimensionsProposal": "Proposed each corner arm3m long, posts0.9m high; source-design proposal.",
+        "notRuntimeBalanceOrGeometryChange": true
+      },
+      "functionalBrief": "Exactly five green round-foot stanchions and four cream rope spans making one90degreecorner: centre corner post shared by two arms, with one intermediate and one end post on each arm. Preserve L-shaped ground layout and five-post count in every view; do not flatten it into a straight barrier.",
+      "ordinary1950sRedesignRequired": false,
+      "conditionBrief": "Identity-preserving modular corner matching straight rope barrier materials and post design.",
+      "visualNotes": "Confirmed five stanchions, four spans in a two-arm corner, not only three posts.",
+      "existingNormalFourReferences": {
+        "candidateCount": 0,
+        "usableCount": 0,
+        "paths": [],
+        "note": "Only one original exact subject is available; original source sheet contains four different props, not four angles."
+      },
+      "existingYaw8Candidates": 0,
+      "historicallyApprovedEightSet": false,
+      "generationPlan": {
+        "normal": "2x2 SE/SW then NW/NE, orthographic30degrees down, equal45degreecorner walls",
+        "yaw8": "2x2 N/E then S/W, each cardinal physically turned8degrees, never square-on",
+        "conditions": "Generate one requested condition consistently through both sheets; source-only variants do not imply runtime upgrades."
+      },
+      "style": "Same painterly game style as style-authority.png, late-afternoon daylight, one sun upper-right, shadows lower-left, transparent background. No people, captions, brands, gridlines or generic ground plates. Functional ramps, buckets, mounting feet and attached panels remain part of their object.",
+      "approvalClaimed": false,
+      "runtimeIntegrated": false,
+      "nativeGeneratedHere": false,
+      "scopeNote": "Exact existing baseline subject only. Eight new view images still require generation and review; no related IDs, aliases or completion are inferred."
+    },
+    {
+      "jobId": "golf-source-02-09-rope-walkway",
+      "runtimeSubjectId": "newprop:rope-walkway",
+      "runtimeName": "Rope walkway",
+      "displayName": "Rope walkway",
+      "sourceReferencePNG": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-02\\references\\rope-walkway.source.png",
+      "sourceProvenance": {
+        "id": "newprop:rope-walkway",
+        "name": "Rope walkway",
+        "referencePNG": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-02\\references\\rope-walkway.source.png",
+        "originalSourcePNG": "E:\\Repos\\CapitalEmpire\\All Generated Images\\exec-5944b53f-4b43-44dc-a10e-7eae61417bf9.png",
+        "copiedOriginalSheet": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-02\\original-sheets\\exec-5944b53f-4b43-44dc-a10e-7eae61417bf9.png",
+        "originalSheetSHA256": "af41568faaa6af5c89f8a06cc03b0304d781020607e81aea822001ef1952e49b",
+        "referenceSHA256": "7ffe2072f61cff60abb48631948f9df608d4c66256b6282a144506847c4acca6",
+        "sourceRectXYWH": [
+          24,
+          752,
+          662,
+          385
+        ],
+        "sourceCell": "bottom left",
+        "sourceSheetContainsFourDifferentSubjectsNotRotations": true,
+        "sourceCropSize": [
+          662,
+          385
+        ],
+        "cropOperation": "lossless native RGBA crop, no resize, recolour, cleanup or synthesis",
+        "sourceMetadataCutOff": false,
+        "runtimeLibrarySource": "src/game/new-props-library.ts",
+        "runtimeBaseBoxesInTiles": [
+          {
+            "hx": 0.8,
+            "hy": 0.8,
+            "dx": 0,
+            "dy": 0
+          }
+        ],
+        "runtimeDisplayPixels": [
+          102.4,
+          59.55
+        ],
+        "manifestHalfExtentsMetresFirstGuess": [
+          0.8,
+          0.8
+        ],
+        "dimensionCaution": "Manifest first-guess dimensions and runtime boxes are not measured native physical dimensions; any new real-object size is a source-design proposal only. No runtime changes.",
+        "visualInspection": "inspected",
+        "visualNotes": "Confirmed two open swing gates, four posts and perforated ramp; not a generic rope walkway.",
+        "sourceOnlyNotReleaseProof": true
+      },
+      "sourceDimensions": {
+        "runtimeBaseBoxesInTiles": [
+          {
+            "hx": 0.8,
+            "hy": 0.8,
+            "dx": 0,
+            "dy": 0
+          }
+        ],
+        "manifestHalfExtentsMetresFirstGuess": [
+          0.8,
+          0.8
+        ],
+        "sourceCropPixels": [
+          662,
+          385
+        ],
+        "newPhysicalDimensionsProposal": "Proposed clear opening1.5m wide with1m ramp depth; source-design proposal, accessibility certification not asserted.",
+        "notRuntimeBalanceOrGeometryChange": true
+      },
+      "functionalBrief": "Actual source is a pedestrian access assembly: four green posts, two short open swing-gate leaves with diagonal rails/rope, and one rectangular perforated metal threshold/ramp with yellow edge strips. Preserve gate/ramp geometry; do not generate a long generic rope corridor. Gate leaves remain fixed open at the same angles.",
+      "ordinary1950sRedesignRequired": false,
+      "conditionBrief": "Identity-preserving access equipment. Practical green/cream hardware and intact ramp; no decorative ground slab beyond the functional ramp.",
+      "visualNotes": "Confirmed two open swing gates, four posts and perforated ramp; not a generic rope walkway.",
+      "existingNormalFourReferences": {
+        "candidateCount": 0,
+        "usableCount": 0,
+        "paths": [],
+        "note": "Only one original exact subject is available; original source sheet contains four different props, not four angles."
+      },
+      "existingYaw8Candidates": 0,
+      "historicallyApprovedEightSet": false,
+      "generationPlan": {
+        "normal": "2x2 SE/SW then NW/NE, orthographic30degrees down, equal45degreecorner walls",
+        "yaw8": "2x2 N/E then S/W, each cardinal physically turned8degrees, never square-on",
+        "conditions": "Generate one requested condition consistently through both sheets; source-only variants do not imply runtime upgrades."
+      },
+      "style": "Same painterly game style as style-authority.png, late-afternoon daylight, one sun upper-right, shadows lower-left, transparent background. No people, captions, brands, gridlines or generic ground plates. Functional ramps, buckets, mounting feet and attached panels remain part of their object.",
+      "approvalClaimed": false,
+      "runtimeIntegrated": false,
+      "nativeGeneratedHere": false,
+      "scopeNote": "Exact existing baseline subject only. Eight new view images still require generation and review; no related IDs, aliases or completion are inferred."
+    },
+    {
+      "jobId": "golf-source-02-10-direction-signpost",
+      "runtimeSubjectId": "newprop:direction-signpost",
+      "runtimeName": "Direction signpost",
+      "displayName": "Direction signpost",
+      "sourceReferencePNG": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-02\\references\\direction-signpost.source.png",
+      "sourceProvenance": {
+        "id": "newprop:direction-signpost",
+        "name": "Direction signpost",
+        "referencePNG": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-02\\references\\direction-signpost.source.png",
+        "originalSourcePNG": "E:\\Repos\\CapitalEmpire\\All Generated Images\\exec-1f28de2a-95b9-4895-aeed-8f32f5b208b8.png",
+        "copiedOriginalSheet": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-02\\original-sheets\\exec-1f28de2a-95b9-4895-aeed-8f32f5b208b8.png",
+        "originalSheetSHA256": "83a3451b8bc46ff7893c891178b21bf25f1baf0b1fa9d6213a9163fc39e509e6",
+        "referenceSHA256": "9f794b546fb239c7faf22edf24017fc93e51470e7d618d4232f963f49daae1b0",
+        "sourceRectXYWH": [
+          733,
+          623,
+          448,
+          619
+        ],
+        "sourceCell": "bottom right",
+        "sourceSheetContainsFourDifferentSubjectsNotRotations": true,
+        "sourceCropSize": [
+          448,
+          619
+        ],
+        "cropOperation": "lossless native RGBA crop, no resize, recolour, cleanup or synthesis",
+        "sourceMetadataCutOff": false,
+        "runtimeLibrarySource": "src/game/new-props-library.ts",
+        "runtimeBaseBoxesInTiles": [
+          {
+            "hx": 0.6,
+            "hy": 0.6,
+            "dx": 0,
+            "dy": 0
+          }
+        ],
+        "runtimeDisplayPixels": [
+          76.8,
+          106.11
+        ],
+        "manifestHalfExtentsMetresFirstGuess": [
+          0.6,
+          0.6
+        ],
+        "dimensionCaution": "Manifest first-guess dimensions and runtime boxes are not measured native physical dimensions; any new real-object size is a source-design proposal only. No runtime changes.",
+        "visualInspection": "inspected",
+        "visualNotes": "Confirmed four arrow boards with golf/food/toilet/exit pictograms. Source crop has a detached fragment from neighbouring prop above; ignore it.",
+        "sourceOnlyNotReleaseProof": true
+      },
+      "sourceDimensions": {
+        "runtimeBaseBoxesInTiles": [
+          {
+            "hx": 0.6,
+            "hy": 0.6,
+            "dx": 0,
+            "dy": 0
+          }
+        ],
+        "manifestHalfExtentsMetresFirstGuess": [
+          0.6,
+          0.6
+        ],
+        "sourceCropPixels": [
+          448,
+          619
+        ],
+        "newPhysicalDimensionsProposal": "Proposed sign about2.0m high and1.2m total board span; source-design proposal.",
+        "notRuntimeBalanceOrGeometryChange": true
+      },
+      "functionalBrief": "One green pedestal fingerpost with exactly four arrow boards: upper-left golf icon, upper-right food icon, lower-left toilets icon, lower-right exit icon. Keep arrows physically attached to fixed sides; backs may be plain. No captions or invented destination text; small intrinsic pictograms allowed. Ignore detached neighbour fragment at source top.",
+      "ordinary1950sRedesignRequired": false,
+      "conditionBrief": "Identity-preserving course wayfinding; plain worn green/cream boards and practical fittings, not an ornate fantasy totem.",
+      "visualNotes": "Confirmed four arrow boards with golf/food/toilet/exit pictograms. Source crop has a detached fragment from neighbouring prop above; ignore it.",
+      "existingNormalFourReferences": {
+        "candidateCount": 0,
+        "usableCount": 0,
+        "paths": [],
+        "note": "Only one original exact subject is available; original source sheet contains four different props, not four angles."
+      },
+      "existingYaw8Candidates": 0,
+      "historicallyApprovedEightSet": false,
+      "generationPlan": {
+        "normal": "2x2 SE/SW then NW/NE, orthographic30degrees down, equal45degreecorner walls",
+        "yaw8": "2x2 N/E then S/W, each cardinal physically turned8degrees, never square-on",
+        "conditions": "Generate one requested condition consistently through both sheets; source-only variants do not imply runtime upgrades."
+      },
+      "style": "Same painterly game style as style-authority.png, late-afternoon daylight, one sun upper-right, shadows lower-left, transparent background. No people, captions, brands, gridlines or generic ground plates. Functional ramps, buckets, mounting feet and attached panels remain part of their object.",
+      "approvalClaimed": false,
+      "runtimeIntegrated": false,
+      "nativeGeneratedHere": false,
+      "scopeNote": "Exact existing baseline subject only. Eight new view images still require generation and review; no related IDs, aliases or completion are inferred."
+    },
+    {
+      "jobId": "golf-source-02-11-hole-12-sign",
+      "runtimeSubjectId": "newprop:hole-12-sign",
+      "runtimeName": "Hole 12 sign",
+      "displayName": "Hole12sign",
+      "sourceReferencePNG": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-02\\references\\hole-12-sign.source.png",
+      "sourceProvenance": {
+        "id": "newprop:hole-12-sign",
+        "name": "Hole 12 sign",
+        "referencePNG": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-02\\references\\hole-12-sign.source.png",
+        "originalSourcePNG": "E:\\Repos\\CapitalEmpire\\All Generated Images\\exec-1f28de2a-95b9-4895-aeed-8f32f5b208b8.png",
+        "copiedOriginalSheet": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-02\\original-sheets\\exec-1f28de2a-95b9-4895-aeed-8f32f5b208b8.png",
+        "originalSheetSHA256": "83a3451b8bc46ff7893c891178b21bf25f1baf0b1fa9d6213a9163fc39e509e6",
+        "referenceSHA256": "1b694824de74d4a7ce7c55266cd5dc579934a337c8bfbeecd89f467ce2bd1de7",
+        "sourceRectXYWH": [
+          749,
+          20,
+          476,
+          627
+        ],
+        "sourceCell": "top right",
+        "sourceSheetContainsFourDifferentSubjectsNotRotations": true,
+        "sourceCropSize": [
+          476,
+          627
+        ],
+        "cropOperation": "lossless native RGBA crop, no resize, recolour, cleanup or synthesis",
+        "sourceMetadataCutOff": false,
+        "runtimeLibrarySource": "src/game/new-props-library.ts",
+        "runtimeBaseBoxesInTiles": [
+          {
+            "hx": 0.6,
+            "hy": 0.6,
+            "dx": 0,
+            "dy": 0
+          }
+        ],
+        "runtimeDisplayPixels": [
+          76.8,
+          101.16
+        ],
+        "manifestHalfExtentsMetresFirstGuess": [
+          0.6,
+          0.6
+        ],
+        "dimensionCaution": "Manifest first-guess dimensions and runtime boxes are not measured native physical dimensions; any new real-object size is a source-design proposal only. No runtime changes.",
+        "visualInspection": "inspected",
+        "visualNotes": "Confirmed tee hole-map sign with12and five dots; unrelated detached neighbouring gold finial below crop must be ignored.",
+        "sourceOnlyNotReleaseProof": true
+      },
+      "sourceDimensions": {
+        "runtimeBaseBoxesInTiles": [
+          {
+            "hx": 0.6,
+            "hy": 0.6,
+            "dx": 0,
+            "dy": 0
+          }
+        ],
+        "manifestHalfExtentsMetresFirstGuess": [
+          0.6,
+          0.6
+        ],
+        "sourceCropPixels": [
+          476,
+          627
+        ],
+        "newPhysicalDimensionsProposal": "Proposed board1.0m wide x0.25m deep x1.7m high; source-design proposal.",
+        "notRuntimeBalanceOrGeometryChange": true
+      },
+      "functionalBrief": "One two-upright green tee-information board with arched top marked12, a single hole map and five small coloured yardage dots/rows on its front. Rear shows backing and braces. Preserve board architecture and fixed12identity, but tiny yardage numerals may stay blank for data. Remove baked grass/soil apron and ignore detached bottom neighbour fragment.",
+      "ordinary1950sRedesignRequired": false,
+      "conditionBrief": "Identity-preserving physical tee board; restrained green/cream frame, ordinary supports. Not the separate event hole scoreboard from batch01.",
+      "visualNotes": "Confirmed tee hole-map sign with12and five dots; unrelated detached neighbouring gold finial below crop must be ignored.",
+      "existingNormalFourReferences": {
+        "candidateCount": 0,
+        "usableCount": 0,
+        "paths": [],
+        "note": "Only one original exact subject is available; original source sheet contains four different props, not four angles."
+      },
+      "existingYaw8Candidates": 0,
+      "historicallyApprovedEightSet": false,
+      "generationPlan": {
+        "normal": "2x2 SE/SW then NW/NE, orthographic30degrees down, equal45degreecorner walls",
+        "yaw8": "2x2 N/E then S/W, each cardinal physically turned8degrees, never square-on",
+        "conditions": "Generate one requested condition consistently through both sheets; source-only variants do not imply runtime upgrades."
+      },
+      "style": "Same painterly game style as style-authority.png, late-afternoon daylight, one sun upper-right, shadows lower-left, transparent background. No people, captions, brands, gridlines or generic ground plates. Functional ramps, buckets, mounting feet and attached panels remain part of their object.",
+      "approvalClaimed": false,
+      "runtimeIntegrated": false,
+      "nativeGeneratedHere": false,
+      "scopeNote": "Exact existing baseline subject only. Eight new view images still require generation and review; no related IDs, aliases or completion are inferred."
+    },
+    {
+      "jobId": "golf-source-02-12-course-map-board",
+      "runtimeSubjectId": "newprop:course-map-board",
+      "runtimeName": "Course map board",
+      "displayName": "Course map board",
+      "sourceReferencePNG": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-02\\references\\course-map-board.source.png",
+      "sourceProvenance": {
+        "id": "newprop:course-map-board",
+        "name": "Course map board",
+        "referencePNG": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-02\\references\\course-map-board.source.png",
+        "originalSheet": "E:\\Repos\\CapitalEmpire\\All Generated Images\\exec-3a7ff403-4e2d-49a3-8154-0835d67ade80.png",
+        "copiedOriginalSheet": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-01\\original-sheets\\exec-3a7ff403-4e2d-49a3-8154-0835d67ade80.png",
+        "sourceSheetSHA256": "8d3a7260b7ec4b810ea709271c0f84e3103ac1bb25d769e9ad9361c46b02c2bb",
+        "referenceSHA256": "68399b1762dc542bae34d9b6d217a8e42759cc6011cd16f6f0c958c76c03ebd1",
+        "sourcePixelRectXYWH": [
+          49,
+          18,
+          520,
+          629
+        ],
+        "originalCellLabel": "top left",
+        "referenceSize": [
+          520,
+          629
+        ],
+        "operation": "native RGBA pixel crop only; no resize, recolour, alpha cleanup or synthesis",
+        "sourceContainsFourDifferentSubjectsNotRotations": true,
+        "cutOffAccordingToSourceMetadata": false,
+        "visualInspection": "inspected",
+        "visualNotes": "Confirmed roofed course-map information board, lanterns and planter/paving extras. The board itself is the desired physical prop.",
+        "sourceOnlyNotReleaseProof": true,
+        "sourceCopyOperation": "byte-for-byte copy of prior native-RGBA crop; original source/provenance retained",
+        "sourcePriorProvenance": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-01\\references\\course-map-board.provenance.json"
+      },
+      "sourceDimensions": {
+        "runtimeBaseBoxesInTiles": null,
+        "manifestHalfExtentsMetresFirstGuess": null,
+        "sourceCropPixels": [
+          520,
+          629
+        ],
+        "newPhysicalDimensionsProposal": "Proposed board2.1m wide x0.65m deep x2.2m high; source-design proposal.",
+        "notRuntimeBalanceOrGeometryChange": true
+      },
+      "functionalBrief": "One freestanding roofed course information/map board with green timber surround, broad cream map panel, shallow pitched roof and information symbol above. Preserve the actual board and back structure; switch lanterns off for daylight. Omit the integrated flower planters and paving slab, retaining only structural supports.",
+      "ordinary1950sRedesignRequired": false,
+      "conditionBrief": "Identity-preserving course map furniture, practical green/cream wood and dark shingle rain cap. This is the actual map board, unlike the mislabelled course-map-stand patio table.",
+      "visualNotes": "Confirmed roofed course-map information board, lanterns and planter/paving extras. The board itself is the desired physical prop.",
+      "existingNormalFourReferences": {
+        "candidateCount": 0,
+        "usableCount": 0,
+        "paths": [],
+        "note": "Only one original exact subject is available; original source sheet contains four different props, not four angles."
+      },
+      "existingYaw8Candidates": 0,
+      "historicallyApprovedEightSet": false,
+      "generationPlan": {
+        "normal": "2x2 SE/SW then NW/NE, orthographic30degrees down, equal45degreecorner walls",
+        "yaw8": "2x2 N/E then S/W, each cardinal physically turned8degrees, never square-on",
+        "conditions": "Generate one requested condition consistently through both sheets; source-only variants do not imply runtime upgrades."
+      },
+      "style": "Same painterly game style as style-authority.png, late-afternoon daylight, one sun upper-right, shadows lower-left, transparent background. No people, captions, brands, gridlines or generic ground plates. Functional ramps, buckets, mounting feet and attached panels remain part of their object.",
+      "approvalClaimed": false,
+      "runtimeIntegrated": false,
+      "nativeGeneratedHere": false,
+      "scopeNote": "Exact existing baseline subject only. Eight new view images still require generation and review; no related IDs, aliases or completion are inferred."
+    }
+  ],
+  "ownerApprovalClaimed": false
+}

@@ -1,0 +1,29 @@
+{
+  "schema": 1,
+  "subject": "golf:event-compact-bleacher-60-upgraded",
+  "version": 1,
+  "key": "normalNE",
+  "source": {
+    "file": "../../bleachers/upgraded/normal-v1.png",
+    "sha256": "55639fff1bcc61e963755694942ccea358a3fc1cbe348266153a550bbff7456b",
+    "width": 1254,
+    "height": 1254
+  },
+  "cell": 3,
+  "cellRect": {
+    "left": 627,
+    "top": 627,
+    "width": 627,
+    "height": 627
+  },
+  "crop": {
+    "left": 50,
+    "top": 98,
+    "width": 515,
+    "height": 428
+  },
+  "output": "normalNE.native.png",
+  "sha256": "c695f17f6ba0b8b6f0b77fd6b8fbb148134db7631ab2bb05d7ecaa13656ad07c",
+  "operation": "native RGBA cell crop only; no flip/repaint/view synthesis",
+  "review": "candidate"
+}

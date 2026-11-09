@@ -1,0 +1,171 @@
+{
+  "schema": 1,
+  "as_of_utc": "2026-11-07T10:55:47.829167+00:00",
+  "review_result": "PASS-native-alpha-cleanup-and-identity;HOLD-uniform30degree-camera",
+  "source": {
+    "path": "generated/vehicles/era-1990s-teal-sedan/traffic8-v2.png",
+    "sha256": "efa3c3bd1b0a643c0d11f45b23675066800aefd90bb1cd8dd255c72f4179d0a0",
+    "bytes": 1330188
+  },
+  "source_original_hash_matches_parent_batch": true,
+  "dimensions": [
+    1774,
+    887
+  ],
+  "mode": "RGBA",
+  "is_opaque_scene": false,
+  "zero_alpha_fraction": 0.6200593821058024,
+  "outer_border_alpha_p50p95max": [
+    0.0,
+    1.0,
+    1.0
+  ],
+  "empty_center_gutter_alpha_p50p95max": [
+    0.0,
+    0.0,
+    1.0
+  ],
+  "cells": [
+    {
+      "cell": 0,
+      "reference_rect_ltrb": [
+        0,
+        0,
+        443,
+        443
+      ],
+      "rgba_rectangle_sha256": "046cf060c44e3951b02736cd8976eb4c48ca0abe308e9f897ebbedbf41be0294",
+      "core_boundary_pixels": 0,
+      "minimum_core_margin_px": 10,
+      "actual_screen_nose": "lower-left"
+    },
+    {
+      "cell": 1,
+      "reference_rect_ltrb": [
+        443,
+        0,
+        887,
+        443
+      ],
+      "rgba_rectangle_sha256": "cbea64d0015ee1ddfcfc3d564a16687b43e3f4f2a7aaa8235e19b75acd618907",
+      "core_boundary_pixels": 0,
+      "minimum_core_margin_px": 55,
+      "actual_screen_nose": "down"
+    },
+    {
+      "cell": 2,
+      "reference_rect_ltrb": [
+        887,
+        0,
+        1314,
+        443
+      ],
+      "rgba_rectangle_sha256": "c912e6721c6daab0413781f43acbcbeed9f4d36341bbd3642ce787c163992834",
+      "core_boundary_pixels": 0,
+      "minimum_core_margin_px": 3,
+      "actual_screen_nose": "lower-right"
+    },
+    {
+      "cell": 3,
+      "reference_rect_ltrb": [
+        1314,
+        0,
+        1774,
+        443
+      ],
+      "rgba_rectangle_sha256": "bde2cef640ff817ae3314836e3a024ca0ddb4409aa3c0f2a523af744fbda7e3f",
+      "core_boundary_pixels": 0,
+      "minimum_core_margin_px": 2,
+      "actual_screen_nose": "right"
+    },
+    {
+      "cell": 4,
+      "reference_rect_ltrb": [
+        0,
+        443,
+        443,
+        887
+      ],
+      "rgba_rectangle_sha256": "37f6a755ecf64af6433d50ce75b9343a0f15500852a925d39f653bda2053f39c",
+      "core_boundary_pixels": 0,
+      "minimum_core_margin_px": 15,
+      "actual_screen_nose": "upper-right"
+    },
+    {
+      "cell": 5,
+      "reference_rect_ltrb": [
+        443,
+        443,
+        887,
+        887
+      ],
+      "rgba_rectangle_sha256": "bda87d583075ac69730756717df03c25e1bb2a9eba4ba9956f75ddba676c94fd",
+      "core_boundary_pixels": 0,
+      "minimum_core_margin_px": 66,
+      "actual_screen_nose": "up"
+    },
+    {
+      "cell": 6,
+      "reference_rect_ltrb": [
+        887,
+        443,
+        1308,
+        887
+      ],
+      "rgba_rectangle_sha256": "d89b238035de8be30f21ee5db307e4777327361e9ac74233d0e56284ee1f359c",
+      "core_boundary_pixels": 0,
+      "minimum_core_margin_px": 4,
+      "actual_screen_nose": "upper-left"
+    },
+    {
+      "cell": 7,
+      "reference_rect_ltrb": [
+        1308,
+        443,
+        1774,
+        887
+      ],
+      "rgba_rectangle_sha256": "d4ebaeba750e2cdb10687e2ab2e0bd46081b2434727f2ebc7db3e8151fd3a281",
+      "core_boundary_pixels": 0,
+      "minimum_core_margin_px": 1,
+      "actual_screen_nose": "left"
+    }
+  ],
+  "all_pixels_partitioned": true,
+  "reference_cut_columns_by_row": [
+    [
+      0,
+      443,
+      887,
+      1314,
+      1774
+    ],
+    [
+      0,
+      443,
+      887,
+      1308,
+      1774
+    ]
+  ],
+  "notes": [
+    "Native background haze corrected; known empty central gutter and border alpha≤1, real zero-alpha areas preserved.",
+    "All eight nose directions remain distinct; original body/cage/cargo identity preserved. Side-profile camera consistency hold remains until native guided correction."
+  ],
+  "source_crops_performed": false,
+  "no_vehicle_or_house_sprite_crops": true,
+  "no_original_pixels_modified": true,
+  "owner_approved": false,
+  "runtime_ready": false,
+  "exact8_certified": false,
+  "exact_prompt": {
+    "path": "generated/vehicles/era-1990s-teal-sedan/traffic8-v2.prompt.txt",
+    "sha256": "81e81749ca730f697e7bfbbf897d47ef0865fbd48bf95a0f9c500eb7358ce3b8",
+    "bytes": 675
+  },
+  "parent_provenance": {
+    "path": "generated/vehicles/era-1990s-teal-sedan/traffic8-v2.provenance.json",
+    "sha256": "e7683d07d5da81d62e8bcf2f141d699c5486d9abc2afc979ccf8aa9bc746379b",
+    "bytes": 1335
+  }
+}

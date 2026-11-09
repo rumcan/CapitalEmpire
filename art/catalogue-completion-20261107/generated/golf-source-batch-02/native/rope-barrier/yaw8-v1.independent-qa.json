@@ -1,0 +1,126 @@
+{
+  "schema": 1,
+  "as_of_utc": "2026-11-07T14:29:39.952183+00:00",
+  "review_result": "LIMITED-PASS-symmetric-source-identity-alpha",
+  "source": {
+    "path": "generated/golf-source-batch-02/native/rope-barrier/yaw8-v1.png",
+    "sha256": "cbfde471bf05680abedc150ef53ffcda10430424c3dcc27e3c9f7b0068e5c6f8",
+    "bytes": 758292
+  },
+  "mode": "RGBA",
+  "dimensions": [
+    1254,
+    1254
+  ],
+  "source_original_hash_matches_parent": true,
+  "parent_provenance": {
+    "path": "generated/golf-source-batch-02/native/rope-barrier/yaw8-v1.provenance.json",
+    "sha256": "8d2a043c0e46e0b2ffa18f1aa9ca84eee438e3e8538a4a5c710ae3428f917149",
+    "bytes": 2778
+  },
+  "exact_prompt_utf8_sha256": "08d821e126c4ab02c4cbb1e17ae9a4064a4257206fb6fe3cc16136c0f012dfd3",
+  "actual_generation_references": [
+    {
+      "path": "generated/golf-source-batch-02/fixed-world-guides-v2/rope-barrier/guides/yaw8-world-v1.png",
+      "sha256": "1277cf9dad25379d01e3f909c9fa031fe218fb5d7d57906e8685d873e56d35db",
+      "bytes": 34986
+    },
+    {
+      "path": "generated/golf-source-batch-02/native/rope-barrier/normal-v1.png",
+      "sha256": "f6a97871eeaf06a1d470485caef8caf02e2a98b3b98cd25ecee02677f9da3bd6",
+      "bytes": 901071
+    }
+  ],
+  "zero_alpha_fraction": 0.7944345240366394,
+  "outer_4px_border_alpha_p50p95max": [
+    0.0,
+    0.0,
+    1.0
+  ],
+  "clear_horizontal_cut_y": 627,
+  "clear_vertical_cut_by_row": [
+    695,
+    701
+  ],
+  "cut_alpha_maxima": {
+    "horizontal": 1,
+    "vertical_top": 1,
+    "vertical_bottom": 1
+  },
+  "cells": [
+    {
+      "cell": "TL",
+      "actual_role": "N broad three-post row",
+      "selected_guide_direction": "N",
+      "reference_rect_ltrb": [
+        0,
+        0,
+        695,
+        627
+      ],
+      "minimum_core_margin_px": 4,
+      "boundary_core_pixels_alpha_gt128": 0,
+      "boundary_alpha_max": 3,
+      "native_rgba_rectangle_sha256": "c73e76e50eed52539b06cfb18b7e311de3acc17556a3e6070d4b67b95d45ddf6",
+      "functional_hold": false
+    },
+    {
+      "cell": "TR",
+      "actual_role": "E near-edge three-post row",
+      "selected_guide_direction": "E",
+      "reference_rect_ltrb": [
+        695,
+        0,
+        1254,
+        627
+      ],
+      "minimum_core_margin_px": 46,
+      "boundary_core_pixels_alpha_gt128": 0,
+      "boundary_alpha_max": 1,
+      "native_rgba_rectangle_sha256": "787c655830ae805e7e3aab3da8eccb28d9f63d5631ada4626577ea1a3c4fadfb",
+      "functional_hold": false
+    },
+    {
+      "cell": "BL",
+      "actual_role": "S symmetric broad row",
+      "selected_guide_direction": "S",
+      "reference_rect_ltrb": [
+        0,
+        627,
+        701,
+        1254
+      ],
+      "minimum_core_margin_px": 3,
+      "boundary_core_pixels_alpha_gt128": 0,
+      "boundary_alpha_max": 4,
+      "native_rgba_rectangle_sha256": "35ef30c40001bc579989e158cea14b8bc9fc8fed4f4b26f8195b351cec1ccf05",
+      "functional_hold": false
+    },
+    {
+      "cell": "BR",
+      "actual_role": "W symmetric near-edge row",
+      "selected_guide_direction": "W",
+      "reference_rect_ltrb": [
+        701,
+        627,
+        1254,
+        1254
+      ],
+      "minimum_core_margin_px": 18,
+      "boundary_core_pixels_alpha_gt128": 0,
+      "boundary_alpha_max": 1,
+      "native_rgba_rectangle_sha256": "34acaaa57ac630f9e43abc1bc76c565538e0f31d543130c0ce1a3b2328acdc23",
+      "functional_hold": false
+    }
+  ],
+  "all_cores_complete_at_reference_cuts": true,
+  "visual_observations": [
+    "Three posts/two spans per cell retained. Two broad and two near-edge projections match symmetric guide. Intrinsic180-degree similarity allowed, not asserted as independent pose proof. Gutter-aware crop needed."
+  ],
+  "intrinsic_rotational_symmetry": true,
+  "main_faces_functionally_accepted_for_source_candidate": true,
+  "owner_approved": false,
+  "runtime_ready": false,
+  "exact_numerical_angle_certified": false,
+  "native_image_bytes_changed": false
+}

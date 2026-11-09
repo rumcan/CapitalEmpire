@@ -1,0 +1,23 @@
+{
+  "key": "1990s-buff-brick-bay-bungalow",
+  "family": "yaw8",
+  "condition": "modern-era",
+  "version": 2,
+  "target": "generated/era-houses/expansion-02/1990s-buff-brick-bay-bungalow/yaw8-v2.png",
+  "refs": [
+    "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/era-houses/expansion-02/1990s-buff-brick-bay-bungalow/yaw8-v1.png",
+    "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/era-houses/expansion-02/1990s-buff-brick-bay-bungalow/normal-v2.png",
+    "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\expansion-02\\1990s-buff-brick-bay-bungalow\\guides\\yaw8-world-v1.png"
+  ],
+  "prompt": "Targeted rear opening correction to reference1: ONLY BOTTOM-LEFT S house view currently has an incorrect wide sliding patio door. Replace that rear facade's openings with exactly THREE windows and ONE ordinary single kitchen/service door, at the fixed positions in reference3's bottom-left guide and reference2 rear normalviews. No patio slider. Keep top-left/front and both end/side views unchanged; keep exact camera/silhouette/chimney/material/roof/base/windowframes/lighting/scale of all4views. Fine painterly miniature home game sprite, late-afternoonDAYTIME sunSCREENUPPERRIGHT/shadowsLOWERLEFT. Retain genuinezeroalpha transparent margins/gutters, no new scenery/textUI.",
+  "source": "C:/Users/RAMPAGE/.codex/generated_images/01a1b1fd-39ec-7220-8f11-86e4448833ea/exec-93d8d718-ccf3-493e-ada2-bdd15264552e.png",
+  "references": [
+    "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/era-houses/expansion-02/1990s-buff-brick-bay-bungalow/yaw8-v1.png",
+    "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/era-houses/expansion-02/1990s-buff-brick-bay-bungalow/normal-v2.png",
+    "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\expansion-02\\1990s-buff-brick-bay-bungalow\\guides\\yaw8-world-v1.png"
+  ],
+  "status": "native-source-candidate-pending-visual-review",
+  "runtime_imported": false,
+  "sha256": "c13e6a5cf8d7f5c9babd132fbebd0e4a69e24e24e51b07c74f4cdacfbabe1351",
+  "native_bytes_preserved": true
+}

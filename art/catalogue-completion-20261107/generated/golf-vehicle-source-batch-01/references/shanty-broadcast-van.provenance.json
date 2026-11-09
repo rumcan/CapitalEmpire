@@ -1,0 +1,26 @@
+{
+  "runtimeSubjectId": "newprop:shanty-broadcast-van",
+  "runtimeName": "Shanty broadcast van",
+  "png": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-vehicle-source-batch-01\\references\\shanty-broadcast-van.source.png",
+  "originalNativePNG": "E:\\Repos\\CapitalEmpire\\All Generated Images\\exec-d37c5a9e-d629-4a76-a14e-d0cb88c0a7fb.png",
+  "copiedNativeSheet": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-vehicle-source-batch-01\\original-sheets\\exec-d37c5a9e-d629-4a76-a14e-d0cb88c0a7fb.png",
+  "sourceSheetSHA256": "ac18eba54cddd39aa23b3d0c6476eeab33a5c7b33aaccbfb1bbd452e3451e9f6",
+  "cropRectXYWH": [
+    604,
+    104,
+    633,
+    550
+  ],
+  "sourceCell": "top right",
+  "pngSHA256": "8002f99b4eda67e9472e6203f1c6988d1541f0fa54ddf477ebdfa2afe2435d6c",
+  "rgbaSHA256": "10efdf2a87b86a735ef4100fb8c552f7d00809ef7b22a0a3bbbeb97b94e23905",
+  "cropPixels": [
+    633,
+    550
+  ],
+  "sourceMetadataCutOff": false,
+  "operation": "Native original RGBA crop only; no resize, recolour, alpha cleanup or synthesis. Source sheet contains4different objects, not4rotations.",
+  "visualInspection": "inspected native crop",
+  "actualIdentityNotes": "Confirmed older cab van with roof cable reel and HVAC, plus inappropriate pallet/tarp/rope roof additions; no satellite dish.",
+  "sourceOnlyNotReleaseProof": true
+}

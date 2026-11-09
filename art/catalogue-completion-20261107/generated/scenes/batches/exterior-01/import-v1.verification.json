@@ -1,0 +1,43 @@
+{
+  "status": "native source/crop/runtime/legacy preservation checks PASS",
+  "full_source_sha256": "da619ce939a1c0e45f4552a04b7ee3c4ea88b86db8cb02c4a9613ea87e6fbb3a",
+  "source_dimensions": [
+    1672,
+    941
+  ],
+  "split": [
+    836,
+    470
+  ],
+  "native_crop_dimensions": [
+    [
+      836,
+      470
+    ],
+    [
+      836,
+      470
+    ],
+    [
+      836,
+      471
+    ],
+    [
+      836,
+      471
+    ]
+  ],
+  "legacy_records_preserved": 17,
+  "legacy_file_hashes_preserved": 17,
+  "new_exact_subject_records": 4,
+  "total_manifest_records": 21,
+  "actual_style_reference_recorded": true,
+  "prepared_identity_refs_unchanged": true,
+  "source_pixels_reconstructed_exactly": true,
+  "exact_actual_prompt_sha256": "c1b2d50f528b90275a42a93183443da02cefe7a5a9e15e50acae14fd9601b508",
+  "exact_actual_prompt_crlf_sequences": 1,
+  "owner_approval_inferred": false,
+  "overall_request_complete": false,
+  "exact_prompt_git_normalization_preserved": true,
+  "exact_prompt_preservation_rule": ".gitattributes: actual-prompt-v*.txt -text"
+}

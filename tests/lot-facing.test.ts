@@ -4,11 +4,12 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { lotPreset, lotPresets, setLotRemix, type ComposeState, type LotGeom } from '../src/game/lots/compose';
 import { LU, LV } from '../src/game/lots/town';
-import { axisSetOf, drawnView, faces, fourViews, isVehicle, ownerScaleOf } from '../src/game/lots/preset-art';
+import { axisSetOf, drawnView, eightRingOf, faces, fourViews, isVehicle, ownerScaleOf } from '../src/game/lots/preset-art';
 import { roadOf } from '../src/game/lots/preset-frame';
 import { CAR_SCALE, carModel, carOwnerScale } from '../src/game/ext/car-art';
 import { LIBRARY } from '../src/game/library';
 import { roleOf } from '../src/game/lots/groups';
+import { SHOP_PALETTE } from '../src/game/lots/variety';
 import { isBuilding } from '../src/game/mirror';
 import type { Road } from '../src/game/lots/presets';
 
@@ -46,8 +47,11 @@ test('every building of a res or com preset faces its street on each road headin
         if (q.view !== 0) { keptHere++; continue; }
         const drawn = drawnView(q.id, frame, q.view).id, where = `${p.id} road ${road} ${q.id} at (${q.x.toFixed(1)}, ${q.y.toFixed(1)})`;
         if (road % 2) {
-          // a screen-straight road: the screen-axis set, its member facing the street is (road - 1) / 2 (roadView: road 1 faces screen down)
-          assert.equal(axisSetOf(q.id)?.indexOf(drawn), (road - 1) / 2, `${where}: the straight-on view faces the street`);
+          // a screen-straight road: the screen-axis set, its member facing the street is (road - 1) / 2 (roadView: road 1 faces screen down);
+          // T375: a building with no old set but eight approved views (the Video Vault, the Arcade): the ring's place of the road
+          const set = axisSetOf(q.id);
+          if (set) assert.equal(set.indexOf(drawn), (road - 1) / 2, `${where}: the straight-on view faces the street`);
+          else assert.equal(eightRingOf(q.id)?.indexOf(drawn), road, `${where}: the 8-degree view faces the street`);
         } else {
           // an angled road: the corner view whose front faces the lot's street
           assert.equal(fourViews(q.id)?.views.indexOf(drawn), streetQuarter(lot), `${where}: the corner view faces the street`);
@@ -80,4 +84,21 @@ test('a car on a lot is drawn at the road cars\' size (T308)', () => {
   }
   assert.ok(cars > 0, 'the presets have parked cars of a road model');
   console.log(`T308 cars: ${cars}`);
+});
+
+test('the shops of the town face their road on the four map-axis roads, at the lot map sizes (T375): a preset that stood a shop sideways turns it', () => {
+  // (T375, the owner: the Video Vault, the fishing and tackle shop and the pharmacy face the wrong way: 238 of the 560 shop placements stayed at a preset's old view
+  // because the turned footprint passed the lot's edge or the front line; setback.ts turnedSpot slides it inside, over the props it covers)
+  let n = 0, kept = 0; const left: string[] = [];
+  for (const biz of SHOP_PALETTE) for (const road of [0, 2, 4, 6]) for (const [w, d] of [[10, 15], [12.5, 16], [15, 18], [16.5, 19], [20, 20]] as const) for (const seed of [23, 61]) {
+    const lp = lotPreset(lotOn(road, w, d), { use: LU.COM, level: LV.BUILT, decline: 0, seed, biz });
+    if (!lp) continue;
+    for (const q of lp.fit.props) {
+      if (!streetBuilding(q.id) || !faces(q.id, road)) continue;
+      n++; if (q.view !== 0) { kept++; left.push(`${lp.preset.id} ${biz} road ${road} ${w}x${d}`); }
+    }
+  }
+  console.log(`T375 shops: ${n} placements on the four axis roads, ${kept} kept at the preset's view (${(100 * kept / n).toFixed(1)}%)`);
+  assert.ok(n > 300, `${n} placements`);
+  assert.ok(kept <= 0.03 * n, `${kept} of ${n} shops still face the wrong way: ${left.slice(0, 4).join('; ')}`);
 });

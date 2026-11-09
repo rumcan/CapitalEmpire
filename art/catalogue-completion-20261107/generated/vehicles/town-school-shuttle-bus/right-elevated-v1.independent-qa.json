@@ -1,0 +1,63 @@
+{
+  "schema": 1,
+  "as_of_utc": "2026-11-07T12:29:37.219894+00:00",
+  "review_result": "PASS-source-candidate-elevated-side-alpha-and-correct-door-STOP",
+  "source": {
+    "path": "generated/vehicles/town-school-shuttle-bus/right-elevated-v1.png",
+    "sha256": "cf2ce10402ac69ed838c290af5f75603dd6c9675b84c4f5f18dff69b56a9b6a4",
+    "bytes": 1190109
+  },
+  "source_original_hash_matches_parent_archive": true,
+  "dimensions": [
+    1774,
+    887
+  ],
+  "mode": "RGBA",
+  "is_single_sprite": true,
+  "actual_direction": "right",
+  "core_bbox_ltrb": [
+    274,
+    230,
+    1560,
+    746
+  ],
+  "minimum_canvas_core_margin_px": 141,
+  "outer_border_alpha_max": 1,
+  "empty_exterior_alpha_p95max": [
+    0.0,
+    1.0
+  ],
+  "zero_alpha_fraction": 0.6231066551935829,
+  "actual_references": [
+    {
+      "path": "generated/vehicles/town-school-shuttle-bus/camera-calibration-refs/right-camera-only.png",
+      "sha256": "735d89398a1c0b16dd171385fd3ed998e1190599c49c46ea81715f26b273ce4f",
+      "bytes": 4741
+    },
+    {
+      "path": "generated/vehicles/town-school-shuttle-bus/camera-calibration-refs/right-corner-identity.png",
+      "sha256": "4f33e47aad44119b022e09c3c232a857a25865df6175395de45530478bd26ee1",
+      "bytes": 194461
+    }
+  ],
+  "exact_prompt": {
+    "path": "generated/vehicles/town-school-shuttle-bus/right-elevated-v1.prompt.txt",
+    "sha256": "cb5bce2a656db909b59b529e6c3bc5c8032f50b5add873e6259501c03216bd32",
+    "bytes": 923
+  },
+  "parent_provenance": {
+    "path": "generated/vehicles/town-school-shuttle-bus/right-elevated-v1.provenance.json",
+    "sha256": "660fa7ec596795f1d9674b4c5e52e964299a9a832eaaf0b9aae578e342b40016",
+    "bytes": 1802
+  },
+  "notes": [
+    "Actual nose RIGHT with materially elevated roof plane; source remains a candidate without exact30degree or scale certificate.",
+    "RIGHT-facing picture has front driver-side STOP arm and NO entry door; LEFT-facing picture has front passenger entry door and NO STOP arm. This corrects traffic8-v3 profile feature regression.",
+    "Historical corner/rear images, roofleafpattern/3roofvents and busbody identity need coherent assembled-set review before runtime release."
+  ],
+  "source_crops_or_native_pixel_changes": false,
+  "owner_approved": false,
+  "runtime_ready": false,
+  "runtime_imported": false,
+  "exact_numerical_angle_certified": false
+}

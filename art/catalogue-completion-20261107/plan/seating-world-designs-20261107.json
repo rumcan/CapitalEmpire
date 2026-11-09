@@ -1,0 +1,5663 @@
+{
+  "schema": 1,
+  "date": "2026-11-07",
+  "status": "technical guides generated; guide-to-game handedness proof and final native-art matching remain pending",
+  "coordinate_system": "metres;x across,y rear,z up;audience faces-y;one model rotated0/90/180/270",
+  "normal_cell_order": [
+    [
+      "SE",
+      "SW"
+    ],
+    [
+      "NW",
+      "NE"
+    ]
+  ],
+  "yaw8_cell_order": [
+    [
+      "N",
+      "E"
+    ],
+    [
+      "S",
+      "W"
+    ]
+  ],
+  "camera_down_degrees": 30,
+  "yaw8_angle_degrees": 8,
+  "existing_24_budget_v1_preservation": [
+    {
+      "path": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\seated-pavilion-24-budget\\guides\\normal-world-v1.calibration.json",
+      "sha256": "2dad57d8d1f955c9ed2e98ba0c962416293ba62022f605b1dda8b1eabd31acfa"
+    },
+    {
+      "path": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\seated-pavilion-24-budget\\guides\\normal-world-v1.png",
+      "sha256": "114ddf3bd68ae5b61ac222ba9837ea177490288cdbc538afb26bfb24b9287ecc"
+    },
+    {
+      "path": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\seated-pavilion-24-budget\\guides\\normal-world-v1.svg",
+      "sha256": "286b25c4419548a525f9cf6ecf12ba5d8b1b8d7122a9d3912f34a3d9348425af"
+    },
+    {
+      "path": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\seated-pavilion-24-budget\\guides\\seated-pavilion-24-budget-world-model-v1.json",
+      "sha256": "cab587ff0fa79610a1d9b9978c0d713019bcf20e6acd0ae0323a4b5fac70c017"
+    },
+    {
+      "path": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\seated-pavilion-24-budget\\guides\\yaw8-world-v1.calibration.json",
+      "sha256": "139a89cfc97e2910d0e0f9f42d4001ccb474579d733a892c14a9126f8f66c1be"
+    },
+    {
+      "path": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\seated-pavilion-24-budget\\guides\\yaw8-world-v1.png",
+      "sha256": "d21c4533b420b870067b65efe4dcf676b003e36b01733c4bb5da848a440efedd"
+    },
+    {
+      "path": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\seated-pavilion-24-budget\\guides\\yaw8-world-v1.svg",
+      "sha256": "c7eeb5ae7bfce9cea091ccd8c5d46113562203e71278bfc80de774f9a5f9d2ad"
+    }
+  ],
+  "pavilion_designs": [
+    {
+      "design_key": "seated-pavilion-24-budget",
+      "capacity_target": 24,
+      "capacity_validated": false,
+      "condition": "budget",
+      "footprint_metres": [
+        8,
+        6
+      ],
+      "deck_top_metres": 0.25,
+      "roof_eaves_metres_proxy": 2.8,
+      "roof_rise_metres_proxy": 0.8,
+      "post_world_xy": [
+        [
+          -3.75,
+          -2.75
+        ],
+        [
+          -3.75,
+          2.75
+        ],
+        [
+          0,
+          -2.75
+        ],
+        [
+          0,
+          2.75
+        ],
+        [
+          3.75,
+          -2.75
+        ],
+        [
+          3.75,
+          2.75
+        ]
+      ],
+      "post_count": 6,
+      "roof_support_strategy": "longitudinal eave beams on all posts; transverse manufactured truss at each x-post station; no interior columns in seat/aisle paths",
+      "roof_support_dimensions_require_design_review": true,
+      "seat_rows": 3,
+      "places_per_row": 8,
+      "seat_pitch_metres": 0.65,
+      "row_pitch_metres": 1.4,
+      "bench_board_width_metres_proxy": 5.6000000000000005,
+      "seat_pan_top_metres": 0.7,
+      "proposed_seat_centres": [
+        {
+          "row": 0,
+          "place": 0,
+          "world_metres": [
+            -2.275,
+            -1.4,
+            0.7
+          ]
+        },
+        {
+          "row": 0,
+          "place": 1,
+          "world_metres": [
+            -1.625,
+            -1.4,
+            0.7
+          ]
+        },
+        {
+          "row": 0,
+          "place": 2,
+          "world_metres": [
+            -0.9750000000000001,
+            -1.4,
+            0.7
+          ]
+        },
+        {
+          "row": 0,
+          "place": 3,
+          "world_metres": [
+            -0.325,
+            -1.4,
+            0.7
+          ]
+        },
+        {
+          "row": 0,
+          "place": 4,
+          "world_metres": [
+            0.325,
+            -1.4,
+            0.7
+          ]
+        },
+        {
+          "row": 0,
+          "place": 5,
+          "world_metres": [
+            0.9750000000000001,
+            -1.4,
+            0.7
+          ]
+        },
+        {
+          "row": 0,
+          "place": 6,
+          "world_metres": [
+            1.625,
+            -1.4,
+            0.7
+          ]
+        },
+        {
+          "row": 0,
+          "place": 7,
+          "world_metres": [
+            2.275,
+            -1.4,
+            0.7
+          ]
+        },
+        {
+          "row": 1,
+          "place": 0,
+          "world_metres": [
+            -2.275,
+            0.0,
+            0.7
+          ]
+        },
+        {
+          "row": 1,
+          "place": 1,
+          "world_metres": [
+            -1.625,
+            0.0,
+            0.7
+          ]
+        },
+        {
+          "row": 1,
+          "place": 2,
+          "world_metres": [
+            -0.9750000000000001,
+            0.0,
+            0.7
+          ]
+        },
+        {
+          "row": 1,
+          "place": 3,
+          "world_metres": [
+            -0.325,
+            0.0,
+            0.7
+          ]
+        },
+        {
+          "row": 1,
+          "place": 4,
+          "world_metres": [
+            0.325,
+            0.0,
+            0.7
+          ]
+        },
+        {
+          "row": 1,
+          "place": 5,
+          "world_metres": [
+            0.9750000000000001,
+            0.0,
+            0.7
+          ]
+        },
+        {
+          "row": 1,
+          "place": 6,
+          "world_metres": [
+            1.625,
+            0.0,
+            0.7
+          ]
+        },
+        {
+          "row": 1,
+          "place": 7,
+          "world_metres": [
+            2.275,
+            0.0,
+            0.7
+          ]
+        },
+        {
+          "row": 2,
+          "place": 0,
+          "world_metres": [
+            -2.275,
+            1.4,
+            0.7
+          ]
+        },
+        {
+          "row": 2,
+          "place": 1,
+          "world_metres": [
+            -1.625,
+            1.4,
+            0.7
+          ]
+        },
+        {
+          "row": 2,
+          "place": 2,
+          "world_metres": [
+            -0.9750000000000001,
+            1.4,
+            0.7
+          ]
+        },
+        {
+          "row": 2,
+          "place": 3,
+          "world_metres": [
+            -0.325,
+            1.4,
+            0.7
+          ]
+        },
+        {
+          "row": 2,
+          "place": 4,
+          "world_metres": [
+            0.325,
+            1.4,
+            0.7
+          ]
+        },
+        {
+          "row": 2,
+          "place": 5,
+          "world_metres": [
+            0.9750000000000001,
+            1.4,
+            0.7
+          ]
+        },
+        {
+          "row": 2,
+          "place": 6,
+          "world_metres": [
+            1.625,
+            1.4,
+            0.7
+          ]
+        },
+        {
+          "row": 2,
+          "place": 7,
+          "world_metres": [
+            2.275,
+            1.4,
+            0.7
+          ]
+        }
+      ],
+      "proposed_rear_entries": [
+        {
+          "world_metres": [
+            -2.9,
+            3.0,
+            0.25
+          ],
+          "side_aisle_center_x": -2.9,
+          "stairs": "two125mm risers to250mm deck;1.1m wide"
+        },
+        {
+          "world_metres": [
+            2.9,
+            3.0,
+            0.25
+          ],
+          "side_aisle_center_x": 2.9,
+          "stairs": "two125mm risers to250mm deck;1.1m wide"
+        }
+      ],
+      "front_audience_direction_world": [
+        0,
+        -1,
+        0
+      ],
+      "rear_access": "rear cross-aisle to clear side aisles outside seating ends",
+      "guide_version": 2,
+      "style_profile": {
+        "structure": "manufactured worn timber/painted steel; no primitive scrap construction",
+        "seating": "continuous manufactured worn timber bench boards; exact intended places remain reviewable",
+        "roof": "low corrugated galvanized gable roof with proper trusses/ridge cap",
+        "palette": "faded cream/green, dull galvanized grey, muted wood"
+      },
+      "all_guides_are_technical_only": true,
+      "release_anchors_authored": false,
+      "runtime_ready": false,
+      "owner_approved": false
+    },
+    {
+      "design_key": "seated-pavilion-24-upgraded",
+      "capacity_target": 24,
+      "capacity_validated": false,
+      "condition": "upgraded",
+      "footprint_metres": [
+        8,
+        6
+      ],
+      "deck_top_metres": 0.25,
+      "roof_eaves_metres_proxy": 2.8,
+      "roof_rise_metres_proxy": 0.8,
+      "post_world_xy": [
+        [
+          -3.75,
+          -2.75
+        ],
+        [
+          -3.75,
+          2.75
+        ],
+        [
+          0,
+          -2.75
+        ],
+        [
+          0,
+          2.75
+        ],
+        [
+          3.75,
+          -2.75
+        ],
+        [
+          3.75,
+          2.75
+        ]
+      ],
+      "post_count": 6,
+      "roof_support_strategy": "longitudinal eave beams on all posts; transverse manufactured truss at each x-post station; no interior columns in seat/aisle paths",
+      "roof_support_dimensions_require_design_review": true,
+      "seat_rows": 3,
+      "places_per_row": 8,
+      "seat_pitch_metres": 0.65,
+      "row_pitch_metres": 1.4,
+      "bench_board_width_metres_proxy": 5.6000000000000005,
+      "seat_pan_top_metres": 0.7,
+      "proposed_seat_centres": [
+        {
+          "row": 0,
+          "place": 0,
+          "world_metres": [
+            -2.275,
+            -1.4,
+            0.7
+          ]
+        },
+        {
+          "row": 0,
+          "place": 1,
+          "world_metres": [
+            -1.625,
+            -1.4,
+            0.7
+          ]
+        },
+        {
+          "row": 0,
+          "place": 2,
+          "world_metres": [
+            -0.9750000000000001,
+            -1.4,
+            0.7
+          ]
+        },
+        {
+          "row": 0,
+          "place": 3,
+          "world_metres": [
+            -0.325,
+            -1.4,
+            0.7
+          ]
+        },
+        {
+          "row": 0,
+          "place": 4,
+          "world_metres": [
+            0.325,
+            -1.4,
+            0.7
+          ]
+        },
+        {
+          "row": 0,
+          "place": 5,
+          "world_metres": [
+            0.9750000000000001,
+            -1.4,
+            0.7
+          ]
+        },
+        {
+          "row": 0,
+          "place": 6,
+          "world_metres": [
+            1.625,
+            -1.4,
+            0.7
+          ]
+        },
+        {
+          "row": 0,
+          "place": 7,
+          "world_metres": [
+            2.275,
+            -1.4,
+            0.7
+          ]
+        },
+        {
+          "row": 1,
+          "place": 0,
+          "world_metres": [
+            -2.275,
+            0.0,
+            0.7
+          ]
+        },
+        {
+          "row": 1,
+          "place": 1,
+          "world_metres": [
+            -1.625,
+            0.0,
+            0.7
+          ]
+        },
+        {
+          "row": 1,
+          "place": 2,
+          "world_metres": [
+            -0.9750000000000001,
+            0.0,
+            0.7
+          ]
+        },
+        {
+          "row": 1,
+          "place": 3,
+          "world_metres": [
+            -0.325,
+            0.0,
+            0.7
+          ]
+        },
+        {
+          "row": 1,
+          "place": 4,
+          "world_metres": [
+            0.325,
+            0.0,
+            0.7
+          ]
+        },
+        {
+          "row": 1,
+          "place": 5,
+          "world_metres": [
+            0.9750000000000001,
+            0.0,
+            0.7
+          ]
+        },
+        {
+          "row": 1,
+          "place": 6,
+          "world_metres": [
+            1.625,
+            0.0,
+            0.7
+          ]
+        },
+        {
+          "row": 1,
+          "place": 7,
+          "world_metres": [
+            2.275,
+            0.0,
+            0.7
+          ]
+        },
+        {
+          "row": 2,
+          "place": 0,
+          "world_metres": [
+            -2.275,
+            1.4,
+            0.7
+          ]
+        },
+        {
+          "row": 2,
+          "place": 1,
+          "world_metres": [
+            -1.625,
+            1.4,
+            0.7
+          ]
+        },
+        {
+          "row": 2,
+          "place": 2,
+          "world_metres": [
+            -0.9750000000000001,
+            1.4,
+            0.7
+          ]
+        },
+        {
+          "row": 2,
+          "place": 3,
+          "world_metres": [
+            -0.325,
+            1.4,
+            0.7
+          ]
+        },
+        {
+          "row": 2,
+          "place": 4,
+          "world_metres": [
+            0.325,
+            1.4,
+            0.7
+          ]
+        },
+        {
+          "row": 2,
+          "place": 5,
+          "world_metres": [
+            0.9750000000000001,
+            1.4,
+            0.7
+          ]
+        },
+        {
+          "row": 2,
+          "place": 6,
+          "world_metres": [
+            1.625,
+            1.4,
+            0.7
+          ]
+        },
+        {
+          "row": 2,
+          "place": 7,
+          "world_metres": [
+            2.275,
+            1.4,
+            0.7
+          ]
+        }
+      ],
+      "proposed_rear_entries": [
+        {
+          "world_metres": [
+            -2.9,
+            3.0,
+            0.25
+          ],
+          "side_aisle_center_x": -2.9,
+          "stairs": "two125mm risers to250mm deck;1.1m wide"
+        },
+        {
+          "world_metres": [
+            2.9,
+            3.0,
+            0.25
+          ],
+          "side_aisle_center_x": 2.9,
+          "stairs": "two125mm risers to250mm deck;1.1m wide"
+        }
+      ],
+      "front_audience_direction_world": [
+        0,
+        -1,
+        0
+      ],
+      "rear_access": "rear cross-aisle to clear side aisles outside seating ends",
+      "guide_version": 1,
+      "style_profile": {
+        "structure": "clean painted steel/timber1985 frame",
+        "seating": "separate cream/green molded1985 chair mesh for every place",
+        "roof": "clean cream low-gable canopy/green fascia",
+        "palette": "cream shell/canopy, forest-green frame/detail"
+      },
+      "all_guides_are_technical_only": true,
+      "release_anchors_authored": false,
+      "runtime_ready": false,
+      "owner_approved": false
+    },
+    {
+      "design_key": "seated-pavilion-60-budget",
+      "capacity_target": 60,
+      "capacity_validated": false,
+      "condition": "budget",
+      "footprint_metres": [
+        12,
+        8
+      ],
+      "deck_top_metres": 0.25,
+      "roof_eaves_metres_proxy": 3.0,
+      "roof_rise_metres_proxy": 1.0,
+      "post_world_xy": [
+        [
+          -5.7,
+          -3.7
+        ],
+        [
+          -5.7,
+          3.7
+        ],
+        [
+          -1.9,
+          -3.7
+        ],
+        [
+          -1.9,
+          3.7
+        ],
+        [
+          1.9,
+          -3.7
+        ],
+        [
+          1.9,
+          3.7
+        ],
+        [
+          5.7,
+          -3.7
+        ],
+        [
+          5.7,
+          3.7
+        ]
+      ],
+      "post_count": 8,
+      "roof_support_strategy": "longitudinal eave beams on all posts; transverse manufactured truss at each x-post station; no interior columns in seat/aisle paths",
+      "roof_support_dimensions_require_design_review": true,
+      "seat_rows": 5,
+      "places_per_row": 12,
+      "seat_pitch_metres": 0.65,
+      "row_pitch_metres": 1.3,
+      "bench_board_width_metres_proxy": 8.200000000000001,
+      "seat_pan_top_metres": 0.7,
+      "proposed_seat_centres": [
+        {
+          "row": 0,
+          "place": 0,
+          "world_metres": [
+            -3.575,
+            -2.6,
+            0.7
+          ]
+        },
+        {
+          "row": 0,
+          "place": 1,
+          "world_metres": [
+            -2.9250000000000003,
+            -2.6,
+            0.7
+          ]
+        },
+        {
+          "row": 0,
+          "place": 2,
+          "world_metres": [
+            -2.275,
+            -2.6,
+            0.7
+          ]
+        },
+        {
+          "row": 0,
+          "place": 3,
+          "world_metres": [
+            -1.625,
+            -2.6,
+            0.7
+          ]
+        },
+        {
+          "row": 0,
+          "place": 4,
+          "world_metres": [
+            -0.9750000000000001,
+            -2.6,
+            0.7
+          ]
+        },
+        {
+          "row": 0,
+          "place": 5,
+          "world_metres": [
+            -0.325,
+            -2.6,
+            0.7
+          ]
+        },
+        {
+          "row": 0,
+          "place": 6,
+          "world_metres": [
+            0.325,
+            -2.6,
+            0.7
+          ]
+        },
+        {
+          "row": 0,
+          "place": 7,
+          "world_metres": [
+            0.9750000000000001,
+            -2.6,
+            0.7
+          ]
+        },
+        {
+          "row": 0,
+          "place": 8,
+          "world_metres": [
+            1.625,
+            -2.6,
+            0.7
+          ]
+        },
+        {
+          "row": 0,
+          "place": 9,
+          "world_metres": [
+            2.275,
+            -2.6,
+            0.7
+          ]
+        },
+        {
+          "row": 0,
+          "place": 10,
+          "world_metres": [
+            2.9250000000000003,
+            -2.6,
+            0.7
+          ]
+        },
+        {
+          "row": 0,
+          "place": 11,
+          "world_metres": [
+            3.575,
+            -2.6,
+            0.7
+          ]
+        },
+        {
+          "row": 1,
+          "place": 0,
+          "world_metres": [
+            -3.575,
+            -1.3,
+            0.7
+          ]
+        },
+        {
+          "row": 1,
+          "place": 1,
+          "world_metres": [
+            -2.9250000000000003,
+            -1.3,
+            0.7
+          ]
+        },
+        {
+          "row": 1,
+          "place": 2,
+          "world_metres": [
+            -2.275,
+            -1.3,
+            0.7
+          ]
+        },
+        {
+          "row": 1,
+          "place": 3,
+          "world_metres": [
+            -1.625,
+            -1.3,
+            0.7
+          ]
+        },
+        {
+          "row": 1,
+          "place": 4,
+          "world_metres": [
+            -0.9750000000000001,
+            -1.3,
+            0.7
+          ]
+        },
+        {
+          "row": 1,
+          "place": 5,
+          "world_metres": [
+            -0.325,
+            -1.3,
+            0.7
+          ]
+        },
+        {
+          "row": 1,
+          "place": 6,
+          "world_metres": [
+            0.325,
+            -1.3,
+            0.7
+          ]
+        },
+        {
+          "row": 1,
+          "place": 7,
+          "world_metres": [
+            0.9750000000000001,
+            -1.3,
+            0.7
+          ]
+        },
+        {
+          "row": 1,
+          "place": 8,
+          "world_metres": [
+            1.625,
+            -1.3,
+            0.7
+          ]
+        },
+        {
+          "row": 1,
+          "place": 9,
+          "world_metres": [
+            2.275,
+            -1.3,
+            0.7
+          ]
+        },
+        {
+          "row": 1,
+          "place": 10,
+          "world_metres": [
+            2.9250000000000003,
+            -1.3,
+            0.7
+          ]
+        },
+        {
+          "row": 1,
+          "place": 11,
+          "world_metres": [
+            3.575,
+            -1.3,
+            0.7
+          ]
+        },
+        {
+          "row": 2,
+          "place": 0,
+          "world_metres": [
+            -3.575,
+            0.0,
+            0.7
+          ]
+        },
+        {
+          "row": 2,
+          "place": 1,
+          "world_metres": [
+            -2.9250000000000003,
+            0.0,
+            0.7
+          ]
+        },
+        {
+          "row": 2,
+          "place": 2,
+          "world_metres": [
+            -2.275,
+            0.0,
+            0.7
+          ]
+        },
+        {
+          "row": 2,
+          "place": 3,
+          "world_metres": [
+            -1.625,
+            0.0,
+            0.7
+          ]
+        },
+        {
+          "row": 2,
+          "place": 4,
+          "world_metres": [
+            -0.9750000000000001,
+            0.0,
+            0.7
+          ]
+        },
+        {
+          "row": 2,
+          "place": 5,
+          "world_metres": [
+            -0.325,
+            0.0,
+            0.7
+          ]
+        },
+        {
+          "row": 2,
+          "place": 6,
+          "world_metres": [
+            0.325,
+            0.0,
+            0.7
+          ]
+        },
+        {
+          "row": 2,
+          "place": 7,
+          "world_metres": [
+            0.9750000000000001,
+            0.0,
+            0.7
+          ]
+        },
+        {
+          "row": 2,
+          "place": 8,
+          "world_metres": [
+            1.625,
+            0.0,
+            0.7
+          ]
+        },
+        {
+          "row": 2,
+          "place": 9,
+          "world_metres": [
+            2.275,
+            0.0,
+            0.7
+          ]
+        },
+        {
+          "row": 2,
+          "place": 10,
+          "world_metres": [
+            2.9250000000000003,
+            0.0,
+            0.7
+          ]
+        },
+        {
+          "row": 2,
+          "place": 11,
+          "world_metres": [
+            3.575,
+            0.0,
+            0.7
+          ]
+        },
+        {
+          "row": 3,
+          "place": 0,
+          "world_metres": [
+            -3.575,
+            1.3,
+            0.7
+          ]
+        },
+        {
+          "row": 3,
+          "place": 1,
+          "world_metres": [
+            -2.9250000000000003,
+            1.3,
+            0.7
+          ]
+        },
+        {
+          "row": 3,
+          "place": 2,
+          "world_metres": [
+            -2.275,
+            1.3,
+            0.7
+          ]
+        },
+        {
+          "row": 3,
+          "place": 3,
+          "world_metres": [
+            -1.625,
+            1.3,
+            0.7
+          ]
+        },
+        {
+          "row": 3,
+          "place": 4,
+          "world_metres": [
+            -0.9750000000000001,
+            1.3,
+            0.7
+          ]
+        },
+        {
+          "row": 3,
+          "place": 5,
+          "world_metres": [
+            -0.325,
+            1.3,
+            0.7
+          ]
+        },
+        {
+          "row": 3,
+          "place": 6,
+          "world_metres": [
+            0.325,
+            1.3,
+            0.7
+          ]
+        },
+        {
+          "row": 3,
+          "place": 7,
+          "world_metres": [
+            0.9750000000000001,
+            1.3,
+            0.7
+          ]
+        },
+        {
+          "row": 3,
+          "place": 8,
+          "world_metres": [
+            1.625,
+            1.3,
+            0.7
+          ]
+        },
+        {
+          "row": 3,
+          "place": 9,
+          "world_metres": [
+            2.275,
+            1.3,
+            0.7
+          ]
+        },
+        {
+          "row": 3,
+          "place": 10,
+          "world_metres": [
+            2.9250000000000003,
+            1.3,
+            0.7
+          ]
+        },
+        {
+          "row": 3,
+          "place": 11,
+          "world_metres": [
+            3.575,
+            1.3,
+            0.7
+          ]
+        },
+        {
+          "row": 4,
+          "place": 0,
+          "world_metres": [
+            -3.575,
+            2.6,
+            0.7
+          ]
+        },
+        {
+          "row": 4,
+          "place": 1,
+          "world_metres": [
+            -2.9250000000000003,
+            2.6,
+            0.7
+          ]
+        },
+        {
+          "row": 4,
+          "place": 2,
+          "world_metres": [
+            -2.275,
+            2.6,
+            0.7
+          ]
+        },
+        {
+          "row": 4,
+          "place": 3,
+          "world_metres": [
+            -1.625,
+            2.6,
+            0.7
+          ]
+        },
+        {
+          "row": 4,
+          "place": 4,
+          "world_metres": [
+            -0.9750000000000001,
+            2.6,
+            0.7
+          ]
+        },
+        {
+          "row": 4,
+          "place": 5,
+          "world_metres": [
+            -0.325,
+            2.6,
+            0.7
+          ]
+        },
+        {
+          "row": 4,
+          "place": 6,
+          "world_metres": [
+            0.325,
+            2.6,
+            0.7
+          ]
+        },
+        {
+          "row": 4,
+          "place": 7,
+          "world_metres": [
+            0.9750000000000001,
+            2.6,
+            0.7
+          ]
+        },
+        {
+          "row": 4,
+          "place": 8,
+          "world_metres": [
+            1.625,
+            2.6,
+            0.7
+          ]
+        },
+        {
+          "row": 4,
+          "place": 9,
+          "world_metres": [
+            2.275,
+            2.6,
+            0.7
+          ]
+        },
+        {
+          "row": 4,
+          "place": 10,
+          "world_metres": [
+            2.9250000000000003,
+            2.6,
+            0.7
+          ]
+        },
+        {
+          "row": 4,
+          "place": 11,
+          "world_metres": [
+            3.575,
+            2.6,
+            0.7
+          ]
+        }
+      ],
+      "proposed_rear_entries": [
+        {
+          "world_metres": [
+            -4.75,
+            4.0,
+            0.25
+          ],
+          "side_aisle_center_x": -4.75,
+          "stairs": "two125mm risers to250mm deck;1.1m wide"
+        },
+        {
+          "world_metres": [
+            4.75,
+            4.0,
+            0.25
+          ],
+          "side_aisle_center_x": 4.75,
+          "stairs": "two125mm risers to250mm deck;1.1m wide"
+        }
+      ],
+      "front_audience_direction_world": [
+        0,
+        -1,
+        0
+      ],
+      "rear_access": "rear cross-aisle to clear side aisles outside seating ends",
+      "guide_version": 1,
+      "style_profile": {
+        "structure": "manufactured worn timber/painted steel; no primitive scrap construction",
+        "seating": "continuous manufactured worn timber bench boards; exact intended places remain reviewable",
+        "roof": "low corrugated galvanized gable roof with proper trusses/ridge cap",
+        "palette": "faded cream/green, dull galvanized grey, muted wood"
+      },
+      "all_guides_are_technical_only": true,
+      "release_anchors_authored": false,
+      "runtime_ready": false,
+      "owner_approved": false
+    },
+    {
+      "design_key": "seated-pavilion-60-upgraded",
+      "capacity_target": 60,
+      "capacity_validated": false,
+      "condition": "upgraded",
+      "footprint_metres": [
+        12,
+        8
+      ],
+      "deck_top_metres": 0.25,
+      "roof_eaves_metres_proxy": 3.0,
+      "roof_rise_metres_proxy": 1.0,
+      "post_world_xy": [
+        [
+          -5.7,
+          -3.7
+        ],
+        [
+          -5.7,
+          3.7
+        ],
+        [
+          -1.9,
+          -3.7
+        ],
+        [
+          -1.9,
+          3.7
+        ],
+        [
+          1.9,
+          -3.7
+        ],
+        [
+          1.9,
+          3.7
+        ],
+        [
+          5.7,
+          -3.7
+        ],
+        [
+          5.7,
+          3.7
+        ]
+      ],
+      "post_count": 8,
+      "roof_support_strategy": "longitudinal eave beams on all posts; transverse manufactured truss at each x-post station; no interior columns in seat/aisle paths",
+      "roof_support_dimensions_require_design_review": true,
+      "seat_rows": 5,
+      "places_per_row": 12,
+      "seat_pitch_metres": 0.65,
+      "row_pitch_metres": 1.3,
+      "bench_board_width_metres_proxy": 8.200000000000001,
+      "seat_pan_top_metres": 0.7,
+      "proposed_seat_centres": [
+        {
+          "row": 0,
+          "place": 0,
+          "world_metres": [
+            -3.575,
+            -2.6,
+            0.7
+          ]
+        },
+        {
+          "row": 0,
+          "place": 1,
+          "world_metres": [
+            -2.9250000000000003,
+            -2.6,
+            0.7
+          ]
+        },
+        {
+          "row": 0,
+          "place": 2,
+          "world_metres": [
+            -2.275,
+            -2.6,
+            0.7
+          ]
+        },
+        {
+          "row": 0,
+          "place": 3,
+          "world_metres": [
+            -1.625,
+            -2.6,
+            0.7
+          ]
+        },
+        {
+          "row": 0,
+          "place": 4,
+          "world_metres": [
+            -0.9750000000000001,
+            -2.6,
+            0.7
+          ]
+        },
+        {
+          "row": 0,
+          "place": 5,
+          "world_metres": [
+            -0.325,
+            -2.6,
+            0.7
+          ]
+        },
+        {
+          "row": 0,
+          "place": 6,
+          "world_metres": [
+            0.325,
+            -2.6,
+            0.7
+          ]
+        },
+        {
+          "row": 0,
+          "place": 7,
+          "world_metres": [
+            0.9750000000000001,
+            -2.6,
+            0.7
+          ]
+        },
+        {
+          "row": 0,
+          "place": 8,
+          "world_metres": [
+            1.625,
+            -2.6,
+            0.7
+          ]
+        },
+        {
+          "row": 0,
+          "place": 9,
+          "world_metres": [
+            2.275,
+            -2.6,
+            0.7
+          ]
+        },
+        {
+          "row": 0,
+          "place": 10,
+          "world_metres": [
+            2.9250000000000003,
+            -2.6,
+            0.7
+          ]
+        },
+        {
+          "row": 0,
+          "place": 11,
+          "world_metres": [
+            3.575,
+            -2.6,
+            0.7
+          ]
+        },
+        {
+          "row": 1,
+          "place": 0,
+          "world_metres": [
+            -3.575,
+            -1.3,
+            0.7
+          ]
+        },
+        {
+          "row": 1,
+          "place": 1,
+          "world_metres": [
+            -2.9250000000000003,
+            -1.3,
+            0.7
+          ]
+        },
+        {
+          "row": 1,
+          "place": 2,
+          "world_metres": [
+            -2.275,
+            -1.3,
+            0.7
+          ]
+        },
+        {
+          "row": 1,
+          "place": 3,
+          "world_metres": [
+            -1.625,
+            -1.3,
+            0.7
+          ]
+        },
+        {
+          "row": 1,
+          "place": 4,
+          "world_metres": [
+            -0.9750000000000001,
+            -1.3,
+            0.7
+          ]
+        },
+        {
+          "row": 1,
+          "place": 5,
+          "world_metres": [
+            -0.325,
+            -1.3,
+            0.7
+          ]
+        },
+        {
+          "row": 1,
+          "place": 6,
+          "world_metres": [
+            0.325,
+            -1.3,
+            0.7
+          ]
+        },
+        {
+          "row": 1,
+          "place": 7,
+          "world_metres": [
+            0.9750000000000001,
+            -1.3,
+            0.7
+          ]
+        },
+        {
+          "row": 1,
+          "place": 8,
+          "world_metres": [
+            1.625,
+            -1.3,
+            0.7
+          ]
+        },
+        {
+          "row": 1,
+          "place": 9,
+          "world_metres": [
+            2.275,
+            -1.3,
+            0.7
+          ]
+        },
+        {
+          "row": 1,
+          "place": 10,
+          "world_metres": [
+            2.9250000000000003,
+            -1.3,
+            0.7
+          ]
+        },
+        {
+          "row": 1,
+          "place": 11,
+          "world_metres": [
+            3.575,
+            -1.3,
+            0.7
+          ]
+        },
+        {
+          "row": 2,
+          "place": 0,
+          "world_metres": [
+            -3.575,
+            0.0,
+            0.7
+          ]
+        },
+        {
+          "row": 2,
+          "place": 1,
+          "world_metres": [
+            -2.9250000000000003,
+            0.0,
+            0.7
+          ]
+        },
+        {
+          "row": 2,
+          "place": 2,
+          "world_metres": [
+            -2.275,
+            0.0,
+            0.7
+          ]
+        },
+        {
+          "row": 2,
+          "place": 3,
+          "world_metres": [
+            -1.625,
+            0.0,
+            0.7
+          ]
+        },
+        {
+          "row": 2,
+          "place": 4,
+          "world_metres": [
+            -0.9750000000000001,
+            0.0,
+            0.7
+          ]
+        },
+        {
+          "row": 2,
+          "place": 5,
+          "world_metres": [
+            -0.325,
+            0.0,
+            0.7
+          ]
+        },
+        {
+          "row": 2,
+          "place": 6,
+          "world_metres": [
+            0.325,
+            0.0,
+            0.7
+          ]
+        },
+        {
+          "row": 2,
+          "place": 7,
+          "world_metres": [
+            0.9750000000000001,
+            0.0,
+            0.7
+          ]
+        },
+        {
+          "row": 2,
+          "place": 8,
+          "world_metres": [
+            1.625,
+            0.0,
+            0.7
+          ]
+        },
+        {
+          "row": 2,
+          "place": 9,
+          "world_metres": [
+            2.275,
+            0.0,
+            0.7
+          ]
+        },
+        {
+          "row": 2,
+          "place": 10,
+          "world_metres": [
+            2.9250000000000003,
+            0.0,
+            0.7
+          ]
+        },
+        {
+          "row": 2,
+          "place": 11,
+          "world_metres": [
+            3.575,
+            0.0,
+            0.7
+          ]
+        },
+        {
+          "row": 3,
+          "place": 0,
+          "world_metres": [
+            -3.575,
+            1.3,
+            0.7
+          ]
+        },
+        {
+          "row": 3,
+          "place": 1,
+          "world_metres": [
+            -2.9250000000000003,
+            1.3,
+            0.7
+          ]
+        },
+        {
+          "row": 3,
+          "place": 2,
+          "world_metres": [
+            -2.275,
+            1.3,
+            0.7
+          ]
+        },
+        {
+          "row": 3,
+          "place": 3,
+          "world_metres": [
+            -1.625,
+            1.3,
+            0.7
+          ]
+        },
+        {
+          "row": 3,
+          "place": 4,
+          "world_metres": [
+            -0.9750000000000001,
+            1.3,
+            0.7
+          ]
+        },
+        {
+          "row": 3,
+          "place": 5,
+          "world_metres": [
+            -0.325,
+            1.3,
+            0.7
+          ]
+        },
+        {
+          "row": 3,
+          "place": 6,
+          "world_metres": [
+            0.325,
+            1.3,
+            0.7
+          ]
+        },
+        {
+          "row": 3,
+          "place": 7,
+          "world_metres": [
+            0.9750000000000001,
+            1.3,
+            0.7
+          ]
+        },
+        {
+          "row": 3,
+          "place": 8,
+          "world_metres": [
+            1.625,
+            1.3,
+            0.7
+          ]
+        },
+        {
+          "row": 3,
+          "place": 9,
+          "world_metres": [
+            2.275,
+            1.3,
+            0.7
+          ]
+        },
+        {
+          "row": 3,
+          "place": 10,
+          "world_metres": [
+            2.9250000000000003,
+            1.3,
+            0.7
+          ]
+        },
+        {
+          "row": 3,
+          "place": 11,
+          "world_metres": [
+            3.575,
+            1.3,
+            0.7
+          ]
+        },
+        {
+          "row": 4,
+          "place": 0,
+          "world_metres": [
+            -3.575,
+            2.6,
+            0.7
+          ]
+        },
+        {
+          "row": 4,
+          "place": 1,
+          "world_metres": [
+            -2.9250000000000003,
+            2.6,
+            0.7
+          ]
+        },
+        {
+          "row": 4,
+          "place": 2,
+          "world_metres": [
+            -2.275,
+            2.6,
+            0.7
+          ]
+        },
+        {
+          "row": 4,
+          "place": 3,
+          "world_metres": [
+            -1.625,
+            2.6,
+            0.7
+          ]
+        },
+        {
+          "row": 4,
+          "place": 4,
+          "world_metres": [
+            -0.9750000000000001,
+            2.6,
+            0.7
+          ]
+        },
+        {
+          "row": 4,
+          "place": 5,
+          "world_metres": [
+            -0.325,
+            2.6,
+            0.7
+          ]
+        },
+        {
+          "row": 4,
+          "place": 6,
+          "world_metres": [
+            0.325,
+            2.6,
+            0.7
+          ]
+        },
+        {
+          "row": 4,
+          "place": 7,
+          "world_metres": [
+            0.9750000000000001,
+            2.6,
+            0.7
+          ]
+        },
+        {
+          "row": 4,
+          "place": 8,
+          "world_metres": [
+            1.625,
+            2.6,
+            0.7
+          ]
+        },
+        {
+          "row": 4,
+          "place": 9,
+          "world_metres": [
+            2.275,
+            2.6,
+            0.7
+          ]
+        },
+        {
+          "row": 4,
+          "place": 10,
+          "world_metres": [
+            2.9250000000000003,
+            2.6,
+            0.7
+          ]
+        },
+        {
+          "row": 4,
+          "place": 11,
+          "world_metres": [
+            3.575,
+            2.6,
+            0.7
+          ]
+        }
+      ],
+      "proposed_rear_entries": [
+        {
+          "world_metres": [
+            -4.75,
+            4.0,
+            0.25
+          ],
+          "side_aisle_center_x": -4.75,
+          "stairs": "two125mm risers to250mm deck;1.1m wide"
+        },
+        {
+          "world_metres": [
+            4.75,
+            4.0,
+            0.25
+          ],
+          "side_aisle_center_x": 4.75,
+          "stairs": "two125mm risers to250mm deck;1.1m wide"
+        }
+      ],
+      "front_audience_direction_world": [
+        0,
+        -1,
+        0
+      ],
+      "rear_access": "rear cross-aisle to clear side aisles outside seating ends",
+      "guide_version": 1,
+      "style_profile": {
+        "structure": "clean painted steel/timber1985 frame",
+        "seating": "separate cream/green molded1985 chair mesh for every place",
+        "roof": "clean cream low-gable canopy/green fascia",
+        "palette": "cream shell/canopy, forest-green frame/detail"
+      },
+      "all_guides_are_technical_only": true,
+      "release_anchors_authored": false,
+      "runtime_ready": false,
+      "owner_approved": false
+    },
+    {
+      "design_key": "seated-pavilion-120-budget",
+      "capacity_target": 120,
+      "capacity_validated": false,
+      "condition": "budget",
+      "footprint_metres": [
+        18,
+        10
+      ],
+      "deck_top_metres": 0.25,
+      "roof_eaves_metres_proxy": 3.2,
+      "roof_rise_metres_proxy": 1.25,
+      "post_world_xy": [
+        [
+          -8.7,
+          -4.7
+        ],
+        [
+          -8.7,
+          4.7
+        ],
+        [
+          -5.22,
+          -4.7
+        ],
+        [
+          -5.22,
+          4.7
+        ],
+        [
+          -1.74,
+          -4.7
+        ],
+        [
+          -1.74,
+          4.7
+        ],
+        [
+          1.74,
+          -4.7
+        ],
+        [
+          1.74,
+          4.7
+        ],
+        [
+          5.22,
+          -4.7
+        ],
+        [
+          5.22,
+          4.7
+        ],
+        [
+          8.7,
+          -4.7
+        ],
+        [
+          8.7,
+          4.7
+        ]
+      ],
+      "post_count": 12,
+      "roof_support_strategy": "longitudinal eave beams on all posts; transverse manufactured truss at each x-post station; no interior columns in seat/aisle paths",
+      "roof_support_dimensions_require_design_review": true,
+      "seat_rows": 6,
+      "places_per_row": 20,
+      "seat_pitch_metres": 0.65,
+      "row_pitch_metres": 1.3,
+      "bench_board_width_metres_proxy": 13.4,
+      "seat_pan_top_metres": 0.7,
+      "proposed_seat_centres": [
+        {
+          "row": 0,
+          "place": 0,
+          "world_metres": [
+            -6.175,
+            -3.25,
+            0.7
+          ]
+        },
+        {
+          "row": 0,
+          "place": 1,
+          "world_metres": [
+            -5.525,
+            -3.25,
+            0.7
+          ]
+        },
+        {
+          "row": 0,
+          "place": 2,
+          "world_metres": [
+            -4.875,
+            -3.25,
+            0.7
+          ]
+        },
+        {
+          "row": 0,
+          "place": 3,
+          "world_metres": [
+            -4.2250000000000005,
+            -3.25,
+            0.7
+          ]
+        },
+        {
+          "row": 0,
+          "place": 4,
+          "world_metres": [
+            -3.575,
+            -3.25,
+            0.7
+          ]
+        },
+        {
+          "row": 0,
+          "place": 5,
+          "world_metres": [
+            -2.9250000000000003,
+            -3.25,
+            0.7
+          ]
+        },
+        {
+          "row": 0,
+          "place": 6,
+          "world_metres": [
+            -2.275,
+            -3.25,
+            0.7
+          ]
+        },
+        {
+          "row": 0,
+          "place": 7,
+          "world_metres": [
+            -1.625,
+            -3.25,
+            0.7
+          ]
+        },
+        {
+          "row": 0,
+          "place": 8,
+          "world_metres": [
+            -0.9750000000000001,
+            -3.25,
+            0.7
+          ]
+        },
+        {
+          "row": 0,
+          "place": 9,
+          "world_metres": [
+            -0.325,
+            -3.25,
+            0.7
+          ]
+        },
+        {
+          "row": 0,
+          "place": 10,
+          "world_metres": [
+            0.325,
+            -3.25,
+            0.7
+          ]
+        },
+        {
+          "row": 0,
+          "place": 11,
+          "world_metres": [
+            0.9750000000000001,
+            -3.25,
+            0.7
+          ]
+        },
+        {
+          "row": 0,
+          "place": 12,
+          "world_metres": [
+            1.625,
+            -3.25,
+            0.7
+          ]
+        },
+        {
+          "row": 0,
+          "place": 13,
+          "world_metres": [
+            2.275,
+            -3.25,
+            0.7
+          ]
+        },
+        {
+          "row": 0,
+          "place": 14,
+          "world_metres": [
+            2.9250000000000003,
+            -3.25,
+            0.7
+          ]
+        },
+        {
+          "row": 0,
+          "place": 15,
+          "world_metres": [
+            3.575,
+            -3.25,
+            0.7
+          ]
+        },
+        {
+          "row": 0,
+          "place": 16,
+          "world_metres": [
+            4.2250000000000005,
+            -3.25,
+            0.7
+          ]
+        },
+        {
+          "row": 0,
+          "place": 17,
+          "world_metres": [
+            4.875,
+            -3.25,
+            0.7
+          ]
+        },
+        {
+          "row": 0,
+          "place": 18,
+          "world_metres": [
+            5.525,
+            -3.25,
+            0.7
+          ]
+        },
+        {
+          "row": 0,
+          "place": 19,
+          "world_metres": [
+            6.175,
+            -3.25,
+            0.7
+          ]
+        },
+        {
+          "row": 1,
+          "place": 0,
+          "world_metres": [
+            -6.175,
+            -1.9500000000000002,
+            0.7
+          ]
+        },
+        {
+          "row": 1,
+          "place": 1,
+          "world_metres": [
+            -5.525,
+            -1.9500000000000002,
+            0.7
+          ]
+        },
+        {
+          "row": 1,
+          "place": 2,
+          "world_metres": [
+            -4.875,
+            -1.9500000000000002,
+            0.7
+          ]
+        },
+        {
+          "row": 1,
+          "place": 3,
+          "world_metres": [
+            -4.2250000000000005,
+            -1.9500000000000002,
+            0.7
+          ]
+        },
+        {
+          "row": 1,
+          "place": 4,
+          "world_metres": [
+            -3.575,
+            -1.9500000000000002,
+            0.7
+          ]
+        },
+        {
+          "row": 1,
+          "place": 5,
+          "world_metres": [
+            -2.9250000000000003,
+            -1.9500000000000002,
+            0.7
+          ]
+        },
+        {
+          "row": 1,
+          "place": 6,
+          "world_metres": [
+            -2.275,
+            -1.9500000000000002,
+            0.7
+          ]
+        },
+        {
+          "row": 1,
+          "place": 7,
+          "world_metres": [
+            -1.625,
+            -1.9500000000000002,
+            0.7
+          ]
+        },
+        {
+          "row": 1,
+          "place": 8,
+          "world_metres": [
+            -0.9750000000000001,
+            -1.9500000000000002,
+            0.7
+          ]
+        },
+        {
+          "row": 1,
+          "place": 9,
+          "world_metres": [
+            -0.325,
+            -1.9500000000000002,
+            0.7
+          ]
+        },
+        {
+          "row": 1,
+          "place": 10,
+          "world_metres": [
+            0.325,
+            -1.9500000000000002,
+            0.7
+          ]
+        },
+        {
+          "row": 1,
+          "place": 11,
+          "world_metres": [
+            0.9750000000000001,
+            -1.9500000000000002,
+            0.7
+          ]
+        },
+        {
+          "row": 1,
+          "place": 12,
+          "world_metres": [
+            1.625,
+            -1.9500000000000002,
+            0.7
+          ]
+        },
+        {
+          "row": 1,
+          "place": 13,
+          "world_metres": [
+            2.275,
+            -1.9500000000000002,
+            0.7
+          ]
+        },
+        {
+          "row": 1,
+          "place": 14,
+          "world_metres": [
+            2.9250000000000003,
+            -1.9500000000000002,
+            0.7
+          ]
+        },
+        {
+          "row": 1,
+          "place": 15,
+          "world_metres": [
+            3.575,
+            -1.9500000000000002,
+            0.7
+          ]
+        },
+        {
+          "row": 1,
+          "place": 16,
+          "world_metres": [
+            4.2250000000000005,
+            -1.9500000000000002,
+            0.7
+          ]
+        },
+        {
+          "row": 1,
+          "place": 17,
+          "world_metres": [
+            4.875,
+            -1.9500000000000002,
+            0.7
+          ]
+        },
+        {
+          "row": 1,
+          "place": 18,
+          "world_metres": [
+            5.525,
+            -1.9500000000000002,
+            0.7
+          ]
+        },
+        {
+          "row": 1,
+          "place": 19,
+          "world_metres": [
+            6.175,
+            -1.9500000000000002,
+            0.7
+          ]
+        },
+        {
+          "row": 2,
+          "place": 0,
+          "world_metres": [
+            -6.175,
+            -0.65,
+            0.7
+          ]
+        },
+        {
+          "row": 2,
+          "place": 1,
+          "world_metres": [
+            -5.525,
+            -0.65,
+            0.7
+          ]
+        },
+        {
+          "row": 2,
+          "place": 2,
+          "world_metres": [
+            -4.875,
+            -0.65,
+            0.7
+          ]
+        },
+        {
+          "row": 2,
+          "place": 3,
+          "world_metres": [
+            -4.2250000000000005,
+            -0.65,
+            0.7
+          ]
+        },
+        {
+          "row": 2,
+          "place": 4,
+          "world_metres": [
+            -3.575,
+            -0.65,
+            0.7
+          ]
+        },
+        {
+          "row": 2,
+          "place": 5,
+          "world_metres": [
+            -2.9250000000000003,
+            -0.65,
+            0.7
+          ]
+        },
+        {
+          "row": 2,
+          "place": 6,
+          "world_metres": [
+            -2.275,
+            -0.65,
+            0.7
+          ]
+        },
+        {
+          "row": 2,
+          "place": 7,
+          "world_metres": [
+            -1.625,
+            -0.65,
+            0.7
+          ]
+        },
+        {
+          "row": 2,
+          "place": 8,
+          "world_metres": [
+            -0.9750000000000001,
+            -0.65,
+            0.7
+          ]
+        },
+        {
+          "row": 2,
+          "place": 9,
+          "world_metres": [
+            -0.325,
+            -0.65,
+            0.7
+          ]
+        },
+        {
+          "row": 2,
+          "place": 10,
+          "world_metres": [
+            0.325,
+            -0.65,
+            0.7
+          ]
+        },
+        {
+          "row": 2,
+          "place": 11,
+          "world_metres": [
+            0.9750000000000001,
+            -0.65,
+            0.7
+          ]
+        },
+        {
+          "row": 2,
+          "place": 12,
+          "world_metres": [
+            1.625,
+            -0.65,
+            0.7
+          ]
+        },
+        {
+          "row": 2,
+          "place": 13,
+          "world_metres": [
+            2.275,
+            -0.65,
+            0.7
+          ]
+        },
+        {
+          "row": 2,
+          "place": 14,
+          "world_metres": [
+            2.9250000000000003,
+            -0.65,
+            0.7
+          ]
+        },
+        {
+          "row": 2,
+          "place": 15,
+          "world_metres": [
+            3.575,
+            -0.65,
+            0.7
+          ]
+        },
+        {
+          "row": 2,
+          "place": 16,
+          "world_metres": [
+            4.2250000000000005,
+            -0.65,
+            0.7
+          ]
+        },
+        {
+          "row": 2,
+          "place": 17,
+          "world_metres": [
+            4.875,
+            -0.65,
+            0.7
+          ]
+        },
+        {
+          "row": 2,
+          "place": 18,
+          "world_metres": [
+            5.525,
+            -0.65,
+            0.7
+          ]
+        },
+        {
+          "row": 2,
+          "place": 19,
+          "world_metres": [
+            6.175,
+            -0.65,
+            0.7
+          ]
+        },
+        {
+          "row": 3,
+          "place": 0,
+          "world_metres": [
+            -6.175,
+            0.65,
+            0.7
+          ]
+        },
+        {
+          "row": 3,
+          "place": 1,
+          "world_metres": [
+            -5.525,
+            0.65,
+            0.7
+          ]
+        },
+        {
+          "row": 3,
+          "place": 2,
+          "world_metres": [
+            -4.875,
+            0.65,
+            0.7
+          ]
+        },
+        {
+          "row": 3,
+          "place": 3,
+          "world_metres": [
+            -4.2250000000000005,
+            0.65,
+            0.7
+          ]
+        },
+        {
+          "row": 3,
+          "place": 4,
+          "world_metres": [
+            -3.575,
+            0.65,
+            0.7
+          ]
+        },
+        {
+          "row": 3,
+          "place": 5,
+          "world_metres": [
+            -2.9250000000000003,
+            0.65,
+            0.7
+          ]
+        },
+        {
+          "row": 3,
+          "place": 6,
+          "world_metres": [
+            -2.275,
+            0.65,
+            0.7
+          ]
+        },
+        {
+          "row": 3,
+          "place": 7,
+          "world_metres": [
+            -1.625,
+            0.65,
+            0.7
+          ]
+        },
+        {
+          "row": 3,
+          "place": 8,
+          "world_metres": [
+            -0.9750000000000001,
+            0.65,
+            0.7
+          ]
+        },
+        {
+          "row": 3,
+          "place": 9,
+          "world_metres": [
+            -0.325,
+            0.65,
+            0.7
+          ]
+        },
+        {
+          "row": 3,
+          "place": 10,
+          "world_metres": [
+            0.325,
+            0.65,
+            0.7
+          ]
+        },
+        {
+          "row": 3,
+          "place": 11,
+          "world_metres": [
+            0.9750000000000001,
+            0.65,
+            0.7
+          ]
+        },
+        {
+          "row": 3,
+          "place": 12,
+          "world_metres": [
+            1.625,
+            0.65,
+            0.7
+          ]
+        },
+        {
+          "row": 3,
+          "place": 13,
+          "world_metres": [
+            2.275,
+            0.65,
+            0.7
+          ]
+        },
+        {
+          "row": 3,
+          "place": 14,
+          "world_metres": [
+            2.9250000000000003,
+            0.65,
+            0.7
+          ]
+        },
+        {
+          "row": 3,
+          "place": 15,
+          "world_metres": [
+            3.575,
+            0.65,
+            0.7
+          ]
+        },
+        {
+          "row": 3,
+          "place": 16,
+          "world_metres": [
+            4.2250000000000005,
+            0.65,
+            0.7
+          ]
+        },
+        {
+          "row": 3,
+          "place": 17,
+          "world_metres": [
+            4.875,
+            0.65,
+            0.7
+          ]
+        },
+        {
+          "row": 3,
+          "place": 18,
+          "world_metres": [
+            5.525,
+            0.65,
+            0.7
+          ]
+        },
+        {
+          "row": 3,
+          "place": 19,
+          "world_metres": [
+            6.175,
+            0.65,
+            0.7
+          ]
+        },
+        {
+          "row": 4,
+          "place": 0,
+          "world_metres": [
+            -6.175,
+            1.9500000000000002,
+            0.7
+          ]
+        },
+        {
+          "row": 4,
+          "place": 1,
+          "world_metres": [
+            -5.525,
+            1.9500000000000002,
+            0.7
+          ]
+        },
+        {
+          "row": 4,
+          "place": 2,
+          "world_metres": [
+            -4.875,
+            1.9500000000000002,
+            0.7
+          ]
+        },
+        {
+          "row": 4,
+          "place": 3,
+          "world_metres": [
+            -4.2250000000000005,
+            1.9500000000000002,
+            0.7
+          ]
+        },
+        {
+          "row": 4,
+          "place": 4,
+          "world_metres": [
+            -3.575,
+            1.9500000000000002,
+            0.7
+          ]
+        },
+        {
+          "row": 4,
+          "place": 5,
+          "world_metres": [
+            -2.9250000000000003,
+            1.9500000000000002,
+            0.7
+          ]
+        },
+        {
+          "row": 4,
+          "place": 6,
+          "world_metres": [
+            -2.275,
+            1.9500000000000002,
+            0.7
+          ]
+        },
+        {
+          "row": 4,
+          "place": 7,
+          "world_metres": [
+            -1.625,
+            1.9500000000000002,
+            0.7
+          ]
+        },
+        {
+          "row": 4,
+          "place": 8,
+          "world_metres": [
+            -0.9750000000000001,
+            1.9500000000000002,
+            0.7
+          ]
+        },
+        {
+          "row": 4,
+          "place": 9,
+          "world_metres": [
+            -0.325,
+            1.9500000000000002,
+            0.7
+          ]
+        },
+        {
+          "row": 4,
+          "place": 10,
+          "world_metres": [
+            0.325,
+            1.9500000000000002,
+            0.7
+          ]
+        },
+        {
+          "row": 4,
+          "place": 11,
+          "world_metres": [
+            0.9750000000000001,
+            1.9500000000000002,
+            0.7
+          ]
+        },
+        {
+          "row": 4,
+          "place": 12,
+          "world_metres": [
+            1.625,
+            1.9500000000000002,
+            0.7
+          ]
+        },
+        {
+          "row": 4,
+          "place": 13,
+          "world_metres": [
+            2.275,
+            1.9500000000000002,
+            0.7
+          ]
+        },
+        {
+          "row": 4,
+          "place": 14,
+          "world_metres": [
+            2.9250000000000003,
+            1.9500000000000002,
+            0.7
+          ]
+        },
+        {
+          "row": 4,
+          "place": 15,
+          "world_metres": [
+            3.575,
+            1.9500000000000002,
+            0.7
+          ]
+        },
+        {
+          "row": 4,
+          "place": 16,
+          "world_metres": [
+            4.2250000000000005,
+            1.9500000000000002,
+            0.7
+          ]
+        },
+        {
+          "row": 4,
+          "place": 17,
+          "world_metres": [
+            4.875,
+            1.9500000000000002,
+            0.7
+          ]
+        },
+        {
+          "row": 4,
+          "place": 18,
+          "world_metres": [
+            5.525,
+            1.9500000000000002,
+            0.7
+          ]
+        },
+        {
+          "row": 4,
+          "place": 19,
+          "world_metres": [
+            6.175,
+            1.9500000000000002,
+            0.7
+          ]
+        },
+        {
+          "row": 5,
+          "place": 0,
+          "world_metres": [
+            -6.175,
+            3.25,
+            0.7
+          ]
+        },
+        {
+          "row": 5,
+          "place": 1,
+          "world_metres": [
+            -5.525,
+            3.25,
+            0.7
+          ]
+        },
+        {
+          "row": 5,
+          "place": 2,
+          "world_metres": [
+            -4.875,
+            3.25,
+            0.7
+          ]
+        },
+        {
+          "row": 5,
+          "place": 3,
+          "world_metres": [
+            -4.2250000000000005,
+            3.25,
+            0.7
+          ]
+        },
+        {
+          "row": 5,
+          "place": 4,
+          "world_metres": [
+            -3.575,
+            3.25,
+            0.7
+          ]
+        },
+        {
+          "row": 5,
+          "place": 5,
+          "world_metres": [
+            -2.9250000000000003,
+            3.25,
+            0.7
+          ]
+        },
+        {
+          "row": 5,
+          "place": 6,
+          "world_metres": [
+            -2.275,
+            3.25,
+            0.7
+          ]
+        },
+        {
+          "row": 5,
+          "place": 7,
+          "world_metres": [
+            -1.625,
+            3.25,
+            0.7
+          ]
+        },
+        {
+          "row": 5,
+          "place": 8,
+          "world_metres": [
+            -0.9750000000000001,
+            3.25,
+            0.7
+          ]
+        },
+        {
+          "row": 5,
+          "place": 9,
+          "world_metres": [
+            -0.325,
+            3.25,
+            0.7
+          ]
+        },
+        {
+          "row": 5,
+          "place": 10,
+          "world_metres": [
+            0.325,
+            3.25,
+            0.7
+          ]
+        },
+        {
+          "row": 5,
+          "place": 11,
+          "world_metres": [
+            0.9750000000000001,
+            3.25,
+            0.7
+          ]
+        },
+        {
+          "row": 5,
+          "place": 12,
+          "world_metres": [
+            1.625,
+            3.25,
+            0.7
+          ]
+        },
+        {
+          "row": 5,
+          "place": 13,
+          "world_metres": [
+            2.275,
+            3.25,
+            0.7
+          ]
+        },
+        {
+          "row": 5,
+          "place": 14,
+          "world_metres": [
+            2.9250000000000003,
+            3.25,
+            0.7
+          ]
+        },
+        {
+          "row": 5,
+          "place": 15,
+          "world_metres": [
+            3.575,
+            3.25,
+            0.7
+          ]
+        },
+        {
+          "row": 5,
+          "place": 16,
+          "world_metres": [
+            4.2250000000000005,
+            3.25,
+            0.7
+          ]
+        },
+        {
+          "row": 5,
+          "place": 17,
+          "world_metres": [
+            4.875,
+            3.25,
+            0.7
+          ]
+        },
+        {
+          "row": 5,
+          "place": 18,
+          "world_metres": [
+            5.525,
+            3.25,
+            0.7
+          ]
+        },
+        {
+          "row": 5,
+          "place": 19,
+          "world_metres": [
+            6.175,
+            3.25,
+            0.7
+          ]
+        }
+      ],
+      "proposed_rear_entries": [
+        {
+          "world_metres": [
+            -7.75,
+            5.0,
+            0.25
+          ],
+          "side_aisle_center_x": -7.75,
+          "stairs": "two125mm risers to250mm deck;1.1m wide"
+        },
+        {
+          "world_metres": [
+            7.75,
+            5.0,
+            0.25
+          ],
+          "side_aisle_center_x": 7.75,
+          "stairs": "two125mm risers to250mm deck;1.1m wide"
+        }
+      ],
+      "front_audience_direction_world": [
+        0,
+        -1,
+        0
+      ],
+      "rear_access": "rear cross-aisle to clear side aisles outside seating ends",
+      "guide_version": 1,
+      "style_profile": {
+        "structure": "manufactured worn timber/painted steel; no primitive scrap construction",
+        "seating": "continuous manufactured worn timber bench boards; exact intended places remain reviewable",
+        "roof": "low corrugated galvanized gable roof with proper trusses/ridge cap",
+        "palette": "faded cream/green, dull galvanized grey, muted wood"
+      },
+      "all_guides_are_technical_only": true,
+      "release_anchors_authored": false,
+      "runtime_ready": false,
+      "owner_approved": false
+    },
+    {
+      "design_key": "seated-pavilion-120-upgraded",
+      "capacity_target": 120,
+      "capacity_validated": false,
+      "condition": "upgraded",
+      "footprint_metres": [
+        18,
+        10
+      ],
+      "deck_top_metres": 0.25,
+      "roof_eaves_metres_proxy": 3.2,
+      "roof_rise_metres_proxy": 1.25,
+      "post_world_xy": [
+        [
+          -8.7,
+          -4.7
+        ],
+        [
+          -8.7,
+          4.7
+        ],
+        [
+          -5.22,
+          -4.7
+        ],
+        [
+          -5.22,
+          4.7
+        ],
+        [
+          -1.74,
+          -4.7
+        ],
+        [
+          -1.74,
+          4.7
+        ],
+        [
+          1.74,
+          -4.7
+        ],
+        [
+          1.74,
+          4.7
+        ],
+        [
+          5.22,
+          -4.7
+        ],
+        [
+          5.22,
+          4.7
+        ],
+        [
+          8.7,
+          -4.7
+        ],
+        [
+          8.7,
+          4.7
+        ]
+      ],
+      "post_count": 12,
+      "roof_support_strategy": "longitudinal eave beams on all posts; transverse manufactured truss at each x-post station; no interior columns in seat/aisle paths",
+      "roof_support_dimensions_require_design_review": true,
+      "seat_rows": 6,
+      "places_per_row": 20,
+      "seat_pitch_metres": 0.65,
+      "row_pitch_metres": 1.3,
+      "bench_board_width_metres_proxy": 13.4,
+      "seat_pan_top_metres": 0.7,
+      "proposed_seat_centres": [
+        {
+          "row": 0,
+          "place": 0,
+          "world_metres": [
+            -6.175,
+            -3.25,
+            0.7
+          ]
+        },
+        {
+          "row": 0,
+          "place": 1,
+          "world_metres": [
+            -5.525,
+            -3.25,
+            0.7
+          ]
+        },
+        {
+          "row": 0,
+          "place": 2,
+          "world_metres": [
+            -4.875,
+            -3.25,
+            0.7
+          ]
+        },
+        {
+          "row": 0,
+          "place": 3,
+          "world_metres": [
+            -4.2250000000000005,
+            -3.25,
+            0.7
+          ]
+        },
+        {
+          "row": 0,
+          "place": 4,
+          "world_metres": [
+            -3.575,
+            -3.25,
+            0.7
+          ]
+        },
+        {
+          "row": 0,
+          "place": 5,
+          "world_metres": [
+            -2.9250000000000003,
+            -3.25,
+            0.7
+          ]
+        },
+        {
+          "row": 0,
+          "place": 6,
+          "world_metres": [
+            -2.275,
+            -3.25,
+            0.7
+          ]
+        },
+        {
+          "row": 0,
+          "place": 7,
+          "world_metres": [
+            -1.625,
+            -3.25,
+            0.7
+          ]
+        },
+        {
+          "row": 0,
+          "place": 8,
+          "world_metres": [
+            -0.9750000000000001,
+            -3.25,
+            0.7
+          ]
+        },
+        {
+          "row": 0,
+          "place": 9,
+          "world_metres": [
+            -0.325,
+            -3.25,
+            0.7
+          ]
+        },
+        {
+          "row": 0,
+          "place": 10,
+          "world_metres": [
+            0.325,
+            -3.25,
+            0.7
+          ]
+        },
+        {
+          "row": 0,
+          "place": 11,
+          "world_metres": [
+            0.9750000000000001,
+            -3.25,
+            0.7
+          ]
+        },
+        {
+          "row": 0,
+          "place": 12,
+          "world_metres": [
+            1.625,
+            -3.25,
+            0.7
+          ]
+        },
+        {
+          "row": 0,
+          "place": 13,
+          "world_metres": [
+            2.275,
+            -3.25,
+            0.7
+          ]
+        },
+        {
+          "row": 0,
+          "place": 14,
+          "world_metres": [
+            2.9250000000000003,
+            -3.25,
+            0.7
+          ]
+        },
+        {
+          "row": 0,
+          "place": 15,
+          "world_metres": [
+            3.575,
+            -3.25,
+            0.7
+          ]
+        },
+        {
+          "row": 0,
+          "place": 16,
+          "world_metres": [
+            4.2250000000000005,
+            -3.25,
+            0.7
+          ]
+        },
+        {
+          "row": 0,
+          "place": 17,
+          "world_metres": [
+            4.875,
+            -3.25,
+            0.7
+          ]
+        },
+        {
+          "row": 0,
+          "place": 18,
+          "world_metres": [
+            5.525,
+            -3.25,
+            0.7
+          ]
+        },
+        {
+          "row": 0,
+          "place": 19,
+          "world_metres": [
+            6.175,
+            -3.25,
+            0.7
+          ]
+        },
+        {
+          "row": 1,
+          "place": 0,
+          "world_metres": [
+            -6.175,
+            -1.9500000000000002,
+            0.7
+          ]
+        },
+        {
+          "row": 1,
+          "place": 1,
+          "world_metres": [
+            -5.525,
+            -1.9500000000000002,
+            0.7
+          ]
+        },
+        {
+          "row": 1,
+          "place": 2,
+          "world_metres": [
+            -4.875,
+            -1.9500000000000002,
+            0.7
+          ]
+        },
+        {
+          "row": 1,
+          "place": 3,
+          "world_metres": [
+            -4.2250000000000005,
+            -1.9500000000000002,
+            0.7
+          ]
+        },
+        {
+          "row": 1,
+          "place": 4,
+          "world_metres": [
+            -3.575,
+            -1.9500000000000002,
+            0.7
+          ]
+        },
+        {
+          "row": 1,
+          "place": 5,
+          "world_metres": [
+            -2.9250000000000003,
+            -1.9500000000000002,
+            0.7
+          ]
+        },
+        {
+          "row": 1,
+          "place": 6,
+          "world_metres": [
+            -2.275,
+            -1.9500000000000002,
+            0.7
+          ]
+        },
+        {
+          "row": 1,
+          "place": 7,
+          "world_metres": [
+            -1.625,
+            -1.9500000000000002,
+            0.7
+          ]
+        },
+        {
+          "row": 1,
+          "place": 8,
+          "world_metres": [
+            -0.9750000000000001,
+            -1.9500000000000002,
+            0.7
+          ]
+        },
+        {
+          "row": 1,
+          "place": 9,
+          "world_metres": [
+            -0.325,
+            -1.9500000000000002,
+            0.7
+          ]
+        },
+        {
+          "row": 1,
+          "place": 10,
+          "world_metres": [
+            0.325,
+            -1.9500000000000002,
+            0.7
+          ]
+        },
+        {
+          "row": 1,
+          "place": 11,
+          "world_metres": [
+            0.9750000000000001,
+            -1.9500000000000002,
+            0.7
+          ]
+        },
+        {
+          "row": 1,
+          "place": 12,
+          "world_metres": [
+            1.625,
+            -1.9500000000000002,
+            0.7
+          ]
+        },
+        {
+          "row": 1,
+          "place": 13,
+          "world_metres": [
+            2.275,
+            -1.9500000000000002,
+            0.7
+          ]
+        },
+        {
+          "row": 1,
+          "place": 14,
+          "world_metres": [
+            2.9250000000000003,
+            -1.9500000000000002,
+            0.7
+          ]
+        },
+        {
+          "row": 1,
+          "place": 15,
+          "world_metres": [
+            3.575,
+            -1.9500000000000002,
+            0.7
+          ]
+        },
+        {
+          "row": 1,
+          "place": 16,
+          "world_metres": [
+            4.2250000000000005,
+            -1.9500000000000002,
+            0.7
+          ]
+        },
+        {
+          "row": 1,
+          "place": 17,
+          "world_metres": [
+            4.875,
+            -1.9500000000000002,
+            0.7
+          ]
+        },
+        {
+          "row": 1,
+          "place": 18,
+          "world_metres": [
+            5.525,
+            -1.9500000000000002,
+            0.7
+          ]
+        },
+        {
+          "row": 1,
+          "place": 19,
+          "world_metres": [
+            6.175,
+            -1.9500000000000002,
+            0.7
+          ]
+        },
+        {
+          "row": 2,
+          "place": 0,
+          "world_metres": [
+            -6.175,
+            -0.65,
+            0.7
+          ]
+        },
+        {
+          "row": 2,
+          "place": 1,
+          "world_metres": [
+            -5.525,
+            -0.65,
+            0.7
+          ]
+        },
+        {
+          "row": 2,
+          "place": 2,
+          "world_metres": [
+            -4.875,
+            -0.65,
+            0.7
+          ]
+        },
+        {
+          "row": 2,
+          "place": 3,
+          "world_metres": [
+            -4.2250000000000005,
+            -0.65,
+            0.7
+          ]
+        },
+        {
+          "row": 2,
+          "place": 4,
+          "world_metres": [
+            -3.575,
+            -0.65,
+            0.7
+          ]
+        },
+        {
+          "row": 2,
+          "place": 5,
+          "world_metres": [
+            -2.9250000000000003,
+            -0.65,
+            0.7
+          ]
+        },
+        {
+          "row": 2,
+          "place": 6,
+          "world_metres": [
+            -2.275,
+            -0.65,
+            0.7
+          ]
+        },
+        {
+          "row": 2,
+          "place": 7,
+          "world_metres": [
+            -1.625,
+            -0.65,
+            0.7
+          ]
+        },
+        {
+          "row": 2,
+          "place": 8,
+          "world_metres": [
+            -0.9750000000000001,
+            -0.65,
+            0.7
+          ]
+        },
+        {
+          "row": 2,
+          "place": 9,
+          "world_metres": [
+            -0.325,
+            -0.65,
+            0.7
+          ]
+        },
+        {
+          "row": 2,
+          "place": 10,
+          "world_metres": [
+            0.325,
+            -0.65,
+            0.7
+          ]
+        },
+        {
+          "row": 2,
+          "place": 11,
+          "world_metres": [
+            0.9750000000000001,
+            -0.65,
+            0.7
+          ]
+        },
+        {
+          "row": 2,
+          "place": 12,
+          "world_metres": [
+            1.625,
+            -0.65,
+            0.7
+          ]
+        },
+        {
+          "row": 2,
+          "place": 13,
+          "world_metres": [
+            2.275,
+            -0.65,
+            0.7
+          ]
+        },
+        {
+          "row": 2,
+          "place": 14,
+          "world_metres": [
+            2.9250000000000003,
+            -0.65,
+            0.7
+          ]
+        },
+        {
+          "row": 2,
+          "place": 15,
+          "world_metres": [
+            3.575,
+            -0.65,
+            0.7
+          ]
+        },
+        {
+          "row": 2,
+          "place": 16,
+          "world_metres": [
+            4.2250000000000005,
+            -0.65,
+            0.7
+          ]
+        },
+        {
+          "row": 2,
+          "place": 17,
+          "world_metres": [
+            4.875,
+            -0.65,
+            0.7
+          ]
+        },
+        {
+          "row": 2,
+          "place": 18,
+          "world_metres": [
+            5.525,
+            -0.65,
+            0.7
+          ]
+        },
+        {
+          "row": 2,
+          "place": 19,
+          "world_metres": [
+            6.175,
+            -0.65,
+            0.7
+          ]
+        },
+        {
+          "row": 3,
+          "place": 0,
+          "world_metres": [
+            -6.175,
+            0.65,
+            0.7
+          ]
+        },
+        {
+          "row": 3,
+          "place": 1,
+          "world_metres": [
+            -5.525,
+            0.65,
+            0.7
+          ]
+        },
+        {
+          "row": 3,
+          "place": 2,
+          "world_metres": [
+            -4.875,
+            0.65,
+            0.7
+          ]
+        },
+        {
+          "row": 3,
+          "place": 3,
+          "world_metres": [
+            -4.2250000000000005,
+            0.65,
+            0.7
+          ]
+        },
+        {
+          "row": 3,
+          "place": 4,
+          "world_metres": [
+            -3.575,
+            0.65,
+            0.7
+          ]
+        },
+        {
+          "row": 3,
+          "place": 5,
+          "world_metres": [
+            -2.9250000000000003,
+            0.65,
+            0.7
+          ]
+        },
+        {
+          "row": 3,
+          "place": 6,
+          "world_metres": [
+            -2.275,
+            0.65,
+            0.7
+          ]
+        },
+        {
+          "row": 3,
+          "place": 7,
+          "world_metres": [
+            -1.625,
+            0.65,
+            0.7
+          ]
+        },
+        {
+          "row": 3,
+          "place": 8,
+          "world_metres": [
+            -0.9750000000000001,
+            0.65,
+            0.7
+          ]
+        },
+        {
+          "row": 3,
+          "place": 9,
+          "world_metres": [
+            -0.325,
+            0.65,
+            0.7
+          ]
+        },
+        {
+          "row": 3,
+          "place": 10,
+          "world_metres": [
+            0.325,
+            0.65,
+            0.7
+          ]
+        },
+        {
+          "row": 3,
+          "place": 11,
+          "world_metres": [
+            0.9750000000000001,
+            0.65,
+            0.7
+          ]
+        },
+        {
+          "row": 3,
+          "place": 12,
+          "world_metres": [
+            1.625,
+            0.65,
+            0.7
+          ]
+        },
+        {
+          "row": 3,
+          "place": 13,
+          "world_metres": [
+            2.275,
+            0.65,
+            0.7
+          ]
+        },
+        {
+          "row": 3,
+          "place": 14,
+          "world_metres": [
+            2.9250000000000003,
+            0.65,
+            0.7
+          ]
+        },
+        {
+          "row": 3,
+          "place": 15,
+          "world_metres": [
+            3.575,
+            0.65,
+            0.7
+          ]
+        },
+        {
+          "row": 3,
+          "place": 16,
+          "world_metres": [
+            4.2250000000000005,
+            0.65,
+            0.7
+          ]
+        },
+        {
+          "row": 3,
+          "place": 17,
+          "world_metres": [
+            4.875,
+            0.65,
+            0.7
+          ]
+        },
+        {
+          "row": 3,
+          "place": 18,
+          "world_metres": [
+            5.525,
+            0.65,
+            0.7
+          ]
+        },
+        {
+          "row": 3,
+          "place": 19,
+          "world_metres": [
+            6.175,
+            0.65,
+            0.7
+          ]
+        },
+        {
+          "row": 4,
+          "place": 0,
+          "world_metres": [
+            -6.175,
+            1.9500000000000002,
+            0.7
+          ]
+        },
+        {
+          "row": 4,
+          "place": 1,
+          "world_metres": [
+            -5.525,
+            1.9500000000000002,
+            0.7
+          ]
+        },
+        {
+          "row": 4,
+          "place": 2,
+          "world_metres": [
+            -4.875,
+            1.9500000000000002,
+            0.7
+          ]
+        },
+        {
+          "row": 4,
+          "place": 3,
+          "world_metres": [
+            -4.2250000000000005,
+            1.9500000000000002,
+            0.7
+          ]
+        },
+        {
+          "row": 4,
+          "place": 4,
+          "world_metres": [
+            -3.575,
+            1.9500000000000002,
+            0.7
+          ]
+        },
+        {
+          "row": 4,
+          "place": 5,
+          "world_metres": [
+            -2.9250000000000003,
+            1.9500000000000002,
+            0.7
+          ]
+        },
+        {
+          "row": 4,
+          "place": 6,
+          "world_metres": [
+            -2.275,
+            1.9500000000000002,
+            0.7
+          ]
+        },
+        {
+          "row": 4,
+          "place": 7,
+          "world_metres": [
+            -1.625,
+            1.9500000000000002,
+            0.7
+          ]
+        },
+        {
+          "row": 4,
+          "place": 8,
+          "world_metres": [
+            -0.9750000000000001,
+            1.9500000000000002,
+            0.7
+          ]
+        },
+        {
+          "row": 4,
+          "place": 9,
+          "world_metres": [
+            -0.325,
+            1.9500000000000002,
+            0.7
+          ]
+        },
+        {
+          "row": 4,
+          "place": 10,
+          "world_metres": [
+            0.325,
+            1.9500000000000002,
+            0.7
+          ]
+        },
+        {
+          "row": 4,
+          "place": 11,
+          "world_metres": [
+            0.9750000000000001,
+            1.9500000000000002,
+            0.7
+          ]
+        },
+        {
+          "row": 4,
+          "place": 12,
+          "world_metres": [
+            1.625,
+            1.9500000000000002,
+            0.7
+          ]
+        },
+        {
+          "row": 4,
+          "place": 13,
+          "world_metres": [
+            2.275,
+            1.9500000000000002,
+            0.7
+          ]
+        },
+        {
+          "row": 4,
+          "place": 14,
+          "world_metres": [
+            2.9250000000000003,
+            1.9500000000000002,
+            0.7
+          ]
+        },
+        {
+          "row": 4,
+          "place": 15,
+          "world_metres": [
+            3.575,
+            1.9500000000000002,
+            0.7
+          ]
+        },
+        {
+          "row": 4,
+          "place": 16,
+          "world_metres": [
+            4.2250000000000005,
+            1.9500000000000002,
+            0.7
+          ]
+        },
+        {
+          "row": 4,
+          "place": 17,
+          "world_metres": [
+            4.875,
+            1.9500000000000002,
+            0.7
+          ]
+        },
+        {
+          "row": 4,
+          "place": 18,
+          "world_metres": [
+            5.525,
+            1.9500000000000002,
+            0.7
+          ]
+        },
+        {
+          "row": 4,
+          "place": 19,
+          "world_metres": [
+            6.175,
+            1.9500000000000002,
+            0.7
+          ]
+        },
+        {
+          "row": 5,
+          "place": 0,
+          "world_metres": [
+            -6.175,
+            3.25,
+            0.7
+          ]
+        },
+        {
+          "row": 5,
+          "place": 1,
+          "world_metres": [
+            -5.525,
+            3.25,
+            0.7
+          ]
+        },
+        {
+          "row": 5,
+          "place": 2,
+          "world_metres": [
+            -4.875,
+            3.25,
+            0.7
+          ]
+        },
+        {
+          "row": 5,
+          "place": 3,
+          "world_metres": [
+            -4.2250000000000005,
+            3.25,
+            0.7
+          ]
+        },
+        {
+          "row": 5,
+          "place": 4,
+          "world_metres": [
+            -3.575,
+            3.25,
+            0.7
+          ]
+        },
+        {
+          "row": 5,
+          "place": 5,
+          "world_metres": [
+            -2.9250000000000003,
+            3.25,
+            0.7
+          ]
+        },
+        {
+          "row": 5,
+          "place": 6,
+          "world_metres": [
+            -2.275,
+            3.25,
+            0.7
+          ]
+        },
+        {
+          "row": 5,
+          "place": 7,
+          "world_metres": [
+            -1.625,
+            3.25,
+            0.7
+          ]
+        },
+        {
+          "row": 5,
+          "place": 8,
+          "world_metres": [
+            -0.9750000000000001,
+            3.25,
+            0.7
+          ]
+        },
+        {
+          "row": 5,
+          "place": 9,
+          "world_metres": [
+            -0.325,
+            3.25,
+            0.7
+          ]
+        },
+        {
+          "row": 5,
+          "place": 10,
+          "world_metres": [
+            0.325,
+            3.25,
+            0.7
+          ]
+        },
+        {
+          "row": 5,
+          "place": 11,
+          "world_metres": [
+            0.9750000000000001,
+            3.25,
+            0.7
+          ]
+        },
+        {
+          "row": 5,
+          "place": 12,
+          "world_metres": [
+            1.625,
+            3.25,
+            0.7
+          ]
+        },
+        {
+          "row": 5,
+          "place": 13,
+          "world_metres": [
+            2.275,
+            3.25,
+            0.7
+          ]
+        },
+        {
+          "row": 5,
+          "place": 14,
+          "world_metres": [
+            2.9250000000000003,
+            3.25,
+            0.7
+          ]
+        },
+        {
+          "row": 5,
+          "place": 15,
+          "world_metres": [
+            3.575,
+            3.25,
+            0.7
+          ]
+        },
+        {
+          "row": 5,
+          "place": 16,
+          "world_metres": [
+            4.2250000000000005,
+            3.25,
+            0.7
+          ]
+        },
+        {
+          "row": 5,
+          "place": 17,
+          "world_metres": [
+            4.875,
+            3.25,
+            0.7
+          ]
+        },
+        {
+          "row": 5,
+          "place": 18,
+          "world_metres": [
+            5.525,
+            3.25,
+            0.7
+          ]
+        },
+        {
+          "row": 5,
+          "place": 19,
+          "world_metres": [
+            6.175,
+            3.25,
+            0.7
+          ]
+        }
+      ],
+      "proposed_rear_entries": [
+        {
+          "world_metres": [
+            -7.75,
+            5.0,
+            0.25
+          ],
+          "side_aisle_center_x": -7.75,
+          "stairs": "two125mm risers to250mm deck;1.1m wide"
+        },
+        {
+          "world_metres": [
+            7.75,
+            5.0,
+            0.25
+          ],
+          "side_aisle_center_x": 7.75,
+          "stairs": "two125mm risers to250mm deck;1.1m wide"
+        }
+      ],
+      "front_audience_direction_world": [
+        0,
+        -1,
+        0
+      ],
+      "rear_access": "rear cross-aisle to clear side aisles outside seating ends",
+      "guide_version": 1,
+      "style_profile": {
+        "structure": "clean painted steel/timber1985 frame",
+        "seating": "separate cream/green molded1985 chair mesh for every place",
+        "roof": "clean cream low-gable canopy/green fascia",
+        "palette": "cream shell/canopy, forest-green frame/detail"
+      },
+      "all_guides_are_technical_only": true,
+      "release_anchors_authored": false,
+      "runtime_ready": false,
+      "owner_approved": false
+    }
+  ],
+  "compact_bleacher_designs": [
+    {
+      "design_key": "compact-bleacher-60-budget",
+      "capacity_target": 60,
+      "capacity_validated": false,
+      "condition": "budget",
+      "footprint_metres": [
+        8,
+        4
+      ],
+      "rows": 6,
+      "places_per_row": 10,
+      "seat_pitch_metres": 0.62,
+      "row_pitch_metres": 0.6,
+      "tier_riser_metres": 0.32,
+      "row_platform_heights_metres": [
+        0.32,
+        0.64,
+        0.96,
+        1.28,
+        1.6,
+        1.92
+      ],
+      "seat_zone_x_metres": [
+        -3.75,
+        2.45
+      ],
+      "single_side_stair_zone_x_metres": [
+        2.7,
+        3.8
+      ],
+      "stair_width_metres": 1.1,
+      "stair_risers": 12,
+      "stair_riser_metres": 0.16,
+      "stair_tread_metres": 0.3,
+      "stair_entry_world_metres": [
+        3.25,
+        -2.25,
+        0
+      ],
+      "side_access_strategy": "two160mm stair rises per320mm tier; outer handrail leaves lateral row access open",
+      "roof": null,
+      "rear_and_side_safety_rails": "1100mm above each local platform; regulatory/structural safety not certified",
+      "why_10_across": "6.2m seating plus1.1m stair and clearances fits8m;12x0.65m seats leave no stair",
+      "proposed_seat_centres": [
+        {
+          "row": 0,
+          "place": 0,
+          "platform_height_metres": 0.32,
+          "world_metres": [
+            -3.44,
+            -1.5,
+            0.77
+          ]
+        },
+        {
+          "row": 0,
+          "place": 1,
+          "platform_height_metres": 0.32,
+          "world_metres": [
+            -2.8200000000000003,
+            -1.5,
+            0.77
+          ]
+        },
+        {
+          "row": 0,
+          "place": 2,
+          "platform_height_metres": 0.32,
+          "world_metres": [
+            -2.2,
+            -1.5,
+            0.77
+          ]
+        },
+        {
+          "row": 0,
+          "place": 3,
+          "platform_height_metres": 0.32,
+          "world_metres": [
+            -1.58,
+            -1.5,
+            0.77
+          ]
+        },
+        {
+          "row": 0,
+          "place": 4,
+          "platform_height_metres": 0.32,
+          "world_metres": [
+            -0.96,
+            -1.5,
+            0.77
+          ]
+        },
+        {
+          "row": 0,
+          "place": 5,
+          "platform_height_metres": 0.32,
+          "world_metres": [
+            -0.33999999999999986,
+            -1.5,
+            0.77
+          ]
+        },
+        {
+          "row": 0,
+          "place": 6,
+          "platform_height_metres": 0.32,
+          "world_metres": [
+            0.28000000000000025,
+            -1.5,
+            0.77
+          ]
+        },
+        {
+          "row": 0,
+          "place": 7,
+          "platform_height_metres": 0.32,
+          "world_metres": [
+            0.9000000000000004,
+            -1.5,
+            0.77
+          ]
+        },
+        {
+          "row": 0,
+          "place": 8,
+          "platform_height_metres": 0.32,
+          "world_metres": [
+            1.5199999999999996,
+            -1.5,
+            0.77
+          ]
+        },
+        {
+          "row": 0,
+          "place": 9,
+          "platform_height_metres": 0.32,
+          "world_metres": [
+            2.1399999999999997,
+            -1.5,
+            0.77
+          ]
+        },
+        {
+          "row": 1,
+          "place": 0,
+          "platform_height_metres": 0.64,
+          "world_metres": [
+            -3.44,
+            -0.9,
+            1.09
+          ]
+        },
+        {
+          "row": 1,
+          "place": 1,
+          "platform_height_metres": 0.64,
+          "world_metres": [
+            -2.8200000000000003,
+            -0.9,
+            1.09
+          ]
+        },
+        {
+          "row": 1,
+          "place": 2,
+          "platform_height_metres": 0.64,
+          "world_metres": [
+            -2.2,
+            -0.9,
+            1.09
+          ]
+        },
+        {
+          "row": 1,
+          "place": 3,
+          "platform_height_metres": 0.64,
+          "world_metres": [
+            -1.58,
+            -0.9,
+            1.09
+          ]
+        },
+        {
+          "row": 1,
+          "place": 4,
+          "platform_height_metres": 0.64,
+          "world_metres": [
+            -0.96,
+            -0.9,
+            1.09
+          ]
+        },
+        {
+          "row": 1,
+          "place": 5,
+          "platform_height_metres": 0.64,
+          "world_metres": [
+            -0.33999999999999986,
+            -0.9,
+            1.09
+          ]
+        },
+        {
+          "row": 1,
+          "place": 6,
+          "platform_height_metres": 0.64,
+          "world_metres": [
+            0.28000000000000025,
+            -0.9,
+            1.09
+          ]
+        },
+        {
+          "row": 1,
+          "place": 7,
+          "platform_height_metres": 0.64,
+          "world_metres": [
+            0.9000000000000004,
+            -0.9,
+            1.09
+          ]
+        },
+        {
+          "row": 1,
+          "place": 8,
+          "platform_height_metres": 0.64,
+          "world_metres": [
+            1.5199999999999996,
+            -0.9,
+            1.09
+          ]
+        },
+        {
+          "row": 1,
+          "place": 9,
+          "platform_height_metres": 0.64,
+          "world_metres": [
+            2.1399999999999997,
+            -0.9,
+            1.09
+          ]
+        },
+        {
+          "row": 2,
+          "place": 0,
+          "platform_height_metres": 0.96,
+          "world_metres": [
+            -3.44,
+            -0.30000000000000004,
+            1.41
+          ]
+        },
+        {
+          "row": 2,
+          "place": 1,
+          "platform_height_metres": 0.96,
+          "world_metres": [
+            -2.8200000000000003,
+            -0.30000000000000004,
+            1.41
+          ]
+        },
+        {
+          "row": 2,
+          "place": 2,
+          "platform_height_metres": 0.96,
+          "world_metres": [
+            -2.2,
+            -0.30000000000000004,
+            1.41
+          ]
+        },
+        {
+          "row": 2,
+          "place": 3,
+          "platform_height_metres": 0.96,
+          "world_metres": [
+            -1.58,
+            -0.30000000000000004,
+            1.41
+          ]
+        },
+        {
+          "row": 2,
+          "place": 4,
+          "platform_height_metres": 0.96,
+          "world_metres": [
+            -0.96,
+            -0.30000000000000004,
+            1.41
+          ]
+        },
+        {
+          "row": 2,
+          "place": 5,
+          "platform_height_metres": 0.96,
+          "world_metres": [
+            -0.33999999999999986,
+            -0.30000000000000004,
+            1.41
+          ]
+        },
+        {
+          "row": 2,
+          "place": 6,
+          "platform_height_metres": 0.96,
+          "world_metres": [
+            0.28000000000000025,
+            -0.30000000000000004,
+            1.41
+          ]
+        },
+        {
+          "row": 2,
+          "place": 7,
+          "platform_height_metres": 0.96,
+          "world_metres": [
+            0.9000000000000004,
+            -0.30000000000000004,
+            1.41
+          ]
+        },
+        {
+          "row": 2,
+          "place": 8,
+          "platform_height_metres": 0.96,
+          "world_metres": [
+            1.5199999999999996,
+            -0.30000000000000004,
+            1.41
+          ]
+        },
+        {
+          "row": 2,
+          "place": 9,
+          "platform_height_metres": 0.96,
+          "world_metres": [
+            2.1399999999999997,
+            -0.30000000000000004,
+            1.41
+          ]
+        },
+        {
+          "row": 3,
+          "place": 0,
+          "platform_height_metres": 1.28,
+          "world_metres": [
+            -3.44,
+            0.2999999999999998,
+            1.73
+          ]
+        },
+        {
+          "row": 3,
+          "place": 1,
+          "platform_height_metres": 1.28,
+          "world_metres": [
+            -2.8200000000000003,
+            0.2999999999999998,
+            1.73
+          ]
+        },
+        {
+          "row": 3,
+          "place": 2,
+          "platform_height_metres": 1.28,
+          "world_metres": [
+            -2.2,
+            0.2999999999999998,
+            1.73
+          ]
+        },
+        {
+          "row": 3,
+          "place": 3,
+          "platform_height_metres": 1.28,
+          "world_metres": [
+            -1.58,
+            0.2999999999999998,
+            1.73
+          ]
+        },
+        {
+          "row": 3,
+          "place": 4,
+          "platform_height_metres": 1.28,
+          "world_metres": [
+            -0.96,
+            0.2999999999999998,
+            1.73
+          ]
+        },
+        {
+          "row": 3,
+          "place": 5,
+          "platform_height_metres": 1.28,
+          "world_metres": [
+            -0.33999999999999986,
+            0.2999999999999998,
+            1.73
+          ]
+        },
+        {
+          "row": 3,
+          "place": 6,
+          "platform_height_metres": 1.28,
+          "world_metres": [
+            0.28000000000000025,
+            0.2999999999999998,
+            1.73
+          ]
+        },
+        {
+          "row": 3,
+          "place": 7,
+          "platform_height_metres": 1.28,
+          "world_metres": [
+            0.9000000000000004,
+            0.2999999999999998,
+            1.73
+          ]
+        },
+        {
+          "row": 3,
+          "place": 8,
+          "platform_height_metres": 1.28,
+          "world_metres": [
+            1.5199999999999996,
+            0.2999999999999998,
+            1.73
+          ]
+        },
+        {
+          "row": 3,
+          "place": 9,
+          "platform_height_metres": 1.28,
+          "world_metres": [
+            2.1399999999999997,
+            0.2999999999999998,
+            1.73
+          ]
+        },
+        {
+          "row": 4,
+          "place": 0,
+          "platform_height_metres": 1.6,
+          "world_metres": [
+            -3.44,
+            0.8999999999999999,
+            2.0500000000000003
+          ]
+        },
+        {
+          "row": 4,
+          "place": 1,
+          "platform_height_metres": 1.6,
+          "world_metres": [
+            -2.8200000000000003,
+            0.8999999999999999,
+            2.0500000000000003
+          ]
+        },
+        {
+          "row": 4,
+          "place": 2,
+          "platform_height_metres": 1.6,
+          "world_metres": [
+            -2.2,
+            0.8999999999999999,
+            2.0500000000000003
+          ]
+        },
+        {
+          "row": 4,
+          "place": 3,
+          "platform_height_metres": 1.6,
+          "world_metres": [
+            -1.58,
+            0.8999999999999999,
+            2.0500000000000003
+          ]
+        },
+        {
+          "row": 4,
+          "place": 4,
+          "platform_height_metres": 1.6,
+          "world_metres": [
+            -0.96,
+            0.8999999999999999,
+            2.0500000000000003
+          ]
+        },
+        {
+          "row": 4,
+          "place": 5,
+          "platform_height_metres": 1.6,
+          "world_metres": [
+            -0.33999999999999986,
+            0.8999999999999999,
+            2.0500000000000003
+          ]
+        },
+        {
+          "row": 4,
+          "place": 6,
+          "platform_height_metres": 1.6,
+          "world_metres": [
+            0.28000000000000025,
+            0.8999999999999999,
+            2.0500000000000003
+          ]
+        },
+        {
+          "row": 4,
+          "place": 7,
+          "platform_height_metres": 1.6,
+          "world_metres": [
+            0.9000000000000004,
+            0.8999999999999999,
+            2.0500000000000003
+          ]
+        },
+        {
+          "row": 4,
+          "place": 8,
+          "platform_height_metres": 1.6,
+          "world_metres": [
+            1.5199999999999996,
+            0.8999999999999999,
+            2.0500000000000003
+          ]
+        },
+        {
+          "row": 4,
+          "place": 9,
+          "platform_height_metres": 1.6,
+          "world_metres": [
+            2.1399999999999997,
+            0.8999999999999999,
+            2.0500000000000003
+          ]
+        },
+        {
+          "row": 5,
+          "place": 0,
+          "platform_height_metres": 1.92,
+          "world_metres": [
+            -3.44,
+            1.5,
+            2.37
+          ]
+        },
+        {
+          "row": 5,
+          "place": 1,
+          "platform_height_metres": 1.92,
+          "world_metres": [
+            -2.8200000000000003,
+            1.5,
+            2.37
+          ]
+        },
+        {
+          "row": 5,
+          "place": 2,
+          "platform_height_metres": 1.92,
+          "world_metres": [
+            -2.2,
+            1.5,
+            2.37
+          ]
+        },
+        {
+          "row": 5,
+          "place": 3,
+          "platform_height_metres": 1.92,
+          "world_metres": [
+            -1.58,
+            1.5,
+            2.37
+          ]
+        },
+        {
+          "row": 5,
+          "place": 4,
+          "platform_height_metres": 1.92,
+          "world_metres": [
+            -0.96,
+            1.5,
+            2.37
+          ]
+        },
+        {
+          "row": 5,
+          "place": 5,
+          "platform_height_metres": 1.92,
+          "world_metres": [
+            -0.33999999999999986,
+            1.5,
+            2.37
+          ]
+        },
+        {
+          "row": 5,
+          "place": 6,
+          "platform_height_metres": 1.92,
+          "world_metres": [
+            0.28000000000000025,
+            1.5,
+            2.37
+          ]
+        },
+        {
+          "row": 5,
+          "place": 7,
+          "platform_height_metres": 1.92,
+          "world_metres": [
+            0.9000000000000004,
+            1.5,
+            2.37
+          ]
+        },
+        {
+          "row": 5,
+          "place": 8,
+          "platform_height_metres": 1.92,
+          "world_metres": [
+            1.5199999999999996,
+            1.5,
+            2.37
+          ]
+        },
+        {
+          "row": 5,
+          "place": 9,
+          "platform_height_metres": 1.92,
+          "world_metres": [
+            2.1399999999999997,
+            1.5,
+            2.37
+          ]
+        }
+      ],
+      "front_audience_direction_world": [
+        0,
+        -1,
+        0
+      ],
+      "guide_version": 1,
+      "style_profile": {
+        "structure": "manufactured worn timber/painted steel; no primitive scrap construction",
+        "seating": "continuous manufactured worn timber bench boards; exact intended places remain reviewable",
+        "roof": "low corrugated galvanized gable roof with proper trusses/ridge cap",
+        "palette": "faded cream/green, dull galvanized grey, muted wood"
+      },
+      "all_guides_are_technical_only": true,
+      "release_anchors_authored": false,
+      "runtime_ready": false,
+      "owner_approved": false
+    },
+    {
+      "design_key": "compact-bleacher-60-upgraded",
+      "capacity_target": 60,
+      "capacity_validated": false,
+      "condition": "upgraded",
+      "footprint_metres": [
+        8,
+        4
+      ],
+      "rows": 6,
+      "places_per_row": 10,
+      "seat_pitch_metres": 0.62,
+      "row_pitch_metres": 0.6,
+      "tier_riser_metres": 0.32,
+      "row_platform_heights_metres": [
+        0.32,
+        0.64,
+        0.96,
+        1.28,
+        1.6,
+        1.92
+      ],
+      "seat_zone_x_metres": [
+        -3.75,
+        2.45
+      ],
+      "single_side_stair_zone_x_metres": [
+        2.7,
+        3.8
+      ],
+      "stair_width_metres": 1.1,
+      "stair_risers": 12,
+      "stair_riser_metres": 0.16,
+      "stair_tread_metres": 0.3,
+      "stair_entry_world_metres": [
+        3.25,
+        -2.25,
+        0
+      ],
+      "side_access_strategy": "two160mm stair rises per320mm tier; outer handrail leaves lateral row access open",
+      "roof": null,
+      "rear_and_side_safety_rails": "1100mm above each local platform; regulatory/structural safety not certified",
+      "why_10_across": "6.2m seating plus1.1m stair and clearances fits8m;12x0.65m seats leave no stair",
+      "proposed_seat_centres": [
+        {
+          "row": 0,
+          "place": 0,
+          "platform_height_metres": 0.32,
+          "world_metres": [
+            -3.44,
+            -1.5,
+            0.77
+          ]
+        },
+        {
+          "row": 0,
+          "place": 1,
+          "platform_height_metres": 0.32,
+          "world_metres": [
+            -2.8200000000000003,
+            -1.5,
+            0.77
+          ]
+        },
+        {
+          "row": 0,
+          "place": 2,
+          "platform_height_metres": 0.32,
+          "world_metres": [
+            -2.2,
+            -1.5,
+            0.77
+          ]
+        },
+        {
+          "row": 0,
+          "place": 3,
+          "platform_height_metres": 0.32,
+          "world_metres": [
+            -1.58,
+            -1.5,
+            0.77
+          ]
+        },
+        {
+          "row": 0,
+          "place": 4,
+          "platform_height_metres": 0.32,
+          "world_metres": [
+            -0.96,
+            -1.5,
+            0.77
+          ]
+        },
+        {
+          "row": 0,
+          "place": 5,
+          "platform_height_metres": 0.32,
+          "world_metres": [
+            -0.33999999999999986,
+            -1.5,
+            0.77
+          ]
+        },
+        {
+          "row": 0,
+          "place": 6,
+          "platform_height_metres": 0.32,
+          "world_metres": [
+            0.28000000000000025,
+            -1.5,
+            0.77
+          ]
+        },
+        {
+          "row": 0,
+          "place": 7,
+          "platform_height_metres": 0.32,
+          "world_metres": [
+            0.9000000000000004,
+            -1.5,
+            0.77
+          ]
+        },
+        {
+          "row": 0,
+          "place": 8,
+          "platform_height_metres": 0.32,
+          "world_metres": [
+            1.5199999999999996,
+            -1.5,
+            0.77
+          ]
+        },
+        {
+          "row": 0,
+          "place": 9,
+          "platform_height_metres": 0.32,
+          "world_metres": [
+            2.1399999999999997,
+            -1.5,
+            0.77
+          ]
+        },
+        {
+          "row": 1,
+          "place": 0,
+          "platform_height_metres": 0.64,
+          "world_metres": [
+            -3.44,
+            -0.9,
+            1.09
+          ]
+        },
+        {
+          "row": 1,
+          "place": 1,
+          "platform_height_metres": 0.64,
+          "world_metres": [
+            -2.8200000000000003,
+            -0.9,
+            1.09
+          ]
+        },
+        {
+          "row": 1,
+          "place": 2,
+          "platform_height_metres": 0.64,
+          "world_metres": [
+            -2.2,
+            -0.9,
+            1.09
+          ]
+        },
+        {
+          "row": 1,
+          "place": 3,
+          "platform_height_metres": 0.64,
+          "world_metres": [
+            -1.58,
+            -0.9,
+            1.09
+          ]
+        },
+        {
+          "row": 1,
+          "place": 4,
+          "platform_height_metres": 0.64,
+          "world_metres": [
+            -0.96,
+            -0.9,
+            1.09
+          ]
+        },
+        {
+          "row": 1,
+          "place": 5,
+          "platform_height_metres": 0.64,
+          "world_metres": [
+            -0.33999999999999986,
+            -0.9,
+            1.09
+          ]
+        },
+        {
+          "row": 1,
+          "place": 6,
+          "platform_height_metres": 0.64,
+          "world_metres": [
+            0.28000000000000025,
+            -0.9,
+            1.09
+          ]
+        },
+        {
+          "row": 1,
+          "place": 7,
+          "platform_height_metres": 0.64,
+          "world_metres": [
+            0.9000000000000004,
+            -0.9,
+            1.09
+          ]
+        },
+        {
+          "row": 1,
+          "place": 8,
+          "platform_height_metres": 0.64,
+          "world_metres": [
+            1.5199999999999996,
+            -0.9,
+            1.09
+          ]
+        },
+        {
+          "row": 1,
+          "place": 9,
+          "platform_height_metres": 0.64,
+          "world_metres": [
+            2.1399999999999997,
+            -0.9,
+            1.09
+          ]
+        },
+        {
+          "row": 2,
+          "place": 0,
+          "platform_height_metres": 0.96,
+          "world_metres": [
+            -3.44,
+            -0.30000000000000004,
+            1.41
+          ]
+        },
+        {
+          "row": 2,
+          "place": 1,
+          "platform_height_metres": 0.96,
+          "world_metres": [
+            -2.8200000000000003,
+            -0.30000000000000004,
+            1.41
+          ]
+        },
+        {
+          "row": 2,
+          "place": 2,
+          "platform_height_metres": 0.96,
+          "world_metres": [
+            -2.2,
+            -0.30000000000000004,
+            1.41
+          ]
+        },
+        {
+          "row": 2,
+          "place": 3,
+          "platform_height_metres": 0.96,
+          "world_metres": [
+            -1.58,
+            -0.30000000000000004,
+            1.41
+          ]
+        },
+        {
+          "row": 2,
+          "place": 4,
+          "platform_height_metres": 0.96,
+          "world_metres": [
+            -0.96,
+            -0.30000000000000004,
+            1.41
+          ]
+        },
+        {
+          "row": 2,
+          "place": 5,
+          "platform_height_metres": 0.96,
+          "world_metres": [
+            -0.33999999999999986,
+            -0.30000000000000004,
+            1.41
+          ]
+        },
+        {
+          "row": 2,
+          "place": 6,
+          "platform_height_metres": 0.96,
+          "world_metres": [
+            0.28000000000000025,
+            -0.30000000000000004,
+            1.41
+          ]
+        },
+        {
+          "row": 2,
+          "place": 7,
+          "platform_height_metres": 0.96,
+          "world_metres": [
+            0.9000000000000004,
+            -0.30000000000000004,
+            1.41
+          ]
+        },
+        {
+          "row": 2,
+          "place": 8,
+          "platform_height_metres": 0.96,
+          "world_metres": [
+            1.5199999999999996,
+            -0.30000000000000004,
+            1.41
+          ]
+        },
+        {
+          "row": 2,
+          "place": 9,
+          "platform_height_metres": 0.96,
+          "world_metres": [
+            2.1399999999999997,
+            -0.30000000000000004,
+            1.41
+          ]
+        },
+        {
+          "row": 3,
+          "place": 0,
+          "platform_height_metres": 1.28,
+          "world_metres": [
+            -3.44,
+            0.2999999999999998,
+            1.73
+          ]
+        },
+        {
+          "row": 3,
+          "place": 1,
+          "platform_height_metres": 1.28,
+          "world_metres": [
+            -2.8200000000000003,
+            0.2999999999999998,
+            1.73
+          ]
+        },
+        {
+          "row": 3,
+          "place": 2,
+          "platform_height_metres": 1.28,
+          "world_metres": [
+            -2.2,
+            0.2999999999999998,
+            1.73
+          ]
+        },
+        {
+          "row": 3,
+          "place": 3,
+          "platform_height_metres": 1.28,
+          "world_metres": [
+            -1.58,
+            0.2999999999999998,
+            1.73
+          ]
+        },
+        {
+          "row": 3,
+          "place": 4,
+          "platform_height_metres": 1.28,
+          "world_metres": [
+            -0.96,
+            0.2999999999999998,
+            1.73
+          ]
+        },
+        {
+          "row": 3,
+          "place": 5,
+          "platform_height_metres": 1.28,
+          "world_metres": [
+            -0.33999999999999986,
+            0.2999999999999998,
+            1.73
+          ]
+        },
+        {
+          "row": 3,
+          "place": 6,
+          "platform_height_metres": 1.28,
+          "world_metres": [
+            0.28000000000000025,
+            0.2999999999999998,
+            1.73
+          ]
+        },
+        {
+          "row": 3,
+          "place": 7,
+          "platform_height_metres": 1.28,
+          "world_metres": [
+            0.9000000000000004,
+            0.2999999999999998,
+            1.73
+          ]
+        },
+        {
+          "row": 3,
+          "place": 8,
+          "platform_height_metres": 1.28,
+          "world_metres": [
+            1.5199999999999996,
+            0.2999999999999998,
+            1.73
+          ]
+        },
+        {
+          "row": 3,
+          "place": 9,
+          "platform_height_metres": 1.28,
+          "world_metres": [
+            2.1399999999999997,
+            0.2999999999999998,
+            1.73
+          ]
+        },
+        {
+          "row": 4,
+          "place": 0,
+          "platform_height_metres": 1.6,
+          "world_metres": [
+            -3.44,
+            0.8999999999999999,
+            2.0500000000000003
+          ]
+        },
+        {
+          "row": 4,
+          "place": 1,
+          "platform_height_metres": 1.6,
+          "world_metres": [
+            -2.8200000000000003,
+            0.8999999999999999,
+            2.0500000000000003
+          ]
+        },
+        {
+          "row": 4,
+          "place": 2,
+          "platform_height_metres": 1.6,
+          "world_metres": [
+            -2.2,
+            0.8999999999999999,
+            2.0500000000000003
+          ]
+        },
+        {
+          "row": 4,
+          "place": 3,
+          "platform_height_metres": 1.6,
+          "world_metres": [
+            -1.58,
+            0.8999999999999999,
+            2.0500000000000003
+          ]
+        },
+        {
+          "row": 4,
+          "place": 4,
+          "platform_height_metres": 1.6,
+          "world_metres": [
+            -0.96,
+            0.8999999999999999,
+            2.0500000000000003
+          ]
+        },
+        {
+          "row": 4,
+          "place": 5,
+          "platform_height_metres": 1.6,
+          "world_metres": [
+            -0.33999999999999986,
+            0.8999999999999999,
+            2.0500000000000003
+          ]
+        },
+        {
+          "row": 4,
+          "place": 6,
+          "platform_height_metres": 1.6,
+          "world_metres": [
+            0.28000000000000025,
+            0.8999999999999999,
+            2.0500000000000003
+          ]
+        },
+        {
+          "row": 4,
+          "place": 7,
+          "platform_height_metres": 1.6,
+          "world_metres": [
+            0.9000000000000004,
+            0.8999999999999999,
+            2.0500000000000003
+          ]
+        },
+        {
+          "row": 4,
+          "place": 8,
+          "platform_height_metres": 1.6,
+          "world_metres": [
+            1.5199999999999996,
+            0.8999999999999999,
+            2.0500000000000003
+          ]
+        },
+        {
+          "row": 4,
+          "place": 9,
+          "platform_height_metres": 1.6,
+          "world_metres": [
+            2.1399999999999997,
+            0.8999999999999999,
+            2.0500000000000003
+          ]
+        },
+        {
+          "row": 5,
+          "place": 0,
+          "platform_height_metres": 1.92,
+          "world_metres": [
+            -3.44,
+            1.5,
+            2.37
+          ]
+        },
+        {
+          "row": 5,
+          "place": 1,
+          "platform_height_metres": 1.92,
+          "world_metres": [
+            -2.8200000000000003,
+            1.5,
+            2.37
+          ]
+        },
+        {
+          "row": 5,
+          "place": 2,
+          "platform_height_metres": 1.92,
+          "world_metres": [
+            -2.2,
+            1.5,
+            2.37
+          ]
+        },
+        {
+          "row": 5,
+          "place": 3,
+          "platform_height_metres": 1.92,
+          "world_metres": [
+            -1.58,
+            1.5,
+            2.37
+          ]
+        },
+        {
+          "row": 5,
+          "place": 4,
+          "platform_height_metres": 1.92,
+          "world_metres": [
+            -0.96,
+            1.5,
+            2.37
+          ]
+        },
+        {
+          "row": 5,
+          "place": 5,
+          "platform_height_metres": 1.92,
+          "world_metres": [
+            -0.33999999999999986,
+            1.5,
+            2.37
+          ]
+        },
+        {
+          "row": 5,
+          "place": 6,
+          "platform_height_metres": 1.92,
+          "world_metres": [
+            0.28000000000000025,
+            1.5,
+            2.37
+          ]
+        },
+        {
+          "row": 5,
+          "place": 7,
+          "platform_height_metres": 1.92,
+          "world_metres": [
+            0.9000000000000004,
+            1.5,
+            2.37
+          ]
+        },
+        {
+          "row": 5,
+          "place": 8,
+          "platform_height_metres": 1.92,
+          "world_metres": [
+            1.5199999999999996,
+            1.5,
+            2.37
+          ]
+        },
+        {
+          "row": 5,
+          "place": 9,
+          "platform_height_metres": 1.92,
+          "world_metres": [
+            2.1399999999999997,
+            1.5,
+            2.37
+          ]
+        }
+      ],
+      "front_audience_direction_world": [
+        0,
+        -1,
+        0
+      ],
+      "guide_version": 1,
+      "style_profile": {
+        "structure": "clean painted steel/timber1985 frame",
+        "seating": "separate cream/green molded1985 chair mesh for every place",
+        "roof": "clean cream low-gable canopy/green fascia",
+        "palette": "cream shell/canopy, forest-green frame/detail"
+      },
+      "all_guides_are_technical_only": true,
+      "release_anchors_authored": false,
+      "runtime_ready": false,
+      "owner_approved": false
+    }
+  ],
+  "upgraded_chair_prototype": {
+    "prototype_key": "molded-chair-1985-cream-green-v1",
+    "seat_width_metres": 0.48,
+    "seat_depth_metres": 0.46,
+    "seat_pan_top_above_floor_metres": 0.45,
+    "shell_thickness_metres": 0.035,
+    "back_width_metres": 0.48,
+    "back_lower_above_floor_metres": 0.55,
+    "back_upper_above_floor_metres": 1.0,
+    "back_recline_depth_metres": 0.08,
+    "rounded_corner_metres": 0.04,
+    "mounting": "independent pan/back shell per place; individual painted-steel brackets on a row beam; never merge upgraded shells into a bench",
+    "every_target_place_gets_its_own_mesh": true,
+    "release_anchors_authored": false
+  },
+  "anchors_are_design_proposals_only": true,
+  "release_anchors_authored": false,
+  "runtime_edited": false,
+  "owner_approved": false
+}

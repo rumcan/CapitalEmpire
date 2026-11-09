@@ -1,0 +1,180 @@
+{
+  "schema": 1,
+  "as_of_utc": "2026-11-07T10:40:25.017055+00:00",
+  "review_result": "HOLD-camera-consistency",
+  "identity_direction_alpha_result": "PASS candidate subject to separate camera hold",
+  "source": {
+    "path": "generated/vehicles/golf-maintenance-utility/traffic8-v1.png",
+    "sha256": "4a9145c65c79e7a70cef2290a2142e8b702160e660f08e5a64e90b2e6f9fb80d",
+    "bytes": 2008098
+  },
+  "source_original_hash_matches_parent_batch": true,
+  "dimensions": [
+    1774,
+    887
+  ],
+  "mode": "RGBA",
+  "zero_alpha_fraction": 0.4531660500095962,
+  "outer_border_alpha_p50p95max": [
+    0.0,
+    0.0,
+    1.0
+  ],
+  "empty_center_gutter_alpha_p50p95max": [
+    0.0,
+    0.0,
+    1.0
+  ],
+  "actual_cells": [
+    {
+      "cell": 0,
+      "actual_screen_nose": "lower-left",
+      "reference_rect_ltrb": [
+        0,
+        0,
+        443,
+        443
+      ],
+      "native_core_margin_pixels": 10,
+      "boundary_core_pixels": 0,
+      "boundary_alpha_max": 1,
+      "rgba_rectangle_sha256": "744f8055b546fb95f4c633e65ed54fda94cfbaf066cc85c658a5ecedab9a29ac"
+    },
+    {
+      "cell": 1,
+      "actual_screen_nose": "down",
+      "reference_rect_ltrb": [
+        443,
+        0,
+        886,
+        443
+      ],
+      "native_core_margin_pixels": 15,
+      "boundary_core_pixels": 0,
+      "boundary_alpha_max": 3,
+      "rgba_rectangle_sha256": "5656229759d64fe15562bddf63535bdc314504f071194ad263d4cd65c72f7ea8"
+    },
+    {
+      "cell": 2,
+      "actual_screen_nose": "lower-right",
+      "reference_rect_ltrb": [
+        886,
+        0,
+        1330,
+        443
+      ],
+      "native_core_margin_pixels": 2,
+      "boundary_core_pixels": 0,
+      "boundary_alpha_max": 5,
+      "rgba_rectangle_sha256": "bae6a449827dee2a4107f26102fd1219eef8a8fa4bc69a94d8d015f5345c4d9d"
+    },
+    {
+      "cell": 3,
+      "actual_screen_nose": "left",
+      "reference_rect_ltrb": [
+        1330,
+        0,
+        1774,
+        443
+      ],
+      "native_core_margin_pixels": 6,
+      "boundary_core_pixels": 0,
+      "boundary_alpha_max": 1,
+      "rgba_rectangle_sha256": "9729cf7fe3fa9b9dcb9ef43be5ec6fb92d3936b7c985d19036b927afb6e69ae0"
+    },
+    {
+      "cell": 4,
+      "actual_screen_nose": "upper-right",
+      "reference_rect_ltrb": [
+        0,
+        443,
+        443,
+        887
+      ],
+      "native_core_margin_pixels": 12,
+      "boundary_core_pixels": 0,
+      "boundary_alpha_max": 1,
+      "rgba_rectangle_sha256": "e8e5d969f65bd9f3b087755965e8a050bb71e97159b9785370c5d04f786a3bb6"
+    },
+    {
+      "cell": 5,
+      "actual_screen_nose": "up",
+      "reference_rect_ltrb": [
+        443,
+        443,
+        864,
+        887
+      ],
+      "native_core_margin_pixels": 23,
+      "boundary_core_pixels": 0,
+      "boundary_alpha_max": 2,
+      "rgba_rectangle_sha256": "0220aef4d8778f0722f4e7c7db1be973dafd40e3b90de2d9f155cec9aba1f567"
+    },
+    {
+      "cell": 6,
+      "actual_screen_nose": "upper-left",
+      "reference_rect_ltrb": [
+        864,
+        443,
+        1330,
+        887
+      ],
+      "native_core_margin_pixels": 2,
+      "boundary_core_pixels": 0,
+      "boundary_alpha_max": 3,
+      "rgba_rectangle_sha256": "c205a9b4f1252c52b12f044ee70f74285de13f867aa55f981915bffcf73d9af9"
+    },
+    {
+      "cell": 7,
+      "actual_screen_nose": "right",
+      "reference_rect_ltrb": [
+        1330,
+        443,
+        1774,
+        887
+      ],
+      "native_core_margin_pixels": 11,
+      "boundary_core_pixels": 0,
+      "boundary_alpha_max": 1,
+      "rgba_rectangle_sha256": "955a716ee0e9c3466e2d80d05621b204397540fb2957c6f05a244776e81b7e9d"
+    }
+  ],
+  "all_eight_distinct_nose_directions_present": true,
+  "side_cell_order_is_remappable": true,
+  "native_core_clipped_at_canvas_border": false,
+  "actual_clear_gutter_crops_reference_only": [
+    [
+      0,
+      443,
+      886,
+      1330,
+      1774
+    ],
+    [
+      0,
+      443,
+      864,
+      1330,
+      1774
+    ]
+  ],
+  "source_crops_performed": false,
+  "notes": [
+    "Both side directions exist but col4 is reversed versus prompt. Actual top col4 LEFT; bottom col4 RIGHT. Map source cells; not a missing direction by itself.",
+    "HOLD visually inconsistent elevation: col4 side profiles show nearly level body/roof and near-circular side wheels; diagonal/front/rear cells show substantially more top planes. Need shared fixed30degree camera proof or native correction, not relabelling."
+  ],
+  "camera_measurement_scope": "Visual inconsistency established; exact percell camera degrees not numerically certified. Do not present approximate appearance as an8degree/30degree measured proof.",
+  "owner_approved": false,
+  "runtime_ready": false,
+  "source_only": true,
+  "exact_prompt": {
+    "path": "generated/vehicles/golf-maintenance-utility/traffic8-v1.prompt.txt",
+    "sha256": "20ea0e8161cf7c0399157690121dcabb3e043994b2edebf8310b618625b6d82e",
+    "bytes": 2062
+  },
+  "parent_provenance": {
+    "path": "generated/vehicles/golf-maintenance-utility/traffic8-v1.provenance.json",
+    "sha256": "282488c8956afcffb1d1c45d45470ee1456a0201cc4c9b22ccdb2b500d1e3ed8",
+    "bytes": 2770
+  }
+}

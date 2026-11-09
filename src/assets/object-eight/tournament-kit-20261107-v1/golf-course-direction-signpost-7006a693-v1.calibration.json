@@ -1,0 +1,94 @@
+{
+  "schema": 1,
+  "space": "orthographic-camera",
+  "engineProjection": {
+    "HW": 64,
+    "HH": 32,
+    "tileMetres": 2
+  },
+  "targetCameraPixelsPerMetre": 45.254833995939045,
+  "sourcePixelsPerMetre": 218.79,
+  "views": {
+    "normalNE": {
+      "sourcePixelsPerMetre": 218.79,
+      "displayScale": 0.206841418693446,
+      "anchorSourcePixels": {
+        "x": 182.5,
+        "y": 524.1
+      },
+      "measurement": "Silhouette fit, 2026-11-07: physical body 0.8 x 0.8 m, height 2.4 m. Scale per sheet (and per full-size override file) from the alpha bbox height (>128) = ground diamond + 0.866 x height at the view's heading (rotation-invariant); width ratio checked per view. Anchor = projected body centre from the bbox bottom/centre.",
+      "atlasResize": 0.1241048512160676
+    },
+    "yaw8N": {
+      "sourcePixelsPerMetre": 222.32,
+      "displayScale": 0.2035571878190853,
+      "anchorSourcePixels": {
+        "x": 215,
+        "y": 514.8
+      },
+      "measurement": "Silhouette fit, 2026-11-07: physical body 0.8 x 0.8 m, height 2.4 m. Scale per sheet (and per full-size override file) from the alpha bbox height (>128) = ground diamond + 0.866 x height at the view's heading (rotation-invariant); width ratio checked per view. Anchor = projected body centre from the bbox bottom/centre.",
+      "atlasResize": 0.12213431269145117
+    },
+    "normalSE": {
+      "sourcePixelsPerMetre": 218.79,
+      "displayScale": 0.206841418693446,
+      "anchorSourcePixels": {
+        "x": 197,
+        "y": 516.1
+      },
+      "measurement": "Silhouette fit, 2026-11-07: physical body 0.8 x 0.8 m, height 2.4 m. Scale per sheet (and per full-size override file) from the alpha bbox height (>128) = ground diamond + 0.866 x height at the view's heading (rotation-invariant); width ratio checked per view. Anchor = projected body centre from the bbox bottom/centre.",
+      "atlasResize": 0.1241048512160676
+    },
+    "yaw8E": {
+      "sourcePixelsPerMetre": 222.32,
+      "displayScale": 0.2035571878190853,
+      "anchorSourcePixels": {
+        "x": 81.5,
+        "y": 513.8
+      },
+      "measurement": "Silhouette fit, 2026-11-07: physical body 0.8 x 0.8 m, height 2.4 m. Scale per sheet (and per full-size override file) from the alpha bbox height (>128) = ground diamond + 0.866 x height at the view's heading (rotation-invariant); width ratio checked per view. Anchor = projected body centre from the bbox bottom/centre.",
+      "atlasResize": 0.12213431269145117
+    },
+    "normalSW": {
+      "sourcePixelsPerMetre": 218.79,
+      "displayScale": 0.206841418693446,
+      "anchorSourcePixels": {
+        "x": 183,
+        "y": 519.1
+      },
+      "measurement": "Silhouette fit, 2026-11-07: physical body 0.8 x 0.8 m, height 2.4 m. Scale per sheet (and per full-size override file) from the alpha bbox height (>128) = ground diamond + 0.866 x height at the view's heading (rotation-invariant); width ratio checked per view. Anchor = projected body centre from the bbox bottom/centre.",
+      "atlasResize": 0.1241048512160676
+    },
+    "yaw8S": {
+      "sourcePixelsPerMetre": 222.32,
+      "displayScale": 0.2035571878190853,
+      "anchorSourcePixels": {
+        "x": 217.5,
+        "y": 518.8
+      },
+      "measurement": "Silhouette fit, 2026-11-07: physical body 0.8 x 0.8 m, height 2.4 m. Scale per sheet (and per full-size override file) from the alpha bbox height (>128) = ground diamond + 0.866 x height at the view's heading (rotation-invariant); width ratio checked per view. Anchor = projected body centre from the bbox bottom/centre.",
+      "atlasResize": 0.12213431269145117
+    },
+    "normalNW": {
+      "sourcePixelsPerMetre": 218.79,
+      "displayScale": 0.206841418693446,
+      "anchorSourcePixels": {
+        "x": 171.5,
+        "y": 525.1
+      },
+      "measurement": "Silhouette fit, 2026-11-07: physical body 0.8 x 0.8 m, height 2.4 m. Scale per sheet (and per full-size override file) from the alpha bbox height (>128) = ground diamond + 0.866 x height at the view's heading (rotation-invariant); width ratio checked per view. Anchor = projected body centre from the bbox bottom/centre.",
+      "atlasResize": 0.1241048512160676
+    },
+    "yaw8W": {
+      "sourcePixelsPerMetre": 222.32,
+      "displayScale": 0.2035571878190853,
+      "anchorSourcePixels": {
+        "x": 85.5,
+        "y": 520.8
+      },
+      "measurement": "Silhouette fit, 2026-11-07: physical body 0.8 x 0.8 m, height 2.4 m. Scale per sheet (and per full-size override file) from the alpha bbox height (>128) = ground diamond + 0.866 x height at the view's heading (rotation-invariant); width ratio checked per view. Anchor = projected body centre from the bbox bottom/centre.",
+      "atlasResize": 0.12213431269145117
+    }
+  },
+  "atlasDensity": 0.6
+}

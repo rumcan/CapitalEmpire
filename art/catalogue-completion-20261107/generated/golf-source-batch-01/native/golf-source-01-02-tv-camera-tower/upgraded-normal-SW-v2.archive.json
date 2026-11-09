@@ -1,0 +1,23 @@
+[
+  {
+    "key": "golf-source-01-02-tv-camera-tower",
+    "family": "normal-SW",
+    "condition": "upgraded",
+    "version": 2,
+    "target": "generated/golf-source-batch-01/native/golf-source-01-02-tv-camera-tower/upgraded-normal-SW-v2.png",
+    "refs": [
+      "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/golf-source-batch-01/native/golf-source-01-02-tv-camera-tower/upgraded-normal-SW-v1.png",
+      "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/golf-source-batch-01/native/golf-source-01-02-tv-camera-tower/camera-calibration-refs/SW-camera-only.png"
+    ],
+    "prompt": "Precise ONE-OBJECT correction to REFERENCE1 single SW TVtower sprite: move the ONE GREEN EQUIPMENT CASE across the platform from foreground SCREEN RIGHT of the tripod to foreground SCREEN LEFT of the tripod, at the fixed position shown by REFERENCE2 guide. Remove old right case completely, place same case at left\u2014there must be EXACTLY ONE CASE. Retain corrected camera plain grey rear end WITHOUT black/green iris; do not swivel camera, move tripod, change guardrails or alter any tower geometry. Reference2 only case-position guide, no camera/body material changes. Same exact SW projection/scale and fine painted upgraded galvanizedsteel, neat greencloth, soundtimber. Late-afternoonDAYTIME sunUPPERRIGHT/shadowsLOWERLEFT; onecompleteobject, genuinezeroalpha transparency, wideclear margins, no greyhalo, textUI, groundplate or new objects.",
+    "source": "C:/Users/RAMPAGE/.codex/generated_images/01a1b1fd-39ec-7220-8f11-86e4448833ea/exec-d0d217c8-d199-4214-8d12-c23f9680cc5b.png",
+    "references": [
+      "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/golf-source-batch-01/native/golf-source-01-02-tv-camera-tower/upgraded-normal-SW-v1.png",
+      "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/golf-source-batch-01/native/golf-source-01-02-tv-camera-tower/camera-calibration-refs/SW-camera-only.png"
+    ],
+    "status": "native-source-candidate-pending-visual-review",
+    "runtime_imported": false,
+    "sha256": "f2fcc31ac8e67544bc9c12246a01bec99945c1969f92ba02f9b20d7a9cfcfc89",
+    "native_bytes_preserved": true
+  }
+]

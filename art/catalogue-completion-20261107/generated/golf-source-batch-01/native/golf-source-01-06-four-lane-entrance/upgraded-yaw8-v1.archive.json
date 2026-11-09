@@ -1,0 +1,41 @@
+[
+  {
+    "key": "golf-source-01-06-four-lane-entrance",
+    "family": "yaw8",
+    "condition": "upgraded",
+    "version": 1,
+    "target": "generated/golf-source-batch-01/native/golf-source-01-06-four-lane-entrance/upgraded-yaw8-v1.png",
+    "refs": [
+      "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-01\\native\\golf-source-01-06-four-lane-entrance\\guides\\yaw8-world-v2.png",
+      "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/golf-source-batch-01/native/golf-source-01-06-four-lane-entrance/upgraded-normal-v1.png"
+    ],
+    "runtimeTarget": {
+      "eventTypeId": "gate",
+      "eventName": "Entrance gate",
+      "currentSpriteSubjectId": "ce:parking-entry",
+      "newArtSubjectProposal": "golf:event-four-lane-entrance",
+      "newArtSubjectAlreadyRegistered": false,
+      "eventCatalogueSource": "src/game/golf/tents.ts",
+      "standInMappingSource": "src/game/golf/structure-art.ts",
+      "footprintTiles": {
+        "width": 6,
+        "depth": 3
+      },
+      "footprintMetres": {
+        "width": 12,
+        "depth": 6
+      },
+      "dimensionsMeaning": "Exact current event placement plot, not measured source sprite architecture. New design must fit plot; no runtime geometry changed."
+    },
+    "prompt": "Paint the four exact technical fixed-world camera views in Reference1 as UPGRADEDpainterly game art matchingReference2materials/identity. Guide controls ALLgeometry/cameras/occlusion, NEVERrepeatcornercamera fromReference2. Exactly4lanes acrossX:3manual turnstiles then1wider swing gate at+X. No ground slab. Sign frame only, no added roof required by brief.. Cleanprofessionallymaintainedwood/galvanizedsteel/forestgreenpaint/creamtrim. Same physical construction, precise fixedfeaturesoncorrectsides. No rust/torncloth/rot/addedfantasyornament. Fourdifferent nearcardinalmainfaces N E / S W inguidecells, orthographic30degreesDOWN, nominal8degreeoffcardinal. Late-afternoonDAYTIME sunSCREENUPPERRIGHT/shadowsLOWERLEFT, lamps/screensOFF. Fourcomplete equallyscaled sprites withwidezeroalpha transparentmargins/gutters. Nopeople/groundplate/slab/plants/textUI/scene/halo.",
+    "source": "C:/Users/RAMPAGE/.codex/generated_images/01a1b1fd-39ec-7220-8f11-86e4448833ea/exec-0124c565-9c75-4860-ba51-cb40749fccac.png",
+    "references": [
+      "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-01\\native\\golf-source-01-06-four-lane-entrance\\guides\\yaw8-world-v2.png",
+      "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/golf-source-batch-01/native/golf-source-01-06-four-lane-entrance/upgraded-normal-v1.png"
+    ],
+    "status": "native-source-candidate-pending-visual-review",
+    "runtime_imported": false,
+    "sha256": "579be9182541f2ed151921cb10ea1e32b869489e2b1c812e3c5614312761c179",
+    "native_bytes_preserved": true
+  }
+]

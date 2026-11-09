@@ -1,0 +1,26 @@
+{
+  "runtimeSubjectId": "newprop:ice-cream-cart",
+  "runtimeName": "Ice cream cart",
+  "png": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-vehicle-source-batch-01\\references\\ice-cream-cart.source.png",
+  "originalNativePNG": "E:\\Repos\\CapitalEmpire\\All Generated Images\\exec-04baee63-23dd-453e-bdcd-ac630eaf592f.png",
+  "copiedNativeSheet": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-vehicle-source-batch-01\\original-sheets\\exec-04baee63-23dd-453e-bdcd-ac630eaf592f.png",
+  "sourceSheetSHA256": "d471a7b9201c45fdc5e7f72a57d2eee3ea749bbe21950133443deb5f0df94617",
+  "cropRectXYWH": [
+    763,
+    652,
+    444,
+    570
+  ],
+  "sourceCell": "bottom right",
+  "pngSHA256": "42278282306fd77bf5902dfa93468be869f0f97659dc2c7a955147cdc7da1bf6",
+  "rgbaSHA256": "e509b22b72f84e1d060a94ecadc60c7592f4dcfafd5d777f5e43bfc785e163f8",
+  "cropPixels": [
+    444,
+    570
+  ],
+  "sourceMetadataCutOff": false,
+  "operation": "Native original RGBA crop only; no resize, recolour, alpha cleanup or synthesis. Source sheet contains4different objects, not4rotations.",
+  "visualInspection": "inspected native crop",
+  "actualIdentityNotes": "Confirmed manual vending chest with large spoked wheels, caster/handles and fixed umbrella/cone rack.",
+  "sourceOnlyNotReleaseProof": true
+}

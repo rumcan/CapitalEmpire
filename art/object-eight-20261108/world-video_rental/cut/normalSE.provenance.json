@@ -1,0 +1,29 @@
+{
+  "schema": 1,
+  "subject": "world:video_rental",
+  "version": 1,
+  "key": "normalSE",
+  "source": {
+    "file": "../src/normalSE.png",
+    "sha256": "78f37b2998d7e1355668b8826eaf76ba50cf7297f7ccfafdeb2d9443a8cebc44",
+    "width": 596,
+    "height": 473
+  },
+  "cell": 0,
+  "cellRect": {
+    "left": 0,
+    "top": 0,
+    "width": 596,
+    "height": 473
+  },
+  "crop": {
+    "left": 4,
+    "top": 4,
+    "width": 588,
+    "height": 465
+  },
+  "output": "normalSE.native.png",
+  "sha256": "2433d3c183698050a96ddbef9c2ed6c7422497783d2eb432d68601b9a025cc9b",
+  "operation": "native RGBA cell crop only; no flip/repaint/view synthesis",
+  "review": "candidate"
+}

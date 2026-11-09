@@ -1,0 +1,38 @@
+{
+  "schema": 1,
+  "createdUtc": "2026-11-07T06:47:45.284562+00:00",
+  "exactRuntimeId": "business:golf-footbridge",
+  "source": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/src/assets/businesses/capital-v1/png/golf-footbridge.png",
+  "sourceSha256": "81926414783beee7436323c01df66550e4f9aa4af26a336e0e32d4a4ebd43432",
+  "output": "identity-references/business-golf-footbridge-6d0e23d0/source.png",
+  "outputSha256": "81926414783beee7436323c01df66550e4f9aa4af26a336e0e32d4a4ebd43432",
+  "width": 542,
+  "height": 441,
+  "sourceCell": {
+    "kind": "already isolated native PNG; whole file",
+    "rectXYWH": [
+      0,
+      0,
+      542,
+      441
+    ]
+  },
+  "operation": "byte-for-byte PNG copy only; no resize, crop, recolour, key, repaint, registration or source mutation",
+  "selection": "retained exact-ID business source master PNG",
+  "registeredCornerDirection": null,
+  "sourceEvidence": null,
+  "sourceReview": null,
+  "sourceRegistration": null,
+  "originalInventorySource": null,
+  "originalBusinessSourceCell": {
+    "id": "golf-footbridge",
+    "sourceSheet": "sliced/builtin/golf-furniture.png",
+    "sourceCrop": [
+      59,
+      115,
+      534,
+      433
+    ]
+  },
+  "nativeReferenceApprovalClaimed": false
+}

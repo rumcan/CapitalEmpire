@@ -1,0 +1,42 @@
+[
+  {
+    "key": "golf-source-01-03-broadcast-compound",
+    "condition": "budget",
+    "runtimeTarget": {
+      "eventTypeId": "broadcast",
+      "eventName": "Broadcast compound",
+      "currentSpriteSubjectId": "business:golf-cart-garage",
+      "newArtSubjectProposal": "golf:event-broadcast-compound",
+      "newArtSubjectAlreadyRegistered": false,
+      "eventCatalogueSource": "src/game/golf/tents.ts",
+      "standInMappingSource": "src/game/golf/structure-art.ts",
+      "footprintTiles": {
+        "width": 15,
+        "depth": 10
+      },
+      "footprintMetres": {
+        "width": 30,
+        "depth": 20
+      },
+      "dimensionsMeaning": "Exact current event placement plot, not measured source sprite architecture. New design must fit plot; no runtime geometry changed.",
+      "currentSpriteBaseBoxesInTiles": [
+        {
+          "hx": 1,
+          "hy": 1,
+          "dx": 0,
+          "dy": 0
+        }
+      ]
+    },
+    "source": "C:/Users/RAMPAGE/.codex/generated_images/01a1b1fd-39ec-7220-8f11-86e4448833ea/exec-e3457429-7ac5-4dae-b84e-d73ca3e6d0bb.png",
+    "target": "generated/golf-source-batch-01/native/golf-source-01-03-broadcast-compound/budget-normal-v1.png",
+    "prompt": "Generate a high-detail2x2 sheet of ONE SAME golf-event item in FOUR genuinely different orthographic45degree CORNER views, camera30degrees down. Reference1 is painted miniature materials/brushwork ONLY, do not copy its building. This is a new role-specific design; follow the functional brief. Functional identity: A30x20m event broadcast compound consisting of one period box broadcast truck, one uplink van with a roof dish, a generator box, cable reels and a small practical equipment workbench. Arrange truck left, van rear-right, generator front-right, with one open service gap at model front; fixed component layout rotates as one object. Separate physical feet/wheels and no painted ground slab. It must read as support vehicles, not a garage. Condition: Tired1950s/1960struck bodies with repainted cream/green panels, repair patches and older cable equipment. Use ordinary working equipment, not fantasy shanties. It is1985; budget means ordinary old1950smanufactured equipment stillusednow, no fantasyarchitecture/rope-lashedlogs/patchworkblueplastic/ornatebrassfinials. Four camera cells: TOP LEFT FRONT+LEFT sides, TOP RIGHT REAR+LEFT sides, BOTTOM LEFT REAR+RIGHT sides, BOTTOM RIGHT FRONT+RIGHT sides, corresponding SE SW / NW NE. Reconstruct real REAR faces, don't pastefront servicehatches/screens/lenses onto theback. Keep ALL doors/windows/vents/equipment/ladder/stair/camera/servingcounter positions fixed in localphysicalspace across the four turns. Structuralbodies andfunctionalattachments are same in every view. Finely hand-painted miniature game style consistent with source authority, realistic materials and readable silhouettes. LATE-AFTERNOON DAYTIME sunfixedSCREEN UPPER RIGHT, shadowsLOWER LEFT; all electriclamps/screensoff. Nopeople, plants, groundplate/roads/terrain, UI/captions/grid/text orhaze. Equipment's owndeck/mat is allowed onlyifpartofbrief. Fullyopaqueobjects on genuinelyzeroalpha transparentbackground includingallgutters; netting/railopeningsremaintransparent. Four complete separate sprites, equal physicalscale, centredwithgenerouscellmargins.",
+    "references": [
+      "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/old-clubhouse-1950/normal-v5.png"
+    ],
+    "status": "native normal4 candidate; yaw4 and independent identity/alpha/geometry review pending",
+    "runtime_imported": false,
+    "sha256": "cf28104d7ee1e2240c964b9b640ed80b912becfb46267cf90b8602fe6b6be87c",
+    "native_bytes_preserved": true
+  }
+]

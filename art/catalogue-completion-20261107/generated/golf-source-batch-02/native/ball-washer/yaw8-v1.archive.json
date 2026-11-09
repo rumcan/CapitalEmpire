@@ -1,0 +1,24 @@
+[
+  {
+    "key": "newprop:ball-washer",
+    "slug": "ball-washer",
+    "family": "yaw8",
+    "condition": "base",
+    "version": 1,
+    "target": "generated/golf-source-batch-02/native/ball-washer/yaw8-v1.png",
+    "refs": [
+      "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-02\\fixed-world-guides-v1\\ball-washer\\guides\\yaw8-world-v1.png",
+      "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/golf-source-batch-02/native/ball-washer/normal-v2.png"
+    ],
+    "prompt": "Paint FOUR exact near-cardinal views of ONE SAME golfprop from fixed-world REFERENCE1 as finished native painterlygameart matchingidentity/materialsofREFERENCE2. Guidecontrols camera andphysicalsidepositions; reference2 is finelypainted material/assemblyidentityONLY, doNOTrepeatitscornercameras. Fixedrequirements: Lid OPEN70degrees in every view; one ball in opening; crank on physical+XRIGHT; towel on physical-XLEFT. No state changes or mirroring.. Allattachments remainonSAMEphysicalside andsameoperatingstate throughthe4quarterturns. Frontlabels/maps/coinslots/taps neverappearonrearbacks. Rearbraces/basket/towel/crank mustobeyguideocclusion. Preserveallidentity details, including archedcaps andgoldfinials whenpresent. FourviewcellsN E / S W asguide, orthographic30degreesDOWN andnominal8degreesoffcardinal; broadmainface/narrowside, not45corner. Matchtheexistingdetailed hand-paintedminiaturegolf-townstyle: wood/enamel/rope/brass/galvanizedsteel/cloth/dimpledgolfballs, notflatlowpolyguidefacets. Late-afternoonDAYTIME sunfixedSCREENUPPERRIGHT/shadowsLOWERLEFT,lampsOFF. Equalphysicalscale, completeisolatedopaqueobjects/generousZEROALPHAtransparentmargins/gutters; no atmosphericgreyhalo, groundtile, grass/plants/people/textlabels/UI/grid. Actualfunctionalrampretained. Symmetricobjectsmayhavenaturallysimilarsilhouettes; donotaddpartstofakeuniqueness.",
+    "source": "C:/Users/RAMPAGE/.codex/generated_images/01a1b1fd-39ec-7220-8f11-86e4448833ea/exec-f5427f6b-466e-4a2a-aabb-91503e6375aa.png",
+    "references": [
+      "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-02\\fixed-world-guides-v1\\ball-washer\\guides\\yaw8-world-v1.png",
+      "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/golf-source-batch-02/native/ball-washer/normal-v2.png"
+    ],
+    "status": "native-source-candidate-pending-visual-review",
+    "runtime_imported": false,
+    "sha256": "1306b1294963719eb0a0e9f35e154403fa83bdede82a40a7839a4fb78c187aa5",
+    "native_bytes_preserved": true
+  }
+]

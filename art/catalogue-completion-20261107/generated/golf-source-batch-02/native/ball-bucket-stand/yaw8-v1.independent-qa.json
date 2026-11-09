@@ -1,0 +1,126 @@
+{
+  "schema": 1,
+  "as_of_utc": "2026-11-07T14:29:39.952183+00:00",
+  "review_result": "PASS-source-candidate-four-main-face-roles-alpha",
+  "source": {
+    "path": "generated/golf-source-batch-02/native/ball-bucket-stand/yaw8-v1.png",
+    "sha256": "3c24a75e447a47ce15c6bc902a0b8e2c3e158ee49c6335f3c9dbccaef4957e91",
+    "bytes": 1518753
+  },
+  "mode": "RGBA",
+  "dimensions": [
+    1254,
+    1254
+  ],
+  "source_original_hash_matches_parent": true,
+  "parent_provenance": {
+    "path": "generated/golf-source-batch-02/native/ball-bucket-stand/yaw8-v1.provenance.json",
+    "sha256": "4bb2449795ba7912ca9ac79818cae14a0bc51115086592497629ae8a9dd7121e",
+    "bytes": 2794
+  },
+  "exact_prompt_utf8_sha256": "5353ece151bd590e5be39d533a15f047a0634c0c5c3cd85a8879688c51debb7e",
+  "actual_generation_references": [
+    {
+      "path": "generated/golf-source-batch-02/fixed-world-guides-v1/ball-bucket-stand/guides/yaw8-world-v1.png",
+      "sha256": "a3a62bffccbf90fedbe1f9ea9c2cae1a5a8b99a480e04c75ea74a26cdb6c1de0",
+      "bytes": 56682
+    },
+    {
+      "path": "generated/golf-source-batch-02/native/ball-bucket-stand/normal-v2.png",
+      "sha256": "8c11d7d6ac9da5b2efad2d46aa926df1fbcc545ba1ebe402fd88b849e1376ab0",
+      "bytes": 1810123
+    }
+  ],
+  "zero_alpha_fraction": 0.6225367500235292,
+  "outer_4px_border_alpha_p50p95max": [
+    0.0,
+    0.0,
+    1.0
+  ],
+  "clear_horizontal_cut_y": 627,
+  "clear_vertical_cut_by_row": [
+    627,
+    627
+  ],
+  "cut_alpha_maxima": {
+    "horizontal": 0,
+    "vertical_top": 0,
+    "vertical_bottom": 0
+  },
+  "cells": [
+    {
+      "cell": "TL",
+      "actual_role": "N ball window/chute/crank",
+      "selected_guide_direction": "N",
+      "reference_rect_ltrb": [
+        0,
+        0,
+        627,
+        627
+      ],
+      "minimum_core_margin_px": 30,
+      "boundary_core_pixels_alpha_gt128": 0,
+      "boundary_alpha_max": 0,
+      "native_rgba_rectangle_sha256": "cdd2864c83eaad2de54175945f15eafe8a3b7ff80296d4c91fd938c8a4da6ccf",
+      "functional_hold": false
+    },
+    {
+      "cell": "TR",
+      "actual_role": "E blank side; apparatus to right",
+      "selected_guide_direction": "E",
+      "reference_rect_ltrb": [
+        627,
+        0,
+        1254,
+        627
+      ],
+      "minimum_core_margin_px": 38,
+      "boundary_core_pixels_alpha_gt128": 0,
+      "boundary_alpha_max": 0,
+      "native_rgba_rectangle_sha256": "9f75258c187f4e6c92517ba47552534a2b2a06f3f2685f32c995e6932ab78202",
+      "functional_hold": false
+    },
+    {
+      "cell": "BL",
+      "actual_role": "S plain back/brace",
+      "selected_guide_direction": "S",
+      "reference_rect_ltrb": [
+        0,
+        627,
+        627,
+        1254
+      ],
+      "minimum_core_margin_px": 43,
+      "boundary_core_pixels_alpha_gt128": 0,
+      "boundary_alpha_max": 1,
+      "native_rgba_rectangle_sha256": "7cb6c4b5d0e087c1ec518d80b91688d82841e58f8acea5a470862ec3e87fc524",
+      "functional_hold": false
+    },
+    {
+      "cell": "BR",
+      "actual_role": "W opposite blank side; apparatus to left",
+      "selected_guide_direction": "W",
+      "reference_rect_ltrb": [
+        627,
+        627,
+        1254,
+        1254
+      ],
+      "minimum_core_margin_px": 19,
+      "boundary_core_pixels_alpha_gt128": 0,
+      "boundary_alpha_max": 0,
+      "native_rgba_rectangle_sha256": "5f0252fe6d8ab638f36151d88c441a6e2e5904bc7e2af1e3cdbda2680011f18d",
+      "functional_hold": false
+    }
+  ],
+  "all_cores_complete_at_reference_cuts": true,
+  "visual_observations": [
+    "Front ball window/chute/crank and one bucket, plain back/brace and opposite side profiles match guide. Fifteen display balls retained on front (3x5)."
+  ],
+  "intrinsic_rotational_symmetry": false,
+  "main_faces_functionally_accepted_for_source_candidate": true,
+  "owner_approved": false,
+  "runtime_ready": false,
+  "exact_numerical_angle_certified": false,
+  "native_image_bytes_changed": false
+}

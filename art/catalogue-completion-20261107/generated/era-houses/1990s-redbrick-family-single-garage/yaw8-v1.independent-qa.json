@@ -1,0 +1,111 @@
+{
+  "schema": 1,
+  "as_of_utc": "2026-11-07T10:55:47.829167+00:00",
+  "review_result": "PASS-main-wall-opening-identity-and-alpha;HOLD-exact8-certification",
+  "source": {
+    "path": "generated/era-houses/1990s-redbrick-family-single-garage/yaw8-v1.png",
+    "sha256": "ee2a4b2820230bdcebf2375d545296c2c9717330cb589dba90acc5ed17a1cdcf",
+    "bytes": 983390
+  },
+  "source_original_hash_matches_parent_batch": true,
+  "dimensions": [
+    1254,
+    1254
+  ],
+  "mode": "RGBA",
+  "is_opaque_scene": false,
+  "zero_alpha_fraction": 0.7559745020082467,
+  "outer_border_alpha_p50p95max": [
+    0.0,
+    0.0,
+    1.0
+  ],
+  "empty_center_gutter_alpha_p50p95max": [
+    0.0,
+    1.0,
+    1.0
+  ],
+  "cells": [
+    {
+      "cell": 0,
+      "reference_rect_ltrb": [
+        0,
+        0,
+        627,
+        627
+      ],
+      "rgba_rectangle_sha256": "653842b988718b765eeb9518cb23933b1e4289471acf0cdbddbd20932bf743c8",
+      "core_boundary_pixels": 0,
+      "minimum_core_margin_px": 81
+    },
+    {
+      "cell": 1,
+      "reference_rect_ltrb": [
+        627,
+        0,
+        1254,
+        627
+      ],
+      "rgba_rectangle_sha256": "b9584877da73915092d51e53f5b01ba00a10e2b8a5938ac5ddb77e56f9702764",
+      "core_boundary_pixels": 0,
+      "minimum_core_margin_px": 153
+    },
+    {
+      "cell": 2,
+      "reference_rect_ltrb": [
+        0,
+        627,
+        627,
+        1254
+      ],
+      "rgba_rectangle_sha256": "0c9f20b14132e51baf0ba8115d22d44512e5a58454a287d2c2add0a292e7f0f7",
+      "core_boundary_pixels": 0,
+      "minimum_core_margin_px": 81
+    },
+    {
+      "cell": 3,
+      "reference_rect_ltrb": [
+        627,
+        627,
+        1254,
+        1254
+      ],
+      "rgba_rectangle_sha256": "6ae2776056543a31fd577884c37a718d6337c979fa92220d3699d66b85bb61b3",
+      "core_boundary_pixels": 0,
+      "minimum_core_margin_px": 145
+    }
+  ],
+  "all_pixels_partitioned": true,
+  "reference_cut_columns_by_row": [
+    [
+      0,
+      627,
+      1254
+    ],
+    [
+      0,
+      627,
+      1254
+    ]
+  ],
+  "notes": [
+    "Main front/rear/side openings and garage/partywall identity remain coherent with normal source.",
+    "Exact8 camera is not established by technical guide labels; independent native measurement remains pending."
+  ],
+  "source_crops_performed": false,
+  "no_vehicle_or_house_sprite_crops": true,
+  "no_original_pixels_modified": true,
+  "owner_approved": false,
+  "runtime_ready": false,
+  "exact8_certified": false,
+  "exact_prompt": {
+    "path": "generated/era-houses/1990s-redbrick-family-single-garage/yaw8-v1.prompt.txt",
+    "sha256": "bc0877ebe5c7d9c7e4fa342140217dd09e743a48ed5bae204947c07a812a9b3a",
+    "bytes": 1147
+  },
+  "parent_provenance": {
+    "path": "generated/era-houses/1990s-redbrick-family-single-garage/yaw8-v1.provenance.json",
+    "sha256": "64cce7c254f692969a6399a773fbccc998f739cb689350081c24ef48dc7a9d66",
+    "bytes": 2020
+  }
+}

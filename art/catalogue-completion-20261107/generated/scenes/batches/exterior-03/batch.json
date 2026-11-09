@@ -1,0 +1,101 @@
+{
+  "schema": 1,
+  "batchId": "exterior-03",
+  "status": "prepared-not-generated",
+  "view": "outside",
+  "condition": "rundown",
+  "sourcePrompt": "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/scenes/batches/exterior-03/prompt.txt",
+  "referenceImages": [
+    "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/scenes/identity-references/style-authority.png",
+    "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/scenes/identity-references/world-house-0-51fa4b80/source.png",
+    "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/scenes/identity-references/world-house-1-ba13ed2e/source.png",
+    "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/scenes/identity-references/gen-house-duplex-c39d1a23/source.png",
+    "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/scenes/identity-references/gen-house-farmhouse-wrap-2b0eea83/source.png"
+  ],
+  "referenceRoles": [
+    "style-only",
+    "exact-building-identity",
+    "exact-building-identity",
+    "exact-building-identity",
+    "exact-building-identity"
+  ],
+  "cells": [
+    {
+      "cell": "top-left",
+      "cellIndex": 0,
+      "identityReferenceNumber": 2,
+      "runtimeId": "world:house_0",
+      "condition": "rundown",
+      "view": "outside",
+      "description": "Single-storey grey clapboard cottage with a dark blue gabled shingle roof, one brick chimney, a small round window in the right gable, black shutters, a red front door, short front steps and low planting against the walls.",
+      "referencePNG": "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/scenes/identity-references/world-house-0-51fa4b80/source.png",
+      "referenceSha256": "f877eeeba0204786429c2f86a837125652626a845497983a47893adb095d9f9f",
+      "manifestEntryAfterReview": {
+        "slug": "town-home-outside",
+        "subject": "world:house_0",
+        "state": "rundown",
+        "view": "outside"
+      },
+      "mustPreserve": "This exact building architecture, proportions, roof/cupola/chimneys, door and window placement, sign identity and its building type. Condition changes do not redesign the building."
+    },
+    {
+      "cell": "top-right",
+      "cellIndex": 1,
+      "identityReferenceNumber": 3,
+      "runtimeId": "world:house_1",
+      "condition": "rundown",
+      "view": "outside",
+      "description": "Two-storey dark teal clapboard house with pale corner trim, a dark blue gable roof, one tall brick chimney, a round right-gable window, black shutters, a centred timber front door and short front steps. Preserve the actual window grid and two-storey height.",
+      "referencePNG": "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/scenes/identity-references/world-house-1-ba13ed2e/source.png",
+      "referenceSha256": "c735558cce077de207f19c34a24ce9b17cf8223319f7f8ffc1c2381f41c5f9c1",
+      "manifestEntryAfterReview": {
+        "slug": "town-home-outside",
+        "subject": "world:house_1",
+        "state": "rundown",
+        "view": "outside"
+      },
+      "mustPreserve": "This exact building architecture, proportions, roof/cupola/chimneys, door and window placement, sign identity and its building type. Condition changes do not redesign the building."
+    },
+    {
+      "cell": "bottom-left",
+      "cellIndex": 2,
+      "identityReferenceNumber": 4,
+      "runtimeId": "gen:house-duplex",
+      "condition": "rundown",
+      "view": "outside",
+      "description": "Two-storey side-by-side clapboard duplex: blue-grey left half and cream right half, two front-facing gables, matching dark shingle roofs, separate small covered entrances and two distinct front doors with their own steps. Keep both units and both entrances.",
+      "referencePNG": "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/scenes/identity-references/gen-house-duplex-c39d1a23/source.png",
+      "referenceSha256": "3a26467971eefdb541488318ec100967e29ae2cf916ec2572036985dc4ca9c85",
+      "manifestEntryAfterReview": {
+        "slug": "town-home-outside",
+        "subject": "gen:house-duplex",
+        "state": "rundown",
+        "view": "outside"
+      },
+      "mustPreserve": "This exact building architecture, proportions, roof/cupola/chimneys, door and window placement, sign identity and its building type. Condition changes do not redesign the building."
+    },
+    {
+      "cell": "bottom-right",
+      "cellIndex": 3,
+      "identityReferenceNumber": 5,
+      "runtimeId": "gen:house-farmhouse-wrap",
+      "condition": "rundown",
+      "view": "outside",
+      "description": "Two-storey pale clapboard farmhouse with a long wraparound timber veranda, many slender veranda posts, a dark blue pitched/gabled roof, one brick chimney, a round gable window and several sash windows. Preserve the porch depth and all sides visible in the native reference.",
+      "referencePNG": "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/scenes/identity-references/gen-house-farmhouse-wrap-2b0eea83/source.png",
+      "referenceSha256": "aaddc4f69472fd8bede578d003a52874550292df445d8f6987944badddb7bd1a",
+      "manifestEntryAfterReview": {
+        "slug": "town-home-outside",
+        "subject": "gen:house-farmhouse-wrap",
+        "state": "rundown",
+        "view": "outside"
+      },
+      "mustPreserve": "This exact building architecture, proportions, roof/cupola/chimneys, door and window placement, sign identity and its building type. Condition changes do not redesign the building."
+    }
+  ],
+  "pairedBatch": null,
+  "appendAcceptedPairOutputAsCompositionReference": false,
+  "outputPolicy": "four independent opaque cinematic property cells; native crop only after review, never count as rotations",
+  "sameCameraRequiredForFutureConditionPair": true,
+  "registrationAutomatic": false
+}

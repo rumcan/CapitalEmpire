@@ -1,0 +1,61 @@
+{
+  "schema": 1,
+  "createdUtc": "2026-11-07T06:47:45.284562+00:00",
+  "exactRuntimeId": "expansion:duplex-rear",
+  "source": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/building-views/expansion-duplex-rear/NE.png",
+  "sourceSha256": "cb6fb4158f5630234f749138a369373106c39d0c2ce139ced9c7409cfe18e4be",
+  "output": "identity-references/expansion-duplex-rear-730b425f/source.png",
+  "outputSha256": "cb6fb4158f5630234f749138a369373106c39d0c2ce139ced9c7409cfe18e4be",
+  "width": 550,
+  "height": 482,
+  "sourceCell": {
+    "kind": "already isolated native PNG; whole file",
+    "rectXYWH": [
+      0,
+      0,
+      550,
+      482
+    ]
+  },
+  "operation": "byte-for-byte PNG copy only; no resize, crop, recolour, key, repaint, registration or source mutation",
+  "selection": "registered corner NE native PNG for this exact subject",
+  "registeredCornerDirection": "NE",
+  "sourceEvidence": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\building-views\\expansion-duplex-rear\\provenance.json",
+  "sourceReview": {
+    "status": "generated-awaiting-visual-review"
+  },
+  "sourceRegistration": {
+    "id": "expansion:duplex-rear",
+    "version": "expansion-duplex-rear-4views-v1",
+    "files": {
+      "NE": "cb6fb4158f5630234f749138a369373106c39d0c2ce139ced9c7409cfe18e4be",
+      "SE": "52b11f41409ee0f0b6c8fe8cffe8f0d7177ba6e84663efeab6f82bc4614db79b",
+      "SW": "fdffaec51ae84127a56da66634e414009cccde8b49c54f4226260c5123aa07a0",
+      "NW": "7cd24e6023485f17994f69a26c0d949170432c95ec0562b2fe0ee8c1bf5cc781"
+    }
+  },
+  "originalInventorySource": {
+    "library": "src/game/library.ts",
+    "librarySha256": "91b5190292c1005ac7b936f08e5e1ebf3be43c3aae99f92ea510775da83d9726",
+    "atlas": "src/assets/atlas/sprites-5-0.webp",
+    "atlasSha256": "ae625d1156c036112692eb54fa253620cd951de8603ee9b3458e9f609bd50bf6",
+    "runtimePage": 5,
+    "localPage": 5,
+    "uv": [
+      0.007813,
+      0.25,
+      0.275391,
+      0.468262
+    ],
+    "crop": {
+      "left": 16,
+      "top": 512,
+      "width": 548,
+      "height": 447
+    },
+    "native": "art/theme-consistency/exports/buildings/expansion-duplex-rear.native.png",
+    "nativeSha256": "f259dd94080f410a018bc4a5c13ac05a5bc77210a8bec15ce69a519b189dda28"
+  },
+  "originalBusinessSourceCell": null,
+  "nativeReferenceApprovalClaimed": false
+}

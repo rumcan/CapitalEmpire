@@ -1,0 +1,35 @@
+[
+  {
+    "key": "golf-source-01-04-first-aid-tent",
+    "condition": "budget",
+    "runtimeTarget": {
+      "eventTypeId": "firstAid",
+      "eventName": "First aid tent",
+      "currentSpriteSubjectId": "expansion:backyard-tent",
+      "newArtSubjectProposal": "golf:event-first-aid-tent",
+      "newArtSubjectAlreadyRegistered": false,
+      "eventCatalogueSource": "src/game/golf/tents.ts",
+      "standInMappingSource": "src/game/golf/structure-art.ts",
+      "footprintTiles": {
+        "width": 3,
+        "depth": 3
+      },
+      "footprintMetres": {
+        "width": 6,
+        "depth": 6
+      },
+      "dimensionsMeaning": "Exact current event placement plot, not measured source sprite architecture. New design must fit plot; no runtime geometry changed."
+    },
+    "source": "C:/Users/RAMPAGE/.codex/generated_images/01a1b1fd-39ec-7220-8f11-86e4448833ea/exec-bb114cae-4483-4dc6-b130-a55ece4b2aa6.png",
+    "target": "generated/golf-source-batch-01/native/golf-source-01-04-first-aid-tent/budget-normal-v1.png",
+    "prompt": "Generate a high-detail2x2 sheet of ONE SAME golf-event item in FOUR genuinely different orthographic45degree CORNER views, camera30degrees down. Reference1 is painted miniature materials/brushwork ONLY, do not copy its building. Reference2 is functional equipment reference ONLY; obey the design brief and reject all ornamental/goblin/modern details described below. Functional identity: A6x6m rectangular first-aid tent, low ridge roof, plain metal or sawn-timber uprights, one broad front opening with tied-back flaps, two simple side ventilation/window panels and closed rear wall with a small service flap. A visible cot, medical cabinet and plain first-aid box establish function where camera permits. Ground-level accessible entrance; no stamped staff, no garden planters. Condition: Faded tan1950smilitary/community medical canvas, patched seams and ordinary hardware, clean enough to function. No blue plastic tarps, rope-lashed logs or goblin hut. It is1985; budget means ordinary old1950smanufactured equipment stillusednow, no fantasyarchitecture/rope-lashedlogs/patchworkblueplastic/ornatebrassfinials. Four camera cells: TOP LEFT FRONT+LEFT sides, TOP RIGHT REAR+LEFT sides, BOTTOM LEFT REAR+RIGHT sides, BOTTOM RIGHT FRONT+RIGHT sides, corresponding SE SW / NW NE. Reconstruct real REAR faces, don't pastefront servicehatches/screens/lenses onto theback. Keep ALL doors/windows/vents/equipment/ladder/stair/camera/servingcounter positions fixed in localphysicalspace across the four turns. Structuralbodies andfunctionalattachments are same in every view. Finely hand-painted miniature game style consistent with source authority, realistic materials and readable silhouettes. LATE-AFTERNOON DAYTIME sunfixedSCREEN UPPER RIGHT, shadowsLOWER LEFT; all electriclamps/screensoff. Nopeople, plants, groundplate/roads/terrain, UI/captions/grid/text orhaze. Equipment's owndeck/mat is allowed onlyifpartofbrief. Fullyopaqueobjects on genuinelyzeroalpha transparentbackground includingallgutters; netting/railopeningsremaintransparent. Four complete separate sprites, equal physicalscale, centredwithgenerouscellmargins.",
+    "references": [
+      "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/old-clubhouse-1950/normal-v5.png",
+      "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-01\\references\\medical-tent.source.png"
+    ],
+    "status": "native normal4 candidate; yaw4 and independent identity/alpha/geometry review pending",
+    "runtime_imported": false,
+    "sha256": "51f956d7fb127ea54c16a3922d59950b68ae5fe9d05d0901da972c07901444c1",
+    "native_bytes_preserved": true
+  }
+]

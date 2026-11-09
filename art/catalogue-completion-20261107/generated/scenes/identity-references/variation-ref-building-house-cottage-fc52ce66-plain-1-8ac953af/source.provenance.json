@@ -1,0 +1,62 @@
+{
+  "schema": 1,
+  "createdUtc": "2026-11-07T06:47:45.284562+00:00",
+  "exactRuntimeId": "variation:ref-building-house-cottage-fc52ce66-plain:1",
+  "source": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/building-views/variation-ref-building-house-cottage-fc52ce66-plain-1/NE.png",
+  "sourceSha256": "0c7da80fadb5e04a5da18beade2ae97c0ff723ec507090fb095bd26bf564d302",
+  "output": "identity-references/variation-ref-building-house-cottage-fc52ce66-plain-1-8ac953af/source.png",
+  "outputSha256": "0c7da80fadb5e04a5da18beade2ae97c0ff723ec507090fb095bd26bf564d302",
+  "width": 594,
+  "height": 456,
+  "sourceCell": {
+    "kind": "already isolated native PNG; whole file",
+    "rectXYWH": [
+      0,
+      0,
+      594,
+      456
+    ]
+  },
+  "operation": "byte-for-byte PNG copy only; no resize, crop, recolour, key, repaint, registration or source mutation",
+  "selection": "registered corner NE native PNG for this exact subject",
+  "registeredCornerDirection": "NE",
+  "sourceEvidence": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\building-views\\variation-ref-building-house-cottage-fc52ce66-plain-1\\provenance.json",
+  "sourceReview": {
+    "integrationStatus": "ready",
+    "integrationReason": "Door canopy on front NE/NW with opposite slants; rear tall gable/two lower annex faces stay coherent SE/SW. Matte stucco, slate and warm dusk match theme. Repack if equal-cell crop warning exists; verify alpha before ready. Lossless disconnected-silhouette v2 extraction passed every nonzero RGBA copy/conservation assertion, alpha audit with no warnings, and post-repack magenta/theme visual review."
+  },
+  "sourceRegistration": {
+    "id": "variation:ref-building-house-cottage-fc52ce66-plain:1",
+    "version": "variation-ref-building-house-cottage-fc52ce66-plain-1-4views-v2",
+    "files": {
+      "NE": "0c7da80fadb5e04a5da18beade2ae97c0ff723ec507090fb095bd26bf564d302",
+      "SE": "3f07932bc260d5d1659e88351c6aeb31144b0fbe5f15c0866a2de8e5ddc67866",
+      "SW": "290d36c80106547ad46ccebc50f881109936194a55fccf27e0de68ca973d2238",
+      "NW": "2481a7fd786e66c21a8728800db91425f2a697d9d0fb2cdeb5894510de2a2a67"
+    }
+  },
+  "originalInventorySource": {
+    "library": "src/game/library.ts",
+    "librarySha256": "91b5190292c1005ac7b936f08e5e1ebf3be43c3aae99f92ea510775da83d9726",
+    "atlas": "src/assets/atlas/sprites-10-0.webp",
+    "atlasSha256": "6ca370227e33f5f4eab6c0abe7cfcf952ed2ff26a21472925e105f582f2922ac",
+    "runtimePage": 10,
+    "localPage": 10,
+    "uv": [
+      0.695313,
+      0.539063,
+      0.864746,
+      0.688477
+    ],
+    "crop": {
+      "left": 1424,
+      "top": 1104,
+      "width": 347,
+      "height": 306
+    },
+    "native": "art/theme-consistency/exports/buildings/variation-ref-building-house-cottage-fc52ce66-plain-1.native.png",
+    "nativeSha256": "334626a44da0c75c9256e380e5ca67afe9cb644cb9853da0e2ba0c7db35606eb"
+  },
+  "originalBusinessSourceCell": null,
+  "nativeReferenceApprovalClaimed": false
+}

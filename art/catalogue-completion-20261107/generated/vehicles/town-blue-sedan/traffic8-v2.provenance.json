@@ -1,0 +1,13 @@
+{
+  "key": "town-blue-sedan",
+  "source": "C:/Users/RAMPAGE/.codex/generated_images/01a1b1fd-39ec-7220-8f11-86e4448833ea/exec-b9219601-de19-458b-82a6-73c920936f95.png",
+  "target": "generated/vehicles/town-blue-sedan/traffic8-v2.png",
+  "prompt": "Edit ONLY the background of this eight-direction blue sedan sprite atlas: remove ALL cloudy grey-blue backdrop, all external ground shadows, haze, coloured wash and alpha noise between or around the cars. Background must be genuinely completely transparent with alpha0, including the gutters and outer border. Keep the SAME EIGHT blue sedan sprites exactly in their existing4x2 positions, same viewing directions, same shapes/paint/windows/wheels/grilles/frontvsrear and native detail. Fully opaque car body/glass; antialias only at actual car edges. Do not redesign cars, move cells, change lighting, add UI or paint a checkerboard. Return a true transparent RGBA sprite sheet.",
+  "references": [
+    "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/vehicles/town-blue-sedan/traffic8-v1.png"
+  ],
+  "status": "native correction candidate; independent QA pending",
+  "runtime_imported": false,
+  "sha256": "479f9dc347debd301d5c76aa2f25c8add753065ebb6157162bd8ba2f5c18f5c2",
+  "native_bytes_preserved": true
+}

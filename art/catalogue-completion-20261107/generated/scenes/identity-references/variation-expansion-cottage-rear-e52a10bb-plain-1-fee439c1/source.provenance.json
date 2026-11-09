@@ -1,0 +1,61 @@
+{
+  "schema": 1,
+  "createdUtc": "2026-11-07T06:47:45.284562+00:00",
+  "exactRuntimeId": "variation:expansion-cottage-rear-e52a10bb-plain:1",
+  "source": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/art/building-views/variation-expansion-cottage-rear-e52a10bb-plain-1/NE.png",
+  "sourceSha256": "7bc699ec4e10d2046be7399de76c2e3834d904984acbefa444d160e2a2b8947c",
+  "output": "identity-references/variation-expansion-cottage-rear-e52a10bb-plain-1-fee439c1/source.png",
+  "outputSha256": "7bc699ec4e10d2046be7399de76c2e3834d904984acbefa444d160e2a2b8947c",
+  "width": 291,
+  "height": 267,
+  "sourceCell": {
+    "kind": "already isolated native PNG; whole file",
+    "rectXYWH": [
+      0,
+      0,
+      291,
+      267
+    ]
+  },
+  "operation": "byte-for-byte PNG copy only; no resize, crop, recolour, key, repaint, registration or source mutation",
+  "selection": "registered corner NE native PNG for this exact subject",
+  "registeredCornerDirection": "NE",
+  "sourceEvidence": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\building-views\\variation-expansion-cottage-rear-e52a10bb-plain-1\\provenance.json",
+  "sourceReview": {
+    "status": "generated"
+  },
+  "sourceRegistration": {
+    "id": "variation:expansion-cottage-rear-e52a10bb-plain:1",
+    "version": "variation-expansion-cottage-rear-e52a10bb-plain-1-4views-v5",
+    "files": {
+      "NE": "7bc699ec4e10d2046be7399de76c2e3834d904984acbefa444d160e2a2b8947c",
+      "SE": "bfe3b81f823e875aa745a5d60a25a933695c8bb0f2de1f0e169df199cd968a82",
+      "SW": "ad8b1624dbae49391266094cd91c0411ee64ca45f60aa933e2324e4a1e37d331",
+      "NW": "e621ba44aa335be64c51581c5264cf5a55133ebf6d2fc28482307d8c4d002cea"
+    }
+  },
+  "originalInventorySource": {
+    "library": "src/game/library.ts",
+    "librarySha256": "91b5190292c1005ac7b936f08e5e1ebf3be43c3aae99f92ea510775da83d9726",
+    "atlas": "src/assets/atlas/sprites-11-0.webp",
+    "atlasSha256": "a8946da0d9c9231cd8576b9ebf3662b2c449685064dd3d9af3cf40715c50f4a6",
+    "runtimePage": 11,
+    "localPage": 11,
+    "uv": [
+      0.648438,
+      0.171875,
+      0.779785,
+      0.310059
+    ],
+    "crop": {
+      "left": 1328,
+      "top": 352,
+      "width": 269,
+      "height": 283
+    },
+    "native": "art/theme-consistency/exports/buildings/variation-expansion-cottage-rear-e52a10bb-plain-1.native.png",
+    "nativeSha256": "641c1440f6f3b3ec451028268bd430137aff1083ef02457c1105634ab3c3e300"
+  },
+  "originalBusinessSourceCell": null,
+  "nativeReferenceApprovalClaimed": false
+}

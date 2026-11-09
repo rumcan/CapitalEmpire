@@ -1,0 +1,54 @@
+{
+  "schema": 1,
+  "as_of_utc": "2026-11-07T14:10:53.936532+00:00",
+  "review_result": "PASS-source-candidate-corrected-component-identity-and-pose",
+  "guide_corner": "SE",
+  "source": {
+    "path": "generated/golf-source-batch-02/native/park-bench/normal-SE-isolated-v2.png",
+    "sha256": "aea9a17d72edc74499a3a62f841d5852e086b8bda6ad53fd30e8ebf245142aae",
+    "bytes": 597597
+  },
+  "mode": "RGBA",
+  "dimensions": [
+    1254,
+    1254
+  ],
+  "source_original_hash_matches_parent": true,
+  "parent_provenance": {
+    "path": "generated/golf-source-batch-02/native/park-bench/normal-SE-isolated-v2.provenance.json",
+    "sha256": "4b5497aebdcd1eea73f4bef4f9c7fa7f2098b23e3d20de2a2f18aa3bbe270a42",
+    "bytes": 2187
+  },
+  "exact_prompt_utf8_sha256": "0626ed5e71797806407bb662dc6842b8b2ec767298361280633b1d5401e12d39",
+  "actual_generation_references": [
+    {
+      "path": "generated/golf-source-batch-02/native/park-bench/normal-SE-isolated-v1.png",
+      "sha256": "e6cd6180b231e981d90188e5ffa7d2eaf3c11997cc673bfa189ad76fec103b94",
+      "bytes": 646558
+    },
+    {
+      "path": "generated/golf-source-batch-02/native/park-bench/camera-calibration-refs/normal-SE-identity-from-v2-BR-NE.png",
+      "sha256": "39f79f0f4c8cfa82647d5f833bbffbe0b68b975b33878ec43c06203c25b7ebc1",
+      "bytes": 422376
+    }
+  ],
+  "zero_alpha_fraction": 0.8445446660002187,
+  "outer_4px_border_alpha_p50p95max": [
+    0.0,
+    0.0,
+    1.0
+  ],
+  "minimum_core_margin_px": 193,
+  "boundary_core_pixels_alpha_gt128": 0,
+  "native_rgba_pixels_sha256": "994f5a16285727d5c7c8a18eaea637285e683a711147d251aa7d4502da0f863c",
+  "all_cores_complete": true,
+  "visual_observations": [
+    "Opposite front SE projection maintained; seat/slat long edges rise screen-right; attached map at physical right end. Arched cap and exactly two gold finials now restored.",
+    "Matches main assembly/pose as a source candidate. Fine arm ornament/wood stroke detail differs from older native quarters; consistent scale/anchors and final art review remain pending."
+  ],
+  "main_component_identity_and_pose_pass": true,
+  "native_image_bytes_changed": false,
+  "owner_approved": false,
+  "runtime_ready": false,
+  "exact_numerical_angle_certified": false
+}

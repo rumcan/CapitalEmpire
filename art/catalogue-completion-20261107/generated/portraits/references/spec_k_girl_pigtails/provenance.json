@@ -1,0 +1,33 @@
+{
+  "look_id": "spectator:spec_k_girl_pigtails",
+  "actual_runtime_look": {
+    "id": "spectator:spec_k_girl_pigtails",
+    "w": 80,
+    "h": 104,
+    "ax": 40,
+    "ay": 99,
+    "m": 1.28,
+    "seat": 0.32
+  },
+  "animation_files_changed": false,
+  "resized": false,
+  "repainted": false,
+  "source_style_changed": false,
+  "method": "original-pics-native-PNG-copy",
+  "source": {
+    "path": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\spectators\\pics\\spec_k_girl_pigtails.png",
+    "sha256": "f8da791aad287dd1f06519d8acfc8d8412e558ad587e028446ade4fe89ecd686",
+    "bytes": 966046
+  },
+  "primary_reference": {
+    "path": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\portraits\\references\\spec_k_girl_pigtails\\identity-source.png",
+    "sha256": "f8da791aad287dd1f06519d8acfc8d8412e558ad587e028446ade4fe89ecd686",
+    "bytes": 966046
+  },
+  "dimensions": [
+    848,
+    1264
+  ],
+  "mode": "RGB",
+  "crop_records": []
+}

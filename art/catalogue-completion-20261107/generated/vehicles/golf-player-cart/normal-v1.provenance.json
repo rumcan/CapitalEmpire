@@ -1,0 +1,14 @@
+{
+  "key": "golf-player-cart",
+  "source": "C:/Users/RAMPAGE/.codex/generated_images/01a1b1fd-39ec-7220-8f11-86e4448833ea/exec-0bc6a9e6-bfef-4422-9909-08eed15d3f38.png",
+  "target": "generated/vehicles/golf-player-cart/normal-v1.png",
+  "prompt": "A high-quality native2x2 sprite sheet of ONE IDENTICAL empty vehicle seen from four true orthographic isometric45degree corner headings,30degrees down. Layout top-left FRONT-LEFT (nose screen lower left),top-right FRONT-RIGHT (nose lower right),bottom-left REAR-RIGHT (nose upper right),bottom-right REAR-LEFT (nose upper left). Keep the same wheelbase, wheel size, bodywork, seats, attachments, paint and scale across all four. Show actual rear structure, never put headlights on rear or mirror one view. Detailed hand-painted miniature game style, late-afternoon DAYTIME sunlight fixed SCREEN UPPER RIGHT and shadows LOWER LEFT in EVERY CELL. No occupants, logos, text, grid, ground plate, road, scenery, haze or vignette. True transparent zero-alpha background with four complete separate centred sprites and wide margins.\nThe two references show the exact SAME dark-green two-seat golf buggy, pale cream canopy, cream bench, black supports/bumper, clear windshield and TWO rear golf bags in their holders. Preserve its details and the same single passenger bench, fixed bag placement and number of wheels in all views. Back views must show bags and rear mechanism, not a second front or rear passenger bench. The references show opposite front corners only; construct the real rear corners. Period-inspired1985 golf-town game vehicle.",
+  "references": [
+    "F:/Repos/ce-wt/eight-facing-runtime-20261107/src/assets/businesses/capital-v1/png/golf-cart-sw.png",
+    "F:/Repos/ce-wt/eight-facing-runtime-20261107/src/assets/businesses/capital-v1/png/golf-cart-se.png"
+  ],
+  "replacement_target": "business:golf-cart",
+  "status": "source candidate; camera and alpha QA pending",
+  "sha256": "2d5501d434040ee9130db24ba4f2bfaec43af8a01f380a9b519420c1316c8254",
+  "native_bytes_preserved": true
+}

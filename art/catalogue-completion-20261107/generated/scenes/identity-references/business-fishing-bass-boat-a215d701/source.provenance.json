@@ -1,0 +1,38 @@
+{
+  "schema": 1,
+  "createdUtc": "2026-11-07T06:47:45.284562+00:00",
+  "exactRuntimeId": "business:fishing-bass-boat",
+  "source": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/src/assets/businesses/capital-v1/png/fishing-bass-boat.png",
+  "sourceSha256": "08f4b772e32061051fdd58c24190e5ed7b9f0ae6b602e6ff9f175430662d0fec",
+  "output": "identity-references/business-fishing-bass-boat-a215d701/source.png",
+  "outputSha256": "08f4b772e32061051fdd58c24190e5ed7b9f0ae6b602e6ff9f175430662d0fec",
+  "width": 606,
+  "height": 419,
+  "sourceCell": {
+    "kind": "already isolated native PNG; whole file",
+    "rectXYWH": [
+      0,
+      0,
+      606,
+      419
+    ]
+  },
+  "operation": "byte-for-byte PNG copy only; no resize, crop, recolour, key, repaint, registration or source mutation",
+  "selection": "retained exact-ID business source master PNG",
+  "registeredCornerDirection": null,
+  "sourceEvidence": null,
+  "sourceReview": null,
+  "sourceRegistration": null,
+  "originalInventorySource": null,
+  "originalBusinessSourceCell": {
+    "id": "fishing-bass-boat",
+    "sourceSheet": "sliced/builtin/fishing-props.png",
+    "sourceCrop": [
+      39,
+      723,
+      598,
+      411
+    ]
+  },
+  "nativeReferenceApprovalClaimed": false
+}

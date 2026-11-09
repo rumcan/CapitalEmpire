@@ -1,0 +1,29 @@
+{
+  "schema": 1,
+  "subject": "golf:course-hole-12-sign",
+  "version": 1,
+  "key": "yaw8E",
+  "source": {
+    "file": "../../batch02/hole-12-sign/yaw8-E.png",
+    "sha256": "075b1c8605e6eafb2c043d2a82a33e50a2ba7dbf62bf4630eda6d004ca52783a",
+    "width": 627,
+    "height": 627
+  },
+  "cell": 0,
+  "cellRect": {
+    "left": 0,
+    "top": 0,
+    "width": 627,
+    "height": 627
+  },
+  "crop": {
+    "left": 268,
+    "top": 63,
+    "width": 116,
+    "height": 494
+  },
+  "output": "yaw8E.native.png",
+  "sha256": "2782b6c08613ec47831a44ec340d6b99ce3f85746c96dfa00523cc5d02cbdc22",
+  "operation": "native RGBA cell crop only; no flip/repaint/view synthesis",
+  "review": "candidate"
+}

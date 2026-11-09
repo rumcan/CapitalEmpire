@@ -1,0 +1,463 @@
+{
+  "schema": 1,
+  "as_of_utc": "2026-11-07T12:22:07.194839+00:00",
+  "scope": "12primary normal4source sheets only,10budget event designs+2upgraded props; no numericalangle certificate",
+  "sheets_reviewed": 12,
+  "normal_source_cells": 48,
+  "recommended_yaw_source_continuations": [
+    "golf-source-01-04-first-aid-tent",
+    "golf-source-01-05-info-will-call-booth",
+    "golf-source-01-07-media-centre",
+    "golf-source-01-08-hole-scoreboard",
+    "golf-source-01-10-concession-kiosk",
+    "golf-source-01-11-practice-net",
+    "golf-source-01-12-bag-trolley"
+  ],
+  "held_or_needs_targeted_check": [
+    "golf-source-01-01-food-truck",
+    "golf-source-01-02-tv-camera-tower",
+    "golf-source-01-03-broadcast-compound",
+    "golf-source-01-06-four-lane-entrance",
+    "golf-source-01-09-main-leaderboard"
+  ],
+  "all12_true_rgba_transparency": true,
+  "all12_core_canvas_and_accepted_cell_boundaries_clear": true,
+  "all12_four_distinct_pixel_views": true,
+  "source_originals_preserved": true,
+  "records": [
+    {
+      "key": "golf-source-01-01-food-truck",
+      "condition": "budget",
+      "source": "generated/golf-source-batch-01/native/golf-source-01-01-food-truck/budget-normal-v1.png",
+      "sha256": "6f52ae1851feb1ddb97a67c9d5bc78158d5fba5727a9dc4269f72f260d65a974",
+      "review_result": "HOLD-extractor-visibility-review-before-further-poses",
+      "continue_yaw_source_generation": false,
+      "four_distinct_corners": true,
+      "outer_border_alpha_max": 1,
+      "all_core_boundaries_clear": true,
+      "min_core_margin": 30,
+      "clear_ycut": 627,
+      "qa": "generated/golf-source-batch-01/native/golf-source-01-01-food-truck/budget-normal-v1.independent-qa.json",
+      "target": {
+        "eventTypeId": "foodTruck",
+        "eventName": "Food truck",
+        "currentSpriteSubjectId": "golf:food-tent",
+        "newArtSubjectProposal": "golf:event-food-truck",
+        "newArtSubjectAlreadyRegistered": false,
+        "eventCatalogueSource": "src/game/golf/tents.ts",
+        "standInMappingSource": "src/game/golf/structure-art.ts",
+        "footprintTiles": {
+          "width": 3,
+          "depth": 2
+        },
+        "footprintMetres": {
+          "width": 6,
+          "depth": 4
+        },
+        "dimensionsMeaning": "Exact current event placement plot, not measured source sprite architecture. New design must fit plot; no runtime geometry changed.",
+        "currentSpriteBaseBoxesInTiles": [
+          {
+            "hx": 4,
+            "hy": 4,
+            "dx": 0,
+            "dy": 0
+          }
+        ]
+      }
+    },
+    {
+      "key": "golf-source-01-02-tv-camera-tower",
+      "condition": "budget",
+      "source": "generated/golf-source-batch-01/native/golf-source-01-02-tv-camera-tower/budget-normal-v1.png",
+      "sha256": "43bd17288a10ca6fe77c1fa3af4d644d84ee1a7084021b2c4a7560846b3825ca",
+      "review_result": "HOLD-shared-world-camera-ladder-case-review",
+      "continue_yaw_source_generation": false,
+      "four_distinct_corners": true,
+      "outer_border_alpha_max": 1,
+      "all_core_boundaries_clear": true,
+      "min_core_margin": 24,
+      "clear_ycut": 627,
+      "qa": "generated/golf-source-batch-01/native/golf-source-01-02-tv-camera-tower/budget-normal-v1.independent-qa.json",
+      "target": {
+        "eventTypeId": "tvTower",
+        "eventName": "TV camera tower",
+        "currentSpriteSubjectId": "ref:landmark-water-tower",
+        "newArtSubjectProposal": "golf:event-tv-camera-tower",
+        "newArtSubjectAlreadyRegistered": false,
+        "eventCatalogueSource": "src/game/golf/tents.ts",
+        "standInMappingSource": "src/game/golf/structure-art.ts",
+        "footprintTiles": {
+          "width": 1,
+          "depth": 1
+        },
+        "footprintMetres": {
+          "width": 2,
+          "depth": 2
+        },
+        "dimensionsMeaning": "Exact current event placement plot, not measured source sprite architecture. New design must fit plot; no runtime geometry changed."
+      }
+    },
+    {
+      "key": "golf-source-01-03-broadcast-compound",
+      "condition": "budget",
+      "source": "generated/golf-source-batch-01/native/golf-source-01-03-broadcast-compound/budget-normal-v1.png",
+      "sha256": "cf28104d7ee1e2240c964b9b640ed80b912becfb46267cf90b8602fe6b6be87c",
+      "review_result": "HOLD-fixed-compound-layout-heading-drift",
+      "continue_yaw_source_generation": false,
+      "four_distinct_corners": true,
+      "outer_border_alpha_max": 1,
+      "all_core_boundaries_clear": true,
+      "min_core_margin": 26,
+      "clear_ycut": 627,
+      "qa": "generated/golf-source-batch-01/native/golf-source-01-03-broadcast-compound/budget-normal-v1.independent-qa.json",
+      "target": {
+        "eventTypeId": "broadcast",
+        "eventName": "Broadcast compound",
+        "currentSpriteSubjectId": "business:golf-cart-garage",
+        "newArtSubjectProposal": "golf:event-broadcast-compound",
+        "newArtSubjectAlreadyRegistered": false,
+        "eventCatalogueSource": "src/game/golf/tents.ts",
+        "standInMappingSource": "src/game/golf/structure-art.ts",
+        "footprintTiles": {
+          "width": 15,
+          "depth": 10
+        },
+        "footprintMetres": {
+          "width": 30,
+          "depth": 20
+        },
+        "dimensionsMeaning": "Exact current event placement plot, not measured source sprite architecture. New design must fit plot; no runtime geometry changed.",
+        "currentSpriteBaseBoxesInTiles": [
+          {
+            "hx": 1,
+            "hy": 1,
+            "dx": 0,
+            "dy": 0
+          }
+        ]
+      }
+    },
+    {
+      "key": "golf-source-01-04-first-aid-tent",
+      "condition": "budget",
+      "source": "generated/golf-source-batch-01/native/golf-source-01-04-first-aid-tent/budget-normal-v1.png",
+      "sha256": "51f956d7fb127ea54c16a3922d59950b68ae5fe9d05d0901da972c07901444c1",
+      "review_result": "PASS-source-candidate-front-rear-function-alpha",
+      "continue_yaw_source_generation": true,
+      "four_distinct_corners": true,
+      "outer_border_alpha_max": 1,
+      "all_core_boundaries_clear": true,
+      "min_core_margin": 39,
+      "clear_ycut": 627,
+      "qa": "generated/golf-source-batch-01/native/golf-source-01-04-first-aid-tent/budget-normal-v1.independent-qa.json",
+      "target": {
+        "eventTypeId": "firstAid",
+        "eventName": "First aid tent",
+        "currentSpriteSubjectId": "expansion:backyard-tent",
+        "newArtSubjectProposal": "golf:event-first-aid-tent",
+        "newArtSubjectAlreadyRegistered": false,
+        "eventCatalogueSource": "src/game/golf/tents.ts",
+        "standInMappingSource": "src/game/golf/structure-art.ts",
+        "footprintTiles": {
+          "width": 3,
+          "depth": 3
+        },
+        "footprintMetres": {
+          "width": 6,
+          "depth": 6
+        },
+        "dimensionsMeaning": "Exact current event placement plot, not measured source sprite architecture. New design must fit plot; no runtime geometry changed."
+      }
+    },
+    {
+      "key": "golf-source-01-05-info-will-call-booth",
+      "condition": "budget",
+      "source": "generated/golf-source-batch-01/native/golf-source-01-05-info-will-call-booth/budget-normal-v1.png",
+      "sha256": "640400b359ad0cec56f81c74fd4eda63973391970f6c4362cc4f4913d0a76b46",
+      "review_result": "PASS-source-candidate-front-rear-function-alpha",
+      "continue_yaw_source_generation": true,
+      "four_distinct_corners": true,
+      "outer_border_alpha_max": 1,
+      "all_core_boundaries_clear": true,
+      "min_core_margin": 29,
+      "clear_ycut": 627,
+      "qa": "generated/golf-source-batch-01/native/golf-source-01-05-info-will-call-booth/budget-normal-v1.independent-qa.json",
+      "target": {
+        "eventTypeId": "info",
+        "eventName": "Info and will-call booth",
+        "currentSpriteSubjectId": "ce:parking-kiosk",
+        "newArtSubjectProposal": "golf:event-info-will-call-booth",
+        "newArtSubjectAlreadyRegistered": false,
+        "eventCatalogueSource": "src/game/golf/tents.ts",
+        "standInMappingSource": "src/game/golf/structure-art.ts",
+        "footprintTiles": {
+          "width": 2,
+          "depth": 2
+        },
+        "footprintMetres": {
+          "width": 4,
+          "depth": 4
+        },
+        "dimensionsMeaning": "Exact current event placement plot, not measured source sprite architecture. New design must fit plot; no runtime geometry changed."
+      }
+    },
+    {
+      "key": "golf-source-01-06-four-lane-entrance",
+      "condition": "budget",
+      "source": "generated/golf-source-batch-01/native/golf-source-01-06-four-lane-entrance/budget-normal-v1.png",
+      "sha256": "15852897f25cb3fe0d6728a35092f5560e5facde45cebd68f0d084b5ab577149",
+      "review_result": "HOLD-unrequested-concrete-ground-slab-guide-pending",
+      "continue_yaw_source_generation": false,
+      "four_distinct_corners": true,
+      "outer_border_alpha_max": 1,
+      "all_core_boundaries_clear": true,
+      "min_core_margin": 30,
+      "clear_ycut": 627,
+      "qa": "generated/golf-source-batch-01/native/golf-source-01-06-four-lane-entrance/budget-normal-v1.independent-qa.json",
+      "target": {
+        "eventTypeId": "gate",
+        "eventName": "Entrance gate",
+        "currentSpriteSubjectId": "ce:parking-entry",
+        "newArtSubjectProposal": "golf:event-four-lane-entrance",
+        "newArtSubjectAlreadyRegistered": false,
+        "eventCatalogueSource": "src/game/golf/tents.ts",
+        "standInMappingSource": "src/game/golf/structure-art.ts",
+        "footprintTiles": {
+          "width": 6,
+          "depth": 3
+        },
+        "footprintMetres": {
+          "width": 12,
+          "depth": 6
+        },
+        "dimensionsMeaning": "Exact current event placement plot, not measured source sprite architecture. New design must fit plot; no runtime geometry changed."
+      }
+    },
+    {
+      "key": "golf-source-01-07-media-centre",
+      "condition": "budget",
+      "source": "generated/golf-source-batch-01/native/golf-source-01-07-media-centre/budget-normal-v1.png",
+      "sha256": "81b8f49b4323c45a0fd7d73a5c2368f6045e2ce78c301623b9e5db5b36f560fa",
+      "review_result": "PASS-source-candidate-front-rear-function-alpha",
+      "continue_yaw_source_generation": true,
+      "four_distinct_corners": true,
+      "outer_border_alpha_max": 1,
+      "all_core_boundaries_clear": true,
+      "min_core_margin": 22,
+      "clear_ycut": 627,
+      "qa": "generated/golf-source-batch-01/native/golf-source-01-07-media-centre/budget-normal-v1.independent-qa.json",
+      "target": {
+        "eventTypeId": "media",
+        "eventName": "Media centre",
+        "currentSpriteSubjectId": "business:golf-clubhouse",
+        "newArtSubjectProposal": "golf:event-media-centre",
+        "newArtSubjectAlreadyRegistered": false,
+        "eventCatalogueSource": "src/game/golf/tents.ts",
+        "standInMappingSource": "src/game/golf/structure-art.ts",
+        "footprintTiles": {
+          "width": 12,
+          "depth": 8
+        },
+        "footprintMetres": {
+          "width": 24,
+          "depth": 16
+        },
+        "dimensionsMeaning": "Exact current event placement plot, not measured source sprite architecture. New design must fit plot; no runtime geometry changed.",
+        "currentSpriteBaseBoxesInTiles": [
+          {
+            "hx": 1,
+            "hy": 1,
+            "dx": 0,
+            "dy": 0
+          }
+        ]
+      }
+    },
+    {
+      "key": "golf-source-01-08-hole-scoreboard",
+      "condition": "budget",
+      "source": "generated/golf-source-batch-01/native/golf-source-01-08-hole-scoreboard/budget-normal-v1.png",
+      "sha256": "cc834765e5f2fb9cecbd6953e0306d4640f7723251e636edecb28af3f2b66bb2",
+      "review_result": "PASS-source-candidate-front-rear-function-alpha",
+      "continue_yaw_source_generation": true,
+      "four_distinct_corners": true,
+      "outer_border_alpha_max": 2,
+      "all_core_boundaries_clear": true,
+      "min_core_margin": 8,
+      "clear_ycut": 627,
+      "qa": "generated/golf-source-batch-01/native/golf-source-01-08-hole-scoreboard/budget-normal-v1.independent-qa.json",
+      "target": {
+        "eventTypeId": "holeBoard",
+        "eventName": "Hole scoreboard",
+        "currentSpriteSubjectId": "poi:fishing-board",
+        "newArtSubjectProposal": "golf:event-hole-scoreboard",
+        "newArtSubjectAlreadyRegistered": false,
+        "eventCatalogueSource": "src/game/golf/tents.ts",
+        "standInMappingSource": "src/game/golf/structure-art.ts",
+        "footprintTiles": {
+          "width": 1,
+          "depth": 1
+        },
+        "footprintMetres": {
+          "width": 2,
+          "depth": 2
+        },
+        "dimensionsMeaning": "Exact current event placement plot, not measured source sprite architecture. New design must fit plot; no runtime geometry changed."
+      }
+    },
+    {
+      "key": "golf-source-01-09-main-leaderboard",
+      "condition": "budget",
+      "source": "generated/golf-source-batch-01/native/golf-source-01-09-main-leaderboard/budget-normal-v1.png",
+      "sha256": "a6bd4e8b85fdbc8aff52bdc01b878aef46feadaf557cc9d683db811dc16031d4",
+      "review_result": "HOLD-fixed-staircase-end-guide-pending",
+      "continue_yaw_source_generation": false,
+      "four_distinct_corners": true,
+      "outer_border_alpha_max": 1,
+      "all_core_boundaries_clear": true,
+      "min_core_margin": 2,
+      "clear_ycut": 626,
+      "qa": "generated/golf-source-batch-01/native/golf-source-01-09-main-leaderboard/budget-normal-v1.independent-qa.json",
+      "target": {
+        "eventTypeId": "leaderboard",
+        "eventName": "Main leaderboard",
+        "currentSpriteSubjectId": "golf:leaderboard",
+        "newArtSubjectProposal": "golf:event-main-leaderboard",
+        "newArtSubjectAlreadyRegistered": false,
+        "eventCatalogueSource": "src/game/golf/tents.ts",
+        "standInMappingSource": "src/game/golf/structure-art.ts",
+        "footprintTiles": {
+          "width": 4,
+          "depth": 2
+        },
+        "footprintMetres": {
+          "width": 8,
+          "depth": 4
+        },
+        "dimensionsMeaning": "Exact current event placement plot, not measured source sprite architecture. New design must fit plot; no runtime geometry changed.",
+        "currentSpriteBaseBoxesInTiles": [
+          {
+            "hx": 4,
+            "hy": 1.5,
+            "dx": 0,
+            "dy": 0
+          }
+        ]
+      }
+    },
+    {
+      "key": "golf-source-01-10-concession-kiosk",
+      "condition": "budget",
+      "source": "generated/golf-source-batch-01/native/golf-source-01-10-concession-kiosk/budget-normal-v1.png",
+      "sha256": "5cbb134479d066212c2d2ae6d8d194dd9ca2389e20caafd3bdc582c35d3796a6",
+      "review_result": "CONDITIONAL-PASS-one-two-faced-corner-fridge-identity",
+      "continue_yaw_source_generation": true,
+      "four_distinct_corners": true,
+      "outer_border_alpha_max": 1,
+      "all_core_boundaries_clear": true,
+      "min_core_margin": 54,
+      "clear_ycut": 627,
+      "qa": "generated/golf-source-batch-01/native/golf-source-01-10-concession-kiosk/budget-normal-v1.independent-qa.json",
+      "target": {
+        "eventTypeId": "kiosk",
+        "eventName": "Concession kiosk",
+        "currentSpriteSubjectId": "business:fishing-rental-kiosk",
+        "newArtSubjectProposal": "golf:event-concession-kiosk",
+        "newArtSubjectAlreadyRegistered": false,
+        "eventCatalogueSource": "src/game/golf/tents.ts",
+        "standInMappingSource": "src/game/golf/structure-art.ts",
+        "footprintTiles": {
+          "width": 2,
+          "depth": 2
+        },
+        "footprintMetres": {
+          "width": 4,
+          "depth": 4
+        },
+        "dimensionsMeaning": "Exact current event placement plot, not measured source sprite architecture. New design must fit plot; no runtime geometry changed.",
+        "currentSpriteBaseBoxesInTiles": [
+          {
+            "hx": 1,
+            "hy": 1,
+            "dx": 0,
+            "dy": 0
+          }
+        ]
+      }
+    },
+    {
+      "key": "golf-source-01-11-practice-net",
+      "condition": "upgraded",
+      "source": "generated/golf-source-batch-01/native/golf-source-01-11-practice-net/upgraded-normal-v1.png",
+      "sha256": "f11e2a553c43ea3202b5fec844fd6a745c273c8bc37505c73940cb18887be228",
+      "review_result": "PASS-source-candidate-open-front-mesh-rear-function",
+      "continue_yaw_source_generation": true,
+      "four_distinct_corners": true,
+      "outer_border_alpha_max": 2,
+      "all_core_boundaries_clear": true,
+      "min_core_margin": 48,
+      "clear_ycut": 627,
+      "qa": "generated/golf-source-batch-01/native/golf-source-01-11-practice-net/upgraded-normal-v1.independent-qa.json",
+      "target": {
+        "runtimeSubjectId": "business:golf-practice-net",
+        "name": "golf practice net",
+        "librarySource": "src/game/business-library.ts",
+        "baseBoxesInTiles": [
+          {
+            "hx": 1,
+            "hy": 1,
+            "dx": 0,
+            "dy": 0
+          }
+        ],
+        "baseBoxMetres": {
+          "width": 4,
+          "depth": 4
+        },
+        "dimensionsMeaning": "Generic base collision box only, not authored physical object measurement; placement/studio scale can change it. Proposed real object dimensions are explicit in functionalIdentity.",
+        "sourceDisplayPixels": {
+          "width": 508,
+          "height": 462
+        }
+      }
+    },
+    {
+      "key": "golf-source-01-12-bag-trolley",
+      "condition": "upgraded",
+      "source": "generated/golf-source-batch-01/native/golf-source-01-12-bag-trolley/upgraded-normal-v1.png",
+      "sha256": "ecae9ac98d99c39b558b8806fc5fca04648da9968066751b25ad8bfad3d076e5",
+      "review_result": "PASS-source-candidate-front-back-function-alpha",
+      "continue_yaw_source_generation": true,
+      "four_distinct_corners": true,
+      "outer_border_alpha_max": 1,
+      "all_core_boundaries_clear": true,
+      "min_core_margin": 9,
+      "clear_ycut": 627,
+      "qa": "generated/golf-source-batch-01/native/golf-source-01-12-bag-trolley/upgraded-normal-v1.independent-qa.json",
+      "target": {
+        "runtimeSubjectId": "business:golf-bag-trolley",
+        "name": "golf bag trolley",
+        "librarySource": "src/game/business-library.ts",
+        "baseBoxesInTiles": [
+          {
+            "hx": 1,
+            "hy": 1,
+            "dx": 0,
+            "dy": 0
+          }
+        ],
+        "baseBoxMetres": {
+          "width": 4,
+          "depth": 4
+        },
+        "dimensionsMeaning": "Generic base collision box only, not authored physical object measurement; placement/studio scale can change it. Proposed real object dimensions are explicit in functionalIdentity.",
+        "sourceDisplayPixels": {
+          "width": 362,
+          "height": 480
+        }
+      }
+    }
+  ],
+  "no_runtime_tests_build_server_commit": true,
+  "whole_catalogue_complete": false
+}

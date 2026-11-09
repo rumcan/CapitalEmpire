@@ -1,0 +1,126 @@
+{
+  "schema": 1,
+  "as_of_utc": "2026-11-07T14:29:39.952183+00:00",
+  "review_result": "PASS-source-candidate-four-main-face-roles-alpha",
+  "source": {
+    "path": "generated/golf-source-batch-02/native/water-tank-stall/yaw8-v1.png",
+    "sha256": "856b1736cdccfa93df744f4e2b244385b4cdb6f29884b32ddda8b95c4d4cd124",
+    "bytes": 1571292
+  },
+  "mode": "RGBA",
+  "dimensions": [
+    1254,
+    1254
+  ],
+  "source_original_hash_matches_parent": true,
+  "parent_provenance": {
+    "path": "generated/golf-source-batch-02/native/water-tank-stall/yaw8-v1.provenance.json",
+    "sha256": "842ca83adacf96e457f3ca16d3b982e20da58f3b78114ef1aa24642d1248a116",
+    "bytes": 2812
+  },
+  "exact_prompt_utf8_sha256": "910609b5537f651d9b8f03ada3518d9aa3a754bccf58761e86a37fe0cac74bb1",
+  "actual_generation_references": [
+    {
+      "path": "generated/golf-source-batch-02/fixed-world-guides-v2/water-tank-stall/guides/yaw8-world-v1.png",
+      "sha256": "0ab98b8202ebe9d1aedd265b98d847399f46edac6f64d922c635e9fe3b0fcb55",
+      "bytes": 56923
+    },
+    {
+      "path": "generated/golf-source-batch-02/native/water-tank-stall/normal-v2.png",
+      "sha256": "5d4d43d95409d6a55fc8c821cb5c96fa503d6999f5edb8e5de4906a4cd41524b",
+      "bytes": 1648387
+    }
+  ],
+  "zero_alpha_fraction": 0.5360594105242809,
+  "outer_4px_border_alpha_p50p95max": [
+    0.0,
+    0.0,
+    1.0
+  ],
+  "clear_horizontal_cut_y": 627,
+  "clear_vertical_cut_by_row": [
+    627,
+    627
+  ],
+  "cut_alpha_maxima": {
+    "horizontal": 1,
+    "vertical_top": 1,
+    "vertical_bottom": 1
+  },
+  "cells": [
+    {
+      "cell": "TL",
+      "actual_role": "N taps/trough/grate",
+      "selected_guide_direction": "N",
+      "reference_rect_ltrb": [
+        0,
+        0,
+        627,
+        627
+      ],
+      "minimum_core_margin_px": 60,
+      "boundary_core_pixels_alpha_gt128": 0,
+      "boundary_alpha_max": 1,
+      "native_rgba_rectangle_sha256": "39fff4dff37b1d99f4557c3f5d8a937a5e100bd0259d962bc93c1321aaf1b2ea",
+      "functional_hold": false
+    },
+    {
+      "cell": "TR",
+      "actual_role": "E side; taps/grate right",
+      "selected_guide_direction": "E",
+      "reference_rect_ltrb": [
+        627,
+        0,
+        1254,
+        627
+      ],
+      "minimum_core_margin_px": 67,
+      "boundary_core_pixels_alpha_gt128": 0,
+      "boundary_alpha_max": 1,
+      "native_rgba_rectangle_sha256": "98a71e3bfa8d35721e012e328caf4f1de8dff32e1f89436f41413bdfe67f9eb9",
+      "functional_hold": false
+    },
+    {
+      "cell": "BL",
+      "actual_role": "S rear braces",
+      "selected_guide_direction": "S",
+      "reference_rect_ltrb": [
+        0,
+        627,
+        627,
+        1254
+      ],
+      "minimum_core_margin_px": 90,
+      "boundary_core_pixels_alpha_gt128": 0,
+      "boundary_alpha_max": 1,
+      "native_rgba_rectangle_sha256": "7a055f416ff34a2737046a50008a62c6d0cedd4821cf659c5a3f36701cbf69e3",
+      "functional_hold": false
+    },
+    {
+      "cell": "BR",
+      "actual_role": "W side; taps left/towel-basket toward viewer",
+      "selected_guide_direction": "W",
+      "reference_rect_ltrb": [
+        627,
+        627,
+        1254,
+        1254
+      ],
+      "minimum_core_margin_px": 62,
+      "boundary_core_pixels_alpha_gt128": 0,
+      "boundary_alpha_max": 1,
+      "native_rgba_rectangle_sha256": "96b7ee52a2ab456166d50fc883df78f08479d3ef7a00f4796587ccb92101a274",
+      "functional_hold": false
+    }
+  ],
+  "all_cores_complete_at_reference_cuts": true,
+  "visual_observations": [
+    "Front two taps/trough, rear braces, opposite side attachments/basket/towel/bucket/grate follow fixed-world guide. No removed hole signage reintroduced."
+  ],
+  "intrinsic_rotational_symmetry": false,
+  "main_faces_functionally_accepted_for_source_candidate": true,
+  "owner_approved": false,
+  "runtime_ready": false,
+  "exact_numerical_angle_certified": false,
+  "native_image_bytes_changed": false
+}

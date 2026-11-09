@@ -1,0 +1,37 @@
+{
+  "key": "golf-source-01-08-hole-scoreboard",
+  "family": "normal",
+  "condition": "upgraded",
+  "version": 1,
+  "target": "generated/golf-source-batch-01/native/golf-source-01-08-hole-scoreboard/upgraded-normal-v1.png",
+  "refs": [
+    "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/golf-source-batch-01/native/golf-source-01-08-hole-scoreboard/budget-normal-v1.png"
+  ],
+  "runtimeTarget": {
+    "eventTypeId": "holeBoard",
+    "eventName": "Hole scoreboard",
+    "currentSpriteSubjectId": "poi:fishing-board",
+    "newArtSubjectProposal": "golf:event-hole-scoreboard",
+    "newArtSubjectAlreadyRegistered": false,
+    "eventCatalogueSource": "src/game/golf/tents.ts",
+    "standInMappingSource": "src/game/golf/structure-art.ts",
+    "footprintTiles": {
+      "width": 1,
+      "depth": 1
+    },
+    "footprintMetres": {
+      "width": 2,
+      "depth": 2
+    },
+    "dimensionsMeaning": "Exact current event placement plot, not measured source sprite architecture. New design must fit plot; no runtime geometry changed."
+  },
+  "prompt": "Create the UPGRADED condition of this exact golf event facility in reference1. This is a restrained practical renovation of the same physical assembly; preserve the four exact cameras and all doors, roof shapes, post/stair/vent positions, and functional layout. Upgrade condition: Clean green metal/timber frame and crisp blank removable score slats; same role, readable simple silhouette without ornate scrollwork.. Functional identity to retain: A compact2x2m footprint hole scoreboard on two plain uprights with rear diagonal supports; one blank green/cream face subdivided into score/name slat rows, about2m high as a proposed art size. A scoreboard, not a course map or baked hole12yardage marker. Rear view has slat backs/braces and no duplicated scoring face.. Match the reference's detailed painterly miniature materials and proportions; fresh clean finishes, professionally maintained structure, sound canvas, no rust or ragged holes. Four actual corners in the same cells, same physical size and even scale, orthographic 30 degrees down. Late-afternoon DAYTIME sun fixed SCREEN UPPER RIGHT and shadows LOWER LEFT, windows and lamps OFF. Complete separate sprites with wide zero-alpha transparent margins and gutters. No scene, groundplate, plants, people, UI, captions or decorative extra objects. ",
+  "source": "C:/Users/RAMPAGE/.codex/generated_images/01a1b1fd-39ec-7220-8f11-86e4448833ea/exec-1d6569aa-9994-4842-b945-aa187d59ca36.png",
+  "references": [
+    "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/golf-source-batch-01/native/golf-source-01-08-hole-scoreboard/budget-normal-v1.png"
+  ],
+  "status": "native-source-candidate-pending-visual-review",
+  "runtime_imported": false,
+  "sha256": "128b4bde9b54eaeb1138200d4ad4798ae5391ead7b441b26ab44d456c941b24d",
+  "native_bytes_preserved": true
+}

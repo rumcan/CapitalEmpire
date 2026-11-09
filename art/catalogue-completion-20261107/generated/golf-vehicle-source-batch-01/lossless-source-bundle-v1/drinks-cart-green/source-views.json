@@ -1,0 +1,206 @@
+{
+  "subject": "newprop:drinks-cart-green",
+  "key": "drinks-cart-green",
+  "views": {
+    "normalSE": {
+      "nominalCameraKey": "normalSE",
+      "sourceFile": "art/catalogue-completion-20261107/generated/golf-vehicle-source-batch-01/native/drinks-cart-green/normal-v1.png",
+      "sourceFileSHA256": "f0df89d1e3e1c24035c9494a2f0937966907eddab9ed95b88528482c420737eb",
+      "sourceFrameRectLTRB": [
+        0,
+        0,
+        627,
+        627
+      ],
+      "singleViewOverride": false,
+      "rgbaSHA256": "4ebdc640b9f67759376aaa926668384892763a5ecc9bd8a97f545a373b15ab3a",
+      "nativeHeadingDegrees": null,
+      "nativeCameraCertified": false,
+      "runtimeReady": false,
+      "operation": "Exact raw integer half-cell crop; native RGBA unchanged",
+      "file": "drinks-cart-green/normalSE.png",
+      "nativeSize": [
+        627,
+        627
+      ],
+      "pngSHA256": "2ec3aa8b10cf811da09856676f4e6d6cc427ec9b197618418f70de2fedbcd6a9",
+      "sourceRGBAEqual": true,
+      "singleSourcePNGBytesUnchanged": false
+    },
+    "normalSW": {
+      "nominalCameraKey": "normalSW",
+      "sourceFile": "art/catalogue-completion-20261107/generated/golf-vehicle-source-batch-01/native/drinks-cart-green/normal-v1.png",
+      "sourceFileSHA256": "f0df89d1e3e1c24035c9494a2f0937966907eddab9ed95b88528482c420737eb",
+      "sourceFrameRectLTRB": [
+        627,
+        0,
+        1254,
+        627
+      ],
+      "singleViewOverride": false,
+      "rgbaSHA256": "eddd0147eede6e70facbd6f73c8d2f3bdcc9a254d7f637c78f1ca0eb724a4540",
+      "nativeHeadingDegrees": null,
+      "nativeCameraCertified": false,
+      "runtimeReady": false,
+      "operation": "Exact raw integer half-cell crop; native RGBA unchanged",
+      "file": "drinks-cart-green/normalSW.png",
+      "nativeSize": [
+        627,
+        627
+      ],
+      "pngSHA256": "5f9f93dfabf8cacf84e50a8cb3a565d7577e22028d813cf2674fe107d811502d",
+      "sourceRGBAEqual": true,
+      "singleSourcePNGBytesUnchanged": false
+    },
+    "normalNW": {
+      "nominalCameraKey": "normalNW",
+      "sourceFile": "art/catalogue-completion-20261107/generated/golf-vehicle-source-batch-01/native/drinks-cart-green/normal-v1.png",
+      "sourceFileSHA256": "f0df89d1e3e1c24035c9494a2f0937966907eddab9ed95b88528482c420737eb",
+      "sourceFrameRectLTRB": [
+        0,
+        627,
+        627,
+        1254
+      ],
+      "singleViewOverride": false,
+      "rgbaSHA256": "38f37d082e088994fee64b0fb00bcd962a31c9f9e8917b97b3c60eba51cb3e3c",
+      "nativeHeadingDegrees": null,
+      "nativeCameraCertified": false,
+      "runtimeReady": false,
+      "operation": "Exact raw integer half-cell crop; native RGBA unchanged",
+      "file": "drinks-cart-green/normalNW.png",
+      "nativeSize": [
+        627,
+        627
+      ],
+      "pngSHA256": "c5db844299f20887bea65994ce8d903c92ae9cf93aa85c54cda0eb39ffb68ba6",
+      "sourceRGBAEqual": true,
+      "singleSourcePNGBytesUnchanged": false
+    },
+    "normalNE": {
+      "nominalCameraKey": "normalNE",
+      "sourceFile": "art/catalogue-completion-20261107/generated/golf-vehicle-source-batch-01/native/drinks-cart-green/normal-v1.png",
+      "sourceFileSHA256": "f0df89d1e3e1c24035c9494a2f0937966907eddab9ed95b88528482c420737eb",
+      "sourceFrameRectLTRB": [
+        627,
+        627,
+        1254,
+        1254
+      ],
+      "singleViewOverride": false,
+      "rgbaSHA256": "05daec1d81f8ff0335911b559edc5376ed59981c8ff86cd10da54813c7d3c0aa",
+      "nativeHeadingDegrees": null,
+      "nativeCameraCertified": false,
+      "runtimeReady": false,
+      "operation": "Exact raw integer half-cell crop; native RGBA unchanged",
+      "file": "drinks-cart-green/normalNE.png",
+      "nativeSize": [
+        627,
+        627
+      ],
+      "pngSHA256": "6c1f047ea630b4024d930209baa4590a6894c8364fdb42f676249897ed0bd7c0",
+      "sourceRGBAEqual": true,
+      "singleSourcePNGBytesUnchanged": false
+    },
+    "yaw8N": {
+      "nominalCameraKey": "yaw8N",
+      "sourceFile": "art/catalogue-completion-20261107/generated/golf-vehicle-source-batch-01/native/drinks-cart-green/yaw8-v1.png",
+      "sourceFileSHA256": "775c38c890ce27d253a87424f5291e4a0b994b1523d880d1d7b54ccf108fc062",
+      "sourceFrameRectLTRB": [
+        0,
+        0,
+        627,
+        627
+      ],
+      "singleViewOverride": false,
+      "rgbaSHA256": "5b58e36f31620a495b3e4ea63cc624e3e6cae4b87d5d0499d368e77654d89292",
+      "file": "drinks-cart-green/yaw8N.png",
+      "nativeSize": [
+        627,
+        627
+      ],
+      "pngSHA256": "1be74251ef5f3fa66b087750c64b535ee6e32f851b9f32154e4bd6ec5266e346",
+      "sourceRGBAEqual": true,
+      "singleSourcePNGBytesUnchanged": false,
+      "nativeHeadingDegrees": null,
+      "nativeCameraCertified": false,
+      "runtimeReady": false,
+      "operation": "Exact raw integer half-cell crop; native RGBA unchanged"
+    },
+    "yaw8E": {
+      "nominalCameraKey": "yaw8E",
+      "sourceFile": "art/catalogue-completion-20261107/generated/golf-vehicle-source-batch-01/native/drinks-cart-green/yaw8-v1.png",
+      "sourceFileSHA256": "775c38c890ce27d253a87424f5291e4a0b994b1523d880d1d7b54ccf108fc062",
+      "sourceFrameRectLTRB": [
+        627,
+        0,
+        1254,
+        627
+      ],
+      "singleViewOverride": false,
+      "rgbaSHA256": "4a24628e15859f51e85a58cdb8694e08372d50391a0049f3fef81d2d8d8c7ec1",
+      "file": "drinks-cart-green/yaw8E.png",
+      "nativeSize": [
+        627,
+        627
+      ],
+      "pngSHA256": "106f61093c7563098581753892e43980fcd401bdff175dc59d38ad66410b02fd",
+      "sourceRGBAEqual": true,
+      "singleSourcePNGBytesUnchanged": false,
+      "nativeHeadingDegrees": null,
+      "nativeCameraCertified": false,
+      "runtimeReady": false,
+      "operation": "Exact raw integer half-cell crop; native RGBA unchanged"
+    },
+    "yaw8S": {
+      "nominalCameraKey": "yaw8S",
+      "sourceFile": "art/catalogue-completion-20261107/generated/golf-vehicle-source-batch-01/native/drinks-cart-green/yaw8-v1.png",
+      "sourceFileSHA256": "775c38c890ce27d253a87424f5291e4a0b994b1523d880d1d7b54ccf108fc062",
+      "sourceFrameRectLTRB": [
+        0,
+        627,
+        627,
+        1254
+      ],
+      "singleViewOverride": false,
+      "rgbaSHA256": "5599429db9e09ac2e6ab5cfc533a29e825c97b182e9d0b0f1ec6f18360c47d37",
+      "file": "drinks-cart-green/yaw8S.png",
+      "nativeSize": [
+        627,
+        627
+      ],
+      "pngSHA256": "1e9d87a88e7bcc666875b6b229159eb9e5fcde4f2df783672e193abb796c46f3",
+      "sourceRGBAEqual": true,
+      "singleSourcePNGBytesUnchanged": false,
+      "nativeHeadingDegrees": null,
+      "nativeCameraCertified": false,
+      "runtimeReady": false,
+      "operation": "Exact raw integer half-cell crop; native RGBA unchanged"
+    },
+    "yaw8W": {
+      "nominalCameraKey": "yaw8W",
+      "sourceFile": "art/catalogue-completion-20261107/generated/golf-vehicle-source-batch-01/native/drinks-cart-green/yaw8-v1.png",
+      "sourceFileSHA256": "775c38c890ce27d253a87424f5291e4a0b994b1523d880d1d7b54ccf108fc062",
+      "sourceFrameRectLTRB": [
+        627,
+        627,
+        1254,
+        1254
+      ],
+      "singleViewOverride": false,
+      "rgbaSHA256": "f717af7bfb431d1e05bdd7580a613aef446bdc4921dbca14e2d317551e6cc9a4",
+      "file": "drinks-cart-green/yaw8W.png",
+      "nativeSize": [
+        627,
+        627
+      ],
+      "pngSHA256": "f9bf26f303d2bdebee02445281f349edf6dfe68cc4e1991a0b93e1b2146026f9",
+      "sourceRGBAEqual": true,
+      "singleSourcePNGBytesUnchanged": false,
+      "nativeHeadingDegrees": null,
+      "nativeCameraCertified": false,
+      "runtimeReady": false,
+      "operation": "Exact raw integer half-cell crop; native RGBA unchanged"
+    }
+  }
+}

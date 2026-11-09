@@ -1,0 +1,246 @@
+{
+  "id": "variation~town-firestation-north-0ac85582-plain~1",
+  "kind": "corners",
+  "version": 1,
+  "generator": "native imagegen",
+  "imported_utc": "2026-11-06T20:48:55.184826+02:00",
+  "source": {
+    "path": "C:\\Users\\RAMPAGE\\.codex\\generated_images\\01a1b1fd-39ec-7220-8f11-86e4448833ea\\exec-cf58654d-6faa-4e4e-8c6d-c88008476d69.png",
+    "sha256": "6fc508edcaf4b79370e2c0bc54a835cc2defc3af813c25887a599bc888138db5",
+    "bytes": 1791033
+  },
+  "raw": {
+    "path": "E:\\Repos\\CapitalEmpire\\.claude\\worktrees\\art-repaint-20261106\\art\\theme-consistency\\native-resume-20261106\\variation~town-firestation-north-0ac85582-plain~1\\corners-v1.png",
+    "sha256": "6fc508edcaf4b79370e2c0bc54a835cc2defc3af813c25887a599bc888138db5",
+    "bytes": 1791033
+  },
+  "exact_prompt": {
+    "path": "E:\\Repos\\CapitalEmpire\\.claude\\worktrees\\art-repaint-20261106\\art\\theme-consistency\\native-resume-20261106\\variation~town-firestation-north-0ac85582-plain~1\\corners-v1.prompt.txt",
+    "sha256": "491c6a746fe097fa1f58367d86aec66596a0b4660ae82010b683b1a48e4c6bc9",
+    "bytes": 1192
+  },
+  "queue": {
+    "path": "D:\\AI\\chatgpt-bridge\\queue-resume-corners-20261106.json",
+    "sha256": "be220aa1862ea65077a5b6cdbf5a823d5cd27b0f02d9721b2f4bd8af35321c5d",
+    "bytes": 12104
+  },
+  "references": [
+    {
+      "path": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\theme-consistency\\exports\\buildings\\variation-town-firestation-north-0ac85582-plain-1.native.png",
+      "sha256": "ebc180de26e00e38f0f4075896e61c6d921bf7ac2418840c6923b30733dd127d",
+      "bytes": 368499
+    },
+    {
+      "path": "D:\\AI\\chatgpt-bridge\\guides\\variation~town-firestation-north-0ac85582-plain~1-corners.png",
+      "sha256": "761980c57a3aa8e2ec277424cc6c0b47a08bf134b83603984b5b00210de7db36",
+      "bytes": 704270
+    }
+  ],
+  "original_queue_references": [
+    {
+      "path": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\theme-consistency\\exports\\buildings\\variation-town-firestation-north-0ac85582-plain-1.native.png",
+      "sha256": "ebc180de26e00e38f0f4075896e61c6d921bf7ac2418840c6923b30733dd127d",
+      "bytes": 368499
+    },
+    {
+      "path": "D:\\AI\\chatgpt-bridge\\guides\\variation~town-firestation-north-0ac85582-plain~1-corners.png",
+      "sha256": "761980c57a3aa8e2ec277424cc6c0b47a08bf134b83603984b5b00210de7db36",
+      "bytes": 704270
+    }
+  ],
+  "cell_order": [
+    [
+      "SE",
+      "SW"
+    ],
+    [
+      "NW",
+      "NE"
+    ]
+  ],
+  "validation": {
+    "mode": "RGBA",
+    "dimensions": [
+      1254,
+      1254
+    ],
+    "cells": [
+      {
+        "view": "SE",
+        "subject_bbox": [
+          37,
+          83,
+          592,
+          554
+        ],
+        "transparent_fraction": 0.5894833502489005,
+        "margins_px": [
+          37,
+          83,
+          35,
+          73
+        ]
+      },
+      {
+        "view": "SW",
+        "subject_bbox": [
+          33,
+          77,
+          590,
+          566
+        ],
+        "transparent_fraction": 0.5621157431784478,
+        "margins_px": [
+          33,
+          77,
+          37,
+          61
+        ]
+      },
+      {
+        "view": "NW",
+        "subject_bbox": [
+          41,
+          54,
+          599,
+          552
+        ],
+        "transparent_fraction": 0.5453807783195846,
+        "margins_px": [
+          41,
+          54,
+          28,
+          75
+        ]
+      },
+      {
+        "view": "NE",
+        "subject_bbox": [
+          37,
+          67,
+          595,
+          533
+        ],
+        "transparent_fraction": 0.5760958871006718,
+        "margins_px": [
+          37,
+          67,
+          32,
+          94
+        ]
+      }
+    ],
+    "cell_differences": [
+      {
+        "views": [
+          "SE",
+          "SW"
+        ],
+        "mean_rgb_difference": 25.30908203125
+      },
+      {
+        "views": [
+          "SE",
+          "NW"
+        ],
+        "mean_rgb_difference": 38.413248697916664
+      },
+      {
+        "views": [
+          "SE",
+          "NE"
+        ],
+        "mean_rgb_difference": 41.0859375
+      },
+      {
+        "views": [
+          "SW",
+          "NW"
+        ],
+        "mean_rgb_difference": 34.693684895833336
+      },
+      {
+        "views": [
+          "SW",
+          "NE"
+        ],
+        "mean_rgb_difference": 41.375162760416664
+      },
+      {
+        "views": [
+          "NW",
+          "NE"
+        ],
+        "mean_rgb_difference": 25.357259114583332
+      }
+    ],
+    "errors": [],
+    "warnings": [],
+    "visual_review": "Required: automatic checks cannot approve style, geometry, lighting, or fidelity."
+  },
+  "status": "held-geometry-requires-regeneration",
+  "owner_approved": false,
+  "runtime_integrated": false,
+  "all_generated_views": false,
+  "compatible_NE": "generated bottom-right cell",
+  "cutter": {
+    "path": "D:\\AI\\chatgpt-bridge\\sheets.py",
+    "sha256": "eb40b531f94e59aa94412009307414a4a8f4dab5668786dcb077b9d0349852d9",
+    "bytes": 4578
+  },
+  "crops": [
+    {
+      "view": "SE",
+      "compatible": {
+        "path": "D:\\AI\\repaint\\out\\variation~town-firestation-north-0ac85582-plain~1\\SE.png",
+        "sha256": "dcbaf4b50dae1432c03d6adaba27d79a350660cf7afa9aba1d1fd86b274a5f40",
+        "bytes": 407704
+      },
+      "project_copy": {
+        "path": "E:\\Repos\\CapitalEmpire\\.claude\\worktrees\\art-repaint-20261106\\art\\theme-consistency\\native-resume-20261106\\variation~town-firestation-north-0ac85582-plain~1\\SE.native.png",
+        "sha256": "dcbaf4b50dae1432c03d6adaba27d79a350660cf7afa9aba1d1fd86b274a5f40",
+        "bytes": 407704
+      }
+    },
+    {
+      "view": "SW",
+      "compatible": {
+        "path": "D:\\AI\\repaint\\out\\variation~town-firestation-north-0ac85582-plain~1\\SW.png",
+        "sha256": "37b22e0e0708b013a87505e55b1a968d9570a5710ed66e4954612b6c874afb52",
+        "bytes": 421006
+      },
+      "project_copy": {
+        "path": "E:\\Repos\\CapitalEmpire\\.claude\\worktrees\\art-repaint-20261106\\art\\theme-consistency\\native-resume-20261106\\variation~town-firestation-north-0ac85582-plain~1\\SW.native.png",
+        "sha256": "37b22e0e0708b013a87505e55b1a968d9570a5710ed66e4954612b6c874afb52",
+        "bytes": 421006
+      }
+    },
+    {
+      "view": "NW",
+      "compatible": {
+        "path": "D:\\AI\\repaint\\out\\variation~town-firestation-north-0ac85582-plain~1\\NW.png",
+        "sha256": "8ea213cd0ee5d94d69c00431c82baafb503b340beebe2e6d29e31962fcf6f532",
+        "bytes": 431971
+      },
+      "project_copy": {
+        "path": "E:\\Repos\\CapitalEmpire\\.claude\\worktrees\\art-repaint-20261106\\art\\theme-consistency\\native-resume-20261106\\variation~town-firestation-north-0ac85582-plain~1\\NW.native.png",
+        "sha256": "8ea213cd0ee5d94d69c00431c82baafb503b340beebe2e6d29e31962fcf6f532",
+        "bytes": 431971
+      }
+    },
+    {
+      "view": "NE",
+      "compatible": {
+        "path": "D:\\AI\\repaint\\out\\variation~town-firestation-north-0ac85582-plain~1\\NE.png",
+        "sha256": "637af109f66535c48076d123613ecdb805377d1bca0b355e2d70be44b9592eea",
+        "bytes": 415856
+      },
+      "project_copy": {
+        "path": "E:\\Repos\\CapitalEmpire\\.claude\\worktrees\\art-repaint-20261106\\art\\theme-consistency\\native-resume-20261106\\variation~town-firestation-north-0ac85582-plain~1\\NE.native.png",
+        "sha256": "637af109f66535c48076d123613ecdb805377d1bca0b355e2d70be44b9592eea",
+        "bytes": 415856
+      }
+    }
+  ],
+  "agent_review": "Stray wireframe-like mesh fragments copied from rough 3D guide outside the rear platform. Remove reconstruction debris before treating this draft as usable."
+}

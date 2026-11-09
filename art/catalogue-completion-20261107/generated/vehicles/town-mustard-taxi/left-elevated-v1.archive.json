@@ -1,0 +1,16 @@
+[
+  {
+    "key": "town-mustard-taxi",
+    "source": "C:/Users/RAMPAGE/.codex/generated_images/01a1b1fd-39ec-7220-8f11-86e4448833ea/exec-5be6051e-06f8-4957-9e66-b72db1b83919.png",
+    "target": "generated/vehicles/town-mustard-taxi/left-elevated-v1.png",
+    "prompt": "Paint the exact projected vehicle of REFERENCE1 as the precise vehicle from REFERENCE2. Produce ONE SINGLE vehicle sprite, NOT a sheet. Orientation/camera/plane visibility comes EXCLUSIVELY from reference1: nose points exactly SCREEN LEFT, longitudinal axis precisely horizontal, orthographic camera looks DOWN30degrees from ABOVE the side. The roof/bonnet/boot or pickup bed show their full upper surfaces as broad planes at this projection; wheels are vertical ellipses0.866height/width, not perfectcircles. No broad front/rear grille plane visible, only thinendrim. Do NOT turn diagonally. Reference2 provides only exactidentity/materials/body/trim/wheels: A1984-style large mustard-yellow FOUR-DOOR taxi sedan, squared separate trunk, black-and-yellow checker stripe along both body sides, small plain cream roof taxi box without any text, dark bumpers and simple chrome hubcaps. No station wagon body. Preserve this SAME model/paint/doorcount/roofline/wheelbase; don'tcopytechnicalproxyboxshape oritscolour. Don't copy reference2's diagonal orientation. Draw the actual leftward-facing physical side, never mirror lighting. Detailed paintedminiature style, natural late-afternoon DAYTIME sunUPPERRIGHT/shadowsLOWERLEFT, lampsoff. One completeopaquevehicle centredwithamplemargins on TRUEzeroalpha transparentbackground, no groundplate/road/haze/text/logos/UI.",
+    "references": [
+      "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/vehicles/town-mustard-taxi/camera-calibration-refs/left-camera-only.png",
+      "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/vehicles/town-mustard-taxi/camera-calibration-refs/corner-identity-only.png"
+    ],
+    "status": "single-side30degree camera candidate; independent alpha/identity/projection QA pending",
+    "runtime_imported": false,
+    "sha256": "1c143e75a711ffd1a4526475fc8bfdeee8a35cd8a26654a0c23117e4a8cccd1f",
+    "native_bytes_preserved": true
+  }
+]

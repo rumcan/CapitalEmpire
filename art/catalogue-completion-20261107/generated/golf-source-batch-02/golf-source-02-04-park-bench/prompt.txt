@@ -1,0 +1,4 @@
+Actual source is a three-seat timber-slat bench with black cast-metal arms/legs PLUS one tall attached hole-map panel at its model right end. Preserve the bench/map combined assembly and map side. Back has slat backs and panel backing, not another front seating face. No people.
+Identity-preserving course furniture with warm wood, black metal and simple map board. Trim excessive gold ornaments; do not omit attached panel.
+Same painterly game style as style-authority.png, late-afternoon daylight, one sun upper-right, shadows lower-left, transparent background. No people, captions, brands, gridlines or generic ground plates. Functional ramps, buckets, mounting feet and attached panels remain part of their object.
+Keep one fixed physical object and all its feature positions across all eight source-camera views.

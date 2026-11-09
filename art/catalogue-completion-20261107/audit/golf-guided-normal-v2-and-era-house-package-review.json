@@ -1,0 +1,943 @@
+{
+  "schema": 1,
+  "date": "2026-11-07",
+  "scope": "Source-only practical guided normal-v2 QA for5golf jobs and integrity/candidate-selection verification for4later-era houses. No numerical angle metrology.",
+  "decision": {
+    "golfSourceCandidates": 4,
+    "golfGeometryRepairsBlockingYaw": 0,
+    "complexYawReferenceOrder": [
+      "exact corresponding technical yaw guide FIRST",
+      "normal-v2 painted identity SECOND"
+    ],
+    "minorTouchups": [
+      "Broadcast SW tabletop toolbox colour should remain red rather than grey."
+    ],
+    "alphaDisposition": "All5 native RGBA have true zero-alpha areas and complete source silhouettes. Four sheets have clear equal-half cores; leaderboard requires authored horizontal cut y610 because a bottom-right flag begins exactly at nominal y627split. Full source is intact. Faint alpha1–8residue persists, outerborder alpha max1–2; do not claim perfectly zero exterior or runtime-ready masks. Grey-composite diagnostics show no opaque coloured halo.",
+    "packagingRequiredBeforeRuntime": [
+      "Leaderboard authored cut x627/y610 or later native recentering; no runtime packaging performed here.",
+      "Preserve faint original alpha residue until an explicitly approved derived cleanup; source candidate is not final mask approval."
+    ],
+    "geometryLayoutsUsableForGuideFirstYaw": 5,
+    "functionalIdentityRepairsBeforeFinalSourceAcceptance": [
+      {
+        "jobId": "golf-source-01-03-broadcast-compound",
+        "frames": [
+          "SW",
+          "NW"
+        ],
+        "feature": "roof dish substituted by rectangular aerial"
+      }
+    ]
+  },
+  "golf": [
+    {
+      "jobId": "golf-source-01-01-food-truck",
+      "review": "PASS-practical-source-candidate;final-runtime-and-numerical-camera-unapproved",
+      "continueYawSourceGeneration": true,
+      "repairRequiredBeforeYaw": false,
+      "geometryAuthority": "job-index.json functional identity; no dedicated technical food guide",
+      "notes": [
+        "Extractor stays at rear roof and is visible all4poses; serving hatch remains one physical side in first2cells; opposite2cells plain equipment side; front cab and rear door distinct.",
+        "Ordinary period stepvan identity coherent. No source geometry repair needed before further poses."
+      ],
+      "source": {
+        "file": "art/catalogue-completion-20261107/generated/golf-source-batch-01/native/golf-source-01-01-food-truck/budget-normal-v2.png",
+        "sha256": "2708408b20af272d91fb4805f6a74510dd0aec85a693ffe64b14c821f09c9417",
+        "dimensions": [
+          1254,
+          1254
+        ],
+        "nativeAlpha": true,
+        "zeroAlphaFraction": 0.5935278242001989,
+        "faintAlpha1to8Fraction": 0.02976249526236935,
+        "outerBorderAlphaMax": 1,
+        "cells": [
+          {
+            "cell": 0,
+            "sourceRect": {
+              "left": 0,
+              "top": 0,
+              "width": 627,
+              "height": 627
+            },
+            "coreBBoxExclusive": [
+              72,
+              101,
+              598,
+              552
+            ],
+            "minimumCoreMargin": 29,
+            "coreTouchesCellBoundary": false,
+            "rgbaSha256": "7f4f75377337e03e5fa708599877703b8b9b680e74dd3ee216c52a58e607d8d4"
+          },
+          {
+            "cell": 1,
+            "sourceRect": {
+              "left": 627,
+              "top": 0,
+              "width": 627,
+              "height": 627
+            },
+            "coreBBoxExclusive": [
+              32,
+              130,
+              545,
+              529
+            ],
+            "minimumCoreMargin": 32,
+            "coreTouchesCellBoundary": false,
+            "rgbaSha256": "f3b82fa8e6fd9ea7b70fad3361680fb5e10f2ac50de978d4e3cbb16cb7694902"
+          },
+          {
+            "cell": 2,
+            "sourceRect": {
+              "left": 0,
+              "top": 627,
+              "width": 627,
+              "height": 627
+            },
+            "coreBBoxExclusive": [
+              100,
+              66,
+              584,
+              479
+            ],
+            "minimumCoreMargin": 43,
+            "coreTouchesCellBoundary": false,
+            "rgbaSha256": "02e1300b4fdc8a4494668cee3fb4fc96216a3a0f5377efc188947bc48450d0d4"
+          },
+          {
+            "cell": 3,
+            "sourceRect": {
+              "left": 627,
+              "top": 627,
+              "width": 627,
+              "height": 627
+            },
+            "coreBBoxExclusive": [
+              60,
+              64,
+              551,
+              514
+            ],
+            "minimumCoreMargin": 60,
+            "coreTouchesCellBoundary": false,
+            "rgbaSha256": "489bc7474d42ba9f91d232022ec043c3812c61374f76c4e17358de61458d238b"
+          }
+        ],
+        "distinctCellPixelHashes": 4
+      },
+      "provenanceHashMatches": true
+    },
+    {
+      "jobId": "golf-source-01-02-tv-camera-tower",
+      "review": "PASS-practical-source-candidate;final-runtime-and-numerical-camera-unapproved",
+      "continueYawSourceGeneration": true,
+      "repairRequiredBeforeYaw": false,
+      "geometryAuthority": "guides/normal-world-v1.png",
+      "notes": [
+        "Tall four-leg tower now followsguide; lens points front only and stays unseen in rearposes; front/right ladder and rear/right equipmentcase keep physicalpositions with natural occlusion.",
+        "Previous apparent coloured fringe is low-alpha RGB; grey composite shows no opaque red halo. No ladder/case teleporting found."
+      ],
+      "source": {
+        "file": "art/catalogue-completion-20261107/generated/golf-source-batch-01/native/golf-source-01-02-tv-camera-tower/budget-normal-v2.png",
+        "sha256": "dc987e477d7d13ec4ed170853ff24e4a71dc72fc5bb2cdf2608cfd3e1425c6ef",
+        "dimensions": [
+          1254,
+          1254
+        ],
+        "nativeAlpha": true,
+        "zeroAlphaFraction": 0.6166105782071534,
+        "faintAlpha1to8Fraction": 0.15475963360627173,
+        "outerBorderAlphaMax": 1,
+        "cells": [
+          {
+            "cell": 0,
+            "sourceRect": {
+              "left": 0,
+              "top": 0,
+              "width": 627,
+              "height": 627
+            },
+            "coreBBoxExclusive": [
+              192,
+              48,
+              436,
+              546
+            ],
+            "minimumCoreMargin": 48,
+            "coreTouchesCellBoundary": false,
+            "rgbaSha256": "981dbc259ca79c4d31d163539f5a6afe2eb32764602b1a7c6bf20166226c6ce1"
+          },
+          {
+            "cell": 1,
+            "sourceRect": {
+              "left": 627,
+              "top": 0,
+              "width": 627,
+              "height": 627
+            },
+            "coreBBoxExclusive": [
+              191,
+              48,
+              436,
+              545
+            ],
+            "minimumCoreMargin": 48,
+            "coreTouchesCellBoundary": false,
+            "rgbaSha256": "155d211ade74bb707ae2d9feb19df254f8667e7a25dc346e4f834d6572f6bbda"
+          },
+          {
+            "cell": 2,
+            "sourceRect": {
+              "left": 0,
+              "top": 627,
+              "width": 627,
+              "height": 627
+            },
+            "coreBBoxExclusive": [
+              189,
+              47,
+              439,
+              546
+            ],
+            "minimumCoreMargin": 47,
+            "coreTouchesCellBoundary": false,
+            "rgbaSha256": "c7ed16788962216075f080bc25dacc6874d90db6edee7bd4427f79b14d39c73b"
+          },
+          {
+            "cell": 3,
+            "sourceRect": {
+              "left": 627,
+              "top": 627,
+              "width": 627,
+              "height": 627
+            },
+            "coreBBoxExclusive": [
+              189,
+              47,
+              439,
+              546
+            ],
+            "minimumCoreMargin": 47,
+            "coreTouchesCellBoundary": false,
+            "rgbaSha256": "11ea71e7cb4a06ba4f2df6afc3054ff4f70b3fde326a9407b755d00398a9b666"
+          }
+        ],
+        "distinctCellPixelHashes": 4
+      },
+      "provenanceHashMatches": true
+    },
+    {
+      "jobId": "golf-source-01-03-broadcast-compound",
+      "review": "HOLD-targeted-dish-identity-repair-SW-NW;layout-pass",
+      "continueYawSourceGeneration": true,
+      "repairRequiredBeforeYaw": false,
+      "geometryAuthority": "guides/normal-world-v1.png",
+      "notes": [
+        "Truck left, van rear-right, generator/bench/reel fixed as one layout; two vehicle noses consistent, service gap remains open, no common groundslab.",
+        "SW/NW roof dish identity requires targeted repair: native image substitutes rectangular lattice/Yagi-like aerial hardware for the one smooth oblique parabolic dish. Preserve positions/vehicle layout while correcting the roof hardware.",
+        "Minor SW tabletop toolbox hue varies grey instead of red. Keep toolbox colour/material fixed in new yawposes; this does not block functional source-candidate status."
+      ],
+      "source": {
+        "file": "art/catalogue-completion-20261107/generated/golf-source-batch-01/native/golf-source-01-03-broadcast-compound/budget-normal-v2.png",
+        "sha256": "b50b463badd03c675ba5411ee62cf28d15bc6e34d2698c9406bd7d4d8f09001d",
+        "dimensions": [
+          1254,
+          1254
+        ],
+        "nativeAlpha": true,
+        "zeroAlphaFraction": 0.7264969005084845,
+        "faintAlpha1to8Fraction": 0.0695719471216827,
+        "outerBorderAlphaMax": 1,
+        "cells": [
+          {
+            "cell": 0,
+            "sourceRect": {
+              "left": 0,
+              "top": 0,
+              "width": 627,
+              "height": 627
+            },
+            "coreBBoxExclusive": [
+              74,
+              111,
+              564,
+              493
+            ],
+            "minimumCoreMargin": 63,
+            "coreTouchesCellBoundary": false,
+            "rgbaSha256": "7c5029db3b8fde6503ae1ef551e33ab3a8d4c3bdea7f3aae38db1bc90ea1a6b4"
+          },
+          {
+            "cell": 1,
+            "sourceRect": {
+              "left": 627,
+              "top": 0,
+              "width": 627,
+              "height": 627
+            },
+            "coreBBoxExclusive": [
+              72,
+              156,
+              565,
+              483
+            ],
+            "minimumCoreMargin": 62,
+            "coreTouchesCellBoundary": false,
+            "rgbaSha256": "da8c9352c49be4031f726d2cadc34d3c27f9c998f700e8d16a7e151e80d1b9ab"
+          },
+          {
+            "cell": 2,
+            "sourceRect": {
+              "left": 0,
+              "top": 627,
+              "width": 627,
+              "height": 627
+            },
+            "coreBBoxExclusive": [
+              57,
+              138,
+              568,
+              467
+            ],
+            "minimumCoreMargin": 57,
+            "coreTouchesCellBoundary": false,
+            "rgbaSha256": "294dddf943721871be02ebe5dbd6ab78a81de8ee90306c48bfec852d2d8d905d"
+          },
+          {
+            "cell": 3,
+            "sourceRect": {
+              "left": 627,
+              "top": 627,
+              "width": 627,
+              "height": 627
+            },
+            "coreBBoxExclusive": [
+              54,
+              122,
+              563,
+              495
+            ],
+            "minimumCoreMargin": 54,
+            "coreTouchesCellBoundary": false,
+            "rgbaSha256": "dd1a443027e339210f82696f647da13d714c05d9535927ab94f3323241ddf7e2"
+          }
+        ],
+        "distinctCellPixelHashes": 4
+      },
+      "provenanceHashMatches": true,
+      "targetedRepairFrames": [
+        "SW",
+        "NW"
+      ],
+      "followupCorrection": {
+        "review": "golf-source-batch-01-complex-yaw-review.json",
+        "note": "Rear normal SW/NW roof hardware becomes rectangular lattice aerial, not smooth parabolic dish. Earlier edge-on interpretation superseded by enlarged native versus guide detail. New yawE/S shows same defect. Layout/vehicles otherwise source-candidate; targeted equipment correction needed before final family acceptance."
+      }
+    },
+    {
+      "jobId": "golf-source-01-06-four-lane-entrance",
+      "review": "PASS-practical-source-candidate;final-runtime-and-numerical-camera-unapproved",
+      "continueYawSourceGeneration": true,
+      "repairRequiredBeforeYaw": false,
+      "geometryAuthority": "guides/normal-world-v2.png",
+      "notes": [
+        "Exactly3manual turnstiles plus1wider accessible swinggate; gate stays on same physical end through rotations.",
+        "Concrete slab and roof/shed sidewalls removed; hardware feet only. Front blank sign face and rear backing distinct; lane openings remain alpha."
+      ],
+      "source": {
+        "file": "art/catalogue-completion-20261107/generated/golf-source-batch-01/native/golf-source-01-06-four-lane-entrance/budget-normal-v2.png",
+        "sha256": "dc1d3952557ace93bd6a7895bd264c77e63cff91b952fe7adea722be81cced47",
+        "dimensions": [
+          1254,
+          1254
+        ],
+        "nativeAlpha": true,
+        "zeroAlphaFraction": 0.32730287005028885,
+        "faintAlpha1to8Fraction": 0.5103305785123967,
+        "outerBorderAlphaMax": 2,
+        "cells": [
+          {
+            "cell": 0,
+            "sourceRect": {
+              "left": 0,
+              "top": 0,
+              "width": 627,
+              "height": 627
+            },
+            "coreBBoxExclusive": [
+              53,
+              115,
+              569,
+              525
+            ],
+            "minimumCoreMargin": 53,
+            "coreTouchesCellBoundary": false,
+            "rgbaSha256": "6a5e7001db89b98ef06a108a6649b3e255381a22119ea09a9cb7fd071e0a4be1"
+          },
+          {
+            "cell": 1,
+            "sourceRect": {
+              "left": 627,
+              "top": 0,
+              "width": 627,
+              "height": 627
+            },
+            "coreBBoxExclusive": [
+              59,
+              123,
+              573,
+              525
+            ],
+            "minimumCoreMargin": 54,
+            "coreTouchesCellBoundary": false,
+            "rgbaSha256": "e6347c507c3ba94428cab8466867785d43c827a178414fe7ef73bba930ced309"
+          },
+          {
+            "cell": 2,
+            "sourceRect": {
+              "left": 0,
+              "top": 627,
+              "width": 627,
+              "height": 627
+            },
+            "coreBBoxExclusive": [
+              56,
+              122,
+              577,
+              509
+            ],
+            "minimumCoreMargin": 50,
+            "coreTouchesCellBoundary": false,
+            "rgbaSha256": "9b03e22a98a8b9ae3b4dc9ede34c673c96df2242a2be7fd60b4ea408ec9a521c"
+          },
+          {
+            "cell": 3,
+            "sourceRect": {
+              "left": 627,
+              "top": 627,
+              "width": 627,
+              "height": 627
+            },
+            "coreBBoxExclusive": [
+              48,
+              111,
+              573,
+              524
+            ],
+            "minimumCoreMargin": 48,
+            "coreTouchesCellBoundary": false,
+            "rgbaSha256": "83c57787fe01ec51e19c372612f8aefd05aa59d2b74bfc1a812ec4b69b3a012a"
+          }
+        ],
+        "distinctCellPixelHashes": 4
+      },
+      "provenanceHashMatches": true
+    },
+    {
+      "jobId": "golf-source-01-09-main-leaderboard",
+      "review": "PASS-practical-source-candidate;final-runtime-and-numerical-camera-unapproved",
+      "continueYawSourceGeneration": true,
+      "repairRequiredBeforeYaw": false,
+      "geometryAuthority": "guides/normal-world-v1.png",
+      "notes": [
+        "Grid only on front; rear slats and braces genuinely different; deck and+Xstairs remain at same physicalend (screenend changes in rearviews).",
+        "Occluded stairs are not repainted onto a visible end. Three-part raincap and2flagpoles consistent; blank scoregrid has no baked names.",
+        "Keep source as candidate; when packaging use authored y610cut, not blind y627halfcut, to retain margin around bottom-right flag. No geometry redraw needed."
+      ],
+      "source": {
+        "file": "art/catalogue-completion-20261107/generated/golf-source-batch-01/native/golf-source-01-09-main-leaderboard/budget-normal-v2.png",
+        "sha256": "93c055d92057dc431a1c826f97457130180b0fa7f6071e92619f992d4fcc40d9",
+        "dimensions": [
+          1254,
+          1254
+        ],
+        "nativeAlpha": true,
+        "zeroAlphaFraction": 0.33002462296091106,
+        "faintAlpha1to8Fraction": 0.3591696364297724,
+        "outerBorderAlphaMax": 1,
+        "cells": [
+          {
+            "cell": 0,
+            "sourceRect": {
+              "left": 0,
+              "top": 0,
+              "width": 627,
+              "height": 627
+            },
+            "coreBBoxExclusive": [
+              71,
+              35,
+              582,
+              566
+            ],
+            "minimumCoreMargin": 35,
+            "coreTouchesCellBoundary": false,
+            "rgbaSha256": "ecf1c3ee6ad6fafc8c4cf59647604175527bc7647a6741e588d86867d8dbf0d4"
+          },
+          {
+            "cell": 1,
+            "sourceRect": {
+              "left": 627,
+              "top": 0,
+              "width": 627,
+              "height": 627
+            },
+            "coreBBoxExclusive": [
+              84,
+              35,
+              559,
+              558
+            ],
+            "minimumCoreMargin": 35,
+            "coreTouchesCellBoundary": false,
+            "rgbaSha256": "6122fa3786808fa123c82e0e32311c6383d84ee03d6130bdbdb46621194de77a"
+          },
+          {
+            "cell": 2,
+            "sourceRect": {
+              "left": 0,
+              "top": 627,
+              "width": 627,
+              "height": 627
+            },
+            "coreBBoxExclusive": [
+              65,
+              4,
+              583,
+              542
+            ],
+            "minimumCoreMargin": 4,
+            "coreTouchesCellBoundary": false,
+            "rgbaSha256": "1a9c02fa53d20b2fd5865e8aaef49883ea6e81be781bcc519b49ff5783bd3295"
+          },
+          {
+            "cell": 3,
+            "sourceRect": {
+              "left": 627,
+              "top": 627,
+              "width": 627,
+              "height": 627
+            },
+            "coreBBoxExclusive": [
+              72,
+              0,
+              553,
+              560
+            ],
+            "minimumCoreMargin": 0,
+            "coreTouchesCellBoundary": true,
+            "rgbaSha256": "007407e21f39d3fd14d52325ab80f6d3f9b89affdb2851e33cf05f09cad39e72"
+          }
+        ],
+        "distinctCellPixelHashes": 4,
+        "nominalHalfSplitCaveat": "NE bottom-right flag starts at sheet y627, exactly the nominal lower-cell top. Full source intact, but blind equal-half crop has no flag-top padding. Clear alpha>128 horizontal gutter rows566–626.",
+        "recommendedSourcePackagingCut": {
+          "x": 627,
+          "y": 610,
+          "sourcePixelsAltered": false,
+          "physicalCropsWritten": false,
+          "cells": [
+            {
+              "cell": 0,
+              "sourceRect": {
+                "left": 0,
+                "top": 0,
+                "width": 627,
+                "height": 610
+              },
+              "coreBBoxExclusive": [
+                71,
+                35,
+                582,
+                566
+              ],
+              "minimumCoreMargin": 35,
+              "coreTouchesBoundary": false
+            },
+            {
+              "cell": 1,
+              "sourceRect": {
+                "left": 627,
+                "top": 0,
+                "width": 627,
+                "height": 610
+              },
+              "coreBBoxExclusive": [
+                84,
+                35,
+                559,
+                558
+              ],
+              "minimumCoreMargin": 35,
+              "coreTouchesBoundary": false
+            },
+            {
+              "cell": 2,
+              "sourceRect": {
+                "left": 0,
+                "top": 610,
+                "width": 627,
+                "height": 644
+              },
+              "coreBBoxExclusive": [
+                65,
+                21,
+                583,
+                559
+              ],
+              "minimumCoreMargin": 21,
+              "coreTouchesBoundary": false
+            },
+            {
+              "cell": 3,
+              "sourceRect": {
+                "left": 627,
+                "top": 610,
+                "width": 627,
+                "height": 644
+              },
+              "coreBBoxExclusive": [
+                72,
+                17,
+                553,
+                577
+              ],
+              "minimumCoreMargin": 17,
+              "coreTouchesBoundary": false
+            }
+          ]
+        }
+      },
+      "provenanceHashMatches": true
+    }
+  ],
+  "housePackage": {
+    "designs": 4,
+    "currentPairedSheets": 8,
+    "additionalSingleWOverride": 1,
+    "selectedCandidateViews": 32,
+    "allSourceHashesMatchRecordedQAAndProvenance": true,
+    "noHouseIDsInNativeRuntimeRegistry": true,
+    "sourcePixelsChanged": false,
+    "viewsPhysicallyRecutOrMerged": false,
+    "selectionEvidenceOnly": true,
+    "visualQAReusedByExactSourceHashes": "Existing per-source independent QA retained. House openings were not re-audited and no exact-angle measurements repeated.",
+    "houses": [
+      {
+        "design": "1990s-redbrick-family-single-garage",
+        "review": "retained-source-candidate8;not-runtime-or-exact-angle-approved",
+        "currentNormalSource": "normal-v1.png",
+        "baseYawSource": "yaw8-v1.png",
+        "singleOverride": null,
+        "recordedInCurrentProgressInventory": true,
+        "viewSelection": {
+          "normal": {
+            "SE": {
+              "file": "art/catalogue-completion-20261107/generated/era-houses/1990s-redbrick-family-single-garage/normal-v1.png",
+              "cell": 0
+            },
+            "SW": {
+              "file": "art/catalogue-completion-20261107/generated/era-houses/1990s-redbrick-family-single-garage/normal-v1.png",
+              "cell": 1
+            },
+            "NW": {
+              "file": "art/catalogue-completion-20261107/generated/era-houses/1990s-redbrick-family-single-garage/normal-v1.png",
+              "cell": 2
+            },
+            "NE": {
+              "file": "art/catalogue-completion-20261107/generated/era-houses/1990s-redbrick-family-single-garage/normal-v1.png",
+              "cell": 3
+            }
+          },
+          "yaw8": {
+            "N": {
+              "file": "art/catalogue-completion-20261107/generated/era-houses/1990s-redbrick-family-single-garage/yaw8-v1.png",
+              "cell": 0
+            },
+            "E": {
+              "file": "art/catalogue-completion-20261107/generated/era-houses/1990s-redbrick-family-single-garage/yaw8-v1.png",
+              "cell": 1
+            },
+            "S": {
+              "file": "art/catalogue-completion-20261107/generated/era-houses/1990s-redbrick-family-single-garage/yaw8-v1.png",
+              "cell": 2
+            },
+            "W": {
+              "file": "art/catalogue-completion-20261107/generated/era-houses/1990s-redbrick-family-single-garage/yaw8-v1.png",
+              "cell": 3
+            }
+          }
+        },
+        "selectedViewCount": 8,
+        "sources": [
+          {
+            "stem": "normal-v1",
+            "file": "art/catalogue-completion-20261107/generated/era-houses/1990s-redbrick-family-single-garage/normal-v1.png",
+            "sha256": "30cac9c191f62ea4ddd48c3d1a699494be5fdf661925f83b164e42bc0c133f1f",
+            "qaFile": "art/catalogue-completion-20261107/generated/era-houses/1990s-redbrick-family-single-garage/normal-v1.independent-qa.json",
+            "priorQAResult": "PASS-source-candidate-openings-and-alpha;exact-camera-unverified",
+            "hashMatchesQAAndProvenance": true,
+            "sourceOnly": true,
+            "allCoreComplete": true,
+            "frames": 4,
+            "ownerApprovalClaimed": false
+          },
+          {
+            "stem": "yaw8-v1",
+            "file": "art/catalogue-completion-20261107/generated/era-houses/1990s-redbrick-family-single-garage/yaw8-v1.png",
+            "sha256": "ee2a4b2820230bdcebf2375d545296c2c9717330cb589dba90acc5ed17a1cdcf",
+            "qaFile": "art/catalogue-completion-20261107/generated/era-houses/1990s-redbrick-family-single-garage/yaw8-v1.independent-qa.json",
+            "priorQAResult": "PASS-main-wall-opening-identity-and-alpha;HOLD-exact8-certification",
+            "hashMatchesQAAndProvenance": true,
+            "sourceOnly": true,
+            "allCoreComplete": true,
+            "frames": 4,
+            "ownerApprovalClaimed": false
+          }
+        ]
+      },
+      {
+        "design": "2000s-cream-stucco-two-storey-garage",
+        "review": "retained-source-candidate8;not-runtime-or-exact-angle-approved",
+        "currentNormalSource": "normal-v1.png",
+        "baseYawSource": "yaw8-v1.png",
+        "singleOverride": null,
+        "recordedInCurrentProgressInventory": true,
+        "viewSelection": {
+          "normal": {
+            "SE": {
+              "file": "art/catalogue-completion-20261107/generated/era-houses/2000s-cream-stucco-two-storey-garage/normal-v1.png",
+              "cell": 0
+            },
+            "SW": {
+              "file": "art/catalogue-completion-20261107/generated/era-houses/2000s-cream-stucco-two-storey-garage/normal-v1.png",
+              "cell": 1
+            },
+            "NW": {
+              "file": "art/catalogue-completion-20261107/generated/era-houses/2000s-cream-stucco-two-storey-garage/normal-v1.png",
+              "cell": 2
+            },
+            "NE": {
+              "file": "art/catalogue-completion-20261107/generated/era-houses/2000s-cream-stucco-two-storey-garage/normal-v1.png",
+              "cell": 3
+            }
+          },
+          "yaw8": {
+            "N": {
+              "file": "art/catalogue-completion-20261107/generated/era-houses/2000s-cream-stucco-two-storey-garage/yaw8-v1.png",
+              "cell": 0
+            },
+            "E": {
+              "file": "art/catalogue-completion-20261107/generated/era-houses/2000s-cream-stucco-two-storey-garage/yaw8-v1.png",
+              "cell": 1
+            },
+            "S": {
+              "file": "art/catalogue-completion-20261107/generated/era-houses/2000s-cream-stucco-two-storey-garage/yaw8-v1.png",
+              "cell": 2
+            },
+            "W": {
+              "file": "art/catalogue-completion-20261107/generated/era-houses/2000s-cream-stucco-two-storey-garage/yaw8-v1.png",
+              "cell": 3
+            }
+          }
+        },
+        "selectedViewCount": 8,
+        "sources": [
+          {
+            "stem": "normal-v1",
+            "file": "art/catalogue-completion-20261107/generated/era-houses/2000s-cream-stucco-two-storey-garage/normal-v1.png",
+            "sha256": "06315f1697f9ebe70ba03122e3a26ddec6f4c5e5945cac2a802350d44b00b079",
+            "qaFile": "art/catalogue-completion-20261107/generated/era-houses/2000s-cream-stucco-two-storey-garage/normal-v1.independent-qa.json",
+            "priorQAResult": "PASS-source-candidate-openings-and-alpha;exact-camera-unverified",
+            "hashMatchesQAAndProvenance": true,
+            "sourceOnly": true,
+            "allCoreComplete": true,
+            "frames": 4,
+            "ownerApprovalClaimed": false
+          },
+          {
+            "stem": "yaw8-v1",
+            "file": "art/catalogue-completion-20261107/generated/era-houses/2000s-cream-stucco-two-storey-garage/yaw8-v1.png",
+            "sha256": "0a0373b2dde993bd2f9c8e172d48b0da6299e93cf560bdbf80d7380e78fb59d3",
+            "qaFile": "art/catalogue-completion-20261107/generated/era-houses/2000s-cream-stucco-two-storey-garage/yaw8-v1.independent-qa.json",
+            "priorQAResult": "PASS-main-wall-opening-identity-and-alpha;HOLD-exact8-certification",
+            "hashMatchesQAAndProvenance": true,
+            "sourceOnly": true,
+            "allCoreComplete": true,
+            "frames": 4,
+            "ownerApprovalClaimed": false
+          }
+        ]
+      },
+      {
+        "design": "2010s-brick-white-clad-townhouse-pair",
+        "review": "retained-source-candidate8;not-runtime-or-exact-angle-approved",
+        "currentNormalSource": "normal-v1.png",
+        "baseYawSource": "yaw8-v1.png",
+        "singleOverride": "yaw8-W-v2.png",
+        "recordedInCurrentProgressInventory": true,
+        "viewSelection": {
+          "normal": {
+            "SE": {
+              "file": "art/catalogue-completion-20261107/generated/era-houses/2010s-brick-white-clad-townhouse-pair/normal-v1.png",
+              "cell": 0
+            },
+            "SW": {
+              "file": "art/catalogue-completion-20261107/generated/era-houses/2010s-brick-white-clad-townhouse-pair/normal-v1.png",
+              "cell": 1
+            },
+            "NW": {
+              "file": "art/catalogue-completion-20261107/generated/era-houses/2010s-brick-white-clad-townhouse-pair/normal-v1.png",
+              "cell": 2
+            },
+            "NE": {
+              "file": "art/catalogue-completion-20261107/generated/era-houses/2010s-brick-white-clad-townhouse-pair/normal-v1.png",
+              "cell": 3
+            }
+          },
+          "yaw8": {
+            "N": {
+              "file": "art/catalogue-completion-20261107/generated/era-houses/2010s-brick-white-clad-townhouse-pair/yaw8-v1.png",
+              "cell": 0
+            },
+            "E": {
+              "file": "art/catalogue-completion-20261107/generated/era-houses/2010s-brick-white-clad-townhouse-pair/yaw8-v1.png",
+              "cell": 1
+            },
+            "S": {
+              "file": "art/catalogue-completion-20261107/generated/era-houses/2010s-brick-white-clad-townhouse-pair/yaw8-v1.png",
+              "cell": 2
+            },
+            "W": {
+              "file": "art/catalogue-completion-20261107/generated/era-houses/2010s-brick-white-clad-townhouse-pair/yaw8-W-v2.png",
+              "cell": null,
+              "fullCanvasSingleSprite": true,
+              "supersedes": "yaw8-v1.png cell3"
+            }
+          }
+        },
+        "selectedViewCount": 8,
+        "sources": [
+          {
+            "stem": "normal-v1",
+            "file": "art/catalogue-completion-20261107/generated/era-houses/2010s-brick-white-clad-townhouse-pair/normal-v1.png",
+            "sha256": "66252e5b3f9c25a8dc2e7a3b05888045b3de7b7b1dec1219d2aa5066abf9e190",
+            "qaFile": "art/catalogue-completion-20261107/generated/era-houses/2010s-brick-white-clad-townhouse-pair/normal-v1.independent-qa.json",
+            "priorQAResult": "PASS-source-candidate-openings-and-alpha;exact-camera-unverified",
+            "hashMatchesQAAndProvenance": true,
+            "sourceOnly": true,
+            "allCoreComplete": true,
+            "frames": 4,
+            "ownerApprovalClaimed": false
+          },
+          {
+            "stem": "yaw8-v1",
+            "file": "art/catalogue-completion-20261107/generated/era-houses/2010s-brick-white-clad-townhouse-pair/yaw8-v1.png",
+            "sha256": "580f7bc6b458b7d8ccb8e90fa302fd677ff62a303e801db14f8799ccc40e12ca",
+            "qaFile": "art/catalogue-completion-20261107/generated/era-houses/2010s-brick-white-clad-townhouse-pair/yaw8-v1.independent-qa.json",
+            "priorQAResult": "HOLD-BR-source-guide-sliver-and-exact8;main-wall-identity-alpha-pass",
+            "hashMatchesQAAndProvenance": true,
+            "sourceOnly": true,
+            "allCoreComplete": true,
+            "frames": 4,
+            "ownerApprovalClaimed": false
+          },
+          {
+            "stem": "yaw8-W-v2",
+            "file": "art/catalogue-completion-20261107/generated/era-houses/2010s-brick-white-clad-townhouse-pair/yaw8-W-v2.png",
+            "sha256": "25aff37c8e06d14e3d73b3eb4f91db0e52b978e6b4ca26096c6ee3cccaefd706",
+            "qaFile": "art/catalogue-completion-20261107/generated/era-houses/2010s-brick-white-clad-townhouse-pair/yaw8-W-v2.independent-qa.json",
+            "priorQAResult": "PASS-single-W-source-guide-rear-sliver-repair;HOLD-exact8-certification",
+            "hashMatchesQAAndProvenance": true,
+            "sourceOnly": true,
+            "allCoreComplete": true,
+            "frames": 1,
+            "ownerApprovalClaimed": false
+          }
+        ]
+      },
+      {
+        "design": "2020s-white-charcoal-asymmetric-solar-home",
+        "review": "retained-source-candidate8;not-runtime-or-exact-angle-approved",
+        "currentNormalSource": "normal-v2.png",
+        "baseYawSource": "yaw8-v1.png",
+        "singleOverride": null,
+        "recordedInCurrentProgressInventory": true,
+        "viewSelection": {
+          "normal": {
+            "SE": {
+              "file": "art/catalogue-completion-20261107/generated/era-houses/2020s-white-charcoal-asymmetric-solar-home/normal-v2.png",
+              "cell": 0
+            },
+            "SW": {
+              "file": "art/catalogue-completion-20261107/generated/era-houses/2020s-white-charcoal-asymmetric-solar-home/normal-v2.png",
+              "cell": 1
+            },
+            "NW": {
+              "file": "art/catalogue-completion-20261107/generated/era-houses/2020s-white-charcoal-asymmetric-solar-home/normal-v2.png",
+              "cell": 2
+            },
+            "NE": {
+              "file": "art/catalogue-completion-20261107/generated/era-houses/2020s-white-charcoal-asymmetric-solar-home/normal-v2.png",
+              "cell": 3
+            }
+          },
+          "yaw8": {
+            "N": {
+              "file": "art/catalogue-completion-20261107/generated/era-houses/2020s-white-charcoal-asymmetric-solar-home/yaw8-v1.png",
+              "cell": 0
+            },
+            "E": {
+              "file": "art/catalogue-completion-20261107/generated/era-houses/2020s-white-charcoal-asymmetric-solar-home/yaw8-v1.png",
+              "cell": 1
+            },
+            "S": {
+              "file": "art/catalogue-completion-20261107/generated/era-houses/2020s-white-charcoal-asymmetric-solar-home/yaw8-v1.png",
+              "cell": 2
+            },
+            "W": {
+              "file": "art/catalogue-completion-20261107/generated/era-houses/2020s-white-charcoal-asymmetric-solar-home/yaw8-v1.png",
+              "cell": 3
+            }
+          }
+        },
+        "selectedViewCount": 8,
+        "sources": [
+          {
+            "stem": "normal-v2",
+            "file": "art/catalogue-completion-20261107/generated/era-houses/2020s-white-charcoal-asymmetric-solar-home/normal-v2.png",
+            "sha256": "4fc0f3fcd8540990e5a85e54bdadf35a4520dc5eb5fd5751d9944197d8c6cc6b",
+            "qaFile": "art/catalogue-completion-20261107/generated/era-houses/2020s-white-charcoal-asymmetric-solar-home/normal-v2.independent-qa.json",
+            "priorQAResult": "PASS-native-glass-patio-opening-correction;camera-unverified",
+            "hashMatchesQAAndProvenance": true,
+            "sourceOnly": true,
+            "allCoreComplete": true,
+            "frames": 4,
+            "ownerApprovalClaimed": false
+          },
+          {
+            "stem": "yaw8-v1",
+            "file": "art/catalogue-completion-20261107/generated/era-houses/2020s-white-charcoal-asymmetric-solar-home/yaw8-v1.png",
+            "sha256": "293ccfd862af61ac2233f00755cf78a5de063af620c9938208cc874f7dc3afa0",
+            "qaFile": "art/catalogue-completion-20261107/generated/era-houses/2020s-white-charcoal-asymmetric-solar-home/yaw8-v1.independent-qa.json",
+            "priorQAResult": "PASS-main-opening-identity-and-alpha;HOLD-exact8-certification",
+            "hashMatchesQAAndProvenance": true,
+            "sourceOnly": true,
+            "allCoreComplete": true,
+            "frames": 4,
+            "ownerApprovalClaimed": false
+          }
+        ]
+      }
+    ],
+    "allRemainSourceOnly": true
+  },
+  "sourceOnly": true,
+  "runtimeModified": false,
+  "testsRun": false,
+  "buildRun": false,
+  "serverStarted": false,
+  "commitCreated": false
+}

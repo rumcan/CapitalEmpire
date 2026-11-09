@@ -1,0 +1,19 @@
+{
+  "key": "golf-source-01-03-broadcast-compound",
+  "family": "normal",
+  "condition": "upgraded",
+  "version": 2,
+  "target": "generated/golf-source-batch-01/native/golf-source-01-03-broadcast-compound/upgraded-normal-v2.png",
+  "refs": [
+    "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/golf-source-batch-01/native/golf-source-01-03-broadcast-compound/upgraded-normal-v1.png"
+  ],
+  "prompt": "Precise correction ONLY to TOP-LEFT SE compound view in this fourview sheet. Remove the erroneous fold-out metal SERVICE STAIR at the side cargo door of the LARGE broadcast truck in that top-left cell. It is the small multi-tread metal staircase between the large truck's axles on its viewer-facing LEFT side, directly under its side service door. Restore empty transparent space below the doorway/plain truck skirt there; no stair on physical LEFT-X side. Keep the small cab access step/integral cab runningboard ifpartofcab, wheels, door, bodypaint, roofHVAC, front/rear lamps and everyotherdetailunchanged. The ONE real service staircase belongs on physical RIGHT+X, visible in BOTTOM-LEFT NW and BOTTOM-RIGHT NE; preserve those staircases exactly. Keep otherthreecells unchanged, allsatellitedishfront/backfaces and van/generator/workbench/reelpositions unchanged. Same finepaintedminiature detail, cleanupgradedperiod1980svehicles, late-afternoonDAYTIME sunSCREENUPPERRIGHT/shadowsLOWERLEFT. Genuinezeroalpha transparentbackground/gutters, no new objects/labels/scene.",
+  "source": "C:/Users/RAMPAGE/.codex/generated_images/01a1b1fd-39ec-7220-8f11-86e4448833ea/exec-a21f02c3-3843-4b26-b3f0-35926791b22d.png",
+  "references": [
+    "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/golf-source-batch-01/native/golf-source-01-03-broadcast-compound/upgraded-normal-v1.png"
+  ],
+  "status": "native-source-candidate-pending-visual-review",
+  "runtime_imported": false,
+  "sha256": "b46027013a800ed1d896bce7156bed5fa79ea3cbef4e4e0d3dc28ac4c49722f1",
+  "native_bytes_preserved": true
+}

@@ -1,0 +1,116 @@
+{
+  "schema": 1,
+  "as_of_utc": "2026-11-07T13:24:11.365118+00:00",
+  "review_result": "HOLD-repeated-front-corner",
+  "recommended_yaw_source_continuation": false,
+  "four_actual_corners_visually_verified": false,
+  "source": {
+    "path": "generated/golf-source-batch-02/native/ball-bucket-stand/normal-v1.png",
+    "sha256": "72a69fad909156b40b5e375b8dfe5629862f9d3a9ccd64ca73abcd3f4fdbb843",
+    "bytes": 1893589
+  },
+  "parent_provenance": {
+    "path": "generated/golf-source-batch-02/native/ball-bucket-stand/normal-v1.provenance.json",
+    "sha256": "1427ce832ae0ad5e0c2662ef15d91822d78a2a0e3acda1bfcb2f229e67007f76",
+    "bytes": 2567
+  },
+  "source_original_hash_matches_parent": true,
+  "exact_prompt_utf8_sha256": "55e4106494fe45e31330655d45a75ff826e4e2b816f7ff3c8bc9540ddf651957",
+  "actual_generation_references": [
+    {
+      "path": "generated/golf-source-batch-02/references/ball-bucket-stand.source.png",
+      "sha256": "8cc5a4030df385a964f07ab0e48bae4a7913a7215f749ff112e327ac4f8a7371",
+      "bytes": 449186
+    },
+    {
+      "path": "generated/old-clubhouse-1950/normal-v5.png",
+      "sha256": "a996fb471f351cc35926c84090192a8b55cc3557bb1bf9fec24872218fa219a6",
+      "bytes": 1473832
+    }
+  ],
+  "dimensions": [
+    1254,
+    1254
+  ],
+  "zero_alpha_fraction": 0.5568153201620842,
+  "outer_border_alpha_p50p95max": [
+    0.0,
+    0.0,
+    1.0
+  ],
+  "nominal_center_gap_alpha_p50p95max": [
+    0.0,
+    0.0,
+    2.0
+  ],
+  "clear_horizontal_cut_y": 627,
+  "clear_vertical_cut_by_row": [
+    627,
+    627
+  ],
+  "true_clear_gutters_found": true,
+  "cells": [
+    {
+      "cell": 0,
+      "reference_rect_ltrb": [
+        0,
+        0,
+        627,
+        627
+      ],
+      "minimum_core_margin_px": 24,
+      "boundary_core_pixels_alpha_gt128": 0,
+      "boundary_alpha_max": 1,
+      "native_rgba_rectangle_sha256": "0a1740373d5ca57cc9d72ae58213f7d3e9042ac165ca7cf7808f65056aaf8249"
+    },
+    {
+      "cell": 1,
+      "reference_rect_ltrb": [
+        627,
+        0,
+        1254,
+        627
+      ],
+      "minimum_core_margin_px": 28,
+      "boundary_core_pixels_alpha_gt128": 0,
+      "boundary_alpha_max": 1,
+      "native_rgba_rectangle_sha256": "07449dddf74c804cdbb86e934eaabcd7283470aea753620b50532d32756ee1af"
+    },
+    {
+      "cell": 2,
+      "reference_rect_ltrb": [
+        0,
+        627,
+        627,
+        1254
+      ],
+      "minimum_core_margin_px": 25,
+      "boundary_core_pixels_alpha_gt128": 0,
+      "boundary_alpha_max": 1,
+      "native_rgba_rectangle_sha256": "e48fa99ceee212e2140db8acd7f5ef8ab07dac738fe147d4b1522b163d381a17"
+    },
+    {
+      "cell": 3,
+      "reference_rect_ltrb": [
+        627,
+        627,
+        1254,
+        1254
+      ],
+      "minimum_core_margin_px": 24,
+      "boundary_core_pixels_alpha_gt128": 0,
+      "boundary_alpha_max": 1,
+      "native_rgba_rectangle_sha256": "9c20b3e115610f07e39ccc4078700f769bbb37e150fdbe9fb999ff0fdd7ffb8e"
+    }
+  ],
+  "all_cores_complete_at_reference_cuts": true,
+  "visual_observations": [
+    "TL/BR repeat same hopper front/chute corner: front outlet onLEFT of plainRIGHT side in both. Opposite front corner absent.",
+    "Rear views are visibly different; hopper/bucket/chute function remains intact."
+  ],
+  "pixel_hash_uniqueness_is_not_pose_proof": true,
+  "source_crops_or_native_pixel_changes": false,
+  "owner_approved": false,
+  "runtime_ready": false,
+  "exact_numerical_angle_certified": false
+}

@@ -1,0 +1,22 @@
+{
+  "key": "newprop:gold-tee-markers",
+  "slug": "gold-tee-markers",
+  "family": "yaw8",
+  "condition": "base",
+  "version": 1,
+  "target": "generated/golf-source-batch-02/native/gold-tee-markers/yaw8-v1.png",
+  "refs": [
+    "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-02\\fixed-world-guides-v2\\gold-tee-markers\\guides\\yaw8-world-v1.png",
+    "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/golf-source-batch-02/native/gold-tee-markers/normal-v1.png"
+  ],
+  "prompt": "Paint FOUR exact near-cardinal views of ONE SAME golfprop from fixed-world REFERENCE1 as finished native painterlygameart matchingidentity/materialsofREFERENCE2. Guidecontrols camera andphysicalsidepositions; reference2 is finelypainted material/assemblyidentityONLY, doNOTrepeatitscornercameras. Fixedrequirements: Exactly two gold golf-ball markers at (-0.23,0,0.202) and (+0.23,0,0.202): fixed 0.46 m centre gap on one world X line. Each has a short individual round foot. No third ball, changing gap, grass bed, slab or connecting rail. Final painted balls keep golf dimples; guide faceting is technical only.. Allattachments remainonSAMEphysicalside andsameoperatingstate throughthe4quarterturns. Frontlabels/maps/coinslots/taps neverappearonrearbacks. Rearbraces/basket/towel/crank mustobeyguideocclusion. Preserveallidentity details, including archedcaps andgoldfinials whenpresent. FourviewcellsN E / S W asguide, orthographic30degreesDOWN andnominal8degreesoffcardinal; broadmainface/narrowside, not45corner. Matchtheexistingdetailed hand-paintedminiaturegolf-townstyle: wood/enamel/rope/brass/galvanizedsteel/cloth/dimpledgolfballs, notflatlowpolyguidefacets. Late-afternoonDAYTIME sunfixedSCREENUPPERRIGHT/shadowsLOWERLEFT,lampsOFF. Equalphysicalscale, completeisolatedopaqueobjects/generousZEROALPHAtransparentmargins/gutters; no atmosphericgreyhalo, groundtile, grass/plants/people/textlabels/UI/grid. Actualfunctionalrampretained. Symmetricobjectsmayhavenaturallysimilarsilhouettes; donotaddpartstofakeuniqueness.",
+  "source": "C:/Users/RAMPAGE/.codex/generated_images/01a1b1fd-39ec-7220-8f11-86e4448833ea/exec-d1674c71-938f-44a9-999f-55889ed38e7b.png",
+  "references": [
+    "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-02\\fixed-world-guides-v2\\gold-tee-markers\\guides\\yaw8-world-v1.png",
+    "F:/Repos/ce-wt/eight-facing-runtime-20261107/art/catalogue-completion-20261107/generated/golf-source-batch-02/native/gold-tee-markers/normal-v1.png"
+  ],
+  "status": "native-source-candidate-pending-visual-review",
+  "runtime_imported": false,
+  "sha256": "bc06623d914c7cb0ba987029b799204cc9a4de7c2d64903a959b314a0f9be531",
+  "native_bytes_preserved": true
+}

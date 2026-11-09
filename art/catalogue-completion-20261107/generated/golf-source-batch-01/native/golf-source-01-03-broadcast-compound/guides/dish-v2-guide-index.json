@@ -1,0 +1,135 @@
+{
+  "jobId": "golf-source-01-03-broadcast-compound",
+  "scope": "Dish shell/rim/feed/back only; original camera, scale, all nondish faces/components/positions unchanged.",
+  "source_only": true,
+  "fixed_dish_axis_world": [
+    0.24997387909438062,
+    -0.5499425340076375,
+    0.7969167265528855
+  ],
+  "non_dish_faces_identical_to_v1": true,
+  "mesh": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-01\\native\\golf-source-01-03-broadcast-compound\\guides\\golf-source-01-03-broadcast-compound-world-model-v2.json",
+  "mesh_sha256": "03b3e6b60fabc7e9a5cb38cae5290232239a352da43821da849f04294eabeb83",
+  "outputs": {
+    "normal": {
+      "png": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-01\\native\\golf-source-01-03-broadcast-compound\\guides\\normal-world-v2.png",
+      "sha256": "5ff4b2208bd26e4ba4cae433e151b1cdf178f7d9924e5d4fb5001c905f10ab7b",
+      "calibration": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-01\\native\\golf-source-01-03-broadcast-compound\\guides\\normal-world-v2.calibration.json",
+      "dish_faces": [
+        {
+          "view": "SE",
+          "fixed_axis_rotated_world": [
+            0.24997387909438062,
+            -0.5499425340076375,
+            0.7969167265528855
+          ],
+          "front_normal_dot_toward_camera": 0.5821508991180651,
+          "dominant_surface": "concave front",
+          "aperture_ellipse_minor_major_ratio": 0.5821508991180651,
+          "note": "Technical aperture projection only; depth/rim/feed make a real3D silhouette. This is not native-painted camera metrology."
+        },
+        {
+          "view": "SW",
+          "fixed_axis_rotated_world": [
+            0.5499425340076375,
+            0.2499738790943806,
+            0.7969167265528855
+          ],
+          "front_normal_dot_toward_camera": -0.09138839896788353,
+          "dominant_surface": "convex ribbed back",
+          "aperture_ellipse_minor_major_ratio": 0.09138839896788353,
+          "note": "Technical aperture projection only; depth/rim/feed make a real3D silhouette. This is not native-painted camera metrology."
+        },
+        {
+          "view": "NW",
+          "fixed_axis_rotated_world": [
+            -0.24997387909438057,
+            0.5499425340076375,
+            0.7969167265528855
+          ],
+          "front_normal_dot_toward_camera": 0.21476582743482028,
+          "dominant_surface": "concave front",
+          "aperture_ellipse_minor_major_ratio": 0.21476582743482028,
+          "note": "Technical aperture projection only; depth/rim/feed make a real3D silhouette. This is not native-painted camera metrology."
+        },
+        {
+          "view": "NE",
+          "fixed_axis_rotated_world": [
+            -0.5499425340076375,
+            -0.2499738790943805,
+            0.7969167265528855
+          ],
+          "front_normal_dot_toward_camera": 0.8883051255207688,
+          "dominant_surface": "concave front",
+          "aperture_ellipse_minor_major_ratio": 0.8883051255207688,
+          "note": "Technical aperture projection only; depth/rim/feed make a real3D silhouette. This is not native-painted camera metrology."
+        }
+      ]
+    },
+    "yaw8": {
+      "png": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-01\\native\\golf-source-01-03-broadcast-compound\\guides\\yaw8-world-v2.png",
+      "sha256": "7786f774f671d6ecf6f199d24f9abfaa1bea40e93eed6d05f7d537fece52999a",
+      "calibration": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-source-batch-01\\native\\golf-source-01-03-broadcast-compound\\guides\\yaw8-world-v2.calibration.json",
+      "dish_faces": [
+        {
+          "view": "N",
+          "fixed_axis_rotated_world": [
+            0.24997387909438062,
+            -0.5499425340076375,
+            0.7969167265528855
+          ],
+          "front_normal_dot_toward_camera": 0.9002163097968396,
+          "dominant_surface": "concave front",
+          "aperture_ellipse_minor_major_ratio": 0.9002163097968396,
+          "note": "Technical aperture projection only; depth/rim/feed make a real3D silhouette. This is not native-painted camera metrology."
+        },
+        {
+          "view": "E",
+          "fixed_axis_rotated_world": [
+            0.5499425340076375,
+            0.2499738790943806,
+            0.7969167265528855
+          ],
+          "front_normal_dot_toward_camera": 0.2503646047691723,
+          "dominant_surface": "concave front",
+          "aperture_ellipse_minor_major_ratio": 0.2503646047691723,
+          "note": "Technical aperture projection only; depth/rim/feed make a real3D silhouette. This is not native-painted camera metrology."
+        },
+        {
+          "view": "S",
+          "fixed_axis_rotated_world": [
+            -0.24997387909438057,
+            0.5499425340076375,
+            0.7969167265528855
+          ],
+          "front_normal_dot_toward_camera": -0.10329958324395427,
+          "dominant_surface": "convex ribbed back",
+          "aperture_ellipse_minor_major_ratio": 0.10329958324395427,
+          "note": "Technical aperture projection only; depth/rim/feed make a real3D silhouette. This is not native-painted camera metrology."
+        },
+        {
+          "view": "W",
+          "fixed_axis_rotated_world": [
+            -0.5499425340076375,
+            -0.2499738790943805,
+            0.7969167265528855
+          ],
+          "front_normal_dot_toward_camera": 0.546552121783713,
+          "dominant_surface": "concave front",
+          "aperture_ellipse_minor_major_ratio": 0.546552121783713,
+          "note": "Technical aperture projection only; depth/rim/feed make a real3D silhouette. This is not native-painted camera metrology."
+        }
+      ]
+    }
+  },
+  "paint_instruction": "Preserve a smooth curved dish in oblique views. Show the back shell/ribs when facing away. Do not rotate its aim to expose the concave interior in every cell.",
+  "technical_visual_inspection": {
+    "all8viewsInspected": true,
+    "normalSW": "Convex dark ribbed back with rounded lip, naturally nearlyedge-on.",
+    "normalNW": "Narrow oblique pale concavefront with curved rim/feedarm, not rectangular aerial.",
+    "yaw8E": "Narrow oblique concavefront with real bowl depth and feedtripod.",
+    "yaw8S": "Convex dark curved back, rounded rim and rear hub/ribs; no repanning to exposefront.",
+    "otherComponents": "Exact non-dish face equality to v1 was checked during source reference generation.",
+    "nativeFinalArtApprovalClaimed": false
+  }
+}

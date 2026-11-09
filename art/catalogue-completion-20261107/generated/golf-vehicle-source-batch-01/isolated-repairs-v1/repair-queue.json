@@ -1,0 +1,60 @@
+{
+  "schema": 1,
+  "sourceOnly": true,
+  "generationPerformed": false,
+  "jobs": [
+    {
+      "key": "cart-ambulance-missing-normalSE",
+      "subject": "newprop:cart-ambulance",
+      "kind": "single-normal-corner-repair",
+      "targetProposal": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-vehicle-source-batch-01\\native\\cart-ambulance\\normal-SE-v2.png",
+      "references": [
+        "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-vehicle-source-batch-01\\isolated-repairs-v1\\cart-ambulance\\guide-normalSE.png",
+        "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-vehicle-source-batch-01\\isolated-repairs-v1\\cart-ambulance\\identity-normalNE.png"
+      ],
+      "referenceOrder": [
+        "Guide geometry/camera FIRST",
+        "Native identity/materials SECOND"
+      ],
+      "prompt": "Generate ONE SINGLE opposite FRONT corner view of this medical golf cart. Reference1 controls geometry, camera and fixed component positions exactly: NOSE points SCREEN LOWER RIGHT, rear stretcher points UPPER LEFT. Reference2 supplies the exact vehicle body/paint/glass/metal identity ONLY; its nose-lower-left angle is already present and MUST NOT be copied. One cream front two-place bench, steering and short canopy with unlit green beacon; four road wheels; exactly one orange stretcher on REAR platform with TWO black transverse straps. Same wheelbase and medical-cross locations. No patient, no added rear bench. Show this missing physical corner independently, not another copy of the existing front-left view. Detailed hand-painted miniature game art, opaque equipment on genuinely zero-alpha transparent background, generous margins, late-afternoon daylight with sun SCREEN UPPER RIGHT and shadows LOWER LEFT. No people, patient, scenery, ground plate, text, brands, grid or UI. Reconstruct the actual 3D view; never mirror the bitmap or turn independent parts toward the viewer.",
+      "nativeAngleOrScaleReleaseApproved": false
+    },
+    {
+      "key": "satellite-van-normalNW-dish-face",
+      "subject": "newprop:satellite-van",
+      "kind": "single-normal-corner-dish-repair",
+      "targetProposal": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-vehicle-source-batch-01\\native\\satellite-van\\normal-NW-v2.png",
+      "references": [
+        "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-vehicle-source-batch-01\\isolated-repairs-v1\\satellite-van\\guide-normalNW-left-door-adopted.png",
+        "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-vehicle-source-batch-01\\isolated-repairs-v1\\satellite-van\\target-normalNW-wrong-dish-face.png",
+        "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-vehicle-source-batch-01\\isolated-repairs-v1\\satellite-van\\concave-front-dish-material-only.png"
+      ],
+      "referenceOrder": [
+        "Guide NW geometry/occlusion FIRST",
+        "Target native NW body/materials SECOND (ignore its wrong dish face)",
+        "Correct concave dish material detail THIRD (not camera)"
+      ],
+      "prompt": "Generate ONE SINGLE NW rear/right corner of the same uplink panel van. Nose points SCREEN UPPER LEFT; twin rear cargo doors face lower-right. Reference1 fixes exact camera and roof dish pose. Reference2 is the exact target van identity: preserve body, wheels, paint, rear doors, roof HVAC, antennas and their positions. Its currently visible convex ribbed dish BACK is WRONG in this particular NW pose: replace ONLY that roof dish geometry with the guide's THIN OBLIQUE CONCAVE FRONT and curved rim/feed support. Do not make a full round bowl face the camera; do not swivel its azimuth/elevation. Reference3 supplies the pale concave interior/rim/feed material, not the output angle. The coherent cargo door has been explicitly adopted on physical LEFT -X: the visible RIGHT side in this NW view stays plain, with no invented sliding-door handle. One fixed curved parabolic dish, not a rectangular aerial or separate moving parts. Detailed hand-painted miniature game art, opaque equipment on genuinely zero-alpha transparent background, generous margins, late-afternoon daylight with sun SCREEN UPPER RIGHT and shadows LOWER LEFT. No people, patient, scenery, ground plate, text, brands, grid or UI. Reconstruct the actual 3D view; never mirror the bitmap or turn independent parts toward the viewer.",
+      "adoptedCargoDoorSide": "LEFT -X",
+      "nativeAngleOrScaleReleaseApproved": false
+    },
+    {
+      "key": "shanty-broadcast-van-normalSE-extra-hatch",
+      "subject": "newprop:shanty-broadcast-van",
+      "kind": "single-normal-corner-panel-repair",
+      "targetProposal": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-vehicle-source-batch-01\\native\\shanty-broadcast-van\\normal-SE-v2.png",
+      "references": [
+        "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-vehicle-source-batch-01\\isolated-repairs-v1\\shanty-broadcast-van\\guide-normalSE.png",
+        "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\golf-vehicle-source-batch-01\\isolated-repairs-v1\\shanty-broadcast-van\\target-normalSE-extra-hatch.png"
+      ],
+      "referenceOrder": [
+        "Exact guide camera/plain LEFT body FIRST",
+        "Target native body and materials SECOND; ignore extra hatch"
+      ],
+      "prompt": "Generate ONE SINGLE SE front/left corner of this worn ordinary broadcast van, nose SCREEN LOWER RIGHT. Reference1 controls exact camera and fixed assembly. Reference2 supplies the target vehicle/body/material identity, but its vented equipment hatch on the visible LEFT side is WRONG. Remove ONLY that extra visible hatch, hinges and vent markings; restore plain cream/green painted cargo panel matching guide. The ONE real equipment hatch stays on physical RIGHT+X, hidden on the opposite side in this SE view. Preserve the existing boxy cab, wheels, paint wear, windows, one roof cable reel on transverseX axle, fixed HVAC front/right of reel, front roof aerial and bolted steel rack. No roof dish or other redesign, no mirroring. Detailed painterly miniature finish; late-afternoon DAYTIME sun UPPER RIGHT/shadows LOWER LEFT, opaque object on true zero-alpha background with broad margins, no people, ground plate, scenery, text or UI. Source-only candidate, no camera/scale/runtime approval.",
+      "nativeCameraOrScaleApproved": false
+    }
+  ],
+  "runtimeIntegrated": false,
+  "nativeCameraAndScaleHoldsRemain": true
+}

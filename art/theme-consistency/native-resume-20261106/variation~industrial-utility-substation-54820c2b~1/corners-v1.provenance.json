@@ -1,0 +1,244 @@
+{
+  "id": "variation~industrial-utility-substation-54820c2b~1",
+  "version": 1,
+  "generator": "native imagegen",
+  "imported_utc": "2026-11-06T18:29:35.267909+00:00",
+  "source": {
+    "path": "C:\\Users\\RAMPAGE\\.codex\\generated_images\\01a1b1fd-39ec-7220-8f11-86e4448833ea\\exec-8136a10a-9281-49ba-96c9-b0afb93ba075.png",
+    "sha256": "64d330a60b6be6a25c4748cf8ed8ff0ae3bbddfb52548b13d6db7228cc098abb",
+    "bytes": 1536674
+  },
+  "raw": {
+    "path": "E:\\Repos\\CapitalEmpire\\.claude\\worktrees\\art-repaint-20261106\\art\\theme-consistency\\native-resume-20261106\\variation~industrial-utility-substation-54820c2b~1\\corners-v1.png",
+    "sha256": "64d330a60b6be6a25c4748cf8ed8ff0ae3bbddfb52548b13d6db7228cc098abb",
+    "bytes": 1536674
+  },
+  "exact_prompt": {
+    "path": "E:\\Repos\\CapitalEmpire\\.claude\\worktrees\\art-repaint-20261106\\art\\theme-consistency\\native-resume-20261106\\variation~industrial-utility-substation-54820c2b~1\\corners-v1.prompt.txt",
+    "sha256": "491c6a746fe097fa1f58367d86aec66596a0b4660ae82010b683b1a48e4c6bc9",
+    "bytes": 1192
+  },
+  "queue": {
+    "path": "D:\\AI\\chatgpt-bridge\\queue-resume-corners-20261106.json",
+    "sha256": "be220aa1862ea65077a5b6cdbf5a823d5cd27b0f02d9721b2f4bd8af35321c5d",
+    "bytes": 12104
+  },
+  "references": [
+    {
+      "path": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\theme-consistency\\exports\\buildings\\variation-industrial-utility-substation-54820c2b-1.native.png",
+      "sha256": "f1295abdb198ae256772bdfec264cb9228b48fc28d4680962de9b2e698b065fe",
+      "bytes": 140470
+    },
+    {
+      "path": "D:\\AI\\chatgpt-bridge\\guides\\variation~industrial-utility-substation-54820c2b~1-corners.png",
+      "sha256": "4f266a705444e6ba4f04c588d790be6bac63deacb87086102a4524070d8ff7be",
+      "bytes": 74250
+    }
+  ],
+  "original_queue_references": [
+    {
+      "path": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\theme-consistency\\exports\\buildings\\variation-industrial-utility-substation-54820c2b-1.native.png",
+      "sha256": "f1295abdb198ae256772bdfec264cb9228b48fc28d4680962de9b2e698b065fe",
+      "bytes": 140470
+    },
+    {
+      "path": "D:\\AI\\chatgpt-bridge\\guides\\variation~industrial-utility-substation-54820c2b~1-corners.png",
+      "sha256": "4f266a705444e6ba4f04c588d790be6bac63deacb87086102a4524070d8ff7be",
+      "bytes": 74250
+    }
+  ],
+  "cell_order": [
+    [
+      "SE",
+      "SW"
+    ],
+    [
+      "NW",
+      "NE"
+    ]
+  ],
+  "validation": {
+    "mode": "RGBA",
+    "dimensions": [
+      1254,
+      1254
+    ],
+    "cells": [
+      {
+        "view": "SE",
+        "subject_bbox": [
+          139,
+          78,
+          502,
+          539
+        ],
+        "transparent_fraction": 0.6709298983285384,
+        "margins_px": [
+          139,
+          78,
+          125,
+          88
+        ]
+      },
+      {
+        "view": "SW",
+        "subject_bbox": [
+          113,
+          81,
+          504,
+          544
+        ],
+        "transparent_fraction": 0.6340692240969249,
+        "margins_px": [
+          113,
+          81,
+          123,
+          83
+        ]
+      },
+      {
+        "view": "NW",
+        "subject_bbox": [
+          121,
+          59,
+          495,
+          538
+        ],
+        "transparent_fraction": 0.6359134024709446,
+        "margins_px": [
+          121,
+          59,
+          132,
+          89
+        ]
+      },
+      {
+        "view": "NE",
+        "subject_bbox": [
+          125,
+          66,
+          513,
+          541
+        ],
+        "transparent_fraction": 0.6298950217358679,
+        "margins_px": [
+          125,
+          66,
+          114,
+          86
+        ]
+      }
+    ],
+    "cell_differences": [
+      {
+        "views": [
+          "SE",
+          "SW"
+        ],
+        "mean_rgb_difference": 26.846923828125
+      },
+      {
+        "views": [
+          "SE",
+          "NW"
+        ],
+        "mean_rgb_difference": 27.070475260416668
+      },
+      {
+        "views": [
+          "SE",
+          "NE"
+        ],
+        "mean_rgb_difference": 30.54443359375
+      },
+      {
+        "views": [
+          "SW",
+          "NW"
+        ],
+        "mean_rgb_difference": 21.465413411458332
+      },
+      {
+        "views": [
+          "SW",
+          "NE"
+        ],
+        "mean_rgb_difference": 32.166259765625
+      },
+      {
+        "views": [
+          "NW",
+          "NE"
+        ],
+        "mean_rgb_difference": 24.902506510416668
+      }
+    ],
+    "errors": [],
+    "warnings": [],
+    "visual_review": "Required: automatic checks cannot approve style, geometry, lighting, or fidelity."
+  },
+  "status": "imported-awaiting-visual-review",
+  "owner_approved": false,
+  "runtime_integrated": false,
+  "all_generated_views": false,
+  "compatible_NE": "original export, intentionally retained by sheets.py",
+  "cutter": {
+    "path": "D:\\AI\\chatgpt-bridge\\sheets.py",
+    "sha256": "eb40b531f94e59aa94412009307414a4a8f4dab5668786dcb077b9d0349852d9",
+    "bytes": 4578
+  },
+  "crops": [
+    {
+      "view": "SE",
+      "compatible": {
+        "path": "D:\\AI\\repaint\\out\\variation~industrial-utility-substation-54820c2b~1\\SE.png",
+        "sha256": "3e9fa0b6465bdef4517904f06217edced084d53183693055ed5a6448ff997cb0",
+        "bytes": 329926
+      },
+      "project_copy": {
+        "path": "E:\\Repos\\CapitalEmpire\\.claude\\worktrees\\art-repaint-20261106\\art\\theme-consistency\\native-resume-20261106\\variation~industrial-utility-substation-54820c2b~1\\SE.native.png",
+        "sha256": "3e9fa0b6465bdef4517904f06217edced084d53183693055ed5a6448ff997cb0",
+        "bytes": 329926
+      }
+    },
+    {
+      "view": "SW",
+      "compatible": {
+        "path": "D:\\AI\\repaint\\out\\variation~industrial-utility-substation-54820c2b~1\\SW.png",
+        "sha256": "9ecb03fe04a0d6bf630a6c0f353110766c4f2f9f648bf44e59827fa0f357608f",
+        "bytes": 357856
+      },
+      "project_copy": {
+        "path": "E:\\Repos\\CapitalEmpire\\.claude\\worktrees\\art-repaint-20261106\\art\\theme-consistency\\native-resume-20261106\\variation~industrial-utility-substation-54820c2b~1\\SW.native.png",
+        "sha256": "9ecb03fe04a0d6bf630a6c0f353110766c4f2f9f648bf44e59827fa0f357608f",
+        "bytes": 357856
+      }
+    },
+    {
+      "view": "NW",
+      "compatible": {
+        "path": "D:\\AI\\repaint\\out\\variation~industrial-utility-substation-54820c2b~1\\NW.png",
+        "sha256": "f83de462eda10cf1f7f9ae7946c9fc4d1cb0a29c8503ac199526ffd68a15e34d",
+        "bytes": 341259
+      },
+      "project_copy": {
+        "path": "E:\\Repos\\CapitalEmpire\\.claude\\worktrees\\art-repaint-20261106\\art\\theme-consistency\\native-resume-20261106\\variation~industrial-utility-substation-54820c2b~1\\NW.native.png",
+        "sha256": "f83de462eda10cf1f7f9ae7946c9fc4d1cb0a29c8503ac199526ffd68a15e34d",
+        "bytes": 341259
+      }
+    },
+    {
+      "view": "NE",
+      "compatible": {
+        "path": "D:\\AI\\repaint\\out\\variation~industrial-utility-substation-54820c2b~1\\NE.png",
+        "sha256": "f1295abdb198ae256772bdfec264cb9228b48fc28d4680962de9b2e698b065fe",
+        "bytes": 140470
+      },
+      "project_copy": {
+        "path": "E:\\Repos\\CapitalEmpire\\.claude\\worktrees\\art-repaint-20261106\\art\\theme-consistency\\native-resume-20261106\\variation~industrial-utility-substation-54820c2b~1\\NE.native.png",
+        "sha256": "f1295abdb198ae256772bdfec264cb9228b48fc28d4680962de9b2e698b065fe",
+        "bytes": 140470
+      }
+    }
+  ]
+}

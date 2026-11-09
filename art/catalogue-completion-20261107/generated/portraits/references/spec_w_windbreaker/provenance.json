@@ -1,0 +1,92 @@
+{
+  "look_id": "spectator:spec_w_windbreaker",
+  "actual_runtime_look": {
+    "id": "spectator:spec_w_windbreaker",
+    "w": 80,
+    "h": 126,
+    "ax": 40,
+    "ay": 121,
+    "m": 1.62,
+    "seat": 0.67
+  },
+  "animation_files_changed": false,
+  "resized": false,
+  "repainted": false,
+  "source_style_changed": false,
+  "source_grid_id": "spectator:spec_w_windbreaker",
+  "runtime_namespace_differs_from_source_grid": false,
+  "method": "lossless-native-preview-idle-crops",
+  "source": {
+    "path": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\spectators\\spec_w_windbreaker\\preview.png",
+    "sha256": "8040a55255c5531c00230f7564098f4c31bb32136d4595486952d55b28f3e1ff",
+    "bytes": 1702178
+  },
+  "source_grid_metadata": {
+    "path": "E:\\Repos\\CapitalEmpire\\worktrees\\theme-consistency\\art\\spectators\\spec_w_windbreaker\\sheet.json",
+    "sha256": "914a8bb7cd5d7b45e2187a6debb82b2527b16105c1b4ceb46eb59113ee980ae1",
+    "bytes": 679
+  },
+  "source_grid": {
+    "columns": 9,
+    "rows": 8,
+    "frame_width": 160,
+    "frame_height": 252
+  },
+  "primary_reference": {
+    "path": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\portraits\\references\\spec_w_windbreaker\\identity-idle-pair.native.png",
+    "sha256": "ea4f882b539cc18cc460b5050d5cbe21d04cc2a3a94abcde31b7c9c09ea328a5",
+    "bytes": 42639
+  },
+  "dimensions": [
+    320,
+    252
+  ],
+  "crop_records": [
+    {
+      "direction": "S",
+      "column": 0,
+      "row": 0,
+      "frame": "idle",
+      "source_crop_box": [
+        0,
+        0,
+        160,
+        252
+      ],
+      "dimensions": [
+        160,
+        252
+      ],
+      "native_file": {
+        "path": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\portraits\\references\\spec_w_windbreaker\\idle-S.native.png",
+        "sha256": "7c09c568c29ae06245d04d1c756603a63f35ae2da13d039b7438f241ea5c155b",
+        "bytes": 22874
+      },
+      "pixel_sha256": "2d0cd41edfde62dace3c5d206222b9e39fda6da1738d87c2fa82405cc1bdb067"
+    },
+    {
+      "direction": "SW",
+      "column": 0,
+      "row": 1,
+      "frame": "idle",
+      "source_crop_box": [
+        0,
+        252,
+        160,
+        504
+      ],
+      "dimensions": [
+        160,
+        252
+      ],
+      "native_file": {
+        "path": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\portraits\\references\\spec_w_windbreaker\\idle-SW.native.png",
+        "sha256": "efabb6445b96d1ee287cdec2aa0bbfb1f7c875bea8f245ee538701b037482c6b",
+        "bytes": 20828
+      },
+      "pixel_sha256": "13afcd5db19855238e7008e6d31429988dfe3fb54a8eb7751ce1a2194195ccd3"
+    }
+  ],
+  "review_background_and_labels": "Original preview green background and S/SW idle labels are preserved, not new portrait styling.",
+  "resolution_limit": "Native frame width160 pixels; no artificial enlargement or generated face detail was introduced."
+}

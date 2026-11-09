@@ -1,0 +1,120 @@
+{
+  "schema": 1,
+  "date": "2026-11-07",
+  "sourceOnly": true,
+  "scope": "Four repair-source practical functional QA; no exact-angle metrology.",
+  "rows": [
+    {
+      "key": "broadcast-normal-v4",
+      "source": {
+        "file": "art/catalogue-completion-20261107/generated/golf-source-batch-01/native/golf-source-01-03-broadcast-compound/budget-normal-v4.png",
+        "sha256": "91a98125388138b7445c4a66a49d1f5653b47f3dcc07036ef35ed4ec61b0ffbf",
+        "dimensions": [
+          1254,
+          1254
+        ],
+        "nativeRGBA": true,
+        "trueZeroAlphaFraction": 0.7014968369161267,
+        "outerBorderAlphaMax": 1,
+        "hashMatchesProvenance": true
+      },
+      "review": "PARTIAL-v4NEheld;family-resolved-by-explicit-v3NE-selection",
+      "heldFrames": [
+        "NE"
+      ],
+      "notes": [
+        "V4SE/SW/NW fixed dish front/back consistent enough for practicalsourcecandidate. NEshowsconvexback whereguidecallsbroadfront; use alreadygood v3NE unchanged."
+      ]
+    },
+    {
+      "key": "broadcast-yaw8-v3",
+      "source": {
+        "file": "art/catalogue-completion-20261107/generated/golf-source-batch-01/native/golf-source-01-03-broadcast-compound/budget-yaw8-v3.png",
+        "sha256": "08c2c9dcc4e28382c143a965d72485e378dd940b19dcb3a9327896b96e6ad7fc",
+        "dimensions": [
+          1254,
+          1254
+        ],
+        "nativeRGBA": true,
+        "trueZeroAlphaFraction": 0.7404999376794894,
+        "outerBorderAlphaMax": 1,
+        "hashMatchesProvenance": true
+      },
+      "review": "PASS-practical-source-candidate",
+      "heldFrames": [],
+      "notes": [
+        "N/W concavefront, Eobliquefront, Sconvexback. Smooth curved dish retained, no rectangular aerial. Layout remainsfixed."
+      ]
+    },
+    {
+      "key": "tower-upgraded-normal-v2",
+      "source": {
+        "file": "art/catalogue-completion-20261107/generated/golf-source-batch-01/native/golf-source-01-02-tv-camera-tower/upgraded-normal-v2.png",
+        "sha256": "f9eeb1a8be99b8c1a7bbe0825810b32dc6b2a6555dc337eb0e29aa24872a77ac",
+        "dimensions": [
+          1254,
+          1254
+        ],
+        "nativeRGBA": true,
+        "trueZeroAlphaFraction": 0.7415600222827622,
+        "outerBorderAlphaMax": 0,
+        "hashMatchesProvenance": true
+      },
+      "review": "HOLD-SWcamera-front-iris-remains",
+      "heldFrames": [
+        "SW"
+      ],
+      "notes": [
+        "Near-facing SWcameraend stillhasgreen circulariris/lens, despite rearhousing instruction. Other3cells/scaffold/case/ladder remain usable."
+      ]
+    },
+    {
+      "key": "bungalow-yaw8-v2",
+      "source": {
+        "file": "art/catalogue-completion-20261107/generated/era-houses/expansion-02/1990s-buff-brick-bay-bungalow/yaw8-v2.png",
+        "sha256": "c13e6a5cf8d7f5c9babd132fbebd0e4a69e24e24e51b07c74f4cdacfbabe1351",
+        "dimensions": [
+          1254,
+          1254
+        ],
+        "nativeRGBA": true,
+        "trueZeroAlphaFraction": 0.7104391942593907,
+        "outerBorderAlphaMax": 1,
+        "hashMatchesProvenance": true
+      },
+      "review": "PASS-practical-rear-opening-repair",
+      "heldFrames": [],
+      "notes": [
+        "Snow3windows+singlekitchendoor; widepatioslider removed. Other3views retained; guide/normal-v2rearidentity agrees."
+      ]
+    }
+  ],
+  "compoundSelection": "art/catalogue-completion-20261107/generated/golf-source-batch-01/native/golf-source-01-03-broadcast-compound/source-candidate-selection-v1.json",
+  "allFourExpansion02NormalAndYawSourceFamiliesNowPracticalCandidates": true,
+  "housePackagingAuthorizedSelection": {
+    "1990s-buff-brick-bay-bungalow": {
+      "normal": "normal-v2.png",
+      "yaw8": "yaw8-v2.png"
+    },
+    "2000s-redbrick-single-storey-duplex": {
+      "normal": "normal-v1.png",
+      "yaw8": "yaw8-v1.png"
+    },
+    "2010s-small-six-flat-walkup": {
+      "normal": "normal-v1.png",
+      "yaw8": "yaw8-v1.png"
+    },
+    "2020s-compact-gabled-solar-family-home": {
+      "normal": "normal-v2.png",
+      "yaw8": "yaw8-v1.png"
+    }
+  },
+  "cameraAndScaleReleaseHoldsRemain": true,
+  "nativePixelsChanged": false,
+  "runtimeModified": false,
+  "importsRun": false,
+  "testsRun": false,
+  "buildRun": false,
+  "serverStarted": false,
+  "commitCreated": false
+}

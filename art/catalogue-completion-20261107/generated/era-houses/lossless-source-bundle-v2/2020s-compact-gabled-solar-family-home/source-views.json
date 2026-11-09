@@ -1,0 +1,241 @@
+{
+  "key": "2020s-compact-gabled-solar-family-home",
+  "name": "Compact two-storey gabled solar family home",
+  "sourceViews": [
+    {
+      "sourceCameraKey": "normalSE",
+      "nominalCameraFamily": "normal",
+      "file": "2020s-compact-gabled-solar-family-home/normalSE.png",
+      "fileRelativeToBundle": "2020s-compact-gabled-solar-family-home/normalSE.png",
+      "sourceFile": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\expansion-02\\2020s-compact-gabled-solar-family-home\\normal-v2.png",
+      "sourceFileSHA256": "ca6549666c74f6e6a2e430187bc6c2c8d18e90d2a49b4f032a38ddac4c070f2f",
+      "sourceFrameRectLTRB": [
+        0,
+        0,
+        627,
+        627
+      ],
+      "sourceCell": 0,
+      "operation": "lossless raw integer half-cell crop; no trim, resize, colour, alpha, flip or paint change",
+      "singleViewOverride": false,
+      "nativeSize": [
+        627,
+        627
+      ],
+      "pngSHA256": "f3bedb5dc4a9e128eaa36923c06842b1a9abf3626cff457407d9f927ecbd7ccf",
+      "rgbaSHA256": "a331a029497ea32248298e567d6d8efe903443f3c5513635bc7951716c430ab6",
+      "sourceRGBAEqual": true,
+      "sourceProvenance": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\expansion-02\\2020s-compact-gabled-solar-family-home\\normal-v2.provenance.json",
+      "identityFeaturesReviewed": "Practical fixed facade openings and special features reviewed; see source identity QA evidence.",
+      "nativeHeadingDegrees": null,
+      "nativeCameraCertified": false,
+      "runtimeReady": false
+    },
+    {
+      "sourceCameraKey": "normalSW",
+      "nominalCameraFamily": "normal",
+      "file": "2020s-compact-gabled-solar-family-home/normalSW.png",
+      "fileRelativeToBundle": "2020s-compact-gabled-solar-family-home/normalSW.png",
+      "sourceFile": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\expansion-02\\2020s-compact-gabled-solar-family-home\\normal-v2.png",
+      "sourceFileSHA256": "ca6549666c74f6e6a2e430187bc6c2c8d18e90d2a49b4f032a38ddac4c070f2f",
+      "sourceFrameRectLTRB": [
+        627,
+        0,
+        1254,
+        627
+      ],
+      "sourceCell": 1,
+      "operation": "lossless raw integer half-cell crop; no trim, resize, colour, alpha, flip or paint change",
+      "singleViewOverride": false,
+      "nativeSize": [
+        627,
+        627
+      ],
+      "pngSHA256": "b0dead522e970f478469955cac27a7486d86ca46a9e030847b72ad9907a1d331",
+      "rgbaSHA256": "ea72a5a58387488d33cf2e95be88cd931a649e4d99ecdff5a73f8428552bf004",
+      "sourceRGBAEqual": true,
+      "sourceProvenance": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\expansion-02\\2020s-compact-gabled-solar-family-home\\normal-v2.provenance.json",
+      "identityFeaturesReviewed": "Practical fixed facade openings and special features reviewed; see source identity QA evidence.",
+      "nativeHeadingDegrees": null,
+      "nativeCameraCertified": false,
+      "runtimeReady": false
+    },
+    {
+      "sourceCameraKey": "normalNW",
+      "nominalCameraFamily": "normal",
+      "file": "2020s-compact-gabled-solar-family-home/normalNW.png",
+      "fileRelativeToBundle": "2020s-compact-gabled-solar-family-home/normalNW.png",
+      "sourceFile": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\expansion-02\\2020s-compact-gabled-solar-family-home\\normal-v2.png",
+      "sourceFileSHA256": "ca6549666c74f6e6a2e430187bc6c2c8d18e90d2a49b4f032a38ddac4c070f2f",
+      "sourceFrameRectLTRB": [
+        0,
+        627,
+        627,
+        1254
+      ],
+      "sourceCell": 2,
+      "operation": "lossless raw integer half-cell crop; no trim, resize, colour, alpha, flip or paint change",
+      "singleViewOverride": false,
+      "nativeSize": [
+        627,
+        627
+      ],
+      "pngSHA256": "66ccc14aa30d5dff39e712255462c754565424b2690273d8aba764dd3657e62d",
+      "rgbaSHA256": "6228a91d0fabecdb5181db4d1b12f274aaf447687cf248c47df57665b86ff1b6",
+      "sourceRGBAEqual": true,
+      "sourceProvenance": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\expansion-02\\2020s-compact-gabled-solar-family-home\\normal-v2.provenance.json",
+      "identityFeaturesReviewed": "Practical fixed facade openings and special features reviewed; see source identity QA evidence.",
+      "nativeHeadingDegrees": null,
+      "nativeCameraCertified": false,
+      "runtimeReady": false
+    },
+    {
+      "sourceCameraKey": "normalNE",
+      "nominalCameraFamily": "normal",
+      "file": "2020s-compact-gabled-solar-family-home/normalNE.png",
+      "fileRelativeToBundle": "2020s-compact-gabled-solar-family-home/normalNE.png",
+      "sourceFile": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\expansion-02\\2020s-compact-gabled-solar-family-home\\normal-v2.png",
+      "sourceFileSHA256": "ca6549666c74f6e6a2e430187bc6c2c8d18e90d2a49b4f032a38ddac4c070f2f",
+      "sourceFrameRectLTRB": [
+        627,
+        627,
+        1254,
+        1254
+      ],
+      "sourceCell": 3,
+      "operation": "lossless raw integer half-cell crop; no trim, resize, colour, alpha, flip or paint change",
+      "singleViewOverride": false,
+      "nativeSize": [
+        627,
+        627
+      ],
+      "pngSHA256": "6fe2428d526beaf1d57c44630f08da832057ec5f51080c9778faa009b74ca3aa",
+      "rgbaSHA256": "688ab94364ed2d9506a92baf40d3ebbdb50e18f177a9f7c96c06182cb00e024e",
+      "sourceRGBAEqual": true,
+      "sourceProvenance": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\expansion-02\\2020s-compact-gabled-solar-family-home\\normal-v2.provenance.json",
+      "identityFeaturesReviewed": "Practical fixed facade openings and special features reviewed; see source identity QA evidence.",
+      "nativeHeadingDegrees": null,
+      "nativeCameraCertified": false,
+      "runtimeReady": false
+    },
+    {
+      "sourceCameraKey": "yaw8N",
+      "nominalCameraFamily": "yaw8",
+      "file": "2020s-compact-gabled-solar-family-home/yaw8N.png",
+      "fileRelativeToBundle": "2020s-compact-gabled-solar-family-home/yaw8N.png",
+      "sourceFile": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\expansion-02\\2020s-compact-gabled-solar-family-home\\yaw8-v1.png",
+      "sourceFileSHA256": "41ff3d722cb01a598b2fdd48f93a8a1de5966f6ca737dedba8593d5ea961639d",
+      "sourceFrameRectLTRB": [
+        0,
+        0,
+        627,
+        627
+      ],
+      "sourceCell": 0,
+      "operation": "lossless raw integer half-cell crop; no trim, resize, colour, alpha, flip or paint change",
+      "singleViewOverride": false,
+      "nativeSize": [
+        627,
+        627
+      ],
+      "pngSHA256": "6983e3c8b3f642a1c49599ddd584d693039071046fa79750851cb9d09e905e18",
+      "rgbaSHA256": "1bc0534fb74452113d0ae7393df3a034ef16da9a746b25c797208db9e6d1f88f",
+      "sourceRGBAEqual": true,
+      "sourceProvenance": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\expansion-02\\2020s-compact-gabled-solar-family-home\\yaw8-v1.provenance.json",
+      "identityFeaturesReviewed": "Practical fixed facade openings and special features reviewed; see source identity QA evidence.",
+      "nativeHeadingDegrees": null,
+      "nativeCameraCertified": false,
+      "runtimeReady": false
+    },
+    {
+      "sourceCameraKey": "yaw8E",
+      "nominalCameraFamily": "yaw8",
+      "file": "2020s-compact-gabled-solar-family-home/yaw8E.png",
+      "fileRelativeToBundle": "2020s-compact-gabled-solar-family-home/yaw8E.png",
+      "sourceFile": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\expansion-02\\2020s-compact-gabled-solar-family-home\\yaw8-v1.png",
+      "sourceFileSHA256": "41ff3d722cb01a598b2fdd48f93a8a1de5966f6ca737dedba8593d5ea961639d",
+      "sourceFrameRectLTRB": [
+        627,
+        0,
+        1254,
+        627
+      ],
+      "sourceCell": 1,
+      "operation": "lossless raw integer half-cell crop; no trim, resize, colour, alpha, flip or paint change",
+      "singleViewOverride": false,
+      "nativeSize": [
+        627,
+        627
+      ],
+      "pngSHA256": "5430adfb20a27326ac3adf162f5920a13bde7568d29640941ee881281cc32075",
+      "rgbaSHA256": "a9a3e33aee6f172e355b9975206de4cdf97ab05c9766c7815b941456ac258d45",
+      "sourceRGBAEqual": true,
+      "sourceProvenance": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\expansion-02\\2020s-compact-gabled-solar-family-home\\yaw8-v1.provenance.json",
+      "identityFeaturesReviewed": "Practical fixed facade openings and special features reviewed; see source identity QA evidence.",
+      "nativeHeadingDegrees": null,
+      "nativeCameraCertified": false,
+      "runtimeReady": false
+    },
+    {
+      "sourceCameraKey": "yaw8S",
+      "nominalCameraFamily": "yaw8",
+      "file": "2020s-compact-gabled-solar-family-home/yaw8S.png",
+      "fileRelativeToBundle": "2020s-compact-gabled-solar-family-home/yaw8S.png",
+      "sourceFile": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\expansion-02\\2020s-compact-gabled-solar-family-home\\yaw8-v1.png",
+      "sourceFileSHA256": "41ff3d722cb01a598b2fdd48f93a8a1de5966f6ca737dedba8593d5ea961639d",
+      "sourceFrameRectLTRB": [
+        0,
+        627,
+        627,
+        1254
+      ],
+      "sourceCell": 2,
+      "operation": "lossless raw integer half-cell crop; no trim, resize, colour, alpha, flip or paint change",
+      "singleViewOverride": false,
+      "nativeSize": [
+        627,
+        627
+      ],
+      "pngSHA256": "696d58f1a9219232d5c2e0f365d81e9d63a46debe288e8dd89a9f8b97cd5bd33",
+      "rgbaSHA256": "cc8f806060d2f0e92fc1fa1f6114dff3c7e4d62347bb57c7d01fb652d65343ac",
+      "sourceRGBAEqual": true,
+      "sourceProvenance": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\expansion-02\\2020s-compact-gabled-solar-family-home\\yaw8-v1.provenance.json",
+      "identityFeaturesReviewed": "Practical fixed facade openings and special features reviewed; see source identity QA evidence.",
+      "nativeHeadingDegrees": null,
+      "nativeCameraCertified": false,
+      "runtimeReady": false
+    },
+    {
+      "sourceCameraKey": "yaw8W",
+      "nominalCameraFamily": "yaw8",
+      "file": "2020s-compact-gabled-solar-family-home/yaw8W.png",
+      "fileRelativeToBundle": "2020s-compact-gabled-solar-family-home/yaw8W.png",
+      "sourceFile": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\expansion-02\\2020s-compact-gabled-solar-family-home\\yaw8-v1.png",
+      "sourceFileSHA256": "41ff3d722cb01a598b2fdd48f93a8a1de5966f6ca737dedba8593d5ea961639d",
+      "sourceFrameRectLTRB": [
+        627,
+        627,
+        1254,
+        1254
+      ],
+      "sourceCell": 3,
+      "operation": "lossless raw integer half-cell crop; no trim, resize, colour, alpha, flip or paint change",
+      "singleViewOverride": false,
+      "nativeSize": [
+        627,
+        627
+      ],
+      "pngSHA256": "c5a719e0458fd38ec4180470db5f6ab58c34272923809edb589b1ea63af97d59",
+      "rgbaSHA256": "9d918d95092ebb52a19256b61e829b9e777d33e4401251d4ebf677de96d4f318",
+      "sourceRGBAEqual": true,
+      "sourceProvenance": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\generated\\era-houses\\expansion-02\\2020s-compact-gabled-solar-family-home\\yaw8-v1.provenance.json",
+      "identityFeaturesReviewed": "Practical fixed facade openings and special features reviewed; see source identity QA evidence.",
+      "nativeHeadingDegrees": null,
+      "nativeCameraCertified": false,
+      "runtimeReady": false
+    }
+  ],
+  "inheritedFromV1": false,
+  "identityReview": "F:\\Repos\\ce-wt\\eight-facing-runtime-20261107\\art\\catalogue-completion-20261107\\audit\\four-source-repairs-and-house-package-readiness.json",
+  "identityReviewSHA256": "61e31b1639323266023e92cbcfa99ea54a9349b07a86c9ebb16f5bae9dae721d"
+}

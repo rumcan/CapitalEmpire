@@ -1,0 +1,105 @@
+{
+  "schema": 1,
+  "as_of_utc": "2026-11-07T10:41:06.632204+00:00",
+  "review_result": "PASS-front-visible-six-by-ten-count-and-alpha;HOLD-exact8-certification",
+  "source": {
+    "path": "generated/compact-bleacher-60-upgraded/yaw8-v2.png",
+    "sha256": "adad4d41642586f1cf610342b4fd6c69649dbfdf2245b8bc7e68de711cf72b36",
+    "bytes": 1090224
+  },
+  "source_original_hash_matches_parent_batch": true,
+  "dimensions": [
+    1254,
+    1254
+  ],
+  "zero_alpha_fraction": 0.6987598218396506,
+  "outer_border_alpha_p50p95max": [
+    0.0,
+    0.0,
+    1.0
+  ],
+  "empty_center_gutter_alpha_p50p95max": [
+    0.0,
+    1.0,
+    1.0
+  ],
+  "actual_cells": [
+    {
+      "cell": 0,
+      "reference_rect_ltrb": [
+        0,
+        0,
+        627,
+        627
+      ],
+      "boundary_core_pixels": 0,
+      "minimum_core_margin_px": 64,
+      "boundary_alpha_max": 1,
+      "rgba_rectangle_sha256": "bf9e9b792e5c7a93805a355062d021a6332e7fb3c998b15ab6f465413eeaaf93",
+      "actual_screen_nose": "almost front"
+    },
+    {
+      "cell": 1,
+      "reference_rect_ltrb": [
+        627,
+        0,
+        1254,
+        627
+      ],
+      "boundary_core_pixels": 0,
+      "minimum_core_margin_px": 74,
+      "boundary_alpha_max": 1,
+      "rgba_rectangle_sha256": "a814a948ee408177be3c80529e5dfe59ff321de4eb1deb3eca2ff4ed72a82bdc",
+      "actual_screen_nose": "right-side-looking"
+    },
+    {
+      "cell": 2,
+      "reference_rect_ltrb": [
+        0,
+        627,
+        627,
+        1254
+      ],
+      "boundary_core_pixels": 0,
+      "minimum_core_margin_px": 51,
+      "boundary_alpha_max": 1,
+      "rgba_rectangle_sha256": "b836292b6c191a48a167e70b9652c114186c411d70b5b5337cbe25ab3b31f90e",
+      "actual_screen_nose": "rear"
+    },
+    {
+      "cell": 3,
+      "reference_rect_ltrb": [
+        627,
+        627,
+        1254,
+        1254
+      ],
+      "boundary_core_pixels": 0,
+      "minimum_core_margin_px": 78,
+      "boundary_alpha_max": 1,
+      "rgba_rectangle_sha256": "e88a55b4c9ca32769e43d5fcdf6de5407c56e3cbcc8252bd5cc9d27e8511b4a4",
+      "actual_screen_nose": "opposite-side-looking"
+    }
+  ],
+  "all_cells_clear_core_boundaries": true,
+  "all_pixels_partitioned": true,
+  "native_source_crops_performed": false,
+  "notes": [
+    "Front N cell visibly has6rowsx10chairs=60, correcting v1 five-row defect.",
+    "Other cells have occluded seats: do not infer all60 from filename; independent final8degree/capacity/access registration remains unapproved."
+  ],
+  "owner_approved": false,
+  "runtime_ready": false,
+  "exact8_certified": false,
+  "pixels_modified": false,
+  "exact_prompt": {
+    "path": "generated/compact-bleacher-60-upgraded/yaw8-v2.prompt.txt",
+    "sha256": "bdaec89674bf90838040191775ccd6f25d1f477d6ade9f340ff2183aa2e90b62",
+    "bytes": 1193
+  },
+  "parent_provenance": {
+    "path": "generated/compact-bleacher-60-upgraded/yaw8-v2.provenance.json",
+    "sha256": "415cabb7f38cbecf55f4959adaac9594aa6ef14569753ac0688e0ab840eb663b",
+    "bytes": 2129
+  }
+}

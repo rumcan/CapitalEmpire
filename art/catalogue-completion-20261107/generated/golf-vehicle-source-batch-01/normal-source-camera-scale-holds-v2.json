@@ -1,0 +1,14 @@
+{
+  "schema": 1,
+  "sourceOnly": true,
+  "nativeCameraCertified": false,
+  "nativePixelsPerMetreApproved": false,
+  "nativeGroundAnchorsApproved": false,
+  "runtimeReady": false,
+  "notes": [
+    "Nominal corner labels and technical guides do not certify the painted camera. No exact-angle metrology performed.",
+    "Original sheet cells are usually627px; accepted isolated overrides are1254px. Native pixels remain unchanged; cross-view physical scale needs separate calibration before runtime use.",
+    "Satellite NW has corrected visible concave dish class; aperture is broader than the proxy and exact component pose remains unverified.",
+    "Displayed seat rows and medical/access features do not establish game capacity or accessibility certification."
+  ]
+}

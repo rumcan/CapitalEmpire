@@ -1,0 +1,29 @@
+{
+  "schema": 1,
+  "subject": "golf:course-rope-barrier",
+  "version": 1,
+  "key": "yaw8S",
+  "source": {
+    "file": "../../batch02/rope-barrier/yaw8-S.png",
+    "sha256": "dd22e2749087db7cf9f1c229f8af3e6cf1460573a4e8137b0271dbda5b66a9df",
+    "width": 701,
+    "height": 627
+  },
+  "cell": 0,
+  "cellRect": {
+    "left": 0,
+    "top": 0,
+    "width": 701,
+    "height": 627
+  },
+  "crop": {
+    "left": 34,
+    "top": 135,
+    "width": 667,
+    "height": 255
+  },
+  "output": "yaw8S.native.png",
+  "sha256": "21f57a57bd9dcb4cef8d6db987943206b62d70ca656299013d0937ec0ddf0ff5",
+  "operation": "native RGBA cell crop only; no flip/repaint/view synthesis",
+  "review": "candidate"
+}

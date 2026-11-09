@@ -1,0 +1,3556 @@
+[
+  {
+    "id": "landscape:bush-deep-green",
+    "name": "Bush, deep green",
+    "kind": "bush",
+    "category": "Landscaping",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "landscape:bush-golden-russet",
+    "name": "Bush, golden russet",
+    "kind": "bush",
+    "category": "Landscaping",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "landscape:bush-sage-round",
+    "name": "Bush, sage round",
+    "kind": "bush",
+    "category": "Landscaping",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "landscape:flowerbed-daisies",
+    "name": "Flower bed, daisies",
+    "kind": "bush",
+    "category": "Landscaping",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "landscape:flowerbed-lavender",
+    "name": "Flower bed, lavender",
+    "kind": "bush",
+    "category": "Landscaping",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "landscape:flowerbed-marigolds",
+    "name": "Flower bed, marigolds",
+    "kind": "bush",
+    "category": "Landscaping",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "landscape:hydrangea-pale",
+    "name": "Hydrangea, pale",
+    "kind": "bush",
+    "category": "Landscaping",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "business:stadium",
+    "name": "stadium",
+    "kind": "business",
+    "category": "Business artwork",
+    "reason": "removed/retired from current runtime catalogue"
+  },
+  {
+    "id": "business:golf-green-kidney-flagged",
+    "name": "golf green kidney flagged",
+    "kind": "business",
+    "category": "Business artwork",
+    "reason": "removed/retired from current runtime catalogue"
+  },
+  {
+    "id": "business:golf-fairway-curved",
+    "name": "golf fairway curved",
+    "kind": "business",
+    "category": "Business artwork",
+    "reason": "removed/retired from current runtime catalogue"
+  },
+  {
+    "id": "business:golf-bunker-organic",
+    "name": "golf bunker organic",
+    "kind": "business",
+    "category": "Business artwork",
+    "reason": "removed/retired from current runtime catalogue"
+  },
+  {
+    "id": "business:golf-tee-box",
+    "name": "golf tee box",
+    "kind": "business",
+    "category": "Business artwork",
+    "reason": "removed/retired from current runtime catalogue"
+  },
+  {
+    "id": "business:golf-green-unflagged",
+    "name": "golf green unflagged",
+    "kind": "business",
+    "category": "Business artwork",
+    "reason": "removed/retired from current runtime catalogue"
+  },
+  {
+    "id": "business:golf-fairway-dogleg",
+    "name": "golf fairway dogleg",
+    "kind": "business",
+    "category": "Business artwork",
+    "reason": "removed/retired from current runtime catalogue"
+  },
+  {
+    "id": "business:golf-driving-range",
+    "name": "golf driving range",
+    "kind": "business",
+    "category": "Business artwork",
+    "reason": "removed/retired from current runtime catalogue"
+  },
+  {
+    "id": "kit:palm-canary-10m",
+    "name": "Canary palm, 10 m",
+    "kind": "palm",
+    "category": "Concept kit",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "kit:palm-canary-8m",
+    "name": "Canary palm, 8 m",
+    "kind": "palm",
+    "category": "Concept kit",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "kit:palm-windmill-6m",
+    "name": "Windmill palm, 6 m",
+    "kind": "palm",
+    "category": "Concept kit",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "kit:palm-canary-6m",
+    "name": "Canary palm, 6 m",
+    "kind": "palm",
+    "category": "Concept kit",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "kit:palm-windmill-5m",
+    "name": "Windmill palm, 5 m",
+    "kind": "palm",
+    "category": "Concept kit",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "kit:palm-windmill-4m",
+    "name": "Windmill palm, 4 m",
+    "kind": "palm",
+    "category": "Concept kit",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "kit:palm-dwarf-fan-3-5m",
+    "name": "Dwarf fan palm, 3.5 m",
+    "kind": "palm",
+    "category": "Concept kit",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "kit:palm-dwarf-fan-3m",
+    "name": "Dwarf fan palm, 3 m",
+    "kind": "palm",
+    "category": "Concept kit",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "kit:palm-dwarf-fan-2m",
+    "name": "Dwarf fan palm, 2 m",
+    "kind": "palm",
+    "category": "Concept kit",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "kit:shrub-plume-grass",
+    "name": "Plume grass",
+    "kind": "shrub",
+    "category": "Concept kit",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "kit:shrub-red-twig-dogwood",
+    "name": "Red-twig dogwood",
+    "kind": "shrub",
+    "category": "Concept kit",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "kit:shrub-burning-bush",
+    "name": "Burning bush",
+    "kind": "shrub",
+    "category": "Concept kit",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "kit:shrub-golden-spirea",
+    "name": "Golden spirea",
+    "kind": "shrub",
+    "category": "Concept kit",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "kit:shrub-boxwood-ball",
+    "name": "Boxwood ball",
+    "kind": "shrub",
+    "category": "Concept kit",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "kit:shrub-blue-juniper",
+    "name": "Blue juniper",
+    "kind": "shrub",
+    "category": "Concept kit",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "kit:hedge-end",
+    "name": "Clipped hedge (end block)",
+    "kind": "shrub",
+    "category": "Concept kit",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "kit:lily-pads-c",
+    "name": "Lily pads (c)",
+    "kind": "decal",
+    "category": "Concept kit",
+    "reason": "decal excluded by owner"
+  },
+  {
+    "id": "kit:lily-pads-a",
+    "name": "Lily pads (a)",
+    "kind": "decal",
+    "category": "Concept kit",
+    "reason": "decal excluded by owner"
+  },
+  {
+    "id": "kit:lily-pads-d",
+    "name": "Lily pads (d)",
+    "kind": "decal",
+    "category": "Concept kit",
+    "reason": "decal excluded by owner"
+  },
+  {
+    "id": "kit:lily-pads-b",
+    "name": "Lily pads (b)",
+    "kind": "decal",
+    "category": "Concept kit",
+    "reason": "decal excluded by owner"
+  },
+  {
+    "id": "kit:flowers-mums-bronze",
+    "name": "Bronze mums",
+    "kind": "flower",
+    "category": "Concept kit",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "kit:flowers-mums-red",
+    "name": "Red mums",
+    "kind": "flower",
+    "category": "Concept kit",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "kit:flowers-mums-yellow",
+    "name": "Yellow mums",
+    "kind": "flower",
+    "category": "Concept kit",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "kit:flowers-mums-orange",
+    "name": "Orange mums",
+    "kind": "flower",
+    "category": "Concept kit",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "kit:flowers-mums-white",
+    "name": "White mums",
+    "kind": "flower",
+    "category": "Concept kit",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "kit:flowers-black-eyed-susans",
+    "name": "Black-eyed Susans",
+    "kind": "flower",
+    "category": "Concept kit",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "kit:water-edge-fern",
+    "name": "Water-edge fern",
+    "kind": "shrub",
+    "category": "Painted landscaping",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "kit:water-edge-sedge",
+    "name": "Water-edge sedge",
+    "kind": "shrub",
+    "category": "Painted landscaping",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "kit:water-edge-cattails",
+    "name": "Water-edge cattails",
+    "kind": "shrub",
+    "category": "Painted landscaping",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "kit:water-edge-juniper",
+    "name": "Water-edge juniper",
+    "kind": "shrub",
+    "category": "Painted landscaping",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "kit:water-edge-golden-grass",
+    "name": "Water-edge golden grass",
+    "kind": "shrub",
+    "category": "Painted landscaping",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "kit:water-edge-red-shrub",
+    "name": "Water-edge red shrub",
+    "kind": "shrub",
+    "category": "Painted landscaping",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "capital:tree-pine-open",
+    "name": "tree pine open",
+    "kind": "tree",
+    "category": "Capital vegetation",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "capital:tree-pine-patchy",
+    "name": "tree pine patchy",
+    "kind": "tree",
+    "category": "Capital vegetation",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "capital:tree-pine-near-bare",
+    "name": "tree pine near bare",
+    "kind": "tree",
+    "category": "Capital vegetation",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "capital:tree-pine-moderate",
+    "name": "tree pine moderate",
+    "kind": "tree",
+    "category": "Capital vegetation",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "capital:tree-spruce-open",
+    "name": "tree spruce open",
+    "kind": "tree",
+    "category": "Capital vegetation",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "capital:tree-spruce-patchy",
+    "name": "tree spruce patchy",
+    "kind": "tree",
+    "category": "Capital vegetation",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "capital:tree-spruce-near-bare",
+    "name": "tree spruce near bare",
+    "kind": "tree",
+    "category": "Capital vegetation",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "capital:tree-spruce-moderate",
+    "name": "tree spruce moderate",
+    "kind": "tree",
+    "category": "Capital vegetation",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "capital:tree-maple-patchy",
+    "name": "tree maple patchy",
+    "kind": "tree",
+    "category": "Capital vegetation",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "capital:tree-maple-near-bare",
+    "name": "tree maple near bare",
+    "kind": "tree",
+    "category": "Capital vegetation",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "capital:tree-maple-moderate",
+    "name": "tree maple moderate",
+    "kind": "tree",
+    "category": "Capital vegetation",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "capital:tree-birch-open",
+    "name": "tree birch open",
+    "kind": "tree",
+    "category": "Capital vegetation",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "capital:tree-birch-patchy",
+    "name": "tree birch patchy",
+    "kind": "tree",
+    "category": "Capital vegetation",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "capital:tree-birch-near-bare",
+    "name": "tree birch near bare",
+    "kind": "tree",
+    "category": "Capital vegetation",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "capital:tree-birch-moderate",
+    "name": "tree birch moderate",
+    "kind": "tree",
+    "category": "Capital vegetation",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "capital:tree-oak-open",
+    "name": "tree oak open",
+    "kind": "tree",
+    "category": "Capital vegetation",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "capital:tree-oak-patchy",
+    "name": "tree oak patchy",
+    "kind": "tree",
+    "category": "Capital vegetation",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "capital:tree-oak-near-bare",
+    "name": "tree oak near bare",
+    "kind": "tree",
+    "category": "Capital vegetation",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "capital:tree-oak-moderate",
+    "name": "tree oak moderate",
+    "kind": "tree",
+    "category": "Capital vegetation",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "world:tree_oak_0",
+    "name": "Tree Oak 0",
+    "kind": "tree",
+    "category": "Trees & plants",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "world:tree_oak_1",
+    "name": "Tree Oak 1",
+    "kind": "tree",
+    "category": "Trees & plants",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "world:tree_oak_2",
+    "name": "Tree Oak 2",
+    "kind": "tree",
+    "category": "Trees & plants",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "world:tree_pine_0",
+    "name": "Tree Pine 0",
+    "kind": "tree",
+    "category": "Trees & plants",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "world:tree_pine_1",
+    "name": "Tree Pine 1",
+    "kind": "tree",
+    "category": "Trees & plants",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "ref:tree-maple-crimson",
+    "name": "Maple Crimson",
+    "kind": "tree",
+    "category": "Trees & plants",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "ref:tree-birch-gold",
+    "name": "Birch Gold",
+    "kind": "tree",
+    "category": "Trees & plants",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "ref:tree-spruce-blue",
+    "name": "Spruce Blue",
+    "kind": "tree",
+    "category": "Trees & plants",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "world:bush_0",
+    "name": "Bush 0",
+    "kind": "bush",
+    "category": "Trees & plants",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "world:bush_1",
+    "name": "Bush 1",
+    "kind": "bush",
+    "category": "Trees & plants",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "town:hydrangea",
+    "name": "Garden hydrangea shrub",
+    "kind": "bush",
+    "category": "Trees & plants",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "town:fern",
+    "name": "Shaded fern clump",
+    "kind": "bush",
+    "category": "Trees & plants",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "town:ornamental_grass",
+    "name": "Roadside ornamental grass",
+    "kind": "bush",
+    "category": "Trees & plants",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "world:bush_2",
+    "name": "Bush 2",
+    "kind": "bush",
+    "category": "Trees & plants",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "world:tree_dead_0",
+    "name": "Tree Dead 0",
+    "kind": "tree",
+    "category": "Trees & plants",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "world:tree_dead_1",
+    "name": "Tree Dead 1",
+    "kind": "tree",
+    "category": "Trees & plants",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "world:tree_dead_2",
+    "name": "Tree Dead 2",
+    "kind": "tree",
+    "category": "Trees & plants",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "world:tree_pine_2",
+    "name": "Tree Pine 2",
+    "kind": "tree",
+    "category": "Trees & plants",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "gen:tree-dark-fir-tall:ne",
+    "name": "Dark fir tall (NE)",
+    "kind": "tree",
+    "category": "New: Trees",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "gen:tree-dark-fir-tall:se",
+    "name": "Dark fir tall (SE)",
+    "kind": "tree",
+    "category": "New: Trees",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "gen:tree-dark-fir-tall:sw",
+    "name": "Dark fir tall (SW)",
+    "kind": "tree",
+    "category": "New: Trees",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "gen:tree-dark-fir-tall:nw",
+    "name": "Dark fir tall (NW)",
+    "kind": "tree",
+    "category": "New: Trees",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "gen:tree-dark-fir-wide:ne",
+    "name": "Dark fir wide (NE)",
+    "kind": "tree",
+    "category": "New: Trees",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "gen:tree-dark-fir-wide:se",
+    "name": "Dark fir wide (SE)",
+    "kind": "tree",
+    "category": "New: Trees",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "gen:tree-dark-fir-wide:sw",
+    "name": "Dark fir wide (SW)",
+    "kind": "tree",
+    "category": "New: Trees",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "gen:tree-dark-fir-wide:nw",
+    "name": "Dark fir wide (NW)",
+    "kind": "tree",
+    "category": "New: Trees",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "gen:tree-dark-fir-medium:ne",
+    "name": "Dark fir medium (NE)",
+    "kind": "tree",
+    "category": "New: Trees",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "gen:tree-dark-fir-medium:se",
+    "name": "Dark fir medium (SE)",
+    "kind": "tree",
+    "category": "New: Trees",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "gen:tree-dark-fir-medium:sw",
+    "name": "Dark fir medium (SW)",
+    "kind": "tree",
+    "category": "New: Trees",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "gen:tree-dark-fir-medium:nw",
+    "name": "Dark fir medium (NW)",
+    "kind": "tree",
+    "category": "New: Trees",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "gen:tree-dark-fir-small:ne",
+    "name": "Dark fir small (NE)",
+    "kind": "tree",
+    "category": "New: Trees",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "gen:tree-dark-fir-small:se",
+    "name": "Dark fir small (SE)",
+    "kind": "tree",
+    "category": "New: Trees",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "gen:tree-dark-fir-small:sw",
+    "name": "Dark fir small (SW)",
+    "kind": "tree",
+    "category": "New: Trees",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "gen:tree-dark-fir-small:nw",
+    "name": "Dark fir small (NW)",
+    "kind": "tree",
+    "category": "New: Trees",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "gen:tree-red-maple:ne",
+    "name": "Red maple (NE)",
+    "kind": "tree",
+    "category": "New: Trees",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "gen:tree-red-maple:se",
+    "name": "Red maple (SE)",
+    "kind": "tree",
+    "category": "New: Trees",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "gen:tree-red-maple:sw",
+    "name": "Red maple (SW)",
+    "kind": "tree",
+    "category": "New: Trees",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "gen:tree-red-maple:nw",
+    "name": "Red maple (NW)",
+    "kind": "tree",
+    "category": "New: Trees",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "gen:tree-red-maple-bare:ne",
+    "name": "Red maple bare (NE)",
+    "kind": "tree",
+    "category": "New: Trees",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "gen:tree-red-maple-bare:se",
+    "name": "Red maple bare (SE)",
+    "kind": "tree",
+    "category": "New: Trees",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "gen:tree-red-maple-bare:sw",
+    "name": "Red maple bare (SW)",
+    "kind": "tree",
+    "category": "New: Trees",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "gen:tree-red-maple-bare:nw",
+    "name": "Red maple bare (NW)",
+    "kind": "tree",
+    "category": "New: Trees",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "gen:tree-red-maple-sparse:ne",
+    "name": "Red maple sparse (NE)",
+    "kind": "tree",
+    "category": "New: Trees",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "gen:tree-red-maple-sparse:se",
+    "name": "Red maple sparse (SE)",
+    "kind": "tree",
+    "category": "New: Trees",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "gen:tree-red-maple-sparse:sw",
+    "name": "Red maple sparse (SW)",
+    "kind": "tree",
+    "category": "New: Trees",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "gen:tree-red-maple-sparse:nw",
+    "name": "Red maple sparse (NW)",
+    "kind": "tree",
+    "category": "New: Trees",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "gen:tree-red-maple-full:ne",
+    "name": "Red maple full (NE)",
+    "kind": "tree",
+    "category": "New: Trees",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "gen:tree-red-maple-full:se",
+    "name": "Red maple full (SE)",
+    "kind": "tree",
+    "category": "New: Trees",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "gen:tree-red-maple-full:sw",
+    "name": "Red maple full (SW)",
+    "kind": "tree",
+    "category": "New: Trees",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "gen:tree-red-maple-full:nw",
+    "name": "Red maple full (NW)",
+    "kind": "tree",
+    "category": "New: Trees",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "newprop:course-worker",
+    "name": "Course worker",
+    "kind": "decor",
+    "category": "New: Stalls (shabby)",
+    "reason": "character art, outside buildings/props scope; separate character workstream"
+  },
+  {
+    "id": "gen:tree-blue-spruce-wide:ne",
+    "name": "Blue spruce wide (NE)",
+    "kind": "tree",
+    "category": "New: Trees",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "gen:tree-blue-spruce-wide:se",
+    "name": "Blue spruce wide (SE)",
+    "kind": "tree",
+    "category": "New: Trees",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "gen:tree-blue-spruce-wide:sw",
+    "name": "Blue spruce wide (SW)",
+    "kind": "tree",
+    "category": "New: Trees",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "gen:tree-blue-spruce-wide:nw",
+    "name": "Blue spruce wide (NW)",
+    "kind": "tree",
+    "category": "New: Trees",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "gen:tree-blue-spruce-tall:ne",
+    "name": "Blue spruce tall (NE)",
+    "kind": "tree",
+    "category": "New: Trees",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "gen:tree-blue-spruce-tall:se",
+    "name": "Blue spruce tall (SE)",
+    "kind": "tree",
+    "category": "New: Trees",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "gen:tree-blue-spruce-tall:sw",
+    "name": "Blue spruce tall (SW)",
+    "kind": "tree",
+    "category": "New: Trees",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "gen:tree-blue-spruce-tall:nw",
+    "name": "Blue spruce tall (NW)",
+    "kind": "tree",
+    "category": "New: Trees",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "gen:tree-blue-spruce-medium:ne",
+    "name": "Blue spruce medium (NE)",
+    "kind": "tree",
+    "category": "New: Trees",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "gen:tree-blue-spruce-medium:se",
+    "name": "Blue spruce medium (SE)",
+    "kind": "tree",
+    "category": "New: Trees",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "gen:tree-blue-spruce-medium:sw",
+    "name": "Blue spruce medium (SW)",
+    "kind": "tree",
+    "category": "New: Trees",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "gen:tree-blue-spruce-medium:nw",
+    "name": "Blue spruce medium (NW)",
+    "kind": "tree",
+    "category": "New: Trees",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "gen:tree-blue-spruce-small:ne",
+    "name": "Blue spruce small (NE)",
+    "kind": "tree",
+    "category": "New: Trees",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "gen:tree-blue-spruce-small:se",
+    "name": "Blue spruce small (SE)",
+    "kind": "tree",
+    "category": "New: Trees",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "gen:tree-blue-spruce-small:sw",
+    "name": "Blue spruce small (SW)",
+    "kind": "tree",
+    "category": "New: Trees",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "gen:tree-blue-spruce-small:nw",
+    "name": "Blue spruce small (NW)",
+    "kind": "tree",
+    "category": "New: Trees",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "gen:tree-thin-blue-fir:ne",
+    "name": "Thin blue fir (NE)",
+    "kind": "tree",
+    "category": "New: Trees",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "gen:tree-thin-blue-fir:se",
+    "name": "Thin blue fir (SE)",
+    "kind": "tree",
+    "category": "New: Trees",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "gen:tree-thin-blue-fir:sw",
+    "name": "Thin blue fir (SW)",
+    "kind": "tree",
+    "category": "New: Trees",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "gen:tree-thin-blue-fir:nw",
+    "name": "Thin blue fir (NW)",
+    "kind": "tree",
+    "category": "New: Trees",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "gen:tree-thin-blue-fir-tall:ne",
+    "name": "Thin blue fir tall (NE)",
+    "kind": "tree",
+    "category": "New: Trees",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "gen:tree-thin-blue-fir-tall:se",
+    "name": "Thin blue fir tall (SE)",
+    "kind": "tree",
+    "category": "New: Trees",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "gen:tree-thin-blue-fir-tall:sw",
+    "name": "Thin blue fir tall (SW)",
+    "kind": "tree",
+    "category": "New: Trees",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "gen:tree-thin-blue-fir-tall:nw",
+    "name": "Thin blue fir tall (NW)",
+    "kind": "tree",
+    "category": "New: Trees",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "gen:tree-thin-blue-fir-sparse:ne",
+    "name": "Thin blue fir sparse (NE)",
+    "kind": "tree",
+    "category": "New: Trees",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "gen:tree-thin-blue-fir-sparse:se",
+    "name": "Thin blue fir sparse (SE)",
+    "kind": "tree",
+    "category": "New: Trees",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "gen:tree-thin-blue-fir-sparse:sw",
+    "name": "Thin blue fir sparse (SW)",
+    "kind": "tree",
+    "category": "New: Trees",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "gen:tree-thin-blue-fir-sparse:nw",
+    "name": "Thin blue fir sparse (NW)",
+    "kind": "tree",
+    "category": "New: Trees",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "gen:tree-thin-blue-fir-small:ne",
+    "name": "Thin blue fir small (NE)",
+    "kind": "tree",
+    "category": "New: Trees",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "gen:tree-thin-blue-fir-small:se",
+    "name": "Thin blue fir small (SE)",
+    "kind": "tree",
+    "category": "New: Trees",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "gen:tree-thin-blue-fir-small:sw",
+    "name": "Thin blue fir small (SW)",
+    "kind": "tree",
+    "category": "New: Trees",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "gen:tree-thin-blue-fir-small:nw",
+    "name": "Thin blue fir small (NW)",
+    "kind": "tree",
+    "category": "New: Trees",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "gen:tree-red-maple-round:ne",
+    "name": "Red maple round (NE)",
+    "kind": "tree",
+    "category": "New: Trees",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "gen:tree-red-maple-round:se",
+    "name": "Red maple round (SE)",
+    "kind": "tree",
+    "category": "New: Trees",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "gen:tree-red-maple-round:sw",
+    "name": "Red maple round (SW)",
+    "kind": "tree",
+    "category": "New: Trees",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "gen:tree-red-maple-round:nw",
+    "name": "Red maple round (NW)",
+    "kind": "tree",
+    "category": "New: Trees",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "gen:tree-red-maple-big:ne",
+    "name": "Red maple big (NE)",
+    "kind": "tree",
+    "category": "New: Trees",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "gen:tree-red-maple-big:se",
+    "name": "Red maple big (SE)",
+    "kind": "tree",
+    "category": "New: Trees",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "gen:tree-red-maple-big:sw",
+    "name": "Red maple big (SW)",
+    "kind": "tree",
+    "category": "New: Trees",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "gen:tree-red-maple-big:nw",
+    "name": "Red maple big (NW)",
+    "kind": "tree",
+    "category": "New: Trees",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "gen:tree-red-maple-tall:ne",
+    "name": "Red maple tall (NE)",
+    "kind": "tree",
+    "category": "New: Trees",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "gen:tree-red-maple-tall:se",
+    "name": "Red maple tall (SE)",
+    "kind": "tree",
+    "category": "New: Trees",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "gen:tree-red-maple-tall:sw",
+    "name": "Red maple tall (SW)",
+    "kind": "tree",
+    "category": "New: Trees",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "gen:tree-red-maple-tall:nw",
+    "name": "Red maple tall (NW)",
+    "kind": "tree",
+    "category": "New: Trees",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "gen:tree-red-maple-small:ne",
+    "name": "Red maple small (NE)",
+    "kind": "tree",
+    "category": "New: Trees",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "gen:tree-red-maple-small:se",
+    "name": "Red maple small (SE)",
+    "kind": "tree",
+    "category": "New: Trees",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "gen:tree-red-maple-small:sw",
+    "name": "Red maple small (SW)",
+    "kind": "tree",
+    "category": "New: Trees",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "gen:tree-red-maple-small:nw",
+    "name": "Red maple small (NW)",
+    "kind": "tree",
+    "category": "New: Trees",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "newprop:golfer-swinging",
+    "name": "Golfer swinging",
+    "kind": "decor",
+    "category": "New: People",
+    "reason": "character art, outside buildings/props scope; separate character workstream"
+  },
+  {
+    "id": "newprop:golfer-putting",
+    "name": "Golfer putting",
+    "kind": "decor",
+    "category": "New: People",
+    "reason": "character art, outside buildings/props scope; separate character workstream"
+  },
+  {
+    "id": "newprop:caddie-with-bag",
+    "name": "Caddie with bag",
+    "kind": "decor",
+    "category": "New: People",
+    "reason": "character art, outside buildings/props scope; separate character workstream"
+  },
+  {
+    "id": "newprop:marshal-with-sign",
+    "name": "Marshal with sign",
+    "kind": "decor",
+    "category": "New: People",
+    "reason": "character art, outside buildings/props scope; separate character workstream"
+  },
+  {
+    "id": "newprop:golfer-swinging-2",
+    "name": "Golfer swinging 2",
+    "kind": "decor",
+    "category": "New: People",
+    "reason": "character art, outside buildings/props scope; separate character workstream"
+  },
+  {
+    "id": "newprop:golfer-putting-2",
+    "name": "Golfer putting 2",
+    "kind": "decor",
+    "category": "New: People",
+    "reason": "character art, outside buildings/props scope; separate character workstream"
+  },
+  {
+    "id": "newprop:caddie-with-bag-2",
+    "name": "Caddie with bag 2",
+    "kind": "decor",
+    "category": "New: People",
+    "reason": "character art, outside buildings/props scope; separate character workstream"
+  },
+  {
+    "id": "newprop:marshal-with-sign-2",
+    "name": "Marshal with sign 2",
+    "kind": "decor",
+    "category": "New: People",
+    "reason": "character art, outside buildings/props scope; separate character workstream"
+  },
+  {
+    "id": "gen:tree-orange-oak:ne",
+    "name": "Orange oak (NE)",
+    "kind": "tree",
+    "category": "New: Trees",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "gen:tree-orange-oak:se",
+    "name": "Orange oak (SE)",
+    "kind": "tree",
+    "category": "New: Trees",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "gen:tree-orange-oak:sw",
+    "name": "Orange oak (SW)",
+    "kind": "tree",
+    "category": "New: Trees",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "gen:tree-orange-oak:nw",
+    "name": "Orange oak (NW)",
+    "kind": "tree",
+    "category": "New: Trees",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "gen:tree-orange-oak-wide:ne",
+    "name": "Orange oak wide (NE)",
+    "kind": "tree",
+    "category": "New: Trees",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "gen:tree-orange-oak-wide:se",
+    "name": "Orange oak wide (SE)",
+    "kind": "tree",
+    "category": "New: Trees",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "gen:tree-orange-oak-wide:sw",
+    "name": "Orange oak wide (SW)",
+    "kind": "tree",
+    "category": "New: Trees",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "gen:tree-orange-oak-wide:nw",
+    "name": "Orange oak wide (NW)",
+    "kind": "tree",
+    "category": "New: Trees",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "gen:tree-orange-oak-full:ne",
+    "name": "Orange oak full (NE)",
+    "kind": "tree",
+    "category": "New: Trees",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "gen:tree-orange-oak-full:se",
+    "name": "Orange oak full (SE)",
+    "kind": "tree",
+    "category": "New: Trees",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "gen:tree-orange-oak-full:sw",
+    "name": "Orange oak full (SW)",
+    "kind": "tree",
+    "category": "New: Trees",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "gen:tree-orange-oak-full:nw",
+    "name": "Orange oak full (NW)",
+    "kind": "tree",
+    "category": "New: Trees",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "gen:tree-orange-oak-small:ne",
+    "name": "Orange oak small (NE)",
+    "kind": "tree",
+    "category": "New: Trees",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "gen:tree-orange-oak-small:se",
+    "name": "Orange oak small (SE)",
+    "kind": "tree",
+    "category": "New: Trees",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "gen:tree-orange-oak-small:sw",
+    "name": "Orange oak small (SW)",
+    "kind": "tree",
+    "category": "New: Trees",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "gen:tree-orange-oak-small:nw",
+    "name": "Orange oak small (NW)",
+    "kind": "tree",
+    "category": "New: Trees",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "gen:tree-orange-maple:ne",
+    "name": "Orange maple (NE)",
+    "kind": "tree",
+    "category": "New: Trees",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "gen:tree-orange-maple:se",
+    "name": "Orange maple (SE)",
+    "kind": "tree",
+    "category": "New: Trees",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "gen:tree-orange-maple:sw",
+    "name": "Orange maple (SW)",
+    "kind": "tree",
+    "category": "New: Trees",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "gen:tree-orange-maple:nw",
+    "name": "Orange maple (NW)",
+    "kind": "tree",
+    "category": "New: Trees",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "gen:tree-orange-maple-wide:ne",
+    "name": "Orange maple wide (NE)",
+    "kind": "tree",
+    "category": "New: Trees",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "gen:tree-orange-maple-wide:se",
+    "name": "Orange maple wide (SE)",
+    "kind": "tree",
+    "category": "New: Trees",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "gen:tree-orange-maple-wide:sw",
+    "name": "Orange maple wide (SW)",
+    "kind": "tree",
+    "category": "New: Trees",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "gen:tree-orange-maple-wide:nw",
+    "name": "Orange maple wide (NW)",
+    "kind": "tree",
+    "category": "New: Trees",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "gen:tree-orange-maple-bare:ne",
+    "name": "Orange maple bare (NE)",
+    "kind": "tree",
+    "category": "New: Trees",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "gen:tree-orange-maple-bare:se",
+    "name": "Orange maple bare (SE)",
+    "kind": "tree",
+    "category": "New: Trees",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "gen:tree-orange-maple-bare:sw",
+    "name": "Orange maple bare (SW)",
+    "kind": "tree",
+    "category": "New: Trees",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "gen:tree-orange-maple-bare:nw",
+    "name": "Orange maple bare (NW)",
+    "kind": "tree",
+    "category": "New: Trees",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "gen:tree-orange-maple-full:ne",
+    "name": "Orange maple full (NE)",
+    "kind": "tree",
+    "category": "New: Trees",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "gen:tree-orange-maple-full:se",
+    "name": "Orange maple full (SE)",
+    "kind": "tree",
+    "category": "New: Trees",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "gen:tree-orange-maple-full:sw",
+    "name": "Orange maple full (SW)",
+    "kind": "tree",
+    "category": "New: Trees",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "gen:tree-orange-maple-full:nw",
+    "name": "Orange maple full (NW)",
+    "kind": "tree",
+    "category": "New: Trees",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "gen:tree-small-orange-tree:ne",
+    "name": "Small orange tree (NE)",
+    "kind": "tree",
+    "category": "New: Trees",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "gen:tree-small-orange-tree:se",
+    "name": "Small orange tree (SE)",
+    "kind": "tree",
+    "category": "New: Trees",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "gen:tree-small-orange-tree:sw",
+    "name": "Small orange tree (SW)",
+    "kind": "tree",
+    "category": "New: Trees",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "gen:tree-small-orange-tree:nw",
+    "name": "Small orange tree (NW)",
+    "kind": "tree",
+    "category": "New: Trees",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "gen:tree-small-orange-tree-2:ne",
+    "name": "Small orange tree 2 (NE)",
+    "kind": "tree",
+    "category": "New: Trees",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "gen:tree-small-orange-tree-2:se",
+    "name": "Small orange tree 2 (SE)",
+    "kind": "tree",
+    "category": "New: Trees",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "gen:tree-small-orange-tree-2:sw",
+    "name": "Small orange tree 2 (SW)",
+    "kind": "tree",
+    "category": "New: Trees",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "gen:tree-small-orange-tree-2:nw",
+    "name": "Small orange tree 2 (NW)",
+    "kind": "tree",
+    "category": "New: Trees",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "gen:tree-small-orange-tree-bare:ne",
+    "name": "Small orange tree bare (NE)",
+    "kind": "tree",
+    "category": "New: Trees",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "gen:tree-small-orange-tree-bare:se",
+    "name": "Small orange tree bare (SE)",
+    "kind": "tree",
+    "category": "New: Trees",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "gen:tree-small-orange-tree-bare:sw",
+    "name": "Small orange tree bare (SW)",
+    "kind": "tree",
+    "category": "New: Trees",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "gen:tree-small-orange-tree-bare:nw",
+    "name": "Small orange tree bare (NW)",
+    "kind": "tree",
+    "category": "New: Trees",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "gen:tree-small-orange-tree-full:ne",
+    "name": "Small orange tree full (NE)",
+    "kind": "tree",
+    "category": "New: Trees",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "gen:tree-small-orange-tree-full:se",
+    "name": "Small orange tree full (SE)",
+    "kind": "tree",
+    "category": "New: Trees",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "gen:tree-small-orange-tree-full:sw",
+    "name": "Small orange tree full (SW)",
+    "kind": "tree",
+    "category": "New: Trees",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "gen:tree-small-orange-tree-full:nw",
+    "name": "Small orange tree full (NW)",
+    "kind": "tree",
+    "category": "New: Trees",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "gen:tree-bare-oak:ne",
+    "name": "Bare oak (NE)",
+    "kind": "tree",
+    "category": "New: Trees",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "gen:tree-bare-oak:se",
+    "name": "Bare oak (SE)",
+    "kind": "tree",
+    "category": "New: Trees",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "gen:tree-bare-oak:sw",
+    "name": "Bare oak (SW)",
+    "kind": "tree",
+    "category": "New: Trees",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "gen:tree-bare-oak:nw",
+    "name": "Bare oak (NW)",
+    "kind": "tree",
+    "category": "New: Trees",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "gen:tree-bare-oak-wide:ne",
+    "name": "Bare oak wide (NE)",
+    "kind": "tree",
+    "category": "New: Trees",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "gen:tree-bare-oak-wide:se",
+    "name": "Bare oak wide (SE)",
+    "kind": "tree",
+    "category": "New: Trees",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "gen:tree-bare-oak-wide:sw",
+    "name": "Bare oak wide (SW)",
+    "kind": "tree",
+    "category": "New: Trees",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "gen:tree-bare-oak-wide:nw",
+    "name": "Bare oak wide (NW)",
+    "kind": "tree",
+    "category": "New: Trees",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "gen:tree-bare-oak-tall:ne",
+    "name": "Bare oak tall (NE)",
+    "kind": "tree",
+    "category": "New: Trees",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "gen:tree-bare-oak-tall:se",
+    "name": "Bare oak tall (SE)",
+    "kind": "tree",
+    "category": "New: Trees",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "gen:tree-bare-oak-tall:sw",
+    "name": "Bare oak tall (SW)",
+    "kind": "tree",
+    "category": "New: Trees",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "gen:tree-bare-oak-tall:nw",
+    "name": "Bare oak tall (NW)",
+    "kind": "tree",
+    "category": "New: Trees",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "gen:tree-bare-oak-small:ne",
+    "name": "Bare oak small (NE)",
+    "kind": "tree",
+    "category": "New: Trees",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "gen:tree-bare-oak-small:se",
+    "name": "Bare oak small (SE)",
+    "kind": "tree",
+    "category": "New: Trees",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "gen:tree-bare-oak-small:sw",
+    "name": "Bare oak small (SW)",
+    "kind": "tree",
+    "category": "New: Trees",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "gen:tree-bare-oak-small:nw",
+    "name": "Bare oak small (NW)",
+    "kind": "tree",
+    "category": "New: Trees",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "gen:tree-small-red-maple:ne",
+    "name": "Small red maple (NE)",
+    "kind": "tree",
+    "category": "New: Trees",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "gen:tree-small-red-maple:se",
+    "name": "Small red maple (SE)",
+    "kind": "tree",
+    "category": "New: Trees",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "gen:tree-small-red-maple:sw",
+    "name": "Small red maple (SW)",
+    "kind": "tree",
+    "category": "New: Trees",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "gen:tree-small-red-maple:nw",
+    "name": "Small red maple (NW)",
+    "kind": "tree",
+    "category": "New: Trees",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "gen:tree-small-red-maple-2:ne",
+    "name": "Small red maple 2 (NE)",
+    "kind": "tree",
+    "category": "New: Trees",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "gen:tree-small-red-maple-2:se",
+    "name": "Small red maple 2 (SE)",
+    "kind": "tree",
+    "category": "New: Trees",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "gen:tree-small-red-maple-2:sw",
+    "name": "Small red maple 2 (SW)",
+    "kind": "tree",
+    "category": "New: Trees",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "gen:tree-small-red-maple-2:nw",
+    "name": "Small red maple 2 (NW)",
+    "kind": "tree",
+    "category": "New: Trees",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "gen:tree-small-red-maple-3:ne",
+    "name": "Small red maple 3 (NE)",
+    "kind": "tree",
+    "category": "New: Trees",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "gen:tree-small-red-maple-3:se",
+    "name": "Small red maple 3 (SE)",
+    "kind": "tree",
+    "category": "New: Trees",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "gen:tree-small-red-maple-3:sw",
+    "name": "Small red maple 3 (SW)",
+    "kind": "tree",
+    "category": "New: Trees",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "gen:tree-small-red-maple-3:nw",
+    "name": "Small red maple 3 (NW)",
+    "kind": "tree",
+    "category": "New: Trees",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "gen:tree-small-red-maple-4:ne",
+    "name": "Small red maple 4 (NE)",
+    "kind": "tree",
+    "category": "New: Trees",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "gen:tree-small-red-maple-4:se",
+    "name": "Small red maple 4 (SE)",
+    "kind": "tree",
+    "category": "New: Trees",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "gen:tree-small-red-maple-4:sw",
+    "name": "Small red maple 4 (SW)",
+    "kind": "tree",
+    "category": "New: Trees",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "gen:tree-small-red-maple-4:nw",
+    "name": "Small red maple 4 (NW)",
+    "kind": "tree",
+    "category": "New: Trees",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "gen:tree-orange-tree:ne",
+    "name": "Orange tree (NE)",
+    "kind": "tree",
+    "category": "New: Trees",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "gen:tree-orange-tree:se",
+    "name": "Orange tree (SE)",
+    "kind": "tree",
+    "category": "New: Trees",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "gen:tree-orange-tree:sw",
+    "name": "Orange tree (SW)",
+    "kind": "tree",
+    "category": "New: Trees",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "gen:tree-orange-tree:nw",
+    "name": "Orange tree (NW)",
+    "kind": "tree",
+    "category": "New: Trees",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "gen:tree-orange-tree-wide:ne",
+    "name": "Orange tree wide (NE)",
+    "kind": "tree",
+    "category": "New: Trees",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "gen:tree-orange-tree-wide:se",
+    "name": "Orange tree wide (SE)",
+    "kind": "tree",
+    "category": "New: Trees",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "gen:tree-orange-tree-wide:sw",
+    "name": "Orange tree wide (SW)",
+    "kind": "tree",
+    "category": "New: Trees",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "gen:tree-orange-tree-wide:nw",
+    "name": "Orange tree wide (NW)",
+    "kind": "tree",
+    "category": "New: Trees",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "gen:tree-orange-tree-sparse:ne",
+    "name": "Orange tree sparse (NE)",
+    "kind": "tree",
+    "category": "New: Trees",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "gen:tree-orange-tree-sparse:se",
+    "name": "Orange tree sparse (SE)",
+    "kind": "tree",
+    "category": "New: Trees",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "gen:tree-orange-tree-sparse:sw",
+    "name": "Orange tree sparse (SW)",
+    "kind": "tree",
+    "category": "New: Trees",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "gen:tree-orange-tree-sparse:nw",
+    "name": "Orange tree sparse (NW)",
+    "kind": "tree",
+    "category": "New: Trees",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "gen:tree-orange-tree-full:ne",
+    "name": "Orange tree full (NE)",
+    "kind": "tree",
+    "category": "New: Trees",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "gen:tree-orange-tree-full:se",
+    "name": "Orange tree full (SE)",
+    "kind": "tree",
+    "category": "New: Trees",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "gen:tree-orange-tree-full:sw",
+    "name": "Orange tree full (SW)",
+    "kind": "tree",
+    "category": "New: Trees",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "gen:tree-orange-tree-full:nw",
+    "name": "Orange tree full (NW)",
+    "kind": "tree",
+    "category": "New: Trees",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "gen:tree-orange-tree-round:ne",
+    "name": "Orange tree round (NE)",
+    "kind": "tree",
+    "category": "New: Trees",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "gen:tree-orange-tree-round:se",
+    "name": "Orange tree round (SE)",
+    "kind": "tree",
+    "category": "New: Trees",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "gen:tree-orange-tree-round:sw",
+    "name": "Orange tree round (SW)",
+    "kind": "tree",
+    "category": "New: Trees",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "gen:tree-orange-tree-round:nw",
+    "name": "Orange tree round (NW)",
+    "kind": "tree",
+    "category": "New: Trees",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "gen:tree-orange-tree-big:ne",
+    "name": "Orange tree big (NE)",
+    "kind": "tree",
+    "category": "New: Trees",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "gen:tree-orange-tree-big:se",
+    "name": "Orange tree big (SE)",
+    "kind": "tree",
+    "category": "New: Trees",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "gen:tree-orange-tree-big:sw",
+    "name": "Orange tree big (SW)",
+    "kind": "tree",
+    "category": "New: Trees",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "gen:tree-orange-tree-big:nw",
+    "name": "Orange tree big (NW)",
+    "kind": "tree",
+    "category": "New: Trees",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "gen:tree-orange-tree-tall:ne",
+    "name": "Orange tree tall (NE)",
+    "kind": "tree",
+    "category": "New: Trees",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "gen:tree-orange-tree-tall:se",
+    "name": "Orange tree tall (SE)",
+    "kind": "tree",
+    "category": "New: Trees",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "gen:tree-orange-tree-tall:sw",
+    "name": "Orange tree tall (SW)",
+    "kind": "tree",
+    "category": "New: Trees",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "gen:tree-orange-tree-tall:nw",
+    "name": "Orange tree tall (NW)",
+    "kind": "tree",
+    "category": "New: Trees",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "gen:tree-orange-tree-small:ne",
+    "name": "Orange tree small (NE)",
+    "kind": "tree",
+    "category": "New: Trees",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "gen:tree-orange-tree-small:se",
+    "name": "Orange tree small (SE)",
+    "kind": "tree",
+    "category": "New: Trees",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "gen:tree-orange-tree-small:sw",
+    "name": "Orange tree small (SW)",
+    "kind": "tree",
+    "category": "New: Trees",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "gen:tree-orange-tree-small:nw",
+    "name": "Orange tree small (NW)",
+    "kind": "tree",
+    "category": "New: Trees",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "gen:tree-birch:ne",
+    "name": "Birch (NE)",
+    "kind": "tree",
+    "category": "New: Trees",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "gen:tree-birch:se",
+    "name": "Birch (SE)",
+    "kind": "tree",
+    "category": "New: Trees",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "gen:tree-birch:sw",
+    "name": "Birch (SW)",
+    "kind": "tree",
+    "category": "New: Trees",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "gen:tree-birch:nw",
+    "name": "Birch (NW)",
+    "kind": "tree",
+    "category": "New: Trees",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "gen:tree-birch-wide:ne",
+    "name": "Birch wide (NE)",
+    "kind": "tree",
+    "category": "New: Trees",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "gen:tree-birch-wide:se",
+    "name": "Birch wide (SE)",
+    "kind": "tree",
+    "category": "New: Trees",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "gen:tree-birch-wide:sw",
+    "name": "Birch wide (SW)",
+    "kind": "tree",
+    "category": "New: Trees",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "gen:tree-birch-wide:nw",
+    "name": "Birch wide (NW)",
+    "kind": "tree",
+    "category": "New: Trees",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "gen:tree-birch-bare:ne",
+    "name": "Birch bare (NE)",
+    "kind": "tree",
+    "category": "New: Trees",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "gen:tree-birch-bare:se",
+    "name": "Birch bare (SE)",
+    "kind": "tree",
+    "category": "New: Trees",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "gen:tree-birch-bare:sw",
+    "name": "Birch bare (SW)",
+    "kind": "tree",
+    "category": "New: Trees",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "gen:tree-birch-bare:nw",
+    "name": "Birch bare (NW)",
+    "kind": "tree",
+    "category": "New: Trees",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "gen:tree-birch-full:ne",
+    "name": "Birch full (NE)",
+    "kind": "tree",
+    "category": "New: Trees",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "gen:tree-birch-full:se",
+    "name": "Birch full (SE)",
+    "kind": "tree",
+    "category": "New: Trees",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "gen:tree-birch-full:sw",
+    "name": "Birch full (SW)",
+    "kind": "tree",
+    "category": "New: Trees",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "gen:tree-birch-full:nw",
+    "name": "Birch full (NW)",
+    "kind": "tree",
+    "category": "New: Trees",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "gen:tree-small-birch:ne",
+    "name": "Small birch (NE)",
+    "kind": "tree",
+    "category": "New: Trees",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "gen:tree-small-birch:se",
+    "name": "Small birch (SE)",
+    "kind": "tree",
+    "category": "New: Trees",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "gen:tree-small-birch:sw",
+    "name": "Small birch (SW)",
+    "kind": "tree",
+    "category": "New: Trees",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "gen:tree-small-birch:nw",
+    "name": "Small birch (NW)",
+    "kind": "tree",
+    "category": "New: Trees",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "gen:tree-small-birch-2:ne",
+    "name": "Small birch 2 (NE)",
+    "kind": "tree",
+    "category": "New: Trees",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "gen:tree-small-birch-2:se",
+    "name": "Small birch 2 (SE)",
+    "kind": "tree",
+    "category": "New: Trees",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "gen:tree-small-birch-2:sw",
+    "name": "Small birch 2 (SW)",
+    "kind": "tree",
+    "category": "New: Trees",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "gen:tree-small-birch-2:nw",
+    "name": "Small birch 2 (NW)",
+    "kind": "tree",
+    "category": "New: Trees",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "gen:tree-small-birch-3:ne",
+    "name": "Small birch 3 (NE)",
+    "kind": "tree",
+    "category": "New: Trees",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "gen:tree-small-birch-3:se",
+    "name": "Small birch 3 (SE)",
+    "kind": "tree",
+    "category": "New: Trees",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "gen:tree-small-birch-3:sw",
+    "name": "Small birch 3 (SW)",
+    "kind": "tree",
+    "category": "New: Trees",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "gen:tree-small-birch-3:nw",
+    "name": "Small birch 3 (NW)",
+    "kind": "tree",
+    "category": "New: Trees",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "gen:tree-small-birch-4:ne",
+    "name": "Small birch 4 (NE)",
+    "kind": "tree",
+    "category": "New: Trees",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "gen:tree-small-birch-4:se",
+    "name": "Small birch 4 (SE)",
+    "kind": "tree",
+    "category": "New: Trees",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "gen:tree-small-birch-4:sw",
+    "name": "Small birch 4 (SW)",
+    "kind": "tree",
+    "category": "New: Trees",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "gen:tree-small-birch-4:nw",
+    "name": "Small birch 4 (NW)",
+    "kind": "tree",
+    "category": "New: Trees",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "newprop:desert-acacia-on-boulders",
+    "name": "Acacia on boulders",
+    "kind": "palm",
+    "category": "Desert: trees",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "newprop:desert-yellow-desert-broom",
+    "name": "Yellow desert broom",
+    "kind": "shrub",
+    "category": "Desert: shrubs",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "newprop:desert-cattail-pair",
+    "name": "Cattail pair",
+    "kind": "shrub",
+    "category": "Desert: reeds",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "newprop:desert-date-palm-pair",
+    "name": "Date palm pair",
+    "kind": "palm",
+    "category": "Desert: palms",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "newprop:desert-date-palm-with-grass",
+    "name": "Date palm with grass",
+    "kind": "palm",
+    "category": "Desert: palms",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "newprop:desert-twin-acacia-with-boulders",
+    "name": "Twin acacia with boulders",
+    "kind": "palm",
+    "category": "Desert: trees",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "newprop:desert-acacia-with-boulder",
+    "name": "Acacia with boulder",
+    "kind": "palm",
+    "category": "Desert: trees",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "newprop:desert-slender-date-palm",
+    "name": "Slender date palm",
+    "kind": "palm",
+    "category": "Desert: palms",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "newprop:desert-dry-grass-on-rocks",
+    "name": "Dry grass on rocks",
+    "kind": "shrub",
+    "category": "Desert: grasses",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "newprop:desert-small-cactus-on-a-rock",
+    "name": "Small cactus on a rock",
+    "kind": "shrub",
+    "category": "Desert: cacti",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "newprop:desert-yellow-flowering-shrub",
+    "name": "Yellow flowering shrub",
+    "kind": "shrub",
+    "category": "Desert: shrubs",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "newprop:desert-grass-clump-on-stones",
+    "name": "Grass clump on stones",
+    "kind": "shrub",
+    "category": "Desert: grasses",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "newprop:desert-small-green-shrub",
+    "name": "Small green shrub",
+    "kind": "shrub",
+    "category": "Desert: shrubs",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "newprop:desert-yellow-broom-bush",
+    "name": "Yellow broom bush",
+    "kind": "shrub",
+    "category": "Desert: shrubs",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "newprop:desert-low-dry-grass",
+    "name": "Low dry grass",
+    "kind": "shrub",
+    "category": "Desert: grasses",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "newprop:desert-cattail-clump",
+    "name": "Cattail clump",
+    "kind": "shrub",
+    "category": "Desert: reeds",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "newprop:desert-yellow-shrub-by-a-boulder",
+    "name": "Yellow shrub by a boulder",
+    "kind": "shrub",
+    "category": "Desert: shrubs",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "newprop:desert-pampas-grass",
+    "name": "Pampas grass",
+    "kind": "shrub",
+    "category": "Desert: grasses",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "newprop:desert-tall-cattails",
+    "name": "Tall cattails",
+    "kind": "shrub",
+    "category": "Desert: reeds",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "newprop:desert-sage-bush",
+    "name": "Sage bush",
+    "kind": "shrub",
+    "category": "Desert: shrubs",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "newprop:desert-slim-cattails",
+    "name": "Slim cattails",
+    "kind": "shrub",
+    "category": "Desert: reeds",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "newprop:desert-cattails-on-stones",
+    "name": "Cattails on stones",
+    "kind": "shrub",
+    "category": "Desert: reeds",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "newprop:desert-dry-grass-tuft",
+    "name": "Dry grass tuft",
+    "kind": "shrub",
+    "category": "Desert: grasses",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "newprop:desert-pink-and-yellow-shrubs",
+    "name": "Pink and yellow shrubs",
+    "kind": "shrub",
+    "category": "Desert: shrubs",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "newprop:desert-yucca-on-stones",
+    "name": "Yucca on stones",
+    "kind": "shrub",
+    "category": "Desert: shrubs",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "newprop:desert-yellow-flowering-bush",
+    "name": "Yellow flowering bush",
+    "kind": "shrub",
+    "category": "Desert: shrubs",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "newprop:desert-green-grass-tuft",
+    "name": "Green grass tuft",
+    "kind": "shrub",
+    "category": "Desert: grasses",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "newprop:desert-mixed-flowering-shrubs",
+    "name": "Mixed flowering shrubs",
+    "kind": "shrub",
+    "category": "Desert: shrubs",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "newprop:desert-sage-and-grass",
+    "name": "Sage and grass",
+    "kind": "shrub",
+    "category": "Desert: shrubs",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "newprop:desert-cattails-by-a-rock",
+    "name": "Cattails by a rock",
+    "kind": "shrub",
+    "category": "Desert: reeds",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "newprop:desert-grass-on-a-sand-patch",
+    "name": "Grass on a sand patch",
+    "kind": "shrub",
+    "category": "Desert: grasses",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "newprop:desert-dry-grass-mound",
+    "name": "Dry grass mound",
+    "kind": "shrub",
+    "category": "Desert: grasses",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "newprop:desert-grass-tuft-on-stones",
+    "name": "Grass tuft on stones",
+    "kind": "shrub",
+    "category": "Desert: grasses",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "newprop:desert-small-reed-pool",
+    "name": "Small reed pool",
+    "kind": "pond",
+    "category": "Desert: oasis water",
+    "reason": "water/terrain or character, outside buildings/props scope"
+  },
+  {
+    "id": "newprop:desert-rock-pool-with-grass",
+    "name": "Rock pool with grass",
+    "kind": "pond",
+    "category": "Desert: oasis water",
+    "reason": "water/terrain or character, outside buildings/props scope"
+  },
+  {
+    "id": "newprop:desert-reed-pool",
+    "name": "Reed pool",
+    "kind": "pond",
+    "category": "Desert: oasis water",
+    "reason": "water/terrain or character, outside buildings/props scope"
+  },
+  {
+    "id": "newprop:desert-rocky-oasis-pool",
+    "name": "Rocky oasis pool",
+    "kind": "pond",
+    "category": "Desert: oasis water",
+    "reason": "water/terrain or character, outside buildings/props scope"
+  },
+  {
+    "id": "newprop:desert-grassy-pool",
+    "name": "Grassy pool",
+    "kind": "pond",
+    "category": "Desert: oasis water",
+    "reason": "water/terrain or character, outside buildings/props scope"
+  },
+  {
+    "id": "newprop:desert-water-lilies",
+    "name": "Water lilies",
+    "kind": "decal",
+    "category": "Desert: oasis water",
+    "reason": "decal excluded by owner"
+  },
+  {
+    "id": "newprop:desert-lily-pad",
+    "name": "Lily pad",
+    "kind": "decal",
+    "category": "Desert: oasis water",
+    "reason": "decal excluded by owner"
+  },
+  {
+    "id": "newprop:desert-blue-sage-shrub",
+    "name": "Blue sage shrub",
+    "kind": "shrub",
+    "category": "Desert: shrubs",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "newprop:desert-lily-pool",
+    "name": "Lily pool",
+    "kind": "pond",
+    "category": "Desert: oasis water",
+    "reason": "water/terrain or character, outside buildings/props scope"
+  },
+  {
+    "id": "newprop:desert-small-reed-pool-long",
+    "name": "Small reed pool, long",
+    "kind": "pond",
+    "category": "Desert: oasis water",
+    "reason": "water/terrain or character, outside buildings/props scope"
+  },
+  {
+    "id": "newprop:desert-oasis-pool",
+    "name": "Oasis pool",
+    "kind": "pond",
+    "category": "Desert: oasis water",
+    "reason": "water/terrain or character, outside buildings/props scope"
+  },
+  {
+    "id": "newprop:desert-shallow-oasis-pool",
+    "name": "Shallow oasis pool",
+    "kind": "pond",
+    "category": "Desert: oasis water",
+    "reason": "water/terrain or character, outside buildings/props scope"
+  },
+  {
+    "id": "newprop:desert-pool-edge-with-grass",
+    "name": "Pool edge with grass",
+    "kind": "pond",
+    "category": "Desert: oasis water",
+    "reason": "water/terrain or character, outside buildings/props scope"
+  },
+  {
+    "id": "newprop:desert-stony-pool",
+    "name": "Stony pool",
+    "kind": "pond",
+    "category": "Desert: oasis water",
+    "reason": "water/terrain or character, outside buildings/props scope"
+  },
+  {
+    "id": "newprop:desert-cattails-and-grass",
+    "name": "Cattails and grass",
+    "kind": "shrub",
+    "category": "Desert: reeds",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "newprop:desert-twin-date-palm",
+    "name": "Twin date palm",
+    "kind": "palm",
+    "category": "Desert: palms",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "newprop:desert-yellow-broom",
+    "name": "Yellow broom",
+    "kind": "shrub",
+    "category": "Desert: shrubs",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "newprop:desert-cattails",
+    "name": "Cattails",
+    "kind": "shrub",
+    "category": "Desert: reeds",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "newprop:desert-two-grass-tufts",
+    "name": "Two grass tufts",
+    "kind": "shrub",
+    "category": "Desert: grasses",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "newprop:desert-date-palm-on-boulders",
+    "name": "Date palm on boulders",
+    "kind": "palm",
+    "category": "Desert: palms",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "newprop:desert-young-date-palm",
+    "name": "Young date palm",
+    "kind": "palm",
+    "category": "Desert: palms",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "newprop:desert-grass-tufts",
+    "name": "Grass tufts",
+    "kind": "shrub",
+    "category": "Desert: grasses",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "newprop:desert-cattail-tuft",
+    "name": "Cattail tuft",
+    "kind": "shrub",
+    "category": "Desert: reeds",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "newprop:desert-yellow-broom-bush-round",
+    "name": "Yellow broom bush, round",
+    "kind": "shrub",
+    "category": "Desert: shrubs",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "newprop:desert-rock-waterfall-pool",
+    "name": "Rock waterfall pool",
+    "kind": "pond",
+    "category": "Desert: oasis water",
+    "reason": "water/terrain or character, outside buildings/props scope"
+  },
+  {
+    "id": "newprop:desert-cattail-sheaf",
+    "name": "Cattail sheaf",
+    "kind": "shrub",
+    "category": "Desert: reeds",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "newprop:desert-white-water-lily",
+    "name": "White water lily",
+    "kind": "decal",
+    "category": "Desert: oasis water",
+    "reason": "decal excluded by owner"
+  },
+  {
+    "id": "newprop:desert-red-flowered-shrub",
+    "name": "Red-flowered shrub",
+    "kind": "shrub",
+    "category": "Desert: shrubs",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "newprop:desert-tall-grass-tuft",
+    "name": "Tall grass tuft",
+    "kind": "shrub",
+    "category": "Desert: grasses",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "newprop:desert-yellow-bush",
+    "name": "Yellow bush",
+    "kind": "shrub",
+    "category": "Desert: shrubs",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "newprop:desert-soft-grass-tuft",
+    "name": "Soft grass tuft",
+    "kind": "shrub",
+    "category": "Desert: grasses",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "newprop:desert-cattails-with-orange-heads",
+    "name": "Cattails with orange heads",
+    "kind": "shrub",
+    "category": "Desert: reeds",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "newprop:desert-lily-pad-cluster",
+    "name": "Lily pad cluster",
+    "kind": "decal",
+    "category": "Desert: oasis water",
+    "reason": "decal excluded by owner"
+  },
+  {
+    "id": "newprop:desert-leafy-yellow-shrub",
+    "name": "Leafy yellow shrub",
+    "kind": "shrub",
+    "category": "Desert: shrubs",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "newprop:desert-yellow-shrub-on-sand",
+    "name": "Yellow shrub on sand",
+    "kind": "shrub",
+    "category": "Desert: shrubs",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "newprop:desert-slim-grass-tuft",
+    "name": "Slim grass tuft",
+    "kind": "shrub",
+    "category": "Desert: grasses",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "newprop:desert-cattails-with-stones",
+    "name": "Cattails with stones",
+    "kind": "shrub",
+    "category": "Desert: reeds",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "newprop:desert-grass-by-stones",
+    "name": "Grass by stones",
+    "kind": "shrub",
+    "category": "Desert: grasses",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "newprop:desert-grass-bank",
+    "name": "Grass bank",
+    "kind": "shrub",
+    "category": "Desert: grasses",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "newprop:desert-dry-grass-ball",
+    "name": "Dry grass ball",
+    "kind": "shrub",
+    "category": "Desert: grasses",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "newprop:desert-dry-grass-tuft-round",
+    "name": "Dry grass tuft, round",
+    "kind": "shrub",
+    "category": "Desert: grasses",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "newprop:desert-cattail-clump-short",
+    "name": "Cattail clump, short",
+    "kind": "shrub",
+    "category": "Desert: reeds",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "newprop:desert-reedy-oasis-creek",
+    "name": "Reedy oasis creek",
+    "kind": "pond",
+    "category": "Desert: oasis water",
+    "reason": "water/terrain or character, outside buildings/props scope"
+  },
+  {
+    "id": "newprop:desert-red-tipped-shrub-on-stones",
+    "name": "Red-tipped shrub on stones",
+    "kind": "shrub",
+    "category": "Desert: shrubs",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "newprop:desert-long-oasis-pool",
+    "name": "Long oasis pool",
+    "kind": "pond",
+    "category": "Desert: oasis water",
+    "reason": "water/terrain or character, outside buildings/props scope"
+  },
+  {
+    "id": "newprop:desert-tall-sedge",
+    "name": "Tall sedge",
+    "kind": "shrub",
+    "category": "Desert: reeds",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "newprop:desert-dry-grass-bush",
+    "name": "Dry grass bush",
+    "kind": "shrub",
+    "category": "Desert: grasses",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "newprop:desert-tall-green-grass",
+    "name": "Tall green grass",
+    "kind": "shrub",
+    "category": "Desert: grasses",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "newprop:desert-grass-tuft",
+    "name": "Grass tuft",
+    "kind": "shrub",
+    "category": "Desert: grasses",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "newprop:desert-pool-with-a-boulder",
+    "name": "Pool with a boulder",
+    "kind": "pond",
+    "category": "Desert: oasis water",
+    "reason": "water/terrain or character, outside buildings/props scope"
+  },
+  {
+    "id": "newprop:desert-saguaro",
+    "name": "Saguaro",
+    "kind": "shrub",
+    "category": "Desert: cacti",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "newprop:desert-barrel-cactus-cluster",
+    "name": "Barrel cactus cluster",
+    "kind": "shrub",
+    "category": "Desert: cacti",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "newprop:desert-ocotillo",
+    "name": "Ocotillo",
+    "kind": "shrub",
+    "category": "Desert: cacti",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "newprop:desert-joshua-tree",
+    "name": "Joshua tree",
+    "kind": "palm",
+    "category": "Desert: trees",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "newprop:desert-agave-clump",
+    "name": "Agave clump",
+    "kind": "shrub",
+    "category": "Desert: shrubs",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "newprop:desert-saguaro-with-barrel-cactus",
+    "name": "Saguaro with barrel cactus",
+    "kind": "shrub",
+    "category": "Desert: cacti",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "newprop:desert-brittlebush",
+    "name": "Brittlebush",
+    "kind": "shrub",
+    "category": "Desert: shrubs",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "newprop:desert-flowering-prickly-pear",
+    "name": "Flowering prickly pear",
+    "kind": "shrub",
+    "category": "Desert: cacti",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "newprop:desert-brittlebush-on-stones",
+    "name": "Brittlebush on stones",
+    "kind": "shrub",
+    "category": "Desert: shrubs",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "newprop:desert-blue-agave",
+    "name": "Blue agave",
+    "kind": "shrub",
+    "category": "Desert: shrubs",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "newprop:desert-young-saguaro",
+    "name": "Young saguaro",
+    "kind": "shrub",
+    "category": "Desert: cacti",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "newprop:desert-flowering-yucca",
+    "name": "Flowering yucca",
+    "kind": "shrub",
+    "category": "Desert: shrubs",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "newprop:desert-golden-desert-broom",
+    "name": "Golden desert broom",
+    "kind": "shrub",
+    "category": "Desert: shrubs",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "newprop:desert-cholla",
+    "name": "Cholla",
+    "kind": "shrub",
+    "category": "Desert: cacti",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "newprop:desert-red-flowering-shrub",
+    "name": "Red flowering shrub",
+    "kind": "shrub",
+    "category": "Desert: shrubs",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "newprop:desert-silver-sage",
+    "name": "Silver sage",
+    "kind": "shrub",
+    "category": "Desert: shrubs",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "newprop:desert-small-flowering-yucca",
+    "name": "Small flowering yucca",
+    "kind": "shrub",
+    "category": "Desert: shrubs",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "newprop:desert-aloe-with-a-boulder",
+    "name": "Aloe with a boulder",
+    "kind": "shrub",
+    "category": "Desert: shrubs",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "newprop:desert-flowering-barrel-cacti",
+    "name": "Flowering barrel cacti",
+    "kind": "shrub",
+    "category": "Desert: cacti",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "newprop:desert-yellow-flowered-prickly-pear",
+    "name": "Yellow-flowered prickly pear",
+    "kind": "shrub",
+    "category": "Desert: cacti",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "newprop:desert-grass-and-purple-sage",
+    "name": "Grass and purple sage",
+    "kind": "shrub",
+    "category": "Desert: shrubs",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "newprop:desert-dry-tumble-bush",
+    "name": "Dry tumble bush",
+    "kind": "shrub",
+    "category": "Desert: shrubs",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "newprop:desert-purple-flowering-succulents",
+    "name": "Purple flowering succulents",
+    "kind": "shrub",
+    "category": "Desert: shrubs",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "newprop:desert-golden-barrel-cactus",
+    "name": "Golden barrel cactus",
+    "kind": "shrub",
+    "category": "Desert: cacti",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "newprop:desert-dry-desert-grasses",
+    "name": "Dry desert grasses",
+    "kind": "shrub",
+    "category": "Desert: shrubs",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "newprop:desert-dry-brush-with-agave",
+    "name": "Dry brush with agave",
+    "kind": "shrub",
+    "category": "Desert: shrubs",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "newprop:desert-teddy-bear-cholla",
+    "name": "Teddy-bear cholla",
+    "kind": "shrub",
+    "category": "Desert: cacti",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "newprop:desert-small-cholla-in-bloom",
+    "name": "Small cholla in bloom",
+    "kind": "shrub",
+    "category": "Desert: cacti",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "newprop:desert-saguaro-with-red-brush",
+    "name": "Saguaro with red brush",
+    "kind": "shrub",
+    "category": "Desert: cacti",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "newprop:desert-joshua-tree-pair",
+    "name": "Joshua tree pair",
+    "kind": "palm",
+    "category": "Desert: trees",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "newprop:desert-spiky-green-shrub",
+    "name": "Spiky green shrub",
+    "kind": "shrub",
+    "category": "Desert: shrubs",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "newprop:desert-ocotillo-tall",
+    "name": "Ocotillo, tall",
+    "kind": "shrub",
+    "category": "Desert: cacti",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "newprop:desert-agave",
+    "name": "Agave",
+    "kind": "shrub",
+    "category": "Desert: shrubs",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "newprop:desert-brittlebush-with-agave",
+    "name": "Brittlebush with agave",
+    "kind": "shrub",
+    "category": "Desert: shrubs",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "newprop:desert-tall-saguaro",
+    "name": "Tall saguaro",
+    "kind": "shrub",
+    "category": "Desert: cacti",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "newprop:desert-barrel-cactus-on-stones",
+    "name": "Barrel cactus on stones",
+    "kind": "shrub",
+    "category": "Desert: cacti",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "newprop:desert-wide-agave",
+    "name": "Wide agave",
+    "kind": "shrub",
+    "category": "Desert: shrubs",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "newprop:desert-tall-barrel-cactus",
+    "name": "Tall barrel cactus",
+    "kind": "shrub",
+    "category": "Desert: cacti",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "newprop:desert-flowering-hedgehog-cactus",
+    "name": "Flowering hedgehog cactus",
+    "kind": "shrub",
+    "category": "Desert: cacti",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "newprop:desert-cholla-thicket",
+    "name": "Cholla thicket",
+    "kind": "shrub",
+    "category": "Desert: cacti",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "newprop:desert-small-agave",
+    "name": "Small agave",
+    "kind": "shrub",
+    "category": "Desert: shrubs",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "newprop:desert-agave-on-stones",
+    "name": "Agave on stones",
+    "kind": "shrub",
+    "category": "Desert: shrubs",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "newprop:desert-golden-broom",
+    "name": "Golden broom",
+    "kind": "shrub",
+    "category": "Desert: shrubs",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "newprop:desert-small-saguaro-and-barrel",
+    "name": "Small saguaro and barrel",
+    "kind": "shrub",
+    "category": "Desert: cacti",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "newprop:desert-yellow-and-grey-brush",
+    "name": "Yellow and grey brush",
+    "kind": "shrub",
+    "category": "Desert: shrubs",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "newprop:desert-yellow-brittlebush",
+    "name": "Yellow brittlebush",
+    "kind": "shrub",
+    "category": "Desert: shrubs",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "newprop:desert-dry-grass-ball-small",
+    "name": "Dry grass ball, small",
+    "kind": "shrub",
+    "category": "Desert: grasses",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "newprop:desert-budding-cholla",
+    "name": "Budding cholla",
+    "kind": "shrub",
+    "category": "Desert: cacti",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "newprop:desert-saguaro-garden",
+    "name": "Saguaro garden",
+    "kind": "shrub",
+    "category": "Desert: cacti",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "newprop:desert-red-torch-flowers",
+    "name": "Red torch flowers",
+    "kind": "shrub",
+    "category": "Desert: shrubs",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "newprop:desert-grey-brush-on-stones",
+    "name": "Grey brush on stones",
+    "kind": "shrub",
+    "category": "Desert: shrubs",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "newprop:desert-flowering-hedgehog-cluster",
+    "name": "Flowering hedgehog cluster",
+    "kind": "shrub",
+    "category": "Desert: cacti",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "newprop:desert-dry-grass-bank",
+    "name": "Dry grass bank",
+    "kind": "shrub",
+    "category": "Desert: grasses",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "newprop:desert-barrel-cactus-with-red-blooms",
+    "name": "Barrel cactus with red blooms",
+    "kind": "shrub",
+    "category": "Desert: cacti",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "newprop:desert-dry-grass-bush-tall",
+    "name": "Dry grass bush, tall",
+    "kind": "shrub",
+    "category": "Desert: grasses",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "newprop:desert-big-barrel-cactus",
+    "name": "Big barrel cactus",
+    "kind": "shrub",
+    "category": "Desert: cacti",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "newprop:desert-red-barrel-cactus",
+    "name": "Red barrel cactus",
+    "kind": "shrub",
+    "category": "Desert: cacti",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "newprop:desert-tumbleweed",
+    "name": "Tumbleweed",
+    "kind": "shrub",
+    "category": "Desert: grasses",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "newprop:desert-spiky-agave",
+    "name": "Spiky agave",
+    "kind": "shrub",
+    "category": "Desert: shrubs",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "newprop:desert-dry-grass-ball-on-stones",
+    "name": "Dry grass ball on stones",
+    "kind": "shrub",
+    "category": "Desert: grasses",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "newprop:desert-barrel-cactus-pair",
+    "name": "Barrel cactus pair",
+    "kind": "shrub",
+    "category": "Desert: cacti",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "newprop:desert-creosote-bush",
+    "name": "Creosote bush",
+    "kind": "shrub",
+    "category": "Desert: shrubs",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "newprop:desert-creosote-bush-small",
+    "name": "Creosote bush, small",
+    "kind": "shrub",
+    "category": "Desert: shrubs",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "newprop:desert-grey-sage-bush",
+    "name": "Grey sage bush",
+    "kind": "shrub",
+    "category": "Desert: shrubs",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "newprop:desert-golden-grass-mound",
+    "name": "Golden grass mound",
+    "kind": "shrub",
+    "category": "Desert: grasses",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "newprop:desert-dark-agave",
+    "name": "Dark agave",
+    "kind": "shrub",
+    "category": "Desert: shrubs",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "newprop:desert-small-barrel-cactus",
+    "name": "Small barrel cactus",
+    "kind": "shrub",
+    "category": "Desert: cacti",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "newprop:desert-spiky-shrub-on-stones",
+    "name": "Spiky shrub on stones",
+    "kind": "shrub",
+    "category": "Desert: shrubs",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "newprop:desert-yellow-shrub-on-stones",
+    "name": "Yellow shrub on stones",
+    "kind": "shrub",
+    "category": "Desert: shrubs",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "newprop:desert-dry-brush",
+    "name": "Dry brush",
+    "kind": "shrub",
+    "category": "Desert: shrubs",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "newprop:desert-spiky-low-shrub",
+    "name": "Spiky low shrub",
+    "kind": "shrub",
+    "category": "Desert: shrubs",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "newprop:desert-grey-green-brush",
+    "name": "Grey-green brush",
+    "kind": "shrub",
+    "category": "Desert: shrubs",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "newprop:desert-pink-flowering-brush",
+    "name": "Pink flowering brush",
+    "kind": "shrub",
+    "category": "Desert: shrubs",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "newprop:desert-yellow-broom-on-stones",
+    "name": "Yellow broom on stones",
+    "kind": "shrub",
+    "category": "Desert: shrubs",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "newprop:desert-golden-broom-bush",
+    "name": "Golden broom bush",
+    "kind": "shrub",
+    "category": "Desert: shrubs",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "newprop:desert-spiky-green-tuft",
+    "name": "Spiky green tuft",
+    "kind": "shrub",
+    "category": "Desert: shrubs",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "gen:tree-maple-scarlet:ne",
+    "name": "Scarlet maple (NE)",
+    "kind": "tree",
+    "category": "Capital vegetation",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "gen:tree-maple-scarlet:se",
+    "name": "Scarlet maple (SE)",
+    "kind": "tree",
+    "category": "Capital vegetation",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "gen:tree-maple-scarlet:sw",
+    "name": "Scarlet maple (SW)",
+    "kind": "tree",
+    "category": "Capital vegetation",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "gen:tree-maple-scarlet:nw",
+    "name": "Scarlet maple (NW)",
+    "kind": "tree",
+    "category": "Capital vegetation",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "gen:tree-oak-amber:ne",
+    "name": "Amber oak (NE)",
+    "kind": "tree",
+    "category": "Capital vegetation",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "gen:tree-oak-amber:se",
+    "name": "Amber oak (SE)",
+    "kind": "tree",
+    "category": "Capital vegetation",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "gen:tree-oak-amber:sw",
+    "name": "Amber oak (SW)",
+    "kind": "tree",
+    "category": "Capital vegetation",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "gen:tree-oak-amber:nw",
+    "name": "Amber oak (NW)",
+    "kind": "tree",
+    "category": "Capital vegetation",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "gen:tree-spruce-young:ne",
+    "name": "Young spruce (NE)",
+    "kind": "tree",
+    "category": "Capital vegetation",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "gen:tree-spruce-young:se",
+    "name": "Young spruce (SE)",
+    "kind": "tree",
+    "category": "Capital vegetation",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "gen:tree-spruce-young:sw",
+    "name": "Young spruce (SW)",
+    "kind": "tree",
+    "category": "Capital vegetation",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "gen:tree-spruce-young:nw",
+    "name": "Young spruce (NW)",
+    "kind": "tree",
+    "category": "Capital vegetation",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "gen:tree-aspen-young:ne",
+    "name": "Young aspen (NE)",
+    "kind": "tree",
+    "category": "Capital vegetation",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "gen:tree-aspen-young:se",
+    "name": "Young aspen (SE)",
+    "kind": "tree",
+    "category": "Capital vegetation",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "gen:tree-aspen-young:sw",
+    "name": "Young aspen (SW)",
+    "kind": "tree",
+    "category": "Capital vegetation",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "gen:tree-aspen-young:nw",
+    "name": "Young aspen (NW)",
+    "kind": "tree",
+    "category": "Capital vegetation",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "gen:tree-fir-tall:ne",
+    "name": "Tall fir (NE)",
+    "kind": "tree",
+    "category": "Capital vegetation",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "gen:tree-fir-tall:se",
+    "name": "Tall fir (SE)",
+    "kind": "tree",
+    "category": "Capital vegetation",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "gen:tree-fir-tall:sw",
+    "name": "Tall fir (SW)",
+    "kind": "tree",
+    "category": "Capital vegetation",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "gen:tree-fir-tall:nw",
+    "name": "Tall fir (NW)",
+    "kind": "tree",
+    "category": "Capital vegetation",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "gen:tree-oak-crimson:ne",
+    "name": "Crimson oak (NE)",
+    "kind": "tree",
+    "category": "Capital vegetation",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "gen:tree-oak-crimson:se",
+    "name": "Crimson oak (SE)",
+    "kind": "tree",
+    "category": "Capital vegetation",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "gen:tree-oak-crimson:sw",
+    "name": "Crimson oak (SW)",
+    "kind": "tree",
+    "category": "Capital vegetation",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "gen:tree-oak-crimson:nw",
+    "name": "Crimson oak (NW)",
+    "kind": "tree",
+    "category": "Capital vegetation",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "gen:tree-maple-ember:ne",
+    "name": "Ember maple (NE)",
+    "kind": "tree",
+    "category": "Capital vegetation",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "gen:tree-maple-ember:se",
+    "name": "Ember maple (SE)",
+    "kind": "tree",
+    "category": "Capital vegetation",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "gen:tree-maple-ember:sw",
+    "name": "Ember maple (SW)",
+    "kind": "tree",
+    "category": "Capital vegetation",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "gen:tree-maple-ember:nw",
+    "name": "Ember maple (NW)",
+    "kind": "tree",
+    "category": "Capital vegetation",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "id": "business:golf-bunker-crescent",
+    "name": "golf bunker crescent",
+    "kind": "business",
+    "category": "Business artwork",
+    "reason": "baked golf terrain/water artwork, not a building or prop"
+  },
+  {
+    "id": "business:golf-pond",
+    "name": "golf pond",
+    "kind": "business",
+    "category": "Business artwork",
+    "reason": "baked golf terrain/water artwork, not a building or prop"
+  },
+  {
+    "source_id": "red-maple-4views",
+    "runtime_id": null,
+    "catalogue": "art/grass-management/budget-props/manifest.json",
+    "reason": "plants/foliage excluded by owner"
+  },
+  {
+    "source_id": "blue-green-conifer-4views",
+    "runtime_id": null,
+    "catalogue": "art/grass-management/budget-props/manifest.json",
+    "reason": "plants/foliage excluded by owner"
+  }
+]
