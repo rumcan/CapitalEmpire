@@ -196,7 +196,7 @@ const handle = async (m: ToWorker) => {
             need.add(p.tex);
             if (p.paint?.b) need.add(p.paint.bt);
             if (p.paint?.m) need.add(p.paint.m.t);
-            if (p.course) { for (const l of p.course.layers) for (const t of layerTexes(l)) need.add(t); if (p.course.walls?.length) for (const w of WALL_TEX) near.add(w); if (p.course.walls?.some(w => w.hs === SURF.tee) && finishOf(tex.surfaces).teeWall !== 'rock') pics.add(BUNKER_WALL_PICTURE); } // T256: its alternate looks too
+            if (p.course) { for (const l of p.course.layers) for (const t of layerTexes(l)) need.add(t); if (p.course.walls?.length) for (const w of WALL_TEX) near.add(w); if (m.kind === 'g' && p.course.walls?.some(w => w.hs === SURF.tee) && finishOf(tex.surfaces).teeWall === 'bunker') pics.add(BUNKER_WALL_PICTURE); } // T256: its alternate looks too
             // a town lawn wears one of the painted lawns (painted-surfaces.ts lawnSlot), picked by where it lies
             // (a lot's lawn wears its look state's, T155: lawnTexFor)
             if (p.lawn && tex.paintedOn) { const t = lawnTexFor(p.lawn, p.pts, tex.surfaces); if (t) need.add(t); }

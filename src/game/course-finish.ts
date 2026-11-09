@@ -15,10 +15,11 @@ import type { StripeLook } from './course-stripes';
 import { mowCustom, patternOf, type MowKind, type MowOpts, type MowPattern, type MowRec } from './mow-lines';
 
 /** T364 (#1019; the owner, 2026-11-08: "use the same texture the bunker uses for its walls for the elevated tee walls"): how a raised tee's cut sides
- *  are painted: 'bunker', the bunker's wall (its picture, its light and shade: tee-wall.ts); 'rock', the painted earth and set stones they wore
- *  before T364 (T127). T372 (#1027) adds the cliff face as a third way */
-export type TeeWall = 'bunker' | 'rock';
-export const TEE_WALLS: readonly TeeWall[] = ['bunker', 'rock'];
+ *  are painted: 'bunker', the bunker's wall (the Bunker look's Cut wall picture, its light and shade: tee-wall.ts); 'sand', the same light on the native
+ *  bunker wall's painting instead (the Bunker wall surface of the painted surfaces: golden sand, wallSand; the other reading of "the bunker's wall");
+ *  'rock', the painted earth and set stones they wore before T364 (T127). T372 (#1027) adds the cliff face as another way */
+export type TeeWall = 'bunker' | 'sand' | 'rock';
+export const TEE_WALLS: readonly TeeWall[] = ['bunker', 'sand', 'rock'];
 
 /** the course finish's knobs */
 export interface CourseFinish {
@@ -40,8 +41,8 @@ export interface CourseFinish {
   bowl: number;
   /** T253 part 3: the greens' soft roll where they meet the fringe (bunker-look.ts greenRollImages): 0 off (as before) .. 1 tuned .. 2 strong */
   roll: number;
-  /** T364 (#1019): a raised tee's cut sides (TeeWall): the bunker's wall by default, 'rock' for the stones of before. Independent of `on` (the
-   *  tees' walls are T127's, not T227's); the tee's grass is its own look in the file's surfaces (the Tee surface wears the green's) */
+  /** T364 (#1019): a raised tee's cut sides (TeeWall): the bunker's wall by default, 'sand' its native painting, 'rock' the stones of before.
+   *  Independent of `on` (the tees' walls are T127's, not T227's); the tee's grass is its own look in the file's surfaces (the Tee surface wears the green's) */
   teeWall: TeeWall;
 }
 /** the tuned look (against the concept, at 30% and 15%) */

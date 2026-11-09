@@ -9,7 +9,7 @@ import { OLD_TEE_LOOK, clampSurfaces, lookOfTex, oldTeeSurfaces } from '../src/g
 import { DEFAULT_COURSE_FINISH, FINISH_OFF, TEE_WALLS, clampCourseFinish, finishOf, mowShown, mowSpec } from '../src/game/course-finish';
 import { fairwayStripeLook } from '../src/game/course-stripes';
 import { PRESETS } from '../src/game/paint-presets';
-import { BUNKER_WALL_METRES, BUNKER_WALL_STRENGTH, TEE_WALL_EXPOSURE, TEE_WALL_STRENGTH, bunkerWallContact, bunkerWallOverhang, bunkerWallShade, teeWallShade } from '../src/game/tee-wall';
+import { BUNKER_WALL_METRES, BUNKER_WALL_STRENGTH, SAND_WALL_MEAN, TEE_WALL_EXPOSURE, TEE_WALL_STRENGTH, bunkerWallContact, bunkerWallOverhang, bunkerWallShade, teeWallShade } from '../src/game/tee-wall';
 import { BUNKER_PACK_TEXTURES } from '../src/game/ext/bunker-look/stage-materials';
 import { DEFAULT_BUNKER_TEXTURES } from '../src/game/ext/bunker-look/settings';
 import { FaceForm, ROCK_FROM, SURF_HEIGHT, WallMat, faceForm, surfHeights } from '../src/game/ext/course-walls/index.js';
@@ -40,11 +40,12 @@ test('no mowing lines on a tee by default: its look sets none, the finish lays n
 });
 
 test('a tee\'s walls: the bunker\'s by default, the old rock a setting; the finish being off does not touch them', () => {
-  assert.deepEqual([...TEE_WALLS], ['bunker', 'rock']);
+  assert.deepEqual([...TEE_WALLS], ['bunker', 'sand', 'rock']);
   assert.equal(DEFAULT_COURSE_FINISH.teeWall, 'bunker'); assert.equal(finishOf(F).teeWall, 'bunker'); assert.equal(finishOf(null).teeWall, 'bunker');
   assert.equal(FINISH_OFF.teeWall, 'bunker', 'the tees\' walls are T127\'s, not T227\'s: the finish off keeps them');
   assert.equal(clampCourseFinish({ teeWall: 'rock' }).teeWall, 'rock');
   assert.equal(clampCourseFinish({ teeWall: 'bunker' }).teeWall, 'bunker');
+  assert.equal(clampCourseFinish({ teeWall: 'sand' }).teeWall, 'sand', "the native bunker wall's painting: the other reading of \"the bunker's wall\"");
   for (const bad of ['cliff', 7, null, undefined, {}]) assert.equal(clampCourseFinish({ teeWall: bad }).teeWall, 'bunker', `${String(bad)}: the default`);
   // it survives the file's own clamp (the Studio saves the course block whole)
   const saved = clampSurfaces(JSON.parse(JSON.stringify({ ...file, course: { ...DEFAULT_COURSE_FINISH, teeWall: 'rock' } })));
@@ -81,6 +82,9 @@ test('the bunker wall: the picture the Bunker look\'s Cut wall wears by default,
   assert.ok(e && /\/textures\/wall-earth\.png$/.test(e.url.split('?')[0]!), 'the pack\'s Wall earth: wall-earth.png, the file the tee wall lays too');
   // one repeat is 0.6 x aspect x textureScale (1.164) x earthScale (3) ground units of 2 m along the wall: about 7.45 m
   assert.ok(Math.abs(BUNKER_WALL_METRES - 7.45) < 0.01, String(BUNKER_WALL_METRES));
+  // the native bunker wall's painting (the Bunker wall surface, 'sand'): its family's mean colour, for the district tier
+  const sandMean = '#' + SAND_WALL_MEAN.map(v => v.toString(16).padStart(2, '0')).join(''); assert.equal(sandMean, '#e6ae60');
+  assert.equal(F.surfaces.wallSand!.family, 'underground-sand');
 });
 
 test('the bunker wall\'s light: its stage shader\'s term, none of it turned from the sun, the picture as it is turned to it; the tee wall takes the same range', () => {

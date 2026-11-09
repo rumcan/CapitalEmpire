@@ -23,7 +23,7 @@ import { WOODLAND_TEX, barShape, classAlpha, rockAlpha, shadeField, shadeRGBA, s
 import { cutPieces, fairwayStripeLook, flipBands, holeStripeLegs, legArea, turnStripeLegs, type StripeLook } from './course-stripes';
 import { LIP, collarToneOf, finishMow, finishOf, lipRuns, mowSpec, tonedCollar, type CourseFinish } from './course-finish';
 import type { MowKind } from './mow-lines';
-import { BUNKER_WALL_MEAN, BUNKER_WALL_METRES, BUNKER_WALL_PICTURE, TEE_WALL_EXPOSURE, bunkerWallContact, bunkerWallOverhang, teeWallShade } from './tee-wall';
+import { BUNKER_WALL_MEAN, BUNKER_WALL_METRES, BUNKER_WALL_PICTURE, SAND_WALL_MEAN, TEE_WALL_EXPOSURE, bunkerWallContact, bunkerWallOverhang, teeWallShade } from './tee-wall';
 import { quadBox, type CourseLayer, type CoursePatch, type CourseRim, type CourseTex, type CourseWall, type LotPatch, type MowStripes, type PatchTex, type ShineMaskData } from './ground-protocol';
 import { BunkerStageRegistry } from './ext/bunker-look/stage-registry';
 import { SHINE_TEXEL, SHINE_TEXEL_PX, SHINE_WEIGHTS, maskColour, maskPad, shineMaskPixels, shineWeight, type ShineWeights } from './grass-shine';
@@ -3259,8 +3259,9 @@ export class GroundPainter {
     const px = 1 / (TILE_PX * L), NB = BANK_STEPS, NQ = BANK_BANDS.length - 1, sx = -SUN_DIR.x, sy = -SUN_DIR.y;
     const binOf = (b: number) => Math.max(0, Math.min(NB - 1, Math.round(((b - BANK_B0) / (BANK_B1 - BANK_B0)) * (NB - 1))));
     const bOfBin = (k: number) => BANK_B0 + (BANK_B1 - BANK_B0) * (k / (NB - 1));
-    // T364: a tee's rock faces in the bunker's wall (the course finish's teeWall, the default) or in the painted earth and set stones of before ('rock')
-    const earth = this.finish().teeWall !== 'rock';
+    // T364: a tee's rock faces in the bunker's wall (the course finish's teeWall, the default: its picture; 'sand': the native bunker wall's painting) or in
+    // the painted earth and set stones of before ('rock')
+    const earth = this.finish().teeWall !== 'rock', sand = this.finish().teeWall === 'sand';
     type Group = { f: FaceForm; hs: number; face: Path2D; bands: Path2D[]; upper: Path2D; toe: Path2D[]; crest: Path2D; body: Path2D; foot: Path2D; shadow: Path2D[]; shade: boolean;
       stoneShade: Path2D; stones: Path2D[]; lights: Path2D[]; tufts: Path2D[]; sides: Path2D[]; treads: Path2D[]; risers: Path2D[]; noses: Path2D; cheeks: Path2D; timber: boolean; stairs: boolean };
     // T217: the faces' paths are made once for these runs (tile space, the same at every level) and kept for the next bake they reach (T204's
@@ -3330,7 +3331,7 @@ export class GroundPainter {
           // the light steps only: grass or earth, mixed by the slope's light (T364: the bunker's wall: its mean colour in the wall's shade)
           const pair = rock ? ROCK_EARTH : [[70, 104, 52], [150, 190, 104]] as const;
           for (let b = 0; b < NB; b++) {
-            ctx.fillStyle = earthy ? rgb(BUNKER_WALL_MEAN.map(v => v * TEE_WALL_EXPOSURE * teeWallShade(bOfBin(b), BANK_B0, BANK_B1))) : rgb(mixRGB(pair[0]!, pair[1]!, b / (NB - 1)));
+            ctx.fillStyle = earthy ? rgb((sand ? SAND_WALL_MEAN : BUNKER_WALL_MEAN).map(v => v * (sand ? 1 : TEE_WALL_EXPOSURE) * teeWallShade(bOfBin(b), BANK_B0, BANK_B1))) : rgb(mixRGB(pair[0]!, pair[1]!, b / (NB - 1)));
             for (let q = 0; q < NQ; q++) ctx.fill(G.bands[q * NB + b]!);
           }
           ctx.restore(); continue;
@@ -3357,9 +3358,9 @@ export class GroundPainter {
             // gives it (tee-wall.ts): each light step a cool multiply of the share of the colour a face turned that way keeps (a face turned from the sun
             // at the upper right keeps the least, one turned to it the picture as it is), a darker strip under the grass lip and a darker foot, the
             // picture's grain staying in every step
-            ctx.fillStyle = this.bunkerWall(ctx, L, Minv, X0, Y0) ?? rgb(BUNKER_WALL_MEAN); ctx.fill(G.body);
-            // (the picture lifted by TEE_WALL_EXPOSURE: itself added again at the excess, so its grain and its colour are kept)
-            ctx.globalCompositeOperation = 'lighter'; ctx.globalAlpha = TEE_WALL_EXPOSURE - 1; ctx.fill(G.body); ctx.globalAlpha = 1;
+            ctx.fillStyle = (sand ? this.wallArt(ctx, WALL_TEX[WallMat.Sand]!, L, Minv, X0, Y0) : this.bunkerWall(ctx, L, Minv, X0, Y0)) ?? rgb(sand ? SAND_WALL_MEAN : BUNKER_WALL_MEAN); ctx.fill(G.body);
+            // (the earth picture lifted by TEE_WALL_EXPOSURE: itself added again at the excess, so its grain and its colour are kept; the sand painting is bright already)
+            if (!sand) { ctx.globalCompositeOperation = 'lighter'; ctx.globalAlpha = TEE_WALL_EXPOSURE - 1; ctx.fill(G.body); ctx.globalAlpha = 1; }
             ctx.globalCompositeOperation = 'multiply';
             const over = bunkerWallOverhang(), contact = bunkerWallContact();
             for (let b = 0; b < NB; b++) {

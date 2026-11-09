@@ -11,6 +11,8 @@ import wallEarth from './ext/bunker-look/package/textures/wall-earth.png';
 export const BUNKER_WALL_PICTURE: string = wallEarth as string;
 /** its mean colour (the picture's, for the district tier, which lays flat tones only) */
 export const BUNKER_WALL_MEAN: readonly number[] = [84, 51, 26];
+/** the mean colour of the native bunker wall's painting (painted families underground-sand, #e6ae60), for the tee wall's 'sand' way in the district tier */
+export const SAND_WALL_MEAN: readonly number[] = [230, 174, 96];
 /** the ground one repeat of the picture covers across, metres, as the approved bunker look lays it: along the wall one repeat is 0.6 x the
  *  picture's aspect (1365 x 768) x the texture size (the look's textureScale 1.164 x earthScale 3) ground units of 2 m; a tee's face shows the
  *  picture at the same size, so a bunker's wall and a tee's wall are one soil */

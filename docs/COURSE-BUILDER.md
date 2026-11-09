@@ -119,6 +119,8 @@ elevated tee walls".
   multiply of the share of the colour that step keeps (a face turned from the sun at the upper right the darkest, one turned to it the picture as it is),
   a darker strip under the grass lip and a darker foot, the picture's grain in every step. The tee's contact shade, cast shadow, grass crest with its
   tufts and the stairs are as T127 had them; the hash-placed stones are not drawn (the picture has its own pebbles).
+- **The other reading of "the bunker's wall":** the course finish's `teeWall: 'sand'` lays the same light on the native course-walls bunker wall's painting
+  (the Bunker wall surface, `wallSand`, `underground-sand`: golden sand) instead of the Bunker look's brown earth picture.
 - **The old look stays an option:** the course finish's `teeWall` (`'bunker'` by default, `'rock'` for the painted earth and set stones; the file's
   `course` block, clamped by `clampCourseFinish`), and the file's `surfaces.tee` look set back to the fairway's. `oldTeeSurfaces(file)` makes both at once;
   the dev server's `?tee=old` lays it (`painted-surfaces-live.ts teeOldDev`), for A/B shots and the bench on one build. T372 (#1027) adds the cliff face as
