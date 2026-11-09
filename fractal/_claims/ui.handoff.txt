@@ -1,0 +1,4 @@
+src/game/golf/play/tools.ts -> play
+src/game/golf/eventtool.ts -> business
+src/game/golf/mode.ts -> core
+src/game/golf/estatetool.ts -> course

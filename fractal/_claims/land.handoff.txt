@@ -1,0 +1,6 @@
+src/game/golf/osm/land.ts -> course
+src/game/ground-art.ts -> art
+src/game/paint.ts -> ui
+src/game/paint-tool.ts -> ui
+src/game/paint-presets.ts -> ui
+src/game/lot-decals.ts -> town
