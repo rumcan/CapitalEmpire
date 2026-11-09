@@ -8,7 +8,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server.edge';
-import { SideMenuRow, sideArrow } from '../src/ui/SideMenuRow';
+import { SideMenuRow, sideArrow, type SideMenuRowProps } from '../src/ui/SideMenuRow';
 import { BunkerPickEntry } from '../src/ui/BunkerSettings';
 import { BagCard } from '../src/ui/golf/BagCard';
 import { SeasonCard } from '../src/ui/golf/SeasonCard';
@@ -27,7 +27,7 @@ const rule = (sel: string): string => css.match(new RegExp(`(?:^|\\n)${sel.repla
 test('one row for every button that opens a menu to the side: full width, a clear arrow, its own look; the arrow points the way it opens', () => {
   assert.equal(sideArrow('right', false), '▸'); assert.equal(sideArrow('right', true), '▸'); assert.equal(sideArrow('left', true), '◂');
   assert.equal(sideArrow('down', false), '▸'); assert.equal(sideArrow('down', true), '▾', 'an editor folding out below turns its arrow down');
-  const h = renderToStaticMarkup(createElement(SideMenuRow, { label: 'Bunker look', sub: 'Sand and walls', value: 'Fairway: Mown', onClick: noop, 'data-looks': true, 'aria-pressed': false, title: 'T' }));
+  const h = renderToStaticMarkup(createElement(SideMenuRow, { label: 'Bunker look', sub: 'Sand and walls', value: 'Fairway: Mown', onClick: noop, 'data-looks': true, 'aria-pressed': false, title: 'T' } as SideMenuRowProps)); // a data-* attribute goes through like on any button (JSX takes one on any component; an object literal needs the cast)
   assert.match(h, /^<button type="button" class="side-row"/); assert.match(h, /data-side-menu/); assert.match(h, /data-looks="true"/); assert.match(h, /aria-pressed="false"/); assert.ok(!/aria-expanded/.test(h), 'its own aria state is kept, none is added');
   assert.match(h, />Bunker look</); assert.match(h, />Sand and walls</); assert.match(h, />Fairway: Mown</); assert.match(h, /<span class="side-row-arrow" aria-hidden="true">▸<\/span>/);
   const open = renderToStaticMarkup(createElement(SideMenuRow, { label: 'Shaft', side: 'left', open: true, onClick: noop }));
