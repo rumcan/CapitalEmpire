@@ -65,8 +65,8 @@ try {
       page.on('pageerror', e => { console.log('[pageerror]', e.message); bad++; });
       page.on('console', m => { if (m.type() === 'error') console.log('[console]', m.text().slice(0, 300)); });
       await page.route('**/*', r => { const x = r.request(); return x.method() !== 'GET' && x.method() !== 'HEAD' ? r.fulfill({ status: 200, contentType: 'application/json', body: '{"ok":true}' }) : r.continue(); });
-      await page.goto(`${base}?osmcourse=${id}${v.q}`, { waitUntil: 'domcontentloaded', timeout: 600000 });
-      await page.waitForFunction(() => window.__game?.ready, null, { timeout: 600000 });
+      await page.goto(`${base}?osmcourse=${id}${v.q}`, { waitUntil: 'domcontentloaded', timeout: 1200000 });
+      await page.waitForFunction(() => window.__game?.ready, null, { timeout: 1200000 });
       await page.evaluate(() => { const g = window.__game; g.prebake = () => {}; g.setSpeed(0); window.__night = 0; g.nightAmount = () => window.__night; g.closeWho?.('Jack Burns', 2); g.closeWelcome?.(false); const p = g.golf.progress; if (p) { for (const k of ['who', 'welcome']) if (!p.seen.includes(k)) p.seen.push(k); if (p.tour) p.tour.off = true; } g.emit(); });
       const info = await page.evaluate(() => {
         const g = window.__game, grid = g.courseGrid, cnt = a => { const o = {}; for (const x of a) o[x] = (o[x] ?? 0) + 1; return o; };
