@@ -9,7 +9,7 @@ import { OLD_TEE_LOOK, clampSurfaces, lookOfTex, oldTeeSurfaces } from '../src/g
 import { DEFAULT_COURSE_FINISH, FINISH_OFF, TEE_WALLS, clampCourseFinish, finishOf, mowShown, mowSpec } from '../src/game/course-finish';
 import { fairwayStripeLook } from '../src/game/course-stripes';
 import { PRESETS } from '../src/game/paint-presets';
-import { BUNKER_WALL_METRES, BUNKER_WALL_STRENGTH, bunkerWallContact, bunkerWallOverhang, bunkerWallShade, teeWallShade } from '../src/game/tee-wall';
+import { BUNKER_WALL_METRES, BUNKER_WALL_STRENGTH, TEE_WALL_EXPOSURE, TEE_WALL_STRENGTH, bunkerWallContact, bunkerWallOverhang, bunkerWallShade, teeWallShade } from '../src/game/tee-wall';
 import { BUNKER_PACK_TEXTURES } from '../src/game/ext/bunker-look/stage-materials';
 import { DEFAULT_BUNKER_TEXTURES } from '../src/game/ext/bunker-look/settings';
 import { FaceForm, ROCK_FROM, SURF_HEIGHT, WallMat, faceForm, surfHeights } from '../src/game/ext/course-walls/index.js';
@@ -92,12 +92,19 @@ test('the bunker wall\'s light: its stage shader\'s term, none of it turned from
   assert.equal(bunkerWallShade(0, 0), 0.95, 'no Shadow strength: a flat .95');
   let last = -1; for (let l = 0; l <= 1.0001; l += 0.05) { const v = bunkerWallShade(l); assert.ok(v >= last, `light ${l.toFixed(2)} is not darker than less light`); last = v; }
   assert.equal(bunkerWallShade(-3), bunkerWallShade(0)); assert.equal(bunkerWallShade(9), bunkerWallShade(1), 'held to its range');
-  // the tee's slope: its bank light range (flat ground is 1) mapped onto the shader's
+  // the tee's slope: its bank light range (flat ground is 1) mapped onto the shader's, at the tee wall's own strength (a bunker's pit wall in its own
+  // shade is near black; a tee's wall is seen in the open and keeps the texture in shade: the same term at a lower strength, the picture lifted)
+  assert.ok(TEE_WALL_STRENGTH > 0 && TEE_WALL_STRENGTH < BUNKER_WALL_STRENGTH, 'the same shader term, turned down');
+  assert.ok(TEE_WALL_EXPOSURE > 1 && TEE_WALL_EXPOSURE < 2, 'the picture lifted by adding itself at the excess (an alpha in (0, 1))');
   for (const [lo, hi] of [[0.3, 1.7]] as const) {
-    assert.equal(teeWallShade(lo, lo, hi), bunkerWallShade(0)); assert.equal(teeWallShade(hi, lo, hi), bunkerWallShade(1));
+    assert.equal(teeWallShade(lo, lo, hi), bunkerWallShade(0, TEE_WALL_STRENGTH)); assert.equal(teeWallShade(hi, lo, hi), bunkerWallShade(1, TEE_WALL_STRENGTH));
     assert.ok(teeWallShade(1, lo, hi) > teeWallShade(lo, lo, hi) && teeWallShade(1, lo, hi) < teeWallShade(hi, lo, hi), 'flat-ground light is in between');
+    assert.ok(teeWallShade(lo, lo, hi) > bunkerWallShade(0), 'a tee wall turned from the sun keeps more of its picture than a pit wall in shade');
+    // a face turned from the sun keeps its texture (a share of the lifted picture that is not black) and still reads darker than one turned to it
+    assert.ok(teeWallShade(lo, lo, hi) * TEE_WALL_EXPOSURE > 0.6, `${teeWallShade(lo, lo, hi) * TEE_WALL_EXPOSURE}`);
+    assert.ok(teeWallShade(hi, lo, hi) / teeWallShade(lo, lo, hi) > 1.3, 'lit and shaded faces differ');
   }
-  assert.equal(teeWallShade(1, 1, 1), bunkerWallShade(0), 'a degenerate range does not divide by nothing');
+  assert.equal(teeWallShade(1, 1, 1), bunkerWallShade(0, TEE_WALL_STRENGTH), 'a degenerate range does not divide by nothing');
   // the lip's overhang and the foot's contact: darker, never past the shader's .62 floor
   assert.ok(bunkerWallOverhang() < 1 && bunkerWallOverhang() >= 0.62 && bunkerWallContact() < 1 && bunkerWallContact() >= 0.62);
   assert.ok(bunkerWallOverhang() < bunkerWallContact(), 'the shader darkens under the lip more than at the foot (0.18 against 0.14)');

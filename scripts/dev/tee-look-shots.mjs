@@ -1,6 +1,7 @@
 // T364 (#1019): in-game shots of the tees, before and after: the tee's grass is the putting green's (no mowing lines), and a raised tee's cut sides wear
 // the bunker's wall (its picture and its stage shader's light, sun at the upper right) instead of the painted earth and set stones.
-//   node scripts/dev/tee-look-shots.mjs --base http://localhost:5195/ --out E:/ClaudeTemp/T364 [--seed 7] [--hole 1]
+//   node scripts/dev/tee-look-shots.mjs --base http://localhost:5195/ --out E:/ClaudeTemp/T364 [--seed 7] [--hole 1] [--only after] [--states raised,flat] [--zooms 30,15]
+// (--only after: no old-look run and no before | after sheets, the after shots alone as <state>-<zoom>-after.png, to tune a look)
 // For each of the old nine's tees (the largest, or --hole) in two states, a raised tee (the default 0.6 m) and a flat one (the Height slider at its lowest,
 // 0.15 m: a low grass bank), at 30% and 15%: the old look (the dev server's ?tee=old: the fairway's grass, the rock sides) beside the new, on one build.
 // Writes <out>/<state>-<zoom>-before.png, -after.png and the captioned sheet <state>-<zoom>.png (before | after), plus a 3x crop of the tee at 30%.
@@ -11,8 +12,8 @@ import { mkdirSync } from 'node:fs';
 import { join } from 'node:path';
 
 const args = process.argv.slice(2), opt = (k, d) => { const i = args.indexOf(`--${k}`); return i >= 0 ? args[i + 1] : d; };
-const base = opt('base', 'http://localhost:5195/'), out = opt('out', 'E:/ClaudeTemp/T364'), seed = opt('seed', '7'), holeArg = opt('hole', '');
-const W = 1366, H = 768, ZOOMS = [0.3, 0.15];
+const base = opt('base', 'http://localhost:5195/'), out = opt('out', 'E:/ClaudeTemp/T364'), seed = opt('seed', '7'), holeArg = opt('hole', ''), only = opt('only', '');
+const W = 1366, H = 768, ZOOMS = opt('zooms', '30,15').split(',').map(v => +v / 100), STATES = opt('states', 'raised,flat').split(',');
 mkdirSync(out, { recursive: true });
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 const settle = async (page, ms = 900) => {
@@ -54,7 +55,7 @@ async function run(browser, query) {
     }, holeArg);
     console.log(`  tee: hole ${tee.hole} at ${tee.x.toFixed(1)}, ${tee.y.toFixed(1)}`);
     const look = (z) => page.evaluate(([x, y, z]) => { const g = window.__game; g.camEase = null; g.lookAt(x, y, z); g.emit(); }, [tee.x, tee.y, z]);
-    for (const state of ['raised', 'flat']) {
+    for (const state of STATES) {
       if (state === 'flat') { await page.evaluate(() => window.__game.paint.setSurfaceHeight(0.15, 'tee')); await sleep(1200); }
       for (const z of ZOOMS) {
         await look(z); await settle(page, state === 'flat' ? 2500 : 1500);
@@ -71,10 +72,11 @@ async function run(browser, query) {
 
 const browser = await chromium.launch({ channel: 'msedge', headless: true, args: ['--enable-gpu', '--ignore-gpu-blocklist', '--use-angle=d3d11'] });
 try {
-  console.log('before (?tee=old)'); const before = await run(browser, '&tee=old');
+  const before = only === 'after' ? null : (console.log('before (?tee=old)'), await run(browser, '&tee=old'));
   console.log('after'); const after = await run(browser, '');
   for (const key of Object.keys(after.shots)) {
     const [state, z] = key.split('-'), name = `${state}-${z}`;
+    if (!before) { await sharp(after.shots[key]).toFile(join(out, `${name}-after.png`)); console.log('  shot ' + join(out, `${name}-after.png`)); continue; }
     await sharp(before.shots[key]).toFile(join(out, `${name}-before.png`)); await sharp(after.shots[key]).toFile(join(out, `${name}-after.png`));
     const label = `${state === 'raised' ? 'Raised tee (0.6 m)' : 'Flat tee (0.15 m)'}, ${z}%`;
     await pair([[before.shots[key], `${label}: before`], [after.shots[key], `${label}: after`]], join(out, `${name}.png`));

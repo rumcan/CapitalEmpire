@@ -23,7 +23,7 @@ import { WOODLAND_TEX, barShape, classAlpha, rockAlpha, shadeField, shadeRGBA, s
 import { cutPieces, fairwayStripeLook, flipBands, holeStripeLegs, legArea, turnStripeLegs, type StripeLook } from './course-stripes';
 import { LIP, collarToneOf, finishMow, finishOf, lipRuns, mowSpec, tonedCollar, type CourseFinish } from './course-finish';
 import type { MowKind } from './mow-lines';
-import { BUNKER_WALL_MEAN, BUNKER_WALL_METRES, BUNKER_WALL_PICTURE, bunkerWallContact, bunkerWallOverhang, teeWallShade } from './tee-wall';
+import { BUNKER_WALL_MEAN, BUNKER_WALL_METRES, BUNKER_WALL_PICTURE, TEE_WALL_EXPOSURE, bunkerWallContact, bunkerWallOverhang, teeWallShade } from './tee-wall';
 import { quadBox, type CourseLayer, type CoursePatch, type CourseRim, type CourseTex, type CourseWall, type LotPatch, type MowStripes, type PatchTex, type ShineMaskData } from './ground-protocol';
 import { BunkerStageRegistry } from './ext/bunker-look/stage-registry';
 import { SHINE_TEXEL, SHINE_TEXEL_PX, SHINE_WEIGHTS, maskColour, maskPad, shineMaskPixels, shineWeight, type ShineWeights } from './grass-shine';
@@ -324,9 +324,9 @@ const BANK_TOE: readonly (readonly [number, number])[] = [[0.84, 0.66], [0.92, 0
 const BANK_STEPS = 16, BANK_B0 = 0.3, BANK_B1 = 1.7;
 /** how strongly a grass bank turned from the sun is shaded (a cool multiply) and one turned to it lit (a textured shine), T110 */
 const BANK_SHADE = 0.95, BANK_SUN = 0.8;
-/** T364: the cool cast of the tee wall's shade (SHADE_TINT as shares of its bluest channel): a face's share of the picture's colour is multiplied in
- *  this hue, so a shaded wall reads as sky-lit shade, never a flat dark wash */
-const WALL_COOL = [112 / 152, 120 / 152] as const;
+/** T364: the cool cast of the tee wall's shade (half way from neutral to SHADE_TINT, rgb(112,120,152), as shares of its bluest channel): a face's share of
+ *  the picture's colour is multiplied in this hue, so a shaded wall reads as sky-lit shade, never a flat dark wash (the full cast turned the red-brown black) */
+const WALL_COOL = [0.86, 0.9] as const;
 /** the rock's painted earth and its stones, in full shade and in full sun (a stone's own shade varies a little round them) */
 const ROCK_EARTH: readonly (readonly number[])[] = [[92, 78, 62], [196, 174, 138]], ROCK_STONE: readonly (readonly number[])[] = [[100, 96, 88], [232, 224, 206]];
 /** the rock's stones: one where the top edge crosses a lattice line every STONE_GAP tiles (x or y, the segment's longer way: a place on the
@@ -3330,7 +3330,7 @@ export class GroundPainter {
           // the light steps only: grass or earth, mixed by the slope's light (T364: the bunker's wall: its mean colour in the wall's shade)
           const pair = rock ? ROCK_EARTH : [[70, 104, 52], [150, 190, 104]] as const;
           for (let b = 0; b < NB; b++) {
-            ctx.fillStyle = earthy ? rgb(BUNKER_WALL_MEAN.map(v => v * teeWallShade(bOfBin(b), BANK_B0, BANK_B1))) : rgb(mixRGB(pair[0]!, pair[1]!, b / (NB - 1)));
+            ctx.fillStyle = earthy ? rgb(BUNKER_WALL_MEAN.map(v => v * TEE_WALL_EXPOSURE * teeWallShade(bOfBin(b), BANK_B0, BANK_B1))) : rgb(mixRGB(pair[0]!, pair[1]!, b / (NB - 1)));
             for (let q = 0; q < NQ; q++) ctx.fill(G.bands[q * NB + b]!);
           }
           ctx.restore(); continue;
@@ -3358,6 +3358,8 @@ export class GroundPainter {
             // at the upper right keeps the least, one turned to it the picture as it is), a darker strip under the grass lip and a darker foot, the
             // picture's grain staying in every step
             ctx.fillStyle = this.bunkerWall(ctx, L, Minv, X0, Y0) ?? rgb(BUNKER_WALL_MEAN); ctx.fill(G.body);
+            // (the picture lifted by TEE_WALL_EXPOSURE: itself added again at the excess, so its grain and its colour are kept)
+            ctx.globalCompositeOperation = 'lighter'; ctx.globalAlpha = TEE_WALL_EXPOSURE - 1; ctx.fill(G.body); ctx.globalAlpha = 1;
             ctx.globalCompositeOperation = 'multiply';
             const over = bunkerWallOverhang(), contact = bunkerWallContact();
             for (let b = 0; b < NB; b++) {
