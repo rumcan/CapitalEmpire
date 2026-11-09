@@ -1,6 +1,7 @@
 import { CHUNK_H, CHUNK_W, DISTRICT_Z, HH, HW, MAP, MID_H, MID_W, PLANNER_Z, PLAN_H, PLAN_W, SPR_H, SPR_W, ZOOM_MAX, ZOOM_MIN, ZOOM_STEP, clamp, clampZoom, planLevelFor, tileOf, worldX, worldY, mulberry } from './iso';
 import { ATLAS_PAGES, GOLFER_BASE, GOLFER_CLIPS, GOLFER_FRAMES, GOLFER_PEOPLE, LIBRARY, SPECTATOR_BASE, SPECTATOR_CLIPS, SPECTATOR_FRAMES, SPECTATOR_PEOPLE, WALKER_BASE, WALKER_PEOPLE, WALK_DIRS, WALK_FRAMES } from './library';
 import { BoundedLru, hasPickingPixel, mapConcurrent, pickingMask } from './ext/asset-residency';
+import { releaseBuffer } from './release-buffer';
 import { PeopleSpacer, spacePeople } from './spacing';
 import { PUTT_IMPACT_S, galleryPeople, hash, queuePeople, walkerPeople, type CrowdPerson } from './crowdview';
 import { FACING_ROW, Pedestrians, facing as facingOf, sidewalks, type Door, type WalkerView } from './ext/pedestrians';
@@ -3142,7 +3143,9 @@ export class Game {
         bitmap = await createImageBitmap(await response.blob()); const w = bitmap.width, h = bitmap.height;
         canvas = new OffscreenCanvas(w, h); const g = canvas.getContext('2d', { willReadFrequently: true }); if (!g) return null;
         g.drawImage(bitmap, 0, 0); bitmap.close(); bitmap = null;
-        return pickingMask(g.getImageData(0, 0, w, h).data, w, h, PICK_ALPHA);
+        // T375: the page's decoded pixels (1 MB a page, 95 pages) are dead once the mask is made: they go back now, not at a full collection
+        const px = g.getImageData(0, 0, w, h), mask = pickingMask(px.data, w, h, PICK_ALPHA); releaseBuffer(px.data);
+        return mask;
       } catch { return null; }
       finally { bitmap?.close(); if (canvas) { canvas.width = 0; canvas.height = 0; } }
     });
