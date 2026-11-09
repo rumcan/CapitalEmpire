@@ -29,7 +29,7 @@ import { GroundCache } from './ground-cache';
 import { GAME_BOOT, clampCentre, flatTerrain, type BootOptions } from './boot';
 import { TILE_BANDS, TILES_REVISION, anchorAt, bandAt, bandRange, bandsAhead, cellOf, cellsIn, coverageOf, drawnScale, nearUntil, nextBand, tiledFamily, tileIndex, tilePermutation, tileScreenPx, tileSize, tileSpec } from './painted-tiles';
 import { desertLeavesDev, onPaintedSurfaces, paintedSurfaces, setDesertSurfaces } from './painted-surfaces-live';
-import { borderDefault, finishBorders, finishOf, finishStripeLook, mowSpec } from './course-finish';
+import { borderDefault, crewBandLook, finishBorders, finishOf, finishStripeLook, mowSpec } from './course-finish';
 import { MOW_KINDS, mowOfHole, mowRecOf, type MowKind, type MowRec, type MowTable } from './mow-lines';
 import { chunkLayers, pictureCurrent, prebakeTargets } from './ground-layers';
 import { clampGrassArt, grassZoomLevels, type GrassArt } from './painted-grass-lod';
@@ -215,6 +215,8 @@ import { CHEER_TILES, DayFinish, IMPACT_S, LiveGroup, MODEL_V, OWNER_ADDRESS, OW
 import { FRAMES_PER_TILE, SWING_EVERY, doorOf, hoverText, keyStep, lookSex, makeYou, routeOf, skipAhead, standInText, startWalk, stepYou, stopWalk, talkSpot, verbOf, youFrame, type ThingKind, type Verb as YouVerb, type You as YouChar } from './golf/you';
 import { AltTap, HeldKeys, WALK_KEYS, cameraChase, clickDoes, loadCursorMode, panAxes, saveCursorMode, walkAxes } from './golf/cursors';
 import { BRING_TILES, GREEN_CLEAR, appearSpot, callMode, callSpot, distText, edgeMarker, parkSpot, shouldPark, type ParkSurf } from './golf/play/yourcart';
+import { CART_ITEMS, CART_OLD, OLD_CART, cartHeadingOf, cartPicture, cartScale } from './golf/cartart'; // T351 (#994): the hire cart's eight pictures
+import { CartDrive } from './golf/cartdrive';
 import { BLADE_R, TreeCut, keyPos, treeKey, type TreeRec } from './treecut';
 import { answerOf, clampStake, firstName, golfs, hcpOfName, hcpOfSkill, holeDecided, matchHoles, matchLengths, matchNextHole, matchTurn, matchView, maxStake, nameSeed, opponentOf, oppShot, playMatchYours, returnChallenge, rivalText, scoreOf, settleMatch, skipMatch, stakeWhy, startMatch, type HoleWin, type Opponent } from './golf/play/match';
 import { ADDRESS_PACE, AT_ADDRESS, jumpAlpha, livePuffs, puffAt, stepToward, type Puff } from './golf/play/jumpfx';
@@ -380,10 +382,10 @@ function seeThrough(d: Drawable, g: Drawable): Drawable {
 /** T214: a club staff member's beat in the world (Game.beatsNow) */
 type ProBeatRow = { k: number; role: ClubRole; name: string; beat: ProBeat };
 const CADDIE_ART = Math.max(0, SPECTATOR_PEOPLE.findIndex(p => p.id === 'spectator:spec_m_polo_visor')), CADDIE_LABEL = 'Stand In for caddie';
-/** T213: the hire cart's two facings (GOLF-ART-LIST item 173 asks for eight: the nearest of the two is drawn), the caddie's bag (the bag trolley), and
- *  their scales (the studio's size, else the owner's table's) */
+/** T213: the caddie's bag (the bag trolley), and the scales of the art (the studio's size, else the owner's table's). T351 (#994): the hire cart has a picture for each of its eight
+ *  headings (golf/cartart.ts: CART_ITEMS, the nearest of eight to its heading; before it had two, golf-cart-sw and -se, GOLF-ART-LIST item 173) */
 const libIndexOf = (id: string): number => LIBRARY.findIndex(it => it.id === id);
-const CART_ART = [libIndexOf('business:golf-cart-sw'), libIndexOf('business:golf-cart-se')], BAG_ART = libIndexOf('business:golf-bag-trolley');
+const BAG_ART = libIndexOf('business:golf-bag-trolley');
 const artScale = (item: number, or: number): number => { const id = LIBRARY[item]?.id ?? ''; return STUDIO_SCALE[id] ?? OWNER_SCALE[id] ?? or; };
 /** the golfer art (indices into GOLFER_PEOPLE) of a tag: the men's ids carry _m, the women's _w; with none of its own, a sex gets all the art */
 const golferArt = (tag: string): number[] => { const a = GOLFER_PEOPLE.flatMap((p, i) => p.id.includes(tag) ? [i] : []); return a.length ? a : GOLFER_PEOPLE.map((_, i) => i); };
@@ -8772,16 +8774,16 @@ export class Game {
     d.x0 = x - r; d.y0 = y - r; d.x1 = x + r; d.y1 = y + r;
     return d;
   }
-  /** T213: the carts (play/carts.ts PlayCart) in the box into `to` as movers: the hire cart's nearest facing to its heading (its art has two: the front
-   *  to the screen's lower left or lower right; a cart heading up the screen shows the one on its side, GOLF-ART-LIST item 173) */
+  /** T213: the carts (play/carts.ts PlayCart) in the box into `to` as movers: the hire cart's picture nearest its heading. T351 (#994): there are eight (golf/cartart.ts; the
+   *  cart's heading is blended round bends by play/carts.ts, so the picture steps through its neighbours); ?oldcart: the two there were, the front to the screen's lower left or lower right */
   private cartDrawables(carts: readonly PlayCart[], to: Drawable[], X0: number, Y0: number, X1: number, Y1: number) {
     const pool = to === this.golfCartOut ? this.golfCartDraw : this.dayCartDraw;
     let n = 0; const tag = to === this.golfCartOut ? 'p' : 'd';
     for (const c of carts) {
       this.trackMove(tag + c.cart, c.x, c.y, 'cart'); // T322: its wear on the grass
       if (c.x < X0 || c.x > X1 || c.y < Y0 || c.y > Y1) continue;
-      const item = CART_ART[c.hx - c.hy < 0 ? 0 : 1]!; if (item < 0) continue;
-      const d = this.propDrawable(pool, n++, item, c.x, c.y, 0.6); if (c.alpha !== undefined) d.alpha = c.alpha; to.push(d); // (T266: a watchable cart fading)
+      const item = cartPicture(c.hx, c.hy); if (item < 0) continue;
+      const d = this.propDrawable(pool, n++, item, c.x, c.y, 0.6); if (!OLD_CART) d.scale = cartScale(item); if (c.alpha !== undefined) d.alpha = c.alpha; to.push(d); // (T266: a watchable cart fading)
     }
   }
   /** the golf round on the tournament day (docs/GOLF-PLAY.md P2), each frame in golf mode. It is built once per tournament, while its round is live
@@ -9176,16 +9178,23 @@ export class Game {
     if (!this.youCart) this.youCartPlace();
     const c = this.youCart, mv = this.youInCart && c ? c : y, ok = mv === y ? this.youOk : this.cartOk, wasMoving = mv.moving || mv.keys, ox = mv.x, oy = mv.y;
     const { kx, ky } = this.youKeysOn() ? walkAxes(this.keys) : { kx: 0, ky: 0 };
+    // T351 (#994): your cart steers under the keys, pulls away and rolls to a stop, and its picture's heading turns through the neighbours (golf/cartdrive.ts); ?oldcart: the walk's way
+    const cd = this.cartDrive, drives = !!c && mv === c && !OLD_CART;
+    if (c && !drives && cd.coasting && !c.moving) { cd.coasting = false; cd.v = 0; c.keys = false; } // (you got out while it rolled: it stops where it is)
     if (kx || ky) {
       if (mv.moving) this.youThen = null;
       this.youRaster(mv.x, mv.y, 24, false);
-      keyStep(mv, kx, ky, this.keys.has('Shift'), dt, ok);
+      if (drives) cd.keys(mv, kx, ky, this.keys.has('Shift'), dt, ok); else keyStep(mv, kx, ky, this.keys.has('Shift'), dt, ok);
+    } else if (drives) {
+      if (cd.coasting) this.youRaster(mv.x, mv.y, 24, false); // (it rolls on a little after the keys)
+      if (cd.free(mv, dt, ok)) this.youArrive();
     } else {
       keyStep(mv, 0, 0, false, dt, ok);
       if (stepYou(mv, dt)) this.youArrive();
     }
     if (mv !== y) { y.x = mv.x; y.y = mv.y; y.face = mv.face; y.moving = false; y.keys = false; }
-    else if (c?.moving && stepYou(c, dt)) this.youCartArrived(); // T326: your cart drives itself (called, or off to park)
+    else if (c?.moving && (OLD_CART ? stepYou(c, dt) : cd.free(c, dt, this.cartOk))) this.youCartArrived(); // T326: your cart drives itself (called, or off to park)
+    if (c && !OLD_CART) cd.look(c, dt);
     this.rangeHandWork(dt, ox, oy, mv); // T386: the range's balls: picked up as you stand among them, emptied at the ball room
     // (T323, the owner: the camera no longer follows you walking or driving: Me centres it once)
     if (wasMoving && !mv.moving && !mv.keys) { this.youSaveDue = true; this.emit(); }
@@ -9493,11 +9502,11 @@ export class Game {
    *  until the player looks (art 232-234) land */
   private youMovers(out: Drawable[], m: number, X0: number, Y0: number, X1: number, Y1: number): number {
     const c = this.youCart, now = performance.now();
-    if (c && c.x >= X0 && c.x <= X1 && c.y >= Y0 && c.y <= Y1) { // T317: your golf cart (the hire cart's art: its side by your heading)
-      const f = c.face; this.youCartSide = f >= 1 && f <= 3 ? 0 : f >= 5 ? 1 : this.youCartSide;
-      const item = CART_ART[this.youCartSide]!;
+    if (c && c.x >= X0 && c.x <= X1 && c.y >= Y0 && c.y <= Y1) { // T317: your golf cart (the hire cart's art: T351, the picture nearest its heading, which turns through the neighbours; ?oldcart: its side by your facing)
+      let item: number;
+      if (OLD_CART) { const f = c.face; this.youCartSide = f >= 1 && f <= 3 ? 0 : f >= 5 ? 1 : this.youCartSide; item = CART_OLD[this.youCartSide]!; } else item = CART_ITEMS[cartHeadingOf(this.cartDrive.ang)]!;
       if (item >= 0) {
-        const d = this.propDrawable(this.youCartDraw, 0, item, c.x, c.y, 0.6), a = jumpAlpha((now - this.cartJumpAt) / 1000); if (a < 1) d.alpha = a; // (T333: brought or called from far: it fades in)
+        const d = this.propDrawable(this.youCartDraw, 0, item, c.x, c.y, 0.6), a = jumpAlpha((now - this.cartJumpAt) / 1000); if (!OLD_CART) d.scale = cartScale(item); if (a < 1) d.alpha = a; // (T333: brought or called from far: it fades in)
         this.golfCartOut.push(d); this.caddieLabels.push({ p: d, text: this.youInCart ? this.golf?.player?.name ?? 'You' : 'Your cart' }); // (T326: "Your cart" when it waits)
         if (this.youInCart) this.golfCartOut.push(seeThrough(d, this.youCartDraw[1] ??= { ...d })); // T333: you ride: the cart seen through what is in front
       }
@@ -9687,6 +9696,8 @@ export class Game {
   /** you sit in your cart: the keys and the clicks drive it, you ride (not drawn) */
   youInCart = false;
   private youCartSide = 1; private youCartDraw: Drawable[] = [];
+  /** T351 (#994): how your cart handles: its heading (the picture it is drawn with) and its pace (golf/cartdrive.ts) */
+  private cartDrive = new CartDrive();
   /** T333 (#959): when you and your cart last jumped (performance.now ms: Jump to ball, Skip, a mulligan; the cart brought or called from far off; they
    *  fade in), the dust puffs showing, your see-through copy, and the address you are walking up to (null: none) */
   youJumpAt = -Infinity; cartJumpAt = -Infinity;
@@ -9808,7 +9819,7 @@ export class Game {
   /** T333: your cart was moved from `from` in one frame (brought to the first tee, called from far off): it fades in at its place, with a puff at both */
   private cartJumped(from: Pt) {
     const c = this.youCart; if (!c || Math.hypot(c.x - from.x, c.y - from.y) < 0.5) return;
-    const now = performance.now(); this.cartJumpAt = now;
+    const now = performance.now(); this.cartJumpAt = now; this.cartDrive.reset(c); // (T351: put down elsewhere, it stands on its facing: its picture does not spin)
     this.yrPuffs.push({ x: from.x, y: from.y, at: now }, { x: c.x, y: c.y, at: now }); livePuffs(this.yrPuffs, now);
   }
   /** T333: the dust puffs (the 2D overlay): faint rings spreading on the ground */
@@ -10373,7 +10384,7 @@ export class Game {
       this.youRaster(s.x, s.y, 8, false);
       at = CART_HOME.map(([dx, dy]) => ({ x: s.x + dx, y: s.y + dy })).find(p => this.cartOk(p.x, p.y)) ?? s;
     }
-    const c = makeYou(at.x, at.y, sv?.f ?? 6); c.speed = CART_TILES; this.youCart = c;
+    const c = makeYou(at.x, at.y, sv?.f ?? 6); c.speed = CART_TILES; this.youCart = c; this.cartDrive.reset(c);
     this.youInCart = !!sv?.in;
     if (this.youInCart && this.you) { this.you.x = c.x; this.you.y = c.y; }
   }
@@ -11290,15 +11301,16 @@ export class Game {
   /** each hole's crew ground (golf/crewground.ts), read from the grid once per course (its rev and the holes' lines) */
   private crewGroundsNow(): Map<number, CrewGround> {
     const grid = this.courseGrid, g = this.golf; if (!grid || !g) return new Map();
-    const lines = this.holeLines(), mow = this.courseMow()?.[SURF.fairway], key = `${grid.rev}|${JSON.stringify([...lines])}|${JSON.stringify(mow ?? null)}`;
+    const lines = this.holeLines(), mow = this.courseMow()?.[SURF.fairway], fin = finishOf(paintedSurfaces()), key = `${grid.rev}|${JSON.stringify([...lines])}|${JSON.stringify(mow ?? null)}|${fin.pattern}`;
     if (this.crewGrounds?.key === key) return this.crewGrounds.m;
     // (the bands the ground draws: T227's finish's, along the line, else T218's own; T359: a hole whose look sets its own band width, the
-    // bands along the hole, is mown in those)
-    const cells = crewCells(grid), base = fairwayStripeLook(), fin = finishOf(paintedSurfaces()), look = finishStripeLook(fin, base) ?? base, m = new Map<number, CrewGround>();
+    // bands along the hole, is mown in those; T365: the fairway's default, wide stripes, and a collar ring's inside are bands along the hole too)
+    const cells = crewCells(grid), base = fairwayStripeLook(), look = finishStripeLook(fin, base) ?? base, m = new Map<number, CrewGround>();
     for (const p of g.pins) {
       const next = g.tees.find(t => t.hole === p.hole + 1 && t.kind === 'back') ?? g.tees.find(t => t.hole === p.hole + 1) ?? null;
-      const spec = mow ? mowSpec('fairway', mowOfHole(mow, p.hole), fin, base) : null;
-      m.set(p.hole, crewGround(grid, p.hole, cells.get(p.hole), lines.get(p.hole), spec && spec.pattern === 'along' ? spec.look : look, this.greenOf(p.hole), next));
+      // (T365: every hole's spec, a hole with no look of its own too: the fairway's default is wide stripes, and the passes are the bands the ground draws)
+      const spec = mowSpec('fairway', mow ? mowOfHole(mow, p.hole) : undefined, fin, base);
+      m.set(p.hole, crewGround(grid, p.hole, cells.get(p.hole), lines.get(p.hole), crewBandLook(spec, look), this.greenOf(p.hole), next));
     }
     this.crewGrounds = { key, m }; return m;
   }
@@ -11376,7 +11388,7 @@ export class Game {
   private static readonly CREW_ART: Record<'gk' | 'mo', number> = {
     gk: Math.max(0, SPECTATOR_PEOPLE.findIndex(p => p.id === 'spectator:spec_m_bucket_hat')), mo: Math.max(0, SPECTATOR_PEOPLE.findIndex(p => p.id === 'spectator:spec_m_young_cap')),
   };
-  /** the crew's vehicles' stand-ins (the hire cart's two facings, the golf mower, the push mower, the ride-on), their footprints' half sides and labels */
+  /** the crew's vehicles' stand-ins (the hire cart: T351 draws the nearest of its eight pictures to its heading, golf/cartart.ts; the golf mower, the push mower, the ride-on), their footprints' half sides and labels */
   private static readonly CREW_VEH: Record<Exclude<CrewVeh, 'none'>, { items: number[]; label: string; r: number }> = {
     cart: { items: [libIndexOf('business:golf-cart-sw'), libIndexOf('business:golf-cart-se')], label: 'Stand In for utility cart', r: 0.6 },
     reel: { items: [libIndexOf('business:golf-mower')], label: 'Stand In for ride-on reel mower', r: 0.7 },
@@ -11400,8 +11412,8 @@ export class Game {
       if (th.veh !== 'none') this.trackMove('c' + k, th.x, th.y, th.veh === 'push' ? 'push' : th.veh === 'cart' ? 'cart' : 'mower'); // T322
       k++;
       if (th.veh === 'none' || th.x < X0 || th.x > X1 || th.y < Y0 || th.y > Y1) continue;
-      const a = Game.CREW_VEH[th.veh], item = a.items.length > 1 ? a.items[th.hx - th.hy < 0 ? 0 : 1]! : a.items[0]!; if (item < 0) continue;
-      const d = this.propDrawable(this.crewThingDraw, n++, item, th.x, th.y, a.r); if (th.alpha < 1) d.alpha = th.alpha;
+      const a = Game.CREW_VEH[th.veh], item = th.veh === 'cart' ? cartPicture(th.hx, th.hy) : a.items.length > 1 ? a.items[th.hx - th.hy < 0 ? 0 : 1]! : a.items[0]!; if (item < 0) continue; // (T351: the utility cart's stand-in is the hire cart, its eight pictures)
+      const d = this.propDrawable(this.crewThingDraw, n++, item, th.x, th.y, a.r); if (th.veh === 'cart' && !OLD_CART) d.scale = cartScale(item); if (th.alpha < 1) d.alpha = th.alpha;
       this.crewOut.push(d); this.caddieLabels.push({ p: d, text: a.label });
     }
     return m;

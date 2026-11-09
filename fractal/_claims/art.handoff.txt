@@ -1,0 +1,1 @@
+src/game/lots/preset-art.ts -> town

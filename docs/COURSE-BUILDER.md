@@ -102,3 +102,54 @@ Ownership: these are the coder's files (App.tsx, engine.ts, paint-tool.ts); the 
   families of bands XORed). The crew's passes follow a hole's own band width. The cause of "I can't edit them any more": the only in-game way
   to set the mowing direction was Greenkeeping's Grass care (hidden by `GREENKEEPING = false`, 17965bb, 2026-10-27, an hour after T218 made the
   fairway's stripes automatic with their look in the Studio alone); nothing was removed from the Fairway panel.
+
+## 8. Tees: the green's grass, the bunker's wall (T364, #1019, 2026-11-09)
+The owner, 2026-11-08: "replace grass on tees with the green grass but without any mow lines" and "use the same texture the bunker uses for its walls for the
+elevated tee walls".
+- **The tee's grass is the putting green's.** `painted-surfaces.json` gives the Tee surface the green's look (`green-concept-run`; it wore the fairway's,
+  `fairway-concept-run`). The tee keeps its own texture ids (`golfTee`, a preset for the `tee` surface), so costs, grow-in, kinds and the hole tags are
+  untouched; only the painting changes, wherever the tee's look is laid (the course grid, painted tee areas, the Paint panel's swatches and pucks). No mowing
+  lines: the tee's Mowing lines are Off unless a look turns them on (`course-finish.ts mowSpec`, pinned in `tests/tee-look.test.ts`). The Grass setting
+  `photo` still lays the old tee photo (it is the "as before" setting for every surface). The range's turf tee box already wore the green's grass.
+- **A raised tee's sides wear the bunker's wall** (`src/game/tee-wall.ts`, painted by `renderer.ts courseBanks` for the rock form, a tee from `ROCK_FROM`
+  = 0.5 m up: the default 0.6 m tee and every taller one; a low tee is still a grass bank, "a flat tee"). The picture is the Bunker look's Cut wall by
+  default (`bunker:wall-earth`, the pack's `wall-earth.png`), decoded by the ground workers with the painted pictures (`Textures.preparePainted`'s
+  `pictures`), laid in screen space at the scale the approved bunker lays it (7.45 m across a repeat), over the whole face, opaque. The light is the bunker
+  stage's wall shader (`stage-baker/wall-renderer.js`: `.28 + .74 x light`, mixed with .95 by the Shadow strength 1.252 / 1.5): per light step a cool
+  multiply of the share of the colour that step keeps (a face turned from the sun at the upper right the darkest, one turned to it the picture as it is),
+  a darker strip under the grass lip and a darker foot, the picture's grain in every step. The tee's contact shade, cast shadow, grass crest with its
+  tufts and the stairs are as T127 had them; the hash-placed stones are not drawn (the picture has its own pebbles).
+- **The other reading of "the bunker's wall":** the course finish's `teeWall: 'sand'` lays the same light on the native course-walls bunker wall's painting
+  (the Bunker wall surface, `wallSand`, `underground-sand`: golden sand) instead of the Bunker look's brown earth picture.
+- **The old look stays an option:** the course finish's `teeWall` (`'bunker'` by default, `'rock'` for the painted earth and set stones; the file's
+  `course` block, clamped by `clampCourseFinish`), and the file's `surfaces.tee` look set back to the fairway's. `oldTeeSurfaces(file)` makes both at once;
+  the dev server's `?tee=old` lays it (`painted-surfaces-live.ts teeOldDev`), for A/B shots and the bench on one build. T372 (#1027) adds the cliff face as
+  a third `TeeWall` and moves the choice into the tee's look.
+- **Check:** `node scripts/dev/tee-look-shots.mjs --base http://localhost:<port>/ --out E:/ClaudeTemp/T364` (the old nine's tee, raised and flat, at 30% and 15%,
+  before | after sheets).
+
+## 9. Mowing patterns like a real course: wide stripes, crosscut, two-tone halves, collar ring (T365, #1020, 2026-11-09)
+The owner, 2026-11-08: "add fairway mowing lines that have patterns like the image attached" (`E:/ClaudeTemp/tickets/mowing-reference.png`: left, bold wide
+stripes with a crossed cut at the bottom; right, one broad two-tone split along the fairway), and "make the strongest look the default for new fairways".
+- **Four patterns** join T359's Mowing lines (`src/game/mow-lines.ts MOW_PATTERNS`; the chips in `MowingLines.tsx`), each with its own tuned numbers
+  (`PATTERN_LOOKS`: width, light and dark strength, soft edge; a look's own numbers still win; a green keeps its fine stripes):
+  - **Wide stripes**: the bands along the hole, 5 tiles (10 m: inside the 8 to 12 m of the reference) at the full lift and multiply, a crisper edge.
+  - **Crosscut**: two diagonal sets of stripes crossed (`course-stripes.ts crosscutLegs`: the hole's legs turned a quarter and half the crossing either
+    side of the line of play); each set is laid at about half the strength, so where they agree the lift and the multiply add up (light where both are
+    light, dark where both are dark, diamonds), never the XOR of a checkerboard. The Angle slider is the crossing: 90 (square diamonds, the default) or
+    45 (long diamonds along the hole), 15 to 90.
+  - **Two-tone halves**: one band as wide as any fairway (`HALF_WIDTH`, 400 tiles) with its edge on the line of play itself (`StripeLook.half`: the band's
+    origin is the leg's start, not set back half a band), the left light and the right dark, a 0.4-tile soft edge (`HALF_SOFT`): a crisp mowing line; the
+    two legs of a dogleg meet at the bend. No width slider.
+  - **Collar ring**: two passes round the surface's edges (`RING_PASSES`; a pass is a third of the band, 1 to 2 tiles: `ringPass`), the outer light (a bright
+    frame against the darker first cut outside the fairway) and the next dark, with the wide stripes inside them. The ring is made of strokes of the edges of every chunk of the bake (`renderer.ts ringPath`, handed to each
+    chunk's stripes: a ring is at most 4 tiles deep, `COURSE_PATCH_REACH`, so every edge a ring pixel is near is among the bake's chunks) cut into the dark and
+    light masks of `mowBands` (the interior stripes under the ring are cut away): lighter and darker texture, never a tint; crisp passes.
+- **Baked, nothing per frame:** every pattern is laid by `renderer.ts courseStripes` into the ground chunk's bake from the same per-hole record
+  (`CourseLayer.stripes[].m`), as T359's were; `MowRec.p` is the pattern's index in `MOW_PATTERNS` (no longer left out for the bands along the hole).
+- **The default:** the course finish's `pattern` (`course-finish.ts`; wide stripes, `DEFAULT_FAIRWAY_PATTERN`) is what a fairway lays when its look names no
+  pattern (and the finish is on; with it off the fairway keeps T218's bands). The bands along the hole at the finish's own width and strength, the look before
+  T365, are the pattern 'along' (a look can name it, the file's `course.pattern` can, the dev server's `?mow=along` lays it, `oldMowSurfaces`). The green's, the
+  tee's and the rough's default pattern is along the hole; the range outfield keeps the finish's own bands (`finishMow`).
+- **Check:** `node scripts/dev/mow-pattern-shots.mjs --base http://localhost:<port>/ --out E:/ClaudeTemp/T365` (each pattern on the old nine's longest fairway beside
+  the reference).

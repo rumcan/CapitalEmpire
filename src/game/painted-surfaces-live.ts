@@ -1,5 +1,6 @@
 import file from './painted-surfaces.json';
-import { clampSurfaces, lookOfTex, type SurfacesFile } from './painted-surfaces';
+import { clampSurfaces, lookOfTex, mowPatternSurfaces, oldTeeSurfaces, teeWallSurfaces, type SurfacesFile } from './painted-surfaces';
+import { MOW_PATTERNS, type MowPattern } from './mow-lines';
 import { lookColour, resolveFamily } from './painted-families';
 import { paintedUrl } from './painted-grass-art';
 import { PRESETS } from './paint-presets';
@@ -8,14 +9,23 @@ import { desertSurfaces } from './desert-theme';
 /** The surfaces file as the running game has it (main thread only; the ground workers get it by message): the one the game was built with,
  *  and on the dev server every save the studio makes (Vite hot-swaps the JSON here, so the game takes the owner's edit at once, with no
  *  rebuild and no reload: the ground is baked again with the new looks) */
-let base: SurfacesFile = clampSurfaces(file), desert = false, current: SurfacesFile = base;
+/** T364 (dev server, ?tee=old): the tees as they were before T364 (the fairway's grass on top, the painted earth and set stones on a raised tee's sides):
+ *  the A/B of the shots and the bench; ?tee=sand: a raised tee's sides in the native bunker wall's painting instead of the Bunker look's picture */
+const teeDev = (): string => { try { return import.meta.env?.DEV ? new URLSearchParams(location.search).get('tee') ?? '' : ''; } catch { return ''; } };
+export const teeOldDev = (): boolean => teeDev() === 'old';
+/** T365 (dev server, ?mow=<pattern>, e.g. ?mow=along): the fairway's mowing lines with that pattern where a look names none (along: as they were before T365,
+ *  the bands along the hole at the finish's own width and strength; the default is wide): the A/B of the shots and the bench */
+export const mowDev = (): MowPattern | '' => { try { const v = import.meta.env?.DEV ? new URLSearchParams(location.search).get('mow') : null; return MOW_PATTERNS.find(p => p.id === v)?.id ?? ''; } catch { return ''; } };
+/** the file as the ground lays it: the dev flags' tees and fairway pattern over it */
+const laid = (f: SurfacesFile): SurfacesFile => { const t = teeDev(), g = t === 'old' ? oldTeeSurfaces(f) : t === 'sand' ? teeWallSurfaces(f, 'sand') : f, m = mowDev(); return m ? mowPatternSurfaces(g, m) : g; };
+let base: SurfacesFile = clampSurfaces(file), desert = false, current: SurfacesFile = laid(base);
 const subs = new Set<(f: SurfacesFile) => void>();
 /** the file the ground is laid with: the owner's, through the desert theme when it is on (T341, desert-theme.ts) */
 export const paintedSurfaces = () => current;
 /** the owner's file itself (no theme): what an edit of a look starts from, so the theme is never written into it */
 export const baseSurfaces = () => base;
 /** T341: the desert theme on or off: the world's looks swapped (desertSurfaces) and the file sent on like a save (the ground bakes again) */
-export function setDesertSurfaces(on: boolean) { if (on === desert) return; desert = on; current = on ? themed(base) : base; for (const s of subs) s(current); }
+export function setDesertSurfaces(on: boolean) { if (on === desert) return; desert = on; current = laid(on ? themed(base) : base); for (const s of subs) s(current); }
 /** T382 (dev server, ?sand=old): the desert as it was before the sand blotches (big pale patches, golden yards, no blotches): the A/B of the shots and the bench */
 export const desertSandDev = (): boolean => { try { return !!import.meta.env?.DEV && new URLSearchParams(location.search).get('sand') === 'old'; } catch { return false; } };
 /** T384 (dev server, ?litter=leaves): the desert theme with the autumn leaves, as it was before the desert's litter (the A/B of the shots and the bench) */
@@ -25,7 +35,7 @@ export const desertSurfacesOn = () => desert;
 /** calls back with every new surfaces file (returns the unsubscribe) */
 export function onPaintedSurfaces(cb: (f: SurfacesFile) => void) { subs.add(cb); return () => { subs.delete(cb); }; }
 /** a surfaces file from elsewhere (the console, a test): checked, then sent on like a save */
-export function setPaintedSurfaces(f: unknown) { base = clampSurfaces(f); current = desert ? themed(base) : base; for (const s of subs) s(current); }
+export function setPaintedSurfaces(f: unknown) { base = clampSurfaces(f); current = laid(desert ? themed(base) : base); for (const s of subs) s(current); }
 /** a texture's painted swatch (the Paint panel's chips): its look's mean colour and its near painting's URL, or null when no surface's look
  *  covers it (it keeps its photo swatch) */
 export function paintedSwatch(tex: string): { col: string; img: string | null } | null {
