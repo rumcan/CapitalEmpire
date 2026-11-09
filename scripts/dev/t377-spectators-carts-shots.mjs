@@ -88,7 +88,7 @@ try {
       const { M, g, groundOf, surfOf, BLOCKED, NP, field, tees, pins } = window.__t377;
       const unit = (dx, dy) => { const L = Math.hypot(dx, dy) || 1; return [dx / L, dy / L]; };
       // (the fans as the engine draws them: on the spot's places when it has them (the new code's arc and ring), else the block)
-      const fansOf = (s, i) => { const o = [], buf = Float32Array.of(s.x, s.y, 60, s.kind === 'stand' ? 2 : 0, s.fx, s.fy, s.ax, s.ay), n = M.view.galleryPeople(buf, 0, i, 100, NP, o, -1, undefined, s.places); return o.slice(0, n).map(p => ({ x: p.x, y: p.y })); };
+      const fansOf = (s, i) => { const o = [], buf = Float32Array.of(s.x, s.y, 90, s.kind === 'stand' ? 2 : 0, s.fx, s.fy, s.ax, s.ay), n = M.view.galleryPeople(buf, 0, i, 100, NP, o, -1, undefined, s.places); return o.slice(0, n).map(p => ({ x: p.x, y: p.y })); };
       const spots = M.gal.gallerySpots(tees, pins, g.golf.structures ?? [], undefined, field());
       const tally = (kind) => {
         const t = { spots: 0, fans: 0, onTee: 0, onGreen: 0, onFairway: 0, onWater: 0, onBunker: 0, ahead: 0, spread: 0, spreadMax: 0, withPlaces: 0 }; // (spread: the mean over the spots of the width of the 60 fans across the line of play for a tee, the angle they cover round the pin for a green, in degrees)
@@ -131,9 +131,9 @@ try {
       const at = which === 'tee' ? pos.tees.find(t => t.hole === hole) : pos.pins.find(p => p.hole === hole);
       await page.evaluate(([hole]) => {
         const { M, g, field, tees, pins } = window.__t377, spots = M.gal.gallerySpots(tees, pins, g.golf.structures ?? [], undefined, field());
-        // every spot, in the engine's order (the engine's places are by the spot's index): 60 fans at that hole's tee and green, none elsewhere
+        // every spot, in the engine's order (the engine's places are by the spot's index): 90 fans (the most a gallery draws; 60 on the old code) at that hole's tee and green, none elsewhere
         const buf = new Float32Array(8 * spots.length);
-        spots.forEach((s, i) => buf.set([s.x, s.y, s.hole === hole && (s.kind === 'tee' || s.kind === 'green') ? 60 : 0, 0, s.fx, s.fy, s.ax, s.ay], 8 * i));
+        spots.forEach((s, i) => buf.set([s.x, s.y, s.hole === hole && (s.kind === 'tee' || s.kind === 'green') ? 90 : 0, 0, s.fx, s.fy, s.ax, s.ay], 8 * i));
         window.__galBuf = buf; Object.defineProperty(g.traffic, 'gallery', { configurable: true, get: () => window.__galBuf, set: () => {} });
       }, [hole]);
       await look(page, at.x, at.y, zoom); await settle(page, warm ? 3500 : 1800);

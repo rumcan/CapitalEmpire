@@ -79,12 +79,12 @@ function seatFrame(spot: number, s: number, lt: number): number {
  *  samples of occupied authored seats, preserving exact positions, aisle gaps, bank facings and bench heights. Larger stands sample across
  *  their occupied rows rather than changing gameplay capacity. Without supplied geometry the legacy stand view is only an estimate.
  *  T377: a standing gallery with `places` (a tee's arc and a green's ring: golf/galleries.ts galleryPlaces, x y x y ... best first) puts its first n fans on the first
- *  n places, each a little off its place (a 0.28 tile jitter), facing the focus; the fans past the places are not drawn.
+ *  n places (up to 90), each a little off its place (a 0.28 tile jitter), facing the focus; the fans past the places are not drawn.
  *  Reuses out objects; cheer >= 0 is seconds since a nearby birdie and keeps the existing clap/cheer animation clips. */
 export function galleryPeople(G: ArrayLike<number>, o: number, spot: number, now: number, people: number, out: CrowdPerson[], cheer = -1, seating?: PlacedSeating, places?: ArrayLike<number>): number {
   const x = G[o]!, y = G[o + 1]!, stand = G[o + 3] === 2, fx = G[o + 4]!, fy = G[o + 5]!, spread = !stand && !!places && places.length >= 2;
   const occupied = Math.max(0, Math.min(Math.round(G[o + 2]!), stand && seating ? seating.count : Infinity));
-  const n = Math.min(occupied, stand ? 90 : spread ? Math.min(60, places!.length >> 1) : 60);
+  const n = Math.min(occupied, stand ? 90 : spread ? Math.min(90, places!.length >> 1) : 60);
   if (people <= 0 || n <= 0) return 0;
   unit(fx - x, fy - y);
   const ux = U[0], uy = U[1], vx = -uy, vy = ux, perRow = stand ? Math.max(1, Math.ceil(Math.sqrt(n * 2))) : 10, seatRow = rowToward(ux, uy);

@@ -57,8 +57,8 @@ export function standingSpot(f: WalkField | null | undefined, x: number, y: numb
 }
 
 /** T377 (#1033, the owner: "they need to be around it not on it"; the lead's review: a gallery is an arc round a tee, a ring round a green, not one clump): the places a tee's
- *  or a green's fans stand at, best first. They are the points of a 1 m lattice on open ground that the walk field (the spectators', grown clear of the tee box,
- *  the green, the bunkers and the water) lets people stand on, in the first ROWS rows from the box or the green (a row a lattice step further out, which a chamfer
+ *  or a green's fans stand at, best first. They are the points of a lattice (a metre or so) on open ground that the walk field (the spectators', grown clear of the tee box,
+ *  the green, the bunkers and the water) lets people stand on, in the first three rows from the box or the green (four where the ground is narrow; a row a lattice step further out, which a chamfer
  *  distance to the box or the green measures), so a gallery is a few deep along its outline. A tee's are behind it and to its sides, never ahead of the tee (dot with
  *  the line of play at most half a tile) and so outside the line of play and its forward cone; a green's are all round it but the cone of 35 degrees on each side of its
  *  approach. They are ordered from straight behind (the tee's back, the green's back) outward round both sides, a bin of 0.06 rad at a time, a bin's rows together:
@@ -93,7 +93,7 @@ export function galleryPlaces(f: WalkField, kind: 'tee' | 'green', c: { x: numbe
     cand.push({ x: X(i), y: Y(j), dist: d[k]!, bin: Math.floor(Math.abs(Math.atan2(bx * dy - by * dx, bx * dx + by * dy)) / PLACE_BIN), band: 0 });
   }
   for (const q of cand) q.band = Math.floor((q.dist - dmin + 0.01) / LAT);
-  // two rows deep, and a row more (to four) where the open ground is so narrow that two rows would not hold the 60 fans a gallery draws
+  // three rows deep, and a row more (to four) where the open ground is so narrow that three rows would not hold the 90 fans a gallery draws
   let rows = cand.filter(q => q.band < PLACE_ROWS);
   for (let r = PLACE_ROWS + 1; r <= PLACE_ROWS_MAX && rows.length < PLACES_MIN; r++) rows = cand.filter(q => q.band < r);
   if (rows.length < 12) return [];
@@ -101,9 +101,9 @@ export function galleryPlaces(f: WalkField, kind: 'tee' | 'green', c: { x: numbe
   const out: number[] = []; for (const q of rows.slice(0, PLACES_MAX)) out.push(q.x, q.y);
   return out;
 }
-/** the lattice of the places (tiles: a tee's 1 m, a green's 1.2 m), the rows a gallery is deep (2, to 4 where it must be to hold 60 fans: a lattice step apart), the angle a bin is, how far from the box or green a
+/** the lattice of the places (tiles: a tee's 1.1 m, a green's 1.2 m), the rows a gallery is deep (3, to 4 where it must be to hold the 90 fans a gallery draws: a lattice step apart), the angle a bin is, how far from the box or green a
  *  place may be (tiles), the most places a spot has, and the cone round a green's approach that no one stands in */
-const PLACE_LAT = 0.5, PLACE_LAT_GREEN = 0.6, PLACE_ROWS = 2, PLACE_ROWS_MAX = 4, PLACES_MIN = 60, PLACE_BIN = 0.06, PLACE_REACH = 9, PLACES_MAX = 90, APPROACH_COS = Math.cos(35 * Math.PI / 180);
+const PLACE_LAT = 0.55, PLACE_LAT_GREEN = 0.6, PLACE_ROWS = 3, PLACE_ROWS_MAX = 4, PLACES_MIN = 90, PLACE_BIN = 0.06, PLACE_REACH = 9, PLACES_MAX = 90, APPROACH_COS = Math.cos(35 * Math.PI / 180);
 
 /** the spots of a course (tees and pins by hole; a hole with no pin has no green spot) and its placed structures. T377: with the course's walk field (`ground`) a
  *  green's and a tee's gallery stands on open ground round it (standingSpot), never on the tee box or the putting surface */

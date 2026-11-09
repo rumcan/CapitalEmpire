@@ -90,18 +90,18 @@ describe('T377: a gallery is an arc round the back and sides of a tee box and a 
     return { min, mean: sum / n };
   };
   const distTo = (ground: number, x: number, y: number): number => { let d = Infinity; for (let j = 0; j < sf.h; j++) for (let i = 0; i < sf.w; i++) if (sf.g[j * sf.w + i] === ground) d = Math.min(d, Math.hypot(sf.x0 + i + 0.5 - x, sf.y0 + j + 0.5 - y)); return d; };
-  it('a tee: places behind it and to its sides on open ground, never ahead of it, 2 rows deep about a metre apart, both sides of the line of play', () => {
+  it('a tee: places behind it and to its sides on open ground, never ahead of it, 3 rows deep about a metre apart, both sides of the line of play', () => {
     const ps = galleryPlaces(sf, 'tee', tee, u); assert.ok(ps.length >= 120, `${ps.length / 2} places`); assert.ok(ps.length <= 180);
     for (let i = 0; i < ps.length; i += 2) {
       const x = ps[i]!, y = ps[i + 1]!, g = groundAt(f0, x, y);
       assert.ok(g === G.open || g === G.path || g === G.walk, `a place at ${x}, ${y} on ground ${g}`);
       assert.ok(passableAt(sf, x, y), 'and clear of the grown tee box, green, bunker and water'); assert.ok((x - tee.x) * u.x + (y - tee.y) * u.y <= 0.5 + 1e-9, `a place ahead of the tee: ${x}, ${y}`);
     }
-    const first = ps.slice(0, 120); let north = 0, south = 0, minY = Infinity, maxY = -Infinity;
+    const first = ps.slice(0, 180); let north = 0, south = 0, minY = Infinity, maxY = -Infinity;
     for (let i = 1; i < first.length; i += 2) { const y = first[i]!; if (y < tee.y - 3) north++; if (y > tee.y + 3) south++; minY = Math.min(minY, y); maxY = Math.max(maxY, y); }
-    assert.ok(north >= 8 && south >= 8, `the first 60 fans are on both sides of the line of play: ${north} to its north, ${south} to its south`);
+    assert.ok(north >= 8 && south >= 8, `the first 90 fans are on both sides of the line of play: ${north} to its north, ${south} to its south`);
     assert.ok(maxY - minY >= 13, `an arc of ${(maxY - minY).toFixed(1)} tiles across the line of play, not a clump of 5`);
-    const rows = new Set<number>(); for (let i = 0; i < 120; i += 2) rows.add(Math.round(distTo(G.tee, ps[i]!, ps[i + 1]!) / 0.5));
+    const rows = new Set<number>(); for (let i = 0; i < 180; i += 2) rows.add(Math.round(distTo(G.tee, ps[i]!, ps[i + 1]!) / 0.55));
     assert.ok(rows.size >= 2 && rows.size <= 4, `${rows.size} rows deep (distances to the box ${[...rows].join(', ')} half tiles)`);
     const nn = near(first); assert.ok(nn.min >= 0.45 && nn.mean <= 0.8, `about a metre apart: the nearest neighbour ${nn.min.toFixed(2)} at least, ${nn.mean.toFixed(2)} on average (tiles of 2 m)`);
   });
@@ -109,7 +109,7 @@ describe('T377: a gallery is an arc round the back and sides of a tee box and a 
     const ps = galleryPlaces(sf, 'tee', tee, u), lateral = (k: number) => { let m = 0; for (let i = 0; i < 2 * Math.min(k, ps.length >> 1); i += 2) m = Math.max(m, Math.abs(ps[i + 1]! - tee.y)); return m; };
     assert.ok(Math.abs(ps[1]! - tee.y) <= 1.5 && ps[0]! < tee.x - 3, `the first place is straight behind the box: ${ps[0]}, ${ps[1]}`);
     assert.ok(lateral(8) <= lateral(30) && lateral(30) <= lateral(60) && lateral(60) <= lateral(90), 'each crowd is wider than the one before');
-    assert.ok(lateral(10) < 3 && lateral(60) > 6, `10 fans stand together behind the box (${lateral(10).toFixed(1)} wide), 60 reach round it (${lateral(60).toFixed(1)})`);
+    assert.ok(lateral(10) < 3 && lateral(90) > 6, `10 fans stand together behind the box (${lateral(10).toFixed(1)} wide), 90 reach round it (${lateral(90).toFixed(1)})`);
   });
   it('a green: a ring round its open sides, on open ground clear of the grown green, the bunker and the water, never in the cone of its approach', () => {
     const ps = galleryPlaces(sf, 'green', pin, u); assert.ok(ps.length >= 120, `${ps.length / 2} places`);
@@ -122,9 +122,9 @@ describe('T377: a gallery is an arc round the back and sides of a tee box and a 
       if (dx > 4) behind++; if (dy < -4) north++; if (dy > 4) south++;
     }
     assert.ok(behind > 10 && north > 10 && south > 10, `behind ${behind}, to the north ${north}, to the south ${south}`);
-    const first = ps.slice(0, 120), nn = near(first); assert.ok(nn.min >= 0.45 && nn.mean <= 0.8, `about a metre apart (${nn.min.toFixed(2)}, ${nn.mean.toFixed(2)})`);
-    let a0 = Infinity, a1 = -Infinity; for (let i = 0; i < 120; i += 2) { const a = Math.atan2(first[i + 1]! - pin.y, first[i]! - pin.x); a0 = Math.min(a0, a); a1 = Math.max(a1, a); }
-    assert.ok((a1 - a0) * 180 / Math.PI >= 100, `60 fans reach ${((a1 - a0) * 180 / Math.PI).toFixed(0)} degrees round the green`);
+    const first = ps.slice(0, 180), nn = near(first); assert.ok(nn.min >= 0.45 && nn.mean <= 0.8, `about a metre apart (${nn.min.toFixed(2)}, ${nn.mean.toFixed(2)})`);
+    let a0 = Infinity, a1 = -Infinity; for (let i = 0; i < 180; i += 2) { const a = Math.atan2(first[i + 1]! - pin.y, first[i]! - pin.x); a0 = Math.min(a0, a); a1 = Math.max(a1, a); }
+    assert.ok((a1 - a0) * 180 / Math.PI >= 100, `90 fans reach ${((a1 - a0) * 180 / Math.PI).toFixed(0)} degrees round the green`);
   });
   it('where the open ground round a tee is narrow the gallery is a row or two deeper (to 4) so its 60 fans have places', () => {
     // a tee box in a lake with a pocket of rough 14 tiles tall behind it: two rows would hold about 44 places, three or four hold the 60 a gallery draws
