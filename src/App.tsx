@@ -295,6 +295,11 @@ export default function App() {
   }, []);
 
   const toasts = game ? game.toasts.filter(t => performance.now() - t.t < (t.scene ? 9000 : 4000)) : []; // (T242: one with a Set the scene button stays longer)
+  /** T348 (#990): the toasts' markup, for the stack under the top bar and for the one hung under your round's bar (RoundBar `below`) */
+  const toastEls = (g: Game) => toasts.map(t => (
+    <div key={t.id} className="glass px-3 py-1.5 text-sm"><span className={t.kind === 'warn' ? 'text-red-300' : t.kind === 'good' ? 'text-emerald-300' : ''}>{t.text}</span>
+      {t.scene && <button className="chip pointer-events-auto ml-2 py-0.5" onClick={() => g.openScene(t.scene!)} data-testid="toast-scene"><Icon name="camera" size={16} />Set the scene</button>}</div>
+  ));
   const net = game?.ledger?.net ?? 0, debtDays = game?.traffic.budget.debtDays ?? 0;
   // the rail item of the tool in hand (the road tool on the course is Paths, the course tool's clubhouse scope Buildings: game.uiTool)
   const item = game ? railItemOf(game.uiTool, activeRail.current) : undefined;
@@ -841,13 +846,13 @@ export default function App() {
           {(game.showAccess || (dev && game.cam.z < PLANNER_Z)) && <AccessLegend game={game} />}
           {game.showFlow && <HeatLegend raised={game.showAccess || (dev && game.cam.z < PLANNER_Z)} time={game.flowMode === 'time'} />}
 
-          {/* T348 (#990): the toasts start under the top bar, however many rows it wraps to (--hud-top), so they never sit on the speed bar's row (they were at a fixed 5rem: on the second row at a narrow window) */}
-          <div className="pointer-events-none absolute left-1/2 top-[calc(var(--hud-top,4.75rem)+0.25rem)] z-30 flex -translate-x-1/2 flex-col items-center gap-1" data-testid="toasts">
-            {toasts.map(t => (
-              <div key={t.id} className="glass px-3 py-1.5 text-sm"><span className={t.kind === 'warn' ? 'text-red-300' : t.kind === 'good' ? 'text-emerald-300' : ''}>{t.text}</span>
-                {t.scene && <button className="chip pointer-events-auto ml-2 py-0.5" onClick={() => game.openScene(t.scene!)} data-testid="toast-scene"><Icon name="camera" size={16} />Set the scene</button>}</div>
-            ))}
-          </div>
+          {/* T348 (#990): the toasts start under the top bar, however many rows it wraps to (--hud-top), so they never sit on the speed bar's row (they were at a fixed 5rem: on the second row at a narrow window);
+              in your round they hang under the round's bar instead (RoundBar `below`), so they never cover it */}
+          {!(game.yourRound() && game.you) && (
+            <div className="pointer-events-none absolute left-1/2 top-[calc(var(--hud-top,4.75rem)+0.25rem)] z-30 flex -translate-x-1/2 flex-col items-center gap-1" data-testid="toasts">
+              {toastEls(game)}
+            </div>
+          )}
 
           {(game.traffic.car || game.traffic.watch?.node) && (
           <div className="absolute left-[450px] top-[var(--hud-top,6rem)] z-20 flex w-64 flex-col gap-2">
@@ -940,7 +945,8 @@ export default function App() {
             const side = game.panel ? '19.5rem' : '0.75rem', card = !!game.youTalk || !!game.youTeeView() || !!game.eventCard() || !!game.challengeView();
             const left = `${Math.round(railRef.current?.getBoundingClientRect().right ?? 96) + 8}px`, right = card ? `calc(${side} + 328px)` : side;
             return <>{/* T317: your round's bar and its scorecard */}
-            <RoundBar left={left} right={right} v={rv} onJump={() => game.yourJump()} onCart={() => game.youCartToggle()} onCallCart={() => game.youCartCall()} onMull={() => game.yourMulligan()} onGimme={() => game.yourGimme()} onCard={() => game.toggleYourCard()} onQuit={() => game.yourRoundEnd()} onSkip={() => game.matchSkip()} />
+            <RoundBar left={left} right={right} v={rv} onJump={() => game.yourJump()} onCart={() => game.youCartToggle()} onCallCart={() => game.youCartCall()} onMull={() => game.yourMulligan()} onGimme={() => game.yourGimme()} onCard={() => game.toggleYourCard()} onQuit={() => game.yourRoundEnd()} onSkip={() => game.matchSkip()}
+              below={toasts.length ? <div className="flex flex-col items-center gap-1" data-testid="toasts">{toastEls(game)}</div> : undefined} />
             {rv.card && <ScoreCard v={rv} onNext={() => game.yourNextHole()} onDone={() => game.yourRoundEnd()} onClose={() => game.toggleYourCard(false)} />}</>; })()}
           {(game.youInCart ? game.youCart : game.you)?.skip && <div className="pointer-events-none absolute inset-x-0 bottom-24 z-20 flex justify-center"><button className="btn-gold pointer-events-auto px-4 py-1.5 text-sm" onClick={() => game.youSkip()} data-tip="A long walk: arrive now" data-testid="you-skip"><Icon name="play" size={16} />Skip the walk</button></div>}
           {(() => { const w = !game.seasonReport ? game.welcomeView() : null; return w && <WelcomeCard road={w.road} newHole={w.newHole} guide={!!game.rangeGuideView()} onGo={() => game.closeWelcome(true)} onClose={() => game.closeWelcome(false)} />; })()}
