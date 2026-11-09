@@ -97,8 +97,36 @@ async function drive(label, legs, x0, y0, wanted, zoom) {
 /** the octagon: the cart within 0.4 tile of the middle of a leg; the square: within 1.6 tiles of a vertex (the bends) */
 const nearMid = (st, pts) => pts.slice(1).some((p, k) => Math.hypot(st.x - (p[0] + pts[k][0]) / 2, st.y - (p[1] + pts[k][1]) / 2) < 0.4);
 const nearVertex = (st, pts) => pts.slice(1, -1).some(p => Math.hypot(st.x - p[0], st.y - p[1]) < 1.6);
+/** you in the cart, the keys: D (the screen's right: the cart heads E), then W (N), A (W), S (S), each held for 1.1 s of the page's clock, then let go (0.6 s: it rolls on and stops); a frame
+ *  every ~150 ms. The game's own keys (g.keys) and its own youStep, so the cart steers, pulls away and rolls to a stop here as it does for a player */
+async function keyed(zoom, x0, y0) {
+  await page.evaluate(({ x0, y0, zoom }) => {
+    const g = window.__game, c = g.youCart; g.keys.clear(); g.youInCart = true;
+    c.x = x0; c.y = y0; c.face = 6; c.moving = false; c.keys = false; c.path.length = 0; if (g.cartDrive) g.cartDrive.reset(c);
+    if (g.you) { g.you.x = x0; g.you.y = y0; g.you.moving = false; g.you.keys = false; g.you.path.length = 0; }
+    window.__zoom = zoom; window.__follow = true;
+  }, { x0, y0, zoom });
+  await page.waitForTimeout(3000);
+  const half = Math.round(60 / (zoom >= 0.25 ? 1 : 2)), frames = [], states = [], marks = [];
+  const sample = () => page.evaluate(() => {
+    const g = window.__game, c = g.youCart, d = g.youCartDraw?.[0], p = g.screen(c.x, c.y);
+    return { x: c.x, y: c.y, keys: c.keys, item: d ? d.item : -1, ang: g.cartDrive ? g.cartDrive.ang : null, v: g.cartDrive ? g.cartDrive.v : null, tnow: performance.now(), sx: p.x, sy: p.y };
+  });
+  const take = async (st, key) => { st.key = key; states.push(st); frames.push({ st, i: states.length - 1, buf: await page.screenshot({ clip: { x: Math.round(st.sx - half), y: Math.round(st.sy - half * 1.15), width: half * 2, height: half * 2 }, type: 'png' }) }); };
+  for (const [key, name] of [['d', 'E'], ['w', 'N'], ['a', 'W'], ['s', 'S']]) {
+    await page.evaluate(k => window.__game.keys.add(k), key);
+    let st = await sample(); const t0 = st.tnow, p0 = { x: st.x, y: st.y };
+    while (st.tnow - t0 < 1100) { st = await sample(); await take(st, `hold ${key.toUpperCase()} (${name})`); }
+    await page.evaluate(k => window.__game.keys.delete(k), key);
+    marks.push({ key: name, moved: +Math.hypot(st.x - p0.x, st.y - p0.y).toFixed(2), from: p0, to: { x: st.x, y: st.y } });
+  }
+  { let st = await sample(); const t0 = st.tnow; while (st.tnow - t0 < 600) { st = await sample(); await take(st, 'keys let go'); } const last = await sample(); marks.push({ key: 'rolled on after the keys', moved: +Math.hypot(last.x - st.x, last.y - st.y).toFixed(2), keysFlag: last.keys }); }
+  await page.evaluate(() => { window.__follow = false; window.__game.youInCart = false; });
+  console.log('keys', states.length, 'states,', frames.length, 'frames,', new Set(states.map(f => f.item)).size, 'different pictures', JSON.stringify(marks.map(m => [m.key, m.moved])));
+  return { frames, states, marks, half };
+}
 for (const zoom of zooms) {
-  const oct = await drive('octagon', OCTAGON, where.cx - 3, where.cy + 1, nearMid, zoom), sq = await drive('square', SQUARE, where.cx - 5, where.cy - 5, nearVertex, zoom);
+  const oct = await drive('octagon', OCTAGON, where.cx - 3, where.cy + 1, nearMid, zoom), sq = await drive('square', SQUARE, where.cx - 5, where.cy - 5, nearVertex, zoom), kd = await keyed(zoom, where.cx - 5, where.cy - 5);
 
   // ---- the strips
   const SCALE = zoom >= 0.25 ? 2 : 4, W = oct.half * 2 * SCALE;
@@ -131,7 +159,18 @@ for (const zoom of zooms) {
     await sharp({ create: { width: 7 * W, height: rows.length * W, channels: 3, background: '#223' } }).composite(tiles.flatMap((r, y) => r.map((input, x) => ({ input, left: x * W, top: y * W })))).png().toFile(path.join(out, `${tag}-z${zoom}-bends.png`));
   }
   console.log('bends', JSON.stringify(bends));
-  fs.writeFileSync(path.join(out, `${tag}-z${zoom}-frames.json`), JSON.stringify({ tag, zoom, slow, query, octagon: oct.states, square: sq.states, bends }));
+  // the keys: one row a key (hold D, W, A, S, then let go): the first frame of each picture shown, so a cart that steers is a row of neighbouring pictures and one that snaps is two
+  {
+    const krows = []; for (const name of ['hold D (E)', 'hold W (N)', 'hold A (W)', 'hold S (S)', 'keys let go']) {
+      const fr = kd.frames.filter(f => f.st.key === name), pick = []; let last = null;
+      for (const f of fr) if (f.st.item !== last) { pick.push(f); last = f.st.item; }
+      if (fr.length && pick[pick.length - 1] !== fr[fr.length - 1]) pick.push(fr[fr.length - 1]);
+      krows.push(pick.slice(0, 7).map((f, k) => ({ f, label: `${name} ${k + 1}: picture ${f.st.item}` })));
+    }
+    const tiles = await Promise.all(krows.map(r => Promise.all(r.map(t => tile(t.f, t.label)))));
+    await sharp({ create: { width: 7 * W, height: krows.length * W, channels: 3, background: '#223' } }).composite(tiles.flatMap((r, y) => r.map((input, x) => ({ input, left: x * W, top: y * W })))).png().toFile(path.join(out, `${tag}-z${zoom}-keys.png`));
+  }
+  fs.writeFileSync(path.join(out, `${tag}-z${zoom}-frames.json`), JSON.stringify({ tag, zoom, slow, query, octagon: oct.states, square: sq.states, keys: kd.states, keyMarks: kd.marks, bends }));
   console.log('written', out);
 
 }

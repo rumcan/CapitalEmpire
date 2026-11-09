@@ -72,6 +72,10 @@ seen, and reusing them stores no pixel twice. The bottom row is kept in `src/` (
   the drive takes the same minutes, so the play is unchanged). A route's slivers (under 0.5 tile: a stop on a path starts its route with one) have no heading of their own.
 - Your cart (`golf/cartdrive.ts`): under the keys it steers (a quarter turn in about 0.3 s, a little slower from rest) and drives along its heading, pulls away in 0.45 s and rolls to a stop in
   0.3 s; a click's route is followed exactly, its pace eased; a facing the game sets from outside (the cart turned to you on arriving) is turned to a step at a time.
+- Shots (`shots/`): `node scripts/assets/golf-cart/shots.mjs --url <dev server> --tag after|before [--query "&oldcart=1"] --zooms 0.3,0.15` drives the game's own cart (a headless Edge on
+  the GPU; the page's clock at a quarter speed so a turn of 0.3 s is caught in several frames) round an octagon through all eight headings, a square with a hairpin, and under the keys (D, W, A,
+  S, then let go), and writes the strips; `compare.mjs` stacks before over after. The before is this build with `?oldcart` (the old pictures, pace and heading), the closest zoom (30%) and the
+  middle one (15%).
 - Tests: `tests/t351-cart-eight.test.ts`.
 
 ## Not done

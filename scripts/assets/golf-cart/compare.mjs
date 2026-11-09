@@ -9,7 +9,7 @@ const args = process.argv.slice(2), opt = (k, d) => { const i = args.indexOf('--
 const dir = path.resolve(opt('dir', 'output/t351/shots')), zoom = opt('zoom', '0.3'), out = path.resolve(opt('out', dir));
 fs.mkdirSync(out, { recursive: true });
 const label = (w, text) => Buffer.from(`<svg width="${w}" height="26" xmlns="http://www.w3.org/2000/svg"><rect width="100%" height="26" fill="#0f172a"/><text x="8" y="18" font-family="sans-serif" font-size="15" font-weight="bold" fill="#fde68a">${text}</text></svg>`);
-for (const kind of ['octagon', 'bends']) {
+for (const kind of ['octagon', 'bends', 'keys']) {
   const parts = [['before', 'BEFORE: main (two pictures, the heading snaps at every bend)'], ['after', 'AFTER: T351 (eight pictures, the heading turns through its neighbours)']];
   const files = parts.map(([tag]) => path.join(dir, `${tag}-z${zoom}-${kind}.png`));
   if (!files.every(f => fs.existsSync(f))) { console.log(`skipped ${kind}: ${files.filter(f => !fs.existsSync(f)).join(', ')} missing`); continue; }
