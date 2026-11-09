@@ -8,7 +8,7 @@ export interface BunkerSettings {
   collar: number;
   firstCut: number;
   wall: number;
-  /** the cut face's height where no green is behind it (metres; the owner, 2026-10-31: low by default, raise it at will) */
+  /** the cut face's height where no green is behind it (metres; the owner, 2026-10-31: low by default, raise it at will; 2026-11-08: none by default, 0) */
   wallLow: number;
   rim: number;
   slope: number;
@@ -89,11 +89,11 @@ export const BUNKER_SETTING_FIELDS: readonly Readonly<BunkerSettingField>[] = Ob
 
 export const DEFAULT_BUNKER_SETTINGS: Readonly<BunkerSettings> = Object.freeze({
   version: 1,
-  // The cut face is this high on the side toward the green and half of it on the far side (the owner, 2026-10-31), so the far side's 0.6 m
-  // matches the old bunker's sink and the swap from the old drawing to the baked picture reads as the same bunker; a shallow sand floor.
+  // The cut face is this high on the side toward the green (the owner, 2026-10-31) and none where no green is behind it (wallLow 0: the owner,
+  // 2026-11-08, "change default of the bunker wall with no green behind to 0"; it was 0.25 m); a shallow sand floor.
   depth: 0.3,
   wall: 1.2,
-  wallLow: 0.25,
+  wallLow: 0,
   // In the game the course draws the grass round a bunker (its rough, a green, a fairway, with their own transitions): the bake draws
   // only the bunker, so its own rough band and first cut start at their minimum and its rim is flat (the approved preset's 5 m band on
   // a 0.8 m mound was cut by every neighbouring green and left raised slivers over the wall). Both widths stay on the sliders.

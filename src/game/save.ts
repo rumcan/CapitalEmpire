@@ -16,8 +16,9 @@ import type { GolfSave } from './golf/mode';
 import type { GrassSave } from './ext/grass-management';
 import type { DaySave } from './event/daysave';
 import type { PedestrianIdentities } from './ext/pedestrians';
+import type { TreeCutSave } from './treecut';
 
-const DB = 'capital-empire', STORE = 'saves', SLOT = 'town', V2_KEY = 'maple-falls-town-v2';
+const DB ='capital-empire', STORE = 'saves', SLOT = 'town', V2_KEY = 'maple-falls-town-v2';
 export const SAVE_VERSION = 5;
 /** the build that writes saves (P07/T044): the package version and the git sha; 'dev' when not built by Vite (the tests) */
 export const BUILD = typeof __BUILD__ !== 'undefined' && __BUILD__ ? __BUILD__ : { app: '0.0.0', sha: 'dev' };
@@ -110,6 +111,9 @@ export interface SaveV5 {
   stadium?: [number, number, number, number] | null;
   /** the painted ground areas as [tex, scale, angle, border, btex, pts, radius, tone, toneAmt, tint] (the Paint tool, docs/PAINT-TOOL.md; ids 1..n in this order; optional, no version bump; missing = none; the last four are optional on load) */
   paints?: PaintTuple[];
+  /** T381: the trees the player took away with Rub out or the bulldozer: the keys (places) of the forest's, river belts' and town's trees and the keys of the
+   *  road network's own trees (treecut.ts; optional, no version bump; missing = none: every tree the map plants stands) */
+  cutTrees?: TreeCutSave;
   /** the Car park tool's bay rows as [ax, ay, bx, by, side, bay, col] (the drag, side 1 or -1, bay 90/60/45, col white or yellow; ids 1..n in this order;
    *  optional, no version bump; missing = none; docs/PARKING.md) */
   rows?: [number, number, number, number, number, number, string][];

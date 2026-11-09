@@ -79,11 +79,11 @@ test('the knobs: clamped to their ranges, the default on; off or the district zo
   assert.deepEqual(clampWaterMotion(null), WATER_MOTION);
   assert.equal(WATER_MOTION.on, true);
   const c = clampWaterMotion({ on: false, flow: 99, ripple: -1, foam: 'x', sparkle: 2 });
-  assert.equal(c.on, false); assert.equal(c.flow, MOTION_RANGES.flow[1]); assert.equal(c.ripple, 0); assert.equal(c.foam, 1); assert.equal(c.sparkle, 2);
+  assert.equal(c.on, false); assert.equal(c.flow, MOTION_RANGES.flow[1]); assert.equal(c.ripple, 0); assert.equal(c.foam, WATER_MOTION.foam, 'a bad knob falls back to the default water'); assert.equal(c.sparkle, 2);
   assert.equal(motionFrame({ ...WATER_MOTION, on: false }, 0.3, 0, 0.3, phasesAt(1, WATER_MOTION)), null);
   assert.equal(motionFrame(WATER_MOTION, ZOOM[0] - 0.01, 0, 0.09, phasesAt(1, WATER_MOTION)), null);
   const f = motionFrame(WATER_MOTION, 0.3, 1, 0.3, phasesAt(1, WATER_MOTION))!;
-  assert.equal(f.gain, 1); assert.ok(f.sparkle < 0.2, 'the sparkle goes after dusk'); assert.equal(f.foam, 1);
+  assert.equal(f.gain, 1); assert.ok(f.sparkle < 0.2 * WATER_MOTION.sparkle, 'the sparkle goes after dusk'); assert.equal(f.foam, WATER_MOTION.foam);
   // the phases run with the speed and wrap at 256
   const p = stepPhases({ phase: 255.9, wave: 0, drift: [0, 0, 0, 0] }, 1, WATER_MOTION);
   assert.ok(p.phase >= 0 && p.phase < 256 && p.phase < 1); assert.ok(p.wave > 0);
@@ -193,15 +193,18 @@ test("T343: a swamp with no open water near still gets a mask, its pools' weight
 test('T343: the swamp mask feeds the motion pass: the pools ripple, glint and lap at their edges, gently; the mud and reeds stay', () => {
   const fr = frame(), sw = sampleOf(0, 128, 128, 255);
   // the pool water moves (over a patch, some pixels lighter, some darker), the swamp's own colour kept (no wash: a multiply and small)
-  let lighter = 0, darker = 0, most = 0, sum = 0;
+  let lighter = 0, darker = 0, most = 0, sum = 0, mostT = 0, sumT = 0;
   for (let i = 0; i < 400; i++) {
     const x = 3 + (i % 20) * 0.37, y = 5 + Math.floor(i / 20) * 0.41, o = motionPixel(POOL, x, y, sw, fr), r = swampPixel(POOL, x, y, 1, frame({ sparkle: 0, foam: 0 }));
     const d = r[1]! - POOL[1]!; if (d > 0.5) lighter++; if (d < -0.5) darker++; most = Math.max(most, Math.abs(d)); sum += Math.abs(d);
+    // (T363: the bound below was set on the ripples first tuned, 1; the default water's are 117%)
+    const dt = swampPixel(POOL, x, y, 1, frame({ sparkle: 0, foam: 0, ripple: 1 }))[1]! - POOL[1]!; mostT = Math.max(mostT, Math.abs(dt)); sumT += Math.abs(dt);
     // (the same as the twin itself)
     assert.deepEqual(o, swampPixel(POOL, x, y, 1, fr));
   }
   assert.ok(lighter > 40 && darker > 40, `ripples both ways: ${lighter} ${darker}`);
-  assert.ok(sum / 400 < 0.08 * POOL[1]! && most < 0.4 * POOL[1]!, `the ripples' light gentle (a multiply): mean ${sum / 400}, at most ${most}`);
+  assert.ok(sumT / 400 < 0.08 * POOL[1]! && mostT < 0.4 * POOL[1]!, `the ripples' light gentle (a multiply): mean ${sumT / 400}, at most ${mostT}`);
+  assert.ok(sum / 400 < 0.1 * POOL[1]! && most < 0.4 * POOL[1]!, `the default water's ripples too (117%): mean ${sum / 400}, at most ${most}`);
   // the mud and the reeds between the pools are untouched
   for (const c of [MUD, REED, GRASS]) assert.deepEqual(motionPixel(c, 4.3, 6.1, sw, fr), c);
   // no swamp weight there (the open water's far bank, as before): untouched
@@ -212,8 +215,15 @@ test('T343: the swamp mask feeds the motion pass: the pools ripple, glint and la
   assert.ok(moved > 20, `moved ${moved}`);
   assert.ok(SWAMP_POOL.scale > 1 && SWAMP_POOL.slow < 1, 'finer and slower');
   // the pool's edge (mud on a side: near 0) gets a soft pale rim, the open middle none
-  let rim = 0; for (let i = 0; i < 100; i++) { const x = 1 + i * 0.21; const e = swampPixel(POOL, x, 3, 1, fr, 0, 0), m = swampPixel(POOL, x, 3, 1, fr, 1, 0); rim = Math.max(rim, e[0]! - m[0]!); }
-  assert.ok(rim > 1 && rim < 30, `a gentle rim: ${rim}`);
+  // (T363: the bound was set on the look first tuned, foam 1; the default water's foam is 128%)
+  const tuned = frame({ ripple: 1, foam: 1, sparkle: 1 });
+  let rim = 0, rimT = 0;
+  for (let i = 0; i < 100; i++) {
+    const x = 1 + i * 0.21, e = swampPixel(POOL, x, 3, 1, fr, 0, 0), m = swampPixel(POOL, x, 3, 1, fr, 1, 0), et = swampPixel(POOL, x, 3, 1, tuned, 0, 0), mt = swampPixel(POOL, x, 3, 1, tuned, 1, 0);
+    rim = Math.max(rim, e[0]! - m[0]!); rimT = Math.max(rimT, et[0]! - mt[0]!);
+  }
+  assert.ok(rimT > 1 && rimT < 30, `a gentle rim: ${rimT}`);
+  assert.ok(rim > 1 && rim < 40, `the default water's rim too: ${rim}`);
   // the motion off (no frame): untouched
   assert.deepEqual(motionPixel(POOL, 4.3, 6.1, sw, null), POOL);
 });

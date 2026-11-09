@@ -7,6 +7,9 @@
 //            http://localhost:5174, which must run from this same checkout): one road and one lot composed as the game does at any type,
 //            size and road angle, edited, its ground painted, saved to src/game/lots/lot-presets.json and approved for the game. (The old
 //            baked house lots' tab is gone; its /api/lot* routes below are unused until the baked-lot pipeline retires, P20 T066.)
+//   Lot review (T385, #1042): the game's lot review (src/game/dev/lot-review.ts, ?lotreview) framed from the same game dev server: the house lots of a generated town or T353's estate, one at a time:
+//            tick what is valid (house, driveway or parking, trees, fence), mark a lot bad with a note, quick pick decals and props onto it as its override. The game dev server saves every
+//            action into scripts/assets/lot-review.json (POST /__dev/lot-review: this server has no route for it); the lead reads it with npm run lots:review
 //   People:  every townsperson's walk (art/people3d, 8 facings x idle + 8 walk frames), animated: fix any frame that faces the wrong way (mirror it, use another frame in its
 //            place, or drop in a new picture): walker-fixes.json, the pictures in scripts/assets/walker-frames (walker-fix.mjs)
 //   Holes:   the golf hole presets (src/game/golf/hole-presets.json, 18 slots): areas and props edited on a canvas, or a generated hole from a seed (holes.js)

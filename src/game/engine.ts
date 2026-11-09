@@ -142,6 +142,7 @@ import { rectPlot, surveyBlocks, surveyPatch } from './lots/survey';
 /** T232: a bought block's survey line runs this far inside its edges (tiles), clear of a neighbour's line */
 const LAND_SURVEY_INSET = 0.6;
 import { SITE_HEAPS, SITE_LUMBER, acrossLines, compose, composeWhole, farmPreset, fenceOnly, isCarPark, lotModelVersion, lotPresets, pickedPreset, setLotModel, type ComposeState, type FenceLines, type LotGeom, type Placed } from './lots/compose';
+import type { Composition } from './lots/compose'; // T385 (#1042): the Lot review's override
 import { LATEST as LATEST_LOT_MODEL } from './lots/lot-models';
 import { stateOf, type PresetState } from './lots/presets';
 import { LotMap, endReach, ringClear } from './lots/lots';
@@ -172,14 +173,14 @@ import { realNet, type AnswerCache } from './golf/osm/polite';
 import { fetchLand, tilesKept, tilesOfCourse } from './golf/osm/dem';
 import { planOsmGame } from './golf/osm/start';
 import { specMarkers } from './golf/osm/raster';
-import { RANGE_CAM_ZOOM, RANGE_LOT, planRangeStart } from './golf/rangestart';
+import { RANGE_CAM_ZOOM, planRangeStart } from './golf/rangestart';
 import { CLUB_REACH, clubhouseSpotWhy, plotOfFront, rangeLayout } from './golf/range';
 import { PRACTICE_LOT_NAME, inPractice, practiceArea, practiceDims } from './golf/practice';
 import { CAR_PARK_PLACE_COST, PRACTICE_PLACE_COST, RANGE_PLACE_COST, landWhy, placeVerdict, rangeSpotAt, rectAt, rectPoly as rectPolyOf, rectsMeet, type LandCheck, type Placeable, type RangeSpot } from './golf/placing';
-import { RANGE_UPGRADES, homeYardBox, rangeTakes, upgradeFoot, upgradeWhy } from './golf/rangebiz';
+import { RANGE_UPGRADES, homeYardBox, rangeTakes, upgradeFoot, upgradeWhy, type RangeBizSave } from './golf/rangebiz';
 import { baysByDoor, servesOf, servingParks, type Serve, type Venue } from './golf/walkserve';
 import { drawServePreview } from './walkserve-overlay';
-import { hiddenBy, rangeKeepOutWhy, snapToRoad, type Building } from './golf/parkplace';
+import { carParkSpotAt, carParkWhy, parkSpotWhy as spotWhyOf, snapToRoad, type Building, type CarParkCtx } from './golf/parkplace';
 import { footStart, parkLook, type ParkLook } from './event/parklook';
 import { dressCourse } from './golf/dressing';
 import { FIRST_TEE, MONTH_LEN, SEASON_LEN, SEASON_START, monthIndexLabel, monthsLeft, seasonLabel, seasonMonth, yearOf } from './golf/calendar';
@@ -209,6 +210,7 @@ import { CHEER_TILES, DayFinish, IMPACT_S, LiveGroup, MODEL_V, OWNER_ADDRESS, OW
 import { FRAMES_PER_TILE, SWING_EVERY, doorOf, hoverText, keyStep, lookSex, makeYou, routeOf, skipAhead, standInText, startWalk, stepYou, stopWalk, talkSpot, verbOf, youFrame, type ThingKind, type Verb as YouVerb, type You as YouChar } from './golf/you';
 import { AltTap, HeldKeys, WALK_KEYS, cameraChase, clickDoes, loadCursorMode, panAxes, saveCursorMode, walkAxes } from './golf/cursors';
 import { BRING_TILES, GREEN_CLEAR, appearSpot, callMode, callSpot, distText, edgeMarker, parkSpot, shouldPark, type ParkSurf } from './golf/play/yourcart';
+import { BLADE_R, TreeCut, keyPos, treeKey, type TreeRec } from './treecut';
 import { answerOf, clampStake, firstName, golfs, hcpOfName, hcpOfSkill, holeDecided, matchHoles, matchLengths, matchNextHole, matchTurn, matchView, maxStake, nameSeed, opponentOf, oppShot, playMatchYours, returnChallenge, rivalText, scoreOf, settleMatch, skipMatch, stakeWhy, startMatch, type HoleWin, type Opponent } from './golf/play/match';
 import { ADDRESS_PACE, AT_ADDRESS, jumpAlpha, livePuffs, puffAt, stepToward, type Puff } from './golf/play/jumpfx';
 import { CLUB_NAME, LEVEL_NAME, addVoucher, bagView, carryFor, fitPart, kitOf, levelOf, partWhy, pickText, readShape, setThird, shapeEffect, shapeLines, clubUpgradeWhy, upgradeClub, voucherWhy, type BagSave, type BagView, type ClubKit, type PartKind, type ShapeFx, type ShopCtx, type ShotShape } from './golf/play';
@@ -579,8 +581,9 @@ const LOT_FILL = Array.from({ length: 24 }, (_, i) => { const k = [1, 0.75, 0.5,
 /** whether node n's arms are small enough for a mini-roundabout: 2 lanes each way at most (a one-way road: 4 lanes) */
 const miniFits = (n: Node): boolean => n.arms.every(a => a.cls.laneCentres.length <= (a.cls.oneway ? 4 : 2));
 
-/** the props an undoable Paint or Course action added and removed */
-type PropLog = { added: Prop[]; removed: Prop[] };
+/** the props an undoable Paint or Course action added and removed, and (T381) the map's trees it took away: the forest's, river belts' and town's by key and
+ *  what they were (TreeRec), the road network's by their AutoProp (they are props the network makes again) */
+type PropLog = { added: Prop[]; removed: Prop[]; cut: TreeRec[]; cutAuto: AutoProp[] };
 
 /** the tools' names as the rail and the panels say them (a locked tool's toast, P23 4.10) */
 const TOOL_NAME: Partial<Record<Tool, string>> = { road: 'Roads', lane: 'Upgrade', downgrade: 'Downgrade', junction: 'Junctions', bus: 'Bus routes', park: 'Car parks', toll: 'Toll gates', paint: 'Paint', course: 'Holes', path: 'Cart paths & roads', buildings: 'Buildings', bulldoze: 'Bulldoze', practice: 'Practice' };
@@ -1059,8 +1062,8 @@ export class Game {
   /** a drag in progress; build: a right-button press in the road tool (released without moving, it builds the route, as Enter) */
   private dragging: null | { kind: 'pan' | 'bulldoze' | 'park'; sx: number; sy: number; camX: number; camY: number; moved: boolean; /** T207: a road tool right-click: on release without a drag it takes back the last point */ back?: boolean; aim?: Pt; /** a Select click's hole under it (0: none; T174) */ hole?: number; /** T200: a click on Land for sale's overlay (it opens the block's card on release, never buys) */ land?: Pt; /** T240: a Walk mode click (your character walks there on release) */ you?: boolean } = null;
   /** the Paint tool: painted ground areas, its settings and the outline being drawn (docs/PAINT-TOOL.md) */
-  paint = new PaintTool({ collarDefault: s => borderDefault(s, finishOf(paintedSurfaces())), progress: () => this.bump('pieces'), setLotGround: (k, p) => { this.paintRev++; this.setLotGround(k, p); }, emit: () => this.emit(), save: () => this.scheduleSave(), toast: (t, k) => this.toast(t, k), affine: o => this.paintAffine(o), placeProps: (ps, seed) => this.placePresetProps(ps, seed), golfMode: () => this.golfMode, money: () => this.money, spend: n => this.traffic.spend('construction', n), ownedLand: pts => !this.golf || polyInParcels(this.golf.parcels ?? [this.golf.parcel], pts), currentMonth: () => !this.golf ? 0 : this.golfMonthIndex(), plant: (ids, x, y, r, spacing, size, seed) => this.plantProps(ids, x, y, r, spacing, size, seed), unplant: (x, y, r) => this.unplantProps(x, y, r), plantPool: (k, f) => plantPool(LIBRARY, k, f), courseHeight: () => this.courseHeight, roadsNear: (x, y, r) => { let k = 0; return [...this.net.segsNear({ x, y }, r)].map(s => ({ id: ++k, ax: s.a.x, ay: s.a.y, bx: s.b.x, by: s.b.y, halfWidthTiles: s.cls.h + s.cls.walk })); }, roadRev: () => this.net.version, heightChanged:b => { this.courseHeightChanged(unionCourseBox(b, this.flattenRoadsIn(b))!); },
-    journal: { begin: () => { this.propLog = { added: [], removed: [] }; }, end: () => { const j = this.propLog; this.propLog = null; return j && (j.added.length || j.removed.length) ? j : null; }, undo: j => this.swapProps(j as PropLog, true), redo: j => this.swapProps(j as PropLog, false) },
+  paint = new PaintTool({ collarDefault: s => borderDefault(s, finishOf(paintedSurfaces())), progress: () => this.bump('pieces'), setLotGround: (k, p) => { this.paintRev++; this.setLotGround(k, p); }, emit: () => this.emit(), save: () => this.scheduleSave(), toast: (t, k) => this.toast(t, k), affine: o => this.paintAffine(o), placeProps: (ps, seed) => this.placePresetProps(ps, seed), golfMode: () => this.golfMode, money: () => this.money, spend: n => this.traffic.spend('construction', n), ownedLand: pts => !this.golf || polyInParcels(this.golf.parcels ?? [this.golf.parcel], pts), currentMonth: () => !this.golf ? 0 : this.golfMonthIndex(), plant: (ids, x, y, r, spacing, size, seed) => this.plantProps(ids, x, y, r, spacing, size, seed), unplant: (x, y, r, trees) => this.unplantProps(x, y, r, trees), plantPool: (k, f) => plantPool(LIBRARY, k, f), courseHeight: () => this.courseHeight, roadsNear: (x, y, r) => { let k = 0; return [...this.net.segsNear({ x, y }, r)].map(s => ({ id: ++k, ax: s.a.x, ay: s.a.y, bx: s.b.x, by: s.b.y, halfWidthTiles: s.cls.h + s.cls.walk })); }, roadRev: () => this.net.version, heightChanged:b => { this.courseHeightChanged(unionCourseBox(b, this.flattenRoadsIn(b))!); },
+    journal: { begin: () => { this.propLog = { added: [], removed: [], cut: [], cutAuto: [] }; }, end: () => { const j = this.propLog; this.propLog = null; return j && (j.added.length || j.removed.length || j.cut.length || j.cutAuto.length) ? j : null; }, undo: j => this.swapProps(j as PropLog, true), redo: j => this.swapProps(j as PropLog, false) },
     changed: pins => this.syncCourseMarkers(pins),
     grid: () => this.courseGrid, gridChanged: (d, flush) => { this.range.practiceCells(this.courseGrid, d); this.courseGridChanged(d, flush); }, gridAreas: () => this.gridAreaList(),
     bunkerState: () => this.bunkers.serialize(), setBunkerState: state => this.bunkers.load(state, this.courseGrid),
@@ -1705,18 +1708,12 @@ export class Game {
    *  its long side along the road, snapped onto the road beside it (parkplace.ts snapToRoad); its gravel and paving are the range's upgrades */
   private carParkPlaceable(): Placeable<CarParkDef> | null {
     const g = this.golf, b = g?.start === 'range' ? g.range : undefined; if (!g || !b) return null;
-    const [L, D] = RANGE_LOT, w = g.dir === 0 || g.dir === 2 ? L : D, h = g.dir === 0 || g.dir === 2 ? D : L, land = this.landCheck();
+    const land = this.landCheck();
     return {
       id: 'carpark', name: 'Car park', cost: CAR_PARK_PLACE_COST,
-      spot: (x, y) => { const [rx, ry] = rectAt(x, y, w, h), raw: CarParkDef = { id: 0, x: rx, y: ry, w, h }, d = snapToRoad(this.net, raw) ?? raw; return { ...d, cross: true }; },
-      why: d => {
-        if (b.built === false) return 'Place your driving range first';
-        if (b.lot) return 'Your range has its car park: more come from Traffic ▸ Car park';
-        const r: Rect = [d.x, d.y, d.w, d.h], inner: Rect = [d.x + 3, d.y + 3, d.w - 6, d.h - 6]; // (its edge on the road's verge lies past the parcel's)
-        return this.parkSpotWhy(d) || parkValid(d, this.terrain.cls, this.net, this.site, this.parkDefs) || (this.lotsUnder(d) ? 'buildings stand there' : '')
-          || landWhy(inner, land) || ((() => { const y = this.homeRect(); return y && rectsMeet(r, y) ? 'Your home is there' : ''; })())
-          || (b.practiceAt && rectsMeet(r, b.practiceAt) ? 'The practice area is there' : '') || (buildPark(this.net, d) ? '' : 'Place it beside a road: its entrance goes on the road');
-      },
+      spot: (x, y) => carParkSpotAt(this.net, g.dir, x, y),
+      // (T387: golf/parkplace.ts carParkWhy: every reason named, woodland is open ground, only water is refused)
+      why: d => carParkWhy(d, this.carParkCtx(b, land)),
       polys: d => [rectPolyOf([d.x, d.y, d.w, d.h])],
       build: d => {
         const pk = buildPark(this.net, d); if (!pk) { this.toast('Car park: no road along its sides', 'warn'); return false; }
@@ -2716,21 +2713,102 @@ export class Game {
   }
   /** the props added and removed while the Paint tool's action is open (undo), or null */
   private propLog: PropLog | null = null;
+  /** T381: the trees the player took away (Rub out, the bulldozer): the forest's, river belts' and town's by their place, the road network's by key. The cells
+   *  plant without them from then on, and the save keeps the list (treecut.ts) */
+  private treeCut = new TreeCut();
+  /** T381: every road tree the network made (an AutoProp of kind tree or rbtree) by key: what a tree taken away is given back from (undo) */
+  private autoRecs = new Map<string, AutoProp>();
   /** undo (back) or redo of a prop journal: the props it added go, the props it removed come back (new objects); returns the journal for the opposite step */
   private swapProps(j: PropLog, back: boolean): PropLog {
     const kill = back ? j.added : j.removed, revive = back ? j.removed : j.added;
     for (const p of kill) this.removeProp(p);
     const out = revive.map(p => { const q = this.addProp(p.item, p.x, p.y, p.flip, p.scale, undefined, p.decor ? { own: true } : undefined); if (p.plant) q.plant = p.plant; if (p.decor) q.decor = p.decor; if (p.frame) q.frame = p.frame; return q; });
     if (j.added.some(p => p.frame) || j.removed.some(p => p.frame)) this.frameRev++; // T229
+    // T381: the map's trees an action took away: undo gives them back, redo takes them away again
+    if (j.cut.length) { if (back) this.uncutTrees(j.cut); else this.recutTrees(j.cut); }
+    if (j.cutAuto.length) { if (back) this.uncutAuto(j.cutAuto); else this.recutAuto(j.cutAuto); }
     this.scheduleSave();
-    return back ? { added: kill, removed: out } : { added: out, removed: kill };
+    const trees = { cut: j.cut, cutAuto: j.cutAuto };
+    return back ? { added: kill, removed: out, ...trees } : { added: out, removed: kill, ...trees };
+  }
+  /** T381: a forest or town tree sprite (index i of its cell's list) taken out of its cell: its picture, its counts, the list; true when it was a river belt tree
+   *  (the belts' trees are the tail of a forest cell's list, beltN of them). The cell's shadows are cellCasters' */
+  private takeTreeSprite(town: boolean, key: number, i: number): boolean {
+    const arr = (town ? this.townTrees : this.forest).get(key), p = arr?.[i]; if (!arr || !p) return false;
+    const nb = town ? 0 : this.beltN.get(key) ?? 0, belt = !town && i >= arr.length - nb;
+    this.sprites.remove(p); arr.splice(i, 1);
+    if (town) this.perf.townTrees--; else if (belt) { this.perf.belt--; this.beltN.set(key, nb - 1); } else this.perf.forest--;
+    return belt;
+  }
+  /** T381: a forest or town cell's shadow casters again after trees left it (the ground bakes the shadows by itself: no rebuild step) */
+  private cellCasters(town: boolean, key: number) { const arr = (town ? this.townTrees : this.forest).get(key); if (arr) this.ground.casters([[(town ? 't:' : 'f:') + key, this.casterRecs(arr)]]); }
+  /** T381 (#1037, the owner: "I wanted to bulldoze some trees but I could not." / "tried the Rub out button on paint for trees and it does nothing."): the map's
+   *  trees whose place is inside the circle (x, y, r) taken away: the forest's, the river belts' and the town's (sprites in their cells) and the road network's
+   *  (its tree props). Each tree's key is cut for good (its cell plants without it), the open action's journal keeps it for undo, the shadows follow at once.
+   *  `begin` is called once before the first tree goes (the bulldozer opens its undo step there). Returns how many; the trees a brush planted are props
+   *  (unplantProps, the bulldozer's click) */
+  private cutMapTrees(x: number, y: number, r: number, begin?: () => void): number {
+    const N = MAP / FOREST_CELL, r2 = r * r, hits: { town: boolean; key: number; p: Prop }[] = [], autos: Prop[] = [];
+    const ci0 = Math.max(0, Math.floor((x - r) / FOREST_CELL)), ci1 = Math.min(N - 1, Math.floor((x + r) / FOREST_CELL)), cj0 = Math.max(0, Math.floor((y - r) / FOREST_CELL)), cj1 = Math.min(N - 1, Math.floor((y + r) / FOREST_CELL));
+    for (let cj = cj0; cj <= cj1; cj++) for (let ci = ci0; ci <= ci1; ci++) {
+      const key = cj * N + ci;
+      for (const town of [false, true]) for (const p of (town ? this.townTrees : this.forest).get(key) ?? []) {
+        if (p.tk === undefined) continue;
+        const q = keyPos(p.tk); if ((q.x - x) ** 2 + (q.y - y) ** 2 <= r2) hits.push({ town, key, p });
+      }
+    }
+    for (const p of this.propGrid.query([x - r, y - r, x + r, y + r])) if (p.auto && LIBRARY[p.item]?.kind === 'tree') { const a = this.autoRecs.get(p.auto); if (a && (a.x - x) ** 2 + (a.y - y) ** 2 <= r2) autos.push(p); }
+    if (!hits.length && !autos.length) return 0;
+    begin?.();
+    const touched = new Set<string>();
+    for (const h of hits) {
+      const i = ((h.town ? this.townTrees : this.forest).get(h.key) ?? []).indexOf(h.p); if (i < 0) continue;
+      this.takeTreeSprite(h.town, h.key, i); this.treeCut.add(h.p.tk!);
+      this.propLog?.cut.push({ k: h.p.tk!, cell: h.key, town: h.town });
+      touched.add((h.town ? 't' : 'f') + h.key);
+    }
+    for (const k of touched) this.cellCasters(k[0] === 't', +k.slice(1));
+    for (const p of autos) this.cutAutoProp(p);
+    return hits.length + autos.length;
+  }
+  /** T381: a road tree (an auto prop of kind tree) taken away: the prop goes, its key is cut (the network does not make it again), the journal keeps its AutoProp */
+  private cutAutoProp(p: Prop) {
+    const k = p.auto, a = k ? this.autoRecs.get(k) : undefined; if (!k || !a) return;
+    const log = this.propLog; this.propLog = null; this.removeProp(p); this.propLog = log; // (removeProp's own journal entry would bring it back as a plain prop)
+    this.autoByKey.delete(k); this.treeCut.addAuto(k); this.propLog?.cutAuto.push(a);
+  }
+  /** T381: undo of a cut: the keys come off the list and the cells round the trees plant again, so the trees come back as they were, where nothing has been
+   *  built over them since */
+  private uncutTrees(recs: readonly TreeRec[]) {
+    let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
+    for (const t of recs) { this.treeCut.remove(t.k); const q = keyPos(t.k); x0 = Math.min(x0, q.x); y0 = Math.min(y0, q.y); x1 = Math.max(x1, q.x); y1 = Math.max(y1, q.y); }
+    if (x0 <= x1) this.dropTownTrees(x0 - 1, y0 - 1, x1 + 1, y1 + 1);
+  }
+  /** T381: redo of a cut: the keys go on the list again and the trees that stand in their cells go */
+  private recutTrees(recs: readonly TreeRec[]) {
+    const touched = new Set<string>();
+    for (const t of recs) {
+      this.treeCut.add(t.k);
+      const arr = (t.town ? this.townTrees : this.forest).get(t.cell), i = arr ? arr.findIndex(p => p.tk === t.k) : -1;
+      if (i >= 0) { this.takeTreeSprite(t.town, t.cell, i); touched.add((t.town ? 't' : 'f') + t.cell); }
+    }
+    for (const k of touched) this.cellCasters(k[0] === 't', +k.slice(1));
+  }
+  /** T381: undo of a road tree's cut: its key comes off the list and the network's tree is made again with its own picture */
+  private uncutAuto(recs: readonly AutoProp[]) { for (const a of recs) this.treeCut.removeAuto(autoKey(a)); this.syncAutoProps([...recs], []); }
+  /** T381: redo of a road tree's cut */
+  private recutAuto(recs: readonly AutoProp[]) {
+    for (const a of recs) {
+      const k = autoKey(a); this.treeCut.addAuto(k); const p = this.autoByKey.get(k);
+      if (p) { const log = this.propLog; this.propLog = null; this.removeProp(p); this.propLog = log; }
+    }
   }
   /** the Paint tool's projection into css px (its handles' hit tests): tile (x, y) is at (o[0] + x*o[2] + y*o[4], o[1] + x*o[3] + y*o[5]) */
   private paintAffine(o: number[]) { const s = this.screen(0, 0), ex = this.screen(1, 0), ey = this.screen(0, 1), d = this.dpr; o[0] = s.x / d; o[1] = s.y / d; o[2] = (ex.x - s.x) / d; o[3] = (ex.y - s.y) / d; o[4] = (ey.x - s.x) / d; o[5] = (ey.y - s.y) / d; }
   /** the Paint tool's snap distance: 10 css px in tiles */
   private get paintTol() { return 10 / (Math.hypot(HW, HH) * this.cam.z); }
   /** the Car park tool's bay rows, on-street runs and fee (docs/PARKING.md) */
-  parking = new ParkingTool({ setLotGround: (k, p) => this.setLotGround(k, p), emit: () => this.emit(), save: () => this.scheduleSave(), toast: (t, k) => this.toast(t, k), money: () => this.money, spend: n => this.traffic.spend('construction', n), sendParking: (r, c, f) => { this.traffic.setParking(r, c, f); this.parkingChanged(); }, net: () => this.net, terrain: () => this.terrain.cls, mapSize: MAP, tollKeys: () => new Set(this.tollDefs.map(plazaKey)),
+  parking = new ParkingTool({ setLotGround: (k, p) => this.setLotGround(k, p), emit: () => this.emit(), save: () => this.scheduleSave(), toast: (t, k) => this.toast(t, k), money: () => this.money, spend: n => this.traffic.spend('construction', n), sendParking: (r, c, f) => { this.traffic.setParking(r, c, f); this.parkingChanged(); }, net: () => this.net, terrain: () => this.terrain.cls, mapSize: MAP, woodland: () => !!this.golf, tollKeys: () => new Set(this.tollDefs.map(plazaKey)),
     occupied: q => { const xs = [q[0]!, q[2]!, q[4]!, q[6]!], ys = [q[1]!, q[3]!, q[5]!, q[7]!], r = { x: Math.min(...xs), y: Math.min(...ys), w: Math.max(...xs) - Math.min(...xs), h: Math.max(...ys) - Math.min(...ys) }, s = this.site;
       return this.lotsUnder(r) ? 'buildings stand there' : s && r.x < s.x + s.w && r.x + r.w > s.x && r.y < s.y + s.h && r.y + r.h > s.y ? 'on the stadium site' : ''; } });
   /** the parks the bay rows' lots and on-street runs make (parking.lots(), then parking.curbParks()), as the City has them; their gates and parked cars follow */
@@ -3394,10 +3472,13 @@ export class Game {
   plantPool(kind: PlantBrushKind, filter: PlantFilter = this.paint.plantFilter) { return plantPool(LIBRARY, kind, filter); }
   /** how many props the plant brushes have placed */
   plantedCount() { let n = 0; for (const p of this.props) if (p.plant) n++; return n; }
-  /** the plant brush's Rub out: removes the props placed by a plant brush (Prop.plant) whose anchor is inside the circle; never other props. Returns how many */
-  unplantProps(x: number, y: number, r: number): number {
+  /** the plant brush's Rub out: removes the props placed by a plant brush (Prop.plant) whose anchor is inside the circle; never other props (a lot's, a
+   *  building's). T381: with `trees` (the Trees brush) the map's own trees inside the circle go as well: the forest's, the river belts', the town's and the road
+   *  network's (cutMapTrees), each counted, none to come back when its cell is planted again. Returns how many */
+  unplantProps(x: number, y: number, r: number, trees = false): number {
     let n = 0;
     for (const p of [...this.propGrid.query([x - r, y - r, x + r, y + r])]) if (p.plant && (p.x - x) ** 2 + (p.y - y) ** 2 <= r * r) { this.removeProp(p); n++; }
+    if (trees) n += this.cutMapTrees(x, y, r);
     if (n) this.scheduleSave(); return n;
   }
   /** o (T133, the range's scene): lift, drawn this high above its spot (world px); foot, its footprint (world tiles x0 y0 x1 y1) in place of its
@@ -3458,9 +3539,10 @@ export class Game {
   /** plant one forest cell as sprites (not props: no selection, bulldozing or saving), without the trees on or beside anything built (T025b) */
   private plantCell(key: number, ci: number, cj: number) {
     const { free } = this.treeClearance(ci, cj);
-    const out = this.treeSprites(forestCell(this.terrain.seed, this.terrain.cls, this.terrain.height, this.slope, this.clearing, ci, cj).filter(t => free(t.x, t.y, 1)));
+    // (T381: the trees the player took away are left out: treecut.ts)
+    const out = this.treeSprites(this.treeCut.keep(forestCell(this.terrain.seed, this.terrain.cls, this.terrain.height, this.slope, this.clearing, ci, cj).filter(t => free(t.x, t.y, 1))));
     // T265: the cell's belt along its rivers and creeks (river-trees.ts), cleared as the forest is (free, FOREST_CLEAR)
-    const belt = this.beltOn && this.belt ? this.treeSprites(riverBeltCell(this.terrain.seed, this.terrain.cls, this.slope, this.belt, ci, cj, free, FOREST_CLEAR)) : [];
+    const belt = this.beltOn && this.belt ? this.treeSprites(this.treeCut.keep(riverBeltCell(this.terrain.seed, this.terrain.cls, this.slope, this.belt, ci, cj, free, FOREST_CLEAR))) : [];
     if (belt.length) { out.push(...belt); this.beltN.set(key, belt.length); this.perf.belt += belt.length; }
     this.forest.set(key, out); this.perf.forest += out.length - belt.length; this.ground.casters([['f:' + key, this.casterRecs(out)]]);
   }
@@ -3484,7 +3566,7 @@ export class Game {
       if (item === undefined) { item = LIBRARY.findIndex(i => i.id === tr.id); this.forestItem.set(tr.id, item); }
       if (item < 0) continue;
       const it = LIBRARY[item], b = it.boxes[0], ax = tr.x - b.dx * tr.scale / 2, ay = tr.y - b.dy * tr.scale / 2, flip = TREE_MIRROR.has(it.id); // the sun from the right (tree-sun.ts)
-      const p: Prop = { uid: this.nextUid++, item, x: ax, y: ay, flip, scale: tr.scale, ...this.footprint(it, ax, ay, flip, tr.scale) };
+      const p: Prop = { uid: this.nextUid++, item, x: ax, y: ay, flip, scale: tr.scale, tk: treeKey(tr.x, tr.y), ...this.footprint(it, ax, ay, flip, tr.scale) }; // (T381: tk: Rub out and the bulldozer find it by its place)
       this.sprites.add(p); out.push(p);
     }
     return out;
@@ -3534,7 +3616,7 @@ export class Game {
   private plantTownCell(key: number, ci: number, cj: number) {
     const { lots, free } = this.treeClearance(ci, cj);
     const near = (x: number, y: number) => { if (this.beltClaims(x, y)) return false; for (const l of lots) if (lotGap(l, x, y) <= 24) return true; return false; };
-    const out = this.treeSprites(townTreeCell(this.terrain.seed, this.terrain.cls, this.townClump, ci, cj, free, near));
+    const out = this.treeSprites(this.treeCut.keep(townTreeCell(this.terrain.seed, this.terrain.cls, this.townClump, ci, cj, free, near)));
     this.townTrees.set(key, out); this.perf.townTrees += out.length; this.ground.casters([['t:' + key, this.casterRecs(out)]]);
   }
   /** the town-tree and forest cells whose box (30 tiles around the cell) touches the box x0 y0 x1 y1 lose their trees: plantForest plants them again (around what was built) */
@@ -4147,6 +4229,8 @@ export class Game {
   private placeLot(key: string, g: LotGeom, st: ComposeState) {
     this.dropLot(key);
     const c = compose(g, st), ps: Prop[] = [];
+    // (T385: the studio's Lot review adds what the owner placed on a lot, its override: lotOverride, set by dev/lot-review.ts in the lab's light boot only)
+    const ov = this.lotOverride?.(key, g); if (ov) { c.props.push(...ov.props); c.ground.push(...ov.ground); }
     for (const q of c.props) {
       const i = LIB_INDEX.get(q.id); if (i === undefined || (q.street && this.inLayby(i, q))) continue;
       const p = this.addProp(i, q.x, q.y, q.flip, q.scale, 'lot:' + key, q.foot ? { foot: q.foot } : undefined); ps.push(p); // q.foot: a parked car of the mix (T236, vehicles.ts parkedAs) on its body footprint
@@ -4501,9 +4585,11 @@ export class Game {
   private lampWait = new Map<string, AutoProp>();
   private syncAutoProps(added: AutoProp[], removed: AutoProp[]) {
     let lamps = false;
-    for (const a of removed) { const k = autoKey(a); this.lampWait.delete(k); const p = this.autoByKey.get(k); if (p) { this.removeProp(p); this.autoByKey.delete(k); lamps ||= a.kind === 'lamp'; } }
+    for (const a of removed) { const k = autoKey(a); this.lampWait.delete(k); this.autoRecs.delete(k); const p = this.autoByKey.get(k); if (p) { this.removeProp(p); this.autoByKey.delete(k); lamps ||= a.kind === 'lamp'; } }
     for (const a of added) {
-      const k = autoKey(a); if (this.autoByKey.has(k)) continue;
+      const k = autoKey(a);
+      if (a.kind === 'tree' || a.kind === 'rbtree') this.autoRecs.set(k, a); // (T381: kept so a tree taken away can be given back)
+      if (this.autoByKey.has(k) || this.treeCut.hasAuto(k)) continue; // (T381: a road tree the player took away stays away when the network is rebuilt)
       // a town road's lamp stands only where the town has houses within 12 tiles
       if (a.town) { let near = false; for (const p of this.propGrid.query([a.x - 12, a.y - 12, a.x + 12, a.y + 12])) { const kind = LIBRARY[p.item]?.kind; if (kind === 'lot' || kind === 'house') { near = true; break; } } if (!near) { this.lampWait.set(k, a); continue; } this.lampWait.delete(k); }
       const id = a.kind === 'tree' ? AUTO_TREES[a.i % AUTO_TREES.length] : a.kind === 'garden' ? AUTO_GARDEN[a.i % AUTO_GARDEN.length] : a.kind === 'rbtree' ? 'world:tree_oak_0' : a.kind === 'lamp' ? 'world:streetlamp' : 'town:traffic_light';
@@ -5830,6 +5916,8 @@ export class Game {
   private bulldozeAt(mx: number, my: number, first: boolean) {
     const t = this.tileAt(mx, my);
     if (first) {
+      // T381: a tree under the pointer, the front-most thing there: the map's own (forest, river belt, town), a road's or one a brush planted, taken with a click
+      if (this.bulldozeTree(mx, my)) return;
       const p = this.propAt(mx, my);
       if (this.golf?.structures?.length) {
         let hitId: number | null = null;
@@ -5847,7 +5935,7 @@ export class Game {
       if (g >= 0) { const id = this.tollDefs[g]!.id; this.removeToll(g); this.scheduleSave(); this.toast(`Removed toll gate #${id} (the road stays; no refund)`); this.emit(); return; }
       const b = this.busIndexAt(t);
       if (b >= 0) { const id = this.busDefs[b]!.id; this.removeBus(b); this.scheduleSave(); this.toast(`Removed bus route #${id} (no refund)`); this.emit(); return; }
-    }
+    } else this.bladeTrees(t); // T381: a drag takes the trees under the blade as it goes (and the roads, below, as before)
     const piece = this.net.pieceNear(t);
     if (!piece) { if (first) this.buyOut(t); return; }
     const before = this.roadValue(), name = piece.seg.cls.name.toLowerCase();
@@ -5911,16 +5999,60 @@ export class Game {
   propAt(mx: number, my: number, includeBusinessScenes = false): Prop | null {
     const X = this.cam.X + (mx - this.cssW / 2) / this.cam.z, Y = this.cam.Y + (my - this.cssH / 2) / this.cam.z, r = [0, 0, 0, 0];
     for (const p of this.sprites.at(X, Y)) {
-      if (!this.props.has(p) && !(includeBusinessScenes && this.businessProps.includes(p) && this.objectSceneOf(p))) continue; // render-only business pieces are inspectable only with exact matching art
-      spriteRect(p, r); if (X < r[0] || X > r[2] || Y < r[1] || Y > r[3]) continue;
-      const look = lookOf(p); if (look.hidden) continue;
-      const it = LIBRARY[look.item], [page, u0, v0, u1, v1] = it.tex, a = this.pageAlpha[page];
-      if (!a) continue; // Missing opacity cannot turn a transparent sprite rectangle into a click target.
-      let u = (X - r[0]) / (r[2] - r[0]); if (look.flip) u = 1 - u;
-      const v = (Y - r[1]) / (r[3] - r[1]), px = clamp(Math.floor((u0 + (u1 - u0) * u) * a.w), 0, a.w - 1), py = clamp(Math.floor((v0 + (v1 - v0) * v) * a.h), 0, a.h - 1);
-      if (hasPickingPixel(a, px, py)) return p;
+      // forest trees are not props: never picked here (T381: the bulldozer picks them: frontAt); render-only business pieces are inspectable only with exact matching art
+      if (!this.props.has(p) && !(includeBusinessScenes && this.businessProps.includes(p) && this.objectSceneOf(p))) continue;
+      if (this.spriteHit(p, X, Y, r)) return p;
     }
     return null;
+  }
+  /** whether sprite p's picture, as it is drawn (lookOf: a stand-in, hidden art, the eight-view replacements), is opaque at world px (X, Y) (r: scratch for its rect) */
+  private spriteHit(p: Prop, X: number, Y: number, r: number[]): boolean {
+    spriteRect(p, r); if (X < r[0]! || X > r[2]! || Y < r[1]! || Y > r[3]!) return false;
+    const look = lookOf(p); if (look.hidden) return false;
+    const it = LIBRARY[look.item], [page, u0, v0, u1, v1] = it.tex, a = this.pageAlpha[page];
+    if (!a) return false; // Missing opacity cannot turn a transparent sprite rectangle into a click target (#976).
+    let u = (X - r[0]!) / (r[2]! - r[0]!); if (look.flip) u = 1 - u;
+    const v = (Y - r[1]!) / (r[3]! - r[1]!), px = clamp(Math.floor((u0 + (u1 - u0) * u) * a.w), 0, a.w - 1), py = clamp(Math.floor((v0 + (v1 - v0) * v) * a.h), 0, a.h - 1);
+    return hasPickingPixel(a, px, py);
+  }
+  /** T381: the front-most picture under the pointer that the bulldozer may take: a prop, or a forest, river belt or town tree sprite (not a prop: it has a
+   *  tk), by the opaque pixels as propAt picks; null: none */
+  private frontAt(mx: number, my: number): Prop | null {
+    const X = this.cam.X + (mx - this.cssW / 2) / this.cam.z, Y = this.cam.Y + (my - this.cssH / 2) / this.cam.z, r = [0, 0, 0, 0];
+    for (const p of this.sprites.at(X, Y)) { if ((this.props.has(p) || p.tk !== undefined) && this.spriteHit(p, X, Y, r)) return p; }
+    return null;
+  }
+  /** T381: the bulldozer's stroke on trees (a click or a drag): one undo step opened before its first tree goes and closed at the release, and the trees
+   *  it took counted for the toast */
+  private treeStroke: { n: number } | null = null;
+  private treeStrokeOpen() { if (!this.treeStroke) { this.paint.openStep('bulldoze trees'); this.treeStroke = { n: 0 }; } }
+  private treeStrokeEnd() {
+    const s = this.treeStroke; if (!s) return;
+    this.treeStroke = null; this.paint.closeStep();
+    if (s.n) { this.scheduleSave(); this.toast(`Removed ${s.n} tree${s.n === 1 ? '' : 's'}`); }
+    this.emit();
+  }
+  /** T381: the bulldozer's click on a tree: the front-most one under the pointer, whichever kind: the map's forest, river belt or town tree, a road's, or one a
+   *  brush planted (the other props go as before); false when the front-most thing is not a tree */
+  private bulldozeTree(mx: number, my: number): boolean {
+    const f = this.frontAt(mx, my); if (!f) return false;
+    const begin = () => this.treeStrokeOpen(); let n = 0;
+    if (f.tk !== undefined && !this.props.has(f)) { const q = keyPos(f.tk); n = this.cutMapTrees(q.x, q.y, 0.03, begin); }
+    else if (f.auto && LIBRARY[f.item]?.kind === 'tree') { const a = this.autoRecs.get(f.auto); if (a) n = this.cutMapTrees(a.x, a.y, 0.03, begin); }
+    else if (f.plant && LIBRARY[f.item]?.kind === 'tree') { begin(); this.removeProp(f); n = 1; }
+    if (!n) return false;
+    if (this.treeStroke) this.treeStroke.n += n;
+    this.puff(f.x, f.y, 6);
+    return true;
+  }
+  /** T381: the bulldozer's blade on a drag: the trees within BLADE_R of tile t go (the map's and the road network's by cutMapTrees, the ones a brush planted as props) */
+  private bladeTrees(t: Pt) {
+    const begin = () => this.treeStrokeOpen(), R2 = BLADE_R * BLADE_R;
+    let n = this.cutMapTrees(t.x, t.y, BLADE_R, begin);
+    const planted: Prop[] = [];
+    for (const p of this.propGrid.query([t.x - BLADE_R, t.y - BLADE_R, t.x + BLADE_R, t.y + BLADE_R])) if (p.plant && LIBRARY[p.item]?.kind === 'tree' && (p.x - t.x) ** 2 + (p.y - t.y) ** 2 <= R2) planted.push(p);
+    if (planted.length) { begin(); for (const p of planted) this.removeProp(p); n += planted.length; }
+    if (n && this.treeStroke) { this.treeStroke.n += n; this.puff(t.x, t.y, 6); }
   }
   deleteSelected() {
     if (!this.selected) return;
@@ -6106,6 +6238,7 @@ export class Game {
     if (this.paintOn) { this.paint.pointerUp(this.paintTol); this.courseCursor.release(); }
     if (this.tool === 'park' && this.parking.mode === 'rows') this.parking.up();
     if (this.tool === 'props') this.decor.up();
+    if (this.treeStroke) this.treeStrokeEnd(); // T381: the bulldozer's stroke on trees ends: one undo step, and how many it took
     this.dragging = null;
   }
   pointerLeave() { this.estateTool.leave(); this.paint.cursor = null; this.paint.mouse = null; this.paint.hover = 0; this.paint.hoverH = null; this.hover = null; this.hoverProp = null; this.hoverNode = null; this.hoverPiece = null; this.hoverRoad = ''; this.tollHover = null; this.bizHover = null; this.ghostMouse = null; this.busHover = null; this.laneHover = null; this.decor.ghost = null; this.practice.leave(); this.youHover = null; }
@@ -6788,21 +6921,33 @@ export class Game {
     const def = raw.w > 0 && raw.h > 0 ? snapToRoad(this.net, raw) ?? raw : raw;
     // the preview is laid as syncParks will build it (a golf game's layout), so its bays, serve line and toast count the bays it gets
     if (this.golf) def.cross = true;
-    pd.def = def; pd.cost = parkCost(def); pd.why = parkValid(def, this.terrain.cls, this.net, this.site, this.parkDefs) || (this.lotsUnder(def) ? 'buildings stand there' : '') || this.parkSpotWhy(def);
+    // T387: a golf game's car park may stand on its owner's woodland (its trees come off when it is built, as for the range's plot): only water is refused
+    pd.def = def; pd.cost = parkCost(def); pd.why = parkValid(def, this.terrain.cls, this.net, this.site, this.parkDefs, !!this.golf) || (this.lotsUnder(def) ? 'buildings stand there' : '') || this.parkSpotWhy(def);
     pd.park = pd.why ? null : buildPark(this.net, def);
   }
   /** T237: why a car park cannot stand on rect d in golf ('' when it can): over the driving range (its tee box, outfield, shop or yard), or a
    *  spot a club building hides in screen space (golf/parkplace.ts) */
   private parkSpotWhy(d: CarParkDef): string {
-    const g = this.golf; if (!g) return '';
+    if (!this.golf) return '';
+    const { keepOut, buildings } = this.parkSpotFacts(); return spotWhyOf(d, keepOut, buildings);
+  }
+  /** T237: what keeps a car park off the range in golf: the range's keep-out rects (its plot, or its tee box and outfield) and the buildings that
+   *  hide the ground behind them (the clubhouse, the halfway house, the range's pro shop and car park building) */
+  private parkSpotFacts(): { keepOut: Rect[]; buildings: Building[] } {
+    const g = this.golf; if (!g) return { keepOut: [], buildings: [] };
     const rd = g.start === 'range' ? this.bizDefs.find(b => b.type === 'range') : undefined, plot = rd ? plotOfFront([rd.x, rd.y, rd.w, rd.h], g.dir) : null;
-    const keep = plot ? rangeKeepOutWhy(d, rangeKeepOut(plot, g.dir, g.range?.setback ?? 0)) : ''; if (keep) return keep;
     const bs: Building[] = [];
     for (const b of this.bizDefs) if (b.type === 'clubhouse' || b.type === 'halfway') bs.push({ rect: [b.x, b.y, b.w, b.h], name: b.type === 'clubhouse' ? 'the clubhouse' : 'the halfway house' });
     if (plot) bs.push({ rect: rangeLayout(plot, g.dir).hut.rect, name: 'the pro shop' });
     const gb = this.range.scene?.garage?.box; if (gb) bs.push({ rect: [gb[0], gb[1], gb[2] - gb[0], gb[3] - gb[1]], name: 'the car park building' });
-    const hid = hiddenBy(d, bs);
-    return hid ? `Hidden behind ${hid.name}: place it beside or in front of it` : '';
+    return { keepOut: plot ? rangeKeepOut(plot, g.dir, g.range?.setback ?? 0) : [], buildings: bs };
+  }
+  /** T387: the range's first car park's checks as the engine has them now (golf/parkplace.ts carParkWhy runs them, in order, each reason named) */
+  private carParkCtx(b: RangeBizSave, land: LandCheck): CarParkCtx {
+    return {
+      built: b.built !== false, lot: !!b.lot, ...this.parkSpotFacts(), cls: this.terrain.cls, net: this.net, site: this.site, parks: this.parkDefs,
+      lotsUnder: r => this.lotsUnder(r), land, yard: this.homeRect(), practice: b.practiceAt ?? null,
+    };
   }
   /** whether a lot of the town that is not EMPTY overlaps rect r (its box against r) */
   private lotsUnder(r: { x: number; y: number; w: number; h: number }): boolean {
@@ -7827,6 +7972,7 @@ export class Game {
       segs: [...this.net.segs].map(segRec),
       nodes: [...this.net.nodes.values()].filter(n => n.type !== 'plain' || n.wide || n.tl).map(nodeEntry),
       props: [...this.props].filter(p => !p.auto).map(p => propTuple(LIBRARY[p.item].id, p)),
+      ...(this.treeCut.size ? { cutTrees: this.treeCut.save() } : {}), // T381: the trees the player took away
       money: this.traffic.budget.money, day: this.day, cam: { ...this.cam, ...(this.tileBand !== null ? { tb: this.tileBand } : {}) },
       lots: [...this.traffic.lots.values()].filter(l => l.level !== LV.EMPTY).map((l): LotTuple => { const t: LotTuple = [l.key, l.use, l.level, l.decline, l.seed, l.since]; if (l.tier !== undefined || l.biz !== undefined) t.push(l.tier ?? 3); if (l.biz !== undefined) t.push(l.biz); return t; }),
       simT: this.traffic.simTime(performance.now()), shift: this.traffic.stats.clock - this.traffic.stats.simT, townClock: this.traffic.town, budget: this.traffic.budget, career: this.traffic.career, round: this.traffic.round,
@@ -7886,6 +8032,7 @@ export class Game {
       // a type the catalogue does not have (a save from another branch) is dropped, so the rest of the save keeps working (T135)
       if (d.biz) this.setBizDefs(knownBusinesses(d.biz.map(([type, x, y, w, h], k): BizDef => ({ id: k + 1, type, x, y, w, h })), 'load'));
       else { const at = d.stadium !== undefined ? d.stadium : this.gameSpot(); this.setBizDefs(at ? [{ id: 1, type: 'stadium', x: at[0], y: at[1], w: at[2], h: at[3] }] : []); }
+      this.treeCut.load(d.cutTrees); // T381: before the network is built (its road trees skip the ones taken away) and before any cell is planted
       for (const [ax, ay, bx, by, cls, style, kind, town] of d.segs) this.edit.addLegs([{ a: { x: ax, y: ay }, b: { x: bx, y: by } }], classOf(cls), style as LineStyle, [(kind ?? 0) as SegKind], town ? true : undefined);
       if (d.speed) this.edit.setSpeedTier(Math.min(3, Math.max(0, d.speed | 0)) as 0 | 1 | 2 | 3);
       this.net.rebuild(true);
@@ -7923,6 +8070,7 @@ export class Game {
     this.edit.clear(); this.snapshot = null; this.pondKey = ''; // T231: the ponds' edges are laid again for the loaded game
     for (const p of [...this.props]) this.removeProp(p);
     this.sprites.clear(); this.autoByKey.clear(); this.forest.clear(); this.perf.forest = 0; this.townTrees.clear(); this.perf.townTrees = 0; this.lotBoxes.clear(); this.paintBoxes.clear();
+    this.treeCut.clear(); this.autoRecs.clear(); this.beltN.clear(); this.perf.belt = 0; this.treeStroke = null; // T381
     this.ground.dropCasters('f:'); this.ground.dropCasters('t:');
     this.parkCars.clear(); this.parkDefs = []; this.parkBuilt = []; this.parkDrag = null; for (const k of this.parkGround) this.setLotGround(k, null); this.parkGround.clear();
     for (const p of this.lookProps.values()) this.removeProp(p); this.lookProps.clear(); this.parkLooks.clear(); this.lookKey = ''; // (T237)
@@ -8060,6 +8208,38 @@ export class Game {
     for (const l of list) { this.staged.set(l.key, { g: l.g, st: l.st }); this.placeLot(l.key, l.g, l.st); }
     this.emit();
   }
+  /** T385 (#1042): what the studio's Lot review adds to a lot as that lot's override (dev/lot-review.ts sets it; null: none): its sprites and ground decals, composed
+   *  with the lot (placeLot) and so kept through every compose. Never saved, and never set in the game itself */
+  lotOverride: ((key: string, g: LotGeom) => Composition | undefined) | null = null;
+  /** debug (the lot review, dev/lot-review.ts, in the lab's light boot): the empty map with a review set laid and every lot of it composed as the game composes it. 'town':
+   *  the street grid a new game lays for a town (townGrid, six blocks across) and the lots the town's lot map (LotMap) cuts along and between its streets, each given the
+   *  state state(i) (i: its place in key order); 'estate': the streets given (a street each, as the road tool lays one) and the lots T353's estate lays along them (golf/estate.ts
+   *  frontageFrames, both sides), the state state(i) each. The lots are staged under their own keys (a staged lot is as it was staged) and returned in key order; the camera
+   *  is put over the set's middle */
+  stageReview(o: { kind: 'town' | 'estate'; state: (i: number) => ComposeState; streets: { a: Pt; b: Pt; base: string }[] }): { key: string; g: LotGeom; st: ComposeState }[] {
+    this.benchMode = true; this.farmsOn(false); this.reset(); this.afterLoad(); this.setSpeed(0);
+    const c = { x: MAP / 2, y: MAP / 2 }, frames: { key: string; g: LotGeom }[] = [];
+    if (o.kind === 'town') {
+      const gr = townGrid(c, 6, (x, y) => classAt(this.terrain, x, y)), byClass = new Map<ClassId, Leg[]>();
+      gr.legs.forEach((l, i) => { const id = gr.cls[i]!; let a = byClass.get(id); if (!a) byClass.set(id, a = []); a.push(l); });
+      for (const [id, legs] of byClass) this.edit.addLegs(legs, classOf(id), 0, undefined, true);
+      this.commitNetwork();
+      for (const l of new LotMap().update(this.net, this.terrain.cls).added) frames.push({ key: l.key, g: { o: l.o, u: l.u, n: l.n, w: l.w, d: l.d } });
+    } else {
+      o.streets.forEach((s, seg) => {
+        const cls = CLASS[s.base as keyof typeof CLASS] ?? CLASS.street;
+        this.edit.addLegs([{ a: s.a, b: s.b }], cls, 0); this.commitNetwork();
+        for (const f of ES.frontageFrames({ a: s.a, b: s.b, base: s.base, h: cls.h, walk: cls.walk, ra: 4, rb: 4 }, [1, -1], seg)) frames.push({ key: `${seg}.${f.side > 0 ? 'l' : 'r'}${f.k}`, g: { o: f.o, u: f.u, n: f.n, w: f.w, d: f.d } });
+      });
+    }
+    frames.sort((a, b) => (a.key < b.key ? -1 : a.key > b.key ? 1 : 0));
+    const out = frames.map((f, i) => ({ key: f.key, g: f.g, st: o.state(i) }));
+    for (const l of out) { this.staged.set(l.key, { g: l.g, st: l.st }); this.placeLot(l.key, l.g, l.st); }
+    this.setTool('select'); this.lookAt(c.x, c.y, 0.06); this.emit();
+    return out;
+  }
+  /** debug (the lot review): a staged lot composed again (its override changed) */
+  restageReview(key: string) { const s = this.staged.get(key); if (s) { this.placeLot(key, s.g, s.st); this.emit(); } }
 
   /** a new valley: the three towns' street grids (townGrid: the legs on buildable ground, the middle lines avenues), laid as one edit; the
    *  city worker stamps the towns to TOWN_POP residents after the network arrives (stampPending). No lamps yet: the net is rebuilt only by
@@ -11793,10 +11973,10 @@ export class Game {
       }
       const mask = this.revealMask(now); if (mask) gl.setMask(mask);
       // T215: the camera specular's falloff and gain this frame (the night light's amount takes the pools to their whole strength after dusk)
-      gl.spec = this.ground.specCam ? { inner: this.spec.inner, outer: this.spec.outer, gain: specGain(this.spec, this.nightAmount()) } : null;
+      gl.spec = this.ground.specCam ? { inner: this.spec.inner, outer: this.spec.outer, gain: specGain(this.spec, this.nightAmount()), oval: this.spec.oval } : null;
       // T199: the swamp's sky glint, on the same switch and knobs (its gain falls after dusk: no sky to reflect); each picture's gloss mask by
       // the picture itself
-      gl.gloss = this.ground.specCam ? { inner: this.spec.inner, outer: this.spec.outer, gain: glossGain(this.spec, this.nightAmount()) } : null;
+      gl.gloss = this.ground.specCam ? { inner: this.spec.inner, outer: this.spec.outer, gain: glossGain(this.spec, this.nightAmount()), oval: this.spec.oval } : null;
       gl.glossOf ??= tex => this.ground.glossOf(tex);
       // T262: the grass shine's falloff (T215's), gain (by day, by the zoom) and look this frame; each picture's weight mask by the picture
       gl.shine = this.ground.grassShine ? { inner: this.spec.inner, outer: this.spec.outer, gain: shineGain(this.shine, this.nightAmount(), cam.z), exponent: shineExponent(this.shine), bump: this.shine.bump, eye: this.shine.eye } : null;

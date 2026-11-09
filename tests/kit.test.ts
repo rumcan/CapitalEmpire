@@ -26,6 +26,9 @@ import { mulberry } from '../src/game/iso';
 import PRESET_FIXTURE from './fixtures/lot-presets.json';
 import type { Prop } from '../src/game/types';
 import { appendNewProps } from '../src/game/new-props-library';
+import { setCleanYards } from '../src/game/lots/clean-yards';
+// T385 (#1042): this file pins the old yards (the learned generator's house yards, the kit, the starter homes): the clean base is the game's house lot now (tests/clean-lots.test.ts)
+setCleanYards(false);
 
 // T329: the owner's new props (new-props-library.ts, 2026-11-02) are appended at the library's very tail, after every other append, so no saved
 // index moves: the tail checks below leave them out (and check they are that tail)

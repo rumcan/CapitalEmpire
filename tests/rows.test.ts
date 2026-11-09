@@ -78,7 +78,7 @@ test('rowCheck: a row on clear ground is fine; each failure gives its reason', (
   assert.equal(rowCheck(row(3, 100, 400, 100 + ROW_MAX + 1, 400), cls, [], [], MAP), 'too long (240 m max)');
   assert.equal(rowCheck(row(4, 2, 400, 14.5, 400), cls, [], [], MAP), 'too close to the edge of the map');
   const wet = cls.slice(); wet[401 * MAP + 405] = TC.WATER;
-  assert.equal(rowCheck(ok, wet, [], [], MAP), 'not on buildable ground');
+  assert.match(rowCheck(ok, wet, [], [], MAP), /^on water/); // T387: the class is named, never "not on buildable ground"
   const patch = cls.slice(); patch[401 * MAP + 405] = TC.PATCH;
   assert.equal(rowCheck(ok, patch, [], [], MAP), '', 'a patch of ground is buildable');
   assert.equal(rowCheck(ok, cls, [{ a: { x: 200, y: 300 }, b: { x: 800, y: 300 }, hw: 6 }], [], MAP), '', 'a road 100 tiles away');

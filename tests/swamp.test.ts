@@ -154,6 +154,28 @@ test('T199 the glint: none off or without gloss, cool and toward the sky, textur
   assert.equal(glossGain(SPEC_LOOK, 0), SPEC_LOOK.strength); assert.ok(glossGain(SPEC_LOOK, 1) < 0.5 * SPEC_LOOK.strength);
 });
 
+// T363 (the lead's review of the oval glint: "a hard-sided pale stripe", "no flat colour washes", "glittering highlights on the wave crests, not a lighter band"): the water
+// glint is masked by the ripples: the lit crests take it, the troughs and the flat water between them are left, and a big gain (the owner's 300%) brightens the crests
+// without flattening the water into a wash
+test('T363 the glint glitters on the crests: the troughs are left, a big gain does not flatten the water, a soft ceiling', () => {
+  const m = [40, 79, 68], at = (dz: number) => m.map(v => v + dz); // dz luma over the pool's mean (every channel alike: the luma moves by dz)
+  const lift = (dz: number, k = 1) => lum(glossPixel(at(dz), m, 1, k)) - lum(at(dz));
+  // the crests (a spread over the mean) take the glint whole; the flat water a share; the troughs hardly any
+  assert.ok(lift(-GLOSS.spread) < 0.08 * lift(GLOSS.spread), `trough +${lift(-GLOSS.spread).toFixed(1)} against crest +${lift(GLOSS.spread).toFixed(1)}`);
+  assert.ok(lift(0) < 0.5 * lift(GLOSS.spread) && lift(0) > lift(-GLOSS.spread), 'the flat water in between');
+  assert.ok(lift(-GLOSS.spread, 3) < 0.4 * lift(GLOSS.spread, 3), 'at three times the gain a trough is still far under a crest');
+  // a big gain: the crests and the troughs stay apart (the water's own contrast is 2 x the spread; after the glint it is more than twice that), no flat wash
+  for (const k of [1, 3, 9]) {
+    const hi = lum(glossPixel(at(GLOSS.spread), m, 1, k)), lo = lum(glossPixel(at(-GLOSS.spread), m, 1, k));
+    assert.ok(hi - lo > 2.4 * GLOSS.spread * (0.3 + 0.59 + 0.11), `gain ${k}: crest less trough ${(hi - lo).toFixed(1)}`);
+  }
+  // held under GLOSS.max by a soft ceiling (a hyperbola): it rises with the gain, never reaches it, and does not stop dead (no flat cap)
+  const sOf = (k: number) => { const c = at(GLOSS.spread), g = glossPixel(c, m, 1, k); return (g[0]! - c[0]!) / (GLOSS.sky[0]! - c[0]!); };
+  let last = 0; for (const k of [0.25, 0.5, 1, 2, 3, 6, 20, 100]) { const v = sOf(k); assert.ok(v > last && v < GLOSS.max, `k ${k}: ${v}`); last = v; }
+  assert.ok(sOf(2) - sOf(1) > 0.05 && sOf(6) - sOf(3) > 0.02, 'the crests still brighten as the gain goes up');
+  assert.match(GLOSS_LIGHT_GLSL, /0\.5 \* x \/ \(x \+ 0\.5\)/); assert.match(GLOSS_LIGHT_GLSL, /smoothstep\(-0\.3, 1\.0, z\)/);
+});
+
 test('T199 the shader runs the same numbers, and off draws and bakes as before', () => {
   const gl = readFileSync(resolve('src/game/gl.ts'), 'utf8'), r = readFileSync(resolve('src/game/renderer.ts'), 'utf8'), e = readFileSync(resolve('src/game/engine.ts'), 'utf8'), gc = readFileSync(resolve('src/game/ground-cache.ts'), 'utf8');
   for (const v of [...GLOSS.sky, GLOSS.spread, GLOSS.floor, GLOSS.max, GLOSS.amount, ...KEY.br, ...KEY.gr]) assert.ok(GLOSS_LIGHT_GLSL.includes(Number.isInteger(v) ? v.toFixed(1) : String(v)), `GLSL has ${v}`);
@@ -161,7 +183,7 @@ test('T199 the shader runs the same numbers, and off draws and bakes as before',
   assert.match(fs, /\$\{GLOSS_LIGHT_GLSL\}/); assert.match(fs, /if \(uGloss\.z > 0\.0\)/, 'no mask or no gain: the chunk as before'); assert.match(fs, /g\.rgb \/ g\.a/);
   // off: no gain uniform (0) and the empty texture; the engine sets no glint without specCam; the bake makes no mask without it
   assert.match(gl, /const gloss = this\.gloss && this\.gloss\.gain > 0 && this\.glossOf \? this\.glossOf\(tex\) : null, gs = gloss \? this\.gloss : null;/);
-  assert.match(gl, /gl\.uniform4f\(pr\.u\.uGloss, gs \? gs\.inner : 0, gs \? gs\.outer : 1, gs \? gs\.gain : 0, 0\)/);
+  assert.match(gl, /gl\.uniform4f\(pr\.u\.uGloss, gs \? gs\.inner : 0, gs \? gs\.outer : 1, gs \? gs\.gain : 0, gs \? gs\.oval : 1\)/); // (T363: the fourth is the glint's oval, 1 when off)
   assert.match(e, /gl\.gloss = this\.ground\.specCam \? \{/);
   assert.match(r, /const tp = this\.specCam \? this\.tex\.paintedOf\('swamp'\)\?\.tiled : undefined;/);
   assert.match(r, /this\.specMask = null; this\.glossMask = null; this\.swampNow = null;/, 'every bake starts with no gloss mask');

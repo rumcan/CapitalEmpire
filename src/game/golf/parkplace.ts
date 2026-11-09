@@ -3,9 +3,12 @@
 // building covers the ground just behind it: a car park there is out of sight) and a spot on the driving range's tee box, mats or outfield.
 // Pure TS, no DOM; tiles of 2 m.
 import { SK, type Pt, type RoadNetwork } from '../network';
-import { frontage, type CarParkDef } from '../event/carpark';
+import { buildPark, frontage, parkValid, type CarParkDef } from '../event/carpark';
 import { FRONT_GAP } from '../event/config';
+import type { Site } from '../event/site';
 import type { Rect } from './mode';
+import { landWhy, rectAt, rectsMeet, type LandCheck } from './placing';
+import { RANGE_LOT } from './rangestart';
 
 /** how far (tiles) the Car park tool moves a rectangle to put its edge on a road's verge */
 export const SNAP_REACH = 6;
@@ -40,6 +43,40 @@ export function rangeKeepOutWhy(d: { x: number; y: number; w: number; h: number 
   for (const r of keepOut) if (d.x < r[0] + r[2] && r[0] < d.x + d.w && d.y < r[1] + r[3] && r[1] < d.y + d.h) return 'The driving range is there: keep car parks off the tee box and the outfield';
   return '';
 }
+/** T237: why a car park cannot stand on rect d in golf ('' when it can): over the driving range (keepOut: its tee box, outfield, shop and yard, or
+ *  its whole plot once it is set back from the road), or a spot a club building hides in screen space (buildings) */
+export function parkSpotWhy(d: { x: number; y: number; w: number; h: number }, keepOut: readonly Rect[], buildings: readonly Building[]): string {
+  const keep = rangeKeepOutWhy(d, keepOut); if (keep) return keep;
+  const hid = hiddenBy(d, buildings);
+  return hid ? `Hidden behind ${hid.name}: place it beside or in front of it` : '';
+}
+
+/** T387 (#1045): what the range's first car park is checked against, as the engine has it (golf/placing.ts: the build in hand; `why` is
+ *  carParkWhy): whether the range is placed and has its car park already, the range's keep-out rects and the buildings that hide the ground
+ *  behind them (parkSpotWhy), the terrain classes, the network, the stadium's site, the car parks, whether a town lot stands on a rect, the land
+ *  (owned, water, course), the home's yard and the practice area (rects, null: none) */
+export interface CarParkCtx {
+  built: boolean; lot: boolean;
+  keepOut: readonly Rect[]; buildings: readonly Building[];
+  cls: Uint8Array; net: RoadNetwork; site: Site | null; parks: CarParkDef[];
+  lotsUnder(r: { x: number; y: number; w: number; h: number }): boolean;
+  land: LandCheck; yard: Rect | null; practice: Rect | null;
+}
+/** the car park's own land check: its rect inset by this many tiles (its edge on the road's verge lies past the parcel's road edge) */
+export const PARK_LAND_INSET = 3;
+/** T387: '' when the range's first car park may stand on d (the spot the ghost offers: snapToRoad's), else the one reason, named, in order: the range
+ *  is not placed yet or has its car park; the range's own ground (its plot, tee box, outfield) or a spot a building hides; water, a creek or the
+ *  river bank under it (woodland is open ground to a golf game: parkValid's `woodland`, as for the range's plot); a road over it, too near the map's
+ *  edge, the stadium's site or another car park; a town building; land that is not the player's; the course; his home's yard; the practice area; no road
+ *  to put its entrance on. Never a bare "not buildable" */
+export function carParkWhy(d: CarParkDef, c: CarParkCtx): string {
+  if (!c.built) return 'Place your driving range first';
+  if (c.lot) return 'Your range has its car park: more come from Traffic ▸ Car park';
+  const r: Rect = [d.x, d.y, d.w, d.h], k = PARK_LAND_INSET, inner: Rect = [d.x + k, d.y + k, d.w - 2 * k, d.h - 2 * k];
+  return parkSpotWhy(d, c.keepOut, c.buildings) || parkValid(d, c.cls, c.net, c.site, c.parks, true) || (c.lotsUnder(d) ? 'buildings stand there' : '')
+    || landWhy(inner, c.land) || (c.yard && rectsMeet(r, c.yard) ? 'Your home is there' : '')
+    || (c.practice && rectsMeet(r, c.practice) ? 'The practice area is there' : '') || (buildPark(c.net, d) ? '' : 'Place it beside a road: its entrance goes on the road');
+}
 
 /** car park d moved onto the road beside it: an axis park with no frontage is moved at most `reach` tiles across the nearest straight ground road
  *  along one of its sides (overlapping it by half its side at least) so its edge stands at the road's verge (within FRONT_GAP, outside the road),
@@ -68,4 +105,13 @@ export function snapToRoad(net: RoadNetwork, d: CarParkDef, reach = SNAP_REACH):
     }
   }
   return best;
+}
+
+/** T387: the range's first car park at the pointer (tile x, y) for a range facing dir: RANGE_LOT's size, its long side along the road (the roads of
+ *  a north or south facing run along x), its rect centred on the pointer in whole tiles and snapped onto the road beside it (snapToRoad), in the golf
+ *  layout (cross). The placeable's spot and the tests' */
+export function carParkSpotAt(net: RoadNetwork, dir: 0 | 1 | 2 | 3, x: number, y: number): CarParkDef {
+  const [L, D] = RANGE_LOT, w = dir === 0 || dir === 2 ? L : D, h = dir === 0 || dir === 2 ? D : L, [rx, ry] = rectAt(x, y, w, h);
+  const raw: CarParkDef = { id: 0, x: rx, y: ry, w, h }, d = snapToRoad(net, raw) ?? raw;
+  return { ...d, cross: true };
 }
