@@ -15,6 +15,7 @@ import type { ShineWeights } from './grass-shine';
 import type { MotionMaskData } from './water-motion';
 import type { MowRec } from './mow-lines';
 import type { LightLand } from './ext/course-height/light';
+import type { ReliefMode } from './relief';
 /** T262: a chunk's grass shine weight mask as plain bytes, one channel (renderer.ts takeShineMask) */
 export interface ShineMaskData { w: number; h: number; data: Uint8Array }
 import type { RoughMix } from './rough-yards';
@@ -250,6 +251,8 @@ export type ToWorker =
   | { t: 'slopeLight'; strength: number }
   /** T388: the real ground's light, the land layer by its own response (false) or the sum with the course height as one field, as before (true: the gear menu's Real ground light off) */
   | { t: 'landLight'; classic: boolean }
+  /** T409: the look of the hills (relief.ts: 'old' the light and the rock as before; 'smooth' and 'bands' the relief light and the slope materials: the gear menu's Hill relief), every chunk is baked again */
+  | { t: 'relief'; mode: ReliefMode }
   /** the tile set bands to decode ahead (painted-tiles.ts bandsAhead: the camera is near their switch; T150), sent when they change */
   | { t: 'tilesAhead'; bands: number[] }
   /** T168: textures the open tool can lay (the Course tool's brushes), made ahead while the worker is idle */

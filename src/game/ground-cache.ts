@@ -8,6 +8,7 @@ import { groundRect, landLightRect, type LandField } from './golf/osm/land';
 import { withBaseGrass } from './base-grass-saved';
 import { withPresets } from './paint-presets-saved';
 import { GRASS_ART_DEFAULT, type GrassArt } from './painted-grass-lod';
+import { RELIEF_DEFAULT, type ReliefMode } from './relief';
 import { patchBox, type FromWorker, type LotPatch, type NetOp, type TileKind, type ToWorker, type WorkerLimits } from './ground-protocol';
 import type { GLRenderer } from './gl';
 import { unionBox, type BBox } from './network';
@@ -158,7 +159,7 @@ export class GroundCache {
   setGrassArt(art: GrassArt) { if (art === this.grassArt) return; this.grassArt = art; this.broadcast({ t: 'grassArt', art }); this.invalidateAll(); }
   /** a light boot's worker limits (boot.ts, T157), sent with init; null: the game's */
   limits: WorkerLimits | null = null;
-  init(t: { cls: Uint8Array; height: Float32Array; waters: Waterway[] }) { const art = { ...withPresets(withBaseGrass(GROUND_ART)), grassArt: this.grassArt }, limits = this.limits ?? undefined; const tileBytes = this.sentTileBytes = this.tileBytes ?? tileCacheBudget(this.budgetPx, this.workers.length); this.workers.forEach((wk, i) => wk.postMessage({ t: 'init', art, terrain: t.cls, height: t.height, waters: t.waters, build: i === 0, peers: this.workers.length - 1, limits, tileBytes } satisfies ToWorker)); this.broadcast({ t: 'living', ...this.living }); this.broadcast({ t: 'slopeLight', strength: this.slopeLight }); this.broadcast({ t: 'landLight', classic: this.landClassic }); this.broadcast({ t: 'leaves', density: this.leafDensity }); this.broadcast({ t: 'specCam', on: this.specCam }); this.broadcast({ t: 'swamp', on: this.swamp }); this.broadcast({ t: 'riverSwamp', on: this.riverSwamp }); this.broadcast({ t: 'grassShine', on: this.grassShine, weights: this.shineWeights }); this.broadcast({ t: 'waterMotion', on: this.waterMotion }); this.broadcast({ t: 'surfaces', file: paintedSurfaces() });
+  init(t: { cls: Uint8Array; height: Float32Array; waters: Waterway[] }) { const art = { ...withPresets(withBaseGrass(GROUND_ART)), grassArt: this.grassArt }, limits = this.limits ?? undefined; const tileBytes = this.sentTileBytes = this.tileBytes ?? tileCacheBudget(this.budgetPx, this.workers.length); this.workers.forEach((wk, i) => wk.postMessage({ t: 'init', art, terrain: t.cls, height: t.height, waters: t.waters, build: i === 0, peers: this.workers.length - 1, limits, tileBytes } satisfies ToWorker)); this.broadcast({ t: 'living', ...this.living }); this.broadcast({ t: 'slopeLight', strength: this.slopeLight }); this.broadcast({ t: 'landLight', classic: this.landClassic }); this.broadcast({ t: 'relief', mode: this.relief }); this.broadcast({ t: 'leaves', density: this.leafDensity }); this.broadcast({ t: 'specCam', on: this.specCam }); this.broadcast({ t: 'swamp', on: this.swamp }); this.broadcast({ t: 'riverSwamp', on: this.riverSwamp }); this.broadcast({ t: 'grassShine', on: this.grassShine, weights: this.shineWeights }); this.broadcast({ t: 'waterMotion', on: this.waterMotion }); this.broadcast({ t: 'surfaces', file: paintedSurfaces() });
     // the studio saved the painted surfaces (the dev server hot-swaps the file): every worker takes the new looks and every chunk is baked again
     this.unsurfaces?.(); this.unsurfaces = onPaintedSurfaces(file => { this.broadcast({ t: 'surfaces', file }); this.invalidateAll(); }); }
   private unsurfaces: (() => void) | null = null;
@@ -170,6 +171,10 @@ export class GroundCache {
   landClassic = false;
   /** the Real ground light changed: every worker switches and every chunk is baked again (each keeps its old picture until then) */
   setLandClassic(v: boolean) { if (v === this.landClassic) return; this.landClassic = v; this.broadcast({ t: 'landLight', classic: v }); this.invalidateAll(); }
+  /** T409: the look of the hills (relief.ts): 'old' as before the relief light and the slope materials */
+  relief: ReliefMode = RELIEF_DEFAULT;
+  /** the Hill relief changed: every worker switches and every chunk is baked again (each keeps its old picture until then) */
+  setRelief(m: ReliefMode) { if (m === this.relief) return; this.relief = m; this.broadcast({ t: 'relief', mode: m }); this.invalidateAll(); }
   /** the living ground (T111): the gear menu's Ground variety and the dev debug view of its influence maps */
   living = { on: true, debug: false };
   /** the living ground is baked at all (its variety, or the debug view of its maps) */

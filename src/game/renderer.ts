@@ -17,7 +17,7 @@ import { LOT_DECALS } from './lot-decals';
 import { clampDecals, drawDecals, flatSquash, placeDecals } from './map-decals';
 import { layOnGround } from './base-grass';
 import savedDecals from './map-decals.json';
-import { HS, TC, type Waterway } from './terrain/types';
+import { HS, HSTEP, TC, sampleField, type Waterway } from './terrain/types';
 import { makeNoise } from './terrain/noise';
 import { WOODLAND_TEX, barShape, classAlpha, rockAlpha, shadeField, shadeRGBA, slopeField, waterBox, waterShape } from './terrain-paint';
 import { crosscutLegs, cutPieces, fairwayStripeLook, flipBands, holeStripeLegs, legArea, ringPass, turnStripeLegs, type StripeLeg, type StripeLook } from './course-stripes';
@@ -45,7 +45,8 @@ import { HEIGHT_LIGHT_STRENGTH, HL_MASK, LUMA_SIGMA_PER_L, heightLightGrid, heig
 import { PaintedGround, type LayLevel } from './painted-ground';
 import { coversMap, familyById } from './painted-families';
 import { bandOf, cellsIn, snappedCell, tileIndex, tileKey, tilePermutation, tileSize } from './painted-tiles';
-import { BLOCK_UNDER, WOODLAND, lawnTexFor } from './painted-surfaces';
+import { BLOCK_UNDER, HILLSIDE, MOUNTAIN, WOODLAND, lawnTexFor } from './painted-surfaces';
+import { RELIEF_DEFAULT, RELIEF_LOOK, bandsOf, clampRelief, flatBelow, reliefGrid, reliefMaxSlope, reliefPictures, slopeMasks, type AlphaMask, type ReliefGrid, type ReliefLook, type ReliefMode } from './relief';
 import { ROUGH_SOFT, ROUGH_TEX, roughBack, type RoughKind, type RoughMix } from './rough-yards';
 import { SOFT, easeWeights, softAreaWidth, softDirt, softMaskImage, softRGBA, softRes, softRingImages, softWidth, type SoftImage } from './soft-edges';
 import { BLEND_WAVES, blendAlpha, blendNoise, trimLru } from './painted-grass-lod';
@@ -1208,6 +1209,10 @@ export class GroundPainter {
   shade: Float32Array = new Float32Array(HS * HS);
   /** slope magnitude per height sample (bare rock on the steep faces) */
   slope: Float32Array = new Float32Array(HS * HS);
+  /** T409: the natural terrain has some height (not the flat map the game ships, T025): its slope then picks the slope materials too (relief.ts slopeMasks) */
+  natAny = false;
+  /** T409: the look of the hills (relief.ts ReliefMode): 'old' the light and the rock as before T409, 'smooth' and 'bands' the relief light and the slope materials */
+  relief: ReliefMode = RELIEF_DEFAULT;
   /** the course height (T027), CH_SIZE² samples; any: some height is not 0. Its light is baked per chunk (heightLight, T126) */
   courseH = new Float32Array(CH_SIZE * CH_SIZE); courseAny = false;
   /** T388: the real ground under a map-data course, as its own layer (the land's samples; null: none): lit by its own response beside the course height's (heightLightGrid) */
@@ -1224,7 +1229,7 @@ export class GroundPainter {
   /** the screen textures laid on the ground (isoImage), per source picture */
   private isoPics = new WeakMap<Cnv, Cnv>();
   /** take a new terrain: classes, height samples and waterways */
-  setTerrain(cls: Uint8Array, height: Float32Array, waters: Waterway[]) { this.terrainVer++; this.terrain.set(cls); this.shade = shadeField(height); this.slope = slopeField(height); this.waters = waters.map(w => ({ w, box: waterBox(w.pts, 4) })); this.swampField = new SwampField(swampStreams(waters)); this.riverField = new SwampField(riverStreams(waters), riverBandOf2(waters)); this.mapWater = new MapWater(waterRuns(waters, k => (k === 'creek' ? SWAMP.water : 1))); }
+  setTerrain(cls: Uint8Array, height: Float32Array, waters: Waterway[]) { this.terrainVer++; this.terrain.set(cls); this.shade = shadeField(height); this.slope = slopeField(height); this.natAny = height.some(v => v !== 0); this.waters = waters.map(w => ({ w, box: waterBox(w.pts, 4) })); this.swampField = new SwampField(swampStreams(waters)); this.riverField = new SwampField(riverStreams(waters), riverBandOf2(waters)); this.mapWater = new MapWater(waterRuns(waters, k => (k === 'creek' ? SWAMP.water : 1))); }
   /** a sub-rect of the course height from the main thread (samples i0.., j0.., w by h, row-major): copied in (the chunks it lights re-bake) */
   setCourse(i0: number, j0: number, w: number, h: number, data: Float32Array) {
     for (let j = 0; j < h; j++) this.courseH.set(data.subarray(j * w, (j + 1) * w), (j0 + j) * CH_SIZE + i0);
@@ -1232,6 +1237,24 @@ export class GroundPainter {
   }
   /** T388: the land layer from the main thread (null: no land, a new game); the chunks it lights re-bake (the main thread invalidates them) */
   setLand(rect: LightLand | null) { this.landL = rect; this.courseAny ||= !!rect; }
+  /** T409: the slope bands of the Hillside and Mountain rock materials (the surfaces file's `relief`, every number held to its range; the defaults without it) */
+  private reliefBands() { return clampRelief(this.tex.surfaces.relief); }
+  /** T409: the relief light of the ground over tile box `box` at res points a tile (relief.ts reliefGrid: the course height and the land, the light posterized in the 'bands' look); null in the 'old' look, with no height, or where nothing slopes */
+  private reliefGridOf(box: BBox, res: number): ReliefGrid | null {
+    return this.relief !== 'old' && this.courseAny ? reliefGrid({ course: this.courseH, land: this.landL }, box, res, bandsOf(this.relief)) : null;
+  }
+  /** T409: which slope materials a tile box can show (the worker asks for their pictures only then): the hillside from the slope bands' first angle (less its blend and noise), the rock from the second. Never in the 'old' look or with the Grass setting 'photo' */
+  reliefNeeds(box: BBox): { hill: boolean; rock: boolean } {
+    if (this.relief === 'old' || !this.tex.paintedOn) return { hill: false, rock: false };
+    const b = this.reliefBands();
+    let steep = this.courseAny ? reliefMaxSlope({ course: this.courseH, land: this.landL }, box) : 0;
+    if (this.natAny) {
+      const i0 = Math.max(0, Math.floor(box[0] / HSTEP) - 1), i1 = Math.min(HS - 1, Math.ceil(box[2] / HSTEP) + 1), j0 = Math.max(0, Math.floor(box[1] / HSTEP) - 1), j1 = Math.min(HS - 1, Math.ceil(box[3] / HSTEP) + 1);
+      let m = 0; for (let j = j0; j <= j1; j++) for (let i = i0; i <= i1; i++) m = Math.max(m, this.slope[j * HS + i]!);
+      steep = Math.max(steep, Math.atan(m) * 180 / Math.PI);
+    }
+    return { hill: steep >= flatBelow(b), rock: steep >= b.rockAt - b.blend / 2 - b.noise };
+  }
   /** apply lot ground edits: each key in `set` replaces its patches, each key in `drop` loses them */
   setLotGround(set: [string, LotPatch[]][], drop: string[]) {
     for (const k of drop) this.lotRemove(k);
@@ -1320,8 +1343,14 @@ export class GroundPainter {
     for (let y = my0 - (my0 % 4); y < my1; y += 4) for (let x = mx0 - (mx0 % 4); x < mx1; x += 4) { const t = this.terrain[y * MAP + x]; if (t !== TC.PATCH && t !== TC.HILL) continue; let p = byType.get(t); if (!p) byType.set(t, (p = new Path2D())); p.rect(x, y, 4, 4); }
     for (const [t, p] of byType) { ctx.fillStyle = planTex(t === TC.PATCH ? 'meadow' : this.woodlandTex()); ctx.fill(p); }
     // bare rock on the steep faces, as a flat colour (before the river banks, so they read on top)
-    const ra = rockAlpha(this.slope, tx0, ty0, tx1 - tx0, ty1 - ty0, 0.25, this.edgeNoise);
-    if (ra) { const rb = this.buffer('small', ra.W, ra.H), rg = ctx2d(rb); rg.putImageData(new ImageData(ra.data as Uint8ClampedArray<ArrayBuffer>, ra.W, ra.H), 0, 0); rg.globalCompositeOperation = 'source-in'; rg.fillStyle = this.planColour('rock'); rg.fillRect(0, 0, ra.W, ra.H); rg.globalCompositeOperation = 'source-over'; ctx.setTransform(M); ctx.drawImage(rb, tx0, ty0, ra.W / 0.25, ra.H / 0.25); }
+    // T409: in the relief looks the slope materials instead (relief.ts slopeMasks: the Hillside, the Mountain rock over it) in their flat colours; the relief light's grid is made here once, the light below uses it
+    const flatMask = (ra: { data: Uint8ClampedArray; W: number; H: number }, colour: string) => { const rb = this.buffer('small', ra.W, ra.H), rg = ctx2d(rb); rg.putImageData(new ImageData(ra.data as Uint8ClampedArray<ArrayBuffer>, ra.W, ra.H), 0, 0); rg.globalCompositeOperation = 'source-in'; rg.fillStyle = colour; rg.fillRect(0, 0, ra.W, ra.H); rg.globalCompositeOperation = 'source-over'; ctx.setTransform(M); ctx.drawImage(rb, tx0, ty0, ra.W / 0.25, ra.H / 0.25); };
+    const relG = this.reliefGridOf(box, 0.25);
+    if (this.relief !== 'old' && this.tex.paintedOn) {
+      const sm = relG || this.natAny ? slopeMasks(relG, this.natAny ? this.slope : null, tx0, ty0, tx1 - tx0, ty1 - ty0, 0.25, this.edgeNoise, this.reliefBands()) : null;
+      if (sm?.hill && this.tex.isPainted(HILLSIDE)) flatMask(sm.hill, this.planColour(HILLSIDE));
+      if (sm?.rock && this.tex.isPainted(MOUNTAIN)) flatMask(sm.rock, this.planColour(MOUNTAIN));
+    } else { const ra = rockAlpha(this.slope, tx0, ty0, tx1 - tx0, ty1 - ty0, 0.25, this.edgeNoise); if (ra) flatMask(ra, this.planColour('rock')); }
     // river banks, creeks and the water, then the hillshade (as on the ground), so the planner reads the valley too
     const vis = (b: BBox) => b[2] >= tx0 && b[0] <= tx1 && b[3] >= ty0 && b[1] <= ty1, near = this.waters.filter(w => vis(w.box));
     const shape = (kind: 'river' | 'creek', extra: number, col: string) => { const p = new Path2D(); let any = false; for (const w of near) if (w.w.kind === kind) any = waterShape(p, w.w.pts, extra, box) || any; if (any) { ctx.fillStyle = col; ctx.fill(p); } };
@@ -1349,7 +1378,10 @@ export class GroundPainter {
       ctx.fillStyle = planFill(p.tex); ctx.fill(polyPath(p.pts));
     }
     // the course height's light over the painted course (T028b, T126): over the lot and paint fills, under the roads
-    if (this.courseAny && this.slopeLight > 0) { const hl = heightLightGrid(this.courseH, box, 0.25, this.landL, this.landClassic); if (hl) this.heightLightOnMap(ctx, hl, M, W, H, L, box); ctx.setTransform(M); }
+    if (this.courseAny && this.slopeLight > 0) {
+      if (this.relief === 'old') { const hl = heightLightGrid(this.courseH, box, 0.25, this.landL, this.landClassic); if (hl) this.heightLightOnMap(ctx, hl, M, W, H, L, box); } else if (relG) this.heightLightOnMap(ctx, relG, M, W, H, L, box, RELIEF_LOOK);
+      ctx.setTransform(M);
+    }
     const v = this.net.view(box), minW = 1.2 / (TILE_PX * L);
     const fill = (list: Feature[], col: string) => { ctx.strokeStyle = ctx.fillStyle = col; ctx.lineJoin = 'round'; for (const f of list) { ctx.lineCap = f.cap; if (f.kind === 'stroke') { ctx.lineWidth = Math.max(minW, f.w); ctx.stroke(f.path); } else ctx.fill(f.path); } };
     fill(v.walkF.filter(f => f.tex !== 'turf'), '#9a9184');
@@ -1368,11 +1400,11 @@ export class GroundPainter {
 
   /** T357: the course height's light over the map only. The land under a real course is not 0 at the map's edge (Woodhill's land is 24 tiles from it), and the light's grid
    *  reaches a few points past the edge, where the heights are held: that margin would shade a band of the dark ground beyond the map. The tile rectangle of the map clips it */
-  private heightLightOnMap(ctx: C2D, g: HeightLightGrid, M: DOMMatrix, W: number, H: number, L: number, box: BBox) {
+  private heightLightOnMap(ctx: C2D, g: HeightLightGrid, M: DOMMatrix, W: number, H: number, L: number, box: BBox, look?: ReliefLook) {
     // a chunk whose tile box lies inside the map has no pixel beyond it (the clip is only for the few at the edge)
-    if (box[0] >= 0 && box[1] >= 0 && box[2] <= MAP && box[3] <= MAP) { this.heightLight(ctx, g, M, W, H, L); return; }
+    if (box[0] >= 0 && box[1] >= 0 && box[2] <= MAP && box[3] <= MAP) { this.heightLight(ctx, g, M, W, H, L, look); return; }
     ctx.save(); ctx.setTransform(M); ctx.beginPath(); ctx.rect(0, 0, MAP, MAP); ctx.clip();
-    try { this.heightLight(ctx, g, M, W, H, L); } finally { ctx.restore(); }
+    try { this.heightLight(ctx, g, M, W, H, L, look); } finally { ctx.restore(); }
   }
   /** the course height's light (T126, ext/course-height/light.ts) on the W x H chunk ctx draws at cache level L, whose tile to pixel matrix
    *  is M, from its light grid g. All of it is canvas compositing on the GPU over the pixels the light touches, never a read-back (which
@@ -1383,10 +1415,11 @@ export class GroundPainter {
    *    by 'lighten' then 'difference' with a grey, doubled; the highlight's, clamp(4 (q − 1)), from max(0, L − mean) / mean, doubled twice;
    *  - the lift: the texels times their mask times the lift picture, added ('lighter'): c × (1 + gain × mask);
    *  - the highlight: its mask times the warm highlight picture, screened over ('screen') */
-  private heightLight(ctx: C2D, g: HeightLightGrid, M: DOMMatrix, W: number, H: number, L: number) {
+  private heightLight(ctx: C2D, g: HeightLightGrid, M: DOMMatrix, W: number, H: number, L: number, look?: ReliefLook) {
     const s = this.slopeLight; if (!(s > 0)) return;
     const r = heightLightRect(g, M, W, H); if (!r) return;
-    const [x0, y0, x1, y1] = r, rw = x1 - x0, rh = y1 - y0, src = ctx.canvas as Cnv, pics = heightLightPictures(g, s);
+    // (T409: the relief look's pictures, the T126 ones' form with the relief's own strengths)
+    const [x0, y0, x1, y1] = r, rw = x1 - x0, rh = y1 - y0, src = ctx.canvas as Cnv, pics = look ? reliefPictures(g, s, look) : heightLightPictures(g, s);
     /** a picture of the grid stretched over the rect (bilinear between the light points) onto g2, through M shifted to the rect */
     const stretch = (g2: C2D, name: string, data: Uint8ClampedArray) => {
       const p = this.buffer(name, g.w, g.h); ctx2d(p).putImageData(new ImageData(data as Uint8ClampedArray<ArrayBuffer>, g.w, g.h), 0, 0);
@@ -1723,7 +1756,16 @@ export class GroundPainter {
     // the woodland floor: its painted look (painted-surfaces.ts WOODLAND, T128), else the course's Fescue (terrain-paint.ts WOODLAND_TEX), laid
     // in tile space at scale 1 like a painted course area
     const woods = classAlpha(this.terrain, TC.HILL, tx0, ty0, bw, bh, cres, this.edgeNoise); if (woods) layer('meadow', g => overlay(g, woods, cres), g => this.paintPhoto(g, this.woodlandTex(), L));
-    const ra = rockAlpha(this.slope, tx0, ty0, bw, bh, cres, this.edgeNoise); if (ra) layer('rock', g => overlay(g, ra, cres));
+    // T409: in the relief looks the natural ground's slope picks its material (relief.ts slopeMasks): the Hillside over moderate ground, the Mountain rock over steep, each blended over a few
+    // degrees and broken up by noise, laid as painted tile sets as crisp as the dirt (paintPhoto: the tiles, only over the cells the mask reaches). Laid here, under the water, the lots,
+    // the course's painted surfaces and the roads (which all keep their own ground); the old rock (steep faces of the natural terrain) stays in the 'old' look and with the photo grass
+    let relG: ReliefGrid | null | undefined;
+    const relief = () => (relG === undefined ? (relG = this.reliefGridOf(box, lite ? 1 : 2)) : relG);
+    if (this.relief !== 'old' && this.tex.paintedOn) {
+      const rg = relief(), sm = rg || this.natAny ? slopeMasks(rg, this.natAny ? this.slope : null, tx0, ty0, bw, bh, cres, this.edgeNoise, this.reliefBands()) : null;
+      const slopeLayer = (mk: AlphaMask | null | undefined, id: string) => { if (mk && tex.isPainted(id)) layer('meadow', g => overlay(g, mk, cres), g => this.paintPhoto(g, id, L, undefined, 1, mk.box as BBox)); };
+      slopeLayer(sm?.hill, HILLSIDE); slopeLayer(sm?.rock, MOUNTAIN);
+    } else { const ra = rockAlpha(this.slope, tx0, ty0, bw, bh, cres, this.edgeNoise); if (ra) layer('rock', g => overlay(g, ra, cres)); }
     const near = this.waters.filter(w => vis(w.box)), rivers = near.filter(w => w.w.kind === 'river'), creeks = near.filter(w => w.w.kind === 'creek');
     /** a feathered waterway mask: 4 nested shapes from extra + f down to extra - f (tiles), each adding a quarter of the alpha */
     const shore = (g: C2D, list: typeof near, extra: number, f: number, scale = 1) => { g.setTransform(M); g.globalCompositeOperation = 'lighter'; g.fillStyle = 'rgba(0,0,0,0.25)'; for (let s = 0; s < 4; s++) { const p = new Path2D(); let any = false; for (const w of list) any = waterShape(p, w.w.pts, extra + f * (1 - (2 * s) / 3), box, scale) || any; if (any) g.fill(p); } g.globalCompositeOperation = 'source-over'; };
@@ -1890,7 +1932,12 @@ export class GroundPainter {
     if (paints.length) { this.drawPaints(ctx, paints, L, X0, Y0, M, Minv, box, lite, under, laid, sc ? softBand : null); ctx.setTransform(M); }
     // ---- 1a'''. the course height's light (T028b, T126): its slopes lit by the sun at the upper right and shaded away from it, its steep rises'
     //      cast shadows and its hollows' occlusion, over the grass, the lots and the painted course, under the living ground, car parks and roads
-    if (this.courseAny && this.slopeLight > 0) { const hl = heightLightGrid(this.courseH, box, lite ? 1 : 2, this.landL, this.landClassic); if (hl) this.heightLightOnMap(ctx, hl, M, W, H, L, box); ctx.setTransform(M); }
+    if (this.courseAny && this.slopeLight > 0) {
+      // (T409: the relief light, relief.ts: the grid made for the slope materials above when it was asked for; the 'old' look is T126's and T388's as they were)
+      if (this.relief === 'old') { const hl = heightLightGrid(this.courseH, box, lite ? 1 : 2, this.landL, this.landClassic); if (hl) this.heightLightOnMap(ctx, hl, M, W, H, L, box); }
+      else { const rg = relief(); if (rg) this.heightLightOnMap(ctx, rg, M, W, H, L, box, RELIEF_LOOK); }
+      ctx.setTransform(M);
+    }
     // ---- 1a''''. the living ground (T111): grass variety from what stands here and its ambient occlusion, over the grass, the lots and the
     //      painted areas, under the car parks and roads
     if (this.living.on || this.living.debug) { this.drawLiving(ctx, L, lite, box, M, Minv, W, H, X0, Y0); ctx.setTransform(M); }

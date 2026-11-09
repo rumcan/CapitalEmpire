@@ -4,6 +4,7 @@ import { clampCourseFinish, type CourseFinish, type TeeWall } from './course-fin
 import type { MowPattern } from './mow-lines';
 import { clampWaterLook, type WaterLook } from './water-look';
 import { clampRangeLook, type RangeLook } from './golf/range-look';
+import { clampRelief, type ReliefBands } from './relief';
 
 /** Which hand-painted family each surface of the game wears (#147, T128): the golf surfaces, the town's lawns (several looks, one picked per lot
  *  and per road block so streets are not uniform), the map's ground, the living ground's lush and patchy grass, the course walls' cut faces,
@@ -14,6 +15,9 @@ import { clampRangeLook, type RangeLook } from './golf/range-look';
 /** the woodland floor's texture id when the painted art is on (renderer.ts lays it under the forests; with the photo grass the floor is the
  *  course's Fescue, terrain-paint.ts WOODLAND_TEX) */
 export const WOODLAND = 'woodland';
+/** T409 (#1105; the owner, 2026-11-09: "a blend that shows on steeper hills and one that shows on flatter hills"): the natural ground's slope materials, texture ids of the
+ *  Hillside and Mountain rock surfaces (relief.ts: the ground's slope picks the material, flat and gentle ground keeping the map's own ground) */
+export const HILLSIDE = 'hillsideGround', MOUNTAIN = 'mountainRock';
 /** T194: what a town block's grass lies over where its soft patches leave the block (the rough's texture: the rough's painted look, the owner's
  *  rough paintings), never the map's fescue */
 export const BLOCK_UNDER = 'wasteSand'; // the owner, 2026-10-27: "change the block grass to desert": blocks lie over the Waste area sand (the desert) now, was the rough
@@ -41,6 +45,9 @@ export const SURFACES: readonly SurfaceDef[] = [
   { key: 'dry', name: 'Dry grass', group: 'Map', tex: ['grassDry'], kinds: ['grass'] },
   // T382: the desert theme's sand blotches (living-ground.ts sandBlotch): unset in autumn (never laid); the desert theme gives it the pale rippled sand
   { key: 'dune', name: 'Sand drifts (the desert theme: windblown blotches over the dirt)', group: 'Map', tex: ['duneSand'], kinds: ['sand'], slot: true },
+  // T409: the slope materials (relief.ts), art slots with stand-ins: the surfaces file's looks for them are existing families until the art lands (replace them in the Studio, no code)
+  { key: 'hillside', name: 'Hillside (moderate slopes: thin rough grass with soil and small stones)', group: 'Map', tex: [HILLSIDE], kinds: ['grass', 'cut', 'sand'], slot: true },
+  { key: 'mountain', name: 'Mountain rock (steep slopes: bare rock and scree)', group: 'Map', tex: [MOUNTAIN], kinds: ['cut', 'sand'], slot: true },
   { key: 'worn', name: 'Worn ground', group: 'Map', tex: ['lawnWorn'], kinds: ['grass'] },
   { key: 'dirt', name: 'Dirt and bare soil', group: 'Map', tex: ['dirt', 'rockyDirt', 'rockyDirtAlt'], kinds: ['cut', 'sand'] },
   { key: 'bank', name: 'River banks and creek beds', group: 'Map', tex: ['bank', 'creek'], kinds: ['cut', 'sand'] },
@@ -81,6 +88,8 @@ export interface LawnLook extends PaintedLook { weight: number }
  *  T258: the range's ground art (golf/range-look.ts: the mats and the target greens as their pictures or their stand-ins, and the bullseye
  *  green; absent: the pictures) */
 export interface SurfacesFile { v: 1; surfaces: Record<string, PaintedLook>; lawns: LawnLook[]; presets: Record<string, PaintedLook>; course?: CourseFinish; water?: WaterLook; range?: RangeLook;
+  /** T409: the slope bands of the Hillside and Mountain rock materials (relief.ts ReliefBands: the angles in degrees they start at, how far each edge blends, the noise that breaks it up; absent: the defaults) */
+  relief?: ReliefBands;
   /** T341: the desert theme is on (desert-theme.ts desertSurfaces: never saved, the running game's view of the file) */ desert?: boolean;
   /** T384 (dev server, ?litter=leaves): the desert theme keeps the autumn leaves, as it was before the desert's litter: the A/B of the shots and the bench */ autumnLitter?: boolean }
 export const LAWN_SLOTS = 8;
@@ -99,7 +108,7 @@ export function clampSurfaces(f: unknown): SurfacesFile {
     const l = clampLook(v), w = (v as { weight?: unknown })?.weight;
     if (l) lawns.push({ ...l, weight: Math.round(Math.min(10, Math.max(0, typeof w === 'number' && Number.isFinite(w) ? w : 1)) * 100) / 100 });
   }
-  return { v: 1, surfaces, lawns, presets, ...(o.course && typeof o.course === 'object' ? { course: clampCourseFinish(o.course) } : {}), ...(o.water && typeof o.water === 'object' ? { water: clampWaterLook(o.water) } : {}), ...(o.range && typeof o.range === 'object' ? { range: clampRangeLook(o.range) } : {}) };
+  return { v: 1, surfaces, lawns, presets, ...(o.course && typeof o.course === 'object' ? { course: clampCourseFinish(o.course) } : {}), ...(o.water && typeof o.water === 'object' ? { water: clampWaterLook(o.water) } : {}), ...(o.range && typeof o.range === 'object' ? { range: clampRangeLook(o.range) } : {}), ...(o.relief && typeof o.relief === 'object' ? { relief: clampRelief(o.relief) } : {}) };
 }
 /** T364 (#1019; the owner, 2026-11-08: "replace grass on tees with the green grass but without any mow lines"): the Tee surface wears the putting
  *  green's painted grass now (the file's `tee` look is the green's); this is the look it wore before, the fairway's. The old tees (the dev

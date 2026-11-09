@@ -17,7 +17,7 @@ import { SURF } from './ext/course-grid';
 import { finishOf } from './course-finish';
 import { BUNKER_WALL_PICTURE } from './tee-wall';
 import { softCanvases } from './canvas2d';
-import { BLOCK_UNDER, WOODLAND, lawnTexFor } from './painted-surfaces';
+import { BLOCK_UNDER, HILLSIDE, MOUNTAIN, WOODLAND, lawnTexFor } from './painted-surfaces';
 import { roughTexes } from './rough-yards';
 import { cropSurface } from './ext/farms/crops';
 import { layerTexes, type LotPatch } from './ground-protocol';
@@ -140,6 +140,7 @@ const handle = async (m: ToWorker) => {
       case 'waterMotion': painter.waterMotion = m.on; break;
       case 'slopeLight': painter.slopeLight = m.strength; break;
       case 'landLight': painter.landClassic = m.classic; break;
+      case 'relief': painter.relief = m.mode; break;
       case 'lotground': {
         // the lazy photo textures the edit's paint areas use (fill and border, course surfaces and collars, wall art): built first, so the
         // chunks baked after it see them. T168, a deferring worker: started now, not waited for here; a chunk that lays one waits for it
@@ -188,6 +189,8 @@ const handle = async (m: ToWorker) => {
           if (painter.swampIn(box)) need.add('swamp');
           // T360: the natural river's point bars (their sand or gravel)
           if (painter.barsIn(box)) need.add(painter.barTex());
+          // T409: the slope materials the chunk's hills show (the Hillside and the Mountain rock surfaces: the relief's slope bands, relief.ts), asked for only where a slope reaches them
+          { const rn = painter.reliefNeeds(box); if (rn.hill) need.add(HILLSIDE); if (rn.rock) need.add(MOUNTAIN); }
           // the living ground's painted variant sets (T111), when their art is in the game
           if (painter.living.on && !painter.living.debug) for (const v of VARIANT_IDS) if (tex.isPainted(v)) need.add(v);
           // T382: the desert's sand blotches' painted sand (the Sand drifts surface the desert theme gives a look: no other texture of the chunk wears that family now, so its pictures are asked for here)

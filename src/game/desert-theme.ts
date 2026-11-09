@@ -36,6 +36,8 @@ export const DESERT_GROUND: Readonly<Record<string, PaintedLook>> = {
   // laid by the living ground as many small blended blotches (living-ground.ts sandBlotch)
   meadow: look(DESERT_SAND), dry: look(DESERT_SAND),
   worn: look(DESERT_DIRT), woodland: look(DESERT_DIRT, 1, -0.03),
+  // T409: the slope materials (relief.ts, the surfaces file's Hillside and Mountain rock): rocky sand over moderate slopes (the dirt), sandstone over steep ones (the cut sandstone face brought toward the desert's red); stand-ins until the art lands
+  hillside: look(DESERT_DIRT), mountain: look('cutaway-sand', 1.6, -0.14, '#d79a6c'),
   // the living ground's patchy grass (under trees, at doors) is bare dirt in the desert; its lush grass (along fences and water) is dirt already
   patchy: look(DESERT_DIRT), lush: look(DESERT_DIRT),
 };

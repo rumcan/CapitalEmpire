@@ -109,6 +109,7 @@ import { carOwnerScale } from './ext/car-art';
 import { SimClient, type LotView } from './sim/client';
 import { localRate, townClockFor, townMinute, townTimeOf } from './sim/townclock';
 import { SUN_KEY, clampSun, sunOffsets, sunStep, type SunSetting } from './sun-patches';
+import { RELIEF_DEFAULT, reliefModeOf, type ReliefMode } from './relief';
 import { STRENGTH as TRACK_STRENGTH, TRACKS_KEY, TyreTracks, UPLOAD_MS as TRACK_UPLOAD_MS, type WearKind } from './tyre-tracks';
 import { CADDIE_CAP, CART_CAP, LONG_DAY_MIN, NIGHT_S, PACE_KEY, WALK_CAP, capped, dayNight, paceOf, paceOfSetting, settingOf, type GolfPace, type PaceSetting } from './golf/pace';
 import { Pacer, setPaceSpeed } from './golf/play/pacer';
@@ -3075,6 +3076,10 @@ export class Game {
     try { this.landClassic = localStorage.getItem('capitalempire.landLight') === 'classic'; } catch { /* the default, the hills' light */ }
     { const q = new URLSearchParams(location.search).get('landlight'); if (import.meta.env.DEV && (q === 'classic' || q === 'hills')) this.landClassic = q === 'classic'; }
     this.ground.landClassic = this.landClassic;
+    // T409: the look of the hills as the player left it (the gear menu's Hill relief: the relief light and the slope materials, smooth or in soft bands; 'old' the ground as before), and ?relief=old|smooth|bands (the dev server: the A/B of the shots and the bench)
+    try { const v = reliefModeOf(localStorage.getItem('capitalempire.relief')); if (v) this.reliefMode = v; } catch { /* the default */ }
+    { const v = reliefModeOf(new URLSearchParams(location.search).get('relief')); if (import.meta.env.DEV && v) this.reliefMode = v; }
+    this.ground.relief = this.reliefMode;
     try { this.tyreTracks = localStorage.getItem(TRACKS_KEY) !== '0'; } catch { /* the default, on */ }
     // T310: the sun through the clouds as the player left it (the gear menu's Sun and clouds; on by default), and ?sun=on|off (the dev server)
     try { const s = localStorage.getItem(SUN_KEY); if (s) this.sunLook = clampSun(JSON.parse(s)); } catch { /* the default */ }
@@ -3862,6 +3867,13 @@ export class Game {
   /** T388 (#1048): the real ground's light, the gear menu's Real ground light (kept across reloads): the land is lit by its own response, proportional to the slope, so a hill reads and gentle ground stays calm (ext/course-height/light.ts landExag).
    *  Off (`landClassic`): the land and the course height are lit as one field with the gentle-ground gain, the look before T388 */
   landClassic = false;
+  /** T409 (#1105): the look of the hills, the gear menu's Hill relief (kept across reloads): the relief light and the slope materials (relief.ts), smooth or in soft bands; 'old' is the ground as before (T126's and T388's light, the steep faces' rock) */
+  reliefMode: ReliefMode = RELIEF_DEFAULT;
+  setRelief(m: ReliefMode) {
+    this.reliefMode = m;
+    try { localStorage.setItem('capitalempire.relief', m); } catch { /* storage may be unavailable */ }
+    this.ground.setRelief(m); this.emit();
+  }
   setLandClassic(v: boolean) {
     this.landClassic = v;
     try { localStorage.setItem('capitalempire.landLight', v ? 'classic' : 'hills'); } catch { /* storage may be unavailable */ }
