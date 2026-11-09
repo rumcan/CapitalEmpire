@@ -136,9 +136,10 @@ test('a swap can place a house of the batch on a road at 45 degrees: measured ag
   }
   // (every other picture is measured against its pixels as before)
   for (const id of ['world:house_5', 'view:world:house_5:se', 'world:video_rental', 'object8:world-video-rental-cc8c504f-v1:yaw8N']) { const i = AT.get(id)!; assert.equal(lotDrawLimit(i), PIXEL_LIMIT[i]!, id); }
-  // (a house swapped into another house's place on each road at 45 degrees)
+  // (a house of the batch swapped into another's place on each road at 45 degrees)
   for (const road of [1, 3, 5, 7]) {
-    const n = awayOf(road), f = presetFrameOf({ o: { x: 300, y: 300 }, u: { x: n.y, y: -n.x }, n, w: 14, d: 14 }), spot = { id: 'world:house_5', x: 7, y: 7, scale: 1, view: 0 } as unknown as Parameters<typeof swapScale>[0];
-    for (const type of ['world:house_0', 'world:house_2', 'world:house_4']) assert.ok(swapScale(spot, type, f, HOUSE_SWAP_RULES) > 0, `${type} takes a house's place on road ${road}`);
+    const n = awayOf(road), f = presetFrameOf({ o: { x: 300, y: 300 }, u: { x: n.y, y: -n.x }, n, w: 14, d: 14 }), spot = { id: 'world:house_2', x: 7, y: 7, scale: 1, view: 0 } as unknown as Parameters<typeof swapScale>[0];
+    // (the batch's houses are of one size class: a swap among them fills the spot, the house rules' area share; before the fix their pictures' limit of 1 against an owner size of 2 failed it)
+    for (const type of ['world:house_0', 'world:house_3', 'world:house_4']) assert.ok(swapScale(spot, type, f, HOUSE_SWAP_RULES) > 0, `${type} takes a house's place on road ${road}`);
   }
 });
