@@ -4835,6 +4835,7 @@ export class Game {
     // T377: the course's spectator field to the City (the spectators' ways round water, greens and tees), sent once per change of the course
     const sf = this.golf ? this.spectatorField() : null;
     if (sf !== this.walkFieldSent) { this.walkFieldSent = sf; this.traffic.setWalkField(sf); }
+    this.fieldSeen = sf && this.golf && this.courseGrid ? this.walkFieldKeyNow() : null; this.fieldCand = null; // (what the field and the galleries were made from: watchWalkField looks again)
     // the galleries (LEAD.md M2.2): the greens and tees of the course and the placed grandstands and tents (T377: a green's and a tee's gallery on open ground round it)
     const spots = this.golf ? gallerySpots(this.golf.tees ?? [], this.golf.pins ?? [], this.golf.structures ?? [], undefined, sf) : [];
     this.gallerySeating.clear(); this.galleryPlaces.clear();
@@ -4860,6 +4861,20 @@ export class Game {
      *  tee markers (golf/walkground.ts); null without a golf course. Kept until the course, the roads, the paint or the markers change */
     private walkFieldMemo: { key: string; v: WalkField | null } | null = null;
     private walkFieldSent: WalkField | null | undefined = undefined;
+    /** what the walk field is made from, as a key: the course grid's revision, the roads' version, the markers and the paint (null: no golf course yet) */
+    private walkFieldKeyNow(): string | null { const g = this.golf, grid = this.courseGrid; return g && grid && this.terrain ? `${grid.rev}|${this.net.version}|${g.tees.length}|${g.pins.length}|${this.paintRev}` : null; }
+    /** T377: the key the field and the galleries sent to the City were made from, the key seen at the last look, and when it was looked at */
+    private fieldSeen: string | null = null; private fieldCand: string | null = null; private fieldAt = 0;
+    /** T377: the City's walk field and the galleries' places follow the course. Nothing else sends them again when a game is loaded or started (the course grid is made after the
+     *  first send) or the roads, the paint or the markers change: every 400 ms the key of what they are made from is read, and when it has changed and has stayed so for a look
+     *  (a stroke of paint is not followed dab by dab) they are made and sent again (syncCourseGates) */
+    private watchWalkField(now: number) {
+      if (!this.golf || now - this.fieldAt < 400) return;
+      this.fieldAt = now; const key = this.walkFieldKeyNow();
+      if (key === null || key === this.fieldSeen) { this.fieldCand = null; return; }
+      if (key !== this.fieldCand) { this.fieldCand = key; return; }
+      this.syncCourseGates();
+    }
     private walkFieldNow(): WalkField | null {
       const g = this.golf, grid = this.courseGrid; if (!g || !grid || !this.terrain) return null;
       const key = `${grid.rev}|${this.net.version}|${g.tees.length}|${g.pins.length}|${this.paintRev}`;
@@ -11967,7 +11982,7 @@ export class Game {
     this.ground.tilesAhead(bandsAhead(z, tb));
     const tier = z < PLANNER_Z ? 'planner' : z < DISTRICT_Z ? 'district' : 'street'; this.perf.tier = tier;
     // the golf round moves on before the movers (the golfers) and the overlay (the balls) read it
-    this.updateDayPins(now); this.updatePlay(now); this.updateEveryday(now); this.stepStartRound(); // T269: the day's cups first, so the day's play reads them
+    this.updateDayPins(now); this.watchWalkField(now); this.updatePlay(now); this.updateEveryday(now); this.stepStartRound(); // T269: the day's cups first, so the day's play reads them
     this.watchFrame(); // T320: the camera on the golfers followed
     if (this.golf) this.monthMoney.note(this.golfMonthAt(now), this.money); // T233: the money chip's change a month
     // T226: the colour grade this frame (grade.ts: none when off, easing off after dusk; the scene then draws straight to the screen)

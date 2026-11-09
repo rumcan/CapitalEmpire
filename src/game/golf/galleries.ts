@@ -92,15 +92,18 @@ export function galleryPlaces(f: WalkField, kind: 'tee' | 'green', c: { x: numbe
     dmin = Math.min(dmin, d[k]!);
     cand.push({ x: X(i), y: Y(j), dist: d[k]!, bin: Math.floor(Math.abs(Math.atan2(bx * dy - by * dx, bx * dx + by * dy)) / PLACE_BIN), band: 0 });
   }
-  const rows = cand.filter(q => { q.band = Math.floor((q.dist - dmin + 0.01) / LAT); return q.band < PLACE_ROWS; });
+  for (const q of cand) q.band = Math.floor((q.dist - dmin + 0.01) / LAT);
+  // two rows deep, and a row more (to four) where the open ground is so narrow that two rows would not hold the 60 fans a gallery draws
+  let rows = cand.filter(q => q.band < PLACE_ROWS);
+  for (let r = PLACE_ROWS + 1; r <= PLACE_ROWS_MAX && rows.length < PLACES_MIN; r++) rows = cand.filter(q => q.band < r);
   if (rows.length < 12) return [];
   rows.sort((p, q) => p.bin - q.bin || p.band - q.band || p.x - q.x || p.y - q.y);
   const out: number[] = []; for (const q of rows.slice(0, PLACES_MAX)) out.push(q.x, q.y);
   return out;
 }
-/** the lattice of the places (tiles: a tee's 1 m, a green's 1.2 m), the rows a gallery is deep (2: a lattice step apart), the angle a bin is, how far from the box or green a
+/** the lattice of the places (tiles: a tee's 1 m, a green's 1.2 m), the rows a gallery is deep (2, to 4 where it must be to hold 60 fans: a lattice step apart), the angle a bin is, how far from the box or green a
  *  place may be (tiles), the most places a spot has, and the cone round a green's approach that no one stands in */
-const PLACE_LAT = 0.5, PLACE_LAT_GREEN = 0.6, PLACE_ROWS = 2, PLACE_BIN = 0.06, PLACE_REACH = 9, PLACES_MAX = 90, APPROACH_COS = Math.cos(35 * Math.PI / 180);
+const PLACE_LAT = 0.5, PLACE_LAT_GREEN = 0.6, PLACE_ROWS = 2, PLACE_ROWS_MAX = 4, PLACES_MIN = 60, PLACE_BIN = 0.06, PLACE_REACH = 9, PLACES_MAX = 90, APPROACH_COS = Math.cos(35 * Math.PI / 180);
 
 /** the spots of a course (tees and pins by hole; a hole with no pin has no green spot) and its placed structures. T377: with the course's walk field (`ground`) a
  *  green's and a tee's gallery stands on open ground round it (standingSpot), never on the tee box or the putting surface */

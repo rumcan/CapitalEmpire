@@ -3,6 +3,7 @@
 // spectator may stand on, each group at a pace of its own; the ways are worked out a few a step; the frame's walker buffer has its 7 floats (x, y, n, stage, the
 // point it is heading for now, id). The same day with no field walks them straight across (the tests above in t377-spectators-carts.test.ts say so for the crowd alone).
 import { test } from 'node:test';
+import { readFileSync } from 'node:fs';
 import assert from 'node:assert/strict';
 import { City } from '../src/game/city';
 import { CLASS, RoadNetwork, type Leg } from '../src/game/network';
@@ -83,4 +84,16 @@ test('T377: the City works out a few ways a step, hands the frame\'s walker buff
   assert.equal(town.round.start([0]), true); assert.equal(town.startNow(), true);
   town.crowd!.add({ x: 0, y: 0, tx: 5, ty: 0, n: 3, town: 0, stage: 1, route: -1 });
   assert.equal(town.crowd!.walkers[0]!.v, 1, 'an event that is not golf: the one walking speed');
+});
+
+test('T377: the game gives the City its walk field and the galleries their places, and again when the course, the roads, the paint or the markers change (the wiring)', () => {
+  const eng = readFileSync('src/game/engine.ts', 'utf8');
+  assert.match(eng, /const sf = this\.golf \? this\.spectatorField\(\) : null;\s+if \(sf !== this\.walkFieldSent\) \{ this\.walkFieldSent = sf; this\.traffic\.setWalkField\(sf\); \}/, 'the City gets the field of the spectators');
+  assert.match(eng, /gallerySpots\(this\.golf\.tees \?\? \[\], this\.golf\.pins \?\? \[\], this\.golf\.structures \?\? \[\], undefined, sf\)/, 'the galleries are made on it');
+  assert.match(eng, /if \(spot\.places\) this\.galleryPlaces\.set\(i, spot\.places\)/, 'the engine keeps the places of a spot');
+  assert.match(eng, /galleryPeople\(G, i, spot, now, nS, P, cheer, this\.gallerySeating\.get\(spot\), this\.galleryPlaces\.get\(spot\)\)/, 'and draws the fans on them');
+  // the first send of a started or loaded game comes before its course grid: the field and the places are sent again once there is a grid, and when it, the roads, the paint or the markers change
+  assert.match(eng, /this\.fieldSeen = sf && this\.golf && this\.courseGrid \? this\.walkFieldKeyNow\(\) : null/, 'what they were made from is noted when they are sent');
+  assert.match(eng, /private watchWalkField\(now: number\)[\s\S]*?if \(key !== this\.fieldCand\) \{ this\.fieldCand = key; return; \}\s+this\.syncCourseGates\(\);/, 'and looked at again, sent again when changed and quiet');
+  assert.match(eng, /this\.updateDayPins\(now\); this\.watchWalkField\(now\);/, 'every frame');
 });

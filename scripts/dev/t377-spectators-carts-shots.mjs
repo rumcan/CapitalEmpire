@@ -75,6 +75,11 @@ try {
     log('the walk field, built from nothing:', JSON.stringify(b)); metrics.fieldBuild = b;
     const b2 = await page.evaluate(() => { const g = window.__game; const a = performance.now(); g.walkFieldNow(); return +(performance.now() - a).toFixed(3); });
     log('and asked again (kept):', b2, 'ms'); metrics.fieldKept = b2;
+    // the game itself (nothing here has touched the course) sends the City the field and makes the galleries' places once the course is there (watchWalkField)
+    await page.waitForTimeout(3000);
+    const st = await page.evaluate(() => { const g = window.__game; return { places: g.galleryPlaces.size, sent: g.walkFieldSent === undefined ? 'undefined' : g.walkFieldSent === null ? 'null' : 'field' }; });
+    log('the game sent the City its walk field and made the places of its galleries:', JSON.stringify(st)); metrics.engineState = st;
+    check(st.sent === 'field' && st.places >= 18, 'the City has the walk field and the tee and green galleries have places, with nothing in the game touched');
   }
 
   // ---------------------------------------------------------------- A. galleries

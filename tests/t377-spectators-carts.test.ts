@@ -126,6 +126,14 @@ describe('T377: a gallery is an arc round the back and sides of a tee box and a 
     let a0 = Infinity, a1 = -Infinity; for (let i = 0; i < 120; i += 2) { const a = Math.atan2(first[i + 1]! - pin.y, first[i]! - pin.x); a0 = Math.min(a0, a); a1 = Math.max(a1, a); }
     assert.ok((a1 - a0) * 180 / Math.PI >= 100, `60 fans reach ${((a1 - a0) * 180 / Math.PI).toFixed(0)} degrees round the green`);
   });
+  it('where the open ground round a tee is narrow the gallery is a row or two deeper (to 4) so its 60 fans have places', () => {
+    // a tee box in a lake with a pocket of rough 14 tiles tall behind it: two rows would hold about 44 places, three or four hold the 60 a gallery draws
+    const surf = (x: number, y: number): number => x >= 20 && x < 25 && y >= 25 && y < 35 ? 5 : x >= 4 && x < 20 && y >= 22 && y < 36 ? 1 : 3;
+    const lake = buildWalkField(0, 0, 60, 60, { surf, wet: () => false, ways: [], teeBoxes: [{ x: 22, y: 30, r: 1.5 }], holes: [] }), pocket = dilate(lake, SPECTATOR_GROW, SPECTATOR_WATER_GROW);
+    const ps = galleryPlaces(pocket, 'tee', { x: 22, y: 30 }, { x: 1, y: 0 });
+    assert.ok(ps.length / 2 >= 60 && ps.length / 2 <= 90, `${ps.length / 2} places in a pocket where two rows would hold fewer than 60`);
+    const cols = new Set<number>(); for (let i = 0; i < ps.length; i += 2) cols.add(Math.round(ps[i]! * 2)); assert.ok(cols.size <= 5, `${cols.size} columns of places: three or four rows deep, not ten`);
+  });
   it('the spots carry the places (their point is the best place), the fans are drawn on them, none on a tee, a green, a bunker, water or a fairway; with no room round a tee the spot is the block as before', () => {
     const tees = [{ hole: 1, ...tee }], pins = [{ hole: 1, ...pin }], spots = gallerySpots(tees, pins, [], undefined, sf);
     for (const s of spots) { assert.ok(s.places && s.places.length >= 120, `${s.kind} places`); assert.deepEqual([s.x, s.y], [s.places![0], s.places![1]], 'the spot is at the best place'); }
