@@ -36,6 +36,9 @@ export interface AdjacentBlock {
   buildings?: number;
   /** current town population (optional; scales price gently above 1,000 residents) */
   townPop?: number;
+  /** T395: the map's side in tiles. Given, a block that leaves the map (or is bigger than MAX_BLOCK_SIDE) is refused: land that does not exist is never bought.
+   *  Absent: no bound is checked (the callers before T395) */
+  map?: number;
 }
 
 /** result of attempting to buy an adjacent block */
@@ -116,6 +119,20 @@ export function isAdjacentBlock(parcels: readonly Rect[], candidate: Rect): bool
 
 /** the side of a block of land for sale, tiles (80 m) */
 export const LAND_BLOCK = 40;
+/** the longest side of a block that can be bought, tiles (512 m): a block of land for sale is LAND_BLOCK, and a computed one (a real-course import, a script) is at most a
+ *  few of them. Past it a rect is no block: it is refused before anything walks its tiles or asks the network about it (T395) */
+export const MAX_BLOCK_SIDE = 256;
+/** T395 (#1062: a block of 1e9 tiles froze the tab, and one off the edge was bought and owned land that does not exist): the block asked for, cut at the map's edge, or why it
+ *  cannot be bought. Refused: a rect that is not a number's worth of tiles (NaN, infinite, empty), a side past MAX_BLOCK_SIDE (judged as asked, before it is cut: a rect that
+ *  wide is not a block that happens to run off the map), a block with none of it on the map. A block partly off the map comes back as the part that is on it (what exists is
+ *  what is bought, and charged). Cheap and exact: no tile is walked, so the engine asks it first */
+export function clampBlock(r: Rect, map: number): { rect: Rect } | { why: string } {
+  if (![r[0], r[1], r[2], r[3], map].every(Number.isFinite) || !validRect(r)) return { why: 'Invalid block dimensions' };
+  if (r[2] > MAX_BLOCK_SIDE || r[3] > MAX_BLOCK_SIDE) return { why: `Too big a block: at most ${MAX_BLOCK_SIDE} tiles a side` };
+  const x0 = Math.max(0, r[0]), y0 = Math.max(0, r[1]), x1 = Math.min(map, r[0] + r[2]), y1 = Math.min(map, r[1] + r[3]);
+  if (!(x1 > x0 && y1 > y0)) return { why: 'Off the map: there is no land to buy there' };
+  return { rect: [x0, y0, x1 - x0, y1 - y0] };
+}
 
 /** the length (tiles) of the boundary two non-overlapping Rects share (0: apart, or touching at a corner only) */
 export function sharedEdge(a: Rect, b: Rect): number {
@@ -294,8 +311,10 @@ export function blockAt(parcels: readonly Rect[], x: number, y: number, size = L
   return best;
 }
 
-/** whether a block holds water (unbuildable land), by isWater(x, y) on every step-th tile of it (the engine's land class samples so) */
+/** whether a block holds water (unbuildable land), by isWater(x, y) on every step-th tile of it (the engine's land class samples so). T395: the walk is bounded: a rect that is
+ *  no block (past MAX_BLOCK_SIDE a side, or not a number) is answered at once as unbuildable, never walked (a 1e9-tile block took the tab with it) */
 export function blockOnWater(r: Rect, isWater: (x: number, y: number) => boolean, step = 4): boolean {
+  if (!(r[2] <= MAX_BLOCK_SIDE && r[3] <= MAX_BLOCK_SIDE && Number.isFinite(r[0]) && Number.isFinite(r[1]))) return true;
   for (let y = r[1]; y < r[1] + r[3]; y += step) for (let x = r[0]; x < r[0] + r[2]; x += step) if (isWater(x, y)) return true;
   return false;
 }
@@ -333,6 +352,13 @@ export function buyAdjacentBlock(parcels: readonly Rect[], block: AdjacentBlock,
   const cur = parcels.map(r => [...r] as Rect);
   const price = adjacentBlockPrice(block);
   if (!validRect(block.rect)) return { ok: false, parcels: cur, bounds: mergeParcelBounds(cur), price, reason: 'Invalid block dimensions' };
+  // T395: with the map's size given, a block that leaves the map is no land (the engine cuts it at the edge first: clampBlock), and one past MAX_BLOCK_SIDE is no block
+  if (block.map !== undefined) {
+    const [x, y, w, h] = block.rect, m = block.map;
+    if (![x, y, w, h, m].every(Number.isFinite)) return { ok: false, parcels: cur, bounds: mergeParcelBounds(cur), price, reason: 'Invalid block dimensions' };
+    if (x < 0 || y < 0 || x + w > m || y + h > m) return { ok: false, parcels: cur, bounds: mergeParcelBounds(cur), price, reason: 'Off the map: there is no land to buy there' };
+    if (w > MAX_BLOCK_SIDE || h > MAX_BLOCK_SIDE) return { ok: false, parcels: cur, bounds: mergeParcelBounds(cur), price, reason: `Too big a block: at most ${MAX_BLOCK_SIDE} tiles a side` };
+  }
   if (block.landClass === 'unbuildable' || !Number.isFinite(price)) {
     return { ok: false, parcels: cur, bounds: mergeParcelBounds(cur), price, reason: 'Unbuildable land' };
   }
