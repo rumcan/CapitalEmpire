@@ -48,9 +48,10 @@ describe('the eight-heading contract: buildings on roads at 45 degrees (T154 Pha
     for (const r of [0, 2, 4, 6]) assert.equal(roadView('town:bakery', r, 0), null, `axis road ${r}`);
     assert.equal(roadView('world:bench', 1, 0), null, 'a prop keeps its picture');
     assert.equal(roadView('world:house_5', 1, 0), null, 'a building with no set keeps its views');
-    // any picture of the subject finds its set: a four-view building's other views, the set's own
+    // any picture of the subject finds its set: a four-view building's other views (the ring's view where the building has one, as for its base picture), the set's own (the square set: eightRingOf knows a ring by a building's base and
+    // corner pictures, never by a square set's own, and no preset prop carries one)
     assert.equal(roadView('view:town:bakery:sw', 3, 0), viewWanted('town:bakery', 3, 0));
-    assert.equal(roadView('view:world:house_3:w', 1, 0), viewWanted('world:house_3', 1, 0));
+    assert.equal(roadView('view:world:house_3:w', 1, 0), 'view:world:house_3:n');
   });
   it('2. compose: on every 45-degree road each building with a set is drawn in the view facing its street; with the rule off, as before', () => {
     for (const id of SET_BUILDINGS) for (const r of [1, 3, 5, 7]) {
