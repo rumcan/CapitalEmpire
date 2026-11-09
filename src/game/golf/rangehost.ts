@@ -55,6 +55,8 @@ export interface RangeHostCtx {
   money(): number; spend(n: number): void; book(n: number): void;
   /** T386: the supplier's invoice for balls ($): out of the treasury as the books' Range balls line (missing: not booked) */
   balls?(cost: number): void;
+  /** T386: true the first time it is asked for this id in this game (a one-time note: the first time the ball room is out); missing: never */
+  once?(id: string): boolean;
   /** the game month as an absolute count (Engine.golfMonthIndex), and the upgrades' upkeep paid ($, the ledger's upkeep: T132); missing: no
    *  upkeep is paid */
   month?(): number; payUpkeep?(n: number): void;
@@ -129,6 +131,9 @@ export class RangeHost {
   cardOpen = false;
   /** T386: the ball room's upgrade tree (the flyout beside the card) is open */
   treeOpen = false;
+  /** T386 (the bench's full outfield, ?fieldBalls=N): balls to lay on the outfield as soon as the range stands; the draw of the lying balls (off: the bench's A/B) and the points the
+   *  last frame drew */
+  benchField = 0; drawField = true; lastField = 0;
   /** the practice facilities as the course grid holds them (T130; null: not read yet), the grid and its rev when read, frames since, and the
    *  practice greens' cup flags (auto props by key) */
   practice: PracticeScan | null = null; private scanG: Grid | null = null; private scanRev = -1; private scanAgo = 0; private cups = new Map<string, Prop>(); private cupKey = '';
@@ -223,6 +228,7 @@ export class RangeHost {
     const b = this.ctx.biz(); if (!b || !this.scene) return;
     // T386: the sim sells and lands the range's balls: the save's book (a load or a new game brings a new one)
     if (this.sim.book !== (b.balls ?? null)) this.sim.setBalls(b.balls ?? null);
+    if (this.benchField > 0 && b.balls) { this.sim.fill(this.benchField); this.benchField = 0; }
     // the tee box into the course grid once (a new game, an old save's first load: T130), then the practice area read as it changes
     if (!b.tee && this.ctx.layTee(this.scene.teeBox)) { b.tee = true; this.ctx.save(); }
     // T306 (#891): turfed, the land between the tee box and the outfield is turf too (once; an old save's first load after the turf too)
@@ -243,6 +249,8 @@ export class RangeHost {
       this.owed = 0; this.owedT = 0; if (this.cardOpen) this.ctx.emit();
     }
     this.nFlying = this.sim.flying(this.flyingBuf);
+    // T386: the first time the ball room is out and golfers drive on, say what to do (once a game)
+    if (b.balls && this.sim.today.noBalls > 0 && this.ctx.once?.('balls-out')) this.ctx.toast('The ball room is out of balls: golfers are driving on. Walk out onto the range and pick the balls up (hold F over them, or click a pile), then empty your basket at the ball room.', 'warn');
   }
 
   /** the month the upgrades' upkeep was last paid for (-1: not yet read since the load) */
@@ -483,7 +491,7 @@ export class RangeHost {
       if (space > 0 && fieldCount(b) > 0) {
         let n = 0;
         if (kit.push && moved) n = pickSwath(b, w.ox, w.oy, w.x, w.y, kit.push / 2, space);
-        else { this.pickAcc += kit.rate * w.dt; const want = Math.floor(this.pickAcc); if (want > 0) { n = pickAround(b, w.x, w.y, kit.reach, Math.min(want, space)); this.pickAcc -= want; if (n < want) this.pickAcc = 0; } }
+        else { this.pickAcc += kit.rate * w.dt; const want = Math.floor(this.pickAcc + 1e-9); if (want > 0) { n = pickAround(b, w.x, w.y, kit.reach, Math.min(want, space)); this.pickAcc -= want; if (n < want) this.pickAcc = 0; } }
         b.basket += n; picked += n;
       } else this.pickAcc = 0;
     } else this.pickAcc = 0;
@@ -527,10 +535,10 @@ export class RangeHost {
    *  a little down and left of each ball: the sun is at the upper right) and then the balls (white). Only the balls inside the world box X0 Y0 X1 Y1, thinned to at
    *  most BALL_DRAW_MAX (every k-th). `out` holds 2 * BALL_DRAW_MAX points. Returns the points in each set (the balls start at out[n * BALL_POINT_FLOATS]) */
   fieldPoints(out: Float32Array, X0: number, Y0: number, X1: number, Y1: number): number {
-    const b = this.balls(); if (!b || !this.scene) return 0;
+    const b = this.balls(); if (!b || !this.scene || !this.drawField) { this.lastField = 0; return 0; }
     const f = b.field, N = f.length / 2, S = BALL_POINT_FLOATS;
     let vis = 0; for (let k = 0; k < N; k++) { const X = worldX(f[2 * k]!, f[2 * k + 1]!), Y = worldY(f[2 * k]!, f[2 * k + 1]!); if (X >= X0 && X <= X1 && Y >= Y0 && Y <= Y1) vis++; }
-    if (!vis) return 0;
+    if (!vis) { this.lastField = 0; return 0; }
     const stride = Math.max(1, Math.ceil(vis / BALL_DRAW_MAX)); let n = 0, seen = 0;
     for (let k = 0; k < N; k++) {
       const X = worldX(f[2 * k]!, f[2 * k + 1]!), Y = worldY(f[2 * k]!, f[2 * k + 1]!); if (X < X0 || X > X1 || Y < Y0 || Y > Y1) continue;
@@ -542,7 +550,7 @@ export class RangeHost {
     }
     // (the balls' set packed straight after the shadows' set)
     if (n < BALL_DRAW_MAX) out.copyWithin(n * S, BALL_DRAW_MAX * S, (BALL_DRAW_MAX + n) * S);
-    return n;
+    this.lastField = n; return n;
   }
   /** the ball loop as the card shows it (null: not a range start) */
   ballView() {

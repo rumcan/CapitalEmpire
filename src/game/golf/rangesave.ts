@@ -118,13 +118,13 @@ export const RANGE_UPGRADES: readonly RangeUpgrade[] = [
   { id: 'kiosk', name: 'Coffee kiosk', cost: 9000, upkeep: 80, effect: 'A coffee kiosk by the shop: 40% of golfers buy a $3 coffee after their bucket, +3% visitors' },
   // T386 (#1043): the ball loop's tools, bought with the range's till: a ball tube, a bigger basket, a push picker, the T133 picker cart (you tow it
   // behind your golf cart), a wider gang picker, night picking (the cart drives itself after closing) and the supplier's account
-  { id: 'tube', name: 'Ball tube', cost: 1500, upkeep: 0, till: true, branch: 'picking', effect: 'Pick balls up through a ball tube: no stooping, a 3.4 m reach, 2.5 times as fast' },
-  { id: 'basket', name: 'Wire basket', cost: 500, upkeep: 0, till: true, branch: 'picking', effect: 'A bigger basket: 48 balls a trip instead of 24' },
+  { id: 'tube', name: 'Ball tube', cost: 1500, upkeep: 10, till: true, branch: 'picking', effect: 'Pick balls up through a ball tube: no stooping, a 3.4 m reach, 2.5 times as fast' },
+  { id: 'basket', name: 'Wire basket', cost: 500, upkeep: 5, till: true, branch: 'picking', effect: 'A bigger basket: 48 balls a trip instead of 24' },
   { id: 'pushpick', name: 'Push picker', cost: 2400, upkeep: 20, needs: 'tube', till: true, branch: 'picking', effect: 'A rolling wire cage you push: hold F and walk over the balls, a 4.8 m swath, a basket of 96' },
   { id: 'picker', name: 'Pull-behind picker', cost: 8000, upkeep: 60, needs: 'pushpick', till: true, branch: 'picking', effect: 'The ball picker cart, yours to drive: it tows a picker behind your golf cart (E): drive over the balls, a 10 m swath, 450 balls a load, emptied at the ball room' },
   { id: 'gang', name: 'Gang picker', cost: 20000, upkeep: 80, needs: 'picker', till: true, branch: 'picking', effect: 'Three reels abreast behind the cart: an 18 m swath and 900 balls a load' },
   { id: 'nightpick', name: 'Night picking', cost: 8000, upkeep: 60, needs: 'picker', till: true, branch: 'picking', effect: 'The cart drives the outfield in lanes by itself after closing and picks what is left: a clean range every morning, +5% visitors' },
-  { id: 'supplier', name: "Supplier's account", cost: 2500, upkeep: 0, till: true, branch: 'supply', effect: `Order cases of balls from the Range card (a case is ${CASE_BALLS}: $${BALL_COST.toFixed(2)} a ball, ${CASES_A_DAY} cases a day): the books' Range balls line` },
+  { id: 'supplier', name: "Supplier's account", cost: 2500, upkeep: 20, till: true, branch: 'supply', effect: `Order cases of balls from the Range card (a case is ${CASE_BALLS}: $${BALL_COST.toFixed(2)} a ball, ${CASES_A_DAY} cases a day): the books' Range balls line` },
   { id: 'tier2', name: 'Second tier of bays', cost: 60000, upkeep: 450, needs: ['bays12', 'covered'], effect: 'A double-deck stand over the mats: 12 more bays upstairs, the World of Golf look, +10% visitors' },
   { id: 'academy', name: 'Golf academy', cost: 30000, upkeep: 350, needs: 'proshop', effect: 'A pro teaches on two bays: 15% of golfers take a $15 lesson, +5% visitors' },
   // T146 (P24 D49): the busy range's car park building, offered once the second tier makes parking the limit

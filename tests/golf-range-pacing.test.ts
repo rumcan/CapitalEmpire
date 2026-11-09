@@ -28,7 +28,7 @@ export function firstHour(minutes: number, price = 6) {
   let s: RangeBizSave = { ...defaultRangeBiz(), price }; s.balls = { ...s.balls!, till: 0 };
   const vb = visitBalls(DAY), bought: Record<string, number> = {}; let stock = START_BALLS, field = 0, till = 0, sold = 0, earned = 0, lastDay = 0;
   for (let t = 0; t < minutes * 60; t++) {
-    const st = rangeStats(s, START), hour = (6.5 + t / (DAY / 24)) % 24, day = Math.floor((6.5 + t / (DAY / 24)) / 24);
+    const st = rangeStats(s), hour = (6.5 + t / (DAY / 24)) % 24, day = Math.floor((6.5 + t / (DAY / 24)) / 24);
     if (day !== lastDay) { lastDay = day; const lf = field * DAY_LOSS_FIELD, ls = stock * DAY_LOSS_STOCK; field -= lf; stock -= ls; }
     // the visits the bays and the demand allow this second, as many as the ball room's buckets
     const bayCap = st.bays / (DAY / 24), want = Math.min(arrivalRate(s, START, hour, DAY, st), bayCap), visits = Math.min(want, stock / vb);

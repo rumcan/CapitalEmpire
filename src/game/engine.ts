@@ -760,6 +760,7 @@ export class Game {
     clearTrees: b => this.dropTownTrees(b[0], b[1], b[2], b[3]),
     money: () => this.money, spend: n => this.spendAt(this.rangeSpot(), 'construction', n), book: n => this.traffic.spend('business', -n),
     month: () => this.golfMonthIndex(), payUpkeep: n => this.spendAt(this.rangeSpot(), 'upkeep', n), balls: n => this.spendAt(this.rangeSpot(), 'balls', n), // (T386: the supplier's balls)
+    once: id => { const p = this.golf?.progress; if (!p || p.seen.includes(id)) return false; p.seen.push(id); this.scheduleSave(); return true; },
     demand: () => ({ tier: this.golf?.tier ?? 1, exits: this.golf?.exits?.length ?? 2, residents: this.traffic.pop, propsAppeal: this.decor.appeal(), practiceAppeal: this.golf?.range ? practiceAppeal(this.golf.range) : 0 }),
     dayLen: () => this.traffic.dayLen, simT: () => this.traffic.simTime(performance.now()),
     pace: () => { const T = this.traffic; return this.golfMode && T.town.prof ? localRate(T.town, T.simTime(performance.now())) * T.dayLen / 1440 : 1; }, // (T266)
@@ -9519,7 +9520,7 @@ export class Game {
   private drawBasket(ctx: CanvasRenderingContext2D) {
     const y = this.you, r = this.range, bk = this.golf?.start === 'range' && r.scene ? r.balls() : null; if (!y || !bk || this.cam.z < DISTRICT_Z) return;
     const picking = !this.youInCart && ((this.keys.has('f') && this.youKeysOn()) || r.order?.phase === 'pick');
-    if (!(bk.basket > 0 || (this.youInCart && bk.hopper > 0) || picking || r.order)) return;
+    if (!(bk.basket > 0 || (this.youInCart && (bk.hopper > 0 || r.kit().cart > 0)) || picking || r.order)) return;
     const dpr = this.dpr, ze = this.cam.z * dpr, kit = r.kit(), n = this.youInCart ? bk.hopper : bk.basket, cap = this.youInCart ? kit.hopper : kit.basket;
     const sx = (worldX(y.x, y.y) - this.cam.X) * ze + this.cw / 2, sy = (worldY(y.x, y.y) - this.cam.Y) * ze + this.ch / 2 - Math.max(34 * dpr, 4.2 * HH * ze);
     if (sx < -60 * dpr || sy < -30 * dpr || sx > this.cw + 60 * dpr || sy > this.ch + 30 * dpr) return;
@@ -9528,7 +9529,9 @@ export class Game {
     ctx.beginPath(); ctx.roundRect(sx - w / 2, sy - h / 2, w, h, 6 * dpr); ctx.fillStyle = 'rgba(2,6,23,0.85)'; ctx.fill();
     ctx.lineWidth = 1.5 * dpr; ctx.strokeStyle = n >= cap && cap > 0 ? '#f87171' : '#4ade80'; ctx.stroke();
     ctx.fillStyle = '#f8fafc'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(text, sx, sy + 0.5 * dpr);
-    if (picking && kit.tube) { const t = 'Stand In for tube_pick clip', f2 = Math.round(10 * dpr); ctx.font = `600 ${f2}px system-ui, sans-serif`; const w2 = ctx.measureText(t).width + 10 * dpr; ctx.beginPath(); ctx.roundRect(sx - w2 / 2, sy + h * 0.8, w2, f2 * 1.6, 5 * dpr); ctx.fillStyle = 'rgba(15,23,42,0.78)'; ctx.fill(); ctx.fillStyle = '#fde68a'; ctx.fillText(t, sx, sy + h * 0.8 + f2 * 0.82); }
+    // (the stand-ins: your walk and idle frames serve for every pick-up, and the rigs have no picture yet: GOLF-SPRITES, "The range ball loop")
+    const t = this.youInCart ? (kit.cart > 0 ? 'Stand In for pull-behind picker' : '') : picking ? (kit.push > 0 ? 'Stand In for push picker' : kit.tube ? 'Stand In for tube_pick clip' : 'Stand In for pick-up clip') : '';
+    if (t) { const f2 = Math.round(10 * dpr); ctx.font = `600 ${f2}px system-ui, sans-serif`; const w2 = ctx.measureText(t).width + 10 * dpr; ctx.beginPath(); ctx.roundRect(sx - w2 / 2, sy + h * 0.8, w2, f2 * 1.6, 5 * dpr); ctx.fillStyle = 'rgba(15,23,42,0.78)'; ctx.fill(); ctx.fillStyle = '#fde68a'; ctx.fillText(t, sx, sy + h * 0.8 + f2 * 0.82); }
     ctx.textAlign = 'start'; ctx.textBaseline = 'alphabetic';
   }
   /** books your everyday round at the next free tee time on today's sheet (golf/player.ts freeTee: BOOK_LEAD ahead at least, clear of the groups' tee

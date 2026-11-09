@@ -9,7 +9,8 @@ import {
   poolOf, removeRandom, skipBalls, stow, takeBucket, visitBalls, type BallSave,
 } from '../src/game/golf/rangeballs';
 import { RANGE_UPGRADES, RangeSim, defaultRangeBiz, normalizeRangeBiz, rangeScene, rangeStats, upgradeWhy, withUpgrade, type CarSlot, type RangeUpgradeId } from '../src/game/golf/rangebiz';
-import { mulberry } from '../src/game/iso';
+import { RangeHost, BALL_DRAW_MAX, BALL_POINT_FLOATS, type RangeHostCtx } from '../src/game/golf/rangehost';
+import { mulberry, worldX, worldY } from '../src/game/iso';
 import type { Rect } from '../src/game/golf/mode';
 
 const rnd = () => mulberry(0xba11);
@@ -225,4 +226,110 @@ test('a skip with a book serves only the balls there are; the balls land on the 
   assert.ok(b.total.sold <= 8 * visitBalls(600) + 2, `no more than its balls (${b.total.sold})`); assert.ok(o.s.season.takings > 0);
   assert.ok(Math.abs(poolOf(b) - pool) <= 2, `the pool is kept (${pool} -> ${poolOf(b)})`); assert.ok(fieldCount(b) > 0);
   const c = newBalls(); c.clean = 1e6; const q = run(c, ['bays8'], 1); q.r.step(1000, { hour: 7, day: 1 }, q.s, busy, 600); assert.ok(q.s.season.takings > o.s.season.takings * 2, 'with balls to sell the skip books what it did before');
+});
+
+// ---------------------------------------------------------------- the host: your hand work, the supplier, the till, the draw
+
+function makeHost(owned: RangeUpgradeId[] = [], till = 0, money = 1e6) {
+  const biz = owned.reduce((q, id) => withUpgrade(q, id), defaultRangeBiz()); biz.balls!.till = till; biz.balls!.clean = 0;
+  const log = { spent: [] as number[], booked: [] as number[], invoices: [] as number[], toasts: [] as string[] }; let t = 0;
+  const sc0 = rangeScene(plot, 2, biz);
+  const ctx: RangeHostCtx = {
+    biz: () => biz, plot: () => ({ rect: plot, facing: 2 }), carPark: () => ({ bays: lot(sc0), entrance: sc0.carEdge, key: 'lot' }), addPiece: () => null, removeProp: () => {}, setGround: () => {}, layPaths: () => {}, clearTrees: () => {},
+    money: () => money, spend: n => { log.spent.push(n); }, book: n => { log.booked.push(n); }, balls: n => { log.invoices.push(n); },
+    demand: () => busy, dayLen: () => 600, simT: () => t, clock: () => ({ hour: 12, day: 1 }),
+    save: () => {}, toast: (m: string) => { log.toasts.push(m); }, emit: () => {}, grid: () => null, layTee: () => false,
+  };
+  const h = new RangeHost(ctx, 3); h.sync(); h.step();
+  return { h, biz, bs: biz.balls!, sc: h.scene!, log, tick: (dt: number) => { t += dt; h.step(); } };
+}
+const near = (x: number, y: number, n: number, bs: BallSave) => { for (let i = 0; i < n; i++) bs.field.push(x + (i % 5) * 0.1, y + Math.floor(i / 5) * 0.1); };
+const at = (x: number, y: number, dt = 0.5, pick = true, inCart = false, ox = x, oy = y) => ({ x, y, ox, oy, dt, pick, inCart });
+
+test('the host: the scene has a ball room door; the card view says the stock, the outfield, the basket and the till', () => {
+  const { h, sc, bs } = makeHost([], 1234); bs.clean = 300; near(60, 60, 12, bs);
+  assert.ok(sc.ballRoom && Number.isFinite(sc.ballRoom.x));
+  const v = h.view()!.balls!; assert.equal(v.clean, 300); assert.equal(v.buckets, 7); assert.equal(v.field, 12); assert.equal(v.till, 1234); assert.equal(v.out, false); assert.equal(v.vb, 40); assert.equal(v.kit.basket, HAND.basket);
+  bs.clean = 39; assert.equal(h.view()!.balls!.out, true, 'under a bucket: out');
+});
+
+test('hand work: hold the key over balls and they go into the basket at your rate, up to its size; the ball room empties it', () => {
+  const { h, bs, sc } = makeHost([]); near(60, 60, 40, bs);
+  let got = 0; for (let i = 0; i < 40; i++) got += h.work(at(60.2, 60.1)).picked;
+  assert.equal(got, HAND.basket, 'the basket fills and no more'); assert.equal(bs.basket, HAND.basket); assert.equal(fieldCount(bs), 40 - HAND.basket);
+  assert.equal(h.work(at(60.2, 60.1)).picked, 0, 'a full basket picks nothing');
+  // a rate: a second of picking is HAND.rate balls (not the whole pile at once)
+  const b2 = makeHost([]); near(60, 60, 40, b2.bs); assert.equal(b2.h.work(at(60.2, 60.1, 1)).picked, Math.floor(HAND.rate));
+  // not holding the key: nothing is picked
+  const b3 = makeHost([]); near(60, 60, 10, b3.bs); assert.equal(b3.h.work(at(60.2, 60.1, 5, false)).picked, 0);
+  // at the ball room the basket is emptied into the stock, counted as picked by hand
+  const d = h.work(at(sc.ballRoom.x + 1, sc.ballRoom.y, 0.1, false));
+  assert.equal(d.dumped, HAND.basket); assert.equal(bs.basket, 0); assert.equal(bs.clean, HAND.basket); assert.equal(bs.total.picked.hand, HAND.basket);
+  // far from it: nothing is emptied
+  bs.basket = 5; assert.equal(h.work(at(sc.ballRoom.x + 9, sc.ballRoom.y, 0.1, false)).dumped, 0);
+});
+
+test('the tools in hand: the tube is faster and reaches further, the push picker takes a swath as you walk, the cart takes the balls it drives over into its hopper', () => {
+  const t = makeHost(['tube']); near(60, 60, 40, t.bs); assert.equal(t.h.work(at(60.2, 60.1, 1)).picked, Math.floor(TUBE.rate), 'the tube\'s rate');
+  const r = makeHost(['tube']); r.bs.field.push(61.5, 60); assert.equal(r.h.work(at(60, 60, 1)).picked, 1, 'a ball 1.5 tiles off is within the tube\'s reach');
+  const hand = makeHost([]); hand.bs.field.push(61.5, 60); assert.equal(hand.h.work(at(60, 60, 1)).picked, 0, 'but not a hand\'s');
+  const p = makeHost(['tube', 'pushpick']); for (let i = 0; i < 30; i++) p.bs.field.push(55 + i * 0.5, 60.5 + (i % 3) * 0.3);
+  const w = p.h.work({ x: 70, y: 60.5, ox: 55, oy: 60.5, dt: 0.1, pick: true, inCart: false }); assert.equal(w.picked, 30, 'walking 15 tiles with the push picker takes the whole line of balls, whatever the rate'); assert.equal(p.bs.basket, 30);
+  const c = makeHost(['tube', 'pushpick', 'picker']); for (let i = 0; i < 60; i++) c.bs.field.push(50 + (i % 20) * 0.8, 60 + Math.floor(i / 20) * 2);
+  const k = c.h.work({ x: 66, y: 62, ox: 50, oy: 62, dt: 0.1, pick: false, inCart: true }); assert.ok(k.picked >= 40, `the cart picks a ten metre swath as it drives (${k.picked})`); assert.equal(c.bs.hopper, k.picked); assert.equal(c.bs.basket, 0);
+  const none = makeHost(['tube', 'pushpick']); near(60, 60, 5, none.bs); assert.equal(none.h.work({ x: 66, y: 60, ox: 60, oy: 60, dt: 0.1, pick: false, inCart: true }).picked, 0, 'a cart without the picker picks nothing');
+  // the hopper is emptied at the ball room, counted as picked by the cart
+  const e = makeHost(['tube', 'pushpick', 'picker']); e.bs.hopper = 77; const d = e.h.work(at(e.sc.ballRoom.x, e.sc.ballRoom.y + 1, 0.1, false, true));
+  assert.equal(d.dumped, 77); assert.equal(e.bs.clean, 77); assert.equal(e.bs.total.picked.cart, 77);
+});
+
+test('a pick order: you walk from ball to ball, take the basket home when it is full or the pile is gone, and the order ends when it is emptied', () => {
+  const { h, bs, sc } = makeHost([]); near(60, 60, 30, bs); near(64, 62, 4, bs);
+  const pile = h.pileAt(60.3, 60.1)!; assert.ok(pile && pile.n >= 25, `a pile of balls under the pointer (${pile?.n})`); assert.equal(h.pileAt(5, 5), null, 'none lies there');
+  h.startOrder(pile.x, pile.y); assert.equal(h.order!.phase, 'pick');
+  // standing at the pile's edge: the balls round you are picked by work; nothing to walk to
+  assert.equal(h.orderStep(60.2, 60.1, false), null);
+  // out of reach of any ball: it says where to step
+  const step = h.orderStep(66, 60, false); assert.ok(step && step.walk, 'steps to the nearest ball');
+  // a full basket: it goes home
+  bs.basket = HAND.basket; const back = h.orderStep(60, 60, false); assert.ok(back && back.back); assert.equal(h.order!.phase, 'back');
+  assert.equal(h.orderStep(60, 60, true), null, 'on its way');
+  assert.deepEqual(h.orderStep(sc.ballRoom.x + 2, sc.ballRoom.y, false), { back: true }, 'stopped short of the door with the basket still full: it goes on');
+  h.work(at(sc.ballRoom.x + 2, sc.ballRoom.y, 0.1, false));
+  assert.deepEqual(h.orderStep(sc.ballRoom.x + 2, sc.ballRoom.y, false), { done: true }); assert.equal(h.order, null);
+  // an order on a pile that is gone is done at once
+  const g = makeHost([]); g.h.startOrder(60, 60); assert.deepEqual(g.h.orderStep(60, 60, false), { done: true });
+  const c = makeHost([]); near(60, 60, 5, c.bs); c.h.startOrder(60, 60); c.h.cancelOrder(); assert.equal(c.h.order, null);
+});
+
+test('the till and the gear: the tools are paid from the till and from the treasury; an order of balls is invoiced as the Range balls line', () => {
+  const cost = RANGE_UPGRADES.find(u => u.id === 'tube')!.cost, t = makeHost([], cost - 1);
+  assert.equal(t.h.buy('tube'), false); assert.match(t.log.toasts.at(-1)!, /Not enough in the range's till/); assert.deepEqual(t.log.spent, []);
+  t.bs.till = cost + 50; assert.equal(t.h.buy('tube'), true); assert.deepEqual(t.log.spent, [cost]); assert.equal(t.bs.till, 50); assert.ok(t.biz.owned.includes('tube')); assert.match(t.log.toasts.at(-1)!, /from the range's till/);
+  const poor = makeHost([], cost + 50, 100); assert.equal(poor.h.buy('tube'), false, 'the treasury must hold it too'); assert.equal(poor.bs.till, cost + 50);
+  // the supplier
+  const o = makeHost([], 1e6); assert.equal(o.h.orderBalls(1), false); assert.match(o.log.toasts.at(-1)!, /supplier's account first/); assert.deepEqual(o.log.invoices, []);
+  const caseCost = Math.round(CASE_BALLS * BALL_COST), s = makeHost(['supplier'], 2.5 * caseCost);
+  assert.equal(s.h.orderBalls(2), true); assert.deepEqual(s.log.invoices, [2 * caseCost]); assert.equal(s.bs.clean, 2 * CASE_BALLS); assert.equal(s.bs.till, 0.5 * caseCost);
+  assert.equal(s.h.orderBalls(1), false, 'the till cannot pay a third'); assert.match(s.log.toasts.at(-1)!, /not enough in the range's till/);
+  const d = makeHost(['supplier'], 1e6); d.h.orderBalls(CASES_A_DAY); assert.equal(d.h.orderBalls(1), false); assert.match(d.log.toasts.at(-1)!, /delivered today's cases/); assert.equal(d.h.view()!.balls!.casesLeft, 0);
+});
+
+test('the host sells the balls it has and credits the till with what it books', () => {
+  const { h, bs, log, tick, biz } = makeHost([], 0); bs.clean = 12 * visitBalls(600);
+  for (let i = 0; i < 4000; i++) tick(0.5);
+  const booked = log.booked.reduce((a, n) => a + n, 0);
+  assert.ok(booked > 3 * 240, `it sold (${booked})`); assert.ok(Math.abs(bs.till - booked) <= 2, `the till takes what is booked (${bs.till} of ${booked})`); assert.ok(h.sim.book === bs, 'the sim holds the save\'s book');
+  assert.ok(biz.season.takings > 0);
+});
+
+test('the balls are drawn as one instanced set of points, thinned to the budget: shadows first, then the balls, only those in view', () => {
+  const { h, bs } = makeHost([]); const S = BALL_POINT_FLOATS, out = new Float32Array(2 * BALL_DRAW_MAX * S);
+  for (let i = 0; i < 6000; i++) bs.field.push(240 + (i % 100) * 0.4, 210 + Math.floor(i / 100) * 0.4);
+  const all = h.fieldPoints(out, -1e9, -1e9, 1e9, 1e9); assert.ok(all > 0 && all <= BALL_DRAW_MAX, `thinned to the budget (${all})`); assert.ok(all >= BALL_DRAW_MAX * 0.7, 'but not thinned to nothing');
+  assert.ok(out[5] > 0.3 && out[5] < 0.5, 'the shadows first: dark, soft'); assert.equal(out[all * S + 5], 1, 'then the balls: opaque white'); assert.equal(out[all * S + 2], 1);
+  assert.ok(Math.abs(out[0] - out[all * S] + 1.6) < 1e-3 && Math.abs(out[1] - out[all * S + 1] - 1.4) < 1e-3, 'a shadow lies a little down and to the left of its ball');
+  const view = h.fieldPoints(out, worldX(240, 210) - 40, worldY(240, 210) - 30, worldX(240, 210) + 40, worldY(240, 210) + 30); assert.ok(view > 0 && view < all, `only the balls in view (${view})`);
+  const empty = makeHost([]); assert.equal(empty.h.fieldPoints(out, -1e9, -1e9, 1e9, 1e9), 0);
+  const sparse = makeHost([]); sparse.bs.field.push(250, 220, 251, 221); assert.equal(sparse.h.fieldPoints(out, -1e9, -1e9, 1e9, 1e9), 2, 'every ball when few');
 });

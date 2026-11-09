@@ -1382,10 +1382,18 @@ export class RangeSim {
   /** T386: the fence the balls lie inside (the plot's box, a little in from the fences); null without a scene */
   private bounds(): readonly [number, number, number, number] | null { const b = this.scene?.box; return b ? [b[0] + 1.4, b[1] + 1.4, b[2] - 1.4, b[3] - 1.4] : null; }
   /** T386: a point down the range where a ball lands without a golfer to say (a skip's: about the distance markers, scattered across and along) */
-  private aimPoint(sc: RangeScene): Pt {
-    const t = sc.aims[Math.min(sc.aims.length - 1, Math.floor(Math.pow(this.rnd(), 1.4) * sc.aims.length))]!, u = { x: sc.aim.x, y: sc.aim.y }, L = Math.hypot(u.x, u.y) || 1;
-    const along = (this.rnd() - 0.5) * 8, across = (this.rnd() - 0.5) * 12;
+  private aimPoint(sc: RangeScene, rnd: () => number = this.rnd): Pt {
+    const t = sc.aims[Math.min(sc.aims.length - 1, Math.floor(Math.pow(rnd(), 1.4) * sc.aims.length))]!, u = { x: sc.aim.x, y: sc.aim.y }, L = Math.hypot(u.x, u.y) || 1;
+    const along = (rnd() - 0.5) * 8, across = (rnd() - 0.5) * 12;
     return { x: t.x + u.x / L * along - u.y / L * across, y: t.y + u.y / L * along + u.x / L * across };
+  }
+  /** T386 (the bench's full outfield, the shots): n balls lie on the outfield in smears round the aims, from a stream of their own (the range's business is as it was); they
+   *  join the pool. Returns the balls that lie (a full outfield loses the rest) */
+  fill(n: number, seed = 0xf111): number {
+    const B = this.book, sc = this.scene; if (!B || !sc) return 0;
+    const r = mulberry(seed); let lay = 0;
+    for (let i = 0; i < n; i++) { const p = this.aimPoint(sc, r); B.inPlay++; lay += landBalls(B, p.x, p.y, 1, r, this.bounds()); }
+    return lay;
   }
   /** T386: the balls golfers have bought and not yet hit land now (a skip, a load, the sim cleared): where the golfers would have hit them */
   private settle(sc: RangeScene): void { const B = this.book; if (B && B.inPlay > 0) dropInPlay(B, () => this.aimPoint(sc), this.rnd, this.bounds()); }
