@@ -4,6 +4,8 @@
 // save from before keeps the river it was built beside (terrain model 1).
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 import { MAP, mulberry } from '../src/game/iso';
 import { TC, TERRAIN_MODEL, classAt, generateTerrain, terrainModelOf, type Terrain, type WaterPoint } from '../src/game/terrain';
 import { STRUCT_MAX, groundClass, splitByTerrain } from '../src/game/structures';
@@ -87,6 +89,16 @@ test('a save without a terrain model is model 1: terrainModelOf, and the latest 
   assert.equal(gen(7, 1).waters[0]!.nat, undefined);
 });
 
+test('the game stamps the terrain model in its saves and builds the valley of a load by it (a save without one: model 1); a new game asks for the latest', () => {
+  const e = readFileSync(resolve('src/game/engine.ts'), 'utf8'), sv = readFileSync(resolve('src/game/save.ts'), 'utf8');
+  assert.match(sv, /terrainModel\?: number;/);
+  assert.match(e, /terrainModel: this\.terrain\.model \?\? TERRAIN_MODEL,/, 'the save');
+  assert.match(e, /this\.genTerrain\(d\.seed, terrainModelOf\(d\.terrainModel\)\)/, 'the load: the model of the save, model 1 without one');
+  assert.match(e, /private genTerrain\(seed: number, model: number = this\.devTerrain \|\| TERRAIN_MODEL\) \{ this\.useTerrain\(generateTerrain\(seed, model\), seed\); \}/, 'a new game: the latest');
+  // (and nothing else in the engine makes a valley by a bare generateTerrain: a map made without the model would be the old river)
+  assert.equal((e.match(/generateTerrain\(/g) ?? []).length, 1);
+});
+
 /** the old generator's maps (taken from lead/live before T360): the class grid's and the waterways' hashes, a seed each */
 const OLD: readonly [number, number, number][] = [
   [1, 4203995818, 3996214917], [2, 3368225484, 3709549715], [3, 331651335, 3165639884], [7, 878236055, 2388974901], [13, 3826656724, 2006434788], [42, 2572766161, 3339362247], [100, 159438908, 4269907959],
@@ -116,17 +128,19 @@ test('the same seed gives the same natural river, and different seeds different 
 // ---- the course: it meanders
 
 test('the river meanders: no long straight run (the old one had reaches of hundreds of tiles), and it is a good deal longer than its chord', () => {
-  const N = 170, worst: string[] = [];
-  let longest = 0;
-  for (let seed = 1; seed <= 30; seed++) {
+  const N = 200, worst: string[] = [];
+  let longest = 0, sum = 0;
+  for (let seed = 1; seed <= 100; seed++) {
     const r = riverOf(gen(seed)), run = longestStraight(r);
-    longest = Math.max(longest, run); if (run > N) worst.push(`${seed}: ${run.toFixed(0)}`);
+    longest = Math.max(longest, run); sum += run; if (run > N) worst.push(`${seed}: ${run.toFixed(0)}`);
     const s = arcsOf(r), chord = Math.hypot(r[r.length - 1]!.x - r[0]!.x, r[r.length - 1]!.y - r[0]!.y), sinuosity = s[s.length - 1]! / chord;
     assert.ok(sinuosity > 1.1 && sinuosity < 1.6, `seed ${seed}: sinuosity ${sinuosity.toFixed(2)}`);
   }
   assert.deepEqual(worst, [], `a reach of the river is straighter than ${N} tiles (heading within 20 degrees): the longest ${longest.toFixed(0)}`);
+  assert.ok(sum / 100 < 160, `the river's longest reach within 20 degrees averages ${(sum / 100).toFixed(0)} tiles`);
   // the measure itself: the old river's reaches run from 200 to 600 tiles
-  for (const seed of [1, 2, 3, 7]) assert.ok(longestStraight(riverOf(gen(seed, 1))) > N + 30, `the old river of seed ${seed} is the canal the measure finds`);
+  let oldSum = 0; for (const seed of [1, 2, 3, 7, 13, 42]) oldSum += longestStraight(riverOf(gen(seed, 1)));
+  assert.ok(oldSum / 6 > 2 * (sum / 100), `the old rivers' longest reaches average ${(oldSum / 6).toFixed(0)} tiles, the natural ones' ${(sum / 100).toFixed(0)}`);
 });
 
 test('the river enters at one border and leaves at the opposite one, and keeps off the others', () => {
