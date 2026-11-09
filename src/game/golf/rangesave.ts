@@ -3,6 +3,7 @@
 // the golfers are golf/rangebiz.ts.
 import { RANGE_PASS_POP } from './range';
 import { LOT_SHARE } from './rangelot';
+import { BALL_COST, CASES_A_DAY, CASE_BALLS, legacyBalls, newBalls, normalizeBalls, type BallSave } from './rangeballs';
 export { LOT_SHARE } from './rangelot';
 /** the range's upgrades (plan P24 2.3) */
 export type RangeUpgradeId = 'bays8' | 'bays12' | 'bays24' | 'targets' | 'covered' | 'lights' | 'dispenser' | 'proshop'
@@ -14,7 +15,10 @@ export type RangeUpgradeId = 'bays8' | 'bays12' | 'bays24' | 'targets' | 'covere
   | 'teeturf' | 'grass'
   /** T239: the guided start's builds: the first target greens (before the 'targets' upgrade's two more and the boards), and the car park's
    *  ground: the packed dirt gravelled, then paved (asphalt, painted bays and lamps) */
-  | 'greens' | 'gravel' | 'pave';
+  | 'greens' | 'gravel' | 'pave'
+  /** T386 (#1043): the ball loop's tools and supply, bought with the range's till (RangeUpgrade.till): the ball tube, the bigger basket, the push picker,
+   *  the gang picker behind your cart, night picking and the supplier's account ('picker' is the pull-behind picker now: the T133 cart you drive yourself) */
+  | 'tube' | 'basket' | 'pushpick' | 'gang' | 'nightpick' | 'supplier';
 /** a span's counts: the golfers who bought a bucket, the buckets (the customers they stand for), the lost (turned away or left the queue), the takings ($)
  *  and the upgrades' upkeep paid ($, T132) */
 export interface RangeCounts { golfers: number; buckets: number; lost: number; takings: number; upkeep: number }
@@ -58,7 +62,10 @@ export interface RangeBizSave { v: 1; owned: RangeUpgradeId[]; price: number; se
   home?: [number, number, number, number];
   /** T288: the practice area's rect (world tiles) where the player placed it; null: not placed yet (a bare start's); absent: the range plot's
    *  own spot beside the car park (a save from before T288) */
-  practiceAt?: [number, number, number, number] | null }
+  practiceAt?: [number, number, number, number] | null;
+  /** T386 (#1043): the range's balls (golf/rangeballs.ts): the ball room's clean stock, the balls lying on the outfield, your basket, the range's till
+   *  and the counts. Absent in a save from before T386: its load gives it legacyBalls (a stock for its bays) and, with the T133 cart, night picking */
+  balls?: BallSave }
 /** the extras that keep their own counts (T133): the coffee kiosk (coffees sold) and the academy (lessons given) */
 export type ExtraId = 'kiosk' | 'academy';
 export const EXTRA_IDS: readonly ExtraId[] = ['kiosk', 'academy'];
@@ -84,7 +91,13 @@ export const GARAGE_CARS = 180;
 
 /** an upgrade as the range card lists it: its id, name, cost ($), its upkeep ($ a game month, T132: twelve months a season), the upgrade it needs
  *  first, what it does (one line) */
-export interface RangeUpgrade { id: RangeUpgradeId; name: string; cost: number; upkeep: number; needs?: RangeUpgradeId | readonly RangeUpgradeId[]; effect: string }
+export interface RangeUpgrade { id: RangeUpgradeId; name: string; cost: number; upkeep: number; needs?: RangeUpgradeId | readonly RangeUpgradeId[]; effect: string;
+  /** T386: paid from the range's till (golf/rangeballs.ts BallSave.till: what the range has taken, less what it spent on its gear) as well as the treasury;
+   *  `branch`: the ball room's upgrade tree shows it (a flyout beside the Range card) in this branch, not the Upgrades list */
+  till?: true; branch?: TreeBranch }
+/** the ball room's upgrade tree's branches (T386; the flyout's first column): the picking tools and the supply (PR 2 and 3 add staff, machines, nets and the golf side) */
+export type TreeBranch = 'picking' | 'supply';
+export const BRANCH_NAME: Readonly<Record<TreeBranch, string>> = { picking: 'Picking', supply: 'Supply' };
 export const RANGE_UPGRADES: readonly RangeUpgrade[] = [
   // T223: the desert start's ground: the dirt tee box turfed, then the desert outfield grassed
   { id: 'teeturf', name: 'Turf the tee box', cost: 4000, upkeep: 30, effect: 'Grass turf under the mats instead of dust: +5% visitors, golfers pay $1 more' },
@@ -103,7 +116,15 @@ export const RANGE_UPGRADES: readonly RangeUpgrade[] = [
   { id: 'proshop', name: 'Pro shop', cost: 45000, upkeep: 400, effect: 'The shack becomes a real pro shop: gear sales +$2 a golfer, +15% visitors' },
   // the World of Golf extras (plan P24 Phase 4b, T133)
   { id: 'kiosk', name: 'Coffee kiosk', cost: 9000, upkeep: 80, effect: 'A coffee kiosk by the shop: 40% of golfers buy a $3 coffee after their bucket, +3% visitors' },
-  { id: 'picker', name: 'Ball picker cart', cost: 7000, upkeep: 60, needs: 'bays8', effect: 'A cart drives the outfield in lanes after closing and picks the balls: a clean range every morning, +5% visitors' },
+  // T386 (#1043): the ball loop's tools, bought with the range's till: a ball tube, a bigger basket, a push picker, the T133 picker cart (you tow it
+  // behind your golf cart), a wider gang picker, night picking (the cart drives itself after closing) and the supplier's account
+  { id: 'tube', name: 'Ball tube', cost: 350, upkeep: 0, till: true, branch: 'picking', effect: 'Pick balls up through a ball tube: no stooping, a 3.4 m reach, 2.3 times as fast' },
+  { id: 'basket', name: 'Wire basket', cost: 250, upkeep: 0, till: true, branch: 'picking', effect: 'A bigger basket: 48 balls a trip instead of 24' },
+  { id: 'pushpick', name: 'Push picker', cost: 1800, upkeep: 10, needs: 'tube', till: true, branch: 'picking', effect: 'A rolling wire cage you push: hold F and walk over the balls, a 4.8 m swath, a basket of 96' },
+  { id: 'picker', name: 'Pull-behind picker', cost: 7500, upkeep: 60, needs: 'pushpick', till: true, branch: 'picking', effect: 'The ball picker cart, yours to drive: it tows a picker behind your golf cart (E): drive over the balls, a 10 m swath, 450 balls a load, emptied at the ball room' },
+  { id: 'gang', name: 'Gang picker', cost: 16000, upkeep: 80, needs: 'picker', till: true, branch: 'picking', effect: 'Three reels abreast behind the cart: an 18 m swath and 900 balls a load' },
+  { id: 'nightpick', name: 'Night picking', cost: 9500, upkeep: 60, needs: 'picker', till: true, branch: 'picking', effect: 'The cart drives the outfield in lanes by itself after closing and picks what is left: a clean range every morning, +5% visitors' },
+  { id: 'supplier', name: "Supplier's account", cost: 900, upkeep: 0, till: true, branch: 'supply', effect: `Order cases of balls from the Range card (a case is ${CASE_BALLS}: $${BALL_COST.toFixed(2)} a ball, ${CASES_A_DAY} cases a day): the books' Range balls line` },
   { id: 'tier2', name: 'Second tier of bays', cost: 60000, upkeep: 450, needs: ['bays12', 'covered'], effect: 'A double-deck stand over the mats: 12 more bays upstairs, the World of Golf look, +10% visitors' },
   { id: 'academy', name: 'Golf academy', cost: 30000, upkeep: 350, needs: 'proshop', effect: 'A pro teaches on two bays: 15% of golfers take a $15 lesson, +5% visitors' },
   // T146 (P24 D49): the busy range's car park building, offered once the second tier makes parking the limit
@@ -123,7 +144,7 @@ const noExtras = (): Record<ExtraId, ExtraSave> => ({ kiosk: { season: { golfers
 const noPractice = (): Record<PracticeId, PracticeFacSave> => ({ putting: { open: false, season: { golfers: 0, takings: 0 }, total: { golfers: 0, takings: 0 } }, chipping: { open: false, season: { golfers: 0, takings: 0 }, total: { golfers: 0, takings: 0 } } });
 /** the range a new game starts with: 4 bays, $6 a bucket, nothing bought, no counts, no practice facilities, no extras' counts, in the desert
  *  (T223: a dirt tee box and a desert outfield) */
-export function defaultRangeBiz(): RangeBizSave { return { v: 1, owned: [], price: PRICE_START, season: zero(), total: zero(), practice: noPractice(), extras: noExtras(), desert: true, guided: true }; }
+export function defaultRangeBiz(): RangeBizSave { return { v: 1, owned: [], price: PRICE_START, season: zero(), total: zero(), practice: noPractice(), extras: noExtras(), desert: true, guided: true, balls: newBalls() }; }
 /** the ground upgrades a range made before T223 owns on its load (its grass tee box and outfield), in buying order */
 export const GRASS_UPGRADES: readonly RangeUpgradeId[] = ['teeturf', 'grass'];
 /** the builds a range made before T239 owns on its load (T239: its target greens, and its car park gravelled and paved: the asphalt it had) */
@@ -161,9 +182,12 @@ const isRect = (r: unknown): r is [number, number, number, number] => Array.isAr
  *  `desert` flag, or no range at all) keeps its grass: it owns the ground upgrades (GRASS_UPGRADES). T239: one saved before the guided start
  *  (no `guided` flag) keeps its target greens and its paved car park (LEGACY_UPGRADES), and its walkway (laid, or paths: false to lay) */
 export function normalizeRangeBiz(x: unknown): RangeBizSave {
-  if (!x || typeof x !== 'object') return { ...defaultRangeBiz(), owned: [...GRASS_UPGRADES, ...LEGACY_UPGRADES], paths: false };
+  if (!x || typeof x !== 'object') { const d: RangeBizSave = { ...defaultRangeBiz(), owned: [...GRASS_UPGRADES, ...LEGACY_UPGRADES], paths: false }; d.balls = legacyBalls(rangeStats(d).bays, 0); return d; }
   const o = x as Partial<RangeBizSave>, owned: RangeUpgradeId[] = [...(o.desert === true ? [] : GRASS_UPGRADES), ...(o.guided === true ? [] : LEGACY_UPGRADES)];
-  for (const id of Array.isArray(o.owned) ? o.owned : []) { const u = BY_ID.get(id as RangeUpgradeId); if (u && !owned.includes(u.id) && needsOf(u).every(n => owned.includes(n))) owned.push(u.id); }
+  // T386: a save from before the ball loop that owns the T133 picker cart keeps what the cart did (picked the balls itself each night): it gets the tools
+  // the cart now needs (the ball tube and the push picker, before it) and night picking (after it)
+  const was = Array.isArray(o.owned) ? (o.owned as RangeUpgradeId[]) : [], legacyCart = o.balls === undefined && was.includes('picker');
+  for (const id of legacyCart ? ['tube', 'pushpick', ...was, 'nightpick'] as RangeUpgradeId[] : was) { const u = BY_ID.get(id as RangeUpgradeId); if (u && !owned.includes(u.id) && needsOf(u).every(n => owned.includes(n))) owned.push(u.id); }
   const p = typeof o.price === 'number' && Number.isFinite(o.price) ? Math.round(o.price) : PRICE_START;
   const out: RangeBizSave = { v: 1, owned, price: Math.min(PRICE_MAX, Math.max(PRICE_MIN, p)), season: counts(o.season), total: counts(o.total), practice: normalizePractice(o.practice), extras: normalizeExtras(o.extras), desert: true, guided: true };
   // the walkway (T239): laid (true); an old save's the game never laid, to lay on its first load (false); a guided start's: none (absent)
@@ -179,6 +203,8 @@ export function normalizeRangeBiz(x: unknown): RangeBizSave {
   if (o.built === false) out.built = false;
   if (isRect(o.home)) out.home = [o.home[0], o.home[1], o.home[2], o.home[3]];
   if (o.practiceAt === null) out.practiceAt = null; else if (isRect(o.practiceAt)) out.practiceAt = [o.practiceAt[0], o.practiceAt[1], o.practiceAt[2], o.practiceAt[3]];
+  // T386: the balls (a save from before the ball loop starts with a stock for its bays and a till of what it has taken, to a cap: legacyBalls)
+  out.balls = normalizeBalls(o.balls) ?? legacyBalls(rangeStats(out).bays, out.total.takings);
   return out;
 }
 
@@ -210,7 +236,8 @@ export function rangeStats(s: RangeBizSave, x: RangeExtras = {}): RangeStats {
   const has = (id: RangeUpgradeId) => s.owned.includes(id);
   const lowerBays = has('bays24') ? 24 : has('bays12') ? 12 : has('bays8') ? 8 : START_BAYS;
   const covered = has('covered'), lights = has('lights'), dispenser = has('dispenser'), proShop = has('proshop');
-  const tier2 = has('tier2'), academy = has('academy'), kiosk = has('kiosk'), picker = has('picker'), bays = lowerBays + (tier2 ? TIER2_BAYS : 0);
+  // (T386: `picker` is the night cart that drives the outfield by itself after closing: night picking; 'picker' is the pull-behind picker you tow)
+  const tier2 = has('tier2'), academy = has('academy'), kiosk = has('kiosk'), picker = has('nightpick'), bays = lowerBays + (tier2 ? TIER2_BAYS : 0);
   // the props' term (T131): a dressed front draws more golfers and they pay more without grumbling
   const propsAppeal = Math.min(PROPS_APPEAL_CAP, Math.max(0, Number.isFinite(x.propsAppeal) ? x.propsAppeal! : 0));
   // the practice facilities' term (T130, practiceAppeal): more golfers come, the price stays
@@ -269,6 +296,8 @@ export function upgradeWhy(s: RangeBizSave, id: RangeUpgradeId, money: number): 
   if (s.owned.includes(id)) return 'Built';
   if (s.built === false) return 'Place your driving range first';
   const miss = needsOf(u).find(n => !s.owned.includes(n)); if (miss) return `Build ${BY_ID.get(miss)!.name} first`;
+  // T386: the ball loop's gear is paid from the range's till (what the range has taken, less its gear), and the treasury must hold it too
+  if (u.till && (s.balls?.till ?? 0) < u.cost) return `Not enough in the range's till: it costs $${u.cost.toLocaleString()} (the till has $${Math.floor(s.balls?.till ?? 0).toLocaleString()})`;
   if (u.cost > money) return `Not enough money: it costs $${u.cost.toLocaleString()}`;
   return '';
 }
