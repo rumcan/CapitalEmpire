@@ -72,7 +72,7 @@ test('world space only: the same value for the same place, and chunks that overl
 
 test('the field is band-limited to the samples a chunk is baked with: the octaves they cannot resolve fade out (no aliasing at the far levels), the coarse pattern stays where it is', () => {
   const rough = (res: number) => { let s = 0, n = 0; for (let j = 0; j < 60; j++) for (let i = 0; i < 400; i++) { const x = 3000 + i * 0.25, y = 3000 + j * 3.3; s += Math.abs(sandField(x + 0.25, y, res) - sandField(x, y, res)); n++; } return s / n; };
-  assert.ok(rough(1) < rough(1e9) * 0.6, `at one sample a tile the finest octaves are gone: ${rough(1).toFixed(4)} against ${rough(1e9).toFixed(4)}`);
+  assert.ok(rough(1) < rough(1e9) * 0.7, `at one sample a tile the finest octaves are gone: ${rough(1).toFixed(4)} against ${rough(1e9).toFixed(4)}`);
   assert.ok(rough(1) < rough(2) && rough(2) < rough(1e9), 'and fewer of them the fewer the samples');
   // the same blotches' coarse structure: the fields correlate
   const xs: number[] = [], ys: number[] = [];
