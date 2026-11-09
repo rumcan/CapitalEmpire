@@ -76,7 +76,9 @@ export function rotateSpec(spec: OsmCourseSpec, deg: number): OsmCourseSpec {
   const pt = (p: TPt): TPt => ({ x: px(p.x, p.y), y: py(p.x, p.y) });
   const areas: SpecArea[] = spec.areas.map(a => ({ ...a, rings: a.rings.map(flat) }));
   const holes: SpecHole[] = spec.holes.map(h => ({ ...h, tees: h.tees.map(t => ({ ...t, ...pt(t) })), pin: pt(h.pin), aims: h.aims.map(pt), line: flat(h.line) }));
-  return { ...spec, w: W, h: H, areas, holes, rot: normDeg((spec.rot ?? 0) + d), outline: flat(out) };
+  // (T354: the estate's streets and houses turn with the rest)
+  const estate = spec.estate ? { ...spec.estate, streets: spec.estate.streets.map(s => ({ ...s, pts: flat(s.pts) })), houses: flat(spec.estate.houses) } : undefined;
+  return { ...spec, w: W, h: H, areas, holes, ...(estate ? { estate } : {}), rot: normDeg((spec.rot ?? 0) + d), outline: flat(out) };
 }
 
 /** a spec's playing length, tee to pin along the aim points, summed over its holes, m: the quantity a turn must not change (lengthM is copied by

@@ -7,7 +7,9 @@
 //   1. Nominatim search for the name; takes the first leisure=golf_course hit (--list prints the hits and stops; --pick N takes the Nth
 //      golf-course hit; --osm way/ID or relation/ID skips the search).
 //   2. one Overpass query: the course boundary and, inside it, every golf=* feature (tee fairway green bunker water_hazard
-//      lateral_water_hazard rough hole pin cartpath ...), natural=water, streams/rivers/ditches and woods, as geometry.
+//      lateral_water_hazard rough hole pin cartpath ...), natural=water, streams/rivers/ditches and woods, as geometry. T354 (#996): and, for a course
+//      with a boundary, the estate's streets (highway=residential|service|living_street|unclassified|tertiary, as geometry; footways, paths and
+//      cycleways are left out, a cart path is golf=cartpath already) and the buildings' centres (building=*, `out center`), in the same query.
 //   3. <out>/<slug>.json: the features in metres, x east and y north of the course's centre (the middle of the boundary's bounding box),
 //      grouped by kind, with counts and an analysis of how well the holes can be ordered (hole lines, and the guess from tee/green pairs).
 //   4. <out>/<slug>.png: top-down preview of the polygons coloured per kind, hole lines numbered, the legend on the left (PNG encoded here
@@ -29,7 +31,7 @@ import { createHash } from 'node:crypto';
 import zlib from 'node:zlib';
 
 // ---------------------------------------------------------------------------------------------------------------- settings
-const UA = 'CapitalEmpire-dev-script/0.1 (+https://github.com/rumcan/CapitalEmpire)';
+const UA = 'CapitalEmpire-dev/1.0 (dev script)';
 const NOMINATIM = 'https://nominatim.openstreetmap.org/search';
 const OVERPASS = ['https://overpass-api.de/api/interpreter', 'https://overpass.kumi.systems/api/interpreter', 'https://overpass.private.coffee/api/interpreter'];
 const EARTH_R = 6371008.8;
@@ -37,7 +39,9 @@ const CREDIT = '© OpenStreetMap contributors (ODbL 1.0, https://www.openstreetm
 const AREA_KINDS = ['tee', 'fairway', 'green', 'bunker', 'water_hazard', 'lateral_water_hazard', 'rough', 'driving_range'];
 const LINE_KINDS = ['hole', 'cartpath', 'path'];
 const GOLF_KINDS = [...AREA_KINDS, ...LINE_KINDS, 'pin'];
-const KINDS = [...GOLF_KINDS, 'water', 'waterway', 'wood', 'other'];
+// T354 (#996): the estate's streets (lines, `highway` tag kept) and buildings (a centre each)
+const STREET_HIGHWAYS = 'residential|service|living_street|unclassified|tertiary';
+const KINDS = [...GOLF_KINDS, 'water', 'waterway', 'wood', 'street', 'building', 'other'];
 const NEAR = 15;                                  // metres: a hole line "starts on" a tee / "ends on" a green within this
 const log = (...a) => console.log(...a);
 const sleep = ms => new Promise(r => setTimeout(r, ms));
@@ -110,8 +114,11 @@ function overpassQuery(src, radius) {
     `  way(${sel})["waterway"~"^(stream|river|canal|ditch|drain)$"];`,
     `  nwr(${sel})["natural"~"^(wood|scrub)$"];`,
     `  nwr(${sel})["landuse"="forest"];`,
+    // (T354: the estate's streets and its buildings' centres, for a course with a boundary: round a node-only course they would be the whole town's)
+    ...(near ? [] : [`  way(${sel})["highway"~"^(${STREET_HIGHWAYS})$"];`]),
     ');',
     'out geom;',
+    ...(near ? [] : [`way(${sel})["building"];`, 'out center;']),
   ].join('\n');
 }
 
@@ -213,6 +220,7 @@ function joinWays(ways) {
 /** the geometry of one element in lon/lat: {pos} | {line, open?} | {polys: [{outer, inner}], broken?}; null when unusable */
 function shapeOf(el, areaLike) {
   if (el.type === 'node') return { pos: [el.lon, el.lat] };
+  if (el.type === 'way' && !el.geometry && el.center) return { pos: [el.center.lon, el.center.lat] };   // (T354: a building's centre, `out center`)
   if (el.type === 'way') {
     const pts = wayPoints(el);
     if (pts.length < 2) return null;
@@ -239,6 +247,8 @@ function kindOf(el, srcKey) {
   if (t.natural === 'water') return 'water';
   if (t.waterway) return 'waterway';
   if (t.natural === 'wood' || t.natural === 'scrub' || t.landuse === 'forest') return 'wood';
+  if (t.building) return 'building';
+  if (t.highway && STREET_HIGHWAYS.split('|').includes(t.highway)) return 'street';
   return 'other';
 }
 
@@ -258,7 +268,7 @@ function buildModel(elements, src, fallbackCentre) {
   const F = Object.fromEntries(KINDS.map(k => [k, []])), skipped = [];
   let boundary = null;
   for (const el of elements) {
-    const kind = kindOf(el, srcKey), areaLike = !LINE_KINDS.includes(kind) && kind !== 'waterway' && kind !== 'pin';
+    const kind = kindOf(el, srcKey), areaLike = !LINE_KINDS.includes(kind) && kind !== 'waterway' && kind !== 'street' && kind !== 'pin';
     const shape = shapeOf(el, areaLike);
     if (!shape) { skipped.push({ id: `${el.type}/${el.id}`, kind, why: 'no usable geometry' }); continue; }
     const f = { id: `${el.type}/${el.id}`, tags: el.tags || {} };
@@ -499,10 +509,10 @@ function encodePng(r) {
 const COLOURS = {
   background: [26, 32, 38], boundary: [60, 96, 56], rough: [84, 128, 66], wood: [28, 62, 38], water: [96, 152, 224], water_hazard: [44, 108, 214], lateral_water_hazard: [64, 178, 208],
   waterway: [96, 152, 224], fairway: [136, 196, 88], tee: [216, 226, 118], bunker: [240, 220, 152], green: [92, 236, 132], driving_range: [104, 156, 84],
-  cartpath: [176, 176, 168], path: [146, 136, 116], hole: [255, 255, 255], pin: [236, 52, 52],
+  cartpath: [176, 176, 168], path: [146, 136, 116], hole: [255, 255, 255], pin: [236, 52, 52], street: [214, 206, 188], building: [232, 150, 116],
 };
 const LEGEND = [['boundary', 'COURSE AREA'], ['rough', 'ROUGH'], ['wood', 'WOOD'], ['water', 'WATER'], ['water_hazard', 'WATER HAZARD'], ['lateral_water_hazard', 'LATERAL WATER'], ['waterway', 'STREAM'],
-  ['fairway', 'FAIRWAY'], ['tee', 'TEE'], ['bunker', 'BUNKER'], ['green', 'GREEN'], ['driving_range', 'RANGE'], ['cartpath', 'CART PATH'], ['path', 'PATH'], ['hole', 'HOLE LINE'], ['pin', 'PIN']];
+  ['fairway', 'FAIRWAY'], ['tee', 'TEE'], ['bunker', 'BUNKER'], ['green', 'GREEN'], ['driving_range', 'RANGE'], ['cartpath', 'CART PATH'], ['path', 'PATH'], ['street', 'STREET'], ['building', 'BUILDING'], ['hole', 'HOLE LINE'], ['pin', 'PIN']];
 const wrap = (str, n) => {
   const out = []; let cur = '';
   for (const w of String(str).normalize('NFD').replace(/[̀-ͯ]/g, '').toUpperCase().split(/\s+/)) {
@@ -528,7 +538,8 @@ function renderPreview({ boundary, F, title }, maxPx) {
   fillKind('wood', 0.85); fillKind('rough'); fillKind('driving_range'); fillKind('water'); lineKind('waterway', 1.6);
   fillKind('fairway'); fillKind('water_hazard'); fillKind('lateral_water_hazard'); fillKind('tee'); fillKind('bunker'); fillKind('green');
   for (const kind of AREA_KINDS) lineKind(kind, 1.6);
-  lineKind('cartpath', 1.4); lineKind('path', 1);
+  lineKind('cartpath', 1.4); lineKind('path', 1); lineKind('street', 2.4);
+  for (const f of F.building) if (f.pos) { const [x, y] = T(f.pos); big.disc(x, y, 1.6 * SS, COLOURS.building); }   // (T354: a dot at each building's centre)
   if (boundary) for (const p of boundary.polys || []) for (const r of [p.outer, ...p.inner]) big.stroke([...r, r[0]].map(T), 1.2 * SS, [236, 236, 236]);
   const holes = F.hole.filter(h => h.line);
   for (const h of holes) big.stroke(h.line.map(T), 4.4 * SS, [8, 10, 12]);
@@ -604,6 +615,8 @@ async function main() {
     projection: 'local equirectangular: x = (lon - lon0) * cos(lat0) * R, y = (lat - lat0) * R, R = 6371008.8 m',
     units: 'metres, x east and y north of the centre; rings are implicitly closed (the first point is not repeated), outer rings counter-clockwise, inner rings clockwise',
     boundsM: bb, sizeM: [Math.round(bb.maxX - bb.minX), Math.round(bb.maxY - bb.minY)], boundaryAreaHa: boundary?.area != null ? round1(boundary.area / 1e4) : null,
+    // T354 (#996): whether the boundary is a residential estate (landuse=residential: Woodhill's), the game's default for "Build the estate streets and lots"
+    estate: { residential: srcEl?.tags?.landuse === 'residential', streets: counts.street, buildings: counts.building },
     counts, golfValues, skipped: model.skipped, analysis,
   };
   const jsonFile = `${OUT}/${slug}.json`, pngFile = `${OUT}/${slug}.png`;

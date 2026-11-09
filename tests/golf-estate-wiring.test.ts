@@ -26,7 +26,7 @@ test('the course tools treat lot ground as not course land: the paint host, New 
 test('the estate is saved with the golf game and read back on a load; a reset drops it', () => {
   assert.match(eng, /everyday: this\.dayBook\?\.save \?\? this\.golf\.everyday, estate: ES\.encodeEstate\(this\.estateRt\) \}/);
   assert.match(eng, /this\.golf = normalizeGolfSave\(d\.golf\);\n\s+this\.estateRt = ES\.normalizeEstate\(this\.golf\?\.estate\);/);
-  assert.match(eng, /this\.golf = null; this\.estateRt = null;/);
+  assert.match(eng, /this\.golf = null;[^\n]* this\.estateRt = null;/); // (a reset drops the estate with the golf state: other resets of its own sit between them since T353)
   assert.match(read('src/game/golf/mode.ts'), /estate\?: EstateSave;/);
   assert.match(read('src/game/golf/mode.ts'), /if \(estate && normalizeEstate\(estate\)\) out\.estate = estate;/);
 });
@@ -82,13 +82,14 @@ test('the menu and the card: Course > Buildings > House lots, the App picks it u
 test('the entry point for streets laid by code (T354): layEstateLots lays lots along street pieces through placeLots, pays for them and clears the ground; its inputs are public', () => {
   assert.match(eng, /\n {2}estateStreets\(near: Pt, r: number\): ES\.StreetSeg\[\] \{/);
   assert.match(eng, /\n {2}estateEnv\(\): ES\.EstateEnv \{/);
+  assert.match(method('estateEnv(): ES.EstateEnv {'), /anyHeading: true,/); // (T354: the composer draws a house on every road heading, so the lot rules do not refuse a street for its angle)
   assert.match(eng, /\n {2}estateMake\(\): ES\.Estate \{/);
-  const lay = method('layEstateLots(along: ES.Along): ES.PlaceResult {');
+  const lay = method('layEstateLots(along: ES.Along, free = false): ES.PlaceResult {'); // (T354: free, an imported estate's lots come with the course)
   assert.match(lay, /if \(!this\.golf\) return \{ placed: \[\], refused: \[\], cost: 0 \};/);
   assert.match(lay, /ES\.planLots\(e, along, env\)/);
-  assert.match(lay, /if \(cost > this\.money\) return \{ placed: \[\]/);
+  assert.match(lay, /if \(cost > this\.money && !free\) return \{ placed: \[\]/);
   assert.match(lay, /ES\.placeLots\(e, along, env, this\.golfMonthAt\(performance\.now\(\)\), this\.seed\)/);
-  assert.match(lay, /this\.traffic\.spend\('construction', r\.cost\)/);
+  assert.match(lay, /else if \(r\.cost\) this\.traffic\.spend\('construction', r\.cost\)/);
   assert.match(lay, /this\.estateLaid\(r\.placed\)/);
   // the laying clears the rough, the long grass and the fescue under the lots (they show their own ground), as a rub out does (carved)
   const laid = method('estateLaid(placed: readonly ES.EstateLot[]) {');

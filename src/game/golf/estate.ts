@@ -44,7 +44,8 @@ export const SOLD_MONTHS: readonly [number, number] = [0.5, 1.2];
 export const BUILD_MONTHS: readonly [number, number] = [2, 3.5];
 /** what a finished house pays the club each month ($: the estate levy for the grounds the estate looks onto); its owner joins the club besides */
 export const LEVY = 20;
-/** a lot whose street runs more than this many degrees off both map axes cannot take a house (lots/compose.ts isAngled: it draws a green) */
+/** a lot whose street runs more than this many degrees off both map axes cannot take a house (lots/compose.ts isAngled: it draws a green): the model's rule, which a game that sets
+ *  EstateEnv.anyHeading (the engine does, T354: the composer draws a house on every heading) does not apply */
 export const OFF_AXIS_DEG = 20;
 /** the time step stepEstate works in (months): a long skip sells and builds as a run of short months would */
 const STEP = 0.25;
@@ -197,6 +198,9 @@ export interface EstateEnv {
   /** T355's way with a street: the rough, the long grass and the fescue are ground a lot may cover (the lot replaces it, as a street does); only the playing surfaces and the
    *  hazards refuse one. false: every painted surface refuses a lot ({the rough} is in the way: rub it out first). Missing: true */ coverRough?: boolean;
   /** why something stands on a box ('' when the ground is free): a building, a prop of the player's, a car park ... */ blocked?(box: readonly [number, number, number, number]): string;
+  /** T354: a lot may front a street at any heading. The town's composer draws a house on every heading (the lot lab's diagonal-road presets, and the generated lots of T305 turned to
+   *  the road: lots/compose.ts planOf), so a street off the map's axes is no reason to refuse a lot, where T353 refused one more than OFF_AXIS_DEG off both axes (it believed such a
+   *  lot drew a green). The engine says true; missing: false, the model's own rule (offAxis) */ anyHeading?: boolean;
 }
 /** the surfaces of the course grid by id, as a refusal calls them */
 const SURF_WORD: Readonly<Record<number, string>> = { [SURF.rough]: 'rough', [SURF.fescue]: 'fescue', [SURF.water]: 'water hazard', [SURF.fairway]: 'fairway', [SURF.tee]: 'tee', [SURF.bunker]: 'bunker', [SURF.waste]: 'waste area', [SURF.green]: 'green', [SURF.longGrass]: 'long grass' };
@@ -259,7 +263,7 @@ export function cellsUnder(f: Pick<Frame, 'o' | 'u' | 'n' | 'w' | 'd'>, g: Grid 
 
 /** why a lot (a frame, or a laid lot) cannot be laid, '' when it can, in the order a player would fix it: off the map; not his land; a playing surface
  *  under it (by name and hole; the rough, the long grass and the fescue only when env.coverRough is false, with the way to clear it); water; a road, cart path or drive through it; in range of a
- *  hole; something built there; another lot; and a street too far off the map's axes for a house. others: the lots already laid (or accepted) */
+ *  hole; something built there; another lot; and (unless env.anyHeading) a street too far off the map's axes for a house. others: the lots already laid (or accepted) */
 export function lotWhy(f: Pick<Frame, 'o' | 'u' | 'n' | 'w' | 'd'>, env: EstateEnv, others: readonly Pick<EstateLot, 'o' | 'u' | 'n' | 'w' | 'd'>[] = []): string {
   const box = boxOf(f);
   if (box[0] < 0 || box[1] < 0 || box[2] > env.map || box[3] > env.map) return 'That is off the map';
@@ -289,7 +293,7 @@ export function lotWhy(f: Pick<Frame, 'o' | 'u' | 'n' | 'w' | 'd'>, env: EstateE
   if (near) return `Hole ${near.hole}'s line is ${Math.round(near.d * TILE_M)} m away: golfers there are in range`;
   const why = env.blocked?.(box); if (why) return why;
   for (const o of others) if (lotsOverlap(f, o)) return 'A lot is there already';
-  if (offAxis(f.u)) return "Houses face the map's axes: lay the street along them (this one is too far off)";
+  if (!env.anyHeading && offAxis(f.u)) return "Houses face the map's axes: lay the street along them (this one is too far off)";
   return '';
 }
 
@@ -389,12 +393,13 @@ export function stepEstate(e: Estate, now: number, env: StepEnv): StepOut {
 // ---------------------------------------------------------------------------------------------------------------------------------------------
 /** where lots are laid: the street pieces, and either a drag (from, to: pickFrames) or the whole frontage of the pieces on `side` (+1 or -1; 0 or none:
  *  both sides) */
-export interface Along { segs: readonly StreetSeg[]; from?: Pt; to?: Pt; side?: 1 | -1 | 0 }
+export interface Along { segs: readonly StreetSeg[]; from?: Pt; to?: Pt; side?: 1 | -1 | 0;
+  /** T354: only the frames this keeps (the imported estate's lots stand where the map's houses do) */ only?: (f: Frame) => boolean }
 /** the candidate frames of an Along */
 export function framesOf(along: Along): Frame[] {
-  if (along.from && along.to) return pickFrames(along.segs, along.from, along.to);
   const sides: (1 | -1)[] = along.side === 1 ? [1] : along.side === -1 ? [-1] : [1, -1];
-  return along.segs.flatMap((s, i) => frontageFrames(s, sides, i));
+  const all = along.from && along.to ? pickFrames(along.segs, along.from, along.to) : along.segs.flatMap((s, i) => frontageFrames(s, sides, i));
+  return along.only ? all.filter(along.only) : all;
 }
 /** the result of laying lots: the lots laid, the frames refused with why, and the cost ($) */
 export interface PlaceResult { placed: EstateLot[]; refused: { frame: Frame; why: string }[]; cost: number }

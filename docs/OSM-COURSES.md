@@ -568,7 +568,7 @@ takes a random map (the T340 table above says `--seed 1`).** The budget is 8 ms 
   in no turn is refused with a message that suggests a smaller or a scaled course (`specOf` already scales Woodhill to 90%; true size needs 1079 tiles). Woodhill at 90% is 976 x 529 tiles: it fits the 1016 usable tiles only at 0, 90, 180 and 270 degrees (and within 4 degrees of them); Rondebosch and Magnolia fit at every turn.
 - **Rerouting around the course** is not done: a cut road ends at the boundary (and the lots it leaves roadless are cleared and counted, the way to the county road is kept by refusing a
   cut that would lose it). A detour needs the road builder's snap and crossing rules on public land; the pop-up's text says what happens.
-- **Estate streets (T354)** are not in lead/live's converter, so none are laid.
+- **Estate streets (T354)** are laid by a new game on the course (the section on the estate, below), not by the placing mode: a course placed into a game under way has its course only (the spec's estate turns with the rest and waits).
 - The cover's extra land and the rect budget (18 strips, 32 in the shader) are choices: a finer cover costs rects the build grid cannot take.
 
 # The course's ground: a band of rough, then natural fescue or the desert (T362, #1017)
@@ -608,3 +608,58 @@ desert game's plays as rough within 80 m of a played line and out of bounds beyo
 rough; nothing for the desert's own ground); a house lot or a street over the wild land clears it as over any rough (T353, T355). The tests: `tests/golf-osm-rough.test.ts` (band widths to the cell, fescue against desert by theme,
 the widths as data, the lies, the shipped courses, the placing mode's price).
 
+# The estate of a real course: its streets and house lots (T354, #996)
+
+The owner, 2026-11-08: "Add a way to add the estate streets if your golf course you are importing is also a golf estate." Woodhill is the example: its boundary is the "Woodhill Golf Estate"
+(`landuse=residential`) and its streets and houses are in OpenStreetMap inside it. A new game on it can lay them: the streets as the game's residential road class, one network joined to the
+entry road, and T353's house lots at the places of the map's houses.
+
+## From the map to the fixture
+- `scripts/dev/osm-course.mjs` asks, in the **same single Overpass query** as before, for the ways inside the boundary with `highway=residential|service|living_street|unclassified|tertiary` (as
+  geometry: footways, paths and cycleways are not asked for, a cart path is `golf=cartpath` already) and for the `building=*` ways as centres (`out center`: a point each, no footprint).
+  They become the kinds `street` (lines, with their tags) and `building` (a point each) of the stage-1 JSON, with `meta.estate` (`residential`: the boundary is landuse=residential, the counts).
+  The script's User-Agent is now `CapitalEmpire-dev/1.0 (dev script)` (no address in it). The browser's own query (`overpass.ts courseQuery`, which a test pins to the script's text) is T378's file and
+  is **not** extended here: a searched course gets streets as soon as that query asks for the two statements (the converter reads the two kinds from any JSON that has them).
+- `scripts/dev/osm-trim-fixture.mjs` keeps them: the street runs inside the box (the holes and 120 m), no names, `highway`, `bridge`, `tunnel`; **a driveway, a parking aisle and a drive-through are not
+  streets** (Woodhill's 328 ways are 210 driveways, 7 parking aisles and 111 streets: 98 residential, 8 service, 5 living_street); each building as a point (a tag only when it is not a plain
+  house: Woodhill's 143 are 135 `yes`, 1 `house`, 5 `roof`, 1 `ruins`, 1 `security`); `meta.estate: true` for a residential boundary. **`--merge <fixture>`** adds only these to a fixture that exists, byte for
+  byte as it was otherwise (its trimmed features and its real ground height stay): the new run's frame is checked against the fixture's by their 18 hole lines (the same OSM ways; it was 0.01 m off) and the
+  streets are moved by the offset if the boundary was edited between the runs. Woodhill's fixture went from 88.7 to 107.7 kB.
+
+## The converter (`golf/osm/convert.ts`, `streets.ts buildEstate`)
+`spec.estate` (absent when the map has no streets inside the land): the streets, the houses and what was left out.
+- The streets are cut **20 m past the land's edge** (`STREET_REACH`): an estate's perimeter road lies just outside the land (Woodhill's about 10 m), and a network cut at the edge itself fell apart into
+  100 pieces of which 43 (4.7 km) were left over, where at 12 m or more 6 are (the clubhouse parcel stands 28 m from the land, so a street 20 m out never reaches it). A street's end within 2 m of another street (`STREET_SNAP`) is **joined** to it: onto a vertex of it when one is about as near, else onto the foot
+  of the perpendicular (the other street gets a vertex there, so the two share a node: the trim's simplification removes a junction's vertex from the through street, and 19 of Woodhill's 218 street ends
+  needed this); of two ends that meet, the later moves onto the earlier.
+- **A street that crosses a hole is left out, whole**: its way meets what the converter paints as a fairway (the made-up bands too), a tee, a green, a bunker or water, or crosses a hole's line of play or a waterway.
+  Then **the pieces the biggest network does not reach are left out** ("isn't connected"). Both are warnings with their counts (`street-over-hole`, `street-unconnected`), and a street on a bridge or in a tunnel is
+  `street-bridge`: nothing is a refusal.
+- The houses: the `building` points that are houses (`yes`, `house`, `residential`, `detached`, `semidetached_house`, `terrace`, `bungalow`, `villa`, `apartments`; a roof, a ruin, a garage, a guard house are not),
+  inside the land, **off the course** (not on a fairway, tee, green, bunker or water) and **off the street's own line** (3 m): the anchors the lots are laid at.
+- At the course's scale: the JSON is scaled first (Woodhill 90%), the streets with it.
+
+## On the map (`start.ts planOsmGame(spec, map, paint, estate)`, `streets.ts joinEstate`)
+The estate's streets on the map as legs, and **one link** that joins their network to the entry road: from the street vertex with the shortest way out of the land (straight towards the map's edge on the
+road's side, to the row 8 tiles from the road's inner end, then along that row to a T on the road) that crosses no playing surface or hazard (the course grid is read along it) and keeps 3 tiles clear of the
+clubhouse parcel and the car park. With no such way the streets are not laid and the game says why (`estateWhy`, a toast): a network the town cannot reach is no estate. Everything else of the plan is as it was.
+
+## The game (`engine.ts`)
+- `newOsmGame` lays the legs and the link as the **street** class (as the entry road and the drive are laid: the towns' legs) and keeps the houses; **the lots are laid in `afterLoad`**, once the network is committed
+  (the streets are real roads, with their junctions): T353's frontage frames along them (`estateStreets`, `ES.framesOf`), the frames that hold a house of the map (`streets.ts framesAtBuildings`: each house takes the
+  nearest frame within 6 tiles, a frame once), laid by `layEstateLots(along, free)` **free of charge and for sale** (the club's land: the houses fill in over time as T353's lots do: they sell with the
+  reputation and the view, and are built in stages) under T353's rules (the club's own land, off the course surfaces, 30 m from every hole's line: the landing zones, no overlap). A frame is square to its
+  street, so **every house faces its street**; a house with no street beside it gets no lot.
+- **Streets at any heading take lots** (`EstateEnv.anyHeading`, which `engine.ts estateEnv()` sets). T353 refused a lot on a street more than 20 degrees off both map axes (`OFF_AXIS_DEG`), believing the town's composer
+  draws a green there. It does not any more: on every heading it draws a house (the lot lab's diagonal-road presets, T305's generated lots turned to the road; `lots/compose.ts planOf`): a probe composing a built
+  house lot at 0, 10 ... 80 degrees gave a preset and a building on all 24 seeds at every angle. The frames at Woodhill's houses lie 20 to 60 degrees off the axes (all 41 would pass the axis rule only with the whole
+  course turned about 40 degrees), so under the axis rule **0 of those 41 could be laid**; with it off **38 are laid in the game**, and the three left are the ground's (land that is not the club's, a hole's range, a lot
+  already there). The model's default is still T353's (`lotWhy` without `anyHeading` refuses as before, its tests unchanged); the House lots tool, which reads the same env, no longer refuses a diagonal street either.
+- **Woodhill in the game** (a new game on `?osmcourse=woodhill`, the land 1,952 x 1,058 m): the network goes from 2 road pieces to 786 (the estate's 779 legs, the 257 m link, the entry road and drive); 100 street pieces
+  of 12,037 m with 88 junctions, 6 pieces (611 m) left out as not joined to the biggest network, none over a hole; 143 buildings of which 92 are houses; **38 lots laid at the houses** (41 frames at houses, 3 refused), all for sale;
+  after 7 minutes at 20x (Sep 1984 to Aug 1985) 31 for sale, 1 sold, 1 being built, 5 built. The town's own lots along the new streets go from 14 to 263 (none on the club's land). The bench (estate off against on, twice each):
+  the main thread a frame 0.8 to 1.0 ms against 0.9 to 1.4 ms at the estate's zoom (budget 8 ms), memory level.
+- **The tick box** on the new-game card (Who are you? › Your course): "Build the estate streets and lots (for a course that is a golf estate)", checked until unticked. **On by default for a course whose boundary is a
+  residential estate** (`spec.estate.residential`: Woodhill): a course that has streets but is no estate builds them only when the box is ticked by hand. `?osmestate=0|1` on the dev server (and the bench's
+  `--osmestate`) overrides it for the session.
+- Old saves have no estate; a saved estate is the roads and `golf.estate` (T353's save) as for any streets and lots.

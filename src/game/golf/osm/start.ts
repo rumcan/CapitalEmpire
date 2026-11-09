@@ -10,6 +10,7 @@ import type { Leg, Pt } from '../../network';
 import type { GolfSave, Rect } from '../mode';
 import { GOLF_REP_START } from '../start';
 import { paintSpec, type PaintOptions } from './raster';
+import { joinEstate } from './streets';
 import { OSM_MARGIN_M, type OsmCourseSpec, type OsmEntry, type OsmGolfInfo } from './types';
 
 /** the clubhouse parcel, [across, along] tiles, and the car park (golf/place.ts VENUE and PARK): across is along the land's edge, along is away from it */
@@ -33,6 +34,9 @@ const SIDES: readonly OsmSide[] = ['W', 'E', 'N', 'S'];
 export interface OsmStart {
   land: Rect; venue: Rect; carpark: Rect; road: Leg[]; drive: Leg[]; save: GolfSave; grid: Grid; centre: Pt; side: OsmSide; entry: OsmEntry;
   /** the tile where the spec's frame (its north-west corner) lies on the map */ at: Pt;
+  /** T354 (#996): the estate's streets laid on the map (legs), the link that joins their network to the entry road, and the places of the map's houses (tiles); absent: none was asked for,
+   *  the spec has none, or the network could not be joined (`estateWhy` says why) */
+  estate?: { legs: Leg[]; link: Leg[]; houses: Pt[]; lengthM: number }; estateWhy?: string;
 }
 
 /** one side's layout of land, clubhouse parcel, car park, road and drive, and how far its parcel is from the first tee, tiles */
@@ -90,8 +94,9 @@ export function osmScaleFor(w: number, h: number, map = MAP): number {
 /** the plan of a new game on the course of this spec, or null when the land does not fit the map. The land is centred; the clubhouse parcel, the car
  *  park, the drive and the entry road go on the side of the land nearest the first tee (the first of west, east, north, south on a tie), the road from
  *  the map's edge on that side to the drive's end, the drive to the clubhouse parcel's door. Deterministic. `paint` (T362): how the course is laid on the grid, the game's
- *  theme among it (a desert game's course keeps the land's own desert ground where the course is natural, raster.ts PaintOptions) */
-export function planOsmGame(spec: OsmCourseSpec, map = MAP, paint: PaintOptions = {}): OsmStart | null {
+ *  theme among it (a desert game's course keeps the land's own desert ground where the course is natural, raster.ts PaintOptions). `estate` (T354): lay the spec's estate too: its
+ *  streets, and the link from the street vertex with the shortest clear way out of the land to a T on the entry road (streets.ts joinEstate) */
+export function planOsmGame(spec: OsmCourseSpec, map = MAP, paint: PaintOptions = {}, estate = false): OsmStart | null {
   const tee = firstTee(spec);
   let best: Layout | null = null;
   for (const s of SIDES) { const l = layoutFor(s, spec, tee, map); if (l && (!best || l.dist < best.dist - 1e-6)) best = l; }
@@ -104,5 +109,11 @@ export function planOsmGame(spec: OsmCourseSpec, map = MAP, paint: PaintOptions 
   const save: GolfSave = { v: 1, tier: 1, rep: GOLF_REP_START, town: centre, course: land, parcel, dir, tees: [], pins: [], aims: [], clubhouse: centre, osm: info };
   const box = landGridBox([land, parcel], GRID_PAD, map)!, grid = makeGrid(box[0], box[1], box[2], box[3]);
   paintSpec(grid, spec, lx, ly, paint);
-  return { land, venue, carpark, road, drive, save, grid, centre, side, entry, at: { x: lx, y: ly } };
+  let est: OsmStart['estate'], estateWhy: string | undefined;
+  if (estate && spec.estate?.streets.length) {
+    const j = joinEstate({ streets: spec.estate.streets, at: { x: lx, y: ly }, road: road[0]!, side, keepOut: [venue, carpark], grid, map });
+    if (j.why) estateWhy = j.why;
+    else { const houses: Pt[] = [], h = spec.estate.houses; for (let k = 0; k + 1 < h.length; k += 2) houses.push({ x: lx + h[k]!, y: ly + h[k + 1]! }); est = { legs: j.legs, link: j.link, houses, lengthM: spec.estate.lengthM }; }
+  }
+  return { land, venue, carpark, road, drive, save, grid, centre, side, entry, at: { x: lx, y: ly }, ...(est ? { estate: est } : {}), ...(estateWhy ? { estateWhy } : {}) };
 }

@@ -3,7 +3,12 @@
 // header. A shipped course makes no request: the game ships these files (the search for other courses, T358, calls the servers on the player's own submit).
 //   node scripts/dev/osm-trim-fixture.mjs <stage-1.json> --id rondebosch --name "Rondebosch Golf Course" --place "Cape Town, South Africa" \
 //        [--course "Augusta National" --rename "Augusta National=Magnolia National"] [--reach 120] [--simplify 0.3] [--height <stage-1>.height.json | none]
-//        [--out src/game/golf/osm/data/<id>.json]
+//        [--out src/game/golf/osm/data/<id>.json] [--merge src/game/golf/osm/data/<id>.json]
+// T354 (#996): the estate's streets and buildings. The stage-1 run also fetches `highway=residential|service|living_street|unclassified|tertiary` ways and the
+// buildings' centres inside the boundary; the fixture keeps the streets (the runs inside the box, the `highway` class, a bridge or tunnel flag, no names; a driveway or a
+// parking aisle is not one) and each building's centre, and `meta.estate: true` when the boundary is landuse=residential. `--merge <fixture>` adds only these (and the
+// flag) to a fixture that already exists, byte for byte as it was otherwise (its trimmed features and its real ground height stay): the new run's frame is checked against
+// the fixture's by their hole lines first, and the streets are moved by the offset when the boundary was edited between the runs.
 // T357 (#999): the real ground height. The stage-1 run's `<name>.height.json` (scripts/dev/osm-height.mjs, or osm-course.mjs --height) beside the input is cropped
 // to the course's box and 440 m round it (the land, the skirt the game fades it out over, the margin), kept at the lattice step its source's smoothing needs
 // (terrarium.ts packStepOf: 16 m for SRTM, 8 m for 3DEP) and written as the fixture's `height` (16-bit, 1 cm units from a base, deflated, base64). `--height none`
@@ -17,7 +22,9 @@ const opt = (k, d) => { const i = args.indexOf(`--${k}`); return i >= 0 ? args[i
 if (!file || !opt('id')) { console.error('usage: node scripts/dev/osm-trim-fixture.mjs <stage-1.json> --id <id> --name <name> [--place <text>] [--course <name>] [--rename a=b] [--reach 120] [--out file]'); process.exit(2); }
 const j = JSON.parse(readFileSync(file, 'utf8')), id = opt('id'), reach = +opt('reach', '120'), out = opt('out', `src/game/golf/osm/data/${id}.json`);
 const renames = new Map((opt('rename', '') ? [opt('rename', '')] : []).map(s => s.split('=')));
-const r1 = v => Math.round(v * 10) / 10, pt = p => [r1(p[0]), r1(p[1])];
+// SHIFT (T354, --merge): where the new run's frame lies against the fixture's, metres (0, 0 unless the boundary the frame is centred on was edited between the runs)
+let SHIFT = [0, 0];
+const r1 = v => Math.round(v * 10) / 10, pt = p => [r1(p[0] - SHIFT[0]), r1(p[1] - SHIFT[1])];
 // Douglas-Peucker: a ring or line loses the points that deviate less than --simplify metres (default 0.3: far under a 1 m cell)
 const tol = +opt('simplify', '0.3');
 function dp(pts, closed) {
@@ -50,6 +57,24 @@ if (chosen === undefined) chosen = [...groups.entries()].sort((a, b) => full(b[1
 const mine = groups.get(chosen) ?? [];
 if (!mine.length) { console.error(`no hole lines for course "${chosen}" (have: ${[...groups.keys()].map(k => `"${k}"`).join(', ')})`); process.exit(1); }
 
+// T354: --merge <fixture>: the new run's frame against the fixture's, by their hole lines (the same OSM ways, so the same vertices unless the boundary the frame is centred
+// on was edited between the runs)
+const merging = opt('merge') ? JSON.parse(readFileSync(opt('merge'), 'utf8')) : null;
+if (merging) {
+  const offs = [];
+  for (const fh of merging.features?.hole ?? []) {
+    const a = fh.line?.[0]; if (!a) continue;
+    let best = null;
+    for (const h of holes) { const b = h.line?.[0]; if (!b) continue; const d = Math.hypot(b[0] - a[0], b[1] - a[1]); if (!best || d < best.d) best = { d, off: [b[0] - a[0], b[1] - a[1]] }; }
+    if (best && best.d < 60) offs.push(best.off);
+  }
+  const med = k => { const v = offs.map(o => o[k]).sort((p, q) => p - q); return v.length ? v[Math.floor(v.length / 2)] : 0; };
+  SHIFT = [med(0), med(1)];
+  const bad = offs.filter(o => Math.hypot(o[0] - SHIFT[0], o[1] - SHIFT[1]) > 0.3).length;
+  console.log(`merge: ${offs.length} hole lines compared; the new frame lies ${SHIFT[0].toFixed(2)}, ${SHIFT[1].toFixed(2)} m from the fixture's; ${bad} of them differ by more than 0.3 m after that`);
+  if (!offs.length || bad > offs.length * 0.2) { console.error('the new run does not match the fixture (another course, or the data changed): nothing written'); process.exit(1); }
+}
+
 // the box of the chosen course's holes, its reach round it
 let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
 for (const h of mine) for (const p of h.line) { x0 = Math.min(x0, p[0]); x1 = Math.max(x1, p[0]); y0 = Math.min(y0, p[1]); y1 = Math.max(y1, p[1]); }
@@ -63,7 +88,11 @@ const rename = v => renames.get(v) ?? v;
 // The kinds a fixture keeps. AREAS: polygons, each with the tags worth keeping. LINES: lines (cut to the box, runs of them), each with its tags. A new kind is one entry in a
 // table here and one section in src/game/golf/osm/convert.ts (T354's estate streets: `LINES.street = ['highway', 'name', 'width', 'tunnel']`, once the stage-1 script fetches them).
 const AREAS = { tee: ['tee', 'colour'], green: [], fairway: [], bunker: [], water_hazard: [], lateral_water_hazard: [], water: [], rough: [] };
-const LINES = { waterway: ['waterway', 'width', 'tunnel', 'culvert'] };
+const LINES = { waterway: ['waterway', 'width', 'tunnel', 'culvert'], street: ['highway', 'bridge', 'tunnel'] };
+/** T354: a service way that is no street (a driveway, a parking aisle...) */
+const NOT_STREET = new Set(['driveway', 'parking_aisle', 'drive-through', 'emergency_access']);
+/** T354: the buildings that are no house (the converter puts a lot at a house; a plain `yes` or `house` is left untagged, the others keep their value) */
+const PLAIN_HOUSE = new Set(['yes', 'house', 'residential', 'detached', 'semidetached_house', 'bungalow']);
 const features = {};
 const area = (kind, keys = []) => {
   const list = (F[kind] ?? []).map(f => ({ tags: keep(f.tags, keys), polys: polys(f) })).filter(f => f.polys.length);
@@ -81,6 +110,7 @@ features.pin = (F.pin ?? []).filter(f => f.pos && inBox(f.pos)).map(f => ({ pos:
 for (const [kind, keys] of Object.entries(LINES)) {
   features[kind] = [];
   for (const w of F[kind] ?? []) {
+    if (kind === 'street' && NOT_STREET.has(w.tags?.service)) continue;
     const L = w.line ?? [];
     let run = [];
     const flush = () => { if (run.length >= 2) features[kind].push({ tags: keep(w.tags, keys), line: dp(run.map(pt), false) }); run = []; };
@@ -91,6 +121,21 @@ for (const [kind, keys] of Object.entries(LINES)) {
     flush();
   }
   if (!features[kind].length) delete features[kind];
+}
+
+// T354: the buildings' centres inside the box, each a point (a tag only when it is no plain house), and whether the boundary is a residential estate
+features.building = (F.building ?? []).filter(f => f.pos && inBox(f.pos)).map(f => { const b = f.tags?.building; return b && !PLAIN_HOUSE.has(b) ? { tags: { building: b }, pos: pt(f.pos) } : { pos: pt(f.pos) }; });
+if (!features.building.length) delete features.building;
+const estate = !!j.meta?.estate?.residential;
+
+// --merge: only the estate's streets, buildings and flag go into the fixture that exists; all the rest of it stays as it is
+if (merging) {
+  delete merging.features.street; delete merging.features.building;
+  for (const k of ['street', 'building']) if (features[k]) merging.features[k] = features[k];
+  if (estate) merging.meta.estate = true; else delete merging.meta.estate;
+  writeFileSync(opt('merge'), JSON.stringify(merging) + '\n');
+  console.log(`${opt('merge')}: ${(JSON.stringify(merging).length / 1024).toFixed(1)} kB; merged street ${features.street?.length ?? 0}, building ${features.building?.length ?? 0}, estate ${estate}`);
+  process.exit(0);
 }
 
 const c = j.meta?.course ?? {};
@@ -110,7 +155,7 @@ let height;
 const fixture = {
   meta: {
     id, credit: '© OpenStreetMap contributors', licence: 'Data © OpenStreetMap contributors, ODbL 1.0 (https://www.openstreetmap.org/copyright)',
-    place: opt('place', ''), course: { osm: c.osm ?? '', name: opt('name', c.name ?? id) },
+    place: opt('place', ''), course: { osm: c.osm ?? '', name: opt('name', c.name ?? id) }, ...(estate ? { estate: true } : {}),
     source: `scripts/dev/osm-course.mjs, fetched ${j.meta?.overpass?.fetchedAt?.slice(0, 10) ?? j.meta?.generated?.slice(0, 10) ?? ''}, trimmed by scripts/dev/osm-trim-fixture.mjs (the course "${rename(chosen)}", ${reach} m round its holes)`,
   },
   boundary: j.boundary ? { polys: polys(j.boundary) } : undefined,

@@ -45,7 +45,8 @@ export function WhoCard({ name, look, looks, hcp, onDone, desert, onTheme, cours
   /** T340 (#967), T358 (#1003): "Your course": build your own, one of the featured real courses, one you downloaded, or one you found (a new game starts on it); current:
    *  the game's now (its id and the name it shows; null: your own) */
   course?: { featured: Featured[]; current: string | null; currentName: string | null; onOwn: () => void; onFeatured: (id: string) => void; onBuild: (spec: OsmCourseSpec, land: OsmLand | null) => void;
-    /** T356: place a found course on this game's map instead of starting a new game on it */ onPlace?: (spec: OsmCourseSpec, land: OsmLand | null) => void } }) {
+    /** T356: place a found course on this game's map instead of starting a new game on it */ onPlace?: (spec: OsmCourseSpec, land: OsmLand | null) => void;
+    /** T354: the tick box "Build the estate streets and lots" (a real golf estate's streets and house lots, laid with the course): its state and its change; absent: no box */ estate?: { on: boolean; set: (on: boolean) => void } } }) {
   const [n, setN] = useState(name), [l, setL] = useState(look), [pick, setPick] = useState(false);
   // (T356: a course placed on this map is the game's course now: the picker closes and the row names it)
   useEffect(() => { setPick(false); }, [course?.current]);
@@ -88,6 +89,12 @@ export function WhoCard({ name, look, looks, hcp, onDone, desert, onTheme, cours
               <span><span className="font-semibold text-white">{course.currentName ?? 'Build your own'}</span> <span className="text-slate-400">{course.currentName ? '(from map data)' : '· a driving range and an empty plot'}</span></span>
               <span className="shrink-0 text-amber-300">{pick ? 'Close' : 'Change or find a course ›'}</span>
             </button>
+            {course.estate && (
+              <label className="mt-1.5 flex cursor-pointer items-start gap-2 text-xs text-slate-300" data-tip="A golf estate's own streets, from the map, laid with the course (one network, joined to the entry road) and house lots along them where the map has houses: they sell and fill in over time. On by default for a course whose boundary is a residential estate (Woodhill); set it before you pick the course" data-testid="who-estate">
+                <input type="checkbox" className="mt-0.5" checked={course.estate.on} onChange={e => course.estate!.set(e.target.checked)} data-testid="who-estate-box" />
+                <span>Build the estate streets and lots <span className="text-slate-500">(for a course that is a golf estate)</span></span>
+              </label>
+            )}
           </div>
         )}
         <div className="flex items-baseline justify-between rounded-lg border border-white/10 bg-white/5 px-2 py-1.5" title="Your skills as a mid-handicap amateur: practise at the range to lower it">

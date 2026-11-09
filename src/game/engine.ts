@@ -177,6 +177,7 @@ import { addLandPatch, clearLandIn, createLandField, designGreens, groundAt, lay
 import { realNet, type AnswerCache } from './golf/osm/polite';
 import { fetchLand, tilesKept, tilesOfCourse } from './golf/osm/dem';
 import { planOsmGame } from './golf/osm/start';
+import { framesAtBuildings } from './golf/osm/streets';
 import { specMarkers, type PaintOptions } from './golf/osm/raster';
 import { RANGE_CAM_ZOOM, planRangeStart } from './golf/rangestart';
 import { CLUB_REACH, clubhouseSpotWhy, plotOfFront, rangeLayout } from './golf/range';
@@ -985,6 +986,10 @@ export class Game {
   private osmId: string | null = null; private osmSpec: OsmCourseSpec | null = null;
   /** T357 (#999): the real ground height that goes with osmSpec (a shipped course's fixture, or a download's tiles): laid by newOsmGame; null: a flat course */
   private osmLand: OsmLand | null = null;
+  /** T354 (#996): the new-game card's tick box "Build the estate streets and lots" (undefined: not touched, so the course's own default: on for a residential estate, golf/osm/types.ts SpecEstate) */
+  osmEstateChoice: boolean | undefined = undefined;
+  /** T354: the map's houses (tiles) of an estate whose streets a new game just laid: its lots are laid when the network is committed (afterLoad), when the streets are real roads */
+  private osmHouses: Pt[] | null = null;
   /** T357: the real ground of each course the placing mode has in hand or has had (T356), by the course's id: layRealCourse lays it with the course */
   private placeLands = new Map<string, OsmLand | null>();
   /** a Space press that panned (held with the drag) does not also pause on release */
@@ -3353,11 +3358,15 @@ export class Game {
    *  points (their pictures as any marker's). The old start's rules: the tournament comes with the season. False, and nothing laid, when the land does
    *  not fit the map (the caller then makes the usual start) */
   private newOsmGame(spec: OsmCourseSpec): boolean {
-    const plan = planOsmGame(spec, MAP, this.osmPaint()); if (!plan) { console.warn(`golf: ${spec.name} does not fit the map; the usual start instead`); return false; }
+    const plan = planOsmGame(spec, MAP, this.osmPaint(), this.osmEstateWanted(spec)); if (!plan) { console.warn(`golf: ${spec.name} does not fit the map; the usual start instead`); return false; }
     this.useTerrain({ ...flatTerrain(), highway: plan.entry }, this.devSeed || newSeed()); // (the highway enters where the entry road meets the map's edge)
     this.townPts = [plan.centre]; this.roadNames = new RoadNames(this.names, this.townPts);
     this.edit.addLegs(plan.road, CLASS.road, 0, plan.road.map(() => SK.GROUND), true);
     this.edit.addLegs(plan.drive, classOf('drive-gravel'), 0, undefined, true);
+    // T354: the estate's streets (the residential class) and the one link that joins their network to the entry road; the lots follow once the network is committed (afterLoad)
+    this.osmHouses = null;
+    if (plan.estate) { this.edit.addLegs(plan.estate.legs, classOf('street'), 0, undefined, true); this.edit.addLegs(plan.estate.link, classOf('street'), 0, undefined, true); this.osmHouses = plan.estate.houses; }
+    else if (plan.estateWhy) { console.warn(`golf: ${spec.name}: the estate's streets were left out: ${plan.estateWhy}`); this.toast(`The estate's streets were left out: ${plan.estateWhy}`, 'warn'); }
     const [vx, vy, vw, vh] = plan.venue, [px, py, pw, ph] = plan.carpark;
     this.setBizDefs([{ id: 1, type: 'clubhouse', x: vx, y: vy, w: vw, h: vh }]);
     this.parkDefs = [{ id: 1, x: px, y: py, w: pw, h: ph }];
@@ -3383,6 +3392,28 @@ export class Game {
    *  desert game's course keeps the land's own desert ground where the course is natural, an autumn game's is natural fescue; both have the band of rough round the fairways, greens
    *  and tees. A saved course keeps the grid it was laid with (nothing re-lays it). The dev server's `?rough=old` lays T340's look (the whole boundary rough, no band) for the before and after of the shots and the bench */
   private osmPaint(): PaintOptions { return { desert: this.desertTheme, ...(import.meta.env.DEV && new URLSearchParams(location.search).get('rough') === 'old' ? { legacy: true } : {}) }; }
+  /** T354 (#996; the owner, 2026-11-08: "Add a way to add the estate streets if your golf course you are importing is also a golf estate"): whether this new game lays the spec's estate (its streets
+   *  and house lots): the new-game card's tick box when the player touched it, else on for a course whose boundary is a residential estate; `?osmestate=0|1` on the dev server (the bench's A/B) says
+   *  for the session */
+  private osmEstateWanted(spec: OsmCourseSpec): boolean {
+    const q = import.meta.env.DEV ? new URLSearchParams(location.search).get('osmestate') : null;
+    if (q === '0' || q === '1') return q === '1';
+    return this.osmEstateChoice ?? !!spec.estate?.residential;
+  }
+  /** T354: the tick box's state for the card (on until the player unticks it) and its change */
+  osmEstateOn(): boolean { return this.osmEstateChoice ?? true; }
+  setOsmEstate(on: boolean) { this.osmEstateChoice = on; this.emit(); }
+  /** T354: the lots of an imported estate, laid once its streets are committed as roads: T353's frames along them, the ones that hold a house of the map (golf/osm/streets.ts
+   *  framesAtBuildings: each house takes the nearest frame within reach, so every house faces its street), under the lot rules (the club's land, off the course surfaces and the holes' landing
+   *  zones), free and for sale: the houses fill in as in T353 */
+  private layOsmEstate(houses: readonly Pt[]) {
+    const g = this.golf; if (!g) return;
+    const c = g.course, segs = this.estateStreets({ x: c[0] + c[2] / 2, y: c[1] + c[3] / 2 }, Math.hypot(c[2], c[3]) / 2 + 8);
+    const key = (f: ES.Frame): string => `${f.seg}:${f.k}:${f.side}`, keep = new Set(framesAtBuildings(ES.framesOf({ segs }), houses).map(key));
+    const r = this.layEstateLots({ segs, only: f => keep.has(key(f)) }, true);
+    const why = new Map<string, number>(); for (const q of r.refused) { const w = q.why.replace(/[0-9]+([.][0-9]+)?/g, '#'); why.set(w, (why.get(w) ?? 0) + 1); }
+    console.log(`golf: the estate: ${r.placed.length} lots laid at the map's ${houses.length} houses, ${r.refused.length} refused${r.refused.length ? ` (${[...why].sort((a, b) => b[1] - a[1]).map(([w, n]) => `${n} x ${w}`).join('; ')})` : ''}`);
+  }
   /** T340: the new-game card's real courses (the shipped ones, with the holes and par) and the one this game is laid on (null: an ordinary game) */
   osmChoices(): { id: string; name: string; place: string; holes: number; par: number; mappedPar: number; scale?: number; ground?: string }[] { return OSM_COURSES.map(c => ({ id: c.id, name: osmDisplayName(c.name), place: c.place, holes: c.holes, par: c.par, mappedPar: c.mappedPar, ...(c.scale ? { scale: c.scale } : {}), ...(c.ground ? { ground: c.ground } : {}) })); }
   osmGame(): GolfSave['osm'] | null { return this.golf?.osm ?? null; }
@@ -4716,6 +4747,7 @@ export class Game {
     this.tagCourseHoles();
     this.setupCourseGrid(); // after the tags: an old save's golf areas move into the grid with their holes
     this.paint.newGame(); // the New hole wizard numbers from this game's holes (the last game's plan and number went in reset or load)
+    if (this.osmHouses) { const h = this.osmHouses; this.osmHouses = null; this.layOsmEstate(h); } // (T354: the network is committed, so the estate's streets are roads the lots can front)
     }
     golfProps = new Map<string, Prop>();
     golfStructureProps = new Map<number, Prop>();
@@ -10846,6 +10878,7 @@ export class Game {
       grid: this.courseGrid, water: this.estateWet,
       lines: [...this.holeLines()].map(([hole, l]) => { const line: Pt[] = []; for (let k = 0; k + 1 < l.length; k += 2) line.push({ x: l[k]!, y: l[k + 1]! }); return { hole, line }; }),
       roads: b => this.estateRoads(b), blocked: b => this.estateBlocked(b),
+      anyHeading: true, // (T354: the composer draws a house on every road heading, so a street off the map's axes takes lots: Woodhill's houses stand on streets 20 to 60 degrees off them)
     };
   }
   /** a lot's view, read again when the course changes (the grid's revision) */
@@ -10869,12 +10902,12 @@ export class Game {
   /** T353, for the code that lays streets (T354's imported ones): lays house lots along streets as the tool does (golf/estate.ts placeLots): `along` is the street pieces (estateStreets
    *  gives the real network's) and a side (+1, -1, or 0 / none: both) or a drag (from, to). The laying cost is paid and the course ground under the lots cleared; with too little
    *  money none is laid (every lot the rules allow is then refused with that reason). Outside a golf game none is laid. Returns what was laid and what was refused with why */
-  layEstateLots(along: ES.Along): ES.PlaceResult {
+  layEstateLots(along: ES.Along, free = false): ES.PlaceResult {
     if (!this.golf) return { placed: [], refused: [], cost: 0 };
     const e = this.estateMake(), env = this.estateEnv(), plan = ES.planLots(e, along, env), cost = plan.ok.length * ES.LAY_COST;
-    if (cost > this.money) return { placed: [], refused: [...plan.refused, ...plan.ok.map(frame => ({ frame, why: `Not enough money: ${plan.ok.length} lots cost $${cost.toLocaleString()} to lay` }))], cost: 0 };
+    if (cost > this.money && !free) return { placed: [], refused: [...plan.refused, ...plan.ok.map(frame => ({ frame, why: `Not enough money: ${plan.ok.length} lots cost $${cost.toLocaleString()} to lay` }))], cost: 0 };
     const r = ES.placeLots(e, along, env, this.golfMonthAt(performance.now()), this.seed);
-    if (r.cost) this.traffic.spend('construction', r.cost);
+    if (free) r.cost = 0; else if (r.cost) this.traffic.spend('construction', r.cost); // (T354: an imported estate's lots come with the course, free)
     this.estateLaid(r.placed);
     return r;
   }

@@ -13,9 +13,10 @@ import {
   type Box, type P, type Poly,
 } from './geom';
 import { deriveHoleLines } from './derive';
+import { buildEstate, houseAnchors, type StreetWay } from './streets';
 import {
   OSM_CREDIT, OSM_LICENCE, OSM_MARGIN_M, OSM_ROUGH_BAND_M, OSM_ROUGH_BAND_MAX_M, type JFeature, type OsmCourseJson, type OsmCourseSpec, type RoughBand, type SpecArea, type SpecHole, type SpecNote,
-  type SpecSurface, type SpecTee, type TPt,
+  type SpecEstate, type SpecSurface, type SpecTee, type TPt,
 } from './types';
 
 /** a tee polygon within this of a hole line's start belongs to that hole's tee, m */
@@ -40,6 +41,8 @@ const FAIRWAY_SHARE = 0.25;
 const SAMPLE = 6;
 /** the widest a waterway gets drawn by default, m, by its OSM `waterway` value (a `width` tag wins) */
 const STREAM_WIDTH: Record<string, number> = { river: 6, canal: 5, stream: 3, ditch: 2, drain: 2, brook: 3 };
+/** T354: the `building` values that are houses (a lot stands at each; a plain `yes` is one: the map does not say more) */
+const HOUSE_BUILDINGS = new Set(['yes', 'house', 'residential', 'detached', 'semidetached_house', 'terrace', 'bungalow', 'villa', 'apartments']);
 
 /** what to build */
 export interface ConvertOptions {
@@ -437,11 +440,44 @@ export function osmCourseToSpec(json0: OsmCourseJson, opt: ConvertOptions = {}):
   }
   for (const h of holes) if (!h.tees.length) warn('no-tee-marker', h.n, `Hole ${h.n} has no tee marker`);
 
+  // ---- T354 (#996): the estate: the map's streets inside the land (one network), and where its houses stand ----
+  let estate: SpecEstate | undefined;
+  const streetFeatures = (F.street ?? []).filter(f => f.line && f.line.length >= 2);
+  if (streetFeatures.length && works.length) {
+    const ways: StreetWay[] = [];
+    let bridges = 0;
+    for (const f of streetFeatures) { if (f.tags?.bridge || f.tags?.tunnel) bridges++; else ways.push({ pts: f.line as P[], hw: f.tags?.highway ?? 'residential' }); }
+    // what a street may not cross: what the converter paints as a playing surface or a hazard (the made-up fairway bands too), every hole's line of play and every waterway
+    const polys: Poly[] = [];
+    for (const [f, l] of fairOwner) if (!foreign(l)) polys.push(f.poly);
+    for (const w of works) { for (const r of w.bandRings ?? []) polys.push({ outer: r, inner: [] }); for (const t of w.tees) polys.push(t.a.poly); polys.push((w.green ?? w.greenMade!).poly); }
+    for (const t of tees) if (!teeOwner.has(t)) polys.push(t.poly);
+    for (const g of greens) if (!used.has(g) && !foreign(ownerOf(g.c, GREEN_REACH + 20)?.l)) polys.push(g.poly);
+    for (const [b, l] of bunkerOwner) if (!foreign(l)) polys.push(b.poly);
+    for (const b of waters) polys.push(b.poly);
+    const lines: P[][] = works.map(w => w.line);
+    for (const f of F.waterway ?? []) if (f.line && f.line.length >= 2 && !f.tags?.tunnel && !f.tags?.culvert) lines.push(f.line);
+    const built = buildEstate(ways, lbox, { polys, lines }), s = built.stats, plural = (n: number, w: string) => `${n} ${w}${n === 1 ? '' : 's'}`;
+    if (bridges) warn('street-bridge', 0, `${plural(bridges, 'street')} on a bridge or in a tunnel: left out (the land is flat)`);
+    if (s.crossing) warn('street-over-hole', 0, `${plural(s.crossing, 'street')} cross${s.crossing === 1 ? 'es' : ''} a hole (its fairway, tee, green, a bunker, a pond or stream, or its line of play): left out`);
+    if (s.unconnected) warn('street-unconnected', 0, `${plural(s.unconnected, 'street piece')} (${s.unconnectedM} m) not joined to the estate's network: left out`);
+    if (built.streets.length) {
+      const centres = (F.building ?? []).filter(f => f.pos && (!f.tags?.building || HOUSE_BUILDINGS.has(f.tags.building))).map(f => f.pos as P);
+      const houses = houseAnchors(centres, lbox, polys, built.streets);
+      estate = {
+        residential: json.meta?.estate === true || json.meta?.course?.tags?.landuse === 'residential',
+        streets: built.streets.map(st => ({ pts: flat(st.pts), hw: st.hw })), houses: houses.flatMap(p => { const q = T(p); return [q.x, q.y]; }),
+        lengthM: s.lengthM, junctions: s.junctions, leftOut: s.crossing + s.unconnected,
+      };
+      counts['street'] = s.kept; counts['house'] = houses.length;
+    }
+  }
+
   const place = opt.place ?? json.meta?.place ?? '';
   return {
     id: opt.id ?? json.meta?.id ?? 'course', name: opt.name ?? json.meta?.course?.name ?? 'Course', credit: OSM_CREDIT, licence: OSM_LICENCE, scale, derived: fromFairways,
     source: json.meta?.course?.osm ?? '', place, w: W, h: H, originM: [ox, oy], holes, areas, warnings, fills, otherCourses, course: chosen || null,
     parTotal: holes.reduce((s, h) => s + h.par, 0), gameParTotal: holes.reduce((s, h) => s + h.gamePar, 0), lengthM: holes.reduce((s, h) => s + h.lengthM, 0),
-    counts, roughBand: roughBandOf(json, opt.roughBandM),
+    counts, roughBand: roughBandOf(json, opt.roughBandM), ...(estate ? { estate } : {}),
   };
 }

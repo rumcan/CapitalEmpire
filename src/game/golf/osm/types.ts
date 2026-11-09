@@ -34,11 +34,13 @@ export interface OsmCourseJson {
     centre?: { lat: number; lon: number }; sizeM?: [number, number]; counts?: Record<string, number>; overpass?: { server: string | null; fetchedAt: string | null };
     /** (T362) the widths of the rough band round this course's fairways, greens and tees, m, where they differ from OSM_ROUGH_BAND_M (a surface left out keeps the default) */
     roughBandM?: Partial<RoughBand>;
+    /** (T354) the boundary is landuse=residential, a golf estate (the trim script's flag: a browser import has it in course.tags) */
+    estate?: boolean;
   };
   boundary?: JFeature;
   /** the map's features by kind. The converter reads the golf kinds ('tee' 'fairway' 'green' 'bunker' 'water_hazard' 'lateral_water_hazard' 'rough' 'hole' 'pin' 'water'
-   *  'waterway'); 'cartpath', 'path' and any other kind the stage-1 script writes (T354's estate streets: 'street', lines with their `highway` tag) ride along unread until
-   *  its section in convert.ts reads them: a new kind needs no change here or in the trim script's reading */
+   *  'waterway') and, T354, the estate's 'street' (lines, with their `highway` tag) and 'building' (a point each: the buildings' centres), which streets.ts reads; 'cartpath',
+   *  'path' and any other kind the stage-1 script writes ride along unread until a section in convert.ts reads them: a new kind needs no change here or in the trim script's reading */
   features: { [kind: string]: JFeature[] | undefined };
   /** (T357, #999) the real ground height under the course: a smooth grid on a metres lattice in this frame, packed (terrarium.ts HeightPack) with its source and
    *  credit. A fixture carries it from scripts/dev/osm-trim-fixture.mjs; a download's is fetched by dem.ts and kept beside the answer. Absent: a flat course */
@@ -71,6 +73,16 @@ export interface SpecHole {
 /** a warning or note about the build: a code, the hole it is about (0: the course) and a sentence */
 export interface SpecNote { code: string; hole: number; text: string }
 
+/** T354 (#996): a street of the estate: its points (flat x, y, tiles of the spec's frame) and the OSM `highway` class it came from (the game lays them all as streets) */
+export interface SpecStreet { pts: number[]; hw: string }
+/** T354: the estate of a course whose map has streets inside its land (golf/osm/streets.ts buildEstate): the network (one, joined), the centres of the map's houses, and what was left out */
+export interface SpecEstate {
+  /** the course's boundary is landuse=residential, a golf estate (Woodhill's): the new-game card builds the estate by default */ residential: boolean;
+  /** the streets, one network, tiles of the frame */ streets: SpecStreet[];
+  /** the centres of the map's houses inside the land (flat x, y, tiles of the frame): the lots stand where they do */ houses: number[];
+  /** the network's length (m) and junctions, and how many streets of the map were left out (over a hole, or not joined to the network) */ lengthM: number; junctions: number; leftOut: number;
+}
+
 /** a course ready for the game: its size and holes, its areas in paint order, and the notes */
 export interface OsmCourseSpec {
   id: string; name: string; credit: string; licence: string; source: string; place: string;
@@ -85,6 +97,8 @@ export interface OsmCourseSpec {
   /** T362: the widths of the band of rough round every fairway, green and tee, m (OSM_ROUGH_BAND_M, as a fixture or the converter's option changed them); absent
    *  (a spec made by hand): the defaults */
   roughBand?: RoughBand;
+  /** T354: the estate (absent: the map has no streets inside the land) */
+  estate?: SpecEstate;
   /** the other courses on the same boundary (golf:course:name / course:name), not built */
   otherCourses: { name: string; holes: number }[];
   /** the course built: its name tag (null: the boundary had one course) */ course: string | null;

@@ -391,11 +391,21 @@ describe('Woodhill (T340): fully mapped, too big for the 2 km map at true size',
   });
 });
 
-describe('kinds the converter does not read yet (T340, T354: estate streets)', () => {
-  it("rides along: a `street` kind in the JSON changes nothing in the spec, and a scale moves its coordinates with the rest", () => {
+describe('kinds the converter does not read (T340), and the estate kinds it does (T354)', () => {
+  it("rides along: a kind the converter does not read changes nothing in the spec, and a scale moves its coordinates with the rest", () => {
+    const path = { tags: { highway: 'path' }, line: [[0, 0], [100, 50], [220, 60]] as [number, number][] };
+    const withPath: OsmCourseJson = { ...ronde, features: { ...ronde.features, cartpath: [path] } };
+    assert.deepEqual(osmCourseToSpec(withPath, { id: 'rondebosch', name: 'Rondebosch Golf Course' }), specR, 'an unread kind is left alone');
+    const scaled = scaleJson(withPath, 0.5).features.cartpath![0]!;
+    assert.deepEqual(scaled.line, [[0, 0], [50, 25], [110, 30]]);
+    assert.deepEqual(scaled.tags, path.tags);
+  });
+  it("a `street` kind is the estate's streets (golf/osm/streets.ts, tests/golf-osm-estate.test.ts): it makes the spec's estate and leaves the course as it was", () => {
     const street = { tags: { highway: 'residential' }, line: [[0, 0], [100, 50], [220, 60]] as [number, number][] };
     const withStreets: OsmCourseJson = { ...ronde, features: { ...ronde.features, street: [street] } };
-    assert.deepEqual(osmCourseToSpec(withStreets, { id: 'rondebosch', name: 'Rondebosch Golf Course' }), specR, 'an unread kind is left alone');
+    const s = osmCourseToSpec(withStreets, { id: 'rondebosch', name: 'Rondebosch Golf Course' });
+    assert.deepEqual({ ...s, estate: undefined, counts: specR.counts, warnings: specR.warnings }, { ...specR, estate: undefined }, 'the rest of the spec is the same');
+    assert.ok(s.estate || s.warnings.some(w => w.code.startsWith('street-')), 'the street is laid, or left out with a warning');
     const scaled = scaleJson(withStreets, 0.5).features.street![0]!;
     assert.deepEqual(scaled.line, [[0, 0], [50, 25], [110, 30]]);
     assert.deepEqual(scaled.tags, street.tags);
