@@ -186,6 +186,18 @@ try {
 
   // ---------------------------------------------------------------- C. the field's carts
   await run('The field\'s carts over the tournament day', async () => {
+    // the dev course has little cart path (three pieces by the clubhouse): lay a dirt cart path along its longest hole, 14 tiles to the side of the line of play, as the road
+    // tool does (the editor's legs, then the commit), before the day's play is built: the carts of that hole have a path to follow, the same for both runs
+    const lay = await page.evaluate(async () => {
+      const { g, tees, pins } = window.__t377, N = await import('/src/game/network.ts');
+      let best = null; for (const t of tees) { const p = pins.find(q => q.hole === t.hole); if (!p) continue; const d = Math.hypot(p.x - t.x, p.y - t.y); if (!best || d > best.d) best = { t, p, d }; }
+      if (!best) return null;
+      const ux = (best.p.x - best.t.x) / best.d, uy = (best.p.y - best.t.y) / best.d, nx = -uy, ny = ux, off = 14;
+      const a = { x: best.t.x - ux * 6 + nx * off, y: best.t.y - uy * 6 + ny * off }, b = { x: best.p.x + ux * 6 + nx * off, y: best.p.y + uy * 6 + ny * off };
+      g.edit.addLegs([{ a, b }], N.CLASSES.find(c => c.id === 'cart-dirt'), 0); g.commitNetwork();
+      return { hole: best.t.hole, a, b, d: Math.round(best.d) };
+    });
+    log('a cart path laid along the longest hole:', JSON.stringify(lay)); metrics.pathLaid = lay;
     await jump(7 * 60); await page.evaluate(() => window.__game.setSpeed(1));
     await page.waitForFunction(() => window.__game.play?.pv, null, { timeout: 120000 });
     const r = await page.evaluate(() => {
@@ -206,9 +218,9 @@ try {
           prev.set(q.cart, { x: q.x, y: q.y });
         }
       }
-      // the cart and drive to follow: among the drives of over 15 tiles between two stops of a hole, the one whose straight line crosses the most tee boxes, greens and bunkers and
-      // no water (the same for both runs; a drive over water has no way but a bridge), else the longest
-      let pick = null;
+      // the cart and drive to follow: the longest drive between two stops that stand on a cart path (within 3 tiles of it); else, among the drives of over 15 tiles between two
+      // stops of a hole, the one whose straight line crosses the most tee boxes, greens and bunkers and no water (a drive over water has no way but a bridge), else the longest
+      let pick = null, onPathPick = null;
       for (let c = 0; c < cp.size; c++) for (let h = 0; h < N; h++) {
         const vs = cp.stops(c, h);
         for (let v = 0; v + 1 < vs.length; v++) {
@@ -217,9 +229,11 @@ try {
           for (let i = 0; i <= k; i++) { const gr = groundOf(A.x + (B.x - A.x) * i / k, A.y + (B.y - A.y) * i / k); if (gr === 'water') water++; else if (BLOCKED.has(gr)) other++; }
           const score = water ? -1 : other, cand = { c, h, d, score, t0: vs[v].dep, t1: vs[v + 1].arr, ax: A.x, ay: A.y, bx: B.x, by: B.y };
           if (!pick || cand.score > pick.score || (cand.score === pick.score && cand.d > pick.d)) pick = cand;
+          if (toPath(A.x, A.y) <= 3 && toPath(B.x, B.y) <= 3 && d > 25 && (!onPathPick || d > onPathPick.d)) onPathPick = cand;
         }
       }
-      return { carts: cp.size, samples: n, bad, byGround, moving, onPath, stops, stopsBad, minutes: [t0, t1], pick, paths: S.length / 4 };
+      pick = onPathPick ?? pick;
+      return { carts: cp.size, samples: n, bad, byGround, moving, onPath, stops, stopsBad, minutes: [t0, t1], pick, onPathPick: !!onPathPick, paths: S.length / 4 };
     });
     log('carts', JSON.stringify(r)); metrics.carts = r;
     if (r.error || !r.pick) return;
