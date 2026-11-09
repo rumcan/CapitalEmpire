@@ -13,7 +13,7 @@ import { CONTACT_LEAN } from './shadow-shape';
 import { CONTACT_AO, VERTEX_FLOATS, type VectorMesh } from './shadow-vector';
 import { SHADOW_AMBIENT } from './cast-shadow';
 import { BRAKE_LIGHT } from './sim/car-lamps';
-import { SPEC_LIGHT_GLSL, SPEC_MASK_K } from './lamp-reflect';
+import { CAMERA_FALLOFF_GLSL, SPEC_LIGHT_GLSL, SPEC_MASK_K } from './lamp-reflect';
 import { GLOSS, GLOSS_LIGHT_GLSL } from './swamp';
 import { GRADE_GLSL, blurGlsl, type GradeFrame } from './grade';
 import { CAR_PAINT_GLSL } from './car-paint';
@@ -88,6 +88,7 @@ uniform sampler2D uTrackTex; uniform vec4 uTrack;
 ${SUN_UNIFORMS}
 in vec2 vUV; in vec2 vW; out vec4 o;
 ${SPEC_LIGHT_GLSL}
+${CAMERA_FALLOFF_GLSL}
 ${GLOSS_LIGHT_GLSL}
 ${GRASS_SHINE_GLSL}
 ${WATER_MOTION_GLSL}
@@ -108,15 +109,13 @@ void main() {
   if (uSpec.z > 0.0) {
     vec4 m = texture(uSpecTex, vUV * vec2(textureSize(uTex, 0)) / (${SPEC_MASK_K.toFixed(1)} * vec2(textureSize(uSpecTex, 0))));
     if (m.a > 0.002) {
-      float d = length(gl_FragCoord.xy - 0.5 * uScreen) / (0.5 * max(uScreen.x, uScreen.y));
-      c.rgb = specLight(c.rgb * 255.0, vec4(m.rgb / m.a * 255.0, m.a), (1.0 - smoothstep(uSpec.x, uSpec.y, d)) * uSpec.z) / 255.0;
+      c.rgb = specLight(c.rgb * 255.0, vec4(m.rgb / m.a * 255.0, m.a), camFall(uSpec) * uSpec.z) / 255.0;
     }
   }
   if (uGloss.z > 0.0) {
     vec4 g = texture(uGlossTex, vUV * vec2(textureSize(uTex, 0)) / (${GLOSS.maskK.toFixed(1)} * vec2(textureSize(uGlossTex, 0))));
     if (g.a > 0.002) {
-      float d = length(gl_FragCoord.xy - 0.5 * uScreen) / (0.5 * max(uScreen.x, uScreen.y));
-      c.rgb = glossLight(c.rgb * 255.0, vec4(g.rgb / g.a * 255.0, g.a), (1.0 - smoothstep(uGloss.x, uGloss.y, d)) * uGloss.z) / 255.0;
+      c.rgb = glossLight(c.rgb * 255.0, vec4(g.rgb / g.a * 255.0, g.a), camFall(uGloss) * uGloss.z) / 255.0;
     }
   }
   if (uShine.z > 0.0) {
@@ -546,10 +545,10 @@ export class GLRenderer {
 
   /** T215: the camera specular this frame (engine.ts: lamp-reflect.ts specGain and the knobs), or null (specCam off): the falloff's inner and
    *  outer radius and the gain a chunk drawn with a reflection mask lights its pools by */
-  spec: { inner: number; outer: number; gain: number } | null = null;
+  spec: { inner: number; outer: number; gain: number; oval: number } | null = null;
   /** T199: the swamp's camera glint this frame (engine.ts: swamp.ts glossGain and T215's knobs), or null (specCam off): the falloff's inner and
    *  outer radius and the gain a chunk drawn with a gloss mask lights its pools by */
-  gloss: { inner: number; outer: number; gain: number } | null = null;
+  gloss: { inner: number; outer: number; gain: number; oval: number } | null = null;
   /** T199: a chunk picture's swamp gloss mask (GroundCache.glossOf), looked up by the picture itself, so it goes wherever its picture is drawn */
   glossOf: ((tex: WebGLTexture) => WebGLTexture | null) | null = null;
   /** T310: the sun patches this frame (engine.ts sunFrame), or null (off): the light's strength, how far the overcast hides the drop shadows
@@ -682,11 +681,11 @@ export class GLRenderer {
     const gl = this.gl, pr = this.quad, sp = spec && this.spec && this.spec.gain > 0 ? this.spec : null; gl.useProgram(pr.p); this.camUniforms(pr);
     const gloss = this.gloss && this.gloss.gain > 0 && this.glossOf ? this.glossOf(tex) : null, gs = gloss ? this.gloss : null;
     gl.uniform4f(pr.u.uRect, X0, Y0, X1, Y1); gl.uniform4f(pr.u.uUV, uv[0], uv[1], uv[2], uv[3]); gl.uniform1i(pr.u.uMode, masked ? 1 : 0); gl.uniform1f(pr.u.uAlpha, alpha);
-    gl.uniform4f(pr.u.uSpec, sp ? sp.inner : 0, sp ? sp.outer : 1, sp ? sp.gain : 0, 0);
+    gl.uniform4f(pr.u.uSpec, sp ? sp.inner : 0, sp ? sp.outer : 1, sp ? sp.gain : 0, sp ? sp.oval : 1);
     gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D, tex); gl.uniform1i(pr.u.uTex, 0);
     gl.activeTexture(gl.TEXTURE1); gl.bindTexture(gl.TEXTURE_2D, masked ? this.maskTex : this.emptyTex); gl.uniform1i(pr.u.uMask, 1);
     gl.activeTexture(gl.TEXTURE2); gl.bindTexture(gl.TEXTURE_2D, sp ? spec : this.emptyTex); gl.uniform1i(pr.u.uSpecTex, 2);
-    gl.uniform4f(pr.u.uGloss, gs ? gs.inner : 0, gs ? gs.outer : 1, gs ? gs.gain : 0, 0);
+    gl.uniform4f(pr.u.uGloss, gs ? gs.inner : 0, gs ? gs.outer : 1, gs ? gs.gain : 0, gs ? gs.oval : 1);
     gl.activeTexture(gl.TEXTURE3); gl.bindTexture(gl.TEXTURE_2D, gs ? gloss : this.emptyTex); gl.uniform1i(pr.u.uGlossTex, 3);
     // T262: the grass shine (its weight mask, unit 4; the last frame's shadow layer, unit 5). The units always hold a texture of their sampler's
     // kind, the empty one while the shine is off: ANGLE checks every sampler's unit at the draw, read or not, and another pass may have left an

@@ -30,9 +30,11 @@ import { KEY as SWAMP_KEY, swampKey } from './swamp';
 
 // ---------- the knobs ----------
 /** the water motion's knobs (the gear menu's Water motion): the switch, the speed of everything that moves (the rivers' flow, the ponds'
- *  drift and the waves), the ripples', the foam's and the sparkle's strength (1 the tuned look, 0 none) */
+ *  drift and the waves), the ripples', the foam's and the sparkle's strength (1 the look first tuned, 0 none) */
 export interface WaterMotion { on: boolean; flow: number; ripple: number; foam: number; sparkle: number }
-export const WATER_MOTION: Readonly<WaterMotion> = { on: true, flow: 1, ripple: 1, foam: 1, sparkle: 1 };
+/** the default water ("The default water", the gear menu's button; what a game with no look saved starts with). T363 (#1018; the owner, 2026-11-08: "find the new default water settings
+ *  attached"): his own settings, moving water on, flow 2.29x, ripples 117%, foam 128%, sparkle 300% (it was 1, 1, 1, 1). A look a player saved keeps its numbers */
+export const WATER_MOTION: Readonly<WaterMotion> = { on: true, flow: 2.29, ripple: 1.17, foam: 1.28, sparkle: 3 };
 export const MOTION_RANGES = { flow: [0, 3], ripple: [0, 3], foam: [0, 3], sparkle: [0, 3] } as const;
 /** where the look is remembered (localStorage) */
 export const WATER_MOTION_KEY = 'capitalempire.waterMotion.v1';
