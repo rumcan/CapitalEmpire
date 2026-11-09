@@ -51,7 +51,7 @@ import { OWNER_SCALE, STUDIO_SCALE } from './lots/scales';
 import { sizeKey, turned } from './lots/preset-art';
 import { FARMHOUSE_SUBJECTS, LOT_PLACES, clubScene, farmScene, lotPlaceOf, lotScene, placeHasArt, placeScene, rangeNews, rangeScene, rangeSceneKeys, rangeViewOfKey, sceneArt, townFortune, lotGood, propertyScene, objectScene, rangeGood, type RangeSceneFacts, type RangeSceneView, type SceneCardView, type SceneRef } from './scenes';
 import { homeStage, rangeScale } from './golf/rangesave';
-import { RangeHost, type RangeCardView } from './golf/rangehost';
+import { BALL_DRAW_MAX, BALL_POINT_FLOATS, RangeHost, type RangeCardView } from './golf/rangehost';
 import { PropsTool } from './golf/propstool';
 import { PracticeTool } from './golf/practicetool';
 import { DECOR_BY_KEY, inPoly, lotTouches, propTuple, sellBack, tupleMarks } from './golf/decor';
@@ -691,9 +691,9 @@ export class Game {
   private moneySpot: Omit<MoneyEvent, 'amount' | 'kind'> | null = null;
   private moneyAt(p: Pt | null) { this.moneySpot = p ? { x: p.x, y: p.y } : null; if (p) queueMicrotask(() => { this.moneySpot = null; }); }
   /** spends n $ of kind with its float at p: a purchase or upkeep red, a refund green */
-  private spendAt(p: Omit<MoneyEvent, 'amount' | 'kind'> | null, kind: 'construction' | 'upkeep', n: number) { const o = this.moneySpot; this.moneySpot = p; try { this.traffic.spend(kind, n); } finally { this.moneySpot = o; } }
+  private spendAt(p: Omit<MoneyEvent, 'amount' | 'kind'> | null, kind: 'construction' | 'upkeep' | 'balls', n: number) { const o = this.moneySpot; this.moneySpot = p; try { this.traffic.spend(kind, n); } finally { this.moneySpot = o; } }
   /** every spend (SimClient.onSpend): one placed (a map click, spendAt) floats up there; the business takings book (the range's) float as they are made */
-  private spent(kind: 'construction' | 'compensation' | 'business' | 'upkeep' | 'lots', n: number) {
+  private spent(kind: 'construction' | 'compensation' | 'business' | 'upkeep' | 'lots' | 'balls', n: number) {
     const p = this.moneySpot; if (!p || kind === 'business' || kind === 'lots' || !n) return;
     this.floatMoney({ ...p, amount: Math.abs(n), kind: n > 0 ? 'out' : 'in' });
   }
@@ -759,7 +759,7 @@ export class Game {
     layPaths: legs => { this.edit.addLegs(legs, classOf('cart-slab'), 0, undefined, true); this.commitNetwork(); },
     clearTrees: b => this.dropTownTrees(b[0], b[1], b[2], b[3]),
     money: () => this.money, spend: n => this.spendAt(this.rangeSpot(), 'construction', n), book: n => this.traffic.spend('business', -n),
-    month: () => this.golfMonthIndex(), payUpkeep: n => this.spendAt(this.rangeSpot(), 'upkeep', n),
+    month: () => this.golfMonthIndex(), payUpkeep: n => this.spendAt(this.rangeSpot(), 'upkeep', n), balls: n => this.spendAt(this.rangeSpot(), 'balls', n), // (T386: the supplier's balls)
     demand: () => ({ tier: this.golf?.tier ?? 1, exits: this.golf?.exits?.length ?? 2, residents: this.traffic.pop, propsAppeal: this.decor.appeal(), practiceAppeal: this.golf?.range ? practiceAppeal(this.golf.range) : 0 }),
     dayLen: () => this.traffic.dayLen, simT: () => this.traffic.simTime(performance.now()),
     pace: () => { const T = this.traffic; return this.golfMode && T.town.prof ? localRate(T.town, T.simTime(performance.now())) * T.dayLen / 1440 : 1; }, // (T266)
@@ -887,13 +887,21 @@ export class Game {
   /** the range card (null: closed, or not a range start) */
   rangeCard() { return this.range.cardOpen ? this.range.view() : null; }
   openRangeCard(open = !this.range.cardOpen) {
-    this.range.cardOpen = open && !!this.range.view(); if (this.range.cardOpen) this.clubCardOpen = false; // (T208: one card at a time)
+    this.range.cardOpen = open && !!this.range.view(); if (this.range.cardOpen) this.clubCardOpen = false; else this.range.treeOpen = false; // (T208: one card at a time; T386: the card's tree flyout goes with it)
     // the ramp's first hint moves on once the card has been seen (T132)
     const p = this.golf?.progress; if (this.range.cardOpen && p && !p.seen.includes(RANGE_CARD_SEEN)) { p.seen.push(RANGE_CARD_SEEN); this.scheduleSave(); }
     this.emit();
   }
   /** T288 (#873): an upgrade bought is placed: its ghost in hand over the range, a click on the range builds it (golf/placing.ts) */
-  buyRangeUpgrade(id: RangeUpgradeId) { const p = this.upgradePlaceable(id); if (p) this.startPlacing(p); }
+  buyRangeUpgrade(id: RangeUpgradeId) {
+    // T386: the ball room's tools, supply, staff and machines (the upgrade tree) are bought at once from the range's till, not placed as a ghost
+    if (RANGE_UPGRADES.find(q => q.id === id)?.branch) { this.range.buy(id); return; }
+    const p = this.upgradePlaceable(id); if (p) this.startPlacing(p);
+  }
+  /** T386: the ball room's upgrade tree (the flyout beside the Range card) opens or closes */
+  toggleBallTree() { this.range.treeOpen = !this.range.treeOpen; this.emit(); }
+  /** T386: an order of cases of balls from the supplier (the Range card's Order button) */
+  orderRangeBalls(cases = 1) { this.range.orderBalls(cases); }
   setRangePrice(price: number) { this.range.setPrice(price); }
   /** the Props tool (plan P24 Phase 3, T131: golf/propstool.ts): the decor the player places, moves, turns and sells; its appeal feeds the range */
   readonly decor: PropsTool = new PropsTool({
@@ -6468,6 +6476,8 @@ export class Game {
     if (typing && !((e.ctrlKey || e.metaKey) && !e.altKey && /^[yz]$/i.test(e.key) && !isTextEntry(el))) return;
     this.keys.down(e); // T330: by e.code (Shift turns 's' into 'S' between the down and the up)
     if (WALK_KEYS.has(e.key) && !e.ctrlKey && !e.metaKey && !e.altKey && this.youKeysOn()) { e.preventDefault(); return; } // T240, T323: WASD walk you in either cursor (the frame reads them)
+    // T386: F picks up the range's balls while you stand on its outfield in Walk (hold it); elsewhere F stays the flow overlay's key
+    if ((e.key === 'f' || e.key === 'F') && !e.ctrlKey && !e.metaKey && !e.altKey && this.youKeysOn() && this.golf?.start === 'range' && this.range.scene && this.range.balls()) { e.preventDefault(); return; }
     // T327: G concedes your short putt in your round (on the green; outside the ring it says so); elsewhere G stays the grid's key
     if ((e.key === 'g' || e.key === 'G') && !e.ctrlKey && !e.metaKey && !e.altKey && !e.repeat && this.yourRound() && this.yourRound()!.lie === 'green' && !this.yourRound()!.holed && gimmeM(this.yourRound()!) > 0) { e.preventDefault(); this.yourGimme(); return; }
     // T325: M takes a mulligan in your round (a shot to take back, or the shot open: it says why not); elsewhere M stays the business tool's key
@@ -9126,7 +9136,7 @@ export class Game {
     const y = this.you;
     // T317: your golf cart (placed once by the clubhouse, or where you left it); in it, the keys and the clicks drive it and you ride
     if (!this.youCart) this.youCartPlace();
-    const c = this.youCart, mv = this.youInCart && c ? c : y, ok = mv === y ? this.youOk : this.cartOk, wasMoving = mv.moving || mv.keys;
+    const c = this.youCart, mv = this.youInCart && c ? c : y, ok = mv === y ? this.youOk : this.cartOk, wasMoving = mv.moving || mv.keys, ox = mv.x, oy = mv.y;
     const { kx, ky } = this.youKeysOn() ? walkAxes(this.keys) : { kx: 0, ky: 0 };
     if (kx || ky) {
       if (mv.moving) this.youThen = null;
@@ -9138,12 +9148,34 @@ export class Game {
     }
     if (mv !== y) { y.x = mv.x; y.y = mv.y; y.face = mv.face; y.moving = false; y.keys = false; }
     else if (c?.moving && stepYou(c, dt)) this.youCartArrived(); // T326: your cart drives itself (called, or off to park)
+    this.rangeHandWork(dt, ox, oy, mv); // T386: the range's balls: picked up as you stand among them, emptied at the ball room
     // (T323, the owner: the camera no longer follows you walking or driving: Me centres it once)
     if (wasMoving && !mv.moving && !mv.keys) { this.youSaveDue = true; this.emit(); }
     this.yourFrame(dt); // T317: your round: the ball's flight, the snap to the address
     this.matchDaily(performance.now()); // T244: a rival's return challenge
     if (this.youSaveDue) { this.youSaveDue = false; this.youKeep(); }
   }
+  /** T386 (#1043): your hand work on the range's balls (golf/rangehost.ts work, golf/rangeballs.ts): F held over the outfield (or a pick order, a click on a pile)
+   *  picks the balls round you into your basket; in your cart the pull-behind picker takes those it drives over; the ball room's door empties them. A pick order
+   *  walks you from ball to ball, then takes the basket home at a run; a key walk, a click elsewhere or the cart ends it. Allocation-free but for a route's */
+  private rangeHandWork(dt: number, ox: number, oy: number, mv: YouChar) {
+    const r = this.range; if (this.golf?.start !== 'range' || !r.scene || !r.balls()) return;
+    if (r.order && (mv.keys || this.youInCart)) r.cancelOrder();
+    const picking = !this.youInCart && ((this.keys.has('f') && this.youKeysOn()) || r.order?.phase === 'pick');
+    const w = r.work({ x: mv.x, y: mv.y, ox, oy, dt, pick: picking, inCart: this.youInCart });
+    if (w.dumped > 0) { this.toast(`${w.dumped} ball${w.dumped === 1 ? '' : 's'} into the ball room`, 'good'); this.scheduleSave(); this.emit(); }
+    else if (w.picked > 0 && !(this.rangeBallsEmit++ % 6)) this.emit();
+    const s = r.order ? r.orderStep(mv.x, mv.y, mv.moving) : null; if (!s) return;
+    if (s.walk) { startWalk(mv, [{ x: mv.x, y: mv.y }, s.walk], false); this.youThen = null; }
+    else if (s.back) {
+      const at = r.scene.ballRoom; this.youRaster(mv.x, mv.y, 64, true, at.x, at.y);
+      startWalk(mv, routeOf({ x: mv.x, y: mv.y }, at, this.youCost), true); this.youThen = null; this.emit();
+    } else if (s.done) this.emit();
+  }
+  /** the frames since the card's balls were last told to redraw while you pick (it shows the basket filling) */
+  private rangeBallsEmit = 0;
+  /** T386: the lying balls' GL points (a shadow set and a ball set: rangehost.ts fieldPoints), made again every frame in view */
+  private ballPts = new Float32Array(2 * BALL_DRAW_MAX * BALL_POINT_FLOATS);
   /** your place into the profile (saved with the game): on stopping, never per frame */
   private youKeep() {
     const p = this.golf?.player ?? this.playerNow(), y = this.you; if (!p || !y) return;
@@ -9283,6 +9315,11 @@ export class Game {
     if (g) for (const t of g.tees) if (t.hole === 1 && Math.hypot(tl.x - t.x, tl.y - t.y) <= 3) {
       const pt = { x: t.x, y: t.y }; return { kind: 'tee', name: 'the first tee', at: { x: t.x + 1.5, y: t.y + 1.5 }, face: pt, key: 'tee', act: () => { this.youTeeOpen = true; this.emit(); } };
     }
+    // T386 (#1043): a pile of the range's balls on the outfield: walk to it and pick the balls round it up (the basket goes home to the ball room when it is full)
+    if (this.golf?.start === 'range' && this.range.scene && !this.youInCart) {
+      const pile = this.range.pileAt(tl.x, tl.y), kit = pile ? this.range.kit() : null, bk = pile ? this.range.balls() : null;
+      if (pile && kit && bk) return { kind: 'pile', name: bk.basket >= kit.basket ? 'Your basket is full: take it to the ball room' : `Pick up balls here (${pile.n} near, basket ${bk.basket}/${kit.basket})`, at: { x: pile.x, y: pile.y }, face: null, key: 'pile', act: () => this.range.startOrder(pile.x, pile.y) };
+    }
     const p = this.propAt(mx, my, true), sc = this.range.scene;
     // the range: its practice greens (use them), its pieces and its front (buy a bucket, hit at a mat)
     if (sc && (p?.auto?.startsWith('range:') || (!p && inPractice(sc.practice, tl.x, tl.y)))) {
@@ -9335,7 +9372,7 @@ export class Game {
     const y = this.you; if (!y) return;
     const t = this.youThingAt(mx, my);
     if (!t) { this.toast('You cannot walk there', 'warn'); return; }
-    this.youTalk = null; this.youTeeOpen = false;
+    this.youTalk = null; this.youTeeOpen = false; this.range.cancelOrder(); // (T386: a click elsewhere ends a pick order)
     // T317: in your cart a click drives it there (the nearest spot short of a green or a bunker; a click on the cart gets you out)
     const c = this.youInCart ? this.youCart : null, mv = c ?? y;
     if (mv.moving && this.youThen?.key === t.key) { mv.run = true; return; } // (a second click on the same place: run)
@@ -9468,6 +9505,7 @@ export class Game {
       ctx.lineWidth = 1.5 * dpr; ctx.strokeStyle = YOU_VERB_COLOR[h.verb ?? 'none']; ctx.stroke();
       ctx.fillStyle = '#f8fafc'; ctx.textBaseline = 'middle'; ctx.fillText(h.text, lx + 7 * dpr, ly + 0.5 * dpr); ctx.textBaseline = 'alphabetic';
     }
+    this.drawBasket(ctx);
     if (this.cam.z < DISTRICT_Z) {
       const sx = (worldX(y.x, y.y) - this.cam.X) * ze + cw / 2, sy = (worldY(y.x, y.y) - this.cam.Y) * ze + ch / 2;
       if (sx < -20 * dpr || sy < -20 * dpr || sx > cw + 20 * dpr || sy > ch + 20 * dpr) return;
@@ -9475,6 +9513,23 @@ export class Game {
       ctx.font = `bold ${11 * dpr}px ui-sans-serif, system-ui, sans-serif`; ctx.textAlign = 'center'; ctx.lineWidth = 3 * dpr; ctx.strokeStyle = 'rgba(2,6,23,0.85)';
       const n = this.golf?.player?.name ?? 'You'; ctx.strokeText(n, sx, sy - 8 * dpr); ctx.fillStyle = '#fef9c3'; ctx.fillText(n, sx, sy - 8 * dpr); ctx.textAlign = 'start';
     }
+  }
+  /** T386 (#1043): over your head at the street tier, the balls you carry (your basket on foot, your cart's hopper) as a small pill, and an amber stand-in note while a ball
+   *  tube or a basket is picking (the tube_pick clip is being made: GOLF-SPRITES) */
+  private drawBasket(ctx: CanvasRenderingContext2D) {
+    const y = this.you, r = this.range, bk = this.golf?.start === 'range' && r.scene ? r.balls() : null; if (!y || !bk || this.cam.z < DISTRICT_Z) return;
+    const picking = !this.youInCart && ((this.keys.has('f') && this.youKeysOn()) || r.order?.phase === 'pick');
+    if (!(bk.basket > 0 || (this.youInCart && bk.hopper > 0) || picking || r.order)) return;
+    const dpr = this.dpr, ze = this.cam.z * dpr, kit = r.kit(), n = this.youInCart ? bk.hopper : bk.basket, cap = this.youInCart ? kit.hopper : kit.basket;
+    const sx = (worldX(y.x, y.y) - this.cam.X) * ze + this.cw / 2, sy = (worldY(y.x, y.y) - this.cam.Y) * ze + this.ch / 2 - Math.max(34 * dpr, 4.2 * HH * ze);
+    if (sx < -60 * dpr || sy < -30 * dpr || sx > this.cw + 60 * dpr || sy > this.ch + 30 * dpr) return;
+    const text = `${this.youInCart ? 'Hopper' : 'Basket'} ${n}/${cap}${picking && n >= cap ? ' · full: to the ball room' : ''}`, fp = Math.round(12 * dpr);
+    ctx.font = `700 ${fp}px ui-sans-serif, system-ui, sans-serif`; const w = ctx.measureText(text).width + 14 * dpr, h = fp * 1.7;
+    ctx.beginPath(); ctx.roundRect(sx - w / 2, sy - h / 2, w, h, 6 * dpr); ctx.fillStyle = 'rgba(2,6,23,0.85)'; ctx.fill();
+    ctx.lineWidth = 1.5 * dpr; ctx.strokeStyle = n >= cap && cap > 0 ? '#f87171' : '#4ade80'; ctx.stroke();
+    ctx.fillStyle = '#f8fafc'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(text, sx, sy + 0.5 * dpr);
+    if (picking && kit.tube) { const t = 'Stand In for tube_pick clip', f2 = Math.round(10 * dpr); ctx.font = `600 ${f2}px system-ui, sans-serif`; const w2 = ctx.measureText(t).width + 10 * dpr; ctx.beginPath(); ctx.roundRect(sx - w2 / 2, sy + h * 0.8, w2, f2 * 1.6, 5 * dpr); ctx.fillStyle = 'rgba(15,23,42,0.78)'; ctx.fill(); ctx.fillStyle = '#fde68a'; ctx.fillText(t, sx, sy + h * 0.8 + f2 * 0.82); }
+    ctx.textAlign = 'start'; ctx.textBaseline = 'alphabetic';
   }
   /** books your everyday round at the next free tee time on today's sheet (golf/player.ts freeTee: BOOK_LEAD ahead at least, clear of the groups' tee
    *  times); the day's playback is played again with you in it */
@@ -12232,12 +12287,17 @@ export class Game {
       this.streamAtlas(f.stream, f.floats, X0, Y0, X1, Y1);
       // (T192: no car light overlay any more: no headlights, beams or turn signals; the brake lights are glow instances in the sprite stream)
       const vecOn = shadows || this.cast.on;
+      // T386 (#1043): the balls lying on the outfield are one instanced draw of GL points (rangehost.ts fieldPoints: at most BALL_DRAW_MAX, thinned past it), in the same upload
+      const nBall = tier === 'street' && this.range.scene ? this.range.fieldPoints(this.ballPts, X0, Y0, X1, Y1) : 0;
       const [sAt, pAt, ...vAt] = gl.uploadParts([[f.shadows, shadows ? f.shadowFloats : 0], [f.stream, f.floats],
-        ...f.vec.map(v => [v.data, vecOn ? v.floats : 0] as [Float32Array, number])]);
+        ...f.vec.map(v => [v.data, vecOn ? v.floats : 0] as [Float32Array, number]), [this.ballPts, nBall * 2 * BALL_POINT_FLOATS]]);
+      const bAt = vAt.pop()!;
       // the shadows into one layer, the darkest winning where they overlap, laid on the ground once (T185: gl.ts beginShadows): the cast
       // shadows (cast-shadow.ts), faded out by night, then the contact shadows, the vector shadows; then the sprites
       // the district zoom's sprite cull (T216): one rule for a sprite and all its shadows (gl.ts CULL_MIN_PX)
       const minPx = tier === 'district' ? CULL_MIN_PX * this.dpr : 0;
+      // (T386: the lying balls on the ground, under every shadow and sprite: a soft shadow dot a little down and left, then the ball)
+      if (nBall) { const px = Math.max(1.8 * this.dpr, 0.17 * HW * ze); gl.drawPoints(bAt, nBall, px * 1.3); gl.drawPoints(bAt + nBall * BALL_POINT_FLOATS, nBall, px); }
       gl.beginShadows();
       // the ground's own baked shade first (T186: the sprite shadows darken it only past that, never a product)
       if (this.shadeMax) for (const m of shadeMasks) gl.drawShadeMask(m.tex, ...m.r);

@@ -15,7 +15,7 @@ import { PUTT_IMPACT_S, clipFrame, golferRow, hash, rowToward, type CrowdPerson 
 import { mulberry } from '../iso';
 import { NO_PRACTICE, practiceArea, practiceAreaAt, type PracticeArea, type PracticeScan } from './practice';
 import { PRACTICE_FEE, PRACTICE_IDS, PRACTICE_SHARE, type PracticeId } from './rangesave';
-import { bucketsLeft, dropInPlay, fieldCount, landBalls, overnight, pickSwath, skipBalls, stow, takeBucket, visitBalls, zeroCounts, type BallSave } from './rangeballs';
+import { bucketsLeft, dropInPlay, landBalls, overnight, pickSwath, skipBalls, stow, takeBucket, visitBalls, zeroCounts, type BallSave } from './rangeballs';
 export * from './rangeballs';
 import { DEFAULT_RANGE_LOOK, type RangeLook } from './range-look';
 import { PIC_TILES } from './range-pics';
@@ -32,6 +32,9 @@ import { DESERT_IDS, desertScatter } from '../desert-props';
 /** the plot frame's spots (u along the road 0..70, v away from it 0..150; the drive beside u = 70, see range.ts plotPoint) */
 const U_MID = 35.5, BAY_W = 2.5, SLOTS = 24, STAND_V = 21, PATH_V = 16.2, TEE: [number, number, number, number] = [4, 67, 18, 24];
 const SHOP = { u: 34, v: 8.5 }, COUNTER = { u: 34, v: 13.4 }, QUEUE_V = 14.5, CAR_EDGE_U = 48.4, YARD: [number, number, number, number] = [4, 22, 3, 13];
+/** T386 (#1043): the ball room's door, where your basket (or your cart's hopper) is emptied into the ball room: beside the shop's front, by the ball trolley
+ *  (a stand-in for the ball room until its art lands, GOLF-SPRITES) */
+const BALLROOM = { u: 29.4, v: 12.4 };
 /** the target greens: distances from the tee line (tiles: 50..240 m), across the range (u) and radii (tiles) */
 const TARGET_D = [25, 50, 75, 100, 120], TARGET_U = [28, 44, 32, 40, 36], TARGET_R = [3, 4, 4, 5, 4];
 /** T239: the golfers' aim with no target green built: the distance markers' line down the middle (tiles from the tee line: 50, 100, 150 m) */
@@ -170,6 +173,8 @@ export interface RangeScene {
   /** the shop's first counter, the queue's step (world, one golfer apart), the line's head (the line steps back from it), the path at the shop,
    *  the path at the car park; counters (T146): every counter open, serving in parallel (the first is counter) */
   counter: Pt; queueStep: Pt; queueAt: Pt; shopJoin: Pt; carEdge: Pt; counters: Pt[];
+  /** T386: the ball room's door (world): the balls you carry are emptied into the ball room within DUMP_REACH of it */
+  ballRoom: Pt;
   /** the car park building (T146; null: not built): its footprint (world x0 y0 x1 y1), the ramp the cars drive into and the way in (unit, world),
    *  the door its walkers use, the range car park's rect beside it (world: the lot shrinks to the near half), the cart path laid round it once,
    *  where its "P" label stands */
@@ -410,7 +415,7 @@ export function rangeScene(plot: Rect, facing: 0 | 1 | 2 | 3, s: RangeBizSave, o
     // T288: the practice area where the player placed it (none yet: an empty box), else the plot's own spot (a save from before T288)
     practice: s.practiceAt === null ? NO_PRACTICE : s.practiceAt ? practiceAreaAt(s.practiceAt, P(CAR_EDGE_U, PATH_V)) : practiceArea(plot, facing),
     paths, bays, academy, kiosk, picker, home, homeGate: PH(13, YARDS[home]![3] + 1.6), aim: { x: dv.x - o.x, y: dv.y - o.y }, targets, aims,
-    counter: q0, queueStep: { x: q1.x - q0.x, y: q1.y - q0.y }, queueAt: P(COUNTER.u + 0.8, QUEUE_V), shopJoin: P(COUNTER.u, PATH_V), carEdge: P(CAR_EDGE_U, PATH_V),
+    counter: q0, queueStep: { x: q1.x - q0.x, y: q1.y - q0.y }, queueAt: P(COUNTER.u + 0.8, QUEUE_V), shopJoin: P(COUNTER.u, PATH_V), carEdge: P(CAR_EDGE_U, PATH_V), ballRoom: P(BALLROOM.u, BALLROOM.v),
     // the counters side by side along the shop's front about its middle, the nearest to the line's head first (it calls the next golfer first)
     counters: Array.from({ length: st.counters }, (_, i) => COUNTER.u + (i - (st.counters - 1) / 2) * COUNTER_STEP).sort((a, b) => Math.abs(a - COUNTER.u - 0.8) - Math.abs(b - COUNTER.u - 0.8)).map(u => P(u, COUNTER.v)), garage,
     // (T237: from the path's end off the set-back lot's back edge, round the car park building's far side when it stands)
@@ -883,8 +888,6 @@ export class RangeSim {
    *  on the outfield until it is picked up, and the night cart picks what it reaches. Set with setBalls */
   book: BallSave | null = null;
   setBalls(b: BallSave | null): void { this.book = b; }
-  /** the balls a bucket holds at the day length the last step ran at */
-  private vb = 0;
   private draw: RangeDraw = { people: [], nPeople: 0, cars: [], nCars: 0, picker: null };
   /** the coffee kiosk's line (T133), the golfer served and its time left */
   private kq: number[] = []; private kServing = -1; private kLeft = 0;
@@ -962,7 +965,7 @@ export class RangeSim {
   step(dt: number, clock: RangeClock, s: RangeBizSave, c: DemandCtx, dayLen: number): number {
     const sc = this.scene; if (!sc || dt <= 0) return 0;
     if (clock.day !== this.day) { this.day = clock.day; this.today.golfers = 0; this.today.lost = 0; this.today.coffees = 0; this.today.lessons = 0; this.today.noPark = 0; this.today.noBalls = 0; this.practiceToday.putting = 0; this.practiceToday.chipping = 0; }
-    const B = this.book, vb = visitBalls(dayLen); this.vb = vb;
+    const B = this.book, vb = visitBalls(dayLen);
     // T386: a new town day: the night's losses on the outfield and in the ball room (golf/rangeballs.ts overnight), the day's ball counts start again
     if (B && clock.day !== B.dayNo) { const nights = B.dayNo < 0 ? 0 : clock.day - B.dayNo; if (nights > 0) overnight(B, nights, this.rnd); else if (B.dayNo >= 0) B.day = zeroCounts(); B.dayNo = clock.day; }
     const st = rangeStats(s, c), value = saleValue(s, dayLen, st), scale = rangeScale(dayLen); this.qMax = st.qMax; this.dayLen = dayLen;
@@ -1072,7 +1075,8 @@ export class RangeSim {
     this.visits = this.visits.filter(v => v.stage !== S.Done || v.rc);
     // the balls are picked once the range is closed and empty: at once (D15), or by the ball picker cart driving its lanes (T133)
     const empty = !isOpen && !this.visits.some(v => v.stage === S.Hit);
-    if (!this.pick) { if (empty) this.nLying = 0; }
+    // (T386: with the ball loop the balls lie until somebody picks them up: only the night cart, once it is bought, picks them here)
+    if (!this.pick) { if (empty && !B) this.nLying = 0; }
     else this.drivePicker(dt, isOpen, empty, dayLen);
     this.movePro(dt, sc);
     this.today.queue = this.queue.length; this.today.kioskQueue = this.kq.length;
@@ -1085,16 +1089,18 @@ export class RangeSim {
    *  picking every lying ball within PICK_SWATH of the leg it drove this step; home once done. Opening time sends it home and the rest are picked */
   private drivePicker(dt: number, isOpen: boolean, empty: boolean, dayLen: number): void {
     const r = this.pick!, len = r.at[r.at.length - 1]!, speed = len / (PICK_HOURS * dayLen / 24);
-    if (isOpen) { if (this.pickT >= 0) this.nLying = 0; this.pickT = -1; this.picked = false; return; }
+    // (T386: with the ball loop, opening time sends the cart home and what it did not reach stays out on the range)
+    if (isOpen) { if (this.pickT >= 0 && !this.book) this.nLying = 0; this.pickT = -1; this.picked = false; return; }
     if (this.pickT < 0) { if (!empty || this.picked) return; this.pickT = 0; along(r, 0, this.pickAt); }
     const a = { x: this.pickAt.x, y: this.pickAt.y };
     this.pickT += dt * speed;
     const done = along(r, this.pickT, this.pickAt);
     this.sweep(a, this.pickAt, PICK_SWATH);
-    if (done) { this.pickT = -1; this.picked = true; this.nLying = 0; }
+    if (done) { this.pickT = -1; this.picked = true; if (!this.book) this.nLying = 0; }
   }
-  /** the lying balls within w of the leg a-b are picked (the ring is packed again) */
+  /** the lying balls within w of the leg a-b are picked (the ring is packed again; T386: with the ball loop they come off the outfield into the ball room) */
   private sweep(a: Pt, b: Pt, w: number): void {
+    const B = this.book; if (B) { stow(B, pickSwath(B, a.x, a.y, b.x, b.y, w, Infinity), 'night'); return; }
     const L = this.lying, n = this.nLying, dx = b.x - a.x, dy = b.y - a.y, L2 = dx * dx + dy * dy || 1e-9, w2 = w * w;
     let k = 0;
     for (let i = 0; i < n; i++) {
@@ -1220,12 +1226,13 @@ export class RangeSim {
     return { parkBays: carHours > 0 ? this.slots.length : 0, carHours: carHours > 0 ? carHours : 1, bayHours: this.bayHours(dayLen), inHours: this.inHours(dayLen) };
   }
   clear(): void {
+    if (this.book && this.scene) this.settle(this.scene); // (T386: the balls golfers had bought and not yet hit land on the range first)
     this.visits = []; this.queue = []; this.balls = []; for (const d of this.desks) { d.id = -1; d.on = false; } this.nLying = 0; this.bayBusy.fill(false); this.slotBusy.fill(false); this.spotBusy.putting.fill(false); this.spotBusy.chipping.fill(false); this.used.length = 0;
     this.kq = []; this.kServing = -1; this.pickT = -1; this.picked = false; this.pro.coach = -1; this.pro.placed = false; this.lyingAt = 0; this.seatsIn = 0; this.seatsOut = 0;
   }
   /** today's counts start again with the next step (a new game or a load: the town day starts again, maybe on the same day number: T135) */
   newDay(): void {
-    this.day = -1; this.today = { golfers: 0, lost: 0, queue: 0, playing: 0, coffees: 0, lessons: 0, kioskQueue: 0, upstairs: 0, noPark: 0, taken: 0 }; this.practiceToday = { putting: 0, chipping: 0 };
+    this.day = -1; this.today = { golfers: 0, lost: 0, queue: 0, playing: 0, coffees: 0, lessons: 0, kioskQueue: 0, upstairs: 0, noPark: 0, taken: 0, noBalls: 0 }; this.practiceToday = { putting: 0, chipping: 0 };
   }
 
   /** a car turns in off the county road from either side, along the drive and into car-park bay `slot` */
@@ -1339,7 +1346,12 @@ export class RangeSim {
   }
   private walk(v: Visit, stage: S, pts: Pt[]): void { v.stage = stage; v.t = 0; v.r = route(pts, [WALK]); }
   /** the visit's golfer done with its bucket (or its bay gone): it walks back to its car */
-  private leave(v: Visit): void { if (v.bay >= 0) this.bayBusy[v.bay] = false; this.walk(v, S.WalkCar, this.toCar(v, { x: v.x, y: v.y })); v.bay = -1; }
+  private leave(v: Visit): void { this.spill(v); if (v.bay >= 0) this.bayBusy[v.bay] = false; this.walk(v, S.WalkCar, this.toCar(v, { x: v.x, y: v.y })); v.bay = -1; }
+  /** T386: the balls of v's bucket it did not hit (it left early: a bay gone, a lesson cut short) land down the range now, so none is lost between hands */
+  private spill(v: Visit): void {
+    const B = this.book, sc = this.scene; if (!B || !sc || !v.left) return;
+    const n = v.left, p = this.aimPoint(sc); v.left = 0; landBalls(B, p.x, p.y, n, this.rnd, this.bounds());
+  }
   /** the line's k-th spot (T146: its head stands at queueAt, a step from the counters, and walks up to the counter that calls it) */
   private queueSpot(k: number): Pt { const sc = this.scene!; return { x: sc.queueAt.x + sc.queueStep.x * k, y: sc.queueAt.y + sc.queueStep.y * k }; }
   /** the coffee kiosk's line (T133): its k-th spot back from the counter, and whether v stands in its spot */

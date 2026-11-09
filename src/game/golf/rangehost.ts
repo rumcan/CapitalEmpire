@@ -16,6 +16,8 @@ import type { GolfSurface } from './types';
 import type { OffRoad } from '../offroad';
 import { homeScene } from './rangebiz';
 import { RangeSim, garageSlots, rangeCounter, rangeScene, rangeStats, upgradeWhy, walkwayOf, withPrice, withUpgrade, RANGE_UPGRADES, type CarSlot, type DemandCtx, type RangeBizSave, type RangeClock, type RangeScene, type RangeUpgradeId, type ScenePatch, type ScenePiece } from './rangebiz';
+import { BALL_COST, CASES_A_DAY, CASE_BALLS, DUMP_REACH, ballsNear, bucketsLeft, dump, fieldCount, nearestBall, orderBalls, perHour, pickAround, pickKit, pickSwath, visitBalls, type BallSave, type PickKit } from './rangeballs';
+import { worldX, worldY } from '../iso';
 import { CELL_T, type Grid, type GridDiff } from '../ext/course-grid';
 import { inPractice, practiceWords, scanPractice, type PracticeScan, type PracticeState } from './practice';
 import { PRACTICE_APPEAL, PRACTICE_FEE, PRACTICE_IDS, practiceAppeal, rangeScale, rangeUpkeep, type PracticeId } from './rangesave';
@@ -51,6 +53,8 @@ export interface RangeHostCtx {
   setGround(key: string, patches: LotPatch[] | null): void; layPaths(legs: { a: Pt; b: Pt }[]): void; clearTrees(box: [number, number, number, number]): void;
   /** the treasury, a spend ($, construction), takings booked ($, business income) */
   money(): number; spend(n: number): void; book(n: number): void;
+  /** T386: the supplier's invoice for balls ($): out of the treasury as the books' Range balls line (missing: not booked) */
+  balls?(cost: number): void;
   /** the game month as an absolute count (Engine.golfMonthIndex), and the upgrades' upkeep paid ($, the ledger's upkeep: T132); missing: no
    *  upkeep is paid */
   month?(): number; payUpkeep?(n: number): void;
@@ -98,6 +102,11 @@ export function outfieldStripes(sc: Pick<RangeScene, 'aim' | 'roadDir' | 'mowFro
 }
 /** the takings are booked this often (sim s), not on every sale; a frame this long (sim s) is a skip */
 const BOOK_EVERY = 2, SKIP_DT = 120;
+/** T386 (#1043): the lying balls are one instanced draw (the engine's GL points: gl.ts drawPoints), at most this many a frame, thinned past it (every k-th
+ *  ball, a little larger); the floats a point takes (gl.ts POINT_STRIDE: x y of the world px, r g b a); the pile a click picks up is this wide (tiles) */
+export const BALL_DRAW_MAX = 4000, BALL_POINT_FLOATS = 6, PILE_REACH = 2.4;
+/** a pick order (click a pile) looks for balls this far round the pile's middle (tiles) before it takes the basket home */
+const ORDER_REACH = 7;
 /** the practice area is read again at most this often (frames) while the grid changes (T130) */
 const SCAN_FRAMES = 6;
 /** the world labels' keys of the range's own stand-in pills (T151: the moving picker cart's and the practice strokes'), kept from frame to frame */
@@ -118,6 +127,8 @@ export class RangeHost {
   readonly flyingBuf = new Float32Array(3 * 600); nFlying = 0; // (T251: room for hundreds in the air and rolling, the bench's busy range)
   /** the range card is open */
   cardOpen = false;
+  /** T386: the ball room's upgrade tree (the flyout beside the card) is open */
+  treeOpen = false;
   /** the practice facilities as the course grid holds them (T130; null: not read yet), the grid and its rev when read, frames since, and the
    *  practice greens' cup flags (auto props by key) */
   practice: PracticeScan | null = null; private scanG: Grid | null = null; private scanRev = -1; private scanAgo = 0; private cups = new Map<string, Prop>(); private cupKey = '';
@@ -202,7 +213,7 @@ export class RangeHost {
   drop(): void {
     for (const p of this.props.values()) this.ctx.removeProp(p);
     for (const p of this.cups.values()) this.ctx.removeProp(p);
-    this.props.clear(); this.cups.clear(); this.cupKey = ''; this.labels = []; this.bareKey = ''; this.bareGate = null; this.scene = null; this.key = ''; this.lastT = -1; this.paidMonth = -1; this.home = -1; this.sim.clear(); this.sim.newDay();
+    this.props.clear(); this.cups.clear(); this.cupKey = ''; this.labels = []; this.bareKey = ''; this.bareGate = null; this.scene = null; this.key = ''; this.lastT = -1; this.paidMonth = -1; this.home = -1; this.sim.clear(); this.sim.newDay(); this.sim.setBalls(null); this.order = null;
     this.practice = null; this.scanG = null; this.scanRev = -1; this.sim.setPractice(null);
     this.ctx.setGround('range:ground', null);
   }
@@ -210,6 +221,8 @@ export class RangeHost {
   /** once a frame: the golfers move on by the sim time since the last frame, and their takings are booked every BOOK_EVERY sim s */
   step(): void {
     const b = this.ctx.biz(); if (!b || !this.scene) return;
+    // T386: the sim sells and lands the range's balls: the save's book (a load or a new game brings a new one)
+    if (this.sim.book !== (b.balls ?? null)) this.sim.setBalls(b.balls ?? null);
     // the tee box into the course grid once (a new game, an old save's first load: T130), then the practice area read as it changes
     if (!b.tee && this.ctx.layTee(this.scene.teeBox)) { b.tee = true; this.ctx.save(); }
     // T306 (#891): turfed, the land between the tee box and the outfield is turf too (once; an old save's first load after the turf too)
@@ -225,7 +238,10 @@ export class RangeHost {
     if (dt >= SKIP_DT) this.owed += this.sim.step(dt, clock, b, dem, L);
     else for (let left = dt; left > 1e-9; left -= 0.5) this.owed += this.sim.step(Math.min(0.5, left), clock, b, dem, L);
     this.owedT += dt;
-    if (this.owed > 0 && (this.owedT >= BOOK_EVERY || dt >= SKIP_DT)) { this.ctx.book(Math.round(this.owed)); this.owed = 0; this.owedT = 0; if (this.cardOpen) this.ctx.emit(); }
+    if (this.owed > 0 && (this.owedT >= BOOK_EVERY || dt >= SKIP_DT)) {
+      const n = Math.round(this.owed); this.ctx.book(n); if (b.balls) b.balls.till += n; // (T386: what the range takes is the range's till too: its gear is bought with it)
+      this.owed = 0; this.owedT = 0; if (this.cardOpen) this.ctx.emit();
+    }
     this.nFlying = this.sim.flying(this.flyingBuf);
   }
 
@@ -304,6 +320,15 @@ export class RangeHost {
       if (sc.garage) {
         const q = screen(sc.garage.label.x, sc.garage.label.y);
         if (on(q, 100)) labels.text(sc.garage, PRI.count, `P · ${this.sim.parked(true)}/${GARAGE_CARS}`, q.x, q.y, `bold ${12 * dpr}px ui-sans-serif, system-ui, sans-serif`, 12 * dpr, '#f8fafc', LABEL_OUTLINE, 3 * dpr);
+      }
+      // T386: the ball room's door (a stand-in label until its art lands): its stock, or red when it is out and the bays sit empty
+      const bk = this.balls();
+      if (bk) {
+        const q = screen(sc.ballRoom.x, sc.ballRoom.y);
+        if (on(q, 100)) {
+          const out = bk.clean < visitBalls(this.ctx.dayLen()), px = Math.round(dpr * 11), font = `700 ${px}px system-ui, sans-serif`, t = out ? 'Ball room · OUT OF BALLS' : `Ball room · ${Math.floor(bk.clean).toLocaleString()} balls`;
+          labels.pill(sc.ballRoom, PRI.count, t, q.x, q.y - 2.1 * 32 * ze, font, labels.width(font, t) + 10 * dpr, px * 1.6, out ? 'rgba(127,29,29,0.92)' : 'rgba(16,24,16,0.8)', 4 * dpr, '#f8fafc', 0.5 * dpr);
+        }
       }
       // the ball picker cart's stand-in pill (T133: the eight-way wagon stands in for it)
       const pk = this.sim.view().picker;
@@ -420,9 +445,114 @@ export class RangeHost {
     const b = this.ctx.biz(); if (!b) return false;
     const why = upgradeWhy(b, id, this.ctx.money()); if (why) { this.ctx.toast(why, 'warn'); return false; }
     const u = RANGE_UPGRADES.find(q => q.id === id)!;
-    this.ctx.spend(u.cost); Object.assign(b, withUpgrade(b, id)); this.sync(true); this.ctx.save();
-    this.ctx.toast(`${u.name} built (-$${u.cost.toLocaleString()})`, 'good'); this.ctx.emit();
+    this.ctx.spend(u.cost); Object.assign(b, withUpgrade(b, id));
+    if (u.till && b.balls) b.balls.till = Math.max(0, b.balls.till - u.cost); // (T386: the ball loop's gear is paid from the range's till too)
+    this.sync(true); this.ctx.save();
+    this.ctx.toast(u.till ? `${u.name} bought (-$${u.cost.toLocaleString()} from the range's till)` : `${u.name} built (-$${u.cost.toLocaleString()})`, 'good'); this.ctx.emit();
     return true;
+  }
+
+  // ---- T386 (#1043): the ball loop: your hand work, the supplier, the balls as the engine draws them and the card shows them
+  /** the range's balls (the save's: null when it is not a range start) */
+  balls(): BallSave | null { return this.ctx.biz()?.balls ?? null; }
+  /** what you pick with, from the upgrades owned (golf/rangeballs.ts pickKit) */
+  kit(): PickKit { return pickKit(this.ctx.biz()?.owned ?? []); }
+  /** a pick order (you clicked a pile): the pile's middle and the phase, 'pick' (the balls round it are picked up as you stand among them) then 'back' (the basket
+   *  goes home to the ball room); null: none. Esc, a key walk or a click elsewhere cancels it */
+  order: { x: number; y: number; phase: 'pick' | 'back' } | null = null;
+  startOrder(x: number, y: number): void { this.order = { x, y, phase: 'pick' }; }
+  cancelOrder(): void { this.order = null; }
+  private pickAcc = 0;
+  /** one frame of your hand work: the mover (you on foot, or your cart) went from (ox, oy) to (x, y) in dt real seconds. On foot with `pick` (F held, or a pick
+   *  order in its pick phase) the balls within your reach go into your basket at the tube's or your hands' rate (a push picker also takes those within its swath
+   *  along the way); in your cart with the pull-behind picker the balls within its swath go into its hopper; at the ball room (DUMP_REACH of its door) the basket
+   *  and, from the cart, the hopper are emptied into it. Returns the balls picked and the balls emptied this frame */
+  work(w: { x: number; y: number; ox: number; oy: number; dt: number; pick: boolean; inCart: boolean }): { picked: number; dumped: number } {
+    const b = this.balls(), sc = this.scene, biz = this.ctx.biz(); if (!b || !sc || !biz) return { picked: 0, dumped: 0 };
+    const kit = pickKit(biz.owned), moved = Math.hypot(w.x - w.ox, w.y - w.oy) > 1e-6;
+    let picked = 0, dumped = 0;
+    if (Math.hypot(w.x - sc.ballRoom.x, w.y - sc.ballRoom.y) <= DUMP_REACH) {
+      dumped += dump(b, 'basket', kit.push ? 'push' : 'hand'); if (w.inCart) dumped += dump(b, 'hopper', 'cart');
+    }
+    if (w.inCart) {
+      const space = kit.hopper - b.hopper;
+      if (kit.cart > 0 && moved && space > 0) { const n = pickSwath(b, w.ox, w.oy, w.x, w.y, kit.cart / 2, space); b.hopper += n; picked += n; }
+      this.pickAcc = 0;
+    } else if (w.pick) {
+      const space = kit.basket - b.basket;
+      if (space > 0 && fieldCount(b) > 0) {
+        let n = 0;
+        if (kit.push && moved) n = pickSwath(b, w.ox, w.oy, w.x, w.y, kit.push / 2, space);
+        else { this.pickAcc += kit.rate * w.dt; const want = Math.floor(this.pickAcc); if (want > 0) { n = pickAround(b, w.x, w.y, kit.reach, Math.min(want, space)); this.pickAcc -= want; if (n < want) this.pickAcc = 0; } }
+        b.basket += n; picked += n;
+      } else this.pickAcc = 0;
+    } else this.pickAcc = 0;
+    return { picked, dumped };
+  }
+  /** a pick order's next step (the engine walks you): null to carry on (the balls at your feet are picked in work), `walk` a ball to step to when none lies within
+   *  your reach, `back` to take a full (or finished) basket to the ball room, `done` once it is emptied there. The order ends when the pile near its middle is gone */
+  orderStep(px: number, py: number, moving: boolean): { walk?: Pt; back?: true; done?: true } | null {
+    const o = this.order, b = this.balls(), sc = this.scene; if (!o || !b || !sc) return null;
+    const kit = this.kit(), room = sc.ballRoom;
+    if (o.phase === 'back') {
+      if (b.basket === 0 && Math.hypot(px - room.x, py - room.y) <= DUMP_REACH) { this.order = null; return { done: true }; }
+      return moving ? null : b.basket === 0 ? (this.order = null, { done: true }) : { back: true };
+    }
+    const left = ballsNear(b, o.x, o.y, ORDER_REACH);
+    if (b.basket >= kit.basket || left === 0) { if (b.basket > 0) { o.phase = 'back'; return { back: true }; } this.order = null; return { done: true }; }
+    if (moving || ballsNear(b, px, py, kit.reach) > 0) return null;
+    const next = nearestBall(b, px, py, ORDER_REACH * 2);
+    if (next) return { walk: next };
+    if (b.basket > 0) { o.phase = 'back'; return { back: true }; }
+    this.order = null; return { done: true };
+  }
+  /** the pile under a point (tiles): its middle (the nearest ball to the point within PILE_REACH) and the balls round it, or null when none lies there */
+  pileAt(x: number, y: number): { x: number; y: number; n: number } | null {
+    const b = this.balls(); if (!b || !this.scene) return null;
+    const at = nearestBall(b, x, y, PILE_REACH); if (!at) return null;
+    return { x: at.x, y: at.y, n: ballsNear(b, at.x, at.y, PILE_REACH) };
+  }
+  /** an order of `cases` cases of balls from the supplier (the tree's Supplier's account): into the ball room, charged to the till and the treasury, booked as the
+   *  books' Range balls line; false with the reason toasted when it cannot */
+  orderBalls(cases = 1): boolean {
+    const b = this.ctx.biz(), bs = b?.balls; if (!b || !bs) return false;
+    if (!b.owned.includes('supplier')) { this.ctx.toast("Open the supplier's account first (Ball room upgrades)", 'warn'); return false; }
+    const today = Math.round(bs.day.bought / CASE_BALLS), o = orderBalls(bs, cases, today, Math.min(bs.till, this.ctx.money()));
+    if (!o.cases) { this.ctx.toast(today >= CASES_A_DAY ? "The supplier has delivered today's cases" : `A case costs $${Math.round(CASE_BALLS * BALL_COST).toLocaleString()}: not enough in the range's till`, 'warn'); return false; }
+    bs.till = Math.max(0, bs.till - o.cost); this.ctx.balls?.(o.cost);
+    this.ctx.toast(`${(o.cases * CASE_BALLS).toLocaleString()} balls delivered (-$${o.cost.toLocaleString()})`, 'good'); this.ctx.save(); this.ctx.emit();
+    return true;
+  }
+  /** the lying balls as GL points for the engine's one instanced draw: the points' world px (iso) and colour, BALL_POINT_FLOATS each, the shadows first (a soft dark dot
+   *  a little down and left of each ball: the sun is at the upper right) and then the balls (white). Only the balls inside the world box X0 Y0 X1 Y1, thinned to at
+   *  most BALL_DRAW_MAX (every k-th). `out` holds 2 * BALL_DRAW_MAX points. Returns the points in each set (the balls start at out[n * BALL_POINT_FLOATS]) */
+  fieldPoints(out: Float32Array, X0: number, Y0: number, X1: number, Y1: number): number {
+    const b = this.balls(); if (!b || !this.scene) return 0;
+    const f = b.field, N = f.length / 2, S = BALL_POINT_FLOATS;
+    let vis = 0; for (let k = 0; k < N; k++) { const X = worldX(f[2 * k]!, f[2 * k + 1]!), Y = worldY(f[2 * k]!, f[2 * k + 1]!); if (X >= X0 && X <= X1 && Y >= Y0 && Y <= Y1) vis++; }
+    if (!vis) return 0;
+    const stride = Math.max(1, Math.ceil(vis / BALL_DRAW_MAX)); let n = 0, seen = 0;
+    for (let k = 0; k < N; k++) {
+      const X = worldX(f[2 * k]!, f[2 * k + 1]!), Y = worldY(f[2 * k]!, f[2 * k + 1]!); if (X < X0 || X > X1 || Y < Y0 || Y > Y1) continue;
+      if (seen++ % stride) continue;
+      if (n >= BALL_DRAW_MAX) break;
+      let o = n * S; out[o] = X - 1.6; out[o + 1] = Y + 1.4; out[o + 2] = 0.06; out[o + 3] = 0.12; out[o + 4] = 0.04; out[o + 5] = 0.42; // the shadow: down and left
+      o = (BALL_DRAW_MAX + n) * S; out[o] = X; out[o + 1] = Y; out[o + 2] = 1; out[o + 3] = 1; out[o + 4] = 0.97; out[o + 5] = 1;
+      n++;
+    }
+    // (the balls' set packed straight after the shadows' set)
+    if (n < BALL_DRAW_MAX) out.copyWithin(n * S, BALL_DRAW_MAX * S, (BALL_DRAW_MAX + n) * S);
+    return n;
+  }
+  /** the ball loop as the card shows it (null: not a range start) */
+  ballView() {
+    const b = this.balls(), biz = this.ctx.biz(); if (!b || !biz) return null;
+    const dayLen = this.ctx.dayLen(), vb = visitBalls(dayLen), kit = pickKit(biz.owned), cases = Math.round(b.day.bought / CASE_BALLS);
+    return {
+      clean: b.clean, buckets: bucketsLeft(b, vb), vb, field: fieldCount(b), inPlay: b.inPlay, basket: b.basket, hopper: b.hopper, kit, till: Math.floor(b.till),
+      out: b.clean < vb, noBalls: this.sim.today.noBalls, supplier: biz.owned.includes('supplier'), caseBalls: CASE_BALLS, caseCost: Math.round(CASE_BALLS * BALL_COST), casesLeft: Math.max(0, CASES_A_DAY - cases),
+      day: b.day, total: b.total, handHour: Math.round(perHour(kit.rate, dayLen)),
+    };
   }
   /** sets the bucket price (whole dollars in the band) */
   setPrice(price: number): void { const b = this.ctx.biz(); if (!b) return; b.price = withPrice(b, price).price; this.ctx.save(); this.ctx.emit(); }
@@ -439,7 +569,7 @@ export class RangeHost {
     const b = this.ctx.biz(); if (!b) return null;
     const dem = this.ctx.demand(), st = rangeStats(b, dem), money = this.ctx.money();
     return {
-      biz: b, stats: st, today: this.sim.today, hours: `${String(st.open).padStart(2, '0')}:00-${st.close}:00`,
+      biz: b, stats: st, treeOpen: this.treeOpen, today: this.sim.today, hours: `${String(st.open).padStart(2, '0')}:00-${st.close}:00`, balls: this.ballView(),
       upgrades: RANGE_UPGRADES.map(u => ({ ...u, why: upgradeWhy(b, u.id, money), owned: b.owned.includes(u.id) })),
       demand: dem, dayLen: this.ctx.dayLen(),
       // the practice facilities (T130): each with its state's words, its appeal, its fee and today's and the season's golfers and takings

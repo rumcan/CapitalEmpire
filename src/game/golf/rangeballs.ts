@@ -16,8 +16,8 @@ export const REF_DAY = 600;
 export const BALLS_VISIT = 40;
 /** the most balls lying on the outfield: past it a ball that lands is lost in the rough (a range that is never picked loses balls) */
 export const FIELD_CAP = 8000;
-/** the clean balls a new game's ball room starts with (15 buckets), and what a save from before T386 gets per hitting bay (legacyBalls) */
-export const START_BALLS = 600;
+/** the clean balls a new game's ball room starts with (5 buckets: its first sales are the range's first money, then the outfield is the supply), and what a save from before T386 gets per hitting bay (legacyBalls) */
+export const START_BALLS = 200;
 export const LEGACY_BALLS_A_BAY = 900;
 /** the balls lost overnight (a new town day): the share of those lying on the outfield (trodden in, kicked into the rough, taken by kids) and the
  *  share of the ball room's stock that wears out (cut, cracked) */
@@ -182,18 +182,19 @@ export function removeRandom(b: BallSave, n: number, rnd: () => number): number 
   let k = 0; for (; k < n && b.field.length; k++) drop(b.field, Math.floor(rnd() * fieldCount(b)) % fieldCount(b));
   return k;
 }
-/** a span the player skipped (dt sim seconds of a town day of dayLen): the shop serves the visits the balls allow, day by day. `want` is the visits the
- *  demand and the bays allow (rangesave.ts skippedVisits); each day's trade takes the clean stock down and lands its balls on the outfield (at gives a
- *  landing's point), the day's machines (auto: balls a sim second, robots and staff) and then the night cart (night: it picks all that lies out) bring
- *  balls back. Returns the visits served (the rest were short of balls) */
+/** a span the player skipped (dt sim seconds of a town day of dayLen): the shop serves the visits the balls allow, day by day. want is the visits the
+ *  demand and the bays allow (rangesave.ts skippedVisits). Each day sells H balls, at most what the ball room holds plus what the day's machines (auto: balls a
+ *  sim second, robots and staff) pick before it is out; the balls land on the outfield (at gives a landing's point), the machines take theirs back, and then
+ *  the night cart (night) picks all that lies out. The pool is kept. Returns the visits served (the rest were short of balls) */
 export function skipBalls(b: BallSave, want: number, vb: number, dt: number, dayLen: number, auto: number, night: boolean, at: () => { x: number; y: number }, rnd: () => number, fence?: Bounds | null): number {
   const days = Math.max(1e-9, dt / Math.max(24, dayLen)), steps = Math.min(12, Math.max(1, Math.ceil(days)));
   let served = 0;
   for (let i = 0; i < steps; i++) {
-    const span = Math.min(1, days - i), w = want * span / days, s = Math.max(0, Math.min(w, b.clean / vb)), hit = Math.min(b.clean, Math.round(s * vb));
-    served += s; b.clean -= hit;
-    for (let k = 0; k < hit; k++) { const p = at(); landBalls(b, p.x, p.y, 1, rnd, fence); }
-    if (auto > 0) stow(b, removeRandom(b, Math.round(auto * dayLen * span), rnd), 'robot');
+    const span = Math.min(1, days - i), A = Math.max(0, auto) * dayLen * span, H = Math.max(0, Math.min(Math.round(want * span / days * vb), b.clean + Math.floor(A)));
+    served += H / vb;
+    for (let k = 0; k < H; k++) { const p = at(); landBalls(b, p.x, p.y, 1, rnd, fence); }
+    if (A > 0) stow(b, removeRandom(b, Math.round(A), rnd), 'robot');
+    b.clean = Math.max(0, b.clean - H);
     if (night && span >= 1) stow(b, removeRandom(b, fieldCount(b), rnd), 'night');
   }
   return served;
@@ -213,9 +214,9 @@ export function orderBalls(b: BallSave, cases: number, ordered: number, till: nu
  *  picker's swath (tiles across; 0: none), the cart's swath (0: none) and hopper */
 export interface PickKit { reach: number; rate: number; basket: number; push: number; cart: number; hopper: number; tube: boolean }
 /** bare hands: a ball at a time within a stride, a basket of 24 */
-export const HAND = { reach: 0.9, rate: 2, basket: 24 };
-/** the ball tube (a pipe to pick balls through: no stooping): further and 2.3 times as fast */
-export const TUBE = { reach: 1.7, rate: 4.6 };
+export const HAND = { reach: 0.9, rate: 1.2, basket: 24 };
+/** the ball tube (a pipe to pick balls through: no stooping): further and 2.5 times as fast */
+export const TUBE = { reach: 1.7, rate: 3 };
 /** the wire basket (a bigger basket) and the push picker's roll basket */
 export const BASKET2 = 48, PUSH_BASKET = 96;
 /** the push picker's swath (a roller cage you walk: 4.8 m across), the cart's pull-behind picker (10 m) and its hopper, the wider gang picker (18 m) */

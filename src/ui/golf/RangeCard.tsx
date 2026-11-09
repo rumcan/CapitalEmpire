@@ -15,10 +15,12 @@ const money = (n: number) => '$' + Math.round(n).toLocaleString();
 
 /** T288: a placement the card offers (the range, its car park, the practice area): its name, price, whether placed and why not yet */
 export interface RangePlace { id: 'range' | 'carpark' | 'practice'; name: string; cost: number; done: boolean; why: string }
-export function RangeCard({ view, places = [], onPlace, onClose, onPrice, onBuy, onShowPractice, onBuildPractice, practiceWhy = null, right = 'right-3', onScene, you = null, onPractise, onProfile, profileOpen = false }: { view: RangeCardView; /** T288: the placements and their Place (the build in hand) */ places?: RangePlace[]; onPlace?: (id: RangePlace['id']) => void; onClose: () => void; onPrice: (p: number) => void; onBuy: (id: RangeCardView['upgrades'][number]['id']) => void; onShowPractice?: () => void; /** T206: a facility's Build: Facilities ▸ Practice armed with it, the practice area shown */ onBuildPractice?: (id: RangeCardView['practice'][number]['id']) => void; /** the practice tools' lock (null: open) */ practiceWhy?: string | null; right?: string; /** T242: Set the scene (the range's picture card; absent: no art) */ onScene?: () => void;
-  /** T241: your golf (null: none) and its actions: a practice session, and the profile card (open: profileOpen) */ you?: YouRangeView | null; onPractise?: (k: PracticeKind) => void; onProfile?: () => void; profileOpen?: boolean }) {
+export function RangeCard({ view, places = [], onPlace, onClose, onPrice, onBuy, onShowPractice, onBuildPractice, practiceWhy = null, right = 'right-3', onScene, you = null, onPractise, onProfile, profileOpen = false, onTree, treeOpen = false, onOrderBalls }: { view: RangeCardView; /** T288: the placements and their Place (the build in hand) */ places?: RangePlace[]; onPlace?: (id: RangePlace['id']) => void; onClose: () => void; onPrice: (p: number) => void; onBuy: (id: RangeCardView['upgrades'][number]['id']) => void; onShowPractice?: () => void; /** T206: a facility's Build: Facilities ▸ Practice armed with it, the practice area shown */ onBuildPractice?: (id: RangeCardView['practice'][number]['id']) => void; /** the practice tools' lock (null: open) */ practiceWhy?: string | null; right?: string; /** T242: Set the scene (the range's picture card; absent: no art) */ onScene?: () => void;
+  /** T241: your golf (null: none) and its actions: a practice session, and the profile card (open: profileOpen) */ you?: YouRangeView | null; onPractise?: (k: PracticeKind) => void; onProfile?: () => void; profileOpen?: boolean;
+  /** T386: the ball room's upgrade tree (a flyout beside the card: Ball room upgrades), whether it is open, and an order of balls from the supplier */ onTree?: () => void; treeOpen?: boolean; onOrderBalls?: () => void }) {
   const { biz, stats: st, today } = view, scale = Math.round(rangeScale(view.dayLen)), pf = priceFactor(biz.price, st.ref);
   const want = Math.round(dayDemand(biz, view.demand, st)), cap = st.bays * (st.close - st.open);
+  const balls = view.balls;
   const demandWord = pf >= 1.15 ? 'cheap: more golfers' : pf <= 0.85 ? 'dear: fewer golfers' : 'fair';
   return (
     <div className={`pointer-events-auto absolute ${right} top-[var(--hud-top,6rem)] z-20 max-h-[calc(var(--vh-ui,100vh)-var(--hud-top,6rem)-4.5rem)] w-[340px] space-y-2 overflow-y-auto overflow-x-hidden rounded-xl border border-white/10 bg-slate-950/90 p-3 text-slate-200 shadow-2xl backdrop-blur`} data-testid="range-card">
@@ -56,6 +58,25 @@ export function RangeCard({ view, places = [], onPlace, onClose, onPrice, onBuy,
       </div>
       {/* T237: the car parks within walking distance of the shop (golf/walkserve.ts): only their bays count for the range */}
       <div className={`rounded-lg border border-white/10 bg-white/5 px-2 py-1.5 text-xs ${view.parking.lots.length ? 'text-slate-300' : 'font-semibold text-rose-300'}`} data-testid="range-lots" title={`A car park serves the range when its nearest bay is within ${WALK_SERVE_M} m of walking (about 2 minutes) of the shop; car parks further away add no bays`}>{lotsLine(view.parking.lots)}</div>
+      {balls && (
+        <div className={`space-y-1.5 rounded-lg border p-2 text-xs ${balls.out ? 'border-rose-400/40 bg-rose-400/5' : 'border-emerald-400/25 bg-emerald-400/5'}`} data-testid="range-balls" data-guide="range-balls">
+          <div className="flex items-center justify-between gap-2">
+            <span className="text-[12px] uppercase text-slate-400">Ball room</span>
+            <span className="text-slate-300" title="What the range has taken, less what it has spent on its gear: the ball room's tools, staff and machines are bought with it">Till <span className="font-semibold text-emerald-300" data-testid="range-balls-till">{money(balls.till)}</span></span>
+          </div>
+          <div className="grid grid-cols-3 gap-1.5 text-center">
+            <Tile label="Clean" value={balls.clean.toLocaleString()} sub={`${balls.buckets} bucket${balls.buckets === 1 ? '' : 's'}`} tone={balls.out ? 'text-rose-300' : 'text-white'} />
+            <Tile label="On the range" value={balls.field.toLocaleString()} sub="to pick up" />
+            <Tile label="You carry" value={`${balls.basket}/${balls.kit.basket}`} sub={balls.kit.cart ? `cart ${balls.hopper}/${balls.kit.hopper}` : 'basket'} />
+          </div>
+          {balls.out && <div className="text-[12px] text-rose-300" data-testid="range-balls-out">Out of balls: {balls.noBalls} golfer{balls.noBalls === 1 ? '' : 's'} drove on today. Walk out (Walk mode) and pick them up: hold F over the balls, or click a pile. Empty your basket at the ball room by the shop.</div>}
+          <div className="text-[12px] text-slate-400" data-testid="range-balls-today">Today: {balls.day.sold.toLocaleString()} balls sold · {Object.values(balls.day.picked).reduce((a, n) => a + n, 0).toLocaleString()} picked up · {balls.day.lost.toLocaleString()} lost. A bucket is {balls.vb} balls.</div>
+          <div className="flex flex-wrap items-center gap-1.5">
+            {onTree && <button className={`chip ${treeOpen ? 'chip-on' : ''}`} onClick={onTree} title="The ball room's tools, staff and machines: bought with the range's till" data-testid="range-balls-tree" data-guide="range-balls-tree">Ball room upgrades ▸</button>}
+            {balls.supplier && onOrderBalls && <button className="chip disabled:opacity-40" disabled={balls.casesLeft <= 0} onClick={onOrderBalls} title={`A case of ${balls.caseBalls} balls from the supplier: ${money(balls.caseCost)}, ${balls.casesLeft} left today`} data-testid="range-balls-order">Order {balls.caseBalls} balls {money(balls.caseCost)}</button>}
+          </div>
+        </div>
+      )}
       <div className="grid grid-cols-2 gap-1.5 text-center" data-guide="range-takings">
         <Tile label="Season takings" value={money(biz.season.takings)} sub={`${Math.round(biz.season.buckets).toLocaleString()} buckets`} tone="text-emerald-300" />
         <Tile label="Demand a day" value={`${want}`} sub={`room for ${cap}`} />
@@ -134,7 +155,7 @@ export function RangeCard({ view, places = [], onPlace, onClose, onPrice, onBuy,
       </div>
       <div className="space-y-1.5" data-testid="range-upgrades">
         <div className="text-[12px] uppercase text-slate-400">Upgrades</div>
-        {view.upgrades.map(u => (
+        {view.upgrades.filter(u => !u.branch).map(u => (
           <div key={u.id} className={`rounded-lg border p-2 text-xs ${u.owned ? 'border-emerald-500/30 bg-emerald-500/5' : 'border-white/5 bg-white/5'}`} data-guide={`range-buy-${u.id}`}>
             <div className="flex items-center justify-between gap-2">
               <span className="font-medium text-white">{u.name}</span>
