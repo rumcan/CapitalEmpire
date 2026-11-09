@@ -15,7 +15,7 @@ import { SeasonCard } from '../src/ui/golf/SeasonCard';
 import { Rail } from '../src/ui/Rail';
 import { RAIL, drawerOf, railLabel, type RailEntry } from '../src/ui/rail-items';
 import { ANCHOR_FALLBACK, anchorElement } from '../src/ui/GuidePulse';
-import { CLUB_ORDER, bagGear, bagView } from '../src/game/golf/play';
+import { bagGear, bagView } from '../src/game/golf/play';
 import { START_SKILLS, gameSkills } from '../src/game/golf/player';
 import type { Game } from '../src/game/engine';
 
@@ -45,7 +45,7 @@ test('the openers are that row: Bunker look, the grass and look entries, the fai
   assert.match(b, /<button type="button" class="chip"[^>]*>Pick bunker</, 'Pick bunker does something: it stays a chip');
   assert.match(renderToStaticMarkup(createElement(BunkerPickEntry, { game, looks: true, onLooks: noop })), /side-row side-row-open/);
   // the Bag: the putter's Shaft and Head open their parts to the left
-  const bag = renderToStaticMarkup(createElement(BagCard, { view: { ...bagView(null, gameSkills(START_SKILLS, 0, bagGear(null)), { shop: true, money: 5000 }), busy: null }, onClose: noop, onUpgrade: noop, onFit: noop, onThird: noop, initial: CLUB_ORDER[CLUB_ORDER.length - 1]! }));
+  const bag = renderToStaticMarkup(createElement(BagCard, { view: { ...bagView(null, gameSkills(START_SKILLS, 0, bagGear(null)), { shop: true, money: 5000 }), busy: null }, onClose: noop, onUpgrade: noop, onFit: noop, onThird: noop, initial: 'putter' }));
   for (const k of ['shaft', 'head']) assert.match(bag, new RegExp(`<button type="button" class="side-row"[^>]*data-side="left"[^>]*data-testid="bag-slot-${k}"`), k);
   // no chip with an arrow in its text is left in the panels (the inline More options and the mode toggles are headers and toggles, not menus)
   for (const f of ['src/ui/BunkerSettings.tsx', 'src/ui/course/BrushControls.tsx', 'src/ui/course/SurfaceFocus.tsx', 'src/ui/course/PracticePanel.tsx', 'src/ui/golf/BagCard.tsx']) {
