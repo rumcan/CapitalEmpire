@@ -183,6 +183,8 @@ const handle = async (m: ToWorker) => {
           const need = new Set<string>(['grass', 'meadow', 'outside', WOODLAND_TEX, WOODLAND, 'dirt', 'bank', 'creek', 'water', 'growSoil']), near = new Set<string>();
           // T199: the small streams' swamp, where one reaches into the chunk
           if (painter.swampIn(box)) need.add('swamp');
+          // T360: the natural river's point bars (their sand or gravel)
+          if (painter.barsIn(box)) need.add(painter.barTex());
           // the living ground's painted variant sets (T111), when their art is in the game
           if (painter.living.on && !painter.living.debug) for (const v of VARIANT_IDS) if (tex.isPainted(v)) need.add(v);
           // T382: the desert's sand blotches' painted sand (the Sand drifts surface the desert theme gives a look: no other texture of the chunk wears that family now, so its pictures are asked for here)

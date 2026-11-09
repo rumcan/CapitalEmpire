@@ -1,9 +1,10 @@
 // Terrain preview: writes output/terrain/seed-<n>.png for each seed argument (default 1 2 3 4). Node only.
+// The river is the game's (TERRAIN_MODEL, the natural one, T360); `--model 1` draws the old straight one (a save from before has it).
 import { writeFileSync, mkdirSync } from 'node:fs';
 import { deflateSync } from 'node:zlib';
 import { resolve } from 'node:path';
 import { MAP } from '../../src/game/iso';
-import { TC, heightAt, generateTerrain, type Terrain } from '../../src/game/terrain';
+import { TC, TERRAIN_MODEL, heightAt, generateTerrain, type Terrain } from '../../src/game/terrain';
 
 const SIZE = 1024, SCALE = 2;
 const COLOURS: Record<number, [number, number, number]> = {
@@ -81,15 +82,17 @@ function render(t: Terrain): Uint8Array {
   return rgb;
 }
 
-const args = process.argv.slice(2);
+const argv = process.argv.slice(2), mi = argv.indexOf('--model');
+const model = mi >= 0 ? Number(argv[mi + 1]) || 1 : TERRAIN_MODEL;
+const args = argv.filter((_, i) => mi < 0 || (i !== mi && i !== mi + 1));
 const seeds = args.length ? args.map(Number) : [1, 2, 3, 4];
 const dir = resolve('output/terrain');
 mkdirSync(dir, { recursive: true });
 for (const seed of seeds) {
   const t0 = performance.now();
-  const t = generateTerrain(seed);
+  const t = generateTerrain(seed, model);
   const ms = performance.now() - t0;
   const file = resolve(dir, `seed-${seed}.png`);
   writeFileSync(file, encodePng(SIZE, SIZE, render(t)));
-  console.log(`${file}  attempt ${t.attempt}  generate ${ms.toFixed(0)} ms`);
+  console.log(`${file}  model ${model}  attempt ${t.attempt}  generate ${ms.toFixed(0)} ms`);
 }

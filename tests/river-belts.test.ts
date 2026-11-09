@@ -121,7 +121,7 @@ test('T265 the river\'s swamp stops short of a road and a lot (river-cut.ts): wh
 
 test('T265 the renderer: the river\'s band with the streams\', under the river\'s bank, cut short of what is built, its own dev switch', () => {
   const r = readFileSync(resolve('src/game/renderer.ts'), 'utf8'), step1 = r.slice(r.indexOf('// ---- 1. terrain:'), r.indexOf('const walk = net.walkF'));
-  assert.match(r, /this\.riverField = new SwampField\(riverStreams\(waters\), RIVER_BAND\)/);
+  assert.match(r, /this\.riverField = new SwampField\(riverStreams\(waters\), riverBandOf2\(waters\)\)/); // (T360: the natural river's band for a natural river, the old one's for the old)
   assert.match(step1, /rres = Math\.min\(cres, RIVER_RES\), rv = this\.riverSwampOn\(\) \? this\.riverField\.alpha\(tx0, ty0, bw, bh, rres\) : null/, 'at its own res');
   assert.match(step1, /this\.swampBand\(sw, rv, tx0, ty0, cres, rv \? this\.riverCut\(net, rv\.box, lite\) : null, rres\)/, 'the cut: what lies near the river\'s band');
   assert.ok(step1.indexOf('this.riverField.alpha(') < step1.indexOf("layer('bank', g => shore(g, rivers, 3, 0.8))"), 'the river\'s swamp lies under its bank');

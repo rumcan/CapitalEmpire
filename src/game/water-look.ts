@@ -259,9 +259,13 @@ export class WaterField {
         }
       }
     };
-    /** the way's unit direction at point i (its neighbours' chord; one-sided at the ends) */
+    /** the way's unit direction at point i (its neighbours' chord; one-sided at the ends). T360: a chord of about 16 tiles whatever the points'
+     *  spacing (the old river's and the creeks' are 6 to 8 apart: the next point either side, as always; the natural river's are 3 apart and its
+     *  mid-line follows two independent banks, so its neighbours' chord would swing) */
+    let arc = 0; if (fl) for (let k = 1; k < pts.length; k++) arc += Math.hypot(pts[k]!.x - pts[k - 1]!.x, pts[k]!.y - pts[k - 1]!.y);
+    const span = fl && pts.length > 1 ? Math.max(1, Math.round(8 / Math.max(1e-6, arc / (pts.length - 1)))) : 1;
     const dirAt = (i: number): [number, number] => {
-      const a = pts[Math.max(0, i - 1)]!, b = pts[Math.min(pts.length - 1, i + 1)]!, l = Math.hypot(b.x - a.x, b.y - a.y);
+      const a = pts[Math.max(0, i - span)]!, b = pts[Math.min(pts.length - 1, i + span)]!, l = Math.hypot(b.x - a.x, b.y - a.y);
       return l > 1e-6 ? [(b.x - a.x) / l, (b.y - a.y) / l] : [0, 0];
     };
     pts.forEach((p, i) => { const r = rad(p), r2 = r * r, [fx, fy] = fl ? dirAt(i) : [0, 0]; each(p.x - r, p.y - r, p.x + r, p.y + r, (x, y) => (x - p.x) ** 2 + (y - p.y) ** 2 <= r2, fx, fy, fl && lap ? lap(p.w * widthScale) : 0); });

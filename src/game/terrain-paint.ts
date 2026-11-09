@@ -1,6 +1,7 @@
 // Pure terrain painting helpers: hillshade, soft class coverage and waterway shapes (no DOM types: runs in Node and workers).
 import { MAP, clamp } from './iso';
 import { HS, HSTEP, TC, sampleField, type WaterPoint } from './terrain/types';
+import { BAR_SHARE } from './terrain/river';
 import { fbm, smoothstep, type Noise } from './terrain/noise';
 import type { BBox } from './network';
 import { SUN_LIGHT, sampleCourseGrid } from './ext/course-height';
@@ -119,6 +120,39 @@ export function waterShape(sink: PathSink, pts: WaterPoint[], extra: number, box
     const dxn = dx / len, dyn = dy / len, nx = -dyn, ny = dxn;
     sink.moveTo(b.x - nx * rb, b.y - ny * rb); sink.lineTo(b.x + nx * rb, b.y + ny * rb);
     sink.lineTo(a.x + nx * ra, a.y + ny * ra); sink.lineTo(a.x - nx * ra, a.y - ny * ra); sink.closePath(); any = true;
+  }
+  return any;
+}
+
+/** T360 (#1015): the natural river's two kinds of bank as paths (tile space), the point bars and the cut banks. Each point's normal is the chord two
+ *  points either side; the strip lies between a tile inside the water's edge (under the water, which is drawn over it) and the edge's distance out:
+ *  - 'bar': on the side WaterPoint.bar names (positive: +N, N = (-ty, tx)), as wide as the bar there, plus grow (negative shrinks it; for a
+ *    feathered mask, as waterShape's extra);
+ *  - 'cut': on the other side, the steep bank's dark lip, CUT.min tiles wide where the bend is slight to CUT.max at the apex (the bar's share of its
+ *    most), plus grow. A point with no bar has neither. true if anything was added */
+export const CUT = { min: 1.1, max: 2.6, inside: 1 } as const;
+export function barShape(sink: PathSink, pts: readonly WaterPoint[], box: BBox, mode: 'bar' | 'cut', grow = 0): boolean {
+  const n = pts.length; if (n < 2) return false;
+  const [bx0, by0, bx1, by1] = box; let any = false;
+  const nx = new Float64Array(n), ny = new Float64Array(n);
+  for (let i = 0; i < n; i++) { const a = pts[Math.max(0, i - 2)]!, b = pts[Math.min(n - 1, i + 2)]!, l = Math.hypot(b.x - a.x, b.y - a.y) || 1; nx[i] = -(b.y - a.y) / l; ny[i] = (b.x - a.x) / l; }
+  /** how far out (past the water's edge) the strip reaches at point i on side `side`, or -Infinity where it has none */
+  const reach = (i: number, side: number) => {
+    const bar = pts[i]!.bar ?? 0; if (!bar) return -Infinity;
+    if (mode === 'bar') return bar * side > 0 ? Math.abs(bar) : -Infinity;
+    return bar * side < 0 ? CUT.min + (CUT.max - CUT.min) * Math.min(1, Math.abs(bar) / (BAR_SHARE * pts[i]!.w)) : -Infinity;
+  };
+  for (let k = 0; k + 1 < n; k++) {
+    const a = pts[k]!, b = pts[k + 1]!, ba = a.bar ?? 0, bb = b.bar ?? 0; if (!ba && !bb) continue;
+    // the side of this piece: the bar's (bar mode) or the other's (cut mode) at its end with more bar
+    const bs = Math.abs(ba) >= Math.abs(bb) ? Math.sign(ba) : Math.sign(bb), side = mode === 'bar' ? bs : -bs;
+    const ra = reach(k, side), rb = reach(k + 1, side), oa = (Number.isFinite(ra) ? ra : 0) + grow, ob = (Number.isFinite(rb) ? rb : 0) + grow;
+    if (!(Number.isFinite(ra) || Number.isFinite(rb)) || (oa <= -CUT.inside && ob <= -CUT.inside)) continue;
+    const ha = a.w / 2, hb = b.w / 2, ia = ha - CUT.inside, ib = hb - CUT.inside;
+    const x0 = a.x + nx[k]! * side * (ha + oa), y0 = a.y + ny[k]! * side * (ha + oa), x1 = b.x + nx[k + 1]! * side * (hb + ob), y1 = b.y + ny[k + 1]! * side * (hb + ob);
+    const x2 = b.x + nx[k + 1]! * side * ib, y2 = b.y + ny[k + 1]! * side * ib, x3 = a.x + nx[k]! * side * ia, y3 = a.y + ny[k]! * side * ia;
+    if (Math.max(x0, x1, x2, x3) < bx0 || Math.min(x0, x1, x2, x3) > bx1 || Math.max(y0, y1, y2, y3) < by0 || Math.min(y0, y1, y2, y3) > by1) continue;
+    sink.moveTo(x3, y3); sink.lineTo(x0, y0); sink.lineTo(x1, y1); sink.lineTo(x2, y2); sink.closePath(); any = true;
   }
   return any;
 }
