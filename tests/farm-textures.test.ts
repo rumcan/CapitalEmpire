@@ -95,21 +95,31 @@ test('a field of grass is a painted area turned with its parcel and feathered at
   assert.ok(n > 60, `fallow fields composed: ${n}`);
 });
 
-test('the same farm laid on the axes and on a road at 45 degrees has the same ground relative to its fields', () => {
-  // one layout in the parcel frame (the same w, d, seed and month), only its angle differs: each ground patch's texture angle minus its field's own angle is the same
-  let n = 0;
-  for (let i = 0; i < 14; i++) for (const seed of SEEDS) for (const month of [1, 5, 8]) {
-    const w = 40 + (i * 13) % 41, d = 80 + (i * 29) % 71;
-    const a = composeFarm(parcel(i, 0, w, d), seed, { model: 2, month }), b = composeFarm(parcel(i, 45, w, d), seed, { model: 2, month });
-    assert.equal(b.ground.length, a.ground.length, 'the same patches');
-    a.ground.forEach((g, k) => {
-      const h = b.ground[k]!;
-      assert.equal(h.tex, g.tex); assert.equal(!!h.crop, !!g.crop); assert.equal(!!h.paint, !!g.paint); assert.equal(!!h.hard, !!g.hard);
-      if (g.crop) { assert.equal(h.crop!.st, g.crop.st); assert.ok(between(laidAt(h), rowsOf(h)) < 0.02 && between(laidAt(g), rowsOf(g)) < 0.02, 'furrows along the rows on both'); assert.ok(Math.abs(between(rowsOf(h), rowsOf(g)) - 45) < 0.05, 'the rows turned with the parcel'); n++; }
-      if (g.paint) { assert.equal(h.paint!.e, g.paint.e); assert.equal(h.paint!.s, g.paint.s); assert.equal(h.paint!.z, g.paint.z); assert.equal(g.paint.a, 0, 'on the axes: unturned'); assert.ok(Math.abs(Math.abs(h.paint!.a) - 45) < 1e-3, `at 45 degrees: turned by 45 (${h.paint!.a})`); n++; }
-    });
+test('a farm on the axes and one on a road at 45 degrees have the same ground orientation relative to their fields', () => {
+  // (a layout holds the buildings' world footprints, which turn with the parcel: the two farms need not have the same fields, but each patch of each is laid the same way to its own field)
+  const got: Record<number, { crops: number; grass: number; furrows: number[]; grain: number[]; unturned: number[] }> = { 0: { crops: 0, grass: 0, furrows: [], grain: [], unturned: [] }, 45: { crops: 0, grass: 0, furrows: [], grain: [], unturned: [] } };
+  for (const deg of [0, 45]) for (let i = 0; i < 14; i++) for (const seed of SEEDS) for (const month of [1, 5, 8]) {
+    const p = parcel(i, deg), c = composeFarm(p, seed, { model: 2, month }), r = got[deg]!;
+    for (const g of c.ground) {
+      if (g.crop) {
+        // the art's furrows, laid, against the field's own rows: the same at every road angle (the nearest axis, unturned, was 0 off on the axes and 45 off on the diagonal)
+        r.crops++; r.furrows.push(between(laidAt(g), rowsOf(g)));
+        r.unturned.push(between(cropSurface(g.crop.st, g.crop.d[0], g.crop.d[1]) === CROP_SURFACE[g.crop.st].x ? 0 : 90, rowsOf(g)));
+      }
+      if (g.paint) {
+        // a grass field's texture angle against its parcel's own (a quarter turn of a grain is the same grain)
+        r.grass++; r.grain.push(Math.abs(fold(g.paint.a - deg)));
+      }
+    }
   }
-  assert.ok(n > 100, `patches compared: ${n}`);
+  for (const deg of [0, 45]) {
+    const r = got[deg]!;
+    assert.ok(r.crops > 40 && r.grass > 8, `${deg}: crop fields ${r.crops}, fields of grass ${r.grass}`);
+    assert.ok(Math.max(...r.furrows) < 0.02, `${deg}: furrows along the rows (off by ${Math.max(...r.furrows)})`);
+    assert.ok(Math.max(...r.grain) < 1e-3, `${deg}: grass texture angle along the parcel (off by ${Math.max(...r.grain)})`);
+  }
+  // the negative: the same art unturned lay 45 degrees off its rows on the diagonal road and right on the axes: the two farms' grounds were not alike
+  assert.ok(Math.max(...got[0]!.unturned) < 0.02 && Math.min(...got[45]!.unturned) > 44.9, 'unturned: 0 off on the axes, 45 off at 45 degrees');
 });
 
 test('farms are stable and the older farm model keeps its ground', () => {
