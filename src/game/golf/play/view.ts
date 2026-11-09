@@ -7,6 +7,7 @@ import { TILE_M } from '../types';
 import { ADDRESS_TIME, FLIGHT_TIME, PICK_UP, PUTT_FLIGHT, WALK_M, offOf, stateAt, stateOne, walkMin } from './round';
 import { OWNER_ADDRESS } from './owner';
 import { CartPlay, RIDE, STATE, WALK, type CartPaths, type PlayCart } from './carts';
+import type { WalkField } from '../walkfield';
 import { CELEBRATE_S, celebrated } from './celebrate';
 import type { OwnerTurn } from './live';
 import type { CourseView, GolferState, Pt, RoundPlan, Shot } from './types';
@@ -28,6 +29,8 @@ export interface PlayCaddie { x: number; y: number; row: number; frame: number; 
 export interface PlayCheer { x: number; y: number; t: number }
 /** T213: the playback's extras: the cart paths (null: none) and where the carts go after the last green */
 export interface PlayOpts { paths?: CartPaths | null; home?: Pt;
+  /** T377: the course's walk field (golf/walkfield.ts): where a cart may stand and drive (absent: as before) */
+  field?: WalkField | null;
   /** T266: the watchable golfers (golf/pace.ts): the golfers', the carts' and (the tournament's) the caddies' pacers (pacer.ts), so they keep to a
    *  walk and a cart's speed */
   pace?: PlayPace | null;
@@ -117,7 +120,7 @@ export class PlayView {
     this.rides = new Uint8Array(size); this.caddie = new Uint8Array(size); this.bi = new Int32Array(size).fill(-1); this.bm = new Uint8Array(size);
     this.cx = new Float64Array(size); this.cy = new Float64Array(size); this.cm = new Float64Array(size).fill(NaN); this.crow = new Uint8Array(size);
     for (const g of plan.golfers) { if (g.cart !== undefined && !g.owner) this.rides[g.id] = 1; if (g.caddie) this.caddie[g.id] = 1; }
-    this.cartPlay = this.rides.some(r => r === 1) ? new CartPlay(plan, view, opts.paths ?? null, opts.home ?? view.holes[0]?.tee ?? { x: 0, y: 0 }) : null;
+    this.cartPlay = this.rides.some(r => r === 1) ? new CartPlay(plan, view, opts.paths ?? null, opts.home ?? view.holes[0]?.tee ?? { x: 0, y: 0 }, opts.field ?? null) : null;
     this.shots = Array.from({ length: size }, () => [] as Shot[]);
     this.index();
     for (const gr of plan.groups) for (const id of gr.players) this.tee[id] = gr.tee;

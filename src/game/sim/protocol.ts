@@ -1,6 +1,7 @@
 // Messages between the main thread (SimClient) and the city worker (sim.worker.ts): the traffic sim, the parcels and the town.
 import type { NetOp } from '../ground-protocol';
 import type { GallerySpot } from '../golf/galleries';
+import type { WalkField } from '../golf/walkfield';
 import type { LotTuple, TownEvent } from '../lots/town';
 import type { BudgetSave, Ledger } from '../budget';
 import type { CareerSave, Milestone } from '../career';
@@ -45,6 +46,8 @@ export type ToSim = { t: 'net'; ops: NetOp[] } | { t: 'terrain'; cls: Uint8Array
   | { t: 'gates'; gates: { x: number; y: number; lanes: number }[] }
   /** the galleries (LEAD.md M2.2): the spots the admitted fans stand at (golf/galleries.ts) */
   | { t: 'spots'; spots: GallerySpot[] }
+  /** T377: the course's walk field (golf/walkfield.ts: the ground of the course the spectators walk over); null: none (every walker straight at its target) */
+  | { t: 'walkField'; f: WalkField | null }
   /** the golf play's featured holes (docs/GOLF-PLAY.md decision 6): the spots on these holes draw more; [] none (see City.setFeatured) */
   | { t: 'featured'; holes: number[] }
   /** T209: a request for the tournament day as the save keeps it (City.daySave; the answer is a daySave message with the same id) */
