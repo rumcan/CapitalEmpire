@@ -28,8 +28,8 @@ export const TALK_REACH = 1.2;
 export type Verb = 'walk' | 'talk' | 'look' | 'use';
 /** what is under the pointer: open ground, a person, a building (a business, a house, an iconic place, the clubhouse), the range (its front and
  *  pieces), the practice area's greens, the first tee */
-export type ThingKind = 'ground' | 'person' | 'building' | 'range' | 'practice' | 'tee' | 'cart' | 'ball';
-export const VERB_OF: Readonly<Record<ThingKind, Verb>> = { ground: 'walk', person: 'talk', building: 'look', range: 'use', practice: 'use', tee: 'use', cart: 'use', ball: 'use' };
+export type ThingKind = 'ground' | 'person' | 'building' | 'range' | 'practice' | 'tee' | 'cart' | 'ball' | 'pile';
+export const VERB_OF: Readonly<Record<ThingKind, Verb>> = { ground: 'walk', person: 'talk', building: 'look', range: 'use', practice: 'use', tee: 'use', cart: 'use', ball: 'use', pile: 'use' };
 /** the verb of a thing; null where you cannot go (water, a fence, a wall with nothing to look at) */
 export function verbOf(kind: ThingKind | null): Verb | null { return kind ? VERB_OF[kind] : null; }
 /** the hover label: what a click there does, naming the thing */
@@ -43,6 +43,7 @@ export function hoverText(kind: ThingKind | null, name = ''): string {
     case 'tee': return 'The first tee: start a round';
     case 'cart': return name || 'Get in your golf cart';
     case 'ball': return 'Your ball: address it';
+    case 'pile': return name || 'Pick up the balls here'; // T386: a pile of the range's balls on the outfield
     default: return 'You cannot walk there';
   }
 }
