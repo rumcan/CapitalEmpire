@@ -32,7 +32,9 @@ export const DESERT_SAND = 'desert-run', DESERT_DIRT = 'dirt-run', DESERT_PALE =
 /** the world's grass surfaces (painted-surfaces.ts SURFACES keys) and the look each wears in the desert */
 export const DESERT_GROUND: Readonly<Record<string, PaintedLook>> = {
   base: look(DESERT_SAND), outside: look(DESERT_SAND),
-  meadow: look(DESERT_PALE, 1, -0.04, PALE_TINT), dry: look(DESERT_PALE, 1, -0.08, PALE_TINT),
+  // T382 (the owner, 2026-11-08: "more small sand blotches but no big sandy spaces"): the meadow and dry grass classes (the map's large soft patches) are the ground itself, no big pale spaces; the pale sand is the Sand drifts surface (dune),
+  // laid by the living ground as many small blended blotches (living-ground.ts sandBlotch)
+  meadow: look(DESERT_SAND), dry: look(DESERT_SAND),
   worn: look(DESERT_DIRT), woodland: look(DESERT_DIRT, 1, -0.03),
   // the living ground's patchy grass (under trees, at doors) is bare dirt in the desert; its lush grass (along fences and water) is dirt already
   patchy: look(DESERT_DIRT), lush: look(DESERT_DIRT),
@@ -40,6 +42,13 @@ export const DESERT_GROUND: Readonly<Record<string, PaintedLook>> = {
 /** the town's lot lawns: golden fescue for the bright green (the owner: "leave the grass in the backyards the way it is now but replace it with
  *  the fescue golden grass"), the yards' shapes, mow lines and feathering as they are */
 export const DESERT_LAWN: Readonly<Record<string, PaintedLook>> = {
+  lawn: look(DESERT_DIRT), lawnBuilt: look(DESERT_DIRT), lawnUpgraded: look(DESERT_DIRT, 1, 0.03), lawnDeclined: look(DESERT_DIRT, 1, -0.04),
+};
+/** T382: the sand blotches' look, the pale rippled sand over the dirt (the surfaces file's `dune`, an art slot: autumn has none and lays none) */
+export const DESERT_DUNE: PaintedLook = look(DESERT_PALE, 1, 0, PALE_TINT);
+/** the desert as it was before T382 (the dev server's ?sand=old, the A/B of the shots and the bench): big pale patches over the meadow and dry grass classes, golden fescue yards, no blotches */
+const OLD_SAND: Readonly<Record<string, PaintedLook>> = {
+  meadow: look(DESERT_PALE, 1, -0.04, PALE_TINT), dry: look(DESERT_PALE, 1, -0.08, PALE_TINT),
   lawn: look(LAWN_FESCUE), lawnBuilt: look(LAWN_FESCUE), lawnUpgraded: look(LAWN_FESCUE, 1, 0.03), lawnDeclined: look(LAWN_FESCUE, 1, -0.04),
 };
 /** the course's and the range's surfaces: never touched by the theme (the owner: "this is for world only not the golf course") */
@@ -47,12 +56,14 @@ export const COURSE_SURFACES: readonly string[] = ['green', 'fringe', 'fairway',
 /** the green lawn families a lawn slot or a lawn preset may wear, swapped for the golden fescue (a desert or fescue one stays as it is) */
 const GREEN_LAWN = /lawn|meadow|emerald|fairway|green|rough-concept|clover/;
 const toFescue = <T extends PaintedLook>(l: T): T => GREEN_LAWN.test(l.family) ? { ...l, family: LAWN_FESCUE, version: null } : l;
+/** T382 (the owner: "no sand-rectangle yards: yards are dirt with drifts and desert plants"): the green lawn families a yard may wear are the desert's dirt (the sand blotches lay a few small drifts over it) */
+const toDirt = <T extends PaintedLook>(l: T): T => GREEN_LAWN.test(l.family) ? { ...l, family: DESERT_DIRT, version: null } : l;
 /** the surfaces file with the desert theme on: the world's grass surfaces as DESERT_GROUND, the lot lawns golden fescue (DESERT_LAWN, the lawn
  *  slots and the lawns preset), the course's surfaces and every other preset (the range's) as they were; desert: true tells the ground
  *  workers (no fallen leaves in the desert) */
-export function desertSurfaces(f: SurfacesFile): SurfacesFile {
-  const presets = { ...f.presets }; if (presets.lawns) presets.lawns = toFescue(presets.lawns);
-  return { ...f, desert: true, surfaces: { ...f.surfaces, ...DESERT_GROUND, ...DESERT_LAWN }, lawns: f.lawns.map(toFescue), presets };
+export function desertSurfaces(f: SurfacesFile, o: { oldSand?: boolean } = {}): SurfacesFile {
+  const old = !!o.oldSand, yard = old ? toFescue : toDirt, presets = { ...f.presets }; if (presets.lawns) presets.lawns = yard(presets.lawns);
+  return { ...f, desert: true, surfaces: { ...f.surfaces, ...DESERT_GROUND, ...(old ? OLD_SAND : { ...DESERT_LAWN, dune: DESERT_DUNE }) }, lawns: f.lawns.map(yard), presets };
 }
 
 // ---------------------------------------------------------------- the sprites
