@@ -155,8 +155,8 @@ export function desertBank(x: number, y: number, d: number): number {
  *  about an eighth of the ground is sand and no disc of it is wider than about 10 m (a test measures both); `bias` lowers the threshold where sand collects (road verges, the lee of plants, doors, fences) or raises it (the yards, the damp dirt) */
 export const SAND = { stretch: 1.5, waves: [3.4, 1.9, 1.0], weights: [0.3, 0.38, 0.32], warp: 0.8, lo: 0.635, hi: 0.665 } as const;
 /** how far the context moves the threshold (a blotch's reach and share): the road verge, plants and doors and worn ground, fences and walls, a house lot's yard, the damp dirt by water */
-/** a tile set is laid as authored (no tint, no tone), so the renderer multiplies the sand layer by this over the whole picture before the mask cuts the blotches out (a multiply keeps every grain and ripple): the family's gold brought toward the dirt it lies on */
-export const DUNE_TINT = '#f0d6bd';
+/** a tile set is laid as authored (no tint, no tone), so the renderer multiplies the sand layer by this over the whole picture before the mask cuts the blotches out (a multiply keeps every grain and ripple): the family's gold a little toward the dirt it lies on (the pale tint the old sand patches wore: with the tile set's own sharpness the blotch must still read against the dirt) */
+export const DUNE_TINT = '#fff0dc';
 export const SAND_BIAS = { road: 0.04, worn: 0.035, line: 0.025, yard: -0.075, damp: -0.22 } as const;
 const WIND_X = 1 / Math.hypot(1, 0.25), WIND_Y = -0.25 / Math.hypot(1, 0.25);
 /** how much of an octave `res` samples a tile resolve: all of it from 2.5 samples a wavelength, none below 1 (an octave finer than the samples would alias into speckle: the far levels bake with fewer samples a tile, one at 15%, two at 30%) */
