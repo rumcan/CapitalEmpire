@@ -46,7 +46,7 @@ test('a sale goes into the books as Lot sales, the levy as the club\'s business,
   assert.match(step, /this\.traffic\.spend\('business', -out\.levy\)/);
   assert.match(step, /members: club\.members \+ n/);
   assert.match(step, /if \(club\) \{/, 'no clubhouse, no club: nothing is booked and nobody joins');
-  assert.match(read('src/game/city.ts'), /spend\(kind: 'construction' \| 'compensation' \| 'business' \| 'upkeep' \| 'lots', n: number\): void \{ this\.budget\.spend\(kind, n\); \}/);
+  assert.match(read('src/game/city.ts'), /spend\(kind: 'construction' \| 'compensation' \| 'business' \| 'upkeep' \| 'lots' \| 'balls', n: number\): void \{ this\.budget\.spend\(kind, n\); \}/);
   assert.match(read('src/App.tsx'), /\['Lot sales', l\.lots \?\? 0, true\]/);
 });
 
