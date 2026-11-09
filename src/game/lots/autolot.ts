@@ -381,6 +381,13 @@ function yardTrees(L: Lay, keep: readonly Keep[], have = 0): number {
     spots.forEach((s, k) => { if (n < want && !used.has(k) && treeAt(L, s[0], s[1], s[2], keep, slack)) { n++; used.add(k); } });
     if (n >= TREES_MIN) break;
   }
+  // (T398: still too few, the buildings and the drive leave the corner spots no room (a big building on a small lot, which the swaps can now place in a straight-on picture): a coarse grid over the yard, tried in the
+  // same way, so a lot holds its three trees wherever there is room for them)
+  if (n < TREES_MIN) {
+    const grid: [Zone, number, number][] = [];
+    for (const y of [1.7, D * 0.5, D - 1.4, D - 3.4]) for (const x of [1.5, W * 0.25, W * 0.5, W * 0.75, W - 1.5]) grid.push([y < D / 3 ? 'front' : y > D * 0.7 ? 'back' : 'side', x, y]);
+    for (const slack of [0.6, 0.35]) { for (const g of grid) if (n < want && treeAt(L, g[0], g[1], g[2], keep, slack)) n++; if (n >= TREES_MIN) break; }
+  }
   return n;
 }
 /** the clipped hedge's shrubs (round ones: they read as a hedge along any line), drawn in turn by the lot's draws */
