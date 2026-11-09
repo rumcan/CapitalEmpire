@@ -104,7 +104,7 @@ export function filterCatalogue(all: readonly CatalogueEntry[], query: string, o
   const pool = opt.cc ? all.filter(e => e.cc === opt.cc) : all;
   if (!words.length) {
     if (!opt.cc) return { rows: [], matched: 0, words };
-    const rows = pool.slice().sort((a, b) => alike(fold(a.name), fold(b.name)) || alike(a.id, b.id));
+    const rows = pool.slice().sort((a, b) => alike(a.nm, b.nm) || alike(a.id, b.id));
     return { rows: rows.slice(0, limit), matched: rows.length, words };
   }
   const scored: { e: CatalogueEntry; s: number }[] = [];
@@ -122,7 +122,7 @@ export function filterCatalogue(all: readonly CatalogueEntry[], query: string, o
     s += Math.min(15, Math.log2(1 + (e.w * e.h) / 10000) * 2);
     scored.push({ e, s });
   }
-  scored.sort((a, b) => b.s - a.s || alike(fold(a.e.name), fold(b.e.name)) || alike(a.e.id, b.e.id));
+  scored.sort((a, b) => b.s - a.s || alike(a.e.nm, b.e.nm) || alike(a.e.id, b.e.id));
   return { rows: scored.slice(0, limit).map(x => x.e), matched: scored.length, words };
 }
 

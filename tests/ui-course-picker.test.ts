@@ -7,6 +7,9 @@ import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server.edge';
 import { CoursePicker, GradeChip, PreviewButtons, type Featured } from '../src/ui/golf/CoursePicker';
 import { WhoCard } from '../src/ui/golf/YouCards';
+import { readFileSync } from 'node:fs';
+import { CatalogueFinder, CountryFlyout, rowLine } from '../src/ui/golf/CourseNames';
+import { filterCatalogue, parseChunk } from '../src/game/golf/osm/catalogue';
 
 const FEATURED: Featured[] = [
   { id: 'rondebosch', name: 'Rondebosch Golf Course (from map data)', place: 'Cape Town, South Africa', holes: 18, par: 72, mappedPar: 72 },
@@ -101,5 +104,99 @@ describe('the Who-are-you card while a course is in hand (T356)', () => {
     assert.ok(h.includes('data-testid="who-card"') && h.includes('data-testid="who-name"'), 'mounted, name and all');
     const shown = card();
     assert.ok(!/display:none/.test(shown) && !shown.includes('data-hidden'), 'shown otherwise');
+  });
+});
+
+// ------------------------------------------------------------------------------------------------------------------------ T378: the filter list of course names
+const CAT = parseChunk({ v: 1, cc: 'ZA', e: [
+  ['w4261725', 'Wingatepark Country Club', 'Wingate Park, Pretoria', -25.8308, 28.2804, 28, 49, 18, '', ''],
+  ['w103', 'Pretoria Country Club', 'Waterkloof, Pretoria', -25.79, 28.2, 300, 200, 9, '', ''],
+  ['n110', 'Pitch & Putt', 'Wingate Park, Pretoria', -25.83, 28.28, 0, 0, 0, '', ''],
+  ['w104', 'A Very Long Named Golf And Country Club And Estate Of The Greater Pretoria Metropolitan Area', 'Some Village Near A Town With A Very Long Name, Gauteng', -25.8, 28.2, 90, 90, 3, '', ''],
+] }, new Map([['ZA', 'South Africa']]));
+const finder = (over: Partial<Parameters<typeof CatalogueFinder>[0]> = {}) => renderToStaticMarkup(createElement(CatalogueFinder, {
+  status: 'ready', summary: '4 golf courses in 1 countries', text: 'wing', onText: noop, onKey: noop, countryLabel: 'All countries', countryOn: false, flyoutOpen: false, onCountry: noop,
+  filtered: filterCatalogue(CAT, 'wing'), active: 0, onActive: noop, onPick: noop, credit: 'Course names: © OpenStreetMap contributors, ODbL.', ...over,
+}));
+
+describe('the filter list of course names, as markup (T378)', () => {
+  it('is the first thing of Find a real course, and the name search is under it, for a course that is not in the list', () => {
+    const h = picker();
+    const at = (s: string) => { const i = h.indexOf(s); assert.ok(i >= 0, `${s} is in the picker`); return i; };
+    assert.ok(at('data-testid="cat-finder"') < at('Not in the list?') && at('Not in the list?') < at('data-testid="find-input"') && at('data-testid="find-input"') < at('data-testid="find-go"'));
+    assert.ok(at('Downloaded courses') < at('data-testid="cat-finder"'), 'after the Downloaded courses, as the search always was');
+    assert.ok(at('data-testid="cat-input"') < at('data-testid="find-input"'), 'the filter input comes before the search input');
+    assert.ok(h.includes('data-testid="cat-country"') && h.includes('All countries'), 'a country button beside it');
+    assert.ok(h.includes('Loading the course names...'), 'the card says so while the catalogue loads (its code is loaded when the card opens)');
+    assert.ok(/only when you press Search/.test(h), 'the fallback keeps its words: a search is one request, on Search only');
+  });
+  it('shows a row for each match: the name, the town and the country, with Full on a course whose holes are all mapped', () => {
+    const h = finder();
+    assert.ok(h.includes('data-testid="cat-row-way-4261725"') && h.includes('Wingatepark Country Club') && h.includes('Wingate Park, Pretoria, South Africa'));
+    assert.match(h, /data-testid="cat-full-way-4261725"[^>]*>Full</);
+    assert.ok(!h.includes('cat-full-node-110'), 'no chip on a course with no hole lines');
+    assert.ok(h.includes('data-testid="cat-row-node-110"'), 'and a course whose TOWN has the word is listed too');
+    assert.match(h, /role="listbox"/); assert.match(h, /role="option"/);
+    assert.ok(/aria-selected="true"[^>]*data-testid="cat-row-way-4261725"/.test(h) || /data-testid="cat-row-way-4261725"[^>]*aria-selected="true"/.test(h), 'the first row is the active one (Enter picks it)');
+  });
+  it('counts what matched in a header that stays at the top of the list, and nothing scrolls sideways', () => {
+    const h = finder();
+    assert.match(h, /data-testid="cat-count"/); assert.ok(h.includes('sticky top-0'), 'sticky header');
+    assert.match(h, /2 golf courses match &quot;wing&quot;/);
+    assert.ok(h.includes('overflow-y-auto') && h.includes('overflow-x-hidden') && !/overflow-x-(auto|scroll)/.test(h), 'the list scrolls up and down inside its box only');
+    assert.ok(h.includes('break-words'), 'a long name wraps instead of running off the card');
+    assert.match(finder({ filtered: filterCatalogue(CAT, 'wing', { limit: 1 }) }), /2 golf courses match &quot;wing&quot; · the best 1 are listed: type more to narrow them/);
+  });
+  it('says what to do before anything is typed, and when nothing matches (and the search below is the way on)', () => {
+    const none = finder({ text: '', filtered: filterCatalogue(CAT, '') });
+    assert.ok(none.includes('data-testid="cat-hint"') && !none.includes('data-testid="cat-list"') && /Type any part of a course&#x27;s name or of its town/.test(none));
+    const nothing = finder({ text: 'zzz', filtered: filterCatalogue(CAT, 'zzz') });
+    assert.ok(nothing.includes('data-testid="cat-none"') && /search the map by name below/.test(nothing) && /0 golf courses match &quot;zzz&quot;/.test(nothing));
+    assert.ok(/still loading/.test(finder({ text: 'zzz', status: 'loading', filtered: filterCatalogue(CAT, 'zzz') })), 'while it loads: not found YET');
+    const country = finder({ text: '', countryOn: true, countryLabel: 'South Africa (4)', filtered: filterCatalogue(CAT, '', { cc: 'ZA' }) });
+    assert.ok(country.includes('data-testid="cat-list"') && /4 golf courses in this country/.test(country) && country.includes('South Africa (4) ›'), 'a country alone lists its courses by name');
+  });
+  it('carries the credit and the status line, and offers Try again when the files could not be read', () => {
+    const h = finder();
+    assert.ok(h.includes('data-testid="cat-credit"') && h.includes('© OpenStreetMap contributors, ODbL.') && h.includes('data-testid="cat-status"') && h.includes('4 golf courses in 1 countries'));
+    assert.ok(!h.includes('cat-retry'));
+    const bad = finder({ status: 'failed', summary: 'The course names could not be read.', filtered: filterCatalogue(CAT, 'wing'), onRetry: noop });
+    assert.ok(bad.includes('data-testid="cat-retry"') && bad.includes('Try again') && bad.includes('text-amber-200'));
+  });
+  it('is switched off while a course is being fetched (rows cannot be pressed twice)', () => {
+    const h = finder({ disabled: true });
+    assert.ok((h.match(/disabled=""/g) ?? []).length >= 3, 'the input and the rows');
+  });
+  it('words the second line of a row: the town, the country, and the size when it is known', () => {
+    assert.equal(rowLine({ place: 'Wingate Park, Pretoria', country: 'South Africa', w: 280, h: 490 }), 'Wingate Park, Pretoria, South Africa · 280 m x 490 m');
+    assert.equal(rowLine({ place: '', country: 'France', w: 1500, h: 1200 }), 'France · 1.5 km x 1.2 km');
+    assert.equal(rowLine({ place: 'X', country: 'Y', w: 0, h: 0 }), 'X, Y', 'a point has no size');
+  });
+});
+
+describe('the countries flyout (T378)', () => {
+  const countries = [{ cc: 'US', country: 'United States', n: 13000 }, { cc: 'ZA', country: 'South Africa', n: 306 }, { cc: 'GB', country: 'United Kingdom', n: 2900 }];
+  const flyout = (over: Partial<Parameters<typeof CountryFlyout>[0]> = {}) => renderToStaticMarkup(createElement(CountryFlyout, { countries, cc: '', total: 16206, onPick: noop, onClose: noop, ...over }));
+  it('is a column of its own beside the picker: All countries, then each country with its number of courses, a title that stays at the top, and a way to close it', () => {
+    const h = flyout();
+    assert.ok(h.includes('data-testid="cat-countries"') && h.includes('data-testid="cat-country-all"') && h.includes('All countries') && h.includes('16,206'));
+    assert.ok(h.indexOf('cat-country-US') < h.indexOf('cat-country-ZA'), 'in the order it is given');
+    assert.ok(h.includes('13,000') && h.includes('South Africa') && h.includes('win-head'), 'counts, and the sticky title');
+    assert.ok(h.includes('data-testid="cat-countries-close"') && h.includes('overflow-y-auto') && !/overflow-x-(auto|scroll)/.test(h));
+  });
+  it('puts the country of the player first and says so, and marks the one chosen', () => {
+    const h = flyout({ prefer: 'ZA', cc: 'GB' });
+    assert.ok(h.indexOf('cat-country-ZA') < h.indexOf('cat-country-US') && h.includes('(your region)'));
+    assert.match(h, /bg-amber-300\/15[^"]*"[^>]*data-testid="cat-country-GB"/);
+    assert.ok(!/bg-amber-300\/15[^"]*"[^>]*data-testid="cat-country-all"/.test(h));
+  });
+});
+
+describe('the progress card says which server is asked and that the servers are slow (T378)', () => {
+  it('the card shows the note under the progress line, and the wait', () => {
+    // (the picker's working view is state, not a prop: its words are checked in the source; the sentences themselves are tested in tests/golf-osm-mirrors.test.ts)
+    const src = readFileSync('src/ui/golf/CoursePicker.tsx', 'utf8');
+    assert.ok(/data-testid="find-progress"/.test(src) && /data-testid="find-slow"/.test(src) && /info\?\.note/.test(src), 'the note rides with the step');
+    assert.ok(/data-testid="find-waited"/.test(src) && /Waiting \{s\} s for the answer/.test(src), 'and the card counts the seconds of a long wait');
   });
 });

@@ -28,7 +28,8 @@ const CACHE = opt('cache', 'E:/ClaudeTemp/T378/cache').replace(/\\/g, '/'), OUT 
 const GAP_MS = Math.max(10, Number(opt('gap', 10))) * 1000, MAX_MS = Number(opt('max-minutes', 170)) * 60_000;
 /** an answer whose map data is older than this is not used (--max-age-days): on 2026-11-09 overpass.kumi.systems answered Texas from a July snapshot, with 139 courses of some 900 */
 const MAX_AGE_MS = Number(opt('max-age-days', 3)) * 86_400_000;
-const SERVERS = opt('overpass') ? opt('overpass').split(',') : L.SERVERS;
+// (the game's own course import asks four servers; this script asks the main one and maps.mail.ru: on 2026-11-09 kumi answered from a July snapshot or hung and private.coffee hung, 215 s a try)
+const SERVERS = opt('overpass') ? opt('overpass').split(',') : L.SERVERS.slice(0, 2);
 const ONLY = opt('countries') ? opt('countries').split(',').map(s => s.trim().toUpperCase()).filter(Boolean) : null;
 const T0 = Date.now(), sleep = ms => new Promise(r => setTimeout(r, ms));
 const stamp = () => new Date().toISOString().slice(11, 19);
@@ -62,8 +63,8 @@ function ordered() {
   const now = Date.now(), score = u => { const h = health.get(u); return (h.until > now ? 1e15 + h.until : 0) - h.okAt; };
   return SERVERS.filter(u => !health.get(u).stale).sort((a, b) => score(a) - score(b) || SERVERS.indexOf(a) - SERVERS.indexOf(b));
 }
-/** how long a request is waited for: the main server the query's own time and a little more, a mirror (they hang when they are down) at most 90 s and a little more */
-const clientTimeoutMs = (url, timeoutS) => (url === SERVERS[0] ? timeoutS + 45 : Math.min(timeoutS, 90) + 15) * 1000;
+/** how long a request is waited for: the main server the query's own time and a little more, a mirror (they hang when they are down) at most 200 s and a little more */
+const clientTimeoutMs = (url, timeoutS) => (url === SERVERS[0] ? timeoutS + 45 : Math.min(timeoutS, 200) + 15) * 1000;
 async function gap() { const w = lastEnd + GAP_MS - Date.now(); if (w > 0) await sleep(w); }
 class Failed extends Error {}
 class TimeUp extends Error {}
@@ -113,85 +114,105 @@ async function ask(query, kind, label, timeoutS) {
   }
   throw new Failed(label);
 }
-const timeoutFor = approx => (approx < 100 ? 180 : approx < 600 ? 240 : 300); // (a country of six courses took 79 s on 2026-11-09: the server is slow today, not the query big)
+// (on 2026-11-09 a country of six courses took 79 s and Florida, with 10 000 hole lines, 76 s: the query costs the time, not the answer, so regions are asked in batches)
 const approxOf = r => (r.cc === 'US' ? 330 : L.COUNTRIES.find(c => c[0] === r.cc)?.[1] ?? 100);
+const label = rs => rs.map(r => r.id).join('+');
 
-/** asks a region for its courses (kept in the cache); returns the cached record. A region already kept is not asked */
-async function coursesOf(r) {
-  const kept = readCached(`${r.id}.courses`, 'json');
-  if (kept) return kept;
-  const a = await ask(L.coursesQuery(r, timeoutFor(approxOf(r))), 'json', r.id, timeoutFor(approxOf(r)));
-  const meta = { server: a.server, fetchedAt: new Date().toISOString(), base: a.base, bytes: a.text.length };
-  keep(`${r.id}.courses`, 'json', a.text, meta);
-  return { text: a.text, meta };
+/** asks a batch of regions for their courses in ONE request (batchQuery: each region's courses and hole lines, a count after each); each region's part is kept in the cache
+ *  as a single region's answer, so a rerun, the build and a smaller batch all see the same files. Throws Failed when no server gave an answer that fits */
+async function coursesBatch(rs) {
+  const timeoutS = rs.length > 1 || rs[0].cc === 'US' ? 300 : 240, name = label(rs);
+  const a = await ask(L.batchQuery(rs, timeoutS), 'json', name, timeoutS);
+  let parts;
+  try { parts = L.splitBatch(JSON.parse(a.text), rs); } catch (e) { log(`${name}: the answer does not fit the batch (${e.message})`); throw new Failed(name); }
+  const fetchedAt = new Date().toISOString();
+  for (const { region, answer } of parts) { const text = JSON.stringify(answer); keep(`${region.id}.courses`, 'json', text, { server: a.server, fetchedAt, base: a.base, bytes: text.length, batch: rs.length }); }
 }
-/** the places of a country (kept); the US asks once for the whole country, the others per country */
-async function placesOf(r) {
-  const p = r.cc === 'US' ? L.usPlaces : r, name = `places-${p.cc.toLowerCase()}`, kept = readCached(name, 'csv');
-  if (kept) return kept;
-  const kinds = r.cc === 'US' ? ['city', 'town', 'village', 'suburb'] : L.PLACE_KINDS, t = r.cc === 'US' ? 300 : timeoutFor(approxOf(r));
-  const a = await ask(L.placesQuery(p, kinds, t), 'csv', name, t);
-  const meta = { server: a.server, fetchedAt: new Date().toISOString(), bytes: a.text.length };
-  keep(name, 'csv', a.text, meta);
-  return { text: a.text, meta };
+/** a batch that failed is asked again in two halves (down to one region); returns the regions that still failed */
+async function coursesTask(rs) {
+  try { await coursesBatch(rs); return []; }
+  catch (e) {
+    if (!(e instanceof Failed)) throw e;
+    if (rs.length === 1) { noteFailure(rs[0].id, 'every server failed'); return rs; }
+    log(`${label(rs)}: failed, asking it in two halves`);
+    const h = Math.ceil(rs.length / 2);
+    return [...(await coursesTask(rs.slice(0, h))), ...(await coursesTask(rs.slice(h)))];
+  }
 }
-/** whether a country is worth a places query: at least 20 of its named courses give no town of their own */
-function needsPlaces(text) {
+
+// ---------------------------------------------------------------------------------------------------------------- the places
+const regionOfCc = cc => (cc === 'US' ? L.usPlaces : { id: cc.toLowerCase(), cc, area: ['ISO3166-1', cc] });
+const placeFiles = () => readdirSync(CACHE).filter(f => /^places-.*\.csv\.gz$/.test(f)).map(f => f.replace(/\.csv\.gz$/, ''));
+/** the countries a kept places file covers (its meta says; the first two files of this script's run, places-za and places-us, are named after theirs) */
+const placesCovers = name => { try { return JSON.parse(readFileSync(fileOf(name, 'meta.json'), 'utf8')).ccs ?? [name.slice(7).toUpperCase()]; } catch { return []; } };
+const placesCovered = cc => placeFiles().some(n => placesCovers(n).includes(cc));
+/** whether a country is worth a places query: at least 20 of its named courses give no town of their own (the US always is) */
+function needsPlaces(cc, mine) {
+  if (cc === 'US') return true;
   let n = 0;
-  try { for (const el of JSON.parse(text).elements) if (el.tags?.leisure === 'golf_course' && !(el.tags['addr:city'] || el.tags['addr:town'] || el.tags['addr:village'] || el.tags['addr:municipality'])) n++; } catch { return false; }
+  for (const r of mine) {
+    const k = readCached(`${r.id}.courses`, 'json');
+    if (!k) continue;
+    try { for (const el of JSON.parse(k.text).elements) if (el.tags?.leisure === 'golf_course' && !(el.tags['addr:city'] || el.tags['addr:town'] || el.tags['addr:village'] || el.tags['addr:municipality'])) n++; } catch { /* unreadable: not counted */ }
+  }
   return n >= 20;
+}
+/** asks for the places of several countries in ONE request (the areas united); the biggest places only (a hamlet is not a town), the US alone */
+async function placesStep(ccs) {
+  const name = `places-${ccs.map(c => c.toLowerCase()).join('-')}`, rs = ccs.map(regionOfCc);
+  const a = await ask(L.placesBatchQuery(rs, ['city', 'town', 'village', 'suburb'], 300), 'csv', name, 300);
+  keep(name, 'csv', a.text, { server: a.server, fetchedAt: new Date().toISOString(), bytes: a.text.length, ccs });
 }
 
 // ---------------------------------------------------------------------------------------------------------------- the plan
 const regions = L.regionsPlan(ONLY), ccs = [...new Set(regions.map(r => r.cc))];
 const have = r => existsSync(fileOf(`${r.id}.courses`, 'json.gz')) && existsSync(fileOf(`${r.id}.courses`, 'meta.json'));
-const havePlaces = cc => existsSync(fileOf(`places-${cc.toLowerCase()}`, 'csv.gz')) && existsSync(fileOf(`places-${cc.toLowerCase()}`, 'meta.json'));
 if (flag('list')) {
   for (const r of regions) console.log(`${r.id.padEnd(7)} ${have(r) ? 'kept' : 'to ask'}${failures[r.id] ? `  (failed ${failures[r.id].n}x: ${failures[r.id].why})` : ''}`);
+  console.log(`${L.batchPlan(regions, r => !have(r)).length} requests of courses to go (batches: ${L.batchPlan(regions, r => !have(r)).map(label).join(' | ')})`);
   process.exit(0);
 }
 
-/** the tasks in the order they are asked: each region's courses, then the places of its country (the US: after its last state) when the courses say they are needed */
-function tasks() {
-  const out = [];
-  for (const cc of ccs) {
-    const mine = regions.filter(r => r.cc === cc);
-    for (const r of mine) out.push({ key: r.id, run: () => coursesOf(r) });
-    out.push({
-      key: `places-${cc.toLowerCase()}`,
-      want: () => (cc === 'US' ? mine.some(have) : have(mine[0]) && needsPlaces(readCached(`${mine[0].id}.courses`, 'json').text)),
-      kept: () => havePlaces(cc), run: () => placesOf(mine[0]),
-    });
-  }
-  return out;
-}
-
-/** asks everything not kept yet, in order; what failed is asked again after a pause (twice); returns the keys that are still missing. Stops quietly when the time is up */
+/** asks everything not kept yet, in order, in batches; the places of a country once its courses are all kept (the US alone, the others five countries to a request); what failed
+ *  is asked again after a pause (twice); returns what is still missing. Stops quietly when the time is up */
 async function fetchAll() {
-  const all = tasks(), bad = [];
-  const one = async t => {
-    if (t.kept ? t.kept() : have(regions.find(r => r.id === t.key))) return true;
-    if (t.want && !t.want()) return true;
-    try { await t.run(); return true; }
-    catch (e) { if (e instanceof Failed) { noteFailure(t.key, 'every server failed'); log(`${t.key}: failed, left for later`); return false; } throw e; }
+  let bad = [];
+  const pending = [];
+  const complete = cc => regions.filter(r => r.cc === cc).every(have);
+  const wantPlaces = cc => complete(cc) && !placesCovered(cc) && !pending.includes(cc) && needsPlaces(cc, regions.filter(r => r.cc === cc));
+  const flush = async all => {
+    while (pending.length && (all || pending.length >= 5 || pending.includes('US'))) {
+      const group = pending.includes('US') ? ['US'] : pending.slice(0, 5);
+      for (const cc of group) pending.splice(pending.indexOf(cc), 1);
+      try { await placesStep(group); } catch (e) { if (!(e instanceof Failed)) throw e; noteFailure(`places-${group.join('-')}`, 'every server failed'); log(`places of ${group.join(' ')}: failed, left for later`); }
+    }
   };
   try {
-    for (const t of all) if (!(await one(t))) bad.push(t);
-    for (let again = 1; again <= 2 && bad.length; again++) {
-      log(`${bad.length} failed, asking them again after a pause: ${bad.map(t => t.key).join(' ')}`); await sleep(Math.min(120_000, left()));
-      for (const t of [...bad]) if (await one(t)) bad.splice(bad.indexOf(t), 1);
+    for (let pass = 0; pass <= 2; pass++) {
+      if (pass) { if (!bad.length) break; log(`${bad.length} failed, asking them again after a pause: ${label(bad)}`); await sleep(Math.min(120_000, left())); }
+      const todo = pass ? bad : regions.filter(r => !have(r));
+      bad = [];
+      for (const b of L.batchPlan(todo, r => !have(r))) {
+        bad.push(...await coursesTask(b));
+        for (const cc of new Set(b.map(r => r.cc))) if (wantPlaces(cc)) pending.push(cc);
+        await flush(false);
+      }
+      for (const cc of ccs) if (wantPlaces(cc)) pending.push(cc); // (countries that were kept by an earlier run and have no places yet)
+      await flush(true);
     }
   } catch (e) { if (!(e instanceof TimeUp)) throw e; log(`the ${opt('max-minutes', 170)} minutes are up: what is kept is built, the rest is for the next run`); }
-  return all.filter(t => (t.kept ? t.want?.() && !t.kept() : !have(regions.find(r => r.id === t.key)))).map(t => t.key);
+  return [...regions.filter(r => !have(r)).map(r => r.id), ...ccs.filter(cc => complete(cc) && !placesCovered(cc) && needsPlaces(cc, regions.filter(r => r.cc === cc))).map(cc => `places-${cc.toLowerCase()}`)];
 }
+
 
 // ---------------------------------------------------------------------------------------------------------------- the build
 function build() {
   const t0 = Date.now(), built = new Date().toISOString().slice(0, 10), countries = [], todo = [], names = {};
+  // (the places of every file kept, as one index: a course takes the nearest, whichever request brought it)
+  const pl = new L.Places(placeFiles().flatMap(n => L.parsePlacesCsv(readCached(n, 'csv')?.text ?? '')));
   for (const cc of [...new Set(regions.map(r => r.cc))]) {
     const mine = regions.filter(r => r.cc === cc), entries = [];
     let at = '', missing = 0;
-    const pl = (() => { const k = readCached(`places-${cc.toLowerCase()}`, 'csv'); return k ? new L.Places(L.parsePlacesCsv(k.text)) : null; })();
     for (const r of mine) {
       const k = readCached(`${r.id}.courses`, 'json');
       if (!k) { missing++; todo.push(r.id); continue; }

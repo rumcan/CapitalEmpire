@@ -22,7 +22,7 @@ export const COUNTRIES = [
   ['IS', 65], ['PL', 60], ['VN', 50], ['CO', 50], ['ZW', 40], ['KE', 40], ['CL', 40], ['RU', 40], ['TR', 30], ['DO', 25], ['PK', 25], ['SG', 20], ['EG', 20], ['MA', 20],
   ['PE', 20], ['UY', 20], ['PR', 20], ['AE', 15], ['JM', 15], ['BS', 15], ['HU', 15], ['SK', 15], ['SI', 15], ['HR', 15], ['RO', 15], ['BG', 15], ['GR', 15], ['UA', 15],
   ['SA', 15], ['NG', 15], ['VE', 15], ['TN', 12], ['BY', 10], ['LT', 10], ['LV', 10], ['EE', 10], ['KH', 10], ['BW', 10], ['NA', 10], ['EC', 10], ['CR', 10], ['PA', 10],
-  ['BB', 7], ['LK', 8], ['MM', 8], ['ZM', 8], ['TZ', 8], ['MU', 8], ['FJ', 8], ['PG', 8], ['GT', 8], ['BM', 8], ['LU', 6], ['CY', 6], ['HK', 6], ['RS', 5], ['KZ', 5],
+  ['LK', 8], ['MM', 8], ['ZM', 8], ['TZ', 8], ['MU', 8], ['FJ', 8], ['PG', 8], ['GT', 8], ['BM', 8], ['BB', 7], ['LU', 6], ['CY', 6], ['HK', 6], ['RS', 5], ['KZ', 5],
   ['NP', 5], ['UG', 5], ['MW', 5], ['MZ', 5], ['GH', 5], ['NC', 5], ['PF', 5], ['GU', 5], ['BO', 5], ['PY', 5], ['BN', 3], ['LA', 3], ['QA', 3], ['OM', 3], ['CI', 3],
   ['SV', 3], ['HN', 3], ['NI', 3], ['TT', 3], ['BD', 3], ['MT', 2], ['UZ', 2], ['MN', 2], ['MO', 2], ['IL', 2], ['JO', 2], ['KW', 2], ['LB', 2], ['SN', 2], ['AO', 2],
   ['SZ', 2], ['ET', 2], ['SC', 2], ['BZ', 2], ['KY', 2], ['AW', 2], ['CW', 2], ['LI', 1], ['BH', 1], ['DZ', 1], ['LS', 1], ['CU', 1], ['HT', 1],
@@ -275,3 +275,58 @@ export function chunkText(chunk, built) {
 }
 /** an entry without its empty tail ('' other names, '' country): the reader fills them in */
 function trimTail(e) { const t = e.slice(); while (t.length > 8 && (t[t.length - 1] === '' || t[t.length - 1] === undefined)) t.pop(); return t; }
+
+// ---------------------------------------------------------------------------------------------------------------- batches
+// On 2026-11-09 every query took 50 to 95 s on the public servers, whatever its size (Luxembourg, six courses: 79 s; Florida, 895 courses and 10 000 hole lines: 76 s):
+// the cost is the query's, not the answer's. So several regions are asked in ONE request, each set of results followed by `out count` (an element of type "count", whose
+// tags.total is the size of the set it follows), which says where one region's courses end and its hole lines begin. 12 small countries in a request, or five US states.
+
+/** one request for several regions: for each, the named golf courses (`out tags bb`), then a count, then the numbered hole lines (`out tags center`), then a count */
+export function batchQuery(rs, timeoutS = 300) {
+  const out = [`[out:json][timeout:${timeoutS}];`];
+  rs.forEach((r, i) => {
+    const n = i + 1;
+    out.push(areaOf(r).replace('->.a;', `->.a${n};`), `nwr(area.a${n})["leisure"="golf_course"]["name"]->.c${n};`, `.c${n} out tags bb;`, `.c${n} out count;`,
+      `way(area.a${n})["golf"="hole"]["ref"]->.h${n};`, `.h${n} out tags center;`, `.h${n} out count;`);
+  });
+  return out.join('\n');
+}
+
+/** a batch's answer taken apart again: one answer for each region, `{ ...the answer's header, elements: [courses, then hole lines] }`, the shape a single region's answer has.
+ *  Throws when the counts do not agree with what came (a cut-off or confused answer is never kept) */
+export function splitBatch(json, rs) {
+  const groups = [];
+  let cur = [];
+  for (const el of json?.elements ?? []) {
+    if (el.type === 'count') {
+      const total = Number(el.tags?.total);
+      if (!Number.isFinite(total) || total !== cur.length) throw new Error(`a count says ${el.tags?.total} but ${cur.length} elements came before it`);
+      groups.push(cur); cur = [];
+    } else cur.push(el);
+  }
+  if (cur.length || groups.length !== rs.length * 2) throw new Error(`${groups.length} sets came, ${rs.length * 2} were asked for`);
+  const head = { ...json }; delete head.elements;
+  return rs.map((r, i) => ({ region: r, answer: { ...head, elements: [...groups[2 * i], ...groups[2 * i + 1]] } }));
+}
+
+/** the places of several countries in ONE request (the areas united): tab-separated text, the places of every one of them */
+export function placesBatchQuery(rs, kinds = PLACE_KINDS, timeoutS = 300) {
+  const areas = rs.map(r => `area["${r.area[0]}"="${r.area[1]}"];`).join(' ');
+  return [`[out:csv(::lat, ::lon, name, place; false)][timeout:${timeoutS}];`, `(${areas})->.a;`, `node(area.a)["place"~"^(${kinds.join('|')})$"]["name"];`, 'out;'].join('\n');
+}
+
+/** the regions of a plan in the batches they are asked in, in order: a batch takes the next regions while their courses (about) stay within `budget` and there are at most
+ *  `max` of them; a region bigger than the budget is a batch of its own. Only regions for which `want(region)` is true are batched */
+export function batchPlan(rs, want = () => true, budget = 2600, max = 12) {
+  const out = [];
+  let cur = [], sum = 0;
+  const approx = r => (r.cc === 'US' ? 330 : COUNTRIES.find(c => c[0] === r.cc)?.[1] ?? 100);
+  for (const r of rs) {
+    if (!want(r)) continue;
+    const a = approx(r);
+    if (cur.length && (sum + a > budget || cur.length >= (r.cc === 'US' ? 5 : max))) { out.push(cur); cur = []; sum = 0; }
+    cur.push(r); sum += a;
+  }
+  if (cur.length) out.push(cur);
+  return out;
+}
