@@ -15,6 +15,7 @@ import SHAPES from './shadow-shapes.json';
 // T309: the farm animals' shadows (scripts/assets/prep-animals.mjs drafts them from the standing and grazing frames)
 import ANIMAL_SHAPES from './animal-shadows.json';
 import { CAST, castShear } from './cast-shadow';
+import { releaseBuffer } from './release-buffer';
 
 /** one picture's shadow (shadow-shapes.json). Rings are flat arrays; a cast ring wound the other way round is a hole (the gap under a bench) */
 export interface VectorShadow {
@@ -130,12 +131,15 @@ export const BLOB_BLUR = 3;
  *  an array left its old backing store behind in the old generation: about 100 MB of dead arrays a build, a dev page builds the mesh twice (React's double mount: the second
  *  engine builds what the first let go), so the used JS heap sat at 250 to 285 MB for as long as no full collection ran (the bench read 471 MB against live's 199 MB), where
  *  the page keeps 83 MB. The vertices are doubles so each rim is computed from the very numbers that were pushed: the mesh is bit for bit the one the arrays made; the final
- *  copies are exact-size Float32Array / Uint32Array. */
+ *  copies are exact-size Float32Array / Uint32Array. The builder's own arrays (44 MB a build) are given back when they are outgrown and when the build is done
+ *  (release-buffer.ts), not left for a collection. */
 class MeshBuf<A extends Float64Array | Uint32Array> {
   a: A; n = 0;
   constructor(private make: (length: number) => A, length: number) { this.a = make(length); }
   /** room for k more (reads of `a` after a push must go through `a` again: the array is replaced when it grows) */
-  room(k: number) { if (this.n + k > this.a.length) { const b = this.make(Math.max(this.a.length * 2, this.n + k)); b.set(this.a.subarray(0, this.n)); this.a = b; } }
+  room(k: number) { if (this.n + k > this.a.length) { const b = this.make(Math.max(this.a.length * 2, this.n + k)); b.set(this.a.subarray(0, this.n)); releaseBuffer(this.a); this.a = b; } }
+  /** the build is done: the array's bytes go back */
+  free() { releaseBuffer(this.a); }
   push1(x: number) { this.room(1); this.a[this.n++] = x; }
   push6(x0: number, x1: number, x2: number, x3: number, x4: number, x5: number) { this.room(6); const a = this.a, o = this.n; a[o] = x0; a[o + 1] = x1; a[o + 2] = x2; a[o + 3] = x3; a[o + 4] = x4; a[o + 5] = x5; this.n = o + 6; }
 }
@@ -230,14 +234,20 @@ export function buildVectorMesh(shapes: Readonly<Record<string, VectorShadow>> =
   for (const [id, e] of Object.entries(shapes)) if (e.same) { const r = at.get(e.same); if (r) at.set(id, r); }
   // (the doubles rounded to floats exactly as Float32Array.from did; exact-size copies, so the growth room is not kept)
   const verts = new Float32Array(V.n); verts.set(V.a.subarray(0, V.n));
-  return { verts, idx: I.a.slice(0, I.n), nVerts: V.n / VERTEX_FLOATS, nIdx: I.n, at };
+  const idx = I.a.slice(0, I.n), nVerts = V.n / VERTEX_FLOATS, nIdx = I.n;
+  V.free(); I.free();
+  return { verts, idx, nVerts, nIdx, at };
 }
 let MESH: VectorMesh | null = null;
 /** the game's mesh, built on first use */
 export function vectorMesh(): VectorMesh { return MESH ??= buildVectorMesh(); }
 /** T172: the mesh's vertices and indices let go once they are on the GPU (gl.ts initVector; about 11 MB): the ranges (`at`) and the counts
  *  stay for the sprites */
-export function releaseVectorMeshData() { if (MESH) MESH = { ...MESH, verts: new Float32Array(0), idx: new Uint32Array(0) }; }
+export function releaseVectorMeshData(uploaded?: VectorMesh) {
+  if (MESH) MESH = { ...MESH, verts: new Float32Array(0), idx: new Uint32Array(0) };
+  // T375: the arrays of the mesh that was uploaded (the game's, or the one a second engine built again: 20 MB each) go back at once, not at a full collection
+  if (uploaded) { releaseBuffer(uploaded.verts); releaseBuffer(uploaded.idx); }
+}
 /** the mesh with its vertices and indices, for an upload: the game's, or the same mesh built again once they were let go (a second engine on
  *  the page: React's dev double mount, a hot reload) */
 export function vectorMeshData(): VectorMesh { const m = vectorMesh(); return m.verts.length >= m.nVerts * VERTEX_FLOATS ? m : buildVectorMesh(); }

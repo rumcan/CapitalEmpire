@@ -2951,7 +2951,7 @@ export class Game {
     this.range.sim.onMoney = e => { const c = this.range.scene?.counter, f = rangeFloat(e, c ?? null); if (f) this.floatMoney(f); };
     try { const v = parseFloat(localStorage.getItem('capitalempire.shadows') ?? ''); if (Number.isFinite(v)) this.shadowStrength = Math.max(0, Math.min(2, v)); } catch { /* default 1.1 */ }
     try { this.vectorShadows = VECTOR.on = localStorage.getItem('capitalempire.vectorShadows') !== '0'; } catch { /* default on */ }
-    this.gl.initVector(vectorMeshData()); releaseVectorMeshData(); // T172: the mesh's data is on the GPU now
+    { const mesh = vectorMeshData(); this.gl.initVector(mesh); releaseVectorMeshData(mesh); } // T172: the mesh's data is on the GPU now (T375: its arrays go back at once)
     try { localStorage.removeItem('capitalempire.grassArt'); } catch { /* the old gear menu's Grass setting: gone, the painted art always */ }
     this.grassArt = import.meta.env.DEV && new URLSearchParams(location.search).get('grass') === 'photo' ? 'photo' : 'painted';
     this.ground.grassArt = this.grassArt;
