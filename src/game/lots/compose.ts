@@ -58,6 +58,7 @@ import type { PresetPatch } from './presets';
 import { cleanYards, conditionOf, SIDE_GAP, SURFACES } from './clean-yards';
 import { buildingRect, cleanGround, cleanTrees, hedgeRun, type Box as CleanBox } from './clean-lot';
 import { facingView, lotAnchors } from './house-facing';
+import { houseOnlyLot } from './autolot'; // T405: the last house of a house lot (cleanLot, lastHouse)
 import { centreOf, isCentre, partOf, widen } from './centre-biz';
 import { CIVIC } from '../event/config';
 import { FRONTAL } from './frontal';
@@ -1172,7 +1173,7 @@ function cleanHouse(B: Build, lot: LotGeom, st: ComposeState, p: LotP): CleanPic
  *  (autolot.ts: the lowest tier that has a house for the lot's road, a corner house last: a preset left with no house, and a starter lot whose tier has no house to deal, are
  *  the lots that drew a yard round no house, T383). The house must survive done() (a building past the lot line is dropped there); on a first pass it must also have a drive or
  *  parking pad (the lot's own preset: it need only face the road) and face the road (exactly on a map-axis road, the nearest view on a road at 45 degrees); a second pass
- *  takes any house that stays; no candidate: an empty lot
+ *  takes any house that stays; no candidate: T405's last house (lastHouse), and only where no dwelling of the owner's rules fits between the side gaps, an empty lot
  *  (its fence lines alone), never a yard with no house */
 function cleanLot(lot: LotGeom, st: ComposeState, lp: LotP | null): Composition {
   const state = stateOf(st.level, st.decline) ?? 'built', odd = roadOf(lot.n) % 2 === 1;
@@ -1194,8 +1195,31 @@ function cleanLot(lot: LotGeom, st: ComposeState, lp: LotP | null): Composition 
     if (pick.bad || (strict && pick.facing > (odd ? 1 : 0))) continue;
     return { ...c, anchors: pick.anchors };
   }
+  // T405 (the owner, 2026-11-09: "why is there a lot with no house?"): no candidate's house could stand on the lot: each was a marked picture or had its garage door on a side wall (T398), and a swap for another house keeps to the
+  // lot's tier (facingHouse) and to a size near the house it replaces, while the house palette holds no starter dwelling at all (tier 0): the lots left empty were all starter lots, the preset's and the generated houses marked, nothing to
+  // swap them for. The last house, whatever the preset: a dwelling the allocations allow for the lot's road and state whose picture faces the road (no mark, no sideways garage door), alone between the side gaps, of the lot's tier
+  // when there is one and else the nearest above. The lot stays empty only where no such dwelling fits (a lot narrower than any house and its gaps)
+  const last = LAST ? lastHouse(lot, st, state) : null;
+  if (last) {
+    const { house: _forced, ...plain } = st, B = fresh(), pick = cleanHouse(B, lot, plain, last);
+    if (pick && !pick.bad) { const c = B.done(); if (c.props.some(q => isBuildingId(q.id))) return { ...c, anchors: pick.anchors }; }
+  }
   const E = fresh(); boundaryFence(E, lot); E.clearDrives();
   return E.done();
+}
+/** T405: the last house of a built house lot on (cleanLot, lastHouse). Off (setLastHouse(false), for the tests' before and after), a lot no candidate gave a house is empty, as it was after T398 */
+let LAST = true;
+export function setLastHouse(on: boolean): void { LAST = on; }
+/** T405: the one-house preset a built house lot is given when no candidate's house stood on it (cleanLot): the dwellings of the lot's road and state that the owner's rules allow (house-facing.ts facingView ok: the picture
+ *  faces the road, no mark, no garage door on a side wall; house-alloc.ts), the lot's tier first (then the nearest below, then above), a draw of the lot's seed within a tier so neighbours differ, the first that fits between the side gaps (autolot.ts
+ *  houseOnlyLot); null when none does */
+function lastHouse(lot: LotGeom, st: ComposeState, state: PresetState): LotP | null {
+  const f = frameOf(lot), road = roadOf(lot.n), cap = st.tier ?? 3;
+  const rank = (id: string): number => { const t = tierOf(id); return t <= cap ? cap - t : 10 + t - cap; };
+  const ids = housePalette().filter(id => allows(ALLOC, id, road, state) && facingView(id, f).ok).map(id => ({ id, r: rank(id), h: mix(st.seed, fnv(id), 0x405) }))
+    .sort((a, b) => a.r - b.r || a.h - b.h || (a.id < b.id ? -1 : 1)).map(x => x.id);
+  const pr = houseOnlyLot(lot, state, ids, SIDE_GAP); if (!pr) return null;
+  return { preset: pr, fit: fitPreset(pr, lot.w, lot.d), frame: presetFrame(lot, pr) };
 }
 
 /** T219 (P27): an iconic place's whole preset (lots/iconic.ts) on its own footprint, drawn as a whole preset draws (its props kept as authored,

@@ -5,7 +5,7 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 import { compose, lotPreset, lotPresets, setLotPresets, type ComposeState, type LotGeom } from '../src/game/lots/compose';
-import { axisSetOf, drawnView, footprintOf, ownerScaleOf, roadView, setRoadHeadings, turned } from '../src/game/lots/preset-art';
+import { axisSetOf, drawnView, eightRingOf, footprintOf, ownerScaleOf, roadView, setRoadHeadings, turned } from '../src/game/lots/preset-art';
 import { AXIS_HEADING, AXIS_SETS } from '../src/game/axis-library';
 import { LIBRARY } from '../src/game/library';
 import { isBuilding } from '../src/game/mirror';
@@ -31,19 +31,26 @@ const presetOf = (id: string, r: number, view: View = 0): LotPreset => { const s
 /** composes a lot drawing a preset (forced, as the lab draws it) */
 const drawn = (p: LotPreset, g: LotGeom) => { const was = lotPresets(); setLotPresets([...was, p]); try { return compose(g, { ...BUILT, preset: p.id }); } finally { setLotPresets([...was]); } };
 
+/** the picture a building with a set is drawn in on road r (1, 3, 5 or 7), turned on by the prop's view v. T375, T398 (the owner, 2026-11-09: "screen-straight roads use the turned straight-on views"): a building with an approved
+ *  eight-view ring (preset-art.ts eightRingOf: houses 0, 1 and 3, the shanty, the dormer ...) is drawn in the ring's turned straight-on view whose front faces the street (the ring's place is the road, two places on a quarter turn of
+ *  the prop's view) and wins over the old square screen-axis set; a building with the square set alone keeps the set's view (N on road 1, E on 3, S on 5, W on 7) */
+const viewWanted = (id: string, r: number, v: number): string => { const ring = eightRingOf(id); return ring ? ring[(((r + 2 * v) % 8) + 8) % 8]! : AXIS_SETS[id]![((((r - 1) / 2 + v) % 4) + 4) % 4]!; };
+
 describe('the eight-heading contract: buildings on roads at 45 degrees (T154 Phase 2)', () => {
-  it('1. the view per road angle: N on road 1, E on 3, S on 5, W on 7, turned on by the prop\'s view; none on an axis road, a prop or a building with no set', () => {
+  it('1. the view per road angle: N on road 1, E on 3, S on 5, W on 7 (a building with an eight-view ring: the ring\'s turned view), turned on by the prop\'s view; none on an axis road, a prop or a building with no set', () => {
     assert.ok(SET_BUILDINGS.length >= 14, `${SET_BUILDINGS.length} buildings with a set`);
     for (const id of SET_BUILDINGS) for (const r of [1, 3, 5, 7]) for (const v of [0, 1, 2, 3] as const) {
       const got = roadView(id, r, v)!;
-      assert.equal(got, AXIS_SETS[id]![((r - 1) / 2 + v) % 4], `${id} road ${r} view ${v}`);
-      assert.equal(AXIS_HEADING[got], 'NESW'[((r - 1) / 2 + v) % 4]);
+      assert.equal(got, viewWanted(id, r, v), `${id} road ${r} view ${v}`);
+      if (!eightRingOf(id)) assert.equal(AXIS_HEADING[got], 'NESW'[((r - 1) / 2 + v) % 4]);
     }
+    assert.ok(SET_BUILDINGS.some(id => eightRingOf(id)) && SET_BUILDINGS.some(id => !eightRingOf(id)), 'the buildings with a ring and those with the square set alone are both there');
     for (const r of [0, 2, 4, 6]) assert.equal(roadView('town:bakery', r, 0), null, `axis road ${r}`);
     assert.equal(roadView('world:bench', 1, 0), null, 'a prop keeps its picture');
     assert.equal(roadView('world:house_5', 1, 0), null, 'a building with no set keeps its views');
-    // any picture of the subject finds its set: a four-view building's other views, the set's own
-    assert.equal(roadView('view:town:bakery:sw', 3, 0), 'view:town:bakery:e');
+    // any picture of the subject finds its set: a four-view building's other views (the ring's view where the building has one, as for its base picture), the set's own (the square set: eightRingOf knows a ring by a building's base and
+    // corner pictures, never by a square set's own, and no preset prop carries one)
+    assert.equal(roadView('view:town:bakery:sw', 3, 0), viewWanted('town:bakery', 3, 0));
     assert.equal(roadView('view:world:house_3:w', 1, 0), 'view:world:house_3:n');
   });
   it('2. compose: on every 45-degree road each building with a set is drawn in the view facing its street; with the rule off, as before', () => {
