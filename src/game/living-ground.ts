@@ -127,6 +127,10 @@ export interface LivingSources {
   /** T342: the desert theme: the world's water (the rivers, the creeks and the painted ponds; never the course's water) wears a band of damp
    *  dirt (the lush channel, which the desert's surfaces lay as dirt), widest at the bank and breaking up outward into blotches (desertBank) */
   desert?: boolean;
+  /** T382: the desert's sand blotches are laid (the desert theme, unless ?sand=old): the `sand` channel is made (sandBlotch, bent by the road verges, plants and doors, the yards and the damp dirt) */
+  sand?: boolean;
+  /** T382: the house lots' lawns (their outlines, tile space, x y pairs): the yards, where the sand is only a few small drifts */
+  yards?: readonly ArrayLike<number>[];
 }
 /** T342 (the owner, 2026-11-05: "you see this transition you have between dirt and the desert is very random. we need more of that around
  *  the rivers and water"): the damp dirt by the world's water in the desert, 0..1, at a sample d metres past the bank at tile (x, y): whole
@@ -144,6 +148,34 @@ export function desertBank(x: number, y: number, d: number): number {
   const blot = vnoise(x / 9 - 3.3, y / 9 + 6.2, 79) * 0.7 + n * 0.3;
   return Math.max(sm(0.5, 0.6, v), sm(0.7, 0.76, blot) * (1 - sm(DESERT_BLOT_M * 0.6, DESERT_BLOT_M, d)));
 }
+
+/** T382 (the owner, 2026-11-08: "some sand texture was added to the map for desert mode but it isn't there enough. we need more small sand blotches but no big sandy spaces. sand should be blended"): the desert's sand is MANY SMALL
+ *  BLOTCHES over the dirt, 2 to 12 m across, from three octaves of value noise (waves of about 7 m, 4 m and 2 m) bent by a slow warp of the world and stretched along the wind (the fallen leaves' wind: the drifts run one way), thresholded through a
+ *  smoothstep 0.03 wide: a blotch is whole sand inside (the painted sand shows at its own sharpness, never a thin film over the dirt) and fades into the dirt only across its edge, which the samples' own bilinear stretch feathers over about a sample (a metre at 30%) and the finest octave breaks up. World-space noise only: deterministic, never periodic, and neighbouring chunks agree at their seams. On open ground
+ *  about an eighth of the ground is sand and no disc of it is wider than about 10 m (a test measures both); `bias` lowers the threshold where sand collects (road verges, the lee of plants, doors, fences) or raises it (the yards, the damp dirt) */
+export const SAND = { stretch: 1.5, waves: [3.4, 1.9, 1.0], weights: [0.3, 0.38, 0.32], warp: 0.8, lo: 0.635, hi: 0.665 } as const;
+/** how far the context moves the threshold (a blotch's reach and share): the road verge, plants and doors and worn ground, fences and walls, a house lot's yard, the damp dirt by water */
+/** a tile set is laid as authored (no tint, no tone), so the renderer multiplies the sand layer by this over the whole picture before the mask cuts the blotches out (a multiply keeps every grain and ripple): the family's gold a little toward the dirt it lies on (the pale tint the old sand patches wore: with the tile set's own sharpness the blotch must still read against the dirt) */
+export const DUNE_TINT = '#fff0dc';
+export const SAND_BIAS = { road: 0.04, worn: 0.035, line: 0.025, yard: -0.075, damp: -0.22 } as const;
+const WIND_X = 1 / Math.hypot(1, 0.25), WIND_Y = -0.25 / Math.hypot(1, 0.25);
+/** how much of an octave `res` samples a tile resolve: all of it from 2.5 samples a wavelength, none below 1 (an octave finer than the samples would alias into speckle: the far levels bake with fewer samples a tile, one at 15%, two at 30%) */
+const resolved = (wave: number, res: number) => sm(1, 2.5, wave * res), SAND_W2 = SAND.weights[0] ** 2 + SAND.weights[1] ** 2 + SAND.weights[2] ** 2;
+/** the sand's raw field at tile (x, y), about 0.5 on average, the blotches where it rises past SAND.lo. `res`: the samples a tile the caller takes it at (the default: all of it): the octaves the samples cannot resolve fade out
+ *  (the pattern of the coarse ones stays where it is, so a chunk baked at another zoom lays the same blotches with less fine edge, and cost nothing) and the rest are scaled up to keep the field's spread, so the share of the ground under sand is
+ *  the same at every zoom (without it the far levels laid almost none) */
+export function sandField(x: number, y: number, res = 1e9): number {
+  const e0 = SAND.weights[0] * resolved(SAND.waves[0], res), e1 = SAND.weights[1] * resolved(SAND.waves[1], res), e2 = SAND.weights[2] * resolved(SAND.waves[2], res);
+  const u = (x * WIND_X + y * WIND_Y) / SAND.stretch, v = -x * WIND_Y + y * WIND_X;
+  const wx = (vnoise(x / 9 + 11.3, y / 9 - 4.7, 91) - 0.5) * SAND.warp, wy = (vnoise(x / 9 - 7.1, y / 9 + 9.9, 93) - 0.5) * SAND.warp;
+  let f = 0;
+  if (e0 > 0) f += (vnoise((u + wx) / SAND.waves[0] + 5.1, (v + wy) / SAND.waves[0] - 3.7, 83) - 0.5) * e0;
+  if (e1 > 0) f += (vnoise((u + wy) / SAND.waves[1] - 2.2, (v - wx) / SAND.waves[1] + 8.4, 85) - 0.5) * e1;
+  if (e2 > 0) f += (vnoise(u / SAND.waves[2] + 6.3, v / SAND.waves[2] - 1.9, 87) - 0.5) * e2;
+  return 0.5 + f * Math.sqrt(SAND_W2 / Math.max(1e-6, e0 * e0 + e1 * e1 + e2 * e2));
+}
+/** the sand's cover at tile (x, y), 0..1: a blotch whole inside, fading to nothing across its irregular edge (bias: the threshold moved by it; res: sandField's) */
+export function sandBlotch(x: number, y: number, bias = 0, res = 1e9): number { return sm(SAND.lo - bias, SAND.hi - bias, sandField(x, y, res)); }
 
 /* ---- noise: value noise on the world grid (never periodic) ---- */
 const hash2 = (x: number, y: number, s: number) => { let h = Math.imul(x | 0, 374761393) ^ Math.imul(y | 0, 668265263) ^ Math.imul(s, 2246822519); h = Math.imul(h ^ (h >>> 13), 1274126177); return ((h ^ (h >>> 16)) >>> 0) / 4294967296; };
@@ -172,7 +204,8 @@ export function openNoise(x: number, y: number) {
 /** the five channels, each 0..1 per sample: lush (darker, denser grass), thin (patchy grass with dirt in its gaps), bare (dirt), litter (leaves
  *  and needles) and ao (how much the ground is darkened) */
 export interface InfluenceGrid { ix0: number; iy0: number; res: number; w: number; h: number; lush: Float32Array; thin: Float32Array; bare: Float32Array; litter: Float32Array; ao: Float32Array;
-  /** T342: the desert's damp dirt by the world's water, 0..1 (desertBank's dirt, deeper toward the bank); only in the desert */ damp?: Float32Array }
+  /** T342: the desert's damp dirt by the world's water, 0..1 (desertBank's dirt, deeper toward the bank); only in the desert */ damp?: Float32Array;
+  /** T382: the desert's sand blotches, 0..1 (sandBlotch bent by the context); only in the desert, with the sand on */ sand?: Float32Array }
 /** samples past the chunk's box on every side (so the bilinear stretch has neighbours at its edges) */
 const PAD = 2;
 /** the sample density for a chunk baked at level L (samples per tile): about one every 12 px, at most 3 (two thirds of a metre) and at least one every
@@ -340,6 +373,17 @@ export function influence(box: Box, res: number, src: LivingSources): InfluenceG
   const step = Math.max(1, Math.round(res * 2)), ci0 = Math.floor(ix0 / step), cj0 = Math.floor(iy0 / step);
   const cw = Math.floor((ix0 + w - 1) / step) - ci0 + 2, chh = Math.floor((iy0 + h - 1) / step) - cj0 + 2, coarse = new Float32Array(cw * chh);
   for (let j = 0; j < chh; j++) for (let i = 0; i < cw; i++) coarse[j * cw + i] = openPatch(((ci0 + i) * step + 0.5) / res, ((cj0 + j) * step + 0.5) / res);
+  // ---- T382: the desert's sand blotches: the channel, and the yards (house lots' lawns) where only a few small drifts lie
+  const sand = src.sand ? new Float32Array(n) : undefined; let yard: Uint8Array | null = null;
+  if (sand && src.yards?.length) {
+    yard = new Uint8Array(n);
+    for (const p of src.yards) {
+      let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
+      for (let k = 0; k + 1 < p.length; k += 2) { x0 = Math.min(x0, p[k]!); x1 = Math.max(x1, p[k]!); y0 = Math.min(y0, p[k + 1]!); y1 = Math.max(y1, p[k + 1]!); }
+      const s = span(x0, y0, x1, y1); if (!s) continue;
+      for (let j = s[1]; j <= s[3]; j++) for (let i = s[0]; i <= s[2]; i++) if (inRing(p, X(i), Y(j))) yard[j * w + i] = 1;
+    }
+  }
   const add = (v: number, ch: number) => ch + v * (1 - ch);
   for (let j = 0; j < h; j++) {
     const gj = iy0 + j, cj = Math.floor(gj / step), fy = (gj - cj * step) / step, rowB = (cj - cj0) * cw;
@@ -360,10 +404,25 @@ export function influence(box: Box, res: number, src: LivingSources): InfluenceG
       if (wall) { const d = wall[q]!; if (d < BIG) { A = add(1 - (1 - 0.42 * near(0, 1.3, d)) * (1 - 0.25 * near(0, 0.35, d)), A); L = add(0.3 * band(0.3, 0.7, 1.2, 2.4, d), L); } }
       if (corner) { const d = corner[q]!; if (d < BIG) T = add(0.5 * near(0.4, 2.2, d), T); }
       if (door) { const d = door[q]!; if (d < BIG) { T = add(0.95 * near(0.6, 3.2, d), T); B = add(0.75 * near(0.3, 1.6, d), B); } }
+      // T382: sand collects along the road verges, in the lee of plants, at doors and corners (the worn ground) and along fences and walls, is a few small drifts in a yard and none on the damp dirt by water
+      if (sand) {
+        let bias = SAND_BIAS.worn * Math.max(T, B);
+        if (road) { const d = road[q]!; if (d < BIG) bias += SAND_BIAS.road * near(0.8, 8, d); }
+        for (const f of [fence, hedge, wallL]) if (f) { const d = f[q]!; if (d < BIG) bias += SAND_BIAS.line * near(0.4, 3, d); }
+        if (yard && yard[q]) bias += SAND_BIAS.yard;
+        if (damp) bias += SAND_BIAS.damp * damp[q]!;
+        sand[q] = sandBlotch(X(i), Y(j), bias, res);
+      }
       lush[q] = L; thin[q] = T; bare[q] = B; ao[q] = A;
     }
   }
-  return { ix0, iy0, res, w, h, lush, thin, bare, litter, ao, ...(damp ? { damp } : {}) };
+  return { ix0, iy0, res, w, h, lush, thin, bare, litter, ao, ...(damp ? { damp } : {}), ...(sand ? { sand } : {}) };
+}
+/** whether (x, y) lies inside the ring p (x y pairs), even-odd */
+function inRing(p: ArrayLike<number>, x: number, y: number): boolean {
+  let inside = false;
+  for (let i = 0, j = p.length - 2; i < p.length; j = i, i += 2) { const ax = p[j]!, ay = p[j + 1]!, bx = p[i]!, by = p[i + 1]!; if ((ay > y) !== (by > y) && x < ((bx - ax) * (y - ay)) / (by - ay) + ax) inside = !inside; }
+  return inside;
 }
 
 /** a cheap signature of what a chunk's influence is made from (its sample density and sources): a re-bake whose sources did not change (a
@@ -376,7 +435,8 @@ export function livingSignature(res: number, src: LivingSources): number {
   for (const p of src.paths ?? []) { mix(p.length); for (let i = 0; i < p.length; i++) mix(p[i]!); }
   for (const w of src.rivers ?? []) { mix(w.pts.length); mix(w.bank); for (const p of w.pts) { mix(p.x); mix(p.y); mix(p.w); } }
   for (const s of src.shores ?? []) { mix(s.pts.length); mix(s.ring ? 1 : 0); for (let i = 0; i < s.pts.length; i++) mix(s.pts[i]!); }
-  mix(src.desert ? 1 : 0);
+  mix(src.desert ? 1 : 0); mix(src.sand ? 1 : 0);
+  for (const p of src.yards ?? []) { mix(p.length); for (let i = 0; i < p.length; i++) mix(p[i]!); }
   return h >>> 0;
 }
 
@@ -396,14 +456,16 @@ export const AO_MAX = 0.62;
 export const LIVING_AO = false;
 export interface LivingMasks { W: number; H: number; x0: number; y0: number; res: number; lush: Uint8ClampedArray; thin: Uint8ClampedArray; bare: Uint8ClampedArray; litter: Uint8ClampedArray; ao: Uint8ClampedArray;
   /** T342: the damp dirt's darkening (alpha; only in the desert, by the world's water) */ damp?: Uint8ClampedArray;
+  /** T382: the sand blotches' cover (alpha; only in the desert, with the sand on): sandBlotch's feathered edge as it is, no further breakup */ sand?: Uint8ClampedArray;
   /** the most each mask reaches (0..1): a pass whose mask stays near 0 is skipped */
-  max: { lush: number; thin: number; bare: number; litter: number; ao: number; damp?: number } }
+  max: { lush: number; thin: number; bare: number; litter: number; ao: number; damp?: number; sand?: number } }
 /** the masks from a grid: each channel broken up by fine noise into painted-looking patches (never a smooth disc, never flat), at the sample
  *  density: the finest wave (about 1.4 m) only where the samples resolve it */
 export function livingMasks(g: InfluenceGrid): LivingMasks {
   const { w, h, res, ix0, iy0 } = g, n = w * h, mk = () => new Uint8ClampedArray(n * 4);
   const lush = mk(), thin = mk(), bare = mk(), litter = mk(), ao = mk(), max = { lush: 0, thin: 0, bare: 0, litter: 0, ao: 0 };
   const damp = g.damp ? mk() : undefined; let dmax = 0;
+  const sandM = g.sand ? mk() : undefined; let smax = 0;
   // the finest wave only where the samples resolve it; the broad wave never finer than about two samples (a district chunk's patches stay
   // patches, not speckle)
   const fine = res >= 3 ? 1 : res >= 2 ? 0.5 : 0, s1 = Math.max(1.8, 2.2 / res), s2 = Math.max(1.1, 1.6 / res);
@@ -417,6 +479,7 @@ export function livingMasks(g: InfluenceGrid): LivingMasks {
       // (T342: the damp dirt by the desert's water is laid whole: its own noise made its blotchy edge already)
       const dv = g.damp ? g.damp[q]! : 0, L = Math.max(LUSH_MAX * sm(0.05, 0.85, g.lush[q]! * (0.7 + 0.6 * nf)), dv > 0 ? sm(0.15, 0.3, dv) : 0);
       if (damp) { const D = DAMP_MAX * dv; damp[o + 3] = D * 255; if (D > dmax) dmax = D; }
+      if (sandM) { const S = g.sand![q]!; sandM[o + 3] = S * 255; if (S > smax) smax = S; }
       const T = sm(0.22, 0.8, g.thin[q]! + (nf - 0.5) * 0.5);
       // bare soil: the cores (big trees' trunks, doors) and, only in the deepest shade (canopies overlapping), small patches between the grass
       // clumps; mostly the ground stays thin grass (never soil on the open ground's thin patches)
@@ -429,7 +492,7 @@ export function livingMasks(g: InfluenceGrid): LivingMasks {
       if (L > max.lush) max.lush = L; if (T > max.thin) max.thin = T; if (B > max.bare) max.bare = B; if (F > max.litter) max.litter = F; if (A > max.ao) max.ao = A;
     }
   }
-  return { W: w, H: h, x0: ix0 / res, y0: iy0 / res, res, lush, thin, bare, litter, ao, max: damp ? { ...max, damp: dmax } : max, ...(damp ? { damp } : {}) };
+  return { W: w, H: h, x0: ix0 / res, y0: iy0 / res, res, lush, thin, bare, litter, ao, max: { ...max, ...(damp ? { damp: dmax } : {}), ...(sandM ? { sand: smax } : {}) }, ...(damp ? { damp } : {}), ...(sandM ? { sand: sandM } : {}) };
 }
 /** the dev debug view of a grid: lush green, thin orange, bare brown, litter red, the ambient occlusion as blue-grey shade (RGBA, laid over the
  *  ground, opaque) */
