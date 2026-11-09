@@ -1,0 +1,206 @@
+{
+  "schema": 1,
+  "projection": "normal+yaw8",
+  "subject": "world:house_3",
+  "name": "House 3",
+  "version": 1,
+  "review": "approved",
+  "source": {
+    "views": {
+      "normalNE": {
+        "reuse": "world:house_3"
+      },
+      "yaw8N": {
+        "file": "../src/yaw8N.png",
+        "sha256": "79e0953d3b19f80bfc7802b6ea02b0b8047684c4af2bf8b19b5e0f02d8f12acb",
+        "width": 606,
+        "height": 477
+      },
+      "normalSE": {
+        "reuse": "view:world:house_3:se"
+      },
+      "yaw8E": {
+        "file": "../src/yaw8E.png",
+        "sha256": "94164fc1df6004695ce54e1c4f2bf6f893f2030dd9e8e30323a7c8b8bbbd11ac",
+        "width": 499,
+        "height": 571
+      },
+      "normalSW": {
+        "reuse": "view:world:house_3:sw"
+      },
+      "yaw8S": {
+        "file": "../src/yaw8S.png",
+        "sha256": "0ba6f3f7cbdb432ff7cbe8bfd68e94951ce0993da13e50ce95483bc40f772ba9",
+        "width": 592,
+        "height": 473
+      },
+      "normalNW": {
+        "reuse": "view:world:house_3:nw"
+      },
+      "yaw8W": {
+        "file": "../src/yaw8W.png",
+        "sha256": "e95d3a143ed38c4a55f794d2fdd9519ad526580366234aed3620a853628754e6",
+        "width": 508,
+        "height": 522
+      }
+    }
+  },
+  "footprintMetres": {
+    "width": 6.94,
+    "depth": 7.04
+  },
+  "pixelsPerMetre": 68.1035876538,
+  "pixelCalibrationSpace": "orthographic-camera",
+  "baselineScale": 1.39,
+  "kind": "building",
+  "solid": 2,
+  "category": "Eight-view buildings",
+  "aliases": [],
+  "views": {
+    "yaw8N": {
+      "file": "yaw8N.native.png",
+      "sha256": "6fdb7a89fb2d5f8843f0b7a17036cea0fec419d237491697dc9cf98844ca3da9",
+      "width": 598,
+      "height": 469,
+      "anchor": {
+        "x": 297.5,
+        "y": 386.99
+      },
+      "headingDegrees": 37,
+      "boxes": null,
+      "sourceFamily": "view",
+      "sourceSha256": "79e0953d3b19f80bfc7802b6ea02b0b8047684c4af2bf8b19b5e0f02d8f12acb",
+      "cell": 0,
+      "cellRect": {
+        "left": 0,
+        "top": 0,
+        "width": 606,
+        "height": 477
+      },
+      "crop": {
+        "left": 4,
+        "top": 4,
+        "width": 598,
+        "height": 469
+      }
+    },
+    "yaw8E": {
+      "file": "yaw8E.native.png",
+      "sha256": "b9d4310e249bde9891a71d82e1d1dc58301c2b1fa9be6df757f550ce1d0d5e64",
+      "width": 491,
+      "height": 563,
+      "anchor": {
+        "x": 302.5,
+        "y": 443.02
+      },
+      "headingDegrees": 127,
+      "boxes": null,
+      "sourceFamily": "view",
+      "sourceSha256": "94164fc1df6004695ce54e1c4f2bf6f893f2030dd9e8e30323a7c8b8bbbd11ac",
+      "cell": 0,
+      "cellRect": {
+        "left": 0,
+        "top": 0,
+        "width": 499,
+        "height": 571
+      },
+      "crop": {
+        "left": 4,
+        "top": 4,
+        "width": 491,
+        "height": 563
+      }
+    },
+    "yaw8S": {
+      "file": "yaw8S.native.png",
+      "sha256": "e6b286e38f12b5565185286742fe5d592ea70d64842673ccdf2b48930e526299",
+      "width": 584,
+      "height": 465,
+      "anchor": {
+        "x": 280,
+        "y": 383.76
+      },
+      "headingDegrees": 217,
+      "boxes": null,
+      "sourceFamily": "view",
+      "sourceSha256": "0ba6f3f7cbdb432ff7cbe8bfd68e94951ce0993da13e50ce95483bc40f772ba9",
+      "cell": 0,
+      "cellRect": {
+        "left": 0,
+        "top": 0,
+        "width": 592,
+        "height": 473
+      },
+      "crop": {
+        "left": 4,
+        "top": 4,
+        "width": 584,
+        "height": 465
+      }
+    },
+    "yaw8W": {
+      "file": "yaw8W.native.png",
+      "sha256": "2becb654dcdcb03b94a0a4db75314b25c111682ad4772283fc007b94417810a5",
+      "width": 500,
+      "height": 514,
+      "anchor": {
+        "x": 299.5,
+        "y": 383.39
+      },
+      "headingDegrees": 307,
+      "boxes": null,
+      "sourceFamily": "view",
+      "sourceSha256": "e95d3a143ed38c4a55f794d2fdd9519ad526580366234aed3620a853628754e6",
+      "cell": 0,
+      "cellRect": {
+        "left": 0,
+        "top": 0,
+        "width": 508,
+        "height": 522
+      },
+      "crop": {
+        "left": 4,
+        "top": 4,
+        "width": 500,
+        "height": 514
+      }
+    },
+    "normalNE": {
+      "reuse": "world:house_3",
+      "anchor": null,
+      "headingDegrees": 0,
+      "boxes": null,
+      "sourceFamily": "reuse"
+    },
+    "normalSE": {
+      "reuse": "view:world:house_3:se",
+      "anchor": null,
+      "headingDegrees": 90,
+      "boxes": null,
+      "sourceFamily": "reuse"
+    },
+    "normalSW": {
+      "reuse": "view:world:house_3:sw",
+      "anchor": null,
+      "headingDegrees": 180,
+      "boxes": null,
+      "sourceFamily": "reuse"
+    },
+    "normalNW": {
+      "reuse": "view:world:house_3:nw",
+      "anchor": null,
+      "headingDegrees": 270,
+      "boxes": null,
+      "sourceFamily": "reuse"
+    }
+  },
+  "calibrationNotes": "The four corner views are the building's existing pictures (world:house_3, view:world:house_3:se, view:world:house_3:sw, view:world:house_3:nw), reused, not repacked. The four straight-on views: scale 0.6645 game px per native px (68.10 px/m), read with scripts/assets/straight-views/measure.mjs: the T375 footprint-box fit (6.94 x 7.04 m, the library's box) on the four corners and the four straight views, the corners' fit bias against their library scale removed (1.0689), the median of the four straight views (0.6609 0.6707 0.6681 0.6564); anchors refitted with that scale held (IoU 0.8459 0.8295 0.8498 0.8548). Not owner-measured. Sheet: world~house_3 axisturn, cells NESW are N E S W. door and wreath on N as on NE; autumn leaves and pumpkins from the old export (the corners are clean); has the old square straight-on set (see world~house_0).",
+  "artReviewRequired": [
+    "same subject across all eight views",
+    "normal and actual yaw8 geometry",
+    "upper-right daylight and lower-left shadows",
+    "true alpha and complete silhouette",
+    "per-view ground anchors and physical footprint",
+    "no duplicates or fake mirror views"
+  ]
+}

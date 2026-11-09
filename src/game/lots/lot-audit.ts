@@ -9,7 +9,7 @@ import { clutterKind, HEDGE_IDS, MAX_TREES } from './clean-yards';
 import { facingView, pictureHeading, turnsBetween } from './house-facing';
 import { buildingRect, rectHitsQuad, rectsHit, treeRects, type Rect } from './clean-lot';
 import { footprintOf } from './preset-art';
-import { frameOf, roadOf } from './preset-frame';
+import { frameOf, roadOf, toFrame } from './preset-frame';
 import { isFence } from './item-kinds';
 
 const BY = new Map(LIBRARY.map(i => [i.id, i]));
@@ -18,6 +18,8 @@ const LIB_AT = new Map(LIBRARY.map((it, i) => [it.id, i] as const));
 export interface LotAudit {
   /** a building stands on the lot (a lot with a yard and no building is the bug of T383, #1039) */
   house: boolean; buildings: number;
+  /** T403: the id of the house's picture as the lot draws it (the widest building), or null with no building */
+  houseId: string | null;
   /** how many eighth turns the house's picture is off the lot's street (0: its front faces the road; null: no house, or a picture the tables do not know) */
   facingOff: number | null;
   /** a drive or parking pad is laid, and its end is at the lot's front edge (it meets the road) */
@@ -30,7 +32,14 @@ export interface LotAudit {
   fence: 'panels' | 'hedge' | 'none'; fencePieces: number; fenceAcross: number;
   /** the clutter on the lot: each prop that is no house, garage, fence, hedge piece or tree (clean-yards.ts clutterKind), by id */
   clutter: string[];
+  /** T398 (the owner, 2026-11-09: the garage door must face the street, the drive leads to the garage, no garage no drive, the path to the door): the doors a clean house lot laid its ground to
+   *  (Composition.anchors; a composition without them reads as no garage and no door). garage: a garage door faces the street (the house's own, on its front wall, or a garage building's front);
+   *  garageSideways: the house's own garage door is on a wall that is not the street's (it is never drawn); marked: the owner marked the house's picture; driveOk: the drive reaches the garage door
+   *  (its far end at the door's wall, over its span) and a lot with no garage door has no drive; pathAtDoor: the path ends at the front wall over the front door; driveTex and pathTex: the surfaces */
+  garage: boolean; garageSideways: boolean; marked: boolean; driveOk: boolean; pathAtDoor: boolean; driveTex: string | null; pathTex: string | null;
 }
+/** how near a patch's far end must be to a door's wall to reach it (tiles), and how far from a door's centre a path may end (tiles) */
+export const REACH = 0.8, DOOR_SLACK = 0.9;
 /** a lot-frame point of a world point */
 const frameOfPt = (g: LotGeom, x: number, y: number): [number, number] => { const dx = x - g.o.x, dy = y - g.o.y; return [dx * g.u.x + dy * g.u.y, dx * g.n.x + dy * g.n.y]; };
 /** a patch's lowest b (its distance from the front edge, tiles) */
@@ -61,11 +70,19 @@ export function auditLot(g: LotGeom, c: Composition): LotAudit {
   const hedges = c.props.filter(p => HEDGE_IDS.has(p.id));
   const pieces = fences.length ? fences : hedges;
   const across = pieces.filter(p => { const fp = footprintOf(p.id, p.scale, p.flip), box: [number, number, number, number] = [p.x + fp[0], p.y + fp[1], p.x + fp[2], p.y + fp[3]]; return worldQuads.some(q => hit(box, q)); }).length;
+  // T398: the doors (the lot frame: preset-frame.ts toFrame): a patch's box, the drive's and the path's reach
+  const frameBox = (pts: readonly number[]): [number, number, number, number] => { let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity; for (let i = 0; i + 1 < pts.length; i += 2) { const p = toFrame(f, pts[i]!, pts[i + 1]!); x0 = Math.min(x0, p.x); x1 = Math.max(x1, p.x); y0 = Math.min(y0, p.y); y1 = Math.max(y1, p.y); } return [x0, y0, x1, y1]; };
+  const A = c.anchors, garage = !!A && A.garages.length > 0;
+  const driveBox = drives[0] ? frameBox(drives[0].pts) : null, pathBox = paths[0] ? frameBox(paths[0].pts) : null;
+  const reaches = !!A && garage && !!driveBox && A.garages.some(gd => Math.abs(driveBox[3] - gd.y) <= REACH && driveBox[0] < gd.x1 && driveBox[2] > gd.x0 && driveBox[1] <= 0.4);
+  const driveOk = garage ? reaches : drives.length === 0;
+  const pathAtDoor = !!A && !!pathBox && Math.abs(pathBox[3] - A.frontY) <= REACH && pathBox[0] - DOOR_SLACK <= A.doorX && pathBox[2] + DOOR_SLACK >= A.doorX && pathBox[1] <= 0.4;
   return {
-    house: builds.length > 0, buildings: builds.length, facingOff,
+    house: builds.length > 0, buildings: builds.length, houseId: house?.id ?? null, facingOff,
     drive: drives.length > 0, driveConnects: drives.some(a => frontOf(g, a.pts) <= 0.4), path: paths.some(a => frontOf(g, a.pts) <= 0.4),
     trees: trees.length, treesClear: treesClear && trees.length <= MAX_TREES,
     fence: fences.length ? 'panels' : hedges.length ? 'hedge' : 'none', fencePieces: pieces.length, fenceAcross: across,
     clutter: c.props.filter(p => p !== house && clutterKind(p.id) !== null).map(p => p.id),
+    garage, garageSideways: A?.house.garage === 'side', marked: !!A?.house.mark, driveOk, pathAtDoor, driveTex: drives[0]?.tex ?? null, pathTex: paths[0]?.tex ?? null,
   };
 }

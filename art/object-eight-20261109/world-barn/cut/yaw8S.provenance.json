@@ -1,0 +1,29 @@
+{
+  "schema": 1,
+  "subject": "world:barn",
+  "version": 1,
+  "key": "yaw8S",
+  "source": {
+    "file": "../src/yaw8S.png",
+    "sha256": "8478bf17a62e34f2b8662be544f4e752285f3c6abe9af48db3bedabdca7eed4e",
+    "width": 569,
+    "height": 438
+  },
+  "cell": 0,
+  "cellRect": {
+    "left": 0,
+    "top": 0,
+    "width": 569,
+    "height": 438
+  },
+  "crop": {
+    "left": 4,
+    "top": 4,
+    "width": 561,
+    "height": 430
+  },
+  "output": "yaw8S.native.png",
+  "sha256": "6f57ac6e2e6b7e78fbcba998fbfbf84761152cf3780b4de9e82aa77eaa5f0f6c",
+  "operation": "native RGBA cell crop only; no flip/repaint/view synthesis",
+  "review": "candidate"
+}

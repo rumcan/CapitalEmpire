@@ -27,17 +27,21 @@ export const LAB_ZOOM_MIN = 0.04;
  *  built only if a lab lot paints them (ground.worker.ts 'lotground') */
 export const LAB_EAGER_PHOTOS: readonly string[] = ['chipSeal', 'dirt', 'gravel', 'asphalt'];
 
-/** the lab's map box: LAB_BOX tiles round the map's centre (where boot.ts flatTerrain puts its start block, and stageLab its street) */
-export function labBox(): BBox {
-  const h = LAB_BOX / 2, c = MAP / 2;
+/** the side of the Lot review's map box (T403, #1081): the review's sample set (review-set.ts sampleStreets: eight road headings with a lot for every house type) reaches 320 tiles from the centre.
+ *  The box only bounds the camera's centre (engine.ts clampCam): the ground is baked where the camera looks, so the larger box costs no more memory */
+export const REVIEW_BOX = 720;
+
+/** the lab's map box: LAB_BOX tiles (or side) round the map's centre (where boot.ts flatTerrain puts its start block, and stageLab its street) */
+export function labBox(side = LAB_BOX): BBox {
+  const h = side / 2, c = MAP / 2;
   return [c - h, c - h, c + h, c + h];
 }
 
-/** the lot lab's light boot */
-export function labBoot(): BootOptions {
+/** the lot lab's light boot (side: the map box's side, tiles) */
+export function labBoot(side = LAB_BOX): BootOptions {
   return {
     kind: 'lab', groundWorkers: 1, sim: false, atlasMB: 16, atlasKeep: 2, groundPx: 16e6, tileSources: 8, paintedSources: 6, eagerPhotos: LAB_EAGER_PHOTOS,
-    saveTextureCache: false, readTextureCache: true, softCanvases: true, lazyTextures: true, lazyTints: true, box: labBox(), zoomMin: LAB_ZOOM_MIN, trees: false, moneyFloats: false, save: false, map: 'flat',
+    saveTextureCache: false, readTextureCache: true, softCanvases: true, lazyTextures: true, lazyTints: true, box: labBox(side), zoomMin: LAB_ZOOM_MIN, trees: false, moneyFloats: false, save: false, map: 'flat',
   };
 }
 
@@ -45,8 +49,9 @@ export function labBoot(): BootOptions {
  *  game as before T157 (to compare, or if the light boot ever misses something) */
 export function bootFor(search: string, dev: boolean): BootOptions {
   const q = new URLSearchParams(search);
-  // (T385: the studio's Lot review, ?lotreview, boots as light as the lab: a flat map, one ground worker, the box round the review town)
-  if (dev && (q.has('lotlab') || q.has('lotreview')) && !q.has('fullboot')) return labBoot();
+  // (T385: the studio's Lot review, ?lotreview, boots as light as the lab: a flat map, one ground worker, the box round the review town; T403: a box that holds the sample set)
+  if (dev && q.has('lotreview') && !q.has('fullboot')) return labBoot(REVIEW_BOX);
+  if (dev && q.has('lotlab') && !q.has('fullboot')) return labBoot();
   // T166: a dev build's ?ground=<levers> boots the game with exactly those ground-worker levers on (boot.ts GROUND_LEVERS; ?ground=old: none);
   // T172: and ?boot=<key>:<value>,... sets its memory budgets (boot.ts BOOT_NUMBERS)
   const boot = dev && q.has('ground') ? withGroundLevers({ ...GAME_BOOT }, q.get('ground') ?? '') : { ...GAME_BOOT };

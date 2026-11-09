@@ -1,0 +1,206 @@
+{
+  "schema": 1,
+  "projection": "normal+yaw8",
+  "subject": "world:house_4",
+  "name": "House 4",
+  "version": 1,
+  "review": "approved",
+  "source": {
+    "views": {
+      "normalNE": {
+        "reuse": "world:house_4"
+      },
+      "yaw8N": {
+        "file": "../src/yaw8N.png",
+        "sha256": "7c0fd871ed3b70c866594ab6b9cd9a46a331376751d473ea277975239915f539",
+        "width": 571,
+        "height": 534
+      },
+      "normalSE": {
+        "reuse": "view:world:house_4:se"
+      },
+      "yaw8E": {
+        "file": "../src/yaw8E.png",
+        "sha256": "d878ff22adf7f6c2bd1461a8777307a5dad20c4a5a9b566fc0a48afd2a63fc79",
+        "width": 575,
+        "height": 556
+      },
+      "normalSW": {
+        "reuse": "view:world:house_4:sw"
+      },
+      "yaw8S": {
+        "file": "../src/yaw8S.png",
+        "sha256": "156c99a0b7e181beacf8ce6491198351eb969bb8f3effb6cfdd2cea120baad03",
+        "width": 568,
+        "height": 458
+      },
+      "normalNW": {
+        "reuse": "view:world:house_4:nw"
+      },
+      "yaw8W": {
+        "file": "../src/yaw8W.png",
+        "sha256": "47e4a488c41b3b3b12d099fc95ecf85a9c78c7a1757d85849168fc4b21b92da9",
+        "width": 567,
+        "height": 505
+      }
+    }
+  },
+  "footprintMetres": {
+    "width": 5.24,
+    "depth": 5.4
+  },
+  "pixelsPerMetre": 88.8743794107,
+  "pixelCalibrationSpace": "orthographic-camera",
+  "baselineScale": 2.13,
+  "kind": "building",
+  "solid": 2,
+  "category": "Eight-view buildings",
+  "aliases": [],
+  "views": {
+    "yaw8N": {
+      "file": "yaw8N.native.png",
+      "sha256": "6b15520b0e1c395b9f9040725f5d94d8b2e801b75b00f54407cfbc303047a53e",
+      "width": 563,
+      "height": 526,
+      "anchor": {
+        "x": 292,
+        "y": 408.08
+      },
+      "headingDegrees": 37,
+      "boxes": null,
+      "sourceFamily": "view",
+      "sourceSha256": "7c0fd871ed3b70c866594ab6b9cd9a46a331376751d473ea277975239915f539",
+      "cell": 0,
+      "cellRect": {
+        "left": 0,
+        "top": 0,
+        "width": 571,
+        "height": 534
+      },
+      "crop": {
+        "left": 4,
+        "top": 4,
+        "width": 563,
+        "height": 526
+      }
+    },
+    "yaw8E": {
+      "file": "yaw8E.native.png",
+      "sha256": "203ce365b8dc81fa6a1ed93ad15e362df679787e6f22fb186d64565d4ab6963c",
+      "width": 567,
+      "height": 548,
+      "anchor": {
+        "x": 285,
+        "y": 427.72
+      },
+      "headingDegrees": 127,
+      "boxes": null,
+      "sourceFamily": "view",
+      "sourceSha256": "d878ff22adf7f6c2bd1461a8777307a5dad20c4a5a9b566fc0a48afd2a63fc79",
+      "cell": 0,
+      "cellRect": {
+        "left": 0,
+        "top": 0,
+        "width": 575,
+        "height": 556
+      },
+      "crop": {
+        "left": 4,
+        "top": 4,
+        "width": 567,
+        "height": 548
+      }
+    },
+    "yaw8S": {
+      "file": "yaw8S.native.png",
+      "sha256": "8d92a638e01b077f7a92861e9fa606f378814a99e819a56b65c027827787845f",
+      "width": 560,
+      "height": 450,
+      "anchor": {
+        "x": 266.5,
+        "y": 371.46
+      },
+      "headingDegrees": 217,
+      "boxes": null,
+      "sourceFamily": "view",
+      "sourceSha256": "156c99a0b7e181beacf8ce6491198351eb969bb8f3effb6cfdd2cea120baad03",
+      "cell": 0,
+      "cellRect": {
+        "left": 0,
+        "top": 0,
+        "width": 568,
+        "height": 458
+      },
+      "crop": {
+        "left": 4,
+        "top": 4,
+        "width": 560,
+        "height": 450
+      }
+    },
+    "yaw8W": {
+      "file": "yaw8W.native.png",
+      "sha256": "3f7e0536a1d14402be7904e74c50d11d8b38a1c9b840bdb2c11caed751721bf1",
+      "width": 559,
+      "height": 497,
+      "anchor": {
+        "x": 305,
+        "y": 379.6
+      },
+      "headingDegrees": 307,
+      "boxes": null,
+      "sourceFamily": "view",
+      "sourceSha256": "47e4a488c41b3b3b12d099fc95ecf85a9c78c7a1757d85849168fc4b21b92da9",
+      "cell": 0,
+      "cellRect": {
+        "left": 0,
+        "top": 0,
+        "width": 567,
+        "height": 505
+      },
+      "crop": {
+        "left": 4,
+        "top": 4,
+        "width": 559,
+        "height": 497
+      }
+    },
+    "normalNE": {
+      "reuse": "world:house_4",
+      "anchor": null,
+      "headingDegrees": 0,
+      "boxes": null,
+      "sourceFamily": "reuse"
+    },
+    "normalSE": {
+      "reuse": "view:world:house_4:se",
+      "anchor": null,
+      "headingDegrees": 90,
+      "boxes": null,
+      "sourceFamily": "reuse"
+    },
+    "normalSW": {
+      "reuse": "view:world:house_4:sw",
+      "anchor": null,
+      "headingDegrees": 180,
+      "boxes": null,
+      "sourceFamily": "reuse"
+    },
+    "normalNW": {
+      "reuse": "view:world:house_4:nw",
+      "anchor": null,
+      "headingDegrees": 270,
+      "boxes": null,
+      "sourceFamily": "reuse"
+    }
+  },
+  "calibrationNotes": "The four corner views are the building's existing pictures (world:house_4, view:world:house_4:se, view:world:house_4:sw, view:world:house_4:nw), reused, not repacked. The four straight-on views: scale 0.5092 game px per native px (88.87 px/m), read with scripts/assets/straight-views/measure.mjs: the T375 footprint-box fit (5.24 x 5.4 m, the library's box) on the four corners and the four straight views, the corners' fit bias against their library scale removed (1.3322), the median of the four straight views (0.5162 0.5047 0.5047 0.5137); anchors refitted with that scale held (IoU 0.847 0.8585 0.8782 0.894). Not owner-measured. Sheet: world~house_4 axisturn, cells NESW are N E S W. door and steps on N as on NE; autumn leaves and pumpkins from the old export (the corners are clean).",
+  "artReviewRequired": [
+    "same subject across all eight views",
+    "normal and actual yaw8 geometry",
+    "upper-right daylight and lower-left shadows",
+    "true alpha and complete silhouette",
+    "per-view ground anchors and physical footprint",
+    "no duplicates or fake mirror views"
+  ]
+}

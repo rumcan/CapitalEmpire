@@ -1,0 +1,29 @@
+{
+  "schema": 1,
+  "subject": "golf:food-tent",
+  "version": 1,
+  "key": "yaw8W",
+  "source": {
+    "file": "../src/yaw8W.png",
+    "sha256": "6a342b829d5bdd0805f68d09627f7b20ade571e0b82598332622d646c60d4279",
+    "width": 467,
+    "height": 535
+  },
+  "cell": 0,
+  "cellRect": {
+    "left": 0,
+    "top": 0,
+    "width": 467,
+    "height": 535
+  },
+  "crop": {
+    "left": 4,
+    "top": 4,
+    "width": 459,
+    "height": 527
+  },
+  "output": "yaw8W.native.png",
+  "sha256": "6bfac1246be0fcc22e96d735d8bf4a26489f257b4949d5632e9df0b75118886f",
+  "operation": "native RGBA cell crop only; no flip/repaint/view synthesis",
+  "review": "candidate"
+}

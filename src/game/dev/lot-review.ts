@@ -22,7 +22,7 @@ import { cleanYards } from '../lots/clean-yards';
 import { auditLot, type LotAudit } from '../lots/lot-audit';
 import { QUICK_PROPS, placeable, spriteGroup } from '../lots/item-kinds';
 import { CHECKS, CHECK_WORDS, parseReview, reviewId, standingOf, summaryOf, type Check, type ReviewFile, type ReviewOverride, type ReviewRecord, type Standing } from '../lots/review-file';
-import { estateState, estateStreets, overrideComposition, readingOf, reviewLot, townState, type ReviewKind, type ReviewLot } from './review-set';
+import { ROAD_FILTERS, estateState, estateStreets, overrideComposition, readingOf, reviewLot, roadCounts, roadVisible, sampleState, sampleStreets, townState, wantedOf, type ReviewKind, type ReviewLot, type RoadFilter } from './review-set';
 import { LotGridLayer, type GridLot } from './lot-grid';
 import { thumb } from './lot-editor';
 import { BTN, DANGER, GO, ON, btn, chip, el, heading, typing } from './lot-lab-ui';
@@ -37,7 +37,7 @@ const LIB_AT = new Map(LIBRARY.map((it, i) => [it.id, i] as const));
 type Filter = 'all' | 'todo' | 'bad';
 type Armed = { kind: 'prop' | 'decal'; id: string } | null;
 /** what the page keeps across a reload (the theme chips frame the page again): the set, the seed, the lot, the filter */
-interface Session { kind: ReviewKind; seed: number; idx: number; filter: Filter }
+interface Session { kind: ReviewKind; seed: number; idx: number; filter: Filter; roads: RoadFilter }
 /** the lot being reviewed: its ticks and note not saved yet (dirty), and what is placed on it */
 interface Pending { checks: Partial<Record<Check, boolean>>; note: string; override: ReviewOverride; dirty: boolean }
 
@@ -58,9 +58,13 @@ function decalThumb(t: HTMLElement, d: LotDecal, px: number) {
 /** installs the lot review on a game (dev builds, ?lotreview, in the lab's light boot); returns the uninstall */
 export function installLotReview(game: Game): () => void {
   const query = new URLSearchParams(location.search), saved = (() => { try { return JSON.parse(sessionStorage.getItem(SESSION) ?? 'null') as Partial<Session> | null; } catch { return null; } })();
-  let kind: ReviewKind = query.get('source') === 'estate' ? 'estate' : query.get('source') === 'town' ? 'town' : saved?.kind === 'estate' ? 'estate' : 'town';
+  const kindOf = (v: unknown): ReviewKind | null => (v === 'estate' || v === 'town' || v === 'sample' ? v : null);
+  let kind: ReviewKind = kindOf(query.get('source')) ?? kindOf(saved?.kind) ?? 'town';
   let seed = Math.max(0, Math.floor(+(query.get('seed') ?? saved?.seed ?? 1) || 1)), idx = Math.max(0, Math.floor(+(query.get('lot') ?? saved?.idx ?? 0) || 0));
   let filter: Filter = saved?.filter === 'todo' || saved?.filter === 'bad' ? saved.filter : 'all';
+  // (T403: the road filter: all roads, the four along a map axis, the four at 45 degrees; ?roads=45 or axis opens on it)
+  const roadsOf = (v: unknown): RoadFilter | null => (v === 'all' || v === 'axis' || v === '45' ? v : null);
+  let roads: RoadFilter = roadsOf(query.get('roads')) ?? roadsOf(saved?.roads) ?? 'all';
   const theme: 'autumn' | 'desert' = game.desertTheme ? 'desert' : 'autumn';
   let file: ReviewFile = { v: 1, lots: {} }, lots: ReviewLot[] = [], pend: Pending | null = null, armed: Armed = null, fly: 'checks' | 'props' | 'decals' | null = null;
   let message = '', started = false, audit: LotAudit | null = null, auditId = '', lastWasProp = true, hidden = false;
@@ -68,8 +72,8 @@ export function installLotReview(game: Game): () => void {
   const cur = (): ReviewLot | undefined => lots[idx];
   const recOf = (l: ReviewLot): ReviewRecord | undefined => file.lots[l.id];
   const standing = (l: ReviewLot): Standing => standingOf(recOf(l));
-  const visible = (): number[] => lots.map((_l, i) => i).filter(i => { const s = standing(lots[i]!); return filter === 'all' || (filter === 'todo' ? s === 'none' || s === 'touched' : s === 'bad'); });
-  const remember = () => { try { sessionStorage.setItem(SESSION, JSON.stringify({ kind, seed, idx, filter } satisfies Session)); } catch { /* no storage */ } };
+  const visible = (): number[] => lots.map((_l, i) => i).filter(i => { const s = standing(lots[i]!); return roadVisible(roads, lots[i]!.road) && (filter === 'all' || (filter === 'todo' ? s === 'none' || s === 'touched' : s === 'bad')); });
+  const remember = () => { try { sessionStorage.setItem(SESSION, JSON.stringify({ kind, seed, idx, filter, roads } satisfies Session)); } catch { /* no storage */ } };
 
   // ---------- the dev server's file
   async function load(): Promise<void> { try { file = parseReview(await (await fetch(API)).text()); } catch { message = 'the review file could not be read'; } }
@@ -99,7 +103,7 @@ export function installLotReview(game: Game): () => void {
       ...(l.st.tier !== undefined ? { tier: l.st.tier } : {}), lotSeed: l.st.seed, road: l.road, checks: o.commit ? checks : { ...(prev?.checks ?? {}), ...checks },
       ...(o.bad || (o.bad === undefined && prev?.bad) ? { bad: true } : {}), ...(p.note.trim() ? { note: p.note.trim().slice(0, 600) } : {}),
       ...(p.override.props.length || p.override.decals.length ? { override: { props: p.override.props, decals: p.override.decals } } : {}),
-      audit: { house: a.house, buildings: a.buildings, facingOff: a.facingOff, drive: a.drive, driveConnects: a.driveConnects, path: a.path, trees: a.trees, treesClear: a.treesClear, fence: a.fence, fencePieces: a.fencePieces, fenceAcross: a.fenceAcross, clutter: a.clutter.slice(0, 60) },
+      audit: { house: a.house, houseId: a.houseId, buildings: a.buildings, facingOff: a.facingOff, drive: a.drive, driveConnects: a.driveConnects, path: a.path, garage: a.garage, garageSideways: a.garageSideways, marked: a.marked, driveOk: a.driveOk, pathAtDoor: a.pathAtDoor, driveTex: a.driveTex, pathTex: a.pathTex, trees: a.trees, treesClear: a.treesClear, fence: a.fence, fencePieces: a.fencePieces, fenceAcross: a.fenceAcross, clutter: a.clutter.slice(0, 60) },
       at: new Date().toISOString(),
     };
   }
@@ -147,9 +151,11 @@ export function installLotReview(game: Game): () => void {
   async function stage() {
     message = `laying the ${kind} (seed ${seed})...`; render();
     await load();
-    const out = game.stageReview({ kind, state: i => (kind === 'town' ? townState(seed, i) : estateState(seed, i)), streets: estateStreets({ x: MAP / 2, y: MAP / 2 }) });
+    const centre = { x: MAP / 2, y: MAP / 2 }, tally = new Map<number, number>();   // (tally: the sample's lots a road has had)
+    const out = game.stageReview({ kind, state: (i, g) => (kind === 'town' ? townState(seed, i) : kind === 'estate' ? estateState(seed, i) : sampleState(seed, i, g, tally)), streets: kind === 'sample' ? sampleStreets(centre) : estateStreets(centre) });
     lots = out.map(o => reviewLot(kind, seed, o.key, o.g, o.st));
-    message = `${lots.length} house lots of the ${kind}, seed ${seed}`;
+    message = `${lots.length} house lots of the ${kind}, seed ${seed}${kind === 'sample' ? ` (${roadCounts(lots.map(l => l.road))['45']} of them on the roads at 45 degrees)` : ''}`;
+    { const v = visible(); if (v.length && !v.includes(idx)) idx = v[0]!; }   // (T403: a lot the road filter hides is not opened: the first of the filter is)
     open(idx);
   }
   /** the free map area: between the drawer and the card, and left of the props or decals flyout while it is open (the lot stays in view, to click on) */
@@ -182,15 +188,19 @@ export function installLotReview(game: Game): () => void {
   function drawDrawer() {
     const s = summaryOf(file), top = el('div', 'display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin:4px 0');
     const set = (k: ReviewKind, sd: number) => { kind = k; seed = sd; idx = 0; pend = null; remember(); void stage(); };
-    top.append(chip('Town', kind === 'town', () => set('town', seed), 'the house lots of a generated town'), chip('Estate', kind === 'estate', () => set('estate', seed), 'T353\'s estate lots'));
+    top.append(chip('Town', kind === 'town', () => set('town', seed), 'the house lots of a generated town'), chip('Estate', kind === 'estate', () => set('estate', seed), 'T353\'s estate lots'),
+      chip('Sample', kind === 'sample', () => set('sample', seed), 'streets along and across the screen, every house type on every road heading (T403)'));
     const sin = el('input', 'width:64px;background:#0f172a;color:#e2e8f0;border:1px solid #334155;border-radius:6px;padding:3px 6px;font:inherit'); sin.type = 'number'; sin.value = String(seed); sin.title = 'the set\'s seed: the same seed is the same town';
     sin.addEventListener('change', () => set(kind, Math.max(0, Math.floor(+sin.value || 0))));
     top.append(el('span', 'opacity:.7', 'seed'), sin);
     const th = el('div', 'display:flex;gap:6px;margin:4px 0');
-    const reload = (d: 'on' | 'off') => { remember(); const u = new URL(location.href); u.searchParams.set('desert', d); u.searchParams.set('lot', String(idx)); u.searchParams.set('source', kind); u.searchParams.set('seed', String(seed)); location.href = u.toString(); };
+    const reload = (d: 'on' | 'off') => { remember(); const u = new URL(location.href); u.searchParams.set('desert', d); u.searchParams.set('lot', String(idx)); u.searchParams.set('source', kind); u.searchParams.set('seed', String(seed)); u.searchParams.set('roads', roads); location.href = u.toString(); };
     th.append(chip('Autumn', theme === 'autumn', () => theme !== 'autumn' && reload('off'), 'frame the page again in the autumn look'), chip('Desert', theme === 'desert', () => theme !== 'desert' && reload('on'), 'frame the page again in the desert look'));
     const fl = el('div', 'display:flex;gap:6px;margin:4px 0');
     for (const [f, w, t] of [['all', 'All', 'every lot'], ['todo', 'To do', 'lots not looked at, or touched'], ['bad', 'Bad', 'the lots marked bad']] as const) fl.append(chip(w, filter === f, () => { filter = f; remember(); render(); }, t));
+    const rc = roadCounts(lots.map(l => l.road)), rf = el('div', 'display:flex;gap:6px;margin:4px 0;align-items:center');
+    rf.append(el('span', 'opacity:.7', 'road'));
+    for (const r of ROAD_FILTERS) rf.append(chip(`${r.label} ${rc[r.id]}`, roads === r.id, () => { roads = r.id; remember(); const v = visible(); if (v.length && !v.includes(idx)) void go(v[0]!); else render(); }, r.title));
     const sum = el('div', 'margin:6px 0;opacity:.85', `${s.ok} ok, ${s.bad} bad, ${s.touched} touched of ${lots.length} lots in this set (${s.lots} in the file)`);
     const grid = el('div', 'display:flex;flex-wrap:wrap;gap:3px;margin-top:6px');
     for (const i of visible()) {
@@ -198,7 +208,7 @@ export function installLotReview(game: Game): () => void {
       t.title = `${l.id}\n${l.g.w}x${l.g.d} ${ARROW[l.road]} road ${l.road}, ${l.st.level === 3 ? 'upgraded' : 'built'}${l.st.decline ? `, decline ${l.st.decline}` : ''}${l.st.tier !== undefined ? `, tier ${l.st.tier}` : ''}\n${STANDING_WORDS[st]}`;
       t.addEventListener('click', () => void go(i)); grid.append(t);
     }
-    drawer.replaceChildren(el('div', 'font-weight:800;color:#7dd3fc;font-size:14px;letter-spacing:.06em', 'LOT REVIEW'), el('div', 'opacity:.7;font-size:12px', 'the owner\'s studio: house lots of a generated town or the estate, ticked and marked, saved to scripts/assets/lot-review.json'), top, th, fl, sum, grid);
+    drawer.replaceChildren(el('div', 'font-weight:800;color:#7dd3fc;font-size:14px;letter-spacing:.06em', 'LOT REVIEW'), el('div', 'opacity:.7;font-size:12px', 'the owner\'s studio: house lots of a generated town or the estate, ticked and marked, saved to scripts/assets/lot-review.json'), top, th, fl, rf, sum, grid);
   }
 
   /** the checks dropdown: its button (the valid ones named) and the flyout beside the card that opens from it */
@@ -209,7 +219,7 @@ export function installLotReview(game: Game): () => void {
     const head = el('div', 'display:flex;align-items:center;gap:8px');
     head.append(el('div', 'font-weight:800;color:#7dd3fc;font-size:14px;letter-spacing:.06em;flex:1', `LOT ${idx + 1} / ${lots.length}`));
     const badge = el('span', `padding:1px 10px;border-radius:999px;background:${FILL[st]};color:#fff;font-weight:700;font-size:12px`, STANDING_WORDS[st]); head.append(badge);
-    const info = el('div', 'margin:4px 0;opacity:.9', `${l.g.w} x ${l.g.d} tiles, ${ARROW[l.road]} road ${l.road}, ${l.st.level === 3 ? 'upgraded' : 'built'}${l.st.decline ? `, decline ${l.st.decline}` : ''}${l.st.tier !== undefined ? `, tier ${l.st.tier}` : ''}, ${kind} ${seed}`);
+    const info = el('div', 'margin:4px 0;opacity:.9', `${l.g.w} x ${l.g.d} tiles, ${ARROW[l.road]} road ${l.road}, ${l.st.level === 3 ? 'upgraded' : 'built'}${l.st.decline ? `, decline ${l.st.decline}` : ''}${l.st.tier !== undefined ? `, tier ${l.st.tier}` : ''}, ${kind} ${seed}${wantedOf(l.st) ? `; laid to show ${wantedOf(l.st)} (a house that cannot face this road is swapped for one that can)` : ''}${a.houseId ? `; draws ${a.houseId}` : ''}`);
     const nav = el('div', 'display:flex;gap:6px;margin:6px 0');
     nav.append(btn('◂ Prev', BTN, () => void step(-1), 'previous lot (Left arrow, ,)'), btn('Next ▸', BTN, () => void step(1), 'next lot (Right arrow, .)'));
     const valid = CHECKS.filter(c => p.checks[c]).map(c => CHECK_WORDS[c]);

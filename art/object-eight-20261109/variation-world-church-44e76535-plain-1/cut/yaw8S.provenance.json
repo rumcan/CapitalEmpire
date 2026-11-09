@@ -1,0 +1,29 @@
+{
+  "schema": 1,
+  "subject": "variation:world-church-44e76535-plain:1",
+  "version": 1,
+  "key": "yaw8S",
+  "source": {
+    "file": "../src/yaw8S.png",
+    "sha256": "6536dcf013b3d5d842d62eabb47a0dceea5e3d47bd4836416a35f153cb981aa8",
+    "width": 391,
+    "height": 568
+  },
+  "cell": 0,
+  "cellRect": {
+    "left": 0,
+    "top": 0,
+    "width": 391,
+    "height": 568
+  },
+  "crop": {
+    "left": 4,
+    "top": 4,
+    "width": 383,
+    "height": 560
+  },
+  "output": "yaw8S.native.png",
+  "sha256": "61c8e2d34861db2eda2846a965494513f1ff4b436be906176609a538052ec5be",
+  "operation": "native RGBA cell crop only; no flip/repaint/view synthesis",
+  "review": "candidate"
+}

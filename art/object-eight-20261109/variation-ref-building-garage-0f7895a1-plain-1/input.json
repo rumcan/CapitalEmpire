@@ -1,0 +1,82 @@
+{
+  "schema": 1,
+  "projection": "normal+yaw8",
+  "subject": "variation:ref-building-garage-0f7895a1-plain:1",
+  "name": "Garage — variation 1",
+  "version": 1,
+  "review": "candidate",
+  "source": {
+    "views": {
+      "normalNE": {
+        "reuse": "variation:ref-building-garage-0f7895a1-plain:1"
+      },
+      "yaw8N": "src/yaw8N.png",
+      "normalSE": {
+        "reuse": "view:variation:ref-building-garage-0f7895a1-plain:1:se"
+      },
+      "yaw8E": "src/yaw8E.png",
+      "normalSW": {
+        "reuse": "view:variation:ref-building-garage-0f7895a1-plain:1:sw"
+      },
+      "yaw8S": "src/yaw8S.png",
+      "normalNW": {
+        "reuse": "view:variation:ref-building-garage-0f7895a1-plain:1:nw"
+      },
+      "yaw8W": "src/yaw8W.png"
+    }
+  },
+  "footprintMetres": {
+    "width": 4,
+    "depth": 4
+  },
+  "pixelsPerMetre": 100.9251427206,
+  "pixelCalibrationSpace": "orthographic-camera",
+  "baselineScale": 1.999,
+  "kind": "building",
+  "solid": 2,
+  "category": "Eight-view buildings",
+  "aliases": [],
+  "views": {
+    "normalNE": {
+      "headingDegrees": 0
+    },
+    "yaw8N": {
+      "anchor": {
+        "x": 244.5,
+        "y": 386.39
+      },
+      "headingDegrees": 37
+    },
+    "normalSE": {
+      "headingDegrees": 90
+    },
+    "yaw8E": {
+      "anchor": {
+        "x": 236,
+        "y": 367.12
+      },
+      "headingDegrees": 127
+    },
+    "normalSW": {
+      "headingDegrees": 180
+    },
+    "yaw8S": {
+      "anchor": {
+        "x": 243.5,
+        "y": 377.82
+      },
+      "headingDegrees": 217
+    },
+    "normalNW": {
+      "headingDegrees": 270
+    },
+    "yaw8W": {
+      "anchor": {
+        "x": 240,
+        "y": 373.22
+      },
+      "headingDegrees": 307
+    }
+  },
+  "calibrationNotes": "The four corner views are the building's existing pictures (variation:ref-building-garage-0f7895a1-plain:1, view:variation:ref-building-garage-0f7895a1-plain:1:se, view:variation:ref-building-garage-0f7895a1-plain:1:sw, view:variation:ref-building-garage-0f7895a1-plain:1:nw), reused, not repacked. The four straight-on views: scale 0.4484 game px per native px (100.93 px/m), read with scripts/assets/straight-views/measure.mjs: the T375 footprint-box fit (4 x 4 m, the library's box) on the four corners and the four straight views, the corners' fit bias against their library scale removed (1.5575), the median of the four straight views (0.4378 0.4522 0.4445 0.4544); anchors refitted with that scale held (IoU 0.9089 0.9505 0.9161 0.9471). Not owner-measured. Sheet: variation~ref-building-garage-0f7895a1-plain~1 axisturn, cells NESW are N E S W. sign and garage door on N as on NE; the W view has one lit orange window."
+}

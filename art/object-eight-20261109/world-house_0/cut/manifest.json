@@ -1,0 +1,206 @@
+{
+  "schema": 1,
+  "projection": "normal+yaw8",
+  "subject": "world:house_0",
+  "name": "House 0",
+  "version": 1,
+  "review": "approved",
+  "source": {
+    "views": {
+      "normalNE": {
+        "reuse": "world:house_0"
+      },
+      "yaw8N": {
+        "file": "../src/yaw8N.png",
+        "sha256": "f9d44b2427b2617b6b6347fdac27b6eb29df6973fb3f79a1066f63e1e662ac25",
+        "width": 589,
+        "height": 488
+      },
+      "normalSE": {
+        "reuse": "view:world:house_0:se"
+      },
+      "yaw8E": {
+        "file": "../src/yaw8E.png",
+        "sha256": "2e7bd019b88bc4d338b604c8dee7891d731b7eb14d5240f90808889bf8c79670",
+        "width": 523,
+        "height": 577
+      },
+      "normalSW": {
+        "reuse": "view:world:house_0:sw"
+      },
+      "yaw8S": {
+        "file": "../src/yaw8S.png",
+        "sha256": "7795a4added30fe0fe447c27e66332b8fd5c1a01ed7a679ee8eeadd6eb545ac9",
+        "width": 602,
+        "height": 479
+      },
+      "normalNW": {
+        "reuse": "view:world:house_0:nw"
+      },
+      "yaw8W": {
+        "file": "../src/yaw8W.png",
+        "sha256": "808a15a68b4e92af8ac9927568ea67df7e5cb95c46cf0db3fa56838237260df4",
+        "width": 516,
+        "height": 531
+      }
+    }
+  },
+  "footprintMetres": {
+    "width": 6.44,
+    "depth": 5.18
+  },
+  "pixelsPerMetre": 80.7401141765,
+  "pixelCalibrationSpace": "orthographic-camera",
+  "baselineScale": 1.837,
+  "kind": "building",
+  "solid": 2,
+  "category": "Eight-view buildings",
+  "aliases": [],
+  "views": {
+    "yaw8N": {
+      "file": "yaw8N.native.png",
+      "sha256": "487c3ebfd8a4ad1adcc82079e34ca8e9436376d7ccb0a22915e9e7b96da07acf",
+      "width": 581,
+      "height": 480,
+      "anchor": {
+        "x": 291.25,
+        "y": 396.06
+      },
+      "headingDegrees": 37,
+      "boxes": null,
+      "sourceFamily": "view",
+      "sourceSha256": "f9d44b2427b2617b6b6347fdac27b6eb29df6973fb3f79a1066f63e1e662ac25",
+      "cell": 0,
+      "cellRect": {
+        "left": 0,
+        "top": 0,
+        "width": 589,
+        "height": 488
+      },
+      "crop": {
+        "left": 4,
+        "top": 4,
+        "width": 581,
+        "height": 480
+      }
+    },
+    "yaw8E": {
+      "file": "yaw8E.native.png",
+      "sha256": "950f234d5e50646622cbb35f476cb158bf0110f9440d3545ab7929a709158ba4",
+      "width": 515,
+      "height": 569,
+      "anchor": {
+        "x": 270.25,
+        "y": 437.74
+      },
+      "headingDegrees": 127,
+      "boxes": null,
+      "sourceFamily": "view",
+      "sourceSha256": "2e7bd019b88bc4d338b604c8dee7891d731b7eb14d5240f90808889bf8c79670",
+      "cell": 0,
+      "cellRect": {
+        "left": 0,
+        "top": 0,
+        "width": 523,
+        "height": 577
+      },
+      "crop": {
+        "left": 4,
+        "top": 4,
+        "width": 515,
+        "height": 569
+      }
+    },
+    "yaw8S": {
+      "file": "yaw8S.native.png",
+      "sha256": "2b96b7010a0b115c14b5b3e9ee50eb559ee8143563f0ce36dd234064e73bd331",
+      "width": 594,
+      "height": 471,
+      "anchor": {
+        "x": 299.25,
+        "y": 388.23
+      },
+      "headingDegrees": 217,
+      "boxes": null,
+      "sourceFamily": "view",
+      "sourceSha256": "7795a4added30fe0fe447c27e66332b8fd5c1a01ed7a679ee8eeadd6eb545ac9",
+      "cell": 0,
+      "cellRect": {
+        "left": 0,
+        "top": 0,
+        "width": 602,
+        "height": 479
+      },
+      "crop": {
+        "left": 4,
+        "top": 4,
+        "width": 594,
+        "height": 471
+      }
+    },
+    "yaw8W": {
+      "file": "yaw8W.native.png",
+      "sha256": "218e50bfe820c4916092eb7fe2a97d5cba7cbbc79ecb92dbbe1f3e7ec0c0dcad",
+      "width": 508,
+      "height": 523,
+      "anchor": {
+        "x": 262.25,
+        "y": 387.47
+      },
+      "headingDegrees": 307,
+      "boxes": null,
+      "sourceFamily": "view",
+      "sourceSha256": "808a15a68b4e92af8ac9927568ea67df7e5cb95c46cf0db3fa56838237260df4",
+      "cell": 0,
+      "cellRect": {
+        "left": 0,
+        "top": 0,
+        "width": 516,
+        "height": 531
+      },
+      "crop": {
+        "left": 4,
+        "top": 4,
+        "width": 508,
+        "height": 523
+      }
+    },
+    "normalNE": {
+      "reuse": "world:house_0",
+      "anchor": null,
+      "headingDegrees": 0,
+      "boxes": null,
+      "sourceFamily": "reuse"
+    },
+    "normalSE": {
+      "reuse": "view:world:house_0:se",
+      "anchor": null,
+      "headingDegrees": 90,
+      "boxes": null,
+      "sourceFamily": "reuse"
+    },
+    "normalSW": {
+      "reuse": "view:world:house_0:sw",
+      "anchor": null,
+      "headingDegrees": 180,
+      "boxes": null,
+      "sourceFamily": "reuse"
+    },
+    "normalNW": {
+      "reuse": "view:world:house_0:nw",
+      "anchor": null,
+      "headingDegrees": 270,
+      "boxes": null,
+      "sourceFamily": "reuse"
+    }
+  },
+  "calibrationNotes": "The four corner views are the building's existing pictures (world:house_0, view:world:house_0:se, view:world:house_0:sw, view:world:house_0:nw), reused, not repacked. The four straight-on views: scale 0.5605 game px per native px (80.74 px/m), read with scripts/assets/straight-views/measure.mjs: the T375 footprint-box fit (6.44 x 5.18 m, the library's box) on the four corners and the four straight views, the corners' fit bias against their library scale removed (1.3054), the median of the four straight views (0.562 0.5591 0.5541 0.5748); anchors refitted with that scale held (IoU 0.8872 0.861 0.8807 0.8957). Not owner-measured. Sheet: world~house_0 axisturn, cells NESW are N E S W. red door on N as on NE; autumn leaves and pumpkins from the old export (the corners are clean); has the old square straight-on set, which still draws on straight roads until the turned views are preferred.",
+  "artReviewRequired": [
+    "same subject across all eight views",
+    "normal and actual yaw8 geometry",
+    "upper-right daylight and lower-left shadows",
+    "true alpha and complete silhouette",
+    "per-view ground anchors and physical footprint",
+    "no duplicates or fake mirror views"
+  ]
+}

@@ -24,12 +24,17 @@ import { CAR_SCALE, carFootprint, carHeading, carOwnerScale } from '../ext/car-a
 /** a placed prop; street is set (true) only for an item on the sidewalk in front of the lot (a lay-by's bays take none: see engine placeLot);
  *  from: the preset it was drawn from and its prop index there (compose.ts; the dev editor maps an edit back to the preset by it) */
 export interface Placed { id: string; x: number; y: number; flip: boolean; scale: number; street?: true; from?: { preset: string; prop: number }; /** T167: drawn in place of this removed picture */ standIn?: string; /** T219: the footprint it stands on (world tiles) when its picture's own is not the library's (art-fix.ts): the engine draws it on that */ foot?: Box4 }
-export interface Composition { props: Placed[]; ground: LotPatch[] }
+/** T398: where a clean house lot's doors are, in the lot's preset frame (x along the street from its left as seen from it, y away from it, tiles): the house (its picture as drawn, its box, whether its front
+ *  meets the street, the owner's mark on the picture, where its garage door is), the front door's x on the front wall (y = frontY), and each garage door that faces the street (its span along the wall and the
+ *  wall's y): the drive goes to one of them and to nothing else, the path to the front door. A lot with no garage door has no drive. */
+export interface LotAnchors { house: { id: string; box: [number, number, number, number]; exact: boolean; mark: string | null; garage: 'none' | 'front' | 'side' }; doorX: number; frontY: number; garages: { x0: number; x1: number; y: number }[];
+  /** the boxes of the lot's buildings, the house first and then its garage buildings (x0, y0, x1, y1): the side gap is measured on them */ boxes: [number, number, number, number][] }
+export interface Composition { props: Placed[]; ground: LotPatch[]; anchors?: LotAnchors }
 /** a preset prop a lot leaves out: the preset and the prop's index there, its sprite id as drawn, and why (past the lot line, overlaps <id>
  *  NN%, the fit, the decline) */
 export interface PresetDrop { preset: string; prop: number; id: string; why: string }
 /** the lot state a composition depends on (the seed is the lot's own) */
-export interface ComposeState { use: number; level: number; decline: number; seed: number; /** the lot lab's forced preset id (dev only): the lot draws that preset, approved or not */ preset?: string; /** T295: the building tier the lot draws from (lots/tiers.ts; absent: the top tier) and the shop business a commercial lot shows (variety.ts; absent: its colour) */ tier?: number; biz?: string; /** T297 (#882): the lot lab's re-roll, an offset to the lot's seed for the remix only (absent: 0, the game's own fill) */ remix?: number; /** T305 (#890): the lab's forced template for a generated lot (autolot.ts; absent: the use's own) */ autoTemplate?: string }
+export interface ComposeState { use: number; level: number; decline: number; seed: number; /** the lot lab's forced preset id (dev only): the lot draws that preset, approved or not */ preset?: string; /** T295: the building tier the lot draws from (lots/tiers.ts; absent: the top tier) and the shop business a commercial lot shows (variety.ts; absent: its colour) */ tier?: number; biz?: string; /** T297 (#882): the lot lab's re-roll, an offset to the lot's seed for the remix only (absent: 0, the game's own fill) */ remix?: number; /** T305 (#890): the lab's forced template for a generated lot (autolot.ts; absent: the use's own) */ autoTemplate?: string; /** T403 (#1081, dev only: the Lot review's sample set): the house type (a house palette entry) a clean house lot is laid to show, in the place of the house of the preset it drew; the facing rules then run on it as on any house, so a type that cannot face the road is swapped as in the game. The preset's detached garages stay unless the house overlaps them */ house?: string }
 
 export type Pt = { x: number; y: number };
 export type Box4 = [number, number, number, number];
@@ -69,7 +74,7 @@ export const names = (ids: string[]) => ids.filter(id => BY.has(id));
 /** the library ids of a filter, without the east-facing art (east:*: drawn only in place of a flipped front, EAST_FACING), the other views (view:*)
  *  and the screen-axis pictures (axis-library.ts, T154: their footings run along the screen, so the town's lots, which run along the map axes, do not
  *  pick them; the Props tool, the lot lab and the roads at 45 degrees place them) */
-export const cat = (f: (i: LibItem) => boolean) => LIBRARY.filter(i => !i.id.startsWith('east:') && !i.id.startsWith('view:') && AXIS_HEADING[i.id] === undefined && f(i)).map(i => i.id);
+export const cat = (f: (i: LibItem) => boolean) => LIBRARY.filter(i => !i.id.startsWith('east:') && !i.id.startsWith('view:') && !i.id.startsWith('object8:') && AXIS_HEADING[i.id] === undefined && f(i)).map(i => i.id);
 /** the footprint of a sprite at scale s, relative to its anchor (the union of its boxes, as the engine draws it) */
 export function boxOf(id: string, s: number, flip: boolean): Box4 {
   const it = BY.get(id)!;

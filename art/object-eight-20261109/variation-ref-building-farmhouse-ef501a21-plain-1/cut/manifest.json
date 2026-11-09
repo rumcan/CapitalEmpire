@@ -1,0 +1,206 @@
+{
+  "schema": 1,
+  "projection": "normal+yaw8",
+  "subject": "variation:ref-building-farmhouse-ef501a21-plain:1",
+  "name": "Farmhouse — variation 1",
+  "version": 1,
+  "review": "approved",
+  "source": {
+    "views": {
+      "normalNE": {
+        "reuse": "variation:ref-building-farmhouse-ef501a21-plain:1"
+      },
+      "yaw8N": {
+        "file": "../src/yaw8N.png",
+        "sha256": "c2aab0c115509c2a3866aee5192b6ee6a6387d2de83ec38b08c7256e2b7df118",
+        "width": 517,
+        "height": 482
+      },
+      "normalSE": {
+        "reuse": "view:variation:ref-building-farmhouse-ef501a21-plain:1:se"
+      },
+      "yaw8E": {
+        "file": "../src/yaw8E.png",
+        "sha256": "994011a7fddbd3c902ae06c35864e5851fd7875880341f114a046575845cf345",
+        "width": 590,
+        "height": 472
+      },
+      "normalSW": {
+        "reuse": "view:variation:ref-building-farmhouse-ef501a21-plain:1:sw"
+      },
+      "yaw8S": {
+        "file": "../src/yaw8S.png",
+        "sha256": "aa25952e05f35f08e937095634bb5480b23e6779b7f9548c33155d05561d72f0",
+        "width": 514,
+        "height": 510
+      },
+      "normalNW": {
+        "reuse": "view:variation:ref-building-farmhouse-ef501a21-plain:1:nw"
+      },
+      "yaw8W": {
+        "file": "../src/yaw8W.png",
+        "sha256": "011f1597cd5f959a48ec491d85cd5a5e60a261b0730e3a3a5b17e36ace458c28",
+        "width": 595,
+        "height": 452
+      }
+    }
+  },
+  "footprintMetres": {
+    "width": 8,
+    "depth": 6
+  },
+  "pixelsPerMetre": 60.517296063,
+  "pixelCalibrationSpace": "orthographic-camera",
+  "baselineScale": 1.714,
+  "kind": "building",
+  "solid": 2,
+  "category": "Eight-view buildings",
+  "aliases": [],
+  "views": {
+    "yaw8N": {
+      "file": "yaw8N.native.png",
+      "sha256": "f41f309dc933e064c5d540d375ac9061170aa99be665b2f7093e5b04588ef1a6",
+      "width": 509,
+      "height": 474,
+      "anchor": {
+        "x": 257.5,
+        "y": 351.09
+      },
+      "headingDegrees": 37,
+      "boxes": null,
+      "sourceFamily": "view",
+      "sourceSha256": "c2aab0c115509c2a3866aee5192b6ee6a6387d2de83ec38b08c7256e2b7df118",
+      "cell": 0,
+      "cellRect": {
+        "left": 0,
+        "top": 0,
+        "width": 517,
+        "height": 482
+      },
+      "crop": {
+        "left": 4,
+        "top": 4,
+        "width": 509,
+        "height": 474
+      }
+    },
+    "yaw8E": {
+      "file": "yaw8E.native.png",
+      "sha256": "884140e6f113d0042e6ee655c30a0ceb34237f5efdf1c43c2b5645829547e255",
+      "width": 582,
+      "height": 464,
+      "anchor": {
+        "x": 294,
+        "y": 362.89
+      },
+      "headingDegrees": 127,
+      "boxes": null,
+      "sourceFamily": "view",
+      "sourceSha256": "994011a7fddbd3c902ae06c35864e5851fd7875880341f114a046575845cf345",
+      "cell": 0,
+      "cellRect": {
+        "left": 0,
+        "top": 0,
+        "width": 590,
+        "height": 472
+      },
+      "crop": {
+        "left": 4,
+        "top": 4,
+        "width": 582,
+        "height": 464
+      }
+    },
+    "yaw8S": {
+      "file": "yaw8S.native.png",
+      "sha256": "c4e773bf620bda16b033bfc03f21359a1c052e94d98d7038f73ce09ea6fc7d74",
+      "width": 506,
+      "height": 502,
+      "anchor": {
+        "x": 258.25,
+        "y": 363.2
+      },
+      "headingDegrees": 217,
+      "boxes": null,
+      "sourceFamily": "view",
+      "sourceSha256": "aa25952e05f35f08e937095634bb5480b23e6779b7f9548c33155d05561d72f0",
+      "cell": 0,
+      "cellRect": {
+        "left": 0,
+        "top": 0,
+        "width": 514,
+        "height": 510
+      },
+      "crop": {
+        "left": 4,
+        "top": 4,
+        "width": 506,
+        "height": 502
+      }
+    },
+    "yaw8W": {
+      "file": "yaw8W.native.png",
+      "sha256": "3f9213339ebe1cb887e03eea8e9c7d4d6d8f48c4cc98d531f83e4d3df0ac0d0e",
+      "width": 587,
+      "height": 444,
+      "anchor": {
+        "x": 281.5,
+        "y": 336.24
+      },
+      "headingDegrees": 307,
+      "boxes": null,
+      "sourceFamily": "view",
+      "sourceSha256": "011f1597cd5f959a48ec491d85cd5a5e60a261b0730e3a3a5b17e36ace458c28",
+      "cell": 0,
+      "cellRect": {
+        "left": 0,
+        "top": 0,
+        "width": 595,
+        "height": 452
+      },
+      "crop": {
+        "left": 4,
+        "top": 4,
+        "width": 587,
+        "height": 444
+      }
+    },
+    "normalNE": {
+      "reuse": "variation:ref-building-farmhouse-ef501a21-plain:1",
+      "anchor": null,
+      "headingDegrees": 0,
+      "boxes": null,
+      "sourceFamily": "reuse"
+    },
+    "normalSE": {
+      "reuse": "view:variation:ref-building-farmhouse-ef501a21-plain:1:se",
+      "anchor": null,
+      "headingDegrees": 90,
+      "boxes": null,
+      "sourceFamily": "reuse"
+    },
+    "normalSW": {
+      "reuse": "view:variation:ref-building-farmhouse-ef501a21-plain:1:sw",
+      "anchor": null,
+      "headingDegrees": 180,
+      "boxes": null,
+      "sourceFamily": "reuse"
+    },
+    "normalNW": {
+      "reuse": "view:variation:ref-building-farmhouse-ef501a21-plain:1:nw",
+      "anchor": null,
+      "headingDegrees": 270,
+      "boxes": null,
+      "sourceFamily": "reuse"
+    }
+  },
+  "calibrationNotes": "The four corner views are the building's existing pictures (variation:ref-building-farmhouse-ef501a21-plain:1, view:variation:ref-building-farmhouse-ef501a21-plain:1:se, view:variation:ref-building-farmhouse-ef501a21-plain:1:sw, view:variation:ref-building-farmhouse-ef501a21-plain:1:nw), reused, not repacked. The four straight-on views: scale 0.7478 game px per native px (60.52 px/m), read with scripts/assets/straight-views/measure.mjs: the T375 footprint-box fit (8 x 6 m, the library's box) on the four corners and the four straight views, the corners' fit bias against their library scale removed (1.2519), the median of the four straight views (0.7454 0.7275 0.7531 0.7502); anchors refitted with that scale held (IoU 0.8154 0.8075 0.8119 0.7901). Not owner-measured. Sheet: variation~ref-building-farmhouse-ef501a21-plain~1 axisturn, cells WNES are N E S W. the gable front with the porch is the sheet's W cell (the guide's N is the wing side); cells rotated by three.",
+  "artReviewRequired": [
+    "same subject across all eight views",
+    "normal and actual yaw8 geometry",
+    "upper-right daylight and lower-left shadows",
+    "true alpha and complete silhouette",
+    "per-view ground anchors and physical footprint",
+    "no duplicates or fake mirror views"
+  ]
+}

@@ -1,0 +1,82 @@
+{
+  "schema": 1,
+  "projection": "normal+yaw8",
+  "subject": "variation:world-church-44e76535-plain:1",
+  "name": "Church — variation 1",
+  "version": 1,
+  "review": "candidate",
+  "source": {
+    "views": {
+      "normalNE": {
+        "reuse": "variation:world-church-44e76535-plain:1"
+      },
+      "yaw8N": "src/yaw8N.png",
+      "normalSE": {
+        "reuse": "view:variation:world-church-44e76535-plain:1:se"
+      },
+      "yaw8E": "src/yaw8E.png",
+      "normalSW": {
+        "reuse": "view:variation:world-church-44e76535-plain:1:sw"
+      },
+      "yaw8S": "src/yaw8S.png",
+      "normalNW": {
+        "reuse": "view:variation:world-church-44e76535-plain:1:nw"
+      },
+      "yaw8W": "src/yaw8W.png"
+    }
+  },
+  "footprintMetres": {
+    "width": 10,
+    "depth": 8
+  },
+  "pixelsPerMetre": 34.8408915205,
+  "pixelCalibrationSpace": "orthographic-camera",
+  "baselineScale": 1.469,
+  "kind": "building",
+  "solid": 2,
+  "category": "Eight-view buildings",
+  "aliases": [],
+  "views": {
+    "normalNE": {
+      "headingDegrees": 0
+    },
+    "yaw8N": {
+      "anchor": {
+        "x": 159.25,
+        "y": 322.36
+      },
+      "headingDegrees": 37
+    },
+    "normalSE": {
+      "headingDegrees": 90
+    },
+    "yaw8E": {
+      "anchor": {
+        "x": 215,
+        "y": 378.62
+      },
+      "headingDegrees": 127
+    },
+    "normalSW": {
+      "headingDegrees": 180
+    },
+    "yaw8S": {
+      "anchor": {
+        "x": 238.25,
+        "y": 434.66
+      },
+      "headingDegrees": 217
+    },
+    "normalNW": {
+      "headingDegrees": 270
+    },
+    "yaw8W": {
+      "anchor": {
+        "x": 225.75,
+        "y": 375.49
+      },
+      "headingDegrees": 307
+    }
+  },
+  "calibrationNotes": "The four corner views are the building's existing pictures (variation:world-church-44e76535-plain:1, view:variation:world-church-44e76535-plain:1:se, view:variation:world-church-44e76535-plain:1:sw, view:variation:world-church-44e76535-plain:1:nw), reused, not repacked. The four straight-on views: scale 1.2989 game px per native px (34.84 px/m), read with scripts/assets/straight-views/measure.mjs: the T375 footprint-box fit (10 x 8 m, the library's box) on the four corners and the four straight views, the corners' fit bias against their library scale removed (0.6646), the median of the four straight views (1.2394 1.2757 1.3221 1.3601); anchors refitted with that scale held (IoU 0.8245 0.8181 0.7642 0.8457). Not owner-measured. Sheet: variation~world-church-44e76535-plain~1 axisturn, cells NESW are N E S W. tower front with the double doors on N as on NE; one window on the long wall where the corners show three."
+}

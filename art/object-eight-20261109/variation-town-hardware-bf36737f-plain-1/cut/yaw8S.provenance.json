@@ -1,0 +1,29 @@
+{
+  "schema": 1,
+  "subject": "variation:town-hardware-bf36737f-plain:1",
+  "version": 1,
+  "key": "yaw8S",
+  "source": {
+    "file": "../src/yaw8S.png",
+    "sha256": "cc22611af569560f9f3f9e585f11b881e236e22ea25d517f8c23f385dfda38a2",
+    "width": 466,
+    "height": 482
+  },
+  "cell": 0,
+  "cellRect": {
+    "left": 0,
+    "top": 0,
+    "width": 466,
+    "height": 482
+  },
+  "crop": {
+    "left": 4,
+    "top": 4,
+    "width": 458,
+    "height": 474
+  },
+  "output": "yaw8S.native.png",
+  "sha256": "861d0b709f6a004f3feb162b86bde153ff40156340bd9122db98a653a523a698",
+  "operation": "native RGBA cell crop only; no flip/repaint/view synthesis",
+  "review": "candidate"
+}

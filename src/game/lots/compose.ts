@@ -22,7 +22,7 @@ import { LU, LV } from './town';
 import {
   BUSHES, BY, Build, CHAIN, DEAD_TREES, DRIVE_GAP, JUNK, MARK_ID, PARK_PIECES, PICKUPS, PRIVACY, SCHOOL_SIGNS, SIDE_YARD, TREES, clamp, isCarPark, mix,
   boxOf, names, patchTex, pick, specFit, withVariations,
-  type Composition, type ComposeState, type LotGeom, type Pt, type PresetDrop,
+  type Composition, type ComposeState, type LotAnchors, type LotGeom, type Pt, type PresetDrop,
 } from './compose-core';
 import { WHOLE_FRONT, approvedFor, bucketOf, fitPreset, parsePresets, pickPreset, presetsFor, stateOf, type Fitted, type LotPreset, type PresetDecal, type PresetMeta, type PresetProp, type PresetState, type PresetUse, type Road } from './presets';
 import { AXIS_PROPS, drawnView, faces, footprintOf, isVehicle, ownerScaleOf, roadView, turned } from './preset-art';
@@ -43,11 +43,10 @@ import ALLOC_JSON from './house-allocations.json';
 import REMOVED from '../../../scripts/assets/removed.json';
 import { OWNER_SCALE } from './scales';
 import { LIBRARY } from '../library';
-import { drawnAsStandIn, standInFamily } from '../newart';
+import { drawnAsStandIn, lotDrawLimit, standInFamily } from '../newart';
 import { GAS_SHOP, GAS_SHOP_FALLBACK, WHEEL_STOP, gasPlan, isCanopy, isOpenStructure, matchBays } from './gas-station';
 import { LATEST, LOT_MODELS } from './lot-models';
 import { lotPickup, parkedAs } from '../vehicles';
-import { PIXEL_LIMIT } from '../sizes';
 import { SHOP_PALETTE, SPOT_OF, VENUE_PALETTE, colourOf, tryOrder } from './variety';
 import { presetTier, tierOf } from './tiers';
 import { buildGroups, groupOf as cellMembers, roleOf, sizeOf, zoneOf, type Role } from './groups';
@@ -55,11 +54,10 @@ import { autoLot, clearAutoLots, dressStraight, isBigLot, relayParks, type AutoT
 // T385 (#1042): the clean base of a house lot (clean-yards.ts; cleanHouse and cleanLot below): its own imports, on lines of their own
 import { hit } from './compose-core';
 import { areaOf } from './house-class';
-import { texOf } from './autolot';
 import type { PresetPatch } from './presets';
-import { cleanYards } from './clean-yards';
+import { cleanYards, conditionOf, SIDE_GAP, SURFACES } from './clean-yards';
 import { buildingRect, cleanGround, cleanTrees, hedgeRun, type Box as CleanBox } from './clean-lot';
-import { facingView } from './house-facing';
+import { facingView, lotAnchors } from './house-facing';
 import { centreOf, isCentre, partOf, widen } from './centre-biz';
 import { CIVIC } from '../event/config';
 import { FRONTAL } from './frontal';
@@ -461,6 +459,8 @@ export function setShopVariety(on: boolean): void { VARIETY = on; }
 export const SWAP_RULES = { side: 0.5, back: 0.6, least: 0.8, area: 0.55 } as const;
 /** a house swapped into another's place keeps closer to it (its drive and walk run beside and up to it) */
 export const HOUSE_SWAP_RULES = { side: 0.3, back: 0.6, least: 0.85, area: 0.6 } as const;
+/** T403: the rules a lot laid to show a house type places it by (ComposeState.house): the type at its own size (down to half of it) wherever the preset's house stood, whatever that one's size */
+const FORCED_RULES = { side: 8, back: 8, least: 0.5, area: 0 } as const;
 type SwapRules = { readonly side: number; readonly back: number; readonly least: number; readonly area: number };
 const LIB_AT = new Map(LIBRARY.map((it, i) => [it.id, i] as const));
 /** the houses a house lot shows (the 'dwelling' family's front sets, house-class.ts houseFamilies: no straight-on art, frontal.ts, and none the
@@ -469,7 +469,7 @@ let HOUSES: string[] | null = null, BACKS: string[] | null = null;
 export const housePalette = (): readonly string[] => (HOUSES ??= (houseFamilies().get('dwelling')?.ids ?? []).filter(id => !FRONTAL.has(id) && !removedOf(id)).sort());
 /** the houses seen from the back (house-class.ts REAR: the north views, the house backs, the rear sets) a lot lab preset shows on the lots whose
  *  street lies behind the house as the camera sees it: a lot whose preset holds one shows another of them (same rules), by id */
-export const backPalette = (): readonly string[] => (BACKS ??= LIBRARY.filter((it, i) => REAR.test(it.id) && !it.id.startsWith('view:') && !it.id.startsWith('east:') && isBuilding(it) && !drawnAsStandIn(i)
+export const backPalette = (): readonly string[] => (BACKS ??= LIBRARY.filter((it, i) => REAR.test(it.id) && !it.id.startsWith('view:') && !it.id.startsWith('east:') && !it.id.startsWith('object8:') && isBuilding(it) && !drawnAsStandIn(i)
   && standInFamily(it) === 'dwelling' && baseOf(it.id) === it.id && !FRONTAL.has(it.id) && !removedOf(it.id)).map(it => it.id).sort());
 /** the palette a lot of a use shows (com: the shop fronts, tour: the venues, res: the houses), or null for a use without one */
 const paletteOf = (use: PresetUse): readonly string[] | null => (use === 'com' ? SHOP_PALETTE : use === 'tour' ? VENUE_PALETTE : use === 'res' ? housePalette() : null);
@@ -495,7 +495,7 @@ export function swapScale(q: PresetProp, id: string, f: PresetFrame, R: SwapRule
   if (SWAP_K.size > 1 << 16) SWAP_K.clear();
   // (T331: the limit of the view it is drawn in and of view 0: faceStreet turns a swapped shop to face its street after the swap, and the turned view's
   // picture can hold fewer pixels: a laundromat swapped at its view's limit was drawn 0.04% past the east view's)
-  const limOf = (v: number) => PIXEL_LIMIT[LIB_AT.get(drawnView(id, f, v).id) ?? -1] ?? 0;
+  const limOf = (v: number) => lotDrawLimit(LIB_AT.get(drawnView(id, f, v).id) ?? -1);
   const half = frameHalf(f), h0 = half(q), h1 = half({ ...q, id, scale: 1 }), lim = Math.min(limOf(q.view), limOf(0));
   k = Math.min(q.scale, lim / ownerScaleOf(id), (h0.ha + R.side) / h1.ha, (2 * h0.hb + R.back) / (2 * h1.hb));
   k = k >= R.least && h1.ha * h1.hb * k * k >= R.area * h0.ha * h0.hb ? k : 0;
@@ -584,7 +584,7 @@ const STARTER_RE = /rundown|derelict|boarded|abandoned|shack|lean-to|mobile-home
 /** the trailers and mobile homes: decor-kind props that stand as a starter home in a house's place for this swap only (the owner, 2026-11-02) */
 const HOME_DECOR = /mobile-home|camper|pop-?up-caravan|(?<!boat-)trailer/;
 let STARTERS: string[] | null = null;
-const starterPalette = (): readonly string[] => (STARTERS ??= LIBRARY.filter((it, i) => STARTER_RE.test(it.id) && (isBuilding(it) || HOME_DECOR.test(it.id)) && tierOf(it.id) === 0 && !it.id.startsWith('view:') && !it.id.startsWith('east:')
+const starterPalette = (): readonly string[] => (STARTERS ??= LIBRARY.filter((it, i) => STARTER_RE.test(it.id) && (isBuilding(it) || HOME_DECOR.test(it.id)) && tierOf(it.id) === 0 && !it.id.startsWith('view:') && !it.id.startsWith('east:') && !it.id.startsWith('object8:')
   && !REAR.test(it.id) && !drawnAsStandIn(i) && baseOf(it.id) === it.id && !FRONTAL.has(it.id) && !removedOf(it.id)).map(it => it.id).sort());
 /** T385 (#1042, #1039): a clean house lot (clean-yards.ts) shows a starter BUILDING, never a trailer or a mobile home: those are decor props, which houseBase left out
  *  of a generated lot, so a tier-0 lot with a mobile home in its house's place drew its yard round no house at all (the owner: "why is there a lot with no house?") */
@@ -709,7 +709,7 @@ function standInHouse(q: PresetProp, r: RemovedPic, fit: Fitted, lot: LotGeom, f
 function standInBuilding(q: PresetProp, r: RemovedPic, seed: number, road: Road): string | null {
   const hr = removedHalf(q.id, r, q.scale), area = 4 * hr * hr;
   let pool = KIND_POOL.get(r.kind);
-  if (!pool) KIND_POOL.set(r.kind, pool = LIBRARY.filter((it, i) => it.kind === r.kind && it.cat !== 'Golf tournament' && isBuilding(it) && !removedOf(it.id) && !drawnAsStandIn(i) && !it.id.startsWith('view:') && !it.id.startsWith('east:') && !/-north-|[-_]rear(?![a-z])/.test(it.id))
+  if (!pool) KIND_POOL.set(r.kind, pool = LIBRARY.filter((it, i) => it.kind === r.kind && it.cat !== 'Golf tournament' && isBuilding(it) && !removedOf(it.id) && !drawnAsStandIn(i) && !it.id.startsWith('view:') && !it.id.startsWith('east:') && !it.id.startsWith('object8:') && !/-north-|[-_]rear(?![a-z])/.test(it.id))
     .map(it => { const fp = footprintOf(it.id, OWNER_SCALE[it.id] ?? 1, false); return { id: it.id, a: (fp[2] - fp[0]) * (fp[3] - fp[1]) }; }));
   const all = pool.filter(c => c.a >= area * 0.6 && c.a <= area * 1.4).sort((a, b) => Math.abs(a.a - area) - Math.abs(b.a - area) || (a.id < b.id ? -1 : 1));
   const faced = all.filter(c => roadView(c.id, road, 0)), near = (faced.length ? faced : all).slice(0, 3);
@@ -1059,15 +1059,17 @@ const ownsBackLine = (lot: LotGeom): boolean => { const s = lot.n.x + lot.n.y; r
 const NOT_A_HOME = /outhouse|glasshouse|coop|doghouse|boxcar|treehouse|birdhouse/;
 /** a clean base: the preset's house and garage (its facing set right), its drive and path, and the index of the house; the rest of the preset is left out; facing: the
  *  eighth turns the house's picture is off the road */
-interface CleanPick { base: LotP; house: number; ground: ReturnType<typeof cleanGround>; facing: number }
+/** bad (T398): why the house cannot stand on the lot at all: its garage door faces sideways, or the owner marked the picture it is drawn in (angles-wrong, more-angles, redo-style) */
+interface CleanPick { base: LotP; house: number; ground: ReturnType<typeof cleanGround>; facing: number; bad: 'garage' | 'mark' | 'gap' | null; anchors: LotAnchors }
 /** the house a lot shows in place of one that cannot face its road: a dwelling of the lot's road, state and tier whose picture faces the street, nearest the
  *  old one in size, that fits its spot (T297's swap rules, placeMember) and shares no more of its footprint with another building than the lot allows */
-function facingHouse(q: PresetProp, k: number, ok: (n: PresetProp, k: number) => boolean, lot: LotGeom, f: PresetFrame, st: ComposeState, state: PresetState): PresetProp | null {
+function facingHouse(q: PresetProp, k: number, ok: (n: PresetProp, k: number) => boolean, lot: LotGeom, f: PresetFrame, st: ComposeState, state: PresetState, inset = 0): PresetProp | null {
   const road = roadOf(lot.n), cap = st.tier ?? 3, a0 = areaOf(baseOf(q.id));
-  const ids = housePalette().filter(id => tierOf(id) <= cap && allows(ALLOC, id, road, state) && facingView(id, f).exact).sort((x, y) => Math.abs(areaOf(x) - a0) - Math.abs(areaOf(y) - a0) || (x < y ? -1 : 1));
+  const ids = housePalette().filter(id => tierOf(id) <= cap && allows(ALLOC, id, road, state) && facingView(id, f).ok).sort((x, y) => Math.abs(areaOf(x) - a0) - Math.abs(areaOf(y) - a0) || (x < y ? -1 : 1));
   for (const id of ids.slice(0, 40)) {
-    const m = placeMember(q, id, lot, f, HOUSE_SWAP_RULES); if (!m) continue;
-    const n: PresetProp = { ...m.prop, view: 0 };
+    // (T398 inset: the side gap on each side of the lot, tiles: the house is placed in the lot narrowed by it, then moved back)
+    const m = placeMember(inset ? { ...q, x: q.x - inset } : q, id, inset ? { ...lot, w: lot.w - 2 * inset } : lot, f, HOUSE_SWAP_RULES); if (!m) continue;
+    const n: PresetProp = { ...m.prop, x: m.prop.x + inset, view: 0 };
     if (ok(n, k)) return n;
   }
   return null;
@@ -1098,17 +1100,48 @@ function cleanBase(p: LotP, lot: LotGeom, st: ComposeState): CleanPick | null {
     return b[0] >= -EPS && b[2] <= lot.w + EPS && b[1] >= -EPS && b[3] <= lot.d + EPS && props.every((o, j) => j === k || share(b, boxAt(o, half(o))) <= OVERLAP);
   };
   // every building faces the street: view 0 when its picture faces the road in it (faceStreet left the preset's view where a yard prop was in the way: those props
-  // are gone); the house, when it cannot, is another house of the lot's road in its place
+  // are gone); the house, when it cannot, is another house of the lot's road in its place. T398: a picture is only right when the owner has not marked it, and a house's
+  // garage door is on its front wall (facingView ok): a house that cannot is swapped for one that can, a garage that cannot is left out (no garage, no drive)
+  // T403 (#1081, the Lot review's sample set): a lot laid to show a house type has it in the place of the preset's house (the facing rules below still run on it); the preset's detached garages stay unless the house overlaps them
+  let forced = false;
+  if (st.house && st.house !== props[house]!.id) { const m = placeMember(props[house]!, st.house, lot, f, FORCED_RULES); if (m) { props[house] = { ...m.prop, view: 0 }; forced = true; } }
   props.forEach((q, k) => {
-    if (facingView(q.id, f, q.view).exact) return;
+    if (facingView(q.id, f, q.view).ok) return;
     const n: PresetProp = { ...q, view: 0 };
-    if (facingView(q.id, f, 0).exact && ok(n, k)) { props[k] = n; return; }
+    if (facingView(q.id, f, 0).ok && ok(n, k)) { props[k] = n; return; }
     if (k === house) { const alt = facingHouse(q, k, ok, lot, f, st, state); if (alt) props[k] = alt; }
   });
-  const hq = props[house]!, hb = boxAt(hq, half(hq)) as CleanBox;
-  const ground = cleanGround(fit.patches, lot.w, lot.d, hb, { drive: texOf('res', state, 'drive', 'paving'), walk: texOf('res', state, 'walk', 'paving') });
+  const gone = props.map((q, k) => k !== house && (!facingView(q.id, f, q.view).ok || (forced && share(boxAt(props[house]!, half(props[house]!)), boxAt(q, half(q))) > OVERLAP)));
+  // T398 (the owner, 2026-11-09: "we can't have the garages right next to the houses": the left house's garage sits almost against the neighbouring lot's house): every wall of the lot's
+  // buildings keeps SIDE_GAP (about 3 m) from each side line, so neighbouring buildings are at least 6 m apart. The buildings (the house and its garages) move together to fit between the
+  // gaps; when they are too wide for the lot the garage farthest from the house is left out (no garage, no drive), then a narrower house of the lot's road takes the house's place; when even
+  // that does not fit the candidate is no house for this lot
+  const room = lot.w - 2 * SIDE_GAP, liveK = props.map((_, k) => k).filter(k => !gone[k]);
+  const extent = (): [number, number] => { let lo = Infinity, hi = -Infinity; for (const k of liveK) { const b = boxAt(props[k]!, half(props[k]!)); lo = Math.min(lo, b[0]); hi = Math.max(hi, b[2]); } return [lo, hi]; };
+  const hx = () => props[house]!.x;
+  while (liveK.length > 1 && extent()[1] - extent()[0] > room + EPS) {
+    let far = -1, fd = -1; for (const k of liveK) if (k !== house && Math.abs(props[k]!.x - hx()) > fd) { fd = Math.abs(props[k]!.x - hx()); far = k; }
+    liveK.splice(liveK.indexOf(far), 1);
+  }
+  if (extent()[1] - extent()[0] > room + EPS) { const alt = facingHouse(props[house]!, house, ok, lot, f, st, state, SIDE_GAP); if (alt) props[house] = alt; }
+  let tooWide = extent()[1] - extent()[0] > room + EPS;
+  if (!tooWide) {
+    const [lo, hi] = extent(), dx = lo < SIDE_GAP - EPS ? SIDE_GAP - lo : hi > lot.w - SIDE_GAP + EPS ? lot.w - SIDE_GAP - hi : 0;
+    if (dx) for (const k of liveK) props[k] = { ...props[k]!, x: props[k]!.x + dx };
+    tooWide = false;
+  }
+  const keepK = new Set(liveK), kept = (a: readonly unknown[]) => a.filter((_, k) => keepK.has(k));
+  const hI = liveK.indexOf(house);
+  const props2 = kept(props) as PresetProp[], from2 = kept(from) as typeof from, standIn2 = standIn ? kept(standIn) as typeof standIn : undefined;
+  const hq = props2[hI]!, hb = boxAt(hq, half(hq)) as CleanBox, hf = facingView(hq.id, f, hq.view);
+  // the doors the pictures draw (house-doors.ts, house-facing.ts lotAnchors): the front door on the house's front wall; each garage door that faces the street (the house's own, on its front
+  // wall, or a garage building's front: it was kept only when it faces the street): the drive goes to it and to nothing else
+  const garageBoxes = props2.flatMap((q, k) => (k === hI || roleOf(q.id) !== 'garage' ? [] : [boxAt(q, half(q)) as Box4]));
+  const anchors = lotAnchors(hq.id, hf, hb, garageBoxes);
+  const surface = SURFACES[conditionOf(state, st.tier, hq.id)];
+  const ground = cleanGround(fit.patches, lot.w, lot.d, hb, { drive: surface.drive, walk: surface.walk }, { doorX: anchors.doorX, frontY: anchors.frontY, garages: anchors.garages });
   const patches = [ground.drive, ground.walk].filter((a): a is PresetPatch => !!a);
-  return { base: { ...p, fit: { ...fit, props, from, patches, decals: [], ...(standIn ? { standIn } : {}) } }, house, ground, facing: facingView(hq.id, f, hq.view).off };
+  return { base: { ...p, fit: { ...fit, props: props2, from: from2, patches, decals: [], ...(standIn2 ? { standIn: standIn2 } : {}) } }, house: hI, ground, facing: hf.off, bad: hf.garage === 'side' ? 'garage' : hf.mark ? 'mark' : tooWide ? 'gap' : null, anchors };
 }
 /** draws a built house lot as its clean base (T385: clean-yards.ts): its house and garage, its drive and path, the fence of the lines it owns (panels; a
  *  hedge on a road at 45 degrees) taken off the drive and the path, and at most three trees clear of all of them (cleanTrees). Nothing else: no street
@@ -1157,8 +1190,9 @@ function cleanLot(lot: LotGeom, st: ComposeState, lp: LotP | null): Composition 
     const c = B.done();
     if (!c.props.some(q => isBuildingId(q.id))) continue;
     // (the lot's own preset keeps its house when it faces the road, drive or none: the owner's and the frozen houses stay the houses they were; a generated house must have its drive too)
-    if (strict && (pick.facing > (odd ? 1 : 0) || (k > 0 && !c.ground.some(a => a.drive)))) continue;
-    return c;
+    // (T398: a house whose garage door faces sideways, or whose picture the owner marked, never stands on a lot; and no garage, no drive: a house needs no drive of its own)
+    if (pick.bad || (strict && pick.facing > (odd ? 1 : 0))) continue;
+    return { ...c, anchors: pick.anchors };
   }
   const E = fresh(); boundaryFence(E, lot); E.clearDrives();
   return E.done();

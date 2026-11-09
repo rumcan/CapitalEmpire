@@ -1,0 +1,206 @@
+{
+  "schema": 1,
+  "projection": "normal+yaw8",
+  "subject": "variation:ref-building-grocery-79498713-plain:1",
+  "name": "Grocery — variation 1",
+  "version": 1,
+  "review": "approved",
+  "source": {
+    "views": {
+      "normalNE": {
+        "reuse": "variation:ref-building-grocery-79498713-plain:1"
+      },
+      "yaw8N": {
+        "file": "../src/yaw8N.png",
+        "sha256": "d878786e567c896c09104eab098b7c18a9ea826ded479eb50f6498fa6b9a0090",
+        "width": 461,
+        "height": 588
+      },
+      "normalSE": {
+        "reuse": "view:variation:ref-building-grocery-79498713-plain:1:se"
+      },
+      "yaw8E": {
+        "file": "../src/yaw8E.png",
+        "sha256": "26865a02a411cd63b3afdb60152b2a3d3ed44c78db66e19c69595278525c31b8",
+        "width": 420,
+        "height": 559
+      },
+      "normalSW": {
+        "reuse": "view:variation:ref-building-grocery-79498713-plain:1:sw"
+      },
+      "yaw8S": {
+        "file": "../src/yaw8S.png",
+        "sha256": "6d67b3d150839ca4ab424628d6739ec36d2f57f1df9045379924849571dce3c0",
+        "width": 449,
+        "height": 564
+      },
+      "normalNW": {
+        "reuse": "view:variation:ref-building-grocery-79498713-plain:1:nw"
+      },
+      "yaw8W": {
+        "file": "../src/yaw8W.png",
+        "sha256": "01ef4638afcf8fbf96aa7ab0c3320d8825c3c763cc0bdd97384d83f9fb328a90",
+        "width": 421,
+        "height": 571
+      }
+    }
+  },
+  "footprintMetres": {
+    "width": 10,
+    "depth": 6
+  },
+  "pixelsPerMetre": 62.8452076044,
+  "pixelCalibrationSpace": "orthographic-camera",
+  "baselineScale": 1.549,
+  "kind": "building",
+  "solid": 2,
+  "category": "Eight-view buildings",
+  "aliases": [],
+  "views": {
+    "yaw8N": {
+      "file": "yaw8N.native.png",
+      "sha256": "77f9bc90affd2a2d24c9dc8eaf52d6d14184a62f2cb33912be657b6f9423e181",
+      "width": 453,
+      "height": 580,
+      "anchor": {
+        "x": 216.75,
+        "y": 444.56
+      },
+      "headingDegrees": 37,
+      "boxes": null,
+      "sourceFamily": "view",
+      "sourceSha256": "d878786e567c896c09104eab098b7c18a9ea826ded479eb50f6498fa6b9a0090",
+      "cell": 0,
+      "cellRect": {
+        "left": 0,
+        "top": 0,
+        "width": 461,
+        "height": 588
+      },
+      "crop": {
+        "left": 4,
+        "top": 4,
+        "width": 453,
+        "height": 580
+      }
+    },
+    "yaw8E": {
+      "file": "yaw8E.native.png",
+      "sha256": "5d6cee50edb7241cb6165437f1632db3956a6551e7e84bf6d1427e69374f63e1",
+      "width": 412,
+      "height": 551,
+      "anchor": {
+        "x": 206,
+        "y": 452.08
+      },
+      "headingDegrees": 127,
+      "boxes": null,
+      "sourceFamily": "view",
+      "sourceSha256": "26865a02a411cd63b3afdb60152b2a3d3ed44c78db66e19c69595278525c31b8",
+      "cell": 0,
+      "cellRect": {
+        "left": 0,
+        "top": 0,
+        "width": 420,
+        "height": 559
+      },
+      "crop": {
+        "left": 4,
+        "top": 4,
+        "width": 412,
+        "height": 551
+      }
+    },
+    "yaw8S": {
+      "file": "yaw8S.native.png",
+      "sha256": "1cfef3438cc4dc26e9d75aab7d773fa2b81cf36d787abf2c706457ab4db966bf",
+      "width": 441,
+      "height": 556,
+      "anchor": {
+        "x": 217.5,
+        "y": 458.18
+      },
+      "headingDegrees": 217,
+      "boxes": null,
+      "sourceFamily": "view",
+      "sourceSha256": "6d67b3d150839ca4ab424628d6739ec36d2f57f1df9045379924849571dce3c0",
+      "cell": 0,
+      "cellRect": {
+        "left": 0,
+        "top": 0,
+        "width": 449,
+        "height": 564
+      },
+      "crop": {
+        "left": 4,
+        "top": 4,
+        "width": 441,
+        "height": 556
+      }
+    },
+    "yaw8W": {
+      "file": "yaw8W.native.png",
+      "sha256": "53a7b93bcc52c601b2ecfd2753f54ac7c63e7fc05baac5e7e7b627a288af1505",
+      "width": 413,
+      "height": 563,
+      "anchor": {
+        "x": 209.5,
+        "y": 464.02
+      },
+      "headingDegrees": 307,
+      "boxes": null,
+      "sourceFamily": "view",
+      "sourceSha256": "01ef4638afcf8fbf96aa7ab0c3320d8825c3c763cc0bdd97384d83f9fb328a90",
+      "cell": 0,
+      "cellRect": {
+        "left": 0,
+        "top": 0,
+        "width": 421,
+        "height": 571
+      },
+      "crop": {
+        "left": 4,
+        "top": 4,
+        "width": 413,
+        "height": 563
+      }
+    },
+    "normalNE": {
+      "reuse": "variation:ref-building-grocery-79498713-plain:1",
+      "anchor": null,
+      "headingDegrees": 0,
+      "boxes": null,
+      "sourceFamily": "reuse"
+    },
+    "normalSE": {
+      "reuse": "view:variation:ref-building-grocery-79498713-plain:1:se",
+      "anchor": null,
+      "headingDegrees": 90,
+      "boxes": null,
+      "sourceFamily": "reuse"
+    },
+    "normalSW": {
+      "reuse": "view:variation:ref-building-grocery-79498713-plain:1:sw",
+      "anchor": null,
+      "headingDegrees": 180,
+      "boxes": null,
+      "sourceFamily": "reuse"
+    },
+    "normalNW": {
+      "reuse": "view:variation:ref-building-grocery-79498713-plain:1:nw",
+      "anchor": null,
+      "headingDegrees": 270,
+      "boxes": null,
+      "sourceFamily": "reuse"
+    }
+  },
+  "calibrationNotes": "The four corner views are the building's existing pictures (variation:ref-building-grocery-79498713-plain:1, view:variation:ref-building-grocery-79498713-plain:1:se, view:variation:ref-building-grocery-79498713-plain:1:sw, view:variation:ref-building-grocery-79498713-plain:1:nw), reused, not repacked. The four straight-on views: scale 0.7201 game px per native px (62.85 px/m), read with scripts/assets/straight-views/measure.mjs: the T375 footprint-box fit (10 x 6 m, the library's box) on the four corners and the four straight views, the corners' fit bias against their library scale removed (1.28), the median of the four straight views (0.6328 0.7366 0.7036 0.7483); anchors refitted with that scale held (IoU 0.8675 0.887 0.8701 0.8874). Not owner-measured. Sheet: variation~ref-building-grocery-79498713-plain~1 axisturn, cells WNES are N E S W. the awning front with the GROCERY sign is the sheet's W cell; cells rotated by three.",
+  "artReviewRequired": [
+    "same subject across all eight views",
+    "normal and actual yaw8 geometry",
+    "upper-right daylight and lower-left shadows",
+    "true alpha and complete silhouette",
+    "per-view ground anchors and physical footprint",
+    "no duplicates or fake mirror views"
+  ]
+}

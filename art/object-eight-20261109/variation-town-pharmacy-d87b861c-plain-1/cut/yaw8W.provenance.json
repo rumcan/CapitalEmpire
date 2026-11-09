@@ -1,0 +1,29 @@
+{
+  "schema": 1,
+  "subject": "variation:town-pharmacy-d87b861c-plain:1",
+  "version": 1,
+  "key": "yaw8W",
+  "source": {
+    "file": "../src/yaw8W.png",
+    "sha256": "a139a8fad7e8fff222bef3727e3403be326695f6b356c07da59663e42e5472ce",
+    "width": 578,
+    "height": 547
+  },
+  "cell": 0,
+  "cellRect": {
+    "left": 0,
+    "top": 0,
+    "width": 578,
+    "height": 547
+  },
+  "crop": {
+    "left": 4,
+    "top": 4,
+    "width": 570,
+    "height": 539
+  },
+  "output": "yaw8W.native.png",
+  "sha256": "d7046494693582e33be9968c48718ed24e4709d8277c263a3dbe7fec8d980395",
+  "operation": "native RGBA cell crop only; no flip/repaint/view synthesis",
+  "review": "candidate"
+}

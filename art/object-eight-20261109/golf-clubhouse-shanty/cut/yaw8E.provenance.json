@@ -1,0 +1,29 @@
+{
+  "schema": 1,
+  "subject": "golf:clubhouse-shanty",
+  "version": 1,
+  "key": "yaw8E",
+  "source": {
+    "file": "../src/yaw8E.png",
+    "sha256": "db9d54d2513e800a1ec371e40491d164bd15d899c5468a2f8f69ba79c9733b4f",
+    "width": 455,
+    "height": 461
+  },
+  "cell": 0,
+  "cellRect": {
+    "left": 0,
+    "top": 0,
+    "width": 455,
+    "height": 461
+  },
+  "crop": {
+    "left": 4,
+    "top": 4,
+    "width": 447,
+    "height": 453
+  },
+  "output": "yaw8E.native.png",
+  "sha256": "6af2df1b90b4496353ba14a1f9bfd7aa1dabca76ade123ab6108a620073a5680",
+  "operation": "native RGBA cell crop only; no flip/repaint/view synthesis",
+  "review": "candidate"
+}

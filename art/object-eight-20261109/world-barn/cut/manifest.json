@@ -1,0 +1,206 @@
+{
+  "schema": 1,
+  "projection": "normal+yaw8",
+  "subject": "world:barn",
+  "name": "Barn",
+  "version": 1,
+  "review": "approved",
+  "source": {
+    "views": {
+      "normalNE": {
+        "reuse": "world:barn"
+      },
+      "yaw8N": {
+        "file": "../src/yaw8N.png",
+        "sha256": "4a2c2fdb6258eef601e9a1012cf81322de877cb212bd8816e8b3472b52daa4da",
+        "width": 563,
+        "height": 460
+      },
+      "normalSE": {
+        "reuse": "view:world:barn:se"
+      },
+      "yaw8E": {
+        "file": "../src/yaw8E.png",
+        "sha256": "ad7f5387cbe2b469edf26bb6d00c265c888a7f3708c16b263ce945dc027618ac",
+        "width": 412,
+        "height": 500
+      },
+      "normalSW": {
+        "reuse": "view:world:barn:sw"
+      },
+      "yaw8S": {
+        "file": "../src/yaw8S.png",
+        "sha256": "8478bf17a62e34f2b8662be544f4e752285f3c6abe9af48db3bedabdca7eed4e",
+        "width": 569,
+        "height": 438
+      },
+      "normalNW": {
+        "reuse": "view:world:barn:nw"
+      },
+      "yaw8W": {
+        "file": "../src/yaw8W.png",
+        "sha256": "a94be256120a079707d624b3a58f53ef4bc1bb86cf7e8c814a2f135f9f72b556",
+        "width": 416,
+        "height": 544
+      }
+    }
+  },
+  "footprintMetres": {
+    "width": 8.38,
+    "depth": 5.52
+  },
+  "pixelsPerMetre": 65.0680575067,
+  "pixelCalibrationSpace": "orthographic-camera",
+  "baselineScale": 1.61,
+  "kind": "building",
+  "solid": 2,
+  "category": "Eight-view buildings",
+  "aliases": [],
+  "views": {
+    "yaw8N": {
+      "file": "yaw8N.native.png",
+      "sha256": "d57edfda2d3fa440577d560ad0ce28153103a45d5092d5a511168a04c8f090ba",
+      "width": 555,
+      "height": 452,
+      "anchor": {
+        "x": 303.75,
+        "y": 363.7
+      },
+      "headingDegrees": 37,
+      "boxes": null,
+      "sourceFamily": "view",
+      "sourceSha256": "4a2c2fdb6258eef601e9a1012cf81322de877cb212bd8816e8b3472b52daa4da",
+      "cell": 0,
+      "cellRect": {
+        "left": 0,
+        "top": 0,
+        "width": 563,
+        "height": 460
+      },
+      "crop": {
+        "left": 4,
+        "top": 4,
+        "width": 555,
+        "height": 452
+      }
+    },
+    "yaw8E": {
+      "file": "yaw8E.native.png",
+      "sha256": "ea3579baff6a9a377be26aba896d0b2774e5d65cd7c59a9473c108cf4a68b3cd",
+      "width": 404,
+      "height": 492,
+      "anchor": {
+        "x": 196.75,
+        "y": 366.75
+      },
+      "headingDegrees": 127,
+      "boxes": null,
+      "sourceFamily": "view",
+      "sourceSha256": "ad7f5387cbe2b469edf26bb6d00c265c888a7f3708c16b263ce945dc027618ac",
+      "cell": 0,
+      "cellRect": {
+        "left": 0,
+        "top": 0,
+        "width": 412,
+        "height": 500
+      },
+      "crop": {
+        "left": 4,
+        "top": 4,
+        "width": 404,
+        "height": 492
+      }
+    },
+    "yaw8S": {
+      "file": "yaw8S.native.png",
+      "sha256": "6f57ac6e2e6b7e78fbcba998fbfbf84761152cf3780b4de9e82aa77eaa5f0f6c",
+      "width": 561,
+      "height": 430,
+      "anchor": {
+        "x": 256.5,
+        "y": 340.31
+      },
+      "headingDegrees": 217,
+      "boxes": null,
+      "sourceFamily": "view",
+      "sourceSha256": "8478bf17a62e34f2b8662be544f4e752285f3c6abe9af48db3bedabdca7eed4e",
+      "cell": 0,
+      "cellRect": {
+        "left": 0,
+        "top": 0,
+        "width": 569,
+        "height": 438
+      },
+      "crop": {
+        "left": 4,
+        "top": 4,
+        "width": 561,
+        "height": 430
+      }
+    },
+    "yaw8W": {
+      "file": "yaw8W.native.png",
+      "sha256": "de8831755e9efb4f828f0e8fd21201cfc418ebe73bcf3f81951e615a98f74016",
+      "width": 408,
+      "height": 536,
+      "anchor": {
+        "x": 204.75,
+        "y": 418.03
+      },
+      "headingDegrees": 307,
+      "boxes": null,
+      "sourceFamily": "view",
+      "sourceSha256": "a94be256120a079707d624b3a58f53ef4bc1bb86cf7e8c814a2f135f9f72b556",
+      "cell": 0,
+      "cellRect": {
+        "left": 0,
+        "top": 0,
+        "width": 416,
+        "height": 544
+      },
+      "crop": {
+        "left": 4,
+        "top": 4,
+        "width": 408,
+        "height": 536
+      }
+    },
+    "normalNE": {
+      "reuse": "world:barn",
+      "anchor": null,
+      "headingDegrees": 0,
+      "boxes": null,
+      "sourceFamily": "reuse"
+    },
+    "normalSE": {
+      "reuse": "view:world:barn:se",
+      "anchor": null,
+      "headingDegrees": 90,
+      "boxes": null,
+      "sourceFamily": "reuse"
+    },
+    "normalSW": {
+      "reuse": "view:world:barn:sw",
+      "anchor": null,
+      "headingDegrees": 180,
+      "boxes": null,
+      "sourceFamily": "reuse"
+    },
+    "normalNW": {
+      "reuse": "view:world:barn:nw",
+      "anchor": null,
+      "headingDegrees": 270,
+      "boxes": null,
+      "sourceFamily": "reuse"
+    }
+  },
+  "calibrationNotes": "The four corner views are the building's existing pictures (world:barn, view:world:barn:se, view:world:barn:sw, view:world:barn:nw), reused, not repacked. The four straight-on views: scale 0.6955 game px per native px (65.07 px/m), read with scripts/assets/straight-views/measure.mjs: the T375 footprint-box fit (8.38 x 5.52 m, the library's box) on the four corners and the four straight views, the corners' fit bias against their library scale removed (1.2358), the median of the four straight views (0.718 0.6909 0.6934 0.6975); anchors refitted with that scale held (IoU 0.8216 0.8956 0.8641 0.8852). Not owner-measured. Sheet: world~barn axisturn, cells NESW are N E S W. X-braced doors on N as on NE; heavy orange ivy on the roof and walls (the corners are clean).",
+  "artReviewRequired": [
+    "same subject across all eight views",
+    "normal and actual yaw8 geometry",
+    "upper-right daylight and lower-left shadows",
+    "true alpha and complete silhouette",
+    "per-view ground anchors and physical footprint",
+    "no duplicates or fake mirror views"
+  ]
+}

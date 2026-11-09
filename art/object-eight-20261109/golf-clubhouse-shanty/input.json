@@ -1,0 +1,82 @@
+{
+  "schema": 1,
+  "projection": "normal+yaw8",
+  "subject": "golf:clubhouse-shanty",
+  "name": "Starter clubhouse",
+  "version": 1,
+  "review": "candidate",
+  "source": {
+    "views": {
+      "normalNE": {
+        "reuse": "golf:clubhouse-shanty"
+      },
+      "yaw8N": "src/yaw8N.png",
+      "normalSE": {
+        "reuse": "view:golf:clubhouse-shanty:se"
+      },
+      "yaw8E": "src/yaw8E.png",
+      "normalSW": {
+        "reuse": "view:golf:clubhouse-shanty:sw"
+      },
+      "yaw8S": "src/yaw8S.png",
+      "normalNW": {
+        "reuse": "view:golf:clubhouse-shanty:nw"
+      },
+      "yaw8W": "src/yaw8W.png"
+    }
+  },
+  "footprintMetres": {
+    "width": 10,
+    "depth": 7
+  },
+  "pixelsPerMetre": 40.2336717603,
+  "pixelCalibrationSpace": "orthographic-camera",
+  "baselineScale": 0.317,
+  "kind": "building",
+  "solid": 2,
+  "category": "Eight-view buildings",
+  "aliases": [],
+  "views": {
+    "normalNE": {
+      "headingDegrees": 0
+    },
+    "yaw8N": {
+      "anchor": {
+        "x": 326.5,
+        "y": 278.26
+      },
+      "headingDegrees": 37
+    },
+    "normalSE": {
+      "headingDegrees": 90
+    },
+    "yaw8E": {
+      "anchor": {
+        "x": 246.25,
+        "y": 303.82
+      },
+      "headingDegrees": 127
+    },
+    "normalSW": {
+      "headingDegrees": 180
+    },
+    "yaw8S": {
+      "anchor": {
+        "x": 303,
+        "y": 252.07
+      },
+      "headingDegrees": 217
+    },
+    "normalNW": {
+      "headingDegrees": 270
+    },
+    "yaw8W": {
+      "anchor": {
+        "x": 227.5,
+        "y": 330.9
+      },
+      "headingDegrees": 307
+    }
+  },
+  "calibrationNotes": "The four corner views are the building's existing pictures (golf:clubhouse-shanty, view:golf:clubhouse-shanty:se, view:golf:clubhouse-shanty:sw, view:golf:clubhouse-shanty:nw), reused, not repacked. The four straight-on views: scale 1.1248 game px per native px (40.23 px/m), read with scripts/assets/straight-views/measure.mjs: the T375 footprint-box fit (10 x 7 m, the library's box) on the four corners and the four straight views, the corners' fit bias against their library scale removed (0.7504), the median of the four straight views (1.1091 1.2001 1.0454 1.1406); anchors refitted with that scale held (IoU 0.8497 0.7967 0.8551 0.8352). Not owner-measured. Sheet: golf~clubhouse-shanty axisturn, cells NESW are N E S W. doorway and bench on N as on NE; it also has the old square straight-on set, which still wins on straight roads; the tarp-shack look the owner rejected for the clubhouse (its old eight-view registration is disabled)."
+}

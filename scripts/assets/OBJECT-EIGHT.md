@@ -118,3 +118,20 @@ Bulk imports still need shared batch packing. The low-mip texture is one array l
 The auxiliary image paths are now bounded: startup reads two picking-opacity pages concurrently and releases bitmap/canvas backing after packing the identical alpha bits; 2D ghosts keep two full-page image references in an LRU (about 32 MiB of decoded RGBA for 2048px pages), clearing them on game destruction; thumbnail source work starts only after real viewport intersection and runs at most two tasks concurrently. Missing opacity data never becomes an opaque rectangle that intercepts clicks. Browser image caches, ground textures and the existing streaming decoder's in-flight working set are separate; these limits are not a certified total process-RAM ceiling.
 
 Preserve the full native masters outside GPU atlases. Before catalogue-wide import, batch several approved subjects into shared immutable pages, and pack at the game's calibrated display density rather than giving every small prop its own mostly empty 2048px page. Keep source/provenance and sprite IDs stable. A renderer bank rewrite is unnecessary until an efficiently packed catalogue demonstrably exceeds hardware layers; the explicit startup guard remains a hard cap meanwhile. Focused residency, visibility, alpha, atlas and thumbnail checks pass 23/23; typecheck is clean. No full build, benchmark or server was used for this review/follow-up.
+
+## Reused normal views (T398)
+
+A building the game already draws from its four corner pictures needs only the four straight-on views as new art. A per-view source may name an existing library picture instead of a file:
+
+```json
+"source": { "views": { "normalNE": { "reuse": "town:bakery" }, "normalSE": { "reuse": "east:town:bakery" }, "normalSW": { "reuse": "view:town:bakery:sw" }, "normalNW": { "reuse": "view:town:bakery:nw" },
+                       "yaw8N": "src/yaw8N.png", "yaw8E": "src/yaw8E.png", "yaw8S": "src/yaw8S.png", "yaw8W": "src/yaw8W.png" } }
+```
+
+Reuse covers all four normal views or none, and never a yaw8 one (the importer rejects a half). Nothing is cut or packed for a reused view; its manifest row has no file or anchor, only the heading and boxes (the physical footprint at that heading when none is given). On
+integration the set is `runtimeReuse` with `sourceIds` naming the pictures, the ledger row of a reused view is `{ id, name, cat, boxes, reuse }` (no `tex`), and the generated `appendObjectEight` resolves it in place: a copy of the named library
+picture's row (the same atlas cell, size and anchor) under the new `object8:` id with the set's boxes. So the corners draw exactly as before (`runtimeReuse` keeps `objectNormalReplacements` from swapping them), no corner pixel is stored twice, the ring
+`[NE, N, SE, E, SW, S, NW, W]` is complete (`preset-art.ts roadView` draws the straight-on view on a screen-straight road) and `objectFacings` gives the Props tool eight facings. The straight-on views are ordinary per-view sources.
+`scripts/assets/straight-views/` is the pipeline that uses it for the corners-only buildings (art/object-eight-20261109/README.md).
+
+The straight-on views are packed at the object-eight density (a pixel limit of about 1) while the building is drawn at its own size (an owner size of 0.7 to 2.1: the draw allows it, `newart.ts maxDrawScale`, SIZE_HI x the set's `baselineScale`, a little soft at the closest zoom only). So a swap (`compose.ts swapScale`) and a generated lot's fit (`autolot.ts Lay.fit`) measure a reuse set's pictures against that draw limit, `newart.ts lotDrawLimit`, not their pixels: a house of owner size 2.1 could never be placed otherwise (`tests/straight-views.test.ts`).

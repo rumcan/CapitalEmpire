@@ -1,0 +1,82 @@
+{
+  "schema": 1,
+  "projection": "normal+yaw8",
+  "subject": "world:house_2",
+  "name": "House 2",
+  "version": 1,
+  "review": "candidate",
+  "source": {
+    "views": {
+      "normalNE": {
+        "reuse": "world:house_2"
+      },
+      "yaw8N": "src/yaw8N.png",
+      "normalSE": {
+        "reuse": "view:world:house_2:se"
+      },
+      "yaw8E": "src/yaw8E.png",
+      "normalSW": {
+        "reuse": "view:world:house_2:sw"
+      },
+      "yaw8S": "src/yaw8S.png",
+      "normalNW": {
+        "reuse": "view:world:house_2:nw"
+      },
+      "yaw8W": "src/yaw8W.png"
+    }
+  },
+  "footprintMetres": {
+    "width": 5.22,
+    "depth": 5.68
+  },
+  "pixelsPerMetre": 69.6121119765,
+  "pixelCalibrationSpace": "orthographic-camera",
+  "baselineScale": 1.905,
+  "kind": "building",
+  "solid": 2,
+  "category": "Eight-view buildings",
+  "aliases": [],
+  "views": {
+    "normalNE": {
+      "headingDegrees": 0
+    },
+    "yaw8N": {
+      "anchor": {
+        "x": 252.5,
+        "y": 480.32
+      },
+      "headingDegrees": 37
+    },
+    "normalSE": {
+      "headingDegrees": 90
+    },
+    "yaw8E": {
+      "anchor": {
+        "x": 239.25,
+        "y": 485.41
+      },
+      "headingDegrees": 127
+    },
+    "normalSW": {
+      "headingDegrees": 180
+    },
+    "yaw8S": {
+      "anchor": {
+        "x": 232,
+        "y": 424.5
+      },
+      "headingDegrees": 217
+    },
+    "normalNW": {
+      "headingDegrees": 270
+    },
+    "yaw8W": {
+      "anchor": {
+        "x": 275.75,
+        "y": 444.11
+      },
+      "headingDegrees": 307
+    }
+  },
+  "calibrationNotes": "The four corner views are the building's existing pictures (world:house_2, view:world:house_2:se, view:world:house_2:sw, view:world:house_2:nw), reused, not repacked. The four straight-on views: scale 0.6501 game px per native px (69.61 px/m), read with scripts/assets/straight-views/measure.mjs: the T375 footprint-box fit (5.22 x 5.68 m, the library's box) on the four corners and the four straight views, the corners' fit bias against their library scale removed (1.17), the median of the four straight views (0.6556 0.6433 0.6786 0.6447); anchors refitted with that scale held (IoU 0.9024 0.858 0.9114 0.8774). Not owner-measured. Sheet: world~house_2 axisturn, cells NESW are N E S W. door and steps on N as on NE; autumn leaves and pumpkins from the old export (the corners are clean)."
+}
