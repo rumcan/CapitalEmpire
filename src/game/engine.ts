@@ -38,7 +38,7 @@ import { collarTexes, courseLookSet, type BrushLooks, type LookStyle } from './c
 import { lookOfTex } from './painted-surfaces';
 import { FACILITY_OWNERS, LOOK_KINDS, holeOwner, ownerHole, seedOwner, type FacilityOwner } from './golf/looks';
 import { facilityAt } from './golf/practicebuild';
-import { escapeLadder, numberKeyUse, pickTool, SIDE_MODES, switchSideMode, type EscCard, type EscLadder, type SideMode } from './tool-modes';
+import { escapeLadder, ESC_KEY, numberKeyUse, pickTool, rightClickLadder, SIDE_MODES, switchSideMode, type ClickStep, type EscCard, type EscLadder, type SideMode } from './tool-modes';
 import type { PresetProp } from './golf/holepreset';
 import { OWNER_SCALE, STUDIO_SCALE } from './lots/scales';
 import { sizeKey, turned } from './lots/preset-art';
@@ -1050,7 +1050,7 @@ export class Game {
   private frameTimes: number[] = [];
   // input
   /** a drag in progress; build: a right-button press in the road tool (released without moving, it builds the route, as Enter) */
-  private dragging: null | { kind: 'pan' | 'bulldoze' | 'park'; sx: number; sy: number; camX: number; camY: number; moved: boolean; /** T207: a road tool right-click: on release without a drag it takes back the last point */ back?: boolean; aim?: Pt; /** a Select click's hole under it (0: none; T174) */ hole?: number; /** T200: a click on Land for sale's overlay (it opens the block's card on release, never buys) */ land?: Pt; /** T240: a Walk mode click (your character walks there on release) */ you?: boolean } = null;
+  private dragging: null | { kind: 'pan' | 'bulldoze' | 'park'; sx: number; sy: number; camX: number; camY: number; moved: boolean; /** T392, T393: a plain right press that became the pan: on release without a drag it takes the step Esc takes (cancelOrClose; a route in hand: its last point back, T207) */ rc?: boolean; aim?: Pt; /** a Select click's hole under it (0: none; T174) */ hole?: number; /** T200: a click on Land for sale's overlay (it opens the block's card on release, never buys) */ land?: Pt; /** T240: a Walk mode click (your character walks there on release) */ you?: boolean } = null;
   /** the Paint tool: painted ground areas, its settings and the outline being drawn (docs/PAINT-TOOL.md) */
   paint = new PaintTool({ collarDefault: s => borderDefault(s, finishOf(paintedSurfaces())), progress: () => this.bump('pieces'), setLotGround: (k, p) => { this.paintRev++; this.setLotGround(k, p); }, emit: () => this.emit(), save: () => this.scheduleSave(), toast: (t, k) => this.toast(t, k), affine: o => this.paintAffine(o), placeProps: (ps, seed) => this.placePresetProps(ps, seed), golfMode: () => this.golfMode, money: () => this.money, spend: n => this.traffic.spend('construction', n), ownedLand: pts => !this.golf || polyInParcels(this.golf.parcels ?? [this.golf.parcel], pts), currentMonth: () => !this.golf ? 0 : this.golfMonthIndex(), plant: (ids, x, y, r, spacing, size, seed) => this.plantProps(ids, x, y, r, spacing, size, seed), unplant: (x, y, r, trees) => this.unplantProps(x, y, r, trees), plantPool: (k, f) => plantPool(LIBRARY, k, f), courseHeight: () => this.courseHeight, roadsNear: (x, y, r) => { let k = 0; return [...this.net.segsNear({ x, y }, r)].map(s => ({ id: ++k, ax: s.a.x, ay: s.a.y, bx: s.b.x, by: s.b.y, halfWidthTiles: s.cls.h + s.cls.walk })); }, roadRev: () => this.net.version, heightChanged:b => { this.courseHeightChanged(unionCourseBox(b, this.flattenRoadsIn(b))!); },
     journal: { begin: () => { this.propLog = { added: [], removed: [], cut: [], cutAuto: [] }; }, end: () => { const j = this.propLog; this.propLog = null; return j && (j.added.length || j.removed.length || j.cut.length || j.cutAuto.length) ? j : null; }, undo: j => this.swapProps(j as PropLog, true), redo: j => this.swapProps(j as PropLog, false) },
@@ -5218,17 +5218,19 @@ export class Game {
     this.toast(`${h.down ? 'Downgraded' : 'Upgraded'} ${Math.round(tiles * 2)} m of ${from} to ${h.to.name.toLowerCase()} (${price})${took}`, 'good');
     this.laneUpdate(this.hover);
   }
-  /** the Upgrade and Downgrade tools' right-click: the one-way straight run under the pointer is reversed (each seg replaced with its b-to-a, free); a two-way road is refused */
-  private laneReverse(mx: number, my: number) {
+  /** the Upgrade and Downgrade tools' right-click: the one-way straight run under the pointer is reversed (each seg replaced with its b-to-a, free); a two-way road is refused.
+   *  Returns false when no road is under the pointer: the click is then the way out of the tool (T392, T393: Esc's step) */
+  private laneReverse(mx: number, my: number): boolean {
     this.laneUpdate(this.tileAt(mx, my));
-    const h = this.laneHover; if (!h || !h.segs.length) { this.toast('Point at a road', 'warn'); return; }
+    const h = this.laneHover; if (!h || !h.segs.length) return false;
     const s0 = h.segs[0]!;
-    if (!s0.cls.oneway) { this.toast('Only one-way roads can be reversed', 'warn'); return; }
+    if (!s0.cls.oneway) { this.toast('Only one-way roads can be reversed', 'warn'); return true; }
     let tiles = 0;
     for (const s of h.segs) { tiles += vlen(sub(s.b, s.a)); this.edit.addLegs([{ a: s.b, b: s.a }], s.cls, s.style, [s.kind]); }
     this.commitNetwork();
     this.toast(`Reversed ${Math.round(tiles * 2)} m of one-way ${classOf(s0.cls.base).name.toLowerCase()}`, 'good');
     this.laneUpdate(this.hover);
+    return true;
   }
   /** the junction tool's badges (street and district zoom, drawn while the tool is open): one label per junction in view, dark like the old tags: its control
    *  (F, A or Ad for lights; RB and the ring lanes for a roundabout) and its options (W, TL, and SL with the slipways on). A plain junction with none has no label */
@@ -5828,6 +5830,7 @@ export class Game {
   this.keys.clearMoves(); this.keys.syncMods(e); // T330: a map click lets go of a stuck movement key (a held one comes back with its repeat)
   this.moneyAt(this.tileAt(mx, my)); // T147: a spend this click makes floats up here
   this.camEase = null; // a press takes the camera back from New hole's framing (P23 4.4)
+  const hadScene = !!this.sceneRef; // (T392: a right click that only put the picture away is that step: it cancels nothing more)
   if (this.sceneRef) this.closeScene(); // T242: a press on the map puts the picture away (Select's click on a place opens its own below)
   // the owner's open shot (P4b) takes a left click on the course as its aim, before any tool does (a drag still pans; the aim is set on release)
   if (this.shot && e.button === 0 && !this.keys.has(' ')) { this.overlay.setPointerCapture(e.pointerId); this.dragging = { kind: 'pan', sx: mx, sy: my, camX: this.cam.X, camY: this.cam.Y, moved: false, aim: this.tileAt(mx, my) }; return; }
@@ -5876,9 +5879,14 @@ export class Game {
     if (this.keys.has(' ')) this.spacePanned = true;
     if (this.tool === 'practice' && !pan) { if (e.button === 0) this.practice.click(mx, my); return; } // T206
     if (this.tool === 'props' && !pan) { if (e.button === 0) this.decor.down(mx, my); return; } // the Props tool (T131): place, or select and drag
+    // T392, T393: a plain right press that does nothing of its own below is the pan, and its release without a drag takes Esc's step (rc): a right
+    // press that reset a junction, cut a corner or reversed a lane is that step instead (it returns), and one that only deselected a junction or
+    // began finishing a run (the paint tool's release) has had its step
+    const sj = this.selectedJunction;
     if (this.tool === 'junction' && e.button === 2 && this.junctionRight(mx, my)) return;
     if (this.paintOn && e.button === 2 && this.paint.secondary(this.tileAt(mx, my), mx, my)) return;
-    if ((this.tool === 'lane' || this.tool === 'downgrade') && e.button === 2) { this.laneReverse(mx, my); return; }
+    if ((this.tool === 'lane' || this.tool === 'downgrade') && e.button === 2 && this.laneReverse(mx, my)) return;
+    const rc = e.button === 2 && !this.keys.has(' ') && !hadScene && this.selectedJunction === sj && !(this.paintOn && this.paint.rightPending);
     // T240: Walk mode: a click walks your character there (on release, so a drag still pans); Ctrl+click is Select's instant look
     if (!pan && e.button === 0 && this.youKeysOn() && clickDoes(this.youWalkMode ? 'walk' : 'select', true, e.ctrlKey || e.metaKey) === 'walk') { this.dragging = { kind: 'pan', sx: mx, sy: my, camX: this.cam.X, camY: this.cam.Y, moved: false, you: true }; return; }
     if (pan || this.tool === 'select') {
@@ -5903,7 +5911,7 @@ export class Game {
         this.selected = null; this.emit();
         if (this.showFlow) { const t = this.tileAt(mx, my); this.traffic.watchAt(t.x, t.y); this.emit(); }
       }
-      this.dragging = { kind: 'pan', sx: mx, sy: my, camX: this.cam.X, camY: this.cam.Y, moved: false, back: this.tool === 'road' && e.button === 2, ...(!pan && this.tool === 'select' && this.golf ? { hole: this.courseHoleAt(this.tileAt(mx, my)) } : {}) }; return;
+      this.dragging = { kind: 'pan', sx: mx, sy: my, camX: this.cam.X, camY: this.cam.Y, moved: false, ...(rc ? { rc } : {}), ...(!pan && this.tool === 'select' && this.golf ? { hole: this.courseHoleAt(this.tileAt(mx, my)) } : {}) }; return;
     }
     if (e.button !== 0) return;
     switch (this.tool) {
@@ -5977,8 +5985,9 @@ export class Game {
     if (d?.kind === 'pan' && d.aim && !d.moved) this.aimAt(d.aim);
     if (d?.kind === 'pan' && d.you && !d.moved) this.youClick(d.sx, d.sy); // T240
     if (d?.kind === 'pan' && d.land && !d.moved && this.landMode) { this.land.click(d.land.x, d.land.y); this.emit(); }
-    // a right click (no drag) in the road tool takes back the last point, as Backspace does (the owner, 2026-10-27, T207); a right drag still pans
-    if (d?.kind === 'pan' && d.back && !d.moved) this.routeInput('right');
+    // a right click (no drag) takes Esc's step (the owner, 2026-11-09, T392 and T393: every tool and mode, with one handler for the key and the click);
+    // in the road tool with a route in hand it takes back the last point, as Backspace does (the owner, 2026-10-27, T207); a right drag still pans
+    if (d?.kind === 'pan' && d.rc && !d.moved) this.cancelOrClose(null);
     if (this.paintOn) { this.paint.pointerUp(this.paintTol); this.courseCursor.release(); }
     if (this.tool === 'park' && this.parking.mode === 'rows') this.parking.up();
     if (this.tool === 'props') this.decor.up();
@@ -6070,9 +6079,8 @@ export class Game {
     // Esc (P23 4.10): the topmost menu or card first (even from a checkbox or slider in it), then the tool's own step, then out to Select; a
     // focused text box keeps Esc from the tool
     if (e.key === 'Escape') this.releaseKeys(); // T330: Esc always lets go of a stuck key
-    if (e.key === 'Escape' && this.sceneRef) { this.closeScene(); return; } // T242: the picture card, over everything, goes first
-    if (e.key === 'Escape' && (this.youTalk || this.youTeeOpen)) { this.youTalk = null; this.youTeeOpen = false; this.emit(); return; } // T240
-    if (e.key === 'Escape') { escapeLadder(this.escRungs(e, tag === 'TEXTAREA' || (tag === 'INPUT' && !/^(checkbox|radio|range|button|color)$/.test(el!.type)))); return; }
+    // (T242: the picture card, over everything, goes first; T240: then a conversation or the first tee's card: both rungs of the ladder now)
+    if (e.key === 'Escape') { this.cancelOrClose(e, tag === 'TEXTAREA' || (tag === 'INPUT' && !/^(checkbox|radio|range|button|color)$/.test(el!.type))); return; }
     if (!e.repeat) this.youAlt.down(e.key, typing); // T323: a lone tap of Alt swaps Walk and Select (keyUp)
     // T359 (#1006): Ctrl+Z and Ctrl+Y (Ctrl+Shift+Z) are the game's from a slider, a tick box or a button a click left in focus (a menu setting is an undo
     // step, and the slider just dragged keeps the focus); a text field or a number box keeps its own undo
@@ -6169,19 +6177,49 @@ export class Game {
   keysSheet: { open(): boolean; show(on: boolean): void } | null = null;
   /** the App's own menus and cards for Esc (Help, the gear menu, Course stats): which are open, and closing one (the App sets it) */
   uiCards: { open(): Partial<Record<EscCard, boolean>>; close(c: EscCard): void } | null = null;
+  /** T392 (#1057), T393 (#1060), T394 (#1061): THE cancel-or-close step, the one handler Esc and a right click on the map both call: the topmost menu
+   *  or card closes, else the tool steps back or drops what is in hand, else a build tool is put down for Select (tool-modes.ts escapeLadder). Esc
+   *  hands it its key (a focused text box keeps Esc from the tool); a right click, no key (null), where a route in hand answers by taking back its
+   *  last point first (the road tool's own meaning since T207) */
+  cancelOrClose(key: KeyboardEvent | null, textBox = false): ClickStep {
+    if (key) return escapeLadder(this.escRungs(key, textBox));
+    return rightClickLadder({ ...this.escRungs(ESC_KEY, false), back: () => { if (this.tool !== 'road' || !this.route.length) return false; this.routeInput('right'); return true; } });
+  }
   /** the Esc ladder's rungs (tool-modes.ts): the open cards (the App's, the Event catalogue, the Grass panel, the Budget or Bottlenecks
-   *  card), the tool's own step (with a text box focused, Esc stops there: the tool keeps what is in hand), and Select */
+   *  card, the side cards of golf, a conversation or the picture card), the tool's own step (with a text box focused, Esc stops there: the
+   *  tool keeps what is in hand), and Select */
   private escRungs(e: KeyboardEvent, textBox: boolean): EscLadder {
+    const golf = !!this.golf;
     return {
-      open: () => ({ ...this.uiCards?.open(), event: this.eventTool, grass: this.grassPanel && this.tool !== 'greenkeeping', panel: !!this.panel }),
-      close: c => {
-        if (c === 'event') this.toggleSideMode('eventTool'); else if (c === 'grass') this.toggleSideMode('grassPanel');
-        else { if (c === 'panel') this.panel = null; else this.uiCards?.close(c); this.emit(); }
-      },
+      open: () => ({
+        ...this.uiCards?.open(), scene: !!this.sceneRef, talk: !!(this.youTalk || this.youTeeOpen), event: this.eventTool, grass: this.grassPanel && this.tool !== 'greenkeeping', panel: !!this.panel,
+        // T394: the cards at the right edge, as they are drawn (App.tsx): each shows only in a golf game (and the cards' own conditions)
+        bag: golf && this.bagCardOpen, cards: golf && this.cardsCardOpen && !this.vendingOpen, player: golf && this.playerCardOpen, staff: golf && this.staffCardOpen,
+        club: golf && this.clubCardOpen && this.hasClubhouse, range: this.range.cardOpen, eventCard: golf && !!this.eventCardOpen,
+      }),
+      close: c => this.closeEscCard(c),
       hand: () => textBox || this.escHand(e),
       tool: () => this.tool,
       select: () => this.setTool('select'),
     };
+  }
+  /** closes one of the ladder's cards or menus (Esc, or a right click on the map) */
+  private closeEscCard(c: EscCard) {
+    switch (c) {
+      case 'scene': this.closeScene(); return;
+      case 'talk': this.youTalk = null; this.youTeeOpen = false; this.emit(); return; // T240
+      case 'event': this.toggleSideMode('eventTool'); return;
+      case 'grass': this.toggleSideMode('grassPanel'); return;
+      case 'panel': this.panel = null; this.emit(); return;
+      case 'bag': this.openBagCard(false); return;
+      case 'cards': this.openCardsCard(false); return;
+      case 'player': this.openPlayerCard(false); return;
+      case 'staff': this.openStaffCard(false); return;
+      case 'club': this.openClubCard(false); return;
+      case 'range': this.openRangeCard(false); return;
+      case 'eventCard': this.openEventCard(null); return;
+      default: this.uiCards?.close(c); this.emit(); // the App's: Help, the gear menu, My looks, Course stats
+    }
   }
   /** Esc's tool rung: the tool steps back one stage or drops what is in hand (the clubhouse, the brush's stroke or outline, a bay row, the
    *  junction picked, the car watched, the bus stop picked, the route, the selection, the pin or tee picked, the Land or Holes switch);

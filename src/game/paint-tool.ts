@@ -595,6 +595,8 @@ export class PaintTool {
   private runShift = false;
   /** a right press during a run (css px): its release finishes the run unless the press dragged (a right-drag pans; decision 4) */
   private runRight: { mx: number; my: number } | null = null;
+  /** a right press is held that its release finishes (a run's right click): that click has its meaning already, so it is not also Esc's step back (T392, T393) */
+  get rightPending(): boolean { return !!this.runRight; }
   private runBuf: number[] = [];
   /** whether Run is the brush in hand: the Course brush in Run on a course grid surface with the square brush (Run has no round brush) */
   runOn(): boolean { return this.brushRun && this.mode === 'brush' && !this.planOpen && this.brushSquare() > 0; } // T238: no Run in Edit hole

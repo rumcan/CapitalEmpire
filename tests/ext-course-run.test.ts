@@ -189,6 +189,19 @@ test('Esc drops the run in progress first (Run stays in hand), then leaves (the 
   assert.equal(tool.undoLabel, base);
 });
 
+test("a right press with a run in hand holds the run's finish for its release (rightPending): the engine then does not also take Esc's step back (T392, T393)", () => {
+  let w = world();
+  assert.equal(w.tool.rightPending, false, 'nothing held');
+  w.tool.secondary({ x: 60, y: 60 }, 400, 300); assert.equal(w.tool.rightPending, false, "a right press with no run in hand holds nothing: its release is the engine's (Esc's step)");
+  w = world(); click(w.tool, 30, 30); click(w.tool, 50, 30);
+  w.tool.secondary({ x: 60, y: 60 }, 400, 300); assert.equal(w.tool.rightPending, true, 'a right press with a run in hand holds its finish');
+  w.tool.pointerMove({ x: 62, y: 60 }, 430, 300); assert.equal(w.tool.rightPending, false, 'a drag pans: nothing held');
+  w.tool.pointerUp(0.5); assert.equal(w.tool.runPts.length, 4, 'and the run stays');
+  w = world(); click(w.tool, 30, 30); click(w.tool, 50, 30);
+  w.tool.secondary({ x: 60, y: 60 }, 400, 300); w.tool.pointerMove({ x: 60, y: 60 }, 401, 301); w.tool.pointerUp(0.5);
+  assert.equal(w.tool.rightPending, false, 'released: the run is laid and nothing is held'); assert.equal(w.tool.runPts.length, 0);
+});
+
 test('a double-click, Enter or a right-click finishes the run; a right-drag pans and keeps it; switching surface keeps the bends', () => {
   // a double-click: its second press lands on the same bend (nothing new), then the double-click finishes
   let w = world(), b = w.g.surf.slice();
