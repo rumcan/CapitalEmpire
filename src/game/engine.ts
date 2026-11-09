@@ -3794,7 +3794,8 @@ export class Game {
   }
   /** T310: the patches' clock (game s of drift) and the last frame it ran (performance.now()) */
   private sunClock = 0; private sunLast = 0;
-  /** T310: the sun this frame: the clock runs at the sim speed (at 1x while paused), the ground and shadow passes read it (gl.ts) */
+  /** T310: the sun this frame: the clock runs at the clouds' rate for the sim speed (T379: 8x the wind's base rate at 1x, in step with the speed, eased at the top, still while
+   *  paused: sun-patches.ts sunStep), the ground and shadow passes read it (gl.ts) */
   private sunFrame(now: number) {
     const dt = this.sunLast ? Math.min(0.25, (now - this.sunLast) / 1000) : 0; this.sunLast = now;
     this.sunClock += sunStep(dt, this.speed);
