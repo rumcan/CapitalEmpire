@@ -13,8 +13,8 @@ import { OWNER_SCALE } from '../src/game/lots/scales';
 import { KIT_GREY_GRANITE, KIT_WATER_EDGE_PLANTS } from '../src/game/kit';
 import { appendNewProps } from '../src/game/new-props-library';
 
-// T329: the owner's new props (new-props-library.ts, 2026-11-02) are appended at the library's very tail, after every other append, so no saved
-// index moves: the tail checks below leave them out (and check they are that tail)
+// T329: the owner's new props (new-props-library.ts, 2026-11-02) are appended after every other append of that day, so no saved index moves (the animals and
+// the eight-view art follow them, T390): the tail checks below leave them out
 const NEW_PROPS: { id: string }[] = []; appendNewProps(NEW_PROPS as never[], []);
 const NEW_IDS = new Set(NEW_PROPS.map(p => p.id));
 
@@ -35,9 +35,10 @@ test('accepted garages select separate authored pictures for all eight road head
 });
 
 test('garage diagonals append after all old art without reinterpreting N or its turns', () => {
-  // (T329: the appends made after the diagonals follow them, as kit.test.ts lets them: T258's range art, T274's organic kit, the new props)
+  // (T329: the appends made after the diagonals follow them, as kit.test.ts lets them: T258's range art, T274's organic kit, the new props; T390: and T309's farm
+  // animals (animal:*) and T375's eight-view art (object8:*), appended after those)
   const organic = new Set<string>([...KIT_GREY_GRANITE, ...KIT_WATER_EDGE_PLANTS].map(p => p.id));
-  const lib = LIBRARY.filter(it => !it.id.startsWith('range:') && !organic.has(it.id) && !NEW_IDS.has(it.id));
+  const lib = LIBRARY.filter(it => !it.id.startsWith('range:') && !organic.has(it.id) && !NEW_IDS.has(it.id) && !it.id.startsWith('animal:') && !it.id.startsWith('object8:'));
   const diagonal = new Set(Object.values(EXTRA_VIEW_SETS).flat()), old = lib.filter(it => !diagonal.has(it.id));
   assert.deepEqual(lib.slice(0, old.length).map(it => it.id), old.map(it => it.id));
   for (const [base, views] of Object.entries(EXTRA_VIEW_SETS)) {
