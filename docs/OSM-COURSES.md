@@ -591,7 +591,7 @@ whole boundary as rough. Now:
   Shipped and searched courses are alike (both go through `planOsmGame` and the placing mode's `scratchOf`, which take the paint options), and a course placed into a game under way is laid the same and priced by the game's
   theme (`RealHost.paint`). **Old saves keep what they have**: a saved game keeps the grid it was laid with, nothing re-lays it.
 - **The wild land stays inside the land.** It is clipped to the spec's frame (the land: the holes' features and their margin): the boundary of a big estate (Woodhill's is the whole estate, 2,277 x 1,535 m) no longer
-  spills fescue into the grid's 32-tile pad round the land, outside what the club owns. A made-up fairway band (`clip`) lays over the course's own land (the wild land and the mapped rough) by a mask of those cells, since a
+  spills fescue into the grid's 32-tile pad round the land, outside what the club owns (T340's rough did: 244,000 cells, a quarter of Magnolia's, and 91,000 of Woodhill's, 6%; Rondebosch's boundary lies inside its land). A made-up fairway band (`clip`) lays over the course's own land (the wild land and the mapped rough) by a mask of those cells, since a
   desert game paints no surface there.
 - **A dev switch for the before and after:** `?rough=old` on the dev server lays T340's look (`PaintOptions.legacy`: the boundary rough, no band) in the same build, as `?land=0` does for the height.
 
