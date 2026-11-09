@@ -14,6 +14,13 @@ import { SUN_TILE_DIR } from './ext/course-height';
 import type { StripeLook } from './course-stripes';
 import { mowCustom, patternOf, type MowKind, type MowOpts, type MowPattern, type MowRec } from './mow-lines';
 
+/** T364 (#1019; the owner, 2026-11-08: "use the same texture the bunker uses for its walls for the elevated tee walls"): how a raised tee's cut sides
+ *  are painted: 'bunker', the bunker's wall (the Bunker look's Cut wall picture, its light and shade: tee-wall.ts); 'sand', the same light on the native
+ *  bunker wall's painting instead (the Bunker wall surface of the painted surfaces: golden sand, wallSand; the other reading of "the bunker's wall");
+ *  'rock', the painted earth and set stones they wore before T364 (T127). T372 (#1027) adds the cliff face as another way */
+export type TeeWall = 'bunker' | 'sand' | 'rock';
+export const TEE_WALLS: readonly TeeWall[] = ['bunker', 'sand', 'rock'];
+
 /** the course finish's knobs */
 export interface CourseFinish {
   /** the finish on; off: the course exactly as before T227 */
@@ -34,9 +41,12 @@ export interface CourseFinish {
   bowl: number;
   /** T253 part 3: the greens' soft roll where they meet the fringe (bunker-look.ts greenRollImages): 0 off (as before) .. 1 tuned .. 2 strong */
   roll: number;
+  /** T364 (#1019): a raised tee's cut sides (TeeWall): the bunker's wall by default, 'sand' its native painting, 'rock' the stones of before.
+   *  Independent of `on` (the tees' walls are T127's, not T227's); the tee's grass is its own look in the file's surfaces (the Tee surface wears the green's) */
+  teeWall: TeeWall;
 }
 /** the tuned look (against the concept, at 30% and 15%) */
-export const DEFAULT_COURSE_FINISH: Readonly<CourseFinish> = { on: true, along: true, bandWidth: 3, bandStrength: 0.8, greenWidth: 0.75, greenStrength: 0.3, collarWidth: 4, collarTone: 0.45, lip: 1, bowl: 1, roll: 1 };
+export const DEFAULT_COURSE_FINISH: Readonly<CourseFinish> = { on: true, along: true, bandWidth: 3, bandStrength: 0.8, greenWidth: 0.75, greenStrength: 0.3, collarWidth: 4, collarTone: 0.45, lip: 1, bowl: 1, roll: 1, teeWall: 'bunker' };
 /** the finish off: the course exactly as before T227 */
 export const FINISH_OFF: Readonly<CourseFinish> = { ...DEFAULT_COURSE_FINISH, on: false };
 /** the knobs' ranges (collarWidth: the Border slider's, ext/course-grid/patch BORDER_MIN_M .. BORDER_MAX_M) */
@@ -47,7 +57,8 @@ type Ranged = keyof typeof FINISH_RANGES;
 export function clampCourseFinish(f: unknown): CourseFinish {
   const o = (f && typeof f === 'object' ? f : {}) as Partial<Record<keyof CourseFinish, unknown>>, D = DEFAULT_COURSE_FINISH;
   const num = (k: Ranged) => { const v = o[k], [lo, hi] = FINISH_RANGES[k]; return Math.round(Math.min(hi, Math.max(lo, typeof v === 'number' && Number.isFinite(v) ? v : D[k])) * 1000) / 1000; };
-  return { on: typeof o.on === 'boolean' ? o.on : D.on, along: typeof o.along === 'boolean' ? o.along : D.along, bandWidth: num('bandWidth'), bandStrength: num('bandStrength'), greenWidth: num('greenWidth'), greenStrength: num('greenStrength'), collarWidth: num('collarWidth'), collarTone: num('collarTone'), lip: num('lip'), bowl: num('bowl'), roll: num('roll') };
+  return { on: typeof o.on === 'boolean' ? o.on : D.on, along: typeof o.along === 'boolean' ? o.along : D.along, bandWidth: num('bandWidth'), bandStrength: num('bandStrength'), greenWidth: num('greenWidth'), greenStrength: num('greenStrength'), collarWidth: num('collarWidth'), collarTone: num('collarTone'), lip: num('lip'), bowl: num('bowl'), roll: num('roll'),
+    teeWall: TEE_WALLS.includes(o.teeWall as TeeWall) ? (o.teeWall as TeeWall) : D.teeWall };
 }
 /** the finish a surfaces file carries (painted-surfaces.ts SurfacesFile.course), clamped and kept per file (the file is never changed) */
 const memo = new WeakMap<object, CourseFinish>();

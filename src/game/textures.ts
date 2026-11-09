@@ -399,12 +399,14 @@ export class Textures {
   }
   /** before a bake at art level L (CSS zoom, painted-grass-lod.ts grassZoomLevels): decodes the pictures the given textures need at that level
    *  (one or two per look), never all of them; the `near` textures take their near painting whatever the level (the course walls' cut faces);
-   *  pin false for a prewarm (decoded ahead, not laid now: the bake in hand keeps its pictures pinned, T194) */
-  async preparePainted(L: number, variants: Iterable<string>, near: Iterable<string> = [], pin = true) {
+   *  pin false for a prewarm (decoded ahead, not laid now: the bake in hand keeps its pictures pinned, T194); `pictures`: pictures by URL that no
+   *  look names, decoded and kept with them (T364: the tees' bunker wall, tee-wall.ts) */
+  async preparePainted(L: number, variants: Iterable<string>, near: Iterable<string> = [], pin = true, pictures: Iterable<string> = []) {
     this.paintedLevel = L;
     const urls = new Set<string>(), vs = [...variants];
     for (const v of vs) { const p = this.paintedOf(v); if (p && !p.tiled) for (const w of this.paintedWeights(p)) urls.add(p[w.detail].src); }
     for (const v of near) { const p = this.paintedOf(v); if (p) urls.add(p.near.src); }
+    for (const u of pictures) if (u) urls.add(u);
     if (pin) this.paintedPinned = urls;
     await Promise.all([this.decodePainted(urls), this.prepareTiles(vs, this.tileTs, pin)]);
   }
