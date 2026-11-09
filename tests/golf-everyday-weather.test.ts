@@ -32,10 +32,10 @@ test('dayConditions: the town day’s wind (the one the world blows that day), t
 
 test('everyday: with no conditions the day is the day of before (golden values captured from the unchanged code); with them it is deterministic, another day, and the golfers meet the wind', () => {
   const r = dayRoster(SEED, 5, CLUB), plain = dayPlan(VIEW, r), again = dayPlan(VIEW, r, undefined);
-  assert.equal(plain.shots.length, GOLD_DAY5N); assert.equal(fnv(JSON.stringify(plain.shots)), 'GOLD_DAY5', 'no conditions: the same shots'); assert.equal(fnv(JSON.stringify(plain.strokes)), 'GOLD_DAY5S'); assert.equal(fnv(JSON.stringify(plain.pace)), 'GOLD_DAY5P');
+  assert.equal(plain.shots.length, 4495); assert.equal(fnv(JSON.stringify(plain.shots)), '29c350', 'no conditions: the same shots'); assert.equal(fnv(JSON.stringify(plain.strokes)), '51b61d48'); assert.equal(fnv(JSON.stringify(plain.pace)), '6ef96a31');
   assert.equal(JSON.stringify(again.shots), JSON.stringify(plain.shots));
   const busy = dayRoster(SEED, 9, { ...CLUB, busy: 140 }), bp = dayPlan(VIEW, busy);
-  assert.equal(bp.shots.length, GOLD_BUSYN); assert.equal(fnv(JSON.stringify(bp.shots)), 'GOLD_BUSY'); assert.equal(fnv(JSON.stringify(bp.strokes)), 'GOLD_BUSYS'); assert.equal(fnv(JSON.stringify(bp.pace)), 'GOLD_BUSYP');
+  assert.equal(bp.shots.length, 12374); assert.equal(fnv(JSON.stringify(bp.shots)), '5925f3e1'); assert.equal(fnv(JSON.stringify(bp.strokes)), '9c9ace8f'); assert.equal(fnv(JSON.stringify(bp.pace)), 'c8d8f595');
   // with the day's conditions: the same every time, another day than the plain one, the same golfers and holes
   const cond = dayConditions(SEED, 5, null), a = dayPlan(VIEW, r, cond), b = dayPlan(VIEW, r, cond);
   assert.equal(JSON.stringify(a.shots), JSON.stringify(b.shots), 'deterministic'); assert.notEqual(JSON.stringify(a.shots), JSON.stringify(plain.shots));
@@ -86,9 +86,9 @@ const SK = { driving: 0.5, irons: 0.5, short: 0.5, putting: 0.5 };
 
 test('match: with no conditions the opponent and a skipped match are as before (golden values captured from the unchanged code); with them the opponent’s full shot takes the conditions of its ball, a putt none', () => {
   const r9 = startMatch(mView, matchHoles(18, 9), 4, opponentOf('Mia Lopez', 16), 100, 2)!, a9 = playMatchYours(mView, r9, SK, { club: 'driver', aim: { x: 120, y: 10 }, power: 1 }, 7).round, o9 = oppShot(mView, a9, 7);
-  assert.equal(fnv(JSON.stringify(o9.shot)), 'GOLD_OPP'); assert.equal(fnv(JSON.stringify(o9.round.match)), 'GOLD_OPPM'); assert.deepEqual(oppShot(mView, a9, 7, undefined).shot, o9.shot);
+  assert.equal(fnv(JSON.stringify(o9.shot)), '5a0f3106'); assert.equal(fnv(JSON.stringify(o9.round.match)), 'ba6a01fd'); assert.deepEqual(oppShot(mView, a9, 7, undefined).shot, o9.shot);
   const rs = startMatch(mView, matchHoles(18, 18), 4, opponentOf('Mia Lopez', 18), 150, 1)!, end = skipMatch(mView, rs, SK, 11);
-  assert.equal(fnv(JSON.stringify(end.match)), 'GOLD_SKIP'); assert.equal(fnv(JSON.stringify(end.card)), 'GOLD_SKIPC'); assert.deepEqual(skipMatch(mView, rs, SK, 11, undefined), end);
+  assert.equal(fnv(JSON.stringify(end.match)), '19cd132b'); assert.equal(fnv(JSON.stringify(end.card)), 'ba19a6f'); assert.deepEqual(skipMatch(mView, rs, SK, 11, undefined), end);
   // the opponent's drive from the tee in a crosswind: the env is asked for their ball, their lie and their aim, the shot takes it (the landing moves downwind), deterministic
   const asked: { ball: Pt; lie: Lie; aim: Pt }[] = [], wind = { mph: 20, from: 0 }, envFor = (ball: Pt, lie: Lie, aim: Pt): ShotEnv => { asked.push({ ball: { ...ball }, lie, aim: { ...aim } }); return envOf(wind, undefined, null, ball, lie, aim); };
   const w = oppShot(mView, a9, 7, envFor), w2 = oppShot(mView, a9, 7, (b, l, aim) => envOf(wind, undefined, null, b, l, aim));
