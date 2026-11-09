@@ -124,6 +124,9 @@ try {
     });
     log('tee galleries  ', JSON.stringify(r.tee)); log('green galleries', JSON.stringify(r.green)); log('the holes to shoot', JSON.stringify(r.shoot));
     metrics.galleries = r;
+    // what making the galleries costs (the game does it once when the course changes: the places of 18 galleries by the lattice and the chamfer)
+    const ms = await page.evaluate(() => { const { M, g, field, tees, pins } = window.__t377, f = field(), t = []; for (let k = 0; k < 7; k++) { const a = performance.now(); M.gal.gallerySpots(tees, pins, g.golf.structures ?? [], undefined, f); t.push(performance.now() - a); } t.sort((x, y) => x - y); return { median: +t[3].toFixed(2), max: +t[6].toFixed(2) }; });
+    log('making the galleries of the course (ms):', JSON.stringify(ms)); metrics.galleriesMs = ms;
     // the shots: that hole's tee gallery and green gallery in the frame
     const pos = await page.evaluate(() => ({ tees: window.__t377.tees.map(t => ({ hole: t.hole, x: t.x, y: t.y })), pins: window.__t377.pins.map(p => ({ hole: p.hole, x: p.x, y: p.y })) }));
     // (the first frame loads the people's art: the green's shot first is a warm-up, taken again)
