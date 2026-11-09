@@ -21,7 +21,9 @@ export const PULLS_MAX = 99;
 
 /** your cards as the profile keeps them (PlayerProfile.cards): the cards you own (ids, in the order you won them), the 8 slots (an id or null), the pulls waiting by grade, the pulls opened and the junk the machine
  *  gave (duds), the last tournament that paid a pull (a reload of its results pays nothing twice) and `legacy`: a save from before the cards, which keeps the mechanics the game had without them */
-export interface CardsSave { v: 1; own: string[]; slots: (string | null)[]; pulls: Record<Grade, number>; opened: number; junk: number; paid?: { tourney?: number }; legacy?: true }
+export interface CardsSave { v: 1; own: string[]; slots: (string | null)[]; pulls: Record<Grade, number>; opened: number; junk: number; paid?: { tourney?: number }; legacy?: true;
+  /** T389 (#1049): the welcome pull has been dealt (welcomeDue): a new game's one silver pull on its first visit to the pro shop or its first round. Saved, so it is never dealt again */
+  welcome?: true }
 
 /** a new game's cards: none, the slots empty, nothing waiting (and none of the mechanics a card unlocks: `legacy` is for a save from before the cards) */
 export const emptyCards = (legacy = false): CardsSave => ({ v: 1, own: [], slots: Array<string | null>(SLOTS).fill(null), pulls: { bronze: 0, silver: 0, gold: 0 }, opened: 0, junk: 0, ...(legacy ? { legacy: true as const } : {}) });
@@ -39,6 +41,7 @@ export function normalizeCards(x: unknown): CardsSave | undefined {
   const out: CardsSave = { v: 1, own, slots, pulls: { bronze: Math.min(PULLS_MAX, num(p.bronze)), silver: Math.min(PULLS_MAX, num(p.silver)), gold: Math.min(PULLS_MAX, num(p.gold)) }, opened: num(o.opened), junk: num(o.junk) };
   const t = o.paid?.tourney; if (typeof t === 'number' && Number.isFinite(t)) out.paid = { tourney: Math.floor(t) };
   if (o.legacy === true) out.legacy = true;
+  if (o.welcome === true) out.welcome = true;
   return out;
 }
 
@@ -101,6 +104,15 @@ export function addPull(c: CardsSave, grade: Grade, n = 1): CardsSave { return {
 export function takePull(c: CardsSave, grade: Grade): CardsSave { return c.pulls[grade] > 0 ? { ...c, pulls: { ...c.pulls, [grade]: c.pulls[grade] - 1 } } : c; }
 /** the grade the machine spends first when you do not pick one: the best you have (gold, then silver, then bronze); null with none waiting */
 export function bestGrade(c: CardsSave | undefined): Grade | null { if (!c) return null; for (const g of ['gold', 'silver', 'bronze'] as const) if (c.pulls[g] > 0) return g; return null; }
+
+/** T389 (#1049; the owner: a new game starts with the Space power-spam and the spin in the air locked until a card is won, so it meets the prize machine early): the WELCOME PULL, one silver pull, dealt once on a new game's first visit to the pro
+ *  shop or its first round (the engine's `welcomePull` asks). Due only for a new game's cards (not `legacy`: a save from before the cards keeps both mechanics and is never given one; no cards at all is such a save too), not yet dealt (`welcome`), and
+ *  only while the machine is a stranger: a save that already owns a card, has opened a pull, has pulls waiting or was paid one (a tournament) has met it, so an older save of the cards gets nothing on top of what it earned */
+export function welcomeDue(c: CardsSave | undefined): boolean {
+  return !!c && !c.legacy && !c.welcome && c.own.length === 0 && c.opened === 0 && pullCount(c) === 0 && !c.paid;
+}
+/** the cards with the welcome pull dealt: one silver pull and the saved mark. Unchanged when none is due, so asking twice (or after a save and load) deals it once */
+export const grantWelcome = (c: CardsSave): CardsSave => welcomeDue(c) ? { ...addPull(c, 'silver'), welcome: true } : c;
 
 // ---- what the equipped cards do to your game ----
 /** what the equipped cards add to a golfer's game: their mods (in slot order, a card banned in competition left out when it is one), the mechanics they unlock (a legacy save's own two too) and the factor on practice gains */
