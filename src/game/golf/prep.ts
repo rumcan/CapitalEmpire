@@ -1,5 +1,6 @@
 // The tournament prep quests: for the tier being prepared (this tier, or the next), the structures the course still needs, in order, and a few
 // optional first steps. Pure TS, no DOM: the engine supplies the facts and pays each newly done step's reward once.
+import { PIN_OFF_GREEN, type Hole } from './holes';
 import { STRUCTURE } from './tents';
 import { tierInfo, type Need } from './tour';
 
@@ -10,8 +11,8 @@ export type PrepTarget = 'gate' | 'green18' | 'green' | 'clubhouse' | 'entry';
 export interface PrepStep { id: string; tier: number; title: string; body: string; typeId: string; need?: Need; count?: number; optional?: boolean; reward: number; target: PrepTarget }
 /** the player's saved progress: steps done (for good) and skipped, and the chapter tier the player hid */
 export interface PrepSave { done: string[]; skipped: string[]; hidden?: number /* the chapter tier hidden by the player */ }
-/** the course's facts: the tier, the needs it has, the placed structures, the saved progress, and whether a type's art is ready and its tier allows it */
-export interface PrepFacts { tier: number; have: ReadonlySet<Need>; placed: readonly { typeId: string }[]; save: PrepSave; available: (typeId: string) => boolean /* art ready and tier allows */ }
+/** the course's facts: the tier, the complete holes it has (T399), the needs it has, the placed structures, the saved progress, and whether a type's art is ready and its tier allows it */
+export interface PrepFacts { tier: number; holes: number /* complete holes: completeHoles */; have: ReadonlySet<Need>; placed: readonly { typeId: string }[]; save: PrepSave; available: (typeId: string) => boolean /* art ready and tier allows */ }
 /** one step's line: its state, whether it is the current step, its progress ('1 of 2'), and whether no structure of its type is placed yet (the engine suggests a spot) */
 export interface PrepLine { step: PrepStep; state: 'todo' | 'done' | 'skipped'; current: boolean; progress?: string /* e.g. '1 of 2' */; first: boolean /* no structure of step.typeId placed yet: the engine suggests a spot */ }
 /** the checklist of the chapter shown: its tier and name, its lines, and the steps whose reward is due now */
@@ -87,8 +88,22 @@ export function prepDue(f: PrepFacts): PrepStep[] {
   return out;
 }
 
-/** the quest checklist to show, or null: the lowest of this tier and the next with a todo step (not when the player hid that chapter) */
+/** the holes of a course that are complete for the checklist (T399, #1077): a tee and a pin make the hole's playing line, and the pin is on a green
+ *  (deriveHoles says so with PIN_OFF_GREEN). A hole still being painted, with no tee marker or no pin, is not one */
+export function completeHoles(holes: readonly Pick<Hole, 'line' | 'warnings'>[]): number {
+  let n = 0;
+  for (const h of holes) if (h.line.length > 0 && !h.warnings.includes(PIN_OFF_GREEN)) n++;
+  return n;
+}
+/** whether the course is playable enough for the checklist to show (T399, #1077; the owner, 2026-11-09: "tournament prep check list should not show
+ *  until you have a course"): it has the complete holes the tier being prepared asks of a course (tour.ts: 9 for tiers 1 and 2, 18 after), and at
+ *  least one whatever a tier asks. A range start has none, so it shows nothing: no card, no reward, no toast */
+export const prepCourseReady = (holes: number, tier: number): boolean => holes >= Math.max(1, tierInfo(tier).holes);
+
+/** the quest checklist to show, or null: the lowest of this tier and the next with a todo step (not when the player hid that chapter, and not
+ *  before the course is playable: T399) */
 export function prepView(f: PrepFacts): PrepView | null {
+  if (!prepCourseReady(f.holes, f.tier)) return null;
   const done = new Set(f.save.done), skipped = new Set(f.save.skipped), holds = holdsFor(f);
   const stateOf = (s: PrepStep): PrepLine['state'] => holds(s) || done.has(s.id) ? 'done' : skipped.has(s.id) ? 'skipped' : 'todo';
   const built = chaptersOf(f), newlyDone = prepDue(f);
