@@ -1,0 +1,29 @@
+{
+  "schema": 1,
+  "subject": "variation:ref-building-mausoleum-719fd618-plain:1",
+  "version": 1,
+  "key": "yaw8N",
+  "source": {
+    "file": "../src/yaw8N.png",
+    "sha256": "f2695429c49b2a53ad29542338af4a9071e2a73ac7d635af7ecd0197b5b3dcc4",
+    "width": 409,
+    "height": 490
+  },
+  "cell": 0,
+  "cellRect": {
+    "left": 0,
+    "top": 0,
+    "width": 409,
+    "height": 490
+  },
+  "crop": {
+    "left": 4,
+    "top": 4,
+    "width": 401,
+    "height": 482
+  },
+  "output": "yaw8N.native.png",
+  "sha256": "6236a76ad3df428e795c355286fd10300476e2648831ac2ff19cd2de0a17d5f8",
+  "operation": "native RGBA cell crop only; no flip/repaint/view synthesis",
+  "review": "candidate"
+}

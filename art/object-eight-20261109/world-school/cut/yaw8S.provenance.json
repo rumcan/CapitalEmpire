@@ -1,0 +1,29 @@
+{
+  "schema": 1,
+  "subject": "world:school",
+  "version": 1,
+  "key": "yaw8S",
+  "source": {
+    "file": "../src/yaw8S.png",
+    "sha256": "927de465dbfaaf0e586ea2dedcd9d36566747f2b248dc9cc42246784b2b0c0bd",
+    "width": 636,
+    "height": 436
+  },
+  "cell": 0,
+  "cellRect": {
+    "left": 0,
+    "top": 0,
+    "width": 636,
+    "height": 436
+  },
+  "crop": {
+    "left": 4,
+    "top": 4,
+    "width": 628,
+    "height": 428
+  },
+  "output": "yaw8S.native.png",
+  "sha256": "cc1b48c65273243c77f9b471ba708d5f6f76d3eeb100f1587c1b8c86ccb4338d",
+  "operation": "native RGBA cell crop only; no flip/repaint/view synthesis",
+  "review": "candidate"
+}

@@ -1,0 +1,29 @@
+{
+  "schema": 1,
+  "subject": "world:primary_school",
+  "version": 1,
+  "key": "yaw8S",
+  "source": {
+    "file": "../src/yaw8S.png",
+    "sha256": "77cb4ee448676bde56d68e5545d2ee9f99d6f4b77c64062a19c2635c8193cc08",
+    "width": 609,
+    "height": 366
+  },
+  "cell": 0,
+  "cellRect": {
+    "left": 0,
+    "top": 0,
+    "width": 609,
+    "height": 366
+  },
+  "crop": {
+    "left": 4,
+    "top": 4,
+    "width": 601,
+    "height": 358
+  },
+  "output": "yaw8S.native.png",
+  "sha256": "dc51088539cfe6df7907a4c0466ee7fd59330e5eb8b302427116bd337907b0da",
+  "operation": "native RGBA cell crop only; no flip/repaint/view synthesis",
+  "review": "candidate"
+}

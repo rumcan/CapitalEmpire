@@ -1,0 +1,4 @@
+# the padded sources and the cut native crops are reproducible from the runner's sheets (scripts/assets/straight-views, review.json, measurements.json) and are archived at
+# F:/Art/newArt/animations/t398-straight-views/<slug>/{src,cut}; the manifests and provenance stay
+*/src/
+*/cut/*.native.png

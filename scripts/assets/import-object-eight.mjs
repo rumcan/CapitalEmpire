@@ -10,6 +10,10 @@ import sharp from 'sharp';
 
 export const KEYS = ['normalNE','yaw8N','normalSE','yaw8E','normalSW','yaw8S','normalNW','yaw8W'];
 const LAYOUTS = { normal: ['normalSE','normalSW','normalNW','normalNE'], yaw8: ['yaw8N','yaw8E','yaw8S','yaw8W'] };
+const NORMALS = ['normalNE','normalSE','normalSW','normalNW'];
+/** T398: a per-view source may name an existing library picture instead of a file ({ "reuse": "<library id>" }, the four normal views only): the set's normal
+ *  view is then an appended alias of that picture's atlas cell (no second copy of its pixels; the old picture still draws as before: the set is runtimeReuse) */
+const isReuse = v => typeof v?.reuse === 'string' && v.reuse.length > 0;
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
 const PAGE=2048,GUT=8;
 const hash = b => crypto.createHash('sha256').update(b).digest('hex');
@@ -52,7 +56,8 @@ export function validateInput(m) {
   assert(m.pixelCalibrationSpace===undefined||m.pixelCalibrationSpace==='orthographic-camera','pixelsPerMetre must use the true orthographic-camera convention');
   assert(m.review==='candidate'||m.review==='approved','explicit candidate/approved review required');
   // Input manifests give path strings; integrated manifests give the cut records (objects with a file).
-  assert((m.source?.normal&&m.source?.yaw8)||(m.source?.views&&KEYS.every(k=>typeof m.source.views[k]==='string'||typeof m.source.views[k]?.file==='string')),'two actual source sheets or eight per-view source files required');
+  assert((m.source?.normal&&m.source?.yaw8)||(m.source?.views&&KEYS.every(k=>typeof m.source.views[k]==='string'||typeof m.source.views[k]?.file==='string'||(isReuse(m.source.views[k])&&k.startsWith('normal')))),'two actual source sheets or eight per-view source files required (a normal view may name an existing library picture to reuse)');
+  if(m.source?.views){const n=NORMALS.filter(k=>isReuse(m.source.views[k])).length;assert(n===0||n===4,'reuse covers all four normal views or none');}
 }
 /** Preserve local-metre seating only after checking real row counts, access and approval. No generated guesses unlock a facility. */
 export function validateSeating(layout,capacity,footprint) {
@@ -102,6 +107,7 @@ export async function cutObject(manifestFile,out) {
   if(input.source.views) {
     // Per-view files: each whole PNG is the single cell for its key.
     for(const key of KEYS) {
+      if(isReuse(input.source.views[key])){sources[key]={reuse:input.source.views[key].reuse};continue;}
       const file=path.resolve(sourceDir,input.source.views[key]),bytes=fs.readFileSync(file),meta=await sharp(bytes).metadata();
       assert(meta.format==='png'&&meta.hasAlpha,`${key}: native alpha PNG required`);
       sources[key]={file:relative(out,file),sha256:hash(bytes),width:meta.width,height:meta.height};
@@ -130,6 +136,7 @@ export async function cutObject(manifestFile,out) {
     views[p.key]={file:filename,sha256:hash(png),width:p.width,height:p.height,anchor,headingDegrees:v.headingDegrees??null,boxes:v.boxes??null,...(v.pixelsPerMetre===undefined?{}:{pixelsPerMetre:v.pixelsPerMetre,calibrationEvidence:v.calibrationEvidence}),...(v.seating?{seating:v.seating}:{}),sourceFamily:p.family,sourceSha256:source.sha256,cell:p.cell,cellRect:p.cellRect,crop:p.crop};
     writeNew(path.join(out,`${p.key}.provenance.json`),json({schema:1,subject:input.subject,version:input.version,key:p.key,source,cell:p.cell,cellRect:p.cellRect,crop:p.crop,output:filename,sha256:hash(png),operation:'native RGBA cell crop only; no flip/repaint/view synthesis',review:'candidate'}));
   }
+  for(const key of KEYS)if(isReuse(sources[key])){const v=input.views?.[key]??{};views[key]={reuse:sources[key].reuse,anchor:null,headingDegrees:v.headingDegrees??null,boxes:v.boxes??null,sourceFamily:'reuse'};}
   const result={...input,pixelCalibrationSpace:'orthographic-camera',review:'candidate',source:input.source.views?{views:sources}:sources,views,artReviewRequired:['same subject across all eight views','normal and actual yaw8 geometry','upper-right daylight and lower-left shadows','true alpha and complete silhouette','per-view ground anchors and physical footprint','no duplicates or fake mirror views']};
   writeNew(path.join(out,'manifest.json'),json(result)); return result;
 }
@@ -138,12 +145,18 @@ async function loadApproved(manifestFile,projection) {
   const m=readJSON(manifestFile); validateInput(m); assert(m.review==='approved','Only an explicitly approved manifest can enter the runtime');
   if(m.seating)validateSeating(m.seating,m.capacity,m.footprintMetres);
   for(const key of KEYS)if(m.views?.[key]?.seating)validateSeating(m.views[key].seating,m.capacity,m.footprintMetres);
-  const dir=path.dirname(manifestFile),images=[],records=m.source.views?KEYS.map(key=>[key,m.source.views[key]]):['normal','yaw8'].map(family=>[family,m.source[family]]);
+  const dir=path.dirname(manifestFile),images=[],reused=[],records=m.source.views?KEYS.filter(key=>!isReuse(m.source.views[key])).map(key=>[key,m.source.views[key]]):['normal','yaw8'].map(family=>[family,m.source[family]]);
   for(const [name,source] of records) {
     assert(typeof source.file==='string'&&typeof source.sha256==='string',`${name}: native source provenance required`);
     assert(hash(fs.readFileSync(path.resolve(dir,source.file)))===source.sha256,`${name}: original source changed after cutting`);
   }
   for(const key of KEYS) {
+    if(m.source.views&&isReuse(m.source.views[key])) {
+      const v=m.views?.[key]; assert(v&&Number.isFinite(v.headingDegrees),`${key}: reviewed heading required`);
+      const boxes=v.boxes??[bounds(m.footprintMetres.width,m.footprintMetres.depth,v.headingDegrees)];
+      assert(boxes.length&&boxes.every(b=>positive(b.hx)&&positive(b.hy)&&Number.isFinite(b.dx)&&Number.isFinite(b.dy)),`${key}: invalid footprint boxes`);
+      reused.push({key,reuse:m.source.views[key].reuse,v,boxes});continue;
+    }
     const v=m.views?.[key]; assert(v&&positive(v.width)&&positive(v.height)&&Number.isFinite(v.anchor?.x)&&Number.isFinite(v.anchor?.y)&&Number.isFinite(v.headingDegrees),`${key}: reviewed anchor/heading and native size required`);
     viewCalibration(m,v);
     assert(v.anchor.x>=0&&v.anchor.x<=v.width&&v.anchor.y>=0&&v.anchor.y<=v.height,`${key}: ground anchor outside crop`);
@@ -153,7 +166,7 @@ async function loadApproved(manifestFile,projection) {
     assert(boxes.length&&boxes.every(b=>positive(b.hx)&&positive(b.hy)&&Number.isFinite(b.dx)&&Number.isFinite(b.dy)),`${key}: invalid footprint boxes`);
     images.push({key,width:info.width,height:info.height,data,bytes,v,k:objectDisplayScale(viewCalibration(m,v),projection),boxes});
   }
-  validateDistinct(images); return {m,dir,images};
+  validateDistinct(images); return {m,dir,images,reused};
 }
 function subjectTag(m) {
   const slug=m.subject.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');
@@ -174,7 +187,12 @@ function shelfPack(list) {
   return pages;
 }
 /** Ledger items for one set; tex points at the packed rectangle, quad keeps the native display size. */
-function registerItems(ledger,set,m,tag,images,base) {
+function registerItems(ledger,set,m,tag,images,base,reused=[]) {
+  for(const r of reused) {
+    const id=`object8:${tag}:${r.key}`;
+    set.views[r.key]={id,headingDegrees:r.v.headingDegrees,boxes:r.boxes};(set.sourceIds??={})[r.key]=r.reuse;set.runtimeReuse=true;
+    ledger.items.push({id,name:`${m.name} (${r.key})`,cat:m.category??'New: Objects',boxes:r.boxes,reuse:r.reuse});
+  }
   for(const p of images) {
     const id=`object8:${tag}:${p.key}`,v=p.v,k=p.k,boxes=p.boxes;
     set.views[p.key]={id,headingDegrees:v.headingDegrees,boxes,...(v.seating?{seating:v.seating}:{})};
@@ -195,11 +213,11 @@ async function writePages(pages,assetDir,root,ledger) {
 /** Regenerate the dedicated library module from the append-only registry. */
 function writeLibrary(ledger,root,ledgerFile) {
   const imports=ledger.pages.flatMap((p,i)=>p.map((file,j)=>`import p${i}m${j} from ${JSON.stringify(file.startsWith('.')?file:'./'+file)};`));
-  const code=["// Generated by import-object-eight.mjs; append-only rows preserve saved indices.","import type { LibItem } from './types';","import type { ObjectEightSet } from './object-eight-types';","import { appendExistingObjectEight, EXISTING_OBJECT_EIGHT_SETS } from './object-eight-existing';",...imports,`const NATIVE_OBJECT_EIGHT_SETS: readonly ObjectEightSet[] = ${JSON.stringify(ledger.sets)};`,`export const OBJECT_EIGHT_SETS: readonly ObjectEightSet[] = [...EXISTING_OBJECT_EIGHT_SETS, ...NATIVE_OBJECT_EIGHT_SETS];`,`const ITEMS: LibItem[] = ${JSON.stringify(ledger.items)};`,`const PAGES: string[][] = [${ledger.pages.map((p,i)=>'['+p.map((_,j)=>`p${i}m${j}`).join(',')+']').join(',')}];`,`export function appendObjectEight(library: LibItem[], pages: string[][]): void { appendExistingObjectEight(library); const base=pages.length; pages.push(...PAGES); for(const item of ITEMS) library.push({...item,tex:[base+item.tex[0],...item.tex.slice(1)] as LibItem['tex']}); }`, ''].join('\n');
+  const code=["// Generated by import-object-eight.mjs; append-only rows preserve saved indices.","import type { LibItem } from './types';","import type { ObjectEightSet } from './object-eight-types';","import { appendExistingObjectEight, EXISTING_OBJECT_EIGHT_SETS } from './object-eight-existing';",...imports,`const NATIVE_OBJECT_EIGHT_SETS: readonly ObjectEightSet[] = ${JSON.stringify(ledger.sets)};`,`export const OBJECT_EIGHT_SETS: readonly ObjectEightSet[] = [...EXISTING_OBJECT_EIGHT_SETS, ...NATIVE_OBJECT_EIGHT_SETS];`,`/** a reused view (T398): an alias of an existing library picture's atlas cell, resolved in place when the library is built */`,`interface ReuseItem { id: string; name: string; cat: string; boxes: LibItem['boxes']; reuse: string }`,`const ITEMS: (LibItem | ReuseItem)[] = ${JSON.stringify(ledger.items)};`,`const PAGES: string[][] = [${ledger.pages.map((p,i)=>'['+p.map((_,j)=>`p${i}m${j}`).join(',')+']').join(',')}];`,`export function appendObjectEight(library: LibItem[], pages: string[][]): void {`,`  appendExistingObjectEight(library); const base=pages.length; pages.push(...PAGES); const by=new Map(library.map(i=>[i.id,i]));`,`  for(const item of ITEMS) {`,`    if('reuse' in item) { const src=by.get(item.reuse); if(src) library.push({...src,id:item.id,name:item.name,cat:item.cat,boxes:item.boxes}); continue; }`,`    library.push({...item,tex:[base+item.tex[0],...item.tex.slice(1)] as LibItem['tex']});`,`  }`,`}`, ''].join('\n');
   fs.writeFileSync(ledgerFile,json(ledger));fs.writeFileSync(path.join(root,'src/game/object-eight-library.ts'),code);
 }
 export async function integrateObject(manifestFile,root=ROOT) {
-  const projection=readGameProjection(),{m,images}=await loadApproved(manifestFile,projection);
+  const projection=readGameProjection(),{m,images,reused}=await loadApproved(manifestFile,projection);
   const ledgerFile=path.join(root,'scripts/assets/object-eight-registry.json'),ledger=fs.existsSync(ledgerFile)?readJSON(ledgerFile):{schema:1,sets:[],items:[],pages:[]};
   assert(!ledger.sets.some(s=>s.subject===m.subject&&s.version===m.version),'This version is already registered; use a new reviewed version');
   const tag=subjectTag(m),assetDir=path.join(root,'src/assets/object-eight',tag);
@@ -207,7 +225,7 @@ export async function integrateObject(manifestFile,root=ROOT) {
   const set=setOf(m);
   for(const p of images)p.pw=p.width,p.ph=p.height;
   const pages=shelfPack(images),base=ledger.pages.length;
-  registerItems(ledger,set,m,tag,images,base);
+  registerItems(ledger,set,m,tag,images,base,reused);
   writeNew(path.join(assetDir,'calibration.json'),json(calibrationOf(m,images,projection)));
   await writePages(pages,assetDir,root,ledger);
   ledger.sets.push(set);
@@ -222,20 +240,20 @@ export async function integrateObjects(manifestFiles,{root=ROOT,tag,density=.6}=
   const projection=readGameProjection(),ledgerFile=path.join(root,'scripts/assets/object-eight-registry.json'),ledger=fs.existsSync(ledgerFile)?readJSON(ledgerFile):{schema:1,sets:[],items:[],pages:[]};
   const sets=[],seen=new Set(),cells=[];
   for(const file of manifestFiles) {
-    const {m,images}=await loadApproved(file,projection),id=`${m.subject}#${m.version}`;
+    const {m,images,reused}=await loadApproved(file,projection),id=`${m.subject}#${m.version}`;
     assert(!seen.has(id),`Duplicate subject version in batch: ${id}`);seen.add(id);
     assert(!ledger.sets.some(s=>s.subject===m.subject&&s.version===m.version),`${id}: already registered; use a new reviewed version`);
     for(const p of images) {
       p.r=Math.min(1,density*p.k);p.pw=Math.max(1,Math.round(p.width*p.r));p.ph=Math.max(1,Math.round(p.height*p.r));
       p.bytes=await sharp(p.bytes).resize(p.pw,p.ph,{kernel:'lanczos3',fit:'fill'}).png().toBuffer();cells.push(p);
     }
-    sets.push({m,images,tag:subjectTag(m),set:setOf(m)});
+    sets.push({m,images,reused,tag:subjectTag(m),set:setOf(m)});
   }
   cells.sort((a,b)=>b.ph-a.ph);
   const pages=shelfPack(cells),base=ledger.pages.length;
   fs.mkdirSync(assetDir,{recursive:true});
   for(const s of sets) {
-    registerItems(ledger,s.set,s.m,s.tag,s.images,base);
+    registerItems(ledger,s.set,s.m,s.tag,s.images,base,s.reused);
     writeNew(path.join(assetDir,`${s.tag}.calibration.json`),json(calibrationOf(s.m,s.images,projection,density)));
     ledger.sets.push(s.set);
   }

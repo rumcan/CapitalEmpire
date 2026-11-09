@@ -1,0 +1,206 @@
+{
+  "schema": 1,
+  "projection": "normal+yaw8",
+  "subject": "variation:world-church-44e76535-plain:1",
+  "name": "Church — variation 1",
+  "version": 1,
+  "review": "approved",
+  "source": {
+    "views": {
+      "normalNE": {
+        "reuse": "variation:world-church-44e76535-plain:1"
+      },
+      "yaw8N": {
+        "file": "../src/yaw8N.png",
+        "sha256": "1d66b6563c1cb03ea5e0c997201919f8108686dd7a855e78f422a30a369fca0f",
+        "width": 395,
+        "height": 503
+      },
+      "normalSE": {
+        "reuse": "view:variation:world-church-44e76535-plain:1:se"
+      },
+      "yaw8E": {
+        "file": "../src/yaw8E.png",
+        "sha256": "18e98f02cd8065075e7f03efc064a2f12df80a638fa17969543ee85aef85657d",
+        "width": 469,
+        "height": 526
+      },
+      "normalSW": {
+        "reuse": "view:variation:world-church-44e76535-plain:1:sw"
+      },
+      "yaw8S": {
+        "file": "../src/yaw8S.png",
+        "sha256": "6536dcf013b3d5d842d62eabb47a0dceea5e3d47bd4836416a35f153cb981aa8",
+        "width": 391,
+        "height": 568
+      },
+      "normalNW": {
+        "reuse": "view:variation:world-church-44e76535-plain:1:nw"
+      },
+      "yaw8W": {
+        "file": "../src/yaw8W.png",
+        "sha256": "fb41bc433ea40c967ee6fd332f51042dad04d4aea306d754c437bd0f21652ce1",
+        "width": 456,
+        "height": 527
+      }
+    }
+  },
+  "footprintMetres": {
+    "width": 10,
+    "depth": 8
+  },
+  "pixelsPerMetre": 34.8408915205,
+  "pixelCalibrationSpace": "orthographic-camera",
+  "baselineScale": 1.469,
+  "kind": "building",
+  "solid": 2,
+  "category": "Eight-view buildings",
+  "aliases": [],
+  "views": {
+    "yaw8N": {
+      "file": "yaw8N.native.png",
+      "sha256": "a43b2cf995647233d61eb4d5c6bd7bcbcb48d04148e016c26bb2d6020779d3f7",
+      "width": 387,
+      "height": 495,
+      "anchor": {
+        "x": 155.25,
+        "y": 318.36
+      },
+      "headingDegrees": 37,
+      "boxes": null,
+      "sourceFamily": "view",
+      "sourceSha256": "1d66b6563c1cb03ea5e0c997201919f8108686dd7a855e78f422a30a369fca0f",
+      "cell": 0,
+      "cellRect": {
+        "left": 0,
+        "top": 0,
+        "width": 395,
+        "height": 503
+      },
+      "crop": {
+        "left": 4,
+        "top": 4,
+        "width": 387,
+        "height": 495
+      }
+    },
+    "yaw8E": {
+      "file": "yaw8E.native.png",
+      "sha256": "d9c069e6344ee5fd7e85e4999d6970abfd36fbc8accd47d9e5bd48e62f29f28a",
+      "width": 461,
+      "height": 518,
+      "anchor": {
+        "x": 211,
+        "y": 374.62
+      },
+      "headingDegrees": 127,
+      "boxes": null,
+      "sourceFamily": "view",
+      "sourceSha256": "18e98f02cd8065075e7f03efc064a2f12df80a638fa17969543ee85aef85657d",
+      "cell": 0,
+      "cellRect": {
+        "left": 0,
+        "top": 0,
+        "width": 469,
+        "height": 526
+      },
+      "crop": {
+        "left": 4,
+        "top": 4,
+        "width": 461,
+        "height": 518
+      }
+    },
+    "yaw8S": {
+      "file": "yaw8S.native.png",
+      "sha256": "61c8e2d34861db2eda2846a965494513f1ff4b436be906176609a538052ec5be",
+      "width": 383,
+      "height": 560,
+      "anchor": {
+        "x": 234.25,
+        "y": 430.66
+      },
+      "headingDegrees": 217,
+      "boxes": null,
+      "sourceFamily": "view",
+      "sourceSha256": "6536dcf013b3d5d842d62eabb47a0dceea5e3d47bd4836416a35f153cb981aa8",
+      "cell": 0,
+      "cellRect": {
+        "left": 0,
+        "top": 0,
+        "width": 391,
+        "height": 568
+      },
+      "crop": {
+        "left": 4,
+        "top": 4,
+        "width": 383,
+        "height": 560
+      }
+    },
+    "yaw8W": {
+      "file": "yaw8W.native.png",
+      "sha256": "3f7d4a0a6480ede7ab339a2d6ed340414387746e9d47b20d1b92b4ea671cc076",
+      "width": 448,
+      "height": 519,
+      "anchor": {
+        "x": 221.75,
+        "y": 371.49
+      },
+      "headingDegrees": 307,
+      "boxes": null,
+      "sourceFamily": "view",
+      "sourceSha256": "fb41bc433ea40c967ee6fd332f51042dad04d4aea306d754c437bd0f21652ce1",
+      "cell": 0,
+      "cellRect": {
+        "left": 0,
+        "top": 0,
+        "width": 456,
+        "height": 527
+      },
+      "crop": {
+        "left": 4,
+        "top": 4,
+        "width": 448,
+        "height": 519
+      }
+    },
+    "normalNE": {
+      "reuse": "variation:world-church-44e76535-plain:1",
+      "anchor": null,
+      "headingDegrees": 0,
+      "boxes": null,
+      "sourceFamily": "reuse"
+    },
+    "normalSE": {
+      "reuse": "view:variation:world-church-44e76535-plain:1:se",
+      "anchor": null,
+      "headingDegrees": 90,
+      "boxes": null,
+      "sourceFamily": "reuse"
+    },
+    "normalSW": {
+      "reuse": "view:variation:world-church-44e76535-plain:1:sw",
+      "anchor": null,
+      "headingDegrees": 180,
+      "boxes": null,
+      "sourceFamily": "reuse"
+    },
+    "normalNW": {
+      "reuse": "view:variation:world-church-44e76535-plain:1:nw",
+      "anchor": null,
+      "headingDegrees": 270,
+      "boxes": null,
+      "sourceFamily": "reuse"
+    }
+  },
+  "calibrationNotes": "The four corner views are the building's existing pictures (variation:world-church-44e76535-plain:1, view:variation:world-church-44e76535-plain:1:se, view:variation:world-church-44e76535-plain:1:sw, view:variation:world-church-44e76535-plain:1:nw), reused, not repacked. The four straight-on views: scale 1.2989 game px per native px (34.84 px/m), read with scripts/assets/straight-views/measure.mjs: the T375 footprint-box fit (10 x 8 m, the library's box) on the four corners and the four straight views, the corners' fit bias against their library scale removed (0.6646), the median of the four straight views (1.2394 1.2757 1.3221 1.3601); anchors refitted with that scale held (IoU 0.8245 0.8181 0.7642 0.8457). Not owner-measured. Sheet: variation~world-church-44e76535-plain~1 axisturn, cells NESW are N E S W. tower front with the double doors on N as on NE; one window on the long wall where the corners show three.",
+  "artReviewRequired": [
+    "same subject across all eight views",
+    "normal and actual yaw8 geometry",
+    "upper-right daylight and lower-left shadows",
+    "true alpha and complete silhouette",
+    "per-view ground anchors and physical footprint",
+    "no duplicates or fake mirror views"
+  ]
+}

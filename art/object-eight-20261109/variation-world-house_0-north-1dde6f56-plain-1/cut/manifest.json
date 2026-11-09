@@ -1,0 +1,206 @@
+{
+  "schema": 1,
+  "projection": "normal+yaw8",
+  "subject": "variation:world-house_0-north-1dde6f56-plain:1",
+  "name": "House 0 — variation 1",
+  "version": 1,
+  "review": "approved",
+  "source": {
+    "views": {
+      "normalNE": {
+        "reuse": "variation:world-house_0-north-1dde6f56-plain:1"
+      },
+      "yaw8N": {
+        "file": "../src/yaw8N.png",
+        "sha256": "76fa987c169269283f3b5dd224e62be577b16494f1932f1218119d43c5e94945",
+        "width": 465,
+        "height": 519
+      },
+      "normalSE": {
+        "reuse": "view:variation:world-house_0-north-1dde6f56-plain:1:se"
+      },
+      "yaw8E": {
+        "file": "../src/yaw8E.png",
+        "sha256": "2d932621c8ec56da08948274476fbfbe862bffe7a9ab464f87dc2870db1ba308",
+        "width": 474,
+        "height": 438
+      },
+      "normalSW": {
+        "reuse": "view:variation:world-house_0-north-1dde6f56-plain:1:sw"
+      },
+      "yaw8S": {
+        "file": "../src/yaw8S.png",
+        "sha256": "e17c6e81e82271110330f37636e64325f3e843c746926abed30e50c183164472",
+        "width": 471,
+        "height": 465
+      },
+      "normalNW": {
+        "reuse": "view:variation:world-house_0-north-1dde6f56-plain:1:nw"
+      },
+      "yaw8W": {
+        "file": "../src/yaw8W.png",
+        "sha256": "f585d8757d84256f02b958ea2176f62c57e4846c866831e0f46b39d28e07f0ea",
+        "width": 476,
+        "height": 444
+      }
+    }
+  },
+  "footprintMetres": {
+    "width": 8,
+    "depth": 6
+  },
+  "pixelsPerMetre": 51.1354056451,
+  "pixelCalibrationSpace": "orthographic-camera",
+  "baselineScale": 1.158,
+  "kind": "building",
+  "solid": 2,
+  "category": "Eight-view buildings",
+  "aliases": [],
+  "views": {
+    "yaw8N": {
+      "file": "yaw8N.native.png",
+      "sha256": "6682d06344bd9a3a9a7d6d82cdd73797a5ad057c70c4e906208339bff290e2ce",
+      "width": 457,
+      "height": 511,
+      "anchor": {
+        "x": 238.25,
+        "y": 368.78
+      },
+      "headingDegrees": 37,
+      "boxes": null,
+      "sourceFamily": "view",
+      "sourceSha256": "76fa987c169269283f3b5dd224e62be577b16494f1932f1218119d43c5e94945",
+      "cell": 0,
+      "cellRect": {
+        "left": 0,
+        "top": 0,
+        "width": 465,
+        "height": 519
+      },
+      "crop": {
+        "left": 4,
+        "top": 4,
+        "width": 457,
+        "height": 511
+      }
+    },
+    "yaw8E": {
+      "file": "yaw8E.native.png",
+      "sha256": "b4f27802c5a8f16a1d15dacb122dafd5dc2b53b898c3383dd25565598a187a8e",
+      "width": 466,
+      "height": 430,
+      "anchor": {
+        "x": 202.25,
+        "y": 302.81
+      },
+      "headingDegrees": 127,
+      "boxes": null,
+      "sourceFamily": "view",
+      "sourceSha256": "2d932621c8ec56da08948274476fbfbe862bffe7a9ab464f87dc2870db1ba308",
+      "cell": 0,
+      "cellRect": {
+        "left": 0,
+        "top": 0,
+        "width": 474,
+        "height": 438
+      },
+      "crop": {
+        "left": 4,
+        "top": 4,
+        "width": 466,
+        "height": 430
+      }
+    },
+    "yaw8S": {
+      "file": "yaw8S.native.png",
+      "sha256": "00e34826b2e78011e77c23f3155d2aaadd72621d505e26b679e4b825d84be8d7",
+      "width": 463,
+      "height": 457,
+      "anchor": {
+        "x": 237.5,
+        "y": 366.05
+      },
+      "headingDegrees": 217,
+      "boxes": null,
+      "sourceFamily": "view",
+      "sourceSha256": "e17c6e81e82271110330f37636e64325f3e843c746926abed30e50c183164472",
+      "cell": 0,
+      "cellRect": {
+        "left": 0,
+        "top": 0,
+        "width": 471,
+        "height": 465
+      },
+      "crop": {
+        "left": 4,
+        "top": 4,
+        "width": 463,
+        "height": 457
+      }
+    },
+    "yaw8W": {
+      "file": "yaw8W.native.png",
+      "sha256": "0bc16349004f11fd73d12e8179eae1b7efa3eda2f63ad5128af43d5f82044a47",
+      "width": 468,
+      "height": 436,
+      "anchor": {
+        "x": 241.5,
+        "y": 313.28
+      },
+      "headingDegrees": 307,
+      "boxes": null,
+      "sourceFamily": "view",
+      "sourceSha256": "f585d8757d84256f02b958ea2176f62c57e4846c866831e0f46b39d28e07f0ea",
+      "cell": 0,
+      "cellRect": {
+        "left": 0,
+        "top": 0,
+        "width": 476,
+        "height": 444
+      },
+      "crop": {
+        "left": 4,
+        "top": 4,
+        "width": 468,
+        "height": 436
+      }
+    },
+    "normalNE": {
+      "reuse": "variation:world-house_0-north-1dde6f56-plain:1",
+      "anchor": null,
+      "headingDegrees": 0,
+      "boxes": null,
+      "sourceFamily": "reuse"
+    },
+    "normalSE": {
+      "reuse": "view:variation:world-house_0-north-1dde6f56-plain:1:se",
+      "anchor": null,
+      "headingDegrees": 90,
+      "boxes": null,
+      "sourceFamily": "reuse"
+    },
+    "normalSW": {
+      "reuse": "view:variation:world-house_0-north-1dde6f56-plain:1:sw",
+      "anchor": null,
+      "headingDegrees": 180,
+      "boxes": null,
+      "sourceFamily": "reuse"
+    },
+    "normalNW": {
+      "reuse": "view:variation:world-house_0-north-1dde6f56-plain:1:nw",
+      "anchor": null,
+      "headingDegrees": 270,
+      "boxes": null,
+      "sourceFamily": "reuse"
+    }
+  },
+  "calibrationNotes": "The four corner views are the building's existing pictures (variation:world-house_0-north-1dde6f56-plain:1, view:variation:world-house_0-north-1dde6f56-plain:1:se, view:variation:world-house_0-north-1dde6f56-plain:1:sw, view:variation:world-house_0-north-1dde6f56-plain:1:nw), reused, not repacked. The four straight-on views: scale 0.885 game px per native px (51.14 px/m), read with scripts/assets/straight-views/measure.mjs: the T375 footprint-box fit (8 x 6 m, the library's box) on the four corners and the four straight views, the corners' fit bias against their library scale removed (1.0198), the median of the four straight views (0.8702 0.9392 0.8638 0.8999); anchors refitted with that scale held (IoU 0.8663 0.8527 0.8716 0.886). Not owner-measured. Sheet: variation~world-house_0-north-1dde6f56-plain~1 axisturn, cells NESW are N E S W. door and deck on N as on NE.",
+  "artReviewRequired": [
+    "same subject across all eight views",
+    "normal and actual yaw8 geometry",
+    "upper-right daylight and lower-left shadows",
+    "true alpha and complete silhouette",
+    "per-view ground anchors and physical footprint",
+    "no duplicates or fake mirror views"
+  ]
+}

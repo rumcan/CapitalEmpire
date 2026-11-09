@@ -140,3 +140,33 @@ test('batch integration packs several per-view subjects into shared pages at atl
   assert.equal(item.w,native.width*k);assert.equal(item.h,native.height*k);
   assert.equal(Math.round((item.tex[3]-item.tex[1])*2048),Math.round(native.width*Math.min(1,.6*k)));
 });
+test('T398: a set can reuse four existing pictures as its normal views and add the four straight-on ones as new atlas cells',async t=>{
+  const dir=fixture(t),src=path.join(dir,'reuse');fs.mkdirSync(src,{recursive:true});
+  const views={};for(const key of KEYS)views[key]=key.startsWith('normal')?{reuse:`old:${key}`}:`${key}.png`;
+  for(const [i,key] of KEYS.entries())if(key.startsWith('yaw8'))await viewPng(path.join(src,`${key}.png`),i);
+  const input={schema:1,projection:'normal+yaw8',subject:'test:reuse',name:'Reuse test',version:1,review:'candidate',source:{views},pixelsPerMetre:44,pixelCalibrationSpace:'orthographic-camera',baselineScale:1.25,footprintMetres:{width:8,depth:4},category:'Eight-view buildings',kind:'building'};
+  const inputFile=path.join(src,'input.json');fs.writeFileSync(inputFile,JSON.stringify(input));
+  // reuse covers all four normal views or none, and never a straight-on one
+  const half={...input,source:{views:{...views,normalSW:'yaw8N.png'}}};fs.writeFileSync(path.join(src,'half.json'),JSON.stringify(half));
+  await assert.rejects(()=>cutObject(path.join(src,'half.json'),path.join(dir,'half')),/all four normal views or none/);
+  const bad={...input,source:{views:{...views,yaw8N:{reuse:'old:x'}}}};fs.writeFileSync(path.join(src,'bad.json'),JSON.stringify(bad));
+  await assert.rejects(()=>cutObject(path.join(src,'bad.json'),path.join(dir,'bad')),/eight per-view source files/);
+  const out=path.join(src,'v1'),result=await cutObject(inputFile,out);
+  assert.equal(Object.keys(result.views).length,8);assert.equal(result.views.normalNE.reuse,'old:normalNE');assert.equal(result.views.normalNE.sourceFamily,'reuse');
+  assert.ok(!fs.existsSync(path.join(out,'normalNE.native.png')));assert.ok(fs.existsSync(path.join(out,'yaw8N.native.png')));
+  result.review='approved';const heading={normalNE:0,yaw8N:37,normalSE:90,yaw8E:127,normalSW:180,yaw8S:217,normalNW:270,yaw8W:307};
+  for(const key of KEYS){const v=result.views[key];v.headingDegrees=heading[key];if(!key.startsWith('normal'))v.anchor={x:v.width/2,y:v.height-5};}
+  const manifest=path.join(out,'manifest.json');fs.writeFileSync(manifest,JSON.stringify(result));
+  fs.mkdirSync(path.join(dir,'scripts/assets'),{recursive:true});fs.mkdirSync(path.join(dir,'src/game'),{recursive:true});
+  const [set]=await integrateObjects([manifest],{root:dir,tag:'reuse'});
+  assert.equal(set.runtimeReuse,true);assert.equal(set.sourceIds.normalSE,'old:normalSE');assert.equal(Object.keys(set.sourceIds).length,4);assert.equal(new Set(Object.values(set.views).map(v=>v.id)).size,8);
+  // the reused normal views carry the physical footprint at their heading (a quarter turn swaps the box), the straight-on ones the box turned 37 degrees
+  assert.deepEqual(set.views.normalNE.boxes,[{hx:4,hy:2,dx:0,dy:0}]);assert.ok(Math.abs(set.views.normalSE.boxes[0].hx-2)<1e-9&&Math.abs(set.views.normalSE.boxes[0].hy-4)<1e-9);
+  const ledger=JSON.parse(fs.readFileSync(path.join(dir,'scripts/assets/object-eight-registry.json'),'utf8'));
+  assert.equal(ledger.items.length,8);assert.equal(ledger.items.filter(i=>i.reuse).length,4);assert.ok(ledger.items.filter(i=>i.reuse).every(i=>!('tex' in i)));assert.equal(ledger.pages.length,1);
+  const files=fs.readdirSync(path.join(dir,'src/assets/object-eight/reuse-v1')),cal=JSON.parse(fs.readFileSync(path.join(dir,'src/assets/object-eight/reuse-v1',files.find(f=>f.endsWith('.calibration.json'))),'utf8'));
+  assert.deepEqual(Object.keys(cal.views).sort(),['yaw8E','yaw8N','yaw8S','yaw8W']);
+  // the generated library module aliases the reused views in place and keeps the pixel ones on their atlas cells
+  const lib=fs.readFileSync(path.join(dir,'src/game/object-eight-library.ts'),'utf8');assert.ok(lib.includes("'reuse' in item")&&lib.includes('"reuse":"old:normalNE"'));
+  assert.ok(ts.transpileModule(lib,{compilerOptions:{module:ts.ModuleKind.ESNext,target:ts.ScriptTarget.ES2022},reportDiagnostics:true}).diagnostics.length===0);
+});

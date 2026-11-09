@@ -1,0 +1,106 @@
+// T398 (#1070): the straight-on (8-degree) views of the corners-only buildings (art/object-eight-20261109: the runner's axisturn sheets, reviewed against each building's
+// corner views, imported as object-eight sets whose four normal views are the building's own existing corner pictures). A building with them is drawn on a screen-straight
+// road in the view whose front faces its street; its corners draw exactly as before. Headless: npm test.
+import { test } from 'node:test';
+import assert from 'node:assert/strict';
+import { LIBRARY } from '../src/game/library';
+import { OBJECT_EIGHT_SETS } from '../src/game/object-eight-library';
+import { OBJECT_FACING_KEYS, objectFootprint } from '../src/game/object-eight-types';
+import { drawnAs } from '../src/game/mirror';
+import { axisSetOf, drawnView, eightRingOf, faces, fourViews, roadView } from '../src/game/lots/preset-art';
+import { roadOf } from '../src/game/lots/preset-frame';
+import { housePalette } from '../src/game/lots/compose';
+import { facingView } from '../src/game/lots/house-facing';
+import { objectFacings } from '../src/game/object-eight';
+import REVIEW from '../art/object-eight-20261109/review.json';
+
+const BY = new Map(LIBRARY.map(i => [i.id, i] as const));
+const awayOf = (road: number) => ({ x: -Math.sin(road * Math.PI / 4), y: -Math.cos(road * Math.PI / 4) });
+const frameOf = (road: number) => ({ q: (road % 2 ? (road === 1 || road === 7 ? 0 : 2) : road / 2) as 0 | 1 | 2 | 3, n: awayOf(road) });
+/** the reviewed buildings (art/object-eight-20261109/review.json: accepted sheets): their library subjects */
+const SUBJECTS = Object.entries(REVIEW.buildings).filter(([, b]) => b.accept).map(([disk]) => disk.replace(/~/g, ':'));
+const setOf = (subject: string) => OBJECT_EIGHT_SETS.find(s => s.subject === subject);
+const HEADINGS = { normalNE: 0, yaw8N: 37, normalSE: 90, yaw8E: 127, normalSW: 180, yaw8S: 217, normalNW: 270, yaw8W: 307 } as const;
+
+test('every reviewed building is an approved eight-view set: its four corner views are its own existing pictures, its four straight-on views new ones', () => {
+  assert.ok(SUBJECTS.length >= 30, `${SUBJECTS.length} reviewed buildings`);
+  for (const subject of SUBJECTS) {
+    const set = setOf(subject); assert.ok(set, `${subject} has a set`);
+    assert.equal(set!.review, 'approved'); assert.equal(set!.projection, 'normal+yaw8'); assert.equal(set!.runtimeReuse, true);
+    const ids = OBJECT_FACING_KEYS.map(k => set!.views[k].id);
+    assert.equal(new Set(ids).size, 8, `${subject}: eight different pictures`);
+    for (const id of ids) assert.ok(BY.has(id), `${id} is in the library`);
+    // the normal views alias the building's four corner pictures (NE, SE, SW, NW) pixel for pixel: same atlas cell, size and anchor
+    const corners = fourViews(subject)!.views;
+    ([['normalNE', 0], ['normalSE', 1], ['normalSW', 2], ['normalNW', 3]] as const).forEach(([key, i]) => {
+      assert.equal(set!.sourceIds![key], corners[i], `${subject} ${key} reuses ${corners[i]}`);
+      const alias = BY.get(set!.views[key].id)!, old = BY.get(corners[i]!)!;
+      assert.deepEqual([alias.tex, alias.w, alias.h, alias.ax, alias.ay, alias.quad], [old.tex, old.w, old.h, old.ax, old.ay, old.quad], `${subject} ${key} draws as ${corners[i]}`);
+      assert.deepEqual(alias.boxes, set!.views[key].boxes);
+      // the physical footprint at the corner's heading is the old picture's own box (the set's footprint is twice its half extents)
+      assert.ok(Math.abs(alias.boxes[0]!.hx - old.boxes[0]!.hx) < 1e-6 && Math.abs(alias.boxes[0]!.hy - old.boxes[0]!.hy) < 1e-6, `${subject} ${key}: the old box`);
+    });
+    // the straight-on views are new atlas cells (no reuse), with an anchor inside their picture, drawn within a sane scale of the corner
+    const ne = BY.get(set!.views.normalNE.id)!;
+    for (const key of ['yaw8N', 'yaw8E', 'yaw8S', 'yaw8W'] as const) {
+      assert.equal(set!.sourceIds![key], undefined, `${subject} ${key} is a new picture`);
+      const it = BY.get(set!.views[key].id)!;
+      assert.ok(it.id.startsWith('object8:') && it.ax > 0 && it.ax < it.w && it.ay > 0 && it.ay < it.h, `${it.id}: an anchor inside its picture`);
+      assert.ok(it.w / ne.w > 0.35 && it.w / ne.w < 1.25, `${it.id}: ${(it.w / ne.w).toFixed(2)} of the NE corner's width`);
+      assert.equal(it.kind, 'building'); assert.deepEqual(drawnAs(it, true), [it.id, false]);
+      // the footprint of the physical rectangle turned by the view's heading (the legacy mapping: the straight-on views are 37, 127, 217 and 307 degrees)
+      const want = objectFootprint(set!.footprintMetres.width, set!.footprintMetres.depth, HEADINGS[key]), got = set!.views[key].boxes[0]!;
+      assert.ok(Math.abs(got.hx - want.hx) < 1e-6 && Math.abs(got.hy - want.hy) < 1e-6, `${it.id}: the footprint turned ${HEADINGS[key]} degrees`);
+    }
+    // the Props tool's resolver sees the eight
+    const f = objectFacings(subject); assert.equal(f.mode, 'eight'); assert.deepEqual([...f.ids], ids);
+  }
+});
+
+test('the old corner pictures draw exactly as before: a reused set never replaces them', () => {
+  for (const subject of SUBJECTS) for (const id of fourViews(subject)!.views) {
+    const it = BY.get(id)!;
+    for (const flip of [false, true]) assert.ok(!drawnAs(it, flip)[0].startsWith('object8:'), `${id} (flip ${flip}) is not swapped for an eight-view picture`);
+  }
+});
+
+test('on a screen-straight road the lot draws the straight-on view that faces its street (a quarter turn of the prop is two places on the ring); the old square set still wins where there is one', () => {
+  let ringDrawn = 0, axisKept = 0;
+  for (const subject of SUBJECTS) {
+    const ring = eightRingOf(subject)!; assert.equal(ring.length, 8);
+    const axis = axisSetOf(subject);
+    for (let road = 1; road < 8; road += 2) for (let view = 0; view < 4; view++) {
+      const got = roadView(subject, road, view);
+      if (axis) { assert.equal(got, axis[(((road - 1) / 2 + view) % 4 + 4) % 4], `${subject} road ${road} view ${view}: the old set`); axisKept++; continue; }
+      assert.equal(got, ring[(road + 2 * view) % 8], `${subject} road ${road} view ${view}`); assert.ok(got!.includes(':yaw8'), `${got} is a straight-on view`); ringDrawn++;
+    }
+    // road 1 faces screen down: view 0 is N, road 3 E, road 5 S, road 7 W
+    if (!axis) assert.deepEqual([1, 3, 5, 7].map(r => roadView(subject, r, 0)!.split(':').pop()), ['yaw8N', 'yaw8E', 'yaw8S', 'yaw8W']);
+    for (const road of [1, 3, 5, 7]) assert.ok(faces(subject, road), `${subject} faces road ${road}`);
+    // the corners on the map-axis roads stay the four-view art
+    for (const road of [0, 2, 4, 6]) assert.equal(roadView(subject, road, 0), null, `${subject} road ${road}: the four-view art draws`);
+  }
+  assert.ok(ringDrawn > 100 && axisKept > 0, `${ringDrawn} ring draws, ${axisKept} old-set draws`);
+});
+
+test('every house the town draws faces its street on all eight roads, except the house types still waiting for straight-on art (the list the next art batch starts from)', () => {
+  // (T385's facingView: exact when the picture's front meets the lot's street. A house type with no straight-on view is 45 degrees off on the four screen-straight roads: the
+  // composer prefers the types that face, bestFacing; the types below need the art, so the next batch is these. When their views land this list shrinks: edit it.)
+  const WAITING = [
+    'gen:house-duplex', 'gen:house-farmhouse-wrap', 'gen:house-l-shape', 'gen:house-ranch-long', 'gen:house-splitlevel',
+    'variation:gen-house-duplex-c39d1a23-plain-corner:1', 'variation:gen-house-farmhouse-wrap-2b0eea83-plain-corner:1', 'variation:gen-house-l-shape-e0e3b328-plain-corner:1',
+    'variation:gen-house-l-shape-e0e3b328-plain:1', 'variation:gen-house-ranch-long-a4ddd58c-plain-corner:1', 'variation:gen-house-splitlevel-8b6b4aa4-plain:1', 'world:house_5',
+  ];
+  const off: string[] = [];
+  for (const id of housePalette()) {
+    const bad: number[] = [];
+    for (let road = 0; road < 8; road++) { const f = facingView(id, frameOf(road), 0); assert.equal(roadOf(frameOf(road).n), road); if (!f.exact) bad.push(road); }
+    if (bad.length) { off.push(id); assert.deepEqual(bad, [1, 3, 5, 7], `${id}: only the screen-straight roads are off (the corners face on the map-axis roads)`); }
+  }
+  assert.deepEqual(off.sort(), [...WAITING].sort());
+  // the five world houses with views face exactly on every road
+  for (const id of ['world:house_0', 'world:house_1', 'world:house_2', 'world:house_3', 'world:house_4']) for (let road = 0; road < 8; road++) {
+    const f = facingView(id, frameOf(road), 0); assert.ok(f.exact && f.off === 0, `${id} on road ${road}`);
+    assert.equal(drawnView(id, frameOf(road), 0).id, f.id);
+  }
+});

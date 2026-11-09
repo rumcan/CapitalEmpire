@@ -1,0 +1,29 @@
+{
+  "schema": 1,
+  "subject": "world:video",
+  "version": 1,
+  "key": "yaw8W",
+  "source": {
+    "file": "../src/yaw8W.png",
+    "sha256": "f983abddd773036ca5b64b8e737ba70b1deb0eaa8f3ef065dfc14ca36780288f",
+    "width": 553,
+    "height": 442
+  },
+  "cell": 0,
+  "cellRect": {
+    "left": 0,
+    "top": 0,
+    "width": 553,
+    "height": 442
+  },
+  "crop": {
+    "left": 4,
+    "top": 4,
+    "width": 545,
+    "height": 434
+  },
+  "output": "yaw8W.native.png",
+  "sha256": "b546d1987e7bcc0590a23025cc86a889955bbea2ab1642a5ec7e7ed4569e59a3",
+  "operation": "native RGBA cell crop only; no flip/repaint/view synthesis",
+  "review": "candidate"
+}

@@ -1,0 +1,206 @@
+{
+  "schema": 1,
+  "projection": "normal+yaw8",
+  "subject": "world:snack_bar",
+  "name": "Snack Bar",
+  "version": 1,
+  "review": "approved",
+  "source": {
+    "views": {
+      "normalNE": {
+        "reuse": "world:snack_bar"
+      },
+      "yaw8N": {
+        "file": "../src/yaw8N.png",
+        "sha256": "33b9912687f6dbabf48e4cdc08e35b53d035111fb86257e39c8deefa1c082fc1",
+        "width": 536,
+        "height": 493
+      },
+      "normalSE": {
+        "reuse": "east:world:snack_bar"
+      },
+      "yaw8E": {
+        "file": "../src/yaw8E.png",
+        "sha256": "0a089b99f30bb0b8586fb09f25e84963e7f27c66902e0b38230cc59352bb6d49",
+        "width": 544,
+        "height": 506
+      },
+      "normalSW": {
+        "reuse": "view:world:snack_bar:sw"
+      },
+      "yaw8S": {
+        "file": "../src/yaw8S.png",
+        "sha256": "70824814cfc5f29d17b35ed049d34d44976fc444cd7b85f4478e9a030178f958",
+        "width": 537,
+        "height": 476
+      },
+      "normalNW": {
+        "reuse": "view:world:snack_bar:nw"
+      },
+      "yaw8W": {
+        "file": "../src/yaw8W.png",
+        "sha256": "3c8bcf67bab4d1a8ce09129bd7598b1a9b295c170897a5807ff758afafa878a7",
+        "width": 536,
+        "height": 482
+      }
+    }
+  },
+  "footprintMetres": {
+    "width": 5.9,
+    "depth": 5.9
+  },
+  "pixelsPerMetre": 69.5158740337,
+  "pixelCalibrationSpace": "orthographic-camera",
+  "baselineScale": 1.291,
+  "kind": "building",
+  "solid": 2,
+  "category": "Eight-view buildings",
+  "aliases": [],
+  "views": {
+    "yaw8N": {
+      "file": "yaw8N.native.png",
+      "sha256": "e2a3ad639ae74d3f6b508ae2771a7bfd57f8fb3237ac12a1918537311b9f10c3",
+      "width": 528,
+      "height": 485,
+      "anchor": {
+        "x": 276.75,
+        "y": 372.16
+      },
+      "headingDegrees": 37,
+      "boxes": null,
+      "sourceFamily": "view",
+      "sourceSha256": "33b9912687f6dbabf48e4cdc08e35b53d035111fb86257e39c8deefa1c082fc1",
+      "cell": 0,
+      "cellRect": {
+        "left": 0,
+        "top": 0,
+        "width": 536,
+        "height": 493
+      },
+      "crop": {
+        "left": 4,
+        "top": 4,
+        "width": 528,
+        "height": 485
+      }
+    },
+    "yaw8E": {
+      "file": "yaw8E.native.png",
+      "sha256": "b2a140a29529b662215e7856ffe18c9065414428692707def73072b012a4ede7",
+      "width": 536,
+      "height": 498,
+      "anchor": {
+        "x": 256.75,
+        "y": 371.97
+      },
+      "headingDegrees": 127,
+      "boxes": null,
+      "sourceFamily": "view",
+      "sourceSha256": "0a089b99f30bb0b8586fb09f25e84963e7f27c66902e0b38230cc59352bb6d49",
+      "cell": 0,
+      "cellRect": {
+        "left": 0,
+        "top": 0,
+        "width": 544,
+        "height": 506
+      },
+      "crop": {
+        "left": 4,
+        "top": 4,
+        "width": 536,
+        "height": 498
+      }
+    },
+    "yaw8S": {
+      "file": "yaw8S.native.png",
+      "sha256": "9150b941c59de093da2481de750b2d04a0b0034975a089c643c29184d5eefe26",
+      "width": 529,
+      "height": 468,
+      "anchor": {
+        "x": 257,
+        "y": 355.62
+      },
+      "headingDegrees": 217,
+      "boxes": null,
+      "sourceFamily": "view",
+      "sourceSha256": "70824814cfc5f29d17b35ed049d34d44976fc444cd7b85f4478e9a030178f958",
+      "cell": 0,
+      "cellRect": {
+        "left": 0,
+        "top": 0,
+        "width": 537,
+        "height": 476
+      },
+      "crop": {
+        "left": 4,
+        "top": 4,
+        "width": 529,
+        "height": 468
+      }
+    },
+    "yaw8W": {
+      "file": "yaw8W.native.png",
+      "sha256": "68134856c81e0806c690b764b8fd45581ebfefacb7648a4e97c0b9d76ae74183",
+      "width": 528,
+      "height": 474,
+      "anchor": {
+        "x": 279,
+        "y": 362.34
+      },
+      "headingDegrees": 307,
+      "boxes": null,
+      "sourceFamily": "view",
+      "sourceSha256": "3c8bcf67bab4d1a8ce09129bd7598b1a9b295c170897a5807ff758afafa878a7",
+      "cell": 0,
+      "cellRect": {
+        "left": 0,
+        "top": 0,
+        "width": 536,
+        "height": 482
+      },
+      "crop": {
+        "left": 4,
+        "top": 4,
+        "width": 528,
+        "height": 474
+      }
+    },
+    "normalNE": {
+      "reuse": "world:snack_bar",
+      "anchor": null,
+      "headingDegrees": 0,
+      "boxes": null,
+      "sourceFamily": "reuse"
+    },
+    "normalSE": {
+      "reuse": "east:world:snack_bar",
+      "anchor": null,
+      "headingDegrees": 90,
+      "boxes": null,
+      "sourceFamily": "reuse"
+    },
+    "normalSW": {
+      "reuse": "view:world:snack_bar:sw",
+      "anchor": null,
+      "headingDegrees": 180,
+      "boxes": null,
+      "sourceFamily": "reuse"
+    },
+    "normalNW": {
+      "reuse": "view:world:snack_bar:nw",
+      "anchor": null,
+      "headingDegrees": 270,
+      "boxes": null,
+      "sourceFamily": "reuse"
+    }
+  },
+  "calibrationNotes": "The four corner views are the building's existing pictures (world:snack_bar, east:world:snack_bar, view:world:snack_bar:sw, view:world:snack_bar:nw), reused, not repacked. The four straight-on views: scale 0.651 game px per native px (69.52 px/m), read with scripts/assets/straight-views/measure.mjs: the T375 footprint-box fit (5.9 x 5.9 m, the library's box) on the four corners and the four straight views, the corners' fit bias against their library scale removed (1.145), the median of the four straight views (0.6486 0.6414 0.6533 0.6533); anchors refitted with that scale held (IoU 0.9023 0.8709 0.9256 0.8832). Not owner-measured. Sheet: world~snack_bar axisturn, cells WNES are N E S W. the SNACKS storefront is the sheet's W cell; cells rotated by three.",
+  "artReviewRequired": [
+    "same subject across all eight views",
+    "normal and actual yaw8 geometry",
+    "upper-right daylight and lower-left shadows",
+    "true alpha and complete silhouette",
+    "per-view ground anchors and physical footprint",
+    "no duplicates or fake mirror views"
+  ]
+}

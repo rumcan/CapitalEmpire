@@ -1,0 +1,206 @@
+{
+  "schema": 1,
+  "projection": "normal+yaw8",
+  "subject": "variation:ref-building-garage-0f7895a1-plain:1",
+  "name": "Garage — variation 1",
+  "version": 1,
+  "review": "approved",
+  "source": {
+    "views": {
+      "normalNE": {
+        "reuse": "variation:ref-building-garage-0f7895a1-plain:1"
+      },
+      "yaw8N": {
+        "file": "../src/yaw8N.png",
+        "sha256": "1e808d7a18b4aa76fa93ff65586e390e3dd262c5810f229587b80189aba420e0",
+        "width": 486,
+        "height": 472
+      },
+      "normalSE": {
+        "reuse": "view:variation:ref-building-garage-0f7895a1-plain:1:se"
+      },
+      "yaw8E": {
+        "file": "../src/yaw8E.png",
+        "sha256": "71bc2208b2bbadd13d8863024368e0e20558a52d8e5df47cc675578b25f8bd4d",
+        "width": 469,
+        "height": 476
+      },
+      "normalSW": {
+        "reuse": "view:variation:ref-building-garage-0f7895a1-plain:1:sw"
+      },
+      "yaw8S": {
+        "file": "../src/yaw8S.png",
+        "sha256": "af4f8463485f387dc3abb6130cf7269d19e25a40ebeca7a2eda138a52c8fda79",
+        "width": 481,
+        "height": 486
+      },
+      "normalNW": {
+        "reuse": "view:variation:ref-building-garage-0f7895a1-plain:1:nw"
+      },
+      "yaw8W": {
+        "file": "../src/yaw8W.png",
+        "sha256": "1ed331ccacf6309644afea979f410f10c9c262659af74bd44983dc72c6b89657",
+        "width": 471,
+        "height": 481
+      }
+    }
+  },
+  "footprintMetres": {
+    "width": 4,
+    "depth": 4
+  },
+  "pixelsPerMetre": 100.9251427206,
+  "pixelCalibrationSpace": "orthographic-camera",
+  "baselineScale": 1.999,
+  "kind": "building",
+  "solid": 2,
+  "category": "Eight-view buildings",
+  "aliases": [],
+  "views": {
+    "yaw8N": {
+      "file": "yaw8N.native.png",
+      "sha256": "4db56f40c8d89e511b3debfffde84e046bd48a9497ed286b194507994ba70fc6",
+      "width": 478,
+      "height": 464,
+      "anchor": {
+        "x": 240.5,
+        "y": 382.39
+      },
+      "headingDegrees": 37,
+      "boxes": null,
+      "sourceFamily": "view",
+      "sourceSha256": "1e808d7a18b4aa76fa93ff65586e390e3dd262c5810f229587b80189aba420e0",
+      "cell": 0,
+      "cellRect": {
+        "left": 0,
+        "top": 0,
+        "width": 486,
+        "height": 472
+      },
+      "crop": {
+        "left": 4,
+        "top": 4,
+        "width": 478,
+        "height": 464
+      }
+    },
+    "yaw8E": {
+      "file": "yaw8E.native.png",
+      "sha256": "ab29125992c3561ab613e6e528a07a573376afbddd0afd44e851d8e8b2c1cbd1",
+      "width": 461,
+      "height": 468,
+      "anchor": {
+        "x": 232,
+        "y": 363.12
+      },
+      "headingDegrees": 127,
+      "boxes": null,
+      "sourceFamily": "view",
+      "sourceSha256": "71bc2208b2bbadd13d8863024368e0e20558a52d8e5df47cc675578b25f8bd4d",
+      "cell": 0,
+      "cellRect": {
+        "left": 0,
+        "top": 0,
+        "width": 469,
+        "height": 476
+      },
+      "crop": {
+        "left": 4,
+        "top": 4,
+        "width": 461,
+        "height": 468
+      }
+    },
+    "yaw8S": {
+      "file": "yaw8S.native.png",
+      "sha256": "b652e8c9caab58c5ef336501a11b1962060f853cecc150d1e9ca4ad7bb82f801",
+      "width": 473,
+      "height": 478,
+      "anchor": {
+        "x": 239.5,
+        "y": 373.82
+      },
+      "headingDegrees": 217,
+      "boxes": null,
+      "sourceFamily": "view",
+      "sourceSha256": "af4f8463485f387dc3abb6130cf7269d19e25a40ebeca7a2eda138a52c8fda79",
+      "cell": 0,
+      "cellRect": {
+        "left": 0,
+        "top": 0,
+        "width": 481,
+        "height": 486
+      },
+      "crop": {
+        "left": 4,
+        "top": 4,
+        "width": 473,
+        "height": 478
+      }
+    },
+    "yaw8W": {
+      "file": "yaw8W.native.png",
+      "sha256": "ba8f4c9459b2c5e7ebb7123581c98022be33cd3bb8b514e7097c9ef5f713de34",
+      "width": 463,
+      "height": 473,
+      "anchor": {
+        "x": 236,
+        "y": 369.22
+      },
+      "headingDegrees": 307,
+      "boxes": null,
+      "sourceFamily": "view",
+      "sourceSha256": "1ed331ccacf6309644afea979f410f10c9c262659af74bd44983dc72c6b89657",
+      "cell": 0,
+      "cellRect": {
+        "left": 0,
+        "top": 0,
+        "width": 471,
+        "height": 481
+      },
+      "crop": {
+        "left": 4,
+        "top": 4,
+        "width": 463,
+        "height": 473
+      }
+    },
+    "normalNE": {
+      "reuse": "variation:ref-building-garage-0f7895a1-plain:1",
+      "anchor": null,
+      "headingDegrees": 0,
+      "boxes": null,
+      "sourceFamily": "reuse"
+    },
+    "normalSE": {
+      "reuse": "view:variation:ref-building-garage-0f7895a1-plain:1:se",
+      "anchor": null,
+      "headingDegrees": 90,
+      "boxes": null,
+      "sourceFamily": "reuse"
+    },
+    "normalSW": {
+      "reuse": "view:variation:ref-building-garage-0f7895a1-plain:1:sw",
+      "anchor": null,
+      "headingDegrees": 180,
+      "boxes": null,
+      "sourceFamily": "reuse"
+    },
+    "normalNW": {
+      "reuse": "view:variation:ref-building-garage-0f7895a1-plain:1:nw",
+      "anchor": null,
+      "headingDegrees": 270,
+      "boxes": null,
+      "sourceFamily": "reuse"
+    }
+  },
+  "calibrationNotes": "The four corner views are the building's existing pictures (variation:ref-building-garage-0f7895a1-plain:1, view:variation:ref-building-garage-0f7895a1-plain:1:se, view:variation:ref-building-garage-0f7895a1-plain:1:sw, view:variation:ref-building-garage-0f7895a1-plain:1:nw), reused, not repacked. The four straight-on views: scale 0.4484 game px per native px (100.93 px/m), read with scripts/assets/straight-views/measure.mjs: the T375 footprint-box fit (4 x 4 m, the library's box) on the four corners and the four straight views, the corners' fit bias against their library scale removed (1.5575), the median of the four straight views (0.4378 0.4522 0.4445 0.4544); anchors refitted with that scale held (IoU 0.9089 0.9505 0.9161 0.9471). Not owner-measured. Sheet: variation~ref-building-garage-0f7895a1-plain~1 axisturn, cells NESW are N E S W. sign and garage door on N as on NE; the W view has one lit orange window.",
+  "artReviewRequired": [
+    "same subject across all eight views",
+    "normal and actual yaw8 geometry",
+    "upper-right daylight and lower-left shadows",
+    "true alpha and complete silhouette",
+    "per-view ground anchors and physical footprint",
+    "no duplicates or fake mirror views"
+  ]
+}

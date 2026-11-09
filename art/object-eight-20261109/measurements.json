@@ -1,0 +1,1685 @@
+{
+ "schema": 1,
+ "subjects": {
+  "variation:ref-building-barn-v2-b96e34dc-plain:1": {
+   "disk": "variation~ref-building-barn-v2-b96e34dc-plain~1",
+   "name": "Barn V2 — variation 1",
+   "kind": "building",
+   "solid": 2,
+   "footprint": [
+    8,
+    6
+   ],
+   "owner": 1.992,
+   "cornerIds": [
+    "variation:ref-building-barn-v2-b96e34dc-plain:1",
+    "view:variation:ref-building-barn-v2-b96e34dc-plain:1:se",
+    "view:variation:ref-building-barn-v2-b96e34dc-plain:1:sw",
+    "view:variation:ref-building-barn-v2-b96e34dc-plain:1:nw"
+   ],
+   "kCorner": 0.8293,
+   "kStraight": 0.7159,
+   "kStraightCells": [
+    0.7207,
+    0.7111,
+    0.6889,
+    0.7619
+   ],
+   "cornerBias": 1.1314,
+   "iouCorners": [
+    0.8277,
+    0.8185,
+    0.8313,
+    0.843
+   ],
+   "iouStraight": [
+    0.7926,
+    0.8242,
+    0.7612,
+    0.7959
+   ],
+   "anchors": {
+    "yaw8N": {
+     "x": 255,
+     "y": 379.13
+    },
+    "yaw8E": {
+     "x": 341.5,
+     "y": 391.44
+    },
+    "yaw8S": {
+     "x": 263.25,
+     "y": 369.4
+    },
+    "yaw8W": {
+     "x": 248,
+     "y": 349.08
+    }
+   }
+  },
+  "variation:ref-building-diner-1e19ec22-plain:1": {
+   "disk": "variation~ref-building-diner-1e19ec22-plain~1",
+   "name": "Diner — variation 1",
+   "kind": "building",
+   "solid": 2,
+   "footprint": [
+    8,
+    6
+   ],
+   "owner": 1.714,
+   "cornerIds": [
+    "variation:ref-building-diner-1e19ec22-plain:1",
+    "view:variation:ref-building-diner-1e19ec22-plain:1:se",
+    "view:variation:ref-building-diner-1e19ec22-plain:1:sw",
+    "view:variation:ref-building-diner-1e19ec22-plain:1:nw"
+   ],
+   "kCorner": 0.7151,
+   "kStraight": 0.6074,
+   "kStraightCells": [
+    0.5773,
+    0.6362,
+    0.6217,
+    0.593
+   ],
+   "cornerBias": 1.1497,
+   "iouCorners": [
+    0.8835,
+    0.9185,
+    0.8664,
+    0.8795
+   ],
+   "iouStraight": [
+    0.8598,
+    0.8935,
+    0.8607,
+    0.8864
+   ],
+   "anchors": {
+    "yaw8N": {
+     "x": 275.25,
+     "y": 405.94
+    },
+    "yaw8E": {
+     "x": 241.25,
+     "y": 432.26
+    },
+    "yaw8S": {
+     "x": 280,
+     "y": 351.6
+    },
+    "yaw8W": {
+     "x": 319.25,
+     "y": 375.77
+    }
+   }
+  },
+  "variation:ref-building-farm-shed-0280794d-plain:1": {
+   "disk": "variation~ref-building-farm-shed-0280794d-plain~1",
+   "name": "Farm Shed — variation 1",
+   "kind": "building",
+   "solid": 2,
+   "footprint": [
+    4,
+    4
+   ],
+   "owner": 3.833,
+   "cornerIds": [
+    "variation:ref-building-farm-shed-0280794d-plain:1",
+    "view:variation:ref-building-farm-shed-0280794d-plain:1:se",
+    "view:variation:ref-building-farm-shed-0280794d-plain:1:sw",
+    "view:variation:ref-building-farm-shed-0280794d-plain:1:nw"
+   ],
+   "kCorner": 0.4491,
+   "kStraight": 0.3695,
+   "kStraightCells": [
+    0.3528,
+    0.3728,
+    0.3722,
+    0.3668
+   ],
+   "cornerBias": 1.5947,
+   "iouCorners": [
+    0.8458,
+    0.8333,
+    0.8842,
+    0.8839
+   ],
+   "iouStraight": [
+    0.8436,
+    0.8479,
+    0.8751,
+    0.8619
+   ],
+   "anchors": {
+    "yaw8N": {
+     "x": 236.75,
+     "y": 325.45
+    },
+    "yaw8E": {
+     "x": 215.75,
+     "y": 334.03
+    },
+    "yaw8S": {
+     "x": 227,
+     "y": 325.55
+    },
+    "yaw8W": {
+     "x": 142.5,
+     "y": 336.91
+    }
+   }
+  },
+  "variation:ref-building-farmhouse-ef501a21-plain:1": {
+   "disk": "variation~ref-building-farmhouse-ef501a21-plain~1",
+   "name": "Farmhouse — variation 1",
+   "kind": "building",
+   "solid": 2,
+   "footprint": [
+    8,
+    6
+   ],
+   "owner": 1.714,
+   "cornerIds": [
+    "variation:ref-building-farmhouse-ef501a21-plain:1",
+    "view:variation:ref-building-farmhouse-ef501a21-plain:1:se",
+    "view:variation:ref-building-farmhouse-ef501a21-plain:1:sw",
+    "view:variation:ref-building-farmhouse-ef501a21-plain:1:nw"
+   ],
+   "kCorner": 0.7994,
+   "kStraight": 0.7478,
+   "kStraightCells": [
+    0.7454,
+    0.7275,
+    0.7531,
+    0.7502
+   ],
+   "cornerBias": 1.2519,
+   "iouCorners": [
+    0.8978,
+    0.8597,
+    0.8791,
+    0.8925
+   ],
+   "iouStraight": [
+    0.8154,
+    0.8075,
+    0.8119,
+    0.7901
+   ],
+   "anchors": {
+    "yaw8N": {
+     "x": 253.5,
+     "y": 347.09
+    },
+    "yaw8E": {
+     "x": 290,
+     "y": 358.89
+    },
+    "yaw8S": {
+     "x": 254.25,
+     "y": 359.2
+    },
+    "yaw8W": {
+     "x": 277.5,
+     "y": 332.24
+    }
+   }
+  },
+  "variation:ref-building-garage-0f7895a1-plain:1": {
+   "disk": "variation~ref-building-garage-0f7895a1-plain~1",
+   "name": "Garage — variation 1",
+   "kind": "building",
+   "solid": 2,
+   "footprint": [
+    4,
+    4
+   ],
+   "owner": 1.999,
+   "cornerIds": [
+    "variation:ref-building-garage-0f7895a1-plain:1",
+    "view:variation:ref-building-garage-0f7895a1-plain:1:se",
+    "view:variation:ref-building-garage-0f7895a1-plain:1:sw",
+    "view:variation:ref-building-garage-0f7895a1-plain:1:nw"
+   ],
+   "kCorner": 0.5075,
+   "kStraight": 0.4484,
+   "kStraightCells": [
+    0.4378,
+    0.4522,
+    0.4445,
+    0.4544
+   ],
+   "cornerBias": 1.5575,
+   "iouCorners": [
+    0.9016,
+    0.9019,
+    0.8931,
+    0.9034
+   ],
+   "iouStraight": [
+    0.9089,
+    0.9505,
+    0.9161,
+    0.9471
+   ],
+   "anchors": {
+    "yaw8N": {
+     "x": 236.5,
+     "y": 378.39
+    },
+    "yaw8E": {
+     "x": 228,
+     "y": 359.12
+    },
+    "yaw8S": {
+     "x": 235.5,
+     "y": 369.82
+    },
+    "yaw8W": {
+     "x": 232,
+     "y": 365.22
+    }
+   }
+  },
+  "variation:ref-building-grocery-79498713-plain:1": {
+   "disk": "variation~ref-building-grocery-79498713-plain~1",
+   "name": "Grocery — variation 1",
+   "kind": "building",
+   "solid": 2,
+   "footprint": [
+    10,
+    6
+   ],
+   "owner": 1.549,
+   "cornerIds": [
+    "variation:ref-building-grocery-79498713-plain:1",
+    "view:variation:ref-building-grocery-79498713-plain:1:se",
+    "view:variation:ref-building-grocery-79498713-plain:1:sw",
+    "view:variation:ref-building-grocery-79498713-plain:1:nw"
+   ],
+   "kCorner": 0.8418,
+   "kStraight": 0.7201,
+   "kStraightCells": [
+    0.6328,
+    0.7366,
+    0.7036,
+    0.7483
+   ],
+   "cornerBias": 1.28,
+   "iouCorners": [
+    0.8361,
+    0.8547,
+    0.8665,
+    0.8841
+   ],
+   "iouStraight": [
+    0.8675,
+    0.887,
+    0.8701,
+    0.8874
+   ],
+   "anchors": {
+    "yaw8N": {
+     "x": 212.75,
+     "y": 440.56
+    },
+    "yaw8E": {
+     "x": 202,
+     "y": 448.08
+    },
+    "yaw8S": {
+     "x": 213.5,
+     "y": 454.18
+    },
+    "yaw8W": {
+     "x": 205.5,
+     "y": 460.02
+    }
+   }
+  },
+  "variation:ref-building-house-dormer-b4413f08-plain:1": {
+   "disk": "variation~ref-building-house-dormer-b4413f08-plain~1",
+   "name": "House Dormer — variation 1",
+   "kind": "building",
+   "solid": 2,
+   "footprint": [
+    6,
+    6
+   ],
+   "owner": 1.469,
+   "cornerIds": [
+    "variation:ref-building-house-dormer-b4413f08-plain:1",
+    "view:variation:ref-building-house-dormer-b4413f08-plain:1:se",
+    "view:variation:ref-building-house-dormer-b4413f08-plain:1:sw",
+    "view:variation:ref-building-house-dormer-b4413f08-plain:1:nw"
+   ],
+   "kCorner": 0.7221,
+   "kStraight": 0.6956,
+   "kStraightCells": [
+    0.6808,
+    0.7104,
+    0.6808,
+    0.7208
+   ],
+   "cornerBias": 1.231,
+   "iouCorners": [
+    0.886,
+    0.9257,
+    0.9101,
+    0.901
+   ],
+   "iouStraight": [
+    0.8589,
+    0.8715,
+    0.8753,
+    0.8726
+   ],
+   "anchors": {
+    "yaw8N": {
+     "x": 229.75,
+     "y": 399.8
+    },
+    "yaw8E": {
+     "x": 241.5,
+     "y": 391.9
+    },
+    "yaw8S": {
+     "x": 230,
+     "y": 382.99
+    },
+    "yaw8W": {
+     "x": 222,
+     "y": 394.67
+    }
+   }
+  },
+  "variation:ref-building-house-dormer-north-6952cea5-plain:1": {
+   "disk": "variation~ref-building-house-dormer-north-6952cea5-plain~1",
+   "name": "House Dormer — variation 1",
+   "kind": "building",
+   "solid": 2,
+   "footprint": [
+    6,
+    6
+   ],
+   "owner": 1.714,
+   "cornerIds": [
+    "variation:ref-building-house-dormer-north-6952cea5-plain:1",
+    "view:variation:ref-building-house-dormer-north-6952cea5-plain:1:se",
+    "view:variation:ref-building-house-dormer-north-6952cea5-plain:1:sw",
+    "view:variation:ref-building-house-dormer-north-6952cea5-plain:1:nw"
+   ],
+   "kCorner": 0.7022,
+   "kStraight": 0.6146,
+   "kStraightCells": [
+    0.5672,
+    0.6696,
+    0.5687,
+    0.6605
+   ],
+   "cornerBias": 1.1419,
+   "iouCorners": [
+    0.901,
+    0.8906,
+    0.8913,
+    0.8992
+   ],
+   "iouStraight": [
+    0.8616,
+    0.8155,
+    0.8354,
+    0.819
+   ],
+   "anchors": {
+    "yaw8N": {
+     "x": 261,
+     "y": 406.97
+    },
+    "yaw8E": {
+     "x": 263.25,
+     "y": 430.08
+    },
+    "yaw8S": {
+     "x": 267,
+     "y": 339.25
+    },
+    "yaw8W": {
+     "x": 244,
+     "y": 430.08
+    }
+   }
+  },
+  "variation:ref-building-house-garage-a1d986d3-plain:1": {
+   "disk": "variation~ref-building-house-garage-a1d986d3-plain~1",
+   "name": "House Garage — variation 1",
+   "kind": "building",
+   "solid": 2,
+   "footprint": [
+    8,
+    6
+   ],
+   "owner": 1.714,
+   "cornerIds": [
+    "variation:ref-building-house-garage-a1d986d3-plain:1",
+    "view:variation:ref-building-house-garage-a1d986d3-plain:1:se",
+    "view:variation:ref-building-house-garage-a1d986d3-plain:1:sw",
+    "view:variation:ref-building-house-garage-a1d986d3-plain:1:nw"
+   ],
+   "kCorner": 0.8063,
+   "kStraight": 0.7088,
+   "kStraightCells": [
+    0.7143,
+    0.7033,
+    0.7221,
+    0.6871
+   ],
+   "cornerBias": 1.2169,
+   "iouCorners": [
+    0.8455,
+    0.8811,
+    0.8632,
+    0.8492
+   ],
+   "iouStraight": [
+    0.8594,
+    0.8204,
+    0.8256,
+    0.8497
+   ],
+   "anchors": {
+    "yaw8N": {
+     "x": 276.5,
+     "y": 425.6
+    },
+    "yaw8E": {
+     "x": 323.25,
+     "y": 391.12
+    },
+    "yaw8S": {
+     "x": 259.5,
+     "y": 414.72
+    },
+    "yaw8W": {
+     "x": 264.75,
+     "y": 422.31
+    }
+   }
+  },
+  "variation:ref-building-mausoleum-719fd618-plain:1": {
+   "disk": "variation~ref-building-mausoleum-719fd618-plain~1",
+   "name": "Mausoleum — variation 1",
+   "kind": "building",
+   "solid": 2,
+   "footprint": [
+    4,
+    4
+   ],
+   "owner": 1.587,
+   "cornerIds": [
+    "variation:ref-building-mausoleum-719fd618-plain:1",
+    "view:variation:ref-building-mausoleum-719fd618-plain:1:se",
+    "view:variation:ref-building-mausoleum-719fd618-plain:1:sw",
+    "view:variation:ref-building-mausoleum-719fd618-plain:1:nw"
+   ],
+   "kCorner": 0.5857,
+   "kStraight": 0.5645,
+   "kStraightCells": [
+    0.5514,
+    0.5663,
+    0.5628,
+    0.577
+   ],
+   "cornerBias": 1.3237,
+   "iouCorners": [
+    0.8874,
+    0.8998,
+    0.911,
+    0.8715
+   ],
+   "iouStraight": [
+    0.8718,
+    0.7859,
+    0.8336,
+    0.8167
+   ],
+   "anchors": {
+    "yaw8N": {
+     "x": 195.75,
+     "y": 388.8
+    },
+    "yaw8E": {
+     "x": 185,
+     "y": 359.18
+    },
+    "yaw8S": {
+     "x": 208,
+     "y": 371.15
+    },
+    "yaw8W": {
+     "x": 205.25,
+     "y": 367.92
+    }
+   }
+  },
+  "variation:ref-building-shop-blue-941779e4-plain:1": {
+   "disk": "variation~ref-building-shop-blue-941779e4-plain~1",
+   "name": "Shop Blue — variation 1",
+   "kind": "building",
+   "solid": 2,
+   "footprint": [
+    6,
+    6
+   ],
+   "owner": 1.587,
+   "cornerIds": [
+    "variation:ref-building-shop-blue-941779e4-plain:1",
+    "view:variation:ref-building-shop-blue-941779e4-plain:1:se",
+    "view:variation:ref-building-shop-blue-941779e4-plain:1:sw",
+    "view:variation:ref-building-shop-blue-941779e4-plain:1:nw"
+   ],
+   "kCorner": 0.7539,
+   "kStraight": 0.7287,
+   "kStraightCells": [
+    0.7428,
+    0.7146,
+    0.7477,
+    0.7078
+   ],
+   "cornerBias": 1.0689,
+   "iouCorners": [
+    0.8925,
+    0.8549,
+    0.8832,
+    0.8874
+   ],
+   "iouStraight": [
+    0.9123,
+    0.8386,
+    0.8916,
+    0.8621
+   ],
+   "anchors": {
+    "yaw8N": {
+     "x": 258,
+     "y": 393.22
+    },
+    "yaw8E": {
+     "x": 151.25,
+     "y": 434.88
+    },
+    "yaw8S": {
+     "x": 198,
+     "y": 402.48
+    },
+    "yaw8W": {
+     "x": 147.75,
+     "y": 423.04
+    }
+   }
+  },
+  "variation:static-garage_brick-v2-be1ee461-plain:1": {
+   "disk": "variation~static-garage_brick-v2-be1ee461-plain~1",
+   "name": "Garage Brick V2 — variation 1",
+   "kind": "building",
+   "solid": 2,
+   "footprint": [
+    4,
+    4
+   ],
+   "owner": 1.628,
+   "cornerIds": [
+    "variation:static-garage_brick-v2-be1ee461-plain:1",
+    "view:variation:static-garage_brick-v2-be1ee461-plain:1:se",
+    "view:variation:static-garage_brick-v2-be1ee461-plain:1:sw",
+    "view:variation:static-garage_brick-v2-be1ee461-plain:1:nw"
+   ],
+   "kCorner": 0.5416,
+   "kStraight": 0.4252,
+   "kStraightCells": [
+    0.435,
+    0.4288,
+    0.4215,
+    0.417
+   ],
+   "cornerBias": 1.3348,
+   "iouCorners": [
+    0.9294,
+    0.9599,
+    0.9579,
+    0.9615
+   ],
+   "iouStraight": [
+    0.9184,
+    0.9386,
+    0.9574,
+    0.9136
+   ],
+   "anchors": {
+    "yaw8N": {
+     "x": 256.75,
+     "y": 383.61
+    },
+    "yaw8E": {
+     "x": 261.25,
+     "y": 326.14
+    },
+    "yaw8S": {
+     "x": 246.5,
+     "y": 334.82
+    },
+    "yaw8W": {
+     "x": 246.75,
+     "y": 383.61
+    }
+   }
+  },
+  "variation:static-shop_brick_rear-04db4dfa-plain:1": {
+   "disk": "variation~static-shop_brick_rear-04db4dfa-plain~1",
+   "name": "Shop Brick Rear — variation 1",
+   "kind": "building",
+   "solid": 2,
+   "footprint": [
+    8,
+    6
+   ],
+   "owner": 0.979,
+   "cornerIds": [
+    "variation:static-shop_brick_rear-04db4dfa-plain:1",
+    "view:variation:static-shop_brick_rear-04db4dfa-plain:1:se",
+    "view:variation:static-shop_brick_rear-04db4dfa-plain:1:sw",
+    "view:variation:static-shop_brick_rear-04db4dfa-plain:1:nw"
+   ],
+   "kCorner": 0.8394,
+   "kStraight": 0.7797,
+   "kStraightCells": [
+    0.8255,
+    0.7942,
+    0.7191,
+    0.7651
+   ],
+   "cornerBias": 0.9617,
+   "iouCorners": [
+    0.8817,
+    0.893,
+    0.8842,
+    0.8851
+   ],
+   "iouStraight": [
+    0.9295,
+    0.9292,
+    0.918,
+    0.9379
+   ],
+   "anchors": {
+    "yaw8N": {
+     "x": 223,
+     "y": 393.64
+    },
+    "yaw8E": {
+     "x": 229.75,
+     "y": 396.72
+    },
+    "yaw8S": {
+     "x": 248.5,
+     "y": 393.97
+    },
+    "yaw8W": {
+     "x": 233.75,
+     "y": 402.89
+    }
+   }
+  },
+  "variation:static-shop_market_rear-f9272004-plain:1": {
+   "disk": "variation~static-shop_market_rear-f9272004-plain~1",
+   "name": "Shop Market Rear — variation 1",
+   "kind": "building",
+   "solid": 2,
+   "footprint": [
+    8,
+    6
+   ],
+   "owner": 1.024,
+   "cornerIds": [
+    "variation:static-shop_market_rear-f9272004-plain:1",
+    "view:variation:static-shop_market_rear-f9272004-plain:1:se",
+    "view:variation:static-shop_market_rear-f9272004-plain:1:sw",
+    "view:variation:static-shop_market_rear-f9272004-plain:1:nw"
+   ],
+   "kCorner": 0.7832,
+   "kStraight": 0.7092,
+   "kStraightCells": [
+    0.7413,
+    0.7178,
+    0.6774,
+    0.7006
+   ],
+   "cornerBias": 1.1797,
+   "iouCorners": [
+    0.9063,
+    0.9324,
+    0.9229,
+    0.9181
+   ],
+   "iouStraight": [
+    0.9417,
+    0.9281,
+    0.9212,
+    0.9339
+   ],
+   "anchors": {
+    "yaw8N": {
+     "x": 281,
+     "y": 348.52
+    },
+    "yaw8E": {
+     "x": 220.75,
+     "y": 362.46
+    },
+    "yaw8S": {
+     "x": 279.5,
+     "y": 332.64
+    },
+    "yaw8W": {
+     "x": 219.25,
+     "y": 354.77
+    }
+   }
+  },
+  "variation:town-bakery-af15d7f5-plain:1": {
+   "disk": "variation~town-bakery-af15d7f5-plain~1",
+   "name": "Rose's Bakery — variation 1",
+   "kind": "building",
+   "solid": 2,
+   "footprint": [
+    6,
+    6
+   ],
+   "owner": 0.938,
+   "cornerIds": [
+    "variation:town-bakery-af15d7f5-plain:1",
+    "view:variation:town-bakery-af15d7f5-plain:1:se",
+    "view:variation:town-bakery-af15d7f5-plain:1:sw",
+    "view:variation:town-bakery-af15d7f5-plain:1:nw"
+   ],
+   "kCorner": 0.7405,
+   "kStraight": 0.58,
+   "kStraightCells": [
+    0.6363,
+    0.5699,
+    0.5595,
+    0.5901
+   ],
+   "cornerBias": 1.2395,
+   "iouCorners": [
+    0.9508,
+    0.9552,
+    0.8828,
+    0.8934
+   ],
+   "iouStraight": [
+    0.9015,
+    0.9079,
+    0.9144,
+    0.9173
+   ],
+   "anchors": {
+    "yaw8N": {
+     "x": 253.75,
+     "y": 402.99
+    },
+    "yaw8E": {
+     "x": 258.75,
+     "y": 337.56
+    },
+    "yaw8S": {
+     "x": 253.75,
+     "y": 428.28
+    },
+    "yaw8W": {
+     "x": 286.25,
+     "y": 401.75
+    }
+   }
+  },
+  "variation:town-fish_tackle-99c1401c-plain:1": {
+   "disk": "variation~town-fish_tackle-99c1401c-plain~1",
+   "name": "Pike & Pine Outfitters — variation 1",
+   "kind": "building",
+   "solid": 2,
+   "footprint": [
+    8,
+    6
+   ],
+   "owner": 0.872,
+   "cornerIds": [
+    "variation:town-fish_tackle-99c1401c-plain:1",
+    "view:variation:town-fish_tackle-99c1401c-plain:1:se",
+    "view:variation:town-fish_tackle-99c1401c-plain:1:sw",
+    "view:variation:town-fish_tackle-99c1401c-plain:1:nw"
+   ],
+   "kCorner": 0.6342,
+   "kStraight": 0.665,
+   "kStraightCells": [
+    0.6627,
+    0.7017,
+    0.6258,
+    0.6674
+   ],
+   "cornerBias": 1.2646,
+   "iouCorners": [
+    0.9482,
+    0.9417,
+    0.9404,
+    0.9035
+   ],
+   "iouStraight": [
+    0.9295,
+    0.8912,
+    0.9042,
+    0.9003
+   ],
+   "anchors": {
+    "yaw8N": {
+     "x": 286,
+     "y": 396.9
+    },
+    "yaw8E": {
+     "x": 199.75,
+     "y": 415.41
+    },
+    "yaw8S": {
+     "x": 243,
+     "y": 397.66
+    },
+    "yaw8W": {
+     "x": 252.25,
+     "y": 417.43
+    }
+   }
+  },
+  "variation:town-hardware-bf36737f-plain:1": {
+   "disk": "variation~town-hardware-bf36737f-plain~1",
+   "name": "Bellamy Hardware — variation 1",
+   "kind": "building",
+   "solid": 2,
+   "footprint": [
+    8,
+    6
+   ],
+   "owner": 1.106,
+   "cornerIds": [
+    "variation:town-hardware-bf36737f-plain:1",
+    "view:variation:town-hardware-bf36737f-plain:1:se",
+    "view:variation:town-hardware-bf36737f-plain:1:sw",
+    "view:variation:town-hardware-bf36737f-plain:1:nw"
+   ],
+   "kCorner": 0.8275,
+   "kStraight": 0.9217,
+   "kStraightCells": [
+    0.9287,
+    0.9183,
+    0.9252,
+    0.9048
+   ],
+   "cornerBias": 0.9808,
+   "iouCorners": [
+    0.8656,
+    0.8924,
+    0.8761,
+    0.8729
+   ],
+   "iouStraight": [
+    0.9304,
+    0.8979,
+    0.9285,
+    0.9115
+   ],
+   "anchors": {
+    "yaw8N": {
+     "x": 223,
+     "y": 375.64
+    },
+    "yaw8E": {
+     "x": 206.5,
+     "y": 402.16
+    },
+    "yaw8S": {
+     "x": 225,
+     "y": 352.34
+    },
+    "yaw8W": {
+     "x": 245.5,
+     "y": 359.23
+    }
+   }
+  },
+  "variation:town-pharmacy-d87b861c-plain:1": {
+   "disk": "variation~town-pharmacy-d87b861c-plain~1",
+   "name": "Maple Pharmacy — variation 1",
+   "kind": "building",
+   "solid": 2,
+   "footprint": [
+    6,
+    6
+   ],
+   "owner": 1.415,
+   "cornerIds": [
+    "variation:town-pharmacy-d87b861c-plain:1",
+    "view:variation:town-pharmacy-d87b861c-plain:1:se",
+    "view:variation:town-pharmacy-d87b861c-plain:1:sw",
+    "view:variation:town-pharmacy-d87b861c-plain:1:nw"
+   ],
+   "kCorner": 0.7614,
+   "kStraight": 0.6403,
+   "kStraightCells": [
+    0.6642,
+    0.6503,
+    0.619,
+    0.6303
+   ],
+   "cornerBias": 1.1045,
+   "iouCorners": [
+    0.9177,
+    0.9427,
+    0.9537,
+    0.9407
+   ],
+   "iouStraight": [
+    0.9202,
+    0.8862,
+    0.9328,
+    0.8944
+   ],
+   "anchors": {
+    "yaw8N": {
+     "x": 242,
+     "y": 453.01
+    },
+    "yaw8E": {
+     "x": 333,
+     "y": 441.26
+    },
+    "yaw8S": {
+     "x": 234,
+     "y": 436.87
+    },
+    "yaw8W": {
+     "x": 242,
+     "y": 425.64
+    }
+   }
+  },
+  "variation:world-church-44e76535-plain:1": {
+   "disk": "variation~world-church-44e76535-plain~1",
+   "name": "Church — variation 1",
+   "kind": "building",
+   "solid": 2,
+   "footprint": [
+    10,
+    8
+   ],
+   "owner": 1.469,
+   "cornerIds": [
+    "variation:world-church-44e76535-plain:1",
+    "view:variation:world-church-44e76535-plain:1:se",
+    "view:variation:world-church-44e76535-plain:1:sw",
+    "view:variation:world-church-44e76535-plain:1:nw"
+   ],
+   "kCorner": 1.0677,
+   "kStraight": 1.2989,
+   "kStraightCells": [
+    1.2394,
+    1.2757,
+    1.3221,
+    1.3601
+   ],
+   "cornerBias": 0.6646,
+   "iouCorners": [
+    0.8416,
+    0.8236,
+    0.8198,
+    0.8218
+   ],
+   "iouStraight": [
+    0.8245,
+    0.8181,
+    0.7642,
+    0.8457
+   ],
+   "anchors": {
+    "yaw8N": {
+     "x": 151.25,
+     "y": 314.36
+    },
+    "yaw8E": {
+     "x": 207,
+     "y": 370.62
+    },
+    "yaw8S": {
+     "x": 230.25,
+     "y": 426.66
+    },
+    "yaw8W": {
+     "x": 217.75,
+     "y": 367.49
+    }
+   }
+  },
+  "variation:world-house_0-north-1dde6f56-plain:1": {
+   "disk": "variation~world-house_0-north-1dde6f56-plain~1",
+   "name": "House 0 — variation 1",
+   "kind": "building",
+   "solid": 2,
+   "footprint": [
+    8,
+    6
+   ],
+   "owner": 1.158,
+   "cornerIds": [
+    "variation:world-house_0-north-1dde6f56-plain:1",
+    "view:variation:world-house_0-north-1dde6f56-plain:1:se",
+    "view:variation:world-house_0-north-1dde6f56-plain:1:sw",
+    "view:variation:world-house_0-north-1dde6f56-plain:1:nw"
+   ],
+   "kCorner": 0.9014,
+   "kStraight": 0.885,
+   "kStraightCells": [
+    0.8702,
+    0.9392,
+    0.8638,
+    0.8999
+   ],
+   "cornerBias": 1.0198,
+   "iouCorners": [
+    0.8755,
+    0.8701,
+    0.8999,
+    0.8839
+   ],
+   "iouStraight": [
+    0.8663,
+    0.8527,
+    0.8716,
+    0.886
+   ],
+   "anchors": {
+    "yaw8N": {
+     "x": 234.25,
+     "y": 364.78
+    },
+    "yaw8E": {
+     "x": 198.25,
+     "y": 298.81
+    },
+    "yaw8S": {
+     "x": 233.5,
+     "y": 362.05
+    },
+    "yaw8W": {
+     "x": 237.5,
+     "y": 309.28
+    }
+   }
+  },
+  "world:barn": {
+   "disk": "world~barn",
+   "name": "Barn",
+   "kind": "venue",
+   "solid": 2,
+   "footprint": [
+    8.38,
+    5.52
+   ],
+   "owner": 1.61,
+   "cornerIds": [
+    "world:barn",
+    "view:world:barn:se",
+    "view:world:barn:sw",
+    "view:world:barn:nw"
+   ],
+   "kCorner": 0.7484,
+   "kStraight": 0.6955,
+   "kStraightCells": [
+    0.718,
+    0.6909,
+    0.6934,
+    0.6975
+   ],
+   "cornerBias": 1.2358,
+   "iouCorners": [
+    0.9184,
+    0.8835,
+    0.8591,
+    0.9046
+   ],
+   "iouStraight": [
+    0.8216,
+    0.8956,
+    0.8641,
+    0.8852
+   ],
+   "anchors": {
+    "yaw8N": {
+     "x": 299.75,
+     "y": 359.7
+    },
+    "yaw8E": {
+     "x": 192.75,
+     "y": 362.75
+    },
+    "yaw8S": {
+     "x": 252.5,
+     "y": 336.31
+    },
+    "yaw8W": {
+     "x": 200.75,
+     "y": 414.03
+    }
+   }
+  },
+  "world:house_0": {
+   "disk": "world~house_0",
+   "name": "House 0",
+   "kind": "house",
+   "solid": 2,
+   "footprint": [
+    6.44,
+    5.18
+   ],
+   "owner": 1.837,
+   "cornerIds": [
+    "world:house_0",
+    "view:world:house_0:se",
+    "view:world:house_0:sw",
+    "view:world:house_0:nw"
+   ],
+   "kCorner": 0.5926,
+   "kStraight": 0.5605,
+   "kStraightCells": [
+    0.562,
+    0.5591,
+    0.5541,
+    0.5748
+   ],
+   "cornerBias": 1.3054,
+   "iouCorners": [
+    0.8751,
+    0.8837,
+    0.8832,
+    0.9006
+   ],
+   "iouStraight": [
+    0.8872,
+    0.861,
+    0.8807,
+    0.8957
+   ],
+   "anchors": {
+    "yaw8N": {
+     "x": 287.25,
+     "y": 392.06
+    },
+    "yaw8E": {
+     "x": 266.25,
+     "y": 433.74
+    },
+    "yaw8S": {
+     "x": 295.25,
+     "y": 384.23
+    },
+    "yaw8W": {
+     "x": 258.25,
+     "y": 383.47
+    }
+   }
+  },
+  "world:house_1": {
+   "disk": "world~house_1",
+   "name": "House 1",
+   "kind": "house",
+   "solid": 2,
+   "footprint": [
+    6.68,
+    4.48
+   ],
+   "owner": 2.062,
+   "cornerIds": [
+    "world:house_1",
+    "view:world:house_1:se",
+    "view:world:house_1:sw",
+    "view:world:house_1:nw"
+   ],
+   "kCorner": 0.7077,
+   "kStraight": 0.6157,
+   "kStraightCells": [
+    0.6135,
+    0.6289,
+    0.6179,
+    0.6067
+   ],
+   "cornerBias": 1.2068,
+   "iouCorners": [
+    0.9087,
+    0.9037,
+    0.9111,
+    0.9201
+   ],
+   "iouStraight": [
+    0.9115,
+    0.8459,
+    0.9198,
+    0.8845
+   ],
+   "anchors": {
+    "yaw8N": {
+     "x": 286.25,
+     "y": 429.16
+    },
+    "yaw8E": {
+     "x": 239,
+     "y": 445.54
+    },
+    "yaw8S": {
+     "x": 273.5,
+     "y": 388.06
+    },
+    "yaw8W": {
+     "x": 222.5,
+     "y": 404.64
+    }
+   }
+  },
+  "world:house_2": {
+   "disk": "world~house_2",
+   "name": "House 2",
+   "kind": "house",
+   "solid": 2,
+   "footprint": [
+    5.22,
+    5.68
+   ],
+   "owner": 1.905,
+   "cornerIds": [
+    "world:house_2",
+    "view:world:house_2:se",
+    "view:world:house_2:sw",
+    "view:world:house_2:nw"
+   ],
+   "kCorner": 0.7398,
+   "kStraight": 0.6501,
+   "kStraightCells": [
+    0.6556,
+    0.6433,
+    0.6786,
+    0.6447
+   ],
+   "cornerBias": 1.17,
+   "iouCorners": [
+    0.8807,
+    0.8962,
+    0.9203,
+    0.8888
+   ],
+   "iouStraight": [
+    0.9024,
+    0.858,
+    0.9114,
+    0.8774
+   ],
+   "anchors": {
+    "yaw8N": {
+     "x": 244.5,
+     "y": 472.32
+    },
+    "yaw8E": {
+     "x": 231.25,
+     "y": 477.41
+    },
+    "yaw8S": {
+     "x": 224,
+     "y": 416.5
+    },
+    "yaw8W": {
+     "x": 267.75,
+     "y": 436.11
+    }
+   }
+  },
+  "world:house_3": {
+   "disk": "world~house_3",
+   "name": "House 3",
+   "kind": "house",
+   "solid": 2,
+   "footprint": [
+    6.94,
+    7.04
+   ],
+   "owner": 1.39,
+   "cornerIds": [
+    "world:house_3",
+    "view:world:house_3:se",
+    "view:world:house_3:sw",
+    "view:world:house_3:nw"
+   ],
+   "kCorner": 0.8468,
+   "kStraight": 0.6645,
+   "kStraightCells": [
+    0.6609,
+    0.6707,
+    0.6681,
+    0.6564
+   ],
+   "cornerBias": 1.0689,
+   "iouCorners": [
+    0.8601,
+    0.8405,
+    0.8482,
+    0.8514
+   ],
+   "iouStraight": [
+    0.8459,
+    0.8295,
+    0.8498,
+    0.8548
+   ],
+   "anchors": {
+    "yaw8N": {
+     "x": 293.5,
+     "y": 382.99
+    },
+    "yaw8E": {
+     "x": 298.5,
+     "y": 439.02
+    },
+    "yaw8S": {
+     "x": 276,
+     "y": 379.76
+    },
+    "yaw8W": {
+     "x": 295.5,
+     "y": 379.39
+    }
+   }
+  },
+  "world:house_4": {
+   "disk": "world~house_4",
+   "name": "House 4",
+   "kind": "house",
+   "solid": 2,
+   "footprint": [
+    5.24,
+    5.4
+   ],
+   "owner": 2.13,
+   "cornerIds": [
+    "world:house_4",
+    "view:world:house_4:se",
+    "view:world:house_4:sw",
+    "view:world:house_4:nw"
+   ],
+   "kCorner": 0.6006,
+   "kStraight": 0.5092,
+   "kStraightCells": [
+    0.5162,
+    0.5047,
+    0.5047,
+    0.5137
+   ],
+   "cornerBias": 1.3322,
+   "iouCorners": [
+    0.8724,
+    0.8761,
+    0.8685,
+    0.8857
+   ],
+   "iouStraight": [
+    0.847,
+    0.8585,
+    0.8782,
+    0.894
+   ],
+   "anchors": {
+    "yaw8N": {
+     "x": 288,
+     "y": 404.08
+    },
+    "yaw8E": {
+     "x": 281,
+     "y": 423.72
+    },
+    "yaw8S": {
+     "x": 262.5,
+     "y": 367.46
+    },
+    "yaw8W": {
+     "x": 301,
+     "y": 375.6
+    }
+   }
+  },
+  "world:primary_school": {
+   "disk": "world~primary_school",
+   "name": "Primary School",
+   "kind": "venue",
+   "solid": 2,
+   "footprint": [
+    11.88,
+    6.7
+   ],
+   "owner": 1.834,
+   "cornerIds": [
+    "world:primary_school",
+    "view:world:primary_school:se",
+    "view:world:primary_school:sw",
+    "view:world:primary_school:nw"
+   ],
+   "kCorner": 0.9943,
+   "kStraight": 0.9725,
+   "kStraightCells": [
+    0.6164,
+    0.9851,
+    1.0444,
+    0.96
+   ],
+   "cornerBias": 1.0699,
+   "iouCorners": [
+    0.9256,
+    0.9357,
+    0.9333,
+    0.9195
+   ],
+   "iouStraight": [
+    0.9168,
+    0.9298,
+    0.8912,
+    0.9262
+   ],
+   "anchors": {
+    "yaw8N": {
+     "x": 297.5,
+     "y": 303.36
+    },
+    "yaw8E": {
+     "x": 210,
+     "y": 323.84
+    },
+    "yaw8S": {
+     "x": 297.25,
+     "y": 286.42
+    },
+    "yaw8W": {
+     "x": 207.5,
+     "y": 307.5
+    }
+   }
+  },
+  "world:school": {
+   "disk": "world~school",
+   "name": "School",
+   "kind": "venue",
+   "solid": 2,
+   "footprint": [
+    10.72,
+    9.58
+   ],
+   "owner": 1.754,
+   "cornerIds": [
+    "world:school",
+    "view:world:school:se",
+    "view:world:school:sw",
+    "view:world:school:nw"
+   ],
+   "kCorner": 1.1964,
+   "kStraight": 1.112,
+   "kStraightCells": [
+    1.1658,
+    1.0583,
+    1.1906,
+    1.0472
+   ],
+   "cornerBias": 0.8087,
+   "iouCorners": [
+    0.8998,
+    0.9232,
+    0.929,
+    0.9116
+   ],
+   "iouStraight": [
+    0.8887,
+    0.8368,
+    0.9076,
+    0.8315
+   ],
+   "anchors": {
+    "yaw8N": {
+     "x": 315.25,
+     "y": 341.94
+    },
+    "yaw8E": {
+     "x": 300,
+     "y": 332.04
+    },
+    "yaw8S": {
+     "x": 314.5,
+     "y": 308.07
+    },
+    "yaw8W": {
+     "x": 303.75,
+     "y": 337.68
+    }
+   }
+  },
+  "world:snack_bar": {
+   "disk": "world~snack_bar",
+   "name": "Snack Bar",
+   "kind": "venue",
+   "solid": 2,
+   "footprint": [
+    5.9,
+    5.9
+   ],
+   "owner": 1.291,
+   "cornerIds": [
+    "world:snack_bar",
+    "east:world:snack_bar",
+    "view:world:snack_bar:sw",
+    "view:world:snack_bar:nw"
+   ],
+   "kCorner": 0.7712,
+   "kStraight": 0.651,
+   "kStraightCells": [
+    0.6486,
+    0.6414,
+    0.6533,
+    0.6533
+   ],
+   "cornerBias": 1.145,
+   "iouCorners": [
+    0.9074,
+    0.9149,
+    0.9012,
+    0.9046
+   ],
+   "iouStraight": [
+    0.9023,
+    0.8709,
+    0.9256,
+    0.8832
+   ],
+   "anchors": {
+    "yaw8N": {
+     "x": 272.75,
+     "y": 368.16
+    },
+    "yaw8E": {
+     "x": 252.75,
+     "y": 367.97
+    },
+    "yaw8S": {
+     "x": 253,
+     "y": 351.62
+    },
+    "yaw8W": {
+     "x": 275,
+     "y": 358.34
+    }
+   }
+  },
+  "world:video": {
+   "disk": "world~video",
+   "name": "Video",
+   "kind": "venue",
+   "solid": 2,
+   "footprint": [
+    5.66,
+    6.56
+   ],
+   "owner": 1.566,
+   "cornerIds": [
+    "world:video",
+    "east:world:video",
+    "view:world:video:sw",
+    "view:world:video:nw"
+   ],
+   "kCorner": 0.7389,
+   "kStraight": 0.6575,
+   "kStraightCells": [
+    0.6829,
+    0.6267,
+    0.6782,
+    0.6368
+   ],
+   "cornerBias": 1.2188,
+   "iouCorners": [
+    0.9666,
+    0.9615,
+    0.9602,
+    0.9631
+   ],
+   "iouStraight": [
+    0.9115,
+    0.9172,
+    0.9165,
+    0.8828
+   ],
+   "anchors": {
+    "yaw8N": {
+     "x": 251,
+     "y": 305.04
+    },
+    "yaw8E": {
+     "x": 282,
+     "y": 312.57
+    },
+    "yaw8S": {
+     "x": 257,
+     "y": 347.51
+    },
+    "yaw8W": {
+     "x": 270,
+     "y": 335.79
+    }
+   }
+  }
+ }
+}

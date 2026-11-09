@@ -1,0 +1,206 @@
+{
+  "schema": 1,
+  "projection": "normal+yaw8",
+  "subject": "world:primary_school",
+  "name": "Primary School",
+  "version": 1,
+  "review": "approved",
+  "source": {
+    "views": {
+      "normalNE": {
+        "reuse": "world:primary_school"
+      },
+      "yaw8N": {
+        "file": "../src/yaw8N.png",
+        "sha256": "ee94e71e5b61e722355e8d12fdd490d9965d7b08d302c4b0acef91a8f95d1f17",
+        "width": 611,
+        "height": 403
+      },
+      "normalSE": {
+        "reuse": "view:world:primary_school:se"
+      },
+      "yaw8E": {
+        "file": "../src/yaw8E.png",
+        "sha256": "c27eeed32500c5357982d9f1c12843c2a85c473850b34b6565d3577c53825afe",
+        "width": 415,
+        "height": 482
+      },
+      "normalSW": {
+        "reuse": "view:world:primary_school:sw"
+      },
+      "yaw8S": {
+        "file": "../src/yaw8S.png",
+        "sha256": "77cb4ee448676bde56d68e5545d2ee9f99d6f4b77c64062a19c2635c8193cc08",
+        "width": 609,
+        "height": 366
+      },
+      "normalNW": {
+        "reuse": "view:world:primary_school:nw"
+      },
+      "yaw8W": {
+        "file": "../src/yaw8W.png",
+        "sha256": "55f209b84791f84fbb558aeb2e3cd9e72dd4c6ba168777ab1a5c4d46779a5009",
+        "width": 428,
+        "height": 475
+      }
+    }
+  },
+  "footprintMetres": {
+    "width": 11.88,
+    "depth": 6.7
+  },
+  "pixelsPerMetre": 46.5345336719,
+  "pixelCalibrationSpace": "orthographic-camera",
+  "baselineScale": 1.834,
+  "kind": "building",
+  "solid": 2,
+  "category": "Eight-view buildings",
+  "aliases": [],
+  "views": {
+    "yaw8N": {
+      "file": "yaw8N.native.png",
+      "sha256": "12c006e46265911ddfe5f428f5af6e41bc8ebb9ac74448fc891d19a48f0993a6",
+      "width": 603,
+      "height": 395,
+      "anchor": {
+        "x": 301.5,
+        "y": 307.36
+      },
+      "headingDegrees": 37,
+      "boxes": null,
+      "sourceFamily": "view",
+      "sourceSha256": "ee94e71e5b61e722355e8d12fdd490d9965d7b08d302c4b0acef91a8f95d1f17",
+      "cell": 0,
+      "cellRect": {
+        "left": 0,
+        "top": 0,
+        "width": 611,
+        "height": 403
+      },
+      "crop": {
+        "left": 4,
+        "top": 4,
+        "width": 603,
+        "height": 395
+      }
+    },
+    "yaw8E": {
+      "file": "yaw8E.native.png",
+      "sha256": "e0bf332a9d25c094e6620f7db80e1033a34fbf366508db7f99427945e2eb1db4",
+      "width": 407,
+      "height": 474,
+      "anchor": {
+        "x": 214,
+        "y": 327.84
+      },
+      "headingDegrees": 127,
+      "boxes": null,
+      "sourceFamily": "view",
+      "sourceSha256": "c27eeed32500c5357982d9f1c12843c2a85c473850b34b6565d3577c53825afe",
+      "cell": 0,
+      "cellRect": {
+        "left": 0,
+        "top": 0,
+        "width": 415,
+        "height": 482
+      },
+      "crop": {
+        "left": 4,
+        "top": 4,
+        "width": 407,
+        "height": 474
+      }
+    },
+    "yaw8S": {
+      "file": "yaw8S.native.png",
+      "sha256": "dc51088539cfe6df7907a4c0466ee7fd59330e5eb8b302427116bd337907b0da",
+      "width": 601,
+      "height": 358,
+      "anchor": {
+        "x": 301.25,
+        "y": 290.42
+      },
+      "headingDegrees": 217,
+      "boxes": null,
+      "sourceFamily": "view",
+      "sourceSha256": "77cb4ee448676bde56d68e5545d2ee9f99d6f4b77c64062a19c2635c8193cc08",
+      "cell": 0,
+      "cellRect": {
+        "left": 0,
+        "top": 0,
+        "width": 609,
+        "height": 366
+      },
+      "crop": {
+        "left": 4,
+        "top": 4,
+        "width": 601,
+        "height": 358
+      }
+    },
+    "yaw8W": {
+      "file": "yaw8W.native.png",
+      "sha256": "6e61ff035c8e7c260325172eb0122cc4f6921d608c5769649cd4a2b6e9b7120d",
+      "width": 420,
+      "height": 467,
+      "anchor": {
+        "x": 211.5,
+        "y": 311.5
+      },
+      "headingDegrees": 307,
+      "boxes": null,
+      "sourceFamily": "view",
+      "sourceSha256": "55f209b84791f84fbb558aeb2e3cd9e72dd4c6ba168777ab1a5c4d46779a5009",
+      "cell": 0,
+      "cellRect": {
+        "left": 0,
+        "top": 0,
+        "width": 428,
+        "height": 475
+      },
+      "crop": {
+        "left": 4,
+        "top": 4,
+        "width": 420,
+        "height": 467
+      }
+    },
+    "normalNE": {
+      "reuse": "world:primary_school",
+      "anchor": null,
+      "headingDegrees": 0,
+      "boxes": null,
+      "sourceFamily": "reuse"
+    },
+    "normalSE": {
+      "reuse": "view:world:primary_school:se",
+      "anchor": null,
+      "headingDegrees": 90,
+      "boxes": null,
+      "sourceFamily": "reuse"
+    },
+    "normalSW": {
+      "reuse": "view:world:primary_school:sw",
+      "anchor": null,
+      "headingDegrees": 180,
+      "boxes": null,
+      "sourceFamily": "reuse"
+    },
+    "normalNW": {
+      "reuse": "view:world:primary_school:nw",
+      "anchor": null,
+      "headingDegrees": 270,
+      "boxes": null,
+      "sourceFamily": "reuse"
+    }
+  },
+  "calibrationNotes": "The four corner views are the building's existing pictures (world:primary_school, view:world:primary_school:se, view:world:primary_school:sw, view:world:primary_school:nw), reused, not repacked. The four straight-on views: scale 0.9725 game px per native px (46.53 px/m), read with scripts/assets/straight-views/measure.mjs: the T375 footprint-box fit (11.88 x 6.7 m, the library's box) on the four corners and the four straight views, the corners' fit bias against their library scale removed (1.0699), the median of the four straight views (0.6164 0.9851 1.0444 0.96); anchors refitted with that scale held (IoU 0.9168 0.9298 0.8912 0.9262). Not owner-measured. Sheet: world~primary_school axisturn, cells NESW are N E S W. HOLLOW CREEK PRIMARY front on N as on NE; autumn leaves and pumpkins from the old export (the corners are clean), and bats and pumpkins in the windows.",
+  "artReviewRequired": [
+    "same subject across all eight views",
+    "normal and actual yaw8 geometry",
+    "upper-right daylight and lower-left shadows",
+    "true alpha and complete silhouette",
+    "per-view ground anchors and physical footprint",
+    "no duplicates or fake mirror views"
+  ]
+}

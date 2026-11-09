@@ -1,0 +1,330 @@
+{
+ "schema": 1,
+ "batch": "straight-views-20261109",
+ "reviewedBy": "T398 agent against each building's existing corner views (contact sheets), 2026-11-09; not owner-approved",
+ "buildings": {
+  "variation~ref-building-barn-v2-b96e34dc-plain~1": {
+   "accept": true,
+   "cells": [
+    "N",
+    "E",
+    "S",
+    "W"
+   ],
+   "notes": "front doors on N as on NE; roof reads light metal where the corners show slate and shingle"
+  },
+  "variation~ref-building-diner-1e19ec22-plain~1": {
+   "accept": true,
+   "cells": [
+    "N",
+    "E",
+    "S",
+    "W"
+   ],
+   "notes": "sign front on N as on NE"
+  },
+  "variation~ref-building-farm-shed-0280794d-plain~1": {
+   "accept": true,
+   "cells": [
+    "N",
+    "E",
+    "S",
+    "W"
+   ],
+   "notes": "double doors on N as on NE"
+  },
+  "variation~ref-building-farmhouse-ef501a21-plain~1": {
+   "accept": true,
+   "cells": [
+    "W",
+    "N",
+    "E",
+    "S"
+   ],
+   "notes": "the gable front with the porch is the sheet's W cell (the guide's N is the wing side); cells rotated by three"
+  },
+  "variation~ref-building-garage-0f7895a1-plain~1": {
+   "accept": true,
+   "cells": [
+    "N",
+    "E",
+    "S",
+    "W"
+   ],
+   "notes": "sign and garage door on N as on NE; the W view has one lit orange window"
+  },
+  "variation~ref-building-grocery-79498713-plain~1": {
+   "accept": true,
+   "cells": [
+    "W",
+    "N",
+    "E",
+    "S"
+   ],
+   "notes": "the awning front with the GROCERY sign is the sheet's W cell; cells rotated by three"
+  },
+  "variation~ref-building-house-dormer-b4413f08-plain~1": {
+   "accept": true,
+   "cells": [
+    "N",
+    "E",
+    "S",
+    "W"
+   ],
+   "notes": "porch and bay window on N as on NE"
+  },
+  "variation~ref-building-house-dormer-north-6952cea5-plain~1": {
+   "accept": true,
+   "cells": [
+    "N",
+    "E",
+    "S",
+    "W"
+   ],
+   "notes": "three dormers and the deck on N as on NE"
+  },
+  "variation~ref-building-house-garage-a1d986d3-plain~1": {
+   "accept": true,
+   "cells": [
+    "N",
+    "E",
+    "S",
+    "W"
+   ],
+   "notes": "garage door and front door on the same face (N), as on NE"
+  },
+  "variation~ref-building-mausoleum-719fd618-plain~1": {
+   "accept": true,
+   "cells": [
+    "N",
+    "E",
+    "S",
+    "W"
+   ],
+   "notes": "arched door front on N as on NE"
+  },
+  "variation~ref-building-shop-blue-941779e4-plain~1": {
+   "accept": true,
+   "cells": [
+    "N",
+    "E",
+    "S",
+    "W"
+   ],
+   "notes": "DRUG & GIFTS shopfront on N as on NE"
+  },
+  "variation~static-garage_brick-v2-be1ee461-plain~1": {
+   "accept": true,
+   "cells": [
+    "N",
+    "E",
+    "S",
+    "W"
+   ],
+   "notes": "garage door on N as on NE; the roof has no leaves"
+  },
+  "variation~static-shop_brick_rear-04db4dfa-plain~1": {
+   "accept": true,
+   "cells": [
+    "N",
+    "E",
+    "S",
+    "W"
+   ],
+   "notes": "steel door and boarded window on N as on NE"
+  },
+  "variation~static-shop_market_rear-f9272004-plain~1": {
+   "accept": true,
+   "cells": [
+    "N",
+    "E",
+    "S",
+    "W"
+   ],
+   "notes": "double doors and barred window on N as on NE"
+  },
+  "variation~town-bakery-af15d7f5-plain~1": {
+   "accept": true,
+   "cells": [
+    "N",
+    "E",
+    "S",
+    "W"
+   ],
+   "notes": "awning front with the sign on N as on NE"
+  },
+  "variation~town-fish_tackle-99c1401c-plain~1": {
+   "accept": true,
+   "cells": [
+    "N",
+    "E",
+    "S",
+    "W"
+   ],
+   "notes": "striped-awning front on N as on NE; the side walls are plain (the corners show windows there)"
+  },
+  "variation~town-hardware-bf36737f-plain~1": {
+   "accept": true,
+   "cells": [
+    "N",
+    "E",
+    "S",
+    "W"
+   ],
+   "notes": "BELLAMY HARDWARE front on N as on NE"
+  },
+  "variation~town-pharmacy-d87b861c-plain~1": {
+   "accept": true,
+   "cells": [
+    "N",
+    "E",
+    "S",
+    "W"
+   ],
+   "notes": "pharmacy shopfront on N as on NE; a second shopfront on E and W, as the corners"
+  },
+  "variation~world-church-44e76535-plain~1": {
+   "accept": true,
+   "cells": [
+    "N",
+    "E",
+    "S",
+    "W"
+   ],
+   "notes": "tower front with the double doors on N as on NE; one window on the long wall where the corners show three"
+  },
+  "variation~world-house_0-north-1dde6f56-plain~1": {
+   "accept": true,
+   "cells": [
+    "N",
+    "E",
+    "S",
+    "W"
+   ],
+   "notes": "door and deck on N as on NE"
+  },
+  "world~barn": {
+   "accept": true,
+   "cells": [
+    "N",
+    "E",
+    "S",
+    "W"
+   ],
+   "notes": "X-braced doors on N as on NE; heavy orange ivy on the roof and walls (the corners are clean)"
+  },
+  "world~house_0": {
+   "accept": true,
+   "cells": [
+    "N",
+    "E",
+    "S",
+    "W"
+   ],
+   "notes": "red door on N as on NE; autumn leaves and pumpkins from the old export (the corners are clean); has the old square straight-on set, which still draws on straight roads until the turned views are preferred"
+  },
+  "world~house_1": {
+   "accept": true,
+   "cells": [
+    "N",
+    "E",
+    "S",
+    "W"
+   ],
+   "notes": "door on N as on NE; autumn leaves and pumpkins from the old export (the corners are clean); has the old square straight-on set (see world~house_0)"
+  },
+  "world~house_2": {
+   "accept": true,
+   "cells": [
+    "N",
+    "E",
+    "S",
+    "W"
+   ],
+   "notes": "door and steps on N as on NE; autumn leaves and pumpkins from the old export (the corners are clean)"
+  },
+  "world~house_3": {
+   "accept": true,
+   "cells": [
+    "N",
+    "E",
+    "S",
+    "W"
+   ],
+   "notes": "door and wreath on N as on NE; autumn leaves and pumpkins from the old export (the corners are clean); has the old square straight-on set (see world~house_0)"
+  },
+  "world~house_4": {
+   "accept": true,
+   "cells": [
+    "N",
+    "E",
+    "S",
+    "W"
+   ],
+   "notes": "door and steps on N as on NE; autumn leaves and pumpkins from the old export (the corners are clean)"
+  },
+  "world~primary_school": {
+   "accept": true,
+   "cells": [
+    "N",
+    "E",
+    "S",
+    "W"
+   ],
+   "notes": "HOLLOW CREEK PRIMARY front on N as on NE; autumn leaves and pumpkins from the old export (the corners are clean), and bats and pumpkins in the windows"
+  },
+  "world~school": {
+   "accept": true,
+   "cells": [
+    "N",
+    "E",
+    "S",
+    "W"
+   ],
+   "notes": "clock tower front with the blue doors on N as on NE; autumn leaves and pumpkins from the old export (the corners are clean)"
+  },
+  "world~snack_bar": {
+   "accept": true,
+   "cells": [
+    "W",
+    "N",
+    "E",
+    "S"
+   ],
+   "notes": "the SNACKS storefront is the sheet's W cell; cells rotated by three"
+  },
+  "world~video": {
+   "accept": true,
+   "cells": [
+    "N",
+    "E",
+    "S",
+    "W"
+   ],
+   "notes": "the corners show the VIDEO storefront on the lower-right face, so N is the window wall on their lower-left face, as the sheet's N cell; autumn leaves and pumpkins from the old export (the corners are clean)"
+  }
+ },
+ "rejects": {
+  "town~laundromat": "side and back walls are cream with blue bands where all four corners are solid blue (the storefront N is right); re-queue with the walls blue",
+  "variation~ref-building-church-1df07e15-plain~1": "the long walls carry no arched windows (the corners have three on each) and the sheet turns the other way round (its N cell is the entrance gable, the corners' N face is the long wall)",
+  "variation~ref-building-gas-shop-3326e70f-plain~1": "the canopy is a flat lattice roof reaching sideways in E and W, the corners have a hip-roofed canopy by the shopfront; poor silhouette fit (IoU 0.72)",
+  "variation~town-barber-13c5ef06-plain~1": "E, S and W show a cut-away: the walls are missing and the interior chairs show; N reads CLIP JOINT where the corners read BARBERSHOP",
+  "variation~town-laundromat-43183f9e-plain~1": "side and back walls are cream with blue bands where the corners are solid blue",
+  "variation~town-postoffice-1c7025b8-plain~1": "E and W show a cross-gabled roof with steps down both sides; the corners have a plain hip roof and no steps (poor fit, IoU 0.77)",
+  "variation~world-barn-ae80f6c9-plain~1": "E, S and W add lean-to wings and a porch with steps that the corners do not have",
+  "variation~world-house_0-51fa4b80-plain~1": "stone terrace pads and steps lie round the base in E, S and W (not in the corners; poor fit, IoU 0.77)",
+  "variation~world-house_2-north-332663ab-plain~1": "E and W show wide decks on both sides of the house that the corners lack (IoU 0.73)",
+  "variation~world-house_5-d6198cb0-plain~1": "stone terrace pads and steps lie round the base in E, S and W (not in the corners; poor fit, IoU 0.77)",
+  "variation~world-house_5-north-bffd2c68-plain~1": "the roof is front-gabled in the straight views and a hip roof in all four corners",
+  "world~drivein_marquee": "a flat sign: E and W are edge-on slivers and the back (S) shows the face with text; the corners have a blank back (the owner flagged the corners angles-wrong too)",
+  "variation~ref-building-house-cottage-fc52ce66-plain~1": "the sheet is RGB with a checkerboard baked into the background (no alpha): re-queue with true transparency (a flat dark background keys cleanly)",
+  "world~diner": "the sheet is RGB with a checkerboard baked into the background (no alpha): re-queue with true transparency (a flat dark background keys cleanly)",
+  "world~house_5": "the sheet is RGB with a checkerboard baked into the background (no alpha): re-queue with true transparency (a flat dark background keys cleanly)"
+ },
+ "skipped": {
+  "business~estate-villa": "business artwork: its library box is a 1 x 1 placeholder (no footprint to fit or place) and the business system, not the lot composer, draws it; the sheet itself is clean, keep it for when the business art gets a footprint",
+  "variation~town-firestation-north-0ac85582-plain~1": "not in the game's library (a removed variation): there is no picture to attach the views to",
+  "world~arcade": "already an eight-view set (T375): the new sheet is an alternative, not imported",
+  "world~video_rental": "already an eight-view set (T375, the Video Vault): the new sheet is RGB with a baked checkerboard and not needed"
+ }
+}

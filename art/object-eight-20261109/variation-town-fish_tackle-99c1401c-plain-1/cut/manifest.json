@@ -1,0 +1,206 @@
+{
+  "schema": 1,
+  "projection": "normal+yaw8",
+  "subject": "variation:town-fish_tackle-99c1401c-plain:1",
+  "name": "Pike & Pine Outfitters — variation 1",
+  "version": 1,
+  "review": "approved",
+  "source": {
+    "views": {
+      "normalNE": {
+        "reuse": "variation:town-fish_tackle-99c1401c-plain:1"
+      },
+      "yaw8N": {
+        "file": "../src/yaw8N.png",
+        "sha256": "150ade864979fd79bcc8789b5aca1bb828a81feabbb2d6ea8644c43abadb29ec",
+        "width": 522,
+        "height": 520
+      },
+      "normalSE": {
+        "reuse": "view:variation:town-fish_tackle-99c1401c-plain:1:se"
+      },
+      "yaw8E": {
+        "file": "../src/yaw8E.png",
+        "sha256": "a58743f6559824a5809b2cf7afba1f21a4e5d6ca06d88739737ef2c7370392d5",
+        "width": 474,
+        "height": 568
+      },
+      "normalSW": {
+        "reuse": "view:variation:town-fish_tackle-99c1401c-plain:1:sw"
+      },
+      "yaw8S": {
+        "file": "../src/yaw8S.png",
+        "sha256": "ede86fad08e6eebcbc9eb438403c78a5755b7b14421b887023888072b91b8077",
+        "width": 526,
+        "height": 543
+      },
+      "normalNW": {
+        "reuse": "view:variation:town-fish_tackle-99c1401c-plain:1:nw"
+      },
+      "yaw8W": {
+        "file": "../src/yaw8W.png",
+        "sha256": "9eacbc47056f5ec0daf226f5eb05fdc9e423f822e28578a18715eeaad5bf5372",
+        "width": 441,
+        "height": 564
+      }
+    }
+  },
+  "footprintMetres": {
+    "width": 8,
+    "depth": 6
+  },
+  "pixelsPerMetre": 68.0523819488,
+  "pixelCalibrationSpace": "orthographic-camera",
+  "baselineScale": 0.872,
+  "kind": "building",
+  "solid": 2,
+  "category": "Eight-view buildings",
+  "aliases": [],
+  "views": {
+    "yaw8N": {
+      "file": "yaw8N.native.png",
+      "sha256": "105c1d5f50ec9d978cfc487b2c0b9c0f0c77f9d090fedd03271d2db829ac1027",
+      "width": 514,
+      "height": 512,
+      "anchor": {
+        "x": 290,
+        "y": 400.9
+      },
+      "headingDegrees": 37,
+      "boxes": null,
+      "sourceFamily": "view",
+      "sourceSha256": "150ade864979fd79bcc8789b5aca1bb828a81feabbb2d6ea8644c43abadb29ec",
+      "cell": 0,
+      "cellRect": {
+        "left": 0,
+        "top": 0,
+        "width": 522,
+        "height": 520
+      },
+      "crop": {
+        "left": 4,
+        "top": 4,
+        "width": 514,
+        "height": 512
+      }
+    },
+    "yaw8E": {
+      "file": "yaw8E.native.png",
+      "sha256": "414290dbf60c2fe2f9e5b71105ab69a5582ed6e67c377f7962d18f35ec13ac2f",
+      "width": 466,
+      "height": 560,
+      "anchor": {
+        "x": 203.75,
+        "y": 419.41
+      },
+      "headingDegrees": 127,
+      "boxes": null,
+      "sourceFamily": "view",
+      "sourceSha256": "a58743f6559824a5809b2cf7afba1f21a4e5d6ca06d88739737ef2c7370392d5",
+      "cell": 0,
+      "cellRect": {
+        "left": 0,
+        "top": 0,
+        "width": 474,
+        "height": 568
+      },
+      "crop": {
+        "left": 4,
+        "top": 4,
+        "width": 466,
+        "height": 560
+      }
+    },
+    "yaw8S": {
+      "file": "yaw8S.native.png",
+      "sha256": "677c2303fe779b921317aca77be7bd3d40660fb99f687885dc6ba9c4689d83d4",
+      "width": 518,
+      "height": 535,
+      "anchor": {
+        "x": 247,
+        "y": 401.66
+      },
+      "headingDegrees": 217,
+      "boxes": null,
+      "sourceFamily": "view",
+      "sourceSha256": "ede86fad08e6eebcbc9eb438403c78a5755b7b14421b887023888072b91b8077",
+      "cell": 0,
+      "cellRect": {
+        "left": 0,
+        "top": 0,
+        "width": 526,
+        "height": 543
+      },
+      "crop": {
+        "left": 4,
+        "top": 4,
+        "width": 518,
+        "height": 535
+      }
+    },
+    "yaw8W": {
+      "file": "yaw8W.native.png",
+      "sha256": "fbe6571c0c23c5bfc6fc4f7229f2979d424f02a50a06635c49a8d4b314724b9a",
+      "width": 433,
+      "height": 556,
+      "anchor": {
+        "x": 256.25,
+        "y": 421.43
+      },
+      "headingDegrees": 307,
+      "boxes": null,
+      "sourceFamily": "view",
+      "sourceSha256": "9eacbc47056f5ec0daf226f5eb05fdc9e423f822e28578a18715eeaad5bf5372",
+      "cell": 0,
+      "cellRect": {
+        "left": 0,
+        "top": 0,
+        "width": 441,
+        "height": 564
+      },
+      "crop": {
+        "left": 4,
+        "top": 4,
+        "width": 433,
+        "height": 556
+      }
+    },
+    "normalNE": {
+      "reuse": "variation:town-fish_tackle-99c1401c-plain:1",
+      "anchor": null,
+      "headingDegrees": 0,
+      "boxes": null,
+      "sourceFamily": "reuse"
+    },
+    "normalSE": {
+      "reuse": "view:variation:town-fish_tackle-99c1401c-plain:1:se",
+      "anchor": null,
+      "headingDegrees": 90,
+      "boxes": null,
+      "sourceFamily": "reuse"
+    },
+    "normalSW": {
+      "reuse": "view:variation:town-fish_tackle-99c1401c-plain:1:sw",
+      "anchor": null,
+      "headingDegrees": 180,
+      "boxes": null,
+      "sourceFamily": "reuse"
+    },
+    "normalNW": {
+      "reuse": "view:variation:town-fish_tackle-99c1401c-plain:1:nw",
+      "anchor": null,
+      "headingDegrees": 270,
+      "boxes": null,
+      "sourceFamily": "reuse"
+    }
+  },
+  "calibrationNotes": "The four corner views are the building's existing pictures (variation:town-fish_tackle-99c1401c-plain:1, view:variation:town-fish_tackle-99c1401c-plain:1:se, view:variation:town-fish_tackle-99c1401c-plain:1:sw, view:variation:town-fish_tackle-99c1401c-plain:1:nw), reused, not repacked. The four straight-on views: scale 0.665 game px per native px (68.05 px/m), read with scripts/assets/straight-views/measure.mjs: the T375 footprint-box fit (8 x 6 m, the library's box) on the four corners and the four straight views, the corners' fit bias against their library scale removed (1.2646), the median of the four straight views (0.6627 0.7017 0.6258 0.6674); anchors refitted with that scale held (IoU 0.9295 0.8912 0.9042 0.9003). Not owner-measured. Sheet: variation~town-fish_tackle-99c1401c-plain~1 axisturn, cells NESW are N E S W. striped-awning front on N as on NE; the side walls are plain (the corners show windows there).",
+  "artReviewRequired": [
+    "same subject across all eight views",
+    "normal and actual yaw8 geometry",
+    "upper-right daylight and lower-left shadows",
+    "true alpha and complete silhouette",
+    "per-view ground anchors and physical footprint",
+    "no duplicates or fake mirror views"
+  ]
+}

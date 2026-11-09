@@ -1,0 +1,29 @@
+{
+  "schema": 1,
+  "subject": "variation:ref-building-grocery-79498713-plain:1",
+  "version": 1,
+  "key": "yaw8E",
+  "source": {
+    "file": "../src/yaw8E.png",
+    "sha256": "26865a02a411cd63b3afdb60152b2a3d3ed44c78db66e19c69595278525c31b8",
+    "width": 420,
+    "height": 559
+  },
+  "cell": 0,
+  "cellRect": {
+    "left": 0,
+    "top": 0,
+    "width": 420,
+    "height": 559
+  },
+  "crop": {
+    "left": 4,
+    "top": 4,
+    "width": 412,
+    "height": 551
+  },
+  "output": "yaw8E.native.png",
+  "sha256": "5d6cee50edb7241cb6165437f1632db3956a6551e7e84bf6d1427e69374f63e1",
+  "operation": "native RGBA cell crop only; no flip/repaint/view synthesis",
+  "review": "candidate"
+}

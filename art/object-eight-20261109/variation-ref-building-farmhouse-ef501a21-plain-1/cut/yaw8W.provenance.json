@@ -1,0 +1,29 @@
+{
+  "schema": 1,
+  "subject": "variation:ref-building-farmhouse-ef501a21-plain:1",
+  "version": 1,
+  "key": "yaw8W",
+  "source": {
+    "file": "../src/yaw8W.png",
+    "sha256": "011f1597cd5f959a48ec491d85cd5a5e60a261b0730e3a3a5b17e36ace458c28",
+    "width": 595,
+    "height": 452
+  },
+  "cell": 0,
+  "cellRect": {
+    "left": 0,
+    "top": 0,
+    "width": 595,
+    "height": 452
+  },
+  "crop": {
+    "left": 4,
+    "top": 4,
+    "width": 587,
+    "height": 444
+  },
+  "output": "yaw8W.native.png",
+  "sha256": "3f9213339ebe1cb887e03eea8e9c7d4d6d8f48c4cc98d531f83e4d3df0ac0d0e",
+  "operation": "native RGBA cell crop only; no flip/repaint/view synthesis",
+  "review": "candidate"
+}
