@@ -148,7 +148,7 @@ export function shotOutcome(view: CourseView, hole: PlayHole, from: Pt, plie: Li
   const kit = kitOf(sk, input.club, mctx); // (his stats and mods for the club: the sweet spot, the scatter, the carry; neutral for a plain skill)
   // (T336: and the Space power-spam is Power Mash's: without the mechanic the boost is none)
   const sw0 = input.swing ? readSwing(input.swing) : null, sw = sw0 && sw0.boost > 0 && !hasMech(sk, 'boost') ? { ...sw0, boost: 0 } : sw0;
-  const eff = sw ? swingEffect(sw, kit.skill, putting, kit.sweet, kit.miss) : null, miss = eff ? eff.deg * Math.PI / 180 : 0; // (the kit's skill is skillFor's, with the moment's mods; kit.miss: the Self-Correcting Ball's half)
+  const eff = sw ? swingEffect(sw, kit.skill, putting, kit.sweet, kit.miss, kit.speed) : null, miss = eff ? eff.deg * Math.PI / 180 : 0; // (the kit's skill is skillFor's, with the moment's mods; kit.miss: the Self-Correcting Ball's half; T345: kit.speed turns the sweet window in time into the arc's width)
   if (putting) {
     const pw = eff ? clamp(eff.power, MIN_SWING_POWER, METER.top + BOOST.max) : clamp(input.power, PUTT_POWER[0]!, PUTT_POWER[1]!);
     const dx = hole.pin.x - from.x, dy = hole.pin.y - from.y, L = Math.hypot(dx, dy), ux = L > 0 ? dx / L : 1, uy = L > 0 ? dy / L : 0;

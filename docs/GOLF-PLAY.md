@@ -208,8 +208,8 @@ slider and Hit); `src/game/golf/play/swing.ts`, `tests/golf-play-swing.test.ts`,
   at the arc's top (the most overswing); no click 3: the swing ends past the snap line (the worst late miss).
 - **Space taps** during the swing (taps, not a held key): +1% power each, at most +6%; the boost narrows the sweet spot (up to 40%) and widens the
   spread (up to 30%).
-- **Skill** (T241: the club's part of the game): the marker takes 0.7 s (skill 0) to 1.3 s (skill 1) to 100%, and the sweet spot is 0.025 to 0.07
-  meter units either side.
+- **Skill** (T241: the club's part of the game): the marker takes 0.7 s (skill 0) to 1.3 s (skill 1) to 100%, and the sweet spot (T345 #987, below: a window in
+  time, 80 ms at skill 0 to 190 ms at skill 1; T316's was 0.025 to 0.07 meter units either side, a width on the arc) is centred on the snap line.
 - **The shot:** the aim is turned by the miss; the carry may pass the club's full carry; a meter shot keeps half of the model's random direction
   spread (the meter's miss takes the rest); the lie's effects, mishits, roll, water and out of bounds as before. **Putts** use the same meter on a
   putting scale: 100% is the putt's length to the hole.
@@ -266,8 +266,30 @@ changes the flight, the slope under the ball, and the playtest's fixes. `play/wi
   conditions and the money matches' opponents putt by it too. Measured (30 rounds a golfer, the scripted swinger's clicks): a 0.5 m putt 59-90% before, 92-99% after; 1 m 46-80% before,
   86-96% after; 3+ putts on 16-55% of the holes before, 7-30% after; putts a round for a club golfer at the starting skills 40.8 before, 36.1 after, and his score +23.4 before, +18.0 after,
   which is the handicap (18.5) the player card shows.
-- **Filed from the playtest:** T345 #987 (the meter's sweet spot is +-33 ms at the starting skill: make it a window in time), T346 #988 (a ball's roll does not depend on the club),
+- **Filed from the playtest:** T345 #987 (the meter's sweet spot is +-33 ms at the starting skill: make it a window in time; done, below), T346 #988 (a ball's roll does not depend on the club),
   T347 #989 (everyday golfers and the money matches' opponents play without the wind, lie kinds and slope), T348 #990 (other cards stay open over the shot panel).
+- **The sweet spot is a window in time (T345 #987, 2026-11-09).** The playtest: at the starting skill the marker ran 1.15 meter units a second and the sweet spot was 0.038 either side, so 33 ms either side of the snap line
+  (18 ms at skill 0, 91 ms at skill 1); a person clicks with a spread of 50 to 90 ms, so a club golfer (60 ms, 20 ms late: `tests/helpers/swing-bot.ts HUMANS.club`) swung Straight about 4 times in 10, a novice 2 in 10, and the beginner had
+  the fastest marker AND the narrowest spot. Now (`swing.ts`): `SWEET = [0.08, 0.19]` is the **whole window in seconds**, centred on the snap line, at skill 0 and skill 1 (40 ms either side, then 95 ms against the first meter's 91), whatever the marker's speed; the low end is a window a person can hit and the top end is never tighter than the first meter's (the lead's rule: the ticket is about making the meter hittable, not harder for the skilled; a test holds every skill to it).
+  `sweetSeconds(skill, boost, sweet)` is its half: the skill's, times `sweet` (`ClubKit.sweet` through `applyMods`: the accuracy stat's 0.6 to 1.4, the bag's upgrades and the putter's parts, the cards), narrowed by up to 40% by the Space
+  boost. `sweetSpot(skill, boost, sweet, speed)` is that window times the marker's speed (`markerSpeed`: the stats' `speed` is the accuracy stat's -15% marker): its width on the arc, what the meter draws as the green band and
+  what the accuracy click's offset is read against. **The miss is unchanged: 90 degrees a meter unit past the sweet spot (a putt 30), at most 18 (8), pull and push, then hook and slice from 5 degrees**; it is read from the click's time error
+  (`clickError(acc, skill, speed)`: the offset on the arc over the marker's speed), so a slower marker turns the same error into fewer degrees. `swingEffect(o, skill, putting, sweet, miss, speed)`, the engine's report and the panel read
+  `kit.speed` with `kit.sweet`.
+  - **Saves: nothing moves.** The saved outcome is still (power, acc, boost) and now carries `v` (`SwingOutcome.v`, `METER_V` 2): the meter writes it on every outcome, `readSwing` keeps it, and an outcome without it was swung on the
+    first meter and `swingEffect` reads it against that meter's sweet spot (`SWEET_V1`, `sweetSpotV1`: a width on the arc, the marker's speed no part of it), so a tournament in progress, a replay and every input saved before replay shot for
+    shot (T334's golden test passes unchanged; a reference of the T316 formula is checked over a grid of 1,296 outcomes). A swing from outside the meter (a dev script's `ownerSwing({ power, acc, boost })`) is the first meter's.
+  - **Measured** (`scripts/dev/play-pass-sim.ts --meter 1|2`, 30 rounds a golfer, the scripted swingers of `tests/helpers/swing-bot.ts`, the 18-hole test course; the town course alongside; % of full swings straight, then strokes over par):
+    at the starting skills (30/24/22/26) a novice goes 25% to 42% straight (27.1 to 23.5 over; town course 26% to 45%, 8.3 to 6.8), a club golfer 36% to 60% (18.4 to 17.8; town 39% to 60%, 5.4 to 4.7), a sharp one 60% to 87% (14.0 to 13.4; town
+    60% to 86%, 3.7 to 3.2); at 50 each the club golfer 54% to 73% (10.9 to 8.4), the novice 36% to 50% (17.3 to 13.8), the sharp one 80% to 94%; at 75 each the club golfer 72% to 80% (3.6 to 3.3). Nobody is worse off: the top end is never tighter than
+    the first meter's. The misses past the window are small (mostly 1 to 3 degrees), so a straighter swing is worth about half a stroke to a club golfer at the starting skills and three and a half to a novice (at 50 each: two and a half and three and a half);
+    the handicap the player card shows (18.5, the scripted club golfer's +18.0 before) is still the club golfer's average (+17.8). A faster or slower marker does not change how often a person hits it (the same clicks in time give the same share at
+    0.85x and 1.15x: 63% for the club golfer at skill 0.3), where on the first meter the 15% faster marker was 11 points worse (47.5% at 0.85x, 36.2% at 1.15x). By skill (the club golfer's clicks, 40,000 swings): skill 0 22% to 47% straight, skill 0.3
+    41% to 63%, skill 1 85% to 87%; the novice at skill 0.1 18% to 36%, the sharp one at skill 0.5 81% to 94%.
+  - **The numbers were first 80 and 150 ms** (the issue's "about 80 ms at skill 0 to 150 ms at skill 1", read as the whole width): that made skill 1 tighter than the first meter (75 ms either side against 91: the club golfer 85% to 76% straight). The lead's decision:
+    keep 80 ms at the low end, make the top 190 ms (95 ms either side), and a test holds every skill to "never tighter than the first meter". If 80 ms were meant as the half width, double both ends (the club golfer would then swing straight about 9 times in 10 at the starting skill, and the accuracy stat and the clubs' `sweet` would be worth little).
+  - Tests: `tests/golf-play-swing.test.ts` (the window in seconds at every skill and marker speed and its edge, never tighter than the first meter at any skill, the kit's `sweet` and `speed`, the miss in degrees from the time error, the scripted golfers' straight shares against
+    the first meter, the first meter's reference formula, the versions through a save and a replay). The putting v2 round test pins the first meter (it compares the putting model's versions, not the window).
 - **Left:** the wind has no art but the shader's stand-in (docs/GOLF-SPRITES.md asks for a flag sheet).
 
 **The play pass, part 2 (T334 #960): shot shaping and the player's stats.** `play/shape.ts`, `play/mods.ts`; `tests/golf-play-shaping.test.ts`, `tests/golf-play-stats.test.ts`.
