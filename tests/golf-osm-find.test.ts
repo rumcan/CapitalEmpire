@@ -216,7 +216,7 @@ out geom;`;
     assert.equal(steps.length, 4); assert.match(steps[0]!, /overpass-api\.de/); assert.match(steps[1]!, /maps\.mail\.ru/); assert.match(steps[2]!, /overpass\.kumi\.systems/); assert.match(steps[3]!, /overpass\.private\.coffee/);
     assert.match(steps[1]!, /did not answer|no answer/i, 'it says why it moved on');
   });
-  it('leaves a server that hung alone for five minutes, and tries it again after', async () => {
+  it('leaves a server that hung alone for five minutes, and after that asks it behind the one that answered (T378: the order is by the health of the servers, tests/golf-osm-mirrors.test.ts)', async () => {
     const { net, calls, clock } = fakeNet(url => { if (url === 'a') throw abortError(); return json({ elements: [] }); });
     const first = await runOverpass('Q', net, { servers: ['a', 'b'] });
     assert.equal(first.server, 'b'); assert.equal(calls.length, 2);
@@ -224,7 +224,8 @@ out geom;`;
     assert.equal(calls.length, 3, 'a is left alone: only b is asked');
     clock.t += 6 * 60_000;
     await runOverpass('Q', net, { servers: ['a', 'b'] });
-    assert.equal(calls.length, 5, 'after the wait a is tried again (and hangs again), then b');
+    assert.equal(calls.length, 4, 'after the wait a is back in the list, behind b, which answered: b is asked first and answers');
+    assert.equal(calls[3]!.url, 'b');
   });
   it('sends nothing for the minute after every server was busy, then asks again', async () => {
     const { net, calls, clock } = fakeNet(() => json({}, 503));

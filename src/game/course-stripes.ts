@@ -15,7 +15,10 @@ export const DEFAULT_MOW_DIR: Readonly<{ x: number; y: number }> = { x: Math.SQR
  *  t the tint, f the soft edge), and across: the bands lie across the line of play (the preset's dir 'x' or 'check'), else along it ('y') */
 export interface StripeLook { w: number; l: number; k: number; lc: string; dc: string; t: number; f: number; across: boolean;
   /** T359: a checkerboard, not bands: squares as wide as a band (the pattern's second family of bands crosses the first) */
-  check?: boolean }
+  check?: boolean;
+  /** T365: two-tone halves: the bands along the line of play with their edge on the line itself (not centred on it), one band as wide as HALF_WIDTH:
+   *  the left of the line one tone, the right the other */
+  half?: boolean }
 
 /** the fairways' stripe look: the range outfield preset's Stripes (its numbers whether or not the outfield shows them; a missing preset: the
  *  presets' default Stripes) */
@@ -34,7 +37,7 @@ const bands = (look: StripeLook, ux: number, uy: number, ox: number, oy: number)
 /** a hole's stripe legs from its playing line (flat tiles: tee, aim points, pin):
  *  - across (the range's look): each leg's bands alternate along its direction, so each band lies across the line of play; the band count runs
  *    on round each bend (the leg's origin is set back by the length already walked), so the bands meet on the line;
- *  - along: each leg's bands alternate sideways, the line in the middle of a band;
+ *  - along: each leg's bands alternate sideways, the line in the middle of a band (T365, half: the line on the edge between two bands);
  *  - angle (the hook for greenkeeping's mow angle, grass-management GrassAction 'mow'; absent until a mow sets one): the way the mower drives,
  *    degrees in tile space. Its passes are the bands, so they lie along it, one direction over the whole hole, from the tee;
  *  - a line of under two points (hole 0: no hole, or no tee or pin yet): one leg along DEFAULT_MOW_DIR from the map origin */
@@ -56,7 +59,7 @@ export function holeStripeLegs(line: ArrayLike<number>, look: StripeLook, angle?
   let walked = 0, px = 0, py = 0;
   for (let i = 0; i + 1 < P.length; i++) {
     const a = P[i]!, b = P[i + 1]!, len = Math.hypot(b.x - a.x, b.y - a.y), dx = (b.x - a.x) / len, dy = (b.y - a.y) / len;
-    const m = look.across ? bands(look, dx, dy, a.x - dx * walked, a.y - dy * walked) : bands(look, -dy, dx, a.x + dy * look.w / 2, a.y - dx * look.w / 2);
+    const m = look.across ? bands(look, dx, dy, a.x - dx * walked, a.y - dy * walked) : look.half ? bands(look, -dy, dx, a.x, a.y) : bands(look, -dy, dx, a.x + dy * look.w / 2, a.y - dx * look.w / 2);
     let cut: StripeLeg['cut'] = null;
     if (i > 0) {
       // the bend's bisector: its normal is the two legs' directions summed (a hairpin, where they cancel: this leg's own)
@@ -77,6 +80,23 @@ export function turnStripeLegs(legs: readonly StripeLeg[], deg: number): StripeL
   const a = (deg * Math.PI) / 180, c = Math.cos(a), s = Math.sin(a);
   return legs.map(({ m, cut }) => ({ m: { ...m, ux: m.ux * c - m.uy * s, uy: m.ux * s + m.uy * c }, cut }));
 }
+
+/** T365 (#1020): the width of the band of two-tone halves (tiles: wider than any fairway, so each half is one band) and the width of the soft edge where
+ *  the halves meet (tiles: a crisp mowing line, not a gradient across the fairway) */
+export const HALF_WIDTH = 400, HALF_SOFT = 0.4;
+/** T365: a crosscut's two sets of stripes from a hole's legs laid across the line of play (holeStripeLegs with across): the stripes of one set lie
+ *  `cross / 2` degrees to one side of the line of play, the other's the same to the other side, so the two sets cross at `cross` (90: square
+ *  diamonds on the line; 45: long diamonds along it). The bands of a set alternate along the turned axis, a quarter turn and half the crossing
+ *  from the line; each leg keeps its origin and its cut, so a dogleg's legs meet at their bends as the other patterns' do */
+export function crosscutLegs(across: readonly StripeLeg[], cross: number): [StripeLeg[], StripeLeg[]] {
+  const c = Math.min(180, Math.max(1, Number.isFinite(cross) ? cross : 90));
+  return [turnStripeLegs(across, 90 + c / 2), turnStripeLegs(across, 90 - c / 2)];
+}
+/** T365: the collar ring's passes: how many go round the fairway's edge, and one pass's width (tiles) from the band width (a third of it, between 1 and 2
+ *  tiles: both passes reach at most 4 tiles in, the reach of the bake's neighbouring chunks, ext/course-grid/patch COURSE_PATCH_REACH, so the edges
+ *  that make them are always there) */
+export const RING_PASSES = 2;
+export const ringPass = (w: number): number => Math.min(2, Math.max(1, (Number.isFinite(w) ? w : 5) / 3));
 
 /** the leg a tile point is mown with: the last whose cut it lies past (on a sharp S the later bend wins) */
 export function legAt(legs: readonly StripeLeg[], x: number, y: number): number {

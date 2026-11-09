@@ -3,11 +3,12 @@
 // object), or a place (golf features near it, Overpass). When a name finds no golf course the first place it did find is looked at for golf features near it,
 // which offers the enclosing area (Woodhill's estate). Picking a course fetches it with ONE Overpass query, keeps the answer in the library, builds the
 // course's JSON and spec with the converter, and grades it (grade.ts) for the preview; "Build this course" starts a game on that spec. Pure of DOM.
+import type { CatalogueEntry } from './catalogue';
 import { reportOf, type CourseReport } from './grade';
 import { specOf } from './index';
 import { CourseLibrary, sharedLibrary, type CourseRecord } from './library';
 import { ANSWER_TTL_MS, NominatimClient, anchorLine, hitLine, type Anchor, type Hit } from './nominatim';
-import { candidatesOf, courseQuery, nearQuery, runOverpass, type Candidate, type OverpassJson } from './overpass';
+import { candidatesOf, courseQuery, nearQuery, runOverpass, type Candidate, type OnStep, type OverpassJson } from './overpass';
 import { realNet, type Net } from './polite';
 import { parseCourseQuery, refText, type OsmRef } from './query';
 import type { OsmCourseJson, OsmCourseSpec } from './types';
@@ -33,16 +34,16 @@ export type SearchOutcome =
   /** nothing found, or nothing the search can use: the sentence for the card */ | { kind: 'none'; message: string };
 
 /** the look for golf near a place: one Overpass query, its answer (the candidates) kept for a week like Nominatim's, so the same search is not asked twice */
-export async function lookNear(near: Near, d: FindDeps, signal?: AbortSignal, onStep?: (text: string) => void): Promise<Candidate[]> {
+export async function lookNear(near: Near, d: FindDeps, signal?: AbortSignal, onStep?: OnStep): Promise<Candidate[]> {
   const key = `near:${near.lat.toFixed(4)},${near.lon.toFixed(4)}`, cache = d.lib.answers(), kept = await cache.get(key).catch(() => undefined);
   if (kept && d.net.now() - kept.at < ANSWER_TTL_MS && Array.isArray(kept.value)) return kept.value as Candidate[];
-  const a = await runOverpass(nearQuery(near.lat, near.lon), d.net, { timeoutsMs: [70000, 30000, 30000], signal, onStep }), found = candidatesOf(a.json);
+  const a = await runOverpass(nearQuery(near.lat, near.lon), d.net, { timeoutsMs: [70000, 30000, 30000], signal, onStep, cache }), found = candidatesOf(a.json);
   await cache.put(key, found, d.net.now()).catch(() => undefined);
   return found;
 }
 
 /** runs the search for what the player typed (see the file's header). Throws ServerBusy, ServerDown or Cancelled */
-export async function search(text: string, d: FindDeps, signal?: AbortSignal, onStep?: (text: string) => void): Promise<SearchOutcome> {
+export async function search(text: string, d: FindDeps, signal?: AbortSignal, onStep?: OnStep): Promise<SearchOutcome> {
   const q = parseCourseQuery(text);
   if (q.kind === 'empty') return { kind: 'none', message: 'Type a golf course\'s name, or paste its openstreetmap.org link or way/123.' };
   if (q.kind === 'link') return { kind: 'none', message: 'That link does not name a golf course or a place. Paste a link like openstreetmap.org/way/123, or type the name.' };
@@ -70,6 +71,8 @@ export interface Preview { record: CourseRecord; json: OsmCourseJson; spec: OsmC
 /** what the card knows of a course before it is fetched: the hit's name, place and position */
 export interface Hint { name?: string; place?: string; at?: { lat: number; lon: number } }
 export const hintOfHit = (h: Hit): Hint => ({ name: h.name, place: hitLine(h), at: { lat: h.lat, lon: h.lon } });
+/** T378: what the card knows of a course picked from the catalogue: its name, its town and country, and its centre (a course mapped as a point is projected about it); the import goes by its OSM id, so nothing is guessed at Nominatim */
+export const hintOfEntry = (e: Pick<CatalogueEntry, 'name' | 'place' | 'country' | 'lat' | 'lon'>): Hint => ({ name: e.name, place: [e.place, e.country].filter(Boolean).join(', '), at: { lat: e.lat, lon: e.lon } });
 export const hintOfCandidate = (c: Candidate, near?: Near): Hint => ({ name: c.name.startsWith('Unnamed') ? undefined : c.name, ...(near?.place ? { place: near.place } : {}) });
 
 /** lets the page paint before a long step (the card's progress line shows first) */
@@ -86,10 +89,10 @@ export async function previewOfKept(id: string, d: FindDeps): Promise<Preview | 
 }
 
 /** fetches a course (ONE Overpass query), keeps its answer, and returns its preview; a course already kept is not fetched again unless `refresh` */
-export async function fetchPreview(ref: OsmRef, hint: Hint, d: FindDeps, opt: { refresh?: boolean; signal?: AbortSignal; onStep?: (text: string) => void } = {}): Promise<Preview> {
+export async function fetchPreview(ref: OsmRef, hint: Hint, d: FindDeps, opt: { refresh?: boolean; signal?: AbortSignal; onStep?: OnStep } = {}): Promise<Preview> {
   const id = refText(ref);
   if (!opt.refresh) { const kept = await previewOfKept(id, d); if (kept) return kept; }
-  const a = await runOverpass(courseQuery(ref), d.net, { signal: opt.signal, onStep: opt.onStep });
+  const a = await runOverpass(courseQuery(ref), d.net, { signal: opt.signal, onStep: opt.onStep, cache: d.lib.answers() });
   const old = opt.refresh ? await d.lib.get(id).catch(() => undefined) : undefined;
   const src = a.json.elements.find(e => e.type === ref.type && e.id === ref.id), tags = src?.tags ?? {};
   const name = old?.name ?? (tags.name?.trim() || hint.name?.trim() || id);
