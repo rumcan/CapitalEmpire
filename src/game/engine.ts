@@ -29,7 +29,7 @@ import { GroundCache } from './ground-cache';
 import { GAME_BOOT, clampCentre, flatTerrain, type BootOptions } from './boot';
 import { TILE_BANDS, TILES_REVISION, anchorAt, bandAt, bandRange, bandsAhead, cellOf, cellsIn, coverageOf, drawnScale, nearUntil, nextBand, tiledFamily, tileIndex, tilePermutation, tileScreenPx, tileSize, tileSpec } from './painted-tiles';
 import { desertLeavesDev, onPaintedSurfaces, paintedSurfaces, setDesertSurfaces } from './painted-surfaces-live';
-import { borderDefault, finishBorders, finishOf, finishStripeLook, mowSpec } from './course-finish';
+import { borderDefault, crewBandLook, finishBorders, finishOf, finishStripeLook, mowSpec } from './course-finish';
 import { MOW_KINDS, mowOfHole, mowRecOf, type MowKind, type MowRec, type MowTable } from './mow-lines';
 import { chunkLayers, pictureCurrent, prebakeTargets } from './ground-layers';
 import { clampGrassArt, grassZoomLevels, type GrassArt } from './painted-grass-lod';
@@ -11285,15 +11285,16 @@ export class Game {
   /** each hole's crew ground (golf/crewground.ts), read from the grid once per course (its rev and the holes' lines) */
   private crewGroundsNow(): Map<number, CrewGround> {
     const grid = this.courseGrid, g = this.golf; if (!grid || !g) return new Map();
-    const lines = this.holeLines(), mow = this.courseMow()?.[SURF.fairway], key = `${grid.rev}|${JSON.stringify([...lines])}|${JSON.stringify(mow ?? null)}`;
+    const lines = this.holeLines(), mow = this.courseMow()?.[SURF.fairway], fin = finishOf(paintedSurfaces()), key = `${grid.rev}|${JSON.stringify([...lines])}|${JSON.stringify(mow ?? null)}|${fin.pattern}`;
     if (this.crewGrounds?.key === key) return this.crewGrounds.m;
     // (the bands the ground draws: T227's finish's, along the line, else T218's own; T359: a hole whose look sets its own band width, the
-    // bands along the hole, is mown in those)
-    const cells = crewCells(grid), base = fairwayStripeLook(), fin = finishOf(paintedSurfaces()), look = finishStripeLook(fin, base) ?? base, m = new Map<number, CrewGround>();
+    // bands along the hole, is mown in those; T365: the fairway's default, wide stripes, and a collar ring's inside are bands along the hole too)
+    const cells = crewCells(grid), base = fairwayStripeLook(), look = finishStripeLook(fin, base) ?? base, m = new Map<number, CrewGround>();
     for (const p of g.pins) {
       const next = g.tees.find(t => t.hole === p.hole + 1 && t.kind === 'back') ?? g.tees.find(t => t.hole === p.hole + 1) ?? null;
-      const spec = mow ? mowSpec('fairway', mowOfHole(mow, p.hole), fin, base) : null;
-      m.set(p.hole, crewGround(grid, p.hole, cells.get(p.hole), lines.get(p.hole), spec && spec.pattern === 'along' ? spec.look : look, this.greenOf(p.hole), next));
+      // (T365: every hole's spec, a hole with no look of its own too: the fairway's default is wide stripes, and the passes are the bands the ground draws)
+      const spec = mowSpec('fairway', mow ? mowOfHole(mow, p.hole) : undefined, fin, base);
+      m.set(p.hole, crewGround(grid, p.hole, cells.get(p.hole), lines.get(p.hole), crewBandLook(spec, look), this.greenOf(p.hole), next));
     }
     this.crewGrounds = { key, m }; return m;
   }

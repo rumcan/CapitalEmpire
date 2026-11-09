@@ -1,6 +1,7 @@
 import { clampLook, DEFAULT_LOOK, familyById, type PaintedKind, type PaintedLook } from './painted-families';
 import type { PresetState } from './lots/presets';
 import { clampCourseFinish, type CourseFinish, type TeeWall } from './course-finish';
+import type { MowPattern } from './mow-lines';
 import { clampWaterLook, type WaterLook } from './water-look';
 import { clampRangeLook, type RangeLook } from './golf/range-look';
 
@@ -113,6 +114,13 @@ export function oldTeeSurfaces(f: SurfacesFile): SurfacesFile {
 export function teeWallSurfaces(f: SurfacesFile, teeWall: TeeWall): SurfacesFile {
   return { ...f, course: { ...clampCourseFinish(f.course), teeWall } };
 }
+/** T365 (#1020; the owner, 2026-11-08: "make the strongest look the default for new fairways"): the surfaces file with another pattern for the fairway's
+ *  mowing lines where a look names none (the course finish's `pattern`: the default is wide stripes). The dev server's ?mow=<pattern> lays it, for A/B shots
+ *  and the bench on one build; oldMowSurfaces is the look before T365, the finish's own bands along the hole at its width and strength */
+export function mowPatternSurfaces(f: SurfacesFile, pattern: MowPattern): SurfacesFile {
+  return { ...f, course: { ...clampCourseFinish(f.course), pattern } };
+}
+export const oldMowSurfaces = (f: SurfacesFile): SurfacesFile => mowPatternSurfaces(f, 'along');
 /** what the game knows of a preset: its id, the golf surface it stands for, and the old painted set it named (T082) */
 export interface PresetRef { id: string; surface?: string | null; painted?: string | null }
 /** the look a texture is laid with, or null (its photo): a lawn slot's, a surface's (by its photo texture id, or a preset by its golf surface;
