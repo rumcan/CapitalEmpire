@@ -114,7 +114,7 @@ import { CADDIE_CAP, CART_CAP, LONG_DAY_MIN, NIGHT_S, PACE_KEY, WALK_CAP, capped
 import { Pacer, setPaceSpeed } from './golf/play/pacer';
 import { SPEEDS, WatchSpeed, type WatchWhy } from './golf/watch';
 import { bookingStep, ffSpeed, planStep, roundSpeed, type StartKind, type StartPlan } from './golf/startround';
-import type { PlayBall } from './golf/play/view';
+import type { PlayBall, PlayLand } from './golf/play/view';
 import { ballPuff, ballSplash } from './golf/ballfx';
 import { zoneOf } from './sim/routing';
 import { lastRush, nextRush, windowOf, type Window } from './beforeafter';
@@ -211,7 +211,7 @@ import { TILE_M, type CourseArea, type CourseLayout, type GolfSurface, type Pin,
 import { deriveHoles, surfaceAt, validateMarkerPlacement, type Hole } from './golf/holes';
 import { BallRoll, FX_SAND, FX_SPLASH, ballRoll, type HeightAt } from './golf/play/roll';
 import { BREAK_COLOURS, BREAK_STEP, CUP_DROP, CUP_LIP, PuttRoll, breakBucket, breakPinOf, type BreakTurn, buildBreakGrid, dotSpeed, loadBreakMode, loadTracers, saveBreakMode, saveTracers, shotPoint, steepShare, tracerAlpha, tracerGone, type BreakGrid, type BreakMode } from './golf/play/green';
-import { CHEER_TILES, DayFinish, IMPACT_S, LiveGroup, MODEL_V, OWNER_ADDRESS, OWNER_ART, OWNER_SKILL, POWER, PUTT_POWER, PlayView, allowedClubs, cartPaths, type CartPaths, type PlayCart, boardRows, championLine, dayRound, makeCourseView, powerFor, readSwing, resultsDue, shotReport, spinEffect, spinRoom, spinText, swingEffect, type ShotReport, type SpinInput, type SwingOutcome, type Lie, shortName as golferShort, skillFor, stateAt, standings, toParText, waitText, waveLine, type BoardRow, type Club, type CourseView, type GameSkills, type OwnerTurn, type RoundPlan, type Sex, type ShotSkill } from './golf/play';
+import { CHEER_TILES, DayFinish, IMPACT_S, LiveGroup, MODEL_V, OWNER_ADDRESS, OWNER_ART, OWNER_SKILL, POWER, PUTT_POWER, PlayView, allowedClubs, cartPaths, type CartPaths, type PlayCart, boardRows, championLine, dayRound, makeCourseView, powerFor, readSwing, resultsDue, shotReport, spinEffect, spinRoom, spinText, swingEffect, type ShotReport, type SpinInput, type SwingOutcome, type Lie, shortName as golferShort, skillFor, stateAt, standings, toParText, waitText, waveLine, type BoardRow, type Club, type CourseView, type GameSkills, type OwnerTurn, type RoundPlan, type Sex, type Shot, type ShotSkill } from './golf/play';
 import { FRAMES_PER_TILE, SWING_EVERY, doorOf, hoverText, keyStep, lookSex, makeYou, routeOf, skipAhead, standInText, startWalk, stepYou, stopWalk, talkSpot, verbOf, youFrame, type ThingKind, type Verb as YouVerb, type You as YouChar } from './golf/you';
 import { AltTap, HeldKeys, WALK_KEYS, cameraChase, clickDoes, loadCursorMode, panAxes, saveCursorMode, walkAxes } from './golf/cursors';
 import { BRING_TILES, GREEN_CLEAR, appearSpot, callMode, callSpot, distText, edgeMarker, parkSpot, shouldPark, type ParkSurf } from './golf/play/yourcart';
@@ -266,6 +266,10 @@ import { neededLevel, type PageWant } from './atlas-pages';
 import { HALF_T, PropertyMemo, gridModes, loadMapGrid, saveMapGrid, type GridModes, type LandRect } from './ext/map-grid';
 import { MapGridLayer } from './ext/map-grid/layer';
 import { MoneyFloats, addCash, drawMoneyFloats, rangeFloat, type MoneyEvent } from './moneyfloats';
+import { BubbleSystem, specId, specParts, type Bubble, type BubbleRate, type Speaker } from './bubbles';
+import { type BubbleContext, type EventId as BubbleEvent, type SpeakerKind } from './bubble-lines';
+import { clearAround, drawBubbles, type Clear } from './bubble-draw';
+import { FORE_R, fanHit, fanHitBy, landEvents } from './golf/ballhit';
 import { ColumnPlacer, PRI } from './label-place';
 import { LABEL_OUTLINE, WorldLabels } from './world-labels';
 import { FIRST_PAR3_M, JAM_ZONES, RANGE_CARD_SEEN, STUCK_PLAY_SEC, advanceProgress, computeProgressiveUiState, emptyProgress, fallbackTeeSpot, nextFirstRunHint, normalizeProgress, progressFacts, rampLock, rampToast, type FirstRunHint, type GuideFacts, type PlayerProgressFacts, type ProgressiveUiState } from './ext/progressive-ui';
@@ -366,8 +370,14 @@ function crowdDrawable(out: Drawable[], k: number, p: CrowdPerson) {
   d.x = p.x; d.y = p.y; d.x0 = p.x - 0.12; d.y0 = p.y - 0.12; d.x1 = p.x + 0.12; d.y1 = p.y + 0.12;
   // (T213: a slot may have held a caddie's bag or a hopping golfer last frame)
   d.lift = p.seatHeightMetres === undefined ? undefined : seatLiftWorldPixels(p.seatHeightMetres, SPECTATOR_PEOPLE[p.person]?.seat ?? 0, SPECTATOR_PEOPLE[p.person]?.w ?? 80, p.benchPixelsPerMetre ?? HH);
-  d.scale = 1; d.flip = false; d.moving = false; d.alpha = undefined; d.pin = undefined;
+  d.scale = 1; d.flip = false; d.moving = false; d.alpha = p.alpha; d.pin = undefined;
 }
+/** T406: a golfer or staff member on screen this frame for the speech bubbles: his id, his mover (its drawn point), whether he is in his swing and how visible he is */
+interface BSeen { id: number; d: Drawable; busy: boolean; alpha: number }
+/** T406: the speech bubbles' ids by who they are over (a golfer's own id in the tournament; each group a block of its own so they never meet) */
+const BUBBLE_DAY = 1e6, BUBBLE_CADDIE = 2e6, BUBBLE_CREW = 3e6, BUBBLE_PRO = 4e6, BUBBLE_YOU = 9e6;
+/** T406: a golfer's frame is in his swing (the address and the backswing to the ball's impact: the drive clip's first nine frames, the putt clip's first five): no bubble over him */
+const swingBusy = (f: number): boolean => (f >= GOLFER_CLIPS.golf_drive.start && f < GOLFER_CLIPS.golf_drive.start + 9) || (f >= GOLFER_CLIPS.golf_putt.start && f < GOLFER_CLIPS.golf_putt.start + 5);
 /** T333: the see-through copy of d into g (drawn over every prop of its tiles at SEE_THROUGH of d's alpha; it casts no shadow: sprites.ts top); returns g */
 const SEE_THROUGH = 0.6;
 function seeThrough(d: Drawable, g: Drawable): Drawable {
@@ -690,6 +700,126 @@ export class Game {
   }
   /** a money event floated at the camera's zoom now (none with the setting off) */
   floatMoney(e: MoneyEvent) { if (this.showMoneyFloats) this.floats.add(e, performance.now() / 1000, this.cam.z); }
+  // ---------- T406 (#1090): speech bubbles over the people (bubbles.ts the machine, bubble-lines.ts the one table of words, bubble-draw.ts the drawing) ----------
+  /** the bubbles' machine: it reads the people on screen through the host below (the townspeople, the fans, the golfers, the staff) and the engine draws its live
+   *  bubbles on the overlay. On by default and remembered (the gear menu's Speech bubbles, with how often). Set them with setShowBubbles and setBubbleRate */
+  readonly bubbles: BubbleSystem = new BubbleSystem({ count: k => this.bubbleCount(k), person: (k, i, o) => this.bubblePerson(k, i, o), find: (k, id, o) => this.bubbleFind(k, id, o) });
+  setShowBubbles(on: boolean) {
+    this.bubbles.on = on; if (!on) this.bubbles.clear();
+    try { localStorage.setItem('capitalempire.bubbles', String(on)); } catch { /* storage may be unavailable */ }
+    this.emit();
+  }
+  setBubbleRate(r: BubbleRate) {
+    this.bubbles.rate = r;
+    try { localStorage.setItem('capitalempire.bubbleRate', r); } catch { /* storage may be unavailable */ }
+    this.emit();
+  }
+  /** the golfers and the staff on screen this frame, as the movers drew them (the townspeople and the fans are read from their own lists): the id, the mover (its
+   *  drawn point, after the spacing), whether he is in his swing and how visible he is; and whether the street tier is the view (no one speaks outside it) */
+  private bGolf: BSeen[] = []; private bGolfN = 0; private bStaff: BSeen[] = []; private bStaffN = 0; private bStreet = false;
+  private bubbleCtxAt = -1e9; private bubbleDraw: Bubble[] = []; private bClear: Clear[] = [];
+  /** the balls of your own shots that have not come down yet: when (s) and where, for the reactions */
+  private bLandQ: { at: number; land: PlayLand }[] = [];
+  private bSee(list: BSeen[], n: number, id: number, d: Drawable, busy: boolean, alpha: number): number {
+    const o = list[n] ?? (list[n] = { id: 0, d, busy: false, alpha: 1 }); o.id = id; o.d = d; o.busy = busy; o.alpha = alpha; return n + 1;
+  }
+  private bubbleCount(k: SpeakerKind): number { return !this.bStreet ? 0 : k === 'town' ? (this.peds.n ? this.pedDraw.length : 0) : k === 'spectator' ? this.spectatorSeenN : k === 'golfer' ? this.bGolfN : this.bStaffN; }
+  /** fills o from a mover's drawn point; false when he is off the ground bubbles may start on (strict: clear of the top bar, the footer and the sides) */
+  private bubbleFill(o: Speaker, kind: SpeakerKind, id: number, d: Drawable, moving: boolean, busy: boolean, alpha: number, strict: boolean): boolean {
+    if (strict) {
+      const ze = this.cam.z * this.dpr, dpr = this.dpr, sx = (worldX(d.x, d.y) - this.cam.X) * ze + this.cw / 2, sy = (worldY(d.x, d.y) - this.cam.Y) * ze + this.ch / 2;
+      if (sx < 50 * dpr || sx > this.cw - 50 * dpr || sy < 125 * dpr || sy > this.ch - 130 * dpr) return false;
+    }
+    o.kind = kind; o.id = id; o.x = d.x; o.y = d.y; o.lift = d.lift ?? 0; o.moving = moving; o.busy = busy; o.alpha = alpha; return true;
+  }
+  private bubblePerson(kind: SpeakerKind, k: number, o: Speaker): boolean {
+    if (kind === 'town') { const v = this.pedView[k], d = this.pedDraw[k]; return !!v && !!d && this.bubbleFill(o, kind, v.id, d, true, false, 1, true); }
+    if (kind === 'spectator') { const s = this.spectatorSeen[k], d = this.crowdDraw[k]; return k < this.spectatorSeenN && !!s && !!d && this.bubbleFill(o, kind, specId(s.source, s.index, s.slot), d, s.source === 1, false, 1, true); }
+    const g = (kind === 'golfer' ? this.bGolf : this.bStaff)[k]; return !!g && this.bubbleFill(o, kind, g.id, g.d, false, g.busy, g.alpha, true);
+  }
+  private bubbleFind(kind: SpeakerKind, id: number, o: Speaker): boolean {
+    if (!this.bStreet) return false;
+    if (kind === 'town') { const n = this.peds.n ? this.pedDraw.length : 0; for (let k = 0; k < n; k++) if (this.pedView[k]?.id === id) return this.bubbleFill(o, kind, id, this.pedDraw[k]!, true, false, 1, false); return false; }
+    if (kind === 'spectator') {
+      const p = specParts(id);
+      for (let k = 0; k < this.spectatorSeenN; k++) { const s = this.spectatorSeen[k]!; if (s.slot === p.slot && s.index === p.index && s.source === p.source) return this.bubbleFill(o, kind, id, this.crowdDraw[k]!, s.source === 1, false, 1, false); }
+      return false;
+    }
+    const L = kind === 'golfer' ? this.bGolf : this.bStaff, n = kind === 'golfer' ? this.bGolfN : this.bStaffN;
+    for (let k = 0; k < n; k++) if (L[k]!.id === id) return this.bubbleFill(o, kind, id, L[k]!.d, false, L[k]!.busy, L[k]!.alpha, false);
+    return false;
+  }
+  /** once a frame at the street tier, after the people are made and spaced: what the game says (about once a second), your shots that have come down, and the
+   *  machine's frame (the bubbles past their life go, the rest follow their people, now and then a person speaks) */
+  private bubblesFrame(nowMs: number) {
+    const t0 = performance.now(), now = nowMs / 1000, T = this.traffic;
+    if (nowMs - this.bubbleCtxAt > 1000) { this.bubbleCtxAt = nowMs; this.bubbleContext(this.bubbles.ctx); }
+    for (let i = this.bLandQ.length - 1; i >= 0; i--) { const q = this.bLandQ[i]!; if (q.at <= now) { this.bLandQ.splice(i, 1); this.bubbleLanded(q.land, BUBBLE_YOU, now); } }
+    this.bubbles.frame(now, T.simTime(nowMs), this.cam.z);
+    this.perf.bubbleMs = performance.now() - t0;
+  }
+  /** what the bubbles read of the game: the weather and the dark, the worst queue, the town's jams (the share of built zones with access over the decline line),
+   *  the prices on the tents, the range's balls, how crowded the view is, and the mood those add up to */
+  private bubbleContext(c: BubbleContext) {
+    const T = this.traffic, g = this.golf, r = T.round;
+    c.golf = !!g; c.tournament = !!g && (r.stage === 'surge' || r.stage === 'eval'); c.night = this.nightAmount();
+    c.weather = g && r.stage !== 'free' ? getTournamentWeather(this.seed, r.stage === 'eval' && r.last ? r.last.run : r.runs + 1).condition : 'clear';
+    let q = 0; const S = T.stops; for (let i = 0; i + 3 < S.length; i += 4) q = Math.max(q, S[i + 2]!);
+    c.queue = Math.min(1, q / 24);
+    let built = 0, bad = 0; for (let z = 0; z < 256; z++) if (T.builtZone[z]) { built++; if (T.access[z]! > 1.8) bad++; }
+    c.jam = built ? Math.min(1, bad / built * 2) : 0;
+    let pr = 0, n = 0; for (const s of g?.structures ?? []) { const k = STRUCTURE[s.typeId]?.kind; if (k !== 'food' && k !== 'drink' && k !== 'snack' && k !== 'merch') continue; n++; pr += s.priceCard === 'premium' ? 1 : s.priceCard === 'cheap' ? -1 : 0; }
+    c.price = n === 0 || Math.abs(pr / n) < 0.4 ? 0 : pr > 0 ? 1 : -1;
+    const bk = g?.start === 'range' && this.range.scene ? this.range.balls() : null; c.ballsOut = !!bk && bk.clean + bk.dirty < 20;
+    c.crowd = Math.min(1, (this.spectatorSeenN + (this.peds.n ? this.pedDraw.length : 0)) / 120);
+    const wx = c.weather === 'clear' ? 0.08 : c.weather === 'rain' ? -0.1 : c.weather === 'storm' ? -0.2 : c.weather === 'heat' ? -0.08 : 0;
+    c.mood = Math.min(1, Math.max(0, 0.55 - 0.35 * c.queue - 0.25 * c.jam - 0.2 * c.litter - 0.1 * c.binShort - (c.ballsOut ? 0.1 : 0) + wx + (this.crewQuality() - 0.9)));
+  }
+  /** T406: the balls that came down in a playback (PlayView.lands, once a shot; the list is cleared here): the fan a ball lands among and the events it raises are
+   *  answered once. id0 is added to the golfer's id (the host's ids: the tournament's golfers 0.., the everyday ones BUBBLE_DAY..) */
+  private bubbleLands(L: PlayLand[], id0: number, now: number) {
+    if (!L.length) return;
+    for (const l of L) this.bubbleLanded(l, id0 + l.golfer, now);
+    L.length = 0;
+  }
+  /** T406: one ball came down (a PlayLand of golfer id): a fan within HIT_R of where it landed or rests is hit (he clutches his knee and moans for two game minutes
+   *  with a toast), and the game events it raises (a birdie, the water, a nice shot, Fore) are said by the golfer and the people near */
+  private bubbleLanded(l: PlayLand, id: number, now: number) {
+    const T = this.traffic, G = T.gallery, subject = { kind: 'golfer' as const, id }, hit = G.length ? fanHitBy(G, this.galleryPlaces, l) : null;
+    if (hit) {
+      const sim = T.simTime(performance.now()), h = this.bubbles.hurt(hit.spot, hit.slot, hit.fx, hit.fy, l.hole + 1, now, sim, localRate(T.town, sim));
+      if (h) { this.bubbles.event('hit-spectator', hit.x, hit.y, now, subject, { kind: 'spectator', id: specId(0, hit.spot, hit.slot) }); this.toast(`Ouch! A fan took a ball to the knee at hole ${l.hole + 1}`, 'warn'); }
+    }
+    const near = !hit && G.length > 0 && l.club !== 'putter' && fanHit(G, this.galleryPlaces, l.x, l.y, FORE_R) !== null;
+    for (const ev of landEvents(l, near)) this.bubbles.event(ev as BubbleEvent, l.rx, l.ry, now, subject);
+  }
+  /** T406: your own shot (a Shot from play/yours.ts) comes down after its flight (the club's impact and the flight's seconds): queued for bubblesFrame */
+  private bubbleYourShot(shot: Shot, hole: { par: number; pin: Pt } | undefined) {
+    const at = shot.landing?.at ?? shot.to, wait = shot.club === 'putter' ? PUTT_IMPACT_S + 0.8 : IMPACT_S + 1.4;
+    this.bLandQ.push({ at: performance.now() / 1000 + wait, land: { golfer: BUBBLE_YOU, hole: shot.hole, x: at.x, y: at.y, rx: shot.to.x, ry: shot.to.y, landLie: shot.landing?.lie ?? shot.lie, lie: shot.lie, club: shot.club, stroke: shot.stroke + shot.penalty, penalty: shot.penalty, holed: shot.holed, par: hole?.par ?? 4, px: hole?.pin.x ?? shot.to.x, py: hole?.pin.y ?? shot.to.y } });
+  }
+  /** the rectangles the bubbles keep clear of (device px): each ball in the air or on the ground of the playbacks, and each golfer in his swing */
+  private bubbleClears(ze: number, dpr: number): Clear[] {
+    const out = this.bClear; let n = 0;
+    const add = (px: number, py: number, hw: number, up: number, down: number) => { const c = out[n] ?? (out[n] = { x0: 0, y0: 0, x1: 0, y1: 0 }); clearAround(c, px, py, hw, up, down); n++; };
+    const r = Math.max(8 * dpr, 0.25 * HW * ze), balls = (B: readonly PlayBall[]) => { for (const b of B) { const c = this.screen(b.x, b.y); if (c.x < -60 * dpr || c.x > this.cw + 60 * dpr || c.y < -60 * dpr || c.y > this.ch + 60 * dpr) continue; add(c.x, c.y - b.h * HH * ze, r * 1.5, r * 2.4, r * 1.2); } };
+    if (this.play) balls(this.play.pv.balls);
+    if (this.dayPlay && !this.dayOff) balls(this.dayPlay.view.balls);
+    for (let i = 0; i < this.bGolfN; i++) { const g = this.bGolf[i]!; if (!g.busy) continue; const c = this.screen(g.d.x, g.d.y); add(c.x, c.y, 0.5 * HW * ze + 6 * dpr, 2 * HH * 2 * ze + 10 * dpr, 8 * dpr); }
+    out.length = n; return out;
+  }
+  /** the speech bubbles on the overlay (bubble-draw.ts), at the street tier */
+  private drawBubbleLayer(ctx: CanvasRenderingContext2D, now: number) {
+    this.perf.bubbles = 0;
+    if (!this.bubbles.on || !this.bStreet) return;
+    const list = this.bubbles.drawable(now, this.bubbleDraw); if (!list.length) return;
+    const t0 = performance.now(), ze = this.cam.z * this.dpr;
+    this.perf.bubbles = drawBubbles(ctx, list, now, this.cam.z, ze, this.dpr, this.cw, this.ch, (x, y) => this.screen(x, y), this.bubbleClears(ze, this.dpr));
+    this.perf.bubbleMs += performance.now() - t0;
+  }
+  /** dev: make a random person of a kind on screen say a line now (the console: game.bubbleSay('Hello', 'spectator')); false with none on screen */
+  bubbleSay(text: string, kind: SpeakerKind = 'town'): boolean { return this.bubbles.tellAny(kind, text, performance.now() / 1000) !== null; }
+
   /** where a spend made now floats up (the map point clicked, set by pointerDown and pointerUp for their own spends; or spendAt's) */
   private moneySpot: Omit<MoneyEvent, 'amount' | 'kind'> | null = null;
   private moneyAt(p: Pt | null) { this.moneySpot = p ? { x: p.x, y: p.y } : null; if (p) queueMicrotask(() => { this.moneySpot = null; }); }
@@ -1078,7 +1208,7 @@ export class Game {
   private grassVisible = false;
   private grassPedX = new Float32Array(PED_MAX); private grassPedY = new Float32Array(PED_MAX); private grassPedOut = new Uint8Array(PED_MAX);
   private grassCarX = new Float32Array(0); private grassCarY = new Float32Array(0); private grassCarAlive = new Uint8Array(0);
-  perf = { fps: 0, frameMs: 0, cpuMs: 0, drawMs: 0, /** main-thread ms this frame: the course chunks' work, the lot ground's flush to the workers, and the last course send's lag after its first change */ courseMs: 0, lotFlushMs: 0, courseLagMs: 0, /** the last course chunk job: its worker ms and chunks; the last areas job: its worker ms and the main ms of taking its areas in */ courseJobMs: 0, courseJobChunks: 0, areasJobMs: 0, areasApplyMs: 0, instances: 0, draws: 0, chunksPending: 0, uploadKB: 0, frames: 0, tier: 'street' as 'street' | 'district' | 'planner', forest: 0, townTrees: 0, /** T265: the belt trees planted, and the most ms a frame's planting took (plantForest) */ belt: 0, plantMs: 0, simActive: 0, simTickMs: 0, simMaxTickMs: 0, pop: 0, jobs: 0, built: 0, lotProps: 0, /** T080: the atlas's GPU MB (fixed by its plan) and the share of this frame's on-screen sprite px drawn coarser than the zoom needs (streaming in) */ atlasMB: 0, atlasSoft: 0, /** T151: the label pass's ms this frame (place and write) and its labels (collected, shown) */ labelMs: 0, labels: 0, labelsShown: 0, /** T312: the people spacer's ms this frame and the people it spaced */ spaceMs: 0, spaced: 0, /** T309: the farm animals drawn this frame and their ms */ animals: 0, animalMs: 0 };
+  perf = { fps: 0, frameMs: 0, cpuMs: 0, drawMs: 0, /** main-thread ms this frame: the course chunks' work, the lot ground's flush to the workers, and the last course send's lag after its first change */ courseMs: 0, lotFlushMs: 0, courseLagMs: 0, /** the last course chunk job: its worker ms and chunks; the last areas job: its worker ms and the main ms of taking its areas in */ courseJobMs: 0, courseJobChunks: 0, areasJobMs: 0, areasApplyMs: 0, instances: 0, draws: 0, chunksPending: 0, uploadKB: 0, frames: 0, tier: 'street' as 'street' | 'district' | 'planner', forest: 0, townTrees: 0, /** T265: the belt trees planted, and the most ms a frame's planting took (plantForest) */ belt: 0, plantMs: 0, simActive: 0, simTickMs: 0, simMaxTickMs: 0, pop: 0, jobs: 0, built: 0, lotProps: 0, /** T080: the atlas's GPU MB (fixed by its plan) and the share of this frame's on-screen sprite px drawn coarser than the zoom needs (streaming in) */ atlasMB: 0, atlasSoft: 0, /** T151: the label pass's ms this frame (place and write) and its labels (collected, shown) */ labelMs: 0, labels: 0, labelsShown: 0, /** T312: the people spacer's ms this frame and the people it spaced */ spaceMs: 0, spaced: 0, /** T309: the farm animals drawn this frame and their ms */ animals: 0, animalMs: 0, /** T406: the speech bubbles' ms this frame (the machine's frame and the draw) and the bubbles drawn */ bubbleMs: 0, bubbles: 0 };
   private frameTimes: number[] = [];
   // input
   /** a drag in progress; build: a right-button press in the road tool (released without moving, it builds the route, as Enter) */
@@ -3046,6 +3176,8 @@ export class Game {
     try { this.showStandIns = localStorage.getItem('capitalempire.standins') !== 'false'; } catch { /* default on */ }
     try { this.showMoneyFloats = localStorage.getItem('capitalempire.moneyFloats') !== 'false'; } catch { /* default on */ }
     if (!boot.moneyFloats) this.showMoneyFloats = false;
+    try { this.bubbles.on = localStorage.getItem('capitalempire.bubbles') !== 'false'; const br = localStorage.getItem('capitalempire.bubbleRate'); if (br === 'low' || br === 'normal' || br === 'high') this.bubbles.rate = br; } catch { /* default on, normal */ }
+    if (!boot.moneyFloats) this.bubbles.on = false; // (the labs and the bench's boots that turn the money floats off turn these off too)
     // T147: the money floats' sources: every spend (placed ones float), the range's sales and lost golfers
     this.traffic.onSpend = (k, n) => this.spent(k, n);
     // T090: a range start's town success after a tournament, kept in the save (sent back with the golf state on load)
@@ -8275,7 +8407,7 @@ export class Game {
   }
   private reset() {
     this.eventCondition = 'budget'; this.gallerySeating.clear(); this.galleryPlaces.clear();
-    this.peds.restoreIdentities(); this.pedNet = -1; this.pedLots = -1; this.pedTick = 0; this.spectatorSeenN = 0;
+    this.peds.restoreIdentities(); this.pedNet = -1; this.pedLots = -1; this.pedTick = 0; this.spectatorSeenN = 0; this.bubbles.clear(); this.bLandQ.length = 0;
     this.courseHeight = createCourseHeightField(); this.chSave = null; this.breakGrids.clear();
     this.realLand = createLandField(); this.landPack = Promise.resolve(null); this.landIn = null; // T357
     this.grass.clear(); this.grassZones.clear(); this.grassSim = -1; this.grassElapsed = 0; this.grassTrafficT = -1; this.grassPedOut.fill(0); this.grassCarAlive.fill(0); this.grassTarget = null; this.grassAction = null;
@@ -8691,7 +8823,7 @@ export class Game {
     }
   }
   private crowdMovers(x0: number, y0: number, x1: number, y1: number, now: number): Drawable[] {
-    this.spectatorSeenN = 0;
+    this.spectatorSeenN = 0; this.bGolfN = 0; this.bStaffN = 0; // (T406: the golfers and staff the movers below see this frame)
     const G = this.traffic.gallery, W = this.traffic.walkers, S = this.traffic.stops, out = this.crowdDraw, P = this.crowdPeople;
     const X0 = x0 - 4, Y0 = y0 - 4, X1 = x1 + 4, Y1 = y1 + 4, nS = SPECTATOR_PEOPLE.length, ch = this.play?.pv.cheers.length ? this.play.pv.cheers : null;
     let m = 0;
@@ -8701,7 +8833,7 @@ export class Game {
       // (T213: the fans cheer a birdie or better holed near them, the playback's celebrations)
       let cheer = -1;
       if (ch) for (const c of ch) if ((c.x - x) ** 2 + (c.y - y) ** 2 < CHEER_TILES * CHEER_TILES) cheer = Math.max(cheer, c.t);
-      const spot = i / 8, k = galleryPeople(G, i, spot, now, nS, P, cheer, this.gallerySeating.get(spot), this.galleryPlaces.get(spot));
+      const spot = i / 8, k = galleryPeople(G, i, spot, now, nS, P, cheer, this.gallerySeating.get(spot), this.galleryPlaces.get(spot), this.bubbles.hurts.length ? this.bubbles.hurts : undefined);
       this.rememberSpectators(P, k, 0, spot);
       for (let j = 0; j < k; j++) crowdDrawable(out, m++, P[j]!);
     }
@@ -8724,6 +8856,8 @@ export class Game {
       for (let j = 0; j < k; j++) crowdDrawable(out, m++, P[j]!);
     }
     m = this.playMovers(out, m, X0, Y0, X1, Y1);
+    // (T406: a fan hit by a ball crouches over his knee in a stand-in pose until its clip is made: labelled)
+    for (const h of this.bubbles.hurts) if (h.pose === 'clutch') for (let q = 0; q < this.spectatorSeenN; q++) { const sn = this.spectatorSeen[q]!; if (sn.source === 0 && sn.index === h.spot && sn.slot === h.slot) { this.caddieLabels.push({ p: out[q]!, text: 'Stand In for hurt knee' }); break; } }
     m = this.dayMovers(out, m, X0, Y0, X1, Y1, now); // T208: everyday golf
     m = this.crewMovers(out, m, X0, Y0, X1, Y1, now); // T269: the grounds crew
     m = this.proMovers(out, m, X0, Y0, X1, Y1); // T214: the club staff
@@ -8744,14 +8878,14 @@ export class Game {
       const p = P[j]!;
       if (p.x < X0 || p.x > X1 || p.y < Y0 || p.y > Y1) continue;
       t.x = p.x; t.y = p.y; t.person = pl.art[p.golfer]!; t.row = p.row; t.frame = p.frame;
-      crowdDrawable(out, m, t); if (p.lift) out[m]!.lift = p.lift; if (p.alpha !== undefined && p.alpha < 1) out[m]!.alpha = p.alpha; m++; // (T266: fading)
+      crowdDrawable(out, m, t); if (p.lift) out[m]!.lift = p.lift; if (p.alpha !== undefined && p.alpha < 1) out[m]!.alpha = p.alpha; this.bGolfN = this.bSee(this.bGolf, this.bGolfN, p.golfer, out[m]!, swingBusy(p.frame), p.alpha ?? 1); m++; // (T266: fading)
     }
     // T213: the caddies (the stand-in spectator, labelled) with their bags, and the carts
     const c = this.crowdGolfers[2] ?? (this.crowdGolfers[2] = { x: 0, y: 0, group: 0, person: 0, row: 0, frame: 0 });
     for (const k of pl.pv.caddies) {
       if (k.x < X0 || k.x > X1 || k.y < Y0 || k.y > Y1) continue;
       c.group = 0; c.x = k.x; c.y = k.y; c.person = CADDIE_ART; c.row = k.row; c.frame = k.frame;
-      crowdDrawable(out, m, c); if (k.alpha !== undefined && k.alpha < 1) out[m]!.alpha = k.alpha; this.caddieLabels.push({ p: out[m]!, text: CADDIE_LABEL }); m++;
+      crowdDrawable(out, m, c); if (k.alpha !== undefined && k.alpha < 1) out[m]!.alpha = k.alpha; this.caddieLabels.push({ p: out[m]!, text: CADDIE_LABEL }); this.bStaffN = this.bSee(this.bStaff, this.bStaffN, BUBBLE_CADDIE + k.golfer, out[m]!, false, k.alpha ?? 1); m++;
       if (BAG_ART >= 0) { const b = this.propDrawable(out, m++, BAG_ART, k.bx, k.by, 0.25); if (k.alpha !== undefined && k.alpha < 1) b.alpha = k.alpha; } // (T266: fading with him)
     }
     this.cartDrawables(pl.pv.carts, this.golfCartOut, X0, Y0, X1, Y1);
@@ -8794,6 +8928,7 @@ export class Game {
     // the owner's pending turn (P4b): his walk to the ball and his address there, facing the open shot's aim when one is open
     const own = this.play.own, shotAim = this.shot && own && this.shot.turn === own.turn ? this.shot.input.aim : null;
     { const T = this.traffic, st = T.simTime(now); this.play.pv.update(minute, now / 1000, own?.turn ?? null, shotAim, null, st, localRate(T.town, st)); } // (T266: its pacers)
+    this.bubbleLands(this.play.pv.lands, 0, now / 1000); // T406: the balls that came down: a fan hit, a birdie, the water
     this.ownerFrame(minute); this.holdDay(now, true);
     // T320: the owner's own live round plays at the watching speed, from his first address until his group is done
     this.watchFor('own', !!own?.turn && (this.watchSpeed.has('own') || minute >= own.tee - OWN_WATCH_LEAD));
@@ -9506,7 +9641,7 @@ export class Game {
     const y = this.you; if (!y || this.youInCart || y.x < X0 || y.x > X1 || y.y < Y0 || y.y > Y1) return m;
     const t = this.crowdGolfers[3] ?? (this.crowdGolfers[3] = { x: 0, y: 0, group: 1, person: 0, row: 0, frame: 0 });
     t.group = 1; t.x = y.x; t.y = y.y; t.person = this.youArt(); t.row = y.face; t.frame = youFrame(y, GOLFER_CLIPS.walk, GOLFER_CLIPS.idle.start, GOLFER_CLIPS.golf_drive, GOLFER_CLIPS.golf_putt);
-    crowdDrawable(out, m, t);
+    crowdDrawable(out, m, t); this.bGolfN = this.bSee(this.bGolf, this.bGolfN, BUBBLE_YOU, out[m]!, swingBusy(t.frame), 1); // (T406: you speak too)
     // T333: you are never nudged by the spacer (the others step round you), you fade in after a jump, and a see-through copy of you is drawn over
     // whatever stands in front of you (a tree, a building), so you never vanish
     const d = out[m]!, a = jumpAlpha((now - this.youJumpAt) / 1000); d.pin = true; if (a < 1) d.alpha = a;
@@ -9851,6 +9986,7 @@ export class Game {
     this.yrFlight.t = -(shot.club === 'putter' ? PUTT_IMPACT_S : IMPACT_S); // (T320: the ball leaves at the clip's impact, as the field's do: play/view.ts)
     if (land) this.yourTracer(this.yrFlight);
     this.yrShotFlight = this.yrFlight;
+    this.bubbleYourShot(shot, v.holes[shot.hole]); // T406: your ball comes down after its flight
     this.youFollow = true;
     this.emit();
   }
@@ -11269,7 +11405,7 @@ export class Game {
         else c.frame = GOLFER_CLIPS.idle.start;
       } else c.frame = o.walking ? SPECTATOR_CLIPS.walk.start + (Math.floor(o.walked * FRAMES_PER_TILE) % SPECTATOR_CLIPS.walk.n) : SPECTATOR_CLIPS.idle.start;
       crowdDrawable(out, m, c); if (o.alpha < 1) out[m]!.alpha = o.alpha;
-      this.caddieLabels.push({ p: out[m]!, text: A.label }); this.proSeen.push({ x: o.x, y: o.y, k: b.k }); m++;
+      this.caddieLabels.push({ p: out[m]!, text: A.label }); this.proSeen.push({ x: o.x, y: o.y, k: b.k }); this.bStaffN = this.bSee(this.bStaff, this.bStaffN, BUBBLE_PRO + b.k, out[m]!, false, o.alpha); m++;
     }
     return m;
   }
@@ -11389,7 +11525,7 @@ export class Game {
       if (p.x < X0 || p.x > X1 || p.y < Y0 || p.y > Y1) continue;
       t.group = 0; t.x = p.x; t.y = p.y; t.person = Game.CREW_ART[p.role]; t.row = p.row; t.frame = p.frame;
       crowdDrawable(out, m, t); if (p.lift) out[m]!.lift = p.lift; if (p.alpha < 1) out[m]!.alpha = p.alpha;
-      this.caddieLabels.push({ p: out[m]!, text: p.role === 'gk' ? 'Stand In for greenkeeper' : 'Stand In for mower operator' }); m++;
+      this.caddieLabels.push({ p: out[m]!, text: p.role === 'gk' ? 'Stand In for greenkeeper' : 'Stand In for mower operator' }); this.bStaffN = this.bSee(this.bStaff, this.bStaffN, BUBBLE_CREW + (p.role === 'gk' ? 0 : 500) + p.k, out[m]!, false, p.alpha); m++;
     }
     let n = 0, k = 0;
     for (const th of v.things) {
@@ -11533,7 +11669,8 @@ export class Game {
     const d = this.dayPlay; this.dayCarOut.length = 0; if (!d || this.dayOff) return m; // (?everyday=0: the bench's same scene with none drawn)
     const T = this.traffic, st = T.simTime(performance.now()), v = d.view; v.update(this.dayMinute, now, X0, Y0, X1, Y1, st, localRate(T.town, st)); // (T266: the watchable golfers walk in sim seconds)
     const t = this.crowdGolfers[1] ?? (this.crowdGolfers[1] = { x: 0, y: 0, group: 1, person: 0, row: 0, frame: 0 });
-    for (const p of v.people) { t.x = p.x; t.y = p.y; t.person = this.dayArt[p.golfer] ?? 0; t.row = p.row; t.frame = p.frame; crowdDrawable(out, m, t); if (p.lift) out[m]!.lift = p.lift; if (p.alpha !== undefined && p.alpha < 1) out[m]!.alpha = p.alpha; m++; }
+    for (const p of v.people) { t.x = p.x; t.y = p.y; t.person = this.dayArt[p.golfer] ?? 0; t.row = p.row; t.frame = p.frame; crowdDrawable(out, m, t); if (p.lift) out[m]!.lift = p.lift; if (p.alpha !== undefined && p.alpha < 1) out[m]!.alpha = p.alpha; this.bGolfN = this.bSee(this.bGolf, this.bGolfN, BUBBLE_DAY + p.golfer, out[m]!, swingBusy(p.frame), p.alpha ?? 1); m++; }
+    this.bubbleLands(v.lands, BUBBLE_DAY, now); // T406: the balls that came down
     this.cartDrawables(v.carts, this.dayCarOut, X0, Y0, X1, Y1); // T213: the carts
     const F = facings();
     for (let k = 0; k < v.cars.length; k++) {
@@ -12325,7 +12462,8 @@ export class Game {
         this.spaceAt = now;
         const a0 = performance.now(), animals = this.animalMovers(bx0, by0, bx1, by1, now / 1000); this.perf.animalMs = performance.now() - a0; this.perf.animals = animals.length;
         movers = cars.concat(peds, crowd, range, this.dayCarOut, this.golfCartOut, this.crewOut, animals);
-      } else this.spaceAt = 0;
+        this.bStreet = true; this.bubblesFrame(now); // T406: the speech bubbles, over the people just made
+      } else { this.spaceAt = 0; this.bStreet = false; }
       // with the living ground the trees plant over every chunk on screen and as far out as a chunk's caster reach (a chunk bakes once its trees
       // are known: casterReady; a cell one tile short of that left an edge chunk unbaked for ever, T134)
       if (this.ground.castersUsed) { const CW2 = this.groundTier === 'm' ? MID_W : CHUNK_W, CH2 = this.groundTier === 'm' ? MID_H : CHUNK_H; this.plantForest(Math.floor(X0 / CW2) * CW2, Math.floor(Y0 / CH2) * CH2, (Math.floor(X1 / CW2) + 1) * CW2, (Math.floor(Y1 / CH2) + 1) * CH2, LIVING_PLANT_MARGIN); }
@@ -12734,6 +12872,7 @@ export class Game {
     this.drawNight(ctx, now);
     // T147: the money floats over everything on the map (the night too), under the HUD
     // (T151: each float's column clear of the placed world labels)
+    this.drawBubbleLayer(ctx, now / 1000); // T406: the speech bubbles, over the night too so they read, under the HUD
     this.floatCols.begin();
     if (this.showMoneyFloats && this.floats.live.length) drawMoneyFloats(ctx, this.floats.live, now / 1000, (x, y) => this.screen(x, y), ze, this.dpr, this.cw, this.ch, { placer: this.labels.placer, cols: this.floatCols });
   }

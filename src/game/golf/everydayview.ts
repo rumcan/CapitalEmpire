@@ -5,7 +5,7 @@
 import { clipFrame, rowToward } from '../crowdview';
 import { GOLFER_CLIPS } from '../library';
 import { ADDRESS_TIME, STEP_IN, stateAt, teeSpot, walkMin } from './play/round';
-import { PlayView, type PlayBall, type PlayPerson } from './play/view';
+import { PlayView, type PlayBall, type PlayLand, type PlayPerson } from './play/view';
 import type { CartPaths, PlayCart } from './play/carts';
 import type { CourseView, Pt, RoundPlan } from './play/types';
 import { holeFrom } from './play/courseview';
@@ -68,6 +68,8 @@ interface Trip { bays: number[]; types: number[]; arrive: number; desk: number; 
 /** the playback of one town day's everyday golf on the club's ground */
 export class DayView {
   people: PlayPerson[] = []; balls: PlayBall[] = []; cars: DayCar[] = [];
+  /** T406: the balls that came down in the last update (play/view.ts PlayLand; the consumer clears the list) */
+  get lands(): PlayLand[] { return this.pv.lands; }
   /** T213: the carts on the course in the box (the golf play's, play/carts.ts: the visitors and half the members ride) */
   carts: PlayCart[] = [];
   readonly plan: RoundPlan; readonly roster: DayRoster;

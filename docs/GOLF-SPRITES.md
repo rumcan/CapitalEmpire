@@ -581,3 +581,15 @@ In the desert theme the open ground is dirt with many small, blended, windblown 
 shapes are code (`src/game/living-ground.ts` `sandBlotch`: three octaves of world-space noise, warped and stretched along the wind, 2 to 12 m across, feathered edges; deterministic and never periodic, so no tiling); what the blotches are *painted with* is the surfaces file's **Sand drifts**
 surface (`dune`, group Map: `src/game/painted-surfaces.ts`), an art slot: the desert theme gives it the `sand-ripples-tiles` tile set (hand-painted ripples and grain, laid as authored at the pictures' own resolution, a multiply brings its gold toward the dirt; the classic `sand-ripples` family is a smooth painting and read as a glossy smear) and autumn has none and lays none. A painted family made for it replaces the stand-in with no code: pick it for Sand drifts in the Studio's
 Painted surfaces (with the desert theme on). It wants the look of wind-rippled sand seen from above at 1 to 4 m a repeat: fine parallel ripples running one way (the sun at the upper right, shadows at 145 degrees), pale warm sand a little lighter than the dirt it lies on, soft grains, no stones or plants, tileable.
+
+## Speech bubbles and the fan hit by a ball (T406, #1090: animation requests)
+The bubbles are drawn in code (a rounded box and tail, a cloud, a burst: `src/game/bubble-draw.ts`), so they need no art. The gag where a ball hits a fan wants two
+spectator clips, which the animation runner (the owner's queue) has not made. Until they land the game draws the crouch (the `sit` clip, labelled "Stand In for hurt knee")
+for the hurt and the ordinary `walk` clip, slowed and fading, for the limp-off; `crowdview.ts` `hurtFan` reads `SPECTATOR_CLIPS.hurt` the day it exists.
+
+| Clip (a loop unless said) | Who | What it shows | Frames | P |
+| --- | --- | --- | --- | --- |
+| `hurt_knee` (a spectator, all 15 looks) | a fan struck on the knee or shin by a ball | stands on one leg and hops a little, both hands cupped round the hurt knee, head tipped back in a silent groan; cartoon, no injury shown, no blood; the loop repeats for about two game minutes | 6 to 8, about 1.2 s | P1 |
+| `limp` (a spectator, all 15 looks) | the same fan walking off | a hobbling walk: a short step, a long step, one hand on the thigh | 8, like `walk` | P1 |
+| `sorry` (a golfer) | the golfer whose ball hit the fan | one hand up flat, a wince, a half step toward the fan | 4 to 6, one shot | P2 |
+| `club_throw` (a golfer; T334's) | a golfer after a bad penalty (the table's `club-throw` row says "Grrr!") | the club flung a short way, then both hands to the head | 6 to 8, one shot | P2 |

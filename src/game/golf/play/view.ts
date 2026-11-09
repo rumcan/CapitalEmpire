@@ -10,7 +10,7 @@ import { CartPlay, RIDE, STATE, WALK, type CartPaths, type PlayCart } from './ca
 import type { WalkField } from '../walkfield';
 import { CELEBRATE_S, celebrated } from './celebrate';
 import type { OwnerTurn } from './live';
-import type { CourseView, GolferState, Pt, RoundPlan, Shot } from './types';
+import type { Club, CourseView, GolferState, Lie, Pt, RoundPlan, Shot } from './types';
 import type { Pacer } from './pacer';
 import { BallRoll, FX_NONE, ballRoll, type HeightAt } from './roll';
 
@@ -27,6 +27,10 @@ export interface PlayBall { x: number; y: number; h: number; fx?: number; fu?: n
 export interface PlayCaddie { x: number; y: number; row: number; frame: number; golfer: number; bx: number; by: number; /** T266: how visible (0..1; absent: 1) */ alpha?: number }
 /** T213: a celebration under way: where (tiles) and how long it has run (real seconds) */
 export interface PlayCheer { x: number; y: number; t: number }
+/** T406 (#1090): a shot's ball came down (once per shot the playback saw struck): the golfer, the hole (an index), where it landed and where it rests (tiles), the lie it
+ *  landed in and the lie it rests in, the club, the stroke (penalties included), the penalty, whether it was holed, and the hole's par and pin: the speech bubbles' and the
+ *  fans' reactions read them (the engine takes them once a frame and clears the list) */
+export interface PlayLand { golfer: number; hole: number; x: number; y: number; rx: number; ry: number; landLie: Lie; lie: Lie; club: Club; stroke: number; penalty: 0 | 1; holed: boolean; par: number; px: number; py: number }
 /** T213: the playback's extras: the cart paths (null: none) and where the carts go after the last green */
 export interface PlayOpts { paths?: CartPaths | null; home?: Pt;
   /** T377: the course's walk field (golf/walkfield.ts): where a cart may stand and drive (absent: as before) */
@@ -80,6 +84,10 @@ export class PlayView {
   people: PlayPerson[] = []; balls: PlayBall[] = [];
   /** T213: the carts, the caddies and the celebrations under way, as of the last update (refilled in place) */
   carts: PlayCart[] = []; caddies: PlayCaddie[] = []; cheers: PlayCheer[] = [];
+  /** T406: the balls that came down in the last update (refilled in place by update; the consumer clears it) */
+  lands: PlayLand[] = [];
+  /** T406: per golfer id, the shot whose landing was already reported */
+  private landed: (Shot | null)[] = [];
   /** T213: the tile box on screen (x0 y0 x1 y1; the engine sets it): the carts outside it are not drawn and their drives not worked out */
   box: number[] | null = null;
   /** T213: the round's carts (null: nobody rides) */
@@ -137,7 +145,7 @@ export class PlayView {
     if (this.count !== this.plan.shots.length) this.index();
     const G = this.plan.golfers, states = only ? this.states : stateAt(this.plan, this.view, minute, this.states), drive = GOLFER_CLIPS.golf_drive, putt = GOLFER_CLIPS.golf_putt;
     const pa = pending ? (aim ?? pending.suggested.aim) : null, carts = this.cartPlay;
-    let np = 0, nb = 0, nc = 0, nh = 0;
+    let np = 0, nb = 0, nc = 0, nh = 0, nl = 0;
     this.bi.fill(-1); this.bm.fill(0);
     for (let i = 0; i < G.length; i++) {
       if (only) { const gid = G[i]!.id; if (!only[gid]) { this.seen[gid] = 0; continue; } states[i] = stateOne(this.plan, this.view, gid, minute, states[i] ?? { golfer: gid, hole: 0, x: 0, y: 0, action: 'waiting', ball: null, flight: null, strokes: 0, toPar: 0, thru: 0 }); }
@@ -234,6 +242,15 @@ export class PlayView {
       // ROLL_DONE_S; a putt rolls on its line as before, breaking on a sloped green
       // (T320: the times from its impact, bt; before it, the ball waits at the golfer's feet through his backswing)
       const fs = newest ? flightS(newest) : 0, lg = newest && ballRoll.on ? newest.landing : undefined, bt = dt - (putting ? PUTT_HIT_S : IMPACT_S);
+      // T406: the ball comes down: once per shot this playback saw struck (one struck before the first update is not announced)
+      if (newest && bt >= fs && this.landed[id] !== newest) {
+        this.landed[id] = newest;
+        if (Number.isFinite(this.swingAt[id]!)) {
+          const hole = this.view.holes[newest.hole], at = newest.landing?.at ?? newest.to, L = this.lands[nl] ?? (this.lands[nl] = { golfer: 0, hole: 0, x: 0, y: 0, rx: 0, ry: 0, landLie: 'fairway', lie: 'fairway', club: 'driver', stroke: 0, penalty: 0, holed: false, par: 4, px: 0, py: 0 }); nl++;
+          L.golfer = id; L.hole = newest.hole; L.x = at.x; L.y = at.y; L.rx = newest.to.x; L.ry = newest.to.y; L.landLie = newest.landing?.lie ?? newest.lie; L.lie = newest.lie; L.club = newest.club;
+          L.stroke = newest.stroke + newest.penalty; L.penalty = newest.penalty; L.holed = newest.holed; L.par = hole?.par ?? 4; L.px = hole?.pin.x ?? newest.to.x; L.py = hole?.pin.y ?? newest.to.y;
+        }
+      }
       if (newest && bt < 0) {
         this.bi[id] = nb; const b = this.slot(nb++); b.x = newest.from.x; b.y = newest.from.y; b.h = 0;
       } else if (newest && bt < fs) {
@@ -251,7 +268,7 @@ export class PlayView {
         this.bi[id] = nb; const b = this.slot(nb++); b.x = s.ball.x; b.y = s.ball.y; b.h = 0;
       }
     }
-    this.people.length = np; this.balls.length = nb; this.caddies.length = nc; this.cheers.length = nh; this.started = true;
+    this.people.length = np; this.balls.length = nb; this.caddies.length = nc; this.cheers.length = nh; this.lands.length = nl; this.started = true;
     // T213: the carts (only those of the golfers played back, and only those on screen)
     if (carts) carts.update(minute, this.carts, only, this.box); else this.carts.length = 0;
     // (T266: the watchable golfers' carts keep to a cart's speed, fading out and back where the schedule parks them)

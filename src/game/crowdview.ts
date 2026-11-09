@@ -6,6 +6,7 @@ import { SPECTATOR_CLIPS, type PeopleClip } from './library';
 import { facing } from './ext/pedestrians';
 import { WALK_STRIDE } from './event/crowd';
 import type { PlacedSeating } from './golf/event-seating';
+import { LIMP_S } from './bubble-lines';
 
 /** T212 (#557): the putt clip's impact, seconds into GOLFER_CLIPS.golf_putt (its sheet's impactSecs: render-person-3d.mjs --putt, a hand-keyed
  *  pendulum: the top of the backstroke at 0.5 s, the putter back at the address and the ball struck at 0.8 s, the finish held from 1.05 s) */
@@ -13,7 +14,8 @@ export const PUTT_IMPACT_S = 0.8;
 
 /** a person to draw: its tile position, group (0 spectator, 1 golfer), person (its index in the group's people), sheet row (0-7, the rows
  *  S SW W NW N NE E SE) and frame (absolute in that row: the clip's start + k) */
-export interface CrowdPerson { x: number; y: number; group: 0 | 1; person: number; row: number; frame: number; /** Authored bench-top height, in metres, for aligning the person's seated hips. */ seatHeightMetres?: number; benchPixelsPerMetre?: number }
+export interface CrowdPerson { x: number; y: number; group: 0 | 1; person: number; row: number; frame: number; /** Authored bench-top height, in metres, for aligning the person's seated hips. */ seatHeightMetres?: number; benchPixelsPerMetre?: number;
+  /** T406: how visible he is (0..1; absent: 1): a hurt fan limping out of sight fades */ alpha?: number }
 
 /** a deterministic hash of two integers: a float in [0, 1) (the seeds of every person, place and time) */
 export function hash(a: number, b: number): number {
@@ -59,7 +61,7 @@ function unit(dx: number, dy: number): void {
 const CHEER_SPREAD = 0.4;
 
 /** the person object at slot s of out (made on first use, then reused) */
-function slot(out: CrowdPerson[], s: number): CrowdPerson { return out[s] ?? (out[s] = { x: 0, y: 0, group: 0, person: 0, row: 0, frame: 0 }); }
+function slot(out: CrowdPerson[], s: number): CrowdPerson { const p = out[s] ?? (out[s] = { x: 0, y: 0, group: 0, person: 0, row: 0, frame: 0 }); p.alpha = undefined; return p; }
 
 /** a standing fan's frame at local time lt of its 20 s cycle: a clap (a loop, 3 s) for half the fans, a cheer (one-shot) now and then, else idle */
 function standFrame(spot: number, s: number, lt: number): number {
@@ -75,13 +77,28 @@ function seatFrame(spot: number, s: number, lt: number): number {
   return lt < 3 && hash(spot, s + 100) < 0.5 ? at(C.sit_clap, lt) : at(C.sit, lt);
 }
 
+/** T406 (#1090): a fan hit by a ball (bubbles.ts Hurt): his gallery spot and slot, his pose (clutching his knee, limping off, gone for a while), the second the pose
+ *  began (the engine's clock) and where his gallery looks (tiles) */
+export interface HurtFan { spot: number; slot: number; pose: 'clutch' | 'limp' | 'gone'; since: number; fx: number; fy: number }
+/** a hurt fan limps off at this many tiles a second (a hobble) */
+export const LIMP_V = 0.45;
+/** T406: a hurt fan at slot p: crouched over his knee (the `hurt` clip when the animation runner has made it: SPECTATOR_CLIPS.hurt; until then the crouch of the
+ *  sit clip, as the grounds crew's kneeling stand-in), then limping away from his gallery's focus and fading, then out of sight (alpha 0) */
+function hurtFan(p: CrowdPerson, h: HurtFan, now: number): void {
+  const C = SPECTATOR_CLIPS as Record<string, PeopleClip>, clip = C.hurt ?? C.sit!, t = Math.max(0, now - h.since);
+  if (h.pose === 'clutch') { p.frame = clipFrame(clip, clip.times[0]! + t); return; }
+  const dx = p.x - h.fx, dy = p.y - h.fy, L = Math.hypot(dx, dy) || 1, ux = dx / L, uy = dy / L, u = h.pose === 'gone' ? LIMP_S : Math.min(t, LIMP_S);
+  p.x += ux * LIMP_V * u; p.y += uy * LIMP_V * u; p.row = rowToward(ux, uy); p.frame = at(C.walk!, u * 0.55);
+  p.alpha = h.pose === 'gone' ? 0 : u > LIMP_S - 1.2 ? Math.max(0, (LIMP_S - u) / 1.2) : undefined;
+}
+
 /** Gallery buffer x/y/fans/kind/focus/aim at float offset o. Standing fans retain their seeded informal rows (up to 60); stands draw up to 90
  *  samples of occupied authored seats, preserving exact positions, aisle gaps, bank facings and bench heights. Larger stands sample across
  *  their occupied rows rather than changing gameplay capacity. Without supplied geometry the legacy stand view is only an estimate.
  *  T377: a standing gallery with `places` (a tee's arc and a green's ring: golf/galleries.ts galleryPlaces, x y x y ... best first) puts its first n fans on the first
  *  n places (up to 90), each a little off its place (a 0.28 tile jitter), facing the focus; the fans past the places are not drawn.
  *  Reuses out objects; cheer >= 0 is seconds since a nearby birdie and keeps the existing clap/cheer animation clips. */
-export function galleryPeople(G: ArrayLike<number>, o: number, spot: number, now: number, people: number, out: CrowdPerson[], cheer = -1, seating?: PlacedSeating, places?: ArrayLike<number>): number {
+export function galleryPeople(G: ArrayLike<number>, o: number, spot: number, now: number, people: number, out: CrowdPerson[], cheer = -1, seating?: PlacedSeating, places?: ArrayLike<number>, hurt?: readonly HurtFan[]): number {
   const x = G[o]!, y = G[o + 1]!, stand = G[o + 3] === 2, fx = G[o + 4]!, fy = G[o + 5]!, spread = !stand && !!places && places.length >= 2;
   const occupied = Math.max(0, Math.min(Math.round(G[o + 2]!), stand && seating ? seating.count : Infinity));
   const n = Math.min(occupied, stand ? 90 : spread ? Math.min(90, places!.length >> 1) : 60);
@@ -103,6 +120,8 @@ export function galleryPeople(G: ArrayLike<number>, o: number, spot: number, now
     }
     p.frame = stand ? seatFrame(spot, s, lt) : standFrame(spot, s, lt);
     if (cheer >= 0) { const ct = cheer - hash(spot, s + 300) * CHEER_SPREAD; if (ct >= 0) p.frame = stand ? at(SPECTATOR_CLIPS.sit_clap, ct) : at(SPECTATOR_CLIPS.cheer, ct); }
+    // (T406: a fan hit by a ball: the gag's pose; none hurt, the usual: this costs a length check)
+    if (hurt !== undefined && hurt.length > 0 && !stand) for (let q = 0; q < hurt.length; q++) { const h = hurt[q]!; if (h.spot === spot && h.slot === s) { hurtFan(p, h, now); break; } }
   }
   return n;
 }

@@ -10,6 +10,7 @@ import { SIGNAL_TIER_YEAR, SPEED_TIER_YEAR } from './game/event/round';
 import { GREEN_CAP, MIN_GREEN } from './game/sim/signals';
 import { isLights, junctionCorners, slipRule } from './game/junctions';
 import { PLANNER_Z, ZOOM_STEP, clampZoom } from './game/iso';
+import { BUBBLE_RATES } from './game/bubbles';
 import { GROWTH_OPTIONS } from './game/lots/town';
 import { shortName } from './game/ext/names';
 import { WALK_SERVE_M, serveLine } from './game/golf/walkserve';
@@ -607,6 +608,16 @@ export default function App() {
                       <input type="checkbox" checked={game.showMoneyFloats} onChange={e => { game.setShowMoneyFloats(e.target.checked); bump(); }} />
                       Money floats
                     </label>
+                    {/* T406: the speech bubbles over the people, and how often; kept in this browser */}
+                    <div className="flex items-center gap-2 px-2 py-2 text-sm" data-testid="bubbles-setting">
+                      <label className="flex cursor-pointer items-center gap-2" data-tip="Small comic speech bubbles over the people walking about, at the street zoom and closer: random thoughts, moods (happy or grumbling), and reactions to the game (a nice shot, a ball in the water, long queues, the prices). A fan hit by a ball clutches his knee and moans for two game minutes">
+                        <input type="checkbox" checked={game.bubbles.on} onChange={e => { game.setShowBubbles(e.target.checked); bump(); }} />
+                        Speech bubbles
+                      </label>
+                      {game.bubbles.on && <span className="ml-auto flex gap-1" role="group" aria-label="Speech bubble frequency">{BUBBLE_RATES.map(r => (
+                        <button key={r} className={`chip ${game.bubbles.rate === r ? 'chip-on' : ''}`} aria-pressed={game.bubbles.rate === r} data-tip={r === 'low' ? 'A few at a time, now and then' : r === 'high' ? 'Chatty: up to eight at once' : 'About six at a time'} onClick={() => { game.setBubbleRate(r); bump(); }}>{r === 'low' ? 'Low' : r === 'high' ? 'High' : 'Normal'}</button>
+                      ))}</span>}
+                    </div>
                     <label className="flex cursor-pointer items-center gap-2 px-2 py-2 text-sm" data-tip="Floods, storms, landslides, wildfires and earthquakes close roads now and then">
                       <input type="checkbox" checked={game.disastersEnabled} onChange={e => { game.setDisasters(e.target.checked); bump(); }} />
                       Natural disasters
