@@ -5,7 +5,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { TILE_M } from '../src/game/golf/types';
-import { LiveGroup, MODEL_V, PUTT_V2, makeField, playRound, putt, rng, shotOutcome, teeTimes } from '../src/game/golf/play';
+import { LiveGroup, PUTT_V2, makeField, playRound, putt, rng, shotOutcome, teeTimes } from '../src/game/golf/play';
 import type { CourseView, Lie, OwnerInput, PlayHole } from '../src/game/golf/play';
 import { HUMANS, botRound, botSwing, mean, type Human } from './helpers/swing-bot';
 
@@ -78,7 +78,7 @@ test('putting v2: the version is kept with the saved input, and an input without
   const gs = teeTimes(f, 5), gi = gs.findIndex(g => g.players.includes(owner.id));
   for (const ver of [1, 2] as const) {
     const pa = playRound(v, f, gs, 5, { live: gi }), a = new LiveGroup(pa, v, gi, 5);
-    for (let k = 0; k < 60; k++) { const t = a.advance(); if (!t) break; const inp: Omit<OwnerInput, 'holeIdx' | 'stroke'> = { club: t.suggested.club, aim: t.suggested.aim, power: t.suggested.power, swing, ...(ver === 2 ? { v: MODEL_V } : {}) }; a.play({ holeIdx: t.holeIdx, stroke: t.stroke, ...inp }); }
+    for (let k = 0; k < 60; k++) { const t = a.advance(); if (!t) break; const inp: Omit<OwnerInput, 'holeIdx' | 'stroke'> = { club: t.suggested.club, aim: t.suggested.aim, power: t.suggested.power, swing, ...(ver === 2 ? { v: 2 } : {}) }; a.play({ holeIdx: t.holeIdx, stroke: t.stroke, ...inp }); } // (T346: the putting's version 2 itself: MODEL_V is 3 now, the club's run)
     assert.ok(a.inputs.length > 5 && a.inputs.every(i => (ver === 2 ? i.v === 2 : !('v' in i))), `version ${ver}: ${a.inputs.length} inputs keep it`);
     const pb = playRound(v, f, gs, 5, { live: gi }), b = new LiveGroup(pb, v, gi, 5);
     b.replay(JSON.parse(JSON.stringify(a.inputs)) as OwnerInput[]); b.advance(); a.advance(); // (the day plays on to the end, or to the next turn, the same in both)

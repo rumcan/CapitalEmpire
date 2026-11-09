@@ -44,11 +44,43 @@ The scripted player of `tests/golf-range-pacing.test.ts` (it picks without a bre
 **14.4**, cart **33**, night picking **42** (the 10-minute town day, speed 1). The range's money arrives when the shop is open (a town day is 10 minutes, 4.6 of them open), so a tool is
 bought at the first morning its price is covered. Hand picking alone brings in about 0.4 balls a second (about $150 a minute) against about 8 balls a second the four bays could sell.
 
+## Staff and machines (PR 2, built)
+Pure model `golf/rangeauto.ts` (balls a second at the reference 600-second day; `perHour` says them in balls a town hour), the sim side in `RangeSim.automate`, the card in `ui/golf/RangeCard.tsx`.
+- **Dirty balls.** Every ball picked up (you, the cart, the night wagon, staff, robots, nets) is stowed **dirty** (`BallSave.dirty`). The tap washes `HAND_WASH` balls a second, a ball washer
+  `WASHER_BPS` more (`wash`, `RangeSim.automate`). A bucket is sold clean balls first, then dirty ones; a bucket of dirty balls earns `DIRTY_VALUE` (75%) of a clean one's price
+  (`takeMix`, `bucketValue`). Dirty balls sell too: the ball room is never "empty" while any are there.
+- **Staff.** A range attendant works a shift (`SHIFT_HOURS` 8, starts at one of `SHIFT_STARTS` 07, 11 or 15: set it on the Range card), picks balls up on foot with your tools but not the
+  cart (`attendantBps`: `ATTENDANT_SKILL` 0.8 of the trip model at `ATTENDANT_PACE` 1.5 tiles/s), the nearest piles to the ball room first. He also tends the shop counter for
+  `COUNTER_SHARE` (40%) of his shift unless a dispenser stands (the dispenser: no attendant is needed at the counter). The second attendant takes the next eight hours. Wages are the
+  upgrade's monthly upkeep ($90).
+- **Machines.** Robot pickers: `ROBOTS_A_NODE` 2 per node (3 nodes: 6), each `ROBOT_BPS` 1.2 balls a second while it runs, on a battery of `ROBOT_HOURS` 3 town hours then `ROBOT_CHARGE` 1 hour
+  charging (the bigger battery doubles the run, the faster motors are `ROBOT_SPEED` 1.6x). Target nets catch `NET_SHARE` 30% of the balls that land within reach of a target green: they
+  roll to the ball room dirty, picked by nobody. The bucket counter scoops `BUCKET_CUT` 90% of a bucket.
+- **Skips.** While you skip time the shop serves what the ball room, the staff's day average, the robots and the washer allow (`skipBalls`), the dirty balls earning their price.
+- **Flow panel** (Range card, `flowOf`): outfield, dirty, clean, sold, with the balls an hour each stage can take (picking: you at the trip model's steady pace plus staff and robots;
+  washing: the tap and the washer; dispensing: the bays' turnover) on the arrows. The stage that can take the fewest is the bottleneck (amber): by hand it is picking, with the cart it is
+  the tap, with the washer it is the four bays.
+- **Stand-ins** (the art is requested in `docs/GOLF-SPRITES.md`): the attendants are the spectators' young man in a cap walking between the ball room and the pile; the robots are small
+  teal pucks; both have "Stand In for ..." pills.
+
+| What | Price (till) | Upkeep a month | Needs | Effect |
+| --- | --- | --- | --- | --- |
+| Range attendant | $1,800 | $90 | push picker | a shift, picks on foot, tends the counter |
+| Second attendant | $2,400 | $90 | attendant | the next eight hours |
+| Ball washer | $6,000 | $90 | push picker | washes 14 balls a second beside the tap's 2.5 |
+| Robot pickers | $9,000 | $120 | ball washer | 2 robots |
+| Two more robots / a third pair | $9,000 / $11,000 | $120 | the pair before | 4 / 6 robots |
+| Bigger robot batteries | $5,000 | $30 | robot pickers | 6 h of running to an hour's charge |
+| Faster drive motors | $6,000 | $30 | robot pickers | 1.6x |
+| Target nets | $7,000 | $50 | target greens | 30% of the balls that land by a target |
+| Bucket counter | $3,500 | $30 | ball washer | a bucket is 90% of the balls |
+
+Scripted-player timeline (`tests/golf-range-pacing.test.ts`, `PACING=1`, the 10-minute day, speed 1): tube **2.3 min**, basket **10.2**, push picker **14.4**, **first hire 21**, cart
+**33.2**, **washer (the first machine) 41.7**, night picking **50.6**, robots **54.6**.
+
 ## Resuming
-- Branch `arena/T386-range-ball-loop` (worktree `F:\Repos\ce-wt\t357`); progress comments on #1043 end with a "To resume:" line.
+- Branches `arena/T386-range-ball-loop` (PR 1), `arena/T386-ball-loop-2` (PR 2) (worktree `F:\Repos\ce-wt\t357`); progress comments on #1043 end with a "To resume:" line.
 - Tests: `tests/golf-range-balls.test.ts` (the economy, the sim, the host), `tests/golf-range-pacing.test.ts` (the first hour; `PACING=1` prints the timeline), and the range
   tests that changed with the picker (`golf-range-extras`, `-parking`, `-ramp`, `golf-rangebiz`).
 - In-game: `E:/ClaudeTemp/T386/` (shots and the scripts that took them).
-- Next (PR 2): the range attendant (shifts, a wage in the monthly upkeep), the ball washer (dirty balls sell at a discount: `BallSave.dirty`), the dispenser (no counter staff),
-  robot pickers (battery, speed), target nets (a share of the balls land in a chute), the bucket counter, the flow panel (outfield, picked, washed, dispensed; the bottleneck).
-  Then (PR 3) the rest of the nodes to 25 to 40 and the golf-side ones (range practice raises skills faster: `golf/play/mods.ts`).
+- Next (PR 3): the rest of the nodes to 25 to 40 and the golf-side ones (range practice raises skills faster: `golf/play/mods.ts`).

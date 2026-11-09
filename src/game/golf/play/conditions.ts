@@ -41,8 +41,9 @@ export function envOf(wind: WindNow | null, kindAt: ((x: number, y: number) => L
   return out;
 }
 
-/** a day's conditions for the model's golfers: the day's wind (its mean: gusts are left out), the course's heights, and the day it is for */
-export interface Conditions { wind?: Wind | null; height?: HeightAt | null }
+/** a day's conditions for the model's golfers: the day's wind (its mean: gusts are left out), the course's heights, and the day it is for. T346 (#988): `run`, false for a day from before the club's own run after landing (shot.ts
+ *  CLUB_RUN: golf/mode.ts runOn): its golfers' balls roll by the surface alone, as they did; absent or true: they roll by their clubs' run */
+export interface Conditions { wind?: Wind | null; height?: HeightAt | null; run?: boolean }
 /** the conditions a model golfer's shot is struck in (envOf at the day's mean wind) */
 export function fieldEnv(c: Conditions, kindAt: ((x: number, y: number) => LieKind) | undefined, ball: Pt, lie: Lie, aim: Pt): ShotEnv {
   return envOf(c.wind ? { mph: c.wind.mph, from: c.wind.from } : null, kindAt, c.height ?? null, ball, lie, aim);
