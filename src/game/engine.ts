@@ -28,7 +28,7 @@ import { CULL_MIN_PX, FULL_UV, GLRenderer, POINT_STRIDE, SHADOW_STRIDE, SPRITE_S
 import { GroundCache } from './ground-cache';
 import { GAME_BOOT, clampCentre, flatTerrain, type BootOptions } from './boot';
 import { TILE_BANDS, TILES_REVISION, anchorAt, bandAt, bandRange, bandsAhead, cellOf, cellsIn, coverageOf, drawnScale, nearUntil, nextBand, tiledFamily, tileIndex, tilePermutation, tileScreenPx, tileSize, tileSpec } from './painted-tiles';
-import { onPaintedSurfaces, paintedSurfaces, setDesertSurfaces } from './painted-surfaces-live';
+import { desertLeavesDev, onPaintedSurfaces, paintedSurfaces, setDesertSurfaces } from './painted-surfaces-live';
 import { borderDefault, finishBorders, finishOf, finishStripeLook, mowSpec } from './course-finish';
 import { MOW_KINDS, mowOfHole, mowRecOf, type MowKind, type MowRec, type MowTable } from './mow-lines';
 import { chunkLayers, pictureCurrent, prebakeTargets } from './ground-layers';
@@ -3843,7 +3843,7 @@ export class Game {
   setLeafDensity(v: number) {
     this.leafDensity = clampLeafDensity(v);
     try { localStorage.setItem('capitalempire.leafDensity', String(this.leafDensity)); } catch { /* storage may be unavailable */ }
-    this.ground.setLeafDensity(this.desertTheme ? 0 : this.leafDensity); this.emit();
+    this.ground.setLeafDensity(this.desertTheme && desertLeavesDev() ? 0 : this.leafDensity); this.emit(); // (T384: the desert's litter has the player's density too)
   }
   /** T341 (#968): the desert theme, the gear menu's Desert theme (kept across reloads; ?desert=on|off on the dev server for the session): the
    *  world's trees drawn as palms and rocks, its bushes as desert plants and rocks, its open ground desert sand, dirt and pale sand and the lot
@@ -3870,9 +3870,11 @@ export class Game {
   private applyDesert() {
     const t0 = performance.now();
     DESERT_THEME.on = this.desertTheme; DESERT_THEME.gen++; DESERT_THEME.keep = d => this.courseOwns(d);
+    DESERT_THEME.dust = this.desertTheme && !desertLeavesDev(); // T384: the leaves painted in the world buildings' roofs are dust in the desert (roof-dust.ts)
     this.paint.plantFilter = this.desertTheme ? 'desert' : 'all'; // T342: the plant brushes start on the game's plants (the player may pick All or Autumn)
     setDesertSurfaces(this.desertTheme);
-    this.ground.setLeafDensity(this.desertTheme ? 0 : this.leafDensity); // no fallen leaves under the palms
+    // T384: the fallen leaves' density stays as the player set it in the desert too: what lies there is the desert's litter (sand drifts, pebbles, dry brush: desert-litter.ts), the same stamps and cost; it was 0 (no litter at all)
+    this.ground.setLeafDensity(this.desertTheme && desertLeavesDev() ? 0 : this.leafDensity); // (dev server, ?litter=leaves: the desert as it was, with no litter at all)
     this.sprites.relist();
     this.desertMs = performance.now() - t0;
   }

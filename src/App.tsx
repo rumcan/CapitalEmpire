@@ -639,8 +639,8 @@ export default function App() {
                         <span className="w-10 text-right tabular-nums">{Math.round(game.sunLook.strength * 100)}%</span>
                       </label>
                     )}
-                    <label className="flex items-center gap-2 px-2 py-2 text-sm" data-tip="Fallen leaves baked into the ground: carpets under the trees, drifts along the fences, walls and houses, a scatter over the yards and sidewalks, and leaves in the gutters under the street trees (T220). 100% = the default, 0 = only the leaves there were before">
-                      <span className="w-16 shrink-0">Fallen leaves</span>
+                    <label className="flex items-center gap-2 px-2 py-2 text-sm" data-tip={game.desertTheme ? 'Desert litter baked into the ground: drifts of sand, pebbles and dry brush under the palms, along the fences, walls and houses, kerbs and gutters, and a scatter over the yards, sidewalks and roads (T384). 100% = the default, 0 = only what there was before' : 'Fallen leaves baked into the ground: carpets under the trees, drifts along the fences, walls and houses, a scatter over the yards and sidewalks, and leaves in the gutters under the street trees (T220). 100% = the default, 0 = only the leaves there were before'}>
+                      <span className="w-16 shrink-0">{game.desertTheme ? 'Desert litter' : 'Fallen leaves'}</span>
                       <input type="range" className="min-w-0 flex-1" min={0} max={2} step={0.1} value={game.leafDensity} onChange={e => { game.setLeafDensity(+e.target.value); bump(); }} />
                       <span className="w-10 text-right tabular-nums">{Math.round(game.leafDensity * 100)}%</span>
                     </label>

@@ -10,6 +10,7 @@ import { bandOf, specBand, specDpr, switchIn, switchOut, tiledFamily, tilePx, ti
 import { picBytes, TileCache } from './tile-cache';
 import { ASPHALT_MEAN, type GroundArt, LEAF_CELL, LEAF_COLS, LEAVES, LOT_ASPHALT_M, PPM, SLAB_CELL, SLAB_COUNT, SLAB_TOP } from './ground-art';
 import { litPixel } from './lamp-reflect';
+import { desertLeafSheet, desertLotDecals, desertMapDecals, desertNature } from './desert-litter';
 import { POOL_STAMP, poolStampAlpha } from './lamp-pool';
 import { RANGE_PICS } from './golf/range-pics';
 
@@ -708,4 +709,19 @@ export class Textures {
   /** slab sprite index: the camera-facing row ('top') for visible curbs */
   slabIndex(visible: boolean, key: number) { return visible ? Math.floor(key * SLAB_TOP) : SLAB_TOP + Math.floor(key * (SLAB_COUNT - SLAB_TOP)); }
   leafRect(i: number): [number, number, number, number] { return [(i % LEAF_COLS) * LEAF_CELL, Math.floor(i / LEAF_COLS) * LEAF_CELL, LEAF_CELL, LEAF_CELL]; }
+  /** T384 (#1040): the desert's litter sheets (desert-litter.ts), drawn the first time the desert theme asks (the surfaces file's `desert`) on their autumn pictures' own rects: every place the ground bake lays leaves asks for its sheet through
+   *  these, so the one theme switch swaps them all (the road and ground litter, the fallen leaves, the living ground's litter, the lots' leaf decals, the map decals) and every placement, size and count is the autumn's */
+  private desertSheets: { leaves?: Cnv; lotDecals?: Cnv; decals?: Cnv; nature?: Cnv } = {};
+  /** whether the ground bake lays the desert's litter: the desert theme (the surfaces file's `desert`); the dev server's ?litter=leaves keeps the autumn leaves in it, for the A/B */
+  get desertLitter(): boolean { return !!this.surfaces.desert && !this.surfaces.autumnLitter; }
+  /** the leaf sprite sheet the bake lays: the leaves' (autumn), or the desert's litter */
+  leafSheet(desert = this.desertLitter): Cnv { return desert ? (this.desertSheets.leaves ??= desertLeafSheet()) : this.leaves; }
+  /** the lots' leaf decals' sheet in the desert (the desert pictures on the leaf group's own rects; the other decals are read from `lotDecals` as ever): null in autumn */
+  desertLotDecalSheet(desert = this.desertLitter): Cnv | null { return desert ? (this.desertSheets.lotDecals ??= desertLotDecals()) : null; }
+  /** the map decals' pictures (map-decals.ts DecalArt): the autumn ones, or the desert's (each drawn when a decal of it is first laid: the layers are off in the shipped settings) */
+  mapDecalArt(desert = this.desertLitter): { nature: Cnv; soil: Cnv; decals: Cnv } {
+    if (!desert) return this;
+    const me = this;
+    return { get nature() { return (me.desertSheets.nature ??= desertNature()); }, soil: this.soil, get decals() { return (me.desertSheets.decals ??= desertMapDecals()); } };
+  }
 }
