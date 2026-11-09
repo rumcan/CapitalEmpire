@@ -1,5 +1,5 @@
 import file from './painted-surfaces.json';
-import { clampSurfaces, lookOfTex, oldTeeSurfaces, type SurfacesFile } from './painted-surfaces';
+import { clampSurfaces, lookOfTex, oldTeeSurfaces, teeWallSurfaces, type SurfacesFile } from './painted-surfaces';
 import { lookColour, resolveFamily } from './painted-families';
 import { paintedUrl } from './painted-grass-art';
 import { PRESETS } from './paint-presets';
@@ -9,10 +9,11 @@ import { desertSurfaces } from './desert-theme';
  *  and on the dev server every save the studio makes (Vite hot-swaps the JSON here, so the game takes the owner's edit at once, with no
  *  rebuild and no reload: the ground is baked again with the new looks) */
 /** T364 (dev server, ?tee=old): the tees as they were before T364 (the fairway's grass on top, the painted earth and set stones on a raised tee's sides):
- *  the A/B of the shots and the bench */
-export const teeOldDev = (): boolean => { try { return !!import.meta.env?.DEV && new URLSearchParams(location.search).get('tee') === 'old'; } catch { return false; } };
-/** the file as the ground lays it: the dev flag's old tees over it */
-const laid = (f: SurfacesFile): SurfacesFile => (teeOldDev() ? oldTeeSurfaces(f) : f);
+ *  the A/B of the shots and the bench; ?tee=sand: a raised tee's sides in the native bunker wall's painting instead of the Bunker look's picture */
+const teeDev = (): string => { try { return import.meta.env?.DEV ? new URLSearchParams(location.search).get('tee') ?? '' : ''; } catch { return ''; } };
+export const teeOldDev = (): boolean => teeDev() === 'old';
+/** the file as the ground lays it: the dev flag's tees over it */
+const laid = (f: SurfacesFile): SurfacesFile => { const t = teeDev(); return t === 'old' ? oldTeeSurfaces(f) : t === 'sand' ? teeWallSurfaces(f, 'sand') : f; };
 let base: SurfacesFile = clampSurfaces(file), desert = false, current: SurfacesFile = laid(base);
 const subs = new Set<(f: SurfacesFile) => void>();
 /** the file the ground is laid with: the owner's, through the desert theme when it is on (T341, desert-theme.ts) */

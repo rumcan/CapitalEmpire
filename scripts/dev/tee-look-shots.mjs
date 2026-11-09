@@ -1,7 +1,8 @@
 // T364 (#1019): in-game shots of the tees, before and after: the tee's grass is the putting green's (no mowing lines), and a raised tee's cut sides wear
 // the bunker's wall (its picture and its stage shader's light, sun at the upper right) instead of the painted earth and set stones.
 //   node scripts/dev/tee-look-shots.mjs --base http://localhost:5195/ --out E:/ClaudeTemp/T364 [--seed 7] [--hole 1] [--only after] [--states raised,flat] [--zooms 30,15]
-// (--only after: no old-look run and no before | after sheets, the after shots alone as <state>-<zoom>-after.png, to tune a look)
+// (--only after: no old-look run and no before | after sheets, the after shots alone as <state>-<zoom>-after.png, to tune a look;
+//  --also sand: one more run with the raised tee's sides in the native bunker wall's painting (the dev server's ?tee=sand), <state>-<zoom>-sand.png)
 // For each of the old nine's tees (the largest, or --hole) in two states, a raised tee (the default 0.6 m) and a flat one (the Height slider at its lowest,
 // 0.15 m: a low grass bank), at 30% and 15%: the old look (the dev server's ?tee=old: the fairway's grass, the rock sides) beside the new, on one build.
 // Writes <out>/<state>-<zoom>-before.png, -after.png and the captioned sheet <state>-<zoom>.png (before | after), plus a 3x crop of the tee at 30%.
@@ -12,7 +13,7 @@ import { mkdirSync } from 'node:fs';
 import { join } from 'node:path';
 
 const args = process.argv.slice(2), opt = (k, d) => { const i = args.indexOf(`--${k}`); return i >= 0 ? args[i + 1] : d; };
-const base = opt('base', 'http://localhost:5195/'), out = opt('out', 'E:/ClaudeTemp/T364'), seed = opt('seed', '7'), holeArg = opt('hole', ''), only = opt('only', '');
+const base = opt('base', 'http://localhost:5195/'), out = opt('out', 'E:/ClaudeTemp/T364'), seed = opt('seed', '7'), holeArg = opt('hole', ''), only = opt('only', ''), also = opt('also', '');
 const W = 1366, H = 768, ZOOMS = opt('zooms', '30,15').split(',').map(v => +v / 100), STATES = opt('states', 'raised,flat').split(',');
 mkdirSync(out, { recursive: true });
 const sleep = ms => new Promise(r => setTimeout(r, ms));
@@ -74,6 +75,7 @@ const browser = await chromium.launch({ channel: 'msedge', headless: true, args:
 try {
   const before = only === 'after' ? null : (console.log('before (?tee=old)'), await run(browser, '&tee=old'));
   console.log('after'); const after = await run(browser, '');
+  if (also) { console.log(`also ${also}`); const alt = await run(browser, `&tee=${also}`); for (const key of Object.keys(alt.shots)) { await sharp(alt.shots[key]).toFile(join(out, `${key}-${also}.png`)); console.log('  shot ' + join(out, `${key}-${also}.png`)); } }
   for (const key of Object.keys(after.shots)) {
     const [state, z] = key.split('-'), name = `${state}-${z}`;
     if (!before) { await sharp(after.shots[key]).toFile(join(out, `${name}-after.png`)); console.log('  shot ' + join(out, `${name}-after.png`)); continue; }

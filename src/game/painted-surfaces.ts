@@ -1,6 +1,6 @@
 import { clampLook, DEFAULT_LOOK, familyById, type PaintedKind, type PaintedLook } from './painted-families';
 import type { PresetState } from './lots/presets';
-import { clampCourseFinish, type CourseFinish } from './course-finish';
+import { clampCourseFinish, type CourseFinish, type TeeWall } from './course-finish';
 import { clampWaterLook, type WaterLook } from './water-look';
 import { clampRangeLook, type RangeLook } from './golf/range-look';
 
@@ -107,7 +107,11 @@ export const OLD_TEE_LOOK: Readonly<PaintedLook> = { family: 'fairway-concept-ru
 /** the surfaces file with the tees as they were before T364: the fairway's grass on top, the painted earth and set stones on a raised tee's
  *  sides (course-finish.ts teeWall 'rock'); nothing else changes */
 export function oldTeeSurfaces(f: SurfacesFile): SurfacesFile {
-  return { ...f, surfaces: { ...f.surfaces, tee: { ...OLD_TEE_LOOK } }, course: { ...clampCourseFinish(f.course), teeWall: 'rock' } };
+  return teeWallSurfaces({ ...f, surfaces: { ...f.surfaces, tee: { ...OLD_TEE_LOOK } } }, 'rock');
+}
+/** the surfaces file with a raised tee's sides painted another way (course-finish.ts TeeWall; the dev server's ?tee=sand lays the native bunker wall's painting) */
+export function teeWallSurfaces(f: SurfacesFile, teeWall: TeeWall): SurfacesFile {
+  return { ...f, course: { ...clampCourseFinish(f.course), teeWall } };
 }
 /** what the game knows of a preset: its id, the golf surface it stands for, and the old painted set it named (T082) */
 export interface PresetRef { id: string; surface?: string | null; painted?: string | null }
