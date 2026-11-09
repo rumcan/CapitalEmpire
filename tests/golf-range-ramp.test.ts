@@ -158,7 +158,7 @@ test('props have diminishing returns: $2,000 of grasses no longer reaches the ca
 });
 
 test('the range upgrades cost upkeep each month, booked as upkeep and shown on the card; the season counts it', () => {
-  for (const u of RANGE_UPGRADES) { assert.ok(u.upkeep > 0 && u.upkeep < u.cost / 50, `${u.id}: $${u.upkeep} a month`); }
+  for (const u of RANGE_UPGRADES) { assert.ok(u.upkeep > 0 && (u.branch === 'staff' || u.upkeep < u.cost / 50), `${u.id}: $${u.upkeep} a month`); } // (T386 part 2: a staff member's upkeep is his wage)
   let s = defaultRangeBiz();
   assert.equal(rangeUpkeep(s), 0);
   s = withUpgrade(withUpgrade(s, 'bays8'), 'dispenser');

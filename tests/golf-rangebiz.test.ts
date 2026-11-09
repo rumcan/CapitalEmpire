@@ -40,7 +40,7 @@ test('a new range: 4 bays, $6, nothing bought, no counts; the save normalizes an
 });
 
 test('the upgrades: their order, their costs, and what each does to the stats', () => {
-  assert.equal(RANGE_UPGRADES.length, 24, 'T386: six tools and a supplier for the ball loop (golf-range-balls.test.ts), the eight of Phase 1, the four World of Golf extras (T133: golf-range-extras.test.ts), the car park building (T146: golf-range-parking.test.ts), the desert start\'s two ground upgrades (T223: golf-range-desert.test.ts) and the guided start\'s greens, gravel and paving (T239: golf-range-guided.test.ts)');
+  assert.equal(RANGE_UPGRADES.length, 34, 'T386: six tools and a supplier for the ball loop (golf-range-balls.test.ts), ten staff and machines (golf-range-auto.test.ts), the eight of Phase 1, the four World of Golf extras (T133: golf-range-extras.test.ts), the car park building (T146: golf-range-parking.test.ts), the desert start\'s two ground upgrades (T223: golf-range-desert.test.ts) and the guided start\'s greens, gravel and paving (T239: golf-range-guided.test.ts)');
   const d = defaultRangeBiz();
   assert.equal(upgradeWhy(d, 'bays12', 1e9), 'Build 8 hitting bays first');
   assert.match(upgradeWhy(d, 'proshop', 1000), /Not enough money/);
