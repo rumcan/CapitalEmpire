@@ -27,7 +27,7 @@ import {
 import { WHOLE_FRONT, approvedFor, bucketOf, fitPreset, parsePresets, pickPreset, presetsFor, stateOf, type Fitted, type LotPreset, type PresetDecal, type PresetMeta, type PresetProp, type PresetState, type PresetUse, type Road } from './presets';
 import { AXIS_PROPS, drawnView, faces, footprintOf, isVehicle, ownerScaleOf, roadView, turned } from './preset-art';
 import { fixedArt } from './art-fix';
-import { share, type Box4 } from './compose-core'; // T232: the building sites' kit (putClear)
+import { EPS, OVERLAP, share, type Box4 } from './compose-core'; // T232: the building sites' kit (putClear); T308: the facing's tolerance (T385's clean lot uses it: faceStreet no longer does)
 import { setBack, turnFirst, turnedSpot } from './setback'; // T375: the turned building's place; T376: the setback behind the pavement
 import { frameOf, listToWorld, quarterOfRoad, roadOf, toWorld, type PresetFrame } from './preset-frame';
 import PRESET_JSON from './lot-presets.json';
