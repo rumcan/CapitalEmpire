@@ -6628,6 +6628,7 @@ export class Game {
   /** each frame: the cards of the T392 to T394 stack that are open when your shot (or your turn in the tournament) opens are closed, and come back FOLD_BACK_MS after the last shot of the run closes (a card you opened during the shot stays,
    *  one a neighbour took the place of does not come back). They are closed by their state, so the Esc ladder (escRungs) never lists a card that is not on the screen and the stack's columns close up (App.tsx) */
   private stepFoldCards(now: number) {
+    if (!this.shot && !this.cardFold.on) return; // (nearly every frame: no shot, nothing folded: nothing to look at, nothing allocated)
     const act = this.cardFold.step(now, !!this.shot, { bag: this.bagCardOpen, cards: this.cardsCardOpen, player: this.playerCardOpen, staff: this.staffCardOpen, club: this.clubCardOpen, range: this.range.cardOpen, event: this.eventCardOpen });
     if (!act) return;
     const c = act.close, b = act.back;
