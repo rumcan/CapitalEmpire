@@ -20,7 +20,7 @@ from prep_sheet import prep
 
 a = sys.argv[1:]
 def opt(k, d): return a[a.index(k) + 1] if k in a else d
-SRC = Path(opt('--src', 'F:/Art/newArt/animations/buildings/business~golf-cart')); OUT = Path(opt('--out', 'output/t351/cut'))
+SRC = Path(opt('--src', 'F:/Art/newArt/animations/buildings/business~golf-cart')); OUT = Path(opt('--out', 'art/golf-cart-20261109/src'))
 MARGIN = 8
 sha = lambda p: hashlib.sha256(Path(p).read_bytes()).hexdigest()
 
@@ -52,11 +52,14 @@ TL, TR, BL, BR = four_views(C)
 sheet, arep = prep(Image.open(axis_f)); assert sheet is not None, arep
 S = np.array(sheet); ax_views = four_views(S)          # the repacked sheet: N (top left), E, S, W in its cells
 N, E, Sv, Wv = ax_views
-cells = {'normalNE': (BL, 'corners bottom left: the front to the screen lower left (heading SW)'), 'yaw8N': (N, 'axisturn top left: the front to the screen bottom (heading S)'),
-         'normalSE': (BR, 'corners bottom right: the front to the lower right (heading SE)'), 'yaw8E': (E, 'axisturn top right: the right side, the front to the right (heading E)'),
+cells = {'yaw8N': (N, 'axisturn top left: the front to the screen bottom (heading S)'),
+         'yaw8E': (E, 'axisturn top right: the right side, the front to the right (heading E)'),
          'normalSW': (TL, 'corners top left: the back to the camera, the front to the upper right (heading NE)'), 'yaw8S': (Sv, 'axisturn bottom left: the back, the front to the screen top (heading N)'),
-         'normalNW': (TR, 'corners top right: the back to the camera, the front to the upper left (heading NW)'), 'yaw8W': (Wv, 'axisturn bottom right: the left side, the front to the left (heading W)')}
+         'normalNW': (TR, 'corners top right: the back to the camera, the front to the upper left (heading NW)'), 'yaw8W': (Wv, 'axisturn bottom right: the left side, the front to the left (heading W)'),
+         # the bottom row of the corners sheet is kept but not used: drawn from a higher camera (roof height / width 0.58-0.60, 36 degrees) than every other picture (0.43-0.50) and a
+         # paler roof; the game's own SE and SW pictures (business:golf-cart-se / -sw) are the cart's SE and SW (art/golf-cart-20261109/README.md)
+         'unused-corners-bottom-left': (BL, 'corners bottom left (heading SW): not used, the existing golf-cart-sw is'), 'unused-corners-bottom-right': (BR, 'corners bottom right (heading SE): not used, the existing golf-cart-se is')}
 rep = {'schema': 1, 'sources': {'corners': {'file': str(corners_f), 'sha256': sha(corners_f), 'key': crep}, 'axisturn': {'file': str(axis_f), 'sha256': sha(axis_f), 'prep': arep}}, 'views': {}}
 for key, (V, what) in cells.items():
-    r = save(V, key); r['from'] = what; rep['views'][key] = r; print(key.ljust(9), r['subject'], what)
-(OUT / 'prep-report.json').write_text(json.dumps(rep, indent=1) + '\n')
+    r = save(V, key); r['from'] = what; rep['views'][key] = r; print(key.ljust(28), r['subject'], what)
+REPORT = OUT.parent / 'prep-report.json'; REPORT.write_text(json.dumps(rep, indent=1) + '\n')   # (the sources' hashes and every picture's: committed; the pictures are not, see art/golf-cart-20261109/.gitignore)

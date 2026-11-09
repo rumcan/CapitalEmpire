@@ -1,0 +1,29 @@
+{
+  "schema": 1,
+  "subject": "business:golf-cart",
+  "version": 1,
+  "key": "normalNW",
+  "source": {
+    "file": "../src/normalNW.png",
+    "sha256": "ca678a76f1204e993710b713800501d0bef10dfab38b6315d63160ba3f8c5fd3",
+    "width": 528,
+    "height": 537
+  },
+  "cell": 0,
+  "cellRect": {
+    "left": 0,
+    "top": 0,
+    "width": 528,
+    "height": 537
+  },
+  "crop": {
+    "left": 4,
+    "top": 4,
+    "width": 520,
+    "height": 529
+  },
+  "output": "normalNW.native.png",
+  "sha256": "d85de6b5583793a1be2ceca1ce1d0444aca4f165a1dc20fa8f22b258d2ddb5dd",
+  "operation": "native RGBA cell crop only; no flip/repaint/view synthesis",
+  "review": "candidate"
+}

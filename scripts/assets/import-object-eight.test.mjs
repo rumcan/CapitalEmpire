@@ -146,9 +146,7 @@ test('T398: a set can reuse four existing pictures as its normal views and add t
   for(const [i,key] of KEYS.entries())if(key.startsWith('yaw8'))await viewPng(path.join(src,`${key}.png`),i);
   const input={schema:1,projection:'normal+yaw8',subject:'test:reuse',name:'Reuse test',version:1,review:'candidate',source:{views},pixelsPerMetre:44,pixelCalibrationSpace:'orthographic-camera',baselineScale:1.25,footprintMetres:{width:8,depth:4},category:'Eight-view buildings',kind:'building'};
   const inputFile=path.join(src,'input.json');fs.writeFileSync(inputFile,JSON.stringify(input));
-  // reuse covers all four normal views or none, and never a straight-on one
-  const half={...input,source:{views:{...views,normalSW:'yaw8N.png'}}};fs.writeFileSync(path.join(src,'half.json'),JSON.stringify(half));
-  await assert.rejects(()=>cutObject(path.join(src,'half.json'),path.join(dir,'half')),/all four normal views or none/);
+  // reuse is for the normal views only, never a straight-on one
   const bad={...input,source:{views:{...views,yaw8N:{reuse:'old:x'}}}};fs.writeFileSync(path.join(src,'bad.json'),JSON.stringify(bad));
   await assert.rejects(()=>cutObject(path.join(src,'bad.json'),path.join(dir,'bad')),/eight per-view source files/);
   const out=path.join(src,'v1'),result=await cutObject(inputFile,out);
@@ -169,4 +167,28 @@ test('T398: a set can reuse four existing pictures as its normal views and add t
   // the generated library module aliases the reused views in place and keeps the pixel ones on their atlas cells
   const lib=fs.readFileSync(path.join(dir,'src/game/object-eight-library.ts'),'utf8');assert.ok(lib.includes("'reuse' in item")&&lib.includes('"reuse":"old:normalNE"'));
   assert.ok(ts.transpileModule(lib,{compilerOptions:{module:ts.ModuleKind.ESNext,target:ts.ScriptTarget.ES2022},reportDiagnostics:true}).diagnostics.length===0);
+});
+test('T351: a set can reuse some of its normal views and add the others as new atlas cells (the golf cart: its two existing corners and two new ones)',async t=>{
+  const dir=fixture(t),src=path.join(dir,'mixed');fs.mkdirSync(src,{recursive:true});
+  const reuse={normalNE:'old:sw',normalSE:'old:se'},views={};
+  for(const [i,key] of KEYS.entries()){if(reuse[key])views[key]={reuse:reuse[key]};else{views[key]=`${key}.png`;await viewPng(path.join(src,views[key]),i);}}
+  const input={schema:1,projection:'normal+yaw8',subject:'test:mixed',name:'Mixed test',version:1,review:'candidate',source:{views},pixelsPerMetre:44,pixelCalibrationSpace:'orthographic-camera',baselineScale:.294,footprintMetres:{width:1.2,depth:2.4},category:'Eight-view carts'};
+  const inputFile=path.join(src,'input.json');fs.writeFileSync(inputFile,JSON.stringify(input));
+  const out=path.join(src,'v1'),result=await cutObject(inputFile,out);
+  assert.equal(Object.keys(result.views).length,8);assert.equal(result.views.normalNE.reuse,'old:sw');assert.equal(result.views.normalSE.reuse,'old:se');
+  for(const key of KEYS)assert.equal(fs.existsSync(path.join(out,`${key}.native.png`)),!reuse[key],`${key}: a crop only for a new view`);
+  result.review='approved';const heading={normalNE:0,yaw8N:37,normalSE:90,yaw8E:127,normalSW:180,yaw8S:217,normalNW:270,yaw8W:307};
+  for(const key of KEYS){const v=result.views[key];v.headingDegrees=heading[key];if(!reuse[key])v.anchor={x:v.width/2,y:v.height-5};}
+  const manifest=path.join(out,'manifest.json');fs.writeFileSync(manifest,JSON.stringify(result));
+  fs.mkdirSync(path.join(dir,'scripts/assets'),{recursive:true});fs.mkdirSync(path.join(dir,'src/game'),{recursive:true});
+  const [set]=await integrateObjects([manifest],{root:dir,tag:'mixed',density:.3});
+  assert.equal(set.runtimeReuse,true);assert.deepEqual(set.sourceIds,reuse);assert.equal(new Set(Object.values(set.views).map(v=>v.id)).size,8);
+  const ledger=JSON.parse(fs.readFileSync(path.join(dir,'scripts/assets/object-eight-registry.json'),'utf8'));
+  assert.equal(ledger.items.length,8);assert.deepEqual(ledger.items.filter(i=>i.reuse).map(i=>i.id).sort(),[set.views.normalNE.id,set.views.normalSE.id].sort());
+  assert.ok(ledger.items.filter(i=>!i.reuse).every(i=>i.tex&&i.w>0),'the six new views carry their atlas cells');assert.equal(ledger.pages.length,1);
+  // the new cells are stored at the batch's density (0.3 of their display size), the display size and anchors unchanged
+  const k=objectDisplayScale(44),n=result.views.yaw8N,item=ledger.items.find(i=>i.id===set.views.yaw8N.id);
+  assert.equal(item.w,n.width*k);assert.equal(Math.round((item.tex[3]-item.tex[1])*2048),Math.round(n.width*Math.min(1,.3*k)));
+  const cal=JSON.parse(fs.readFileSync(path.join(dir,'src/assets/object-eight/mixed-v1',fs.readdirSync(path.join(dir,'src/assets/object-eight/mixed-v1')).find(f=>f.endsWith('.calibration.json'))),'utf8'));
+  assert.deepEqual(Object.keys(cal.views).sort(),['normalNW','normalSW','yaw8E','yaw8N','yaw8S','yaw8W']);assert.equal(cal.atlasDensity,.3);
 });

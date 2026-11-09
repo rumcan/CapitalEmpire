@@ -1,0 +1,86 @@
+{
+  "schema": 1,
+  "projection": "normal+yaw8",
+  "subject": "business:golf-cart",
+  "name": "Hire golf cart",
+  "version": 1,
+  "review": "candidate",
+  "source": {
+    "views": {
+      "normalNE": {
+        "reuse": "business:golf-cart-sw"
+      },
+      "yaw8N": "src/yaw8N.png",
+      "normalSE": {
+        "reuse": "business:golf-cart-se"
+      },
+      "yaw8E": "src/yaw8E.png",
+      "normalSW": "src/normalSW.png",
+      "yaw8S": "src/yaw8S.png",
+      "normalNW": "src/normalNW.png",
+      "yaw8W": "src/yaw8W.png"
+    }
+  },
+  "footprintMetres": {
+    "width": 1.2,
+    "depth": 2.4
+  },
+  "pixelsPerMetre": 42.7335542927,
+  "pixelCalibrationSpace": "orthographic-camera",
+  "baselineScale": 0.294,
+  "kind": "decor",
+  "solid": 0,
+  "category": "Eight-view carts",
+  "aliases": [],
+  "views": {
+    "normalNE": {
+      "headingDegrees": 0
+    },
+    "yaw8N": {
+      "anchor": {
+        "x": 141,
+        "y": 417
+      },
+      "headingDegrees": 37
+    },
+    "normalSE": {
+      "headingDegrees": 90
+    },
+    "yaw8E": {
+      "anchor": {
+        "x": 262.4,
+        "y": 368.6
+      },
+      "headingDegrees": 127
+    },
+    "normalSW": {
+      "anchor": {
+        "x": 305.5,
+        "y": 380.8
+      },
+      "headingDegrees": 180
+    },
+    "yaw8S": {
+      "anchor": {
+        "x": 148.9,
+        "y": 371.1
+      },
+      "headingDegrees": 217
+    },
+    "normalNW": {
+      "anchor": {
+        "x": 273.6,
+        "y": 384.1
+      },
+      "headingDegrees": 270
+    },
+    "yaw8W": {
+      "anchor": {
+        "x": 260.6,
+        "y": 365.1
+      },
+      "headingDegrees": 307
+    }
+  },
+  "calibrationNotes": "The hire cart (GOLF-ART-LIST item 173: 1.2 x 2.4 m). SE and SW headings: the game's own golf-cart-se and golf-cart-sw, reused (their atlas cells). The other six: the lead's two sheets (F:/Art/newArt/animations/buildings/business~golf-cart/{corners,axisturn}.png) keyed and cleaned (scripts/assets/golf-cart/prep_cart.py), at 1.059 library px per native px = the existing pictures' 1.4063 x 0.753 (the roof's horizontal width, which does not depend on the camera's pitch: measure.py), drawn at the existing cart's owner size 0.294. Anchors: the roof's centroid and the old pictures' roof-to-floor drop at that scale (measure.py). The corners sheet's bottom row is not used (drawn from a camera 9 degrees higher than every other picture)."
+}

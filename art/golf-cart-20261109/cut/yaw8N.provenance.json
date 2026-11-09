@@ -1,0 +1,29 @@
+{
+  "schema": 1,
+  "subject": "business:golf-cart",
+  "version": 1,
+  "key": "yaw8N",
+  "source": {
+    "file": "../src/yaw8N.png",
+    "sha256": "26a478899445810e9b7cc110cadc89b3b0b77f45bd8f8fb20c71c190e084272d",
+    "width": 287,
+    "height": 538
+  },
+  "cell": 0,
+  "cellRect": {
+    "left": 0,
+    "top": 0,
+    "width": 287,
+    "height": 538
+  },
+  "crop": {
+    "left": 4,
+    "top": 4,
+    "width": 279,
+    "height": 530
+  },
+  "output": "yaw8N.native.png",
+  "sha256": "c6938e52c85c34fe6e6d39d1d57b629c821890b1b6cb299ae79ad7d62ded7662",
+  "operation": "native RGBA cell crop only; no flip/repaint/view synthesis",
+  "review": "candidate"
+}

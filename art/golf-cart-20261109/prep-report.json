@@ -1,0 +1,196 @@
+{
+ "schema": 1,
+ "sources": {
+  "corners": {
+   "file": "F:\\Art\\newArt\\animations\\buildings\\business~golf-cart\\corners.png",
+   "sha256": "47f07ea0c79590777a8f873ddc6846e44fe7a040f31b00be5edc0d7f73dcc133",
+   "key": {
+    "paper_frac": 0.5428485306349824,
+    "bg_frac": 0.5419302569894361,
+    "band_px": 43583,
+    "solid_px": 676739,
+    "alpha_semi": 18544
+   }
+  },
+  "axisturn": {
+   "file": "F:\\Art\\newArt\\animations\\buildings\\business~golf-cart\\axisturn.png",
+   "sha256": "4c9e2fde31503badcac3de23fda4f07c036bc6df4b9c27a0592605a581fe0030",
+   "prep": {
+    "components": 4,
+    "areas": [
+     154937,
+     153103,
+     120148,
+     113975
+    ],
+    "flags": [],
+    "attached": 0,
+    "dropped": 0,
+    "views": {
+     "N": {
+      "size": [
+       271,
+       522
+      ],
+      "edge_px": 3343,
+      "bbox_in_sheet": [
+       191,
+       59,
+       461,
+       580
+      ]
+     },
+     "E": {
+      "size": [
+       499,
+       462
+      ],
+      "edge_px": 6518,
+      "bbox_in_sheet": [
+       687,
+       105,
+       1185,
+       566
+      ]
+     },
+     "S": {
+      "size": [
+       281,
+       483
+      ],
+      "edge_px": 2981,
+      "bbox_in_sheet": [
+       182,
+       701,
+       462,
+       1183
+      ]
+     },
+     "W": {
+      "size": [
+       519,
+       474
+      ],
+      "edge_px": 6672,
+      "bbox_in_sheet": [
+       647,
+       709,
+       1165,
+       1182
+      ]
+     }
+    },
+    "sheet": [
+     1236,
+     1236
+    ]
+   }
+  }
+ },
+ "views": {
+  "yaw8N": {
+   "file": "yaw8N.png",
+   "size": [
+    287,
+    538
+   ],
+   "subject": [
+    271,
+    522
+   ],
+   "sha256": "26a478899445810e9b7cc110cadc89b3b0b77f45bd8f8fb20c71c190e084272d",
+   "from": "axisturn top left: the front to the screen bottom (heading S)"
+  },
+  "yaw8E": {
+   "file": "yaw8E.png",
+   "size": [
+    515,
+    478
+   ],
+   "subject": [
+    499,
+    462
+   ],
+   "sha256": "362a3f148faa35f421396a024cc440dcd9e38b738e6f13dcd524b35d043177ce",
+   "from": "axisturn top right: the right side, the front to the right (heading E)"
+  },
+  "normalSW": {
+   "file": "normalSW.png",
+   "size": [
+    575,
+    529
+   ],
+   "subject": [
+    559,
+    513
+   ],
+   "sha256": "c53c4a54597ff6d9cc0fdee9dbbcdd2ccec12e8826bdf3067eb8a811c32074c5",
+   "from": "corners top left: the back to the camera, the front to the upper right (heading NE)"
+  },
+  "yaw8S": {
+   "file": "yaw8S.png",
+   "size": [
+    297,
+    499
+   ],
+   "subject": [
+    281,
+    483
+   ],
+   "sha256": "586fd05752820e917b3a2b882bf232f9d945d1dfe6ddc1eb040c7c940fba41db",
+   "from": "axisturn bottom left: the back, the front to the screen top (heading N)"
+  },
+  "normalNW": {
+   "file": "normalNW.png",
+   "size": [
+    528,
+    537
+   ],
+   "subject": [
+    512,
+    521
+   ],
+   "sha256": "ca678a76f1204e993710b713800501d0bef10dfab38b6315d63160ba3f8c5fd3",
+   "from": "corners top right: the back to the camera, the front to the upper left (heading NW)"
+  },
+  "yaw8W": {
+   "file": "yaw8W.png",
+   "size": [
+    535,
+    490
+   ],
+   "subject": [
+    519,
+    474
+   ],
+   "sha256": "f2bb7ef07d98eadfb5ce1ccf6e882eda57db8f0e71a76de46a28691c35d0f118",
+   "from": "axisturn bottom right: the left side, the front to the left (heading W)"
+  },
+  "unused-corners-bottom-left": {
+   "file": "unused-corners-bottom-left.png",
+   "size": [
+    570,
+    573
+   ],
+   "subject": [
+    554,
+    557
+   ],
+   "sha256": "a47ba4344da588ba2e05b0097b24b12ded7da10e4e8ceab3c7def9beb4303571",
+   "from": "corners bottom left (heading SW): not used, the existing golf-cart-sw is"
+  },
+  "unused-corners-bottom-right": {
+   "file": "unused-corners-bottom-right.png",
+   "size": [
+    535,
+    585
+   ],
+   "subject": [
+    519,
+    569
+   ],
+   "sha256": "20c9d2fbf51be25b6820284100686870b2468d75e0686daad58959b6aa8e19ee",
+   "from": "corners bottom right (heading SE): not used, the existing golf-cart-se is"
+  }
+ }
+}
