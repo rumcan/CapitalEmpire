@@ -58,7 +58,7 @@ const inHand = (): { title: string; tool: Tool; alt?: true; rows: [string, strin
 ];
 /** the keys that work anywhere (the top), the camera, the speed and the views */
 const general = (): { id: string; title: string; rows: [string, string][] }[] => [
-  { id: 'anywhere', title: 'Anywhere', rows: [['Esc', 'close the top card or menu, then put down what is in hand, then back to Select'], ['Ctrl+Z / Ctrl+Y', 'undo / redo (the course, the paint, the props)'], ['Delete', 'remove or sell what is picked'], ['? / F1', 'these keys']] },
+  { id: 'anywhere', title: 'Anywhere', rows: [['Esc', 'close the top card or menu, then put down what is in hand, then back to Select (a right click on the map does the same)'], ['Ctrl+Z / Ctrl+Y', 'undo / redo (the course, the paint, the props)'], ['Delete', 'remove or sell what is picked'], ['? / F1', 'these keys']] },
   { id: 'camera', title: 'Camera', rows: [['W A S D, arrows', 'pan'], ['Space + drag, right drag', 'pan'], ['+ / −, the wheel', 'zoom in / out']] },
   { id: 'speed', title: 'Speed', rows: [['Space (tap)', 'pause / go on'], [', / .', 'slower / faster'], ['H', 'skip to the next rush hour']] },
   { id: 'views', title: 'Views and panels', rows: [['G', 'the grid'], ['F', 'traffic flow and the junctions\' service'], ['B', 'the worst bottlenecks'], ['L', 'the lanes'], ['K', 'the lots'], ['O', 'the access paths']] },
