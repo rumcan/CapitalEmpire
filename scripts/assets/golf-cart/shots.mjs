@@ -24,7 +24,15 @@ const SQUARE = [['E', 7], ['N', 7], ['W', 7], ['S', 7], ['E', 7], ['W', 9]];
 
 const browser = await chromium.launch({ channel: opt('channel', 'msedge'), headless: true, args: ['--enable-gpu', '--ignore-gpu-blocklist', '--use-angle=d3d11', '--enable-unsafe-swiftshader=false', '--disable-background-timer-throttling', '--disable-renderer-backgrounding'] });
 const ctx = await browser.newContext({ viewport: { width: 1280, height: 800 }, deviceScaleFactor: 1 });
-await ctx.addInitScript(k => { try { localStorage.clear(); sessionStorage.clear(); } catch { /* none */ } const real = window.requestAnimationFrame.bind(window); window.requestAnimationFrame = cb => real(t => cb(t * k)); }, slow);
+// the page's clock: normal while the game starts (some of its timers mix performance.now and the frame's own time, so a clock scaled from the first frame can hold a start back), then
+// window.__setSlow(k) slows it to k of real time: performance.now and the frames' timestamps are one scaled clock, continuous at the change
+await ctx.addInitScript(() => {
+  try { localStorage.clear(); sessionStorage.clear(); } catch { /* none */ }
+  const realNow = performance.now.bind(performance), c = { k: 1, t0: 0, v0: 0 }, scaled = t => c.v0 + (Math.max(t, c.t0) - c.t0) * c.k;
+  performance.now = () => scaled(realNow());
+  const realRaf = window.requestAnimationFrame.bind(window); window.requestAnimationFrame = cb => realRaf(t => cb(scaled(t)));
+  window.__setSlow = k => { const now = realNow(); c.v0 = scaled(now); c.t0 = now; c.k = k; };
+});
 const page = await ctx.newPage();
 page.on('pageerror', e => console.log('[pageerror]', e.message.slice(0, 300)));
 page.on('crash', () => console.log('[crash] the page crashed'));
@@ -37,8 +45,9 @@ await page.evaluate(() => {
   g.standInPill = () => {}; g.emit(); // (no "Your cart" pill over the roof)
 });
 await page.waitForTimeout(3000);
-{ const t1 = Date.now(); while (!(await page.evaluate(() => !!window.__game?.you && !!window.__game?.youCart)) && Date.now() - t1 < 600000) { await page.waitForTimeout(2000); if ((Date.now() - t1) % 20000 < 2100) console.log('[wait] the game has no character yet'); } }
+{ const t1 = Date.now(); while (!(await page.evaluate(() => !!window.__game?.you && !!window.__game?.youCart)) && Date.now() - t1 < 600000) { await page.waitForTimeout(2000); if ((Date.now() - t1) % 20000 < 2100) console.log('[wait] the game has no character yet', JSON.stringify(await page.evaluate(() => { const g = window.__game; return { golf: !!g?.golf, you: !!g?.you, cart: !!g?.youCart, speed: g?.speed, ready: !!g?.ready }; }))); } }
 await page.waitForTimeout(2000);
+await page.evaluate(k => window.__setSlow(k), slow);
 
 // the cart, and open ground for the routes (found with the game's own cartOk over a spiral of 12-tile steps from where the cart waits)
 const where = await page.evaluate(() => {

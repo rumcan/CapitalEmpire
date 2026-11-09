@@ -43,7 +43,10 @@ seen, and reusing them stores no pixel twice. The bottom row is kept in `src/` (
 
 1. `python scripts/assets/golf-cart/prep_cart.py` cuts the eight cells into `src/` (8 px clear margin each):
    - `corners.png` is RGB with a checkerboard baked in (no alpha): `key_checker.py` keys it (the near-white neutral paper that joins the sheet's border, and the see-through gaps of the open cart:
-     enclosed paper of 60 px or more; alpha unmixed against the paper on a 3 px band; edge colour from the nearest solid pixels; nothing resized or repainted);
+     enclosed paper of 60 px or more; alpha unmixed against the paper on a 3 px band; the edge colour is the pixel less the paper it holds, over its alpha, where that is well conditioned, else
+     the nearest solid colour; nothing resized or repainted). A first try that only bled the nearest solid colour into the edge left a light halo round the dark tyres: at dark edges 52% of
+     the edge pixels were more than 60 levels brighter than their neighbour (median +61); now 5-9% (median +16-21: the cart's own rim light), against 0.0-0.2% for the axis views
+     (`fringe_check.py`);
    - `axisturn.png` has alpha, haze and a yellow fringe: T398's `straight-views/prep_sheet.py` (alpha under 8 zeroed, solid alpha 252-253 to 255, edge pixels take the colour of the solid ones beside
      them, the four views kept as connected pieces). Checked at 3-6x over grass green and dark: no fringe left.
 2. `python scripts/assets/golf-cart/measure.py` writes `measurements.json`:

@@ -293,6 +293,20 @@ describe('T351: your cart steers, pulls away and rolls to a stop', () => {
     const st = steps(angles); assert.ok(st.every(s => Math.abs(s) <= 1), `the pictures step through their neighbours (${st.filter(s => Math.abs(s) > 1).length} jumps)`);
     void remaining;
   });
+  it('your cart keeps off what `ok` keeps it off (the tee boxes, greens, bunkers and water that cartOk refuses): steering, rolling on and a route never put it there', () => {
+    // a green of radius 6 round (108, 100): ok is false on it. Drive at it under the keys (screen right is the tile direction +x -y: along the wall's face) and rolling on after them, then a route across it.
+    const ok = (x: number, y: number) => Math.hypot(x - 108, y - 100) > 6;
+    for (const [kx, ky] of [[1, 1], [1, 0], [1, -1], [0, 1]] as const) {
+      const { c, d } = fresh(6); c.x = 100; c.y = 100; let inside = 0, steps2 = 0;
+      for (let i = 0; i < 240; i++) { d.keys(c, kx, ky, i > 120, frame, ok); d.look(c, frame); if (!ok(c.x, c.y)) inside++; steps2++; }
+      for (let i = 0; i < 60; i++) { d.free(c, frame, ok); d.look(c, frame); if (!ok(c.x, c.y)) inside++; }
+      assert.equal(inside, 0, `keys ${kx},${ky}: never on the green (${steps2} frames)`); assert.ok(!d.coasting && d.v === 0, 'and it came to a stop');
+    }
+    // the route round it (the A* of the engine goes round what is Infinity: here the same cost): the cart drives the polyline exactly and never touches the green
+    const { c, d } = fresh(6); c.x = 90; c.y = 100; const cost = (x: number, y: number) => (ok(x, y) ? 1 : Infinity), route = routeOf({ x: c.x, y: c.y }, { x: 126, y: 100 }, cost);
+    startWalk(c, route, false); let t = 0, on = 0; while (c.moving && t < 40) { d.free(c, frame, ok); d.look(c, frame); if (!ok(c.x, c.y)) on++; t += frame; }
+    assert.ok(!c.moving && Math.abs(c.x - 126) < 1e-9, 'it arrived'); assert.equal(on, 0, 'round the green, never on it');
+  });
   it('a facing the game sets from outside (the cart turned to you on arriving) is turned to a step at a time, not jumped to; at rest it keeps its heading', () => {
     const { c, d } = fresh(6); for (let i = 0; i < 30; i++) d.look(c, frame); assert.ok(Math.abs(wrapPi(d.ang - faceAngle(6))) < 1e-12);
     c.face = 2; const angles = [d.ang]; for (let i = 0; i < 60; i++) { d.look(c, frame); angles.push(d.ang); }
