@@ -102,3 +102,26 @@ Ownership: these are the coder's files (App.tsx, engine.ts, paint-tool.ts); the 
   families of bands XORed). The crew's passes follow a hole's own band width. The cause of "I can't edit them any more": the only in-game way
   to set the mowing direction was Greenkeeping's Grass care (hidden by `GREENKEEPING = false`, 17965bb, 2026-10-27, an hour after T218 made the
   fairway's stripes automatic with their look in the Studio alone); nothing was removed from the Fairway panel.
+
+## 8. Tees: the green's grass, the bunker's wall (T364, #1019, 2026-11-09)
+The owner, 2026-11-08: "replace grass on tees with the green grass but without any mow lines" and "use the same texture the bunker uses for its walls for the
+elevated tee walls".
+- **The tee's grass is the putting green's.** `painted-surfaces.json` gives the Tee surface the green's look (`green-concept-run`; it wore the fairway's,
+  `fairway-concept-run`). The tee keeps its own texture ids (`golfTee`, a preset for the `tee` surface), so costs, grow-in, kinds and the hole tags are
+  untouched; only the painting changes, wherever the tee's look is laid (the course grid, painted tee areas, the Paint panel's swatches and pucks). No mowing
+  lines: the tee's Mowing lines are Off unless a look turns them on (`course-finish.ts mowSpec`, pinned in `tests/tee-look.test.ts`). The Grass setting
+  `photo` still lays the old tee photo (it is the "as before" setting for every surface). The range's turf tee box already wore the green's grass.
+- **A raised tee's sides wear the bunker's wall** (`src/game/tee-wall.ts`, painted by `renderer.ts courseBanks` for the rock form, a tee from `ROCK_FROM`
+  = 0.5 m up: the default 0.6 m tee and every taller one; a low tee is still a grass bank, "a flat tee"). The picture is the Bunker look's Cut wall by
+  default (`bunker:wall-earth`, the pack's `wall-earth.png`), decoded by the ground workers with the painted pictures (`Textures.preparePainted`'s
+  `pictures`), laid in screen space at the scale the approved bunker lays it (7.45 m across a repeat), over the whole face, opaque. The light is the bunker
+  stage's wall shader (`stage-baker/wall-renderer.js`: `.28 + .74 x light`, mixed with .95 by the Shadow strength 1.252 / 1.5): per light step a cool
+  multiply of the share of the colour that step keeps (a face turned from the sun at the upper right the darkest, one turned to it the picture as it is),
+  a darker strip under the grass lip and a darker foot, the picture's grain in every step. The tee's contact shade, cast shadow, grass crest with its
+  tufts and the stairs are as T127 had them; the hash-placed stones are not drawn (the picture has its own pebbles).
+- **The old look stays an option:** the course finish's `teeWall` (`'bunker'` by default, `'rock'` for the painted earth and set stones; the file's
+  `course` block, clamped by `clampCourseFinish`), and the file's `surfaces.tee` look set back to the fairway's. `oldTeeSurfaces(file)` makes both at once;
+  the dev server's `?tee=old` lays it (`painted-surfaces-live.ts teeOldDev`), for A/B shots and the bench on one build. T372 (#1027) adds the cliff face as
+  a third `TeeWall` and moves the choice into the tee's look.
+- **Check:** `node scripts/dev/tee-look-shots.mjs --base http://localhost:<port>/ --out E:/ClaudeTemp/T364` (the old nine's tee, raised and flat, at 30% and 15%,
+  before | after sheets).

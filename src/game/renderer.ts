@@ -23,6 +23,7 @@ import { WOODLAND_TEX, barShape, classAlpha, rockAlpha, shadeField, shadeRGBA, s
 import { cutPieces, fairwayStripeLook, flipBands, holeStripeLegs, legArea, turnStripeLegs, type StripeLook } from './course-stripes';
 import { LIP, collarToneOf, finishMow, finishOf, lipRuns, mowSpec, tonedCollar, type CourseFinish } from './course-finish';
 import type { MowKind } from './mow-lines';
+import { BUNKER_WALL_MEAN, BUNKER_WALL_METRES, BUNKER_WALL_PICTURE, bunkerWallContact, bunkerWallOverhang, teeWallShade } from './tee-wall';
 import { quadBox, type CourseLayer, type CoursePatch, type CourseRim, type CourseTex, type CourseWall, type LotPatch, type MowStripes, type PatchTex, type ShineMaskData } from './ground-protocol';
 import { BunkerStageRegistry } from './ext/bunker-look/stage-registry';
 import { SHINE_TEXEL, SHINE_TEXEL_PX, SHINE_WEIGHTS, maskColour, maskPad, shineMaskPixels, shineWeight, type ShineWeights } from './grass-shine';
@@ -323,6 +324,9 @@ const BANK_TOE: readonly (readonly [number, number])[] = [[0.84, 0.66], [0.92, 0
 const BANK_STEPS = 16, BANK_B0 = 0.3, BANK_B1 = 1.7;
 /** how strongly a grass bank turned from the sun is shaded (a cool multiply) and one turned to it lit (a textured shine), T110 */
 const BANK_SHADE = 0.95, BANK_SUN = 0.8;
+/** T364: the cool cast of the tee wall's shade (SHADE_TINT as shares of its bluest channel): a face's share of the picture's colour is multiplied in
+ *  this hue, so a shaded wall reads as sky-lit shade, never a flat dark wash */
+const WALL_COOL = [112 / 152, 120 / 152] as const;
 /** the rock's painted earth and its stones, in full shade and in full sun (a stone's own shade varies a little round them) */
 const ROCK_EARTH: readonly (readonly number[])[] = [[92, 78, 62], [196, 174, 138]], ROCK_STONE: readonly (readonly number[])[] = [[100, 96, 88], [232, 224, 206]];
 /** the rock's stones: one where the top edge crosses a lattice line every STONE_GAP tiles (x or y, the segment's longer way: a place on the
@@ -3255,11 +3259,13 @@ export class GroundPainter {
     const px = 1 / (TILE_PX * L), NB = BANK_STEPS, NQ = BANK_BANDS.length - 1, sx = -SUN_DIR.x, sy = -SUN_DIR.y;
     const binOf = (b: number) => Math.max(0, Math.min(NB - 1, Math.round(((b - BANK_B0) / (BANK_B1 - BANK_B0)) * (NB - 1))));
     const bOfBin = (k: number) => BANK_B0 + (BANK_B1 - BANK_B0) * (k / (NB - 1));
+    // T364: a tee's rock faces in the bunker's wall (the course finish's teeWall, the default) or in the painted earth and set stones of before ('rock')
+    const earth = this.finish().teeWall !== 'rock';
     type Group = { f: FaceForm; hs: number; face: Path2D; bands: Path2D[]; upper: Path2D; toe: Path2D[]; crest: Path2D; body: Path2D; foot: Path2D; shadow: Path2D[]; shade: boolean;
       stoneShade: Path2D; stones: Path2D[]; lights: Path2D[]; tufts: Path2D[]; sides: Path2D[]; treads: Path2D[]; risers: Path2D[]; noses: Path2D; cheeks: Path2D; timber: boolean; stairs: boolean };
     // T217: the faces' paths are made once for these runs (tile space, the same at every level) and kept for the next bake they reach (T204's
     // warped wall tops have ten times the points: a re-bake of a chunk under a bank built them all again)
-    const bkey = this.bankKey(ws, lite, stairs), built = this.bankBuilt.get(bkey) as Map<number, Group> | undefined;
+    const bkey = this.bankKey(ws, lite, stairs, earth), built = this.bankBuilt.get(bkey) as Map<number, Group> | undefined;
     const groups = built ?? new Map<number, Group>(), ends = built ? null : endNormals(ws);
     if (built) { this.bankBuilt.delete(bkey); this.bankBuilt.set(bkey, built); }
     if (!built) for (const w of ws) {
@@ -3299,9 +3305,11 @@ export class GroundPainter {
           sp.closePath();
         }
       }
-      // the stones and the turf's tufts: built once per run (tile space: the same at every zoom) and kept with it (rockDetail)
-      const rd = this.rockDetail(w, ox, oy, lb);
-      rd.stones.forEach((q, t) => G.stones[t]!.addPath(q)); rd.lights.forEach((q, t) => G.lights[t]!.addPath(q)); G.stoneShade.addPath(rd.shade); rd.tufts.forEach((q, t) => G.tufts[t]!.addPath(q));
+      // the stones and the turf's tufts: built once per run (tile space: the same at every zoom) and kept with it (rockDetail). T364: in the bunker's
+      // wall a tee's face has no set stones (the picture has its own pebbles): the turf's tufts alone
+      const rd = this.rockDetail(w, ox, oy, lb, !earth);
+      if (!earth) { rd.stones.forEach((q, t) => G.stones[t]!.addPath(q)); rd.lights.forEach((q, t) => G.lights[t]!.addPath(q)); G.stoneShade.addPath(rd.shade); }
+      rd.tufts.forEach((q, t) => G.tufts[t]!.addPath(q));
       if (hs === SURF.tee) this.bankStairs(G, w, nx, ny, stairs, k);
     }
     if (!built) { this.bankBuilt.set(bkey, groups); trimLru(this.bankBuilt, new Set([bkey]), BANK_BUILT); }
@@ -3316,12 +3324,15 @@ export class GroundPainter {
     };
     return () => {
       for (const G of groups.values()) {
-        const rock = G.f === FaceForm.Rock, weight = rock ? ROCK_WEIGHT : BANK_WEIGHT, grass = grassOf(G.hs), sh = shadeOf(G.hs);
+        const rock = G.f === FaceForm.Rock, earthy = rock && earth, weight = rock ? ROCK_WEIGHT : BANK_WEIGHT, grass = grassOf(G.hs), sh = shadeOf(G.hs);
         ctx.save(); ctx.setTransform(M); ctx.lineJoin = 'round'; ctx.lineCap = 'round';
         if (lite) {
-          // the light steps only: grass or earth, mixed by the slope's light
+          // the light steps only: grass or earth, mixed by the slope's light (T364: the bunker's wall: its mean colour in the wall's shade)
           const pair = rock ? ROCK_EARTH : [[70, 104, 52], [150, 190, 104]] as const;
-          for (let b = 0; b < NB; b++) { ctx.fillStyle = rgb(mixRGB(pair[0]!, pair[1]!, b / (NB - 1))); for (let q = 0; q < NQ; q++) ctx.fill(G.bands[q * NB + b]!); }
+          for (let b = 0; b < NB; b++) {
+            ctx.fillStyle = earthy ? rgb(BUNKER_WALL_MEAN.map(v => v * teeWallShade(bOfBin(b), BANK_B0, BANK_B1))) : rgb(mixRGB(pair[0]!, pair[1]!, b / (NB - 1)));
+            for (let q = 0; q < NQ; q++) ctx.fill(G.bands[q * NB + b]!);
+          }
           ctx.restore(); continue;
         }
         // rock: the cast shadow and the contact shade first, on the ground (multiplied in the cool shade: the ground keeps its texture)
@@ -3341,6 +3352,23 @@ export class GroundPainter {
           BANK_TOE.forEach(([, a], q) => { ctx.globalAlpha = a; ctx.fill(G.toe[q]!); }); ctx.globalAlpha = 1;
         }
         if (rock) {
+          if (earthy) {
+            // T364 (#1019): the bunker's wall. Its picture over the whole face, opaque (never a flat face), then the bunker's light as its stage shader
+            // gives it (tee-wall.ts): each light step a cool multiply of the share of the colour a face turned that way keeps (a face turned from the sun
+            // at the upper right keeps the least, one turned to it the picture as it is), a darker strip under the grass lip and a darker foot, the
+            // picture's grain staying in every step
+            ctx.fillStyle = this.bunkerWall(ctx, L, Minv, X0, Y0) ?? rgb(BUNKER_WALL_MEAN); ctx.fill(G.body);
+            ctx.globalCompositeOperation = 'multiply';
+            const over = bunkerWallOverhang(), contact = bunkerWallContact();
+            for (let b = 0; b < NB; b++) {
+              const v = teeWallShade(bOfBin(b), BANK_B0, BANK_B1);
+              for (let q = 1; q < NQ; q++) {
+                const m = v * (q === 1 ? over : q === NQ - 1 ? contact : 1); if (m >= 0.995) continue;
+                ctx.fillStyle = rgb([255 * m * WALL_COOL[0]!, 255 * m * WALL_COOL[1]!, 255 * m]); ctx.fill(G.bands[q * NB + b]!);
+              }
+            }
+            ctx.globalCompositeOperation = 'source-over';
+          } else {
           // the painted earth in its light steps, its texture, the stones, then the texture once more over all of it (never a flat face)
           for (let b = 0; b < NB; b++) {
             const lt = Math.max(0, Math.min(1, (bOfBin(b) - BANK_B0) / (BANK_B1 - BANK_B0)));
@@ -3356,6 +3384,7 @@ export class GroundPainter {
           G.lights.forEach((lp, t) => { ctx.fillStyle = `rgba(250,244,226,${(0.18 + 0.22 * t).toFixed(2)})`; ctx.fill(lp); });
           if (this.tex.image('rockyDirt', L)) { ctx.globalCompositeOperation = 'soft-light'; ctx.globalAlpha = art ? 0.35 : 0.7; ctx.fillStyle = this.screenPattern(ctx, 'rockyDirt', L, X0, Y0, Minv); ctx.fill(G.body); }
           ctx.restore();
+          }
           // the turf's tufts over the crest
           ctx.lineWidth = Math.max(px, 0.02);
           ctx.strokeStyle = 'rgba(46,74,30,0.9)'; ctx.stroke(G.tufts[0]!); ctx.strokeStyle = 'rgba(84,118,50,0.8)'; ctx.stroke(G.tufts[1]!); ctx.strokeStyle = 'rgba(70,96,40,0.85)'; ctx.stroke(G.tufts[2]!);
@@ -3395,8 +3424,8 @@ export class GroundPainter {
   private wallIds = new WeakMap<CourseWall, number>(); private wallIdNext = 1;
   /** a set of runs' key for bankBuilt: lite, the stairs (cut into a tee's runs) and each run by its own id (a run keeps its object while its
    *  course chunk does) */
-  private bankKey(ws: readonly CourseWall[], lite: boolean, stairs: readonly Stair[]): string {
-    let s = lite ? 'm' : 'g';
+  private bankKey(ws: readonly CourseWall[], lite: boolean, stairs: readonly Stair[], earth: boolean): string {
+    let s = (lite ? 'm' : 'g') + (earth ? 'e' : 'r'); // (T364: a tee's rock faces in the bunker's wall or in stones: another set of paths)
     for (const q of stairs) s += `|${q.x},${q.y},${q.nx},${q.ny},${q.half}`;
     s += '#';
     for (const w of ws) { let id = this.wallIds.get(w); if (id === undefined) this.wallIds.set(w, id = this.wallIdNext++); s += id + ','; }
@@ -3405,21 +3434,29 @@ export class GroundPainter {
   /** each rock run's stones and tufts (courseBanks), kept with the run (a chunk patch's runs live as long as the patch) and made again only
    *  when its feet move (a neighbouring run's end, which its ends share, came or went) */
   private rockCache = new WeakMap<CourseWall, { key: string; stones: Path2D[]; lights: Path2D[]; shade: Path2D; tufts: Path2D[] }>();
+  /** T364: the bunker wall's picture as a fill laid in screen space like the walls' art (wallArt), BUNKER_WALL_METRES of ground across a repeat at
+   *  WALL_PX_PER_M x L px a metre, anchored to the world so chunks meet; null until the picture is decoded (the flat mean colour draws meanwhile) */
+  private bunkerWall(g: C2D, L: number, Minv: DOMMatrix, X0: number, Y0: number): CanvasPattern | null {
+    const want = WALL_PX_PER_M * L * BUNKER_WALL_METRES, src = this.tex.paintedImage(BUNKER_WALL_PICTURE, Math.ceil(want)); if (!src) return null;
+    const k = want / src.width, pat = g.createPattern(src, 'repeat'); if (!pat) return null;
+    pat.setTransform(Minv.multiply(new DOMMatrix([k, 0, 0, k, -X0 * L, -Y0 * L])));
+    return pat;
+  }
   /** a tee's cut faces into bunkers as rock bands (drawCourses), one object per wall so its rockDetail is kept too */
   private rockBands = new WeakMap<CourseWall, CourseWall | null>();
   /** a rock run's stones: one where its top edge crosses a lattice line (the segment's longer way, every STONE_GAP tiles: a place on the
    *  map, the same in every chunk), in rows down the face below the grass lip, each a painted six-sided stone (STONE_PX across, turned and
    *  sized by a hash of its place) in one of six tones by the slope's light, with a lit cap toward the upper right and a soft shade at its
    *  lower left; and the turf's tufts hanging over the crest and growing at the foot, on a finer lattice */
-  private rockDetail(w: CourseWall, ox: ArrayLike<number>, oy: ArrayLike<number>, lb: ArrayLike<number>) {
-    const p = w.p, n = p.length / 3, key = `${ox[0]},${oy[0]},${ox[n - 1]},${oy[n - 1]}`;
+  private rockDetail(w: CourseWall, ox: ArrayLike<number>, oy: ArrayLike<number>, lb: ArrayLike<number>, stones = true) {
+    const p = w.p, n = p.length / 3, key = `${ox[0]},${oy[0]},${ox[n - 1]},${oy[n - 1]}|${stones ? 's' : 't'}`; // (T364: stones false: the tufts alone)
     const was = this.rockCache.get(w); if (was && was.key === key) return was;
     const out = { key, stones: Array.from({ length: 6 }, () => new Path2D()), lights: [new Path2D(), new Path2D(), new Path2D()], shade: new Path2D(), tufts: [new Path2D(), new Path2D(), new Path2D()] };
     const cs = new Float64Array(6), sn = new Float64Array(6), rr = new Float64Array(6);
     for (let i = 0; i + 1 < n; i++) {
       const x0 = p[3 * i]!, y0 = p[3 * i + 1]!, ddx = p[3 * i + 3]! - x0, ddy = p[3 * i + 4]! - y0, sl = Math.hypot(ddx, ddy); if (sl < 1e-6) continue;
       const ax = Math.abs(ddx) >= Math.abs(ddy) ? 0 : 1, a0 = ax ? y0 : x0, a1 = ax ? y0 + ddy : x0 + ddx;
-      for (let q = Math.ceil(Math.min(a0, a1) / STONE_GAP), q1 = Math.floor(Math.max(a0, a1) / STONE_GAP); q <= q1; q++) {
+      for (let q = Math.ceil(Math.min(a0, a1) / STONE_GAP), q1 = stones ? Math.floor(Math.max(a0, a1) / STONE_GAP) : q - 1; q <= q1; q++) {
         const t = (q * STONE_GAP - a0) / (a1 - a0); if (t < 0 || t >= 1) continue;
         const cx = x0 + t * ddx, cy = y0 + t * ddy, salt = ax * 7919 + Math.round((ax ? cx : cy) / STONE_GAP) * 104729;
         const fx = ox[i]! + t * (ox[i + 1]! - ox[i]!), fy = oy[i]! + t * (oy[i + 1]! - oy[i]!), li = lb[i]! + t * (lb[i + 1]! - lb[i]!);

@@ -13,6 +13,9 @@ import { lightPack } from './boot';
 import { WOODLAND_TEX } from './terrain-paint';
 import { VARIANT_IDS } from './living-ground';
 import { WALL_TEX } from './ext/course-walls';
+import { SURF } from './ext/course-grid';
+import { finishOf } from './course-finish';
+import { BUNKER_WALL_PICTURE } from './tee-wall';
 import { softCanvases } from './canvas2d';
 import { BLOCK_UNDER, WOODLAND, lawnTexFor } from './painted-surfaces';
 import { roughTexes } from './rough-yards';
@@ -180,7 +183,7 @@ const handle = async (m: ToWorker) => {
         if (m.kind !== 'p') {
           const k = m.kind === 'm' ? MID_K : 1, w = CHUNK_W * k, h = CHUNK_H * k;
           const box = GroundPainter.tileBox(m.i * w, m.j * h, (m.i + 1) * w, (m.j + 1) * h);
-          const need = new Set<string>(['grass', 'meadow', 'outside', WOODLAND_TEX, WOODLAND, 'dirt', 'bank', 'creek', 'water', 'growSoil']), near = new Set<string>();
+          const need = new Set<string>(['grass', 'meadow', 'outside', WOODLAND_TEX, WOODLAND, 'dirt', 'bank', 'creek', 'water', 'growSoil']), near = new Set<string>(); const pics = new Set<string>(); // (T364: pictures no look names: the tees' bunker wall)
           // T199: the small streams' swamp, where one reaches into the chunk
           if (painter.swampIn(box)) need.add('swamp');
           // T360: the natural river's point bars (their sand or gravel)
@@ -193,7 +196,7 @@ const handle = async (m: ToWorker) => {
             need.add(p.tex);
             if (p.paint?.b) need.add(p.paint.bt);
             if (p.paint?.m) need.add(p.paint.m.t);
-            if (p.course) { for (const l of p.course.layers) for (const t of layerTexes(l)) need.add(t); if (p.course.walls?.length) for (const w of WALL_TEX) near.add(w); } // T256: its alternate looks too
+            if (p.course) { for (const l of p.course.layers) for (const t of layerTexes(l)) need.add(t); if (p.course.walls?.length) for (const w of WALL_TEX) near.add(w); if (p.course.walls?.some(w => w.hs === SURF.tee) && finishOf(tex.surfaces).teeWall !== 'rock') pics.add(BUNKER_WALL_PICTURE); } // T256: its alternate looks too
             // a town lawn wears one of the painted lawns (painted-surfaces.ts lawnSlot), picked by where it lies
             // (a lot's lawn wears its look state's, T155: lawnTexFor)
             if (p.lawn && tex.paintedOn) { const t = lawnTexFor(p.lawn, p.pts, tex.surfaces); if (t) need.add(t); }
@@ -210,7 +213,7 @@ const handle = async (m: ToWorker) => {
               const cell = painter.grassCells.get(y * (MAP / 4) + x); if (cell) need.add(cell.material);
             }
           }
-          await tex.preparePainted(m.artL ?? m.L, need, near);
+          await tex.preparePainted(m.artL ?? m.L, need, near, true, pics);
         } else {
           await tex.preparePainted(PLAN_LEVELS[PLAN_LEVELS.length - 1], ['grass', 'meadow', 'outside']); await tex.preparePlanner(['grass', 'meadow', WOODLAND_TEX, WOODLAND]);
           // the tile set families the planner piece's course surfaces wear (their tiles at the camera's band: FAR at the furthest zoom)

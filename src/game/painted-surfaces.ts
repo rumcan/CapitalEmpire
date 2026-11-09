@@ -100,6 +100,15 @@ export function clampSurfaces(f: unknown): SurfacesFile {
   }
   return { v: 1, surfaces, lawns, presets, ...(o.course && typeof o.course === 'object' ? { course: clampCourseFinish(o.course) } : {}), ...(o.water && typeof o.water === 'object' ? { water: clampWaterLook(o.water) } : {}), ...(o.range && typeof o.range === 'object' ? { range: clampRangeLook(o.range) } : {}) };
 }
+/** T364 (#1019; the owner, 2026-11-08: "replace grass on tees with the green grass but without any mow lines"): the Tee surface wears the putting
+ *  green's painted grass now (the file's `tee` look is the green's); this is the look it wore before, the fairway's. The old tees (the dev
+ *  server's ?tee=old, and a saved file that wants them: set `tee` to this look and `course.teeWall` to 'rock') */
+export const OLD_TEE_LOOK: Readonly<PaintedLook> = { family: 'fairway-concept-run', version: null, scale: 1, tint: '#ffffff', tone: 0 };
+/** the surfaces file with the tees as they were before T364: the fairway's grass on top, the painted earth and set stones on a raised tee's
+ *  sides (course-finish.ts teeWall 'rock'); nothing else changes */
+export function oldTeeSurfaces(f: SurfacesFile): SurfacesFile {
+  return { ...f, surfaces: { ...f.surfaces, tee: { ...OLD_TEE_LOOK } }, course: { ...clampCourseFinish(f.course), teeWall: 'rock' } };
+}
 /** what the game knows of a preset: its id, the golf surface it stands for, and the old painted set it named (T082) */
 export interface PresetRef { id: string; surface?: string | null; painted?: string | null }
 /** the look a texture is laid with, or null (its photo): a lawn slot's, a surface's (by its photo texture id, or a preset by its golf surface;
