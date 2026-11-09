@@ -189,13 +189,13 @@ describe('T403 (#1081): the Lot review on the roads at 45 degrees', () => {
     for (let road = 0; road < 8; road++) assert.equal(shown.get(road)!.size, pal.length, `road ${road} is laid with every house type`);
   });
   it('the sample lots compose as house lots on every road: a house on each but the few of a type that cannot face its road, a house type with the pictures for the road faces it, a garage door facing the road on some, a reading for each', () => {
-    const fr = sampleFrames(), st = sampleStates(7), by = { houses: 0, faces: 0, garages: 0, can: 0, canFace: 0, oddCan: 0, oddCanFace: 0, odd: 0, oddFaces: 0, canNoHouse: 0, driveNoGarage: 0, garageDriveBad: 0, clutter: 0 };
+    const fr = sampleFrames(), st = sampleStates(7), by = { houses: 0, faces: 0, garages: 0, can: 0, canFace: 0, oddCan: 0, oddCanFace: 0, odd: 0, oddFaces: 0, canNoHouse: 0, driveNoGarage: 0, garageDriveBad: 0, clutter: 0, pathBad: 0 };
     fr.forEach((f, i) => {
       const a = auditLot(f.g, compose(f.g, st[i]!)), odd = roadOf(f.g.n) % 2 === 1, type = wantedOf(st[i]!), can = !!type && facingView(type, frameOf(f.g)).ok;
       if (odd) by.odd++;
       if (!a.house) { if (can) by.canNoHouse++; return; }   // (a type that cannot face its road and fits no swap leaves the lot empty: the review says so)
       by.houses++; if (a.facingOff === 0) by.faces++; if (a.garage) by.garages++;
-      if (a.drive && !a.garage) by.driveNoGarage++; if (a.garage && !a.driveOk) by.garageDriveBad++; if (a.clutter.length) by.clutter++;
+      if (a.drive && !a.garage) by.driveNoGarage++; if (a.garage && !a.driveOk) by.garageDriveBad++; if (a.clutter.length) by.clutter++; if (!a.pathAtDoor) by.pathBad++;
       if (odd && a.facingOff === 0) by.oddFaces++;
       // (a type with the pictures to face the road must face it; the others show the nearest picture, and the reading says how far off)
       if (can) { by.can++; if (a.facingOff === 0) by.canFace++; if (odd) { by.oddCan++; if (a.facingOff === 0) by.oddCanFace++; } }
@@ -203,8 +203,8 @@ describe('T403 (#1081): the Lot review on the roads at 45 degrees', () => {
     });
     console.log(`T403 sample: ${fr.length} lots, ${JSON.stringify(by)}`);
     assert.equal(by.canNoHouse, 0, 'a lot laid with a type that can face its road has a house');
-    // (the clean base runs on every sample lot: no garage, no drive; a drive reaches each garage door; no yard clutter)
-    assert.equal(by.driveNoGarage, 0, 'no garage, no drive'); assert.equal(by.garageDriveBad, 0, 'a drive reaches every garage door'); assert.equal(by.clutter, 0, 'no yard clutter');
+    // (the clean base runs on every sample lot: no garage, no drive; a drive reaches each garage door; the path reaches the front door; no yard clutter)
+    assert.equal(by.driveNoGarage, 0, 'no garage, no drive'); assert.equal(by.garageDriveBad, 0, 'a drive reaches every garage door'); assert.equal(by.clutter, 0, 'no yard clutter'); assert.equal(by.pathBad, 0, 'the front path reaches the front door');
     assert.ok(by.houses >= fr.length * 0.8, `${by.houses} of ${fr.length} sample lots have a house`);
     assert.ok(by.faces >= by.houses * 0.5, `${by.faces} of ${by.houses} houses face the road`);
     assert.ok(by.odd >= 70 && by.oddCan >= 20, `${by.oddCan} of the ${by.odd} lots on the roads at 45 degrees are laid with a type that has the pictures to face them`);
