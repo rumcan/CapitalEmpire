@@ -4,7 +4,7 @@
 // Hill relief select) and exits 1 on a failed check.
 //   node scripts/dev/relief-shots.mjs --base http://127.0.0.1:5231/ --out E:/ClaudeTemp/T409/shots [--scene hills,woodhill] [--theme autumn,desert] [--modes old,smooth,bands] [--zooms 0.3,0.15,0.08] [--sheet 1]
 // Needs a dev server (vite) on --base. One headless Edge, closed when done; saving is off. --sheet 1 lays old | smooth | bands side by side as <scene>-<theme>-<look>-<zoom>-sheet.png.
-// The sculpted hills (HILLS below, tiles from the camera's tile at the start, heights in metres, written straight into the course height field and handed to the ground as an edit does):
+// The sculpted hills (HILLS below, tiles from an anchor: the nearest open ground to the home (findOpen: grass and meadow only, no wood, water or road within reach), cleared of trees; heights in metres, written straight into the course height field and handed to the ground as an edit does):
 //   gentle    a dome 2.4 m high and 36 tiles (72 m) across the foot: about 3 degrees at its steepest, the light only
 //   moderate  a dome 3 m high and 8 tiles round: 15 degrees at its steepest, the hillside's band
 //   steep     a valley 6 m deep between two 3 m ridges, its sides rising over 4 tiles (8 m): 37 degrees on average and up to 48, the rock's band, one side facing the sun and one away
@@ -18,11 +18,11 @@ const base = opt('base', 'http://127.0.0.1:5231/'), out = opt('out', 'E:/ClaudeT
 const zooms = opt('zooms', '0.3,0.15,0.08').split(',').map(Number), sheet = opt('sheet', '1') === '1', only = opt('look', '');
 // the looks: [name, dx, dy] tiles from the scene's anchor (the camera's tile for the hills, the land's north-west corner for Woodhill)
 const LOOKS = {
-  hills: [['gentle', 0, 0], ['moderate', 52, 6], ['steep', 22, -48]],
-  woodhill: [['hill', 510, 180], ['flank', 405, 90]],
+  hills: [['gentle', -58, 0], ['moderate', 0, 0], ['steep', 62, 0]],
+  woodhill: [['hill', 510, 180], ['flank', 405, 90], ['skirt', 20, 10]],
 };
 /** the features: [kind, dx, dy, ...numbers] in tiles from the camera's tile; dome: radius, height; valley: half width of the floor, width of a side, ridge height, length */
-const HILLS = [['dome', 0, 0, 18, 2.4], ['dome', 52, 6, 8, 3], ['valley', 22, -48, 5, 4, 3, 22]];
+const HILLS = [['dome', -58, 0, 18, 2.4], ['dome', 0, 0, 8, 3], ['valley', 62, 0, 5, 4, 3, 22]];
 const W = 1440, H = 900, UI_OFF = '* { visibility: hidden !important } canvas { visibility: visible !important }';
 mkdirSync(out, { recursive: true });
 let bad = 0;
@@ -44,7 +44,19 @@ const side = async (files, file) => {
 const sculpt = hills => {
   const g = window.__game, f = g.courseHeight, d = f.data, N = 512, STEP = 2;
   const sm = t => (t <= 0 ? 0 : t >= 1 ? 1 : t * t * (3 - 2 * t));
-  const { X, Y } = g.cam, bx = (X / 64 + Y / 32) / 2, by = (Y / 32 - X / 64) / 2;
+  // the anchor: the nearest window of open ground (grass and meadow classes only, no waterway within 30 tiles, no road within 20) 180 x 90 tiles, searched on a 16-tile grid about the camera's tile
+  const { X, Y } = g.cam, cx0 = (X / 64 + Y / 32) / 2, cy0 = (Y / 32 - X / 64) / 2, cls = g.terrain.cls, M = Math.round(Math.sqrt(cls.length)), wp = [];
+  for (const w of g.terrain.waters) for (const p of w.pts) wp.push(p.x, p.y);
+  const open = (ax, ay) => {
+    if (ax - 90 < 8 || ay - 45 < 8 || ax + 90 > M - 8 || ay + 45 > M - 8) return false;
+    for (let y = ay - 45; y <= ay + 45; y += 6) for (let x = ax - 90; x <= ax + 90; x += 6) { const c = cls[Math.floor(y) * M + Math.floor(x)]; if (c !== 0 && c !== 1) return false; }
+    for (let k = 0; k < wp.length; k += 2) if (wp[k] > ax - 120 && wp[k] < ax + 120 && wp[k + 1] > ay - 75 && wp[k + 1] < ay + 75) return false;
+    for (const s of g.net.segsNear({ x: ax, y: ay }, 130)) { const x0 = Math.min(s.a.x, s.b.x), x1 = Math.max(s.a.x, s.b.x), y0 = Math.min(s.a.y, s.b.y), y1 = Math.max(s.a.y, s.b.y); if (x1 > ax - 110 && x0 < ax + 110 && y1 > ay - 65 && y0 < ay + 65) return false; }
+    return true;
+  };
+  let bx = cx0, by = cy0, best = Infinity;
+  for (let ay = 60; ay < M - 60; ay += 16) for (let ax = 100; ax < M - 100; ax += 16) { const dd = Math.hypot(ax - cx0, ay - cy0); if (dd < best && dd > 10 && open(ax, ay)) { best = dd; bx = ax; by = ay; } }
+  g.unplantProps(bx, by, 110, true);
   let x0 = 1e9, y0 = 1e9, x1 = -1e9, y1 = -1e9;
   const put = (i, j, v) => { const k = j * N + i; d[k] = Math.max(-3, Math.min(3, d[k] + v)); };
   for (const [kind, dx, dy, a, b, c, e] of hills) {
@@ -74,8 +86,8 @@ try {
       page.on('console', m => { if (m.type() === 'error') console.log('[console]', m.text().slice(0, 300)); });
       await page.route('**/*', r => { const x = r.request(); return x.method() !== 'GET' && x.method() !== 'HEAD' ? r.fulfill({ status: 200, contentType: 'application/json', body: '{"ok":true}' }) : r.continue(); });
       const q = scene === 'woodhill' ? `?osmcourse=woodhill&seed=1&relief=${mode}` : `?seed=1&relief=${mode}`;
-      await page.goto(`${base}${q}${theme === 'desert' ? '&desert=on' : ''}`, { waitUntil: 'domcontentloaded', timeout: 240000 });
-      await page.waitForFunction(() => window.__game?.ready, null, { timeout: 400000 });
+      await page.goto(`${base}${q}${theme === 'desert' ? '&desert=on' : ''}`, { waitUntil: 'commit', timeout: 600000 }); // (a loaded PC takes minutes over the module graph: wait for the game itself, not the document)
+      await page.waitForFunction(() => window.__game?.ready, null, { timeout: 1200000, polling: 1000 });
       await page.evaluate(() => { const g = window.__game; g.prebake = () => {}; g.setSpeed(0); window.__night = 0; g.nightAmount = () => window.__night; g.closeWho?.('Jack Burns', 2); g.closeWelcome?.(false); const p = g.golf.progress; if (p) for (const k of ['who', 'welcome']) if (!p.seen.includes(k)) p.seen.push(k); });
       const st = await page.evaluate(() => { const g = window.__game; return { mode: g.reliefMode, ground: g.ground.relief, desert: g.desertTheme, land: g.landInfo?.() ?? null }; });
       check(st.mode === mode && st.ground === mode, `the engine and the ground are on the ${mode} relief`); check(st.desert === (theme === 'desert'), `the ${theme} theme is on`);
@@ -89,7 +101,7 @@ try {
         for (const z of zooms) {
           await page.evaluate(([scene, dx, dy, z, ax, ay]) => { const g = window.__game, c = g.golf.course; g.camEase = null; if (scene === 'woodhill') g.lookAt(c[0] + dx, c[1] + dy, z); else g.lookAt(ax + dx, ay + dy, z); g.emit(); }, [scene, dx, dy, z, anchor.bx, anchor.by]);
           await settle(page, 1500);
-          const f = join(out, `${scene}-${theme}-${name}-${Math.round(z * 100)}-${mode}.png`), off = await page.addStyleTag({ content: UI_OFF }); await page.screenshot({ path: f }); await off.evaluate(e => e.remove());
+          const f = join(out, `${scene}-${theme}-${name}-${Math.round(z * 100)}-${mode}.png`), off = await page.addStyleTag({ content: UI_OFF }); await page.evaluate(() => { for (const c of document.querySelectorAll('canvas')) if (c.clientWidth < 400) c.dataset.hid = '1'; }); await page.addStyleTag({ content: 'canvas[data-hid] { visibility: hidden !important }' }); await page.screenshot({ path: f }); await off.evaluate(e => e.remove());
           (files[`${name}-${Math.round(z * 100)}`] ??= {})[mode] = f; console.log('  ' + f);
         }
       }

@@ -7,7 +7,7 @@ import { resolve } from 'node:path';
 import { CH_SIZE, CH_STEP, SUN_TILE_DIR } from '../src/game/ext/course-height';
 import { heightLightGrid, sampleHeightLight, type LightLand } from '../src/game/ext/course-height/light';
 import {
-  NORMAL_W, REL_MAX, REL_MIN, RELIEF_BANDS, RELIEF_BANDS_DEFAULT, RELIEF_LOOK, RELIEF_RANGES, bandRel, bandsOf, clampRelief, flatBelow, reliefGrid, reliefMaxSlope, reliefModeOf, reliefPictures, sampleSlope,
+  NORMAL_W, REL_MAX, REL_MIN, RELIEF_BANDS, RELIEF_BANDS_DEFAULT, RELIEF_DEFAULT, RELIEF_LOOK, RELIEF_RANGES, bandRel, bandsOf, clampRelief, flatBelow, reliefGrid, reliefMaxSlope, reliefModeOf, reliefPictures, sampleSlope,
   slopeMasks, slopeShares, tiltOneSided, type ReliefBands, type ReliefGrid,
 } from '../src/game/relief';
 import { clampSurfaces, SURFACES, HILLSIDE, MOUNTAIN, lookOfTex } from '../src/game/painted-surfaces';
@@ -242,8 +242,8 @@ describe('the Hillside and Mountain rock surfaces (art slots with stand-ins)', (
   it('every stand-in names a family the game has (the surfaces file\'s looks, and the desert theme\'s)', () => {
     const f = clampSurfaces(surfacesFile), d = desertSurfaces(f);
     for (const file of [f, d]) for (const k of ['hillside', 'mountain']) { const l = file.surfaces[k]; assert.ok(l, `${k} has a look`); assert.ok(familyById(l!.family), `${k}: ${l!.family}`); }
-    assert.notEqual(d.surfaces.hillside!.family, f.surfaces.hillside!.family, 'the desert\'s hillside is its own (rocky sand over the open sand, not the autumn\'s soil)');
-    assert.notEqual(d.surfaces.mountain!.family, f.surfaces.mountain!.family, 'sandstone, not the autumn\'s earth');
+    assert.equal(d.surfaces.hillside!.family, 'dirt-run', 'the desert\'s hillside is the dirt tiles (crisp), over the open sand');
+    assert.notDeepEqual(d.surfaces.mountain, f.surfaces.mountain, 'sandstone, redder than the autumn\'s pale rock');
   });
   it('the course, the farms and the golf surfaces are not touched by the desert\'s slope looks', () => {
     const f = clampSurfaces(surfacesFile), d = desertSurfaces(f);
@@ -272,5 +272,27 @@ describe('the ground painter lays the slope materials under everything that keep
   it('the worker asks for the slope pictures only where a slope reaches them', () => {
     const w = readFileSync(resolve('src/game/ground.worker.ts'), 'utf8').replace(/\r\n/g, '\n');
     assert.ok(w.includes('const rn = painter.reliefNeeds(box); if (rn.hill) need.add(HILLSIDE); if (rn.rock) need.add(MOUNTAIN);'));
+  });
+});
+
+describe('the plumbing: the look of the hills reaches every worker (the gear menu, ?relief=, the cache, the worker, the painter)', () => {
+  const read = (p: string) => readFileSync(resolve(p), 'utf8').replace(/\r\n/g, '\n');
+  it('the engine keeps the mode (saved, and the dev server\'s ?relief= for the A/B), tells the cache, and the gear menu has the select', () => {
+    const e = read('src/game/engine.ts'), a = read('src/App.tsx');
+    assert.ok(e.includes("localStorage.getItem('capitalempire.relief')") && e.includes("localStorage.setItem('capitalempire.relief', m)"), 'saved across reloads');
+    assert.ok(e.includes("get('relief'))") && e.includes('import.meta.env.DEV && v) this.reliefMode = v'), '?relief= on the dev server only');
+    assert.ok(e.includes('this.ground.relief = this.reliefMode;') && e.includes('this.ground.setRelief(m); this.emit();'));
+    assert.ok(a.includes('data-testid="hill-relief"') && a.includes('game.setRelief(e.target.value'), 'the gear menu\'s Hill relief');
+    for (const m of ['bands', 'smooth', 'old']) assert.ok(a.includes(`<option value="${m}">`), `the select offers ${m}`);
+  });
+  it('the cache sends it with init and on a change (every chunk baked again), the worker passes it to its painter, the protocol types it', () => {
+    const c = read('src/game/ground-cache.ts'), w = read('src/game/ground.worker.ts'), p = read('src/game/ground-protocol.ts');
+    assert.ok(c.includes("this.broadcast({ t: 'relief', mode: this.relief })"), 'sent with init');
+    assert.ok(/setRelief\(m: ReliefMode\) \{ if \(m === this\.relief\) return; this\.relief = m; this\.broadcast\(\{ t: 'relief', mode: m \}\); this\.invalidateAll\(\); \}/.test(c), 'a change bakes every chunk again');
+    assert.ok(w.includes("case 'relief': painter.relief = m.mode; break;")); assert.ok(p.includes("| { t: 'relief'; mode: ReliefMode }"));
+  });
+  it('the default look is the smooth one (the A/B shots: 4 bands turn a broad gentle slope into a spotlight blob), bands and old one select away, and every mode is a ReliefMode', () => {
+    for (const m of ['old', 'smooth', 'bands'] as const) assert.equal(reliefModeOf(m), m);
+    assert.equal(RELIEF_DEFAULT, 'smooth'); assert.ok(bandsOf('bands') > 0 && bandsOf('smooth') === 0 && bandsOf('old') === 0);
   });
 });

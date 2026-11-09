@@ -634,12 +634,12 @@ export default function App() {
                     <label className="flex items-center gap-2 px-2 py-2 text-sm" data-tip="How the hills are drawn (T409): Banded and Smooth light every slope from its own normal (a crest faces straight up, a flank leans away from the higher ground), with cast shadows, darker hollows, a thin highlight on the crests and the ground's material following the slope (hillside over moderate slopes, rock over steep). Banded lays the light in four soft bands, as in pixel art. Old is the ground before that" data-testid="hill-relief">
                       <span className="w-16 shrink-0">Hill relief</span>
                       <select className="min-w-0 flex-1 rounded bg-slate-800 px-1 text-slate-200" value={game.reliefMode} onChange={e => { game.setRelief(e.target.value as 'old' | 'smooth' | 'bands'); bump(); }}>
-                        <option value="bands">Banded</option>
                         <option value="smooth">Smooth</option>
+                        <option value="bands">Banded</option>
                         <option value="old">Old</option>
                       </select>
                     </label>
-                    {game.landInfo() && (
+                    {game.reliefMode === 'old' && game.landInfo() && (
                       <label className="flex cursor-pointer items-center gap-2 px-2 py-2 text-sm" data-tip="The real ground of a map-data course lit by its own response: gentle ground stays calm and a hill's flanks catch the sun in proportion to their steepness, so the hills read (T388). Off: the old light, where every 3 to 15% slope lit the same" data-testid="land-light">
                         <input type="checkbox" checked={!game.landClassic} onChange={e => { game.setLandClassic(!e.target.checked); bump(); }} />
                         Real ground hill light

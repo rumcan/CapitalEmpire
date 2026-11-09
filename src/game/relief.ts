@@ -29,12 +29,13 @@ import { AMBIENT, HEIGHT_LIGHT_REACH, HL_STRIDE, LAND_GAIN, LIGHT_EXAG, gentleDa
  *  faces' rock, and no slope materials); 'smooth' the relief light and the slope materials; 'bands' the same with the light posterized into RELIEF_BANDS soft bands */
 export type ReliefMode = 'old' | 'smooth' | 'bands';
 export const RELIEF_MODES: readonly ReliefMode[] = ['old', 'smooth', 'bands'];
-/** the bands 'bands' lays: 3 to 5 soft steps across the shade to light range (the owner's choice after the A/B shots; the default of the video's "posterize" is a handful) */
+/** the bands 'bands' lays: 3 to 5 soft steps across the shade to light range (the video's "posterize" is a handful) */
 export const RELIEF_BANDS = 4;
 /** a mode from text (the URL's ?relief=, a saved choice): 'old', 'smooth', 'bands'; anything else null */
 export function reliefModeOf(v: unknown): ReliefMode | null { return v === 'old' || v === 'smooth' || v === 'bands' ? v : null; }
-/** the mode a game starts in (the dev server's ?relief= and the player's saved choice override it) */
-export const RELIEF_DEFAULT: ReliefMode = 'bands';
+/** the mode a game starts in (the dev server's ?relief= and the player's saved choice override it). Smooth: the A/B shots (T409) found that 4 bands read well on small steep ground (the same as smooth, a little crisper) but turn a broad
+ *  gentle slope, which is all a real course has, into a flat spotlight blob with hard edges, a cel-shaded map rather than a hill; 'bands' is one select away */
+export const RELIEF_DEFAULT: ReliefMode = 'smooth';
 /** the bands a mode lays (0: the smooth staircase-free light) */
 export const bandsOf = (m: ReliefMode): number => (m === 'bands' ? RELIEF_BANDS : 0);
 
@@ -176,7 +177,11 @@ export function reliefGrid(inp: ReliefInput, box: readonly number[], res: number
     const below = ring / (RING.length * AO_RADII.length) - H0;
     // the narrow ring: a fold in the ground (res of at least a point a tile: the planner's coarse lattice has no such scale)
     let fold = 0;
-    if (res >= 1) { let r1 = 0; for (const [cx, cy] of RING) r1 += at(ii + cx * CREASE_R * res, jj + cy * CREASE_R * res); fold = (r1 / RING.length - H0) * LIGHT_EXAG; }
+    if (res >= 1) {
+      // (the four lattice points that distance away tell first whether the ground curves there at all: on a gentle swell it does not, and the eight-point ring is skipped)
+      const k = CREASE_R * res, lap4 = (Hs[c + k]! + Hs[c - k]! + Hs[c + k * HWd]! + Hs[c - k * HWd]!) / 4 - H0;
+      if (Math.abs(lap4) * LIGHT_EXAG >= 0.5 * CREST_LO) { let r1 = 0; for (const [cx, cy] of RING) r1 += at(ii + cx * k, jj + cy * k); fold = (r1 / RING.length - H0) * LIGHT_EXAG; }
+    }
     const crease = fold > 0 ? smooth(CREST_LO, CREST_HI, fold) : 0, crest = fold < 0 ? smooth(CREST_LO, CREST_HI, -fold) : 0;
     const ao = Math.min(1, (below > 0 ? below * LIGHT_EXAG * AO_K : 0) + CREASE_AO * crease);
     out[o + 3] = cast; out[o + 4] = ao;
@@ -199,7 +204,7 @@ export function reliefGrid(inp: ReliefInput, box: readonly number[], res: number
 /** the look of the relief light as the pictures lay it (the shade's multiply, the lift, the highlight): heightLightPictures' form with the relief's own strengths. The
  *  numbers are the T126 look's, the shade a little deeper and the highlight a little warmer so the hills read as shapes */
 export interface ReliefLook { darkK: number; darkMax: number; shadeW: readonly [number, number, number]; liftG: number; liftW: readonly [number, number, number]; specG: number; sun: readonly [number, number, number] }
-export const RELIEF_LOOK: ReliefLook = { darkK: 0.85, darkMax: 0.55, shadeW: [1.12, 1, 0.66], liftG: 0.45, liftW: [1.08, 1, 0.8], specG: 0.36, sun: [255, 236, 176] };
+export const RELIEF_LOOK: ReliefLook = { darkK: 0.75, darkMax: 0.5, shadeW: [1.12, 1, 0.66], liftG: 0.42, liftW: [1.08, 1, 0.8], specG: 0.34, sun: [255, 236, 176] };
 /** the grid's light as three w x h RGBA pictures at strength s (heightLightPictures' contract) */
 export function reliefPictures(g: HeightLightGrid, s: number, look: ReliefLook = RELIEF_LOOK): { shade: Uint8ClampedArray; lift: Uint8ClampedArray; spec: Uint8ClampedArray } {
   const n = g.w * g.h, shade = new Uint8ClampedArray(n * 4), lift = new Uint8ClampedArray(n * 4), spec = new Uint8ClampedArray(n * 4), V = g.v;
@@ -219,7 +224,7 @@ export function reliefPictures(g: HeightLightGrid, s: number, look: ReliefLook =
 export interface ReliefBands { hillAt: number; rockAt: number; blend: number; noise: number; grain: number }
 /** the ranges each number is held to (the surfaces file may say anything) */
 export const RELIEF_RANGES = { hillAt: [2, 60], rockAt: [5, 80], blend: [0.5, 20], noise: [0, 12], grain: [2, 80] } as const;
-export const RELIEF_BANDS_DEFAULT: Readonly<ReliefBands> = { hillAt: 9, rockAt: 27, blend: 5, noise: 3, grain: 12 };
+export const RELIEF_BANDS_DEFAULT: Readonly<ReliefBands> = { hillAt: 9, rockAt: 27, blend: 4, noise: 2, grain: 12 };
 const clampNum = (v: unknown, r: readonly [number, number], d: number) => { const n = typeof v === 'number' && Number.isFinite(v) ? v : d; return Math.max(r[0], Math.min(r[1], n)); };
 /** the surfaces file's relief numbers with every value held to its range and the rock never below the hillside */
 export function clampRelief(v: unknown): ReliefBands {

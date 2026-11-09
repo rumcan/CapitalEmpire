@@ -242,8 +242,8 @@ export class GroundCache {
   setTileStats(on: boolean) { this.broadcast({ t: 'tileStats', on }); }
   /** T265, the bench: every worker paints its last bakes of this kind again, the river's swamp on and off by turns, and answers each paint's ms */
   private abWait = new Map<number, (m: { on: number[]; off: number[] }) => void>();
-  bakeAB(kind: 'g' | 'm', reps: number, cold = false): Promise<{ on: number[]; off: number[] }> {
-    return Promise.all(this.workers.map((wk, w) => new Promise<{ on: number[]; off: number[] }>(res => { this.abWait.set(w, res); wk.postMessage({ t: 'bakeAB', kind, reps, cold } satisfies ToWorker); })))
+  bakeAB(kind: 'g' | 'm', reps: number, cold = false, ab?: 'relief'): Promise<{ on: number[]; off: number[] }> {
+    return Promise.all(this.workers.map((wk, w) => new Promise<{ on: number[]; off: number[] }>(res => { this.abWait.set(w, res); wk.postMessage({ t: 'bakeAB', kind, reps, cold, ab } satisfies ToWorker); })))
       .then(rs => ({ on: rs.flatMap(r => r.on), off: rs.flatMap(r => r.off) }));
   }
   /** T199: each chunk picture's swamp gloss mask (renderer.ts takeGlossMask), by picture, as its reflection mask (it goes and is deleted with it) */
