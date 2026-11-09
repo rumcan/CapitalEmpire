@@ -2,13 +2,15 @@
 // closest zoom and the middle one. A headless Edge on the GPU (the way scripts/perf/bench.mjs runs the game), the game's own cart driven by its own code (it drives itself along a polyline
 // exactly as it does when you click or call it, and under the keys as it does for you):
 //   node scripts/assets/golf-cart/shots.mjs --url http://[::1]:5206/ --tag after [--zooms 0.3,0.15] [--step 50] [--query "&oldcart=1"] [--out output/t351/shots] [--only octagon,bends,keys]
-// Three scenes on open ground the cart may drive on (found with the game's own cartOk and prop grid), at each zoom:
+// Three scenes on open ground the cart may drive on (found with the game's own cartOk and prop grid, then with no planted tree in the way: a crown over the cart hides it; a map is tried until the
+// game places a course on it), at each zoom:
 //   OCTAGON  a loop of eight legs of 3 tiles, one for each heading (E, SE, S, SW, W, NW, N, NE): the picture at the middle of each leg;
 //   BENDS    a square (four 90 degree bends, then one the other way) and a hairpin (E then W): the pictures it shows through each bend;
 //   KEYS     you in the cart: D, W, A, S held 1.1 s each, then let go: it steers, pulls away and rolls to a stop.
 // The camera follows the cart (the game's does not: T323). The page's clock is STEPPED by this script: from the moment a scene starts, performance.now and the frames' timestamps only advance
 // by --step ms each time the script asks for a frame (and the game draws exactly that frame), so a loaded PC drawing a few frames a second shows the same strips as a fast one: every frame is
-// exactly --step ms of game time, and a screenshot is taken of exactly the frame the state was read from. Writes <out>/<tag>-z<zoom>-{octagon,bends,keys}.png, <tag>-z<zoom>-frames.json (every
+// exactly --step ms of game time, and a screenshot is taken of exactly the frame the state was read from (after the atlas has had a moment to stream the cells the frame drew: a picture drawn for
+// the first time shows its coarse mip until then). Writes <out>/<tag>-z<zoom>-{octagon,bends,keys}.png, <tag>-z<zoom>-frames.json (every
 // state) and <tag>-z<zoom>-<scene>-start.jpg (the scene's overview); compare.mjs stacks two runs.
 import { chromium } from 'playwright-core';
 import sharp from 'sharp';
@@ -52,40 +54,57 @@ try {
   page.on('crash', () => console.log('[crash] the page crashed'));
   page.on('console', m => { const t = m.text(); if (t.startsWith('[step]')) console.log('[page]', t.slice(0, 300)); });
   await page.route('**/*', r => { const x = r.request(); return x.method() !== 'GET' && x.method() !== 'HEAD' ? r.fulfill({ status: 200, contentType: 'application/json', body: '{"ok":true}' }) : r.continue(); }); // (no save is written)
-  await page.goto(`${url}?start=town&seed=${opt('seed', '1')}&everyday=0&golfers=0${query}`, { waitUntil: 'domcontentloaded', timeout: 600000 });
-  await page.waitForFunction(() => window.__game?.ready, null, { timeout: 900000 });
-  await page.evaluate(() => {
-    const g = window.__game; g.closeWho?.('Jack Burns', 2); g.closeWelcome?.(false); g.setSpeed(0);
-    const p = g.golf?.progress; if (p) { for (const k of ['who', 'welcome']) if (!p.seen.includes(k)) p.seen.push(k); if (p.tour) p.tour.off = true; } // (the tutorial card off)
-    g.standInPill = () => {}; g.emit(); // (no "Your cart" pill over the roof)
-  });
-  await page.waitForTimeout(3000);
-  { const t1 = Date.now(); while (!(await page.evaluate(() => !!window.__game?.you && !!window.__game?.youCart)) && Date.now() - t1 < 240000) { await page.waitForTimeout(2000); if ((Date.now() - t1) % 20000 < 2100) console.log('[wait] the game has no character yet', JSON.stringify(await page.evaluate(() => { const g = window.__game; return { golf: !!g?.golf, you: !!g?.you, cart: !!g?.youCart, speed: g?.speed, ready: !!g?.ready }; }))); } }
-  await page.waitForTimeout(2000);
-  await page.evaluate(() => {
-    window.__cartState = () => {
-      const g = window.__game, c = g.youCart, d = g.youCartDraw?.[0], p = g.screen(c.x, c.y);
-      return { x: c.x, y: c.y, moving: c.moving, keys: c.keys, seg: c.seg, face: c.face, item: d ? d.item : -1, scale: d ? d.scale : 0, ang: g.cartDrive ? g.cartDrive.ang : null, v: g.cartDrive ? g.cartDrive.v : null, t: performance.now(), sx: p.x, sy: p.y };
-    };
-  });
-
-  // the cart, and open ground for the routes (found with the game's own cartOk over a spiral of 10-tile steps from where the cart waits)
-  const where = await page.evaluate(() => {
-    const g = window.__game, c = g.youCart; if (!c) return null;
-    // (ground the cart may drive on, with no prop of any kind in it: a tree would hide the cart in some of the frames)
-    const free = (cx, cy, r) => {
-      g.youRaster(cx, cy, r + 4, true); const S = new Set(); g.propGrid.query([cx - r - 4, cy - r - 4, cx + r + 4, cy + r + 4], S); if (S.size) return false;
-      for (let dx = -r; dx <= r; dx++) for (let dy = -r; dy <= r; dy++) if (!g.cartOk(cx + dx, cy + dy)) return false;
-      return true;
-    };
-    for (let ring = 0; ring <= 12; ring++) for (let a = 0; a < Math.max(1, ring * 8); a++) {
-      const th = ring ? (a / (ring * 8)) * Math.PI * 2 : 0, cx = Math.round(c.x + Math.cos(th) * ring * 10), cy = Math.round(c.y + Math.sin(th) * ring * 10);
-      if (free(cx, cy, 8)) return { cx, cy, ring };
-    }
-    return { cx: c.x, cy: c.y, ring: -1 };
-  });
-  if (!where) throw new Error('no cart in the game (no golf?)');
-  console.log('open ground', JSON.stringify(where));
+  /** loads a game on map `sd` up to its character and cart (null: no course was placed in 90 s: on some maps it never is), and finds open ground for the routes */
+  async function startOnce(sd) {
+    await page.goto(`${url}?start=town&seed=${sd}&everyday=0&golfers=0${query}`, { waitUntil: 'domcontentloaded', timeout: 600000 });
+    await page.waitForFunction(() => window.__game?.ready, null, { timeout: 900000 });
+    await page.evaluate(() => {
+      const g = window.__game; g.closeWho?.('Jack Burns', 2); g.closeWelcome?.(false); g.setSpeed(0);
+      const p = g.golf?.progress; if (p) { for (const k of ['who', 'welcome']) if (!p.seen.includes(k)) p.seen.push(k); if (p.tour) p.tour.off = true; } // (the tutorial card off)
+      g.standInPill = () => {}; g.emit(); // (no "Your cart" pill over the roof)
+    });
+    await page.waitForTimeout(3000);
+    { const t1 = Date.now(); while (!(await page.evaluate(() => !!window.__game?.you && !!window.__game?.youCart)) && Date.now() - t1 < 90000) await page.waitForTimeout(2000); }
+    if (!(await page.evaluate(() => !!window.__game?.you && !!window.__game?.youCart))) { console.log(`[seed ${sd}] no course placed in 90 s: `, JSON.stringify(await page.evaluate(() => { const g = window.__game; return { golf: !!g?.golf, you: !!g?.you, cart: !!g?.youCart, speed: g?.speed, ready: !!g?.ready }; }))); return null; }
+    await page.waitForTimeout(2000);
+    await page.evaluate(() => {
+      /** the planted trees (forest and town: sprites, not in the prop grid) that could hide a cart on a scene round (x, y) with their crowns: a crown reaches up the screen from its foot, so the trees
+       *  standing up to 24 tiles of x + y beyond it (and up to 10 behind it), within 18 tiles of its screen column */
+      window.__treesNear = (x, y) => {
+        const g = window.__game; let n = 0;
+        for (const m of [g.forest, g.townTrees]) { if (!m || !m.values) continue; for (const arr of m.values()) for (const p of arr) { const dx = (p.x0 + p.x1) / 2 - x, dy = (p.y0 + p.y1) / 2 - y, s = dx + dy, d = dx - dy; if (s >= -10 && s <= 24 && Math.abs(d) <= 18) n++; } }
+        return n;
+      };
+      window.__cartState = () => {
+        const g = window.__game, c = g.youCart, d = g.youCartDraw?.[0], p = g.screen(c.x, c.y);
+        return { x: c.x, y: c.y, moving: c.moving, keys: c.keys, seg: c.seg, face: c.face, item: d ? d.item : -1, scale: d ? d.scale : 0, ang: g.cartDrive ? g.cartDrive.ang : null, v: g.cartDrive ? g.cartDrive.v : null, t: performance.now(), sx: p.x, sy: p.y };
+      };
+    });
+    // the cart, and open ground for the routes (found with the game's own cartOk over a spiral of 10-tile steps from where the cart waits)
+    const where = await page.evaluate(() => {
+      const g = window.__game, c = g.youCart; if (!c) return null;
+      // (ground the cart may drive on, with no prop of any kind in it)
+      const free = (cx, cy, r) => {
+        g.youRaster(cx, cy, r + 4, true); const S = new Set(); g.propGrid.query([cx - r - 4, cy - r - 4, cx + r + 4, cy + r + 4], S); if (S.size) return false;
+        for (let dx = -r; dx <= r; dx++) for (let dy = -r; dy <= r; dy++) if (!g.cartOk(cx + dx, cy + dy)) return false;
+        return true;
+      };
+      const list = [];
+      for (let ring = 0; ring <= 16 && list.length < 24; ring++) for (let a = 0; a < Math.max(1, ring * 8) && list.length < 24; a++) {
+        const th = ring ? (a / (ring * 8)) * Math.PI * 2 : 0, cx = Math.round(c.x + Math.cos(th) * ring * 10), cy = Math.round(c.y + Math.sin(th) * ring * 10);
+        if (free(cx, cy, 8)) list.push({ cx, cy, ring });
+      }
+      return { list: list.length ? list : [{ cx: c.x, cy: c.y, ring: -1 }] };
+    });
+    if (!where) throw new Error('no cart in the game (no golf?)');
+    console.log(`map ${sd}: open ground candidates`, JSON.stringify(where.list));
+    return where;
+  }
+  /** a game with a course: the map asked for, else the next ones */
+  async function startGame() {
+    for (let k = 0; k < 5; k++) { const w = await startOnce(+opt('seed', '1') + k); if (w) return w; }
+    throw new Error('no map gave a game with a course');
+  }
 
   /** waits for the game's ground to be baked (the bakes of a new place slow the frames): the worker idle for 20 polls in a row, at most 90 s (the page's own clock runs: not stepped) */
   async function settle() {
@@ -99,17 +118,22 @@ try {
   const present = () => page.evaluate(() => window.__present());
   const halfOf = zoom => Math.round(60 / (zoom >= 0.25 ? 1 : 2));
   /** the picture of the frame just drawn: a clip of the screen round the cart */
-  async function grab(st, zoom) { await present(); const h = halfOf(zoom); return page.screenshot({ clip: { x: Math.round(st.sx - h), y: Math.round(st.sy - h * 1.15), width: h * 2, height: h * 2 }, type: 'png' }); }
-  /** puts the cart (and you) on a place with the camera on it, the clock running, the ground baked; then freezes the clock */
-  async function stage(label, x, y, face, zoom, inCart) {
-    await page.evaluate(({ x, y, face, zoom, inCart }) => {
+  async function grab(st, zoom) {
+    // a picture drawn for the first time shows its coarse mip until the atlas has streamed its cell: wait, and draw the same moment again (a frame of no time) with what has come
+    for (let k = 0; k < 2; k++) { await present(); await page.waitForTimeout(120); await page.evaluate(() => window.__step(0)); }
+    await present(); const h = halfOf(zoom); return page.screenshot({ clip: { x: Math.round(st.sx - h), y: Math.round(st.sy - h * 1.15), width: h * 2, height: h * 2 }, type: 'png' }); }
+  /** puts the cart (and you) on a place with the camera following it (the clock running) */
+  const aim = (x, y, face, zoom, inCart) => page.evaluate(({ x, y, face, zoom, inCart }) => {
       const g = window.__game, c = g.youCart; g.keys.clear(); g.youInCart = inCart;
       c.x = x; c.y = y; c.face = face; c.moving = false; c.keys = false; c.path.length = 0; if (g.cartDrive) g.cartDrive.reset(c);
       if (inCart && g.you) { g.you.x = x; g.you.y = y; g.you.moving = false; g.you.keys = false; g.you.path.length = 0; }
       window.__zoom = zoom; window.__follow = true;
       window.__followOnce = () => { if (window.__follow) { g.cam.X = (c.x - c.y) * 64; g.cam.Y = (c.x + c.y) * 32; g.cam.z = window.__zoom; g.camEase = null; } };
       if (!window.__followLoop) { window.__followLoop = true; const loop = () => { window.__followOnce(); requestAnimationFrame(loop); }; loop(); }
-    }, { x, y, face, zoom, inCart });
+  }, { x, y, face, zoom, inCart });
+  /** puts the cart on a place with the camera on it, the clock running, the ground baked; then freezes the clock */
+  async function stage(label, x, y, face, zoom, inCart) {
+    await aim(x, y, face, zoom, inCart);
     await settle(); // (the ground under the new place bakes, and frames are slow until it has; the cart stands on its first heading)
     await page.evaluate(() => window.__manual(true));
     await stepN(3); // (it stands on its heading: the camera on it, drawn)
@@ -117,6 +141,19 @@ try {
   }
   const unstage = () => page.evaluate(() => { window.__follow = false; window.__game.youInCart = false; window.__manual(false); });
 
+  /** the first of the open places with no planted tree in the way once the camera has been there and the ground is baked (the forest is planted round the camera: a tree south of the cart hides
+   *  it with its crown), else the one with the fewest; `n` is its count of trees (0: clean) */
+  async function pickCentre(zoom, where) {
+    let best = null;
+    for (const cand of where.list) {
+      await aim(cand.cx, cand.cy, 6, zoom, false); await settle();
+      const n = await page.evaluate(({ x, y }) => window.__treesNear(x, y), { x: cand.cx, y: cand.cy });
+      console.log(`place ${cand.cx}, ${cand.cy}: ${n} trees in the way`);
+      if (!best || n < best.n) best = { ...cand, n };
+      if (n === 0) break;
+    }
+    return best;
+  }
   /** drives the cart along a polyline (the way a click sends it) one frame at a time; `want(st, pts, memo)` says whether the frame is taken; returns the states and the frames */
   async function drive(label, legs, x0, y0, want, zoom) {
     const pts = route(legs, x0, y0);
@@ -170,11 +207,14 @@ try {
     } finally { await unstage(); }
   }
 
+  /** a place for the scenes: the open ground with no tree in the way (else the fewest) */
+  const where = await startGame(), at = await pickCentre(zooms[0], where);
+  console.log(`scenes at ${at.cx}, ${at.cy} (${at.n} trees in the way)`);
   for (const zoom of zooms) {
     const safe = async (name, fn) => { try { return await fn(); } catch (e) { console.log(`[${name} z${zoom}] FAILED: ${String(e?.stack ?? e).slice(0, 700)}`); return null; } }; // (a scene that fails does not stop the others)
-    const oct = only.has('octagon') ? await safe('octagon', () => drive('octagon', OCTAGON, where.cx - 3.6, where.cy - 1.5, midWanted, zoom)) : null;
-    const sq = only.has('bends') ? await safe('square', () => drive('square', SQUARE, where.cx, where.cy + 2.1, bendWanted, zoom)) : null;
-    const kd = only.has('keys') ? await safe('keys', () => keyed(zoom, where.cx, where.cy + 1.5)) : null;
+    const oct = only.has('octagon') ? await safe('octagon', () => drive('octagon', OCTAGON, at.cx - 3.6, at.cy - 1.5, midWanted, zoom)) : null;
+    const sq = only.has('bends') ? await safe('square', () => drive('square', SQUARE, at.cx, at.cy + 2.1, bendWanted, zoom)) : null;
+    const kd = only.has('keys') ? await safe('keys', () => keyed(zoom, at.cx, at.cy + 1.5)) : null;
 
     // ---- the strips
     const half = halfOf(zoom), SCALE = zoom >= 0.25 ? 2 : 4, W = half * 2 * SCALE;
