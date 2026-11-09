@@ -3,7 +3,9 @@
 // it is the overswing: more distance and more spread); the marker turns back at once. Click 3, on the way back, sets the accuracy: its offset from the
 // snap line is the miss, left when early (the marker still above the line), right when late (past it), straight inside the sweet spot. Space presses
 // during the swing ("spamming a keyboard button ... to add power") add a small capped boost and narrow the sweet spot. Your skill (T241, the club's part
-// of the game) slows the marker and widens the sweet spot.
+// of the game) slows the marker and widens the sweet spot. T345 (#987): the sweet spot is a window in TIME (SWEET: seconds around the snap line, scaled by the skill,
+// the accuracy stat and the clubs' and cards' `sweet`), not a width on the arc, so a faster or slower marker does not change how hard it is to hit; the miss stays
+// degrees per meter unit, read from the click's time error (its offset on the arc is that error times the marker's speed).
 // The meter is pure here (times in seconds in, an outcome out); the outcome (power, accuracy, boost), never the click times, is what the save keeps and
 // the replay plays (live.ts OwnerInput.swing). Pure TS, no DOM.
 import { TILE_M } from '../types';
@@ -14,8 +16,15 @@ import type { Club, Shot } from './types';
 export const METER = { top: 1.2, low: -0.2 } as const;
 /** the time (s) the marker takes from the snap line to 100% at skill 0 and at skill 1 (a better golfer gets a slower marker); the way back is as fast */
 export const METER_TIME = [0.7, 1.3] as const;
-/** the sweet spot's half width (meter units) around the snap line at skill 0 and at skill 1 */
-export const SWEET = [0.025, 0.07] as const;
+/** T345 (#987): the sweet spot as a WINDOW IN TIME: its whole width in seconds, centred on the snap line, at skill 0 and at skill 1 (80 ms, then 150 ms: 40 ms and 75 ms either side). A person clicks with a
+ *  spread of 50 to 90 ms; the first meter's spot (SWEET_V1, a width on the arc) was 33 ms either side at the starting skill, and the beginner's marker was the fastest and its spot the narrowest. A click
+ *  inside the window is straight; the accuracy stat, the clubs' upgrades and the cards scale the window (ClubKit.sweet), the Space boost narrows it (BOOST.narrow); the marker's speed does not */
+export const SWEET = [0.08, 0.15] as const;
+/** the first meter's sweet spot (T316), kept for the swing outcomes a save made before T345 holds (they carry no `v`): its half width in meter units around the snap line at skill 0 and at skill 1 */
+export const SWEET_V1 = [0.025, 0.07] as const;
+/** the meter's version a swing outcome carries (SwingOutcome.v): absent is the first meter (T316: the sweet spot is a width on the arc, SWEET_V1), 2 the window in time (T345: SWEET). The meter writes 2 on
+ *  every outcome, a save keeps it, and a replay reads the outcome against the meter it was swung on, so every saved shot is played as it was */
+export const METER_V = 2;
 /** the key-spam boost: power added per Space press during the swing, the cap, how much a full boost narrows the sweet spot and widens the spread */
 export const BOOST = { per: 0.01, max: 0.06, narrow: 0.4, spread: 0.3 } as const;
 /** the miss: degrees off the aim per meter unit outside the sweet spot and the most, for a full shot and a putt; a full shot past HOOK_DEG is a hook or a
@@ -32,8 +41,8 @@ export const METER_ANG = 0.5;
 const clamp = (v: number, lo: number, hi: number): number => Math.min(hi, Math.max(lo, v));
 
 /** the meter's outcome, saved and replayed: power (meter units at click 2, 0..TOP: 1 is 100%), acc (meter units at click 3, signed: + early, - late,
- *  LOW..TOP) and boost (the key-spam power added, 0..BOOST.max) */
-export interface SwingOutcome { power: number; acc: number; boost: number }
+ *  LOW..TOP) and boost (the key-spam power added, 0..BOOST.max). T345: v, the meter it was swung on (METER_V; absent: the first meter, whose sweet spot is SWEET_V1) */
+export interface SwingOutcome { power: number; acc: number; boost: number; v?: number }
 /** a miss's shape: straight, pull (left) or push (right) for a small miss, hook (left) or slice (right) for a big one */
 export type SwingShape = 'straight' | 'pull' | 'push' | 'hook' | 'slice';
 /** what a swing does to the shot: the power played (a share of the club's full carry; a putt's share of its length to the pin), the miss in degrees off
@@ -45,9 +54,20 @@ export interface SwingEffect { power: number; deg: number; spread: number; shape
 export const swingTime = (skill: number, speed = 1): number => (METER_TIME[0] + (METER_TIME[1] - METER_TIME[0]) * clamp(skill, 0, 1)) / speed;
 /** the boost of n Space presses: BOOST.per each, at most BOOST.max */
 export const boostOf = (presses: number): number => Math.min(BOOST.max, Math.max(0, Math.floor(presses)) * BOOST.per);
-/** the sweet spot's half width (meter units) for a skill (0..1) and a boost: a full boost narrows it by BOOST.narrow; T334 part 2: `sweet`, the factor a golfer's stats put on it (mods.ts ClubKit.sweet) */
-export const sweetSpot = (skill: number, boost = 0, sweet = 1): number =>
-  (SWEET[0] + (SWEET[1] - SWEET[0]) * clamp(skill, 0, 1)) * (1 - BOOST.narrow * clamp(boost, 0, BOOST.max) / BOOST.max) * sweet;
+/** the marker's speed in meter units a second for a skill (0..1) and the stats' `speed` factor: the way from the snap line to 100% takes swingTime */
+export const markerSpeed = (skill: number, speed = 1): number => 1 / swingTime(skill, speed);
+/** T345: the sweet spot's half window in SECONDS for a skill (0..1) and a boost: half of SWEET at the skill (the whole window grows from 80 to 150 ms), narrowed by up to BOOST.narrow with the boost, times `sweet`, the
+ *  factor a golfer's stats, clubs and cards put on it (mods.ts ClubKit.sweet). A click this near (or nearer) the moment the marker crosses the snap line is straight, whatever the marker's speed */
+export const sweetSeconds = (skill: number, boost = 0, sweet = 1): number =>
+  0.5 * (SWEET[0] + (SWEET[1] - SWEET[0]) * clamp(skill, 0, 1)) * (1 - BOOST.narrow * clamp(boost, 0, BOOST.max) / BOOST.max) * sweet;
+/** the sweet spot's half width on the arc (meter units) of the meter as swung now: its window in time (sweetSeconds) times the marker's speed (`speed`: the stats' factor on it, mods.ts ClubKit.speed), which is
+ *  what the meter draws as the green band and what an accuracy click's offset is read against */
+export const sweetSpot = (skill: number, boost = 0, sweet = 1, speed = 1): number => sweetSeconds(skill, boost, sweet) * markerSpeed(skill, speed);
+/** the first meter's sweet spot (T316), the one a saved outcome without `v` is read against: its half width in meter units, SWEET_V1 from skill 0 to skill 1, narrowed by a boost, times `sweet` */
+export const sweetSpotV1 = (skill: number, boost = 0, sweet = 1): number =>
+  (SWEET_V1[0] + (SWEET_V1[1] - SWEET_V1[0]) * clamp(skill, 0, 1)) * (1 - BOOST.narrow * clamp(boost, 0, BOOST.max) / BOOST.max) * sweet;
+/** how far in time an accuracy click was from the snap line, in seconds: + early (the marker still above the line), - late; its offset on the arc over the marker's speed */
+export const clickError = (acc: number, skill: number, speed = 1): number => acc / markerSpeed(skill, speed);
 
 /** the meter mark (u) of a full shot's power share p (overswing: 1 + (p - 1) / OVER.carry), and of a putt's (u = p); for the aim's mark on the arc */
 export function meterMark(p: number, putting: boolean): number {
@@ -56,10 +76,11 @@ export function meterMark(p: number, putting: boolean): number {
 }
 
 /** what a swing's outcome does to the shot, for the club's skill (0..1) and a putt or a full shot (see SwingEffect). Pure: the same outcome and skill always
- *  give the same effect, so a replay plays the same shot */
-export function swingEffect(o: SwingOutcome, skill: number, putting: boolean, sweet = 1, miss = 1): SwingEffect {
+ *  give the same effect, so a replay plays the same shot. T345: `speed`, the stats' factor on the marker (ClubKit.speed): it turns the sweet window in time into its width on the arc; an outcome
+ *  without `v` was swung on the first meter and is read against its sweet spot (SWEET_V1), exactly as it was */
+export function swingEffect(o: SwingOutcome, skill: number, putting: boolean, sweet = 1, miss = 1, speed = 1): SwingEffect {
   const boost = clamp(o.boost, 0, BOOST.max), pw = clamp(o.power, 0, METER.top), acc = clamp(o.acc, METER.low, METER.top);
-  const w = sweetSpot(skill, boost, sweet), off = Math.abs(acc) <= w ? 0 : (Math.abs(acc) - w) * Math.sign(acc);
+  const w = (o.v ?? 1) >= METER_V ? sweetSpot(skill, boost, sweet, speed) : sweetSpotV1(skill, boost, sweet), off = Math.abs(acc) <= w ? 0 : (Math.abs(acc) - w) * Math.sign(acc);
   // early (acc > 0) misses left (-), late misses right (+)
   const k = putting ? MISS.puttDeg : MISS.fullDeg, mx = putting ? MISS.puttMax : MISS.fullMax, deg0 = off === 0 ? 0 : -Math.sign(off) * Math.min(mx, Math.abs(off) * k);
   // (T337: `miss`, the factor his mods put on the angle of the miss: the Self-Correcting Ball's 0.5; the miss is named by what it was, a hook that went half as far offline is still a hook)
@@ -75,7 +96,7 @@ export function swingEffect(o: SwingOutcome, skill: number, putting: boolean, sw
 export function readSwing(v: unknown): SwingOutcome | null {
   const o = v as Partial<SwingOutcome> | null;
   if (!o || typeof o !== 'object' || ![o.power, o.acc, o.boost].every(n => typeof n === 'number' && Number.isFinite(n))) return null;
-  return { power: clamp(o.power!, 0, METER.top), acc: clamp(o.acc!, METER.low, METER.top), boost: clamp(o.boost!, 0, BOOST.max) };
+  return { power: clamp(o.power!, 0, METER.top), acc: clamp(o.acc!, METER.low, METER.top), boost: clamp(o.boost!, 0, BOOST.max), ...((o.v ?? 1) >= METER_V ? { v: METER_V } : {}) };
 }
 
 /** the meter's phase: ready (before click 1), up (the backswing, before click 2), back (the downswing, before click 3), done */
@@ -127,7 +148,7 @@ export class SwingMeter {
 
   /** the outcome once done, else null */
   outcome(): SwingOutcome | null {
-    return this.phase === 'done' ? { power: this.power!, acc: this.acc!, boost: this.boost() } : null;
+    return this.phase === 'done' ? { power: this.power!, acc: this.acc!, boost: this.boost(), v: METER_V } : null;
   }
 }
 

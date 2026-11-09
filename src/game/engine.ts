@@ -11692,7 +11692,7 @@ export class Game {
     return parts.length ? parts.join(' · ') : null;
   }
   /** T337: a swing's effect as the shot model plays it for this golfer and club (the kit's skill, sweet spot and miss factor: the Self-Correcting Ball's half), for the reports */
-  private swingFx(sk: ShotSkill, club: Club, swing: SwingOutcome, ctx?: ModCtx) { const k = kitOf(sk, club, ctx); return swingEffect(swing, k.skill, club === 'putter', k.sweet, k.miss); }
+  private swingFx(sk: ShotSkill, club: Club, swing: SwingOutcome, ctx?: ModCtx) { const k = kitOf(sk, club, ctx); return swingEffect(swing, k.skill, club === 'putter', k.sweet, k.miss, k.speed); } // (T345: and his marker's speed: the sweet window is in time)
   /** the owner's open shot for the shot panel, or null */
   shotState(): ShotState | null { return this.shot; }
   /** T316: the skill (0..1) the open shot's club is played at (your part of the game for it, T241): the swing meter's speed and sweet spot; 0 with no shot */
