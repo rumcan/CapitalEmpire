@@ -30,22 +30,25 @@ export const DUMP_REACH = 2.6;
 /** a landing's scatter (tiles): the other balls of a swing land this far, about, from the one you see (every ball lies where it landed until it is picked
  *  up or lost) */
 export const SCATTER = 1.5;
+/** T386 part 2: a dirty (unwashed) ball sells at this share of a clean one's price: a bucket is worth the mix of the balls it holds (golf/rangeauto.ts) */
+export const DIRTY_VALUE = 0.75;
 
 /** who picked a ball up: you by hand or tube, you with the push picker, you in the cart, the night cart, a range attendant, a robot, a net's chute */
 export type PickBy = 'hand' | 'push' | 'cart' | 'night' | 'staff' | 'robot' | 'net';
 export const PICK_BY: readonly PickBy[] = ['hand', 'push', 'cart', 'night', 'staff', 'robot', 'net'];
-/** a span's ball counts: balls hit, sold, lost and bought, and the balls picked up by each way of picking */
-export interface BallCounts { hit: number; sold: number; lost: number; bought: number; picked: Record<PickBy, number> }
+/** a span's ball counts: balls hit, sold, lost, bought and washed, and the balls picked up by each way of picking */
+export interface BallCounts { hit: number; sold: number; lost: number; bought: number; washed: number; picked: Record<PickBy, number> }
 /** the range's balls in the save (golf.range.balls): the clean balls in the ball room, the balls with golfers who have bought them and not yet hit
  *  them all (the sim's), the balls in your basket and in your cart's hopper, the balls lying on the outfield (x y pairs, tiles, two decimals), the
  *  range's till ($: what the range has taken, less what it has spent on its own gear: the ball loop's tools, staff and machines are bought with it),
- *  today's counts and the lifetime's, and the town day the day's counts are for */
-export interface BallSave { v: 1; clean: number; inPlay: number; basket: number; hopper: number; field: number[]; till: number; day: BallCounts; total: BallCounts; dayNo: number }
+ *  today's counts and the lifetime's, and the town day the day's counts are for. T386 part 2: dirty, the balls picked up and not yet washed (they sell too, at DIRTY_VALUE,
+ *  after the clean ones), and shift, the town hour the first range attendant's shift starts at */
+export interface BallSave { v: 1; clean: number; dirty: number; shift: number; inPlay: number; basket: number; hopper: number; field: number[]; till: number; day: BallCounts; total: BallCounts; dayNo: number }
 
 const noPicks = (): Record<PickBy, number> => ({ hand: 0, push: 0, cart: 0, night: 0, staff: 0, robot: 0, net: 0 });
-export const zeroCounts = (): BallCounts => ({ hit: 0, sold: 0, lost: 0, bought: 0, picked: noPicks() });
+export const zeroCounts = (): BallCounts => ({ hit: 0, sold: 0, lost: 0, bought: 0, washed: 0, picked: noPicks() });
 /** a new game's balls: START_BALLS clean in the ball room, nothing on the outfield, an empty till */
-export function newBalls(): BallSave { return { v: 1, clean: START_BALLS, inPlay: 0, basket: 0, hopper: 0, field: [], till: 0, day: zeroCounts(), total: zeroCounts(), dayNo: -1 }; }
+export function newBalls(): BallSave { return { v: 1, clean: START_BALLS, dirty: 0, shift: 7, inPlay: 0, basket: 0, hopper: 0, field: [], till: 0, day: zeroCounts(), total: zeroCounts(), dayNo: -1 }; }
 /** the balls a save from before T386 starts with (it never ran out: the balls were picked at once, or by the cart each night): its bays' share, so
  *  an existing range does not suddenly run dry; its till is its lifetime takings to LEGACY_TILL_CAP (the grown range has money to spend on the new gear) */
 export const LEGACY_TILL_CAP = 40000;
@@ -62,7 +65,7 @@ const pos = (v: unknown): number => Math.max(0, num(v));
 function counts(c: unknown): BallCounts {
   const o = (c && typeof c === 'object' ? c : {}) as Partial<BallCounts>, p = (o.picked && typeof o.picked === 'object' ? o.picked : {}) as Partial<Record<PickBy, number>>, picked = noPicks();
   for (const k of PICK_BY) picked[k] = Math.round(pos(p[k]));
-  return { hit: Math.round(pos(o.hit)), sold: Math.round(pos(o.sold)), lost: Math.round(pos(o.lost)), bought: Math.round(pos(o.bought)), picked };
+  return { hit: Math.round(pos(o.hit)), sold: Math.round(pos(o.sold)), lost: Math.round(pos(o.lost)), bought: Math.round(pos(o.bought)), washed: Math.round(pos(o.washed)), picked };
 }
 /** a loaded golf.range.balls made well formed, or undefined when there is none (a save from before T386: the caller gives it legacyBalls): whole
  *  counts, a field of finite pairs inside the cap */
@@ -70,22 +73,26 @@ export function normalizeBalls(x: unknown): BallSave | undefined {
   if (!x || typeof x !== 'object') return undefined;
   const o = x as Partial<BallSave>, field: number[] = [];
   if (Array.isArray(o.field)) for (let i = 0; i + 1 < o.field.length && field.length < FIELD_CAP * 2; i += 2) { const a = o.field[i], b = o.field[i + 1]; if (typeof a === 'number' && typeof b === 'number' && Number.isFinite(a) && Number.isFinite(b)) field.push(a, b); }
-  return { v: 1, clean: Math.round(pos(o.clean)), inPlay: Math.round(pos(o.inPlay)), basket: Math.round(pos(o.basket)), hopper: Math.round(pos(o.hopper)), field, till: Math.round(pos(o.till) * 100) / 100, day: counts(o.day), total: counts(o.total), dayNo: Math.floor(num(o.dayNo, -1)) };
+  return { v: 1, clean: Math.round(pos(o.clean)), dirty: Math.round(pos(o.dirty)), shift: Math.max(0, Math.min(23, Math.floor(num(o.shift, 7)))), inPlay: Math.round(pos(o.inPlay)), basket: Math.round(pos(o.basket)), hopper: Math.round(pos(o.hopper)), field, till: Math.round(pos(o.till) * 100) / 100, day: counts(o.day), total: counts(o.total), dayNo: Math.floor(num(o.dayNo, -1)) };
 }
 /** the balls lying on the outfield */
 export const fieldCount = (b: Pick<BallSave, 'field'>): number => b.field.length / 2;
 /** all the range's balls: the ball room's, with golfers, in your basket and hopper, and lying out (what a sale and a pick keep the same) */
-export const poolOf = (b: BallSave): number => b.clean + b.inPlay + b.basket + b.hopper + fieldCount(b);
+export const poolOf = (b: BallSave): number => b.clean + b.dirty + b.inPlay + b.basket + b.hopper + fieldCount(b);
+/** the balls the ball room can sell: the clean ones and the dirty ones */
+export const stockOf = (b: Pick<BallSave, 'clean' | 'dirty'>): number => b.clean + b.dirty;
 
 // ---------------------------------------------------------------- selling and landing
 
 /** whole buckets of vb balls the ball room holds */
-export const bucketsLeft = (b: Pick<BallSave, 'clean'>, vb: number): number => Math.floor(b.clean / Math.max(1, vb));
-/** a sale: a bucket's vb balls leave the ball room for the golfer's hands (false: the ball room holds fewer; nothing changes) */
-export function takeBucket(b: BallSave, vb: number): boolean {
-  if (b.clean < vb) return false;
-  b.clean -= vb; b.inPlay += vb; b.day.sold += vb; b.total.sold += vb; return true;
+export const bucketsLeft = (b: Pick<BallSave, 'clean' | 'dirty'>, vb: number): number => Math.floor(stockOf(b) / Math.max(1, vb));
+/** a sale: a bucket's vb balls leave the ball room for the golfer's hands, the clean ones first and then the dirty ones: what the bucket holds (null: the ball room holds fewer; nothing changes) */
+export function takeMix(b: BallSave, vb: number): { clean: number; dirty: number } | null {
+  if (stockOf(b) < vb) return null;
+  const c = Math.min(b.clean, vb), d = vb - c; b.clean -= c; b.dirty -= d; b.inPlay += vb; b.day.sold += vb; b.total.sold += vb; return { clean: c, dirty: d };
 }
+/** a sale as takeMix, whether it was made */
+export const takeBucket = (b: BallSave, vb: number): boolean => takeMix(b, vb) !== null;
 const r2 = (v: number): number => Math.round(v * 100) / 100;
 /** the fence a landing keeps inside (x0 y0 x1 y1, tiles); none: anywhere */
 export type Bounds = readonly [number, number, number, number];
@@ -138,6 +145,23 @@ export function pickSwath(b: BallSave, ax: number, ay: number, cx: number, cy: n
   for (let i = hit.length - 1; i >= 0; i--) drop(f, hit[i]!);
   return hit.length;
 }
+/** the n balls nearest to (x, y) taken off the outfield (the staff and the robots work the piles near the ball room first), wherever they lie; returns how many */
+const nearK: number[] = [], nearD: number[] = [];
+export function pickNear(b: BallSave, x: number, y: number, n: number): number {
+  const f = b.field, m = f.length / 2, want = Math.min(Math.floor(n), m); if (want <= 0) return 0;
+  // one pass over the outfield keeping the `want` nearest (a short list in ascending distance, reused between calls: nothing is allocated, nothing is sorted past it)
+  let have = 0;
+  for (let k = 0; k < m; k++) {
+    const dx = f[2 * k]! - x, dy = f[2 * k + 1]! - y, d = dx * dx + dy * dy;
+    if (have === want && d >= nearD[have - 1]!) continue;
+    let i = have < want ? have++ : have - 1;
+    while (i > 0 && nearD[i - 1]! > d) { nearD[i] = nearD[i - 1]!; nearK[i] = nearK[i - 1]!; i--; }
+    nearD[i] = d; nearK[i] = k;
+  }
+  nearK.length = have; nearK.sort((p, q) => q - p); // (highest index first: a swap never moves one still to come)
+  for (let i = 0; i < have; i++) drop(f, nearK[i]!);
+  return have;
+}
 /** the nearest ball to (x, y) within r (a point, or null): where a pick order walks to when nothing is within your reach */
 export function nearestBall(b: Pick<BallSave, 'field'>, x: number, y: number, r: number): { x: number; y: number } | null {
   const f = b.field; let best = -1, bd = r * r;
@@ -150,8 +174,10 @@ export function ballsNear(b: Pick<BallSave, 'field'>, x: number, y: number, r: n
   for (let k = 0; k < f.length / 2; k++) { const dx = f[2 * k]! - x, dy = f[2 * k + 1]! - y; if (dx * dx + dy * dy <= r2_) n++; }
   return n;
 }
-/** the balls of a load put into the ball room (a basket, a hopper, a robot's tray): clean stock, counted as picked by `by` */
-export function stow(b: BallSave, n: number, by: PickBy): void { if (n <= 0) return; b.clean += n; b.day.picked[by] += n; b.total.picked[by] += n; }
+/** the balls of a load put into the ball room (a basket, a hopper, a robot's tray): dirty stock (T386 part 2: they are washed at the tap or the washer), counted as picked by `by` */
+export function stow(b: BallSave, n: number, by: PickBy): void { if (n <= 0) return; b.dirty += n; b.day.picked[by] += n; b.total.picked[by] += n; }
+/** n of the dirty balls washed into clean ones (at most the dirty ones there are): returns how many */
+export function wash(b: BallSave, n: number): number { const k = Math.min(Math.floor(n), b.dirty); if (k <= 0) return 0; b.dirty -= k; b.clean += k; b.day.washed += k; b.total.washed += k; return k; }
 /** the balls picked by `by` that have not reached the ball room yet are counted when they are stowed (stow); this counts a pick that goes straight
  *  into a basket or hopper */
 export function carry(b: BallSave, where: 'basket' | 'hopper', n: number): void { if (where === 'basket') b.basket += n; else b.hopper += n; }
@@ -171,8 +197,8 @@ export function overnight(b: BallSave, nights: number, rnd: () => number): numbe
   for (let n = 0; n < Math.min(5, Math.max(0, nights)); n++) {
     const out = Math.floor(fieldCount(b) * DAY_LOSS_FIELD + rnd());
     for (let i = 0; i < out && b.field.length; i++) drop(b.field, Math.floor(rnd() * fieldCount(b)));
-    const worn = Math.min(b.clean, Math.floor(b.clean * DAY_LOSS_STOCK + rnd()));
-    b.clean -= worn; lost += out + worn;
+    const worn = Math.min(b.clean, Math.floor(b.clean * DAY_LOSS_STOCK + rnd())), wornD = Math.min(b.dirty, Math.floor(b.dirty * DAY_LOSS_STOCK + rnd()));
+    b.clean -= worn; b.dirty -= wornD; lost += out + worn + wornD;
   }
   b.total.lost += lost; b.day = zeroCounts(); b.day.lost = lost;
   return lost;
@@ -182,22 +208,27 @@ export function removeRandom(b: BallSave, n: number, rnd: () => number): number 
   let k = 0; for (; k < n && b.field.length; k++) drop(b.field, Math.floor(rnd() * fieldCount(b)) % fieldCount(b));
   return k;
 }
-/** a span the player skipped (dt sim seconds of a town day of dayLen): the shop serves the visits the balls allow, day by day. want is the visits the
- *  demand and the bays allow (rangesave.ts skippedVisits). Each day sells H balls, at most what the ball room holds plus what the day's machines (auto: balls a
- *  sim second, robots and staff) pick before it is out; the balls land on the outfield (at gives a landing's point), the machines take theirs back, and then
- *  the night cart (night) picks all that lies out. The pool is kept. Returns the visits served (the rest were short of balls) */
-export function skipBalls(b: BallSave, want: number, vb: number, dt: number, dayLen: number, auto: number, night: boolean, at: () => { x: number; y: number }, rnd: () => number, fence?: Bounds | null): number {
+/** a span the player skipped (dt sim seconds of a town day of dayLen): the shop serves the visits the balls allow, day by day. want is the visits the demand and the bays allow
+ *  (rangesave.ts skippedVisits). Each day sells H balls, the clean ones first, at most what the ball room holds plus what the day's staff and robots (auto: balls a sim second) pick
+ *  before it is out; the balls land on the outfield (at gives a landing's point), the machines take theirs back (dirty), the tap and the washer (wash: balls a sim second) wash what
+ *  they can, and then the night cart (night) picks all that lies out. The pool is kept. Returns the visits served (the rest were short of balls) and the share of a clean bucket's
+ *  price they earned (the dirty balls at DIRTY_VALUE) */
+export function skipBalls(b: BallSave, want: number, vb: number, dt: number, dayLen: number, auto: number, wash_: number, night: boolean, at: () => { x: number; y: number }, rnd: () => number, fence?: Bounds | null): { served: number; value: number } {
   const days = Math.max(1e-9, dt / Math.max(24, dayLen)), steps = Math.min(12, Math.max(1, Math.ceil(days)));
-  let served = 0;
+  let served = 0, clean = 0, dirty = 0;
   for (let i = 0; i < steps; i++) {
-    const span = Math.min(1, days - i), A = Math.max(0, auto) * dayLen * span, H = Math.max(0, Math.min(Math.round(want * span / days * vb), b.clean + Math.floor(A)));
+    const span = Math.min(1, days - i), A = Math.max(0, auto) * dayLen * span, W = Math.max(0, wash_) * dayLen * span;
+    wash(b, W / 2); // (the first half of the day's washing: what was picked before and what the day's machines bring in)
+    const H = Math.max(0, Math.min(Math.round(want * span / days * vb), stockOf(b) + Math.floor(A)));
     served += H / vb;
+    const c = Math.min(b.clean, H); clean += c; dirty += H - c;
     for (let k = 0; k < H; k++) { const p = at(); landBalls(b, p.x, p.y, 1, rnd, fence); }
     if (A > 0) stow(b, removeRandom(b, Math.round(A), rnd), 'robot');
-    b.clean = Math.max(0, b.clean - H);
+    const fromClean = Math.min(b.clean, H); b.clean -= fromClean; b.dirty = Math.max(0, b.dirty - (H - fromClean));
+    wash(b, W / 2);
     if (night && span >= 1) stow(b, removeRandom(b, fieldCount(b), rnd), 'night');
   }
-  return served;
+  const n = clean + dirty; return { served, value: n > 0 ? (clean + DIRTY_VALUE * dirty) / n : 1 };
 }
 /** the supplier's order of `cases` cases ($ BALL_COST a ball, CASES_A_DAY a town day): the balls into the ball room, the cost ($) to charge, the
  *  cases that came (0: none: the day's orders are in already, or the till cannot pay). The caller charges `cost` */
