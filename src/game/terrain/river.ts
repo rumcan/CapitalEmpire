@@ -19,6 +19,8 @@ import { TC, type WaterPoint } from './types';
 
 export type P = { x: number; y: number };
 
+/** the point bar's width as a share of the water's width at the apex of a bend, and the widest the water gets (tiles): the band look and the belt read them */
+export const BAR_SHARE = 0.27, W_MAX = 52;
 /** the natural river's numbers (tiles unless said). They are terrain model 2's contract: a save stamped model 2 rebuilds its valley from them, so
  *  changing one (or anything else this file and generate.ts's nat branches compute) puts every such town beside another river: a change is a new
  *  model (TERRAIN_MODEL 3, the old numbers kept for model 2), never an edit.
@@ -42,8 +44,6 @@ export type P = { x: number; y: number };
  *    outline), and the bends between which it grows from nothing (a crossing has none) to whole (the crescent's horns taper over the range)
  *  - creek: the creeks' own meander (shapeCreek's, creekSwing): a sine of the arc along the flow path, about creekWave tiles a swing and creekAmp tiles
  *    wide, both swinging by a third and two-fifths, so no creek runs a straight line as the flow's grid left it */
-/** the point bar's width as a share of the water's width at the apex of a bend, and the widest the water gets (tiles): the band look and the belt read them */
-export const BAR_SHARE = 0.27, W_MAX = 52;
 export const NAT = {
   wander: { med: [330, 1.0, 0.4, 0.4, 0.2], large: [800, 0.12], small: [70, 0.4] } as const, ds: 4, kmax: 1 / 52, fade: 120, pad: 48, look: 130, maxDev: 1.1,
   step: 1.5,
