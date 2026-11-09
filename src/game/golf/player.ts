@@ -106,6 +106,10 @@ export const PRACTICE: Readonly<Record<PracticeKind, { name: string; min: number
 };
 /** each session of the same kind on the same day gains this share of the one before (the third bucket of the day teaches less than the first) */
 export const FATIGUE = 0.7;
+/** T386 part 3 (#1043): what the range's gear does to a session (golf/rangegear.ts: the ball room tree's Your game branch): a factor on all its gains, factors on single skills' gains, and the fatigue (the share of the
+ *  session before that each session of the same kind on the day gives: FATIGUE). No gear: 1, none, FATIGUE */
+export interface PracticeGear { all: number; skill: Partial<Record<SkillId, number>>; fatigue: number }
+export const NO_GEAR: PracticeGear = { all: 1, skill: {}, fatigue: FATIGUE };
 /** P26's lessons (docs/plans/P26.md 3.2: the teaching pro; T214). A lesson taken with a session multiplies its gains by 1 + bonus and adds its price
  *  to the cost; the engine passes one when you booked one with your pro today and have not used it (Engine.lessonFor) */
 export interface Lesson { bonus: number; price: number }
@@ -114,9 +118,9 @@ export const LESSON_BONUS = 0.5;
 
 /** the gain of one session for a skill now (0..100): base * (1 - skill / 100)², times FATIGUE for each session of its kind already today, times
  *  1 + the lesson's bonus. So at 25 a bucket adds about 1.1 driving, at 50 0.5, at 80 0.08 */
-export function gainOf(skill: number, base: number, today = 0, lessonBonus = 0): number {
+export function gainOf(skill: number, base: number, today = 0, lessonBonus = 0, fatigue = FATIGUE): number {
   const u = 1 - clampSkill(skill) / 100;
-  return base * u * u * FATIGUE ** Math.max(0, today) * (1 + Math.max(0, lessonBonus));
+  return base * u * u * fatigue ** Math.max(0, today) * (1 + Math.max(0, lessonBonus));
 }
 
 /** a practice session in the log: the town day and the minute it began, its kind, its cost ($), its minutes, each skill's gain, whether a lesson came
@@ -216,11 +220,11 @@ export function normalizePlayer(x: unknown): PlayerProfile | null {
 export const sessionsToday = (p: PlayerProfile, kind: PracticeKind, day: number): number => p.today.day === day ? p.today.n[kind] : 0;
 
 /** what one session would give now: each skill it raises, from and to, and the handicap after (the cards' preview; practise applies the same) */
-export function practicePreview(p: PlayerProfile, kind: PracticeKind, day: number, lesson: Lesson | null = null): { gains: { id: SkillId; from: number; to: number; gain: number }[]; hcp: [number, number] } {
+export function practicePreview(p: PlayerProfile, kind: PracticeKind, day: number, lesson: Lesson | null = null, gear: PracticeGear = NO_GEAR): { gains: { id: SkillId; from: number; to: number; gain: number }[]; hcp: [number, number] } {
   const k = sessionsToday(p, kind, day), next = { ...p.skills }, gains: { id: SkillId; from: number; to: number; gain: number }[] = [], pf = practiceFactor(p.cards); // (T336: Range Rat's practice bonus; 1 without cards)
   for (const id of SKILL_IDS) {
     const base = PRACTICE[kind].gains[id]; if (base === undefined) continue;
-    const from = p.skills[id], to = keep(from + gainOf(from, base, k, lesson?.bonus ?? 0) * pf);
+    const from = p.skills[id], to = keep(from + gainOf(from, base, k, lesson?.bonus ?? 0, gear.fatigue) * pf * gear.all * (gear.skill[id] ?? 1));
     next[id] = to; gains.push({ id, from, to, gain: Math.round((to - from) * 100) / 100 });
   }
   return { gains, hcp: [handicapOf(p.skills), handicapOf(next)] };
@@ -228,7 +232,7 @@ export function practicePreview(p: PlayerProfile, kind: PracticeKind, day: numbe
 
 /** where and when you would practise: the town day and minute, the hours the place is open (minutes of the day), its price ($, without a lesson),
  *  whether the facility is open (a practice green not built: false), the money you have, and whether you are on the course now (your round) */
-export interface PracticeCtx { day: number; minute: number; open: number; close: number; price: number; facility: boolean; money: number; onCourse: boolean }
+export interface PracticeCtx { day: number; minute: number; open: number; close: number; price: number; facility: boolean; money: number; onCourse: boolean; /** T386 part 3: the range's gear for the session (absent: none) */ gear?: PracticeGear }
 
 /** why a session cannot start now (the button's reason), or null when it can */
 export function practiceWhy(p: PlayerProfile, kind: PracticeKind, c: PracticeCtx, lesson: Lesson | null = null): string | null {
@@ -247,8 +251,8 @@ export function busyUntil(p: PlayerProfile, day: number): number | null { return
 
 /** a session from now (practiceWhy must be null): the skills it raises (gainOf, the day's fatigue, the lesson), the cost (the price, plus the lesson's),
  *  busy for its minutes, and its entry in the log. Returns the new profile and the entry (the profile passed in is not changed) */
-export function practise(p: PlayerProfile, kind: PracticeKind, c: Pick<PracticeCtx, 'day' | 'minute' | 'price'>, lesson: Lesson | null = null): { profile: PlayerProfile; entry: PracticeEntry } {
-  const pv = practicePreview(p, kind, c.day, lesson), skills = { ...p.skills }, gains: Partial<Record<SkillId, number>> = {};
+export function practise(p: PlayerProfile, kind: PracticeKind, c: Pick<PracticeCtx, 'day' | 'minute' | 'price' | 'gear'>, lesson: Lesson | null = null): { profile: PlayerProfile; entry: PracticeEntry } {
+  const pv = practicePreview(p, kind, c.day, lesson, c.gear), skills = { ...p.skills }, gains: Partial<Record<SkillId, number>> = {};
   for (const g of pv.gains) { skills[g.id] = g.to; gains[g.id] = g.gain; }
   const P = PRACTICE[kind], entry: PracticeEntry = { day: c.day, at: c.minute, kind, cost: c.price + (lesson?.price ?? 0), min: P.min, gains, hcp: pv.hcp };
   if (lesson) entry.lesson = true;
@@ -330,7 +334,7 @@ export function youRangeView(p: PlayerProfile, ctx: Record<PracticeKind, Practic
   return {
     name: p.name, hcp: h, hcpText: hcpText(h), busy: u !== null && ctx.bucket.minute < u ? `Practising until ${clock(u)}` : null,
     sessions: PRACTICE_KINDS.map(kind => {
-      const pv = practicePreview(p, kind, day, lesson), c = ctx[kind];
+      const c = ctx[kind], pv = practicePreview(p, kind, day, lesson, c.gear);
       return { kind, name: PRACTICE[kind].name, cost: c.price + (lesson?.price ?? 0), min: PRACTICE[kind].min, gains: pv.gains.map(g => ({ ...g, name: SKILL_NAME[g.id] })), hcp: pv.hcp, why: practiceWhy(p, kind, c, lesson) };
     }),
     last: last ? { text: entryText(last), hcp: last.hcp, cost: last.cost, day: last.day } : null,

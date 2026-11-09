@@ -246,7 +246,19 @@ changes the flight, the slope under the ball, and the playtest's fixes. `play/wi
 - **The model's golfers** play in the same weather when `playRound(..., { cond })` has the day's `Conditions` (the mean wind, no gusts: a model shot never depends on the
   minute; the heights; the view's kinds): `dayRound(..., cond)`. The engine passes them for a tournament from `GolfSave.weather.from` on: a save from before the weather has
   none, and the engine stamps it on load with the next tournament's key, so a day in progress and every day before play exactly as they did. Everyday golf and the money
-  matches' opponent are left as they were (see Left).
+  matches' opponent meet the weather too since T347 (the next bullet).
+- **Everyday golfers and a money match's opponent meet the weather too (T347 #989, 2026-11-09; left by T334's part 1).** The tee sheet's golfers (`everyday.ts dayPlan`) and a match's opponent (`play/match.ts oppShot`, `skipMatch`) played in no wind,
+  from the coarse lies and on flat ground while the tournament's field and you met the day's wind, the lie's kinds and the slope. Now the same model, the same record (`ShotEnv`: `fieldEnv`, `envOf`):
+  - **Everyday golf**: `dayConditions(seed, day, height)` is the town day's wind (`dailyWind(seed, day)`: the one the world blows that day, the round's bar and the shot panel show it; its mean, no gusts: a model shot never depends on the minute) with the
+    course's heights; `dayPlan(view, roster, cond?)` plays the day in it, so every golfer meets the wind, the lie's kind under the ball (the view's `kindAt`: the first cut, the deep rough, the fescue) and the slope along the aim. **Worked out once, with the
+    day's round** (the plan is built once a town day, at its first frame, and when the course changes: nothing per frame; `DayView` reads the plan as before). A dev run's forced wind (`?wind=`) goes through it too. **Saves**: `DaySave.wx` is the day's
+    mark (true or nothing: `normalizeDaySave` keeps it): every day the book starts from T347 on has it (a new game, a day after a tournament, the days a skip jumps over); a day saved from before has none and plays out as it was, no conditions, the
+    same shots and the same pace (golden values captured from the unchanged code); the next day starts with the weather. The season's pace term asks for each settled day's pace in the weather it was played in (`DayBook.step`'s `pace(roster, wx)`).
+  - **A money match's opponent**: `oppShot(view, r, seed, envFor?)` and `skipMatch(view, r, sk, seed, envFor?)` take an `EnvFor` (conditions.ts: ball, lie, aim -> the conditions at the strike or null); the engine's `matchEnv()` builds it from the world's wind
+    with its gusts at that moment (`windAt` on the real clock, as the wind your own shots meet; a skip steps the clock 8 s a shot so the shots do not all meet one gust), the view's finer lie and the course's heights (`envOf`). The opponent's full
+    shot is struck in it through `hitShot`'s env; a putt takes none; a skipped match plays both sides in it (yours as the caddie plays them in the open game: the input at the model's current version with the conditions). Without an `EnvFor` (the pure tests,
+    a caller with no world) none, as before (golden values captured from the unchanged code). A match is not replayed from a save (its round state is saved after each shot), so it needs no mark.
+  - Tests: `tests/golf-everyday-weather.test.ts`.
 - **The shot panel** (`ui/ShotPanel.tsx`, `Game.shotConditions`): under the meter, the wind dial (the arrow is the way it blows against the shot: up the line a tailwind), its
   mph, "Into the wind / Helping / Left to right", the gusts' peak and what it adds to this shot ("-9 m, 5 m right"); the lie's name and effect lines ("carry -12% · scatter x1.3
   · 45% of the spin · a flier in 3 of 10") and the slope's lines. The meter's aim mark is where to stop the power for the distance the aim PLAYS like in the conditions (the club

@@ -19,7 +19,8 @@ import { chooseShot, hitShot, putt, rng, skillFor } from './shot';
 import type { CourseView, GameSkills, Lie, Pt, Shot } from './types';
 import { cardTotals, holeOf, nextHole, playYours, rowOf, rulesFor, startRound, yourTurn, PICK_UP_OVER, type CardRow, type YourRound } from './yours';
 import { gameSkills, handicapOf, playedRound, PRESSURE, type PlayerProfile, type SkillsIn } from '../player';
-import type { OwnerInput } from './live';
+import { MODEL_V, type OwnerInput } from './live';
+import type { EnvFor } from './conditions';
 
 /** the smallest stake ($) and the step the stake moves by */
 export const MIN_STAKE = 10, STAKE_STEP = 10;
@@ -198,8 +199,10 @@ export function decideHole(r: YourRound): YourRound {
 /** the stream of the opponent's shot on hole index i, stroke k (their own: the same on a reload) */
 const oppStream = (seed: number, r: YourRound, i: number, k: number) => rng(seed, 0x6d6174 + r.day, i * 32 + k);
 /** the opponent's shot by the round model (as a field golfer's: chooseShot, a putt by putt, else hitShot) from their ball; the round after it (their
- *  ball, lie and strokes; holed, or picked up at par + PICK_UP_OVER; the hole decided when it is) and the shot (for the flight). Throws with none to play */
-export function oppShot(view: CourseView, r: YourRound, seed: number): { round: YourRound; shot: Shot } {
+ *  ball, lie and strokes; holed, or picked up at par + PICK_UP_OVER; the hole decided when it is) and the shot (for the flight). Throws with none to play.
+ *  T347 (#989): `envFor`, the world's conditions at the strike (conditions.ts EnvFor: the day's wind with its gusts, the lie's kind under their ball, the slope along their aim): the opponent's full shot is struck in them through the
+ *  same model as yours (hitShot's env: the wind and the slope, the lie's carry, scatter and flier, the club's run); without it (the pure tests, a caller with no world) none, as before. A putt takes none */
+export function oppShot(view: CourseView, r: YourRound, seed: number, envFor?: EnvFor): { round: YourRound; shot: Shot } {
   const m = r.match; if (!m || m.holed || holeDecided(r)) throw new Error('oppShot: no shot to play');
   const row = rowOf(r), h0 = view.holes[row.i]; if (!h0) throw new Error(`oppShot: no hole ${row.i}`);
   const hole = holeFrom(h0, MATCH_TEES), stroke = m.strokes + 1, rr = oppStream(seed, r, row.i, stroke), k = chooseShot(m.lie, m.ball, hole, m.sk, m.lie === 'tee');
@@ -208,7 +211,8 @@ export function oppShot(view: CourseView, r: YourRound, seed: number): { round: 
     const dx = hole.pin.x - m.ball.x, dy = hole.pin.y - m.ball.y, L = Math.hypot(dx, dy), o = putt(rr, skillFor(m.sk, 'putter'), L * TILE_M, 1, true), s = L > 0 ? o.leaveM / TILE_M / L : 0;
     to = o.holed ? { x: hole.pin.x, y: hole.pin.y } : { x: hole.pin.x + dx * s, y: hole.pin.y + dy * s }; lie = o.holed ? 'green' : view.lieAt(to.x, to.y); holed = o.holed;
   } else {
-    const o = hitShot(rr, m.sk, m.lie, m.ball, k.aim, k.club, view); to = o.to; lie = o.lie; penalty = o.penalty; landing = o.landing;
+    const env = envFor ? envFor(m.ball, m.lie, k.aim) : null; // (T347: struck in the day's conditions, as yours are)
+    const o = hitShot(rr, m.sk, m.lie, m.ball, k.aim, k.club, view, env ? { env } : undefined); to = o.to; lie = o.lie; penalty = o.penalty; landing = o.landing;
   }
   const strokes = m.strokes + 1 + penalty, cap = row.par + PICK_UP_OVER, up = !holed && strokes >= cap;
   const shot: Shot = { golfer: -2, hole: row.i, stroke, t: 0, from: { x: m.ball.x, y: m.ball.y }, to, club: k.club, lie, penalty, holed, ...(landing ? { landing } : {}) };
@@ -230,15 +234,17 @@ export function matchNextHole(view: CourseView, r: YourRound): YourRound {
   return { ...n, match: { ...n.match, ball: { x: t.x, y: t.y }, lie: 'tee', strokes: 0, holed: false } };
 }
 /** "Skip to result": the rest of the match played by the model for both (your shots as the caddie plays them: the suggested club, aim and power, no
- *  meter), to its end. The round, over */
-export function skipMatch(view: CourseView, r0: YourRound, sk: number | GameSkills, seed: number): YourRound {
+ *  meter), to its end. The round, over. T347 (#989): `envFor` (conditions.ts EnvFor): both sides' full shots are struck in the world's conditions, yours as the caddie plays them in the open game (play/yours.ts
+ *  at the model's current version: the engine's yourCaddie), theirs as oppShot's; without it none, as before */
+export function skipMatch(view: CourseView, r0: YourRound, sk: number | GameSkills, seed: number, envFor?: EnvFor): YourRound {
   let r = r0;
   for (let k = 0; k < 4000 && r.match && !r.over; k++) {
     if (holeDecided(r)) { const n = matchNextHole(view, r); if (n === r) break; r = n; continue; }
     const who = matchTurn(view, r);
-    if (who === 'opp') { r = oppShot(view, r, seed).round; continue; }
+    if (who === 'opp') { r = oppShot(view, r, seed, envFor).round; continue; }
     const t = yourTurn(view, r, sk); if (!t) break;
-    r = playMatchYours(view, r, sk, { club: t.suggested.club, aim: t.suggested.aim, power: t.suggested.power }, seed).round;
+    const env = envFor && t.suggested.club !== 'putter' ? envFor(t.ball, t.lie, t.suggested.aim) : null;
+    r = playMatchYours(view, r, sk, { club: t.suggested.club, aim: t.suggested.aim, power: t.suggested.power, ...(envFor ? { v: MODEL_V } : {}), ...(env ? { env } : {}) }, seed).round;
   }
   return r;
 }
