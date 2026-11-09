@@ -44,6 +44,8 @@ async function open(size) {
   await page.waitForFunction(() => window.__game?.ready, null, { timeout: 300000 });
   await page.evaluate(() => { const g = window.__game; g.setSpeed(0); g.closeWelcome?.(false); g.emit(); });
   await page.waitForFunction(() => window.__game?.courseGrid, null, { timeout: 120000 });
+  // the start tutorial and the Mayor's Cup card stand where every right-hand window docks: out of the way for the shots
+  await page.evaluate(() => { const g = window.__game; g.tourSkipStep?.(null); g.openEventCard?.(null); g.emit(); });
   await settle(page, 1500);
   return { ctx, page };
 }
@@ -59,7 +61,7 @@ try {
         const one = btn => {
           const sp = [...btn.querySelectorAll('span')].find(x => x.textContent && x.textContent.trim().length > 2 && !x.classList.contains('new-badge') && !x.classList.contains('rail-lock')); if (!sp) return null;
           const cs = getComputedStyle(sp), lh = parseFloat(cs.lineHeight) || parseFloat(cs.fontSize) * 1.2, r = sp.getBoundingClientRect(), b = btn.getBoundingClientRect();
-          return { label: sp.textContent.trim(), lines: Math.max(1, Math.round(r.height / lh)), spill: Math.round(Math.max(0, sp.scrollWidth - b.width + 2)), textW: Math.round(sp.scrollWidth), btnW: Math.round(b.width) };
+          return { label: sp.textContent.trim(), lines: Math.max(1, Math.round(r.height / lh)), spill: Math.round(Math.max(0, r.width - b.width + 0.5)), textW: Math.round(r.width), btnW: Math.round(b.width) };
         };
         const side = [...document.querySelectorAll('[data-testid="rail"] .rail-tab')].map(one).filter(Boolean);
         const foot = [...document.querySelectorAll('[data-testid="rail-footer"] .rail-tab')].map(one).filter(Boolean);

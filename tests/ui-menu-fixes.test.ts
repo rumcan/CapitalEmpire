@@ -56,7 +56,7 @@ test('the openers are that row: Bunker look, the grass and look entries, the fai
 });
 
 test('every scrolling window\'s header is pinned: its title and its close button stay while the content scrolls', () => {
-  const r = rule('.win-head'); assert.match(r, /position: sticky/); assert.match(r, /top: 0/); assert.match(r, /z-index: \d+/); assert.match(r, /background: rgb\(/, 'an opaque colour: the content never shows through');
+  const r = rule('.win-head'); assert.match(r, /position: sticky/); assert.match(r, /top: calc\(var\(--win-pad, 0\.75rem\) \* -1\)/, 'flush at the window\'s top edge'); assert.match(r, /z-index: \d+/); assert.match(r, /background: rgb\(/, 'an opaque colour: the content never shows through');
   assert.match(r, /margin: calc\(var\(--win-pad, 0\.75rem\) \* -1\)/, 'flush in the window\'s padding');
   assert.ok(rule('.win-head-slate').length > 0 && /--win-pad: 1\.25rem/.test(rule('.win-head-pad5')));
   // every window that scrolls and has a title row with a close button wears it (the cards' rows were `border-b border-white/10 pb-2`: the plain row is gone from them)
@@ -76,6 +76,8 @@ test('the left rail: every label is one line (the long one is shortened, its tip
   const h = renderToStaticMarkup(createElement(Rail, { entries: ['select', 'range', 'course', 'paths', 'facilities', 'bulldoze'].map(id => entry(RAIL.find(r => r.id === id)!)), onPick: noop, onLocked: noop }));
   assert.match(h, /aria-label="Cart paths &amp; roads"/); assert.match(h, /<span>Paths &amp; roads<\/span>/); assert.ok(!/<span>Cart paths/.test(h));
   assert.match(rule('.rail-tab span') + (css.match(/\.rail-tab span \{[^}]*\}/)?.[0] ?? ''), /white-space: nowrap/, 'a label never wraps');
+  // the button is wide enough for the longest label (Paths & roads is 74 px at 12 px; the button was 70)
+  const tabW = Number(css.match(/\.rail-tab \{[^}]*?width: ([\d.]+)rem/)?.[1]); assert.ok(tabW >= 4.7, `the rail button is ${tabW} rem wide`);
 });
 
 test('the skip-to-tournament button is in the Season card (not the top bar), and the guide still points at it', () => {

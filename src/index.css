@@ -82,7 +82,7 @@ button.stat-chip:hover { background: rgba(255, 255, 255, 0.06); }
 .card:hover { border-color: var(--gold-line); }
 .card-on { border-color: var(--gold); background: var(--gold-wash); box-shadow: 0 0 0 1px rgba(245, 181, 46, 0.25); }
 
-.rail-tab { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0.2rem; width: 4.4rem; height: 4.2rem; border-radius: 0.8rem; border: 1px solid transparent; font-size: 0.7rem; color: #d9d3c4; }
+.rail-tab { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0.2rem; width: 4.8rem; height: 4.2rem; border-radius: 0.8rem; border: 1px solid transparent; font-size: 0.7rem; color: #d9d3c4; }
 .rail-tab:hover { background: rgba(255, 255, 255, 0.05); }
 .rail-tab-on { border-color: var(--gold); background: var(--gold-wash); color: var(--gold-hi); box-shadow: inset 0 0 12px rgba(245, 181, 46, 0.18); }
 .rail-tab-half { height: 3.4rem; } /* T323: the Select slot's two cursors (pointer, walking figure) */
@@ -369,8 +369,9 @@ button.stat-chip:hover { background: rgba(255, 255, 255, 0.06); }
 
 /* T366 (#1021: "make headers for windows sticky with the window close button also sticky"): a window's header row (its title and its close button, the row's
    flex layout is Tailwind's) stays pinned at the top of the window while the content scrolls. It sits flush in the window's padding (--win-pad, 0.75rem; the
-   course picker pads more) on the window's own colour (glass, or slate for the cards), so nothing shows through it, and rounds its top corners with the window */
-.win-head { position: sticky; top: 0; z-index: 6; margin: calc(var(--win-pad, 0.75rem) * -1) calc(var(--win-pad, 0.75rem) * -1) 0.5rem; padding: var(--win-pad, 0.75rem) var(--win-pad, 0.75rem) 0.5rem; border-bottom: 1px solid rgba(255, 255, 255, 0.1); border-radius: inherit; border-bottom-left-radius: 0; border-bottom-right-radius: 0; background: rgb(20, 21, 25); }
+   course picker pads more) on the window's own colour (glass, or slate for the cards), so nothing shows through it, and rounds its top corners with the window. A sticky
+   offset is measured inside the window's padding, so it is -(the padding): the header sticks flush at the window's top edge and no content scrolls through a strip above it */
+.win-head { position: sticky; top: calc(var(--win-pad, 0.75rem) * -1); z-index: 6; margin: calc(var(--win-pad, 0.75rem) * -1) calc(var(--win-pad, 0.75rem) * -1) 0.5rem; padding: var(--win-pad, 0.75rem) var(--win-pad, 0.75rem) 0.5rem; border-bottom: 1px solid rgba(255, 255, 255, 0.1); border-radius: inherit; border-bottom-left-radius: 0; border-bottom-right-radius: 0; background: rgb(20, 21, 25); }
 .win-head-slate { background: rgb(2, 6, 23); }
 .win-head-pad5 { --win-pad: 1.25rem; }
 

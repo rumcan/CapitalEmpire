@@ -822,7 +822,7 @@ export default function App() {
           </div>
 
           {(game.traffic.car || game.traffic.watch?.node) && (
-          <div className="absolute left-[444px] top-[var(--hud-top,6rem)] z-20 flex w-64 flex-col gap-2">
+          <div className="absolute left-[450px] top-[var(--hud-top,6rem)] z-20 flex w-64 flex-col gap-2">
           {game.traffic.car && <CarPanel game={game} />}
           {game.traffic.watch?.node && <RoutesPanel game={game} />}
           </div>
