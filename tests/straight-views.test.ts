@@ -44,13 +44,13 @@ test('every reviewed building is an approved eight-view set: its four corner vie
     const ne = BY.get(set!.views.normalNE.id)!;
     for (const key of ['yaw8N', 'yaw8E', 'yaw8S', 'yaw8W'] as const) {
       assert.equal(set!.sourceIds![key], undefined, `${subject} ${key} is a new picture`);
-      const it = BY.get(set!.views[key].id)!;
-      assert.ok(it.id.startsWith('object8:') && it.ax > 0 && it.ax < it.w && it.ay > 0 && it.ay < it.h, `${it.id}: an anchor inside its picture`);
-      assert.ok(it.w / ne.w > 0.35 && it.w / ne.w < 1.25, `${it.id}: ${(it.w / ne.w).toFixed(2)} of the NE corner's width`);
-      assert.equal(it.kind, 'building'); assert.deepEqual(drawnAs(it, true), [it.id, false]);
+      const pic = BY.get(set!.views[key].id)!;
+      assert.ok(pic.id.startsWith('object8:') && pic.ax > 0 && pic.ax < pic.w && pic.ay > 0 && pic.ay < pic.h, `${pic.id}: an anchor inside its picture`);
+      assert.ok(pic.w / ne.w > 0.35 && pic.w / ne.w < 1.25, `${pic.id}: ${(pic.w / ne.w).toFixed(2)} of the NE corner's width`);
+      assert.equal(pic.kind, 'building'); assert.deepEqual(drawnAs(pic, true), [pic.id, false]);
       // the footprint of the physical rectangle turned by the view's heading (the legacy mapping: the straight-on views are 37, 127, 217 and 307 degrees)
       const want = objectFootprint(set!.footprintMetres.width, set!.footprintMetres.depth, HEADINGS[key]), got = set!.views[key].boxes[0]!;
-      assert.ok(Math.abs(got.hx - want.hx) < 1e-6 && Math.abs(got.hy - want.hy) < 1e-6, `${it.id}: the footprint turned ${HEADINGS[key]} degrees`);
+      assert.ok(Math.abs(got.hx - want.hx) < 1e-6 && Math.abs(got.hy - want.hy) < 1e-6, `${pic.id}: the footprint turned ${HEADINGS[key]} degrees`);
     }
     // the Props tool's resolver sees the eight
     const f = objectFacings(subject); assert.equal(f.mode, 'eight'); assert.deepEqual([...f.ids], ids);
@@ -59,8 +59,8 @@ test('every reviewed building is an approved eight-view set: its four corner vie
 
 test('the old corner pictures draw exactly as before: a reused set never replaces them', () => {
   for (const subject of SUBJECTS) for (const id of fourViews(subject)!.views) {
-    const it = BY.get(id)!;
-    for (const flip of [false, true]) assert.ok(!drawnAs(it, flip)[0].startsWith('object8:'), `${id} (flip ${flip}) is not swapped for an eight-view picture`);
+    const pic = BY.get(id)!;
+    for (const flip of [false, true]) assert.ok(!drawnAs(pic, flip)[0].startsWith('object8:'), `${id} (flip ${flip}) is not swapped for an eight-view picture`);
   }
 });
 

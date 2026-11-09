@@ -7,6 +7,7 @@
 //     [--houses 6]  (houses: how many of the palette's, spread along it)
 //     [--only wanted --wanted id,id,...]  (T398: any building by its library id, on the lot kind that shows it: each found by scanning lots of the town's use kinds along a street)
 //     [--rows 8]  (rows a sheet: a long sheet is cut into files *-1, *-2 ...)
+//     [--cap 25]  (T398: minutes the whole run may take before the browser is closed and the run fails; the page load of each attempt is capped at 6 minutes: a stuck page fails the job, it never hangs it)
 //     [--front]  (T376: each cell framed on the lot's street front, the red line, larger: the base of the walls against the pavement; the sheets are named *-front-<tag>.png)
 // Needs a dev server (vite) on --base. One headless Edge, closed when done. Nothing is saved.
 import { chromium } from 'playwright-core';
@@ -23,6 +24,9 @@ const W = 1500, H = 950, ZOOM = 0.3, CELL_W = front ? 560 : 400, CELL_H = front 
 const browser = await chromium.launch({ channel: 'msedge', headless: true, args: ['--enable-gpu', '--ignore-gpu-blocklist', '--use-angle=d3d11'] });
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 const results = [];
+// (T398: the heavy lock is shared by every agent: a run that hangs on a page must fail, not hold it. The browser is closed first, then the process ends with status 3)
+const watchdog = setTimeout(async () => { console.log(`[watchdog] over the ${opt('cap', '25')} minute cap: closing the browser`); try { await browser.close(); } catch { /* gone */ } process.exit(3); }, +opt('cap', '25') * 60000);
+watchdog.unref();
 try {
   const ctx = await browser.newContext({ viewport: { width: W, height: H }, deviceScaleFactor: 1 });
   const page = await ctx.newPage();
@@ -32,9 +36,9 @@ try {
   // short of memory answers late: the load is tried again)
   for (let attempt = 1; ; attempt++) {
     try {
-      await page.goto(`${base}?start=town&seed=1${opt('desert', '1') === '1' ? '&desert=on' : ''}`, { waitUntil: 'domcontentloaded', timeout: 300000 });
-      await page.waitForFunction(() => window.__game?.ready, null, { timeout: 300000 }); break;
-    } catch (e) { if (attempt >= 4) throw e; console.log(`  (load attempt ${attempt} failed: ${String(e.message).split(/\r?\n/)[0]}; again)`); await sleep(8000); }
+      await page.goto(`${base}?start=town&seed=1${opt('desert', '1') === '1' ? '&desert=on' : ''}`, { waitUntil: 'domcontentloaded', timeout: 360000 });
+      await page.waitForFunction(() => window.__game?.ready, null, { timeout: 360000 }); break;
+    } catch (e) { if (attempt >= 2) throw e; console.log(`  (load attempt ${attempt} failed: ${String(e.message).split(/\r?\n/)[0]}; again)`); await sleep(8000); }
   }
   await page.addStyleTag({ content: '* { visibility: hidden !important } canvas { visibility: visible !important }' });
   await page.evaluate(() => { const g = window.__game; g.prebake = () => {}; g.setShowGrid?.(false); window.__night = 0; g.nightAmount = () => window.__night; g.setSpeed(0); });
