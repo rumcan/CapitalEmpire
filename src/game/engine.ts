@@ -161,7 +161,7 @@ import { Budget, DEBT_DAYS, LOAN, compensation, type Ledger } from './budget';
 import { WIN_POP, classUnlocked, junctionUnlocked, tunnelsUnlocked, unlockOf } from './career';
 import type { DisasterNote } from './city';
 import type { DisasterKind } from './ext/disasters';
-import { normalizeGolfSave, stampWeather, weatherOn, type GolfPlaySave, type GolfSave, type GolfView, type Rect } from './golf/mode';
+import { normalizeGolfSave, runOn, stampRun, stampWeather, weatherOn, type GolfPlaySave, type GolfSave, type GolfView, type Rect } from './golf/mode';
 import { courseSlopeAt, createCourseHeightField, flattenCourseCorridor, loadCourseHeight, saveCourseHeight, unionBox as unionCourseBox, type CourseHeightField, type CourseHeightSaveChunk, type CourseTileBox } from './ext/course-height';
 import { HEIGHT_LIGHT_STRENGTH, clampHeightLight } from './ext/course-height/light';
 import { planGolfGame } from './golf/start';
@@ -3213,6 +3213,8 @@ export class Game {
       if (loaded.tourney) { this.dayHold = { speed: this.speed || this.lastSpeed, at: 0 }; this.setSpeed(0); this.traffic.resumeDay(loaded.round, loaded.tourney); }
       // T334: a save from before the weather has none: its tournament in progress (and every day before) plays as it did, the wind and the lie's kinds start with the next one
       if (this.golf) stampWeather(this.golf, loaded.round?.runs ?? 0, !!loaded.tourney);
+      // T346: and a save from before the club's own run (one from T334 has the weather and no run) the same: its balls roll by the surface alone through the tournament in progress and every day before
+      if (this.golf) stampRun(this.golf, loaded.round?.runs ?? 0, !!loaded.tourney);
     }
     else this.rangeMorning();
     if (opts.bench) console.log('[bench] after load', Math.round(performance.now() - tl), 'ms');
@@ -11600,8 +11602,9 @@ export class Game {
   private weatherOn(key: number): boolean { const g = this.golf; return !!g && weatherOn(g, key); } // (a new game is stamped here, from the first tournament; a save from before is stamped on load)
   /** a tournament's wind (its key: the same after a reload, whatever town day it is then) */
   private tourneyWind(key: number): Wind { return dailyWind(this.seed + 0x4f55, key); }
-  /** the model's golfers' conditions for the tournament of key `key`: its mean wind, the course's heights, and the lie's kinds (the view's); undefined before the weather */
-  private tourneyConditions(key: number): Conditions | undefined { return this.weatherOn(key) ? { wind: this.tourneyWind(key), height: this.ballHeight } : undefined; }
+  /** the model's golfers' conditions for the tournament of key `key`: its mean wind, the course's heights, and the lie's kinds (the view's); undefined before the weather. T346: and whether their balls roll on by their clubs' run
+   *  (`run: false` for a day from before it: its shots roll by the surface alone, as they did) */
+  private tourneyConditions(key: number): Conditions | undefined { return this.weatherOn(key) ? { wind: this.tourneyWind(key), height: this.ballHeight, ...(this.golf && runOn(this.golf, key) ? {} : { run: false }) } : undefined; }
   /** a town day's wind, kept for the day */
   private dayWindMemo: { day: number; w: Wind } | null = null;
   private dayWind(day: number): Wind { const m = this.dayWindMemo; if (m && m.day === day) return m.w; const w = dailyWind(this.seed, day); this.dayWindMemo = { day, w }; return w; }

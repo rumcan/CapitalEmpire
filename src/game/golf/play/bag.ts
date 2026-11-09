@@ -10,7 +10,7 @@
 //   `applyMods` (the one function the shot, the swing meter, the caddie and the panel read) is the only way a club or a shaft changes a shot. A bag at its default (every club Garage-sale, the stock shaft
 //   and the blade head) is no mods at all: the shot model plays exactly as it did before the bag. T336's cards add their mods after these.
 // Pure TS, no DOM, no draws.
-import { CLUB_ORDER, carryFor } from './shot';
+import { CLUB_ORDER, CLUB_RUN, carryFor } from './shot';
 import { CLUB_BASE, FAMILY, applyMods, type Family, type MechId, type Mod } from './mods';
 import { SPIN_BACK_CAP } from './spin';
 import type { Club, GameSkills } from './types';
@@ -225,13 +225,16 @@ export function forgivePips(k: { spread: number; sweet: number; mishit: number }
 }
 /** the launch in words from the loft */
 export const launchWord = (loft: number): string => loft <= 16 ? 'Low' : loft <= 30 ? 'Mid' : loft <= 42 ? 'High' : 'Very high';
+/** T346: the run after landing in words from its factor (shot.ts CLUB_RUN): the woods and the hybrid run on, the 9-iron and the wedges land soft, the irons between say nothing */
+export const runWord = (run: number): string | null => run > 1.04 ? 'runs on' : run < 0.6 ? 'lands soft' : null;
 
 /** one club of the bag as the card shows it, for a golfer's game (carry, spin, forgiveness after the club's level and his stats) and what the next level offers */
 export interface ClubRow {
   club: Club; name: string; short: string; family: Family; kind: PriceKind; level: number; levelName: string;
   /** his full carry with it (metres; 0 for the putter) */ carryM: number;
   /** the loft in degrees and the launch in words (Low, Mid, High, Very high) */ loftDeg: number; launch: string;
-  /** "runs on", "lands soft" or null */ runs: string | null;
+  /** "runs on", "lands soft" or null (T346: from `run`) */ runs: string | null;
+  /** T346 (#988): how far the ball runs on after landing as a factor on the surface's share of the carry (shot.ts CLUB_RUN, times his cards' run: 1.3 a driver, 0.3 a sand wedge; the putter's 1 is not shown) */ run: number;
   /** the backspin it can put on the ball, as a share of the most (0..100; the putter 0) */ spinPct: number;
   /** its forgiveness, 1..5 pips */ forgive: number;
   /** the next level: its number and name, its price, what it adds, and why money cannot buy it (null: it can), why a voucher cannot (null: it can); null at the Prototype */
@@ -256,10 +259,12 @@ export function bagView(bag: BagSave | null | undefined, sk: GameSkills, ctx: Sh
     // (spin, runs and forgiveness are the club's own, with his mods but not his stats: a golfer's accuracy does not make a lob wedge forgiving)
     const kit = applyMods({ driving: sk.driving, irons: sk.irons, short: sk.short, putting: sk.putting, ...(sk.mods ? { mods: sk.mods } : {}) }, club), lv = levelOf(bag, club), kind = KIND_OF[club], putter = club === 'putter';
     const nextLv = lv + 1, why = lv >= MAX_LEVEL ? null : clubUpgradeWhy(bag, club, ctx);
+    const run = CLUB_RUN[club] * kit.roll / (CLUB_BASE[club]?.roll ?? 1); // (T346: what a shot with conditions rolls by: the ranking's, and his cards' factor on the club)
     return {
       club, name: cap1(clubName(club)), short: CLUB_SHORT[club], family: FAMILY[club], kind, level: lv, levelName: LEVEL_NAME[lv]!,
       carryM: putter ? 0 : carryFor(sk, club), loftDeg: LOFT[club], launch: putter ? '' : launchWord(LOFT[club]),
-      runs: putter ? null : kit.roll > 1.04 ? 'runs on' : kit.roll < 0.96 ? 'lands soft' : null,
+      // (T346: the run is the whole bag's ranking by launch and spin (CLUB_RUN) times his cards' factor; the T335 base character is the ranking's now)
+      runs: putter ? null : runWord(run), run,
       spinPct: putter ? 0 : Math.round(clampN(SPIN_BACK_CAP[club] * kit.spin, 0, 1) * 100), forgive: forgivePips(kit),
       next: lv >= MAX_LEVEL ? null : { level: nextLv, name: LEVEL_NAME[nextLv]!, price: priceOf(club, nextLv), lines: fxLines(fxDelta(LEVEL_FX[kind][nextLv - 1]!, lv >= 1 ? LEVEL_FX[kind][lv - 1] : undefined), putter ? 'leave' : 'scatter'), why, voucherWhy: voucherWhy(bag, club) },
     };
@@ -276,13 +281,11 @@ export function bagView(bag: BagSave | null | undefined, sk: GameSkills, ctx: Sh
   };
 }
 
-/** a club's own base character (CLUB_BASE) as lines: "runs on", "forgiving", "lands soft", "hard to hit" */
+/** a club's own base character (CLUB_BASE: its forgiveness) and its run (T346: shot.ts CLUB_RUN, the whole bag ranked) as lines: "forgiving", "hard to hit", "runs on", "lands soft" */
 export function baseNote(club: Club): string | null {
-  const b = CLUB_BASE[club]; if (!b) return null;
-  const out: string[] = [];
-  if ((b.sweet ?? 1) > 1.03 || (b.spread ?? 1) < 0.98) out.push('forgiving');
-  if ((b.sweet ?? 1) < 0.97 || (b.spread ?? 1) > 1.03) out.push('hard to hit');
-  if ((b.roll ?? 1) > 1.03) out.push('runs on');
-  if ((b.roll ?? 1) < 0.97) out.push('lands soft');
+  const b = CLUB_BASE[club], out: string[] = [];
+  if (b && ((b.sweet ?? 1) > 1.03 || (b.spread ?? 1) < 0.98)) out.push('forgiving');
+  if (b && ((b.sweet ?? 1) < 0.97 || (b.spread ?? 1) > 1.03)) out.push('hard to hit');
+  const w = club === 'putter' ? null : runWord(CLUB_RUN[club]); if (w) out.push(w);
   return out.length ? out.join(', ') : null;
 }
