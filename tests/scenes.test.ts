@@ -13,6 +13,7 @@ import {
   type RangeSceneFacts, type SceneManifest,
 } from '../src/game/scenes';
 import { SceneCard } from '../src/ui/SceneCard';
+import { topCard } from '../src/game/tool-modes';
 
 const DIR = 'src/assets/scenes';
 const BATCH1 = ['hitting-bays', 'home-caravan', 'home-cottage', 'home-farmhouse', 'practice-green', 'pro-shop-inside', 'range-road', 'video-store-inside', 'video-store-outside'];
@@ -156,7 +157,12 @@ test('the card: the picture, its state, the tabs (wrapping, never a sideways scr
 test('the wiring: the map click, Esc and a press on the map; the cards\' Scene buttons; the guide; the toasts', () => {
   const eng = readFileSync('src/game/engine.ts', 'utf8'), app = readFileSync('src/App.tsx', 'utf8');
   assert.match(eng, /if \(this\.sceneRef\) this\.closeScene\(\); \/\/ T242/);
-  assert.match(eng, /if \(e\.key === 'Escape' && this\.sceneRef\) \{ this\.closeScene\(\); return; \}/);
+  // (T392 to T394, PR 1069: Esc is the one ladder, Game.cancelOrClose, which a right click on the map takes too; the picture card was its own Esc line before. It is now the ladder's first rung: Esc reaches the ladder, the engine
+  // lists the picture as an open card while one shows (escRungs), closing that rung is closeScene (closeEscCard), and tool-modes.ts holds it over every other card)
+  assert.match(eng, /if \(e\.key === 'Escape'\) \{ this\.cancelOrClose\(e, /);
+  assert.match(eng, /\.\.\.this\.uiCards\?\.open\(\), scene: !!this\.sceneRef,/);
+  assert.match(eng, /case 'scene': this\.closeScene\(\); return;/);
+  assert.equal(topCard({ scene: true, talk: true, help: true, menu: true, panel: true }), 'scene', 'Esc puts the picture away before any other card');
   assert.match(eng, /\{ this\.openRangeCard\(true\); this\.inspectScene\(p\); return; \}/);
   assert.match(eng, /\{ this\.openClubCard\(true\); this\.inspectScene\(null, true\); return; \}/);
   assert.match(eng, /if \(p\) \{ this\.selected = p; this\.inspectScene\(p\); this\.emit\(\); return; \}/);
