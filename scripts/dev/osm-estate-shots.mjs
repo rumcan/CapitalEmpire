@@ -79,11 +79,12 @@ try {
     const state = () => page.evaluate(() => {
       const g = window.__game, c = g.estateCard?.(), e = g.estateRt;
       return { card: c ? { total: c.total, sale: c.sale, sold: c.sold, building: c.building, built: c.built } : null, lots: (e?.lots ?? []).map(l => ({ x: l.o.x + (l.u.x * l.w + l.n.x * l.d) / 2, y: l.o.y + (l.u.y * l.w + l.n.y * l.d) / 2, st: l.st })), segs: g.net.segs.size, townLots: g.traffic.lots.size, townBuilt: g.traffic.built, money: g.money, osm: g.golf.osm?.id, course: g.golf.course, clubhouse: g.golf.clubhouse, ...(() => {
-        // how the town's own lots sit on the club's land and against the estate's lots (bounding boxes: a lot's four corners)
-        const box = l => { const c = [[0, 0], [l.w, 0], [l.w, l.d], [0, l.d]].map(([a, b]) => [l.o.x + l.u.x * a + l.n.x * b, l.o.y + l.u.y * a + l.n.y * b]); return [Math.min(...c.map(q => q[0])), Math.min(...c.map(q => q[1])), Math.max(...c.map(q => q[0])), Math.max(...c.map(q => q[1]))]; };
-        const town = [...g.traffic.lots.values()].filter(v => v.o && v.w), inLand = town.filter(v => g.ownedAt(v.o.x + (v.u.x * v.w + v.n.x * v.d) / 2, v.o.y + (v.u.y * v.w + v.n.y * v.d) / 2));
-        const tb = town.map(v => ({ v, b: box(v) })), over = (e?.lots ?? []).filter(l => { const b = box(l); return tb.some(t => t.v.level > 0 && t.b[0] < b[2] && t.b[2] > b[0] && t.b[1] < b[3] && t.b[3] > b[1]); }).length;
-        return { townInLand: inLand.length, townBuiltInLand: inLand.filter(v => v.level > 0).length, estateOverTownBuilt: over };
+        // how the town's own lots sit on the golf land and against the estate's lots (a lot's bounding box; the town's lots keep o, u, n as [x, y], the estate's as {x, y})
+        const P = p => Array.isArray(p) ? { x: p[0], y: p[1] } : p;
+        const box = l => { const o = P(l.o), u = P(l.u), n = P(l.n), c = [[0, 0], [l.w, 0], [l.w, l.d], [0, l.d]].map(([a, b]) => [o.x + u.x * a + n.x * b, o.y + u.y * a + n.y * b]); return [Math.min(...c.map(q => q[0])), Math.min(...c.map(q => q[1])), Math.max(...c.map(q => q[0])), Math.max(...c.map(q => q[1]))]; };
+        const town = [...g.traffic.lots.values()].filter(v => v.o && v.w), onLand = town.filter(v => g.onGolfLand(box(v))), tb = town.map(v => ({ v, b: box(v) }));
+        const over = (e?.lots ?? []).filter(l => { const b = box(l); return tb.some(t => t.v.level > 0 && t.b[0] < b[2] && t.b[2] > b[0] && t.b[1] < b[3] && t.b[3] > b[1]); }).length;
+        return { townOnGolfLand: onLand.length, townBuiltOnGolfLand: onLand.filter(v => v.level > 0).length, estateOverTownBuilt: over };
       })() };
     });
     let s0 = await state();
@@ -130,7 +131,7 @@ try {
       await look(page, spot.x, spot.y, 0.3); await settle(page, 1500); await dismiss(page);
       add('houses-30', await bare(page, () => shot(page, `${id}-${v.key}-houses-30`)));
     }
-    numbers[v.key] = { card: s0.card, after: s1.card, segs: s0.segs, townLots: s0.townLots, townInLand: s0.townInLand, townBuilt: s1.townBuilt, townLotsAfter: s1.townLots, townBuiltInLand: s1.townBuiltInLand, estateOverTownBuilt: s1.estateOverTownBuilt };
+    numbers[v.key] = { card: s0.card, after: s1.card, segs: s0.segs, townLots: s0.townLots, townOnGolfLand: s0.townOnGolfLand, townBuilt: s1.townBuilt, townLotsAfter: s1.townLots, townBuiltOnGolfLand: s1.townBuiltOnGolfLand, estateOverTownBuilt: s1.estateOverTownBuilt };
     await page.close();
   }
   console.log('\nnumbers', JSON.stringify(numbers));
