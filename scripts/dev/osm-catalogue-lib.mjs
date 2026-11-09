@@ -244,6 +244,11 @@ export function dedupe(entries) {
   return entries.filter((_, i) => !drop.has(i));
 }
 
+/** the entries not seen before, by reference, remembering them in `seen`: a course on a border comes back in both countries' answers and is listed once, in the country asked first */
+export function firstSeen(entries, seen) {
+  return entries.filter(e => { if (seen.has(e[0])) return false; seen.add(e[0]); return true; });
+}
+
 // ---------------------------------------------------------------------------------------------------------------- chunks
 /** the entry tuple's fields, for the readers */
 export const ENTRY = ['ref', 'name', 'place', 'lat', 'lon', 'w10', 'h10', 'holes', 'alt', 'cc'];

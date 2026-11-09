@@ -258,6 +258,7 @@ async function fetchAll() {
 // ---------------------------------------------------------------------------------------------------------------- the build
 function build() {
   const t0 = Date.now(), built = new Date().toISOString().slice(0, 10), countries = [], todo = [], names = {};
+  const seenRefs = new Set();
   // (the places of every file kept, as one index: a course takes the nearest, whichever request brought it)
   const pl = new L.Places(placeFiles().flatMap(n => L.parsePlacesCsv(readCached(n, 'csv')?.text ?? '')));
   for (const cc of [...new Set(regions.map(r => r.cc))]) {
@@ -271,7 +272,7 @@ function build() {
       const b = k.meta.base || k.meta.fetchedAt; if (b && (!at || b < at)) at = b;
     }
     if (!mine.length || (missing === mine.length)) continue;
-    const kept = L.dedupe(entries);
+    const kept = L.firstSeen(L.dedupe(entries), seenRefs); // (a course on a border is in both answers: it is listed once)
     countries.push({ cc, entries: kept, parts: L.splitByRegion(kept, group, mine.length), at: at ? at.slice(0, 10) : built, regions: mine.length, missing });
     names[cc] = L.countryName(cc);
   }

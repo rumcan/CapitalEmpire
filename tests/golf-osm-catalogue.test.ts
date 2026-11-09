@@ -131,6 +131,17 @@ describe('the catalogue script: places and entries (T378)', () => {
   });
 });
 
+describe('the catalogue script: a course on a border (T378)', () => {
+  it('is listed once, in the country asked first: the second answer's copy is dropped, what the first did not have stays', () => {
+    const e = (ref: string, name: string): L.Entry => [ref, name, '', 1, 2, 10, 10, 0, '', ''];
+    const seen = new Set<string>();
+    const first = L.firstSeen([e('w1', 'Border GC'), e('w2', 'Home GC')], seen), second = L.firstSeen([e('w1', 'Border GC'), e('w3', 'Away GC')], seen);
+    assert.deepEqual(first.map(x => x[0]), ['w1', 'w2']); assert.deepEqual(second.map(x => x[0]), ['w3']);
+    assert.equal(seen.size, 3);
+    assert.deepEqual(L.firstSeen([], seen), []);
+  });
+});
+
 describe('the catalogue script: the chunks (T378)', () => {
   const entries = (cc: string, n: number): L.Entry[] => Array.from({ length: n }, (_, i) => [`w${i + 1}`, `${cc} course ${String(i).padStart(4, '0')}`, '', 1, 2, 10, 10, 0, '', cc] as L.Entry);
   it('a country with 150 courses or more is a chunk of its own; the small ones are packed together, up to 700, each entry with its country code', () => {

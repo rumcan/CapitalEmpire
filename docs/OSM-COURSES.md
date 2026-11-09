@@ -507,9 +507,9 @@ maps from the dev server. not sure if bug." (It was not a bug: that evening the 
 - The countries are asked in the owner's order (South Africa, the US, the UK and Ireland, Australia, Canada, New Zealand, then by number of courses); the script prints what is not asked yet and finishes it on its next run.
 
 ## What is in it (the run of 2026-11-09)
-**29,935 named golf courses in 35 countries**, 28 chunk files, 2.4 MB raw and **884 KB gzipped** in all, the biggest chunk 135 KB gzipped (the US is cut into three of about 4 400 courses). By country:
-US 13,152, GB 3,012, JP 2,205, CA 1,843, AU 1,458, DE 882, KR 845, FR 776, ES 504, SE 464, IE 435, NZ 406, CN 376, AR 354, IT 307, ZA 306, NL 279, DK 198, TH 194, AT 189, MX 163, MY 157, ID 157, FI 156,
-NO 149, CZ 142, CH 128, PH 123, TW 113, IN 111, PT 100, BE 97, BR 75, IS 73, LU 6 (the countries under 150 courses share two packs). That is the owner's order (South Africa, the US, the UK and Ireland, Australia,
+**29,898 named golf courses in 35 countries**, 28 chunk files, 2.4 MB raw and **884 KB gzipped** in all, the biggest chunk 135 KB gzipped (the US is cut into three of about 4 400 courses). By country:
+US 13,122, GB 3,012, JP 2,205, CA 1,843, AU 1,458, DE 882, KR 845, FR 776, ES 504, SE 464, IE 435, NZ 406, CN 376, AR 354, IT 305, ZA 306, NL 279, DK 198, TH 194, AT 187, MX 163, MY 157, ID 157, FI 155,
+NO 149, CZ 142, CH 128, PH 123, TW 113, IN 111, PT 100, BE 95, BR 75, IS 73, LU 6 (the countries under 150 courses share two packs). That is the owner's order (South Africa, the US, the UK and Ireland, Australia,
 Canada, New Zealand) and then every country down to the twentieth by number of courses and twelve more; **97 countries are not asked yet** (Poland, Vietnam, Colombia and on: the script lists them and does them on its next run).
 The run: 42 answers (61 MB of JSON and text), about 1 h 45 min in requests over about 2.5 h of running (116 attempts were turned away at once with a 502 or 504, the rest was the 10 s gaps and the back-offs, and
 restarts to fix the script); the main server stopped answering from this PC part-way (a TCP time-out), maps.mail.ru gave most of the answers, in batches. The build step (cache to chunks) takes 3.5 s.

@@ -38,6 +38,7 @@ export type Entry = [string, string, string, number, number, number, number, num
 export function entriesOf(json: { elements?: OverpassEl[] } | null, opt?: { places?: Places | null; suffix?: string; cc?: string }): Entry[];
 export function fold(s: string): string;
 export function dedupe(entries: Entry[]): Entry[];
+export function firstSeen(entries: Entry[], seen: Set<string>): Entry[];
 export interface Chunk { id: string; cc: string; entries: Entry[]; at?: string }
 export function packChunks(countries: readonly { cc: string; entries: Entry[]; at?: string; parts?: Entry[][] | null }[]): Chunk[];
 export function splitByRegion(entries: Entry[], groupOf: ReadonlyMap<string, number>, nRegions: number, splitAt?: number, chunkAt?: number): Entry[][] | null;
