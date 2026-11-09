@@ -89,21 +89,37 @@ export function specPixel(c: readonly number[], m: readonly number[], a: number,
 }
 
 /** the camera layer's knobs (window.__game.spec, the gear menu's Night panel): the falloff's inner and outer radius (the distance from the
- *  screen's centre over half its longer side: within inner the reflection is whole, past outer gone), the strength, and the share of it by
- *  day (the night light's amount takes it to the whole strength after dusk) */
-export interface SpecLook { inner: number; outer: number; strength: number; day: number }
-export const SPEC_LOOK: SpecLook = { inner: 0.15, outer: 1, strength: 1, day: 0.5 };
+ *  screen's centre over half its longer side: within inner the reflection is whole, past outer gone), the strength, the share of it by
+ *  day (the night light's amount takes it to the whole strength after dusk) and, T363 (#1018; the owner, 2026-11-08: "the water glint should be a
+ *  much more oval shape. A LOT more oval. so stretch it vertically and make it so I can make it thinner"), the oval: how many times narrower than
+ *  tall the reflection is on the screen (1 round, the old glint; the radii are its height, so a higher oval only thins it) */
+export interface SpecLook { inner: number; outer: number; strength: number; day: number; oval: number }
+/** the oval's range (1 round .. 8 a long thin streak) */
+export const SPEC_OVAL = { min: 1, max: 8 } as const;
+export const SPEC_LOOK: SpecLook = { inner: 0.15, outer: 1, strength: 1, day: 0.5, oval: 3 };
 const num = (v: unknown, d: number, a: number, b: number) => (typeof v === 'number' && Number.isFinite(v) ? clamp(v, a, b) : d);
 export function clampSpecLook(s: Partial<SpecLook> | null | undefined): SpecLook {
   const D = SPEC_LOOK, inner = num(s?.inner, D.inner, 0, 2);
-  return { inner, outer: Math.max(inner + 0.01, num(s?.outer, D.outer, 0.01, 3)), strength: num(s?.strength, D.strength, 0, 3), day: num(s?.day, D.day, 0, 1) };
+  return { inner, outer: Math.max(inner + 0.01, num(s?.outer, D.outer, 0.01, 3)), strength: num(s?.strength, D.strength, 0, 3), day: num(s?.day, D.day, 0, 1), oval: num(s?.oval, D.oval, SPEC_OVAL.min, SPEC_OVAL.max) };
 }
 /** the camera falloff at device px (x, y) of a w x h screen: 1 within the inner radius, 0 past the outer, a smoothstep between. The distance
- *  is in screen px over half the longer side, so the falloff is round on any screen (the aspect corrected), and outer 1 reaches the far edges */
-export function specFalloff(x: number, y: number, w: number, h: number, inner: number, outer: number): number {
-  const d = Math.hypot(x - w / 2, y - h / 2) / (0.5 * Math.max(w, h));
-  return 1 - smooth(inner, outer, d);
+ *  is in screen px over half the longer side, so the falloff is round on any screen (the aspect corrected), and outer 1 reaches the far edges.
+ *  T363: oval scales the sideways distance (1 round; 3 narrower than tall by 3), so the reflection is a vertical ellipse as tall as the round one was;
+ *  and from oval 1 to 2 its sides take a feather: a smoothstep over the whole half width (0 at the middle line .. the outer radius), so a narrow Inner / Outer
+ *  gap makes no crisp-sided stripe (the lead's review: "no flat colour washes"; the middle line, the vertical reach and oval 1 are as they were) */
+export function specFalloff(x: number, y: number, w: number, h: number, inner: number, outer: number, oval = 1): number {
+  const R = 0.5 * Math.max(w, h), e = Math.abs(x - w / 2) * oval / R, d = Math.hypot(e, (y - h / 2) / R);
+  const side = 1 - smooth(0, outer, e), t = clamp(oval - 1, 0, 1);
+  return (1 - smooth(inner, outer, d)) * (1 + (side - 1) * t);
 }
+/** GLSL (gl.ts FS_QUAD): camFall(u), specFalloff on the GPU: u is uSpec or uGloss (x inner, y outer, z gain, w the oval); the grass shine's own falloff stays round.
+ *  Needs uniform vec2 uScreen */
+export const CAMERA_FALLOFF_GLSL = `float camFall(vec4 u) {
+  vec2 q = gl_FragCoord.xy - 0.5 * uScreen;
+  float R = 0.5 * max(uScreen.x, uScreen.y), e = abs(q.x) * u.w / R, d = length(vec2(e, q.y / R));
+  float side = 1.0 - smoothstep(0.0, u.y, e);
+  return (1.0 - smoothstep(u.x, u.y, d)) * mix(1.0, side, clamp(u.w - 1.0, 0.0, 1.0));
+}`;
 /** the reflection's strength at the night light's amount (0 day .. 1 night): the day share by day, the whole strength at night */
 export const specGain = (s: SpecLook, night: number) => s.strength * (s.day + (1 - s.day) * clamp(night, 0, 1));
 

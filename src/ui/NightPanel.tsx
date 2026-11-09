@@ -3,6 +3,7 @@
 import type { Game } from '../game/engine';
 import { LIGHT_TYPES, NIGHT_DEFAULT, type LightKey, type NightSettings } from '../game/night-light';
 import { SHINE_GROUPS, SHINE_LOOK } from '../game/grass-shine';
+import { SPEC_OVAL } from '../game/lamp-reflect';
 import { WATER_MOTION } from '../game/water-motion';
 
 const hour = (h: number) => `${String(Math.floor(h) % 24).padStart(2, '0')}:${h % 1 ? '30' : '00'}`;
@@ -86,6 +87,8 @@ export function NightPanel({ game, bump }: { game: Game; bump: () => void }) {
         </label>
         <Row label="Inner" value={game.spec.inner} min={0} max={2} step={0.01} show={game.spec.inner.toFixed(2)} set={v => { game.setSpec({ inner: v }); bump(); }} title="Within this distance from the screen's centre (over half the screen's width) the reflection is whole" />
         <Row label="Outer" value={game.spec.outer} min={0.01} max={3} step={0.01} show={game.spec.outer.toFixed(2)} set={v => { game.setSpec({ outer: v }); bump(); }} title="Past this distance from the screen's centre the reflection is gone" />
+        {/* T363 (#1018): the glint is an oval, taller than wide; this makes it thinner (1x round, up to 8x) */}
+        <Row label="Oval / thinness" value={game.spec.oval} min={SPEC_OVAL.min} max={SPEC_OVAL.max} step={0.05} show={`${game.spec.oval.toFixed(1)}x`} set={v => { game.setSpec({ oval: v }); bump(); }} title="How oval the reflection is: 1x is round, more is narrower than tall (3x: a vertical oval a third as wide as it is high), up to a long thin streak. Inner and Outer set its height" />
         <Row label="Strength" value={game.spec.strength} min={0} max={3} step={0.01} show={pct(game.spec.strength)} set={v => { game.setSpec({ strength: v }); bump(); }} />
         <Row label="By day" value={game.spec.day} min={0} max={1} step={0.01} show={pct(game.spec.day)} set={v => { game.setSpec({ day: v }); bump(); }} title="The share of the strength by day; after dusk the night takes it to the whole" />
       </details>
