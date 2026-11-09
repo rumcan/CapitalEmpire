@@ -11,7 +11,7 @@ import {
 import { RANGE_UPGRADES, RangeSim, defaultRangeBiz, normalizeRangeBiz, rangeScene, rangeStats, upgradeWhy, withUpgrade, type CarSlot, type RangeUpgradeId } from '../src/game/golf/rangebiz';
 import { RangeHost, BALL_DRAW_MAX, BALL_POINT_FLOATS, type RangeHostCtx } from '../src/game/golf/rangehost';
 import { mulberry, worldX, worldY } from '../src/game/iso';
-import type { Rect } from '../src/game/golf/mode';
+import { normalizeGolfSave, type GolfSave, type Rect } from '../src/game/golf/mode';
 
 const rnd = () => mulberry(0xba11);
 const lay = (b: BallSave, pts: [number, number][]) => { for (const [x, y] of pts) b.field.push(x, y); };
@@ -332,4 +332,14 @@ test('the balls are drawn as one instanced set of points, thinned to the budget:
   const view = h.fieldPoints(out, worldX(240, 210) - 40, worldY(240, 210) - 30, worldX(240, 210) + 40, worldY(240, 210) + 30); assert.ok(view > 0 && view < all, `only the balls in view (${view})`);
   const empty = makeHost([]); assert.equal(empty.h.fieldPoints(out, -1e9, -1e9, 1e9, 1e9), 0);
   const sparse = makeHost([]); sparse.bs.field.push(250, 220, 251, 221); assert.equal(sparse.h.fieldPoints(out, -1e9, -1e9, 1e9, 1e9), 2, 'every ball when few');
+});
+
+test('the golf save keeps the balls: the outfield, the basket, the till and the counts come back as they were saved', () => {
+  const base = { v: 1, tier: 1, rep: 0, town: { x: 0, y: 0 }, course: [0, 0, 10, 10], parcel: [0, 0, 10, 10], dir: 2, tees: [], pins: [], aims: [], clubhouse: { x: 0, y: 0 } } as unknown as GolfSave;
+  const r = defaultRangeBiz(); r.balls!.field.push(10.5, 20.25, 11, 21); r.balls!.basket = 7; r.balls!.till = 321.5; r.balls!.total.picked.hand = 40; r.balls!.dayNo = 4;
+  const back = normalizeGolfSave(JSON.parse(JSON.stringify({ ...base, start: 'range', range: r })))!;
+  assert.deepEqual(back.range!.balls, r.balls); assert.deepEqual(back.range!.owned, []);
+  // a big outfield is a big but sane save (compact numbers: two decimals)
+  const f = newBalls(); const rr = rnd(); for (let i = 0; i < FIELD_CAP; i++) landBalls(f, 20 + rr() * 60, 40 + rr() * 100, 1, rr); assert.equal(fieldCount(f), FIELD_CAP);
+  const bytes = JSON.stringify(f).length; assert.ok(bytes < 200000, `a full outfield saves in ${bytes} bytes`);
 });

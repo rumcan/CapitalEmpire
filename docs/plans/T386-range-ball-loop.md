@@ -7,7 +7,7 @@ better tools, then staff, then machines, down a tree. Landing in parts, each pla
 ## The loop (PR 1, built)
 - **Balls are a pool.** `golf/rangeballs.ts` (pure, on a plain `BallSave` in `golf.range.balls`): clean balls in the ball room, balls in golfers' hands, your basket and
   hopper, and the balls lying on the outfield (x y pairs, up to `FIELD_CAP`). Every bucket sold takes `visitBalls(dayLen)` balls out of the ball room; every swing lands its
-  share on the outfield and they **stay** until somebody picks them up (or overnight loss takes a few). A ball ball room with fewer than a bucket sends the drivers on (lost,
+  share on the outfield and they **stay** until somebody picks them up (or overnight loss takes a few). A ball room with fewer than a bucket sends the drivers on (lost,
   why `balls`): the bays sit empty. The pool never changes except by overnight loss, the supplier and `FIELD_CAP`.
 - **The range's till.** `balls.till` = everything the range has taken, less what it has spent on its own gear. The ball loop's tools are bought with it *and* the treasury
   (a new game starts with $600,000: the treasury alone would buy the tree at minute 1). Orders from the supplier are the books' **Range balls** line.
