@@ -79,8 +79,9 @@ function climb(p0, view, mk, free) {
 export function fitView(view, mk, shared) {
   let best = null;
   for (const sign of [1, -1]) for (const swap of [false, true]) {
-    const v = { ...view, sign, swap, ppmLo: shared?.ppm ?? 38, ppmHi: shared?.ppm ?? 62 };
-    for (const ppm0 of shared?.ppm ? [shared.ppm] : [42, 48, 54]) {
+    // (T398: a view may widen the scale range and its starts: a sheet painted for a small building is drawn at up to three times the native scale)
+    const v = { ...view, sign, swap, ppmLo: view.ppmLo ?? shared?.ppm ?? 38, ppmHi: view.ppmHi ?? shared?.ppm ?? 62 };
+    for (const ppm0 of shared?.ppm ? [shared.ppm] : view.ppmStarts ?? [42, 48, 54]) {
       const cx = mk.W / 2, cy = mk.H * 0.62;
       const start = { ppm: ppm0, tx: cx, ty: cy, H: shared?.H ?? 4, e: shared?.e ?? 0.3 };
       const r = climb(start, v, mk, !shared);

@@ -23,7 +23,7 @@ export interface ReviewOverride {
 /** a lot's record */
 export interface ReviewRecord {
   /** the review set it came from: a generated town or the estate's lots, the set's seed, the look it was seen in */
-  kind: 'town' | 'estate'; seed: number; theme: 'autumn' | 'desert';
+  kind: ReviewKind; seed: number; theme: 'autumn' | 'desert';
   /** the lot's key in its set, its frame (the origin, the way along the street and the way away from it, as world tiles; its width and depth), its state and its road (0..7) */
   key: string; o: [number, number]; u: [number, number]; n: [number, number]; w: number; d: number;
   use: number; level: number; decline: number; tier?: number; lotSeed: number; road: number;
@@ -41,9 +41,12 @@ export interface ReviewRecord {
 /** the file */
 export interface ReviewFile { v: 1; lots: Record<string, ReviewRecord> }
 
+/** the review sets: a generated town, T353's estate, and (T403) the sample: streets along and across the screen with every house type on every road heading */
+export type ReviewKind = 'town' | 'estate' | 'sample';
+export const REVIEW_KINDS: readonly ReviewKind[] = ['town', 'estate', 'sample'];
 /** a lot's id: its set, the set's seed and its key (the set's own: a town lot's key, an estate lot's number) */
-export const reviewId = (kind: 'town' | 'estate', seed: number, key: string): string => `${kind}:${seed}:${key}`;
-const ID_RE = /^(town|estate):\d{1,9}:[A-Za-z0-9_.,:|-]{1,80}$/;
+export const reviewId = (kind: ReviewKind, seed: number, key: string): string => `${kind}:${seed}:${key}`;
+const ID_RE = /^(town|estate|sample):\d{1,9}:[A-Za-z0-9_.,:|-]{1,80}$/;
 
 /** a lot is bad when the owner marked it, or ticked off any of the four checks */
 export const isBad = (r: Pick<ReviewRecord, 'bad' | 'checks'>): boolean => r.bad === true || CHECKS.some(c => r.checks[c] === false);
@@ -77,7 +80,7 @@ const NOTE_MAX = 600, PLACED_MAX = 300;
 export function readRecord(raw: unknown): ReviewRecord | null {
   if (typeof raw !== 'object' || raw === null || Array.isArray(raw)) return null;
   const r = raw as Record<string, unknown>;
-  if (!(r.kind === 'town' || r.kind === 'estate') || !num(r.seed, 0, 999999999) || !(r.theme === 'autumn' || r.theme === 'desert') || !text(r.key, 80) || !pair(r.o) || !pair(r.u) || !pair(r.n)) return null;
+  if (!(r.kind === 'town' || r.kind === 'estate' || r.kind === 'sample') || !num(r.seed, 0, 999999999) || !(r.theme === 'autumn' || r.theme === 'desert') || !text(r.key, 80) || !pair(r.o) || !pair(r.u) || !pair(r.n)) return null;
   if (!num(r.w, 1, 200) || !num(r.d, 1, 200) || !num(r.use, 0, 9) || !num(r.level, 0, 9) || !num(r.decline, 0, 9) || !num(r.lotSeed, 0, 4294967295) || !num(r.road, 0, 7) || !text(r.at, 40)) return null;
   if (r.tier !== undefined && !num(r.tier, 0, 9)) return null;
   const c = r.checks; if (typeof c !== 'object' || c === null || Array.isArray(c)) return null;

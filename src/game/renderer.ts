@@ -52,8 +52,8 @@ import { LEAF_DENSITY_DEFAULT, PIC_REACH, STAMP, layLeaves, leafSignature, type 
 import { leafAtlasAt, type LeafAtlas } from './leaf-atlas';
 import { DESERT_FALL_SCALE, DESERT_LITTER_SCALE, DESERT_SHADOW_A, DESERT_TINTS, DESERT_TINT_LOOK, DESERT_TUFT } from './desert-litter';
 import { SURVEY_COL, SURVEY_DASH, SURVEY_W } from './lots/survey';
-import { CROP_STATES, LANE_SURFACE, ROW_LOOK, cropSurface, rowSegments, rowStep } from './ext/farms/crops';
-import { DAMP_TINT, DESERT_BLOT_M, LIVING_AO, LIVING_EDGE, maskContours, CasterStore, COURSE_GRASSY, COURSE_WATER, SHADOW_DIR, debugImage, grassyTex, influence, livingMasks, livingQueryBox, livingRes, livingSignature, waterTex, type Box, type InfluenceGrid, type LivingMasks, type RoadPiece, type WaterLine } from './living-ground';
+import { CROP_STATES, LANE_SURFACE, ROW_LOOK, cropArtTurn, cropSurface, rowSegments, rowStep } from './ext/farms/crops';
+import { DAMP_TINT, DESERT_BLOT_M, DUNE_TINT, LIVING_AO, LIVING_EDGE, maskContours, CasterStore, COURSE_GRASSY, COURSE_WATER, SHADOW_DIR, debugImage, grassyTex, influence, livingMasks, livingQueryBox, livingRes, livingSignature, waterTex, type Box, type InfluenceGrid, type LivingMasks, type RoadPiece, type WaterLine } from './living-ground';
 import { courseBlendG, courseTexG, paintedLay, type Aff } from './painted-turn';
 /** a DOMMatrix as painted-turn's plain affine */
 const affOf = (m: DOMMatrix): Aff => [m.a, m.b, m.c, m.d, m.e, m.f];
@@ -815,6 +815,14 @@ export class GroundPainter {
   private cropArt(p: LotPatch): string | null {
     const c = p.crop!, t = cropSurface(c.st, c.d[0], c.d[1]);
     return this.tex.paintedOf(t) ? t : null;
+  }
+  /** T402 (#1080): the fill of a crop field's art, its furrows laid along the field: the picture of the nearest axis turned by the angle between that axis and the
+   *  field's rows (cropArtTurn, through the painted look's own turn, as the Paint tool's areas are laid), over the part of the chunk the field covers. null: the field
+   *  lies on the axes (no turn: the chunk's own composition, as before) or the look is not ready (the caller's unturned fill) */
+  private cropFill(g: C2D, p: LotPatch, art: string, box: BBox): CanvasPattern | null {
+    const c = p.crop!, turn = cropArtTurn(c.d[0], c.d[1]); if (!turn) return null;
+    const pb = quadBox(p.pts), need: BBox = [Math.max(pb[0], box[0]) - 1, Math.max(pb[1], box[1]) - 1, Math.min(pb[2], box[2]) + 1, Math.min(pb[3], box[3]) + 1];
+    return need[2] <= need[0] || need[3] <= need[1] ? null : this.paintedFill(g, art, need, 1, new DOMMatrix().rotateSelf(0, 0, turn));
   }
   /** T259: the crop fields' stand-in rows (ext/farms/crops.ts ROW_LOOK, the stand-ins for 185 and 186) over their soil, a state at a time:
    *  - the rows along each field's direction, `pitch` apart (thinned out, wider, where they would fall under ROW_MIN_PX apart: no moire),
@@ -1817,13 +1825,14 @@ export class GroundPainter {
         // T259: a crop field wears its state's art once it lands (cropArt), else its soil (tex 'field') under the stand-in rows (drawCrops)
         const art = p.crop ? this.cropArt(p) : p.hard && p.tex === 'dirt' && this.tex.paintedOf(LANE_SURFACE) ? LANE_SURFACE : null;
         // T247: a lot's dirt (a dirt car park, a vegetable bed, a building site, a field) with its soft band where it meets grass (T259: not a farm lane)
+        const turned = art && p.crop ? this.cropFill(ctx, p, art, box) : null;
         if (sc && !p.hard && this.softTex(p.tex)) {
-          const fill = pat((art ?? p.tex) as TexName);
+          const fill = turned ?? pat((art ?? p.tex) as TexName);
           this.softArea(ctx, softBand(p, p.pts, 0), M, () => { ctx.fillStyle = fill; ctx.fill(path); }, (g, r) => { g.fillStyle = fill; g.fillRect(r[0]!, r[1]!, r[2]! - r[0]!, r[3]! - r[1]!); }, path);
           continue;
         }
         if (p.tex === 'slabs') { ctx.save(); ctx.clip(path); ctx.fillStyle = tex.curb.top; ctx.fill(path); if (!lite) this.slabGrid(ctx, new DOMMatrix(), quadBox(p.pts), M); ctx.globalCompositeOperation = 'multiply'; ctx.fillStyle = pat('grime'); ctx.fill(path); ctx.restore(); ctx.setTransform(M); }
-        else { ctx.fillStyle = p.tex === 'asphalt' ? lotAsph! : p.tex === 'concrete' ? lotConc! : pat((art ?? p.tex) as TexName); ctx.fill(path); }
+        else { ctx.fillStyle = p.tex === 'asphalt' ? lotAsph! : p.tex === 'concrete' ? lotConc! : turned ?? pat((art ?? p.tex) as TexName); ctx.fill(path); }
         if (p.tex === 'asphalt' || p.tex === 'paving' || p.tex === 'pad' || p.tex === 'concrete' || p.tex === 'slabs') {
           ctx.save(); ctx.clip(path); ctx.strokeStyle = p.tex === 'asphalt' ? 'rgba(12,10,8,0.5)' : 'rgba(0,0,0,0.3)'; ctx.lineWidth = p.tex === 'asphalt' ? 0.3 : 0.16; ctx.stroke(path); ctx.restore();
         }
@@ -2169,7 +2178,10 @@ export class GroundPainter {
     if (desert) for (const p of this.lotsIn([gb[0] - wr, gb[1] - wr, gb[2] + wr, gb[3] + wr])) if (!p.course && !p.top && !p.lawn && waterTex(p.tex) && !lots.includes(p)) shores.push({ pts: p.pts, ring: true });
     const waters = this.waters.filter(w => w.box[2] >= gb[0] - wr && w.box[0] <= gb[2] + wr && w.box[3] >= gb[1] - wr && w.box[1] <= gb[3] + wr);
     const rivers: WaterLine[] = waters.map(w => ({ pts: w.w.pts, bank: w.w.kind === 'river' ? 2.6 : 0.4 }));
-    const src = { casters, roads, paths, rivers, shores, desert }, ck = `${this.chunkNow!.key}:${livingSignature(res, src)}`;
+    // T382: the desert's sand blotches over the dirt (living-ground.ts sandBlotch; the desert theme gives the Sand drifts surface its look, the dev server's ?sand=old does not: the old desert): the house lots' lawns are the yards, where they thin out to a few small drifts
+    const sandOn = desert && !!this.tex.surfaces.surfaces.dune, yards: ArrayLike<number>[] = [];
+    if (sandOn) for (const p of lots) if (p.lawn && !p.top && p.pts.length >= 8) yards.push(p.pts);
+    const src = { casters, roads, paths, rivers, shores, desert, sand: sandOn, yards }, ck = `${this.chunkNow!.key}:${livingSignature(res, src)}`;
     let made = this.livingMade.get(ck);
     if (made) { this.livingMade.delete(ck); this.livingMade.set(ck, made); }
     else { made = { grid: influence(box, res, src), masks: null }; this.livingMade.set(ck, made); trimLru(this.livingMade, new Set([ck]), LIVING_MADE); }
@@ -2269,6 +2281,16 @@ export class GroundPainter {
       const lb = this.buffer('livingLayer', W, H), lg = ctx2d(lb);
       lg.save(); lg.setTransform(1, 0, 0, 1, 0, 0); lg.globalCompositeOperation = 'copy'; lg.fillStyle = DAMP_TINT; lg.fillRect(0, 0, W, H); lg.restore();
       put(lg, m.damp, 'destination-in'); lay(lb, 'multiply');
+    }
+    // T382: the desert's sand: windblown blotches of pale rippled sand (the painted Sand drifts look, painted-surfaces.ts dune) over the dirt, each fading into it along its own noisy edge (the mask is the field's own feather), the ripples running one way
+    if (m.sand && (m.max.sand ?? 0) > T) {
+      const sb = this.paintedBuf('duneSand', maskBox(m.sand));
+      if (sb) {
+        const lb = this.buffer('livingLayer', W, H), lg = ctx2d(lb); lg.drawImage(sb, 0, 0);
+        // (a tile set is laid as authored: the desert's sand is brought toward the dirt it lies on by one multiply over the whole picture, which keeps every grain and ripple; the mask then cuts the blotches out whole, soft only at their edges)
+        if (this.tex.paintedOf('duneSand')?.tiled) { lg.save(); lg.setTransform(1, 0, 0, 1, 0, 0); lg.globalCompositeOperation = 'multiply'; lg.fillStyle = DUNE_TINT; lg.fillRect(0, 0, W, H); lg.restore(); }
+        put(lg, m.sand, 'destination-in'); lay(lb, 'source-over');
+      }
     }
     // thin: patchy grass going over to soil, under trees, at doors and corners, on worn edges: the soil's colour on the grass's own strokes
     // (dry, thin turf that keeps its texture), then the soil in the grass's dark gaps (lighten: the lit tufts stay)
@@ -2468,7 +2490,8 @@ export class GroundPainter {
     if (!(bw > 0 && bh > 0)) return;
     const layers: [RoughKind, number, number][] = [[mix.k, mix.s, mix.p]]; if (mix.k2 && mix.s2) layers.push([mix.k2, mix.s2, mix.p2 ?? 0.3]);
     for (const [k, s, pa] of layers) {
-      const t = ROUGH_TEX[k]; if (!this.tex.isPainted(t) && !this.tex.has(t)) continue;
+      const t = ROUGH_TEX[this.tex.surfaces.desert && k === 'desert' ? 'dirt' : k]; // (T382: no patches of sand in a desert yard: dirt, and the sand blotches)
+      if (!this.tex.isPainted(t) && !this.tex.has(t)) continue;
       this.drawBlend(ctx, { t, s, f: ROUGH_SOFT, p: pa, g: depth }, 1, G, path, 'nonzero', r, L, X0, Y0, M, Minv, [bx, by, bw, bh]);
     }
   }

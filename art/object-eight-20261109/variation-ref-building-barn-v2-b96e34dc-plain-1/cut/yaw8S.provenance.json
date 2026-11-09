@@ -1,0 +1,29 @@
+{
+  "schema": 1,
+  "subject": "variation:ref-building-barn-v2-b96e34dc-plain:1",
+  "version": 1,
+  "key": "yaw8S",
+  "source": {
+    "file": "../src/yaw8S.png",
+    "sha256": "89758be2f5efb92aa50c2794f7d482f77e827b2705a908303ceb4d0beeeac539",
+    "width": 514,
+    "height": 570
+  },
+  "cell": 0,
+  "cellRect": {
+    "left": 0,
+    "top": 0,
+    "width": 514,
+    "height": 570
+  },
+  "crop": {
+    "left": 4,
+    "top": 4,
+    "width": 506,
+    "height": 562
+  },
+  "output": "yaw8S.native.png",
+  "sha256": "7b44158259d0d680bb468e81ee293617a57f65b99623f31ec03f140547acbacc",
+  "operation": "native RGBA cell crop only; no flip/repaint/view synthesis",
+  "review": "candidate"
+}

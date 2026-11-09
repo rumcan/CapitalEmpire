@@ -56,6 +56,15 @@ export const CROP_SURFACE: Readonly<Record<CropState, { x: string; y: string }>>
 export const LANE_SURFACE = 'farmLane';
 /** the surface (texture id) a crop patch's art would be, by its state and its rows' direction (dx, dy) */
 export const cropSurface = (st: CropState, dx: number, dy: number): string => (Math.abs(dx) >= Math.abs(dy) ? CROP_SURFACE[st].x : CROP_SURFACE[st].y);
+/** T402 (#1080: "the texture angles not correct"): the turn that lays a crop field's art along the field. The art comes in two pictures, rows along the map's x and
+ *  rows along its y (cropSurface takes the axis nearest the field's rows), and was laid unturned: on a field that lies across the axes (a farm on a road at 45 degrees
+ *  to the grid, or any other angle) its furrows ran across the field's own. The turn is the angle (degrees, tile space, -45..45) between that axis and the rows'
+ *  direction (dx, dy); rows along the axes need none, and a row and its reverse turn the same. The renderer lays the picture through it, as the Paint tool's areas
+ *  are turned, so the furrows follow the field whatever angle its road lies at */
+export function cropArtTurn(dx: number, dy: number): number {
+  const along = Math.abs(dx) >= Math.abs(dy), ang = Math.atan2(dy, dx) * 180 / Math.PI, r = (((ang - (along ? 0 : 90)) % 180) + 270) % 180 - 90, t = Math.round(r * 1e4) / 1e4;
+  return t === 0 ? 0 : t;
+}
 
 /** the stand-in rows of each state (tiles; renderer.ts drawCrops):
  *  - pitch: the rows' spacing (corn at 0.76 m, the furrows at 0.9 m);

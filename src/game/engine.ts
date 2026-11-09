@@ -4040,7 +4040,8 @@ export class Game {
   /** a lot's ground patches (driveways, walks, car parks, yards); null drops them. Batched: the ground hears of them once per frame */
   setLotGround(key: string, patches: LotPatch[] | null) {
     const keep: string[] = [];
-    for (let i = 0; i < (patches?.length ?? 0); i++) { const p = patches![i], surface = (p.paint || p.lawn) && grassSurface(p.tex, !!p.lawn, surfaceOfTex(p.tex as PaintTex)); if (!surface) continue; const id = `${key}/${i}`; keep.push(id); this.grass.register(id, p.pts, surface, /worn|dry/i.test(p.tex) ? 'stressed' : 'maintained'); }
+    // (T402: a farm's fields of grass are painted areas for their look alone: they are no managed turf, so no grass care, condition or health colour reaches them)
+    for (let i = 0; i < (patches?.length ?? 0); i++) { const p = patches![i], surface = !key.startsWith('farm:') && (p.paint || p.lawn) && grassSurface(p.tex, !!p.lawn, surfaceOfTex(p.tex as PaintTex)); if (!surface) continue; const id = `${key}/${i}`; keep.push(id); this.grass.register(id, p.pts, surface, /worn|dry/i.test(p.tex) ? 'stressed' : 'maintained'); }
     // a course chunk's turf (each grass surface's outer fill rings, at most 1,000 corners each) waits for courseGrass, a millisecond a frame
     if (key.startsWith('cg:')) this.grassWait.set(key, patches);
     else {
@@ -8425,9 +8426,9 @@ export class Game {
   /** debug (the lot review, dev/lot-review.ts, in the lab's light boot): the empty map with a review set laid and every lot of it composed as the game composes it. 'town':
    *  the street grid a new game lays for a town (townGrid, six blocks across) and the lots the town's lot map (LotMap) cuts along and between its streets, each given the
    *  state state(i) (i: its place in key order); 'estate': the streets given (a street each, as the road tool lays one) and the lots T353's estate lays along them (golf/estate.ts
-   *  frontageFrames, both sides), the state state(i) each. The lots are staged under their own keys (a staged lot is as it was staged) and returned in key order; the camera
+   *  frontageFrames, both sides), the state state(i) each; 'sample' (T403, #1081): the estate's way with the sample set's streets, four of them, along and across the screen: lots on every road heading. The lots are staged under their own keys (a staged lot is as it was staged) and returned in key order; the camera
    *  is put over the set's middle */
-  stageReview(o: { kind: 'town' | 'estate'; state: (i: number) => ComposeState; streets: { a: Pt; b: Pt; base: string }[] }): { key: string; g: LotGeom; st: ComposeState }[] {
+  stageReview(o: { kind: 'town' | 'estate' | 'sample'; state: (i: number, g: LotGeom) => ComposeState; streets: { a: Pt; b: Pt; base: string }[] }): { key: string; g: LotGeom; st: ComposeState }[] {
     this.benchMode = true; this.farmsOn(false); this.reset(); this.afterLoad(); this.setSpeed(0);
     const c = { x: MAP / 2, y: MAP / 2 }, frames: { key: string; g: LotGeom }[] = [];
     if (o.kind === 'town') {
@@ -8444,7 +8445,7 @@ export class Game {
       });
     }
     frames.sort((a, b) => (a.key < b.key ? -1 : a.key > b.key ? 1 : 0));
-    const out = frames.map((f, i) => ({ key: f.key, g: f.g, st: o.state(i) }));
+    const out = frames.map((f, i) => ({ key: f.key, g: f.g, st: o.state(i, f.g) }));
     for (const l of out) { this.staged.set(l.key, { g: l.g, st: l.st }); this.placeLot(l.key, l.g, l.st); }
     this.setTool('select'); this.lookAt(c.x, c.y, 0.06); this.emit();
     return out;
@@ -12837,8 +12838,9 @@ export class Game {
     for (const p of this.siHits) this.standInPill(p, p, ze);
     for (const p of this.businessProps) this.standInPill(p, p, ze, this.bizLabels.get(p)); // (T214: the club buildings' own labels)
     for (const l of this.range.labels) this.standInPill(l, l.p, ze, l.text);
-    // T259: the farms' stand-ins (the windbreak, the orchard, the crop fields, the lane) in the view's box
-    for (const ls of this.farmLabels.values()) for (const l of ls) if (l.box[2]! >= b[0]! && l.box[0]! <= b[2]! && l.box[3]! >= b[1]! && l.box[1]! <= b[3]!) this.standInPill(l, l.p, ze, l.text);
+    // T259: the farms' stand-ins (the windbreak, the orchard, the crop fields, the lane, the stable) in the view's box. T402 (#1080; the owner, 2026-11-09: "the stand-in labels
+    // ('Stand In for windbreak poplars', 'Stand In for farm lane') get real art, or their labels are hidden outside dev"): drawn in a dev build only, until their art lands
+    if (import.meta.env.DEV) for (const ls of this.farmLabels.values()) for (const l of ls) if (l.box[2]! >= b[0]! && l.box[0]! <= b[2]! && l.box[3]! >= b[1]! && l.box[1]! <= b[3]!) this.standInPill(l, l.p, ze, l.text);
     for (const l of this.decor.labels) this.standInPill(l, l.p, ze, l.text);
     for (const l of this.placeStandIns) this.standInPill(l, l.p, ze, l.text);
     for (const l of this.caddieLabels) this.standInPill(l.p, l.p, ze, l.text); // T213: the caddies' stand-in

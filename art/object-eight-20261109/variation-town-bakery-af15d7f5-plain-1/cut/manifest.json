@@ -1,0 +1,206 @@
+{
+  "schema": 1,
+  "projection": "normal+yaw8",
+  "subject": "variation:town-bakery-af15d7f5-plain:1",
+  "name": "Rose's Bakery — variation 1",
+  "version": 1,
+  "review": "approved",
+  "source": {
+    "views": {
+      "normalNE": {
+        "reuse": "variation:town-bakery-af15d7f5-plain:1"
+      },
+      "yaw8N": {
+        "file": "../src/yaw8N.png",
+        "sha256": "917906b084d4084cf7ef576d2193769c34997e618b2500a92cbc477b7d91a708",
+        "width": 450,
+        "height": 502
+      },
+      "normalSE": {
+        "reuse": "view:variation:town-bakery-af15d7f5-plain:1:se"
+      },
+      "yaw8E": {
+        "file": "../src/yaw8E.png",
+        "sha256": "3bbc95a85d9b29ed0cebed3a5eba28aff7ee4b81ae72926da5a18e4bd083c3e2",
+        "width": 547,
+        "height": 463
+      },
+      "normalSW": {
+        "reuse": "view:variation:town-bakery-af15d7f5-plain:1:sw"
+      },
+      "yaw8S": {
+        "file": "../src/yaw8S.png",
+        "sha256": "6e4ffde595e17fb596ceecb02bf9c836a88a2f909942912448df35e97eb97935",
+        "width": 453,
+        "height": 544
+      },
+      "normalNW": {
+        "reuse": "view:variation:town-bakery-af15d7f5-plain:1:nw"
+      },
+      "yaw8W": {
+        "file": "../src/yaw8W.png",
+        "sha256": "809bcb38b95a81c854a7a3bf0543a982f4f1e07c5ff0df7138696ffd381499e9",
+        "width": 551,
+        "height": 500
+      }
+    }
+  },
+  "footprintMetres": {
+    "width": 6,
+    "depth": 6
+  },
+  "pixelsPerMetre": 78.0255758551,
+  "pixelCalibrationSpace": "orthographic-camera",
+  "baselineScale": 0.938,
+  "kind": "building",
+  "solid": 2,
+  "category": "Eight-view buildings",
+  "aliases": [],
+  "views": {
+    "yaw8N": {
+      "file": "yaw8N.native.png",
+      "sha256": "fe3b95f256592d34f6e0690a8b5058be2f21e0b6bcf9b97a4507fcf3e8bd23be",
+      "width": 442,
+      "height": 494,
+      "anchor": {
+        "x": 257.75,
+        "y": 406.99
+      },
+      "headingDegrees": 37,
+      "boxes": null,
+      "sourceFamily": "view",
+      "sourceSha256": "917906b084d4084cf7ef576d2193769c34997e618b2500a92cbc477b7d91a708",
+      "cell": 0,
+      "cellRect": {
+        "left": 0,
+        "top": 0,
+        "width": 450,
+        "height": 502
+      },
+      "crop": {
+        "left": 4,
+        "top": 4,
+        "width": 442,
+        "height": 494
+      }
+    },
+    "yaw8E": {
+      "file": "yaw8E.native.png",
+      "sha256": "1e45c1cfdcb509a19c4d748f5f9b3289f736c46996f09aa9b5e8fad3d8636ae0",
+      "width": 539,
+      "height": 455,
+      "anchor": {
+        "x": 262.75,
+        "y": 341.56
+      },
+      "headingDegrees": 127,
+      "boxes": null,
+      "sourceFamily": "view",
+      "sourceSha256": "3bbc95a85d9b29ed0cebed3a5eba28aff7ee4b81ae72926da5a18e4bd083c3e2",
+      "cell": 0,
+      "cellRect": {
+        "left": 0,
+        "top": 0,
+        "width": 547,
+        "height": 463
+      },
+      "crop": {
+        "left": 4,
+        "top": 4,
+        "width": 539,
+        "height": 455
+      }
+    },
+    "yaw8S": {
+      "file": "yaw8S.native.png",
+      "sha256": "52b2bf74d9891832a4f3e63fde96af0cd7ac94a4d46a03618ee7f0bd9833ada8",
+      "width": 445,
+      "height": 536,
+      "anchor": {
+        "x": 257.75,
+        "y": 432.28
+      },
+      "headingDegrees": 217,
+      "boxes": null,
+      "sourceFamily": "view",
+      "sourceSha256": "6e4ffde595e17fb596ceecb02bf9c836a88a2f909942912448df35e97eb97935",
+      "cell": 0,
+      "cellRect": {
+        "left": 0,
+        "top": 0,
+        "width": 453,
+        "height": 544
+      },
+      "crop": {
+        "left": 4,
+        "top": 4,
+        "width": 445,
+        "height": 536
+      }
+    },
+    "yaw8W": {
+      "file": "yaw8W.native.png",
+      "sha256": "1240fbb480a1b234d0587048f71b331262f7e22af5ce5029e84f4da99b6d6d87",
+      "width": 543,
+      "height": 492,
+      "anchor": {
+        "x": 290.25,
+        "y": 405.75
+      },
+      "headingDegrees": 307,
+      "boxes": null,
+      "sourceFamily": "view",
+      "sourceSha256": "809bcb38b95a81c854a7a3bf0543a982f4f1e07c5ff0df7138696ffd381499e9",
+      "cell": 0,
+      "cellRect": {
+        "left": 0,
+        "top": 0,
+        "width": 551,
+        "height": 500
+      },
+      "crop": {
+        "left": 4,
+        "top": 4,
+        "width": 543,
+        "height": 492
+      }
+    },
+    "normalNE": {
+      "reuse": "variation:town-bakery-af15d7f5-plain:1",
+      "anchor": null,
+      "headingDegrees": 0,
+      "boxes": null,
+      "sourceFamily": "reuse"
+    },
+    "normalSE": {
+      "reuse": "view:variation:town-bakery-af15d7f5-plain:1:se",
+      "anchor": null,
+      "headingDegrees": 90,
+      "boxes": null,
+      "sourceFamily": "reuse"
+    },
+    "normalSW": {
+      "reuse": "view:variation:town-bakery-af15d7f5-plain:1:sw",
+      "anchor": null,
+      "headingDegrees": 180,
+      "boxes": null,
+      "sourceFamily": "reuse"
+    },
+    "normalNW": {
+      "reuse": "view:variation:town-bakery-af15d7f5-plain:1:nw",
+      "anchor": null,
+      "headingDegrees": 270,
+      "boxes": null,
+      "sourceFamily": "reuse"
+    }
+  },
+  "calibrationNotes": "The four corner views are the building's existing pictures (variation:town-bakery-af15d7f5-plain:1, view:variation:town-bakery-af15d7f5-plain:1:se, view:variation:town-bakery-af15d7f5-plain:1:sw, view:variation:town-bakery-af15d7f5-plain:1:nw), reused, not repacked. The four straight-on views: scale 0.58 game px per native px (78.03 px/m), read with scripts/assets/straight-views/measure.mjs: the T375 footprint-box fit (6 x 6 m, the library's box) on the four corners and the four straight views, the corners' fit bias against their library scale removed (1.2395), the median of the four straight views (0.6363 0.5699 0.5595 0.5901); anchors refitted with that scale held (IoU 0.9015 0.9079 0.9144 0.9173). Not owner-measured. Sheet: variation~town-bakery-af15d7f5-plain~1 axisturn, cells NESW are N E S W. awning front with the sign on N as on NE.",
+  "artReviewRequired": [
+    "same subject across all eight views",
+    "normal and actual yaw8 geometry",
+    "upper-right daylight and lower-left shadows",
+    "true alpha and complete silhouette",
+    "per-view ground anchors and physical footprint",
+    "no duplicates or fake mirror views"
+  ]
+}

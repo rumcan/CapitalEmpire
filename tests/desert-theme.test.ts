@@ -1,11 +1,11 @@
 // T341 (#968): the desert theme. Every world tree is drawn as a palm or a rock, every world bush as a desert plant or rock (none left unmapped,
 // never mirrored, the same spot the same plant); the course's own props keep their art; the world's grass surfaces wear desert looks, the lot
-// lawns golden fescue, and no golf surface changes; off restores the look exactly.
+// lawns dirt (T382: yards are dirt with a few sand drifts; ?sand=old keeps the golden fescue), and no golf surface changes; off restores the look exactly.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { LIBRARY } from '../src/game/library';
 import { DESERT_THEME, lookOf } from '../src/game/newart';
-import { COURSE_SURFACES, DESERT_CLASS, DESERT_GROUND, DESERT_LAWN, DESERT_POOLS, desertClassOf, desertPick, desertSurfaces } from '../src/game/desert-theme';
+import { COURSE_SURFACES, DESERT_CLASS, DESERT_DUNE, DESERT_GROUND, DESERT_LAWN, DESERT_POOLS, desertClassOf, desertPick, desertSurfaces } from '../src/game/desert-theme';
 import { SURFACES, lookOfTex } from '../src/game/painted-surfaces';
 import { baseSurfaces, paintedSurfaces, setDesertSurfaces } from '../src/game/painted-surfaces-live';
 import { familyById } from '../src/game/painted-families';
@@ -83,11 +83,13 @@ test('desert theme ground: every world grass surface and lawn has a desert look;
   // the grass surfaces of the world (the farm fields and the swamp keep their own looks: the ploughed fields stay)
   const keep = new Set(['swamp', 'field', 'outside', ...SURFACES.filter(s => s.key.startsWith('field') || s.key.startsWith('corn')).map(s => s.key)]);
   for (const k of world) if (!keep.has(k)) assert.ok(DESERT_GROUND[k] || DESERT_LAWN[k], `world grass surface ${k} unmapped`);
-  for (const l of [...Object.values(DESERT_GROUND), ...Object.values(DESERT_LAWN)]) assert.ok(familyById(l.family), `${l.family} missing`);
+  for (const l of [...Object.values(DESERT_GROUND), ...Object.values(DESERT_LAWN), DESERT_DUNE]) assert.ok(familyById(l.family), `${l.family} missing`);
   for (const k of Object.keys(DESERT_GROUND)) assert.notEqual(d.surfaces[k]!.family, 'lawn-concept-run');
-  for (const k of Object.keys(DESERT_LAWN)) assert.equal(d.surfaces[k]!.family, 'golden-fescue', `lawn ${k}`);
-  // three materials over the open ground (desert sand, dirt, pale sand), not one colour
-  assert.ok(new Set(Object.values(DESERT_GROUND).map(l => l.family)).size >= 3);
+  // T382: the yards are dirt (the owner: "no sand-rectangle yards"), the sand blotches' pale rippled sand is the Sand drifts surface
+  for (const k of Object.keys(DESERT_LAWN)) assert.equal(d.surfaces[k]!.family, 'dirt-run', `lawn ${k}`);
+  // three materials over the open ground (desert sand, dirt, pale sand in the blotches), not one colour
+  assert.ok(new Set([...Object.values(DESERT_GROUND), DESERT_DUNE].map(l => l.family)).size >= 3);
+  assert.deepEqual(d.surfaces.dune, DESERT_DUNE);
   // no course tile changes: every golf surface and every texture of the course reads the same look
   for (const k of COURSE_SURFACES) assert.deepEqual(d.surfaces[k], base.surfaces[k], `course surface ${k} changed`);
   for (const s of SURFACES.filter(s => s.group === 'Golf' || s.group === 'Course walls')) for (const t of s.tex) assert.deepEqual(lookOfTex(t, d, PRESETS), lookOfTex(t, base, PRESETS), `course texture ${t} changed`);

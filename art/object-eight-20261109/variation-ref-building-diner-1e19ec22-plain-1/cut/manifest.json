@@ -1,0 +1,206 @@
+{
+  "schema": 1,
+  "projection": "normal+yaw8",
+  "subject": "variation:ref-building-diner-1e19ec22-plain:1",
+  "name": "Diner — variation 1",
+  "version": 1,
+  "review": "approved",
+  "source": {
+    "views": {
+      "normalNE": {
+        "reuse": "variation:ref-building-diner-1e19ec22-plain:1"
+      },
+      "yaw8N": {
+        "file": "../src/yaw8N.png",
+        "sha256": "cabbaf7b2bd40d8381f4e4ba82958f451da0c413796a76c605c20f7f307b9139",
+        "width": 559,
+        "height": 537
+      },
+      "normalSE": {
+        "reuse": "view:variation:ref-building-diner-1e19ec22-plain:1:se"
+      },
+      "yaw8E": {
+        "file": "../src/yaw8E.png",
+        "sha256": "acc8d831b932a2e88f7db5673bbd32d4d5cd6124f6375b087f323105ebcc9585",
+        "width": 539,
+        "height": 548
+      },
+      "normalSW": {
+        "reuse": "view:variation:ref-building-diner-1e19ec22-plain:1:sw"
+      },
+      "yaw8S": {
+        "file": "../src/yaw8S.png",
+        "sha256": "65a0c6b0f246775d7653ab89862e9b657acb691999591482351cd403b336c7f6",
+        "width": 552,
+        "height": 505
+      },
+      "normalNW": {
+        "reuse": "view:variation:ref-building-diner-1e19ec22-plain:1:nw"
+      },
+      "yaw8W": {
+        "file": "../src/yaw8W.png",
+        "sha256": "dbc132b50695ca4a102dcb0a19bd1e75bf9f67ec1618a434998622cc707273a5",
+        "width": 536,
+        "height": 521
+      }
+    }
+  },
+  "footprintMetres": {
+    "width": 8,
+    "depth": 6
+  },
+  "pixelsPerMetre": 74.505818235,
+  "pixelCalibrationSpace": "orthographic-camera",
+  "baselineScale": 1.714,
+  "kind": "building",
+  "solid": 2,
+  "category": "Eight-view buildings",
+  "aliases": [],
+  "views": {
+    "yaw8N": {
+      "file": "yaw8N.native.png",
+      "sha256": "a5480a5cedbc1c22e0882cefc5e5cfc62874b9aa249cd2c4865d118c3f098024",
+      "width": 551,
+      "height": 529,
+      "anchor": {
+        "x": 279.25,
+        "y": 409.94
+      },
+      "headingDegrees": 37,
+      "boxes": null,
+      "sourceFamily": "view",
+      "sourceSha256": "cabbaf7b2bd40d8381f4e4ba82958f451da0c413796a76c605c20f7f307b9139",
+      "cell": 0,
+      "cellRect": {
+        "left": 0,
+        "top": 0,
+        "width": 559,
+        "height": 537
+      },
+      "crop": {
+        "left": 4,
+        "top": 4,
+        "width": 551,
+        "height": 529
+      }
+    },
+    "yaw8E": {
+      "file": "yaw8E.native.png",
+      "sha256": "2b7463e2b411f73f1e7e5378336e1b3cc7048cfdf19611a6ab4e16e517d6b737",
+      "width": 531,
+      "height": 540,
+      "anchor": {
+        "x": 245.25,
+        "y": 436.26
+      },
+      "headingDegrees": 127,
+      "boxes": null,
+      "sourceFamily": "view",
+      "sourceSha256": "acc8d831b932a2e88f7db5673bbd32d4d5cd6124f6375b087f323105ebcc9585",
+      "cell": 0,
+      "cellRect": {
+        "left": 0,
+        "top": 0,
+        "width": 539,
+        "height": 548
+      },
+      "crop": {
+        "left": 4,
+        "top": 4,
+        "width": 531,
+        "height": 540
+      }
+    },
+    "yaw8S": {
+      "file": "yaw8S.native.png",
+      "sha256": "0b8bd0bfe7475361fee4476e8f2c6755f982801213fe63bec4e344a51bfafe9e",
+      "width": 544,
+      "height": 497,
+      "anchor": {
+        "x": 284,
+        "y": 355.6
+      },
+      "headingDegrees": 217,
+      "boxes": null,
+      "sourceFamily": "view",
+      "sourceSha256": "65a0c6b0f246775d7653ab89862e9b657acb691999591482351cd403b336c7f6",
+      "cell": 0,
+      "cellRect": {
+        "left": 0,
+        "top": 0,
+        "width": 552,
+        "height": 505
+      },
+      "crop": {
+        "left": 4,
+        "top": 4,
+        "width": 544,
+        "height": 497
+      }
+    },
+    "yaw8W": {
+      "file": "yaw8W.native.png",
+      "sha256": "4be0d503732b19285f16966477266465e1a426fb3d765c27b6372b8e3c7ada48",
+      "width": 528,
+      "height": 513,
+      "anchor": {
+        "x": 323.25,
+        "y": 379.77
+      },
+      "headingDegrees": 307,
+      "boxes": null,
+      "sourceFamily": "view",
+      "sourceSha256": "dbc132b50695ca4a102dcb0a19bd1e75bf9f67ec1618a434998622cc707273a5",
+      "cell": 0,
+      "cellRect": {
+        "left": 0,
+        "top": 0,
+        "width": 536,
+        "height": 521
+      },
+      "crop": {
+        "left": 4,
+        "top": 4,
+        "width": 528,
+        "height": 513
+      }
+    },
+    "normalNE": {
+      "reuse": "variation:ref-building-diner-1e19ec22-plain:1",
+      "anchor": null,
+      "headingDegrees": 0,
+      "boxes": null,
+      "sourceFamily": "reuse"
+    },
+    "normalSE": {
+      "reuse": "view:variation:ref-building-diner-1e19ec22-plain:1:se",
+      "anchor": null,
+      "headingDegrees": 90,
+      "boxes": null,
+      "sourceFamily": "reuse"
+    },
+    "normalSW": {
+      "reuse": "view:variation:ref-building-diner-1e19ec22-plain:1:sw",
+      "anchor": null,
+      "headingDegrees": 180,
+      "boxes": null,
+      "sourceFamily": "reuse"
+    },
+    "normalNW": {
+      "reuse": "view:variation:ref-building-diner-1e19ec22-plain:1:nw",
+      "anchor": null,
+      "headingDegrees": 270,
+      "boxes": null,
+      "sourceFamily": "reuse"
+    }
+  },
+  "calibrationNotes": "The four corner views are the building's existing pictures (variation:ref-building-diner-1e19ec22-plain:1, view:variation:ref-building-diner-1e19ec22-plain:1:se, view:variation:ref-building-diner-1e19ec22-plain:1:sw, view:variation:ref-building-diner-1e19ec22-plain:1:nw), reused, not repacked. The four straight-on views: scale 0.6074 game px per native px (74.51 px/m), read with scripts/assets/straight-views/measure.mjs: the T375 footprint-box fit (8 x 6 m, the library's box) on the four corners and the four straight views, the corners' fit bias against their library scale removed (1.1497), the median of the four straight views (0.5773 0.6362 0.6217 0.593); anchors refitted with that scale held (IoU 0.8598 0.8935 0.8607 0.8864). Not owner-measured. Sheet: variation~ref-building-diner-1e19ec22-plain~1 axisturn, cells NESW are N E S W. sign front on N as on NE.",
+  "artReviewRequired": [
+    "same subject across all eight views",
+    "normal and actual yaw8 geometry",
+    "upper-right daylight and lower-left shadows",
+    "true alpha and complete silhouette",
+    "per-view ground anchors and physical footprint",
+    "no duplicates or fake mirror views"
+  ]
+}

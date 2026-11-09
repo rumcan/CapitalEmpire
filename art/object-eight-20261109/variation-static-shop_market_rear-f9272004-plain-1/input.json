@@ -1,0 +1,82 @@
+{
+  "schema": 1,
+  "projection": "normal+yaw8",
+  "subject": "variation:static-shop_market_rear-f9272004-plain:1",
+  "name": "Shop Market Rear — variation 1",
+  "version": 1,
+  "review": "candidate",
+  "source": {
+    "views": {
+      "normalNE": {
+        "reuse": "variation:static-shop_market_rear-f9272004-plain:1"
+      },
+      "yaw8N": "src/yaw8N.png",
+      "normalSE": {
+        "reuse": "view:variation:static-shop_market_rear-f9272004-plain:1:se"
+      },
+      "yaw8E": "src/yaw8E.png",
+      "normalSW": {
+        "reuse": "view:variation:static-shop_market_rear-f9272004-plain:1:sw"
+      },
+      "yaw8S": "src/yaw8S.png",
+      "normalNW": {
+        "reuse": "view:variation:static-shop_market_rear-f9272004-plain:1:nw"
+      },
+      "yaw8W": "src/yaw8W.png"
+    }
+  },
+  "footprintMetres": {
+    "width": 8,
+    "depth": 6
+  },
+  "pixelsPerMetre": 63.8111026451,
+  "pixelCalibrationSpace": "orthographic-camera",
+  "baselineScale": 1.024,
+  "kind": "building",
+  "solid": 2,
+  "category": "Eight-view buildings",
+  "aliases": [],
+  "views": {
+    "normalNE": {
+      "headingDegrees": 0
+    },
+    "yaw8N": {
+      "anchor": {
+        "x": 289,
+        "y": 356.52
+      },
+      "headingDegrees": 37
+    },
+    "normalSE": {
+      "headingDegrees": 90
+    },
+    "yaw8E": {
+      "anchor": {
+        "x": 228.75,
+        "y": 370.46
+      },
+      "headingDegrees": 127
+    },
+    "normalSW": {
+      "headingDegrees": 180
+    },
+    "yaw8S": {
+      "anchor": {
+        "x": 287.5,
+        "y": 340.64
+      },
+      "headingDegrees": 217
+    },
+    "normalNW": {
+      "headingDegrees": 270
+    },
+    "yaw8W": {
+      "anchor": {
+        "x": 227.25,
+        "y": 362.77
+      },
+      "headingDegrees": 307
+    }
+  },
+  "calibrationNotes": "The four corner views are the building's existing pictures (variation:static-shop_market_rear-f9272004-plain:1, view:variation:static-shop_market_rear-f9272004-plain:1:se, view:variation:static-shop_market_rear-f9272004-plain:1:sw, view:variation:static-shop_market_rear-f9272004-plain:1:nw), reused, not repacked. The four straight-on views: scale 0.7092 game px per native px (63.81 px/m), read with scripts/assets/straight-views/measure.mjs: the T375 footprint-box fit (8 x 6 m, the library's box) on the four corners and the four straight views, the corners' fit bias against their library scale removed (1.1797), the median of the four straight views (0.7413 0.7178 0.6774 0.7006); anchors refitted with that scale held (IoU 0.9417 0.9281 0.9212 0.9339). Not owner-measured. Sheet: variation~static-shop_market_rear-f9272004-plain~1 axisturn, cells NESW are N E S W. double doors and barred window on N as on NE."
+}

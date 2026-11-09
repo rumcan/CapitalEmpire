@@ -1,0 +1,29 @@
+{
+  "schema": 1,
+  "subject": "variation:ref-building-house-dormer-b4413f08-plain:1",
+  "version": 1,
+  "key": "yaw8S",
+  "source": {
+    "file": "../src/yaw8S.png",
+    "sha256": "f9e891403f58f4e6bcef0cf0159df051b26dd9a6235da3d9e4e6c50f26c58b7f",
+    "width": 476,
+    "height": 477
+  },
+  "cell": 0,
+  "cellRect": {
+    "left": 0,
+    "top": 0,
+    "width": 476,
+    "height": 477
+  },
+  "crop": {
+    "left": 4,
+    "top": 4,
+    "width": 468,
+    "height": 469
+  },
+  "output": "yaw8S.native.png",
+  "sha256": "80b946e62cd299357d7ff38c9297a882ae4586ee985224f96730d194438054d5",
+  "operation": "native RGBA cell crop only; no flip/repaint/view synthesis",
+  "review": "candidate"
+}

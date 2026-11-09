@@ -1,0 +1,29 @@
+{
+  "schema": 1,
+  "subject": "variation:ref-building-house-dormer-north-6952cea5-plain:1",
+  "version": 1,
+  "key": "yaw8E",
+  "source": {
+    "file": "../src/yaw8E.png",
+    "sha256": "2e7a734044edaa5bbe36f9c5184383b3d2a3fe8b4a930c15607130a427cced90",
+    "width": 493,
+    "height": 559
+  },
+  "cell": 0,
+  "cellRect": {
+    "left": 0,
+    "top": 0,
+    "width": 493,
+    "height": 559
+  },
+  "crop": {
+    "left": 4,
+    "top": 4,
+    "width": 485,
+    "height": 551
+  },
+  "output": "yaw8E.native.png",
+  "sha256": "1e4ab22ac73b843e3b026a9eb111f7dc3f94f67bc5583c3a32e29a6c0905b9b1",
+  "operation": "native RGBA cell crop only; no flip/repaint/view synthesis",
+  "review": "candidate"
+}

@@ -38,6 +38,8 @@ export const SURFACES: readonly SurfaceDef[] = [
   { key: 'base', name: 'Map grass (the open ground)', group: 'Map', tex: ['grass'], kinds: ['grass'] },
   { key: 'meadow', name: 'Meadow', group: 'Map', tex: ['meadow', 'meadowLush', 'meadowFlowers'], kinds: ['grass'] },
   { key: 'dry', name: 'Dry grass', group: 'Map', tex: ['grassDry'], kinds: ['grass'] },
+  // T382: the desert theme's sand blotches (living-ground.ts sandBlotch): unset in autumn (never laid); the desert theme gives it the pale rippled sand
+  { key: 'dune', name: 'Sand drifts (the desert theme: windblown blotches over the dirt)', group: 'Map', tex: ['duneSand'], kinds: ['sand'], slot: true },
   { key: 'worn', name: 'Worn ground', group: 'Map', tex: ['lawnWorn'], kinds: ['grass'] },
   { key: 'dirt', name: 'Dirt and bare soil', group: 'Map', tex: ['dirt', 'rockyDirt', 'rockyDirtAlt'], kinds: ['cut', 'sand'] },
   { key: 'bank', name: 'River banks and creek beds', group: 'Map', tex: ['bank', 'creek'], kinds: ['cut', 'sand'] },

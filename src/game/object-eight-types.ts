@@ -14,6 +14,8 @@ export interface ObjectEightSet {
   seating?: AuthoredSeating;
   /** Reuses existing atlas pixels through appended IDs; does not replace normal road-lot pictures. */
   runtimeReuse?: true;
+  /** The library pictures whose atlas cells these views alias (T398: the four normal views of a building whose straight-on views are new: its own corner pictures, never repacked). */
+  sourceIds?: Partial<Record<ObjectFacingKey, string>>;
   /** T401 (#1079): a set of a person (an animated golfer or spectator): never a Props card or a studio palette's pick; the game draws its own people */
   person?: true;
 }

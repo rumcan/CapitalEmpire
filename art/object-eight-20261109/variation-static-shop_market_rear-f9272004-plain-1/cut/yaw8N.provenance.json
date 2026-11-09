@@ -1,0 +1,29 @@
+{
+  "schema": 1,
+  "subject": "variation:static-shop_market_rear-f9272004-plain:1",
+  "version": 1,
+  "key": "yaw8N",
+  "source": {
+    "file": "../src/yaw8N.png",
+    "sha256": "6753e7a3f1478f5fa6e029ed44f0da16c393506482d72ab0360501557481cdfb",
+    "width": 521,
+    "height": 471
+  },
+  "cell": 0,
+  "cellRect": {
+    "left": 0,
+    "top": 0,
+    "width": 521,
+    "height": 471
+  },
+  "crop": {
+    "left": 4,
+    "top": 4,
+    "width": 513,
+    "height": 463
+  },
+  "output": "yaw8N.native.png",
+  "sha256": "7988bdc5a0f6aa7f5fce681e69072c92b02d0d6e4bef5fdad27b43cc9e3d065f",
+  "operation": "native RGBA cell crop only; no flip/repaint/view synthesis",
+  "review": "candidate"
+}

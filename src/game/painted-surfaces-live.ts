@@ -16,9 +16,11 @@ export const paintedSurfaces = () => current;
 export const baseSurfaces = () => base;
 /** T341: the desert theme on or off: the world's looks swapped (desertSurfaces) and the file sent on like a save (the ground bakes again) */
 export function setDesertSurfaces(on: boolean) { if (on === desert) return; desert = on; current = on ? themed(base) : base; for (const s of subs) s(current); }
+/** T382 (dev server, ?sand=old): the desert as it was before the sand blotches (big pale patches, golden yards, no blotches): the A/B of the shots and the bench */
+export const desertSandDev = (): boolean => { try { return !!import.meta.env?.DEV && new URLSearchParams(location.search).get('sand') === 'old'; } catch { return false; } };
 /** T384 (dev server, ?litter=leaves): the desert theme with the autumn leaves, as it was before the desert's litter (the A/B of the shots and the bench) */
 export const desertLeavesDev = (): boolean => { try { return !!import.meta.env?.DEV && new URLSearchParams(location.search).get('litter') === 'leaves'; } catch { return false; } };
-const themed = (f: SurfacesFile): SurfacesFile => { const d = desertSurfaces(f); return desertLeavesDev() ? { ...d, autumnLitter: true } : d; };
+const themed = (f: SurfacesFile): SurfacesFile => { const d = desertSurfaces(f, { oldSand: desertSandDev() }); return desertLeavesDev() ? { ...d, autumnLitter: true } : d; };
 export const desertSurfacesOn = () => desert;
 /** calls back with every new surfaces file (returns the unsubscribe) */
 export function onPaintedSurfaces(cb: (f: SurfacesFile) => void) { subs.add(cb); return () => { subs.delete(cb); }; }

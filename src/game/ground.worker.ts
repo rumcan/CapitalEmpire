@@ -187,6 +187,8 @@ const handle = async (m: ToWorker) => {
           if (painter.barsIn(box)) need.add(painter.barTex());
           // the living ground's painted variant sets (T111), when their art is in the game
           if (painter.living.on && !painter.living.debug) for (const v of VARIANT_IDS) if (tex.isPainted(v)) need.add(v);
+          // T382: the desert's sand blotches' painted sand (the Sand drifts surface the desert theme gives a look: no other texture of the chunk wears that family now, so its pictures are asked for here)
+          if (painter.living.on && !painter.living.debug && tex.surfaces.desert && tex.surfaces.surfaces.dune) need.add('duneSand');
           for (const p of painter.lotsIn(box)) {
             need.add(p.tex);
             if (p.paint?.b) need.add(p.paint.bt);

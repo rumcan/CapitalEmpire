@@ -1,0 +1,29 @@
+{
+  "schema": 1,
+  "subject": "variation:ref-building-garage-0f7895a1-plain:1",
+  "version": 1,
+  "key": "yaw8E",
+  "source": {
+    "file": "../src/yaw8E.png",
+    "sha256": "71bc2208b2bbadd13d8863024368e0e20558a52d8e5df47cc675578b25f8bd4d",
+    "width": 469,
+    "height": 476
+  },
+  "cell": 0,
+  "cellRect": {
+    "left": 0,
+    "top": 0,
+    "width": 469,
+    "height": 476
+  },
+  "crop": {
+    "left": 4,
+    "top": 4,
+    "width": 461,
+    "height": 468
+  },
+  "output": "yaw8E.native.png",
+  "sha256": "ab29125992c3561ab613e6e528a07a573376afbddd0afd44e851d8e8b2c1cbd1",
+  "operation": "native RGBA cell crop only; no flip/repaint/view synthesis",
+  "review": "candidate"
+}

@@ -1,0 +1,29 @@
+{
+  "schema": 1,
+  "subject": "variation:ref-building-diner-1e19ec22-plain:1",
+  "version": 1,
+  "key": "yaw8N",
+  "source": {
+    "file": "../src/yaw8N.png",
+    "sha256": "cabbaf7b2bd40d8381f4e4ba82958f451da0c413796a76c605c20f7f307b9139",
+    "width": 559,
+    "height": 537
+  },
+  "cell": 0,
+  "cellRect": {
+    "left": 0,
+    "top": 0,
+    "width": 559,
+    "height": 537
+  },
+  "crop": {
+    "left": 4,
+    "top": 4,
+    "width": 551,
+    "height": 529
+  },
+  "output": "yaw8N.native.png",
+  "sha256": "a5480a5cedbc1c22e0882cefc5e5cfc62874b9aa249cd2c4865d118c3f098024",
+  "operation": "native RGBA cell crop only; no flip/repaint/view synthesis",
+  "review": "candidate"
+}

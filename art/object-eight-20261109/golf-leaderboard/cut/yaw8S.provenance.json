@@ -1,0 +1,29 @@
+{
+  "schema": 1,
+  "subject": "golf:leaderboard",
+  "version": 1,
+  "key": "yaw8S",
+  "source": {
+    "file": "../src/yaw8S.png",
+    "sha256": "bc25a1af39bce9a3addcde5dd9629e4a5d9568439bd6f699db93ad1382fac711",
+    "width": 436,
+    "height": 452
+  },
+  "cell": 0,
+  "cellRect": {
+    "left": 0,
+    "top": 0,
+    "width": 436,
+    "height": 452
+  },
+  "crop": {
+    "left": 4,
+    "top": 4,
+    "width": 428,
+    "height": 444
+  },
+  "output": "yaw8S.native.png",
+  "sha256": "e8b7b84dc9e5b215e32f95a0ee715559ea9a32ef8e3041a0f6e32a5a305b09a7",
+  "operation": "native RGBA cell crop only; no flip/repaint/view synthesis",
+  "review": "candidate"
+}

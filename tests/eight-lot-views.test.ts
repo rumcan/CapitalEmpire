@@ -74,13 +74,19 @@ test('on a road along a map axis the old corner logic stands (the new corners re
 });
 
 test('a building with four views only falls back to the nearest corner on a screen-straight road, as before; one with the old screen-axis set keeps it', () => {
-  for (const subject of ['town:fish_tackle', 'town:barber', 'town:laundromat', 'world:house_2']) {
+  for (const subject of ['town:fish_tackle', 'town:barber', 'town:laundromat', 'world:house_5']) {
     assert.equal(eightRingOf(subject), null, `${subject} has no eight views yet`);
     for (let road = 1; road < 8; road += 2) { assert.equal(roadView(subject, road, 0), null, `${subject} road ${road}`); assert.equal(faces(subject, road), false); }
     for (let road = 0; road < 8; road += 2) assert.equal(faces(subject, road), true, `${subject} turns to road ${road}`);
   }
-  for (const subject of ['town:grocery', 'town:bakery', 'town:pharmacy', 'world:house_0']) {
+  for (const subject of ['town:grocery', 'town:bakery', 'town:pharmacy']) {
     const set = AXIS_SETS[subject]!; assert.ok(set, `${subject} has the old screen-axis set`);
     for (let road = 1; road < 8; road += 2) assert.equal(roadView(subject, road, 0), set[(road - 1) / 2], `${subject} road ${road}: the old set`);
+  }
+  // T398 (the owner, 2026-11-09: "screen-straight roads use the turned straight-on views"): a building with both the old square set and the 8-degree views draws the turned ones (house 0)
+  for (const subject of ['world:house_0']) {
+    assert.ok(AXIS_SETS[subject], `${subject} has the old screen-axis set too`);
+    const ring = eightRingOf(subject)!; assert.ok(ring, `${subject} has the 8-degree views`);
+    for (let road = 1; road < 8; road += 2) assert.equal(roadView(subject, road, 0), ring[road], `${subject} road ${road}: the turned view`);
   }
 });

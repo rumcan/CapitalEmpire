@@ -1,0 +1,29 @@
+{
+  "schema": 1,
+  "subject": "world:snack_bar",
+  "version": 1,
+  "key": "yaw8S",
+  "source": {
+    "file": "../src/yaw8S.png",
+    "sha256": "70824814cfc5f29d17b35ed049d34d44976fc444cd7b85f4478e9a030178f958",
+    "width": 537,
+    "height": 476
+  },
+  "cell": 0,
+  "cellRect": {
+    "left": 0,
+    "top": 0,
+    "width": 537,
+    "height": 476
+  },
+  "crop": {
+    "left": 4,
+    "top": 4,
+    "width": 529,
+    "height": 468
+  },
+  "output": "yaw8S.native.png",
+  "sha256": "9150b941c59de093da2481de750b2d04a0b0034975a089c643c29184d5eefe26",
+  "operation": "native RGBA cell crop only; no flip/repaint/view synthesis",
+  "review": "candidate"
+}

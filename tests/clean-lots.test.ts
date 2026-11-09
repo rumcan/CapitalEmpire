@@ -92,16 +92,17 @@ describe('the clean base of a house lot (T385)', () => {
     }
   });
 
-  it('4. the drive meets the road and a front path leads to the door, on every lot that has its house', () => {
+  it('4. a drive only where a garage door faces the street, from the road to that door; a front path from the road to the front door (T398: no garage, no drive)', () => {
     setCleanYards(true);
-    let parked = 0; const lacking: string[] = [];
+    let parked = 0, garages = 0, drives = 0; const lacking: string[] = [];
     for (const { g, st } of LOTS) {
       const a = auditLot(g, compose(g, st)); if (!a.house) continue;
-      parked++;
-      if (!(a.drive && a.driveConnects && a.path)) lacking.push(`${g.w}x${g.d} road ${roadOf(g.n)} seed ${st.seed}: drive ${a.drive} meets ${a.driveConnects} path ${a.path}`);
+      parked++; if (a.garage) garages++; if (a.drive) drives++;
+      if (!(a.driveOk && a.pathAtDoor && (!a.drive || a.driveConnects) && a.path)) lacking.push(`${g.w}x${g.d} road ${roadOf(g.n)} seed ${st.seed}: garage ${a.garage} drive ${a.drive} (ok ${a.driveOk}, meets ${a.driveConnects}) path ${a.path} (at the door ${a.pathAtDoor})`);
     }
     assert.ok(parked > 600, `${parked} lots checked`);
-    assert.ok(lacking.length <= parked * 0.01, `${lacking.length} of ${parked} house lots have no drive that meets the road, or no path: ${lacking.slice(0, 4).join(' | ')}`);
+    assert.equal(drives, garages, 'a drive on every lot with a garage door facing the street, and on no other');
+    assert.ok(lacking.length <= parked * 0.01, `${lacking.length} of ${parked} house lots have a drive that misses its garage door (or a drive and no garage), or a path that misses the door: ${lacking.slice(0, 4).join(' | ')}`);
   });
 
   it('5. at most three trees, clear of the house, its roof, the drive and the path, as the autumn tree and as the desert palm or rock', () => {
@@ -216,7 +217,7 @@ describe('the clean base of a house lot (T385)', () => {
     frames.forEach((f, i) => {
       const g: LotGeom = { o: f.o, u: f.u, n: f.n, w: f.w, d: f.d }, c = compose(g, estateState(7, i)), a = auditLot(g, c);
       assert.deepEqual(a.clutter, []); assert.ok(a.trees <= MAX_TREES && a.treesClear); assert.equal(a.fenceAcross, 0);
-      if (a.house) { houses++; assert.ok(a.facingOff !== null && a.facingOff <= 1); assert.ok(a.drive && a.driveConnects && a.path); }
+      if (a.house) { houses++; assert.ok(a.facingOff !== null && a.facingOff <= 1); assert.ok(a.driveOk && a.pathAtDoor && a.path); }
     });
     assert.ok(houses > frames.length * 0.85, `${houses} of ${frames.length} estate lots have their house`);
   });

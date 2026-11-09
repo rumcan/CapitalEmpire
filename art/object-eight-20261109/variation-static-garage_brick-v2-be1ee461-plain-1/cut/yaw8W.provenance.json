@@ -1,0 +1,29 @@
+{
+  "schema": 1,
+  "subject": "variation:static-garage_brick-v2-be1ee461-plain:1",
+  "version": 1,
+  "key": "yaw8W",
+  "source": {
+    "file": "../src/yaw8W.png",
+    "sha256": "11b66e2513fe936ba2f1a917ea2fe3e6d1456fb4c8e7c2aba21a787cfe0f0f35",
+    "width": 535,
+    "height": 478
+  },
+  "cell": 0,
+  "cellRect": {
+    "left": 0,
+    "top": 0,
+    "width": 535,
+    "height": 478
+  },
+  "crop": {
+    "left": 4,
+    "top": 4,
+    "width": 527,
+    "height": 470
+  },
+  "output": "yaw8W.native.png",
+  "sha256": "1c4ad51dd7559a0c2ddce0e810411badc39d68e17200c69b262fd6ddc4f25451",
+  "operation": "native RGBA cell crop only; no flip/repaint/view synthesis",
+  "review": "candidate"
+}

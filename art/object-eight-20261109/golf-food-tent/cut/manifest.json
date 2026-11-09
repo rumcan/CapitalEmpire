@@ -1,0 +1,206 @@
+{
+  "schema": 1,
+  "projection": "normal+yaw8",
+  "subject": "golf:food-tent",
+  "name": "Food tent",
+  "version": 1,
+  "review": "approved",
+  "source": {
+    "views": {
+      "normalNE": {
+        "reuse": "golf:food-tent"
+      },
+      "yaw8N": {
+        "file": "../src/yaw8N.png",
+        "sha256": "f77a03413665c7017686f00c3cdc090fe5386a85c9b6235d1e150c93161ba9d7",
+        "width": 471,
+        "height": 526
+      },
+      "normalSE": {
+        "reuse": "view:golf:food-tent:se"
+      },
+      "yaw8E": {
+        "file": "../src/yaw8E.png",
+        "sha256": "81cb4642869b3e0eabe385e0ef1d2e3a808e85bfd5b3e7739397f7c9de2651ea",
+        "width": 469,
+        "height": 518
+      },
+      "normalSW": {
+        "reuse": "view:golf:food-tent:sw"
+      },
+      "yaw8S": {
+        "file": "../src/yaw8S.png",
+        "sha256": "1f7dbd3e085bc582349a195c231a960b278c71280a1aa46a9370817f1b9f7054",
+        "width": 463,
+        "height": 530
+      },
+      "normalNW": {
+        "reuse": "view:golf:food-tent:nw"
+      },
+      "yaw8W": {
+        "file": "../src/yaw8W.png",
+        "sha256": "6a342b829d5bdd0805f68d09627f7b20ade571e0b82598332622d646c60d4279",
+        "width": 467,
+        "height": 535
+      }
+    }
+  },
+  "footprintMetres": {
+    "width": 8,
+    "depth": 8
+  },
+  "pixelsPerMetre": 50.5640603307,
+  "pixelCalibrationSpace": "orthographic-camera",
+  "baselineScale": 0.681,
+  "kind": "building",
+  "solid": 2,
+  "category": "Eight-view buildings",
+  "aliases": [],
+  "views": {
+    "yaw8N": {
+      "file": "yaw8N.native.png",
+      "sha256": "8e8888f4a41fb4851a993e8e2e82e01afef8ac51631fc9e391f1723457baad5b",
+      "width": 463,
+      "height": 518,
+      "anchor": {
+        "x": 236.75,
+        "y": 397.87
+      },
+      "headingDegrees": 37,
+      "boxes": null,
+      "sourceFamily": "view",
+      "sourceSha256": "f77a03413665c7017686f00c3cdc090fe5386a85c9b6235d1e150c93161ba9d7",
+      "cell": 0,
+      "cellRect": {
+        "left": 0,
+        "top": 0,
+        "width": 471,
+        "height": 526
+      },
+      "crop": {
+        "left": 4,
+        "top": 4,
+        "width": 463,
+        "height": 518
+      }
+    },
+    "yaw8E": {
+      "file": "yaw8E.native.png",
+      "sha256": "75815aa0e6b4bfe20fd6a7340118a1e3916ee4b2caae032cb15700e5e0093661",
+      "width": 461,
+      "height": 510,
+      "anchor": {
+        "x": 237.25,
+        "y": 395.16
+      },
+      "headingDegrees": 127,
+      "boxes": null,
+      "sourceFamily": "view",
+      "sourceSha256": "81cb4642869b3e0eabe385e0ef1d2e3a808e85bfd5b3e7739397f7c9de2651ea",
+      "cell": 0,
+      "cellRect": {
+        "left": 0,
+        "top": 0,
+        "width": 469,
+        "height": 518
+      },
+      "crop": {
+        "left": 4,
+        "top": 4,
+        "width": 461,
+        "height": 510
+      }
+    },
+    "yaw8S": {
+      "file": "yaw8S.native.png",
+      "sha256": "c912a04bd15bec4a46e2ccdebd8fde4b01a944da1c1425243ed1db5185d5f249",
+      "width": 455,
+      "height": 522,
+      "anchor": {
+        "x": 235,
+        "y": 410.1
+      },
+      "headingDegrees": 217,
+      "boxes": null,
+      "sourceFamily": "view",
+      "sourceSha256": "1f7dbd3e085bc582349a195c231a960b278c71280a1aa46a9370817f1b9f7054",
+      "cell": 0,
+      "cellRect": {
+        "left": 0,
+        "top": 0,
+        "width": 463,
+        "height": 530
+      },
+      "crop": {
+        "left": 4,
+        "top": 4,
+        "width": 455,
+        "height": 522
+      }
+    },
+    "yaw8W": {
+      "file": "yaw8W.native.png",
+      "sha256": "6bfac1246be0fcc22e96d735d8bf4a26489f257b4949d5632e9df0b75118886f",
+      "width": 459,
+      "height": 527,
+      "anchor": {
+        "x": 233.25,
+        "y": 409.45
+      },
+      "headingDegrees": 307,
+      "boxes": null,
+      "sourceFamily": "view",
+      "sourceSha256": "6a342b829d5bdd0805f68d09627f7b20ade571e0b82598332622d646c60d4279",
+      "cell": 0,
+      "cellRect": {
+        "left": 0,
+        "top": 0,
+        "width": 467,
+        "height": 535
+      },
+      "crop": {
+        "left": 4,
+        "top": 4,
+        "width": 459,
+        "height": 527
+      }
+    },
+    "normalNE": {
+      "reuse": "golf:food-tent",
+      "anchor": null,
+      "headingDegrees": 0,
+      "boxes": null,
+      "sourceFamily": "reuse"
+    },
+    "normalSE": {
+      "reuse": "view:golf:food-tent:se",
+      "anchor": null,
+      "headingDegrees": 90,
+      "boxes": null,
+      "sourceFamily": "reuse"
+    },
+    "normalSW": {
+      "reuse": "view:golf:food-tent:sw",
+      "anchor": null,
+      "headingDegrees": 180,
+      "boxes": null,
+      "sourceFamily": "reuse"
+    },
+    "normalNW": {
+      "reuse": "view:golf:food-tent:nw",
+      "anchor": null,
+      "headingDegrees": 270,
+      "boxes": null,
+      "sourceFamily": "reuse"
+    }
+  },
+  "calibrationNotes": "The four corner views are the building's existing pictures (golf:food-tent, view:golf:food-tent:se, view:golf:food-tent:sw, view:golf:food-tent:nw), reused, not repacked. The four straight-on views: scale 0.895 game px per native px (50.56 px/m), read with scripts/assets/straight-views/measure.mjs: the T375 footprint-box fit (8 x 8 m, the library's box) on the four corners and the four straight views, the corners' fit bias against their library scale removed (1.094), the median of the four straight views (0.8801 0.8896 0.9004 0.9004); anchors refitted with that scale held (IoU 0.8753 0.8886 0.8781 0.8575). Not owner-measured. Sheet: golf~food-tent axisturn, cells NESW are N E S W. counter and stools on N as on NE; the straight views add flower pots round the tent (the corners have none).",
+  "artReviewRequired": [
+    "same subject across all eight views",
+    "normal and actual yaw8 geometry",
+    "upper-right daylight and lower-left shadows",
+    "true alpha and complete silhouette",
+    "per-view ground anchors and physical footprint",
+    "no duplicates or fake mirror views"
+  ]
+}
