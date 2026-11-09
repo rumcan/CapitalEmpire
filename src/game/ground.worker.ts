@@ -104,6 +104,7 @@ const handle = async (m: ToWorker) => {
       case 'terrain': painter.setTerrain(m.cls, m.height, m.waters); break;
       case 'blocks': painter.blocks = m.data; break;
       case 'course': painter.setCourse(m.i0, m.j0, m.w, m.h, m.data); break;
+      case 'land': painter.setLand(m.rect); break;
       case 'casters': {
         for (const p of m.dropPrefix ?? []) painter.casters.dropPrefix(p);
         for (const k of m.drop) painter.casters.drop(k);
@@ -135,6 +136,7 @@ const handle = async (m: ToWorker) => {
       case 'grassShine': painter.grassShine = m.on; painter.shineWeights = m.weights; break;
       case 'waterMotion': painter.waterMotion = m.on; break;
       case 'slopeLight': painter.slopeLight = m.strength; break;
+      case 'landLight': painter.landClassic = m.classic; break;
       case 'lotground': {
         // the lazy photo textures the edit's paint areas use (fill and border, course surfaces and collars, wall art): built first, so the
         // chunks baked after it see them. T168, a deferring worker: started now, not waited for here; a chunk that lays one waits for it
