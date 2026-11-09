@@ -8,7 +8,7 @@
 // tier, seed). The fences a lot owns are laid as compose's boundary fence does (the side at the higher world end, the back when n points +x/+y).
 import { LIBRARY } from '../library';
 import { isBuilding } from '../mirror';
-import { PIXEL_LIMIT } from '../sizes';
+import { lotDrawLimit } from '../newart';
 import REMOVED from '../../../scripts/assets/removed.json';
 import ALLOC_JSON from './house-allocations.json';
 import { FRONTAL } from './frontal';
@@ -106,7 +106,7 @@ export class Lay {
   /** the piece of id at its scale to fit a spot (cx, cy: its centre; ha, hb: the half extents it may take): the largest scale up to 1 that fits, the
    *  picture's pixel limit kept, null below least (a piece is skipped, never shrunk past it) */
   fit(id: string, view: View, cx: number, cy: number, ha: number, hb: number, least = 0.7): PresetProp | null {
-    const one = this.half({ id, x: cx, y: cy, scale: 1, view }), lim = PIXEL_LIMIT[LIB_AT.get(drawnView(id, this.f, view).id) ?? -1] ?? 0;
+    const one = this.half({ id, x: cx, y: cy, scale: 1, view }), lim = lotDrawLimit(LIB_AT.get(drawnView(id, this.f, view).id) ?? -1);
     // T308 (#893): a car is drawn at the road cars' size (scale 1) or not at all: a car shrunk to a spot was the tiny car in the drive
     if (isVehicle(id)) return ha >= one.ha - 1e-9 && hb >= one.hb - 1e-9 ? { id, x: cx, y: cy, scale: 1, view } : null;
     const k = Math.floor(Math.min(1, ha / one.ha, hb / one.hb, lim / ownerScaleOf(id)) * 100) / 100;

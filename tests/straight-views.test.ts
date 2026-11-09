@@ -8,9 +8,11 @@ import type { LibItem } from '../src/game/types';
 import { OBJECT_EIGHT_SETS } from '../src/game/object-eight-library';
 import { OBJECT_FACING_KEYS, objectFootprint } from '../src/game/object-eight-types';
 import { drawnAs } from '../src/game/mirror';
-import { axisSetOf, drawnView, eightRingOf, faces, fourViews, roadView } from '../src/game/lots/preset-art';
-import { roadOf } from '../src/game/lots/preset-frame';
-import { backPalette, compose, housePalette } from '../src/game/lots/compose';
+import { axisSetOf, drawnView, eightRingOf, faces, fourViews, ownerScaleOf, roadView } from '../src/game/lots/preset-art';
+import { frameOf as presetFrameOf, roadOf } from '../src/game/lots/preset-frame';
+import { lotDrawLimit } from '../src/game/newart';
+import { PIXEL_LIMIT } from '../src/game/sizes';
+import { HOUSE_SWAP_RULES, backPalette, compose, housePalette, swapScale } from '../src/game/lots/compose';
 import { cat } from '../src/game/lots/compose-core';
 import { LU, LV } from '../src/game/lots/town';
 import { facingView } from '../src/game/lots/house-facing';
@@ -121,4 +123,22 @@ test('the composer\'s pools hand out no object-eight picture, and no lot on a ro
   }
   assert.ok(lots >= 190);
   assert.deepEqual([...found], [], 'no picture of the batch on a road along an axis');
+});
+
+test('a swap can place a house of the batch on a road at 45 degrees: measured against the size the game draws it at, not against its pixels (the straight-on views of a house of owner size 2.1 hold a limit of 1, and no swap could place one)', () => {
+  const AT = new Map(LIBRARY.map((it, i) => [it.id, i] as const));
+  for (const subject of SUBJECTS) {
+    const set = setOf(subject)!, owner = ownerScaleOf(subject);
+    for (const key of ['yaw8N', 'yaw8E', 'yaw8S', 'yaw8W'] as const) {
+      const i = AT.get(set.views[key].id)!;
+      assert.ok(lotDrawLimit(i) >= owner, `${subject} ${key}: a lot may draw it at the building's own size (${lotDrawLimit(i).toFixed(2)} of ${owner.toFixed(2)})`);
+    }
+  }
+  // (every other picture is measured against its pixels as before)
+  for (const id of ['world:house_5', 'view:world:house_5:se', 'world:video_rental', 'object8:world-video-rental-cc8c504f-v1:yaw8N']) { const i = AT.get(id)!; assert.equal(lotDrawLimit(i), PIXEL_LIMIT[i]!, id); }
+  // (a house swapped into another house's place on each road at 45 degrees)
+  for (const road of [1, 3, 5, 7]) {
+    const n = awayOf(road), f = presetFrameOf({ o: { x: 300, y: 300 }, u: { x: n.y, y: -n.x }, n, w: 14, d: 14 }), spot = { id: 'world:house_5', x: 7, y: 7, scale: 1, view: 0 } as unknown as Parameters<typeof swapScale>[0];
+    for (const type of ['world:house_0', 'world:house_2', 'world:house_4']) assert.ok(swapScale(spot, type, f, HOUSE_SWAP_RULES) > 0, `${type} takes a house's place on road ${road}`);
+  }
 });
