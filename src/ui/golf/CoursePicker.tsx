@@ -3,13 +3,19 @@
 // openstreetmap.org link or way/123. A pick fetches the course with ONE Overpass query (kept in IndexedDB), then the card shows a preview with a quality
 // grade (Full, Partial, Outline only), the counts and the size, and "Build this course" starts a new game on it. The steps and every network rule are in
 // golf/osm/find.ts and polite.ts; this file is the card. The credit "© OpenStreetMap contributors" is on the card, as everywhere a real course shows.
-import { useEffect, useRef, useState, type ReactElement } from 'react';
+// T378 (#1034, the owner: "the course search should get a course names catalog. so first you find the name of the course in a filter list"): Find a real course starts
+// with a filter list of real course names (golf/osm/catalogue.ts: loaded when the card opens, narrowed locally as the player types, no map server asked); a row imports
+// that course by its OpenStreetMap id. The name search is under it, for a course the list does not have. Which map server is being asked, and that the servers are slow
+// today, are on the progress card.
+import { useEffect, useMemo, useReducer, useRef, useState, type ReactElement } from 'react';
 import { Icon } from '../Icon';
-import { fetchPreview, hintOfCandidate, hintOfHit, previewOfKept, realDeps, search, sizeLine, type FindDeps, type Hint, type Near, type Preview } from '../../game/golf/osm/find';
+import { CatalogueFinder, CountryFlyout, GradeChip } from './CourseNames';
+import { fetchPreview, hintOfCandidate, hintOfEntry, hintOfHit, previewOfKept, realDeps, search, sizeLine, type FindDeps, type Hint, type Near, type Preview } from '../../game/golf/osm/find';
 import { hitLine, type Hit } from '../../game/golf/osm/nominatim';
-import type { Candidate } from '../../game/golf/osm/overpass';
+import type { Candidate, OnStep } from '../../game/golf/osm/overpass';
+// (the catalogue's code and files are not in the game's start-up bundle: a dynamic import when the card opens; these are types only)
+import type { Catalogue, CatalogueEntry, Filtered } from '../../game/golf/osm/catalogue';
 import type { CourseRecord } from '../../game/golf/osm/library';
-import type { Grade } from '../../game/golf/osm/grade';
 import { paintPreview, previewOps } from '../../game/golf/osm/preview';
 import { BUSY_MESSAGE, DOWN_MESSAGE, Cancelled, ServerBusy, ServerDown } from '../../game/golf/osm/polite';
 import { refText, type OsmRef } from '../../game/golf/osm/query';
@@ -18,25 +24,28 @@ import { DemUnavailable, fetchLand, tilesKept, tilesOfCourse } from '../../game/
 import type { OsmLand } from '../../game/golf/osm/land';
 import { DEM_CREDIT_DEFAULT } from '../../game/golf/osm/terrarium';
 
+export { GradeChip };
+
 /** a shipped real course, as the card lists it */
 export interface Featured { id: string; name: string; place: string; holes: number; par: number; mappedPar: number; scale?: number; /** the source of its real ground height ("SRTM, 30 m"), T357 */ ground?: string }
 
+type CatalogueModule = typeof import('../../game/golf/osm/catalogue');
+
 type View =
   | { v: 'home' }
-  | { v: 'working'; text: string }
+  | { v: 'working'; text: string; /** T378: the sentence that says the map servers are slow today (absent: they are not) */ note?: string }
   | { v: 'hits'; q: string; hits: Hit[] }
   | { v: 'near'; q: string; near: Near; cands: Candidate[] }
   | { v: 'preview'; p: Preview; from: View };
 
-const GRADE_STYLE: Record<Grade, string> = {
-  full: 'border-emerald-400/50 bg-emerald-400/15 text-emerald-200', partial: 'border-amber-300/50 bg-amber-300/15 text-amber-200', outline: 'border-slate-400/40 bg-slate-400/10 text-slate-300',
-};
-const GRADE_NAME: Record<Grade, string> = { full: 'Full', partial: 'Partial', outline: 'Outline only' };
 const date = (iso: string) => { const d = new Date(iso); return Number.isFinite(d.getTime()) ? d.toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' }) : ''; };
 const km = (m: number) => (m >= 1000 ? `${(m / 1000).toFixed(1)} km` : `${m} m`);
 
-export function GradeChip({ grade, id }: { grade: Grade; id?: string }) {
-  return <span className={`shrink-0 rounded-full border px-2 py-[1px] text-[11px] font-semibold ${GRADE_STYLE[grade]}`} data-testid={id ?? 'find-grade'} data-grade={grade}>{GRADE_NAME[grade]}</span>;
+/** T378: how long the card has waited on the map server it is asking (shown from 5 s: a big course takes a minute, and a silent card looks hung) */
+function Waited() {
+  const [s, setS] = useState(0);
+  useEffect(() => { const t0 = Date.now(), id = setInterval(() => setS(Math.floor((Date.now() - t0) / 1000)), 1000); return () => clearInterval(id); }, []);
+  return s >= 5 ? <div className="text-[11px] text-slate-400" data-testid="find-waited">Waiting {s} s for the answer...</div> : null;
 }
 
 /** the preview picture of a course on a canvas (a w x h box in CSS pixels, drawn at the screen's pixel ratio) */
@@ -67,11 +76,12 @@ export function PreviewButtons({ can, holes, onBuild, onPlace }: { can: boolean;
   );
 }
 
-export function CoursePicker({ featured, current, onOwn, onFeatured, onBuild, onPlace, onClose, deps: given }: {
+export function CoursePicker({ featured, current, onOwn, onFeatured, onBuild, onPlace, onClose, deps: given, catalogue: catalog }: {
   featured: Featured[]; current: string | null; onOwn: () => void; onFeatured: (id: string) => void; onBuild: (spec: OsmCourseSpec, land: OsmLand | null) => void;
   /** T356: take a previewed course in hand over this game's map (the card hides until it is placed or put down); absent: only Build this course */ onPlace?: (spec: OsmCourseSpec, land: OsmLand | null) => void;
   onClose: () => void;
   /** the parts the card runs on (default: the browser's network and the IndexedDB library) */ deps?: Promise<FindDeps>;
+  /** T378: the course names catalogue (default: the page's own, loaded from public/catalogue/); a test or a shot hands it one on fake files */ catalogue?: Catalogue;
 }) {
   const [deps, setDeps] = useState<FindDeps | null>(null);
   const [view, setView] = useState<View>({ v: 'home' });
@@ -95,19 +105,39 @@ export function CoursePicker({ featured, current, onOwn, onFeatured, onBuild, on
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  /** runs a step that talks to the map servers: the card shows its progress, a cancel stops it, and a failure says why in the card's words */
-  const run = async (first: string, task: (signal: AbortSignal, step: (t: string) => void) => Promise<void>, back: View): Promise<void> => {
+  // T378: the course names catalogue: loaded when the card opens (a dynamic import: the game's start-up bundle has none of it), narrowed here as the player types
+  const [cat, setCat] = useState<{ mod: CatalogueModule; c: Catalogue; prefer: string } | null>(null), [, bump] = useReducer((n: number) => n + 1, 0);
+  const [catText, setCatText] = useState(''), [cc, setCc] = useState(''), [flyout, setFlyout] = useState(false), [active, setActive] = useState(0);
+  useEffect(() => {
+    let on = true, off: () => void = () => undefined;
+    void import('../../game/golf/osm/catalogue').then(mod => {
+      if (!on) return;
+      const c = catalog ?? mod.sharedCatalogue(), prefer = mod.regionOfLocale([...(typeof navigator !== 'undefined' ? navigator.languages ?? [] : []), typeof navigator !== 'undefined' ? navigator.language : '']);
+      off = c.subscribe(() => bump());
+      setCat({ mod, c, prefer });
+      void c.open(prefer);
+    }, () => undefined);
+    return () => { on = false; off(); };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+  const filtered: Filtered | null = useMemo(() => (cat ? cat.mod.filterCatalogue(cat.c.entries, catText, { cc: cc || undefined, prefer: cat.prefer }) : null),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [cat, cat?.c.version, catText, cc]);
+  useEffect(() => { setActive(0); }, [catText, cc]);
+
+  /** runs a step that talks to the map servers: the card shows its progress (which server is asked, and that the servers are slow today), a cancel stops it, and a failure says why in the card's words */
+  const run = async (first: string, task: (signal: AbortSignal, step: OnStep) => Promise<void>, back: View): Promise<void> => {
     if (!deps || view.v === 'working') return;
     const c = new AbortController(); ctl.current = c;
     setMsg(''); setView({ v: 'working', text: first });
-    try { await task(c.signal, t => { if (alive.current) setView({ v: 'working', text: t }); }); }
+    try { await task(c.signal, (t, info) => { if (alive.current) setView({ v: 'working', text: t, ...(info?.note ? { note: info.note } : {}) }); }); }
     catch (e) {
       if (!alive.current) return;
       if (e instanceof Cancelled || c.signal.aborted) setView(back);
       else { setMsg(e instanceof ServerBusy ? BUSY_MESSAGE : e instanceof ServerDown ? DOWN_MESSAGE : `That did not work: ${(e as Error).message}`); setView(back); }
     } finally { ctl.current = null; }
   };
-  const fetchAndShow = async (ref: OsmRef, hint: Hint, from: View, signal: AbortSignal, refresh = false, step?: (t: string) => void) => {
+  const fetchAndShow = async (ref: OsmRef, hint: Hint, from: View, signal: AbortSignal, refresh = false, step?: OnStep) => {
     const p = await fetchPreview(ref, hint, deps!, { refresh, signal, onStep: step });
     if (alive.current) { setView({ v: 'preview', p, from }); listKept(deps!); }
   };
@@ -125,6 +155,15 @@ export function CoursePicker({ featured, current, onOwn, onFeatured, onBuild, on
   };
   const pick = (ref: OsmRef, hint: Hint, list: View) =>
     void run(`Fetching ${hint.name ?? refText(ref)} from the map servers (one request; a big course can take a minute)...`, (signal, step) => fetchAndShow(ref, hint, list, signal, false, step), list);
+  /** T378: a row of the catalogue: the import goes by the course's OpenStreetMap id (no name is guessed at Nominatim) */
+  const pickEntry = (e: CatalogueEntry) => pick(e.ref, hintOfEntry(e), { v: 'home' });
+  const onCatKey = (ev: React.KeyboardEvent<HTMLInputElement>) => {
+    const rows = filtered?.rows ?? [];
+    if (ev.key === 'ArrowDown' && rows.length) { ev.preventDefault(); setActive(i => Math.min(rows.length - 1, i + 1)); }
+    else if (ev.key === 'ArrowUp' && rows.length) { ev.preventDefault(); setActive(i => Math.max(0, i - 1)); }
+    else if (ev.key === 'Enter') { ev.preventDefault(); const e = rows[Math.min(active, rows.length - 1)]; if (e && !working && deps) pickEntry(e); }
+    else if (ev.key === 'Escape' && catText) { ev.preventDefault(); ev.stopPropagation(); setCatText(''); }
+  };
   const openKept = (r: CourseRecord) => void run(`Reading ${r.name}...`, async () => {
     const p = await previewOfKept(r.id, deps!);
     if (!alive.current) return;
@@ -155,6 +194,7 @@ export function CoursePicker({ featured, current, onOwn, onFeatured, onBuild, on
     }, here);
   };
   const working = view.v === 'working';
+  const countries = cat?.c.index ? cat.mod.countriesByCount(cat.c.index) : [], countryName = countries.find(c => c.cc === cc)?.country ?? cc;
 
   const row = 'rounded-lg border px-2 py-1 text-left text-xs';
   const pickRow = (on: boolean) => `${row} ${on ? 'border-amber-300 bg-amber-300/15' : 'border-white/10 bg-white/5 hover:bg-white/10'}`;
@@ -173,6 +213,8 @@ export function CoursePicker({ featured, current, onOwn, onFeatured, onBuild, on
     body = (
       <div className="space-y-2 py-6 text-center" data-testid="find-working">
         <div className="text-sm text-slate-200" data-testid="find-progress">{view.text}</div>
+        {view.note && <div className="mx-auto max-w-[420px] rounded-lg border border-amber-300/30 bg-amber-300/10 px-2 py-1 text-xs text-amber-100" data-testid="find-slow" role="status">{view.note}</div>}
+        <Waited key={view.text} />
         <button className="chip" onClick={() => ctl.current?.abort()} data-testid="find-cancel">Cancel</button>
       </div>
     );
@@ -268,10 +310,14 @@ export function CoursePicker({ featured, current, onOwn, onFeatured, onBuild, on
             </div>
           )}
         </div>
+        <CatalogueFinder status={cat?.c.status ?? 'idle'} summary={cat ? cat.c.summary() : 'Loading the course names...'}
+          text={catText} onText={setCatText} onKey={onCatKey} countryLabel={cc ? `${countryName} (${(cat?.c.index?.countries.find(c => c.cc === cc)?.n ?? 0).toLocaleString('en-US')})` : 'All countries'} countryOn={!!cc} flyoutOpen={flyout} onCountry={() => setFlyout(o => !o)}
+          filtered={filtered} active={active} onActive={setActive} onPick={pickEntry} disabled={working || !deps} onRetry={cat ? () => void cat.c.retry(cat.prefer) : undefined}
+          credit={`Course names, towns and positions: ${OSM_CREDIT}, ODbL${cat?.c.index?.built ? `, as of ${date(cat.c.index.built)}` : ''}. Picking one fetches its map data (one request).`} />
         <div>
-          <div className="mb-1 text-xs text-slate-400">Find a real course <span className="text-slate-500">(from OpenStreetMap)</span></div>
+          <div className="mb-1 text-xs text-slate-400">Not in the list? <span className="text-slate-500">Search the map by name (or an openstreetmap.org link, or way/123)</span></div>
           <div className="flex gap-1.5">
-            <input className="min-w-0 flex-1 rounded-lg border border-white/10 bg-slate-900 px-2 py-1.5 text-sm text-white" value={text} maxLength={120} placeholder="A name, an openstreetmap.org link or way/123" autoFocus
+            <input className="min-w-0 flex-1 rounded-lg border border-white/10 bg-slate-900 px-2 py-1.5 text-sm text-white" value={text} maxLength={120} placeholder="A name, an openstreetmap.org link or way/123"
               onChange={e => setText(e.target.value)} onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); submit(); } }} disabled={working || !deps} data-testid="find-input" aria-label="Find a real course" />
             <button className="btn-gold px-3 text-sm disabled:opacity-40" onClick={submit} disabled={working || !deps} data-testid="find-go">Search</button>
           </div>
@@ -282,9 +328,12 @@ export function CoursePicker({ featured, current, onOwn, onFeatured, onBuild, on
     );
   }
   return (
-    <div className="pointer-events-auto max-h-[calc(100vh-2rem)] w-[500px] max-w-full space-y-2 overflow-y-auto rounded-2xl border border-white/10 bg-slate-950/90 p-5 text-slate-200 shadow-2xl backdrop-blur" data-testid="find-card">
-      {body}
-      <div className="border-t border-white/10 pt-1.5 text-[10px] leading-tight text-slate-500" data-testid="find-footer">Real courses are built from map data {OSM_CREDIT}. Their ground height is public elevation data: {DEM_CREDIT_DEFAULT}, via Tilezen's terrain tiles.</div>
-    </div>
+    <>
+      <div className="pointer-events-auto max-h-[calc(100vh-2rem)] w-[500px] max-w-full space-y-2 overflow-y-auto rounded-2xl border border-white/10 bg-slate-950/90 p-5 text-slate-200 shadow-2xl backdrop-blur" data-testid="find-card">
+        {body}
+        <div className="border-t border-white/10 pt-1.5 text-[10px] leading-tight text-slate-500" data-testid="find-footer">Real courses are built from map data {OSM_CREDIT}. Their ground height is public elevation data: {DEM_CREDIT_DEFAULT}, via Tilezen's terrain tiles.</div>
+      </div>
+      {flyout && view.v === 'home' && countries.length > 0 && <CountryFlyout countries={countries} cc={cc} total={cat?.c.index?.total ?? 0} prefer={cat?.prefer} onPick={c => { setCc(c); setFlyout(false); }} onClose={() => setFlyout(false)} />}
+    </>
   );
 }

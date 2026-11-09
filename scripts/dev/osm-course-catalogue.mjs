@@ -26,6 +26,8 @@ import * as L from './osm-catalogue-lib.mjs';
 const args = process.argv.slice(2), opt = (k, d) => { const i = args.indexOf(`--${k}`); return i >= 0 ? args[i + 1] : d; }, flag = k => args.includes(`--${k}`);
 const CACHE = opt('cache', 'E:/ClaudeTemp/T378/cache').replace(/\\/g, '/'), OUT = opt('out', 'public/catalogue').replace(/\\/g, '/');
 const GAP_MS = Math.max(10, Number(opt('gap', 10))) * 1000, MAX_MS = Number(opt('max-minutes', 170)) * 60_000;
+/** an answer whose map data is older than this is not used (--max-age-days): on 2026-11-09 overpass.kumi.systems answered Texas from a July snapshot, with 139 courses of some 900 */
+const MAX_AGE_MS = Number(opt('max-age-days', 3)) * 86_400_000;
 const SERVERS = opt('overpass') ? opt('overpass').split(',') : L.SERVERS;
 const ONLY = opt('countries') ? opt('countries').split(',').map(s => s.trim().toUpperCase()).filter(Boolean) : null;
 const T0 = Date.now(), sleep = ms => new Promise(r => setTimeout(r, ms));
@@ -51,15 +53,17 @@ const noteFailure = (key, why) => { failures[key] = { n: (failures[key]?.n ?? 0)
 
 // ---------------------------------------------------------------------------------------------------------------- the polite asking
 /** what this run has learned of each server: when it may be asked again, and when it last answered */
-const health = new Map(SERVERS.map(u => [u, { until: 0, okAt: 0 }]));
+const health = new Map(SERVERS.map(u => [u, { until: 0, okAt: 0, stale: false }]));
 const host = u => new URL(u).hostname;
 const stats = { requests: 0, ok: 0, byServer: Object.fromEntries(SERVERS.map(u => [host(u), { ok: 0, bad: 0 }])) };
 let lastEnd = 0;
 /** the servers to ask, the one that answered last first, the ones left alone (they hung or were busy) after the rest */
 function ordered() {
   const now = Date.now(), score = u => { const h = health.get(u); return (h.until > now ? 1e15 + h.until : 0) - h.okAt; };
-  return [...SERVERS].sort((a, b) => score(a) - score(b) || SERVERS.indexOf(a) - SERVERS.indexOf(b));
+  return SERVERS.filter(u => !health.get(u).stale).sort((a, b) => score(a) - score(b) || SERVERS.indexOf(a) - SERVERS.indexOf(b));
 }
+/** how long a request is waited for: the main server the query's own time and a little more, a mirror (they hang when they are down) at most 90 s and a little more */
+const clientTimeoutMs = (url, timeoutS) => (url === SERVERS[0] ? timeoutS + 45 : Math.min(timeoutS, 90) + 15) * 1000;
 async function gap() { const w = lastEnd + GAP_MS - Date.now(); if (w > 0) await sleep(w); }
 class Failed extends Error {}
 class TimeUp extends Error {}
@@ -78,15 +82,15 @@ async function ask(query, kind, label, timeoutS) {
       const t0 = Date.now(), tag = `${label} on ${host(url)}`;
       let res = null, text = '', why = '', hung = false, retryAfter = 0;
       try {
-        res = await fetch(url, { method: 'POST', headers: { 'User-Agent': L.UA, 'Content-Type': 'application/x-www-form-urlencoded' }, body: 'data=' + encodeURIComponent(query), signal: AbortSignal.timeout((timeoutS + 45) * 1000) });
+        res = await fetch(url, { method: 'POST', headers: { 'User-Agent': L.UA, 'Content-Type': 'application/x-www-form-urlencoded' }, body: 'data=' + encodeURIComponent(query), signal: AbortSignal.timeout(clientTimeoutMs(url, timeoutS)) });
         retryAfter = parseInt(res.headers.get('retry-after') ?? '', 10) || 0;
         text = await res.text();
-      } catch (e) { hung = e.name === 'TimeoutError' || e.name === 'AbortError'; why = hung ? `no answer in ${timeoutS + 45} s` : (e.cause?.code || e.message); }
+      } catch (e) { hung = e.name === 'TimeoutError' || e.name === 'AbortError'; why = hung ? `no answer in ${clientTimeoutMs(url, timeoutS) / 1000} s` : (e.cause?.code || e.message); }
       lastEnd = Date.now();
       const s = ((lastEnd - t0) / 1000).toFixed(1);
       let base = '';
       if (!why && res.status === 429) { why = 'HTTP 429 (too many requests)'; h.until = Date.now() + 180_000; wait = Math.max(wait, (retryAfter || 60) * 1000); }
-      else if (!why && [502, 503, 504, 509].includes(res.status)) { why = `HTTP ${res.status}`; h.until = Date.now() + 180_000; }
+      else if (!why && [502, 503, 504, 509].includes(res.status)) { why = `HTTP ${res.status}`; h.until = Date.now() + 60_000; }
       else if (!why && res.status === 400) throw new Error(`${tag}: HTTP 400, the query is wrong: ${text.replace(/\s+/g, ' ').slice(0, 300)}`);
       else if (!why && !res.ok) why = `HTTP ${res.status}`;
       else if (!why) {
@@ -94,7 +98,11 @@ async function ask(query, kind, label, timeoutS) {
           let j = null; try { j = JSON.parse(text); } catch { /* an error page */ }
           if (!j || !Array.isArray(j.elements)) why = `not an Overpass answer (${text.replace(/\s+/g, ' ').slice(0, 120)})`;
           else if (j.remark && /runtime error|timed out|out of memory|too busy|rejected/i.test(j.remark)) { why = `remark: ${j.remark}`; h.until = Date.now() + 180_000; }
-          else base = j.osm3s?.timestamp_osm_base ?? '';
+          else {
+            base = j.osm3s?.timestamp_osm_base ?? '';
+            const age = Date.now() - Date.parse(base);
+            if (!base || !Number.isFinite(age) || age > MAX_AGE_MS) { why = `stale map data (${base || 'no date'}): left alone for the rest of the run`; h.stale = true; }
+          }
         } else if (/runtime error|<html|<\?xml|Error/i.test(text.slice(0, 2000)) && !/^-?\d/.test(text)) why = `not a table (${text.replace(/\s+/g, ' ').slice(0, 120)})`;
       }
       if (hung) h.until = Date.now() + 600_000;

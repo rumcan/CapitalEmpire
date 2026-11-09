@@ -96,8 +96,8 @@ const REACH = { city: 40, town: 25, village: 10, suburb: 10, hamlet: 6 };
 /** a nearer place wins unless a bigger one is nearly as near: the distance is scaled by this (a city 7 km away beats a hamlet 4 km away) */
 const WEIGHT = { city: 0.55, town: 0.7, village: 0.9, suburb: 0.85, hamlet: 1.15 };
 
-/** an index of places on a grid of 0.25 degrees: `near(lat, lon)` gives the course's own place ("Wingate Park", the nearest one that is not far) and the town it
- *  belongs to ("Pretoria": the nearest city or town), each by name, either '' when none is near */
+/** an index of places on a grid of 0.25 degrees: `near(lat, lon)` gives the course's own place ("Wingate Park": the nearest of any kind, a bigger one counting as nearer)
+ *  and the town it belongs to ("Pretoria": a city within 20 km, else the nearest town within 25 km, else a city within 40 km), each by name, either '' when none is near */
 export class Places {
   constructor(list) {
     this.cell = 0.25; this.grid = new Map(); this.count = 0;
@@ -121,14 +121,16 @@ export class Places {
     return out;
   }
   near(lat, lon) {
-    let local = null, town = null;
+    let local = null, city = null, town = null;
     for (const { p, d } of this.within(lat, lon, 40)) {
       if (d > REACH[p.kind]) continue;
       const score = d * WEIGHT[p.kind];
       if (!local || score < local.score) local = { p, score };
-      if ((p.kind === 'city' || p.kind === 'town') && (!town || score < town.score)) town = { p, score };
+      if (p.kind === 'city' && (!city || d < city.d)) city = { p, d };
+      if (p.kind === 'town' && (!town || d < town.d)) town = { p, d };
     }
-    return { local: local?.p.name ?? '', town: town?.p.name ?? '' };
+    // the town: a city within 20 km, else the nearest town (25 km), else a city further off (40 km): Wingate Park is in Pretoria, 9 km off, with the town of Irene nearer
+    return { local: local?.p.name ?? '', town: ((city && city.d <= 20 ? city : null) ?? town ?? city)?.p.name ?? '' };
   }
 }
 
