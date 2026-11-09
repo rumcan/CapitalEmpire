@@ -40,7 +40,7 @@ import { AREA_SHADE, EDGE_LOOKS, JOINT_SOFT, SHADE_RGB, areaLightEdge, areaShade
 import { CH_SIZE, SUN_TILE_DIR } from './ext/course-height';
 import { CART_RIM, CART_SURFACE, cartCast, cartRim } from './cart-bevel';
 import { faceShift, kerbFace, stepReach, upScreen } from './kerb-face';
-import { HEIGHT_LIGHT_STRENGTH, HL_MASK, LUMA_SIGMA_PER_L, heightLightGrid, heightLightPictures, heightLightRect, type HeightLightGrid } from './ext/course-height/light';
+import { HEIGHT_LIGHT_STRENGTH, HL_MASK, LUMA_SIGMA_PER_L, heightLightGrid, heightLightPictures, heightLightRect, type HeightLightGrid, type LightLand } from './ext/course-height/light';
 import { PaintedGround, type LayLevel } from './painted-ground';
 import { coversMap, familyById } from './painted-families';
 import { bandOf, cellsIn, snappedCell, tileIndex, tileKey, tilePermutation, tileSize } from './painted-tiles';
@@ -1190,6 +1190,10 @@ export class GroundPainter {
   slope: Float32Array = new Float32Array(HS * HS);
   /** the course height (T027), CH_SIZE² samples; any: some height is not 0. Its light is baked per chunk (heightLight, T126) */
   courseH = new Float32Array(CH_SIZE * CH_SIZE); courseAny = false;
+  /** T388: the real ground under a map-data course, as its own layer (the land's samples; null: none): lit by its own response beside the course height's (heightLightGrid) */
+  landL: LightLand | null = null;
+  /** T388: the land is lit as one field with the course height, as before (the gear menu's Real ground light off) */
+  landClassic = false;
   /** the course height light's strength (T126): light.json's, or the gear menu's Slope light (0 = off) */
   slopeLight = HEIGHT_LIGHT_STRENGTH;
   waters: { w: Waterway; box: BBox }[] = [];
@@ -1206,6 +1210,8 @@ export class GroundPainter {
     for (let j = 0; j < h; j++) this.courseH.set(data.subarray(j * w, (j + 1) * w), (j0 + j) * CH_SIZE + i0);
     this.courseAny ||= data.some(v => v !== 0);
   }
+  /** T388: the land layer from the main thread (null: no land, a new game); the chunks it lights re-bake (the main thread invalidates them) */
+  setLand(rect: LightLand | null) { this.landL = rect; this.courseAny ||= !!rect; }
   /** apply lot ground edits: each key in `set` replaces its patches, each key in `drop` loses them */
   setLotGround(set: [string, LotPatch[]][], drop: string[]) {
     for (const k of drop) this.lotRemove(k);
@@ -1323,7 +1329,7 @@ export class GroundPainter {
       ctx.fillStyle = planFill(p.tex); ctx.fill(polyPath(p.pts));
     }
     // the course height's light over the painted course (T028b, T126): over the lot and paint fills, under the roads
-    if (this.courseAny && this.slopeLight > 0) { const hl = heightLightGrid(this.courseH, box, 0.25); if (hl) this.heightLightOnMap(ctx, hl, M, W, H, L, box); ctx.setTransform(M); }
+    if (this.courseAny && this.slopeLight > 0) { const hl = heightLightGrid(this.courseH, box, 0.25, this.landL, this.landClassic); if (hl) this.heightLightOnMap(ctx, hl, M, W, H, L, box); ctx.setTransform(M); }
     const v = this.net.view(box), minW = 1.2 / (TILE_PX * L);
     const fill = (list: Feature[], col: string) => { ctx.strokeStyle = ctx.fillStyle = col; ctx.lineJoin = 'round'; for (const f of list) { ctx.lineCap = f.cap; if (f.kind === 'stroke') { ctx.lineWidth = Math.max(minW, f.w); ctx.stroke(f.path); } else ctx.fill(f.path); } };
     fill(v.walkF.filter(f => f.tex !== 'turf'), '#9a9184');
@@ -1854,7 +1860,7 @@ export class GroundPainter {
     if (paints.length) { this.drawPaints(ctx, paints, L, X0, Y0, M, Minv, box, lite, under, laid, sc ? softBand : null); ctx.setTransform(M); }
     // ---- 1a'''. the course height's light (T028b, T126): its slopes lit by the sun at the upper right and shaded away from it, its steep rises'
     //      cast shadows and its hollows' occlusion, over the grass, the lots and the painted course, under the living ground, car parks and roads
-    if (this.courseAny && this.slopeLight > 0) { const hl = heightLightGrid(this.courseH, box, lite ? 1 : 2); if (hl) this.heightLightOnMap(ctx, hl, M, W, H, L, box); ctx.setTransform(M); }
+    if (this.courseAny && this.slopeLight > 0) { const hl = heightLightGrid(this.courseH, box, lite ? 1 : 2, this.landL, this.landClassic); if (hl) this.heightLightOnMap(ctx, hl, M, W, H, L, box); ctx.setTransform(M); }
     // ---- 1a''''. the living ground (T111): grass variety from what stands here and its ambient occlusion, over the grass, the lots and the
     //      painted areas, under the car parks and roads
     if (this.living.on || this.living.debug) { this.drawLiving(ctx, L, lite, box, M, Minv, W, H, X0, Y0); ctx.setTransform(M); }

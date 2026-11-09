@@ -4,7 +4,7 @@
 import { CHUNK_H, CHUNK_W, MID_H, MID_W, PLAN_H, PLAN_W, PLAN_K } from './iso';
 import { GROUND_ART } from './ground-art';
 import { HEIGHT_LIGHT_REACH, HEIGHT_LIGHT_STRENGTH, clampHeightLight } from './ext/course-height/light';
-import { groundRect } from './golf/osm/land';
+import { groundRect, landLightRect, type LandField } from './golf/osm/land';
 import { withBaseGrass } from './base-grass-saved';
 import { withPresets } from './paint-presets-saved';
 import { GRASS_ART_DEFAULT, type GrassArt } from './painted-grass-lod';
@@ -158,7 +158,7 @@ export class GroundCache {
   setGrassArt(art: GrassArt) { if (art === this.grassArt) return; this.grassArt = art; this.broadcast({ t: 'grassArt', art }); this.invalidateAll(); }
   /** a light boot's worker limits (boot.ts, T157), sent with init; null: the game's */
   limits: WorkerLimits | null = null;
-  init(t: { cls: Uint8Array; height: Float32Array; waters: Waterway[] }) { const art = { ...withPresets(withBaseGrass(GROUND_ART)), grassArt: this.grassArt }, limits = this.limits ?? undefined; const tileBytes = this.sentTileBytes = this.tileBytes ?? tileCacheBudget(this.budgetPx, this.workers.length); this.workers.forEach((wk, i) => wk.postMessage({ t: 'init', art, terrain: t.cls, height: t.height, waters: t.waters, build: i === 0, peers: this.workers.length - 1, limits, tileBytes } satisfies ToWorker)); this.broadcast({ t: 'living', ...this.living }); this.broadcast({ t: 'slopeLight', strength: this.slopeLight }); this.broadcast({ t: 'leaves', density: this.leafDensity }); this.broadcast({ t: 'specCam', on: this.specCam }); this.broadcast({ t: 'swamp', on: this.swamp }); this.broadcast({ t: 'riverSwamp', on: this.riverSwamp }); this.broadcast({ t: 'grassShine', on: this.grassShine, weights: this.shineWeights }); this.broadcast({ t: 'waterMotion', on: this.waterMotion }); this.broadcast({ t: 'surfaces', file: paintedSurfaces() });
+  init(t: { cls: Uint8Array; height: Float32Array; waters: Waterway[] }) { const art = { ...withPresets(withBaseGrass(GROUND_ART)), grassArt: this.grassArt }, limits = this.limits ?? undefined; const tileBytes = this.sentTileBytes = this.tileBytes ?? tileCacheBudget(this.budgetPx, this.workers.length); this.workers.forEach((wk, i) => wk.postMessage({ t: 'init', art, terrain: t.cls, height: t.height, waters: t.waters, build: i === 0, peers: this.workers.length - 1, limits, tileBytes } satisfies ToWorker)); this.broadcast({ t: 'living', ...this.living }); this.broadcast({ t: 'slopeLight', strength: this.slopeLight }); this.broadcast({ t: 'landLight', classic: this.landClassic }); this.broadcast({ t: 'leaves', density: this.leafDensity }); this.broadcast({ t: 'specCam', on: this.specCam }); this.broadcast({ t: 'swamp', on: this.swamp }); this.broadcast({ t: 'riverSwamp', on: this.riverSwamp }); this.broadcast({ t: 'grassShine', on: this.grassShine, weights: this.shineWeights }); this.broadcast({ t: 'waterMotion', on: this.waterMotion }); this.broadcast({ t: 'surfaces', file: paintedSurfaces() });
     // the studio saved the painted surfaces (the dev server hot-swaps the file): every worker takes the new looks and every chunk is baked again
     this.unsurfaces?.(); this.unsurfaces = onPaintedSurfaces(file => { this.broadcast({ t: 'surfaces', file }); this.invalidateAll(); }); }
   private unsurfaces: (() => void) | null = null;
@@ -166,6 +166,10 @@ export class GroundCache {
   slopeLight = HEIGHT_LIGHT_STRENGTH;
   /** the Slope light changed: every worker switches and every chunk is baked again (each keeps its old picture until then) */
   setSlopeLight(v: number) { const s = clampHeightLight(v); if (s === this.slopeLight) return; this.slopeLight = s; this.broadcast({ t: 'slopeLight', strength: s }); this.invalidateAll(); }
+  /** T388: the real ground's light as it was before (the land and the course height lit as one field: the gear menu's Real ground light off) */
+  landClassic = false;
+  /** the Real ground light changed: every worker switches and every chunk is baked again (each keeps its old picture until then) */
+  setLandClassic(v: boolean) { if (v === this.landClassic) return; this.landClassic = v; this.broadcast({ t: 'landLight', classic: v }); this.invalidateAll(); }
   /** the living ground (T111): the gear menu's Ground variety and the dev debug view of its influence maps */
   living = { on: true, debug: false };
   /** the living ground is baked at all (its variety, or the debug view of its maps) */
@@ -305,11 +309,21 @@ export class GroundCache {
   /** the course height in tile box b (whole samples, clamped) goes to every worker, and the ground its light reaches re-bakes (the old bake
    *  shows until then): the light at a point depends on the heights up to HEIGHT_LIGHT_REACH tiles away (T126). T357: with `land` (the natural
    *  ground under a real course, the same lattice) the workers get the land plus the course height */
-  courseHeight(field: Float32Array, b: [number, number, number, number], land: Float32Array | null = null) {
-    // T357: the ground under a real course is the land plus the course height: the workers light that sum (their copy of the field is the ground's)
-    const { i0, j0, w, h, data } = groundRect(field, land, b);
+  courseHeight(field: Float32Array, b: [number, number, number, number], land: LandField | null = null) {
+    // T357: the ground under a real course is the land plus the course height. T388: the workers get them as two layers and light the land by its own response (heightLightGrid): the course height as the field
+    // holds it, and the land layer (sent only when the land changed: it is the whole land, not the box of an edit)
+    this.syncLand(land);
+    const { i0, j0, w, h, data } = groundRect(field, null, b);
     this.broadcast({ t: 'course', i0, j0, w, h, data });
     const r = HEIGHT_LIGHT_REACH; this.invalidate([b[0] - r, b[1] - r, b[2] + r, b[3] + r], true);
+  }
+  /** the land layer the workers hold: the field it was sent for and its rev (-1: none), so it goes again only when the land changes (a new game, a placed course, a load) */
+  private landSent: { f: LandField | null; rev: number } = { f: null, rev: -1 };
+  private syncLand(f: LandField | null) {
+    const rev = f && f.data ? f.rev : -1;
+    if (this.landSent.rev === rev && (rev < 0 || this.landSent.f === f)) return;
+    this.landSent = { f: rev < 0 ? null : f, rev };
+    this.broadcast({ t: 'land', rect: f && f.data ? landLightRect(f) : null });
   }
   /** Changed turf cells invalidate only the chunks that touch them, retaining the old bake until replacement. */
   grass(cells: GrassCellView[], strength: number, heat: boolean, mowing = false) {

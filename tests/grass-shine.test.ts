@@ -37,7 +37,8 @@ test('the weights: greens and fairways most, then fringe and first cut, then law
 
 test('every grass surface of painted-surfaces.json has a group; the textures the course, the lawns and the range lay find theirs', () => {
   const file = SURFACES as unknown as { surfaces: Record<string, { family: string }> };
-  const sandy = new Set(['bunker', 'waste', 'water', 'growSoil', 'dirt', 'bank', 'mulch', 'river', 'swamp', 'field', 'lush', 'wallTurf', 'wallSand', 'wallBank']);
+  // the ground that is not grass: T289's ploughed fields (both axes) are bare soil like the plain field, a painted family of kind 'cut', which renderer.ts never shines
+  const sandy = new Set(['bunker', 'waste', 'water', 'growSoil', 'dirt', 'bank', 'mulch', 'river', 'swamp', 'field', 'fieldPloughed', 'fieldPloughedY', 'lush', 'wallTurf', 'wallSand', 'wallBank']);
   for (const key of Object.keys(file.surfaces)) if (!sandy.has(key)) assert.ok(shineGroup(key), key);
   const cases: [string, string][] = [['preset:golf-green', 'green'], ['preset:fairway', 'fairway'], ['preset:fringe', 'fringe'], ['preset:first-cut', 'firstCut'], ['golfTee', 'tee'],
     ['preset:rough', 'rough'], ['lawn:0', 'lawn'], ['lawnBuilt', 'lawn'], ['grass', 'map'], ['preset:range-outfield', 'outfield'], ['pic:range-green', 'green'], ['preset:range-tee-turf', 'tee'], ['preset:fescue', 'fescue'], ['longGrass', 'longGrass']];

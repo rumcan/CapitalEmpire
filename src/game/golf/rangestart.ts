@@ -195,8 +195,10 @@ function candidates(t: Terrain): Pt[] {
 /** the site at J for axis and side with a parcel of [along the road, deep] tiles, by plan 2.1.2 (shifted DRIVE_GAP off the drive: the drive's
  *  corridor stays off the range plot and the range's door lands on the drive; T237: the plot SETBACK behind the parcel's road edge, the car park
  *  in the frontage strip that leaves, beside the drive, on the road), or null when a fit rule fails: the parcel PARCEL_BUILD playable, the
- *  range front, car park and drive corridor all buildable, the town window across the road TOWN_BUILD buildable, all of it SITE_MARGIN from the edges */
-function siteAt(I: ReturnType<typeof integrals>, J: Pt, axis: 'x' | 'y', side: 1 | -1, size: [number, number]): RangeSite | null {
+ *  range front, car park and drive corridor all buildable, the town window across the road TOWN_BUILD buildable, all of it SITE_MARGIN from the edges.
+ *  T391 (#1055): with dry, the whole range plot too must be dry (no creek, bank or open water in the outfield behind the front: the placement's own test, golf/placing.ts
+ *  landWhy, refuses a plot with one wet tile, so a creek through it refused the range at its start spot on a third of the maps) */
+function siteAt(I: ReturnType<typeof integrals>, J: Pt, axis: 'x' | 'y', side: 1 | -1, size: [number, number], dry: boolean): RangeSite | null {
   const f = frameOf(axis, side), [along, deep] = size, s0 = -DRIVE_GAP - RANGE_PLOT[0];
   const parcel = rectOf(J, f, s0, s0 + along, NEAR, NEAR + deep);
   const B = NEAR + SETBACK, rangePlot = rectOf(J, f, s0, -DRIVE_GAP, B, B + RANGE_PLOT[1]);
@@ -208,21 +210,24 @@ function siteAt(I: ReturnType<typeof integrals>, J: Pt, axis: 'x' | 'y', side: 1
   for (const r of [parcel, town]) if (!inside(r, SITE_MARGIN)) return null;
   if (I.count(rangeFront, I.S) !== area(rangeFront) || I.count(carpark, I.S) !== area(carpark) || I.count(corridor, I.S) !== area(corridor)) return null;
   if (I.count(parcel, I.H) < PARCEL_BUILD * area(parcel) || I.count(town, I.S) < TOWN_BUILD * area(town)) return null;
+  if (dry && I.count(rangePlot, I.H) !== area(rangePlot)) return null; // (I.H: grass, patch and woodland: every tile the placement accepts; water, creek and bank are the others)
   return { J, axis, side, dir: f.dir, parcel, rangePlot, rangeFront, carpark, drive: [{ a: J, b: at(J, f, 0, B + DRIVE_IN) }], centre: at(J, f, 0, -SEED_ACROSS), setback: SETBACK, strip };
 }
 
-/** the site and its road: sizes (COURSE_SIZES) outermost, then the axes (the one with more open edges first: fewer road ends in the mountains),
- *  then the J candidates, then the sides (in a seeded order); the first site that fits and whose J has a county road wins */
+/** the site and its road: first a site whose range plot is dry (T391: no creek through the outfield, so the range can be placed at its start spot; only a map
+ *  with no such site takes the old rule, which kept every start it had), then sizes (COURSE_SIZES) outermost, then the axes (the one with more open edges
+ *  first: fewer road ends in the mountains), then the J candidates, then the sides (in a seeded order); the first site that fits and whose J has a county
+ *  road wins */
 function findStart(t: Terrain, seed: number): { site: RangeSite; road: CountyRoad } | null {
   const I = integrals(t.cls), open = (e: Edge) => (t.mountainEdges.includes(e) ? 0 : 1);
   const axes: ('x' | 'y')[] = open('W') + open('E') >= open('N') + open('S') ? ['x', 'y'] : ['y', 'x'];
   const sides: (1 | -1)[] = mulberry(seed)() < 0.5 ? [1, -1] : [-1, 1];
   const roads = new Map<string, CountyRoad | null>(), Js = candidates(t);
-  for (const size of COURSE_SIZES) for (const axis of axes) for (const J of Js) {
+  for (const dry of [true, false]) for (const size of COURSE_SIZES) for (const axis of axes) for (const J of Js) {
     const a = axis === 'x' ? J.x : J.y;
     if (a < STRAIGHT || a > MAP - 1 - STRAIGHT) continue;
     for (const side of sides) {
-      const site = siteAt(I, J, axis, side, size); if (!site) continue;
+      const site = siteAt(I, J, axis, side, size, dry); if (!site) continue;
       const k = `${J.x},${J.y},${axis}`;
       if (!roads.has(k)) roads.set(k, regionalRoute(t, J, axis));
       const road = roads.get(k); if (road) return { site, road };
