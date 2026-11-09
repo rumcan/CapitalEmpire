@@ -561,3 +561,18 @@ export function autoLot(lot: LotGeom, use: PresetUse, tier: number, seed: number
   CACHE.set(key, out);
   return out;
 }
+
+/** T405 (the owner, 2026-11-09: "why is there a lot with no house?"): the last house a built house lot is given when no candidate's house could stand on it (compose.ts cleanLot): a preset of one building, the first of ids (the
+ *  caller's order, each a dwelling that passes the owner's rules for the lot's road and state) that fits between the side lines, gap tiles in from each (drawn at least `least` of its size), centred, its front at the house set-back.
+ *  Nothing else is laid (the clean base adds the drive, the path, the fence and the trees). null when no dwelling of ids fits: the lot is too narrow for any house with its gaps */
+export function houseOnlyLot(lot: LotGeom, state: PresetState, ids: readonly string[], gap: number, least = 0.75): LotPreset | null {
+  const f = frameOf(lot), road = roadOf(lot.n), L = new Lay(f, lot.w, lot.d, 'res', state, road, 3, () => 0.5);
+  const fr = Math.min(FRONT, 0.25 * lot.d), bk = Math.min(BACK, 0.2 * lot.d), maxHb = (lot.d - fr - bk) / 2, ha = lot.w / 2 - gap;
+  if (maxHb < 2 || ha < 2) return null;
+  for (const id of ids) {
+    if (gone(id)) continue;
+    const q = L.fit(id, 0, lot.w / 2, fr + maxHb, ha, maxHb, least); if (!q) continue;
+    if (L.add({ ...q, y: fr + L.half(q).hb })) return { id: 'auto:house', use: 'res', state, w: lot.w, d: lot.d, props: L.props, patches: [], whole: true };
+  }
+  return null;
+}
