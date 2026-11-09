@@ -159,6 +159,7 @@ export function installLotReview(game: Game): () => void {
     const out = game.stageReview({ kind, state: (i, g) => (kind === 'town' ? townState(seed, i) : kind === 'estate' ? estateState(seed, i) : sampleState(seed, i, g, tally)), streets: kind === 'sample' ? sampleStreets(centre) : estateStreets(centre) });
     lots = out.map(o => reviewLot(kind, seed, o.key, o.g, o.st));
     message = `${lots.length} house lots of the ${kind}, seed ${seed}${kind === 'sample' ? ` (${roadCounts(lots.map(l => l.road))['45']} of them on the roads at 45 degrees)` : ''}`;
+    { const v = visible(); if (v.length && !v.includes(idx)) idx = v[0]!; }   // (T403: a lot the road filter hides is not opened: the first of the filter is)
     open(idx);
   }
   /** the free map area: between the drawer and the card, and left of the props or decals flyout while it is open (the lot stays in view, to click on) */

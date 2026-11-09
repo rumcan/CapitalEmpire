@@ -229,6 +229,7 @@ describe('T403 (#1081): the Lot review on the roads at 45 degrees', () => {
     assert.match(page, /chip\('Sample', kind === 'sample'/); assert.match(page, /for \(const r of ROAD_FILTERS\) rf\.append\(chip\(/); assert.match(page, /roadVisible\(roads, lots\[i\]!\.road\)/);
     assert.match(page, /\{ kind, seed, idx, filter, roads \} satisfies Session/); assert.match(page, /sampleStreets\(centre\)/); assert.match(page, /garageSideways: a\.garageSideways/);
     assert.match(page, /laid to show \$\{wantedOf\(l\.st\)\}/);
+    assert.match(page, /if \(v\.length && !v\.includes\(idx\)\) idx = v\[0\]!;/);   // (a lot the road filter hides is not opened)
     assert.match(read('src/game/engine.ts'), /stageReview\(o: \{ kind: 'town' \| 'estate' \| 'sample'; state: \(i: number, g: LotGeom\) => ComposeState/);
     assert.match(read('src/game/dev/lab-boot.ts'), /q\.has\('lotreview'\) && !q\.has\('fullboot'\)\) return labBoot\(REVIEW_BOX\)/);
   });
