@@ -156,7 +156,7 @@ export function edgeRoute(view: CourseView, a: Pt, b: Pt): Pt[] {
 export interface Leg { id: number; ball: Pt; rest: Pt; out: number; at: number; end: number; back: number }
 /** a cart's stop on a hole: where it parks, when it is there (arr) and when it leaves (dep), its golfers' parts, and its route in from the stop before
  *  (worked out when first drawn; with its lengths) */
-export interface Visit { stop: Pt; arr: number; dep: number; legs: Leg[]; route: Pt[] | null; cum: number[] | null; /** T351: the route's runs of heading (cartturn.ts routeHeadings), worked out with it */ ang?: RouteHeadings | null }
+export interface Visit { stop: Pt; arr: number; dep: number; legs: Leg[]; route: Pt[] | null; cum: number[] | null; /** T351: the route's runs of heading (cartturn.ts routeHeadings), worked out with it */ ang?: RouteHeadings | null; /** T351: the heading the cart was parked with when this drive's route was first worked out (the drive blends from it) */ from?: number }
 /** a cart: its golfers, its group's tee time, its stops on each hole (worked out a hole at a time), the hole it is on (the playback's cursor), and its
  *  drive home after the last green (its route when drawn, and the minute it is there) */
 interface Cart { ids: number[]; tee: number; holes: (Visit[] | undefined)[]; leaves: number[]; h: number; home: Visit | null }
@@ -361,28 +361,32 @@ export class CartPlay {
     const N = this.view.holes.length; if (!N) return false;
     const h = this.holeAt(c, m), vs = this.stops(c, h), p = this.pt;
     // no strokes on the hole yet (a live round: the field is held at the owner's strike): parked where it left the hole before, or by the first tee
-    if (!vs.length) { const pvs = h > 0 ? this.stops(c, h - 1) : []; return this.park(c, pvs[pvs.length - 1]?.stop ?? this.teeStop(h)); }
+    if (!vs.length) { const pvs = h > 0 ? this.stops(c, h - 1) : [], pv = pvs[pvs.length - 1]; return this.park(c, pv?.stop ?? this.teeStop(h), pv); }
     // before the hole's first stop: the drive in from the last stop of the hole before (the first tee: parked by it)
     if (m < vs[0]!.arr) {
-      if (h === 0) return this.park(c, vs[0]!.stop);
+      if (h === 0) return this.park(c, vs[0]!.stop, vs[0]);
       const pvs = this.stops(c, h - 1), from = pvs[pvs.length - 1]!.stop;
       return this.drive(c, vs[0]!, from, pvs[pvs.length - 1], this.leave(c, h - 1), m, box);
     }
     for (let v = 0; v < vs.length; v++) {
       const vi = vs[v]!;
-      if (m <= vi.dep) return this.park(c, vi.stop);
+      if (m <= vi.dep) return this.park(c, vi.stop, vi);
       const nx = vs[v + 1];
       if (nx && m < nx.arr) return this.drive(c, nx, vi.stop, vi, vi.dep, m, box);
     }
     // after the last stop: on to the next hole (holeAt moves on at its leave), or home after the last green
     const last = vs[vs.length - 1]!;
-    if (h < N - 1) return this.park(c, last.stop);
+    if (h < N - 1) return this.park(c, last.stop, last);
     const home = this.homeOf(c);
     if (!home || m >= home.arr) { p.x = last.stop.x; p.y = last.stop.y; return !home; }
     return this.drive(c, home, last.stop, last, last.dep, m, box);
   }
-  /** parked at stop */
-  private park(_c: number, stop: Pt): boolean { this.pt.x = stop.x; this.pt.y = stop.y; return true; }
+  /** parked at stop (the visit `v`: T351, a cart that has driven in is parked on the heading its drive ended on, whichever frame it was last drawn at) */
+  private park(c: number, stop: Pt, v?: Visit): boolean {
+    this.pt.x = stop.x; this.pt.y = stop.y;
+    const a = v?.ang; if (a && a.ang.length) { const h = a.ang[a.ang.length - 1]!; this.head[2 * c] = Math.cos(h); this.head[2 * c + 1] = Math.sin(h); }
+    return true;
+  }
   /** driving into stop `to` from `from` (the stop `prev`: its drive in left the cart on its last heading), leaving at t0 and there at to.arr, at minute m: along its route
    *  (the paths', else the rough's edge), worked out the first time the drive is near the box. T351: the cart pulls away and stops softly (easedShare over RAMP_M of the way,
    *  the same minutes) and its heading turns through each bend over TURN_M of route (cartturn.ts routeHeading), from the heading it was parked with into the first segment */
@@ -395,6 +399,7 @@ export class CartPlay {
       if (r === HOP) { to.cum = [0]; return false; }
       const cum = [0]; for (let i = 1; i < to.route.length; i++) cum.push(cum[i - 1]! + Math.hypot(to.route[i]!.x - to.route[i - 1]!.x, to.route[i]!.y - to.route[i - 1]!.y));
       to.cum = cum; to.ang = routeHeadings(to.route, cum);
+      const pa = prev?.ang; to.from = pa && pa.ang.length ? pa.ang[pa.ang.length - 1]! : Math.atan2(this.head[2 * c + 1]!, this.head[2 * c]!); // (the heading it was parked with: the drive in's last, else the one it was drawn with)
     }
     if (to.route === HOP) return false; // (no way over the water: carried, not drawn)
     const R = to.route, C = to.cum!, L = C[C.length - 1]!, u = to.arr > t0 ? Math.min(1, Math.max(0, (m - t0) / (to.arr - t0))) : 1, d = easedShare(u, RAMP_M / TILE_M / Math.max(L, 1e-9)) * L;
@@ -402,7 +407,7 @@ export class CartPlay {
     const a = R[i - 1]!, e = R[i]!, sl = C[i]! - C[i - 1]!, k = sl > 0 ? (d - C[i - 1]!) / sl : 1;
     this.pt.x = a.x + (e.x - a.x) * k; this.pt.y = a.y + (e.y - a.y) * k;
     if (L > 1e-6) {
-      const ang = to.ang ?? (to.ang = routeHeadings(R, C)), pa = prev?.ang, hd = routeHeading(ang, ang.of[i - 1]!, d, TURN_M / TILE_M, pa && pa.ang.length ? pa.ang[pa.ang.length - 1]! : null);
+      const ang = to.ang ?? (to.ang = routeHeadings(R, C)), hd = routeHeading(ang, ang.of[i - 1]!, d, TURN_M / TILE_M, to.from ?? null);
       this.head[2 * c] = Math.cos(hd); this.head[2 * c + 1] = Math.sin(hd);
     }
     return true;
