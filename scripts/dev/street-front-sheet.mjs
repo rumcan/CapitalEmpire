@@ -28,8 +28,14 @@ try {
   const page = await ctx.newPage();
   page.on('pageerror', e => console.log('[pageerror]', e.message));
   await page.route('**/*', r => { const x = r.request(); return x.method() !== 'GET' && x.method() !== 'HEAD' ? r.fulfill({ status: 200, contentType: 'application/json', body: '{"ok":true}' }) : r.continue(); });
-  await page.goto(`${base}?start=town&seed=1${opt('desert', '1') === '1' ? '&desert=on' : ''}`, { waitUntil: 'domcontentloaded', timeout: 300000 });
-  await page.waitForFunction(() => window.__game?.ready, null, { timeout: 300000 });
+  // (T398: a cold dev server pre-bundles its dependencies on the first load and reloads the page when it is done, which aborts a navigation in flight, and a machine
+  // short of memory answers late: the load is tried again)
+  for (let attempt = 1; ; attempt++) {
+    try {
+      await page.goto(`${base}?start=town&seed=1${opt('desert', '1') === '1' ? '&desert=on' : ''}`, { waitUntil: 'domcontentloaded', timeout: 300000 });
+      await page.waitForFunction(() => window.__game?.ready, null, { timeout: 300000 }); break;
+    } catch (e) { if (attempt >= 4) throw e; console.log(`  (load attempt ${attempt} failed: ${String(e.message).split(/\r?\n/)[0]}; again)`); await sleep(8000); }
+  }
   await page.addStyleTag({ content: '* { visibility: hidden !important } canvas { visibility: visible !important }' });
   await page.evaluate(() => { const g = window.__game; g.prebake = () => {}; g.setShowGrid?.(false); window.__night = 0; g.nightAmount = () => window.__night; g.setSpeed(0); });
   const settle = async (ms = 500) => {
