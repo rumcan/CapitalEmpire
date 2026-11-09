@@ -19,6 +19,7 @@ import { getTournamentWeather } from './golf/weather';
 import { clubTitle, type ClubTitle } from './golf/clubtitle';
 import { CLASS, FLAG_COST, Grid, classOf, courseRoadOpen, courseTierNeeded, isCourseClass, JUNCTIONS, KEY_CLASSES, RoadNetwork, SLIP_CORNER_COST, SPEED_BONUS_KMH, RB_LANE, ringRadius, NARROWER, VARIANTS as CLASS_VARIANTS, WIDER, SK, add, dot, mul, norm, perp, sub, unionBox, variantCost, vlen, type AutoProp, type BBox, type ClassId, type Leg, type Node, type NodeType, type PieceSel, type Pt, type PortalRec, type RoadClass, type Seg, type SegKind, type TypeId } from './network';
 import { NetEditor, applyNodeEntry, netToOps, nodeEntry, straightChain } from './netops';
+import { createNetJournal } from './net-undo';
 import { TIER_BADGE, flagRule, isLights, junctionCorners, slipPlan, slipsOn, type Corner } from './junctions';
 import { MIN_SEP, checkLegs, replaceCuts, ringStubs, segDist as segSeg, snapPoint, type Snap } from './snap';
 import { STRUCT_COST, STRUCT_MAX, groundClass, highwayRoute, longestRun, splitByTerrain, structureLengths } from './structures';
@@ -602,6 +603,9 @@ export class Game {
   /** the town sites' centres (tiles) in the terrain's order: the town index of the names module */
   townPts: Pt[] = [];
   net = new RoadNetwork(); edit = new NetEditor(this.net); lanes = new LaneGraph();
+  /** T396 (#1064): the network's undo journal (net-undo.ts): the roads, paths, drives and junctions a road step (paint.netStep) makes or takes away are kept for Ctrl+Z; undo and redo
+   *  commit the network as any edit does (the workers get the ops, the ground re-bakes where it changed). The editor tells it before each edit (onEdit, set in the constructor) */
+  private netJ = createNetJournal({ net: () => this.net, edit: () => this.edit, commit: () => this.netUndone() });
   props = new Set<Prop>(); nextUid = 1;
   private propGrid = new Grid<Prop>(8); private lampProps = new Set<Prop>(); private autoByKey = new Map<string, Prop>();
   sprites = new SpriteTiles();
@@ -1065,6 +1069,7 @@ export class Game {
   /** the Paint tool: painted ground areas, its settings and the outline being drawn (docs/PAINT-TOOL.md) */
   paint = new PaintTool({ collarDefault: s => borderDefault(s, finishOf(paintedSurfaces())), progress: () => this.bump('pieces'), setLotGround: (k, p) => { this.paintRev++; this.setLotGround(k, p); }, emit: () => this.emit(), save: () => this.scheduleSave(), toast: (t, k) => this.toast(t, k), affine: o => this.paintAffine(o), placeProps: (ps, seed) => this.placePresetProps(ps, seed), golfMode: () => this.golfMode, money: () => this.money, spend: n => this.traffic.spend('construction', n), ownedLand: pts => !this.golf || polyInParcels(this.golf.parcels ?? [this.golf.parcel], pts), currentMonth: () => !this.golf ? 0 : this.golfMonthIndex(), plant: (ids, x, y, r, spacing, size, seed) => this.plantProps(ids, x, y, r, spacing, size, seed), unplant: (x, y, r, trees) => this.unplantProps(x, y, r, trees), plantPool: (k, f) => plantPool(LIBRARY, k, f), courseHeight: () => this.courseHeight, roadsNear: (x, y, r) => { let k = 0; return [...this.net.segsNear({ x, y }, r)].map(s => ({ id: ++k, ax: s.a.x, ay: s.a.y, bx: s.b.x, by: s.b.y, halfWidthTiles: s.cls.h + s.cls.walk })); }, roadRev: () => this.net.version, heightChanged:b => { this.courseHeightChanged(unionCourseBox(b, this.flattenRoadsIn(b))!); },
     journal: { begin: () => { this.propLog = { added: [], removed: [], cut: [], cutAuto: [] }; }, end: () => { const j = this.propLog; this.propLog = null; return j && (j.added.length || j.removed.length || j.cut.length || j.cutAuto.length) ? j : null; }, undo: j => this.swapProps(j as PropLog, true), redo: j => this.swapProps(j as PropLog, false) },
+    netJournal: this.netJ, // T396: a road step's changes to the network
     changed: pins => this.syncCourseMarkers(pins),
     grid: () => this.courseGrid, gridChanged: (d, flush) => { this.range.practiceCells(this.courseGrid, d); this.courseGridChanged(d, flush); }, gridAreas: () => this.gridAreaList(),
     bunkerState: () => this.bunkers.serialize(), setBunkerState: state => this.bunkers.load(state, this.courseGrid),
@@ -3012,6 +3017,7 @@ export class Game {
     this.ov = overlay.getContext('2d')!;
     this.paint.puckCursor = true;
     this.net.paintData = false;
+    this.edit.onEdit = () => this.netJ.touch(); // T396: the network's undo journal keeps the network as it was before a road step's first edit
     this.ground = new GroundCache(this.gl, boot.groundWorkers ?? undefined);
     this.ground.bunkerGeometryChanged = () => this.syncBunkerBakes();
     this.ground.budgetPx = boot.groundPx;
@@ -4626,6 +4632,14 @@ export class Game {
   }
 
   // ---------- network edits ----------
+  /** T396: the network as an undo or a redo left it (net-undo.ts): committed as any edit is (the workers get the ops, the ground re-bakes where the network changed), and what the
+   *  engine held of the old network let go: a route in hand (its snapped ends point into the old network), the junction picked (found again where it stands, if it does) and the hovers */
+  private netUndone() {
+    this.commitNetwork();
+    if (this.route.length) this.cancelRoute();
+    const j = this.selectedJunction; if (j) this.selectedJunction = this.net.nodeAt({ x: j.x, y: j.y }) ?? null;
+    this.hoverPiece = null; this.hoverNode = null; this.laneHover = null;
+  }
   /** send the edits to the workers, refresh what depends on the network and mark the changed ground stale */
   private commitNetwork(keepPrev = false, until = 0) {
     const ops = this.edit.commit(); this.lanes.update(this.net);
@@ -5152,22 +5166,28 @@ export class Game {
     // what is in the way (businesses, the range's structures, car parks, toll plazas, big props) was judged with checkLegs above (routeInWay, T207)
     const total = this.net.legsLength(parts);
     const hw = cls.h + cls.walk, near = this.propsNearLegs(legs, hw);
-    const cleared = near.filter(p => !p.auto && !LIBRARY[p.item].big);
-    for (const p of cleared) this.removeProp(p);
     const now = performance.now(), dur = Math.min(4000, 700 + total * 70);
     const cum: number[] = []; let acc = 0; for (const l of parts) { cum.push(acc); acc += vlen(sub(l.b, l.a)); }
-    // Replace charges the new road less the value of what it takes away: the cut pieces and the dead ends tidyEnds trims after them, measured
-    let removed = this.roadValue();
-    for (const c of cuts) this.edit.removePiece(c);
-    removed -= this.roadValue();
-    this.edit.addLegs(parts, cls, this.lineStyle, kinds);
-    if (cuts.length) { const v = this.roadValue(); this.tidyEnds(cuts.flatMap(c => [c.p0, c.p1, c.seg.a, c.seg.b])); removed += v - this.roadValue(); }
-    const paid = Math.round(build - removed);
-    this.commitNetwork(true, now + dur + 150); this.bump('roads');
-    this.builds.push({ legs: parts, cls, t0: now, dur, total, cum });
-    this.traffic.spend('construction', paid);
-    if (comp) this.traffic.spend('compensation', comp);
-    this.route = [];
+    // T396 (#1064): the route is ONE undo step on the course's stack (the props it clears, the roads, paths and junctions it lays or takes out under Replace, its cost): Ctrl+Z gives
+    // them all back and refunds the cost, Ctrl+Y builds it again; the compensation for the buildings it took is not part of it (they stay gone)
+    let cleared: Prop[] = [], removed = 0, paid = 0;
+    this.paint.netStep(`build ${Math.round(total * 2)} m of ${cls.name.toLowerCase()}`, () => {
+      cleared = near.filter(p => !p.auto && !LIBRARY[p.item].big);
+      for (const p of cleared) this.removeProp(p);
+      // Replace charges the new road less the value of what it takes away: the cut pieces and the dead ends tidyEnds trims after them, measured
+      removed = this.roadValue();
+      for (const c of cuts) this.edit.removePiece(c);
+      removed -= this.roadValue();
+      this.edit.addLegs(parts, cls, this.lineStyle, kinds);
+      if (cuts.length) { const v = this.roadValue(); this.tidyEnds(cuts.flatMap(c => [c.p0, c.p1, c.seg.a, c.seg.b])); removed += v - this.roadValue(); }
+      paid = Math.round(build - removed);
+      this.commitNetwork(true, now + dur + 150); this.bump('roads');
+      this.builds.push({ legs: parts, cls, t0: now, dur, total, cum });
+      this.traffic.spend('construction', paid);
+      if (comp) this.traffic.spend('compensation', comp);
+      this.route = [];
+      return paid;
+    });
     const structs = [lens[SK.BRIDGE] ? `${Math.round(lens[SK.BRIDGE] * 2)} m bridge` : '', lens[SK.TUNNEL] ? `${Math.round(lens[SK.TUNNEL] * 2)} m tunnel` : ''].filter(Boolean);
     this.toast(`Built ${Math.round(total * 2)} m of ${cls.name.toLowerCase()}${structs.length ? ` (${structs.join(', ')})` : ''} ${paid < 0 ? `(refund $${(-paid).toLocaleString()})` : `for $${paid.toLocaleString()}`}${comp ? `, $${comp.toLocaleString()} compensation for ${hit.length} building${hit.length > 1 ? 's' : ''}` : ''}${cleared.length ? ` (cleared ${cleared.length} item${cleared.length > 1 ? 's' : ''})` : ''}${cuts.length ? `, replaced ${cuts.length} road piece${cuts.length > 1 ? 's' : ''} worth $${Math.round(removed).toLocaleString()}` : ''}`, 'good');
     this.clubDriveBuilt(cls); this.estateStreetBuilt(cls); // T175, T353: the clubhouse stopgap's drive
@@ -5264,13 +5284,18 @@ export class Game {
     const relane = n.type === 'roundabout' && t === 'roundabout', name = JUNCTIONS.find(j => j.id === t)!.name;
     // what the ring takes in goes, as under a new road (T224): the small placed items for nothing, the built lots for their compensation (the
     // worker's partition drops them with the commit below; the big props, the businesses, the range and the iconic places refused it: installCheck)
-    const took = this.ringTaken(ring, comp);
-    this.traffic.spend('construction', cost);
-    if (n.type !== t) this.edit.setNodeType(n, t);
-    if (t === 'signal') this.edit.setSignal(n, this.signalTier(), undefined);
-    if (t === 'roundabout') { this.edit.setNodeFlags(n, !!n.wide, !!n.tl, rl); this.ringLanes = rl; }
-    else if ((t === 'stop' || t === 'mini') && (n.wide || n.tl)) this.edit.setNodeFlags(n, false, false, n.rl ?? 1); // no options on a stop or a mini: its flags go
-    this.commitNetwork(); this.puff(n.x, n.y, 8);
+    // T396 (#1064): the junction is one undo step (its type, options and lights, the items the ring took, its cost: Ctrl+Z gives them back and refunds the cost; the compensation stays)
+    let took = '';
+    this.paint.netStep(relane ? `roundabout with ${rl} ring lane${rl > 1 ? 's' : ''}` : `install ${name.toLowerCase()}`, () => {
+      took = this.ringTaken(ring, comp);
+      this.traffic.spend('construction', cost);
+      if (n.type !== t) this.edit.setNodeType(n, t);
+      if (t === 'signal') this.edit.setSignal(n, this.signalTier(), undefined);
+      if (t === 'roundabout') { this.edit.setNodeFlags(n, !!n.wide, !!n.tl, rl); this.ringLanes = rl; }
+      else if ((t === 'stop' || t === 'mini') && (n.wide || n.tl)) this.edit.setNodeFlags(n, false, false, n.rl ?? 1); // no options on a stop or a mini: its flags go
+      this.commitNetwork(); this.puff(n.x, n.y, 8);
+      return cost;
+    });
     const m = this.net.nodeAt({ x: n.x, y: n.y }) ?? n; this.selectedJunction = m;
     const warn = this.armWarn(m);
     if (warn) this.toast(warn, 'warn');
@@ -5297,9 +5322,14 @@ export class Game {
   setFlag(n: Node, k: 'wide' | 'tl', on: boolean) {
     this.selectedJunction = n;
     const name = k === 'wide' ? 'Widened turns' : 'Turn lanes', cost = FLAG_COST[k];
-    if (on) { const why = this.flagWhy(n, k); if (why) { this.toast(why, 'warn'); this.emit(); return; } this.traffic.spend('construction', cost); }
-    this.edit.setNodeFlags(n, k === 'wide' ? on : !!n.wide, k === 'tl' ? on : !!n.tl);
-    this.commitNetwork(); this.puff(n.x, n.y, 8);
+    if (on) { const why = this.flagWhy(n, k); if (why) { this.toast(why, 'warn'); this.emit(); return; } }
+    // T396 (#1064): one undo step (a flag on is paid, off is free: Ctrl+Z gives the money back)
+    this.paint.netStep(`${on ? '' : 'remove '}${name.toLowerCase()}`, () => {
+      if (on) this.traffic.spend('construction', cost);
+      this.edit.setNodeFlags(n, k === 'wide' ? on : !!n.wide, k === 'tl' ? on : !!n.tl);
+      this.commitNetwork(); this.puff(n.x, n.y, 8);
+      return on ? cost : 0;
+    });
     this.toast(on ? `${name} added` : `${name} removed`, 'good');
   }
   /** the slipways of lights node n: the corners whose degs are in on have one, the others none (see slipPlan). Each corner that turns on pays
@@ -5308,10 +5338,14 @@ export class Game {
     this.selectedJunction = n;
     const cur = slipsOn(n), adds = on.filter(d => !cur.includes(d)).length, cost = adds * SLIP_CORNER_COST, plan = slipPlan(n, on);
     if (cost > this.money) { this.toast(`Not enough money: ${adds > 1 ? `${adds} slipways cost` : 'a slipway costs'} $${cost.toLocaleString()}`, 'warn'); this.emit(); return; }
-    if (cost) this.traffic.spend('construction', cost);
-    if (plan.type === 'signal') { if (n.type !== 'signal') this.edit.setNodeType(n, 'signal'); }
-    else { if (n.type !== 'slip') this.edit.setNodeType(n, 'slip'); this.edit.setSlipOff(n, plan.off); }
-    this.commitNetwork(); this.puff(n.x, n.y, 8);
+    // T396 (#1064): one undo step (each corner turned on is paid: Ctrl+Z gives the slipways back, and the money)
+    this.paint.netStep(on.length < cur.length ? 'remove slipways' : 'add slipways', () => {
+      if (cost) this.traffic.spend('construction', cost);
+      if (plan.type === 'signal') { if (n.type !== 'signal') this.edit.setNodeType(n, 'signal'); }
+      else { if (n.type !== 'slip') this.edit.setNodeType(n, 'slip'); this.edit.setSlipOff(n, plan.off); }
+      this.commitNetwork(); this.puff(n.x, n.y, 8);
+      return cost;
+    });
     const dn = on.length - cur.length, pl = dn < 0 ? `${-dn > 1 ? `${-dn} slipways` : 'Slipway'} removed` : `${dn > 1 ? `${dn} slipways` : 'Slipway'} added for $${cost.toLocaleString()}`;
     this.toast(dn === 0 ? 'Slipways unchanged' : plan.type === 'signal' && dn < 0 ? `${pl}: plain lights again` : pl, dn === 0 ? 'info' : 'good');
   }
@@ -5370,14 +5404,19 @@ export class Game {
   private laneClick() {
     const h = this.laneHover; if (!h) return;
     if (!h.segs.length || !h.to || h.why) { this.toast(h.why || 'Point at a road', 'warn'); return; }
-    const took = h.rings.map(r => this.ringTaken(r, r.comp)).join(''); // the buildings and items the grown rings take (T224)
-    this.traffic.spend('construction', h.cost);
-    let tiles = 0;
-    const from = h.segs[0]!.cls.name.toLowerCase();
-    for (const s of h.segs) { tiles += vlen(sub(s.b, s.a)); this.edit.addLegs([{ a: s.a, b: s.b }], h.to, s.style, [s.kind]); }
-    this.commitNetwork(); this.puff(h.segs[0]!.a.x, h.segs[0]!.a.y, 8);
-    const price = h.cost < 0 ? `refund $${(-h.cost).toLocaleString()}` : `$${h.cost.toLocaleString()}`;
-    this.toast(`${h.down ? 'Downgraded' : 'Upgraded'} ${Math.round(tiles * 2)} m of ${from} to ${h.to.name.toLowerCase()} (${price})${took}`, 'good');
+    const to = h.to, segs = h.segs, cost = h.cost, rings = h.rings, down = h.down, from = segs[0]!.cls.name.toLowerCase();
+    let tiles = 0; for (const s of segs) tiles += vlen(sub(s.b, s.a));
+    // T396 (#1064): one undo step on the course's stack: Ctrl+Z puts the old class back and refunds the difference (the buildings the rings took stay gone)
+    let took = '';
+    this.paint.netStep(`${down ? 'downgrade' : 'upgrade'} ${Math.round(tiles * 2)} m of ${from} to ${to.name.toLowerCase()}`, () => {
+      took = rings.map(r => this.ringTaken(r, r.comp)).join(''); // the buildings and items the grown rings take (T224)
+      this.traffic.spend('construction', cost);
+      for (const s of segs) this.edit.addLegs([{ a: s.a, b: s.b }], to, s.style, [s.kind]);
+      this.commitNetwork(); this.puff(segs[0]!.a.x, segs[0]!.a.y, 8);
+      return cost;
+    });
+    const price = cost < 0 ? `refund $${(-cost).toLocaleString()}` : `$${cost.toLocaleString()}`;
+    this.toast(`${down ? 'Downgraded' : 'Upgraded'} ${Math.round(tiles * 2)} m of ${from} to ${to.name.toLowerCase()} (${price})${took}`, 'good');
     this.laneUpdate(this.hover);
   }
   /** the Upgrade and Downgrade tools' right-click: the one-way straight run under the pointer is reversed (each seg replaced with its b-to-a, free); a two-way road is refused.
@@ -5387,9 +5426,13 @@ export class Game {
     const h = this.laneHover; if (!h || !h.segs.length) return false;
     const s0 = h.segs[0]!;
     if (!s0.cls.oneway) { this.toast('Only one-way roads can be reversed', 'warn'); return true; }
-    let tiles = 0;
-    for (const s of h.segs) { tiles += vlen(sub(s.b, s.a)); this.edit.addLegs([{ a: s.b, b: s.a }], s.cls, s.style, [s.kind]); }
-    this.commitNetwork();
+    const segs = h.segs; let tiles = 0; for (const s of segs) tiles += vlen(sub(s.b, s.a));
+    // T396 (#1064): one undo step (free): Ctrl+Z turns the run round again
+    this.paint.netStep(`reverse ${Math.round(tiles * 2)} m of one-way ${classOf(s0.cls.base).name.toLowerCase()}`, () => {
+      for (const s of segs) this.edit.addLegs([{ a: s.b, b: s.a }], s.cls, s.style, [s.kind]);
+      this.commitNetwork();
+      return 0;
+    });
     this.toast(`Reversed ${Math.round(tiles * 2)} m of one-way ${classOf(s0.cls.base).name.toLowerCase()}`, 'good');
     this.laneUpdate(this.hover);
     return true;
@@ -5455,7 +5498,7 @@ export class Game {
     const n = this.net.nearestNode(this.tileAt(mx, my), 2, 5);
     if (!n) { if (this.selectedJunction) { this.selectedJunction = null; this.emit(); } return false; }
     if (this.brush === 'select' || n.type === 'plain') return false;
-    this.edit.setNodeType(n, 'plain'); this.commitNetwork(); this.puff(n.x, n.y, 8);
+    this.paint.netStep('reset a junction to plain', () => { this.edit.setNodeType(n, 'plain'); this.commitNetwork(); this.puff(n.x, n.y, 8); return 0; }); // (T396: one undo step)
     this.selectedJunction = this.net.nodeAt({ x: n.x, y: n.y }) ?? n;
     this.toast('Reset to plain (free)', 'good'); return true;
   }
@@ -5508,32 +5551,40 @@ export class Game {
     const v = fits[k]!, name = JUNCTIONS.find(j => j.id === v.type)!.name + (v.type === 'roundabout' ? `, ${v.rl} ring lane${v.rl > 1 ? 's' : ''}` : '');
     const price = variantCost(v.type, v.rl), ring = this.ringJudge(n, v.type, v.rl), comp = ring?.comp ?? 0, cost = Math.max(0, price - variantCost(n.type, n.rl ?? 1));
     if (cost + comp > this.money) { this.toast(`Not enough money: ${name} costs $${(price + comp).toLocaleString()}${comp ? ` with $${comp.toLocaleString()} compensation` : ''}`, 'warn'); return; }
-    const took = this.ringTaken(ring, comp);
-    this.traffic.spend('construction', cost);
-    if (v.type === 'roundabout') this.ringLanes = v.rl;
-    const hadLights = isLights(n), lit = v.type === 'signal' || v.type === 'slip';
-    this.edit.setNodeType(n, v.type);
-    if (lit && !hadLights) this.edit.setSignal(n, this.signalTier(), undefined);
-    if (v.type === 'slip') this.edit.setSlipOff(n, []);
-    if (v.type === 'roundabout') this.edit.setNodeFlags(n, !!n.wide, !!n.tl, v.rl);
-    else if ((v.type === 'stop' || v.type === 'mini') && (n.wide || n.tl)) this.edit.setNodeFlags(n, false, false, n.rl ?? 1);
-    this.commitNetwork(); this.puff(n.x, n.y, 8);
+    // T396 (#1064): one undo step (see installType)
+    let took = '';
+    this.paint.netStep(`junction: ${name.toLowerCase()}`, () => {
+      took = this.ringTaken(ring, comp);
+      this.traffic.spend('construction', cost);
+      if (v.type === 'roundabout') this.ringLanes = v.rl;
+      const hadLights = isLights(n), lit = v.type === 'signal' || v.type === 'slip';
+      this.edit.setNodeType(n, v.type);
+      if (lit && !hadLights) this.edit.setSignal(n, this.signalTier(), undefined);
+      if (v.type === 'slip') this.edit.setSlipOff(n, []);
+      if (v.type === 'roundabout') this.edit.setNodeFlags(n, !!n.wide, !!n.tl, v.rl);
+      else if ((v.type === 'stop' || v.type === 'mini') && (n.wide || n.tl)) this.edit.setNodeFlags(n, false, false, n.rl ?? 1);
+      this.commitNetwork(); this.puff(n.x, n.y, 8);
+      return cost;
+    });
     const m = this.net.nodeAt({ x: n.x, y: n.y }) ?? n; this.selectedJunction = m;
     const warn = this.armWarn(m);
     if (warn) this.toast(warn, 'warn');
     else this.toast(`${name} (${price ? '$' + price.toLocaleString() : 'free'})${took} · Tab for the next type${refused.length ? ` · ${refused[0]}` : ''}`, 'good');
   }
-  /** the fixed-time green seconds of each phase (the panel's sliders, once released): sets the lights to fixed-time and commits the network */
-  setSplit(n: Node, split: number[]) { this.edit.setSignal(n, 0, split); this.commitNetwork(); }
+  /** the fixed-time green seconds of each phase (the panel's sliders, once released): sets the lights to fixed-time and commits the network (T396: one undo step) */
+  setSplit(n: Node, split: number[]) { this.paint.netStep('light timings', () => { this.edit.setSignal(n, 0, split); this.commitNetwork(); return 0; }); }
   /** buys the selected lights' upgrade to tier (1 actuated, 2 adaptive): the tier's year must have come and the cost be paid; the split is kept */
   upgradeSignal(tier: 1 | 2) {
     const n = this.selectedNode(); if (!n || !isLights(n) || (n.sig ?? 1) >= tier) return;
     const name = tier === 1 ? 'Actuated' : 'Adaptive', cost = UPGRADE_COST[tier]!;
     if (this.signalTier() < tier) { this.toast(`${name} lights from ${SIGNAL_TIER_YEAR[tier]}`, 'warn'); return; }
     if (cost > this.money) { this.toast(`Not enough money: ${name.toLowerCase()} lights cost $${cost.toLocaleString()}`, 'warn'); return; }
-    this.traffic.spend('construction', cost);
-    this.edit.setSignal(n, tier, n.split);
-    this.commitNetwork(); this.puff(n.x, n.y, 8);
+    this.paint.netStep(`${name.toLowerCase()} lights`, () => { // (T396: one undo step)
+      this.traffic.spend('construction', cost);
+      this.edit.setSignal(n, tier, n.split);
+      this.commitNetwork(); this.puff(n.x, n.y, 8);
+      return cost;
+    });
     this.toast(`${name} lights${tier === 1 ? ' (loop detectors)' : ''} installed for $${cost.toLocaleString()}`, 'good');
   }
   /** the calendar: the year against the one seen last frame; a signal tier's year coming in toasts once (the first frame only records the year) */
@@ -5945,9 +5996,12 @@ export class Game {
     const piece = this.net.pieceNear(t);
     if (!piece) { if (first) this.buyOut(t); return; }
     const before = this.roadValue(), name = piece.seg.cls.name.toLowerCase();
+    // T396 (#1064): the bulldozer's stroke is one undo step for the roads it takes too, their refund with it (a road built earlier, undone after, is refunded once: what the
+    // bulldozer took is put back first); the step closes at the release (treeStrokeEnd)
+    this.treeStrokeOpen('bulldoze roads'); this.paint.netInStep();
     this.edit.removePiece(piece); this.tidyEnds([piece.p0, piece.p1, piece.seg.a, piece.seg.b]);
     const refund = Math.round(before - this.roadValue()); // the piece and the dead ends tidyEnds trimmed after it
-    if (refund > 0) { this.traffic.spend('construction', -refund); this.toast(`Removed ${name} (+$${refund.toLocaleString()})`); }
+    if (refund > 0) { this.traffic.spend('construction', -refund); this.paint.addSpent(-refund); this.toast(`Removed ${name} (+$${refund.toLocaleString()})`); }
     this.commitNetwork();
     this.hoverPiece = this.net.pieceNear(t);
     this.puff(t.x, t.y, 10);
@@ -6031,7 +6085,7 @@ export class Game {
   /** T381: the bulldozer's stroke on trees (a click or a drag): one undo step opened before its first tree goes and closed at the release, and the trees
    *  it took counted for the toast */
   private treeStroke: { n: number } | null = null;
-  private treeStrokeOpen() { if (!this.treeStroke) { this.paint.openStep('bulldoze trees'); this.treeStroke = { n: 0 }; } }
+  private treeStrokeOpen(label = 'bulldoze trees') { if (!this.treeStroke) { this.paint.openStep(label); this.treeStroke = { n: 0 }; } }
   private treeStrokeEnd() {
     const s = this.treeStroke; if (!s) return;
     this.treeStroke = null; this.paint.closeStep();
@@ -6387,6 +6441,9 @@ export class Game {
     if (this.tool === 'park' && this.parking.key(e)) return;
     if (this.tool === 'props' && this.decor.key(e)) return;
     if (this.tool === 'practice' && this.practice.key(e)) { this.emit(); return; } // T206
+    // T396 (#1064; the owner, 2026-11-08: "ctrl/z should always work"): Ctrl+Z and Ctrl+Y (Ctrl+Shift+Z) work from any tool, on the one stack the brush, the props and the practice tools
+    // above already use: the roads, paths, drives and junctions a player builds are steps on it now, in time order with the course, the paint, the props and the settings
+    if ((e.ctrlKey || e.metaKey) && !e.altKey && /^[yz]$/i.test(e.key)) { e.preventDefault(); if (e.key.toLowerCase() === 'z' && !e.shiftKey) this.paint.undoTop(); else this.paint.redoTop(); return; }
     switch (e.key) {
       case 'Enter': this.routeInput('enter'); break;
       case 'Backspace': this.routeInput('backspace'); break;
