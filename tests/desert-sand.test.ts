@@ -80,6 +80,10 @@ test('the field is band-limited to the samples a chunk is baked with: the octave
   const mean = (a: number[]) => a.reduce((p, q) => p + q, 0) / a.length, mx = mean(xs), my = mean(ys);
   let cxy = 0, cxx = 0, cyy = 0; for (let k = 0; k < xs.length; k++) { cxy += (xs[k]! - mx) * (ys[k]! - my); cxx += (xs[k]! - mx) ** 2; cyy += (ys[k]! - my) ** 2; }
   assert.ok(cxy / Math.sqrt(cxx * cyy) > 0.7, `the far level's field follows the close level's: correlation ${(cxy / Math.sqrt(cxx * cyy)).toFixed(2)}`);
+  // the field keeps its spread, so the far level lays about the same share of sand (without it the far levels laid almost none)
+  const share = (res: number) => { let s = 0, n = 0; for (let j = 0; j < 160; j++) for (let i = 0; i < 160; i++) { s += sandBlotch(5000 + i * 1.1, 5000 + j * 1.3, 0, res); n++; } return s / n; };
+  const r1 = share(1), r2 = share(2), rAll = share(1e9);
+  assert.ok(r1 > rAll * 0.6 && r1 < rAll * 1.6 && r2 > rAll * 0.6 && r2 < rAll * 1.6, `the share of the ground under sand holds at the far levels: ${r1.toFixed(3)} at 1, ${r2.toFixed(3)} at 2 samples a tile, ${rAll.toFixed(3)} resolved`);
   assert.equal(sandField(55.5, 66.25, 1e9), sandField(55.5, 66.25), 'the default is all of it');
   // the chunk's channel is made at its own density
   const none: LivingSources = { casters: new Float32Array(0), desert: true, sand: true }, hi = influence([0, 0, 40, 40], 3, none), lo = influence([0, 0, 40, 40], 1, none);
