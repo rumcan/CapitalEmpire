@@ -40,11 +40,14 @@ test('swing: click 2 sets the power where the marker is (100% after swingTime), 
   near(live.pos(10 + T / 4), 0.25); live.click(10 + T / 2); near(live.pos(10 + T / 2 + T / 4), 0.25);
 });
 
-test('swing: a better golfer gets a slower marker and a wider sweet spot (in time: the window grows from 80 to 150 ms)', () => {
+test('swing: a better golfer gets a slower marker and a wider sweet spot (in time: the window grows from 80 to 190 ms), and the meter is never tighter than the first one was', () => {
   assert.ok(swingTime(0.9) > swingTime(0.3));
   assert.ok(sweetSeconds(0.9) > sweetSeconds(0.3) && sweetSeconds(0.3) > sweetSeconds(0.1));
-  near(2 * sweetSeconds(0), SWEET[0]); near(2 * sweetSeconds(1), SWEET[1]); near(SWEET[0], 0.08); near(SWEET[1], 0.15);
-  // a click 60 ms early is inside the good golfer's window (+-71 ms at skill 0.9) and a miss for a beginner's (+-44 ms at skill 0.1), whatever the marker's speed
+  near(2 * sweetSeconds(0), SWEET[0]); near(2 * sweetSeconds(1), SWEET[1]); near(SWEET[0], 0.08); near(SWEET[1], 0.19);
+  // the coordinator's rule (T345): the top end is never tighter than the first meter's (95 ms against 91 either side at skill 1), nor is any skill's between: the ticket is about making the meter hittable, not harder
+  for (let s = 0; s <= 1.0001; s += 0.05) assert.ok(sweetSeconds(s) >= sweetSpotV1(s) / markerSpeed(s), `skill ${s.toFixed(2)}: ${(1000 * sweetSeconds(s)).toFixed(1)} ms against the first meter's ${(1000 * sweetSpotV1(s) / markerSpeed(s)).toFixed(1)}`);
+  assert.ok(sweetSeconds(1) > sweetSpotV1(1) / markerSpeed(1) && sweetSeconds(1) >= 0.095 - 1e-12);
+  // a click 60 ms early is inside the good golfer's window (+-90 ms at skill 0.9) and a miss for a beginner's (+-46 ms at skill 0.1), whatever the marker's speed
   for (const sp of [0.85, 1, 1.15]) {
     const o = v2({ power: 1, acc: 0.06 * markerSpeed(0.9, sp), boost: 0 }), o2 = v2({ power: 1, acc: 0.06 * markerSpeed(0.1, sp), boost: 0 });
     assert.equal(swingEffect(o, 0.9, false, 1, 1, sp).shape, 'straight', `speed ${sp}`);
@@ -73,7 +76,7 @@ test('swing: early on the way back misses left (pull, then hook), late misses ri
   near(e.acc, 0.15, 1e-9); assert.ok(swingEffect(e, s, false).deg < 0);
 });
 
-test('T345: the sweet spot is a window in time: its width in seconds is the skill’s (80 ms to 150 ms), the same at any marker speed, scaled by the kit’s sweet factor and narrowed by the boost; its width on the arc follows the marker', () => {
+test('T345: the sweet spot is a window in time: its width in seconds is the skill’s (80 ms to 190 ms), the same at any marker speed, scaled by the kit’s sweet factor and narrowed by the boost; its width on the arc follows the marker', () => {
   for (const s of [0, 0.3, 0.7, 1]) {
     const want = 0.5 * (SWEET[0] + (SWEET[1] - SWEET[0]) * s);
     near(sweetSeconds(s), want);
@@ -108,9 +111,9 @@ test('T345: the miss stays degrees per meter unit, read from the click’s time 
     const e = swingEffect(v2({ power: 1, acc: -0.08 * sk, boost: 0 }), s, false, 1, 1, sp);
     near(e.deg, 90 * (0.08 - w) * sk, 1e-9); assert.equal(e.shape, 'push');
   }
-  // 100 ms late is a slice (5 degrees or more); the same time error with the accuracy stat's slower marker and wider window is a smaller miss in degrees (and its wider window a smaller error past it)
-  const a = swingEffect(v2({ power: 1, acc: -0.1 * markerSpeed(s, 1), boost: 0 }), s, false, 1, 1, 1), b = swingEffect(v2({ power: 1, acc: -0.1 * markerSpeed(s, 0.85), boost: 0 }), s, false, 1.4, 1, 0.85);
-  assert.equal(a.shape, 'slice'); assert.ok(Math.abs(b.deg) < Math.abs(a.deg) * 0.55, `${b.deg.toFixed(1)} against ${a.deg.toFixed(1)} degrees`);
+  // 120 ms late is a slice (5 degrees or more); the same time error with the accuracy stat's slower marker and wider window is a smaller miss in degrees (and its wider window a smaller error past it)
+  const a = swingEffect(v2({ power: 1, acc: -0.12 * markerSpeed(s, 1), boost: 0 }), s, false, 1, 1, 1), b = swingEffect(v2({ power: 1, acc: -0.12 * markerSpeed(s, 0.85), boost: 0 }), s, false, 1.4, 1, 0.85);
+  assert.equal(a.shape, 'slice'); assert.ok(Math.abs(b.deg) < Math.abs(a.deg) * 0.6, `${b.deg.toFixed(1)} against ${a.deg.toFixed(1)} degrees`);
   // a big miss is a hook or a slice from 5 degrees, and the worst is capped at 18 (a putt 30 degrees a unit, at most 8), as before
   const big = swingEffect(v2({ power: 1, acc: 0.2 * markerSpeed(s), boost: 0 }), s, false), putt = swingEffect(v2({ power: 1, acc: 0.2 * markerSpeed(s), boost: 0 }), s, true);
   assert.equal(big.shape, 'hook'); assert.ok(Math.abs(big.deg) <= 18 && Math.abs(putt.deg) <= 8 && putt.shape === 'pull');
@@ -127,7 +130,7 @@ test('T345: a person can hit it: the scripted golfers (a club golfer 60 ms of sp
   const club1 = share(HUMANS.club, 0.3, 1), nov1 = share(HUMANS.novice, 0.1, 1), sharp1 = share(HUMANS.sharp, 0.5, 1);
   const club2 = share(HUMANS.club, 0.3, 2), nov2 = share(HUMANS.novice, 0.1, 2), sharp2 = share(HUMANS.sharp, 0.5, 2);
   assert.ok(club1 > 0.37 && club1 < 0.44 && nov1 > 0.15 && nov1 < 0.23, `the first meter: club ${club1.toFixed(2)}, novice ${nov1.toFixed(2)}`);
-  assert.ok(club2 >= 0.54 && club2 <= 0.61, `club golfer ${club2.toFixed(2)}`); assert.ok(nov2 >= 0.32 && nov2 <= 0.39, `novice ${nov2.toFixed(2)}`); assert.ok(sharp2 >= 0.86 && sharp2 <= 0.92, `sharp ${sharp2.toFixed(2)}`);
+  assert.ok(club2 >= 0.60 && club2 <= 0.66, `club golfer ${club2.toFixed(2)}`); assert.ok(nov2 >= 0.34 && nov2 <= 0.40, `novice ${nov2.toFixed(2)}`); assert.ok(sharp2 >= 0.92 && sharp2 <= 0.95, `sharp ${sharp2.toFixed(2)}`);
   assert.ok(club2 > club1 + 0.12 && nov2 > nov1 + 0.12 && sharp2 > sharp1 + 0.04, 'a window a person can hit');
   // a faster or slower marker does not change how hard it is to hit (the accuracy stat's +-15%): the same clicks in time are the same shares; on the first meter a faster marker was harder
   for (const sp of [0.85, 1.15]) assert.ok(Math.abs(share(HUMANS.club, 0.3, 2, sp) - club2) < 0.002, `speed ${sp}: ${share(HUMANS.club, 0.3, 2, sp).toFixed(3)} against ${club2.toFixed(3)}`);
@@ -135,6 +138,8 @@ test('T345: a person can hit it: the scripted golfers (a club golfer 60 ms of sp
   // the beginner no longer has the narrowest spot by far: a club golfer at skill 0 swings straight about as often as the starting skill did on the first meter, and the better golfer more often
   const c0 = share(HUMANS.club, 0, 2), c1 = share(HUMANS.club, 1, 2);
   assert.ok(c0 > 0.42 && c1 > c0 + 0.1, `skill 0 ${c0.toFixed(2)}, skill 1 ${c1.toFixed(2)}`);
+  // and no skill is worse off than on the first meter (the top end was the one a 150 ms top made tighter)
+  for (const [h, s] of [[HUMANS.novice, 0.1], [HUMANS.club, 0.3], [HUMANS.club, 1], [HUMANS.sharp, 0.5], [HUMANS.sharp, 1]] as const) assert.ok(share(h, s, 2) >= share(h, s, 1), `skill ${s}: ${share(h, s, 2).toFixed(3)} against ${share(h, s, 1).toFixed(3)}`);
 });
 
 test('T345: an outcome saved before it (no `v`) is read against the first meter’s sweet spot, exactly as it was (a reference of the T316 formula over a grid), and the new meter’s outcome carries its version', () => {

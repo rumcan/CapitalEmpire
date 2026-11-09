@@ -16,10 +16,11 @@ import type { Club, Shot } from './types';
 export const METER = { top: 1.2, low: -0.2 } as const;
 /** the time (s) the marker takes from the snap line to 100% at skill 0 and at skill 1 (a better golfer gets a slower marker); the way back is as fast */
 export const METER_TIME = [0.7, 1.3] as const;
-/** T345 (#987): the sweet spot as a WINDOW IN TIME: its whole width in seconds, centred on the snap line, at skill 0 and at skill 1 (80 ms, then 150 ms: 40 ms and 75 ms either side). A person clicks with a
- *  spread of 50 to 90 ms; the first meter's spot (SWEET_V1, a width on the arc) was 33 ms either side at the starting skill, and the beginner's marker was the fastest and its spot the narrowest. A click
- *  inside the window is straight; the accuracy stat, the clubs' upgrades and the cards scale the window (ClubKit.sweet), the Space boost narrows it (BOOST.narrow); the marker's speed does not */
-export const SWEET = [0.08, 0.15] as const;
+/** T345 (#987): the sweet spot as a WINDOW IN TIME: its whole width in seconds, centred on the snap line, at skill 0 and at skill 1 (80 ms, then 190 ms: 40 ms and 95 ms either side). A person clicks with a
+ *  spread of 50 to 90 ms; the first meter's spot (SWEET_V1, a width on the arc) was 33 ms either side at the starting skill, and the beginner's marker was the fastest and its spot the narrowest (18 ms at skill 0,
+ *  91 ms at skill 1). The low end is the window a person can hit; the top end is never tighter than the first meter's (95 ms against 91), so the meter is no harder for a skilled golfer. A click inside the
+ *  window is straight; the accuracy stat, the clubs' upgrades and the cards scale the window (ClubKit.sweet), the Space boost narrows it (BOOST.narrow); the marker's speed does not */
+export const SWEET = [0.08, 0.19] as const;
 /** the first meter's sweet spot (T316), kept for the swing outcomes a save made before T345 holds (they carry no `v`): its half width in meter units around the snap line at skill 0 and at skill 1 */
 export const SWEET_V1 = [0.025, 0.07] as const;
 /** the meter's version a swing outcome carries (SwingOutcome.v): absent is the first meter (T316: the sweet spot is a width on the arc, SWEET_V1), 2 the window in time (T345: SWEET). The meter writes 2 on
@@ -56,7 +57,7 @@ export const swingTime = (skill: number, speed = 1): number => (METER_TIME[0] + 
 export const boostOf = (presses: number): number => Math.min(BOOST.max, Math.max(0, Math.floor(presses)) * BOOST.per);
 /** the marker's speed in meter units a second for a skill (0..1) and the stats' `speed` factor: the way from the snap line to 100% takes swingTime */
 export const markerSpeed = (skill: number, speed = 1): number => 1 / swingTime(skill, speed);
-/** T345: the sweet spot's half window in SECONDS for a skill (0..1) and a boost: half of SWEET at the skill (the whole window grows from 80 to 150 ms), narrowed by up to BOOST.narrow with the boost, times `sweet`, the
+/** T345: the sweet spot's half window in SECONDS for a skill (0..1) and a boost: half of SWEET at the skill (the whole window grows from 80 to 190 ms), narrowed by up to BOOST.narrow with the boost, times `sweet`, the
  *  factor a golfer's stats, clubs and cards put on it (mods.ts ClubKit.sweet). A click this near (or nearer) the moment the marker crosses the snap line is straight, whatever the marker's speed */
 export const sweetSeconds = (skill: number, boost = 0, sweet = 1): number =>
   0.5 * (SWEET[0] + (SWEET[1] - SWEET[0]) * clamp(skill, 0, 1)) * (1 - BOOST.narrow * clamp(boost, 0, BOOST.max) / BOOST.max) * sweet;
