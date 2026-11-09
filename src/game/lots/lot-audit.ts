@@ -18,6 +18,8 @@ const LIB_AT = new Map(LIBRARY.map((it, i) => [it.id, i] as const));
 export interface LotAudit {
   /** a building stands on the lot (a lot with a yard and no building is the bug of T383, #1039) */
   house: boolean; buildings: number;
+  /** T403: the id of the house's picture as the lot draws it (the widest building), or null with no building */
+  houseId: string | null;
   /** how many eighth turns the house's picture is off the lot's street (0: its front faces the road; null: no house, or a picture the tables do not know) */
   facingOff: number | null;
   /** a drive or parking pad is laid, and its end is at the lot's front edge (it meets the road) */
@@ -76,7 +78,7 @@ export function auditLot(g: LotGeom, c: Composition): LotAudit {
   const driveOk = garage ? reaches : drives.length === 0;
   const pathAtDoor = !!A && !!pathBox && Math.abs(pathBox[3] - A.frontY) <= REACH && pathBox[0] - DOOR_SLACK <= A.doorX && pathBox[2] + DOOR_SLACK >= A.doorX && pathBox[1] <= 0.4;
   return {
-    house: builds.length > 0, buildings: builds.length, facingOff,
+    house: builds.length > 0, buildings: builds.length, houseId: house?.id ?? null, facingOff,
     drive: drives.length > 0, driveConnects: drives.some(a => frontOf(g, a.pts) <= 0.4), path: paths.some(a => frontOf(g, a.pts) <= 0.4),
     trees: trees.length, treesClear: treesClear && trees.length <= MAX_TREES,
     fence: fences.length ? 'panels' : hedges.length ? 'hedge' : 'none', fencePieces: pieces.length, fenceAcross: across,
