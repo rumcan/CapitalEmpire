@@ -39,9 +39,15 @@ const DRIVE_W = 1.8, DRIVE_MIN = 1.2, SIDE = 0.3;
 const PAD_MIN = 1.4, PATH_MIN = 0.6;
 /** the drive and path a clean base keeps: the preset's own (a drive patch, or a paved yard strip from the street that is a car wide; a walk patch, or a
  *  paved strip a person wide), or those it lacks made here: a drive beside the house (or a parking pad in front of it on a lot with no room beside it) and
- *  a path to the house's front. Both start at the street edge (the drive connects to the road) and stay inside the lot */
+ *  a path to the house's front. Both start at the street edge (the drive connects to the road) and stay inside the lot.
+ *  T398 (the owner, 2026-11-09: "a driveway pad beside it leads to no garage", "the path meets the side wall"): with `anchors` the drive and the path are laid to the doors the
+ *  house's pictures draw: a drive only where there is a garage door facing the street, from the street to the front wall of that garage, as wide as one car within the door's span;
+ *  no garage, no drive (and no parking pad); the path from the street to the front door, kept off the drive. A patch of the preset's own that does not end at its door is not kept */
 export interface CleanGround { drive: PresetPatch | null; walk: PresetPatch | null; parking: 'drive' | 'pad' | null }
-export function cleanGround(patches: readonly PresetPatch[], W: number, D: number, house: Box | null, tex: { drive?: string; walk?: string } = {}): CleanGround {
+/** where the doors are on a lot (the lot frame, tiles): the front door's x on the house's front wall (the wall at y = frontY), and each garage door that faces the street: its span along
+ *  the wall (x0..x1) and the wall's distance from the street (y). A house with no garage has none. */
+export interface GroundAnchors { doorX: number | null; frontY: number; garages: readonly { x0: number; x1: number; y: number }[] }
+export function cleanGround(patches: readonly PresetPatch[], W: number, D: number, house: Box | null, tex: { drive?: string; walk?: string } = {}, anchors?: GroundAnchors): CleanGround {
   let drive: PresetPatch | null = null, walk: PresetPatch | null = null, dA = 0, wL = 0;
   for (const a of patches) {
     const b = boxOfPts(a.pts), w = b[2] - b[0], h = b[3] - b[1];
@@ -52,8 +58,9 @@ export function cleanGround(patches: readonly PresetPatch[], W: number, D: numbe
   }
   const rect = (a: PresetPatch, kind: PresetPatch['kind']): PresetPatch => {
     const b = boxOfPts(a.pts), r: Box = [Math.max(0, b[0]), 0, Math.min(W, b[2]), Math.min(D, b[3])];
-    return { kind, tex: a.tex, pts: rectPts(r) };
+    return { kind, tex: anchors ? tex[kind === 'drive' ? 'drive' : 'walk'] ?? a.tex : a.tex, pts: rectPts(r) };   // (T398: with anchors the surface is the lot's condition's, not the preset's)
   };
+  if (anchors) return anchoredGround(drive, walk, W, D, house, tex, anchors, rect);
   let parking: CleanGround['parking'] = null;
   let d = drive ? rect(drive, 'drive') : null, w = walk ? rect(walk, 'walk') : null;
   if (d) parking = 'drive';
@@ -74,6 +81,37 @@ export function cleanGround(patches: readonly PresetPatch[], W: number, D: numbe
     let x0 = cx - 0.35, x1 = cx + 0.35;
     if (db && x1 > db[0] - 0.2 && x0 < db[2] + 0.2) { const s = (db[0] + db[2]) / 2 < W / 2 ? db[2] + 0.4 : db[0] - 0.4 - 0.7; x0 = s; x1 = s + 0.7; }
     w = { kind: 'walk', tex: tex.walk ?? 'paving', pts: rectPts([Math.max(0, x0), 0, Math.min(W, x1), Math.min(hy + 0.1, D)]) };
+  }
+  return { drive: d, walk: w, parking };
+}
+/** how near a kept patch's far end must be to a door's wall to count as reaching it (tiles) */
+const REACH = 0.8;
+/** the T398 ground: the drive to the garage door, the path to the front door (see cleanGround) */
+function anchoredGround(drive: PresetPatch | null, walk: PresetPatch | null, W: number, D: number, house: Box | null, tex: { drive?: string; walk?: string }, A: GroundAnchors,
+  rect: (a: PresetPatch, kind: PresetPatch['kind']) => PresetPatch): CleanGround {
+  const garage = A.garages.length ? [...A.garages].sort((p, q) => p.y - q.y)[0]! : null;
+  let d: PresetPatch | null = null, parking: CleanGround['parking'] = null;
+  if (garage) {
+    // the preset's own drive stays when it meets the garage door (its far end at the door's wall, over the door's span); else one car wide, centred on the door, from the street to the wall
+    const kept = drive ? rect(drive, 'drive') : null, kb = kept ? boxOfPts(kept.pts) : null;
+    if (kept && kb && Math.abs(kb[3] - garage.y) <= REACH && kb[0] < garage.x1 && kb[2] > garage.x0) d = kept;
+    else {
+      const cx = (garage.x0 + garage.x1) / 2, dw = Math.max(DRIVE_MIN, Math.min(DRIVE_W, garage.x1 - garage.x0)), x0 = Math.max(SIDE, Math.min(W - SIDE - dw, cx - dw / 2));
+      d = { kind: 'drive', tex: tex.drive ?? 'paving', pts: rectPts([x0, 0, x0 + dw, Math.min(D, Math.max(garage.y, 0.6))]) };
+    }
+    parking = 'drive';
+  }
+  // the path: from the street to the front door (the front wall), a person wide; moved off the drive when they would touch (the door is then beside the garage: along the wall,
+  // toward the door's side, never across the drive)
+  let w: PresetPatch | null = null;
+  if (house && A.frontY >= PATH_MIN && A.doorX !== null) {
+    const db = d ? boxOfPts(d.pts) : null, half = 0.35;
+    let cx = Math.max(half, Math.min(W - half, A.doorX));
+    if (db && cx + half > db[0] - 0.2 && cx - half < db[2] + 0.2) cx = A.doorX < (db[0] + db[2]) / 2 ? db[0] - 0.2 - half : db[2] + 0.2 + half;
+    cx = Math.max(half, Math.min(W - half, cx));
+    const kept = walk ? rect(walk, 'walk') : null, kb = kept ? boxOfPts(kept.pts) : null;
+    if (kept && kb && Math.abs(kb[3] - A.frontY) <= REACH && kb[0] < cx + half && kb[2] > cx - half && !(db && kb[0] < db[2] + 0.2 && kb[2] > db[0] - 0.2)) w = kept;
+    else w = { kind: 'walk', tex: tex.walk ?? 'paving', pts: rectPts([cx - half, 0, cx + half, Math.min(A.frontY + 0.1, D)]) };
   }
   return { drive: d, walk: w, parking };
 }

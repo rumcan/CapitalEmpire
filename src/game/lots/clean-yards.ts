@@ -15,6 +15,7 @@ import { isBuilding } from '../mirror';
 import { AXIS_PROPS } from './preset-art';
 import { isFence } from './item-kinds';
 import { roleOf } from './groups';
+import type { PresetState } from './presets';
 
 /** the clean yards on (?oldyards, or setCleanYards(false), composes the house lots as before T385: the old look kept as an option) */
 let CLEAN = !(typeof location !== 'undefined' && /[?&]oldyards(&|=|$)/.test(location.search ?? ''));
@@ -59,3 +60,26 @@ export function clutterKind(id: string): ClutterKind | null {
 }
 /** whether an id is clutter (not a house, a garage, a fence or hedge piece, or a tree) */
 export const isClutter = (id: string): boolean => clutterKind(id) !== null;
+
+// ---------------------------------------------------------------- the surface of the drive and the path (T398)
+/** how well off a house lot is: run-down (declined, the starter tier 0, or a shanty), ordinary (built, tiers 1 and 2), well-off (upgraded, or the top tier) */
+export type Condition = 'run-down' | 'ordinary' | 'well-off';
+/** a house whose name says it is run down, whatever its lot's state */
+const RUN_DOWN_HOUSE = /rundown|shanty|derelict|abandon|dilapidat|boarded/;
+/** the condition of a house lot (the owner, 2026-11-09, after tiled pavers on a run-down house: "the driveway surface follows the house's condition"): its look state (presets.ts stateOf), its
+ *  building tier (absent: the top tier, as the lots compose it) and the house's id */
+export function conditionOf(state: PresetState, tier: number | undefined, houseId: string): Condition {
+  if (state === 'declined' || tier === 0 || RUN_DOWN_HOUSE.test(houseId)) return 'run-down';
+  return state === 'upgraded' || (tier ?? 3) >= 3 ? 'well-off' : 'ordinary';
+}
+/** what each condition lays its drive and its front path in (ground-protocol.ts LotPatch tex): a run-down lot a gravel drive and a dirt path (packed sand and dirt in the desert theme: the
+ *  painted surfaces' desert switch), an ordinary one a concrete drive and slabs, a well-off one pavers. The pavers are the tiled look: never on a run-down lot, and no concrete there either */
+export const SURFACES: Readonly<Record<Condition, { drive: string; walk: string }>> = {
+  'run-down': { drive: 'gravel', walk: 'dirt' },
+  ordinary: { drive: 'concrete', walk: 'slabs' },
+  'well-off': { drive: 'paving', walk: 'paving' },
+};
+
+/** the side gap (T398; the owner, 2026-11-09: "we can't have the garages right next to the houses"): every wall of a house lot's buildings, a garage included, keeps this far from each side lot
+ *  line (tiles of 2 m: about 3 m), so two neighbouring buildings are at least twice it apart (about 6 m) */
+export const SIDE_GAP = 1.5;

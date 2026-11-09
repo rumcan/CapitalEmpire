@@ -49,9 +49,11 @@ test('every building of a res or com preset faces its street on each road headin
         if (road % 2) {
           // a screen-straight road: the screen-axis set, its member facing the street is (road - 1) / 2 (roadView: road 1 faces screen down);
           // T375: a building with no old set but eight approved views (the Video Vault, the Arcade): the ring's place of the road
-          const set = axisSetOf(q.id);
-          if (set) assert.equal(set.indexOf(drawn), (road - 1) / 2, `${where}: the straight-on view faces the street`);
-          else assert.equal(eightRingOf(q.id)?.indexOf(drawn), road, `${where}: the 8-degree view faces the street`);
+          // (T398: the turned 8-degree views win over the old square set where a building has both)
+          const set = axisSetOf(q.id), ring = eightRingOf(q.id);
+          if (ring) assert.equal(ring.indexOf(drawn), road, `${where}: the 8-degree view faces the street`);
+          else if (set) assert.equal(set.indexOf(drawn), (road - 1) / 2, `${where}: the straight-on view faces the street`);
+          else assert.fail(`${where}: a building that faces a screen-straight road has a straight-on view`);
         } else {
           // an angled road: the corner view whose front faces the lot's street
           assert.equal(fourViews(q.id)?.views.indexOf(drawn), streetQuarter(lot), `${where}: the corner view faces the street`);
