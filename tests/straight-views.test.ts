@@ -4,6 +4,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { LIBRARY } from '../src/game/library';
+import type { LibItem } from '../src/game/types';
 import { OBJECT_EIGHT_SETS } from '../src/game/object-eight-library';
 import { OBJECT_FACING_KEYS, objectFootprint } from '../src/game/object-eight-types';
 import { drawnAs } from '../src/game/mirror';
@@ -14,7 +15,7 @@ import { facingView } from '../src/game/lots/house-facing';
 import { objectFacings } from '../src/game/object-eight';
 import REVIEW from '../art/object-eight-20261109/review.json';
 
-const BY = new Map(LIBRARY.map(i => [i.id, i] as const));
+const BY = new Map<string, LibItem>(LIBRARY.map(i => [i.id, i] as const));
 const awayOf = (road: number) => ({ x: -Math.sin(road * Math.PI / 4), y: -Math.cos(road * Math.PI / 4) });
 const frameOf = (road: number) => ({ q: (road % 2 ? (road === 1 || road === 7 ? 0 : 2) : road / 2) as 0 | 1 | 2 | 3, n: awayOf(road) });
 /** the reviewed buildings (art/object-eight-20261109/review.json: accepted sheets): their library subjects */
@@ -34,17 +35,17 @@ test('every reviewed building is an approved eight-view set: its four corner vie
     const corners = fourViews(subject)!.views;
     ([['normalNE', 0], ['normalSE', 1], ['normalSW', 2], ['normalNW', 3]] as const).forEach(([key, i]) => {
       assert.equal(set!.sourceIds![key], corners[i], `${subject} ${key} reuses ${corners[i]}`);
-      const alias = BY.get(set!.views[key].id)!, old = BY.get(corners[i]!)!;
+      const alias: LibItem = BY.get(set!.views[key].id)!, old: LibItem = BY.get(corners[i]!)!;
       assert.deepEqual([alias.tex, alias.w, alias.h, alias.ax, alias.ay, alias.quad], [old.tex, old.w, old.h, old.ax, old.ay, old.quad], `${subject} ${key} draws as ${corners[i]}`);
       assert.deepEqual(alias.boxes, set!.views[key].boxes);
       // the physical footprint at the corner's heading is the old picture's own box (the set's footprint is twice its half extents)
       assert.ok(Math.abs(alias.boxes[0]!.hx - old.boxes[0]!.hx) < 1e-6 && Math.abs(alias.boxes[0]!.hy - old.boxes[0]!.hy) < 1e-6, `${subject} ${key}: the old box`);
     });
     // the straight-on views are new atlas cells (no reuse), with an anchor inside their picture, drawn within a sane scale of the corner
-    const ne = BY.get(set!.views.normalNE.id)!;
+    const ne: LibItem = BY.get(set!.views.normalNE.id)!;
     for (const key of ['yaw8N', 'yaw8E', 'yaw8S', 'yaw8W'] as const) {
       assert.equal(set!.sourceIds![key], undefined, `${subject} ${key} is a new picture`);
-      const pic = BY.get(set!.views[key].id)!;
+      const pic: LibItem = BY.get(set!.views[key].id)!;
       assert.ok(pic.id.startsWith('object8:') && pic.ax > 0 && pic.ax < pic.w && pic.ay > 0 && pic.ay < pic.h, `${pic.id}: an anchor inside its picture`);
       assert.ok(pic.w / ne.w > 0.35 && pic.w / ne.w < 1.25, `${pic.id}: ${(pic.w / ne.w).toFixed(2)} of the NE corner's width`);
       assert.equal(pic.kind, 'building'); assert.deepEqual(drawnAs(pic, true), [pic.id, false]);
@@ -59,7 +60,7 @@ test('every reviewed building is an approved eight-view set: its four corner vie
 
 test('the old corner pictures draw exactly as before: a reused set never replaces them', () => {
   for (const subject of SUBJECTS) for (const id of fourViews(subject)!.views) {
-    const pic = BY.get(id)!;
+    const pic: LibItem = BY.get(id)!;
     for (const flip of [false, true]) assert.ok(!drawnAs(pic, flip)[0].startsWith('object8:'), `${id} (flip ${flip}) is not swapped for an eight-view picture`);
   }
 });
