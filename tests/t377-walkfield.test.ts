@@ -3,7 +3,7 @@
 // the ground a course reads as (golf/walkground.ts); the routes are worked out once per pair of ends (RouteCache).
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
-import { CART, G, NO_WAY, RouteCache, SPECTATOR, cellOf, dilate, findRoute, groundAt, lineCost, makeField, nearestPassable, nearestStand, passable, routeClear, routeCost, type Profile, type WalkField } from '../src/game/golf/walkfield';
+import { CART, G, NO_WAY, RouteCache, SPECTATOR, cellOf, dilate, routeUnits, findRoute, groundAt, lineCost, makeField, nearestPassable, nearestStand, passable, routeClear, routeCost, type Profile, type WalkField } from '../src/game/golf/walkfield';
 import { buildWalkField } from '../src/game/golf/walkground';
 import type { Pt } from '../src/game/network';
 
@@ -181,6 +181,13 @@ describe('T377: the finer points of the walk field', () => {
     assert.ok(Array.isArray(rc.route(a, b)), 'a known one is still given'); assert.equal(rc.budget, 0); assert.deepEqual(rc.stats, { hits: 1, miss: 1 });
     rc.budget = 2; assert.ok(Array.isArray(rc.route(a, c)), 'next step it is worked out'); assert.equal(rc.size, 2); assert.equal(rc.budget, 1);
     assert.ok(Array.isArray(new RouteCache(f, SPECTATOR).route(a, b)), 'no budget set: no limit');
+  });
+  it('the budget counts search in units: a way of under 100 tiles is 1, 100 to 200 is 2; a long way is made while any budget is left, and the next waits', () => {
+    assert.equal(routeUnits({ x: 0, y: 0 }, { x: 50, y: 0 }), 1); assert.equal(routeUnits({ x: 0, y: 0 }, { x: 99.9, y: 0 }), 1); assert.equal(routeUnits({ x: 0, y: 0 }, { x: 150, y: 0 }), 2); assert.equal(routeUnits({ x: 0, y: 0 }, { x: 0, y: 1000 }), 11);
+    const f = field(300, 40, []), rc = new RouteCache(f, SPECTATOR), a = { x: 5.5, y: 20.5 }, far = { x: 290.5, y: 20.5 }, near = { x: 60.5, y: 20.5 };
+    rc.budget = 2; assert.ok(Array.isArray(rc.route(a, far)), 'a long way (3 units) is made with 2 left'); assert.equal(rc.budget, -1);
+    assert.equal(rc.route(a, near), undefined, 'and the next waits'); rc.budget = 3;
+    assert.ok(Array.isArray(rc.route(a, near)) && rc.budget === 2, 'a short one is 1 unit'); assert.ok(Array.isArray(rc.route(a, far)), 'a known one costs nothing'); assert.equal(rc.budget, 2);
   });
   it('dilate: tees, greens and bunkers grow by the margin, water by its own, other ground stays; the field it is made from is not changed', () => {
     const f = field(40, 40, [[10, 10, 12, 12, G.green], [20, 20, 22, 21, G.bunker], [30, 30, 31, 31, G.water], [10, 25, 14, 28, G.fairway]]), d = dilate(f, 2, 1);

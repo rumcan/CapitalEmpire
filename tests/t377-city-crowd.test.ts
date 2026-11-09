@@ -74,7 +74,7 @@ test('T377: with a walk field the City\'s fans never walk on the pond or the gre
 test('T377: the City works out a few ways a step, hands the frame\'s walker buffer its id, and gives each group a pace of its own', () => {
   const d = day(true);
   assert.ok(d.withWay >= 1 && d.withWay < 30, `${d.withWay} of 30 groups had their way after the first step: the rest wait`);
-  assert.ok(d.distinct >= 1 && d.distinct <= 4, `and those are ${d.distinct} different ways at most (the budget is 4 a step; a way worked out is given to all that need it)`);
+  assert.ok(d.distinct >= 1 && d.distinct <= 3, `and those are ${d.distinct} different ways at most (the budget is 3 units a step; a way worked out is given to all that need it)`);
   assert.ok(d.bufOk, 'the buffer has 7 floats a group'); assert.ok(d.ids.size >= 25, `${d.ids.size} different ids in the buffer`); assert.ok(!d.ids.has(0), 'every group has an id');
   assert.ok(new Set(d.pace.map(v => v.toFixed(3))).size >= 25, 'the paces differ'); assert.ok(Math.min(...d.pace) >= 0.85 && Math.max(...d.pace) <= 1.15, `${Math.min(...d.pace)} to ${Math.max(...d.pace)}`);
   // a day with no golf has no pace of its own for the fans: the old one walking speed (the surge of a town event, the bus tests)

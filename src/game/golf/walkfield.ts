@@ -229,9 +229,13 @@ function rimOf(f: WalkField, p: Pt): Pt {
   const h = f.cell / 2;
   return { x: Math.min(f.x0 + f.w * f.cell - h, Math.max(f.x0 + h, p.x)), y: Math.min(f.y0 + f.h * f.cell - h, Math.max(f.y0 + h, p.y)) };
 }
+/** what a search costs in a budget, in units: 1 for a way of under 100 tiles, one more for each 100 tiles further (a search grows with the square of the way, a
+ *  long one is some 5 ms and a short one 1 ms or less) */
+export const routeUnits = (a: Pt, b: Pt): number => 1 + Math.floor(Math.hypot(b.x - a.x, b.y - a.y) / 100);
 /** a cache of routes by the cells of their ends: the route (or null for none) the first time, the same one after (the City keeps one per day). `budget` is how
- *  many routes it may still work out (a miss costs a search; a hit costs a look): the City gives it a few each step so a crowd arriving at once does not stall a
- *  step; over it a miss is not worked out and the answer is undefined (ask again next step) */
+ *  much search it may still do, in routeUnits (a miss costs a search; a hit costs a look): the City gives it a few units each step so a crowd arriving at once
+ *  does not stall a step. A route is worked out while any budget is left (it may end below 0: a long way is never starved); with none left a miss is not worked
+ *  out and the answer is undefined (ask again next step) */
 export class RouteCache {
   private m = new Map<number, Pt[]>(); private hits = 0; private miss = 0;
   budget = Infinity;
@@ -253,7 +257,7 @@ export class RouteCache {
     const key = ca * (this.f.w * this.f.h) + cb, got = this.m.get(key);
     if (got !== undefined) { this.hits++; return got; }
     if (this.budget <= 0) return undefined;
-    this.budget--; this.miss++; const r = findRoute(this.f, this.p, a, b, this.o) ?? NO_WAY; this.m.set(key, r); return r;
+    this.budget -= routeUnits(a, b); this.miss++; const r = findRoute(this.f, this.p, a, b, this.o) ?? NO_WAY; this.m.set(key, r); return r;
   }
   get size(): number { return this.m.size; }
   get stats(): { hits: number; miss: number } { return { hits: this.hits, miss: this.miss }; }

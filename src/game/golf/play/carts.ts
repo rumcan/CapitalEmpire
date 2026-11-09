@@ -9,7 +9,7 @@
 // under the cart profile: the paths cheap, the rough dearer, a fairway dearer still (a cart leaves its path only to reach a ball), never a tee, a green, a
 // bunker or water; a drive the field cannot find keeps the old route (paths, else the rough's edge) when that is clear of them too.
 import { TILE_M } from '../types';
-import { CART, findRoute, nearestStand, routeClear, type WalkField } from '../walkfield';
+import { CART, findRoute, nearestStand, routeClear, routeUnits, type WalkField } from '../walkfield';
 import { ADDRESS_TIME, FLIGHT_TIME, PICK_UP, PUTT_FLIGHT, SWING_TIME, walkMin } from './round';
 import type { CourseView, Lie, Pt, RoundPlan, Shot } from './types';
 
@@ -35,8 +35,9 @@ const FAIRWAY_PUSH = 14;
 const WIND = 1.3;
 /** a drive's route is worked out once its box (padded this many tiles) is near the screen */
 const NEAR = 40;
-/** T377: the searches for a drive's way over the course's walk field one drawing may make (each a millisecond or a few on the main thread): over it a drive takes the
- *  paths' way (when that is clear of the tees, greens, bunkers and water) and is worked out properly only when it is made again; none with no box (a test) */
+/** T377: the search for drives' ways over the course's walk field one drawing may make, in routeUnits (a drive of under 100 tiles is 1: a millisecond or less on the
+ *  main thread; a long one a few): over it a drive takes the paths' way (when that is clear of the tees, greens, bunkers and water), else waits a drawing; no limit
+ *  with no box (a test) */
 const ROUTES_A_FRAME = 2;
 
 /** a cart's drive along `len` tiles (game minutes) */
@@ -215,7 +216,7 @@ export class CartPlay {
   private driveRoute(a: Pt, b: Pt, capped: boolean): Pt[] | null {
     const f = this.field, old = (): Pt[] => (this.paths && pathRoute(this.paths, a, b)) ?? edgeRoute(this.view, a, b);
     if (!f) return old();
-    if (!capped || this.routed < ROUTES_A_FRAME) { this.routed++; this.searchesMade++; const r = findRoute(f, CART, a, b, { pad: 12, whole: false }); if (r) return [a, ...r]; return old(); }
+    if (!capped || this.routed < ROUTES_A_FRAME) { this.routed += routeUnits(a, b); this.searchesMade++; const r = findRoute(f, CART, a, b, { pad: 12, whole: false }); if (r) return [a, ...r]; return old(); }
     const o = old(); return routeClear(f, CART, o) ? o : null;
   }
   /** the searches made in this drawing (update resets it), and in all */

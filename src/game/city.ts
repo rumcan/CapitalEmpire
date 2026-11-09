@@ -269,8 +269,9 @@ export class City {
   private walkField: WalkField | null = null; private walkRoutes: RouteCache | null = null;
   setWalkField(f: WalkField | null): void { this.walkField = f; this.walkRoutes = f ? new RouteCache(f, SPECTATOR) : null; if (this.crowd) this.crowd.router = this.router(); }
   private router(): WalkRouter | null { const rc = this.walkRoutes; return rc ? (x, y, tx, ty) => rc.route({ x, y }, { x: tx, y: ty }) : null; }
-  /** T377: the ways worked out in one step at most (each a search over the field, a millisecond or a few: a crowd that arrives at once is walked off over a few steps) */
-  private static readonly WAYS_A_STEP = 4;
+  /** T377: the search a step may make for the crowd's ways, in routeUnits (a way of under 100 tiles is 1: a millisecond or less; a long one a few ms): a crowd that
+   *  arrives at once, or a day loaded with its walkers, is walked off over a few steps */
+  private static readonly WAYS_A_STEP = 3;
   /** T377: where a spectator may stand near (x, y): itself when the field lets him, else the nearest ground that does (12 tiles at most); (x, y) with no field */
   private stand(x: number, y: number): Pt { const f = this.walkField; return f ? nearestStand(f, SPECTATOR, x, y) ?? { x, y } : { x, y }; }
   /** the golf play's featured holes (the full set, each time): the spots on them draw more from now (see spotDraw); [] for none */
