@@ -10,10 +10,12 @@ import { mulberry } from '../iso';
 import { frameOf, roadOf, type Pt } from '../lots/preset-frame';
 import { ownerScaleOf, turned } from '../lots/preset-art';
 import type { LotAudit } from '../lots/lot-audit';
-import { reviewId, type Check, type ReviewOverride, type ReviewRecord } from '../lots/review-file';
-
-/** the two sets */
-export type ReviewKind = 'town' | 'estate';
+import { reviewId, type Check, type ReviewKind, type ReviewOverride, type ReviewRecord } from '../lots/review-file';
+import { housePalette, lotPresets } from '../lots/compose';
+import { baseOf, areaOf } from '../lots/house-class';
+import { roleOf } from '../lots/groups';
+import { isBuilding } from '../mirror';
+export type { ReviewKind } from '../lots/review-file';
 /** a lot of a review set, as the page stages and lists it: its id, its key in the engine (staged under it), its frame, its compose state and its road (0..7) */
 export interface ReviewLot { id: string; kind: ReviewKind; seed: number; key: string; g: LotGeom; st: ComposeState; road: number }
 /** a lot of a set with its road worked out */
@@ -71,3 +73,63 @@ export function readingOf(a: LotAudit): Record<Check, [boolean, string]> {
   };
 }
 
+// ---------- T403 (#1081): the road filter and the sample set
+/** the Lot review's road filter (the owner, 2026-11-09: "the Lot review has no lots on 45-degree roads, the streets that run straight across or down the screen, and those are exactly where the
+ *  facing, garage and driveway problems show"): all roads, the four along a map axis (0, 2, 4, 6: the street lies on the lot's +y, +x, -y or -x side; the corner views draw), or the four at 45 degrees
+ *  (1, 3, 5, 7: the streets straight across or down the screen; the turned straight-on views draw) */
+export type RoadFilter = 'all' | 'axis' | '45';
+export const ROAD_FILTERS: readonly { id: RoadFilter; label: string; title: string }[] = [
+  { id: 'all', label: 'All roads', title: 'every lot' },
+  { id: 'axis', label: 'Axis', title: 'lots on the four roads along a map axis (↙ ↘ ↗ ↖): the corner views draw' },
+  { id: '45', label: '45°', title: 'lots on the four roads at 45 degrees, the streets straight across or down the screen (↓ → ↑ ←): the turned straight-on views draw' },
+];
+/** whether a lot on a road (0..7) shows under the filter */
+export const roadVisible = (filter: RoadFilter, road: number): boolean => filter === 'all' || (filter === 'axis' ? road % 2 === 0 : road % 2 === 1);
+/** how many lots of a list stand on each road kind, for the filter's chips */
+export function roadCounts(roads: readonly number[]): Record<RoadFilter, number> { return { all: roads.length, axis: roads.filter(r => r % 2 === 0).length, '45': roads.filter(r => r % 2 === 1).length }; }
+
+/** the sample set's streets round a centre (tiles): four roads (the road class: lots of 12.5 x 16 tiles, wide enough for most house types with the side gaps) of 280 tiles, one along +x, one along +y and two at 45
+ *  degrees (along (1, 1): straight down the screen; along (1, -1): straight across it), each with the lots of both its sides (frontageFrames: 21 lots a side): the eight sides are the eight road headings, so every
+ *  road has a lot for each of the house types (19 now, and room for 21). They do not cross and no lot of one touches a street or a lot of another; the set reaches 320 tiles from the centre, inside the review's
+ *  map box (lab-boot.ts REVIEW_BOX); tests/lot-review.test.ts checks all of this */
+export function sampleStreets(c: Pt): { a: Pt; b: Pt; base: 'road' }[] {
+  const L = 280, h = L / Math.SQRT2;
+  return [
+    { a: { x: c.x - L / 2, y: c.y - 290 }, b: { x: c.x + L / 2, y: c.y - 290 }, base: 'road' },
+    { a: { x: c.x + 290, y: c.y - L / 2 }, b: { x: c.x + 290, y: c.y + L / 2 }, base: 'road' },
+    { a: { x: c.x - 280, y: c.y - 130 }, b: { x: c.x - 280 + h, y: c.y - 130 + h }, base: 'road' },
+    { a: { x: c.x - 70, y: c.y + 300 }, b: { x: c.x - 70 + h, y: c.y + 300 - h }, base: 'road' },
+  ];
+}
+/** the main house of a preset: its widest building that is a house (the clean base keeps the same one) */
+function houseOfPreset(props: readonly { id: string; scale: number }[]): string | null {
+  let best: string | null = null, area = 0;
+  for (const q of props) { const it = LIBRARY[LIB_AT.get(q.id) ?? -1]; if (!it || !isBuilding(it) || roleOf(q.id) !== 'house') continue; const a = areaOf(q.id) * q.scale * q.scale; if (a > area) { area = a; best = baseOf(q.id); } }
+  return best;
+}
+let PRESETS_OF: Map<string, string[]> | null = null, TYPE_OF: Map<string, string> | null = null;
+/** the frozen built house presets by the house type they hold (a house palette entry's base id), in file order: what a sample lot forces to show that type */
+function presetsByType(): { by: Map<string, string[]>; of: Map<string, string> } {
+  if (!PRESETS_OF || !TYPE_OF) {
+    PRESETS_OF = new Map(); TYPE_OF = new Map(); const pal = new Set(housePalette());
+    for (const p of lotPresets()) {
+      if (p.use !== 'res' || p.state !== 'built' || p.road !== undefined) continue;
+      const t = houseOfPreset(p.props); if (!t || !pal.has(t)) continue;
+      let a = PRESETS_OF.get(t); if (!a) PRESETS_OF.set(t, a = []); a.push(p.id); TYPE_OF.set(p.id, t);
+    }
+  }
+  return { by: PRESETS_OF, of: TYPE_OF };
+}
+/** the house type (a house palette entry) the sample lot with this forced preset was laid to show, or null */
+export const wantedOfPreset = (preset: string | undefined): string | null => (preset ? presetsByType().of.get(preset) ?? null : null);
+/** the house type a sample lot was laid to show: the type forced on it (a type no frozen preset holds), or the one its frozen preset holds; null for any other lot */
+export const wantedOf = (st: Pick<ComposeState, 'preset' | 'house'>): string | null => st.house ?? wantedOfPreset(st.preset);
+/** the state of a sample lot: the lots of a road take the house types in the palette's order (the k-th lot of the road the k-th type, round again past the last), each as a frozen built preset that holds that type,
+ *  or, for a type no frozen preset holds, the lot's own preset with that house in its place (ComposeState.house); at the top tier, built, no decline. A type that cannot face the road is swapped for one that
+ *  can, as in the game. tally: how many lots each road has had (the caller's, one per staging). Deterministic from the seed and the lot's place in the road */
+export function sampleState(seed: number, i: number, g: { n: Pt }, tally: Map<number, number>): ComposeState {
+  const road = roadOf(g.n), k = tally.get(road) ?? 0; tally.set(road, k + 1);
+  const pal = housePalette(), type = pal[k % pal.length]!, list = presetsByType().by.get(type), round = Math.floor(k / pal.length);
+  const base: ComposeState = { use: LU.RES, level: LV.BUILT, decline: 0, seed: mix(seed, 0x403, i) % 100000, tier: 3 };
+  return list?.length ? { ...base, preset: list[(round + mix(seed, 0x403, road)) % list.length]! } : { ...base, house: type };
+}

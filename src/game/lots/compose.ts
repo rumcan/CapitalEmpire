@@ -460,6 +460,8 @@ export function setShopVariety(on: boolean): void { VARIETY = on; }
 export const SWAP_RULES = { side: 0.5, back: 0.6, least: 0.8, area: 0.55 } as const;
 /** a house swapped into another's place keeps closer to it (its drive and walk run beside and up to it) */
 export const HOUSE_SWAP_RULES = { side: 0.3, back: 0.6, least: 0.85, area: 0.6 } as const;
+/** T403: the rules a lot laid to show a house type places it by (ComposeState.house): the type at its own size (down to half of it) wherever the preset's house stood, whatever that one's size */
+const FORCED_RULES = { side: 8, back: 8, least: 0.5, area: 0 } as const;
 type SwapRules = { readonly side: number; readonly back: number; readonly least: number; readonly area: number };
 const LIB_AT = new Map(LIBRARY.map((it, i) => [it.id, i] as const));
 /** the houses a house lot shows (the 'dwelling' family's front sets, house-class.ts houseFamilies: no straight-on art, frontal.ts, and none the
@@ -1101,13 +1103,16 @@ function cleanBase(p: LotP, lot: LotGeom, st: ComposeState): CleanPick | null {
   // every building faces the street: view 0 when its picture faces the road in it (faceStreet left the preset's view where a yard prop was in the way: those props
   // are gone); the house, when it cannot, is another house of the lot's road in its place. T398: a picture is only right when the owner has not marked it, and a house's
   // garage door is on its front wall (facingView ok): a house that cannot is swapped for one that can, a garage that cannot is left out (no garage, no drive)
+  // T403 (#1081, the Lot review's sample set): a lot laid to show a house type has it in the place of the preset's house (the facing rules below still run on it), alone: the preset's detached garages are left out
+  let forced = false;
+  if (st.house && st.house !== props[house]!.id) { const m = placeMember(props[house]!, st.house, lot, f, FORCED_RULES); if (m) { props[house] = { ...m.prop, view: 0 }; forced = true; } }
   props.forEach((q, k) => {
     if (facingView(q.id, f, q.view).ok) return;
     const n: PresetProp = { ...q, view: 0 };
     if (facingView(q.id, f, 0).ok && ok(n, k)) { props[k] = n; return; }
     if (k === house) { const alt = facingHouse(q, k, ok, lot, f, st, state); if (alt) props[k] = alt; }
   });
-  const gone = props.map((q, k) => k !== house && !facingView(q.id, f, q.view).ok);
+  const gone = props.map((q, k) => k !== house && (forced || !facingView(q.id, f, q.view).ok));
   // T398 (the owner, 2026-11-09: "we can't have the garages right next to the houses": the left house's garage sits almost against the neighbouring lot's house): every wall of the lot's
   // buildings keeps SIDE_GAP (about 3 m) from each side line, so neighbouring buildings are at least 6 m apart. The buildings (the house and its garages) move together to fit between the
   // gaps; when they are too wide for the lot the garage farthest from the house is left out (no garage, no drive), then a narrower house of the lot's road takes the house's place; when even
