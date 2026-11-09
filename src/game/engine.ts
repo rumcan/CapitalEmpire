@@ -94,7 +94,7 @@ import { releaseVectorMeshData, vectorMeshData } from './shadow-vector';
 import { readSave, writeSave, withTourney, clearSave, backupTownSlot, SAVE_VERSION, segRec, exportSaveBytes, importSaveBytes, listSaveBackups, readBackup, deleteBackup, type SaveV5 } from './save';
 import { CAR_COLOURS, carHeading, facings } from './traffic';
 import { bayCar, bayFoot, isWagon } from './vehicles';
-import { DayBook, clubCardView, dayCourse, dayPace, dayPlan, feeScale, normalizeDaySave, paceSlow, seasonPaceRep, type ClubCardView, type DayInputs, type DayRoster } from './golf/everyday';
+import { DayBook, clubCardView, dayConditions, dayCourse, dayPace, dayPlan, feeScale, normalizeDaySave, paceSlow, seasonPaceRep, type ClubCardView, type DayInputs, type DayRoster } from './golf/everyday';
 import { clampPrice, closeSeason as closeClubSeason, foundingDrive, holdTo, legacyClub, membersView, newClub, seasonMemberships, stepTo as stepClubTo, type ClubInputs, type MembersView } from './golf/club';
 import { choosePin, greenAt, pinIn, pinLine, pinReport, pinSlot, rollDayPins, withDayPins, type DayPin, type GreenShape } from './golf/daypins';
 import { crewCells, crewGround, type CrewGround } from './golf/crewground';
@@ -217,7 +217,7 @@ import { BLADE_R, TreeCut, keyPos, treeKey, type TreeRec } from './treecut';
 import { answerOf, clampStake, firstName, golfs, hcpOfName, hcpOfSkill, holeDecided, matchHoles, matchLengths, matchNextHole, matchTurn, matchView, maxStake, nameSeed, opponentOf, oppShot, playMatchYours, returnChallenge, rivalText, scoreOf, settleMatch, skipMatch, stakeWhy, startMatch, type HoleWin, type Opponent } from './golf/play/match';
 import { ADDRESS_PACE, AT_ADDRESS, jumpAlpha, livePuffs, puffAt, stepToward, type Puff } from './golf/play/jumpfx';
 import { CLUB_NAME, LEVEL_NAME, addVoucher, bagView, carryFor, fitPart, kitOf, levelOf, partWhy, pickText, readShape, setThird, shapeEffect, shapeLines, clubUpgradeWhy, upgradeClub, voucherWhy, type BagSave, type BagView, type ClubKit, type PartKind, type ShapeFx, type ShopCtx, type ShotShape } from './golf/play';
-import { CALM_MPH, NO_WIND, dailyWind, envOf, lieKindFor, lieView, previewShot, slopeLines, windAt, windNote, windText, windToward, windView, type Conditions, type LieView, type ShotEnv, type ShotPreview, type Slope, type Wind, type WindNow, type WindView } from './golf/play';
+import { CALM_MPH, NO_WIND, dailyWind, envOf, lieKindFor, lieView, previewShot, slopeLines, windAt, windNote, windText, windToward, windView, type Conditions, type EnvFor, type LieView, type ShotEnv, type ShotPreview, type Slope, type Wind, type WindNow, type WindView } from './golf/play';
 import { CART_REACH, CART_TILES, COMPETITION_RULES, isCompetition, addressOf, canGimme, gimmeM, takeGimme, canMulligan, mulligansLeft, noHandicapWhy, takeMulligan, type RoundRules, cardTotals, cupTime, flightSpin, holeOf, holeOptions, nearBall, nextHole, pickHoles, playYours, rowOf, flightOf, ordinal, scoreName, startRound, yourBallAt, yourTurn, type CardRow, type HoleChoice, type YourFlight, type YourRound, type YourRoundView } from './golf/play/yours';
 import { missingParts, missingWhy, practicePick, realHoleCount, type PracticeScope } from './golf/play/practice';
 import { CLUB_EVENTS, MODE_OF, announceDue, entryWhy, eventBoard, eventDay, eventDue, eventOfMode, eventResult, eventWhen, fieldEntries, fieldIds, freshEvents, isEntered, resultLine, withTitle, type BoardEntry, type ClubEventsSave, type EventId, type EventResult } from './golf/clubevents';
@@ -8797,7 +8797,7 @@ export class Game {
     if (!g.club) this.stepClub(); // T214: the club (an old save's seeded, a new one's founding drive) before the day's first roster
     const at = townTimeOf(tr.town, tr.simTime(now)), free = tr.round.stage === 'free';
     this.dayMinute = at.dayMin;
-    const b = this.dayBook.step(at.day, at.dayMin, free, () => this.dayInputs(), feeScale(tr.dayLen), r => this.dayPaceOf(r, now));
+    const b = this.dayBook.step(at.day, at.dayMin, free, () => this.dayInputs(), feeScale(tr.dayLen), (r, wx) => this.dayPaceOf(r, now, wx));
     if (b.fees > 0) {
       tr.spend('business', -b.fees);
       const c = g.clubhouse; this.floatMoney({ x: c.x, y: c.y, amount: Math.round(b.fees), kind: 'in', group: 'clubhouse', gx: c.x, gy: c.y });
@@ -8813,7 +8813,8 @@ export class Game {
     // T241: your round booked today (golf/player.ts): you join the day's playback alone at your tee time, with your game as you booked it
     const me = g.player, bk = me?.booked && me.booked.day === s.day && me.booked.auto ? me.booked : null; // (T350: the model plays your round only when you said so)
     if (!this.dayPlay || this.dayPlay.day !== s.day || this.dayPlay.key !== course.key || this.dayPlay.you !== bk) {
-      const base = this.dayBook.rosterOf()!, roster = bk && me ? withYou(base, bookedGolfer(me, bk), bk.tee) : base, plan = dayPlan(course.view, roster);
+      // (T347: the day plays in its weather, worked out once for the round: the day's wind, the lie's kind and the slope; a day saved from before it, no `wx`, plays as it did)
+      const base = this.dayBook.rosterOf()!, roster = bk && me ? withYou(base, bookedGolfer(me, bk), bk.tee) : base, plan = dayPlan(course.view, roster, s.wx ? this.dayCond(s.day) : undefined);
       const youId = bk ? roster.golfers.length - 1 : -1;
       this.dayPlay = { view: new DayView(plan, roster, course.view, this.clubGround(g), this.cartPathsNow(), capped(this.golfPace) ? { walk: WALK_CAP, cart: CART_CAP, car: DAY_CAR_CAP } : null, this.ballHeight, this.walkFieldNow()), day: s.day, key: course.key, base, you: bk, youId };
       this.dayArt = roster.golfers.map((p, i) => i === youId ? this.youArt() : GOLFER_ART[p.sex][p.look % GOLFER_ART[p.sex].length]!);
@@ -10205,7 +10206,7 @@ export class Game {
   /** the opponent plays their shot: the round after it saved, their figure swings, the ball flies (and rolls or putts) as yours does, a toast says it */
   private matchOppHit() {
     const r = this.yourRound(), v = this.yrView(); if (!r?.match || !v) return;
-    const { round, shot } = oppShot(v, r, this.seed), h = holeOf(v, rowOf(r).i)!;
+    const { round, shot } = oppShot(v, r, this.seed, this.matchEnv()), h = holeOf(v, rowOf(r).i)!; // (T347: struck in the world's wind, the lie's kind and the slope, as yours are)
     this.setYourRound(round);
     const q = this.mYou ??= makeYou(shot.from.x, shot.from.y, 0), a = addressOf(shot.from, h.pin);
     stopWalk(q); q.x = a.x; q.y = a.y; q.face = facingOf(h.pin.x - a.x, h.pin.y - a.y); q.swing = 0; q.putt = shot.club === 'putter';
@@ -10229,7 +10230,14 @@ export class Game {
     const r = this.yourRound(), v = this.yrView(); if (!r?.match || !v) return;
     if (this.shot?.mine) this.shot = null;
     this.yrFlight = null; this.mFlight = null;
-    this.matchSettle(skipMatch(v, r, this.yourSkills(), this.seed), false);
+    // (T347: both sides' shots in the world's conditions, each shot of the skip meeting the gust of a moment a few seconds after the last: a clock that steps)
+    let t = performance.now() / 1000; this.matchSettle(skipMatch(v, r, this.yourSkills(), this.seed, this.matchEnv(() => (t += 8))), false);
+  }
+  /** T347 (#989): the conditions a model golfer's shot in your match is struck in: the world's wind with its gusts at that moment (windAt on the real clock in seconds, as the wind your own shots meet; `clock` gives another for shots
+   *  played at once, a skip), the lie's kind under the ball and the slope along the aim (conditions.ts envOf): the same record and the same model as yours. Undefined without a golf world */
+  private matchEnv(clock?: () => number): EnvFor | undefined {
+    const v = this.yrView(), w = this.worldWind(); if (!v || !w) return undefined;
+    return (ball, lie, aim) => envOf(windAt(w, clock ? clock() : performance.now() / 1000), v.kindAt, this.ballHeight, ball, lie, aim);
   }
   /** a match settled (golf/play/match.ts settleMatch): the stake moves (the club's money), a win lifts the reputation a little, the opponent remembers
    *  you (rivals), the round is in your rounds; the result card opens */
@@ -11369,10 +11377,12 @@ export class Game {
   /** T208: the everyday cars as movers (reused Drawables, rangehost.ts's way: their facing's picture at CAR_SCALE about their centre) */
   private dayCarDraw: Drawable[] = []; private dayCarOut: Drawable[] = [];
   /** T208: the pace of a day's roster for the season's pace term: the day on screen's plan, else the day played now (a day a skip jumped) */
-  private dayPaceOf(r: DayRoster, now: number) {
+  private dayPaceOf(r: DayRoster, now: number, wx: boolean) {
     if (this.dayPlay && (this.dayPlay.view.roster === r || this.dayPlay.base === r)) return dayPace(this.dayPlay.view.plan); // (T241: yours too)
-    const c = this.dayCourseOf(now); return c && c.view.holes.length ? dayPace(dayPlan(c.view, r)) : null;
+    const c = this.dayCourseOf(now); return c && c.view.holes.length ? dayPace(dayPlan(c.view, r, wx ? this.dayCond(r.day) : undefined)) : null; // (T347: a day played in its weather has its pace worked out in it)
   }
+  /** T347 (#989): the conditions a town day's everyday golf is played in (golf/everyday.ts dayConditions): the day's wind (a dev run's forced wind first: ?wind=), the course's heights under the balls and the view's finer lie */
+  private dayCond(day: number): Conditions { return this.devWind ? { wind: this.devWind, height: this.ballHeight } : dayConditions(this.seed, day, this.ballHeight); }
   /** T208: the played course for everyday golf, rebuilt when the tees, pins or aim points change (looked at every 2 s) */
   private dayCourseOf(now: number): { view: CourseView; key: string } | null {
     const g = this.golf; if (!g) return null;

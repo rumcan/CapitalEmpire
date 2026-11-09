@@ -8,6 +8,9 @@ import { dailyGolfers, GREEN_FEE_PER_ROUND, OFF_SEASON_PLAY_DAYS } from './yeare
 import { legacyMembers, visitorsADay, type MembersView } from './club';
 import { AM_SKILL, GOLFER_NAMES } from './play/field';
 import { playRound } from './play/round';
+import { dailyWind } from './play/wind';
+import type { Conditions } from './play/conditions';
+import type { HeightAt } from './play/roll';
 import { dayEntourage } from './play/entourage';
 import { rng } from './play/shot';
 import { everydaySet } from './teesets';
@@ -142,9 +145,13 @@ export function dayCourse(view: CourseView): CourseView {
   return k > 0 ? { holes: H.slice(0, k), lieAt: view.lieAt, ...(view.kindAt ? { kindAt: view.kindAt } : {}) } : view; // (T334: the finer lie goes along)
 }
 
+/** T347 (#989): the conditions a town day's everyday round is played in: the day's wind (play/wind.ts dailyWind(seed, day): the one the world blows on that day, shown in the round's bar and on the shot panel; its mean, no gusts: a model
+ *  shot never depends on the minute), the course's heights under the balls (null: flat), and so the finer lie and the slope a tournament's field already meets (play/conditions.ts fieldEnv). Worked out once for the day: the round is played once a day */
+export function dayConditions(seed: number, day: number, height: HeightAt | null): Conditions { return { wind: dailyWind(seed, day), height }; }
 /** the day's round on the course (play/round.ts playRound with the roster's golfers, groups and seed): every group's holes in time order, the waits on the
- *  group ahead (T211) and each golfer's done minute */
-export function dayPlan(view: CourseView, roster: DayRoster): RoundPlan { return playRound(view, roster.golfers, roster.groups, roster.seed); }
+ *  group ahead (T211) and each golfer's done minute. T347: `cond`, the day's conditions (dayConditions): the golfers play in the day's wind, from the lie's kind and the slope under the ball, as the tournament's field does; without it, the day as it
+ *  was (a day saved from before T347: DaySave.wx) */
+export function dayPlan(view: CourseView, roster: DayRoster, cond?: Conditions): RoundPlan { return playRound(view, roster.golfers, roster.groups, roster.seed, cond ? { cond } : undefined); }
 
 /** the check-ins due by minute m after `paid` of them (in check-in order, roster.order): how many are paid now, and the green fees they pay ($, before the
  *  scale), the members and the visitors who checked in */
@@ -185,8 +192,9 @@ export function seasonPaceRep(s: DaySeason): number { return paceReputation(s.gr
 
 /** everyday golf as the save keeps it (GolfSave.everyday): the town day in play and what the club was at its start (the roster comes back from them and
  *  the seed), how many of its check-ins are paid, whether the day was closed for a tournament (no play), the visitors and members checked in today,
- *  the fees booked today ($, scaled), and the season so far */
-export interface DaySave { day: number; inp: DayInputs; paid: number; closed: boolean; today: { members: number; visitors: number; fees: number }; season: DaySeason }
+ *  the fees booked today ($, scaled), and the season so far. T347 (#989): `wx`, the day plays in its weather (dayConditions: the day's wind, the lie's kind and the slope); every day the book starts from T347 on has it, a day saved from before
+ *  has none and plays out as it was (the next day starts with it) */
+export interface DaySave { day: number; inp: DayInputs; paid: number; closed: boolean; today: { members: number; visitors: number; fees: number }; season: DaySeason; wx?: true }
 
 /** a finite number, else d */
 const num = (v: unknown, d = 0): number => typeof v === 'number' && Number.isFinite(v) ? v : d;
@@ -201,6 +209,7 @@ export function normalizeDaySave(s: Partial<DaySave> | null | undefined): DaySav
     day: s.day, inp, paid: Math.max(0, Math.floor(num(s.paid))), closed: !!s.closed,
     today: { members: num(t.members), visitors: num(t.visitors), fees: num(t.fees) },
     season: { days: num(se.days), members: num(se.members), visitors: num(se.visitors), turned: num(se.turned), fees: num(se.fees), groups: num(se.groups), waitMin: num(se.waitMin) },
+    ...(s.wx === true ? { wx: true as const } : {}), // (T347)
   };
 }
 
@@ -263,29 +272,29 @@ export class DayBook {
     return this.roster;
   }
   /** steps to town day `day`, minute `minute`: free (the round is free: no tournament day), the club's inputs now, the fee scale (feeScale), and the pace
-   *  of a day's roster (null: not worked out). Returns what was booked now */
-  step(day: number, minute: number, free: boolean, inputs: () => DayInputs, scale: number, pace: (r: DayRoster) => DayPace | null): DayBooked {
+   *  of a day's roster (null: not worked out; T347: it is told whether that day plays in its weather, DaySave.wx, so the pace is worked out for the day that was played). Returns what was booked now */
+  step(day: number, minute: number, free: boolean, inputs: () => DayInputs, scale: number, pace: (r: DayRoster, wx: boolean) => DayPace | null): DayBooked {
     const out: DayBooked = { fees: 0, members: 0, visitors: 0 };
     const add = (c: { fees: number; members: number; visitors: number }, s: DaySeason) => { const f = c.fees * scale; out.fees += f; out.members += c.members; out.visitors += c.visitors; s.fees += f; s.members += c.members; s.visitors += c.visitors; };
     let s = this.save;
     if (!s || day < s.day) {
       const inp = inputs(), r = dayRoster(this.seed, day, inp);
-      this.save = { day, inp, paid: checkInsTo(r, 0, minute).paid, closed: !free, today: { members: 0, visitors: 0, fees: 0 }, season: s?.season ?? emptySeason() };
+      this.save = { day, inp, paid: checkInsTo(r, 0, minute).paid, closed: !free, today: { members: 0, visitors: 0, fees: 0 }, season: s?.season ?? emptySeason(), wx: true };
       this.roster = r;
       return out;
     }
     if (day > s.day) {
       // the day in play ends: its check-ins still due (unless a tournament closed it, or begins now), its pace, its turned away
       const season = s.season;
-      const settle = (r: DayRoster, from: number) => {
+      const settle = (r: DayRoster, from: number, wx: boolean) => {
         add(checkInsTo(r, from, Infinity), season);
-        const p = pace(r); if (p) { season.groups += p.groups; season.waitMin += p.waitMin; }
+        const p = pace(r, wx); if (p) { season.groups += p.groups; season.waitMin += p.waitMin; }
         season.days++; season.turned += r.turned;
       };
-      if (!s.closed && free) settle(this.rosterOf()!, s.paid);
-      // the days a skip jumped over whole (free: no tournament on them), from the club as it is now
-      if (free) for (let d = s.day + 1; d < day; d++) settle(dayRoster(this.seed, d, inputs()), 0);
-      s = this.save = { day, inp: inputs(), paid: 0, closed: !free, today: { members: 0, visitors: 0, fees: 0 }, season };
+      if (!s.closed && free) settle(this.rosterOf()!, s.paid, s.wx === true);
+      // the days a skip jumped over whole (free: no tournament on them), from the club as it is now (they play in their weather: a day from T347 on)
+      if (free) for (let d = s.day + 1; d < day; d++) settle(dayRoster(this.seed, d, inputs()), 0, true);
+      s = this.save = { day, inp: inputs(), paid: 0, closed: !free, today: { members: 0, visitors: 0, fees: 0 }, season, wx: true };
     }
     if (!free) { s.closed = true; return out; }
     if (s.closed) return out;

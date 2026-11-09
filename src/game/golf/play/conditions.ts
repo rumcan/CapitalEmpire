@@ -48,6 +48,9 @@ export interface Conditions { wind?: Wind | null; height?: HeightAt | null; run?
 export function fieldEnv(c: Conditions, kindAt: ((x: number, y: number) => LieKind) | undefined, ball: Pt, lie: Lie, aim: Pt): ShotEnv {
   return envOf(c.wind ? { mph: c.wind.mph, from: c.wind.from } : null, kindAt, c.height ?? null, ball, lie, aim);
 }
+/** T347 (#989): the conditions of a shot struck from `ball` on `lie` at `aim`, as the world gives them at that moment (null: none): what a model golfer in a match of yours is handed (match.ts oppShot, skipMatch). The engine builds it
+ *  from the world's wind at the strike (its gusts: the clock is real seconds), the view's finer lie and the course's heights, as it builds yours (envOf); the pure model never reads a clock */
+export type EnvFor = (ball: Pt, lie: Lie, aim: Pt) => ShotEnv | null;
 
 // ---- what the conditions add up to, for the panel and the overlay ----
 
