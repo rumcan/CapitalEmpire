@@ -42,7 +42,7 @@ import { KeysSheet } from './ui/KeysSheet';
 import { keySheet, numberedGroups, type LabKeys } from './ui/keymap';
 import { indicesOf, leavesOf, menuOf, type MenuCtx, type MenuRow } from './ui/flyout-menu';
 import { GRASS_COST } from './game/ext/grass-management/management';
-import { DECOR_GROUPS } from './game/golf/decor';
+import { propMenuLists } from './game/golf/decor';
 import { PLANT_KINDS } from './game/plant';
 import { newHole } from './ui/course/HoleStrip';
 import { SurfaceMark } from './ui/course/SurfaceMark';
@@ -131,7 +131,8 @@ function menuCtx(game: Game): MenuCtx {
     junctions: JUNCTION_KINDS.map(t => { const lk = game.junctionOpen(t) ? null : unlockOf('junction', t); return { id: t, name: SEG_NAME[t], why: game.junctionOpen(t) ? null : game.eventMode ? `${SEG_NAME[t]} needs the Roundabout card` : lk ? `Unlocks at ${lk.pop.toLocaleString()} residents` : 'Not open yet' }; }),
     surfaces: SURFACE_BRUSHES.filter(b => !ui || (ui.visibleCourseBrushes as string[]).includes(b.kind)).map(b => ({ id: b.kind, name: b.name })), // T252: no cart path brush
     cares: (Object.keys(GRASS_COST) as string[]).map(k => ({ id: k, name: k[0]!.toUpperCase() + k.slice(1) })),
-    propGroups: DECOR_GROUPS.filter(g => g.id !== 'buildings').map(g => ({ id: g.id, name: g.name })),
+    // T400 (#1078): Facilities lists the everyday groups and, by kind, the golf props; Town decoration lists the town's groups alone (no golf group)
+    ...propMenuLists(),
     materials: MENU_TEXES.map(t => ({ id: t.id, name: t.name, col: t.col })),
     plants: PLANT_KINDS.map(k => ({ id: k.kind, name: k.name, col: k.col })),
     // T206: Facilities ▸ Practice: the range's practice area's facilities (no range: locked with why)
