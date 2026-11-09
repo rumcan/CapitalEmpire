@@ -151,10 +151,12 @@ export function desertBank(x: number, y: number, d: number): number {
 
 /** T382 (the owner, 2026-11-08: "some sand texture was added to the map for desert mode but it isn't there enough. we need more small sand blotches but no big sandy spaces. sand should be blended"): the desert's sand is MANY SMALL
  *  BLOTCHES over the dirt, 2 to 12 m across, from three octaves of value noise (waves of about 7 m, 4 m and 2 m) bent by a slow warp of the world and stretched along the wind (the fallen leaves' wind: the drifts run one way), thresholded through a
- *  smoothstep 0.06 wide (a feather of about half a metre to a metre at the finest octave, wider along the slower ones) so each blotch fades into the dirt along an irregular edge (the finest octave breaks it up at the metre). World-space noise only: deterministic, never periodic, and neighbouring chunks agree at their seams. On open ground
+ *  smoothstep 0.03 wide: a blotch is whole sand inside (the painted sand shows at its own sharpness, never a thin film over the dirt) and fades into the dirt only across its edge, which the samples' own bilinear stretch feathers over about a sample (a metre at 30%) and the finest octave breaks up. World-space noise only: deterministic, never periodic, and neighbouring chunks agree at their seams. On open ground
  *  about an eighth of the ground is sand and no disc of it is wider than about 10 m (a test measures both); `bias` lowers the threshold where sand collects (road verges, the lee of plants, doors, fences) or raises it (the yards, the damp dirt) */
-export const SAND = { stretch: 1.5, waves: [3.4, 1.9, 1.0], weights: [0.3, 0.38, 0.32], warp: 0.8, lo: 0.62, hi: 0.68 } as const;
+export const SAND = { stretch: 1.5, waves: [3.4, 1.9, 1.0], weights: [0.3, 0.38, 0.32], warp: 0.8, lo: 0.635, hi: 0.665 } as const;
 /** how far the context moves the threshold (a blotch's reach and share): the road verge, plants and doors and worn ground, fences and walls, a house lot's yard, the damp dirt by water */
+/** a tile set is laid as authored (no tint, no tone), so the renderer multiplies the sand layer by this over the whole picture before the mask cuts the blotches out (a multiply keeps every grain and ripple): the family's gold brought toward the dirt it lies on */
+export const DUNE_TINT = '#f0d6bd';
 export const SAND_BIAS = { road: 0.04, worn: 0.035, line: 0.025, yard: -0.075, damp: -0.22 } as const;
 const WIND_X = 1 / Math.hypot(1, 0.25), WIND_Y = -0.25 / Math.hypot(1, 0.25);
 /** how much of an octave `res` samples a tile resolve: all of it from 2.5 samples a wavelength, none below 1 (an octave finer than the samples would alias into speckle: the far levels bake with fewer samples a tile, one at 15%, two at 30%) */

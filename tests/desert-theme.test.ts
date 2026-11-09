@@ -83,7 +83,7 @@ test('desert theme ground: every world grass surface and lawn has a desert look;
   // the grass surfaces of the world (the farm fields and the swamp keep their own looks: the ploughed fields stay)
   const keep = new Set(['swamp', 'field', 'outside', ...SURFACES.filter(s => s.key.startsWith('field') || s.key.startsWith('corn')).map(s => s.key)]);
   for (const k of world) if (!keep.has(k)) assert.ok(DESERT_GROUND[k] || DESERT_LAWN[k], `world grass surface ${k} unmapped`);
-  for (const l of [...Object.values(DESERT_GROUND), ...Object.values(DESERT_LAWN)]) assert.ok(familyById(l.family), `${l.family} missing`);
+  for (const l of [...Object.values(DESERT_GROUND), ...Object.values(DESERT_LAWN), DESERT_DUNE]) assert.ok(familyById(l.family), `${l.family} missing`);
   for (const k of Object.keys(DESERT_GROUND)) assert.notEqual(d.surfaces[k]!.family, 'lawn-concept-run');
   // T382: the yards are dirt (the owner: "no sand-rectangle yards"), the sand blotches' pale rippled sand is the Sand drifts surface
   for (const k of Object.keys(DESERT_LAWN)) assert.equal(d.surfaces[k]!.family, 'dirt-run', `lawn ${k}`);

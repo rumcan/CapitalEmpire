@@ -53,7 +53,7 @@ import { leafAtlasAt, type LeafAtlas } from './leaf-atlas';
 import { DESERT_FALL_SCALE, DESERT_LITTER_SCALE, DESERT_SHADOW_A, DESERT_TINTS, DESERT_TINT_LOOK, DESERT_TUFT } from './desert-litter';
 import { SURVEY_COL, SURVEY_DASH, SURVEY_W } from './lots/survey';
 import { CROP_STATES, LANE_SURFACE, ROW_LOOK, cropSurface, rowSegments, rowStep } from './ext/farms/crops';
-import { DAMP_TINT, DESERT_BLOT_M, LIVING_AO, LIVING_EDGE, maskContours, CasterStore, COURSE_GRASSY, COURSE_WATER, SHADOW_DIR, debugImage, grassyTex, influence, livingMasks, livingQueryBox, livingRes, livingSignature, waterTex, type Box, type InfluenceGrid, type LivingMasks, type RoadPiece, type WaterLine } from './living-ground';
+import { DAMP_TINT, DESERT_BLOT_M, DUNE_TINT, LIVING_AO, LIVING_EDGE, maskContours, CasterStore, COURSE_GRASSY, COURSE_WATER, SHADOW_DIR, debugImage, grassyTex, influence, livingMasks, livingQueryBox, livingRes, livingSignature, waterTex, type Box, type InfluenceGrid, type LivingMasks, type RoadPiece, type WaterLine } from './living-ground';
 import { courseBlendG, courseTexG, paintedLay, type Aff } from './painted-turn';
 /** a DOMMatrix as painted-turn's plain affine */
 const affOf = (m: DOMMatrix): Aff => [m.a, m.b, m.c, m.d, m.e, m.f];
@@ -2257,7 +2257,12 @@ export class GroundPainter {
     // T382: the desert's sand: windblown blotches of pale rippled sand (the painted Sand drifts look, painted-surfaces.ts dune) over the dirt, each fading into it along its own noisy edge (the mask is the field's own feather), the ripples running one way
     if (m.sand && (m.max.sand ?? 0) > T) {
       const sb = this.paintedBuf('duneSand', maskBox(m.sand));
-      if (sb) { const lb = this.buffer('livingLayer', W, H), lg = ctx2d(lb); lg.drawImage(sb, 0, 0); put(lg, m.sand, 'destination-in'); lay(lb, 'source-over'); }
+      if (sb) {
+        const lb = this.buffer('livingLayer', W, H), lg = ctx2d(lb); lg.drawImage(sb, 0, 0);
+        // (a tile set is laid as authored: the desert's sand is brought toward the dirt it lies on by one multiply over the whole picture, which keeps every grain and ripple; the mask then cuts the blotches out whole, soft only at their edges)
+        if (this.tex.paintedOf('duneSand')?.tiled) { lg.save(); lg.setTransform(1, 0, 0, 1, 0, 0); lg.globalCompositeOperation = 'multiply'; lg.fillStyle = DUNE_TINT; lg.fillRect(0, 0, W, H); lg.restore(); }
+        put(lg, m.sand, 'destination-in'); lay(lb, 'source-over');
+      }
     }
     // thin: patchy grass going over to soil, under trees, at doors and corners, on worn edges: the soil's colour on the grass's own strokes
     // (dry, thin turf that keeps its texture), then the soil in the grass's dark gaps (lighten: the lit tufts stay)

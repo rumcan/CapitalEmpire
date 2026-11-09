@@ -7,7 +7,8 @@ import { resolve } from 'node:path';
 import {
   CASTER_STRIDE, CK, SAND, SAND_BIAS, influence, livingMasks, livingSignature, sandBlotch, sandField, type Box, type InfluenceGrid, type LivingSources,
 } from '../src/game/living-ground';
-import { DESERT_DUNE, DESERT_GROUND, DESERT_LAWN, DESERT_PALE, DESERT_SAND, desertSurfaces } from '../src/game/desert-theme';
+import { DESERT_DUNE, DESERT_DUNE_FAMILY, DESERT_GROUND, DESERT_LAWN, DESERT_PALE, DESERT_SAND, desertSurfaces } from '../src/game/desert-theme';
+import { familyById } from '../src/game/painted-families';
 import { SURFACES, clampSurfaces } from '../src/game/painted-surfaces';
 
 const read = (p: string) => readFileSync(resolve(p), 'utf8');
@@ -44,7 +45,7 @@ test('the sand is many small blotches: about an eighth of the open ground, none 
   assert.ok(s.wideShare < 0.03, `${(s.wideShare * 100).toFixed(1)}% of the sand lies in discs wider than 8 m`);
 });
 
-test('the blotches fade into the dirt: a good share of what is sand is partly sand, and no step between neighbours is a cut', () => {
+test('a blotch is whole sand inside and fades into the dirt only across its edge: most of what is sand is full sand, some of it (the edge) is partly sand', () => {
   const n = 600, step = 0.5; let covered = 0, partial = 0, worst = 0, prev = 0;
   for (let j = 0; j < 40; j++) for (let i = 0; i < n; i++) {
     const v = sandBlotch(2000 + i * step, 2000 + j * 25 * step, 0);
@@ -52,7 +53,7 @@ test('the blotches fade into the dirt: a good share of what is sand is partly sa
     if (i) worst = Math.max(worst, Math.abs(v - prev));
     prev = v;
   }
-  assert.ok(partial / covered > 0.3, `${(partial / covered * 100).toFixed(0)}% of the sand is partly sand (feathered edges)`);
+  assert.ok(partial / covered > 0.1 && partial / covered < 0.5, `${(partial / covered * 100).toFixed(0)}% of the sand is partly sand (a feathered edge, not a film over the whole blotch)`);
   assert.ok(worst < 1.0001, 'a cover is 0 to 1');
 });
 
@@ -162,7 +163,9 @@ test('the signature knows the sand and the yards (a re-bake of the same sources 
 
 test('the desert theme: the pale sand lives in the Sand drifts surface, the big pale patches are the dirt, the yards are dirt', () => {
   assert.ok(SURFACES.some(s => s.key === 'dune' && s.tex.includes('duneSand') && s.slot), 'a Sand drifts surface (an art slot: no look in autumn)');
-  assert.equal(DESERT_DUNE.family, DESERT_PALE, 'the desert gives it the pale rippled sand');
+  assert.equal(DESERT_DUNE.family, DESERT_DUNE_FAMILY, 'the desert gives it the rippled sand');
+  assert.equal(familyById(DESERT_DUNE_FAMILY)?.tiled, true, 'a hand-painted tile set: as sharp as the desert ground (the classic sand-ripples family is a smooth painting at a coarser scale: a glossy smear)');
+  assert.notEqual(DESERT_DUNE_FAMILY, DESERT_PALE);
   assert.equal(DESERT_GROUND.meadow?.family, DESERT_SAND, 'the meadow patches are the ground itself, not big pale spaces');
   assert.equal(DESERT_GROUND.dry?.family, DESERT_SAND);
   for (const k of ['lawn', 'lawnBuilt', 'lawnUpgraded', 'lawnDeclined']) assert.ok(/dirt/.test(DESERT_LAWN[k]!.family), `${k} is dirt in the desert`);
@@ -181,6 +184,7 @@ test('wiring: the living ground lays the sand through its mask over the dirt, th
   assert.match(r, /const sandOn = desert && !!this\.tex\.surfaces\.surfaces\.dune/);
   assert.match(r, /sand: sandOn, yards/);
   assert.match(r, /paintedBuf\('duneSand', maskBox\(m\.sand\)\)/);
+  assert.match(r, /globalCompositeOperation = 'multiply'; lg\.fillStyle = DUNE_TINT/, 'the tile set is tinted by one multiply, which keeps its grain');
   assert.match(r, /this\.tex\.surfaces\.desert && k === 'desert' \? 'dirt' : k/);
   const l = read('src/game/living-ground.ts');
   assert.match(l, /export function sandBlotch/);

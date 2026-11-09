@@ -45,7 +45,9 @@ export const DESERT_LAWN: Readonly<Record<string, PaintedLook>> = {
   lawn: look(DESERT_DIRT), lawnBuilt: look(DESERT_DIRT), lawnUpgraded: look(DESERT_DIRT, 1, 0.03), lawnDeclined: look(DESERT_DIRT, 1, -0.04),
 };
 /** T382: the sand blotches' look, the pale rippled sand over the dirt (the surfaces file's `dune`, an art slot: autumn has none and lays none) */
-export const DESERT_DUNE: PaintedLook = look(DESERT_PALE, 1, 0, '#efd0a2'); // (the family's golden sand brought toward the dirt it lies on: pale, but a soft blend; at the family's own gold the blotches read as bright yellow patches)
+/** the sand blotches are painted with the hand-painted sand-ripples TILE set (painted-tiles.ts: fine ripples and grain at the picture's own resolution, as sharp as the desert ground's tiles); the classic sand-ripples family (DESERT_PALE, 1024 px pictures laid at a coarser scale) is a smooth painting, and a blotch of it read as a glossy smear */
+export const DESERT_DUNE_FAMILY = 'sand-ripples-tiles';
+export const DESERT_DUNE: PaintedLook = look(DESERT_DUNE_FAMILY);
 /** the desert as it was before T382 (the dev server's ?sand=old, the A/B of the shots and the bench): big pale patches over the meadow and dry grass classes, golden fescue yards, no blotches */
 const OLD_SAND: Readonly<Record<string, PaintedLook>> = {
   meadow: look(DESERT_PALE, 1, -0.04, PALE_TINT), dry: look(DESERT_PALE, 1, -0.08, PALE_TINT),
