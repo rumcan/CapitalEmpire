@@ -285,10 +285,10 @@ class FB {
   /** T402 (#1080, T361 #1016): a field of grass over a parcel-frame rectangle, laid as a painted area (the way the course lays its long grass): through the iso ground path,
    *  its texture at the course's own scale and turned with the field (FieldGrass.a), its edge feathered into the ground round it (the flat profile: the feather the course's
    *  rough and fescue have) in place of the hard cut edge of a lot patch, under every area the player paints (z). `i` keeps the fields' order */
-  grass(a0: number, b0: number, a1: number, b1: number, tex: LotPatch['tex'], i = 0) {
-    const A0 = clamp(a0, 0, this.W), A1 = clamp(a1, 0, this.W), B0 = clamp(b0, 0, this.D), B1 = clamp(b1, 0, this.D);
+  grass(a0: number, b0: number, a1: number, b1: number, i = 0) {
+    const A0 = clamp(a0, 0, this.W), A1 = clamp(a1, 0, this.W), B0 = clamp(b0, 0, this.D), B1 = clamp(b1, 0, this.D), tex = FIELD_GRASS.tex;
     if (A1 - A0 < 0.05 || B1 - B0 < 0.05) return;
-    this.patches.push({ block: false, tex, quad: this.quad(A0, B0, A1, B1), paint: { s: FIELD_GRASS.s, a: this.turn, b: 0, bt: tex as string, z: FIELD_GRASS.z + i, e: FIELD_GRASS.e } });
+    this.patches.push({ block: false, tex, quad: this.quad(A0, B0, A1, B1), paint: { s: FIELD_GRASS.s, a: this.turn, b: 0, bt: tex, z: FIELD_GRASS.z + i, e: FIELD_GRASS.e } });
   }
   /** crop or furrow rows for a field rectangle: lines every ROW tiles running along u or along n, in world tiles.
    *  NOTE for the lead: the renderer paints every lot patch's lines in worn off-white today (parking bays); rows want a
@@ -546,12 +546,14 @@ export const LANE_HALF = 1.2;
 /** the orchard (stand-ins for 187): the grid's pitch between rows and between the trees of a row (tiles: 6 m), the most trees across and
  *  down, the trees' size (of their owner size: 4-5 m fruit trees) */
 export const ORCHARD_PITCH = 3, ORCHARD_MAX = 8, ORCHARD_MUL = 0.62;
-/** the fallow field's grass (the course's long grass: an unkept field, never the map's own grass, so it reads against it) */
-const FALLOW_TEX: LotPatch['tex'] = 'golfLongGrass';
 /** T402 (#1080, T361 #1016; the owner, 2026-11-08: "fix scaling on farms with the green long grass texture. it has a hard edge that doesn't look right"): how a field of grass is
- *  laid. A painted area's look, the way the course's long grass is: scale s (1: the course's own, the same display scale as the map's other tile-set grasses), its edge e feathered
- *  (the flat profile, 0.5 tiles: no cut line against the ground round it), drawn under every area the player paints (z, the range ground's own order) */
-export const FIELD_GRASS: { s: number; e: NonNullable<PatchPaint['e']>; z: number } = { s: 1, e: 'flat', z: -2e6 };
+ *  laid. The fallow field's grass is the course's long grass (an unkept field, never the map's own grass, so it reads against it), laid as a painted area's look the way the
+ *  course lays it: texture tex, scale s (1: the course's own, the same display scale as the map's other tile-set grasses), its edge e feathered (the flat profile, 0.5 tiles: no
+ *  cut line against the ground round it), drawn under every area the player paints (z, below the range ground's own order). One object, so a look can be tried on a running game */
+export const FIELD_GRASS: { tex: LotPatch['tex']; s: number; e: NonNullable<PatchPaint['e']>; z: number } = { tex: 'golfLongGrass', s: 1, e: 'flat', z: -2e6 };
+/** T402 (#1080; the owner, 2026-11-09: "the grey farm lane ... a flat grey bar"): the stretch of a model 2 farm's lane through its yard: its surface (the gravel photo, dark grey; or the
+ *  lane's own dirt) and whether it wears the lane's two wheel ruts (the ruts are drawn on dirt only). One object, so a look can be tried on a running game */
+export const YARD_DRIVE: { tex: LotPatch['tex']; ruts: boolean } = { tex: 'gravel', ruts: false };
 /** the windbreak's trees: the gold birch (Stand In for the poplars: their shape and autumn gold) on most farms, else a row of spruces; one tree a row */
 const WIND_POPLAR = names(['ref:tree-birch-gold']), WIND_SPRUCE = names(['ref:tree-spruce-blue', 'capital:tree-spruce-open']);
 /** T276 (#855; the owner, 2026-10-29: "Farm roads' tree lines become a single row on one side of the road only ... vary each tree's size and
@@ -725,14 +727,14 @@ function composeFarm2(p: FarmParcel, seed: number, month: number): Composition {
   for (const q of L.plots) {
     const st = plotState(q, month);
     if (st) { const d = q.alongU ? p.u : p.n; B.pave(false, q.a0, q.b0, q.a1, q.b1, 'field', undefined, { st, d: [Math.round(d.x * 1e4) / 1e4, Math.round(d.y * 1e4) / 1e4], ph: q.ph }); }
-    else if (q.kind === 'fallow') B.grass(q.a0, q.b0, q.a1, q.b1, FALLOW_TEX, B.patches.length);
+    else if (q.kind === 'fallow') B.grass(q.a0, q.b0, q.a1, q.b1, B.patches.length);
   }
   // (the yard: packed earth, its edge soft into the grass)
   B.pave(false, L.yA0, L.yardB0, L.yA1, L.yardB1, 'dirt');
   // (the lane and the track: dirt with a hard outline, never T247's soft band, which is wider than they are, and two wheel ruts as furrows)
   const ruts = (b0: number, b1: number, h: number) => [-h, h].flatMap(s => { const x = B.P(L.laneA + s, b0 + 0.3), y = B.P(L.laneA + s, b1 - 0.3); return [x.x, x.y, y.x, y.y]; });
   B.pave(true, L.laneA - LANE_HALF, 0, L.laneA + LANE_HALF, L.yardB0 + 0.5, 'dirt', ruts(0, L.yardB0 + 0.5, 0.5), undefined, true);
-  B.pave(true, L.laneA - 1, L.yardB0 + 0.5, L.laneA + 1, L.yardB1, 'gravel', undefined, undefined, true);
+  B.pave(true, L.laneA - 1, L.yardB0 + 0.5, L.laneA + 1, L.yardB1, YARD_DRIVE.tex, YARD_DRIVE.ruts ? ruts(L.yardB0 + 0.5, L.yardB1, 0.5) : undefined, undefined, true);
   if (L.endB > L.yardB1) B.pave(true, L.laneA - 0.8, L.yardB1, L.laneA + 0.8, L.endB, 'dirt', ruts(L.yardB1, L.endB, 0.4), undefined, true);
   // the buildings, at their laid-out centres and scales (farmsteadOf stays exact)
   B.put(L.houseId, L.ha, L.hb, { flip, mul: L.houseMul, fixed: true });
