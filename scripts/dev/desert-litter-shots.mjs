@@ -9,7 +9,7 @@ import { mkdirSync } from 'node:fs';
 import { join } from 'node:path';
 
 const args = process.argv.slice(2), opt = (k, d) => { const i = args.indexOf(`--${k}`); return i >= 0 ? args[i + 1] : d; };
-const base = opt('base', 'http://localhost:5187/'), out = opt('out', 'E:/ClaudeTemp/T384'), fixture = opt('fixture', 'range20'), autumn = opt('autumn', '0') === '1';
+const base = opt('base', 'http://localhost:5187/'), out = opt('out', 'E:/ClaudeTemp/T384'), fixture = opt('fixture', 'range20'), autumn = opt('autumn', '0') === '1', modes = opt('modes', 'before,after').split(','), density = opt('density', '');
 const W = 1440, H = 900, UI_OFF = '* { visibility: hidden !important } canvas { visibility: visible !important }';
 mkdirSync(out, { recursive: true });
 let bad = 0;
@@ -54,10 +54,12 @@ try {
   const files = { before: {}, after: {} };
   let pts = null;
   for (const [mode, look] of [['before', 'desert=on&litter=leaves'], ['after', 'desert=on']]) {
+    if (!modes.includes(mode)) continue;
     console.log(` -- ${mode}`);
     const { ctx, page } = await open(look);
+    if (density !== '' && mode === 'after') await page.evaluate(d => window.__game.setLeafDensity(d), Number(density)); // (debug: the fallen leaves' share, 0 to see what the rest lays)
     const st = await page.evaluate(() => { const g = window.__game; return { desert: g.desertTheme, density: g.leafDensity, lots: g.traffic.lots.size }; });
-    check(st.desert === true && st.density === 1, `${mode}: the desert theme is on, the litter density is the player's (${st.density})`);
+    check(st.desert === true && (st.density === 1 || density !== ''), `${mode}: the desert theme is on, the litter density is the player's (${st.density})`);
     pts ??= await points(page); check(!!pts && pts.lots > 5, `the town has ${pts?.lots} built lots to look at`);
     for (const [name, key, z] of VIEWS) {
       const p = pts[key]; await page.evaluate(([x, y, z]) => { const g = window.__game; g.camEase = null; g.lookAt(x, y, z); g.emit(); }, [p.x, p.y, z]);
@@ -66,7 +68,7 @@ try {
     }
     await ctx.close();
   }
-  for (const [name] of VIEWS) await side(files.before[name], files.after[name], join(out, `${name}-before-vs-after.png`));
+  if (modes.length === 2) for (const [name] of VIEWS) await side(files.before[name], files.after[name], join(out, `${name}-before-vs-after.png`));
   if (autumn) {
     const { ctx, page } = await open('desert=off');
     const p = pts.street; await page.evaluate(([x, y]) => { const g = window.__game; g.camEase = null; g.lookAt(x, y, 0.3); g.emit(); }, [p.x, p.y]); await settle(page, 1500);

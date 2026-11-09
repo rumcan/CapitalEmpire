@@ -50,7 +50,7 @@ import { SOFT, easeWeights, softAreaWidth, softDirt, softMaskImage, softRGBA, so
 import { BLEND_WAVES, blendAlpha, blendNoise, trimLru } from './painted-grass-lod';
 import { LEAF_DENSITY_DEFAULT, PIC_REACH, STAMP, layLeaves, leafSignature, type LeafRoad } from './leaf-fall';
 import { leafAtlasAt, type LeafAtlas } from './leaf-atlas';
-import { DESERT_LITTER_SCALE, DESERT_SHADOW_A, DESERT_TINTS, DESERT_TINT_LOOK, DESERT_TUFT } from './desert-litter';
+import { DESERT_FALL_SCALE, DESERT_LITTER_SCALE, DESERT_SHADOW_A, DESERT_TINTS, DESERT_TINT_LOOK, DESERT_TUFT } from './desert-litter';
 import { SURVEY_COL, SURVEY_DASH, SURVEY_W } from './lots/survey';
 import { CROP_STATES, LANE_SURFACE, ROW_LOOK, cropSurface, rowSegments, rowStep } from './ext/farms/crops';
 import { DAMP_TINT, DESERT_BLOT_M, LIVING_AO, LIVING_EDGE, maskContours, CasterStore, COURSE_GRASSY, COURSE_WATER, SHADOW_DIR, debugImage, grassyTex, influence, livingMasks, livingQueryBox, livingRes, livingSignature, waterTex, type Box, type InfluenceGrid, type LivingMasks, type RoadPiece, type WaterLine } from './living-ground';
@@ -4142,7 +4142,7 @@ export class GroundPainter {
   private leafAtlas(L: number): LeafAtlas {
     const desert = this.tex.desertLitter, key = `${L}${desert ? 'd' : ''}`; // (T384: the desert's litter, its tints, its own atlas)
     let a = this.leafAtlases.get(key);
-    if (!a) { const tex = this.tex; a = leafAtlasAt(L, tex.leafSheet(), (r, sizeM) => tex.leafRect(tex.pickLeaf(r, sizeM)), desert ? { tints: DESERT_TINTS, look: DESERT_TINT_LOOK, scale: DESERT_LITTER_SCALE, shadow: DESERT_SHADOW_A } : undefined); this.leafAtlases.set(key, a); }
+    if (!a) { const tex = this.tex; a = leafAtlasAt(L, tex.leafSheet(), (r, sizeM) => tex.leafRect(tex.pickLeaf(r, sizeM)), desert ? { tints: DESERT_TINTS, look: DESERT_TINT_LOOK, scale: DESERT_FALL_SCALE, shadow: DESERT_SHADOW_A } : undefined); this.leafAtlases.set(key, a); }
     return a;
   }
   private drawLitter(ctx: C2D, net: FxView, L: number, M: DOMMatrix, box: BBox, W: number, H: number) {
@@ -4170,7 +4170,7 @@ export class GroundPainter {
     const sh = this.buffer('leafShadow', W, H), shg = ctx2d(sh);
     for (const l of inView) { const S = M.transformPoint(new DOMPoint(l.x, l.y)), size = l.s * pxPerM, [sx, sy, sw, swh] = tex.leafRect(l.idx); shg.setTransform(1, 0, 0, 1, S.x + shadowDx, S.y + shadowDy); shg.scale(1, 0.74); shg.rotate(l.ang); shg.drawImage(atlas, sx, sy, sw, swh, -size / 2, -size / 2, size, size); }
     shg.setTransform(1, 0, 0, 1, 0, 0); shg.globalCompositeOperation = 'source-in'; shg.fillStyle = '#05050f'; shg.fillRect(0, 0, W, H);
-    ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.globalAlpha = 0.22; ctx.drawImage(sh, 0, 0); ctx.globalAlpha = 1;
+    ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.globalAlpha = tex.desertLitter ? DESERT_SHADOW_A : 0.22; ctx.drawImage(sh, 0, 0); ctx.globalAlpha = 1; // (T384: a soft clump of sand casts a faint shadow: at the leaves' 0.22 the drifts were grey stains)
     g.globalAlpha = 1;
     for (const l of inView) draw(l.x, l.y, l.ang, l.s, l.idx, 1);
     // T220: the fallen leaves, over the litter and under the tufts and the lamp pools' light

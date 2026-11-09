@@ -15,19 +15,21 @@ import { NATURE } from './nature-patches';
 import { canvas, ctx2d, type C2D, type Cnv } from './canvas2d';
 
 /** the litter's colours: sand (pale to deep), stone (grey and brown), dry brush (browns), a little grey-green sage, and the dust of a dry road */
-export const SAND = ['#d6b97f', '#c9a668', '#e2c993', '#bf9a60'] as const;
-export const STONE = ['#a18a6c', '#8c6f52', '#b3a186', '#9a9184', '#7d766b', '#6a645b'] as const;
+export const SAND = ['#e6c27c', '#dcb56a', '#ecca8a', '#d3a95e'] as const;
+export const STONE = ['#ad8c66', '#966f48', '#bba07e', '#a39482', '#8a7b69', '#746758'] as const;
 export const BRUSH = ['#6e4f32', '#8a6a42', '#5a4128', '#9a7b50'] as const;
 export const SAGE = ['#8c9468', '#7f8860', '#a3a67b'] as const;
 export const DUST = '#caa878';
+/** the straw of a dry tuft */
+export const STRAW = ['#c9b88a', '#b9a574', '#d3c295'] as const;
 /** the tints the fallen leaves' atlas lays over the desert sprites in place of the leaves' (leaf-atlas.ts: as drawn, sand, stone, dry brown, sage), and how (alpha, the multiply) */
-export const DESERT_TINTS = ['', '#d6b878', '#8a6a42', '#cdb27a', '#b09a74'] as const; // (in the leaves' order of moods: as drawn, sand where the maple's red was, dry brown for the oak's brown, straw for the gold, stone for the green: warm ones lead, so a pile under a palm is sand and dry brush, not grey)
+export const DESERT_TINTS = ['', '#e6c27c', '#b88a4c', '#dfbb80', '#c9a470'] as const; // (in the leaves' order of moods: as drawn, sand where the maple's red was, dry brown for the oak's brown, straw for the gold, stone for the green: warm ones lead, so a pile under a palm is sand and dry brush, not grey)
 /** the strokes of the grass tufts at the kerb's edge in the desert: dry straw and brown (the autumn grass is green) */
 export const DESERT_TUFT = ['#a08a5a', '#b9a574', '#7d6a45', '#c9b88a'] as const;
 export const DESERT_TINT_LOOK: readonly { a: number; mul?: string }[] = [{ a: 0 }, { a: 0.55 }, { a: 0.5 }, { a: 0.55 }, { a: 0.45 }];
-/** the desert litter's sprites are drawn this much bigger than the leaves they stand for (the same counts and places: a pebble or a clump of sand a hand's breadth across reads on a road at the closest zoom, a leaf's 0.1 to 0.6 m does not) and
- *  cast a lighter shadow (leaf-atlas.ts) */
-export const DESERT_LITTER_SCALE = 1.7, DESERT_SHADOW_A = 0.05; // (a soft clump of sand has a soft silhouette: its shadow is a faint one, or it is a grey haze)
+/** the desert litter's sprites are drawn this much bigger than the leaves they stand for (the same counts and places: a pebble or a clump of sand a hand's breadth across reads on a road at the closest zoom, a leaf's 0.1 to 0.6 m does not),
+ *  and the fallen leaves' piles (leaf-atlas.ts: dozens of sprites a pile) a little less (at the road litter's size a pile of them was one grey stain), and they cast a lighter shadow */
+export const DESERT_LITTER_SCALE = 1.7, DESERT_FALL_SCALE = 1.15, DESERT_SHADOW_A = 0.05; // (a soft clump of sand has a soft silhouette: its shadow is a faint one, or it is a grey haze)
 
 const pick = <T>(a: readonly T[], r: () => number): T => a[Math.floor(r() * a.length) % a.length]!;
 const hex = (h: string): [number, number, number] => [parseInt(h.slice(1, 3), 16), parseInt(h.slice(3, 5), 16), parseInt(h.slice(5, 7), 16)];
@@ -38,20 +40,20 @@ const TAU = Math.PI * 2;
 /** a pebble: a rounded irregular stone, lit toward the upper right (the sun) and shaded toward the lower left, with a contact shadow beside it and a thin dark rim */
 export function pebble(g: C2D, x: number, y: number, rad: number, r: () => number, tone: string = r() < 0.65 ? pick(STONE.slice(0, 3), r) : pick(STONE.slice(3), r)): void {
   g.save(); g.translate(x, y);
-  g.fillStyle = 'rgba(40,28,18,0.30)'; g.beginPath(); g.ellipse(-rad * 0.28, rad * 0.34, rad * 1.02, rad * 0.62, 0, 0, TAU); g.fill();
+  g.fillStyle = 'rgba(40,28,18,0.18)'; g.beginPath(); g.ellipse(-rad * 0.28, rad * 0.34, rad * 1.02, rad * 0.62, 0, 0, TAU); g.fill();
   g.rotate(r() * TAU); g.scale(1, 0.74 + r() * 0.22);
   const path = () => { const n = 7 + Math.floor(r() * 3); g.beginPath(); for (let k = 0; k < n; k++) { const a = (k / n) * TAU, q = rad * (0.8 + r() * 0.3); k ? g.lineTo(Math.cos(a) * q, Math.sin(a) * q) : g.moveTo(Math.cos(a) * q, Math.sin(a) * q); } g.closePath(); };
   path(); g.fillStyle = tone; g.fill();
   const gr = g.createRadialGradient(rad * 0.35, -rad * 0.35, rad * 0.05, 0, 0, rad * 1.1);
   gr.addColorStop(0, 'rgba(255,244,220,0.55)'); gr.addColorStop(0.45, 'rgba(255,244,220,0)'); gr.addColorStop(1, 'rgba(40,30,20,0.5)');
-  g.fillStyle = gr; g.fill(); g.lineWidth = Math.max(0.5, rad * 0.08); g.strokeStyle = 'rgba(50,40,30,0.55)'; g.stroke();
+  g.fillStyle = gr; g.fill(); g.lineWidth = Math.max(0.5, rad * 0.08); g.strokeStyle = 'rgba(50,40,30,0.42)'; g.stroke();
   g.restore();
 }
 /** a clump of sand: a soft-edged heap, pale on top and deeper at the edge, with a few grains of grit; never a hard disc */
 export function sandClump(g: C2D, x: number, y: number, rad: number, r: () => number, tone: string = pick(SAND, r)): void {
   g.save(); g.translate(x, y); g.rotate(r() * TAU); g.scale(1, 0.62 + r() * 0.2);
   const gr = g.createRadialGradient(rad * 0.15, -rad * 0.12, rad * 0.05, 0, 0, rad);
-  gr.addColorStop(0, rgba(tone, 0.95)); gr.addColorStop(0.55, rgba(tone, 0.7)); gr.addColorStop(1, rgba(tone, 0));
+  gr.addColorStop(0, rgba(tone, 0.97)); gr.addColorStop(0.68, rgba(tone, 0.9)); gr.addColorStop(0.9, rgba(tone, 0.4)); gr.addColorStop(1, rgba(tone, 0)); // (a firm edge: soft ones laid over each other in a pile were one smoky veil)
   g.fillStyle = gr; g.beginPath(); g.ellipse(0, 0, rad, rad * (0.8 + r() * 0.2), 0, 0, TAU); g.fill();
   for (let k = 0; k < 3 + Math.floor(rad / 3); k++) { const a = r() * TAU, d = r() * rad * 0.8; g.fillStyle = rgba(pick(k % 2 ? STONE : BRUSH, r), 0.5 + r() * 0.3); g.fillRect(Math.cos(a) * d, Math.sin(a) * d, Math.max(0.6, rad * 0.07), Math.max(0.6, rad * 0.07)); }
   g.restore();
@@ -81,14 +83,44 @@ export function bladeTuft(g: C2D, x: number, y: number, len: number, r: () => nu
   g.restore();
 }
 /** a tumbleweed tuft: a loose round tangle of thin dry stems, light on its upper right and dark inside, with its shadow to the lower left */
-export function tumbleweed(g: C2D, x: number, y: number, rad: number, r: () => number): void {
+export function tumbleweed(g: C2D, x: number, y: number, rad: number, r: () => number, bold = false): void {
   g.save(); g.translate(x, y);
   g.fillStyle = 'rgba(40,28,18,0.22)'; g.beginPath(); g.ellipse(-rad * 0.3, rad * 0.4, rad * 0.95, rad * 0.5, 0, 0, TAU); g.fill();
   g.scale(1, 0.85); g.lineCap = 'round';
   for (let k = 0, n = 14 + Math.floor(rad); k < n; k++) {
     const a0 = r() * TAU, a1 = a0 + 0.8 + r() * 1.8, q = rad * (0.45 + r() * 0.55), cx = (r() - 0.5) * rad * 0.5, cy = (r() - 0.5) * rad * 0.5;
-    g.beginPath(); g.arc(cx, cy, q, a0, a1); g.strokeStyle = rgba(pick(k % 3 ? BRUSH : SAND, r), 0.35 + r() * 0.4); g.lineWidth = Math.max(0.5, rad / 14); g.stroke();
+    g.beginPath(); g.arc(cx, cy, q, a0, a1); g.strokeStyle = rgba(pick(k % 3 ? BRUSH : SAND, r), bold ? 0.6 + r() * 0.35 : 0.35 + r() * 0.4); g.lineWidth = Math.max(0.5, rad / (bold ? 6 : 14)); g.stroke();
   }
+  g.restore();
+}
+/** a chunk of dry brush: a few thick stems crossed, brown, with a pale cut end each: it keeps its dark and light as a speck of a few pixels where a tangle of thin stems blurred to a veil */
+export function brushChunk(g: C2D, x: number, y: number, len: number, r: () => number): void {
+  g.save(); g.translate(x, y); g.rotate(r() * TAU); g.lineCap = 'round';
+  for (let k = 0, n = 5 + Math.floor(r() * 3); k < n; k++) {
+    const a = (k / n) * Math.PI + (r() - 0.5) * 0.5, l = len * (0.45 + r() * 0.4);
+    g.beginPath(); g.moveTo(-Math.cos(a) * l * 0.45, -Math.sin(a) * l * 0.45); g.lineTo(Math.cos(a) * l, Math.sin(a) * l);
+    g.strokeStyle = 'rgba(30,22,14,0.3)'; g.lineWidth = len / 8 + 0.8; g.translate(-0.5, 0.6); g.stroke(); g.translate(0.5, -0.6);
+    g.strokeStyle = pick(BRUSH, r); g.lineWidth = len / 8; g.stroke();
+  }
+  g.restore();
+}
+/** a tuft of straw: stout pale blades fanning from a base (no sage: it read as a grey-green stain), the colours of straw and sand */
+export function strawTuft(g: C2D, x: number, y: number, len: number, r: () => number): void {
+  g.save(); g.translate(x, y); g.lineCap = 'round';
+  const n = 6 + Math.floor(r() * 4);
+  for (let k = 0; k < n; k++) {
+    const a = -Math.PI / 2 + (k / (n - 1) - 0.5) * 1.5 + (r() - 0.5) * 0.3, l = len * (0.55 + r() * 0.45), c = (r() - 0.5) * l * 0.3;
+    g.beginPath(); g.moveTo(0, 0); g.quadraticCurveTo(Math.cos(a) * l * 0.5 + c, Math.sin(a) * l * 0.5, Math.cos(a) * l, Math.sin(a) * l);
+    g.strokeStyle = rgba(pick(k % 3 === 2 ? BRUSH.slice(1) : [...SAND, ...STRAW], r), 0.95); g.lineWidth = Math.max(1.4, len / 11); g.stroke();
+  }
+  g.restore();
+}
+/** a streak of windblown sand: three clumps along a line, grit in it and a stone at an end */
+export function sandStreak(g: C2D, x: number, y: number, len: number, r: () => number): void {
+  g.save(); g.translate(x, y); g.rotate((r() - 0.5) * 0.5);
+  const tone = pick(SAND, r);
+  for (let k = -1; k <= 1; k++) sandClump(g, k * len * 0.28 + (r() - 0.5) * 2, (r() - 0.5) * 3, len * (0.27 + r() * 0.08), r, tone);
+  pebble(g, len * (r() < 0.5 ? -0.42 : 0.42), (r() - 0.5) * 4, 2.8 + r() * 1.6, r);
   g.restore();
 }
 
@@ -157,16 +189,18 @@ export function desertLeafSheet(): Cnv {
   return repaint(LEAVES.map(l => cell(l.i)), 0xde5e47, (g, v, k, r) => {
     const l = LEAVES[k]!, cx = v.x + v.w / 2, cy = v.y + v.h / 2, q = l.i % 5;
     if (l.round) {
-      if (q === 0 || q === 1) sandClump(g, cx, cy, q ? 13 : 16, r);
-      else if (q === 3) { pebble(g, cx - 6, cy + 3, 8, r); pebble(g, cx + 7, cy - 5, 6, r); }
-      else if (q === 4) { for (let j = 0; j < 4; j++) pebble(g, cx + (r() - 0.5) * 18, cy + (r() - 0.5) * 18, 3.5 + r() * 2, r); }
-      else pebble(g, cx, cy, 12 + r() * 3, r);
+      // (mostly sand, which is paler than the ground: a pile of dark stones was a grey stain on the orange, and a pale drift with a few stones in it is what the wind leaves)
+      if (q === 0 || q === 1 || (q === 2 && l.i % 2)) sandClump(g, cx, cy, q === 0 ? 14 : q === 1 ? 11 : 12, r);
+      else if (q === 2) pebble(g, cx, cy, 9 + r() * 2, r);
+      else if (q === 3) { sandClump(g, cx + 2, cy + 1, 10, r); pebble(g, cx - 5, cy + 3, 6, r); pebble(g, cx + 7, cy - 4, 4.5, r); }
+      else { sandClump(g, cx, cy, 9, r); for (let j = 0; j < 3; j++) pebble(g, cx + (r() - 0.5) * 16, cy + (r() - 0.5) * 14, 2.8 + r() * 1.6, r); }
     } else {
+      // (the fallen leaves' piles and the road litter above 0.2 m draw these cells, 3 px across at the zoom the owner looks from: chunky forms that keep their light and dark, not thin stems that blur to a smoky veil)
       const t = l.i % 4;
-      if (t === 0) twig(g, cx, cy, 34, (r() - 0.5) * 0.6, r);
-      else if (t === 1) bladeTuft(g, cx, cy + 12, 28, r);
-      else if (t === 2) { g.save(); g.translate(cx, cy); g.lineCap = 'round'; g.strokeStyle = pick(BRUSH, r); g.lineWidth = 3.4; g.beginPath(); g.moveTo(-16, 6); g.quadraticCurveTo(0, -14, 16, 4); g.stroke(); g.strokeStyle = rgba(pick(SAND, r), 0.8); g.lineWidth = 1.2; g.stroke(); g.restore(); }
-      else tumbleweed(g, cx, cy, 14 + (l.dim > 33 ? 2 : 0), r);
+      if (t === 0) sandStreak(g, cx, cy, 34, r);
+      else if (t === 1) brushChunk(g, cx, cy, 26, r);
+      else if (t === 2) strawTuft(g, cx, cy + 12, 28, r);
+      else tumbleweed(g, cx, cy, 13 + (l.dim > 33 ? 2 : 0), r, true);
     }
   });
 }
