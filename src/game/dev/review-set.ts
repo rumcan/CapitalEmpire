@@ -61,9 +61,11 @@ export function overrideComposition(g: LotGeom, ov: ReviewOverride | undefined):
 /** the machine's reading of one check: whether it is right, and in words */
 export function readingOf(a: LotAudit): Record<Check, [boolean, string]> {
   const turns = a.facingOff === null ? 'facing not known' : a.facingOff === 0 ? 'its front faces the road' : `${a.facingOff * 45} degrees off the road`;
+  // (T398: the garage door faces the street, the drive goes to it and to nothing else, the path to the front door; a picture the owner marked is never drawn)
+  const doors = a.garageSideways ? ', its garage door faces sideways' : a.marked ? ', a picture the owner marked' : a.garage ? ', its garage door faces the road' : '';
   return {
-    house: [a.house && (a.facingOff === 0 || a.facingOff === null), a.house ? `${a.buildings} building${a.buildings === 1 ? '' : 's'}, ${turns}` : 'no house on the lot'],
-    drive: [a.drive && a.driveConnects && a.path, `${a.drive ? (a.driveConnects ? 'drive meets the road' : 'drive does not reach the road') : 'no drive or parking'}, ${a.path ? 'front path' : 'no front path'}`],
+    house: [a.house && (a.facingOff === 0 || a.facingOff === null) && !a.garageSideways && !a.marked, a.house ? `${a.buildings} building${a.buildings === 1 ? '' : 's'}, ${turns}${doors}` : 'no house on the lot'],
+    drive: [a.house && a.driveOk && a.pathAtDoor && (!a.drive || a.driveConnects) && a.path, `${a.garage ? (a.driveOk ? 'the drive meets the road and reaches the garage door' : 'the drive does not reach the garage door') : a.drive ? 'a drive and no garage door' : 'no garage, no drive'}, ${a.path ? (a.pathAtDoor ? 'the front path reaches the front door' : 'the front path misses the front door') : 'no front path'}`],
     trees: [a.trees <= 3 && a.treesClear, `${a.trees} tree${a.trees === 1 ? '' : 's'}${a.treesClear ? ', clear of the house, drive and path' : ', one covers the house, drive or path'}`],
     fence: [a.fence !== 'none' && a.fenceAcross === 0, a.fence === 'none' ? 'no fence' : `${a.fencePieces} ${a.fence === 'hedge' ? 'hedge shrubs' : 'fence panels'}${a.fenceAcross ? `, ${a.fenceAcross} across the drive or path` : ''}`],
   };

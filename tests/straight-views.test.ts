@@ -70,23 +70,23 @@ test('the old corner pictures draw exactly as before: a reused set never replace
   }
 });
 
-test('on a screen-straight road the lot draws the straight-on view that faces its street (a quarter turn of the prop is two places on the ring); the old square set still wins where there is one', () => {
-  let ringDrawn = 0, axisKept = 0;
+test('on a screen-straight road the lot draws the straight-on view that faces its street (a quarter turn of the prop is two places on the ring); the turned view wins over the old square set where a building has both', () => {
+  let ringDrawn = 0, bothSets = 0;
   for (const subject of SUBJECTS) {
     const ring = eightRingOf(subject)!; assert.equal(ring.length, 8);
-    const axis = axisSetOf(subject);
+    // (the owner, 2026-11-09: screen-straight roads use the turned straight-on views: a building with the old square screen-axis set as well draws the turned one)
+    if (axisSetOf(subject)) bothSets++;
     for (let road = 1; road < 8; road += 2) for (let view = 0; view < 4; view++) {
       const got = roadView(subject, road, view);
-      if (axis) { assert.equal(got, axis[(((road - 1) / 2 + view) % 4 + 4) % 4], `${subject} road ${road} view ${view}: the old set`); axisKept++; continue; }
       assert.equal(got, ring[(road + 2 * view) % 8], `${subject} road ${road} view ${view}`); assert.ok(got!.includes(':yaw8'), `${got} is a straight-on view`); ringDrawn++;
     }
     // road 1 faces screen down: view 0 is N, road 3 E, road 5 S, road 7 W
-    if (!axis) assert.deepEqual([1, 3, 5, 7].map(r => roadView(subject, r, 0)!.split(':').pop()), ['yaw8N', 'yaw8E', 'yaw8S', 'yaw8W']);
+    assert.deepEqual([1, 3, 5, 7].map(r => roadView(subject, r, 0)!.split(':').pop()), ['yaw8N', 'yaw8E', 'yaw8S', 'yaw8W']);
     for (const road of [1, 3, 5, 7]) assert.ok(faces(subject, road), `${subject} faces road ${road}`);
     // the corners on the map-axis roads stay the four-view art
     for (const road of [0, 2, 4, 6]) assert.equal(roadView(subject, road, 0), null, `${subject} road ${road}: the four-view art draws`);
   }
-  assert.ok(ringDrawn > 100 && axisKept > 0, `${ringDrawn} ring draws, ${axisKept} old-set draws`);
+  assert.ok(ringDrawn > 100 && bothSets > 0, `${ringDrawn} ring draws, ${bothSets} buildings with both sets`);
 });
 
 test('every house the town draws faces its street on all eight roads, except the house types still waiting for straight-on art (the list the next art batch starts from)', () => {

@@ -94,12 +94,14 @@ export function roadView(id: string, road: number, view: number): string | null 
     const set = supplemental;
     return set && set.every(v => BY.has(v)) ? set[(((road / 2 + view) % 4) + 4) % 4]! : null;
   }
-  const it = BY.get(baseView(id).id) ?? BY.get(id), set = it && isBuilding(it) ? axisSetOf(id) : null;
-  if (set) return set[((((road - 1) / 2 + view) % 4) + 4) % 4]!;
-  // T375: no screen-axis set of the old art: an approved eight-view set (the owner's 8-view art) draws its 8-degree straight-on view whose front faces the
-  // street (the ring's place is the road; a quarter turn of the prop's own view is two places on)
+  const it = BY.get(baseView(id).id) ?? BY.get(id);
+  // T375: an approved eight-view set (the owner's 8-view art) draws its 8-degree straight-on view whose front faces the street (the ring's place is the road; a
+  // quarter turn of the prop's own view is two places on). T398 (the owner, 2026-11-09: "screen-straight roads use the turned straight-on views"; straight views
+  // are turned 8 degrees): the turned view wins over the old square screen-axis set where a building has both (houses 0, 1 and 3, the shanty)
   const ring = it && isBuilding(it) ? eightRingOf(id) : null;
-  return ring ? ring[(((road + 2 * view) % 8) + 8) % 8]! : null;
+  if (ring) return ring[(((road + 2 * view) % 8) + 8) % 8]!;
+  const set = it && isBuilding(it) ? axisSetOf(id) : null;
+  return set ? set[((((road - 1) / 2 + view) % 4) + 4) % 4]! : null;
 }
 /** whether a picture faces the street of a road (T305 autolot's rule, shared with the composer's facing, T308): on a screen-straight road (odd) it has a
  *  screen-axis set (roadView, view 0 faces the street), on any other road it has four views to turn (turned) */

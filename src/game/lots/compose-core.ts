@@ -24,7 +24,12 @@ import { CAR_SCALE, carFootprint, carHeading, carOwnerScale } from '../ext/car-a
 /** a placed prop; street is set (true) only for an item on the sidewalk in front of the lot (a lay-by's bays take none: see engine placeLot);
  *  from: the preset it was drawn from and its prop index there (compose.ts; the dev editor maps an edit back to the preset by it) */
 export interface Placed { id: string; x: number; y: number; flip: boolean; scale: number; street?: true; from?: { preset: string; prop: number }; /** T167: drawn in place of this removed picture */ standIn?: string; /** T219: the footprint it stands on (world tiles) when its picture's own is not the library's (art-fix.ts): the engine draws it on that */ foot?: Box4 }
-export interface Composition { props: Placed[]; ground: LotPatch[] }
+/** T398: where a clean house lot's doors are, in the lot's preset frame (x along the street from its left as seen from it, y away from it, tiles): the house (its picture as drawn, its box, whether its front
+ *  meets the street, the owner's mark on the picture, where its garage door is), the front door's x on the front wall (y = frontY), and each garage door that faces the street (its span along the wall and the
+ *  wall's y): the drive goes to one of them and to nothing else, the path to the front door. A lot with no garage door has no drive. */
+export interface LotAnchors { house: { id: string; box: [number, number, number, number]; exact: boolean; mark: string | null; garage: 'none' | 'front' | 'side' }; doorX: number; frontY: number; garages: { x0: number; x1: number; y: number }[];
+  /** the boxes of the lot's buildings, the house first and then its garage buildings (x0, y0, x1, y1): the side gap is measured on them */ boxes: [number, number, number, number][] }
+export interface Composition { props: Placed[]; ground: LotPatch[]; anchors?: LotAnchors }
 /** a preset prop a lot leaves out: the preset and the prop's index there, its sprite id as drawn, and why (past the lot line, overlaps <id>
  *  NN%, the fit, the decline) */
 export interface PresetDrop { preset: string; prop: number; id: string; why: string }
