@@ -18,6 +18,7 @@
 //   props), then the course scene's tour over the estate with the lots drawn (its stages: fps, cpu, instances, draws and the working set in MB, the ground and tile budget's)
 // --oldyards 1 (T385, a dev server): the house lots composed as before the clean base (clean-yards.ts: ?oldyards), the A/B of the clean lots' frame cost on the same build
 // --osmcourse <id> (T340, with --start town): the game is laid on that real course built from map data (golf/osm; rondebosch, magnolia-national) on the flat map
+// --rough old (T362, with --osmcourse and a dev server): the course laid as before the band of rough (the whole boundary rough, no fescue, no band round the fairways, greens and tees), the A/B of the course's ground
 // --land 0 (T357, with --osmcourse): the course without its real ground height and the greens' tilt (golf/osm/land.ts): the flat plain as before T357, the A/B of the land
 // --landlight classic|hills (T388, with --osmcourse and a dev server): the real ground's slope light as it was before T388 (the land and the course height lit as one field) or by its own response (the default), the A/B of the bakes
 // --realplace <id>[,laid] (T356, with --start town --money 1 --stamp 1 and a dev server): a real course (rondebosch, magnolia-national, woodhill) in hand over the town, the placing mode's frames against the same frames without it (off, hand, move at 30% and 15%); ,laid: the course laid there and the scene's own tour over the new game
@@ -64,13 +65,13 @@ const logs = [];
 page.on('console', m => { const t = m.text(); if (/\[bench\]|error|Error/.test(t)) { logs.push(t); console.log('[page]', t.slice(0, 300)); } });
 page.on('pageerror', e => console.log('[pageerror]', e.message));
 page.on('crash', () => console.log('[crash] the page crashed'));
-await page.goto(`${base}?bench=${size}${scene}${args.includes("--course") ? "&course=1" : ""}${opt("courseSend", "") ? "&courseSend=" + opt("courseSend", "") : ""}${opt("courseHold", "") ? "&courseHold=" + opt("courseHold", "") : ""}${opt("ground", "") ? "&ground=" + opt("ground", "") : ""}${["golfers", "seed", "everyday", "frame", "grassShine", "river", "bakeab", "tourOnly", "belts", "riverSwamp", "golfPace", "golfMinute", "zooms", "boot", "farms", "farmMonth", "ballRoll", "rangeBalls", "fieldBalls", "fieldAb", "tourney", "tracks", "spacing", "sun", "animals", "wind", "osmcourse", "estate", "realplace", "money", "stamp", "land", "landlight", "desert", "litter", "sand", "terrain", "tee", "mow"].map(k => opt(k, "") ? `&${k}=${opt(k, "")}` : "").join("")}`, { timeout: +opt("gotoMs", "30000") }); // (T312: --gotoMs, a cold dev server loads slower than 30 s) --course: the old nine laid as a course grid under the tour (T077)
+await page.goto(`${base}?bench=${size}${scene}${args.includes("--course") ? "&course=1" : ""}${opt("courseSend", "") ? "&courseSend=" + opt("courseSend", "") : ""}${opt("courseHold", "") ? "&courseHold=" + opt("courseHold", "") : ""}${opt("ground", "") ? "&ground=" + opt("ground", "") : ""}${["golfers", "seed", "everyday", "frame", "grassShine", "river", "bakeab", "tourOnly", "belts", "riverSwamp", "golfPace", "golfMinute", "zooms", "boot", "farms", "farmMonth", "ballRoll", "rangeBalls", "fieldBalls", "fieldAb", "tourney", "tracks", "spacing", "sun", "animals", "wind", "osmcourse", "estate", "realplace", "money", "stamp", "land", "landlight", "rough", "desert", "litter", "sand", "terrain", "tee", "mow"].map(k => opt(k, "") ? `&${k}=${opt(k, "")}` : "").join("")}`, { timeout: +opt("gotoMs", "30000") }); // (T312: --gotoMs, a cold dev server loads slower than 30 s) --course: the old nine laid as a course grid under the tour (T077)
 gpu = await page.evaluate(() => { const gl = document.createElement('canvas').getContext('webgl2'); const d = gl?.getExtension('WEBGL_debug_renderer_info'); return d ? gl.getParameter(d.UNMASKED_RENDERER_WEBGL) : 'unknown'; });
 }
 console.log('GPU:', gpu);
 let shot = 0;
 const t0 = Date.now();
-while (Date.now() - t0 < 420000) {
+while (Date.now() - t0 < +opt('tourMs', '420000')) { // (--tourMs: how long the tour may take, ms; a PC out of memory or a busy disk needs more than 7 minutes)
   const r = await page.evaluate(() => ({ done: !!window.__bench, ready: !!window.__game?.ready, tier: window.__game?.perf.tier, z: window.__game?.cam.z })).catch(() => null);
   if (!r) break;
   if (shots && r.ready && Date.now() - t0 > 2000 * (shot + 1)) { await page.screenshot({ path: path.join(out, `tour-${String(shot).padStart(2, '0')}-${r.tier}-${(r.z * 100).toFixed(1)}.png`) }); shot++; }

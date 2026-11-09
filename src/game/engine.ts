@@ -177,7 +177,7 @@ import { addLandPatch, clearLandIn, createLandField, designGreens, groundAt, lay
 import { realNet, type AnswerCache } from './golf/osm/polite';
 import { fetchLand, tilesKept, tilesOfCourse } from './golf/osm/dem';
 import { planOsmGame } from './golf/osm/start';
-import { specMarkers } from './golf/osm/raster';
+import { specMarkers, type PaintOptions } from './golf/osm/raster';
 import { RANGE_CAM_ZOOM, planRangeStart } from './golf/rangestart';
 import { CLUB_REACH, clubhouseSpotWhy, plotOfFront, rangeLayout } from './golf/range';
 import { PRACTICE_LOT_NAME, inPractice, practiceArea, practiceDims } from './golf/practice';
@@ -1515,7 +1515,7 @@ export class Game {
     toast: (t, k) => this.toast(t, k), emit: () => this.emit(),
     enter: () => { this.setTool('select'); if (this.range.cardOpen) this.openRangeCard(false); if (this.landMode) this.closeLandSale(); },
     holes: () => new Set((this.golf?.pins ?? []).map(p => p.hole)).size,
-    lay: c => this.layRealCourse(c),
+    lay: c => this.layRealCourse(c), paint: () => this.osmPaint(),
     // (T358's library: a downloaded course read back from the browser's IndexedDB, converted as a new game would, scaled to the map when it must be)
     kept: async id => { const d = await realDeps(), p = await previewOfKept(id, d); if (p) this.placeLands.set(id, await this.keptLand(p.spec, p.json, d.lib.answers())); return p && p.spec.holes.length ? { info: realInfoOf(p.spec), spec: p.spec } : null; },
   });
@@ -1615,7 +1615,7 @@ export class Game {
     for (const r of plan.cover) for (const p of [...this.propGrid.query([r[0], r[1], r[0] + r[2], r[1] + r[3]])]) if (this.realPropGoes(p) && inRects([r], (p.x0 + p.x1) / 2, (p.y0 + p.y1) / 2)) this.removeProp(p);
     // the course: one diff on the grid, through the grid's own pipeline
     const grid = this.courseGrid!;
-    const cls = this.terrain.cls, diff = placeDiff(grid, scratchOf(turned, plan.ox, plan.oy), plan.cover, true, (x, y) => { const tx = Math.floor(x), ty = Math.floor(y); return tx >= 0 && ty >= 0 && tx < MAP && ty < MAP && cls[ty * MAP + tx] === TC.WATER; });
+    const cls = this.terrain.cls, diff = placeDiff(grid, scratchOf(turned, plan.ox, plan.oy, this.osmPaint()), plan.cover, true, (x, y) => { const tx = Math.floor(x), ty = Math.floor(y); return tx >= 0 && ty >= 0 && tx < MAP && ty < MAP && cls[ty * MAP + tx] === TC.WATER; });
     this.gaDirty = null; this.gaRev++; this.caCache = null; this.holeCache = null; this.cardCache = null;
     applyDiff(grid, diff, false); this.courseGridChanged(diff, true);
     // the holes: the old markers go, the real course's are laid (tee sets, pins, aim points)
@@ -3355,7 +3355,7 @@ export class Game {
    *  points (their pictures as any marker's). The old start's rules: the tournament comes with the season. False, and nothing laid, when the land does
    *  not fit the map (the caller then makes the usual start) */
   private newOsmGame(spec: OsmCourseSpec): boolean {
-    const plan = planOsmGame(spec); if (!plan) { console.warn(`golf: ${spec.name} does not fit the map; the usual start instead`); return false; }
+    const plan = planOsmGame(spec, MAP, this.osmPaint()); if (!plan) { console.warn(`golf: ${spec.name} does not fit the map; the usual start instead`); return false; }
     this.useTerrain({ ...flatTerrain(), highway: plan.entry }, this.devSeed || newSeed()); // (the highway enters where the entry road meets the map's edge)
     this.townPts = [plan.centre]; this.roadNames = new RoadNames(this.names, this.townPts);
     this.edit.addLegs(plan.road, CLASS.road, 0, plan.road.map(() => SK.GROUND), true);
@@ -3380,6 +3380,11 @@ export class Game {
     this.osmSpec = null; this.osmId = null;
     return true;
   }
+  /** T362 (#1017; the owner, 2026-11-08: "leave the rest of the course the natural fescue or desert"): how a map-data course is laid on the course grid, the game's own theme among it. The
+   *  game's theme is known here (newGame took it, the Who-are-you card's choice or the last one made, before it lays anything), so the converter's spec stays the same for either: a
+   *  desert game's course keeps the land's own desert ground where the course is natural, an autumn game's is natural fescue; both have the band of rough round the fairways, greens
+   *  and tees. A saved course keeps the grid it was laid with (nothing re-lays it). The dev server's `?rough=old` lays T340's look (the whole boundary rough, no band) for the before and after of the shots and the bench */
+  private osmPaint(): PaintOptions { return { desert: this.desertTheme, ...(import.meta.env.DEV && new URLSearchParams(location.search).get('rough') === 'old' ? { legacy: true } : {}) }; }
   /** T340: the new-game card's real courses (the shipped ones, with the holes and par) and the one this game is laid on (null: an ordinary game) */
   osmChoices(): { id: string; name: string; place: string; holes: number; par: number; mappedPar: number; scale?: number; ground?: string }[] { return OSM_COURSES.map(c => ({ id: c.id, name: osmDisplayName(c.name), place: c.place, holes: c.holes, par: c.par, mappedPar: c.mappedPar, ...(c.scale ? { scale: c.scale } : {}), ...(c.ground ? { ground: c.ground } : {}) })); }
   osmGame(): GolfSave['osm'] | null { return this.golf?.osm ?? null; }

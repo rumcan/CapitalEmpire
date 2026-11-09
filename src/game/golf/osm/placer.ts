@@ -9,6 +9,7 @@ import type { Pt } from '../../network';
 import { loadOsmSpec, osmCourseInfo, osmDisplayName, type OsmCourseInfo } from './index';
 import { PLACE_EDGE, placeLabel, planPlace, popupText, priceLines, type PlacePlan, type PlaceWorld } from './place';
 import { gridBuildCost, scratchOf } from './placegrid';
+import type { PaintOptions } from './raster';
 import { ROT_FINE, ROT_STEP, coverOutline, firstFittingAngle, normDeg, rotateSpec } from './rotate';
 import type { OsmCourseSpec } from './types';
 
@@ -38,6 +39,8 @@ export interface RealHost {
   /** a downloaded course (T358's library) by its id, as a spec the game would build (scaled to fit the map when it must be): null when it is no longer kept or
    *  has no holes. Absent (the tests): only the shipped courses */
   kept?(id: string): Promise<{ info: RealInfo; spec: OsmCourseSpec } | null>;
+  /** T362: how the game lays a course on its grid (its theme: a desert game's wild land is not painted fescue), so the price of painting it is the one it will pay. Absent (the tests): the autumn game's */
+  paint?(): PaintOptions;
 }
 
 /** the course in hand as the card and the pop-up read it */
@@ -53,7 +56,7 @@ export interface RealView {
  *  islands cut out), and the hole lines. Built once for a spec in its own frame and drawn under the pose's transform */
 interface Sketch { layers: { path: Path2D; fill: string }[]; lines: Path2D; w: number; h: number }
 const LAYERS: { surf: string; fill: string }[] = [
-  { surf: 'rough', fill: 'rgba(120,180,95,0.16)' }, { surf: 'fairway', fill: 'rgba(160,222,115,0.46)' }, { surf: 'water', fill: 'rgba(95,165,235,0.62)' },
+  { surf: 'wild', fill: 'rgba(120,180,95,0.16)' }, { surf: 'rough', fill: 'rgba(120,180,95,0.16)' }, { surf: 'fairway', fill: 'rgba(160,222,115,0.46)' }, { surf: 'water', fill: 'rgba(95,165,235,0.62)' },
   { surf: 'bunker', fill: 'rgba(242,224,165,0.85)' }, { surf: 'tee', fill: 'rgba(196,240,150,0.70)' }, { surf: 'green', fill: 'rgba(90,230,135,0.82)' },
 ];
 const area2 = (r: readonly number[]): number => { let a = 0; for (let i = 0, n = r.length >> 1; i < n; i++) { const j = (i + 1) % n; a += r[2 * i]! * r[2 * j + 1]! - r[2 * j]! * r[2 * i + 1]!; } return a; };
@@ -129,7 +132,7 @@ export class RealPlacer {
     }
     this.host.enter(); // (Select in hand: picking a tool puts a course in hand down, so this comes first)
     this.id = id; this.info = info; this.spec = spec; this.deg = deg; this.confirming = null; this.turnedBy.clear(); this.cache = null; this.shown = null;
-    this.build = gridBuildCost(scratchOf(spec, 0, 0));
+    this.build = gridBuildCost(scratchOf(spec, 0, 0, this.host.paint?.()));
     const c = this.host.centre(); this.at = { x: Math.round(c.x), y: Math.round(c.y) };
     this.host.toast(`${info.name}: move it to a spot and click to place it · R turns it (Shift+R back, Alt for any angle) · Esc puts it down`, 'info');
     this.host.emit();

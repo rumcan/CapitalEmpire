@@ -3,8 +3,9 @@
 // of 2 m, x east and y south of the land's north-west corner, the surfaces in paint order with the hole each belongs to, and the holes in order with
 // their tee markers, pin, aim points and par. What the map lacks it makes up (and lists): a green where a hole line ends on none, a tee where it
 // starts on none, a fairway band on a par 4 or 5 with none, a pin at a green's middle, par from length. Holes closer than the 60 m corridor
-// guideline, double greens and the like are warnings, never a refusal. Pure TypeScript, no network, no DOM, deterministic: the same JSON gives the
-// same spec.
+// guideline, double greens and the like are warnings, never a refusal. T362: the boundary is the course's wild land (natural fescue, or desert ground), with
+// a band of rough round every fairway, green and tee laid from the spec's `roughBand` widths. Pure TypeScript, no network, no DOM, deterministic: the same
+// JSON gives the same spec.
 import { deriveHoles, parFromLength } from '../holes';
 import { TILE_M, type AimPoint, type Pin, type TeeKind, type TeeMark } from '../types';
 import {
@@ -13,7 +14,8 @@ import {
 } from './geom';
 import { deriveHoleLines } from './derive';
 import {
-  OSM_CREDIT, OSM_LICENCE, OSM_MARGIN_M, type JFeature, type OsmCourseJson, type OsmCourseSpec, type SpecArea, type SpecHole, type SpecNote, type SpecSurface, type SpecTee, type TPt,
+  OSM_CREDIT, OSM_LICENCE, OSM_MARGIN_M, OSM_ROUGH_BAND_M, OSM_ROUGH_BAND_MAX_M, type JFeature, type OsmCourseJson, type OsmCourseSpec, type RoughBand, type SpecArea, type SpecHole, type SpecNote,
+  type SpecSurface, type SpecTee, type TPt,
 } from './types';
 
 /** a tee polygon within this of a hole line's start belongs to that hole's tee, m */
@@ -48,6 +50,8 @@ export interface ConvertOptions {
   /** the land's margin round the holes' features, m (default 40) */ marginM?: number;
   /** a uniform scale for a course too big for the map (the real coordinates times this, 1 by default: true size); the margin and what is made up keep their size */ scale?: number;
   /** work holes out from the fairways when the map has no hole lines (default: yes; see derive.ts) */ derive?: boolean;
+  /** T362: the widths of the band of rough round the fairways, greens and tees, m, for this build (over the fixture's `meta.roughBandM`, over OSM_ROUGH_BAND_M); a surface left out keeps what it had */
+  roughBandM?: Partial<RoughBand>;
 }
 
 /** a polygon of the JSON as the converter works with it */
@@ -91,6 +95,17 @@ export function scaleJson(json: OsmCourseJson, k: number): OsmCourseJson {
   const features: OsmCourseJson['features'] = {};
   for (const [kind, list] of Object.entries(json.features ?? {})) (features as Record<string, JFeature[]>)[kind] = (list ?? []).map(feat);
   return { ...json, ...(json.boundary ? { boundary: feat(json.boundary) } : {}), features };
+}
+
+/** T362 (#1017): the widths of the band of rough round the fairways, greens and tees for a course, m: OSM_ROUGH_BAND_M, over it the fixture's `meta.roughBandM`, over it the caller's
+ *  (`roughBandM`). A width that is not a number is ignored, and none goes below 0 (no band) or above OSM_ROUGH_BAND_MAX_M */
+export function roughBandOf(json: OsmCourseJson, over?: Partial<RoughBand>): RoughBand {
+  const out: RoughBand = { ...OSM_ROUGH_BAND_M };
+  for (const src of [json.meta?.roughBandM, over]) for (const k of ['fairway', 'green', 'tee'] as const) {
+    const v = src?.[k];
+    if (typeof v === 'number' && Number.isFinite(v)) out[k] = Math.min(OSM_ROUGH_BAND_MAX_M, Math.max(0, v));
+  }
+  return out;
 }
 
 /** the playing length through a tee marker, aim points and pin, m (golf/holes.ts: metres, whole) */
@@ -356,7 +371,10 @@ export function osmCourseToSpec(json0: OsmCourseJson, opt: ConvertOptions = {}):
     if (!boxesMeet(a.box, lbox)) return;
     areas.push({ surf, hole, rings: ringsOf(a.poly), ...extra }); if (kind) count(kind);
   };
-  for (const b of boundaryAreas) add('rough', b, 0, {}, 'boundary');
+  // T362 (#1017; the owner, 2026-11-08: "add a layer of rough around the edges of the fairway and greens for the imported course but leave the rest of the course the natural
+  // fescue or desert"): the boundary is the course's wild land (the natural fescue, or the land's own desert ground in a desert game: raster.ts decides, the game's theme is
+  // known only when the course is laid), the mapped `golf=rough` areas stay rough, and the band of rough round the fairways, greens and tees is the raster's, from spec.roughBand
+  for (const b of boundaryAreas) add('wild', b, 0, {}, 'boundary');
   for (const r of roughs) add('rough', r, 0, {}, 'rough');
   for (const [f, l] of fairOwner) if (!foreign(l)) add('fairway', f, holeOfLine(l), {}, 'fairway');
   for (const w of works) if (w.bandRings) for (const r of w.bandRings) areas.push({ surf: 'fairway', hole: w.n, rings: [flat(r)], made: true, clip: true });
@@ -424,6 +442,6 @@ export function osmCourseToSpec(json0: OsmCourseJson, opt: ConvertOptions = {}):
     id: opt.id ?? json.meta?.id ?? 'course', name: opt.name ?? json.meta?.course?.name ?? 'Course', credit: OSM_CREDIT, licence: OSM_LICENCE, scale, derived: fromFairways,
     source: json.meta?.course?.osm ?? '', place, w: W, h: H, originM: [ox, oy], holes, areas, warnings, fills, otherCourses, course: chosen || null,
     parTotal: holes.reduce((s, h) => s + h.par, 0), gameParTotal: holes.reduce((s, h) => s + h.gamePar, 0), lengthM: holes.reduce((s, h) => s + h.lengthM, 0),
-    counts,
+    counts, roughBand: roughBandOf(json, opt.roughBandM),
   };
 }
