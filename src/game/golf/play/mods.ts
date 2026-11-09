@@ -55,7 +55,8 @@ const whenHolds = (w: ModWhen, c: ModCtx | undefined): boolean => {
 export interface ClubKit { skill: number; stats: Stats; carry: number; spread: number; sweet: number; speed: number; roll: number; mishit: number; spin: number; feel: number; line: number; luck: number; wind: number; miss: number; slope: number }
 
 /** T335: the character each club has of its own, on top of the golfer and his mods: the clubs added with the bag have one (a 5-wood and a hybrid forgive more and run on, the lob wedge lands soft and is harder to
- *  hit); the original eight have none, so they play exactly as they did before the bag (T346 #988 is where the clubs' run gets ranked across the whole bag). Factors (1: none), a mishit chance added */
+ *  hit); the original eight have none, so they play exactly as they did before the bag. Factors (1: none), a mishit chance added. T346 (#988): the `roll` here is what a shot WITHOUT conditions rolls by, as before; in a shot with
+ *  conditions the whole bag's run is ranked by launch and spin in shot.ts CLUB_RUN (the original eight clubs too) and replaces it (hitShot) */
 export const CLUB_BASE: Readonly<Partial<Record<Club, { spread?: number; sweet?: number; roll?: number; mishit?: number }>>> = {
   wood5: { spread: 0.97, sweet: 1.04, roll: 1.05 },
   hybrid: { spread: 0.93, sweet: 1.08, roll: 1.1, mishit: -0.01 },

@@ -17,7 +17,7 @@ const FACINGS = [0, 1, 2, 3] as const;
 const start = { tier: 1, exits: 2, residents: 0 }, busy = { tier: 5, exits: 2, residents: 20000 };
 const buy = (ids: RangeUpgradeId[], s = defaultRangeBiz()): RangeBizSave => ids.reduce((q, id) => withUpgrade(q, id), s);
 const BASE: RangeUpgradeId[] = ['bays8', 'bays12', 'greens', 'targets', 'covered', 'dispenser', 'proshop'];
-const EVERY: RangeUpgradeId[] = [...BASE, 'bays24', 'lights', 'kiosk', 'picker', 'tier2', 'academy', 'gravel', 'pave', 'parking', 'teeturf', 'grass'];
+const EVERY: RangeUpgradeId[] = [...BASE, 'bays24', 'lights', 'kiosk', 'tube', 'pushpick', 'picker', 'nightpick', 'tier2', 'academy', 'gravel', 'pave', 'parking', 'teeturf', 'grass'];
 
 test('the extras are range card upgrades: their costs, upkeep and what each needs first', () => {
   const by = new Map(RANGE_UPGRADES.map(u => [u.id, u]));
@@ -29,11 +29,11 @@ test('the extras are range card upgrades: their costs, upkeep and what each need
   assert.equal(upgradeWhy(buy(['bays8', 'bays12']), 'tier2', 1e9), 'Build Covered bays first', 'the second tier needs the covered bays too');
   assert.equal(upgradeWhy(buy(['bays8', 'bays12', 'covered']), 'tier2', 1e9), '');
   assert.equal(upgradeWhy(d, 'academy', 1e9), 'Build Pro shop first');
-  assert.equal(upgradeWhy(d, 'picker', 1e9), 'Build 8 hitting bays first');
+  assert.equal(upgradeWhy(d, 'picker', 1e9), 'Build Push picker first', 'T386: the picker cart is the third tool of the ball loop');
   assert.equal(upgradeWhy(d, 'kiosk', 9000), '', 'the kiosk needs nothing first');
   // the upkeep goes through T132's monthly upkeep
   assert.equal(rangeUpkeep(buy(['kiosk'])), 80);
-  assert.equal(rangeUpkeep(buy(EVERY)), RANGE_UPGRADES.reduce((a, u) => a + u.upkeep, 0));
+  assert.equal(rangeUpkeep(buy(EVERY)), RANGE_UPGRADES.filter(u => EVERY.includes(u.id)).reduce((a, u) => a + u.upkeep, 0));
 });
 
 test('what the extras do to the stats: twelve bays upstairs, the appeal, the hours stay', () => {
@@ -59,7 +59,7 @@ test('the save: the extras round-trip, an old save migrates with zero counts, a 
 test('the scene: the deck, its upper bays, the academy, the kiosk and the picker cart stand on the plot for every facing', () => {
   for (const f of FACINGS) {
     const p = plots[f], inPlot = (x: number, y: number) => x >= p[0] - 1e-6 && y >= p[1] - 1e-6 && x <= p[0] + p[2] + 1e-6 && y <= p[1] + p[3] + 1e-6;
-    for (const ids of [[...BASE, 'tier2', 'academy', 'kiosk', 'picker'], EVERY] as RangeUpgradeId[][]) {
+    for (const ids of [[...BASE, 'tier2', 'academy', 'kiosk', 'tube', 'pushpick', 'picker', 'nightpick'], EVERY] as RangeUpgradeId[][]) {
       const s = buy(ids); s.total.takings = HOME_AT[1];
       const sc = rangeScene(p, f, s), st = rangeStats(s);
       for (const q of sc.pieces) assert.ok(inPlot(q.x, q.y), `facing ${f}: ${q.key} on the plot`);
@@ -174,7 +174,7 @@ test('the academy: golfers who want a lesson take a lesson bay and pay $15 more;
 });
 
 test('the ball picker cart drives its lanes after closing and picks the balls; without it they go at once (D15)', () => {
-  const s = buy(['bays8', 'picker']), o = run(s, 300, 15);
+  const s = buy(['bays8', 'tube', 'pushpick', 'picker', 'nightpick']), o = run(s, 300, 15); // (T386: the night cart is night picking: the cart you tow is the tool before it)
   const lying = o.r.nLying; assert.ok(lying > 20, `balls lie on the range (${lying})`);
   const v0 = o.r.view(); assert.ok(v0.picker && !v0.picker.out, 'parked by day');
   // closing: the last buckets finish, then the cart goes out and the balls go as it passes

@@ -155,8 +155,8 @@ export class HoleRun {
       const s = L > 0 ? o.leaveM / TILE_M / L : 0, to = o.holed ? { x: hole.pin.x, y: hole.pin.y } : { x: hole.pin.x + dx * s, y: hole.pin.y + dy * s };
       return p.pend = { club: 'putter', to, lie: o.holed ? 'green' : this.c.view.lieAt(to.x, to.y), penalty: 0, holed: o.holed, dur: PUTT_FLIGHT, green: true };
     }
-    // (T334: with the day's conditions the wind, the lie's kind and the slope play; without them the shot is as before)
-    const cd = this.c.cond, o = hitShot(p.r, p.sk, p.lie, p.ball, k.aim, k.club, this.c.view, cd ? { env: fieldEnv(cd, this.c.view.kindAt, p.ball, p.lie, k.aim) } : undefined), atPin = k.aim.x === hole.pin.x && k.aim.y === hole.pin.y;
+    // (T334: with the day's conditions the wind, the lie's kind and the slope play; without them the shot is as before. T346: and the ball rolls on by its club's run, unless the day is from before it: Conditions.run false)
+    const cd = this.c.cond, o = hitShot(p.r, p.sk, p.lie, p.ball, k.aim, k.club, this.c.view, cd ? { env: fieldEnv(cd, this.c.view.kindAt, p.ball, p.lie, k.aim), ...(cd.run === false ? { run: false } : {}) } : undefined), atPin = k.aim.x === hole.pin.x && k.aim.y === hole.pin.y;
     return p.pend = { club: k.club, to: o.to, lie: o.lie, penalty: o.penalty, holed: false, dur: FLIGHT_TIME, green: atPin || o.lie === 'green', landing: o.landing };
   }
   /** the model's stroke for p at its minute (timeOf, which must be known). Recorded, and returned */

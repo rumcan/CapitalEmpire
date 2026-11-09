@@ -190,3 +190,15 @@ test('T353 house lot sales: lotSale() is income now and in the next ledger (Lot 
   // an older ledger (no lots field) reads as none
   const old = Budget.from({ ...b.toJSON(), history: [{ ...L, lots: undefined }] }); assert.equal(old.history[0]!.lots ?? 0, 0);
 });
+
+test('T386 range balls: spend(balls) is out of the treasury now and in the next ledger (Range balls, in net); a day with no order has no such line; the sandbox keeps the treasury', () => {
+  const b = new Budget(); b.money = 5000;
+  b.spend('balls', 1020);
+  assert.equal(b.money, 3980, 'paid to the supplier at once');
+  const L = b.endDay(1, EMPTY_DAY);
+  assert.equal(L.balls, 1020); assert.equal(L.net, -1020); assert.equal(b.money, 3980, 'the day close does not charge it twice');
+  assert.equal(b.endDay(2, EMPTY_DAY).balls, undefined, 'a day with no order has no Range balls line');
+  const u = new Budget(); u.money = 5000; u.unlimited = true; u.spend('balls', 1020); assert.equal(u.money, 5000, 'the dev sandbox\'s money does not move'); assert.equal(u.endDay(1, EMPTY_DAY).balls, 1020, 'but the ledger shows it');
+  // an older ledger (no balls field) reads as none
+  const old = Budget.from({ ...b.toJSON(), history: [{ ...L, balls: undefined }] }); assert.equal(old.history[0]!.balls ?? 0, 0);
+});

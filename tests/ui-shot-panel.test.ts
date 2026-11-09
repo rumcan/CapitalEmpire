@@ -80,3 +80,18 @@ test('shot panel (T335): the club strip is your bag: the woods, irons, wedges an
   const old = html(game(state('iron6'), {}));
   assert.ok(/aria-label="Sand wedge"/.test(old) && !/aria-label="7-iron"/.test(old), 'no bag in the stand-in game: the original seven');
 });
+
+test('shot panel (T348): the hint is what a first-time player needs, two lines at most, and the club keys, the aim and the boost are in the "?" tip', () => {
+  const h = html(game(state('iron6'), {}));
+  const hint = (/data-testid="shot-hint-text"[^>]*>([^<]*)</.exec(h) ?? [])[1] ?? '';
+  assert.ok(hint.length > 20 && hint.length <= 80, `the hint is one short sentence pair: "${hint}" (${hint.length} characters: two lines of the panel's text column at most)`);
+  assert.ok(/meter/.test(hint) && /power/.test(hint) && /snap line/.test(hint), 'the swing: the meter, the power, the snap line');
+  assert.ok(!/Q \/ E|wheel|aim|Space/.test(hint), 'the rest is not in the line');
+  const tip = (/data-testid="shot-help" title="([^"]*)"/.exec(h) ?? [])[1] ?? '';
+  assert.ok(/Q \/ E/.test(tip) && /wheel/.test(tip) && /aim/.test(tip) && /Space during the swing/.test(tip), `the "?" tip holds the club keys, the aim and the boost: "${tip}"`);
+  assert.ok(/aria-label="More controls"/.test(h) && />\?<\/button>/.test(h), 'a "?" button');
+  assert.ok(!/min-h-\[4\.5em\]/.test(h), 'the four-line box is gone'); assert.ok(h.includes('data-testid="shot-hint"') && /min-h-\[2\.4em\]/.test(h), 'two lines of room');
+  // a locked mechanic says nothing of Space in the tip either
+  const locked = html({ ...game(state('iron6'), {}), shotCan: () => ({ boost: false, airspin: false }) } as unknown as Game);
+  assert.ok(!/Space/.test(locked), 'no Space without Power Mash');
+});
