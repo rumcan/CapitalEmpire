@@ -9,8 +9,10 @@ import type { ProgressiveUiState } from '../game/ext/progressive-ui';
 import type { IconName } from './Icon';
 import { entryKey, extraLock, toolLock, toolNew, toolsIn, type RailItem, type RailTool } from './rail-items';
 import { GREENKEEPING } from '../game/features';
-import { EXTRA_TILE, PLANT_TILE, PRACTICE_TILE, PROP_GROUP_TILE, ROW_TILE, SURFACE_TILE, type ToolTile } from './tool-tiles';
+import { EXTRA_TILE, PLANT_TILE, PRACTICE_TILE, PROP_GROUP_TILE, PROP_KIND_TILE, ROW_TILE, SURFACE_TILE, type ToolTile } from './tool-tiles';
 
+/** T400: the icon of a golf props' kind row in Facilities */
+const PROP_KIND_ICON: Readonly<Record<string, IconName>> = { structures: 'buildings', coursefurniture: 'leaf', rangeprops: 'pin', vehicles: 'bus' };
 /** what a leaf does besides picking its tool (App.tsx runs it) */
 export type LeafAct =
   | { k: 'road'; id: string } | { k: 'junction'; id: string } | { k: 'surface'; id: string } | { k: 'newHole' } | { k: 'holes' }
@@ -42,7 +44,13 @@ export interface MenuCtx {
   /** the course brushes shown at this stage (Shape by hand), the greenkeeping cares, the props' groups, the paint's materials and plants */
   surfaces: { id: string; name: string }[];
   cares: { id: string; name: string }[];
+  /** the props' groups: Facilities ▸ Decoration ▸ Props lists them (the everyday groups of the course) and, with no townPropGroups, Town decoration ▸ Props too */
   propGroups: { id: string; name: string }[];
+  /** T400 (#1078): Town decoration ▸ Props' groups, the town's alone (no golf group); absent: propGroups */
+  townPropGroups?: { id: string; name: string }[];
+  /** T400 (#1078): the golf props by kind, a row each in Facilities after Decoration (Tournament structures, Course furniture, Range props, Course vehicles): a
+   *  kind of one group is a leaf, else a flyout of its groups under "All <kind>" */
+  propKinds?: { id: string; name: string; groups: { id: string; name: string }[] }[];
   materials: { id: string; name: string; col?: string }[];
   plants: { id: string; name: string; col?: string }[];
   /** T206: the practice facilities (Facilities ▸ Practice) with their own lock besides the tool's (no practice area: not a range start) */
@@ -146,6 +154,15 @@ export function menuOf(item: RailItem, c: MenuCtx): MenuRow[] {
       if (pa) rows.push(tiled(group('plants', 'Plants', 'trees', c.plants.map(m => tiled({ ...leaf(pa, m.name, { k: 'plant', id: m.id })!, ...(m.col ? { swatch: m.col } : {}) }, PLANT_TILE[m.id])), pa), ROW_TILE.plants));
       const pr = byId('props');
       if (pr) rows.push(tiled(group('decoration', 'Decoration', 'leaf', [group('props', 'Props', 'leaf', [leaf(pr, 'All props', { k: 'props', group: null }), ...c.propGroups.map(g => tiled(leaf(pr, g.name, { k: 'props', group: g.id }), PROP_GROUP_TILE[g.id]))], pr)], pr), ROW_TILE.decoration));
+      // T400 (#1078; the owner, 2026-11-09: "why are the golf shit in the town decoration menu and not in the facilities menu?"): the golf props, by the kinds the
+      // tournament kit meant, a row each: Tournament structures ▸ (the stalls, seating, media and event structures), Course furniture ▸ (the tournament
+      // dressing and the course props), Range props, Course vehicles. Town decoration lists none of them
+      if (pr) for (const k of c.propKinds ?? []) {
+        const icon: IconName = PROP_KIND_ICON[k.id] ?? 'leaf', tile = PROP_KIND_TILE[k.id];
+        rows.push(tiled(k.groups.length === 1
+          ? leaf(pr, k.name, { k: 'props', group: k.groups[0]!.id }, icon)
+          : group(`kind:${k.id}`, k.name, icon, [leaf(pr, `All ${k.name.toLowerCase()}`, { k: 'props', group: k.id }, icon), ...k.groups.map(g => leaf(pr, g.name, { k: 'props', group: g.id }, icon))], pr), tile));
+      }
       // T256: the same Build as the Range's: paint your property
       if (c.golf) { const b = leaf(BUILD_TOOL, 'Build on your property', { k: 'build' }, 'terrain'); if (b) rows.push({ ...b, gold: true, tile: ROW_TILE.build }); }
       break;
@@ -158,7 +175,8 @@ export function menuOf(item: RailItem, c: MenuCtx): MenuRow[] {
         leaf(pa, 'Pick an area', { k: 'paintMode', id: 'pick' }, 'compass'), leaf(pa, 'Erase areas', { k: 'paintMode', id: 'erase' }, 'bulldozer'),
       ], pa));
       const pr = byId('props', ''), bu = byId('props', 'buildings');
-      if (pr) rows.push(group('props', 'Props', 'leaf', [leaf(pr, 'All props', { k: 'props', group: null }), ...c.propGroups.map(g => leaf(pr, g.name, { k: 'props', group: g.id }))], pr));
+      // (T400: the town's groups alone: a group with nothing for the town, the golf props', is no row here)
+      if (pr) rows.push(group('props', 'Props', 'leaf', [leaf(pr, 'All props', { k: 'props', group: null }), ...(c.townPropGroups ?? c.propGroups).map(g => leaf(pr, g.name, { k: 'props', group: g.id }))], pr));
       if (bu) rows.push(leaf(bu, 'Buildings', { k: 'props', group: 'buildings' }, 'buildings'));
       const biz = byId('business');
       if (biz) rows.push(leaf(biz));

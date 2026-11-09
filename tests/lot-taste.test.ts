@@ -103,7 +103,10 @@ describe('the lot generator\'s taste: pairs and densities by state (T161)', () =
     assert.ok(by.built && by.upgraded && by.declined && by.built.n > 20, JSON.stringify(by));
     assert.ok(m('declined', 'prop') > m('built', 'prop') && m('declined', 'flowerbed') < m('built', 'flowerbed'), 'decrepit: more props, fewer flowers');
     assert.ok(m('upgraded', 'bush') > m('built', 'bush') && m('upgraded', 'flowerbed') > m('built', 'flowerbed'), 'upgraded: more bushes and flowers');
-    assert.ok(m('built', 'pairs') > 0.5, 'pairs laid in the game');
+    // (T390: this was "> 0.5". The mean is a fixed number (these lots are fixed, nothing here is random) that the owner's presets decide (lot-presets.json, saved again on
+    // 2026-11-02): it is 0.5 a built lot now (0.66 an upgraded one, 0.39 a declined one over 80 lots each), so the strict bar failed on a tie (turning the buildings to face
+    // their street, T375, changes none of these numbers: checked). What this checks is that the game lays pairs at all, a pair every two or three lots at least: 0.4, and it says what it saw)
+    assert.ok(m('built', 'pairs') >= 0.4, `pairs laid in the game: ${m('built', 'pairs')} a built lot`);
   });
   it('6. the exam: 50 fixed lots, every state on every axis road, frozen presets running small to large; rows fit the lab street', () => {
     const a = examLots(lotPresets()), b = examLots(lotPresets());

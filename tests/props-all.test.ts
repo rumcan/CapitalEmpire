@@ -9,6 +9,7 @@ import { DECOR, DECOR_GROUPS, placeableProps, propsCount, propsShown, shownIn, t
 import { PropsTool, type PropsHostCtx } from '../src/game/golf/propstool';
 import { PropsPanel } from '../src/ui/course/PropsPanel';
 import { LIBRARY } from '../src/game/library';
+import { isPerson } from '../src/game/person';
 import type { Game } from '../src/game/engine';
 
 const LIB = new Map(LIBRARY.map((it, i) => [it.id, i]));
@@ -26,7 +27,8 @@ test('the placeable props: every prop of the owner\'s new categories has its car
   assert.equal(new Set(placeable.map(d => d.key)).size, placeable.length, 'one card each');
   // the library's own list of the new props (every "New: " category: one card a prop, a tree one card for its four views): none is left out
   // (T375: the eight-view art's rows, category "New: Eight-view objects", are the views the lots draw a building with, not props: no card)
-  const fresh = LIBRARY.filter(i => i.cat.startsWith('New: ') && !i.id.startsWith('object8:') && (i.kind !== 'tree' || i.id.endsWith(':ne')));
+  // (T401: the People props are no card: people are never placed)
+  const fresh = LIBRARY.filter(i => i.cat.startsWith('New: ') && !isPerson(i) && !i.id.startsWith('object8:') && (i.kind !== 'tree' || i.id.endsWith(':ne')));
   const cards = new Set(placeable.map(d => d.id));
   for (const it of fresh) assert.ok(cards.has(it.id), `${it.id} (${it.cat}) has a card`);
   // ...and no more: a card in a new group is a library New: item (the tournament kit moves seven of them to its own group, and the eight-view sets get one card each, their first view)
@@ -40,7 +42,9 @@ test('the placeable props: every prop of the owner\'s new categories has its car
   // (the desert's removed pictures stay out of its cards on purpose: desert-props.ts)
   for (const d of placeable.filter(x => x.group === 'desert')) for (const id of [d.id, ...(d.variants ?? [])]) assert.ok(LIB.has(id), `${d.key}: ${id} is in the library`);
   // every prop of every view: All props shows the whole catalogue, the course's and the town's alike (the frame tree is not sold in the panel)
-  for (const where of ['course', 'town'] as const) assert.equal(propsCount(view({ where, all: true })), placeable.length, `${where}: All props`);
+  // (T400: the town has no All props box: its panel lists the town's props alone, so the whole catalogue is the course's)
+  assert.equal(propsCount(view({ where: 'course', all: true })), placeable.length, 'course: All props');
+  assert.ok(propsCount(view({ where: 'town', all: true })) < placeable.length, "town: the town's props alone");
   assert.equal(DECOR.filter(d => d.hidden).length, 1, 'only the hole frame\'s tree is kept out');
 });
 
@@ -50,6 +54,8 @@ test('All props lists every group, whichever group the flyout opened and whereve
     // no group opened, a group opened: All props is the same whole catalogue
     for (const focus of [null, ...DECOR_GROUPS.map(g => g.id)] as (DecorGroup | null)[]) {
       const shown = propsShown(view({ where, all: true, focus }));
+      // (T400: the town has no All props: the box changes nothing there, the golf props are Facilities')
+      if (where === 'town') { assert.deepEqual(shown, propsShown(view({ where, all: false, focus })), `town / ${focus}: the box changes nothing`); continue; }
       assert.equal(shown.reduce((n, g) => n + g.items.length, 0), all, `${where} / ${focus}: every prop`);
       assert.deepEqual(shown.map(g => g.id), DECOR_GROUPS.map(g => g.id), `${where} / ${focus}: every group, in its order`);
     }
@@ -97,9 +103,9 @@ test('the panel: the cards on screen are the count it says, in their groups, and
   assert.deepEqual(groupsIn(h), DECOR_GROUPS.map(g => g.id), 'in their groups');
   assert.match(h, new RegExp(`Showing ${all} of ${all} props`)); assert.match(h, new RegExp(`data-shown="${all}" data-placeable="${all}"`));
   assert.doesNotMatch(h, /overflow-x-(auto|scroll)/, 'no sideways scroll');
-  // the town's panel: the same box, the same count
-  t.setAll(false); t.setView('town'); assert.equal(cardsIn(html(t)), propsCount(view({ where: 'town' })));
-  t.setAll(true); assert.equal(cardsIn(html(t)), all);
+  // the town's panel (T400): the town's props alone, with no All props box: ticking it does nothing, and the golf props are Facilities'
+  t.setAll(false); t.setView('town'); h = html(t); assert.equal(cardsIn(h), propsCount(view({ where: 'town' }))); assert.doesNotMatch(h, /data-testid="props-all"/, 'no All props box in the town');
+  t.setAll(true); assert.equal(t.all, false, 'the town keeps the box off'); assert.equal(cardsIn(html(t)), propsCount(view({ where: 'town' }))); assert.ok(cardsIn(html(t)) < all);
   // the town's Buildings carry no box (their own view)
   t.setAll(false); t.setView('town', 'buildings'); h = html(t); assert.doesNotMatch(h, /data-testid="props-all"/); assert.deepEqual(groupsIn(h), ['buildings']);
 });

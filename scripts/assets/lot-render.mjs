@@ -8,8 +8,13 @@ import sharp from 'sharp';
 import { TOT } from './source.mjs';
 
 export const LIB_DIR = path.join(TOT, 'output/town-builder/library');
-/** the builder library by id (local TrickOrTreat checkout) */
-export const LIB = new Map(JSON.parse(fs.readFileSync(path.join(LIB_DIR, 'library.json'), 'utf8')).items.map(i => [i.id, i]));
+/** the builder library by id (local TrickOrTreat checkout). Optional: on a PC without TrickOrTreat's output/town-builder (2026-11-09:
+ *  the studio would not start at all), it is empty and only the lot renders that need it have nothing to draw */
+export const LIB = (() => {
+  const f = path.join(LIB_DIR, 'library.json');
+  if (!fs.existsSync(f)) { console.warn(`lot-render: no TrickOrTreat builder library at ${f}; lot renders from it are off`); return new Map(); }
+  return new Map(JSON.parse(fs.readFileSync(f, 'utf8')).items.map(i => [i.id, i]));
+})();
 const S = 32;
 /** screen px (native) of a world point in metres */
 export const toScreen = (X, Y) => [(X - Y) * S, (X + Y) * S / 2];

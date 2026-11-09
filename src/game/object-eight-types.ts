@@ -16,6 +16,8 @@ export interface ObjectEightSet {
   runtimeReuse?: true;
   /** The library pictures whose atlas cells these views alias (T398: the four normal views of a building whose straight-on views are new: its own corner pictures, never repacked). */
   sourceIds?: Partial<Record<ObjectFacingKey, string>>;
+  /** T401 (#1079): a set of a person (an animated golfer or spectator): never a Props card or a studio palette's pick; the game draws its own people */
+  person?: true;
 }
 export const isObjectFacing = (v: unknown): v is ObjectFacingKey => typeof v === 'string' && (OBJECT_FACING_KEYS as readonly string[]).includes(v);
 export const objectFacingLabel = (key: ObjectFacingKey): string => key.startsWith('normal') ? key.slice(6) : `${key.slice(4)} (8°)`;

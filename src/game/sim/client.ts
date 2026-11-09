@@ -107,7 +107,7 @@ export class SimClient {
    *  City.takeCash): the engine floats it up and clears it */
   cash: number[] = [];
   /** T147: told of every spend (the engine floats a purchase up where it was placed) */
-  onSpend: ((kind: 'construction' | 'compensation' | 'business' | 'upkeep' | 'lots', n: number) => void) | null = null;
+  onSpend: ((kind: 'construction' | 'compensation' | 'business' | 'upkeep' | 'lots' | 'balls', n: number) => void) | null = null;
   /** the active traffic incidents as the worker last sent them (with each frame): 3 floats each, x and y (tiles) and kind (1 crash, 0 breakdown) */
   incidents: Float32Array = NO_FLOATS;
   /** the active natural disaster as the worker last sent it (none: empty); called with the notes (warnings, starts, ends, repairs) of each such message */
@@ -231,7 +231,7 @@ export class SimClient {
   /** takes a card of the eval's draft: its effects apply at once (see City.pickCard) */
   pickCard(card: CardId) { this.post({ t: 'round', op: 'pick', card }); }
   /** spends n $ on kind (negative construction gives it back): the treasury drops now, the worker books it into today's ledger */
-  spend(kind: 'construction' | 'compensation' | 'business' | 'upkeep' | 'lots', n: number) {  
+  spend(kind: 'construction' | 'compensation' | 'business' | 'upkeep' | 'lots' | 'balls', n: number) {  
  if (kind === 'business') { this.budget.money -= n; }  
  else if (kind === 'upkeep') { this.budget.money -= n; }  
  else { this.budget.money -= n; }  

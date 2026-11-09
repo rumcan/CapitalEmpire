@@ -25,6 +25,7 @@
 import type { Game } from '../engine';
 import type { LibItem, Prop } from '../types';
 import { ATLAS_PAGES, ATLAS_SIZE, LIBRARY } from '../library';
+import { isPerson } from '../person';
 import { spriteRect, type Drawable } from '../sprites';
 import { worldX, worldY } from '../iso';
 import { OWNER_SCALE, TABLE_SCALE } from '../lots/scales';
@@ -246,7 +247,7 @@ export function installLotEditor(game: Game, canvas: HTMLCanvasElement): () => v
     <div data-k="msg" style="margin-top:6px;color:#fcd34d;white-space:pre-wrap"></div>`;
   const $ = <T extends HTMLElement>(k: string) => panel.querySelector(`[data-k="${k}"]`) as T;
   const list = panel.querySelector('datalist')!;
-  for (const it of LIBRARY) if ((!it.id.startsWith('view:') || EXTRA_VIEW_BASE.has(it.id)) && !it.id.startsWith('east:') && it.kind !== 'walker') { const o = document.createElement('option'); o.value = it.id; o.label = it.name; list.appendChild(o); }
+  for (const it of LIBRARY) if ((!it.id.startsWith('view:') || EXTRA_VIEW_BASE.has(it.id)) && !it.id.startsWith('east:') && it.kind !== 'walker' && !isPerson(it)) { const o = document.createElement('option'); o.value = it.id; o.label = it.name; list.appendChild(o); }
   document.body.append(outline, lost, ghostEl, boxEl, panel);
   const pick = $<HTMLInputElement>('pick');
   /** the picker's library id: the id typed, or the one whose name was typed */

@@ -173,6 +173,9 @@ export function benchGame(g: Game, scene: BenchScene) {
   if (new URLSearchParams(location.search).get('riverSwamp') === '0') (g.ground as unknown as { setRiverSwamp?: (on: boolean) => void }).setRiverSwamp?.(false);
   // T251: ?rangeBalls=N (bench.mjs --rangeBalls N), the busy range: N balls kept in the air from its bays (RangeSim.benchBalls)
   { const rb = Number(new URLSearchParams(location.search).get('rangeBalls')); if (rb > 0) g.range.sim.benchBalls = Math.floor(rb); }
+  // T386 (#1043): ?fieldBalls=N (bench.mjs --fieldBalls N), a full outfield: N balls lie on the range's outfield from the start (RangeHost.benchField); ?fieldAb=1: the balls drawn and not
+  // drawn by turns (fieldStage)
+  { const fb = Number(new URLSearchParams(location.search).get('fieldBalls')); if (fb > 0) g.range.benchField = Math.floor(fb); }
   // T353 (#995): ?estate=N (bench.mjs --estate N, a dev server): N built house lots are laid along streets on the player's land once the game is ready (dev/estate-fixture.ts), and the
   // tour is the lots' A/B over them (estateStage): the same page with the lots drawn and not, by turns
   const estateN = import.meta.env.DEV ? Number(new URLSearchParams(location.search).get('estate')) : 0;
@@ -207,6 +210,8 @@ export function benchGame(g: Game, scene: BenchScene) {
     // against the same frames without it (realPlaceStage); ?realplace=<id>,laid: the course laid there, then the scene's own tour (the game after placing)
     { const rp = new URLSearchParams(location.search).get('realplace'); if ((scene === 'golf' || scene === 'fixture') && rp) { void realPlaceBench(g, rp, info, scene, r => { const out = { ...info, realplace: rp, stages: r }; (window as unknown as { __bench: unknown }).__bench = out; console.log('[bench] results', JSON.stringify(out, null, 1)); }); return; } }
     // T251: ?ballRoll=ab (bench.mjs --ballRoll ab), the balls' bounce and roll on and off by turns over the action (rollStage)
+    // T386: ?fieldAb=1 (bench.mjs --fieldBalls N --fieldAb 1, with --fixture range20: a built range): the lying balls drawn and not drawn by turns over a full outfield (fieldStage)
+    if ((scene === 'range' || scene === 'fixture') && new URLSearchParams(location.search).get('fieldAb') === '1') { fieldStage(g, r => { const out = { ...info, fieldAb: true, fieldBalls: (g.range.balls()?.field.length ?? 0) / 2, stages: r }; (window as unknown as { __bench: unknown }).__bench = out; console.log('[bench] results', JSON.stringify(out, null, 1)); }); return; }
     // T312: ?spacing=ab (bench.mjs --spacing ab), the people stepping round each other on and off by turns over the action (spaceStage)
     if (new URLSearchParams(location.search).get('spacing') === 'ab') { spaceStage(g, scene, r => { const out = { ...info, spacing: 'ab', stages: r }; (window as unknown as { __bench: unknown }).__bench = out; console.log('[bench] results', JSON.stringify(out, null, 1)); }); return; }
     if (new URLSearchParams(location.search).get('ballRoll') === 'ab') { rollStage(g, scene, r => { const out = { ...info, ballRoll: 'ab', rangeBalls: g.range.sim.benchBalls, stages: r }; (window as unknown as { __bench: unknown }).__bench = out; console.log('[bench] results', JSON.stringify(out, null, 1)); }); return; }
@@ -327,6 +332,42 @@ function rollStage(g: Game, scene: BenchScene, done: (r: Record<string, unknown>
     g.onFrame = (_now, dt) => {
       t += dt; if (t < 1) return;
       const v = frames.get(tag) ?? { cpu: [], balls: [] }; frames.set(tag, v); v.cpu.push(g.perf.cpuMs); v.balls.push(balls());
+      if (t >= 5) { k++; next(); }
+    };
+  };
+  next();
+}
+
+/** T386 (#1043, "dont screw performance"): the range's lying balls' A/B on one page (the PC's other load falls alike on both): the outfield full of balls (?fieldBalls=N), at 30% and 17%
+ *  over its middle, the balls drawn (on: one instanced draw of GL points, at most BALL_DRAW_MAX) and not drawn (off) by turns, three runs each. A run settles 1 s, then 4 s of frames: the
+ *  cpu ms (average and p95) and the points drawn. Pooled per zoom and switch, with on less off */
+function fieldStage(g: Game, done: (r: Record<string, unknown>[]) => void) {
+  const zooms = [0.3, 0.17], runs: { z: number; on: boolean }[] = [];
+  for (const z of zooms) for (let r = 0; r < 3; r++) runs.push({ z, on: r % 2 === 0 }, { z, on: r % 2 !== 0 });
+  const frames = new Map<string, { cpu: number[]; pts: number[] }>();
+  const q = (a: number[], p: number) => { const s = [...a].sort((x, y) => x - y); return s[Math.min(s.length - 1, Math.floor(p * s.length))] ?? 0; };
+  const avg = (a: number[]) => a.reduce((p, v) => p + v, 0) / Math.max(1, a.length);
+  const focus = (): { x: number; y: number } | null => { const sc = g.range.scene; if (!sc) return null; const a = sc.aims[Math.floor(sc.aims.length / 2)] ?? sc.mowFrom; return { x: a.x, y: a.y }; };
+  let k = 0, t = 0;
+  const next = () => {
+    if (k >= runs.length) {
+      g.onFrame = null; g.range.drawField = true;
+      const out: Record<string, unknown>[] = [];
+      for (const z of zooms) {
+        const tag = `${Math.round(z * 100)}%`, r: Record<string, unknown> = { stage: `field balls ${tag}` };
+        for (const on of [false, true]) { const f = frames.get(`${tag} ${on ? 'on' : 'off'}`) ?? { cpu: [], pts: [] }; r[on ? 'on' : 'off'] = { frames: f.cpu.length, cpuAvgMs: +avg(f.cpu).toFixed(3), cpuP95Ms: +q(f.cpu, 0.95).toFixed(3), pointsAvg: +avg(f.pts).toFixed(0) }; }
+        const a = r.off as Record<string, number>, b = r.on as Record<string, number>;
+        r.delta = { cpuAvgMs: +(b.cpuAvgMs! - a.cpuAvgMs!).toFixed(3), cpuP95Ms: +(b.cpuP95Ms! - a.cpuP95Ms!).toFixed(3) };
+        out.push(r);
+      }
+      done(out); return;
+    }
+    const r = runs[k]!, tag = `${Math.round(r.z * 100)}% ${r.on ? 'on' : 'off'}`, f = focus();
+    g.range.drawField = r.on; t = 0;
+    if (f) g.lookAt(f.x, f.y, r.z); else g.cam.z = r.z;
+    g.onFrame = (_now, dt) => {
+      t += dt; if (t < 1) return;
+      const v = frames.get(tag) ?? { cpu: [], pts: [] }; frames.set(tag, v); v.cpu.push(g.perf.cpuMs); v.pts.push(g.range.lastField);
       if (t >= 5) { k++; next(); }
     };
   };
