@@ -9811,7 +9811,7 @@ export class Game {
   /** T333: your cart was moved from `from` in one frame (brought to the first tee, called from far off): it fades in at its place, with a puff at both */
   private cartJumped(from: Pt) {
     const c = this.youCart; if (!c || Math.hypot(c.x - from.x, c.y - from.y) < 0.5) return;
-    const now = performance.now(); this.cartJumpAt = now;
+    const now = performance.now(); this.cartJumpAt = now; this.cartDrive.reset(c); // (T351: put down elsewhere, it stands on its facing: its picture does not spin)
     this.yrPuffs.push({ x: from.x, y: from.y, at: now }, { x: c.x, y: c.y, at: now }); livePuffs(this.yrPuffs, now);
   }
   /** T333: the dust puffs (the 2D overlay): faint rings spreading on the ground */

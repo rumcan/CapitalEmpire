@@ -17,6 +17,11 @@ export function turnToward(cur: number, want: number, step: number): number {
 /** 0 to 1 as t goes 0 to 1, with no speed at either end (the turn's blend) */
 export const smoothstep = (t: number): number => (t <= 0 ? 0 : t >= 1 ? 1 : t * t * (3 - 2 * t));
 
+/** the soft cart: on (the default), the field's carts ease their pace and blend their bends (carts.ts); off (the engine's ?oldcart, golf/cartart.ts), they drive as before: a steady pace,
+ *  and the heading of the segment they are on */
+export const SOFT = { on: true };
+export const setCartSoft = (on: boolean): void => { SOFT.on = on; };
+
 /** the metres of route a cart's turn is blended over (it is driving about 5 tiles a real second at the watching speed, where the round is watched: about 0.3 s of that
  *  time; a bend is a few frames, never a jump across the eight pictures), and the metres it takes to pull away to its pace and to stop (about half a second there) */
 export const TURN_M = 3, RAMP_M = 3;

@@ -13,7 +13,7 @@
 import { TILE_M } from '../types';
 import { CART, RouteCache, nearestStand, routeClear, type WalkField } from '../walkfield';
 import { ADDRESS_TIME, FLIGHT_TIME, PICK_UP, PUTT_FLIGHT, SWING_TIME, walkMin } from './round';
-import { RAMP_M, TURN_M, easedShare, routeHeading, routeHeadings, type RouteHeadings } from './cartturn';
+import { RAMP_M, SOFT, TURN_M, easedShare, routeHeading, routeHeadings, type RouteHeadings } from './cartturn';
 import type { CourseView, Lie, Pt, RoundPlan, Shot } from './types';
 
 /** a cart's speed on the course (metres per game minute: about 15 km/h) */
@@ -384,7 +384,7 @@ export class CartPlay {
   /** parked at stop (the visit `v`: T351, a cart that has driven in is parked on the heading its drive ended on, whichever frame it was last drawn at) */
   private park(c: number, stop: Pt, v?: Visit): boolean {
     this.pt.x = stop.x; this.pt.y = stop.y;
-    const a = v?.ang; if (a && a.ang.length) { const h = a.ang[a.ang.length - 1]!; this.head[2 * c] = Math.cos(h); this.head[2 * c + 1] = Math.sin(h); }
+    const a = SOFT.on ? v?.ang : undefined; if (a && a.ang.length) { const h = a.ang[a.ang.length - 1]!; this.head[2 * c] = Math.cos(h); this.head[2 * c + 1] = Math.sin(h); }
     return true;
   }
   /** driving into stop `to` from `from` (the stop `prev`: its drive in left the cart on its last heading), leaving at t0 and there at to.arr, at minute m: along its route
@@ -402,11 +402,12 @@ export class CartPlay {
       const pa = prev?.ang; to.from = pa && pa.ang.length ? pa.ang[pa.ang.length - 1]! : Math.atan2(this.head[2 * c + 1]!, this.head[2 * c]!); // (the heading it was parked with: the drive in's last, else the one it was drawn with)
     }
     if (to.route === HOP) return false; // (no way over the water: carried, not drawn)
-    const R = to.route, C = to.cum!, L = C[C.length - 1]!, u = to.arr > t0 ? Math.min(1, Math.max(0, (m - t0) / (to.arr - t0))) : 1, d = easedShare(u, RAMP_M / TILE_M / Math.max(L, 1e-9)) * L;
+    const R = to.route, C = to.cum!, L = C[C.length - 1]!, u = to.arr > t0 ? Math.min(1, Math.max(0, (m - t0) / (to.arr - t0))) : 1, d = (SOFT.on ? easedShare(u, RAMP_M / TILE_M / Math.max(L, 1e-9)) : u) * L;
     let i = 1; while (i < R.length - 1 && C[i]! < d) i++;
     const a = R[i - 1]!, e = R[i]!, sl = C[i]! - C[i - 1]!, k = sl > 0 ? (d - C[i - 1]!) / sl : 1;
     this.pt.x = a.x + (e.x - a.x) * k; this.pt.y = a.y + (e.y - a.y) * k;
-    if (L > 1e-6) {
+    if (!SOFT.on) { if (sl > 1e-6) { this.head[2 * c] = (e.x - a.x) / sl; this.head[2 * c + 1] = (e.y - a.y) / sl; } } // (?oldcart: the segment's own heading, as before T351)
+    else if (L > 1e-6) {
       const ang = to.ang ?? (to.ang = routeHeadings(R, C)), hd = routeHeading(ang, ang.of[i - 1]!, d, TURN_M / TILE_M, to.from ?? null);
       this.head[2 * c] = Math.cos(hd); this.head[2 * c + 1] = Math.sin(hd);
     }

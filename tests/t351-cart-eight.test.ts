@@ -9,7 +9,7 @@ import { OBJECT_EIGHT_SETS } from '../src/game/object-eight-library';
 import { CAR_DIRECTIONS } from '../src/game/ext/car-art';
 import { OBJECT_FACING_KEYS } from '../src/game/object-eight-types';
 import { CART_ITEMS, CART_OLD, CART_OLD_IDS, CART_SUBJECT, CART_VIEW_KEYS, cartHeading, cartHeadingOf, cartItems, cartPicture, cartScale } from '../src/game/golf/cartart';
-import { RAMP_M, TURN_M, TAU, easedShare, routeHeading, routeHeadings, turnToward, wrapPi } from '../src/game/golf/play/cartturn';
+import { RAMP_M, TURN_M, TAU, easedShare, routeHeading, routeHeadings, setCartSoft, turnToward, wrapPi } from '../src/game/golf/play/cartturn';
 import { CartDrive, TURN_RATE, SPEED_DOWN_S, SPEED_UP_S, faceAngle } from '../src/game/golf/cartdrive';
 import { makeYou, routeOf, startWalk, remaining } from '../src/game/golf/you';
 import { CART_TILES } from '../src/game/golf/play/yours';
@@ -215,6 +215,18 @@ describe('T351: the field\'s carts turn through their bends and ease in and out,
     for (const d of long.slice(0, 200)) { const H = rawHeadings(d.to.route ?? []); let any = false; for (let j = 1; j < H.length; j++) if (Math.abs(steps([H[j - 1]!, H[j]!])[0]!) >= 2) { jumps++; any = true; } if (any) drivesWith++; }
     // (only drives whose routes were worked out by the test above; the course's paths turn corners of a quarter turn behind the tees)
     const withRoutes = long.filter(d => d.to.route).length; assert.ok(withRoutes >= 10, `${withRoutes} routes known`); assert.ok(jumps >= 3, `${jumps} bends of two pictures or more in ${drivesWith} drives`);
+  });
+  it('?oldcart (the soft cart off) drives as before on the same drives: a full-pace first step, and a heading that jumps across the pictures at a bend', () => {
+    setCartSoft(false);
+    try {
+      let n = 0, jumps = 0, hard = 0;
+      for (const d of long.filter((_, i) => i % 3 === 0).slice(0, 40)) {
+        const rows = sample(d); if (rows.length < 100) continue; n++;
+        jumps += steps(rows.map(r => Math.atan2(r.hy, r.hx))).filter(s => Math.abs(s) >= 2).length;
+        const L = d.to.cum![d.to.cum!.length - 1]!, T = d.to.arr - d.t0, mean = (L / T) * STEP; if (Math.hypot(rows[1]!.x - rows[0]!.x, rows[1]!.y - rows[0]!.y) > 0.9 * mean) hard++;
+      }
+      assert.ok(n >= 15, `${n} drives`); assert.ok(jumps >= 3, `${jumps} jumps across two pictures or more, as before`); assert.ok(hard >= n * 0.8, `${hard} of ${n} drives start at full pace, as before`);
+    } finally { setCartSoft(true); }
   });
   it('the arrival minutes of the play are untouched: a cart is parked at each of its stops from its arrival to its departure, and the day\'s stops are the same', () => {
     let stops = 0;

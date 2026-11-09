@@ -27,7 +27,7 @@
       },
       "normalSW": {
         "file": "../src/normalSW.png",
-        "sha256": "c53c4a54597ff6d9cc0fdee9dbbcdd2ccec12e8826bdf3067eb8a811c32074c5",
+        "sha256": "ef48b8af10fa542bd006520d512b3f0eec3df83a6103ff85f09a1e4b438e635e",
         "width": 575,
         "height": 529
       },
@@ -39,7 +39,7 @@
       },
       "normalNW": {
         "file": "../src/normalNW.png",
-        "sha256": "ca678a76f1204e993710b713800501d0bef10dfab38b6315d63160ba3f8c5fd3",
+        "sha256": "f185f5ab367316d19e320b068415203f3ffc6fa68031d0462dd476a96d3b9888",
         "width": 528,
         "height": 537
       },
@@ -70,7 +70,7 @@
       "height": 530,
       "anchor": {
         "x": 137,
-        "y": 413
+        "y": 413.2
       },
       "headingDegrees": 37,
       "boxes": null,
@@ -97,7 +97,7 @@
       "height": 470,
       "anchor": {
         "x": 258.4,
-        "y": 364.6
+        "y": 364.8
       },
       "headingDegrees": 127,
       "boxes": null,
@@ -119,17 +119,17 @@
     },
     "normalSW": {
       "file": "normalSW.native.png",
-      "sha256": "c0807a0196ffa7987893f88f22b469180692452b5ee7e2d74633ca20b1c6b7c5",
+      "sha256": "0f0b0f52472ba34487357e9bc15481d0437fcdd40abb894423da01c8b6613e8a",
       "width": 567,
       "height": 521,
       "anchor": {
-        "x": 301.5,
-        "y": 376.8
+        "x": 301.6,
+        "y": 377.6
       },
       "headingDegrees": 180,
       "boxes": null,
       "sourceFamily": "view",
-      "sourceSha256": "c53c4a54597ff6d9cc0fdee9dbbcdd2ccec12e8826bdf3067eb8a811c32074c5",
+      "sourceSha256": "ef48b8af10fa542bd006520d512b3f0eec3df83a6103ff85f09a1e4b438e635e",
       "cell": 0,
       "cellRect": {
         "left": 0,
@@ -151,7 +151,7 @@
       "height": 491,
       "anchor": {
         "x": 144.9,
-        "y": 367.1
+        "y": 367.3
       },
       "headingDegrees": 217,
       "boxes": null,
@@ -173,17 +173,17 @@
     },
     "normalNW": {
       "file": "normalNW.native.png",
-      "sha256": "d85de6b5583793a1be2ceca1ce1d0444aca4f165a1dc20fa8f22b258d2ddb5dd",
+      "sha256": "18f10d9a8fe4a1d94913efb33ce79648140cf2e40358291f088250220c562046",
       "width": 520,
       "height": 529,
       "anchor": {
-        "x": 269.6,
-        "y": 380.1
+        "x": 269.4,
+        "y": 380.2
       },
       "headingDegrees": 270,
       "boxes": null,
       "sourceFamily": "view",
-      "sourceSha256": "ca678a76f1204e993710b713800501d0bef10dfab38b6315d63160ba3f8c5fd3",
+      "sourceSha256": "f185f5ab367316d19e320b068415203f3ffc6fa68031d0462dd476a96d3b9888",
       "cell": 0,
       "cellRect": {
         "left": 0,
@@ -205,7 +205,7 @@
       "height": 480,
       "anchor": {
         "x": 255.60000000000002,
-        "y": 361.1
+        "y": 361.3
       },
       "headingDegrees": 307,
       "boxes": null,

@@ -3,12 +3,13 @@
 // slid sideways or looked to reverse. It now has a picture for every heading on the iso screen, the object-eight set business:golf-cart (art/golf-cart-20261109/README.md): its SE
 // and SW are the two it had, the other six the lead's corners and axisturn sheets. The picture drawn is the nearest of eight to the cart's heading, counted the way the cars'
 // eight headings are (ext/car-art carHeading: 0 the screen's lower right, then S, SW, W, NW, N, NE, E), never mirrored; the heading is blended through its neighbours on a bend
-// (play/cartturn.ts), so the picture steps round and never jumps across. ?oldcart: the two pictures and their rule as before.
+// (play/cartturn.ts), so the picture steps round and never jumps across. ?oldcart: the two pictures and their rule, and the carts' steady pace and snapping heading, as before.
 import { LIBRARY } from '../library';
 import { carHeading } from '../ext/car-art';
 import { OBJECT_EIGHT_SETS } from '../object-eight-library';
 import type { ObjectEightSet, ObjectFacingKey } from '../object-eight-types';
 import { OWNER_SCALE, STUDIO_SCALE } from '../lots/scales';
+import { setCartSoft } from './play/cartturn';
 
 /** the set's subject, and the two pictures the cart had before it (its SW and SE headings) */
 export const CART_SUBJECT = 'business:golf-cart';
@@ -37,6 +38,7 @@ export const CART_OLD: readonly number[] = CART_OLD_IDS.map(id => INDEX.get(id) 
 
 /** ?oldcart: the two pictures picked by the sign of hx - hy, and your cart's side by your heading, as before T351 (the A/B and the old look kept as an option) */
 export const OLD_CART: boolean = (() => { try { return new URLSearchParams(globalThis.location?.search ?? '').has('oldcart'); } catch { return false; } })();
+setCartSoft(!OLD_CART); // (and the field's carts drive as before: a steady pace, the segment's own heading)
 
 /** the heading (0-7, carHeading's order) a tile direction is nearest */
 export const cartHeading = (hx: number, hy: number): number => carHeading(Math.atan2(hy, hx));

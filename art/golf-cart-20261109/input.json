@@ -39,7 +39,7 @@
     "yaw8N": {
       "anchor": {
         "x": 141,
-        "y": 417
+        "y": 417.2
       },
       "headingDegrees": 37
     },
@@ -49,35 +49,35 @@
     "yaw8E": {
       "anchor": {
         "x": 262.4,
-        "y": 368.6
+        "y": 368.8
       },
       "headingDegrees": 127
     },
     "normalSW": {
       "anchor": {
-        "x": 305.5,
-        "y": 380.8
+        "x": 305.6,
+        "y": 381.6
       },
       "headingDegrees": 180
     },
     "yaw8S": {
       "anchor": {
         "x": 148.9,
-        "y": 371.1
+        "y": 371.3
       },
       "headingDegrees": 217
     },
     "normalNW": {
       "anchor": {
-        "x": 273.6,
-        "y": 384.1
+        "x": 273.4,
+        "y": 384.2
       },
       "headingDegrees": 270
     },
     "yaw8W": {
       "anchor": {
         "x": 260.6,
-        "y": 365.1
+        "y": 365.3
       },
       "headingDegrees": 307
     }

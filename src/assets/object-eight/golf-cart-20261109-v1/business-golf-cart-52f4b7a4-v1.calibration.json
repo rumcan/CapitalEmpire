@@ -14,7 +14,7 @@
       "displayScale": 1.058999999999292,
       "anchorSourcePixels": {
         "x": 137,
-        "y": 413
+        "y": 413.2
       },
       "atlasResize": 0.3176999999997876
     },
@@ -23,7 +23,7 @@
       "displayScale": 1.058999999999292,
       "anchorSourcePixels": {
         "x": 258.4,
-        "y": 364.6
+        "y": 364.8
       },
       "atlasResize": 0.3176999999997876
     },
@@ -31,8 +31,8 @@
       "sourcePixelsPerMetre": 42.7335542927,
       "displayScale": 1.058999999999292,
       "anchorSourcePixels": {
-        "x": 301.5,
-        "y": 376.8
+        "x": 301.6,
+        "y": 377.6
       },
       "atlasResize": 0.3176999999997876
     },
@@ -41,7 +41,7 @@
       "displayScale": 1.058999999999292,
       "anchorSourcePixels": {
         "x": 144.9,
-        "y": 367.1
+        "y": 367.3
       },
       "atlasResize": 0.3176999999997876
     },
@@ -49,8 +49,8 @@
       "sourcePixelsPerMetre": 42.7335542927,
       "displayScale": 1.058999999999292,
       "anchorSourcePixels": {
-        "x": 269.6,
-        "y": 380.1
+        "x": 269.4,
+        "y": 380.2
       },
       "atlasResize": 0.3176999999997876
     },
@@ -59,7 +59,7 @@
       "displayScale": 1.058999999999292,
       "anchorSourcePixels": {
         "x": 255.60000000000002,
-        "y": 361.1
+        "y": 361.3
       },
       "atlasResize": 0.3176999999997876
     }

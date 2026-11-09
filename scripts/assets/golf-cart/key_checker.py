@@ -4,8 +4,8 @@
     and the see-through gaps of the open cart (the windows between the roof posts, the gap behind the seat): enclosed pieces of paper of at least HOLE_MIN px. A
     pale speck inside the cart smaller than that (a chrome highlight on a club) stays part of the cart
  2. the cart's own antialiased edge is the band of up to BAND px between the background and the pixels that are surely the cart (a pixel at least BAND + 1 px from the
-    background): there alpha is unmixed against the paper (alpha = how far the pixel is from the paper towards the nearest solid colour), and the colour is
-    the nearest solid colour weighted by how transparent the pixel is (alpha-bleed, as clean_sheet.py does for the axisturn sheets), so no paper survives in the edge
+    background): there alpha is unmixed against the paper (alpha = how far the pixel is from the paper towards the nearest solid colour), and the colour is the
+    paper-free colour (the pixel less the paper it holds, over its alpha) where that is well conditioned, else the nearest solid colour, so no paper survives in the edge
  3. nothing is resized, repainted or mirrored; fully clear pixels carry black.
 Returns (RGBA ndarray, report)."""
 import sys
@@ -75,11 +75,17 @@ def key(rgb):
     alpha[use] = a[use]
     # a band pixel that is not paper-like and whose unmixed alpha is tiny is still cart (a dark thin line): keep at least what the paper test says
     alpha[band & ~filled] = np.where(paper[band & ~filled], 0.0, 1.0)
-    # colour: solid pixels as they are; band pixels take the nearest solid colour, weighted by their transparency (alpha-bleed)
+    # colour: solid pixels as they are. A band pixel is paper blended into the cart, so its true colour is the pixel less the paper it holds, over its alpha: P = a F + (1 - a) B, F = (P - (1 - a) B) / a.
+    # That is exact where the pixel is mostly cart (a over 0.6) and noise where it is mostly paper (a under 0.2: dividing by a small number), so the unmixed colour is weighted in by
+    # smoothstep((a - 0.2) / 0.4) and the nearest solid colour fills the rest (alpha-bleed, as clean_sheet.py does for a black background). Where the cart is as pale as the paper (den
+    # small) nothing can be unmixed and the nearest solid colour is the colour. No paper survives in the edge: a light halo round a dark cart is the fault this avoids.
     out = rgb.astype(np.float32).copy()
-    w = (0.85 * (1.0 - alpha))[..., None]
+    a3 = alpha[..., None]
+    unmix = np.clip((rgb.astype(np.float32) - (1.0 - a3) * paper_col[None, None, :]) / np.maximum(a3, 1e-3), 0.0, 255.0)
+    t = np.clip((alpha - 0.2) / 0.4, 0.0, 1.0); s = (t * t * (3 - 2 * t) * (den > 40.0 ** 2))[..., None]
+    fg = unmix * s + col * (1.0 - s)
     edge = band & filled
-    out = np.where(edge[..., None], out * (1 - w) + col * w, out)
+    out = np.where(edge[..., None], fg, out)
     A = np.zeros((H, W, 4), np.uint8)
     A[..., :3] = np.clip(out + 0.5, 0, 255).astype(np.uint8)
     A[..., 3] = np.clip(alpha * 255 + 0.5, 0, 255).astype(np.uint8)

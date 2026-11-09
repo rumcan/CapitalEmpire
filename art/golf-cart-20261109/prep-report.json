@@ -124,7 +124,7 @@
     559,
     513
    ],
-   "sha256": "c53c4a54597ff6d9cc0fdee9dbbcdd2ccec12e8826bdf3067eb8a811c32074c5",
+   "sha256": "ef48b8af10fa542bd006520d512b3f0eec3df83a6103ff85f09a1e4b438e635e",
    "from": "corners top left: the back to the camera, the front to the upper right (heading NE)"
   },
   "yaw8S": {
@@ -150,7 +150,7 @@
     512,
     521
    ],
-   "sha256": "ca678a76f1204e993710b713800501d0bef10dfab38b6315d63160ba3f8c5fd3",
+   "sha256": "f185f5ab367316d19e320b068415203f3ffc6fa68031d0462dd476a96d3b9888",
    "from": "corners top right: the back to the camera, the front to the upper left (heading NW)"
   },
   "yaw8W": {
@@ -176,7 +176,7 @@
     554,
     557
    ],
-   "sha256": "a47ba4344da588ba2e05b0097b24b12ded7da10e4e8ceab3c7def9beb4303571",
+   "sha256": "99e4e251ac522c01cfd17ce7d8644640d6577e95bf66620f711fb7bdb5a24cc9",
    "from": "corners bottom left (heading SW): not used, the existing golf-cart-sw is"
   },
   "unused-corners-bottom-right": {
@@ -189,7 +189,7 @@
     519,
     569
    ],
-   "sha256": "20c9d2fbf51be25b6820284100686870b2468d75e0686daad58959b6aa8e19ee",
+   "sha256": "03126baf2ff62da08132c642be20ace380a88ba05f6f618a29e64a6ae6e51479",
    "from": "corners bottom right (heading SE): not used, the existing golf-cart-se is"
   }
  }

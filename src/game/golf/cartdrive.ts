@@ -29,7 +29,7 @@ export class CartDrive {
   v = 0;
   /** the keys were let go and it rolls on along its heading while its speed dies away */
   coasting = false;
-  private target = 0; private lastFace = -1; private px = 0; private py = 0;
+  private target = 0; private lastFace = -1; private px = 0; private py = 0; private run = false;
 
   /** the cart put down (placed, loaded, brought): standing, on its facing */
   reset(c: You): void { this.ang = this.target = faceAngle(c.face); this.v = 0; this.coasting = false; this.lastFace = c.face; this.px = c.x; this.py = c.y; }
@@ -52,7 +52,7 @@ export class CartDrive {
   keys(c: You, kx: number, ky: number, run: boolean, dt: number, ok: (x: number, y: number) => boolean): boolean {
     if (c.moving) stopWalk(c);
     keyDir(kx, ky, KD); const want = headingOf(KD[0], KD[1]);
-    this.v = Math.min(1, Math.max(this.v, V_MIN) + dt / SPEED_UP_S);
+    this.v = Math.min(1, Math.max(this.v, V_MIN) + dt / SPEED_UP_S); this.run = run;
     this.ang = turnToward(this.ang, want, TURN_RATE * Math.max(TURN_AT_REST, this.v) * dt); this.target = this.ang; this.coasting = true;
     return this.roll(c, run, dt, ok);
   }
@@ -63,7 +63,7 @@ export class CartDrive {
     if (this.coasting && !c.moving) {
       this.v = Math.max(0, this.v - dt / SPEED_DOWN_S); this.target = this.ang;
       if (this.v <= V_MIN) { this.v = 0; this.coasting = false; c.keys = false; return false; }
-      this.roll(c, false, dt, ok); return false;
+      this.roll(c, this.run, dt, ok); return false; // (a run rolls on at its own pace)
     }
     this.coasting = false; c.keys = false;
     if (!c.moving) { this.v = 0; return false; }

@@ -5,7 +5,7 @@
   "key": "normalSW",
   "source": {
     "file": "../src/normalSW.png",
-    "sha256": "c53c4a54597ff6d9cc0fdee9dbbcdd2ccec12e8826bdf3067eb8a811c32074c5",
+    "sha256": "ef48b8af10fa542bd006520d512b3f0eec3df83a6103ff85f09a1e4b438e635e",
     "width": 575,
     "height": 529
   },
@@ -23,7 +23,7 @@
     "height": 521
   },
   "output": "normalSW.native.png",
-  "sha256": "c0807a0196ffa7987893f88f22b469180692452b5ee7e2d74633ca20b1c6b7c5",
+  "sha256": "0f0b0f52472ba34487357e9bc15481d0437fcdd40abb894423da01c8b6613e8a",
   "operation": "native RGBA cell crop only; no flip/repaint/view synthesis",
   "review": "candidate"
 }
