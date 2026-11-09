@@ -170,7 +170,8 @@ export function softAt(item: number, scale: number, moving?: boolean): boolean {
 /** T341: the desert theme (desert-theme.ts; the engine sets it from the gear menu's switch): on, every world tree, bush, flower bed and hedge
  *  piece is drawn as a palm, a desert plant or a rock picked by where it stands, never mirrored; keep(d), the engine's: a drawable the
  *  course or the range owns (on the club's land, a decor or frame prop) keeps its own art. gen changes with every switch (the cache below) */
-export const DESERT_THEME: { on: boolean; gen: number; keep: ((d: { x: number; y: number; x0?: number; y0?: number; x1?: number; y1?: number }) => boolean) | null } = { on: false, gen: 0, keep: null };
+export const DESERT_THEME: { on: boolean; gen: number; keep: ((d: { x: number; y: number; x0?: number; y0?: number; x1?: number; y1?: number }) => boolean) | null;
+  /** T384: the world's buildings are drawn with their roofs' leaves as dust (roof-dust.ts): the desert theme (the dev server's ?litter=leaves turns it off, for the A/B) */ dust: boolean } = { on: false, gen: 0, keep: null, dust: false };
 const desertCache = new WeakMap<object, { gen: number; src: number; scale: number; x: number; y: number; look: Look | null }>();
 /** a world plant's desert look (null: the course keeps it, or no desert picture): the picked picture at its scale (never past its pixels),
  *  unmirrored, at the plant's own anchor (the desert props stand on their foot as the trees do) */
