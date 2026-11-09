@@ -16,6 +16,8 @@ import { OWNER_SCALE } from '../../lots/scales';
 import { TC } from '../../terrain/types';
 import { RUSTY_PICKUPS } from '../../vehicles';
 import { cornShift, cropState, orchardStage, type CropState, type FieldUse, type OrchardStage } from './crops';
+import { hasSheep, herdPlan, type Graze } from './herd';
+import { facingSide, paddockOf, runPieces, type Side } from './paddock';
 
 /** one rural parcel fronting a road: the frame origin (front-left corner, tiles), u along the road, n away from it;
  *  w (frontage) and d (depth) in tiles, side +1 to the left of a -> b and -1 to the right; key stable across seg splits */
@@ -141,8 +143,12 @@ function facing(p: FarmParcel): { flip: boolean; rear: boolean; F: Pt } {
 }
 const FARMHOUSE_FRONT = names(['gen:house-farmhouse-wrap', 'gen:house-l-ranch', 'gen:house-ranch-long']);
 const FARMHOUSE_REAR = names(['expansion:ranch-rear']);   // no farmhouse rear view exists; the ranch rear stands in
-const BARN = names(['world:barn']), SILO = names(['ref:landmark-silo']), SHED = names(['ref:building-farm-shed']);
-const GARAGE_FRONT = names(['static:garage_timber', 'static:garage_brick']), GARAGE_REAR = names(['expansion:garage-rear']);
+const BARN = names(['world:barn']), SILO = names(['ref:landmark-silo']);
+/** T402 (#1080; the owner, 2026-11-09: "a house garage as a barn??"): a farm's outbuildings come from the farm kit alone: the barn, the silo and this shed (the farm shed's plain
+ *  variation: the sheep's; the library has no 'ref:building-farm-shed' id, so the old shed pick never found a picture, and the garage pick beside it found the house kit's). The
+ *  stable (the horses') has no art yet: this shed stands in for it, labelled "Stand In for stable" (the request is in the PR). The shed's owner size is a large building: SHED_MUL
+ *  brings it to a shed's size beside the barn, STABLE_MUL a stable's */
+const FARM_SHED = names(['variation:ref-building-farm-shed-0280794d-plain:1']), SHED_MUL = 0.45, STABLE_MUL = 0.5;
 const TREES = cat(i => i.kind === 'tree' && !/dead/.test(i.id)), BUSHES = cat(i => i.kind === 'bush');
 const ORCHARD = names(['ref:tree-birch-gold', 'ref:tree-maple-crimson', 'world:tree_oak_0', 'world:tree_oak_1']);
 const CARS = cat(i => i.cat === 'Vehicles' && /_[news](-v2)?$/.test(i.id)), PICKUPS = CARS.filter(id => /pickup|van/.test(id));
@@ -153,6 +159,8 @@ interface Pair { x: string; y: string }
  *  fences from farms. they should only have the farm fences"). */
 const FARM_FENCE: Pair | null = null;
 const CHAIN: Pair = { x: 'expansion:chainlink-x', y: 'expansion:chainlink-y' };
+/** T402: the paddock's gate (the chain-link gate's X and Y pieces) */
+const CHAIN_GATE: Pair = { x: 'expansion:gate-chainlink-x', y: 'expansion:gate-chainlink-y' };
 
 interface Item { id: string; x: number; y: number; flip: boolean; s: number; fp: Box4; fence: boolean; veh: boolean; street: boolean; plant: boolean }
 interface Spec { id: string; s: number; flip: boolean; h: Box4 }
@@ -171,6 +179,16 @@ function hit(fp: Box4, q: number[]): boolean {
       a0 = Math.min(a0, pa); a1 = Math.max(a1, pa); b0 = Math.min(b0, pb); b1 = Math.max(b1, pb);
     }
     if (a1 <= b0 + EPS || b1 <= a0 + EPS) return false;
+  }
+  return true;
+}
+/** is a point inside a convex quad (8 numbers, corners in order, either winding) by at least margin tiles */
+function inQuad(x: number, y: number, q: number[], margin: number): boolean {
+  let sign = 0;
+  for (let k = 0; k < 4; k++) {
+    const j = (k + 1) % 4, ex = q[2 * j]! - q[2 * k]!, ey = q[2 * j + 1]! - q[2 * k + 1]!, len = Math.hypot(ex, ey) || 1, d = (ex * (y - q[2 * k + 1]!) - ey * (x - q[2 * k]!)) / len;
+    if (Math.abs(d) < margin) return false;
+    if (sign === 0) sign = Math.sign(d); else if (Math.sign(d) !== sign) return false;
   }
   return true;
 }
@@ -227,6 +245,28 @@ class FB {
       this.atW(g, { x: p0.x + dx * t, y: p0.y + dy * t });
     }
   }
+  /** T402 (#1080): the paddock's fence on the map's axes round the world rectangle r (x0, y0, x1, y1, tiles): four straight runs, the chain-link's X piece along y0 and y1 and its
+   *  Y piece along x0 and x1, each laid end to end by paddock.ts runPieces (every piece meets the next; the first starts and the last ends on the rectangle's corner, so the end
+   *  posts of two runs stand together at each corner), with the gate piece at the middle of the side that faces gateSide when the art is there. Nothing is drawn from the
+   *  farm's random stream: a farm's other props stand where they stood */
+  fenceRect(kind: Pair, gate: Pair | null, r: readonly [number, number, number, number], gateSide: Side | null) {
+    const [x0, y0, x1, y1] = r;
+    const runs: { side: Side; a: Pt; b: Pt; x: boolean }[] = [
+      { side: 'y0', a: { x: x0, y: y0 }, b: { x: x1, y: y0 }, x: true }, { side: 'y1', a: { x: x0, y: y1 }, b: { x: x1, y: y1 }, x: true },
+      { side: 'x0', a: { x: x0, y: y0 }, b: { x: x0, y: y1 }, x: false }, { side: 'x1', a: { x: x1, y: y0 }, b: { x: x1, y: y1 }, x: false },
+    ];
+    for (const run of runs) {
+      const pid = run.x ? kind.x : kind.y, gid = gate && gateSide === run.side ? (run.x ? gate.x : gate.y) : null;
+      if (!BY.has(pid)) continue;
+      const along = (id: string, s: number) => { const h = boxOf(id, s, false); return run.x ? h[2] - h[0] : h[3] - h[1]; };
+      const sp = OWNER_SCALE[pid] ?? 1, sg = gid && BY.has(gid) ? (OWNER_SCALE[gid] ?? 1) : 0, L = Math.hypot(run.b.x - run.a.x, run.b.y - run.a.y);
+      const { pieces, scale } = runPieces(L, along(pid, sp), sg ? along(gid!, sg) : undefined);
+      for (const pc of pieces) {
+        const id = pc.gate ? gid! : pid, s = (pc.gate ? sg : sp) * scale, t = (pc.t0 + pc.t1) / 2 / L;
+        this.atW({ id, s, flip: false, h: boxOf(id, s, false) }, { x: run.a.x + (run.b.x - run.a.x) * t, y: run.a.y + (run.b.y - run.a.y) * t });
+      }
+    }
+  }
   /** the world quad (8 numbers) of a parcel-frame rectangle */
   quad(a0: number, b0: number, a1: number, b1: number): number[] { return [this.P(a0, b0), this.P(a1, b0), this.P(a1, b1), this.P(a0, b1)].flatMap(q => [q.x, q.y]); }
   /** a ground patch over a parcel-frame rectangle (clamped to the parcel); blocking patches (the drive, the track) keep uprights off */
@@ -273,7 +313,13 @@ class FB {
     return true;
   }
   /** does it stand on the drive or the track (vehicles excepted) */
-  onBlock(it: Item): boolean { for (const q of this.patches) if (q.block && !it.veh && hit(it.fp, q.quad)) return true; return false; }
+  onBlock(it: Item): boolean {
+    // (T402: a fence along the edge of the track or the drive stands beside it, not on it. Its footprint is a tenth of a tile thick, and laid on the edge of a strip it overlapped
+    //  the strip by half that, which took the whole side of a paddock's fence away where a headland track ran along it: a fence is on a strip when its middle is inside it)
+    if (it.fence) { const cx = (it.fp[0] + it.fp[2]) / 2, cy = (it.fp[1] + it.fp[3]) / 2; for (const q of this.patches) if (q.block && inQuad(cx, cy, q.quad, 0.05)) return true; return false; }
+    for (const q of this.patches) if (q.block && !it.veh && hit(it.fp, q.quad)) return true;
+    return false;
+  }
   /** the composition: candidates in order, the first that fits wins; fences settle separately, plants stop at the cap */
   done(): Composition {
     const props: Placed[] = [], acc: Item[] = []; let plants = 0;
@@ -396,7 +442,7 @@ function farmTrack1(p: FarmParcel, seed: number): { a: Pt; b: Pt }[] {
  *  LIBRARY; no two uprights share more than 35% of the smaller footprint; nothing stands in front of the parcel's front
  *  edge except the mailbox and the utility pole, within VERGE tiles of it and clear of the asphalt. */
 function composeFarm1(p: FarmParcel, seed: number): Composition {
-  const L = layoutOf(p, seed), B = new FB(p, mulberry(mix(seed >>> 0, keyHash(p.key), 0xc09f))), { W, D, r, flip, rear } = B;
+  const L = layoutOf(p, seed), B = new FB(p, mulberry(mix(seed >>> 0, keyHash(p.key), 0xc09f))), { W, D, r, flip } = B;
   // the ground, back to front (later patches paint over earlier): fields, the yard apron, the drive, the track
   for (const q of L.plots) {
     if (q.kind === 'crop') B.pave(false, q.a0, q.b0, q.a1, q.b1, 'field', B.rows(q.a0, q.b0, q.a1, q.b1, r() < 0.5));
@@ -413,8 +459,9 @@ function composeFarm1(p: FarmParcel, seed: number): Composition {
   B.put(BARN[0], L.ba, L.bb, { flip, mul: L.barnMul, fixed: true });
   // the silo stands at the barn's back corner, away from the lane; the shed behind the barn towards it
   if (SILO.length && r() < 0.55) { const [sw, sd] = frameExtents(p.u, p.n, SILO[0], flip); B.put(SILO[0], clamp(L.ba - L.side * (L.bw / 4), sw / 2 + 0.7, W - sw / 2 - 0.7), clamp(L.bb + L.bd / 2 + sd / 2 + 0.6, sd / 2 + 0.7, D - sd / 2 - 0.7), { flip }); }
-  if (SHED.length && r() < 0.75) B.put(SHED[0], clamp(L.ba + L.side * (L.bw / 5), 3, W - 3), Math.min(D - 2.5, L.bb + L.bd / 2 + 2.6), { flip });
-  if (r() < 0.45) B.put(rear ? (GARAGE_REAR[0] ?? pick(r, GARAGE_FRONT)) : pick(r, GARAGE_FRONT), clamp(L.driveA + L.side * 3.4, 2.6, W - 2.6), Math.max(2.2, L.front - 1.6), { flip });
+  // (T402: no house garage on a farm: its draws stay, so the rest of the farm stands where it stood. The farm kit's sheds and stable beside the barn, for its herd)
+  if (r() < 0.45) { r(); r(); }
+  for (const o of outbuildings(p, L, W, D, herdPlan(animalFieldsOf(p, L), seed), flip)) B.put(o.id, o.a, o.b, { flip, mul: o.mul, fixed: true });
   // the working yard: tractor before the barn, a trailer by the shed, the pickup on the drive, clutter, the windmill
   if (r() < 0.75) B.put('expansion:farm-tractor', L.ba, L.bb - L.bd / 2 - 1.8, { veh: true });
   if (r() < 0.35) B.put('expansion:utility-trailer', clamp(L.ba + L.bw / 2 + 1.6, 1.6, W - 1.6), L.bb + L.bd / 2 + 1.2, { veh: true });
@@ -439,12 +486,12 @@ function composeFarm1(p: FarmParcel, seed: number): Composition {
   }
   const pad = L.pasture;
   if (pad) {
-    const laneSideLeft = pad.a1 <= L.driveA;   // the gate gap goes on the paddock side facing the track lane
-    B.run(CHAIN, pad.a0, pad.b0, pad.a1, pad.b0);
-    B.run(CHAIN, pad.a0, pad.b1, pad.a1, pad.b1);
-    B.run(CHAIN, pad.a0, pad.b0, pad.a0, pad.b1, laneSideLeft ? undefined : [0.42, 0.58]);
-    B.run(CHAIN, pad.a1, pad.b0, pad.a1, pad.b1, laneSideLeft ? [0.42, 0.58] : undefined);
-    B.scatter(names(['ref:halloween-hay-bales']), pad.a0 + 1.2, pad.b0 + 1.2, pad.a1 - 1.2, pad.b1 - 1.2, 2 + Math.floor(r() * 3));
+    // T402 (#1080): the paddock's fence on the map's axes (paddock.ts): the pasture itself on a parcel that lies on them, the largest axes rectangle inside it on a turned one;
+    // four runs end to end from corner to corner and a gate on the side that faces the track lane. (The four old runs' draws stay: the rest of the farm stands where it stood)
+    r(); r(); r(); r();
+    const pd = paddockOf(p, pad);
+    B.fenceRect(CHAIN, CHAIN_GATE, pd.fence, facingSide(pd.fence, B.P(L.driveA, clamp((pad.b0 + pad.b1) / 2, 0, L.endB))));
+    B.scatter(names(['ref:halloween-hay-bales']), pd.field.a0 + 1.2, pd.field.b0 + 1.2, pd.field.a1 - 1.2, pd.field.b1 - 1.2, 2 + Math.floor(r() * 3));
   }
   // the fields' own furniture: orchard grids, hay in the fallow, hedgerow trees along the back and one side
   for (const q of L.plots) {
@@ -653,7 +700,7 @@ function farmTrack2(p: FarmParcel, seed: number): { a: Pt; b: Pt }[] {
  *  the orchard's grid on some farms, the farm fence along the road and at the back of the yard when FARM_FENCE is set, hedgerow trees, and the field track
  *  behind the yard. Deterministic in (parcel, seed, month); the month changes only the crop states and the orchard's trees */
 function composeFarm2(p: FarmParcel, seed: number, month: number): Composition {
-  const L = layoutOf2(p, seed), B = new FB(p, mulberry(mix(seed >>> 0, keyHash(p.key), 0xc0a2))), { W, D, r, flip, rear } = B;
+  const L = layoutOf2(p, seed), B = new FB(p, mulberry(mix(seed >>> 0, keyHash(p.key), 0xc0a2))), { W, D, r, flip } = B;
   B.cap = 150;
   // the ground, back to front: the fields (crops with their rows' direction, fallow grass), the yard apron, the lane and the yard's drive, the track
   for (const q of L.plots) {
@@ -672,8 +719,9 @@ function composeFarm2(p: FarmParcel, seed: number, month: number): Composition {
   B.put(L.houseId, L.ha, L.hb, { flip, mul: L.houseMul, fixed: true });
   B.put(BARN[0], L.ba, L.bb, { flip, mul: L.barnMul, fixed: true });
   if (SILO.length && r() < 0.55) { const [sw, sd] = frameExtents(p.u, p.n, SILO[0], flip); B.put(SILO[0], clamp(L.ba - L.side * (L.bw / 4), sw / 2 + 0.7, W - sw / 2 - 0.7), clamp(L.bb + L.bd / 2 + sd / 2 + 0.6, sd / 2 + 0.7, D - sd / 2 - 0.7), { flip }); }
-  if (SHED.length && r() < 0.75) B.put(SHED[0], clamp(L.ba + L.side * (L.bw / 5), 3, W - 3), Math.min(D - 2.5, L.bb + L.bd / 2 + 2.6), { flip });
-  if (r() < 0.45) B.put(rear ? (GARAGE_REAR[0] ?? pick(r, GARAGE_FRONT)) : pick(r, GARAGE_FRONT), clamp(L.ha + L.side * (L.hw / 2 + 2.6), 2.6, W - 2.6), L.hb + L.hd / 2 + 0.4, { flip });
+  // (T402: no house garage on a farm: its draws stay, so the rest of the farm stands where it stood. The farm kit's sheds and stable beside the barn, for its herd)
+  if (r() < 0.45) { r(); r(); }
+  for (const o of outbuildings(p, L, W, D, herdPlan(animalFieldsOf(p, L), seed), flip)) B.put(o.id, o.a, o.b, { flip, mul: o.mul, fixed: true });
   if (r() < 0.75) B.put('expansion:farm-tractor', L.ba, L.bb - L.bd / 2 - 1.8, { veh: true });
   if (r() < 0.35) B.put('expansion:utility-trailer', clamp(L.ba + L.bw / 2 + 1.6, 1.6, W - 1.6), L.bb + L.bd / 2 + 1.2, { veh: true });
   // (T236: the yard's pickup is the yellow or the rusty one) parked on the yard's drive in front of the house
@@ -709,12 +757,11 @@ function composeFarm2(p: FarmParcel, seed: number, month: number): Composition {
   }
   const pad = L.pasture;
   if (pad) {
-    const laneSideLeft = pad.a1 <= L.laneA;
-    B.run(CHAIN, pad.a0, pad.b0, pad.a1, pad.b0);
-    B.run(CHAIN, pad.a0, pad.b1, pad.a1, pad.b1);
-    B.run(CHAIN, pad.a0, pad.b0, pad.a0, pad.b1, laneSideLeft ? undefined : [0.42, 0.58]);
-    B.run(CHAIN, pad.a1, pad.b0, pad.a1, pad.b1, laneSideLeft ? [0.42, 0.58] : undefined);
-    B.scatter(names(['ref:halloween-hay-bales']), pad.a0 + 1.2, pad.b0 + 1.2, pad.a1 - 1.2, pad.b1 - 1.2, 2 + Math.floor(r() * 3));
+    // T402 (#1080): the paddock's fence on the map's axes, as model 1's (see composeFarm1): a gate on the side that faces the lane
+    r(); r(); r(); r();
+    const pd = paddockOf(p, pad);
+    B.fenceRect(CHAIN, CHAIN_GATE, pd.fence, facingSide(pd.fence, B.P(L.laneA, clamp((pad.b0 + pad.b1) / 2, 0, L.endB))));
+    B.scatter(names(['ref:halloween-hay-bales']), pd.field.a0 + 1.2, pd.field.b0 + 1.2, pd.field.a1 - 1.2, pd.field.b1 - 1.2, 2 + Math.floor(r() * 3));
   }
   for (const q of L.plots) {
     if (q.kind === 'fallow') B.scatter(names(['ref:halloween-hay-bales']), q.a0 + 1.2, q.b0 + 1.2, q.a1 - 1.2, q.b1 - 1.2, 2);
@@ -752,6 +799,8 @@ export function farmStandIns(p: FarmParcel, seed: number, month: number): { x: n
   const L = layoutOf2(p, seed), out: { x: number; y: number; text: string; id?: string }[] = [];
   if (L.wind) { const c = world(p, L.laneA + L.wind.sides[0]! * WIND_OFF, L.wind.b0 + WIND_STEP * 2); if (windTreeId(L.wind.id, month) === L.wind.id) out.push({ ...c, text: 'Stand In for windbreak poplars', id: L.wind.id }); }
   if (L.orchard && !ORCHARD_ART[orchardStage(month)]) { const c = world(p, L.orchard.a0, L.orchard.b0); out.push({ ...c, text: 'Stand In for orchard trees', id: orchardTreeId(L.orchard.sp, month) }); }
+  // (T402: the horses' stable stands as the shed's picture: the label says so, on that prop)
+  for (const o of outbuildings(p, L, p.w, p.d, herdPlan(animalFieldsOf(p, L), seed), facing(p).flip)) if (o.stable) out.push({ ...world(p, o.a, o.b), text: 'Stand In for stable', id: o.id });
   const NAME: Record<CropState, string> = { plough: 'ploughed field', young: 'corn field, young', ripe: 'corn field, ripe', stubble: 'corn field, stubble' };
   const best = new Map<CropState, Plot2>();
   for (const q of L.plots) { const st = plotState(q, month); if (!st) continue; const b = best.get(st); if (!b || (q.a1 - q.a0) * (q.b1 - q.b0) > (b.a1 - b.a0) * (b.b1 - b.b0)) best.set(st, q); }
@@ -766,14 +815,45 @@ export function farmLayoutForTest(p: FarmParcel, seed: number) {
   return { front: L.front, yardB0: L.yardB0, yardB1: L.yardB1, laneA: L.laneA, wind: L.wind, orchard: L.orchard && { a0: L.orchard.a0, b0: L.orchard.b0, na: L.orchard.na, nb: L.orchard.nb, plot: { a0: L.orchard.q.a0, b0: L.orchard.q.b0, a1: L.orchard.q.a1, b1: L.orchard.q.b1 } }, plots: L.plots.map(q => ({ a0: q.a0, b0: q.b0, a1: q.a1, b1: q.b1, kind: q.kind, shift: q.shift, alongU: q.alongU })), ha: L.ha, hb: L.hb, hd: L.hd };
 }
 
+/** the test hook (T402): a layout's pasture plot (the paddock's field before its fence, parcel frame, tiles) in a model, or null */
+export function farmPastureForTest(p: FarmParcel, seed: number, model: FarmModel = FARM_MODEL): { a0: number; b0: number; a1: number; b1: number } | null {
+  const q = (model === 1 ? layoutOf(p, seed) : layoutOf2(p, seed)).pasture; return q ? { a0: q.a0, b0: q.b0, a1: q.a1, b1: q.b1 } : null;
+}
+
 /** T309 (#894): the grass fields a farm's animals graze, parcel frame (tiles): the paddock (the pasture inside the chain-link fence: cows or
  *  horses), the other pastures and the fallow fields (sheep). From the layout alone, so the animals stay put through the year */
 export interface AnimalField { a0: number; b0: number; a1: number; b1: number; kind: 'paddock' | 'pasture' | 'fallow' }
-export function farmAnimalFields(p: FarmParcel, seed: number, model: FarmModel = FARM_MODEL): AnimalField[] {
-  const L = model === 1 ? layoutOf(p, seed) : layoutOf2(p, seed), out: AnimalField[] = [];
+/** the grass fields of a layout as the animals graze them (T402: the paddock is the grazing rectangle inside its fence: the pasture itself on a parcel that lies on the
+ *  map's axes, a smaller one on a turned parcel, whose fence stands on the axes: paddock.ts paddockOf) */
+function animalFieldsOf(p: FarmParcel, L: Layout | Layout2): AnimalField[] {
+  const out: AnimalField[] = [];
   for (const q of L.plots as (Plot | Plot2)[]) {
     if (q.kind !== 'pasture' && q.kind !== 'fallow') continue;
-    out.push({ a0: q.a0, b0: q.b0, a1: q.a1, b1: q.b1, kind: q === L.pasture ? 'paddock' : q.kind });
+    out.push(q === L.pasture ? { ...paddockOf(p, q).field, kind: 'paddock' } : { a0: q.a0, b0: q.b0, a1: q.a1, b1: q.b1, kind: q.kind });
+  }
+  return out;
+}
+export function farmAnimalFields(p: FarmParcel, seed: number, model: FarmModel = FARM_MODEL): AnimalField[] {
+  return animalFieldsOf(p, model === 1 ? layoutOf(p, seed) : layoutOf2(p, seed));
+}
+
+/** The farm kit's outbuildings for a farm's herd (T402, #1080), each a spot in the parcel frame (its footprint's centre), its picture and its size over its owner size: a shed
+ *  for the sheep and a stable (the shed's picture, a labelled stand-in) for the horses, in a column behind the barn on the lane's side (where the old shed stood; the silo keeps its
+ *  corner on the far side), the shed first. The barn is every farm's (the cows graze the paddock of the others): nothing here is a house garage */
+interface Outbuilding { id: string; a: number; b: number; mul: number; stable: boolean }
+function outbuildings(p: FarmParcel, L: { ba: number; bb: number; bw: number; bd: number; side: 1 | -1; yardB1: number }, W: number, D: number, plan: readonly Graze[], flip: boolean): Outbuilding[] {
+  const id = FARM_SHED[0]; if (!id) return [];
+  const want: { mul: number; stable: boolean }[] = [];
+  if (hasSheep(plan)) want.push({ mul: SHED_MUL, stable: false });
+  if (plan.some(g => g.kind === 'horse')) want.push({ mul: STABLE_MUL, stable: true });
+  const out: Outbuilding[] = []; let from = L.bb + L.bd / 2 + 0.9;
+  for (const w of want) {
+    const [ew, ed] = frameExtents(p.u, p.n, id, flip, w.mul);
+    // (inside the yard: past its back edge are the fields, and an orchard's trees are never taken for a building)
+    const b = Math.min(D - ed / 2 - 0.7, L.yardB1 - 0.3 - ed / 2, from + ed / 2);
+    if (b - ed / 2 < L.bb + L.bd / 2 + 0.2) continue;
+    out.push({ id, a: clamp(L.ba + L.side * (L.bw / 5), ew / 2 + 0.7, W - ew / 2 - 0.7), b, mul: w.mul, stable: w.stable });
+    from = b + ed / 2 + 0.6;
   }
   return out;
 }

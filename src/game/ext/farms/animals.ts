@@ -9,8 +9,9 @@
 // swishing), lookup 4-6 (head 2/3 down, 1/3, up), walk 7-14 (a four-beat walk, the feet matched to WALK_FRAME_S and the speed).
 import type { Pt } from '../../network';
 import { farmAnimalFields, type AnimalField, type FarmModel, type FarmParcel } from './farms';
+import { h32, herdPlan, u01, type AnimalKind } from './herd';
 
-export type AnimalKind = 'cow' | 'horse' | 'sheep';
+export type { AnimalKind };
 /** the animals' art as the game knows it: its id (cow-*, horse-*, sheep-*: the kind) */
 export interface AnimalArtRef { id: string }
 export const animalKind = (id: string): AnimalKind => (id.startsWith('horse') ? 'horse' : id.startsWith('sheep') ? 'sheep' : 'cow');
@@ -51,11 +52,6 @@ export interface FarmAnimal {
 /** what an animal shows at a time: world tiles, its heading row (0..7) and its frame in the row (0..14) */
 export interface AnimalView { x: number; y: number; art: number; row: number; frame: number; moving: boolean }
 
-const h32 = (a: number, b: number, c = 0) => {
-  let h = (Math.imul(a | 0, 0x9e3779b1) ^ Math.imul(b | 0, 0x85ebca77) ^ Math.imul(c | 0, 0xc2b2ae3d)) >>> 0;
-  h = Math.imul(h ^ (h >>> 16), 0x7feb352d) >>> 0; h = Math.imul(h ^ (h >>> 15), 0x846ca68b) >>> 0; return (h ^ (h >>> 16)) >>> 0;
-};
-const u01 = (a: number, b: number, c = 0) => h32(a, b, c) / 4294967296;
 const clamp = (v: number, a: number, b: number) => (v < a ? a : v > b ? b : v);
 /** the nearest painted heading to a world direction (CAR_DIRECTIONS order: carHeading) */
 export const animalHeading = (dx: number, dy: number) => ((Math.round(Math.atan2(dy, dx) / (Math.PI / 4)) % 8) + 8) % 8;
@@ -78,9 +74,8 @@ export function farmAnimals(p: FarmParcel, seed: number, arts: readonly AnimalAr
   const byKind: Record<AnimalKind, number[]> = { cow: [], horse: [], sheep: [] };
   arts.forEach((a, i) => byKind[animalKind(a.id)].push(i));
   const s0 = h32(seed, 0x7309), out: FarmAnimal[] = [];
-  const fallow = fields.filter(q => q.kind === 'fallow').sort((a, b) => (b.a1 - b.a0) * (b.b1 - b.b0) - (a.a1 - a.a0) * (a.b1 - a.b0))[0];
-  const grazed = fields.filter(q => q.kind !== 'fallow' || (q === fallow && u01(s0, 1) < 0.5 && !fields.some(z => z.kind === 'pasture')));
-  grazed.forEach((q, qi) => {
+  // (T402: herd.ts herdPlan is the one rule of which fields graze and what grazes them: the farm's outbuildings read it too)
+  herdPlan(fields, seed).forEach(({ q, qi, kind }) => {
     const a0 = q.a0 + ANIMAL_MARGIN, b0 = q.b0 + ANIMAL_MARGIN, a1 = q.a1 - ANIMAL_MARGIN, b1 = q.b1 - ANIMAL_MARGIN;
     if (a1 - a0 < 2 || b1 - b0 < 2) return;
     // the hay bales and bushes standing in this field (parcel frame)
@@ -89,7 +84,6 @@ export function farmAnimals(p: FarmParcel, seed: number, arts: readonly AnimalAr
       const dx = o.x - p.o.x, dy = o.y - p.o.y, oa = dx * p.u.x + dy * p.u.y, ob = dx * p.n.x + dy * p.n.y;
       if (oa > q.a0 && oa < q.a1 && ob > q.b0 && ob < q.b1) obs.push([oa, ob]);
     }
-    const kind: AnimalKind = q.kind === 'paddock' ? (u01(s0, 2, qi) < 0.6 ? 'cow' : 'horse') : 'sheep';
     const pool = byKind[kind].length ? byKind[kind] : null; if (!pool) return;
     const [lo, hi] = HERD[kind];
     const want = Math.min(lo + Math.floor(u01(s0, 3, qi) * (hi - lo + 1)), Math.floor((q.a1 - q.a0) * (q.b1 - q.b0) / ANIMAL_AREA), ANIMALS_PER_FARM_MAX - out.length);

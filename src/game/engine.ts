@@ -12829,8 +12829,9 @@ export class Game {
     for (const p of this.siHits) this.standInPill(p, p, ze);
     for (const p of this.businessProps) this.standInPill(p, p, ze, this.bizLabels.get(p)); // (T214: the club buildings' own labels)
     for (const l of this.range.labels) this.standInPill(l, l.p, ze, l.text);
-    // T259: the farms' stand-ins (the windbreak, the orchard, the crop fields, the lane) in the view's box
-    for (const ls of this.farmLabels.values()) for (const l of ls) if (l.box[2]! >= b[0]! && l.box[0]! <= b[2]! && l.box[3]! >= b[1]! && l.box[1]! <= b[3]!) this.standInPill(l, l.p, ze, l.text);
+    // T259: the farms' stand-ins (the windbreak, the orchard, the crop fields, the lane, the stable) in the view's box. T402 (#1080; the owner, 2026-11-09: "the stand-in labels
+    // ('Stand In for windbreak poplars', 'Stand In for farm lane') get real art, or their labels are hidden outside dev"): drawn in a dev build only, until their art lands
+    if (import.meta.env.DEV) for (const ls of this.farmLabels.values()) for (const l of ls) if (l.box[2]! >= b[0]! && l.box[0]! <= b[2]! && l.box[3]! >= b[1]! && l.box[1]! <= b[3]!) this.standInPill(l, l.p, ze, l.text);
     for (const l of this.decor.labels) this.standInPill(l, l.p, ze, l.text);
     for (const l of this.placeStandIns) this.standInPill(l, l.p, ze, l.text);
     for (const l of this.caddieLabels) this.standInPill(l.p, l.p, ze, l.text); // T213: the caddies' stand-in
