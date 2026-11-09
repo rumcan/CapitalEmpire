@@ -17,7 +17,7 @@ import { LOT_DECALS } from './lot-decals';
 import { clampDecals, drawDecals, flatSquash, placeDecals } from './map-decals';
 import { layOnGround } from './base-grass';
 import savedDecals from './map-decals.json';
-import { HS, HSTEP, TC, sampleField, type Waterway } from './terrain/types';
+import { HS, HSTEP, TC, type Waterway } from './terrain/types';
 import { makeNoise } from './terrain/noise';
 import { WOODLAND_TEX, barShape, classAlpha, rockAlpha, shadeField, shadeRGBA, slopeField, waterBox, waterShape } from './terrain-paint';
 import { crosscutLegs, cutPieces, fairwayStripeLook, flipBands, holeStripeLegs, legArea, ringPass, turnStripeLegs, type StripeLeg, type StripeLook } from './course-stripes';

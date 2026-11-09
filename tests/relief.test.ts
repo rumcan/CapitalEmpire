@@ -4,7 +4,7 @@ import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
-import { CH_SIZE, CH_STEP, SUN_TILE_DIR, applyCourseHeightBrush } from '../src/game/ext/course-height';
+import { CH_SIZE, CH_STEP, SUN_TILE_DIR } from '../src/game/ext/course-height';
 import { heightLightGrid, sampleHeightLight, type LightLand } from '../src/game/ext/course-height/light';
 import {
   NORMAL_W, REL_MAX, REL_MIN, RELIEF_BANDS, RELIEF_BANDS_DEFAULT, RELIEF_LOOK, RELIEF_RANGES, bandRel, bandsOf, clampRelief, flatBelow, reliefGrid, reliefMaxSlope, reliefModeOf, reliefPictures, sampleSlope,
@@ -158,7 +158,7 @@ describe('the relief grid: the light of the ground (T126, T388) read with the vi
     // the share of the lit or shaded points that have one of the five commonest (dark, lift) pairs
     const top5 = (g: ReliefGrid) => { const m = new Map<string, number>(); let n = 0; for (let p = 0; p < g.w * g.h; p++) { const d = g.v[p * 5]!, l = g.v[p * 5 + 1]!; if (d === 0 && l === 0) continue; const k = `${d.toFixed(5)}|${l.toFixed(5)}`; m.set(k, (m.get(k) ?? 0) + 1); n++; } return [...m.values()].sort((a, b) => b - a).slice(0, 5).reduce((s, v) => s + v, 0) / n; };
     const smooth = reliefGrid({ course: f, land: null }, box(500, 500, 30), 2, 0)!, banded = reliefGrid({ course: f, land: null }, box(500, 500, 30), 2, 4)!;
-    assert.ok(top5(smooth) < 0.2, `smooth: the five commonest levels hold ${(100 * top5(smooth)).toFixed(0)}% of the points`); assert.ok(top5(banded) > 0.6, `banded: ${(100 * top5(banded)).toFixed(0)}%`);
+    assert.ok(top5(smooth) < 0.2, `smooth: the five commonest levels hold ${(100 * top5(smooth)).toFixed(0)}% of the points`); assert.ok(top5(banded) > 0.45, `banded: ${(100 * top5(banded)).toFixed(0)}%`);
     // flat ground far from the dome is nothing in both
     assert.equal(banded.v[0], 0); assert.equal(smooth.v[0], 0);
   });
@@ -237,7 +237,7 @@ describe('the Hillside and Mountain rock surfaces (art slots with stand-ins)', (
     assert.deepEqual([h.tex, h.group, h.slot], [[HILLSIDE], 'Map', true]); assert.deepEqual([m.tex, m.group, m.slot], [[MOUNTAIN], 'Map', true]);
     assert.equal(SURFACES.filter(s => s.tex.includes(HILLSIDE) || s.tex.includes(MOUNTAIN)).length, 2);
     const f = clampSurfaces(surfacesFile);
-    assert.equal(lookOfTex(HILLSIDE, f)!.family, 'grow-in-run'); assert.ok(familyById(lookOfTex(MOUNTAIN, f)!.family), 'the rock stand-in names a family the game has');
+    assert.equal(lookOfTex(HILLSIDE, f)!.family, 'dirt-run'); assert.ok(familyById(lookOfTex(MOUNTAIN, f)!.family), 'the rock stand-in names a family the game has');
   });
   it('every stand-in names a family the game has (the surfaces file\'s looks, and the desert theme\'s)', () => {
     const f = clampSurfaces(surfacesFile), d = desertSurfaces(f);

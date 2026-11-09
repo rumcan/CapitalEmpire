@@ -73,8 +73,10 @@ const CAST_REACH = 8, PEN0 = 0.12, PEN = 0.22, CAST_EPS = 0.03;
 const AO_RADII = [3, 6] as const, AO_K = 0.2;
 /** the lift (0..1) over which the inset highlight on a lit slope ramps in */
 const SPEC_LO = 0.3, SPEC_HI = 0.85;
-/** the crest highlight: a crest (the ground above the mean of the ring round it by this many exaggerated metres or more) catches the sun on its lit side: none under CREST_LO, all of it from CREST_HI */
-const CREST_LO = 0.05, CREST_HI = 0.5;
+/** the creases and the crests: the ground against the mean of a ring one tile (2 m) round it, a narrow one, so only a fold shows and a broad swell does not. A crest (the ground above that
+ *  mean by this many exaggerated metres) catches a thin highlight on its lit side, a crease (below it) darkens a little more than the hollow's occlusion: none under CREST_LO, all of it from CREST_HI;
+ *  a crease adds CREASE_AO of its share to the occlusion */
+const CREASE_R = 1, CREST_LO = 0.05, CREST_HI = 0.5, CREASE_AO = 0.5;
 /** the sun's brightness over flat ground at its fullest: B(max) - 1 (a slope facing the sun squarely), the lift's scale */
 const { lx, ly, lz } = SUN_LIGHT;
 export const REL_MAX = (1 - AMBIENT) * (1 / lz - 1);
@@ -143,6 +145,8 @@ export function reliefGrid(inp: ReliefInput, box: readonly number[], res: number
     return top + (bot - top) * fv;
   };
   const TS = new Float64Array(2), TL = new Float64Array(2), TC = new Float64Array(2);
+  // the highest ground the lattice holds: a ray toward the sun climbs 2 SUN_SLOPE a tile, so a point can only be shaded by ground within (rise to that height) / (2 SUN_SLOPE) tiles: the march stops there (exact, and most points stop early)
+  let hMax = -Infinity; for (let k = 0; k < n; k++) if (Hs[k]! > hMax) hMax = Hs[k]!;
   const step = 1 / res, stepM = 2 * step, sdx = SUN_TILE_DIR.x * res, sdy = SUN_TILE_DIR.y * res, out = new Float32Array(w * gh * HL_STRIDE), slope = new Float32Array(w * gh), DEG = 180 / Math.PI;
   let qi0 = w, qi1 = -1, qj0 = gh, qj1 = -1;
   for (let j = 0; j < gh; j++) for (let i = 0; i < w; i++) {
@@ -160,7 +164,8 @@ export function reliefGrid(inp: ReliefInput, box: readonly number[], res: number
     const ndl = (nx * lx + ny * ly + lz) / Math.sqrt(nx * nx + ny * ny + 1), ndl0 = (ex0 * lx + ey0 * ly + lz) / Math.sqrt(ex0 * ex0 + ey0 * ey0 + 1);
     // cast: the march toward the sun; a point is shaded where the ground ahead rises above the sun's ray (exaggerated heights, metres)
     let cast = 0;
-    for (let d = step; d <= CAST_REACH + 1e-9 && cast < 1; d += step) {
+    const dEnd = Math.min(CAST_REACH + 1e-9, LIGHT_EXAG * (hMax - H0) / (2 * SUN_SLOPE));
+    for (let d = step; d <= dEnd && cast < 1; d += step) {
       const ex = LIGHT_EXAG * (at(ii + sdx * d, jj + sdy * d) - H0) - 2 * d * SUN_SLOPE;
       if (ex > 0) cast = Math.max(cast, Math.min(1, ex / (PEN0 + PEN * 2 * d)) * (1 - smooth(0.6 * CAST_REACH, CAST_REACH, d)));
     }
@@ -168,7 +173,12 @@ export function reliefGrid(inp: ReliefInput, box: readonly number[], res: number
     // occlusion (a hollow) and its opposite (a crest): the mean of the ring round, less this point's height
     let ring = 0;
     for (const r of AO_RADII) for (const [cx, cy] of RING) ring += at(ii + cx * r * res, jj + cy * r * res);
-    const below = ring / (RING.length * AO_RADII.length) - H0, ao = below > 0 ? Math.min(1, below * LIGHT_EXAG * AO_K) : 0, crest = below < 0 ? Math.min(1, smooth(CREST_LO, CREST_HI, -below * LIGHT_EXAG)) : 0;
+    const below = ring / (RING.length * AO_RADII.length) - H0;
+    // the narrow ring: a fold in the ground (res of at least a point a tile: the planner's coarse lattice has no such scale)
+    let fold = 0;
+    if (res >= 1) { let r1 = 0; for (const [cx, cy] of RING) r1 += at(ii + cx * CREASE_R * res, jj + cy * CREASE_R * res); fold = (r1 / RING.length - H0) * LIGHT_EXAG; }
+    const crease = fold > 0 ? smooth(CREST_LO, CREST_HI, fold) : 0, crest = fold < 0 ? smooth(CREST_LO, CREST_HI, -fold) : 0;
+    const ao = Math.min(1, (below > 0 ? below * LIGHT_EXAG * AO_K : 0) + CREASE_AO * crease);
     out[o + 3] = cast; out[o + 4] = ao;
     // flat ground (or a level plateau) stays exactly as it is: judged on the plain response, so the gentle gain lights no more ground than it did
     const rel0 = AMBIENT * (1 - ao) + (1 - AMBIENT) * Math.max(0, ndl0) / lz * (1 - cast) - 1;
@@ -189,7 +199,7 @@ export function reliefGrid(inp: ReliefInput, box: readonly number[], res: number
 /** the look of the relief light as the pictures lay it (the shade's multiply, the lift, the highlight): heightLightPictures' form with the relief's own strengths. The
  *  numbers are the T126 look's, the shade a little deeper and the highlight a little warmer so the hills read as shapes */
 export interface ReliefLook { darkK: number; darkMax: number; shadeW: readonly [number, number, number]; liftG: number; liftW: readonly [number, number, number]; specG: number; sun: readonly [number, number, number] }
-export const RELIEF_LOOK: ReliefLook = { darkK: 0.55, darkMax: 0.5, shadeW: [1.12, 1, 0.66], liftG: 0.32, liftW: [1.08, 1, 0.8], specG: 0.3, sun: [255, 236, 176] };
+export const RELIEF_LOOK: ReliefLook = { darkK: 0.85, darkMax: 0.55, shadeW: [1.12, 1, 0.66], liftG: 0.45, liftW: [1.08, 1, 0.8], specG: 0.36, sun: [255, 236, 176] };
 /** the grid's light as three w x h RGBA pictures at strength s (heightLightPictures' contract) */
 export function reliefPictures(g: HeightLightGrid, s: number, look: ReliefLook = RELIEF_LOOK): { shade: Uint8ClampedArray; lift: Uint8ClampedArray; spec: Uint8ClampedArray } {
   const n = g.w * g.h, shade = new Uint8ClampedArray(n * 4), lift = new Uint8ClampedArray(n * 4), spec = new Uint8ClampedArray(n * 4), V = g.v;
