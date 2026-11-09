@@ -139,7 +139,7 @@ test('drawing: each float\'s label (and a lost sale\'s caption) is written once 
 // ---- the range's money (T146's RangeSim.onMoney) ----
 const P: Rect = [200, 200, 70, 150], entrance = { x: P[0] + 72, y: P[1] + 9 };
 const LOT44: Rect = [P[0] + 49, P[1] + 2, 20, 16];
-const GROWN: RangeUpgradeId[] = ['bays8', 'bays12', 'bays24', 'targets', 'covered', 'lights', 'dispenser', 'proshop', 'kiosk', 'picker', 'tier2', 'academy'];
+const GROWN: RangeUpgradeId[] = ['bays8', 'bays12', 'bays24', 'targets', 'covered', 'lights', 'dispenser', 'proshop', 'kiosk', 'tube', 'pushpick', 'picker', 'nightpick', 'tier2', 'academy'];
 const grown = { tier: 1, exits: 2, residents: 2000, propsAppeal: 0.4, practiceAppeal: 0.21 };
 const DAY = 600, HOUR = DAY / 24;
 

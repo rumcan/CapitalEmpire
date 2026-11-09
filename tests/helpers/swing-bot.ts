@@ -3,8 +3,8 @@
 // (playYours: the one shot model the owner's shots use). The tests use it to check the mechanics over many shots; scripts/dev/play-pass-sim.ts and
 // scripts/dev/play-pass-playtest.mjs use it to measure distances, scores and pace on the town course. Pure TS, deterministic from its seeds.
 import { TILE_M } from '../../src/game/golf/types';
-import { meterMark, METER, swingTime, MIN_SWING_POWER, rng, gauss, skillFor } from '../../src/game/golf/play';
-import type { CourseView, Club, OwnerInput, OwnerTurn, Shot, ShotSkill, SwingOutcome } from '../../src/game/golf/play';
+import { meterMark, METER, METER_V, markerSpeed, MIN_SWING_POWER, rng, gauss, kitOf, swingEffect } from '../../src/game/golf/play';
+import type { CourseView, Club, OwnerInput, OwnerTurn, Shot, ShotSkill, SwingOutcome, SwingShape } from '../../src/game/golf/play';
 import { nextHole, playYours, startRound, yourTurn, type YourRound } from '../../src/game/golf/play/yours';
 
 /** how a person clicks: the click timing error (seconds: its bias, + late, and its spread) and the share of power he misses by (the second click) */
@@ -18,23 +18,25 @@ export const HUMANS: Readonly<Record<'novice' | 'club' | 'sharp', Human>> = {
 
 /** one swing of a person: wants `want` of the club's carry (a putt: of its length to the hole); returns the meter's outcome. The power click lands where the marker
  *  is `powerSd` (a share of the power) off the wanted mark, the accuracy click is the person's timing error in seconds times the marker's speed (the marker moves
- *  1 / swingTime(skill) meter units a second): early (negative error) is a positive acc (a pull), late a negative one (a push) */
-export function botSwing(r: () => number, h: Human, skill: number, want: number, putting: boolean, boost = 0): SwingOutcome {
-  const speed = 1 / swingTime(skill), mark = meterMark(want, putting);
+ *  markerSpeed(skill, speedF) meter units a second): early (negative error) is a positive acc (a pull), late a negative one (a push). T345: `speedF`, the stats' factor on the marker (ClubKit.speed),
+ *  and `meter`, the meter he swings (METER_V, the window in time: the outcome carries its version; 1: the first meter, whose outcomes carry none) */
+export function botSwing(r: () => number, h: Human, skill: number, want: number, putting: boolean, boost = 0, speedF = 1, meter: number = METER_V): SwingOutcome {
+  const speed = markerSpeed(skill, speedF), mark = meterMark(want, putting);
   const power = Math.min(METER.top, Math.max(MIN_SWING_POWER, mark * (1 + gauss(r) * h.powerSd)));
   const e = h.biasS + gauss(r) * h.sdS;
-  return { power, acc: Math.min(METER.top, Math.max(METER.low, -e * speed)), boost };
+  return { power, acc: Math.min(METER.top, Math.max(METER.low, -e * speed)), boost, ...(meter >= 2 ? { v: METER_V } : {}) };
 }
 
 /** a shot of a round, with what the tests and the sim measure */
-export interface BotShot { hole: number; stroke: number; club: Club; shot: Shot; carryM: number | null; totalM: number | null; lieBefore: string; par: number; distM: number }
+export interface BotShot { hole: number; stroke: number; club: Club; shot: Shot; carryM: number | null; totalM: number | null; lieBefore: string; par: number; distM: number;
+  /** T345: the shape of the swing's miss (straight, pull, push, hook, slice) and the accuracy click's timing error in seconds (+ late) */ swing: SwingShape; errS: number }
 /** a round played by the bot: the card (strokes per hole), the shots, and the totals */
 export interface BotRound { strokes: number[]; pars: number[]; shots: BotShot[]; total: number; par: number; putts: number; penalties: number; gir: number; fairways: number; fairwayHoles: number }
 
 /** plays every hole of `view` for a golfer of skills `sk` (his part of the game each: ShotSkill), from the first tee to the last cup, with the human clicking: the
  *  caddie's club, aim and power each time (yourTurn), swung through botSwing, played through playYours. `mod` may add fields to each input (the tests put the
- *  conditions there: env, shape). `day` and `seed` pick the round's streams */
-export function botRound(view: CourseView, sk: ShotSkill, h: Human, seed: number, day = 1, mod?: (turn: OwnerTurn, r: YourRound) => Partial<OwnerInput>, holes?: number[]): BotRound {
+ *  conditions there: env, shape). `day` and `seed` pick the round's streams. T345: `meter`, the meter he swings (METER_V, the window in time; 1: the first meter) */
+export function botRound(view: CourseView, sk: ShotSkill, h: Human, seed: number, day = 1, mod?: (turn: OwnerTurn, r: YourRound) => Partial<OwnerInput>, holes?: number[], meter: number = METER_V): BotRound {
   const idx = holes ?? view.holes.map((_, i) => i), r0 = startRound(view, idx, day);
   if (!r0) throw new Error('botRound: no holes');
   let r: YourRound = r0;
@@ -43,13 +45,14 @@ export function botRound(view: CourseView, sk: ShotSkill, h: Human, seed: number
   while (!r.over && guard++ < 2000) {
     const t = yourTurn(view, r, sk);
     if (!t) { r = nextHole(view, r); continue; }
-    const putting = t.suggested.club === 'putter', skill = skillFor(sk, t.suggested.club);
-    const swing = botSwing(sw, h, skill, t.suggested.power, putting);
+    const putting = t.suggested.club === 'putter', kit = kitOf(sk, t.suggested.club), skill = kit.skill;
+    const swing = botSwing(sw, h, skill, t.suggested.power, putting, 0, kit.speed, meter);
     const input = { club: t.suggested.club, aim: t.suggested.aim, power: t.suggested.power, swing, ...(mod ? mod(t, r) : {}) };
     const o = playYours(view, r, sk, input, seed);
     const m = (a: { x: number; y: number }, b: { x: number; y: number }) => Math.hypot(b.x - a.x, b.y - a.y) * TILE_M;
     const s = o.shot;
-    shots.push({ hole: t.hole, stroke: t.stroke, club: s.club, shot: s, carryM: s.landing ? m(s.from, s.landing.at) : null, totalM: s.penalty ? null : m(s.from, s.to), lieBefore: t.lie, par: t.par, distM: t.distM });
+    shots.push({ hole: t.hole, stroke: t.stroke, club: s.club, shot: s, carryM: s.landing ? m(s.from, s.landing.at) : null, totalM: s.penalty ? null : m(s.from, s.to), lieBefore: t.lie, par: t.par, distM: t.distM,
+      swing: swingEffect(swing, skill, putting, kit.sweet, kit.miss, kit.speed).shape, errS: -swing.acc / markerSpeed(skill, kit.speed) });
     if (s.club === 'putter') putts++;
     if (s.penalty) penalties++;
     // a fairway found: the tee shot of a par 4 or 5 coming to rest on the fairway (or the green)

@@ -129,7 +129,7 @@ function ShotPanelBody({ game, s }: { game: Game; s: ShotState }) {
   const [result, setResult] = useState<string | null>(null);
   // (T336: the moves a card unlocks, and the cards in play; a stand-in game without cards: the legacy set, none shown)
   const can = typeof game.shotCan === 'function' ? game.shotCan() : { boost: true, airspin: true }, cards = typeof game.shotCards === 'function' ? game.shotCards() : [], tools = typeof game.shotTools === 'function' ? game.shotTools() : null;
-  const look: MeterLook = { sweet: sweetSpot(skill, 0, kit?.sweet ?? 1), aimMark: meterMark(fullM > 0 ? playsM / fullM : 1, putting), full: putting ? `100% · ${t.distM.toFixed(1)} m` : `100% · ${Math.round(fullM)} m`, putting, boost: can.boost, pace: tools?.paceHalf ?? null };
+  const look: MeterLook = { sweet: sweetSpot(skill, 0, kit?.sweet ?? 1, kit?.speed ?? 1), aimMark: meterMark(fullM > 0 ? playsM / fullM : 1, putting), full: putting ? `100% · ${t.distM.toFixed(1)} m` : `100% · ${Math.round(fullM)} m`, putting, boost: can.boost, pace: tools?.paceHalf ?? null };
   const swinging = phase === 'up' || phase === 'back', busy = phase !== 'ready';
   const boostOn = useRef(can.boost); boostOn.current = can.boost;
   const last = game.lastShotReport();
@@ -138,7 +138,7 @@ function ShotPanelBody({ game, s }: { game: Game; s: ShotState }) {
   const finish = (m: SwingMeter) => {
     const o = m.outcome(); if (!o || fired.current) return;
     fired.current = true;
-    const e = swingEffect(o, game.shotSkill(), putting, game.shotKit()?.sweet ?? 1, game.shotKit()?.miss ?? 1);
+    const e = swingEffect(o, game.shotSkill(), putting, game.shotKit()?.sweet ?? 1, game.shotKit()?.miss ?? 1, game.shotKit()?.speed ?? 1);
     setPhase('done'); setResult(`${shapeText(e)} · ${Math.round(e.power * 100)}%`);
     window.setTimeout(() => game.ownerSwing(o), HOLD_MS);
   };
@@ -188,7 +188,7 @@ function ShotPanelBody({ game, s }: { game: Game; s: ShotState }) {
     const frame = () => {
       const c = canvas.current, m = meter.current, now = performance.now() / 1000;
       if (m && (m.phase === 'up' || m.phase === 'back')) { m.tick(now); if ((m.phase as SwingPhase) === 'done') { setPhase('done'); api.current.finish(m); } }
-      if (c) drawMeter(c, m, now, { ...lookRef.current, sweet: sweetSpot(game.shotSkill(), m?.boost() ?? 0, game.shotKit()?.sweet ?? 1) }, resultRef.current);
+      if (c) drawMeter(c, m, now, { ...lookRef.current, sweet: sweetSpot(game.shotSkill(), m?.boost() ?? 0, game.shotKit()?.sweet ?? 1, game.shotKit()?.speed ?? 1) }, resultRef.current);
       if (m && (m.phase === 'up' || m.phase === 'back')) raf = requestAnimationFrame(frame);
     };
     frame();

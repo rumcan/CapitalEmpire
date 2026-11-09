@@ -15,7 +15,7 @@ import type { Rect } from '../src/game/golf/mode';
 const P: Rect = [200, 200, 70, 150], entrance = { x: P[0] + 72, y: P[1] + 9 };
 const LOT44: Rect = [P[0] + 49, P[1] + 2, 20, 16];
 const lot = (r: Rect): CarSlot[] => bayGrid({ id: 1, x: r[0], y: r[1], w: r[2], h: r[3] }, 0, [entrance]);
-const GROWN: RangeUpgradeId[] = ['bays8', 'bays12', 'bays24', 'targets', 'covered', 'lights', 'dispenser', 'proshop', 'kiosk', 'picker', 'tier2', 'academy'];
+const GROWN: RangeUpgradeId[] = ['bays8', 'bays12', 'bays24', 'targets', 'covered', 'lights', 'dispenser', 'proshop', 'kiosk', 'tube', 'pushpick', 'picker', 'nightpick', 'tier2', 'academy'];
 const buy = (ids: RangeUpgradeId[]): RangeBizSave => { const s = ids.reduce((q, id) => withUpgrade(q, id), defaultRangeBiz()); s.price = 8; return s; };
 /** P24's grown range: 2,000 residents, props +40%, both practice greens' appeal */
 const grown = { tier: 1, exits: 2, residents: 2000, propsAppeal: 0.4, practiceAppeal: 0.21 };
