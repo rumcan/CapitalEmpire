@@ -25,6 +25,7 @@
  *  Pure TypeScript, no DOM: the node tests run it, and gl.ts builds its shader from the same numbers. Units: tiles of 2 m. */
 import { fbm, makeNoise } from './terrain/noise';
 import type { WaterPoint } from './terrain/types';
+import { BAR_SHARE, W_MAX } from './terrain/river';
 import type { SpecLook } from './lamp-reflect';
 
 /** the band's numbers (tiles):
@@ -83,7 +84,11 @@ export interface BandLook {
   out: number; soft: number; softReach: number; softOut: number; ragStep: number; latStep: number; farStep: number; farRag: number; ragFrom: number; wide: boolean;
   /** a wide band's bounds, for skipping whole lattice cells: none under lo (the water), none past the reach plus rim plus rag0 */
   lo: number; rim: number; rag0: number;
-  reach(x: number, y: number, hw: number): number; rag(x: number, y: number): number; band(e: number, R: number, g: number): number;
+  /** T360: a sided band (the natural river's) lets its reach read which side of the river the point lies on: sbar, the point bar's width on its
+   *  side of the nearest water (positive: the bar is on this side; negative: the cut bank is, the bar on the other, its width the magnitude; 0:
+   *  neither), from the points' WaterPoint.bar. A band that is not sided is never asked, so the old rivers' and the creeks' are as they were */
+  sided?: boolean;
+  reach(x: number, y: number, hw: number, sbar?: number): number; rag(x: number, y: number): number; band(e: number, R: number, g: number): number;
 }
 /** the creeks' band (T199): SWAMP's numbers, as before */
 export const CREEK_BAND: BandLook = { out: SWAMP_OUT, soft: SWAMP.soft, softReach: SOFT_REACH, softOut: SOFT_OUT, ragStep: RAG_STEP, latStep: 1, farStep: 2, farRag: 2 * RAG_STEP, ragFrom: -Infinity, wide: false, lo: -Infinity, rim: SWAMP.feather, rag0: SWAMP.rag, reach: (x, y) => reachAt(x, y), rag: ragAt, band: bandOf };
@@ -133,6 +138,39 @@ export const RIVER_BAND: BandLook = {
   lo: RIVER_SWAMP.inner[0], rim: RIVER_SWAMP.feather, rag0: RIVER_SWAMP.rag,
   reach: riverReachAt, rag: riverRagAt, band: riverBandOf,
 };
+/** T360 (#1015; the owner, 2026-11-09: "a river that looks like a canal", "a bank vegetation band of varying width, not an even strip"): the
+ *  natural river's band (terrain model 2, Waterway.nat): the old one's shape (a band rising under the bank, its rim ragged once it is wider than
+ *  the bank), but its width swings a great deal more, and on the two sides of a bend it differs:
+ *  - the width past the bank: stretch (a slow noise of stretchWave tiles, under stretch[0] only floor of the width, over stretch[1] the whole)
+ *    times (bank + k x the river's half width, at most cap, and its bays +-bay over bayWave): from a fringe of a tile or two to a marsh of 17;
+ *  - on the inside of a bend (the point bar's side, sbar > 0) the band lies barK of the bar's width farther out, so the marsh starts past the
+ *    sand; on the outside (the cut bank, sbar < 0) it is thinned by up to cutK, by how much of its most the bar there is (barShare of the water's
+ *    width), the steep bank holding its trees close and no marsh;
+ *  - rag, ragWave, feather, soft, ragStep, latStep, farStep, farRag: as RIVER_SWAMP's (the rim a little more ragged) */
+export const RIVER_NAT = {
+  floor: 0.22, bank: 3, inner: [-0.8, -0.4], k: 0.6, cap: 10, stretch: [-0.3, 0.22], stretchWave: 56, bay: 4.5, bayWave: 15, barK: 0.9, cutK: 0.6,
+  rag: 2.6, ragWave: 6, feather: 0.4, soft: 1, ragStep: 1, latStep: 2, farStep: 8, farRag: 3,
+} as const;
+/** the farthest the natural river's band reaches past the water's edge (tiles, on the soft distance): the bank, the widest swing, the widest bar */
+export const RIVER_NAT_OUT = RIVER_NAT.bank + RIVER_NAT.cap + RIVER_NAT.bay + BAR_SHARE * W_MAX + RIVER_NAT.rag + RIVER_NAT.feather;
+const NNOISE = makeNoise(0x4a1c);
+/** the natural river's swamp at tile (x, y): 0 (a fringe) .. 1 (the whole width) */
+export const natStretchAt = (x: number, y: number) => smooth(RIVER_NAT.stretch[0], RIVER_NAT.stretch[1], fbm(NNOISE, x / RIVER_NAT.stretchWave + 3.17, y / RIVER_NAT.stretchWave - 5.71, 2));
+/** the natural river's band's reach past the water's edge at tile (x, y), the river's half width there hw and the bar on this side sbar (see BandLook.sided) */
+export function natReachAt(x: number, y: number, hw: number, sbar = 0): number {
+  const s = Math.max(RIVER_NAT.floor, natStretchAt(x, y));
+  const w = Math.min(RIVER_NAT.cap, RIVER_NAT.k * hw) + RIVER_NAT.bay * clamp(NNOISE(x / RIVER_NAT.bayWave + 0.53, y / RIVER_NAT.bayWave + 1.93), -1, 1);
+  const base = s * (RIVER_NAT.bank + Math.max(0, w));
+  return sbar > 0 ? base + RIVER_NAT.barK * sbar : sbar < 0 ? base * (1 - RIVER_NAT.cutK * clamp(-sbar / (BAR_SHARE * 2 * hw), 0, 1)) : base;
+}
+/** the natural river's band's rim rag at tile (x, y) (tiles, within +-rag) */
+export const natRagAt = (x: number, y: number) => RIVER_NAT.rag * clamp(2 * fbm(NNOISE, x / RIVER_NAT.ragWave - 9.3, y / RIVER_NAT.ragWave + 4.1, 3), -1, 1);
+/** the natural river's band's look: the old one's cover (it rises under the bank, its rim ragged once it is wider than the bank) over the natural reach */
+export const RIVER_BAND_NAT: BandLook = {
+  ...RIVER_BAND, out: RIVER_NAT_OUT, softOut: RIVER_NAT_OUT + RIVER_NAT.soft * Math.log(8), sided: true, reach: natReachAt, rag: natRagAt, rag0: RIVER_NAT.rag,
+};
+/** the band look the waterways' river wears: the natural one's for a natural river (terrain model 2), else the old one's */
+export const riverBandOf2 = (waters: readonly { kind: string; nat?: boolean }[]): BandLook => (waters.some(w => w.kind === 'river' && w.nat) ? RIVER_BAND_NAT : RIVER_BAND);
 const bilerp = (a: number, b: number, c: number, d: number, tx: number, ty: number) => { const t = a + (b - a) * tx, u = c + (d - c) * tx; return t + (u - t) * ty; };
 /** a lattice point's key in a cache */
 const latKey = (i: number, j: number) => (i + 8192) * 32768 + j + 8192;
@@ -155,8 +193,8 @@ const NONE: readonly number[] = [];
 let LAT_D = new Float64Array(1 << 16);
 
 /** segment records: ax ay bx by (tiles), the half widths at a and b, then the box (grown by the widest half width, SOFT_OUT and the soft
- *  union's reach) */
-const SEG = 10;
+ *  union's reach), then (T360) the point bar's width at a and b (signed: WaterPoint.bar; 0 on a creek and the old river) */
+const SEG = 12;
 /** the bucket size (tiles) of the segment index */
 const CELL = 32;
 
@@ -173,9 +211,9 @@ export class SwampField {
       const p = s.pts;
       for (let k = 0; k + 1 < p.length; k++) {
         const a = p[k]!, b = p[k + 1]!, g = Math.max(a.w, b.w) / 2 + grow;
-        out.push(a.x, a.y, b.x, b.y, a.w / 2, b.w / 2, Math.min(a.x, b.x) - g, Math.min(a.y, b.y) - g, Math.max(a.x, b.x) + g, Math.max(a.y, b.y) + g);
+        out.push(a.x, a.y, b.x, b.y, a.w / 2, b.w / 2, Math.min(a.x, b.x) - g, Math.min(a.y, b.y) - g, Math.max(a.x, b.x) + g, Math.max(a.y, b.y) + g, a.bar ?? 0, b.bar ?? 0);
       }
-      if (p.length === 1) { const a = p[0]!, g = a.w / 2 + grow; out.push(a.x, a.y, a.x, a.y, a.w / 2, a.w / 2, a.x - g, a.y - g, a.x + g, a.y + g); }
+      if (p.length === 1) { const a = p[0]!, g = a.w / 2 + grow; out.push(a.x, a.y, a.x, a.y, a.w / 2, a.w / 2, a.x - g, a.y - g, a.x + g, a.y + g, 0, 0); }
     }
     this.segs = Float64Array.from(out);
     for (let i = 0; i < this.segs.length; i += SEG) {
@@ -220,6 +258,23 @@ export class SwampField {
     }
     return hw;
   }
+  /** T360: the half width and the point bar on (x, y)'s side (BandLook.sided) of the channel nearest (x, y); 0 and 0 with none near */
+  sideBar(list: readonly number[], x: number, y: number): number {
+    const s = this.segs; let m = Infinity, sb = 0;
+    for (const i of list) {
+      if (x < s[i + 6]! || x > s[i + 8]! || y < s[i + 7]! || y > s[i + 9]!) continue;
+      const v = this.segDist(i, x, y); if (v < m) { m = v; sb = this.segSideBar(i, x, y); }
+    }
+    return sb;
+  }
+  /** T360: segment i's point bar on the side of it (x, y) lies on, where it passes nearest (x, y): positive, the bar's width there; negative, the
+   *  cut bank's side (the bar's width on the other); the side is the sign of the cross product of the segment's direction and the point's offset,
+   *  as the generator's (terrain/river.ts: bar > 0 on the +N side, N = (-ty, tx)) */
+  private segSideBar(i: number, x: number, y: number) {
+    const s = this.segs, ax = s[i]!, ay = s[i + 1]!, dx = s[i + 2]! - ax, dy = s[i + 3]! - ay, l2 = dx * dx + dy * dy;
+    const t = l2 > 0 ? clamp(((x - ax) * dx + (y - ay) * dy) / l2, 0, 1) : 0, bar = s[i + 10]! + (s[i + 11]! - s[i + 10]!) * t;
+    return dx * (y - (ay + dy * t)) - dy * (x - (ax + dx * t)) > 0 ? bar : -bar;
+  }
   /** segment i's half width where it passes nearest (x, y) */
   private segHw(i: number, x: number, y: number) {
     const s = this.segs, ax = s[i]!, ay = s[i + 1]!, dx = s[i + 2]! - ax, dy = s[i + 3]! - ay, l2 = dx * dx + dy * dy;
@@ -236,13 +291,13 @@ export class SwampField {
   /** the soft distance (edge) on the lattice of step st tiles, points [i0, i0 + ni) x [j0, j0 + nj) (point (i, j) at tile (i st, j st)): each
    *  segment visits the points its box holds (no point tests every segment), first for the nearest distance, then for the soft sum in the
    *  list's order, so every value is edge()'s exactly */
-  private lattice(list: readonly number[], i0: number, j0: number, ni: number, nj: number, st: number, H: Float64Array | null = null): Float64Array {
+  private lattice(list: readonly number[], i0: number, j0: number, ni: number, nj: number, st: number, H: Float64Array | null = null, SB: Float64Array | null = null): Float64Array {
     const s = this.segs, L = this.look, n = ni * nj, M = new Float64Array(n).fill(Infinity), S = new Float64Array(n);
     // (T265: each segment's distances kept from the first pass for the second, so each is worked out once: the same values, half the work)
     const need = list.length * n; if (LAT_D.length < need) LAT_D = new Float64Array(Math.max(need, LAT_D.length * 2)); const D = LAT_D;
     list.forEach((i, li) => {
       const a = Math.max(0, Math.ceil(s[i + 6]! / st) - i0), b = Math.min(ni - 1, Math.floor(s[i + 8]! / st) - i0), c = Math.max(0, Math.ceil(s[i + 7]! / st) - j0), d = Math.min(nj - 1, Math.floor(s[i + 9]! / st) - j0), o = li * n;
-      for (let y = c; y <= d; y++) for (let x = a; x <= b; x++) { const k = y * ni + x, v = this.segDist(i, (i0 + x) * st, (j0 + y) * st); D[o + k] = v; if (v < M[k]!) { M[k] = v; if (H) H[k] = this.segHw(i, (i0 + x) * st, (j0 + y) * st); } }
+      for (let y = c; y <= d; y++) for (let x = a; x <= b; x++) { const k = y * ni + x, v = this.segDist(i, (i0 + x) * st, (j0 + y) * st); D[o + k] = v; if (v < M[k]!) { M[k] = v; if (H) H[k] = this.segHw(i, (i0 + x) * st, (j0 + y) * st); if (SB) SB[k] = this.segSideBar(i, (i0 + x) * st, (j0 + y) * st); } }
     });
     list.forEach((i, li) => {
       const a = Math.max(0, Math.ceil(s[i + 6]! / st) - i0), b = Math.min(ni - 1, Math.floor(s[i + 8]! / st) - i0), c = Math.max(0, Math.ceil(s[i + 7]! / st) - j0), d = Math.min(nj - 1, Math.floor(s[i + 9]! / st) - j0), o = li * n;
@@ -266,7 +321,7 @@ export class SwampField {
     const E = (a: number, b: number) => this.cached(this.latE, latKey(a, b), () => this.edge(list, a * st, b * st));
     const e = bilerp(E(i, j), E(i + 1, j), E(i, j + 1), E(i + 1, j + 1), tx, ty); if (e >= L.out) return 0;
     // (T265: the river's reach reads its half width there; a lattice point past the band's out lays none, as alpha's)
-    const R = (a: number, b: number) => this.cached(this.latR, latKey(a, b), () => (L.wide ? (E(a, b) < L.out ? L.reach(a * st, b * st, this.halfWidth(list, a * st, b * st)) : 0) : L.reach(a * st, b * st, 0)));
+    const R = (a: number, b: number) => this.cached(this.latR, latKey(a, b), () => (L.wide ? (E(a, b) < L.out ? L.reach(a * st, b * st, this.halfWidth(list, a * st, b * st), L.sided ? this.sideBar(list, a * st, b * st) : 0) : 0) : L.reach(a * st, b * st, 0)));
     const rs = L.ragStep, gi = Math.floor(x / rs), gj = Math.floor(y / rs), gx = x / rs - gi, gy = y / rs - gj;
     const G = (a: number, b: number) => this.cached(this.latG, latKey(a, b), () => L.rag(a * rs, b * rs));
     return L.band(e, bilerp(R(i, j), R(i + 1, j), R(i, j + 1), R(i + 1, j + 1), tx, ty), bilerp(G(gi, gj), G(gi + 1, gj), G(gi, gj + 1), G(gi + 1, gj + 1), gx, gy));
@@ -291,13 +346,13 @@ export class SwampField {
     const L = this.look, OUT = L.out, st = res >= 2 ? L.latStep : L.farStep, gs = res >= 2 ? L.ragStep : L.farRag;
     const i0 = Math.floor(x0 / st), j0 = Math.floor(y0 / st), ni = Math.floor((x0 + w) / st) - i0 + 2, nj = Math.floor((y0 + h) / st) - j0 + 2;
     const list = this.near(i0 * st, j0 * st, (i0 + ni - 1) * st, (j0 + nj - 1) * st); if (!list.length) return null;
-    const HW = L.wide ? new Float64Array(ni * nj) : null, E = this.lattice(list, i0, j0, ni, nj, st, HW); let any = false;
+    const HW = L.wide ? new Float64Array(ni * nj) : null, SB = L.sided ? new Float64Array(ni * nj) : null, E = this.lattice(list, i0, j0, ni, nj, st, HW, SB); let any = false;
     // (a lattice cell whose four corners are all past the band's out lays nothing: its samples are skipped whole)
     const live = new Uint8Array(ni * nj);
     for (let j = 0; j + 1 < nj; j++) for (let i = 0; i + 1 < ni; i++) { const k = j * ni + i; if (E[k]! < OUT || E[k + 1]! < OUT || E[k + ni]! < OUT || E[k + ni + 1]! < OUT) { live[k] = 1; any = true; } }
     if (!any) return null;
     const R = new Float64Array(ni * nj), gi0 = Math.floor(x0 / gs), gj0 = Math.floor(y0 / gs), gni = Math.floor((x0 + w) / gs) - gi0 + 2, gnj = Math.floor((y0 + h) / gs) - gj0 + 2;
-    for (let j = 0; j < nj; j++) for (let i = 0; i < ni; i++) { const k = j * ni + i; R[k] = HW ? (E[k]! < OUT ? L.reach((i0 + i) * st, (j0 + j) * st, HW[k]!) : 0) : L.reach((i0 + i) * st, (j0 + j) * st, 0); }
+    for (let j = 0; j < nj; j++) for (let i = 0; i < ni; i++) { const k = j * ni + i; R[k] = HW ? (E[k]! < OUT ? L.reach((i0 + i) * st, (j0 + j) * st, HW[k]!, SB ? SB[k]! : 0) : 0) : L.reach((i0 + i) * st, (j0 + j) * st, 0); }
     // (T265, a wide band: a cell lays nothing where its corners all lie inside the water (under lo), its reach is none at every corner, or its
     //  nearest corner lies past its farthest reach and the rag; the bilinear values inside a cell lie between its corners')
     if (HW) {

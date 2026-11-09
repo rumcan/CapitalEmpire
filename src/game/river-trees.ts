@@ -20,10 +20,12 @@ import { MAP, mulberry } from './iso';
 import { fbm, hash2, makeNoise, smoothstep, type Noise } from './terrain/noise';
 import { TC, sampleField, type Waterway } from './terrain/types';
 import { FOREST_BROADLEAF, FOREST_CELL, FOREST_CONIFERS, FOREST_SIZE, dealTree, ownerSize, treeDeal, type ForestTree, type TreeSpecies } from './forest';
-import { RIVER_BAND, RIVER_SWAMP, RIVER_SWAMP_OUT, SWAMP, SWAMP_OUT, SwampField, bandOf, ragAt, reachAt, riverBandOf, riverRagAt, riverReachAt, riverStreams, swampStreams } from './swamp';
+import { SWAMP, SWAMP_OUT, SwampField, bandOf, ragAt, reachAt, riverBandOf2, riverStreams, swampStreams, type BandLook } from './swamp';
 
 /** the farthest past its channel's edge (tiles, on the plain distance) a creek's and the river's swamp can reach (their out, plus the soft union's most) */
-const CREEK_SWAMP_REACH = SWAMP_OUT + SWAMP.soft * Math.log(4) + 0.5, RIVER_SWAMP_REACH = RIVER_SWAMP_OUT + RIVER_SWAMP.soft * Math.log(8) + 0.5;
+const CREEK_SWAMP_REACH = SWAMP_OUT + SWAMP.soft * Math.log(4) + 0.5;
+/** the farthest past the water's edge a river's swamp can reach (tiles, on the plain distance): its look's out, plus the soft union's most (T360: the natural river's look reaches farther) */
+const riverSwampReach = (l: BandLook) => l.out + l.soft * Math.log(8) + 0.5;
 
 /** the belt's numbers (tiles):
  *  - S: the grid's spacing (wider than the forest's 2.4); keep: the most of its points a thicket keeps; size: the trees' spread, times the forest's size
@@ -60,8 +62,8 @@ export const BELT_CONIFER_DEAL = treeDeal(FOREST_CONIFERS.map(s => ({ ...s, w: s
 export const BELT_SNAG_DEAL = treeDeal(FOREST_BROADLEAF.filter(s => s.dead));
 
 /** segment records: ax ay bx by, the half widths at a and b, the kind (0 river, 1 creek), then the box (grown by the widest half width and
- *  BELT_OUT) */
-const SEG = 11;
+ *  BELT_OUT), then (T360) the point bar's width at a and b (signed: WaterPoint.bar) */
+const SEG = 13;
 /** the bucket size (tiles) of the segment index */
 const CELL = 32;
 
@@ -75,7 +77,7 @@ export class WaterIndex {
       const p = w.pts, kind = w.kind === 'river' ? 0 : 1;
       for (let k = 0; k < Math.max(1, p.length - 1); k++) {
         const a = p[k]!, b = p[Math.min(k + 1, p.length - 1)]!, g = Math.max(a.w, b.w) / 2 + BELT_OUT + 1;
-        out.push(a.x, a.y, b.x, b.y, a.w / 2, b.w / 2, kind, Math.min(a.x, b.x) - g, Math.min(a.y, b.y) - g, Math.max(a.x, b.x) + g, Math.max(a.y, b.y) + g);
+        out.push(a.x, a.y, b.x, b.y, a.w / 2, b.w / 2, kind, Math.min(a.x, b.x) - g, Math.min(a.y, b.y) - g, Math.max(a.x, b.x) + g, Math.max(a.y, b.y) + g, a.bar ?? 0, b.bar ?? 0);
       }
     }
     this.segs = Float64Array.from(out);
@@ -95,15 +97,16 @@ export class WaterIndex {
     return [...seen].sort((a, b) => a - b);
   }
   /** the waterway nearest (x, y) among list: d, how far (x, y) lies past its channel's edge (tiles; negative inside), its kind (0 river, 1
-   *  creek), the unit vector from its nearest point to (x, y) (nx, ny) and its half width there (hw); d Infinity with none */
-  nearest<T extends { d: number; kind: number; nx: number; ny: number; hw?: number }>(list: readonly number[], x: number, y: number, out: T): T {
-    const s = this.segs; out.d = Infinity; out.kind = 1; out.nx = 0; out.ny = 0; out.hw = 0;
+   *  creek), the unit vector from its nearest point to (x, y) (nx, ny) and its half width there (hw); d Infinity with none. T360: and sbar,
+   *  the point bar's width on (x, y)'s side of it (positive: the bar is on this side; negative: the cut bank is; 0 on a creek and the old river) */
+  nearest<T extends { d: number; kind: number; nx: number; ny: number; hw?: number; sbar?: number }>(list: readonly number[], x: number, y: number, out: T): T {
+    const s = this.segs; out.d = Infinity; out.kind = 1; out.nx = 0; out.ny = 0; out.hw = 0; out.sbar = 0;
     for (const i of list) {
       if (x < s[i + 7]! || x > s[i + 9]! || y < s[i + 8]! || y > s[i + 10]!) continue;
       const ax = s[i]!, ay = s[i + 1]!, dx = s[i + 2]! - ax, dy = s[i + 3]! - ay, l2 = dx * dx + dy * dy;
       const t = l2 > 0 ? Math.max(0, Math.min(1, ((x - ax) * dx + (y - ay) * dy) / l2)) : 0;
       const ex = x - (ax + dx * t), ey = y - (ay + dy * t), r = Math.sqrt(ex * ex + ey * ey), hw = s[i + 4]! + (s[i + 5]! - s[i + 4]!) * t, d = r - hw;
-      if (d < out.d) { out.d = d; out.kind = s[i + 6]!; out.nx = r > 0 ? ex / r : 0; out.ny = r > 0 ? ey / r : 0; out.hw = hw; }
+      if (d < out.d) { out.d = d; out.kind = s[i + 6]!; out.nx = r > 0 ? ex / r : 0; out.ny = r > 0 ? ey / r : 0; out.hw = hw; const bar = s[i + 11]! + (s[i + 12]! - s[i + 11]!) * t; out.sbar = dx * ey - dy * ex > 0 ? bar : -bar; }
     }
     return out;
   }
@@ -113,15 +116,15 @@ export class WaterIndex {
  *  them (the streams' and the river's: the planting reads beltSwamp, which asks only whether each has any; the tests' point queries) */
 export interface BeltField { water: WaterIndex; creekSwamp: SwampField; riverSwamp: SwampField; clump: Noise; open: Noise }
 export function beltField(seed: number, waters: readonly Waterway[]): BeltField {
-  return { water: new WaterIndex(waters), creekSwamp: new SwampField(swampStreams(waters)), riverSwamp: new SwampField(riverStreams(waters), RIVER_BAND), clump: makeNoise(seed ^ 0x3e17), open: makeNoise(seed ^ 0x0be7) };
+  return { water: new WaterIndex(waters), creekSwamp: new SwampField(swampStreams(waters)), riverSwamp: new SwampField(riverStreams(waters), riverBandOf2(waters)), clump: makeNoise(seed ^ 0x3e17), open: makeNoise(seed ^ 0x0be7) };
 }
 
 /** the swamp at (x, y) for the belt (0..1), from its nearest waterway q (WaterIndex nearest): that waterway's band (swamp.ts bandOf,
  *  riverBandOf) on the plain distance, with its reach and rag there: the band as the ground lays it to a tile or so and never past it (the
  *  ground's soft distance is never more than the plain one), without its lattices (a planted cell asks it of every tree; the lattices' first
  *  queries made a cell take milliseconds) */
-export function beltSwamp(f: BeltField, q: { d: number; kind: number; hw: number }, x: number, y: number): number {
-  if (q.kind === 0) return q.d < RIVER_SWAMP_REACH && !f.riverSwamp.empty ? riverBandOf(q.d, riverReachAt(x, y, q.hw), riverRagAt(x, y)) : 0;
+export function beltSwamp(f: BeltField, q: { d: number; kind: number; hw: number; sbar?: number }, x: number, y: number): number {
+  if (q.kind === 0) { const l = f.riverSwamp.look; return q.d < riverSwampReach(l) && !f.riverSwamp.empty ? l.band(q.d, l.reach(x, y, q.hw, q.sbar ?? 0), l.rag(x, y)) : 0; }
   return q.d < CREEK_SWAMP_REACH && !f.creekSwamp.empty ? bandOf(q.d, reachAt(x, y), ragAt(x, y)) : 0;
 }
 /** the belt's keep (0..1) at a point b tiles past the bank (the profile: thick near the water, thinning out to none at BELT.reach) */
@@ -133,7 +136,7 @@ export const beltProfile = (b: number) => 1 - smoothstep(BELT.full, BELT.reach, 
 export function riverBeltCell(seed: number, cls: Uint8Array, slope: Float32Array | null, f: BeltField, ci: number, cj: number, free: (x: number, y: number, r: number) => boolean, r0 = 1): ForestTree[] {
   const out: ForestTree[] = [], S = BELT.S, x0 = ci * FOREST_CELL, y0 = cj * FOREST_CELL;
   const list = f.water.near(x0, y0, x0 + FOREST_CELL, y0 + FOREST_CELL); if (!list.length) return out;
-  const q = { d: 0, kind: 0, nx: 0, ny: 0, hw: 0 };
+  const q = { d: 0, kind: 0, nx: 0, ny: 0, hw: 0, sbar: 0 };
   for (let gx = Math.floor(x0 / S) - 1; gx <= Math.ceil((x0 + FOREST_CELL) / S) + 1; gx++) {
     for (let gy = Math.floor(y0 / S) - 1; gy <= Math.ceil((y0 + FOREST_CELL) / S) + 1; gy++) {
       const bx = (gx + 0.5) * S, by = (gy + 0.5) * S;
@@ -143,8 +146,10 @@ export function riverBeltCell(seed: number, cls: Uint8Array, slope: Float32Array
       if (x < 1 || y < 1 || x >= MAP - 1 || y >= MAP - 1) continue;
       f.water.nearest(list, x, y, q);
       const kind = q.kind === 0 ? BELT.river : BELT.creek;
-      if (!(q.d >= kind.min)) continue; // (never in the water: past the river's water and its bank's inner half, past a creek's channel)
-      const b = q.d - kind.bank; if (b >= BELT.reach) continue;
+      // T360: the natural river's point bar is bare sand (no tree stands on it, the belt starts past it); on the cut bank's side the trees stand close
+      const bar = q.kind === 0 && q.sbar > 0 ? q.sbar : 0, cut = q.kind === 0 && q.sbar < 0;
+      if (!(q.d >= kind.min + (bar > 0 ? bar + 0.5 : 0) - (cut ? 0.8 : 0))) continue; // (never in the water: past the river's water and its bank's inner half, past a creek's channel)
+      const b = q.d - kind.bank - bar; if (b >= BELT.reach) continue;
       const c = cls[Math.floor(y) * MAP + Math.floor(x)];
       if (c === TC.WATER || c === TC.CREEK || c === TC.HILL) continue; // (the hills are the forest's)
       let p = BELT.keep * beltProfile(b);

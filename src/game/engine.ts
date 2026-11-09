@@ -128,7 +128,7 @@ import { Round, SIGNAL_TIER_YEAR, SPEED_TIER_YEAR, signalTierOpen, speedTierOpen
 import type { BusRouteDef } from './event/bus';
 import { plazaEdge, plazaIslands, plazaKey, plazaLocal, plazaOutline, plazaPoint, plazaQuads, type TollDef } from './event/toll';
 import { bayDrive, bayWalk, buildPark, parkCost, parkValid, type CarPark, type CarParkDef, type ParkView } from './event/carpark';
-import { TC, classAt, generateTerrain, makeNoise, type Noise, type Terrain } from './terrain';
+import { TC, TERRAIN_MODEL, classAt, generateTerrain, makeNoise, terrainModelOf, type Noise, type Terrain } from './terrain';
 import { slopeField } from './terrain-paint';
 import { CONIFER_IDS, FOREST_CELL, FOREST_VIEW_MARGIN, forestCell, forestCellRange, type ForestTree } from './forest';
 import { CHUNK_CASTER_REACH, LIVING_PLANT_MARGIN, casterKind, casterOf, doorToward, pxAcross, waterTex, CK } from './living-ground';
@@ -1020,6 +1020,8 @@ export class Game {
   private monthMoney = new MonthMoney(); private ratingAt = -Infinity; private ratingOf: { quality: number | null; holes: number } = { quality: null, holes: 0 };
   /** T208: the bench's busy day (?golfers=N: this many visitors in place of dailyGolfers; dev and bench only) */
   private dayBusy: number | undefined; private devSeed = 0; private dayOff = false;
+  /** T360 (dev server, ?terrain=1|2): the river a NEW game's map is made with: 1 the old straight one, 2 the natural one (the A/B of the look and the cost; a loaded save keeps its own) */
+  private devTerrain = 0;
   /** T312: the people spacer (spacing.ts), its scratch, the last frame it ran (ms; 0: not at the street tier) and ?spacing=0 (dev: off) */
   private spacer = new PeopleSpacer(); private spaceRefs: Drawable[] = []; private spaceAt = 0; private spacingOff = false;
   /** T251 (dev, ?tourney=1: the bench's tournament day and the ball captures): today plays the tournament's round as if its day had come */
@@ -3100,7 +3102,7 @@ export class Game {
     // the dev sandbox options (see sandboxGrow): the URL, else the defaults of the dev server or the build
     const q = new URLSearchParams(location.search), dev = import.meta.env.DEV;
     this.sandboxGrow = Number(q.get('grow') ?? 1) || 1; // the game's speed everywhere (the owner, 2026-10-27: the dev server's default of 20 grew the town too fast); ?grow=N still speeds it for tests
-    this.startMode = q.get('start') === 'town' ? 'town' : q.get('start') === 'valley' ? 'valley' : 'range'; { const gb = Number(q.get('golfers')); if (import.meta.env.DEV && q.has('golfers') && gb >= 0) this.dayBusy = gb; const sd = Number(q.get('seed')); if (import.meta.env.DEV && sd > 0) this.devSeed = Math.floor(sd); if (import.meta.env.DEV && q.get('everyday') === '0') this.dayOff = true; if (import.meta.env.DEV && q.get('spacing') === '0') this.spacingOff = true; if (import.meta.env.DEV && q.get('animals') === '0') this.animalsOff = true; /* T309: ?animals=0, no farm animals (dev; the bench's before) */ if (import.meta.env.DEV && q.get('tourney') === '1') this.devTourney = true; { const wd = q.get('wind'); if (import.meta.env.DEV && wd) { const [a, b, c] = wd.split(',').map(Number); this.devWind = wd === 'off' ? NO_WIND : { mph: a! >= 0 ? a! : 8, from: Number.isFinite(b) ? b! : 270, gusty: Number.isFinite(c) ? c! : 0.5, seed: 7 }; } } /* (T334: ?wind=off | mph,from,gusty) */ const ce = q.get('clubevent'); if (import.meta.env.DEV && (ce === 'club' || ce === 'mayor')) this.devEvent = ce; } // T208: ?golfers=N, a busy everyday day; ?seed=N, the old start's map; ?everyday=0, no everyday golf (dev, the bench's before and after)
+    this.startMode = q.get('start') === 'town' ? 'town' : q.get('start') === 'valley' ? 'valley' : 'range'; { const gb = Number(q.get('golfers')); if (import.meta.env.DEV && q.has('golfers') && gb >= 0) this.dayBusy = gb; const sd = Number(q.get('seed')); if (import.meta.env.DEV && sd > 0) this.devSeed = Math.floor(sd); if (import.meta.env.DEV && (q.get('terrain') === '1' || q.get('terrain') === '2')) this.devTerrain = Number(q.get('terrain')); if (import.meta.env.DEV && q.get('everyday') === '0') this.dayOff = true; if (import.meta.env.DEV && q.get('spacing') === '0') this.spacingOff = true; if (import.meta.env.DEV && q.get('animals') === '0') this.animalsOff = true; /* T309: ?animals=0, no farm animals (dev; the bench's before) */ if (import.meta.env.DEV && q.get('tourney') === '1') this.devTourney = true; { const wd = q.get('wind'); if (import.meta.env.DEV && wd) { const [a, b, c] = wd.split(',').map(Number); this.devWind = wd === 'off' ? NO_WIND : { mph: a! >= 0 ? a! : 8, from: Number.isFinite(b) ? b! : 270, gusty: Number.isFinite(c) ? c! : 0.5, seed: 7 }; } } /* (T334: ?wind=off | mph,from,gusty) */ const ce = q.get('clubevent'); if (import.meta.env.DEV && (ce === 'club' || ce === 'mayor')) this.devEvent = ce; } // T208: ?golfers=N, a busy everyday day; ?seed=N, the old start's map; ?everyday=0, no everyday golf (dev, the bench's before and after)
     this.osmId = osmCourseInfo(q.get('osmcourse'))?.id ?? null; // T340: ?osmcourse=rondebosch | magnolia-national, a new game on that real course (saving off for the session, as a fixture)
     this.stampOn = q.has('stamp') ? q.get('stamp') === '1' : !dev;
     this.sandboxMoney = q.has('money') ? q.get('money') === '1' : dev;
@@ -3239,8 +3241,9 @@ export class Game {
     this.last = performance.now();
     this.raf = requestAnimationFrame(this.frame);
   }
-  /** generate the valley for a seed (about 0.3–0.6 s) */
-  private genTerrain(seed: number) { this.useTerrain(generateTerrain(seed), seed); }
+  /** generate the valley for a seed (about 0.3–0.6 s); model (T360): the river's, the latest for a new game, a save's own for its load (a save from
+   *  before has none: model 1, the old straight river, which the town beside it was built for) */
+  private genTerrain(seed: number, model: number = this.devTerrain || TERRAIN_MODEL) { this.useTerrain(generateTerrain(seed, model), seed); }
   /** a map to play on (a generated valley, or a light boot's flat map), with the seed the save keeps */
   private useTerrain(t: Terrain, seed: number) {
     this.seed = seed; this.terrain = t;
@@ -8173,7 +8176,7 @@ export class Game {
     const landSave = await this.landPack; // T357: the real ground, packed once (a few tens of kB: it never changes after the course is laid)
     if (this.saveBlocked) return 0;
     const d: SaveV5 = {
-      version: SAVE_VERSION, map: MAP, seed: this.seed, lotModel: lotModelVersion(), theme: this.desertTheme ? 'desert' : 'autumn',
+      version: SAVE_VERSION, map: MAP, seed: this.seed, terrainModel: this.terrain.model ?? TERRAIN_MODEL, lotModel: lotModelVersion(), theme: this.desertTheme ? 'desert' : 'autumn',
       pedestrianIdentities: this.peds.identityState(),
       // T259: the farm model (an old save's farms rebuilt since on the new one: farmsNew)
       farmModel: this.farmModel, ...(this.farmModel === 1 && this.farmsNew.size ? { farmsNew: [...this.farmsNew] } : {}),
@@ -8218,7 +8221,7 @@ export class Game {
       // T340: a map-data game is laid on the flat map whatever its seed (the save's golf state says so)
       const osm = (d.golf as { osm?: { id?: unknown; entry?: { x?: unknown; y?: unknown; edge?: unknown } } } | undefined)?.osm, en = osm?.entry;
       if (osm?.id && !(osm as { placed?: unknown }).placed) this.useTerrain(typeof en?.x === 'number' && typeof en.y === 'number' && (en.edge === 'N' || en.edge === 'E' || en.edge === 'S' || en.edge === 'W') ? { ...flatTerrain(), highway: { x: en.x, y: en.y, edge: en.edge } } : flatTerrain(), d.seed);
-      else this.genTerrain(d.seed);
+      else this.genTerrain(d.seed, terrainModelOf(d.terrainModel)); // T360: a save without a terrain model is model 1, its river as it was
       this.peds.restoreIdentities(d.pedestrianIdentities); this.pedNet = -1; this.pedLots = -1; this.pedTick = 0;
       // a golf game has one town (its centre, saved); a legacy save has none of these, and keeps the valley's three
       this.golf = normalizeGolfSave(d.golf);

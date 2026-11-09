@@ -216,7 +216,7 @@ export function benchGame(g: Game, scene: BenchScene) {
     if (new URLSearchParams(location.search).get('spacing') === 'ab') { spaceStage(g, scene, r => { const out = { ...info, spacing: 'ab', stages: r }; (window as unknown as { __bench: unknown }).__bench = out; console.log('[bench] results', JSON.stringify(out, null, 1)); }); return; }
     if (new URLSearchParams(location.search).get('ballRoll') === 'ab') { rollStage(g, scene, r => { const out = { ...info, ballRoll: 'ab', rangeBalls: g.range.sim.benchBalls, stages: r }; (window as unknown as { __bench: unknown }).__bench = out; console.log('[bench] results', JSON.stringify(out, null, 1)); }); return; }
     // T265: ?river=1, the river through the town (its point nearest the first town's centre)
-    const town = g.townPts[0], follow = scene === 'fixture' && new URLSearchParams(location.search).get('river') === '1' && town ? riverFollow(g, town.x, town.y) : null;
+    const town = g.townPts[0], follow = (scene === 'fixture' || scene === 'range') && new URLSearchParams(location.search).get('river') === '1' && town ? riverFollow(g, town.x, town.y) : null; // (T360: and a new range start's river, ?bench&start=range&river=1&seed=N: the natural river's pan)
     // (?river=1&bakeab=1, bench.mjs --river 1 --bakeab 1: only the bake check, on a fresh page: no tour before it, so no long session's heap and
     //  caches in the paints)
     if (follow && new URLSearchParams(location.search).get('bakeab') === '1') {

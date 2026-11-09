@@ -2,6 +2,7 @@ import { MAP, clamp, mulberry } from '../iso';
 import { TC, HS, HSTEP, sampleField, type Edge, type Terrain, type Waterway, type WaterPoint, type Chokepoint } from './types';
 import { makeNoise, fbm, ridged, smoothstep, hash2, type Noise } from './noise';
 import { priorityFlood, flowDirs, flowAccum, traceDown } from './flow';
+import { creekSwing, lineCells, meanderLine, pullExit, rasterRiverNat, shapeCreek, shapeRiver, spreadAlong, valleyDist } from './river';
 
 /** creeks: a channel cell needs this many upstream samples to count as a channel */
 const CREEK_MIN_ACC = 60;
@@ -163,8 +164,10 @@ export function checkGuarantees(t: Terrain): GuaranteeReport {
   return { ok: reasons.length === 0, reasons, buildableConnected, sideA, sideB, ms: performance.now() - t0 };
 }
 
-/** one attempt: edges, height field, main river, classes, highway entry, start block, town sites, chokepoints */
-function build(genSeed: number): Terrain {
+/** one attempt: edges, height field, main river, classes, highway entry, start block, town sites, chokepoints. model 2 (T360, river.ts): the
+ *  river's course is drawn first (it meanders, its width swings, its banks differ) and the valley is cut round it; model 1 is the old river, as it was */
+function build(genSeed: number, model: number): Terrain {
+  const nat = model >= 2;
   const r = mulberry(genSeed);
   // 1. edges: 2 or 3 mountain edges (none with VALLEYS off), a random exit off them, the source opposite the exit
   const nMount = VALLEYS ? (r() < 0.5 ? 2 : 3) : 0;
@@ -179,6 +182,10 @@ function build(genSeed: number): Terrain {
   // noise per purpose: 1 warp, 2 base, 3 mountain edge, 4 ridge, 5 butte, 6-7 butte warp, 8 butte ridge, 9 river width, 10 hill detail, 11 patches
   const nk = (k: number): Noise => makeNoise(hash2(genSeed, k));
   const nWarp = nk(1), nBase = nk(2), nEdge = nk(3), nRidge = nk(4), nB = nk(5), nW1 = nk(6), nW2 = nk(7), nB2 = nk(8), nWidth = nk(9), nDetail = nk(10), nPatch = nk(11);
+  // T360: the natural river's course (noises 13 the wander, 15 and 16 the banks, 17 the pools, 18-20 the creeks') and the distance to it
+  const vert = exit === 'N' || exit === 'S', spn = nat ? spreadAlong(sp, vert) : sp, epn = nat ? spreadAlong(pullExit(sp, ep, vert), vert) : ep;
+  const line = nat ? meanderLine(nk(13), { x: spn.x * MAP, y: spn.y * MAP }, { x: epn.x * MAP, y: epn.y * MAP }, MAP) : null;
+  const gdGrid = line ? valleyDist(line, HS, HSTEP, MAP) : null;
   const gdx = ep.x - sp.x, gdy = ep.y - sp.y, gL2 = gdx * gdx + gdy * gdy;
   const guideDist = (u: number, v: number) => {
     // the warp fades to zero at both ends of the guide so the river stays pinned to its source and exit
@@ -194,7 +201,7 @@ function build(genSeed: number): Terrain {
   const heightC = new Float32Array(HS * HS);
   for (let j = 0; j < HS; j++) for (let i = 0; i < HS; i++) {
     const u = (i + 0.5) / HS, v = (j + 0.5) / HS, k = j * HS + i;
-    const gd = guideDist(u, v);
+    const gd = gdGrid ? gdGrid[k]! : guideDist(u, v);
     const base = 6 * fbm(nBase, u * 3, v * 3, 4) + 40 * dEdge(exit, u, v) + 70 * gd;
     const fine = 12 * fbm(nBase, u * 14 + 9.1, v * 14 + 3.7, 3);
     const edgeN = fbm(nEdge, u * 3, v * 3, 4);
@@ -213,29 +220,36 @@ function build(genSeed: number): Terrain {
     height[k] = base + up;
     heightC[k] = base + up + fine;
   }
-  // 5. main river: steepest descent from just inside the source edge, smoothed, resampled, run off both ends
-  const filled = priorityFlood(height, HS);
-  const dir = flowDirs(filled, HS);
-  let si = clamp(Math.round(sp.x * HS - 0.5), 0, HS - 1), sj = clamp(Math.round(sp.y * HS - 0.5), 0, HS - 1);
-  if (source === 'N') sj += 6; else if (source === 'S') sj -= 6; else if (source === 'W') si += 6; else si -= 6;
-  si = clamp(si, 0, HS - 1); sj = clamp(sj, 0, HS - 1);
-  const riverCells = traceDown(dir, sj * HS + si);
-  let path: P[] = riverCells.map(c => ({ x: (c % HS) * HSTEP + HSTEP / 2, y: ((c / HS) | 0) * HSTEP + HSTEP / 2 }));
-  for (let it = 0; it < 3; it++) path = chaikin(path);
-  path = resample(path, 8);
-  // the river enters at the source point on its edge, and leaves straight out perpendicular to the nearest border
-  const head: P = { x: sp.x * MAP, y: sp.y * MAP };
-  const last = path[path.length - 1];
-  const dN = last.y, dS = MAP - last.y, dW = last.x, dE = MAP - last.x, dMin = Math.min(dN, dS, dW, dE);
-  const tail: P = dMin === dN ? { x: last.x, y: 0 } : dMin === dS ? { x: last.x, y: MAP } : dMin === dW ? { x: 0, y: last.y } : { x: MAP, y: last.y };
-  path = [head, ...path, tail];
+  // 5. main river: steepest descent from just inside the source edge, smoothed, resampled, run off both ends (model 1); model 2 (T360): the
+  //    meandering line already drawn (river.ts), its width, banks and bars shaped along it
   const pts: WaterPoint[] = [];
-  let s = 0;
-  for (let k = 0; k < path.length; k++) {
-    if (k > 0) s += Math.hypot(path[k].x - path[k - 1].x, path[k].y - path[k - 1].y);
-    pts.push({ x: path[k].x, y: path[k].y, w: clamp(20 + 20 * (0.5 + 0.5 * nWidth(s / 300, 0)), 20, 40) });
+  let riverCells: number[];
+  if (nat) {
+    riverCells = lineCells(line!, HS, HSTEP);
+    pts.push(...shapeRiver(line!, { width: nWidth, left: nk(15), right: nk(16), pool: nk(17) }));
+  } else {
+    const filled = priorityFlood(height, HS);
+    const dir = flowDirs(filled, HS);
+    let si = clamp(Math.round(sp.x * HS - 0.5), 0, HS - 1), sj = clamp(Math.round(sp.y * HS - 0.5), 0, HS - 1);
+    if (source === 'N') sj += 6; else if (source === 'S') sj -= 6; else if (source === 'W') si += 6; else si -= 6;
+    si = clamp(si, 0, HS - 1); sj = clamp(sj, 0, HS - 1);
+    riverCells = traceDown(dir, sj * HS + si);
+    let path: P[] = riverCells.map(c => ({ x: (c % HS) * HSTEP + HSTEP / 2, y: ((c / HS) | 0) * HSTEP + HSTEP / 2 }));
+    for (let it = 0; it < 3; it++) path = chaikin(path);
+    path = resample(path, 8);
+    // the river enters at the source point on its edge, and leaves straight out perpendicular to the nearest border
+    const head: P = { x: sp.x * MAP, y: sp.y * MAP };
+    const last = path[path.length - 1];
+    const dN = last.y, dS = MAP - last.y, dW = last.x, dE = MAP - last.x, dMin = Math.min(dN, dS, dW, dE);
+    const tail: P = dMin === dN ? { x: last.x, y: 0 } : dMin === dS ? { x: last.x, y: MAP } : dMin === dW ? { x: 0, y: last.y } : { x: MAP, y: last.y };
+    path = [head, ...path, tail];
+    let s = 0;
+    for (let k = 0; k < path.length; k++) {
+      if (k > 0) s += Math.hypot(path[k].x - path[k - 1].x, path[k].y - path[k - 1].y);
+      pts.push({ x: path[k].x, y: path[k].y, w: clamp(20 + 20 * (0.5 + 0.5 * nWidth(s / 300, 0)), 20, 40) });
+    }
   }
-  const waters: Waterway[] = [{ kind: 'river', pts }];
+  const waters: Waterway[] = [{ kind: 'river', pts, ...(nat ? { nat: true as const } : {}) }];
   // 6. classes: hills and patches from the detail grids, then river water and banks on top
   const cls = new Uint8Array(MAP * MAP);
   const G = MAP / 4;
@@ -250,7 +264,8 @@ function build(genSeed: number): Terrain {
     if (bil(uplift, x, y) >= 3 + 2 * detailG[c]) cls[k] = TC.HILL;
     else if (patchG[c] > 0.35) cls[k] = TC.PATCH;
   }
-  for (let k = 0; k + 1 < pts.length; k++) {
+  if (nat) rasterRiverNat(cls, pts, MAP);
+  else for (let k = 0; k + 1 < pts.length; k++) {
     const a = pts[k], b = pts[k + 1], mw = Math.max(a.w, b.w) / 2 + 4;
     const x0 = Math.max(0, Math.floor(Math.min(a.x, b.x) - mw)), x1 = Math.min(MAP - 1, Math.ceil(Math.max(a.x, b.x) + mw));
     const y0 = Math.max(0, Math.floor(Math.min(a.y, b.y) - mw)), y1 = Math.min(MAP - 1, Math.ceil(Math.max(a.y, b.y) + mw));
@@ -370,16 +385,19 @@ function build(genSeed: number): Terrain {
     // arc length, then meander: interior points offset perpendicular to the path
     const sArc = [0];
     for (let k = 1; k < line.length; k++) sArc.push(sArc[k - 1] + Math.hypot(line[k].x - line[k - 1].x, line[k].y - line[k - 1].y));
+    // (T360, model 2: the grid's straight runs get a sine of their own (river.ts creekSwing) over a smaller noise drift, and the corners it makes are cut)
+    const swing = nat ? creekSwing(nMeander, sArc, idx) : null;
     const moved: P[] = line.map((p, k) => {
       if (k === 0 || k === line.length - 1) return p;
       // tangent over +-4 points so the offset doesn't flip at the D8 corners; the meander fades out over 60 tiles at both ends
       const a = line[Math.max(0, k - 4)], b = line[Math.min(line.length - 1, k + 4)], L = Math.hypot(b.x - a.x, b.y - a.y) || 1;
       const fade = smoothstep(0, 60, sArc[k]) * smoothstep(0, 60, sArc[line.length - 1] - sArc[k]);
-      const off = fade * (16 * fbm(nMeander, sArc[k] / 160, idx * 7.3, 3) + 3 * nMeander(sArc[k] / 30, idx * 7.3 + 50));
+      const off = fade * (swing ? 8 * fbm(nMeander, sArc[k] / 160, idx * 7.3, 3) + 2 * nMeander(sArc[k] / 30, idx * 7.3 + 50) + swing[k]! : 16 * fbm(nMeander, sArc[k] / 160, idx * 7.3, 3) + 3 * nMeander(sArc[k] / 30, idx * 7.3 + 50));
       return { x: p.x - (b.y - a.y) / L * off, y: p.y + (b.x - a.x) / L * off };
     });
+    const smooth = nat ? chaikin(chaikin(moved)) : moved;
     // width from the accumulation of the nearest original cell
-    const cpts: WaterPoint[] = moved.map(p => {
+    const cpts: WaterPoint[] = smooth.map(p => {
       let best = 0, bd = Infinity;
       for (let j = 0; j < cellPts.length; j++) {
         const d = (cellPts[j].x - p.x) ** 2 + (cellPts[j].y - p.y) ** 2;
@@ -394,7 +412,7 @@ function build(genSeed: number): Terrain {
     while (i0 < cpts.length && isHill(cpts[i0])) i0++;
     const trimmed = cpts.slice(Math.max(0, i0 - 1));
     // accepted creeks are processed in order, so the creek this one joins is already final
-    const fin0 = trimmed.length < 8 ? null : trimmed;
+    const fin0 = trimmed.length < 8 ? null : nat ? shapeCreek(trimmed, { width: nk(18), left: nk(19), right: nk(20) }, idx) : trimmed;
     let fin = fin0 && cr.join >= 0 ? joinTo(fin0, finals[cr.join]) : fin0;
     if (fin && cr.join < 0) fin = intoRiver(fin);
     // a creek that runs within 24 tiles of a border (more than 48 tiles of arc from its end) is dropped. T329: checked on the final creek, after
@@ -491,13 +509,14 @@ function build(genSeed: number): Terrain {
   // 9. chokepoints: the narrowest river crossing with buildable banks, and the longest run of hill-walled points
   const chokepoints: Chokepoint[] = [];
   const buildableXY = (x: number, y: number) => { const ix = Math.floor(x), iy = Math.floor(y); return ix >= 0 && iy >= 0 && ix < MAP && iy < MAP && buildable(cls[iy * MAP + ix]); };
+  const PK = nat ? 4 : 1; // (model 2: points 1.5 tiles apart: the tangent over four either side, 6 tiles)
   const perp = (k: number) => {
-    const a = pts[Math.max(0, k - 1)], b = pts[Math.min(pts.length - 1, k + 1)];
+    const a = pts[Math.max(0, k - PK)], b = pts[Math.min(pts.length - 1, k + PK)];
     const tx = b.x - a.x, ty = b.y - a.y, L = Math.hypot(tx, ty) || 1;
     return { nx: -ty / L, ny: tx / L };
   };
   let bridge: Chokepoint | null = null;
-  for (let k = 10; k < pts.length - 10; k++) {
+  for (let k = nat ? 60 : 10; k < pts.length - (nat ? 60 : 10); k++) { // (about 90 tiles of the river's arc from each end, as the old river's 10 points of 8 tiles)
     const p = pts[k], { nx, ny } = perp(k), off = p.w / 2 + 6;
     if (buildableXY(p.x + nx * off, p.y + ny * off) && buildableXY(p.x - nx * off, p.y - ny * off) && (!bridge || p.w < bridge.width))
       bridge = { kind: 'bridge', x: p.x, y: p.y, width: p.w };
@@ -530,14 +549,16 @@ function build(genSeed: number): Terrain {
   if (bridge) chokepoints.unshift(bridge);
   // the playable plane (owner, T025 choice 1A): the relief only shaped the rivers, creeks, woodland and chokepoints above; the map itself ships flat
   height.fill(0);
-  return { seed: genSeed, attempt: 0, height, cls, waters, mountainEdges, highway, start, towns, chokepoints };
+  return { seed: genSeed, attempt: 0, height, cls, waters, mountainEdges, highway, start, towns, chokepoints, model };
 }
 
-/** Generate the terrain for a seed: retries up to 8 times until checkGuarantees passes. */
-export function generateTerrain(seed: number): Terrain {
+/** Generate the terrain for a seed: retries up to 8 times until checkGuarantees passes. model (T360): the river's: 1 the old straight one, which is what
+ *  a call without a model (and a save from before T360, which has none) gets, so the valley a town was built in is the valley it comes back to; 2 the
+ *  natural one, which a new game asks for (TERRAIN_MODEL: engine.ts genTerrain) and stamps in its saves */
+export function generateTerrain(seed: number, model = 1): Terrain {
   let reasons: string[] = [];
   for (let a = 0; a < 8; a++) {
-    const t = build(a === 0 ? seed : hash2(seed, a));
+    const t = build(a === 0 ? seed : hash2(seed, a), model);
     const rep = checkGuarantees(t);
     if (rep.ok) { t.seed = seed; t.attempt = a; return t; }
     reasons = rep.reasons;  }
