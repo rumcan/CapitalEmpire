@@ -121,6 +121,8 @@ export function reliefGrid(inp: ReliefInput, box: readonly number[], res: number
     const row = j * CH_SIZE;
     for (let i = i0; i <= i1; i++) if (h[row + i] !== 0) { if (i < ni0) ni0 = i; if (i > ni1) ni1 = i; if (j < nj0) nj0 = j; nj1 = j; }
   }
+  // (the course height has some height within reach, or it is 0 everywhere here: its spline, its sum with the land and its tilt are then never made, a court of flat ground costs nothing)
+  const courseOn = ni1 >= 0;
   const L = land && land.w > 0 && land.h > 0 && land.i0 <= i1 && land.i0 + land.w - 1 >= i0 && land.j0 <= j1 && land.j0 + land.h - 1 >= j0 ? land : null;
   if (L) { ni0 = Math.min(ni0, Math.max(i0, L.i0)); ni1 = Math.max(ni1, Math.min(i1, L.i0 + L.w - 1)); nj0 = Math.min(nj0, Math.max(j0, L.j0)); nj1 = Math.max(nj1, Math.min(j1, L.j0 + L.h - 1)); }
   if (ni1 < 0) return null;
@@ -130,13 +132,14 @@ export function reliefGrid(inp: ReliefInput, box: readonly number[], res: number
   const k0 = Math.floor(px0 * res) - 1, l0 = Math.floor(py0 * res) - 1, w = Math.ceil(px1 * res) + 1 - k0, gh = Math.ceil(py1 * res) + 1 - l0;
   // the spline heights on the lattice, grown by the march's and the ring's reach (m points): the course height, the land, and the two together
   const m = Math.ceil(Math.max(CAST_REACH, AO_RADII[1]) * res) + 2, HWd = w + 2 * m, HHt = gh + 2 * m, n = HWd * HHt;
-  const Hc = new Float32Array(n), Hl = L ? new Float32Array(n) : null, Hs = L ? new Float32Array(n) : Hc;
+  // (the whole surface Hs is the course height's Hc alone, the land's Hl alone, or their sum: only the sum is a third array)
+  const Hc = courseOn ? new Float32Array(n) : null, Hl = L ? new Float32Array(n) : null, Hs = (Hc && Hl ? new Float32Array(n) : Hl ?? Hc)!;
   for (let jj = 0; jj < HHt; jj++) {
     const ty = (l0 - m + jj + 0.5) / res;
     for (let ii = 0; ii < HWd; ii++) {
-      const tx = (k0 - m + ii + 0.5) / res, c = jj * HWd + ii, hc = h ? splineHeight(h, tx, ty) : 0;
-      Hc[c] = hc;
-      if (Hl) { const hl = splineLand(L!, tx, ty); Hl[c] = hl; Hs[c] = hc + hl; }
+      const tx = (k0 - m + ii + 0.5) / res, c = jj * HWd + ii, hc = Hc ? splineHeight(h!, tx, ty) : 0;
+      if (Hc) Hc[c] = hc;
+      if (Hl) { const hl = splineLand(L!, tx, ty); Hl[c] = hl; if (Hs !== Hl) Hs[c] = hc + hl; }
     }
   }
   const at = (u: number, v: number) => {
@@ -153,14 +156,15 @@ export function reliefGrid(inp: ReliefInput, box: readonly number[], res: number
   for (let j = 0; j < gh; j++) for (let i = 0; i < w; i++) {
     const ii = i + m, jj = j + m, c = jj * HWd + ii, H0 = Hs[c]!, o = (j * w + i) * HL_STRIDE;
     // the slope of the ground: the one-sided tilt of the whole surface (the angle of its normal from straight up)
-    tiltInto(Hs, c, HWd, stepM, TS, 0); const sgx = TS[0]!, sgy = TS[1]!, deg = Math.atan(Math.hypot(sgx, sgy)) * DEG; slope[j * w + i] = deg;
+    tiltInto(Hs, c, HWd, stepM, TS, 0); const sgx = TS[0]!, sgy = TS[1]!, deg = Math.atan(Math.sqrt(sgx * sgx + sgy * sgy)) * DEG; slope[j * w + i] = deg;
     // the light's tilt: the course height's own (the player's gentle-ground gain) and the land's (T388), added; ex0 is the tilt with LIGHT_EXAG alone (the inset highlight's ramp)
     let nx: number, ny: number, ex0: number, ey0: number, landShare = 0;
     if (Hl) {
-      tiltInto(Hl, c, HWd, stepM, TL, 0); tiltInto(Hc, c, HWd, stepM, TC, 0);
+      if (Hl === Hs) { TL[0] = sgx; TL[1] = sgy; } else tiltInto(Hl, c, HWd, stepM, TL, 0);
+      if (Hc) tiltInto(Hc, c, HWd, stepM, TC, 0); else { TC[0] = 0; TC[1] = 0; }
       const qx = TL[0]!, qy = TL[1]!, px = TC[0]!, py = TC[1]!, xp = lightExag(px * px + py * py), xq = landExag(qx * qx + qy * qy);
       nx = -(xp * px + xq * qx); ny = -(xp * py + xq * qy); ex0 = -(LIGHT_EXAG * px + xq * qx); ey0 = -(LIGHT_EXAG * py + xq * qy);
-      const tq = xq * Math.hypot(qx, qy), tp = xp * Math.hypot(px, py); landShare = tq / (tq + tp + 1e-12);
+      const tq = xq * Math.sqrt(qx * qx + qy * qy), tp = xp * Math.sqrt(px * px + py * py); landShare = tq / (tq + tp + 1e-12);
     } else { const xg = lightExag(sgx * sgx + sgy * sgy); nx = -xg * sgx; ny = -xg * sgy; ex0 = -LIGHT_EXAG * sgx; ey0 = -LIGHT_EXAG * sgy; }
     const ndl = (nx * lx + ny * ly + lz) / Math.sqrt(nx * nx + ny * ny + 1), ndl0 = (ex0 * lx + ey0 * ly + lz) / Math.sqrt(ex0 * ex0 + ey0 * ey0 + 1);
     // cast: the march toward the sun; a point is shaded where the ground ahead rises above the sun's ray (exaggerated heights, metres)
@@ -175,13 +179,9 @@ export function reliefGrid(inp: ReliefInput, box: readonly number[], res: number
     let ring = 0;
     for (const r of AO_RADII) for (const [cx, cy] of RING) ring += at(ii + cx * r * res, jj + cy * r * res);
     const below = ring / (RING.length * AO_RADII.length) - H0;
-    // the narrow ring: a fold in the ground (res of at least a point a tile: the planner's coarse lattice has no such scale)
+    // the narrow ring: a fold in the ground, the mean of the eight lattice points a tile out (the square ring: straight reads, no interpolation) less this point's height (res of at least a point a tile: the planner's coarse lattice has no such scale)
     let fold = 0;
-    if (res >= 1) {
-      // (the four lattice points that distance away tell first whether the ground curves there at all: on a gentle swell it does not, and the eight-point ring is skipped)
-      const k = CREASE_R * res, lap4 = (Hs[c + k]! + Hs[c - k]! + Hs[c + k * HWd]! + Hs[c - k * HWd]!) / 4 - H0;
-      if (Math.abs(lap4) * LIGHT_EXAG >= 0.5 * CREST_LO) { let r1 = 0; for (const [cx, cy] of RING) r1 += at(ii + cx * k, jj + cy * k); fold = (r1 / RING.length - H0) * LIGHT_EXAG; }
-    }
+    if (res >= 1) { const k = Math.round(CREASE_R * res), kw = k * HWd; fold = ((Hs[c + k]! + Hs[c - k]! + Hs[c + kw]! + Hs[c - kw]! + Hs[c + k + kw]! + Hs[c - k + kw]! + Hs[c + k - kw]! + Hs[c - k - kw]!) / 8 - H0) * LIGHT_EXAG; }
     const crease = fold > 0 ? smooth(CREST_LO, CREST_HI, fold) : 0, crest = fold < 0 ? smooth(CREST_LO, CREST_HI, -fold) : 0;
     const ao = Math.min(1, (below > 0 ? below * LIGHT_EXAG * AO_K : 0) + CREASE_AO * crease);
     out[o + 3] = cast; out[o + 4] = ao;

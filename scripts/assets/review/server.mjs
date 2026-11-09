@@ -386,7 +386,9 @@ function writeSurfaces(f) {
   const course = f.course ? `,\n "course": ${line(f.course)}` : '';
   // T230: the water look's knobs (water-look.ts), one line, when the file has them (absent: the tuned look; on false: the water as before)
   const water = f.water ? `,\n "water": ${line(f.water)}` : '';
-  const txt = `{\n "v": 1,\n "surfaces": {\n${obj(f.surfaces, '  ')}\n },\n "lawns": [\n${f.lawns.map(l => '  ' + line(l)).join(',\n')}\n ],\n "presets": {\n${obj(f.presets, '  ')}\n }${course}${water}\n}\n`;
+  // T409: the slope bands of the Hillside and Mountain rock (relief.ts), one line, when the file has them (absent: the defaults): a studio save keeps the numbers the owner tuned
+  const relief = f.relief ? `,\n "relief": ${line(f.relief)}` : '';
+  const txt = `{\n "v": 1,\n "surfaces": {\n${obj(f.surfaces, '  ')}\n },\n "lawns": [\n${f.lawns.map(l => '  ' + line(l)).join(',\n')}\n ],\n "presets": {\n${obj(f.presets, '  ')}\n }${course}${water}${relief}\n}\n`;
   fs.writeFileSync(PS_FILE, txt.replace(/\{\n\n \}/g, '{}').replace(/\[\n\n \]/g, '[]'));
 }
 /** every painting the registry names (the Painted tab may read only these) */

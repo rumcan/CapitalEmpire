@@ -2,12 +2,12 @@
 // owner looks at, 30%, 15% and 8%, in autumn and in the desert, over the range start's own hills (the Height tool's ground: a gentle hill, a moderate hill and a steep valley side sculpted on the open
 // ground beside the home, the same numbers every run) and over Woodhill's real ground (?osmcourse=woodhill). Also checks the game's state (the mode the engine and the worker are in, the gear menu's
 // Hill relief select) and exits 1 on a failed check.
-//   node scripts/dev/relief-shots.mjs --base http://127.0.0.1:5231/ --out E:/ClaudeTemp/T409/shots [--scene hills,woodhill] [--theme autumn,desert] [--modes old,smooth,bands] [--zooms 0.3,0.15,0.08] [--sheet 1]
+//   node scripts/dev/relief-shots.mjs --base http://127.0.0.1:5231/ --out E:/ClaudeTemp/T409/shots [--scene hills,woodhill] [--theme autumn,desert] [--modes old,smooth,bands] [--look gentle,moderate,steep|hill,flank,skirt] [--zooms 0.3,0.15,0.08] [--sheet 1]
 // Needs a dev server (vite) on --base. One headless Edge, closed when done; saving is off. --sheet 1 lays old | smooth | bands side by side as <scene>-<theme>-<look>-<zoom>-sheet.png.
 // The sculpted hills (HILLS below, tiles from an anchor: the nearest open ground to the home (findOpen: grass and meadow only, no wood, water or road within reach), cleared of trees; heights in metres, written straight into the course height field and handed to the ground as an edit does):
-//   gentle    a dome 2.4 m high and 36 tiles (72 m) across the foot: about 3 degrees at its steepest, the light only
-//   moderate  a dome 3 m high and 8 tiles round: 15 degrees at its steepest, the hillside's band
-//   steep     a valley 6 m deep between two 3 m ridges, its sides rising over 4 tiles (8 m): 37 degrees on average and up to 48, the rock's band, one side facing the sun and one away
+//   gentle    a dome 2.4 m high and 36 tiles (72 m) across the foot: 5.7 degrees at its steepest, the light only (a real course's hills: Woodhill's are 72% under 5 degrees)
+//   moderate  a dome 3 m high and 16 tiles (32 m) across the foot: 15.7 degrees at its steepest, the hillside's band
+//   steep     a valley 6 m deep between two 3 m ridges, its sides rising 6 m over 4 tiles (8 m): 37 degrees on average and up to 48, the rock's band, one side facing the sun and one away (a cart-path-wide strip of floor, no roads)
 import { chromium } from 'playwright-core';
 import sharp from 'sharp';
 import { mkdirSync } from 'node:fs';
@@ -15,7 +15,7 @@ import { join } from 'node:path';
 
 const args = process.argv.slice(2), opt = (k, d) => { const i = args.indexOf(`--${k}`); return i >= 0 ? args[i + 1] : d; };
 const base = opt('base', 'http://127.0.0.1:5231/'), out = opt('out', 'E:/ClaudeTemp/T409/shots'), scenes = opt('scene', 'hills,woodhill').split(','), themes = opt('theme', 'autumn,desert').split(','), modes = opt('modes', 'old,smooth,bands').split(',');
-const zooms = opt('zooms', '0.3,0.15,0.08').split(',').map(Number), sheet = opt('sheet', '1') === '1', only = opt('look', '');
+const zooms = opt('zooms', '0.3,0.15,0.08').split(',').map(Number), sheet = opt('sheet', '1') === '1', only = opt('look', '').split(',').filter(Boolean);
 // the looks: [name, dx, dy] tiles from the scene's anchor (the camera's tile for the hills, the land's north-west corner for Woodhill)
 const LOOKS = {
   hills: [['gentle', -58, 0], ['moderate', 0, 0], ['steep', 62, 0]],
@@ -97,7 +97,7 @@ try {
       }
       if (scene === 'hills') { anchor = await page.evaluate(sculpt, HILLS); await settle(page, 1500); } else check(!!st.land && st.land.reliefM > 15, `Woodhill's real ground is laid (${st.land?.reliefM} m)`);
       for (const [name, dx, dy] of LOOKS[scene]) {
-        if (only && only !== name) continue;
+        if (only.length && !only.includes(name)) continue;
         for (const z of zooms) {
           await page.evaluate(([scene, dx, dy, z, ax, ay]) => { const g = window.__game, c = g.golf.course; g.camEase = null; if (scene === 'woodhill') g.lookAt(c[0] + dx, c[1] + dy, z); else g.lookAt(ax + dx, ay + dy, z); g.emit(); }, [scene, dx, dy, z, anchor.bx, anchor.by]);
           await settle(page, 1500);

@@ -172,6 +172,13 @@ describe('the relief grid: the light of the ground (T126, T388) read with the vi
     for (let c = 0; c < 3; c++) assert.ok(p.shade[c]! >= 0.3 * 255, `channel ${c} of the deepest shade is ${p.shade[c]}`);
     assert.ok(p.shade[2]! > p.shade[0]!, 'the shade is a little cooler: blue darkens least');
   });
+  it('a course height that is 0 everywhere within reach costs nothing and changes nothing (the spline and the tilt of flat ground are never made)', () => {
+    const L = layer(plane(0.12, true), 500, 500, 60), b = box(500, 500, 24), far = field((x, y) => (x < 100 && y < 100 ? 2 : 0));
+    const none = reliefGrid({ course: null, land: L }, b, 2, 4)!, zeros = reliefGrid({ course: field(() => 0), land: L }, b, 2, 4)!, away = reliefGrid({ course: far, land: L }, b, 2, 4)!;
+    assert.deepEqual(Array.from(zeros.v), Array.from(none.v)); assert.deepEqual(Array.from(away.v), Array.from(none.v)); assert.deepEqual(Array.from(zeros.slope), Array.from(none.slope));
+    // and the land alone is lit by its own response: the same as the land with a course layer that is exactly 0 beside it is the T388 light (a 12% slope lit like the land's)
+    assert.ok(sampleHeightLight(none, 500, 500).lift > 0.3);
+  });
   it('the land and the course height light together, their tilts added (T388)', () => {
     const only = (inp: { course: Float32Array; land: LightLand | null }) => sampleSlope(reliefGrid(inp, box(500, 500, 24), 2)!, 500, 500);
     const s1 = only({ course: field(plane(0.1, true)), land: null }), s2 = only({ course: field(() => 0), land: layer(plane(0.1, true), 500, 500, 60) }), s3 = only({ course: field(plane(0.1, true)), land: layer(plane(0.1, true), 500, 500, 60) });
@@ -290,6 +297,13 @@ describe('the plumbing: the look of the hills reaches every worker (the gear men
     assert.ok(c.includes("this.broadcast({ t: 'relief', mode: this.relief })"), 'sent with init');
     assert.ok(/setRelief\(m: ReliefMode\) \{ if \(m === this\.relief\) return; this\.relief = m; this\.broadcast\(\{ t: 'relief', mode: m \}\); this\.invalidateAll\(\); \}/.test(c), 'a change bakes every chunk again');
     assert.ok(w.includes("case 'relief': painter.relief = m.mode; break;")); assert.ok(p.includes("| { t: 'relief'; mode: ReliefMode }"));
+  });
+  it('the Studio\'s save keeps the relief numbers the owner tuned (its writer was blind to any block it did not know)', () => {
+    const w = read('scripts/assets/review/server.mjs');
+    assert.ok(w.includes('const relief = f.relief ? `,\\n "relief": ${line(f.relief)}` : \'\';'), 'the writer builds the relief line');
+    assert.ok(w.includes('}${course}${water}${relief}\\n}\\n`;'), 'and writes it after the course and water blocks');
+    // the shipped file lists it last, where the writer puts it, so a Studio save moves nothing
+    const f = read('src/game/painted-surfaces.json').trimEnd(), i = f.indexOf(' "relief"'); assert.ok(i > f.indexOf(' "presets"') && f.slice(i).split('\n').length === 2, 'the relief block is the file\'s last line');
   });
   it('the default look is the smooth one (the A/B shots: 4 bands turn a broad gentle slope into a spotlight blob), bands and old one select away, and every mode is a ReliefMode', () => {
     for (const m of ['old', 'smooth', 'bands'] as const) assert.equal(reliefModeOf(m), m);

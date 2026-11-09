@@ -20,7 +20,7 @@
   "worn": { "family": "golden-fescue", "version": null, "scale": 1, "tint": "#ffffff", "tone": 0 },
   "dirt": { "family": "dirt-run", "version": null, "scale": 1, "tint": "#ffffff", "tone": 0 },
   "hillside": { "family": "dirt-run", "version": null, "scale": 1, "tint": "#ffffff", "tone": 0 },
-  "mountain": { "family": "cutaway-sand", "version": null, "scale": 1.6, "tint": "#c9c0b4", "tone": -0.04 },
+  "mountain": { "family": "cutaway-earth", "version": null, "scale": 1.2, "tint": "#a8c8f0", "tone": 0.3 },
   "bank": { "family": "pond-bank-run", "version": null, "scale": 1, "tint": "#ffffff", "tone": 0 },
   "mulch": { "family": "flower-bed-soil-run", "version": null, "scale": 1, "tint": "#ffffff", "tone": 0 },
   "river": { "family": "lake", "version": null, "scale": 1, "tint": "#ffffff", "tone": 0 },
@@ -43,7 +43,6 @@
  "lawns": [
   { "family": "desert-run", "version": null, "scale": 1, "tint": "#ffffff", "tone": 0, "weight": 1 }
  ],
- "relief": { "hillAt": 9, "rockAt": 27, "blend": 4, "noise": 2, "grain": 12 },
  "presets": {
   "lawns": { "family": "lawn-concept-run", "version": null, "scale": 1, "tint": "#ffffff", "tone": 0 },
   "path-worn": { "family": "underground-earth", "version": "v2", "scale": 0.5, "tint": "#b0b4e8", "tone": 0 },
@@ -53,5 +52,6 @@
   "range-tee": { "family": "dirt-run", "version": null, "scale": 1, "tint": "#ffffff", "tone": 0 },
   "range-tee-turf": { "family": "green-concept-run", "version": null, "scale": 1, "tint": "#ffffff", "tone": 0 },
   "range-home-yard": { "family": "desert-run", "version": null, "scale": 1, "tint": "#ffffff", "tone": 0 }
- }
+ },
+ "relief": { "hillAt": 9, "rockAt": 27, "blend": 4, "noise": 2, "grain": 12 }
 }
