@@ -223,7 +223,7 @@ import { BOOK_LEAD, LESSON_BONUS, PRESSURE, bookRound, gearOf, handicapOf, booke
 import { gearFor, withCards } from './golf/player'; // T336 (#962): your cards
 import { MECH_IDS, PUTT_V2, greenRead, hasMech, laserLines, laserReport, type MechId, type ModCtx } from './golf/play';
 import { hotNerve, scrambleLeft } from './golf/play/yours';
-import { addCard, addPull, bestGrade, cardById, cardEco, cardsInPlay, cardsView, createSpin, earnFromMatch, earnFromPlace, emptyCards, equipCard as equipInCards, equipWhy, rollPrize, takePull, unequipCard as unequipFromCards, unequipWhy, vendingView, type CardsSave, type CardsView, type Earn, type Grade, type PlayCard, type VendingSpin, type VendingView } from './golf/cards';
+import { addCard, addPull, bestGrade, cardById, cardEco, cardsInPlay, cardsView, createSpin, earnFromMatch, earnFromPlace, emptyCards, equipCard as equipInCards, equipWhy, grantWelcome, rollPrize, takePull, unequipCard as unequipFromCards, unequipWhy, vendingView, welcomeDue, type CardsSave, type CardsView, type Earn, type Grade, type PlayCard, type VendingSpin, type VendingView } from './golf/cards';
 import { holeViews, markerPlan, tagByHole, type HoleView, type MarkerKind } from './golf/holeview';
 import { CAST, castShear, clampCast, type CastShadow } from './cast-shadow';
 import { SPEC_LOOK, clampSpecLook, specGain, type SpecLook } from './lamp-reflect';
@@ -8721,7 +8721,7 @@ export class Game {
   // ---------- T335 (#961): your bag (golf/play/bag.ts): 14 clubs, their upgrades, the putter's shaft and head ----------
   /** your bag card is open */
   bagCardOpen = false;
-  openBagCard(open = !this.bagCardOpen) { this.bagCardOpen = open && !!this.golf; if (this.bagCardOpen) this.cardsCardOpen = false; /* (T336: the Cards card stands where the bag card does) */ this.emit(); }
+  openBagCard(open = !this.bagCardOpen) { this.bagCardOpen = open && !!this.golf; if (this.bagCardOpen) { this.cardsCardOpen = false; /* (T336: the Cards card stands where the bag card does) */ this.welcomePull('shop'); } this.emit(); }
   /** the pro shop as the bag buys from it: open with a clubhouse, a pro's office or a range (the shack is a shop too), with your money */
   private bagShop(): ShopCtx {
     const g = this.golf, shop = !!g && (this.hasClubhouse || this.bizCount('prooffice') > 0 || (g.start === 'range' && !!g.range && g.range.built !== false));
@@ -8774,7 +8774,7 @@ export class Game {
   // ---------- T336 (#962): your cards: 8 slots on your player, earned from wins, opened in the vending machine (golf/cards) ----------
   /** your Cards card is open (the 8 slots and the collection) */
   cardsCardOpen = false;
-  openCardsCard(open = !this.cardsCardOpen) { this.cardsCardOpen = open && !!this.golf; if (this.cardsCardOpen) this.bagCardOpen = false; /* (it stands where the bag card does: one of the two at a time) */ this.emit(); }
+  openCardsCard(open = !this.cardsCardOpen) { this.cardsCardOpen = open && !!this.golf; if (this.cardsCardOpen) { this.bagCardOpen = false; /* (it stands where the bag card does: one of the two at a time) */ this.welcomePull('shop'); } this.emit(); }
   /** why your cards cannot change now (null: they can): out on the course (your round, the tournament, an open shot) nothing changes in them: cards swap between rounds, never in one */
   private cardsBusy(): string | null { return this.bagBusy() ? 'You are out on the course: your cards change when the round is over' : null; }
   /** the Cards card's view (golf/cards view.ts: the 8 slots, the collection, the pulls waiting, why not); null while closed */
@@ -8811,6 +8811,14 @@ export class Game {
     this.setPlayer(withCards(p, addPull(p.cards ?? emptyCards(true), earn.grade)));
     this.toast(`${earn.grade[0]!.toUpperCase()}${earn.grade.slice(1)} card pull: ${earn.why}. Open it at the vending machine (Cards)`, 'good');
     return earn;
+  }
+  /** T389 (#1049): the WELCOME PULL (golf/cards collection.ts welcomeDue): a new game's first visit to the pro shop (its Bag card, Cards card or vending machine, with a shop to stand in) or its first round (by hand, a money match, a round the
+   *  game plays for you) deals one silver pull to the machine, once: the mark is saved with the cards, so a reload, a spent pull or an older save never gets a second. A save from before the cards, or one that has already met the machine, gets none. A toast says it */
+  private welcomePull(where: 'shop' | 'round') {
+    const p = this.playerNow(), c = p?.cards; if (!p || !c || !welcomeDue(c)) return;
+    if (where === 'shop' && !this.bagShop().shop) return; // (a shop not built is no visit: the card only says to build one)
+    this.setPlayer(withCards(p, grantWelcome(c)));
+    this.toast(where === 'shop' ? 'Welcome to the pro shop: a silver card pull is on the house. Open it at the vending machine (Cards)' : 'Welcome to the club: a silver card pull is on the house for your first round. Open it at the vending machine (Cards) when you are back in', 'good');
   }
   /** the tournament's pull: you played it (the owner in the day) and everyone has finished: your place in the field pays by the table, once a tournament (a reload of its results pays nothing twice) */
   private tourneyPull(pl: GolfPlay, minute: number) {
@@ -8860,7 +8868,7 @@ export class Game {
   /** opens or closes the machine (it stands in your clubhouse or pro shop: the shop the bag buys from) */
   openVending(open = !this.vendingOpen) {
     if (open) { const s = this.bagShop(); if (!this.golf || !this.playerNow()) return; if (!s.shop) { this.toast(s.shopWhy ?? 'No pro shop yet', 'warn'); return; } }
-    this.vendingOpen = open && !!this.golf; if (!this.vendingOpen) this.vendingSpin = null;
+    this.vendingOpen = open && !!this.golf; if (!this.vendingOpen) this.vendingSpin = null; else this.welcomePull('shop');
     this.emit();
   }
   /** the machine's view (null while closed) */
@@ -9394,6 +9402,7 @@ export class Game {
   bookedAuto() {
     const p = this.playerNow(), b = p?.booked; if (!p || !b || b.auto) return;
     this.setPlayer({ ...p, booked: { ...b, auto: true } });
+    this.welcomePull('round'); // T389: a new game's first round deals the welcome pull (this one the game plays for you)
     this.teeAsk = false; this.youTeeOpen = false; if (!this.speed) this.setSpeed(this.lastSpeed);
     this.toast(`The game plays your ${clock(b.tee)} round: its score comes when it is done`, 'info'); this.emit();
   }
@@ -9465,6 +9474,7 @@ export class Game {
     if (b && b.day === at.day) this.setPlayer({ ...this.playerNow()!, booked: null }); // (T350: a round by hand ends the booking, whatever it was)
     this.setYourRound(r); this.youTeeOpen = false; this.yrCard = false; this.yrFlight = null;
     this.shutToolsForRound(); // T328: your round clears the tool panels
+    this.welcomePull('round'); // T389: a new game's first round deals the welcome pull
     const h = holeOf(v, holes[0]!)!, brought = this.youCartBring(h.tee);
     this.toast(`Your round: ${holes.length} hole${holes.length > 1 ? 's' : ''}. Hole ${h.n}, par ${h.par}: walk up to the tee to address the ball${brought ? ' (your cart is by the tee)' : ''}`, 'good');
     this.emit();
@@ -9936,6 +9946,7 @@ export class Game {
     const at = this.townNow(), r = startMatch(v, hs, at.day, o, stake, look, back); if (!r) return false;
     const b = p.booked; if (b && b.day === at.day && !b.result) this.setPlayer({ ...p, booked: null });
     this.setYourRound(r); this.yrCard = false; this.yrFlight = null; this.mFlight = null; this.mYou = null; this.mWait = 0; this.matchResult = null;
+    this.welcomePull('round'); // T389: a new game's first round deals the welcome pull (a money match is one)
     const h = holeOf(v, hs[0]!)!, brought = this.youCartBring(h.tee);
     this.toast(`${firstName(o.name)} is on: ${hs.length} holes of match play for $${stake.toLocaleString('en-US')}. Meet at the ${ordinal(h.n)} tee${brought ? ' (your cart is by the tee)' : ''}`, 'good');
     this.emit(); return true;
