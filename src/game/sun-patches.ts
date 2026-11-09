@@ -15,8 +15,9 @@
 // shape as they go and the two repeats (REPEAT_A, REPEAT_B tiles) never line up into a visible tiling. A soft threshold (cover ± soft) cuts the
 // blobby gaps a few hundred metres across with soft edges.
 //
-// The motion: in game time (Engine.sunFrame: the clock runs at the sim speed, faster at 4x or 20x), and at the 1x rate while paused, so the map
-// never looks frozen.
+// The motion: in game time, at CLOUD_BOOST (8) times the wind's own rate at game speed 1x, in step with the game speed (2x: 16 times, 1/4x: twice) up to the speed
+// where it would flicker (cloudRate: it eases to a ceiling), and still while paused (T379, the owner, 2026-11-08: "clouds should move at x8 speed when you are
+// on x1 and adjust accordingly for the rest"; T310 had them at the sim speed itself, and at the 1x rate while paused). Engine.sunFrame adds sunStep each frame.
 // Pure TypeScript (no DOM, no GL): gl.ts uploads the picture, engine.ts runs the clock, tests/sun-patches.test.ts checks it in node.
 
 /** the noise picture's size (px, square, tileable) */
@@ -30,8 +31,8 @@ export const REPEAT_A = 700, REPEAT_B = 959;
 export const TURN_B = 0.61;
 /** the weight of each read in the field (A + B = 1) */
 export const MIX_A = 0.6;
-/** the wind (tiles, unit) the gaps drift along, and its speed at 1x (tiles per real second: 2.8 m/s; 20x is 56 m/s). B drifts DRIFT_B times as
- *  fast with a small cross wind (CROSS_B of the speed, to the wind's left), so the two reads slide over each other and the shapes change */
+/** the wind (tiles, unit) the gaps drift along, and its base speed (tiles per second of the clock: 2.8 m/s; sunStep runs the clock CLOUD_BOOST times as fast at game speed 1x:
+ *  22 m/s). B drifts DRIFT_B times as fast with a small cross wind (CROSS_B of the speed, to the wind's left), so the two reads slide over each other and the shapes change */
 export const WIND = { x: 0.6, y: 0.8 } as const, WIND_SPEED = 1.4, DRIFT_B = 1.3, CROSS_B = 0.25;
 /** the soft threshold on the field: sun = smoothstep(cover − soft, cover + soft, n). About a third to two fifths of the ground is in the sun */
 export const COVER = 0.53, SOFT = 0.07;
@@ -56,8 +57,20 @@ export function clampSun(v: unknown): SunSetting {
   return { on: typeof o.on === 'boolean' ? o.on : SUN_DEFAULT.on, strength: Math.max(SUN_RANGE[0], Math.min(SUN_RANGE[1], s)) };
 }
 
-/** the clock's step (game seconds of drift) for a frame of dt real seconds at sim speed k: k times dt, and dt while paused (k 0: the 1x rate) */
-export const sunStep = (dt: number, speed: number) => (dt > 0 ? dt : 0) * (speed > 0 ? speed : 1);
+/** T379: at game speed 1x the clouds drift this many times as fast as the wind's base rate (WIND_SPEED) says, 2x twice that again, and so on */
+export const CLOUD_BOOST = 8;
+/** T379: the boosted rate follows the game speed straight up to CLOUD_KNEE (8x game speed: 64 times the base rate; at 30% that is a patch's edge crossing the screen in a
+ *  second) and then eases to CLOUD_CEILING (80), so 20x and the fast forward do not make the patches flicker across the screen (the finest noise moves 0.14 of its
+ *  wavelength a frame at 60 fps at the knee, 0.17 at the ceiling) */
+export const CLOUD_KNEE = 64, CLOUD_CEILING = 80;
+/** T379: the clock's rate (game seconds of drift per real second) at game speed k: CLOUD_BOOST times k up to the knee, then an exponential ease to the ceiling (the slope is
+ *  the same at the knee, so no kink); 0 when paused */
+export function cloudRate(speed: number): number {
+  const v = speed > 0 ? CLOUD_BOOST * speed : 0;
+  return v <= CLOUD_KNEE ? v : CLOUD_KNEE + (CLOUD_CEILING - CLOUD_KNEE) * (1 - Math.exp(-(v - CLOUD_KNEE) / (CLOUD_CEILING - CLOUD_KNEE)));
+}
+/** the clock's step (game seconds of drift) for a frame of dt real seconds at sim speed k: dt times the rate (cloudRate); nothing while paused */
+export const sunStep = (dt: number, speed: number) => (dt > 0 ? dt : 0) * cloudRate(speed);
 
 const fract = (v: number) => v - Math.floor(v);
 /** the two reads' offsets (picture uv, each in 0..1: the picture repeats) at clock t (game s): [ax, ay, bx, by]. A point of the field drifts

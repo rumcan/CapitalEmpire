@@ -608,7 +608,7 @@ export default function App() {
                       <input type="checkbox" checked={game.tyreTracks} onChange={e => { game.setTyreTracks(e.target.checked); bump(); }} />
                       Tyre tracks
                     </label>
-                    <label className="flex cursor-pointer items-center gap-2 px-2 pt-2 text-sm" data-tip="The sun breaking through the clouds: soft patches of sunlight drift over the ground with the wind (faster at the faster game speeds), brightening it; outside them the day is overcast and the objects cast no drop shadows (their contact shadows stay) (T310)">
+                    <label className="flex cursor-pointer items-center gap-2 px-2 pt-2 text-sm" data-tip="The sun breaking through the clouds: soft patches of sunlight drift over the ground with the wind (in step with the game speed, eased at the fastest speeds, still when paused), brightening it; outside them the day is overcast and the objects cast no drop shadows (their contact shadows stay) (T310)">
                       <input type="checkbox" checked={game.sunLook.on} onChange={e => { game.setSunLook({ on: e.target.checked }); bump(); }} />
                       Sun and clouds
                     </label>
