@@ -80,7 +80,7 @@ try {
   // ---------------------------------------------------------------- A. galleries
   await run('The galleries of a tee and a green: where their fans stand', async () => {
     const r = await page.evaluate(() => {
-      const { M, g, groundOf, BLOCKED, NP, field, tees, pins } = window.__t377;
+      const { M, g, groundOf, surfOf, BLOCKED, NP, field, tees, pins } = window.__t377;
       const unit = (dx, dy) => { const L = Math.hypot(dx, dy) || 1; return [dx / L, dy / L]; };
       const fansOf = (s, i) => { const o = [], buf = Float32Array.of(s.x, s.y, 60, s.kind === 'stand' ? 2 : 0, s.fx, s.fy, s.ax, s.ay), n = M.view.galleryPeople(buf, 0, i, 100, NP, o); return o.slice(0, n).map(p => ({ x: p.x, y: p.y })); };
       const spots = M.gal.gallerySpots(tees, pins, g.golf.structures ?? [], field());
@@ -215,7 +215,7 @@ try {
           const A = vs[v].stop, B = vs[v + 1].stop, d = Math.hypot(B.x - A.x, B.y - A.y); if (d <= 15) continue;
           let water = 0, other = 0; const k = Math.ceil(d / 0.5);
           for (let i = 0; i <= k; i++) { const gr = groundOf(A.x + (B.x - A.x) * i / k, A.y + (B.y - A.y) * i / k); if (gr === 'water') water++; else if (BLOCKED.has(gr)) other++; }
-          const score = water ? -1 : other, cand = { c, h, d, score, t0: vs[v].dep, t1: vs[v + 1].arr };
+          const score = water ? -1 : other, cand = { c, h, d, score, t0: vs[v].dep, t1: vs[v + 1].arr, ax: A.x, ay: A.y, bx: B.x, by: B.y };
           if (!pick || cand.score > pick.score || (cand.score === pick.score && cand.d > pick.d)) pick = cand;
         }
       }
@@ -225,14 +225,14 @@ try {
     if (r.error || !r.pick) return;
     // the shots: the game's own frames of that cart on that drive (the clock at the drive's start, running at 1x, the camera on the live cart): three shots 800 ms apart
     // once it has moved (a cart carried over water with no way is not drawn: nothing to shoot then)
-    await jump(r.pick.t0 - 0.15); await page.evaluate(() => window.__game.setSpeed(1));
+    await look(page, r.pick.ax, r.pick.ay, 0.3); await jump(r.pick.t0 - 0.3); await page.waitForTimeout(400); await page.evaluate(() => window.__game.setSpeed(0.25));
     let k = 0, last = null;
-    for (let tries = 0; tries < 24 && k < 3; tries++) {
-      await page.waitForTimeout(500);
+    for (let tries = 0; tries < 120 && k < 3; tries++) {
+      await page.waitForTimeout(150);
       const c = await page.evaluate(n => { const o = window.__game.play?.pv.carts.find(q => q.cart === n); return o ? { x: o.x, y: o.y } : null; }, r.pick.c);
       if (!c) continue;
-      if (last && Math.hypot(c.x - last.x, c.y - last.y) < 2.5) continue;
-      await look(page, c.x, c.y, 0.3); await page.waitForTimeout(350); k++; last = c; await shot(page, `carts-${k}`);
+      if (last && Math.hypot(c.x - last.x, c.y - last.y) < 3) { await look(page, c.x, c.y, 0.3); continue; }
+      await look(page, c.x, c.y, 0.3); await page.waitForTimeout(250); k++; last = c; await shot(page, `carts-${k}`);
     }
     if (k < 3) log(`  (${k} of 3 shots: the cart was not drawn or did not move far enough)`);
     await page.evaluate(() => window.__game.setSpeed(0));
