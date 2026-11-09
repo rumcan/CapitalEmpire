@@ -1,7 +1,7 @@
 // T317 (#903): your own round's UI: the first tee's hole choice (inside the tee card), the round's bar at the top (the hole, the stroke, your lie and the
 // distance, the score so far, "Jump to ball", the cart, the scorecard, quit), and the scorecard (strokes, par, to par, putts per hole) that opens between
 // holes and at the end. The engine plays the round (golf/play/yours.ts); these only show it and send the clicks.
-import { useState } from 'react';
+import { useState, type ReactNode } from 'react';
 import { DEFAULT_RULES, GIMME_RULES, MULL_RULES, gimmiesOf, mulligansOf, noHandicapWhy, scoreName, type CardRow, type HoleChoice, type RoundRules, type YourRoundView } from '../../game/golf/play/yours';
 import { Icon } from '../Icon';
 import { MatchRows, MatchStrip } from './MatchCards';
@@ -54,11 +54,12 @@ export function HoleChoiceBox({ choices, onStart }: { choices: { options: { id: 
 }
 
 /** the round's bar (top centre): where you are in the round, the score so far, and the buttons */
-export function RoundBar({ v, onJump, onCart, onCallCart, onMull, onGimme, onCard, onQuit, onSkip, left = '0.75rem', right = '0.75rem' }: { v: YourRoundView; onJump: () => void; onCart: () => void; onCallCart: () => void; onMull: () => void; onGimme: () => void; onCard: () => void; onQuit: () => void; /** T244: Skip to result (a money match) */ onSkip?: () => void;
-  /** T328 (#936): the bar's edges (CSS lengths), clear of the left rail and of a right-hand card (event, tee, talk, challenge) */ left?: string; right?: string }) {
+export function RoundBar({ v, onJump, onCart, onCallCart, onMull, onGimme, onCard, onQuit, onSkip, left = '0.75rem', right = '0.75rem', below }: { v: YourRoundView; onJump: () => void; onCart: () => void; onCallCart: () => void; onMull: () => void; onGimme: () => void; onCard: () => void; onQuit: () => void; /** T244: Skip to result (a money match) */ onSkip?: () => void;
+  /** T328 (#936): the bar's edges (CSS lengths), clear of the left rail and of a right-hand card (event, tee, talk, challenge) */ left?: string; right?: string;
+  /** T348 (#990): what hangs under the bar, in its column (the toasts: they stack under the bar, never over it) */ below?: ReactNode }) {
   const t = v.totals, r = v.round;
   return (
-    <div className="pointer-events-none absolute top-[calc(var(--hud-top,6rem)+2.75rem)] z-20 flex justify-center" style={{ left, right }}>
+    <div className="pointer-events-none absolute top-[calc(var(--hud-top,6rem)+2.75rem)] z-20 flex flex-col items-center gap-1" style={{ left, right }}>
       <div className="pointer-events-auto flex flex-wrap items-center gap-2 rounded-xl border border-white/10 bg-slate-950/85 px-3 py-1.5 text-xs text-slate-200 shadow-xl backdrop-blur" data-testid="round-bar">
         {v.match && onSkip && <MatchStrip m={v.match} onSkip={onSkip} />}
         <span className="font-display font-bold text-[var(--gold-hi)]">Hole {v.hole}</span>
@@ -74,6 +75,7 @@ export function RoundBar({ v, onJump, onCart, onCallCart, onMull, onGimme, onCar
         <button className="chip" onClick={onCard} data-testid="round-card-btn">Scorecard</button>
         <button className="chip" onClick={onQuit} title={v.match ? 'Concede the match: you lose the stake' : r.practice ? 'Stop the practice round: nothing is recorded' : 'Stop your round here: the holes done go into your rounds'} data-testid="round-quit">{v.match ? 'Concede' : 'Quit'}</button>
       </div>
+      {below}
     </div>
   );
 }
