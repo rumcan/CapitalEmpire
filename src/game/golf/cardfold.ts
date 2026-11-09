@@ -1,7 +1,7 @@
 // T348 (#990): the cards at the right edge fold away while your shot is open. The playtest (h3s1-address): at an address the right-hand column held the Mayor's Cup card and the tutorial card, the toast and the tool
 // footer crowded the speed bar's strip, and the shot panel took the middle bottom: the cards you are not using sit over the one you are. While a shot is open (yours, or your turn in the tournament) every card of the
 // T392 to T394 stack that is open (the card on the right: the range's, the clubhouse's, the event's; the Staff card; your profile; your bag or your cards) is closed, and the cards come back when the shot is over:
-// FOLD_BACK_MS after the last shot of a run closes (a putt a few seconds after a chip, the next address of a hole, never flickers the cards in and out between two shots close together).
+// FOLD_BACK_MS (6 s: a drive's flight and the camera that follows it) after the last shot of a run closes (a putt a few seconds after a chip, a drop and the shot after it, never flicker the cards in and out between two shots close together).
 // A card you open yourself while the shot is open stays: it is your own act. A card is brought back only if it is still closed, and not if its neighbour took its place (the bag and the cards stand in one column,
 // the range card and the clubhouse card in another). The guide cards (the tutorial, the range guide, the tournament checklist) hold no open state: App.tsx hides them while `on`.
 // Pure TS, no DOM; the engine reads the open cards each frame and does what step says (Game.stepFoldCards).
@@ -14,7 +14,7 @@ export interface OpenCards { bag: boolean; cards: boolean; player: boolean; staf
 /** a set of cards: the ones folded for a shot, or the ones to bring back */
 export type Folded = Partial<Record<FoldKey, true>> & { event?: EventId };
 /** how long (ms of real time) the cards stay away after the last frame a shot was open */
-export const FOLD_BACK_MS = 2500;
+export const FOLD_BACK_MS = 6000;
 const KEYS: readonly FoldKey[] = ['range', 'club', 'staff', 'player', 'cards', 'bag'];
 /** the card each card cannot stand beside: the bag and the cards take one column, the range card and the clubhouse card one */
 const SHARES: Readonly<Record<'bag' | 'cards' | 'club' | 'range', 'bag' | 'cards' | 'club' | 'range'>> = { bag: 'cards', cards: 'bag', club: 'range', range: 'club' };
