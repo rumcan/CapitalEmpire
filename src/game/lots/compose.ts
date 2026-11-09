@@ -469,7 +469,7 @@ let HOUSES: string[] | null = null, BACKS: string[] | null = null;
 export const housePalette = (): readonly string[] => (HOUSES ??= (houseFamilies().get('dwelling')?.ids ?? []).filter(id => !FRONTAL.has(id) && !removedOf(id)).sort());
 /** the houses seen from the back (house-class.ts REAR: the north views, the house backs, the rear sets) a lot lab preset shows on the lots whose
  *  street lies behind the house as the camera sees it: a lot whose preset holds one shows another of them (same rules), by id */
-export const backPalette = (): readonly string[] => (BACKS ??= LIBRARY.filter((it, i) => REAR.test(it.id) && !it.id.startsWith('view:') && !it.id.startsWith('east:') && isBuilding(it) && !drawnAsStandIn(i)
+export const backPalette = (): readonly string[] => (BACKS ??= LIBRARY.filter((it, i) => REAR.test(it.id) && !it.id.startsWith('view:') && !it.id.startsWith('east:') && !it.id.startsWith('object8:') && isBuilding(it) && !drawnAsStandIn(i)
   && standInFamily(it) === 'dwelling' && baseOf(it.id) === it.id && !FRONTAL.has(it.id) && !removedOf(it.id)).map(it => it.id).sort());
 /** the palette a lot of a use shows (com: the shop fronts, tour: the venues, res: the houses), or null for a use without one */
 const paletteOf = (use: PresetUse): readonly string[] | null => (use === 'com' ? SHOP_PALETTE : use === 'tour' ? VENUE_PALETTE : use === 'res' ? housePalette() : null);
@@ -584,7 +584,7 @@ const STARTER_RE = /rundown|derelict|boarded|abandoned|shack|lean-to|mobile-home
 /** the trailers and mobile homes: decor-kind props that stand as a starter home in a house's place for this swap only (the owner, 2026-11-02) */
 const HOME_DECOR = /mobile-home|camper|pop-?up-caravan|(?<!boat-)trailer/;
 let STARTERS: string[] | null = null;
-const starterPalette = (): readonly string[] => (STARTERS ??= LIBRARY.filter((it, i) => STARTER_RE.test(it.id) && (isBuilding(it) || HOME_DECOR.test(it.id)) && tierOf(it.id) === 0 && !it.id.startsWith('view:') && !it.id.startsWith('east:')
+const starterPalette = (): readonly string[] => (STARTERS ??= LIBRARY.filter((it, i) => STARTER_RE.test(it.id) && (isBuilding(it) || HOME_DECOR.test(it.id)) && tierOf(it.id) === 0 && !it.id.startsWith('view:') && !it.id.startsWith('east:') && !it.id.startsWith('object8:')
   && !REAR.test(it.id) && !drawnAsStandIn(i) && baseOf(it.id) === it.id && !FRONTAL.has(it.id) && !removedOf(it.id)).map(it => it.id).sort());
 /** T385 (#1042, #1039): a clean house lot (clean-yards.ts) shows a starter BUILDING, never a trailer or a mobile home: those are decor props, which houseBase left out
  *  of a generated lot, so a tier-0 lot with a mobile home in its house's place drew its yard round no house at all (the owner: "why is there a lot with no house?") */
@@ -709,7 +709,7 @@ function standInHouse(q: PresetProp, r: RemovedPic, fit: Fitted, lot: LotGeom, f
 function standInBuilding(q: PresetProp, r: RemovedPic, seed: number, road: Road): string | null {
   const hr = removedHalf(q.id, r, q.scale), area = 4 * hr * hr;
   let pool = KIND_POOL.get(r.kind);
-  if (!pool) KIND_POOL.set(r.kind, pool = LIBRARY.filter((it, i) => it.kind === r.kind && it.cat !== 'Golf tournament' && isBuilding(it) && !removedOf(it.id) && !drawnAsStandIn(i) && !it.id.startsWith('view:') && !it.id.startsWith('east:') && !/-north-|[-_]rear(?![a-z])/.test(it.id))
+  if (!pool) KIND_POOL.set(r.kind, pool = LIBRARY.filter((it, i) => it.kind === r.kind && it.cat !== 'Golf tournament' && isBuilding(it) && !removedOf(it.id) && !drawnAsStandIn(i) && !it.id.startsWith('view:') && !it.id.startsWith('east:') && !it.id.startsWith('object8:') && !/-north-|[-_]rear(?![a-z])/.test(it.id))
     .map(it => { const fp = footprintOf(it.id, OWNER_SCALE[it.id] ?? 1, false); return { id: it.id, a: (fp[2] - fp[0]) * (fp[3] - fp[1]) }; }));
   const all = pool.filter(c => c.a >= area * 0.6 && c.a <= area * 1.4).sort((a, b) => Math.abs(a.a - area) - Math.abs(b.a - area) || (a.id < b.id ? -1 : 1));
   const faced = all.filter(c => roadView(c.id, road, 0)), near = (faced.length ? faced : all).slice(0, 3);

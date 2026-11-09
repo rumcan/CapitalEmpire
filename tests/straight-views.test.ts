@@ -10,12 +10,15 @@ import { OBJECT_FACING_KEYS, objectFootprint } from '../src/game/object-eight-ty
 import { drawnAs } from '../src/game/mirror';
 import { axisSetOf, drawnView, eightRingOf, faces, fourViews, roadView } from '../src/game/lots/preset-art';
 import { roadOf } from '../src/game/lots/preset-frame';
-import { housePalette } from '../src/game/lots/compose';
+import { backPalette, compose, housePalette } from '../src/game/lots/compose';
+import { cat } from '../src/game/lots/compose-core';
+import { LU, LV } from '../src/game/lots/town';
 import { facingView } from '../src/game/lots/house-facing';
 import { objectFacings } from '../src/game/object-eight';
 import REVIEW from '../art/object-eight-20261109/review.json';
 
 const BY = new Map<string, LibItem>(LIBRARY.map(i => [i.id, i] as const));
+(globalThis as unknown as { Path2D: unknown }).Path2D ??= class { moveTo() {} lineTo() {} arc() {} arcTo() {} closePath() {} rect() {} };
 const awayOf = (road: number) => ({ x: -Math.sin(road * Math.PI / 4), y: -Math.cos(road * Math.PI / 4) });
 const frameOf = (road: number) => ({ q: (road % 2 ? (road === 1 || road === 7 ? 0 : 2) : road / 2) as 0 | 1 | 2 | 3, n: awayOf(road) });
 /** the reviewed buildings (art/object-eight-20261109/review.json: accepted sheets): their library subjects */
@@ -104,4 +107,18 @@ test('every house the town draws faces its street on all eight roads, except the
     const f = facingView(id, frameOf(road), 0); assert.ok(f.exact && f.off === 0, `${id} on road ${road}`);
     assert.equal(drawnView(id, frameOf(road), 0).id, f.id);
   }
+});
+
+test('the composer\'s pools hand out no object-eight picture, and no lot on a road along a map axis draws one of the batch: the straight-on views are placed by a lot\'s facing, never picked as buildings of their own', () => {
+  for (const id of [...cat(() => true), ...backPalette(), ...housePalette()]) assert.ok(!id.startsWith('object8:'), `${id} is in a pool`);
+  const mine = new Set(OBJECT_EIGHT_SETS.filter(s => SUBJECTS.includes(s.subject)).flatMap(s => OBJECT_FACING_KEYS.map(k => s.views[k].id)));
+  assert.ok(mine.size >= 240, `${mine.size} pictures of the batch`);
+  // (a lot of each kind and state on the four roads along an axis: the corner views draw there, as before)
+  const lotOn = (road: number) => { const n = awayOf(road), u = { x: n.y, y: -n.x }; return { o: { x: 300, y: 300 }, u, n, w: 14, d: 14 }; };
+  const found = new Set<string>(); let lots = 0;
+  for (const road of [0, 2, 4, 6]) for (const tier of [0, 3]) for (const decline of [0, 2]) for (const use of [LU.RES, LU.COM, LU.TOUR]) for (let seed = 1; seed <= 4; seed++) {
+    lots++; for (const p of compose(lotOn(road), { use, level: LV.BUILT, decline, seed, tier }).props) if (mine.has(p.id)) found.add(p.id);
+  }
+  assert.ok(lots >= 190);
+  assert.deepEqual([...found], [], 'no picture of the batch on a road along an axis');
 });
