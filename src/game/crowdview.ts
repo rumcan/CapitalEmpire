@@ -4,6 +4,7 @@
 // and the engine only packs the sprites.
 import { SPECTATOR_CLIPS, type PeopleClip } from './library';
 import { facing } from './ext/pedestrians';
+import { WALK_STRIDE } from './event/crowd';
 import type { PlacedSeating } from './golf/event-seating';
 
 /** T212 (#557): the putt clip's impact, seconds into GOLFER_CLIPS.golf_putt (its sheet's impactSecs: render-person-3d.mjs --putt, a hand-keyed
@@ -77,17 +78,20 @@ function seatFrame(spot: number, s: number, lt: number): number {
 /** Gallery buffer x/y/fans/kind/focus/aim at float offset o. Standing fans retain their seeded informal rows (up to 60); stands draw up to 90
  *  samples of occupied authored seats, preserving exact positions, aisle gaps, bank facings and bench heights. Larger stands sample across
  *  their occupied rows rather than changing gameplay capacity. Without supplied geometry the legacy stand view is only an estimate.
+ *  T377: a standing gallery with `places` (a tee's arc and a green's ring: golf/galleries.ts galleryPlaces, x y x y ... best first) puts its first n fans on the first
+ *  n places (up to 90), each a little off its place (a 0.28 tile jitter), facing the focus; the fans past the places are not drawn.
  *  Reuses out objects; cheer >= 0 is seconds since a nearby birdie and keeps the existing clap/cheer animation clips. */
-export function galleryPeople(G: ArrayLike<number>, o: number, spot: number, now: number, people: number, out: CrowdPerson[], cheer = -1, seating?: PlacedSeating): number {
-  const x = G[o]!, y = G[o + 1]!, stand = G[o + 3] === 2, fx = G[o + 4]!, fy = G[o + 5]!;
+export function galleryPeople(G: ArrayLike<number>, o: number, spot: number, now: number, people: number, out: CrowdPerson[], cheer = -1, seating?: PlacedSeating, places?: ArrayLike<number>): number {
+  const x = G[o]!, y = G[o + 1]!, stand = G[o + 3] === 2, fx = G[o + 4]!, fy = G[o + 5]!, spread = !stand && !!places && places.length >= 2;
   const occupied = Math.max(0, Math.min(Math.round(G[o + 2]!), stand && seating ? seating.count : Infinity));
-  const n = Math.min(occupied, stand ? 90 : 60);
+  const n = Math.min(occupied, stand ? 90 : spread ? Math.min(90, places!.length >> 1) : 60);
   if (people <= 0 || n <= 0) return 0;
   unit(fx - x, fy - y);
   const ux = U[0], uy = U[1], vx = -uy, vy = ux, perRow = stand ? Math.max(1, Math.ceil(Math.sqrt(n * 2))) : 10, seatRow = rowToward(ux, uy);
   for (let s = 0; s < n; s++) {
     const r = Math.floor(s / perRow), along = (s % perRow - (perRow - 1) / 2) * 0.55, back = r * 0.6;
     let px = x + vx * along - ux * back + (hash(spot, s * 3) - 0.5) * 0.24, py = y + vy * along - uy * back + (hash(spot, s * 3 + 1) - 0.5) * 0.24;
+    if (spread) { px = places![2 * s]! + (hash(spot, s * 3) - 0.5) * 0.28; py = places![2 * s + 1]! + (hash(spot, s * 3 + 1) - 0.5) * 0.28; }
     const lt = ((now + hash(spot * 7 + 1, s) * 20) % 20 + 20) % 20, p = slot(out, s);
     p.x = px; p.y = py; p.group = 0; p.person = Math.floor(hash(spot, s * 3 + 2) * people);
     p.row = stand ? seatRow : rowToward(fx - px, fy - py);
@@ -118,17 +122,24 @@ export function queuePeople(x: number, y: number, fx: number, fy: number, count:
   return n;
 }
 
-/** a walking party, the walker group idx at float offset o of the 6-float walker buffer (x, y, n, stage, tx, ty): min(round(n), 3) people side by
- *  side across the heading (toward its target), 0.4 tiles apart, facing it, on the walk loop (one phase for the party, its own by idx). Writes into
- *  out; returns the count */
-export function walkerPeople(W: ArrayLike<number>, o: number, idx: number, now: number, people: number, out: CrowdPerson[]): number {
+/** a walking party, the walker group at float offset o of the 7-float walker buffer (x, y, n, stage, tx, ty, id: the point it is heading for now, and its own
+ *  number): min(round(n), 3) people who walk together and not in step (T377, #1033, the owner: "spectators walking in step 3 at a time"): each has his own
+ *  pace (the walk loop at 0.85 to 1.15 of its rate), phase, a place along the heading that drifts (a person is ahead of the others, then behind) and a place across
+ *  it that drifts, all from the group's id and his number (the id is the walker's own, not its index in the buffer, so a person is the same person from frame to
+ *  frame). The group faces its heading. Writes into out; returns the count. stride 6 reads the old buffer (idx is then the seed) */
+export function walkerPeople(W: ArrayLike<number>, o: number, idx: number, now: number, people: number, out: CrowdPerson[], stride = WALK_STRIDE): number {
   const x = W[o]!, y = W[o + 1]!, k = Math.min(Math.round(W[o + 2]!), 3);
   if (people <= 0 || k <= 0) return 0;
+  const id = stride > 6 ? W[o + 6]! : idx;
   unit(W[o + 4]! - x, W[o + 5]! - y);
-  const ux = U[0], uy = U[1], vx = -uy, vy = ux, row = rowToward(ux, uy), frame = at(SPECTATOR_CLIPS.walk, now + hash(idx, 9) * 2);
+  const ux = U[0], uy = U[1], vx = -uy, vy = ux, row = rowToward(ux, uy), C = SPECTATOR_CLIPS.walk;
   for (let j = 0; j < k; j++) {
-    const along = (j - (k - 1) / 2) * 0.4, p = slot(out, j);
-    p.x = x + vx * along; p.y = y + vy * along; p.group = 0; p.person = Math.floor(hash(idx, j) * people); p.row = row; p.frame = frame; p.seatHeightMetres = undefined; p.benchPixelsPerMetre = undefined;
+    const s = 11 + j * 7, h1 = hash(id, s), h2 = hash(id, s + 1), h3 = hash(id, s + 2), h4 = hash(id, s + 3), h5 = hash(id, s + 4), h6 = hash(id, s + 5), c = j - (k - 1) / 2;
+    // the pace and the phase: the clip at 0.85 to 1.15 of its rate, from a start of his own
+    const frame = at(C, now * (0.85 + 0.3 * h1) + h2 * 3);
+    // along the heading: his place in the party (0.35 to 0.75 tiles apart) and a slow drift of 0.45 (a period of 5 to 11 s); across it: 0.35 to 0.6 apart, drifting 0.15
+    const along = c * (0.35 + 0.4 * h3) + Math.sin(now * (0.55 + 0.6 * h4) + h5 * 6.2832) * 0.45, across = c * (0.35 + 0.25 * h4) + Math.sin(now * (0.3 + 0.35 * h6) + h1 * 6.2832) * 0.15, p = slot(out, j);
+    p.x = x + ux * along + vx * across; p.y = y + uy * along + vy * across; p.group = 0; p.person = Math.floor(hash(id, j) * people); p.row = row; p.frame = frame; p.seatHeightMetres = undefined; p.benchPixelsPerMetre = undefined;
   }
   return k;
 }

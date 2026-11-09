@@ -57,17 +57,34 @@ export interface CrewInputs {
   greens: ReadonlySet<number>; sands: ReadonlySet<number>; fairways: ReadonlySet<number>; rough: ReadonlySet<number>;
   windows: readonly (readonly (readonly [number, number])[])[]; firstOn: readonly number[];
   pace: { walk: number; cart: number } | null;
+  /** T377 (#1033): the way a drive takes from a to b (golf/walkfield.ts, the cart profile: the paths, never a tee, a green, a bunker or water): the waypoints after
+   *  a, the last b; null: straight; an empty way: none (the water cuts the course in two there, with no bridge): the worker is carried across, not drawn (an `away` leg).
+   *  A drive is laid as one leg per piece of its way, its minutes shared by their lengths (absent: every drive straight) */
+  route?: (ax: number, ay: number, bx: number, by: number) => Pt[] | null;
 }
 
 const NOP = NaN;
 /** a worker's legs as they are laid: the clock and where he is */
 class Shift {
   legs: CrewLeg[] = [];
+  /** T377: the way a drive takes (CrewInputs.route); null: straight */
+  route: CrewInputs['route'] | null = null;
   constructor(public t: number, public x: number, public y: number) {}
-  /** a leg to (bx, by) taking dur minutes */
+  /** a leg to (bx, by) taking dur minutes. T377: a drive with a route is laid as a leg to each waypoint of its way, the minutes shared by their lengths */
   go(bx: number, by: number, act: Act, veh: Veh, dur: number, park: { x: number; y: number; veh: Veh } | null = null): void {
     const d = Math.max(0, dur);
     if (d <= 0 && bx === this.x && by === this.y) return;
+    const way = act === 'drive' && this.route && (bx !== this.x || by !== this.y) ? this.route(this.x, this.y, bx, by) : null;
+    if (way && way.length === 0) { this.leg(bx, by, 'away', 'none', d, park); return; } // (no way over the field: carried across)
+    if (way && way.length > 1) {
+      let L = 0, px = this.x, py = this.y;
+      for (const w of way) { L += dist(px, py, w.x, w.y); px = w.x; py = w.y; }
+      for (const w of way) { const seg = dist(this.x, this.y, w.x, w.y); this.leg(w.x, w.y, act, veh, L > 0 ? d * seg / L : d / way.length, park); }
+      return;
+    }
+    this.leg(bx, by, act, veh, d, park);
+  }
+  private leg(bx: number, by: number, act: Act, veh: Veh, d: number, park: { x: number; y: number; veh: Veh } | null): void {
     this.legs.push({ t0: this.t, t1: this.t + d, ax: this.x, ay: this.y, bx, by, act, veh, px: park ? park.x : NOP, py: park ? park.y : NOP, pveh: park ? park.veh : 'none' });
     this.t += d; this.x = bx; this.y = by;
   }
@@ -219,7 +236,7 @@ export function crewDay(inp: CrewInputs): CrewDay {
     sh.go(Y.x, Y.y, 'drive', veh, driveMins(dist(sh.x, sh.y, Y.x, Y.y), inp)); sh.stay(Math.max(sh.t, end), 'away', 'none');
   };
   runs(N, Math.min(inp.gk, N)).forEach((run, k) => {
-    const sh = new Shift(CREW_OUT, Y.x, Y.y);
+    const sh = new Shift(CREW_OUT, Y.x, Y.y); sh.route = inp.route ?? null; // (T377: the greenkeeper's cart drives round the tees and greens)
     cupRound(sh, run, inp, cups);
     // his greens due today, then his sands, each when the hole is clear
     const site: SiteJob[] = [];
@@ -234,7 +251,7 @@ export function crewDay(inp: CrewInputs): CrewDay {
   });
   // the mowers: the fairways due today on the holes of their run, the one play reaches last first; then the rough
   runs(N, Math.min(inp.mo, N)).forEach((run, k) => {
-    const sh = new Shift(CREW_OUT, Y.x, Y.y);
+    const sh = new Shift(CREW_OUT, Y.x, Y.y); sh.route = inp.route ?? null; // (T377: a mower's drive between jobs too; its mowing legs go where the passes do)
     const order = [...run].sort((a, b) => (inp.firstOn[b] ?? Infinity) - (inp.firstOn[a] ?? Infinity) || a - b);
     for (const i of order) if (inp.fairways.has(inp.holes[i]!.ground.n)) mowHole(sh, i, inp.holes[i]!.ground.passes, 'reel', SPEED.reel, inp, MO_HOME, mown);
     for (const i of order) if (inp.rough.has(inp.holes[i]!.ground.n)) mowHole(sh, i, inp.holes[i]!.ground.rough, 'rotary', SPEED.rotary, inp, MO_HOME, null);

@@ -35,8 +35,9 @@ export const YOUR_TEES: TeeKind = 'middle';
 /** the most holes a round has (the everyday course plays each hole once) */
 const MAX_HOLES = 18;
 
-/** the lies your cart may not drive on: the greens, the bunkers and water (the tees, fairways and rough are fine, as in a buggy) */
-export const cartMay = (l: Lie): boolean => l !== 'green' && l !== 'bunker' && l !== 'water';
+/** the lies your cart may not drive on: the greens, the tee boxes, the bunkers and water (the fairways and rough are fine, as in a buggy). T377 (#1033, the owner:
+ *  "they should not be driving on tee boxes or greens"): the tee boxes joined the greens */
+export const cartMay = (l: Lie): boolean => l !== 'green' && l !== 'tee' && l !== 'bunker' && l !== 'water';
 
 /** which holes: all of them, the front nine, the back nine, or a pick */
 export type HoleChoice = 'all' | 'front' | 'back' | 'pick';

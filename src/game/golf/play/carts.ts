@@ -4,7 +4,12 @@
 // edge (around the fairways, greens, tees and bunkers). The cart's stops and minutes follow from the round's shots (the round already timed its golfers
 // at CART_PACE), so the play is unchanged; a late cart only shortens its golfers' walk out. Everything is worked out lazily, a hole at a time and a
 // drive's route only when it is near the screen: a cart off the screen costs a look at its hole. Pure TS, no DOM; times are game minutes.
+// T377 (#1033, the owner: "they should not be driving on tee boxes or greens and follow the cart paths"): with the course's walk field (golf/walkfield.ts: the
+// ground of the course, the paths, the map's own water) every stop is moved to ground a cart may stand on and every drive is the cheapest way over the field
+// under the cart profile: the paths cheap, the rough dearer, a fairway dearer still (a cart leaves its path only to reach a ball), never a tee, a green, a
+// bunker or water; a drive the field cannot find keeps the old route (paths, else the rough's edge) when that is clear of them too.
 import { TILE_M } from '../types';
+import { CART, RouteCache, nearestStand, routeClear, type WalkField } from '../walkfield';
 import { ADDRESS_TIME, FLIGHT_TIME, PICK_UP, PUTT_FLIGHT, SWING_TIME, walkMin } from './round';
 import type { CourseView, Lie, Pt, RoundPlan, Shot } from './types';
 
@@ -30,6 +35,12 @@ const FAIRWAY_PUSH = 14;
 const WIND = 1.3;
 /** a drive's route is worked out once its box (padded this many tiles) is near the screen */
 const NEAR = 40;
+/** T377: the search for drives' ways over the course's walk field one drawing may make, in routeUnits (a drive of under 100 tiles is 1: a millisecond or less on the
+ *  main thread; a long one a few): over it a drive takes the paths' way (when that is clear of the tees, greens, bunkers and water), else waits a drawing; no limit
+ *  with no box (a test) */
+const ROUTES_A_FRAME = 2;
+/** T377: the route of a drive with no way over the field (the cart is carried across: not drawn on that drive) */
+const HOP: Pt[] = [];
 
 /** a cart's drive along `len` tiles (game minutes) */
 export const driveMin = (len: number): number => len * TILE_M / CART_SPEED_M;
@@ -158,6 +169,9 @@ export class CartPlay {
   /** the scratch of rider(): the walk's point and heading, and (T294) its end and the minute he is there */
   readonly walk = { x: 0, y: 0, hx: 0, hy: 0, ex: 0, ey: 0, by: 0 };
   private plan: RoundPlan; private view: CourseView; private paths: CartPaths | null; private homeAt: Pt;
+  /** T377: the course's walk field (null: none: the stops and the drives are as they were) and the drives' ways over it, by the cells of their ends (so the carts of
+   *  a group, and the groups after them, share the ways they have in common) */
+  private field: WalkField | null; private cache: RouteCache | null;
   private carts: Cart[] = []; private cartOf: Int32Array; private shots: Shot[][] = [];
   /** per hole: the stop by its tee and the stop beside its green (worked out once) */
   private teeStops: (Pt | undefined)[] = []; private greenStops: (Pt | undefined)[] = [];
@@ -167,9 +181,10 @@ export class CartPlay {
   private head: Float64Array;
 
   /** the plan's carts (golfer.cart, entourage.ts) on the course; `paths` the cart paths (null: none, every drive along the rough's edge), `home` where a
-   *  cart goes after the last green (the clubhouse) */
-  constructor(plan: RoundPlan, view: CourseView, paths: CartPaths | null, home: Pt) {
-    this.plan = plan; this.view = view; this.paths = paths && paths.segs.length ? paths : null; this.homeAt = home;
+   *  cart goes after the last green (the clubhouse), `field` the course's walk field (T377: where a cart may stand and drive) */
+  constructor(plan: RoundPlan, view: CourseView, paths: CartPaths | null, home: Pt, field: WalkField | null = null) {
+    this.plan = plan; this.view = view; this.paths = paths && paths.segs.length ? paths : null; this.field = field; this.homeAt = home;
+    this.cache = field ? new RouteCache(field, CART, { pad: 12 }) : null;
     const size = Math.max(0, ...plan.golfers.map(g => g.id)) + 1, tee = new Map<number, number>();
     this.cartOf = new Int32Array(size).fill(-1);
     plan.groups.forEach(gr => { for (const id of gr.players) tee.set(id, gr.tee); });
@@ -193,8 +208,28 @@ export class CartPlay {
     const got = this.teeStops[h]; if (got) return got;
     const hole = this.view.holes[h]!, t = hole.tee, a = hole.line[1] ?? hole.pin, [ux, uy] = unit(a.x - t.x, a.y - t.y);
     const p = this.onPath(t) ?? edgeOf(this.view, t, -uy, ux) ?? { x: t.x - uy * 4, y: t.y + ux * 4 };
-    return this.teeStops[h] = p;
+    return this.teeStops[h] = this.legal(p);
   }
+  /** T377: a place a cart may stand: p itself when the course's walk field lets a cart stand there (never a tee, a green, a bunker or water), else the nearest
+   *  ground that does (12 tiles at most); p with no field, or none near */
+  private legal(p: Pt): Pt { const f = this.field; return f ? nearestStand(f, CART, p.x, p.y, 12) ?? p : p; }
+  /** T377: a cart's way from a to b: with the field, the cheapest over it (the cart paths cheap, so it follows them while they lead there and leaves them over
+   *  the rough only to reach its stop; never a tee, a green, a bunker or water); else the way along the paths (the rough's edge when they do not serve). The route's
+   *  first point is a. A drawing's searches are few (ROUTES_A_FRAME units: the cache's budget): over them the paths' way, when it is clear of the ground a cart
+   *  never enters, else null (not now: the drive is asked for again the next drawing). With no way at all over the field (two pieces of the course the water
+   *  cuts apart, with no bridge) the paths' way when it is clear, else HOP: the cart is carried, not drawn on that drive */
+  private driveRoute(a: Pt, b: Pt): Pt[] | null {
+    const c = this.cache, old = (): Pt[] => (this.paths && pathRoute(this.paths, a, b)) ?? edgeRoute(this.view, a, b);
+    if (!c) return old();
+    const r = c.route(a, b);
+    if (r === undefined) { const o = old(); return routeClear(c.f, CART, o) ? o : null; }
+    if (r === null) return old(); // (both ends off the field: nothing is known of the ground)
+    if (!r.length) { const o = old(); return routeClear(c.f, CART, o) ? o : HOP; }
+    const out = [a, ...r], last = out[out.length - 1]!; if (last.x !== b.x || last.y !== b.y) out.push(b); // (a way kept for the cell of an end: this cart's own end last)
+    return out;
+  }
+  /** how many searches over the field the drives have taken in all */
+  get searches(): number { return this.cache?.stats.miss ?? 0; }
   /** the stop beside hole h's green: on a path near the pin that is off the green, else just off the green at the rough's edge (across the approach) */
   greenStop(h: number): Pt {
     const got = this.greenStops[h]; if (got) return got;
@@ -202,7 +237,7 @@ export class CartPlay {
     let p = this.onPath(pin);
     if (p && this.view.lieAt(p.x, p.y) === 'green') p = null;
     p ??= edgeOf(this.view, pin, -uy, ux, GREEN_PAD) ?? { x: pin.x - uy * EDGE_MAX, y: pin.y + ux * EDGE_MAX };
-    return this.greenStops[h] = p;
+    return this.greenStops[h] = this.legal(p);
   }
   /** the stop for a stroke from `ball` on hole h: by the tee for a tee shot, beside the green near it, else on a path near the ball, else beside the ball
    *  (a ball in the rough) or at the rough's edge across the hole */
@@ -210,9 +245,9 @@ export class CartPlay {
     if (s.stroke === 1) return this.teeStop(h);
     const hole = this.view.holes[h]!, b = s.from, pin = hole.pin;
     if (Math.hypot(b.x - pin.x, b.y - pin.y) <= GREEN_NEAR || this.view.lieAt(b.x, b.y) === 'green') return this.greenStop(h);
-    const p = this.onPath(b); if (p) return p;
+    const p = this.onPath(b); if (p) return this.legal(p);
     const [ux, uy] = unit(pin.x - hole.tee.x, pin.y - hole.tee.y);
-    return cartLie(this.view.lieAt(b.x, b.y)) ? { x: b.x - uy * 2, y: b.y + ux * 2 } : edgeOf(this.view, b, -uy, ux) ?? { x: b.x - uy * 2, y: b.y + ux * 2 };
+    return this.legal(cartLie(this.view.lieAt(b.x, b.y)) ? { x: b.x - uy * 2, y: b.y + ux * 2 } : edgeOf(this.view, b, -uy, ux) ?? { x: b.x - uy * 2, y: b.y + ux * 2 });
   }
 
   /** cart c's stops on hole h (worked out once): its golfers' strokes on the hole in time order, a new stop when a stroke's is more than MERGE_TILES from
@@ -260,7 +295,7 @@ export class CartPlay {
     const cart = this.carts[c]!; if (cart.home) return cart.home;
     const N = this.view.holes.length, vs = N ? this.stops(c, N - 1) : [], last = vs[vs.length - 1], dep = N ? this.leave(c, N - 1) : Infinity;
     if (!last || !Number.isFinite(dep)) return null;
-    const d = this.homeAt, arr = dep + driveMin(WIND * Math.hypot(d.x - last.stop.x, d.y - last.stop.y));
+    const d = this.legal(this.homeAt), arr = dep + driveMin(WIND * Math.hypot(d.x - last.stop.x, d.y - last.stop.y));
     return cart.home = { stop: d, arr, dep: arr, legs: [], route: null, cum: null };
   }
   /** the minute golfer id's cart is back at the clubhouse after his round (Infinity: not known yet, or he walks) */
@@ -303,7 +338,7 @@ export class CartPlay {
    *  `only` (per golfer id), only the carts of those golfers; with a box (tiles x0 y0 x1 y1), only those in it (a drive's route is worked out only
    *  when it is near the box) */
   update(m: number, out: PlayCart[], only: Uint8Array | null = null, box: readonly number[] | null = null): number {
-    let n = 0;
+    let n = 0; if (this.cache) this.cache.budget = box ? ROUTES_A_FRAME : Infinity;
     for (let c = 0; c < this.carts.length; c++) {
       const cart = this.carts[c]!;
       if (!cart.ids.length || m < cart.tee - CART_LEAD) continue;
@@ -351,10 +386,13 @@ export class CartPlay {
     const b = to.stop;
     if (!to.route) {
       if (box && (Math.max(from.x, b.x) < box[0]! - NEAR || Math.min(from.x, b.x) > box[2]! + NEAR || Math.max(from.y, b.y) < box[1]! - NEAR || Math.min(from.y, b.y) > box[3]! + NEAR)) return false;
-      to.route = (this.paths && pathRoute(this.paths, from, b)) ?? edgeRoute(this.view, from, b);
+      const r = this.driveRoute(from, b); if (!r) return false; // (T377: over the drawing's few searches and the paths' way not clear: next drawing)
+      to.route = r;
+      if (r === HOP) { to.cum = [0]; return false; }
       const cum = [0]; for (let i = 1; i < to.route.length; i++) cum.push(cum[i - 1]! + Math.hypot(to.route[i]!.x - to.route[i - 1]!.x, to.route[i]!.y - to.route[i - 1]!.y));
       to.cum = cum;
     }
+    if (to.route === HOP) return false; // (no way over the water: carried, not drawn)
     const R = to.route, C = to.cum!, L = C[C.length - 1]!, u = to.arr > t0 ? Math.min(1, Math.max(0, (m - t0) / (to.arr - t0))) : 1, d = u * L;
     let i = 1; while (i < R.length - 1 && C[i]! < d) i++;
     const a = R[i - 1]!, e = R[i]!, sl = C[i]! - C[i - 1]!, k = sl > 0 ? (d - C[i - 1]!) / sl : 1;

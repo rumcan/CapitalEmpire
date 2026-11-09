@@ -2,6 +2,7 @@
 // frames, and interpolates the cars between them so they move smoothly at 60 fps while the sim runs at 10 Hz.
 import SimWorker from './sim.worker?worker';
 import type { GallerySpot } from '../golf/galleries';
+import type { WalkField } from '../golf/walkfield';
 import type { NetOp } from '../ground-protocol';
 import { CAR_SCALE, type Drawable } from '../sprites';
 import { carHeading, facings } from '../traffic';
@@ -194,6 +195,8 @@ export class SimClient {
   town: TownClock = townClockFor(1440);
   /** the galleries' spots (LEAD.md M2.2): sent with the gates, and when the holes change */
   setSpots(spots: GallerySpot[]) { this.post({ t: 'spots', spots }); }
+  /** T377: the course's walk field for the spectators' ways (the worker keeps a copy: the field's bytes go over once per course change, not per frame) */
+  setWalkField(f: WalkField | null) { this.post({ t: 'walkField', f }); }
   /** the golf play's featured holes (docs/GOLF-PLAY.md decision 6): the crowd's spots on these holes draw more; [] none (see City.setFeatured) */
   setFeatured(holes: number[]) { this.post({ t: 'featured', holes }); }
   /** the course's gates (LEAD.md M2.1): sent whenever the placed gate structures change */

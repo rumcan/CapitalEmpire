@@ -2,13 +2,26 @@
 // gate), each lot stop's queue (a FIFO of parties), the fans on each bus by town, each gate's queue (golf, LEAD.md M2.1: a FIFO of parties
 // admitted at the gate's rate) and the fans at the doors (inside). City drives it (see City.step); the counts add up: parked * PARTY =
 // walking + at a stop + on a bus + at a gate + at the doors.
+import type { Pt } from '../network';
 import type { CrowdSave } from './daysave';
 
-/** a group of n fans of town walking straight from (x, y) to (tx, ty) (tiles): stage 0 to the lot stop of route (then it queues there), stage 1 to a
+/** a group of n fans of town walking from (x, y) to (tx, ty) (tiles): stage 0 to the lot stop of route (then it queues there), stage 1 to a
  *  door (then the fans are at the doors), stage 2 to gate `route` (then it queues there), stage 3 (already inside) to gallery spot `route`
  *  (then they stand there), stage 4 (going home, LEAD.md M2.3) back to the bay of parked car `route` (then onBack); route -1 for a stage 1
- *  group from no route */
-export interface Walker { x: number; y: number; tx: number; ty: number; n: number; town: number; stage: 0 | 1 | 2 | 3 | 4; route: number }
+ *  group from no route. T377 (#1033): straight at first, now by the way the crowd's router gives it (round water, greens, tees and bunkers, across a fairway
+ *  only where it must): `via`, the waypoints after its place (the last is its target) and `vi`, the next one; absent until it first steps (the router is
+ *  asked then, once; a save does not keep it: a loaded day works it out again). `id` is its own number (the view seeds each person's pace, phase and
+ *  drift from it: a person is the same person from frame to frame) and `v` its pace as a share of the walking speed (0.85 to 1.15): not in step with the next group */
+export interface Walker { x: number; y: number; tx: number; ty: number; n: number; town: number; stage: 0 | 1 | 2 | 3 | 4; route: number; id?: number; v?: number; via?: Pt[] | null; vi?: number }
+/** T377: the way from (x, y) to (tx, ty): the waypoints after the start (the last the target); null for a straight line (no field, an end off it); an empty way when
+ *  the ground has none (the group then does not walk it: it lands at once); undefined when it is not worked out yet (the City's budget of ways a step is spent: the
+ *  group waits where it is and asks again next step) */
+export type WalkRouter = (x: number, y: number, tx: number, ty: number) => Pt[] | null | undefined;
+/** T377: a group's pace from its id, 0.85 to 1.15 of the walking speed (a hash, so a loaded day gives the same groups the same paces) */
+export function walkPace(id: number): number {
+  let h = Math.imul(id | 0, 0x9e3779b1) ^ 0x7f4a7c15; h = Math.imul(h ^ (h >>> 16), 0x85ebca6b); h = Math.imul(h ^ (h >>> 13), 0xc2b2ae35); h ^= h >>> 16;
+  return 0.85 + 0.3 * ((h >>> 0) / 4294967296);
+}
 /** a party waiting at a lot stop or a gate: its town, its fans, and (gates) the time it joined the queue */
 export interface Party { town: number; n: number; since?: number }
 /** per town: the fans at the doors (arrived: inside), at a lot stop's queue, on a bus, and at a gate's queue */
@@ -18,6 +31,8 @@ export interface FanCounts { fans: number[]; atStop: number[]; onBus: number[]; 
 export interface GateStats { admitted: number; waitSum: number; waitMax: number; late: number }
 /** the most walker groups at once: over it the oldest group lands at once (see Crowd.add) */
 export const WALK_CAP = 6000;
+/** T377: the floats a walker group takes in the frame's buffer (city.walkBuf): x, y, n fans, stage, the point it is heading for, its id */
+export const WALK_STRIDE = 7;
 
 /** the crowd of one round: its towns' fans by place (see FanCounts) */
 export class Crowd {
@@ -45,6 +60,12 @@ export class Crowd {
   onIn: ((town: number, n: number, x: number, y: number) => void) | null = null;
   /** called when a party going home reaches its car's bay (stage 4; route: the car): the City drives the car home */
   onBack: ((town: number, route: number) => void) | null = null;
+  /** T377: the way a walker takes (the City sets it from the day's walk field: golf/walkfield.ts); null: every walker straight at its target */
+  router: WalkRouter | null = null;
+  /** T377: whether each walker group has a pace of its own (0.85 to 1.15 of the walking speed: the golf tournament day's crowd; the City sets it); false: every group walks at the one speed */
+  varied = false;
+  /** T377: the next walker id */
+  private nextId = 1;
   /** the number of towns (the length of each per-town list) */
   readonly towns: number;
 
@@ -106,6 +127,7 @@ export class Crowd {
   /** adds a walker group. Over WALK_CAP the oldest group lands at once (a stage 0 group joins its queue, a stage 1 group arrives) */
   add(w: Walker): void {
     if (this.walkers.length >= WALK_CAP) this.land(this.walkers.shift()!);
+    w.id ??= this.nextId++; w.v ??= this.varied ? walkPace(w.id) : 1;
     this.walkers.push(w);
   }
   /** a group at its target: a stage 0 group joins its lot stop's queue, a stage 2 group its gate's queue, a stage 1 group's fans arrive at
@@ -117,13 +139,31 @@ export class Crowd {
     else if (w.stage === 4) this.onBack?.(w.town, w.route);
     else { this.arrive(w.town, w.n); this.onIn?.(w.town, w.n, w.tx, w.ty); }
   }
-  /** moves every walker dist tiles straight at its target; a group that reaches it lands (see land) */
+  /** moves every walker dist tiles (times its own pace, 0.85 to 1.15) along its way: the router's waypoints (asked once, the first time it steps), else
+   *  straight at its target; a group that reaches its target lands (see land). A step is the same few operations for any length of way (T377: the way
+   *  is worked out once, not each frame) */
   step(dist: number): void {
     let w = 0;
     for (const g of this.walkers) {
-      const dx = g.tx - g.x, dy = g.ty - g.y, L = Math.hypot(dx, dy);
-      if (L <= dist) { this.land(g); continue; }
-      g.x += dx / L * dist; g.y += dy / L * dist; this.walkers[w++] = g;
+      if (g.via === undefined) {
+        const r = this.router ? this.router(g.x, g.y, g.tx, g.ty) : null;
+        if (r === undefined) { this.walkers[w++] = g; continue; } // (its way is not worked out yet: it waits a step)
+        g.via = r; g.vi = 0;
+      }
+      // (an empty way: the ground has none from here to there, round water say: the group does not cross it, it is there)
+      if (g.via && !g.via.length) { this.land(g); continue; }
+      const via = g.via; let left = dist * (g.v ?? 1), landed = false;
+      for (;;) {
+        const tx = via ? via[g.vi!]!.x : g.tx, ty = via ? via[g.vi!]!.y : g.ty, dx = tx - g.x, dy = ty - g.y, L = Math.hypot(dx, dy);
+        if (L <= left) {
+          g.x = tx; g.y = ty; left -= L;
+          if (via && g.vi! < via.length - 1) { g.vi!++; continue; }
+          landed = true; break;
+        }
+        g.x += dx / L * left; g.y += dy / L * left; break;
+      }
+      if (landed) { this.land(g); continue; }
+      this.walkers[w++] = g;
     }
     this.walkers.length = w;
   }
@@ -155,7 +195,7 @@ export class Crowd {
     this.walkers = [];
     for (let i = 0; i + 7 < s.walkers.length; i += 8) {
       const [x, y, tx, ty, n, k, stage, route] = s.walkers.slice(i, i + 8) as number[];
-      if (town(k!) && stage! >= 0 && stage! <= 4) this.walkers.push({ x: x!, y: y!, tx: tx!, ty: ty!, n: n!, town: k!, stage: stage as Walker['stage'], route: route! });
+      if (town(k!) && stage! >= 0 && stage! <= 4) { const id = this.nextId++; this.walkers.push({ x: x!, y: y!, tx: tx!, ty: ty!, n: n!, town: k!, stage: stage as Walker['stage'], route: route!, id, v: this.varied ? walkPace(id) : 1 }); } // (T377: its way is worked out when it first steps)
     }
     const parties = (a: number[], w: number): Party[] => { const out: Party[] = []; for (let i = 0; i + w - 1 < a.length; i += w) if (town(a[i]!)) out.push(w === 3 ? { town: a[i]!, n: a[i + 1]!, since: a[i + 2]! } : { town: a[i]!, n: a[i + 1]! }); return out; };
     this.queue = this.queue.map((_, r) => parties(s.queue[r] ?? [], 2));
