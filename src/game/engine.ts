@@ -162,6 +162,7 @@ import { WIN_POP, classUnlocked, junctionUnlocked, tunnelsUnlocked, unlockOf } f
 import type { DisasterNote } from './city';
 import type { DisasterKind } from './ext/disasters';
 import { normalizeGolfSave, stampWeather, weatherOn, type GolfPlaySave, type GolfSave, type GolfView, type Rect } from './golf/mode';
+import { CardFold } from './golf/cardfold';
 import { courseSlopeAt, createCourseHeightField, flattenCourseCorridor, loadCourseHeight, saveCourseHeight, unionBox as unionCourseBox, type CourseHeightField, type CourseHeightSaveChunk, type CourseTileBox } from './ext/course-height';
 import { HEIGHT_LIGHT_STRENGTH, clampHeightLight } from './ext/course-height/light';
 import { planGolfGame } from './golf/start';
@@ -6606,6 +6607,21 @@ export class Game {
       default: this.uiCards?.close(c); this.emit(); // the App's: Help, the gear menu, My looks, Course stats
     }
   }
+  // ---------- T348 (#990): the cards at the right edge fold away while your shot is open (golf/cardfold.ts) ----------
+  /** the fold's state machine: it asks, each frame, which cards to close when a shot opens and which to bring back once its run is over */
+  private readonly cardFold = new CardFold();
+  /** whether the cards are folded away for a shot now: the guide cards (the tutorial, the range guide, the tournament checklist) hold no open state, so App.tsx keeps them away while this is true */
+  cardsFolded(): boolean { return this.cardFold.on; }
+  /** each frame: the cards of the T392 to T394 stack that are open when your shot (or your turn in the tournament) opens are closed, and come back FOLD_BACK_MS after the last shot of the run closes (a card you opened during the shot stays,
+   *  one a neighbour took the place of does not come back). They are closed by their state, so the Esc ladder (escRungs) never lists a card that is not on the screen and the stack's columns close up (App.tsx) */
+  private stepFoldCards(now: number) {
+    const act = this.cardFold.step(now, !!this.shot, { bag: this.bagCardOpen, cards: this.cardsCardOpen, player: this.playerCardOpen, staff: this.staffCardOpen, club: this.clubCardOpen, range: this.range.cardOpen, event: this.eventCardOpen });
+    if (!act) return;
+    const c = act.close, b = act.back;
+    if (c) { if (c.bag) this.bagCardOpen = false; if (c.cards) this.cardsCardOpen = false; if (c.player) this.playerCardOpen = false; if (c.staff) this.staffCardOpen = false; if (c.club) this.clubCardOpen = false; if (c.range) this.range.cardOpen = false; if (c.event) this.eventCardOpen = null; }
+    if (b) { if (b.bag) this.bagCardOpen = true; if (b.cards) this.cardsCardOpen = true; if (b.player) this.playerCardOpen = true; if (b.staff) this.staffCardOpen = true; if (b.club && this.hasClubhouse) this.clubCardOpen = true; if (b.range && this.range.view()) this.range.cardOpen = true; if (b.event) this.eventCardOpen = b.event; }
+    this.emit();
+  }
   /** Esc's tool rung: the tool steps back one stage or drops what is in hand (the clubhouse, the brush's stroke or outline, a bay row, the
    *  junction picked, the car watched, the bus stop picked, the route, the selection, the pin or tee picked, the Land or Holes switch);
    *  true when it did (else Esc puts the tool down for Select) */
@@ -12105,6 +12121,7 @@ export class Game {
     const tier = z < PLANNER_Z ? 'planner' : z < DISTRICT_Z ? 'district' : 'street'; this.perf.tier = tier;
     // the golf round moves on before the movers (the golfers) and the overlay (the balls) read it
     this.updateDayPins(now); this.watchWalkField(now); this.updatePlay(now); this.updateEveryday(now); this.stepStartRound(); // T269: the day's cups first, so the day's play reads them
+    this.stepFoldCards(now); // T348: the cards at the right edge fold away while a shot is open and come back after it
     this.watchFrame(); // T320: the camera on the golfers followed
     if (this.golf) this.monthMoney.note(this.golfMonthAt(now), this.money); // T233: the money chip's change a month
     // T226: the colour grade this frame (grade.ts: none when off, easing off after dusk; the scene then draws straight to the screen)
