@@ -37,6 +37,8 @@ async function load() {
   await new Promise(r => setTimeout(r, after * 1000));
   stop = true; await poll;
   const last = series.at(-1) ?? { v8: 0, emb: 0, back: 0, pm: 0 };
+  // (the picking masks the engine made from the atlas pages, one a page, each with opaque bits: the decoded pixels they came from are given back as soon as a mask is made)
+  const masks = await page.evaluate(() => { const a = window.__game?.pageAlpha ?? []; return { pages: a.length, withBits: a.filter(m => m && m.bits && m.bits.some(b => b !== 0)).length }; }).catch(() => ({ pages: -1, withBits: -1 }));
   // (the heap profiler is switched on only now, for one forced collection: what the page keeps)
   await cdp.send('HeapProfiler.enable'); await cdp.send('HeapProfiler.collectGarbage'); await new Promise(r => setTimeout(r, 1500)); await cdp.send('HeapProfiler.collectGarbage');
   const k = await cdp.send('Runtime.getHeapUsage'), keptPm = await page.evaluate(() => Math.round(performance.memory.usedJSHeapSize / 1048576));
@@ -48,6 +50,7 @@ async function load() {
     peak: { v8: Math.max(...series.map(s => s.v8)), typedArrays: Math.max(...series.map(s => s.back)), performanceMemory: Math.max(...series.map(s => s.pm)) },
     end: { v8: last.v8, typedArrays: last.back, performanceMemory: last.pm },
     kept: { v8: mb(k.usedSize), typedArrays: mb(k.backingStorageSize), performanceMemory: keptPm },
+    pickingMasks: masks,
     series: series.filter((s, i, a) => i === 0 || Math.floor(s.t) !== Math.floor(a[i - 1].t)).map(s => `${s.t.toFixed(0)}:${s.v8}+${s.emb}+${s.back}=${s.pm}`).join(' '),
   };
 }
@@ -56,7 +59,7 @@ const results = [];
 const f = r => `${r.v8} / ${r.typedArrays} / ${r.performanceMemory}`;
 for (let i = 0; i < runs; i++) {
   const r = await load(); results.push(r);
-  console.log(`load ${i + 1}: ready ${r.readyAtSec} s | after load ${f(r.afterLoad)} | peak ${f(r.peak)} | end ${f(r.end)} | kept after a full collection ${f(r.kept)}   (MB: V8 / typed arrays / performance.memory)`);
+  console.log(`load ${i + 1}: ready ${r.readyAtSec} s | after load ${f(r.afterLoad)} | peak ${f(r.peak)} | end ${f(r.end)} | kept after a full collection ${f(r.kept)}   (MB: V8 / typed arrays / performance.memory) | picking masks ${r.pickingMasks.withBits}/${r.pickingMasks.pages} pages have bits`);
 }
 fs.mkdirSync(path.dirname(outFile), { recursive: true });
 fs.writeFileSync(outFile, JSON.stringify({ base, poll: pollMs, after, results }, null, 1));
