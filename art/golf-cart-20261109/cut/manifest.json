@@ -4,7 +4,7 @@
   "subject": "business:golf-cart",
   "name": "Hire golf cart",
   "version": 1,
-  "review": "candidate",
+  "review": "approved",
   "source": {
     "views": {
       "normalNE": {
