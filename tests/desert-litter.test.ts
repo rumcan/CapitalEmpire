@@ -10,7 +10,7 @@ import { LOT_DECALS } from '../src/game/lot-decals';
 import { NATURE } from '../src/game/nature-patches';
 import { LEAF_TINTS } from '../src/game/leaf-fall';
 import { leafAtlasAt } from '../src/game/leaf-atlas';
-import { BRUSH, DESERT_TINTS, DESERT_TINT_LOOK, SAGE, SAND, STONE, desertLeafSheet, desertLotDecals, desertMapDecals, desertNature } from '../src/game/desert-litter';
+import { BRUSH, DESERT_TINTS, DESERT_TINT_LOOK, GRAIN, SAGE, SAND, STONE, desertLeafSheet, desertLotDecals, desertMapDecals, desertNature } from '../src/game/desert-litter';
 import type { Cnv } from '../src/game/canvas2d';
 
 /** a canvas that records what is drawn on it: its calls, and every colour it was given */
@@ -46,7 +46,7 @@ describe('the desert litter\'s colours (T384)', () => {
   it('the test knows an autumn leaf: the leaf sprites\' and the leaf tints\' reds, oranges and greens are caught, sand, stone, brush and sage are not', () => {
     // (the oak's brown tint, #6f4a2c, is a dry brown too: not told apart by colour, and not needed: the desert's tints are checked to be its own below)
     for (const c of ['#c8561e', '#e08a2a', '#a8321c', '#d9b13b', '#b8451d', '#8f2d14', '#f0c040', '#a8281a', '#d6a12c', '#71882e']) assert.ok(autumn(c), `${c} is an autumn leaf`);
-    for (const c of [...SAND, ...STONE, ...BRUSH, ...SAGE, ...DESERT_TINTS.filter(Boolean)]) assert.ok(!autumn(c), `${c} is not`);
+    for (const c of [...SAND, ...STONE, ...BRUSH, ...SAGE, ...GRAIN, ...DESERT_TINTS.filter(Boolean)]) assert.ok(!autumn(c), `${c} is not`);
   });
   it('the leaf sheet is drawn in desert colours only, a cell for every leaf sprite (the same cells), each clipped to its own', () => {
     const out = desertLeafSheet() as unknown as FakeCanvas;
@@ -55,6 +55,20 @@ describe('the desert litter\'s colours (T384)', () => {
     const clears = out.calls.filter(c => c[0] === 'clearRect'), clips = out.calls.filter(c => c[0] === 'rect');
     assert.equal(clears.length, LEAVES.length); assert.equal(clips.length, LEAVES.length);
     LEAVES.forEach((l, k) => { const want = [(l.i % LEAF_COLS) * LEAF_CELL, Math.floor(l.i / LEAF_COLS) * LEAF_CELL, LEAF_CELL, LEAF_CELL]; assert.deepEqual(clears[k]!.slice(1), want, `sprite ${l.i}'s cell`); assert.deepEqual(clips[k]!.slice(1), want); });
+  });
+  it('the road litter\'s grain sheet is the same cells in warm sand and stone colours only, its own pictures (not the chunky sheet\'s), the same twice', () => {
+    const grain = desertLeafSheet(true) as unknown as FakeCanvas, chunky = desertLeafSheet() as unknown as FakeCanvas, again = desertLeafSheet(true) as unknown as FakeCanvas;
+    assert.equal(grain.width, chunky.width); assert.equal(grain.height, chunky.height);
+    const rects = (c: FakeCanvas) => c.calls.filter(x => x[0] === 'clearRect').map(x => x.slice(1));
+    assert.deepEqual(rects(grain), rects(chunky), 'the same cells: the autumn picker finds them');
+    for (const c of grain.colours) assert.ok(!autumn(c), `${c} is not a leaf colour`);
+    assert.ok(GRAIN.some(t => grain.colours.has(t) || [...grain.colours].some(c => c.startsWith('rgba('))), 'the grains\' warm tones are drawn');
+    assert.notEqual(JSON.stringify(grain.calls), JSON.stringify(chunky.calls), 'a different sheet');
+    assert.equal(JSON.stringify(grain.calls), JSON.stringify(again.calls), 'the same twice');
+    // the grains are tiny: the biggest ellipse the grain sheet draws is smaller than the chunky sheet's, and most of what it draws is a grain
+    const radii = (c: FakeCanvas) => c.calls.filter(x => x[0] === 'ellipse').map(x => Math.max(Number(x[3]), Number(x[4])));
+    assert.ok(Math.max(...radii(grain)) < Math.max(...radii(chunky)), 'smaller pieces than the chunky sheet\'s');
+    assert.ok(radii(grain).filter(v => v <= 2.6).length > radii(grain).length * 0.5, 'mostly grains');
   });
   it('the decal atlases are repainted on exactly the autumn pictures\' rects: the lots\' leaf group, the map decals, the nature patches; and in desert colours only', () => {
     const rects = (cs: Call[]) => cs.filter(c => c[0] === 'clearRect').map(c => c.slice(1));
@@ -90,6 +104,7 @@ describe('the one switch drives every leaf source (T384)', () => {
     assert.ok(/get desertLitter\(\): boolean \{ return !!this\.surfaces\.desert && !this\.surfaces\.autumnLitter; \}/.test(tex) && /leafSheet\(desert = this\.desertLitter\)/.test(tex) && /desertLotDecalSheet\(/.test(tex) && /mapDecalArt\(/.test(tex), 'the textures give the sheet for the theme');
     assert.ok(!/tex\.leaves\b/.test(ren) && !/this\.tex\.nature\b/.test(ren) && !/this\.tex\.decals\b/.test(ren), 'no leaf source reads an autumn sheet directly');
     assert.ok(/tex\.leafSheet\(\)/.test(ren) && /this\.tex\.desertLotDecalSheet\(\)/.test(ren) && /this\.tex\.mapDecalArt\(\)/.test(ren));
+    assert.ok(/atlas = tex\.litterSheet\(\)/.test(ren) && /litterSheet\(desert = this\.desertLitter\)/.test(tex), 'the road litter draws the grain sheet');
     assert.ok(/DESERT_TINTS/.test(ren) && /leafAtlases = new Map<string,/.test(ren), 'the fallen leaves\' atlas is kept for each theme');
   });
   it('the theme switch keeps the fallen leaves\' density in the desert (it was zeroed: the desert had none): the same stamps, the same cost as autumn', () => {

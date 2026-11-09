@@ -20,6 +20,8 @@ export const STONE = ['#ad8c66', '#966f48', '#bba07e', '#a39482', '#8a7b69', '#7
 export const BRUSH = ['#6e4f32', '#8a6a42', '#5a4128', '#9a7b50'] as const;
 export const SAGE = ['#8c9468', '#7f8860', '#a3a67b'] as const;
 export const DUST = '#caa878';
+/** the road litter's grains: warm sand and orange-tan (a cream chip on dark asphalt reads as a chip; a warm grain reads as sand) */
+export const GRAIN = ['#d6a45a', '#cc9c58', '#dfb36b', '#bf9355', '#b88a56'] as const;
 /** the straw of a dry tuft */
 export const STRAW = ['#c9b88a', '#b9a574', '#d3c295'] as const;
 /** the tints the fallen leaves' atlas lays over the desert sprites in place of the leaves' (leaf-atlas.ts: as drawn, sand, stone, dry brown, sage), and how (alpha, the multiply) */
@@ -123,6 +125,19 @@ export function sandStreak(g: C2D, x: number, y: number, len: number, r: () => n
   pebble(g, len * (r() < 0.5 ? -0.42 : 0.42), (r() - 0.5) * 4, 2.8 + r() * 1.6, r);
   g.restore();
 }
+/** a scatter of sand grains within an ellipse (sx, sy) about (x, y), turned by `ang`: `n` tiny warm grains (radius rmin to rmax px, a glint on the side toward the sun) over a very faint smudge of sand, so they read as the grit of a drift and not as dots */
+export function grains(g: C2D, x: number, y: number, sx: number, sy: number, n: number, rmin: number, rmax: number, r: () => number, ang = 0): void {
+  g.save(); g.translate(x, y); g.rotate(ang);
+  const tone = pick(GRAIN, r), gr = g.createRadialGradient(0, 0, 0, 0, 0, sx);
+  gr.addColorStop(0, rgba(tone, 0.24)); gr.addColorStop(0.6, rgba(tone, 0.12)); gr.addColorStop(1, rgba(tone, 0));
+  g.save(); g.scale(1, sy / sx); g.fillStyle = gr; g.beginPath(); g.arc(0, 0, sx, 0, TAU); g.fill(); g.restore();
+  for (let k = 0; k < n; k++) {
+    const a = r() * TAU, d = Math.sqrt(r()), px = Math.cos(a) * d * sx, py = Math.sin(a) * d * sy, rad = rmin + r() * (rmax - rmin);
+    g.fillStyle = rgba(pick(GRAIN, r), 0.92); g.beginPath(); g.ellipse(px, py, rad, rad * (0.7 + r() * 0.3), r() * TAU, 0, TAU); g.fill();
+    g.fillStyle = 'rgba(255,236,196,0.3)'; g.fillRect(px + rad * 0.1, py - rad * 0.55, Math.max(0.5, rad * 0.55), Math.max(0.5, rad * 0.4));
+  }
+  g.restore();
+}
 
 /* ---- the pictures (a rect of an atlas: x0, y0, w, h in px) ---- */
 type Rect = { x: number; y: number; w: number; h: number };
@@ -184,10 +199,11 @@ function repaint(rects: readonly Rect[], seed: number, paint: (g: C2D, v: Rect, 
 
 /** the leaf sprite sheet as desert litter: each LEAVES cell (the same 40 px cells, the same sizes: the autumn picker finds them) holds a pebble, a clump of sand, two pebbles or grit (the round ones: pebbles and sand) or a twig, a tuft of
  *  dry grass, a curled dry frond or a tumbleweed tuft (the long ones: brush) */
-export function desertLeafSheet(): Cnv {
+export function desertLeafSheet(grain = false): Cnv {
   const cell = (i: number): Rect => ({ x: (i % LEAF_COLS) * LEAF_CELL, y: Math.floor(i / LEAF_COLS) * LEAF_CELL, w: LEAF_CELL, h: LEAF_CELL });
-  return repaint(LEAVES.map(l => cell(l.i)), 0xde5e47, (g, v, k, r) => {
+  return repaint(LEAVES.map(l => cell(l.i)), grain ? 0x6a1d5e : 0xde5e47, (g, v, k, r) => {
     const l = LEAVES[k]!, cx = v.x + v.w / 2, cy = v.y + v.h / 2, q = l.i % 5;
+    if (grain) { grainCell(g, cx, cy, l, q, r); return; }
     if (l.round) {
       // (mostly sand, which is paler than the ground: a pile of dark stones was a grey stain on the orange, and a pale drift with a few stones in it is what the wind leaves)
       if (q === 0 || q === 1 || (q === 2 && l.i % 2)) sandClump(g, cx, cy, q === 0 ? 14 : q === 1 ? 11 : 12, r);
@@ -203,6 +219,23 @@ export function desertLeafSheet(): Cnv {
       else tumbleweed(g, cx, cy, 13 + (l.dim > 33 ? 2 : 0), r, true);
     }
   });
+}
+/** a cell of the grain sheet, the road litter's (drawLitter: the gutters' clumps and strays, the scatter on open ground; the fallen leaves' piles and the litter under trees keep the chunkier sheet): sand grains and tiny stones in warm tones, a few
+ *  small pieces of brush: the lead's review, 2026-11-09, found the pale chips on the road borderline, "smaller and warmer, more sand grains than chips" */
+function grainCell(g: C2D, cx: number, cy: number, l: { i: number; dim: number; round: boolean }, q: number, r: () => number): void {
+  const warm = () => pick(STONE.slice(0, 3), r);
+  if (l.round) {
+    if (q === 0 || q === 1 || (q === 2 && l.i % 2)) grains(g, cx, cy, q === 0 ? 11 : 9, q === 0 ? 7 : 6, 9 + q * 2, 0.9, 2.2, r, r() * TAU);
+    else if (q === 2) { pebble(g, cx, cy, 5 + r() * 1.5, r, warm()); grains(g, cx, cy, 8, 5, 5, 0.9, 1.8, r); }
+    else if (q === 3) { pebble(g, cx - 4, cy + 2, 3.6, r, warm()); pebble(g, cx + 5, cy - 3, 2.8, r, warm()); grains(g, cx, cy, 9, 6, 6, 0.8, 1.6, r); }
+    else grains(g, cx, cy, 11, 8, 16, 0.8, 1.7, r, r() * TAU);
+  } else {
+    const t = l.i % 4;
+    if (t === 0) grains(g, cx, cy, 16, 4.5, 18, 0.9, 2.1, r, (r() - 0.5) * 0.5); // a streak of grains along the wind
+    else if (t === 1) brushChunk(g, cx, cy, 18, r);
+    else if (t === 2) strawTuft(g, cx, cy + 9, 20, r);
+    else tumbleweed(g, cx, cy, 9.5, r, true);
+  }
 }
 /** the lots' leaf decals (lot-decals.ts group 'leaves') as desert litter, on their own rects of the atlas (a canvas as high as they reach: drawMarks reads these decals from it and the rest from the autumn atlas): drifts, heaps of sand,
  *  scatters of grit and dry brush, picked by the decal's own name */

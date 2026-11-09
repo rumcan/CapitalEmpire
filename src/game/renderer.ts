@@ -4152,7 +4152,7 @@ export class GroundPainter {
     return a;
   }
   private drawLitter(ctx: C2D, net: FxView, L: number, M: DOMMatrix, box: BBox, W: number, H: number) {
-    const [tx0, ty0, tx1, ty1] = box, tex = this.tex, atlas = tex.leafSheet(), occAt = (x: number, y: number) => this.net.occAt(x, y); // (T384: the desert's litter in the desert theme)
+    const [tx0, ty0, tx1, ty1] = box, tex = this.tex, atlas = tex.litterSheet(), occAt = (x: number, y: number) => this.net.occAt(x, y); // (T384: the desert's litter in the desert theme)
     const lb = this.buffer('leaves', W, H), g = ctx2d(lb); g.imageSmoothingEnabled = true; g.imageSmoothingQuality = 'high';
     const pxPerM = 45.25 * L * (tex.desertLitter ? DESERT_LITTER_SCALE : 1), shadowDx = 0.8 * L, shadowDy = 1.1 * L; // (T384: the desert's litter a little bigger than the leaves: the same places and counts)
     const draw = (x: number, y: number, ang: number, sizeM: number, idx: number, pass: number) => {

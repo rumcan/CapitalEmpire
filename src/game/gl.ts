@@ -218,8 +218,8 @@ void main() {
   // T176: a tinted sprite (a tree a Build would clear): its own light and shade in one warm rust red (its luminance times the tint), so it
   // reads as marked even among autumn reds, and the art's own darks stay dark (the owner's light rule)
   if (vTint > 0.5 && vTint < 1.5) { float l = dot(c.rgb, vec3(0.299, 0.587, 0.114)); c.rgb = min(vec3(l) * vec3(1.8, 0.66, 0.44), vec3(c.a)); }
-  // T384: a world building in the desert theme (roof-dust.ts): the leaves painted in its roof (saturated oranges and yellows) take the colour of dry sand at their own brightness: the dust of the valleys and gutters
-  else if (vTint > ${ROOF_DUST_CODE}.5) c.rgb = roofDust(c.rgb / c.a) * c.a;
+  // T384: a world building in the desert theme (roof-dust.ts): the leaves painted in its roof take the colour of the roof round them, and a soft warm film of dust settles in the roof's creases
+  else if (vTint > ${ROOF_DUST_CODE}.5) c.rgb = roofDust(c.rgb / c.a, uv, vUV.z) * c.a;
   // T228: a painted car (car-paint.ts): its body's pixels take its paint at their own light and shade (premultiplied: by its coverage)
   else if (vTint > 1.5) c.rgb = carPaint(c.rgb / c.a, vTint - 1.0) * c.a;
   o = c * vAlpha;
