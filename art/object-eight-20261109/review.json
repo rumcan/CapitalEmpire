@@ -302,6 +302,46 @@
     "W"
    ],
    "notes": "the corners show the VIDEO storefront on the lower-right face, so N is the window wall on their lower-left face, as the sheet's N cell; autumn leaves and pumpkins from the old export (the corners are clean)"
+  },
+  "golf~clubhouse-shanty": {
+   "accept": true,
+   "cells": [
+    "N",
+    "E",
+    "S",
+    "W"
+   ],
+   "notes": "doorway and bench on N as on NE; it also has the old square straight-on set, which still wins on straight roads; the tarp-shack look the owner rejected for the clubhouse (its old eight-view registration is disabled)"
+  },
+  "golf~food-tent": {
+   "accept": true,
+   "cells": [
+    "N",
+    "E",
+    "S",
+    "W"
+   ],
+   "notes": "counter and stools on N as on NE; the straight views add flower pots round the tent (the corners have none)"
+  },
+  "golf~leaderboard": {
+   "accept": true,
+   "cells": [
+    "N",
+    "E",
+    "S",
+    "W"
+   ],
+   "notes": "the board face with the ladder on its right on N as on NE; E and W are thin side profiles of the stilted frame, S the braced back (poor fit, IoU 0.68-0.85: the board is thin)"
+  },
+  "golf~toilet-block": {
+   "accept": true,
+   "cells": [
+    "N",
+    "E",
+    "S",
+    "W"
+   ],
+   "notes": "the row of four doors with the sink on its right on N as on NE"
   }
  },
  "rejects": {
@@ -319,12 +359,19 @@
   "world~drivein_marquee": "a flat sign: E and W are edge-on slivers and the back (S) shows the face with text; the corners have a blank back (the owner flagged the corners angles-wrong too)",
   "variation~ref-building-house-cottage-fc52ce66-plain~1": "the sheet is RGB with a checkerboard baked into the background (no alpha): re-queue with true transparency (a flat dark background keys cleanly)",
   "world~diner": "the sheet is RGB with a checkerboard baked into the background (no alpha): re-queue with true transparency (a flat dark background keys cleanly)",
-  "world~house_5": "the sheet is RGB with a checkerboard baked into the background (no alpha): re-queue with true transparency (a flat dark background keys cleanly)"
+  "world~house_5": "the sheet is RGB with a checkerboard baked into the background (no alpha): re-queue with true transparency (a flat dark background keys cleanly)",
+  "golf~grandstand-s": "the sheet is RGB with a checkerboard baked into the background (no alpha): re-queue with true transparency (a flat dark background keys cleanly)",
+  "business~golf-cart-garage": "two of the four buildings touch in the sheet (E and W run into each other): they cannot be cut apart, re-queue with a gap; also business artwork with a 1 x 1 placeholder footprint (see skipped)",
+  "business~golf-clubhouse": "buildings touch in the sheet (the cells run into each other): they cannot be cut apart, re-queue with a gap; also business artwork with a 1 x 1 placeholder footprint (see skipped)"
  },
  "skipped": {
   "business~estate-villa": "business artwork: its library box is a 1 x 1 placeholder (no footprint to fit or place) and the business system, not the lot composer, draws it; the sheet itself is clean, keep it for when the business art gets a footprint",
   "variation~town-firestation-north-0ac85582-plain~1": "not in the game's library (a removed variation): there is no picture to attach the views to",
   "world~arcade": "already an eight-view set (T375): the new sheet is an alternative, not imported",
-  "world~video_rental": "already an eight-view set (T375, the Video Vault): the new sheet is RGB with a baked checkerboard and not needed"
+  "world~video_rental": "already an eight-view set (T375, the Video Vault): the new sheet is RGB with a baked checkerboard and not needed",
+  "business~golf-halfway-pavilion": "business artwork: its library box is a 1 x 1 placeholder (no footprint to fit or place); the sheet cuts cleanly (kept in the scratch project), import it when the business art gets a footprint",
+  "business~golf-pro-shop": "business artwork: its library box is a 1 x 1 placeholder (no footprint to fit or place); the sheet cuts cleanly (kept in the scratch project), import it when the business art gets a footprint",
+  "business~golf-driving-range": "not in the game's library as a four-view building (business:golf-driving-range has no pictures there): no picture to attach the views to",
+  "business~golf-cart": "a vehicle (axisturn and corners sheets of the golf cart): not a building subject, no library picture named business:golf-cart; belongs with the cars (eight-way heading art)"
  }
 }

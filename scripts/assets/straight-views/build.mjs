@@ -1,6 +1,6 @@
 // T398 (#1070): the reviewed straight-on views of the corners-only buildings into the game as object-eight sets (the T375 format: the Video Vault, the Arcade).
 //   node scripts/assets/straight-views/build.mjs --prepare [--crops DIR] [disk-id ...]   per building: art/object-eight-20261109/<slug>/{src,input.json,cut}
-//   node scripts/assets/straight-views/build.mjs --integrate [disk-id ...]                approves their cut manifests and writes the shared atlas pages + library
+//   node scripts/assets/straight-views/build.mjs --integrate [--tag TAG] [disk-id ...]   approves their cut manifests and writes the shared atlas pages + library
 // A set is eight views: the four normal ones are the building's own existing corner pictures (reused: aliases of their atlas cells, so the corners draw exactly as before and
 // no pixel is stored twice), the four yaw8 ones are the new straight-on views (N, E, S, W: the building turned 37, 127, 217, 307 degrees, i.e. 8 degrees off square) as new
 // atlas cells at the scale and anchors measure.mjs read. review.json holds the review (which sheet cell is which view, and the reason for every reject), measurements.json
@@ -11,11 +11,13 @@ import sharp from 'sharp';
 import { cutObject, integrateObjects } from '../import-object-eight.mjs';
 
 const ROOT = path.resolve(path.dirname(new URL(import.meta.url).pathname.replace(/^\/(\w:)/, '$1')), '../../..');
-const DIR = path.join(ROOT, 'art/object-eight-20261109'), TAG = 'straight-views-20261109', NATIVE = Math.SQRT2 * 32, PAD = 8;
+const DIR = path.join(ROOT, 'art/object-eight-20261109'), NATIVE = Math.SQRT2 * 32, PAD = 8;
 const args = process.argv.slice(2), opt = k => { const i = args.indexOf(`--${k}`); return i >= 0 ? args[i + 1] : undefined; };
+const TAG = opt('tag') ?? 'straight-views-20261109';   // (a later batch: its own tag and the disk ids named on the command line; the registered sets are never touched)
 const review = JSON.parse(fs.readFileSync(path.join(DIR, 'review.json'), 'utf8')), meas = JSON.parse(fs.readFileSync(path.join(DIR, 'measurements.json'), 'utf8'));
-const named = args.filter((a, i) => !a.startsWith('--') && args[i - 1] !== '--crops');
-const subjects = Object.entries(meas.subjects).filter(([, m]) => review.buildings[m.disk]?.accept && (!named.length || named.includes(m.disk)));
+const named = args.filter((a, i) => !a.startsWith('--') && args[i - 1] !== '--crops' && args[i - 1] !== '--tag');
+const registered = new Set((JSON.parse(fs.readFileSync(path.join(ROOT, 'scripts/assets/object-eight-registry.json'), 'utf8')).sets).map(s => s.subject));
+const subjects = Object.entries(meas.subjects).filter(([id, m]) => review.buildings[m.disk]?.accept && (named.length ? named.includes(m.disk) : !registered.has(id)));
 const slugOf = id => id.replace(/:/g, '-');
 /** the eight views in the ring's order [NE, N, SE, E, SW, S, NW, W]: key, the corner it reuses (index in the four-view order) or the cell, its heading (the legacy mapping of the
  *  24 historical sets and the Video Vault: corners 0/90/180/270, the 8-degree views 37/127/217/307; the boxes are the footprint turned by it) */

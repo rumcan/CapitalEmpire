@@ -1,0 +1,206 @@
+{
+  "schema": 1,
+  "projection": "normal+yaw8",
+  "subject": "golf:leaderboard",
+  "name": "Main leaderboard",
+  "version": 1,
+  "review": "approved",
+  "source": {
+    "views": {
+      "normalNE": {
+        "reuse": "golf:leaderboard"
+      },
+      "yaw8N": {
+        "file": "../src/yaw8N.png",
+        "sha256": "57d82d964ada85a3a1090aef44da3972a12333cdaf0605471a83020c0b47f089",
+        "width": 451,
+        "height": 472
+      },
+      "normalSE": {
+        "reuse": "view:golf:leaderboard:se"
+      },
+      "yaw8E": {
+        "file": "../src/yaw8E.png",
+        "sha256": "9bc2b73a4a144b4a788d8c2959ec4b7438e760e2835467123b87c0bae5a2ea4b",
+        "width": 301,
+        "height": 543
+      },
+      "normalSW": {
+        "reuse": "view:golf:leaderboard:sw"
+      },
+      "yaw8S": {
+        "file": "../src/yaw8S.png",
+        "sha256": "bc25a1af39bce9a3addcde5dd9629e4a5d9568439bd6f699db93ad1382fac711",
+        "width": 436,
+        "height": 452
+      },
+      "normalNW": {
+        "reuse": "view:golf:leaderboard:nw"
+      },
+      "yaw8W": {
+        "file": "../src/yaw8W.png",
+        "sha256": "3e7a43d68a201ca2751ccea7d759d0cef176a51487f2d046e2e85f3f298dc592",
+        "width": 319,
+        "height": 571
+      }
+    }
+  },
+  "footprintMetres": {
+    "width": 8,
+    "depth": 3
+  },
+  "pixelsPerMetre": 62.0014166269,
+  "pixelCalibrationSpace": "orthographic-camera",
+  "baselineScale": 1.36,
+  "kind": "building",
+  "solid": 2,
+  "category": "Eight-view buildings",
+  "aliases": [],
+  "views": {
+    "yaw8N": {
+      "file": "yaw8N.native.png",
+      "sha256": "998bff271768696f33403fb3b96b1f5f67c0105c6b929b4d3cf9034ffad3eda2",
+      "width": 443,
+      "height": 464,
+      "anchor": {
+        "x": 258.25,
+        "y": 379.39
+      },
+      "headingDegrees": 37,
+      "boxes": null,
+      "sourceFamily": "view",
+      "sourceSha256": "57d82d964ada85a3a1090aef44da3972a12333cdaf0605471a83020c0b47f089",
+      "cell": 0,
+      "cellRect": {
+        "left": 0,
+        "top": 0,
+        "width": 451,
+        "height": 472
+      },
+      "crop": {
+        "left": 4,
+        "top": 4,
+        "width": 443,
+        "height": 464
+      }
+    },
+    "yaw8E": {
+      "file": "yaw8E.native.png",
+      "sha256": "ab0bd0e96a061945b8dfb22c64b4e5cbeeb3d192ab32a7e2826e3c53b40c6d39",
+      "width": 293,
+      "height": 535,
+      "anchor": {
+        "x": 147.25,
+        "y": 439.91
+      },
+      "headingDegrees": 127,
+      "boxes": null,
+      "sourceFamily": "view",
+      "sourceSha256": "9bc2b73a4a144b4a788d8c2959ec4b7438e760e2835467123b87c0bae5a2ea4b",
+      "cell": 0,
+      "cellRect": {
+        "left": 0,
+        "top": 0,
+        "width": 301,
+        "height": 543
+      },
+      "crop": {
+        "left": 4,
+        "top": 4,
+        "width": 293,
+        "height": 535
+      }
+    },
+    "yaw8S": {
+      "file": "yaw8S.native.png",
+      "sha256": "e8b7b84dc9e5b215e32f95a0ee715559ea9a32ef8e3041a0f6e32a5a305b09a7",
+      "width": 428,
+      "height": 444,
+      "anchor": {
+        "x": 242.5,
+        "y": 363.24
+      },
+      "headingDegrees": 217,
+      "boxes": null,
+      "sourceFamily": "view",
+      "sourceSha256": "bc25a1af39bce9a3addcde5dd9629e4a5d9568439bd6f699db93ad1382fac711",
+      "cell": 0,
+      "cellRect": {
+        "left": 0,
+        "top": 0,
+        "width": 436,
+        "height": 452
+      },
+      "crop": {
+        "left": 4,
+        "top": 4,
+        "width": 428,
+        "height": 444
+      }
+    },
+    "yaw8W": {
+      "file": "yaw8W.native.png",
+      "sha256": "8819d195da7ff9242e0fee9be1f48169e53ecb1218aacdc5293c60405beed7a5",
+      "width": 311,
+      "height": 563,
+      "anchor": {
+        "x": 183.25,
+        "y": 447.52
+      },
+      "headingDegrees": 307,
+      "boxes": null,
+      "sourceFamily": "view",
+      "sourceSha256": "3e7a43d68a201ca2751ccea7d759d0cef176a51487f2d046e2e85f3f298dc592",
+      "cell": 0,
+      "cellRect": {
+        "left": 0,
+        "top": 0,
+        "width": 319,
+        "height": 571
+      },
+      "crop": {
+        "left": 4,
+        "top": 4,
+        "width": 311,
+        "height": 563
+      }
+    },
+    "normalNE": {
+      "reuse": "golf:leaderboard",
+      "anchor": null,
+      "headingDegrees": 0,
+      "boxes": null,
+      "sourceFamily": "reuse"
+    },
+    "normalSE": {
+      "reuse": "view:golf:leaderboard:se",
+      "anchor": null,
+      "headingDegrees": 90,
+      "boxes": null,
+      "sourceFamily": "reuse"
+    },
+    "normalSW": {
+      "reuse": "view:golf:leaderboard:sw",
+      "anchor": null,
+      "headingDegrees": 180,
+      "boxes": null,
+      "sourceFamily": "reuse"
+    },
+    "normalNW": {
+      "reuse": "view:golf:leaderboard:nw",
+      "anchor": null,
+      "headingDegrees": 270,
+      "boxes": null,
+      "sourceFamily": "reuse"
+    }
+  },
+  "calibrationNotes": "The four corner views are the building's existing pictures (golf:leaderboard, view:golf:leaderboard:se, view:golf:leaderboard:sw, view:golf:leaderboard:nw), reused, not repacked. The four straight-on views: scale 0.7299 game px per native px (62.00 px/m), read with scripts/assets/straight-views/measure.mjs: the T375 footprint-box fit (8 x 3 m, the library's box) on the four corners and the four straight views, the corners' fit bias against their library scale removed (1.2035), the median of the four straight views (0.6597 0.8001 0.6387 0.8001); anchors refitted with that scale held (IoU 0.7613 0.6842 0.81 0.7576). Not owner-measured. Sheet: golf~leaderboard axisturn, cells NESW are N E S W. the board face with the ladder on its right on N as on NE; E and W are thin side profiles of the stilted frame, S the braced back (poor fit, IoU 0.68-0.85: the board is thin).",
+  "artReviewRequired": [
+    "same subject across all eight views",
+    "normal and actual yaw8 geometry",
+    "upper-right daylight and lower-left shadows",
+    "true alpha and complete silhouette",
+    "per-view ground anchors and physical footprint",
+    "no duplicates or fake mirror views"
+  ]
+}

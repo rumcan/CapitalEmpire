@@ -1,0 +1,82 @@
+{
+  "schema": 1,
+  "projection": "normal+yaw8",
+  "subject": "golf:toilet-block",
+  "name": "Toilet block",
+  "version": 1,
+  "review": "candidate",
+  "source": {
+    "views": {
+      "normalNE": {
+        "reuse": "golf:toilet-block"
+      },
+      "yaw8N": "src/yaw8N.png",
+      "normalSE": {
+        "reuse": "view:golf:toilet-block:se"
+      },
+      "yaw8E": "src/yaw8E.png",
+      "normalSW": {
+        "reuse": "view:golf:toilet-block:sw"
+      },
+      "yaw8S": "src/yaw8S.png",
+      "normalNW": {
+        "reuse": "view:golf:toilet-block:nw"
+      },
+      "yaw8W": "src/yaw8W.png"
+    }
+  },
+  "footprintMetres": {
+    "width": 10.6,
+    "depth": 4
+  },
+  "pixelsPerMetre": 54.4451804571,
+  "pixelCalibrationSpace": "orthographic-camera",
+  "baselineScale": 1,
+  "kind": "building",
+  "solid": 2,
+  "category": "Eight-view buildings",
+  "aliases": [],
+  "views": {
+    "normalNE": {
+      "headingDegrees": 0
+    },
+    "yaw8N": {
+      "anchor": {
+        "x": 275,
+        "y": 245.62
+      },
+      "headingDegrees": 37
+    },
+    "normalSE": {
+      "headingDegrees": 90
+    },
+    "yaw8E": {
+      "anchor": {
+        "x": 183.75,
+        "y": 222.58
+      },
+      "headingDegrees": 127
+    },
+    "normalSW": {
+      "headingDegrees": 180
+    },
+    "yaw8S": {
+      "anchor": {
+        "x": 187.25,
+        "y": 205.26
+      },
+      "headingDegrees": 217
+    },
+    "normalNW": {
+      "headingDegrees": 270
+    },
+    "yaw8W": {
+      "anchor": {
+        "x": 195.5,
+        "y": 296.05
+      },
+      "headingDegrees": 307
+    }
+  },
+  "calibrationNotes": "The four corner views are the building's existing pictures (golf:toilet-block, view:golf:toilet-block:se, view:golf:toilet-block:sw, view:golf:toilet-block:nw), reused, not repacked. The four straight-on views: scale 0.8312 game px per native px (54.45 px/m), read with scripts/assets/straight-views/measure.mjs: the T375 footprint-box fit (10.6 x 4 m, the library's box) on the four corners and the four straight views, the corners' fit bias against their library scale removed (1.371), the median of the four straight views (0.8423 0.815 0.9781 0.8201); anchors refitted with that scale held (IoU 0.8204 0.7383 0.8138 0.8103). Not owner-measured. Sheet: golf~toilet-block axisturn, cells NESW are N E S W. the row of four doors with the sink on its right on N as on NE."
+}

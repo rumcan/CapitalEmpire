@@ -5,6 +5,8 @@
 // the road), 45 off (a four-view building on a screen-straight road: the nearest corner), WRONG (its front is turned off the road by 90 degrees or more).
 //   node scripts/dev/street-front-sheet.mjs --base http://127.0.0.1:5189/ --out E:/ClaudeTemp/T375 --tag before|after [--only shops,venues,houses] [--roads 0,1,2,3,4,5,6,7]
 //     [--houses 6]  (houses: how many of the palette's, spread along it)
+//     [--only wanted --wanted id,id,...]  (T398: any building by its library id, on the lot kind that shows it: each found by scanning lots of the town's use kinds along a street)
+//     [--rows 8]  (rows a sheet: a long sheet is cut into files *-1, *-2 ...)
 //     [--front]  (T376: each cell framed on the lot's street front, the red line, larger: the base of the walls against the pavement; the sheets are named *-front-<tag>.png)
 // Needs a dev server (vite) on --base. One headless Edge, closed when done. Nothing is saved.
 import { chromium } from 'playwright-core';
@@ -111,11 +113,14 @@ try {
     const file = join(out, `${name}${front ? '-front' : ''}-${tag}.png`);
     await sharp({ create: { width: CELL_W * cols, height: y, channels: 4, background: '#3b4252' } }).composite(comp).png().toFile(file); console.log(file);
   };
+  /** one sheet, or several of at most `rows` rows each (a house palette of 19 and eight roads is a very tall picture) */
+  const perSheet = +opt('rows', '8');
+  const sheets = async (name, rows) => { if (rows.length <= perSheet) return sheet(name, rows); for (let i = 0; i * perSheet < rows.length; i++) await sheet(`${name}-${i + 1}`, rows.slice(i * perSheet, (i + 1) * perSheet)); };
   const SHOPS = ['town:bakery', 'town:grocery', 'town:pharmacy', 'world:video', 'town:laundromat', 'world:video_rental', 'town:fish_tackle', 'town:barber'], VENUES = ['world:arcade', 'world:diner', 'world:snack_bar'];
   if (only.has('shops')) {
     const rows = [];
     for (const biz of SHOPS) { const cells = []; for (const road of roads) cells.push(await cell({ use: 'COM', road, w: 16, d: 14, seed: 31, biz }, biz)); rows.push({ label: biz, cells }); }
-    await sheet('shops', rows);
+    await sheets('shops', rows);
   }
   if (only.has('venues')) {
     const rows = [];
@@ -128,7 +133,7 @@ try {
       }
       rows.push({ label: want, cells });
     }
-    await sheet('venues', rows);
+    await sheets('venues', rows);
   }
   if (only.has('houses')) {
     const pal = await page.evaluate(async () => { const { housePalette } = await import('/src/game/lots/compose.ts'); return [...housePalette()]; });
@@ -143,7 +148,26 @@ try {
       }
       rows.push({ label: want, cells });
     }
-    await sheet('houses', rows);
+    await sheets('houses', rows);
+  }
+  if (only.has('wanted')) {
+    // T398: the buildings of the straight-views batch (or any): each on the first lot of a town use kind that shows it, on every road asked for
+    const USES = [['TOUR', 20, 18, 5], ['GOV', 20, 18, 5], ['IND', 24, 20, 5], ['COM', 16, 14, 31], ['RES', 14, 14, 3]];
+    const rows = [];
+    for (const want of opt('wanted', '').split(',').filter(Boolean)) {
+      const cells = [];
+      for (const road of roads) {
+        let best = null;
+        for (const [use, w, d, seed] of USES) {
+          for (let k = 0; k < 21 && !best; k++) { const shift = k % 2 ? (k + 1) / 2 : -k / 2, o = { use, road, w, d, seed, shift }, r = await stage({ ...o, zoom: ZOOM }); if (r.id && (r.subject === want || r.id === want)) best = await cell(o, want, r); }
+          if (best) break;
+        }
+        if (!best) console.log(`  no lot shows ${want} on road ${road}`);
+        cells.push(best);
+      }
+      rows.push({ label: want, cells });
+    }
+    await sheets('wanted', rows);
   }
   await ctx.close();
 } finally { await browser.close(); }

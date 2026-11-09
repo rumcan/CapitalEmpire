@@ -1680,6 +1680,230 @@
      "y": 335.79
     }
    }
+  },
+  "golf:clubhouse-shanty": {
+   "disk": "golf~clubhouse-shanty",
+   "name": "Starter clubhouse",
+   "kind": "building",
+   "solid": 2,
+   "footprint": [
+    10,
+    7
+   ],
+   "owner": 0.317,
+   "cornerIds": [
+    "golf:clubhouse-shanty",
+    "view:golf:clubhouse-shanty:se",
+    "view:golf:clubhouse-shanty:sw",
+    "view:golf:clubhouse-shanty:nw"
+   ],
+   "kCorner": 1.6687,
+   "kStraight": 1.1248,
+   "kStraightCells": [
+    1.1091,
+    1.2001,
+    1.0454,
+    1.1406
+   ],
+   "cornerBias": 0.7504,
+   "iouCorners": [
+    0.8372,
+    0.8756,
+    0.8922,
+    0.8917
+   ],
+   "iouStraight": [
+    0.8497,
+    0.7967,
+    0.8551,
+    0.8352
+   ],
+   "anchors": {
+    "yaw8N": {
+     "x": 318.5,
+     "y": 270.26
+    },
+    "yaw8E": {
+     "x": 238.25,
+     "y": 295.82
+    },
+    "yaw8S": {
+     "x": 295,
+     "y": 244.07
+    },
+    "yaw8W": {
+     "x": 219.5,
+     "y": 322.9
+    }
+   }
+  },
+  "golf:food-tent": {
+   "disk": "golf~food-tent",
+   "name": "Food tent",
+   "kind": "building",
+   "solid": 2,
+   "footprint": [
+    8,
+    8
+   ],
+   "owner": 0.681,
+   "cornerIds": [
+    "golf:food-tent",
+    "view:golf:food-tent:se",
+    "view:golf:food-tent:sw",
+    "view:golf:food-tent:nw"
+   ],
+   "kCorner": 0.9192,
+   "kStraight": 0.895,
+   "kStraightCells": [
+    0.8801,
+    0.8896,
+    0.9004,
+    0.9004
+   ],
+   "cornerBias": 1.094,
+   "iouCorners": [
+    0.9427,
+    0.948,
+    0.9366,
+    0.9389
+   ],
+   "iouStraight": [
+    0.8753,
+    0.8886,
+    0.8781,
+    0.8575
+   ],
+   "anchors": {
+    "yaw8N": {
+     "x": 232.75,
+     "y": 393.87
+    },
+    "yaw8E": {
+     "x": 233.25,
+     "y": 391.16
+    },
+    "yaw8S": {
+     "x": 231,
+     "y": 406.1
+    },
+    "yaw8W": {
+     "x": 229.25,
+     "y": 405.45
+    }
+   }
+  },
+  "golf:leaderboard": {
+   "disk": "golf~leaderboard",
+   "name": "Main leaderboard",
+   "kind": "building",
+   "solid": 2,
+   "footprint": [
+    8,
+    3
+   ],
+   "owner": 1.36,
+   "cornerIds": [
+    "golf:leaderboard",
+    "view:golf:leaderboard:se",
+    "view:golf:leaderboard:sw",
+    "view:golf:leaderboard:nw"
+   ],
+   "kCorner": 0.6984,
+   "kStraight": 0.7299,
+   "kStraightCells": [
+    0.6597,
+    0.8001,
+    0.6387,
+    0.8001
+   ],
+   "cornerBias": 1.2035,
+   "iouCorners": [
+    0.7773,
+    0.7988,
+    0.8268,
+    0.7789
+   ],
+   "iouStraight": [
+    0.7613,
+    0.6842,
+    0.81,
+    0.7576
+   ],
+   "anchors": {
+    "yaw8N": {
+     "x": 254.25,
+     "y": 375.39
+    },
+    "yaw8E": {
+     "x": 143.25,
+     "y": 435.91
+    },
+    "yaw8S": {
+     "x": 238.5,
+     "y": 359.24
+    },
+    "yaw8W": {
+     "x": 179.25,
+     "y": 443.52
+    }
+   }
+  },
+  "golf:toilet-block": {
+   "disk": "golf~toilet-block",
+   "name": "Toilet block",
+   "kind": "building",
+   "solid": 2,
+   "footprint": [
+    10.6,
+    4
+   ],
+   "owner": 1,
+   "cornerIds": [
+    "golf:toilet-block",
+    "view:golf:toilet-block:se",
+    "view:golf:toilet-block:sw",
+    "view:golf:toilet-block:nw"
+   ],
+   "kCorner": 0.7047,
+   "kStraight": 0.8312,
+   "kStraightCells": [
+    0.8423,
+    0.815,
+    0.9781,
+    0.8201
+   ],
+   "cornerBias": 1.371,
+   "iouCorners": [
+    0.8357,
+    0.8815,
+    0.8775,
+    0.8234
+   ],
+   "iouStraight": [
+    0.8204,
+    0.7383,
+    0.8138,
+    0.8103
+   ],
+   "anchors": {
+    "yaw8N": {
+     "x": 267,
+     "y": 237.62
+    },
+    "yaw8E": {
+     "x": 175.75,
+     "y": 214.58
+    },
+    "yaw8S": {
+     "x": 179.25,
+     "y": 197.26
+    },
+    "yaw8W": {
+     "x": 187.5,
+     "y": 288.05
+    }
+   }
   }
  }
 }
