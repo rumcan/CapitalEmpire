@@ -48,7 +48,7 @@ test('everyday: with no conditions the day is the day of before (golden values c
   assert.ok(mean(totals(head)) > mean(totals(tail)) + 1.5, `a headwind against a tailwind: ${mean(totals(head)).toFixed(1)} against ${mean(totals(tail)).toFixed(1)}`);
 });
 
-test('everyday: the conditions cost the day almost nothing more to work out (it is once a day, not each frame), and the pace and the groups hold as before', () => {
+test('everyday: the conditions cost the day under about twice as long to work out (it is once a day, not each frame), and the pace and the groups hold as before', () => {
   const r = dayRoster(SEED, 9, { ...CLUB, busy: 140 }), cond = dayConditions(SEED, 9, (x, y) => 0.004 * Math.sin(x / 9) + 0.004 * Math.cos(y / 7));
   const time = (c?: Conditions) => { let best = Infinity; for (let k = 0; k < 3; k++) { const t0 = performance.now(); dayPlan(VIEW, r, c); best = Math.min(best, performance.now() - t0); } return best; };
   const plain = time(), withCond = time(cond);
