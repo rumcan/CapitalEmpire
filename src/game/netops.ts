@@ -100,26 +100,30 @@ export function applyNodeEntry(e: NetEditor, [x, y, type, f, off, sg]: NodeEntry
 /** Edits the main thread's network and records the same edits for the ground workers. */
 export class NetEditor {
   ops: NetOp[] = [];
+  /** T396: told before each edit of the network's segs or junctions (not the speed tier, not a clear): the undo journal keeps the network as it was at the first one (net-undo.ts) */
+  onEdit?: () => void;
   constructor(public net: RoadNetwork) {}
   /** add legs as the player's, or as the towns' (town: true, see Seg.town) */
   addLegs(legs: Leg[], cls: RoadClass, style: LineStyle, kinds?: SegKind[], town?: true) {
+    this.onEdit?.();
     this.net.addLegs(legs, cls, style, false, kinds, town);
     this.ops.push({ k: 'legs', legs: legs.flatMap(l => [l.a.x, l.a.y, l.b.x, l.b.y]), cls: cls.id, style, ...(kinds ? { kinds } : {}), ...(town ? { town: true as const } : {}) });
   }
   removePiece(sel: PieceSel) {
+    this.onEdit?.();
     const s = sel.seg;
     this.ops.push({ k: 'piece', seg: [s.a.x, s.a.y, s.b.x, s.b.y], p0: [sel.p0.x, sel.p0.y], p1: [sel.p1.x, sel.p1.y] });
     this.net.removePiece(sel, false);
   }
-  setNodeType(n: Node, type: NodeType) { this.ops.push({ k: 'type', x: n.x, y: n.y, type }); this.net.setNodeType(n, type, false); }
+  setNodeType(n: Node, type: NodeType) { this.onEdit?.(); this.ops.push({ k: 'type', x: n.x, y: n.y, type }); this.net.setNodeType(n, type, false); }
   /** the node's flags and ring lanes (rl keeps the node's own when not given) */
-  setNodeFlags(n: Node, wide: boolean, tl: boolean, rl: 1 | 2 | 3 = n.rl ?? 1) { this.ops.push({ k: 'flags', x: n.x, y: n.y, wide, tl, rl }); this.net.setNodeFlags(n, wide, tl, rl, false); }
+  setNodeFlags(n: Node, wide: boolean, tl: boolean, rl: 1 | 2 | 3 = n.rl ?? 1) { this.onEdit?.(); this.ops.push({ k: 'flags', x: n.x, y: n.y, wide, tl, rl }); this.net.setNodeFlags(n, wide, tl, rl, false); }
   /** the slip node's corners without a slipway (their in-arms, armDeg; empty = all have one) */
-  setSlipOff(n: Node, off: number[]) { this.ops.push({ k: 'slips', x: n.x, y: n.y, off }); this.net.setSlipOff(n, off, false); }
+  setSlipOff(n: Node, off: number[]) { this.onEdit?.(); this.ops.push({ k: 'slips', x: n.x, y: n.y, off }); this.net.setSlipOff(n, off, false); }
   /** the lights' tier (0 fixed-time, 1 actuated, 2 adaptive) and the fixed-time green seconds of each phase (split; none = 18 s each) */
   /** every road's speed-limit tier (see speedOf) */
   setSpeedTier(t: 0 | 1 | 2 | 3) { this.ops.push({ k: 'speed', tier: t }); this.net.setSpeedTier(t, false); }
-  setSignal(n: Node, sig: 0 | 1 | 2, split?: number[]) { this.ops.push({ k: 'signal', x: n.x, y: n.y, sig, split }); this.net.setSignal(n, sig, split, false); }
+  setSignal(n: Node, sig: 0 | 1 | 2, split?: number[]) { this.onEdit?.(); this.ops.push({ k: 'signal', x: n.x, y: n.y, sig, split }); this.net.setSignal(n, sig, split, false); }
   clear() { this.net.clear(); this.ops = [{ k: 'clear' }]; }
   /** rebuild here, and hand back the ops (ending in the same rebuild) for the workers */
   commit(full = false): NetOp[] {

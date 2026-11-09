@@ -101,6 +101,8 @@ export const RUB_WHY = { nothing: 'Nothing to rub out', hole: 'Another hole' } a
 const STORED: (StoredHole | null)[] = Array.from({ length: HOLE_COUNT }, (_, i) => ((HOLE_PRESETS as { holes?: (StoredHole | null)[] }).holes?.[i] ?? null));
 /** the props an action added and removed (the engine's journal; opaque here), for undo */
 export interface PropJournal { added: unknown[]; removed: unknown[] }
+/** what a step changed in the road network (the engine's net journal, net-undo.ts NetDiff; opaque here), for undo (T396) */
+export type NetStep = object;
 /** the areas at one moment, for undo: each area's id and save tuple (and the tuple as text, to compare), and the next id */
 interface AreaSnap { ids: number[]; ts: PaintTuple[]; keys: string[]; nextId: number }
 /** an undoable action: the areas before and after it, the props it added or removed, the money it spent, the course height blocks it changed (T027),
@@ -109,7 +111,9 @@ interface UndoStep { label: string; before: AreaSnap; after: AreaSnap; props: Pr
   /** T256: the looks owners the step gave, took or changed (a hole seeded, deleted, saved or placed), each before and after (null: none) */
   looks?: [string, LookSet | null, LookSet | null][];
   /** T254: Edit Hole Layout's step: the pins and tee markers before and after (Engine.markersKey) */
-  markers?: { before: string; after: string } }
+  markers?: { before: string; after: string };
+  /** T396 (#1064): a road step's changes to the network (the roads, paths, drives and junctions it made or took away; netStep): undo applies them back, redo again */
+  net?: NetStep }
 /** T359 (#1006; the owner, 2026-11-08: "ctrl/z should always work to reset your prev menu setting change"): the build menus' settings on the undo
  *  stack, in time order with the ground edits. A setting step keeps just the items its change touched, each as it was before and as it is after:
  *  the brush presets by surface (each BrushSet as text: the course default's look, the brush's size, Border, Shadow, Length, Height), the looks book
@@ -213,6 +217,9 @@ export interface PaintHost { setLotGround(key: string, patches: LotPatch[] | nul
   /** the prop journal (undo): begin records every prop added or removed until end, which returns them (null: none); undo and redo
    *  reverse or replay a journal and return the journal to keep for the opposite step */
   journal?: { begin(): void; end(): PropJournal | null; undo(j: PropJournal): PropJournal; redo(j: PropJournal): PropJournal };
+  /** T396 (#1064): the road network's journal (net-undo.ts; opaque here): a netStep opens it (begin), end gives what the step changed in the network (null: nothing),
+   *  undo and redo apply it (the engine commits the network: the workers get the edits and the ground re-bakes) and return the journal to keep for the other way */
+  netJournal?: { begin(): void; end(): NetStep | null; undo(j: NetStep): NetStep; redo(j: NetStep): NetStep };
   /** the course height field to edit, if any (T027) */
   courseHeight?(): CourseHeightField | null;
   /** the course height changed in this box: the engine re-flattens the roads there, saves and re-bakes */
@@ -411,6 +418,7 @@ export class PaintTool {
   /** T359: how many ground steps have been made (a setting change that makes one, a painted area restyled, is that step's, not a setting's) */
   private commits = 0;
   private tx: { before: AreaSnap; spent: number; depth: number; label: string; gd: GridDiff[]; plans: string; /** only looks changed (no shape: the holes' markers stay) */ looks?: boolean;
+    /** T396: a road step (netStep): the network's journal is open for it */ net?: boolean;
     /** T256: the looks owners touched so far, as they were before (lookTouch) */ lk?: Map<string, LookSet | null> } | null = null;
   /** the course height blocks the action in progress touches, for undo (T027) */
   private hj = new CourseHeightJournal();
@@ -1454,7 +1462,7 @@ export class PaintTool {
   /** the areas now, for undo */
   private snapshot(): AreaSnap { const ts = this.areas.map(a => toTuple(a)); return { ids: this.areas.map(a => a.id), ts, keys: ts.map(t => JSON.stringify(t)), nextId: this.nextId }; }
   /** starts an undoable action (a nested begin joins the open one) */
-  private begin(label: string, looks = false) { if (this.tx) { this.tx.depth++; return; } if (!this.applying) this.endSetting(); this.tx = { before: this.snapshot(), spent: 0, depth: 1, label, gd: [], plans: this.plansKey(), ...(looks ? { looks } : {}) }; this.host.journal?.begin(); this.hj.begin(); }
+  private begin(label: string, looks = false, net = false) { if (this.tx) { this.tx.depth++; return; } if (!this.applying) this.endSetting(); this.tx = { before: this.snapshot(), spent: 0, depth: 1, label, gd: [], plans: this.plansKey(), ...(looks ? { looks } : {}), ...(net ? { net } : {}) }; this.host.journal?.begin(); if (net) this.host.netJournal?.begin(); this.hj.begin(); }
   /** the hole plans, the ponds' edge marks (T231) and the custom grasses (T271: a grass made or deleted is an undo step, with its cells) as text
    *  (undo compares and restores them) */
   private plansKey(): string { return JSON.stringify([this.host.plans?.() ?? [], this.host.pondMarks?.() ?? [], this.host.grasses?.() ?? [], this.host.bunkerState?.() ?? null]); }
@@ -1470,15 +1478,15 @@ export class PaintTool {
     this.tx = null;
     // the action's last chunks go out first, inside the prop journal: the trees they clear off new playing surfaces come back on undo
     if (t.gd.length) this.host.gridChanged?.(null, true);
-    const props = this.host.journal?.end() ?? null, after = this.snapshot();
+    const props = this.host.journal?.end() ?? null, after = this.snapshot(), net = t.net ? this.host.netJournal?.end() ?? null : null; // (T396: a road step's changes to the network)
     const f = this.host.courseHeight?.() ?? null, height = f ? this.hj.end(f) : null; if (!f) this.hj.drop();
     const same = after.keys.length === t.before.keys.length && after.keys.every((k, i) => k === t.before.keys[i]); // a stroke that changed nothing re-made the same areas under new ids
     const gd = mergeMany(t.gd), grid = gd && gd.n ? gd : null, pk = this.plansKey(), plans = pk !== t.plans ? { before: t.plans, after: pk } : null;
     // T256: the looks owners it gave, took or changed (each its whole set, before and after)
     const book = this.host.lookBook?.(), looks: [string, LookSet | null, LookSet | null][] = [];
     if (t.lk) for (const [o, b] of t.lk) { const a = book?.[o] ? copySet(book[o]!) : null; if (JSON.stringify(a) !== JSON.stringify(b)) looks.push([o, b, a]); }
-    if (!props && !t.spent && same && !height && !grid && !plans) return; // (a look seeded by a stroke that laid nothing stays: no step for it alone)
-    this.undos.push({ label: t.label, before: t.before, after, props, spent: t.spent, height, grid, plans, ...(looks.length ? { looks } : {}) }); if (this.undos.length > UNDO_MAX) this.undos.shift();
+    if (!props && !t.spent && same && !height && !grid && !plans && !net) return; // (a look seeded by a stroke that laid nothing stays: no step for it alone)
+    this.undos.push({ label: t.label, before: t.before, after, props, spent: t.spent, height, grid, plans, ...(looks.length ? { looks } : {}), ...(net ? { net } : {}) }); if (this.undos.length > UNDO_MAX) this.undos.shift();
     this.commits++;
     // T238: a stroke laid in Edit hole is ordered against the plan's own steps (undoTop); the course's redo goes, and Edit hole's with it
     if (this.editInHand && (grid || height) && !plans) this.editMarks.push(this.wizard.depth); // T252: a height stroke too
@@ -1629,10 +1637,22 @@ export class PaintTool {
     this.begin(label);
     try { const spent = run(); if (this.tx) this.tx.spent += spent; } finally { this.commit(); }
   }
+  /** T396 (#1064; the owner, 2026-11-08: "ctrl/z should always work to reset your prev menu setting change"): a road edit as one undo step, on this stack in time order with
+   *  the course, the paint, the props and the settings: a route, an Upgrade, a junction's type or options, a one-way run reversed. Like step (run changes props inside the
+   *  prop journal, spends what it spends itself and returns it: $, below 0 for a refund), and the network's own changes are kept too (the segs and junctions it made or took
+   *  away, net-undo.ts): undo takes them back, refunds the money and gives the props back; redo builds it all again. The commit is the engine's (commitNetwork) */
+  netStep(label: string, run: () => number) {
+    this.begin(label, false, true);
+    try { const spent = run(); if (this.tx) this.tx.spent += spent; } finally { this.commit(); }
+  }
   /** T381: an outside stroke as one undo step, opened before its first change and closed when it ends (the bulldozer taking trees: a click or a drag, then
    *  one Ctrl+Z gives them all back). Props removed or trees taken between the two are in the step; a stroke that changed nothing leaves no step */
   openStep(label: string) { this.begin(label); }
   closeStep() { this.commit(); }
+  /** T396 (#1064): the step open (openStep) keeps the road network's changes from here on, and counts money (what it spent, below 0 what it refunded): the bulldozer's stroke when it
+   *  takes a road. Without it a Ctrl+Z of a road built earlier would refund it twice (the bulldozer refunded it already) and a road taken by the bulldozer could not come back */
+  netInStep() { const t = this.tx; if (!t || t.net) return; t.net = true; this.host.netJournal?.begin(); }
+  addSpent(n: number) { if (this.tx) this.tx.spent += n; }
   /** an outside edit of the course grid as one undo step (T206: the practice tools build and the bulldozer removes a practice facility): run
    *  lays its cells into the grid (the diffs it returns, made in place) and returns what it spent ($, below 0 for a refund), which is paid
    *  here; undo takes the cells and the money back. Nothing happens without a grid */
@@ -1661,6 +1681,7 @@ export class PaintTool {
     this.restore(u.before);
     this.gridStep(u, true);
     const f = this.host.courseHeight?.(); if (u.height && f) { const b = this.hj.apply(f, u.height, 'before'); if (b) this.host.heightChanged?.(b); }
+    if (u.net && this.host.netJournal) u.net = this.host.netJournal.undo(u.net); // (T396: the roads go before the props they cleared come back)
     if (u.props && this.host.journal) u.props = this.host.journal.undo(u.props);
     if (u.spent) this.host.spend?.(-u.spent);
     this.host.changed?.();
@@ -1678,6 +1699,7 @@ export class PaintTool {
     this.gridStep(u, false);
     const f = this.host.courseHeight?.(); if (u.height && f) { const b = this.hj.apply(f, u.height, 'after'); if (b) this.host.heightChanged?.(b); }
     if (u.props && this.host.journal) u.props = this.host.journal.redo(u.props);
+    if (u.net && this.host.netJournal) u.net = this.host.netJournal.redo(u.net); // (T396: the props the route clears go first, then it is laid)
     if (u.spent) this.host.spend?.(u.spent);
     this.host.changed?.();
     if (this.planOpen && (u.plans || !this.wizard.base)) this.wizard.plansChanged(this.nextFreeHole(), n => this.usedHoles().has(n));
