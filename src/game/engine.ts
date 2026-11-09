@@ -11382,7 +11382,7 @@ export class Game {
   private static readonly CREW_ART: Record<'gk' | 'mo', number> = {
     gk: Math.max(0, SPECTATOR_PEOPLE.findIndex(p => p.id === 'spectator:spec_m_bucket_hat')), mo: Math.max(0, SPECTATOR_PEOPLE.findIndex(p => p.id === 'spectator:spec_m_young_cap')),
   };
-  /** the crew's vehicles' stand-ins (the hire cart's two facings, the golf mower, the push mower, the ride-on), their footprints' half sides and labels */
+  /** the crew's vehicles' stand-ins (the hire cart: T351 draws the nearest of its eight pictures to its heading, golf/cartart.ts; the golf mower, the push mower, the ride-on), their footprints' half sides and labels */
   private static readonly CREW_VEH: Record<Exclude<CrewVeh, 'none'>, { items: number[]; label: string; r: number }> = {
     cart: { items: [libIndexOf('business:golf-cart-sw'), libIndexOf('business:golf-cart-se')], label: 'Stand In for utility cart', r: 0.6 },
     reel: { items: [libIndexOf('business:golf-mower')], label: 'Stand In for ride-on reel mower', r: 0.7 },
@@ -11406,8 +11406,8 @@ export class Game {
       if (th.veh !== 'none') this.trackMove('c' + k, th.x, th.y, th.veh === 'push' ? 'push' : th.veh === 'cart' ? 'cart' : 'mower'); // T322
       k++;
       if (th.veh === 'none' || th.x < X0 || th.x > X1 || th.y < Y0 || th.y > Y1) continue;
-      const a = Game.CREW_VEH[th.veh], item = a.items.length > 1 ? a.items[th.hx - th.hy < 0 ? 0 : 1]! : a.items[0]!; if (item < 0) continue;
-      const d = this.propDrawable(this.crewThingDraw, n++, item, th.x, th.y, a.r); if (th.alpha < 1) d.alpha = th.alpha;
+      const a = Game.CREW_VEH[th.veh], item = th.veh === 'cart' ? cartPicture(th.hx, th.hy) : a.items.length > 1 ? a.items[th.hx - th.hy < 0 ? 0 : 1]! : a.items[0]!; if (item < 0) continue; // (T351: the utility cart's stand-in is the hire cart, its eight pictures)
+      const d = this.propDrawable(this.crewThingDraw, n++, item, th.x, th.y, a.r); if (th.veh === 'cart' && !OLD_CART) d.scale = cartScale(item); if (th.alpha < 1) d.alpha = th.alpha;
       this.crewOut.push(d); this.caddieLabels.push({ p: d, text: a.label });
     }
     return m;

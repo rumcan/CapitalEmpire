@@ -66,6 +66,8 @@ seen, and reusing them stores no pixel twice. The bottom row is kept in `src/` (
 
 ## In the game
 
+- The picture is the nearest of the eight to the heading wherever the hire cart is drawn: your cart, the field's carts and the grounds crew's utility cart (its stand-in, engine `crewMovers`; its legs
+  are long and straight, so its heading is not blended).
 - `?oldcart`: the two pictures by the sign of `hx - hy`, your cart's side by its facing, a steady pace and the segment's own heading, as before T351.
 - The field's carts (`golf/play/carts.ts`): the heading is blended round every bend over 3 m of route centred on the bend (smoothstep through the shorter way round, never two blends meeting), from the
   heading the cart was parked with into its first leg, so the picture steps through its neighbours and never jumps across; the pace eases in and out over 3 m at each end (constant acceleration;

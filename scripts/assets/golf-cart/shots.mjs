@@ -182,9 +182,10 @@ try {
       const bar = Buffer.from(`<svg width="${W}" height="18" xmlns="http://www.w3.org/2000/svg"><rect width="100%" height="18" fill="rgba(0,0,0,0.6)"/><text x="4" y="13" font-family="sans-serif" font-size="12" fill="#fff">${label}</text></svg>`);
       return sharp(f.buf).resize({ width: W, kernel: 'nearest' }).composite([{ input: bar, top: 0, left: 0 }]).png().toBuffer();
     }
-    /** a sheet of rows of tiles (cols wide) */
-    async function sheet(rows, cols, file) {
+    /** a sheet of rows of tiles (as wide as its longest row) */
+    async function sheet(rows, file) {
       if (!rows.some(r => r.length)) { console.log('no frames for', path.basename(file)); return; }
+      const cols = Math.max(2, ...rows.map(r => r.length));
       const tiles = await Promise.all(rows.map(r => Promise.all(r.map(t => tile(t.f, t.label)))));
       await sharp({ create: { width: cols * W, height: rows.length * W, channels: 3, background: '#223' } }).composite(tiles.flatMap((r, y) => r.map((input, x) => ({ input, left: x * W, top: y * W })))).png().toFile(file);
     }
@@ -193,7 +194,7 @@ try {
       // the octagon: the frame taken at the middle of each leg, with the picture the game drew (a library index: eight different ones, or the two there were)
       const midOf = leg => { const p = oct.pts, m = [(p[leg][0] + p[leg + 1][0]) / 2, (p[leg][1] + p[leg + 1][1]) / 2]; return oct.frames.map(f => [f, Math.hypot(f.st.x - m[0], f.st.y - m[1])]).sort((a, b) => a[1] - b[1])[0]?.[0] ?? null; };
       const mids = OCTAGON.map(([n], leg) => ({ f: midOf(leg), label: n })).filter(t => t.f).map(t => ({ f: t.f, label: `${t.label}: picture ${t.f.st.item}` }));
-      await sheet([mids.slice(0, 4), mids.slice(4, 8)], 4, path.join(out, `${tag}-z${zoom}-octagon.png`));
+      await sheet([mids.slice(0, 4), mids.slice(4, 8)], path.join(out, `${tag}-z${zoom}-octagon.png`));
     }
     if (sq) {
       // the bends of the square and the hairpin, one row a bend: the frames taken in the vertex's neighbourhood (the cart within 1.6 tiles of it, before the bend, through it, after it), so a
@@ -205,13 +206,13 @@ try {
         const name = `${sq.legs[leg - 1][0]} to ${sq.legs[leg][0]}`; bends.push({ name, frames: near.length, pictures: pick.length });
         rows.push(pick.slice(0, 7).map((f, k) => ({ f, label: `${name} ${k + 1}: picture ${f.st.item}` })));
       }
-      await sheet(rows, 7, path.join(out, `${tag}-z${zoom}-bends.png`));
+      await sheet(rows, path.join(out, `${tag}-z${zoom}-bends.png`));
       console.log('bends', JSON.stringify(bends));
     }
     if (kd?.frames.length) {
       // the keys: one row a key (hold D, W, A, S, then let go): the first frame of each picture shown, so a cart that steers is a row of neighbouring pictures and one that snaps is two
       const rows = ['hold D (E)', 'hold W (N)', 'hold A (W)', 'hold S (S)', 'keys let go'].map(name => kd.frames.filter(f => f.st.key === name).slice(0, 7).map((f, k) => ({ f, label: `${name} ${k + 1}: picture ${f.st.item}` })));
-      await sheet(rows, 7, path.join(out, `${tag}-z${zoom}-keys.png`));
+      await sheet(rows, path.join(out, `${tag}-z${zoom}-keys.png`));
     }
     const slim = s => s.map(({ x, y, item, ang, v, t, seg, key }) => ({ x: +x.toFixed(3), y: +y.toFixed(3), item, ang: ang === null ? null : +ang.toFixed(3), v: v === null ? null : +v.toFixed(3), t: +t.toFixed(1), seg, key }));
     fs.writeFileSync(path.join(out, `${tag}-z${zoom}-frames.json`), JSON.stringify({ tag, zoom, step: STEP, query, octagon: oct ? slim(oct.states) : null, square: sq ? slim(sq.states) : null, keys: kd ? slim(kd.states) : null, keyMarks: kd?.marks ?? null, bends }));
