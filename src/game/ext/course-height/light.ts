@@ -45,6 +45,16 @@ export const GENTLE_DARK = 1.4, GENTLE_DARK_KNEE = 0.25;
 export const gentleDark = (d: number) => { const t = d >= GENTLE_DARK_KNEE ? 1 : d / GENTLE_DARK_KNEE; return d * (1 + GENTLE_DARK * (1 - t * t * (3 - 2 * t))); };
 /** the light's normal tilt per metre per metre of slope at slope² s2: LIGHT_EXAG with the gentle ground's gain */
 export const lightExag = (s2: number) => LIGHT_EXAG * (1 + GENTLE_GAIN / (1 + s2 / (GENTLE_SLOPE * GENTLE_SLOPE)));
+/** T388 (#1048): the REAL GROUND's response. A map-data course has a natural layer under the player's own (golf/osm/land.ts): 3 to 15% slopes over hundreds of metres, not the 1 to 3% rolls the gentle gain is built for. The gain
+ *  above is strong everywhere from 3% to 15% (the normal tilts 0.38 at 3%, 0.43 at 5%, 0.45 at 10%), so a hill's flank lights no more than the gentle ground beside it and the course reads as blotches of "facing the sun" and
+ *  "facing away", not a hill. The land layer is lit by its own response, the tilt per metre of slope LAND_EXAG x (LAND_FLOOR at 0 rising to 1 at LAND_KNEE): faint on gentle ground (a 2% slope tilts 0.03), 0.2 at 6%, 0.4 at 10%, 0.6 at 15%
+ *  and still growing on a steep flank, so the light follows the steepness. The player's layer on top keeps the gentle gain (a green's 1 to 2% tilt, a fairway's rolls), and the two tilts add. A game with no land never calls it */
+export const LAND_EXAG = 6, LAND_FLOOR = 0.3, LAND_KNEE = 0.1;
+/** the land's light amplitude over the player's: the shade and the lift of a land-dominated point are this many times what the same tilt gives on the player's own ground (the response above is proportional, so a hill's flank, a few steps from
+ *  the gentle ground beside it, is lit with room to show it). 1 is the same as the player's */
+export const LAND_GAIN = 1.35;
+/** the land's normal tilt per metre per metre of slope at slope² s2 */
+export const landExag = (s2: number) => { const s = Math.sqrt(s2), t = s >= LAND_KNEE ? 1 : s / LAND_KNEE; return LAND_EXAG * (LAND_FLOOR + (1 - LAND_FLOOR) * t * t * (3 - 2 * t)); };
 /** the sky's share of the light on flat ground; the sun gives the rest */
 export const AMBIENT = 0.35;
 const { lx, ly, lz } = SUN_LIGHT;
@@ -95,6 +105,22 @@ export function splineHeight(h: Float32Array, x: number, y: number): number {
   return s;
 }
 
+/** T388: the land layer the light is given beside the course height: samples (i0.., j0..) of the same lattice, w by h, row-major, metres; 0 outside the rect (the land is exactly 0 where its skirt ends). The map's edge holds, as the field's */
+export interface LightLand { i0: number; j0: number; w: number; h: number; data: Float32Array }
+/** the smooth height (metres) of the land layer at world tile (x, y): splineHeight's cubic through the layer's samples, 0 outside its rect */
+export function splineLand(r: LightLand, x: number, y: number): number {
+  const fx = x / CH_STEP - 0.5, fy = y / CH_STEP - 0.5, i = Math.floor(fx), j = Math.floor(fy), tx = fx - i, ty = fy - j;
+  const a0 = cubicW(1 + tx), a1 = cubicW(tx), a2 = cubicW(1 - tx), a3 = cubicW(2 - tx);
+  const c0 = clampS(i - 1) - r.i0, c1 = clampS(i) - r.i0, c2 = clampS(i + 1) - r.i0, c3 = clampS(i + 2) - r.i0, W = r.w, d = r.data;
+  let s = 0;
+  for (let k = 0; k < 4; k++) {
+    const jj = clampS(j - 1 + k) - r.j0; if (jj < 0 || jj >= r.h) continue;
+    const wy = cubicW(k === 0 ? 1 + ty : k === 1 ? ty : k === 2 ? 1 - ty : 2 - ty), row = jj * W;
+    s += wy * ((c0 >= 0 && c0 < W ? a0 * d[row + c0]! : 0) + (c1 >= 0 && c1 < W ? a1 * d[row + c1]! : 0) + (c2 >= 0 && c2 < W ? a2 * d[row + c2]! : 0) + (c3 >= 0 && c3 < W ? a3 * d[row + c3]! : 0));
+  }
+  return s;
+}
+
 /** the numbers per grid point in HeightLightGrid.v: dark, lift, spec, cast, ao */
 export const HL_STRIDE = 5;
 /** the light on a grid of points over a tile box: point (i, j) sits at world tile (x0 + (i + 0.5) / res, y0 + (j + 0.5) / res), on the world
@@ -104,8 +130,10 @@ export const HL_STRIDE = 5;
 export interface HeightLightGrid { x0: number; y0: number; res: number; w: number; h: number; v: Float32Array; nz: [number, number, number, number] }
 
 /** the course height's light over tile box `box` at res points per tile (2 = a point per metre), from the raw CH_SIZE² samples h; null when
- *  nothing in the box is lit or shaded (no height within reach, or all of it flat) */
-export function heightLightGrid(h: Float32Array, box: CourseTileBox | readonly number[], res: number): HeightLightGrid | null {
+ *  nothing in the box is lit or shaded (no height within reach, or all of it flat). T388: `land` is the real ground's layer under a map-data course (LightLand), lit by its own response (landExag) with its tilt added to the course
+ *  height's; the surface for the cast shadows and the occlusion is the two together. Without it (a game with no land, or a box out of its reach) every number is what it was before. `classic` (the gear menu's Real ground light, off: the
+ *  look before T388) lights the sum of the two as one field, as it was */
+export function heightLightGrid(h: Float32Array, box: CourseTileBox | readonly number[], res: number, land: LightLand | null = null, classic = false): HeightLightGrid | null {
   const R = HEIGHT_LIGHT_REACH, bx0 = box[0]!, by0 = box[1]!, bx1 = box[2]!, by1 = box[3]!;
   // the samples within reach of the box that are not 0 (the field is 0 everywhere it was never edited)
   const i0 = clampS(Math.floor((bx0 - R) / CH_STEP)), i1 = clampS(Math.ceil((bx1 + R) / CH_STEP));
@@ -115,6 +143,9 @@ export function heightLightGrid(h: Float32Array, box: CourseTileBox | readonly n
     const row = j * CH_SIZE;
     for (let i = i0; i <= i1; i++) if (h[row + i] !== 0) { if (i < ni0) ni0 = i; if (i > ni1) ni1 = i; if (j < nj0) nj0 = j; nj1 = j; }
   }
+  // T388: the land layer lights what it covers: the part of its rect within reach of the box
+  const L = land && land.w > 0 && land.h > 0 && land.i0 <= i1 && land.i0 + land.w - 1 >= i0 && land.j0 <= j1 && land.j0 + land.h - 1 >= j0 ? land : null;
+  if (L) { ni0 = Math.min(ni0, Math.max(i0, L.i0)); ni1 = Math.max(ni1, Math.min(i1, L.i0 + L.w - 1)); nj0 = Math.min(nj0, Math.max(j0, L.j0)); nj1 = Math.max(nj1, Math.min(j1, L.j0 + L.h - 1)); }
   if (ni1 < 0) return null;
   // the part of the box those samples can light (tiles), as whole lattice points with one point to spare all round
   const px0 = Math.max(bx0, ni0 * CH_STEP - R), px1 = Math.min(bx1, (ni1 + 1) * CH_STEP + R);
@@ -122,8 +153,14 @@ export function heightLightGrid(h: Float32Array, box: CourseTileBox | readonly n
   if (px0 >= px1 || py0 >= py1) return null;
   const k0 = Math.floor(px0 * res) - 1, l0 = Math.floor(py0 * res) - 1, w = Math.ceil(px1 * res) + 1 - k0, gh = Math.ceil(py1 * res) + 1 - l0;
   // the spline heights on the lattice, grown by the march's and the ring's reach (m points), read bilinearly below
-  const m = Math.ceil(Math.max(CAST_REACH, AO_RADII[1]) * res) + 2, HWd = w + 2 * m, HHt = gh + 2 * m, Hg = new Float32Array(HWd * HHt);
-  for (let jj = 0; jj < HHt; jj++) { const ty = (l0 - m + jj + 0.5) / res; for (let ii = 0; ii < HWd; ii++) Hg[jj * HWd + ii] = splineHeight(h, (k0 - m + ii + 0.5) / res, ty); }
+  const m = Math.ceil(Math.max(CAST_REACH, AO_RADII[1]) * res) + 2, HWd = w + 2 * m, HHt = gh + 2 * m, Hg = new Float32Array(HWd * HHt), Lg = L ? new Float32Array(HWd * HHt) : null;
+  for (let jj = 0; jj < HHt; jj++) {
+    const ty = (l0 - m + jj + 0.5) / res;
+    for (let ii = 0; ii < HWd; ii++) {
+      const tx = (k0 - m + ii + 0.5) / res, hc = splineHeight(h, tx, ty);
+      if (Lg) { const hl = splineLand(L!, tx, ty); Lg[jj * HWd + ii] = hl; Hg[jj * HWd + ii] = hc + hl; } else Hg[jj * HWd + ii] = hc;
+    }
+  }
   const at = (u: number, v: number) => {
     u = u < 0 ? 0 : u > HWd - 1.001 ? HWd - 1.001 : u; v = v < 0 ? 0 : v > HHt - 1.001 ? HHt - 1.001 : v;
     const i = u | 0, j = v | 0, fu = u - i, fv = v - j, k = j * HWd + i;
@@ -137,9 +174,16 @@ export function heightLightGrid(h: Float32Array, box: CourseTileBox | readonly n
     // the slope (m per m) by central differences over the lattice (two steps of 1/res tiles of 2 m)
     const gx = (Hg[c + 1]! - Hg[c - 1]!) / (4 * step), gy = (Hg[c + HWd]! - Hg[c - HWd]!) / (4 * step);
     // the sun on the normal tilted with the gentle ground's gain (the shade and the lift), and on the one tilted by LIGHT_EXAG alone (the inset
-    // highlight's ramp: it keeps its place down the slope, so a gentle roll's top never catches the highlight)
-    const xg = lightExag(gx * gx + gy * gy), nx = -xg * gx, ny = -xg * gy, ndl = (nx * lx + ny * ly + lz) / Math.sqrt(nx * nx + ny * ny + 1);
-    const ex0 = -LIGHT_EXAG * gx, ey0 = -LIGHT_EXAG * gy, ndl0 = (ex0 * lx + ey0 * ly + lz) / Math.sqrt(ex0 * ex0 + ey0 * ey0 + 1);
+    // highlight's ramp: it keeps its place down the slope, so a gentle roll's top never catches the highlight). T388: with a land layer the course
+    // height's tilt is that (its own gain) and the land's its own response, added; the ramp's tilt is LIGHT_EXAG on the course's slope and the land's tilt as it is
+    let nx: number, ny: number, ex0: number, ey0: number, landShare = 0;
+    if (Lg && !classic) {
+      const qx = (Lg[c + 1]! - Lg[c - 1]!) / (4 * step), qy = (Lg[c + HWd]! - Lg[c - HWd]!) / (4 * step), px = gx - qx, py = gy - qy, xp = lightExag(px * px + py * py), xq = landExag(qx * qx + qy * qy);
+      nx = -(xp * px + xq * qx); ny = -(xp * py + xq * qy); ex0 = -(LIGHT_EXAG * px + xq * qx); ey0 = -(LIGHT_EXAG * py + xq * qy);
+      // the land's share of the tilt: the shade's gentle-ground boost (gentleDark) is for the player's rolls, not for a hillside (a 3% slope facing away would darken the whole course)
+      const tq = xq * Math.sqrt(qx * qx + qy * qy), tp = xp * Math.sqrt(px * px + py * py); landShare = tq / (tq + tp + 1e-12);
+    } else { const xg = lightExag(gx * gx + gy * gy); nx = -xg * gx; ny = -xg * gy; ex0 = -LIGHT_EXAG * gx; ey0 = -LIGHT_EXAG * gy; }
+    const ndl = (nx * lx + ny * ly + lz) / Math.sqrt(nx * nx + ny * ny + 1), ndl0 = (ex0 * lx + ey0 * ly + lz) / Math.sqrt(ex0 * ex0 + ey0 * ey0 + 1);
     // cast: the march toward the sun; a point is shaded where the ground ahead rises above the sun's ray (exaggerated heights, metres)
     let cast = 0;
     for (let d = step; d <= CAST_REACH + 1e-9 && cast < 1; d += step) {
@@ -157,8 +201,8 @@ export function heightLightGrid(h: Float32Array, box: CourseTileBox | readonly n
     const rel = Math.abs(rel0) < 1e-5 ? 0 : AMBIENT * (1 - ao) + (1 - AMBIENT) * Math.max(0, ndl) / lz * (1 - cast) - 1;
     const o = (j * w + i) * HL_STRIDE; out[o + 3] = cast; out[o + 4] = ao;
     if (rel === 0) continue;
-    const lift = rel > 0 ? Math.min(1, rel / REL_MAX) : 0;
-    out[o] = rel < 0 ? Math.min(1, gentleDark(-rel)) : 0; out[o + 1] = lift; out[o + 2] = rel0 > 0 ? smooth(SPEC_LO, SPEC_HI, Math.min(1, rel0 / REL_MAX)) : 0;
+    const gain = 1 + (LAND_GAIN - 1) * landShare, lift = rel > 0 ? gain * Math.min(1, rel / REL_MAX) : 0;
+    out[o] = rel < 0 ? gain * Math.min(1, landShare > 0 ? gentleDark(-rel) + (-rel - gentleDark(-rel)) * landShare : gentleDark(-rel)) : 0; out[o + 1] = lift; out[o + 2] = rel0 > 0 ? smooth(SPEC_LO, SPEC_HI, Math.min(1, rel0 / REL_MAX)) : 0;
     if (i < qi0) qi0 = i; if (i > qi1) qi1 = i; if (j < qj0) qj0 = j; if (j > qj1) qj1 = j;
   }
   if (qi1 < 0) return null;
