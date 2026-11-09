@@ -122,6 +122,25 @@ test('a farm on the axes and one on a road at 45 degrees have the same ground or
   assert.ok(Math.max(...got[0]!.unturned) < 0.02 && Math.min(...got[45]!.unturned) > 44.9, 'unturned: 0 off on the axes, 45 off at 45 degrees');
 });
 
+test('the lane runs from the road to the fields as one dirt lane with its wheel ruts: no flat grey gravel bar through the yard', () => {
+  // (the owner, 2026-11-09: "the grey farm lane ... a flat grey bar": the yard's stretch of the lane was the gravel photo, dark grey cobbles in a hard-edged slab between the dirt lane and the dirt track)
+  let n = 0;
+  for (const deg of [0, 45, 100, 333]) for (let i = 0; i < 14; i++) for (const seed of SEEDS) {
+    const p = parcel(i, deg), c = composeFarm(p, seed, { model: 2, month: 6 });
+    assert.ok(!c.ground.some(g => g.tex === 'gravel'), `${p.key}: no gravel in a farm of the farm model 2`);
+    // the lane (from the road: its front edge at b = 0) and the drive through the yard, both hard-edged dirt with their two ruts
+    const ruts = c.ground.filter(g => g.tex === 'dirt' && g.hard && g.lines && g.lines.length >= 8);
+    assert.ok(ruts.length >= 2, `${p.key}: the lane and the yard drive wear their ruts (${ruts.length})`);
+    // the lane starts at the road (its front edge at b = 0): the yard's drive is one of the others, so the lane and the drive are two patches
+    const lane = ruts.find(g => g.pts.some((_, k) => k % 2 === 0 && Math.abs((g.pts[k]! - p.o.x) * p.n.x + (g.pts[k + 1]! - p.o.y) * p.n.y) < 1e-6));
+    assert.ok(lane, `${p.key}: a lane from the road`);
+    n++;
+  }
+  assert.ok(n >= 168);
+  // the older farm model keeps its gravel yard (saves made with it)
+  assert.ok(composeFarm(parcel(1, 45), SEEDS[0]!, { model: 1 }).ground.some(g => g.tex === 'gravel'));
+});
+
 test('farms are stable and the older farm model keeps its ground', () => {
   const p = parcel(3, 45), a = composeFarm(p, SEEDS[0]!, { model: 2, month: 4 }), b = composeFarm(p, SEEDS[0]!, { model: 2, month: 4 });
   assert.equal(JSON.stringify(a.ground), JSON.stringify(b.ground), 'deterministic');

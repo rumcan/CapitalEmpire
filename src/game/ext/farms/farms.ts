@@ -548,12 +548,14 @@ export const LANE_HALF = 1.2;
 export const ORCHARD_PITCH = 3, ORCHARD_MAX = 8, ORCHARD_MUL = 0.62;
 /** T402 (#1080, T361 #1016; the owner, 2026-11-08: "fix scaling on farms with the green long grass texture. it has a hard edge that doesn't look right"): how a field of grass is
  *  laid. The fallow field's grass is the course's long grass (an unkept field, never the map's own grass, so it reads against it), laid as a painted area's look the way the
- *  course lays it: texture tex, scale s (1: the course's own, the same display scale as the map's other tile-set grasses), its edge e feathered (the flat profile, 0.5 tiles: no
- *  cut line against the ground round it), drawn under every area the player paints (z, below the range ground's own order). One object, so a look can be tried on a running game */
-export const FIELD_GRASS: { tex: LotPatch['tex']; s: number; e: NonNullable<PatchPaint['e']>; z: number } = { tex: 'golfLongGrass', s: 1, e: 'flat', z: -2e6 };
-/** T402 (#1080; the owner, 2026-11-09: "the grey farm lane ... a flat grey bar"): the stretch of a model 2 farm's lane through its yard: its surface (the gravel photo, dark grey; or the
- *  lane's own dirt) and whether it wears the lane's two wheel ruts (the ruts are drawn on dirt only). One object, so a look can be tried on a running game */
-export const YARD_DRIVE: { tex: LotPatch['tex']; ruts: boolean } = { tex: 'gravel', ruts: false };
+ *  course lays it: texture tex, its edge e feathered (the flat profile, 0.5 tiles, with the course's tall-grass spill: no cut line against the ground round it), drawn under
+ *  every area the player paints (z, below the range ground's own order), and its scale s: the owner's long grass painting has waves tens of px wide at 30%, coarse beside the
+ *  map's own fescue and the course's other grasses, so a farm's field takes 0.6 of it (1 is the course's own). One object, so a look can be tried on a running game */
+export const FIELD_GRASS: { tex: LotPatch['tex']; s: number; e: NonNullable<PatchPaint['e']>; z: number } = { tex: 'golfLongGrass', s: 0.6, e: 'flat', z: -2e6 };
+/** T402 (#1080; the owner, 2026-11-09: "the grey farm lane ... a flat grey bar"): the stretch of a model 2 farm's lane through its yard. It was the gravel photo (dark grey cobbles:
+ *  a hard-edged grey slab in the middle of a brown lane); now the lane's own dirt with its two wheel ruts, so the lane runs from the road to the fields as one (the ruts are drawn on
+ *  dirt only). One object, so a look can be tried on a running game */
+export const YARD_DRIVE: { tex: LotPatch['tex']; ruts: boolean } = { tex: 'dirt', ruts: true };
 /** the windbreak's trees: the gold birch (Stand In for the poplars: their shape and autumn gold) on most farms, else a row of spruces; one tree a row */
 const WIND_POPLAR = names(['ref:tree-birch-gold']), WIND_SPRUCE = names(['ref:tree-spruce-blue', 'capital:tree-spruce-open']);
 /** T276 (#855; the owner, 2026-10-29: "Farm roads' tree lines become a single row on one side of the road only ... vary each tree's size and
