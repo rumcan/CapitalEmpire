@@ -65,7 +65,9 @@ export interface Actor { id: number; role: ActorRole; at: ViewPt; hole: number; 
    *  [x, y, the height he sits at (m; 0 standing)] in the view's frame, and the point they face (the pin, the tee, the stand's front); `count` is how many */
   fans?: ViewPt3[]; focus?: ViewPt; seated?: true;
   /** T426: he tends the flag (stands at the pin for another's long putt) */
-  tend?: true }
+  tend?: true;
+  /** T433: a ghost round's golfer (ghost3p.ts): drawn see-through, never in the way */
+  ghost?: true }
 /** T424: what the view draws a person doing: walking, standing, addressing the ball, swinging, putting, riding in a cart (a golfer; the cart carries him) or
  *  watching another's shot (standing turned to it) */
 export type Doing = 'walk' | 'stand' | 'address' | 'swing' | 'putt' | 'ride' | 'watch';
