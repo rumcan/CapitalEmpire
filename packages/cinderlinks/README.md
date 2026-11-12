@@ -288,6 +288,7 @@ courses, no `?find=`), draws nothing, and talks to the page that holds it by `po
 | host to view | `{ v: 1, t: 'course', course, features, biome, type, seed, scale, hole }` | `course`: one entry in the shape `tools/course-import.mjs` makes for `courses.js` (`convert()` is exported for this); `features`: the object `setFeatures` takes (`{ features: [...] }`, as `courses/edits/<id>.json`); `biome`, `type`: as `setBiome` takes; `seed`: the scatter's seed; `scale`: the course's size (1: true size, the default here; saved courses keep `CSCALE` 0.6); `hole`: from 1 (default 1). The course joins `MORE_COURSES` (replacing one of the same id), is played with `setCourse`, and the drawing starts |
 | view to host | `{ v: 1, t: 'loaded', holes }` | the course is on screen |
 | view to host | `{ v: 1, t: 'error', why }` | a course without id, holes or shapes |
+| host to view | `{ v: 1, t: 'actors', at, actors }` | T424: who else is on the course (CapitalEmpire's `play/actors3p.ts`): each golfer, caddie and cart with its id, place (metres, x east, y south), heading, `doing` and `phase`, `dress` (shirt, trousers, cap, skin, hair, build) and a cart's `riders`; the whole list each time. Drawn by `parts/08d-actors.md` with the golfer sculpture in their clothes, moved smoothly between messages; harness scene `actors`, and the gate times forty of them (budget 2 ms) |
 | host to view | `{ v: 1, t: 'leave' }` | the loop stops (nothing drawn); a later `course` starts it again |
 | view to host | `{ v: 1, t: 'exit' }` | the player pressed Escape |
 
