@@ -58,7 +58,9 @@ export interface Actor { id: number; role: ActorRole; at: ViewPt; hole: number; 
    *  stepping up to the strike, a swing from the strike to the finish, a putt from stepping up to the end of the stroke; absent: 0), and how he looks (Dress) */
   doing?: Doing; phase?: number; dress?: Dress;
   /** T424: a cart's riders (golfer actor ids, the driver first) */
-  riders?: number[] }
+  riders?: number[];
+  /** T426: he tends the flag (stands at the pin for another's long putt) */
+  tend?: true }
 /** T424: what the view draws a person doing: walking, standing, addressing the ball, swinging, putting, riding in a cart (a golfer; the cart carries him) or
  *  watching another's shot (standing turned to it) */
 export type Doing = 'walk' | 'stand' | 'address' | 'swing' | 'putt' | 'ride' | 'watch';
@@ -106,6 +108,10 @@ export interface ShotMsg { v: 1; t: 'shot'; golfer: number; hole: number; stroke
    *  (rest is where the ball itself stopped: in the water, or out of bounds) */
   flightT?: number[]; landLie?: Lie; bounceLies?: Lie[]; rollT?: number[]; rollZ?: number[]; check?: ViewPt; drop?: ViewPt; dropLie?: Lie }
 
+/** T427: the leaderboard at game minute `at` (board.ts boardRows: the leaders, then the owner's row when he is below them) and the owner's group's wait
+ *  on the group ahead in words (board.ts waitText; null: none) */
+export interface BoardMsg { v: 1; t: 'board'; at: number; rows: { pos: string; name: string; toPar: string; thru: string; owner: boolean }[]; wait: string | null }
+
 /** the time and weather: the game minute of the day, the weather (weather.ts) and the wind now */
 export interface ClockMsg { v: 1; t: 'clock'; minute: number; weather: WeatherCondition; wind: WindNow }
 
@@ -116,7 +122,7 @@ export interface HoleEndMsg { v: 1; t: 'holeEnd'; holeIdx: number; hole: number;
 /** the host closes the view: why, in the owner's words (absent: none to show) */
 export interface LeaveMsg { v: 1; t: 'leave'; why?: string }
 
-export type HostMsg = CourseMsg | ActorsMsg | TurnMsg | ShotMsg | HoleEndMsg | ClockMsg | LeaveMsg;
+export type HostMsg = CourseMsg | ActorsMsg | BoardMsg | TurnMsg | ShotMsg | HoleEndMsg | ClockMsg | LeaveMsg;
 
 // ---------------------------------------------------------------- view to host
 
@@ -144,7 +150,7 @@ export interface ExitMsg { v: 1; t: 'exit'; why?: 'esc' | 'done' | 'error'; deta
 export type ViewMsg = ReadyMsg | LoadedMsg | ErrorMsg | InputMsg | WalkedMsg | GimmeMsg | HoleDoneMsg | ExitMsg;
 
 /** the message types each side sends */
-export const HOST_TYPES: readonly HostMsg['t'][] = ['course', 'actors', 'turn', 'shot', 'holeEnd', 'clock', 'leave'];
+export const HOST_TYPES: readonly HostMsg['t'][] = ['course', 'actors', 'board', 'turn', 'shot', 'holeEnd', 'clock', 'leave'];
 export const VIEW_TYPES: readonly ViewMsg['t'][] = ['ready', 'loaded', 'error', 'input', 'walked', 'gimme', 'holeDone', 'exit'];
 
 const isMsg = (m: unknown, types: readonly string[]): boolean =>
