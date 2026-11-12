@@ -17,6 +17,7 @@ import type { ClubKit } from './mods';
 import type { WeatherCondition } from '../weather';
 import type { FeaturesFile } from './features3p';
 import type { Earned } from './unlocks';
+import type { Green3p } from './green3p';
 
 /** the protocol's version: every message carries it, and a message of another version is refused (isHostMsg / isViewMsg) */
 export const PROTOCOL_V = 1;
@@ -88,7 +89,10 @@ export interface TurnMsg { v: 1; t: 'turn'; golfer: number; holeIdx: number; hol
   /** T422: the lie as the card names it and what it does (lies.ts LIE_FX), and the day's gust peak (mph; absent: none known) */
   lieName?: string; lieNote?: string; gust?: number;
   /** T443: what he has earned (unlocks.ts; absent: an older host, everything) and the boost charges left on this hole */
-  earned?: Earned; charges?: number }
+  earned?: Earned; charges?: number;
+  /** T423: on the green, the green as the host reads it (green3p.ts: the slope grid, the read, a holed putt's way and its start line), and the gimme the round's rule
+   *  allows (m; absent or 0: none, as in a match) */
+  green?: Green3p; gimmeM?: number }
 
 /** a decided shot, the owner's or anyone's: who, the hole (1-based) and stroke, the club, where it was struck from, the flight's samples (x, y and
  *  the height, evenly spaced in time from the strike to the landing; a putt has none), the bounces (each touch of the ground after the landing),
