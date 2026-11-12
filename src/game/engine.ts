@@ -217,6 +217,7 @@ import { courseEntry3p } from './golf/play/entry3p';
 import { seedOf } from './golf/play/view3p';
 import type { CourseMsg, HostMsg, ViewInput } from './golf/play/protocol3p';
 import { Play3p } from './golf/play/play3p'; // T418: the owner's play in the view from behind the golfer
+import { earned } from './golf/play/unlocks'; // T443
 import type { Frame3p } from './golf/play/export3p';
 import { putterFitName } from './golf/play/bag';
 import { BallRoll, FX_SAND, FX_SPLASH, ballRoll, type HeightAt } from './golf/play/roll';
@@ -10070,14 +10071,18 @@ export class Game {
     const n = this.view3pHole, v = this.yrView(), f = this.view3pFrame; this.play3p = null;
     if (n === null || !v || !f) return [];
     const idx = v.holes.findIndex(h => h.n === n); if (idx < 0) return [];
-    const p = this.playerNow();
-    this.play3p = new Play3p({ view: v, holes: [idx], skills: this.yourSkills(), sex: p?.sex ?? 'm', seed: (this.seed ^ Math.imul(n, 7919) ^ Math.imul(++this.play3pN, 104729)) | 0, frame: f,
+    const p = this.playerNow(), sk = this.yourSkills();
+    // T443: what he has earned: his card's skills, his clubs' levels, his cards' mechanics (golf/play/unlocks.ts)
+    const earn = earned({ skills: p?.skills ?? {}, bag: p?.bag ?? null, mech: MECH_IDS.filter(id => hasMech(sk, id)) });
+    this.play3p = new Play3p({ view: v, holes: [idx], skills: sk, earned: earn, sex: p?.sex ?? 'm', seed: (this.seed ^ Math.imul(n, 7919) ^ Math.imul(++this.play3pN, 104729)) | 0, frame: f,
       height: this.ballHeight, wind: () => this.windNow(), fit: putterFitName(p?.bag), gust: () => { const w = this.worldWind(); return w ? windView(this.windNow(), w, 1, 0).peak : null; } });
     return this.play3p.start();
   }
   /** the view's input for the turn in hand: played through the one model (LiveGroup); what the view is sent back (his stroke, anyone else's, the
    *  hole's end, the next turn) */
   input3p(input: ViewInput): HostMsg[] { return this.play3p ? this.play3p.input(input) : []; }
+  /** T441, T442: the model's luckless shot for what the view has picked (its aim marker), or null with no play */
+  preview3p(key: number, input: ViewInput): HostMsg | null { return this.play3p ? this.play3p.preview(key, input) : null; }
   /** the Play button's choice: a practice round on just hole n (from your tee: the white one, else the first it has) or on every hole of the course from the first. Free, not an event, not
    *  recorded (yourRoundEnd); when it ends the camera, the tool, the side modes and the hole card come back as they were */
   practiceStart(n: number, scope: PracticeScope) {
