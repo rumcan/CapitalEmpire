@@ -61,21 +61,20 @@ function miniDot(x, y, col, s) { mctx.fillStyle = col; mctx.fillRect(Math.round(
 function updateHud() {
   const H = hole, m = matAt(ball.x, ball.y), d = Math.hypot(H.pin.x - ball.x, H.pin.y - ball.y);
   const score = strokes - H.par, row = (a, b) => '<div class="row"><span>' + a + '</span><b>' + b + '</b></div>';
-  const card = (course ? '<div class="course">' + course.name + '</div>' : '') + '<div class="hole">Hole ' + (course ? course.holes[(holeN - 1) % course.holes.length].n : holeN) + '<span>par ' + H.par + '</span></div>' + row('Strokes', strokes + (strokes ? ' (' + (score > 0 ? '+' : '') + score + ')' : '')) + row('Round', total) + row('To pin', (d < 10 ? d.toFixed(1) : Math.round(d)) + ' m') + row('Lie', MAT_NAME[m]) + row('Light', TOD[tmode].name) + (course ? '<div class="credit">' + course.credit + (course.hcredit ? ' &middot; heights: ' + course.hcredit : '') + ' &middot; ' + Math.round(course.S * 10) + '/10 size</div>' : '');
+  const card = (course ? '<div class="course">' + course.name + '</div>' : '') + '<div class="hole">Hole ' + (course ? course.holes[(holeN - 1) % course.holes.length].n : holeN) + '<span>par ' + H.par + '</span></div>' + row('Strokes', strokes + (strokes ? ' (' + (score > 0 ? '+' : '') + score + ')' : '')) + row('Round', total) + row('To pin', (d < 10 ? d.toFixed(1) : Math.round(d)) + ' m') + row('Lie', hostOnTurn() ? HP.turn.lieName || HP.turn.lieKind : MAT_NAME[m]) + (hostOnTurn() ? hostCardRows(row) : '') + row('Light', TOD[tmode].name) + (course ? '<div class="credit">' + course.credit + (course.hcredit ? ' &middot; heights: ' + course.hcredit : '') + ' &middot; ' + Math.round(course.S * 10) + '/10 size</div>' : '');
   if (card !== shownCard) { cardEl.innerHTML = card; shownCard = card; }
   if (club !== shownClub) { shownClub = club; clubsEl.className = HP && HP.clubs.length ? 'bag' : ''; clubsEl.innerHTML = HP && HP.clubs.length ? hostTabs() : CLUBS.map((c, k) => '<div class="club' + (k === club ? ' on' : '') + '"><b>' + (k + 1) + '</b> ' + c.name + '<i>' + (c.loft ? Math.round(c.v * c.v * clubK() * clubK() * Math.sin(2 * c.loft) / 9.81 / 5) * 5 + ' m' : 'on the green') + '</i></div>').join(''); }
-  powerEl.className = charging || player.swing >= 0 ? 'on' : '';
-  powerBar.style.width = (power * 100).toFixed(0) + '%';
-  if (charging) powerTxt.textContent = Math.round(power * 100) + '%  ' + clubName(club);
+  if (!HP) { powerEl.className = charging || player.swing >= 0 ? 'on' : ''; powerBar.style.width = (power * 100).toFixed(0) + '%'; }   // (host mode: the meter, hostMeterShow)
+  if (charging && !HP) powerTxt.textContent = Math.round(power * 100) + '%  ' + clubName(club);
   const byCart = !cart.on && Math.hypot(player.x - cart.x, player.y - cart.y) < 3.2;
   const hint = msgT > 0 ? msgText : '';
   if (hint !== shownMsg) { msgEl.textContent = hint; shownMsg = hint; }
-  const kh = (cart.on ? '<b>G</b> get out &middot; <b>W S</b> go, brake &middot; <b>A D</b> steer' : byCart ? '<b>G</b> drive the cart' : nearBall() ? '<b>hold click</b> swing &middot; <b>' + (HP ? '1-9, wheel' : '1-4') + '</b> club' : '<b>W</b> walk &middot; <b>A D</b> turn &middot; to the ball') + ' &middot; <b>H</b> help';
+  const kh = (cart.on ? '<b>G</b> get out &middot; <b>W S</b> go, brake &middot; <b>A D</b> steer' : byCart ? '<b>G</b> drive the cart' : nearBall() ? '<b>hold click</b> swing &middot; <b>' + (HP ? '1-9, wheel' : '1-4') + '</b> club' + (HP ? ' &middot; <b>Z X</b> shape &middot; <b>I</b> boost' : '') : '<b>W</b> walk &middot; <b>A D</b> turn &middot; to the ball') + ' &middot; <b>H</b> help';
   if (kh !== shownKeys) { keysEl.innerHTML = kh; shownKeys = kh; }
   if (shownStyle !== biomeId || shownType !== ctypeId) styleShow();
   { const gm = canGimme() ? 'on' : ''; if (gimmeEl.className !== gm) gimmeEl.className = gm; }   // the gimme button shows when the putt left is short enough to be given
   { const far = ball.state === 0 && !bcam && player.swing < 0 && Math.hypot(player.x - ball.x, player.y - ball.y) > 4 ? 'on' : ''; if (jumpEl.className !== far) jumpEl.className = far; }   // the button shows when the ball lies still and the golfer is away from it
-  { const wr = WDX * RX + WDY * RY, wf = WDX * FX + WDY * FY, deg = Math.round(Math.atan2(-wf, wr) * 57.3 / 5) * 5, gu = WG[(((Math.round(player.y * PPV) >> 5) & 127) << 7) | ((Math.round(player.x * PPM) >> 6) & 127)] > 110, ws = deg + (gu ? 'g' : '');   // the wind as the camera sees it; gold while a gust is on the golfer
+  { const hw = hostWindDir(), wdx = hw ? hw[0] : WDX, wdy = hw ? hw[1] : WDY, wr = wdx * RX + wdy * RY, wf = wdx * FX + wdy * FY, deg = Math.round(Math.atan2(-wf, wr) * 57.3 / 5) * 5, gu = WG[(((Math.round(player.y * PPV) >> 5) & 127) << 7) | ((Math.round(player.x * PPM) >> 6) & 127)] > 110, ws = deg + (gu ? 'g' : '');   // the wind as the camera sees it; gold while a gust is on the golfer
     if (ws !== shownWind) { windArrow.style.transform = 'rotate(' + deg + 'deg)'; windEl.className = gu ? 'gust' : ''; shownWind = ws; } }
   if (miniImg) {
     mctx.putImageData(miniImg, 0, 0);
@@ -116,7 +115,7 @@ function hostMessage(m) {   // one message from the host page, already known to 
   if (!m || typeof m !== 'object') return;
   if (m.t === 'leave') { hostOff = true; return; }
   if (m.t === 'actors' || m.t === 'board') { groupMsg(m); return; }   // T424, T427: who else is on the course, the leaderboard (parts/08d-actors.md, 08e-group.md)
-  if ((m.t === 'turn' || m.t === 'shot' || m.t === 'holeEnd') && m.v === 1) { if (course) hostPlayMsg(m); return; }   // (T418: the play, once a course is in)
+  if ((m.t === 'turn' || m.t === 'shot' || m.t === 'holeEnd' || m.t === 'preview') && m.v === 1) { if (course) hostPlayMsg(m); return; }   // (T418: the play, once a course is in)
   if (m.t !== 'course' || m.v !== 1) return;
   const C = m.course;
   if (!C || typeof C.id !== 'string' || !Array.isArray(C.holes) || !C.holes.length || !C.polys) { hostSend({ t: 'error', why: 'the course has no id, holes or shapes' }); return; }
@@ -159,6 +158,7 @@ const CLUB_NAME = { driver: 'Driver', wood3: '3-wood', wood5: '5-wood', hybrid: 
 function clubName(k) { const c = HP && HP.clubs[k]; return c ? CLUB_NAME[c.club] || c.club : CLUBS[k] ? CLUBS[k].name : ''; }
 function hostPlayMsg(m) {   // a play message from the host: a turn, a shot, the hole's end; held while a shot is being played back
   if (!HP) HP = { turn: null, clubs: [], wait: 0, play: null, q: [], over: false };
+  if (m.t === 'preview') { if (m.key === HP.pvKey) HP.pv = Object.assign({}, m, { sig: HP.pvSig, club: hostClub() ? hostClub().club : '' }); return; }   // (T441: the answer to the latest `aim` only)
   if (m.t === 'shot') { if (groupOther(m) && !groupPlays(m)) return;   /* (T425: his group's strokes are played too: 08e-group.md) */ if (HP.play) { HP.q.push(m); return; } hostShot(m); return; }   // (anyone else's stroke: shown from T425)
   if (HP.play || HP.q.length) { HP.q.push(m); return; }
   if (m.t === 'turn') hostTurn(m); else if (m.t === 'holeEnd') hostHoleEnd(m);
@@ -169,13 +169,16 @@ function hostTurn(m) {   // the owner's turn: the ball and the pin where the mod
   ball.x = ball.lx = m.ball[0] * S; ball.y = ball.ly = m.ball[1] * S; ball.z = groundH(ball.x, ball.y); ball.vx = ball.vy = ball.vz = 0; ball.state = 0;
   hole.pin.x = hole.green.x = m.pin[0] * S; hole.pin.y = hole.green.y = m.pin[1] * S;
   strokes = m.stroke - 1; autoClub = false; club = Math.max(0, HP.clubs.findIndex((c) => c.club === m.suggested.club)); shownClub = -2;
+  HP.pick = null; HP.pv = null; HP.pvSig = '';   // (T441: each turn starts from a plain shot)
   const ax = m.suggested.aim[0] * S - ball.x, ay = m.suggested.aim[1] * S - ball.y, al = Math.hypot(ax, ay); if (al > 0.3) { aim.dx = ax / al; aim.dy = ay / al; }
   if (m.stroke === 1 && Math.hypot(player.x - ball.x, player.y - ball.y) > 2.5) jumpToBall();   // (on the tee he stands at his ball; later he walks to it, or J)
 }
 function hostStrike() {   // the club meets the ball: the input goes to the host, and the ball waits for its answer
   const c = hostClub(), t = HP.turn, S = hostS(); if (!c || !t) return;
   const putt = c.club === 'putter', m = matAt(ball.x, ball.y);
-  hostSend({ t: 'input', input: { holeIdx: t.holeIdx, stroke: t.stroke, club: c.club, aim: [aim.x / S, aim.y / S], power: hostPower(power, putt) } });   // (spin and shape: T441, T442)
+  const sw = HP.out; HP.out = null;   // (T421: the meter's outcome; the power is then only what it would be without one)
+  hostSend({ t: 'input', input: Object.assign({ holeIdx: t.holeIdx, stroke: t.stroke, club: c.club, aim: [aim.x / S, aim.y / S], power: sw ? Math.min(putt ? 1.5 : 1, Math.max(putt ? 0.5 : 0.3, sw.power)) : hostPower(power, putt) }, sw ? { swing: sw } : {}, hostShotIn()) });   // (T441, T442: the shape and spin picked)
+  if (HP.pick) HP.pick.armed = false;   // (spin and shape: T441, T442)
   HP.wait = 1;
   if (!putt) sndShot(); else sndTap();
   for (let k = 0, n = putt ? 3 : 10 + ((power * 14) | 0); k < n; k++) {   // sparks off the club, and turf or sand
@@ -212,6 +215,9 @@ function hostBall() {   // one step of the playback: the ball follows the host's
     if (!P.landed) { P.landed = true; hostLand(8); }
     while (P.bi < P.bT.length && P.bT[P.bi] <= P.t) { P.bi++; if (P.bi > 1) hostLand(4); }   // (the first bounce is the landing)
     hostAt(P.RT, P.RQ, P.t, HQ); ball.x = HQ.x * S; ball.y = HQ.y * S; ball.z = groundH(ball.x, ball.y) + HQ.h * S; ball.state = 2;
+    { const vx = ball.x - x0, vy = ball.y - y0;   // (T442: a ball that turns back is spinning back: a zip of sparks and a tick where it bites)
+      if (P.ldx !== undefined && !P.zip && vx * P.ldx + vy * P.ldy < 0) { P.zip = true; sndTap(); for (let k = 0; k < 10; k++) addParticle(P_SPARK, ball.x, ball.y, ball.z + 0.05, (rnd() - 0.5) * 1.6, (rnd() - 0.5) * 1.6, 0.6 + rnd(), 14 + rndi(12), 0); }
+      if (Math.hypot(vx, vy) > 1e-4) { P.ldx = vx; P.ldy = vy; } }
   } else { hostRest(); return; }
   ball.vx = (ball.x - x0) / dt; ball.vy = (ball.y - y0) / dt; ball.vz = 0;   // (for the ball camera's turn)
 }
@@ -231,16 +237,19 @@ function hostHoleEnd(m) {   // the hole is over: its score is said; after the la
   strokes = m.strokes; if (m.last) { HP.turn = null; HP.over = true; }
   say(name + '  -  hole ' + m.hole + ' in ' + m.strokes + (m.last ? '  -  Esc goes back to the course' : ''), m.last ? 100000 : 330);
 }
-function hostTick() {   // each step: the playback, and the wait for an answer
-  hostBall();
+function hostTick() {   // each step: the playback, the meter, and the wait for an answer
+  hostBall(); hostMeterShow(); hostShotShow(); hostAimAsk();
   if (HP.wait > 0 && ++HP.wait > HOST_WAIT && (HP.wait - HOST_WAIT) % 120 === 1) say('Waiting for the course...', 130);
 }
 function hostAim() {   // T420: the aim tells the truth: the arc to where the model's mean lands this club at this power (its carry in this lie, slope and wind, and
   // the wind's push off the line), and a ring at one standard deviation of where it lands (shot.ts SHOT_SCATTER: across the line and along it). A better
   // club or a steadier golfer draws a smaller ring. Its numbers come from the host's kit for the club (turn.clubs), worked out along the suggested line
   const C = hostClub(), t = HP.turn; if (!C || !t) return;
-  const S = hostS(), putt = C.club === 'putter', pw = hostPower(charging ? power : putt ? 0.5 : 1, putt), hot = charging ? AIM_R : AIM_G, ph = (frame >> 1) % 6;
+  const sw = HP.sw, u = sw ? (sw.ph === 1 ? sw.u : sw.power) : 1, b = sw ? hostBoost(sw.presses) : 0;   // (T421: what the meter has set so far: the overswing carries half, the boost adds)
+  const S = hostS(), putt = C.club === 'putter', pw = sw ? (putt ? u : u <= 1 ? u : 1 + 0.5 * (u - 1)) + b : 1, hot = charging ? AIM_R : AIM_G, ph = (frame >> 1) % 6;
   const dx = aim.dx, dy = aim.dy, rx = -dy, ry = dx;                  // (the line, and his right as he faces it: x east, y south)
+  if (!putt && hostAimPreview(C, pw, hot, ph)) return;               // (T441, T442: the model's preview of the shot picked, when it has come)
+  if (putt && hostPuttAim(pw, hot, ph)) return;                      // (T423: the host's read: the way a putt struck along this aim takes)
   if (putt) {                                                          // a putt: its length is a share of the way to the pin
     const len = Math.hypot(hole.pin.x - ball.x, hole.pin.y - ball.y) * pw;
     for (let k = 0, d = 0.4 + ph * 0.07; d < len; d += 0.42, k++) { const qx = ball.x + dx * d, qy = ball.y + dy * d; projectO(qx, qy, groundH(qx, qy) + 0.03, PJ); if (PJ.s > 0) aimDotO(PJ.x, PJ.y, PJ.s > 0.8 ? 1 : 0, k & 1 ? hot : AIM_W); }
@@ -264,6 +273,205 @@ function hostAim() {   // T420: the aim tells the truth: the arc to where the mo
   projectO(lx, ly, z1 + 0.03, PJ); if (PJ.s > 0) aimDotO(PJ.x, PJ.y, PJ.s > 0.5 ? 2 : 1, hot);
   HP.ring = { x: lx, y: ly, across, along };   // (kept for the harness)
 }
+// T421: the swing is the model's meter (swing.ts SwingMeter) in Cinderlinks' hold-and-release. Pressing starts the backswing: the marker climbs at the
+// club's speed (turn.clubs[].speed: meter units a second, slower for a better golfer) while the heart beats faster; letting go sets the power (past 100%
+// is the overswing; at 120% it turns back by itself). The marker then comes back down, the club with it, and a second press strikes: its place against
+// the snap line is the accuracy (inside the sweet band, the club's `sweet` and narrowed by a boost, straight; early pulls left, late pushes right). With
+// no second press the swing ends at -20%, the worst late miss. Space during the swing adds the boost (the host counts it only for a golfer with the card).
+// The outcome, not the times, goes to the host, which reads it exactly as the top view's meter (swing.ts swingEffect): the same click, the same miss.
+const HMETER = { top: 1.2, low: -0.2, per: 0.01, max: 0.06, narrow: 0.4, v: 2 };
+function hostBoost(n) { return Math.min(HMETER.max, Math.max(0, n) * HMETER.per); }
+function hostSweet(C, boost) { return (C && C.sweet > 0 ? C.sweet : 0.07) * (1 - HMETER.narrow * Math.min(HMETER.max, boost) / HMETER.max); }   // (swing.ts sweetSpot's narrowing by the boost)
+function hostSwing(p) {   // one step of the meter; true while it holds the golfer (updatePlayer then does nothing else)
+  const down = mouse.down, edge = down && !HP.mwas; HP.mwas = down;
+  const S = HP.sw, C = hostClub();
+  if (!S) {
+    if (!edge || !C || hostBusy() || !nearBall() || player.swing >= 0 || cart.on) return false;
+    HP.sw = { ph: 1, t: 0, u: 0, power: 0, presses: 0, spd: C.speed > 0 ? C.speed : 1 }; heartT = 0; charging = true; power = 0; return true;
+  }
+  const fx = -aim.dy, fy = aim.dx;                                     // he stands side-on: the target is to his left
+  p.x += (ball.x - fx * 0.64 - p.x) * 0.3; p.y += (ball.y - fy * 0.64 - p.y) * 0.3; p.th = Math.atan2(fy, fx); p.fa = Math.round(p.th / 6.2832 * 16 + 16) % 16; p.moving = false;
+  S.t += 1 / 60;
+  if (S.ph === 1) {                                                    // the backswing: the marker climbs while the button is held
+    S.u = Math.min(HMETER.top, S.t * S.spd);
+    if (S.u >= HMETER.top || !down) { S.power = S.u; S.ph = 2; S.t = 0; charging = false; }
+    if (--heartT <= 0) { sndHeart(); heartT = Math.round((50 - 24 * Math.min(1, S.u)) * (HP.pick && HP.pick.armed ? 0.6 : 1)); }   // the heart beats, faster as the power builds (and faster still with the boost armed, T443)
+    power = S.u; p.al = -2 * Math.min(1, S.u);
+    return true;
+  }
+  S.u = S.power - S.t * S.spd;                                         // the downswing: the marker comes back to the snap line, the club to the ball
+  p.al = S.u > 0 ? -2 * Math.min(1, S.u) : 0;
+  const acc = edge ? S.u : S.u <= HMETER.low ? HMETER.low : null;
+  if (acc === null) return true;
+  HP.out = { power: S.power, acc, boost: HP.pick && HP.pick.armed && hostEarned('boost') && hostCharges() > 0 ? HMETER.max : hostBoost(S.presses), v: HMETER.v }; HP.sw = null; HP.lastSw = HP.out;
+  p.swing = 1; p.al = 0.01;                                            // (the follow-through plays; the club has met the ball)
+  hostStrike();
+  return true;
+}
+function hostMeterShow() {   // the power bar as the meter: the marker, the sweet band round the snap line and the 100% mark; the outcome in words after it
+  const S = HP.sw, on = !!S || (player.swing >= 0 && !!HP.lastSw), C = hostClub(), span = HMETER.top - HMETER.low, at = (u) => ((u - HMETER.low) / span * 100).toFixed(1) + '%';
+  const cls = on ? 'on meter' : 'meter'; if (powerEl.className !== cls) powerEl.className = cls;
+  if (!on) return;
+  const u = S ? S.u : HP.lastSw.acc, boost = S ? (HP.pick && HP.pick.armed ? HMETER.max : hostBoost(S.presses)) : HP.lastSw.boost, w = hostSweet(C, boost);
+  powerBar.style.width = at(Math.max(HMETER.low, u));
+  meterSweet.style.left = at(-w); meterSweet.style.width = (2 * w / span * 100).toFixed(1) + '%'; meterTop.style.left = at(1);
+  const pw = S ? (S.ph === 1 ? S.u : S.power) : HP.lastSw.power;
+  let txt = Math.round(pw * 100) + '%  ' + clubName(club) + (boost > 0 ? '  +' + Math.round(boost * 100) + '% boost' : '');
+  if (!S) { const off = Math.abs(u) <= w ? 0 : u; txt += off === 0 ? '  -  straight' : off > 0 ? '  -  early: it goes left' : '  -  late: it goes right'; }
+  else if (S.ph === 2) txt += '  -  click on the line';
+  powerTxt.textContent = txt;
+}
+const meterSweet = document.createElement('b'), meterTop = document.createElement('b');
+meterSweet.className = 'sweet'; meterTop.className = 'top';
+{ const tr = powerBar.parentNode || (powerEl.children && powerEl.children[0]); if (tr && tr.appendChild) { tr.appendChild(meterSweet); tr.appendChild(meterTop); } }
+
+// T422: the card says what the model will use: the lie (its kind and what it does), the slope under the ball, and the wind now with the day's gusts
+const COMPASS = ['north', 'north-east', 'east', 'south-east', 'south', 'south-west', 'west', 'north-west'];
+function hostOnTurn() { return !!(HP && HP.turn && !HP.play && ball.state === 0); }
+function hostCardRows(row) {
+  const t = HP.turn, s = t.slope || { up: 0, across: 0 }, w = t.wind || { mph: 0, from: 0 }, pc = (v) => Math.round(Math.abs(v) * 100) + '%';
+  const up = Math.abs(s.up) < 0.01 ? 'level' : (s.up > 0 ? 'uphill ' : 'downhill ') + pc(s.up), side = Math.abs(s.across) < 0.01 ? '' : ', ball ' + (s.across > 0 ? 'above' : 'below') + ' feet ' + pc(s.across);
+  const wind = w.mph < 1 ? 'calm' : Math.round(w.mph) + ' mph from the ' + COMPASS[Math.round((((w.from % 360) + 360) % 360) / 45) % 8] + (t.gust > w.mph + 1 ? ', gusts ' + Math.round(t.gust) : '');
+  return (t.green ? row('Read', t.green.read.replace(/^Green read: /, '')) : '') + row('Slope', up + side) + row('Wind', wind) + (hostClub() && hostClub().club !== 'putter' ? row('Shot', hostPickText()) : '') + (t.lieNote ? '<div class="credit">' + t.lieNote + '</div>' : '');
+}
+function hostWindDir() {   // the way the host's wind blows (toward), on the ground: the arrow shows it; null without a turn (the view's own wind)
+  if (!HP || !HP.turn || !HP.turn.wind || HP.turn.wind.mph < 1) return null;
+  const b = HP.turn.wind.from * Math.PI / 180; return [-Math.sin(b), Math.cos(b)];   // (from the north, 0, it blows south: + y)
+}
+// T441, T442, T443: the shot he picks before the swing, the model's preview of it, and what he has earned.
+// - The shape (shape.ts ShotShape): the curve (draw, straight, fade; Z steps through them) and the flight (normal, high, low; X).
+// - The ball control (spin.ts SpinInput): a strike point picked on the ball (low for backspin, high to run on, left and right for side spin); tour spin
+//   adds the clicks in the air a card allows. A click on the ball's middle takes the spin off.
+// - The boost (I, or the button): armed, the swing is a "go for it" (swing.ts BOOST.max: more carry, a narrower sweet band, a wider miss), one charge.
+// What he has not earned (turn.earned, unlocks.ts) is greyed and says what unlocks it; the host takes it out of an input anyway.
+// The aim draws the host's preview: the model's shot for this pick with no luck in it (its curve, its landing, then its bounce and roll as a fainter line).
+function hostEarned(k) { const e = HP && HP.turn && HP.turn.earned; return !e || !!e[k]; }   // (an older host sends none: everything)
+function hostWhy(k) { const e = HP && HP.turn && HP.turn.earned; return (e && e.why && e.why[k]) || ''; }
+function hostCharges() { const t = HP && HP.turn; return t && t.charges !== undefined ? t.charges : hostEarned('boost') ? 1 : 0; }
+function hostPick() { if (!HP.pick) HP.pick = { curve: 0, flight: 0, sx: 0, sy: 0, tour: false, armed: false }; return HP.pick; }
+function hostPickSet(k) {   // a pick from a button or a key; a locked one says what unlocks it
+  const P = hostPick(), lock = (n) => { say(n[0].toUpperCase() + n.slice(1) + ' is locked: ' + (hostWhy(n) || 'not earned yet'), 200); return false; };
+  if (k === 'draw' || k === 'fade') { if (!hostEarned(k)) return lock(k); P.curve = P.curve === (k === 'draw' ? -1 : 1) ? 0 : k === 'draw' ? -1 : 1; }
+  else if (k === 'straight') P.curve = 0;
+  else if (k === 'high' || k === 'low') { if (!hostEarned(k)) return lock(k); P.flight = P.flight === (k === 'high' ? 1 : -1) ? 0 : k === 'high' ? 1 : -1; }
+  else if (k === 'normal') P.flight = 0;
+  else if (k === 'tour') { if (!hostEarned('tour')) return lock('tour'); P.tour = !P.tour; }
+  else if (k === 'boost') { if (!hostEarned('boost')) return lock('boost'); if (!P.armed && hostCharges() <= 0) { say('No boost left on this hole', 150); return false; } P.armed = !P.armed; }
+  else if (k === 'curve') { const n = [0, -1, 1][([0, -1, 1].indexOf(P.curve) + 1) % 3]; return hostPickSet(n === 0 ? 'straight' : n < 0 ? 'draw' : 'fade'); }
+  else if (k === 'flight') { const n = [0, 1, -1][([0, 1, -1].indexOf(P.flight) + 1) % 3]; return hostPickSet(n === 0 ? 'normal' : n > 0 ? 'high' : 'low'); }
+  shotShown = ''; return true;
+}
+function hostSpinAt(fx, fy) {   // the strike point on the ball (-1..1 each, y up): side spin and backspin only when earned
+  const P = hostPick(), r = Math.hypot(fx, fy); let x = fx, y = fy; if (r > 1) { x /= r; y /= r; } if (r < 0.18) { x = 0; y = 0; }
+  if (x && !hostEarned('side')) { say('Side spin is locked: ' + hostWhy('side'), 200); x = 0; }
+  if (y < 0 && !hostEarned('back')) { say('Backspin is locked: ' + hostWhy('back'), 200); y = 0; }
+  P.sx = +x.toFixed(2); P.sy = +y.toFixed(2); shotShown = '';
+}
+function hostPickText() {
+  const P = hostPick(), c = P.curve < 0 ? 'Draw' : P.curve > 0 ? 'Fade' : '', f = P.flight > 0 ? 'high' : P.flight < 0 ? 'low' : '', sp = Math.round(Math.hypot(P.sx, P.sy) * 100);
+  const spin = sp ? (P.sy < -0.2 ? 'backspin' : P.sy > 0.2 ? 'topspin' : 'side spin') + ' ' + sp + '%' + (P.tour ? ' + tour' : '') : '';
+  return [c && f ? c + ', ' + f : c || (f ? f[0].toUpperCase() + f.slice(1) : 'Straight'), spin, P.armed ? 'boost' : ''].filter(Boolean).join(' · ');
+}
+function hostShotIn() {   // what the pick adds to an input (none for a putt)
+  const P = hostPick(), c = hostClub(); if (!c || c.club === 'putter') return {};
+  const o = {}; if (P.curve || P.flight) o.shape = { curve: P.curve, flight: P.flight }; if (P.sx || P.sy || P.tour) o.spin = { x: P.sx, y: P.sy, pump: P.tour ? 4 : 0 }; return o;
+}
+// the panel: built once, shown while it is his turn with a full shot in hand
+const shotEl = document.createElement('div'); shotEl.id = 'shotc';
+shotEl.innerHTML = '<div class="row"><span>Curve</span><b data-k="draw">Draw</b><b data-k="straight">Straight</b><b data-k="fade">Fade</b></div>'
+  + '<div class="row"><span>Flight</span><b data-k="low">Low</b><b data-k="normal">Normal</b><b data-k="high">High</b></div>'
+  + '<div class="row"><span>Spin</span><canvas id="spinBall" width="40" height="40"></canvas><b data-k="tour">Tour</b></div>'
+  + '<div class="row"><b data-k="boost" class="boost">Go for it</b><i id="boostTxt"></i></div><div id="pickTxt"></div>';
+if (typeof hudEl !== 'undefined' && hudEl.appendChild) hudEl.appendChild(shotEl);
+const spinBall = shotEl.querySelector ? shotEl.querySelector('#spinBall') : null, sctx = spinBall && spinBall.getContext ? spinBall.getContext('2d') : null;
+let shotShown = '';
+if (shotEl.addEventListener) shotEl.addEventListener('mousedown', (e) => {
+  if (e.stopPropagation) e.stopPropagation(); if (e.preventDefault) e.preventDefault();
+  const t = e.target; if (!HP || !t) return;
+  if (t === spinBall && spinBall.getBoundingClientRect) { const r = spinBall.getBoundingClientRect(); hostSpinAt(((e.clientX - r.left) / r.width - 0.5) * 2.2, -((e.clientY - r.top) / r.height - 0.5) * 2.2); }
+  else if (t.dataset && t.dataset.k) hostPickSet(t.dataset.k);
+});
+function hostShotShow() {   // the panel, written only when something changed
+  const on = hostOnTurn() && !hostBusy() && !HP.sw && !!hostClub() && hostClub().club !== 'putter', P = hostPick();
+  const sig = on ? [P.curve, P.flight, P.sx, P.sy, P.tour, P.armed, hostCharges(), JSON.stringify((HP.turn && HP.turn.earned) || '')].join('|') : 'off';
+  if (sig === shotShown) return; shotShown = sig; shotEl.className = on ? 'on' : ''; if (!on || !shotEl.querySelectorAll) return;
+  for (const b of shotEl.querySelectorAll('b[data-k]')) {
+    const k = b.dataset.k, earnedK = k === 'straight' || k === 'normal' || hostEarned(k);
+    const sel = (k === 'draw' && P.curve < 0) || (k === 'fade' && P.curve > 0) || (k === 'straight' && !P.curve) || (k === 'low' && P.flight < 0) || (k === 'high' && P.flight > 0) || (k === 'normal' && !P.flight) || (k === 'tour' && P.tour) || (k === 'boost' && P.armed);
+    b.className = (k === 'boost' ? 'boost ' : '') + (sel ? 'sel' : '') + (earnedK ? '' : ' lock'); b.title = earnedK ? '' : 'Locked: ' + hostWhy(k);
+  }
+  const bt = shotEl.querySelector('#boostTxt'); if (bt) bt.textContent = hostEarned('boost') ? hostCharges() + ' left this hole' : 'locked';
+  const pt = shotEl.querySelector('#pickTxt'); if (pt) pt.textContent = hostPickText();
+  if (sctx) {   // the ball and its strike point
+    sctx.clearRect(0, 0, 40, 40); sctx.fillStyle = '#f4efdc'; sctx.beginPath(); sctx.arc(20, 20, 17, 0, 6.2832); sctx.fill();
+    sctx.fillStyle = 'rgba(12,34,24,0.25)'; if (!hostEarned('back')) sctx.fillRect(3, 20, 34, 17); if (!hostEarned('side')) { sctx.fillRect(3, 3, 9, 34); sctx.fillRect(28, 3, 9, 34); }
+    sctx.fillStyle = '#e8573c'; sctx.beginPath(); sctx.arc(20 + P.sx * 15, 20 - P.sy * 15, 3.5, 0, 6.2832); sctx.fill();
+  }
+}
+// the preview: asked for when the pick, the club or the line changes (a few times a second at most), drawn when the answer is for what is picked now
+function hostAimSig() { const c = hostClub(), P = hostPick(); return c ? [c.club, P.curve, P.flight, P.sx, P.sy, P.tour, P.armed, Math.round(Math.atan2(aim.dy, aim.dx) * 360 / Math.PI)].join('|') : ''; }
+function hostAimAsk() {
+  if (!hostOnTurn() || hostBusy() || HP.sw || !nearBall() || !hostClub() || hostClub().club === 'putter') return;
+  const sig = hostAimSig(); HP.tk = (HP.tk || 0) + 1; if (sig === HP.pvSig || HP.tk - (HP.pvAt || -99) < 8) return;
+  const t = HP.turn, S = hostS(); HP.pvSig = sig; HP.pvAt = HP.tk; HP.pvKey = (HP.pvKey || 0) + 1;
+  hostSend({ t: 'aim', key: HP.pvKey, input: Object.assign({ holeIdx: t.holeIdx, stroke: t.stroke, club: hostClub().club, aim: [aim.x / S, aim.y / S], power: 1 }, hostShotIn(), HP.pick.armed ? { swing: { power: 1, acc: 0, boost: HMETER.max, v: HMETER.v } } : {}) });
+}
+const AIM_RL = rgb(150, 205, 255);   // the bounce and roll after the landing: a fainter line
+function hostAimPreview(C, pw, hot, ph) {   // the preview's flight (scaled to the power while he swings), its ring, and its roll; false when there is none for this pick
+  const pv = HP.pv; if (!pv || !pv.shot || pv.sig !== HP.pvSig || pv.club !== C.club) return false;
+  const m = pv.shot, S = hostS(), F = m.flight, n = F.length; if (n < 2) return false;
+  const bx = ball.x, by = ball.y, k = pw, at = (p) => [bx + (p[0] * S - bx) * k, by + (p[1] * S - by) * k];
+  for (let i = 0; i < n; i++) {   // the curved flight and its shadow
+    if (i % 3 !== ph % 3) continue;
+    const q = at(F[i]), gz = groundH(q[0], q[1]);
+    projectO(q[0], q[1], gz + 0.03, PJ); if (PJ.s > 0) plotZO(PJ.x, PJ.y, PJ.d, AIM_D);
+    projectO(q[0], q[1], gz + F[i][2] * S * k, PJ); if (PJ.s > 0) aimDotO(PJ.x, PJ.y, PJ.s > 1.1 ? 2 : PJ.s > 0.35 ? 1 : 0, (i / 3 | 0) & 1 ? hot : AIM_W);
+  }
+  const L = at(F[n - 1]), dx0 = L[0] - bx, dy0 = L[1] - by, dl = Math.hypot(dx0, dy0) || 1, dx = dx0 / dl, dy = dy0 / dl, rx = -dy, ry = dx;
+  const across = Math.max(0.4, (C.scatterM || 0) / 2 * pv.spread * pw * S), along = Math.max(0.4, (C.longM !== undefined ? C.longM : C.scatterM || 0) / 2 * pv.spread * pw * S);
+  const na = Math.max(40, Math.min(160, Math.round((across + along) * 3)));
+  for (let a = 0; a < na; a++) { const an = a / na * 6.2832, qx = L[0] + dx * along * Math.cos(an) + rx * across * Math.sin(an), qy = L[1] + dy * along * Math.cos(an) + ry * across * Math.sin(an); projectO(qx, qy, groundH(qx, qy) + 0.03, PJ); if (PJ.s > 0) { plotZO(PJ.x, PJ.y + 1, PJ.d - 0.3, AIM_D); plotZO(PJ.x, PJ.y, PJ.d - 0.3, a & 1 ? hot : AIM_W); } }
+  projectO(L[0], L[1], groundH(L[0], L[1]) + 0.03, PJ); if (PJ.s > 0) aimDotO(PJ.x, PJ.y, PJ.s > 0.5 ? 2 : 1, hot);
+  const R = [F[n - 1]].concat(m.roll || []);   // the bounce and roll: a fainter line from the landing to where it stops
+  for (let i = 0; i + 1 < R.length; i++) { const a = at(R[i]), b = at(R[i + 1]), seg = Math.hypot(b[0] - a[0], b[1] - a[1]); for (let d = 0; d < seg; d += 0.6) { const u = d / seg, x = a[0] + (b[0] - a[0]) * u, y = a[1] + (b[1] - a[1]) * u; projectO(x, y, groundH(x, y) + 0.04, PJ); if (PJ.s > 0) plotZO(PJ.x, PJ.y, PJ.d - 0.3, AIM_RL); } }
+  const E2 = at(m.rest); projectO(E2[0], E2[1], groundH(E2[0], E2[1]) + 0.04, PJ); if (PJ.s > 0) aimDotO(PJ.x, PJ.y, 1, AIM_RL);
+  HP.ring = { x: L[0], y: L[1], across, along, pv: true };
+  return true;
+}
+// T423: the green as the host reads it. Its slope grid is the host's (its own heights: the view's are raised and roughened for the look), drawn as a
+// dot every metre with a tick downhill, white on the flat, then cyan, yellow, orange as it steepens (green.ts BREAK_COLOURS). A putt is aimed as one is
+// read: the aim shows the way a putt struck along it takes (the host's holed way, turned with the aim and stretched with the pace), and the model judges
+// it against the read's start line (green3p.ts), so a putt started along the read and struck at the right pace goes in.
+const GRID_RGB = [rgb(255, 255, 255), rgb(125, 211, 252), rgb(250, 204, 21), rgb(249, 115, 22)];
+function hostPuttGrid() {
+  const G = HP.turn.green, P = G.pts, S = hostS();
+  for (let k = 0; k + 4 < P.length; k += 5) {
+    const x = P[k] * S, y = P[k + 1] * S, s = P[k + 4], u = s <= 0.002 ? 0 : Math.min(1, (s - 0.002) / 0.038), c = GRID_RGB[u <= 0 ? 0 : u < 0.3 ? 1 : u < 0.65 ? 2 : 3];
+    projectO(x, y, groundH(x, y) + 0.02, PJ); if (PJ.s <= 0 || PJ.d < 1.5) continue;
+    plotZO(PJ.x, PJ.y, PJ.d - 0.2, c); plotZO(PJ.x + 1, PJ.y, PJ.d - 0.2, c);
+    if (u > 0) {   // the tick downhill: longer where steeper
+      const L = (0.12 + 0.3 * u) * S, ex = x + P[k + 2] * L, ey = y + P[k + 3] * L;
+      for (let t = 0.25; t <= 1; t += 0.25) { const qx = x + (ex - x) * t, qy = y + (ey - y) * t; projectO(qx, qy, groundH(qx, qy) + 0.02, PJ); if (PJ.s > 0) plotZO(PJ.x, PJ.y, PJ.d - 0.2, c); }
+    }
+  }
+}
+function hostPuttAim(pw, hot, ph) {   // the putt's way as the model would draw it for this aim and pace; false without the host's green
+  const G = HP.turn && HP.turn.green; if (!G || !G.path || G.path.length < 2) return false;
+  const S = hostS(), bx = ball.x, by = ball.y, pin = HP.turn.pin, a0 = Math.atan2(pin[1] * S - by, pin[0] * S - bx), aA = Math.atan2(aim.dy, aim.dx);
+  const rot = aA - a0 - G.startDeg * Math.PI / 180, c = Math.cos(rot), s = Math.sin(rot), at = (p) => { const dx = (p[0] * S - bx) * pw, dy = (p[1] * S - by) * pw; return [bx + dx * c - dy * s, by + dx * s + dy * c]; };
+  let k = 0;
+  for (let i = 0; i + 1 < G.path.length; i++) {
+    const a = at(G.path[i]), b = at(G.path[i + 1]), seg = Math.hypot(b[0] - a[0], b[1] - a[1]);
+    for (let d = (ph * 0.07) % 0.42; d < seg; d += 0.42, k++) { const u = d / seg, x = a[0] + (b[0] - a[0]) * u, y = a[1] + (b[1] - a[1]) * u; projectO(x, y, groundH(x, y) + 0.03, PJ); if (PJ.s > 0) aimDotO(PJ.x, PJ.y, PJ.s > 0.8 ? 1 : 0, k & 1 ? hot : AIM_W); }
+  }
+  const e = at(G.path[G.path.length - 1]); projectO(e[0], e[1], groundH(e[0], e[1]) + 0.03, PJ); if (PJ.s > 0) aimDotO(PJ.x, PJ.y, 2, hot);
+  HP.putt = { x: e[0], y: e[1], rot };   // (kept for the harness: where this aim and pace end)
+  return true;
+}
+function hostCanGimme() {   // a gimme the round's rule allows: his turn, on the green, inside the rule's distance
+  const t = HP.turn; return !!t && hostOnTurn() && !hostBusy() && !bcam && t.gimmeM > 0 && !!t.green && t.distM <= t.gimmeM;
+}
+function hostGimme() { if (!hostCanGimme()) return; const t = HP.turn; hostSend({ t: 'gimme', holeIdx: t.holeIdx, stroke: t.stroke }); HP.wait = 1; }
 function hostTabs() {   // T419: his clubs in the tabs: the name, its full carry after his mods (the putter: its fitting); keys 1 to 9 and the wheel change club
   return HP.clubs.map((c, k) => '<div class="club' + (k === club ? ' on' : '') + '">' + (k < 9 ? '<b>' + (k + 1) + '</b> ' : '') + (CLUB_NAME[c.club] || c.club) + '<i>' + (c.club === 'putter' ? (c.fit || 'on the green') : Math.round(c.carryM) + ' m') + '</i></div>').join('');
 }
@@ -273,6 +481,8 @@ clubsEl.addEventListener('wheel', (e) => { if (!HP || !HP.clubs.length) return; 
 // ---- loop
 addEventListener('keydown', (e) => {
   if (e.repeat) return;
+  if (HP && HP.sw && e.code === 'Space') { HP.sw.presses++; if (e.preventDefault) e.preventDefault(); return; }   // (host mode: the boost, T421 and T443)
+  if (HP && HP.turn && !HP.sw && (e.code === 'KeyZ' || e.code === 'KeyX' || e.code === 'KeyI')) { hostPickSet(e.code === 'KeyZ' ? 'curve' : e.code === 'KeyX' ? 'flight' : 'boost'); return; }   // (T441, T443: the shape and the boost)
   if (HOST && e.code === 'Escape') { hostSend({ t: 'exit' }); return; }   // (the host page closes the view)
   keys[e.code] = true;
   if (e.code === 'KeyT') setTime((tmode + 1) % 3);

@@ -62,7 +62,7 @@ export const toMetres = (f: Frame3p, x: number, y: number): JPt => [(x - f.cx) *
 export const toTiles = (f: Frame3p, X: number, Y: number): { x: number; y: number } => ({ x: f.cx + X / TILE_M, y: f.cy - Y / TILE_M });
 
 /** the box (tiles) round everything painted or placed, or null when there is nothing */
-function tileBox(inp: Export3pInput): [number, number, number, number] | null {
+export function tileBox(inp: Export3pInput): [number, number, number, number] | null {
   let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
   const add = (x: number, y: number) => { if (x < x0) x0 = x; if (x > x1) x1 = x; if (y < y0) y0 = y; if (y > y1) y1 = y; };
   for (const a of inp.areas) for (let i = 0; i + 1 < a.pts.length; i += 2) add(a.pts[i]!, a.pts[i + 1]!);

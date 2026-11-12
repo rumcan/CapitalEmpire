@@ -959,6 +959,7 @@ function gridPix(x, y, d, r, g, b, a) {   // a pixel of the grid on the full-siz
   overPut(x, y, ((a << 24) | (b << 16) | (g << 8) | r) >>> 0);
 }
 function drawPuttGrid() {
+  if (HP && HP.turn) { if (HP.turn.green && !bcam && ball.state === 0 && !HP.play) hostPuttGrid(); return; }   // (host mode: the host's green only, T423)
   if (bcam || doneT || ball.state === 1 || ball.state === 3 || matAt(ball.x, ball.y) !== M_GREEN) return;
   puttGrid(); const N = pgN, S = pgS;
   for (let s = 0; s < S.length; s += 3) {

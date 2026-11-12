@@ -16,6 +16,8 @@ import type { WindNow } from './wind';
 import type { ClubKit } from './mods';
 import type { WeatherCondition } from '../weather';
 import type { FeaturesFile } from './features3p';
+import type { Earned } from './unlocks';
+import type { Green3p } from './green3p';
 
 /** the protocol's version: every message carries it, and a message of another version is refused (isHostMsg / isViewMsg) */
 export const PROTOCOL_V = 1;
@@ -97,7 +99,14 @@ export interface TurnMsg { v: 1; t: 'turn'; golfer: number; holeIdx: number; hol
   lie: Lie; lieKind: LieKind; ball: ViewPt; pin: ViewPt; distM: number; wind: WindNow; slope: Slope; clubs: ClubChoice[];
   suggested: { club: Club; aim: ViewPt; power: number };
   /** T418: what he may do beyond a plain swing (absent: an older host: all of it) */
-  can?: Unlocks }
+  can?: Unlocks;
+  /** T422: the lie as the card names it and what it does (lies.ts LIE_FX), and the day's gust peak (mph; absent: none known) */
+  lieName?: string; lieNote?: string; gust?: number;
+  /** T443: what he has earned (unlocks.ts; absent: an older host, everything) and the boost charges left on this hole */
+  earned?: Earned; charges?: number;
+  /** T423: on the green, the green as the host reads it (green3p.ts: the slope grid, the read, a holed putt's way and its start line), and the gimme the round's rule
+   *  allows (m; absent or 0: none, as in a match) */
+  green?: Green3p; gimmeM?: number }
 
 /** a decided shot, the owner's or anyone's: who, the hole (1-based) and stroke, the club, where it was struck from, the flight's samples (x, y and
  *  the height, evenly spaced in time from the strike to the landing; a putt has none), the bounces (each touch of the ground after the landing),
@@ -114,6 +123,11 @@ export interface ShotMsg { v: 1; t: 'shot'; golfer: number; hole: number; stroke
  *  on the group ahead in words (board.ts waitText; null: none) */
 export interface BoardMsg { v: 1; t: 'board'; at: number; rows: { pos: string; name: string; toPar: string; thru: string; owner: boolean }[]; wait: string | null }
 
+/** T441, T442: the model's shot for an input as the view would strike it, with no luck in it (the mean: no scatter, no mishit, no flier), so the view draws the
+ *  curve, the landing and the bounce and roll of the shape and spin picked: `key` answers the view's `aim`; `shot` the stroke as a ShotMsg (its flight, roll
+ *  and rest); `spread` the factor the shape puts on the scatter (the ring's size); null shot: none to show (a putt, no turn) */
+export interface PreviewMsg { v: 1; t: 'preview'; key: number; shot: ShotMsg | null; spread: number }
+
 /** the time and weather: the game minute of the day, the weather (weather.ts) and the wind now */
 export interface ClockMsg { v: 1; t: 'clock'; minute: number; weather: WeatherCondition; wind: WindNow }
 
@@ -124,7 +138,7 @@ export interface HoleEndMsg { v: 1; t: 'holeEnd'; holeIdx: number; hole: number;
 /** the host closes the view: why, in the owner's words (absent: none to show) */
 export interface LeaveMsg { v: 1; t: 'leave'; why?: string }
 
-export type HostMsg = CourseMsg | ActorsMsg | BoardMsg | TurnMsg | ShotMsg | HoleEndMsg | ClockMsg | LeaveMsg;
+export type HostMsg = CourseMsg | ActorsMsg | BoardMsg | TurnMsg | ShotMsg | HoleEndMsg | PreviewMsg | ClockMsg | LeaveMsg;
 
 // ---------------------------------------------------------------- view to host
 
@@ -139,6 +153,8 @@ export interface ErrorMsg { v: 1; t: 'error'; why: string }
  *  decide: the conditions (env) and the model version (v), so those two never cross the bridge */
 export type ViewInput = Omit<OwnerInput, 'aim' | 'env' | 'v'> & { aim: ViewPt };
 export interface InputMsg { v: 1; t: 'input'; input: ViewInput }
+/** T441, T442: what the shot picked now would do (answered with a `preview` of the same key); the input as it would be struck at full power */
+export interface AimMsg { v: 1; t: 'aim'; key: number; input: ViewInput }
 
 /** where the owner's golfer (or his cart, cart: true) is now, for pace and so others can react to him */
 export interface WalkedMsg { v: 1; t: 'walked'; golfer: number; at: ViewPt; cart?: true }
@@ -149,11 +165,11 @@ export interface HoleDoneMsg { v: 1; t: 'holeDone'; holeIdx: number }
 /** the owner left the view (Esc, the round over, or a page error): why */
 export interface ExitMsg { v: 1; t: 'exit'; why?: 'esc' | 'done' | 'error'; detail?: string }
 
-export type ViewMsg = ReadyMsg | LoadedMsg | ErrorMsg | InputMsg | WalkedMsg | GimmeMsg | HoleDoneMsg | ExitMsg;
+export type ViewMsg = ReadyMsg | LoadedMsg | ErrorMsg | InputMsg | AimMsg | WalkedMsg | GimmeMsg | HoleDoneMsg | ExitMsg;
 
 /** the message types each side sends */
-export const HOST_TYPES: readonly HostMsg['t'][] = ['course', 'actors', 'board', 'turn', 'shot', 'holeEnd', 'clock', 'leave'];
-export const VIEW_TYPES: readonly ViewMsg['t'][] = ['ready', 'loaded', 'error', 'input', 'walked', 'gimme', 'holeDone', 'exit'];
+export const HOST_TYPES: readonly HostMsg['t'][] = ['course', 'actors', 'board', 'turn', 'shot', 'holeEnd', 'preview', 'clock', 'leave'];
+export const VIEW_TYPES: readonly ViewMsg['t'][] = ['ready', 'loaded', 'error', 'input', 'aim', 'walked', 'gimme', 'holeDone', 'exit'];
 
 const isMsg = (m: unknown, types: readonly string[]): boolean =>
   typeof m === 'object' && m !== null && (m as { v?: unknown }).v === PROTOCOL_V && types.includes((m as { t?: unknown }).t as string);

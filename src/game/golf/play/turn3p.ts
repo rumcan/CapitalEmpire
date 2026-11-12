@@ -31,7 +31,9 @@ export const centreOf = (f: Frame3p | Pt): Pt => 'cx' in f ? { x: f.cx, y: f.cy 
  *  the wind now (absent: calm), and whether this is the round's last hole (the moment `last` of a card) */
 export interface TurnState { turn: OwnerTurn; skills: ShotSkill; view: CourseView; height?: HeightAt | null; wind?: WindNow | null; last?: boolean;
   /** T419: the putter's fitting in words (bag.ts putterFitName; absent or '': none shown) */
-  fit?: string }
+  fit?: string;
+  /** T422: the day's gust peak (mph; absent: none sent) */
+  gust?: number | null }
 
 /** the moment of a shot with `club` from `lie` (live.ts shotOutcome builds the same one for the strike) */
 export const momentOf = (lie: Lie, club: Club, last = false): ModCtx => ({ lie, tee: lie === 'tee', deck: club === 'driver' && lie !== 'tee', last, follow: false });
@@ -81,13 +83,15 @@ export function turnMsg(st: TurnState, frame: Frame3p | Pt): TurnMsg {
   let aim = t.suggested.aim; if (Math.hypot(aim.x - t.ball.x, aim.y - t.ball.y) < 1e-9) aim = t.pin;
   const env = envOf(wind.mph > 0 ? wind : null, st.view.kindAt, st.height ?? null, t.ball, t.lie, aim);
   const dx = aim.x - t.ball.x, dy = aim.y - t.ball.y, L = Math.hypot(dx, dy), ux = L > 1e-9 ? dx / L : 1, uy = L > 1e-9 ? dy / L : 0;
+  const lk = env.lie ?? lieKindFor(st.view.kindAt, t.ball, t.lie);
   const clubs = bagClubs(st.skills).map(k => clubChoice(st.skills, k, t.lie, k === 'putter' ? null : env, ux, uy, st.last === true));
   if (st.fit) for (const c of clubs) if (c.club === 'putter') c.fit = st.fit;
   return {
     v: PROTOCOL_V, t: 'turn', golfer: t.golfer, holeIdx: t.holeIdx, hole: t.hole, par: t.par, stroke: t.stroke, at: t.t,
-    lie: t.lie, lieKind: env.lie ?? lieKindFor(st.view.kindAt, t.ball, t.lie), ball: toView(t.ball, c), pin: toView(t.pin, c), distM: t.distM,
+    lie: t.lie, lieKind: lk, ball: toView(t.ball, c), pin: toView(t.pin, c), distM: t.distM,
     wind, slope: env.slope ?? { up: 0, across: 0 }, clubs,
     suggested: { club: t.suggested.club, aim: toView(t.suggested.aim, c), power: t.suggested.power },
     can: unlocksOf(st.skills),
+    lieName: LIE_FX[lk].name, lieNote: LIE_FX[lk].note, ...(st.gust != null ? { gust: st.gust } : {}),
   };
 }

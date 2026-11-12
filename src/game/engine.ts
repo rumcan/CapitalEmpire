@@ -210,12 +210,14 @@ import { buildCourseStatsPanel, type CourseStatsPanel } from './golf/coursestats
 import { TILE_M, type CourseArea, type CourseLayout, type GolfSurface, type Pin, type TeeBoxRec, type TeeKind, type TeeMark } from './golf/types';
 import { deriveHoles, surfaceAt, validateMarkerPlacement, type Hole } from './golf/holes';
 import { playable3p } from './golf/play/playable3p';
-import { export3pInputOf, exportCourse3p, frame3p } from './golf/play/export3p';
+import { export3pInputOf, exportCourse3p, frame3p, tileBox } from './golf/play/export3p';
+import { lieGrid3p } from './golf/play/lies3p';
 import { exportFeatures3p, gatherFeatures3p } from './golf/play/features3p';
 import { courseEntry3p } from './golf/play/entry3p';
 import { seedOf } from './golf/play/view3p';
 import type { CourseMsg, HostMsg, ViewInput } from './golf/play/protocol3p';
 import { Play3p } from './golf/play/play3p'; // T418: the owner's play in the view from behind the golfer
+import { earned } from './golf/play/unlocks'; // T443
 import type { Frame3p } from './golf/play/export3p';
 import { putterFitName } from './golf/play/bag';
 import { BallRoll, FX_SAND, FX_SPLASH, ballRoll, type HeightAt } from './golf/play/roll';
@@ -238,7 +240,7 @@ import { BOOK_LEAD, LESSON_BONUS, PRESSURE, bookRound, gearOf, handicapOf, booke
 import { gearFor, withCards } from './golf/player'; // T336 (#962): your cards
 import { practiceGear } from './golf/rangegear'; // T386 part 3: the range's gear for your practice
 import { MECH_IDS, PUTT_V2, greenRead, hasMech, laserLines, laserReport, type MechId, type ModCtx } from './golf/play';
-import { hotNerve, scrambleLeft } from './golf/play/yours';
+import { DEFAULT_RULES, GIMME_RULES, hotNerve, scrambleLeft } from './golf/play/yours';
 import { addCard, addPull, bestGrade, cardById, cardEco, cardsInPlay, cardsView, createSpin, earnFromMatch, earnFromPlace, emptyCards, equipCard as equipInCards, equipWhy, grantWelcome, rollPrize, takePull, unequipCard as unequipFromCards, unequipWhy, vendingView, welcomeDue, type CardsSave, type CardsView, type Earn, type Grade, type PlayCard, type VendingSpin, type VendingView } from './golf/cards';
 import { holeViews, markerPlan, tagByHole, type HoleView, type MarkerKind } from './golf/holeview';
 import { CAST, castShear, clampCast, type CastShadow } from './cast-shadow';
@@ -10046,6 +10048,8 @@ export class Game {
     inp.id = id;
     const f = frame3p(inp), file = await exportCourse3p(inp), course = await courseEntry3p(file);
     this.view3pFrame = f; // (T418: the turns and shots are sent in this same frame)
+    // T422: the model's lies over the course (and 40 tiles round it), so the view draws its grass where the model reads it
+    { const v = this.yrView(), b = tileBox(inp); if (v && b) course.lk = lieGrid3p(v, [b[0] - 40, b[1] - 40, b[2] + 40, b[3] + 40], { x: f.cx, y: f.cy }); }
     // the box town roads must be near to count as the course's: every marker of the course (tees, pins, aims), in tiles
     const pts = [...g.tees, ...g.pins, ...(g.aims ?? [])];
     const box: [number, number, number, number] | undefined = pts.length
@@ -10067,14 +10071,20 @@ export class Game {
     const n = this.view3pHole, v = this.yrView(), f = this.view3pFrame; this.play3p = null;
     if (n === null || !v || !f) return [];
     const idx = v.holes.findIndex(h => h.n === n); if (idx < 0) return [];
-    const p = this.playerNow();
-    this.play3p = new Play3p({ view: v, holes: [idx], skills: this.yourSkills(), sex: p?.sex ?? 'm', seed: (this.seed ^ Math.imul(n, 7919) ^ Math.imul(++this.play3pN, 104729)) | 0, frame: f,
-      height: this.ballHeight, wind: () => this.windNow(), fit: putterFitName(p?.bag) });
+    const p = this.playerNow(), sk = this.yourSkills();
+    // T443: what he has earned: his card's skills, his clubs' levels, his cards' mechanics (golf/play/unlocks.ts)
+    const earn = earned({ skills: p?.skills ?? {}, bag: p?.bag ?? null, mech: MECH_IDS.filter(id => hasMech(sk, id)) });
+    this.play3p = new Play3p({ view: v, holes: [idx], skills: sk, earned: earn, gimmeM: GIMME_RULES.find(r => r.id === DEFAULT_RULES.gimme)?.m ?? 0, /* (T423: a practice hole's rules: the leather) */ sex: p?.sex ?? 'm', seed: (this.seed ^ Math.imul(n, 7919) ^ Math.imul(++this.play3pN, 104729)) | 0, frame: f,
+      height: this.ballHeight, wind: () => this.windNow(), fit: putterFitName(p?.bag), gust: () => { const w = this.worldWind(); return w ? windView(this.windNow(), w, 1, 0).peak : null; } });
     return this.play3p.start();
   }
   /** the view's input for the turn in hand: played through the one model (LiveGroup); what the view is sent back (his stroke, anyone else's, the
    *  hole's end, the next turn) */
   input3p(input: ViewInput): HostMsg[] { return this.play3p ? this.play3p.input(input) : []; }
+  /** T441, T442: the model's luckless shot for what the view has picked (its aim marker), or null with no play */
+  /** T423: the view's gimme, if the round's rule allows it */
+  gimme3p(holeIdx: number, stroke: number): HostMsg[] { return this.play3p ? this.play3p.gimme(holeIdx, stroke) : []; }
+  preview3p(key: number, input: ViewInput): HostMsg | null { return this.play3p ? this.play3p.preview(key, input) : null; }
   /** the Play button's choice: a practice round on just hole n (from your tee: the white one, else the first it has) or on every hole of the course from the first. Free, not an event, not
    *  recorded (yourRoundEnd); when it ends the camera, the tool, the side modes and the hole card come back as they were */
   practiceStart(n: number, scope: PracticeScope) {

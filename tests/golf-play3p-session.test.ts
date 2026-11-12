@@ -108,3 +108,18 @@ test('play3p: two holes: holeEnd (not last), then the second hole\'s turn from i
   assert.ok(seen.indexOf(end) < seen.indexOf(t), 'holeEnd before the next turn');
   void TILE_M;
 });
+
+test('play3p: a swing outcome is played as the model plays it (T421): a late click misses right of an early one, both as shotOutcome', () => {
+  const run = (acc: number) => {
+    const s = session(), t = turnsOf(s.start())[0]!, vi: ViewInput = { ...answer(t), swing: { power: 1, acc, boost: 0, v: 2 } };
+    const m = shotsOf(s.input(vi)).find(x => x.golfer === OWNER_3P)!;
+    const { holeIdx: _h, stroke: _s, ...played } = s.inputs[0]!; void _h; void _s;
+    assert.deepEqual(played.swing, vi.swing, 'the outcome is kept as sent');
+    const own = shotOutcome(s.view, s.view.holes[0]!, holes[0]!.tee, 'tee', sk, played, rng(SEED, OWNER_3P, 1), { last: true });
+    assert.ok(near(m.rest, toView(own.landing?.rest ?? own.to, centre), 1e-6), 'the same rest as the model struck by hand');
+    return m.flight[m.flight.length - 1]!;
+  };
+  const early = run(0.15), late = run(-0.15);
+  // (the hole runs east, so right of the line is south: + y in the view's frame)
+  assert.ok(late[1] - early[1] > 20, `the late click lands right of the early one (${early[1].toFixed(1)} -> ${late[1].toFixed(1)})`);
+});
