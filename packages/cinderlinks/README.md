@@ -276,3 +276,27 @@ In the desert biome the ground a wood would cover (far off the fairway) is soft 
 ## Heat at the horizon, thicker desert air (gen-29, 2026-11-12)
 
 The heat wobble now touches only land past 150 m and the foot of the sky (it began at 60 m), a little stronger there; and over the desert the distance haze is twice as thick (`farHaze`, and the middle sweep's `hf`).
+
+## Host mode (T415, 2026-11-12)
+
+`index.html?host=1` is the view inside another page (CapitalEmpire's panel, T416). It loads no course of its own (no `courses.js` pick, no kept
+courses, no `?find=`), draws nothing, and talks to the page that holds it by `postMessage` (protocol version 1, `docs/CINDERLINKS-PORT.md` section 4):
+
+| Direction | Message | What happens |
+|---|---|---|
+| view to host | `{ v: 1, t: 'ready' }` | sent once the page listens |
+| host to view | `{ v: 1, t: 'course', course, features, biome, type, seed, scale, hole }` | `course`: one entry in the shape `tools/course-import.mjs` makes for `courses.js` (`convert()` is exported for this); `features`: the object `setFeatures` takes (`{ features: [...] }`, as `courses/edits/<id>.json`); `biome`, `type`: as `setBiome` takes; `seed`: the scatter's seed; `scale`: the course's size (1: true size, the default here; saved courses keep `CSCALE` 0.6); `hole`: from 1 (default 1). The course joins `MORE_COURSES` (replacing one of the same id), is played with `setCourse`, and the drawing starts |
+| view to host | `{ v: 1, t: 'loaded', holes }` | the course is on screen |
+| view to host | `{ v: 1, t: 'error', why }` | a course without id, holes or shapes |
+| host to view | `{ v: 1, t: 'leave' }` | the loop stops (nothing drawn); a later `course` starts it again |
+| view to host | `{ v: 1, t: 'exit' }` | the player pressed Escape |
+
+- Messages whose `source` is not `window.parent`, or whose origin is not the parent's (`location.ancestorOrigins`, else the referrer, else the
+  page's own), are ignored. The view sends to the parent's origin.
+- The scale travels with the course (`D.scale`, read by `loadCourse`, so the land workers use it too); the clubs follow it: `clubK()` is
+  `sqrt(course.S / 0.3)` (the root of two at 0.6, as before). A course handed over again under the same id carries a new `hv`, so the workers load it again.
+- In host mode the page does not poll `edits/<id>.json`: the host's features are the course's.
+- The code is in `parts/09-hud.md` (`hostMessage`, `hostStart`), below `LAND-WORKER-END` and outside `drawGround`.
+- The gate checks it: `hostMsg()` in `harness.mjs` builds the message from `courses/raw/woodhill.json` (and its edits), and the gate wants the
+  `loaded` answer, Woodhill at scale 1, hole 1 with a tee under the golfer, the features applied and a picture that is not black. Picture:
+  `--scenes host`.

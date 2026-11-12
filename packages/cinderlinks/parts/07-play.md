@@ -20,7 +20,7 @@ Check: function newHole(
 ````js file=game.js
 
 // ---- play: the golfer, the ball, the clubs
-function clubK() { return course ? 1.4142 : 1; }   // on a real course (twice the invented one's scale) every club sends the ball twice as far: its speed is up by the root of two
+function clubK() { return course ? Math.sqrt(course.S / 0.3) : 1; }   // on a real course every club reaches as much further as the course is bigger than the invented one (0.3): at 0.6 twice as far, its speed up by the root of two; at a host page's full size (1) 3.3 times
 const CLUBS = [{ name: 'Driver', v: 31, loft: 0.42 }, { name: 'Iron', v: 24.5, loft: 0.66 }, { name: 'Wedge', v: 16.5, loft: 0.95 }, { name: 'Putter', v: 7.4, loft: 0 }];
 //                 water green sand  tee  fair  cut  rough deep woods hill rock cliff shore
 const BOUNCE = [0, 0.28, 0.03, 0.36, 0.36, 0.28, 0.16, 0.1, 0.14, 0.3, 0.55, 0.5, 0.05];

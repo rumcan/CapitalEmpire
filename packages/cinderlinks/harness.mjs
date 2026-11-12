@@ -4,6 +4,7 @@
 //        [--seed N] [--time 0|1|2] [--scale N]
 import fs from 'node:fs';
 import zlib from 'node:zlib';
+import { convert } from './tools/course-import.mjs';
 
 const argv = process.argv.slice(2);
 const optOf = (name, def) => { const k = argv.indexOf(name); return k >= 0 && k + 1 < argv.length ? argv[k + 1] : def; };
@@ -47,6 +48,11 @@ globalThis.window = globalThis; globalThis.self = globalThis;
 { const ef = 'courses/edits/' + optOf('--course', 'none') + '.json'; if (fs.existsSync(ef)) globalThis.FEAT_JSON = fs.readFileSync(ef, 'utf8'); }   // the paths and buildings added to the course, for the scenes that show them
 const RSH = +process.env.RSCALE || 1; if (RSH !== 1) globalThis.RSCALE = RSH;   // the picture's scale, to try smaller pictures (RSCALE=0.5)
 const run = (src) => (0, eval)(src);
+// host mode (T415): the message a host page sends, made from the importer's Woodhill file as CapitalEmpire would send it (true size, its paths and buildings)
+globalThis.hostMsg = () => {   // (made only when asked: a course this size held from the start slows the gate's chunk timings)
+  const raw = JSON.parse(fs.readFileSync(new URL('./courses/raw/woodhill.json', import.meta.url), 'utf8')), ed = new URL('./courses/edits/woodhill.json', import.meta.url);
+  return { v: 1, t: 'course', course: convert(raw, 'woodhill.json'), features: fs.existsSync(ed) ? JSON.parse(fs.readFileSync(ed, 'utf8')) : null, biome: 'parkland', type: 'private', seed: 4242, scale: 1, hole: 1 };
+};
 
 // the scene library for --shot: it runs in the game's own scope
 const SHOT_LIB = String.raw`
@@ -60,6 +66,7 @@ const SHOT_LIB = String.raw`
   const find = (test, cx, cy, rad) => { for (let r = 0; r < rad; r += 1.5) for (let a = 0; a < 6.283; a += 1.5 / Math.max(r, 1.5)) { const x = cx + Math.cos(a) * r, y = cy + Math.sin(a) * r; if (test(x, y)) return [x, y]; } return null; };
   const mid = pathAt(0.5);
   const SC = {
+    host: () => { hostMessage(hostMsg()); idle(); snap('host'); },   // (T415: Woodhill handed over by message, hole 1 from its tee)
     tee() { idle(); frames(20); snap('tee'); },
     aim() { idle(); newHole(holeN, hole.tee.x, hole.tee.y); frames(20); player.x = ball.x - 0.3; player.y = ball.y + 0.6; mouse.x = VW / 2 + 60; mouse.y = VH / 2 - 150; frames(6); snap('aim'); mouse.down = true; frames(40); snap('aim-charge'); mouse.down = false; frames(60); snap('ballcam-a'); frames(70); snap('ballcam-b'); for (let k = 0; k < 900 && ball.state !== 0; k++) frames(1); frames(20); snap('ballcam-end'); frames(60); snap('aim-after'); },
     stuck() { // can the golfer be trapped? On every steep point found near the hole (and its flatter neighbours), count the points from which no step in any of 16 directions is allowed
@@ -306,6 +313,15 @@ try {
     render(); render();
     res.lum = Array.from({ length: VW * VH }, (_, i) => px[i * 4] * 0.3 + px[i * 4 + 1] * 0.59 + px[i * 4 + 2] * 0.11);
     res.mem = { chunks: chunks.size, tiles: tiles.size, cells: ocells.size };
+    // host mode (T415): Woodhill handed over by message at true size: answered 'loaded', hole 1 drawn with a tee under the golfer
+    { a = t(); hostMessage(hostMsg()); res.hostLoadMs = +(t() - a).toFixed(0);
+      const lie = matAt(player.x, player.y); let s = 0; for (let k = 0; k < 30; k++) { const s0 = t(); render(); s += t() - s0; }
+      res.host = { answer: hostLast && hostLast.t, holes: hostLast && hostLast.holes, course: course && course.id, scale: course && course.S, hole: holeN, lie: MAT_NAME[lie], renderMs: +(s / 30).toFixed(2) };
+      if (!course || course.id !== 'woodhill' || course.S !== 1) res.errors.push('host: Woodhill was not loaded at scale 1');
+      if (!hostLast || hostLast.t !== 'loaded' || !course || hostLast.holes !== course.holes.length) res.errors.push('host: no loaded answer');
+      if (holeN !== 1 || lie !== M_TEE) res.errors.push('host: hole 1 has no tee under the golfer (' + MAT_NAME[lie] + ')');
+      if (!(feats && feats.paths && feats.paths.length)) res.errors.push('host: the features were not applied');
+      let lit = 0; for (let i = 0; i < VW * VH; i += 7) if (px[i * 4] + px[i * 4 + 1] + px[i * 4 + 2] > 30) lit++; if (lit < VW * VH / 7 * 0.5) res.errors.push('host: the picture is mostly black'); }
     return res;
   })()`);
   const lum = r.lum; delete r.lum;

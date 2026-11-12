@@ -192,8 +192,8 @@ onmessage = (e) => {
   const m = e.data;
   if (m.t === 'init') {
     wgen = m.gen; SEED = m.seed; wq.length = 0; wc.length = 0; setBiome(m.biome || 'parkland', m.ctype || 'private');
-    if (m.data && !courseList().some((c) => c.id === m.data.id)) MORE_COURSES.push(m.data);
-    if (m.course) { if (!course || course.id !== m.course) loadCourse(m.course); } else course = null;
+    if (m.data) { const k = MORE_COURSES.findIndex((c) => c.id === m.data.id); if (k < 0) MORE_COURSES.push(m.data); else if (MORE_COURSES[k].hv !== m.data.hv) MORE_COURSES[k] = m.data; }   // (hv: a host page's course, numbered each time it is handed over: the same id may come again with new shapes or a new scale)
+    if (m.course) { if (!course || course.id !== m.course || (m.data && course.raw && course.raw.hv !== m.data.hv)) loadCourse(m.course); } else course = null;
     hole = course ? courseHole(m.n) : makeHole(m.seed, m.n, m.ox, m.oy);
     tiles.clear(); lastTK = NaN; lastTile = null; ocells.clear(); treeMemo.clear();
     return;

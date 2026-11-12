@@ -64,10 +64,10 @@ function courseLineD(x, y) {   // how far a point is from the nearest hole's lin
   const C = course, i = Math.round((x - C.gx0) / CRES), j = Math.round((y - C.gy0) / CRES); if (i < 0 || j < 0 || i >= C.gw || j >= C.gh) return 999;
   return C.md[j * C.gw + i];
 }
-function loadCourse(id) {   // make a saved course ready to play; false if there is no such course
+function loadCourse(id) {   // make a saved course ready to play; false if there is no such course (its scale: its own `scale` if it has one, as a host page's course does; else CSCALE)
   course = null;
-  const D = courseList().find((c) => c.id === id); if (!D) return false;
-  const S = CSCALE, sc = (a) => { const o = new Float32Array(a.length); for (let k = 0; k < a.length; k++) o[k] = a[k] * S; return o; };
+  const D = MORE_COURSES.find((c) => c.id === id) || courseList().find((c) => c.id === id); if (!D) return false;   // (one handed over or fetched in this visit wins over a saved one of the same id)
+  const S = D.scale > 0 ? +D.scale : CSCALE, sc = (a) => { const o = new Float32Array(a.length); for (let k = 0; k < a.length; k++) o[k] = a[k] * S; return o; };
   const C = { id: D.id, name: D.name, place: D.place, credit: D.credit, hcredit: D.hg ? D.hg.src : '', S, holes: [], gx0: 0, gy0: 0, gw: 0, gh: 0, sF: null, sG: null, sB: null, sT: null, sP: null, mw: null, ma: null, md: null, wlG: null,
     hx0: 0, hy0: 0, hstep: 1, hw: 0, hh: 0, hm: null, streams: [], raw: D.fetched ? D : null };   // (raw: a fetched course's data, for the workers, which do not have it)
   if (D.hg) {                                                       // the heights: metres above the grid's lowest

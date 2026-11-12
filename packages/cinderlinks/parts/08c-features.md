@@ -57,7 +57,7 @@ function setFeatures(F) {   // F: the edits file's object (or nothing): made rea
   feats = { paths, builds, sd, kind, seg, SG: Float64Array.from(SG), gx0: x0, gy0: y0, res, gw, gh, bmap };
 }
 function pollFeatures() {   // the edits file read again; a change in it shows within two seconds
-  if (!course || typeof fetch !== 'function') return;
+  if (!course || typeof fetch !== 'function' || hostMode()) return;   // (in host mode the host page's features are the course's: no file)
   const id = course.id;
   fetch('edits/' + id + '.json?t=' + Date.now(), { cache: 'no-store' }).then((r) => (r.ok ? r.text() : '')).then((t) => {
     if (!course || course.id !== id || (t === featTxt && featFor === id)) return;

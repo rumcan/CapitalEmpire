@@ -57,7 +57,7 @@ function miniDot(x, y, col, s) { mctx.fillStyle = col; mctx.fillRect(Math.round(
 function updateHud() {
   const H = hole, m = matAt(ball.x, ball.y), d = Math.hypot(H.pin.x - ball.x, H.pin.y - ball.y);
   const score = strokes - H.par, row = (a, b) => '<div class="row"><span>' + a + '</span><b>' + b + '</b></div>';
-  const card = (course ? '<div class="course">' + course.name + '</div>' : '') + '<div class="hole">Hole ' + (course ? course.holes[(holeN - 1) % course.holes.length].n : holeN) + '<span>par ' + H.par + '</span></div>' + row('Strokes', strokes + (strokes ? ' (' + (score > 0 ? '+' : '') + score + ')' : '')) + row('Round', total) + row('To pin', (d < 10 ? d.toFixed(1) : Math.round(d)) + ' m') + row('Lie', MAT_NAME[m]) + row('Light', TOD[tmode].name) + (course ? '<div class="credit">' + course.credit + (course.hcredit ? ' &middot; heights: ' + course.hcredit : '') + ' &middot; ' + Math.round(CSCALE * 10) + '/10 size</div>' : '');
+  const card = (course ? '<div class="course">' + course.name + '</div>' : '') + '<div class="hole">Hole ' + (course ? course.holes[(holeN - 1) % course.holes.length].n : holeN) + '<span>par ' + H.par + '</span></div>' + row('Strokes', strokes + (strokes ? ' (' + (score > 0 ? '+' : '') + score + ')' : '')) + row('Round', total) + row('To pin', (d < 10 ? d.toFixed(1) : Math.round(d)) + ' m') + row('Lie', MAT_NAME[m]) + row('Light', TOD[tmode].name) + (course ? '<div class="credit">' + course.credit + (course.hcredit ? ' &middot; heights: ' + course.hcredit : '') + ' &middot; ' + Math.round(course.S * 10) + '/10 size</div>' : '');
   if (card !== shownCard) { cardEl.innerHTML = card; shownCard = card; }
   if (club !== shownClub) { shownClub = club; clubsEl.innerHTML = CLUBS.map((c, k) => '<div class="club' + (k === club ? ' on' : '') + '"><b>' + (k + 1) + '</b> ' + c.name + '<i>' + (c.loft ? Math.round(c.v * c.v * clubK() * clubK() * Math.sin(2 * c.loft) / 9.81 / 5) * 5 + ' m' : 'on the green') + '</i></div>').join(''); }
   powerEl.className = charging || player.swing >= 0 ? 'on' : '';
@@ -88,12 +88,54 @@ R: Old chunks, tiles and scatter cells far from the camera are dropped, so memor
 File: game.js
 Check: function tickGame(
 Check: requestAnimationFrame(loop)
+R: Host mode (?host=1, T415): the page is a view inside another page (CapitalEmpire). It loads no course of its own, says { v: 1, t: 'ready' } to the page that holds it and waits for { v: 1, t: 'course', course, features, biome, type, seed, scale, hole }; it plays that course from hole `hole` (1 if none) and answers { v: 1, t: 'loaded', holes }. { t: 'leave' } stops it drawing; Escape sends { v: 1, t: 'exit' }. Messages from anywhere but the page that holds it are ignored.
+Check: function hostMessage(
 
 ````js file=game.js
+
+// ---- host mode (?host=1, T415): the view inside another page (CapitalEmpire), driven by messages (docs/CINDERLINKS-PORT.md, section 4)
+// Host to view:  { v: 1, t: 'course', course, features, biome, type, seed, scale, hole }   course: one entry of courses.js (tools/course-import.mjs's
+//                shape); features: what setFeatures takes; biome, type: what setBiome takes; scale: the course's scale (1: true size); hole: from 1
+//                { v: 1, t: 'leave' }   stop drawing (a later 'course' starts it again)
+// View to host:  { v: 1, t: 'ready' } once listening; { v: 1, t: 'loaded', holes } when a course is on screen; { v: 1, t: 'error', why }; { v: 1, t: 'exit' } on Escape
+let HOST = false, hostOrigin = '', hostLast = null, hostN = 0, hostOff = false, looping = false;
+function hostMode() { return HOST; }
+function hostSend(m) {
+  hostLast = Object.assign({ v: 1 }, m);   // (kept: the harness reads it, having no parent page)
+  try { if (typeof window !== 'undefined' && window.parent && window.parent !== window) window.parent.postMessage(hostLast, hostOrigin || '*'); } catch (e) { /* the parent is gone */ }
+}
+function hostMessage(m) {   // one message from the host page, already known to come from it
+  if (!m || typeof m !== 'object') return;
+  if (m.t === 'leave') { hostOff = true; return; }
+  if (m.t !== 'course' || m.v !== 1) return;
+  const C = m.course;
+  if (!C || typeof C.id !== 'string' || !Array.isArray(C.holes) || !C.holes.length || !C.polys) { hostSend({ t: 'error', why: 'the course has no id, holes or shapes' }); return; }
+  const D = Object.assign({}, C, { fetched: true, scale: +m.scale > 0 ? +m.scale : 1, hv: ++hostN });   // (fetched: the workers are handed its data; hv: a new hand-over of the same id is loaded again)
+  const k = MORE_COURSES.findIndex((c) => c.id === D.id); if (k >= 0) MORE_COURSES.splice(k, 1); MORE_COURSES.push(D);
+  if (m.seed !== undefined && Number.isFinite(+m.seed)) SEED = +m.seed | 0;
+  setBiome(BIOMES[m.biome] ? m.biome : biomeId, CTYPES[m.type] ? m.type : ctypeId); lib.clear(); libWarm = 0;   // (sculptures made in the old colours are dropped, as useStyle does)
+  course = null; if (!setCourse(D.id)) { hostSend({ t: 'error', why: 'the course could not be laid out' }); return; }
+  setFeatures(m.features || null); featTxt = ''; featFor = course.id;
+  const n = Math.max(1, Math.min(course.holes.length, +m.hole | 0 || 1)); if (n !== 1) newHole(n, 0, 0);
+  hostOff = false; firstPicture(); updateHud();
+  if (!looping && typeof requestAnimationFrame === 'function') { looping = true; last = performance.now(); acc = 0; requestAnimationFrame(loop); }
+  hostSend({ t: 'loaded', holes: course.holes.length });
+}
+function hostStart() {
+  HOST = true; hostOff = true;   // (nothing is drawn until a course comes)
+  try { hostOrigin = (location.ancestorOrigins && location.ancestorOrigins.length ? location.ancestorOrigins[0] : '') || (document.referrer ? new URL(document.referrer).origin : '') || location.origin || ''; } catch (e) { hostOrigin = ''; }
+  addEventListener('message', (e) => {
+    if (typeof window !== 'undefined' && e.source !== window.parent) return;   // only the page that holds this one
+    if (hostOrigin && e.origin !== hostOrigin) return;
+    hostMessage(e.data);
+  });
+  hostSend({ t: 'ready' });
+}
 
 // ---- loop
 addEventListener('keydown', (e) => {
   if (e.repeat) return;
+  if (HOST && e.code === 'Escape') { hostSend({ t: 'exit' }); return; }   // (the host page closes the view)
   keys[e.code] = true;
   if (e.code === 'KeyT') setTime((tmode + 1) % 3);
   else if (e.code === 'KeyC') { behindHole(); camD = D0; camHk = 1; HZ = HZ0; }
@@ -145,6 +187,8 @@ function tickGame() {
 const STEP_MS = 1000 / 60;
 let last = performance.now(), acc = 0;
 function loop(now) {
+  if (hostOff) { looping = false; return; }   // (host mode: left, or no course yet; a 'course' message starts the loop again)
+  looping = true;
   acc = Math.min(acc + (now - last), 100); last = now;
   while (acc >= STEP_MS) { tickGame(); acc -= STEP_MS; }
   render();
@@ -154,15 +198,16 @@ function loop(now) {
 }
 {
   const q = new URLSearchParams(location.search);
+  if (q.get('host') === '1') HOST = true;   // (host mode: started below, once the page is ready)
   if (q.get('seed')) SEED = +q.get('seed') | 0;
   setTime(q.get('time') ? clamp(+q.get('time') | 0, 0, 2) : 0);
   setBiome(BIOMES[q.get('biome')] ? q.get('biome') : 'parkland', CTYPES[q.get('type')] ? q.get('type') : 'private');   // ?biome=desert&type=links and so on
-  try { for (const c of JSON.parse(localStorage.getItem('cinderlinks.courses') || '[]')) if (c && c.id && c.holes) MORE_COURSES.push(c); } catch (e) { /* nothing kept */ }
-  if (q.get('find')) setTimeout(() => importCourse(q.get('find')), 800);
-  { const c = q.get('course'); if (c !== 'none') loadCourse(c || 'woodhill') || loadCourse(courseList().length ? courseList()[0].id : ''); }   // the game starts on Woodhill (the owner's choice, 2026-11-12); ?course=<id> starts on another, ?course=none on the invented course
+  if (!HOST) try { for (const c of JSON.parse(localStorage.getItem('cinderlinks.courses') || '[]')) if (c && c.id && c.holes) MORE_COURSES.push(c); } catch (e) { /* nothing kept */ }
+  if (q.get('find') && !HOST) setTimeout(() => importCourse(q.get('find')), 800);
+  if (!HOST) { const c = q.get('course'); if (c !== 'none') loadCourse(c || 'woodhill') || loadCourse(courseList().length ? courseList()[0].id : ''); }   // the game starts on Woodhill (the owner's choice, 2026-11-12); ?course=<id> starts on another, ?course=none on the invented course
 }
 if (!/[?&]worker=0/.test(location.search || '')) wkStart();   // (?worker=0: the page makes the land itself, for comparing)
-newHole(1, 0, 0);
-firstPicture(); updateHud();
-requestAnimationFrame(loop);
+newHole(1, 0, 0);   // (in host mode: the invented hole, never drawn, so that everything has a hole until the course comes)
+if (HOST) hostStart();
+else { firstPicture(); updateHud(); looping = true; requestAnimationFrame(loop); }
 ````
