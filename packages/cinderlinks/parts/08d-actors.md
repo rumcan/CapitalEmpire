@@ -6,11 +6,13 @@ R: A cart is the player's cart model drawn at another place and heading, with it
 R: Between two messages each one moves smoothly from where it was drawn to where the new message puts it, over the time the last two messages were apart; one that jumps far (a new hole) is put there at once.
 R: Near ones cast their live shadow. Within 60 m a person is the full sculpture; out to 180 m the same sculpture drawn small (its shrunk copies); beyond that a figure of two pixels, its shirt over its trousers.
 R: Sculptures are made when first needed (a few a frame) and kept by pose, facing and clothes; the player's golfer is the one the host does not send (the owner).
+R: The player's own golfer wears his player card's clothes when the host sends them with the course (T437).
 R: A ghost round's golfer (T433) is drawn see-through, every other pixel left out, and casts no shadow.
 File: game.js
 Check: function actorsIn(
 Check: function actorsList(
 Check: function drawActor(
+Check: function playerLook(
 
 ````js file=game.js
 
@@ -39,6 +41,15 @@ function mkGolferLook(theta, pose, ph, lamp, K, L) {
   const keep = GMAT.slice();
   GMAT[M_SKIN] = L.skin; GMAT[M_POLO] = L.shirt; GMAT[M_TROU] = L.trou; GMAT[M_CAP] = L.cap; GMAT[M_BRIM] = L.cap; GMAT[M_HAIR] = L.hair;
   try { return mkGolfer(theta, pose, ph, lamp, K); } finally { for (let i = 0; i < keep.length; i++) GMAT[i] = keep[i]; }
+}
+// T437: the player's own golfer in his player card's clothes (the host's `course` message carries them): the sculpture's own materials change, so every pose of
+// his is made again in them; a person in other clothes still swaps his in and back (mkGolferLook), so he is unchanged by it
+let playerDressKey = '';
+function playerLook(d) {
+  const L = lookOf(d); if (!L || L.key === playerDressKey) return;
+  playerDressKey = L.key;
+  GMAT[M_SKIN] = L.skin; GMAT[M_POLO] = L.shirt; GMAT[M_TROU] = L.trou; GMAT[M_CAP] = L.cap; GMAT[M_BRIM] = L.cap; GMAT[M_HAIR] = L.hair;
+  gcache.clear();
 }
 const actSpr = new Map();
 function actorSprite(L, fa, pose, ph, K) {   // a person's sculpture by clothes, pose, facing (sixteenths, as the camera sees him) and scale; null when this frame may make no more

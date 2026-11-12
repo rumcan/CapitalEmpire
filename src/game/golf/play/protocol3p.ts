@@ -46,7 +46,9 @@ export type CourseType = 'public' | 'private' | 'tour';
  *  every visit) */
 export interface CourseMsg { v: 1; t: 'course'; course: Record<string, unknown>; features: FeaturesFile; biome: string; type: CourseType; seed: number;
   /** the course's size (1: true size, what the host sends; the view's own saved courses play at 0.6) and the hole to open, from 1 (T416; absent: 1) */
-  scale?: number; hole?: number }
+  scale?: number; hole?: number;
+  /** T437: the player's golfer in his player card's clothes (look3p.ts playerDress; absent: the view's own red polo) */
+  golfer?: Dress }
 
 /** what an actor is: a golfer, a caddie, a cart, or a gallery (a crowd standing at one spot, `count` people) */
 export type ActorRole = 'golfer' | 'caddie' | 'cart' | 'gallery';
