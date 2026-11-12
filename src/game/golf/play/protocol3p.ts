@@ -122,11 +122,17 @@ export interface ShotMsg { v: 1; t: 'shot'; golfer: number; hole: number; stroke
    *  landing's lie, the surface of each bounce, the seconds from the strike and the height (m above the ground) of each roll point (the bounces' hops are in
    *  them), a spin back's check (the point the ball skids to before it comes back), and with a penalty the drop: where the next stroke is played from and its lie
    *  (rest is where the ball itself stopped: in the water, or out of bounds) */
-  flightT?: number[]; landLie?: Lie; bounceLies?: Lie[]; rollT?: number[]; rollZ?: number[]; check?: ViewPt; drop?: ViewPt; dropLie?: Lie }
+  flightT?: number[]; landLie?: Lie; bounceLies?: Lie[]; rollT?: number[]; rollZ?: number[]; check?: ViewPt; drop?: ViewPt; dropLie?: Lie ;
+  /** T433: a ghost round's stroke (ghost3p.ts): played back see-through, beside the play, never in its way */
+  ghost?: true }
 
 /** T427: the leaderboard at game minute `at` (board.ts boardRows: the leaders, then the owner's row when he is below them) and the owner's group's wait
  *  on the group ahead in words (board.ts waitText; null: none) */
-export interface BoardMsg { v: 1; t: 'board'; at: number; rows: { pos: string; name: string; toPar: string; thru: string; owner: boolean }[]; wait: string | null }
+export interface BoardMsg { v: 1; t: 'board'; at: number; rows: { pos: string; name: string; toPar: string; thru: string; owner: boolean;
+  /** T436: his handicap as golfers write it ('12.4', '+1.0'; 'level' when everyone plays the same kit) and his net to par (absent: the field's board) */
+  hcp?: string; net?: string }[]; wait: string | null;
+  /** T436: the kit the round is played with ('own': each his own, scored net of handicaps; 'level': everyone the same, scored as played); absent: the field */
+  mode?: 'own' | 'level' }
 
 /** T441, T442: the model's shot for an input as the view would strike it, with no luck in it (the mean: no scatter, no mishit, no flier), so the view draws the
  *  curve, the landing and the bounce and roll of the shape and spin picked: `key` answers the view's `aim`; `shot` the stroke as a ShotMsg (its flight, roll

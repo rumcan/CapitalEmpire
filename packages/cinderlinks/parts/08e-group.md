@@ -3,7 +3,9 @@ When the host plays a round with company (CapitalEmpire's `play/play3p.ts` with 
 R: The others in his group play their strokes in the model's order (the farthest from the pin first, the honour on the tee). Each is played back with the same playback as his own (`hostShot`), from the striker's ball: the striker swings or putts as it starts, a full shot has its short ball camera, and the camera cuts back to the owner once the ball lies still. The owner's ball, his strokes and his score are kept and put back.
 R: People move by the round's own clock: while a stroke plays back, everyone walks from where the list before it has them toward where the next list has them; between his turns they stand as the last list has them.
 R: The others' balls lie where they came to rest; on the green a marker stands in for a ball until its golfer plays it. The flag is tended for a long putt (the tender stands at the pin).
-R: The leaderboard card shows the leaders and the owner's row; when his group waits on the group ahead it is said.
+R: The leaderboard card shows the leaders and the owner's row; when his group waits on the group ahead it is said. Racing a ghost (T436) it shows you and him: in own kit your nets after handicaps, in level kit the strokes as played.
+R: A ghost's strokes (T433) play back beside the play when their minute comes: his ball flies and rolls see-through, his figure swings with it; the owner's ball and camera are never taken.
+R: In host mode the help (H) also says what a round inside the game is: the course decides the shots, your kit counts, the land's fine detail is grown, and the ghost, share and kit buttons (T440).
 File: game.js
 Check: function groupMsg(
 Check: function groupShotStart(
@@ -94,7 +96,34 @@ function groupOther(m) {   // a stroke that is not the owner's (by the owner's i
   return grpOwner >= 0 ? m.golfer !== grpOwner : !!(HP && HP.turn && m.golfer !== HP.turn.golfer);
 }
 function groupPlays(m) {   // whether another's stroke is played back here: one of his group's, on the hole on screen (the host sends only those)
+  if (m && m.ghost) { ghostShotIn(m); return false; }   // (T433: a ghost's stroke has its own playback, beside the play: ghostShotIn)
   return !!m && groupOther(m) && (m.hole | 0) === holeN;
+}
+// ---- T433: a ghost's strokes. Each is held until the play's minute reaches it, then its ball flies and rolls along the host's samples (hostAt, the
+// playback's own reader) in real time, drawn see-through; the owner's ball, camera and turn are never touched. Then the ghost's ball lies at its rest
+const grpGhost = [];
+function ghostShotIn(m) {
+  const S = hostS(), F = Array.isArray(m.flight) ? m.flight : [], R = Array.isArray(m.roll) ? m.roll : [];
+  const fT = Array.isArray(m.flightT) && m.flightT.length === F.length ? m.flightT : F.map((_, k) => k / 30), tL = F.length ? fT[F.length - 1] : 0;
+  const rT = Array.isArray(m.rollT) && m.rollT.length === R.length ? m.rollT : R.map((_, k) => tL + (k + 1) * 0.12), start = F.length ? [F[F.length - 1][0], F[F.length - 1][1], 0] : [m.from[0], m.from[1], 0];
+  grpGhost.push({ m, S, F, fT, tL, RT: [tL].concat(rT), RQ: [start].concat(R.map((p, k) => [p[0], p[1], Array.isArray(m.rollZ) && m.rollZ.length === R.length ? m.rollZ[k] : 0])), t0: 0,
+    b: { role: 'ball', x: 0, y: 0, mark: false, ghost: true, dl: { k: K_ACTOR, d: 0, a: null } } });
+  const g = grpGhost[grpGhost.length - 1]; g.b.dl.a = g.b;
+  while (grpGhost.length > 24) grpGhost.shift();
+}
+const GQ = { x: 0, y: 0, h: 0 };
+function ghostBalls(now, tanH) {   // each frame: the ghost's strokes whose minute has come, their balls where the samples have them; returns the golfer whose ball flies
+  let flying = -1; const M = groupMinute();
+  for (let i = 0; i < grpGhost.length; i++) {
+    const g = grpGhost[i]; if (!g.t0) { if (!(M >= +g.m.at)) continue; g.t0 = now; const r = actors.get(g.m.golfer); if (r) { r.sw0 = now; r.swPutt = g.m.club === 'putter'; r.swTh = Math.atan2(g.m.rest[1] - g.m.from[1], g.m.rest[0] - g.m.from[0]); } }
+    const t = (now - g.t0) / 1000, end = g.RT[g.RT.length - 1];
+    if (t >= end) { grpGhost.splice(i--, 1); continue; }
+    if (g.F.length && t < g.tL) hostAt(g.fT, g.F, t, GQ); else hostAt(g.RT, g.RQ, t, GQ);
+    const b = g.b, S = g.S; b.x = GQ.x * S; b.y = GQ.y * S; b.z = GQ.h * S; flying = g.m.golfer;
+    const ex = b.x - camX, ey = b.y - camY, d = ex * FX + ey * FY;
+    if (d > 1 && d < 220 && Math.abs(ex * RX + ey * RY) <= tanH * d + 4) { b.dl.d = d; dlist.push(b.dl); }
+  }
+  return flying;
 }
 function groupShotStart(m) {   // hook: hostShot is about to play stroke m back. Another's: the owner's ball and score are put aside, the ball set at the striker's
   grpPlay = null;
@@ -113,11 +142,11 @@ function groupShotEnd(m) {   // hook: hostRest has laid stroke m's ball at its r
 function groupList(t, tanH) {   // each frame (from actorsList): the others' balls on the hole on screen join the list; a ball on the green is a marker until it is played
   if (!grpSnaps.length || grpCourse !== course) { if (grpBalls.size) grpBalls.clear(); return; }
   groupFrame(); const s = grpB && grpU >= 0.5 ? grpB : grpA; if (!s) return;
-  const seen = new Set(), flying = grpPlay ? grpPlay.m.golfer : -1;
+  const gf = grpGhost.length ? ghostBalls(t, tanH) : -1, seen = new Set(), flying = grpPlay ? grpPlay.m.golfer : -1;
   for (const [id, a] of s.m) {
-    if (a.role !== 'golfer' || a.owner || !a.ball || id === flying || (a.hole && a.hole !== holeN)) continue;
+    if (a.role !== 'golfer' || a.owner || !a.ball || id === flying || id === gf || (a.hole && a.hole !== holeN)) continue;
     let b = grpBalls.get(id); if (!b) { b = { role: 'ball', x: 0, y: 0, mark: false, dl: { k: K_ACTOR, d: 0, a: null } }; b.dl.a = b; grpBalls.set(id, b); }
-    b.x = a.ball[0]; b.y = a.ball[1]; b.mark = matAt(b.x, b.y) === M_GREEN && a.doing !== 'putt'; seen.add(id);
+    b.x = a.ball[0]; b.y = a.ball[1]; b.z = 0; b.ghost = !!(actors.get(id) && actors.get(id).ghost); b.mark = !b.ghost && matAt(b.x, b.y) === M_GREEN && a.doing !== 'putt'; seen.add(id);
     const ex = b.x - camX, ey = b.y - camY, d = ex * FX + ey * FY;
     if (d < 1 || d > 160 || Math.abs(ex * RX + ey * RY) > tanH * d + 4) continue;
     b.dl.d = d; dlist.push(b.dl);
@@ -129,9 +158,10 @@ function groupList(t, tanH) {   // each frame (from actorsList): the others' bal
   }
   for (const id of grpBalls.keys()) if (!seen.has(id)) grpBalls.delete(id);
 }
-function drawGroupBall(b, d) {   // a ball at rest (as the render draws his), or a marker on the green
-  project(b.x, b.y, groundH(b.x, b.y), PJ); if (PJ.s === 0) return;
+function drawGroupBall(b, d) {   // a ball at rest or in the air (as the render draws his), or a marker on the green; a ghost's see-through
+  project(b.x, b.y, groundH(b.x, b.y) + (b.z || 0), PJ); if (PJ.s === 0) return;
   if (b.mark) { blit(markSpr, PJ.x, PJ.y, PJ.s * 0.7, PJ.d * 100, 0, 0, false, 0); return; }
+  if (b.ghost && ((PJ.x + PJ.y + (frame >> 2)) & 1)) return;   // (a ghost's ball: there one frame in two, flickering like a ghost)
   if (PJ.s > 0.55) blit(ballSpr, PJ.x, PJ.y, PJ.s, PJ.d * 100 - 40, 0, 0, false, 0);
   else { const w = lit(tone(SHOER, 0.95)); plotZ(PJ.x, PJ.y, PJ.d - 1, w); plotZ(PJ.x + 1, PJ.y, PJ.d - 1, w); }
 }
@@ -142,9 +172,23 @@ function groupBoard(m) {   // the leaderboard card (the leaders, his row lit) an
     if (document.body && document.body.appendChild) document.body.appendChild(grpBoardEl);
   }
   const rows = Array.isArray(m.rows) ? m.rows : [], esc = (v) => String(v == null ? '' : v).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
-  if (grpBoardEl) grpBoardEl.innerHTML = '<b>LEADERS</b><br>' + rows.map((r) => (r.owner ? '<span style="color:#f2c94c">' : '<span>') + esc(r.pos) + '&nbsp;&nbsp;' + esc(r.name) + '&nbsp;&nbsp;' + esc(r.toPar) + '&nbsp;&nbsp;' + esc(r.thru) + '</span>').join('<br>');
+  const fair = rows.some((r) => r.hcp !== undefined), level = rows.some((r) => r.hcp === 'level');   // (T436: you and a ghost, own kit scored net, level kit as played)
+  const head = !fair ? 'LEADERS' : level ? 'LEVEL KIT' : 'OWN KIT &middot; NET';
+  if (grpBoardEl) grpBoardEl.innerHTML = '<b>' + head + '</b><br>' + rows.map((r) => (r.owner ? '<span style="color:#f2c94c">' : '<span>') + esc(r.pos) + '&nbsp;&nbsp;' + esc(r.name) + '&nbsp;&nbsp;' + esc(r.toPar)
+    + (fair && !level ? '&nbsp;&nbsp;net ' + esc(r.net) + ' (' + esc(r.hcp) + ')' : '') + '&nbsp;&nbsp;thru ' + esc(r.thru) + '</span>').join('<br>');
   const w = typeof m.wait === 'string' ? m.wait : '';
   if (w && w !== grpWait) say('Your group is ' + w, 300);
   grpWait = w; groupBoard.last = m;
+}
+// ---- T440: the in-game help (H) in host mode: what the round inside CapitalEmpire is (added once to the help panel the page already has)
+let hostHelpDone = false;
+const HOST_HELP = [['', ''], ['IN YOUR GAME', ''], ['the shots', 'the course decides each one: your skills, clubs, cards and unlocks count'], ['the land', 'its fine detail (grass, trees, rocks) is grown here, not copied'],
+  ['1-9, wheel', 'your own clubs, with their real carries'], ['Esc', 'back to the course (a round under way is kept)'], ['Save ghost', 'your round as a file a friend can race'],
+  ['Ghost...', 'race a saved round: he plays beside you, see-through'], ['Share course', 'this course as a file; Play a shared course... opens one'], ['Kit', 'own kit (scored net of handicaps) or level kit (everyone the same)']];
+function hostHelp() {   // (from actorsList, each frame until done: the help panel is the page's, made after the parts load)
+  hostHelpDone = true;
+  if (typeof helpEl === 'undefined' || !helpEl) return;
+  const NL = String.fromCharCode(10);   // (a new line: the help panel keeps its lines)
+  helpEl.innerHTML += NL + HOST_HELP.map((h) => '<b>' + h[0] + '</b>' + h[1]).join(NL);
 }
 ````

@@ -216,12 +216,13 @@ import { exportFeatures3p, gatherFeatures3p } from './golf/play/features3p';
 import { courseEntry3p } from './golf/play/entry3p';
 import { seedOf } from './golf/play/view3p';
 import type { Actor, CourseMsg, HostMsg, ViewInput } from './golf/play/protocol3p';
-import { Play3p } from './golf/play/play3p'; // T418: the owner's play in the view from behind the golfer
+import { Play3p, type Play3pOpts } from './golf/play/play3p'; // T418: the owner's play in the view from behind the golfer
 import { earned } from './golf/play/unlocks'; // T443
 import { galleryActors } from './golf/play/gallery3p'; // T429: the galleries for the view
 import { Match3p } from './golf/play/match3p'; // T428: a money match in the view
 import { readShare, shareCourseMsg, shareOf, shareText, shareView, type CourseShare } from './golf/play/share3p'; // T434: shared courses
-import { ghostActor, ghostOf, ghostText, readGhost, replayGhost, type GhostFile } from './golf/play/ghost3p'; // T433: ghost rounds
+import { ghostActor, ghostOf, ghostShots, ghostText, readGhost, replayGhost, type GhostFile } from './golf/play/ghost3p'; // T433: ghost rounds
+import { fairRows, kitFor, levelHcp, LEVEL_PROFILE, type KitMode } from './golf/play/fair3p'; // T436: own kit or level kit
 import type { Frame3p } from './golf/play/export3p';
 import { putterFitName } from './golf/play/bag';
 import { BallRoll, FX_SAND, FX_SPLASH, ballRoll, type HeightAt } from './golf/play/roll';
@@ -10094,12 +10095,12 @@ export class Game {
       return this.play3p.start();
     }
     const idx = v.holes.findIndex(h => h.n === n); if (idx < 0) return [];
-    const p = this.playerNow(), sk = this.yourSkills();
-    // T443: what he has earned: his card's skills, his clubs' levels, his cards' mechanics (golf/play/unlocks.ts)
-    const earn = earned({ skills: p?.skills ?? {}, bag: p?.bag ?? null, mech: MECH_IDS.filter(id => hasMech(sk, id)) });
-    const seed3p = (this.seed ^ Math.imul(n, 7919) ^ Math.imul(this.play3pN + 1, 104729)) | 0, more = this.ghostMore3p(v, [idx]);   // (T433: a loaded ghost of this hole walks alongside)
-    this.ghostMeta3p = { holes: [idx], seed: seed3p, skills: sk, sex: p?.sex ?? 'm', name: p?.name ?? 'You' };
-    this.play3p = new Play3p({ view: v, holes: [idx], skills: sk, earned: earn, ...(more ? { more } : {}), gimmeM: GIMME_RULES.find(r => r.id === DEFAULT_RULES.gimme)?.m ?? 0, /* (T423: a practice hole's rules: the leather) */ sex: p?.sex ?? 'm', seed: (this.seed ^ Math.imul(n, 7919) ^ Math.imul(++this.play3pN, 104729)) | 0, frame: f,
+    const p = this.playerNow(), mode = this.fair3p, sk = kitFor(mode, this.yourSkills());   // (T436: his own kit, or the level kit)
+    // T443: what he has earned: his card's skills, his clubs' levels, his cards' mechanics (golf/play/unlocks.ts); the level kit has the level golfer's, no cards
+    const earn = mode === 'level' ? earned({ skills: LEVEL_PROFILE, bag: null, mech: [] }) : earned({ skills: p?.skills ?? {}, bag: p?.bag ?? null, mech: MECH_IDS.filter(id => hasMech(sk, id)) });
+    const seed3p = (this.seed ^ Math.imul(n, 7919) ^ Math.imul(this.play3pN + 1, 104729)) | 0, ghost = this.ghostOpts3p(v, [idx]);   // (T433: a loaded ghost of this hole plays alongside)
+    this.ghostMeta3p = { holes: [idx], seed: seed3p, skills: sk, sex: p?.sex ?? 'm', name: p?.name ?? 'You', mode, hcp: mode === 'level' ? levelHcp() : p ? handicapOf(p.skills) : levelHcp() };
+    this.play3p = new Play3p({ view: v, holes: [idx], skills: sk, earned: earn, ...ghost, gimmeM: GIMME_RULES.find(r => r.id === DEFAULT_RULES.gimme)?.m ?? 0, /* (T423: a practice hole's rules: the leather) */ sex: p?.sex ?? 'm', seed: (this.seed ^ Math.imul(n, 7919) ^ Math.imul(++this.play3pN, 104729)) | 0, frame: f,
       height: sh ? sh.height : this.ballHeight, wind: () => this.windNow(), fit: putterFitName(p?.bag), gust: () => { const w = this.worldWind(); return w ? windView(this.windNow(), w, 1, 0).peak : null; } });
     return this.play3p.start();
   }
@@ -10110,13 +10111,24 @@ export class Game {
   private course3pShare: CourseShare | null = null;
   /** T433: the ghost loaded to play alongside (null: none), and what the last practice session was made with (ghostSave3p) */
   private ghost3p: GhostFile | null = null;
-  private ghostMeta3p: { holes: number[]; seed: number; skills: ShotSkill; sex: Sex; name: string } | null = null;
+  private ghostMeta3p: { holes: number[]; seed: number; skills: ShotSkill; sex: Sex; name: string; mode: KitMode; hcp: number } | null = null;
   /** T433: the loaded ghost replayed on these holes, as an actors source (null: no ghost, or one of other holes) */
-  private ghostMore3p(v: CourseView, holes: number[]): ((m: number) => Actor[]) | null {
-    const g = this.ghost3p, f = this.view3pFrame; if (!g || !f || g.holes.join() !== holes.join()) return null;
-    const r = replayGhost(g, v);
-    return (m: number) => { const a = ghostActor(r, m, f); return a ? [a] : []; };
+  private ghostOpts3p(v: CourseView, holes: number[]): Pick<Play3pOpts, 'more' | 'moreShots' | 'boardRows'> {
+    const g = this.ghost3p, f = this.view3pFrame; if (!g || !f || g.holes.join() !== holes.join()) return {};
+    const r = replayGhost(g, v), mode = this.fair3p, me = this.ghostMeta3p;
+    return {
+      more: (m: number) => { const a = ghostActor(r, m, f); return a ? [a] : []; },
+      moreShots: (t0: number, t1: number) => ghostShots(r, t0, t1, f),   // (his balls, played back see-through)
+      boardRows: (m: number) => { const p = this.play3p; if (!p) return []; return fairRows([   // (T436: you and him, gross and net)
+        { name: me?.name ?? 'You', hcp: me?.hcp ?? null, owner: true, plan: p.plan, view: p.view, id: p.me },
+        { name: g.golfer.name, hcp: mode === 'level' ? levelHcp() : g.hcp ?? null, owner: false, plan: r.plan, view: r.view, id: 0 }], m, mode); },
+    };
   }
+  /** T436: the kit the view's sessions are played with ('own' by default; a ghost brings the one it was played with) */
+  private fair3p: KitMode = 'own';
+  get fairMode3p(): KitMode { return this.fair3p; }
+  /** T436: own kit or level kit for the next session (the view starts the hole again with it) */
+  setFair3p(mode: KitMode) { if (mode !== this.fair3p) { this.fair3p = mode; this.emit(); } }
   /** T433: the round just played in the view as a ghost file's text (null: none played yet) */
   ghostSave3p(): string | null {
     const p = this.play3p, m = this.ghostMeta3p, c = this.course3pShare; if (!p || !m || !c || !p.inputs.length) return null;
@@ -10125,7 +10137,7 @@ export class Game {
   /** T433: a ghost file to play alongside the next session of its hole on this course; the reason when it cannot be */
   ghostLoad3p(text: string): string | null {
     const r = readGhost(text, this.course3pShare?.hash); if ('why' in r) return r.why;
-    this.ghost3p = r.ghost; return null;
+    this.ghost3p = r.ghost; this.fair3p = r.ghost.mode ?? 'own'; this.emit(); return null;   // (T436: you race him with the kit he played)
   }
   /** T434: the course open in the view as a shared course file's text (null: none sent yet) */
   shareSave3p(): string | null { const c = this.course3pShare; return c ? shareText(c) : null; }
