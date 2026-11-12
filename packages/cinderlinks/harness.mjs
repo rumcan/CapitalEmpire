@@ -373,7 +373,7 @@ ${HOST_PLAY}
       hm.features = hm.features || { features: [] }; hm.features.features = (hm.features.features || []).concat([
         { id: 'tent-1', kind: 'building', use: 'tent', name: 'Hospitality', at: at(16, -14), w: 9, d: 6, h: 4.2, rot, wall: '#f6f6f2', roofColour: '#c8323a' },
         { id: 'tent-2', kind: 'building', use: 'tent', name: 'Food', at: at(28, -15), w: 6, d: 6, h: 3.8, rot, wall: '#f6f6f2', roofColour: '#2f8a4e' },
-        { id: 'stand-1', kind: 'building', use: 'stand', name: 'Grandstand', at: at(30, 3), w: 16, d: 6, h: 3.4, rot: rot - 90, wall: '#f6f6f2', roofColour: '#2f5fae' }]);
+        { id: 'stand-1', kind: 'building', use: 'stand', name: 'Grandstand', at: at(30, 3), w: 16, d: 6, h: 3.4, rot: rot + 90, wall: '#f6f6f2', roofColour: '#2f5fae' }]);
       hostMessage(hm); idle();
       const me = at(-6, 0); go(me[0], me[1], Math.atan2(ux, -uy)); frames(30); snap('dress'); { const c = at(18, 3); go(c[0], c[1], Math.atan2(ux, -uy)); camHk = 2.2; frames(20); snap('dress-stand'); camHk = 1; }
       const B = feats ? feats.builds.filter((b) => b.use === 'tent' || b.use === 'stand') : []; for (const b of B) if (!b.faces) buildFaces(b);

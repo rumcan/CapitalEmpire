@@ -1,7 +1,7 @@
 ## dress Tournament dress: tents and grandstands (T429)
 The course's event buildings (CapitalEmpire's features: `use` 'tent' for the food, drink, merchandise, hospitality, media and first-aid tents, 'stand' for a grandstand) are drawn as what they are, not as houses.
 R: A tent is a marquee: a peaked canvas roof in stripes of white and its colour, a scalloped valance hanging from the eaves all round, on a pole at each corner and halfway along the long sides; open below.
-R: A grandstand is a bank of rows stepping up from its front to its back: each row a seat deck in the seats' colour and a grey riser, solid ends, a back wall and a rail along the top.
+R: A grandstand is a bank of rows stepping up from its front (the +d side, where CapitalEmpire's seats face) to its back: each row a seat deck in the seats' colour and a grey riser, solid ends, a back wall and a rail along the top.
 R: Both are flat faces lit by the one sun, as the other buildings are, and cast the same shadow.
 File: game.js
 Check: function dressFaces(
@@ -11,7 +11,7 @@ Check: function dressFaces(
 // ---- tournament dress (T429): a tent's and a grandstand's faces, for buildFaces (parts/08c-features.md) to draw. P(a, f, z): a point in the building's own
 // frame (a across, f along, metres; z height) in the world; N: a normal the same way; add(points, normal, colour, detail rank); mul: a colour shaded
 const DRESS_CANVAS = [246, 244, 236], DRESS_POLE = [214, 214, 220], DRESS_RISER = [150, 152, 160], DRESS_SEAT = [52, 92, 158], DRESS_END = [196, 198, 204];
-function dressFaces(B, P, N, add, mul, zm) {
+function dressFaces(B, P, N, add, mul, zm) {   // (P and N are rebound for a stand: see below)
   const hw = B.w / 2, hd = B.d / 2;
   if (B.use === 'tent') {
     const ze = zm + Math.min(2.6, B.h * 0.6), zr = zm + Math.max(B.h, 3.4), pole = 0.07, band = B.rc;
@@ -46,7 +46,9 @@ function dressFaces(B, P, N, add, mul, zm) {
     }
     return;
   }
-  // a grandstand: rows rising from the front (f = -hd) to the back (f = +hd)
+  // a grandstand: rows rising from the front to the back. Its front is the building's +d side (CapitalEmpire's seating faces +y unturned: event-seating.ts
+  // proposedSeating's front), so the rows are laid out mirrored: f below runs from the front (+hd) back (-hd)
+  { const P0 = P, N0 = N; P = (a, f, z) => P0(a, -f, z); N = (a, f, z) => N0(a, -f, z); }
   const rows = Math.max(3, Math.min(14, Math.round(B.d / 0.9))), step = B.d / rows, rise = Math.max(0.3, Math.min(0.5, (B.h - 0.6) / rows)), seat = mul(B.wall, 1)[0] > 200 && mul(B.wall, 1)[1] > 190 ? DRESS_SEAT : B.wall;
   for (let i = 0; i < rows; i++) {
     const f0 = -hd + i * step, f1 = f0 + step, zt = zm + 0.45 + i * rise, zl = i ? zm + 0.45 + (i - 1) * rise : zm;
