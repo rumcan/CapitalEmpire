@@ -114,7 +114,7 @@ function hostSend(m) {
 function hostMessage(m) {   // one message from the host page, already known to come from it
   if (!m || typeof m !== 'object') return;
   if (m.t === 'leave') { hostOff = true; return; }
-  if (m.t === 'actors') { actorsIn(m); return; }   // T424: who else is on the course (parts/08d-actors.md)
+  if (m.t === 'actors' || m.t === 'board') { groupMsg(m); return; }   // T424, T427: who else is on the course, the leaderboard (parts/08d-actors.md, 08e-group.md)
   if ((m.t === 'turn' || m.t === 'shot' || m.t === 'holeEnd' || m.t === 'preview') && m.v === 1) { if (course) hostPlayMsg(m); return; }   // (T418: the play, once a course is in)
   if (m.t !== 'course' || m.v !== 1) return;
   const C = m.course;
@@ -159,7 +159,7 @@ function clubName(k) { const c = HP && HP.clubs[k]; return c ? CLUB_NAME[c.club]
 function hostPlayMsg(m) {   // a play message from the host: a turn, a shot, the hole's end; held while a shot is being played back
   if (!HP) HP = { turn: null, clubs: [], wait: 0, play: null, q: [], over: false };
   if (m.t === 'preview') { if (m.key === HP.pvKey) HP.pv = Object.assign({}, m, { sig: HP.pvSig, club: hostClub() ? hostClub().club : '' }); return; }   // (T441: the answer to the latest `aim` only)
-  if (m.t === 'shot') { if (HP.turn && m.golfer !== HP.turn.golfer) return; if (HP.play) { HP.q.push(m); return; } hostShot(m); return; }   // (anyone else's stroke: shown from T425)
+  if (m.t === 'shot') { if (groupOther(m) && !groupPlays(m)) return;   /* (T425: his group's strokes are played too: 08e-group.md) */ if (HP.play) { HP.q.push(m); return; } hostShot(m); return; }   // (anyone else's stroke: shown from T425)
   if (HP.play || HP.q.length) { HP.q.push(m); return; }
   if (m.t === 'turn') hostTurn(m); else if (m.t === 'holeEnd') hostHoleEnd(m);
 }
@@ -187,6 +187,7 @@ function hostStrike() {   // the club meets the ball: the input goes to the host
   }
 }
 function hostShot(m) {   // the owner's decided stroke: played back from its samples (hostBall)
+  groupShotStart(m);   // (T425: another's stroke: the owner's ball and score put aside, 08e-group.md)
   const S = hostS(), F = Array.isArray(m.flight) ? m.flight : [], R = Array.isArray(m.roll) ? m.roll : [];
   const fT = Array.isArray(m.flightT) && m.flightT.length === F.length ? m.flightT : F.map((_, k) => k / 30);   // (an older host: 30 samples a second)
   const tL = F.length ? fT[F.length - 1] : 0, rT = Array.isArray(m.rollT) && m.rollT.length === R.length ? m.rollT : R.map((_, k) => tL + (k + 1) * 0.12);
@@ -228,6 +229,7 @@ function hostRest() {   // the playback is over: the ball lies at the host's res
   strokes = m.stroke + (m.penalty || 0); total += 1 + (m.penalty || 0);
   if (m.holed) { ball.state = 3; ball.x = hole.pin.x; ball.y = hole.pin.y; for (let k = 0; k < 120; k++) addParticle(k & 1 ? P_SPARK : P_EMBER, hole.pin.x, hole.pin.y, ball.z + 0.1, (rnd() - 0.5) * 3, (rnd() - 0.5) * 3, 2 + rnd() * 5, 40 + rndi(70), rndi(4)); }
   else if (m.penalty) { splash(ball.x, ball.y, wlAt(ball.x, ball.y), 26); say(m.restLie === 'water' ? 'Water: one stroke, and a drop' : 'Out of bounds: one stroke', 260); }
+  groupShotEnd(m);   // (T425: after another's stroke the owner's ball and score come back, 08e-group.md)
   galleryReact(m);   // (T429: the crowd near it cheers a holed putt, groans at a short miss: 08f-gallery.md)
   while (HP.q.length && !HP.play) { const q = HP.q.shift(); if (q.t === 'shot') hostShot(q); else if (q.t === 'turn') hostTurn(q); else if (q.t === 'holeEnd') hostHoleEnd(q); }
 }

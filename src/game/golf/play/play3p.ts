@@ -9,7 +9,7 @@
 // An input that is not for the turn in hand (an old one, sent twice) is answered with the turn again, so the view is never left waiting.
 //
 // Positions cross in the view's frame (protocol3p.ts toView / fromView). Pure TS, no DOM.
-import type { CourseView, Golfer, Lie, Pt, RoundPlan, Sex, Shot } from './types';
+import type { CourseView, Golfer, Group, Lie, Pt, RoundPlan, Sex, Shot } from './types';
 import type { TeeKind } from '../types';
 import { LiveGroup, MODEL_V, shotOutcome, type OwnerInput, type OwnerTurn } from './live';
 import { shapeEffect } from './shape';
@@ -17,14 +17,18 @@ import { carryFor } from './shot';
 import { kitOf } from './mods';
 import { ALL_EARNED, type Earned } from './unlocks';
 import { green3p, puttAim, type Green3p } from './green3p';
-import { playRound } from './round';
+import { playRound, standings } from './round';
 import { teeTimes } from './field';
 import { envOf } from './conditions';
 import type { ShotSkill } from './shot';
 import type { HeightAt } from './roll';
 import type { WindNow } from './wind';
 import type { Frame3p } from './export3p';
-import { fromView, type HoleEndMsg, type HostMsg, type PreviewMsg, type ViewInput } from './protocol3p';
+import { PROTOCOL_V, fromView, type Actor, type ActorsMsg, type BoardMsg, type HoleEndMsg, type HostMsg, type PreviewMsg, type ViewInput } from './protocol3p';
+import { CartPlay, type CartPaths } from './carts';
+import type { WalkField } from '../walkfield';
+import { actorsMsg } from './actors3p';
+import { boardRows, waitText } from './board';
 import { centreOf, turnMsg } from './turn3p';
 import { allowedClubs } from './owner';
 import { fieldShotMsg, shotMsg } from './shot3p';
@@ -36,6 +40,17 @@ import { fieldShotMsg, shotMsg } from './shot3p';
 export interface Play3pOpts {
   view: CourseView; holes: readonly number[]; skills: ShotSkill; sex: Sex; tees?: TeeKind; seed: number; frame: Frame3p | Pt;
   height?: HeightAt | null; wind?: () => WindNow | null; fit?: string;
+  /** T425 to T427: who else plays: the rest of his group and the field (never id OWNER_3P: that is him) and the tee sheet, the owner (OWNER_3P) in one of
+   *  its groups; their carts and caddies as entourage.ts wrote them into the golfers. Absent: he plays alone, as before (no actors, no board) */
+  company?: { golfers: Golfer[]; groups: Group[] };
+  /** T426: the carts' ways: the course's cart paths (absent or null: along the rough's edge), where a cart goes after the last green, the course's walk field */
+  paths?: CartPaths | null; home?: Pt; walk?: WalkField | null;
+  /** T425: the owner's real round, played on in the view: the day's plan and course, his live group (live.ts LiveGroup: the very one the manager game plays),
+   *  his golfer's id and his group's index. The session plays that group on (no new plan; `holes`, `seed` and `company` are not used); the strokes already
+   *  played count as sent, so the view opens on his turn as it stands. Absent: a fresh session, as above */
+  attach?: { plan: RoundPlan; view: CourseView; live: LiveGroup; owner: number; group: number };
+  /** T429: the galleries to put in each actors list (gallery3p.ts galleryActors, as the engine has them now; absent: none) */
+  galleries?: () => Actor[];
   /** T422: the day's gust peak now (mph; absent: none sent) */
   gust?: () => number | null;
   /** T443: what he has earned (unlocks.ts earned; absent: everything, as before T443) */
@@ -43,6 +58,8 @@ export interface Play3pOpts {
   /** T423: the gimme the round's rule allows (m; absent or 0: none, as in a match) */
   gimmeM?: number;
 }
+/** T427: the leaderboard's rows the view is sent (the leaders; the owner's row after them when he is lower) */
+export const BOARD_ROWS = 8;
 
 /** the owner's golfer in a session: id 0, alone in his group */
 export const OWNER_3P = 0;
@@ -64,6 +81,12 @@ export class Play3p {
   private readonly sent = new Set<Shot>();
   private turn: OwnerTurn | null = null;
   private done = false;
+  /** T425: the owner's golfer id (OWNER_3P, or his id in the real round) */
+  readonly me: number;
+  /** T425: the owner's group (golfer ids) */
+  private readonly group: Set<number>;
+  /** T426: the carts' playback (null: nobody rides) */
+  readonly carts: CartPlay | null;
   /** T443: the boost charges used on each hole (by index) */
   private used = new Map<number, number>();
   /** T423: the green sent with the turn in hand (null: not on the green) */
@@ -71,14 +94,29 @@ export class Play3p {
   private get earn(): Earned { return this.o.earned ?? ALL_EARNED; }
 
   constructor(private readonly o: Play3pOpts) {
+    const at = o.attach;
+    if (at) {   // (T425: his real round: the day's plan, course and live group)
+      this.view = at.view; this.plan = at.plan; this.live = at.live; this.me = at.owner; this.centre = centreOf(o.frame);
+      this.group = new Set(at.plan.groups[at.group]?.players ?? [at.owner]);
+      for (const s of at.plan.shots) this.sent.add(s);
+      this.carts = at.plan.golfers.some(g => g.cart !== undefined && !g.owner) ? new CartPlay(this.plan, this.view, o.paths ?? null, o.home ?? this.view.holes[0]!.tee, o.walk ?? null) : null;
+      return;
+    }
+    this.me = OWNER_3P;
     if (!o.holes.length) throw new Error('play3p: no holes to play');
     this.view = holesView(o.view, o.holes);
     const sk = o.skills, golfer: Golfer = { id: OWNER_3P, name: 'You', sex: o.sex, pro: false, look: 0, owner: true,
       skill: typeof sk === 'number' ? sk : (sk.driving + sk.irons + sk.short + sk.putting) / 4, ...(o.tees ? { tees: o.tees } : {}), ...(typeof sk === 'number' ? {} : { skills: sk }) };
-    const groups = teeTimes([golfer], o.seed);
-    this.plan = playRound(this.view, [golfer], groups, o.seed, { live: 0 });
-    this.live = new LiveGroup(this.plan, this.view, 0, o.seed);
+    const co = o.company, golfers = co ? [golfer, ...co.golfers] : [golfer], groups = co ? co.groups : teeTimes([golfer], o.seed);
+    const gi = groups.findIndex(g => g.players.includes(OWNER_3P));
+    if (gi < 0) throw new Error('play3p: the owner is in no group of the tee sheet');
+    if (co && co.golfers.some(g => g.id === OWNER_3P)) throw new Error('play3p: another golfer has the owner id');
+    this.plan = playRound(this.view, golfers, groups, o.seed, { live: gi, ...(co ? { honour: true } : {}) });   // (T425: with company, the honour on the tee)
+    this.live = new LiveGroup(this.plan, this.view, gi, o.seed);
     this.centre = centreOf(o.frame);
+    this.group = new Set(groups[gi]!.players);
+    this.carts = co && golfers.some(g => g.cart !== undefined && !g.owner)
+      ? new CartPlay(this.plan, this.view, o.paths ?? null, o.home ?? this.view.holes[0]!.tee, o.walk ?? null) : null;
   }
 
   /** the turn in hand (null: none, the session is over) */
@@ -114,7 +152,7 @@ export class Play3p {
     const input = this.owned(vi, t, false), { holeIdx: _h, stroke: _s, ...inp } = input; void _h; void _s;
     const hole = this.view.holes[t.holeIdx]!, last = t.holeIdx === this.view.holes.length - 1;
     const o = shotOutcome(this.view, hole, t.ball, t.lie, this.o.skills, inp, () => 0.75, { last });
-    const shot = { golfer: OWNER_3P, hole: t.holeIdx, stroke: t.stroke, t: t.t, from: { x: t.ball.x, y: t.ball.y }, to: o.to, club: vi.club, lie: o.lie, penalty: o.penalty, holed: o.holed, ...(o.landing ? { landing: o.landing } : {}) };
+    const shot = { golfer: this.me, hole: t.holeIdx, stroke: t.stroke, t: t.t, from: { x: t.ball.x, y: t.ball.y }, to: o.to, club: vi.club, lie: o.lie, penalty: o.penalty, holed: o.holed, ...(o.landing ? { landing: o.landing } : {}) };
     const mctx = { lie: t.lie, tee: t.lie === 'tee', deck: vi.club === 'driver' && t.lie !== 'tee', last, follow: false }, kit = kitOf(this.o.skills, vi.club, mctx);
     const fx = shapeEffect(inp.shape ?? null, vi.club, carryFor(this.o.skills, vi.club, mctx) * Math.min(1, Math.max(0.3, inp.power)), kit.skill, kit);
     return { v: 1, t: 'preview', key, shot: this.strokeMsg(shot, input), spread: fx.spread };
@@ -152,21 +190,38 @@ export class Play3p {
   /** runs the day to his next turn and writes what happened: the strokes not sent yet in time order (his own from his input), holeEnd when his hole
    *  changed or the round is over, then the turn */
   private next(out: HostMsg[], mine: { shot: Shot; input: OwnerInput } | null, holeWas: number): void {
-    const turn = this.live.advance();
-    for (const s of this.plan.shots) {
-      if (this.sent.has(s)) continue;
-      this.sent.add(s);
+    const turn = this.live.advance(), co = !!this.o.company || !!this.o.attach;
+    // the strokes not sent yet in time order. T425: with company, only his group's are played back, each after who is where just before it is struck
+    // (the view moves everyone by these as the strokes play); the rest of the field travels in those lists
+    const fresh = this.plan.shots.filter(s => !this.sent.has(s)).sort((a, b) => a.t - b.t);
+    let last = -Infinity;
+    for (const s of fresh) {
+      this.sent.add(s); last = Math.max(last, s.t);
+      if (co && !this.group.has(s.golfer)) continue;
+      if (co) out.push(this.actors(s.t - 1e-3));
       out.push(this.strokeMsg(s, mine && s === mine.shot ? mine.input : null));
     }
     if (mine && !this.plan.shots.includes(mine.shot)) out.push(this.strokeMsg(mine.shot, mine.input)); // (LiveGroup records it in the plan; this is a guard)
     if (holeWas >= 0 && (!turn || turn.holeIdx !== holeWas)) out.push(this.holeEnd(holeWas, !turn));
     this.turn = turn; this.done = !turn;
+    if (co) { const m = turn ? turn.t - 1e-3 : Number.isFinite(last) ? last + 1 : 0; out.push(this.actors(m), this.board(m)); }
     if (turn) out.push(this.turnMsg(turn));
+  }
+
+  /** T424/T425: who is on the course at game minute m, in the view's frame (actors3p.ts), carts and riders included */
+  actors(m: number): ActorsMsg {
+    const a = actorsMsg({ plan: this.plan, view: this.view, minute: m, carts: this.carts }, this.centre), g = this.o.galleries ? this.o.galleries() : [];
+    return { ...a, actors: g.length ? [...a.actors, ...g] : a.actors, play: true };
+  }
+  /** T427: the leaderboard at game minute m and his group's wait on the group ahead */
+  board(m: number): BoardMsg {
+    const rows = boardRows(standings(this.plan, this.view, m), this.plan.golfers, BOARD_ROWS, this.me).map(r => ({ pos: r.pos, name: r.name, toPar: r.toPar, thru: r.thru, owner: r.owner }));
+    return { v: PROTOCOL_V, t: 'board', at: m, rows, wait: waitText(this.plan, this.view, this.me, m) };
   }
 
   private strokeMsg(s: Shot, input: OwnerInput | null) {
     const n = this.view.holes[s.hole]?.n ?? s.hole + 1, wind = this.windNow(), height = this.o.height ?? null;
-    if (s.golfer === OWNER_3P && input) {
+    if (s.golfer === this.me && input) {
       const { holeIdx: _h, stroke: _s, ...inp } = input; void _h; void _s;
       return shotMsg({ shot: s, input: inp, skills: this.o.skills, hole: n, view: this.view, height, wind }, this.centre);
     }
@@ -174,7 +229,7 @@ export class Play3p {
   }
 
   private holeEnd(holeIdx: number, last: boolean): HoleEndMsg {
-    const h = this.view.holes[holeIdx]!, strokes = this.plan.strokes[OWNER_3P]?.[holeIdx] ?? this.plan.shots.filter(s => s.golfer === OWNER_3P && s.hole === holeIdx).reduce((a, s) => a + 1 + s.penalty, 0);
+    const h = this.view.holes[holeIdx]!, strokes = this.plan.strokes[this.me]?.[holeIdx] ?? this.plan.shots.filter(s => s.golfer === this.me && s.hole === holeIdx).reduce((a, s) => a + 1 + s.penalty, 0);
     return { v: 1, t: 'holeEnd', holeIdx, hole: h.n, par: h.par, strokes, last };
   }
 
