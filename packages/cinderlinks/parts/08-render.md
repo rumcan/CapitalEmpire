@@ -1094,23 +1094,28 @@ function plotZO(sx, sy, d, c) {   // a mark on the ground: hidden where the game
   const gx = (sx * RS) | 0, gy = (sy * RS) | 0; if (gx < 0 || gy < 0 || gx >= VW || gy >= VH) return;
   if (zbuf[gy * VW + gx] >= d * 100 - 40) overPut(sx, sy, c);
 }
+function aimH(x, y) {   // T438: the ground's height for the aim's marks: never made here (a far tile took ~2 ms, thirty of them a slow frame); a tile not made yet is
+  const u = x * PPM, v = y * PPV, tx = Math.floor(u / TPX), ty = Math.floor(v / TPX);   // asked of the workers and the ball's height stands in until it comes
+  if (tileHave(tx, ty)) return hUV(u, v);
+  tileWant(tx, ty); return groundH(ball.x, ball.y);
+}
 function drawAim() {   // the shot's shape: a dotted arc that marches toward the target, its faint shadow on the ground, and a double ring where the ball will land
   overBegin();
   drawPuttGrid();   // (the putting grid lies on the full-size layer too, drawn after everything so it hides behind what stands on the green)
   if (!nearBall() || player.swing >= 0) { overEnd(); return; }
   if (HP) { if (!hostBusy()) hostAim(); overEnd(); return; }        // (host mode: the host's numbers for the club in hand, T420)
   const c = CLUBS[club], m = matAt(ball.x, ball.y), pw = charging ? power : 0.7, sp = c.v * clubK() * (0.22 + 0.78 * pw) * (club === 2 && m === M_SAND ? 0.85 : club === 3 ? 1 : LIEPOW[m]);
-  let x = ball.x, y = ball.y, z = groundH(x, y) + 0.02, vx = aim.dx * sp * Math.cos(c.loft), vy = aim.dy * sp * Math.cos(c.loft), vz = sp * Math.sin(c.loft);
+  let x = ball.x, y = ball.y, z = aimH(x, y) + 0.02, vx = aim.dx * sp * Math.cos(c.loft), vy = aim.dy * sp * Math.cos(c.loft), vz = sp * Math.sin(c.loft);
   const hot = charging ? AIM_R : AIM_G, ph = (frame >> 1) % 6;
   if (c.loft === 0) {                                                  // a putt: a line of dots along the green, an arrowhead at its end
     const len = Math.min(18 * clubK() * clubK(), sp * sp / 3.4);
-    for (let k = 0, d = 0.4 + ph * 0.07; d < len; d += 0.42, k++) { const qx = ball.x + aim.dx * d, qy = ball.y + aim.dy * d; projectO(qx, qy, groundH(qx, qy) + 0.03, PJ); if (PJ.s > 0) aimDotO(PJ.x, PJ.y, PJ.s > 0.8 ? 1 : 0, k & 1 ? hot : AIM_W); }
-    const ex = ball.x + aim.dx * len, ey = ball.y + aim.dy * len; projectO(ex, ey, groundH(ex, ey) + 0.03, PJ); if (PJ.s > 0) aimDotO(PJ.x, PJ.y, 2, hot);
+    for (let k = 0, d = 0.4 + ph * 0.07; d < len; d += 0.42, k++) { const qx = ball.x + aim.dx * d, qy = ball.y + aim.dy * d; projectO(qx, qy, aimH(qx, qy) + 0.03, PJ); if (PJ.s > 0) aimDotO(PJ.x, PJ.y, PJ.s > 0.8 ? 1 : 0, k & 1 ? hot : AIM_W); }
+    const ex = ball.x + aim.dx * len, ey = ball.y + aim.dy * len; projectO(ex, ey, aimH(ex, ey) + 0.03, PJ); if (PJ.s > 0) aimDotO(PJ.x, PJ.y, 2, hot);
     overEnd(); return;
   }
   for (let k = 0; k < 500; k++) {
     vz -= 9.81 / 60; vx *= 0.9986; vy *= 0.9986; x += vx / 60; y += vy / 60; z += vz / 60;
-    const gz = groundH(x, y);
+    const gz = aimH(x, y);
     if (k % 6 === ph) {
       projectO(x, y, gz + 0.03, PJ); if (PJ.s > 0) plotZO(PJ.x, PJ.y, PJ.d, AIM_D);                 // the arc's shadow on the ground
       projectO(x, y, z, PJ); if (PJ.s > 0) aimDotO(PJ.x, PJ.y, PJ.s > 1.1 ? 2 : PJ.s > 0.35 ? 1 : 0, (k / 6 | 0) & 1 ? hot : AIM_W);
@@ -1119,8 +1124,8 @@ function drawAim() {   // the shot's shape: a dotted arc that marches toward the
       const rr = 1.3 + 0.2 * Math.sin(frame * 0.12);
       for (let a = 0; a < 40; a++) {
         const ca = Math.cos(a * 0.157), sa = Math.sin(a * 0.157);
-        let qx = x + ca * rr, qy = y + sa * rr; projectO(qx, qy, groundH(qx, qy) + 0.03, PJ); if (PJ.s > 0) { plotZO(PJ.x, PJ.y + 1, PJ.d - 0.3, AIM_D); plotZO(PJ.x, PJ.y, PJ.d - 0.3, a & 1 ? hot : AIM_W); plotZO(PJ.x + 1, PJ.y, PJ.d - 0.3, a & 1 ? hot : AIM_W); }
-        if (a & 1) { qx = x + ca * 0.55; qy = y + sa * 0.55; projectO(qx, qy, groundH(qx, qy) + 0.03, PJ); if (PJ.s > 0) { plotZO(PJ.x, PJ.y, PJ.d - 0.3, AIM_W); plotZO(PJ.x + 1, PJ.y, PJ.d - 0.3, AIM_W); } }
+        let qx = x + ca * rr, qy = y + sa * rr; projectO(qx, qy, aimH(qx, qy) + 0.03, PJ); if (PJ.s > 0) { plotZO(PJ.x, PJ.y + 1, PJ.d - 0.3, AIM_D); plotZO(PJ.x, PJ.y, PJ.d - 0.3, a & 1 ? hot : AIM_W); plotZO(PJ.x + 1, PJ.y, PJ.d - 0.3, a & 1 ? hot : AIM_W); }
+        if (a & 1) { qx = x + ca * 0.55; qy = y + sa * 0.55; projectO(qx, qy, aimH(qx, qy) + 0.03, PJ); if (PJ.s > 0) { plotZO(PJ.x, PJ.y, PJ.d - 0.3, AIM_W); plotZO(PJ.x + 1, PJ.y, PJ.d - 0.3, AIM_W); } }
       }
       projectO(x, y, gz + 0.03, PJ); if (PJ.s > 0) aimDotO(PJ.x, PJ.y, PJ.s > 0.5 ? 2 : 1, hot);
       break;

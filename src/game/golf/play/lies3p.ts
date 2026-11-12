@@ -19,15 +19,34 @@ export interface LieGrid { x0: number; y0: number; step: number; w: number; h: n
 /** the lie grid over the tile box [x0, y0, x1, y1] (tiles, inclusive of x0 and y0, exclusive of x1 and y1) of a course, each cell read at its tile's
  *  middle with the model's own kindAt (lieAt's coarse lie where there is none), in the view's frame about `centre` (tiles) */
 export function lieGrid3p(view: Pick<CourseView, 'lieAt' | 'kindAt'>, box: readonly [number, number, number, number], centre: Pt): LieGrid {
+  const job = lieGridJob(view, box, centre); let g: LieGrid | null = null;
+  while (!(g = job.step(Infinity)));
+  return g;
+}
+
+/** T438: lieGrid3p in slices, so the view's first picture need not wait for it: each step(ms) reads rows until about ms have gone by and returns the grid
+ *  once the last row is read (null until then). The same grid as lieGrid3p */
+export function lieGridJob(view: Pick<CourseView, 'lieAt' | 'kindAt'>, box: readonly [number, number, number, number], centre: Pt): { step(ms: number): LieGrid | null; readonly done: boolean } {
   const tx0 = Math.floor(box[0]), ty0 = Math.floor(box[1]), w = Math.max(0, Math.ceil(box[2]) - tx0), h = Math.max(0, Math.ceil(box[3]) - ty0), r: number[] = [];
-  let last = -1, n = 0;
-  for (let j = 0; j < h; j++) for (let i = 0; i < w; i++) {
-    const x = tx0 + i + 0.5, y = ty0 + j + 0.5, k = view.kindAt ? view.kindAt(x, y) : view.lieAt(x, y);
-    const c = Math.max(0, LIE_CODES.indexOf(k));
-    if (c === last) n++; else { if (n) r.push(last, n); last = c; n = 1; }
-  }
-  if (n) r.push(last, n);
-  return { x0: (tx0 - centre.x) * TILE_M, y0: (ty0 - centre.y) * TILE_M, step: TILE_M, w, h, r };
+  let last = -1, n = 0, j = 0, out: LieGrid | null = null;
+  const code = new Map<string, number>(LIE_CODES.map((k, i) => [k, i]));
+  return {
+    get done() { return !!out; },
+    step(ms: number) {
+      if (out) return out;
+      const t0 = performance.now();
+      for (; j < h; j++) {
+        if (j > 0 && performance.now() - t0 > ms) return null;
+        for (let i = 0; i < w; i++) {
+          const x = tx0 + i + 0.5, y = ty0 + j + 0.5, k = view.kindAt ? view.kindAt(x, y) : view.lieAt(x, y);
+          const c = code.get(k) ?? 0;
+          if (c === last) n++; else { if (n) r.push(last, n); last = c; n = 1; }
+        }
+      }
+      if (n) r.push(last, n);
+      return out = { x0: (tx0 - centre.x) * TILE_M, y0: (ty0 - centre.y) * TILE_M, step: TILE_M, w, h, r };
+    },
+  };
 }
 
 /** the kind the grid holds at the view's point (x, y) (metres), or null off the grid or where it holds none */

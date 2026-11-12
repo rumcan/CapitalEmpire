@@ -34,7 +34,10 @@ export function View3pPanel({ game }: { game: Game }) {
     const relay = (ms: readonly HostMsg[]) => { for (const msg of ms) v.send(msg); };
     v.onMessage(m => {
       try {
-        if (m.t === 'loaded') { setState('loaded'); relay(game.start3p()); }
+        if (m.t === 'loaded') {   // T438: the first picture is up; the lies follow when they are read, then the first turn
+          setState('loaded');
+          void game.lies3pReady().then(lk => { if (bridge.current !== v) return; try { if (lk) v.send({ v: 1, t: 'lies', lk }); relay(game.start3p()); } catch (err) { console.warn('[view3p] the play could not start', err); } });
+        }
         else if (m.t === 'input') relay(game.input3p(m.input));
         else if (m.t === 'gimme') relay(game.gimme3p(m.holeIdx, m.stroke));
         else if (m.t === 'holeDone') relay(game.holeDone3p(m.holeIdx));

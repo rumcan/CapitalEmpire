@@ -91,7 +91,7 @@ R: Old chunks, tiles and scatter cells far from the camera are dropped, so memor
 File: game.js
 Check: function tickGame(
 Check: requestAnimationFrame(loop)
-R: Host mode (?host=1, T415): the page is a view inside another page (CapitalEmpire). It loads no course of its own, says { v: 1, t: 'ready' } to the page that holds it and waits for { v: 1, t: 'course', course, features, biome, type, seed, scale, hole }; it plays that course from hole `hole` (1 if none) and answers { v: 1, t: 'loaded', holes }. { t: 'leave' } stops it drawing; Escape sends { v: 1, t: 'exit' }. Messages from anywhere but the page that holds it are ignored.
+R: Host mode (?host=1, T415): the page is a view inside another page (CapitalEmpire). It loads no course of its own, says { v: 1, t: 'ready' } to the page that holds it and waits for { v: 1, t: 'course', course, features, biome, type, seed, scale, hole }; it plays that course from hole `hole` (1 if none) and answers { v: 1, t: 'loaded', holes }. { t: 'leave' } stops it drawing; Escape sends { v: 1, t: 'exit' }. { v: 1, t: 'lies', lk } (T438) may come after the course: the host's lies, sent once read so the first picture does not wait for them; from then on the grass is drawn by them and the land made before them is made again (the sculptures are kept). Messages from anywhere but the page that holds it are ignored.
 Check: function hostMessage(
 R: Host play (T418 to T420): in host mode the host decides every shot. A strike sends { v: 1, t: 'input', input: { holeIdx, stroke, club, aim, power } } and waits (after 5 s it says it is waiting for the course, and keeps waiting); { t: 'shot' } is played back from its samples (the flight with the ball camera, a thump at the landing and each bounce, the roll, the rest); { t: 'turn' } puts the ball and the pin where the host has them and only then may he swing again; { t: 'holeEnd' } says the score. The club tabs are his bag from the turn (keys 1 to 9 and the wheel over the tabs), and the aim's arc and ring are the host's carry, wind push and scatter for the club in hand. Standalone play is unchanged.
 Check: function hostShot(
@@ -115,6 +115,7 @@ function hostMessage(m) {   // one message from the host page, already known to 
   if (!m || typeof m !== 'object') return;
   if (m.t === 'leave') { hostOff = true; return; }
   if (m.t === 'actors' || m.t === 'board' || m.t === 'match') { if (m.t === 'match') matchIn(m); else groupMsg(m); return; }   // T424, T427, T428: who else is on the course, the leaderboard, a money match (parts/08d-actors.md, 08e-group.md, 08g-match.md)
+  if (m.t === 'lies' && m.v === 1) { hostLies(m.lk); return; }   // T438
   if ((m.t === 'turn' || m.t === 'shot' || m.t === 'holeEnd' || m.t === 'preview') && m.v === 1) { if (course) hostPlayMsg(m); return; }   // (T418: the play, once a course is in)
   if (m.t !== 'course' || m.v !== 1) return;
   if (m.golfer) playerLook(m.golfer);   // T437: the golfer in the player card's clothes (parts/08d-actors.md)
@@ -130,6 +131,13 @@ function hostMessage(m) {   // one message from the host page, already known to 
   hostOff = false; firstPicture(); updateHud();
   if (!looping && typeof requestAnimationFrame === 'function') { looping = true; last = performance.now(); acc = 0; requestAnimationFrame(loop); }
   hostSend({ t: 'loaded', holes: course.holes.length });
+}
+function hostLies(L) {   // T438: the host's lies, after the course: the grass by them from now on; the land made without them is made again (here and in the workers)
+  if (!course || !L || !Array.isArray(L.r)) return;
+  const D = course.raw; if (D) { D.lk = L; D.hv = ++hostN; }   // (a new hv: the workers load the course again, with the lies)
+  course.lk = lieGrid(L, course.S);
+  treeMemo.clear(); tiles.clear(); chunks.clear(); ocells.clear(); ftiles.clear(); farQ.length = 0; tileQ.length = 0; tileQset.clear(); pwAt = 1e9; lastTK = NaN; lastCK = NaN; lastTile = lastChunk = null;
+  wkInit();
 }
 function hostStart() {
   HOST = true; hostOff = true;   // (nothing is drawn until a course comes)
@@ -256,15 +264,15 @@ function hostAim() {   // T420: the aim tells the truth: the arc to where the mo
   if (putt && hostPuttAim(pw, hot, ph)) return;                      // (T423: the host's read: the way a putt struck along this aim takes)
   if (putt) {                                                          // a putt: its length is a share of the way to the pin
     const len = Math.hypot(hole.pin.x - ball.x, hole.pin.y - ball.y) * pw;
-    for (let k = 0, d = 0.4 + ph * 0.07; d < len; d += 0.42, k++) { const qx = ball.x + dx * d, qy = ball.y + dy * d; projectO(qx, qy, groundH(qx, qy) + 0.03, PJ); if (PJ.s > 0) aimDotO(PJ.x, PJ.y, PJ.s > 0.8 ? 1 : 0, k & 1 ? hot : AIM_W); }
-    const ex = ball.x + dx * len, ey = ball.y + dy * len; projectO(ex, ey, groundH(ex, ey) + 0.03, PJ); if (PJ.s > 0) aimDotO(PJ.x, PJ.y, 2, hot);
+    for (let k = 0, d = 0.4 + ph * 0.07; d < len; d += 0.42, k++) { const qx = ball.x + dx * d, qy = ball.y + dy * d; projectO(qx, qy, aimH(qx, qy) + 0.03, PJ); if (PJ.s > 0) aimDotO(PJ.x, PJ.y, PJ.s > 0.8 ? 1 : 0, k & 1 ? hot : AIM_W); }
+    const ex = ball.x + dx * len, ey = ball.y + dy * len; projectO(ex, ey, aimH(ex, ey) + 0.03, PJ); if (PJ.s > 0) aimDotO(PJ.x, PJ.y, 2, hot);
     return;
   }
   const carry = (C.playsM !== undefined ? C.playsM : C.carryM) * pw * S, side = (C.sideM || 0) * pw * S;
-  const lx = ball.x + dx * carry + rx * side, ly = ball.y + dy * carry + ry * side, apex = (0.08 + 0.004 * (C.loftDeg || 30)) * carry, z0 = groundH(ball.x, ball.y), z1 = groundH(lx, ly);
+  const lx = ball.x + dx * carry + rx * side, ly = ball.y + dy * carry + ry * side, apex = (0.08 + 0.004 * (C.loftDeg || 30)) * carry, z0 = aimH(ball.x, ball.y), z1 = aimH(lx, ly);
   for (let k = 0, n = Math.max(12, Math.round(carry / 1.6)); k <= n; k++) {   // the arc and its shadow
     if (k % 6 !== ph) continue;
-    const u = k / n, x = ball.x + (lx - ball.x) * u, y = ball.y + (ly - ball.y) * u, gz = groundH(x, y), z = z0 + (z1 - z0) * u + apex * 4 * u * (1 - u);
+    const u = k / n, x = ball.x + (lx - ball.x) * u, y = ball.y + (ly - ball.y) * u, gz = aimH(x, y), z = z0 + (z1 - z0) * u + apex * 4 * u * (1 - u);
     projectO(x, y, gz + 0.03, PJ); if (PJ.s > 0) plotZO(PJ.x, PJ.y, PJ.d, AIM_D);
     projectO(x, y, Math.max(z, gz + 0.03), PJ); if (PJ.s > 0) aimDotO(PJ.x, PJ.y, PJ.s > 1.1 ? 2 : PJ.s > 0.35 ? 1 : 0, (k / 6 | 0) & 1 ? hot : AIM_W);
   }
@@ -272,7 +280,7 @@ function hostAim() {   // T420: the aim tells the truth: the arc to where the mo
   const na = Math.max(40, Math.min(160, Math.round((across + along) * 3)));
   for (let a = 0; a < na; a++) {                                       // the ring: one standard deviation across the line and along it
     const an = a / na * 6.2832, ca = Math.cos(an), sa = Math.sin(an), qx = lx + dx * along * ca + rx * across * sa, qy = ly + dy * along * ca + ry * across * sa;
-    projectO(qx, qy, groundH(qx, qy) + 0.03, PJ); if (PJ.s > 0) { plotZO(PJ.x, PJ.y + 1, PJ.d - 0.3, AIM_D); plotZO(PJ.x, PJ.y, PJ.d - 0.3, a & 1 ? hot : AIM_W); plotZO(PJ.x + 1, PJ.y, PJ.d - 0.3, a & 1 ? hot : AIM_W); }
+    projectO(qx, qy, aimH(qx, qy) + 0.03, PJ); if (PJ.s > 0) { plotZO(PJ.x, PJ.y + 1, PJ.d - 0.3, AIM_D); plotZO(PJ.x, PJ.y, PJ.d - 0.3, a & 1 ? hot : AIM_W); plotZO(PJ.x + 1, PJ.y, PJ.d - 0.3, a & 1 ? hot : AIM_W); }
   }
   projectO(lx, ly, z1 + 0.03, PJ); if (PJ.s > 0) aimDotO(PJ.x, PJ.y, PJ.s > 0.5 ? 2 : 1, hot);
   HP.ring = { x: lx, y: ly, across, along };   // (kept for the harness)
@@ -427,18 +435,18 @@ function hostAimPreview(C, pw, hot, ph) {   // the preview's flight (scaled to t
   const bx = ball.x, by = ball.y, k = pw, at = (p) => [bx + (p[0] * S - bx) * k, by + (p[1] * S - by) * k];
   for (let i = 0; i < n; i++) {   // the curved flight and its shadow
     if (i % 3 !== ph % 3) continue;
-    const q = at(F[i]), gz = groundH(q[0], q[1]);
+    const q = at(F[i]), gz = aimH(q[0], q[1]);
     projectO(q[0], q[1], gz + 0.03, PJ); if (PJ.s > 0) plotZO(PJ.x, PJ.y, PJ.d, AIM_D);
     projectO(q[0], q[1], gz + F[i][2] * S * k, PJ); if (PJ.s > 0) aimDotO(PJ.x, PJ.y, PJ.s > 1.1 ? 2 : PJ.s > 0.35 ? 1 : 0, (i / 3 | 0) & 1 ? hot : AIM_W);
   }
   const L = at(F[n - 1]), dx0 = L[0] - bx, dy0 = L[1] - by, dl = Math.hypot(dx0, dy0) || 1, dx = dx0 / dl, dy = dy0 / dl, rx = -dy, ry = dx;
   const across = Math.max(0.4, (C.scatterM || 0) / 2 * pv.spread * pw * S), along = Math.max(0.4, (C.longM !== undefined ? C.longM : C.scatterM || 0) / 2 * pv.spread * pw * S);
   const na = Math.max(40, Math.min(160, Math.round((across + along) * 3)));
-  for (let a = 0; a < na; a++) { const an = a / na * 6.2832, qx = L[0] + dx * along * Math.cos(an) + rx * across * Math.sin(an), qy = L[1] + dy * along * Math.cos(an) + ry * across * Math.sin(an); projectO(qx, qy, groundH(qx, qy) + 0.03, PJ); if (PJ.s > 0) { plotZO(PJ.x, PJ.y + 1, PJ.d - 0.3, AIM_D); plotZO(PJ.x, PJ.y, PJ.d - 0.3, a & 1 ? hot : AIM_W); } }
-  projectO(L[0], L[1], groundH(L[0], L[1]) + 0.03, PJ); if (PJ.s > 0) aimDotO(PJ.x, PJ.y, PJ.s > 0.5 ? 2 : 1, hot);
+  for (let a = 0; a < na; a++) { const an = a / na * 6.2832, qx = L[0] + dx * along * Math.cos(an) + rx * across * Math.sin(an), qy = L[1] + dy * along * Math.cos(an) + ry * across * Math.sin(an); projectO(qx, qy, aimH(qx, qy) + 0.03, PJ); if (PJ.s > 0) { plotZO(PJ.x, PJ.y + 1, PJ.d - 0.3, AIM_D); plotZO(PJ.x, PJ.y, PJ.d - 0.3, a & 1 ? hot : AIM_W); } }
+  projectO(L[0], L[1], aimH(L[0], L[1]) + 0.03, PJ); if (PJ.s > 0) aimDotO(PJ.x, PJ.y, PJ.s > 0.5 ? 2 : 1, hot);
   const R = [F[n - 1]].concat(m.roll || []);   // the bounce and roll: a fainter line from the landing to where it stops
-  for (let i = 0; i + 1 < R.length; i++) { const a = at(R[i]), b = at(R[i + 1]), seg = Math.hypot(b[0] - a[0], b[1] - a[1]); for (let d = 0; d < seg; d += 0.6) { const u = d / seg, x = a[0] + (b[0] - a[0]) * u, y = a[1] + (b[1] - a[1]) * u; projectO(x, y, groundH(x, y) + 0.04, PJ); if (PJ.s > 0) plotZO(PJ.x, PJ.y, PJ.d - 0.3, AIM_RL); } }
-  const E2 = at(m.rest); projectO(E2[0], E2[1], groundH(E2[0], E2[1]) + 0.04, PJ); if (PJ.s > 0) aimDotO(PJ.x, PJ.y, 1, AIM_RL);
+  for (let i = 0; i + 1 < R.length; i++) { const a = at(R[i]), b = at(R[i + 1]), seg = Math.hypot(b[0] - a[0], b[1] - a[1]); for (let d = 0; d < seg; d += 0.6) { const u = d / seg, x = a[0] + (b[0] - a[0]) * u, y = a[1] + (b[1] - a[1]) * u; projectO(x, y, aimH(x, y) + 0.04, PJ); if (PJ.s > 0) plotZO(PJ.x, PJ.y, PJ.d - 0.3, AIM_RL); } }
+  const E2 = at(m.rest); projectO(E2[0], E2[1], aimH(E2[0], E2[1]) + 0.04, PJ); if (PJ.s > 0) aimDotO(PJ.x, PJ.y, 1, AIM_RL);
   HP.ring = { x: L[0], y: L[1], across, along, pv: true };
   return true;
 }

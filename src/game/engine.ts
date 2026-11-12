@@ -208,10 +208,11 @@ import { buyAdjacentBlock, blockOnRoad, blockOnWater, clampBlock, mergeParcelBou
 import { BAND_LABEL, LandSale } from './golf/land-sale';
 import { buildCourseStatsPanel, type CourseStatsPanel } from './golf/coursestats';
 import { TILE_M, type CourseArea, type CourseLayout, type GolfSurface, type Pin, type TeeBoxRec, type TeeKind, type TeeMark } from './golf/types';
-import { deriveHoles, surfaceAt, validateMarkerPlacement, type Hole } from './golf/holes';
+import { deriveHoles, surfaceAt, surfaceAtIx, areaIndex, validateMarkerPlacement, type AreaIndex, type Hole } from './golf/holes';
 import { playable3p } from './golf/play/playable3p';
 import { export3pInputOf, exportCourse3p, frame3p, tileBox } from './golf/play/export3p';
-import { lieGrid3p } from './golf/play/lies3p';
+import { lieGridJob, type LieGrid } from './golf/play/lies3p';
+import { fillPack } from './golf/osm/terrarium'; // T438: the share file's heights deflated after the course has gone
 import { exportFeatures3p, gatherFeatures3p } from './golf/play/features3p';
 import { courseEntry3p } from './golf/play/entry3p';
 import { seedOf } from './golf/play/view3p';
@@ -10043,26 +10044,44 @@ export class Game {
   /** the view from behind the golfer closed (its Esc, the page's Esc, ✕): the manager view comes back and the sim runs at the speed it had */
   close3p() {
     if (this.view3pHole === null) return;
-    this.play3p = null; this.shared3p = null; this.view3pRound = false;   // (T434: a shared course is played only while the view is open)
+    this.play3p = null; this.shared3p = null; this.view3pRound = false; this.lies3pRun(null);   // (T434: a shared course is played only while the view is open)
     this.view3pHole = null; this.lastFrame = 0; this.last = performance.now();
     if (this.view3pSpeed && !this.speed) this.setSpeed(this.view3pSpeed);
     this.emit();
+  }
+  /** T438: the host's lies for the course last sent, read a few ms at a time between frames (a MessageChannel's turns: not held back as timers are in
+   *  a hidden page); null when the course carried its own or there is no course view. The view sends them, then the first turn */
+  lies3pReady(): Promise<LieGrid | null> { return this.lies3p; }
+  private lies3p: Promise<LieGrid | null> = Promise.resolve(null);
+  private lies3pGen = 0;
+  private lies3pRun(job: ReturnType<typeof lieGridJob> | null) {
+    const gen = ++this.lies3pGen;
+    if (!job) { this.lies3p = Promise.resolve(null); return; }
+    this.lies3p = new Promise(done => {
+      const ch = new MessageChannel();
+      ch.port1.onmessage = () => {
+        if (gen !== this.lies3pGen) { ch.port1.close(); done(null); return; }   // (another course went, or the view closed)
+        const g = job.step(6); if (g) { ch.port1.close(); done(g); } else ch.port2.postMessage(0);
+      };
+      ch.port2.postMessage(0);
+    });
   }
   /** the `course` message for hole n: the painted course (export3p.ts), the placed things (features3p.ts) in the same frame, the biome and course type
    *  (parkland and private for now: section 2's mapping from the map's setting and the upkeep is later work), a seed from the club's name, true size.
    *  Null without a course */
   async course3pMsg(n: number): Promise<CourseMsg | null> {
-    const sh = this.shared3p;
+    const sh = this.shared3p; this.lies3pRun(null);
     const golfer = playerDress(GOLFER_PEOPLE[this.youArt()]?.id, this.golf?.player?.sex ?? 'm');   // (T437: the golfer in the player card's clothes)
     if (sh) { this.view3pFrame = sh.frame; this.course3pShare = sh.share; return { ...(await shareCourseMsg(sh.share, sh.view, n)), golfer }; }   // (T434: a shared course)
     const g = this.golf; if (!g) return null;
     const name = this.titleName()?.name ?? 'Your course', id = 'ce-' + (name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'course');
     const inp = export3pInputOf(this, name); if (!inp) return null;
     inp.id = id;
-    const f = frame3p(inp), file = await exportCourse3p(inp), course = await courseEntry3p(file);
+    const f = frame3p(inp), file = await exportCourse3p(inp, { deflate: false }), course = await courseEntry3p(file);   // (T438: the heights deflated after, for the share file)
     this.view3pFrame = f; // (T418: the turns and shots are sent in this same frame)
     // T422: the model's lies over the course (and 40 tiles round it), so the view draws its grass where the model reads it
-    { const v = this.yrView(), b = tileBox(inp); if (v && b) course.lk = lieGrid3p(v, [b[0] - 40, b[1] - 40, b[2] + 40, b[3] + 40], { x: f.cx, y: f.cy }); }
+    // T438: read in slices after the course has gone (lies3pReady), so the first picture does not wait for them; the first turn does
+    { const v = this.yrView(), b = tileBox(inp); this.lies3pRun(v && b ? lieGridJob(v, [b[0] - 40, b[1] - 40, b[2] + 40, b[3] + 40], { x: f.cx, y: f.cy }) : null); }
     // the box town roads must be near to count as the course's: every marker of the course (tees, pins, aims), in tiles
     const pts = [...g.tees, ...g.pins, ...(g.aims ?? [])];
     const box: [number, number, number, number] | undefined = pts.length
@@ -10071,7 +10090,9 @@ export class Game {
       props: this.props, library: LIBRARY, ...(box ? { box } : {}) }), { x: f.cx, y: f.cy });
     // T437: the biome from the map's setting and the month, the course type from how the course is kept (the crew's condition; a tournament day: Tour)
     const st = g.crew?.staff, biome = biomeOf(this.farmMonth()), type = courseTypeOf({ condition: st ? courseCondition(st) : 100, tournament: this.traffic.round.stage !== 'free' || !!this.eventToday() });
-    this.course3pShare = shareOf(file, features, { name, biome, type, seed: seedOf(name) });   // (T433, T434: what a ghost or a shared course file holds)
+    // T433, T434: what a ghost or a shared course file holds, once its heights are deflated (T438: after the course has gone to the view)
+    this.course3pShare = null; const sg = this.lies3pGen;
+    void (file.height ? fillPack(file.height) : Promise.resolve()).then(() => { if (sg === this.lies3pGen) this.course3pShare = shareOf(file, features, { name, biome, type, seed: seedOf(name) }); });
     return { v: 1, t: 'course', course: course as unknown as Record<string, unknown>, features, biome, type, seed: seedOf(name), scale: 1, hole: n, golfer };
   }
   // ---------- T418: the owner's play in the view from behind the golfer (golf/play/play3p.ts: LiveGroup decides every stroke; the view shows them) ----------
@@ -11898,14 +11919,14 @@ export class Game {
     const drawn = grid ? drawnSurfaces(grid, this.courseLooks()) : null, but = new Map<number, CourseAreaRec[]>();
     const areasBut = (c: number) => { let v = but.get(c); if (!v) { v = areas.filter(a => { const q = a as Partial<GridArea>; return q.s !== c || !!q.collar; }); but.set(c, v); } return v; };
     // T271: a custom grass plays as its grass (the cells hold that surface; the first cut's hold rough, so the lie reads the grass's own play)
-    const plays = this.grassPlays();
+    const plays = this.grassPlays(), ixs = new Map<readonly CourseAreaRec[], AreaIndex>(), ixOf = (l: CourseAreaRec[]) => { let v = ixs.get(l); if (!v) { v = areaIndex(l); ixs.set(l, v); } return v; };
     const surfAt = (x: number, y: number): GolfSurface | null => {
       const i = grid ? cellAt(grid, x, y) : -1, c = i >= 0 ? grid!.surf[i]! : 0;
       // the surface drawn on top (the rounded outlines' where they are near, else the cell's): a draw id, so a custom grass is its own
       const d0 = drawn && i >= 0 ? drawn.at(x, y) : i >= 0 && grid!.draw ? grid!.draw[i]! : c;
       const k = grassSlot(d0), p = k ? plays.get(k) : undefined, d = k ? (p ? PLAY_SURF[p] : c) : d0;
       const s = i >= 0 ? (p ? golfSurfaceOf(p) : SURF_SURFACE[d]) : null;
-      return s ?? surfaceAt(d !== c && c ? areasBut(c) : areas, x, y);
+      return s ?? surfaceAtIx(ixOf(d !== c && c ? areasBut(c) : areas), x, y);   // (T438: the areas of the point's cell only: the same answer)
     };
     // T269: play reads the day's cups (golf/daypins.ts): the pin and the end of each line; the par and the tees are the placed pin's
     // T353: a ball that comes to rest on a house lot is out of bounds (golf/estate.ts lotAt)

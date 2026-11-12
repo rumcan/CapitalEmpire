@@ -203,6 +203,25 @@ Each ticket: what, where, done when. "Lead" means design-heavy work for the lead
   (2) the export's height pack (deflate, then inflated again by courseEntry3p) and the 1 m tracing of the full-course rough: pass the grid along
   instead of re-reading it; (3) the view's first frames making land (about 1 s each) and its slow frames (p95 22 to 34 ms): the GPU engine;
   (4) Woodhill's tee in the browser and a rAF frame rate with the pane shown were not measured (hidden pane).
+
+  **Second pass (2026-11-13).** Same browser setup (Maple Falls, pane hidden, frames driven one task each so the workers' deliveries come between them).
+
+  | Budget | Before | After |
+  |---|---|---|
+  | (d) first picture | course message 4 to 7 s, then the view's course load 12 s, first picture 2.5 s: `loaded` at about 15 s | course message 0.31 to 0.37 s, course load 0.53 s, first picture 2.5 s: `loaded` at 3.9 s; the lies 2.4 s later, then the first turn |
+  | (c) Woodhill export | 379 ms (median) | 291 ms (cold 381); painted 18 holes 62 ms |
+  | (a) slow frames, p95 | walking 26.3 ms, green with 40 people 22.8, turning 20.0 | walking 16.9, green 24.4, turning 22.5 (machine-noisy) |
+
+  What changed: the lies go after the course (`lies` message; engine `lies3pReady`, built a few ms at a time between frames; the first turn waits for
+  them; the view remakes its land when they come); `surfaceAt` over an area index (`holes.ts areaIndex`, 16-tile cells); the view's `sdfRing` edge by
+  edge (each edge measures the cells within 61 m of it, inside or out from each row's crossings: the same distances, the 12 s course load now 0.5 s);
+  the export leaves the heights' deflate (only the share file needs it) until after the course has gone (`fillPack`), and the entry reads the
+  samples rather than inflating them again; the aim's marks never make a tile (`aimH`: a far tile cost ~2 ms, thirty of them a 50 to 70 ms frame).
+  All of these give the same output as before, checked against the old code. Left: (5) the first picture itself (833 tiles made at once on the main
+  thread, 1.7 s; the far land 0.46 s; sculptures 0.19 s) keeps (d) at about 3.4 to 3.9 s: making it with the three workers is the next step; (6) the
+  slow frames left are sculptures (a thing's own sculpture, one every 15 frames while moving, 10 to 30 ms; the people's, three a frame) and the
+  ground sweep while turning; sculpting in a worker is the fix; (7) the people's heights (08d, 08e, 08f `groundH`) can still make a far tile: the
+  actors' owner's parts, left to them.
 - **T439 Tests** (coder). Unit: exporter, protocol encode and decode, sampler. Headless: the Cinderlinks harness fed by a scripted host plays
   three holes and checks rest points against the model. Nightly, as the testing policy says. Done when: `npm run cinder:gate` covers it.
 - **T440 The player's guide** (coder). The hole card's button, keys, what carries over (skills, clubs, cards) and what does not (fine detail is

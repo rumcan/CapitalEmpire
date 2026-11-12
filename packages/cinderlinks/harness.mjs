@@ -212,6 +212,15 @@ const HOST_PLAY = String.raw`
     msg.course.lk = { x0, y0, step: 2, w, h, r }; msg.course.id = 'woodhill-lies'; hostMessage(msg);
     const got = pts.map((q) => MAT_NAME[matAt(q[0], q[1])]); info.lies = got;
     if (!(got[0] === MAT_NAME[M_ROUGH] || got[0] === MAT_NAME[M_FOREST]) || got[1] !== MAT_NAME[M_DEEP] || got[2] !== MAT_NAME[M_CUT]) errs.push('host lies: the grounds do not follow the host (' + got.join(', ') + ')');
+    // T438: the same lies sent after a course that came without them: the course's own grass first, the host's once they come, the land made again
+    const lk = msg.course.lk; delete msg.course.lk; msg.course.id = 'woodhill-lies-late'; hostMessage(msg);
+    const before = pts.map((q) => MAT_NAME[matAt(q[0], q[1])]); render(); const made = tiles.size + chunks.size, hv = course.raw && course.raw.hv;
+    hostMessage({ v: 1, t: 'lies', lk }); const cleared = tiles.size + chunks.size;
+    const late = pts.map((q) => MAT_NAME[matAt(q[0], q[1])]); info.late = { before, late, made, cleared, hv: [hv, course.raw && course.raw.hv] };
+    if (before.some((b) => b !== MAT_NAME[M_FAIR])) errs.push('host lies late: the course had grounds of its own before the lies (' + before.join(', ') + ')');
+    if (late.join() !== got.join()) errs.push('host lies late: the grounds do not follow the lies sent late (' + late.join(', ') + ')');
+    if (!(made > 0) || cleared !== 0 || !(course.raw && course.raw.hv > hv)) errs.push('host lies late: the land was not made again (' + JSON.stringify(info.late) + ')');
+    render(); render();
     return { errs, info };
   }
 `;
