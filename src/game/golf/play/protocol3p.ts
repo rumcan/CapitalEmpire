@@ -67,7 +67,9 @@ export type Doing = 'walk' | 'stand' | 'address' | 'swing' | 'putt' | 'ride' | '
 /** T424: how a person is drawn: the shirt, trousers, cap, skin and hair colours ('#rrggbb'), his build (a height factor, about 0.92..1.06) and sex */
 export interface Dress { shirt: string; trousers: string; cap: string; skin: string; hair: string; build: number; sex: 'm' | 'w' }
 /** who is on the course and where at game minute t: the full list each time (an actor missing from it has left) */
-export interface ActorsMsg { v: 1; t: 'actors'; at: number; actors: Actor[] }
+export interface ActorsMsg { v: 1; t: 'actors'; at: number; actors: Actor[];
+  /** T425: a list of a played round (play3p.ts with company): the view keeps it by its minute and places people by the play's own minute, not as it arrives */
+  play?: true }
 
 /** a club the owner may choose at his turn: the club, its full carry in metres and its scatter (the spread of where it lands, metres either side at
  *  full carry) after his skills, bag and mods for this lie, and the kit those numbers come from (mods.ts ClubKit) */

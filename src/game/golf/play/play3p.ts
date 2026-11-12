@@ -135,7 +135,7 @@ export class Play3p {
   }
 
   /** T424/T425: who is on the course at game minute m, in the view's frame (actors3p.ts), carts and riders included */
-  actors(m: number): ActorsMsg { return actorsMsg({ plan: this.plan, view: this.view, minute: m, carts: this.carts }, this.centre); }
+  actors(m: number): ActorsMsg { return { ...actorsMsg({ plan: this.plan, view: this.view, minute: m, carts: this.carts }, this.centre), play: true }; }
   /** T427: the leaderboard at game minute m and his group's wait on the group ahead */
   board(m: number): BoardMsg {
     const rows = boardRows(standings(this.plan, this.view, m), this.plan.golfers, BOARD_ROWS, OWNER_3P).map(r => ({ pos: r.pos, name: r.name, toPar: r.toPar, thru: r.thru, owner: r.owner }));
