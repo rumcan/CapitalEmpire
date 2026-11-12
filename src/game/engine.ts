@@ -218,6 +218,7 @@ import { seedOf } from './golf/play/view3p';
 import type { CourseMsg, HostMsg, ViewInput } from './golf/play/protocol3p';
 import { Play3p } from './golf/play/play3p'; // T418: the owner's play in the view from behind the golfer
 import { earned } from './golf/play/unlocks'; // T443
+import { Match3p } from './golf/play/match3p'; // T428: a money match in the view
 import type { Frame3p } from './golf/play/export3p';
 import { putterFitName } from './golf/play/bag';
 import { BallRoll, FX_SAND, FX_SPLASH, ballRoll, type HeightAt } from './golf/play/roll';
@@ -10068,8 +10069,16 @@ export class Game {
   /** the view has loaded the course (its `loaded`): a fresh play of the open hole starts, alone, free and not recorded (as a practice hole), and the
    *  view is sent its first turn. Nothing when the view is closed or the hole cannot be played (the course changed under it) */
   start3p(): HostMsg[] {
-    const n = this.view3pHole, v = this.yrView(), f = this.view3pFrame; this.play3p = null;
+    const n = this.view3pHole, v = this.yrView(), f = this.view3pFrame; this.play3p = null; this.match3p = null;
     if (n === null || !v || !f) return [];
+    // T428: a money match under way is played on in the view (the very match: its round saved after each input, settled when it ends)
+    const mr = this.yourRound();
+    if (mr?.match && !mr.over) {
+      const p = this.playerNow();
+      this.match3p = new Match3p({ view: v, round: mr, skills: this.yourSkills(), sex: p?.sex ?? 'm', seed: this.seed, frame: f, height: this.ballHeight, wind: () => this.windNow(),
+        fit: putterFitName(p?.bag), ...(this.matchEnv() ? { envFor: this.matchEnv()! } : {}) });
+      return this.match3pSync(this.match3p.start());
+    }
     // T425: his real round under way (his live group in the day's field, not handed to the caddie): the view plays it on; else a lone practice hole
     const pl = this.play, own = pl?.own;
     if (pl && own?.turn && own.caddie === null) {
@@ -10089,8 +10098,18 @@ export class Game {
   /** the view's input for the turn in hand: played through the one model (LiveGroup); what the view is sent back (his stroke, anyone else's, the
    *  hole's end, the next turn) */
   input3p(input: ViewInput): HostMsg[] {
+    if (this.match3p) return this.match3pSync(this.match3p.input(input));   // (T428: a money match)
     const ms = this.play3p ? this.play3p.input(input) : [], pl = this.play, own = pl?.own;
     if (pl && own && this.play3p?.me === own.id && this.play3p.plan === pl.plan) { own.turn = own.live.advance(); this.saveOwner(); if (!own.turn) this.ownerDone(pl); this.emit(); }   // (T425: his real round moved on: kept as the manager game's)
+    return ms;
+  }
+  /** T428: the money match in the open view (null: none) */
+  private match3p: Match3p | null = null;
+  /** T428: after the view's match moved on: its round saved as yours; once it is over, settled (the stake moves, the result card opens) */
+  private match3pSync(ms: HostMsg[]): HostMsg[] {
+    const m = this.match3p; if (!m) return ms;
+    this.setYourRound(m.round);
+    if (m.over) { this.match3p = null; this.matchSettle(m.round, false); }
     return ms;
   }
   /** T441, T442: the model's luckless shot for what the view has picked (its aim marker), or null with no play */
