@@ -44,6 +44,33 @@ function outlineOf(p: readonly number[]): Outline {
   for (let i = 0; i + 1 < p.length; i += 2) { const x = p[i]!, y = p[i + 1]!; if (x < x0) x0 = x; if (x > x1) x1 = x; if (y < y0) y0 = y; if (y > y1) y1 = y; }
   const o: Outline = { n: p.length, b: [x0, y0, x1, y1], rows: new Map() }; OUTLINES.set(p, o); return o;
 }
+/** T438: the areas bucketed on a coarse grid (each cell lists, topmost first, the areas whose box touches it), for surfaceAtIx. For a list that is not
+ *  changed after (the engine's area lists are rebuilt, not edited) */
+export interface AreaIndex { areas: readonly CourseArea[]; cell: number; x0: number; y0: number; w: number; h: number; start: Int32Array; list: Int32Array }
+export function areaIndex(areas: readonly CourseArea[], cell = 16): AreaIndex {
+  const boxes = areas.map(a => outlineOf(a.pts).b);
+  let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
+  for (const b of boxes) if (b[0] <= b[2]) { x0 = Math.min(x0, b[0]); y0 = Math.min(y0, b[1]); x1 = Math.max(x1, b[2]); y1 = Math.max(y1, b[3]); }
+  if (!Number.isFinite(x0)) return { areas, cell, x0: 0, y0: 0, w: 0, h: 0, start: new Int32Array(1), list: new Int32Array(0) };
+  const gx = Math.floor(x0 / cell), gy = Math.floor(y0 / cell), w = Math.floor(x1 / cell) - gx + 1, h = Math.floor(y1 / cell) - gy + 1;
+  const count = new Int32Array(w * h + 1), span = (b: readonly number[]) => [Math.floor(b[0]! / cell) - gx, Math.floor(b[1]! / cell) - gy, Math.floor(b[2]! / cell) - gx, Math.floor(b[3]! / cell) - gy] as const;
+  for (const b of boxes) { if (!(b[0] <= b[2])) continue; const [i0, j0, i1, j1] = span(b); for (let j = j0; j <= j1; j++) for (let i = i0; i <= i1; i++) count[j * w + i + 1]!++; }
+  for (let k = 1; k <= w * h; k++) count[k] += count[k - 1]!;
+  const start = count.slice(), fill = count.slice(0, w * h), list = new Int32Array(start[w * h]!);
+  for (let a = areas.length - 1; a >= 0; a--) { const b = boxes[a]!; if (!(b[0] <= b[2])) continue; const [i0, j0, i1, j1] = span(b); for (let j = j0; j <= j1; j++) for (let i = i0; i <= i1; i++) list[fill[j * w + i]!++] = a; }
+  return { areas, cell, x0: gx, y0: gy, w, h, start, list };
+}
+/** surfaceAt over an index: the same answer (the topmost area whose outline holds the point), looking only at the areas of the point's cell */
+export function surfaceAtIx(ix: AreaIndex, x: number, y: number): GolfSurface | null {
+  const i = Math.floor(x / ix.cell) - ix.x0, j = Math.floor(y / ix.cell) - ix.y0;
+  if (i < 0 || j < 0 || i >= ix.w || j >= ix.h) return null;
+  const k = j * ix.w + i;
+  for (let q = ix.start[k]!; q < ix.start[k + 1]!; q++) {
+    const a = ix.areas[ix.list[q]!]!, p = a.pts, o = outlineOf(p);
+    if (x >= o.b[0] && x <= o.b[2] && y >= o.b[1] && y <= o.b[3] && inRow(o, p, x, y)) return a.surface;
+  }
+  return null;
+}
 function inRow(o: Outline, p: readonly number[], x: number, y: number): boolean {
   if (p.length < 64) return inPoly(p as number[], x, y);   // (a small outline: straight through)
   let xs = o.rows.get(y);

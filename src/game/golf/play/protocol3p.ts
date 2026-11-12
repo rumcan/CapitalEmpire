@@ -18,6 +18,7 @@ import type { WeatherCondition } from '../weather';
 import type { FeaturesFile } from './features3p';
 import type { Earned } from './unlocks';
 import type { Green3p } from './green3p';
+import type { LieGrid } from './lies3p';
 
 /** the protocol's version: every message carries it, and a message of another version is refused (isHostMsg / isViewMsg) */
 export const PROTOCOL_V = 1;
@@ -157,8 +158,11 @@ export interface HoleEndMsg { v: 1; t: 'holeEnd'; holeIdx: number; hole: number;
 
 /** the host closes the view: why, in the owner's words (absent: none to show) */
 export interface LeaveMsg { v: 1; t: 'leave'; why?: string }
+/** T438: the host's lies (lies3p.ts), sent after the course once they are read (the first picture does not wait for them); the view draws its grass by
+ *  them from then on. The first turn comes after them */
+export interface LiesMsg { v: 1; t: 'lies'; lk: LieGrid }
 
-export type HostMsg = CourseMsg | ActorsMsg | BoardMsg | MatchMsg | TurnMsg | ShotMsg | HoleEndMsg | PreviewMsg | ClockMsg | LeaveMsg;
+export type HostMsg = CourseMsg | ActorsMsg | BoardMsg | MatchMsg | TurnMsg | ShotMsg | HoleEndMsg | PreviewMsg | ClockMsg | LeaveMsg | LiesMsg;
 
 // ---------------------------------------------------------------- view to host
 
@@ -188,7 +192,7 @@ export interface ExitMsg { v: 1; t: 'exit'; why?: 'esc' | 'done' | 'error'; deta
 export type ViewMsg = ReadyMsg | LoadedMsg | ErrorMsg | InputMsg | AimMsg | WalkedMsg | GimmeMsg | HoleDoneMsg | ExitMsg;
 
 /** the message types each side sends */
-export const HOST_TYPES: readonly HostMsg['t'][] = ['course', 'actors', 'board', 'match', 'turn', 'shot', 'holeEnd', 'preview', 'clock', 'leave'];
+export const HOST_TYPES: readonly HostMsg['t'][] = ['course', 'actors', 'board', 'match', 'turn', 'shot', 'holeEnd', 'preview', 'clock', 'leave', 'lies'];
 export const VIEW_TYPES: readonly ViewMsg['t'][] = ['ready', 'loaded', 'error', 'input', 'aim', 'walked', 'gimme', 'holeDone', 'exit'];
 
 const isMsg = (m: unknown, types: readonly string[]): boolean =>

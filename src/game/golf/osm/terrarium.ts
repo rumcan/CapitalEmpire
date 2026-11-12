@@ -246,22 +246,41 @@ export const PACK_Q = 0.01;
 
 /** the grid packed (see HeightPack); the heights are held to `unit` metres (1 cm unless a coarser one is asked for, and coarser when the range is over 655 m
  *  at 1 cm), far under the data's own accuracy */
-export async function packGrid(g: HeightGrid, unit = PACK_Q): Promise<HeightPack> {
-  let lo = Infinity, hi = -Infinity; for (const v of g.m) { if (v < lo) lo = v; if (v > hi) hi = v; }
+/** T438: the samples (in units of q over base) of each pack made here, so a pack read back in the same visit (the view's course entry from the export
+ *  just made) need not be inflated and decoded again. The very object only: a copy (a pack read from a file) is decoded */
+export const PACKED = new WeakMap<HeightPack, Int32Array>();
+export async function packGrid(g: HeightGrid, unit = PACK_Q, opts: { deflate?: boolean } = {}): Promise<HeightPack> {
+  const m = g.m; let lo = Infinity, hi = -Infinity; for (let k = 0; k < m.length; k++) { const v = m[k]!; if (v < lo) lo = v; if (v > hi) hi = v; }
   if (!Number.isFinite(lo)) throw new Error('an empty height grid');
   const q = Math.max(unit, Math.ceil(((hi - lo) / 65000) * 1000) / 1000), base = Math.floor(lo / q) * q, { w, h } = g, n = w * h, u = new Int32Array(n);
-  for (let k = 0; k < n; k++) u[k] = Math.round((g.m[k]! - base) / q);
-  const planes = new Uint8Array(2 * n);
-  for (let j = 0; j < h; j++) {
-    for (let i = 0; i < w; i++) {
-      const k = j * w + i, pred = i > 0 && j > 0 ? u[k - 1]! + u[k - w]! - u[k - w - 1]! : i > 0 ? u[k - 1]! : j > 0 ? u[k - w]! : 0;
-      const r = u[k]! - pred, z = r >= 0 ? 2 * r : -2 * r - 1; // zigzag: a small residual of either sign is a small number
-      planes[k] = z & 255; planes[n + k] = (z >> 8) & 255; // (|r| < 2^17 for 16-bit units: the third byte is never needed; a residual that big is checked below)
-      if (z > 65535) throw new Error('a height step too big for the packing');
+  for (let k = 0; k < n; k++) u[k] = Math.round((m[k]! - base) / q);
+  const round = (v: number) => Math.round(v * 1000) / 1000;
+  const pack: HeightPack = { v: 1, x0: round(g.x0), y0: round(g.y0), step: g.step, w, h, base: Math.round(base * 1000) / 1000, q, d: '' };
+  PACKED.set(pack, u);
+  if (opts.deflate !== false) await fillPack(pack); else planesOf(u, w, h);   // (the planes even so: a step too big is said now)
+  return pack;
+}
+/** T438: a pack made with { deflate: false } given its text (d) now: the same as packGrid would have made. Nothing for a pack that has its text */
+export async function fillPack(p: HeightPack): Promise<void> {
+  const u = PACKED.get(p); if (p.d || !u) return;
+  p.d = toBase64(await deflateRaw(planesOf(u, p.w, p.h)));
+}
+/** the samples' residuals from their neighbours' plane, zigzag, low bytes then high bytes */
+function planesOf(u: Int32Array, w: number, h: number): Uint8Array {
+  const n = w * h, planes = new Uint8Array(2 * n);
+  // T438: the first row and column apart, so the rest runs without a test a sample (the same bytes)
+  let big = false;
+  const put = (k: number, r: number) => { const z = r >= 0 ? 2 * r : -2 * r - 1; planes[k] = z & 255; planes[n + k] = (z >> 8) & 255; if (z > 65535) big = true; }; // zigzag: a small residual of either sign is a small number (|r| < 2^17 for 16-bit units: the third byte is never needed; a residual that big is checked below)
+  for (let i = 0; i < w; i++) put(i, u[i]! - (i > 0 ? u[i - 1]! : 0));
+  for (let j = 1; j < h; j++) {
+    const r0 = j * w; put(r0, u[r0]! - u[r0 - w]!);
+    for (let k = r0 + 1, e = r0 + w; k < e; k++) {
+      const r = u[k]! - (u[k - 1]! + u[k - w]! - u[k - w - 1]!), z = r >= 0 ? 2 * r : -2 * r - 1;
+      planes[k] = z & 255; planes[n + k] = (z >> 8) & 255; if (z > 65535) big = true;
     }
   }
-  const round = (v: number) => Math.round(v * 1000) / 1000;
-  return { v: 1, x0: round(g.x0), y0: round(g.y0), step: g.step, w, h, base: Math.round(base * 1000) / 1000, q, d: toBase64(await deflateRaw(planes)) };
+  if (big) throw new Error('a height step too big for the packing');
+  return planes;
 }
 
 /** a packed grid unpacked; throws on a pack that does not decode (a bad version, size or bytes) */

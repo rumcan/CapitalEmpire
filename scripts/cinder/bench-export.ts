@@ -60,7 +60,7 @@ async function time(inp: Export3pInput, runs: number) {
   const ms: number[] = [];
   let parts = { exportMs: 0, entryMs: 0, liesMs: 0 };
   for (let k = 0; k < runs; k++) {
-    const t0 = performance.now(), file = await exportCourse3p(inp), t1 = performance.now(), entry = await courseEntry3p(file), t2 = performance.now();
+    const t0 = performance.now(), file = await exportCourse3p(inp, { deflate: false }), t1 = performance.now(), entry = await courseEntry3p(file), t2 = performance.now();
     entry.lk = lieGrid3p({ lieAt }, box, { x: f.cx, y: f.cy }); const t3 = performance.now();
     ms.push(t3 - t0); if (k === runs - 1) parts = { exportMs: +(t1 - t0).toFixed(1), entryMs: +(t2 - t1).toFixed(1), liesMs: +(t3 - t2).toFixed(1) };
   }

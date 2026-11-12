@@ -14,7 +14,7 @@ import type { AimPoint, CourseArea, GolfSurface, Pin, TeeMark } from '../types';
 import { TILE_M } from '../types';
 import { ringArea, inRing, type P } from '../osm/geom';
 import type { JFeature, JPoly, JPt, OsmCourseJson } from '../osm/types';
-import { packGrid, type HeightGrid, type OsmHeight } from '../osm/terrarium';
+import { PACKED, packGrid, type HeightGrid, type OsmHeight } from '../osm/terrarium';
 
 /** the course file the view loads: the map importer's stage-1 JSON */
 export type CourseFile = OsmCourseJson;
@@ -242,7 +242,9 @@ export function sampleHeights(heightAt: (x: number, y: number) => number, f: Fra
 
 // ------------------------------------------------------------------------------------------------------------------------ the file
 /** the painted course as the course file (see the top of this file). Async because the height packing deflates (the platform's CompressionStream) */
-export async function exportCourse3p(inp: Export3pInput): Promise<CourseFile> {
+/** opts.deflate false (T438): the heights' text (height.d) is left empty, to be filled by terrarium.ts fillPack(file.height) later; the view's entry
+ *  (courseEntry3p) reads the samples all the same */
+export async function exportCourse3p(inp: Export3pInput, opts: { deflate?: boolean } = {}): Promise<CourseFile> {
   const f = frame3p(inp), features: Record<string, JFeature[]> = {};
   for (const [kind, polys] of tracePolys(inp.areas, f, inp.outlineStepM ?? OUTLINE_STEP_M)) features[kind] = polys.map(p => ({ polys: [p] }));
 
@@ -276,8 +278,9 @@ export async function exportCourse3p(inp: Export3pInput): Promise<CourseFile> {
     features,
   };
   if (inp.heightAt) {
-    const pack = await packGrid(sampleHeights(inp.heightAt, f, land, inp.heightStepM ?? HEIGHT_STEP_M));
+    const pack = await packGrid(sampleHeights(inp.heightAt, f, land, inp.heightStepM ?? HEIGHT_STEP_M), undefined, opts);
     const height: OsmHeight = { ...pack, src: 'course', label: 'Your course, 2 m', credit: '', z: 0, sigma: 0, fetched: inp.date ?? '' };
+    const u = PACKED.get(pack); if (u) PACKED.set(height, u);   // (T438: the entry made from this file reads the samples, not the deflated text)
     file.height = height;
   }
   return file;

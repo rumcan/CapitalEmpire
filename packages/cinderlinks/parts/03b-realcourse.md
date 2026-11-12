@@ -36,21 +36,41 @@ function courseElev(C, x, y) {   // the real height (metres above the grid's low
 function courseH(C, x, y) { return C.hm ? 5 + courseElev(C, x, y) * C.S * CVEX : 6; }
 // the signed distance from every cell near a ring to the ring (negative inside), kept where it is the smallest so far; lvG / lv: the water level that goes with it
 function sdfRing(C, grid, ring, R, lvG, lv) {
+  // T438: the same distances as testing every cell against every edge, made edge by edge: each edge measures only the cells within SDF_REACH of it, and
+  // inside or out is read from each row's crossings (the same sums). A cell no edge reaches lies farther than SDF_REACH from the ring: outside, the map
+  // keeps what it has (never more than SDF_REACH); inside (deep in a big pond) it is measured against every edge, as before. A painted course's shapes
+  // (thousands of points traced at 1 m) took seconds to lay out
   const n = ring.length >> 1; let x0 = 1e9, x1 = -1e9, y0 = 1e9, y1 = -1e9;
   for (let k = 0; k < n; k++) { const x = ring[k * 2], y = ring[k * 2 + 1]; if (x < x0) x0 = x; if (x > x1) x1 = x; if (y < y0) y0 = y; if (y > y1) y1 = y; }
   const i0 = Math.max(0, Math.floor((x0 - R - C.gx0) / CRES)), i1 = Math.min(C.gw - 1, Math.ceil((x1 + R - C.gx0) / CRES)), j0 = Math.max(0, Math.floor((y0 - R - C.gy0) / CRES)), j1 = Math.min(C.gh - 1, Math.ceil((y1 + R - C.gy0) / CRES));
-  for (let j = j0; j <= j1; j++) for (let i = i0; i <= i1; i++) {
-    const px = C.gx0 + i * CRES, py = C.gy0 + j * CRES; let best = 1e18, inside = false;
-    for (let k = 0, q = n - 1; k < n; q = k++) {
-      const ax = ring[k * 2], ay = ring[k * 2 + 1], bx = ring[q * 2], by = ring[q * 2 + 1], ex = bx - ax, ey = by - ay, l2 = ex * ex + ey * ey;
+  if (i1 < i0 || j1 < j0) return;
+  const W = i1 - i0 + 1, H = j1 - j0 + 1, best = new Float64Array(W * H).fill(Infinity), RE = SDF_REACH;
+  for (let k = 0, q = n - 1; k < n; q = k++) {
+    const ax = ring[k * 2], ay = ring[k * 2 + 1], bx = ring[q * 2], by = ring[q * 2 + 1], ex = bx - ax, ey = by - ay, l2 = ex * ex + ey * ey;
+    const a0 = Math.max(i0, Math.floor((Math.min(ax, bx) - RE - C.gx0) / CRES)), a1 = Math.min(i1, Math.ceil((Math.max(ax, bx) + RE - C.gx0) / CRES));
+    const b0 = Math.max(j0, Math.floor((Math.min(ay, by) - RE - C.gy0) / CRES)), b1 = Math.min(j1, Math.ceil((Math.max(ay, by) + RE - C.gy0) / CRES));
+    for (let j = b0; j <= b1; j++) for (let i = a0; i <= a1; i++) {
+      const px = C.gx0 + i * CRES, py = C.gy0 + j * CRES;
       let t = l2 > 0 ? ((px - ax) * ex + (py - ay) * ey) / l2 : 0; t = t < 0 ? 0 : t > 1 ? 1 : t;
-      const dx = px - ax - ex * t, dy = py - ay - ey * t, d = dx * dx + dy * dy; if (d < best) best = d;
-      if ((ay > py) !== (by > py) && px < ax + (py - ay) / (by - ay) * ex) inside = !inside;
+      const dx = px - ax - ex * t, dy = py - ay - ey * t, d = dx * dx + dy * dy, c = (j - j0) * W + (i - i0); if (d < best[c]) best[c] = d;
     }
-    const sd = inside ? -Math.sqrt(best) : Math.sqrt(best), g = j * C.gw + i;
-    if (sd < grid[g]) { grid[g] = sd; if (lvG && sd < R) lvG[g] = lv; }
+  }
+  const xs = [];
+  for (let j = j0; j <= j1; j++) {
+    const py = C.gy0 + j * CRES; xs.length = 0;
+    for (let k = 0, q = n - 1; k < n; q = k++) { const ax = ring[k * 2], ay = ring[k * 2 + 1], bx = ring[q * 2], by = ring[q * 2 + 1]; if ((ay > py) !== (by > py)) xs.push(ax + (py - ay) / (by - ay) * (bx - ax)); }
+    xs.sort((p, q) => p - q);
+    let c0 = 0;   // (crossings at or left of px: px < x counts the rest)
+    for (let i = i0; i <= i1; i++) {
+      const px = C.gx0 + i * CRES; while (c0 < xs.length && !(px < xs[c0])) c0++;
+      const inside = ((xs.length - c0) & 1) === 1; let b2 = best[(j - j0) * W + (i - i0)];
+      if (b2 > RE * RE) { if (!inside) continue; b2 = 1e18; for (let k = 0, q = n - 1; k < n; q = k++) { const ax = ring[k * 2], ay = ring[k * 2 + 1], ex = ring[q * 2] - ax, ey = ring[q * 2 + 1] - ay, l2 = ex * ex + ey * ey; let t = l2 > 0 ? ((px - ax) * ex + (py - ay) * ey) / l2 : 0; t = t < 0 ? 0 : t > 1 ? 1 : t; const dx = px - ax - ex * t, dy = py - ay - ey * t, d = dx * dx + dy * dy; if (d < b2) b2 = d; } }
+      const sd = inside ? -Math.sqrt(b2) : Math.sqrt(b2), g = j * C.gw + i;
+      if (sd < grid[g]) { grid[g] = sd; if (lvG && sd < R) lvG[g] = lv; }
+    }
   }
 }
+const SDF_REACH = 61;   // (past this no cell is written from outside: the maps start at 60 and only go down)
 function sdfDisc(C, grid, cx, cy, r, R) {   // the same for a round patch (a green or tee the map lacks)
   const i0 = Math.max(0, Math.floor((cx - r - R - C.gx0) / CRES)), i1 = Math.min(C.gw - 1, Math.ceil((cx + r + R - C.gx0) / CRES)), j0 = Math.max(0, Math.floor((cy - r - R - C.gy0) / CRES)), j1 = Math.min(C.gh - 1, Math.ceil((cy + r + R - C.gy0) / CRES));
   for (let j = j0; j <= j1; j++) for (let i = i0; i <= i1; i++) { const sd = Math.hypot(C.gx0 + i * CRES - cx, C.gy0 + j * CRES - cy) - r, g = j * C.gw + i; if (sd < grid[g]) grid[g] = sd; }
