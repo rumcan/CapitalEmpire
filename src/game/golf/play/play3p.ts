@@ -21,6 +21,7 @@ import type { WindNow } from './wind';
 import type { Frame3p } from './export3p';
 import { fromView, type HoleEndMsg, type HostMsg, type ViewInput } from './protocol3p';
 import { centreOf, turnMsg } from './turn3p';
+import { allowedClubs } from './owner';
 import { fieldShotMsg, shotMsg } from './shot3p';
 
 /** what a session needs: the course (every hole the course has) and the indexes of the holes to play, in order (the view's Play this hole: one), the
@@ -120,7 +121,15 @@ export class Play3p {
     return { v: 1, t: 'holeEnd', holeIdx, hole: h.n, par: h.par, strokes, last };
   }
 
+  /** his turn for the view, offering only the clubs the model lets him take from this lie (owner.ts allowedClubs: the driver from the tee, the putter
+   *  on the green; his bag's and cards' rules) */
   private turnMsg(t: OwnerTurn) {
+    const m = this.turnMsgAll(t), sk = this.o.skills, bag = typeof sk === 'number' ? undefined : sk.clubs, mech = typeof sk === 'number' ? undefined : sk.mech;
+    const ok = allowedClubs(t.lie, t.lie === 'tee', bag, mech), clubs = m.clubs.filter(c => ok.includes(c.club) || c.club === m.suggested.club);
+    if (clubs.length) m.clubs = clubs;
+    return m;
+  }
+  private turnMsgAll(t: OwnerTurn) {
     return turnMsg({ turn: t, skills: this.o.skills, view: this.view, height: this.o.height ?? null, wind: this.windNow(), last: t.holeIdx === this.view.holes.length - 1,
       ...(this.o.fit ? { fit: this.o.fit } : {}) }, this.centre);
   }

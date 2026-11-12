@@ -63,14 +63,14 @@ function updateHud() {
   const score = strokes - H.par, row = (a, b) => '<div class="row"><span>' + a + '</span><b>' + b + '</b></div>';
   const card = (course ? '<div class="course">' + course.name + '</div>' : '') + '<div class="hole">Hole ' + (course ? course.holes[(holeN - 1) % course.holes.length].n : holeN) + '<span>par ' + H.par + '</span></div>' + row('Strokes', strokes + (strokes ? ' (' + (score > 0 ? '+' : '') + score + ')' : '')) + row('Round', total) + row('To pin', (d < 10 ? d.toFixed(1) : Math.round(d)) + ' m') + row('Lie', MAT_NAME[m]) + row('Light', TOD[tmode].name) + (course ? '<div class="credit">' + course.credit + (course.hcredit ? ' &middot; heights: ' + course.hcredit : '') + ' &middot; ' + Math.round(course.S * 10) + '/10 size</div>' : '');
   if (card !== shownCard) { cardEl.innerHTML = card; shownCard = card; }
-  if (club !== shownClub) { shownClub = club; clubsEl.innerHTML = CLUBS.map((c, k) => '<div class="club' + (k === club ? ' on' : '') + '"><b>' + (k + 1) + '</b> ' + c.name + '<i>' + (c.loft ? Math.round(c.v * c.v * clubK() * clubK() * Math.sin(2 * c.loft) / 9.81 / 5) * 5 + ' m' : 'on the green') + '</i></div>').join(''); }
+  if (club !== shownClub) { shownClub = club; clubsEl.className = HP && HP.clubs.length ? 'bag' : ''; clubsEl.innerHTML = HP && HP.clubs.length ? hostTabs() : CLUBS.map((c, k) => '<div class="club' + (k === club ? ' on' : '') + '"><b>' + (k + 1) + '</b> ' + c.name + '<i>' + (c.loft ? Math.round(c.v * c.v * clubK() * clubK() * Math.sin(2 * c.loft) / 9.81 / 5) * 5 + ' m' : 'on the green') + '</i></div>').join(''); }
   powerEl.className = charging || player.swing >= 0 ? 'on' : '';
   powerBar.style.width = (power * 100).toFixed(0) + '%';
-  if (charging) powerTxt.textContent = Math.round(power * 100) + '%  ' + CLUBS[club].name;
+  if (charging) powerTxt.textContent = Math.round(power * 100) + '%  ' + clubName(club);
   const byCart = !cart.on && Math.hypot(player.x - cart.x, player.y - cart.y) < 3.2;
   const hint = msgT > 0 ? msgText : '';
   if (hint !== shownMsg) { msgEl.textContent = hint; shownMsg = hint; }
-  const kh = (cart.on ? '<b>G</b> get out &middot; <b>W S</b> go, brake &middot; <b>A D</b> steer' : byCart ? '<b>G</b> drive the cart' : nearBall() ? '<b>hold click</b> swing &middot; <b>1-4</b> club' : '<b>W</b> walk &middot; <b>A D</b> turn &middot; to the ball') + ' &middot; <b>H</b> help';
+  const kh = (cart.on ? '<b>G</b> get out &middot; <b>W S</b> go, brake &middot; <b>A D</b> steer' : byCart ? '<b>G</b> drive the cart' : nearBall() ? '<b>hold click</b> swing &middot; <b>' + (HP ? '1-9, wheel' : '1-4') + '</b> club' : '<b>W</b> walk &middot; <b>A D</b> turn &middot; to the ball') + ' &middot; <b>H</b> help';
   if (kh !== shownKeys) { keysEl.innerHTML = kh; shownKeys = kh; }
   if (shownStyle !== biomeId || shownType !== ctypeId) styleShow();
   { const gm = canGimme() ? 'on' : ''; if (gimmeEl.className !== gm) gimmeEl.className = gm; }   // the gimme button shows when the putt left is short enough to be given
@@ -94,6 +94,10 @@ Check: function tickGame(
 Check: requestAnimationFrame(loop)
 R: Host mode (?host=1, T415): the page is a view inside another page (CapitalEmpire). It loads no course of its own, says { v: 1, t: 'ready' } to the page that holds it and waits for { v: 1, t: 'course', course, features, biome, type, seed, scale, hole }; it plays that course from hole `hole` (1 if none) and answers { v: 1, t: 'loaded', holes }. { t: 'leave' } stops it drawing; Escape sends { v: 1, t: 'exit' }. Messages from anywhere but the page that holds it are ignored.
 Check: function hostMessage(
+R: Host play (T418 to T420): in host mode the host decides every shot. A strike sends { v: 1, t: 'input', input: { holeIdx, stroke, club, aim, power } } and waits (after 5 s it says it is waiting for the course, and keeps waiting); { t: 'shot' } is played back from its samples (the flight with the ball camera, a thump at the landing and each bounce, the roll, the rest); { t: 'turn' } puts the ball and the pin where the host has them and only then may he swing again; { t: 'holeEnd' } says the score. The club tabs are his bag from the turn (keys 1 to 9 and the wheel over the tabs), and the aim's arc and ring are the host's carry, wind push and scatter for the club in hand. Standalone play is unchanged.
+Check: function hostShot(
+Check: function hostAim(
+Check: function hostTabs(
 
 ````js file=game.js
 
@@ -111,6 +115,7 @@ function hostSend(m) {
 function hostMessage(m) {   // one message from the host page, already known to come from it
   if (!m || typeof m !== 'object') return;
   if (m.t === 'leave') { hostOff = true; return; }
+  if ((m.t === 'turn' || m.t === 'shot' || m.t === 'holeEnd') && m.v === 1) { if (course) hostPlayMsg(m); return; }   // (T418: the play, once a course is in)
   if (m.t !== 'course' || m.v !== 1) return;
   const C = m.course;
   if (!C || typeof C.id !== 'string' || !Array.isArray(C.holes) || !C.holes.length || !C.polys) { hostSend({ t: 'error', why: 'the course has no id, holes or shapes' }); return; }
@@ -118,7 +123,7 @@ function hostMessage(m) {   // one message from the host page, already known to 
   const k = MORE_COURSES.findIndex((c) => c.id === D.id); if (k >= 0) MORE_COURSES.splice(k, 1); MORE_COURSES.push(D);
   if (m.seed !== undefined && Number.isFinite(+m.seed)) SEED = +m.seed | 0;
   setBiome(BIOMES[m.biome] ? m.biome : biomeId, CTYPES[m.type] ? m.type : ctypeId); lib.clear(); libWarm = 0;   // (sculptures made in the old colours are dropped, as useStyle does)
-  course = null; if (!setCourse(D.id)) { hostSend({ t: 'error', why: 'the course could not be laid out' }); return; }
+  HP = null; course = null; if (!setCourse(D.id)) { hostSend({ t: 'error', why: 'the course could not be laid out' }); return; }
   setFeatures(m.features || null); featTxt = ''; featFor = course.id;
   const n = Math.max(1, Math.min(course.holes.length, +m.hole | 0 || 1)); if (n !== 1) newHole(n, 0, 0);
   hostOff = false; firstPicture(); updateHud();
@@ -135,6 +140,132 @@ function hostStart() {
   });
   hostSend({ t: 'ready' });
 }
+
+// ---- host play (T418, T419, T420): in host mode the shots are the host's. The view never flies or rolls a ball of its own: strike() sends the
+// owner's input (the club from the host's list, the aim point, the power) and waits; the host's `shot` is played back sample by sample (the flight with
+// the ball camera, a thump at the landing and each bounce, the roll, the rest), and only then does the next `turn` put the ball and the pin where the
+// model has them. The clubs are the host's (turn.clubs: his bag with its carries after his mods); the aim draws the host's numbers (hostAim).
+// Host to view:  { t: 'turn', ... }   { t: 'shot', ... }   { t: 'holeEnd', hole, par, strokes, last }      (docs/CINDERLINKS-PORT.md section 4)
+// View to host:  { t: 'input', input: { holeIdx, stroke, club, aim: [x, y], power } }   (metres in the host's frame, true size)
+let HP = null;   // the host's play: { turn, clubs, wait (steps since the input went, 0: none), play (a shot being played back), q (messages held until it ends), over }
+const HOST_WAIT = 300;   // five seconds of steps without an answer: "waiting for the course" is said (and the view keeps waiting)
+function hostS() { return course ? course.S : 1; }   // (the host's metres are true size; a course drawn at another scale scales them)
+function hostBusy() { return !!HP && (!HP.turn || HP.wait > 0 || !!HP.play || HP.q.length > 0 || HP.over); }
+function hostClub() { return HP && HP.clubs[club] ? HP.clubs[club] : null; }
+function puttNow() { const c = hostClub(); return c ? c.club === 'putter' : club === 3; }
+function hostPower(p, putt) { return putt ? 0.5 + p : 0.3 + 0.7 * p; }   // the meter's 0..1 as the model's power: a full shot 0.3..1 of the club's carry, a putt 0.5..1.5 of its length to the pin (live.ts POWER, PUTT_POWER)
+const CLUB_NAME = { driver: 'Driver', wood3: '3-wood', wood5: '5-wood', hybrid: 'Hybrid', iron4: '4-iron', iron5: '5-iron', iron6: '6-iron', iron7: '7-iron', iron8: '8-iron', iron9: '9-iron', pw: 'Pitching wedge', gw: 'Gap wedge', sw: 'Sand wedge', lw: 'Lob wedge', putter: 'Putter' };
+function clubName(k) { const c = HP && HP.clubs[k]; return c ? CLUB_NAME[c.club] || c.club : CLUBS[k] ? CLUBS[k].name : ''; }
+function hostPlayMsg(m) {   // a play message from the host: a turn, a shot, the hole's end; held while a shot is being played back
+  if (!HP) HP = { turn: null, clubs: [], wait: 0, play: null, q: [], over: false };
+  if (m.t === 'shot') { if (HP.turn && m.golfer !== HP.turn.golfer) return; if (HP.play) { HP.q.push(m); return; } hostShot(m); return; }   // (anyone else's stroke: shown from T425)
+  if (HP.play || HP.q.length) { HP.q.push(m); return; }
+  if (m.t === 'turn') hostTurn(m); else if (m.t === 'holeEnd') hostHoleEnd(m);
+}
+function hostTurn(m) {   // the owner's turn: the ball and the pin where the model has them, his clubs in the tabs, the suggested club in hand
+  const S = hostS(); HP.turn = m; HP.clubs = Array.isArray(m.clubs) ? m.clubs : []; HP.wait = 0; HP.over = false;
+  if (m.hole !== holeN) newHole(m.hole, 0, 0);
+  ball.x = ball.lx = m.ball[0] * S; ball.y = ball.ly = m.ball[1] * S; ball.z = groundH(ball.x, ball.y); ball.vx = ball.vy = ball.vz = 0; ball.state = 0;
+  hole.pin.x = hole.green.x = m.pin[0] * S; hole.pin.y = hole.green.y = m.pin[1] * S;
+  strokes = m.stroke - 1; autoClub = false; club = Math.max(0, HP.clubs.findIndex((c) => c.club === m.suggested.club)); shownClub = -2;
+  const ax = m.suggested.aim[0] * S - ball.x, ay = m.suggested.aim[1] * S - ball.y, al = Math.hypot(ax, ay); if (al > 0.3) { aim.dx = ax / al; aim.dy = ay / al; }
+  if (m.stroke === 1 && Math.hypot(player.x - ball.x, player.y - ball.y) > 2.5) jumpToBall();   // (on the tee he stands at his ball; later he walks to it, or J)
+}
+function hostStrike() {   // the club meets the ball: the input goes to the host, and the ball waits for its answer
+  const c = hostClub(), t = HP.turn, S = hostS(); if (!c || !t) return;
+  const putt = c.club === 'putter', m = matAt(ball.x, ball.y);
+  hostSend({ t: 'input', input: { holeIdx: t.holeIdx, stroke: t.stroke, club: c.club, aim: [aim.x / S, aim.y / S], power: hostPower(power, putt) } });   // (spin and shape: T441, T442)
+  HP.wait = 1;
+  if (!putt) sndShot(); else sndTap();
+  for (let k = 0, n = putt ? 3 : 10 + ((power * 14) | 0); k < n; k++) {   // sparks off the club, and turf or sand
+    addParticle(P_SPARK, ball.x, ball.y, ball.z + 0.05, aim.dx * (1 + rnd() * 3) + (rnd() - 0.5) * 2, aim.dy * (1 + rnd() * 3) + (rnd() - 0.5) * 2, 1 + rnd() * 3, 16 + rndi(18), 0);
+    if (!putt) addParticle(m === M_SAND ? P_SAND : P_TURF, ball.x, ball.y, ball.z + 0.05, aim.dx * (0.5 + rnd() * 2.5) + (rnd() - 0.5) * 1.6, aim.dy * (0.5 + rnd() * 2.5) + (rnd() - 0.5) * 1.6, 1.5 + rnd() * 2.5, 30 + rndi(30), rndi(6));
+  }
+}
+function hostShot(m) {   // the owner's decided stroke: played back from its samples (hostBall)
+  const S = hostS(), F = Array.isArray(m.flight) ? m.flight : [], R = Array.isArray(m.roll) ? m.roll : [];
+  const fT = Array.isArray(m.flightT) && m.flightT.length === F.length ? m.flightT : F.map((_, k) => k / 30);   // (an older host: 30 samples a second)
+  const tL = F.length ? fT[F.length - 1] : 0, rT = Array.isArray(m.rollT) && m.rollT.length === R.length ? m.rollT : R.map((_, k) => tL + (k + 1) * 0.12);
+  const bT = (m.bounces || []).map((b) => { let bi = -1, bd = 1e9; for (let k = 0; k < R.length; k++) { const d = Math.hypot(R[k][0] - b[0], R[k][1] - b[1]); if (d < bd) { bd = d; bi = k; } } return bi >= 0 ? rT[bi] : tL; }).sort((a, b) => a - b);
+  const start = F.length ? [F[F.length - 1][0], F[F.length - 1][1], 0] : [m.from[0], m.from[1], 0];
+  HP.play = { m, S, F, fT, tL, bT, bi: 0, t: 0, landed: !F.length, RT: [tL].concat(rT), RQ: [start].concat(R.map((p, k) => [p[0], p[1], Array.isArray(m.rollZ) && m.rollZ.length === R.length ? m.rollZ[k] : 0])) };
+  HP.wait = 0; ball.lx = ball.x; ball.ly = ball.y; ball.t = 0; ball.state = F.length ? 1 : 2;
+  if (F.length && tL > 0.8) { bcam = 1; bcamT = 0; bcamYaw = camYaw; bcamD = camD; slowT = 30; }   // a full shot: a moment of slow time, and the camera goes with the ball
+}
+function hostAt(T, P, t, o) {   // the point of a sampled path at time t (seconds from the strike): x, y and the height (m) between its samples
+  let k = 0; while (k < T.length - 1 && T[k + 1] < t) k++;
+  const a = P[k], b = P[Math.min(k + 1, P.length - 1)], t0 = T[k], t1 = T[Math.min(k + 1, T.length - 1)], u = t1 > t0 ? Math.min(1, Math.max(0, (t - t0) / (t1 - t0))) : 1;
+  o.x = a[0] + (b[0] - a[0]) * u; o.y = a[1] + (b[1] - a[1]) * u; o.h = (a[2] || 0) + ((b[2] || 0) - (a[2] || 0)) * u; return o;
+}
+const HQ = { x: 0, y: 0, h: 0 };
+function hostBall() {   // one step of the playback: the ball follows the host's samples, then lies where the host says it rests
+  const P = HP.play; if (!P) return;
+  const dt = (slowT > 0 ? 0.3 : 1) / 60, S = P.S; if (slowT > 0) slowT--;
+  P.t += dt; ball.t++;
+  const x0 = ball.x, y0 = ball.y;
+  if (P.F.length && P.t < P.tL) {                                     // in the air
+    hostAt(P.fT, P.F, P.t, HQ); ball.x = HQ.x * S; ball.y = HQ.y * S; ball.z = groundH(ball.x, ball.y) + HQ.h * S; ball.state = 1;
+    if (tmode > 0 && (ball.t & 1)) addParticle(P_EMBER, ball.x, ball.y, ball.z, (rnd() - 0.5) * 0.3, (rnd() - 0.5) * 0.3, 0.2, 16 + rndi(14), 1);
+  } else if (P.RT.length > 1 && P.t < P.RT[P.RT.length - 1]) {        // bouncing and rolling
+    if (!P.landed) { P.landed = true; hostLand(8); }
+    while (P.bi < P.bT.length && P.bT[P.bi] <= P.t) { P.bi++; if (P.bi > 1) hostLand(4); }   // (the first bounce is the landing)
+    hostAt(P.RT, P.RQ, P.t, HQ); ball.x = HQ.x * S; ball.y = HQ.y * S; ball.z = groundH(ball.x, ball.y) + HQ.h * S; ball.state = 2;
+  } else { hostRest(); return; }
+  ball.vx = (ball.x - x0) / dt; ball.vy = (ball.y - y0) / dt; ball.vz = 0;   // (for the ball camera's turn)
+}
+function hostLand(v) { sndLand(v); const m = matAt(ball.x, ball.y), gh = groundH(ball.x, ball.y); for (let k = 0; k < v; k++) addParticle(m === M_SAND ? P_SAND : P_TURF, ball.x, ball.y, gh + 0.04, (rnd() - 0.5) * 2.4, (rnd() - 0.5) * 2.4, 0.8 + rnd() * 2, 20 + rndi(24), rndi(6)); }
+function hostRest() {   // the playback is over: the ball lies at the host's rest (in the cup, in the water), the strokes are counted, held messages go on
+  const P = HP.play, m = P.m, S = P.S; HP.play = null;
+  if (!P.landed) hostLand(8);
+  ball.x = m.rest[0] * S; ball.y = m.rest[1] * S; ballRest();
+  strokes = m.stroke + (m.penalty || 0); total += 1 + (m.penalty || 0);
+  if (m.holed) { ball.state = 3; ball.x = hole.pin.x; ball.y = hole.pin.y; for (let k = 0; k < 120; k++) addParticle(k & 1 ? P_SPARK : P_EMBER, hole.pin.x, hole.pin.y, ball.z + 0.1, (rnd() - 0.5) * 3, (rnd() - 0.5) * 3, 2 + rnd() * 5, 40 + rndi(70), rndi(4)); }
+  else if (m.penalty) { splash(ball.x, ball.y, wlAt(ball.x, ball.y), 26); say(m.restLie === 'water' ? 'Water: one stroke, and a drop' : 'Out of bounds: one stroke', 260); }
+  while (HP.q.length && !HP.play) { const q = HP.q.shift(); if (q.t === 'shot') hostShot(q); else if (q.t === 'turn') hostTurn(q); else if (q.t === 'holeEnd') hostHoleEnd(q); }
+}
+function hostHoleEnd(m) {   // the hole is over: its score is said; after the last, the view waits for Escape
+  const d = m.strokes - m.par, name = m.strokes === 1 ? 'Hole in one!' : d <= -2 ? 'Eagle!' : d === -1 ? 'Birdie!' : d === 0 ? 'Par' : d === 1 ? 'Bogey' : '+' + d;
+  strokes = m.strokes; if (m.last) { HP.turn = null; HP.over = true; }
+  say(name + '  -  hole ' + m.hole + ' in ' + m.strokes + (m.last ? '  -  Esc goes back to the course' : ''), m.last ? 100000 : 330);
+}
+function hostTick() {   // each step: the playback, and the wait for an answer
+  hostBall();
+  if (HP.wait > 0 && ++HP.wait > HOST_WAIT && (HP.wait - HOST_WAIT) % 120 === 1) say('Waiting for the course...', 130);
+}
+function hostAim() {   // T420: the aim tells the truth: the arc to where the model's mean lands this club at this power (its carry in this lie, slope and wind, and
+  // the wind's push off the line), and a ring at one standard deviation of where it lands (shot.ts SHOT_SCATTER: across the line and along it). A better
+  // club or a steadier golfer draws a smaller ring. Its numbers come from the host's kit for the club (turn.clubs), worked out along the suggested line
+  const C = hostClub(), t = HP.turn; if (!C || !t) return;
+  const S = hostS(), putt = C.club === 'putter', pw = hostPower(charging ? power : putt ? 0.5 : 1, putt), hot = charging ? AIM_R : AIM_G, ph = (frame >> 1) % 6;
+  const dx = aim.dx, dy = aim.dy, rx = -dy, ry = dx;                  // (the line, and his right as he faces it: x east, y south)
+  if (putt) {                                                          // a putt: its length is a share of the way to the pin
+    const len = Math.hypot(hole.pin.x - ball.x, hole.pin.y - ball.y) * pw;
+    for (let k = 0, d = 0.4 + ph * 0.07; d < len; d += 0.42, k++) { const qx = ball.x + dx * d, qy = ball.y + dy * d; projectO(qx, qy, groundH(qx, qy) + 0.03, PJ); if (PJ.s > 0) aimDotO(PJ.x, PJ.y, PJ.s > 0.8 ? 1 : 0, k & 1 ? hot : AIM_W); }
+    const ex = ball.x + dx * len, ey = ball.y + dy * len; projectO(ex, ey, groundH(ex, ey) + 0.03, PJ); if (PJ.s > 0) aimDotO(PJ.x, PJ.y, 2, hot);
+    return;
+  }
+  const carry = (C.playsM !== undefined ? C.playsM : C.carryM) * pw * S, side = (C.sideM || 0) * pw * S;
+  const lx = ball.x + dx * carry + rx * side, ly = ball.y + dy * carry + ry * side, apex = (0.08 + 0.004 * (C.loftDeg || 30)) * carry, z0 = groundH(ball.x, ball.y), z1 = groundH(lx, ly);
+  for (let k = 0, n = Math.max(12, Math.round(carry / 1.6)); k <= n; k++) {   // the arc and its shadow
+    if (k % 6 !== ph) continue;
+    const u = k / n, x = ball.x + (lx - ball.x) * u, y = ball.y + (ly - ball.y) * u, gz = groundH(x, y), z = z0 + (z1 - z0) * u + apex * 4 * u * (1 - u);
+    projectO(x, y, gz + 0.03, PJ); if (PJ.s > 0) plotZO(PJ.x, PJ.y, PJ.d, AIM_D);
+    projectO(x, y, Math.max(z, gz + 0.03), PJ); if (PJ.s > 0) aimDotO(PJ.x, PJ.y, PJ.s > 1.1 ? 2 : PJ.s > 0.35 ? 1 : 0, (k / 6 | 0) & 1 ? hot : AIM_W);
+  }
+  const across = Math.max(0.4, (C.scatterM || 0) / 2 * pw * S), along = Math.max(0.4, (C.longM !== undefined ? C.longM : C.scatterM || 0) / 2 * pw * S);   // (one standard deviation: the host sends two)
+  const na = Math.max(40, Math.min(160, Math.round((across + along) * 3)));
+  for (let a = 0; a < na; a++) {                                       // the ring: one standard deviation across the line and along it
+    const an = a / na * 6.2832, ca = Math.cos(an), sa = Math.sin(an), qx = lx + dx * along * ca + rx * across * sa, qy = ly + dy * along * ca + ry * across * sa;
+    projectO(qx, qy, groundH(qx, qy) + 0.03, PJ); if (PJ.s > 0) { plotZO(PJ.x, PJ.y + 1, PJ.d - 0.3, AIM_D); plotZO(PJ.x, PJ.y, PJ.d - 0.3, a & 1 ? hot : AIM_W); plotZO(PJ.x + 1, PJ.y, PJ.d - 0.3, a & 1 ? hot : AIM_W); }
+  }
+  projectO(lx, ly, z1 + 0.03, PJ); if (PJ.s > 0) aimDotO(PJ.x, PJ.y, PJ.s > 0.5 ? 2 : 1, hot);
+  HP.ring = { x: lx, y: ly, across, along };   // (kept for the harness)
+}
+function hostTabs() {   // T419: his clubs in the tabs: the name, its full carry after his mods (the putter: its fitting); keys 1 to 9 and the wheel change club
+  return HP.clubs.map((c, k) => '<div class="club' + (k === club ? ' on' : '') + '">' + (k < 9 ? '<b>' + (k + 1) + '</b> ' : '') + (CLUB_NAME[c.club] || c.club) + '<i>' + (c.club === 'putter' ? (c.fit || 'on the green') : Math.round(c.carryM) + ' m') + '</i></div>').join('');
+}
+function hostPickClub(k) { if (!HP || !HP.clubs.length || charging || player.swing >= 0) return; club = Math.max(0, Math.min(HP.clubs.length - 1, k)); }
+clubsEl.addEventListener('wheel', (e) => { if (!HP || !HP.clubs.length) return; hostPickClub(club + (e.deltaY > 0 ? 1 : -1)); if (e.preventDefault) e.preventDefault(); if (e.stopPropagation) e.stopPropagation(); }, { passive: false });
 
 // ---- loop
 addEventListener('keydown', (e) => {
@@ -155,6 +286,7 @@ addEventListener('keydown', (e) => {
   else if (e.code === 'KeyY') gimme();
   else if (e.code === 'KeyP') { const nx = RS > 0.9 ? 0.75 : RS > 0.6 ? 0.5 : 1; try { localStorage.setItem('cinderlinks.scale', '' + nx); } catch (e2) {} if (typeof location !== 'undefined' && location.reload) { const u = new URLSearchParams(location.search); u.delete('scale'); location.search = u.toString(); } }   // the picture's scale: 75%, 50%, 100% (the page loads again at the new size)
   else if (e.code === 'KeyH') { helpOn = !helpOn; helpEl.className = helpOn ? 'on' : ''; }
+  else if (HP && /^Digit[1-9]$/.test(e.code)) hostPickClub(+e.code.slice(5) - 1);   // (host mode: his bag)
   else if (/^Digit[1-4]$/.test(e.code)) { club = +e.code.slice(5) - 1; autoClub = false; }
   if (/^Arrow|^Space/.test(e.code) && e.preventDefault) e.preventDefault();
 });

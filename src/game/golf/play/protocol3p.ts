@@ -67,6 +67,9 @@ export interface ClubChoice { club: Club; carryM: number; scatterM: number; kit:
    *  and whether he may pick a shape (shape.ts) or a spin with this club */
   playsM?: number; longM?: number; mishitP?: number; sweet?: number; speed?: number; loftDeg?: number; launch?: string; run?: number;
   backspin?: number; topspin?: number; shapes?: boolean; spin?: boolean;
+  /** T420: where the full shot lands off the aim's line along the suggested line (m, + right as he faces it: the wind's drift and the slope's pull;
+   *  conditions.ts previewShot sideM) */
+  sideM?: number;
   /** T419: the putter's fitting in words (the shaft and head fitted beyond the stock ones, bag.ts putterFitName); absent: none, or another club */
   fit?: string }
 /** T418: what the owner may do beyond a plain swing (T443 turns these into earned unlocks): pick a shape (draw or fade, high or low), put spin on the ball, add spin

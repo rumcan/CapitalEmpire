@@ -4,7 +4,8 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { TILE_M } from '../src/game/golf/types';
-import { rng, shotOutcome } from '../src/game/golf/play';
+import { putterFitName, rng, shotOutcome } from '../src/game/golf/play';
+import { turnMsg } from '../src/game/golf/play/turn3p';
 import type { CourseView, GameSkills, Lie, PlayHole, Pt } from '../src/game/golf/play';
 import { toView, type HostMsg, type ShotMsg, type TurnMsg, type ViewInput } from '../src/game/golf/play/protocol3p';
 import { OWNER_3P, Play3p } from '../src/game/golf/play/play3p';
@@ -39,7 +40,16 @@ test('play3p: the session opens with his turn on the tee, in the view\'s frame, 
   assert.equal(t.golfer, OWNER_3P); assert.equal(t.hole, 1); assert.equal(t.stroke, 1); assert.equal(t.lie, 'tee');
   assert.ok(near(t.ball, toView(holes[0]!.tee, centre)), 'the ball is on the tee');
   assert.ok(near(t.pin, toView(holes[0]!.pin, centre)), 'the pin is the hole\'s');
-  assert.ok(t.clubs.length >= 7 && t.clubs.some(c => c.club === 'driver'));
+  assert.ok(t.clubs.length >= 6 && t.clubs.some(c => c.club === 'driver'));
+  assert.ok(!t.clubs.some(c => c.club === 'putter'), 'only the clubs the model lets him take from the tee');
+  for (const c of t.clubs) assert.equal(typeof c.sideM, 'number', 'each club says where the wind and slope push it');
+});
+
+test('play3p: the putter carries the name of its fitting (T419)', () => {
+  const tm = turnMsg({ turn: { golfer: 0, holeIdx: 0, hole: 1, par: 4, stroke: 3, t: 600, lie: 'green', ball: { x: 296, y: 100 }, pin: holes[0]!.pin, distM: 8, suggested: { club: 'putter', aim: holes[0]!.pin, power: 1 } },
+    skills: sk, view, fit: putterFitName({ v: 1, shaft: 'whip', head: 'mallet' }) }, centre);
+  assert.equal(tm.clubs.find(c => c.club === 'putter')!.fit, 'Whippy graphite shaft, Mallet head');
+  assert.equal(putterFitName({ v: 1 }), '', 'a stock putter has none');
 });
 
 test('play3p: an input gives exactly one stroke of his, its rest the model\'s; the next turn has his ball there', () => {

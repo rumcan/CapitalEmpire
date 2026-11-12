@@ -54,8 +54,57 @@ globalThis.hostMsg = () => {   // (made only when asked: a course this size held
   return { v: 1, t: 'course', course: convert(raw, 'woodhill.json'), features: fs.existsSync(ed) ? JSON.parse(fs.readFileSync(ed, 'utf8')) : null, biome: 'parkland', type: 'private', seed: 4242, scale: 1, hole: 1 };
 };
 
+// host play (T418 to T420): a turn with a made-up bag, a scripted strike, and a canned shot from the host; run in the game's own scope by the gate and the
+// `host` scene. The view must take the turn (the ball where it says, the bag in the tabs, the ring at one standard deviation), send one input and wait
+// without moving the ball, play the shot back (it flies, lands, rolls) and leave the ball exactly at the shot's rest, then take the next turn from there
+const HOST_PLAY = String.raw`
+  function hostPlayRun(snapAt) {
+    const errs = [], info = {}, S = course.S, near = (a, b) => Math.hypot(a[0] - b[0], a[1] - b[1]);
+    const b0 = [hole.tee.x / S, hole.tee.y / S], p0 = [hole.pin.x / S, hole.pin.y / S], dl = near(b0, p0), ux = (p0[0] - b0[0]) / dl, uy = (p0[1] - b0[1]) / dl;
+    const kit = (club, carryM, scatterM, longM, loftDeg, x) => Object.assign({ club, carryM, scatterM, longM, playsM: carryM * 0.98, sideM: 2, loftDeg }, x || {});
+    const bag = (sc) => [kit('driver', 230, sc, 24, 10.5), kit('iron7', 150, 18, 12, 34), kit('putter', 0, 0, 0, 3, { fit: 'Mallet head' })];
+    const turn = (ball, stroke, sc) => ({ v: 1, t: 'turn', golfer: 0, holeIdx: 0, hole: holeN, par: hole.par, stroke, at: 600, lie: 'tee', lieKind: 'tee', ball, pin: p0, distM: dl, wind: { mph: 5, from: 90 },
+      slope: { up: 0, across: 0 }, clubs: bag(sc), suggested: { club: 'driver', aim: [b0[0] + ux * 230, b0[1] + uy * 230], power: 1 } });
+    const step = (n, every) => { for (let k = 0; k < n; k++) { tickGame(); if (every && k % every === 0) render(); } };
+    for (const c of Object.keys(keys)) keys[c] = false; mouse.down = false; charging = false;
+    hostMessage(turn(b0, 1, 40));
+    if (!HP || !HP.turn) errs.push('host play: the turn was not taken');
+    if (near([ball.x / S, ball.y / S], b0) > 1e-6) errs.push('host play: the ball is not where the turn put it');
+    updateHud(); info.tabs = (clubsEl.innerHTML.match(/class="club/g) || []).length;
+    if (info.tabs !== 3 || !/Driver/.test(clubsEl.innerHTML) || !/230 m/.test(clubsEl.innerHTML) || !/Mallet head/.test(clubsEl.innerHTML)) errs.push('host play: the tabs do not show the bag');
+    mouse.x = VW / 2; mouse.y = VH / 2 - 120; step(6, 1);
+    const r1 = HP.ring && HP.ring.across; info.ring = r1;
+    if (!(Math.abs(r1 - 20) < 1e-6)) errs.push('host play: the ring is not at one standard deviation (' + r1 + ' m, want 20)');
+    if (snapAt) snapAt('host-aim');
+    hostMessage(turn(b0, 1, 16)); step(2, 1); info.ringTight = HP.ring && HP.ring.across;
+    if (!(info.ringTight < r1)) errs.push('host play: a steadier club did not tighten the ring');
+    mouse.down = true; step(40, 0); mouse.down = false;
+    let sent = null; for (let k = 0; k < 120 && !sent; k++) { step(1, 0); if (hostLast && hostLast.t === 'input') sent = hostLast.input; }
+    info.input = sent;
+    if (!sent || sent.club !== 'driver' || !(sent.power >= 0.3 && sent.power <= 1) || !Array.isArray(sent.aim) || !Number.isFinite(sent.aim[0]) || sent.holeIdx !== 0 || sent.stroke !== 1) errs.push('host play: no input, or a wrong one');
+    const bw = [ball.x, ball.y]; step(60, 0);
+    if (ball.state !== 0 || near([ball.x, ball.y], bw) > 1e-9 || !hostBusy()) errs.push('host play: the ball moved (or he could swing) before the host answered');
+    // the canned shot: 200 m out along the hole, 30 m up, 5 s in the air; two bounces and a roll to 22 m further on
+    const L = [b0[0] + ux * 200 + uy * 3, b0[1] + uy * 200 - ux * 3], R = [L[0] + ux * 22, L[1] + uy * 22], F = [], FT = [], RL = [], RT = [], RZ = [];
+    for (let k = 0; k <= 50; k++) { const u = k / 50; F.push([b0[0] + (L[0] - b0[0]) * u, b0[1] + (L[1] - b0[1]) * u, 30 * 4 * u * (1 - u)]); FT.push(5 * u); }
+    for (let k = 1; k <= 12; k++) { const u = k / 12; RL.push([L[0] + (R[0] - L[0]) * u, L[1] + (R[1] - L[1]) * u]); RT.push(5 + 3 * u); RZ.push(k < 4 ? 0.6 * Math.sin(k / 4 * Math.PI) : 0); }
+    hostMessage({ v: 1, t: 'shot', golfer: 0, hole: holeN, stroke: 1, club: 'driver', from: b0, flight: F, flightT: FT, bounces: [L, RL[3]], roll: RL, rollT: RT, rollZ: RZ, rest: R, restLie: 'fairway', holed: false, penalty: 0, at: 600 });
+    let flew = 0, maxH = 0, cam = 0, k = 0;
+    for (; k < 1500 && (HP.play || ball.state !== 0); k++) { step(1, 0); if (ball.state === 1) flew++; if (bcam) cam++; const h = ball.z - groundH(ball.x, ball.y); if (h > maxH) maxH = h; if (snapAt && k === 150) snapAt('host-flight'); }
+    info.flew = flew; info.maxH = +maxH.toFixed(1); info.steps = k; info.rest = [+(ball.x / S).toFixed(2), +(ball.y / S).toFixed(2)]; info.want = [+R[0].toFixed(2), +R[1].toFixed(2)];
+    if (HP.play || ball.state !== 0) errs.push('host play: the shot never came to rest');
+    if (near([ball.x / S, ball.y / S], R) > 1e-6) errs.push('host play: the ball did not stop at the rest of the shot');
+    if (flew < 200 || maxH < 25 || !cam) errs.push('host play: the shot was not flown with the ball camera (' + flew + ' steps, ' + maxH.toFixed(1) + ' m high)');
+    if (strokes !== 1) errs.push('host play: the stroke was not counted');
+    hostMessage(turn(R, 2, 40));
+    if (near([ball.x / S, ball.y / S], R) > 1e-6 || strokes !== 1 || hostBusy()) errs.push('host play: the next turn is not from the rest');
+    if (snapAt) { step(60, 0); jumpToBall(); step(30, 0); snapAt('host-rest'); }
+    return { errs, info };
+  }
+`;
 // the scene library for --shot: it runs in the game's own scope
 const SHOT_LIB = String.raw`
+${HOST_PLAY}
   const out = { names: [], frames: [], info: [] };
   const idle = () => { for (const c of Object.keys(keys)) keys[c] = false; mouse.down = false; charging = false; };
   genBudget = 1e9; spriteMax = 999;
@@ -66,7 +115,7 @@ const SHOT_LIB = String.raw`
   const find = (test, cx, cy, rad) => { for (let r = 0; r < rad; r += 1.5) for (let a = 0; a < 6.283; a += 1.5 / Math.max(r, 1.5)) { const x = cx + Math.cos(a) * r, y = cy + Math.sin(a) * r; if (test(x, y)) return [x, y]; } return null; };
   const mid = pathAt(0.5);
   const SC = {
-    host: () => { hostMessage(hostMsg()); idle(); snap('host'); },   // (T415: Woodhill handed over by message, hole 1 from its tee)
+    host: () => { hostMessage(hostMsg()); idle(); snap('host'); const r = hostPlayRun(snap); out.info.push({ hostPlay: r.info, errors: r.errs }); },   // (T418: then a turn, a strike and a canned shot)   // (T415: Woodhill handed over by message, hole 1 from its tee)
     tee() { idle(); frames(20); snap('tee'); },
     aim() { idle(); newHole(holeN, hole.tee.x, hole.tee.y); frames(20); player.x = ball.x - 0.3; player.y = ball.y + 0.6; mouse.x = VW / 2 + 60; mouse.y = VH / 2 - 150; frames(6); snap('aim'); mouse.down = true; frames(40); snap('aim-charge'); mouse.down = false; frames(60); snap('ballcam-a'); frames(70); snap('ballcam-b'); for (let k = 0; k < 900 && ball.state !== 0; k++) frames(1); frames(20); snap('ballcam-end'); frames(60); snap('aim-after'); },
     stuck() { // can the golfer be trapped? On every steep point found near the hole (and its flatter neighbours), count the points from which no step in any of 16 directions is allowed
@@ -271,7 +320,7 @@ try {
     console.log(JSON.stringify({ shots: r.names.map((n) => shotBase + '-' + n + '.png'), info: r.info }));
     process.exit(0);
   }
-  const r = run(code + '\n;' + `(() => {
+  const r = run(code + '\n;' + HOST_PLAY + '\n;' + `(() => {
     const res = { errors: [] };
     const t = () => performance.now();
     // timings from cold: a tile, its light, a chunk
@@ -322,6 +371,8 @@ try {
       if (holeN !== 1 || lie !== M_TEE) res.errors.push('host: hole 1 has no tee under the golfer (' + MAT_NAME[lie] + ')');
       if (!(feats && feats.paths && feats.paths.length)) res.errors.push('host: the features were not applied');
       let lit = 0; for (let i = 0; i < VW * VH; i += 7) if (px[i * 4] + px[i * 4 + 1] + px[i * 4 + 2] > 30) lit++; if (lit < VW * VH / 7 * 0.5) res.errors.push('host: the picture is mostly black'); }
+    // host play (T418 to T420): the turn, the bag, the ring, one input and a wait, the host's shot played back to its rest
+    { const hp = hostPlayRun(null); res.hostPlay = hp.info; res.errors.push(...hp.errs); }
     return res;
   })()`);
   const lum = r.lum; delete r.lum;

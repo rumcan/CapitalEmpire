@@ -48,7 +48,7 @@ export function clubChoice(sk: ShotSkill, club: Club, lie: Lie, env: ShotEnv | n
   const putter = club === 'putter', mctx = momentOf(lie, club, last), kit = kitOf(sk, club, mctx);
   const carryM = putter ? 0 : carryFor(sk, club, mctx);
   const kind = env?.lie ?? kindOfLie(lie), lx = LIE_FX[kind];
-  const playsM = putter ? 0 : previewShot(club, carryM, ux, uy, env, null, kit.wind, kit.slope).carryM;
+  const pv = putter ? null : previewShot(club, carryM, ux, uy, env, null, kit.wind, kit.slope), playsM = pv ? pv.carryM : 0;
   // (hitShot's scatter, one standard deviation: of the distance a share of the carry, of the direction degrees; both times the spread of the lie, the slope
   // and his kit. The swing meter's spread and a picked shape come on top at the strike; the sand wedge's splash from a greenside bunker (1.6) is left out)
   const sl = slopeEffect(env?.slope && kit.slope !== 1 ? { up: env.slope.up * kit.slope, across: env.slope.across * kit.slope } : env?.slope);
@@ -58,7 +58,7 @@ export function clubChoice(sk: ShotSkill, club: Club, lie: Lie, env: ShotEnv | n
   const longM = putter ? 0 : 2 * (SHOT_SCATTER.dist0 + SHOT_SCATTER.distK * un) * playsM * spread;
   const mishitP = putter ? 0 : Math.max(0, MISHIT.base + MISHIT.skillK * un * un + (env ? lx.wild : 0) + kit.mishit);
   return {
-    club, carryM, scatterM, kit, playsM, longM, mishitP,
+    club, carryM, scatterM, kit, playsM, longM, mishitP, sideM: pv ? pv.sideM : 0,
     sweet: sweetSpot(kit.skill, 0, kit.sweet, kit.speed), speed: markerSpeed(kit.skill, kit.speed),
     loftDeg: LOFT[club], launch: putter ? '' : launchWord(LOFT[club]),
     run: putter ? 1 : CLUB_RUN[club] * kit.roll / (CLUB_BASE[club]?.roll ?? 1), // (bag.ts bagView's run: what a shot with conditions rolls by)

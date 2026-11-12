@@ -141,6 +141,7 @@ function jumpToBall() {   // J: the golfer is set down beside his ball, facing t
 }
 function nearBall() { return ball.state === 0 && Math.hypot(player.x - ball.x, player.y - ball.y) < 1.5; }
 function pickClub() {
+  if (HP) return;                                                      // (host mode: the host suggests the club)
   const d = Math.hypot(hole.pin.x - ball.x, hole.pin.y - ball.y) / (clubK() * clubK()), m = matAt(ball.x, ball.y);   // (measured in the clubs' own reach)
   club = m === M_GREEN ? 3 : m === M_SAND ? 2 : d > 62 ? 0 : d > 26 ? 1 : d > 9 || m !== M_CUT ? 2 : 3;
 }
@@ -193,7 +194,7 @@ function updatePlayer() {
     return;
   }
   const near = nearBall();
-  if (near && ball.state === 0) {
+  if (near && ball.state === 0 && !(HP && hostBusy())) {               // (host mode: not while the course decides, or plays back, a shot)
     screenToGround(mouse.x, mouse.y, GP);
     let dx = GP.x - ball.x, dy = GP.y - ball.y; const l = Math.hypot(dx, dy);
     if (l > 0.3) { aim.dx = dx / l; aim.dy = dy / l; }
@@ -209,7 +210,7 @@ function updatePlayer() {
     p.x += (ball.x - fx * 0.64 - p.x) * 0.3; p.y += (ball.y - fy * 0.64 - p.y) * 0.3;
     p.th = Math.atan2(fy, fx); p.fa = Math.round(p.th / 6.2832 * 16 + 16) % 16;
     p.al = -2 * power; p.moving = false;
-    if (!mouse.down) { charging = false; p.swing = 0; heartT = 0; if (club !== 3) { breathT = 18; sndBreath(); } }
+    if (!mouse.down) { charging = false; p.swing = 0; heartT = 0; if (!puttNow()) { breathT = 18; sndBreath(); } }
     return;
   }
   if (ball.state === 1 || ball.state === 2 || ball.state === 3) { p.moving = false; return; }
@@ -227,6 +228,7 @@ function updatePlayer() {
   if (p.moving) p.walk += keys.ShiftLeft && fwd > 0 ? 0.3 : 0.2;
 }
 function strike() {
+  if (HP) { hostStrike(); return; }                                   // (host mode: the host decides the shot: hostStrike sends the input)
   const c = CLUBS[club], m = matAt(ball.x, ball.y), sp = c.v * clubK() * (0.22 + 0.78 * power) * (club === 2 && m === M_SAND ? 0.85 : club === 3 ? 1 : LIEPOW[m]);
   ball.lx = ball.x; ball.ly = ball.y; strokes++; total++;
   ball.vx = aim.dx * sp * Math.cos(c.loft); ball.vy = aim.dy * sp * Math.cos(c.loft); ball.vz = sp * Math.sin(c.loft); prewarmShot();
@@ -243,6 +245,7 @@ function ballRest() {
   ball.state = 0; ball.vx = ball.vy = ball.vz = 0; ball.z = groundH(ball.x, ball.y); autoClub = true;
 }
 function updateBall() {
+  if (HP) { hostTick(); return; }                                     // (host mode: the ball only plays back the host's shot)
   const b = ball, dt = (slowT > 0 ? 0.3 : 1) / 60;
   if (slowT > 0) slowT--;
   if (b.state === 0 || b.state === 3) return;
@@ -286,7 +289,7 @@ function drown() {
 // a gimme: the ball lies still on the green within a short putt of the hole; the putt is given (one stroke) and the hole is done
 const GIMME = 1.5;
 function canGimme() { return ball.state === 0 && !bcam && !doneT && strokes > 0 && Math.hypot(ball.x - hole.pin.x, ball.y - hole.pin.y) < GIMME && matAt(ball.x, ball.y) === M_GREEN; }
-function gimme() { if (!canGimme()) return; strokes++; total++; holed(); }
+function gimme() { if (HP || !canGimme()) return; strokes++; total++; holed(); }
 function holed() {
   ball.state = 3; ball.x = hole.pin.x; ball.y = hole.pin.y; doneT = 1;
   const d = strokes - hole.par, name = strokes === 1 ? 'Hole in one!' : d <= -2 ? 'Eagle!' : d === -1 ? 'Birdie!' : d === 0 ? 'Par' : d === 1 ? 'Bogey' : '+' + d;
@@ -294,6 +297,7 @@ function holed() {
   for (let k = 0; k < 120; k++) addParticle(k & 1 ? P_SPARK : P_EMBER, hole.pin.x, hole.pin.y, ball.z + 0.1, (rnd() - 0.5) * 3, (rnd() - 0.5) * 3, 2 + rnd() * 5, 40 + rndi(70), rndi(4));
 }
 function dropBall() {
+  if (HP) { say('The course decides where the ball lies', 120); return; }
   if (ball.state !== 0 || player.swing >= 0) return;
   ball.x = player.x + 0.5; ball.y = player.y + 0.35; ballRest(); strokes++; total++; say('Dropped: one stroke', 160);
 }
