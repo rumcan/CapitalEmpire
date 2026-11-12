@@ -223,6 +223,7 @@ import { Match3p } from './golf/play/match3p'; // T428: a money match in the vie
 import { readShare, shareCourseMsg, shareOf, shareText, shareView, type CourseShare } from './golf/play/share3p'; // T434: shared courses
 import { ghostActor, ghostOf, ghostShots, ghostText, readGhost, replayGhost, type GhostFile } from './golf/play/ghost3p'; // T433: ghost rounds
 import { fairRows, kitFor, levelHcp, LEVEL_PROFILE, type KitMode } from './golf/play/fair3p'; // T436: own kit or level kit
+import { biomeOf, courseTypeOf, playerDress } from './golf/play/look3p'; // T437: one look
 import type { Frame3p } from './golf/play/export3p';
 import { putterFitName } from './golf/play/bag';
 import { BallRoll, FX_SAND, FX_SPLASH, ballRoll, type HeightAt } from './golf/play/roll';
@@ -10048,7 +10049,8 @@ export class Game {
    *  Null without a course */
   async course3pMsg(n: number): Promise<CourseMsg | null> {
     const sh = this.shared3p;
-    if (sh) { this.view3pFrame = sh.frame; this.course3pShare = sh.share; return shareCourseMsg(sh.share, sh.view, n); }   // (T434: a shared course)
+    const golfer = playerDress(GOLFER_PEOPLE[this.youArt()]?.id, this.golf?.player?.sex ?? 'm');   // (T437: the golfer in the player card's clothes)
+    if (sh) { this.view3pFrame = sh.frame; this.course3pShare = sh.share; return { ...(await shareCourseMsg(sh.share, sh.view, n)), golfer }; }   // (T434: a shared course)
     const g = this.golf; if (!g) return null;
     const name = this.titleName()?.name ?? 'Your course', id = 'ce-' + (name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'course');
     const inp = export3pInputOf(this, name); if (!inp) return null;
@@ -10063,8 +10065,10 @@ export class Game {
       ? [Math.min(...pts.map(p => p.x)), Math.min(...pts.map(p => p.y)), Math.max(...pts.map(p => p.x)), Math.max(...pts.map(p => p.y))] : undefined;
     const features = exportFeatures3p(gatherFeatures3p({ course: id, segs: this.net.segs, bizDefs: this.bizDefs, structures: g.structures ?? [], lots: this.estateRt?.lots ?? [],
       props: this.props, library: LIBRARY, ...(box ? { box } : {}) }), { x: f.cx, y: f.cy });
-    this.course3pShare = shareOf(file, features, { name, biome: 'parkland', type: 'private', seed: seedOf(name) });   // (T433, T434: what a ghost or a shared course file holds)
-    return { v: 1, t: 'course', course: course as unknown as Record<string, unknown>, features, biome: 'parkland', type: 'private', seed: seedOf(name), scale: 1, hole: n };
+    // T437: the biome from the map's setting and the month, the course type from how the course is kept (the crew's condition; a tournament day: Tour)
+    const st = g.crew?.staff, biome = biomeOf(this.farmMonth()), type = courseTypeOf({ condition: st ? courseCondition(st) : 100, tournament: this.traffic.round.stage !== 'free' || !!this.eventToday() });
+    this.course3pShare = shareOf(file, features, { name, biome, type, seed: seedOf(name) });   // (T433, T434: what a ghost or a shared course file holds)
+    return { v: 1, t: 'course', course: course as unknown as Record<string, unknown>, features, biome, type, seed: seedOf(name), scale: 1, hole: n, golfer };
   }
   // ---------- T418: the owner's play in the view from behind the golfer (golf/play/play3p.ts: LiveGroup decides every stroke; the view shows them) ----------
   /** the frame the last course message was made in (course3pMsg) */

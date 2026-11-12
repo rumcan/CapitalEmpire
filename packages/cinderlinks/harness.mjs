@@ -5,6 +5,8 @@
 import fs from 'node:fs';
 import zlib from 'node:zlib';
 import { convert } from './tools/course-import.mjs';
+import path from 'node:path';
+import { pathToFileURL, fileURLToPath } from 'node:url';
 
 const argv = process.argv.slice(2);
 const optOf = (name, def) => { const k = argv.indexOf(name); return k >= 0 && k + 1 < argv.length ? argv[k + 1] : def; };
@@ -201,6 +203,58 @@ const HOST_PLAY = String.raw`
     msg.course.lk = { x0, y0, step: 2, w, h, r }; msg.course.id = 'woodhill-lies'; hostMessage(msg);
     const got = pts.map((q) => MAT_NAME[matAt(q[0], q[1])]); info.lies = got;
     if (!(got[0] === MAT_NAME[M_ROUGH] || got[0] === MAT_NAME[M_FOREST]) || got[1] !== MAT_NAME[M_DEEP] || got[2] !== MAT_NAME[M_CUT]) errs.push('host lies: the grounds do not follow the host (' + got.join(', ') + ')');
+    return { errs, info };
+  }
+`;
+// T439: the scripted host: CapitalEmpire's own model (src/game/golf/play/hostscript3p.ts: a painted course exported as the game exports it, played through
+// Play3p), bundled with esbuild into output/ and loaded here, so the view below is fed by the real host
+async function hostScript() {
+  const HERE = path.dirname(fileURLToPath(import.meta.url)), root = path.join(HERE, '..', '..'), outfile = path.join(root, 'output', 'cinder-hostscript.mjs');
+  const esb = await import('esbuild');
+  await esb.build({ entryPoints: [path.join(root, 'src', 'game', 'golf', 'play', 'hostscript3p.ts')], bundle: true, platform: 'node', format: 'esm', outfile,
+    loader: { '.webp': 'empty', '.png': 'empty', '.jpg': 'empty' }, logLevel: 'error' });
+  const m = await import(pathToFileURL(outfile).href + '?t=' + Date.now());
+  return m.scriptedHost();
+}
+// T439: the view plays the scripted host's three holes: each turn the golfer swings as a player would (hold, let go, strike), the view's input goes to the
+// host, its answers come back; every ball the view leaves at rest must be where the model put it, and every turn's ball where the stroke before left it
+const HOST_SCRIPT = String.raw`
+  function scriptRun(S, snapAt) {
+    const errs = [], info = { strokes: 0, holes: 0, worstM: 0, turns: 0 }, near = (a, b) => Math.hypot(a[0] - b[0], a[1] - b[1]);
+    const sent = [], send0 = hostSend; hostSend = (m) => { sent.push(Object.assign({ v: 1 }, m)); send0(m); };
+    let seen = null; const turn0 = hostTurn, end0 = hostHoleEnd, look = () => { if (!seen) seen = { x: ball.x, y: ball.y, state: ball.state }; };   // (the ball as the stroke left it, before the next turn or the hole's end moves it on)
+    hostTurn = (m) => { look(); turn0(m); }; hostHoleEnd = (m) => { look(); end0(m); };
+    let ends = 0; const feed = (ms) => { for (const m of ms) { if (m.t === 'holeEnd') ends++; hostMessage(m); } };
+    const step = (n) => { for (let k = 0; k < n; k++) tickGame(); };
+    try {
+      for (const c of Object.keys(keys)) keys[c] = false; mouse.down = false; charging = false;
+      hostMessage(S.courseMsg); if (!course || !hostLast || hostLast.t !== 'loaded') { errs.push('script: the course did not load'); return { errs, info }; }
+      feed(S.start());
+      for (let turn = 0; turn < 60; turn++) {
+        for (let k = 0; k < 4000 && HP && (HP.play || HP.q.length); k++) step(1);
+        if (!HP || !HP.turn || HP.over) break;
+        info.turns++;
+        const st0 = S.strokes(), Sc = course.S;
+        if (near([ball.x / Sc, ball.y / Sc], HP.turn.ball) > 0.05) errs.push('script: the ball is not where turn ' + turn + ' says');
+        if (st0.length) { const prev = st0[st0.length - 1]; if (!prev.holed && near(HP.turn.ball, prev.next) > 0.05) errs.push('script: turn ' + turn + ' does not start where the stroke before left the ball'); }
+        for (let k = 0; k < 400 && (bcam || player.swing >= 0); k++) step(1);   // (the ball camera lingers on a ball at rest a moment: the jump waits for it)
+        jumpToBall(); mouse.x = VW / 2; mouse.y = VH / 2 - 100; step(6);
+        sent.length = 0;
+        mouse.down = true; step(45); mouse.down = false; step(40); mouse.down = true; step(1); mouse.down = false;
+        let inp = null; for (let k = 0; k < 240 && !inp; k++) { step(1); inp = sent.find((m) => m.t === 'input') || null; }
+        if (!inp) { errs.push('script: no input from the view at turn ' + turn + ' ' + JSON.stringify({ wait: HP.wait, sw: !!HP.sw, swing: player.swing, near: nearBall(), busy: hostBusy(), bcam, cart: cart.on, club: hostClub() && hostClub().club, clubs: HP.clubs.length, sent: sent.map((m) => m.t), d: Math.hypot(player.x - ball.x, player.y - ball.y) })); break; }
+        seen = null; feed(S.input(inp.input));
+        for (let k = 0; k < 4000 && HP && HP.play; k++) { step(1); if (snapAt && turn === 0 && k === 120) snapAt('script-flight'); }
+        const st = S.strokes(), sh = st[st.length - 1]; if (!sh) { errs.push('script: the host played no stroke at turn ' + turn); break; }
+        const at = seen || { x: ball.x, y: ball.y, state: ball.state }, d = sh.holed ? 0 : near([at.x / course.S, at.y / course.S], sh.rest); if (d > info.worstM) info.worstM = d;
+        if (d > 0.05) errs.push('script: stroke ' + st.length + ' (hole ' + sh.hole + ') rests ' + d.toFixed(2) + ' m from the model');
+        if (sh.holed && at.state !== 3) errs.push('script: stroke ' + st.length + ' went in for the model, not in the view');
+      }
+      for (let k = 0; k < 4000 && HP && (HP.play || HP.q.length); k++) step(1);
+      info.strokes = S.strokes().length; info.holes = ends; info.worstM = +info.worstM.toFixed(3);
+      if (ends !== 3) errs.push('script: ' + ends + ' of 3 holes played out');
+      if (snapAt) snapAt('script-end');
+    } finally { hostSend = send0; hostTurn = turn0; hostHoleEnd = end0; }
     return { errs, info };
   }
 `;
@@ -496,6 +550,9 @@ ${HOST_PLAY}
       let drawn = 0; for (const o of dlist) if (o.k === K_ACTOR) drawn++;
       out.info.push({ teesheet: { actors: A.length, inView: drawn, renderMs: +withMs.toFixed(2), renderNoActorsMs: +without.toFixed(2), actorMs: +act.toFixed(3), fps: +(1000 / withMs).toFixed(1) } });
       hostMessage({ v: 1, t: 'actors', at: 600, actors: [] }); ACT_MAKE = 3; },
+    script: () => { idle(); const r = scriptRun(SCRIPT, snap); out.info.push({ script: r.info, errors: r.errs }); },   // (T439: the scripted host's three holes)
+    look: () => { const hm = hostMsg(); hm.golfer = { shirt: '#c4a057', trousers: '#343d56', cap: '#f6f6f2', skin: '#e2b48a', hair: '#47291a', build: 1, sex: 'm' }; hostMessage(hm); idle(); snap('look');   // (T437: the golfer in a player card's clothes: golf_pro_m2's)
+      out.info.push({ look: { dressed: playerDressKey !== '', shirt: GMAT[M_POLO] !== CAPR, trousers: GMAT[M_TROU] !== TROW } }); },
     actors() { // T424: a three-ball on the fairway, a caddie and two carts beside it, from an 'actors' message; then the swing; then forty actors timed
       idle(); newHole(holeN, hole.tee.x, hole.tee.y); frames(4); ACT_MAKE = 999;
       const q = pathAt(0.34), q0 = pathAt(0.26), L = Math.hypot(q[0] - q0[0], q[1] - q0[1]) || 1, ux = (q[0] - q0[0]) / L, uy = (q[1] - q0[1]) / L, rx = -uy, ry = ux;
@@ -558,12 +615,14 @@ try {
   out.bytes = code.length;
   if (shotBase) {
     const names = optOf('--scenes', 'tee,fair,green').split(','), scale = +optOf('--scale', '1');
-    const r = run(code + '\n;(() => {const NAMES = ' + JSON.stringify(names) + ';\n' + SHOT_LIB + '})()');
+    if (names.includes('script')) globalThis.SCRIPT = await hostScript();   // (T439)
+    const r = run(code + '\n;' + HOST_SCRIPT + '\n;(() => {const NAMES = ' + JSON.stringify(names) + ';\n' + SHOT_LIB + '})()');
     r.frames.forEach((f, k) => fs.writeFileSync(shotBase + '-' + r.names[k] + '.png', encodePng(Math.round(120 * RSH) * 8, Math.round(540 * RSH), f, scale)));
     console.log(JSON.stringify({ shots: r.names.map((n) => shotBase + '-' + n + '.png'), info: r.info }));
     process.exit(0);
   }
-  const r = run(code + '\n;' + HOST_PLAY + '\n;' + `(() => {
+  globalThis.SCRIPT = await hostScript();   // (T439: the scripted host, built from CapitalEmpire's model)
+  const r = run(code + '\n;' + HOST_PLAY + '\n;' + HOST_SCRIPT + '\n;' + `(() => {
     const res = { errors: [] };
     const t = () => performance.now();
     // timings from cold: a tile, its light, a chunk
@@ -626,6 +685,8 @@ try {
     { const hc = hostCraftRun(); res.hostCraft = hc.info; res.errors.push(...hc.errs); }
     { const hg = hostGreenRun(); res.hostGreen = hg.info; res.errors.push(...hg.errs); }
     { const hl = hostLieRun(); res.hostLies = hl.info; res.errors.push(...hl.errs); }
+    // T439: the scripted host's three holes, every rest against the model
+    { const sr = scriptRun(SCRIPT, null); res.script = sr.info; res.errors.push(...sr.errs); }   // (last: it loads a course of its own)
     return res;
   })()`);
   const lum = r.lum; delete r.lum;
