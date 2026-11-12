@@ -37,6 +37,7 @@ export function View3pPanel({ game }: { game: Game }) {
         if (m.t === 'loaded') { setState('loaded'); relay(game.start3p()); }
         else if (m.t === 'input') relay(game.input3p(m.input));
         else if (m.t === 'gimme') relay(game.gimme3p(m.holeIdx, m.stroke));
+        else if (m.t === 'holeDone') relay(game.holeDone3p(m.holeIdx));
         else if (m.t === 'aim') { const p = game.preview3p(m.key, m.input); if (p) v.send(p); }
         else if (m.t === 'error') setState(m.why);
       } catch (err) { console.warn('[view3p] the play could not go on', err); }

@@ -243,7 +243,10 @@ import { CART_REACH, CART_TILES, COMPETITION_RULES, isCompetition, addressOf, ca
 import { missingParts, missingWhy, practicePick, realHoleCount, type PracticeScope } from './golf/play/practice';
 import { CLUB_EVENTS, MODE_OF, announceDue, entryWhy, eventBoard, eventDay, eventDue, eventOfMode, eventResult, eventWhen, fieldEntries, fieldIds, freshEvents, isEntered, resultLine, withTitle, type BoardEntry, type ClubEventsSave, type EventId, type EventResult } from './golf/clubevents';
 import { BOOK_LEAD, LESSON_BONUS, PRESSURE, bookRound, gearOf, handicapOf, bookedGolfer, clock, entryText, freeTee, gameSkills, hcpText, playedRound, playerCardView, practise, practiceWhy, rebook, startProfile, toParWord, withBag, withYou, youRangeView, type Booking, type Lesson, type PlayerCardView, type PlayerProfile, type PracticeCtx, type PracticeKind, type RoundState, type YouRangeView } from './golf/player';
-import { gearFor, withCards } from './golf/player'; // T336 (#962): your cards
+import { gearFor, withCards, gainOf } from './golf/player'; // T336 (#962): your cards
+import { yoursDriver } from './golf/play/yours3p'; // T430: your round in the view from behind the golfer
+import { PLAY_GAIN, featOf, skillOfClub } from './golf/play/feats'; // T431
+import { earnFromFeat } from './golf/cards/earning';
 import { practiceGear } from './golf/rangegear'; // T386 part 3: the range's gear for your practice
 import { MECH_IDS, PUTT_V2, greenRead, hasMech, laserLines, laserReport, type MechId, type ModCtx } from './golf/play';
 import { DEFAULT_RULES, GIMME_RULES, hotNerve, scrambleLeft } from './golf/play/yours';
@@ -9870,6 +9873,7 @@ export class Game {
     this.lastShot = shotReport(shot, swing ? this.swingFx(sk, i.club, swing, this.shotCtx()) : null, this.shotNote(s.shape, env, i.club, shot, kitOf(sk, i.club).wind));
     this.toast(this.lastShot.text, 'info');
     this.shot = null; this.setYourRound(round);
+    this.yourProgress(shot, r, round); // (T431: the stroke's practice and a feat's card pull, as in the view from behind)
     if (this.you) { this.you.swing = 0; this.you.putt = shot.club === 'putter'; } // (the drive clip plays once; T212: a putt, the putt clip)
     // T319: a putt rolls with the green's break and ends at the cup as the model says (in, lipped out, or shaving the rim); a full shot bends from
     // its aim to where it lands, and leaves a tracer; T318's spin: a spin back's check, topspin's run-out
@@ -10039,7 +10043,7 @@ export class Game {
   /** the view from behind the golfer closed (its Esc, the page's Esc, ✕): the manager view comes back and the sim runs at the speed it had */
   close3p() {
     if (this.view3pHole === null) return;
-    this.play3p = null; this.shared3p = null;   // (T434: a shared course is played only while the view is open)
+    this.play3p = null; this.shared3p = null; this.view3pRound = false;   // (T434: a shared course is played only while the view is open)
     this.view3pHole = null; this.lastFrame = 0; this.last = performance.now();
     if (this.view3pSpeed && !this.speed) this.setSpeed(this.view3pSpeed);
     this.emit();
@@ -10099,7 +10103,16 @@ export class Game {
       return this.play3p.start();
     }
     const idx = v.holes.findIndex(h => h.n === n); if (idx < 0) return [];
-    const p = this.playerNow(), mode = this.fair3p, sk = kitFor(mode, this.yourSkills());   // (T436: his own kit, or the level kit)
+    const p = this.playerNow(), yr = this.view3pRound && !sh ? this.yourRound() : null;
+    if (yr && !yr.match && !yr.over) {
+      // T430: your round in the view: the game's own round (play/yours3p.ts), its strokes saved, its end recorded, its own gimme rule
+      const sk = this.yourSkills(), earn = earned({ skills: p?.skills ?? {}, bag: p?.bag ?? null, mech: MECH_IDS.filter(id => hasMech(sk, id)) });
+      const driver = yoursDriver(v, sk, this.seed, { get: () => this.yourRound(), set: r => this.setYourRound(r), played: (s, b, a, up) => this.yourPlayed3p(s, b, a, up), next: () => this.yourNextHole() });
+      this.play3p = new Play3p({ view: v, holes: [idx], skills: sk, earned: earn, gimmeM: gimmeM(yr), driver, sex: p?.sex ?? 'm', seed: this.seed, frame: f,
+        height: this.ballHeight, wind: () => this.windNow(), fit: putterFitName(p?.bag), gust: () => { const w = this.worldWind(); return w ? windView(this.windNow(), w, 1, 0).peak : null; } });
+      return this.play3p.start();
+    }
+    const mode = this.fair3p, sk = kitFor(mode, this.yourSkills());   // (T436: his own kit, or the level kit)
     // T443: what he has earned: his card's skills, his clubs' levels, his cards' mechanics (golf/play/unlocks.ts); the level kit has the level golfer's, no cards
     const earn = mode === 'level' ? earned({ skills: LEVEL_PROFILE, bag: null, mech: [] }) : earned({ skills: p?.skills ?? {}, bag: p?.bag ?? null, mech: MECH_IDS.filter(id => hasMech(sk, id)) });
     const seed3p = (this.seed ^ Math.imul(n, 7919) ^ Math.imul(this.play3pN + 1, 104729)) | 0, ghost = this.ghostOpts3p(v, [idx]);   // (T433: a loaded ghost of this hole plays alongside)
@@ -10174,6 +10187,42 @@ export class Game {
   /** T441, T442: the model's luckless shot for what the view has picked (its aim marker), or null with no play */
   /** T423: the view's gimme, if the round's rule allows it */
   gimme3p(holeIdx: number, stroke: number): HostMsg[] { return this.play3p ? this.play3p.gimme(holeIdx, stroke) : []; }
+  /** T430: the view has seen hole index i out: your round goes on to its next hole (its turn), or, the round over, ends through the game's own round end
+   *  (your card into your rounds and handicap, an event's result: yourRoundEnd) */
+  holeDone3p(i: number): HostMsg[] {
+    const out = this.play3p ? this.play3p.holeDone(i) : [], r = this.view3pRound ? this.yourRound() : null;
+    if (r && r.over) this.yourRoundEnd();
+    return out;
+  }
+  /** T430: the view opens on your round in progress (the round bar's button): its hole, from where your ball lies (T432: a round loaded from a save too).
+   *  A money match opens as T428 plays it (Match3p) */
+  open3pRound() {
+    const r = this.yourRound(), v = this.yrView(); if (!r || !v) { this.toast('No round in progress', 'warn'); return; }
+    if (r.over) { this.toast('Your round is over', 'info'); return; }
+    if (r.holed) this.yourNextHole();
+    const now = this.yourRound(), h = now ? holeOf(v, rowOf(now).i) : null; if (!now || !h) return;
+    this.yrCard = false; this.shot = null; this.view3pRound = !now.match; this.open3p(h.n);   // (a money match: start3p plays it as T428's Match3p)
+    if (this.view3pHole === null) this.view3pRound = false;
+  }
+  /** whether the open view plays your round (else the free hole) */
+  private view3pRound = false;
+  /** T430: a stroke of your round played in the view: the shot's report, its progress (T431), and the hole's end as the top view has it */
+  private yourPlayed3p(shot: import('./golf/play/types').Shot, before: YourRound, after: YourRound, up: boolean) {
+    this.lastShot = shotReport(shot, null); this.toast(this.lastShot.text, 'info');
+    this.yourProgress(shot, before, after);
+    if (after.holed) this.youHoledOut(rowOf(after), up);
+    this.emit();
+  }
+  /** T431: what a stroke of your recorded round (not a practice round) earns, in either view: a little practice for the part of the game it used
+   *  (play/feats.ts PLAY_GAIN, through player.ts gainOf), and a feat's card pull once a round (an ace, a bunker hole-out, a chip-in, a long drive) */
+  private yourProgress(shot: import('./golf/play/types').Shot, before: YourRound, after: YourRound) {
+    if (after.practice) return;
+    const p = this.playerNow(); if (!p) return;
+    const k = skillOfClub(shot.club), gain = gainOf(p.skills[k], PLAY_GAIN);
+    if (gain > 0) this.setPlayer({ ...p, skills: { ...p.skills, [k]: Math.min(100, p.skills[k] + gain) } });
+    const f = featOf(shot, before.lie), r = this.yourRound();
+    if (f && r && !(r.feats ?? []).includes(f)) { this.setYourRound({ ...r, feats: [...(r.feats ?? []), f] }); this.grantPull(earnFromFeat(f)); }
+  }
   preview3p(key: number, input: ViewInput): HostMsg | null { return this.play3p ? this.play3p.preview(key, input) : null; }
   /** T429: the galleries for the view (gallery3p.ts): each spot's spectators as the City has them, each fan where the manager view stands or seats him; [] with
    *  no course frame yet */

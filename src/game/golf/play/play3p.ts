@@ -9,7 +9,7 @@
 // An input that is not for the turn in hand (an old one, sent twice) is answered with the turn again, so the view is never left waiting.
 //
 // Positions cross in the view's frame (protocol3p.ts toView / fromView). Pure TS, no DOM.
-import type { CourseView, Golfer, Group, Lie, Pt, RoundPlan, Sex, Shot } from './types';
+import type { CourseView, Golfer, Group, Lie, PlayHole, Pt, RoundPlan, Sex, Shot } from './types';
 import type { TeeKind } from '../types';
 import { LiveGroup, MODEL_V, shotOutcome, type OwnerInput, type OwnerTurn } from './live';
 import { shapeEffect } from './shape';
@@ -70,6 +70,49 @@ export const BOARD_ROWS = 8;
 /** the owner's golfer in a session: id 0, alone in his group */
 export const OWNER_3P = 0;
 
+/** T430: what a session plays on: the round the turns come from and the strokes go to. Two kinds: his live group on a free hole (liveDriver, LiveGroup)
+ *  and his own round in the game (yours3p.ts, play/yours.ts YourRound: recorded, saved with the game, ended through the game's own round end) */
+export interface RoundDriver {
+  /** the course the turns' hole indices point into */
+  readonly view: CourseView;
+  /** his golfer's id in the strokes */
+  readonly golfer: number;
+  /** every input played, in order */
+  readonly inputs: readonly OwnerInput[];
+  /** his turn now; null when the hole is over (holed, picked up) or the round is */
+  turn(): OwnerTurn | null;
+  /** plays his input through the one model (a gimme too: gim), with whatever the round keeps; the stroke */
+  play(input: OwnerInput): Shot;
+  /** every stroke so far (his, and anyone's in his group), to send the new ones */
+  shots(): readonly Shot[];
+  /** the hole index i as he plays it (his tee set's) */
+  hole(i: number): PlayHole;
+  /** his strokes on hole index i */
+  strokes(i: number): number;
+  /** whether hole index i is the round's last (the moment last of a card) */
+  isLast(i: number): boolean;
+  /** whether the round is over */
+  over(): boolean;
+  /** on to the next hole once the view has seen this one out (holeDone); absent: the next hole's turn comes by itself */
+  nextHole?(): void;
+}
+
+/** a driver over his live group in a round plan (T425: alone on a free hole, with company, or his real round attached): his turns from LiveGroup,
+ *  the plan's strokes; the round is over when he has no turn left */
+export function liveOn(plan: RoundPlan, view: CourseView, live: LiveGroup, me: number): RoundDriver {
+  let done = false;
+  return {
+    view, golfer: me, get inputs() { return live.inputs; },
+    turn() { const t = live.advance(); done = !t; return t; },
+    play: (input) => live.play(input),
+    shots: () => plan.shots,
+    hole: (i) => view.holes[i]!,
+    strokes: (i) => plan.strokes[me]?.[i] ?? plan.shots.filter(s => s.golfer === me && s.hole === i).reduce((a, s) => a + 1 + s.penalty, 0),
+    isLast: (i) => i === view.holes.length - 1,
+    over: () => done,
+  };
+}
+
 /** a course view of only the holes `idx` (in that order), reading the lie and its finer kind from the whole course */
 export function holesView(view: CourseView, idx: readonly number[]): CourseView {
   const holes = idx.map(i => { const h = view.holes[i]; if (!h) throw new Error(`play3p: no hole ${i}`); return h; });
@@ -79,9 +122,10 @@ export function holesView(view: CourseView, idx: readonly number[]): CourseView 
 
 /** one owner's play in the view: build it when the view has loaded the course, send start()'s messages, and input()'s for each input the view sends */
 export class Play3p {
+  /** the free hole's round plan (an empty one on his own round) */
   readonly plan: RoundPlan;
   readonly view: CourseView;
-  private readonly live: LiveGroup;
+  private readonly drv: RoundDriver;
   private readonly centre: Pt;
   /** the strokes already sent */
   private readonly sent = new Set<Shot>();
@@ -101,10 +145,18 @@ export class Play3p {
   private green: Green3p | null = null;
   private get earn(): Earned { return this.o.earned ?? ALL_EARNED; }
 
-  constructor(private readonly o: Play3pOpts) {
+  /** o.driver: his own round (T430: the game's YourRound, yours3p.ts); absent: his live group (his real round with o.attach, else a fresh one) */
+  constructor(private readonly o: Play3pOpts & { driver?: RoundDriver }) {
     const at = o.attach;
+    if (o.driver) {   // (T430: his own round: no plan, no company; what was played before is not sent again)
+      this.drv = o.driver; this.view = o.driver.view; this.plan = { golfers: [], groups: [], shots: [], strokes: [], done: [] };
+      this.me = o.driver.golfer; this.centre = centreOf(o.frame); this.group = new Set([this.me]); this.carts = null;
+      for (const s of this.drv.shots()) this.sent.add(s);
+      return;
+    }
     if (at) {   // (T425: his real round: the day's plan, course and live group)
-      this.view = at.view; this.plan = at.plan; this.live = at.live; this.me = at.owner; this.centre = centreOf(o.frame);
+      this.view = at.view; this.plan = at.plan; this.me = at.owner; this.centre = centreOf(o.frame);
+      this.drv = liveOn(at.plan, at.view, at.live, at.owner);
       this.group = new Set(at.plan.groups[at.group]?.players ?? [at.owner]);
       for (const s of at.plan.shots) this.sent.add(s);
       this.carts = at.plan.golfers.some(g => g.cart !== undefined && !g.owner) ? new CartPlay(this.plan, this.view, o.paths ?? null, o.home ?? this.view.holes[0]!.tee, o.walk ?? null) : null;
@@ -120,7 +172,7 @@ export class Play3p {
     if (gi < 0) throw new Error('play3p: the owner is in no group of the tee sheet');
     if (co && co.golfers.some(g => g.id === OWNER_3P)) throw new Error('play3p: another golfer has the owner id');
     this.plan = playRound(this.view, golfers, groups, o.seed, { live: gi, ...(co ? { honour: true } : {}) });   // (T425: with company, the honour on the tee)
-    this.live = new LiveGroup(this.plan, this.view, gi, o.seed);
+    this.drv = liveOn(this.plan, this.view, new LiveGroup(this.plan, this.view, gi, o.seed), OWNER_3P);
     this.centre = centreOf(o.frame);
     this.group = new Set(groups[gi]!.players);
     this.carts = co && golfers.some(g => g.cart !== undefined && !g.owner)
@@ -130,7 +182,7 @@ export class Play3p {
   /** the turn in hand (null: none, the session is over) */
   get current(): OwnerTurn | null { return this.turn; }
   /** every input played, in order */
-  get inputs(): readonly OwnerInput[] { return this.live.inputs; }
+  get inputs(): readonly OwnerInput[] { return this.drv.inputs; }
 
   /** the messages that open the session: the strokes played before his first turn, then that turn (or holeEnd when there is none) */
   start(): HostMsg[] {
@@ -146,7 +198,7 @@ export class Play3p {
     const t = this.turn; if (!t || this.done) return [];
     if (vi.holeIdx !== t.holeIdx || vi.stroke !== t.stroke) return [this.turnMsg(t)];
     const input = this.owned(vi, t, true);
-    const mine = this.live.play(input);
+    const mine = this.drv.play(input);
     const out: HostMsg[] = [];
     this.next(out, { shot: mine, input }, t.holeIdx);
     return out;
@@ -158,7 +210,7 @@ export class Play3p {
     const t = this.turn, none: PreviewMsg = { v: 1, t: 'preview', key, shot: null, spread: 1 };
     if (!t || this.done || vi.club === 'putter' || vi.holeIdx !== t.holeIdx || vi.stroke !== t.stroke) return none;
     const input = this.owned(vi, t, false), { holeIdx: _h, stroke: _s, ...inp } = input; void _h; void _s;
-    const hole = this.view.holes[t.holeIdx]!, last = t.holeIdx === this.view.holes.length - 1;
+    const hole = this.drv.hole(t.holeIdx), last = this.drv.isLast(t.holeIdx);
     const o = shotOutcome(this.view, hole, t.ball, t.lie, this.o.skills, inp, () => 0.75, { last });
     const shot = { golfer: this.me, hole: t.holeIdx, stroke: t.stroke, t: t.t, from: { x: t.ball.x, y: t.ball.y }, to: o.to, club: vi.club, lie: o.lie, penalty: o.penalty, holed: o.holed, ...(o.landing ? { landing: o.landing } : {}) };
     const mctx = { lie: t.lie, tee: t.lie === 'tee', deck: vi.club === 'driver' && t.lie !== 'tee', last, follow: false }, kit = kitOf(this.o.skills, vi.club, mctx);
@@ -190,18 +242,27 @@ export class Play3p {
     const m = this.o.gimmeM ?? 0, onGreen = this.view.lieAt(t.ball.x, t.ball.y) === 'green';
     if (holeIdx !== t.holeIdx || stroke !== t.stroke || !onGreen || !(m > 0) || t.distM > m) return [this.turnMsg(t)];
     const input: OwnerInput = { holeIdx, stroke, club: 'putter', aim: { x: t.pin.x, y: t.pin.y }, power: 1, v: MODEL_V, gim: true };
-    const mine = this.live.play(input), out: HostMsg[] = [];
+    const mine = this.drv.play(input), out: HostMsg[] = [];
     this.next(out, { shot: mine, input }, t.holeIdx);
     return out;
   }
 
+  /** T430: the view has seen the hole out: on his own round, on to the next hole (its turn); nothing more once the round is over */
+  holeDone(holeIdx: number): HostMsg[] {
+    if (this.turn || !this.drv.nextHole || this.drv.over() || holeIdx !== this.lastHole) return this.turn ? [this.turnMsg(this.turn)] : [];
+    this.drv.nextHole();
+    const out: HostMsg[] = []; this.next(out, null, -1); return out;
+  }
+  /** the hole of the last turn (holeDone answers only for it) */
+  private lastHole = -1;
+
   /** runs the day to his next turn and writes what happened: the strokes not sent yet in time order (his own from his input), holeEnd when his hole
    *  changed or the round is over, then the turn */
   private next(out: HostMsg[], mine: { shot: Shot; input: OwnerInput } | null, holeWas: number): void {
-    const turn = this.live.advance(), co = !!this.o.company || !!this.o.attach || !!this.o.more;
+    const turn = this.drv.turn(), co = !!this.o.company || !!this.o.attach || !!this.o.more;
     // the strokes not sent yet in time order. T425: with company, only his group's are played back, each after who is where just before it is struck
     // (the view moves everyone by these as the strokes play); the rest of the field travels in those lists
-    const fresh = this.plan.shots.filter(s => !this.sent.has(s)).sort((a, b) => a.t - b.t);
+    const fresh = this.drv.shots().filter(s => !this.sent.has(s)).sort((a, b) => a.t - b.t);
     let last = -Infinity;
     for (const s of fresh) {
       this.sent.add(s); last = Math.max(last, s.t);
@@ -209,9 +270,9 @@ export class Play3p {
       if (co) out.push(this.actors(s.t - 1e-3));
       out.push(this.strokeMsg(s, mine && s === mine.shot ? mine.input : null));
     }
-    if (mine && !this.plan.shots.includes(mine.shot)) out.push(this.strokeMsg(mine.shot, mine.input)); // (LiveGroup records it in the plan; this is a guard)
-    if (holeWas >= 0 && (!turn || turn.holeIdx !== holeWas)) out.push(this.holeEnd(holeWas, !turn));
-    this.turn = turn; this.done = !turn;
+    if (mine && !this.sent.has(mine.shot)) { this.sent.add(mine.shot); out.push(this.strokeMsg(mine.shot, mine.input)); } // (a driver that keeps no list of strokes; a guard)
+    if (holeWas >= 0 && (!turn || turn.holeIdx !== holeWas)) out.push(this.holeEnd(holeWas, this.drv.over()));
+    this.turn = turn; this.done = this.drv.over(); if (turn) this.lastHole = turn.holeIdx;
     if (co) {
       const m = turn ? turn.t - 1e-3 : Number.isFinite(last) ? last + 1 : 0;
       if (this.o.moreShots && m > this.moreT) { out.push(...this.o.moreShots(this.moreT, m)); this.moreT = m; }   // (T433: the ghost's strokes of this stretch)
@@ -242,7 +303,7 @@ export class Play3p {
   }
 
   private holeEnd(holeIdx: number, last: boolean): HoleEndMsg {
-    const h = this.view.holes[holeIdx]!, strokes = this.plan.strokes[this.me]?.[holeIdx] ?? this.plan.shots.filter(s => s.golfer === this.me && s.hole === holeIdx).reduce((a, s) => a + 1 + s.penalty, 0);
+    const h = this.drv.hole(holeIdx), strokes = this.drv.strokes(holeIdx);
     return { v: 1, t: 'holeEnd', holeIdx, hole: h.n, par: h.par, strokes, last };
   }
 
@@ -255,7 +316,7 @@ export class Play3p {
     return m;
   }
   private turnMsgAll(t: OwnerTurn) {
-    const m = turnMsg({ turn: t, skills: this.o.skills, view: this.view, height: this.o.height ?? null, wind: this.windNow(), last: t.holeIdx === this.view.holes.length - 1,
+    const m = turnMsg({ turn: t, skills: this.o.skills, view: this.view, height: this.o.height ?? null, wind: this.windNow(), last: this.drv.isLast(t.holeIdx),
       ...(this.o.fit ? { fit: this.o.fit } : {}), ...(this.o.gust ? { gust: this.o.gust() } : {}) }, this.centre);
     m.earned = this.earn; m.charges = Math.max(0, this.earn.charges - (this.used.get(t.holeIdx) ?? 0));
     // T423: on the green, the host's green and the gimme the rule allows

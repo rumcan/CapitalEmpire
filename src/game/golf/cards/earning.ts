@@ -3,6 +3,7 @@
 // This is the table (EARN_TABLE: the words the cards show), and the pure functions the engine asks when a result is in. Pure TS, no DOM.
 import { ordinal } from '../play/board';
 import type { Grade } from './collection';
+import type { FeatId } from '../play/feats';
 
 /** the grade of a pull and why it was paid (the toast and the result cards say it) */
 export interface Earn { grade: Grade; why: string }
@@ -18,7 +19,21 @@ export const EARN_TABLE: readonly { what: string; grade: Grade }[] = [
   { what: 'Finish in the top quarter of the field', grade: 'bronze' },
   { what: `Win a money match for $${MATCH_BIG_STAKE} or more`, grade: 'silver' },
   { what: 'Win a money match', grade: 'bronze' },
+  // T431: feats in your own recorded round (once a round each): play/feats.ts
+  { what: 'A hole in one', grade: 'gold' },
+  { what: 'Hole out from a bunker', grade: 'silver' },
+  { what: 'Chip in from off the green', grade: 'bronze' },
+  { what: 'A drive of 270 m or more', grade: 'bronze' },
 ];
+/** T431: the pull a feat pays (play/feats.ts featOf) */
+export function earnFromFeat(f: FeatId): Earn {
+  switch (f) {
+    case 'ace': return { grade: 'gold', why: 'A hole in one' };
+    case 'bunker': return { grade: 'silver', why: 'Holed out from a bunker' };
+    case 'chipin': return { grade: 'bronze', why: 'Chipped in' };
+    default: return { grade: 'bronze', why: 'A long drive' };
+  }
+}
 
 /** the pull a finishing place earns in a field (`of` golfers, `what` the competition: "the Club Championship"): first (shared too) is gold, the podium of the top half silver, the top quarter bronze; null for nothing (not
  *  played or not finished: pos null) */
