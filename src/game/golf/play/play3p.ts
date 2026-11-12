@@ -45,6 +45,10 @@ export interface Play3pOpts {
   company?: { golfers: Golfer[]; groups: Group[] };
   /** T426: the carts' ways: the course's cart paths (absent or null: along the rough's edge), where a cart goes after the last green, the course's walk field */
   paths?: CartPaths | null; home?: Pt; walk?: WalkField | null;
+  /** T425: the owner's real round, played on in the view: the day's plan and course, his live group (live.ts LiveGroup: the very one the manager game plays),
+   *  his golfer's id and his group's index. The session plays that group on (no new plan; `holes`, `seed` and `company` are not used); the strokes already
+   *  played count as sent, so the view opens on his turn as it stands. Absent: a fresh session, as above */
+  attach?: { plan: RoundPlan; view: CourseView; live: LiveGroup; owner: number; group: number };
   /** T422: the day's gust peak now (mph; absent: none sent) */
   gust?: () => number | null;
   /** T443: what he has earned (unlocks.ts earned; absent: everything, as before T443) */
@@ -75,6 +79,8 @@ export class Play3p {
   private readonly sent = new Set<Shot>();
   private turn: OwnerTurn | null = null;
   private done = false;
+  /** T425: the owner's golfer id (OWNER_3P, or his id in the real round) */
+  readonly me: number;
   /** T425: the owner's group (golfer ids) */
   private readonly group: Set<number>;
   /** T426: the carts' playback (null: nobody rides) */
@@ -86,6 +92,15 @@ export class Play3p {
   private get earn(): Earned { return this.o.earned ?? ALL_EARNED; }
 
   constructor(private readonly o: Play3pOpts) {
+    const at = o.attach;
+    if (at) {   // (T425: his real round: the day's plan, course and live group)
+      this.view = at.view; this.plan = at.plan; this.live = at.live; this.me = at.owner; this.centre = centreOf(o.frame);
+      this.group = new Set(at.plan.groups[at.group]?.players ?? [at.owner]);
+      for (const s of at.plan.shots) this.sent.add(s);
+      this.carts = at.plan.golfers.some(g => g.cart !== undefined && !g.owner) ? new CartPlay(this.plan, this.view, o.paths ?? null, o.home ?? this.view.holes[0]!.tee, o.walk ?? null) : null;
+      return;
+    }
+    this.me = OWNER_3P;
     if (!o.holes.length) throw new Error('play3p: no holes to play');
     this.view = holesView(o.view, o.holes);
     const sk = o.skills, golfer: Golfer = { id: OWNER_3P, name: 'You', sex: o.sex, pro: false, look: 0, owner: true,
@@ -135,7 +150,7 @@ export class Play3p {
     const input = this.owned(vi, t, false), { holeIdx: _h, stroke: _s, ...inp } = input; void _h; void _s;
     const hole = this.view.holes[t.holeIdx]!, last = t.holeIdx === this.view.holes.length - 1;
     const o = shotOutcome(this.view, hole, t.ball, t.lie, this.o.skills, inp, () => 0.75, { last });
-    const shot = { golfer: OWNER_3P, hole: t.holeIdx, stroke: t.stroke, t: t.t, from: { x: t.ball.x, y: t.ball.y }, to: o.to, club: vi.club, lie: o.lie, penalty: o.penalty, holed: o.holed, ...(o.landing ? { landing: o.landing } : {}) };
+    const shot = { golfer: this.me, hole: t.holeIdx, stroke: t.stroke, t: t.t, from: { x: t.ball.x, y: t.ball.y }, to: o.to, club: vi.club, lie: o.lie, penalty: o.penalty, holed: o.holed, ...(o.landing ? { landing: o.landing } : {}) };
     const mctx = { lie: t.lie, tee: t.lie === 'tee', deck: vi.club === 'driver' && t.lie !== 'tee', last, follow: false }, kit = kitOf(this.o.skills, vi.club, mctx);
     const fx = shapeEffect(inp.shape ?? null, vi.club, carryFor(this.o.skills, vi.club, mctx) * Math.min(1, Math.max(0.3, inp.power)), kit.skill, kit);
     return { v: 1, t: 'preview', key, shot: this.strokeMsg(shot, input), spread: fx.spread };
@@ -173,7 +188,7 @@ export class Play3p {
   /** runs the day to his next turn and writes what happened: the strokes not sent yet in time order (his own from his input), holeEnd when his hole
    *  changed or the round is over, then the turn */
   private next(out: HostMsg[], mine: { shot: Shot; input: OwnerInput } | null, holeWas: number): void {
-    const turn = this.live.advance(), co = !!this.o.company;
+    const turn = this.live.advance(), co = !!this.o.company || !!this.o.attach;
     // the strokes not sent yet in time order. T425: with company, only his group's are played back, each after who is where just before it is struck
     // (the view moves everyone by these as the strokes play); the rest of the field travels in those lists
     const fresh = this.plan.shots.filter(s => !this.sent.has(s)).sort((a, b) => a.t - b.t);
@@ -195,13 +210,13 @@ export class Play3p {
   actors(m: number): ActorsMsg { return { ...actorsMsg({ plan: this.plan, view: this.view, minute: m, carts: this.carts }, this.centre), play: true }; }
   /** T427: the leaderboard at game minute m and his group's wait on the group ahead */
   board(m: number): BoardMsg {
-    const rows = boardRows(standings(this.plan, this.view, m), this.plan.golfers, BOARD_ROWS, OWNER_3P).map(r => ({ pos: r.pos, name: r.name, toPar: r.toPar, thru: r.thru, owner: r.owner }));
-    return { v: PROTOCOL_V, t: 'board', at: m, rows, wait: waitText(this.plan, this.view, OWNER_3P, m) };
+    const rows = boardRows(standings(this.plan, this.view, m), this.plan.golfers, BOARD_ROWS, this.me).map(r => ({ pos: r.pos, name: r.name, toPar: r.toPar, thru: r.thru, owner: r.owner }));
+    return { v: PROTOCOL_V, t: 'board', at: m, rows, wait: waitText(this.plan, this.view, this.me, m) };
   }
 
   private strokeMsg(s: Shot, input: OwnerInput | null) {
     const n = this.view.holes[s.hole]?.n ?? s.hole + 1, wind = this.windNow(), height = this.o.height ?? null;
-    if (s.golfer === OWNER_3P && input) {
+    if (s.golfer === this.me && input) {
       const { holeIdx: _h, stroke: _s, ...inp } = input; void _h; void _s;
       return shotMsg({ shot: s, input: inp, skills: this.o.skills, hole: n, view: this.view, height, wind }, this.centre);
     }
@@ -209,7 +224,7 @@ export class Play3p {
   }
 
   private holeEnd(holeIdx: number, last: boolean): HoleEndMsg {
-    const h = this.view.holes[holeIdx]!, strokes = this.plan.strokes[OWNER_3P]?.[holeIdx] ?? this.plan.shots.filter(s => s.golfer === OWNER_3P && s.hole === holeIdx).reduce((a, s) => a + 1 + s.penalty, 0);
+    const h = this.view.holes[holeIdx]!, strokes = this.plan.strokes[this.me]?.[holeIdx] ?? this.plan.shots.filter(s => s.golfer === this.me && s.hole === holeIdx).reduce((a, s) => a + 1 + s.penalty, 0);
     return { v: 1, t: 'holeEnd', holeIdx, hole: h.n, par: h.par, strokes, last };
   }
 

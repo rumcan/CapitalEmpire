@@ -10070,6 +10070,14 @@ export class Game {
   start3p(): HostMsg[] {
     const n = this.view3pHole, v = this.yrView(), f = this.view3pFrame; this.play3p = null;
     if (n === null || !v || !f) return [];
+    // T425: his real round under way (his live group in the day's field, not handed to the caddie): the view plays it on; else a lone practice hole
+    const pl = this.play, own = pl?.own;
+    if (pl && own?.turn && own.caddie === null) {
+      const gi = pl.plan.groups.findIndex(g => g.players.includes(own.id));
+      this.play3p = new Play3p({ view: pl.view, holes: [], skills: own.skill, sex: own.sex, seed: 0, frame: f, height: this.ballHeight, wind: () => this.windNow(),
+        paths: this.cartPathsNow(), attach: { plan: pl.plan, view: pl.view, live: own.live, owner: own.id, group: Math.max(0, gi) } });
+      return this.play3p.start();
+    }
     const idx = v.holes.findIndex(h => h.n === n); if (idx < 0) return [];
     const p = this.playerNow(), sk = this.yourSkills();
     // T443: what he has earned: his card's skills, his clubs' levels, his cards' mechanics (golf/play/unlocks.ts)
@@ -10080,7 +10088,11 @@ export class Game {
   }
   /** the view's input for the turn in hand: played through the one model (LiveGroup); what the view is sent back (his stroke, anyone else's, the
    *  hole's end, the next turn) */
-  input3p(input: ViewInput): HostMsg[] { return this.play3p ? this.play3p.input(input) : []; }
+  input3p(input: ViewInput): HostMsg[] {
+    const ms = this.play3p ? this.play3p.input(input) : [], pl = this.play, own = pl?.own;
+    if (pl && own && this.play3p?.me === own.id && this.play3p.plan === pl.plan) { own.turn = own.live.advance(); this.saveOwner(); if (!own.turn) this.ownerDone(pl); this.emit(); }   // (T425: his real round moved on: kept as the manager game's)
+    return ms;
+  }
   /** T441, T442: the model's luckless shot for what the view has picked (its aim marker), or null with no play */
   /** T423: the view's gimme, if the round's rule allows it */
   gimme3p(holeIdx: number, stroke: number): HostMsg[] { return this.play3p ? this.play3p.gimme(holeIdx, stroke) : []; }

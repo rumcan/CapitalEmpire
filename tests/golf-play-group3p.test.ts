@@ -8,7 +8,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { TILE_M } from '../src/game/golf/types';
-import { CartPlay, cartPaths, fieldEntourage, makeField, nearestOnPaths, playRound } from '../src/game/golf/play';
+import { CartPlay, LiveGroup, cartPaths, fieldEntourage, makeField, nearestOnPaths, playRound } from '../src/game/golf/play';
 import type { CartPaths, CourseView, GameSkills, Golfer, Group, Lie, PlayHole, Pt, Shot } from '../src/game/golf/play';
 import { fromView, type ActorsMsg, type BoardMsg, type HostMsg, type ShotMsg, type TurnMsg, type ViewInput } from '../src/game/golf/play/protocol3p';
 import { OWNER_3P, Play3p } from '../src/game/golf/play/play3p';
@@ -128,4 +128,21 @@ test('alone, a session sends what it sent before: no actors and no board', () =>
   const p = new Play3p({ view, holes: [0], skills: sk, sex: 'm', seed: 3, frame: centre });
   const all = playAll(p);
   assert.ok(!all.some(m => m.t === 'actors' || m.t === 'board'));
+});
+
+test('his real round: the view plays on his live group in the day\'s plan, from his turn as it stands', () => {
+  const co = company(8, 13), owner: Golfer = { id: 0, name: 'You', sex: 'm', pro: false, skill: 0.6, look: 0, owner: true };
+  // the day as the manager game holds it: his id is 5 (the field renumbered), two of his strokes already played there
+  const ren = (id: number) => id === 0 ? 5 : id === 5 ? 0 : id, golfers = [owner, ...co.golfers].map(g => ({ ...g, id: ren(g.id) })), groups = co.groups.map(g => ({ ...g, players: g.players.map(ren) }));
+  const plan = playRound(view, golfers, groups, 13, { live: 0 }), live = new LiveGroup(plan, view, 0, 13);
+  for (let k = 0; k < 2; k++) { const t = live.advance()!; live.play({ holeIdx: t.holeIdx, stroke: t.stroke, club: t.suggested.club, aim: t.suggested.aim, power: t.suggested.power }); }
+  const before = plan.shots.length, turn = live.advance()!;
+  const p = new Play3p({ view, holes: [], skills: sk, sex: 'm', seed: 0, frame: centre, paths, attach: { plan, view, live, owner: 5, group: 0 } });
+  const ms = p.start(), t = ms.filter((m): m is TurnMsg => m.t === 'turn').pop()!;
+  assert.ok(!ms.some(m => m.t === 'shot'), 'the strokes played before the view opened are not played again');
+  assert.equal(t.golfer, 5); assert.equal(t.stroke, turn.stroke); assert.equal(t.holeIdx, turn.holeIdx);
+  assert.ok(ms.some(m => m.t === 'board' && m.rows.some(r => r.owner)), 'the board marks his row');
+  const next = p.input(answer(t));
+  assert.ok(next.some(m => m.t === 'shot' && m.golfer === 5), 'his stroke'); assert.ok(plan.shots.length > before, 'played into the day\'s own plan');
+  assert.equal(live.inputs.length, 3, 'his live group has the input');
 });
