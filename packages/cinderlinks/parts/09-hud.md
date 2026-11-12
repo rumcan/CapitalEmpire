@@ -114,6 +114,7 @@ function hostSend(m) {
 function hostMessage(m) {   // one message from the host page, already known to come from it
   if (!m || typeof m !== 'object') return;
   if (m.t === 'leave') { hostOff = true; return; }
+  if (m.t === 'actors') { actorsIn(m); return; }   // T424: who else is on the course (parts/08d-actors.md)
   if ((m.t === 'turn' || m.t === 'shot' || m.t === 'holeEnd' || m.t === 'preview') && m.v === 1) { if (course) hostPlayMsg(m); return; }   // (T418: the play, once a course is in)
   if (m.t !== 'course' || m.v !== 1) return;
   const C = m.course;

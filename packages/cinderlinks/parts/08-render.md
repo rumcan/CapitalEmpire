@@ -1268,6 +1268,7 @@ function render() {
       if (!tileHave(tx, ty)) tileWant(tx, ty);
     }
   }
+  actorsList();   // T424: the host's other people and carts join the list (parts/08d-actors.md)
   dlist.sort((a, b) => b.d - a.d);
 
   const fav = (((p.fa - Math.round(camYaw * 16 / 6.2832)) % 16) + 16) % 16;   // his facing as this camera sees it
@@ -1291,6 +1292,7 @@ function render() {
   }
   for (const o of dlist) {
     if (o.k === 24) drawCart(cart.on ? gs : null, G);
+    else if (o.k === K_ACTOR) drawActor(o.a, o.d);   // T424: another person or cart from the host (parts/08d-actors.md)
     else if (o.k === 21) { if (cart.on || o.d < 1) continue; ghostX = psx; ghostY = psy - 46; blit(gs, psx, psy, DS / o.d / golfK, o.d * 100, 0, 0, false, 0); if (G > 0) addLight(psx, psy - 30, 2.2 * G, 1.6 * G, 0.8 * G); }
     else if (o.k === 20) { project(H.pin.x, H.pin.y, groundH(H.pin.x, H.pin.y), PJ); if (PJ.s > 0) blit(fs, PJ.x, PJ.y, Math.max(0.3, PJ.s), PJ.d * 100, 0, 0, false, 0); }
     else if (o.k === 22) {
