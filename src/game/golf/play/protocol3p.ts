@@ -128,6 +128,13 @@ export interface BoardMsg { v: 1; t: 'board'; at: number; rows: { pos: string; n
  *  and rest); `spread` the factor the shape puts on the scatter (the ring's size); null shot: none to show (a putt, no turn) */
 export interface PreviewMsg { v: 1; t: 'preview'; key: number; shot: ShotMsg | null; spread: number }
 
+/** T428: a money match (match.ts) as the view shows it: why it is sent (the match begins, a hole is decided, the match is over), the opponent's name and
+ *  handicap, the stake ($), the holes of the match, each decided hole's result (1 you, 0 halved, -1 them), the score (match.ts MatchScore: "2 UP", "3 & 2"),
+ *  and for a decided hole its number and both sides' strokes (null: picked up) */
+export interface MatchMsg { v: 1; t: 'match'; why: 'start' | 'hole' | 'end'; name: string; hcp: number; stake: number; holes: number; res: (1 | 0 | -1)[];
+  score: { text: string; short: string; up: number; played: number; left: number; over: boolean; result: 'w' | 'l' | 'h' | null };
+  hole?: number; you?: number | null; opp?: number | null }
+
 /** the time and weather: the game minute of the day, the weather (weather.ts) and the wind now */
 export interface ClockMsg { v: 1; t: 'clock'; minute: number; weather: WeatherCondition; wind: WindNow }
 
@@ -138,7 +145,7 @@ export interface HoleEndMsg { v: 1; t: 'holeEnd'; holeIdx: number; hole: number;
 /** the host closes the view: why, in the owner's words (absent: none to show) */
 export interface LeaveMsg { v: 1; t: 'leave'; why?: string }
 
-export type HostMsg = CourseMsg | ActorsMsg | BoardMsg | TurnMsg | ShotMsg | HoleEndMsg | PreviewMsg | ClockMsg | LeaveMsg;
+export type HostMsg = CourseMsg | ActorsMsg | BoardMsg | MatchMsg | TurnMsg | ShotMsg | HoleEndMsg | PreviewMsg | ClockMsg | LeaveMsg;
 
 // ---------------------------------------------------------------- view to host
 
@@ -168,7 +175,7 @@ export interface ExitMsg { v: 1; t: 'exit'; why?: 'esc' | 'done' | 'error'; deta
 export type ViewMsg = ReadyMsg | LoadedMsg | ErrorMsg | InputMsg | AimMsg | WalkedMsg | GimmeMsg | HoleDoneMsg | ExitMsg;
 
 /** the message types each side sends */
-export const HOST_TYPES: readonly HostMsg['t'][] = ['course', 'actors', 'board', 'turn', 'shot', 'holeEnd', 'preview', 'clock', 'leave'];
+export const HOST_TYPES: readonly HostMsg['t'][] = ['course', 'actors', 'board', 'match', 'turn', 'shot', 'holeEnd', 'preview', 'clock', 'leave'];
 export const VIEW_TYPES: readonly ViewMsg['t'][] = ['ready', 'loaded', 'error', 'input', 'aim', 'walked', 'gimme', 'holeDone', 'exit'];
 
 const isMsg = (m: unknown, types: readonly string[]): boolean =>
