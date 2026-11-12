@@ -53,7 +53,17 @@ export type ActorRole = 'golfer' | 'caddie' | 'cart' | 'gallery';
  *  (degrees clockwise from east, absent: not known), and for a golfer his name, sex and look, whether he is the owner, the cart he rides (an actor id)
  *  and whether he has a caddie; for a gallery its size */
 export interface Actor { id: number; role: ActorRole; at: ViewPt; hole: number; action?: Action; ball?: ViewPt | null; heading?: number;
-  name?: string; sex?: 'm' | 'w'; look?: number; owner?: true; cart?: number; caddie?: true; count?: number }
+  name?: string; sex?: 'm' | 'w'; look?: number; owner?: true; cart?: number; caddie?: true; count?: number;
+  /** T424 (actors3p.ts; optional so an older host's message still reads): what the view draws him doing (Doing), how far through it (0..1: an address from
+   *  stepping up to the strike, a swing from the strike to the finish, a putt from stepping up to the end of the stroke; absent: 0), and how he looks (Dress) */
+  doing?: Doing; phase?: number; dress?: Dress;
+  /** T424: a cart's riders (golfer actor ids, the driver first) */
+  riders?: number[] }
+/** T424: what the view draws a person doing: walking, standing, addressing the ball, swinging, putting, riding in a cart (a golfer; the cart carries him) or
+ *  watching another's shot (standing turned to it) */
+export type Doing = 'walk' | 'stand' | 'address' | 'swing' | 'putt' | 'ride' | 'watch';
+/** T424: how a person is drawn: the shirt, trousers, cap, skin and hair colours ('#rrggbb'), his build (a height factor, about 0.92..1.06) and sex */
+export interface Dress { shirt: string; trousers: string; cap: string; skin: string; hair: string; build: number; sex: 'm' | 'w' }
 /** who is on the course and where at game minute t: the full list each time (an actor missing from it has left) */
 export interface ActorsMsg { v: 1; t: 'actors'; at: number; actors: Actor[] }
 
