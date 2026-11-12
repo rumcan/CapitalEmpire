@@ -24,7 +24,7 @@ import type { ShotSkill } from './shot';
 import type { HeightAt } from './roll';
 import type { WindNow } from './wind';
 import type { Frame3p } from './export3p';
-import { PROTOCOL_V, fromView, type ActorsMsg, type BoardMsg, type HoleEndMsg, type HostMsg, type PreviewMsg, type ViewInput } from './protocol3p';
+import { PROTOCOL_V, fromView, type Actor, type ActorsMsg, type BoardMsg, type HoleEndMsg, type HostMsg, type PreviewMsg, type ViewInput } from './protocol3p';
 import { CartPlay, type CartPaths } from './carts';
 import type { WalkField } from '../walkfield';
 import { actorsMsg } from './actors3p';
@@ -49,6 +49,8 @@ export interface Play3pOpts {
    *  his golfer's id and his group's index. The session plays that group on (no new plan; `holes`, `seed` and `company` are not used); the strokes already
    *  played count as sent, so the view opens on his turn as it stands. Absent: a fresh session, as above */
   attach?: { plan: RoundPlan; view: CourseView; live: LiveGroup; owner: number; group: number };
+  /** T429: the galleries to put in each actors list (gallery3p.ts galleryActors, as the engine has them now; absent: none) */
+  galleries?: () => Actor[];
   /** T422: the day's gust peak now (mph; absent: none sent) */
   gust?: () => number | null;
   /** T443: what he has earned (unlocks.ts earned; absent: everything, as before T443) */
@@ -207,7 +209,10 @@ export class Play3p {
   }
 
   /** T424/T425: who is on the course at game minute m, in the view's frame (actors3p.ts), carts and riders included */
-  actors(m: number): ActorsMsg { return { ...actorsMsg({ plan: this.plan, view: this.view, minute: m, carts: this.carts }, this.centre), play: true }; }
+  actors(m: number): ActorsMsg {
+    const a = actorsMsg({ plan: this.plan, view: this.view, minute: m, carts: this.carts }, this.centre), g = this.o.galleries ? this.o.galleries() : [];
+    return { ...a, actors: g.length ? [...a.actors, ...g] : a.actors, play: true };
+  }
   /** T427: the leaderboard at game minute m and his group's wait on the group ahead */
   board(m: number): BoardMsg {
     const rows = boardRows(standings(this.plan, this.view, m), this.plan.golfers, BOARD_ROWS, this.me).map(r => ({ pos: r.pos, name: r.name, toPar: r.toPar, thru: r.thru, owner: r.owner }));

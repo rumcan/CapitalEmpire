@@ -55,7 +55,7 @@ const wrapA = (a) => a - Math.round(a / 6.2832) * 6.2832;
 function actorsIn(m) {   // a host's 'actors' message: the whole list (one missing from it has left)
   if (!m || !Array.isArray(m.actors)) return;
   const now = performance.now(), dur = actLast > 0 ? clamp(now - actLast, 60, 2500) : 0, S = course && course.S > 0 ? course.S : 1, seen = new Set();
-  actLast = now;
+  actLast = now; galleriesIn(m, S);   // (T429: the galleries: parts/08f-gallery.md)
   for (const a of m.actors) {
     if (a && a.owner) grpOwner = a.id;
     if (!a || a.owner || a.role === 'gallery' || !Array.isArray(a.at)) continue;   // (the owner is the player's golfer; galleries are T429)
@@ -96,6 +96,7 @@ function actorsList() {   // render's hook: every actor in view joins its list (
   const t = performance.now(), tanH = (VW / 2 + 120) / FOC;
   if (matchQ.length) matchTick();   // (T428: a match's words wait for the strokes before them)
   groupList(t, tanH);   // (T425: the group's balls and markers)
+  if (galleries.size) galleryList(tanH);   // (T429: the crowds)
   if (!actors.size) { ACT_MS += performance.now() - t; return; }
   for (const r of actors.values()) {
     actorAt(r, t); if (r.hidden) continue;
@@ -125,6 +126,7 @@ const CART_DOTS = [];
 function drawActor(r, d) {   // render's hook: one actor, in its turn far to near
   const t = performance.now();
   if (r.role === 'cart') drawActorCart(r, d);
+  else if (r.role === 'gallery') drawGallery(r, d);
   else if (r.role === 'ball') drawGroupBall(r, d);
   else if (r.S) { project(r.dx, r.dy, groundH(r.dx, r.dy), PJ); if (PJ.s > 0) blit(r.S, PJ.x, PJ.y, PJ.s / r.K * r.build, PJ.d * 100, 0, 0, false, d > 50 ? farHaze(d) : 0); }
   else if (r.L) actorDots(r, d, [[0, lit(tone(r.L.trou, 0.6)), 0], [0, lit(tone(r.L.shirt, 0.7)), 1]]);

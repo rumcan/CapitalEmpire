@@ -61,6 +61,9 @@ export interface Actor { id: number; role: ActorRole; at: ViewPt; hole: number; 
   doing?: Doing; phase?: number; dress?: Dress;
   /** T424: a cart's riders (golfer actor ids, the driver first) */
   riders?: number[];
+  /** T429: a gallery's fans, each where the manager view draws him (crowdview.ts galleryPeople: an arc round a tee, a ring round a green, the seats of a stand):
+   *  [x, y, the height he sits at (m; 0 standing)] in the view's frame, and the point they face (the pin, the tee, the stand's front); `count` is how many */
+  fans?: ViewPt3[]; focus?: ViewPt; seated?: true;
   /** T426: he tends the flag (stands at the pin for another's long putt) */
   tend?: true }
 /** T424: what the view draws a person doing: walking, standing, addressing the ball, swinging, putting, riding in a cart (a golfer; the cart carries him) or

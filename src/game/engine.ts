@@ -215,9 +215,10 @@ import { lieGrid3p } from './golf/play/lies3p';
 import { exportFeatures3p, gatherFeatures3p } from './golf/play/features3p';
 import { courseEntry3p } from './golf/play/entry3p';
 import { seedOf } from './golf/play/view3p';
-import type { CourseMsg, HostMsg, ViewInput } from './golf/play/protocol3p';
+import type { Actor, CourseMsg, HostMsg, ViewInput } from './golf/play/protocol3p';
 import { Play3p } from './golf/play/play3p'; // T418: the owner's play in the view from behind the golfer
 import { earned } from './golf/play/unlocks'; // T443
+import { galleryActors } from './golf/play/gallery3p'; // T429: the galleries for the view
 import { Match3p } from './golf/play/match3p'; // T428: a money match in the view
 import type { Frame3p } from './golf/play/export3p';
 import { putterFitName } from './golf/play/bag';
@@ -10084,7 +10085,7 @@ export class Game {
     if (pl && own?.turn && own.caddie === null) {
       const gi = pl.plan.groups.findIndex(g => g.players.includes(own.id));
       this.play3p = new Play3p({ view: pl.view, holes: [], skills: own.skill, sex: own.sex, seed: 0, frame: f, height: this.ballHeight, wind: () => this.windNow(),
-        paths: this.cartPathsNow(), attach: { plan: pl.plan, view: pl.view, live: own.live, owner: own.id, group: Math.max(0, gi) } });
+        paths: this.cartPathsNow(), galleries: () => this.galleries3p(), attach: { plan: pl.plan, view: pl.view, live: own.live, owner: own.id, group: Math.max(0, gi) } });
       return this.play3p.start();
     }
     const idx = v.holes.findIndex(h => h.n === n); if (idx < 0) return [];
@@ -10116,6 +10117,12 @@ export class Game {
   /** T423: the view's gimme, if the round's rule allows it */
   gimme3p(holeIdx: number, stroke: number): HostMsg[] { return this.play3p ? this.play3p.gimme(holeIdx, stroke) : []; }
   preview3p(key: number, input: ViewInput): HostMsg | null { return this.play3p ? this.play3p.preview(key, input) : null; }
+  /** T429: the galleries for the view (gallery3p.ts): each spot's spectators as the City has them, each fan where the manager view stands or seats him; [] with
+   *  no course frame yet */
+  galleries3p(): Actor[] {
+    const f = this.view3pFrame; if (!f) return [];
+    return galleryActors({ G: this.traffic.gallery, places: this.galleryPlaces, seating: this.gallerySeating }, f);
+  }
   /** the Play button's choice: a practice round on just hole n (from your tee: the white one, else the first it has) or on every hole of the course from the first. Free, not an event, not
    *  recorded (yourRoundEnd); when it ends the camera, the tool, the side modes and the hole card come back as they were */
   practiceStart(n: number, scope: PracticeScope) {

@@ -31,7 +31,7 @@ function groupMsg(m) {   // the host's 'actors' or 'board'
     while (grpSnaps.length > GRP_SNAPS) grpSnaps.shift();
     // the people's looks come with them: kept, the records added (or dropped once no list has them), never moved from here
     const known = new Set(); for (const q of grpSnaps) for (const id of q.m.keys()) known.add(id);
-    actorsKeep(m, known);
+    actorsKeep(m, known); galleriesIn(m, S);   // (T429: the galleries in the list: 08f-gallery.md)
     return;
   }
   actorsIn(m);

@@ -367,6 +367,28 @@ ${HOST_PLAY}
     bunker() { idle(); const b = hole.bunk[0]; go(b.x, b.y + b.ry + 6); frames(12); snap('bunker'); },
     swing() { idle(); go(ball.x - 0.2, ball.y + 0.6); mouse.x = VW / 2 + 180; mouse.y = VH / 2 - 150; frames(4); mouse.down = true; frames(26); snap('swing'); mouse.down = false; frames(8); snap('strike'); frames(40); snap('flight'); idle(); },
     walk() { idle(); keys.KeyD = true; keys.KeyS = true; frames(46); snap('walk'); idle(); },
+    gallery() { // T429: Woodhill's 18th on tournament day: a ring of fans round the green, a grandstand of seated fans behind it; then a holed putt and the cheer
+      const hm = hostMsg(); hm.hole = 18; hostMessage(hm); idle(); ACT_MAKE = 999;
+      const S = course.S, px = hole.pin.x, py = hole.pin.y, bx = hole.tee.x, by = hole.tee.y, L = Math.hypot(px - bx, py - by), ux = (px - bx) / L, uy = (py - by) / L, rx = -uy, ry = ux;
+      const ring = [], stand = [];
+      for (let k = 0; k < 165; k++) {   // round the green but its approach, two or three deep
+        const a = Math.PI * 0.28 + (k % 55) / 55 * Math.PI * 1.44, row = Math.floor(k / 55) % 3, cx = Math.cos(a), cy = Math.sin(a);
+        let r = 6; while (r < 40 && matAt(px - (ux * cx + rx * cy) * r, py - (uy * cx + ry * cy) * r) === M_GREEN) r += 0.5;
+        r += 2.5 + row * 1.2; const qx = px - (ux * cx + rx * cy) * r, qy = py - (uy * cx + ry * cy) * r, mq = matAt(qx, qy); if (mq === M_WATER || mq === M_SAND || mq === M_GREEN) continue; ring.push([qx / S, qy / S, 0]);
+      }
+      const sx = px + ux * 30, sy = py + uy * 30;   // a stand behind the green, facing back down the hole
+      for (let row = 0; row < 4; row++) for (let c = 0; c < 16; c++) { const a = (c - 7.5) * 0.65, b = row * 0.9; stand.push([(sx + rx * a + ux * b) / S, (sy + ry * a + uy * b) / S, 0.45 + row * 0.35]); }
+      const msg = { v: 1, t: 'actors', at: 600, actors: [
+        { id: 300000, role: 'gallery', at: [px / S, py / S], hole: 18, count: ring.length, fans: ring, focus: [px / S, py / S] },
+        { id: 300001, role: 'gallery', at: [sx / S, sy / S], hole: 18, count: stand.length, fans: stand, focus: [px / S, py / S], seated: true }] };
+      msg.actors.pop();   // (Woodhill has no grandstand to seat them on: the seated crowd is drawn in the gate's count only)
+      hostMessage(msg);
+      const me = [px - ux * 26 + rx * 4, py - uy * 26 + ry * 4]; go(me[0], me[1], Math.atan2(ux, -uy) + 0); camYaw = Math.atan2(px - me[0], -(py - me[1])); player.th = camYaw - 1.5708; aimCam(); frames(30);
+      for (let k = 0; k < 6; k++) render(); snap('gallery');
+      ACT_MS = 0; const T0 = performance.now(); for (let k = 0; k < 30; k++) render(); const ms = (performance.now() - T0) / 30, act = ACT_MS / 30;
+      galleryReact({ holed: true, club: 'putter', rest: [px / S, py / S] }); for (let k = 0; k < 6; k++) { frame++; } render(); snap('gallery-cheer');
+      out.info.push({ gallery: { fans: ring.length, crowds: galleries.size, cheering: [...galleries.values()].filter((g) => frame - g.cheer < 150).length, renderMs: +ms.toFixed(2), crowdMs: +act.toFixed(3), sprites: fanSpr.size } });
+      hostMessage({ v: 1, t: 'actors', at: 600, actors: [] }); ACT_MAKE = 3; },
     match() { // T428: a money match: the card as it begins; a hole's result held until its stroke has played back; the end
       hostMessage(hostMsg()); idle();
       const S = course.S, b0 = [hole.tee.x / S, hole.tee.y / S], p0 = [hole.pin.x / S, hole.pin.y / S], dl = Math.hypot(p0[0] - b0[0], p0[1] - b0[1]), ux = (p0[0] - b0[0]) / dl, uy = (p0[1] - b0[1]) / dl;
