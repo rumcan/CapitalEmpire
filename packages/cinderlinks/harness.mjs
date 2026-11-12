@@ -12,7 +12,7 @@ const VALUE_FLAGS = new Set(['--shot', '--scenes', '--seed', '--scale', '--time'
 const positional = argv.filter((a, k) => !a.startsWith('--') && !(k > 0 && VALUE_FLAGS.has(argv[k - 1])));
 const file = positional[0] || new URL('../../public/cinderlinks/game.js', import.meta.url).pathname.replace(/^\/(\w:)/, '$1');
 const shotBase = optOf('--shot', null);
-const BUDGET = { renderMs: 16.6, tickMs: 1.5, chunkMs: 14, tileMs: 40 };
+const BUDGET = { renderMs: 16.6, tickMs: 1.5, chunkMs: 14, tileMs: 40, actors40Ms: 2 };   // (actors40Ms: T424, drawing forty of the host's people a frame)
 
 const CRC = new Int32Array(256).map((_, n) => { let c = n; for (let k = 0; k < 8; k++) c = c & 1 ? 0xedb88320 ^ (c >>> 1) : c >>> 1; return c; });
 function crc32(buf) { let c = -1; for (let i = 0; i < buf.length; i++) c = CRC[(c ^ buf[i]) & 255] ^ (c >>> 8); return (c ^ -1) >>> 0; }
@@ -53,6 +53,35 @@ globalThis.hostMsg = () => {   // (made only when asked: a course this size held
   const raw = JSON.parse(fs.readFileSync(new URL('./courses/raw/woodhill.json', import.meta.url), 'utf8')), ed = new URL('./courses/edits/woodhill.json', import.meta.url);
   return { v: 1, t: 'course', course: convert(raw, 'woodhill.json'), features: fs.existsSync(ed) ? JSON.parse(fs.readFileSync(ed, 'utf8')) : null, biome: 'parkland', type: 'private', seed: 4242, scale: 1, hole: 1 };
 };
+
+// T424: 'actors' messages as CapitalEmpire sends them (its play/actors3p.ts), in the view's metres. A dress like actors3p.ts dressOf makes
+const ACT_SHIRTS = ['#c8323a', '#f2f2ee', '#2f5fae', '#2f8a4e', '#f2c94c', '#e8803a', '#7a4fa0', '#1f2a44', '#5ab8d8', '#e87aa8'];
+const ACT_TROU = ['#2a3550', '#d8cfb4', '#5a5f6a', '#1e1e24', '#f0f0ea', '#6e5a3c'], ACT_CAPS = ['#f6f6f2', '#1f2a44', '#c8323a', '#2f5fae', '#2a2a2e'];
+const ACT_SKIN = ['#f1c9a4', '#e2b48a', '#c48d62', '#9a6544', '#6e4430'], ACT_HAIR = ['#2c1a12', '#5a3a22', '#a8743c', '#d8b070', '#8a8a8a'];
+const actDress = (k) => ({ shirt: ACT_SHIRTS[k % 10], trousers: ACT_TROU[(k * 3 + 1) % 6], cap: ACT_CAPS[(k * 7 + 2) % 5], skin: ACT_SKIN[(k * 3) % 5], hair: ACT_HAIR[(k + 2) % 5], build: 0.95 + (k % 4) * 0.03, sex: k % 5 === 3 ? 'w' : 'm' });
+/** a three-ball on the fairway at P(0, 0) playing along (ux, uy): one addressing (or swinging: phase), one watching, one walking up, a caddie, and two carts
+ *  on the side of the fairway, one with its two riders. P(f, s): f metres along the hole, s to its right */
+globalThis.actorsThreeBall = (P, hd, doing = 'address', phase = 0.75) => ({ v: 1, t: 'actors', at: 600, actors: [
+  { id: 11, role: 'golfer', at: P(0, -1.2), hole: 1, heading: hd, doing, phase, dress: actDress(2), caddie: true },
+  { id: 12, role: 'golfer', at: P(-3.5, 3.2), hole: 1, heading: hd - 70, doing: 'watch', phase: 0, dress: actDress(4) },
+  { id: 13, role: 'golfer', at: P(-10, 1.5), hole: 1, heading: hd + 8, doing: 'walk', phase: 0, dress: actDress(5) },
+  { id: 200011, role: 'caddie', at: P(-1, -3.4), hole: 1, heading: hd, doing: 'stand', phase: 0, dress: { shirt: '#f6f6f2', trousers: '#3a4250', cap: '#1f2a44', skin: '#c48d62', hair: '#2c1a12', build: 1, sex: 'm' } },
+  { id: 14, role: 'golfer', at: P(-7, 14), hole: 1, doing: 'ride', phase: 0, dress: actDress(7), cart: 100000 },
+  { id: 15, role: 'golfer', at: P(-7, 14), hole: 1, doing: 'ride', phase: 0, dress: actDress(1), cart: 100000 },
+  { id: 100000, role: 'cart', at: P(-7, 14), hole: 1, heading: hd, riders: [14, 15] },
+  { id: 100001, role: 'cart', at: P(9, 15), hole: 1, heading: hd + 160, riders: [] },
+] });
+/** forty actors in front of a camera at (x, y) looking along (ux, uy): 36 people in every pose from 8 to 190 m, and 4 carts */
+globalThis.actors40 = (x, y, ux, uy) => {
+  const rx = -uy, ry = ux, hd = Math.atan2(uy, ux) * 180 / Math.PI, poses = ['walk', 'stand', 'address', 'swing', 'putt', 'watch'], A = [];
+  for (let k = 0; k < 40; k++) {
+    const d = 8 + k * 4.6, s = (((k * 7) % 11) - 5) * (1.2 + d * 0.06), at = [x + ux * d + rx * s, y + uy * d + ry * s];
+    if (k % 10 === 9) A.push({ id: 100000 + k, role: 'cart', at, hole: 1, heading: hd + k * 37, riders: [] });
+    else A.push({ id: k, role: 'golfer', at, hole: 1, heading: hd + k * 41, doing: poses[k % 6], phase: (k % 5) / 5, dress: actDress(k) });
+  }
+  return { v: 1, t: 'actors', at: 600, actors: A };
+};
+
 
 // host play (T418 to T420): a turn with a made-up bag, a scripted strike, and a canned shot from the host; run in the game's own scope by the gate and the
 // `host` scene. The view must take the turn (the ball where it says, the bag in the tabs, the ring at one standard deviation), send one input and wait
@@ -265,6 +294,18 @@ ${HOST_PLAY}
     bunker() { idle(); const b = hole.bunk[0]; go(b.x, b.y + b.ry + 6); frames(12); snap('bunker'); },
     swing() { idle(); go(ball.x - 0.2, ball.y + 0.6); mouse.x = VW / 2 + 180; mouse.y = VH / 2 - 150; frames(4); mouse.down = true; frames(26); snap('swing'); mouse.down = false; frames(8); snap('strike'); frames(40); snap('flight'); idle(); },
     walk() { idle(); keys.KeyD = true; keys.KeyS = true; frames(46); snap('walk'); idle(); },
+    actors() { // T424: a three-ball on the fairway, a caddie and two carts beside it, from an 'actors' message; then the swing; then forty actors timed
+      idle(); newHole(holeN, hole.tee.x, hole.tee.y); frames(4); ACT_MAKE = 999;
+      const q = pathAt(0.34), q0 = pathAt(0.26), L = Math.hypot(q[0] - q0[0], q[1] - q0[1]) || 1, ux = (q[0] - q0[0]) / L, uy = (q[1] - q0[1]) / L, rx = -uy, ry = ux;
+      const P = (f, s) => [q[0] + ux * f + rx * s, q[1] + uy * f + ry * s], hd = Math.atan2(uy, ux) * 180 / Math.PI, th = Math.atan2(uy, ux);
+      const me = P(-17, -2.5); go(me[0], me[1], th + 1.5708); frames(20);
+      hostMessage(actorsThreeBall(P, hd)); frames(4); snap('actors');
+      hostMessage(actorsThreeBall(P, hd, 'swing', 0.45)); frames(4); snap('actors-swing');
+      go(me[0], me[1], th + 1.5708); frames(10);
+      hostMessage(actors40(me[0], me[1], ux, uy)); for (let k = 0; k < 6; k++) render(); snap('actors40');
+      const T0 = performance.now(); ACT_MS = 0; for (let k = 0; k < 40; k++) render(); const withMs = (performance.now() - T0) / 40, actMs = ACT_MS / 40;
+      hostMessage({ v: 1, t: 'actors', at: 600, actors: [] }); render(); const T1 = performance.now(); for (let k = 0; k < 40; k++) render(); const noMs = (performance.now() - T1) / 40;
+      ACT_MAKE = 3; out.info.push({ actors40: { actorMs: +actMs.toFixed(3), renderMs: +withMs.toFixed(2), renderNoActorsMs: +noMs.toFixed(2), sprites: actSpr.size } }); },
     golfer() { // every facing, standing and mid-stride, on one sheet (drawn straight into the frame)
       render(); for (let i = 0; i < fb.length; i++) fb[i] = 0xff5a9e4a; zbuf.fill(65535);
       for (let f = 0; f < 16; f++) { blit(golferSprite(f, 'i', 0), 40 + (f % 8) * 118, 130 + Math.floor(f / 8) * 135, 1, 100, 0, 0, false, 0); blit(golferSprite(f, 'w', 2), 40 + (f % 8) * 118 + 52, 130 + Math.floor(f / 8) * 135, 1, 100, 0, 0, false, 0); }
@@ -371,6 +412,13 @@ try {
       if (holeN !== 1 || lie !== M_TEE) res.errors.push('host: hole 1 has no tee under the golfer (' + MAT_NAME[lie] + ')');
       if (!(feats && feats.paths && feats.paths.length)) res.errors.push('host: the features were not applied');
       let lit = 0; for (let i = 0; i < VW * VH; i += 7) if (px[i * 4] + px[i * 4 + 1] + px[i * 4 + 2] > 30) lit++; if (lit < VW * VH / 7 * 0.5) res.errors.push('host: the picture is mostly black'); }
+    // T424: forty actors (36 people in every pose from 8 to 190 m, 4 carts) in front of the golfer: what drawing them costs a frame, once their sculptures are made
+    { const mk = ACT_MAKE; ACT_MAKE = 999; hostMessage(actors40(player.x, player.y, FX, FY)); for (let k = 0; k < 4; k++) render(); ACT_MAKE = mk;
+      let drawn = 0; for (const o of dlist) if (o.k === K_ACTOR) drawn++;
+      ACT_MS = 0; for (let k = 0; k < 30; k++) render(); res.actors40Ms = +(ACT_MS / 30).toFixed(3); res.actorsDrawn = drawn;
+      if (actors.size !== 40) res.errors.push('actors: ' + actors.size + ' kept of 40 sent');
+      if (drawn < 30) res.errors.push('actors: only ' + drawn + ' of 40 in view');
+      hostMessage({ v: 1, t: 'actors', at: 600, actors: [] }); if (actors.size) res.errors.push('actors: an empty list did not clear them'); }
     // host play (T418 to T420): the turn, the bag, the ring, one input and a wait, the host's shot played back to its rest
     { const hp = hostPlayRun(null); res.hostPlay = hp.info; res.errors.push(...hp.errs); }
     return res;
@@ -391,6 +439,7 @@ try {
   if (r.tileMs + r.tileLightMs > BUDGET.tileMs) over.push('tile ' + (r.tileMs + r.tileLightMs) + ' ms > ' + BUDGET.tileMs);
   if (!r.deterministic) over.push('same seed, different ground');
   if (!r.thingsDeterministic) over.push('same seed, different plants');
+  if (r.actors40Ms > BUDGET.actors40Ms) over.push('forty actors ' + r.actors40Ms + ' ms > ' + BUDGET.actors40Ms);
   if (!r.ballRests) over.push('the ball never came to rest');
   if (r.strokes !== 1) over.push('the scripted shot did not happen');
   if (!(out.patternCheckerOnTile > 0.5 && out.patternCheckerOnNoise < 0.1)) over.push('the pattern checker failed its own test');
