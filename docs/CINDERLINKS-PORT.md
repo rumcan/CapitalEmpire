@@ -182,6 +182,27 @@ Each ticket: what, where, done when. "Lead" means design-heavy work for the lead
 - **T438 Speed** (lead). Budgets: 60 frames a second in the view with a full field; the manager view costs under 2 ms a frame while the panel
   is open; course export under 300 ms; first picture under 3 s. Bench before and after, as the performance gate asks. Done when: `npm run
   bench` reports all four.
+  **Measured (2026-11-13, PR for T438).** `npm run cinder:bench` (after `npm run cinder:build`) prints the four, as far as they go headless: the
+  harness's render timings on the built page (Woodhill handed over as the host does, 0.75 picture scale), the export of Woodhill and a painted 18
+  holes (`scripts/cinder/bench-export.ts`), and the view's course load. In the browser (one tab, one dev server; the pane was hidden, so
+  requestAnimationFrame was throttled and every frame was timed by calling the view's own `render()` and reading `PERF`; the game's painted
+  Maple Falls course, 259 areas, 18 holes):
+
+  | Budget | Measured | |
+  |---|---|---|
+  | (a) 60 fps in the view | tee: 15.6 ms a frame (p50 14.9, p95 22; ground 11.1, things 2.3, post 2.2). Green, 40 people in view: 13.7 ms (p50 12.5, p95 34). Headless Woodhill tee + 40 people: 14.3 ms | median within; the slow frames are over |
+  | (b) manager view under 2 ms a frame, panel open | 0.4 us: `frame()` returns at once while `view3pHole` is set (engine.ts), the sim at speed 0 | within |
+  | (c) export under 300 ms | headless Woodhill 379 ms median (was 582), painted 18 holes 110 (was 174). Browser, Maple Falls: file 300 to 490 ms, entry 30 to 50 | Woodhill and big painted courses over |
+  | (d) Play this hole to first picture under 3 s | the view's page is ready in 0.6 to 0.9 s; the course message took 66 s before this PR (the lie grid: 36 s), 4 to 7 s after (the lie grid 2 to 6 s); the view's first frames cost about 1 s each making land | over |
+
+  Fixed (cheap, every output the same as before, checked against the old code): the outline tracer marches each kind only over its own window
+  with typed arrays and reused buffers (export3p.ts marchLoops); base64 by a pair table (terrarium.ts toBase64); `surfaceAt` reads an outline's
+  box first and a row's crossings once (holes.ts: a point on no painted cell was testing all 259 areas edge by edge, 85 us); the played lines'
+  distance from a lattice stamped once, the exact test only near the 40-tile edge (courseview.ts). Left, not cheap: (1) the view's lie grid
+  still asks the course view for ~800 000 points (surfaceAt's loop over 259 boxes): an area index, or the grid sent after the first picture;
+  (2) the export's height pack (deflate, then inflated again by courseEntry3p) and the 1 m tracing of the full-course rough: pass the grid along
+  instead of re-reading it; (3) the view's first frames making land (about 1 s each) and its slow frames (p95 22 to 34 ms): the GPU engine;
+  (4) Woodhill's tee in the browser and a rAF frame rate with the pane shown were not measured (hidden pane).
 - **T439 Tests** (coder). Unit: exporter, protocol encode and decode, sampler. Headless: the Cinderlinks harness fed by a scripted host plays
   three holes and checks rest points against the model. Nightly, as the testing policy says. Done when: `npm run cinder:gate` covers it.
 - **T440 The player's guide** (coder). The hole card's button, keys, what carries over (skills, clubs, cards) and what does not (fine detail is

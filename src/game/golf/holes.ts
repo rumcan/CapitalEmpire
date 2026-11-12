@@ -29,8 +29,37 @@ const WALK = 75;
 
 /** the surface of the topmost area (the last in paint order) whose outline contains (x, y), or null */
 export function surfaceAt(areas: CourseArea[], x: number, y: number): GolfSurface | null {
-  for (let i = areas.length - 1; i >= 0; i--) if (inPoly(areas[i].pts, x, y)) return areas[i].surface;
+  for (let i = areas.length - 1; i >= 0; i--) { const p = areas[i].pts, o = outlineOf(p); if (x >= o.b[0] && x <= o.b[2] && y >= o.b[1] && y <= o.b[3] && inRow(o, p, x, y)) return areas[i].surface; }
   return null;
+}
+/** T438: what surfaceAt keeps of an outline (outlines are replaced, not edited in place; a change of length is seen): its box (x0, y0, x1, y1), read
+ *  before the polygon test, and the crossings of its last few rows. A point on no painted cell tested every area's polygon edge by edge (some 85 us a
+ *  point on a painted course of 259 areas: the view's lie grid took seconds); a row's crossings are worked out once and each point is a binary search.
+ *  The same even-odd test as inPoly, the same arithmetic: the same answer */
+interface Outline { n: number; b: [number, number, number, number]; rows: Map<number, Float64Array> }
+const OUTLINES = new WeakMap<readonly number[], Outline>();
+function outlineOf(p: readonly number[]): Outline {
+  const c = OUTLINES.get(p); if (c && c.n === p.length) return c;
+  let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
+  for (let i = 0; i + 1 < p.length; i += 2) { const x = p[i]!, y = p[i + 1]!; if (x < x0) x0 = x; if (x > x1) x1 = x; if (y < y0) y0 = y; if (y > y1) y1 = y; }
+  const o: Outline = { n: p.length, b: [x0, y0, x1, y1], rows: new Map() }; OUTLINES.set(p, o); return o;
+}
+function inRow(o: Outline, p: readonly number[], x: number, y: number): boolean {
+  if (p.length < 64) return inPoly(p as number[], x, y);   // (a small outline: straight through)
+  let xs = o.rows.get(y);
+  if (!xs) {
+    const q: number[] = [];
+    for (let i = 0, j = p.length - 2; i < p.length; j = i, i += 2) {
+      const xi = p[i]!, yi = p[i + 1]!, xj = p[j]!, yj = p[j + 1]!;
+      if ((yi > y) !== (yj > y)) q.push((xj - xi) * (y - yi) / (yj - yi) + xi);
+    }
+    xs = Float64Array.from(q).sort();
+    if (o.rows.size >= 8) o.rows.clear();
+    o.rows.set(y, xs);
+  }
+  // inside when an odd number of crossings lie beyond x (inPoly's x < crossing)
+  let lo = 0, hi = xs.length; while (lo < hi) { const m = (lo + hi) >> 1; if (xs[m]! > x) hi = m; else lo = m + 1; }
+  return ((xs.length - lo) & 1) === 1;
 }
 
 /** validation result for moving a tee marker or pin */

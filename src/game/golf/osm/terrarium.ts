@@ -222,9 +222,20 @@ export interface HeightPack {
 
 /** the bytes as base64 text (chunked: a big array does not blow the call's argument limit) */
 export function toBase64(b: Uint8Array): string {
-  let s = ''; for (let i = 0; i < b.length; i += 0x8000) s += String.fromCharCode(...b.subarray(i, i + 0x8000));
-  return btoa(s);
+  // T438: by a table of every 12-bit pair (two letters at a time), not a binary string through btoa: a large height pack in a fraction of the time
+  const t = B64_PAIRS ?? (B64_PAIRS = Array.from({ length: 4096 }, (_, k) => B64[k >> 6]! + B64[k & 63]!)), n3 = b.length - (b.length % 3), parts: string[] = [];
+  for (let s = 0; s < n3; s += 0x6000) {
+    const e = Math.min(n3, s + 0x6000), row: string[] = [];
+    for (let i = s; i < e; i += 3) { const v = (b[i]! << 16) | (b[i + 1]! << 8) | b[i + 2]!; row.push(t[v >> 12]! + t[v & 4095]!); }
+    parts.push(row.join(''));
+  }
+  const r = b.length - n3;
+  if (r === 1) { const v = b[n3]! << 16; parts.push(B64[v >> 18]! + B64[(v >> 12) & 63]! + '=='); }
+  else if (r === 2) { const v = (b[n3]! << 16) | (b[n3 + 1]! << 8); parts.push(B64[v >> 18]! + B64[(v >> 12) & 63]! + B64[(v >> 6) & 63]! + '='); }
+  return parts.join('');
 }
+const B64 = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
+let B64_PAIRS: string[] | null = null;
 /** base64 text as bytes (throws on text that is not base64) */
 export function fromBase64(t: string): Uint8Array {
   const s = atob(t), b = new Uint8Array(s.length); for (let i = 0; i < s.length; i++) b[i] = s.charCodeAt(i); return b;
