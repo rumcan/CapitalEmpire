@@ -106,7 +106,7 @@ body { display: flex; align-items: center; justify-content: center; color: #eadf
 #power .track b.sweet { background: rgba(130, 255, 160, 0.45); border-left: 1px solid #b8ffc8; border-right: 1px solid #b8ffc8; }
 #power .track b.top { width: 2px; margin-left: -1px; background: #f4efdc; }
 #clubs { position: absolute; left: 1.4%; bottom: 2.4%; display: flex; flex-wrap: wrap; gap: 6px; max-width: 64%; }
-#clubs.bag { gap: 4px; }
+#clubs.bag { gap: 4px; max-width: 34%; }   /* (his whole bag wraps in the left third: the power bar stays clear) */
 #clubs.bag .club { padding: 3px 6px 4px; font-size: 10px; }
 #clubs .club { padding: 4px 9px 5px; font-size: 11px; color: #a9c9b1; line-height: 1.35; }
 #clubs .club.on { box-shadow: 0 0 0 1px #f2c94c, 0 0 0 3px rgba(242, 201, 76, 0.25); color: #ffffff; background: rgba(22, 60, 40, 0.9); }
