@@ -125,6 +125,15 @@ export class BallRoll {
     return FX_NONE;
   }
 
+  /** T418: the bounces as set: where each ends (a share of the way, 0..1) and when (seconds from the landing), and its height (m); one bounce or none gives fewer.
+   *  The view from behind the golfer (shot3p.ts) sends them as the ball's touches of the ground */
+  bounces(): { s: number; t: number; h: number }[] {
+    const out: { s: number; t: number; h: number }[] = [];
+    if (this.t1 > 0) out.push({ s: this.s1, t: this.t1, h: this.h1 });
+    if (this.t2 > this.t1) out.push({ s: this.s2, t: this.t2, h: this.h2 });
+    return out;
+  }
+
   /** the bend for a line by (dx, dy) of length L from the start: the ground's cross slope (plus cross) times BEND times L */
   private bendOf(height: HeightAt, dx: number, dy: number, L: number, cross: number): void {
     if (L < 0.05) { this.nx = 0; this.ny = 0; this.bend = 0; return; }
