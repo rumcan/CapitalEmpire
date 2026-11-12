@@ -110,18 +110,35 @@ function rasterise(areas: CourseArea[], box: [number, number, number, number], s
  *  closes). A loop's points are the middles of the lattice edges it crosses, as (i, j) sample coordinates. A saddle (two opposite corners inside) keeps
  *  the two insides apart */
 export function marchLoops(w: number, h: number, inside: (i: number, j: number) => boolean): [number, number][][] {
-  const W = w + 2, at = (i: number, j: number) => i >= 0 && j >= 0 && i < w && j < h && inside(i, j);
+  // T438: the samples read once into a padded byte grid and the edges' links kept in typed arrays (each edge joins at most two others), not a Map of
+  // lists: the same loops, from the same starts in the same order, many times faster on a course's 1 m lattice
+  const W = w + 2, g = new Uint8Array(W * (h + 2));
+  for (let j = 0; j < h; j++) for (let i = 0; i < w; i++) if (inside(i, j)) g[(j + 1) * W + i + 1] = 1;
+  return marchGrid(w, h, g);
+}
+
+/** marchLoops over a padded byte grid made already: (w + 2) x (h + 2), sample (i, j) at (j + 1) * (w + 2) + i + 1, 1 inside, the border 0 */
+function marchGrid(w: number, h: number, g: Uint8Array): [number, number][][] {
+  const W = w + 2, H = h + 2;
   // edge ids: the horizontal edge from sample (i, j) to (i + 1, j) and the vertical one from (i, j) to (i, j + 1), i and j from -1
   const hid = (i: number, j: number) => 2 * ((j + 1) * W + (i + 1)), vid = (i: number, j: number) => 2 * ((j + 1) * W + (i + 1)) + 1;
-  const link = new Map<number, number[]>();
-  const join = (a: number, b: number) => { (link.get(a) ?? link.set(a, []).get(a)!).push(b); (link.get(b) ?? link.set(b, []).get(b)!).push(a); };
+  // (each edge's two joined edges + 1, 0: none yet; kept between calls and cleared after, only where written: a course's lattice is millions of edges)
+  if (MARCH_L0.length < 2 * W * H) { MARCH_L0 = new Int32Array(2 * W * H); MARCH_L1 = new Int32Array(2 * W * H); MARCH_SEEN = new Uint8Array(2 * W * H); }
+  const l0 = MARCH_L0, l1 = MARCH_L1, seen = MARCH_SEEN, order: number[] = [];
+  const add = (a: number, b: number) => { if (!l0[a]) { l0[a] = b + 1; order.push(a); } else l1[a] = b + 1; };
+  const join = (a: number, b: number) => { add(a, b); add(b, a); };
   for (let j = -1; j < h; j++) {
+    const r0 = (j + 1) * W, r1 = r0 + W;
     for (let i = -1; i < w; i++) {
-      const a = at(i, j), b = at(i + 1, j), c = at(i + 1, j + 1), d = at(i, j + 1);
+      const a = g[r0 + i + 1]!, b = g[r0 + i + 2]!, c = g[r1 + i + 2]!, d = g[r1 + i + 1]!;
       if (a === b && b === c && c === d) continue;
-      const T = hid(i, j), R = vid(i + 1, j), B = hid(i, j + 1), L = vid(i, j), e: number[] = [];
-      if (a !== b) e.push(T); if (b !== c) e.push(R); if (c !== d) e.push(B); if (d !== a) e.push(L);
-      if (e.length === 2) join(e[0]!, e[1]!);
+      const T = hid(i, j), R = vid(i + 1, j), B = hid(i, j + 1), L = vid(i, j);
+      let e0 = -1, e1 = -1, n = 0;
+      if (a !== b) { e0 = T; n++; }
+      if (b !== c) { if (n) e1 = R; else e0 = R; n++; }
+      if (c !== d) { if (n === 1) e1 = B; else if (!n) e0 = B; n++; }
+      if (d !== a) { if (n === 1) e1 = L; n++; }
+      if (n === 2) join(e0, e1);
       else if (a) { join(T, L); join(R, B); } // a saddle with a and c inside: cut round each
       else { join(T, R); join(L, B); } // b and d inside
     }
@@ -130,20 +147,22 @@ export function marchLoops(w: number, h: number, inside: (i: number, j: number) 
     const k = id >> 1, i = (k % W) - 1, j = Math.floor(k / W) - 1;
     return id & 1 ? [i, j + 0.5] : [i + 0.5, j];
   };
-  const seen = new Set<number>(), loops: [number, number][][] = [];
-  for (const start of link.keys()) {
-    if (seen.has(start)) continue;
+  const loops: [number, number][][] = [];
+  for (const start of order) {
+    if (seen[start]) continue;
     const loop: [number, number][] = [];
     let prev = -1, cur = start;
-    while (!seen.has(cur)) {
-      seen.add(cur); loop.push(pt(cur));
-      const nb = link.get(cur)!, next = nb[0] !== prev ? nb[0]! : nb[1]!;
+    while (!seen[cur]) {
+      seen[cur] = 1; loop.push(pt(cur));
+      const next = l0[cur]! - 1 !== prev ? l0[cur]! - 1 : l1[cur]! - 1;
       prev = cur; cur = next;
     }
     if (loop.length >= 3) loops.push(loop);
   }
+  for (const e of order) { l0[e] = 0; l1[e] = 0; seen[e] = 0; }
   return loops;
 }
+let MARCH_L0 = new Int32Array(0), MARCH_L1 = new Int32Array(0), MARCH_SEEN = new Uint8Array(0);
 
 /** the ring with its straight runs thinned to their ends (a point in line with its neighbours goes) */
 function thin(r: P[]): P[] {
@@ -178,12 +197,18 @@ export function tracePolys(areas: CourseArea[], f: Frame3p, stepM = OUTLINE_STEP
   for (const a of areas) for (let i = 0; i + 1 < a.pts.length; i += 2) { x0 = Math.min(x0, a.pts[i]!); x1 = Math.max(x1, a.pts[i]!); y0 = Math.min(y0, a.pts[i + 1]!); y1 = Math.max(y1, a.pts[i + 1]!); }
   if (!Number.isFinite(x0)) return out;
   const s = stepM / TILE_M, g = rasterise(areas, [x0, y0, x1, y1], s), minArea = 2 * stepM * stepM;
+  // T438: each kind is marched over only the window of samples it covers (a green's few metres, not the whole course: the same loops, moved)
+  const bx = KINDS.map(() => [Infinity, Infinity, -Infinity, -Infinity]);
+  for (let j = 0; j < g.h; j++) for (let i = 0; i < g.w; i++) { const v = g.cell[j * g.w + i]!; if (v) { const b = bx[v - 1]!; if (i < b[0]!) b[0] = i; if (j < b[1]!) b[1] = j; if (i > b[2]!) b[2] = i; if (j > b[3]!) b[3] = j; } }
   for (let k = 0; k < KINDS.length; k++) {
-    const v = k + 1, loops = marchLoops(g.w, g.h, (i, j) => g.cell[j * g.w + i] === v);
+    const v = k + 1, [wi, wj, wi1, wj1] = bx[k]!; if (!Number.isFinite(wi!)) continue;
+    const ww = wi1! - wi! + 1, wh = wj1! - wj! + 1, W = ww + 2, pad = new Uint8Array(W * (wh + 2)), cell = g.cell, gw = g.w;
+    for (let j = 0; j < wh; j++) { const src = (j + wj!) * gw + wi!, dst = (j + 1) * W + 1; for (let i = 0; i < ww; i++) if (cell[src + i] === v) pad[dst + i] = 1; }
+    const loops = marchGrid(ww, wh, pad);
     if (!loops.length) continue;
     // to metres (sample (i, j) sits at the middle of its cell), thinned and smoothed
     const rings = loops.map(L => {
-      let r: P[] = thin(L.map(([i, j]) => toMetres(f, g.x0 + (i + 0.5) * s, g.y0 + (j + 0.5) * s)));
+      let r: P[] = thin(L.map(([i, j]) => toMetres(f, g.x0 + (i + wi! + 0.5) * s, g.y0 + (j + wj! + 0.5) * s)));
       for (let p = 0; p < passes; p++) r = chaikin(r);
       return r;
     }).filter(r => Math.abs(ringArea(r)) >= minArea);
