@@ -61,6 +61,7 @@ const ACT_SKIN = ['#f1c9a4', '#e2b48a', '#c48d62', '#9a6544', '#6e4430'], ACT_HA
 const actDress = (k) => ({ shirt: ACT_SHIRTS[k % 10], trousers: ACT_TROU[(k * 3 + 1) % 6], cap: ACT_CAPS[(k * 7 + 2) % 5], skin: ACT_SKIN[(k * 3) % 5], hair: ACT_HAIR[(k + 2) % 5], build: 0.95 + (k % 4) * 0.03, sex: k % 5 === 3 ? 'w' : 'm' });
 /** a three-ball on the fairway at P(0, 0) playing along (ux, uy): one addressing (or swinging: phase), one watching, one walking up, a caddie, and two carts
  *  on the side of the fairway, one with its two riders. P(f, s): f metres along the hole, s to its right */
+globalThis.actDress = actDress;
 globalThis.actorsThreeBall = (P, hd, doing = 'address', phase = 0.75) => ({ v: 1, t: 'actors', at: 600, actors: [
   { id: 11, role: 'golfer', at: P(0, -1.2), hole: 1, heading: hd, doing, phase, dress: actDress(2), caddie: true },
   { id: 12, role: 'golfer', at: P(-3.5, 3.2), hole: 1, heading: hd - 70, doing: 'watch', phase: 0, dress: actDress(4) },
@@ -366,6 +367,56 @@ ${HOST_PLAY}
     bunker() { idle(); const b = hole.bunk[0]; go(b.x, b.y + b.ry + 6); frames(12); snap('bunker'); },
     swing() { idle(); go(ball.x - 0.2, ball.y + 0.6); mouse.x = VW / 2 + 180; mouse.y = VH / 2 - 150; frames(4); mouse.down = true; frames(26); snap('swing'); mouse.down = false; frames(8); snap('strike'); frames(40); snap('flight'); idle(); },
     walk() { idle(); keys.KeyD = true; keys.KeyS = true; frames(46); snap('walk'); idle(); },
+    group() { // T425: a three-ball plays Woodhill's 1st in the model's order: the two others tee off (each played back from his ball, his swing with it), then his turn
+      hostMessage(hostMsg()); idle(); ACT_MAKE = 999;
+      const S = course.S, b0 = [hole.tee.x / S, hole.tee.y / S], p0 = [hole.pin.x / S, hole.pin.y / S], dl = Math.hypot(p0[0] - b0[0], p0[1] - b0[1]), ux = (p0[0] - b0[0]) / dl, uy = (p0[1] - b0[1]) / dl, rx = -uy, ry = ux;
+      const P = (f, s) => [b0[0] + ux * f + rx * s, b0[1] + uy * f + ry * s], hd = Math.round(Math.atan2(uy, ux) * 180 / Math.PI);
+      const A = P(205, 7), B = P(188, -9);
+      const who = (at, a1, a2, ba, bb) => ({ v: 1, t: 'actors', play: true, at, actors: [
+        { id: 0, role: 'golfer', owner: true, at: b0, hole: holeN, doing: 'stand', ball: b0 },
+        { id: 1, role: 'golfer', at: a1[0], hole: holeN, heading: a1[1], doing: a1[2], phase: 0.3, ball: ba, dress: actDress(2) },
+        { id: 2, role: 'golfer', at: a2[0], hole: holeN, heading: a2[1], doing: a2[2], phase: 0.3, ball: bb, dress: actDress(5) }] });
+      const shot = (g, to, at) => { const F = [], FT = [], R = [], RT = []; const L = [b0[0] + (to[0] - b0[0]) * 0.9, b0[1] + (to[1] - b0[1]) * 0.9];
+        for (let k = 0; k <= 40; k++) { const u = k / 40; F.push([b0[0] + (L[0] - b0[0]) * u, b0[1] + (L[1] - b0[1]) * u, 28 * 4 * u * (1 - u)]); FT.push(4 * u); }
+        for (let k = 1; k <= 10; k++) { const u = k / 10; R.push([L[0] + (to[0] - L[0]) * u, L[1] + (to[1] - L[1]) * u]); RT.push(4 + 2 * u); }
+        return { v: 1, t: 'shot', golfer: g, hole: holeN, stroke: 1, club: 'driver', from: b0, flight: F, flightT: FT, bounces: [L], roll: R, rollT: RT, rest: to, restLie: 'fairway', holed: false, penalty: 0, at }; };
+      const tee1 = P(-2, -2.5), tee2 = P(-3, 2.5);
+      hostMessage(who(599.99, [b0, hd, 'address'], [tee2, hd - 60, 'stand'], b0, b0));
+      hostMessage(shot(1, A, 600));
+      hostMessage(who(600.59, [tee1, hd, 'stand'], [b0, hd, 'address'], A, b0));
+      hostMessage(shot(2, B, 600.6));
+      hostMessage(who(601.19, [tee1, hd - 30, 'watch'], [tee2, hd + 30, 'watch'], A, B));
+      hostMessage({ v: 1, t: 'board', at: 601.19, rows: [{ pos: '1', name: 'D. Kelly', toPar: '−2', thru: '9', owner: false }, { pos: 'T2', name: 'You', toPar: 'E', thru: '0', owner: true }], wait: null });
+      hostMessage({ v: 1, t: 'turn', golfer: 0, holeIdx: 0, hole: holeN, par: hole.par, stroke: 1, at: 601.2, lie: 'tee', lieKind: 'tee', ball: b0, pin: p0, distM: dl, wind: { mph: 5, from: 90 }, slope: { up: 0, across: 0 },
+        clubs: [{ club: 'driver', carryM: 230, scatterM: 24, longM: 24, playsM: 225, sideM: 2, loftDeg: 10.5 }], suggested: { club: 'driver', aim: P(230, 0), power: 1 } });
+      const order = [], st0 = strokes; let snapped = 0;
+      camYaw = Math.atan2(ux, -uy); camD = D0; player.x = b0[0] * S - ux * 3 + rx * 1.5; player.y = b0[1] * S - uy * 3 + ry * 1.5; aimCam();
+      for (let k = 0; k < 2400 && (HP.play || HP.q.length); k++) {
+        tickGame(); if (HP.play && order[order.length - 1] !== HP.play.m.golfer) order.push(HP.play.m.golfer);
+        if (!snapped && HP.play && HP.play.t > 0.12) { snapped = 1; render(); snap('group-swing'); }
+        if (k % 4 === 0) render();
+      }
+      for (let k = 0; k < 80; k++) tickGame(); camYaw = Math.atan2(ux, -uy); camD = D0; aimCam(); frames(4); snap('group-turn');
+      const ownerAtTee = Math.hypot(ball.x / S - b0[0], ball.y / S - b0[1]) < 1e-6;
+      out.info.push({ group: { order, strokesKept: strokes === st0, ownerAtTee, turn: !!(HP.turn && HP.turn.stroke === 1), ballsShown: grpBalls.size, board: !!(grpBoardEl && /D\. Kelly/.test(grpBoardEl.innerHTML)) } });
+      ACT_MAKE = 3; },
+    teesheet() { // T427: a full tee sheet over Woodhill (72 golfers in 24 threesomes, 24 carts), the view from the 1st tee: the frame time with them and without
+      hostMessage(hostMsg()); idle(); ACT_MAKE = 999;
+      const S = course.S, A = [];
+      for (let g = 0; g < 24; g++) {
+        const H = course.holes[g % 18], L = H.line, n = L.length / 2, f = g < 18 ? 0.35 : 0.75, k = Math.min(n - 2, Math.floor(f * (n - 1))), u = f * (n - 1) - k;
+        const x = (L[k * 2] + (L[k * 2 + 2] - L[k * 2]) * u) / S, y = (L[k * 2 + 1] + (L[k * 2 + 3] - L[k * 2 + 1]) * u) / S, dx = L[k * 2 + 2] - L[k * 2], dy = L[k * 2 + 3] - L[k * 2 + 1], hd = Math.atan2(dy, dx) * 180 / Math.PI;
+        for (let i = 0; i < 3; i++) A.push({ id: g * 3 + i + 1, role: 'golfer', at: [x + (i - 1) * 4, y + (i % 2) * 3], hole: H.n, heading: hd + i * 25, doing: ['walk', 'address', 'watch'][i], phase: 0.3, dress: actDress(g * 3 + i) });
+        A.push({ id: 100000 + g, role: 'cart', at: [x + 14, y + 6], hole: H.n, heading: hd, riders: [] });
+      }
+      const msg = { v: 1, t: 'actors', at: 600, actors: A };
+      const time = (n) => { const t0 = performance.now(); for (let k = 0; k < n; k++) render(); return (performance.now() - t0) / n; };
+      frames(10); render(); render(); const without = time(60);
+      hostMessage(msg); for (let k = 0; k < 8; k++) render(); ACT_MS = 0; const withMs = time(60), act = ACT_MS / 60;
+      snap('teesheet');
+      let drawn = 0; for (const o of dlist) if (o.k === K_ACTOR) drawn++;
+      out.info.push({ teesheet: { actors: A.length, inView: drawn, renderMs: +withMs.toFixed(2), renderNoActorsMs: +without.toFixed(2), actorMs: +act.toFixed(3), fps: +(1000 / withMs).toFixed(1) } });
+      hostMessage({ v: 1, t: 'actors', at: 600, actors: [] }); ACT_MAKE = 3; },
     actors() { // T424: a three-ball on the fairway, a caddie and two carts beside it, from an 'actors' message; then the swing; then forty actors timed
       idle(); newHole(holeN, hole.tee.x, hole.tee.y); frames(4); ACT_MAKE = 999;
       const q = pathAt(0.34), q0 = pathAt(0.26), L = Math.hypot(q[0] - q0[0], q[1] - q0[1]) || 1, ux = (q[0] - q0[0]) / L, uy = (q[1] - q0[1]) / L, rx = -uy, ry = ux;

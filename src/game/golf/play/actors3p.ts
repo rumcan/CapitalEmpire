@@ -20,6 +20,9 @@ export const SHOW_BEFORE = 10;
 export const CART_ID = 100000, CADDIE_ID = 200000;
 /** a caddie stands this far (tiles) to his golfer's right and a little behind him; off to the side of the green while he putts */
 const CADDIE_SIDE = 0.8, CADDIE_BACK = 0.5, CADDIE_PUTT = 3;
+/** T426: a putt from further than this (tiles: 8 m) has the flag tended; the tender stands this far (tiles) to the side of the pin */
+export const TEND_TILES = 4;
+const TEND_SIDE = 0.35;
 
 /** what actorsMsg reads: the round plan and its course (the plan the playback draws: playRound's, with LiveGroup's shots appended), the game minute, and
  *  the carts' playback (view.ts' cartPlay; absent or null: nobody rides) */
@@ -135,7 +138,7 @@ export function actorsMsg(st: ActorsState, frame: Frame3p | Pt): ActorsMsg {
       }
       if (Number.isNaN(heading) && pin) heading = headingOf(at, pin);
     }
-    const a: Actor = { id: g.id, role: 'golfer', at: roundPt(toView(at, c)), hole: s.hole + 1, action: s.action, ball: s.ball ? roundPt(toView(s.ball, c)) : null,
+    const a: Actor = { id: g.id, role: 'golfer', at: roundPt(toView(at, c)), hole: view.holes[s.hole]?.n ?? s.hole + 1, action: s.action, ball: s.ball ? roundPt(toView(s.ball, c)) : null,
       name: g.name, sex: g.sex, look: g.look, doing, phase: round2(phase), dress: dressOf(g) };
     if (!Number.isNaN(heading)) a.heading = Math.round(heading);
     if (g.owner) a.owner = true;
@@ -148,7 +151,7 @@ export function actorsMsg(st: ActorsState, frame: Frame3p | Pt): ActorsMsg {
       const hr = Number.isNaN(heading) ? 0 : heading / DEG, fx = Math.cos(hr), fy = Math.sin(hr), rx = -fy, ry = fx;
       const side = doing === 'putt' ? CADDIE_PUTT : CADDIE_SIDE, back = doing === 'putt' ? 0 : CADDIE_BACK;
       const cp = { x: at.x + rx * side - fx * back, y: at.y + ry * side - fy * back };
-      const cd: Actor = { id: CADDIE_ID + g.id, role: 'caddie', at: roundPt(toView(cp, c)), hole: s.hole + 1, doing: doing === 'walk' ? 'walk' : doing === 'putt' || doing === 'watch' ? 'watch' : 'stand',
+      const cd: Actor = { id: CADDIE_ID + g.id, role: 'caddie', at: roundPt(toView(cp, c)), hole: view.holes[s.hole]?.n ?? s.hole + 1, doing: doing === 'walk' ? 'walk' : doing === 'putt' || doing === 'watch' ? 'watch' : 'stand',
         phase: 0, dress: caddieDress(g.id) };
       if (!Number.isNaN(heading)) cd.heading = Math.round(doing === 'putt' && pin ? headingOf(cp, pin) : heading);
       out.push(cd);
@@ -168,5 +171,26 @@ export function actorsMsg(st: ActorsState, frame: Frame3p | Pt): ActorsMsg {
       out.push(ca);
     }
   }
+  // T426: the flag tended: a putt from further than TEND_TILES has the flag held, by the putter's caddie (he has one) or else the group-mate nearest the pin who
+  // is not playing (out of the cart, if he sits in it); the tender stands at the pin, a little to its side, turned to the putter
+  for (const s of states) {
+    if (s.action !== 'putt') continue;
+    const pin = view.holes[s.hole]?.pin; if (!pin || !s.ball || Math.hypot(s.ball.x - pin.x, s.ball.y - pin.y) <= TEND_TILES) continue;
+    const g = golfers.get(s.golfer)!, k = group.get(s.golfer);
+    let who: Actor | undefined = g.caddie ? out.find(o => o.id === CADDIE_ID + g.id) : undefined;
+    if (!who && k !== undefined) {
+      let best = Infinity;
+      for (const id of plan.groups[k]!.players) {
+        const o = stOf.get(id), a = o && id !== s.golfer && o.hole === s.hole && (o.action === 'walk' || o.action === 'holed') ? out.find(q => q.id === id) : undefined;
+        if (!a || golfers.get(id)?.owner) continue;   // (the owner is the player: the view never moves him)
+        const d = Math.hypot(o!.x - pin.x, o!.y - pin.y); if (d < best) { best = d; who = a; }
+      }
+    }
+    if (!who) continue;
+    const dx = s.x - pin.x, dy = s.y - pin.y, L = Math.hypot(dx, dy) || 1, sp = { x: pin.x - dy / L * TEND_SIDE, y: pin.y + dx / L * TEND_SIDE };
+    if (who.doing === 'ride') for (const o of out) if (o.role === 'cart' && o.riders?.includes(who.id)) o.riders = o.riders.filter(id => id !== who!.id);   // (he gets out of the cart)
+    who.at = roundPt(toView(sp, c)); who.doing = 'watch'; who.phase = 0; who.tend = true; who.heading = Math.round(headingOf(sp, s));
+  }
+
   return { v: PROTOCOL_V, t: 'actors', at: m, actors: out };
 }
