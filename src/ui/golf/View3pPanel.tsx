@@ -28,9 +28,10 @@ export function View3pPanel({ game }: { game: Game }) {
     const v = new View3p(host, n => game.course3pMsg(n), import.meta.env.BASE_URL);
     bridge.current = v; setState('loading');
     v.onMessage(m => { if (m.t === 'loaded') setState('loaded'); else if (m.t === 'error') setState(m.why); });
-    v.onClose(why => { if (why !== 'reopen') game.close3p(); });
+    const off = v.onClose(why => { if (why !== 'reopen') game.close3p(); });
     v.open(hole);
-    return () => { bridge.current = null; v.close('host'); };
+    // (unmounting only takes the bridge down: the game's own state is the caller's. React's strict mode runs this once on mount in development)
+    return () => { off(); bridge.current = null; v.close('host'); };
   }, [game, hole]);
 
   if (hole === null) return null;
