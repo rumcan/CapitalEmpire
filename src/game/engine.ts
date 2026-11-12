@@ -214,7 +214,10 @@ import { export3pInputOf, exportCourse3p, frame3p } from './golf/play/export3p';
 import { exportFeatures3p, gatherFeatures3p } from './golf/play/features3p';
 import { courseEntry3p } from './golf/play/entry3p';
 import { seedOf } from './golf/play/view3p';
-import type { CourseMsg } from './golf/play/protocol3p';
+import type { CourseMsg, HostMsg, ViewInput } from './golf/play/protocol3p';
+import { Play3p } from './golf/play/play3p'; // T418: the owner's play in the view from behind the golfer
+import type { Frame3p } from './golf/play/export3p';
+import { putterFitName } from './golf/play/bag';
 import { BallRoll, FX_SAND, FX_SPLASH, ballRoll, type HeightAt } from './golf/play/roll';
 import { BREAK_COLOURS, BREAK_STEP, CUP_DROP, CUP_LIP, PuttRoll, breakBucket, breakPinOf, type BreakTurn, buildBreakGrid, dotSpeed, loadBreakMode, loadTracers, saveBreakMode, saveTracers, shotPoint, steepShare, tracerAlpha, tracerGone, type BreakGrid, type BreakMode } from './golf/play/green';
 import { CHEER_TILES, DayFinish, IMPACT_S, LiveGroup, MODEL_V, OWNER_ADDRESS, OWNER_ART, OWNER_SKILL, POWER, PUTT_POWER, PlayView, allowedClubs, cartPaths, type CartPaths, type PlayCart, boardRows, championLine, dayRound, makeCourseView, powerFor, readSwing, resultsDue, shotReport, spinEffect, spinRoom, spinText, swingEffect, type ShotReport, type SpinInput, type SwingOutcome, type Lie, shortName as golferShort, skillFor, stateAt, standings, toParText, waitText, waveLine, type BoardRow, type Club, type CourseView, type GameSkills, type OwnerTurn, type RoundPlan, type Sex, type ShotSkill } from './golf/play';
@@ -10028,6 +10031,7 @@ export class Game {
   /** the view from behind the golfer closed (its Esc, the page's Esc, ✕): the manager view comes back and the sim runs at the speed it had */
   close3p() {
     if (this.view3pHole === null) return;
+    this.play3p = null;
     this.view3pHole = null; this.lastFrame = 0; this.last = performance.now();
     if (this.view3pSpeed && !this.speed) this.setSpeed(this.view3pSpeed);
     this.emit();
@@ -10041,6 +10045,7 @@ export class Game {
     const inp = export3pInputOf(this, name); if (!inp) return null;
     inp.id = id;
     const f = frame3p(inp), file = await exportCourse3p(inp), course = await courseEntry3p(file);
+    this.view3pFrame = f; // (T418: the turns and shots are sent in this same frame)
     // the box town roads must be near to count as the course's: every marker of the course (tees, pins, aims), in tiles
     const pts = [...g.tees, ...g.pins, ...(g.aims ?? [])];
     const box: [number, number, number, number] | undefined = pts.length
@@ -10049,6 +10054,27 @@ export class Game {
       props: this.props, library: LIBRARY, ...(box ? { box } : {}) }), { x: f.cx, y: f.cy });
     return { v: 1, t: 'course', course: course as unknown as Record<string, unknown>, features, biome: 'parkland', type: 'private', seed: seedOf(name), scale: 1, hole: n };
   }
+  // ---------- T418: the owner's play in the view from behind the golfer (golf/play/play3p.ts: LiveGroup decides every stroke; the view shows them) ----------
+  /** the frame the last course message was made in (course3pMsg) */
+  private view3pFrame: Frame3p | null = null;
+  /** the owner's play in the open view (null: none yet, or closed) */
+  private play3p: Play3p | null = null;
+  /** how many plays the view has started: each a fresh round of the hole, on its own seed */
+  private play3pN = 0;
+  /** the view has loaded the course (its `loaded`): a fresh play of the open hole starts, alone, free and not recorded (as a practice hole), and the
+   *  view is sent its first turn. Nothing when the view is closed or the hole cannot be played (the course changed under it) */
+  start3p(): HostMsg[] {
+    const n = this.view3pHole, v = this.yrView(), f = this.view3pFrame; this.play3p = null;
+    if (n === null || !v || !f) return [];
+    const idx = v.holes.findIndex(h => h.n === n); if (idx < 0) return [];
+    const p = this.playerNow();
+    this.play3p = new Play3p({ view: v, holes: [idx], skills: this.yourSkills(), sex: p?.sex ?? 'm', seed: (this.seed ^ Math.imul(n, 7919) ^ Math.imul(++this.play3pN, 104729)) | 0, frame: f,
+      height: this.ballHeight, wind: () => this.windNow(), fit: putterFitName(p?.bag) });
+    return this.play3p.start();
+  }
+  /** the view's input for the turn in hand: played through the one model (LiveGroup); what the view is sent back (his stroke, anyone else's, the
+   *  hole's end, the next turn) */
+  input3p(input: ViewInput): HostMsg[] { return this.play3p ? this.play3p.input(input) : []; }
   /** the Play button's choice: a practice round on just hole n (from your tee: the white one, else the first it has) or on every hole of the course from the first. Free, not an event, not
    *  recorded (yourRoundEnd); when it ends the camera, the tool, the side modes and the hole card come back as they were */
   practiceStart(n: number, scope: PracticeScope) {

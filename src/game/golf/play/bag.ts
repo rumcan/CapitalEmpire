@@ -83,6 +83,9 @@ export function clubsOf(bag: BagSave | null | undefined): Club[] { const hy = ba
 export const levelOf = (bag: BagSave | null | undefined, club: Club): number => Math.min(MAX_LEVEL, Math.max(0, Math.floor(bag?.lv?.[club] ?? 0)));
 /** the part fitted to the putter: the shaft or the head */
 export const fittedPart = (bag: BagSave | null | undefined, kind: PartKind): PartDef => partOf(kind, kind === 'shaft' ? bag?.shaft : bag?.head);
+/** T419: the putter's fitting in words, the parts fitted beyond the stock ones ("Whippy graphite shaft, Mallet head"); '' for a stock putter */
+export const putterFitName = (bag: BagSave | null | undefined): string =>
+  (['shaft', 'head'] as const).map(k => fittedPart(bag, k)).filter(p => p.price > 0).map(p => p.name).join(', ');
 /** whether you own a part (the stock ones always) */
 export function ownsPart(bag: BagSave | null | undefined, kind: PartKind, id: string): boolean { return PARTS[kind][0]!.id === id || !!bag?.own?.[kind]?.includes(id); }
 
