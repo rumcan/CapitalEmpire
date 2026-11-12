@@ -4,6 +4,7 @@
 // (protocol3p.ts). Keep the two in step: a change to convert() belongs here too. Pure TS, no DOM.
 import { fromBase64, inflate, toBase64, type HeightPack } from '../osm/terrarium';
 import type { CourseFile } from './export3p';
+import type { LieGrid } from './lies3p';
 
 /** one hole as the view reads it: its number, par, length (m), its line and its pin as flat [x, y, x, y, ...] in metres, y south */
 export interface EntryHole { n: number; par: number; lenM: number; line: number[]; pin: [number, number] }
@@ -14,6 +15,8 @@ export interface EntryHeights { x0: number; y0: number; step: number; w: number;
 export interface CourseEntry {
   id: string; name: string; place: string; osm: string; credit: string; licence: string;
   holes: EntryHole[]; polys: Record<'T' | 'F' | 'G' | 'B' | 'W', number[][]>; streams: number[][]; hg: EntryHeights | null;
+  /** T422: the host's lies over the course (lies3p.ts), so the view draws the first cut, the rough and the fescue where the model reads them; absent: the view's own */
+  lk?: LieGrid;
 }
 
 const r1 = (v: number): number => Math.round(v * 10) / 10;

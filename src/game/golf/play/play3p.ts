@@ -31,6 +31,8 @@ import { fieldShotMsg, shotMsg } from './shot3p';
 export interface Play3pOpts {
   view: CourseView; holes: readonly number[]; skills: ShotSkill; sex: Sex; tees?: TeeKind; seed: number; frame: Frame3p | Pt;
   height?: HeightAt | null; wind?: () => WindNow | null; fit?: string;
+  /** T422: the day's gust peak now (mph; absent: none sent) */
+  gust?: () => number | null;
 }
 
 /** the owner's golfer in a session: id 0, alone in his group */
@@ -131,7 +133,7 @@ export class Play3p {
   }
   private turnMsgAll(t: OwnerTurn) {
     return turnMsg({ turn: t, skills: this.o.skills, view: this.view, height: this.o.height ?? null, wind: this.windNow(), last: t.holeIdx === this.view.holes.length - 1,
-      ...(this.o.fit ? { fit: this.o.fit } : {}) }, this.centre);
+      ...(this.o.fit ? { fit: this.o.fit } : {}), ...(this.o.gust ? { gust: this.o.gust() } : {}) }, this.centre);
   }
 
   private windNow(): WindNow | null { return this.o.wind ? this.o.wind() : null; }
