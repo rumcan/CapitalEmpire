@@ -51,6 +51,8 @@ export interface Play3pOpts {
   attach?: { plan: RoundPlan; view: CourseView; live: LiveGroup; owner: number; group: number };
   /** T429: the galleries to put in each actors list (gallery3p.ts galleryActors, as the engine has them now; absent: none) */
   galleries?: () => Actor[];
+  /** T433: more people at game minute m (a ghost round's golfer: ghost3p.ts ghostActor); with it, the actors lists are sent as with company */
+  more?: (minute: number) => Actor[];
   /** T422: the day's gust peak now (mph; absent: none sent) */
   gust?: () => number | null;
   /** T443: what he has earned (unlocks.ts earned; absent: everything, as before T443) */
@@ -190,7 +192,7 @@ export class Play3p {
   /** runs the day to his next turn and writes what happened: the strokes not sent yet in time order (his own from his input), holeEnd when his hole
    *  changed or the round is over, then the turn */
   private next(out: HostMsg[], mine: { shot: Shot; input: OwnerInput } | null, holeWas: number): void {
-    const turn = this.live.advance(), co = !!this.o.company || !!this.o.attach;
+    const turn = this.live.advance(), co = !!this.o.company || !!this.o.attach || !!this.o.more;
     // the strokes not sent yet in time order. T425: with company, only his group's are played back, each after who is where just before it is struck
     // (the view moves everyone by these as the strokes play); the rest of the field travels in those lists
     const fresh = this.plan.shots.filter(s => !this.sent.has(s)).sort((a, b) => a.t - b.t);
@@ -210,7 +212,7 @@ export class Play3p {
 
   /** T424/T425: who is on the course at game minute m, in the view's frame (actors3p.ts), carts and riders included */
   actors(m: number): ActorsMsg {
-    const a = actorsMsg({ plan: this.plan, view: this.view, minute: m, carts: this.carts }, this.centre), g = this.o.galleries ? this.o.galleries() : [];
+    const a = actorsMsg({ plan: this.plan, view: this.view, minute: m, carts: this.carts }, this.centre), g = [...(this.o.galleries ? this.o.galleries() : []), ...(this.o.more ? this.o.more(m) : [])];
     return { ...a, actors: g.length ? [...a.actors, ...g] : a.actors, play: true };
   }
   /** T427: the leaderboard at game minute m and his group's wait on the group ahead */

@@ -43,7 +43,7 @@ function actorsKeep(m, known) {   // the records of a played round's people: loo
     let r = actors.get(a.id);
     if (!r) { const x = a.at[0] * S, y = a.at[1] * S; r = { id: a.id, role: a.role, x0: x, y0: y, x1: x, y1: y, th0: 0, th1: 0, t0: 0, dur: 0, ph0: 0, ph1: 0, doing: 'stand', cx: x, cy: y, cth: 0, cph: 0, walk: 0, px: x, py: y,
       sf: 0, sr: 0, zc: groundH(x, y), L: null, build: 1, riders: [], S: null, K: GK, dl: { k: K_ACTOR, d: 0, a: null } }; r.dl.a = r; actors.set(a.id, r); }
-    r.role = a.role; if (a.dress) { r.L = lookOf(a.dress); r.build = a.dress.build >= 0.8 && a.dress.build <= 1.2 ? +a.dress.build : 1; }
+    r.role = a.role; r.ghost = !!a.ghost; if (a.dress) { r.L = lookOf(a.dress); r.build = a.dress.build >= 0.8 && a.dress.build <= 1.2 ? +a.dress.build : 1; }
   }
   for (const id of actors.keys()) if (!known.has(id)) actors.delete(id);
 }

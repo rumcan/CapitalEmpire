@@ -367,6 +367,16 @@ ${HOST_PLAY}
     bunker() { idle(); const b = hole.bunk[0]; go(b.x, b.y + b.ry + 6); frames(12); snap('bunker'); },
     swing() { idle(); go(ball.x - 0.2, ball.y + 0.6); mouse.x = VW / 2 + 180; mouse.y = VH / 2 - 150; frames(4); mouse.down = true; frames(26); snap('swing'); mouse.down = false; frames(8); snap('strike'); frames(40); snap('flight'); idle(); },
     walk() { idle(); keys.KeyD = true; keys.KeyS = true; frames(46); snap('walk'); idle(); },
+    ghost() { // T433: a ghost round's golfer beside a golfer of flesh, on the fairway: the ghost is drawn see-through
+      idle(); newHole(holeN, hole.tee.x, hole.tee.y); frames(4); ACT_MAKE = 999;
+      const q = pathAt(0.3), q0 = pathAt(0.22), L = Math.hypot(q[0] - q0[0], q[1] - q0[1]) || 1, ux = (q[0] - q0[0]) / L, uy = (q[1] - q0[1]) / L, rx = -uy, ry = ux, hd = Math.atan2(uy, ux) * 180 / Math.PI;
+      const P = (f, s) => [q[0] + ux * f + rx * s, q[1] + uy * f + ry * s];
+      hostMessage({ v: 1, t: 'actors', at: 600, actors: [
+        { id: 1, role: 'golfer', at: P(0, -2), hole: 1, heading: hd, doing: 'address', phase: 0.3, dress: actDress(3) },
+        { id: 400000, role: 'golfer', at: P(0, 2), hole: 1, heading: hd, doing: 'address', phase: 0.3, dress: actDress(3), ghost: true, name: 'Pat' }] });
+      const me = P(-9, 0); go(me[0], me[1], Math.atan2(ux, -uy)); frames(10); snap('ghost');
+      out.info.push({ ghost: { kept: actors.size, ghost: !!(actors.get(400000) && actors.get(400000).ghost), solid: !(actors.get(1) && actors.get(1).ghost) } });
+      hostMessage({ v: 1, t: 'actors', at: 600, actors: [] }); ACT_MAKE = 3; },
     dress() { // T429: tournament dress: a striped marquee and a grandstand beside Woodhill's 1st, as the host's features send them (use 'tent', 'stand')
       const hm = hostMsg(), S = 1, T = [hm.course.holes[0].line[0], hm.course.holes[0].line[1]], N2 = [hm.course.holes[0].line[2], hm.course.holes[0].line[3]], L = Math.hypot(N2[0] - T[0], N2[1] - T[1]), ux = (N2[0] - T[0]) / L, uy = (N2[1] - T[1]) / L, rx = -uy, ry = ux;
       const at = (f, s) => [T[0] + ux * f + rx * s, T[1] + uy * f + ry * s], rot = Math.atan2(uy, ux) * 180 / Math.PI;
