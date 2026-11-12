@@ -55,7 +55,7 @@ const wrapA = (a) => a - Math.round(a / 6.2832) * 6.2832;
 function actorsIn(m) {   // a host's 'actors' message: the whole list (one missing from it has left)
   if (!m || !Array.isArray(m.actors)) return;
   const now = performance.now(), dur = actLast > 0 ? clamp(now - actLast, 60, 2500) : 0, S = course && course.S > 0 ? course.S : 1, seen = new Set();
-  actLast = now;
+  actLast = now; galleriesIn(m, S);   // (T429: the galleries: parts/08f-gallery.md)
   for (const a of m.actors) {
     if (!a || a.owner || a.role === 'gallery' || !Array.isArray(a.at)) continue;   // (the owner is the player's golfer; galleries are T429)
     const x = +a.at[0] * S, y = +a.at[1] * S; if (!Number.isFinite(x) || !Number.isFinite(y)) continue;
@@ -91,8 +91,9 @@ function actorPose(r, far) {   // [pose, step] of mkGolfer for what it is doing 
 }
 const faOf = (th) => ((Math.round(th / 6.2832 * 16) - Math.round(camYaw * 16 / 6.2832)) % 16 + 16) % 16;   // a world heading as the facing the camera sees
 function actorsList() {   // render's hook: every actor in view joins its list (with its sculpture picked and its shadow cast, before anything stands on the ground)
-  if (!actors.size) return;
   const t = performance.now(), tanH = (VW / 2 + 120) / FOC;
+  if (galleries.size) galleryList(tanH);   // (T429: the crowds)
+  if (!actors.size) { ACT_MS += performance.now() - t; return; }
   for (const r of actors.values()) {
     actorAt(r, t);
     const mx = r.cx - r.px, my = r.cy - r.py, mv = Math.hypot(mx, my); r.px = r.cx; r.py = r.cy;
@@ -119,6 +120,7 @@ const CART_DOTS = [];
 function drawActor(r, d) {   // render's hook: one actor, in its turn far to near
   const t = performance.now();
   if (r.role === 'cart') drawActorCart(r, d);
+  else if (r.role === 'gallery') drawGallery(r, d);
   else if (r.S) { project(r.cx, r.cy, groundH(r.cx, r.cy), PJ); if (PJ.s > 0) blit(r.S, PJ.x, PJ.y, PJ.s / r.K * r.build, PJ.d * 100, 0, 0, false, d > 50 ? farHaze(d) : 0); }
   else if (r.L) actorDots(r, d, [[0, lit(tone(r.L.trou, 0.6)), 0], [0, lit(tone(r.L.shirt, 0.7)), 1]]);
   else actorDots(r, d, [[0, lit(tone(TROW, 0.6)), 0], [0, lit(tone(CAPR, 0.7)), 1]]);

@@ -222,6 +222,7 @@ function hostRest() {   // the playback is over: the ball lies at the host's res
   strokes = m.stroke + (m.penalty || 0); total += 1 + (m.penalty || 0);
   if (m.holed) { ball.state = 3; ball.x = hole.pin.x; ball.y = hole.pin.y; for (let k = 0; k < 120; k++) addParticle(k & 1 ? P_SPARK : P_EMBER, hole.pin.x, hole.pin.y, ball.z + 0.1, (rnd() - 0.5) * 3, (rnd() - 0.5) * 3, 2 + rnd() * 5, 40 + rndi(70), rndi(4)); }
   else if (m.penalty) { splash(ball.x, ball.y, wlAt(ball.x, ball.y), 26); say(m.restLie === 'water' ? 'Water: one stroke, and a drop' : 'Out of bounds: one stroke', 260); }
+  galleryReact(m);   // (T429: the crowd near it cheers a holed putt, groans at a short miss: 08f-gallery.md)
   while (HP.q.length && !HP.play) { const q = HP.q.shift(); if (q.t === 'shot') hostShot(q); else if (q.t === 'turn') hostTurn(q); else if (q.t === 'holeEnd') hostHoleEnd(q); }
 }
 function hostHoleEnd(m) {   // the hole is over: its score is said; after the last, the view waits for Escape
