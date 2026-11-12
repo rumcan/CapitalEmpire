@@ -367,6 +367,24 @@ ${HOST_PLAY}
     bunker() { idle(); const b = hole.bunk[0]; go(b.x, b.y + b.ry + 6); frames(12); snap('bunker'); },
     swing() { idle(); go(ball.x - 0.2, ball.y + 0.6); mouse.x = VW / 2 + 180; mouse.y = VH / 2 - 150; frames(4); mouse.down = true; frames(26); snap('swing'); mouse.down = false; frames(8); snap('strike'); frames(40); snap('flight'); idle(); },
     walk() { idle(); keys.KeyD = true; keys.KeyS = true; frames(46); snap('walk'); idle(); },
+    match() { // T428: a money match: the card as it begins; a hole's result held until its stroke has played back; the end
+      hostMessage(hostMsg()); idle();
+      const S = course.S, b0 = [hole.tee.x / S, hole.tee.y / S], p0 = [hole.pin.x / S, hole.pin.y / S], dl = Math.hypot(p0[0] - b0[0], p0[1] - b0[1]), ux = (p0[0] - b0[0]) / dl, uy = (p0[1] - b0[1]) / dl;
+      const sc = (text, short, up, played, over, result) => ({ text, short, up, played, left: 9 - played, over, result });
+      const base = { v: 1, t: 'match', name: 'Mia Lopez', hcp: 14, stake: 150, holes: 9 };
+      hostMessage({ ...base, why: 'start', res: [], score: sc('All square', 'AS', 0, 0, false, null) });
+      const card0 = matchEl ? matchEl.innerHTML : '', said0 = msgText;
+      hostMessage({ v: 1, t: 'turn', golfer: 0, holeIdx: 0, hole: holeN, par: hole.par, stroke: 4, at: 0.5, lie: 'green', lieKind: 'green', ball: [p0[0] - ux * 3, p0[1] - uy * 3], pin: p0, distM: 3, wind: { mph: 0, from: 0 }, slope: { up: 0, across: 0 },
+        clubs: [{ club: 'putter', carryM: 0, scatterM: 0, longM: 0, loftDeg: 3, fit: 'Mallet head' }], suggested: { club: 'putter', aim: p0, power: 1 } });
+      const R = [], RT = []; for (let k = 1; k <= 20; k++) { const u = k / 20; R.push([p0[0] - ux * 3 * (1 - u), p0[1] - uy * 3 * (1 - u)]); RT.push(1.6 * u); }
+      hostMessage({ v: 1, t: 'shot', golfer: 0, hole: holeN, stroke: 4, club: 'putter', from: [p0[0] - ux * 3, p0[1] - uy * 3], flight: [], bounces: [], roll: R, rollT: RT, rest: p0, restLie: 'green', holed: true, penalty: 0, at: 1 });
+      hostMessage({ ...base, why: 'hole', res: [1], score: sc('1 UP thru 1', '1 UP', 1, 1, false, null), hole: holeN, you: 4, opp: 5 });
+      const heldWhilePlaying = !!(HP && HP.play) && /All square/.test(matchEl ? matchEl.innerHTML : '');
+      for (let k = 0; k < 400 && HP && (HP.play || HP.q.length); k++) { tickGame(); render(); }
+      render(); const shownAfter = /1 UP/.test(matchEl ? matchEl.innerHTML : '') && /You win the/.test(msgText);
+      hostMessage({ ...base, why: 'end', res: [1, 1, 1, 1, 1, 0, 1], score: sc('You win 5 & 2', '5 & 2', 5, 7, true, 'w') });
+      out.info.push({ match: { startCard: /MATCH/.test(card0) && /Mia Lopez/.test(card0) && /\$150/.test(card0), startSaid: said0, heldWhilePlaying, shownAfter, endSaid: msgText } });
+      snap('match'); },
     group() { // T425: a three-ball plays Woodhill's 1st in the model's order: the two others tee off (each played back from his ball, his swing with it), then his turn
       hostMessage(hostMsg()); idle(); ACT_MAKE = 999;
       const S = course.S, b0 = [hole.tee.x / S, hole.tee.y / S], p0 = [hole.pin.x / S, hole.pin.y / S], dl = Math.hypot(p0[0] - b0[0], p0[1] - b0[1]), ux = (p0[0] - b0[0]) / dl, uy = (p0[1] - b0[1]) / dl, rx = -uy, ry = ux;
