@@ -186,6 +186,7 @@ function driveCart() {   // W goes, S brakes and backs up, A and D steer; the ca
 function updatePlayer() {
   const p = player;
   if (cart.on) { driveCart(); return; }
+  if (HP && hostSwing(p)) return;                                     // (host mode: the swing is the model's meter, T421)
   if (p.swing >= 0) {                                                  // the swing plays out; the ball leaves as the club passes it
     if (breathT > 0) { breathT--; return; }                              // (held at the top while the breath is drawn)
     const before = p.al; p.al += 0.34; p.swing++;
@@ -200,7 +201,7 @@ function updatePlayer() {
     if (l > 0.3) { aim.dx = dx / l; aim.dy = dy / l; }
     aim.x = GP.x; aim.y = GP.y;
     if (autoClub) pickClub();
-    if (mouse.down && !charging) { charging = true; chargeT = 0; }
+    if (mouse.down && !charging && !HP) { charging = true; chargeT = 0; }
   }
   if (charging) {
     if (!near) { charging = false; return; }

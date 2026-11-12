@@ -69,7 +69,8 @@ function loadCourse(id) {   // make a saved course ready to play; false if there
   const D = MORE_COURSES.find((c) => c.id === id) || courseList().find((c) => c.id === id); if (!D) return false;   // (one handed over or fetched in this visit wins over a saved one of the same id)
   const S = D.scale > 0 ? +D.scale : CSCALE, sc = (a) => { const o = new Float32Array(a.length); for (let k = 0; k < a.length; k++) o[k] = a[k] * S; return o; };
   const C = { id: D.id, name: D.name, place: D.place, credit: D.credit, hcredit: D.hg ? D.hg.src : '', S, holes: [], gx0: 0, gy0: 0, gw: 0, gh: 0, sF: null, sG: null, sB: null, sT: null, sP: null, mw: null, ma: null, md: null, wlG: null,
-    hx0: 0, hy0: 0, hstep: 1, hw: 0, hh: 0, hm: null, streams: [], raw: D.fetched ? D : null };   // (raw: a fetched course's data, for the workers, which do not have it)
+    hx0: 0, hy0: 0, hstep: 1, hw: 0, hh: 0, hm: null, streams: [], raw: D.fetched ? D : null, lk: null };   // (raw: a fetched course's data, for the workers, which do not have it)
+  if (D.lk && Array.isArray(D.lk.r)) C.lk = lieGrid(D.lk, S);   // (T422: a host page's lies)
   if (D.hg) {                                                       // the heights: metres above the grid's lowest
     const b = atob(D.hg.d), n = D.hg.w * D.hg.h, M = new Float32Array(n); let lo = 1e9;
     for (let k = 0; k < n; k++) { const v = (b.charCodeAt(k * 2) | (b.charCodeAt(k * 2 + 1) << 8)) * D.hg.q; M[k] = v; if (v < lo) lo = v; }
@@ -157,6 +158,25 @@ function fieldCourse(x, y, o) {
   } else dP = 60;
   o.tal = tal; o.mow = mow; o.mow2 = mow2; o.h = h; o.dF = dF; o.dG = dG; o.dB = dB; o.dT = dT; o.dP = dP; o.wl = wl;
   o.wood = fbm(x / 34 + 5.5, y / 34 + 9.1, SEED + 80, 3); o.dry = fbm(x / 27 - 3.3, y / 27 + 1.7, SEED + 81, 3); o.tone = fbm(x / 8.5, y / 8.5, SEED + 82, 2);
+  if (C.lk) hostLie(C.lk, x, y, o);
+}
+// T422: a host page's lies (the course entry's `lk`: its model's kind for every 2 m cell, run-length coded) decide where the first cut, the rough and the
+// long grass are: the distances matOf reads are pushed to the side of the host's kind. The course's shapes still draw the fairway, green, tee, sand and water
+function lieGrid(L, S) {   // the grid unpacked, in the course's scale
+  const g = new Uint8Array(L.w * L.h); let at = 0;
+  for (let k = 0; k + 1 < L.r.length; k += 2) { const n = Math.min(L.r[k + 1], g.length - at); if (n > 0) g.fill(L.r[k], at, at + n); at += n; }
+  return { x0: L.x0 * S, y0: L.y0 * S, step: L.step * S, w: L.w, h: L.h, g };
+}
+function hostLie(L, x, y, o) {   // codes: 1 fairway, 2 first cut, 3 rough, 4 deep rough, 5 fescue (the rest: the shapes decide)
+  const i = Math.floor((x - L.x0) / L.step), j = Math.floor((y - L.y0) / L.step); if (i < 0 || j < 0 || i >= L.w || j >= L.h) return;
+  const k = L.g[j * L.w + i];
+  if (k === 1) { if (o.dF > FWO - 1) o.dF = FWO - 1; }
+  else if (k === 2) { o.dF = FWO + CUTW * 0.5; o.dry = 0; }
+  else if (k >= 3 && k <= 5) {
+    o.dF = Math.max(o.dF, FWO + CUTW + 1.2); if (DEEPD < 1e8) o.dF = Math.max(FWO + CUTW + 1.2, Math.min(o.dF, FWO + CUTW + DEEPD - 1.2));
+    o.dry = k === 3 ? 0 : 1;
+    if (o.dG > -0.3 && o.dG < COLLAR + 1) o.dG = COLLAR + 1; if (o.dT > -0.6 && o.dT < 1) o.dT = 1;
+  }
 }
 function courseHole(n) {   // a hole of the course, in the shape the game's own holes have
   const C = course, Hd = C.holes[(n - 1) % C.holes.length], L = Hd.line, m = L.length >> 1, path = new Float32Array(50), cum = new Float32Array(m);

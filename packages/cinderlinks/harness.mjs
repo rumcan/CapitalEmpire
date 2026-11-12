@@ -90,7 +90,7 @@ const HOST_PLAY = String.raw`
   function hostPlayRun(snapAt) {
     const errs = [], info = {}, S = course.S, near = (a, b) => Math.hypot(a[0] - b[0], a[1] - b[1]);
     const b0 = [hole.tee.x / S, hole.tee.y / S], p0 = [hole.pin.x / S, hole.pin.y / S], dl = near(b0, p0), ux = (p0[0] - b0[0]) / dl, uy = (p0[1] - b0[1]) / dl;
-    const kit = (club, carryM, scatterM, longM, loftDeg, x) => Object.assign({ club, carryM, scatterM, longM, playsM: carryM * 0.98, sideM: 2, loftDeg }, x || {});
+    const kit = (club, carryM, scatterM, longM, loftDeg, x) => Object.assign({ club, carryM, scatterM, longM, playsM: carryM * 0.98, sideM: 2, loftDeg, speed: 0.9, sweet: 0.08 }, x || {});
     const bag = (sc) => [kit('driver', 230, sc, 24, 10.5), kit('iron7', 150, 18, 12, 34), kit('putter', 0, 0, 0, 3, { fit: 'Mallet head' })];
     const turn = (ball, stroke, sc) => ({ v: 1, t: 'turn', golfer: 0, holeIdx: 0, hole: holeN, par: hole.par, stroke, at: 600, lie: 'tee', lieKind: 'tee', ball, pin: p0, distM: dl, wind: { mph: 5, from: 90 },
       slope: { up: 0, across: 0 }, clubs: bag(sc), suggested: { club: 'driver', aim: [b0[0] + ux * 230, b0[1] + uy * 230], power: 1 } });
@@ -107,9 +107,12 @@ const HOST_PLAY = String.raw`
     if (snapAt) snapAt('host-aim');
     hostMessage(turn(b0, 1, 16)); step(2, 1); info.ringTight = HP.ring && HP.ring.across;
     if (!(info.ringTight < r1)) errs.push('host play: a steadier club did not tighten the ring');
-    mouse.down = true; step(40, 0); mouse.down = false;
+    // T421: the meter in the hold-and-release: held 45 steps at 0.9 a second (power 0.675), Space three times (boost 0.03), clicked 40 steps into
+    // the downswing (accuracy 0.675 - 0.6 = 0.075: early)
+    mouse.down = true; step(45, 0); mouse.down = false; if (HP.sw) HP.sw.presses += 3; step(40, 0); mouse.down = true; step(1, 0); mouse.down = false;
     let sent = null; for (let k = 0; k < 120 && !sent; k++) { step(1, 0); if (hostLast && hostLast.t === 'input') sent = hostLast.input; }
     info.input = sent;
+    { const w = sent && sent.swing; if (!w || Math.abs(w.power - 0.675) > 1e-6 || Math.abs(w.acc - 0.075) > 1e-6 || Math.abs(w.boost - 0.03) > 1e-9 || w.v !== 2) errs.push('host play: the meter\'s outcome is not the timing (' + JSON.stringify(w) + ')'); }
     if (!sent || sent.club !== 'driver' || !(sent.power >= 0.3 && sent.power <= 1) || !Array.isArray(sent.aim) || !Number.isFinite(sent.aim[0]) || sent.holeIdx !== 0 || sent.stroke !== 1) errs.push('host play: no input, or a wrong one');
     const bw = [ball.x, ball.y]; step(60, 0);
     if (ball.state !== 0 || near([ball.x, ball.y], bw) > 1e-9 || !hostBusy()) errs.push('host play: the ball moved (or he could swing) before the host answered');
@@ -130,6 +133,19 @@ const HOST_PLAY = String.raw`
     if (snapAt) { step(60, 0); jumpToBall(); step(30, 0); snapAt('host-rest'); }
     return { errs, info };
   }
+  // T422: a host page's lies: three fairway points of hole 1 handed over as rough, deep rough and first cut are drawn so
+  function hostLieRun() {
+    const errs = [], info = {}, msg = hostMsg(), pts = [];
+    for (let t = 0.3; t < 0.8 && pts.length < 3; t += 0.02) { const k = Math.min(23, Math.floor(t * 24)), x = hole.path[k * 2], y = hole.path[k * 2 + 1]; if (matAt(x, y) === M_FAIR && pts.every((q) => Math.hypot(q[0] - x, q[1] - y) > 8)) pts.push([x, y]); }
+    if (pts.length < 3) { errs.push('host lies: no fairway points found'); return { errs, info }; }
+    const S = course.S, x0 = Math.min(...pts.map((q) => q[0])) / S - 10, y0 = Math.min(...pts.map((q) => q[1])) / S - 10, w = 80, h = 80, g = new Array(w * h).fill(0);
+    pts.forEach((q, n) => { const i = Math.floor((q[0] / S - x0) / 2), j = Math.floor((q[1] / S - y0) / 2); for (let dj = -1; dj <= 1; dj++) for (let di = -1; di <= 1; di++) g[(j + dj) * w + i + di] = [3, 4, 2][n]; });
+    const r = []; for (let k = 0; k < g.length; k++) { if (r.length && r[r.length - 2] === g[k]) r[r.length - 1]++; else r.push(g[k], 1); }
+    msg.course.lk = { x0, y0, step: 2, w, h, r }; msg.course.id = 'woodhill-lies'; hostMessage(msg);
+    const got = pts.map((q) => MAT_NAME[matAt(q[0], q[1])]); info.lies = got;
+    if (!(got[0] === MAT_NAME[M_ROUGH] || got[0] === MAT_NAME[M_FOREST]) || got[1] !== MAT_NAME[M_DEEP] || got[2] !== MAT_NAME[M_CUT]) errs.push('host lies: the grounds do not follow the host (' + got.join(', ') + ')');
+    return { errs, info };
+  }
 `;
 // the scene library for --shot: it runs in the game's own scope
 const SHOT_LIB = String.raw`
@@ -144,7 +160,7 @@ ${HOST_PLAY}
   const find = (test, cx, cy, rad) => { for (let r = 0; r < rad; r += 1.5) for (let a = 0; a < 6.283; a += 1.5 / Math.max(r, 1.5)) { const x = cx + Math.cos(a) * r, y = cy + Math.sin(a) * r; if (test(x, y)) return [x, y]; } return null; };
   const mid = pathAt(0.5);
   const SC = {
-    host: () => { hostMessage(hostMsg()); idle(); snap('host'); const r = hostPlayRun(snap); out.info.push({ hostPlay: r.info, errors: r.errs }); },   // (T418: then a turn, a strike and a canned shot)   // (T415: Woodhill handed over by message, hole 1 from its tee)
+    host: () => { hostMessage(hostMsg()); idle(); snap('host'); const r = hostPlayRun(snap); out.info.push({ hostPlay: r.info, errors: r.errs }); const l = hostLieRun(); out.info.push({ hostLies: l.info, errors: l.errs }); snap('host-lies'); },   // (T418: then a turn, a strike and a canned shot)   // (T415: Woodhill handed over by message, hole 1 from its tee)
     tee() { idle(); frames(20); snap('tee'); },
     aim() { idle(); newHole(holeN, hole.tee.x, hole.tee.y); frames(20); player.x = ball.x - 0.3; player.y = ball.y + 0.6; mouse.x = VW / 2 + 60; mouse.y = VH / 2 - 150; frames(6); snap('aim'); mouse.down = true; frames(40); snap('aim-charge'); mouse.down = false; frames(60); snap('ballcam-a'); frames(70); snap('ballcam-b'); for (let k = 0; k < 900 && ball.state !== 0; k++) frames(1); frames(20); snap('ballcam-end'); frames(60); snap('aim-after'); },
     stuck() { // can the golfer be trapped? On every steep point found near the hole (and its flatter neighbours), count the points from which no step in any of 16 directions is allowed
@@ -421,6 +437,7 @@ try {
       hostMessage({ v: 1, t: 'actors', at: 600, actors: [] }); if (actors.size) res.errors.push('actors: an empty list did not clear them'); }
     // host play (T418 to T420): the turn, the bag, the ring, one input and a wait, the host's shot played back to its rest
     { const hp = hostPlayRun(null); res.hostPlay = hp.info; res.errors.push(...hp.errs); }
+    { const hl = hostLieRun(); res.hostLies = hl.info; res.errors.push(...hl.errs); }
     return res;
   })()`);
   const lum = r.lum; delete r.lum;

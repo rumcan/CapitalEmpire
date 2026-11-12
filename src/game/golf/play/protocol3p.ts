@@ -93,7 +93,9 @@ export interface TurnMsg { v: 1; t: 'turn'; golfer: number; holeIdx: number; hol
   lie: Lie; lieKind: LieKind; ball: ViewPt; pin: ViewPt; distM: number; wind: WindNow; slope: Slope; clubs: ClubChoice[];
   suggested: { club: Club; aim: ViewPt; power: number };
   /** T418: what he may do beyond a plain swing (absent: an older host: all of it) */
-  can?: Unlocks }
+  can?: Unlocks;
+  /** T422: the lie as the card names it and what it does (lies.ts LIE_FX), and the day's gust peak (mph; absent: none known) */
+  lieName?: string; lieNote?: string; gust?: number }
 
 /** a decided shot, the owner's or anyone's: who, the hole (1-based) and stroke, the club, where it was struck from, the flight's samples (x, y and
  *  the height, evenly spaced in time from the strike to the landing; a putt has none), the bounces (each touch of the ground after the landing),
