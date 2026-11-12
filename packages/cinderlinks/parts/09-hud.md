@@ -127,7 +127,7 @@ function hostStart() {
   addEventListener('message', (e) => {
     if (typeof window !== 'undefined' && e.source !== window.parent) return;   // only the page that holds this one
     if (hostOrigin && e.origin !== hostOrigin) return;
-    hostMessage(e.data);
+    try { hostMessage(e.data); } catch (err) { hostSend({ t: 'error', why: String((err && err.message) || err) }); }   // (a course that cannot be read is said, not swallowed)
   });
   hostSend({ t: 'ready' });
 }
