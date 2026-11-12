@@ -57,19 +57,37 @@ export interface ActorsMsg { v: 1; t: 'actors'; at: number; actors: Actor[] }
 
 /** a club the owner may choose at his turn: the club, its full carry in metres and its scatter (the spread of where it lands, metres either side at
  *  full carry) after his skills, bag and mods for this lie, and the kit those numbers come from (mods.ts ClubKit) */
-export interface ClubChoice { club: Club; carryM: number; scatterM: number; kit: ClubKit }
+export interface ClubChoice { club: Club; carryM: number; scatterM: number; kit: ClubKit;
+  /** T418 (turn3p.ts; optional so an older host's message still reads): the full carry once the lie, the slope and the wind now are on it along the suggested line
+   *  (conditions.ts previewShot; m), the distance scatter (two standard deviations, m, at the full carry), the chance of a mishit, the meter's sweet spot (half width,
+   *  meter units: swing.ts sweetSpot) and the marker's speed (meter units a second), the loft (degrees) and the launch in words, the run after landing (a factor on
+   *  the surface's share of the carry: shot.ts CLUB_RUN times his mods), the most backspin and the most top or side spin this lie lets on (0..1: spin.ts spinCap),
+   *  and whether he may pick a shape (shape.ts) or a spin with this club */
+  playsM?: number; longM?: number; mishitP?: number; sweet?: number; speed?: number; loftDeg?: number; launch?: string; run?: number;
+  backspin?: number; topspin?: number; shapes?: boolean; spin?: boolean }
+/** T418: what the owner may do beyond a plain swing (T443 turns these into earned unlocks): pick a shape (draw or fade, high or low), put spin on the ball, add spin
+ *  in the air (the `airspin` mechanic), the Space power boost (the `boost` mechanic). Today only the two mechanics are earned (mods.ts hasMech); shapes and spin are
+ *  open to every golfer */
+export interface Unlocks { shapes: boolean; spin: boolean; airspin: boolean; boost: boolean }
 /** the owner's turn (live.ts OwnerTurn in the view's frame, with what the view shows around it): his golfer, the hole (index, number, par), the
  *  stroke, the minute he strikes, his lie (the play lie and the finer lies.ts kind), his ball, the pin, the distance to the pin (m), the wind now, the
  *  slope under his ball, the clubs he may choose and the model's suggested shot */
 export interface TurnMsg { v: 1; t: 'turn'; golfer: number; holeIdx: number; hole: number; par: number; stroke: number; at: number;
   lie: Lie; lieKind: LieKind; ball: ViewPt; pin: ViewPt; distM: number; wind: WindNow; slope: Slope; clubs: ClubChoice[];
-  suggested: { club: Club; aim: ViewPt; power: number } }
+  suggested: { club: Club; aim: ViewPt; power: number };
+  /** T418: what he may do beyond a plain swing (absent: an older host: all of it) */
+  can?: Unlocks }
 
 /** a decided shot, the owner's or anyone's: who, the hole (1-based) and stroke, the club, where it was struck from, the flight's samples (x, y and
  *  the height, evenly spaced in time from the strike to the landing; a putt has none), the bounces (each touch of the ground after the landing),
  *  the roll's path to rest, the rest and its lie, whether it was holed, a penalty stroke (water or out), and the game minute it was struck */
 export interface ShotMsg { v: 1; t: 'shot'; golfer: number; hole: number; stroke: number; club: Club; from: ViewPt; flight: ViewPt3[];
-  bounces: ViewPt[]; roll: ViewPt[]; rest: ViewPt; restLie: Lie; holed: boolean; penalty: 0 | 1; at: number }
+  bounces: ViewPt[]; roll: ViewPt[]; rest: ViewPt; restLie: Lie; holed: boolean; penalty: 0 | 1; at: number;
+  /** T418 (shot3p.ts; optional so an older host's message still reads): the seconds from the strike of each flight sample (rising; the last is the landing), the
+   *  landing's lie, the surface of each bounce, the seconds from the strike and the height (m above the ground) of each roll point (the bounces' hops are in
+   *  them), a spin back's check (the point the ball skids to before it comes back), and with a penalty the drop: where the next stroke is played from and its lie
+   *  (rest is where the ball itself stopped: in the water, or out of bounds) */
+  flightT?: number[]; landLie?: Lie; bounceLies?: Lie[]; rollT?: number[]; rollZ?: number[]; check?: ViewPt; drop?: ViewPt; dropLie?: Lie }
 
 /** the time and weather: the game minute of the day, the weather (weather.ts) and the wind now */
 export interface ClockMsg { v: 1; t: 'clock'; minute: number; weather: WeatherCondition; wind: WindNow }

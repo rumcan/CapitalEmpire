@@ -34,7 +34,10 @@ const PLAYABLE = new Set<Lie>(['tee', 'fairway', 'rough', 'fescue', 'bunker', 'g
 const SAND_M = 40;
 /** a mishit (the amateurs' topped and sliced shots): the chance per shot is base + skillK * (1 - skill)^2, it carries a share of the shot
  *  drawn from carry (uniform), and it is off line by a normal draw of deg degrees, on top of the normal spread */
-const MISHIT = { base: 0.03, skillK: 0.25, carry: [0.35, 0.7], deg: 12 };
+export const MISHIT = { base: 0.03, skillK: 0.25, carry: [0.35, 0.7], deg: 12 } as const;
+/** T418: a full shot's scatter, one standard deviation: of the distance, (dist0 + distK * (1 - skill)) of the carry; of the direction, (deg0 + degK * (1 - skill)) degrees; both times the
+ *  shot's spread factor (the lie, the slope, the kit, the shape, the meter). hitShot reads these; the view's landing ring (turn3p.ts) reads the same */
+export const SHOT_SCATTER = { dist0: 0.03, distK: 0.07, deg0: 1.5, degK: 5 } as const;
 
 /** a 32-bit hash step: mixes v into h (a murmur-style finaliser), so nearby ids give unrelated streams */
 function mix(h: number, v: number): number {
@@ -156,7 +159,7 @@ export function hitShot(r: () => number, sk: ShotSkill, lie: Lie, from: Pt, aim:
   if (lx && slope) carry *= slope.carry * (flier ? FLIER.carry : 1);
   if (shape) carry *= shape.carry;
   const spread = (sand ? 1.6 : lx ? lx.spread : SPREAD_F[lie]) * (mod?.spread ?? 1) * (lx && slope ? slope.spread * (flier ? FLIER.spread : 1) : 1) * (kit ? kit.spread : 1) * (shape ? shape.spread : 1);
-  const sD = (0.03 + 0.07 * (1 - skill)) * carry * spread, sA = (1.5 + 5 * (1 - skill)) * spread * (mod?.angF ?? 1) * Math.PI / 180;
+  const sD = (SHOT_SCATTER.dist0 + SHOT_SCATTER.distK * (1 - skill)) * carry * spread, sA = (SHOT_SCATTER.deg0 + SHOT_SCATTER.degK * (1 - skill)) * spread * (mod?.angF ?? 1) * Math.PI / 180;
   const sp = mod?.spin && mod.spin.amount > 0 && !flier ? mod.spin : null; // (T318: the curve and the roll below; no draws. T334: a flier has no spin)
   const ang = Math.atan2(aim.y - from.y, aim.x - from.x) + gauss(r) * sA + (mis ? gauss(r) * MISHIT.deg * Math.PI / 180 : 0) + (sp ? curveOf(sp, carry) : 0) + (slope ? slope.deg * Math.PI / 180 : 0) + (shape ? shape.curve : 0);
   let flown = Math.max(0, carry + gauss(r) * sD);
