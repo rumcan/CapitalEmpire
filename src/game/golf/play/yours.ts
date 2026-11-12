@@ -10,6 +10,7 @@
 // - Your round moves in real time: you walk or drive to your ball (golf/you.ts) whatever the sim's speed; it is not on the day's playback, so the day's
 //   groups do not wait for you nor you for them (T320 brings the watching speed; pace with the field is a follow-up).
 // - Your golf cart: drives at CART_TILES on anything but the greens, the bunkers and water (the engine's raster keeps it out of the buildings).
+import { FEAT_IDS, type FeatId } from './feats';
 import { TILE_M } from '../types';
 import { holeFrom } from './courseview';
 import { shotOutcome, POWER, type OwnerInput, type OwnerTurn } from './live';
@@ -107,7 +108,9 @@ export interface YourRound { v: 1; day: number; holes: number[]; at: number; car
   /** T349 (#992): a practice round from the hole card's Play: free, not an event, not recorded (no handicap, reputation or money); absent: your round as before */
   practice?: true;
   /** T337 (#963): the Snowman Eraser was used this round (once); Cold Beer, Hot Hands: the holes of nerve left (set to HOT_HOLES + 1 by a birdie, one less each hole you go on to: the bonus is on while it is above 0); absent: none */
-  er?: true; hot?: number }
+  er?: true; hot?: number;
+  /** T431: the feats that have paid a card pull this round (play/feats.ts; once a round each); absent: none */
+  feats?: FeatId[] }
 /** T246/T244: a round's mode (YourRound.mode) */
 export type RoundMode = 'casual' | 'championship' | 'mayors-cup' | 'match';
 export const ROUND_MODES: readonly RoundMode[] = ['casual', 'championship', 'mayors-cup', 'match'];
@@ -271,6 +274,7 @@ export function normalizeYourRound(x: unknown): YourRound | undefined {
   if (n(o.mk) && o.mk >= 1) base.mk = Math.round(o.mk);
   if (o.er === true) base.er = true; if (n(o.hot) && o.hot >= 1) base.hot = Math.min(HOT_HOLES + 1, Math.round(o.hot)); // T337: the Snowman Eraser used, the nerve holes left
   if (o.practice === true && !o.mode) base.practice = true; // T349: a casual round that is practice (a competition or a match never is)
+  if (Array.isArray(o.feats)) { const f = [...new Set(o.feats.filter((x: unknown): x is FeatId => FEAT_IDS.includes(x as FeatId)))]; if (f.length) base.feats = f; } // T431
   if (o.mode && ROUND_MODES.includes(o.mode) && o.mode !== 'casual') { base.mode = o.mode; base.rules = { ...COMPETITION_RULES }; } // (T246: a competition keeps its rules)
   if (base.mode === 'match') { const m = normalizeMatch(o.match, holes.length); if (m) base.match = m; else delete base.mode; } // (T244: a match without its other side is a casual round)
   if (o.undo && typeof o.undo === 'object') {

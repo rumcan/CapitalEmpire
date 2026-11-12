@@ -189,6 +189,15 @@ const HOST_PLAY = String.raw`
     if (info.gimmeFar || !info.gimmeNear || info.sent !== 'gimme' || info.gimmeNone) errs.push('host green: the gimme does not follow the rule (' + JSON.stringify(info) + ')');
     return { errs, info };
   }
+  // T430: a hole's end is said, and once it has been seen (about three seconds) the view answers holeDone for that hole, so the round goes on
+  function hostDoneRun() {
+    const errs = [], info = {};
+    hostMessage({ v: 1, t: 'holeEnd', holeIdx: 4, hole: 5, par: 4, strokes: 5, last: false });
+    let k = 0; for (; k < 400 && !(hostLast && hostLast.t === 'holeDone'); k++) tickGame();
+    info.steps = k; info.sent = hostLast && hostLast.t === 'holeDone' ? hostLast.holeIdx : null; info.said = msgText;
+    if (info.sent !== 4 || k < 150 || !/Bogey/.test(msgText)) errs.push('host done: no holeDone after the hole was seen (' + JSON.stringify(info) + ')');
+    return { errs, info };
+  }
   // T422: a host page's lies: three fairway points of hole 1 handed over as rough, deep rough and first cut are drawn so
   function hostLieRun() {
     const errs = [], info = {}, msg = hostMsg(), pts = [];
@@ -216,7 +225,7 @@ ${HOST_PLAY}
   const find = (test, cx, cy, rad) => { for (let r = 0; r < rad; r += 1.5) for (let a = 0; a < 6.283; a += 1.5 / Math.max(r, 1.5)) { const x = cx + Math.cos(a) * r, y = cy + Math.sin(a) * r; if (test(x, y)) return [x, y]; } return null; };
   const mid = pathAt(0.5);
   const SC = {
-    host: () => { hostMessage(hostMsg()); idle(); snap('host'); const r = hostPlayRun(snap); out.info.push({ hostPlay: r.info, errors: r.errs }); const c = hostCraftRun(); out.info.push({ hostCraft: c.info, errors: c.errs }); const gr = hostGreenRun(); out.info.push({ hostGreen: gr.info, errors: gr.errs }); snap('host-green'); const l = hostLieRun(); out.info.push({ hostLies: l.info, errors: l.errs }); snap('host-lies'); },   // (T418: then a turn, a strike and a canned shot)   // (T415: Woodhill handed over by message, hole 1 from its tee)
+    host: () => { hostMessage(hostMsg()); idle(); snap('host'); const r = hostPlayRun(snap); out.info.push({ hostPlay: r.info, errors: r.errs }); const c = hostCraftRun(); out.info.push({ hostCraft: c.info, errors: c.errs }); const gr = hostGreenRun(); out.info.push({ hostGreen: gr.info, errors: gr.errs }); snap('host-green'); const dn = hostDoneRun(); out.info.push({ hostDone: dn.info, errors: dn.errs }); const l = hostLieRun(); out.info.push({ hostLies: l.info, errors: l.errs }); snap('host-lies'); },   // (T418: then a turn, a strike and a canned shot)   // (T415: Woodhill handed over by message, hole 1 from its tee)
     tee() { idle(); frames(20); snap('tee'); },
     aim() { idle(); newHole(holeN, hole.tee.x, hole.tee.y); frames(20); player.x = ball.x - 0.3; player.y = ball.y + 0.6; mouse.x = VW / 2 + 60; mouse.y = VH / 2 - 150; frames(6); snap('aim'); mouse.down = true; frames(40); snap('aim-charge'); mouse.down = false; frames(60); snap('ballcam-a'); frames(70); snap('ballcam-b'); for (let k = 0; k < 900 && ball.state !== 0; k++) frames(1); frames(20); snap('ballcam-end'); frames(60); snap('aim-after'); },
     stuck() { // can the golfer be trapped? On every steep point found near the hole (and its flatter neighbours), count the points from which no step in any of 16 directions is allowed
@@ -495,6 +504,7 @@ try {
     { const hp = hostPlayRun(null); res.hostPlay = hp.info; res.errors.push(...hp.errs); }
     { const hc = hostCraftRun(); res.hostCraft = hc.info; res.errors.push(...hc.errs); }
     { const hg = hostGreenRun(); res.hostGreen = hg.info; res.errors.push(...hg.errs); }
+    { const hd = hostDoneRun(); res.hostDone = hd.info; res.errors.push(...hd.errs); }
     { const hl = hostLieRun(); res.hostLies = hl.info; res.errors.push(...hl.errs); }
     return res;
   })()`);

@@ -233,10 +233,12 @@ function hostRest() {   // the playback is over: the ball lies at the host's res
 function hostHoleEnd(m) {   // the hole is over: its score is said; after the last, the view waits for Escape
   const d = m.strokes - m.par, name = m.strokes === 1 ? 'Hole in one!' : d <= -2 ? 'Eagle!' : d === -1 ? 'Birdie!' : d === 0 ? 'Par' : d === 1 ? 'Bogey' : '+' + d;
   strokes = m.strokes; if (m.last) { HP.turn = null; HP.over = true; }
-  say(name + '  -  hole ' + m.hole + ' in ' + m.strokes + (m.last ? '  -  Esc goes back to the course' : ''), m.last ? 100000 : 330);
+  HP.doneHole = m.holeIdx; HP.doneAt = 200;   // (T430: after the score has been seen, about three seconds, the view says so: the host's round goes on to its next hole, or ends)
+  say(name + '  -  hole ' + m.hole + ' in ' + m.strokes + (m.last ? '  -  Esc goes back to the course' : '  -  on to the next tee'), m.last ? 100000 : 330);
 }
 function hostTick() {   // each step: the playback, the meter, and the wait for an answer
   hostBall(); hostMeterShow(); hostShotShow(); hostAimAsk();
+  if (HP.doneAt > 0 && --HP.doneAt === 0) hostSend({ t: 'holeDone', holeIdx: HP.doneHole });
   if (HP.wait > 0 && ++HP.wait > HOST_WAIT && (HP.wait - HOST_WAIT) % 120 === 1) say('Waiting for the course...', 130);
 }
 function hostAim() {   // T420: the aim tells the truth: the arc to where the model's mean lands this club at this power (its carry in this lie, slope and wind, and

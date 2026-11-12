@@ -229,7 +229,7 @@ test('earning: a title pays gold, 2nd and 3rd silver, the top quarter bronze, a 
   assert.ok(/Finished 2nd in the Mayor’s Cup/.test(earnFromPlace(2, 20, 'the Mayor’s Cup')!.why) && /Finished 5th of 20/.test(earnFromPlace(5, 20, 'x')!.why));
   assert.equal(earnFromMatch('w', 100)!.grade, 'bronze'); assert.equal(earnFromMatch('w', MATCH_BIG_STAKE)!.grade, 'silver'); assert.equal(earnFromMatch('w', 5000)!.grade, 'silver'); assert.equal(earnFromMatch('l', 500), null); assert.equal(earnFromMatch('h', 500), null);
   assert.ok(/\$1,200 money match/.test(earnFromMatch('w', 1200)!.why));
-  assert.deepEqual(EARN_TABLE.map(r => r.grade), ['gold', 'gold', 'silver', 'bronze', 'silver', 'bronze']); assert.ok(EARN_TABLE.every(r => r.what.length > 10));
+  assert.deepEqual(EARN_TABLE.map(r => r.grade), ['gold', 'gold', 'silver', 'bronze', 'silver', 'bronze', 'gold', 'silver', 'bronze', 'bronze'] /* (T431: the feats) */); assert.ok(EARN_TABLE.every(r => r.what.length > 10));
   // the pulls wait at the machine, by grade, up to a limit
   let c = emptyCards(); c = addPull(addPull(addPull(c, 'gold'), 'bronze', 2), 'silver'); assert.deepEqual(c.pulls, { bronze: 2, silver: 1, gold: 1 }); assert.equal(bestGrade(c), 'gold');
   c = takePull(c, 'gold'); assert.equal(bestGrade(c), 'silver'); assert.equal(takePull(takePull(takePull(takePull(c, 'silver'), 'bronze'), 'bronze'), 'bronze').pulls.bronze, 0, 'never below none'); assert.equal(bestGrade(emptyCards()), null);
