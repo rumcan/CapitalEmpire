@@ -377,6 +377,17 @@ ${HOST_PLAY}
       const me = P(-9, 0); go(me[0], me[1], Math.atan2(ux, -uy)); frames(10); snap('ghost');
       out.info.push({ ghost: { kept: actors.size, ghost: !!(actors.get(400000) && actors.get(400000).ghost), solid: !(actors.get(1) && actors.get(1).ghost) } });
       hostMessage({ v: 1, t: 'actors', at: 600, actors: [] }); ACT_MAKE = 3; },
+    dress() { // T429: tournament dress: a striped marquee and a grandstand beside Woodhill's 1st, as the host's features send them (use 'tent', 'stand')
+      const hm = hostMsg(), S = 1, T = [hm.course.holes[0].line[0], hm.course.holes[0].line[1]], N2 = [hm.course.holes[0].line[2], hm.course.holes[0].line[3]], L = Math.hypot(N2[0] - T[0], N2[1] - T[1]), ux = (N2[0] - T[0]) / L, uy = (N2[1] - T[1]) / L, rx = -uy, ry = ux;
+      const at = (f, s) => [T[0] + ux * f + rx * s, T[1] + uy * f + ry * s], rot = Math.atan2(uy, ux) * 180 / Math.PI;
+      hm.features = hm.features || { features: [] }; hm.features.features = (hm.features.features || []).concat([
+        { id: 'tent-1', kind: 'building', use: 'tent', name: 'Hospitality', at: at(16, -14), w: 9, d: 6, h: 4.2, rot, wall: '#f6f6f2', roofColour: '#c8323a' },
+        { id: 'tent-2', kind: 'building', use: 'tent', name: 'Food', at: at(28, -15), w: 6, d: 6, h: 3.8, rot, wall: '#f6f6f2', roofColour: '#2f8a4e' },
+        { id: 'stand-1', kind: 'building', use: 'stand', name: 'Grandstand', at: at(30, 3), w: 16, d: 6, h: 3.4, rot: rot + 90, wall: '#f6f6f2', roofColour: '#2f5fae' }]);
+      hostMessage(hm); idle();
+      const me = at(-6, 0); go(me[0], me[1], Math.atan2(ux, -uy)); frames(30); snap('dress'); { const c = at(18, 3); go(c[0], c[1], Math.atan2(ux, -uy)); camHk = 2.2; frames(20); snap('dress-stand'); camHk = 1; }
+      const B = feats ? feats.builds.filter((b) => b.use === 'tent' || b.use === 'stand') : []; for (const b of B) if (!b.faces) buildFaces(b);
+      out.info.push({ dress: { builds: B.length, faces: B.map((b) => b.use + ':' + (b.faces ? b.faces.length : 0)) } }); },
     gallery() { // T429: Woodhill's 18th on tournament day: a ring of fans round the green, a grandstand of seated fans behind it; then a holed putt and the cheer
       const hm = hostMsg(); hm.hole = 18; hostMessage(hm); idle(); ACT_MAKE = 999;
       const S = course.S, px = hole.pin.x, py = hole.pin.y, bx = hole.tee.x, by = hole.tee.y, L = Math.hypot(px - bx, py - by), ux = (px - bx) / L, uy = (py - by) / L, rx = -uy, ry = ux;
