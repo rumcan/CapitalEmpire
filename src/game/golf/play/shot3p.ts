@@ -110,9 +110,9 @@ export function shotMsg(o: ShotOutcome, frame: Frame3p | Pt, sampleHz = 30): Sho
   const height = o.height ?? null, lieAt = o.view ? (p: Pt): Lie => o.view!.lieAt(p.x, p.y) : null;
   const roll: ViewPt[] = [], rollT: number[] = [], rollZ: number[] = [], bounces: ViewPt[] = [], bounceLies: Lie[] = [];
   const leg = (a: Pt, b: Pt, aLie: Lie, bLie: Lie, t0: number): number => {
-    const r = new BallRoll().set(a, b, aLie, bLie, D, 0, height), p: RollPoint = { x: 0, y: 0, h: 0 }, m = Math.max(1, Math.ceil(r.rest * hz));
+    const r = new BallRoll().set(a, b, aLie, bLie, D, 0, height), p: RollPoint = { x: 0, y: 0, h: 0 }, m = r.rest > 0 ? Math.max(1, Math.ceil(r.rest * hz)) : 0; // (a dead stop: the landing alone)
     for (const bo of r.bounces()) { r.along(bo.s, p); const q = { x: p.x, y: p.y }; bounces.push(vp(q, c)); bounceLies.push(lieAt ? lieAt(q) : aLie); }
-    for (let j = roll.length ? 1 : 0; j <= m; j++) { const t = r.rest * j / m; r.at(t, p); roll.push(vp(p, c)); rollT.push(t0 + t); rollZ.push(Math.max(0, p.h)); }
+    for (let j = roll.length ? 1 : 0; j <= m; j++) { const t = m ? r.rest * j / m : 0; r.at(t, p); roll.push(vp(p, c)); rollT.push(t0 + t); rollZ.push(Math.max(0, p.h)); }
     roll[roll.length - 1] = vp(r.rest > 0 ? b : a, c); rollZ[rollZ.length - 1] = 0; // (the leg's end, exactly: a dead stop in water or sand stays at the landing)
     return t0 + r.rest;
   };
