@@ -42,7 +42,9 @@ export type CourseType = 'public' | 'private' | 'tour';
 /** the course: the course file (export3p.ts, T412: shapes in metres and the packed height grid; typed loosely until that exporter lands), the
  *  placed things (features3p.ts), the biome, the course type and the seed fine detail is grown from (from the course's name, so it looks the same on
  *  every visit) */
-export interface CourseMsg { v: 1; t: 'course'; course: Record<string, unknown>; features: FeaturesFile; biome: string; type: CourseType; seed: number }
+export interface CourseMsg { v: 1; t: 'course'; course: Record<string, unknown>; features: FeaturesFile; biome: string; type: CourseType; seed: number;
+  /** the course's size (1: true size, what the host sends; the view's own saved courses play at 0.6) and the hole to open, from 1 (T416; absent: 1) */
+  scale?: number; hole?: number }
 
 /** what an actor is: a golfer, a caddie, a cart, or a gallery (a crowd standing at one spot, `count` people) */
 export type ActorRole = 'golfer' | 'caddie' | 'cart' | 'gallery';
@@ -83,8 +85,10 @@ export type HostMsg = CourseMsg | ActorsMsg | TurnMsg | ShotMsg | ClockMsg | Lea
 
 /** the view's page has started and waits for a course */
 export interface ReadyMsg { v: 1; t: 'ready' }
-/** the view has drawn the course it was sent (the course file's id) and can take turns */
-export interface LoadedMsg { v: 1; t: 'loaded'; course: string }
+/** the view has drawn the course it was sent and can take turns: the course file's id, or (what the view sends today, T415) its number of holes */
+export interface LoadedMsg { v: 1; t: 'loaded'; course?: string; holes?: number }
+/** the view could not use what it was sent (a course without id, holes or shapes; one that could not be laid out): why, in plain words (T415) */
+export interface ErrorMsg { v: 1; t: 'error'; why: string }
 
 /** the owner's input for a turn (live.ts OwnerInput) as the view sends it: the aim in the view's frame. The host fills in what the view does not
  *  decide: the conditions (env) and the model version (v), so those two never cross the bridge */
@@ -98,13 +102,13 @@ export interface GimmeMsg { v: 1; t: 'gimme'; holeIdx: number; stroke: number }
 /** the owner has seen the hole (index) out: the view is ready for the next */
 export interface HoleDoneMsg { v: 1; t: 'holeDone'; holeIdx: number }
 /** the owner left the view (Esc, the round over, or a page error): why */
-export interface ExitMsg { v: 1; t: 'exit'; why: 'esc' | 'done' | 'error'; detail?: string }
+export interface ExitMsg { v: 1; t: 'exit'; why?: 'esc' | 'done' | 'error'; detail?: string }
 
-export type ViewMsg = ReadyMsg | LoadedMsg | InputMsg | WalkedMsg | GimmeMsg | HoleDoneMsg | ExitMsg;
+export type ViewMsg = ReadyMsg | LoadedMsg | ErrorMsg | InputMsg | WalkedMsg | GimmeMsg | HoleDoneMsg | ExitMsg;
 
 /** the message types each side sends */
 export const HOST_TYPES: readonly HostMsg['t'][] = ['course', 'actors', 'turn', 'shot', 'clock', 'leave'];
-export const VIEW_TYPES: readonly ViewMsg['t'][] = ['ready', 'loaded', 'input', 'walked', 'gimme', 'holeDone', 'exit'];
+export const VIEW_TYPES: readonly ViewMsg['t'][] = ['ready', 'loaded', 'error', 'input', 'walked', 'gimme', 'holeDone', 'exit'];
 
 const isMsg = (m: unknown, types: readonly string[]): boolean =>
   typeof m === 'object' && m !== null && (m as { v?: unknown }).v === PROTOCOL_V && types.includes((m as { t?: unknown }).t as string);

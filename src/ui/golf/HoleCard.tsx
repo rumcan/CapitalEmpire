@@ -28,6 +28,7 @@ export function HoleCard({ game, right = 'right-3' }: { game: Game; right?: stri
   const c = useHoleCard(game), [asking, ask, unask] = useConfirm(), [pick, setPick] = useState(false);
   if (!c) return null;
   const playWhy = game.holePlayWhy(c.n); // (T349: why Play is off, or null)
+  const why3p = game.hole3pWhy(c.n); // (T416: why the view from behind the golfer cannot open this hole; empty: it can)
   const bad = c.checks.filter(k => !k.ok), state = bad.length ? { icon: '!', word: 'needs attention', tone: 'text-amber-300' } : c.ready !== null ? { icon: '◔', word: `growing · ready ${monthIndexLabel(c.ready)}`, tone: 'text-sky-300' } : { icon: '✓', word: 'ready', tone: 'text-emerald-300' };
   const length = c.tees[0]?.m ?? 0, del = deleteNote(c);
   const others = game.courseHoleViews().filter(v => v.n !== c.n);
@@ -59,6 +60,12 @@ export function HoleCard({ game, right = 'right-3' }: { game: Game; right?: stri
           <button className="chip disabled:opacity-40" disabled={!!playWhy} onClick={() => setPick(p => !p)} title={playWhy ?? `Play hole ${c.n} yourself: a practice round on this hole or on the whole course, free and not recorded`} data-testid="hole-play"><Icon name="play" size={14} />Play</button>
           <button className="btn-icon" onClick={() => game.closeHoleCard()} title="Close (Esc)" aria-label="Close the hole card"><Icon name="close" size={18} /></button>
         </div>
+      </div>
+
+      {/* T416: the hole from behind the golfer (Cinderlinks, full screen; Esc comes back), greyed with the reasons when it cannot be played */}
+      <div className="mt-2 flex flex-col gap-1">
+        <button className="chip self-start disabled:opacity-40" disabled={why3p.length > 0} onClick={() => game.open3p(c.n)} title={why3p.length ? why3p.join('. ') : `Walk hole ${c.n} from its tee, seen from behind the golfer (Esc comes back)`} data-testid="hole-play-3p"><Icon name="play" size={14} />Play this hole</button>
+        {why3p.length > 0 && <div className="text-[12px] text-slate-400" data-testid="hole-play-3p-why">{why3p.join(' · ')}</div>}
       </div>
 
       {pick && !playWhy && <HolePlayChoice n={c.n} count={game.practiceHoleCount()} onHole={() => { setPick(false); game.practiceStart(c.n, 'hole'); }} onAll={() => { setPick(false); game.practiceStart(c.n, 'all'); }} onCancel={() => setPick(false)} />}

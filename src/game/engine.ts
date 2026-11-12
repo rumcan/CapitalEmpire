@@ -209,6 +209,12 @@ import { BAND_LABEL, LandSale } from './golf/land-sale';
 import { buildCourseStatsPanel, type CourseStatsPanel } from './golf/coursestats';
 import { TILE_M, type CourseArea, type CourseLayout, type GolfSurface, type Pin, type TeeBoxRec, type TeeKind, type TeeMark } from './golf/types';
 import { deriveHoles, surfaceAt, validateMarkerPlacement, type Hole } from './golf/holes';
+import { playable3p } from './golf/play/playable3p';
+import { export3pInputOf, exportCourse3p, frame3p } from './golf/play/export3p';
+import { exportFeatures3p, gatherFeatures3p } from './golf/play/features3p';
+import { courseEntry3p } from './golf/play/entry3p';
+import { seedOf } from './golf/play/view3p';
+import type { CourseMsg } from './golf/play/protocol3p';
 import { BallRoll, FX_SAND, FX_SPLASH, ballRoll, type HeightAt } from './golf/play/roll';
 import { BREAK_COLOURS, BREAK_STEP, CUP_DROP, CUP_LIP, PuttRoll, breakBucket, breakPinOf, type BreakTurn, buildBreakGrid, dotSpeed, loadBreakMode, loadTracers, saveBreakMode, saveTracers, shotPoint, steepShare, tracerAlpha, tracerGone, type BreakGrid, type BreakMode } from './golf/play/green';
 import { CHEER_TILES, DayFinish, IMPACT_S, LiveGroup, MODEL_V, OWNER_ADDRESS, OWNER_ART, OWNER_SKILL, POWER, PUTT_POWER, PlayView, allowedClubs, cartPaths, type CartPaths, type PlayCart, boardRows, championLine, dayRound, makeCourseView, powerFor, readSwing, resultsDue, shotReport, spinEffect, spinRoom, spinText, swingEffect, type ShotReport, type SpinInput, type SwingOutcome, type Lie, shortName as golferShort, skillFor, stateAt, standings, toParText, waitText, waveLine, type BoardRow, type Club, type CourseView, type GameSkills, type OwnerTurn, type RoundPlan, type Sex, type ShotSkill } from './golf/play';
@@ -9999,6 +10005,50 @@ export class Game {
     const why = this.yourChoices().why; if (why) return why;
     const v = this.yrView(); return v && v.holes.some(h => h.n === n) ? null : 'The course is still being set up: try again in a moment';
   }
+  // ---------- T416: the view from behind the golfer (Cinderlinks in a panel; golf/play/view3p.ts is the bridge, ui/golf/View3pPanel.tsx the panel) ----------
+  /** the hole the view from behind the golfer is open on (null: closed). While it is open the manager view holds still: its frame loop draws and steps
+   *  nothing (frame) and the sim is paused, put back to its speed on close */
+  view3pHole: number | null = null;
+  /** the sim speed when the view opened (put back when it closes) */
+  private view3pSpeed = 0;
+  /** why hole n cannot be opened in the view from behind the golfer (golf/play/playable3p.ts, T417): empty when it can */
+  hole3pWhy(n: number): string[] {
+    const g = this.golf; if (!g) return ['No course yet'];
+    const areas = this.courseAreaList(), h = deriveHoles(areas, g.tees, g.pins, g.aims ?? []).find(q => q.n === n);
+    if (!h) return ['No pin', 'No tee markers'];
+    return playable3p(h, areas).reasons;
+  }
+  /** opens the view from behind the golfer on hole n (the panel mounts the iframe): pauses the sim and holds the manager view still */
+  open3p(n: number) {
+    if (this.view3pHole !== null) { this.view3pHole = n; this.emit(); return; }
+    const why = this.hole3pWhy(n); if (why.length) { this.toast(why[0]!, 'warn'); return; }
+    this.releaseKeys(); this.view3pSpeed = this.speed; if (this.speed) this.setSpeed(0);
+    this.view3pHole = n; this.emit();
+  }
+  /** the view from behind the golfer closed (its Esc, the page's Esc, ✕): the manager view comes back and the sim runs at the speed it had */
+  close3p() {
+    if (this.view3pHole === null) return;
+    this.view3pHole = null; this.lastFrame = 0; this.last = performance.now();
+    if (this.view3pSpeed && !this.speed) this.setSpeed(this.view3pSpeed);
+    this.emit();
+  }
+  /** the `course` message for hole n: the painted course (export3p.ts), the placed things (features3p.ts) in the same frame, the biome and course type
+   *  (parkland and private for now: section 2's mapping from the map's setting and the upkeep is later work), a seed from the club's name, true size.
+   *  Null without a course */
+  async course3pMsg(n: number): Promise<CourseMsg | null> {
+    const g = this.golf; if (!g) return null;
+    const name = this.titleName()?.name ?? 'Your course', id = 'ce-' + (name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'course');
+    const inp = export3pInputOf(this, name); if (!inp) return null;
+    inp.id = id;
+    const f = frame3p(inp), file = await exportCourse3p(inp), course = await courseEntry3p(file);
+    // the box town roads must be near to count as the course's: every marker of the course (tees, pins, aims), in tiles
+    const pts = [...g.tees, ...g.pins, ...(g.aims ?? [])];
+    const box: [number, number, number, number] | undefined = pts.length
+      ? [Math.min(...pts.map(p => p.x)), Math.min(...pts.map(p => p.y)), Math.max(...pts.map(p => p.x)), Math.max(...pts.map(p => p.y))] : undefined;
+    const features = exportFeatures3p(gatherFeatures3p({ course: id, segs: this.net.segs, bizDefs: this.bizDefs, structures: g.structures ?? [], lots: this.estateRt?.lots ?? [],
+      props: this.props, library: LIBRARY, ...(box ? { box } : {}) }), { x: f.cx, y: f.cy });
+    return { v: 1, t: 'course', course: course as unknown as Record<string, unknown>, features, biome: 'parkland', type: 'private', seed: seedOf(name), scale: 1, hole: n };
+  }
   /** the Play button's choice: a practice round on just hole n (from your tee: the white one, else the first it has) or on every hole of the course from the first. Free, not an event, not
    *  recorded (yourRoundEnd); when it ends the camera, the tool, the side modes and the hole card come back as they were */
   practiceStart(n: number, scope: PracticeScope) {
@@ -12024,6 +12074,7 @@ export class Game {
   // ---------- main loop ----------
   frame = (now: number) => {
     this.raf = requestAnimationFrame(this.frame);
+    if (this.view3pHole !== null) return; // T416: the view from behind the golfer is open over the map: the manager view draws and steps nothing (close3p resets the clocks)
     // real play seconds of a golf game while the sim runs (T033): stops at the stuck player's mark (T117: 20 minutes), so the save does not churn
     const pdt = this.lastFrame ? Math.min(0.25, (now - this.lastFrame) / 1000) : 0; this.lastFrame = now; const gp = this.golf?.progress; if (gp && this.speed > 0 && gp.playS < STUCK_PLAY_SEC) gp.playS += pdt;
     this.perf.courseMs = this.cMs; this.cMs = 0; this.perf.lotFlushMs = 0;
