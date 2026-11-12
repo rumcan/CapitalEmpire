@@ -11,7 +11,12 @@
 // Positions cross in the view's frame (protocol3p.ts toView / fromView). Pure TS, no DOM.
 import type { CourseView, Golfer, Lie, Pt, RoundPlan, Sex, Shot } from './types';
 import type { TeeKind } from '../types';
-import { LiveGroup, MODEL_V, type OwnerInput, type OwnerTurn } from './live';
+import { LiveGroup, MODEL_V, shotOutcome, type OwnerInput, type OwnerTurn } from './live';
+import { shapeEffect } from './shape';
+import { carryFor } from './shot';
+import { kitOf } from './mods';
+import { ALL_EARNED, type Earned } from './unlocks';
+import { green3p, puttAim, type Green3p } from './green3p';
 import { playRound } from './round';
 import { teeTimes } from './field';
 import { envOf } from './conditions';
@@ -19,7 +24,7 @@ import type { ShotSkill } from './shot';
 import type { HeightAt } from './roll';
 import type { WindNow } from './wind';
 import type { Frame3p } from './export3p';
-import { fromView, type HoleEndMsg, type HostMsg, type ViewInput } from './protocol3p';
+import { fromView, type HoleEndMsg, type HostMsg, type PreviewMsg, type ViewInput } from './protocol3p';
 import { centreOf, turnMsg } from './turn3p';
 import { allowedClubs } from './owner';
 import { fieldShotMsg, shotMsg } from './shot3p';
@@ -33,6 +38,10 @@ export interface Play3pOpts {
   height?: HeightAt | null; wind?: () => WindNow | null; fit?: string;
   /** T422: the day's gust peak now (mph; absent: none sent) */
   gust?: () => number | null;
+  /** T443: what he has earned (unlocks.ts earned; absent: everything, as before T443) */
+  earned?: Earned;
+  /** T423: the gimme the round's rule allows (m; absent or 0: none, as in a match) */
+  gimmeM?: number;
 }
 
 /** the owner's golfer in a session: id 0, alone in his group */
@@ -55,6 +64,11 @@ export class Play3p {
   private readonly sent = new Set<Shot>();
   private turn: OwnerTurn | null = null;
   private done = false;
+  /** T443: the boost charges used on each hole (by index) */
+  private used = new Map<number, number>();
+  /** T423: the green sent with the turn in hand (null: not on the green) */
+  private green: Green3p | null = null;
+  private get earn(): Earned { return this.o.earned ?? ALL_EARNED; }
 
   constructor(private readonly o: Play3pOpts) {
     if (!o.holes.length) throw new Error('play3p: no holes to play');
@@ -85,11 +99,52 @@ export class Play3p {
   input(vi: ViewInput): HostMsg[] {
     const t = this.turn; if (!t || this.done) return [];
     if (vi.holeIdx !== t.holeIdx || vi.stroke !== t.stroke) return [this.turnMsg(t)];
-    const putting = vi.club === 'putter', aim = fromView(vi.aim, this.centre);
-    const env = putting ? null : envOf(this.windNow(), this.view.kindAt, this.o.height ?? null, t.ball, t.lie, aim);
-    const input: OwnerInput = { ...vi, aim, v: MODEL_V, ...(env ? { env } : {}) };
+    const input = this.owned(vi, t, true);
     const mine = this.live.play(input);
     const out: HostMsg[] = [];
+    this.next(out, { shot: mine, input }, t.holeIdx);
+    return out;
+  }
+
+  /** T441, T442: the model's shot for the view's input with no luck in it (every draw of the stream at 0.75: a normal draw of 0, no mishit, no flier, no card's
+   *  chance), as the view would strike it now: what its shape and spin do, for the aim marker. Plays nothing. Null for a putt or with no turn */
+  preview(key: number, vi: ViewInput): PreviewMsg {
+    const t = this.turn, none: PreviewMsg = { v: 1, t: 'preview', key, shot: null, spread: 1 };
+    if (!t || this.done || vi.club === 'putter' || vi.holeIdx !== t.holeIdx || vi.stroke !== t.stroke) return none;
+    const input = this.owned(vi, t, false), { holeIdx: _h, stroke: _s, ...inp } = input; void _h; void _s;
+    const hole = this.view.holes[t.holeIdx]!, last = t.holeIdx === this.view.holes.length - 1;
+    const o = shotOutcome(this.view, hole, t.ball, t.lie, this.o.skills, inp, () => 0.75, { last });
+    const shot = { golfer: OWNER_3P, hole: t.holeIdx, stroke: t.stroke, t: t.t, from: { x: t.ball.x, y: t.ball.y }, to: o.to, club: vi.club, lie: o.lie, penalty: o.penalty, holed: o.holed, ...(o.landing ? { landing: o.landing } : {}) };
+    const mctx = { lie: t.lie, tee: t.lie === 'tee', deck: vi.club === 'driver' && t.lie !== 'tee', last, follow: false }, kit = kitOf(this.o.skills, vi.club, mctx);
+    const fx = shapeEffect(inp.shape ?? null, vi.club, carryFor(this.o.skills, vi.club, mctx) * Math.min(1, Math.max(0.3, inp.power)), kit.skill, kit);
+    return { v: 1, t: 'preview', key, shot: this.strokeMsg(shot, input), spread: fx.spread };
+  }
+
+  /** the view's input as the model plays it: the aim in tiles, the conditions and the model's version filled in, and what he has not earned taken out (a
+   *  shape's curve or flight, side spin, backspin, clicks in the air, a boost with no charge left on the hole); `spend`: a boost uses a charge */
+  private owned(vi: ViewInput, t: OwnerTurn, spend: boolean): OwnerInput {
+    const e = this.earn, putting = vi.club === 'putter', aim0 = fromView(vi.aim, this.centre);
+    const aim = putting && this.green ? puttAim(t.ball, aim0, this.green.startDeg) : aim0; // (T423: a putt is aimed along the read; the model judges it at the pin's line)
+    const env = putting ? null : envOf(this.windNow(), this.view.kindAt, this.o.height ?? null, t.ball, t.lie, aim);
+    const { shape: sh0, spin: sp0, swing: sw0, ...rest } = vi;
+    const shape = sh0 ? { curve: (sh0.curve < 0 ? (e.draw ? -1 : 0) : sh0.curve > 0 ? (e.fade ? 1 : 0) : 0) as -1 | 0 | 1, flight: (sh0.flight > 0 ? (e.high ? 1 : 0) : sh0.flight < 0 ? (e.low ? -1 : 0) : 0) as -1 | 0 | 1 } : null;
+    const spin = sp0 ? { x: e.side ? sp0.x : 0, y: sp0.y < 0 && !e.back ? 0 : sp0.y, pump: e.tour ? sp0.pump : 0 } : null;
+    let swing = sw0;
+    if (swing && swing.boost > 0) {
+      const used = this.used.get(t.holeIdx) ?? 0;
+      if (!e.boost || used >= e.charges) swing = { ...swing, boost: 0 }; else if (spend) this.used.set(t.holeIdx, used + 1);
+    }
+    return { ...rest, aim, v: MODEL_V, ...(env ? { env } : {}), ...(swing ? { swing } : {}), ...(shape && (shape.curve || shape.flight) ? { shape } : {}), ...(spin && (spin.x || spin.y || spin.pump) ? { spin } : {}) };
+  }
+
+  /** T423: the view's gimme for the turn in hand: played as a conceded putt (LiveGroup's `gim`) when the ball lies on the green within the round's gimme;
+   *  else the turn again. Answered as an input is */
+  gimme(holeIdx: number, stroke: number): HostMsg[] {
+    const t = this.turn; if (!t || this.done) return [];
+    const m = this.o.gimmeM ?? 0, onGreen = this.view.lieAt(t.ball.x, t.ball.y) === 'green';
+    if (holeIdx !== t.holeIdx || stroke !== t.stroke || !onGreen || !(m > 0) || t.distM > m) return [this.turnMsg(t)];
+    const input: OwnerInput = { holeIdx, stroke, club: 'putter', aim: { x: t.pin.x, y: t.pin.y }, power: 1, v: MODEL_V, gim: true };
+    const mine = this.live.play(input), out: HostMsg[] = [];
     this.next(out, { shot: mine, input }, t.holeIdx);
     return out;
   }
@@ -132,8 +187,14 @@ export class Play3p {
     return m;
   }
   private turnMsgAll(t: OwnerTurn) {
-    return turnMsg({ turn: t, skills: this.o.skills, view: this.view, height: this.o.height ?? null, wind: this.windNow(), last: t.holeIdx === this.view.holes.length - 1,
+    const m = turnMsg({ turn: t, skills: this.o.skills, view: this.view, height: this.o.height ?? null, wind: this.windNow(), last: t.holeIdx === this.view.holes.length - 1,
       ...(this.o.fit ? { fit: this.o.fit } : {}), ...(this.o.gust ? { gust: this.o.gust() } : {}) }, this.centre);
+    m.earned = this.earn; m.charges = Math.max(0, this.earn.charges - (this.used.get(t.holeIdx) ?? 0));
+    // T423: on the green, the host's green and the gimme the rule allows
+    this.green = this.view.lieAt(t.ball.x, t.ball.y) === 'green' ? green3p(this.o.height ?? null, (x, y) => this.view.lieAt(x, y) === 'green', t.ball, t.pin, this.centre) : null;
+    if (this.green) m.green = this.green;
+    if ((this.o.gimmeM ?? 0) > 0) m.gimmeM = this.o.gimmeM;
+    return m;
   }
 
   private windNow(): WindNow | null { return this.o.wind ? this.o.wind() : null; }
