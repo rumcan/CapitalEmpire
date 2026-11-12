@@ -302,6 +302,21 @@ courses, no `?find=`), draws nothing, and talks to the page that holds it by `po
   `loaded` answer, Woodhill at scale 1, hole 1 with a tee under the golfer, the features applied and a picture that is not black. Picture:
   `--scenes host`.
 
+## Host play: the host decides every shot (T418 to T420, 2026-11-12)
+
+In host mode the shots are CapitalEmpire's (its golf model, `src/game/golf/play/play3p.ts`); the view never flies or rolls a ball of its own. The code is in `parts/09-hud.md` below `hostStart` (`hostPlayMsg`, `hostTurn`, `hostStrike`, `hostShot`, `hostBall`, `hostAim`, `hostTabs`), with one-line hooks in `strike`, `updateBall`, `updatePlayer`, `pickClub`, `gimme`, `dropBall` (07) and `drawAim` (08); nothing in `drawGround`. All of it keys off `HP`, which only a `turn` sets, so standalone play is unchanged.
+
+| Direction | Message | What happens |
+|---|---|---|
+| host to view | `{ v: 1, t: 'turn', golfer, holeIdx, hole, stroke, ball, pin, clubs, suggested, wind, ... }` | the ball and the pin go where the host has them, the tabs show `clubs` (his bag: name, full carry after his mods, the putter's fitting), the suggested club is in hand. Held while a shot plays back |
+| view to host | `{ v: 1, t: 'input', input: { holeIdx, stroke, club, aim: [x, y], power } }` | sent at the strike (metres in the host's frame; power is the model's: 0.3..1 of the carry, a putt 0.5..1.5 of its length to the pin); the ball stays put. After 5 s without an answer it says "Waiting for the course..." and keeps waiting |
+| host to view | `{ v: 1, t: 'shot', flight, flightT, bounces, roll, rollT, rollZ, rest, holed, penalty, ... }` | the owner's stroke is played back: the flight with the ball camera, a thump at the landing and each bounce, the roll, then the ball lies at `rest`. Anyone else's is ignored until T425 |
+| host to view | `{ v: 1, t: 'holeEnd', hole, par, strokes, last }` | the score is said; after the last, the view waits for Escape |
+
+- Keys 1 to 9 and the mouse wheel over the tabs change club; B (drop) and the gimme are the host's to decide, so they do nothing here.
+- The aim (T420) draws the host's numbers for the club in hand: the arc to `playsM` times the power plus `sideM` (the wind's and the slope's push, both along the suggested line), and a ring of one standard deviation: `scatterM / 2` across the line and `longM / 2` along it, times the power. A better club or a steadier golfer draws a smaller ring.
+- The gate checks it (`HOST_PLAY` in `harness.mjs`): a turn with a made-up bag, the tabs, the ring's size and that a steadier club tightens it, one input and a wait with the ball still, a canned shot flown with the ball camera and the ball exactly at its rest, and the next turn from there. Pictures: `--scenes host` (also `host-aim`, `host-flight`, `host-rest`; the aim itself is on the full-size layer, which the harness pictures do not show).
+
 ## Cart tracks without stripes (gen-30, 2026-11-12)
 
 `pressCart` lays the wheels' tracks all the way from where the cart was a moment ago to where it is now. Stamped only where it stood each frame, a moving cart left a stamp, a gap, a stamp, and its tracks came out as stripes across them (it looked like two surfaces fighting for the same pixels).

@@ -29,7 +29,9 @@ export const centreOf = (f: Frame3p | Pt): Pt => 'cx' in f ? { x: f.cx, y: f.cy 
 /** what turnMsg reads besides the turn: the owner's skills as the model plays them (GameSkills with his bag's and cards' mods in them: golf/player.ts
  *  gameSkills with bag.ts bagGear; a plain number for a golfer without), the course (its lie and finer lie readers), the ground's height (absent: flat),
  *  the wind now (absent: calm), and whether this is the round's last hole (the moment `last` of a card) */
-export interface TurnState { turn: OwnerTurn; skills: ShotSkill; view: CourseView; height?: HeightAt | null; wind?: WindNow | null; last?: boolean }
+export interface TurnState { turn: OwnerTurn; skills: ShotSkill; view: CourseView; height?: HeightAt | null; wind?: WindNow | null; last?: boolean;
+  /** T419: the putter's fitting in words (bag.ts putterFitName; absent or '': none shown) */
+  fit?: string }
 
 /** the moment of a shot with `club` from `lie` (live.ts shotOutcome builds the same one for the strike) */
 export const momentOf = (lie: Lie, club: Club, last = false): ModCtx => ({ lie, tee: lie === 'tee', deck: club === 'driver' && lie !== 'tee', last, follow: false });
@@ -46,7 +48,7 @@ export function clubChoice(sk: ShotSkill, club: Club, lie: Lie, env: ShotEnv | n
   const putter = club === 'putter', mctx = momentOf(lie, club, last), kit = kitOf(sk, club, mctx);
   const carryM = putter ? 0 : carryFor(sk, club, mctx);
   const kind = env?.lie ?? kindOfLie(lie), lx = LIE_FX[kind];
-  const playsM = putter ? 0 : previewShot(club, carryM, ux, uy, env, null, kit.wind, kit.slope).carryM;
+  const pv = putter ? null : previewShot(club, carryM, ux, uy, env, null, kit.wind, kit.slope), playsM = pv ? pv.carryM : 0;
   // (hitShot's scatter, one standard deviation: of the distance a share of the carry, of the direction degrees; both times the spread of the lie, the slope
   // and his kit. The swing meter's spread and a picked shape come on top at the strike; the sand wedge's splash from a greenside bunker (1.6) is left out)
   const sl = slopeEffect(env?.slope && kit.slope !== 1 ? { up: env.slope.up * kit.slope, across: env.slope.across * kit.slope } : env?.slope);
@@ -56,7 +58,7 @@ export function clubChoice(sk: ShotSkill, club: Club, lie: Lie, env: ShotEnv | n
   const longM = putter ? 0 : 2 * (SHOT_SCATTER.dist0 + SHOT_SCATTER.distK * un) * playsM * spread;
   const mishitP = putter ? 0 : Math.max(0, MISHIT.base + MISHIT.skillK * un * un + (env ? lx.wild : 0) + kit.mishit);
   return {
-    club, carryM, scatterM, kit, playsM, longM, mishitP,
+    club, carryM, scatterM, kit, playsM, longM, mishitP, sideM: pv ? pv.sideM : 0,
     sweet: sweetSpot(kit.skill, 0, kit.sweet, kit.speed), speed: markerSpeed(kit.skill, kit.speed),
     loftDeg: LOFT[club], launch: putter ? '' : launchWord(LOFT[club]),
     run: putter ? 1 : CLUB_RUN[club] * kit.roll / (CLUB_BASE[club]?.roll ?? 1), // (bag.ts bagView's run: what a shot with conditions rolls by)
@@ -80,6 +82,7 @@ export function turnMsg(st: TurnState, frame: Frame3p | Pt): TurnMsg {
   const env = envOf(wind.mph > 0 ? wind : null, st.view.kindAt, st.height ?? null, t.ball, t.lie, aim);
   const dx = aim.x - t.ball.x, dy = aim.y - t.ball.y, L = Math.hypot(dx, dy), ux = L > 1e-9 ? dx / L : 1, uy = L > 1e-9 ? dy / L : 0;
   const clubs = bagClubs(st.skills).map(k => clubChoice(st.skills, k, t.lie, k === 'putter' ? null : env, ux, uy, st.last === true));
+  if (st.fit) for (const c of clubs) if (c.club === 'putter') c.fit = st.fit;
   return {
     v: PROTOCOL_V, t: 'turn', golfer: t.golfer, holeIdx: t.holeIdx, hole: t.hole, par: t.par, stroke: t.stroke, at: t.t,
     lie: t.lie, lieKind: env.lie ?? lieKindFor(st.view.kindAt, t.ball, t.lie), ball: toView(t.ball, c), pin: toView(t.pin, c), distM: t.distM,
