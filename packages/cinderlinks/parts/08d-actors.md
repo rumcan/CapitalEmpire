@@ -95,6 +95,7 @@ function actorPose(r, far) {   // [pose, step] of mkGolfer for what it is doing 
 const faOf = (th) => ((Math.round(th / 6.2832 * 16) - Math.round(camYaw * 16 / 6.2832)) % 16 + 16) % 16;   // a world heading as the facing the camera sees
 function actorsList() {   // render's hook: every actor in view joins its list (with its sculpture picked and its shadow cast, before anything stands on the ground)
   const t = performance.now(), tanH = (VW / 2 + 120) / FOC;
+  if (!hostHelpDone && HOST) hostHelp();   // (T440: the help says what a round inside the game is)
   if (matchQ.length) matchTick();   // (T428: a match's words wait for the strokes before them)
   groupList(t, tanH);   // (T425: the group's balls and markers)
   if (galleries.size) galleryList(tanH);   // (T429: the crowds)

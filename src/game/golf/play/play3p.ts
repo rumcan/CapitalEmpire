@@ -24,7 +24,7 @@ import type { ShotSkill } from './shot';
 import type { HeightAt } from './roll';
 import type { WindNow } from './wind';
 import type { Frame3p } from './export3p';
-import { PROTOCOL_V, fromView, type Actor, type ActorsMsg, type BoardMsg, type HoleEndMsg, type HostMsg, type PreviewMsg, type ViewInput } from './protocol3p';
+import { PROTOCOL_V, fromView, type Actor, type ActorsMsg, type BoardMsg, type HoleEndMsg, type HostMsg, type PreviewMsg, type ShotMsg, type ViewInput } from './protocol3p';
 import { CartPlay, type CartPaths } from './carts';
 import type { WalkField } from '../walkfield';
 import { actorsMsg } from './actors3p';
@@ -53,6 +53,10 @@ export interface Play3pOpts {
   galleries?: () => Actor[];
   /** T433: more people at game minute m (a ghost round's golfer: ghost3p.ts ghostActor); with it, the actors lists are sent as with company */
   more?: (minute: number) => Actor[];
+  /** T433: more strokes struck after minute t0 and by t1 (a ghost round's: ghost3p.ts ghostShots), sent with the batch they fall in */
+  moreShots?: (t0: number, t1: number) => ShotMsg[];
+  /** T436: the board's rows at minute m in place of the field's standings (fair3p.ts fairRows: you and a ghost, gross and net) */
+  boardRows?: (minute: number) => BoardMsg['rows'];
   /** T422: the day's gust peak now (mph; absent: none sent) */
   gust?: () => number | null;
   /** T443: what he has earned (unlocks.ts earned; absent: everything, as before T443) */
@@ -83,6 +87,8 @@ export class Play3p {
   private readonly sent = new Set<Shot>();
   private turn: OwnerTurn | null = null;
   private done = false;
+  /** T433: the last minute the ghost's strokes have been sent to */
+  private moreT = -Infinity;
   /** T425: the owner's golfer id (OWNER_3P, or his id in the real round) */
   readonly me: number;
   /** T425: the owner's group (golfer ids) */
@@ -206,7 +212,11 @@ export class Play3p {
     if (mine && !this.plan.shots.includes(mine.shot)) out.push(this.strokeMsg(mine.shot, mine.input)); // (LiveGroup records it in the plan; this is a guard)
     if (holeWas >= 0 && (!turn || turn.holeIdx !== holeWas)) out.push(this.holeEnd(holeWas, !turn));
     this.turn = turn; this.done = !turn;
-    if (co) { const m = turn ? turn.t - 1e-3 : Number.isFinite(last) ? last + 1 : 0; out.push(this.actors(m), this.board(m)); }
+    if (co) {
+      const m = turn ? turn.t - 1e-3 : Number.isFinite(last) ? last + 1 : 0;
+      if (this.o.moreShots && m > this.moreT) { out.push(...this.o.moreShots(this.moreT, m)); this.moreT = m; }   // (T433: the ghost's strokes of this stretch)
+      out.push(this.actors(m), this.board(m));
+    }
     if (turn) out.push(this.turnMsg(turn));
   }
 
@@ -217,6 +227,7 @@ export class Play3p {
   }
   /** T427: the leaderboard at game minute m and his group's wait on the group ahead */
   board(m: number): BoardMsg {
+    if (this.o.boardRows) return { v: PROTOCOL_V, t: 'board', at: m, rows: this.o.boardRows(m), wait: waitText(this.plan, this.view, this.me, m) };
     const rows = boardRows(standings(this.plan, this.view, m), this.plan.golfers, BOARD_ROWS, this.me).map(r => ({ pos: r.pos, name: r.name, toPar: r.toPar, thru: r.thru, owner: r.owner }));
     return { v: PROTOCOL_V, t: 'board', at: m, rows, wait: waitText(this.plan, this.view, this.me, m) };
   }

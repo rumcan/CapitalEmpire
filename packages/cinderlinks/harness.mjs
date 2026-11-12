@@ -388,6 +388,20 @@ ${HOST_PLAY}
       const me = at(-6, 0); go(me[0], me[1], Math.atan2(ux, -uy)); frames(30); snap('dress'); { const c = at(18, 3); go(c[0], c[1], Math.atan2(ux, -uy)); camHk = 2.2; frames(20); snap('dress-stand'); camHk = 1; }
       const B = feats ? feats.builds.filter((b) => b.use === 'tent' || b.use === 'stand') : []; for (const b of B) if (!b.faces) buildFaces(b);
       out.info.push({ dress: { builds: B.length, faces: B.map((b) => b.use + ':' + (b.faces ? b.faces.length : 0)) } }); },
+    ghostball() { // T433: a ghost's stroke on Woodhill's 1st, beside the owner's turn: his ball flies see-through while the owner's stays on the tee; the help says what a round in the game is
+      hostMessage(hostMsg()); idle(); ACT_MAKE = 999;
+      const S = course.S, b0 = [hole.tee.x / S, hole.tee.y / S], p0 = [hole.pin.x / S, hole.pin.y / S], dl = Math.hypot(p0[0] - b0[0], p0[1] - b0[1]), ux = (p0[0] - b0[0]) / dl, uy = (p0[1] - b0[1]) / dl, rx = -uy, ry = ux;
+      const gb = [b0[0] + rx * 3, b0[1] + ry * 3], L = [gb[0] + ux * 150, gb[1] + uy * 150], R = [L[0] + ux * 20, L[1] + uy * 20], F = [], FT = [], RL = [], RT = [];
+      for (let k = 0; k <= 40; k++) { const u = k / 40; F.push([gb[0] + (L[0] - gb[0]) * u, gb[1] + (L[1] - gb[1]) * u, 26 * 4 * u * (1 - u)]); FT.push(4 * u); }
+      for (let k = 1; k <= 10; k++) { const u = k / 10; RL.push([L[0] + (R[0] - L[0]) * u, L[1] + (R[1] - L[1]) * u]); RT.push(4 + 2 * u); }
+      hostMessage({ v: 1, t: 'actors', play: true, at: 600.4, actors: [{ id: 0, role: 'golfer', owner: true, at: b0, hole: holeN }, { id: 400000, role: 'golfer', ghost: true, name: 'Pat', at: gb, hole: holeN, doing: 'address', phase: 0.3, ball: gb, dress: actDress(6) }] });
+      hostMessage({ v: 1, t: 'shot', golfer: 400000, ghost: true, hole: holeN, stroke: 1, club: 'driver', from: gb, flight: F, flightT: FT, bounces: [L], roll: RL, rollT: RT, rest: R, restLie: 'fairway', holed: false, penalty: 0, at: 600 });
+      hostMessage({ v: 1, t: 'turn', golfer: 0, holeIdx: 0, hole: holeN, par: hole.par, stroke: 1, at: 600.5, lie: 'tee', lieKind: 'tee', ball: b0, pin: p0, distM: dl, wind: { mph: 0, from: 0 }, slope: { up: 0, across: 0 },
+        clubs: [{ club: 'driver', carryM: 230, scatterM: 24, longM: 24, playsM: 225, sideM: 2, loftDeg: 10.5 }], suggested: { club: 'driver', aim: [b0[0] + ux * 230, b0[1] + uy * 230], power: 1 } });
+      const own = [ball.x, ball.y]; let flew = 0, maxZ = 0; if (!hostHelpDone) hostHelp();   // (the harness is not in host mode: the help is asked for here)
+      const T0 = performance.now(); while (performance.now() - T0 < 2000) { tickGame(); render(); for (const o of dlist) if (o.k === K_ACTOR && o.a && o.a.role === 'ball' && o.a.ghost && o.a.z > 0.5) { flew++; if (o.a.z > maxZ) maxZ = o.a.z; } if (flew === 5) snap('ghostball'); }
+      out.info.push({ ghostball: { flewFrames: flew, highestM: +maxZ.toFixed(1), ownerBallStill: Math.hypot(ball.x - own[0], ball.y - own[1]) < 1e-9 && !HP.play, turnKept: !!(HP && HP.turn), help: /IN YOUR GAME/.test(helpEl.innerHTML) } });
+      ACT_MAKE = 3; },
     gallery() { // T429: Woodhill's 18th on tournament day: a ring of fans round the green, a grandstand of seated fans behind it; then a holed putt and the cheer
       const hm = hostMsg(); hm.hole = 18; hostMessage(hm); idle(); ACT_MAKE = 999;
       const S = course.S, px = hole.pin.x, py = hole.pin.y, bx = hole.tee.x, by = hole.tee.y, L = Math.hypot(px - bx, py - by), ux = (px - bx) / L, uy = (py - by) / L, rx = -uy, ry = ux;
