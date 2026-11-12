@@ -100,6 +100,11 @@ body { display: flex; align-items: center; justify-content: center; color: #eadf
 #powerTxt { margin-top: 4px; font-size: 11px; color: #f4efdc; text-shadow: 2px 2px 0 #000; }
 .track { height: 13px; background: #0c2218; border: 2px solid #0a1a12; box-shadow: 0 0 0 1px rgba(242, 201, 76, 0.55); position: relative; }
 .track i { display: block; height: 100%; width: 0%; background: linear-gradient(90deg, #58c070, #f2c94c 72%, #e8573c); }
+.track b { display: none; position: absolute; top: -3px; bottom: -3px; }
+#power.meter .track b { display: block; }
+#power.meter .track i { background: linear-gradient(90deg, #3c8a52, #58c070 14%, #f2c94c 80%, #e8573c); }
+#power .track b.sweet { background: rgba(130, 255, 160, 0.45); border-left: 1px solid #b8ffc8; border-right: 1px solid #b8ffc8; }
+#power .track b.top { width: 2px; margin-left: -1px; background: #f4efdc; }
 #clubs { position: absolute; left: 1.4%; bottom: 2.4%; display: flex; flex-wrap: wrap; gap: 6px; max-width: 64%; }
 #clubs.bag { gap: 4px; }
 #clubs.bag .club { padding: 3px 6px 4px; font-size: 10px; }

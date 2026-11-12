@@ -61,12 +61,11 @@ function miniDot(x, y, col, s) { mctx.fillStyle = col; mctx.fillRect(Math.round(
 function updateHud() {
   const H = hole, m = matAt(ball.x, ball.y), d = Math.hypot(H.pin.x - ball.x, H.pin.y - ball.y);
   const score = strokes - H.par, row = (a, b) => '<div class="row"><span>' + a + '</span><b>' + b + '</b></div>';
-  const card = (course ? '<div class="course">' + course.name + '</div>' : '') + '<div class="hole">Hole ' + (course ? course.holes[(holeN - 1) % course.holes.length].n : holeN) + '<span>par ' + H.par + '</span></div>' + row('Strokes', strokes + (strokes ? ' (' + (score > 0 ? '+' : '') + score + ')' : '')) + row('Round', total) + row('To pin', (d < 10 ? d.toFixed(1) : Math.round(d)) + ' m') + row('Lie', MAT_NAME[m]) + row('Light', TOD[tmode].name) + (course ? '<div class="credit">' + course.credit + (course.hcredit ? ' &middot; heights: ' + course.hcredit : '') + ' &middot; ' + Math.round(course.S * 10) + '/10 size</div>' : '');
+  const card = (course ? '<div class="course">' + course.name + '</div>' : '') + '<div class="hole">Hole ' + (course ? course.holes[(holeN - 1) % course.holes.length].n : holeN) + '<span>par ' + H.par + '</span></div>' + row('Strokes', strokes + (strokes ? ' (' + (score > 0 ? '+' : '') + score + ')' : '')) + row('Round', total) + row('To pin', (d < 10 ? d.toFixed(1) : Math.round(d)) + ' m') + row('Lie', hostOnTurn() ? HP.turn.lieName || HP.turn.lieKind : MAT_NAME[m]) + (hostOnTurn() ? hostCardRows(row) : '') + row('Light', TOD[tmode].name) + (course ? '<div class="credit">' + course.credit + (course.hcredit ? ' &middot; heights: ' + course.hcredit : '') + ' &middot; ' + Math.round(course.S * 10) + '/10 size</div>' : '');
   if (card !== shownCard) { cardEl.innerHTML = card; shownCard = card; }
   if (club !== shownClub) { shownClub = club; clubsEl.className = HP && HP.clubs.length ? 'bag' : ''; clubsEl.innerHTML = HP && HP.clubs.length ? hostTabs() : CLUBS.map((c, k) => '<div class="club' + (k === club ? ' on' : '') + '"><b>' + (k + 1) + '</b> ' + c.name + '<i>' + (c.loft ? Math.round(c.v * c.v * clubK() * clubK() * Math.sin(2 * c.loft) / 9.81 / 5) * 5 + ' m' : 'on the green') + '</i></div>').join(''); }
-  powerEl.className = charging || player.swing >= 0 ? 'on' : '';
-  powerBar.style.width = (power * 100).toFixed(0) + '%';
-  if (charging) powerTxt.textContent = Math.round(power * 100) + '%  ' + clubName(club);
+  if (!HP) { powerEl.className = charging || player.swing >= 0 ? 'on' : ''; powerBar.style.width = (power * 100).toFixed(0) + '%'; }   // (host mode: the meter, hostMeterShow)
+  if (charging && !HP) powerTxt.textContent = Math.round(power * 100) + '%  ' + clubName(club);
   const byCart = !cart.on && Math.hypot(player.x - cart.x, player.y - cart.y) < 3.2;
   const hint = msgT > 0 ? msgText : '';
   if (hint !== shownMsg) { msgEl.textContent = hint; shownMsg = hint; }
@@ -75,7 +74,7 @@ function updateHud() {
   if (shownStyle !== biomeId || shownType !== ctypeId) styleShow();
   { const gm = canGimme() ? 'on' : ''; if (gimmeEl.className !== gm) gimmeEl.className = gm; }   // the gimme button shows when the putt left is short enough to be given
   { const far = ball.state === 0 && !bcam && player.swing < 0 && Math.hypot(player.x - ball.x, player.y - ball.y) > 4 ? 'on' : ''; if (jumpEl.className !== far) jumpEl.className = far; }   // the button shows when the ball lies still and the golfer is away from it
-  { const wr = WDX * RX + WDY * RY, wf = WDX * FX + WDY * FY, deg = Math.round(Math.atan2(-wf, wr) * 57.3 / 5) * 5, gu = WG[(((Math.round(player.y * PPV) >> 5) & 127) << 7) | ((Math.round(player.x * PPM) >> 6) & 127)] > 110, ws = deg + (gu ? 'g' : '');   // the wind as the camera sees it; gold while a gust is on the golfer
+  { const hw = hostWindDir(), wdx = hw ? hw[0] : WDX, wdy = hw ? hw[1] : WDY, wr = wdx * RX + wdy * RY, wf = wdx * FX + wdy * FY, deg = Math.round(Math.atan2(-wf, wr) * 57.3 / 5) * 5, gu = WG[(((Math.round(player.y * PPV) >> 5) & 127) << 7) | ((Math.round(player.x * PPM) >> 6) & 127)] > 110, ws = deg + (gu ? 'g' : '');   // the wind as the camera sees it; gold while a gust is on the golfer
     if (ws !== shownWind) { windArrow.style.transform = 'rotate(' + deg + 'deg)'; windEl.className = gu ? 'gust' : ''; shownWind = ws; } }
   if (miniImg) {
     mctx.putImageData(miniImg, 0, 0);
@@ -174,7 +173,8 @@ function hostTurn(m) {   // the owner's turn: the ball and the pin where the mod
 function hostStrike() {   // the club meets the ball: the input goes to the host, and the ball waits for its answer
   const c = hostClub(), t = HP.turn, S = hostS(); if (!c || !t) return;
   const putt = c.club === 'putter', m = matAt(ball.x, ball.y);
-  hostSend({ t: 'input', input: { holeIdx: t.holeIdx, stroke: t.stroke, club: c.club, aim: [aim.x / S, aim.y / S], power: hostPower(power, putt) } });   // (spin and shape: T441, T442)
+  const sw = HP.out; HP.out = null;   // (T421: the meter's outcome; the power is then only what it would be without one)
+  hostSend({ t: 'input', input: Object.assign({ holeIdx: t.holeIdx, stroke: t.stroke, club: c.club, aim: [aim.x / S, aim.y / S], power: sw ? Math.min(putt ? 1.5 : 1, Math.max(putt ? 0.5 : 0.3, sw.power)) : hostPower(power, putt) }, sw ? { swing: sw } : {}) });   // (spin and shape: T441, T442)
   HP.wait = 1;
   if (!putt) sndShot(); else sndTap();
   for (let k = 0, n = putt ? 3 : 10 + ((power * 14) | 0); k < n; k++) {   // sparks off the club, and turf or sand
@@ -228,15 +228,16 @@ function hostHoleEnd(m) {   // the hole is over: its score is said; after the la
   strokes = m.strokes; if (m.last) { HP.turn = null; HP.over = true; }
   say(name + '  -  hole ' + m.hole + ' in ' + m.strokes + (m.last ? '  -  Esc goes back to the course' : ''), m.last ? 100000 : 330);
 }
-function hostTick() {   // each step: the playback, and the wait for an answer
-  hostBall();
+function hostTick() {   // each step: the playback, the meter, and the wait for an answer
+  hostBall(); hostMeterShow();
   if (HP.wait > 0 && ++HP.wait > HOST_WAIT && (HP.wait - HOST_WAIT) % 120 === 1) say('Waiting for the course...', 130);
 }
 function hostAim() {   // T420: the aim tells the truth: the arc to where the model's mean lands this club at this power (its carry in this lie, slope and wind, and
   // the wind's push off the line), and a ring at one standard deviation of where it lands (shot.ts SHOT_SCATTER: across the line and along it). A better
   // club or a steadier golfer draws a smaller ring. Its numbers come from the host's kit for the club (turn.clubs), worked out along the suggested line
   const C = hostClub(), t = HP.turn; if (!C || !t) return;
-  const S = hostS(), putt = C.club === 'putter', pw = hostPower(charging ? power : putt ? 0.5 : 1, putt), hot = charging ? AIM_R : AIM_G, ph = (frame >> 1) % 6;
+  const sw = HP.sw, u = sw ? (sw.ph === 1 ? sw.u : sw.power) : 1, b = sw ? hostBoost(sw.presses) : 0;   // (T421: what the meter has set so far: the overswing carries half, the boost adds)
+  const S = hostS(), putt = C.club === 'putter', pw = sw ? (putt ? u : u <= 1 ? u : 1 + 0.5 * (u - 1)) + b : 1, hot = charging ? AIM_R : AIM_G, ph = (frame >> 1) % 6;
   const dx = aim.dx, dy = aim.dy, rx = -dy, ry = dx;                  // (the line, and his right as he faces it: x east, y south)
   if (putt) {                                                          // a putt: its length is a share of the way to the pin
     const len = Math.hypot(hole.pin.x - ball.x, hole.pin.y - ball.y) * pw;
@@ -261,6 +262,71 @@ function hostAim() {   // T420: the aim tells the truth: the arc to where the mo
   projectO(lx, ly, z1 + 0.03, PJ); if (PJ.s > 0) aimDotO(PJ.x, PJ.y, PJ.s > 0.5 ? 2 : 1, hot);
   HP.ring = { x: lx, y: ly, across, along };   // (kept for the harness)
 }
+// T421: the swing is the model's meter (swing.ts SwingMeter) in Cinderlinks' hold-and-release. Pressing starts the backswing: the marker climbs at the
+// club's speed (turn.clubs[].speed: meter units a second, slower for a better golfer) while the heart beats faster; letting go sets the power (past 100%
+// is the overswing; at 120% it turns back by itself). The marker then comes back down, the club with it, and a second press strikes: its place against
+// the snap line is the accuracy (inside the sweet band, the club's `sweet` and narrowed by a boost, straight; early pulls left, late pushes right). With
+// no second press the swing ends at -20%, the worst late miss. Space during the swing adds the boost (the host counts it only for a golfer with the card).
+// The outcome, not the times, goes to the host, which reads it exactly as the top view's meter (swing.ts swingEffect): the same click, the same miss.
+const HMETER = { top: 1.2, low: -0.2, per: 0.01, max: 0.06, narrow: 0.4, v: 2 };
+function hostBoost(n) { return Math.min(HMETER.max, Math.max(0, n) * HMETER.per); }
+function hostSweet(C, boost) { return (C && C.sweet > 0 ? C.sweet : 0.07) * (1 - HMETER.narrow * Math.min(HMETER.max, boost) / HMETER.max); }   // (swing.ts sweetSpot's narrowing by the boost)
+function hostSwing(p) {   // one step of the meter; true while it holds the golfer (updatePlayer then does nothing else)
+  const down = mouse.down, edge = down && !HP.mwas; HP.mwas = down;
+  const S = HP.sw, C = hostClub();
+  if (!S) {
+    if (!edge || !C || hostBusy() || !nearBall() || player.swing >= 0 || cart.on) return false;
+    HP.sw = { ph: 1, t: 0, u: 0, power: 0, presses: 0, spd: C.speed > 0 ? C.speed : 1 }; heartT = 0; charging = true; power = 0; return true;
+  }
+  const fx = -aim.dy, fy = aim.dx;                                     // he stands side-on: the target is to his left
+  p.x += (ball.x - fx * 0.64 - p.x) * 0.3; p.y += (ball.y - fy * 0.64 - p.y) * 0.3; p.th = Math.atan2(fy, fx); p.fa = Math.round(p.th / 6.2832 * 16 + 16) % 16; p.moving = false;
+  S.t += 1 / 60;
+  if (S.ph === 1) {                                                    // the backswing: the marker climbs while the button is held
+    S.u = Math.min(HMETER.top, S.t * S.spd);
+    if (S.u >= HMETER.top || !down) { S.power = S.u; S.ph = 2; S.t = 0; charging = false; }
+    if (--heartT <= 0) { sndHeart(); heartT = Math.round(50 - 24 * Math.min(1, S.u)); }   // the heart beats, faster as the power builds
+    power = S.u; p.al = -2 * Math.min(1, S.u);
+    return true;
+  }
+  S.u = S.power - S.t * S.spd;                                         // the downswing: the marker comes back to the snap line, the club to the ball
+  p.al = S.u > 0 ? -2 * Math.min(1, S.u) : 0;
+  const acc = edge ? S.u : S.u <= HMETER.low ? HMETER.low : null;
+  if (acc === null) return true;
+  HP.out = { power: S.power, acc, boost: hostBoost(S.presses), v: HMETER.v }; HP.sw = null; HP.lastSw = HP.out;
+  p.swing = 1; p.al = 0.01;                                            // (the follow-through plays; the club has met the ball)
+  hostStrike();
+  return true;
+}
+function hostMeterShow() {   // the power bar as the meter: the marker, the sweet band round the snap line and the 100% mark; the outcome in words after it
+  const S = HP.sw, on = !!S || (player.swing >= 0 && !!HP.lastSw), C = hostClub(), span = HMETER.top - HMETER.low, at = (u) => ((u - HMETER.low) / span * 100).toFixed(1) + '%';
+  const cls = on ? 'on meter' : 'meter'; if (powerEl.className !== cls) powerEl.className = cls;
+  if (!on) return;
+  const u = S ? S.u : HP.lastSw.acc, boost = S ? hostBoost(S.presses) : HP.lastSw.boost, w = hostSweet(C, boost);
+  powerBar.style.width = at(Math.max(HMETER.low, u));
+  meterSweet.style.left = at(-w); meterSweet.style.width = (2 * w / span * 100).toFixed(1) + '%'; meterTop.style.left = at(1);
+  const pw = S ? (S.ph === 1 ? S.u : S.power) : HP.lastSw.power;
+  let txt = Math.round(pw * 100) + '%  ' + clubName(club) + (boost > 0 ? '  +' + Math.round(boost * 100) + '% boost' : '');
+  if (!S) { const off = Math.abs(u) <= w ? 0 : u; txt += off === 0 ? '  -  straight' : off > 0 ? '  -  early: it goes left' : '  -  late: it goes right'; }
+  else if (S.ph === 2) txt += '  -  click on the line';
+  powerTxt.textContent = txt;
+}
+const meterSweet = document.createElement('b'), meterTop = document.createElement('b');
+meterSweet.className = 'sweet'; meterTop.className = 'top';
+{ const tr = powerBar.parentNode || (powerEl.children && powerEl.children[0]); if (tr && tr.appendChild) { tr.appendChild(meterSweet); tr.appendChild(meterTop); } }
+
+// T422: the card says what the model will use: the lie (its kind and what it does), the slope under the ball, and the wind now with the day's gusts
+const COMPASS = ['north', 'north-east', 'east', 'south-east', 'south', 'south-west', 'west', 'north-west'];
+function hostOnTurn() { return !!(HP && HP.turn && !HP.play && ball.state === 0); }
+function hostCardRows(row) {
+  const t = HP.turn, s = t.slope || { up: 0, across: 0 }, w = t.wind || { mph: 0, from: 0 }, pc = (v) => Math.round(Math.abs(v) * 100) + '%';
+  const up = Math.abs(s.up) < 0.01 ? 'level' : (s.up > 0 ? 'uphill ' : 'downhill ') + pc(s.up), side = Math.abs(s.across) < 0.01 ? '' : ', ball ' + (s.across > 0 ? 'above' : 'below') + ' feet ' + pc(s.across);
+  const wind = w.mph < 1 ? 'calm' : Math.round(w.mph) + ' mph from the ' + COMPASS[Math.round((((w.from % 360) + 360) % 360) / 45) % 8] + (t.gust > w.mph + 1 ? ', gusts ' + Math.round(t.gust) : '');
+  return row('Slope', up + side) + row('Wind', wind) + (t.lieNote ? '<div class="credit">' + t.lieNote + '</div>' : '');
+}
+function hostWindDir() {   // the way the host's wind blows (toward), on the ground: the arrow shows it; null without a turn (the view's own wind)
+  if (!HP || !HP.turn || !HP.turn.wind || HP.turn.wind.mph < 1) return null;
+  const b = HP.turn.wind.from * Math.PI / 180; return [-Math.sin(b), Math.cos(b)];   // (from the north, 0, it blows south: + y)
+}
 function hostTabs() {   // T419: his clubs in the tabs: the name, its full carry after his mods (the putter: its fitting); keys 1 to 9 and the wheel change club
   return HP.clubs.map((c, k) => '<div class="club' + (k === club ? ' on' : '') + '">' + (k < 9 ? '<b>' + (k + 1) + '</b> ' : '') + (CLUB_NAME[c.club] || c.club) + '<i>' + (c.club === 'putter' ? (c.fit || 'on the green') : Math.round(c.carryM) + ' m') + '</i></div>').join('');
 }
@@ -270,6 +336,7 @@ clubsEl.addEventListener('wheel', (e) => { if (!HP || !HP.clubs.length) return; 
 // ---- loop
 addEventListener('keydown', (e) => {
   if (e.repeat) return;
+  if (HP && HP.sw && e.code === 'Space') { HP.sw.presses++; if (e.preventDefault) e.preventDefault(); return; }   // (host mode: the boost, T421 and T443)
   if (HOST && e.code === 'Escape') { hostSend({ t: 'exit' }); return; }   // (the host page closes the view)
   keys[e.code] = true;
   if (e.code === 'KeyT') setTime((tmode + 1) % 3);
