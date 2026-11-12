@@ -103,6 +103,7 @@ import { TooltipLayer } from './ui/Tooltip';
 import { UI_SCALES, applyUiScale, currentUiScale, saveUiScale } from './ui/uiScale';
 import { stackCol, stackFit, stackRight, type StackCard, type StackOpen } from './ui/golf/card-stack';
 import { HoleCard } from './ui/golf/HoleCard';
+import { View3pPanel } from './ui/golf/View3pPanel';
 import { affordKind, balanceKind, statusIcon, trendKind, withIcon } from './ui/status-icon';
 import stadiumArt from './assets/ui/art/stadium.webp';
 import { StatChips } from './ui/StatChips';
@@ -994,6 +995,7 @@ export default function App() {
             return <SceneCard view={sc} padRight={`${side ? base + 22 : Math.max(1, base + 0.75)}rem`} onView={v => game.sceneView(v)} onClose={() => game.closeScene()} />;
           })()}
           {game.holeCardHole !== null && <HoleCard game={game} right={game.panel ? 'right-[19.5rem]' : 'right-3'} />}
+          {game.view3pHole !== null && <View3pPanel game={game} />}
           {game.real.active && <RealPlaceHud game={game} />}
           {game.real.active && <RealPlaceDialog game={game} />}
           {game.eventMode && !game.site && !game.golfMode && (

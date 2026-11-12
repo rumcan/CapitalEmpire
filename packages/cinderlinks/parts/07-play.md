@@ -89,11 +89,14 @@ function pressAt(x, y, amt) {
   if (!A) { if (press.size > 700) press.delete(press.keys().next().value); press.set(key, A = new Uint8Array(1024)); }
   const k = (((v & 127) >> 2) << 5) | ((u & 127) >> 2); if (A[k] < amt) A[k] = amt;
 }
-function pressCart(x, y, th) {   // its four wheels, each a tyre's width, and a little way back along its run (so a fast cart leaves no gaps)
-  const hx = Math.cos(th), hy = Math.sin(th);
-  for (const a of [-0.48, 0.48]) for (const f of [0.71, -0.71]) for (const b of [-0.1, -0.03, 0.04, 0.11]) for (const g of [0, -0.08, -0.16]) pressAt(x - (a + b) * hy + (f + g) * hx, y + (a + b) * hx + (f + g) * hy, 255);
+let pcX = 0, pcY = 0, pcOn = false;
+function pressCart(x, y, th) {   // its four wheels, each a tyre's width, laid down all the way from where the cart was a moment ago to where it is now
+  const hx = Math.cos(th), hy = Math.sin(th), dx = pcOn ? x - pcX : 0, dy = pcOn ? y - pcY : 0, dl = Math.hypot(dx, dy), n = dl > 3 ? 1 : Math.max(1, Math.ceil(dl / 0.045));   // (stamped only where it stood each moment, a moving cart left a stamp, a gap, a stamp: its tracks came out as stripes across them)
+  for (let k = 1; k <= n; k++) { const cx = n > 1 ? pcX + dx * k / n : x, cy = n > 1 ? pcY + dy * k / n : y;
+    for (const a of [-0.48, 0.48]) for (const f of [0.71, -0.71]) for (const b of [-0.1, -0.03, 0.04, 0.11]) pressAt(cx - (a + b) * hy + f * hx, cy + (a + b) * hx + f * hy, 255); }
+  pcX = x; pcY = y; pcOn = true;
 }
-function clearWorld() { press.clear(); preOn = false; bcam = 0; slowT = 0; libWarm = 0; treeMemo.clear(); tiles.clear(); chunks.clear(); ocells.clear(); ftiles.clear(); farQ.length = 0; tileQ.length = 0; tileQset.clear(); lib.clear(); pwAt = 1e9; lastTK = NaN; lastCK = NaN; lastTile = lastChunk = null; }
+function clearWorld() { press.clear(); pcOn = false; preOn = false; bcam = 0; slowT = 0; libWarm = 0; treeMemo.clear(); tiles.clear(); chunks.clear(); ocells.clear(); ftiles.clear(); farQ.length = 0; tileQ.length = 0; tileQset.clear(); lib.clear(); pwAt = 1e9; lastTK = NaN; lastCK = NaN; lastTile = lastChunk = null; }
 function newHole(n, ox, oy) {
   holeN = n; if (course) { hole = courseHole(n); ox = hole.tee.x; oy = hole.tee.y; } else hole = makeHole(SEED, n, ox, oy);
   clearWorld(); wkInit();
