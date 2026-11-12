@@ -257,8 +257,22 @@ function hFar(wx, wy) {   // the far land's height (metres) at a point if its pi
   return F.h[Math.min(FTN - 1, ((wy - fy * FTS) / FTD) | 0) * FTN + Math.min(FTN - 1, ((wx - fx * FTS) / FTD) | 0)];
 }
 const PW_NEAR = [], PW_FAR = [];                            // the chunks within 31 m of the golfer and the far pieces within 260 m, nearest first
-for (let dy = -7; dy <= 7; dy++) for (let dx = -14; dx <= 14; dx++) { const d = Math.hypot(dx * CH / PPM, dy * CH / PPV); if (d < 31) PW_NEAR.push([d, dx, dy]); }
-for (let dy = -9; dy <= 9; dy++) for (let dx = -9; dx <= 9; dx++) { const d = Math.hypot(dx, dy) * FTS; if (d < DFAR_ + FTS) PW_FAR.push([d, dx, dy]); }
+let SIMPLEG = true;   // the simple grass everywhere (the owner, 2026-11-12: "make that the main grass, I want to see what it looks like up close"); false: the painted ground near by, as before
+const CAMMIN = 18;   // the closest the camera may come behind the golfer (the owner, 2026-11-12: the zoom of their screenshot, for now)
+function setSimple(on) { SIMPLEG = !!on; try { localStorage.setItem('cinderlinks.simple', on ? '1' : '0'); } catch (e) {} }
+let DNEAR = 30, DFAR = 260, HZK = 1, VIEWR = 260;   // how far the painted ground is drawn (30 to 60 m) and how far the land is drawn at all (150 to 400 m): the player's render distance (setDetail); HZK thins the air to suit
+function nearList() { PW_NEAR.length = 0; const R = DNEAR + 1, ny = Math.ceil(R * PPV / CH), nx = Math.ceil(R * PPM / CH); for (let dy = -ny; dy <= ny; dy++) for (let dx = -nx; dx <= nx; dx++) { const d = Math.hypot(dx * CH / PPM, dy * CH / PPV); if (d < R) PW_NEAR.push([d, dx, dy]); } PW_NEAR.sort((a, b) => a[0] - b[0]); }
+nearList();
+// The player's render distance: how far the painted ground (and with it the standing grass beyond) is drawn. More is prettier and costs more: the
+// painted ground kept in memory grows with the square of it.
+let CHCAP = 620;
+function setDetail(R) {   // R: the render distance, 150 to 400 m (260 is the game as it was made)
+  R = R >= 150 && R <= 400 ? Math.round(R / 25) * 25 : 260; VIEWR = R; DFAR = R; HZK = 260 / R;
+  const D = R <= 260 ? 30 : Math.round((30 + (R - 260) / 140 * 30) / 5) * 5; DNEAR = D; GRASS_FAR = R <= 260 ? Math.round(140 * R / 260) : R - 10;   /* (past the game's own 260 m the grass stands all the way out: the player asked for it and has the PC for it) */ CHCAP = Math.round(620 * D * D / 900);
+  nearList(); farList(); try { localStorage.setItem('cinderlinks.view', '' + R); } catch (e) {}
+}
+function farList() { PW_FAR.length = 0; const n = Math.ceil((DFAR + FTS) / FTS) + 1; for (let dy = -n; dy <= n; dy++) for (let dx = -n; dx <= n; dx++) { const d = Math.hypot(dx, dy) * FTS; if (d < DFAR + FTS) PW_FAR.push([d, dx, dy]); } PW_FAR.sort((a, b) => a[0] - b[0]); }
+farList();
 PW_NEAR.sort((a, b) => a[0] - b[0]); PW_FAR.sort((a, b) => a[0] - b[0]);
 let aheadOn = true;
 // ---- the land where a shot will come down, painted before the ball gets there. At the strike a copy of the ball is flown (the flight's own sums) to
@@ -285,6 +299,7 @@ function makeAhead() {                                      // one small piece a
   if (!aheadOn || genUsed > 1 || player.moving || camYaw !== pwYaw) { pwYaw = camYaw; return; }   // only while nothing else is going on
   if (tileQ.length) { tileWork(2); return; }
   if (farQ.length) { farWork(2); return; }
+  if (SIMPLEG) return;
   for (; libWarm < 36; libWarm++) { const f = libWarm % 3, h = ((libWarm / 3) | 0) % 6, v = (libWarm / 18) | 0; if (!lib.has(K_TREE * 1000 + f * 100 + h * 10 + v)) { libOf(K_TREE, f, h, v); libWarm++; return; } }   // the trees' stand-ins, one a frame, before they are needed
   const pcx = Math.floor(player.x * PPM / CH), pcy = Math.floor(player.y * PPV / CH), at = pcx * 4096 + pcy;
   if (at !== pwAt) { pwAt = at; pwI = 0; pwF = 0; }
@@ -357,7 +372,7 @@ function reflectWater() {
 // the land: per screen column, near to far; a point draws only above what is already drawn
 // the land: one distance at a time, near to far, across all the screen's columns; a point draws only above what its column already holds.
 // (Every column meets the same distances, so the sweep runs along lines of the ground and rows of the picture, which is what memory likes.)
-const DNEAR = 30, DMID = 90, DFAR = 260, STEPK = 1 / (FOC * 3.6);
+const DMID = 90, STEPK = 1 / (FOC * 3.6);
 const yTopA = new Int16Array(VW), hPrevA = new Float32Array(VW), mPrevA = new Uint8Array(VW);
 let capA = 0, capB = 0, capEnd = 0;   // the cutaway: the land may not rise above a line from just under the camera (capA) to the golfer's feet (capB), nearer than capEnd
 function capAt(d, lat) { const t = d <= 2 ? 0 : (d - 2) / (capEnd - 2), w = Math.abs(lat) - 1.2; return capA + (capB - capA) * t + (w > 0 && d > 3 ? w * 0.9 * Math.min(1, (d - 3) / 4) : 0); }
@@ -402,19 +417,20 @@ function slopeFillNear(x, y, yTop, sy, den, u, v, bu, bv, cx, cy, col, lc, out, 
   }
 }
 function tuftHash(du, dv, tx, ty) { return ih(((du * 0.125) | 0) + tx * 32, ((dv * 0.125) | 0) + ty * 32); }   // one number for each small patch of a tile (two of its cells square): the patch's grass shares a height and a shade
-const GRASS_FAR = 140;   // how far off the land's standing grass is drawn, metres
+let GRASS_FAR = 140;   // how far off the land's standing grass is drawn, metres
 let swD = 0, swP = 0, swS = 0;   // where the middle sweep left off: the far sweep goes on from there
 function midSweep(d, dPrev, step, HAZ, kx0, B, pivD, cuP, cvP, HZ8, ZPF, pOn, camF, sunF) {
   let pthT = false;
-  while (d < DMID) {                                         // middle: the tiles' own colours
+  const GM = SIMPLEG ? Math.max(DMID, Math.min(VIEWR - 20, 220)) : DMID;   // (with the simple grass everywhere, the tiles' grass reaches as far as the render distance allows, to 220 m; the far field only beyond)
+  while (d < GM) {                                         // middle: the tiles' own colours
     wFar = d > 68 ? 0.5 : (d - 8) / 120; wGl = sunF * (d > 50 ? 0.1 : (d - 10) / 400); wSh = d < 56 ? 2 : 3;
     const k = FOC / d, zr = (d * 100) | 0, lx = kx0 * d, dl = d / FOC;
     const uf0 = (camX + FX * d + RX * lx) * PPM, du = RX * dl * PPM, vf0 = (camY + FY * d + RY * lx) * PPV, dv = RY * dl * PPV;
-    const hf = d > 50 ? (d - 50) / (BSAND ? 150 : 300) : 0, rise = step * 1.1, Rr = (d - pivD) * (d - pivD), bladeK = d < DMID ? k / ZP : 0, g3 = d < 46 ? (46 - d) * 0.0625 : 0,   /* (g3: the in-between grass, strongest where the painted ground ends and gone by 46 m: taller, more varied, dark at the root, so the painted grass does not end at a line) */ qst = (d - dPrev) * 0.25;   // (bladeK: screen rows per height px of grass; qst: a quarter of the way back to the line before)
+    const hf = d * HZK > 50 ? (d * HZK - 50) / (BSAND ? 150 : 300) : 0, rise = step * 1.1, Rr = (d - pivD) * (d - pivD), rw = d < pivD + 6 ? 0 : d > pivD + 20 ? 1 : (d - pivD - 6) / 14, bladeK = k / ZP, g3 = d < DNEAR + 16 ? (DNEAR + 16 - d) * 0.0625 : 0,   /* (g3: the in-between grass, strongest where the painted ground ends and gone by 46 m: taller, more varied, dark at the root, so the painted grass does not end at a line) */ qst = (d - dPrev) * 0.25;   // (bladeK: screen rows per height px of grass; qst: a quarter of the way back to the line before)
     let TGh = null, tWl = -99, ltx = 1e9, lty = 1e9, TL = null, TLL = null, TH = null, TG = null, tu0 = 0, tv0 = 0, sfx = 1e9, sfy = 1e9, sF = null, lfS = 0, lfX = -9;
     for (let x = 0; x < VW; x++) {
       const yTop = yTopA[x]; if (yTop <= 0) continue;
-      const dx = PDC[x] + PCS[x] * Math.sqrt(Rr - PS2[x]), kc = FOC / dx, zr = (dx * 100) | 0, zs = dx * ZPF, uf = cuP + PGU[x] * dx, vf = cvP + PGV[x] * dx, tx = ((uf + B) >> 8) - 16384, ty = ((vf + B) >> 8) - 16384;   /* (dx: this column's distance where it meets the ring) */
+      const rr = Rr - PS2[x], dx = rw >= 1 ? PDC[x] + PCS[x] * Math.sqrt(rr) : rw <= 0 || rr <= 0 ? d : d + (PDC[x] + PCS[x] * Math.sqrt(rr) - d) * rw, kc = FOC / dx,   /* (close to the golfer the rings are too small to read the land by: there it is read along lines square to the view, going over to rings by 34 m) */ zr = (dx * 100) | 0, zs = dx * ZPF, uf = cuP + PGU[x] * dx, vf = cvP + PGV[x] * dx, tx = ((uf + B) >> 8) - 16384, ty = ((vf + B) >> 8) - 16384;   /* (dx: this column's distance where it meets the ring) */
       if (tx !== ltx || ty !== lty) {
         ltx = tx; lty = ty; let Tt = tileHave(tx, ty);
         if (Tt && !Tt.look) { if (lookN < 4 || genBudget > 100) lookN++; else Tt = null; }   // (its look is made here, four tiles a frame at most)
@@ -479,7 +495,7 @@ function midSweep(d, dPrev, step, HAZ, kx0, B, pivD, cuP, cvP, HZ8, ZPF, pOn, ca
       }
       hPrevA[x] = h;
     }
-    step = d * d * STEPK * 1.5; if (step > 1.2) { const cap = d < 75 ? 1.2 : d * 0.016; if (step > cap) step = cap; } dPrev = d; d = nextRow(d, step, camF);   // (far land: three rows to two samples)
+    step = d * d * STEPK * 1.5; if (step < 0.03) step = 0.03; if (step > 1.2) { const cap = d < 75 ? 1.2 : d * 0.016; if (step > cap) step = cap; } dPrev = d; d = nextRow(d, step, camF);   // (far land: three rows to two samples)
   }
   swD = d; swP = dPrev; swS = step;
 }
@@ -528,7 +544,7 @@ function farSweep(d, dPrev, step, HAZ, pivD, HZ8, ZPF, camF, sunF) {
         } else if (L > 200 && L < 255) { wAny = true; for (; y < yTop; y++) { const q = y * VW + x; fb[q] = out; zbuf[q] = zr; wz[q] = zr; wrow[y] = 1; } }
         else for (; y < yTop; y++) { const q = y * VW + x; fb[q] = out; zbuf[q] = zr; }
         yTopA[x] = sy;
-        if (gfar > 0 && L <= 200) { const gq = FG[k2]; if (gq > 1) { const hq = ih(k2, lfx * 7 + lfy * 13), gs = ((gq - 2) * kc * gfar * (150 + (hq & 127))) >> 8; if (gs > 0) {   // the far land's standing grass: the ground's own colour stood up, its tip a shade lighter
+        if (gfar > 0 && L <= 200) { const gq = FG[k2]; if (gq > 1) { const hq = ih(k2, lfx * 7 + lfy * 13); let gs = ((gq - 2) * kc * gfar * (150 + (hq & 127))) >> 8; if (gs < 1 && gq > 7 && (hq & 3)) gs = 1; if (gs > 0) {   /* (very far off a blade is under a pixel tall: three tufts in four of the taller grass still stand one pixel, so far grass keeps its ragged top instead of going flat) */   // the far land's standing grass: the ground's own colour stood up, its tip a shade lighter
           const t0 = sy - gs, bc = hq & 128 ? (out - ((out >>> 3) & 0x1f1f1f)) >>> 0 : out, tipc = (bc + ((~bc >>> 4) & 0x0f0f)) >>> 0, y1 = sy < yTop ? sy : yTop; for (let yy = t0 < 0 ? 0 : t0; yy < y1; yy++) { const q = yy * VW + x; fb[q] = yy === t0 ? tipc : bc; zbuf[q] = zr; } if (t0 < yTopA[x]) yTopA[x] = t0; } } }
       }
       hPrevA[x] = h;
@@ -558,7 +574,8 @@ function drawGround() {
   const kx0 = (0.5 - VW / 2) / FOC, B = 4194304, camL = camX * RX + camY * RY;   // camL: the camera's own place along its sideways direction
   yTopA.fill(VH); hPrevA.fill(-1e9); syncT = 0; lookN = 0;
   const pOn = !!(feats && feats.sd && course && featFor === course.id); let pthC = false, pthT = false, prsA = null;   // (paths added to the course: no grass stands on them)
-  const DN = bcam ? 78 : DNEAR;   // (following the ball, the painted ground is drawn to 78 m wherever it has been painted: the landing ground is whole long before the camera comes down to it, instead of wiping in at 30 m)
+  if (!bcam && camD < CAMMIN) camD = CAMMIN;   // (held back to the closest the player may zoom; the ball camera keeps its own)
+  const DN = SIMPLEG ? 0 : bcam ? 78 : DNEAR;   // (SIMPLEG: the player chose the simple grass everywhere: the middle land's plain blades and tufts are drawn from the golfer's feet, no painted ground)   // (following the ball, the painted ground is drawn to 78 m wherever it has been painted: the landing ground is whole long before the camera comes down to it, instead of wiping in at 30 m)
   const pivD = camD < 14 ? camD : 14, cuP = camX * PPM, cvP = camY * PPV, HZ8 = HZ + 8192, ZPF = ZP / FOC;   // (pivD: how far ahead the point is that the camera swings round)
   for (let x = 0; x < VW; x++) { const kx = kx0 + x / FOC, c2 = 1 / (1 + kx * kx); PGX[x] = FX + RX * kx; PGY[x] = FY + RY * kx; PGU[x] = PGX[x] * PPM; PGV[x] = PGY[x] * PPV; PCS[x] = Math.sqrt(c2); PS2[x] = pivD * pivD * kx * kx * c2; PDC[x] = pivD * c2; }
   { const mx = camX - rowX, my = camY - rowY; rowPh = mx * mx + my * my > 25 ? 0 : rowPh + mx * FX + my * FY; rowX = camX; rowY = camY; }
@@ -588,7 +605,7 @@ function drawGround() {
       const yTop = yTopA[x]; if (yTop <= 0) continue;
       const u = ((uf0 + x * du) | 0) - B, v = ((vf0 + x * dv) | 0) - B, cx = u >> 7, cy = v >> 7;
       if (cx !== lcx || cy !== lcy) {
-        const C = d > 31 ? chunkHave(cx, cy) : chunkTry(cx, cy); lcx = cx; lcy = cy;
+        const C = d > DNEAR + 1 ? chunkHave(cx, cy) : chunkTry(cx, cy); lcx = cx; lcy = cy;
         if (C) { if (C.lt !== tmode) { C.lc = litArr(C.col); C.lt = tmode; C.l1 = null; C.l2 = null; } { const Tt = tileHave(cx >> 1, cy >> 1); tlA = Tt ? Tt.lt : null; tsA = Tt ? Tt.sh : null; fdA = fdOn && Tt && Tt.ll !== null && Tt.llt === tmode ? Tt.ll : null; su0 = (cx >> 1) * TPX; sv0 = (cy >> 1) * TPX; if (!tlA && wkOn) wkTile(cx >> 1, cy >> 1, true); else if (!Tt) tileAt(cx >> 1, cy >> 1); } col = C.col; lc = C.lc; lift = C.lift; mt = C.mt; sub = false; skip = false; grA = C.gr; pthC = pOn && pathNearPx(cx * 128 + 64, cy * 128 + 64, 5); prsA = press.size ? press.get((cx + 32768) * 65536 + (cy + 32768)) || null : null; if (lv) { if (!C.l1) chunkMips(C); if (lv === 1) { mp = C.l1; grA = C.g1; } else { mp = C.l2; grA = C.g2; } } }
         else { let Tt = tileHave(cx >> 1, cy >> 1); if (!Tt) { if (syncT < (wkOn ? 2 : 5) || genBudget > 100) { Tt = tileAt(cx >> 1, cy >> 1); syncT++; } else tileWant(cx >> 1, cy >> 1); }
           if (Tt) { SL = tileLook(Tt); if (Tt.llt !== tmode) { Tt.ll = litArr(SL); Tt.llt = tmode; } SLL = Tt.ll; SHh = Tt.h; SGh = Tt.gh; sWl = Tt.wl; su0 = (cx >> 1) * TPX; sv0 = (cy >> 1) * TPX; sub = true; skip = false; } else skip = true; }
@@ -1153,7 +1170,7 @@ function spriteFor(o, d) {
   o.born = -1;
   return libFor(o);
 }
-function farHaze(d) { const h = d < 50 ? 0 : d < 200 ? (d - 50) / 300 : 0.5 + (d - 200) * 0.007; return BSAND ? (h * 2 > 0.92 ? 0.92 : h * 2) : h; }   // (over the desert the air is twice as thick with dust and heat)   // the air thickens fast toward the edge of sight: what comes into view there comes out of the haze
+function farHaze(d0) { const d = d0 * HZK, h = d < 50 ? 0 : d < 200 ? (d - 50) / 300 : 0.5 + (d - 200) * 0.007; return BSAND ? (h * 2 > 0.92 ? 0.92 : h * 2) : h; }   // (over the desert the air is twice as thick with dust and heat)   // the air thickens fast toward the edge of sight: what comes into view there comes out of the haze
 let spriteMax = 1;
 
 const PERF = { n: 0, ground: 0, things: 0, post: 0, make: 0, msgs: 0, msgMs: 0 };   // where the frames' time goes (ms, summed; read and reset by whoever measures): the land sweep, the things standing on it, the passes after, making new land, the worker's deliveries
@@ -1226,7 +1243,7 @@ function render() {
       if (!F) { const cxm = (fx + 0.5) * FTS - camX, cym = (fy + 0.5) * FTS - camY, cd = cxm * FX + cym * FY; if (cd > -30 && cd < DQ + 20 && Math.abs(cxm * RX + cym * RY) < tanH * (cd + 30) + 30) farTile(fx, fy); continue; }   // far land is asked for before it comes into sight
       if (!F.ready) continue;
       for (const t of F.trees) {
-        const tx = t.x - camX, ty = t.y - camY, d = tx * FX + ty * FY; if (d < 3 || d >= 226) continue;
+        const tx = t.x - camX, ty = t.y - camY, d = tx * FX + ty * FY; if (d < 3 || d >= DFAR - 34) continue;
         if (feats && featClear(t.x, t.y, 0.5)) continue;
         const k = FOC / d, sx = VW / 2 + (tx * RX + ty * RY) * k, reach = (t.rx * 1.3 + 30) * k / PPM; if (sx < -reach || sx > VW + reach) continue;
         t.d = d; t.sx = Math.round(sx); if (d >= DMID) flist.push(t); else { dlist.push(t); if (d < 30) visObjs.push(t); }
@@ -1238,7 +1255,7 @@ function render() {
     const ptx = Math.floor(player.x * PPM / TPX), pty = Math.floor(player.y * PPV / TPX);
     for (let dy = -6; dy <= 6; dy++) for (let dx = -11; dx <= 11; dx++) { if (Math.hypot(dx * TPX / PPM, dy * TPX / PPV) > 46) continue; if (!tileHave(ptx + dx, pty + dy)) wkTile(ptx + dx, pty + dy, false); }
     const pcx = Math.floor(player.x * PPM / CH), pcy = Math.floor(player.y * PPV / CH);
-    for (let k = 0; k < PW_NEAR.length && wkChunks.size < 40; k++) { const o = PW_NEAR[k], cx = pcx + o[1], cy = pcy + o[2]; if (!hasChunk(cx, cy)) chunkTry(cx, cy); }
+    for (let k = 0; !SIMPLEG && k < PW_NEAR.length && wkChunks.size < 40; k++) {   /* (no painted ground is asked for while the simple grass is drawn everywhere) */ const o = PW_NEAR[k], cx = pcx + o[1], cy = pcy + o[2]; if (!hasChunk(cx, cy)) chunkTry(cx, cy); }
   }
   if ((frame & 3) === 0) {   // the land just beyond the middle distance is asked for before the view reaches it
     const D1 = DMID + 18, ex = camX + FX * D1, ey = camY + FY * D1, hw = tanH * D1 + 4;

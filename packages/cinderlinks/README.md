@@ -300,3 +300,17 @@ courses, no `?find=`), draws nothing, and talks to the page that holds it by `po
 - The gate checks it: `hostMsg()` in `harness.mjs` builds the message from `courses/raw/woodhill.json` (and its edits), and the gate wants the
   `loaded` answer, Woodhill at scale 1, hole 1 with a tee under the golfer, the features applied and a picture that is not black. Picture:
   `--scenes host`.
+
+## Cart tracks without stripes (gen-30, 2026-11-12)
+
+`pressCart` lays the wheels' tracks all the way from where the cart was a moment ago to where it is now. Stamped only where it stood each frame, a moving cart left a stamp, a gap, a stamp, and its tracks came out as stripes across them (it looked like two surfaces fighting for the same pixels).
+
+## The player's render distance (gen-31, 2026-11-12)
+
+A slider in the style menu, 150 to 400 m in steps of 25 (260 is the game as it was made), kept in `localStorage['cinderlinks.view']`. `setDetail(R)` sets how far the land and its trees are drawn (`DFAR`), thins the haze to suit (`HZK`), carries the standing grass out in proportion (`GRASS_FAR`), and past 260 m lets the painted ground reach farther too (`DNEAR`, 30 m rising to 60 m at 400), with the lists of ground to ask for (`nearList`, `farList`) and the memory limits following. Measured in the browser pane at the first tee: 260 m, 60 frames a second, ground 8.6 ms, 436 MB; 400 m, 57 frames a second, ground 11.2 ms, 573 MB (while other work was loading the PC).
+- Past 260 m the standing grass is carried to within 10 m of the render distance (390 m at 400), and far tufts of the taller grass keep one pixel of height so they do not go flat.
+
+## Simple grass everywhere (gen-32, 2026-11-12)
+
+At the owner's word the middle land's plain grass (tile colours, standing blades in tufts) is now drawn from the golfer's feet out (`SIMPLEG`, default on; the "Simple grass everywhere" box under Render distance in the style menu turns the painted near ground back on; kept in `localStorage['cinderlinks.simple']`). Close to the golfer the land is read along lines square to the view, going over to rings between 20 and 34 m (`rw` in `midSweep`: the rings round the golfer are too small to read by near him), and the middle sweep's rows are at least 3 cm apart. With it off, nothing changes from gen-31. Lost while it is on: the camera's cutaway through hills, cliff faces close by, flowers and pressed cart tracks painted into the ground.
+- gen-33: with the simple grass on, the tiles' grass reaches as far as the render distance allows, to 220 m (`GM` in `drawGround`), the far field only beyond; tiles are kept to match (up to 1100); no detailed ground is painted or asked for. The camera comes no closer than 18 m behind the golfer (`CAMMIN`; the ball camera keeps its own).

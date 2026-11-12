@@ -111,6 +111,8 @@ body { display: flex; align-items: center; justify-content: center; color: #eadf
 #styleBtn:hover { background: rgba(28, 66, 44, 0.95); } #styleBtn b { color: #f2c94c; margin-left: 6px; }
 #styleMenu { display: none; margin-top: 5px; padding: 7px 8px 6px; gap: 14px; text-align: left; white-space: nowrap; background: rgba(12, 34, 24, 0.92); border: 2px solid #0a1a12; box-shadow: 0 0 0 1px rgba(242, 201, 76, 0.55); }
 #styleMenu.on { display: flex; }
+#styleMenu .dist { width: 150px; white-space: normal; } #styleMenu .dist input { width: 100%; margin: 4px 0 2px; accent-color: #f2c94c; } #styleMenu .dist span { display: block; font-size: 11px; color: #f4efdc; margin-left: 8px; } #styleMenu .dist label.simple { display: block; font-size: 10px; color: #f4efdc; margin: 6px 0 0 4px; cursor: pointer; } #styleMenu .dist label.simple input { width: auto; margin: 0 5px 0 0; vertical-align: middle; }
+#styleMenu .dist em { display: block; font-style: normal; font-size: 8px; line-height: 1.35; color: rgba(244, 239, 220, 0.7); margin: 4px 0 0 8px; text-transform: none; }
 #styleMenu .grp > i { display: block; font-style: normal; font-size: 9px; color: #f2c94c; margin: 0 0 3px 8px; }
 #styleMenu button { display: block; width: 100%; padding: 3px 8px; font: inherit; font-size: 11px; text-transform: uppercase; text-align: left; color: #f4efdc; background: none; border: 0; cursor: pointer; }
 #styleMenu button:hover { background: rgba(28, 66, 44, 0.95); } #styleMenu button.on { color: #f2c94c; }

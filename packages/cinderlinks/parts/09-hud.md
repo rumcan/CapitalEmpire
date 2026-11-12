@@ -24,12 +24,16 @@ let shownType = '';
 function styleShow() {   // the menu: the biome (the land and its plants) beside the course type (how the course is kept); one of each is in force
   shownStyle = biomeId; shownType = ctypeId; styleBtn.innerHTML = BIOMES[biomeId].name + ' &middot; ' + CTYPES[ctypeId].name + '<b>&#9662;</b>';
   const col = (title, kind, ids, T, cur) => '<div class="grp"><i>' + title + '</i>' + ids.map((id) => '<button type="button" data-kind="' + kind + '" data-id="' + id + '"' + (id === cur ? ' class="on"' : '') + '>' + T[id].name + '</button>').join('') + '</div>';
-  styleMenu.innerHTML = col('Biome', 'b', BIOME_ORDER, BIOMES, biomeId) + col('Course type', 't', CTYPE_ORDER, CTYPES, ctypeId);
+  styleMenu.innerHTML = col('Biome', 'b', BIOME_ORDER, BIOMES, biomeId) + col('Course type', 't', CTYPE_ORDER, CTYPES, ctypeId)
+    + '<div class="grp dist"><i>Render distance</i><input id="detail" type="range" min="150" max="400" step="25" value="' + VIEWR + '"><span id="detailV">' + VIEWR + ' m</span><label class=\"simple\"><input id=\"simpleG\" type=\"checkbox\"' + (SIMPLEG ? ' checked' : '') + '> Simple grass everywhere</label><em>How far the land, trees and grass are drawn; past 260 m the detailed ground reaches farther too. Higher needs a faster PC.</em></div>';
 }
 styleBtn.addEventListener('click', (e) => { styleMenu.className = styleMenu.className === 'on' ? '' : 'on'; if (styleBtn.blur) styleBtn.blur(); if (e.preventDefault) e.preventDefault(); });
 styleMenu.addEventListener('click', (e) => { const t = e.target, id = t && t.getAttribute ? t.getAttribute('data-id') : null, kind = id ? t.getAttribute('data-kind') : null; if (!id) return;
   if (kind === 'b' && BIOMES[id] && id !== biomeId) { useStyle(id, null); firstPicture(); } else if (kind === 't' && CTYPES[id] && id !== ctypeId) { useStyle(null, id); firstPicture(); }
   styleShow(); });   // (the menu stays open: a biome and a type are usually chosen together)
+styleMenu.addEventListener('change', (e) => { const t = e.target; if (t && t.id === 'simpleG') setSimple(t.checked); });
+styleMenu.addEventListener('input', (e) => { const t = e.target; if (!t || t.id !== 'detail') return; setDetail(+t.value); const v = document.getElementById('detailV'); if (v) v.textContent = VIEWR + ' m'; });
+try { const d0 = +localStorage.getItem('cinderlinks.view'); if (d0) setDetail(d0); const s0 = localStorage.getItem('cinderlinks.simple'); if (s0 === '0') SIMPLEG = false; } catch (e) {}
 const hudEl = $('hud'); let uiMin = true;
 try { if (localStorage.getItem('cinderlinks.ui') === 'open') uiMin = false; } catch (e) {}
 function setUi(min) { uiMin = min; hudEl.className = min ? 'min' : ''; try { localStorage.setItem('cinderlinks.ui', min ? 'min' : 'open'); } catch (e) {} }
@@ -163,19 +167,19 @@ view.addEventListener('mousemove', (e) => {
 view.addEventListener('mousedown', (e) => { const a = audio(); if (a && a.state === 'suspended') a.resume(); if (e.button === 1) { camDrag = true; if (e.preventDefault) e.preventDefault(); } else if (!e.button) mouse.down = true; });
 addEventListener('mouseup', (e) => { if (e.button === 1) camDrag = false; else mouse.down = false; });
 view.addEventListener('auxclick', (e) => { if (e.preventDefault) e.preventDefault(); });
-view.addEventListener('wheel', (e) => { camD = clamp(camD * (e.deltaY > 0 ? 1.1 : 1 / 1.1), 7, 42); if (e.preventDefault) e.preventDefault(); }, { passive: false });
+view.addEventListener('wheel', (e) => { camD = clamp(camD * (e.deltaY > 0 ? 1.1 : 1 / 1.1), CAMMIN, 42); if (e.preventDefault) e.preventDefault(); }, { passive: false });
 
 function trimCaches() {   // drop what is far from the camera
   const cu = camX * PPM, cv = (camY - 30) * PPV;
-  if (chunks.size > (preOn ? 1300 : 620)) { for (const [k, C] of chunks) if ((Math.abs(C.cx * CH - cu) > 3400 || Math.abs(C.cy * CH - cv) > 1500) && !(preOn && Math.abs(C.cx * CH - preX * PPM) < 2700 && Math.abs(C.cy * CH - preY * PPV) < 1400)) chunks.delete(k);   /* (the land where the ball will come down is kept) */ lastCK = NaN; }
-  if (tiles.size > 330) {
+  if (chunks.size > (preOn ? CHCAP + 700 : CHCAP)) { for (const [k, C] of chunks) if ((Math.abs(C.cx * CH - cu) > (DNEAR + 30) * PPM || Math.abs(C.cy * CH - cv) > (DNEAR + 24) * PPV) && !(preOn && Math.abs(C.cx * CH - preX * PPM) < 2700 && Math.abs(C.cy * CH - preY * PPV) < 1400)) chunks.delete(k);   /* (the land where the ball will come down is kept) */ lastCK = NaN; }
+  if (tiles.size > (SIMPLEG ? 1100 : 330)) {
     const tanV = (VW / 2 + 300) / FOC;
     for (const [k, T] of tiles) { const ex = (T.tx + 0.5) * TPX / PPM - camX, ey = (T.ty + 0.5) * TPX / PPV - camY, fd = ex * FX + ey * FY, la = Math.abs(ex * RX + ey * RY), near = Math.hypot((T.tx + 0.5) * TPX / PPM - player.x, (T.ty + 0.5) * TPX / PPV - player.y) < 52 || (preOn && Math.hypot((T.tx + 0.5) * TPX / PPM - preX, (T.ty + 0.5) * TPX / PPV - preY) < 62);
-      if (!near && (wkOn ? fd < -12 || fd > 125 || la > tanV * (fd + 24) + 14 : Math.abs(T.tx * TPX - cu) > 6800 || Math.abs(T.ty * TPX - cv) > 3000)) tiles.delete(k); }   // (with a worker: all that is out of view and not round the golfer)
+      if (!near && (wkOn ? fd < -12 || fd > (SIMPLEG ? Math.min(VIEWR - 20, 220) + 35 : 125) || la > tanV * (fd + 24) + 14 : Math.abs(T.tx * TPX - cu) > 6800 || Math.abs(T.ty * TPX - cv) > 3000)) tiles.delete(k); }   // (with a worker: all that is out of view and not round the golfer)
     lastTK = NaN; lastTile = null;
   }
   if (ocells.size > 2600) { for (const k of ocells.keys()) { const ix = Math.floor(k / 65536) - 32768, iy = (k % 65536) - 32768; if (Math.abs(ix * OC - cu) > 6800 || Math.abs(iy * OC - cv) > 3000) ocells.delete(k); } }
-  if (ftiles.size > 340) { for (const [k, F] of ftiles) if (Math.abs(F.fx * FTS - camX) > 400 || Math.abs(F.fy * FTS - camY) > 400) ftiles.delete(k); for (let i = farQ.length - 1; i >= 0; i--) { const F = farQ[i]; if (ftiles.get((F.fx + 32768) * 65536 + (F.fy + 32768)) !== F) farQ.splice(i, 1); } }
+  if (ftiles.size > 340 * DFAR * DFAR / 67600) { for (const [k, F] of ftiles) if (Math.abs(F.fx * FTS - camX) > DFAR + 140 || Math.abs(F.fy * FTS - camY) > DFAR + 140) ftiles.delete(k); for (let i = farQ.length - 1; i >= 0; i--) { const F = farQ[i]; if (ftiles.get((F.fx + 32768) * 65536 + (F.fy + 32768)) !== F) farQ.splice(i, 1); } }
 }
 function firstPicture() { const b = genBudget, s = spriteMax; genBudget = 1e9; spriteMax = 999; render(); render(); render(); genBudget = b; spriteMax = s; }   // a hole's first picture is made whole; after it, new land and new sculptures arrive a piece a frame
 function tickGame() {
