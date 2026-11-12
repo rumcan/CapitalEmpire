@@ -10,6 +10,7 @@ import { deleteNote, type HoleCardCheck, type HoleCardView } from '../../game/go
 import { monthIndexLabel } from '../../game/golf/calendar';
 import { SurfaceMark } from '../course/SurfaceMark';
 import { Icon } from '../Icon';
+import { pickText } from './files3p';
 import { TeeSetRows } from './TeeSets';
 import { allLabel } from '../../game/golf/play/practice';
 
@@ -66,6 +67,8 @@ export function HoleCard({ game, right = 'right-3' }: { game: Game; right?: stri
       <div className="mt-2 flex flex-col gap-1">
         <button className="chip self-start disabled:opacity-40" disabled={why3p.length > 0} onClick={() => game.open3p(c.n)} title={why3p.length ? why3p.join('. ') : `Walk hole ${c.n} from its tee, seen from behind the golfer (Esc comes back)`} data-testid="hole-play-3p"><Icon name="play" size={14} />Play this hole</button>
         {why3p.length > 0 && <div className="text-[12px] text-slate-400" data-testid="hole-play-3p-why">{why3p.join(' · ')}</div>}
+        {/* T434: a course another player shared (its file), played from behind the golfer with your own golfer */}
+        <button className="chip self-start" onClick={() => { void pickText().then(async t => { if (!t) return; const why = await game.shareLoad3p(t); if (why) game.toast(why, 'warn'); }); }} title="Open a course file another player shared and play it with your golfer" data-testid="hole-play-shared">Play a shared course…</button>
       </div>
 
       {pick && !playWhy && <HolePlayChoice n={c.n} count={game.practiceHoleCount()} onHole={() => { setPick(false); game.practiceStart(c.n, 'hole'); }} onAll={() => { setPick(false); game.practiceStart(c.n, 'all'); }} onCancel={() => setPick(false)} />}

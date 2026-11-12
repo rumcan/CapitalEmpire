@@ -215,9 +215,15 @@ import { lieGrid3p } from './golf/play/lies3p';
 import { exportFeatures3p, gatherFeatures3p } from './golf/play/features3p';
 import { courseEntry3p } from './golf/play/entry3p';
 import { seedOf } from './golf/play/view3p';
-import type { CourseMsg, HostMsg, ViewInput } from './golf/play/protocol3p';
-import { Play3p } from './golf/play/play3p'; // T418: the owner's play in the view from behind the golfer
+import type { Actor, CourseMsg, HostMsg, ViewInput } from './golf/play/protocol3p';
+import { Play3p, type Play3pOpts } from './golf/play/play3p'; // T418: the owner's play in the view from behind the golfer
 import { earned } from './golf/play/unlocks'; // T443
+import { galleryActors } from './golf/play/gallery3p'; // T429: the galleries for the view
+import { Match3p } from './golf/play/match3p'; // T428: a money match in the view
+import { readShare, shareCourseMsg, shareOf, shareText, shareView, type CourseShare } from './golf/play/share3p'; // T434: shared courses
+import { ghostActor, ghostOf, ghostShots, ghostText, readGhost, replayGhost, type GhostFile } from './golf/play/ghost3p'; // T433: ghost rounds
+import { fairRows, kitFor, levelHcp, LEVEL_PROFILE, type KitMode } from './golf/play/fair3p'; // T436: own kit or level kit
+import { biomeOf, courseTypeOf, playerDress } from './golf/play/look3p'; // T437: one look
 import type { Frame3p } from './golf/play/export3p';
 import { putterFitName } from './golf/play/bag';
 import { BallRoll, FX_SAND, FX_SPLASH, ballRoll, type HeightAt } from './golf/play/roll';
@@ -10037,7 +10043,7 @@ export class Game {
   /** the view from behind the golfer closed (its Esc, the page's Esc, ✕): the manager view comes back and the sim runs at the speed it had */
   close3p() {
     if (this.view3pHole === null) return;
-    this.play3p = null; this.view3pRound = false;
+    this.play3p = null; this.shared3p = null; this.view3pRound = false;   // (T434: a shared course is played only while the view is open)
     this.view3pHole = null; this.lastFrame = 0; this.last = performance.now();
     if (this.view3pSpeed && !this.speed) this.setSpeed(this.view3pSpeed);
     this.emit();
@@ -10046,6 +10052,9 @@ export class Game {
    *  (parkland and private for now: section 2's mapping from the map's setting and the upkeep is later work), a seed from the club's name, true size.
    *  Null without a course */
   async course3pMsg(n: number): Promise<CourseMsg | null> {
+    const sh = this.shared3p;
+    const golfer = playerDress(GOLFER_PEOPLE[this.youArt()]?.id, this.golf?.player?.sex ?? 'm');   // (T437: the golfer in the player card's clothes)
+    if (sh) { this.view3pFrame = sh.frame; this.course3pShare = sh.share; return { ...(await shareCourseMsg(sh.share, sh.view, n)), golfer }; }   // (T434: a shared course)
     const g = this.golf; if (!g) return null;
     const name = this.titleName()?.name ?? 'Your course', id = 'ce-' + (name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'course');
     const inp = export3pInputOf(this, name); if (!inp) return null;
@@ -10060,7 +10069,10 @@ export class Game {
       ? [Math.min(...pts.map(p => p.x)), Math.min(...pts.map(p => p.y)), Math.max(...pts.map(p => p.x)), Math.max(...pts.map(p => p.y))] : undefined;
     const features = exportFeatures3p(gatherFeatures3p({ course: id, segs: this.net.segs, bizDefs: this.bizDefs, structures: g.structures ?? [], lots: this.estateRt?.lots ?? [],
       props: this.props, library: LIBRARY, ...(box ? { box } : {}) }), { x: f.cx, y: f.cy });
-    return { v: 1, t: 'course', course: course as unknown as Record<string, unknown>, features, biome: 'parkland', type: 'private', seed: seedOf(name), scale: 1, hole: n };
+    // T437: the biome from the map's setting and the month, the course type from how the course is kept (the crew's condition; a tournament day: Tour)
+    const st = g.crew?.staff, biome = biomeOf(this.farmMonth()), type = courseTypeOf({ condition: st ? courseCondition(st) : 100, tournament: this.traffic.round.stage !== 'free' || !!this.eventToday() });
+    this.course3pShare = shareOf(file, features, { name, biome, type, seed: seedOf(name) });   // (T433, T434: what a ghost or a shared course file holds)
+    return { v: 1, t: 'course', course: course as unknown as Record<string, unknown>, features, biome, type, seed: seedOf(name), scale: 1, hole: n, golfer };
   }
   // ---------- T418: the owner's play in the view from behind the golfer (golf/play/play3p.ts: LiveGroup decides every stroke; the view shows them) ----------
   /** the frame the last course message was made in (course3pMsg) */
@@ -10072,21 +10084,106 @@ export class Game {
   /** the view has loaded the course (its `loaded`): a fresh play of the open hole starts, alone, free and not recorded (as a practice hole), and the
    *  view is sent its first turn. Nothing when the view is closed or the hole cannot be played (the course changed under it) */
   start3p(): HostMsg[] {
-    const n = this.view3pHole, v = this.yrView(), f = this.view3pFrame; this.play3p = null;
+    const n = this.view3pHole, sh = this.shared3p, v = sh ? sh.view : this.yrView(), f = this.view3pFrame; this.play3p = null; this.match3p = null;   // (T434: a shared course is played on its own view)
     if (n === null || !v || !f) return [];
+    // T428: a money match under way is played on in the view (the very match: its round saved after each input, settled when it ends)
+    const mr = this.yourRound();
+    if (mr?.match && !mr.over && !sh) {
+      const p = this.playerNow();
+      this.match3p = new Match3p({ view: v, round: mr, skills: this.yourSkills(), sex: p?.sex ?? 'm', seed: this.seed, frame: f, height: this.ballHeight, wind: () => this.windNow(),
+        fit: putterFitName(p?.bag), ...(this.matchEnv() ? { envFor: this.matchEnv()! } : {}) });
+      return this.match3pSync(this.match3p.start());
+    }
+    // T425: his real round under way (his live group in the day's field, not handed to the caddie): the view plays it on; else a lone practice hole
+    const pl = this.play, own = pl?.own;
+    if (pl && own?.turn && own.caddie === null && !sh) {
+      const gi = pl.plan.groups.findIndex(g => g.players.includes(own.id));
+      this.play3p = new Play3p({ view: pl.view, holes: [], skills: own.skill, sex: own.sex, seed: 0, frame: f, height: this.ballHeight, wind: () => this.windNow(),
+        paths: this.cartPathsNow(), galleries: () => this.galleries3p(), attach: { plan: pl.plan, view: pl.view, live: own.live, owner: own.id, group: Math.max(0, gi) } });
+      return this.play3p.start();
+    }
     const idx = v.holes.findIndex(h => h.n === n); if (idx < 0) return [];
-    const p = this.playerNow(), sk = this.yourSkills(), yr = this.view3pRound ? this.yourRound() : null;
-    // T430: your round in the view: the game's own round (play/yours3p.ts), its strokes saved, its end recorded; else the free hole (LiveGroup)
-    const driver = yr && !yr.match ? yoursDriver(v, sk, this.seed, { get: () => this.yourRound(), set: r => this.setYourRound(r), played: (s, b, a, up) => this.yourPlayed3p(s, b, a, up), next: () => this.yourNextHole() }) : undefined;
-    // T443: what he has earned: his card's skills, his clubs' levels, his cards' mechanics (golf/play/unlocks.ts)
-    const earn = earned({ skills: p?.skills ?? {}, bag: p?.bag ?? null, mech: MECH_IDS.filter(id => hasMech(sk, id)) });
-    this.play3p = new Play3p({ view: v, holes: [idx], skills: sk, earned: earn, gimmeM: yr ? gimmeM(yr) : GIMME_RULES.find(r => r.id === DEFAULT_RULES.gimme)?.m ?? 0, /* (T423: the round's own rule; a free hole's: the leather) */ ...(driver ? { driver } : {}), sex: p?.sex ?? 'm', seed: (this.seed ^ Math.imul(n, 7919) ^ Math.imul(++this.play3pN, 104729)) | 0, frame: f,
-      height: this.ballHeight, wind: () => this.windNow(), fit: putterFitName(p?.bag), gust: () => { const w = this.worldWind(); return w ? windView(this.windNow(), w, 1, 0).peak : null; } });
+    const p = this.playerNow(), yr = this.view3pRound && !sh ? this.yourRound() : null;
+    if (yr && !yr.match && !yr.over) {
+      // T430: your round in the view: the game's own round (play/yours3p.ts), its strokes saved, its end recorded, its own gimme rule
+      const sk = this.yourSkills(), earn = earned({ skills: p?.skills ?? {}, bag: p?.bag ?? null, mech: MECH_IDS.filter(id => hasMech(sk, id)) });
+      const driver = yoursDriver(v, sk, this.seed, { get: () => this.yourRound(), set: r => this.setYourRound(r), played: (s, b, a, up) => this.yourPlayed3p(s, b, a, up), next: () => this.yourNextHole() });
+      this.play3p = new Play3p({ view: v, holes: [idx], skills: sk, earned: earn, gimmeM: gimmeM(yr), driver, sex: p?.sex ?? 'm', seed: this.seed, frame: f,
+        height: this.ballHeight, wind: () => this.windNow(), fit: putterFitName(p?.bag), gust: () => { const w = this.worldWind(); return w ? windView(this.windNow(), w, 1, 0).peak : null; } });
+      return this.play3p.start();
+    }
+    const mode = this.fair3p, sk = kitFor(mode, this.yourSkills());   // (T436: his own kit, or the level kit)
+    // T443: what he has earned: his card's skills, his clubs' levels, his cards' mechanics (golf/play/unlocks.ts); the level kit has the level golfer's, no cards
+    const earn = mode === 'level' ? earned({ skills: LEVEL_PROFILE, bag: null, mech: [] }) : earned({ skills: p?.skills ?? {}, bag: p?.bag ?? null, mech: MECH_IDS.filter(id => hasMech(sk, id)) });
+    const seed3p = (this.seed ^ Math.imul(n, 7919) ^ Math.imul(this.play3pN + 1, 104729)) | 0, ghost = this.ghostOpts3p(v, [idx]);   // (T433: a loaded ghost of this hole plays alongside)
+    this.ghostMeta3p = { holes: [idx], seed: seed3p, skills: sk, sex: p?.sex ?? 'm', name: p?.name ?? 'You', mode, hcp: mode === 'level' ? levelHcp() : p ? handicapOf(p.skills) : levelHcp() };
+    this.play3p = new Play3p({ view: v, holes: [idx], skills: sk, earned: earn, ...ghost, gimmeM: GIMME_RULES.find(r => r.id === DEFAULT_RULES.gimme)?.m ?? 0, /* (T423: a practice hole's rules: the leather) */ sex: p?.sex ?? 'm', seed: (this.seed ^ Math.imul(n, 7919) ^ Math.imul(++this.play3pN, 104729)) | 0, frame: f,
+      height: sh ? sh.height : this.ballHeight, wind: () => this.windNow(), fit: putterFitName(p?.bag), gust: () => { const w = this.worldWind(); return w ? windView(this.windNow(), w, 1, 0).peak : null; } });
     return this.play3p.start();
+  }
+  // ---------- T433, T434: ghost rounds and shared courses as files (golf/play/ghost3p.ts, share3p.ts) ----------
+  /** T434: the shared course open in the view (null: the painted course) */
+  private shared3p: { share: CourseShare; view: CourseView; frame: Frame3p; height: HeightAt } | null = null;
+  /** T434: the last course sent to the view, as a shared course would hold it (shareSave3p) */
+  private course3pShare: CourseShare | null = null;
+  /** T433: the ghost loaded to play alongside (null: none), and what the last practice session was made with (ghostSave3p) */
+  private ghost3p: GhostFile | null = null;
+  private ghostMeta3p: { holes: number[]; seed: number; skills: ShotSkill; sex: Sex; name: string; mode: KitMode; hcp: number } | null = null;
+  /** T433: the loaded ghost replayed on these holes, as an actors source (null: no ghost, or one of other holes) */
+  private ghostOpts3p(v: CourseView, holes: number[]): Pick<Play3pOpts, 'more' | 'moreShots' | 'boardRows'> {
+    const g = this.ghost3p, f = this.view3pFrame; if (!g || !f || g.holes.join() !== holes.join()) return {};
+    const r = replayGhost(g, v), mode = this.fair3p, me = this.ghostMeta3p;
+    return {
+      more: (m: number) => { const a = ghostActor(r, m, f); return a ? [a] : []; },
+      moreShots: (t0: number, t1: number) => ghostShots(r, t0, t1, f),   // (his balls, played back see-through)
+      boardRows: (m: number) => { const p = this.play3p; if (!p) return []; return fairRows([   // (T436: you and him, gross and net)
+        { name: me?.name ?? 'You', hcp: me?.hcp ?? null, owner: true, plan: p.plan, view: p.view, id: p.me },
+        { name: g.golfer.name, hcp: mode === 'level' ? levelHcp() : g.hcp ?? null, owner: false, plan: r.plan, view: r.view, id: 0 }], m, mode); },
+    };
+  }
+  /** T436: the kit the view's sessions are played with ('own' by default; a ghost brings the one it was played with) */
+  private fair3p: KitMode = 'own';
+  get fairMode3p(): KitMode { return this.fair3p; }
+  /** T436: own kit or level kit for the next session (the view starts the hole again with it) */
+  setFair3p(mode: KitMode) { if (mode !== this.fair3p) { this.fair3p = mode; this.emit(); } }
+  /** T433: the round just played in the view as a ghost file's text (null: none played yet) */
+  ghostSave3p(): string | null {
+    const p = this.play3p, m = this.ghostMeta3p, c = this.course3pShare; if (!p || !m || !c || !p.inputs.length) return null;
+    return ghostText(ghostOf(m, { name: c.name, hash: c.hash }, p.inputs, p.plan, p.me, new Date().toISOString().slice(0, 10)));
+  }
+  /** T433: a ghost file to play alongside the next session of its hole on this course; the reason when it cannot be */
+  ghostLoad3p(text: string): string | null {
+    const r = readGhost(text, this.course3pShare?.hash); if ('why' in r) return r.why;
+    this.ghost3p = r.ghost; this.fair3p = r.ghost.mode ?? 'own'; this.emit(); return null;   // (T436: you race him with the kit he played)
+  }
+  /** T434: the course open in the view as a shared course file's text (null: none sent yet) */
+  shareSave3p(): string | null { const c = this.course3pShare; return c ? shareText(c) : null; }
+  /** T434: a shared course file played in the view with your golfer (from its first hole); the reason when it cannot be */
+  async shareLoad3p(text: string): Promise<string | null> {
+    const r = readShare(text); if ('why' in r) return r.why;
+    const sv = await shareView(r.share); this.shared3p = { share: r.share, ...sv };
+    if (this.view3pHole !== null) { this.view3pHole = null; this.emit(); }
+    this.releaseKeys(); this.view3pSpeed = this.speed; if (this.speed) this.setSpeed(0);
+    this.view3pHole = sv.view.holes[0]?.n ?? 1; this.emit();
+    return null;
   }
   /** the view's input for the turn in hand: played through the one model (LiveGroup); what the view is sent back (his stroke, anyone else's, the
    *  hole's end, the next turn) */
-  input3p(input: ViewInput): HostMsg[] { return this.play3p ? this.play3p.input(input) : []; }
+  input3p(input: ViewInput): HostMsg[] {
+    if (this.match3p) return this.match3pSync(this.match3p.input(input));   // (T428: a money match)
+    const ms = this.play3p ? this.play3p.input(input) : [], pl = this.play, own = pl?.own;
+    if (pl && own && this.play3p?.me === own.id && this.play3p.plan === pl.plan) { own.turn = own.live.advance(); this.saveOwner(); if (!own.turn) this.ownerDone(pl); this.emit(); }   // (T425: his real round moved on: kept as the manager game's)
+    return ms;
+  }
+  /** T428: the money match in the open view (null: none) */
+  private match3p: Match3p | null = null;
+  /** T428: after the view's match moved on: its round saved as yours; once it is over, settled (the stake moves, the result card opens) */
+  private match3pSync(ms: HostMsg[]): HostMsg[] {
+    const m = this.match3p; if (!m) return ms;
+    this.setYourRound(m.round);
+    if (m.over) { this.match3p = null; this.matchSettle(m.round, false); }
+    return ms;
+  }
   /** T441, T442: the model's luckless shot for what the view has picked (its aim marker), or null with no play */
   /** T423: the view's gimme, if the round's rule allows it */
   gimme3p(holeIdx: number, stroke: number): HostMsg[] { return this.play3p ? this.play3p.gimme(holeIdx, stroke) : []; }
@@ -10098,14 +10195,13 @@ export class Game {
     return out;
   }
   /** T430: the view opens on your round in progress (the round bar's button): its hole, from where your ball lies (T432: a round loaded from a save too).
-   *  A money match is played in the top view for now */
+   *  A money match opens as T428 plays it (Match3p) */
   open3pRound() {
     const r = this.yourRound(), v = this.yrView(); if (!r || !v) { this.toast('No round in progress', 'warn'); return; }
-    if (r.match) { this.toast('A money match is played from above for now', 'warn'); return; }
     if (r.over) { this.toast('Your round is over', 'info'); return; }
     if (r.holed) this.yourNextHole();
     const now = this.yourRound(), h = now ? holeOf(v, rowOf(now).i) : null; if (!now || !h) return;
-    this.yrCard = false; this.shot = null; this.view3pRound = true; this.open3p(h.n);
+    this.yrCard = false; this.shot = null; this.view3pRound = !now.match; this.open3p(h.n);   // (a money match: start3p plays it as T428's Match3p)
     if (this.view3pHole === null) this.view3pRound = false;
   }
   /** whether the open view plays your round (else the free hole) */
@@ -10128,6 +10224,12 @@ export class Game {
     if (f && r && !(r.feats ?? []).includes(f)) { this.setYourRound({ ...r, feats: [...(r.feats ?? []), f] }); this.grantPull(earnFromFeat(f)); }
   }
   preview3p(key: number, input: ViewInput): HostMsg | null { return this.play3p ? this.play3p.preview(key, input) : null; }
+  /** T429: the galleries for the view (gallery3p.ts): each spot's spectators as the City has them, each fan where the manager view stands or seats him; [] with
+   *  no course frame yet */
+  galleries3p(): Actor[] {
+    const f = this.view3pFrame; if (!f) return [];
+    return galleryActors({ G: this.traffic.gallery, places: this.galleryPlaces, seating: this.gallerySeating }, f);
+  }
   /** the Play button's choice: a practice round on just hole n (from your tee: the white one, else the first it has) or on every hole of the course from the first. Free, not an event, not
    *  recorded (yourRoundEnd); when it ends the camera, the tool, the side modes and the hole card come back as they were */
   practiceStart(n: number, scope: PracticeScope) {

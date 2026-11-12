@@ -80,7 +80,10 @@ interface Pending { club: Club; to: Pt; lie: Lie; penalty: 0 | 1; holed: boolean
 /** what a round's play writes to: the course, the seed, the golfers by id, the shots (in the order struck), the done minutes and the pace (T211) */
 export interface PlayCtx { view: CourseView; seed: number; who: Map<number, Golfer>; out: Shot[]; done: number[]; pace: Pace;
   /** T334: the day's conditions for the model's golfers (the wind's mean, the heights, the view's finer lie: conditions.ts); absent: none, played as before */
-  cond?: Conditions }
+  cond?: Conditions;
+  /** T425: the honour on the tee (the lowest score on the hole before tees off first); absent: the group's own order on every tee, as before (saved rounds and
+   *  the field's days replay exactly; the view's free sessions ask for it) */
+  honour?: boolean }
 
 /** one group's play of one hole. A golfer strikes when he is ready (his walk to his ball is done), the group's last strike's routine is over and the
  *  group ahead on the hole lets him (T211, gate), the farthest from the pin first. `first` is the group's first strike on the hole; `now` is when the last
@@ -92,11 +95,13 @@ export class HoleRun {
   readonly g: GroupRun; readonly ahead: GroupRun | null;
   /** the end of the last flight, the group's first strike, and the group's last strike and its routine (none yet: -Infinity) */
   now: number; first = -1; private last = -Infinity; private routine = 0; private c: PlayCtx;
-  constructor(c: PlayCtx, gr: Group, h: number, start: number, g: GroupRun, ahead: GroupRun | null) {
+  /** prev: the group's run of the hole before (null on its first): T425, the honour: the lowest score there tees off first here (a tie keeps that hole's order) */
+  constructor(c: PlayCtx, gr: Group, h: number, start: number, g: GroupRun, ahead: GroupRun | null, prev: HoleRun | null = null) {
     this.c = c; this.h = h; this.now = start; this.g = g; this.ahead = ahead;
     const hole = c.view.holes[h]!;
     // T254: each golfer tees off from his own set (the nearest the hole has)
     this.ps = gr.players.map(id => { const q = c.who.get(id)!, tee = holeFrom(hole, q.tees).tee; return { id, pro: q.pro, skill: q.skill, sk: q.skills ?? q.skill, owner: !!q.owner, cart: q.cart !== undefined && !q.owner, ball: { ...tee }, stand: { ...tee }, lie: 'tee' as Lie, strokes: 0, holed: false, cup: false, end: start, ready: start, r: rng(c.seed, id, h), pend: null, ...(q.tees ? { set: q.tees } : {}) }; });
+    if (prev && c.honour) { const k = new Map(prev.ps.map((q, i) => [q.id, q.strokes * 64 + i] as const)); this.ps.sort((a, b) => (k.get(a.id) ?? 1e9) - (k.get(b.id) ?? 1e9)); }   // (T425: the honour)
   }
   /** the golfer to strike next: the one farthest from the pin among those not holed (the group's order on a tie); null when the hole is over */
   next(): Player | null {
@@ -173,6 +178,8 @@ export class HoleRun {
 export class GroupRun {
   readonly idx: number; readonly first: number[]; readonly arrive: number[]; readonly clear: number[]; readonly out: number[];
   h = 0; hole: HoleRun | null = null;
+  /** T425: its run of the last hole it finished (the honour on the next tee is from its scores) */
+  private played: HoleRun | null = null;
   /** the minute it reaches its next tee */
   ready: number;
   /** T211: the group it stands aside for on its next tee (a wave-through), until that group has begun the hole */
@@ -195,7 +202,7 @@ export class GroupRun {
   /** starts the next hole from its arrival at the tee, behind `ahead` (the group that began it before, or null); false once every hole is played */
   begin(ahead: GroupRun | null = null): boolean {
     if (this.h >= this.c.view.holes.length) return false;
-    this.hole = new HoleRun(this.c, this.gr, this.h, this.ready, this, ahead);
+    this.hole = new HoleRun(this.c, this.gr, this.h, this.ready, this, ahead, this.played);
     return true;
   }
   /** ends the hole: off the green (out); the group's walk to the next tee; on the last hole, each golfer's done minute (his walk off the last green) */
@@ -206,7 +213,7 @@ export class GroupRun {
     // (T213: a group all in carts drives to the next tee, CART_PACE of the walk)
     if (h + 1 < N) { this.ready = run.now + moveMin(pin, holes[h + 1]!.tee, run.ps.every(b => b.cart)); this.arrive[h + 1] = this.ready; }
     if (h === N - 1) for (const b of run.ps) this.c.done[b.id] = offOf(b.cup ? b.ball : b.stand, pin, b.stand, this.gr.players.indexOf(b.id), b.end).t1;
-    this.hole = null; this.h++;
+    this.played = run; this.hole = null; this.h++;
   }
   /** whether it has begun hole h (reached the tee and is playing it, or past it) */
   begun(h: number): boolean { return this.h > h || (this.h === h && this.hole !== null); }
@@ -315,12 +322,12 @@ export function liveField(plan: RoundPlan): { field: Field; live: number } | und
  *  played up to his first strike, and LiveGroup (live.ts) plays on from there; the golfers not done yet (his group, and the groups behind that wait on
  *  it) have done Infinity. T334: with opts.cond (the day's conditions) the model's shots are struck in the day's mean wind, from the lie's kind and the slope under
  *  the ball; without it, as before */
-export function playRound(view: CourseView, golfers: Golfer[], groups: Group[], seed: number, opts?: { live?: number; cond?: Conditions }): RoundPlan {
+export function playRound(view: CourseView, golfers: Golfer[], groups: Group[], seed: number, opts?: { live?: number; cond?: Conditions; honour?: boolean }): RoundPlan {
   const N = view.holes.length, size = Math.max(0, ...golfers.map(g => g.id)) + 1;
   const pace: Pace = { arrive: groups.map(() => new Array<number>(N).fill(Infinity)), waits: [], open: [], waves: [] };
   const plan: RoundPlan = { golfers, groups, shots: [], strokes: Array.from({ length: size }, () => new Array<number>(N).fill(0)), done: new Array<number>(size).fill(0), pace };
   for (const gr of groups) for (const id of gr.players) plan.done[id] = N ? Infinity : gr.tee; // with no holes, a golfer is done at his tee time
-  const c: PlayCtx = { view, seed, who: new Map(golfers.map(g => [g.id, g] as const)), out: [], done: plan.done, pace, ...(opts?.cond ? { cond: opts.cond } : {}) };
+  const c: PlayCtx = { view, seed, who: new Map(golfers.map(g => [g.id, g] as const)), out: [], done: plan.done, pace, ...(opts?.cond ? { cond: opts.cond } : {}), ...(opts?.honour ? { honour: true } : {}) };
   const field = new Field(c, groups), live = opts?.live !== undefined ? groups[opts.live] : undefined;
   if (live) {
     field.ownerId = live.players.find(id => c.who.get(id)?.owner) ?? -1;

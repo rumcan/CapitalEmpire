@@ -73,7 +73,7 @@ export function RoundBar({ v, onJump, onCart, onCallCart, onMull, onGimme, onCar
         {v.cartFar && <button className="chip" onClick={onCallCart} data-testid="you-cart-call" data-tip="Your cart drives to you (C); then E gets in"><Icon name="compass" size={14} />Cart (C)</button>}
         {v.canMull && <button className="chip" onClick={onMull} data-testid="you-mulligan" data-tip="Take your last shot back and hit it again: no stroke counted (M). A round with mulligans does not count toward your handicap">Mulligan (M){v.mullLeft !== Infinity ? ` · ${v.mullLeft} left` : ''}</button>}
         {v.canGimme && <button className="btn-gold px-2 py-0.5 text-xs" onClick={onGimme} data-testid="you-gimme" data-tip="Inside the gimme ring: the putt is conceded, holed for one stroke (G)">Gimme (G)</button>}
-        {onView && !v.match && !r.over && <button className="chip" onClick={onView} data-testid="round-view3p" data-tip="Play on from behind the golfer: the same round, the same shots, saved as you go">From behind</button>}
+        {onView && !r.over && <button className="chip" onClick={onView} data-testid="round-view3p" data-tip="Play on from behind the golfer: the same round, the same shots, saved as you go">From behind</button>}
         <button className="chip" onClick={onCard} data-testid="round-card-btn">Scorecard</button>
         <button className="chip" onClick={onQuit} title={v.match ? 'Concede the match: you lose the stake' : r.practice ? 'Stop the practice round: nothing is recorded' : 'Stop your round here: the holes done go into your rounds'} data-testid="round-quit">{v.match ? 'Concede' : 'Quit'}</button>
       </div>

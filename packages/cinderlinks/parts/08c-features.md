@@ -32,7 +32,7 @@ function setFeatures(F) {   // F: the edits file's object (or nothing): made rea
     } else if (f.kind === 'building' && Array.isArray(f.at)) {
       const x = +f.at[0] * S, y = +f.at[1] * S; if (!(x === x && y === y)) continue;
       builds.push({ x, y, w: clamp(+f.w || 10, 2, 120) * S, d: clamp(+f.d || 8, 2, 120) * S, h: clamp(+f.h || 4.5, 2, 20) * Math.max(S, 0.8), rot: (+f.rot || 0) * Math.PI / 180, roof: f.roof || 'gable',
-        wall: hexRgb(f.wall, [232, 220, 192]), rc: hexRgb(f.roofColour, [138, 59, 42]), floors: clamp(Math.round(+f.floors || 1), 1, 4), faces: null });
+        wall: hexRgb(f.wall, [232, 220, 192]), rc: hexRgb(f.roofColour, [138, 59, 42]), floors: clamp(Math.round(+f.floors || 1), 1, 4), faces: null, use: typeof f.use === 'string' ? f.use : '' });
     }
   }
   let sd = null, kind = null, seg = null, gw = 0, gh = 0, res = 0.5; const SG = [];   // (SG: every stretch of every path: its start, its run, its length squared, how far along its path it starts, its length)
@@ -109,6 +109,7 @@ function buildFaces(B) {
   let zb = 1e9, zm = -1e9; for (const [a, f] of [[-hw, -hd], [hw, -hd], [hw, hd], [-hw, hd], [0, 0]]) { const g = groundH(B.x + a * cr - f * sr, B.y + a * sr + f * cr); if (g < zb) zb = g; if (g > zm) zm = g; }
   const z0 = zb - 0.4, z1 = zm + B.h, mul = (c, k) => [Math.min(255, c[0] * k), Math.min(255, c[1] * k), Math.min(255, c[2] * k)];
   const add = (pts, n, col, bias = 0, emit = false) => faces.push({ pts, n, col, bias, emit });   // bias: how far in front of its wall a detail counts (cm); also its rank of detail (see drawBuildings)
+  if (B.use === 'tent' || B.use === 'stand') { dressFaces(B, P, N, add, mul, zm); B.faces = faces; B.z0 = zm; B.top = zm + B.h; return; }   // (T429: a marquee, a grandstand: parts/08h-dress.md)
   const FRAME = [246, 242, 230], G1 = [74, 96, 128], G2 = [116, 148, 184];
   const walls = [[-hw, -hd, hw, -hd, 0, -1], [hw, -hd, hw, hd, 1, 0], [hw, hd, -hw, hd, 0, 1], [-hw, hd, -hw, -hd, -1, 0]];
   walls.forEach(([a0, f0, a1, f1, na, nf], wi) => {

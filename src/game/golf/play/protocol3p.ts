@@ -46,7 +46,9 @@ export type CourseType = 'public' | 'private' | 'tour';
  *  every visit) */
 export interface CourseMsg { v: 1; t: 'course'; course: Record<string, unknown>; features: FeaturesFile; biome: string; type: CourseType; seed: number;
   /** the course's size (1: true size, what the host sends; the view's own saved courses play at 0.6) and the hole to open, from 1 (T416; absent: 1) */
-  scale?: number; hole?: number }
+  scale?: number; hole?: number;
+  /** T437: the player's golfer in his player card's clothes (look3p.ts playerDress; absent: the view's own red polo) */
+  golfer?: Dress }
 
 /** what an actor is: a golfer, a caddie, a cart, or a gallery (a crowd standing at one spot, `count` people) */
 export type ActorRole = 'golfer' | 'caddie' | 'cart' | 'gallery';
@@ -60,14 +62,23 @@ export interface Actor { id: number; role: ActorRole; at: ViewPt; hole: number; 
    *  stepping up to the strike, a swing from the strike to the finish, a putt from stepping up to the end of the stroke; absent: 0), and how he looks (Dress) */
   doing?: Doing; phase?: number; dress?: Dress;
   /** T424: a cart's riders (golfer actor ids, the driver first) */
-  riders?: number[] }
+  riders?: number[];
+  /** T429: a gallery's fans, each where the manager view draws him (crowdview.ts galleryPeople: an arc round a tee, a ring round a green, the seats of a stand):
+   *  [x, y, the height he sits at (m; 0 standing)] in the view's frame, and the point they face (the pin, the tee, the stand's front); `count` is how many */
+  fans?: ViewPt3[]; focus?: ViewPt; seated?: true;
+  /** T426: he tends the flag (stands at the pin for another's long putt) */
+  tend?: true;
+  /** T433: a ghost round's golfer (ghost3p.ts): drawn see-through, never in the way */
+  ghost?: true }
 /** T424: what the view draws a person doing: walking, standing, addressing the ball, swinging, putting, riding in a cart (a golfer; the cart carries him) or
  *  watching another's shot (standing turned to it) */
 export type Doing = 'walk' | 'stand' | 'address' | 'swing' | 'putt' | 'ride' | 'watch';
 /** T424: how a person is drawn: the shirt, trousers, cap, skin and hair colours ('#rrggbb'), his build (a height factor, about 0.92..1.06) and sex */
 export interface Dress { shirt: string; trousers: string; cap: string; skin: string; hair: string; build: number; sex: 'm' | 'w' }
 /** who is on the course and where at game minute t: the full list each time (an actor missing from it has left) */
-export interface ActorsMsg { v: 1; t: 'actors'; at: number; actors: Actor[] }
+export interface ActorsMsg { v: 1; t: 'actors'; at: number; actors: Actor[];
+  /** T425: a list of a played round (play3p.ts with company): the view keeps it by its minute and places people by the play's own minute, not as it arrives */
+  play?: true }
 
 /** a club the owner may choose at his turn: the club, its full carry in metres and its scatter (the spread of where it lands, metres either side at
  *  full carry) after his skills, bag and mods for this lie, and the kit those numbers come from (mods.ts ClubKit) */
@@ -113,12 +124,29 @@ export interface ShotMsg { v: 1; t: 'shot'; golfer: number; hole: number; stroke
    *  landing's lie, the surface of each bounce, the seconds from the strike and the height (m above the ground) of each roll point (the bounces' hops are in
    *  them), a spin back's check (the point the ball skids to before it comes back), and with a penalty the drop: where the next stroke is played from and its lie
    *  (rest is where the ball itself stopped: in the water, or out of bounds) */
-  flightT?: number[]; landLie?: Lie; bounceLies?: Lie[]; rollT?: number[]; rollZ?: number[]; check?: ViewPt; drop?: ViewPt; dropLie?: Lie }
+  flightT?: number[]; landLie?: Lie; bounceLies?: Lie[]; rollT?: number[]; rollZ?: number[]; check?: ViewPt; drop?: ViewPt; dropLie?: Lie ;
+  /** T433: a ghost round's stroke (ghost3p.ts): played back see-through, beside the play, never in its way */
+  ghost?: true }
+
+/** T427: the leaderboard at game minute `at` (board.ts boardRows: the leaders, then the owner's row when he is below them) and the owner's group's wait
+ *  on the group ahead in words (board.ts waitText; null: none) */
+export interface BoardMsg { v: 1; t: 'board'; at: number; rows: { pos: string; name: string; toPar: string; thru: string; owner: boolean;
+  /** T436: his handicap as golfers write it ('12.4', '+1.0'; 'level' when everyone plays the same kit) and his net to par (absent: the field's board) */
+  hcp?: string; net?: string }[]; wait: string | null;
+  /** T436: the kit the round is played with ('own': each his own, scored net of handicaps; 'level': everyone the same, scored as played); absent: the field */
+  mode?: 'own' | 'level' }
 
 /** T441, T442: the model's shot for an input as the view would strike it, with no luck in it (the mean: no scatter, no mishit, no flier), so the view draws the
  *  curve, the landing and the bounce and roll of the shape and spin picked: `key` answers the view's `aim`; `shot` the stroke as a ShotMsg (its flight, roll
  *  and rest); `spread` the factor the shape puts on the scatter (the ring's size); null shot: none to show (a putt, no turn) */
 export interface PreviewMsg { v: 1; t: 'preview'; key: number; shot: ShotMsg | null; spread: number }
+
+/** T428: a money match (match.ts) as the view shows it: why it is sent (the match begins, a hole is decided, the match is over), the opponent's name and
+ *  handicap, the stake ($), the holes of the match, each decided hole's result (1 you, 0 halved, -1 them), the score (match.ts MatchScore: "2 UP", "3 & 2"),
+ *  and for a decided hole its number and both sides' strokes (null: picked up) */
+export interface MatchMsg { v: 1; t: 'match'; why: 'start' | 'hole' | 'end'; name: string; hcp: number; stake: number; holes: number; res: (1 | 0 | -1)[];
+  score: { text: string; short: string; up: number; played: number; left: number; over: boolean; result: 'w' | 'l' | 'h' | null };
+  hole?: number; you?: number | null; opp?: number | null }
 
 /** the time and weather: the game minute of the day, the weather (weather.ts) and the wind now */
 export interface ClockMsg { v: 1; t: 'clock'; minute: number; weather: WeatherCondition; wind: WindNow }
@@ -130,7 +158,7 @@ export interface HoleEndMsg { v: 1; t: 'holeEnd'; holeIdx: number; hole: number;
 /** the host closes the view: why, in the owner's words (absent: none to show) */
 export interface LeaveMsg { v: 1; t: 'leave'; why?: string }
 
-export type HostMsg = CourseMsg | ActorsMsg | TurnMsg | ShotMsg | HoleEndMsg | PreviewMsg | ClockMsg | LeaveMsg;
+export type HostMsg = CourseMsg | ActorsMsg | BoardMsg | MatchMsg | TurnMsg | ShotMsg | HoleEndMsg | PreviewMsg | ClockMsg | LeaveMsg;
 
 // ---------------------------------------------------------------- view to host
 
@@ -160,7 +188,7 @@ export interface ExitMsg { v: 1; t: 'exit'; why?: 'esc' | 'done' | 'error'; deta
 export type ViewMsg = ReadyMsg | LoadedMsg | ErrorMsg | InputMsg | AimMsg | WalkedMsg | GimmeMsg | HoleDoneMsg | ExitMsg;
 
 /** the message types each side sends */
-export const HOST_TYPES: readonly HostMsg['t'][] = ['course', 'actors', 'turn', 'shot', 'holeEnd', 'preview', 'clock', 'leave'];
+export const HOST_TYPES: readonly HostMsg['t'][] = ['course', 'actors', 'board', 'match', 'turn', 'shot', 'holeEnd', 'preview', 'clock', 'leave'];
 export const VIEW_TYPES: readonly ViewMsg['t'][] = ['ready', 'loaded', 'error', 'input', 'aim', 'walked', 'gimme', 'holeDone', 'exit'];
 
 const isMsg = (m: unknown, types: readonly string[]): boolean =>

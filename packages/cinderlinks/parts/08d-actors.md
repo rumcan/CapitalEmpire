@@ -6,10 +6,13 @@ R: A cart is the player's cart model drawn at another place and heading, with it
 R: Between two messages each one moves smoothly from where it was drawn to where the new message puts it, over the time the last two messages were apart; one that jumps far (a new hole) is put there at once.
 R: Near ones cast their live shadow. Within 60 m a person is the full sculpture; out to 180 m the same sculpture drawn small (its shrunk copies); beyond that a figure of two pixels, its shirt over its trousers.
 R: Sculptures are made when first needed (a few a frame) and kept by pose, facing and clothes; the player's golfer is the one the host does not send (the owner).
+R: The player's own golfer wears his player card's clothes when the host sends them with the course (T437).
+R: A ghost round's golfer (T433) is drawn see-through, every other pixel left out, and casts no shadow.
 File: game.js
 Check: function actorsIn(
 Check: function actorsList(
 Check: function drawActor(
+Check: function playerLook(
 
 ````js file=game.js
 
@@ -17,7 +20,7 @@ Check: function drawActor(
 // view) places each, picks its sculpture and casts its shadow, and puts it in the list; drawActor draws it in its turn, far to near.
 const K_ACTOR = 25;                    // the kind of an actor's entry in render's list (the others: 0..7 things, 20..24 the flag, golfer, ball, tee marks, cart)
 const actors = new Map();              // id -> what is drawn of it
-let actLast = 0, actFrame = -1, actMade = 0, ACT_MAKE = 3, ACT_MS = 0;   // the last message's time; sculptures made this frame (at most ACT_MAKE); the ms spent (the harness reads it)
+let grpOwner = -1, actLast = 0, actFrame = -1, actMade = 0, ACT_MAKE = 3, ACT_MS = 0;   // the last message's time; sculptures made this frame (at most ACT_MAKE); the ms spent (the harness reads it)
 const ACT_SNAP = 60, ACT_NEAR = 60, ACT_FAR = 180, ACT_MAXD = 420, ACT_SHADOW = 30, ACT_CACHE = 600;
 function shadeRamp(hex) {   // a '#rrggbb' as a ramp of five tones, dark to light, as the golfer's materials are
   const n = /^#[0-9a-f]{6}$/i.test(hex || '') ? parseInt(hex.slice(1), 16) : 0x808080, c = [n >> 16, (n >> 8) & 255, n & 255];
@@ -39,6 +42,15 @@ function mkGolferLook(theta, pose, ph, lamp, K, L) {
   GMAT[M_SKIN] = L.skin; GMAT[M_POLO] = L.shirt; GMAT[M_TROU] = L.trou; GMAT[M_CAP] = L.cap; GMAT[M_BRIM] = L.cap; GMAT[M_HAIR] = L.hair;
   try { return mkGolfer(theta, pose, ph, lamp, K); } finally { for (let i = 0; i < keep.length; i++) GMAT[i] = keep[i]; }
 }
+// T437: the player's own golfer in his player card's clothes (the host's `course` message carries them): the sculpture's own materials change, so every pose of
+// his is made again in them; a person in other clothes still swaps his in and back (mkGolferLook), so he is unchanged by it
+let playerDressKey = '';
+function playerLook(d) {
+  const L = lookOf(d); if (!L || L.key === playerDressKey) return;
+  playerDressKey = L.key;
+  GMAT[M_SKIN] = L.skin; GMAT[M_POLO] = L.shirt; GMAT[M_TROU] = L.trou; GMAT[M_CAP] = L.cap; GMAT[M_BRIM] = L.cap; GMAT[M_HAIR] = L.hair;
+  gcache.clear();
+}
 const actSpr = new Map();
 function actorSprite(L, fa, pose, ph, K) {   // a person's sculpture by clothes, pose, facing (sixteenths, as the camera sees him) and scale; null when this frame may make no more
   const lamp = TOD[tmode].glow > 0, key = (L ? L.key : '-') + pose + fa + '_' + ph + (lamp ? 'L' : '') + 'k' + K;
@@ -55,8 +67,9 @@ const wrapA = (a) => a - Math.round(a / 6.2832) * 6.2832;
 function actorsIn(m) {   // a host's 'actors' message: the whole list (one missing from it has left)
   if (!m || !Array.isArray(m.actors)) return;
   const now = performance.now(), dur = actLast > 0 ? clamp(now - actLast, 60, 2500) : 0, S = course && course.S > 0 ? course.S : 1, seen = new Set();
-  actLast = now;
+  actLast = now; galleriesIn(m, S);   // (T429: the galleries: parts/08f-gallery.md)
   for (const a of m.actors) {
+    if (a && a.owner) grpOwner = a.id;
     if (!a || a.owner || a.role === 'gallery' || !Array.isArray(a.at)) continue;   // (the owner is the player's golfer; galleries are T429)
     const x = +a.at[0] * S, y = +a.at[1] * S; if (!Number.isFinite(x) || !Number.isFinite(y)) continue;
     const th = Number.isFinite(a.heading) ? a.heading * Math.PI / 180 : NaN, ph = clamp(+a.phase || 0, 0, 1), doing = a.role === 'cart' ? 'cart' : a.doing || 'stand';
@@ -69,12 +82,13 @@ function actorsIn(m) {   // a host's 'actors' message: the whole list (one missi
       if (Math.hypot(x - r.cx, y - r.cy) > ACT_SNAP) { r.x0 = r.px = x; r.y0 = r.py = y; }   // (a jump: a new hole, a cart's hop)
     }
     r.x1 = x; r.y1 = y; r.th1 = Number.isFinite(th) ? r.th0 + wrapA(th - r.th0) : r.th0; r.ph1 = ph; r.t0 = now; r.dur = dur; r.doing = doing; r.role = a.role;
-    r.L = lookOf(a.dress); r.build = a.dress && a.dress.build >= 0.8 && a.dress.build <= 1.2 ? +a.dress.build : 1; r.riders = Array.isArray(a.riders) ? a.riders : [];
+    r.L = lookOf(a.dress); r.build = a.dress && a.dress.build >= 0.8 && a.dress.build <= 1.2 ? +a.dress.build : 1; r.riders = Array.isArray(a.riders) ? a.riders : []; r.ghost = !!a.ghost;   // (T433: a ghost round's golfer)
     seen.add(a.id);
   }
   for (const id of actors.keys()) if (!seen.has(id)) actors.delete(id);
 }
-function actorAt(r, now) {   // where it is drawn now: on its way from the last message's place to this one's
+function actorAt(r, now) {   // where it is drawn now: on its way from the last message's place to this one's (T425: in a played round, at the play's minute: groupAt)
+  if (groupAt(r, now)) return;
   const u = r.dur > 0 ? clamp((now - r.t0) / r.dur, 0, 1) : 1;
   r.cx = r.x0 + (r.x1 - r.x0) * u; r.cy = r.y0 + (r.y1 - r.y0) * u; r.cth = r.th0 + (r.th1 - r.th0) * u; r.cph = r.ph0 + (r.ph1 - r.ph0) * u;
 }
@@ -91,10 +105,14 @@ function actorPose(r, far) {   // [pose, step] of mkGolfer for what it is doing 
 }
 const faOf = (th) => ((Math.round(th / 6.2832 * 16) - Math.round(camYaw * 16 / 6.2832)) % 16 + 16) % 16;   // a world heading as the facing the camera sees
 function actorsList() {   // render's hook: every actor in view joins its list (with its sculpture picked and its shadow cast, before anything stands on the ground)
-  if (!actors.size) return;
   const t = performance.now(), tanH = (VW / 2 + 120) / FOC;
+  if (!hostHelpDone && HOST) hostHelp();   // (T440: the help says what a round inside the game is)
+  if (matchQ.length) matchTick();   // (T428: a match's words wait for the strokes before them)
+  groupList(t, tanH);   // (T425: the group's balls and markers)
+  if (galleries.size) galleryList(tanH);   // (T429: the crowds)
+  if (!actors.size) { ACT_MS += performance.now() - t; return; }
   for (const r of actors.values()) {
-    actorAt(r, t);
+    actorAt(r, t); if (r.hidden) continue;
     const mx = r.cx - r.px, my = r.cy - r.py, mv = Math.hypot(mx, my); r.px = r.cx; r.py = r.cy;
     if (r.doing === 'walk') r.walk += mv / 0.18;   // (eight steps to a stride of 1.44 m: his feet keep to the ground he covers)
     if (r.doing === 'ride') continue;   // (in his cart: drawn with it)
@@ -103,8 +121,10 @@ function actorsList() {   // render's hook: every actor in view joins its list (
     r.S = null;
     if (r.role !== 'cart' && d <= ACT_FAR) {
       const K = golferK(DS / d), ps = actorPose(r, d > ACT_NEAR), fa = faOf(r.cth);
+      if (ps[0] === 's') { const fx = Math.cos(r.cth), fy = Math.sin(r.cth); r.dx = r.cx - fx * 0.6 + fy * 0.2; r.dy = r.cy - fy * 0.6 - fx * 0.2; }   // (at a stroke he stands back from his ball and a little to its side, as the player does)
+      else { r.dx = r.cx; r.dy = r.cy; }
       r.K = K; r.S = actorSprite(r.L, fa, ps[0], ps[1], K) || actSpr.get((r.L ? r.L.key : '-') + 'i' + fa + '_0' + (TOD[tmode].glow > 0 ? 'L' : '') + 'k' + K) || null;   // (not made yet: standing, if that one is)
-      if (r.S && d < ACT_SHADOW) { if (d < 15) castSprite(r.S, r.cx, r.cy, K / r.build); else castSprite(r.S.mip || mipOf(r.S), r.cx, r.cy, K / 2 / r.build); }
+      if (r.S && d < ACT_SHADOW && !r.ghost) { if (d < 15) castSprite(r.S, r.dx, r.dy, K / r.build); else castSprite(r.S.mip || mipOf(r.S), r.dx, r.dy, K / 2 / r.build); }
     }
     r.dl.d = d; dlist.push(r.dl);
   }
@@ -119,7 +139,9 @@ const CART_DOTS = [];
 function drawActor(r, d) {   // render's hook: one actor, in its turn far to near
   const t = performance.now();
   if (r.role === 'cart') drawActorCart(r, d);
-  else if (r.S) { project(r.cx, r.cy, groundH(r.cx, r.cy), PJ); if (PJ.s > 0) blit(r.S, PJ.x, PJ.y, PJ.s / r.K * r.build, PJ.d * 100, 0, 0, false, d > 50 ? farHaze(d) : 0); }
+  else if (r.role === 'gallery') drawGallery(r, d);
+  else if (r.role === 'ball') drawGroupBall(r, d);
+  else if (r.S) { project(r.dx, r.dy, groundH(r.dx, r.dy), PJ); if (PJ.s > 0) { if (r.ghost) blitDith = 7; blit(r.S, PJ.x, PJ.y, PJ.s / r.K * r.build, PJ.d * 100, 0, 0, false, d > 50 ? farHaze(d) : 0); blitDith = 0; } }   // (T433: a ghost is drawn see-through)
   else if (r.L) actorDots(r, d, [[0, lit(tone(r.L.trou, 0.6)), 0], [0, lit(tone(r.L.shirt, 0.7)), 1]]);
   else actorDots(r, d, [[0, lit(tone(TROW, 0.6)), 0], [0, lit(tone(CAPR, 0.7)), 1]]);
   ACT_MS += performance.now() - t;
