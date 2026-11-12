@@ -105,6 +105,17 @@ body { display: flex; align-items: center; justify-content: center; color: #eadf
 #power.meter .track i { background: linear-gradient(90deg, #3c8a52, #58c070 14%, #f2c94c 80%, #e8573c); }
 #power .track b.sweet { background: rgba(130, 255, 160, 0.45); border-left: 1px solid #b8ffc8; border-right: 1px solid #b8ffc8; }
 #power .track b.top { width: 2px; margin-left: -1px; background: #f4efdc; }
+#shotc { position: absolute; right: 1.4%; bottom: 13%; display: none; padding: 6px 8px; font-size: 10px; line-height: 1.5; background: rgba(12, 34, 24, 0.78); border: 2px solid #0a1a12; box-shadow: 0 0 0 1px rgba(242, 201, 76, 0.55); color: #f4efdc; }
+#shotc.on { display: block; }
+#shotc .row { display: flex; align-items: center; gap: 4px; margin: 2px 0; }
+#shotc .row span { width: 38px; color: #a9c9b1; }
+#shotc b { cursor: pointer; padding: 1px 5px; border: 1px solid #2c5a3c; color: #d8e8d8; font-weight: normal; }
+#shotc b.sel { border-color: #f2c94c; color: #ffffff; background: rgba(22, 60, 40, 0.9); }
+#shotc b.lock { opacity: 0.4; cursor: not-allowed; text-decoration: line-through; }
+#shotc b.boost.sel { background: #8a2c1c; border-color: #ffb070; }
+#shotc canvas { width: 40px; height: 40px; cursor: crosshair; image-rendering: auto; }
+#shotc i { font-style: normal; color: #a9c9b1; }
+#pickTxt { margin-top: 2px; color: #f2c94c; }
 #clubs { position: absolute; left: 1.4%; bottom: 2.4%; display: flex; flex-wrap: wrap; gap: 6px; max-width: 64%; }
 #clubs.bag { gap: 4px; max-width: 34%; }   /* (his whole bag wraps in the left third: the power bar stays clear) */
 #clubs.bag .club { padding: 3px 6px 4px; font-size: 10px; }
