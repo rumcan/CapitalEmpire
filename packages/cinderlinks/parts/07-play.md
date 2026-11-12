@@ -289,8 +289,8 @@ function drown() {
 }
 // a gimme: the ball lies still on the green within a short putt of the hole; the putt is given (one stroke) and the hole is done
 const GIMME = 1.5;
-function canGimme() { return ball.state === 0 && !bcam && !doneT && strokes > 0 && Math.hypot(ball.x - hole.pin.x, ball.y - hole.pin.y) < GIMME && matAt(ball.x, ball.y) === M_GREEN; }
-function gimme() { if (HP || !canGimme()) return; strokes++; total++; holed(); }
+function canGimme() { if (HP) return hostCanGimme(); return ball.state === 0 && !bcam && !doneT && strokes > 0 && Math.hypot(ball.x - hole.pin.x, ball.y - hole.pin.y) < GIMME && matAt(ball.x, ball.y) === M_GREEN; }
+function gimme() { if (HP) { hostGimme(); return; } if (!canGimme()) return; strokes++; total++; holed(); }
 function holed() {
   ball.state = 3; ball.x = hole.pin.x; ball.y = hole.pin.y; doneT = 1;
   const d = strokes - hole.par, name = strokes === 1 ? 'Hole in one!' : d <= -2 ? 'Eagle!' : d === -1 ? 'Birdie!' : d === 0 ? 'Par' : d === 1 ? 'Bogey' : '+' + d;

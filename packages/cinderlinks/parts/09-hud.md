@@ -247,6 +247,7 @@ function hostAim() {   // T420: the aim tells the truth: the arc to where the mo
   const S = hostS(), putt = C.club === 'putter', pw = sw ? (putt ? u : u <= 1 ? u : 1 + 0.5 * (u - 1)) + b : 1, hot = charging ? AIM_R : AIM_G, ph = (frame >> 1) % 6;
   const dx = aim.dx, dy = aim.dy, rx = -dy, ry = dx;                  // (the line, and his right as he faces it: x east, y south)
   if (!putt && hostAimPreview(C, pw, hot, ph)) return;               // (T441, T442: the model's preview of the shot picked, when it has come)
+  if (putt && hostPuttAim(pw, hot, ph)) return;                      // (T423: the host's read: the way a putt struck along this aim takes)
   if (putt) {                                                          // a putt: its length is a share of the way to the pin
     const len = Math.hypot(hole.pin.x - ball.x, hole.pin.y - ball.y) * pw;
     for (let k = 0, d = 0.4 + ph * 0.07; d < len; d += 0.42, k++) { const qx = ball.x + dx * d, qy = ball.y + dy * d; projectO(qx, qy, groundH(qx, qy) + 0.03, PJ); if (PJ.s > 0) aimDotO(PJ.x, PJ.y, PJ.s > 0.8 ? 1 : 0, k & 1 ? hot : AIM_W); }
@@ -329,7 +330,7 @@ function hostCardRows(row) {
   const t = HP.turn, s = t.slope || { up: 0, across: 0 }, w = t.wind || { mph: 0, from: 0 }, pc = (v) => Math.round(Math.abs(v) * 100) + '%';
   const up = Math.abs(s.up) < 0.01 ? 'level' : (s.up > 0 ? 'uphill ' : 'downhill ') + pc(s.up), side = Math.abs(s.across) < 0.01 ? '' : ', ball ' + (s.across > 0 ? 'above' : 'below') + ' feet ' + pc(s.across);
   const wind = w.mph < 1 ? 'calm' : Math.round(w.mph) + ' mph from the ' + COMPASS[Math.round((((w.from % 360) + 360) % 360) / 45) % 8] + (t.gust > w.mph + 1 ? ', gusts ' + Math.round(t.gust) : '');
-  return row('Slope', up + side) + row('Wind', wind) + (hostClub() && hostClub().club !== 'putter' ? row('Shot', hostPickText()) : '') + (t.lieNote ? '<div class="credit">' + t.lieNote + '</div>' : '');
+  return (t.green ? row('Read', t.green.read.replace(/^Green read: /, '')) : '') + row('Slope', up + side) + row('Wind', wind) + (hostClub() && hostClub().club !== 'putter' ? row('Shot', hostPickText()) : '') + (t.lieNote ? '<div class="credit">' + t.lieNote + '</div>' : '');
 }
 function hostWindDir() {   // the way the host's wind blows (toward), on the ground: the arrow shows it; null without a turn (the view's own wind)
   if (!HP || !HP.turn || !HP.turn.wind || HP.turn.wind.mph < 1) return null;
@@ -435,6 +436,40 @@ function hostAimPreview(C, pw, hot, ph) {   // the preview's flight (scaled to t
   HP.ring = { x: L[0], y: L[1], across, along, pv: true };
   return true;
 }
+// T423: the green as the host reads it. Its slope grid is the host's (its own heights: the view's are raised and roughened for the look), drawn as a
+// dot every metre with a tick downhill, white on the flat, then cyan, yellow, orange as it steepens (green.ts BREAK_COLOURS). A putt is aimed as one is
+// read: the aim shows the way a putt struck along it takes (the host's holed way, turned with the aim and stretched with the pace), and the model judges
+// it against the read's start line (green3p.ts), so a putt started along the read and struck at the right pace goes in.
+const GRID_RGB = [rgb(255, 255, 255), rgb(125, 211, 252), rgb(250, 204, 21), rgb(249, 115, 22)];
+function hostPuttGrid() {
+  const G = HP.turn.green, P = G.pts, S = hostS();
+  for (let k = 0; k + 4 < P.length; k += 5) {
+    const x = P[k] * S, y = P[k + 1] * S, s = P[k + 4], u = s <= 0.002 ? 0 : Math.min(1, (s - 0.002) / 0.038), c = GRID_RGB[u <= 0 ? 0 : u < 0.3 ? 1 : u < 0.65 ? 2 : 3];
+    projectO(x, y, groundH(x, y) + 0.02, PJ); if (PJ.s <= 0 || PJ.d < 1.5) continue;
+    plotZO(PJ.x, PJ.y, PJ.d - 0.2, c); plotZO(PJ.x + 1, PJ.y, PJ.d - 0.2, c);
+    if (u > 0) {   // the tick downhill: longer where steeper
+      const L = (0.12 + 0.3 * u) * S, ex = x + P[k + 2] * L, ey = y + P[k + 3] * L;
+      for (let t = 0.25; t <= 1; t += 0.25) { const qx = x + (ex - x) * t, qy = y + (ey - y) * t; projectO(qx, qy, groundH(qx, qy) + 0.02, PJ); if (PJ.s > 0) plotZO(PJ.x, PJ.y, PJ.d - 0.2, c); }
+    }
+  }
+}
+function hostPuttAim(pw, hot, ph) {   // the putt's way as the model would draw it for this aim and pace; false without the host's green
+  const G = HP.turn && HP.turn.green; if (!G || !G.path || G.path.length < 2) return false;
+  const S = hostS(), bx = ball.x, by = ball.y, pin = HP.turn.pin, a0 = Math.atan2(pin[1] * S - by, pin[0] * S - bx), aA = Math.atan2(aim.dy, aim.dx);
+  const rot = aA - a0 - G.startDeg * Math.PI / 180, c = Math.cos(rot), s = Math.sin(rot), at = (p) => { const dx = (p[0] * S - bx) * pw, dy = (p[1] * S - by) * pw; return [bx + dx * c - dy * s, by + dx * s + dy * c]; };
+  let k = 0;
+  for (let i = 0; i + 1 < G.path.length; i++) {
+    const a = at(G.path[i]), b = at(G.path[i + 1]), seg = Math.hypot(b[0] - a[0], b[1] - a[1]);
+    for (let d = (ph * 0.07) % 0.42; d < seg; d += 0.42, k++) { const u = d / seg, x = a[0] + (b[0] - a[0]) * u, y = a[1] + (b[1] - a[1]) * u; projectO(x, y, groundH(x, y) + 0.03, PJ); if (PJ.s > 0) aimDotO(PJ.x, PJ.y, PJ.s > 0.8 ? 1 : 0, k & 1 ? hot : AIM_W); }
+  }
+  const e = at(G.path[G.path.length - 1]); projectO(e[0], e[1], groundH(e[0], e[1]) + 0.03, PJ); if (PJ.s > 0) aimDotO(PJ.x, PJ.y, 2, hot);
+  HP.putt = { x: e[0], y: e[1], rot };   // (kept for the harness: where this aim and pace end)
+  return true;
+}
+function hostCanGimme() {   // a gimme the round's rule allows: his turn, on the green, inside the rule's distance
+  const t = HP.turn; return !!t && hostOnTurn() && !hostBusy() && !bcam && t.gimmeM > 0 && !!t.green && t.distM <= t.gimmeM;
+}
+function hostGimme() { if (!hostCanGimme()) return; const t = HP.turn; hostSend({ t: 'gimme', holeIdx: t.holeIdx, stroke: t.stroke }); HP.wait = 1; }
 function hostTabs() {   // T419: his clubs in the tabs: the name, its full carry after his mods (the putter: its fitting); keys 1 to 9 and the wheel change club
   return HP.clubs.map((c, k) => '<div class="club' + (k === club ? ' on' : '') + '">' + (k < 9 ? '<b>' + (k + 1) + '</b> ' : '') + (CLUB_NAME[c.club] || c.club) + '<i>' + (c.club === 'putter' ? (c.fit || 'on the green') : Math.round(c.carryM) + ' m') + '</i></div>').join('');
 }

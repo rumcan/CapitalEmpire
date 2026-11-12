@@ -165,6 +165,30 @@ const HOST_PLAY = String.raw`
     if (!armed || !sw || sw.boost !== 0.06 || HP.pick.armed) errs.push('host craft: the armed boost was not a full boost, or was not spent');
     return { errs, info };
   }
+  // T423: a putt on the host's green: the read is on the card; the putt aimed along the read's start line ends in the cup, aimed at the cup it ends off by
+  // the break; a gimme goes out only inside the round's rule
+  function hostGreenRun() {
+    const errs = [], info = {}, S = course.S, p0 = [hole.pin.x / S, hole.pin.y / S], ux = hole.dx, uy = hole.dy, deg = 5, a = deg * Math.PI / 180;
+    const b0 = [p0[0] - ux * 3, p0[1] - uy * 3], path = [];
+    for (let k = 0; k <= 24; k++) { const u = k / 24, bend = Math.sin(a) * 3 * u * (1 - u) * 2; path.push([b0[0] + (p0[0] - b0[0]) * u - uy * bend, b0[1] + (p0[1] - b0[1]) * u + ux * bend]); }
+    const pts = []; for (let i = -3; i <= 3; i++) for (let j = -3; j <= 3; j++) pts.push(p0[0] + i, p0[1] + j, 0, -1, 0.03);
+    const putter = { club: 'putter', carryM: 0, scatterM: 0, longM: 0, playsM: 0, sideM: 0, loftDeg: 3, speed: 1, sweet: 0.1 };
+    const turn = (ball, gimmeM) => Object.assign({ v: 1, t: 'turn', golfer: 0, holeIdx: 0, hole: holeN, par: hole.par, stroke: 3, at: 600, lie: 'green', lieKind: 'green', ball, pin: p0, distM: Math.hypot(ball[0] - p0[0], ball[1] - p0[1]),
+      wind: { mph: 0, from: 0 }, slope: { up: 0, across: 0 }, clubs: [putter], suggested: { club: 'putter', aim: p0, power: 1 }, green: { pts, step: 1, read: 'Green read: breaks right to left (3.0%)', path, startDeg: deg } }, gimmeM ? { gimmeM } : {});
+    const step = (n) => { for (let k = 0; k < n; k++) tickGame(); };
+    for (const c of Object.keys(keys)) keys[c] = false; mouse.down = false; charging = false;
+    step(70); hostMessage(turn(b0, 0.6)); jumpToBall(); step(6); updateHud();
+    if (!/breaks right to left/.test(cardEl.innerHTML)) errs.push('host green: the read is not on the card');
+    const ends = (dAng) => { const pa = Math.atan2((p0[1] - b0[1]), (p0[0] - b0[0])) + dAng; aim.dx = Math.cos(pa); aim.dy = Math.sin(pa); render(); return HP.putt ? Math.hypot(HP.putt.x / S - p0[0], HP.putt.y / S - p0[1]) : null; };
+    info.byRead = ends(a); info.atCup = ends(0);
+    if (!(info.byRead !== null && info.byRead < 1e-6)) errs.push('host green: aimed along the read the putt does not end in the cup (' + info.byRead + ')');
+    if (!(info.atCup > 0.2)) errs.push('host green: aimed at the cup the putt does not miss by the break (' + info.atCup + ')');
+    info.gimmeFar = canGimme();
+    hostMessage(turn([p0[0] - ux * 0.4, p0[1] - uy * 0.4], 0.6)); step(80); jumpToBall(); step(4); info.gimmeNear = canGimme(); gimme(); info.sent = hostLast && hostLast.t;
+    hostMessage(turn([p0[0] - ux * 0.4, p0[1] - uy * 0.4], 0)); step(4); info.gimmeNone = canGimme();
+    if (info.gimmeFar || !info.gimmeNear || info.sent !== 'gimme' || info.gimmeNone) errs.push('host green: the gimme does not follow the rule (' + JSON.stringify(info) + ')');
+    return { errs, info };
+  }
   // T422: a host page's lies: three fairway points of hole 1 handed over as rough, deep rough and first cut are drawn so
   function hostLieRun() {
     const errs = [], info = {}, msg = hostMsg(), pts = [];
@@ -192,7 +216,7 @@ ${HOST_PLAY}
   const find = (test, cx, cy, rad) => { for (let r = 0; r < rad; r += 1.5) for (let a = 0; a < 6.283; a += 1.5 / Math.max(r, 1.5)) { const x = cx + Math.cos(a) * r, y = cy + Math.sin(a) * r; if (test(x, y)) return [x, y]; } return null; };
   const mid = pathAt(0.5);
   const SC = {
-    host: () => { hostMessage(hostMsg()); idle(); snap('host'); const r = hostPlayRun(snap); out.info.push({ hostPlay: r.info, errors: r.errs }); const c = hostCraftRun(); out.info.push({ hostCraft: c.info, errors: c.errs }); const l = hostLieRun(); out.info.push({ hostLies: l.info, errors: l.errs }); snap('host-lies'); },   // (T418: then a turn, a strike and a canned shot)   // (T415: Woodhill handed over by message, hole 1 from its tee)
+    host: () => { hostMessage(hostMsg()); idle(); snap('host'); const r = hostPlayRun(snap); out.info.push({ hostPlay: r.info, errors: r.errs }); const c = hostCraftRun(); out.info.push({ hostCraft: c.info, errors: c.errs }); const gr = hostGreenRun(); out.info.push({ hostGreen: gr.info, errors: gr.errs }); snap('host-green'); const l = hostLieRun(); out.info.push({ hostLies: l.info, errors: l.errs }); snap('host-lies'); },   // (T418: then a turn, a strike and a canned shot)   // (T415: Woodhill handed over by message, hole 1 from its tee)
     tee() { idle(); frames(20); snap('tee'); },
     aim() { idle(); newHole(holeN, hole.tee.x, hole.tee.y); frames(20); player.x = ball.x - 0.3; player.y = ball.y + 0.6; mouse.x = VW / 2 + 60; mouse.y = VH / 2 - 150; frames(6); snap('aim'); mouse.down = true; frames(40); snap('aim-charge'); mouse.down = false; frames(60); snap('ballcam-a'); frames(70); snap('ballcam-b'); for (let k = 0; k < 900 && ball.state !== 0; k++) frames(1); frames(20); snap('ballcam-end'); frames(60); snap('aim-after'); },
     stuck() { // can the golfer be trapped? On every steep point found near the hole (and its flatter neighbours), count the points from which no step in any of 16 directions is allowed
@@ -470,6 +494,7 @@ try {
     // host play (T418 to T420): the turn, the bag, the ring, one input and a wait, the host's shot played back to its rest
     { const hp = hostPlayRun(null); res.hostPlay = hp.info; res.errors.push(...hp.errs); }
     { const hc = hostCraftRun(); res.hostCraft = hc.info; res.errors.push(...hc.errs); }
+    { const hg = hostGreenRun(); res.hostGreen = hg.info; res.errors.push(...hg.errs); }
     { const hl = hostLieRun(); res.hostLies = hl.info; res.errors.push(...hl.errs); }
     return res;
   })()`);

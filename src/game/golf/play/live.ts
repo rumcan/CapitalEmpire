@@ -23,7 +23,9 @@ import type { Club, CourseView, Landing, Lie, PlayHole, Pt, RoundPlan, Shot } fr
  *  MODEL_V on every input it plays, and a replay keeps the version each input was played under (an input saved before 3 rolls as it did). T334 part 2: shape,
  *  the curve and the flight he picked before the swing (shape.ts; a full shot only; absent: none, a shot from before played exactly as before). T337 (#963): cad, the shot was played as the caddie
  *  said (his club on his line: the Mic'd-Up Caddie's mods for the moment `follow`); scr, a second ball was hit from the tee and the better stood (the Scramble Captain: once a nine); both only with the card, absent: none */
-export interface OwnerInput { holeIdx: number; stroke: number; club: Club; aim: Pt; power: number; swing?: SwingOutcome; spin?: SpinInput; env?: ShotEnv; v?: number; shape?: ShotShape; cad?: true; scr?: true }
+export interface OwnerInput { holeIdx: number; stroke: number; club: Club; aim: Pt; power: number; swing?: SwingOutcome; spin?: SpinInput; env?: ShotEnv; v?: number; shape?: ShotShape; cad?: true; scr?: true;
+  /** T423: a gimme: the putt conceded under the round's rule (the caller checks the rule), counted as one putt into the cup with no draw; a putter input only */
+  gim?: true }
 
 /** T337: what the round knows of a shot that the shot itself does not: whether it is on the round's last hole (the moment `last`) */
 export interface ShotCtx { last?: boolean }
@@ -97,10 +99,12 @@ export class LiveGroup {
     if (!turn || !p || !g || !hr || this.field.caddied) throw new Error('LiveGroup.play: no owner turn to play (call advance first)');
     if (input.holeIdx !== turn.holeIdx || input.stroke !== turn.stroke) throw new Error(`LiveGroup.play: the input is for hole ${input.holeIdx} stroke ${input.stroke}, the turn is hole ${turn.holeIdx} stroke ${turn.stroke}`);
     const r = rng(this.ctx.seed, p.id, hr.h * 32 + turn.stroke);
-    const { to, lie, penalty, holed, landing, sw, spin, env, shape } = shotOutcome(this.ctx.view, this.ctx.view.holes[hr.h]!, p.ball, p.lie, p.sk, input, r, { last: hr.h === this.ctx.view.holes.length - 1 });
+    const gim = input.gim === true && input.club === 'putter', pin = turn.pin; // (T423: a gimme is counted into the cup, nothing drawn)
+    const { to, lie, penalty, holed, landing, sw, spin, env, shape } = gim ? { to: { x: pin.x, y: pin.y }, lie: 'green' as Lie, penalty: 0 as const, holed: true, landing: undefined, sw: null, spin: null, env: null, shape: null }
+      : shotOutcome(this.ctx.view, this.ctx.view.holes[hr.h]!, p.ball, p.lie, p.sk, input, r, { last: hr.h === this.ctx.view.holes.length - 1 });
     const putting = input.club === 'putter';
     const s = hr.record(p, input.club, turn.t, putting ? PUTT_FLIGHT : FLIGHT_TIME, to, lie, penalty, holed, landing);
-    this.inputs.push({ holeIdx: input.holeIdx, stroke: input.stroke, club: input.club, aim: { x: input.aim.x, y: input.aim.y }, power: input.power, ...(sw ? { swing: sw } : {}), ...(spin ? { spin } : {}), ...(env ? { env } : {}), ...(shape ? { shape } : {}), ...(input.cad && hasMech(p.sk, 'caddie') ? { cad: true as const } : {}), ...(input.scr && hasMech(p.sk, 'scramble') ? { scr: true as const } : {}), ...((input.v ?? 1) >= 2 ? { v: Math.min(MODEL_V, Math.floor(input.v!)) } : {}) }); // (T346: the version it was played under, kept on a replay)
+    this.inputs.push({ holeIdx: input.holeIdx, stroke: input.stroke, club: input.club, aim: { x: input.aim.x, y: input.aim.y }, power: input.power, ...(sw ? { swing: sw } : {}), ...(spin ? { spin } : {}), ...(env ? { env } : {}), ...(shape ? { shape } : {}), ...(input.cad && hasMech(p.sk, 'caddie') ? { cad: true as const } : {}), ...(input.scr && hasMech(p.sk, 'scramble') ? { scr: true as const } : {}), ...(gim ? { gim: true as const } : {}), ...((input.v ?? 1) >= 2 ? { v: Math.min(MODEL_V, Math.floor(input.v!)) } : {}) }); // (T346: the version it was played under, kept on a replay)
     this.field.settle(g);
     this.turn = null; this.player = null; this.due = null;
     this.flush();
