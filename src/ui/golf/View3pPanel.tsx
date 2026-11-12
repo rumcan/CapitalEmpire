@@ -4,6 +4,7 @@
 import { useEffect, useRef, useState } from 'react';
 import type { Game } from '../../game/engine';
 import { View3p, type View3pFrame, type View3pHost } from '../../game/golf/play/view3p';
+import type { HostMsg } from '../../game/golf/play/protocol3p';
 import { Icon } from '../Icon';
 
 export function View3pPanel({ game }: { game: Game }) {
@@ -27,7 +28,16 @@ export function View3pPanel({ game }: { game: Game }) {
     } as View3pHost;
     const v = new View3p(host, n => game.course3pMsg(n), import.meta.env.BASE_URL);
     bridge.current = v; setState('loading');
-    v.onMessage(m => { if (m.t === 'loaded') setState('loaded'); else if (m.t === 'error') setState(m.why); });
+    // T418: once the course is on screen the owner's play starts (his first turn goes over); each input the view sends is played by the model and
+    // answered with the strokes, the hole's end and the next turn
+    const relay = (ms: readonly HostMsg[]) => { for (const msg of ms) v.send(msg); };
+    v.onMessage(m => {
+      try {
+        if (m.t === 'loaded') { setState('loaded'); relay(game.start3p()); }
+        else if (m.t === 'input') relay(game.input3p(m.input));
+        else if (m.t === 'error') setState(m.why);
+      } catch (err) { console.warn('[view3p] the play could not go on', err); }
+    });
     const off = v.onClose(why => { if (why !== 'reopen') game.close3p(); });
     v.open(hole);
     // (unmounting only takes the bridge down: the game's own state is the caller's. React's strict mode runs this once on mount in development)

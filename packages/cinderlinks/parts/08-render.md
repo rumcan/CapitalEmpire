@@ -1097,6 +1097,7 @@ function drawAim() {   // the shot's shape: a dotted arc that marches toward the
   overBegin();
   drawPuttGrid();   // (the putting grid lies on the full-size layer too, drawn after everything so it hides behind what stands on the green)
   if (!nearBall() || player.swing >= 0) { overEnd(); return; }
+  if (HP) { if (!hostBusy()) hostAim(); overEnd(); return; }        // (host mode: the host's numbers for the club in hand, T420)
   const c = CLUBS[club], m = matAt(ball.x, ball.y), pw = charging ? power : 0.7, sp = c.v * clubK() * (0.22 + 0.78 * pw) * (club === 2 && m === M_SAND ? 0.85 : club === 3 ? 1 : LIEPOW[m]);
   let x = ball.x, y = ball.y, z = groundH(x, y) + 0.02, vx = aim.dx * sp * Math.cos(c.loft), vy = aim.dy * sp * Math.cos(c.loft), vz = sp * Math.sin(c.loft);
   const hot = charging ? AIM_R : AIM_G, ph = (frame >> 1) % 6;

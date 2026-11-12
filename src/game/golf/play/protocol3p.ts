@@ -66,7 +66,12 @@ export interface ClubChoice { club: Club; carryM: number; scatterM: number; kit:
    *  the surface's share of the carry: shot.ts CLUB_RUN times his mods), the most backspin and the most top or side spin this lie lets on (0..1: spin.ts spinCap),
    *  and whether he may pick a shape (shape.ts) or a spin with this club */
   playsM?: number; longM?: number; mishitP?: number; sweet?: number; speed?: number; loftDeg?: number; launch?: string; run?: number;
-  backspin?: number; topspin?: number; shapes?: boolean; spin?: boolean }
+  backspin?: number; topspin?: number; shapes?: boolean; spin?: boolean;
+  /** T420: where the full shot lands off the aim's line along the suggested line (m, + right as he faces it: the wind's drift and the slope's pull;
+   *  conditions.ts previewShot sideM) */
+  sideM?: number;
+  /** T419: the putter's fitting in words (the shaft and head fitted beyond the stock ones, bag.ts putterFitName); absent: none, or another club */
+  fit?: string }
 /** T418: what the owner may do beyond a plain swing (T443 turns these into earned unlocks): pick a shape (draw or fade, high or low), put spin on the ball, add spin
  *  in the air (the `airspin` mechanic), the Space power boost (the `boost` mechanic). Today only the two mechanics are earned (mods.ts hasMech); shapes and spin are
  *  open to every golfer */
@@ -94,10 +99,14 @@ export interface ShotMsg { v: 1; t: 'shot'; golfer: number; hole: number; stroke
 /** the time and weather: the game minute of the day, the weather (weather.ts) and the wind now */
 export interface ClockMsg { v: 1; t: 'clock'; minute: number; weather: WeatherCondition; wind: WindNow }
 
+/** T418: the owner's hole is over (holed, or picked up): the hole (index, number, par), his strokes on it, and whether this was his last turn of the
+ *  session (last: no turn follows; else the next hole's turn comes after this message) */
+export interface HoleEndMsg { v: 1; t: 'holeEnd'; holeIdx: number; hole: number; par: number; strokes: number; last: boolean }
+
 /** the host closes the view: why, in the owner's words (absent: none to show) */
 export interface LeaveMsg { v: 1; t: 'leave'; why?: string }
 
-export type HostMsg = CourseMsg | ActorsMsg | TurnMsg | ShotMsg | ClockMsg | LeaveMsg;
+export type HostMsg = CourseMsg | ActorsMsg | TurnMsg | ShotMsg | HoleEndMsg | ClockMsg | LeaveMsg;
 
 // ---------------------------------------------------------------- view to host
 
@@ -125,7 +134,7 @@ export interface ExitMsg { v: 1; t: 'exit'; why?: 'esc' | 'done' | 'error'; deta
 export type ViewMsg = ReadyMsg | LoadedMsg | ErrorMsg | InputMsg | WalkedMsg | GimmeMsg | HoleDoneMsg | ExitMsg;
 
 /** the message types each side sends */
-export const HOST_TYPES: readonly HostMsg['t'][] = ['course', 'actors', 'turn', 'shot', 'clock', 'leave'];
+export const HOST_TYPES: readonly HostMsg['t'][] = ['course', 'actors', 'turn', 'shot', 'holeEnd', 'clock', 'leave'];
 export const VIEW_TYPES: readonly ViewMsg['t'][] = ['ready', 'loaded', 'error', 'input', 'walked', 'gimme', 'holeDone', 'exit'];
 
 const isMsg = (m: unknown, types: readonly string[]): boolean =>
