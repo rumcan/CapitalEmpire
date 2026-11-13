@@ -34,20 +34,17 @@ function styleShow() {   // the menu: the biome (the land and its plants) beside
   const col = (title, kind, ids, T, cur) => '<div class="grp"><i>' + title + '</i>' + ids.map((id) => '<button type="button" data-kind="' + kind + '" data-id="' + id + '"' + (id === cur ? ' class="on"' : '') + '>' + T[id].name + '</button>').join('') + '</div>';
   // T447: inside the game the biome and the course type are the course's own (the host sends them): those two columns go; the trees, the picture and the render distance stay
   styleMenu.innerHTML = (HOST ? '' : col('Biome', 'b', BIOME_ORDER, BIOMES, biomeId) + col('Course type', 't', CTYPE_ORDER, CTYPES, ctypeId) + golferCol())   // (T450: the golfer, without a host)
-    + '<div class="grp"><i>Trees</i>' + ['Sculpted', 'Pictures'].map((nm, i) => '<button type="button" data-kind="tr" data-id="' + i + '"' + (i === TREEART ? ' class="on"' : '') + '>' + nm + '</button>').join('') + '</div>'
     + picMenu()
     + '<div class="grp dist"><i>Render distance</i><input id="detail" type="range" min="150" max="400" step="25" value="' + VIEWR + '"><span id="detailV">' + VIEWR + ' m</span><em>How far the land, trees and grass are drawn. Higher needs a faster PC.</em></div>';
 }
 styleBtn.addEventListener('click', (e) => { styleMenu.className = styleMenu.className === 'on' ? '' : 'on'; if (styleBtn.blur) styleBtn.blur(); if (e.preventDefault) e.preventDefault(); });
 styleMenu.addEventListener('click', (e) => { const t = e.target, id = t && t.getAttribute ? t.getAttribute('data-id') : null, kind = id ? t.getAttribute('data-kind') : null; if (!id) return;
-  if (kind === 'tr') { setTreeArt(+id); firstPicture(); styleShow(); return; }   // T451: the host's trees sculpted or in its pictures
   if (HOST) return;   // (T447: in the game the biome and course type are the course's)
   if (kind === 'b' && BIOMES[id] && id !== biomeId) { useStyle(id, null); firstPicture(); } else if (kind === 't' && CTYPES[id] && id !== ctypeId) { useStyle(null, id); firstPicture(); } else if (kind === 'g') golferPick(id);
   styleShow(); });   // (the menu stays open: a biome and a type are usually chosen together)
 styleMenu.addEventListener('change', (e) => { const t = e.target; if (t && t.id === 'picOn') picSet('on', t.checked); });
 styleMenu.addEventListener('input', (e) => { const t = e.target; if (t && PIC_IN[t.id]) { const [k, f, sh] = PIC_IN[t.id]; picSet(k, +t.value * f); const v = document.getElementById(t.id + 'V'); if (v) v.textContent = sh(); return; } if (!t || t.id !== 'detail') return; setDetail(+t.value); const v = document.getElementById('detailV'); if (v) v.textContent = VIEWR + ' m'; });
-function setTreeArt(v) { TREEART = v ? 1 : 0; try { localStorage.setItem('cinderlinks.treeart', String(TREEART)); } catch (e) { /* not kept */ } }
-try { const ta = new URLSearchParams(location.search).get('trees'), t0 = ta === 'pic' ? '1' : ta === 'sculpt' ? '0' : localStorage.getItem('cinderlinks.treeart'); if (t0 === '1') TREEART = 1; else if (t0 === '0') TREEART = 0; } catch (e) {}
+try { localStorage.removeItem('cinderlinks.treeart'); } catch (e) { /* nothing kept */ }   // (T454: the Trees setting is gone: a host's trees are always its pictures)
 try { const d0 = +localStorage.getItem('cinderlinks.view'); if (d0) setDetail(d0); } catch (e) {}   // (T447: the simple grass is the only grass: no choice kept)
 const hudEl = $('hud'); let uiMin = true;
 try { if (localStorage.getItem('cinderlinks.ui') === 'open') uiMin = false; } catch (e) {}
@@ -143,6 +140,7 @@ function hostMessage(m) {   // one message from the host page, already known to 
   if (m.seed !== undefined && Number.isFinite(+m.seed)) SEED = +m.seed | 0;
   setBiome(BIOMES[m.biome] ? m.biome : biomeId, CTYPES[m.type] ? m.type : ctypeId); lib.clear(); libWarm = 0;   // (sculptures made in the old colours are dropped, as useStyle does)
   HP = null; course = null; if (!setCourse(D.id)) { hostSend({ t: 'error', why: 'the course could not be laid out' }); return; }
+  picReset();   // (T454: a new course's species pictures)
   setFeatures(m.features || null); featTxt = ''; featFor = course.id;
   const n = Math.max(1, Math.min(course.holes.length, +m.hole | 0 || 1)); if (n !== 1) newHole(n, 0, 0);
   hostOff = false; firstPicture(FP_NEAR); updateHud();
