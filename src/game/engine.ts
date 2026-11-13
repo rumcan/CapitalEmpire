@@ -188,7 +188,9 @@ import { drawServePreview } from './walkserve-overlay';
 import { carParkSpotAt, carParkWhy, parkSpotWhy as spotWhyOf, snapToRoad, type Building, type CarParkCtx } from './golf/parkplace';
 import { footStart, parkLook, type ParkLook } from './event/parklook';
 import { dressCourse } from './golf/dressing';
-import { book, assetsAtCost, deposit, isBankrupt, monthEnd, newFinance, repay, signBank, signMurabaha, withdraw, type FinanceSave, type Line, type MonthReport } from './golf/finance';
+import { book, assetsAtCost, debtOf, netWorthOf, deposit, isBankrupt, monthEnd, newFinance, repay, signBank, signMurabaha, withdraw, type FinanceSave, type Line, type MonthReport } from './golf/finance';
+import { settleRisk, noteEmergency, setInsurance, type Plan } from './golf/risk'; // J3
+import { weeklyFees, type Live } from './golf/reports'; // J3
 import { FIRST_TEE, MONTH_LEN, SEASON_LEN, SEASON_START, monthIndexLabel, monthsLeft, seasonLabel, seasonMonth, yearOf } from './golf/calendar';
 import { MonthMoney, golfersAMonth, type TopStats } from './golf/topstats';
 import { afterRoute, driveOffer, driveStart, type DriveStopgap } from './golf/drivestopgap';
@@ -6936,6 +6938,18 @@ export class Game {
   private sendGolf() { const g = this.golf, b = g?.range; this.traffic.setGolf(!!g, g?.tier ?? 1, g?.rep ?? 0, this.golfLand(), g?.start === 'range' ? { start: 'range', exits: g.exits, invited: g.invited, holes: this.holesBuilt(), townBoost: g.townBoost, townTakings: b ? Math.max(b.season.takings, b.last ?? 0) : 0, townHome: b ? homeStage(b) : 0 } : undefined); }
   /** T090: the holes the player has built (a pin each): a range start's town grows faster with them (plan P22 2.3.3) */
   private holesBuilt(): number { return new Set((this.golf?.pins ?? []).map(p => p.hole)).size; }
+  /** J3 (docs/JAM.md): the live figures the goal chip and the report card read: holes built, the treasury, the net worth now (cash + savings + built at cost - debt), the debt */
+  finLive(): Live {
+    const f = this.finance, cash = this.traffic.budget.money, debt = debtOf(f);
+    return { holes: this.holesBuilt(), cash, netWorth: netWorthOf(f, cash, assetsAtCost(f)), debt };
+  }
+  /** J3: the player's insurance plan (the Bank panel's Protection section) */
+  setInsurancePlan(p: Plan): void { setInsurance(this.finance, p); this.scheduleSave(); this.emit(); }
+  /** J3: the month's emergency, rolled just before the Bank closes the month: the player's share leaves the treasury now and is booked on the 'emergency' line */
+  private rollMonthRisk(month: number) {
+    const f = this.finance, e = settleRisk(f, { seed: this.seed, month, holes: this.holesBuilt(), weeklyGreenFees: weeklyFees(f.history) }, n => this.cashMove(-n));
+    return e;
+  }
   /** the terrain of the valley for the city worker: its classes, the highway entry (a range start's: its map exit nearer the town; the start
    *  block's centre if none) and the seed */
   private sendTerrain() {
@@ -8299,10 +8313,12 @@ export class Game {
     if (f.month === 0 && f.history.length === 0 && idx > 1 && Object.keys(f.cur).length === 0) f.month = idx - 1; // (an old save: the books start at the month before)
     for (let k = 0; f.month < idx && k < 12; k++) {
       const open = f.month;
+      const em = this.rollMonthRisk(open); // J3: the emergency lands before the books close
       const { cashChange, report } = monthEnd(f, { cash: this.traffic.budget.money, assets: assetsAtCost(f), label: monthIndexLabel(open) });
+      noteEmergency(report, em); // J3
       this.cashMove(cashChange);
       for (const cb of this.monthCbs) { try { cb(report); } catch (e) { console.error('onMonthEnd', e); } }
-      this.toast(`${report.label}: net worth $${Math.round(report.netWorth).toLocaleString('en-US')}${report.events[0] ? `. ${report.events[0]}` : ''}`, report.events.length ? 'warn' : 'info');
+      // (J3: the month's toast is the StatementCard's: profit, net worth and the first event)
       if (this.bankrupt) { this.setSpeed(0); this.toast('Bankrupt: the overdraft is too big or has lasted too long', 'warn'); }
       this.scheduleSave(); this.emit();
     }

@@ -8,6 +8,7 @@ import {
   debtOf, monthlyDue, overdraftStreak, quoteBank, quoteMurabaha, savingsMonthly, settleCost, type Loan,
 } from '../../game/golf/finance';
 import { Icon } from '../Icon';
+import { ProtectionSection } from './ProtectionSection'; // J3
 
 const money = (v: number) => `${v < 0 ? '−' : ''}$${Math.abs(Math.round(v)).toLocaleString('en-US')}`;
 const pct = (v: number) => `${v.toFixed(1)}%`;
@@ -144,6 +145,7 @@ export function BankPanel({ game }: { game: Game }) {
         </div>
         <p className="text-[11px] text-slate-400">Savings are a cushion for storms and repairs. They earn {SAVINGS_APR}%, but a loan costs more than that, so pay a loan off before you save when you can.</p>
       </Section>
+      <ProtectionSection finance={f} onChange={p => game.setInsurancePlan(p)} />
     </div>
   );
 }
