@@ -7,8 +7,7 @@ import { BAND_LABEL, BAND_MAX, BAND_NAME, offerFacts, type PriceBand } from '../
 import { rectAreaSqm } from '../../game/golf/parcels';
 import { ToolHead } from '../ToolHead';
 import { affordKind, statusIcon } from '../status-icon';
-
-const money = (n: number) => '$' + Math.round(n).toLocaleString();
+import { money } from './money';
 /** the bands' swatches (the map's fills: engine.ts LAND_BAND_COL) */
 const SWATCH: Record<PriceBand, string> = { cheap: '#34d399', fair: '#facc15', dear: '#fb7185' };
 const CLASS_NAME: Record<string, string> = { farm: 'Farmland', open: 'Open land', town: 'Town land', commercial: 'Shops (commercial)', industrial: 'Works (industrial)', unbuildable: 'Unbuildable' };

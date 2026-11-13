@@ -95,6 +95,7 @@ import { releaseVectorMeshData, vectorMeshData } from './shadow-vector';
 import { readSave, writeSave, withTourney, clearSave, backupTownSlot, SAVE_VERSION, segRec, exportSaveBytes, importSaveBytes, listSaveBackups, readBackup, deleteBackup, type SaveV5 } from './save';
 import { CAR_COLOURS, carHeading, facings } from './traffic';
 import { bayCar, bayFoot, isWagon } from './vehicles';
+import { memberPriceLadder, type CourseNow } from './golf/payback';
 import { DayBook, clubCardView, dayConditions, dayCourse, dayPace, dayPlan, feeScale, normalizeDaySave, paceSlow, seasonPaceRep, type ClubCardView, type DayInputs, type DayRoster } from './golf/everyday';
 import { clampPrice, closeSeason as closeClubSeason, foundingDrive, holdTo, legacyClub, membersView, newClub, seasonMemberships, stepTo as stepClubTo, type ClubInputs, type MembersView } from './golf/club';
 import { choosePin, greenAt, pinIn, pinLine, pinReport, pinSlot, rollDayPins, withDayPins, type DayPin, type GreenShape } from './golf/daypins';
@@ -11296,7 +11297,22 @@ export class Game {
     g.club = { ...cl, price }; this.scheduleSave(); this.emit();
   }
   /** T214: the Clubhouse card's Members block (golf/club.ts membersView; null: no club yet, or no clubhouse) */
-  private clubMembersView(): MembersView | null { const g = this.golf; return g?.club && this.hasClubhouse ? membersView(g.club, this.clubInputs()) : null; }
+  private clubMembersView(): MembersView | null {
+    const g = this.golf; if (!g?.club || !this.hasClubhouse) return null;
+    const i = this.clubInputs();
+    return { ...membersView(g.club, i), ladder: memberPriceLadder(g.club.members, g.club.price, i) }; // J4: the dues ladder (golf/payback.ts)
+  }
+  /** J4 (#1207): what the payback readouts need (golf/payback.ts): the course now (quality, reputation, playable holes) and whether a clubhouse
+   *  stands (null outside golf). Worked out at most once a second: the cards ask on every frame */
+  paybackCourse(): { course: CourseNow; clubhouse: boolean } | null {
+    if (!this.golf) return null;
+    const t = performance.now(), c = this.paybackCache;
+    if (c && t - c.t < 1000) return c.v;
+    const i = this.clubInputs(), v = { course: { quality: i.quality, rep: i.rep, holes: i.holes }, clubhouse: this.hasClubhouse };
+    this.paybackCache = { t, v };
+    return v;
+  }
+  private paybackCache: { t: number; v: { course: CourseNow; clubhouse: boolean } } | null = null;
   /** T214: the money chip's drawer (P26 5.3): the dues a month (the members now x the price; none without a clubhouse) and the wages a month (the
    *  grounds crew's and the club staff's: golf/staff.ts wages, the one wage book). Null outside golf */
   clubMoney(): { dues: number; wages: number } | null {

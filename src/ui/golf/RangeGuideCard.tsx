@@ -6,8 +6,7 @@
 // T293 (#878): the start tutorial runs on this card too (heading, testid, Next on its 'next' steps, Skip tutorial): one guide look, not two.
 import type { GuideLine } from '../../game/ext/progressive-ui/guide';
 import { Icon } from '../Icon';
-
-const money = (n: number) => `$${Math.round(n).toLocaleString('en-US')}`;
+import { money } from './money';
 
 export function RangeGuideCard({ view, right = 'right-3', onShow, onSkip, onFold, onScene, onNext, heading = 'Guide · build your range', tid = 'range-guide', foot = 'Each step pays when it is done', offLabel = 'Skip guide' }: {
   view: { lines: GuideLine[]; folded: boolean }; right?: string;

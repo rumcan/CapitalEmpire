@@ -6,6 +6,10 @@ import { LAY_COST, LEVY } from '../../game/golf/estate';
 import { HUT_COST, HUT_MAX, HUT_REACH, HUT_UPKEEP, OFFICE_CLUB_REACH, OFFICE_COST, OFFICE_UPKEEP } from '../../game/golf/pros';
 import { LIBRARY } from '../../game/library';
 import { Thumb } from '../Thumb';
+import { PaybackLine } from '../golf/Decisions';
+import { money } from '../golf/money';
+import { MONTHS_A_SEASON } from '../../game/golf/rangesave';
+import { greenFeesMonth, halfwayMonth, payback } from '../../game/golf/payback';
 import { ToolHead } from '../ToolHead';
 
 /** the starting clubhouse's picture (the tin-and-tarp shack the game places: business/art.ts) */
@@ -29,13 +33,17 @@ export function BuildingsPanel({ game }: { game: Game }) {
         <div className="flex w-full items-center gap-3">
           {CLUB_ART && <div className="grid h-16 w-20 shrink-0 place-items-center overflow-hidden rounded-lg bg-black/30"><Thumb it={CLUB_ART} size={60} /></div>}
           <div className="min-w-0 flex-1">
-            <div className="flex items-baseline justify-between gap-2"><span className="font-semibold">Clubhouse</span><span className="text-amber-200">{built ? '✓ Built' : `$${CLUBHOUSE_RANGE_COST.toLocaleString()}`}</span></div>
+            <div className="flex items-baseline justify-between gap-2"><span className="font-semibold">Clubhouse</span><span className="text-amber-200">{built ? '✓ Built' : money(CLUBHOUSE_RANGE_COST)}</span></div>
             <div className="sub-line">{`${B.footprint.w} × ${B.footprint.h} tiles · one only`}</div>
           </div>
         </div>
         <div className="sub-line leading-snug">The course's front door: green fees start, the tournament's crowd heads here, and the tour needs it before it invites you.</div>
       </button>
       <p className="mt-2 leading-snug">{built ? 'Your clubhouse stands: there is one only.' : placing ? 'Click beside a drive on your land (its front snaps to the drive); R turns it, Esc puts it down.' : 'Pick the clubhouse to place it.'}</p>
+      {/* J4 (#1207): what the clubhouse pays back: the green fees your playable holes would take a month (golf/payback.ts), against its upkeep
+          (the business's upkeep a game day, a season in golf mode) */}
+      {!built && (() => { const pc = game.paybackCourse(); return pc && <PaybackLine p={payback(CLUBHOUSE_RANGE_COST, B.upkeepPerDay / MONTHS_A_SEASON, greenFeesMonth(pc.course))} what="green fees" testid="clubhouse-payback"
+        note={pc.course.holes > 0 ? `With your ${pc.course.holes} playable hole${pc.course.holes === 1 ? '' : 's'}; memberships come on top.` : 'No playable holes yet: green fees start when your first hole plays.'} />; })()}
       {/* T187: the halfway house, placed like the clubhouse: on the course by a tee, its front on a cart path */}
       <HalfwayCard game={game} />
       {/* T214 (P26 3.1): the pro's office by the clubhouse, the teaching huts at the range's mats and the practice greens */}
@@ -64,13 +72,16 @@ function HalfwayCard({ game }: { game: Game }) {
         <div className="flex w-full items-center gap-3">
           {HALFWAY_ART && <div className="grid h-16 w-20 shrink-0 place-items-center overflow-hidden rounded-lg bg-black/30"><Thumb it={HALFWAY_ART} size={60} /></div>}
           <div className="min-w-0 flex-1">
-            <div className="flex items-baseline justify-between gap-2"><span className="font-semibold">Halfway house</span><span className="text-amber-200">{built ? '✓ Built' : `$${HALFWAY_COST.toLocaleString()}`}</span></div>
+            <div className="flex items-baseline justify-between gap-2"><span className="font-semibold">Halfway house</span><span className="text-amber-200">{built ? '✓ Built' : money(HALFWAY_COST)}</span></div>
             <div className="sub-line">{`${B.footprint.w} × ${B.footprint.h} tiles · one only`}</div>
           </div>
         </div>
         <div className="sub-line leading-snug">{B.blurb} Half the clubhouse's golfers stop and spend $4.</div>
       </button>
-      <p className="mt-1 leading-snug" data-testid="halfway-note">{built ? `Its takings this session: $${game.halfwayTaken.toLocaleString()}.` : placing ? `Click on your course by a tee (within ${HALFWAY_TEE_REACH * 2} m; between holes 9 and 10 is the classic spot), off the fairways and greens, its front on a cart path; R turns it, Esc puts it down.` : 'Pick the halfway house to place it.'}</p>
+      <p className="mt-1 leading-snug" data-testid="halfway-note">{built ? `Its takings this session: ${money(game.halfwayTaken)}.` : placing ? `Click on your course by a tee (within ${HALFWAY_TEE_REACH * 2} m; between holes 9 and 10 is the classic spot), off the fairways and greens, its front on a cart path; R turns it, Esc puts it down.` : 'Pick the halfway house to place it.'}</p>
+      {/* J4 (#1207): the halfway house's takings a month from the course's visitors (golf/payback.ts), against its upkeep (a season's, by the month) */}
+      {!built && (() => { const pc = game.paybackCourse(); return pc && <PaybackLine p={payback(HALFWAY_COST, B.upkeepPerDay / MONTHS_A_SEASON, pc.clubhouse ? halfwayMonth(pc.course) : 0)} testid="halfway-payback"
+        note={pc.clubhouse ? undefined : 'Its golfers come through the clubhouse: build that first.'} />; })()}
     </>
   );
 }
@@ -88,8 +99,8 @@ function ProBuildingCard({ game, kind }: { game: Game; kind: 'prooffice' | 'teac
         <div className="flex w-full items-center gap-3">
           {art && <div className="relative grid h-16 w-20 shrink-0 place-items-center overflow-hidden rounded-lg bg-black/30"><Thumb it={art} size={60} /><span className="absolute bottom-0 left-0 right-0 bg-black/60 text-center text-[9px] leading-tight text-slate-200">Stand In</span></div>}
           <div className="min-w-0 flex-1">
-            <div className="flex items-baseline justify-between gap-2"><span className="font-semibold">{name}</span><span className="text-amber-200">{full ? '✓ Built' : `$${cost.toLocaleString()}`}</span></div>
-            <div className="sub-line">{`${B.footprint.w} × ${B.footprint.h} tiles · $${upkeep} a month · ${office ? 'one only' : `${n} of ${max}`}`}</div>
+            <div className="flex items-baseline justify-between gap-2"><span className="font-semibold">{name}</span><span className="text-amber-200">{full ? '✓ Built' : money(cost)}</span></div>
+            <div className="sub-line">{`${B.footprint.w} × ${B.footprint.h} tiles · ${money(upkeep)} a month · ${office ? 'one only' : `${n} of ${max}`}`}</div>
           </div>
         </div>
         <div className="sub-line leading-snug">{B.blurb}</div>
@@ -114,7 +125,7 @@ function EstateCard({ game }: { game: Game }) {
     if (over > 0) box.scrollTop += over;
   }, [offer]);
   if (!c) return null;
-  const money = (n: number) => `$${Math.round(n).toLocaleString('en-US')}`, building = c.sold + c.building;
+  const building = c.sold + c.building;
   return (
     <>
       <button className={`card mt-2 gap-1 ${c.placing ? 'card-on' : ''}`} data-card="estate" aria-pressed={c.placing} onClick={() => game.placeEstate(!c.placing)}

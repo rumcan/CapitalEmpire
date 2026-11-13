@@ -7,8 +7,9 @@ import type { CardRow } from '../../game/golf/play/yours';
 import type { Earn } from '../../game/golf/cards';
 import { Icon } from '../Icon';
 import { PullBanner } from './CardsCard';
+import { money as fmtMoney } from './money';
 
-const money = (n: number) => `$${Math.abs(n).toLocaleString('en-US')}`;
+const money = (n: number) => fmtMoney(Math.abs(n));
 const hcpT = (h: number) => h < 0 ? `+${(-h).toFixed(1)}` : h.toFixed(1);
 
 export interface MatchOffer { name: string; hcp: number; yourHcp: number; purse: number; money: number; max: number; lengths: number[]; rival: string | null; why: string | null; answer: { yes: boolean; line: string } | null }

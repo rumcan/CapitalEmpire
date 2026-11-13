@@ -6,6 +6,7 @@ import { courseRating, type TopStats } from '../game/golf/topstats';
 import { monthIndexLabel } from '../game/golf/calendar';
 import type { IconName } from './Icon';
 import { balanceKind, trendKind, withIcon } from './status-icon';
+import { inCurrency, moneyPrefs } from './golf/money';
 
 /** a chip as drawn: its id, icon, figure (short: the figure narrower than 1600 px; and a muted unit after it, from 1600 px), its words (hidden
  *  below 2200 px; null: none), the line under the figure (sub: the money's change, from 1600 px; subAlways: shown at every width, the debt's
@@ -15,17 +16,19 @@ export interface StatChipView {
   label: string | null; sub?: string; subTone?: 'up' | 'down' | 'flat'; subAlways?: true; tip: string;
 }
 
-const money = (n: number) => '$' + Math.round(n).toLocaleString('en-US');
+/** J4 (#1207): the currency setting's symbol (golf/money.ts: US dollars, or UAE dirhams at the peg; display only) */
+const sym = () => (moneyPrefs().currency === 'AED' ? 'AED ' : '$');
+const money = (n: number) => sym() + Math.round(inCurrency(n)).toLocaleString('en-US');
 /** a money figure with a true minus when below zero: $842,350, −$5,000 */
 export const plainMoney = (n: number) => (n < 0 ? '−' : '') + money(Math.abs(n));
 /** a signed money figure: +$X, −$X (a true minus), or $0 */
 export const signedMoney = (n: number) => (n > 0 ? '+' : n < 0 ? '−' : '') + money(Math.abs(n));
 /** money in a few characters (the top bar narrower than 1600 px): $9,500, $842k, $1.23M, $12.4M (a true minus before it) */
 export function shortMoney(n: number): string {
-  const a = Math.abs(n), s = n < 0 ? '−' : '';
-  if (a >= 1e6) return `${s}$${(a / 1e6).toFixed(a >= 1e7 ? 1 : 2)}M`;
-  if (a >= 1e4) return `${s}$${Math.round(a / 1e3)}k`;
-  return s + money(a);
+  const a = Math.abs(inCurrency(n)), s = n < 0 ? '−' : '';
+  if (a >= 1e6) return `${s}${sym()}${(a / 1e6).toFixed(a >= 1e7 ? 1 : 2)}M`;
+  if (a >= 1e4) return `${s}${sym()}${Math.round(a / 1e3)}k`;
+  return s + money(Math.abs(n));
 }
 
 /** the span the money's change is over: so far this month, last month, or a month on average over the last n months */

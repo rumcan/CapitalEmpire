@@ -11,7 +11,8 @@ import type { CrewCardView, StaffRole } from '../../game/golf/staff';
 import { Icon } from '../Icon';
 import { WALK_SERVE_M, lotsLine } from '../../game/golf/walkserve';
 
-const money = (n: number) => '$' + Math.round(n).toLocaleString();
+import { money } from './money';
+import { PriceLadder } from './Decisions';
 /** a game minute of the day as 07:40 */
 const clock = (m: number) => `${String(Math.floor(m / 60) % 24).padStart(2, '0')}:${String(Math.floor(m % 60)).padStart(2, '0')}`;
 /** minutes as "12 min" or "1 h 05" */
@@ -88,6 +89,8 @@ function MembersBlock({ m, onPrice }: { m: MembersView; onPrice?: (price: number
         </div>
         <div className="flex items-center justify-between gap-2 text-[12px]"><span className="text-slate-400" data-testid="club-fair">{fairWords(m)}</span><span className={`font-semibold ${tone}`}>{stand.word}</span></div>
         <div className={`text-[12px] ${tone}`} data-testid="club-stand">{stand.line}</div>
+        {/* J4 (#1207): the members and the dues (less their upkeep) expected next month at this price and a step either side (golf/payback.ts) */}
+        {m.ladder && m.ladder.length > 0 && <PriceLadder rungs={m.ladder} who="Members" testid="club-price-ladder" />}
         <div className="text-[12px] text-slate-300" data-testid="club-member-money" title="A month: the dues the members pay, their upkeep (lockers, handicap cards, the newsletter) and the visitors' green fees the members no longer pay (they were regulars)">
           Dues <span className="font-semibold text-emerald-300">{ml.dues}</span> · upkeep <span className="font-semibold text-rose-300">{ml.upkeep}</span> · about <span className="font-semibold text-white">{ml.lost}</span> of green fees lost a month
         </div>

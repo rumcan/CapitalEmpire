@@ -7,7 +7,9 @@ import { useState } from 'react';
 import type { RangeCardView } from '../../game/golf/rangehost';
 import { BRANCH_NAME, type TreeBranch } from '../../game/golf/rangesave';
 
-const money = (n: number) => '$' + Math.round(n).toLocaleString();
+import { money } from './money';
+import { PaybackLine } from './Decisions';
+import { payback, rangeUpgradeExtra } from '../../game/golf/payback';
 /** the branches in the order the first column lists them */
 export const BRANCHES: readonly TreeBranch[] = ['picking', 'staff', 'machines', 'supply', 'golf'];
 type Node = RangeCardView['upgrades'][number];
@@ -53,6 +55,8 @@ export function BallTree({ view, onBuy, onClose, rightRem = 0.75 }: { view: Rang
           <div className="px-1.5 text-[12.5px] leading-snug text-slate-200">{node.effect}</div>
           {rate !== undefined && <div className="px-1.5 pt-1 text-[12px] text-sky-200" data-testid="ball-tree-rate">{RATE_WORDS[node.id] ?? 'Takes'} about {rate.toLocaleString()} balls an hour{node.id.startsWith('robot') ? ' (a pair, over a charge)' : node.id.startsWith('attendant') ? ' (on his shift)' : ''}</div>}
           <div className="px-1.5 pt-1 text-[12px] text-slate-400">Price {money(node.cost)}{node.upkeep ? ` · upkeep ${money(node.upkeep)} a month` : ''}{view.needs[node.id].length ? ` · needs ${view.needs[node.id].join(' and ')}` : ''}</div>
+          {/* J4 (#1207): what it earns back (golf/payback.ts: the range's demand model; the ball room's gear mostly saves work, not money) */}
+          {!node.owned && <div className="px-1.5 pt-1"><PaybackLine p={payback(node.cost, node.upkeep, rangeUpgradeExtra(view.biz, view.demand, view.dayLen, node.id))} testid="ball-tree-payback" /></div>}
           <div className="px-1.5 pt-2">
             {node.owned ? <span className="text-emerald-300">Bought</span>
               : <button className="chip chip-on disabled:opacity-40" disabled={!!node.why} onClick={() => onBuy(node.id)} title={node.why || `Buy it with the range's till (${money(node.cost)})`} data-testid={`ball-tree-buy-${node.id}`}>Buy {money(node.cost)}</button>}
