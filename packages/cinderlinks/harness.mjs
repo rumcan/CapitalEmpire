@@ -430,6 +430,16 @@ ${HOST_PLAY}
       }
       out.info.push({ farjit: res }); },
     chunkprof() { const t0 = performance.now(); let n = 0; for (let cy = -12; cy < 12; cy++) for (let cx = -14; cx < 14; cx++) { genChunk(cx, cy); n++; } out.info.push({ chunkAvgMs: +((performance.now() - t0) / n).toFixed(2), n }); snap('chunkprof'); },
+    cart4() { // the block cart from four headings (from behind, its right, its front, its left, each a little turned), the golfer at the wheel; then empty
+      idle(); const base = Math.atan2(Math.cos(cart.th), -Math.sin(cart.th)), t0 = performance.now(); let n0 = 0;
+      for (const [n, k] of [['a', 0], ['b', 1], ['c', 2], ['d', 3]]) { player.x = cart.x; player.y = cart.y; cart.on = true; camYaw = base + k * 1.5708 + 0.4; camD = 6; camHk = 0.8; aimCam(); camZ = groundH(cart.x, cart.y) + HC * 0.8; frames(4); snap('cart4-' + n); n0++; }
+      cart.on = false; player.x = cart.x - Math.sin(cart.th) * 2.6; player.y = cart.y + Math.cos(cart.th) * 2.6; camYaw = base + 0.9; aimCam(); frames(4); snap('cart4-e'); camD = D0; camHk = 1;
+      out.info.push({ cart4: { pictures: cartPics.size, ms: +(performance.now() - t0).toFixed(0), views: n0 } }); },
+    cartsheet() { // the cart's pictures on a plain ground, eight headings (four on top, close; four below), to judge the blocks themselves
+      idle(); render(); for (let i = 0; i < fb.length; i++) fb[i] = 0xff58a04c; zbuf.fill(65535); frame++;
+      const K = GK, sc = Math.max(1, Math.floor(VW / 4 / (170 * K)));
+      for (let k = 0; k < 8; k++, frame++) cartBlit(cartPic(k * 4 + 2, 0, K), Math.round(VW / 8 + (k % 4) * VW / 4), Math.round(VH * (k < 4 ? 0.45 : 0.92)), sc, 10, 0);
+      out.names.push('cartsheet'); out.frames.push(Uint8ClampedArray.from(px)); out.info.push({ name: 'cartsheet', scale: sc }); },
     cart() { idle(); cart.th = Math.atan2(hole.ry, hole.rx); const back = Math.atan2(Math.cos(cart.th), Math.sin(cart.th));   // (back: the camera's turn that looks along the cart's heading)
       go(cart.x - Math.cos(cart.th) * 5, cart.y - Math.sin(cart.th) * 5, back + 0.7); camD = 8; aimCam(); frames(12); snap('cart'); camYaw = back + 2.4; aimCam(); frames(8); snap('cart-b'); camYaw = back - 1.5; camD = 6; aimCam(); frames(8); snap('cart-c');
       camD = 14; camYaw = back; player.x = cart.x; player.y = cart.y; rideCart(); frames(4); snap('cart-in'); keys.KeyW = true; frames(60); keys.KeyD = true; frames(40); snap('cart-ride'); idle(); frames(30); rideCart(); out.info.push({ cartTh: +cart.th.toFixed(2), cartAt: [+cart.x.toFixed(1), +cart.y.toFixed(1)] }); },
