@@ -2,6 +2,7 @@
 // its auto props and, once, its cart paths), steps the golfers on the town clock and books their sales, and hands the engine the golfers and cars
 // to draw as movers and the balls and labels to draw over the map. The engine gives it a small context, so its own edits stay a few lines.
 import { JAM } from '../features';
+import { drawYardageSign } from './yardage-sign';
 import type { Drawable } from '../sprites';
 import { CAR_SCALE } from '../sprites';
 import type { Prop } from '../types';
@@ -338,7 +339,12 @@ export class RangeHost {
       c.fill();
       // the distance numbers: a small dark plate with white figures just above each marker
       const px = Math.round(dpr * Math.max(9, 11 * Math.sqrt(Math.min(1, zoom / 0.3)))), font = `700 ${px}px system-ui, sans-serif`;
-      for (const t of sc.numbers) {
+      // J7d (#1234): in the jam each distance is a painted yardage board standing in the world (golf/yardage-sign.ts), not a floating label; a junk pile's
+      // name shows while the pointer is over it (the jam's labels show on hover: world-labels.ts hoverOnly)
+      if (JAM) {
+        for (const t of sc.numbers) { const p = screen(t.x, t.y); if (on(p)) drawYardageSign(c, p.x, p.y, t.text, 32 * ze, 10 * dpr); }
+        for (const j of sc.junk) { const q = screen(j.x, j.y); if (on(q)) labels.text(j, PRI.name, j.name, q.x, q.y - 1.4 * 32 * ze, font, px, '#f8fafc', LABEL_OUTLINE, 3 * dpr); }
+      } else for (const t of sc.numbers) {
         const p = screen(t.x, t.y); if (!on(p)) continue;
         const y = p.y - (t.low ? 1.2 : 2.6) * 32 * ze - (t.low ? 0 : px), tw = labels.width(font, t.text) + 8 * dpr;
         labels.pill(t, PRI.marker, t.text, p.x, y, font, tw, px * 1.5, 'rgba(16,24,16,0.8)', 3 * dpr, '#f8fafc', 0.5 * dpr);
@@ -355,7 +361,7 @@ export class RangeHost {
         if (on(q, 100)) {
           const out = bk.clean + bk.dirty < bucketBalls(visitBalls(this.ctx.dayLen()), autoKit(this.ctx.biz()?.owned ?? [])), px = Math.round(dpr * 11), font = `700 ${px}px system-ui, sans-serif`;
           const t = out ? 'Ball room · OUT OF BALLS' : `Ball room · ${Math.floor(bk.clean + bk.dirty).toLocaleString()} balls${bk.dirty >= 1 ? ` (${Math.floor(bk.dirty).toLocaleString()} dirty)` : ''}`; // (the dirty ones sell too)
-          labels.pill(sc.ballRoom, PRI.count, t, q.x, q.y - 2.1 * 32 * ze, font, labels.width(font, t) + 10 * dpr, px * 1.6, out ? 'rgba(127,29,29,0.92)' : 'rgba(16,24,16,0.8)', 4 * dpr, '#f8fafc', 0.5 * dpr);
+          labels.pill(sc.ballRoom, out ? PRI.warn : PRI.count, t, q.x, q.y - 2.1 * 32 * ze, font, labels.width(font, t) + 10 * dpr, px * 1.6, out ? 'rgba(127,29,29,0.92)' : 'rgba(16,24,16,0.8)', 4 * dpr, '#f8fafc', 0.5 * dpr);
         }
       }
       // T386 part 2: the robot pickers (small teal pucks with a ball on top: stand-ins) and the stand-in pills of the robots and the attendants

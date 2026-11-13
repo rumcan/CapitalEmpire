@@ -589,3 +589,18 @@ The office is smart and proud: new carpet, a polished desk, a silver trophy cup 
 
 Period details only: 1985 cars, signs, clothes, technology (no phones, no LEDs, no modern logos). People going about their day, never posing. Golfers who are swinging stand side-on to the target they hit toward, in a real golf stance, never turned to face the camera. No text other than the signs named here, no UI, no frame, no caption.
 ```
+
+### J7d Yardage sign (`golf-range-yardage-sign`; the owner, 2026-11-13: "add a 50m artwork sign")
+The range's distances (the 50 m markers, the target greens, the junk on the outfield) are drawn now as a code stand-in (`src/game/golf/yardage-sign.ts`: a cream
+board in a dark wooden frame on a post). The game paints the figures on the board itself, so the picture has **a blank face**. Start a new chat, attach the two
+usual references, and ask for a **square** picture on a plain flat background (it is cut out), about 1024 x 1024.
+
+Save as `art/theme-consistency/generated/props/golf-range-yardage-sign-v1.png`.
+
+```text
+One small painted game prop, isometric three-quarter view from above (the camera of reference 1), alone on a plain flat light grey background: a driving range
+yardage sign from 1985: a weathered wooden post about one metre tall with a small rectangular board on top, about 80 x 50 cm, a cream painted face that is
+completely blank (no numbers, letters or logos: the game paints the distance on it), a dark brown timber frame round the face, a little peeled paint and two
+rusty bolts. Warm painted illustration style and colours of the references, light from the upper right, a soft shadow falling to the lower left on the
+ground under it. Nothing else in the picture: no grass patch, no text, no frame, no caption.
+```

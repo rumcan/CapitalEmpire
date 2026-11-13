@@ -13462,6 +13462,8 @@ export class Game {
     ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.clearRect(0, 0, this.cw, this.ch);
     // T151: the world labels drawn below are collected (this.labels) and written together after the tolls, placed so none overlap
     this.labels.begin(ctx, this.dpr);
+    // J7d (#1234; the owner: "pls make all the labels show on hover"): in the jam a name label shows only while the pointer is over its thing (world-labels.ts)
+    if (JAM) { const L = this.labels, gm = this.ghostMouse, d = this.dpr; L.hoverOnly = true; L.hoverAt = gm ? (L.hoverAt ?? { x: 0, y: 0 }) : null; if (gm && L.hoverAt) { L.hoverAt.x = gm.mx * d; L.hoverAt.y = gm.my * d; } L.hoverReach.side = 40 * d; L.hoverReach.up = 12 * d; L.hoverReach.down = 90 * d; }
     if (this.showLanes && this.cam.z > 0.12) this.drawLanes(ctx);
     if (this.showLots && this.cam.z > 0.06) this.drawLots(ctx);
     if (this.showAccess || this.cam.z < PLANNER_Z) this.drawAccess(ctx);

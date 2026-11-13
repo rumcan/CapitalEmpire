@@ -10,7 +10,7 @@ import { arrivalRate, hourWeight, practiceUsers, rangeScale, rangeStats, saleVal
 import { KIOSK_QMAX, KIOSK_SERVE, KIOSK_SHARE, LESSON_SHARE, TIER2_BAYS, extraValue, homeStage, type ExtraId, type HomeStage } from './rangesave';
 export * from './rangesave';
 import { NEAR, RANGE_LOT } from './rangestart';
-import { GOLFER_CLIPS } from '../library';
+import { GOLFER_CLIPS, LIBRARY } from '../library';
 import { PUTT_IMPACT_S, clipFrame, golferRow, hash, rowToward, type CrowdPerson } from '../crowdview';
 import { mulberry } from '../iso';
 import { NO_PRACTICE, practiceArea, practiceAreaAt, type PracticeArea, type PracticeScan } from './practice';
@@ -239,6 +239,13 @@ export function newRangeJunk(seed: number): JunkPile[] {
 }
 /** J7: how much larger than life the junk is drawn (a car at its true size is a smudge on the outfield at the closest zoom) */
 export const JUNK_SCALE = 1.8;
+/** J7d (#1234; the owner could not see the pallets): the small piles (pallets, tyres, a trunk: art under SMALL_JUNK_W px wide) larger still, so every pile reads as a
+ *  thing at the range's zoom, not a speck among the scrub */
+export const SMALL_JUNK_SCALE = 2.8, SMALL_JUNK_W = 110;
+const JUNK_W = new Map(LIBRARY.filter(it => JUNK_BY_ID.has(it.id)).map(it => [it.id, it.w]));
+export const junkScale = (id: string): number => ((JUNK_W.get(id) ?? SMALL_JUNK_W) < SMALL_JUNK_W ? SMALL_JUNK_SCALE : JUNK_SCALE);
+/** J7d: how far across the range (tiles) a pile's yardage board stands from it */
+export const JUNK_SIGN_U = 3;
 /** J7: a spot's distance from the tee line (the mats' stand line), m */
 export const junkMetres = (v: number): number => Math.max(0, Math.round((v - STAND_V) * TILE_M));
 export function rangeScene(plot: Rect, facing: 0 | 1 | 2 | 3, s: RangeBizSave, opts: SceneOpts = {}): RangeScene {
@@ -330,7 +337,7 @@ export function rangeScene(plot: Rect, facing: 0 | 1 | 2 | 3, s: RangeBizSave, o
   }
   // ---- J7 (#1225): the junk on an old jam range, each pile with its distance pill (numbers, low) like a yardage board: fun targets until cleared
   const junk: RangeJunkSpot[] = (s.junk ?? []).map((j, i) => { const p = P(j.u, j.v); return { i, id: j.id, name: JUNK_BY_ID.get(j.id)?.name ?? 'Junk', x: p.x, y: p.y, m: junkMetres(j.v) }; });
-  (s.junk ?? []).forEach((j, i) => put(`junk${i}`, j.id, j.u, j.v, 0, { scale: JUNK_SCALE })); // (drawn larger than life: they read at the range's zoom)
+  (s.junk ?? []).forEach((j, i) => put(`junk${i}`, j.id, j.u, j.v, 0, { scale: junkScale(j.id) })); // (drawn larger than life: they read at the range's zoom)
   // ---- the sign at the drive, the bench and bins at the tee, a bag trolley by the shop
   // (T258: each drawn as the owner's ChatGPT picture once it lands, its label gone)
   // (T237: a set-back range's sign stands by the road at the drive's mouth, across the drive from its car park in the frontage strip)
@@ -339,7 +346,8 @@ export function rangeScene(plot: Rect, facing: 0 | 1 | 2 | 3, s: RangeBizSave, o
   put('bench', 'world:bench', 43, 15); put('bins-tee', 'gen:trash-cans-row', 25.5, 15); put('trolley', 'business:golf-bag-trolley', 29.4, 13.6);
   // ---- the distance markers down both sides every 50 m, flags on the greens, the yardage boards (upgrade)
   const numbers: RangeScene['numbers'] = [], post = art('golf-range-distance-post', 0), board = art('golf-range-yardage-board', toRoad);
-  for (const j of junk) numbers.push({ x: j.x, y: j.y, text: `${j.name} · ${j.m} m`, low: true }); // J7: the junk's distance pills
+  // J7d (#1234): each pile's distance on a yardage board standing beside it (its name is a hover label: rangehost.ts drawOver)
+  (s.junk ?? []).forEach((j, i) => { const p = P(j.u + JUNK_SIGN_U, j.v + 0.6); numbers.push({ x: p.x, y: p.y, text: `${junk[i]!.m} m`, low: true }); });
   for (let k = 1; k <= 5; k++) for (const [j, u] of [2.2, 67.8].entries()) {
     if (post) put(`mark${k}-${j}`, post, u, STAND_V + 25 * k);
     else put(`mark${k}-${j}`, 'ce:parking-sign', u, STAND_V + 25 * k, 0, k === 1 && j === 0 ? { label: 'Stand In for Range distance marker' } : {});
