@@ -8,7 +8,7 @@
 /** every line of the monthly statement */
 export type Line = 'range' | 'greenFees' | 'members' | 'events' | 'shop' | 'parking' | 'otherIn'
   | 'wages' | 'upkeep' | 'build' | 'stock' | 'otherOut'
-  | 'loanInterest' | 'loanPrincipal' | 'savingsInterest' | 'overdraftInterest' | 'emergency' | 'insurance';
+  | 'loanInterest' | 'markup' | 'loanPrincipal' | 'savingsInterest' | 'overdraftInterest' | 'emergency' | 'insurance';
 
 /** one loan. bank: balance is the principal still owed, aprPct the yearly rate, payment the level monthly payment. murabaha: principal is the
  *  cost the bank paid, markupPct the whole markup fixed at signing (4.5% a year of the term, so 9% for 24 months), aprPct that flat yearly
@@ -22,7 +22,7 @@ export interface MonthReport { month: number; label: string; lines: Partial<Reco
 
 /** the whole bank state, saved with the golf save (plain JSON) */
 export interface FinanceSave { v: 1; month: number; savings: number; loans: Loan[]; credit: number;
-  insurance: 'none' | 'basic' | 'full'; cur: Partial<Record<Line, number>>; history: MonthReport[]; moments: string[]; nextId: number }
+  insurance: 'none' | 'basic' | 'full'; /** J2b: the book value, at cost, of what the club already had when the books opened (the range, its buildings); absent: not counted yet */ opening?: number; cur: Partial<Record<Line, number>>; history: MonthReport[]; moments: string[]; nextId: number }
 
 // ---- the numbers (docs/JAM.md "Numbers"; named so the balance pass can change them in one place) ----
 /** the credit score of a new club */
@@ -108,10 +108,30 @@ export function loadFinance(raw: unknown): FinanceSave {
   const history = Array.isArray(o.history) ? o.history.filter((h) => h && typeof h === 'object' && Number.isFinite(h.month)).slice(-HISTORY_CAP) : [];
   return {
     v: 1, month: Math.max(0, Math.round(fin(o.month))), savings: Math.max(0, fin(o.savings)), loans, credit: clampCredit(o.credit ?? CREDIT_START),
-    insurance: o.insurance === 'basic' || o.insurance === 'full' ? o.insurance : 'none', cur, history,
+    insurance: o.insurance === 'basic' || o.insurance === 'full' ? o.insurance : 'none', ...(typeof o.opening === 'number' && Number.isFinite(o.opening) ? { opening: Math.max(0, o.opening) } : {}), cur, history,
     moments: Array.isArray(o.moments) ? o.moments.filter((m) => typeof m === 'string').slice(-MOMENTS_CAP) : [],
     nextId: Math.max(1, Math.round(fin(o.nextId)) || 1, ...loans.map((l) => l.id + 1)),
   };
+}
+
+// ---- keeping the books balanced (J2b) ----
+/** the lines that are not cash moving through the treasury (savings interest is credited to savings) */
+const NON_CASH: readonly Line[] = ['savingsInterest'];
+/** the cash the month's lines say came in (+) or went out (-) so far */
+export function cashLinesSum(f: FinanceSave): number {
+  let t = 0;
+  for (const k of Object.keys(f.cur) as Line[]) if (!NON_CASH.includes(k)) t += fin(f.cur[k]);
+  return r2(t);
+}
+/** how far the treasury's change since the month began is from what the lines and the bank's own moves (a loan paid in, a deposit) explain */
+export function booksGap(f: FinanceSave, moneyDelta: number, bankNet: number): number { return r2(fin(moneyDelta) - fin(bankNet) - cashLinesSum(f)); }
+/** books what no line explains (money that reached the treasury, or left it, by a path nothing booked) on otherIn or otherOut, so that a month's lines always add up to the
+ *  treasury's change. Returns the amount booked (0 when the books already balanced) */
+export function balanceBooks(f: FinanceSave, moneyDelta: number, bankNet: number): number {
+  const g = booksGap(f, moneyDelta, bankNet);
+  if (Math.abs(g) < 0.01) return 0;
+  book(f, g > 0 ? 'otherIn' : 'otherOut', g);
+  return g;
 }
 
 // ---- reading the books ----
@@ -125,9 +145,9 @@ export function lastIncome(f: FinanceSave): number {
   if (!h) return 0;
   return INCOME_LINES.reduce((s, k) => s + Math.max(0, h.lines[k] ?? 0), 0);
 }
-/** what the club has built and bought, at cost: everything booked on the build line (land, holes, buildings, less refunds) over the statements kept and this month */
+/** what the club has built and bought, at cost: what it had when the books opened (`opening`) plus everything booked on the build line (land, holes, buildings, less refunds) over the statements kept and this month */
 export function assetsAtCost(f: FinanceSave): number {
-  let b = -(f.cur.build ?? 0);
+  let b = Math.max(0, fin(f.opening)) - (f.cur.build ?? 0);
   for (const h of f.history) b -= h.lines.build ?? 0;
   return r2(Math.max(0, b));
 }
@@ -265,7 +285,7 @@ export function repay(f: FinanceSave, id: number, amount: number, cash: number):
   if (l.kind === 'murabaha') {
     const rebate = murabahaRebate(l);
     const unpaidMarkup = r2(Math.max(0, (l.principal * l.markupPct / 100) * ((l.termMonths - l.paidMonths) / l.termMonths) - rebate));
-    book(f, 'loanInterest', -Math.min(unpaidMarkup, pay));
+    book(f, 'markup', -Math.min(unpaidMarkup, pay));
     book(f, 'loanPrincipal', -(pay - Math.min(unpaidMarkup, pay)));
     moment(f, `Settled "${l.label}" early and saved $${rebate.toLocaleString('en-US')} of markup.`);
     f.loans = f.loans.filter((x) => x.id !== id);
@@ -323,7 +343,7 @@ export function monthEnd(f: FinanceSave, o: { cash: number; assets: number; labe
     }
     const late = run < due - 0.005;
     run -= due;
-    book(f, 'loanInterest', -interest);
+    book(f, l.kind === 'murabaha' ? 'markup' : 'loanInterest', -interest);
     book(f, 'loanPrincipal', -(due - interest));
     l.balance = r2(l.kind === 'bank' ? l.balance - (due - interest) : l.balance - due);
     l.paidMonths += 1;
