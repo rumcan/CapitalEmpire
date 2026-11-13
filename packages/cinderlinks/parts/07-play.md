@@ -148,11 +148,35 @@ function jumpToBall() {   // J: the golfer is set down beside his ball, facing t
   cart.on = false; cart.v = 0;
   for (const [a, b] of [[-0.9, 0.75], [-0.9, -0.75], [-1.3, 0], [0.9, 0.9]]) { const x = ball.x + ux * a - uy * b, y = ball.y + uy * a + ux * b; if (matAt(x, y) !== M_WATER) { p.x = x; p.y = y; break; } }
   p.th = Math.atan2(uy, ux); p.fa = ((Math.round(p.th / 6.2832 * 16) % 16) + 16) % 16; p.moving = false;
-  camYaw = p.th + 1.5708; aimCam(); camZ = groundH(p.x, p.y) + HC * camHk * camD / D0;
+  camYaw = p.th + 1.5708; aimCam();
+  if (onAim) camFrame(aim.x, aim.y);   // (J5e: in host mode the camera is raised or pulled back until the target shows over the land)
+  camZ = groundH(p.x, p.y) + HC * camHk * camD / D0;
   let best = 1e9;                                                      // the cart: the flattest allowed spot four to nine metres behind or beside him
   for (let k = 0; k < 40; k++) { const an = p.th + 1.6 + (k % 10) * 0.35, rr = 4.5 + ((k / 10) | 0) * 1.5, x = ball.x + Math.cos(an) * rr, y = ball.y + Math.sin(an) * rr; slopeAt(x, y, SL);
     const sc = Math.hypot(SL.x, SL.y) + cartNo(x, y) + cartNo(x + 1.6, y) + cartNo(x - 1.6, y) + cartNo(x, y + 1.6) + cartNo(x, y - 1.6) + rr * 0.01; if (sc < best) { best = sc; cart.x = x; cart.y = y; } }
   cart.th = p.th; cart.fa = p.fa; cart.steer = 0; cart.zc = groundH(cart.x, cart.y);
+}
+// J5e (the final take: "on a par 3 built behind a rise, the default tee view showed no green"): standing at his ball in host mode, the camera frames the
+// shot's target. camSees: the line from the camera (camD behind him, HC x hk x camD / D0 above his feet, as the render places it) to a point 0.4 m over the
+// target clears the land all the way; camFrame raises the camera, then pulls it back, a step at a time, until it does (the heights R gives, up to x3.2,
+// the zoom's 42 m), and keeps what it chose (camK) for the swing's line-up to glide to, instead of the default view, which would hide it again.
+let camK = { d: D0, hk: 1 };
+function camSees(tx, ty, hk, d) {
+  const p = player, cx = p.x - FX * d, cy = p.y - FY * d, cz = groundH(p.x, p.y) + HC * hk * d / D0, tz = groundH(tx, ty) + 0.4;
+  const L = Math.hypot(tx - cx, ty - cy), n = Math.max(8, Math.min(80, Math.ceil(L / 4)));
+  for (let k = 1; k < n; k++) { const f = k / n; if (groundH(cx + (tx - cx) * f, cy + (ty - cy) * f) > cz + (tz - cz) * f) return false; }
+  return true;
+}
+function camFrame(tx, ty) {
+  if (!(Number.isFinite(tx) && Number.isFinite(ty)) || Math.hypot(tx - ball.x, ty - ball.y) < 3) { camK = { d: camD, hk: camHk }; return; }
+  camD = Math.max(camD, D0); camHk = Math.max(camHk, 1); aimCam();
+  if (!camSees(tx, ty, camHk, camD)) {
+    let ok = false;
+    for (const d of [camD, 20, 28, 36, 42]) { if (d < camD) continue; for (let hk = camHk; hk <= 3.2 + 1e-9 && !ok; hk = Math.min(3.2, hk * 1.15) + (hk >= 3.2 ? 1 : 0)) { camD = d; aimCam(); if (camSees(tx, ty, hk, d)) { camHk = hk; ok = true; } } if (ok) break; }
+    if (!ok) { camD = 42; camHk = 3.2; }   // (nothing clears it: the highest and farthest the player could take it)
+    aimCam();
+  }
+  camK = { d: camD, hk: camHk };
 }
 function nearBall() { return ball.state === 0 && Math.hypot(player.x - ball.x, player.y - ball.y) < 1.5; }
 // J5b (the owner, 2026-11-13: "character addressing the ball at the driving range should not look like this? why he look like he is mid walking to the
