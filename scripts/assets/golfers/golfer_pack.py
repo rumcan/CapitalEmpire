@@ -50,6 +50,9 @@ Style: a painterly isometric game sprite, soft brushwork, natural colours, clean
 
 Background: one flat, even {keyname} colour ({key}) filling the whole picture and every gap (between the legs, between an arm and the body). No ground, no shadow on the ground, no grid lines, no borders, no text, no numbers."""
 
+NEW = """IMPORTANT: reference 2's figures are plain grey mannequins showing only the pose, camera angle, size and place; paint the person, face, clothes and colours of reference 1 over them, never grey.
+
+"""
 CLIP_HEAD = """Use only the two pictures attached to this message (ignore earlier pictures in this chat). Create an image: a {cols}x{rows} sprite sheet of one {who} for a painted isometric golf game.
 
 Reference 1 shows who the {who} is (him standing, from the front, the side and the back): keep his face, hair, skin, build and his exact clothes and colours ({outfit}). Mid-1980s clothes, no logos, no text.
@@ -158,6 +161,13 @@ def ref_png(cells, path):
     out.convert('RGB').save(path)
 
 
+def mannequin(im):
+    """a new person's guide frame (--like: another person's render) as a plain light-grey mannequin, its shading kept: only the pose, camera,
+    size and place carry over, never that person's clothes or face (2026-11-14: with the coloured renders ChatGPT painted the guide's person)"""
+    a = im.getchannel('A'); g = im.convert('L').point(lambda v: 110 + v * 0.45)
+    return Image.merge('RGBA', (g, g, g, a))
+
+
 def guide_png(row, j, key, path):
     out = Image.new('RGBA', (GRID, GRID), key + (255,))
     ax, ay = j['anchor']['x'], j['anchor']['y']
@@ -229,9 +239,11 @@ def main():
     out, bridge, queue = Path(a.out), Path(a.bridge), []
     for gid in gids:
         cells, j = frames(gid, like=a.like)
+        if a.like: cells = {h: [mannequin(c) for c in row] for h, row in cells.items()}
         keyname = pick_key(cells); key, keyhex = KEYS[keyname]; wear = outfit(cells)
         if a.clip != 'sheet':
             ccells, cj = pick_frames(gid, a) if a.clip == 'pick' else frames(gid, a.clip, like=a.like)
+            if a.like: ccells = {h: [mannequin(c) for c in row] for h, row in ccells.items()}
             wear = 'exactly as in reference 1 (his painted standing pose: the clothes to copy)' + ('; ' + a.note if a.note else '')   # (the sampled colours misread shorts and skirts)
         if a.note: wear += '; ' + a.note
         (out / gid).mkdir(parents=True, exist_ok=True); ref = out / gid / 'ref.png'
@@ -244,11 +256,11 @@ def main():
             (d / 'ref.png').write_bytes(ref.read_bytes())
             if a.clip == 'sheet':
                 guide_png(cells[h], j, key, d / 'guide.png')
-                p = gender(PROMPT.format(who=a.who, outfit=wear, facing=FACING[h], keyname=keyname, key=keyhex), gid)
+                p = gender((NEW if a.like else '') + PROMPT.format(who=a.who, outfit=wear, facing=FACING[h], keyname=keyname, key=keyhex), gid)
             else:
                 cols, rows, _, _ = CLIPS[a.clip]
                 clip_guide_png(ccells[h], CLIPS[a.clip], key, d / 'guide.png')
-                p = gender(CLIP_HEAD.format(who=a.who, cols=cols, rows=rows, n=cols * rows, outfit=wear, facing=FACING[h].replace('walking', 'his body facing')) + '\n\n' + CLIP_POSES[a.clip]
+                p = gender((NEW if a.like else '') + CLIP_HEAD.format(who=a.who, cols=cols, rows=rows, n=cols * rows, outfit=wear, facing=FACING[h].replace('walking', 'his body facing')) + '\n\n' + CLIP_POSES[a.clip]
                            + CLIP_TAIL.format(keyname=keyname, key=keyhex), gid)
             (d / 'PROMPT.md').write_text(p + '\n', encoding='utf-8')
             (d / 'CHECKS.md').write_text(CHECKS.format(name=name, heading=h, facing_short=SHORT[h], key=keyhex), encoding='utf-8')

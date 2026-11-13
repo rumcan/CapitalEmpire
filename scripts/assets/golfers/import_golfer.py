@@ -251,7 +251,7 @@ def main():
     ART = ROOT / 'art' / a.family
     if a.contact: return contact(a.contact, a.out or f'{a.contact}-{a.clip}-contact.png', a.clip)
     if a.all:
-        for p in sorted(Path(a.inp).glob('golf_*~*-golfers.png'), key=lambda p: p.stat().st_mtime):
+        for p in sorted(Path(a.inp).glob('*~*-golfers.png'), key=lambda p: p.stat().st_mtime):
             m = NAME.match(p.name)
             if m and (not a.golfer or m.group(1) == a.golfer) and (m.group(3) or 'sheet') == a.clip:
                 if a.clip == 'sheet': import_one(p, m.group(1), m.group(2), a.tol, a.soft, a.scale, a.dry_run)
