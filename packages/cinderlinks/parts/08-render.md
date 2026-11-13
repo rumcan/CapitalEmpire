@@ -1104,7 +1104,7 @@ function libFor(o) {   // the library sculpture that stands in for a thing, and 
   return L.S;
 }
 function spriteFor(o, d) {
-  if (TREEART && o.k === K_TREE && o.sp !== undefined) { const B = picFor(o); if (B) return B; }   // T451: the host's picture of the tree's species
+  if (o.k === K_TREE && o.sp !== undefined) { const B = picFor(o); if (B) return B; }   // T451, T454: a host's tree is its species' picture
   if (o.spr) return o.spr;
   const heavy = o.k === K_TREE || o.k === K_BUSH || o.k === K_ROCK;
   if (!heavy) { if (smallMade >= 10 && spriteMax < 99) return null; smallMade++; return objSprite(o); }   // small things: ten new ones a frame at most (the rest wait a frame: never a stall when the camera lands among them)
@@ -1113,35 +1113,76 @@ function spriteFor(o, d) {
   o.born = -1;
   return libFor(o);
 }
-// T451: the host's trees in the game's own pictures (the style menu's Trees: Pictures; TREEART 1). Each species' picture is cut from the host's atlas
-// page (features3p.ts TreePic) and made a sculpture once, HPIC px from its top to its ground point, kept per species and time of day: its pixels the
-// picture's own colours (light byte 255) by day, lit by the time of day's light at golden hour and dusk; a pixel counts from alpha 110. One picture is
-// made a frame at most, and until a page has loaded the tree is the sculpted stand-in, so a picture never stalls a frame. libS scales it to the tree.
-let TREEART = 0;   // (Sculpted by default: under the painted filter the two looks are close, and the pictures cost about 0.6 ms a frame more in the browser, which would take the view past its 0.5 ms allowance over lead/live)
-const WIND_HOST = 30;   // a host's tree is drawn cluster by cluster (swaying) within this many metres: a fuller crown than the land's own costs more, and past 30 m the sway does not show
-const HPIC = 256, picImgs = new Map(), picSpr = new Map(); let picMade = -1, picCv = null;
+// T451, T454: a host's trees are the game's own pictures (the owner: "it should be pictures for this app"; no setting). Each species' picture is cut
+// from the host's atlas page (features3p.ts TreePic) once, HPIC px from its top to its ground point, and kept per species and time of day: its
+// pixels the picture's own colours (light byte 255) by day, lit by the time of day's light at golden hour and dusk; a pixel counts from alpha 110.
+// Nothing of it is done inside a frame: the page is fetched, cut and read in a small worker (picWorker: a bitmap on an OffscreenCanvas), and the
+// pump between frames (picPump, 2 ms at most a turn) only copies a finished picture into a sculpture. Until then the tree is its sculpted stand-in
+// (libFor), and a species with no picture, or one that failed, stays sculpted (mkTree's host builds). libS scales the picture to the tree.
+const WIND_HOST = 30;   // a host's sculpted tree is drawn cluster by cluster (swaying) within this many metres: a fuller crown than the land's own costs more, and past 30 m the sway does not show
+const HPIC = 256, picBase = new Map(), picSpr = new Map(), picDecQ = [], picMakeQ = [];   // (picBase: species -> 'wait', 'bad' or its cut pixels)
+let picGen = 0, picSched = false, picWk = null, picWkOk = true;
+function picReset() { picGen++; picBase.clear(); picSpr.clear(); picDecQ.length = 0; picMakeQ.length = 0; }   // a new host course: its species are numbered anew
 function picFor(o) {
-  const HT = course ? course.ht : null, P = HT ? HT.pic[o.sp] : null; if (!P || typeof Image === 'undefined') return null;
-  const key = o.sp * 8 + tmode; let S = picSpr.get(key);
-  if (!S) {
-    let I = picImgs.get(P.url);
-    if (!I) { I = new Image(); I.ok = false; I.onload = () => { I.ok = true; }; I.onerror = () => { I.bad = true; }; I.src = P.url; picImgs.set(P.url, I); }
-    if (I.bad) return null;
-    if (!I.ok || picMade === frame) return libFor(o);
-    picMade = frame; S = picBuild(I, P, tmode === 0 ? 255 : 170); if (!S) return null; picSpr.set(key, S);
-  }
-  o.libS = o.H / S.ph; return S;
+  const HT = course ? course.ht : null, P = HT ? HT.pic[o.sp] : null; if (!P) return null;
+  const key = o.sp * 8 + tmode, S = picSpr.get(key);
+  if (S) { o.libS = o.H / S.ph; return S; }
+  const b = picBase.get(o.sp);
+  if (b === 'bad') return null;
+  if (b === undefined) { picBase.set(o.sp, 'wait'); picDecQ.push(o.sp); picKick(); }
+  else if (b !== 'wait' && !b.queued[tmode]) { b.queued[tmode] = 1; picMakeQ.push(key); picKick(); }
+  return libFor(o);
 }
-function picBuild(I, P, L) {
-  const W = I.naturalWidth, H0 = I.naturalHeight, q = P.quad, k = HPIC / Math.max(1, P.ay - q[1]);
-  const dw = Math.max(2, Math.ceil((q[2] - q[0]) * k)), dh = Math.max(2, Math.ceil((q[3] - q[1]) * k));
-  if (!picCv) picCv = typeof document !== 'undefined' ? document.createElement('canvas') : null; if (!picCv) return null;
-  picCv.width = dw; picCv.height = dh; const g = picCv.getContext('2d', { willReadFrequently: true }); g.clearRect(0, 0, dw, dh); g.imageSmoothingEnabled = true; g.imageSmoothingQuality = 'high';
-  g.drawImage(I, P.uv[0] * W, P.uv[1] * H0, (P.uv[2] - P.uv[0]) * W, (P.uv[3] - P.uv[1]) * H0, 0, 0, dw, dh);
-  const d = g.getImageData(0, 0, dw, dh).data, S = sculpt(dw, dh, Math.round((P.ax - q[0]) * k), Math.round((P.ay - q[1]) * k));
-  for (let i = 0; i < dw * dh; i++) { if (d[i * 4 + 3] < 110) continue; S.px[i] = ((L << 24) | (d[i * 4 + 2] << 16) | (d[i * 4 + 1] << 8) | d[i * 4]) >>> 0; }
-  sDone(S, 0); S.wind = null; S.pic = true; S.ph = HPIC;
-  return S;
+function picKick() { if (!picSched && typeof setTimeout === 'function') { picSched = true; setTimeout(picPump, 0); } }
+function picPump() {   // between frames: one picture cut (by the worker, or here from the harness's decoded pages) and the finished ones made sculptures, 2 ms at most
+  picSched = false; const t0 = performance.now();
+  while (performance.now() - t0 < 2) {
+    if (picMakeQ.length) {
+      const key = picMakeQ.shift(), b = picBase.get(key >> 3); if (!b || typeof b === 'string') continue;
+      const L = (key & 7) === 0 ? 255 : 170, S = sculpt(b.w, b.h, b.ax, b.ay);
+      for (let i = 0; i < b.px.length; i++) { const c = b.px[i]; if (c) S.px[i] = L === 255 ? c : (((c & 0xffffff) | (L << 24)) >>> 0); }
+      sDone(S, 0); S.wind = null; S.pic = true; S.ph = HPIC; picSpr.set(key, S); continue;
+    }
+    if (!picDecQ.length) break;
+    const sp = picDecQ.shift(), P = course && course.ht ? course.ht.pic[sp] : null; if (!P) { picBase.set(sp, 'bad'); continue; }
+    if (typeof PIC_DECODE === 'function') { picDone(sp, picGen, picCut(PIC_DECODE(P.url), P)); continue; }   // (the harness: its pages decoded beforehand)
+    const W = picWorker(); if (W) { W.postMessage({ sp, gen: picGen, P: Object.assign({}, P, { url: new URL(P.url, location.href).href }), H: HPIC }); continue; }
+    picBase.set(sp, 'bad');   // (no worker to cut it off the page: the sculpted tree)
+  }
+  if (picMakeQ.length || picDecQ.length) picKick();
+}
+function picDone(sp, gen, r) { if (gen !== picGen) return; if (!r) { picBase.set(sp, 'bad'); return; } r.queued = [0, 0, 0, 0, 0, 0, 0, 0]; r.queued[tmode] = 1; picBase.set(sp, r); picMakeQ.push(sp * 8 + tmode); picKick(); }
+const PIC_WK_SRC = 'const bm = new Map();\n' +
+  'onmessage = async (e) => { const { sp, gen, P, H } = e.data;\n' +
+  '  try {\n' +
+  '    let b = bm.get(P.url); if (!b) { b = fetch(P.url).then((r) => r.blob()).then((x) => createImageBitmap(x)); bm.set(P.url, b); } b = await b;\n' +
+  '    const q = P.quad, k = H / Math.max(1, P.ay - q[1]), dw = Math.max(2, Math.ceil((q[2] - q[0]) * k)), dh = Math.max(2, Math.ceil((q[3] - q[1]) * k));\n' +
+  '    const c = new OffscreenCanvas(dw, dh), g = c.getContext("2d"); g.imageSmoothingEnabled = true; g.imageSmoothingQuality = "high";\n' +
+  '    g.drawImage(b, P.uv[0] * b.width, P.uv[1] * b.height, (P.uv[2] - P.uv[0]) * b.width, (P.uv[3] - P.uv[1]) * b.height, 0, 0, dw, dh);\n' +
+  '    const d = g.getImageData(0, 0, dw, dh).data, px = new Uint32Array(dw * dh);\n' +
+  '    for (let i = 0; i < dw * dh; i++) { if (d[i * 4 + 3] < 110) continue; px[i] = ((255 << 24) | (d[i * 4 + 2] << 16) | (d[i * 4 + 1] << 8) | d[i * 4]) >>> 0; }\n' +
+  '    postMessage({ sp, gen, w: dw, h: dh, ax: Math.round((P.ax - q[0]) * k), ay: Math.round((P.ay - q[1]) * k), px }, [px.buffer]);\n' +
+  '  } catch (err) { postMessage({ sp, gen, bad: true }); }\n' +
+  '};';
+function picWorker() {   // the cutting worker (null where a page cannot have one: then the trees stay sculpted)
+  if (picWk || !picWkOk) return picWk;
+  try {
+    if (typeof Worker === 'undefined' || typeof OffscreenCanvas === 'undefined' || typeof Blob === 'undefined') { picWkOk = false; return null; }
+    picWk = new Worker(URL.createObjectURL(new Blob([PIC_WK_SRC], { type: 'text/javascript' })));
+    picWk.onmessage = (e) => { const m = e.data; picDone(m.sp, m.gen, m.bad ? null : { w: m.w, h: m.h, ax: m.ax, ay: m.ay, px: m.px }); };
+    picWk.onerror = () => { picWkOk = false; picWk = null; };
+  } catch (e) { picWkOk = false; picWk = null; }
+  return picWk;
+}
+function picCut(img, P) {   // the worker's cut, here (the harness's decoded pages): the picture's box scaled to HPIC by the nearest pixel
+  if (!img) return null;
+  const q = P.quad, k = HPIC / Math.max(1, P.ay - q[1]), dw = Math.max(2, Math.ceil((q[2] - q[0]) * k)), dh = Math.max(2, Math.ceil((q[3] - q[1]) * k)), px = new Uint32Array(dw * dh);
+  const sx0 = P.uv[0] * img.w, sy0 = P.uv[1] * img.h, sw = (P.uv[2] - P.uv[0]) * img.w / dw, sh = (P.uv[3] - P.uv[1]) * img.h / dh, d = img.data;
+  for (let y = 0; y < dh; y++) for (let x = 0; x < dw; x++) {
+    const u = Math.min(img.w - 1, Math.floor(sx0 + (x + 0.5) * sw)), v = Math.min(img.h - 1, Math.floor(sy0 + (y + 0.5) * sh)), j = (v * img.w + u) * 4;
+    if (d[j + 3] >= 110) px[y * dw + x] = ((255 << 24) | (d[j + 2] << 16) | (d[j + 1] << 8) | d[j]) >>> 0;
+  }
+  return { w: dw, h: dh, ax: Math.round((P.ax - q[0]) * k), ay: Math.round((P.ay - q[1]) * k), px };
 }
 function farHaze(d0) { const d = d0 * HZK, h = d < 50 ? 0 : d < 200 ? (d - 50) / 300 : 0.5 + (d - 200) * 0.007; return BSAND ? (h * 2 > 0.92 ? 0.92 : h * 2) : h; }   // (over the desert the air is twice as thick with dust and heat)   // the air thickens fast toward the edge of sight: what comes into view there comes out of the haze
 let spriteMax = 1;
@@ -1258,7 +1299,7 @@ function render() {
   project(p.x, p.y, gh, PJ); const psx = PJ.x, psy = PJ.y;
   flist.sort((a, b) => b.d - a.d);
   for (const t of flist) {   // far trees: the same stand-in the near pass would draw at this distance; at the edge of sight they rise out of the haze
-    const d = t.d, k = FOC / d, S = (TREEART && t.sp !== undefined && picFor(t)) || libFor(t), gi = d > 196 ? (228 - d) / 32 : 1;   // (T451: in the pictures' look, far trees are their pictures too)
+    const d = t.d, k = FOC / d, S = (t.sp !== undefined && picFor(t)) || libFor(t), gi = d > 196 ? (228 - d) / 32 : 1;   // (T451: a host's far trees are their pictures too)
     blit(S, t.sx, Math.round(HZ - (t.lift / ZP - camZ) * k), DS / d * t.libS * gi, d * 100, 0, 0, false, farHaze(d));
   }
   for (const o of dlist) {
