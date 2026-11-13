@@ -46,7 +46,7 @@ export function StatementCard({ history }: { history: readonly Report[] }) {
   return <>
     {toast && !s && (
       <button type="button" onClick={() => { setFull(toastAt); setToastAt(null); }} aria-live="polite" data-testid="statement-toast"
-        className="pointer-events-auto absolute bottom-24 right-3 z-30 w-64 rounded-xl border border-white/10 bg-slate-950/90 p-3 text-left text-slate-200 shadow-xl backdrop-blur hover:border-emerald-400/60">
+        className="pointer-events-auto absolute bottom-[9.5rem] left-3 z-30 w-64 rounded-xl border border-white/10 bg-slate-950/90 p-3 text-left text-slate-200 shadow-xl backdrop-blur hover:border-emerald-400/60">
         <div className="text-[11px] font-semibold uppercase tracking-wider text-emerald-300/80">{toast.label} statement</div>
         <div className="text-sm font-semibold text-white">{headline(toast.profit)}</div>
         <div className="text-xs text-slate-400">Net worth {money(toast.netWorth)} ({signed(toast.netWorthChange)}). Click for details.</div>

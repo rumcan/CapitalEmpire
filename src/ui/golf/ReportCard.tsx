@@ -45,7 +45,7 @@ export function ReportCard({ history, live }: { history: readonly Report[]; live
   return (
     <div className="pointer-events-none absolute inset-0 z-40 flex items-center justify-center p-4" data-testid="report-card">
       <div role="dialog" aria-label="Report card" className="pointer-events-auto max-h-full w-[420px] max-w-full space-y-3 overflow-y-auto rounded-2xl border border-white/10 bg-slate-950/95 p-5 text-slate-200 shadow-2xl backdrop-blur">
-        <div className="text-center text-xs font-semibold uppercase tracking-[0.2em] text-amber-400/80">{c.final ? 'Your two seasons: the report card' : `Report card so far · month ${c.goal.monthsDone} of ${GOAL.months}`}</div>
+        <div className="text-center text-xs font-semibold uppercase tracking-[0.2em] text-amber-400/80">{c.final ? 'Your two seasons: the report card' : `If it ended today · month ${c.goal.monthsDone} of ${GOAL.months}`}</div>
         <div className="text-center">
           <div className={`text-7xl font-black ${TONE[c.grade]}`} data-testid="report-grade">{c.grade}</div>
           <div className="text-sm text-slate-300">{c.goal.met ? (c.final ? 'Goal reached: a nine-hole club, in the black.' : 'You are over the goal line right now. Keep it there.') : VERDICT[c.grade]}</div>
