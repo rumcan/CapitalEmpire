@@ -125,6 +125,8 @@ export interface GolfSave {
  osm?: OsmGolfInfo;
  /** T353 (#995): the house lots laid on the club's land (golf/estate.ts EstateSave): each lot's frame, stage, times, seed and price. Missing: none laid */
  estate?: EstateSave;
+ /** T447: the time of day the course is played at from behind the golfer (protocol3p.ts CourseTime3p). Missing: golden hour, the default */
+ time3p?: 'day';
 }
 
 /** the owner's play as saved (GolfSave.play): the tournament's key (the round's count), his sex, the inputs he played in order, and how many of them
@@ -168,7 +170,7 @@ export function normalizeGolfSave(g: Partial<GolfSave> | null | undefined): Golf
   if (!g || !g.town || !g.course || !g.clubhouse) return null;
   const parcel: Rect = g.parcel ?? g.parcels?.[0] ?? g.course;
   // the range start's fields (plan P22 2.6) are taken out and put back only when well formed, so an old start's save normalizes as before
-  const { start, exits, townBoost, invited, founding, play, weather, runFrom, range, everyday, ponds, practiceLot, looks, myHoles, teeSets, grasses, teeBoxes, dayPins, crew, club, player, clubEvents, osm, estate, courseRects, ...rest } = g;
+  const { start, exits, townBoost, invited, founding, play, weather, runFrom, range, everyday, ponds, practiceLot, looks, myHoles, teeSets, grasses, teeBoxes, dayPins, crew, club, player, clubEvents, osm, estate, courseRects, time3p, ...rest } = g;
   const out: GolfSave = {
     ...rest,
     v: 1,
@@ -218,5 +220,6 @@ export function normalizeGolfSave(g: Partial<GolfSave> | null | undefined): Golf
   if (Array.isArray(courseRects)) { const cr = courseRects.filter(r => Array.isArray(r) && r.length === 4 && r.every(v => Number.isFinite(v)) && r[2]! > 0 && r[3]! > 0).map(r => [...r] as Rect); if (cr.length) out.courseRects = cr; }
   // T353: the house lots, well formed only (a save whose lots do not read has none: the field stays out)
   if (estate && normalizeEstate(estate)) out.estate = estate;
+  if (time3p === 'day') out.time3p = 'day'; // T447: golden hour is the default and is not written
   return out;
 }

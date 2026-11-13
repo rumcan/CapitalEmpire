@@ -216,7 +216,7 @@ import { fillPack } from './golf/osm/terrarium'; // T438: the share file's heigh
 import { exportFeatures3p, gatherFeatures3p } from './golf/play/features3p';
 import { courseEntry3p } from './golf/play/entry3p';
 import { seedOf } from './golf/play/view3p';
-import type { Actor, CourseMsg, HostMsg, ViewInput } from './golf/play/protocol3p';
+import type { Actor, CourseMsg, CourseTime3p, HostMsg, Time3p, ViewInput } from './golf/play/protocol3p';
 import { Play3p, type Play3pOpts } from './golf/play/play3p'; // T418: the owner's play in the view from behind the golfer
 import { earned } from './golf/play/unlocks'; // T443
 import { galleryActors } from './golf/play/gallery3p'; // T429: the galleries for the view
@@ -10069,10 +10069,14 @@ export class Game {
   /** the `course` message for hole n: the painted course (export3p.ts), the placed things (features3p.ts) in the same frame, the biome and course type
    *  (parkland and private for now: section 2's mapping from the map's setting and the upkeep is later work), a seed from the club's name, true size.
    *  Null without a course */
-  async course3pMsg(n: number): Promise<CourseMsg | null> {
+  /** T447: the time of day the course is played at from behind the golfer (the hole card's choice, saved with the course; golden hour by default) */
+  get time3p(): CourseTime3p { return this.golf?.time3p ?? 'golden'; }
+  setTime3p(t: CourseTime3p) { const g = this.golf; if (!g) return; if (t === 'day') g.time3p = 'day'; else delete g.time3p; this.scheduleSave(); }
+  /** roundTime: the round's own time of day (a night-golf event, T449), which wins over the course's setting */
+  async course3pMsg(n: number, roundTime?: Time3p): Promise<CourseMsg | null> {
     const sh = this.shared3p; this.lies3pRun(null);
     const golfer = playerDress(GOLFER_PEOPLE[this.youArt()]?.id, this.golf?.player?.sex ?? 'm');   // (T437: the golfer in the player card's clothes)
-    if (sh) { this.view3pFrame = sh.frame; this.course3pShare = sh.share; return { ...(await shareCourseMsg(sh.share, sh.view, n)), golfer }; }   // (T434: a shared course)
+    if (sh) { this.view3pFrame = sh.frame; this.course3pShare = sh.share; return { ...(await shareCourseMsg(sh.share, sh.view, n)), golfer, time: roundTime ?? this.time3p }; }   // (T434: a shared course)
     const g = this.golf; if (!g) return null;
     const name = this.titleName()?.name ?? 'Your course', id = 'ce-' + (name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'course');
     const inp = export3pInputOf(this, name); if (!inp) return null;
@@ -10096,7 +10100,7 @@ export class Game {
     // T433, T434: what a ghost or a shared course file holds, once its heights are deflated (T438: after the course has gone to the view)
     this.course3pShare = null; const sg = this.lies3pGen;
     void (file.height ? fillPack(file.height) : Promise.resolve()).then(() => { if (sg === this.lies3pGen) this.course3pShare = shareOf(file, features, { name, biome, type, seed: seedOf(name) }); });
-    return { v: 1, t: 'course', course: course as unknown as Record<string, unknown>, features, biome, type, seed: seedOf(name), scale: 1, hole: n, golfer };
+    return { v: 1, t: 'course', course: course as unknown as Record<string, unknown>, features, biome, type, seed: seedOf(name), scale: 1, hole: n, golfer, time: roundTime ?? this.time3p };
   }
   // ---------- T418: the owner's play in the view from behind the golfer (golf/play/play3p.ts: LiveGroup decides every stroke; the view shows them) ----------
   /** the frame the last course message was made in (course3pMsg) */

@@ -43,6 +43,12 @@ export function fromView(v: readonly [number, number], centre: Pt): Pt {
  *  treeless sandy course by the sea as links. look3p.ts courseTypeFor3p). A view that does not know a type keeps its own */
 export type CourseType = 'public' | 'private' | 'tour' | 'links';
 
+/** T447: the times of day the view can light a course at: golden hour (the default), day, dusk and night (night-golf events only) */
+export type Time3p = 'golden' | 'day' | 'dusk' | 'night';
+/** the times a course itself can be set to (the hole card's choice); dusk and night come only from a round */
+export const COURSE_TIMES_3P = [['golden', 'Golden hour'], ['day', 'Day']] as const;
+export type CourseTime3p = typeof COURSE_TIMES_3P[number][0];
+
 /** the course: the course file (export3p.ts, T412: shapes in metres and the packed height grid; typed loosely until that exporter lands), the
  *  placed things (features3p.ts), the biome, the course type and the seed fine detail is grown from (from the course's name, so it looks the same on
  *  every visit) */
@@ -50,7 +56,10 @@ export interface CourseMsg { v: 1; t: 'course'; course: Record<string, unknown>;
   /** the course's size (1: true size, what the host sends; the view's own saved courses play at 0.6) and the hole to open, from 1 (T416; absent: 1) */
   scale?: number; hole?: number;
   /** T437: the player's golfer in his player card's clothes (look3p.ts playerDress; absent: the view's own red polo) */
-  golfer?: Dress }
+  golfer?: Dress;
+  /** T447: the time of day the course is played at: the course's own setting (golden hour unless the player chose day, GolfSave.time3p), or the round's when
+   *  the host sends one (night is for night-golf events, T449). Absent: golden hour. The view honours it from T448 on; an older view ignores it */
+  time?: Time3p }
 
 /** what an actor is: a golfer, a caddie, a cart, or a gallery (a crowd standing at one spot, `count` people) */
 export type ActorRole = 'golfer' | 'caddie' | 'cart' | 'gallery';

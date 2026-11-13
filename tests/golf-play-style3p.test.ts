@@ -11,6 +11,8 @@ import { specMarkers } from '../src/game/golf/osm/raster';
 import type { OsmCourseJson } from '../src/game/golf/osm/types';
 import type { CourseArea, GolfSurface } from '../src/game/golf/types';
 import { exportCourse3p, groundOf3p, type CourseFile } from '../src/game/golf/play/export3p';
+import { normalizeGolfSave, type GolfSave } from '../src/game/golf/mode';
+import { COURSE_TIMES_3P } from '../src/game/golf/play/protocol3p';
 import {
   BIOMES_3P, COURSE_TYPES_3P, DESERT_SAND, KEPT_CONDITION, SHIPPED_LAT, TOUR_TIER, biomeFor3p, courseTypeFor3p, type Ground3p,
 } from '../src/game/golf/play/look3p';
@@ -102,5 +104,16 @@ describe('T447 the view', () => {
     assert.ok(!hud.includes('simpleG') && !hud.includes('Simple grass everywhere'));
     assert.ok(!hud.includes("'cinderlinks.simple'") && !render.includes('function setSimple'));
     assert.match(render, /const SIMPLEG = true;/);
+  });
+});
+
+describe('T447 the time of day is a course setting', () => {
+  const base = { town: { x: 10, y: 10 }, course: { x: 0, y: 0, w: 50, h: 50 }, clubhouse: { x: 5, y: 5 }, tees: [], pins: [], aims: [] } as unknown as Partial<GolfSave>;
+  it('golden hour by default; day is kept with the course; anything else reads as golden hour', () => {
+    assert.deepEqual(COURSE_TIMES_3P.map(t => t[0]), ['golden', 'day']);
+    assert.equal(normalizeGolfSave(base)!.time3p, undefined);
+    assert.equal(normalizeGolfSave({ ...base, time3p: 'day' })!.time3p, 'day');
+    assert.equal(normalizeGolfSave({ ...base, time3p: 'night' as 'day' })!.time3p, undefined);
+    assert.equal(JSON.parse(JSON.stringify(normalizeGolfSave({ ...base, time3p: 'day' }))).time3p, 'day', 'saved with the course');
   });
 });
