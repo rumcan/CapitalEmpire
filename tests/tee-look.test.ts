@@ -46,7 +46,8 @@ test('a tee\'s walls: the bunker\'s by default, the old rock a setting; the fini
   assert.equal(clampCourseFinish({ teeWall: 'rock' }).teeWall, 'rock');
   assert.equal(clampCourseFinish({ teeWall: 'bunker' }).teeWall, 'bunker');
   assert.equal(clampCourseFinish({ teeWall: 'sand' }).teeWall, 'sand', "the native bunker wall's painting: the other reading of \"the bunker's wall\"");
-  for (const bad of ['cliff', 7, null, undefined, {}]) assert.equal(clampCourseFinish({ teeWall: bad }).teeWall, 'bunker', `${String(bad)}: the default`);
+  assert.equal(clampCourseFinish({ teeWall: 'cliff' }).teeWall, 'cliff', 'T372: grey cliff rock');
+  for (const bad of ['granite', 7, null, undefined, {}]) assert.equal(clampCourseFinish({ teeWall: bad }).teeWall, 'bunker', `${String(bad)}: the default`);
   // it survives the file's own clamp (the Studio saves the course block whole)
   const saved = clampSurfaces(JSON.parse(JSON.stringify({ ...file, course: { ...DEFAULT_COURSE_FINISH, teeWall: 'rock' } })));
   assert.equal(saved.course!.teeWall, 'rock'); assert.equal(finishOf(saved).teeWall, 'rock');
