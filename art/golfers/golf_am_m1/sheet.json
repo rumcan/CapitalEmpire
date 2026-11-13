@@ -1,6 +1,6 @@
 {
   "id": "golfer:golf_am_m1",
-  "name": "golf_am_m1 (3D template)",
+  "name": "golf_am_m1 (ChatGPT painted)",
   "size": "adult",
   "heightMetres": 1.76,
   "frameWidth": 160,
@@ -34,7 +34,49 @@
   "mirrored": {},
   "source": "art/golfers/golf_am_m1",
   "clips": {
-    "walk": "Armature|Casual_Walk|baselayer 4.20s, stride 1.40s, body turned -1 deg",
-    "idle": "Armature|Idle|baselayer"
+    "walk": "ChatGPT painted walk (8 frames, issue #1235)",
+    "idle": "ChatGPT painted standing pose (issue #1235)"
+  },
+  "chatgpt": {
+    "S": {
+      "picture": "golf_am_m1~S-golfers.png",
+      "date": "2026-11-13",
+      "scale": 0.6
+    },
+    "SW": {
+      "picture": "golf_am_m1~SW-golfers.png",
+      "date": "2026-11-13",
+      "scale": 0.6154
+    },
+    "W": {
+      "picture": "golf_am_m1~W-golfers.png",
+      "date": "2026-11-13",
+      "scale": 0.6006
+    },
+    "NW": {
+      "picture": "golf_am_m1~NW-golfers.png",
+      "date": "2026-11-13",
+      "scale": 0.6808
+    },
+    "N": {
+      "picture": "golf_am_m1~N-golfers.png",
+      "date": "2026-11-13",
+      "scale": 0.6531
+    },
+    "NE": {
+      "picture": "golf_am_m1~NE-golfers.png",
+      "date": "2026-11-13",
+      "scale": 0.6774
+    },
+    "E": {
+      "picture": "golf_am_m1~E-golfers.png",
+      "date": "2026-11-13",
+      "scale": 0.6833
+    },
+    "SE": {
+      "picture": "golf_am_m1~SE-golfers.png",
+      "date": "2026-11-13",
+      "scale": 0.6667
+    }
   }
 }
