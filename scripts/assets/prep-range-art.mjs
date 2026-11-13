@@ -124,9 +124,17 @@ async function cutOne(png) {
   return { w, h, rgba, rect: [x0, y0, x1, y1] };
 }
 /** the lowest opaque pixel (alpha > 128) in a trimmed picture's 3 outermost columns each side (its left and right ground corners) */
-function corners(p) {
+function corners(p, below = 0.4) {
   const low = xs => { let y = -1; for (const x of xs) for (let r = p.h - 1; r >= 0; r--) if (p.rgba[(r * p.w + x) * 4 + 3] > 128) { y = Math.max(y, r); break; } return y; };
-  const yL = low([0, 1, 2]), yR = low([p.w - 1, p.w - 2, p.w - 3]);
+  // (an overhanging roof's eave reaches past the walls: an edge column with nothing below `below` of the height (a roof's eave, an awning) is skipped,
+  // up to a quarter of the width in, so the ground corner is the wall's; an item's wallBelow in range-art-items.json sets it: the coffee
+  // kiosk's awning reaches 0.62 down, so it takes 0.65; #1235 stand-ins)
+  const lim = Math.round(p.w * 0.25), wall = x => low([x]) >= p.h * below;
+  let l = 0, r = p.w - 1;
+  while (l < lim && !wall(l)) l++;
+  while (p.w - 1 - r < lim && !wall(r)) r--;
+  if (l >= lim) l = 0; if (p.w - 1 - r >= lim) r = p.w - 1;
+  const yL = low([l, l + 1, l + 2]), yR = low([r, r - 1, r - 2]);
   return { yL: yL < 0 ? p.h - 1 : yL, yR: yR < 0 ? p.h - 1 : yR };
 }
 /** the mean x of the opaque pixels in the lowest rows (a mast's or a post's base) */
@@ -141,7 +149,7 @@ export function geometry(it, view, p) {
   const r3 = v => +v.toFixed(3), [W, D] = it.box, [bx, by] = view === 2 ? [D, W] : [W, D];
   let w, h, ax, ay;
   if (it.size === 'tall') { h = UP * it.high; const k = h / p.h; w = p.w * k; ax = baseX(p) * k; ay = h - 8 * (W + D); }
-  else { w = 32 * (W + D); const k = w / p.w, c = corners(p); h = p.h * k; ax = w / 2; ay = Math.min(h, ((c.yL + c.yR) / 2 + 0.5) * k); }
+  else { w = 32 * (W + D); const k = w / p.w, c = corners(p, it.wallBelow); h = p.h * k; ax = w / 2; ay = Math.min(h, ((c.yL + c.yR) / 2 + 0.5) * k); }
   return { w: r3(w), h: r3(h), ax: r3(ax), ay: r3(ay), boxes: [{ hx: r3(bx / 2), hy: r3(by / 2), dx: 0, dy: 0 }] };
 }
 const viewName = (it, k) => (it.code === 'B' ? '1view' : `view${k + 1}`);
