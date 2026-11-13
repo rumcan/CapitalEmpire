@@ -81,7 +81,8 @@ function coverShow(n) {
   LOADT.course = performance.now(); LOADT.ready = 0; LOADT.pics = picCount(coverNeed); LOADT.picsAt = 0; LOADT.artAt = 0; LOADT.timedOut = false;
   if (typeof document === 'undefined' || !document.createElement) return;
   if (!coverEl) { coverEl = document.createElement('div'); coverEl.id = 'cover'; const st = document.getElementById('stage'); if (st && st.appendChild) st.appendChild(coverEl); }
-  coverEl.innerHTML = '<div class="cv"><i>Hole ' + n + '</i><b>Walking out to the tee</b><s><u></u></s><em></em></div>'; coverTxt = ''; coverOn = true; coverEl.className = 'on';
+  const prac = !!(course && course.name === 'Practice');   // (the host's practice course, src/game/golf/play/practice3p.ts: not a numbered hole)
+  coverEl.innerHTML = '<div class="cv"><i>' + (prac ? 'Practice' : 'Hole ' + n) + '</i><b>' + (prac ? 'Out to the range' : 'Walking out to the tee') + '</b><s><u></u></s><em></em></div>'; coverTxt = ''; coverOn = true; coverEl.className = 'on';
 }
 function coverHide() { coverOn = false; if (coverEl) coverEl.className = ''; }
 function coverTick() {
