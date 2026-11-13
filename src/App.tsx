@@ -102,9 +102,12 @@ import { keptCourses, refreshKept, watchKept } from './game/golf/osm/kept';
 import { RangeGuideCard } from './ui/golf/RangeGuideCard';
 import { TooltipLayer } from './ui/Tooltip';
 import { UI_SCALES, applyUiScale, currentUiScale, saveUiScale } from './ui/uiScale';
+import { AccessSettings } from './ui/golf/AccessSettings';
 import { stackCol, stackFit, stackRight, type StackCard, type StackOpen } from './ui/golf/card-stack';
 import { HoleCard } from './ui/golf/HoleCard';
 import { View3pPanel } from './ui/golf/View3pPanel';
+import { BankPanel } from './ui/golf/BankPanel';
+import { FinLitHud } from './ui/golf/FinLitHud'; // J3
 import { affordKind, balanceKind, statusIcon, trendKind, withIcon } from './ui/status-icon';
 import stadiumArt from './assets/ui/art/stadium.webp';
 import { StatChips } from './ui/StatChips';
@@ -219,6 +222,7 @@ export default function App() {
   /** the Developer toggle (see devStart): the gear menu's checkbox and F3 set it; remembered */
   const [dev, setDevState] = useState(devStart);
   const devRef = useRef(dev);
+  useEffect(() => { if (game) game.devMode = dev; }, [game, dev]);   // (T455: the Developer toggle unlocks the shot extras)
   const setDev = (v: boolean) => { if (JAM) return; devRef.current = v; setDevState(v); try { localStorage.setItem(DEV_KEY, v ? '1' : '0'); } catch { /* storage may be unavailable */ } };
   /** the developer readouts (the tile sets in view and the frame time and traffic panel): off unless F4 shows them (the owner, 2026-10-29) */
   const [readouts, setReadouts] = useState(false);
@@ -310,7 +314,7 @@ export default function App() {
     <div key={t.id} className="glass px-3 py-1.5 text-sm"><span className={t.kind === 'warn' ? 'text-red-300' : t.kind === 'good' ? 'text-emerald-300' : ''}>{t.text}</span>
       {t.scene && <button className="chip pointer-events-auto ml-2 py-0.5" onClick={() => g.openScene(t.scene!)} data-testid="toast-scene"><Icon name="camera" size={16} />Set the scene</button>}</div>
   ));
-  const net = game?.ledger?.net ?? 0, debtDays = game?.traffic.budget.debtDays ?? 0;
+  const net = game?.ledger?.net ?? 0, debtDays = game && !game.golf ? game.traffic.budget.debtDays : 0;
   // the rail item of the tool in hand (the road tool on the course is Paths, the course tool's clubhouse scope Buildings: game.uiTool)
   const item = game ? railItemOf(game.uiTool, activeRail.current) : undefined;
   /** T187: opens a rail entry: the Props tool's view first (its place and group), then its tool; remembered as the item's last */
@@ -417,7 +421,7 @@ export default function App() {
   /** the open item's tools that the progressive unlocks show (the segmented row of Roads and Transport) */
 
   /** the top bar's money figure (a button: it opens the budget) */
-  const treasury = (g: Game) => <Stat icon="bank" label="Treasury" value={g.unlimited ? '∞' : withIcon(balanceKind(g.money), money(g.money))} tone={g.money < 0 ? 'text-red-300' : 'text-emerald-300'} sub={debtDays ? `bankrupt in ${DEBT_DAYS - debtDays} days` : undefined} subTone="text-red-300" onClick={() => { g.panel = g.panel === 'budget' ? null : 'budget'; g.emit(); }} />;
+  const treasury = (g: Game) => <Stat icon="bank" label="Treasury" value={g.unlimited ? '∞' : withIcon(balanceKind(g.money), money(g.money))} tone={g.money < 0 ? 'text-red-300' : 'text-emerald-300'} sub={debtDays ? `bankrupt in ${DEBT_DAYS - debtDays} days` : undefined} subTone="text-red-300" onClick={() => g.toggleMoneyPanel()} />;
   /** the population, jobs, day and daily income: inline in classic mode, in the money chip's drawer in golf mode (T035, T233) */
   const moreStats = (g: Game) => (
     <>
@@ -505,7 +509,7 @@ export default function App() {
                       town's figures, the golf Treasury's since T035), the reputation, the golfers a month (a click: the Club card) and the course
                       rating (a click: the Season card's Course stats) */}
                   {stats && <StatChips chips={statChips(stats, debtDays ? DEBT_DAYS - debtDays : null)} drawer={moreStats(game)} on={{
-                    money: () => { game.panel = game.panel === 'budget' ? null : 'budget'; game.emit(); },
+                    money: () => game.toggleMoneyPanel(),
                     golfers: game.hasClubhouse ? () => game.openClubCard() : undefined,
                     rating: chip('courseStats') ? () => { setSeasonOpen(true); setCourseStats(null); } : undefined,
                   }} />}
@@ -578,9 +582,11 @@ export default function App() {
                     )}
                     {/* T179 (P23 P2-7): the UI scale, the UI layer only (the map keeps its size); kept in this browser */}
                     <div className="flex items-center gap-2 px-2 py-2 text-sm" role="group" aria-label="UI scale">
-                      <span className="flex-1">UI scale</span>
+                      <span className="flex-1">Text size</span>
                       {UI_SCALES.map(v => <button key={v} className={`chip ${uiScale === v ? 'chip-on' : ''}`} aria-pressed={uiScale === v} data-scale={v} onClick={() => setUiScale(applyUiScale(saveUiScale(v)))}>{Math.round(v * 100)}%</button>)}
                     </div>
+                    {/* J4 (#1207): the golf mode's currency (USD or AED, display only) and colour-blind-safe money */}
+                    {game.golfMode && <AccessSettings />}
                     <label className="flex cursor-pointer items-center gap-2 px-2 py-2 text-sm" data-tip="A subtle iso grid of the 2 m tiles roads and lots snap to, shown over land that is not yours while a build or paint tool is in hand: your own land stays clear. It fades out as you zoom out (G)">
                       <input type="checkbox" checked={game.showGrid} onChange={e => { game.setShowGrid(e.target.checked); bump(); }} />
                       Map grid (G)
@@ -875,6 +881,8 @@ export default function App() {
           </div>
           )}
           {game.panel === 'budget' && <BudgetPanel game={game} />}
+          {game.panel === 'bank' && <BankPanel game={game} />}
+          {game.golfMode && <FinLitHud game={game} />}
           {GREENKEEPING && game.grassPanel && game.tool !== 'greenkeeping' && <GrassManagementPanel game={game} />}
           {courseStats && (
           <div className={`pointer-events-auto absolute ${game.panel ? 'right-[19.5rem]' : 'right-3'} top-[var(--hud-top,6rem)] z-20`}>
@@ -1033,7 +1041,7 @@ export default function App() {
             <div className="absolute inset-0 z-40 flex items-center justify-center bg-black/70 p-4">
               <div className="w-96 rounded-2xl border border-red-500/40 bg-slate-950 p-6 text-center text-slate-200 shadow-2xl">
                 <div className="text-2xl font-bold text-red-300">Bankrupt</div>
-                <p className="mt-3 text-sm text-slate-300">The books stayed in the red for {DEBT_DAYS} days in a row.</p>
+                <p className="mt-3 text-sm text-slate-300">{game.golf ? 'The overdraft passed $50,000, or stayed open for 3 month ends in a row.' : `The books stayed in the red for ${DEBT_DAYS} days in a row.`}</p>
                 <div className="mt-5 flex justify-center gap-2">
                   <button className="chip chip-on" onClick={() => game.newTown()}>New game</button>
                   <button className="chip" onClick={() => setWatch(true)}>Keep watching</button>

@@ -11,7 +11,9 @@ import { WALK_SERVE_M, lotsLine } from '../../game/golf/walkserve';
 import { Icon } from '../Icon';
 import { statusIcon } from '../status-icon';
 
-const money = (n: number) => '$' + Math.round(n).toLocaleString();
+import { money } from './money';
+import { PaybackLine, PriceLadder } from './Decisions';
+import { payback, practiceExtra, rangePriceLadder, rangeUpgradeExtra } from '../../game/golf/payback';
 
 /** T288: a placement the card offers (the range, its car park, the practice area): its name, price, whether placed and why not yet */
 export interface RangePlace { id: 'range' | 'carpark' | 'practice'; name: string; cost: number; done: boolean; why: string }
@@ -94,7 +96,7 @@ export function RangeCard({ view, places = [], onPlace, onClose, onPrice, onBuy,
       )}
       <div className="flex items-center justify-between gap-2 rounded-lg border border-white/10 bg-white/5 px-2 py-1.5 text-xs" data-testid="range-parking" title="The range's car park: its golfers' cars parked now of its bays (the lot's and the car park building's), and the cars that drove on today because it was full">
         <span className="text-slate-300">Parking: <span className="font-semibold text-white">{view.parking.parked}/{view.parking.bays}</span> cars{view.parking.garage ? <span className="text-slate-400"> · building {view.parking.garage.parked}/{view.parking.garage.cars}</span> : null}</span>
-        <span className={view.parking.turned > 0 ? 'font-semibold text-rose-300' : 'text-slate-400'}>{view.parking.turned} turned away today{view.parking.turned > 0 && !st.parking ? ' (car park full)' : ''}</span>
+        <span className={view.parking.turned > 0 ? 'font-semibold text-rose-300' : 'text-slate-400'}>{view.parking.turned} turned away today{view.parking.turned > 0 && !st.parking ? ' (no room to park: no car park yet, or a full one)' : ''}</span>
       </div>
       {/* T237: the car parks within walking distance of the shop (golf/walkserve.ts): only their bays count for the range */}
       <div className={`rounded-lg border border-white/10 bg-white/5 px-2 py-1.5 text-xs ${view.parking.lots.length ? 'text-slate-300' : 'font-semibold text-rose-300'}`} data-testid="range-lots" title={`A car park serves the range when its nearest bay is within ${WALK_SERVE_M} m of walking (about 2 minutes) of the shop; car parks further away add no bays`}>{lotsLine(view.parking.lots)}</div>
@@ -115,6 +117,8 @@ export function RangeCard({ view, places = [], onPlace, onClose, onPrice, onBuy,
           <span className="text-[12px] text-slate-400">{st.extra ? `+ ${money(st.extra)} shop spend · ` : ''}fair price {money(st.ref)}</span>
         </div>
         <div className="mt-1 text-[12px] text-slate-400">Each golfer you see stands for {scale} customers over the season.</div>
+        {/* J4 (#1207): golfers and takings a month at this price and a dollar either side (golf/payback.ts, the demand curve above) */}
+        <PriceLadder rungs={rangePriceLadder(biz, view.demand, view.dayLen)} who="Golfers" testid="range-price-ladder" />
       </div>
       {you && (
         <div className="space-y-1 rounded-lg border border-sky-400/25 bg-sky-400/5 p-2 text-xs" data-testid="range-you">
@@ -147,6 +151,7 @@ export function RangeCard({ view, places = [], onPlace, onClose, onPrice, onBuy,
             </div>
             <div className="text-[12px] text-slate-400">{f.words}</div>
             {f.state !== 'open' && practiceWhy && <div className="text-[12px] text-amber-300/80">{practiceWhy}</div>}
+            {f.state !== 'open' && <PaybackLine p={payback(0, 0, practiceExtra(biz, view.demand, view.dayLen, f.id))} note="Plus the price of the green you lay (Facilities ▸ Practice)." testid={`range-practice-payback-${f.id}`} />}
             {f.state === 'open' && you && (() => { const s = you.sessions.find(x => x.kind === f.id); return s && <div className="mt-1"><Session s={s} onPractise={onPractise} /></div>; })()}
             <div className="mt-0.5 flex justify-between text-[12px] text-slate-400">
               <span>+{Math.round(f.appeal * 100)}% visitors · ${view.fee} a golfer</span>
@@ -185,7 +190,9 @@ export function RangeCard({ view, places = [], onPlace, onClose, onPrice, onBuy,
               )}
             </div>
             <div className="text-[12px] text-slate-400">{u.effect}</div>
-            <div className="text-[12px] text-slate-400">Upkeep {money(u.upkeep)} a month{view.needs[u.id].length ? ` · needs ${view.needs[u.id].join(' and ')}` : ''}</div>
+            {u.owned ? <div className="text-[12px] text-slate-400">Upkeep {money(u.upkeep)} a month</div>
+              : <PaybackLine p={payback(u.cost, u.upkeep, rangeUpgradeExtra(biz, view.demand, view.dayLen, u.id))} testid={`range-payback-${u.id}`} />}
+            {!u.owned && view.needs[u.id].length > 0 && <div className="text-[12px] text-slate-400">Needs {view.needs[u.id].join(' and ')}</div>}
             {!u.owned && u.why && u.why !== 'Built' && <div className="text-[12px] text-amber-300/80">{u.why}</div>}
           </div>
         ))}

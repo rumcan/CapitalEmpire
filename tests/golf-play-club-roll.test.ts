@@ -104,7 +104,7 @@ test('back-compat: a shot with conditions but not the club’s run (an input sav
     const o = hitShot(rng(7, n, 11), sk, lie, { x: 0, y: 0 }, { x: 90, y: 4 }, club, flat('fairway'), { env, run: false });
     g1.push([club, lie, sk, r6(o.to.x), r6(o.to.y), o.lie, o.penalty, r6(o.landing.at.x), r6(o.landing.at.y), o.landing.lie]);
   }
-  assert.equal(g1.length, 70); assert.equal(fnv(JSON.stringify(g1)), '24733958', 'hitShot with conditions, no club run: the same landings');
+  assert.equal(g1.length, 70); assert.equal(fnv(JSON.stringify(g1)), '659338f6', 'hitShot with conditions, no club run: T455 retuned the lies’ carries (the golden before: 24733958)');
   // a live group (the owner's, 18 holes) played with conditions in every input and no version: a tournament saved between T334 and T346
   const view = course(), field = makeField(3, 5), owner = field.find(g => !g.pro)!; owner.owner = true; owner.skill = 0.4;
   const groups = teeTimes(field, 5), gi = groups.findIndex(g => g.players.includes(owner.id));
@@ -118,8 +118,8 @@ test('back-compat: a shot with conditions but not the club’s run (an input sav
     return { pl, lg };
   };
   const old = play(), old2 = play(2), now = play(MODEL_V);
-  assert.equal(fnv(JSON.stringify(old.pl.shots)), '189d9013', 'the live group with conditions and no version: the same shots'); assert.equal(old.lg.inputs.length, 87);
-  assert.equal(fnv(JSON.stringify(old2.pl.shots)), '7eb26272', 'version 2 (the putting): the same shots, the club’s run came with 3');
+  assert.equal(fnv(JSON.stringify(old.pl.shots)), '1a8e4b80', 'the live group with conditions and no version: the same shots'); assert.equal(old.lg.inputs.length, 90);
+  assert.equal(fnv(JSON.stringify(old2.pl.shots)), '54037f2f', 'version 2 (the putting): the same shots, the club’s run came with 3');
   assert.notEqual(JSON.stringify(now.pl.shots), JSON.stringify(old.pl.shots), 'version 3 runs by club'); assert.equal(MODEL_V, 3);
   assert.deepEqual(old.lg.inputs.map(i => i.v), old.lg.inputs.map(() => undefined)); assert.deepEqual(old2.lg.inputs.map(i => i.v), old2.lg.inputs.map(() => 2)); assert.deepEqual(now.lg.inputs.map(i => i.v), now.lg.inputs.map(() => MODEL_V), 'each input keeps the version it was played under');
   // and the saved inputs replay to the same round, whatever the model's version is now (through JSON: what a save does)
@@ -131,7 +131,7 @@ test('back-compat: a shot with conditions but not the club’s run (an input sav
   // the field's round with the day's conditions and no club run is the day of T334; with it the field's balls run by club
   const f = makeField(3, 3), gs = teeTimes(f, 3), cond = { wind: { mph: 9, from: 250, gusty: 0, seed: 2 } };
   const t334 = playRound(view, f, gs, 3, { cond: { ...cond, run: false } }), t346 = playRound(view, f, gs, 3, { cond }), t346b = playRound(view, f, gs, 3, { cond });
-  assert.equal(t334.shots.length, 3846); assert.equal(fnv(JSON.stringify(t334.shots)), '4b84220a', 'the field’s day in conditions without the club’s run: the same shots');
+  assert.equal(t334.shots.length, 3857); assert.equal(fnv(JSON.stringify(t334.shots)), '38cac12e', 'the field’s day in conditions without the club’s run: the same shots');
   assert.equal(JSON.stringify(t346.shots), JSON.stringify(t346b.shots), 'deterministic'); assert.notEqual(JSON.stringify(t346.shots), JSON.stringify(t334.shots));
   assert.equal(fnv(JSON.stringify(playRound(view, f, gs, 3).shots)), '419b9662', 'and with no conditions at all, as before');
   // what it does to a field: the fairway drives roll 10% of their carry (8% x 1.3) where they rolled 8%, a short iron or wedge onto the green a good deal less

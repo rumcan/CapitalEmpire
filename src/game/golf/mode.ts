@@ -27,6 +27,7 @@ import type { GameSkills } from './play/types';
 import type { OsmGolfInfo } from './osm/types';
 import type { LandSave } from './osm/land';
 import { normalizeEstate, type EstateSave } from './estate';
+import { loadFinance, type FinanceSave } from './finance';
 
 /** a rectangle in tiles: top-left x, y and the size w, h */
 export type Rect = [number, number, number, number];
@@ -39,6 +40,8 @@ export interface GolfSave {
  v: 1; tier: number; rep: number; poorYears?: number; town: Pt; course: Rect; parcel: Rect; dir: 0 | 1 | 2 | 3;
  tees: TeeMark[]; pins: Pin[]; aims: AimPoint[]; clubhouse: Pt;
  parcels?: Rect[];
+ /** J2 (docs/JAM.md): the Bank's state (golf/finance.ts: loans, savings, credit score, the monthly statements). Missing in older saves: a fresh bank on load */
+ finance?: FinanceSave;
  /** T356 (#998): the rects of the land a real course was placed on (they are in parcels too; kept apart so Land for sale and the survey lines leave them be) */
  courseRects?: Rect[];
  /** T232: the town lots the bulldozer cleared on the player's land, pegged out (bare dirt in a survey line) until the player builds there: each
@@ -171,7 +174,7 @@ export function normalizeGolfSave(g: Partial<GolfSave> | null | undefined): Golf
   if (!g || !g.town || !g.course || !g.clubhouse) return null;
   const parcel: Rect = g.parcel ?? g.parcels?.[0] ?? g.course;
   // the range start's fields (plan P22 2.6) are taken out and put back only when well formed, so an old start's save normalizes as before
-  const { start, exits, townBoost, invited, founding, play, weather, runFrom, range, everyday, ponds, practiceLot, looks, myHoles, teeSets, grasses, teeBoxes, dayPins, crew, club, player, clubEvents, osm, estate, courseRects, time3p, ...rest } = g;
+  const { start, exits, townBoost, invited, founding, play, weather, runFrom, range, everyday, ponds, practiceLot, looks, myHoles, teeSets, grasses, teeBoxes, dayPins, crew, club, player, clubEvents, osm, estate, courseRects, time3p, finance, ...rest } = g;
   const out: GolfSave = {
     ...rest,
     v: 1,
@@ -189,6 +192,7 @@ export function normalizeGolfSave(g: Partial<GolfSave> | null | undefined): Golf
     aims: g.aims ?? [],
     clubhouse: g.clubhouse,
   };
+  out.finance = loadFinance(finance); // J2: an old save has no bank: a fresh one
   if (start === 'range') { out.start = 'range'; out.range = normalizeRangeBiz(range); }
   if (start === 'range' && Array.isArray(practiceLot) && practiceLot.length === 4 && practiceLot.every(v => Number.isFinite(v)) && practiceLot[2] > 0 && practiceLot[3] > 0) out.practiceLot = [...practiceLot] as Rect;
   if (Array.isArray(exits)) out.exits = exits.filter(p => p && Number.isFinite(p.x) && Number.isFinite(p.y)).map(p => ({ x: p.x, y: p.y }));

@@ -3,7 +3,7 @@
 // terms and the price's effect, worst first, then the town's pool). Pure TypeScript, no DOM.
 import type { MembersView } from '../../game/golf/club';
 
-const money = (n: number) => '$' + Math.round(n).toLocaleString('en-US');
+import { inCurrency, money } from './money';
 const count = (n: number) => Math.round(n).toLocaleString('en-US');
 /** a factor as "× 0.84" */
 export const factor = (f: number) => `× ${f.toFixed(2)}`;
@@ -31,7 +31,7 @@ export function bandBar(v: Pick<MembersView, 'price' | 'fair' | 'band'>): { lo: 
   return { lo: at(v.band[0]), hi: at(v.band[1]), at: at(v.price) };
 }
 /** the words under the bar: "Fair for your club: $47-64" (whole dollars) */
-export const fairWords = (v: Pick<MembersView, 'band'>) => `Fair for your club: ${money(v.band[0])}-${Math.round(v.band[1])}`;
+export const fairWords = (v: Pick<MembersView, 'band'>) => `Fair for your club: ${money(v.band[0])}-${Math.round(inCurrency(v.band[1])).toLocaleString('en-US')}`;
 /** where the price stands, in a word and a line */
 export const STAND: Readonly<Record<MembersView['stand'], { word: string; line: string }>> = {
   cheap: { word: 'Cheap', line: 'Cheap: more join, the tee sheet fills' },

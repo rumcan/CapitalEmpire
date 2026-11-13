@@ -163,7 +163,7 @@ test('wind on a shot: more on the high long clubs, less on the low short ones; a
 test('lies: the surface’s kind (fairway, first cut, rough, deep rough, fescue, sand), and the coarse lie’s own when nothing finer is known', () => {
   const k = (s: GolfSurface) => lieKindOfSurface(s);
   assert.deepEqual(['green', 'tee', 'fairway', 'fringe', 'firstCut', 'rough', 'longGrass', 'fescue', 'bunker', 'waste', 'water', 'path', 'other'].map(s => k(s as GolfSurface)),
-    ['green', 'tee', 'fairway', 'fairway', 'firstcut', 'rough', 'deep', 'fescue', 'bunker', 'bunker', 'water', 'rough', 'rough']);
+    ['green', 'tee', 'fairway', 'fairway', 'firstcut', 'rough', 'deep', 'fescue', 'bunker', 'waste', 'water', 'rough', 'rough']);   // (T455: the waste area is a kind of its own)
   assert.equal(lieKindFor(undefined, O, 'fescue'), 'fescue'); assert.equal(lieKindFor(() => 'deep', O, 'fescue'), 'deep'); assert.equal(lieKindFor(() => 'deep', O, 'rough'), 'deep');
   assert.equal(lieKindFor(() => 'bunker', O, 'fairway'), 'fairway', 'a reading that does not fit the lie (the ball was put elsewhere) is dropped');
   assert.ok(kindFits('firstcut', 'fairway') && kindFits('firstcut', 'rough') && !kindFits('firstcut', 'bunker') && kindFits('tee', 'tee') && !kindFits('tee', 'fairway'));
@@ -187,7 +187,7 @@ test('lies: the course view reads the first cut beside a fairway, the deep rough
   assert.equal(kind(100, -FIRST_CUT_TILES * 0.5), 'firstcut');
   assert.equal(kind(100, 4 + FIRST_CUT_TILES + 0.6), 'rough', 'further out it is rough');
   assert.equal(kind(100, 40), 'deep'); assert.equal(kind(100, -45), 'deep'); assert.equal(kind(100, 70), 'fescue');
-  assert.equal(kind(52, 22), 'bunker'); assert.equal(view.lieAt(52, 22), 'bunker', 'the coarse lie is unchanged');
+  assert.equal(kind(52, 22), 'waste'); assert.equal(view.lieAt(52, 22), 'bunker', 'the coarse lie is unchanged');
   assert.equal(view.lieAt(100, 40), 'fescue', 'the deep rough was the coarse fescue lie before; it still is');
   assert.equal(kind(500, 500), 'out'); assert.equal(kind(205, 2), 'rough', 'unpainted land near a played line is rough'); assert.equal(kind(100, 90), 'out', 'and far from one it is out of bounds');
 });
@@ -199,8 +199,8 @@ test('lies: each lie does what the table says: the carry, the spread (and the te
   // each against the fairway within the noise: the table's carry (a flier adds a little to the rough's)
   assert.ok(Math.abs(fc / fw - LIE_FX.firstcut.carry) < 0.05, `first cut ${(fc / fw).toFixed(2)}`);
   assert.ok(Math.abs(rgh / fw - LIE_FX.rough.carry * (1 + 0.28 * 0.9 * (FLIER.carry - 1))) < 0.06, `rough ${(rgh / fw).toFixed(2)}`);
-  assert.ok(deep / fw < 0.82 && fes / fw < 0.7, `deep ${(deep / fw).toFixed(2)}, fescue ${(fes / fw).toFixed(2)}: much shorter`);
-  assert.ok(bkr / fw < 0.78 && bkr / fw > 0.6, `bunker ${(bkr / fw).toFixed(2)}: short`);
+  assert.ok(deep / fw < 0.85 && fes / fw < 0.8, `deep ${(deep / fw).toFixed(2)}, fescue ${(fes / fw).toFixed(2)}: much shorter`);
+  assert.ok(bkr / fw < 0.9 && bkr / fw > 0.78, `bunker ${(bkr / fw).toFixed(2)}: short`);
   // the tee: the most distance (a driver asked for more than it has): 3% over the fairway's
   const full = (lie: Lie, kind: ShotEnv['lie']) => mean(volley('driver', 400, lie, { lie: kind }, 120, 0.8).map(x => x.carry));
   assert.ok(full('tee', 'tee') > 1.02 * full('fairway', 'fairway') && full('tee', 'tee') < 1.05 * full('fairway', 'fairway'), `tee ${full('tee', 'tee').toFixed(0)} against fairway ${full('fairway', 'fairway').toFixed(0)}`);
@@ -419,8 +419,8 @@ test('panel: the wind dial reads the wind against the shot (up the line a tailwi
   assert.equal(headW.rel, 'Into the wind'); assert.equal(tailW.rel, 'Helping'); assert.equal(right.rel, 'Left to right'); assert.equal(left.rel, 'Right to left');
   assert.equal(headW.text, '10 mph from the N'); assert.equal(headW.peak, 14); assert.equal(windView(null, null, 1, 0).calm, true); assert.equal(windView({ mph: 1, from: 0 }, day, 1, 0).rel, 'Calm');
   assert.deepEqual(lieView('fairway', 'iron6').lines, []); assert.equal(lieView('tee', 'driver').lines[0], 'carry +3%');
-  assert.deepEqual(lieView('rough', 'pw').lines, ['carry -12%', 'scatter x1.3', '45% of the spin', 'a flier in 3 of 10']);
-  assert.ok(lieView('fescue', 'iron6').lines.includes('wild strikes') && lieView('fescue', 'iron6').lines.includes('carry -40%'));
+  assert.deepEqual(lieView('rough', 'pw').lines, ['carry -13%', 'scatter x1.3', '45% of the spin', 'a flier in 3 of 10']);
+  assert.ok(lieView('fescue', 'iron6').lines.includes('wild strikes') && lieView('fescue', 'iron6').lines.includes('carry -25%'));
   assert.ok(lieView('rough', 'driver').flier < 0.05 && !lieView('rough', 'driver').lines.some(l => l.startsWith('a flier')), 'a driver gets no flier line');
   // the report's tail: what the wind did to a played shot
   const at = { x: 60, y: 0 }, up = windNote({ wind: { mph: 14, from: 270 }, lie: 'fairway' }, 'iron6', O, at);

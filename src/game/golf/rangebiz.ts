@@ -450,6 +450,18 @@ const inPoly = (q: Pt[], x: number, y: number): boolean => {
   for (let i = 0, j = q.length - 1; i < q.length; j = i++) { const a = q[i]!, b = q[j]!; if ((a.y > y) !== (b.y > y) && x < (b.x - a.x) * (y - a.y) / (b.y - a.y) + a.x) k = !k; }
   return k;
 };
+/** T459 (#1215): which of the walkway's three anchors (the car park lot, the shop's counter, the tee box's back edge) a path comes within
+ *  WALK_REACH of, whether or not the paths join up: the guide's walking-path step says what is still missing */
+export function walkwayReach(sc: Pick<RangeScene, 'anchors'>, legs: readonly { a: Pt; b: Pt }[]): { lot: boolean; shop: boolean; tee: boolean } {
+  const { lot, shop, tee } = sc.anchors;
+  const toLot = (p: Pt) => (inPoly(lot, p.x, p.y) ? 0 : Math.min(...lot.map((a, i) => ptSeg(p, a, lot[(i + 1) % 4]!).d)));
+  const reaches = (dist: (p: Pt) => number) => legs.some(l => {
+    const n = Math.max(1, Math.ceil(Math.hypot(l.b.x - l.a.x, l.b.y - l.a.y) / WALK_STEP));
+    for (let i = 0; i <= n; i++) { const t = i / n; if (dist({ x: l.a.x + (l.b.x - l.a.x) * t, y: l.a.y + (l.b.y - l.a.y) * t }) <= WALK_REACH) return true; }
+    return false;
+  });
+  return { lot: reaches(toLot), shop: reaches(p => Math.hypot(p.x - shop.x, p.y - shop.y)), tee: reaches(p => ptSeg(p, tee[0], tee[1]).d) };
+}
 /** the walkway the player's path legs (world, the cart paths near the range front: any of the Cart paths & roads tool's paths) make, or null
  *  when no connected run of them comes within WALK_REACH of the car park lot, the shop's counter and the tee box's back edge all three.
  *  Deterministic: the legs are joined where they share an end point; each anchor takes the path's nearest point (sampled every WALK_STEP),

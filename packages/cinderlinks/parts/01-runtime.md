@@ -14,7 +14,7 @@ The game runs on Windows from its own folder, with no server, no network and no 
 R: The game is a single HTML page with one JavaScript file and one CSS file, with no external libraries.
 R: launch.cmd opens the page in Microsoft Edge in app mode, as its own window.
 R: The page has a canvas for the game, an overlay for the HUD and a small canvas for the hole map.
-R: The HUD is a golf scoreboard: dark green panels with a gold line and cream letters.
+R: The HUD wears CapitalEmpire's look (J5): charcoal glass panels, gold accents and cream letters, as its cards and rail.
 File: launch.cmd
 Check: --app=
 File: index.html
@@ -64,94 +64,150 @@ start "" "%EDGE%" --app="file:///%~dp0index.html" --new-window --user-data-dir="
 ````
 
 ## look The look
-The page keeps Cinderdeep's frame: black surround, pixelated canvas, capital letters with a hard shadow.
+The page keeps Cinderdeep's frame (black surround, pixelated canvas) and wears CapitalEmpire's own look on top of it (J5, the owner 2026-11-13: "fit the UIX of the golf game to the capital empire ui"): the same dark charcoal glass panels, gold accents and outlines, cream ink, system sans text and the Georgia serif for titles as CapitalEmpire's cards and rail (src/index.css: --panel, --gold, --ink, .glass, .btn, .seg, .keycap).
 R: The canvas is scaled with no smoothing and keeps 16:9.
+R: The HUD's tokens are CapitalEmpire's: --gold #f5b52e, --gold-hi #ffd166, --panel rgba(20, 21, 25, 0.9), --ink #efe9da, --muted #a9a394, hairline borders, rounded corners, soft drop shadows; the panels are solid enough to read over the painted picture (no backdrop blur: it would be redrawn over the moving picture every frame).
+R: The HUD's text size follows the picture's width (13 px at 1280 px wide, 11 to 15 px), so it reads the same inside CapitalEmpire's frame and in its own window.
+R: Inside CapitalEmpire (host mode: the body carries the class host) the hole map and the wind sit below CapitalEmpire's own buttons along the top right. The help never runs off the picture: a long help scrolls up and down (CapitalEmpire's thin scrollbar), never sideways.
 File: style.css
 Check: image-rendering: pixelated
+Check: --panel: rgba(20, 21, 25, 0.9)
+Check: body.host #mini
 
 ````css file=style.css
+:root {
+  --gold: #f5b52e; --gold-hi: #ffd166; --gold-line: rgba(245, 181, 46, 0.55); --gold-wash: rgba(245, 181, 46, 0.14);
+  --gold-btn: linear-gradient(#ffc94a, #f0a91e);
+  --panel: rgba(20, 21, 25, 0.9); --panel-2: rgba(32, 33, 38, 0.92); --line: rgba(255, 255, 255, 0.08); --line-hi: rgba(255, 255, 255, 0.14);
+  --ink: #efe9da; --muted: #a9a394; --good: #74e3a4; --warn: #fb9a4b;
+  --shadow: 0 10px 30px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  --sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --serif: Georgia, "Palatino Linotype", "Book Antiqua", Palatino, serif;
+}
 html, body { margin: 0; height: 100%; background: #000; overflow: hidden; }
-body { display: flex; align-items: center; justify-content: center; color: #eadfcb; user-select: none;
-  font: bold 12px/1.25 "Lucida Console", Consolas, "Courier New", monospace; letter-spacing: 1px; }
-#stage { position: relative; width: min(100vw, calc(100vh * 16 / 9)); aspect-ratio: 16 / 9; }
+body { display: flex; align-items: center; justify-content: center; color: var(--ink); user-select: none;
+  font: 13px/1.35 var(--sans); -webkit-font-smoothing: antialiased; }
+button { font-family: var(--sans); }
+#stage { position: relative; width: min(100vw, calc(100vh * 16 / 9)); aspect-ratio: 16 / 9; container-type: inline-size; }
 #view { display: block; width: 100%; height: 100%; image-rendering: pixelated; cursor: crosshair; }
 #over { position: absolute; inset: 0; width: 100%; height: 100%; image-rendering: pixelated; pointer-events: none; }
-#hud { position: absolute; inset: 0; pointer-events: none; text-transform: uppercase; }
-.panel, #card, #clubs .club, #keys, #help, #wind { background: rgba(12, 34, 24, 0.78); border: 2px solid #0a1a12; box-shadow: 0 0 0 1px rgba(242, 201, 76, 0.55); color: #f4efdc; }
-#card { position: absolute; left: 1.4%; top: 2%; padding: 7px 10px 8px; min-width: 150px; font-size: 11px; line-height: 1.55; }
-#card { pointer-events: auto; cursor: pointer; }
+#hud { position: absolute; inset: 0; pointer-events: none; font-size: clamp(11px, 1.016cqw, 15px); line-height: 1.35; }
+
+/* the glass panels (CapitalEmpire's .glass): the card, the help, the shot panel, the settings menu, the leaderboard and match cards */
+.panel, #card, #keys, #help, #wind, #shotc, #styleMenu { background: var(--panel); border: 1px solid var(--line); border-radius: 1.1em; box-shadow: var(--shadow); color: var(--ink); }
+body > .panel { border-radius: 0.9em; }
+body > .panel > b:first-child { font-size: 0.85em; letter-spacing: 0.12em; text-transform: uppercase; color: var(--gold); }
+
+/* the card: the hole in the serif, gold; its facts as CapitalEmpire's stat lines (muted name, bold cream figure) */
+#card { position: absolute; left: 1.4%; top: 2%; padding: 0.6em 0.85em 0.65em; min-width: 13em; pointer-events: auto; cursor: pointer; }
+#card:hover { border-color: var(--gold-line); }
 #hud.min #card .row, #hud.min #card .course, #hud.min #card .credit, #hud.min #mini, #hud.min #wind, #hud.min #keys, #hud.min #clubs .club:not(.on) { display: none; }
-#hud.min #card { min-width: 0; padding: 4px 9px 5px; opacity: 0.88; }
-#hud.min #card .hole { border-bottom: 0; margin-bottom: 0; padding-bottom: 0; font-size: 12px; gap: 12px; }
-#card .hole { font-size: 15px; color: #f2c94c; border-bottom: 1px solid rgba(242, 201, 76, 0.45); margin-bottom: 4px; padding-bottom: 3px; display: flex; justify-content: space-between; align-items: baseline; }
-#card .hole span { font-size: 11px; color: #f4efdc; }
-#card .row { display: flex; justify-content: space-between; gap: 18px; }
-#card .course { font-size: 11px; color: #f4efdc; letter-spacing: 0.04em; margin-bottom: 2px; }
-#card .credit { font-size: 8px; line-height: 1.3; color: rgba(244, 239, 220, 0.7); margin-top: 5px; max-width: 170px; white-space: normal; }
-#card .row span { color: #a9c9b1; }
-#card .row b { color: #ffffff; }
-#wind { position: absolute; right: calc(1.4% + 162px); top: 2%; width: 54px; padding: 4px 0 3px; text-align: center; font-size: 9px; color: #a9c9b1; }
-#windArrow { font-size: 22px; line-height: 26px; color: #f4efdc; transition: transform 0.25s; }
-#wind.gust #windArrow { color: #f2c94c; }
-#wind.gust { box-shadow: 0 0 0 1px #f2c94c; }
-#mini { position: absolute; right: 1.4%; top: 2%; width: 150px; height: 150px; image-rendering: pixelated; border: 2px solid #0a1a12; box-shadow: 0 0 0 1px rgba(242, 201, 76, 0.55); opacity: 0.95; }
+#hud.min #card { min-width: 0; padding: 0.4em 0.85em 0.45em; border-radius: 999px; }
+#hud.min #card .hole { border-bottom: 0; margin-bottom: 0; padding-bottom: 0; font-size: 1.15em; gap: 0.9em; }
+#card .hole { display: flex; justify-content: space-between; align-items: baseline; gap: 1em; margin-bottom: 0.35em; padding-bottom: 0.3em; border-bottom: 1px solid var(--line);
+  font: 700 1.3em/1.2 var(--serif); color: var(--gold-hi); }
+#card .hole span { font: 600 0.62em var(--sans); letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); }
+#card .course { font-size: 0.92em; font-weight: 700; color: var(--ink); margin-bottom: 0.15em; max-width: 17em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+#card .row { display: flex; justify-content: space-between; gap: 1.4em; font-size: 0.95em; }
+#card .row span { color: var(--muted); }
+#card .row b { color: var(--ink); font-variant-numeric: tabular-nums; text-align: right; }
+#card .credit { font-size: 0.78em; line-height: 1.3; color: var(--muted); margin-top: 0.45em; max-width: 15em; white-space: normal; }
+
+/* the wind: a small square tile; gold while a gust is on the golfer */
+#wind { position: absolute; right: calc(1.4% + 12.1em); top: 2%; width: 3.6em; padding: 0.25em 0 0.3em; text-align: center; color: var(--muted); border-radius: 0.9em; }
+#windTxt { font-size: 0.8em; }
+#windArrow { font-size: 1.6em; line-height: 1.25; color: var(--ink); transition: transform 0.25s; }
+#wind.gust #windArrow { color: var(--gold-hi); }
+#wind.gust { border-color: var(--gold); background: linear-gradient(var(--gold-wash), var(--gold-wash)), var(--panel); }
+/* (inside CapitalEmpire its own buttons, the ghost and share chips and the close button, run along the top right: the map and the wind sit below them) */
+body.host #mini, body.host #wind { top: 56px; }
+#mini { position: absolute; right: 1.4%; top: 2%; width: 11.5em; height: 11.5em; image-rendering: pixelated; border: 1px solid var(--line-hi); border-radius: 0.9em; box-shadow: var(--shadow); }
+
+/* the power bar (the view's own play) and the swing button (in CapitalEmpire): a rounded track, the fill from green to gold, the gold aim mark and the white hole mark */
 #power { position: absolute; left: 36%; right: 36%; bottom: 8%; opacity: 0; transition: opacity 0.15s; text-align: center; }
 #power.on { opacity: 1; }
-#swingBtn { position: absolute; left: 50%; bottom: 2.2%; transform: translateX(-50%); width: 300px; height: 50px; display: none; pointer-events: auto; cursor: pointer; touch-action: none; user-select: none; overflow: hidden;
-  background: rgba(12, 34, 24, 0.86); border: 2px solid #0a1a12; box-shadow: 0 0 0 1px rgba(242, 201, 76, 0.75); color: #f4efdc; }
+#swingBtn { position: absolute; left: 50%; bottom: 2.2%; transform: translateX(-50%); width: 23em; height: 3.6em; display: none; pointer-events: auto; cursor: pointer; touch-action: none; user-select: none; overflow: hidden;
+  background: var(--panel); border: 1px solid var(--gold-line); border-radius: 1em; box-shadow: var(--shadow); color: var(--ink); }
 #swingBtn.on { display: block; }
-#swingBtn.idle { opacity: 0.55; cursor: default; }
-#swingBtn.swinging { box-shadow: 0 0 0 2px #f2c94c; }
-#swingBtn i { position: absolute; left: 0; top: 0; bottom: 0; width: 0; background: linear-gradient(90deg, #3c8a52, #58c070 40%, #f2c94c 90%); opacity: 0.85; }
-#swingBtn b { position: absolute; top: 0; bottom: 0; width: 3px; margin-left: -1px; display: none; }
+#swingBtn.on:hover { border-color: var(--gold); }
+#swingBtn.idle { opacity: 0.6; cursor: default; border-color: var(--line); }
+#swingBtn.swinging { border-color: var(--gold); box-shadow: var(--shadow), 0 0 0 1px var(--gold), 0 0 16px rgba(245, 181, 46, 0.35); }
+#swingBtn i { position: absolute; left: 0; top: 0; bottom: 0; width: 0; background: linear-gradient(90deg, rgba(116, 227, 164, 0.35), rgba(116, 227, 164, 0.7) 40%, rgba(255, 209, 102, 0.85) 90%); }
+#swingBtn b { position: absolute; top: 0; bottom: 0; width: 3px; margin-left: -1.5px; display: none; }
 #swingBtn b.on { display: block; }
-#swingBtn b.aimmk { background: #f2c94c; box-shadow: 0 0 0 1px #0a1a12; }
-#swingBtn b.aimmk::after { content: ''; position: absolute; left: -4px; top: -1px; border: 5px solid transparent; border-top-color: #f2c94c; }
-#swingBtn b.holemk { width: 2px; background: #f4efdc; opacity: 0.85; }
-#swingBtn span { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 12px; letter-spacing: 1px; text-shadow: 2px 2px 0 #000; white-space: nowrap; }
-#powerTxt { margin-top: 4px; font-size: 11px; color: #f4efdc; text-shadow: 2px 2px 0 #000; }
-.track { height: 13px; background: #0c2218; border: 2px solid #0a1a12; box-shadow: 0 0 0 1px rgba(242, 201, 76, 0.55); position: relative; }
-.track i { display: block; height: 100%; width: 0%; background: linear-gradient(90deg, #58c070, #f2c94c 72%, #e8573c); }
-.track b { display: none; position: absolute; top: -3px; bottom: -3px; }
+#swingBtn b.aimmk { background: var(--gold-hi); box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.6), 0 0 6px rgba(255, 209, 102, 0.7); }
+#swingBtn b.aimmk::after { content: ''; position: absolute; left: -4.5px; top: 0; border: 6px solid transparent; border-top-color: var(--gold-hi); }
+#swingBtn b.holemk { width: 2px; margin-left: -1px; background: #fff; opacity: 0.9; box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.45); }
+#swingBtn span { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 1.05em; font-weight: 700; white-space: nowrap; text-shadow: 0 1px 2px rgba(0, 0, 0, 0.85), 0 0 8px rgba(0, 0, 0, 0.5); }
+#powerTxt { display: inline-block; margin-top: 0.4em; padding: 0.15em 0.7em; border-radius: 999px; background: var(--panel); font-size: 0.95em; font-weight: 700; color: var(--ink); }
+#powerTxt:empty { display: none; }
+.track { position: relative; height: 1.1em; background: var(--panel); border: 1px solid var(--gold-line); border-radius: 999px; box-shadow: var(--shadow); overflow: hidden; }
+.track i { display: block; height: 100%; width: 0%; background: linear-gradient(90deg, var(--good), var(--gold-hi) 72%, #e8573c); }
+.track b { display: none; position: absolute; top: 0; bottom: 0; }
 #power.meter .track b { display: block; }
-#power.meter .track i { background: linear-gradient(90deg, #3c8a52, #58c070 14%, #f2c94c 80%, #e8573c); }
-#power .track b.sweet { background: rgba(130, 255, 160, 0.45); border-left: 1px solid #b8ffc8; border-right: 1px solid #b8ffc8; }
-#power .track b.top { width: 2px; margin-left: -1px; background: #f4efdc; }
-#shotc { position: absolute; right: 1.4%; bottom: 13%; display: none; padding: 6px 8px; font-size: 10px; line-height: 1.5; background: rgba(12, 34, 24, 0.78); border: 2px solid #0a1a12; box-shadow: 0 0 0 1px rgba(242, 201, 76, 0.55); color: #f4efdc; }
+#power.meter .track i { background: linear-gradient(90deg, rgba(116, 227, 164, 0.6), var(--good) 14%, var(--gold-hi) 80%, #e8573c); }
+#power .track b.sweet { background: rgba(116, 227, 164, 0.35); border-left: 1px solid #b8ffc8; border-right: 1px solid #b8ffc8; }
+#power .track b.top { width: 2px; margin-left: -1px; background: #fff; }
+
+/* the shot panel: CapitalEmpire's segmented choices (.seg): a dark well, the picked one in the gold button's gradient */
+#shotc { position: absolute; right: 1.4%; bottom: 13%; display: none; padding: 0.55em 0.65em; font-size: 0.92em; line-height: 1.4; }
 #shotc.on { display: block; }
-#shotc .row { display: flex; align-items: center; gap: 4px; margin: 2px 0; }
-#shotc .row span { width: 38px; color: #a9c9b1; }
-#shotc b { cursor: pointer; padding: 1px 5px; border: 1px solid #2c5a3c; color: #d8e8d8; font-weight: normal; }
-#shotc b.sel { border-color: #f2c94c; color: #ffffff; background: rgba(22, 60, 40, 0.9); }
-#shotc b.lock { opacity: 0.4; cursor: not-allowed; text-decoration: line-through; }
-#shotc b.boost.sel { background: #8a2c1c; border-color: #ffb070; }
-#shotc canvas { width: 40px; height: 40px; cursor: crosshair; image-rendering: auto; }
-#shotc i { font-style: normal; color: #a9c9b1; }
-#pickTxt { margin-top: 2px; color: #f2c94c; }
-#clubs { position: absolute; left: 1.4%; bottom: 2.4%; display: flex; flex-wrap: wrap; gap: 6px; max-width: 64%; }
-#clubs.bag { gap: 4px; max-width: 34%; }   /* (his whole bag wraps in the left third: the power bar stays clear) */
-#clubs.bag .club { padding: 3px 6px 4px; font-size: 10px; }
-#clubs .club { padding: 4px 9px 5px; font-size: 11px; color: #a9c9b1; line-height: 1.35; }
-#clubs .club.on { box-shadow: 0 0 0 1px #f2c94c, 0 0 0 3px rgba(242, 201, 76, 0.25); color: #ffffff; background: rgba(22, 60, 40, 0.9); }
-#clubs .club b { color: #f2c94c; }
-#clubs .club i { display: block; font-style: normal; font-size: 9px; color: #a9c9b1; }
-#keys { position: absolute; right: 1.4%; bottom: 2.4%; padding: 4px 9px; font-size: 10px; color: #a9c9b1; }
-#style { position: absolute; top: 2%; left: 50%; transform: translateX(-50%); pointer-events: auto; text-align: center; }
-#styleBtn { padding: 5px 12px; font: inherit; font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; color: #f4efdc; background: rgba(12, 34, 24, 0.86); border: 2px solid #0a1a12; box-shadow: 0 0 0 1px rgba(242, 201, 76, 0.7); cursor: pointer; }
-#styleBtn:hover { background: rgba(28, 66, 44, 0.95); } #styleBtn b { color: #f2c94c; margin-left: 6px; }
-#styleMenu { display: none; margin-top: 5px; padding: 7px 8px 6px; gap: 14px; text-align: left; white-space: nowrap; background: rgba(12, 34, 24, 0.92); border: 2px solid #0a1a12; box-shadow: 0 0 0 1px rgba(242, 201, 76, 0.55); }
-#styleMenu.on { display: flex; }
-#styleMenu .dist { width: 150px; white-space: normal; } #styleMenu .dist input { width: 100%; margin: 4px 0 2px; accent-color: #f2c94c; } #styleMenu .dist span { display: block; font-size: 11px; color: #f4efdc; margin-left: 8px; } #styleMenu .dist label.simple { display: block; font-size: 10px; color: #f4efdc; margin: 6px 0 0 4px; cursor: pointer; } #styleMenu .dist label.simple input { width: auto; margin: 0 5px 0 0; vertical-align: middle; }
-#styleMenu .dist em { display: block; font-style: normal; font-size: 8px; line-height: 1.35; color: rgba(244, 239, 220, 0.7); margin: 4px 0 0 8px; text-transform: none; }
-#styleMenu .grp > i { display: block; font-style: normal; font-size: 9px; color: #f2c94c; margin: 0 0 3px 8px; }
-#styleMenu button { display: block; width: 100%; padding: 3px 8px; font: inherit; font-size: 11px; text-transform: uppercase; text-align: left; color: #f4efdc; background: none; border: 0; cursor: pointer; }
-#styleMenu button:hover { background: rgba(28, 66, 44, 0.95); } #styleMenu button.on { color: #f2c94c; }
-#jump, #gimme { position: absolute; right: 1.4%; bottom: 8%; padding: 6px 12px; font: inherit; font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; color: #f4efdc; background: rgba(12, 34, 24, 0.86); border: 2px solid #0a1a12; box-shadow: 0 0 0 1px rgba(242, 201, 76, 0.7); cursor: pointer; pointer-events: auto; display: none; }
-#jump.on, #gimme.on { display: block; } #jump:hover, #gimme:hover { background: rgba(28, 66, 44, 0.95); } #jump b, #gimme b { color: #f2c94c; margin-left: 4px; }
-#gimme { bottom: calc(8% + 38px); box-shadow: 0 0 0 1px #f2c94c, 0 0 0 3px rgba(242, 201, 76, 0.25); }
-#keys b { color: #f2c94c; }
-#help { position: absolute; right: 1.4%; bottom: calc(2.4% + 34px); padding: 8px 12px; font-size: 10px; line-height: 1.7; display: none; white-space: pre; color: #f4efdc; }
+#shotc .row { display: flex; align-items: center; gap: 0.2em; margin: 0.2em 0; padding: 0.15em; border-radius: 0.7em; background: rgba(0, 0, 0, 0.25); }
+#shotc .row span { width: 3.6em; padding-left: 0.35em; font-size: 0.9em; font-weight: 700; color: var(--muted); }
+#shotc b { cursor: pointer; padding: 0.2em 0.6em; border-radius: 0.55em; border: 1px solid transparent; color: #d9d3c4; font-weight: 500; }
+#shotc b:hover { background: rgba(255, 255, 255, 0.06); }
+#shotc b.sel { background: var(--gold-btn); color: #1b1406; font-weight: 700; }
+#shotc b.lock { opacity: 0.45; cursor: not-allowed; text-decoration: line-through; }
+#shotc b.boost { border-color: var(--line); }
+#shotc b.boost.sel { background: linear-gradient(#ef6a4a, #c2410c); border-color: transparent; color: #fff; }
+#shotc canvas { width: 3.1em; height: 3.1em; cursor: crosshair; image-rendering: auto; }
+#shotc i { font-style: normal; font-size: 0.9em; color: var(--muted); padding: 0 0.3em; }
+#pickTxt { margin-top: 0.3em; padding-left: 0.2em; color: var(--gold-hi); }
+
+/* the clubs: CapitalEmpire's rail tabs, the one in hand ringed in gold on the gold wash */
+#clubs { position: absolute; left: 1.4%; bottom: 2.4%; display: flex; flex-wrap: wrap; gap: 0.45em; max-width: 64%; }
+#clubs.bag { gap: 0.3em; max-width: 34%; }   /* (his whole bag wraps in the left third: the power bar stays clear) */
+#clubs .club { padding: 0.35em 0.7em 0.4em; border-radius: 0.8em; background: var(--panel); border: 1px solid var(--line); box-shadow: var(--shadow); font-size: 1em; font-weight: 600; color: #d9d3c4; line-height: 1.3; }
+#clubs.bag .club { padding: 0.25em 0.55em 0.3em; font-size: 0.88em; }
+#clubs .club.on { border-color: var(--gold); background: linear-gradient(var(--gold-wash), var(--gold-wash)), var(--panel); color: var(--gold-hi); box-shadow: var(--shadow), inset 0 0 12px rgba(245, 181, 46, 0.18); }
+#clubs .club b { margin-right: 0.1em; color: var(--muted); font-weight: 700; }
+#clubs .club.on b { color: var(--gold); }
+#clubs .club i { display: block; font-style: normal; font-weight: 500; font-size: 0.85em; color: var(--muted); font-variant-numeric: tabular-nums; }
+#clubs .club.cut i { color: var(--warn); }
+
+/* the key hints and the help: CapitalEmpire's keycaps */
+#keys { position: absolute; right: 1.4%; bottom: 2.4%; padding: 0.35em 0.75em; border-radius: 999px; font-size: 0.9em; color: var(--muted); }
+#keys b { display: inline-block; min-width: 1.4em; padding: 0 0.3em; border-radius: 0.35em; border: 1px solid var(--line-hi); background: rgba(255, 255, 255, 0.06); font-weight: 700; line-height: 1.45; text-align: center; color: var(--ink); }
+#help { position: absolute; right: 1.4%; bottom: calc(2.4% + 2.9em); max-width: 58%; max-height: calc(100% - 2.4% - 2.9em - 2% - 5em); overflow-y: auto; overflow-x: hidden; overscroll-behavior: contain; pointer-events: auto; padding: 0.7em 0.95em; font-size: 0.9em; line-height: 1.6; display: none; white-space: pre-wrap; color: var(--ink); }
+/* CapitalEmpire's thin scrollbar (src/index.css, T205): a light thumb, gold under the pointer, no arrows; never a sideways one */
+#help::-webkit-scrollbar { width: 8px; background: transparent; } #help::-webkit-scrollbar-button { display: none; width: 0; height: 0; }
+#help::-webkit-scrollbar-thumb { min-height: 28px; border: 2px solid transparent; border-radius: 999px; background: rgba(239, 233, 218, 0.26) padding-box; } #help::-webkit-scrollbar-thumb:hover { background: rgba(245, 181, 46, 0.85) padding-box; }
 #help.on { display: block; }
-#help b { color: #f2c94c; display: inline-block; min-width: 96px; }
-#msg { position: absolute; left: 8%; right: 8%; top: 27%; text-align: center; font-size: 16px; color: #fff3c4; text-shadow: 2px 2px 0 #000, 0 0 12px rgba(0, 0, 0, 0.6); }
+#help b { display: inline-block; min-width: 7.5em; margin-right: 0.6em; font-weight: 700; color: var(--gold-hi); }
+#help b.h { border: 0; background: none; padding: 0; font-size: 0.85em; letter-spacing: 0.12em; text-transform: uppercase; color: var(--gold); }
+
+/* the Settings button and its menu: CapitalEmpire's .btn and its flyout rows, section names in small caps */
+#style { position: absolute; top: 2%; left: 50%; transform: translateX(-50%); pointer-events: auto; text-align: center; }
+#styleBtn { display: inline-flex; align-items: center; gap: 0.4em; padding: 0.4em 0.9em; font-size: 1em; font-weight: 600; color: var(--ink); background: var(--panel); border: 1px solid var(--line-hi); border-radius: 0.8em; box-shadow: var(--shadow); cursor: pointer; }
+#styleBtn:hover { border-color: var(--gold-line); } #styleBtn b { color: var(--gold); margin-left: 0; font-size: 0.85em; }
+#styleMenu { display: none; margin-top: 0.4em; padding: 0.55em; gap: 0.9em; text-align: left; white-space: nowrap; border-radius: 1em; }
+#styleMenu.on { display: flex; }
+#styleMenu .grp { display: flex; flex-direction: column; gap: 2px; }
+#styleMenu .dist { width: 12em; white-space: normal; } #styleMenu .dist input { width: 100%; margin: 0.4em 0 0.2em; accent-color: var(--gold); cursor: pointer; } #styleMenu .dist span { display: block; font-size: 0.95em; font-weight: 700; font-variant-numeric: tabular-nums; color: var(--ink); margin-left: 0.45em; } #styleMenu .dist label.simple { display: block; font-size: 0.9em; color: var(--ink); margin: 0.5em 0 0 0.35em; cursor: pointer; } #styleMenu .dist label.simple input { width: auto; margin: 0 0.4em 0 0; vertical-align: middle; }
+#styleMenu .dist em { display: block; font-style: normal; font-size: 0.85em; line-height: 1.35; color: var(--muted); margin: 0.35em 0 0 0.45em; }
+#styleMenu .grp > i { display: block; font-style: normal; font-size: 0.8em; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); margin: 0.1em 0 0.25em 0.45em; }
+#styleMenu button { display: block; width: 100%; padding: 0.3em 0.55em; font-size: 0.95em; text-align: left; color: var(--ink); background: none; border: 1px solid transparent; border-radius: 0.6em; cursor: pointer; }
+#styleMenu button:hover { background: rgba(255, 255, 255, 0.07); } #styleMenu button.on { color: var(--gold-hi); background: var(--gold-wash); border-color: rgba(245, 181, 46, 0.45); }
+
+/* Jump to ball (.btn) and Gimme (the gold button: the thing to take now), each with its key as a keycap */
+#jump, #gimme { position: absolute; right: 1.4%; bottom: 8%; display: none; align-items: center; gap: 0.45em; padding: 0.45em 0.9em; font-size: 1em; font-weight: 600; color: var(--ink); background: var(--panel); border: 1px solid var(--line-hi); border-radius: 0.8em; box-shadow: var(--shadow); cursor: pointer; pointer-events: auto; }
+#jump.on, #gimme.on { display: inline-flex; } #jump:hover { border-color: var(--gold-line); }
+#jump b, #gimme b { min-width: 1.4em; padding: 0 0.3em; border-radius: 0.35em; border: 1px solid var(--line-hi); background: rgba(255, 255, 255, 0.06); font-size: 0.85em; line-height: 1.45; color: var(--ink); }
+#gimme { bottom: calc(8% + 2.9em); background: var(--gold-btn); border-color: transparent; color: #1b1406; font-weight: 700; box-shadow: 0 2px 10px rgba(245, 181, 46, 0.35), var(--shadow); }
+#gimme:hover { filter: brightness(1.06); } #gimme b { border-color: rgba(27, 20, 6, 0.35); background: rgba(27, 20, 6, 0.1); color: #1b1406; }
+
+/* the message line: the serif on a glass pill, only while there is something to say */
+#msg { position: absolute; left: 50%; top: 27%; transform: translateX(-50%); max-width: 84%; width: max-content; padding: 0.35em 1.1em 0.4em; text-align: center; white-space: normal;
+  font: 700 1.45em/1.3 var(--serif); color: var(--ink); background: var(--panel); border: 1px solid var(--gold-line); border-radius: 999px; box-shadow: var(--shadow); }
+#msg:empty { display: none; }
 ````

@@ -366,6 +366,9 @@ export class HoleWizard {
     if (this.step === 'tee') {
       const n = this.lineAt(mx, my, toScreen), p = n ? this.planOf(n) : null;
       if (p) { this.open(p); return 'open'; }
+      // T459 (#1213): a tee on land the course may not use (the driving range's outfield, off your land, a house lot) is not placed: the
+      // pointer's label says why (label), instead of a plan whose Build is dead
+      if (this.teeRefusal(snapPt(t))) return null;
       const s = this.snap('place the tee');
       this.tee = snapPt(t); this.step = 'green'; this.plan = null; this.push(s); return 'tee';
     }
@@ -761,12 +764,22 @@ export class HoleWizard {
     return out;
   }
 
+  /** T459 (#1213): why the land rules refuse a tee at tile p ('' where it may go): the words Build would block with */
+  private teeRefusal(p: Pt): string {
+    // (the ghost's okAt: the cell the plan may lay; landWhy is only asked for a cell refused, as Build's check asks it)
+    const g = this.host.grid(); if (!g || !this.host.allow) return '';
+    const cx = Math.floor((p.x - g.x0) / CELL_T), cy = Math.floor((p.y - g.y0) / CELL_T);
+    if (cx >= 0 && cy >= 0 && cx < g.w && cy < g.h && this.host.allow(cy * g.w + cx)) return '';
+    return SPOT_WHY[this.host.landWhy?.(p.x, p.y) || 'off'];
+  }
+
   /** the one-line label beside the pointer (P21 3.5) and whether it is a refusal */
   label(): { text: string; bad: boolean } {
     const n = this.hole;
     if (this.step === 'tee') {
       if (this.lineHole) return { text: `Hole ${this.lineHole} · click to edit its plan`, bad: false };
       const pin = n > 1 ? this.host.pinOf?.(n - 1) : null, c = this.cursor;
+      const no = c ? this.teeRefusal(snapPt(c)) : ''; if (no) return { text: `Hole ${n} · no tee here: ${no}`, bad: true }; // (T459 #1213)
       const walk = pin && c ? ` · ${Math.round(Math.hypot(c.x - pin.x, c.y - pin.y) * 2)} m walk from hole ${n - 1}` : '';
       return { text: `Hole ${n} · click the tee${walk}`, bad: false };
     }

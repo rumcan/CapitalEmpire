@@ -263,6 +263,18 @@ function golf(o: { practice?: [number, number, number, number]; land?: [number, 
 const rows = (w: HoleWizard) => w.checks().map(r => `${r.kind}:${r.id}`);
 const row = (w: HoleWizard, id: string) => w.checks().find(r => r.id === id);
 
+test('T459 (#1213): a tee click on the driving range (or off your land) is not placed: the pointer says why, and the tee step waits', () => {
+  const { tool, w, down } = golf();
+  assert.ok(tool.setPlan()); assert.equal(w.step, 'tee');
+  w.move({ x: 350, y: 120 }, 350 * PX, 120 * PX, toScreen);
+  assert.deepEqual(w.label(), { text: 'Hole 1 · no tee here: on the driving range: golfers hit here', bad: true }, 'the pointer over the range says so before the click');
+  down(350, 120);
+  assert.equal(w.step, 'tee', 'a tee on the range is not placed'); assert.equal(w.tee, null);
+  down(450, 120); assert.equal(w.step, 'tee', 'nor off your land');
+  w.move({ x: 40, y: 120 }, 40 * PX, 120 * PX, toScreen); assert.equal(w.label().bad, false, 'on your land the label is the usual one');
+  down(40, 120); assert.equal(w.step, 'green', 'on your land the tee goes down');
+});
+
 test('10. the wizard\'s own undo: Ctrl+Z takes back the drag, then the green, then the tee; only then the course\'s last step (the last hole)', () => {
   const { st, tool, w, down, drag, plan } = golf();
   plan([40, 120], [230, 120]); assert.ok(tool.buildPlan(), 'hole 1 built');

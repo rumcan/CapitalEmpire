@@ -6,7 +6,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
   LEGACY_UPGRADES, LOT_SHARE, RANGE_UPGRADES, RangeSim, TARGET_APPEAL, WALK_REACH, defaultRangeBiz, lotGround, normalizeRangeBiz, rangeScene, rangeStats,
-  upgradeWhy, walkwayOf, withUpgrade, type CarSlot, type RangeBizSave, type RangeUpgradeId,
+  upgradeWhy, walkwayOf, walkwayReach, withUpgrade, type CarSlot, type RangeBizSave, type RangeUpgradeId,
 } from '../src/game/golf/rangebiz';
 import { RangeHost, type RangeHostCtx } from '../src/game/golf/rangehost';
 import { looseBays } from '../src/game/golf/rangelot';
@@ -116,6 +116,18 @@ test('the walkway: none without a path, or with one that misses the shop; a path
   // two legs that cross the same point join there (the tee spur off the middle of the path)
   const t = walkwayOf(sc, pathLegs([[50, 12], [34, 14]]).concat(pathLegs([[42, 13], [42, 16.5], [10, 16.5]])));
   assert.equal(t, null, 'legs that only cross (no shared point) are not joined');
+});
+
+test('T459 (#1215): walkwayReach says which of the car park, the shop and the tee box a path reaches, joined or not', () => {
+  const sc = rangeScene(PLOT, F, defaultRangeBiz());
+  assert.deepEqual(walkwayReach(sc, []), { lot: false, shop: false, tee: false });
+  assert.deepEqual(walkwayReach(sc, pathLegs([[50, 12], [42, 12]])), { lot: true, shop: false, tee: false }, 'from the car park, short of the shop');
+  assert.deepEqual(walkwayReach(sc, pathLegs([[50, 12], [42, 12], [34, 14]])), { lot: true, shop: true, tee: false }, 'car park to shop: the mats still missing (the playtest path)');
+  assert.deepEqual(walkwayReach(sc, pathLegs([[30, 16.5], [8, 16.5]])), { lot: false, shop: false, tee: true }, 'behind the mats alone');
+  assert.deepEqual(walkwayReach(sc, pathLegs()), { lot: true, shop: true, tee: true }, 'the whole walkway');
+  // all three reached by legs that never join: reach says yes to each, walkwayOf still none (the toast then says "join the pieces")
+  const apart = pathLegs([[50, 12], [34, 14]]).concat(pathLegs([[42, 13], [42, 16.5], [10, 16.5]]));
+  assert.deepEqual(walkwayReach(sc, apart), { lot: true, shop: true, tee: true }); assert.equal(walkwayOf(sc, apart), null);
 });
 
 test('the walkers: across the dirt without a path; along the laid walking path once there is one', () => {
