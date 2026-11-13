@@ -1,0 +1,78 @@
+{
+  "id": "staff:staff_range_m:pick",
+  "name": "staff_range_m pick (ChatGPT painted)",
+  "clip": "pick",
+  "heightMetres": 1.82,
+  "frameWidth": 160,
+  "frameHeight": 277,
+  "anchor": {
+    "x": 80,
+    "y": 267
+  },
+  "directions": [
+    "S",
+    "SW",
+    "W",
+    "NW",
+    "N",
+    "NE",
+    "E",
+    "SE"
+  ],
+  "frames": [
+    "pick1",
+    "pick2",
+    "pick3",
+    "pick4"
+  ],
+  "times": [
+    0,
+    0.45,
+    0.8,
+    1.2
+  ],
+  "loop": true,
+  "note": "stand, bend, pick, rise (the attendant at the ball pile, rangehost.ts); starts as idle copies until imported",
+  "chatgpt": {
+    "S": {
+      "picture": "staff_range_m~S~pick-golfers.png",
+      "date": "2026-11-14",
+      "scale": 0.464
+    },
+    "SW": {
+      "picture": "staff_range_m~SW~pick-golfers.png",
+      "date": "2026-11-14",
+      "scale": 0.455
+    },
+    "W": {
+      "picture": "staff_range_m~W~pick-golfers.png",
+      "date": "2026-11-14",
+      "scale": 0.4674
+    },
+    "NW": {
+      "picture": "staff_range_m~NW~pick-golfers.png",
+      "date": "2026-11-14",
+      "scale": 0.4489
+    },
+    "N": {
+      "picture": "staff_range_m~N~pick-golfers.png",
+      "date": "2026-11-14",
+      "scale": 0.4492
+    },
+    "NE": {
+      "picture": "staff_range_m~NE~pick-golfers.png",
+      "date": "2026-11-14",
+      "scale": 0.4485
+    },
+    "E": {
+      "picture": "staff_range_m~E~pick-golfers.png",
+      "date": "2026-11-14",
+      "scale": 0.4796
+    },
+    "SE": {
+      "picture": "staff_range_m~SE~pick-golfers.png",
+      "date": "2026-11-14",
+      "scale": 0.4784
+    }
+  }
+}

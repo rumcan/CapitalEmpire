@@ -181,22 +181,25 @@ async function cutSheet(sheet, json, tmpl) {
 /** the people of one crowd group: each `prefix*` folder of art/<dir> with its template sheet and every clip sheet ([name, frames]). A folder
  *  missing a sheet is logged and skipped. Returns the people ({ id, row: the table row, tmpl, cj: the clip jsons by name }), the walker frames in
  *  order (person, facing, frame) and the clips (idle, walk, then the sheets: first frame in the row, frame count, times, loop, from the first person) */
-async function crowd(dir, prefix, label, sheets) {
+async function crowd(dir, prefix, label, sheets, fill = false) {
   const root = path.join(ROOT, 'art', dir), people = [], frames = [], k = 0.5;
   const sig = j => JSON.stringify([j.frames.length, j.times, j.loop]);
   for (const name of fs.existsSync(root) ? fs.readdirSync(root).sort() : []) {
-    if (!name.startsWith(prefix)) continue;
+    if (!(prefix instanceof RegExp ? prefix.test(name) : name.startsWith(prefix))) continue;
     const id = `${label}:${name}`, base = path.join(root, name);
     if (REMOVED.has(id)) continue;
     const missing = [];
     if (!fs.existsSync(path.join(base, 'sheet.json')) || !fs.existsSync(path.join(base, 'sheet.webp'))) missing.push('template');
-    for (const [c] of sheets) if (!fs.existsSync(path.join(base, c + '.json')) || !fs.existsSync(path.join(base, c + '.webp'))) missing.push(c);
+    // (fill, the staff: a clip a person does not play may be missing: its standing frame is repeated in its place)
+    const has = c => fs.existsSync(path.join(base, c + '.json')) && fs.existsSync(path.join(base, c + '.webp'));
+    for (const [c] of sheets) if (!has(c) && !fill) missing.push(c);
     if (missing.length) { console.warn(`${label} ${name}: no ${missing.join(', ')} sheet yet, skipped`); continue; }
     const tmpl = JSON.parse(fs.readFileSync(path.join(base, 'sheet.json'), 'utf8'));
     if (tmpl.directions.join(' ') !== WALK_DIRS.join(' ')) throw new Error(`${id}: rows ${tmpl.directions.join(' ')}, expected ${WALK_DIRS.join(' ')}`);
     if (tmpl.frames.length !== TEMPLATE_FRAMES) throw new Error(`${id}: ${tmpl.frames.length} frames, expected ${TEMPLATE_FRAMES} (idle, walk1..8)`);
     const cj = {};
     for (const [c, n] of sheets) {
+      if (!has(c)) { cj[c] = null; continue; }
       const j = JSON.parse(fs.readFileSync(path.join(base, c + '.json'), 'utf8'));
       if (j.directions.join(' ') !== WALK_DIRS.join(' ')) throw new Error(`${id} ${c}: rows ${j.directions.join(' ')}, expected ${WALK_DIRS.join(' ')}`);
       if (j.frames.length !== n) throw new Error(`${id} ${c}: ${j.frames.length} frames, expected ${n}`);
@@ -205,11 +208,11 @@ async function crowd(dir, prefix, label, sheets) {
     }
     const first = people[0];
     if (first) {
-      for (const [c] of sheets) if (sig(cj[c]) !== sig(first.cj[c])) console.warn(`${id}: the ${c} clip differs from ${first.id} (frames, times or loop); the group uses ${first.id}'s`);
+      for (const [c] of sheets) if (cj[c] && first.cj[c] && sig(cj[c]) !== sig(first.cj[c])) console.warn(`${id}: the ${c} clip differs from ${first.id} (frames, times or loop); the group uses ${first.id}'s`);
       if (tmpl.walkFps !== first.tmpl.walkFps) console.warn(`${id}: walkFps ${tmpl.walkFps} differs from ${first.id} (${first.tmpl.walkFps}); the walk times use ${first.id}'s`);
     }
     const parts = [await cutSheet(path.join(base, 'sheet.webp'), tmpl, tmpl)];
-    for (const [c] of sheets) parts.push(await cutSheet(path.join(base, c + '.webp'), cj[c], tmpl));
+    for (const [c, n] of sheets) parts.push(cj[c] ? await cutSheet(path.join(base, c + '.webp'), cj[c], tmpl) : Object.fromEntries(WALK_DIRS.map(d => [d, Array(n).fill(parts[0][d][0])])));
     const pi = people.length;
     for (const d of WALK_DIRS) for (const part of parts) for (const f of part[d]) frames.push({ id: `${id}:${d}:${frames.length}`, person: pi, crop: f.crop, cw: f.cw, ch: f.ch, qx0: f.qx0, qy0: f.qy0, qx1: f.qx1, qy1: f.qy1 });
     people.push({ id, tmpl, cj, row: { id, w: +(tmpl.frameWidth * k).toFixed(2), h: +(tmpl.frameHeight * k).toFixed(2), ax: +(tmpl.anchor.x * k).toFixed(2), ay: +(tmpl.anchor.y * k).toFixed(2), m: tmpl.heightMetres } });
@@ -218,10 +221,14 @@ async function crowd(dir, prefix, label, sheets) {
   const first = people[0], walkN = TEMPLATE_FRAMES - 1;
   const clips = { idle: { start: 0, n: 1, times: [0], loop: true }, walk: { start: 1, n: walkN, times: first ? Array.from({ length: walkN }, (_, i) => +(i / (first.tmpl.walkFps || 8)).toFixed(4)) : [0], loop: true } };
   let start = TEMPLATE_FRAMES;
-  for (const [c, n] of sheets) { clips[c] = { start, n, times: first ? first.cj[c].times : [0], loop: first ? first.cj[c].loop : true }; start += n; }
+  for (const [c, n] of sheets) { const src = people.find(p => p.cj[c])?.cj[c]; clips[c] = { start, n, times: src ? src.times : Array.from({ length: n }, (_, i) => i * 0.2), loop: src ? src.loop : true }; start += n; }
   return { people, frames, clips, frameCount: start };
 }
 const spec = await crowd('spectators', 'spec_', 'spectator', SPEC_CLIPS), golf = await crowd('golfers', 'golf_', 'golfer', GOLF_CLIPS);
+// #1235: the range staff painted in ChatGPT (art/spectators/staff_range_*: the attendant), their own group: the template and a pick clip
+// (the staff roles, the owner's lead 2026-11-14: each role its own painted person, never a customer: staff_role_headpro, _teachpro (also the
+// range academy's pro), _secretary, _caddie, _greenkeeper, _mower; the pros' drive is golf_drive; a person without a clip shows standing)
+const STAFF_CLIPS = [['pick', 4], ['golf_drive', 12]], staff = await crowd('spectators', /^staff_(range|role)_/, 'staff', STAFF_CLIPS, true);
 
 // ---- 1c. the baked house lots (lot-variants.mjs): one picture per variant, rendered straight at mip-0 resolution, the whole lot
 // as its footprint and the house as its planner block
@@ -255,7 +262,7 @@ function pack(list, gut, align) {
 }
 pack(sprites, GUT, ALIGN);
 // the walker pages hold the townspeople, the spectators and the golfers together
-const walkerList = [...walkers, ...spec.frames, ...golf.frames];
+const walkerList = [...walkers, ...spec.frames, ...golf.frames, ...staff.frames];
 if (walkerList.length) pack(walkerList, 4, 4);
 console.log(`atlas: ${pages.length} pages; the last is ${Math.round(100 * pages[pages.length - 1].shelves.reduce((m, sh) => Math.max(m, sh.y + sh.h), 0) / PAGE)}% full (shelf height)`);
 
@@ -326,6 +333,7 @@ fs.writeFileSync(path.join(ROOT, 'src/game/library.ts'), [
   "import { appendGolf, appendKit, appendRangeArt, appendLandscapeArt } from './golf-library';",
   "import { appendNewProps } from './new-props-library';",
   "import { appendAnimals } from './animals-library';",
+  "import { appendObjectEight } from './object-eight-library';",   // (kept: the reviewed eight-facing art, appended after the animals)
   "import { appendViews } from './views-library';",
   "import { appendTrees } from './trees-library';",
   "import { appendAxisViews } from './axis-library';",
@@ -367,9 +375,12 @@ fs.writeFileSync(path.join(ROOT, 'src/game/library.ts'), [
   'appendRangeArt(LIBRARY); // T258: range art on the existing golf page',
   'appendLandscapeArt(LIBRARY); // T274: accepted organic art at the tail, on the same golf page',
   'appendNewProps(LIBRARY, ATLAS_PAGES); // the owner\'s new props (art/new-props): their own pages, at the tail so no saved index moves',
-  'appendAnimals(LIBRARY, ATLAS_PAGES); // T309: the farm animals (art/animals, prep-animals.mjs): their own page, at the very tail', ''].join('\n'));
+  'appendAnimals(LIBRARY, ATLAS_PAGES); // T309: the farm animals (art/animals, prep-animals.mjs): their own page, at the very tail',
+  'appendObjectEight(LIBRARY, ATLAS_PAGES); // reviewed eight-facing art is always appended, after the animals; existing save indices stay stable',
+  '// #1235: the range staff (the attendant) after everything else, so no saved index moves',
+  ...crowdLines('STAFF', 'Staff', staff, "'idle' | 'walk' | 'pick' | 'golf_drive'", false), ''].join('\n'));
 console.log(`walkers: ${people.length} people, ${walkers.length} frames; frame fixes: ${flipped.length ? flipped.join(', ') : 'none'}`);
-console.log(`spectators: ${spec.people.length} people, ${spec.frames.length} frames; golfers: ${golf.people.length} people, ${golf.frames.length} frames`);
+console.log(`spectators: ${spec.people.length} people, ${spec.frames.length} frames; golfers: ${golf.people.length} people, ${golf.frames.length} frames; staff: ${staff.people.length} people, ${staff.frames.length} frames`);
 console.log(`walk frames still needed: ${needed.length}${needed.length ? ` (${needed.join(', ')})` : ''}`);
 const used = sprites.reduce((s, x) => s + (x.cw + 2 * GUT) * (x.ch + 2 * GUT), 0);
 console.log(`sprites ${sprites.length}, pages ${pages.length}, fill ${(used / (pages.length * PAGE * PAGE) * 100).toFixed(0)}%`);

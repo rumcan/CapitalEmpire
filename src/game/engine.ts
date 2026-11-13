@@ -1,5 +1,6 @@
 import { CHUNK_H, CHUNK_W, DISTRICT_Z, HH, HW, MAP, MID_H, MID_W, PLANNER_Z, PLAN_H, PLAN_W, SPR_H, SPR_W, ZOOM_MAX, ZOOM_MIN, ZOOM_STEP, clamp, clampZoom, planLevelFor, tileOf, worldX, worldY, mulberry } from './iso';
-import { ATLAS_PAGES, GOLFER_BASE, GOLFER_CLIPS, GOLFER_FRAMES, GOLFER_PEOPLE, LIBRARY, SPECTATOR_BASE, SPECTATOR_CLIPS, SPECTATOR_FRAMES, SPECTATOR_PEOPLE, WALKER_BASE, WALKER_PEOPLE, WALK_DIRS, WALK_FRAMES } from './library';
+import { ATLAS_PAGES, GOLFER_BASE, GOLFER_CLIPS, GOLFER_FRAMES, GOLFER_PEOPLE, LIBRARY, SPECTATOR_BASE, SPECTATOR_CLIPS, SPECTATOR_FRAMES, SPECTATOR_PEOPLE, STAFF_BASE, STAFF_CLIPS, STAFF_FRAMES, STAFF_PEOPLE, WALKER_BASE, WALKER_PEOPLE, WALK_DIRS, WALK_FRAMES } from './library';
+import { staffDrive, staffPerson } from './crowdview';
 import { BoundedLru, hasPickingPixel, mapConcurrent, pickingMask } from './ext/asset-residency';
 import { releaseBuffer } from './release-buffer';
 import { PeopleSpacer, spacePeople } from './spacing';
@@ -401,7 +402,8 @@ function inPolygon(z: readonly number[], x: number, y: number): boolean {
  *  golfers), at its point, unflipped, with the townspeople's 0.24-tile footprint */
 function crowdDrawable(out: Drawable[], k: number, p: CrowdPerson) {
   const d = out[k] ?? (out[k] = { item: 0, x: 0, y: 0, flip: false, scale: 1, x0: 0, y0: 0, x1: 0, y1: 0, moving: false });
-  d.item = p.group ? GOLFER_BASE + (p.person * WALK_DIRS.length + p.row) * GOLFER_FRAMES + p.frame : SPECTATOR_BASE + (p.person * WALK_DIRS.length + p.row) * SPECTATOR_FRAMES + p.frame;
+  d.item = p.group === 2 ? STAFF_BASE + (p.person * WALK_DIRS.length + p.row) * STAFF_FRAMES + p.frame   // (#1235: the painted staff)
+    : p.group ? GOLFER_BASE + (p.person * WALK_DIRS.length + p.row) * GOLFER_FRAMES + p.frame : SPECTATOR_BASE + (p.person * WALK_DIRS.length + p.row) * SPECTATOR_FRAMES + p.frame;
   d.x = p.x; d.y = p.y; d.x0 = p.x - 0.12; d.y0 = p.y - 0.12; d.x1 = p.x + 0.12; d.y1 = p.y + 0.12;
   // (T213: a slot may have held a caddie's bag or a hopping golfer last frame)
   d.lift = p.seatHeightMetres === undefined ? undefined : seatLiftWorldPixels(p.seatHeightMetres, SPECTATOR_PEOPLE[p.person]?.seat ?? 0, SPECTATOR_PEOPLE[p.person]?.w ?? 80, p.benchPixelsPerMetre ?? HH);
@@ -419,6 +421,8 @@ function seeThrough(d: Drawable, g: Drawable): Drawable {
 /** T214: a club staff member's beat in the world (Game.beatsNow) */
 type ProBeatRow = { k: number; role: ClubRole; name: string; beat: ProBeat };
 const CADDIE_ART = Math.max(0, SPECTATOR_PEOPLE.findIndex(p => p.id === 'spectator:spec_m_polo_visor')), CADDIE_LABEL = 'Stand In for caddie';
+/** #1235: the painted caddie (staff_role_caddie), -1 until packed: then the stand-in above and its label */
+const CADDIE_STAFF = staffPerson('staff_role_caddie');
 /** T213: the caddie's bag (the bag trolley), and the scales of the art (the studio's size, else the owner's table's). T351 (#994): the hire cart has a picture for each of its eight
  *  headings (golf/cartart.ts: CART_ITEMS, the nearest of eight to its heading; before it had two, golf-cart-sw and -se, GOLF-ART-LIST item 173) */
 const libIndexOf = (id: string): number => LIBRARY.findIndex(it => it.id === id);
@@ -9143,8 +9147,9 @@ export class Game {
     const c = this.crowdGolfers[2] ?? (this.crowdGolfers[2] = { x: 0, y: 0, group: 0, person: 0, row: 0, frame: 0 });
     for (const k of pl.pv.caddies) {
       if (k.x < X0 || k.x > X1 || k.y < Y0 || k.y > Y1) continue;
-      c.group = 0; c.x = k.x; c.y = k.y; c.person = CADDIE_ART; c.row = k.row; c.frame = k.frame;
-      crowdDrawable(out, m, c); if (k.alpha !== undefined && k.alpha < 1) out[m]!.alpha = k.alpha; this.caddieLabels.push({ p: out[m]!, text: CADDIE_LABEL }); m++;
+      // (the staff's template frames are the spectators' own: idle 0, walk 1-8)
+      c.group = CADDIE_STAFF >= 0 ? 2 : 0; c.x = k.x; c.y = k.y; c.person = CADDIE_STAFF >= 0 ? CADDIE_STAFF : CADDIE_ART; c.row = k.row; c.frame = k.frame;
+      crowdDrawable(out, m, c); if (k.alpha !== undefined && k.alpha < 1) out[m]!.alpha = k.alpha; if (CADDIE_STAFF < 0) this.caddieLabels.push({ p: out[m]!, text: CADDIE_LABEL }); m++;
       if (BAG_ART >= 0) { const b = this.propDrawable(out, m++, BAG_ART, k.bx, k.by, 0.25); if (k.alpha !== undefined && k.alpha < 1) b.alpha = k.alpha; } // (T266: fading with him)
     }
     this.cartDrawables(pl.pv.carts, this.golfCartOut, X0, Y0, X1, Y1);
@@ -9698,7 +9703,7 @@ export class Game {
         if (!hit(q.x, q.y)) continue;
         const h = this.golf?.crew?.staff?.pros?.[q.k]; if (!h) continue;
         const pt = { x: q.x, y: q.y }, role = h.role, art = Game.PRO_ART[role];
-        const person = personIdentity(this.seed, `pro:${h.at}:${role}:${h.name}`, (art.group === 1 ? GOLFER_PEOPLE : SPECTATOR_PEOPLE)[art.person]!.id, 'staff', { name: h.name, job: ROLE_TITLE[role] });
+        const person = personIdentity(this.seed, `pro:${h.at}:${role}:${h.name}`, (art.group === 2 ? STAFF_PEOPLE : art.group === 1 ? GOLFER_PEOPLE : SPECTATOR_PEOPLE)[art.person]!.id, 'staff', { name: h.name, job: ROLE_TITLE[role] });
         return { kind: 'person', name: h.name, at: talkSpot(pt, from), face: pt, key: person.id, act: () => this.youTalkTo(h.name, `your ${ROLE_TITLE[role]}`, pt, null, role, person) };
       }
       // the range's golfers (walking to a mat, queueing, hitting): a name of their own until T243's people
@@ -9728,7 +9733,7 @@ export class Game {
       }
       if (this.crew && !this.dayOff) for (const p of this.crew.view.people) {
         if (p.alpha < 0.2 || !hit(p.x, p.y)) continue;
-        const person = personIdentity(this.seed, `crew:${p.role}:${p.k}`, SPECTATOR_PEOPLE[Game.CREW_ART[p.role]]!.id, 'staff', { job: p.role === 'gk' ? 'Greenkeeper' : 'Mower operator' }), pt = { x: p.x, y: p.y };
+        const person = personIdentity(this.seed, `crew:${p.role}:${p.k}`, Game.CREW_STAFF[p.role] >= 0 ? STAFF_PEOPLE[Game.CREW_STAFF[p.role]]!.id : SPECTATOR_PEOPLE[Game.CREW_ART[p.role]]!.id, 'staff', { job: p.role === 'gk' ? 'Greenkeeper' : 'Mower operator' }), pt = { x: p.x, y: p.y };
         return { kind: 'person', name: person.name, at: talkSpot(pt, from), face: pt, key: person.id, act: () => this.youTalkTo(person.name, 'working on the course', pt, null, undefined, person) };
       }
       for (let i = 0; i < this.spectatorSeenN; i++) {
@@ -12031,11 +12036,16 @@ export class Game {
   // the people (P26 3.5)
   /** the stand-ins (until art 136-138): the head pro golf_pro_m2, the teaching pro golf_pro_w1 (golfers: they have the drive clip), the secretary
    *  spec_w_older_cardigan (a spectator) */
-  private static readonly PRO_ART: Record<ClubRole, { group: 0 | 1; person: number; label: string }> = {
-    head: { group: 1, person: Math.max(0, GOLFER_PEOPLE.findIndex(p => p.id === 'golfer:golf_pro_m2')), label: 'Stand In for head pro' },
-    teach: { group: 1, person: Math.max(0, GOLFER_PEOPLE.findIndex(p => p.id === 'golfer:golf_pro_w1')), label: 'Stand In for teaching pro' },
-    sec: { group: 0, person: Math.max(0, SPECTATOR_PEOPLE.findIndex(p => p.id === 'spectator:spec_w_older_cardigan')), label: 'Stand In for membership secretary' },
+  private static readonly PRO_ART: Record<ClubRole, { group: 0 | 1 | 2; person: number; label: string }> = {
+    head: Game.staffOr('staff_role_headpro', { group: 1, person: Math.max(0, GOLFER_PEOPLE.findIndex(p => p.id === 'golfer:golf_pro_m2')), label: 'Stand In for head pro' }),
+    teach: Game.staffOr('staff_role_teachpro', { group: 1, person: Math.max(0, GOLFER_PEOPLE.findIndex(p => p.id === 'golfer:golf_pro_w1')), label: 'Stand In for teaching pro' }),
+    sec: Game.staffOr('staff_role_secretary', { group: 0, person: Math.max(0, SPECTATOR_PEOPLE.findIndex(p => p.id === 'spectator:spec_w_older_cardigan')), label: 'Stand In for membership secretary' }),
   };
+  /** #1235 (the owner's lead, 2026-11-14: each role its own person, never a customer's look): the painted staff person once packed (no stand-in
+   *  label), else the stand-in */
+  private static staffOr(id: string, standIn: { group: 0 | 1; person: number; label: string }): { group: 0 | 1 | 2; person: number; label: string } {
+    const k = staffPerson(id); return k >= 0 ? { group: 2, person: k, label: '' } : standIn;
+  }
   /** each hire's beat (golf/pros.ts ProBeat), remade when the staff or the buildings change */
   private proBeats: ProBeatRow[] = []; private proBeatsKey = '';
   private proPoseOut: ProPose = { x: 0, y: 0, face: 0, walking: false, walked: 0, work: -1, alpha: 1 };
@@ -12076,9 +12086,14 @@ export class Game {
         if (o.walking) c.frame = W.start + (Math.floor(o.walked * FRAMES_PER_TILE) % W.n);
         else if (b.beat.demo && o.work >= 0 && D) { const u = o.work % SWING_EVERY; let f = 0; while (f + 1 < D.n && D.times[f + 1]! <= u) f++; c.frame = u > D.times[D.n - 1]! + 0.6 ? GOLFER_CLIPS.idle.start : D.start + f; }
         else c.frame = GOLFER_CLIPS.idle.start;
+      } else if (A.group === 2) {   // #1235: the painted staff (the pros demonstrate with the staff's drive once it is packed)
+        const W = STAFF_CLIPS.walk, D = staffDrive();
+        if (o.walking) c.frame = W.start + (Math.floor(o.walked * FRAMES_PER_TILE) % W.n);
+        else if (b.beat.demo && o.work >= 0 && D) { const u = o.work % SWING_EVERY; let f = 0; while (f + 1 < D.n && D.times[f + 1]! <= u) f++; c.frame = u > D.times[D.n - 1]! + 0.6 ? STAFF_CLIPS.idle.start : D.start + f; }
+        else c.frame = STAFF_CLIPS.idle.start;
       } else c.frame = o.walking ? SPECTATOR_CLIPS.walk.start + (Math.floor(o.walked * FRAMES_PER_TILE) % SPECTATOR_CLIPS.walk.n) : SPECTATOR_CLIPS.idle.start;
       crowdDrawable(out, m, c); if (o.alpha < 1) out[m]!.alpha = o.alpha;
-      this.caddieLabels.push({ p: out[m]!, text: A.label }); this.proSeen.push({ x: o.x, y: o.y, k: b.k }); m++;
+      if (A.label) this.caddieLabels.push({ p: out[m]!, text: A.label }); this.proSeen.push({ x: o.x, y: o.y, k: b.k }); m++;
     }
     return m;
   }
@@ -12181,6 +12196,8 @@ export class Game {
   private static readonly CREW_ART: Record<'gk' | 'mo', number> = {
     gk: Math.max(0, SPECTATOR_PEOPLE.findIndex(p => p.id === 'spectator:spec_m_bucket_hat')), mo: Math.max(0, SPECTATOR_PEOPLE.findIndex(p => p.id === 'spectator:spec_m_young_cap')),
   };
+  /** #1235: the painted grounds crew (staff_role_greenkeeper, staff_role_mower), -1 until packed (then the stand-ins above and their labels) */
+  private static readonly CREW_STAFF: Record<'gk' | 'mo', number> = { gk: staffPerson('staff_role_greenkeeper'), mo: staffPerson('staff_role_mower') };
   /** the crew's vehicles' stand-ins (the hire cart: T351 draws the nearest of its eight pictures to its heading, golf/cartart.ts; the golf mower, the push mower, the ride-on), their footprints' half sides and labels */
   private static readonly CREW_VEH: Record<Exclude<CrewVeh, 'none'>, { items: number[]; label: string; r: number }> = {
     cart: { items: [libIndexOf('business:golf-cart-sw'), libIndexOf('business:golf-cart-se')], label: 'Stand In for utility cart', r: 0.6 },
@@ -12196,9 +12213,10 @@ export class Game {
     const t = this.crowdGolfers[3] ?? (this.crowdGolfers[3] = { x: 0, y: 0, group: 0, person: 0, row: 0, frame: 0 });
     for (const p of v.people) {
       if (p.x < X0 || p.x > X1 || p.y < Y0 || p.y > Y1) continue;
-      t.group = 0; t.x = p.x; t.y = p.y; t.person = Game.CREW_ART[p.role]; t.row = p.row; t.frame = p.frame;
+      const sk = Game.CREW_STAFF[p.role];   // (the staff's template frames are the spectators' own: idle 0, walk 1-8)
+      t.group = sk >= 0 ? 2 : 0; t.x = p.x; t.y = p.y; t.person = sk >= 0 ? sk : Game.CREW_ART[p.role]; t.row = p.row; t.frame = p.frame;
       crowdDrawable(out, m, t); if (p.lift) out[m]!.lift = p.lift; if (p.alpha < 1) out[m]!.alpha = p.alpha;
-      this.caddieLabels.push({ p: out[m]!, text: p.role === 'gk' ? 'Stand In for greenkeeper' : 'Stand In for mower operator' }); m++;
+      if (sk < 0) this.caddieLabels.push({ p: out[m]!, text: p.role === 'gk' ? 'Stand In for greenkeeper' : 'Stand In for mower operator' }); m++;
     }
     let n = 0, k = 0;
     for (const th of v.things) {
