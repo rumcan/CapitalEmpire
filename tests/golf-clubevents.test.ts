@@ -25,6 +25,9 @@ test('the dates: the Mayor\'s Cup in October, the Club Championship in May, in t
   assert.equal(eventDue(s, 0, 7.9), null);
   assert.equal(eventDue(s, 0, 8), 'club');
   s.held.club = 0;
+  assert.equal(eventDue(s, 0, 10), 'night'); // (T449: Night golf in July, when it can be hosted)
+  assert.equal(eventDue(s, 0, 11.9, id => id !== 'night'), null);
+  s.held.night = 0;
   assert.equal(eventDue(s, 0, 11.9), null);
   assert.equal(eventDue(s, 1, 1.2), 'mayor'); // next season again
 });

@@ -52,7 +52,8 @@ const RSH = +process.env.RSCALE || 1; if (RSH !== 1) globalThis.RSCALE = RSH;   
 const run = (src) => (0, eval)(src);
 // host mode (T415): the message a host page sends, made from the importer's Woodhill file as CapitalEmpire would send it (true size, its paths and buildings)
 globalThis.hostMsg = () => {   // (made only when asked: a course this size held from the start slows the gate's chunk timings)
-  const raw = JSON.parse(fs.readFileSync(new URL('./courses/raw/woodhill.json', import.meta.url), 'utf8')), ed = new URL('./courses/edits/woodhill.json', import.meta.url);
+  // (T445: HOSTCOURSE=<file>: a course file CapitalEmpire exported (play/export3p.ts) instead of the importer's Woodhill, to see the game's own ground in the view)
+  const raw = JSON.parse(fs.readFileSync(process.env.HOSTCOURSE || new URL('./courses/raw/woodhill.json', import.meta.url), 'utf8')), ed = new URL('./courses/edits/woodhill.json', import.meta.url);
   return { v: 1, t: 'course', course: convert(raw, 'woodhill.json'), features: fs.existsSync(ed) ? JSON.parse(fs.readFileSync(ed, 'utf8')) : null, biome: 'parkland', type: 'private', seed: 4242, scale: 1, hole: 1 };
 };
 
@@ -110,12 +111,22 @@ const HOST_PLAY = String.raw`
     if (snapAt) snapAt('host-aim');
     hostMessage(turn(b0, 1, 16)); step(2, 1); info.ringTight = HP.ring && HP.ring.across;
     if (!(info.ringTight < r1)) errs.push('host play: a steadier club did not tighten the ring');
-    // T421: the meter in the hold-and-release: held 45 steps at 0.9 a second (power 0.675), Space three times (boost 0.03), clicked 40 steps into
-    // the downswing (accuracy 0.675 - 0.6 = 0.075: early)
-    mouse.down = true; step(45, 0); mouse.down = false; if (HP.sw) HP.sw.presses += 3; step(40, 0); mouse.down = true; step(1, 0); mouse.down = false;
+    // T446: the hold and release. A click on the course sets the aim and holds it (it never swings); the camera turned away, Space held lines it up
+    // behind the ball first, then the power fills; Shift three times (boost 0.03); let go: the strike at the power held, no timing (acc 0), version 3
+    mouse.down = true; step(2, 0); mouse.down = false; step(2, 0);
+    if (HP.sw || (hostLast && hostLast.t === 'input')) errs.push('host play: a click on the course started a swing');
+    const aim0 = [aim.x, aim.y]; mouse.x = VW / 2 + 220; step(3, 0);
+    if (aim.x !== aim0[0] || aim.y !== aim0[1]) errs.push('host play: the aim moved after a click set it');
+    camYaw += 1.2; aimCam();
+    keys.Space = true; step(1, 0); const glide = !!(HP.sw && HP.sw.g), u0 = HP.sw ? HP.sw.u : -1; step(30, 0);
+    const off = camYaw - Math.atan2(aim.dy, aim.dx) - 1.5708, lined = Math.abs(Math.atan2(Math.sin(off), Math.cos(off))) < 1e-6;
+    step(30, 0); if (HP.sw) HP.sw.presses += 3; const held = HP.sw ? HP.sw.u : -1; keys.Space = false;
+    info.swing = { glide, u0, lined, held: +held.toFixed(4) };
+    if (!glide || u0 !== 0 || !lined) errs.push('host play: the camera did not line up behind the ball before the power filled');
+    if (!(held > 0.2 && held <= 1)) errs.push('host play: the power did not fill while held (' + held + ')');
     let sent = null; for (let k = 0; k < 120 && !sent; k++) { step(1, 0); if (hostLast && hostLast.t === 'input') sent = hostLast.input; }
     info.input = sent;
-    { const w = sent && sent.swing; if (!w || Math.abs(w.power - 0.675) > 1e-6 || Math.abs(w.acc - 0.075) > 1e-6 || Math.abs(w.boost - 0.03) > 1e-9 || w.v !== 2) errs.push('host play: the meter\'s outcome is not the timing (' + JSON.stringify(w) + ')'); }
+    { const w = sent && sent.swing; if (!w || Math.abs(w.power - held) > 1e-9 || w.acc !== 0 || Math.abs(w.boost - 0.03) > 1e-9 || w.v !== 3) errs.push('host play: the swing\'s outcome is not the power held (' + JSON.stringify(w) + ')'); }
     if (!sent || sent.club !== 'driver' || !(sent.power >= 0.3 && sent.power <= 1) || !Array.isArray(sent.aim) || !Number.isFinite(sent.aim[0]) || sent.holeIdx !== 0 || sent.stroke !== 1) errs.push('host play: no input, or a wrong one');
     const bw = [ball.x, ball.y]; step(60, 0);
     if (ball.state !== 0 || near([ball.x, ball.y], bw) > 1e-9 || !hostBusy()) errs.push('host play: the ball moved (or he could swing) before the host answered');
@@ -163,7 +174,7 @@ const HOST_PLAY = String.raw`
     if (took !== false || HP.pick.curve !== 0 || !/Accuracy 60/.test(msgText) || hostPickSet('boost') !== false) errs.push('host craft: a locked pick was taken');
     hostMessage(turn(2, Object.assign({}, none, { boost: true, charges: 1, why: {} }), 1)); jumpToBall(); step(4, 0);
     hostPickSet('boost'); const armed = HP.pick.armed;
-    mouse.down = true; step(30, 0); mouse.down = false; for (let k = 0; k < 120 && !(hostLast && hostLast.t === 'input'); k++) step(1, 0);
+    keys.Space = true; step(60, 0); keys.Space = false; for (let k = 0; k < 120 && !(hostLast && hostLast.t === 'input'); k++) step(1, 0);   // (T446: Space held swings)
     const sw = hostLast && hostLast.t === 'input' && hostLast.input.swing; info.boost = { armed, sent: sw && sw.boost, after: HP.pick.armed };
     if (!armed || !sw || sw.boost !== 0.06 || HP.pick.armed) errs.push('host craft: the armed boost was not a full boost, or was not spent');
     return { errs, info };
@@ -258,7 +269,7 @@ const HOST_SCRIPT = String.raw`
         for (let k = 0; k < 400 && (bcam || player.swing >= 0); k++) step(1);   // (the ball camera lingers on a ball at rest a moment: the jump waits for it)
         jumpToBall(); mouse.x = VW / 2; mouse.y = VH / 2 - 100; step(6);
         sent.length = 0;
-        mouse.down = true; step(45); mouse.down = false; step(40); mouse.down = true; step(1); mouse.down = false;
+        keys.Space = true; step(60); keys.Space = false;   // (T446: Space held swings, let go strikes)
         let inp = null; for (let k = 0; k < 240 && !inp; k++) { step(1); inp = sent.find((m) => m.t === 'input') || null; }
         if (!inp) { errs.push('script: no input from the view at turn ' + turn + ' ' + JSON.stringify({ wait: HP.wait, sw: !!HP.sw, swing: player.swing, near: nearBall(), busy: hostBusy(), bcam, cart: cart.on, club: hostClub() && hostClub().club, clubs: HP.clubs.length, sent: sent.map((m) => m.t), d: Math.hypot(player.x - ball.x, player.y - ball.y) })); break; }
         seen = null; feed(S.input(inp.input));
@@ -430,6 +441,32 @@ ${HOST_PLAY}
       }
       out.info.push({ farjit: res }); },
     chunkprof() { const t0 = performance.now(); let n = 0; for (let cy = -12; cy < 12; cy++) for (let cx = -14; cx < 14; cx++) { genChunk(cx, cy); n++; } out.info.push({ chunkAvgMs: +((performance.now() - t0) / n).toFixed(2), n }); snap('chunkprof'); },
+    cart4() { // the block cart from four headings (from behind, its right, its front, its left, each a little turned), the golfer at the wheel; then empty
+      idle(); const base = Math.atan2(Math.cos(cart.th), -Math.sin(cart.th)), t0 = performance.now(); let n0 = 0;
+      for (const [n, k] of [['a', 0], ['b', 1], ['c', 2], ['d', 3]]) { player.x = cart.x; player.y = cart.y; cart.on = true; camYaw = base + k * 1.5708 + 0.4; camD = 6; camHk = 0.8; aimCam(); camZ = groundH(cart.x, cart.y) + HC * 0.8; frames(4); snap('cart4-' + n); n0++; }
+      cart.on = false; player.x = cart.x - Math.sin(cart.th) * 2.6; player.y = cart.y + Math.cos(cart.th) * 2.6; camYaw = base + 0.9; aimCam(); frames(4); snap('cart4-e'); camD = D0; camHk = 1;
+      out.info.push({ cart4: { pictures: cartPics.size, ms: +(performance.now() - t0).toFixed(0), views: n0 } }); },
+    stylekeep() { // the style chosen for a course comes back when it is played again (a stand-in localStorage that keeps what it is given; the harness's own keeps nothing)
+      const LS0 = globalThis.localStorage; { const m = new Map(); globalThis.localStorage = { getItem: (k) => (m.has(k) ? m.get(k) : null), setItem: (k, v) => m.set(k, '' + v), removeItem: (k) => m.delete(k) }; }
+      idle(); const L = courseList(), a = L[0] && L[0].id, b = L[1] && L[1].id; if (!a || !b) { out.info.push({ stylekeep: 'needs two courses' }); return; }
+      const U0 = STYLE_URL; STYLE_URL = false;   // (the harness's address may name a style)
+      setCourse(a); useStyle('desert', 'links'); setCourse(b); useStyle('snow', 'public'); const onB = biomeId + '/' + ctypeId; setCourse(a); const backA = biomeId + '/' + ctypeId; setCourse(b); const backB = biomeId + '/' + ctypeId;
+      STYLE_URL = true; setCourse(a); const url = biomeId + '/' + ctypeId; STYLE_URL = false;
+      out.info.push({ stylekeep: { kept: JSON.parse(localStorage.getItem(STYLE_KEY)), a, b, onB, backA, backB, urlWins: url === backB, ok: backA === 'desert/links' && backB === 'snow/public' && url === backB } }); globalThis.localStorage = LS0; STYLE_URL = U0; },
+    cartms() { // what drawing the cart costs a frame (any build: drawCart alone), seen from 6, 14 and 40 m, turning: the median and the 95th percentile
+      idle(); const base = Math.atan2(Math.cos(cart.th), -Math.sin(cart.th)), res = {};
+      for (const d of [6, 14, 40]) {
+        player.x = cart.x - Math.sin(base) * (d - D0) ; player.y = cart.y + Math.cos(base) * (d - D0); camYaw = base; aimCam(); camX = cart.x - Math.sin(base) * d; camY = cart.y + Math.cos(base) * d; camZ = groundH(cart.x, cart.y) + HC; render();
+        let cold = 0; for (let k = 0; k < 400; k++) { frame++; cart.th += 0.0157; const t0 = performance.now(); drawCart(null, 0); cold = Math.max(cold, performance.now() - t0); }   // (the first turn: the pictures made)
+        const t = []; for (let k = 0; k < 400; k++) { frame++; cart.th += 0.0157; const t0 = performance.now(); drawCart(null, 0); t.push(performance.now() - t0); }
+        t.sort((a, b) => a - b); res['d' + d] = { med: +t[200].toFixed(3), p95: +t[380].toFixed(3), max: +t[399].toFixed(2), coldMax: +cold.toFixed(2) };
+      }
+      out.info.push({ cartms: res }); },
+    cartsheet() { // the cart's pictures on a plain ground, eight headings (four on top, close; four below), to judge the blocks themselves
+      idle(); render(); for (let i = 0; i < fb.length; i++) fb[i] = 0xff58a04c; zbuf.fill(65535); frame++;
+      const K = GK, sc = Math.max(1, Math.floor(VW / 4 / (170 * K)));
+      for (let k = 0; k < 8; k++, frame++) cartBlit(cartPic(k * 4 + 2, 0, K), Math.round(VW / 8 + (k % 4) * VW / 4), Math.round(VH * (k < 4 ? 0.45 : 0.92)), sc, 10, 0);
+      out.names.push('cartsheet'); out.frames.push(Uint8ClampedArray.from(px)); out.info.push({ name: 'cartsheet', scale: sc }); },
     cart() { idle(); cart.th = Math.atan2(hole.ry, hole.rx); const back = Math.atan2(Math.cos(cart.th), Math.sin(cart.th));   // (back: the camera's turn that looks along the cart's heading)
       go(cart.x - Math.cos(cart.th) * 5, cart.y - Math.sin(cart.th) * 5, back + 0.7); camD = 8; aimCam(); frames(12); snap('cart'); camYaw = back + 2.4; aimCam(); frames(8); snap('cart-b'); camYaw = back - 1.5; camD = 6; aimCam(); frames(8); snap('cart-c');
       camD = 14; camYaw = back; player.x = cart.x; player.y = cart.y; rideCart(); frames(4); snap('cart-in'); keys.KeyW = true; frames(60); keys.KeyD = true; frames(40); snap('cart-ride'); idle(); frames(30); rideCart(); out.info.push({ cartTh: +cart.th.toFixed(2), cartAt: [+cart.x.toFixed(1), +cart.y.toFixed(1)] }); },
@@ -474,6 +511,18 @@ ${HOST_PLAY}
       const T0 = performance.now(); while (performance.now() - T0 < 2000) { tickGame(); render(); for (const o of dlist) if (o.k === K_ACTOR && o.a && o.a.role === 'ball' && o.a.ghost && o.a.z > 0.5) { flew++; if (o.a.z > maxZ) maxZ = o.a.z; } if (flew === 5) snap('ghostball'); }
       out.info.push({ ghostball: { flewFrames: flew, highestM: +maxZ.toFixed(1), ownerBallStill: Math.hypot(ball.x - own[0], ball.y - own[1]) < 1e-9 && !HP.play, turnKept: !!(HP && HP.turn), help: /IN YOUR GAME/.test(helpEl.innerHTML) } });
       ACT_MAKE = 3; },
+    standboard() { // a grandstand behind Woodhill's 18th green and a hole scoreboard beside it, both sent unturned (facing south) as the manager game sends them;
+      // the view turns each to the green, and the stand's seated fans with it
+      const hm = hostMsg(); hm.hole = 18; hostMessage(hm); idle(); ACT_MAKE = 999;
+      const S = course.S, px = hole.pin.x, py = hole.pin.y, bx = hole.tee.x, by = hole.tee.y, L = Math.hypot(px - bx, py - by), ux = (px - bx) / L, uy = (py - by) / L, rx = -uy, ry = ux;
+      const sx = px + ux * 26, sy = py + uy * 26, kx = px + rx * 13 + ux * 3, ky = py + ry * 13 + uy * 3;
+      setFeatures({ features: [{ kind: 'building', use: 'stand', at: [sx / S, sy / S], w: 16, d: 6, h: 5, rot: 0, roof: 'flat', wall: '#8b9097' }, { kind: 'building', use: 'board', at: [kx / S, ky / S], w: 4, d: 2, h: 4.5, rot: 0, roof: 'flat', wall: '#2f5a3e' }] });
+      const seats = []; for (let row = 0; row < 4; row++) for (let c = 0; c < 16; c++) seats.push([(sx + (c - 7.5) * 0.9) / S, (sy + 2.4 - row * 1.4) / S, 0.45 + row * 0.42]);   // (the seats as an unturned stand has them: its front to the south)
+      hostMessage({ v: 1, t: 'actors', at: 600, actors: [{ id: 300001, role: 'gallery', at: [sx / S, sy / S], hole: 18, count: seats.length, fans: seats, focus: [px / S, py / S], seated: true }] });
+      const me = [px - ux * 30 + rx * 6, py - uy * 30 + ry * 6]; go(me[0], me[1]); camYaw = Math.atan2(px + ux * 8 - me[0], -(py + uy * 8 - me[1])); player.th = camYaw - 1.5708; camHk = 1.6; aimCam(); frames(30); snap('standboard');
+      const B = feats.builds, to = (b) => Math.round(((Math.atan2(px - b.x, -(py - b.y)) - (b.rot + Math.PI)) * 180 / Math.PI % 360 + 540) % 360 - 180);   // (how far its front is turned from the green: 0 is square on)
+      out.info.push({ standboard: { stand: { rot: Math.round(B[0].rot * 180 / Math.PI), off: to(B[0]) }, board: { rot: Math.round(B[1].rot * 180 / Math.PI), off: to(B[1]) }, fans: galleries.get(300001) ? galleries.get(300001).n : 0, onStand: (() => { const g = galleries.get(300001), b = B[0], c = Math.cos(b.rot), s = Math.sin(b.rot); let n = 0; if (g) for (let k = 0; k < g.n; k++) { const dx = g.fans[k * 3] - b.x, dy = g.fans[k * 3 + 1] - b.y; if (Math.abs(dx * c + dy * s) <= b.w / 2 && Math.abs(-dx * s + dy * c) <= b.d / 2) n++; } return n; })() } });
+      const nb = [kx - ux * 9 - rx * 2, ky - uy * 9 - ry * 2]; go(nb[0], nb[1]); camYaw = Math.atan2(kx - nb[0], -(ky - nb[1])); player.th = camYaw - 1.5708; camHk = 1; camD = 8; aimCam(); frames(20); snap('standboard-board'); camD = D0; },
     gallery() { // T429: Woodhill's 18th on tournament day: a ring of fans round the green, a grandstand of seated fans behind it; then a holed putt and the cheer
       const hm = hostMsg(); hm.hole = 18; hostMessage(hm); idle(); ACT_MAKE = 999;
       const S = course.S, px = hole.pin.x, py = hole.pin.y, bx = hole.tee.x, by = hole.tee.y, L = Math.hypot(px - bx, py - by), ux = (px - bx) / L, uy = (py - by) / L, rx = -uy, ry = ux;

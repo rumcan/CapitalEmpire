@@ -3,6 +3,7 @@
 import { CELL_T, SURF, type Grid } from '../../ext/course-grid';
 import type { AimPoint, Pin, TeeMark } from '../types';
 import type { OsmCourseSpec, SpecSurface } from './types';
+import { roughBand } from './band';
 
 /** the grid surface id each spec surface paints */
 const SURF_OF: Record<SpecSurface, number> = { rough: SURF.rough, fairway: SURF.fairway, bunker: SURF.bunker, water: SURF.water, tee: SURF.tee, green: SURF.green };
@@ -44,7 +45,8 @@ function fillRings(g: Grid, rings: readonly (readonly number[])[], ox: number, o
 
 /** lays the spec's areas into grid g, in their order (rough, fairway, bunker, water, tee, green: a later one over an earlier one). (ox, oy): where the
  *  spec's frame (its north-west corner) lies on the grid's frame, tiles. Cells outside g are skipped. A made-up fairway band (clip) only lays over
- *  rough; water leaves greens and tees alone. The planting month stays 0 (established): the course is not growing in. Returns the cells laid per
+ *  rough; water leaves greens and tees alone. T445: then the rough is cut back to a band beside the fairways, tees, greens and hole lines (band.ts), long
+ *  grass in its outer metres. The planting month stays 0 (established): the course is not growing in. Returns the cells laid per
  *  surface */
 export function paintSpec(g: Grid, spec: OsmCourseSpec, ox: number, oy: number): Record<SpecSurface, number> {
   const out: Record<SpecSurface, number> = { rough: 0, fairway: 0, bunker: 0, water: 0, tee: 0, green: 0 };
@@ -58,6 +60,8 @@ export function paintSpec(g: Grid, spec: OsmCourseSpec, ox: number, oy: number):
         : (i: number) => { surf[i] = s; hole[i] = h; out[a.surf]++; };
     fillRings(g, a.rings, ox, oy, put);
   }
+  // T445: the rough only as a band beside the play (band.ts): long grass in its outer metres, the land's own ground beyond
+  const band = roughBand(g, spec, ox, oy); if (band.rough >= 0) out.rough = band.rough;
   g.rev++;
   return out;
 }
