@@ -1,6 +1,7 @@
 // T356 (#998): the placing mode (golf/osm/placer.ts) driven with a made-up host: a course taken in hand, turned, moved, priced, asked about, and either laid
 // (Place it) or left untouched (Cancel, Esc, a pose that cannot go there); the grid diff that lays it (placegrid.ts); the Course menu's entry for it.
 import { describe, it } from 'node:test';
+import { MAP } from '../src/game/iso';
 import assert from 'node:assert/strict';
 import { RealPlacer, type RealHost } from '../src/game/golf/osm/placer';
 import { goesPhrase, popupText, planPlace, type PlaceLot, type PlaceSeg, type PlaceWorld } from '../src/game/golf/osm/place';
@@ -20,9 +21,9 @@ function host(over: { map?: number; money?: number; lots?: PlaceLot[]; segs?: Pl
   const state = { money: over.money ?? 1e12, rev: 0 };
   const lots = over.lots ?? [], segs = over.segs ?? [];
   const h: RealHost = {
-    map: over.map ?? 1024,
+    map: over.map ?? MAP,
     world: (_fresh?: boolean): PlaceWorld => ({
-      map: over.map ?? 1024, owned: [], river: () => false, lots, farms: [], segs, pop: 0, townCentre: null, entries: [], targets: [], keep: [], money: state.money, roundLive: false,
+      map: over.map ?? MAP, owned: [], river: () => false, lots, farms: [], segs, pop: 0, townCentre: null, entries: [], targets: [], keep: [], money: state.money, roundLive: false,
       segsNear: (x, y, r) => segs.filter(s => Math.min(s.a.x, s.b.x) - r <= x && x <= Math.max(s.a.x, s.b.x) + r && Math.min(s.a.y, s.b.y) - r <= y && y <= Math.max(s.a.y, s.b.y) + r),
       isCourseRoad: () => false, valuePerTile: () => 10, compensation: l => compensation(l),
     }),
@@ -63,7 +64,7 @@ describe('the placing mode (T356)', () => {
     assert.equal(await s.start('rondebosch'), false);
     assert.equal(s.active, false);
     assert.match(b.log.toasts.at(-1)!.text, /bigger than the map in every direction.*cannot grow.*smaller or a scaled course/);
-    // every shipped course fits the 1024-tile map (Woodhill is scaled to 90%)
+    // every shipped course fits the map (T444: Woodhill at true size on the 4 km map)
     for (const c of OSM_COURSES) { const x = host(), p = new RealPlacer(x.h); assert.equal(await p.start(c.id), true, c.id); }
   });
 

@@ -7,7 +7,7 @@ export const HH = 32;
  *  T444 put it back to 2048 so a real course fits beside the town) */
 export const MAP = 2048;
 /** the map's side in km, for the sentences that name it ("the 4 km map"): tiles are 2 m */
-export const MAP_KM = (MAP * 2) / 1000;
+export const MAP_KM = Math.round((MAP * 2) / 1000);
 /** simulation / content cells (tiles per side) */
 export const CELL = 64;
 /** The builder's 30% zoom is the closest the game camera gets. */

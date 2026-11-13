@@ -417,15 +417,15 @@ describe('the quality grade (T358)', () => {
     const spec = specOf(ronde, { id: 'rondebosch', name: 'Rondebosch', place: 'Cape Town' }), r = reportOf(ronde, spec);
     assert.equal(r.grade, 'full'); assert.equal(r.label, 'Full'); assert.equal(r.holes, 18); assert.equal(r.par, 72);
     assert.deepEqual([r.counts.greens, r.counts.bunkers, r.counts.pins, r.counts.numbered], [18, 41, 18, 18]);
-    assert.ok(r.fits && r.scalePct === 100); assert.match(sizeLine(r), /fits the 2 km map at true size/);
+    assert.ok(r.fits && r.scalePct === 100); assert.match(sizeLine(r), /fits the 4 km map at true size/);
     assert.ok(r.landM[0] > 1200 && r.landM[1] > 1000, `${r.landM}`);
     assert.deepEqual(extentOf(ronde), r.landM);
   });
-  it('Magnolia National and Woodhill are Full too (Woodhill scaled to fit the map, and the card says so)', () => {
+  it('Magnolia National and Woodhill are Full too (Woodhill at true size on the 4 km map)', () => {
     const m = reportOf(magnolia, specOf(magnolia, { id: 'm', name: 'M', place: '' }));
     assert.equal(m.grade, 'full'); assert.equal(m.holes, 18);
     const wh = reportOf(woodhill, specOf(woodhill, { id: 'w', name: 'W', place: '' }));
-    assert.equal(wh.grade, 'full'); assert.equal(wh.scalePct, 90); assert.match(sizeLine(wh), /scaled to 90% to fit the 2 km map/);
+    assert.equal(wh.grade, 'full'); assert.equal(wh.scalePct, 100); assert.match(sizeLine(wh), /fits the 4 km map at true size/);
   });
   it('Wingate Park is Partial: no hole lines, three holes worked out from its fairways, and the card says it is a guess', () => {
     const { report, spec } = rawSpec(wingateRaw, 'way/4261725', 'Wingatepark Country Club');
@@ -445,10 +445,10 @@ describe('the quality grade (T358)', () => {
     assert.ok(report.landM[0] > 2000, 'the boundary is 2.8 km wide');
   });
   it('a course that would have to shrink to under a third to fit the map is too big to build, and says so with the scale it would need', () => {
-    const huge = scaleJson(ronde, 6), spec = specOf(huge, { id: 'h', name: 'H', place: '' }), r = reportOf(huge, spec);
+    const huge = scaleJson(ronde, 12), spec = specOf(huge, { id: 'h', name: 'H', place: '' }), r = reportOf(huge, spec);
     assert.equal(r.grade, 'full'); assert.equal(r.fits, false); assert.ok(r.scalePct > 0 && r.scalePct < 30, `${r.scalePct}%`);
-    assert.match(sizeLine(r), /too big for the 2 km map \(it would have to shrink to \d+%\)/);
-    const big = scaleJson(ronde, 1.8), r2 = reportOf(big, specOf(big, { id: 'b', name: 'B', place: '' }));
+    assert.match(sizeLine(r), /too big for the 4 km map \(it would have to shrink to \d+%\)/);
+    const big = scaleJson(ronde, 3.6), r2 = reportOf(big, specOf(big, { id: 'b', name: 'B', place: '' }));
     assert.equal(r2.fits, true); assert.ok(r2.scalePct >= 50 && r2.scalePct < 100, `${r2.scalePct}%`);
   });
   it('a course with only some holes numbered is Partial, and a nine-hole course with nine lines is Full', () => {
