@@ -9,7 +9,7 @@ import { PUTT_V2, carryFor, chooseShot, hitShot, luckyPutt, putt, rng, type Shot
 import { hasMech, kitOf, type ModCtx } from './mods';
 import { readShape, shapeEffect, type ShotShape } from './shape';
 import { holeFrom } from './courseview';
-import { BOOST, HOLD_V, METER, METER_ANG, MIN_SWING_POWER, readSwing, swingEffect, type SwingOutcome } from './swing';
+import { BOOST, HOLD_PUTT_TOP, HOLD_V, METER, METER_ANG, MIN_SWING_POWER, readSwing, swingEffect, type SwingOutcome } from './swing';
 import { readSpin, spinEffect, type SpinInput } from './spin';
 import { readEnv, type ShotEnv } from './conditions';
 import type { Club, CourseView, Landing, Lie, PlayHole, Pt, RoundPlan, Shot } from './types';
@@ -155,7 +155,7 @@ export function shotOutcome(view: CourseView, hole: PlayHole, from: Pt, plie: Li
   const sw0 = input.swing ? readSwing(input.swing) : null, sw = sw0 && sw0.boost > 0 && !hasMech(sk, 'boost') ? { ...sw0, boost: 0 } : sw0;
   const eff = sw ? swingEffect(sw, kit.skill, putting, kit.sweet, kit.miss, kit.speed) : null, miss = eff ? eff.deg * Math.PI / 180 : 0; // (the kit's skill is skillFor's, with the moment's mods; kit.miss: the Self-Correcting Ball's half; T345: kit.speed turns the sweet window in time into the arc's width)
   if (putting) {
-    const pw = eff ? clamp(eff.power, MIN_SWING_POWER, METER.top + BOOST.max) : clamp(input.power, PUTT_POWER[0]!, PUTT_POWER[1]!);
+    const pw = eff ? clamp(eff.power, MIN_SWING_POWER, (sw!.v === HOLD_V ? HOLD_PUTT_TOP : METER.top) + BOOST.max) : clamp(input.power, PUTT_POWER[0]!, PUTT_POWER[1]!);
     const dx = hole.pin.x - from.x, dy = hole.pin.y - from.y, L = Math.hypot(dx, dy), ux = L > 0 ? dx / L : 1, uy = L > 0 ? dy / L : 0;
     const ax = input.aim.x - from.x, ay = input.aim.y - from.y;
     const e = Math.atan2(ux * ay - uy * ax, ux * ax + uy * ay) + miss; // the aim's angle off the pin's line (radians, signed), plus the meter's miss

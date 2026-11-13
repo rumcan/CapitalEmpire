@@ -20,7 +20,8 @@ The same points are in the view's own help: press **H** there.
 |---|---|
 | W S | walk forward, back (Shift: run) |
 | A D | turn; Q E step sideways |
-| mouse | aim, beside the ball; a click on the course sets the aim and holds it, so the mouse can go to the swing button (a click never swings) |
+| mouse | aim, beside the ball. A click on the ground sets the target there and holds it, so the mouse can go to the swing button (a click never swings). The target is a ring lying on the ground (the spread of the shot there) with a small chevron along the line; on the swing button a gold mark shows the fill that lands the ball on it (a putt: that rolls it there). Hold until the fill reaches the mark and let go |
+| the putt's bar | reaches well past the hole (1.6 times the way, at least 3 m past it): the white mark is the hole, the gold one your aim. A firm putt runs on past the hole |
 | swing button (bottom centre), or Space | hold it: the camera lines up behind the ball along your aim, then the distance fills (to 100% and back again, the landing marker growing with it); let go to hit at that distance. How straight it goes is your golfer's skill, not your timing |
 | Shift (while holding) | the power boost, if your cards give it |
 | Z, X | the shot's shape (draw or fade, high or low), when you have earned them |

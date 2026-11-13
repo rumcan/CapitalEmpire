@@ -31,6 +31,9 @@ export const METER_V = 2;
  *  so its outcome (acc 0) carries this version and has no timing miss: the direction comes from the shot model's own spread for the golfer's skill, all of
  *  it (METER_ANG is for the clicked meter, whose miss takes over half). The boost counts as on the meter */
 export const HOLD_V = 3;
+/** T456 (the owner, 2026-11-13: "the putting stroke should go past the hole"): a hold-and-release putt's power may reach this many times the way to the hole (its share
+ *  of that way: 1 rolls it to the hole), so a firm putt runs on past the cup; the view's meter tops out well short of it (1.6 times, at least 3 m past) */
+export const HOLD_PUTT_TOP = 5;
 /** the key-spam boost: power added per Space press during the swing, the cap, how much a full boost narrows the sweet spot and widens the spread */
 export const BOOST = { per: 0.01, max: 0.06, narrow: 0.4, spread: 0.3 } as const;
 /** the miss: degrees off the aim per meter unit outside the sweet spot and the most, for a full shot and a putt; a full shot past HOOK_DEG is a hook or a
@@ -85,7 +88,7 @@ export function meterMark(p: number, putting: boolean): number {
  *  give the same effect, so a replay plays the same shot. T345: `speed`, the stats' factor on the marker (ClubKit.speed): it turns the sweet window in time into its width on the arc; an outcome
  *  without `v` was swung on the first meter and is read against its sweet spot (SWEET_V1), exactly as it was */
 export function swingEffect(o: SwingOutcome, skill: number, putting: boolean, sweet = 1, miss = 1, speed = 1): SwingEffect {
-  const boost = clamp(o.boost, 0, BOOST.max), pw = clamp(o.power, 0, METER.top), acc = clamp(o.acc, METER.low, METER.top);
+  const boost = clamp(o.boost, 0, BOOST.max), pw = clamp(o.power, 0, putting && (o.v ?? 1) >= HOLD_V ? HOLD_PUTT_TOP : METER.top), acc = clamp(o.acc, METER.low, METER.top);
   const hold = (o.v ?? 1) >= HOLD_V; // (T446: the hold-and-release swing has no accuracy click, so no timing miss)
   const w = hold ? 0 : (o.v ?? 1) >= METER_V ? sweetSpot(skill, boost, sweet, speed) : sweetSpotV1(skill, boost, sweet), off = hold || Math.abs(acc) <= w ? 0 : (Math.abs(acc) - w) * Math.sign(acc);
   // early (acc > 0) misses left (-), late misses right (+)
@@ -103,7 +106,7 @@ export function swingEffect(o: SwingOutcome, skill: number, putting: boolean, sw
 export function readSwing(v: unknown): SwingOutcome | null {
   const o = v as Partial<SwingOutcome> | null;
   if (!o || typeof o !== 'object' || ![o.power, o.acc, o.boost].every(n => typeof n === 'number' && Number.isFinite(n))) return null;
-  return { power: clamp(o.power!, 0, METER.top), acc: clamp(o.acc!, METER.low, METER.top), boost: clamp(o.boost!, 0, BOOST.max), ...((o.v ?? 1) >= HOLD_V ? { v: HOLD_V } : (o.v ?? 1) >= METER_V ? { v: METER_V } : {}) };
+  return { power: clamp(o.power!, 0, (o.v ?? 1) >= HOLD_V ? HOLD_PUTT_TOP : METER.top), acc: clamp(o.acc!, METER.low, METER.top), boost: clamp(o.boost!, 0, BOOST.max), ...((o.v ?? 1) >= HOLD_V ? { v: HOLD_V } : (o.v ?? 1) >= METER_V ? { v: METER_V } : {}) };
 }
 
 /** the meter's phase: ready (before click 1), up (the backswing, before click 2), back (the downswing, before click 3), done */

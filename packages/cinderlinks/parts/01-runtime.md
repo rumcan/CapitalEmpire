@@ -103,6 +103,11 @@ body { display: flex; align-items: center; justify-content: center; color: #eadf
 #swingBtn.idle { opacity: 0.55; cursor: default; }
 #swingBtn.swinging { box-shadow: 0 0 0 2px #f2c94c; }
 #swingBtn i { position: absolute; left: 0; top: 0; bottom: 0; width: 0; background: linear-gradient(90deg, #3c8a52, #58c070 40%, #f2c94c 90%); opacity: 0.85; }
+#swingBtn b { position: absolute; top: 0; bottom: 0; width: 3px; margin-left: -1px; display: none; }
+#swingBtn b.on { display: block; }
+#swingBtn b.aimmk { background: #f2c94c; box-shadow: 0 0 0 1px #0a1a12; }
+#swingBtn b.aimmk::after { content: ''; position: absolute; left: -4px; top: -1px; border: 5px solid transparent; border-top-color: #f2c94c; }
+#swingBtn b.holemk { width: 2px; background: #f4efdc; opacity: 0.85; }
 #swingBtn span { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 12px; letter-spacing: 1px; text-shadow: 2px 2px 0 #000; white-space: nowrap; }
 #powerTxt { margin-top: 4px; font-size: 11px; color: #f4efdc; text-shadow: 2px 2px 0 #000; }
 .track { height: 13px; background: #0c2218; border: 2px solid #0a1a12; box-shadow: 0 0 0 1px rgba(242, 201, 76, 0.55); position: relative; }

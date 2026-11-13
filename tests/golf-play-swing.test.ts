@@ -4,9 +4,10 @@
 // T345 (#987): the sweet spot is a window in time (SWEET seconds, whatever the marker's speed), scaled by the skill, the accuracy stat and the clubs' and cards' `sweet`; the miss is read from the click's time
 // error; a person can hit it (the scripted golfers of tests/helpers/swing-bot.ts); and an outcome saved before it (no `v`) is read against the first meter's sweet spot, exactly as it was.
 import { test } from 'node:test';
+import fs from 'node:fs';
 import assert from 'node:assert/strict';
 import { TILE_M } from '../src/game/golf/types';
-import { BOOST, HOLD_V, LiveGroup, METER, METER_TIME, METER_V, SWEET, SWEET_V1, SwingMeter, applyMods, boostOf, clickError, kitOf, makeField, markerSpeed, meterMark, playRound, readSwing, rng, shotOutcome, shotReport, swingEffect, sweetSeconds, sweetSpot, sweetSpotV1, swingTime, teeTimes } from '../src/game/golf/play';
+import { BOOST, HOLD_PUTT_TOP, HOLD_V, LiveGroup, METER, METER_TIME, METER_V, SWEET, SWEET_V1, SwingMeter, applyMods, boostOf, clickError, kitOf, makeField, markerSpeed, meterMark, playRound, readSwing, rng, shotOutcome, shotReport, swingEffect, sweetSeconds, sweetSpot, sweetSpotV1, swingTime, teeTimes } from '../src/game/golf/play';
 import type { CourseView, GameSkills, Lie, OwnerInput, OwnerTurn, PlayHole, Pt, Shot, SwingOutcome } from '../src/game/golf/play';
 import { HUMANS, botSwing } from './helpers/swing-bot';
 
@@ -344,4 +345,24 @@ test('T446: the hold-and-release swing (HOLD_V) has no timing miss: straight wha
   };
   const hold = across({ power: 1, acc: 0, boost: 0, v: HOLD_V }), click = across({ power: 1, acc: 0, boost: 0, v: METER_V });
   assert.ok(hold > click * 1.5, `the hold shot's spread across the line (${hold.toFixed(3)}) is the model's whole one, about twice the clicked meter's (${click.toFixed(3)})`);
+});
+
+test('T456: a hold-and-release putt may reach well past the hole (its power is a share of the way to the cup, up to HOLD_PUTT_TOP); a full shot may not borrow that range', () => {
+  const view = course(), hole = view.holes[1]!, dir = { x: 1, y: 0 }, distM = 6, from = { x: hole.pin.x - distM / TILE_M * dir.x, y: hole.pin.y };
+  const putt = (power: number) => shotOutcome(view, hole, from, 'green', 0.3, { club: 'putter', aim: { x: hole.pin.x, y: hole.pin.y }, power: 1, swing: { power, acc: 0, boost: 0, v: HOLD_V } }, rng(5, 1, 1));
+  const past = (o: ReturnType<typeof putt>) => (o.to.x - hole.pin.x) * TILE_M;
+  assert.equal(readSwing({ power: 1.6, acc: 0, boost: 0, v: HOLD_V })!.power, 1.6, 'a save keeps a power past the hole');
+  assert.equal(readSwing({ power: 9, acc: 0, boost: 0, v: HOLD_V })!.power, HOLD_PUTT_TOP, 'and is capped at the top');
+  assert.equal(readSwing({ power: 1.6, acc: 0, boost: 0, v: METER_V })!.power, METER.top, 'the clicked meter keeps its own top');
+  const firm = past(putt(1.6)), harder = past(putt(2.4)), soft = past(putt(0.6));
+  assert.ok(firm >= 0.55 * distM, `a firm putt (1.6 times the way) runs on past the cup (${firm.toFixed(2)} m)`);
+  assert.ok(harder > firm + 0.5 * distM, `and a harder one runs on further (${harder.toFixed(2)} m)`);
+  assert.ok(soft < 0, 'a soft one stops short');
+  near(swingEffect({ power: 1.6, acc: 0, boost: 0, v: HOLD_V }, 0.3, true).power, 1.6);
+  near(swingEffect({ power: 4, acc: 0, boost: 0, v: HOLD_V }, 0.3, false).power, 1 + 0.5 * (METER.top - 1), 1e-12);
+});
+
+test('T456: the view repeats HOLD_PUTT_TOP (packages/cinderlinks/parts/09-hud.md): a drift would clamp the putts the meter reaches', () => {
+  const view = fs.readFileSync(`${process.cwd()}/packages/cinderlinks/parts/09-hud.md`, 'utf8');
+  assert.match(view, new RegExp(`const HOLD_PUTT_TOP = ${HOLD_PUTT_TOP};`));
 });

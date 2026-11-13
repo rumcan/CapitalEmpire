@@ -202,7 +202,7 @@ function hostStrike() {   // the club meets the ball: the input goes to the host
   const c = hostClub(), t = HP.turn, S = hostS(); if (!c || !t) return;
   const putt = c.club === 'putter', m = matAt(ball.x, ball.y);
   const sw = HP.out; HP.out = null;   // (T421: the meter's outcome; the power is then only what it would be without one)
-  hostSend({ t: 'input', input: Object.assign({ holeIdx: t.holeIdx, stroke: t.stroke, club: c.club, aim: [aim.x / S, aim.y / S], power: sw ? Math.min(putt ? 1.5 : 1, Math.max(putt ? 0.5 : 0.3, sw.power)) : hostPower(power, putt) }, sw ? { swing: sw } : {}, hostShotIn()) });   // (T441, T442: the shape and spin picked)
+  hostSend({ t: 'input', input: Object.assign({ holeIdx: t.holeIdx, stroke: t.stroke, club: c.club, aim: [aim.x / S, aim.y / S], power: sw ? Math.min(putt ? HOLD_PUTT_TOP : 1, Math.max(putt ? 0.05 : 0.3, sw.power)) : hostPower(power, putt) }, sw ? { swing: { power: sw.power, acc: sw.acc, boost: sw.boost, v: sw.v } } : {}, hostShotIn()) });   // (T441, T442: the shape and spin picked)
   if (HP.pick) HP.pick.armed = false;   // (spin and shape: T441, T442)
   HP.wait = 1;
   if (!putt) sndShot(); else sndTap();
@@ -274,7 +274,8 @@ function hostAim() {   // T420: the aim tells the truth: the arc to where the mo
   // club or a steadier golfer draws a smaller ring. Its numbers come from the host's kit for the club (turn.clubs), worked out along the suggested line
   const C = hostClub(), t = HP.turn; if (!C || !t) return;
   const sw = HP.sw, u = sw ? sw.u : 1, b = sw ? hostBoost(sw.presses) : 0;   // (T421, T446: what the swing has set so far: the power held, and the boost added)
-  const S = hostS(), putt = C.club === 'putter', pw = sw ? (putt ? u : u <= 1 ? u : 1 + 0.5 * (u - 1)) + b : 1, hot = charging ? AIM_R : AIM_G, ph = (frame >> 1) % 6;
+  const S = hostS(), putt = C.club === 'putter', pw = sw ? (putt ? u * hostPuttTop() : u) + b : 1, hot = charging ? AIM_R : AIM_G, ph = (frame >> 1) % 6;   // (T456: a putt's meter reaches past the hole)
+  { const T = hostTarget(); if (T) hostTargetRing(T, C); else HP.target = null; }   // (T456: the aimed point on the ground)
   const dx = aim.dx, dy = aim.dy, rx = -dy, ry = dx;                  // (the line, and his right as he faces it: x east, y south)
   if (!putt && hostAimPreview(C, pw, hot, ph)) return;               // (T441, T442: the model's preview of the shot picked, when it has come)
   if (putt && hostPuttAim(pw, hot, ph)) return;                      // (T423: the host's read: the way a putt struck along this aim takes)
@@ -312,6 +313,34 @@ function hostAim() {   // T420: the aim tells the truth: the arc to where the mo
 // aim and holds it there (so the mouse can go down to the button); before a click the aim follows the mouse, as it did.
 const HMETER = { per: 0.01, max: 0.06, v: 3, glide: 0.4, line: 0.07 };   // (v: swing.ts HOLD_V; glide: seconds; line: radians the camera may be off and need no glide)
 function hostBoost(n) { return Math.min(HMETER.max, Math.max(0, n) * HMETER.per); }
+// T456 (the owner, 2026-11-13: "the putting stroke should go past the hole"): a putt's meter reaches well past the hole: its top is 1.6 times the way to the
+// hole, and at least 3 m past it (swing.ts HOLD_PUTT_TOP: never more than 5 times). A full shot's top is the club's full carry, as before.
+const HOLD_PUTT_TOP = 5;
+function hostPuttTop() { const D = HP && HP.turn ? +HP.turn.distM || 0 : 0; return D > 0 ? Math.min(HOLD_PUTT_TOP, Math.max(1.6, (D + 3) / D)) : 1.6; }
+// T456: the aim as a target: the point clicked (or pointed at), kept within the club's reach, its distance, the model's power that lands the ball there
+// (a full shot: the share of the club's carry in this lie, the host's playsM, so a lie that costs distance asks for more) or rolls it there (a putt: the
+// share of the way to the hole), and the meter's fill for it; null without a club or an aim off the ball
+function hostTarget() {
+  const C = hostClub(), t = HP && HP.turn; if (!C || !t) return null;
+  const S = hostS(), putt = C.club === 'putter', dx = aim.x - ball.x, dy = aim.y - ball.y, d = Math.hypot(dx, dy); if (!(d > 0.05)) return null;
+  const unit = putt ? Math.hypot(hole.pin.x - ball.x, hole.pin.y - ball.y) : (C.playsM !== undefined ? C.playsM : C.carryM) * S;
+  if (!(unit > 0)) return null;
+  const top = putt ? hostPuttTop() : 1, dd = Math.min(d, unit * top);
+  return { x: ball.x + dx / d * dd, y: ball.y + dy / d * dd, d: dd, pw: dd / unit, u: dd / (unit * top), putt, top };
+}
+// T456: the target drawn on the ground: a ring lying flat on the slope (a full shot: one standard deviation of the spread across the line at that
+// distance; a putt: a little more than a cup) and a small chevron inside it pointing along the shot line; marks on the ground, hidden behind whatever
+// stands nearer (the golfer, a tree), as the putting grid is
+function hostTargetRing(T, C) {
+  const S = hostS(), dx = aim.dx, dy = aim.dy, rx = -dy, ry = dx;
+  const R = T.putt ? Math.max(0.25 * S, 0.05 * T.d) : Math.max(1.2 * S, (C.scatterM || 0) / 2 * T.pw * S);
+  const mark = (qx, qy, c) => { projectO(qx, qy, aimH(qx, qy) + 0.03, PJ); if (PJ.s > 0) { plotZO(PJ.x, PJ.y + 1, PJ.d - 0.3, AIM_D); plotZO(PJ.x, PJ.y, PJ.d - 0.3, c); plotZO(PJ.x + 1, PJ.y, PJ.d - 0.3, c); } };
+  const n = Math.max(48, Math.min(220, Math.round(R / S * 30)));
+  for (let a = 0; a < n; a++) { const an = a / n * 6.2832; mark(T.x + Math.cos(an) * R, T.y + Math.sin(an) * R, AIM_G); }
+  const c = R * 0.6, tx = T.x + dx * c * 0.5, ty = T.y + dy * c * 0.5;   // (the chevron's point, a little past the centre, along the line)
+  for (const sd of [-1, 1]) { const bx = tx - dx * c + rx * c * 0.75 * sd, by = ty - dy * c + ry * c * 0.75 * sd, m = Math.max(24, Math.round(c / S * 40)); for (let k = 0; k <= m; k++) { const u = k / m; mark(bx + (tx - bx) * u, by + (ty - by) * u, AIM_W); } }
+  HP.target = { x: T.x, y: T.y, d: T.d, u: T.u, pw: T.pw, top: T.top, R };   // (kept for the harness)
+}
 let swingBtnDown = false, hostAimPin = false;
 function hostSwingHeld() { return swingBtnDown || !!keys.Space; }
 function hostLineUp(S) {   // one step of the camera's glide behind the ball, along the aim, with the green ahead; true once it is lined up
@@ -348,7 +377,7 @@ function hostSwing(p) {   // one step of the swing; true while it holds the golf
     power = S.u; p.al = -2 * S.u;
     return true;
   }
-  HP.out = { power: S.u, acc: 0, boost: HP.pick && HP.pick.armed && hostEarned('boost') && hostCharges() > 0 ? HMETER.max : hostBoost(S.presses), v: HMETER.v }; HP.lastSw = HP.out;
+  HP.out = { power: S.u * (C.club === 'putter' ? hostPuttTop() : 1), u: S.u, acc: 0, boost: HP.pick && HP.pick.armed && hostEarned('boost') && hostCharges() > 0 ? HMETER.max : hostBoost(S.presses), v: HMETER.v }; HP.lastSw = HP.out;
   S.rel = true; charging = false; if (C.club !== 'putter') sndBreath();   // (let go: he draws a breath and swings down)
   return true;
 }
@@ -358,14 +387,21 @@ function hostMeterShow() {   // the meter on the swing button: the power held, t
   const cls = turn ? (on ? 'on swinging' : hostBusy() || !nearBall() ? 'on idle' : 'on') : '';
   if (swingBtn.className !== cls) swingBtn.className = cls;
   if (!turn) return;
-  const pw = S ? S.u : on ? HP.lastSw.power : 0, boost = S ? (HP.pick && HP.pick.armed ? HMETER.max : hostBoost(S.presses)) : on ? HP.lastSw.boost : 0;
+  const pw = S ? S.u : on ? (HP.lastSw.u !== undefined ? HP.lastSw.u : HP.lastSw.power) : 0, boost = S ? (HP.pick && HP.pick.armed ? HMETER.max : hostBoost(S.presses)) : on ? HP.lastSw.boost : 0;
   swingFill.style.width = (Math.max(0, Math.min(1, pw)) * 100).toFixed(1) + '%';
   const txt = S && S.g ? 'Lining up ...' : S || on ? Math.round(pw * 100) + '%  ' + clubName(club) + (boost > 0 ? '  +' + Math.round(boost * 100) + '% boost' : '') + (S && !S.rel ? '  -  let go to hit' : '') : !nearBall() ? 'Walk to your ball (J)' : 'Hold to swing (or Space)';
   if (swingTxt.textContent !== txt) swingTxt.textContent = txt;
+  // T456: the bar's marks: where the aim is (the fill that lands or rolls the ball there: hold to it and let go) and, on a putt, where the hole is
+  const T = !on || S ? hostTarget() : null, C = hostClub(), putt = !!C && C.club === 'putter';
+  const aimAt = T ? (T.u * 100).toFixed(1) + '%' : '', holeAt = putt ? (100 / hostPuttTop()).toFixed(1) + '%' : '';
+  if (swingAimMk.style.left !== aimAt) { swingAimMk.style.left = aimAt; swingAimMk.className = T ? 'aimmk on' : 'aimmk'; }
+  if (swingHoleMk.style.left !== holeAt) { swingHoleMk.style.left = holeAt; swingHoleMk.className = putt ? 'holemk on' : 'holemk'; }
+  const tip = T ? 'Aim: ' + Math.round(T.u * 100) + '%' + (putt ? ', the hole at ' + Math.round(100 / hostPuttTop()) + '%' : '') : '';
+  if (swingBtn.title !== tip) swingBtn.title = tip;
 }
 // the swing button: held with the mouse (or a finger) it swings; its presses never reach the course (so they never set the aim either)
-const swingBtn = document.createElement('div'), swingFill = document.createElement('i'), swingTxt = document.createElement('span');
-swingBtn.id = 'swingBtn'; swingBtn.appendChild(swingFill); swingBtn.appendChild(swingTxt);
+const swingBtn = document.createElement('div'), swingFill = document.createElement('i'), swingTxt = document.createElement('span'), swingAimMk = document.createElement('b'), swingHoleMk = document.createElement('b');
+swingBtn.id = 'swingBtn'; swingAimMk.className = 'aimmk'; swingHoleMk.className = 'holemk'; swingBtn.appendChild(swingFill); swingBtn.appendChild(swingHoleMk); swingBtn.appendChild(swingAimMk); swingBtn.appendChild(swingTxt);   // (T456: the aim's and the hole's marks on the bar)
 {
   const up = (e) => { swingBtnDown = false; if (e && e.stopPropagation) e.stopPropagation(); };
   swingBtn.addEventListener('pointerdown', (e) => {
@@ -576,7 +612,10 @@ view.addEventListener('mousemove', (e) => {
   const r = view.getBoundingClientRect(); mouse.x = clamp((e.clientX - r.left) / r.width * VW, 0, VW - 1); mouse.y = clamp((e.clientY - r.top) / r.height * VH, 0, VH - 1);
   if (camDrag) { camYaw -= (e.movementX || 0) * 0.005; HZ = Math.round(clamp(HZ + (e.movementY || 0) * 0.7 * RS, 40 * RS, SH * RS)); }   // (a whole row: the sky is read by row)   // the middle button holds the scene: drag it round, drag it up or down
 });
-view.addEventListener('mousedown', (e) => { const a = audio(); if (a && a.state === 'suspended') a.resume(); if (e.button === 1) { camDrag = true; if (e.preventDefault) e.preventDefault(); } else if (!e.button) mouse.down = true; });
+view.addEventListener('mousedown', (e) => { const a = audio(); if (a && a.state === 'suspended') a.resume(); if (e.button === 1) { camDrag = true; if (e.preventDefault) e.preventDefault(); } else if (!e.button) {
+  mouse.down = true;
+  if (HP && ball.state === 0 && nearBall() && !hostBusy()) { const r = view.getBoundingClientRect(); mouse.x = clamp((e.clientX - r.left) / r.width * VW, 0, VW - 1); mouse.y = clamp((e.clientY - r.top) / r.height * VH, 0, VH - 1); aimToMouse(); hostAimPin = true; }   // (T456: a click on the ground aims there at once, whatever the tick: it is the target, and it stays when the mouse goes)
+} });
 addEventListener('mouseup', (e) => { if (e.button === 1) camDrag = false; else mouse.down = false; });
 view.addEventListener('auxclick', (e) => { if (e.preventDefault) e.preventDefault(); });
 view.addEventListener('wheel', (e) => { camD = clamp(camD * (e.deltaY > 0 ? 1.1 : 1 / 1.1), CAMMIN, 42); if (e.preventDefault) e.preventDefault(); }, { passive: false });
