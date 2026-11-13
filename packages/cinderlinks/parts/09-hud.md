@@ -92,6 +92,7 @@ R: Old chunks, tiles and scatter cells far from the camera are dropped, so memor
 File: game.js
 Check: function tickGame(
 Check: requestAnimationFrame(loop)
+R: The swing in host mode (T446): only the swing button or Space starts it, never a click on the course or a panel; holding lines the camera up behind the ball along the aim, then fills the power to 100% and back; letting go strikes at the power held; a click on the course sets the aim and holds it.
 R: Host mode (?host=1, T415): the page is a view inside another page (CapitalEmpire). It loads no course of its own, says { v: 1, t: 'ready' } to the page that holds it and waits for { v: 1, t: 'course', course, features, biome, type, seed, scale, hole }; it plays that course from hole `hole` (1 if none) and answers { v: 1, t: 'loaded', holes }. { t: 'leave' } stops it drawing; Escape sends { v: 1, t: 'exit' }. { v: 1, t: 'lies', lk } (T438) may come after the course: the host's lies, sent once read so the first picture does not wait for them; from then on the grass is drawn by them and the land made before them is made again (the sculptures are kept). Messages from anywhere but the page that holds it are ignored.
 Check: function hostMessage(
 R: Host play (T418 to T420): in host mode the host decides every shot. A strike sends { v: 1, t: 'input', input: { holeIdx, stroke, club, aim, power } } and waits (after 5 s it says it is waiting for the course, and keeps waiting); { t: 'shot' } is played back from its samples (the flight with the ball camera, a thump at the landing and each bounce, the roll, the rest); { t: 'turn' } puts the ball and the pin where the host has them and only then may he swing again; { t: 'holeEnd' } says the score. The club tabs are his bag from the turn (keys 1 to 9 and the wheel over the tabs), and the aim's arc and ring are the host's carry, wind push and scatter for the club in hand. Standalone play is unchanged.
@@ -180,7 +181,7 @@ function hostTurn(m) {   // the owner's turn: the ball and the pin where the mod
   ball.x = ball.lx = m.ball[0] * S; ball.y = ball.ly = m.ball[1] * S; ball.z = groundH(ball.x, ball.y); ball.vx = ball.vy = ball.vz = 0; ball.state = 0;
   hole.pin.x = hole.green.x = m.pin[0] * S; hole.pin.y = hole.green.y = m.pin[1] * S;
   strokes = m.stroke - 1; autoClub = false; club = Math.max(0, HP.clubs.findIndex((c) => c.club === m.suggested.club)); shownClub = -2;
-  HP.pick = null; HP.pv = null; HP.pvSig = '';   // (T441: each turn starts from a plain shot)
+  HP.pick = null; HP.pv = null; HP.pvSig = ''; hostAimPin = false;   // (T441: each turn starts from a plain shot; T446: and the aim follows the mouse until a click sets it)
   const ax = m.suggested.aim[0] * S - ball.x, ay = m.suggested.aim[1] * S - ball.y, al = Math.hypot(ax, ay); if (al > 0.3) { aim.dx = ax / al; aim.dy = ay / al; }
   if (m.stroke === 1 && Math.hypot(player.x - ball.x, player.y - ball.y) > 2.5) jumpToBall();   // (on the tee he stands at his ball; later he walks to it, or J)
 }
@@ -259,7 +260,7 @@ function hostAim() {   // T420: the aim tells the truth: the arc to where the mo
   // the wind's push off the line), and a ring at one standard deviation of where it lands (shot.ts SHOT_SCATTER: across the line and along it). A better
   // club or a steadier golfer draws a smaller ring. Its numbers come from the host's kit for the club (turn.clubs), worked out along the suggested line
   const C = hostClub(), t = HP.turn; if (!C || !t) return;
-  const sw = HP.sw, u = sw ? (sw.ph === 1 ? sw.u : sw.power) : 1, b = sw ? hostBoost(sw.presses) : 0;   // (T421: what the meter has set so far: the overswing carries half, the boost adds)
+  const sw = HP.sw, u = sw ? sw.u : 1, b = sw ? hostBoost(sw.presses) : 0;   // (T421, T446: what the swing has set so far: the power held, and the boost added)
   const S = hostS(), putt = C.club === 'putter', pw = sw ? (putt ? u : u <= 1 ? u : 1 + 0.5 * (u - 1)) + b : 1, hot = charging ? AIM_R : AIM_G, ph = (frame >> 1) % 6;
   const dx = aim.dx, dy = aim.dy, rx = -dy, ry = dx;                  // (the line, and his right as he faces it: x east, y south)
   if (!putt && hostAimPreview(C, pw, hot, ph)) return;               // (T441, T442: the model's preview of the shot picked, when it has come)
@@ -287,57 +288,83 @@ function hostAim() {   // T420: the aim tells the truth: the arc to where the mo
   projectO(lx, ly, z1 + 0.03, PJ); if (PJ.s > 0) aimDotO(PJ.x, PJ.y, PJ.s > 0.5 ? 2 : 1, hot);
   HP.ring = { x: lx, y: ly, across, along };   // (kept for the harness)
 }
-// T421: the swing is the model's meter (swing.ts SwingMeter) in Cinderlinks' hold-and-release. Pressing starts the backswing: the marker climbs at the
-// club's speed (turn.clubs[].speed: meter units a second, slower for a better golfer) while the heart beats faster; letting go sets the power (past 100%
-// is the overswing; at 120% it turns back by itself). The marker then comes back down, the club with it, and a second press strikes: its place against
-// the snap line is the accuracy (inside the sweet band, the club's `sweet` and narrowed by a boost, straight; early pulls left, late pushes right). With
-// no second press the swing ends at -20%, the worst late miss. Space during the swing adds the boost (the host counts it only for a golfer with the card).
-// The outcome, not the times, goes to the host, which reads it exactly as the top view's meter (swing.ts swingEffect): the same click, the same miss.
-const HMETER = { top: 1.2, low: -0.2, per: 0.01, max: 0.06, narrow: 0.4, v: 2 };
+// T446 (the owner, 2026-11-13: "the original mechanic of holding and releasing the key when the distance is correct"): the swing is Cinderlinks' own
+// hold and release, started only from the swing button (bottom centre) or Space, never by a click on the course, so a click on a menu, a tab or the
+// spin ball cannot start one. Holding first lines the camera up behind the ball along the aim (a glide of HMETER.glide seconds, smooth in and out, the
+// shortest way round; none when it is already within HMETER.line), and the meter waits for it. Then the power fills: it rises to 100% at the club's
+// speed (turn.clubs[].speed: meter units a second, slower for a better golfer) and falls back again, as the original's did, while the heart beats
+// faster; the landing marker grows with it. Letting go swings the club down and strikes at the power held (let go during the glide: no swing). There is
+// no accuracy click: how straight it goes is the model's own spread for the golfer's skill (swing.ts HOLD_V), so the shot comes only from the host.
+// Shift tapped while holding adds the boost (the host counts it only for a golfer with the card); I arms the full boost. A click on the course sets the
+// aim and holds it there (so the mouse can go down to the button); before a click the aim follows the mouse, as it did.
+const HMETER = { per: 0.01, max: 0.06, v: 3, glide: 0.4, line: 0.07 };   // (v: swing.ts HOLD_V; glide: seconds; line: radians the camera may be off and need no glide)
 function hostBoost(n) { return Math.min(HMETER.max, Math.max(0, n) * HMETER.per); }
-function hostSweet(C, boost) { return (C && C.sweet > 0 ? C.sweet : 0.07) * (1 - HMETER.narrow * Math.min(HMETER.max, boost) / HMETER.max); }   // (swing.ts sweetSpot's narrowing by the boost)
-function hostSwing(p) {   // one step of the meter; true while it holds the golfer (updatePlayer then does nothing else)
-  const down = mouse.down, edge = down && !HP.mwas; HP.mwas = down;
+let swingBtnDown = false, hostAimPin = false;
+function hostSwingHeld() { return swingBtnDown || !!keys.Space; }
+function hostLineUp(S) {   // one step of the camera's glide behind the ball, along the aim, with the green ahead; true once it is lined up
+  const g = S.g; if (!g) return true;
+  g.t = Math.min(1, g.t + 1 / 60 / HMETER.glide); const e = g.t * g.t * (3 - 2 * g.t);
+  camYaw = g.y0 + g.dy * e; camD = g.d0 + (D0 - g.d0) * e; camHk = g.h0 + (1 - g.h0) * e; aimCam();
+  if (g.t >= 1) S.g = null;
+  return !S.g;
+}
+function hostSwing(p) {   // one step of the swing; true while it holds the golfer (updatePlayer then does nothing else)
+  const down = hostSwingHeld(), edge = down && !HP.mwas; HP.mwas = down;
   const S = HP.sw, C = hostClub();
   if (!S) {
     if (!edge || !C || hostBusy() || !nearBall() || player.swing >= 0 || cart.on) return false;
-    HP.sw = { ph: 1, t: 0, u: 0, power: 0, presses: 0, spd: C.speed > 0 ? C.speed : 1 }; heartT = 0; charging = true; power = 0; return true;
+    let dy = Math.atan2(aim.dy, aim.dx) + 1.5708 - camYaw; dy = Math.atan2(Math.sin(dy), Math.cos(dy));   // (the camera behind him looks his way: its yaw is his heading plus a quarter turn)
+    const g = Math.abs(dy) > HMETER.line || Math.abs(camD - D0) > 0.5 || Math.abs(camHk - 1) > 0.05 ? { t: 0, y0: camYaw, dy, d0: camD, h0: camHk } : null;
+    HP.sw = { t: 0, u: 0, presses: 0, spd: C.speed > 0 ? C.speed : 1, g, rel: false }; heartT = 0; charging = true; power = 0; hostAimPin = true;
+    if (HP.ring) prewarmAt(HP.ring.x, HP.ring.y);   // (the land where it will come down is made while he lines up and swings)
+    return true;
   }
   const fx = -aim.dy, fy = aim.dx;                                     // he stands side-on: the target is to his left
   p.x += (ball.x - fx * 0.64 - p.x) * 0.3; p.y += (ball.y - fy * 0.64 - p.y) * 0.3; p.th = Math.atan2(fy, fx); p.fa = Math.round(p.th / 6.2832 * 16 + 16) % 16; p.moving = false;
-  S.t += 1 / 60;
-  if (S.ph === 1) {                                                    // the backswing: the marker climbs while the button is held
-    S.u = Math.min(HMETER.top, S.t * S.spd);
-    if (S.u >= HMETER.top || !down) { S.power = S.u; S.ph = 2; S.t = 0; charging = false; }
-    if (--heartT <= 0) { sndHeart(); heartT = Math.round((50 - 24 * Math.min(1, S.u)) * (HP.pick && HP.pick.armed ? 0.6 : 1)); }   // the heart beats, faster as the power builds (and faster still with the boost armed, T443)
-    power = S.u; p.al = -2 * Math.min(1, S.u);
+  if (S.rel) {                                                         // the downswing: the club comes down from where it was; the ball is struck as it passes
+    p.al += 0.34; if (p.al < 0) return true;
+    HP.sw = null; p.swing = 1; p.al = 0.01; hostStrike(); return true;
+  }
+  if (!hostLineUp(S)) {                                                // the camera lines up first; the meter waits
+    if (!down) { HP.sw = null; charging = false; power = 0; p.al = 0; }   // (let go before it was lined up: no swing)
     return true;
   }
-  S.u = S.power - S.t * S.spd;                                         // the downswing: the marker comes back to the snap line, the club to the ball
-  p.al = S.u > 0 ? -2 * Math.min(1, S.u) : 0;
-  const acc = edge ? S.u : S.u <= HMETER.low ? HMETER.low : null;
-  if (acc === null) return true;
-  HP.out = { power: S.power, acc, boost: HP.pick && HP.pick.armed && hostEarned('boost') && hostCharges() > 0 ? HMETER.max : hostBoost(S.presses), v: HMETER.v }; HP.sw = null; HP.lastSw = HP.out;
-  p.swing = 1; p.al = 0.01;                                            // (the follow-through plays; the club has met the ball)
-  hostStrike();
+  if (down) {                                                          // the backswing: the power rises to 100% in 1 / speed seconds, falls back, rises again
+    S.t += 1 / 60; S.u = 0.5 - 0.5 * Math.cos(Math.PI * S.t * S.spd);
+    if (--heartT <= 0) { sndHeart(); heartT = Math.round((50 - 24 * S.u) * (HP.pick && HP.pick.armed ? 0.6 : 1)); }   // the heart beats, faster as the power builds (and faster still with the boost armed, T443)
+    power = S.u; p.al = -2 * S.u;
+    return true;
+  }
+  HP.out = { power: S.u, acc: 0, boost: HP.pick && HP.pick.armed && hostEarned('boost') && hostCharges() > 0 ? HMETER.max : hostBoost(S.presses), v: HMETER.v }; HP.lastSw = HP.out;
+  S.rel = true; charging = false; if (C.club !== 'putter') sndBreath();   // (let go: he draws a breath and swings down)
   return true;
 }
-function hostMeterShow() {   // the power bar as the meter: the marker, the sweet band round the snap line and the 100% mark; the outcome in words after it
-  const S = HP.sw, on = !!S || (player.swing >= 0 && !!HP.lastSw), C = hostClub(), span = HMETER.top - HMETER.low, at = (u) => ((u - HMETER.low) / span * 100).toFixed(1) + '%';
-  const cls = on ? 'on meter' : 'meter'; if (powerEl.className !== cls) powerEl.className = cls;
-  if (!on) return;
-  const u = S ? S.u : HP.lastSw.acc, boost = S ? (HP.pick && HP.pick.armed ? HMETER.max : hostBoost(S.presses)) : HP.lastSw.boost, w = hostSweet(C, boost);
-  powerBar.style.width = at(Math.max(HMETER.low, u));
-  meterSweet.style.left = at(-w); meterSweet.style.width = (2 * w / span * 100).toFixed(1) + '%'; meterTop.style.left = at(1);
-  const pw = S ? (S.ph === 1 ? S.u : S.power) : HP.lastSw.power;
-  let txt = Math.round(pw * 100) + '%  ' + clubName(club) + (boost > 0 ? '  +' + Math.round(boost * 100) + '% boost' : '');
-  if (!S) { const off = Math.abs(u) <= w ? 0 : u; txt += off === 0 ? '  -  straight' : off > 0 ? '  -  early: it goes left' : '  -  late: it goes right'; }
-  else if (S.ph === 2) txt += '  -  click on the line';
-  powerTxt.textContent = txt;
+function hostMeterShow() {   // the meter on the swing button: the power held, the club and the boost; after the strike the power played
+  const S = HP.sw, on = !!S || (player.swing >= 0 && !!HP.lastSw), turn = !!(HP.turn && !HP.over);
+  if (powerEl.className) powerEl.className = '';                     // (host mode: the swing button carries the meter)
+  const cls = turn ? (on ? 'on swinging' : hostBusy() || !nearBall() ? 'on idle' : 'on') : '';
+  if (swingBtn.className !== cls) swingBtn.className = cls;
+  if (!turn) return;
+  const pw = S ? S.u : on ? HP.lastSw.power : 0, boost = S ? (HP.pick && HP.pick.armed ? HMETER.max : hostBoost(S.presses)) : on ? HP.lastSw.boost : 0;
+  swingFill.style.width = (Math.max(0, Math.min(1, pw)) * 100).toFixed(1) + '%';
+  const txt = S && S.g ? 'Lining up ...' : S || on ? Math.round(pw * 100) + '%  ' + clubName(club) + (boost > 0 ? '  +' + Math.round(boost * 100) + '% boost' : '') + (S && !S.rel ? '  -  let go to hit' : '') : !nearBall() ? 'Walk to your ball (J)' : 'Hold to swing (or Space)';
+  if (swingTxt.textContent !== txt) swingTxt.textContent = txt;
 }
-const meterSweet = document.createElement('b'), meterTop = document.createElement('b');
-meterSweet.className = 'sweet'; meterTop.className = 'top';
-{ const tr = powerBar.parentNode || (powerEl.children && powerEl.children[0]); if (tr && tr.appendChild) { tr.appendChild(meterSweet); tr.appendChild(meterTop); } }
+// the swing button: held with the mouse (or a finger) it swings; its presses never reach the course (so they never set the aim either)
+const swingBtn = document.createElement('div'), swingFill = document.createElement('i'), swingTxt = document.createElement('span');
+swingBtn.id = 'swingBtn'; swingBtn.appendChild(swingFill); swingBtn.appendChild(swingTxt);
+{
+  const up = (e) => { swingBtnDown = false; if (e && e.stopPropagation) e.stopPropagation(); };
+  swingBtn.addEventListener('pointerdown', (e) => {
+    if (e.button) return; swingBtnDown = true;
+    try { if (swingBtn.setPointerCapture) swingBtn.setPointerCapture(e.pointerId); } catch (x) { /* (no capture: pointerup on the button still ends it) */ }
+    const a = audio(); if (a && a.state === 'suspended') a.resume();
+    if (e.preventDefault) e.preventDefault(); if (e.stopPropagation) e.stopPropagation();
+  });
+  swingBtn.addEventListener('pointerup', up); swingBtn.addEventListener('pointercancel', up); swingBtn.addEventListener('lostpointercapture', up);
+  swingBtn.addEventListener('mousedown', (e) => { if (e.stopPropagation) e.stopPropagation(); });
+  if (hudEl && hudEl.appendChild) hudEl.appendChild(swingBtn);
+}
 
 // T422: the card says what the model will use: the lie (its kind and what it does), the slope under the ball, and the wind now with the day's gusts
 const COMPASS = ['north', 'north-east', 'east', 'south-east', 'south', 'south-west', 'west', 'north-west'];
@@ -495,7 +522,7 @@ clubsEl.addEventListener('wheel', (e) => { if (!HP || !HP.clubs.length) return; 
 // ---- loop
 addEventListener('keydown', (e) => {
   if (e.repeat) return;
-  if (HP && HP.sw && e.code === 'Space') { HP.sw.presses++; if (e.preventDefault) e.preventDefault(); return; }   // (host mode: the boost, T421 and T443)
+  if (HP && HP.sw && (e.code === 'ShiftLeft' || e.code === 'ShiftRight')) { HP.sw.presses++; return; }   // (host mode: the boost, tapped while the swing is held: T421, T443; Shift since T446, Space now swings)
   if (HP && HP.turn && !HP.sw && (e.code === 'KeyZ' || e.code === 'KeyX' || e.code === 'KeyI')) { hostPickSet(e.code === 'KeyZ' ? 'curve' : e.code === 'KeyX' ? 'flight' : 'boost'); return; }   // (T441, T443: the shape and the boost)
   if (HOST && e.code === 'Escape') { hostSend({ t: 'exit' }); return; }   // (the host page closes the view)
   keys[e.code] = true;

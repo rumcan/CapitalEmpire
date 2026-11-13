@@ -9,7 +9,7 @@ import { PUTT_V2, carryFor, chooseShot, hitShot, luckyPutt, putt, rng, type Shot
 import { hasMech, kitOf, type ModCtx } from './mods';
 import { readShape, shapeEffect, type ShotShape } from './shape';
 import { holeFrom } from './courseview';
-import { BOOST, METER, METER_ANG, MIN_SWING_POWER, readSwing, swingEffect, type SwingOutcome } from './swing';
+import { BOOST, HOLD_V, METER, METER_ANG, MIN_SWING_POWER, readSwing, swingEffect, type SwingOutcome } from './swing';
 import { readSpin, spinEffect, type SpinInput } from './spin';
 import { readEnv, type ShotEnv } from './conditions';
 import type { Club, CourseView, Landing, Lie, PlayHole, Pt, RoundPlan, Shot } from './types';
@@ -192,11 +192,11 @@ export function shotOutcome(view: CourseView, hole: PlayHole, from: Pt, plie: Li
     // (T337: Backyard Trick Shot: a wedge plays out of the rough, the fescue or a bunker as if it lay on the fairway: its lie's carry, scatter, flier and spin share are the fairway's)
     const trick = hasMech(sk, 'trick') && WEDGES.includes(input.club) && (plie === 'rough' || plie === 'fescue' || plie === 'bunker'), lieP: Lie = trick ? 'fairway' : plie, envP = trick && env ? { ...env, lie: 'fairway' as const } : env;
     // (T241: his part of the game's skill; T316: a meter shot may carry past the club's full carry, with its spread, and keeps METER_ANG of the
-    // model's direction spread, the meter's miss taking over the rest)
+    // model's direction spread, the meter's miss taking over the rest; T446: a hold-and-release swing has no miss of its own and keeps all of it)
     // (T318: the spin, from the lie it is played from: the curve, the check, the release; none without it)
     const sp = spin ? spinEffect(spin, input.club, lieP, envP?.lie, kit.spin) : null; // (T334: the lie's finer kind scales the spin; T335: his clubs' grooves)
     // (T346: the club's own run after landing is version 3's: an input saved before it keeps its conditions and rolls as it did)
-    const mod = { ...(eff ? { maxF: Math.max(1, pw), spread: eff.spread, angF: METER_ANG, roll: eff.roll } : {}), ...(sp ? { spin: sp } : {}), ...(envP ? { env: envP } : {}), ...((input.v ?? 1) < 3 ? { run: false } : {}), ...(shape ? { shape: fx } : {}), ctx: mctx };
+    const mod = { ...(eff ? { maxF: Math.max(1, pw), spread: eff.spread, angF: sw!.v === HOLD_V ? 1 : METER_ANG, roll: eff.roll } : {}), ...(sp ? { spin: sp } : {}), ...(envP ? { env: envP } : {}), ...((input.v ?? 1) < 3 ? { run: false } : {}), ...(shape ? { shape: fx } : {}), ctx: mctx };
     let o = hitShot(r, sk, lieP, from, at, input.club, view, mod);
     // (T337: the Scramble Captain: a second ball from the tee, the same strike with its own luck: the one in play, then the nearer the cup, stands)
     if (input.scr === true && plie === 'tee' && hasMech(sk, 'scramble')) {
