@@ -130,14 +130,23 @@ def import_clip(path, gid, heading, clip, tol=60, soft=40, scale=None, dry=False
     olds = [olds_sheet.crop((c * fw, row * fh, (c + 1) * fw, (row + 1) * fh)) for c in range(n)]
     figs, bg = figures(path, tol, soft, GRIDS[clip])
     figs = figs[:n]
-    probe = [0, 1, 7] if clip == 'golf_drive' else [0, 4]
+    probe = [9, 10, 11] if clip == 'golf_drive' else [0, 7]   # (the drive's upright finish frames: ChatGPT stands the address more upright than the renders)
     k = scale or float(np.median([measure(olds[i])[0] / max(1, measure(figs[i])[0]) for i in probe]))
+    # one feet line and one body x for the whole row (the feet stay planted through a stroke): the medians of the frames' lowest pixels
+    # (a club head below the feet in two or three frames does not move it) and of their body middles, old and new
+    scaled = [f.resize((max(1, round(f.width * k)), max(1, round(f.height * k))), Image.LANCZOS) for f in figs]
+    def mass_x(im):
+        a = np.asarray(im)[..., 3].astype(np.float32); m = a.sum(0)
+        return float((m * np.arange(a.shape[1])).sum() / m.sum()) if m.sum() else im.width / 2
+    nm, om = [measure(s) for s in scaled], [measure(o) for o in olds]
+    obot = min(float(np.median([m[1] for m in om])), fh - 4); ocx = float(np.median([mass_x(o) for o in olds]))
     cells, over = [], []
-    for i, f in enumerate(figs):
-        s = f.resize((max(1, round(f.width * k)), max(1, round(f.height * k))), Image.LANCZOS)
-        _, bot, cx = measure(s); _, obot, ocx = measure(olds[i])
+    for i, s in enumerate(scaled):
+        # each frame's own feet: its lowest pixel unless that is a club head well below the row's feet (then the row's median)
+        nb = float(np.median([m[1] for m in nm])); bot = nm[i][1] if nm[i][1] <= nb + 6 else nb
+        cx = mass_x(s)   # (each frame's own crop: its body's middle over the row's)
         c = Image.new('RGBA', (fw, fh), (0, 0, 0, 0))
-        x, y = round(ocx - cx), round(min(obot, fh - 4) - bot)
+        x, y = round(ocx - cx), round(obot - bot)
         c.paste(s, (x, y), s)
         if x < 0 or y < 0 or x + s.width > fw or y + s.height > fh: over.append(i)
         cells.append(c)

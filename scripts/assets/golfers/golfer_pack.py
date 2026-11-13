@@ -56,19 +56,19 @@ Reference 1 shows who the golfer is (him standing, from the front, the side and 
 
 Reference 2 is the layout to paint over: {n} cells ({cols} across, {rows} down, read left to right then the next row), the golfer in each, all at the same heading: {facing}. Keep that heading, the camera, the size and the place of the figure in every cell exactly as reference 2 has them, his feet planted on the same spot of the same ground line in every cell (they do not move during the stroke), and keep each pose close to reference 2's (the renders are rough: paint them as a real golfer)."""
 CLIP_POSES = {
-    'golf_drive': """One full drive with a driver (a wooden-headed 1985 driver, a dark shaft, no ball, no tee), in order:
+    'golf_drive': """One full drive with a driver (a wooden-headed 1985 driver, a dark shaft, no ball, no tee), twelve phases in this order (the game times them, so keep each in its own cell):
 1 address: knees flexed, back tilted, arms hanging, the club head on the ground behind where the ball would be;
 2 takeaway: the club swung back low, the shaft level with the ground;
 3 half-way back: the lead arm level, the club pointing up;
-4 near the top: the shoulders turned, the club over the back shoulder;
-5 the top: fully turned, the shaft about level behind his head;
-6 starting down: hips turning toward the target, the club still high;
-7 half-way down: the club level again, the wrists still cocked;
-8 impact: the club head at the ground where the ball was, arms straight;
-9 just after impact: both arms extended toward the target;
-10 follow-through: the club rising over the lead shoulder, the chest turned to the target;
-11 finish: high finish, belly facing the target, the back heel up on its toe;
-12 holding the finish, relaxed, the club over the shoulder.
+4 the top: fully turned, the club over the back shoulder, the shaft about level behind his head;
+5 starting down: hips turning toward the target, the club still high;
+6 half-way down: the club level again, the wrists still cocked;
+7 impact: the club head at the ground where the ball was, arms straight;
+8 just after impact: both arms extended toward the target, the club low;
+9 follow-through: the club rising over the lead shoulder, the chest turned to the target;
+10 high finish: belly facing the target, the back heel up on its toe;
+11 finish held;
+12 holding the finish, relaxed, the club resting over the shoulder.
 The swing is the same smooth motion through all twelve; the club is one straight shaft in every cell, never bent or doubled.""",
     'golf_putt': """One putt with a putter (a 1985 blade putter, no ball), in order:
 1 address: bent over the ball spot, eyes down, the putter head on the ground, hands together;
