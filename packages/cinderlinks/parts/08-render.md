@@ -1098,6 +1098,7 @@ function spriteFor(o, d) {
 // picture's own colours (light byte 255) by day, lit by the time of day's light at golden hour and dusk; a pixel counts from alpha 110. One picture is
 // made a frame at most, and until a page has loaded the tree is the sculpted stand-in, so a picture never stalls a frame. libS scales it to the tree.
 let TREEART = 0;
+const WIND_HOST = 30;   // a host's tree is drawn cluster by cluster (swaying) within this many metres: a fuller crown than the land's own costs more, and past 30 m the sway does not show
 const HPIC = 256, picImgs = new Map(), picSpr = new Map(); let picMade = -1, picCv = null;
 function picFor(o) {
   const HT = course ? course.ht : null, P = HT ? HT.pic[o.sp] : null; if (!P || typeof Image === 'undefined') return null;
@@ -1266,7 +1267,7 @@ function render() {
       const gust = d < 60 ? gustAt(o.u / PPM, o.v / PPV) : 0;
       if (fade) { const Sl = libFor(o); blit(Sl, sx, sy, s0 * o.libS, d * 100, 0, 0, false, hzo); o.libS = 1; blitDith = fade; }   // the stand-in under, the own sculpture dissolving in over it
       if (o.k === K_TREE && d < 5.5) { if (S.wind) blit(S.wind.wood, sx, sy, s, d * 100, 0, 0, false, 0); }   // a tree right at the camera shows its trunk only: its crown would fill the screen (and cost a slow frame)
-      else if (S.wind && d < 46) drawWindTree(S, sx, sy, s, d * 100, ghost, 0, gust);
+      else if (S.wind && d < (o.hf !== undefined ? WIND_HOST : 46)) drawWindTree(S, sx, sy, s, d * 100, ghost, 0, gust);   // (T451: a host's tree sways within WIND_HOST m; past it its crown is drawn whole)
       else blit(S, sx, sy, s, d * 100, soft ? (1.3 + o.H * 0.035) * (gust ? 1.6 : 0.3) : S.pic ? (gust ? 2.4 : 0.6) : 0, frame * (gust ? 0.14 : 0.045) + o.u * 0.021 + o.v * 0.034, ghost, hzo);   // (a picture tree sways from its foot up, T451)
       blitDith = 0;
       if (G > 0 && d < 40) { if (o.k === K_GLOW) { const g = GLOW_LIGHT[Math.min(2, (o.c[2] * 3) | 0)], a = (0.5 + o.H * 0.03) * G * Math.min(1.5, s0); addLight(sx, sy - o.H * 0.5 * s0, g[0] * a, g[1] * a, g[2] * a); }

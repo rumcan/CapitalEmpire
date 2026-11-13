@@ -55,8 +55,9 @@ export interface TreeIn { at: Pt; size: number; crown?: number; sp?: string }
 export interface FeaturesInput { course: string; paths: readonly PathSegIn[]; buildings: readonly BuildingIn[]; trees: readonly TreeIn[];
   treeBox?: readonly [number, number, number, number]; pics?: Readonly<Record<string, TreePic>> }
 
-/** T451: at most this many trees go to the view (the course message stays quick); past it the ones outside the course's own box are thinned */
-export const MAX_TREES = 16000;
+/** T451: at most this many trees go to the view (the course message stays quick: about 1 MB); past it the ones outside the course's own box are
+ *  thinned first, evenly, and the course's own too if they alone are more */
+export const MAX_TREES = 40000;
 /** T451: how a species is sculpted in the view, from its library id: its form (a conifer, broadleaf, airy broadleaf, palm or dead snag) and its
  *  leaf colour on the view's scale (0.1 deep green .. 0.95 rose); the names say it (gen:tree-maple-scarlet, capital:tree-pine-open, world:tree_pine_0) */
 export function treeLook(sp: string, conifers?: ReadonlySet<string>): { form: TreeForm; hue: number } {
@@ -148,16 +149,17 @@ export function exportFeatures3p(input: FeaturesInput, centre: Pt): FeaturesFile
 const r1 = (n: number): number => Math.round(n * 10) / 10;
 /** T451: the trees packed for the view (TreesPack), or null when there are none. The trees are sorted by place, so the same input packs the same
  *  whatever its order; past MAX_TREES the ones outside the course's own box (treeBox shrunk by the margin it was grown by, MARGIN_T) are kept one
- *  in k, evenly */
+ *  in k, evenly, and the course's own the same way when they alone are more */
 function packTrees(input: FeaturesInput, centre: Pt): TreesPack | null {
   if (!input.trees.length) return null;
   let list = [...input.trees].sort((p, q) => p.at.x - q.at.x || p.at.y - q.at.y || p.size - q.size || (p.sp ?? '').localeCompare(q.sp ?? ''));
   const tb = input.treeBox ?? [Math.min(...list.map(t => t.at.x)), Math.min(...list.map(t => t.at.y)), Math.max(...list.map(t => t.at.x)), Math.max(...list.map(t => t.at.y))];
   if (list.length > MAX_TREES) {
     const m = input.treeBox ? MARGIN_T : 0, inside = (t: TreeIn) => t.at.x >= tb[0] + m && t.at.x <= tb[2] - m && t.at.y >= tb[1] + m && t.at.y <= tb[3] - m;
-    const core = list.filter(inside), rim = list.filter(t => !inside(t)), room = Math.max(0, MAX_TREES - core.length);
-    const k = rim.length / Math.max(1, room);
-    list = [...core.slice(0, MAX_TREES), ...(room ? rim.filter((_, i) => Math.floor(i / k) !== Math.floor((i - 1) / k)).slice(0, room) : [])];
+    // (evenly: one in k along the trees sorted by place, which leaves every stretch of the land its share; never the first n, which would bare a side)
+    const even = (a: TreeIn[], n: number): TreeIn[] => { if (a.length <= n) return a; const k = a.length / n; return a.filter((_, i) => Math.floor(i / k) !== Math.floor((i - 1) / k)).slice(0, n); };
+    const core = list.filter(inside), rim = list.filter(t => !inside(t)), keep = even(core, MAX_TREES);
+    list = [...keep, ...even(rim, MAX_TREES - keep.length)];
     list.sort((p, q) => p.at.x - q.at.x || p.at.y - q.at.y || p.size - q.size);
   }
   const spIdx = new Map<string, number>(), sp: string[] = [], form: TreeForm[] = [], hue: number[] = [], pic: (TreePic | null)[] = [], t: number[] = [];

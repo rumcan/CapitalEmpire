@@ -54,7 +54,12 @@ const run = (src) => (0, eval)(src);
 globalThis.hostMsg = () => {   // (made only when asked: a course this size held from the start slows the gate's chunk timings)
   // (T445: HOSTCOURSE=<file>: a course file CapitalEmpire exported (play/export3p.ts) instead of the importer's Woodhill, to see the game's own ground in the view)
   const raw = JSON.parse(fs.readFileSync(process.env.HOSTCOURSE || new URL('./courses/raw/woodhill.json', import.meta.url), 'utf8')), ed = new URL('./courses/edits/woodhill.json', import.meta.url);
-  return { v: 1, t: 'course', course: convert(raw, 'woodhill.json'), features: fs.existsSync(ed) ? JSON.parse(fs.readFileSync(ed, 'utf8')) : null, biome: 'parkland', type: 'private', seed: 4242, scale: 1, hole: 1 };
+  const m = { v: 1, t: 'course', course: convert(raw, 'woodhill.json'), features: fs.existsSync(ed) ? JSON.parse(fs.readFileSync(ed, 'utf8')) : null, biome: 'parkland', type: 'private', seed: 4242, scale: 1, hole: 1 };
+  // (T451: HOSTTREES=<file>: the course's own trees, a pack as CapitalEmpire sends them (play/features3p.ts TreesPack); HOSTTREES=1: made up in the
+  //  treesms scene from the view's own trees)
+  const ht = process.env.HOSTTREES;
+  if (ht && ht !== '1') m.features = Object.assign({ course: 'woodhill', v: 1, features: [] }, m.features || {}, { trees: JSON.parse(fs.readFileSync(ht, 'utf8')) });
+  return m;
 };
 
 // T424: 'actors' messages as CapitalEmpire sends them (its play/actors3p.ts), in the view's metres. A dress like actors3p.ts dressOf makes
@@ -453,6 +458,27 @@ ${HOST_PLAY}
       setCourse(a); useStyle('desert', 'links'); setCourse(b); useStyle('snow', 'public'); const onB = biomeId + '/' + ctypeId; setCourse(a); const backA = biomeId + '/' + ctypeId; setCourse(b); const backB = biomeId + '/' + ctypeId;
       STYLE_URL = true; setCourse(a); const url = biomeId + '/' + ctypeId; STYLE_URL = false;
       out.info.push({ stylekeep: { kept: JSON.parse(localStorage.getItem(STYLE_KEY)), a, b, onB, backA, backB, urlWins: url === backB, ok: backA === 'desert/links' && backB === 'snow/public' && url === backB } }); globalThis.localStorage = LS0; STYLE_URL = U0; },
+    treesms() { // T451: the view's frame on Woodhill in host mode (HOSTTREES=1: with the course's own trees), walking hole 1 from the tee and turning:
+      // the median and the 95th percentile of a whole frame (render), the land and things made as they come (the page's own budgets), and how many trees
+      const synth = (m) => {   // the course is loaded once without trees, to read where the land puts its own; each becomes one of the game's species at the game's size (3.5 to 8 m: a woods tree, its picture x FOREST_SIZE 0.55 x its owner size), over the course's box and 150 m round it
+        hostMessage(m);
+        const SP = ['capital:tree-pine-open', 'gen:tree-fir-tall:ne', 'capital:tree-oak-open', 'capital:tree-maple-moderate', 'gen:tree-maple-scarlet:se', 'gen:tree-aspen-young:sw'], FORM = [0, 0, 1, 1, 1, 2], HUE = [0.1, 0.1, 0.25, 0.3, 0.92, 0.45];
+        const x0 = course.gx0 - 106, y0 = course.gy0 - 106, x1 = course.gx0 + course.gw * CRES + 106, y1 = course.gy0 + course.gh * CRES + 106, t = [];
+        for (let gy = Math.floor(y0 / TGC); gy <= Math.floor(y1 / TGC); gy++) for (let gx = Math.floor(x0 / TGC); gx <= Math.floor(x1 / TGC); gx++) {
+          const o = treeAt(gx, gy); if (!o) continue;
+          const q = hash2(gx, gy, 77), sp = o.c[0] < CONT ? (q < 0.5 ? 0 : 1) : 2 + Math.floor(q * 3.99), h = process.env.HOSTSIZE === 'own' ? o.H / PPM : 3.5 + hash2(gx, gy, 78) * 4.5;
+          t.push(+o.x.toFixed(1), +o.y.toFixed(1), +h.toFixed(1), +(process.env.HOSTSIZE === 'own' ? o.rx * 2 / PPM : h * (FORM[sp] === 0 ? 0.42 : 0.62)).toFixed(1), sp);
+        }
+        return { box: [x0, y0, x1, y1], sp: SP, form: FORM, hue: HUE, pic: SP.map(() => null), t };
+      };
+      const m = hostMsg(); if (process.env.HOSTTREES === '1') m.features = Object.assign({ course: 'woodhill', v: 1, features: [] }, m.features || {}, { trees: synth(m) });
+      hostMessage(m); for (let w = 0; w < 400 && (farQ.length || tileQ.length); w++) render();
+      const T = []; let host = 0, own = 0, x0 = player.x, y0 = player.y, yaw0 = camYaw;
+      for (let k = 0; k < 360; k++) { player.x = x0 + FX * k * 0.12; player.y = y0 + FY * k * 0.12; camYaw = yaw0 + Math.sin(k / 40) * 0.5; aimCam(); camZ = groundH(player.x, player.y) + HC;
+        const t0 = performance.now(); render(); T.push(performance.now() - t0); FX = Math.sin(yaw0); FY = -Math.cos(yaw0); }
+      for (const o of dlist) if (o.k === K_TREE) { if (o.hf !== undefined) host++; else own++; }
+      const W = T.slice(40).sort((a, b) => a - b), n = W.length;
+      out.info.push({ treesms: { med: +W[n >> 1].toFixed(2), p95: +W[Math.floor(n * 0.95)].toFixed(2), max: +W[n - 1].toFixed(1), packed: m.features && m.features.trees ? m.features.trees.t.length / 5 : 0, nearHost: host, nearOwn: own } }); },
     cartms() { // what drawing the cart costs a frame (any build: drawCart alone), seen from 6, 14 and 40 m, turning: the median and the 95th percentile
       idle(); const base = Math.atan2(Math.cos(cart.th), -Math.sin(cart.th)), res = {};
       for (const d of [6, 14, 40]) {

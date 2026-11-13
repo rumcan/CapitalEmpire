@@ -158,3 +158,12 @@ test('T451: the adapter takes the trees the game plants and the trees among the 
   const T = exportFeatures3p(g, centre).trees!;
   assert.equal(T.pic[0]!.url, 'p1.webp');
 });
+
+test('T451: when the trees of the course alone are more than MAX_TREES they are thinned evenly, never cut at one side', () => {
+  const trees: TreeIn[] = [];
+  for (let i = 0; i < MAX_TREES * 2; i++) trees.push({ at: { x: 1000 + (i % 400) * 0.25, y: 1000 + Math.floor(i / 400) * 0.25 }, size: 6, sp: 'a' });
+  const T = exportFeatures3p({ course: 'c', paths: [], buildings: [], trees, treeBox: [1000 - MARGIN_T, 1000 - MARGIN_T, 1100 + MARGIN_T, 1100 + MARGIN_T] }, centre).trees!;
+  const xs: number[] = []; for (let k = 0; k < T.t.length; k += 5) xs.push(T.t[k]!);
+  assert.ok(T.t.length / 5 <= MAX_TREES && T.t.length / 5 > MAX_TREES - 50);
+  assert.ok(Math.min(...xs) < 1 && Math.max(...xs) > 198, `the trees still reach both sides (${Math.min(...xs)} .. ${Math.max(...xs)} m)`);
+});
