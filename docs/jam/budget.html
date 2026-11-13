@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>Fairway Fortune: Budget and Production Plan</title>
+<style>
+@page { size: A4; margin: 16mm 16mm 18mm; }
+:root { --ink:#1d2a22; --soft:#4b5a50; --line:#cfd8cf; --acc:#2f6b3f; --gold:#b8862b; --bg:#f6f8f4; }
+body { font: 10.5pt/1.5 "Segoe UI", Arial, sans-serif; color: var(--ink); margin: 0; }
+h1 { font-size: 22pt; margin: 0; color: var(--acc); }
+h2 { font-size: 13.5pt; color: var(--acc); border-bottom: 2px solid var(--acc); padding-bottom: 2px; margin: 16px 0 8px; break-after: avoid; }
+p { margin: 4px 0 8px; } ul { margin: 4px 0 8px 18px; padding: 0; } li { margin: 2px 0; }
+.sub { font-size: 11.5pt; color: var(--soft); margin: 4px 0 10px; }
+.box { background: var(--bg); border: 1px solid var(--line); border-radius: 6px; padding: 8px 12px; margin: 8px 0; break-inside: avoid; }
+table { border-collapse: collapse; width: 100%; margin: 6px 0 10px; font-size: 9.5pt; }
+th, td { border: 1px solid var(--line); padding: 4px 6px; text-align: left; vertical-align: top; }
+th { background: #e6ede4; } td.n, th.n { text-align: right; white-space: nowrap; }
+tr.tot td { font-weight: 700; background: #eef3ec; }
+tr { break-inside: avoid; }
+.foot { color: var(--soft); font-size: 8.5pt; margin-top: 14px; }
+</style></head><body>
+
+<h1>Fairway Fortune: Budget and Production Plan</h1>
+<div class="sub">From the jam build to a 1.0 release on PC, with a classroom edition. All amounts in US dollars.</div>
+<div class="box"><b>Summary.</b> A 12-month plan in three milestones that takes the jam build to an Early Access release on Steam and a classroom
+edition for schools and financial-education programmes. The full plan costs <b>$68,750</b>. A reduced plan for $30,000 is shown in section 4. The
+engine, art pipeline and golf view already exist, so the money goes into content, localisation, expert review, polish and launch rather than technology.</div>
+
+<h2>1. Starting point</h2>
+<ul>
+<li>A working course-building engine in the browser (WebGL2, TypeScript), a living driving range, and a painted golf view that plays the holes the player built.</li>
+<li>The jam's financial systems: the Bank (loans, murabaha, savings, overdraft, credit score), monthly statements, emergencies and insurance, payback readouts and the report card.</li>
+<li>An AI-assisted production pipeline for code and 2D art, directed and reviewed by the developer, which keeps the team small and the costs low.</li>
+</ul>
+
+<h2>2. Milestones</h2>
+<table>
+<tr><th style="width:16%">Milestone</th><th style="width:12%">Months</th><th>Deliverables</th><th class="n" style="width:13%">Cost</th></tr>
+<tr><td><b>M1 Polished demo</b></td><td>1 to 3</td><td>Balance pass from playtests; tutorial rework; music and sound; Arabic localisation with right-to-left layout; financial content
+review by a financial-literacy educator and an Islamic finance advisor; public web demo.</td><td class="n">$22,050</td></tr>
+<tr><td><b>M2 Season mode and classroom beta</b></td><td>4 to 7</td><td>Tournaments with sponsors and prize purses; equity versus debt (bringing in investors); leasing versus buying;
+classroom mode with fixed scenarios, a teacher dashboard and discussion prompts; pilot with two schools.</td><td class="n">$24,200</td></tr>
+<tr><td><b>M3 Launch</b></td><td>8 to 12</td><td>Steam store page, trailer and capsule art; Steam Next Fest demo; Early Access release; education licence sales; one
+partnership pilot with a bank or financial-education programme.</td><td class="n">$22,500</td></tr>
+<tr class="tot"><td colspan="3">Total</td><td class="n">$68,750</td></tr>
+</table>
+
+<h2>3. Cost breakdown</h2>
+<table>
+<tr><th>Item</th><th>Basis</th><th class="n">Cost</th></tr>
+<tr><td>Lead developer and game designer</td><td>12 months at $2,500</td><td class="n">$30,000</td></tr>
+<tr><td>Artist (contract, part time)</td><td>6 months at $1,500: characters, buildings, UI, store art</td><td class="n">$9,000</td></tr>
+<tr><td>Music and sound design</td><td>Contract: soundtrack, ambience, golf and interface sounds</td><td class="n">$4,000</td></tr>
+<tr><td>Arabic localisation and right-to-left QA</td><td>Translation of about 15,000 words, layout review</td><td class="n">$3,500</td></tr>
+<tr><td>Financial content review</td><td>Financial-literacy educator and Islamic finance advisor</td><td class="n">$3,000</td></tr>
+<tr><td>Playtesting and QA</td><td>Testers, two school pilots, accessibility review</td><td class="n">$3,000</td></tr>
+<tr><td>Software and AI tools</td><td>12 months at $200</td><td class="n">$2,400</td></tr>
+<tr><td>Hosting and builds</td><td>Web demo hosting, build storage</td><td class="n">$600</td></tr>
+<tr><td>Marketing</td><td>Trailer, store art, festival entries, targeted ads</td><td class="n">$5,000</td></tr>
+<tr><td>Business admin</td><td>Steam fee, company, accounting and legal</td><td class="n">$2,000</td></tr>
+<tr><td>Contingency</td><td>About 9% of the total</td><td class="n">$6,250</td></tr>
+<tr class="tot"><td colspan="2">Total</td><td class="n">$68,750</td></tr>
+</table>
+
+<h2>4. Reduced plan</h2>
+<table>
+<tr><th>Funding</th><th>What is kept</th><th>What moves later</th></tr>
+<tr><td><b>$68,750</b></td><td>Everything above</td><td>Nothing</td></tr>
+<tr><td><b>$30,000</b></td><td>M1 in full (polish, sound, Arabic, expert review); the classroom mode; the Steam page and an Early Access release with a lighter marketing budget</td><td>Season mode, equity and leasing; the contract artist (existing art pipeline only)</td></tr>
+<tr><td><b>$15,000</b></td><td>Polish, sound, Arabic localisation, expert review; a public web demo and the classroom mode</td><td>Steam release, season mode, paid marketing</td></tr>
+</table>
+
+<h2>5. Market and revenue</h2>
+<ul>
+<li><b>Players:</b> management and sports-sim players on PC; golf and tycoon games sell steadily, and a game that plays the course you built is a clear hook.</li>
+<li><b>Education:</b> schools and financial-education programmes, including in the UAE and the wider region, where Islamic finance is part of everyday banking.</li>
+<li><b>Model:</b> premium game at $12.99 on Steam with no microtransactions and no loot boxes, in keeping with its message; a classroom licence at $99 per
+school per year; white-label scenario packs for banks and financial-literacy programmes.</li>
+</ul>
+<table>
+<tr><th>First-year estimate (conservative)</th><th>Basis</th><th class="n">Net</th></tr>
+<tr><td>Steam sales</td><td>6,000 copies × $12.99, less the 30% store share and 15% for regional pricing and refunds</td><td class="n">$46,400</td></tr>
+<tr><td>Classroom licences</td><td>40 schools × $99</td><td class="n">$3,960</td></tr>
+<tr><td>Partnership pilot</td><td>One sponsored scenario pack</td><td class="n">$15,000</td></tr>
+<tr class="tot"><td colspan="2">Total</td><td class="n">$65,360</td></tr>
+</table>
+<p>On these estimates the full plan pays back within about 16 months of launch. Every figure is an estimate; the playtests in M1 and the store-page
+wishlists in M3 are the checkpoints that confirm or revise them.</p>
+
+<h2>6. Risks</h2>
+<table>
+<tr><th>Risk</th><th>Mitigation</th></tr>
+<tr><td>Finance content too dense for casual players</td><td>Learning through consequences, short money moments, a glossary on every term, school pilots</td></tr>
+<tr><td>Performance on low-end machines</td><td>Render distance setting, performance budgets enforced on every change</td></tr>
+<tr><td>Scope growth</td><td>Fixed milestones, the reduced plans above, 9% contingency</td></tr>
+<tr><td>Financial accuracy, including Islamic finance</td><td>Paid review by a financial-literacy educator and an Islamic finance advisor in M1</td></tr>
+</table>
+
+<div class="foot">Fairway Fortune · Zoud GameLab FinLit Jam 2026 · Budget and Production Plan · Figures are estimates for planning.</div>
+</body></html>
