@@ -242,6 +242,8 @@ import { CLUB_NAME, LEVEL_NAME, addVoucher, bagView, carryFor, fitPart, kitOf, l
 import { CALM_MPH, NO_WIND, dailyWind, envOf, lieKindFor, lieView, previewShot, slopeLines, windAt, windNote, windText, windToward, windView, type Conditions, type EnvFor, type LieView, type ShotEnv, type ShotPreview, type Slope, type Wind, type WindNow, type WindView } from './golf/play';
 import { CART_REACH, CART_TILES, COMPETITION_RULES, isCompetition, addressOf, canGimme, gimmeM, takeGimme, canMulligan, mulligansLeft, noHandicapWhy, takeMulligan, type RoundRules, cardTotals, cupTime, flightSpin, holeOf, holeOptions, nearBall, nextHole, pickHoles, playYours, rowOf, flightOf, ordinal, scoreName, startRound, yourBallAt, yourTurn, type CardRow, type HoleChoice, type YourFlight, type YourRound, type YourRoundView } from './golf/play/yours';
 import { missingParts, missingWhy, practicePick, realHoleCount, type PracticeScope } from './golf/play/practice';
+import { FLOODLIGHT_ID, darkStrokes, hostWhy, lighting, nightMoney, nightMoneyLine, nightUnlocked, type Lighting } from './golf/nightgolf';
+import type { EventDay } from './golf/clubevents';
 import { CLUB_EVENTS, MODE_OF, announceDue, entryWhy, eventBoard, eventDay, eventDue, eventOfMode, eventResult, eventWhen, fieldEntries, fieldIds, freshEvents, isEntered, resultLine, withTitle, type BoardEntry, type ClubEventsSave, type EventId, type EventResult } from './golf/clubevents';
 import { BOOK_LEAD, LESSON_BONUS, PRESSURE, bookRound, gearOf, handicapOf, bookedGolfer, clock, entryText, freeTee, gameSkills, hcpText, playedRound, playerCardView, practise, practiceWhy, rebook, startProfile, toParWord, withBag, withYou, youRangeView, type Booking, type Lesson, type PlayerCardView, type PlayerProfile, type PracticeCtx, type PracticeKind, type RoundState, type YouRangeView } from './golf/player';
 import { gearFor, withCards, gainOf } from './golf/player'; // T336 (#962): your cards
@@ -10110,7 +10112,8 @@ export class Game {
     // T433, T434: what a ghost or a shared course file holds, once its heights are deflated (T438: after the course has gone to the view)
     this.course3pShare = null; const sg = this.lies3pGen;
     void (file.height ? fillPack(file.height) : Promise.resolve()).then(() => { if (sg === this.lies3pGen) this.course3pShare = shareOf(file, features, { name, biome, type, seed: seedOf(name) }); });
-    return { v: 1, t: 'course', course: course as unknown as Record<string, unknown>, features, biome, type, seed: seedOf(name), scale: 1, hole: n, golfer };
+    const night = this.golf?.player?.round?.mode === 'night-golf';   // (T449: a night-golf round is played at night)
+    return { v: 1, t: 'course', course: course as unknown as Record<string, unknown>, features, biome, type, seed: seedOf(name), scale: 1, hole: n, golfer, ...(night ? { time: 'night' as const } : {}) };
   }
   // ---------- T418: the owner's play in the view from behind the golfer (golf/play/play3p.ts: LiveGroup decides every stroke; the view shows them) ----------
   /** the frame the last course message was made in (course3pMsg) */
@@ -10311,7 +10314,10 @@ export class Game {
     if (d && !d.done && day > d.day && !(r && eventOfMode(r.mode) === d.id && r.day === d.day)) this.finishEvent(null);
     if (this.traffic.round.stage !== 'free' || !this.dayPlay) return; // (announced once the course has a day of play)
     const id = announceDue(ev, season, this.seasonMonthNow(now));
-    if (id) {
+    // T449: night golf that cannot be hosted (not unlocked, or the course not lit) is announced with the reason, and no card opens
+    const nw = id === 'night' ? this.nightWhy() : null;
+    if (id && nw) { ev.announced[id] = season; this.scheduleSave(); if (nightUnlocked(this.golf?.tier ?? 1)) this.toast(`${CLUB_EVENTS[id].name} (${eventWhen(id, season)}): ${nw}`, 'info'); this.emit(); }
+    else if (id) {
       ev.announced[id] = season; if (!this.eventCardOpen) this.eventCardOpen = id; this.scheduleSave(); // (a card already open stays: the toast names it)
       this.toast(`${CLUB_EVENTS[id].name}: ${eventWhen(id, season)} at your club`, 'info'); this.emit();
     }
@@ -10320,15 +10326,17 @@ export class Game {
   private eventDayBuilt(day: number, view: CourseView, now: number) {
     const dp = this.dayPlay; if (!dp || !this.golf) return;
     const ev = this.clubEv(), season = this.seasonsDone();
-    if (ev.today && ev.today.day === day) { if (!ev.today.done) ev.today = eventDay(ev.today.id, ev.today.season, day, dp.view.plan, view, dp.base); return; }
+    if (ev.today && ev.today.day === day) { if (!ev.today.done) { ev.today = eventDay(ev.today.id, ev.today.season, day, dp.view.plan, view, dp.base); this.darken(ev.today); } return; }
     if (this.evDayChecked === day) return;
     this.evDayChecked = day;
     // (an event's day waits while your round in the last one goes on: its result comes with your card)
     const r = this.golf.player?.round; if (ev.today && !ev.today.done && r && eventOfMode(r.mode) === ev.today.id && r.day === ev.today.day) return;
-    const id = this.devEvent ?? eventDue(ev, season, this.seasonMonthNow(now)); if (!id) return;
+    const id = this.devEvent ?? eventDue(ev, season, this.seasonMonthNow(now), e => e !== 'night' || this.nightWhy() === null); if (!id) return;
     this.devEvent = null;
     if (ev.today && !ev.today.done) this.finishEvent(null);
     ev.today = eventDay(id, season, day, dp.view.plan, view, dp.base); ev.held[id] = season; ev.announced[id] = season;
+    // T449: night golf: the field drops strokes on the holes left dark
+    this.darken(ev.today);
     this.eventCardOpen = id; this.evBoardCache = null; this.scheduleSave();
     this.toast(`Today: the ${CLUB_EVENTS[id].name} at your club (${ev.today.field.length} in the field)`, 'good'); this.emit();
   }
@@ -10340,6 +10348,12 @@ export class Game {
     const res: EventResult = eventResult(d, you);
     { const k = res.won ? cardEco(this.playerNow()?.cards, true).prize : 1; if (k !== 1) res.money = Math.round(res.money * k); } // (T337: the Sponsor Tent: a title's prize is half as much again)
     d.done = true; ev.last = res;
+    // T449: night golf's money: the tickets, the field's entries and the novelty in, the staff and the lights out
+    if (d.id === 'night') {
+      const m = nightMoney({ rep: g.rep, field: d.field.length, before: ev.nights ?? 0, towers: this.floodlights().length }); ev.nights = (ev.nights ?? 0) + 1;
+      this.traffic.spend('business', -m.net); const c = g.clubhouse; this.floatMoney({ x: c.x, y: c.y, amount: Math.abs(m.net), kind: m.net >= 0 ? 'in' : 'out', group: 'clubhouse', gx: c.x, gy: c.y });
+      this.toast(nightMoneyLine(m), m.net >= 0 ? 'good' : 'info');
+    }
     // T336: a title (gold), a podium finish (silver) or the top quarter of the field (bronze) pays a card pull (golf/cards earning.ts)
     const earn = earnFromPlace(res.pos, res.of, `the ${CLUB_EVENTS[d.id].name}`); if (earn) this.pullFor.set(`event:${d.id}`, this.grantPull(earn)); else this.pullFor.delete(`event:${d.id}`);
     if (res.won) {
@@ -10350,6 +10364,22 @@ export class Game {
     }
     this.eventCardOpen = d.id; this.evBoardCache = null; this.scheduleSave();
     this.toast(`${CLUB_EVENTS[d.id].name}: ${resultLine(res)}`, res.won ? 'good' : 'info'); this.emit();
+  }
+  /** T449: a night-golf day's field drops strokes on the holes left dark (another event's day: unchanged) */
+  private darken(d: EventDay) { if (d.id !== 'night') return; const L = this.nightLighting(); if (L) for (const f of d.field) f.strokes += darkStrokes(f.name, L.shares); }
+  /** T449: the floodlight towers placed (their tile points) */
+  private floodlights(): { x: number; y: number }[] { return (this.golf?.structures ?? []).filter(s => s.typeId === FLOODLIGHT_ID).map(s => ({ x: s.x, y: s.y })); }
+  /** T449: the course's lighting for night golf (null: no course) */
+  private nightLighting(): Lighting | null {
+    const g = this.golf; if (!g) return null;
+    const holes = deriveHoles(this.courseAreaList(), g.tees, g.pins, g.aims ?? []).filter(h => h.line.length >= 2);
+    return lighting(holes, this.floodlights());
+  }
+  /** T449: why night golf cannot be hosted now (null: it can): its unlock, then the lights */
+  nightWhy(): string | null {
+    const g = this.golf; if (!g) return 'No golf course';
+    const holes = deriveHoles(this.courseAreaList(), g.tees, g.pins, g.aims ?? []).filter(h => h.line.length >= 2);
+    return hostWhy(g.tier ?? 1, holes, this.floodlights());
   }
   /** today's event, not over yet (null: none) */
   private eventToday(): ClubEventsSave['today'] | null {

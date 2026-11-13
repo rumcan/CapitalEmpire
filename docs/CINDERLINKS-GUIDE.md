@@ -20,10 +20,9 @@ The same points are in the view's own help: press **H** there.
 |---|---|
 | W S | walk forward, back (Shift: run) |
 | A D | turn; Q E step sideways |
-| mouse | aim, beside the ball |
-| hold click | the backswing: let go for the power (past 100% is the overswing) |
-| click again | the strike: its place against the line is how straight it goes |
-| Space (during the swing) | the power boost, if your cards give it |
+| mouse | aim, beside the ball; a click on the course sets the aim and holds it, so the mouse can go to the swing button (a click never swings) |
+| swing button (bottom centre), or Space | hold it: the camera lines up behind the ball along your aim, then the distance fills (to 100% and back again, the landing marker growing with it); let go to hit at that distance. How straight it goes is your golfer's skill, not your timing |
+| Shift (while holding) | the power boost, if your cards give it |
 | Z, X | the shot's shape (draw or fade, high or low), when you have earned them |
 | I | the boost pick, when you have earned it |
 | 1 to 9, the wheel | your clubs (the tabs show each club's real carry) |

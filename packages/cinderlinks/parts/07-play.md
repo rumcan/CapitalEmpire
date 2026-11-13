@@ -200,7 +200,8 @@ function driveCart() {   // W goes, S brakes and backs up, A and D steer; the ca
 function updatePlayer() {
   const p = player;
   if (cart.on) { driveCart(); return; }
-  if (HP && hostSwing(p)) return;                                     // (host mode: the swing is the model's meter, T421)
+  if (HP && hostSwing(p)) return;                                     // (host mode: the hold-and-release swing, T421 and T446)
+  if (HP && hostAimPin && !nearBall()) hostAimPin = false;            // (walked away from the ball: the aim follows the mouse again)
   if (p.swing >= 0) {                                                  // the swing plays out; the ball leaves as the club passes it
     if (breathT > 0) { breathT--; return; }                              // (held at the top while the breath is drawn)
     const before = p.al; p.al += 0.34; p.swing++;
@@ -210,10 +211,13 @@ function updatePlayer() {
   }
   const near = nearBall();
   if (near && ball.state === 0 && !(HP && hostBusy())) {               // (host mode: not while the course decides, or plays back, a shot)
-    screenToGround(mouse.x, mouse.y, GP);
-    let dx = GP.x - ball.x, dy = GP.y - ball.y; const l = Math.hypot(dx, dy);
-    if (l > 0.3) { aim.dx = dx / l; aim.dy = dy / l; }
-    aim.x = GP.x; aim.y = GP.y;
+    if (!HP || !hostAimPin || mouse.down) {                            // (host mode, T446: a click on the course sets the aim and holds it, so the mouse can go to the swing button)
+      screenToGround(mouse.x, mouse.y, GP);
+      let dx = GP.x - ball.x, dy = GP.y - ball.y; const l = Math.hypot(dx, dy);
+      if (l > 0.3) { aim.dx = dx / l; aim.dy = dy / l; }
+      aim.x = GP.x; aim.y = GP.y;
+      if (HP && mouse.down) hostAimPin = true;
+    }
     if (autoClub) pickClub();
     if (mouse.down && !charging && !HP) { charging = true; chargeT = 0; }
   }
