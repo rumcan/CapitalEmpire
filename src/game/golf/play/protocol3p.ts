@@ -183,7 +183,11 @@ export interface LiesMsg { v: 1; t: 'lies'; lk: LieGrid }
  *  the handicap now and the balls hit. The view holds the golfer to his spot while it has one (no walking, no cart) */
 export interface PracticeMsg { v: 1; t: 'practice'; place: 'range' | 'short';
   drills: { id: string; name: string; goal: string; got: number; need: number; done: boolean; reward: string; here: boolean }[];
-  active: string | null; note: string | null; paid: string | null; flags: { at: ViewPt; label: string }[]; hcp: string; balls: number }
+  active: string | null; note: string | null; paid: string | null; flags: { at: ViewPt; label: string; /** J6b: a label only (a junk pile's: no flag) */ only?: true }[]; hcp: string; balls: number;
+  /** J6b: the junk pile the last ball hit, to say ("Hit the old car!"; absent: none) */
+  hit?: string;
+  /** J6b: the range's own flags stand among the course's things as the game's pictures: the view draws only their distance labels (absent: it draws flags too) */
+  pics?: true }
 
 export type HostMsg = CourseMsg | ActorsMsg | BoardMsg | MatchMsg | TurnMsg | ShotMsg | HoleEndMsg | PreviewMsg | ClockMsg | LeaveMsg | LiesMsg | PracticeMsg;
 

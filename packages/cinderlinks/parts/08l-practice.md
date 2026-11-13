@@ -2,7 +2,7 @@
 When the owner practises (CapitalEmpire's `play/practice3p.ts`, `play/drills.ts`), the host sends `{ v: 1, t: 'practice', place, drills, active, note, paid, flags, hcp, balls }` before the first turn and after each ball and each pick; the view answers a drill picked with `{ v: 1, t: 'pick', drill }`. The balls are the host's, as in a round: each turn tees the next one up on the spot.
 R: While practising the golfer is held to his spot (a range mat, the chip stand, the putt, the practice bunker): W, S, Q and E do not walk him, there is no cart (G does nothing and none is drawn), J, B, N, K and L do nothing; A and D still turn him, and the mouse aims. Each ball is teed up where he stands, and he is set beside it.
 R: A panel on the left lists the drills: each its name, its goal, its progress (3/5) and its reward, the one being played marked, a done one ticked; a drill played at the other place is greyed with where it is played. A click on a drill played here picks it (the next ball comes from its spot). Under the list: the last ball's line, the balls hit and the handicap. A drill just done is said, with its reward.
-R: On the range each target green has its flag, with its distance over it (50 m, 100 m, ...).
+R: On the range each target green has its flag, with its distance over it (50 m, 100 m, ...). Each junk pile (an old car, tyres, oil drums: J7's) carries its name and distance over it (Old car · 140 m), with no flag; a ball that lands on or stops by one is said (Hit the old car!).
 R: The card at the top says Practice and the place instead of the hole, par and strokes, and the words as it opens say where he practises, not the hole and its par.
 File: game.js
 Check: function pracIn(
@@ -51,11 +51,12 @@ function pracShow(m) {   // the panel, the flags, and a drill done said
     '<div class="pn">' + (m.note ? pracEsc(m.note) : (m.active ? 'Hit away: every ball counts for the marked drill' : 'Pick a drill')) + '</div>' +
     '<div class="pf">Balls ' + (m.balls | 0) + ' &middot; handicap ' + pracEsc(m.hcp) + ' &middot; <b>Esc</b> back</div>';
   if (m.paid) say(String(m.paid), 420);
+  else if (m.hit) say(String(m.hit), 200);   // (J6b: a junk pile hit)
   else if (first) say('Practice at ' + (m.place === 'range' ? 'the range' : 'the chipping green') + '  -  pick a drill on the left', 300);   // (in place of the hole's own words)
   // the range's flags: a label over each green
   for (const L of pracLab) if (L.parentNode) L.parentNode.removeChild(L);
   pracLab = [];
-  const S = hostS(); PRAC.F = (Array.isArray(m.flags) ? m.flags : []).map((f) => ({ x: f.at[0] * S, y: f.at[1] * S, label: String(f.label || '') }));
+  const S = hostS(); PRAC.F = (Array.isArray(m.flags) ? m.flags : []).map((f) => ({ x: f.at[0] * S, y: f.at[1] * S, label: String(f.label || ''), only: !!f.only }));
   if (typeof document !== 'undefined' && document.createElement && document.body) for (const f of PRAC.F) {
     const L = document.createElement('div'); L.className = 'pflag'; L.textContent = f.label;
     Object.assign(L.style, { position: 'absolute', transform: 'translate(-50%, -100%)', pointerEvents: 'none', display: 'none' });
@@ -63,8 +64,8 @@ function pracShow(m) {   // the panel, the flags, and a drill done said
   }
 }
 function pracFlags(dlist, dist) {   // the range's flags join the draw list (the pin's own is drawn already)
-  if (!PRAC || !PRAC.F) return;
-  for (const f of PRAC.F) { if (Math.hypot(f.x - hole.pin.x, f.y - hole.pin.y) < 1) continue; dlist.push({ k: K_PFLAG, d: dist(f.x, f.y) + 0.02, x: f.x, y: f.y }); }
+  if (!PRAC || !PRAC.F || PRAC.pics) return;   // (J6b: the range's own flags stand as the game's pictures: only their labels here)
+  for (const f of PRAC.F) { if (f.only || Math.hypot(f.x - hole.pin.x, f.y - hole.pin.y) < 1) continue; dlist.push({ k: K_PFLAG, d: dist(f.x, f.y) + 0.02, x: f.x, y: f.y }); }
 }
 function pracTick() {   // each step: the labels over the flags follow the camera
   if (!PRAC || !PRAC.F || !pracLab.length || typeof view === 'undefined' || !view.getBoundingClientRect) return;

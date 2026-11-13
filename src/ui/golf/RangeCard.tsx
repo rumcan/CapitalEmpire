@@ -155,7 +155,7 @@ export function RangeCard({ forSale, onBuyRange, junk = [], junkCost = 0, onClea
                 title={hitWhy?.range ?? 'Stand on a mat and hit balls yourself, from behind the golfer: drills open shots for the course and lower your handicap'}>Hit balls</button>
               <button className="chip normal-case disabled:opacity-40" disabled={!!hitWhy?.short} onClick={() => onHit('short')} data-testid="range-chip-putt"
                 title={hitWhy?.short ?? 'Chip, putt and play out of the bunker at your chipping green: drills open the putt read and sharpen your short game'}>Chip and putt</button>
-              <span className="text-[12px] text-slate-400" data-testid="range-drills">{drillsDone}/6 drills done</span>
+              <span className="text-[12px] text-slate-400" data-testid="range-drills">{drillsDone} {drillsDone === 1 ? 'drill' : 'drills'} done</span>
             </div>
           )}
           {you.last && <div className="text-[12px] text-slate-400" data-testid="range-you-last">Last: {you.last.text} · ${you.last.cost.toLocaleString()} · handicap {hcp(you.last.hcp[0])} to <span className="text-emerald-300">{hcp(you.last.hcp[1])}</span></div>}
