@@ -125,6 +125,12 @@ export function lastIncome(f: FinanceSave): number {
   if (!h) return 0;
   return INCOME_LINES.reduce((s, k) => s + Math.max(0, h.lines[k] ?? 0), 0);
 }
+/** what the club has built and bought, at cost: everything booked on the build line (land, holes, buildings, less refunds) over the statements kept and this month */
+export function assetsAtCost(f: FinanceSave): number {
+  let b = -(f.cur.build ?? 0);
+  for (const h of f.history) b -= h.lines.build ?? 0;
+  return r2(Math.max(0, b));
+}
 /** cash + savings + assets - debt */
 export function netWorthOf(f: FinanceSave, cash: number, assets: number): number { return r2(fin(cash) + f.savings + Math.max(0, fin(assets)) - debtOf(f)); }
 /** how many month ends in a row (counting back from the newest) closed with the cash below zero */

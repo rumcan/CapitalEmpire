@@ -3,17 +3,10 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
   newFinance, book, loadFinance, amortisedPayment, creditApr, quoteBank, signBank, quoteMurabaha, signMurabaha, murabahaRebate, settleCost, repay,
-  deposit, withdraw, monthEnd, effectiveApr, debtOf, isBankrupt, overdraftStreak, insuredLoss, HISTORY_CAP, CREDIT_START, LATE_FEE, type FinanceSave,
+  deposit, withdraw, monthEnd, effectiveApr, debtOf, isBankrupt, overdraftStreak, insuredLoss, assetsAtCost, HISTORY_CAP, CREDIT_START, LATE_FEE,
 } from '../src/game/golf/finance';
 
 const close = (a: number, b: number, eps = 0.011) => assert.ok(Math.abs(a - b) <= eps, `${a} vs ${b}`);
-/** run n month ends with plenty of cash, summing what was paid out */
-function run(f: FinanceSave, n: number, cash = 1_000_000) {
-  let out = 0;
-  for (let i = 0; i < n; i++) out += -monthEnd(f, { cash, assets: 0 }).cashChange;
-  return out;
-}
-
 test('a new bank is empty at credit 650 and book sums a month', () => {
   const f = newFinance();
   assert.equal(f.credit, CREDIT_START); assert.equal(f.loans.length, 0); assert.equal(f.history.length, 0);
@@ -230,4 +223,13 @@ test('save round trip, old saves and junk give a usable bank', () => {
     const h = loadFinance(bad); assert.equal(h.v, 1); assert.ok(Array.isArray(h.loans)); assert.ok(h.credit >= 300 && h.credit <= 850); assert.ok(h.savings >= 0);
   }
   const n = f.nextId; signBank(g, 10_000, 12); assert.equal(g.loans[g.loans.length - 1]!.id, n);
+});
+
+test('assetsAtCost sums the build line over the history and this month, refunds count', () => {
+  const f = newFinance();
+  assert.equal(assetsAtCost(f), 0);
+  book(f, 'build', -10_000); monthEnd(f, { cash: 1e6, assets: 0 });
+  book(f, 'build', -5_000); book(f, 'build', 1_000);
+  assert.equal(assetsAtCost(f), 14_000);
+  book(f, 'build', 100_000); assert.equal(assetsAtCost(f), 0); // never negative
 });
