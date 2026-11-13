@@ -18,6 +18,10 @@ enough."** The jam build keeps the money the player manages through play: cash a
 opened on demand (borrow with the total interest shown, repay, savings), one month-end toast that opens the statement, USD/AED. Hidden when
 JAM (the code stays, normal builds unchanged): money moments, the goal chip and report card, emergencies and insurance, the murabaha
 section, the glossary underlines. The GDD and the video follow this lighter scope.
+**And the MVP (the owner, same evening): "simplify the ui and the game. you dont need to keep all the functionality in the game for this
+part. Call it the MVP, we will add stuff we hav that isnt tested as part of future dev for the game design doc".** The jam build is the MVP
+core loop only (range, holes, clubhouse, play a hole, the Bank on demand, the month-end toast); everything untested is hidden when JAM and
+listed under "Future development (hidden in the MVP)" below, which becomes the GDD's roadmap.
 
 ## The jam flag
 `src/game/features.ts`: `export const JAM = import.meta.env.VITE_JAM === '1'` (false in tests and normal builds). `npm run build:jam` builds
