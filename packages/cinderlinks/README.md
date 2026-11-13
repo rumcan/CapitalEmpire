@@ -337,5 +337,12 @@ A slider in the style menu, 150 to 400 m in steps of 25 (260 is the game as it w
 
 ## Simple grass everywhere (gen-32, 2026-11-12)
 
-At the owner's word the middle land's plain grass (tile colours, standing blades in tufts) is now drawn from the golfer's feet out (`SIMPLEG`, default on; the "Simple grass everywhere" box under Render distance in the style menu turns the painted near ground back on; kept in `localStorage['cinderlinks.simple']`). Close to the golfer the land is read along lines square to the view, going over to rings between 20 and 34 m (`rw` in `midSweep`: the rings round the golfer are too small to read by near him), and the middle sweep's rows are at least 3 cm apart. With it off, nothing changes from gen-31. Lost while it is on: the camera's cutaway through hills, cliff faces close by, flowers and pressed cart tracks painted into the ground.
+At the owner's word the middle land's plain grass (tile colours, standing blades in tufts) is now drawn from the golfer's feet out (`SIMPLEG`; T447: always on, the only grass: the box that turned the painted near ground back on is gone, and the painted near ground's code is left dead behind `SIMPLEG ?`). Close to the golfer the land is read along lines square to the view, going over to rings between 20 and 34 m (`rw` in `midSweep`: the rings round the golfer are too small to read by near him), and the middle sweep's rows are at least 3 cm apart. With it off, nothing changes from gen-31. Lost while it is on: the camera's cutaway through hills, cliff faces close by, flowers and pressed cart tracks painted into the ground.
 - gen-33: with the simple grass on, the tiles' grass reaches as far as the render distance allows, to 220 m (`GM` in `drawGround`), the far field only beyond; tiles are kept to match (up to 1100); no detailed ground is painted or asked for. The camera comes no closer than 18 m behind the golfer (`CAMMIN`; the ball camera keeps its own).
+
+## T447: the style comes from the course
+
+Inside CapitalEmpire (`?host=1`) the biome and the course type are the course's own, sent in the `course` message (`biome`, `type`; worked out by
+`src/game/golf/play/look3p.ts` `biomeFor3p` and `courseTypeFor3p` from the Desert theme, a real course's latitude, its sand, water and trees, the club's
+members and tour tier). In host mode the style menu holds only Render distance, and M and V do nothing. Standalone, the full menu stays. The simple
+grass is the only grass (`SIMPLEG` is a constant).

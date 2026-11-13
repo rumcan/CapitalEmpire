@@ -39,8 +39,15 @@ export function fromView(v: readonly [number, number], centre: Pt): Pt {
 
 // ---------------------------------------------------------------- host to view
 
-/** how the course is kept, which picks Cinderlinks' course type (section 2: neglected plays as public, well kept as private, a tour week as tour) */
-export type CourseType = 'public' | 'private' | 'tour';
+/** how the course is kept, which picks Cinderlinks' course type (section 2: neglected plays as public, well kept as private, a tour week as tour; T447: a
+ *  treeless sandy course by the sea as links. look3p.ts courseTypeFor3p). A view that does not know a type keeps its own */
+export type CourseType = 'public' | 'private' | 'tour' | 'links';
+
+/** T447: the times of day the view can light a course at: golden hour (the default), day, dusk and night (night-golf events only) */
+export type Time3p = 'golden' | 'day' | 'dusk' | 'night';
+/** the times a course itself can be set to (the hole card's choice); dusk and night come only from a round */
+export const COURSE_TIMES_3P = [['golden', 'Golden hour'], ['day', 'Day']] as const;
+export type CourseTime3p = typeof COURSE_TIMES_3P[number][0];
 
 /** the course: the course file (export3p.ts, T412: shapes in metres and the packed height grid; typed loosely until that exporter lands), the
  *  placed things (features3p.ts), the biome, the course type and the seed fine detail is grown from (from the course's name, so it looks the same on
@@ -50,9 +57,9 @@ export interface CourseMsg { v: 1; t: 'course'; course: Record<string, unknown>;
   scale?: number; hole?: number;
   /** T437: the player's golfer in his player card's clothes (look3p.ts playerDress; absent: the view's own red polo) */
   golfer?: Dress;
-  /** T449: the time the round is played at: 'night' for night golf (the view draws its darkest time until it draws night with the floodlights); T448:
-   *  'day', 'golden' (Golden hour) or 'dusk'; absent: the view's own (Golden hour). Older views ignore it */
-  time?: 'day' | 'golden' | 'dusk' | 'night' }
+  /** The time of day the round is played at. T447: the course's own setting (golden hour unless the player chose day, GolfSave.time3p); T449: a round's
+   *  own time wins ('night' for night golf). T448: the view draws 'day', 'golden' (Golden hour) or 'dusk'; absent: the view's own (Golden hour). Older views ignore it */
+  time?: Time3p }
 
 /** what an actor is: a golfer, a caddie, a cart, or a gallery (a crowd standing at one spot, `count` people) */
 export type ActorRole = 'golfer' | 'caddie' | 'cart' | 'gallery';

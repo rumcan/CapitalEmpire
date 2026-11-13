@@ -13,6 +13,7 @@ import { Icon } from '../Icon';
 import { pickText } from './files3p';
 import { TeeSetRows } from './TeeSets';
 import { allLabel } from '../../game/golf/play/practice';
+import { COURSE_TIMES_3P, type CourseTime3p } from '../../game/golf/play/protocol3p';
 
 /** the surfaces' names as the Holes panel says them */
 const NAME: Record<string, string> = { green: 'Green', tee: 'Tee', fairway: 'Fairway', rough: 'Rough', bunker: 'Bunker', water: 'Water', fescue: 'Fescue', waste: 'Waste area', longGrass: 'Long grass' };
@@ -27,6 +28,7 @@ function useConfirm(): [boolean, () => void, () => void] { const [on, set] = use
  *  78vh ran past the screen's bottom at 125%, T205's overflow check) */
 export function HoleCard({ game, right = 'right-3' }: { game: Game; right?: string }) {
   const c = useHoleCard(game), [asking, ask, unask] = useConfirm(), [pick, setPick] = useState(false);
+  const [time3p, setTime3p] = useState<CourseTime3p>(game.time3p); // T447: the course's time of day from behind the golfer (saved with the course)
   if (!c) return null;
   const playWhy = game.holePlayWhy(c.n); // (T349: why Play is off, or null)
   const why3p = game.hole3pWhy(c.n); // (T416: why the view from behind the golfer cannot open this hole; empty: it can)
@@ -67,6 +69,14 @@ export function HoleCard({ game, right = 'right-3' }: { game: Game; right?: stri
       <div className="mt-2 flex flex-col gap-1">
         <button className="chip self-start disabled:opacity-40" disabled={why3p.length > 0} onClick={() => game.open3p(c.n)} title={why3p.length ? why3p.join('. ') : `Walk hole ${c.n} from its tee, seen from behind the golfer (Esc comes back)`} data-testid="hole-play-3p"><Icon name="play" size={14} />Play this hole</button>
         {why3p.length > 0 && <div className="text-[12px] text-slate-400" data-testid="hole-play-3p-why">{why3p.join(' · ')}</div>}
+        {/* T447: the time of day the course is played at (the whole course's setting, saved with it); golden hour unless Day is chosen */}
+        <div className="flex items-center gap-1 text-[12px] text-[var(--muted)]" data-testid="hole-time-3p">
+          <span>Light</span>
+          {COURSE_TIMES_3P.map(([id, name]) => (
+            <button key={id} className={`chip ${time3p === id ? 'chip-on' : ''}`} aria-pressed={time3p === id} onClick={() => { game.setTime3p(id); setTime3p(id); }}
+              title={id === 'golden' ? 'Play the course in the low gold light of late afternoon (the default)' : 'Play the course in full daylight'} data-testid={`hole-time-3p-${id}`}>{name}</button>
+          ))}
+        </div>
         {/* T434: a course another player shared (its file), played from behind the golfer with your own golfer */}
         <button className="chip self-start" onClick={() => { void pickText().then(async t => { if (!t) return; const why = await game.shareLoad3p(t); if (why) game.toast(why, 'warn'); }); }} title="Open a course file another player shared and play it with your golfer" data-testid="hole-play-shared">Play a shared course…</button>
       </div>

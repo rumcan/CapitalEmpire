@@ -32,21 +32,23 @@ function picMenu() {
 function styleShow() {   // the menu: the biome (the land and its plants) beside the course type (how the course is kept); one of each is in force
   shownStyle = biomeId; shownType = ctypeId; styleBtn.innerHTML = BIOMES[biomeId].name + ' &middot; ' + CTYPES[ctypeId].name + '<b>&#9662;</b>';
   const col = (title, kind, ids, T, cur) => '<div class="grp"><i>' + title + '</i>' + ids.map((id) => '<button type="button" data-kind="' + kind + '" data-id="' + id + '"' + (id === cur ? ' class="on"' : '') + '>' + T[id].name + '</button>').join('') + '</div>';
-  styleMenu.innerHTML = col('Biome', 'b', BIOME_ORDER, BIOMES, biomeId) + col('Course type', 't', CTYPE_ORDER, CTYPES, ctypeId) + (HOST ? '' : golferCol())   // (T450: the golfer, without a host)
+  // T447: inside the game the biome and the course type are the course's own (the host sends them): those two columns go; the trees, the picture and the render distance stay
+  styleMenu.innerHTML = (HOST ? '' : col('Biome', 'b', BIOME_ORDER, BIOMES, biomeId) + col('Course type', 't', CTYPE_ORDER, CTYPES, ctypeId) + golferCol())   // (T450: the golfer, without a host)
     + '<div class="grp"><i>Trees</i>' + ['Sculpted', 'Pictures'].map((nm, i) => '<button type="button" data-kind="tr" data-id="' + i + '"' + (i === TREEART ? ' class="on"' : '') + '>' + nm + '</button>').join('') + '</div>'
     + picMenu()
-    + '<div class="grp dist"><i>Render distance</i><input id="detail" type="range" min="150" max="400" step="25" value="' + VIEWR + '"><span id="detailV">' + VIEWR + ' m</span><label class=\"simple\"><input id=\"simpleG\" type=\"checkbox\"' + (SIMPLEG ? ' checked' : '') + '> Simple grass everywhere</label><em>How far the land, trees and grass are drawn; past 260 m the detailed ground reaches farther too. Higher needs a faster PC.</em></div>';
+    + '<div class="grp dist"><i>Render distance</i><input id="detail" type="range" min="150" max="400" step="25" value="' + VIEWR + '"><span id="detailV">' + VIEWR + ' m</span><em>How far the land, trees and grass are drawn. Higher needs a faster PC.</em></div>';
 }
 styleBtn.addEventListener('click', (e) => { styleMenu.className = styleMenu.className === 'on' ? '' : 'on'; if (styleBtn.blur) styleBtn.blur(); if (e.preventDefault) e.preventDefault(); });
 styleMenu.addEventListener('click', (e) => { const t = e.target, id = t && t.getAttribute ? t.getAttribute('data-id') : null, kind = id ? t.getAttribute('data-kind') : null; if (!id) return;
   if (kind === 'tr') { setTreeArt(+id); firstPicture(); styleShow(); return; }   // T451: the host's trees sculpted or in its pictures
+  if (HOST) return;   // (T447: in the game the biome and course type are the course's)
   if (kind === 'b' && BIOMES[id] && id !== biomeId) { useStyle(id, null); firstPicture(); } else if (kind === 't' && CTYPES[id] && id !== ctypeId) { useStyle(null, id); firstPicture(); } else if (kind === 'g') golferPick(id);
   styleShow(); });   // (the menu stays open: a biome and a type are usually chosen together)
-styleMenu.addEventListener('change', (e) => { const t = e.target; if (t && t.id === 'simpleG') setSimple(t.checked); else if (t && t.id === 'picOn') picSet('on', t.checked); });
+styleMenu.addEventListener('change', (e) => { const t = e.target; if (t && t.id === 'picOn') picSet('on', t.checked); });
 styleMenu.addEventListener('input', (e) => { const t = e.target; if (t && PIC_IN[t.id]) { const [k, f, sh] = PIC_IN[t.id]; picSet(k, +t.value * f); const v = document.getElementById(t.id + 'V'); if (v) v.textContent = sh(); return; } if (!t || t.id !== 'detail') return; setDetail(+t.value); const v = document.getElementById('detailV'); if (v) v.textContent = VIEWR + ' m'; });
 function setTreeArt(v) { TREEART = v ? 1 : 0; try { localStorage.setItem('cinderlinks.treeart', String(TREEART)); } catch (e) { /* not kept */ } }
 try { const ta = new URLSearchParams(location.search).get('trees'), t0 = ta === 'pic' ? '1' : ta === 'sculpt' ? '0' : localStorage.getItem('cinderlinks.treeart'); if (t0 === '1') TREEART = 1; else if (t0 === '0') TREEART = 0; } catch (e) {}
-try { const d0 = +localStorage.getItem('cinderlinks.view'); if (d0) setDetail(d0); const s0 = localStorage.getItem('cinderlinks.simple'); if (s0 === '0') SIMPLEG = false; } catch (e) {}
+try { const d0 = +localStorage.getItem('cinderlinks.view'); if (d0) setDetail(d0); } catch (e) {}   // (T447: the simple grass is the only grass: no choice kept)
 const hudEl = $('hud'); let uiMin = true;
 try { if (localStorage.getItem('cinderlinks.ui') === 'open') uiMin = false; } catch (e) {}
 function setUi(min) { uiMin = min; hudEl.className = min ? 'min' : ''; try { localStorage.setItem('cinderlinks.ui', min ? 'min' : 'open'); } catch (e) {} }
@@ -157,6 +159,7 @@ function hostLies(L) {   // T438: the host's lies, after the course: the grass b
 }
 function hostStart() {
   HOST = true; hostOff = true;   // (nothing is drawn until a course comes)
+  helpEl.innerHTML = HELP.filter((h) => h[0] !== 'M' && h[0] !== 'V').map((h) => '<b>' + h[0] + '</b>' + h[1]).join('\n');   // (T447: M and V choose nothing in the game)
   try { hostOrigin = (location.ancestorOrigins && location.ancestorOrigins.length ? location.ancestorOrigins[0] : '') || (document.referrer ? new URL(document.referrer).origin : '') || location.origin || ''; } catch (e) { hostOrigin = ''; }
   addEventListener('message', (e) => {
     if (typeof window !== 'undefined' && e.source !== window.parent) return;   // only the page that holds this one
@@ -561,8 +564,8 @@ addEventListener('keydown', (e) => {
   else if (e.code === 'KeyG') rideCart();
   else if (e.code === 'KeyJ') jumpToBall();
   else if (e.code === 'KeyU') setUi(!uiMin);
-  else if (e.code === 'KeyM') { useBiome(BIOME_ORDER[(BIOME_ORDER.indexOf(biomeId) + 1) % BIOME_ORDER.length]); firstPicture(); }
-  else if (e.code === 'KeyV') { useStyle(null, CTYPE_ORDER[(CTYPE_ORDER.indexOf(ctypeId) + 1) % CTYPE_ORDER.length]); firstPicture(); }
+  else if (e.code === 'KeyM' && !HOST) { useBiome(BIOME_ORDER[(BIOME_ORDER.indexOf(biomeId) + 1) % BIOME_ORDER.length]); firstPicture(); }
+  else if (e.code === 'KeyV' && !HOST) { useStyle(null, CTYPE_ORDER[(CTYPE_ORDER.indexOf(ctypeId) + 1) % CTYPE_ORDER.length]); firstPicture(); }
   else if (e.code === 'KeyY') gimme();
   else if (e.code === 'KeyP') { const nx = RS > 0.9 ? 0.75 : RS > 0.6 ? 0.5 : 1; try { localStorage.setItem('cinderlinks.scale', '' + nx); } catch (e2) {} if (typeof location !== 'undefined' && location.reload) { const u = new URLSearchParams(location.search); u.delete('scale'); location.search = u.toString(); } }   // the picture's scale: 75%, 50%, 100% (the page loads again at the new size)
   else if (e.code === 'KeyH') { helpOn = !helpOn; helpEl.className = helpOn ? 'on' : ''; }
