@@ -29,7 +29,7 @@ export function lieGrid3p(view: Pick<CourseView, 'lieAt' | 'kindAt'>, box: reado
 export function lieGridJob(view: Pick<CourseView, 'lieAt' | 'kindAt'>, box: readonly [number, number, number, number], centre: Pt): { step(ms: number): LieGrid | null; readonly done: boolean } {
   const tx0 = Math.floor(box[0]), ty0 = Math.floor(box[1]), w = Math.max(0, Math.ceil(box[2]) - tx0), h = Math.max(0, Math.ceil(box[3]) - ty0), r: number[] = [];
   let last = -1, n = 0, j = 0, out: LieGrid | null = null;
-  const code = new Map<string, number>(LIE_CODES.map((k, i) => [k, i]));
+  const code = new Map<string, number>(LIE_CODES.map((k, i) => [k, i])); code.set('waste', code.get('bunker')!);   // (T455: the view draws the waste area as sand)
   return {
     get done() { return !!out; },
     step(ms: number) {

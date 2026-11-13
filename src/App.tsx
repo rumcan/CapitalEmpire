@@ -212,6 +212,7 @@ export default function App() {
   /** the Developer toggle (see devStart): the gear menu's checkbox and F3 set it; remembered */
   const [dev, setDevState] = useState(devStart);
   const devRef = useRef(dev);
+  useEffect(() => { if (game) game.devMode = dev; }, [game, dev]);   // (T455: the Developer toggle unlocks the shot extras)
   const setDev = (v: boolean) => { devRef.current = v; setDevState(v); try { localStorage.setItem(DEV_KEY, v ? '1' : '0'); } catch { /* storage may be unavailable */ } };
   /** the developer readouts (the tile sets in view and the frame time and traffic panel): off unless F4 shows them (the owner, 2026-10-29) */
   const [readouts, setReadouts] = useState(false);

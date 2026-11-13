@@ -1,7 +1,7 @@
 ## postfx The painted look (T448)
-The finished picture is passed through a WebGL2 layer before it reaches the screen. The owner chose "Painted + cinematic" as the game's look, always on: an oil-paint filter over the whole picture, an anti-flicker calm, and a light cinematic finish (the owner, 2026-11-13: the paint covers everything, no radius, and the look has no off switch).
+The finished picture is passed through a WebGL2 layer before it reaches the screen. The owner chose "Painted" as the game's look, always on: an oil-paint filter over the whole picture and an anti-flicker calm (the cinematic finish is off: the owner, 2026-11-13, it hid the ball on the green; the ?fx=test bar still has it) (the owner, 2026-11-13: the paint covers everything, no radius, and the look has no off switch).
 R: Each frame the picture goes to the GPU: all of it (the land, the trees, the people and the sky) is painted (a Kuwahara filter: flat strokes that keep the edges); a temporal calm (always full, 85%: the owner, 2026-11-13) holds each pixel to its last frames inside its neighbours' colours, so shimmer settles; the picture is scaled to the screen with sharp pixel edges; a cinematic finish (40% to start: a filmic tone curve, a teal and orange grade, bloom, sun rays from the upper right, a little lens fringe, grain and vignette) and a contrast-adaptive sharpen end it.
-R: The ball, the flag and the marker are kept sharp. The style menu's Picture section sets the cinematic amount; the browser keeps it. Without WebGL2 the plain picture is shown and the menu says so.
+R: The ball, the flag and the marker are kept sharp. Without WebGL2 the plain picture is shown and the menu says so.
 R: The aiming marks, the putting grid and the panels stay above the layer at full sharpness; the layer never takes a click.
 R: With ?fx=test in the address a bar at the top steps through the filters tried (the backquote key too; hold Backslash for the original) with the sliders and the frame rate, the slowest frame and the filter's GPU and CPU time.
 File: game.js
@@ -260,7 +260,7 @@ void main(){
   let gpuMs = 0, gpuN = 0, gpuShow = 0, cpuMs = 0, fpsT = performance.now(), fpsN = 0, fps = 0, frameMax = 0, lastT = 0, maxShow = 0;
 
   // the preset in force: the painted look (or none) in play; any of them with ?fx=test (the bar steps through them; &fxp=<n> starts on the nth)
-  const PAINTED = PRESETS.findIndex((p) => p.name === 'Painted + cinematic');
+  const PAINTED = PRESETS.findIndex((p) => p.name === 'Painted');   // (the owner, 2026-11-13: no cinematic finish in the game: it hid the ball on the green)
   let cur = PAINTED, peek = false;   // (always painted: the owner, 2026-11-13)
   if (FX_TEST) { const k = +(new URLSearchParams(location.search).get('fxp')); if (k >= 1 && k <= PRESETS.length) cur = k - 1; }
   const FORCE_W = +(new URLSearchParams(location.search).get('fxw')) || 0;   // (testing: the screen picture's width, whatever the window's)

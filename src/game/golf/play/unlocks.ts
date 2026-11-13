@@ -51,5 +51,8 @@ export function earned(e: EarnIn): Earned {
   return { draw: curve, fade: curve, high: flight, low: flight, side, back, tour, boost, charges: boost ? (driver >= EARN.boost2Level ? 2 : 1) : 0, why };
 }
 
+/** T455 (the owner, 2026-11-13: "unlock shot shaping in dev mode"): the Developer toggle (F3, App.tsx) opens everything for testing without the cards, the skills or the clubs: the curve, the flight, the spins, the boost, and two boost charges */
+export const DEV_EARNED: Readonly<Earned> = { ...{ draw: true, fade: true, high: true, low: true, side: true, back: true, tour: true, boost: true }, charges: 2, why: {} };
+
 /** everything earned (a host that does not know the profile: as before T443, nothing is taken away) */
 export const ALL_EARNED: Readonly<Earned> = { draw: true, fade: true, high: true, low: true, side: true, back: true, tour: true, boost: true, charges: 1, why: {} };

@@ -18,6 +18,7 @@ import { BUSINESS, type BusinessId } from '../../business/catalogue';
 import { STRUCTURE, type StructureKind } from '../tents';
 import { structureRect, type PlacedEventStructure } from '../eventtool';
 import { cornersOf, type EstateLot } from '../estate';
+import { FLOODLIGHT_HEIGHT_M, FLOODLIGHT_ID, LIGHT_REACH_M } from '../nightgolf';
 
 export type PathSurface = 'gravel' | 'concrete' | 'dirt' | 'sand';
 export type Roof = 'gable' | 'hip' | 'flat';
@@ -27,7 +28,9 @@ export type BuildingUse = 'clubhouse' | 'halfway' | 'prooffice' | 'teachhut' | '
 export interface PathFeature { id: string; kind: 'path'; name: string; surface: PathSurface; width: number; pts: ViewPt[] }
 export interface BuildingFeature { id: string; kind: 'building'; use: BuildingUse; name: string; at: ViewPt; w: number; d: number; h: number; rot: number;
   roof: Roof; wall: string; roofColour: string; floors: number }
-export type Feature = PathFeature | BuildingFeature;
+/** #1200: a floodlight tower (night golf): where its mast stands, how tall it is (m, to its lamp head) and how far it lights (m); the view draws the tower and, at night, lights the ground, the trees and the golfers within its reach */
+export interface LightFeature { id: string; kind: 'light'; name: string; at: ViewPt; h: number; reach: number }
+export type Feature = PathFeature | BuildingFeature | LightFeature;
 /** T451: the build a tree is sculpted as in the view: 0 a conifer, 1 a broadleaf, 2 an airy broadleaf (birch, aspen), 3 a palm, 4 a dead snag;
  *  T454: 5 a cactus, 6 a bush (a shrub, a desert plant, a clump of grass or reeds), 7 a flat-topped acacia or joshua tree */
 export type TreeForm = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7;
@@ -55,10 +58,12 @@ export interface PathSegIn { a: Pt; b: Pt; surface: PathSurface; width: number; 
  *  floors (absent: the use's defaults, STYLE) */
 export interface BuildingIn { key: string; use: BuildingUse; name: string; at: Pt; w: number; d: number; rot: number;
   h?: number; roof?: Roof; wall?: string; roofColour?: string; floors?: number }
+/** #1200: a floodlight tower: a key unique among the lights (the id is made from it), its mast's place (tiles) and optionally its height and reach (m: absent, the floodlight tower's) */
+export interface LightIn { key: string; at: Pt; h?: number; reach?: number }
 /** a tree: where it stands (its ground point, tiles), its height and crown width (m) and its species (the library id; '' when not known) */
 export interface TreeIn { at: Pt; size: number; crown?: number; sp?: string }
 /** the plain input; T451: treeBox, the tile box the trees were gathered in (absent: the trees' own box), and pics, the species' pictures */
-export interface FeaturesInput { course: string; paths: readonly PathSegIn[]; buildings: readonly BuildingIn[]; trees: readonly TreeIn[];
+export interface FeaturesInput { course: string; paths: readonly PathSegIn[]; buildings: readonly BuildingIn[]; trees: readonly TreeIn[]; lights?: readonly LightIn[];
   treeBox?: readonly [number, number, number, number]; pics?: Readonly<Record<string, TreePic>> }
 
 /** T451: at most this many trees go to the view (the course message stays quick: about 1 MB); past it the ones outside the course's own box are
@@ -150,6 +155,12 @@ export function exportFeatures3p(input: FeaturesInput, centre: Pt): FeaturesFile
     features.push({ id, kind: 'building', use: b.use, name: b.name, at: rv(toView(b.at, centre)), w: r2(b.w), d: r2(b.d), h: r2(b.h ?? st.h), rot: deg360(b.rot),
       roof: b.roof ?? st.roof, wall: b.wall ?? st.wall, roofColour: b.roofColour ?? st.roofColour, floors: b.floors ?? st.floors });
   }
+  // #1200: the floodlight towers, after the buildings, sorted by key like them
+  const lseen = new Set<string>();
+  for (const l of [...(input.lights ?? [])].sort((p, q) => (p.key < q.key ? -1 : p.key > q.key ? 1 : 0))) {
+    let id = `l:${l.key}`; for (let n = 2; lseen.has(id); n++) id = `l:${l.key}#${n}`; lseen.add(id);
+    features.push({ id, kind: 'light', name: 'Floodlight tower', at: rv(toView(l.at, centre)), h: r2(l.h ?? FLOODLIGHT_HEIGHT_M), reach: r2(l.reach ?? LIGHT_REACH_M) });
+  }
   const trees = packTrees(input, centre);
   return trees ? { course: input.course, v: 1, features, trees } : { course: input.course, v: 1, features };
 }
@@ -229,7 +240,7 @@ const HOUSE_WALLS = ['#e6dcc8', '#d8c7a8', '#c9c3b6', '#eadfd0', '#b9a58a'];
 
 /** the plain input of the placed things where the game keeps them (GameFeatureSource) */
 export function gatherFeatures3p(src: GameFeatureSource): FeaturesInput {
-  const paths: PathSegIn[] = [], buildings: BuildingIn[] = [], trees: TreeIn[] = [];
+  const paths: PathSegIn[] = [], buildings: BuildingIn[] = [], trees: TreeIn[] = [], lights: LightIn[] = [];
   const m = src.margin ?? 75, B = src.box;
   const near = (p: Pt): boolean => !B || (p.x >= B[0] - m && p.x <= B[2] + m && p.y >= B[1] - m && p.y <= B[3] + m);
   for (const s of src.segs) {
@@ -247,6 +258,9 @@ export function gatherFeatures3p(src: GameFeatureSource): FeaturesInput {
   // the event structures: no stored size of their own, so the footprint is the catalogue's (or its art's, eventtool.ts structureRect), the box as
   // it stands on the map (x, y its top-left corner), turned already, so rot 0
   for (const s of src.structures) {
+    if (s.typeId === FLOODLIGHT_ID) {   // #1200: a floodlight tower is a light, not a building: its mast stands in the middle of its footprint
+      const [lx, ly, lw, lh] = structureRect(s); lights.push({ key: `event:${s.id}`, at: { x: lx + (lw > 0 ? lw : 1) / 2, y: ly + (lh > 0 ? lh : 1) / 2 } }); continue;
+    }
     const def = STRUCTURE[s.typeId], use = def && STRUCT_USE[def.kind]; if (!def || !use) continue;
     const [x, y, w, h] = structureRect(s); if (!(w > 0 && h > 0)) continue;
     buildings.push({ key: `event:${s.id}`, use, name: def.name, at: { x: x + w / 2, y: y + h / 2 }, w: w * TILE_M, d: h * TILE_M, rot: 0, ...(STRUCT_H[def.kind] ? { h: STRUCT_H[def.kind] } : {}) });
@@ -278,5 +292,5 @@ export function gatherFeatures3p(src: GameFeatureSource): FeaturesInput {
   };
   for (const p of src.props) { const L = src.library[p.item]; if (L && isPlant(L)) add(L, p.x, p.y, p.scale); }   // (T454: every plant, not only kind tree: the desert's palms, cacti and shrubs are kinds of their own)
   for (const t of src.trees ?? []) { const L = byId.get(t.id); if (L) add(L, t.x, t.y, t.scale); }
-  return { course: src.course, paths, buildings, trees, ...(tb ? { treeBox: tb } : {}), pics };
+  return { course: src.course, paths, buildings, trees, ...(lights.length ? { lights } : {}), ...(tb ? { treeBox: tb } : {}), pics };
 }
