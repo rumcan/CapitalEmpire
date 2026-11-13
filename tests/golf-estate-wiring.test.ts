@@ -32,7 +32,7 @@ test('the estate is saved with the golf game and read back on a load; a reset dr
 });
 
 test('the estate runs beside the club: every two seconds; its lots are drawn through the lot queue, only the ones that changed', () => {
-  assert.match(eng, /this\.payStaff\(\); this\.stepClub\(\); this\.estateStep\(\); \}/);
+  assert.match(eng, /this\.payStaff\(\); this\.stepClub\(\); this\.estateStep\(\); this\.stepFinance\(\); \}/);
   assert.match(eng, /if \(this\.estateRt && this\.estateRt\.rev !== this\.estateRev\) this\.estateSync\(\);/);
   assert.match(method('  private applyLot(key: string) {'), /^ {2}private applyLot\(key: string\) \{\n\s+if \(key\.startsWith\('estate:'\)\) \{ this\.applyEstateLot\(key\); return; \}/);
   const sync = method('private estateSync() {');
@@ -46,7 +46,7 @@ test('a sale goes into the books as Lot sales, the levy as the club\'s business,
   assert.match(step, /this\.traffic\.spend\('business', -out\.levy\)/);
   assert.match(step, /members: club\.members \+ n/);
   assert.match(step, /if \(club\) \{/, 'no clubhouse, no club: nothing is booked and nobody joins');
-  assert.match(read('src/game/city.ts'), /spend\(kind: 'construction' \| 'compensation' \| 'business' \| 'upkeep' \| 'lots' \| 'balls', n: number\): void \{ this\.budget\.spend\(kind, n\); \}/);
+  assert.match(read('src/game/city.ts'), /spend\(kind: 'construction' \| 'compensation' \| 'business' \| 'upkeep' \| 'lots' \| 'balls' \| 'bank', n: number\): void \{ this\.budget\.spend\(kind, n\); \}/);
   assert.match(read('src/App.tsx'), /\['Lot sales', l\.lots \?\? 0, true\]/);
 });
 
