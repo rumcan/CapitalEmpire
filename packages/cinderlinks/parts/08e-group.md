@@ -168,13 +168,13 @@ function drawGroupBall(b, d) {   // a ball at rest or in the air (as the render 
 function groupBoard(m) {   // the leaderboard card (the leaders, his row lit) and his group's wait, said once when it begins
   if (!grpBoardEl && typeof document !== 'undefined') {
     grpBoardEl = document.createElement('div'); grpBoardEl.className = 'panel';
-    Object.assign(grpBoardEl.style, { position: 'absolute', left: '1.4%', top: '30%', padding: '5px 8px', fontSize: '11px', lineHeight: '1.35', pointerEvents: 'none', whiteSpace: 'nowrap' });
+    Object.assign(grpBoardEl.style, { position: 'absolute', left: '1.4%', top: '30%', padding: '0.5em 0.8em', fontSize: 'clamp(11px, 1.016vw, 15px)', lineHeight: '1.45', pointerEvents: 'none', whiteSpace: 'nowrap' });
     if (document.body && document.body.appendChild) document.body.appendChild(grpBoardEl);
   }
   const rows = Array.isArray(m.rows) ? m.rows : [], esc = (v) => String(v == null ? '' : v).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
   const fair = rows.some((r) => r.hcp !== undefined), level = rows.some((r) => r.hcp === 'level');   // (T436: you and a ghost, own kit scored net, level kit as played)
   const head = !fair ? 'LEADERS' : level ? 'LEVEL KIT' : 'OWN KIT &middot; NET';
-  if (grpBoardEl) grpBoardEl.innerHTML = '<b>' + head + '</b><br>' + rows.map((r) => (r.owner ? '<span style="color:#f2c94c">' : '<span>') + esc(r.pos) + '&nbsp;&nbsp;' + esc(r.name) + '&nbsp;&nbsp;' + esc(r.toPar)
+  if (grpBoardEl) grpBoardEl.innerHTML = '<b>' + head + '</b><br>' + rows.map((r) => (r.owner ? '<span style="color:#ffd166;font-weight:700">' : '<span>') + esc(r.pos) + '&nbsp;&nbsp;' + esc(r.name) + '&nbsp;&nbsp;' + esc(r.toPar)
     + (fair && !level ? '&nbsp;&nbsp;net ' + esc(r.net) + ' (' + esc(r.hcp) + ')' : '') + '&nbsp;&nbsp;thru ' + esc(r.thru) + '</span>').join('<br>');
   const w = typeof m.wait === 'string' ? m.wait : '';
   if (w && w !== grpWait) say('Your group is ' + w, 300);
@@ -190,6 +190,6 @@ function hostHelp() {   // (from actorsList, each frame until done: the help pan
   hostHelpDone = true;
   if (typeof helpEl === 'undefined' || !helpEl) return;
   const NL = String.fromCharCode(10);   // (a new line: the help panel keeps its lines)
-  helpEl.innerHTML += NL + HOST_HELP.map((h) => '<b>' + h[0] + '</b>' + h[1]).join(NL);
+  helpEl.innerHTML += NL + HOST_HELP.map((h) => '<b' + (h[1] ? '' : ' class="h"') + '>' + h[0] + '</b>' + h[1]).join(NL);
 }
 ````
