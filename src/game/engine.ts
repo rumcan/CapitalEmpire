@@ -8282,6 +8282,7 @@ export class Game {
   /** today's upkeep spends so far: the day's ledger holds the road and signal upkeep on top, which no spend booked */
   private dayUpkeepBooked = 0;
   /** J2b: the treasury at the last month end (after the bank's own moves), null until the books open */
+  private finTicks = 0;
   private moneyMark: number | null = null;
   /** the bank's own moves since then that are not on a line: a loan paid in, a deposit, a withdrawal */
   private bankNet = 0;
@@ -8358,7 +8359,7 @@ export class Game {
   private stepFinance(): void {
     const g = this.golf; if (!g) return;
     const f = this.finance, idx = this.golfMonthIndex();
-    if (f.opening === undefined) { f.opening = this.openingAssets(); this.scheduleSave(); }
+    if (f.opening === undefined && (this.bizDefs.length > 0 || ++this.finTicks > 3)) { f.opening = this.openingAssets(); this.scheduleSave(); } // (a load restores the buildings first: wait a few ticks for them)
     if (f.month > idx) return; // (a save from a later month: wait)
     if (f.month === 0 && f.history.length === 0 && idx > 1 && Object.keys(f.cur).length === 0) f.month = idx - 1; // (an old save: the books start at the month before)
     for (let k = 0; f.month < idx && k < 12; k++) {
