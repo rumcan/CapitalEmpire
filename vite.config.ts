@@ -272,9 +272,14 @@ function jamCut(): Plugin {
   };
 }
 
+/** J7c (#1230): the jam build's page is Fairway Fortune from the first moment (index.html's own title is the town builder's) */
+function jamTitle(): Plugin {
+  return { name: "capitalempire-jam-title", transformIndexHtml: (html) => (JAM_BUILD ? html.replace(/<title>[^<]*<\/title>/, "<title>Fairway Fortune</title>") : html) };
+}
+
 // https://vite.dev/config/
 export default defineConfig(({ command }) => ({
-  plugins: [react(), tailwindcss(), devSave(), atlasKtx2(), jamCut()],
+  plugins: [react(), tailwindcss(), devSave(), atlasKtx2(), jamCut(), jamTitle()],
   worker: { plugins: () => [jamCut()] }, // (the ground worker is bundled by its own pipeline)
   // the KTX2 atlas pages exist in a production build only: the dev server always shows the WebP pages, fresh as the art is edited
   define: { __ATLAS_KTX2__: JSON.stringify(command === "build" && KTX2_ON), __BUILD__: JSON.stringify({ app: pkg.version, sha }) },

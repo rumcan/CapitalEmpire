@@ -1,6 +1,7 @@
 // The range business on the map (plan P24 Phase 1, T129): the engine's side of golf/rangebiz.ts. It lays the range's scene (its ground patches,
 // its auto props and, once, its cart paths), steps the golfers on the town clock and books their sales, and hands the engine the golfers and cars
 // to draw as movers and the balls and labels to draw over the map. The engine gives it a small context, so its own edits stay a few lines.
+import { JAM } from '../features';
 import type { Drawable } from '../sprites';
 import { CAR_SCALE } from '../sprites';
 import type { Prop } from '../types';
@@ -486,7 +487,7 @@ export class RangeHost {
     this.ctx.spend(u.cost); Object.assign(b, withUpgrade(b, id));
     if (u.till && b.balls) b.balls.till = Math.max(0, b.balls.till - u.cost); // (T386: the ball loop's gear is paid from the range's till too)
     this.sync(true); this.ctx.save();
-    this.ctx.toast(u.till ? `${u.name} bought (-$${u.cost.toLocaleString()} from the range's till)` : `${u.name} built (-$${u.cost.toLocaleString()})`, 'good'); this.ctx.emit();
+    this.ctx.toast(u.till && !JAM ? `${u.name} bought (-$${u.cost.toLocaleString()} from the range's till)` : `${u.name} ${u.till ? 'bought' : 'built'} (-$${u.cost.toLocaleString()})`, 'good'); this.ctx.emit(); // (J7c: in the jam the till is no purse: the cash pays)
     return true;
   }
 
@@ -555,7 +556,7 @@ export class RangeHost {
   orderBalls(cases = 1, standing = false): boolean {
     const b = this.ctx.biz(), bs = b?.balls; if (!b || !bs) return false;
     if (!b.owned.includes('supplier')) { if (!standing) this.ctx.toast("Open the supplier's account first (Ball room upgrades)", 'warn'); return false; }
-    const sup = supplyKit(b.owned), today = Math.round(bs.day.bought / CASE_BALLS), o = orderBalls(bs, cases, today, Math.min(bs.till, this.ctx.money()), sup);
+    const sup = supplyKit(b.owned), today = Math.round(bs.day.bought / CASE_BALLS), o = orderBalls(bs, cases, today, JAM ? this.ctx.money() : Math.min(bs.till, this.ctx.money()), sup);
     if (!o.cases) { if (!standing) this.ctx.toast(today >= sup.perDay ? "The supplier has delivered today's cases" : `A case costs $${caseCost(sup).toLocaleString()}: not enough in the range's till`, 'warn'); return false; }
     bs.till = Math.max(0, bs.till - o.cost); this.ctx.balls?.(o.cost);
     this.ctx.toast(`${standing ? 'Standing order: ' : ''}${(o.cases * CASE_BALLS).toLocaleString()} balls delivered (-$${o.cost.toLocaleString()})`, 'good'); this.ctx.save(); this.ctx.emit();

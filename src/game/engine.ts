@@ -9,7 +9,7 @@ import { FACING_ROW, Pedestrians, facing as facingOf, sidewalks, type Door, type
 import { personIdentity, type PersonIdentity } from './person-identity';
 import { legacySeating, placeSeating, seatLiftWorldPixels, seatingProblems, type PlacedSeating } from './golf/event-seating';
 import { facilityCondition, facilityImprovement, hasUpgradedArt, improvementCost, type FacilityCondition } from './golf/facility-models';
-import { GREENKEEPING, JAM, JAM_FEE_PER_HOLE } from './features';
+import { GREENKEEPING, JAM, JAM_FEE_PER_HOLE, JAM_RANGE_BALLS, JAM_RANGE_KIT } from './features';
 import { GRASS_ACTION_NAME, GrassManagement, grassSurface, type GrassAction, type GrassCellView, type GrassScope, type GrassSettings } from './ext/grass-management';
 import { drawGhostBlueprint, drawGhostHint, drawGhostPoly, drawGhostRing, drawRefusedMarks, ghostStatus, rgbaOf, type GhostBlueprint, type GhostView } from './ext/ghost-preview';
 import { drawRefusedCross, strokeHatch } from './ext/refused-mark';
@@ -187,6 +187,7 @@ import { newRangeJunk, type RangeJunkSpot } from './golf/rangebiz';
 import { rangeSpotAlong } from './golf/placing';
 import { CAR_PARK_PLACE_COST, PRACTICE_PLACE_COST, RANGE_PLACE_COST, landWhy, placeVerdict, rangeSpotAt, rectAt, rectPoly as rectPolyOf, rectsMeet, type LandCheck, type Placeable, type RangeSpot } from './golf/placing';
 import { RANGE_UPGRADES, homeYardBox, rangeTakes, upgradeFoot, upgradeWhy, type RangeBizSave } from './golf/rangebiz';
+import { withUpgrade } from './golf/rangebiz';
 import { baysByDoor, servesOf, servingParks, type Serve, type Venue } from './golf/walkserve';
 import { drawServePreview } from './walkserve-overlay';
 import { carParkSpotAt, carParkWhy, parkSpotWhy as spotWhyOf, snapToRoad, type Building, type CarParkCtx } from './golf/parkplace';
@@ -1856,9 +1857,28 @@ export class Game {
     const b = this.golf?.range; if (!b?.forSale) return false;
     const at = this.range.scene?.counter ?? { x: 0, y: 0 };
     if (!this.payPlaced('The driving range', RANGE_PLACE_COST, at)) return false;
-    delete b.forSale; this.range.sync(true); this.scheduleSave();
-    this.toast(`The driving range is yours (-$${RANGE_PLACE_COST.toLocaleString()}): golfers turn off the road for a bucket now. Clear the junk when you like`, 'good');
+    delete b.forSale;
+    // J7c (#1230): with its ball kit (features.ts JAM_RANGE_KIT: a push picker and a part-time attendant), so it never runs dry at its starting demand
+    for (const id of JAM_RANGE_KIT as RangeUpgradeId[]) if (!b.owned.includes(id)) Object.assign(b, withUpgrade(b, id));
+    if (b.balls) b.balls.clean += JAM_RANGE_BALLS; // (and its ball stock: 15 buckets)
+    this.range.sync(true); this.scheduleSave();
+    this.toast(`The driving range is yours (-$${RANGE_PLACE_COST.toLocaleString()}), with a push picker and a range attendant who picks the balls up ($${RANGE_UPGRADES.find(u => u.id === 'attendant')!.upkeep} a month). Clear the junk when you like`, 'good');
     this.emit(); return true;
+  }
+  /** J7c (#1230): the Range card's fix for an empty ball room: the ball kit's missing pieces bought (a ball tube, a push picker, a range attendant), else Walk to pick by
+   *  hand. Returns what it did */
+  fixRangeBalls(): 'hired' | 'walk' | null {
+    const b = this.golf?.range; if (!b) return null;
+    const need = (JAM_RANGE_KIT as RangeUpgradeId[]).filter(id => !b.owned.includes(id));
+    if (!need.length) { if (this.range.cardOpen) this.openRangeCard(false); this.setTool('select'); this.guideShowMe('guide-range-buckets'); return 'walk'; }
+    for (const id of need) if (!this.range.buy(id)) return null;
+    return 'hired';
+  }
+  /** J7c: lets the range attendant go (and the shifts after his): the wage stops, the balls are yours to pick again */
+  letAttendantGo(): boolean {
+    const b = this.golf?.range; if (!b?.owned.includes('attendant')) return false;
+    b.owned = b.owned.filter(id => id !== 'attendant' && id !== 'attendant2' && id !== 'attendant3' && id !== 'training' && id !== 'staffcart');
+    this.range.sync(true); this.scheduleSave(); this.toast('The range attendant is gone: no wage, and the balls are yours to pick up (Walk, hold F over them)', 'info'); this.emit(); return true;
   }
   /** J7: the range's junk piles (each with its index in the save, library id, name, world spot and distance from the tee line, m): Cinderlinks' practice
    *  range (J6) draws the same items from this; empty when there is none */

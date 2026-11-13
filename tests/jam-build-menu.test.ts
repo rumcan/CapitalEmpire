@@ -123,3 +123,16 @@ test('J7: the Clear the junk card: one per range with junk, its price a pile, op
   assert.ok(j.payback && j.payback.extra > 0, 'a cleaner range draws more golfers');
   assert.equal(buildCards(src()).find(c => c.id === 'junk'), undefined);
 });
+
+test('J7c: the bought range\'s ball kit is real upgrades, each after what it needs, with the attendant\'s wage as a monthly upkeep', async () => {
+  const { JAM_RANGE_KIT, JAM_RANGE_BALLS, JAM_STAFF_X } = await import('../src/game/features');
+  const owned: string[] = [];
+  for (const id of JAM_RANGE_KIT) {
+    const u = RANGE_UPGRADES.find(q => q.id === id); assert.ok(u, id);
+    for (const n of needsOf(u!)) assert.ok(owned.includes(n), `${id} needs ${n} first`);
+    owned.push(id);
+  }
+  assert.ok(RANGE_UPGRADES.find(u => u.id === 'attendant')!.upkeep > 0, 'the attendant has a wage');
+  assert.ok(JAM_RANGE_BALLS + 200 >= 13 * 40, 'the lunchtime rush (13 golfers) finds a bucket each');
+  assert.ok(JAM_STAFF_X >= 1);
+});
