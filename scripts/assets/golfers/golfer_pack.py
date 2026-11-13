@@ -241,6 +241,7 @@ def main():
         cells, j = frames(gid, like=a.like)
         if a.like: cells = {h: [mannequin(c) for c in row] for h, row in cells.items()}
         keyname = pick_key(cells); key, keyhex = KEYS[keyname]; wear = outfit(cells)
+        if a.ref: wear = 'exactly as in reference 1'   # (a new person: the guide is someone else, its colours must not leak into the prompt)
         if a.clip != 'sheet':
             ccells, cj = pick_frames(gid, a) if a.clip == 'pick' else frames(gid, a.clip, like=a.like)
             if a.like: ccells = {h: [mannequin(c) for c in row] for h, row in ccells.items()}

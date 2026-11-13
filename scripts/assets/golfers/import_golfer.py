@@ -33,6 +33,13 @@ def key_out(rgb, tol, soft):
     bg = np.median(border, axis=0)
     d = np.sqrt(((rgb - bg) ** 2).sum(-1))
     a = np.clip((d - tol) / soft, 0, 1)
+    # the key's own hue painted darker (the inside of a wire basket, a gap in shade): R and B both well above G for magenta (G above R and
+    # B for green) is background, not the subject; a pink shirt (219,135,152) scores 17, the basket's shaded magenta 90+ (#1235, 2026-11-14)
+    hi0 = bg > 128
+    if hi0.any() and (~hi0).any():
+        score = rgb[..., hi0].min(-1) - rgb[..., ~hi0].max(-1)
+        bal = (rgb[..., hi0].max(-1) - rgb[..., hi0].min(-1)) < 70 if hi0.sum() > 1 else True
+        a = np.where((score > 70) & bal, 0, a)
     # un-mix the background from the rim pixels: c = a*fg + (1-a)*bg  ->  fg = (c - (1-a)*bg) / a
     am = np.maximum(a, 1e-3)[..., None]
     fg = np.clip((rgb - (1 - am) * bg) / am, 0, 255)
