@@ -118,6 +118,22 @@ built in dirt parking lot"; "lets place the range for him. he has to buy it ... 
   left takes 1.6% off the range's appeal; Clear on the range card costs $250 and pays its scrap back. For Cinderlinks (J6): `Engine.rangeJunk()` /
   `RangeScene.junk` give each pile's library id, name, world spot and metres from the mats; the save holds `golf.range.junk` (range frame u, v).
 
+## Button tests: run them before every jam build (T459, the owner 2026-11-13: "are you guys not testing buttons?")
+A dead button must not ship. Two checks:
+- **`npm test`** includes `tests/jam-buttons.test.ts` (node, seconds): every tutorial step's Show me does something (`tour.ts tourShowOf`) and every
+  control it pulses is drawn; every tip's Show me and every Build menu card reaches the engine (`ui/jam/acts.ts`, run against a stub game); every
+  Build card that is not built has an act; every `<button>` in the jam's cards has an `onClick`; every `game.x` they call is a member of the engine.
+  A new card, tip or step goes through `acts.ts` / `tourShowOf` so the test covers it.
+- **`npm run jam:smoke`** (`scripts/jam/smoke.mjs`, after `npm run build:jam`): serves `dist-jam` on a free port, opens it in the installed Chrome
+  (playwright-core, headless with WebGL), starts a fresh game and clicks every visible button in turn: the title card, who-are-you, the tutorial
+  (each Show me and Next), the rail, the Build menu's tabs and cards, the tips and their Show me, buying the range, every Range card button, the
+  Bank (a small loan, repay, save, take), a hole's card, Play this hole and Back to the course, Settings, the speeds. A click passes when the page
+  or the game's state changes and no console error appears; a locked card or button is listed with its reason; a click that may change nothing
+  (a tab already open, the currency already set) says why. It prints the table and exits 1 on a FAIL (about 4 minutes; `--headed` to watch,
+  `--debug` prints the state of a click that changed nothing, `--stop-after tutorial` stops early).
+
+Order before a jam build: `npm run typecheck`, `npm test`, `npm run build:jam`, `npm run jam:smoke`.
+
 ## Out of the jam build (J1 hides them when JAM)
 Traffic tools but the car park and cart paths (bus, toll, junction tiers, road up/downgrades); town decoration; career milestones and
 the city win; the natural disasters toggle (J3's emergencies replace it); the Studio, DEV badge, perf panels; Empty map; real places /
