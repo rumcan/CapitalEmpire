@@ -15,9 +15,9 @@ import type { HeightAt } from './roll';
 import type { Club, Lie, Pt } from './types';
 
 /** how a ball sits: the coarse lies, and the grass split into the first cut, the rough, the deep rough and the fescue */
-export type LieKind = 'tee' | 'fairway' | 'firstcut' | 'rough' | 'deep' | 'fescue' | 'bunker' | 'green' | 'water' | 'out';
+export type LieKind = 'tee' | 'fairway' | 'firstcut' | 'rough' | 'deep' | 'fescue' | 'bunker' | 'waste' | 'green' | 'water' | 'out';
 /** every kind, in the order the panel lists them */
-export const LIE_KINDS: readonly LieKind[] = ['tee', 'fairway', 'firstcut', 'rough', 'deep', 'fescue', 'bunker', 'green', 'water', 'out'];
+export const LIE_KINDS: readonly LieKind[] = ['tee', 'fairway', 'firstcut', 'rough', 'deep', 'fescue', 'bunker', 'waste', 'green', 'water', 'out'];
 
 /** the kind a course surface plays as: the fringe and the fairway clean, the first cut, the rough, the long grass as deep rough, the fescue; the sand and the waste
  *  area as bunker; a path and other paint as rough (as courseview.ts's lie did) */
@@ -29,7 +29,8 @@ export function lieKindOfSurface(s: GolfSurface): LieKind {
     case 'firstCut': return 'firstcut';
     case 'longGrass': return 'deep';
     case 'fescue': return 'fescue';
-    case 'bunker': case 'waste': return 'bunker';
+    case 'bunker': return 'bunker';
+    case 'waste': return 'waste';   // (T455: the waste area plays a little shorter, not as sand does)
     case 'water': return 'water';
     default: return 'rough';
   }
@@ -39,7 +40,7 @@ export const kindOfLie = (l: Lie): LieKind => l;
 /** whether a kind can be the finer reading of a coarse lie (the first cut is a fairway lie or a rough one, the deep rough a fescue lie or a rough one) */
 export function kindFits(k: LieKind, l: Lie): boolean {
   if (k === l) return true;
-  return (k === 'firstcut' && (l === 'fairway' || l === 'rough')) || (k === 'deep' && (l === 'rough' || l === 'fescue'));
+  return (k === 'firstcut' && (l === 'fairway' || l === 'rough')) || (k === 'deep' && (l === 'rough' || l === 'fescue')) || (k === 'waste' && l === 'bunker');
 }
 /** the kind of the ball's lie `lie` at `at`: the view's finer reading where it fits the lie (kindAt), else the lie's own */
 export function lieKindFor(kindAt: ((x: number, y: number) => LieKind) | undefined, at: Pt, lie: Lie): LieKind {
@@ -51,18 +52,33 @@ export function lieKindFor(kindAt: ((x: number, y: number) => LieKind) | undefin
  *  ball, the factor on the run after landing, the chance of a flier (for a club that can: FLIER_CLUB), the extra chance of a bad strike, the wind multiplier of
  *  the shot's height, a name and a line for the panel */
 export interface LieEffect { name: string; carry: number; spread: number; spin: number; run: number; flier: number; wild: number; high: number; note: string }
+// T455 (the owner, 2026-11-13: "add distance penalties for your lie ... rough and sand affect how much club you can get on it"): the carry is the penalty. First cut about
+// -3%, rough -13%, the long grass -22% (the fescue -25%), the waste area -7%, sand -10% for a full shot (CLUB_LIE has the sand and the grass per club: no driver or wood from
+// sand, the long irons cut further, the wedges explode out short and high). The spread, spin, flier and wild numbers are T334's, kept.
 export const LIE_FX: Readonly<Record<LieKind, LieEffect>> = {
   tee: { name: 'Tee', carry: 1.03, spread: 0.95, spin: 1, run: 1, flier: 0, wild: 0, high: 1, note: 'Teed up: the most distance and the cleanest strike' },
   fairway: { name: 'Fairway', carry: 1, spread: 1, spin: 1, run: 1, flier: 0, wild: 0, high: 1, note: 'A clean lie: full spin' },
-  firstcut: { name: 'First cut', carry: 0.98, spread: 1.1, spin: 0.85, run: 1, flier: 0.04, wild: 0, high: 1, note: 'A little grass behind the ball: a touch less spin' },
-  rough: { name: 'Rough', carry: 0.88, spread: 1.3, spin: 0.45, run: 1.25, flier: 0.28, wild: 0.02, high: 1, note: 'Less spin, more run, a wider miss; a flier now and then' },
-  deep: { name: 'Deep rough', carry: 0.74, spread: 1.55, spin: 0.25, run: 0.8, flier: 0.12, wild: 0.08, high: 1, note: 'The ball sits down: much shorter, and it twists off line' },
-  fescue: { name: 'Fescue', carry: 0.6, spread: 1.9, spin: 0.2, run: 0.5, flier: 0, wild: 0.16, high: 1, note: 'Long grass: much shorter, and wild' },
-  bunker: { name: 'Bunker', carry: 0.7, spread: 1.4, spin: 0.6, run: 0, flier: 0, wild: 0.03, high: 1.3, note: 'Out of the sand: short and high, it lands soft' },
+  firstcut: { name: 'First cut', carry: 0.97, spread: 1.1, spin: 0.85, run: 1, flier: 0.04, wild: 0, high: 1, note: 'A little grass behind the ball: 3% shorter, a touch less spin' },
+  rough: { name: 'Rough', carry: 0.87, spread: 1.3, spin: 0.45, run: 1.25, flier: 0.28, wild: 0.02, high: 1, note: 'About 13% shorter, less spin, more run, a wider miss; a flier now and then: club up' },
+  deep: { name: 'Deep rough', carry: 0.78, spread: 1.55, spin: 0.25, run: 0.8, flier: 0.12, wild: 0.08, high: 1, note: 'The ball sits down: 22% shorter, and it twists off line: club up, or chip out' },
+  fescue: { name: 'Fescue', carry: 0.75, spread: 1.9, spin: 0.2, run: 0.5, flier: 0, wild: 0.16, high: 1, note: 'Long grass: 25% shorter, and wild: club up' },
+  bunker: { name: 'Bunker', carry: 0.9, spread: 1.4, spin: 0.6, run: 0, flier: 0, wild: 0.03, high: 1.3, note: 'Out of the sand: 10% shorter for a full shot (no driver or wood), high, it lands soft; a greenside shot is an explosion' },
+  waste: { name: 'Waste area', carry: 0.93, spread: 1.2, spin: 0.7, run: 0.6, flier: 0, wild: 0.02, high: 1.15, note: 'Hard sand and stones: 7% shorter, a touch wider' },
   green: { name: 'Green', carry: 1, spread: 1, spin: 1, run: 1, flier: 0, wild: 0, high: 1, note: 'On the green' },
   water: { name: 'Water', carry: 1, spread: 1, spin: 0, run: 1, flier: 0, wild: 0, high: 1, note: 'In the water' },
   out: { name: 'Out of bounds', carry: 1, spread: 1, spin: 0, run: 1, flier: 0, wild: 0, high: 1, note: 'Out of bounds' },
 };
+/** T455: what a club adds to a lie's carry (a factor on LIE_FX[kind].carry; absent: 1). Sand: the woods cannot lift the ball out (the driver barely gets it out), the hybrid and long irons are cut further, the mid and
+ *  short irons a little, the sand and lob wedges are the explosion clubs (a short, high shot). The long grass: a wood or a long iron cannot swing through it (the ball sits down), the wedges cut it. Fliers are separate (FLIER_CLUB) */
+export const CLUB_LIE: Readonly<Partial<Record<LieKind, Partial<Record<Club, number>>>>> = {
+  bunker: { driver: 0.35, wood3: 0.5, wood5: 0.62, hybrid: 0.78, iron4: 0.85, iron5: 0.9, iron6: 0.95, iron7: 1, iron8: 1, iron9: 1, pw: 1, gw: 1, sw: 0.85, lw: 0.78 },
+  waste: { driver: 0.9, wood3: 0.93, wood5: 0.96 },
+  rough: { driver: 0.95, wood3: 0.96, wood5: 0.98 },
+  deep: { driver: 0.8, wood3: 0.85, wood5: 0.9, hybrid: 0.96, iron4: 0.94 },
+  fescue: { driver: 0.8, wood3: 0.85, wood5: 0.9, hybrid: 0.96, iron4: 0.94 },
+};
+/** the factor on a club's carry for the lie it is played from (LIE_FX carry times CLUB_LIE): 1 from the fairway, 0.87 from the rough with an iron, 0.35 from the sand with a driver */
+export const lieCarry = (k: LieKind, club: Club): number => LIE_FX[k].carry * (CLUB_LIE[k]?.[club] ?? 1);
 /** how much of a lie's flier chance each club has (the driver and the woods cannot get a flier out of grass; the short irons and the wedges are the clubs that do) */
 export const FLIER_CLUB: Readonly<Record<Club, number>> = { driver: 0.1, wood3: 0.3, wood5: 0.2, hybrid: 0.5, iron4: 0.6, iron5: 0.75, iron6: 0.9, iron7: 1, iron8: 1.1, iron9: 1.15, pw: 1.2, gw: 1.1, sw: 1, lw: 0.9, putter: 0 };
 /** a flier: the ball jumps off the grass with no spin on it, so it flies this much further (a factor on the carry), runs on this much more, and is a little wilder */

@@ -97,6 +97,8 @@ export interface ActorsMsg { v: 1; t: 'actors'; at: number; actors: Actor[];
 /** a club the owner may choose at his turn: the club, its full carry in metres and its scatter (the spread of where it lands, metres either side at
  *  full carry) after his skills, bag and mods for this lie, and the kit those numbers come from (mods.ts ClubKit) */
 export interface ClubChoice { club: Club; carryM: number; scatterM: number; kit: ClubKit;
+  /** T455 (turn3p.ts; optional): the club's carry from this lie, in metres: the full carry times the lie's factor for the club (lies.ts lieCarry), before the slope and the wind. The club tabs show it */
+  lieM?: number;
   /** T418 (turn3p.ts; optional so an older host's message still reads): the full carry once the lie, the slope and the wind now are on it along the suggested line
    *  (conditions.ts previewShot; m), the distance scatter (two standard deviations, m, at the full carry), the chance of a mishit, the meter's sweet spot (half width,
    *  meter units: swing.ts sweetSpot) and the marker's speed (meter units a second), the loft (degrees) and the launch in words, the run after landing (a factor on
