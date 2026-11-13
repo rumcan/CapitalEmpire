@@ -1,7 +1,7 @@
 ## postfx The painted look (T448)
 The finished picture is passed through a WebGL2 layer before it reaches the screen. The owner chose "Painted + cinematic" as the game's look, always on: an oil-paint filter over the whole picture, an anti-flicker calm, and a light cinematic finish (the owner, 2026-11-13: the paint covers everything, no radius, and the look has no off switch).
-R: Each frame the picture goes to the GPU: all of it (the land, the trees, the people and the sky) is painted (a Kuwahara filter: flat strokes that keep the edges); a temporal calm (85% to start) holds each pixel to its last frames inside its neighbours' colours, so shimmer settles; the picture is scaled to the screen with sharp pixel edges; a cinematic finish (40% to start: a filmic tone curve, a teal and orange grade, bloom, sun rays from the upper right, a little lens fringe, grain and vignette) and a contrast-adaptive sharpen end it.
-R: The ball, the flag and the marker are kept sharp. The style menu's Picture section sets the calm and the cinematic amount; the browser keeps them. Without WebGL2 the plain picture is shown and the menu says so.
+R: Each frame the picture goes to the GPU: all of it (the land, the trees, the people and the sky) is painted (a Kuwahara filter: flat strokes that keep the edges); a temporal calm (always full, 85%: the owner, 2026-11-13) holds each pixel to its last frames inside its neighbours' colours, so shimmer settles; the picture is scaled to the screen with sharp pixel edges; a cinematic finish (40% to start: a filmic tone curve, a teal and orange grade, bloom, sun rays from the upper right, a little lens fringe, grain and vignette) and a contrast-adaptive sharpen end it.
+R: The ball, the flag and the marker are kept sharp. The style menu's Picture section sets the cinematic amount; the browser keeps it. Without WebGL2 the plain picture is shown and the menu says so.
 R: The aiming marks, the putting grid and the panels stay above the layer at full sharpness; the layer never takes a click.
 R: With ?fx=test in the address a bar at the top steps through the filters tried (the backquote key too; hold Backslash for the original) with the sliders and the frame rate, the slowest frame and the filter's GPU and CPU time.
 File: game.js
@@ -11,14 +11,15 @@ Check: PAINTED = PRESETS.findIndex(
 ````js file=game.js
 
 // ---- the painted look (T448): a WebGL2 layer between the game's picture and the overlay. PIC: the player's settings (localStorage cinderlinks.picture:
-// { calm (0..0.85), cine (0..1) }); PFX: the layer once it runs (null: no WebGL2, or headless); picSet changes a setting.
+// { cine (0..1) }; the calm is always full, CALM_FULL); PFX: the layer once it runs (null: no WebGL2, or headless); picSet changes a setting.
 var PFX = null;
-const PIC = { calm: 0.85, cine: 0.4 };
-try { const s = JSON.parse(localStorage.getItem('cinderlinks.picture') || 'null'); if (s && typeof s === 'object') { for (const k of ['calm', 'cine']) if (Number.isFinite(s[k])) PIC[k] = s[k]; } } catch (e) { /* the defaults */ }
-PIC.calm = clamp(PIC.calm, 0, 0.85); PIC.cine = clamp(PIC.cine, 0, 1);
+const CALM_FULL = 0.85;   // the anti-flicker calm: always on, at full (the owner, 2026-11-13: not a setting; more than this smears what moves)
+const PIC = { calm: CALM_FULL, cine: 0.4 };
+try { const s = JSON.parse(localStorage.getItem('cinderlinks.picture') || 'null'); if (s && typeof s === 'object') { for (const k of ['cine']) if (Number.isFinite(s[k])) PIC[k] = s[k]; } } catch (e) { /* the defaults */ }
+PIC.cine = clamp(PIC.cine, 0, 1);
 const FX_TEST = typeof location !== 'undefined' && /[?&]fx=test(&|$)/.test(location.search || '');
 function picSet(k, v) {   // a Picture setting from the style menu (or the test bar), kept in the browser
-  if (k === 'calm') PIC.calm = clamp(+v, 0, 0.85); else if (k === 'cine') PIC.cine = clamp(+v, 0, 1);
+  if (k === 'cine') PIC.cine = clamp(+v, 0, 1);
   try { localStorage.setItem('cinderlinks.picture', JSON.stringify(PIC)); } catch (e) { /* not kept */ }
   if (PFX) PFX.changed(k);
 }
@@ -266,7 +267,7 @@ void main(){
   const CINE = { up: 2, post: 2, sharp: 0.5, bloom: 0.25, clar: 0.15, vig: 0.45, grade: 2, ca: 1, grain: 0.02, rays: 0.4 };
   function resolve(p) {
     if (!p.paint) return p;
-    const k = p.cine ? PIC.cine : 0, r = { pre: 3, up: 2, calm: PIC.calm > 0 ? Math.min(0.85, PIC.calm) : 0 };
+    const k = p.cine ? PIC.cine : 0, r = { pre: 3, up: 2, calm: CALM_FULL };
     if (k > 0) { r.post = 2; r.sharp = CINE.sharp * k; r.bloom = CINE.bloom * k; r.clar = CINE.clar * k; r.vig = CINE.vig * k; r.grade = 2; r.gradeK = k; r.ca = CINE.ca * k; r.grain = CINE.grain * k; r.rays = CINE.rays * k; }
     return r;
   }
@@ -338,11 +339,10 @@ void main(){
   #fxTune input{width:110px;accent-color:#f2c94c;vertical-align:middle}`;
   document.head.appendChild(css);
   bar = document.createElement('div'); bar.id = 'fxBar';
-  bar.innerHTML = '<button id="fxPrev" type="button" title="previous filter">&#9664;</button><div id="fxMid" title="click: next filter (right-click: previous); the backquote key; hold Backslash for the original"><div id="fxName"></div><div id="fxDesc"></div><div id="fxStat"></div><div id="fxTune"><label>Calm <input id="fxCalm" type="range" min="0" max="85" step="5"> <b id="fxCalmV"></b></label><label id="fxCineL">Cinematic <input id="fxCine" type="range" min="0" max="100" step="5"> <b id="fxCineV"></b></label></div></div><button id="fxNext" type="button" title="next filter">&#9654;</button>';
+  bar.innerHTML = '<button id="fxPrev" type="button" title="previous filter">&#9664;</button><div id="fxMid" title="click: next filter (right-click: previous); the backquote key; hold Backslash for the original"><div id="fxName"></div><div id="fxDesc"></div><div id="fxStat"></div><div id="fxTune"><label id="fxCineL">Cinematic <input id="fxCine" type="range" min="0" max="100" step="5"> <b id="fxCineV"></b></label></div></div><button id="fxNext" type="button" title="next filter">&#9654;</button>';
   (document.getElementById('hud') || stage).appendChild(bar);
   for (const ev of ['mousedown', 'mouseup', 'pointerdown', 'pointerup', 'click', 'contextmenu', 'wheel']) bar.addEventListener(ev, (e) => e.stopPropagation());
-  const q = (id) => bar.querySelector('#' + id), tuneEl = q('fxTune'), calmEl = q('fxCalm'), cineEl = q('fxCine'), nameEl = q('fxName'), descEl = q('fxDesc'), statEl = q('fxStat');
-  calmEl.addEventListener('input', () => picSet('calm', +calmEl.value / 100));
+  const q = (id) => bar.querySelector('#' + id), tuneEl = q('fxTune'), cineEl = q('fxCine'), nameEl = q('fxName'), descEl = q('fxDesc'), statEl = q('fxStat');
   cineEl.addEventListener('input', () => picSet('cine', +cineEl.value / 100));
   show = () => {
     const pr = PRESETS[cur];
@@ -350,7 +350,6 @@ void main(){
     descEl.textContent = pr.desc;
     tuneEl.style.display = pr.paint ? 'flex' : 'none';
     q('fxCineL').style.display = pr.cine ? '' : 'none';
-    calmEl.value = String(Math.round(PIC.calm * 100)); q('fxCalmV').textContent = Math.round(PIC.calm * 100) + '%';
     cineEl.value = String(Math.round(PIC.cine * 100));
     q('fxCineV').textContent = Math.round(PIC.cine * 100) + '%';
   };

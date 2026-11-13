@@ -21,13 +21,13 @@ const gimmeEl = $('gimme'); gimmeEl.addEventListener('click', (e) => { gimme(); 
 // the course's style: a button at the top of the picture; its menu lists the course types and the biomes side by side (M steps through them too)
 const styleBtn = $('styleBtn'), styleMenu = $('styleMenu'); let shownStyle = '';
 let shownType = '';
-// T448: the Picture section: the calm and the cinematic amount (the painted look is always on and covers everything: the owner, 2026-11-13) (parts/09b-postfx.md); without WebGL2 it says so
-const PIC_IN = { picCalm: ['calm', 0.01, () => Math.round(PIC.calm * 100) + '%'], picCine: ['cine', 0.01, () => Math.round(PIC.cine * 100) + '%'] };
+// T448: the Picture section: the cinematic amount (the painted look and the calm are always on, the calm at full: the owner, 2026-11-13) (parts/09b-postfx.md); without WebGL2 it says so
+const PIC_IN = { picCine: ['cine', 0.01, () => Math.round(PIC.cine * 100) + '%'] };
 function picMenu() {
   if (!PFX) return '<div class="grp dist"><i>Picture</i><em>The painted look needs WebGL2: the plain picture is shown.</em></div>';
   const sl = (id, name, lo, hi, st, v) => '<em>' + name + '</em><input id="' + id + '" type="range" min="' + lo + '" max="' + hi + '" step="' + st + '" value="' + v + '"><span id="' + id + 'V">' + PIC_IN[id][2]() + '</span>';
   return '<div class="grp dist"><i>Picture</i>'
-    + sl('picCalm', 'Calm', 0, 85, 5, Math.round(PIC.calm * 100)) + sl('picCine', 'Cinematic', 0, 100, 5, Math.round(PIC.cine * 100)) + '</div>';
+    + sl('picCine', 'Cinematic', 0, 100, 5, Math.round(PIC.cine * 100)) + '</div>';
 }
 function styleShow() {   // the menu: the biome (the land and its plants) beside the course type (how the course is kept); one of each is in force
   shownStyle = biomeId; shownType = ctypeId; styleBtn.innerHTML = 'Settings<b>&#9662;</b>';   // (the owner, 2026-11-13: the button always reads Settings; the biome and type are chosen in its menu)
