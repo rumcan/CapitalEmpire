@@ -49,7 +49,10 @@ export interface CourseMsg { v: 1; t: 'course'; course: Record<string, unknown>;
   /** the course's size (1: true size, what the host sends; the view's own saved courses play at 0.6) and the hole to open, from 1 (T416; absent: 1) */
   scale?: number; hole?: number;
   /** T437: the player's golfer in his player card's clothes (look3p.ts playerDress; absent: the view's own red polo) */
-  golfer?: Dress }
+  golfer?: Dress;
+  /** T449: the time the round is played at: 'night' for night golf (the view draws its darkest time until it draws night with the floodlights; absent or
+   *  'day': the view's own time). Older views ignore it */
+  time?: 'day' | 'night' }
 
 /** what an actor is: a golfer, a caddie, a cart, or a gallery (a crowd standing at one spot, `count` people) */
 export type ActorRole = 'golfer' | 'caddie' | 'cart' | 'gallery';

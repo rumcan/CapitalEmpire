@@ -10,7 +10,8 @@ import type { DayRoster } from './everyday';
 import type { CourseView, RoundPlan, Standing } from './play/types';
 import type { RoundMode } from './play/yours';
 
-export type EventId = 'club' | 'mayor';
+/** T449: 'night', Night golf (nightgolf.ts): unlocked at the tour's tier 2 and hosted only with the course lit (the engine checks hostWhy) */
+export type EventId = 'club' | 'mayor' | 'night';
 /** an event: its name, its calendar month (0 = Jan; held on the first town day of play that starts on or after the 1st), its field (the day's members,
  *  or everyone on the day's sheet), the highest handicap that may enter (null: open), the winner's prize (the club's reputation, $) and its title */
 export interface ClubEventDef { id: EventId; name: string; month: number; field: 'members' | 'all'; maxHcp: number | null; win: { rep: number; money: number }; title: string }
@@ -19,12 +20,13 @@ export const CLUB_MAX_HCP = 18;
 export const CLUB_EVENTS: Readonly<Record<EventId, ClubEventDef>> = {
   club: { id: 'club', name: 'Club Championship', month: 4, field: 'members', maxHcp: CLUB_MAX_HCP, win: { rep: 1, money: 500 }, title: 'Club Champion' },
   mayor: { id: 'mayor', name: "Mayor's Cup", month: 9, field: 'all', maxHcp: null, win: { rep: 2, money: 1000 }, title: "Mayor's Cup" },
+  night: { id: 'night', name: 'Night golf', month: 6, field: 'all', maxHcp: null, win: { rep: 1, money: 750 }, title: 'Night golf champion' },
 };
 /** your round's mode in an event (play/yours.ts RoundMode, the flag shared with T244's money matches), and the event of a mode (null: not an event) */
-export const MODE_OF: Readonly<Record<EventId, RoundMode>> = { club: 'championship', mayor: 'mayors-cup' };
-export const eventOfMode = (m: RoundMode | undefined): EventId | null => m === 'championship' ? 'club' : m === 'mayors-cup' ? 'mayor' : null;
-/** the season's order (the season starts in September): the Mayor's Cup (October) before the Club Championship (May) */
-export const EVENT_IDS: readonly EventId[] = ['mayor', 'club'];
+export const MODE_OF: Readonly<Record<EventId, RoundMode>> = { club: 'championship', mayor: 'mayors-cup', night: 'night-golf' };
+export const eventOfMode = (m: RoundMode | undefined): EventId | null => m === 'championship' ? 'club' : m === 'mayors-cup' ? 'mayor' : m === 'night-golf' ? 'night' : null;
+/** the season's order (the season starts in September): the Mayor's Cup (October), the Club Championship (May), Night golf (July) */
+export const EVENT_IDS: readonly EventId[] = ['mayor', 'club', 'night'];
 /** the card announces an event this many months before its date */
 export const ANNOUNCE_MONTHS = 1;
 /** the board's rows (the top, and yours below them) */
@@ -49,16 +51,18 @@ export interface EventResult { id: EventId; season: number; year: number; pos: n
 /** the save (GolfSave.clubEvents): the season each event was last held, entered and announced; the event day in play (or the last); the last result
  *  (its card) */
 export interface ClubEventsSave { held: Partial<Record<EventId, number>>; entered: Partial<Record<EventId, number>>; announced: Partial<Record<EventId, number>>;
-  today?: EventDay; last?: EventResult }
+  today?: EventDay; last?: EventResult;
+  /** T449: how many nights of night golf were held (its novelty fades with them; absent: none) */
+  nights?: number }
 /** a title you won (PlayerProfile.titles) */
 export interface Title { id: EventId; name: string; year: number; strokes: number; toPar: number; holes: number }
 
 export const freshEvents = (): ClubEventsSave => ({ held: {}, entered: {}, announced: {} });
 
 /** the event due on a town day of play that starts at month `at` of season `season` (0..12, fractional): the first in the season's order whose date has
- *  come and that was not held this season; null: none */
-export function eventDue(s: ClubEventsSave, season: number, at: number): EventId | null {
-  for (const id of EVENT_IDS) if (at >= seasonMonthOf(id) && s.held[id] !== season) return id;
+ *  come and that was not held this season and that may be held (`can`: T449, night golf needs its unlock and the lights); null: none */
+export function eventDue(s: ClubEventsSave, season: number, at: number, can: (id: EventId) => boolean = () => true): EventId | null {
+  for (const id of EVENT_IDS) if (at >= seasonMonthOf(id) && s.held[id] !== season && can(id)) return id;
   return null;
 }
 /** the event the card announces at month `at` (from ANNOUNCE_MONTHS before its date until it is held); null: none, or already announced this season */
@@ -144,7 +148,7 @@ export const TITLES_MAX = 40;
 /** a title as the player card writes it: "Club Champion 1986 · 74 (+2)" */
 export const titleText = (t: Title): string => `${CLUB_EVENTS[t.id].title} ${t.year} · ${t.strokes} (${t.toPar === 0 ? 'E' : t.toPar > 0 ? `+${t.toPar}` : `−${-t.toPar}`})${t.holes !== 18 ? ` over ${t.holes}` : ''}`;
 
-const isId = (x: unknown): x is EventId => x === 'club' || x === 'mayor';
+const isId = (x: unknown): x is EventId => x === 'club' || x === 'mayor' || x === 'night';
 const fin = (v: unknown): v is number => typeof v === 'number' && Number.isFinite(v);
 /** saved titles, well formed (bad ones dropped); undefined with none */
 export function normalizeTitles(x: unknown): Title[] | undefined {
@@ -159,6 +163,7 @@ export function normalizeEvents(x: unknown): ClubEventsSave {
   const o = x as Partial<ClubEventsSave>;
   const rec = (r: unknown): Partial<Record<EventId, number>> => { const out: Partial<Record<EventId, number>> = {}; if (r && typeof r === 'object') for (const k of EVENT_IDS) { const v = (r as Record<string, unknown>)[k]; if (fin(v)) out[k] = Math.round(v); } return out; };
   s.held = rec(o.held); s.entered = rec(o.entered); s.announced = rec(o.announced);
+  if (fin(o.nights) && o.nights > 0) s.nights = Math.round(o.nights);
   const d = o.today;
   if (d && isId(d.id) && fin(d.season) && fin(d.day) && fin(d.par) && fin(d.holes) && Array.isArray(d.field)) {
     s.today = { id: d.id, season: Math.round(d.season), day: Math.round(d.day), par: Math.round(d.par), holes: Math.round(d.holes),
