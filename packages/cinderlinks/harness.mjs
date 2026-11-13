@@ -122,6 +122,15 @@ const HOST_PLAY = String.raw`
     const r1 = HP.ring && HP.ring.across; info.ring = r1;
     if (!(Math.abs(r1 - 20) < 1e-6)) errs.push('host play: the ring is not at one standard deviation (' + r1 + ' m, want 20)');
     if (snapAt) snapAt('host-aim');
+    // T456: a click on the ground aims; the target point is held at the club's reach, and the bar's mark is the share of the carry that lands the ball there
+    { aim.x = ball.x + aim.dx * 100 * S * 0.5; aim.y = ball.y + aim.dy * 100 * S * 0.5; hostAimPin = true; step(3, 1);
+      const T = HP.target, C = HP.clubs[club], unit = (C.playsM !== undefined ? C.playsM : C.carryM) * S;
+      info.target = T && { d: +(T.d / S).toFixed(1), u: +T.u.toFixed(3), ring: +(T.R / S).toFixed(2), mark: swingAimMk.style.left };
+      if (!T || Math.abs(T.d - Math.min(100 * S * 0.5, unit)) > 1e-6 || Math.abs(T.u - T.d / unit) > 1e-6) errs.push('host play: the aim is not a target at the club reach (' + JSON.stringify(info.target) + ')');
+      if (!T || !(T.R > 0) || Math.abs(parseFloat(swingAimMk.style.left) - T.u * 100) > 0.2) errs.push('host play: the bar does not mark the aim (' + JSON.stringify(info.target) + ')');
+      aim.x = ball.x + aim.dx * 400 * S; aim.y = ball.y + aim.dy * 400 * S; step(3, 1);
+      if (!HP.target || Math.abs(HP.target.u - 1) > 1e-9) errs.push('host play: an aim beyond the club is not held at full power');
+      hostAimPin = false; }
     hostMessage(turn(b0, 1, 16)); step(2, 1); info.ringTight = HP.ring && HP.ring.across;
     if (!(info.ringTight < r1)) errs.push('host play: a steadier club did not tighten the ring');
     // T446: the hold and release. A click on the course sets the aim and holds it (it never swings); the camera turned away, Space held lines it up
@@ -206,10 +215,21 @@ const HOST_PLAY = String.raw`
     for (const c of Object.keys(keys)) keys[c] = false; mouse.down = false; charging = false;
     step(70); hostMessage(turn(b0, 0.6)); jumpToBall(); step(6); updateHud();
     if (!/breaks right to left/.test(cardEl.innerHTML)) errs.push('host green: the read is not on the card');
-    const ends = (dAng) => { const pa = Math.atan2((p0[1] - b0[1]), (p0[0] - b0[0])) + dAng; aim.dx = Math.cos(pa); aim.dy = Math.sin(pa); render(); return HP.putt ? Math.hypot(HP.putt.x / S - p0[0], HP.putt.y / S - p0[1]) : null; };
+    const ends = (dAng) => { const pa = Math.atan2((p0[1] - b0[1]), (p0[0] - b0[0])) + dAng; aim.dx = Math.cos(pa); aim.dy = Math.sin(pa); aim.x = ball.x + aim.dx * Math.hypot(p0[0] - b0[0], p0[1] - b0[1]) * S; aim.y = ball.y + aim.dy * Math.hypot(p0[0] - b0[0], p0[1] - b0[1]) * S; render(); return HP.putt ? Math.hypot(HP.putt.x / S - p0[0], HP.putt.y / S - p0[1]) : null; };
     info.byRead = ends(a); info.atCup = ends(0);
     if (!(info.byRead !== null && info.byRead < 1e-6)) errs.push('host green: aimed along the read the putt does not end in the cup (' + info.byRead + ')');
     if (!(info.atCup > 0.2)) errs.push('host green: aimed at the cup the putt does not miss by the break (' + info.atCup + ')');
+    // T456: the aim is a target on the ground and the meter reaches past the hole: its top is 1.6 times the way, at least 3 m past it; the hole and the aim are marks on the bar
+    { hostAimPin = true; step(2); const T = HP.target, top = hostPuttTop(), D = Math.hypot(b0[0] - p0[0], b0[1] - p0[1]);
+      info.putt = { top: +top.toFixed(3), hole: swingHoleMk.style.left, aim: swingAimMk.style.left, target: T && { u: +T.u.toFixed(3), pw: +T.pw.toFixed(3) } };
+      if (Math.abs(top - Math.max(1.6, (D + 3) / D)) > 1e-9 || !(top >= 1.6) || !(top * D >= D + 3 - 1e-9 || top === 1.6)) errs.push('host green: the putt meter does not reach past the hole (' + top + ')');
+      if (!T || Math.abs(T.pw - 1) > 0.02 || Math.abs(T.u - 1 / top) > 0.02) errs.push('host green: the aim at the cup is not a putt of the way to it (' + JSON.stringify(info.putt) + ')');
+      if (parseFloat(swingHoleMk.style.left) < 40 || parseFloat(swingHoleMk.style.left) > 70 || Math.abs(parseFloat(swingAimMk.style.left) - 100 / top) > 2) errs.push('host green: the bar does not mark the hole and the aim (' + JSON.stringify(info.putt) + ')');
+      const hit = (pw) => { HP.sw = { t: 0, u: pw / top, presses: 0, spd: 1, g: null, rel: false }; render(); const t2 = HP.target; HP.sw = null; return t2; };
+      const far = (() => { aim.x = b0[0] * S + (p0[0] - b0[0]) * S * 3; aim.y = b0[1] * S + (p0[1] - b0[1]) * S * 3; render(); return HP.target; })();
+      info.puttFar = far && { d: +(far.d / S).toFixed(2), u: +far.u.toFixed(3) };
+      if (!far || Math.abs(far.u - 1) > 1e-6 || Math.abs(far.d / S - top * D) > 1e-6) errs.push('host green: an aim past the meter is not held at its top (' + JSON.stringify(info.puttFar) + ')');
+      aim.x = p0[0] * S; aim.y = p0[1] * S; hit(1); }
     info.gimmeFar = canGimme();
     hostMessage(turn([p0[0] - ux * 0.4, p0[1] - uy * 0.4], 0.6)); step(80); jumpToBall(); step(4); info.gimmeNear = canGimme(); gimme(); info.sent = hostLast && hostLast.t;
     hostMessage(turn([p0[0] - ux * 0.4, p0[1] - uy * 0.4], 0)); step(4); info.gimmeNone = canGimme();
@@ -278,13 +298,15 @@ const HOST_SCRIPT = String.raw`
         info.turns++;
         const st0 = S.strokes(), Sc = course.S;
         if (near([ball.x / Sc, ball.y / Sc], HP.turn.ball) > 0.05) errs.push('script: the ball is not where turn ' + turn + ' says');
-        if (st0.length) { const prev = st0[st0.length - 1]; if (!prev.holed && near(HP.turn.ball, prev.next) > 0.05) errs.push('script: turn ' + turn + ' does not start where the stroke before left the ball'); }
+        if (st0.length) { const prev = st0[st0.length - 1]; if (!prev.holed && prev.hole === HP.turn.hole && near(HP.turn.ball, prev.next) > 0.05) errs.push('script: turn ' + turn + ' does not start where the stroke before left the ball'); }
         for (let k = 0; k < 400 && (bcam || player.swing >= 0); k++) step(1);   // (the ball camera lingers on a ball at rest a moment: the jump waits for it)
         jumpToBall(); mouse.x = VW / 2; mouse.y = VH / 2 - 100; step(6);
         sent.length = 0;
-        keys.Space = true; step(60); keys.Space = false;   // (T446: Space held swings, let go strikes)
+        { const putt = hostClub() && hostClub().club === 'putter', stop = putt ? 1 / hostPuttTop() : 2;   // (T456: a putt is held until the fill reaches the hole's mark on the bar; a full shot as before, one second)
+          keys.Space = true; for (let k = 0; k < (putt ? 400 : 60) && !(putt && HP.sw && !HP.sw.g && HP.sw.u >= stop); k++) step(1); keys.Space = false; }   // (T446: Space held swings, let go strikes)
         let inp = null; for (let k = 0; k < 240 && !inp; k++) { step(1); inp = sent.find((m) => m.t === 'input') || null; }
         if (!inp) { errs.push('script: no input from the view at turn ' + turn + ' ' + JSON.stringify({ wait: HP.wait, sw: !!HP.sw, swing: player.swing, near: nearBall(), busy: hostBusy(), bcam, cart: cart.on, club: hostClub() && hostClub().club, clubs: HP.clubs.length, sent: sent.map((m) => m.t), d: Math.hypot(player.x - ball.x, player.y - ball.y) })); break; }
+        if (inp.input.club === 'putter') { const e = Math.abs(inp.input.swing.power - 1); info.puttErr = Math.max(info.puttErr || 0, +e.toFixed(3)); info.putts = (info.putts || 0) + 1; }
         seen = null; feed(S.input(inp.input));
         for (let k = 0; k < 4000 && HP && HP.play; k++) { step(1); if (snapAt && turn === 0 && k === 120) snapAt('script-flight'); }
         const st = S.strokes(), sh = st[st.length - 1]; if (!sh) { errs.push('script: the host played no stroke at turn ' + turn); break; }
@@ -293,7 +315,7 @@ const HOST_SCRIPT = String.raw`
         if (sh.holed && at.state !== 3) errs.push('script: stroke ' + st.length + ' went in for the model, not in the view');
       }
       for (let k = 0; k < 4000 && HP && (HP.play || HP.q.length); k++) step(1);
-      info.strokes = S.strokes().length; info.holes = ends; info.worstM = +info.worstM.toFixed(3);
+      info.strokes = S.strokes().length; info.holes = ends; info.byHole = S.strokes().reduce((o, x) => { o[x.hole] = (o[x.hole] || 0) + 1; return o; }, {}); info.worstM = +info.worstM.toFixed(3);
       if (ends !== 3) errs.push('script: ' + ends + ' of 3 holes played out');
       if (snapAt) snapAt('script-end');
     } finally { hostSend = send0; hostTurn = turn0; hostHoleEnd = end0; }
