@@ -989,6 +989,8 @@ export class Game {
     save: () => this.scheduleSave(), toast: (t, k) => this.toast(t, k), emit: () => this.emit(),
   });
   /** a practice facility in hand (Facilities ▸ Practice, the range card's Build; null puts it down); show: the camera on the practice area */
+  /** J6 (#1223): the range card's Quick build: the facility laid at the first spot of the practice area where it fits (practicetool.ts quick); the reason when it cannot be */
+  quickPractice(kind: 'putting' | 'chipping'): string | null { return this.practice.quick(kind); }
   armPractice(kind: 'putting' | 'chipping' | null, show = false) {
     if (!kind) { this.practice.cancel(); this.emit(); return; }
     if (this.refuseLocked('practice')) return;

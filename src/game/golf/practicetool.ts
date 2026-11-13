@@ -68,6 +68,33 @@ export class PracticeTool {
     const gh = this.ghost, k = this.kind; if (!gh || !k) return;
     if (gh.why) { this.ctx.toast(gh.why, 'warn'); return; }
     if (gh.cost > this.ctx.money()) { this.ctx.toast(`Not enough money: the ${FACILITY_NAME[k].toLowerCase()} costs $${gh.cost.toLocaleString()}`, 'warn'); return; }
+    this.build(gh, k);
+  }
+  /** J6 (#1223): Quick build (the range card's, so a jam player needs no tool): the facility at its starting size built at the first spot of the practice area
+   *  where it fits, from the area's middle outward and at each turn, as a click there would build it; the reason when it fits nowhere or costs too much */
+  quick(kind: PracticeId): string | null {
+    const a = this.ctx.area(), g = this.ctx.grid(); if (!a || !g) return PRACTICE_WHY.none;
+    const was = { kind: this.kind, at: this.at, turn: this.turn }, pts: Pt[] = [], [x0, y0, x1, y1] = a.box, c = a.label;
+    for (let y = y0; y <= y1; y += 2) for (let x = x0; x <= x1; x += 2) pts.push({ x, y });
+    pts.sort((p, q) => Math.hypot(p.x - c.x, p.y - c.y) - Math.hypot(q.x - c.x, q.y - c.y) || p.y - q.y || p.x - q.x);
+    let why: string = PRACTICE_WHY.outside, done = false;
+    this.kind = kind;
+    for (const p of pts) {
+      for (let t = 0; t < TURNS && !done; t++) {
+        this.at = p; this.turn = t; this.refresh(); const gh = this.ghost;
+        if (!gh) continue;
+        if (gh.why) { if (gh.refusal !== 'outside') why = gh.why; continue; }
+        if (gh.cost > this.ctx.money()) { why = `Not enough money: the ${FACILITY_NAME[kind].toLowerCase()} costs $${gh.cost.toLocaleString()}`; continue; }
+        this.build(gh, kind); done = true;
+      }
+      if (done) break;
+    }
+    this.kind = was.kind; this.at = was.at; this.turn = was.turn; this.refresh();
+    if (!done) this.ctx.toast(why, 'warn');
+    return done ? null : why;
+  }
+  /** builds the ghost gh of facility k: its cells laid (one undo step) and its price paid */
+  private build(gh: PracticeGhost, k: PracticeId): void {
     const c = gh.cells, month = plantMonth('seed', this.ctx.month());
     this.ctx.gridStep(`build the ${FACILITY_NAME[k].toLowerCase()}`, g => ({
       diffs: [paintCells(g, c.green, c.green.length, SURF.green, 0, month), paintCells(g, c.bunker, c.bunker.length, SURF.bunker, 0, month), paintCells(g, c.tee, c.tee.length, SURF.tee, 0, month)],
