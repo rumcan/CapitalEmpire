@@ -120,6 +120,8 @@ function cartBlit(S, bx, by, s, dC, ls) {
 }
 const czB = new Float32Array(VW * VH), czS = new Uint32Array(VW * VH), PXs = new Float32Array(12), PYs = new Float32Array(12), PWs = new Float32Array(12);   // (PXs..: the buildings' faces use them too)
 let blitW = 0;   // when set, a sprite is hidden where the cart's own depth is nearer than this (1 / distance)
+/** the player's own cart: hidden for now (the owner, 2026-11-13: "golf cart does not look great. lets hide it"; CapitalEmpire's cart art has only two views): no cart drawn, G does nothing, no hint */
+const CART_SHOWN = false;
 function drawCart(gS, G) {   // gS: the golfer's sitting sprite when he is in it; G: how much its lamps glow
   const dC = (cart.x - camX) * FX + (cart.y - camY) * FY; if (dC < 2.4 || dC > 130) return;
   const th = cart.th, hx = Math.cos(th), hy = Math.sin(th), rx = -hy, ry = hx;
