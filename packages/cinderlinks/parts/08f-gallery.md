@@ -47,6 +47,7 @@ function galleriesIn(m, S) {   // the galleries of an actors list (the whole lis
     if (!g) { g = { id: a.id, x: 0, y: 0, fans: null, look: null, th: null, n: 0, seated: false, cheer: -1e9, dl: { k: K_ACTOR, d: 0, a: null }, order: null, dd: null }; g.dl.a = g; galleries.set(a.id, g); }
     const n = a.fans.length, F = new Float32Array(n * 3), L = new Uint8Array(n), T = new Float32Array(n), fx = Array.isArray(a.focus) ? a.focus[0] * S : a.at[0] * S, fy = Array.isArray(a.focus) ? a.focus[1] * S : a.at[1] * S - 1;
     for (let k = 0; k < n; k++) { const f = a.fans[k]; F[k * 3] = f[0] * S; F[k * 3 + 1] = f[1] * S; F[k * 3 + 2] = +f[2] || 0; L[k] = (Math.imul(a.id + 7, 2654435761) ^ Math.imul(k + 1, 40503)) >>> 0 & 0xffff; L[k] %= FAN_LOOKS; T[k] = Math.atan2(fy - F[k * 3 + 1], fx - F[k * 3]); }
+    if (a.seated && standTurnFans(F, n, a.at[0] * S, a.at[1] * S)) for (let k = 0; k < n; k++) T[k] = Math.atan2(fy - F[k * 3 + 1], fx - F[k * 3]);   // (on a stand the view turned: turned with it, parts/08h-dress.md)
     g.x = a.at[0] * S; g.y = a.at[1] * S; g.fans = F; g.look = L; g.th = T; g.n = n; g.seated = !!a.seated; g.role = 'gallery'; g.order = new Uint16Array(n); g.dd = new Float32Array(n);
     seen.add(a.id);
   }

@@ -2,9 +2,14 @@
 The course's event buildings (CapitalEmpire's features: `use` 'tent' for the food, drink, merchandise, hospitality, media and first-aid tents, 'stand' for a grandstand) are drawn as what they are, not as houses.
 R: A tent is a marquee: a peaked canvas roof in stripes of white and its colour, a scalloped valance hanging from the eaves all round, on a pole at each corner and halfway along the long sides; open below.
 R: A grandstand is a bank of rows stepping up from its front (the +d side, where CapitalEmpire's seats face) to its back: each row a seat deck in the seats' colour and a grey riser, solid ends, a back wall and a rail along the top.
+R: A grandstand faces the nearest green or tee (within 250 m): the manager game's stands come unturned, all facing south, so the view turns each about its middle, and the fans seated on it turn with it.
+R: A hole scoreboard is a framed board on two legs: a dark green panel in a light frame, a cream header, and rows of marks under it (a position, a name, a score in red or cream, drawn as strokes, not letters), turned like a grandstand to the nearest green or tee; plain green at the back.
 R: Both are flat faces lit by the one sun, as the other buildings are, and cast the same shadow.
 File: game.js
 Check: function dressFaces(
+Check: function faceStand(
+Check: function standTurnFans(
+Check: function boardFaces(
 
 ````js file=game.js
 
@@ -13,6 +18,7 @@ Check: function dressFaces(
 const DRESS_CANVAS = [246, 244, 236], DRESS_POLE = [214, 214, 220], DRESS_RISER = [150, 152, 160], DRESS_SEAT = [52, 92, 158], DRESS_END = [196, 198, 204];
 function dressFaces(B, P, N, add, mul, zm) {   // (P and N are rebound for a stand: see below)
   const hw = B.w / 2, hd = B.d / 2;
+  if (B.use === 'board') { boardFaces(B, P, N, add, zm); return; }
   if (B.use === 'tent') {
     const ze = zm + Math.min(2.6, B.h * 0.6), zr = zm + Math.max(B.h, 3.4), pole = 0.07, band = B.rc;
     const posts = [[-hw, -hd], [hw, -hd], [hw, hd], [-hw, hd], [0, -hd], [0, hd]];
@@ -60,5 +66,51 @@ function dressFaces(B, P, N, add, mul, zm) {   // (P and N are rebound for a sta
   const ztop = zm + 0.45 + (rows - 1) * rise;
   add([P(hw, hd, zm), P(-hw, hd, zm), P(-hw, hd, ztop + 1), P(hw, hd, ztop + 1)], N(0, 1, 0), DRESS_END);                    // the back wall, up to the rail
   add([P(-hw, hd - 0.05, ztop + 0.95), P(hw, hd - 0.05, ztop + 0.95), P(hw, hd - 0.05, ztop + 1.05), P(-hw, hd - 0.05, ztop + 1.05)], N(0, -1, 0), DRESS_POLE, 3);   // the rail
+}
+
+// a grandstand turned to face the nearest green or tee (its front, the +d side, toward it); rot0 keeps the turn it came with
+function faceStand(B) {
+  B.rot0 = B.rot; if (!course || !Array.isArray(course.holes)) return;
+  let best = 250 * 250, tx = 0, ty = 0;
+  for (const h of course.holes) for (const p of [h.pin, h.line]) { if (!p) continue; const dx = p[0] - B.x, dy = p[1] - B.y, d = dx * dx + dy * dy; if (d < best) { best = d; tx = dx; ty = dy; } }
+  if (best < 250 * 250) B.rot = Math.atan2(-tx, ty);
+}
+// the seated fans of a gallery on a stand faceStand turned: turned with it about its middle (in place); false when the gallery is on no turned stand
+function standTurnFans(F, n, gx, gy) {
+  if (!feats || !feats.builds) return false;
+  for (const B of feats.builds) {
+    if (B.use !== 'stand' || B.rot0 === undefined || B.rot === B.rot0) continue;
+    const c0 = Math.cos(B.rot0), s0 = Math.sin(B.rot0), dx = gx - B.x, dy = gy - B.y, a = dx * c0 + dy * s0, f = -dx * s0 + dy * c0;
+    if (Math.abs(a) > B.w / 2 + 2 || Math.abs(f) > B.d / 2 + 2) continue;
+    const t = B.rot - B.rot0, c = Math.cos(t), s = Math.sin(t);
+    for (let k = 0; k < n; k++) { const x = F[k * 3] - B.x, y = F[k * 3 + 1] - B.y; F[k * 3] = B.x + x * c - y * s; F[k * 3 + 1] = B.y + x * s + y * c; }
+    return true;
+  }
+  return false;
+}
+
+// a hole scoreboard (CapitalEmpire's 'Hole scoreboard', the engine's board structures): a framed board on two legs, its front (+d) to the green, rows of marks
+const BOARD_FACE = [30, 78, 54], BOARD_BACK = [40, 92, 64], BOARD_FRAME = [236, 228, 200], BOARD_LEG = [70, 74, 80], BOARD_CREAM = [242, 232, 196], BOARD_RED = [214, 56, 48];
+function boardFaces(B, P, N, add, zm) {
+  const hw = Math.min(B.w / 2, 2.2) * 0.95, t = 0.08, zb = zm + 1.3, zt = zm + Math.max(3.1, Math.min(4.6, B.h * 0.9)), lg = hw * 0.72, pole = 0.07;
+  for (const sa of [-1, 1]) for (const [da, df, na, nf] of [[-1, -1, 0, -1], [1, -1, 1, 0], [1, 1, 0, 1], [-1, 1, -1, 0]]) {   // the legs: square posts from the ground up behind the board
+    const a = sa * lg, a0 = a + da * pole, f0 = -t - pole + df * pole, a1 = a + (na === 0 ? -da : da) * pole, f1 = -t - pole + (nf === 0 ? -df : df) * pole;
+    add([P(a0, f0, zm), P(a1, f1, zm), P(a1, f1, zt - 0.2), P(a0, f0, zt - 0.2)], N(na, nf, 0), BOARD_LEG, 3);
+  }
+  const R = (a0, a1, z0, z1, f, col, bias) => add([P(a0, f, z0), P(a1, f, z0), P(a1, f, z1), P(a0, f, z1)], N(0, f < 0 ? -1 : 1, 0), col, bias);
+  R(-hw, hw, zb, zt, t, BOARD_FACE, 0); R(hw, -hw, zb, zt, -t, BOARD_BACK, 0);                                               // the panel, front and back
+  add([P(-hw, -t, zt), P(hw, -t, zt), P(hw, t, zt), P(-hw, t, zt)], N(0, 0, 1), BOARD_FRAME, 0);                              // its top
+  for (const sa of [-1, 1]) add([P(sa * hw, -t, zb), P(sa * hw, t, zb), P(sa * hw, t, zt), P(sa * hw, -t, zt)], N(sa, 0, 0), BOARD_FRAME, 0);   // its ends
+  const fw = 0.1, ff = t + 0.01;                                                                                               // the frame, standing a little proud
+  R(-hw, hw, zt - fw, zt, ff, BOARD_FRAME, 5); R(-hw, hw, zb, zb + fw, ff, BOARD_FRAME, 5); R(-hw, -hw + fw, zb, zt, ff, BOARD_FRAME, 5); R(hw - fw, hw, zb, zt, ff, BOARD_FRAME, 5);
+  const x0 = -hw + fw + 0.12, x1 = hw - fw - 0.12, hz = zt - fw - 0.08;
+  R(x0, x1, hz - 0.2, hz, ff + 0.01, BOARD_CREAM, 8);                                                                          // the header
+  const rows = Math.max(3, Math.min(8, Math.floor((hz - 0.3 - zb - fw) / 0.26))), rh = (hz - 0.3 - zb - fw) / rows;
+  for (let i = 0; i < rows; i++) {                                                                                             // a row: its position, a name, a score
+    const z1 = hz - 0.3 - i * rh, z0 = z1 - Math.min(0.11, rh * 0.5), hsh = ((B.x * 7 + B.y * 13 + i * 31) | 0) >>> 0, nl = 0.45 + (hsh % 7) / 7 * (x1 - x0 - 1.2) * 0.6;
+    R(x0, x0 + 0.12, z0, z1, ff + 0.01, BOARD_CREAM, 11);
+    R(x0 + 0.25, x0 + 0.25 + nl, z0, z1, ff + 0.01, BOARD_CREAM, 8);
+    R(x1 - 0.1 - (hsh % 3) * 0.06, x1, z0, z1, ff + 0.01, i < 3 ? BOARD_RED : BOARD_CREAM, 11);
+  }
 }
 ````

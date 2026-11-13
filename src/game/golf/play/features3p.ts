@@ -19,7 +19,7 @@ import { cornersOf, type EstateLot } from '../estate';
 export type PathSurface = 'gravel' | 'concrete' | 'dirt' | 'sand';
 export type Roof = 'gable' | 'hip' | 'flat';
 /** what a building is, so the view can draw each kind its own way later */
-export type BuildingUse = 'clubhouse' | 'halfway' | 'prooffice' | 'teachhut' | 'range' | 'house' | 'tent' | 'stand' | 'structure' | 'building';
+export type BuildingUse = 'clubhouse' | 'halfway' | 'prooffice' | 'teachhut' | 'range' | 'house' | 'tent' | 'stand' | 'board' | 'structure' | 'building';
 
 export interface PathFeature { id: string; kind: 'path'; name: string; surface: PathSurface; width: number; pts: ViewPt[] }
 export interface BuildingFeature { id: string; kind: 'building'; use: BuildingUse; name: string; at: ViewPt; w: number; d: number; h: number; rot: number;
@@ -52,6 +52,7 @@ export const STYLE: Readonly<Record<BuildingUse, { h: number; roof: Roof; wall: 
   house: { h: 6.5, roof: 'gable', wall: '#e6dcc8', roofColour: '#8a3b2a', floors: 2 },
   tent: { h: 4, roof: 'gable', wall: '#f3f1ea', roofColour: '#fbfbf7', floors: 1 },
   stand: { h: 6, roof: 'flat', wall: '#8b9097', roofColour: '#d9dde2', floors: 1 },
+  board: { h: 4.5, roof: 'flat', wall: '#2f5a3e', roofColour: '#e8e0c4', floors: 1 },
   structure: { h: 3, roof: 'flat', wall: '#5f646b', roofColour: '#3f444a', floors: 1 },
   building: { h: 4.5, roof: 'gable', wall: '#e8dcc0', roofColour: '#8a3b2a', floors: 1 },
 };
@@ -146,7 +147,7 @@ const BIZ_USE: Partial<Record<BusinessId, BuildingUse>> = { clubhouse: 'clubhous
 /** an event structure's use from its catalogue kind (tents.ts StructureKind); a helipad is flat ground, so it is not exported */
 const STRUCT_USE: Partial<Record<StructureKind, BuildingUse>> = {
   food: 'tent', drink: 'tent', snack: 'tent', merch: 'tent', hospitality: 'tent', media: 'tent', firstaid: 'tent', info: 'tent', toilet: 'structure',
-  grandstand: 'stand', board: 'structure', tv: 'structure', gate: 'structure', transport: 'structure', display: 'structure',
+  grandstand: 'stand', board: 'board', tv: 'structure', gate: 'structure', transport: 'structure', display: 'structure',
 };
 /** each structure use's height (m) where the catalogue has none: a tent's ridge, a stand's back row, a board or gate */
 const STRUCT_H: Partial<Record<StructureKind, number>> = { grandstand: 6, board: 4.5, tv: 5, gate: 4, toilet: 2.6, display: 3, transport: 3 };

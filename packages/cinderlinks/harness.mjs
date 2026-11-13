@@ -484,6 +484,18 @@ ${HOST_PLAY}
       const T0 = performance.now(); while (performance.now() - T0 < 2000) { tickGame(); render(); for (const o of dlist) if (o.k === K_ACTOR && o.a && o.a.role === 'ball' && o.a.ghost && o.a.z > 0.5) { flew++; if (o.a.z > maxZ) maxZ = o.a.z; } if (flew === 5) snap('ghostball'); }
       out.info.push({ ghostball: { flewFrames: flew, highestM: +maxZ.toFixed(1), ownerBallStill: Math.hypot(ball.x - own[0], ball.y - own[1]) < 1e-9 && !HP.play, turnKept: !!(HP && HP.turn), help: /IN YOUR GAME/.test(helpEl.innerHTML) } });
       ACT_MAKE = 3; },
+    standboard() { // a grandstand behind Woodhill's 18th green and a hole scoreboard beside it, both sent unturned (facing south) as the manager game sends them;
+      // the view turns each to the green, and the stand's seated fans with it
+      const hm = hostMsg(); hm.hole = 18; hostMessage(hm); idle(); ACT_MAKE = 999;
+      const S = course.S, px = hole.pin.x, py = hole.pin.y, bx = hole.tee.x, by = hole.tee.y, L = Math.hypot(px - bx, py - by), ux = (px - bx) / L, uy = (py - by) / L, rx = -uy, ry = ux;
+      const sx = px + ux * 26, sy = py + uy * 26, kx = px + rx * 13 + ux * 3, ky = py + ry * 13 + uy * 3;
+      setFeatures({ features: [{ kind: 'building', use: 'stand', at: [sx / S, sy / S], w: 16, d: 6, h: 5, rot: 0, roof: 'flat', wall: '#8b9097' }, { kind: 'building', use: 'board', at: [kx / S, ky / S], w: 4, d: 2, h: 4.5, rot: 0, roof: 'flat', wall: '#2f5a3e' }] });
+      const seats = []; for (let row = 0; row < 4; row++) for (let c = 0; c < 16; c++) seats.push([(sx + (c - 7.5) * 0.9) / S, (sy + 2.4 - row * 1.4) / S, 0.45 + row * 0.42]);   // (the seats as an unturned stand has them: its front to the south)
+      hostMessage({ v: 1, t: 'actors', at: 600, actors: [{ id: 300001, role: 'gallery', at: [sx / S, sy / S], hole: 18, count: seats.length, fans: seats, focus: [px / S, py / S], seated: true }] });
+      const me = [px - ux * 30 + rx * 6, py - uy * 30 + ry * 6]; go(me[0], me[1]); camYaw = Math.atan2(px + ux * 8 - me[0], -(py + uy * 8 - me[1])); player.th = camYaw - 1.5708; camHk = 1.6; aimCam(); frames(30); snap('standboard');
+      const B = feats.builds, to = (b) => Math.round(((Math.atan2(px - b.x, -(py - b.y)) - (b.rot + Math.PI)) * 180 / Math.PI % 360 + 540) % 360 - 180);   // (how far its front is turned from the green: 0 is square on)
+      out.info.push({ standboard: { stand: { rot: Math.round(B[0].rot * 180 / Math.PI), off: to(B[0]) }, board: { rot: Math.round(B[1].rot * 180 / Math.PI), off: to(B[1]) }, fans: galleries.get(300001) ? galleries.get(300001).n : 0, onStand: (() => { const g = galleries.get(300001), b = B[0], c = Math.cos(b.rot), s = Math.sin(b.rot); let n = 0; if (g) for (let k = 0; k < g.n; k++) { const dx = g.fans[k * 3] - b.x, dy = g.fans[k * 3 + 1] - b.y; if (Math.abs(dx * c + dy * s) <= b.w / 2 && Math.abs(-dx * s + dy * c) <= b.d / 2) n++; } return n; })() } });
+      const nb = [kx - ux * 9 - rx * 2, ky - uy * 9 - ry * 2]; go(nb[0], nb[1]); camYaw = Math.atan2(kx - nb[0], -(ky - nb[1])); player.th = camYaw - 1.5708; camHk = 1; camD = 8; aimCam(); frames(20); snap('standboard-board'); camD = D0; },
     gallery() { // T429: Woodhill's 18th on tournament day: a ring of fans round the green, a grandstand of seated fans behind it; then a holed putt and the cheer
       const hm = hostMsg(); hm.hole = 18; hostMessage(hm); idle(); ACT_MAKE = 999;
       const S = course.S, px = hole.pin.x, py = hole.pin.y, bx = hole.tee.x, by = hole.tee.y, L = Math.hypot(px - bx, py - by), ux = (px - bx) / L, uy = (py - by) / L, rx = -uy, ry = ux;
