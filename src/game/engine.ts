@@ -990,7 +990,7 @@ export class Game {
   });
   /** a practice facility in hand (Facilities ▸ Practice, the range card's Build; null puts it down); show: the camera on the practice area */
   /** J6 (#1223): the range card's Quick build: the facility laid at the first spot of the practice area where it fits (practicetool.ts quick); the reason when it cannot be */
-  quickPractice(kind: 'putting' | 'chipping'): string | null { return this.practice.quick(kind); }
+  quickPractice(kind: 'putting' | 'chipping'): string | null { const lock = this.toolLock('practice'); if (lock) { this.toast(lock, 'warn'); return lock; } return this.practice.quick(kind); }   // (the practice tools' own lock holds: a jam game opens them with the first range upgrade)
   armPractice(kind: 'putting' | 'chipping' | null, show = false) {
     if (!kind) { this.practice.cancel(); this.emit(); return; }
     if (this.refuseLocked('practice')) return;
@@ -10366,6 +10366,13 @@ export class Game {
       props: [...this.props].map(p => { const l = lookOf(p); return { item: l.item, x: p.x, y: p.y, scale: l.scale, ...(p.auto ? { auto: p.auto } : {}) }; }), library: LIBRARY,   // (T454: each prop as the game draws it)
       ...(box ? { box } : {}), ...(tb3 ? { courseBox: tb3, trees: this.trees3p([tb3[0] - MARGIN_T, tb3[1] - MARGIN_T, tb3[2] + MARGIN_T, tb3[3] + MARGIN_T]) } : {}),
       pages: ATLAS_PAGES }), { x: f.cx, y: f.cy });   // (T451: every tree on the course and 150 m round it, with the game's pictures of them)
+    if (pr) {   // (J6: the range's business site is one block over its whole front (shop, mats and car park); in practice only its shop stands, so the mats look down the range)
+      const sc = this.range.scene, fs = features.features, i = fs.findIndex(x => x.kind === 'building' && x.use === 'range'), b = fs[i];
+      if (sc && b && b.kind === 'building') {
+        const [x0, y0, x1, y1] = sc.box, hut = rangeLayout([x0, y0, x1 - x0, y1 - y0], sc.facing).hut.rect, c = { x: hut[0] + hut[2] / 2 - f.cx, y: hut[1] + hut[3] / 2 - f.cy };
+        fs[i] = { ...b, name: 'Pro shop', at: [c.x * TILE_M, c.y * TILE_M], w: hut[2] * TILE_M, d: hut[3] * TILE_M, h: 5, rot: 0 };
+      }
+    }
     // T447: the biome and course type from what the course looks like (look3p.ts biomeFor3p, courseTypeFor3p): the Desert theme, the month on the home map, a
     // shipped real course's latitude, the sand, water and trees of the course file; the club's members, tour tier and condition, and a tournament day
     // (the trees on the course itself, T451's own and planted props, in the course's tile box: the per-hectare count reads the course, not its 150 m rim)

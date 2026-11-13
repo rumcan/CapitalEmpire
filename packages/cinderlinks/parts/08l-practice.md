@@ -14,6 +14,7 @@ Check: function pracClear(
 ````js file=game.js
 
 // ---- practice (J6): the drills panel, the golfer held to his spot, the range's flags. The message waits behind a ball being played back, as a turn does.
+var K_PFLAG = 26;     // a range flag's entry in render's list (08d-actors.md K_ACTOR is 25)
 var PRAC = null, pracEl = null, pracLab = [];   // (var: read by the render and the keys, which may run before this line has)
 function pracLock() { return !!PRAC; }   // the golfer is held to his spot
 function pracClear() {   // a new course: no practice (the panel and the flags' labels go)
@@ -62,7 +63,7 @@ function pracShow(m) {   // the panel, the flags, and a drill done said
 }
 function pracFlags(dlist, dist) {   // the range's flags join the draw list (the pin's own is drawn already)
   if (!PRAC || !PRAC.F) return;
-  for (const f of PRAC.F) { if (Math.hypot(f.x - hole.pin.x, f.y - hole.pin.y) < 1) continue; dlist.push({ k: 25, d: dist(f.x, f.y) + 0.02, x: f.x, y: f.y }); }
+  for (const f of PRAC.F) { if (Math.hypot(f.x - hole.pin.x, f.y - hole.pin.y) < 1) continue; dlist.push({ k: K_PFLAG, d: dist(f.x, f.y) + 0.02, x: f.x, y: f.y }); }
 }
 function pracTick() {   // each step: the labels over the flags follow the camera
   if (!PRAC || !PRAC.F || !pracLab.length || typeof view === 'undefined' || !view.getBoundingClientRect) return;
