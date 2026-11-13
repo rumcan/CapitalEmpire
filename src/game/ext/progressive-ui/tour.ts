@@ -8,7 +8,7 @@ import { guideLines, type GuideLine, type GuideStep, type RangeGuideSave } from 
 import { JAM } from '../../features';
 
 /** the jam build's start tutorial (docs/JAM.md, "Fairway Fortune"): the money game, not the town's roads (no road tool in the jam build) */
-const JAM_TOUR: readonly GuideStep[] = Object.freeze([
+export const JAM_TOUR: readonly GuideStep[] = Object.freeze([
   {
     id: 'tour-town',
     n: 1,
@@ -75,6 +75,18 @@ export const TOWN_TOUR: readonly GuideStep[] = JAM ? JAM_TOUR : Object.freeze([
 
 /** the tutorial in the save (GolfProgress.tour): the guide's save (the steps done and skipped, the whole tutorial skipped) and the town roads
  *  the player has built while it ran (step 2's done-check) */
+/** T459 (the owner: "a Show me button that does nothing? are you guys not testing buttons?"): what a step's Show me does, in order: open the Bank,
+ *  frame the range for sale (the jam's step 1), frame the town's houses (the town game's step 1), pulse the control its target names. Engine.tourShowMe
+ *  runs these; tests/jam-buttons.test.ts checks every step has at least one and every pulse names a control the UI draws */
+export type TourShow = { k: 'bank' } | { k: 'range' } | { k: 'town' } | { k: 'pulse'; ui: string };
+export function tourShowOf(st: GuideStep, jam: boolean = JAM): TourShow[] {
+  const out: TourShow[] = [];
+  if (jam && st.id === 'tour-room') return [{ k: 'bank' }];
+  if (st.n === 1) out.push(jam ? { k: 'range' } : { k: 'town' });
+  if (st.target.ui) out.push({ k: 'pulse', ui: st.target.ui });
+  return out;
+}
+
 export interface TourSave extends RangeGuideSave { roads: number }
 /** a new game's tutorial (and Help's replay): nothing done */
 export function newTour(): TourSave { return { done: [], skipped: [], off: false, roads: 0 }; }

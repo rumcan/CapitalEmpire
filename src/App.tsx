@@ -104,6 +104,7 @@ import { keptCourses, refreshKept, watchKept } from './game/golf/osm/kept';
 import { RangeGuideCard } from './ui/golf/RangeGuideCard';
 import { BuildMenu } from './ui/jam/BuildMenu'; // J7
 import { TipsCard } from './ui/jam/TipsCard';
+import { runBuildAct, runTipShow, type ActUi } from './ui/jam/acts';
 import { buildCards, type BuildCard, type BuildGroupId } from './ui/jam/build-menu';
 import { MONTHS_A_SEASON } from './game/golf/rangesave';
 import { JUNK_BY_ID, JUNK_CLEAR_COST } from './game/golf/junk';
@@ -364,24 +365,13 @@ export default function App() {
   /** J7: a Build menu card picked: the same placement the rail and the range card start; the menu shuts */
   const runBuild = (c: BuildCard) => {
     if (!game || !c.act) return;
-    const a = c.act; setBuild(null); setFly(null);
-    if (a.k !== 'rangeCard' && game.range.cardOpen) game.openRangeCard(false);
-    switch (a.k) {
-      case 'place': activeRail.current = 'range'; game.placeRangePart(a.id); break;
-      case 'upgrade': { activeRail.current = 'range'; const sc = game.range.scene; if (sc) game.lookAt(sc.counter.x, sc.counter.y); game.buyRangeUpgrade(a.id); break; }
-      case 'rangeCard': activeRail.current = 'range'; game.setTool('select'); game.openRangeCard(true); break;
-      case 'newHole': activeRail.current = 'course'; game.paint.setProperty(false); game.startFirstHole(); break;
-      case 'paths': activeRail.current = null; game.setTool('path'); break;
-      case 'clubhouse': activeRail.current = 'course'; game.placeClubhouse(true); break;
-      case 'green': activeRail.current = null; game.armPractice(a.id, true); break;
-      case 'buyRange': game.buyRange(); break;
-      case 'junk': {
-        activeRail.current = 'range'; game.setTool('select'); game.openRangeCard(true);
-        window.setTimeout(() => { const el = document.querySelector<HTMLElement>('[data-testid="range-junk"]'), card = el?.closest<HTMLElement>('.overflow-y-auto'); if (el && card) card.scrollTop += el.getBoundingClientRect().top - card.getBoundingClientRect().top - 8; }, 60);
-        break;
-      }
-    }
+    setFly(null);
+    // (T459: the act itself is ui/jam/acts.ts runBuildAct, tested against a stub game)
+    runBuildAct(game, c.act, actUi);
+    if (c.act.k === 'junk') window.setTimeout(() => { const el = document.querySelector<HTMLElement>('[data-testid="range-junk"]'), card = el?.closest<HTMLElement>('.overflow-y-auto'); if (el && card) card.scrollTop += el.getBoundingClientRect().top - card.getBoundingClientRect().top - 8; }, 60);
   };
+  /** T459: the bits of UI state a menu card or a tip touches (acts.ts ActUi) */
+  const actUi: ActUi = { rail: id => { activeRail.current = id; }, build: tab => setBuild(tab as typeof build), tips: setTips };
   /** T193: opens a rail item's flyout beside its button (T250: a town footer item's above its button) */
   const openFly = (r: RailItem, el: HTMLElement | undefined, keyboard: boolean, path: number[] = []) => {
     const s = currentUiScale() || 1;
@@ -1058,7 +1048,7 @@ export default function App() {
             return gv && <RangeGuideCard view={gv} right={stack!.guide()} onShow={id => { game.guideShowMe(id); bump(); }} onSkip={id => { game.skipGuideStep(id); bump(); }} onFold={f => { game.guideFolded = f; bump(); }} onScene={game.sceneArt('range') ? () => game.openScene({ kind: 'range', view: 'road' }) : undefined} />;
           })()}
           {/* J7 (#1225): the jam's optional tips (Build ▸ Tips), where the guided build's card stood */}
-          {JAM && tips && !game.seasonReport && <TipsCard right={stack!.guide()} onClose={() => setTips(false)} onShow={s => { if (s === 'build') { setTips(false); setBuild('range'); } else if (s === 'bank') { if (game.panel !== 'bank') game.toggleMoneyPanel(); } else game.guideShowMe('guide-range-buckets'); bump(); }} />}
+          {JAM && tips && !game.seasonReport && <TipsCard right={stack!.guide()} onClose={() => setTips(false)} onShow={s => { runTipShow(game, s, actUi); bump(); }} />}
           {(() => { // the tournament prep checklist (golf/prep.ts), bottom right like the guide: on a free day only (the round is not running), after the tutorial and the guide
             const pv = !game.seasonReport && !game.sceneRef && !game.playerCardOpen && !game.cardsFolded() && game.traffic.round.stage === 'free' ? game.prepCardView() : null, busy = game.range.cardOpen || !!game.clubCard() || !!game.placeCard() || game.holeCardHole !== null;
             return pv && <RangeGuideCard view={pv} heading={pv.heading} tid="prep" foot="Each step pays once when it is done" offLabel="Hide this checklist" right={busy ? (game.panel ? 'right-[41rem]' : 'right-[23rem]') : game.eventTool ? (game.panel ? 'right-[40.25rem]' : 'right-[21.5rem]') : game.panel ? 'right-[19.5rem]' : 'right-3'} onShow={id => { game.prepShowMe(id); bump(); }} onSkip={id => { game.prepSkip(id); bump(); }} onFold={f => { game.prepFolded = f; bump(); }} />;

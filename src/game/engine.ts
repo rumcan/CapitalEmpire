@@ -60,7 +60,7 @@ import { CELL as POND_CELL, discOutline, lilyPads, normalizePondMarks, pieceKey,
 import { fountainAt, fountainFrame } from './kit';
 import { HALFWAY_COST, halfwaySpotWhy, halfwayTakings } from './golf/halfway';
 import { DESK_SIGN_LABEL, HUT_COST, HUT_LABEL, HUT_NAME, HUT_UPKEEP, OFFICE_COST, OFFICE_LABEL, OFFICE_UPKEEP, ROLE_TITLE, dropProsAt, hireWhy, hirePro, hutSpotWhy, lessonWhy, lessonsMonth, letGoPro, officeSpotWhy, PLAYER_LESSON_PRICE, proPose, rectGap, staffCardView, staffWork, type HutAt, type HutPlace, type ProBeat, type ProPose, type StaffCardView, type StaffNeeds } from './golf/pros';
-import { newTour, tourCurrent, tourLines, tourNext, tourOff, tourRunning, tourSkip, tourTick, type TourFacts } from './ext/progressive-ui/tour';
+import { newTour, tourCurrent, tourLines, tourNext, tourOff, tourRunning, tourShowOf, tourSkip, tourTick, type TourFacts } from './ext/progressive-ui/tour';
 import { FIRST_BUCKETS, PLACED_STEPS, RANGE_GUIDE, guideTable, newRangeGuide, rangeGuideCurrent, rangeGuideLines, rangeGuideOff, rangeGuideSkip, rangeGuideTick, type GuideEvent, type GuideLine } from './ext/progressive-ui/guide';
 import { welcomeReady } from './golf/firstview';
 /** the hints' anchors (T188: their Show me pulses the control) where the hint is no guide step */
@@ -6236,16 +6236,19 @@ export class Game {
   tourShowMe(id: string) {
     const st = tourLines(this.golf?.progress?.tour, this.tourFacts())?.find(l => l.step.id === id)?.step; if (!st) return;
     if (this.guideRings && !this.guideRings.walk) this.guideRings = null;
-    if (JAM && st.id === 'tour-room') { if (this.panel !== 'bank') this.toggleMoneyPanel(); this.emit(); return; }   // (the jam's step 2, the Bank: Show me opens it; the owner, 2026-11-13: it did nothing)
-    if (JAM && st.n === 1) { const r = this.rangeSpot(); if (r) { this.lookAt(r.x, r.y, 0.14); this.guideRings = { pts: [{ x: r.x, y: r.y }], until: performance.now() + 15000 }; this.emit(); return; } }   // (the jam: the old range for sale, not the town)
-    if (st.n === 1) {
-      const c = this.townPts[0] ?? this.townCentreOfLots(); if (!c) return;
-      const all = [...this.traffic.lots.values()], built = all.filter(v => this.houseLots.has(v.key)); // its houses first, else its first lots
-      const near = (built.length ? built : all).map(v => { const b = lotBoxOf(v.o, v.u, v.n, v.w, v.d); return { x: (b[0]! + b[2]!) / 2, y: (b[1]! + b[3]!) / 2 }; })
-        .sort((a, b) => Math.hypot(a.x - c.x, a.y - c.y) - Math.hypot(b.x - c.x, b.y - c.y)).slice(0, 3);
-      this.lookAt(c.x, c.y, 0.12); this.guideRings = { pts: near.length ? near : [c], until: performance.now() + 20000 };
+    // (T459: what a step's Show me does is tour.ts tourShowOf's, so a test can check every step does something)
+    for (const a of tourShowOf(st)) {
+      if (a.k === 'bank') { if (this.panel !== 'bank') this.toggleMoneyPanel(); }   // (the jam's step 2, the Bank: Show me opens it; the owner, 2026-11-13: it did nothing)
+      // (the jam: the old range for sale, not the town; T459: and its card, with Buy, open: a new game already frames the range, so the camera alone moved nothing)
+      else if (a.k === 'range') { const r = this.rangeSpot(); if (r) { this.lookAt(r.x, r.y, 0.14); this.guideRings = { pts: [{ x: r.x, y: r.y }], until: performance.now() + 15000 }; } this.setTool('select'); this.openRangeCard(true); }
+      else if (a.k === 'town') {
+        const c = this.townPts[0] ?? this.townCentreOfLots(); if (!c) continue;
+        const all = [...this.traffic.lots.values()], built = all.filter(v => this.houseLots.has(v.key)); // its houses first, else its first lots
+        const near = (built.length ? built : all).map(v => { const b = lotBoxOf(v.o, v.u, v.n, v.w, v.d); return { x: (b[0]! + b[2]!) / 2, y: (b[1]! + b[3]!) / 2 }; })
+          .sort((a, b) => Math.hypot(a.x - c.x, a.y - c.y) - Math.hypot(b.x - c.x, b.y - c.y)).slice(0, 3);
+        this.lookAt(c.x, c.y, 0.12); this.guideRings = { pts: near.length ? near : [c], until: performance.now() + 20000 };
+      } else this.pulseAnchor(a.ui, 15000);
     }
-    if (st.target.ui) this.pulseAnchor(st.target.ui, 15000);
     this.emit();
   }
   /** Next on the tutorial's current step */
