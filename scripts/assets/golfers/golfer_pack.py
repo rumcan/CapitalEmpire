@@ -131,12 +131,14 @@ def main():
     ap.add_argument('--golfer', nargs='*'); ap.add_argument('--heading', nargs='*', default=HEADINGS)
     ap.add_argument('--out', default='D:/AI/chatgpt-bridge/guides/golfers'); ap.add_argument('--bridge', default='D:/AI/chatgpt-bridge')
     ap.add_argument('--skip-done', action='store_true')
+    ap.add_argument('--note', help='words added to the clothes line, e.g. "the trousers pure white, not beige or cream" (a re-run of a colour that drifted)')
     a = ap.parse_args()
     gids = a.golfer or sorted(d.name for d in ART.iterdir() if (d / 'sheet.json').exists())
     out, bridge, queue = Path(a.out), Path(a.bridge), []
     for gid in gids:
         cells, j = frames(gid)
         keyname = pick_key(cells); key, keyhex = KEYS[keyname]; wear = outfit(cells)
+        if a.note: wear += '; ' + a.note
         (out / gid).mkdir(parents=True, exist_ok=True); ref = out / gid / 'ref.png'; ref_png(cells, ref)
         for h in a.heading:
             name = f'{gid}~{h}'
