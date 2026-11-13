@@ -91,7 +91,7 @@ R: Old chunks, tiles and scatter cells far from the camera are dropped, so memor
 File: game.js
 Check: function tickGame(
 Check: requestAnimationFrame(loop)
-R: Host mode (?host=1, T415): the page is a view inside another page (CapitalEmpire). It loads no course of its own, says { v: 1, t: 'ready' } to the page that holds it and waits for { v: 1, t: 'course', course, features, biome, type, seed, scale, hole }; it plays that course from hole `hole` (1 if none) and answers { v: 1, t: 'loaded', holes }. { t: 'leave' } stops it drawing; Escape sends { v: 1, t: 'exit' }. { v: 1, t: 'lies', lk } (T438) may come after the course: the host's lies, sent once read so the first picture does not wait for them; from then on the grass is drawn by them and the land made before them is made again (the sculptures are kept). Messages from anywhere but the page that holds it are ignored.
+R: Host mode (?host=1, T415): the page is a view inside another page (CapitalEmpire). It loads no course of its own, says { v: 1, t: 'ready' } to the page that holds it and waits for { v: 1, t: 'course', course, features, biome, type, seed, scale, hole }; it plays that course from hole `hole` (1 if none) and answers { v: 1, t: 'loaded', holes }. { t: 'leave' } stops it drawing; Escape sends { v: 1, t: 'exit' }. { v: 1, t: 'lies', lk } (T438) may come after the course: the host's lies, sent once read so the first picture does not wait for them; from then on the grass is drawn by them and the land made before them is made again (the sculptures are kept). The first picture in host mode is whole within 60 m, the far land standing in beyond until the rest is made; until the first turn (or the lies) come, one frame in four is drawn, so the host page, on the same thread, reads the lies sooner. Messages from anywhere but the page that holds it are ignored.
 Check: function hostMessage(
 R: Host play (T418 to T420): in host mode the host decides every shot. A strike sends { v: 1, t: 'input', input: { holeIdx, stroke, club, aim, power } } and waits (after 5 s it says it is waiting for the course, and keeps waiting); { t: 'shot' } is played back from its samples (the flight with the ball camera, a thump at the landing and each bounce, the roll, the rest); { t: 'turn' } puts the ball and the pin where the host has them and only then may he swing again; { t: 'holeEnd' } says the score. The club tabs are his bag from the turn (keys 1 to 9 and the wheel over the tabs), and the aim's arc and ring are the host's carry, wind push and scatter for the club in hand. Standalone play is unchanged.
 Check: function hostShot(
@@ -128,10 +128,11 @@ function hostMessage(m) {   // one message from the host page, already known to 
   HP = null; course = null; if (!setCourse(D.id)) { hostSend({ t: 'error', why: 'the course could not be laid out' }); return; }
   setFeatures(m.features || null); featTxt = ''; featFor = course.id;
   const n = Math.max(1, Math.min(course.holes.length, +m.hole | 0 || 1)); if (n !== 1) newHole(n, 0, 0);
-  hostOff = false; firstPicture(); updateHud();
+  hostOff = false; firstPicture(FP_NEAR); updateHud();
   if (!looping && typeof requestAnimationFrame === 'function') { looping = true; last = performance.now(); acc = 0; requestAnimationFrame(loop); }
-  hostSend({ t: 'loaded', holes: course.holes.length });
+  hostSend({ t: 'loaded', holes: course.holes.length }); hostWaitT = performance.now();
 }
+let hostWaitT = 0, hostWaitF = 0;   // T438: since the first picture, waiting for the first turn (see loop)
 function hostLies(L) {   // T438: the host's lies, after the course: the grass by them from now on; the land made without them is made again (here and in the workers)
   if (!course || !L || !Array.isArray(L.r)) return;
   const D = course.raw; if (D) { D.lk = L; D.hv = ++hostN; }   // (a new hv: the workers load the course again, with the lies)
@@ -455,16 +456,29 @@ function hostAimPreview(C, pw, hot, ph) {   // the preview's flight (scaled to t
 // read: the aim shows the way a putt struck along it takes (the host's holed way, turned with the aim and stretched with the pace), and the model judges
 // it against the read's start line (green3p.ts), so a putt started along the read and struck at the right pace goes in.
 const GRID_RGB = [rgb(255, 255, 255), rgb(125, 211, 252), rgb(250, 204, 21), rgb(249, 115, 22)];
-function hostPuttGrid() {
-  const G = HP.turn.green, P = G.pts, S = hostS();
+const PG_MEMO = new WeakMap();   // T438: a green's grid points on the land (x, y, height; 0 or 4 tick points after each), worked out once a green, not each frame
+function hostPuttPts(G, S) {
+  const hv = course && course.raw ? course.raw.hv : 0; let M = PG_MEMO.get(G);
+  if (M && M.S === S && M.hv === hv) return M;
+  const P = G.pts, xyz = [], col = [], nt = [];
   for (let k = 0; k + 4 < P.length; k += 5) {
-    const x = P[k] * S, y = P[k + 1] * S, s = P[k + 4], u = s <= 0.002 ? 0 : Math.min(1, (s - 0.002) / 0.038), c = GRID_RGB[u <= 0 ? 0 : u < 0.3 ? 1 : u < 0.65 ? 2 : 3];
-    projectO(x, y, groundH(x, y) + 0.02, PJ); if (PJ.s <= 0 || PJ.d < 1.5) continue;
-    plotZO(PJ.x, PJ.y, PJ.d - 0.2, c); plotZO(PJ.x + 1, PJ.y, PJ.d - 0.2, c);
+    const x = P[k] * S, y = P[k + 1] * S, s = P[k + 4], u = s <= 0.002 ? 0 : Math.min(1, (s - 0.002) / 0.038);
+    col.push(GRID_RGB[u <= 0 ? 0 : u < 0.3 ? 1 : u < 0.65 ? 2 : 3]); xyz.push(x, y, groundH(x, y) + 0.02);
     if (u > 0) {   // the tick downhill: longer where steeper
       const L = (0.12 + 0.3 * u) * S, ex = x + P[k + 2] * L, ey = y + P[k + 3] * L;
-      for (let t = 0.25; t <= 1; t += 0.25) { const qx = x + (ex - x) * t, qy = y + (ey - y) * t; projectO(qx, qy, groundH(qx, qy) + 0.02, PJ); if (PJ.s > 0) plotZO(PJ.x, PJ.y, PJ.d - 0.2, c); }
-    }
+      for (let t = 0.25; t <= 1; t += 0.25) { const qx = x + (ex - x) * t, qy = y + (ey - y) * t; xyz.push(qx, qy, groundH(qx, qy) + 0.02); }
+      nt.push(4);
+    } else nt.push(0);
+  }
+  M = { S, hv, xyz: Float64Array.from(xyz), col, nt }; PG_MEMO.set(G, M); return M;
+}
+function hostPuttGrid() {
+  const M = hostPuttPts(HP.turn.green, hostS()), X = M.xyz;
+  for (let p = 0, q = 0; p < M.col.length; p++) {
+    const c = M.col[p], n = M.nt[p], q0 = q; q += 3 * (1 + n);
+    projectO(X[q0], X[q0 + 1], X[q0 + 2], PJ); if (PJ.s <= 0 || PJ.d < 1.5) continue;
+    plotZO(PJ.x, PJ.y, PJ.d - 0.2, c); plotZO(PJ.x + 1, PJ.y, PJ.d - 0.2, c);
+    for (let t = 1; t <= n; t++) { const r = q0 + 3 * t; projectO(X[r], X[r + 1], X[r + 2], PJ); if (PJ.s > 0) plotZO(PJ.x, PJ.y, PJ.d - 0.2, c); }
   }
 }
 function hostPuttAim(pw, hot, ph) {   // the putt's way as the model would draw it for this aim and pace; false without the host's green
@@ -538,7 +552,7 @@ function trimCaches() {   // drop what is far from the camera
   if (ocells.size > 2600) { for (const k of ocells.keys()) { const ix = Math.floor(k / 65536) - 32768, iy = (k % 65536) - 32768; if (Math.abs(ix * OC - cu) > 6800 || Math.abs(iy * OC - cv) > 3000) ocells.delete(k); } }
   if (ftiles.size > 340 * DFAR * DFAR / 67600) { for (const [k, F] of ftiles) if (Math.abs(F.fx * FTS - camX) > DFAR + 140 || Math.abs(F.fy * FTS - camY) > DFAR + 140) ftiles.delete(k); for (let i = farQ.length - 1; i >= 0; i--) { const F = farQ[i]; if (ftiles.get((F.fx + 32768) * 65536 + (F.fy + 32768)) !== F) farQ.splice(i, 1); } }
 }
-function firstPicture() { const b = genBudget, s = spriteMax; genBudget = 1e9; spriteMax = 999; render(); render(); render(); genBudget = b; spriteMax = s; }   // a hole's first picture is made whole; after it, new land and new sculptures arrive a piece a frame
+function firstPicture(near) { const b = genBudget, s = spriteMax; genBudget = 1e9; spriteMax = 999; fpNear = near || 0; render(); render(); render(); fpNear = 0; genBudget = b; spriteMax = s; }   // a hole's first picture is made whole (near: T438, the host's, whole within that many metres, the far land standing in beyond); after it, new land and new sculptures arrive a piece a frame
 function tickGame() {
   if (keys.KeyR) camHk = Math.min(3.2, camHk * 1.02); if (keys.KeyF) camHk = Math.max(0.4, camHk / 1.02);
   updatePlayer(); updateBall(); ballCam(); cartHum(); updateParticles(); updateCreatures(); ambienceTick();
@@ -552,6 +566,9 @@ function loop(now) {
   looping = true;
   acc = Math.min(acc + (now - last), 100); last = now;
   while (acc >= STEP_MS) { tickGame(); acc -= STEP_MS; }
+  // T438: after the first picture, until the first turn (or the lies) come, a frame in four is drawn: the host reads the lies on this same thread
+  if (hostWaitT && (!HOST || !course || (HP && HP.turn) || course.lk || now - hostWaitT > 10000)) hostWaitT = 0;
+  if (hostWaitT && (++hostWaitF & 3) !== 0) { requestAnimationFrame(loop); return; }
   render();
   if ((frame & 7) === 0) updateHud();
   if (((frame & 255) === 0 || (wkOn && (frame & 15) === 0 && tiles.size > 470)) && !bcam) trimCaches();   // (not while the camera is away with the ball: the land round the golfer is kept for the cut back)

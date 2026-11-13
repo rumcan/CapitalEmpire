@@ -22,7 +22,7 @@ R: Standing things are drawn far to near, scaled by distance; near ones are each
 R: The wind is Grove's: every 12 seconds a gust crosses the land. As it passes a tree, each leaf cluster but the core steps through eight poses from its own start and its lobes swell and shrink; the wood stays still. Grass, reeds and flowers bend hard while the gust passes and barely stir in the calm.
 R: The golfer, the cart, the ball and the flag cast live shadows; a marker hangs over a far ball.
 R: A small plant too far for its sculpture is a speck of its colour (a stem, and a petal on a flower) out to 90 m, so meadows keep their flowers at a distance; the painted ground's levels of detail change over a band of mixed lines fixed to the ground, not at a line that moves with the camera.
-R: New land is made by a background worker (tiles and painted chunks), so the page itself only draws; without a worker the page makes it within a ration of milliseconds a frame.
+R: New land is made by a background worker (tiles and painted chunks), so the page itself only draws; without a worker the page makes it within a ration of milliseconds a frame. With workers, a thing's own sculpture is made there too (T438): its stand-in shows until it comes, then it dissolves in.
 R: The sun breaks through the clouds in soft-edged gaps that drift over the land with the wind and change shape as they go (CapitalEmpire's sun patches). Nothing dark is drawn: in a gap of sun the picture's own pixels are brighter and a little warmer, the dark parts kept dark; elsewhere it is the overcast, the picture as it always was. None at night.
 R: Glow (Cinderdeep's light grid, swept and blurred): the lantern, glowcaps, crystals, fireflies, sparks, the ball and the cup light what is around them at dusk, faintly at golden hour.
 File: game.js
@@ -179,6 +179,7 @@ function wpump() {
     const m = wc.length ? wc.shift() : wq.shift(); if (!m) return;
     if (m.gen !== wgen) continue;
     if (m.t === 'chunk') { const C = genChunk(m.cx, m.cy); postMessage({ t: 'chunk', gen: wgen, cx: m.cx, cy: m.cy, col: C.col, lift: C.lift, mt: C.mt, gr: C.gr, maxLift: C.maxLift }, [C.col.buffer, C.lift.buffer, C.mt.buffer, C.gr.buffer]); }
+    else if (m.t === 'spr') { postMessage({ t: 'spr', gen: wgen, id: m.id, S: objSprite(m.o) }); }   // T438: a thing's own sculpture (copied over: nothing of the worker's is handed away)
     else if (m.t === 'far') { const F = { fx: m.fx, fy: m.fy, ready: false, row: 0, hh: null, ff: null, h: null, col: null, wood: null, trees: null }; while (!F.ready) farStep(F); postMessage({ t: 'far', gen: wgen, fx: m.fx, fy: m.fy, h: F.h, col: F.col, wood: F.wood, trees: F.trees }, [F.h.buffer, F.col.buffer, F.wood.buffer]); }
     else { const T = tileAt(m.tx, m.ty); if (m.light) tileLight(T); tileLook(T);   // (the worker keeps its own tile: copies are handed over, which costs the page nothing to receive)
       const o = { t: 'tile', gen: wgen, tx: m.tx, ty: m.ty, light: m.light, maxLift: T.maxLift, wl: T.wl }, tr = [];
@@ -198,7 +199,7 @@ onmessage = (e) => {
     tiles.clear(); lastTK = NaN; lastTile = null; ocells.clear(); treeMemo.clear();
     return;
   }
-  (m.t === 'chunk' ? wc : wq).push(m); if (!wbusy) { wbusy = true; setTimeout(wpump, 0); }
+  (m.t === 'chunk' || m.t === 'spr' ? wc : wq).push(m); if (!wbusy) { wbusy = true; setTimeout(wpump, 0); }
 };
 postMessage({ t: 'ready' });
 `;
@@ -213,12 +214,22 @@ function wkStart() {
   }).catch(() => {});
 }
 function wkInit() {   // a new hole, seed or course: the worker starts over on it, and whatever it was still making for the old one is dropped when it comes back
-  wkGen++; wkChunks.clear(); wkTiles.clear();
+  wkGen++; wkChunks.clear(); wkTiles.clear(); wkSprQ.clear();
   if (wkOn) { const m = { t: 'init', gen: wkGen, seed: SEED, n: holeN, ox: hole.tee.x, oy: hole.tee.y, course: course ? course.id : null, data: course ? course.raw : null, biome: biomeId, ctype: ctypeId }; wk.postMessage(m); wk2.postMessage(m); wk3.postMessage(m); }
 }
 function wkTile(tx, ty, light) {   // ask the worker for a tile (with its light, for land near the camera)
   const key = (tx + 32768) * 65536 + (ty + 32768) + (light ? 0.5 : 0); if (wkTiles.has(key) || wkTiles.size > 300) return;
   wkTiles.add(key); (light ? wk : (tx + ty) & 1 ? wk2 : wk3).postMessage({ t: 'tile', gen: wkGen, tx, ty, light });
+}
+// T438: a tree's, bush's or rock's own sculpture is made by a worker (it cost the page 10 to 30 ms, a slow frame each); its stand-in shows until it comes,
+// then it dissolves in as before. The worker is sent the thing's own numbers and makes the same sculpture the page would have.
+const wkSprQ = new Map(); let wkSprN = 0;
+const WK_SPR = 24;
+function wkSprite(o) {
+  if (o.wkS === wkGen) return; if (wkSprQ.size >= WK_SPR) return;
+  const id = ++wkSprN, q = {};
+  for (const k in o) { const v = o[k]; if (k === 'spr' || k === 'wkS') continue; if (typeof v === 'number' || typeof v === 'boolean' || typeof v === 'string' || (Array.isArray(v) && (!v.length || typeof v[0] === 'number'))) q[k] = v; }
+  o.wkS = wkGen; wkSprQ.set(id, o); (id & 1 ? wk2 : wk3).postMessage({ t: 'spr', gen: wkGen, id, o: q });
 }
 function wkGot(e) {
   const m = e.data, pt = performance.now(); PERF.msgs++;
@@ -227,6 +238,7 @@ function wkGot(e) {
 function wkGot2(m) {
   if (m.t === 'ready') { if (++wkUp >= 3) { wkOn = true; wkInit(); } return; }
   if (m.gen !== wkGen) return;
+  if (m.t === 'spr') { const o = wkSprQ.get(m.id); wkSprQ.delete(m.id); if (o && !o.spr && m.S) { o.spr = m.S; if (o.born === -1) o.born = frame; } return; }
   if (m.t === 'chunk') {
     const key = (m.cx + 32768) * 65536 + (m.cy + 32768); wkChunks.delete(key);
     if (!chunks.has(key)) chunks.set(key, { cx: m.cx, cy: m.cy, col: m.col, lift: m.lift, mt: m.mt, maxLift: m.maxLift, gr: m.gr, lc: null, lt: -1, l1: null, l2: null, g1: null, g2: null });
@@ -246,7 +258,11 @@ function wkGot2(m) {
 const tileQ = [], tileQset = new Set();                     // middle-distance tiles the view has asked for, made within the ration
 function tileHave(tx, ty) { return tiles.get((tx + 32768) * 65536 + (ty + 32768)); }   // the tile if it is made; asking does not make it
 function tileWant(tx, ty) { if (wkOn && genBudget < 100) { wkTile(tx, ty, false); return; } const key = (tx + 32768) * 65536 + (ty + 32768); if (!tileQset.has(key)) { tileQset.add(key); tileQ.push(tx, ty); } }   // (the worker makes it; without one, the queue below)
-function tileWork(ms) { const t0 = performance.now(); while (tileQ.length && performance.now() - t0 < ms) { const tx = tileQ.shift(), ty = tileQ.shift(); tileLook(tileAt(tx, ty)); tileQset.delete((tx + 32768) * 65536 + (ty + 32768)); } }
+function tileWork(ms) { const t0 = performance.now(); let n = tileQ.length >> 1; while (n-- > 0 && tileQ.length && performance.now() - t0 < ms) { const tx = tileQ.shift(), ty = tileQ.shift(); if (fpNear && tileFar(tx, ty, fpNear)) { tileQ.push(tx, ty); continue; } if (wkOn && genBudget < 100) { tileQset.delete((tx + 32768) * 65536 + (ty + 32768)); wkTile(tx, ty, false); continue; }   /* (left over from a first picture: a worker makes it) */ tileLook(tileAt(tx, ty)); tileQset.delete((tx + 32768) * 65536 + (ty + 32768)); } }
+// T438: the host's first picture makes only the land within FP_NEAR m of the camera; the far land stands in beyond until the rest is made (by the workers,
+// or a few ms a frame here), so the picture is up in about a second instead of the 2.5 s that the 800-odd tiles of the whole view took
+const FP_NEAR = 60; let fpNear = 0;
+function tileFar(tx, ty, R) { const ex = (tx + 0.5) * TPX / PPM - camX, ey = (ty + 0.5) * TPX / PPV - camY; return ex * ex + ey * ey > R * R; }
 function hTry(u, v) {   // the land's height (metres) at a ground pixel if its tile is made, else NaN
   const tx = Math.floor(u / TPX), ty = Math.floor(v / TPX), T = tileHave(tx, ty); if (!T) return NaN;
   const fx = (u - tx * TPX) * 0.25, fy = (v - ty * TPX) * 0.25, i = fx >= 64 ? 63 : fx | 0, j = fy >= 64 ? 63 : fy | 0, a = fx - i, b = fy - j, k = j * TN + i, H = T.h;
@@ -1173,6 +1189,7 @@ function spriteFor(o, d) {
   if (o.spr) return o.spr;
   const heavy = o.k === K_TREE || o.k === K_BUSH || o.k === K_ROCK;
   if (!heavy) { if (smallMade >= 10 && spriteMax < 99) return null; smallMade++; return objSprite(o); }   // small things: ten new ones a frame at most (the rest wait a frame: never a stall when the camera lands among them)
+  if (wkOn && spriteMax < 99) { if (d < 55 && (stillF > 10 || d < 26)) wkSprite(o); o.born = -1; return libFor(o); }   // T438: with workers, a worker makes it (see wkSprite); as before, only the nearest while the camera moves
   if (d < 55 && madeThisFrame < spriteMax && !(bcam && ball.state === 1) && (spriteMax > 1 || (stillF > 10 ? frame % 3 === 0 : frame % 15 === 0 && d < 26))) {   /* while the camera moves: only the nearest, and seldom (each new sculpture costs a slow frame) */ madeThisFrame++; o.born = o.born === -1 ? frame : 0; return objSprite(o); }   // (born: it was on show as a stand-in, so its own sculpture dissolves in)
   o.born = -1;
   return libFor(o);
