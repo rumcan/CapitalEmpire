@@ -188,7 +188,8 @@ import { drawServePreview } from './walkserve-overlay';
 import { carParkSpotAt, carParkWhy, parkSpotWhy as spotWhyOf, snapToRoad, type Building, type CarParkCtx } from './golf/parkplace';
 import { footStart, parkLook, type ParkLook } from './event/parklook';
 import { dressCourse } from './golf/dressing';
-import { book, assetsAtCost, debtOf, netWorthOf, deposit, isBankrupt, monthEnd, newFinance, repay, signBank, signMurabaha, withdraw, type FinanceSave, type Line, type MonthReport } from './golf/finance';
+import { noteMoment } from '../ui/golf/finevents';
+import { balanceBooks, cashLinesSum, book, assetsAtCost, debtOf, netWorthOf, deposit, isBankrupt, monthEnd, newFinance, repay, signBank, signMurabaha, withdraw, type FinanceSave, type Line, type MonthReport } from './golf/finance';
 import { settleRisk, noteEmergency, setInsurance, type Plan } from './golf/risk'; // J3
 import { weeklyFees, type Live } from './golf/reports'; // J3
 import { FIRST_TEE, MONTH_LEN, SEASON_LEN, SEASON_START, monthIndexLabel, monthsLeft, seasonLabel, seasonMonth, yearOf } from './golf/calendar';
@@ -935,7 +936,13 @@ export class Game {
   toggleBallTree() { this.range.treeOpen = !this.range.treeOpen; this.emit(); }
   /** T386: an order of cases of balls from the supplier (the Range card's Order button) */
   orderRangeBalls(cases = 1) { this.range.orderBalls(cases); }
-  setRangePrice(price: number) { this.range.setPrice(price); }
+  setRangePrice(price: number) {
+    const before = this.range.view()?.biz.price ?? 0;
+    this.range.setPrice(price);
+    const after = this.range.view()?.biz.price ?? before;
+    if (this.golf && after > before && before > 0 && !this.priceRaise) this.priceRaise = { month: this.finance.month, base: this.lastMonthGolfers }; // (judged a full month later: judgePriceRaise)
+    else if (after < before) this.priceRaise = null;
+  }
   /** the Props tool (plan P24 Phase 3, T131: golf/propstool.ts): the decor the player places, moves, turns and sells; its appeal feeds the range */
   readonly decor: PropsTool = new PropsTool({
     golf: () => this.golfMode && !!this.golf, item: id => LIB_INDEX.get(id), idOf: p => LIBRARY[p.item]!.id,
@@ -8274,6 +8281,19 @@ export class Game {
   private finLine: Line | null = null;
   /** today's upkeep spends so far: the day's ledger holds the road and signal upkeep on top, which no spend booked */
   private dayUpkeepBooked = 0;
+  /** J2b: the treasury at the last month end (after the bank's own moves), null until the books open */
+  private finTicks = 0;
+  private moneyMark: number | null = null;
+  /** the bank's own moves since then that are not on a line: a loan paid in, a deposit, a withdrawal */
+  private bankNet = 0;
+  /** the business takings the engine booked itself (so the worker's own visits are what is left of Budget.cum.biz) */
+  private bizBooked = 0;
+  /** what of Budget.cum is already on a line: parking, toll, grants, biz (worker visits only), other */
+  private cumBooked = { parking: 0, toll: 0, grants: 0, biz: 0, other: 0 };
+  /** the range's golfers (total) at the last month end, the last full month's count, and a bucket price raise waiting to be judged */
+  private golfersMark: number | null = null;
+  private lastMonthGolfers = 0;
+  private priceRaise: { month: number; base: number } | null = null;
   private monthCbs: Array<(r: MonthReport) => void> = [];
   private classicFinance: FinanceSave | null = null;
   /** runs fn with its spends and takings booked on `line` */
@@ -8291,32 +8311,66 @@ export class Game {
     if (kind === 'construction' || kind === 'compensation') book(f, 'build', -n);
     else if (kind === 'balls') book(f, 'stock', -n);
     else if (kind === 'upkeep') { book(f, this.finLine ?? 'upkeep', -n); if (!this.finLine) this.dayUpkeepBooked += n; }
-    else book(f, this.finLine ?? 'otherIn', -n); // business takings and lot sales come in as negative spends
+    else { if (kind === 'business') this.bizBooked -= n; book(f, this.finLine ?? 'otherIn', -n); } // business takings and lot sales come in as negative spends
   }
   /** the worker's day ledger into the statement: what it took in on its own (parking, tolls, grants, the town's tax) and the road upkeep no spend booked */
   private bookLedger(l: Ledger): void {
     if (!this.golf) return;
     const f = this.finance;
-    book(f, 'parking', l.parking ?? 0);
-    book(f, 'otherIn', (l.toll ?? 0) + l.grants + l.property + (l.sales ?? 0) + (l.fees ?? 0));
+    book(f, 'otherIn', l.property); // (the parking fees, tolls, grants, sales and fees are booked from the budget's running totals: reconcileBooks)
     book(f, 'upkeep', -Math.max(0, l.upkeep + l.signals - this.dayUpkeepBooked));
     this.dayUpkeepBooked = 0;
   }
   /** a change of the treasury by the Bank: + into the cash, - out of it (nothing in the dev sandbox's unlimited money) */
-  private cashMove(n: number): void { if (n && Number.isFinite(n) && !this.traffic.unlimited) this.traffic.spend('bank', -n); }
+  private cashMove(n: number, offLines = false): void { if (n && Number.isFinite(n) && !this.traffic.unlimited) { this.traffic.spend('bank', -n); if (offLines) this.bankNet += n; } }
+  /** J2b: the book value at cost of what the club had when the books opened: the buildings placed (the range at its placing cost, the clubhouse, the rest at their build cost) */
+  private openingAssets(): number {
+    let t = 0;
+    for (const d of this.bizDefs) t += d.type === 'range' ? RANGE_PLACE_COST : d.type === 'clubhouse' ? CLUBHOUSE_RANGE_COST : BUSINESS[d.type]?.buildCost ?? 0;
+    return Math.round(t);
+  }
+  /** J2b: puts every pound that reached the treasury on a line before a month closes: the worker's own takings (parking fees, tolls, grants, the visits' business, land sales and fees) by
+   *  Budget.cum, then whatever is left over on otherIn / otherOut (balanceBooks), so a month's lines add up to the treasury's change less the bank's own moves */
+  private reconcileBooks(): void {
+    const f = this.finance, b = this.traffic.budget, cum = b.cum;
+    if (this.traffic.unlimited) return;
+    if (cum) {
+      const own = (k: 'parking' | 'toll' | 'grants' | 'other', line: Line) => { const d = cum[k] - this.cumBooked[k]; if (d > 0.005) { book(f, line, d); this.cumBooked[k] += d; } };
+      if (this.moneyMark === null) { this.cumBooked = { parking: cum.parking, toll: cum.toll, grants: cum.grants, biz: cum.biz - this.bizBooked, other: cum.other }; }
+      else {
+        own('parking', 'parking'); own('toll', 'otherIn'); own('grants', 'otherIn'); own('other', 'otherIn');
+        const d = cum.biz - this.bizBooked - this.cumBooked.biz; if (d > 0.005) { book(f, 'shop', d); this.cumBooked.biz += d; }
+      }
+    }
+    if (this.moneyMark === null) { this.moneyMark = b.money - cashLinesSum(f); return; } // (the books open here: what is on the lines so far counts as balanced)
+    const plug = balanceBooks(f, b.money - this.moneyMark, this.bankNet);
+    if (import.meta.env?.DEV && Math.abs(plug) > 1) console.warn(`books: $${Math.round(plug)} reached the treasury with no line; booked as ${plug > 0 ? 'otherIn' : 'otherOut'}`);
+  }
+  /** J2b: a bucket price raise that lost customers the month after is the 'priceLoss' money moment (ui/golf/finevents) */
+  private judgePriceRaise(closed: number): void {
+    const g = this.golf, now = g?.range?.total.golfers ?? 0, was = this.golfersMark ?? now, month = Math.max(0, now - was);
+    this.golfersMark = now;
+    const r = this.priceRaise;
+    if (r && closed === r.month + 1) { if (r.base >= 8 && month < r.base * 0.85) noteMoment('priceLoss'); this.priceRaise = null; }
+    this.lastMonthGolfers = month;
+  }
   /** every 2 s in golf: closes each game month that has ended (golfMonthIndex above the months the bank has closed): the instalments, premiums
    *  and overdraft interest come out of the treasury, the statement goes to onMonthEnd's listeners */
   private stepFinance(): void {
     const g = this.golf; if (!g) return;
     const f = this.finance, idx = this.golfMonthIndex();
+    if (f.opening === undefined && (this.bizDefs.length > 0 || ++this.finTicks > 3)) { f.opening = this.openingAssets(); this.scheduleSave(); } // (a load restores the buildings first: wait a few ticks for them)
     if (f.month > idx) return; // (a save from a later month: wait)
     if (f.month === 0 && f.history.length === 0 && idx > 1 && Object.keys(f.cur).length === 0) f.month = idx - 1; // (an old save: the books start at the month before)
     for (let k = 0; f.month < idx && k < 12; k++) {
       const open = f.month;
       const em = this.rollMonthRisk(open); // J3: the emergency lands before the books close
+      this.reconcileBooks();
       const { cashChange, report } = monthEnd(f, { cash: this.traffic.budget.money, assets: assetsAtCost(f), label: monthIndexLabel(open) });
       noteEmergency(report, em); // J3
       this.cashMove(cashChange);
+      if (!this.traffic.unlimited) { this.moneyMark = this.traffic.budget.money; this.bankNet = 0; }
+      this.judgePriceRaise(open);
       for (const cb of this.monthCbs) { try { cb(report); } catch (e) { console.error('onMonthEnd', e); } }
       // (J3: the month's toast is the StatementCard's: profit, net worth and the first event)
       if (this.bankrupt) { this.setSpeed(0); this.toast('Bankrupt: the overdraft is too big or has lasted too long', 'warn'); }
@@ -8327,13 +8381,13 @@ export class Game {
   bankBorrow(amount: number, term: number, label = 'Bank loan'): boolean {
     const r = signBank(this.finance, amount, term, label);
     if (!r.ok) { this.toast(r.reason ?? 'The bank said no', 'warn'); return false; }
-    this.cashMove(r.cash); this.toast(`Borrowed $${r.cash.toLocaleString('en-US')} at ${r.loan!.aprPct.toFixed(1)}% for ${term} months`, 'good'); this.scheduleSave(); this.emit(); return true;
+    this.cashMove(r.cash, true); this.toast(`Borrowed $${r.cash.toLocaleString('en-US')} at ${r.loan!.aprPct.toFixed(1)}% for ${term} months`, 'good'); this.scheduleSave(); this.emit(); return true;
   }
   /** buy a named purchase of `cost` with murabaha over `term` months: the bank pays for it, you pay it back at cost plus the fixed markup */
   bankMurabaha(cost: number, term: number, label: string): boolean {
     const r = signMurabaha(this.finance, cost, term, label);
     if (!r.ok) { this.toast(r.reason ?? 'The bank said no', 'warn'); return false; }
-    this.cashMove(r.cash); this.toast(`Murabaha: $${r.cash.toLocaleString('en-US')} for ${label || 'your purchase'}, $${r.loan!.payment.toLocaleString('en-US')} a month for ${term} months`, 'good'); this.scheduleSave(); this.emit(); return true;
+    this.cashMove(r.cash, true); this.toast(`Murabaha: $${r.cash.toLocaleString('en-US')} for ${label || 'your purchase'}, $${r.loan!.payment.toLocaleString('en-US')} a month for ${term} months`, 'good'); this.scheduleSave(); this.emit(); return true;
   }
   /** pay `amount` of a loan early (a murabaha is settled in full, at its settle cost) */
   bankRepay(id: number, amount: number): boolean {
@@ -8344,12 +8398,12 @@ export class Game {
   /** cash into savings (4% a year, paid monthly) */
   bankDeposit(amount: number): number {
     const a = deposit(this.finance, amount, this.traffic.budget.money); if (a <= 0) { this.toast('Nothing to deposit', 'warn'); return 0; }
-    this.cashMove(-a); this.scheduleSave(); this.emit(); return a;
+    this.cashMove(-a, true); this.scheduleSave(); this.emit(); return a;
   }
   /** savings back to cash */
   bankWithdraw(amount: number): number {
     const a = withdraw(this.finance, amount); if (a <= 0) { this.toast('Nothing to withdraw', 'warn'); return 0; }
-    this.cashMove(a); this.scheduleSave(); this.emit(); return a;
+    this.cashMove(a, true); this.scheduleSave(); this.emit(); return a;
   }
   /** opens the treasury chip's panel: the Bank in golf mode, the budget in a classic game */
   toggleMoneyPanel() { const want = this.golf ? 'bank' : 'budget'; this.panel = this.panel === want ? null : want; this.emit(); }

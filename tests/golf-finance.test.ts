@@ -3,7 +3,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
   newFinance, book, loadFinance, amortisedPayment, creditApr, quoteBank, signBank, quoteMurabaha, signMurabaha, murabahaRebate, settleCost, repay,
-  deposit, withdraw, monthEnd, effectiveApr, debtOf, isBankrupt, overdraftStreak, insuredLoss, assetsAtCost, HISTORY_CAP, CREDIT_START, LATE_FEE,
+  deposit, withdraw, monthEnd, effectiveApr, debtOf, isBankrupt, overdraftStreak, insuredLoss, assetsAtCost, balanceBooks, booksGap, cashLinesSum, HISTORY_CAP, CREDIT_START, LATE_FEE,
 } from '../src/game/golf/finance';
 
 const close = (a: number, b: number, eps = 0.011) => assert.ok(Math.abs(a - b) <= eps, `${a} vs ${b}`);
@@ -232,4 +232,44 @@ test('assetsAtCost sums the build line over the history and this month, refunds 
   book(f, 'build', -5_000); book(f, 'build', 1_000);
   assert.equal(assetsAtCost(f), 14_000);
   book(f, 'build', 100_000); assert.equal(assetsAtCost(f), 0); // never negative
+});
+
+test('murabaha markup is booked on its own line, never as loan interest', () => {
+  const f = newFinance(); signMurabaha(f, 12_000, 12, 'Pump');
+  const r = monthEnd(f, { cash: 1e6, assets: 0 });
+  close(-(r.report.lines.markup ?? 0), 12_000 * 0.045 / 12, 0.02);
+  assert.equal(r.report.lines.loanInterest, undefined);
+  close(-(r.report.lines.loanPrincipal ?? 0), 12_000 / 12, 0.02); // the cost share of the instalment
+  const g = newFinance(); signMurabaha(g, 24_000, 24, 'Clubhouse'); for (let i = 0; i < 6; i++) monthEnd(g, { cash: 1e6, assets: 0 });
+  const l = g.loans[0]!; const rebate = murabahaRebate(l);
+  repay(g, l.id, 1e6, 1e6);
+  assert.equal(g.cur.loanInterest, undefined); assert.ok((g.cur.markup ?? 0) < 0);
+  assert.ok(rebate > 0);
+});
+
+test('opening assets count at cost with what is built later; old saves read none', () => {
+  const f = newFinance(); f.opening = 40_000;
+  assert.equal(assetsAtCost(f), 40_000);
+  book(f, 'build', -10_000); assert.equal(assetsAtCost(f), 50_000);
+  assert.equal(loadFinance(JSON.parse(JSON.stringify(f))).opening, 40_000);
+  assert.equal(loadFinance({ v: 1, opening: NaN }).opening, undefined);
+  assert.equal(assetsAtCost(newFinance()), 0);
+});
+
+test('balanceBooks: the month lines add up to the treasury change less the bank own moves', () => {
+  const f = newFinance();
+  book(f, 'range', 1000); book(f, 'wages', -300); book(f, 'savingsInterest', 5); // savings interest is not cash
+  assert.equal(cashLinesSum(f), 700);
+  // the treasury rose by 700 + a $20,000 loan paid in + $350 nothing booked
+  assert.equal(booksGap(f, 21_050, 20_000), 350);
+  assert.equal(balanceBooks(f, 21_050, 20_000), 350);
+  assert.equal(f.cur.otherIn, 350);
+  assert.equal(booksGap(f, 21_050, 20_000), 0); // now balanced
+  assert.equal(balanceBooks(f, 21_050, 20_000), 0);
+  // money left with no line: booked as otherOut
+  const h = newFinance(); book(h, 'range', 100);
+  assert.equal(balanceBooks(h, -400, 0), -500); assert.equal(h.cur.otherOut, -500);
+  assert.equal(cashLinesSum(h), -400);
+  // NaN never poisons the books
+  const n = newFinance(); assert.equal(balanceBooks(n, NaN, NaN), 0);
 });
