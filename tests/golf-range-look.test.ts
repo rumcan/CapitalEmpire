@@ -57,3 +57,28 @@ test('J6b: the range ground lies under everything: rough to the model off the ou
   assert.deepEqual(c.input.areas.slice(0, 2).map(a => a.surface), ['fairway', 'fairway']);
   assert.equal(c.input.areas[2]!.surface, 'tee');
 });
+
+import { DRILLS, judgeDrill, junkHit, junkReach, recordDrill } from '../src/game/golf/play/drills';
+import { PracticeDriver, practiceFlags } from '../src/game/golf/play/practice3p';
+import { TILE_M } from '../src/game/golf/types';
+test('J6b: junk piles (J7) are targets: a ball that lands on one or stops by it hits it; the junk drill counts three; labels carry name and distance', () => {
+  const m = (v: number) => v / TILE_M, car = { x: 35, y: m(140), r: junkReach('expansion:junk-car'), name: 'Old car', distM: 140 }, tyres = { x: 10, y: m(80), r: junkReach('expansion:tyre-stack'), name: 'Tyres', distM: 80 };
+  assert.equal(car.r, 4); assert.equal(tyres.r, 2.5);
+  assert.equal(junkHit([car, tyres], { x: 35 + m(4.8), y: m(140) }, { x: 35, y: m(160) })?.name, 'Old car', 'landed within its reach + 1 m');
+  assert.equal(junkHit([car, tyres], { x: 35, y: m(120) }, { x: 10 + m(2), y: m(80) })?.name, 'Tyres', 'stopped by it');
+  assert.equal(junkHit([car, tyres], { x: 35, y: m(100) }, { x: 35, y: m(110) }), null);
+  const base = { spot: 'range' as const, club: 'iron7' as const, shape: null, landLie: null, restLie: 'fairway' as const, holed: false, pin: { x: 35, y: m(100) }, greens: [], from: 'tee' as const, junk: [car, tyres] };
+  const hit = judgeDrill('junk', { ...base, landing: { x: 35, y: m(140) }, rest: { x: 35, y: m(150) } });
+  assert.deepEqual(hit, { hit: true, note: 'Hit the old car!' });
+  assert.match(judgeDrill('junk', { ...base, landing: { x: 35, y: m(100) }, rest: { x: 35, y: m(105) } }).note, /from the tyres|from the old car/);
+  let sv = recordDrill(undefined, 'junk', hit).save; sv = recordDrill(sv, 'junk', hit).save; const r = recordDrill(sv, 'junk', hit);
+  assert.equal(r.paid, 'junk'); assert.equal(DRILLS.junk.need, 3);
+  // the course: junk only where J7 lays it; labels only (no flags)
+  const sq = (x0: number, y0: number, x1: number, y1: number) => [x0, y0, x1, y0, x1, y1, x0, y1];
+  const inp = { outfield: sq(0, -3, 70, 130), teeBox: sq(4, -3, 67, 1), bays: [{ x: 35, y: 0 }], greens: [{ x: 35, y: m(100), r: 4, m: 100 }], area: null, areas: [], chip: null };
+  const none = practiceCourse(inp), withJ = practiceCourse({ ...inp, junk: [{ id: 'expansion:junk-car', name: 'Old car', x: 35, y: m(140), m: 140 }] });
+  assert.equal(none.junk.length, 0); assert.equal(new PracticeDriver(none, 'range', 0.5, 1, { drills: () => null, judged: () => {} }).canPlay('junk'), false, 'no junk: no junk drill');
+  assert.equal(new PracticeDriver(withJ, 'range', 0.5, 1, { drills: () => null, judged: () => {} }).canPlay('junk'), true);
+  const L = practiceFlags(withJ, 'range', { x: 0, y: 0 });
+  assert.deepEqual(L.map(f => [f.label, !!f.only]), [['100 m', false], ['Old car · 140 m', true]]);
+});

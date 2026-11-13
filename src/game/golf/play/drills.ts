@@ -9,8 +9,8 @@ import type { ShotShape } from './shape';
 import type { SkillId } from '../player';
 import { TILE_M } from '../types';
 
-export type DrillId = 'distance' | 'shaping' | 'flight' | 'updown' | 'putting' | 'bunker';
-export const DRILL_IDS: readonly DrillId[] = ['distance', 'shaping', 'flight', 'updown', 'putting', 'bunker'];
+export type DrillId = 'distance' | 'shaping' | 'flight' | 'junk' | 'updown' | 'putting' | 'bunker';
+export const DRILL_IDS: readonly DrillId[] = ['distance', 'shaping', 'flight', 'junk', 'updown', 'putting', 'bunker'];
 /** where a drill is played from: a range mat, the chip stand beside the chipping green, a putt out on that green, the practice bunker */
 export type DrillSpot = 'range' | 'chip' | 'putt' | 'sand';
 /** what a drill opens on the course (unlocks.ts): the curve (draw and fade), the flight (high and low), the putt read (the putting line's preview) */
@@ -29,6 +29,8 @@ export const DRILLS: Readonly<Record<DrillId, Drill>> = {
     reward: { gains: { accuracy: 3 }, opens: 'curve', text: 'Draw and fade on the course, Accuracy +3' } },
   flight: { id: 'flight', name: 'Flight', spot: 'range', goal: 'Land a high and a low ball on a target green (X picks the flight)', need: 2, withinM: 3,
     reward: { gains: { touch: 3 }, opens: 'flight', text: 'High and low on the course, Touch +3' } },
+  junk: { id: 'junk', name: 'Junk targets', spot: 'range', goal: 'Hit three of the junk piles on the outfield (a ball that lands on one, or stops by it)', need: 3,
+    reward: { gains: { accuracy: 2, power: 2 }, text: 'Accuracy +2, Power +2' } },
   updown: { id: 'updown', name: 'Up and down', spot: 'chip', goal: 'Chip to within 2 m of the pin, 3 times', need: 3, withinM: 2,
     reward: { gains: { short: 5, touch: 2 }, text: 'Wedges +5, Touch +2' } },
   putting: { id: 'putting', name: 'Putting', spot: 'putt', goal: 'Hole 3 putts from 3 to 6 m', need: 3,
@@ -70,10 +72,22 @@ export function drillOpens(done: readonly DrillId[] | null | undefined): Set<Dri
 
 /** a range target green (tiles: its centre and radius) and its distance from the mats (m) */
 export interface DrillGreen { x: number; y: number; r: number; distM: number }
+/** J6b (J7's junk, #1225): a junk pile on the range as a target: where it lies (tiles), how far a ball may land from its middle and count (m), its name and its
+ *  distance from the mats (m) */
+export interface DrillJunk { x: number; y: number; r: number; name: string; distM: number }
+/** a junk pile's reach as a target (m): a car, a pickup or a trailer is big, the rest small */
+export const junkReach = (id: string): number => (/car|pickup|trailer/.test(id) ? 4 : 2.5);
+/** the junk pile a ball hit (it came down within the pile's reach, or stopped within it), else null */
+export function junkHit(junk: readonly DrillJunk[] | undefined, landing: Pt | null, rest: Pt): DrillJunk | null {
+  for (const j of junk ?? []) if ((landing && dM(landing, j) <= j.r + 1) || dM(rest, j) <= j.r) return j;
+  return null;
+}
 /** one practice shot as a drill reads it: the spot it was played from, its club, the shape the model played (null: straight), where it landed (tiles; null: a
  *  putt) and its lie there, where it stopped and its lie there, whether it was holed, the pin (tiles), the range's target greens, and the lie it was struck from */
 export interface DrillShot { spot: DrillSpot; club: Club; shape: ShotShape | null; landing: Pt | null; landLie: Lie | null; rest: Pt; restLie: Lie; holed: boolean;
-  pin: Pt; greens: readonly DrillGreen[]; from: Lie }
+  pin: Pt; greens: readonly DrillGreen[]; from: Lie;
+  /** J6b: the junk on the range (absent: none) */
+  junk?: readonly DrillJunk[] }
 /** a shot's judgement for a drill: whether it counts (hit), the mark it makes (shaping and flight), and the line the panel shows for it */
 export interface DrillCall { hit: boolean; mark?: string; note: string }
 
@@ -114,6 +128,12 @@ export function judgeDrill(id: DrillId, s: DrillShot): DrillCall {
       if (!fl) return { hit: false, note: g ? `On the ${g.distM} m green, but a normal flight: pick high or low (X)` : 'Pick a high or a low flight (X), then land it on a green' };
       const mark = fl > 0 ? 'high' : 'low';
       return g ? { hit: true, mark, note: `A ${mark} ball onto the ${g.distM} m green` } : { hit: false, note: `The ${mark} ball missed the greens` };
+    }
+    case 'junk': {
+      const j = junkHit(s.junk, s.landing, s.rest);
+      if (j) return { hit: true, note: `Hit the ${j.name.toLowerCase()}!` };
+      let best: DrillJunk | null = null, bd = Infinity; for (const q of s.junk ?? []) { const d = dM(s.rest, q); if (d < bd) { bd = d; best = q; } }
+      return { hit: false, note: best ? `Missed: ${m1(bd)} from the ${best.name.toLowerCase()}` : 'No junk on this range' };
     }
     case 'updown': {
       const far = s.holed ? 0 : dM(s.rest, s.pin);

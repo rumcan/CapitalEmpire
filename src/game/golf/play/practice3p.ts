@@ -15,7 +15,7 @@ import { makeCourseView } from './courseview';
 import { MODEL_V, POWER, shotOutcome, type OwnerTurn } from './live';
 import { carryFor, chooseShot, type ShotSkill } from './shot';
 import type { RoundDriver } from './play3p';
-import { DRILLS, drillProgress, drillsAt, greenAt, judgeDrill, type DrillCall, type DrillGreen, type DrillId, type DrillShot, type DrillSpot, type DrillsSave } from './drills';
+import { DRILLS, drillProgress, drillsAt, greenAt, judgeDrill, junkHit, junkReach, type DrillCall, type DrillGreen, type DrillId, type DrillJunk, type DrillShot, type DrillSpot, type DrillsSave } from './drills';
 import { toView, type ViewPt } from './protocol3p';
 import { mulberry } from '../../iso';
 
@@ -42,13 +42,16 @@ export interface PracticeIn {
   greensBuilt?: boolean;
   /** J6b: the range's whole ground (tiles x0 y0 x1 y1: its plot, car park and practice area, with a margin), laid under everything as rough, so the view counts it as
    *  the course's ground (else its own wild land grows plateaus and cliffs by the shop and the road); absent: none */
-  ground?: readonly [number, number, number, number]; bays: readonly Pt[]; greens: readonly RangeGreen[];
+  ground?: readonly [number, number, number, number];
+  /** J6b (J7's junk, #1225): the junk piles on the outfield: library id, name, spot (tiles) and metres from the mats (absent: none) */
+  junk?: readonly { id: string; name: string; x: number; y: number; m: number }[]; bays: readonly Pt[]; greens: readonly RangeGreen[];
   area: readonly [number, number, number, number] | null; areas: readonly CourseArea[]; chip: ChipArea | null;
   heightAt?: (x: number, y: number) => number; name?: string;
 }
 /** the practice course: what the exporter takes, the course the model plays, the mat he stands on, the greens (the drills' terms), the chipping green's
  *  spots (null: none), and the hole index of each place in the view (-1: none) */
 export interface PracticeCourse { input: Export3pInput; view: CourseView; mat: Pt; greens: DrillGreen[]; chip: { cup: Pt; stand: Pt; sand: Pt | null } | null;
+  /** J6b: the junk piles as targets */ junk: DrillJunk[];
   idx: Record<PracticePlace, number> }
 
 const disc = (x: number, y: number, r: number, n = 32): number[] => { const p: number[] = []; for (let k = 0; k < n; k++) { const a = k / n * Math.PI * 2; p.push(x + Math.cos(a) * r, y + Math.sin(a) * r); } return p; };
@@ -102,7 +105,8 @@ export function practiceCourse(p: PracticeIn): PracticeCourse {
   // there); a bare outfield is told apart by the lies the model reads (fescue: the view draws dry long grass by them, not a mown fairway)
   const shapes = areas.map((a, i) => (i <= outfieldAt && a.surface !== 'fairway' ? { ...a, surface: 'fairway' as GolfSurface } : a));   // (the ground and the outfield)
   const input: Export3pInput = { areas: shapes, tees, pins, aims: [], holes, ...(p.heightAt ? { heightAt: p.heightAt } : {}), name: p.name ?? 'Practice' };
-  return { input, view, mat: { x: mat.x, y: mat.y }, greens: dg, chip, idx: { range: 0, short: chip ? 1 : -1 } };
+  const junk: DrillJunk[] = (p.junk ?? []).filter(j => Number.isFinite(j.x) && Number.isFinite(j.y)).map(j => ({ x: j.x, y: j.y, r: junkReach(j.id), name: j.name, distM: Math.round(j.m) }));
+  return { input, view, mat: { x: mat.x, y: mat.y }, greens: dg, chip, junk, idx: { range: 0, short: chip ? 1 : -1 } };
 }
 
 /** where the ball is teed up for a spot: the mat; the chip stand; the practice bunker (none: the chip stand); a putt out on the green, PUTT_M from the cup,
@@ -135,6 +139,8 @@ export class PracticeDriver implements RoundDriver {
   note: string | null = null;
   /** balls hit this session */
   balls = 0;
+  /** J6b: the junk pile the last ball hit, said once (null: none) */
+  hitJunk: string | null = null;
   constructor(readonly course: PracticeCourse, readonly place: PracticePlace, private readonly sk: ShotSkill, private readonly seed: number, private readonly hooks: PracticeHooks) {
     this.view = course.view;
     const here = drillsAt(place), sv = hooks.drills();
@@ -144,6 +150,7 @@ export class PracticeDriver implements RoundDriver {
   canPlay(id: DrillId): boolean {
     const d = DRILLS[id];
     if (!drillsAt(this.place).includes(id)) return false;
+    if (id === 'junk') return this.course.junk.length > 0;
     if (d.spot === 'range') return true;
     return !!this.course.chip && (d.spot !== 'sand' || !!this.course.chip.sand);
   }
@@ -172,12 +179,13 @@ export class PracticeDriver implements RoundDriver {
     const t = this.turn(), h = this.holeNow(), { holeIdx: _h, stroke: _s, ...inp } = input; void _h; void _s;
     const r = mulberry((this.seed ^ Math.imul(this.balls + 1, 2654435761)) | 0);
     const o = shotOutcome(this.view, h, t.ball, t.lie, this.sk, { ...inp, v: inp.v ?? MODEL_V }, r, { last: false });
+    { const j = this.spot === 'range' ? junkHit(this.course.junk, o.landing?.at ?? null, o.landing?.rest ?? o.to) : null; this.hitJunk = j ? `Hit the ${j.name.toLowerCase()}!` : null; }   // (J6b: any range ball that hits a junk pile is said)
     const shot: Shot = { golfer: this.golfer, hole: t.holeIdx, stroke: t.stroke, t: 0, from: { ...t.ball }, to: o.to, club: input.club, lie: o.lie, penalty: o.penalty, holed: o.holed,
       ...(o.landing ? { landing: o.landing } : {}) };
     this.list.push(shot); this.inputs.push(input); this.balls++;
     if (this.active) {
       const ds: DrillShot = { spot: this.spot, club: input.club, shape: o.shape, landing: o.landing?.at ?? null, landLie: o.landing?.lie ?? null, rest: o.landing?.rest ?? o.to,
-        restLie: o.landing?.restLie ?? o.lie, holed: o.holed, pin: t.pin, greens: this.course.greens, from: t.lie };
+        restLie: o.landing?.restLie ?? o.lie, holed: o.holed, pin: t.pin, greens: this.course.greens, from: t.lie, junk: this.course.junk };
       const id = this.active, was = drillProgress(this.hooks.drills(), id).done, call = judgeDrill(id, ds); this.note = call.note;
       this.hooks.judged(id, call);
       if (!was && drillProgress(this.hooks.drills(), id).done) {   // (just done: on to the next drill not done here, from the next ball; none left: he keeps this one)
@@ -196,6 +204,8 @@ export class PracticeDriver implements RoundDriver {
 }
 
 /** the range's flags as the view stands them: each target green's centre and its distance in words, in the view's frame */
-export function practiceFlags(c: PracticeCourse, place: PracticePlace, centre: Pt): { at: ViewPt; label: string }[] {
-  return place === 'range' ? c.greens.map(g => ({ at: toView(g, centre), label: `${g.distM} m` })) : [];
+export function practiceFlags(c: PracticeCourse, place: PracticePlace, centre: Pt): { at: ViewPt; label: string; only?: true }[] {
+  if (place !== 'range') return [];
+  // (J6b: and each junk pile's name and distance, a label only: the pile itself is the game's picture)
+  return [...c.greens.map(g => ({ at: toView(g, centre), label: `${g.distM} m` })), ...c.junk.map(j => ({ at: toView(j, centre), label: `${j.name} · ${j.distM} m`, only: true as const }))];
 }
