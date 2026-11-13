@@ -3623,8 +3623,14 @@ export class Game {
     const out: { id: string; x: number; y: number; scale: number }[] = [];
     if (!this.boot.trees) return out;
     const N = MAP / FOREST_CELL, cl = (v: number) => clamp(Math.floor(v / FOREST_CELL), 0, N - 1), inB = (x: number, y: number) => x >= b[0] && x <= b[2] && y >= b[1] && y <= b[3];
-    const fromSprite = (p: Prop) => { const it = LIBRARY[p.item]!, bx = it.boxes[0]; const x = p.x + (bx ? bx.dx * p.scale / 2 : 0), y = p.y + (bx ? bx.dy * p.scale / 2 : 0); if (inB(x, y)) out.push({ id: it.id, x, y, scale: p.scale }); };
-    const fromTree = (t: ForestTree) => { if (inB(t.x, t.y) && !this.inPortal(t.x, t.y)) out.push({ id: t.id, x: t.x, y: t.y, scale: t.scale }); };
+    // (T454: each as the game draws it, newart.ts lookOf: in a desert game a woods tree is a palm or a rock, a bush a desert plant)
+    const drawn = (item: number, ax: number, ay: number, flip: boolean, scale: number, x: number, y: number) => { const l = lookOf({ item, x: ax, y: ay, flip, scale }); out.push({ id: LIBRARY[l.item]!.id, x, y, scale: l.scale }); };
+    const fromSprite = (p: Prop) => { const it = LIBRARY[p.item]!, bx = it.boxes[0]; const x = p.x + (bx ? bx.dx * p.scale / 2 : 0), y = p.y + (bx ? bx.dy * p.scale / 2 : 0); if (inB(x, y)) drawn(p.item, p.x, p.y, p.flip, p.scale, x, y); };
+    const fromTree = (t: ForestTree) => {
+      if (!inB(t.x, t.y) || this.inPortal(t.x, t.y)) return;
+      let item = this.forestItem.get(t.id); if (item === undefined) { item = LIBRARY.findIndex(i => i.id === t.id); this.forestItem.set(t.id, item); } if (item < 0) return;
+      const b = LIBRARY[item]!.boxes[0]; drawn(item, t.x - (b ? b.dx * t.scale / 2 : 0), t.y - (b ? b.dy * t.scale / 2 : 0), false, t.scale, t.x, t.y);   // (its anchor as treeSprites sets it)
+    };
     for (let cj = cl(b[1]); cj <= cl(b[3]); cj++) for (let ci = cl(b[0]); ci <= cl(b[2]); ci++) {
       const key = cj * N + ci, f = this.forest.get(key), tt = this.townTrees.get(key);
       if (f) f.forEach(fromSprite); if (tt) tt.forEach(fromSprite);
@@ -10152,7 +10158,8 @@ export class Game {
       ? [Math.min(...pts.map(p => p.x)), Math.min(...pts.map(p => p.y)), Math.max(...pts.map(p => p.x)), Math.max(...pts.map(p => p.y))] : undefined;
     const tb3 = tileBox(inp);   // (T451: the course's own box, which its trees are gathered round)
     const features = exportFeatures3p(gatherFeatures3p({ course: id, segs: this.net.segs, bizDefs: this.bizDefs, structures: g.structures ?? [], lots: this.estateRt?.lots ?? [],
-      props: this.props, library: LIBRARY, ...(box ? { box } : {}), ...(tb3 ? { courseBox: tb3, trees: this.trees3p([tb3[0] - MARGIN_T, tb3[1] - MARGIN_T, tb3[2] + MARGIN_T, tb3[3] + MARGIN_T]) } : {}),
+      props: [...this.props].map(p => { const l = lookOf(p); return { item: l.item, x: p.x, y: p.y, scale: l.scale, ...(p.auto ? { auto: p.auto } : {}) }; }), library: LIBRARY,   // (T454: each prop as the game draws it)
+      ...(box ? { box } : {}), ...(tb3 ? { courseBox: tb3, trees: this.trees3p([tb3[0] - MARGIN_T, tb3[1] - MARGIN_T, tb3[2] + MARGIN_T, tb3[3] + MARGIN_T]) } : {}),
       pages: ATLAS_PAGES }), { x: f.cx, y: f.cy });   // (T451: every tree on the course and 150 m round it, with the game's pictures of them)
     // T447: the biome and course type from what the course looks like (look3p.ts biomeFor3p, courseTypeFor3p): the Desert theme, the month on the home map, a
     // shipped real course's latitude, the sand, water and trees of the course file; the club's members, tour tier and condition, and a tournament day

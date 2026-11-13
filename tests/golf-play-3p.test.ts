@@ -167,3 +167,39 @@ test('T451: when the trees of the course alone are more than MAX_TREES they are 
   assert.ok(T.t.length / 5 <= MAX_TREES && T.t.length / 5 > MAX_TREES - 50);
   assert.ok(Math.min(...xs) < 1 && Math.max(...xs) > 198, `the trees still reach both sides (${Math.min(...xs)} .. ${Math.max(...xs)} m)`);
 });
+
+// ---- T454: every plant the player places goes to the view, whatever its library kind (a desert hole's palms, cacti and shrubs had none)
+
+test('T454: a placed palm, cactus, desert shrub, bush, plant and small course tree each go to the view, where they stand; a rock does not', () => {
+  const lib = [
+    { kind: 'palm', id: 'newprop:desert-date-palm-pair', name: 'date palms', w: 300, h: 500, ax: 150, ay: 490, tex: [0, 0, 0, 0.1, 0.1], quad: [20, 40, 280, 490] },
+    { kind: 'shrub', id: 'newprop:desert-saguaro', name: 'saguaro', w: 120, h: 300, ax: 60, ay: 295, tex: [0, 0.1, 0, 0.2, 0.1], quad: [10, 20, 110, 295] },
+    { kind: 'shrub', id: 'newprop:desert-yellow-desert-broom', name: 'broom', w: 160, h: 90, ax: 80, ay: 86, tex: [0, 0.2, 0, 0.3, 0.1], quad: [4, 10, 156, 86] },
+    { kind: 'bush', id: 'world:bush_0', name: 'bush', w: 140, h: 100, ax: 70, ay: 96 },
+    { kind: 'plant', id: 'town:fern', name: 'fern', w: 80, h: 60, ax: 40, ay: 58 },
+    { kind: 'decor', id: 'newprop:small-tree', name: 'small tree', w: 200, h: 260, ax: 100, ay: 255 },
+    { kind: 'palm', id: 'newprop:desert-joshua-tree', name: 'joshua tree', w: 260, h: 380, ax: 130, ay: 375 },
+    { kind: 'rock', id: 'newprop:desert-sandstone-boulder', name: 'boulder', w: 200, h: 120, ax: 100, ay: 115 },
+    { kind: 'decor', id: 'town:bench', name: 'bench', w: 100, h: 60, ax: 50, ay: 55 },
+  ];
+  const props = lib.map((_, i) => ({ item: i, x: 1000 + i * 3, y: 1000 + i, scale: 1 }));
+  const g = gatherFeatures3p({ course: 'desert', segs: [], bizDefs: [], structures: [], lots: [], props, library: lib, courseBox: [990, 990, 1040, 1020], pages: [['p0.webp']] });
+  assert.deepEqual(g.trees.map(t => t.sp), lib.slice(0, 7).map(L => L.id), 'every plant, in place order; the rock and the bench are not plants');
+  for (let i = 0; i < 7; i++) assert.deepEqual(g.trees[i]!.at, { x: 1000 + i * 3, y: 1000 + i }, `${lib[i]!.id} where it stands`);
+  assert.equal(g.trees[1]!.size, (295 - 20) / 128 * TILE_M, 'the saguaro as tall as its picture');
+  const T = exportFeatures3p(g, centre).trees!;
+  assert.equal(T.t.length / 5, 7);
+  assert.deepEqual(T.form, [3, 5, 6, 6, 6, 1, 7], 'palm, cactus, bush (broom, bush, fern), the small tree a broadleaf, the joshua tree an acacia');
+  assert.equal(T.pic[0]!.url, 'p0.webp', 'the palm goes with its picture');
+});
+
+test('T454: the forms of the desert\'s and the garden\'s plants by their ids', () => {
+  assert.equal(treeLook('newprop:desert-barrel-cactus-cluster').form, 5);
+  assert.equal(treeLook('newprop:desert-ocotillo').form, 5);
+  assert.equal(treeLook('newprop:desert-flowering-prickly-pear').form, 5);
+  assert.equal(treeLook('kit:palm-canary-10m').form, 3);
+  assert.equal(treeLook('newprop:desert-twin-acacia-with-boulders').form, 7);
+  assert.equal(treeLook('kit:shrub-blue-juniper').form, 6, 'a juniper shrub is a bush, not a conifer');
+  assert.equal(treeLook('newprop:desert-tall-cattails').form, 6);
+  assert.equal(treeLook('capital:tree-pine-open').form, 0, 'the trees as before');
+});

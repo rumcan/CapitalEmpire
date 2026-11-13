@@ -28,8 +28,14 @@ export interface PathFeature { id: string; kind: 'path'; name: string; surface: 
 export interface BuildingFeature { id: string; kind: 'building'; use: BuildingUse; name: string; at: ViewPt; w: number; d: number; h: number; rot: number;
   roof: Roof; wall: string; roofColour: string; floors: number }
 export type Feature = PathFeature | BuildingFeature;
-/** T451: the build a tree is sculpted as in the view: 0 a conifer, 1 a broadleaf, 2 an airy broadleaf (birch, aspen), 3 a palm, 4 a dead snag */
-export type TreeForm = 0 | 1 | 2 | 3 | 4;
+/** T451: the build a tree is sculpted as in the view: 0 a conifer, 1 a broadleaf, 2 an airy broadleaf (birch, aspen), 3 a palm, 4 a dead snag;
+ *  T454: 5 a cactus, 6 a bush (a shrub, a desert plant, a clump of grass or reeds), 7 a flat-topped acacia or joshua tree */
+export type TreeForm = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7;
+/** T454: the library kinds that are plants the view stands where they stand (a tree, a palm, a cactus or desert shrub, a bush, a plant), and the
+ *  course props that are trees by their id (their kind is decor) */
+export const PLANT_KINDS: ReadonlySet<string> = new Set(['tree', 'palm', 'shrub', 'bush', 'plant']);
+export const PLANT_IDS: ReadonlySet<string> = new Set(['newprop:small-tree', 'newprop:flowering-tree']);
+const isPlant = (L: { kind: string; id?: string }): boolean => PLANT_KINDS.has(L.kind) || (!!L.id && PLANT_IDS.has(L.id));
 /** T451: the game's picture of a species: the atlas page's address (mip 0), the picture's box on it (uv, 0..1), the display rectangle w x h (px at
  *  128 a tile) with the ground point ax, ay in it, and the trimmed picture's box inside that rectangle (quad: x0, y0, x1, y1 display px) */
 export interface TreePic { url: string; uv: [number, number, number, number]; w: number; h: number; ax: number; ay: number; quad: [number, number, number, number] }
@@ -64,6 +70,9 @@ export function treeLook(sp: string, conifers?: ReadonlySet<string>): { form: Tr
   const s = sp.toLowerCase();
   if (/dead|snag/.test(s)) return { form: 4, hue: 0.3 };
   if (/palm/.test(s)) return { form: 3, hue: 0.3 };
+  if (/cact|saguaro|ocotillo|prickly|cholla|agave|yucca/.test(s)) return { form: 5, hue: 0.3 };   // (T454: the desert's)
+  if (/acacia|joshua/.test(s)) return { form: 7, hue: 0.4 };
+  if (/shrub|bush|broom|sage|grass|reed|cattail|hedge|fern|hydrangea|plant/.test(s)) return { form: 6, hue: /yellow|golden|russet/.test(s) ? 0.7 : /red|burning/.test(s) ? 0.92 : 0.3 };
   if (conifers?.has(sp) || /pine|spruce|fir\b|fir-|cedar|conifer|cypress|larch|juniper|hemlock|yew/.test(s)) return { form: 0, hue: /blue/.test(s) ? 0.02 : 0.1 };
   const airy = /birch|aspen|willow/.test(s) ? 2 : 1;
   const hue = /scarlet|crimson|red|rose|cherry|blossom/.test(s) ? 0.92 : /ember|amber|orange|gold|yellow|autumn/.test(s) ? 0.8
@@ -251,13 +260,13 @@ export function gatherFeatures3p(src: GameFeatureSource): FeaturesInput {
     buildings.push({ key: `lot:${l.id}`, use: 'house', name: l.st === 3 ? 'House' : 'House (being built)', at, w: l.w * ul * TILE_M * 0.6, d: l.d * nl * TILE_M * 0.5,
       rot: Math.atan2(l.u.y, l.u.x) * 180 / Math.PI, wall: HOUSE_WALLS[Math.abs(l.seed) % HOUSE_WALLS.length], ...(l.st === 2 ? { h: 3 } : {}) });
   }
-  // T451: the trees: the props whose library entry is a tree (planted by the player or the network's own, auto) and the trees the game plants by
+  // T451: the trees: the props whose library entry is a plant (T454: a tree, palm, cactus, shrub or bush; planted by the player or the network's own, auto) and the trees the game plants by
   // itself (src.trees), inside the course's box grown by MARGIN_T. A tree's height is its picture's, from the top of the trimmed picture down to its
   // ground point, and its crown the trimmed picture's width (display px at 128 a tile, x its scale)
   const CB = src.courseBox ?? B, tb: [number, number, number, number] | undefined = CB ? [CB[0] - MARGIN_T, CB[1] - MARGIN_T, CB[2] + MARGIN_T, CB[3] + MARGIN_T] : undefined;
   const inBox = (x: number, y: number): boolean => !tb || (x >= tb[0] && x <= tb[2] && y >= tb[1] && y <= tb[3]);
   const byId = new Map<string, LibLike>(), pics: Record<string, TreePic> = {};
-  for (const L of src.library) if (L.id && L.kind === 'tree' && !byId.has(L.id)) byId.set(L.id, L);
+  for (const L of src.library) if (L.id && isPlant(L) && !byId.has(L.id)) byId.set(L.id, L);
   const add = (L: LibLike, x: number, y: number, scale: number): void => {
     if (!inBox(x, y)) return;
     const q = L.quad, m = TILE_M / 128 * scale, h = q && L.ay !== undefined ? (L.ay - q[1]!) * m : L.h * m, w = q ? (q[2]! - q[0]!) * m : (L.w ?? L.h * 0.7) * m;
@@ -267,7 +276,7 @@ export function gatherFeatures3p(src: GameFeatureSource): FeaturesInput {
     if (page && !pics[sp] && q && L.w !== undefined && L.ax !== undefined && L.ay !== undefined)
       pics[sp] = { url: page, uv: [L.tex![1]!, L.tex![2]!, L.tex![3]!, L.tex![4]!], w: L.w, h: L.h, ax: L.ax, ay: L.ay, quad: [q[0]!, q[1]!, q[2]!, q[3]!] };
   };
-  for (const p of src.props) { const L = src.library[p.item]; if (L && L.kind === 'tree') add(L, p.x, p.y, p.scale); }
+  for (const p of src.props) { const L = src.library[p.item]; if (L && isPlant(L)) add(L, p.x, p.y, p.scale); }   // (T454: every plant, not only kind tree: the desert's palms, cacti and shrubs are kinds of their own)
   for (const t of src.trees ?? []) { const L = byId.get(t.id); if (L) add(L, t.x, t.y, t.scale); }
   return { course: src.course, paths, buildings, trees, ...(tb ? { treeBox: tb } : {}), pics };
 }
