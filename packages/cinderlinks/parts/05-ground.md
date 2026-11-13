@@ -57,7 +57,7 @@ function hostTree(s, gx, gy) {
   const H = Math.max(40, Math.round(s.h * PPM)), rx = Math.max(12, Math.round(s.cw * 0.5 * PPM)), f = s.f;
   const c = [f === 0 ? 0.02 : f === 2 || f === 4 ? 0.85 : 0.45, clamp((s.h - 4) / 16, 0, 1), s.hue, f === 4 ? 0 : 0.6];
   return { k: K_TREE, u: Math.round(s.x * PPM), v: Math.round(s.y * PPV), lift: Math.round(FO.h * ZP), seed: (hash2(gx * 7, gy * 3, SEED + 331) * 2147483647) | 0, c, H, rx,
-    hf: f, sp: s.p, spr: null, flat: false, d: 0, sx: 0, libS: 1, born: 0, x: s.x, y: s.y, gx, gy, spk: 0, spk2: 0 };
+    hf: f, sp: s.p, still: s.st ? 1 : 0, spr: null, flat: false, d: 0, sx: 0, libS: 1, born: 0, x: s.x, y: s.y, gx, gy, spk: 0, spk2: 0 };   // (J6b: still, a thing drawn as its picture only)
 }
 function isCon(o) { return o.hf !== undefined ? o.hf === 0 : o.c[0] < CONT; }   // a conifer: the host's word for its own trees, the land's share for the rest
 // The mower's plaid (after the owner's photograph of a criss-cross fairway): strong stripes along the hole, light and dark by turns, crossed by a fainter
@@ -420,10 +420,10 @@ function shadeEllipse(uc, vc, ru, rv, dapple, seed) {
   }
 }
 function castShadow(o) {
-  if (o.k === K_TREE) {
+  if (o.k === K_TREE && !o.still) {
     if (isCon(o)) { for (let k = 0; k <= 9; k++) { const s = k / 9, z = o.H * s, r = o.rx * (1 - s * 0.86) + 3; shadeEllipse(o.u + SHU * z, o.v + SHV * z, r * 0.9, r * 0.5 + 1, k > 0, o.seed); } }
     else { const zc = o.H * 0.66; for (let k = 1; k < 10; k++) shadeEllipse(o.u + SHU * zc * k / 10, o.v + SHV * zc * k / 10, 4.5, 2.6, false, o.seed); shadeEllipse(o.u + SHU * zc, o.v + SHV * zc, o.rx * 1.02, o.rx * 0.52, true, o.seed); }
-  } else if (o.k === K_BUSH || o.k === K_ROCK) shadeEllipse(o.u + SHU * o.H * 0.4, o.v + SHV * o.H * 0.4 + 1, o.rx * 0.95, o.rx * 0.42 + 1, false, o.seed);
+  } else if (o.k === K_BUSH || o.k === K_ROCK || o.still) shadeEllipse(o.u + SHU * o.H * 0.4, o.v + SHV * o.H * 0.4 + 1, o.rx * 0.95, o.rx * 0.42 + 1, false, o.seed);
   else shadeEllipse(o.u + SHU * o.H * 0.3, o.v + SHV * o.H * 0.3 + 1, o.H * 0.3 + 3, 2.5 + o.H * 0.06, true, o.seed);
 }
 

@@ -6,12 +6,14 @@ R: Nothing grows on a path or inside a building: no standing grass, no bush, flo
 R: A building is a box with a roof (gable, hip or flat) with courses of tiles, a ridge, eaves and a chimney; windows by floor in frames with sills and glazing bars, a door, a plinth and a band between floors, drawn as flat faces lit by the one sun, in front of and behind things by its true depth; it throws its shadow where the sun reaches it.
 R: A concrete path is laid in slabs (a joint across it every 1.7 m, each slab its own shade); any path may carry a fallen leaf here and there; none has flecks or stains.
 R: A floodlight tower (a `light` feature: its place, its height, its reach; #1200) is drawn as a mast on a plinth with a lamp head of lamp panels. By day and golden hour the panels are plain glass; at dusk and at night they shine, with a soft bloom round each. At dusk and night every tower lights the ground, the trees, the buildings and the golfers within its reach: a pool of warm white light, brightest at the mast and fading smoothly to nothing at its reach, many towers adding up. What no tower reaches stays as dark as the night.
+R: A pad (a path feature with `ring`: J6b, the practice range's concrete slabs, dirt yards and car park) is laid whole: everything inside its ring takes its surface, its edge as a path's edge.
 R: A course without the file plays as before.
 File: game.js
 Check: function lampLight(
 Check: function drawPaths(
 Check: function drawBuildings(
 Check: function setFeatures(
+Check: function padSd(
 
 ````js file=game.js
 
@@ -28,7 +30,7 @@ function setFeatures(F) {   // F: the edits file's object (or nothing): made rea
   for (const f of F.features) {
     if (!f) continue;
     if (f.kind === 'path' && Array.isArray(f.pts) && f.pts.length > 1) {
-      const p = { hw: Math.max(1.5, (+f.width || 2.4) * S * 1.3) / 2, col: SURF[f.surface] || SURF.gravel, slab: f.surface === 'concrete', pts: [] };
+      const p = { hw: f.ring ? 0 : Math.max(1.5, (+f.width || 2.4) * S * 1.3) / 2, col: SURF[f.surface] || SURF.gravel, slab: f.surface === 'concrete', pts: [], ring: !!f.ring };   // (J6b: ring, a pad laid whole)
       for (const q of f.pts) { const x = +q[0] * S, y = +q[1] * S; if (!(x === x && y === y)) continue; p.pts.push(x, y); if (x < x0) x0 = x; if (x > x1) x1 = x; if (y < y0) y0 = y; if (y > y1) y1 = y; }
       if (p.pts.length >= 4) paths.push(p);
     } else if (f.kind === 'building' && Array.isArray(f.at)) {
@@ -48,6 +50,7 @@ function setFeatures(F) {   // F: the edits file's object (or nothing): made rea
     x0 -= 6; y0 -= 6; x1 += 6; y1 += 6; while (((x1 - x0) / res) * ((y1 - y0) / res) > 3e6) res *= 2;
     gw = Math.ceil((x1 - x0) / res) + 1; gh = Math.ceil((y1 - y0) / res) + 1; sd = new Float32Array(gw * gh).fill(9); kind = new Uint8Array(gw * gh); seg = new Uint16Array(gw * gh);
     paths.forEach((p, pi) => {
+      if (p.ring) { padSd(p, pi, x0, y0, gw, gh, res, sd, kind, seg, SG); return; }   // (J6b: a pad: inside it below 0)
       let acc = 0;
       for (let s = 0; s + 3 < p.pts.length; s += 2) {
         const ax = p.pts[s], ay = p.pts[s + 1], bx = p.pts[s + 2], by = p.pts[s + 3], ex = bx - ax, ey = by - ay, L2 = ex * ex + ey * ey || 1e-6, m = p.hw + 3.5, si = Math.min(65535, SG.length / 7);
@@ -63,6 +66,23 @@ function setFeatures(F) {   // F: the edits file's object (or nothing): made rea
   let bmap = null;                                                  // the buildings by 16 m square, to ask quickly what stands at a place
   if (builds.length) { bmap = new Map(); for (const B of builds) { const r = Math.hypot(B.w, B.d) / 2 + 1; for (let j = Math.floor((B.y - r) / 16); j <= Math.floor((B.y + r) / 16); j++) for (let i = Math.floor((B.x - r) / 16); i <= Math.floor((B.x + r) / 16); i++) { const k = (i + 4096) * 8192 + j + 4096; let L = bmap.get(k); if (!L) bmap.set(k, L = []); L.push(B); } } }
   feats = { paths, builds, lamps, sd, kind, seg, SG: Float64Array.from(SG), gx0: x0, gy0: y0, res, gw, gh, bmap };
+}
+function padSd(p, pi, x0, y0, gw, gh, res, sd, kind, seg, SG) {   // J6b: a pad's distances: inside the ring below 0 (how far in), outside the distance to its edge
+  const P = p.pts, n = P.length >> 1, si = Math.min(65535, SG.length / 7); if (n < 3) return;
+  let bx0 = 1e9, by0 = 1e9, bx1 = -1e9, by1 = -1e9, acc = 0;
+  for (let a = 0; a < n; a++) { const ax = P[2 * a], ay = P[2 * a + 1], b = (a + 1) % n, ex = P[2 * b] - ax, ey = P[2 * b + 1] - ay, L2 = ex * ex + ey * ey || 1e-6; SG.push(ax, ay, ex, ey, L2, acc, Math.sqrt(L2)); acc += Math.sqrt(L2);
+    if (ax < bx0) bx0 = ax; if (ax > bx1) bx1 = ax; if (ay < by0) by0 = ay; if (ay > by1) by1 = ay; }
+  const m = 3.5, i0 = Math.max(0, Math.floor((bx0 - m - x0) / res)), i1 = Math.min(gw - 1, Math.ceil((bx1 + m - x0) / res)), j0 = Math.max(0, Math.floor((by0 - m - y0) / res)), j1 = Math.min(gh - 1, Math.ceil((by1 + m - y0) / res));
+  for (let j = j0; j <= j1; j++) for (let i = i0; i <= i1; i++) {
+    const x = x0 + i * res, y = y0 + j * res; let inside = false, dm = 1e9;
+    for (let a = 0, b = n - 1; a < n; b = a++) {
+      const ax = P[2 * a], ay = P[2 * a + 1], bx = P[2 * b], by = P[2 * b + 1];
+      if ((ay > y) !== (by > y) && x < (bx - ax) * (y - ay) / (by - ay) + ax) inside = !inside;
+      const ex = bx - ax, ey = by - ay, L2 = ex * ex + ey * ey || 1e-6; let t = ((x - ax) * ex + (y - ay) * ey) / L2; t = t < 0 ? 0 : t > 1 ? 1 : t;
+      const d = Math.hypot(x - ax - ex * t, y - ay - ey * t); if (d < dm) dm = d;
+    }
+    const d = inside ? -dm : dm, k = j * gw + i; if (d < sd[k]) { sd[k] = d; kind[k] = pi & 255; seg[k] = si; }
+  }
 }
 function pollFeatures() {   // the edits file read again; a change in it shows within two seconds
   if (!course || typeof fetch !== 'function' || hostMode()) return;   // (in host mode the host page's features are the course's: no file)

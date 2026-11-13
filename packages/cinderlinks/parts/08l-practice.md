@@ -63,7 +63,7 @@ function pracShow(m) {   // the panel, the flags, and a drill done said
   }
 }
 function pracFlags(dlist, dist) {   // the range's flags join the draw list (the pin's own is drawn already)
-  if (!PRAC || !PRAC.F) return;
+  if (!PRAC || !PRAC.F || PRAC.pics) return;   // (J6b: the range's own flags stand as the game's pictures: only their labels here)
   for (const f of PRAC.F) { if (Math.hypot(f.x - hole.pin.x, f.y - hole.pin.y) < 1) continue; dlist.push({ k: K_PFLAG, d: dist(f.x, f.y) + 0.02, x: f.x, y: f.y }); }
 }
 function pracTick() {   // each step: the labels over the flags follow the camera

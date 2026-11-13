@@ -91,7 +91,7 @@ function hostTrees(T, S) {   // T451: a host's trees (features3p.ts TreesPack) b
   ord.sort((a, b) => t[b * 5 + 2] - t[a * 5 + 2]);
   for (const i of ord) {
     const x = t[i * 5] * S, y = t[i * 5 + 1] * S, p = t[i * 5 + 4] | 0; if (!(x === x && y === y)) continue;
-    const s = { x, y, h: Math.max(1, t[i * 5 + 2] * Math.max(S, 0.8)), cw: Math.max(0.6, t[i * 5 + 3] * Math.max(S, 0.8)), f: T.form && T.form[p] !== undefined ? T.form[p] : 1, hue: T.hue && T.hue[p] !== undefined ? T.hue[p] : 0.3, p };
+    const s = { x, y, h: Math.max(1, t[i * 5 + 2] * Math.max(S, 0.8)), cw: Math.max(0.6, t[i * 5 + 3] * Math.max(S, 0.8)), f: T.form && T.form[p] !== undefined ? T.form[p] : 1, hue: T.hue && T.hue[p] !== undefined ? T.hue[p] : 0.3, p, st: T.st && T.st[p] ? 1 : 0 };   // (J6b: st, a still thing: a range's shop, sign, fence, floodlight)
     const gx = Math.floor(x / TGC), gy = Math.floor(y / TGC);
     for (let k = 0; k < 9; k++) { const kx = gx + [0, 1, -1, 0, 0, 1, -1, 1, -1][k], ky = gy + [0, 0, 0, 1, -1, 1, -1, -1, 1][k], key = (kx + 32768) * 65536 + (ky + 32768); if (!at.has(key)) { at.set(key, s); break; } }
   }

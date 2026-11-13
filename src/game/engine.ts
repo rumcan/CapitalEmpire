@@ -219,7 +219,9 @@ import { playable3p } from './golf/play/playable3p';
 import { export3pInputOf, exportCourse3p, frame3p, groundOf3p, tileBox } from './golf/play/export3p';
 import { lieGridJob, type LieGrid } from './golf/play/lies3p';
 import { fillPack } from './golf/osm/terrarium'; // T438: the share file's heights deflated after the course has gone
-import { MARGIN_T, exportFeatures3p, gatherFeatures3p } from './golf/play/features3p';
+import { MARGIN_T, exportFeatures3p, gatherFeatures3p, type PadIn, type PathSurface } from './golf/play/features3p';
+/** J6b: the range scene's ground patches laid as pads in the practice view, by their surface (the green ones are the course file's own) */
+const PAD_SURF: Partial<Record<string, PathSurface>> = { concrete: 'concrete', asphaltDark: 'concrete', gravel: 'gravel', dirt: 'dirt', teeDirt: 'dirt', yard: 'dirt' };
 import { courseEntry3p } from './golf/play/entry3p';
 import { seedOf } from './golf/play/view3p';
 import type { Actor, CourseMsg, CourseTime3p, Dress, HostMsg, PracticeMsg, Time3p, ViewInput } from './golf/play/protocol3p';
@@ -10367,17 +10369,14 @@ export class Game {
     const box: [number, number, number, number] | undefined = pts.length
       ? [Math.min(...pts.map(p => p.x)), Math.min(...pts.map(p => p.y)), Math.max(...pts.map(p => p.x)), Math.max(...pts.map(p => p.y))] : undefined;
     const tb3 = tileBox(inp);   // (T451: the course's own box, which its trees are gathered round)
-    const features = exportFeatures3p(gatherFeatures3p({ course: id, segs: this.net.segs, bizDefs: this.bizDefs, structures: g.structures ?? [], lots: this.estateRt?.lots ?? [],
+    const look = pr ? this.practiceRange3p() : null;   // (J6b: the range as built: its props as pictures, its ground pads)
+    const fin = gatherFeatures3p({ course: id, segs: this.net.segs, bizDefs: this.bizDefs, structures: g.structures ?? [], lots: this.estateRt?.lots ?? [],
       props: [...this.props].map(p => { const l = lookOf(p); return { item: l.item, x: p.x, y: p.y, scale: l.scale, ...(p.auto ? { auto: p.auto } : {}) }; }), library: LIBRARY,   // (T454: each prop as the game draws it)
       ...(box ? { box } : {}), ...(tb3 ? { courseBox: tb3, trees: this.trees3p([tb3[0] - MARGIN_T, tb3[1] - MARGIN_T, tb3[2] + MARGIN_T, tb3[3] + MARGIN_T]) } : {}),
-      pages: ATLAS_PAGES }), { x: f.cx, y: f.cy });   // (T451: every tree on the course and 150 m round it, with the game's pictures of them)
-    if (pr) {   // (J6: the range's business site is one block over its whole front (shop, mats and car park); in practice only its shop stands, so the mats look down the range)
-      const sc = this.range.scene, fs = features.features, i = fs.findIndex(x => x.kind === 'building' && x.use === 'range'), b = fs[i];
-      if (sc && b && b.kind === 'building') {
-        const [x0, y0, x1, y1] = sc.box, hut = rangeLayout([x0, y0, x1 - x0, y1 - y0], sc.facing).hut.rect, c = { x: hut[0] + hut[2] / 2 - f.cx, y: hut[1] + hut[3] / 2 - f.cy };
-        fs[i] = { ...b, name: 'Pro shop', at: [c.x * TILE_M, c.y * TILE_M], w: hut[2] * TILE_M, d: hut[3] * TILE_M, h: 5, rot: 0 };
-      }
-    }
+      pages: ATLAS_PAGES, ...(look ? { things: look.box } : {}) });   // (T451: every tree on the course and 150 m round it, with the game's pictures of them)
+    // J6b: in practice the range's business site (one block over its whole front) gives way to the range as the game draws it: its shop, sign, fences,
+    // floodlights, flags and the rest as the game's pictures, its slabs, yards and car park as ground pads
+    const features = exportFeatures3p(look ? { ...fin, buildings: fin.buildings.filter(b => b.use !== 'range'), pads: look.pads } : fin, { x: f.cx, y: f.cy });
     // T447: the biome and course type from what the course looks like (look3p.ts biomeFor3p, courseTypeFor3p): the Desert theme, the month on the home map, a
     // shipped real course's latitude, the sand, water and trees of the course file; the club's members, tour tier and condition, and a tournament day
     // (the trees on the course itself, T451's own and planted props, in the course's tile box: the per-hectare count reads the course, not its 150 m rim)
@@ -10407,6 +10406,24 @@ export class Game {
     return practiceCourse({ outfield, teeBox: sc.teeBox, bays: sc.bays.filter(b => !b.lift).map(b => b.stand), greens: sc.targets.length ? sc.targets : sc.aims, area,
       areas: area ? this.courseAreaList() : [], chip: cf && cf.state === 'open' && cf.cups[0] ? { cup: cf.cups[0], stands: cf.stands } : null,
       heightAt: (x, y) => this.groundHeightAt(x, y), name: `${this.titleName()?.name ?? 'Your'} practice` });
+  }
+  /** J6b: the range as built for the practice view: the tile box whose props go as pictures (the plot, its car park and the practice area, grown 4 tiles) and the
+   *  ground the scene lays that the course file does not hold (rangebiz.ts scene patches: the concrete slabs, the shop's and the home's dirt yards, the dirt tee
+   *  box; the car park by its ground). Null without a range */
+  private practiceRange3p(): { box: [number, number, number, number]; pads: PadIn[] } | null {
+    const sc = this.range.scene; if (!sc) return null;
+    let [x0, y0, x1, y1] = sc.box;
+    const grow = (x: number, y: number) => { x0 = Math.min(x0, x); y0 = Math.min(y0, y); x1 = Math.max(x1, x); y1 = Math.max(y1, y); };
+    const pads: PadIn[] = [], ring = (pts: readonly number[]) => { const out: { x: number; y: number }[] = []; for (let i = 0; i + 1 < pts.length; i += 2) out.push({ x: pts[i]!, y: pts[i + 1]! }); return out; };
+    sc.patches.forEach((p, i) => { const s = PAD_SURF[p.surf]; if (s) pads.push({ key: `patch${String(i).padStart(3, '0')}`, pts: ring(p.pts), surface: s, name: p.surf }); });
+    const lot = this.rangeLotDef();
+    if (lot) {   // (its w side at a degrees about its corner, as the car park tool lays it)
+      const a = (lot.a ?? 0) * Math.PI / 180, c = Math.cos(a), s = Math.sin(a), P = (u: number, v: number) => ({ x: lot.x + u * c - v * s, y: lot.y + u * s + v * c });
+      const pts = [P(0, 0), P(lot.w, 0), P(lot.w, lot.h), P(0, lot.h)]; for (const q of pts) grow(q.x, q.y);
+      pads.push({ key: 'lot', pts, surface: lot.ground === 'gravel' ? 'gravel' : lot.ground === 'dirt' ? 'dirt' : 'concrete', name: 'Car park' });
+    }
+    if (sc.practice.pts.length) { grow(sc.practice.box[0], sc.practice.box[1]); grow(sc.practice.box[2], sc.practice.box[3]); }
+    return { box: [x0 - 4, y0 - 4, x1 + 4, y1 + 4], pads };
   }
   /** why a practice place cannot open now (null: it can): the range not placed, a round under way, the short game area with no open chipping green */
   practice3pWhy(place: PracticePlace): string | null {
@@ -10451,7 +10468,7 @@ export class Game {
   private practiceMsg3p(): PracticeMsg {
     const pr = this.prac3p!, d = pr.drv, p = this.playerNow(), f = this.view3pFrame, paid = pr.paid; pr.paid = null;
     return { v: 1, t: 'practice', place: pr.place, drills: DRILL_IDS.map(id => { const g = drillProgress(p?.drills, id), D = DRILLS[id]; return { id, name: D.name, goal: D.goal, got: g.got, need: g.need, done: g.done, reward: D.reward.text, here: !!d && d.canPlay(id) }; }),
-      active: d?.active ?? null, note: d?.note ?? null, paid, flags: f ? practiceFlags(pr.course, pr.place, { x: f.cx, y: f.cy }) : [], hcp: p ? hcpText(handicapOf(p.skills)) : '', balls: d?.balls ?? 0 };
+      active: d?.active ?? null, note: d?.note ?? null, paid, flags: f ? practiceFlags(pr.course, pr.place, { x: f.cx, y: f.cy }) : [], hcp: p ? hcpText(handicapOf(p.skills)) : '', balls: d?.balls ?? 0, ...(pr.place === 'range' ? { pics: true as const } : {}) };   // (J6b: the flags are the range's own pictures)
   }
   /** the view's drill picked in the practice panel: the panel again and the next ball from the drill's spot (nothing when no practice is open or it is not here) */
   pick3p(id: string): HostMsg[] {
