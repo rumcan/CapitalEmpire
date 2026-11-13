@@ -1270,7 +1270,7 @@ function render() {
   frame++; madeThisFrame = 0; smallMade = 0; genUsed = 0; sprM.fill(0);
   if (Math.abs(camX - stX) + Math.abs(camY - stY) > 0.02 || Math.abs(camYaw - stYaw) > 0.002) stillF = 0; else stillF++; stX = camX; stY = camY; stYaw = camYaw;
   // the camera: behind the golfer (wherever "behind" has been turned to), raised over any ground that would hide him
-  const p = player, gh = groundH(p.x, p.y);
+  const p = player, gh = groundH(p.x, p.y), AD = !cart.on && addressAt() ? addressSpot() || [p.x, p.y] : null, gpx = AD ? AD[0] : p.x, gpy = AD ? AD[1] : p.y, gha = AD ? groundH(gpx, gpy) : gh;   // (J5b: at address he is drawn in the swing's stance)
   aimCam();
   const fz = bcam ? ball.z - 0.9 : gh, up = bcam ? 1.7 : HC * camHk * camD / D0;   // (the ball camera looks at the ball, from a little above it)
   let cz = fz + up;
@@ -1311,7 +1311,7 @@ function render() {
   }
   const H = hole, G = TOD[tmode].glow, HAZ = TOD[tmode].haze;
   const dist = (x, y) => (x - camX) * FX + (y - camY) * FY;
-  const flag = { k: 20, d: dist(H.pin.x, H.pin.y) + 0.02 }, gol = { k: 21, d: bcam ? dist(p.x, p.y) : camD }, bl = { k: 22, d: dist(ball.x, ball.y) };
+  const flag = { k: 20, d: dist(H.pin.x, H.pin.y) + 0.02 }, gol = { k: 21, d: bcam ? dist(p.x, p.y) : AD ? Math.max(1, dist(gpx, gpy)) : camD }, bl = { k: 22, d: dist(ball.x, ball.y) };
   dlist.push(flag, gol, bl); if (!pracLock() && CART_SHOWN) dlist.push({ k: 24, d: cart.on ? camD - 0.02 : dist(cart.x, cart.y) });   // (J6: no cart while practising)
   pracFlags(dlist, dist);   // (J6: the range's flags, parts/08l-practice.md)
   for (const sd of [-1, 1]) { const mx = H.tee.x - H.ry * sd * 2.5 + H.rx * 2.2, my = H.tee.y + H.rx * sd * 2.5 + H.ry * 2.2; dlist.push({ k: 23, d: dist(mx, my), x: mx, y: my }); }
@@ -1352,9 +1352,9 @@ function render() {
 
   const fav = (((p.fa - Math.round(camYaw * 16 / 6.2832)) % 16) + 16) % 16;   // his facing as this camera sees it
   golfK = golferK(DS / Math.max(1, (p.x - camX) * FX + (p.y - camY) * FY));   // the sculpture that suits how big he is seen: the larger one when the camera is close
-  const gs = cart.on ? golferSprite(fav, 'c', 0, golfK) : p.swing >= 0 || charging || (HP && HP.sw) ? golferPic(fav, 's', Math.round(p.al / 0.2), golfK) : p.moving ? golferPic(fav, 'w', Math.floor(p.walk) % 8, golfK) : golferPic(fav, 'i', 0, golfK);   // (T450: golferPic draws his CapitalEmpire golfer when he has one; HP.sw: the host swing's downswing is a swing too)
+  const gs = cart.on ? golferSprite(fav, 'c', 0, golfK) : p.swing >= 0 || charging || (HP && HP.sw) ? golferPic(fav, 's', Math.round(p.al / 0.2), golfK) : p.moving ? golferPic(fav, 'w', Math.floor(p.walk) % 8, golfK) : AD ? golferPic((((addressFa() - Math.round(camYaw * 16 / 6.2832)) % 16) + 16) % 16, 'a', 0, golfK) : golferPic(fav, 'i', 0, golfK);   // (J5b: at the ball, ready: the address pose, side-on)   // (T450: golferPic draws his CapitalEmpire golfer when he has one; HP.sw: the host swing's downswing is a swing too)
   const fs = flagSpr[(frame >> 3) % 6], bz = ball.state === 3 ? groundH(ball.x, ball.y) - 0.2 : ball.z;
-  if (!cart.on) castSprite(gs, p.x, p.y, golfK);
+  if (!cart.on) castSprite(gs, gpx, gpy, golfK);
   if (flag.d > 2 && flag.d < 40) castSprite(fs, H.pin.x, H.pin.y);
   if (ball.state !== 3) { const bh = Math.max(0, bz - groundH(ball.x, ball.y)); for (let a = -2; a <= 2; a++) for (let b = -1; b <= 1; b++) shadePoint(ball.x - 0.809 * bh + a * 0.018 - 0.02, ball.y + 0.735 * bh + b * 0.03); }
   project(H.pin.x, H.pin.y, groundH(H.pin.x, H.pin.y), PJ);
@@ -1363,7 +1363,7 @@ function render() {
     for (let dy = -ry; dy <= ry; dy++) for (let dx = -rx; dx <= rx; dx++) { if (dx * dx / (rx * rx + 1) + dy * dy / (ry * ry + 0.5) > 1) continue; plotZ(PJ.x + dx, PJ.y + dy, PJ.d - 0.2, dy === -ry ? rgb(70, 60, 80) : rgb(22, 14, 26)); }
     addLight(PJ.x, PJ.y, 0.1 * G, 0.5 * G, 0.5 * G);
   }
-  project(p.x, p.y, gh, PJ); const psx = PJ.x, psy = PJ.y;
+  project(gpx, gpy, gha, PJ); const psx = PJ.x, psy = PJ.y;
   flist.sort((a, b) => b.d - a.d);
   for (const t of flist) {   // far trees: the same stand-in the near pass would draw at this distance; at the edge of sight they rise out of the haze
     const P0 = t.sp !== undefined ? picFor(t) : null; if (P0 === PIC_WAIT) continue;   // (J5b: a far tree whose picture is loading is not drawn either)

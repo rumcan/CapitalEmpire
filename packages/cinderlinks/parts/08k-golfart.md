@@ -25,6 +25,7 @@ function gaName(id) { const m = /^golf_(am|pro)_([mw])(\d)$/.exec(id); return m 
 // far the club is back, 4 and 5 the downswing, 6 the strike, 7..11 the follow-through by how far through it is); a putt, golf_putt's eight (0..3 back, 4 the
 // strike, 4..7 through). al: the club's angle (the sculpture's, -2 at the top of the backswing, up to 2.2 at the finish); released: the club is on its way down
 function artFrame(pose, ph, al, released, putt) {
+  if (pose === 'a') return [putt ? 'golf_putt' : 'golf_drive', 0];   // (J5b: at address: the swing's first frame, the club at the ball)
   if (pose === 'w') return ['sheet', 1 + (((ph | 0) % 8) + 8) % 8];
   if (pose !== 's') return ['sheet', 0];
   const t = Math.min(1, Math.max(0, -al / 2));
@@ -107,7 +108,7 @@ function golferPic(fa, pose, ph, K) {
     if (S) return S;
     if (!gaBad(id)) return gaNone();   // (J5b: his art is still coming: nothing, not the voxel figure)
   }
-  return golferSprite(fa, pose, ph, K);
+  return pose === 'a' ? golferSprite(fa, 's', 0, K) : golferSprite(fa, pose, ph, K);   // (J5b: the voxel figure at address: his swing pose, the club at the ball)
 }
 // another golfer's picture (actorsList): his art when ready, else null (the voxel figure in his clothes)
 function actorArt(r, fa, ps, K) {
