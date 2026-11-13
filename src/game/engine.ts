@@ -1575,8 +1575,13 @@ export class Game {
     if (!g) return out;
     const NAMES: Record<string, string> = { clubhouse: 'clubhouse', halfway: 'halfway house', prooffice: "pro's office", teachhut: 'teaching hut' };
     for (const d of this.bizDefs) {
-      const clear = () => { this.setBizDefs(this.bizDefs.filter(q => q.id !== d.id)); this.traffic.setBusinesses(this.bizDefs); };
-      const refund = Math.round((BUSINESS[d.type]?.buildCost ?? 0) / 2);
+      const clear = () => {
+        this.setBizDefs(this.bizDefs.filter(q => q.id !== d.id)); this.traffic.setBusinesses(this.bizDefs);
+        // a range start's own range: its record goes back to "not built", so the start's checklist offers it again (Range ▸ Place the driving range)
+        const b = this.golf?.range; if (d.type === 'range' && b) { b.built = false; this.range.sync(true); }
+      };
+      // (the range is placed at RANGE_PLACE_COST, not priced in the business catalogue: half of that comes back, as for any building)
+      const refund = Math.round((d.type === 'range' ? RANGE_PLACE_COST : BUSINESS[d.type]?.buildCost ?? 0) / 2);
       out.push(d.type === 'range' ? { name: 'driving range', rect: plotOfFront([d.x, d.y, d.w, d.h], g.dir), refund, ref: clear } : { name: NAMES[d.type] ?? 'building', rect: [d.x, d.y, d.w, d.h], refund, ref: clear });
     }
     for (const p of this.parkDefs) out.push({ name: 'car park', rect: [p.x, p.y, p.w, p.h], refund: Math.round(parkCost(p) / 2), ref: () => { const k = this.parkDefs.findIndex(q => q.id === p.id); if (k >= 0) this.removePark(k); } });
