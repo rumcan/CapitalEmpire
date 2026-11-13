@@ -34,7 +34,15 @@ export interface ChipArea { cup: Pt; stands: Pt[] }
  *  the target greens (none built: the distance markers', small greens), the practice area's box and the painted areas in it (null: no practice area),
  *  the chipping green (null: none open), the ground's height, and the name */
 export interface PracticeIn {
-  outfield: readonly number[]; teeBox: readonly number[]; bays: readonly Pt[]; greens: readonly RangeGreen[];
+  outfield: readonly number[]; teeBox: readonly number[];
+  /** J6b: the outfield's ground as the range has it: 'fairway' once it is grassed (the scene's mown outfield), else 'fescue' (the bare start's scrub: dry long grass in
+   *  the view, never a mown fairway); absent: fairway */
+  outfieldSurface?: 'fairway' | 'fescue';
+  /** J6b: whether the target greens are built (absent: yes). Without them the greens are the distance markers' spots: the drills judge by them, nothing is painted */
+  greensBuilt?: boolean;
+  /** J6b: the range's whole ground (tiles x0 y0 x1 y1: its plot, car park and practice area, with a margin), laid under everything as rough, so the view counts it as
+   *  the course's ground (else its own wild land grows plateaus and cliffs by the shop and the road); absent: none */
+  ground?: readonly [number, number, number, number]; bays: readonly Pt[]; greens: readonly RangeGreen[];
   area: readonly [number, number, number, number] | null; areas: readonly CourseArea[]; chip: ChipArea | null;
   heightAt?: (x: number, y: number) => number; name?: string;
 }
@@ -59,10 +67,12 @@ export function practiceCourse(p: PracticeIn): PracticeCourse {
   let id = -1;
   const add = (surface: GolfSurface, pts: number[]) => { areas.push({ id: id--, surface, pts }); };
   // the range: the outfield as fairway, the mats' tee box as tee, each target green as green
-  add('fairway', p.outfield.slice());
+  if (p.ground) add('rough', rect(p.ground));
+  const outfieldAt = areas.length;
+  add(p.outfieldSurface ?? 'fairway', p.outfield.slice());
   add('tee', p.teeBox.slice());
   const greens: RangeGreen[] = p.greens.length ? p.greens.slice() : [];
-  for (const g of greens) add('green', disc(g.x, g.y, g.r));
+  if (p.greensBuilt !== false) for (const g of greens) add('green', disc(g.x, g.y, g.r));
   // the short game area: a first cut over the area, then what is painted in it
   if (p.area) {
     add('firstCut', rect(p.area));
@@ -88,7 +98,10 @@ export function practiceCourse(p: PracticeIn): PracticeCourse {
   const view = makeCourseView(holes, surf);
   const pins = holes.map(h => ({ hole: h.n, x: h.line[h.line.length - 1]!.x, y: h.line[h.line.length - 1]!.y }));
   const tees = holes.map(h => ({ hole: h.n, x: h.line[0]!.x, y: h.line[0]!.y, kind: 'middle' as const }));
-  const input: Export3pInput = { areas, tees, pins, aims: [], holes, ...(p.heightAt ? { heightAt: p.heightAt } : {}), name: p.name ?? 'Practice' };
+  // J6b: the course file always holds the outfield as fairway, so the view counts it as the course's ground (else its own wild land grows plateaus and cliffs
+  // there); a bare outfield is told apart by the lies the model reads (fescue: the view draws dry long grass by them, not a mown fairway)
+  const shapes = areas.map((a, i) => (i <= outfieldAt && a.surface !== 'fairway' ? { ...a, surface: 'fairway' as GolfSurface } : a));   // (the ground and the outfield)
+  const input: Export3pInput = { areas: shapes, tees, pins, aims: [], holes, ...(p.heightAt ? { heightAt: p.heightAt } : {}), name: p.name ?? 'Practice' };
   return { input, view, mat: { x: mat.x, y: mat.y }, greens: dg, chip, idx: { range: 0, short: chip ? 1 : -1 } };
 }
 

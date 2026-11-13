@@ -37,3 +37,23 @@ test('J6b: pads go to the view as rings laid whole, sorted by key; a pad of fewe
   assert.equal(pads[1]!.surface, 'gravel'); assert.equal(pads[1]!.width, 0);
   assert.deepEqual(pads[1]!.pts[0], [0, 0]); assert.deepEqual(pads[1]!.pts[2], [20, 10], 'metres in the view frame (2 m tiles, y south)');
 });
+
+import { practiceCourse } from '../src/game/golf/play/practice3p';
+test('J6b: a bare outfield is dry long grass to the model but course ground (fairway) in the file; the greens are painted only once built', () => {
+  const sq = (x0: number, y0: number, x1: number, y1: number) => [x0, y0, x1, y0, x1, y1, x0, y1];
+  const c = practiceCourse({ outfield: sq(0, -3, 70, 130), teeBox: sq(4, -3, 67, 1), bays: [{ x: 30, y: 0 }], greens: [{ x: 35, y: 50, r: 4, m: 100 }], area: null, areas: [], chip: null,
+    outfieldSurface: 'fescue', greensBuilt: false });
+  assert.equal(c.view.kindAt!(35, 30), 'fescue'); assert.notEqual(c.view.lieAt(35, 50), 'green', 'no green painted where none is built');
+  assert.equal(c.input.areas[0]!.surface, 'fairway', 'the file keeps the outfield as the course\'s ground');
+  assert.ok(!c.input.areas.some(a => a.surface === 'green'));
+  assert.equal(c.greens.length, 1, 'the drills still have the 100 m spot');
+});
+test('J6b: the range ground lies under everything: rough to the model off the outfield, course ground (fairway) in the file', () => {
+  const sq = (x0: number, y0: number, x1: number, y1: number) => [x0, y0, x1, y0, x1, y1, x0, y1];
+  const c = practiceCourse({ outfield: sq(0, -3, 70, 130), teeBox: sq(4, -3, 67, 1), bays: [{ x: 30, y: 0 }], greens: [], area: null, areas: [], chip: null,
+    outfieldSurface: 'fescue', ground: [-30, -60, 100, 160] });
+  assert.equal(c.view.lieAt(35, -40), 'rough', 'by the shop: rough, not out of bounds');
+  assert.equal(c.view.kindAt!(35, 60), 'fescue');
+  assert.deepEqual(c.input.areas.slice(0, 2).map(a => a.surface), ['fairway', 'fairway']);
+  assert.equal(c.input.areas[2]!.surface, 'tee');
+});

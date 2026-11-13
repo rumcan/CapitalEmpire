@@ -224,7 +224,7 @@ import { MARGIN_T, exportFeatures3p, gatherFeatures3p, type PadIn, type PathSurf
 const PAD_SURF: Partial<Record<string, PathSurface>> = { concrete: 'concrete', asphaltDark: 'concrete', gravel: 'gravel', dirt: 'dirt', teeDirt: 'dirt', yard: 'dirt' };
 import { courseEntry3p } from './golf/play/entry3p';
 import { seedOf } from './golf/play/view3p';
-import type { Actor, CourseMsg, CourseTime3p, Dress, HostMsg, PracticeMsg, Time3p, ViewInput } from './golf/play/protocol3p';
+import type { Actor, ActorsMsg, CourseMsg, CourseTime3p, Dress, HostMsg, PracticeMsg, Time3p, ViewInput } from './golf/play/protocol3p';
 import { Play3p, type Play3pOpts } from './golf/play/play3p'; // T418: the owner's play in the view from behind the golfer
 import { DEV_EARNED, earned, practiceEarned } from './golf/play/unlocks'; // T443
 import { PracticeDriver, RANGE_HOLE, SHORT_HOLE, practiceCourse, practiceFlags, type PracticeCourse, type PracticePlace } from './golf/play/practice3p'; // J6
@@ -10403,7 +10403,11 @@ export class Game {
     const [x0, y0, x1, y1] = sc.box, [W, D] = RANGE_PLOT, P = (u: number, v: number) => plotPoint([x0, y0, x1 - x0, y1 - y0], sc.facing, u, v);
     const outfield = [P(0, 18), P(W, 18), P(W, D), P(0, D)].flatMap(q => [q.x, q.y]);   // (the plot past the shop and the car park: the tee box at 18..24, then the outfield)
     const area = g.start === 'range' && sc.practice.pts.length ? sc.practice.box : null, cf = area ? this.range.practice?.chipping ?? null : null;
+    const look = this.practiceRange3p();   // (J6b: the range's box: its ground under everything)
+    // (J6b: the outfield as the range has it: mown once grassed, else the bare start's scrub; greens painted only once built)
     return practiceCourse({ outfield, teeBox: sc.teeBox, bays: sc.bays.filter(b => !b.lift).map(b => b.stand), greens: sc.targets.length ? sc.targets : sc.aims, area,
+      outfieldSurface: sc.patches.some(p => p.surf === 'outfield') ? 'fairway' : 'fescue', greensBuilt: sc.targets.length > 0,
+      ...(look ? { ground: [look.box[0] - 26, look.box[1] - 26, look.box[2] + 26, look.box[3] + 26] as const } : {}),
       areas: area ? this.courseAreaList() : [], chip: cf && cf.state === 'open' && cf.cups[0] ? { cup: cf.cups[0], stands: cf.stands } : null,
       heightAt: (x, y) => this.groundHeightAt(x, y), name: `${this.titleName()?.name ?? 'Your'} practice` });
   }
@@ -10450,7 +10454,24 @@ export class Game {
     pr.drv = new PracticeDriver(pr.course, pr.place, sk, (this.seed ^ Math.imul(++this.play3pN, 104729)) | 0, { drills: () => this.playerNow()?.drills ?? null, judged: (id, call) => this.drillJudged(id, call) });
     this.play3p = new Play3p({ view: pr.course.view, holes: [Math.max(0, pr.course.idx[pr.place])], skills: sk, earned: practiceEarned(base), driver: pr.drv, owner: this.youDress3p(), sex: p?.sex ?? 'm',
       seed: this.seed, frame: f, height: this.ballHeight, wind: () => this.windNow(), fit: putterFitName(p?.bag) });
-    return [this.practiceMsg3p(), ...this.play3p.start()];
+    return [this.practiceMsg3p(), this.rangeActors3p(), ...this.play3p.start()];
+  }
+  /** J6b: the range's own golfers at the other mats now (the range sim's people standing on a bay, not on his), as the view's people: in the golfer art they are
+   *  drawn with in the game, facing down the range, addressing the ball and swinging through with each ball he hits (the sim is still while the view is open) */
+  private rangeActors3p(): ActorsMsg {
+    const sc = this.range.scene, pr = this.prac3p, f = this.view3pFrame, out: Actor[] = [];
+    if (sc && pr && pr.place === 'range' && f) {
+      const mine = pr.course.mat, stands = sc.bays.filter(b => !b.lift).map(b => b.stand), rd = this.range.sim.view(), heading = Math.atan2(sc.aim.y, sc.aim.x) * 180 / Math.PI;
+      const swing = (pr.drv?.balls ?? 0) % 2 === 1;
+      for (let k = 0; k < rd.nPeople && out.length < 24; k++) {
+        const q = rd.people[k]!; if (q.lift || q.id === 0) continue;
+        const bay = stands.find(s => Math.hypot(s.x - q.x, s.y - q.y) < 1.2); if (!bay || Math.hypot(bay.x - mine.x, bay.y - mine.y) < 1) continue;
+        const art = GOLFER_PEOPLE[q.person]?.id;
+        out.push({ id: 5000 + q.id, role: 'golfer', at: [(bay.x - f.cx) * TILE_M, (bay.y - f.cy) * TILE_M], hole: RANGE_HOLE, heading, doing: swing ? 'swing' : 'address', phase: swing ? 1 : 0.6,
+          ...(art ? { dress: playerDress(art, /_w\d/.test(art) ? 'w' : 'm') } : {}) });
+      }
+    }
+    return { v: 1, t: 'actors', at: pr?.drv?.balls ?? 0, actors: out };
   }
   /** a ball judged for a drill: the drills saved with the profile; a drill done pays its skill points (the handicap comes down with them) and is toasted */
   private drillJudged(id: DrillId, call: DrillCall) {
@@ -10468,7 +10489,7 @@ export class Game {
   private practiceMsg3p(): PracticeMsg {
     const pr = this.prac3p!, d = pr.drv, p = this.playerNow(), f = this.view3pFrame, paid = pr.paid; pr.paid = null;
     return { v: 1, t: 'practice', place: pr.place, drills: DRILL_IDS.map(id => { const g = drillProgress(p?.drills, id), D = DRILLS[id]; return { id, name: D.name, goal: D.goal, got: g.got, need: g.need, done: g.done, reward: D.reward.text, here: !!d && d.canPlay(id) }; }),
-      active: d?.active ?? null, note: d?.note ?? null, paid, flags: f ? practiceFlags(pr.course, pr.place, { x: f.cx, y: f.cy }) : [], hcp: p ? hcpText(handicapOf(p.skills)) : '', balls: d?.balls ?? 0, ...(pr.place === 'range' ? { pics: true as const } : {}) };   // (J6b: the flags are the range's own pictures)
+      active: d?.active ?? null, note: d?.note ?? null, paid, flags: f ? practiceFlags(pr.course, pr.place, { x: f.cx, y: f.cy }) : [], hcp: p ? hcpText(handicapOf(p.skills)) : '', balls: d?.balls ?? 0, ...(pr.place === 'range' && (this.range.scene?.targets.length ?? 0) > 0 ? { pics: true as const } : {}) };   // (J6b: the flags are the range's own pictures)
   }
   /** the view's drill picked in the practice panel: the panel again and the next ball from the drill's spot (nothing when no practice is open or it is not here) */
   pick3p(id: string): HostMsg[] {
@@ -10573,7 +10594,7 @@ export class Game {
    *  hole's end, the next turn) */
   input3p(input: ViewInput): HostMsg[] {
     if (this.match3p) return this.match3pSync(this.match3p.input(input));   // (T428: a money match)
-    if (this.prac3p) { const ms = this.play3p ? this.play3p.input(input) : []; return this.prac3p.drv ? [...ms, this.practiceMsg3p()] : ms; }   // (J6: a practice ball, and the drills after it)
+    if (this.prac3p) { const ms = this.play3p ? this.play3p.input(input) : []; return this.prac3p.drv ? [...ms, this.practiceMsg3p(), this.rangeActors3p()] : ms; }   // (J6: a practice ball, and the drills after it)
     const ms = this.play3p ? this.play3p.input(input) : [], pl = this.play, own = pl?.own;
     if (pl && own && this.play3p?.me === own.id && this.play3p.plan === pl.plan) { own.turn = own.live.advance(); this.saveOwner(); if (!own.turn) this.ownerDone(pl); this.emit(); }   // (T425: his real round moved on: kept as the manager game's)
     return ms;
