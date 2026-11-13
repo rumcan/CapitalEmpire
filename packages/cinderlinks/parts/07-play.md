@@ -197,6 +197,12 @@ function driveCart() {   // W goes, S brakes and backs up, A and D steer; the ca
   if (Math.abs(cart.v) > 0.6 && !camDrag) { let dy = cart.th + 1.5708 - camYaw; dy = Math.atan2(Math.sin(dy), Math.cos(dy)); camYaw += dy * 0.07 * Math.min(1, Math.abs(cart.v) / 4); }   // the camera swings round behind the cart as it turns
   if (cart.v > 6 && (frame & 3) === 0) { const mm = matAt(p.x, p.y); if (mm === M_HILL || mm === M_MUD || mm === M_ROCK) addParticle(P_SAND, p.x - wx * 0.8, p.y - wy * 0.8, groundH(p.x, p.y) + 0.05, -wx * 0.6 + (rnd() - 0.5) * 0.6, -wy * 0.6 + (rnd() - 0.5) * 0.6, 0.6 + rnd() * 0.8, 18 + rndi(14), rndi(6)); }   // dust on bare ground
 }
+function aimToMouse() {   // the aim is the ground point under the mouse: the line from the ball to it, and the point itself (T456: the target the ring is drawn at)
+  screenToGround(mouse.x, mouse.y, GP);
+  let dx = GP.x - ball.x, dy = GP.y - ball.y; const l = Math.hypot(dx, dy);
+  if (l > 0.3) { aim.dx = dx / l; aim.dy = dy / l; }
+  aim.x = GP.x; aim.y = GP.y;
+}
 function updatePlayer() {
   const p = player;
   if (cart.on) { driveCart(); return; }
@@ -212,10 +218,7 @@ function updatePlayer() {
   const near = nearBall();
   if (near && ball.state === 0 && !(HP && hostBusy())) {               // (host mode: not while the course decides, or plays back, a shot)
     if (!HP || !hostAimPin || mouse.down) {                            // (host mode, T446: a click on the course sets the aim and holds it, so the mouse can go to the swing button)
-      screenToGround(mouse.x, mouse.y, GP);
-      let dx = GP.x - ball.x, dy = GP.y - ball.y; const l = Math.hypot(dx, dy);
-      if (l > 0.3) { aim.dx = dx / l; aim.dy = dy / l; }
-      aim.x = GP.x; aim.y = GP.y;
+      aimToMouse();
       if (HP && mouse.down) hostAimPin = true;
     }
     if (autoClub) pickClub();

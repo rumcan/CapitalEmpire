@@ -128,6 +128,8 @@ const HOST_PLAY = String.raw`
       info.target = T && { d: +(T.d / S).toFixed(1), u: +T.u.toFixed(3), ring: +(T.R / S).toFixed(2), mark: swingAimMk.style.left };
       if (!T || Math.abs(T.d - Math.min(100 * S * 0.5, unit)) > 1e-6 || Math.abs(T.u - T.d / unit) > 1e-6) errs.push('host play: the aim is not a target at the club reach (' + JSON.stringify(info.target) + ')');
       if (!T || !(T.R > 0) || Math.abs(parseFloat(swingAimMk.style.left) - T.u * 100) > 0.2) errs.push('host play: the bar does not mark the aim (' + JSON.stringify(info.target) + ')');
+      { const T2 = hostTarget(), C2 = hostClub(), t0 = performance.now(); for (let k = 0; k < 50; k++) hostTargetRing(T2, C2); info.ringMs = +((performance.now() - t0) / 50).toFixed(3);   // (the ring's cost a frame: a budget of 1 ms)
+        if (!(info.ringMs < 1)) errs.push('host play: the target ring costs ' + info.ringMs + ' ms a frame (budget 1 ms)'); }
       aim.x = ball.x + aim.dx * 400 * S; aim.y = ball.y + aim.dy * 400 * S; step(3, 1);
       if (!HP.target || Math.abs(HP.target.u - 1) > 1e-9) errs.push('host play: an aim beyond the club is not held at full power');
       hostAimPin = false; }

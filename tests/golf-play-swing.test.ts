@@ -4,6 +4,7 @@
 // T345 (#987): the sweet spot is a window in time (SWEET seconds, whatever the marker's speed), scaled by the skill, the accuracy stat and the clubs' and cards' `sweet`; the miss is read from the click's time
 // error; a person can hit it (the scripted golfers of tests/helpers/swing-bot.ts); and an outcome saved before it (no `v`) is read against the first meter's sweet spot, exactly as it was.
 import { test } from 'node:test';
+import fs from 'node:fs';
 import assert from 'node:assert/strict';
 import { TILE_M } from '../src/game/golf/types';
 import { BOOST, HOLD_PUTT_TOP, HOLD_V, LiveGroup, METER, METER_TIME, METER_V, SWEET, SWEET_V1, SwingMeter, applyMods, boostOf, clickError, kitOf, makeField, markerSpeed, meterMark, playRound, readSwing, rng, shotOutcome, shotReport, swingEffect, sweetSeconds, sweetSpot, sweetSpotV1, swingTime, teeTimes } from '../src/game/golf/play';
@@ -359,4 +360,9 @@ test('T456: a hold-and-release putt may reach well past the hole (its power is a
   assert.ok(soft < 0, 'a soft one stops short');
   near(swingEffect({ power: 1.6, acc: 0, boost: 0, v: HOLD_V }, 0.3, true).power, 1.6);
   near(swingEffect({ power: 4, acc: 0, boost: 0, v: HOLD_V }, 0.3, false).power, 1 + 0.5 * (METER.top - 1), 1e-12);
+});
+
+test('T456: the view repeats HOLD_PUTT_TOP (packages/cinderlinks/parts/09-hud.md): a drift would clamp the putts the meter reaches', () => {
+  const view = fs.readFileSync(`${process.cwd()}/packages/cinderlinks/parts/09-hud.md`, 'utf8');
+  assert.match(view, new RegExp(`const HOLD_PUTT_TOP = ${HOLD_PUTT_TOP};`));
 });

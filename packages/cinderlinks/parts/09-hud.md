@@ -334,12 +334,12 @@ function hostTarget() {
 // stands nearer (the golfer, a tree), as the putting grid is
 function hostTargetRing(T, C) {
   const S = hostS(), dx = aim.dx, dy = aim.dy, rx = -dy, ry = dx;
-  const R = T.putt ? Math.max(0.22 * S, 0.05 * T.d) : Math.max(0.8 * S, (C.scatterM || 0) / 2 * T.pw * S);
+  const R = T.putt ? Math.max(0.25 * S, 0.05 * T.d) : Math.max(1.2 * S, (C.scatterM || 0) / 2 * T.pw * S);
   const mark = (qx, qy, c) => { projectO(qx, qy, aimH(qx, qy) + 0.03, PJ); if (PJ.s > 0) { plotZO(PJ.x, PJ.y + 1, PJ.d - 0.3, AIM_D); plotZO(PJ.x, PJ.y, PJ.d - 0.3, c); plotZO(PJ.x + 1, PJ.y, PJ.d - 0.3, c); } };
   const n = Math.max(48, Math.min(220, Math.round(R / S * 30)));
   for (let a = 0; a < n; a++) { const an = a / n * 6.2832; mark(T.x + Math.cos(an) * R, T.y + Math.sin(an) * R, AIM_G); }
-  const c = R * 0.45, tx = T.x + dx * c * 0.5, ty = T.y + dy * c * 0.5;   // (the chevron's point, a little past the centre, along the line)
-  for (const sd of [-1, 1]) { const bx = tx - dx * c + rx * c * 0.75 * sd, by = ty - dy * c + ry * c * 0.75 * sd; for (let k = 0; k <= 24; k++) { const u = k / 24; mark(bx + (tx - bx) * u, by + (ty - by) * u, AIM_W); } }
+  const c = R * 0.6, tx = T.x + dx * c * 0.5, ty = T.y + dy * c * 0.5;   // (the chevron's point, a little past the centre, along the line)
+  for (const sd of [-1, 1]) { const bx = tx - dx * c + rx * c * 0.75 * sd, by = ty - dy * c + ry * c * 0.75 * sd, m = Math.max(24, Math.round(c / S * 40)); for (let k = 0; k <= m; k++) { const u = k / m; mark(bx + (tx - bx) * u, by + (ty - by) * u, AIM_W); } }
   HP.target = { x: T.x, y: T.y, d: T.d, u: T.u, pw: T.pw, top: T.top, R };   // (kept for the harness)
 }
 let swingBtnDown = false, hostAimPin = false;
@@ -613,7 +613,10 @@ view.addEventListener('mousemove', (e) => {
   const r = view.getBoundingClientRect(); mouse.x = clamp((e.clientX - r.left) / r.width * VW, 0, VW - 1); mouse.y = clamp((e.clientY - r.top) / r.height * VH, 0, VH - 1);
   if (camDrag) { camYaw -= (e.movementX || 0) * 0.005; HZ = Math.round(clamp(HZ + (e.movementY || 0) * 0.7 * RS, 40 * RS, SH * RS)); }   // (a whole row: the sky is read by row)   // the middle button holds the scene: drag it round, drag it up or down
 });
-view.addEventListener('mousedown', (e) => { const a = audio(); if (a && a.state === 'suspended') a.resume(); if (e.button === 1) { camDrag = true; if (e.preventDefault) e.preventDefault(); } else if (!e.button) mouse.down = true; });
+view.addEventListener('mousedown', (e) => { const a = audio(); if (a && a.state === 'suspended') a.resume(); if (e.button === 1) { camDrag = true; if (e.preventDefault) e.preventDefault(); } else if (!e.button) {
+  mouse.down = true;
+  if (HP && ball.state === 0 && nearBall() && !hostBusy()) { const r = view.getBoundingClientRect(); mouse.x = clamp((e.clientX - r.left) / r.width * VW, 0, VW - 1); mouse.y = clamp((e.clientY - r.top) / r.height * VH, 0, VH - 1); aimToMouse(); hostAimPin = true; }   // (T456: a click on the ground aims there at once, whatever the tick: it is the target, and it stays when the mouse goes)
+} });
 addEventListener('mouseup', (e) => { if (e.button === 1) camDrag = false; else mouse.down = false; });
 view.addEventListener('auxclick', (e) => { if (e.preventDefault) e.preventDefault(); });
 view.addEventListener('wheel', (e) => { camD = clamp(camD * (e.deltaY > 0 ? 1.1 : 1 / 1.1), CAMMIN, 42); if (e.preventDefault) e.preventDefault(); }, { passive: false });
