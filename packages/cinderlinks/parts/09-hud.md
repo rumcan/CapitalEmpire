@@ -6,7 +6,9 @@ R: One line of hints says what can be done right now; H opens the full list of k
 R: The map shows the hole from above with the tee, the pin, the ball and the golfer.
 File: game.js
 Check: function updateHud(
+R: J5b: in host mode a CapitalEmpire card covers the picture from the course's coming until the pictures it opens on are in (the tree species within the render distance of the tee, his golfer's clips), at most 20 s; every other species is fetched at once behind it, and nothing stands in for a picture still loading.
 Check: function drawMini(
+Check: function coverTick(
 
 ````js file=game.js
 
@@ -68,6 +70,28 @@ function drawMini() {
   }
 }
 function miniDot(x, y, col, s) { mctx.fillStyle = col; mctx.fillRect(Math.round((x - miniX0) * miniS) - (s >> 1), Math.round((y - miniY0) * miniS) - (s >> 1), s, s); }
+// J5b: the loading cover (host mode). From the course's coming until CapitalEmpire's pictures are in (every tree species with a picture made for this
+// light, and his golfer's three clips), a CapitalEmpire card covers the picture: the hole, "Walking out to the tee" and how many pictures are in. The
+// game draws on under it (the land is made, the golfer's frames are cut), so it lifts on a finished picture. At most COVER_MAX ms: then it lifts anyway,
+// and whatever is still loading is simply not drawn until it comes (never a stand-in). LOADT keeps the times (performance.now(): the course, the lift).
+const COVER_MAX = 20000, LOADT = { course: 0, ready: 0, pics: 0, picsAt: 0, artAt: 0, timedOut: false };
+let coverEl = null, coverOn = false, coverTxt = '', coverNeed = null;   // (coverNeed: the species within sight of the tee: the cover waits for those; the rest load behind it and are not drawn until they come)
+function coverShow(n) {
+  coverNeed = picNear(hole.tee.x, hole.tee.y, VIEWR + 40);
+  LOADT.course = performance.now(); LOADT.ready = 0; LOADT.pics = picCount(coverNeed); LOADT.picsAt = 0; LOADT.artAt = 0; LOADT.timedOut = false;
+  if (typeof document === 'undefined' || !document.createElement) return;
+  if (!coverEl) { coverEl = document.createElement('div'); coverEl.id = 'cover'; const st = document.getElementById('stage'); if (st && st.appendChild) st.appendChild(coverEl); }
+  coverEl.innerHTML = '<div class="cv"><i>Hole ' + n + '</i><b>Walking out to the tee</b><s><u></u></s><em></em></div>'; coverTxt = ''; coverOn = true; coverEl.className = 'on';
+}
+function coverHide() { coverOn = false; if (coverEl) coverEl.className = ''; }
+function coverTick() {
+  if (!coverOn || !LOADT.course) return;
+  const left = picPending(coverNeed), n = LOADT.pics, art = gaReady(gaHost), t = performance.now() - LOADT.course;
+  if (!left && !LOADT.picsAt) LOADT.picsAt = performance.now(); if (art && !LOADT.artAt) LOADT.artAt = performance.now();
+  if ((left === 0 && art) || t > COVER_MAX) { LOADT.ready = performance.now(); LOADT.timedOut = left > 0 || !art; coverHide(); return; }
+  const done = n - left + (art ? 1 : 0), all = n + 1, txt = (n ? 'The course\'s pictures: ' + (n - left) + ' of ' + n : 'The course\'s pictures') + (art ? '' : ' \u00b7 your golfer');
+  if (txt !== coverTxt && coverEl && coverEl.querySelector) { coverTxt = txt; const e = coverEl.querySelector('em'), u = coverEl.querySelector('u'); if (e) e.textContent = txt; if (u) u.style.width = Math.round(done / all * 100) + '%'; }
+}
 function updateHud() {
   const H = hole, m = matAt(ball.x, ball.y), d = Math.hypot(H.pin.x - ball.x, H.pin.y - ball.y);
   const score = strokes - H.par, row = (a, b) => '<div class="row"><span>' + a + '</span><b>' + b + '</b></div>';
@@ -124,7 +148,7 @@ function hostSend(m) {
 }
 function hostMessage(m) {   // one message from the host page, already known to come from it
   if (!m || typeof m !== 'object') return;
-  if (m.t === 'leave') { hostOff = true; return; }
+  if (m.t === 'leave') { hostOff = true; coverHide(); return; }
   if (m.t === 'actors' || m.t === 'board' || m.t === 'match') { if (m.t === 'match') matchIn(m); else groupMsg(m); return; }   // T424, T427, T428: who else is on the course, the leaderboard, a money match (parts/08d-actors.md, 08e-group.md, 08g-match.md)
   if (m.t === 'lies' && m.v === 1) { hostLies(m.lk); return; }   // T438
   if (m.t === 'practice' && m.v === 1) { if (course) pracIn(m); return; }   // J6: practice (parts/08l-practice.md)
@@ -141,7 +165,9 @@ function hostMessage(m) {   // one message from the host page, already known to 
   HP = null; pracClear(); course = null; if (!setCourse(D.id)) { hostSend({ t: 'error', why: 'the course could not be laid out' }); return; }
   picReset();   // (T454: a new course's species pictures)
   setFeatures(m.features || null); featTxt = ''; featFor = course.id;
+  picPrefetch(); if (gaHost) for (const c of GOLFART_CLIPS) gaLoad(gaHost, c);   // (J5b: every tree picture and his golfer's clips are asked for at once)
   const n = Math.max(1, Math.min(course.holes.length, +m.hole | 0 || 1)); if (n !== 1) newHole(n, 0, 0);
+  coverShow(n);   // (J5b: after newHole: the cover waits for the trees within sight of this hole's tee)
   hostOff = false; firstPicture(FP_NEAR); updateHud();
   if (!looping && typeof requestAnimationFrame === 'function') { looping = true; last = performance.now(); acc = 0; requestAnimationFrame(loop); }
   hostSend({ t: 'loaded', holes: course.holes.length }); hostWaitT = performance.now();
@@ -280,27 +306,27 @@ function hostAim() {   // T420: the aim tells the truth: the arc to where the mo
   const dx = aim.dx, dy = aim.dy, rx = -dy, ry = dx;                  // (the line, and his right as he faces it: x east, y south)
   if (!putt && hostAimPreview(C, pw, hot, ph)) return;               // (T441, T442: the model's preview of the shot picked, when it has come)
   if (putt && hostRead() && hostPuttAim(pw, hot, ph)) return;        // (T423: the host's read: the way a putt struck along this aim takes; J6: once earned)
-  if (putt) {                                                          // a putt: its length is a share of the way to the pin
+  if (putt) {                                                          // a putt: its length is a share of the way to the pin; the blue ribbon along the green (J5b)
     const len = Math.hypot(hole.pin.x - ball.x, hole.pin.y - ball.y) * pw;
-    for (let k = 0, d = 0.4 + ph * 0.07; d < len; d += 0.42, k++) { const qx = ball.x + dx * d, qy = ball.y + dy * d; projectO(qx, qy, aimH(qx, qy) + 0.03, PJ); if (PJ.s > 0) aimDotO(PJ.x, PJ.y, PJ.s > 0.8 ? 1 : 0, k & 1 ? hot : AIM_W); }
-    const ex = ball.x + dx * len, ey = ball.y + dy * len; projectO(ex, ey, aimH(ex, ey) + 0.03, PJ); if (PJ.s > 0) aimDotO(PJ.x, PJ.y, 2, hot);
+    ribStart(); for (let d = 0; d < len + 0.34; d += 0.35) { const e = d < len ? d : len, qx = ball.x + dx * e, qy = ball.y + dy * e; ribAdd(qx, qy, aimH(qx, qy) + 0.03); }
+    ribbonO(RIB_W * 0.35 * S, false);
     return;
   }
   const carry = (C.playsM !== undefined ? C.playsM : C.carryM) * pw * S, side = (C.sideM || 0) * pw * S;
   const lx = ball.x + dx * carry + rx * side, ly = ball.y + dy * carry + ry * side, apex = (0.08 + 0.004 * (C.loftDeg || 30)) * carry, z0 = aimH(ball.x, ball.y), z1 = aimH(lx, ly);
-  for (let k = 0, n = Math.max(12, Math.round(carry / 1.6)); k <= n; k++) {   // the arc and its shadow
-    if (k % 6 !== ph) continue;
+  ribStart();
+  for (let k = 0, n = Math.max(12, Math.round(carry / 1.6)); k <= n; k++) {   // the arc: the blue ribbon (J5b), a point every 3 m or so (smooth enough, half the cost)
+    if ((k & 1) && k !== n) continue;
     const u = k / n, x = ball.x + (lx - ball.x) * u, y = ball.y + (ly - ball.y) * u, gz = aimH(x, y), z = z0 + (z1 - z0) * u + apex * 4 * u * (1 - u);
-    projectO(x, y, gz + 0.03, PJ); if (PJ.s > 0) plotZO(PJ.x, PJ.y, PJ.d, AIM_D);
-    projectO(x, y, Math.max(z, gz + 0.03), PJ); if (PJ.s > 0) aimDotO(PJ.x, PJ.y, PJ.s > 1.1 ? 2 : PJ.s > 0.35 ? 1 : 0, (k / 6 | 0) & 1 ? hot : AIM_W);
+    ribAdd(x, y, Math.max(z, gz + 0.03));
   }
+  ribbonO(RIB_W * S, false);
   const across = Math.max(0.4, (C.scatterM || 0) / 2 * pw * S), along = Math.max(0.4, (C.longM !== undefined ? C.longM : C.scatterM || 0) / 2 * pw * S);   // (one standard deviation: the host sends two)
   const na = Math.max(40, Math.min(160, Math.round((across + along) * 3)));
   for (let a = 0; a < na; a++) {                                       // the ring: one standard deviation across the line and along it
     const an = a / na * 6.2832, ca = Math.cos(an), sa = Math.sin(an), qx = lx + dx * along * ca + rx * across * sa, qy = ly + dy * along * ca + ry * across * sa;
     projectO(qx, qy, aimH(qx, qy) + 0.03, PJ); if (PJ.s > 0) { plotZO(PJ.x, PJ.y + 1, PJ.d - 0.3, AIM_D); plotZO(PJ.x, PJ.y, PJ.d - 0.3, a & 1 ? hot : AIM_W); plotZO(PJ.x + 1, PJ.y, PJ.d - 0.3, a & 1 ? hot : AIM_W); }
   }
-  projectO(lx, ly, z1 + 0.03, PJ); if (PJ.s > 0) aimDotO(PJ.x, PJ.y, PJ.s > 0.5 ? 2 : 1, hot);
   HP.ring = { x: lx, y: ly, across, along };   // (kept for the harness)
 }
 // T446 (the owner, 2026-11-13: "the original mechanic of holding and releasing the key when the distance is correct"): the swing is Cinderlinks' own
@@ -513,20 +539,22 @@ function hostAimPreview(C, pw, hot, ph) {   // the preview's flight (scaled to t
   const pv = HP.pv; if (!pv || !pv.shot || pv.sig !== HP.pvSig || pv.club !== C.club) return false;
   const m = pv.shot, S = hostS(), F = m.flight, n = F.length; if (n < 2) return false;
   const bx = ball.x, by = ball.y, k = pw, at = (p) => [bx + (p[0] * S - bx) * k, by + (p[1] * S - by) * k];
-  for (let i = 0; i < n; i++) {   // the curved flight and its shadow
-    if (i % 3 !== ph % 3) continue;
+  ribStart();
+  for (let i = 0; i < n; i++) {   // the curved flight: the blue ribbon (J5b), every other sample
+    if ((i & 1) && i !== n - 1) continue;
     const q = at(F[i]), gz = aimH(q[0], q[1]);
-    projectO(q[0], q[1], gz + 0.03, PJ); if (PJ.s > 0) plotZO(PJ.x, PJ.y, PJ.d, AIM_D);
-    projectO(q[0], q[1], gz + F[i][2] * S * k, PJ); if (PJ.s > 0) aimDotO(PJ.x, PJ.y, PJ.s > 1.1 ? 2 : PJ.s > 0.35 ? 1 : 0, (i / 3 | 0) & 1 ? hot : AIM_W);
+    ribAdd(q[0], q[1], Math.max(gz + 0.03, gz + F[i][2] * S * k));
   }
+  ribbonO(RIB_W * S, false);
   const L = at(F[n - 1]), dx0 = L[0] - bx, dy0 = L[1] - by, dl = Math.hypot(dx0, dy0) || 1, dx = dx0 / dl, dy = dy0 / dl, rx = -dy, ry = dx;
   const across = Math.max(0.4, (C.scatterM || 0) / 2 * pv.spread * pw * S), along = Math.max(0.4, (C.longM !== undefined ? C.longM : C.scatterM || 0) / 2 * pv.spread * pw * S);
   const na = Math.max(40, Math.min(160, Math.round((across + along) * 3)));
   for (let a = 0; a < na; a++) { const an = a / na * 6.2832, qx = L[0] + dx * along * Math.cos(an) + rx * across * Math.sin(an), qy = L[1] + dy * along * Math.cos(an) + ry * across * Math.sin(an); projectO(qx, qy, aimH(qx, qy) + 0.03, PJ); if (PJ.s > 0) { plotZO(PJ.x, PJ.y + 1, PJ.d - 0.3, AIM_D); plotZO(PJ.x, PJ.y, PJ.d - 0.3, a & 1 ? hot : AIM_W); } }
-  projectO(L[0], L[1], aimH(L[0], L[1]) + 0.03, PJ); if (PJ.s > 0) aimDotO(PJ.x, PJ.y, PJ.s > 0.5 ? 2 : 1, hot);
-  const R = [F[n - 1]].concat(m.roll || []);   // the bounce and roll: a fainter line from the landing to where it stops
-  for (let i = 0; i + 1 < R.length; i++) { const a = at(R[i]), b = at(R[i + 1]), seg = Math.hypot(b[0] - a[0], b[1] - a[1]); for (let d = 0; d < seg; d += 0.6) { const u = d / seg, x = a[0] + (b[0] - a[0]) * u, y = a[1] + (b[1] - a[1]) * u; projectO(x, y, aimH(x, y) + 0.04, PJ); if (PJ.s > 0) plotZO(PJ.x, PJ.y, PJ.d - 0.3, AIM_RL); } }
-  const E2 = at(m.rest); projectO(E2[0], E2[1], aimH(E2[0], E2[1]) + 0.04, PJ); if (PJ.s > 0) aimDotO(PJ.x, PJ.y, 1, AIM_RL);
+  const R = [F[n - 1]].concat(m.roll || []);   // the bounce and roll: a fainter, narrower ribbon from the landing to where it stops
+  ribStart();
+  for (let i = 0; i + 1 < R.length; i++) { const a = at(R[i]), b = at(R[i + 1]), seg = Math.hypot(b[0] - a[0], b[1] - a[1]); for (let d = 0; d < seg; d += 0.6) { const u = d / seg, x = a[0] + (b[0] - a[0]) * u, y = a[1] + (b[1] - a[1]) * u; ribAdd(x, y, aimH(x, y) + 0.04); } }
+  if (R.length > 1) { const E2 = at(R[R.length - 1]); ribAdd(E2[0], E2[1], aimH(E2[0], E2[1]) + 0.04); }
+  ribbonO(RIB_W * 0.45 * S, true);
   HP.ring = { x: L[0], y: L[1], across, along, pv: true };
   return true;
 }
@@ -564,12 +592,13 @@ function hostPuttAim(pw, hot, ph) {   // the putt's way as the model would draw 
   const G = HP.turn && HP.turn.green; if (!G || !G.path || G.path.length < 2) return false;
   const S = hostS(), bx = ball.x, by = ball.y, pin = HP.turn.pin, a0 = Math.atan2(pin[1] * S - by, pin[0] * S - bx), aA = Math.atan2(aim.dy, aim.dx);
   const rot = aA - a0 - G.startDeg * Math.PI / 180, c = Math.cos(rot), s = Math.sin(rot), at = (p) => { const dx = (p[0] * S - bx) * pw, dy = (p[1] * S - by) * pw; return [bx + dx * c - dy * s, by + dx * s + dy * c]; };
-  let k = 0;
-  for (let i = 0; i + 1 < G.path.length; i++) {
+  ribStart();
+  for (let i = 0; i + 1 < G.path.length; i++) {   // the way the putt takes: the blue ribbon along the green (J5b)
     const a = at(G.path[i]), b = at(G.path[i + 1]), seg = Math.hypot(b[0] - a[0], b[1] - a[1]);
-    for (let d = (ph * 0.07) % 0.42; d < seg; d += 0.42, k++) { const u = d / seg, x = a[0] + (b[0] - a[0]) * u, y = a[1] + (b[1] - a[1]) * u; projectO(x, y, groundH(x, y) + 0.03, PJ); if (PJ.s > 0) aimDotO(PJ.x, PJ.y, PJ.s > 0.8 ? 1 : 0, k & 1 ? hot : AIM_W); }
+    for (let d = 0; d < seg; d += 0.35) { const u = d / seg, x = a[0] + (b[0] - a[0]) * u, y = a[1] + (b[1] - a[1]) * u; ribAdd(x, y, groundH(x, y) + 0.03); }
   }
-  const e = at(G.path[G.path.length - 1]); projectO(e[0], e[1], groundH(e[0], e[1]) + 0.03, PJ); if (PJ.s > 0) aimDotO(PJ.x, PJ.y, 2, hot);
+  const e = at(G.path[G.path.length - 1]); ribAdd(e[0], e[1], groundH(e[0], e[1]) + 0.03);
+  ribbonO(RIB_W * 0.35 * S, false);
   HP.putt = { x: e[0], y: e[1], rot };   // (kept for the harness: where this aim and pace end)
   return true;
 }
@@ -651,6 +680,7 @@ function loop(now) {
   while (acc >= STEP_MS) { tickGame(); acc -= STEP_MS; }
   // T438: after the first picture, until the first turn (or the lies) come, a frame in four is drawn: the host reads the lies on this same thread
   if (hostWaitT && (!HOST || !course || (HP && HP.turn) || course.lk || now - hostWaitT > 10000)) hostWaitT = 0;
+  coverTick();   // (J5b: every frame: the cover lifts the moment the pictures are in)
   if (hostWaitT && (++hostWaitF & 3) !== 0) { requestAnimationFrame(loop); return; }
   render();
   if ((frame & 7) === 0) updateHud();

@@ -73,6 +73,7 @@ File: style.css
 Check: image-rendering: pixelated
 Check: --panel: rgba(20, 21, 25, 0.9)
 Check: body.host #mini
+Check: #cover.on
 
 ````css file=style.css
 :root {
@@ -215,4 +216,14 @@ body.host #mini, body.host #wind { top: 56px; }
 #msg { position: absolute; left: 50%; top: 27%; transform: translateX(-50%); max-width: 84%; width: max-content; padding: 0.35em 1.1em 0.4em; text-align: center; white-space: normal;
   font: 700 1.45em/1.3 var(--serif); color: var(--ink); background: var(--panel); border: 1px solid var(--gold-line); border-radius: 999px; box-shadow: var(--shadow); }
 #msg:empty { display: none; }
+
+/* J5b: the loading cover in host mode: a CapitalEmpire card on the dimmed picture until the course's pictures are in (parts/09-hud.md coverShow) */
+#cover { position: absolute; inset: 0; display: none; place-items: center; z-index: 5; background: radial-gradient(ellipse at center, rgba(20, 21, 25, 0.92), rgba(8, 9, 12, 0.99)); font-size: clamp(11px, 1.016cqw, 15px); }
+#cover.on { display: grid; }
+#cover .cv { min-width: 19em; padding: 1.1em 1.4em 1.2em; text-align: center; background: var(--panel); border: 1px solid var(--line); border-radius: 1.1em; box-shadow: var(--shadow); color: var(--ink); }
+#cover i { display: block; font-style: normal; font-size: 0.8em; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: var(--gold); }
+#cover b { display: block; margin-top: 0.25em; font: 700 1.5em/1.25 var(--serif); color: var(--gold-hi); }
+#cover s { display: block; height: 0.45em; margin: 0.9em 0 0.55em; border-radius: 999px; background: rgba(255, 255, 255, 0.08); overflow: hidden; }
+#cover u { display: block; width: 0; height: 100%; border-radius: 999px; background: var(--gold-btn); transition: width 0.3s; }
+#cover em { display: block; font-style: normal; font-size: 0.92em; color: var(--muted); }
 ````

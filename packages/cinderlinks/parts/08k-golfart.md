@@ -5,6 +5,7 @@ R: Without a host the style menu has a Golfer choice: the voxel figure or one of
 R: A golfer's art is as tall as the voxel figure at the same scale; all of a golfer's clips share one scale; the direction row follows the facing the camera sees (a sixteenth turns 22.5 degrees).
 R: The art is lit by the time of day (its colours times the sun's colour against the day's; at night the moon's, between its light and its shade) and casts the same shadow as the voxel figure. The glow pass (the floodlights' pools, a lantern) then lights it like everything else on the picture, so a golfer in a floodlit pool is lit and one in the dark is dark (#1200).
 R: Nothing stalls: the pictures load in the background; a frame is made from them only when it is needed, a few milliseconds of it a step at most, and until it is made the nearest frame already made (or the voxel figure) stands in.
+R: J5b: while a golfer's art is still loading he is not drawn at all (never the voxel figure in his place); only art that failed to load gives the voxel figure. The picture and its frame table are fetched side by side.
 File: game.js
 Check: function golferPic(
 Check: function artFrame(
@@ -24,6 +25,7 @@ function gaName(id) { const m = /^golf_(am|pro)_([mw])(\d)$/.exec(id); return m 
 // far the club is back, 4 and 5 the downswing, 6 the strike, 7..11 the follow-through by how far through it is); a putt, golf_putt's eight (0..3 back, 4 the
 // strike, 4..7 through). al: the club's angle (the sculpture's, -2 at the top of the backswing, up to 2.2 at the finish); released: the club is on its way down
 function artFrame(pose, ph, al, released, putt) {
+  if (pose === 'a') return [putt ? 'golf_putt' : 'golf_drive', 0];   // (J5b: at address: the swing's first frame, the club at the ball)
   if (pose === 'w') return ['sheet', 1 + (((ph | 0) % 8) + 8) % 8];
   if (pose !== 's') return ['sheet', 0];
   const t = Math.min(1, Math.max(0, -al / 2));
@@ -31,17 +33,22 @@ function artFrame(pose, ph, al, released, putt) {
   return ['golf_drive', al < 0 ? (released ? (t > 0.5 ? 4 : 5) : Math.round(t * 3)) : 6 + Math.round(Math.min(1, al / 2.2) * 5)];
 }
 function artRow(fa) { const k = ((Math.round((fa - GA_AWAY) / 2) % 8) + 8) % 8; return (k + 4) % 8; }   // the sheet's row for a facing: turned away (fa 12) is N, row 4; a sixteenth turns him clockwise
-function gaLoad(id, clip) {   // a clip's picture and its frame table, fetched once, in the background
+function gaLoad(id, clip) {   // a clip's picture and its frame table, fetched once, in the background, side by side (J5b: the picture no longer waits for the table)
   const key = id + '/' + clip; let a = gaAtlas.get(key); if (a) return a;
-  a = { img: null, meta: null, ready: false, personH: 0 }; gaAtlas.set(key, a);
-  if (typeof Image === 'undefined' || typeof fetch !== 'function') return a;   // (the harness: no pictures, the voxel figure)
-  fetch('golfart/' + id + '/' + clip + '.json').then((r) => r.json()).then((m) => {
-    a.meta = m; a.img = new Image();
-    a.img.onload = () => { a.ready = true; if (clip === 'sheet') gaMeasure(a); };
-    a.img.src = 'golfart/' + id + '/' + clip + '.webp';
-  }).catch(() => { /* no art: the voxel figure */ });
+  a = { img: null, meta: null, ready: false, bad: false, personH: 0, got: 0 }; gaAtlas.set(key, a);
+  if (typeof Image === 'undefined' || typeof fetch !== 'function') { a.bad = true; return a; }   // (the harness: no pictures, the voxel figure)
+  const both = () => { if (++a.got < 2 || a.bad) return; a.ready = true; if (clip === 'sheet') gaMeasure(a); };
+  a.img = new Image(); a.img.onload = both; a.img.onerror = () => { a.bad = true; };   // (no art: the voxel figure)
+  a.img.src = 'golfart/' + id + '/' + clip + '.webp';
+  fetch('golfart/' + id + '/' + clip + '.json').then((r) => r.json()).then((m) => { a.meta = m; both(); }).catch(() => { a.bad = true; });
   return a;
 }
+// J5b: until a golfer's art is ready he is not drawn at all (GA_NONE, a sculpture with no pixels): never the voxel figure in his place. Only art that
+// failed to load (or a page with no pictures: the harness) gives the voxel figure. gaReady: the player's three clips are in (or failed).
+let GA_NONE = null;
+function gaNone() { if (!GA_NONE) { GA_NONE = sculpt(1, 1, 0, 0); sDone(GA_NONE, 0); GA_NONE.art = true; GA_NONE.none = true; } return GA_NONE; }
+function gaBad(id) { return GOLFART_CLIPS.some((c) => gaLoad(id, c).bad); }
+function gaReady(id) { if (!id) return true; return GOLFART_CLIPS.every((c) => { const a = gaLoad(id, c); return a.bad || (a.ready && (c !== 'sheet' || a.personH > 0)); }); }
 function gaCan(w, h) {
   if (!gaCanvas) { gaCanvas = typeof OffscreenCanvas !== 'undefined' ? new OffscreenCanvas(w, h) : document.createElement('canvas'); gaCtx = gaCanvas.getContext('2d', { willReadFrequently: true }); }
   gaCanvas.width = w; gaCanvas.height = h; gaCtx.clearRect(0, 0, w, h); return gaCtx;
@@ -63,7 +70,7 @@ function gaKey(id, clip, row, f, K) { return id + clip + row + '_' + f + '_' + K
 function gaMake(id, clip, row, f, K) {   // one frame as a sculpture: the art scaled to the voxel figure's height, lit by the hour; null when it cannot be made yet
   const a = gaLoad(id, clip), s0 = gaLoad(id, 'sheet'); if (!a.ready || !s0.ready || !s0.personH) return null;
   if (frame !== gaFrame) { gaFrame = frame; gaSpent = 0; }
-  if (gaSpent >= GA_MS) return null;
+  if (gaSpent >= (coverOn ? 12 : GA_MS)) return null;   // (J5b: more a step behind the loading cover)
   const t0 = performance.now(), m = a.meta, fw = m.frameWidth, fh = m.frameHeight, sc = gaVoxel(K) / s0.personH;
   const w = Math.max(2, Math.ceil(fw * sc)), h = Math.max(2, Math.ceil(fh * sc)), c = gaCan(w, h);
   c.imageSmoothingEnabled = true; c.imageSmoothingQuality = 'high'; c.drawImage(a.img, f * fw, row * fh, fw, fh, 0, 0, w, h);
@@ -99,14 +106,15 @@ function golferPic(fa, pose, ph, K) {
     const released = player.swing >= 0 || !!(HP && HP.sw && HP.sw.rel), S = artSprite(id, fa, pose, ph, K, player.al, released, puttNow());
     gaWarm(id, artRow(fa), K); gaPump();
     if (S) return S;
+    if (!gaBad(id)) return gaNone();   // (J5b: his art is still coming: nothing, not the voxel figure)
   }
-  return golferSprite(fa, pose, ph, K);
+  return pose === 'a' ? golferSprite(fa, 's', 0, K) : golferSprite(fa, pose, ph, K);   // (J5b: the voxel figure at address: his swing pose, the club at the ball)
 }
 // another golfer's picture (actorsList): his art when ready, else null (the voxel figure in his clothes)
 function actorArt(r, fa, ps, K) {
   if (!r.art) return null;
   for (const c of GOLFART_CLIPS) gaLoad(r.art, c);
-  return artSprite(r.art, fa, ps[0], ps[1], K, ps[0] === 's' ? ps[1] * 0.2 : 0, false, r.doing === 'putt');
+  return artSprite(r.art, fa, ps[0], ps[1], K, ps[0] === 's' ? ps[1] * 0.2 : 0, false, r.doing === 'putt') || (gaBad(r.art) ? null : gaNone());   // (J5b: nothing until his art is ready)
 }
 // the style menu's Golfer column (without a host: in host mode he is the golfer of his player card)
 function golferCol() {

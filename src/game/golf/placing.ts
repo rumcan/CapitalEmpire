@@ -59,6 +59,12 @@ export function rangeSpotAt(home: Rect, facing: 0 | 1 | 2 | 3, x: number, y: num
   // (the drive and the door as the start laid them: rangestart.ts siteAt, the drive at u 72, DRIVE_GAP beside the plot)
   return { plot, front: frameRect(plot, facing, 0, RANGE_PLOT[0], 0, RANGE_FRONT), setback, J: P(RANGE_PLOT[0] + 2, -NEAR - setback), end: P(RANGE_PLOT[0] + 2, 16), door: P(RANGE_PLOT[0], RANGE_FRONT / 2), du, dv };
 }
+/** J7 (#1225): the range slid du tiles along the county road at the start's own set-back (dv 0: its car park in the frontage strip, its shop within a
+ *  walk of it) */
+export function rangeSpotAlong(home: Rect, facing: 0 | 1 | 2 | 3, du: number): RangeSpot {
+  const p = plotPoint(home, facing, Math.round(du) + RANGE_PLOT[0] / 2, RANGE_FRONT / 2);
+  return rangeSpotAt(home, facing, p.x, p.y);
+}
 /** a rect of size (w, h) centred on tile (x, y), whole tiles */
 export const rectAt = (x: number, y: number, w: number, h: number): Rect => [Math.round(x - w / 2), Math.round(y - h / 2), w, h];
 /** the tile centres of a rect, every step tiles (the land and water checks sample them) */

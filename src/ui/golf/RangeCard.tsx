@@ -22,11 +22,13 @@ export interface RangePlace { id: 'range' | 'carpark' | 'practice'; name: string
  *  biggest bays): docs/JAM.md "Future development" */
 const JAM_HIDDEN_UPGRADES: readonly string[] = ['bays24', 'lights', 'proshop', 'tier2', 'academy', 'kiosk', 'parking'];
 
-export function RangeCard({ view, places = [], onPlace, onClose, onPrice, onBuy, onShowPractice, onBuildPractice, practiceWhy = null, right = 'right-3', onScene, you = null, onPractise, onHit, hitWhy, drillsDone = 0, onQuickPractice, onProfile, profileOpen = false, onTree, treeOpen = false, onOrderBalls, onShift }: { view: RangeCardView; /** T288: the placements and their Place (the build in hand) */ places?: RangePlace[]; onPlace?: (id: RangePlace['id']) => void; onClose: () => void; onPrice: (p: number) => void; onBuy: (id: RangeCardView['upgrades'][number]['id']) => void; onShowPractice?: () => void; /** T206: a facility's Build: Facilities ▸ Practice armed with it, the practice area shown */ onBuildPractice?: (id: RangeCardView['practice'][number]['id']) => void; /** the practice tools' lock (null: open) */ practiceWhy?: string | null; right?: string; /** T242: Set the scene (the range's picture card; absent: no art) */ onScene?: () => void;
+export function RangeCard({ forSale, onBuyRange, junk = [], junkCost = 0, onClearJunk, view, places = [], onPlace, onClose, onPrice, onBuy, onShowPractice, onBuildPractice, practiceWhy = null, right = 'right-3', onScene, you = null, onPractise, onHit, hitWhy, drillsDone = 0, onQuickPractice, onProfile, profileOpen = false, onTree, treeOpen = false, onOrderBalls, onShift }: { view: RangeCardView; /** T288: the placements and their Place (the build in hand) */ places?: RangePlace[]; onPlace?: (id: RangePlace['id']) => void; onClose: () => void; onPrice: (p: number) => void; onBuy: (id: RangeCardView['upgrades'][number]['id']) => void; onShowPractice?: () => void; /** T206: a facility's Build: Facilities ▸ Practice armed with it, the practice area shown */ onBuildPractice?: (id: RangeCardView['practice'][number]['id']) => void; /** the practice tools' lock (null: open) */ practiceWhy?: string | null; right?: string; /** T242: Set the scene (the range's picture card; absent: no art) */ onScene?: () => void;
   /** T241: your golf (null: none) and its actions: a practice session, and the profile card (open: profileOpen) */ you?: YouRangeView | null; onPractise?: (k: PracticeKind) => void;
   /** J6 (#1223): practice from behind the golfer: Hit balls (the range's mats) and Chip and putt (the chipping green), each with why it cannot open (null: it can), and the drills done */ onHit?: (place: 'range' | 'short') => void; hitWhy?: { range: string | null; short: string | null }; drillsDone?: number;
   /** J6: Quick build: the facility laid where it fits in the practice area, no tool needed (absent: no button) */ onQuickPractice?: (id: RangeCardView['practice'][number]['id']) => void; onProfile?: () => void; profileOpen?: boolean;
-  /** T386: the ball room's upgrade tree (a flyout beside the card: Ball room upgrades), whether it is open, and an order of balls from the supplier */ onTree?: () => void; treeOpen?: boolean; onOrderBalls?: () => void; /** T386 part 2: the attendants' shift starts at this town hour */ onShift?: (h: number) => void }) {
+  /** T386: the ball room's upgrade tree (a flyout beside the card: Ball room upgrades), whether it is open, and an order of balls from the supplier */ onTree?: () => void; treeOpen?: boolean; onOrderBalls?: () => void; /** T386 part 2: the attendants' shift starts at this town hour */ onShift?: (h: number) => void;
+  /** J7 (#1225): the old range for sale (its price and why it cannot be bought yet; absent: owned) and Buy; the junk piles on it (name, distance, scrap) and
+   *  Clear (each JUNK_CLEAR_COST) */ forSale?: { cost: number; why: string | null }; onBuyRange?: () => void; junk?: { i: number; name: string; m: number; scrap: number }[]; junkCost?: number; onClearJunk?: (i: number) => void }) {
   const { biz, stats: st, today } = view, scale = Math.round(rangeScale(view.dayLen)), pf = priceFactor(biz.price, st.ref);
   const want = Math.round(dayDemand(biz, view.demand, st)), cap = st.bays * (st.close - st.open);
   const balls = view.balls;
@@ -43,6 +45,16 @@ export function RangeCard({ view, places = [], onPlace, onClose, onPrice, onBuy,
           <button className="btn-icon" onClick={onClose} title="Close"><Icon name="close" size={18} /></button>
         </div>
       </div>
+      {/* J7 (#1225): a jam game's old range stands for sale: Buy opens it (no golfer comes before) */}
+      {forSale && (
+        <div className="space-y-1.5 rounded-lg border border-amber-300/40 bg-amber-300/10 p-2 text-xs" data-testid="range-for-sale">
+          <div className="flex items-center justify-between gap-2">
+            <span className="font-medium text-white">For sale: this old range, its dirt car park and the junk on it</span>
+            <button className="chip chip-on shrink-0 disabled:opacity-40" disabled={!!forSale.why || !onBuyRange} title={forSale.why ?? `Buy it (${money(forSale.cost)}): golfers stop for a bucket from then on`} onClick={() => onBuyRange?.()} data-testid="range-buy">Buy {money(forSale.cost)}</button>
+          </div>
+          {forSale.why && <div className="text-[12px] text-amber-300/80">{forSale.why}</div>}
+        </div>
+      )}
       {/* T288 (#873): what the player places himself: each comes into his hand as a ghost, a click on the map builds it */}
       {places.some(p => !p.done) && (
         <div className="space-y-1.5 rounded-lg border border-amber-300/30 bg-amber-300/5 p-2 text-xs" data-testid="range-places">
@@ -198,6 +210,18 @@ export function RangeCard({ view, places = [], onPlace, onClose, onPrice, onBuy,
         <span className="text-slate-300">Your home: <span className="font-semibold text-white">{view.home.name}</span></span>
         <span className="text-slate-400">{view.home.next ? `${view.home.next.name} at ${money(view.home.next.at)} taken (${money(view.home.total)} so far)` : `${money(view.home.total)} taken in all`}</span>
       </div></>}
+      {/* J7: the junk on the outfield, each pile's distance from the mats; Clear takes it away (its scrap paid back), or leave it as a target */}
+      {junk.length > 0 && (
+        <div className="space-y-1" data-testid="range-junk">
+          <div className="text-[12px] uppercase text-slate-400">Junk on the range · fewer golfers while it lies there</div>
+          {junk.map(j => (
+            <div key={j.i} className="flex items-center justify-between gap-2 rounded-lg border border-white/5 bg-white/5 px-2 py-1 text-xs" data-testid={`range-junk-${j.i}`}>
+              <span className="text-white">{j.name} <span className="text-slate-400">· {j.m} m</span></span>
+              <button className="chip disabled:opacity-40" disabled={!onClearJunk} title={`Clear it: ${money(junkCost)}, ${money(j.scrap)} of scrap back`} onClick={() => onClearJunk?.(j.i)} data-testid={`range-junk-clear-${j.i}`}>Clear {money(junkCost)}</button>
+            </div>
+          ))}
+        </div>
+      )}
       <div className="space-y-1.5" data-testid="range-upgrades">
         <div className="text-[12px] uppercase text-slate-400">Upgrades</div>
         {view.upgrades.filter(u => !u.branch && !(JAM && JAM_HIDDEN_UPGRADES.includes(u.id))).map(u => (

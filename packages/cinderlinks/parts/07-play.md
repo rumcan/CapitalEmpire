@@ -154,6 +154,25 @@ function jumpToBall() {   // J: the golfer is set down beside his ball, facing t
   cart.th = p.th; cart.fa = p.fa; cart.steer = 0; cart.zc = groundH(cart.x, cart.y);
 }
 function nearBall() { return ball.state === 0 && Math.hypot(player.x - ball.x, player.y - ball.y) < 1.5; }
+// J5b (the owner, 2026-11-13: "character addressing the ball at the driving range should not look like this? why he look like he is mid walking to the
+// right"): at his ball and ready to hit (on a hole, in practice, on the green) he is drawn at address, side-on to the aim as the swing has him (the
+// target to his left), not in a frame of the walk sheet, and drawn where the swing will stand him (addressSpot: beside the ball, the line to his
+// left). Only his picture moves there, not he: his place, the camera and the aim stay as they were until the swing takes him there itself. Turning
+// to aim only turns him; the walk frames are for walking.
+function addressAt() {
+  const p = player; if (cart.on || p.swing >= 0 || charging || p.moving || !nearBall()) return false;
+  if (typeof HP !== 'undefined' && HP) { if (HP.sw || !HP.turn || HP.over || HP.play || HP.wait > 0) return false; }
+  return true;
+}
+function addressFa() {   // his facing at address, in sixteenths of a turn: side-on to the aim, the target to his left (as the swing stands him)
+  const l = Math.hypot(aim.dx, aim.dy); if (!(l > 0)) return player.fa;
+  const th = Math.atan2(aim.dx / l, -aim.dy / l); return ((Math.round(th / 6.2832 * 16) % 16) + 16) % 16;
+}
+function addressSpot() {   // where he is drawn at address: the stance the swing takes (0.64 m beside the ball, the line to his left); null: where he is
+  const l = Math.hypot(aim.dx, aim.dy); if (!(l > 0)) return null;
+  const x = ball.x + aim.dy / l * 0.64, y = ball.y - aim.dx / l * 0.64;
+  return canStand(x, y, player.x, player.y) ? [x, y] : null;
+}
 function pickClub() {
   if (HP) return;                                                      // (host mode: the host suggests the club)
   const d = Math.hypot(hole.pin.x - ball.x, hole.pin.y - ball.y) / (clubK() * clubK()), m = matAt(ball.x, ball.y);   // (measured in the clubs' own reach)

@@ -280,7 +280,7 @@ export function isStuck(f: PlayerProgressFacts): boolean {
 export const RAMP_TAKINGS = JAM ? JAM_RAMP_TAKINGS : 20000; // (T459: the jam opens New hole sooner: features.ts JAM_RAMP_TAKINGS)
 /** the ramp step each tool opens at in a range start (the rest follow the stages): Holes and Paths with the first upgrade (to paint the
  *  practice greens), Props once the putting green opens, Buildings (the clubhouse) with New hole */
-export const RAMP_TOOL_STEP: Readonly<Partial<Record<UiToolId, RampStep>>> = Object.freeze({ course: 1, path: 1, practice: 1, props: 2, buildings: 3 }); // T206: the practice tools open with the first range upgrade, as the brushes that painted them did
+export const RAMP_TOOL_STEP: Readonly<Partial<Record<UiToolId, RampStep>>> = JAM ? Object.freeze({ course: 1, props: 2, buildings: 3 }) : Object.freeze({ course: 1, path: 1, practice: 1, props: 2, buildings: 3 }); // (J7 #1225: in the jam the paths and the practice greens are open from the start: the Build menu offers them, nothing waits on a step) // T206: the practice tools open with the first range upgrade, as the brushes that painted them did
 /** T239: the guided build's step from which a ramp tool is open whatever the ramp (a skipped step still opens the next one's tools): the paths
  *  with the walking path, Holes and Facilities › Practice with the practice area, Buildings with the first hole. New hole and the rest of
  *  ramp step 3 open at the first hole's step (rampEarned), Land for sale at the practice area's (computeProgressiveUiState) */
@@ -297,7 +297,7 @@ export const RAMP_WHY: Readonly<Record<RampStep, string>> = Object.freeze({
   3: `Unlocks when the range takes $${RAMP_TAKINGS.toLocaleString('en-US')} in a season, or in season 2`,
 });
 /** the toast as each ramp step opens */
-export const RAMP_TOAST: Readonly<Partial<Record<RampStep, string>>> = Object.freeze({
+export const RAMP_TOAST: Readonly<Partial<Record<RampStep, string>>> = JAM ? Object.freeze({ 3: 'New hole and the clubhouse are open in Build' }) : Object.freeze({ // (J7: the jam's toasts say what opened, never what to build)
   1: 'The Practice area opens: place it on your land (Range ▸ Place the practice area), then build a putting green on it (Facilities ▸ Practice)',
   2: 'Props are open (Z): dress the range to draw more golfers',
   3: 'New hole is open: build your first hole, a par-3',
@@ -375,7 +375,7 @@ export function nextFirstRunHint(f: PlayerProgressFacts): FirstRunHint | null {
   // the jam's hint points at the Junction tool, so only once it is open
   if (!JAM && f.townJammed && (f.advancedMode || stage >= TOOL_STAGE.junction!) && !dismissed.has(JAM_HINT.id)) return JAM_HINT; // (T459: not in the jam build: no Junction tool)
   // a range start (T132): the ramp's hints until the first hole (never Step 1's: the range is the job), then the stages' as everywhere
-  if (f.ramp && f.playableHoles < 1) return f.guideStep !== undefined ? null : rampHint(f, dismissed); // (T239: the guide's card says it while it runs)
+  if (f.ramp && f.playableHoles < 1) return f.guideStep !== undefined || JAM ? null : rampHint(f, dismissed); // (T239: the guide's card says it while it runs; J7: the jam's hints are Build ▸ Tips, opened by the player)
   // a range start's practice facilities first (T130): the putting green, then the chipping green and bunker
   const [pp, pc] = PRACTICE_HINTS;
   if (!f.ramp && f.practice && f.playableHoles < 1) {

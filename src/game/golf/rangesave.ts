@@ -1,6 +1,7 @@
 // The range business's save and rules (plan P24 Phase 1, T129): the upgrades, the bucket price, the counts, what the upgrades do, the demand and
 // the money. Light and pure (it imports only the range's numbers), so the save's normalizer (golf/mode.ts) and the UI can use it; the scene and
 // the golfers are golf/rangebiz.ts.
+import { junkFactor, normalizeJunk, type JunkPile } from './junk';
 import { RANGE_PASS_POP } from './range';
 import { LOT_SHARE } from './rangelot';
 import { BALL_COST, CASES_A_DAY, CASE_BALLS, legacyBalls, newBalls, normalizeBalls, type BallSave } from './rangeballs';
@@ -46,6 +47,12 @@ export interface RangeBizSave { v: 1; owned: RangeUpgradeId[]; price: number; se
   /** T146: the game has laid the car park building's cart path (from the path's end at the car park round the building); an old save's first
    *  load with the building lays it */
   garage?: boolean;
+  /** J7 (#1225): a jam game's old range stands on the plot for sale: drawn, with its car park, but no golfer comes until the player buys it (absent:
+   *  owned) */
+  forSale?: true;
+  /** J7: the junk lying on the range (golf/junk.ts: a library id and a spot in the range's frame each); the player clears it pile by pile (absent:
+   *  none) */
+  junk?: JunkPile[];
   /** T223: the range began in the desert (a dirt tee box and a desert outfield the player turfs and grasses: the 'teeturf' and 'grass'
    *  upgrades). A save without it was made before T223, when every range had its grass: its load gets both upgrades (normalizeRangeBiz) */
   desert?: boolean;
@@ -229,6 +236,8 @@ export function normalizeRangeBiz(x: unknown): RangeBizSave {
   if (o.apron === true) out.apron = true; // T306
   if (typeof o.last === 'number' && Number.isFinite(o.last) && o.last > 0) out.last = Math.round(o.last);
   if (o.garage === true && owned.includes('parking')) out.garage = true;
+  if (o.forSale === true) out.forSale = true; // J7
+  const jk = normalizeJunk(o.junk); if (jk?.length) out.junk = jk;
   // T237: the set-back and the range's own lot (a save from before T237 has neither: its plot on the road, its lot on the plot)
   if (typeof o.setback === 'number' && Number.isFinite(o.setback) && o.setback > 0) out.setback = Math.round(o.setback);
   if (isRect(o.lot)) out.lot = [o.lot[0], o.lot[1], o.lot[2], o.lot[3]];
@@ -278,7 +287,8 @@ export function rangeStats(s: RangeBizSave, x: RangeExtras = {}): RangeStats {
   const teeTurf = has('teeturf'), grass = has('grass');
   const own = (has('greens') ? TARGET_APPEAL.greens : 0) + (has('targets') ? TARGET_APPEAL.targets : 0) + (covered ? 0.15 : 0) + (dispenser ? 0.05 : 0) + (proShop ? 0.15 : 0) + (teeTurf ? GROUND_APPEAL.teeturf : 0) + (grass ? GROUND_APPEAL.grass : 0)
     + (tier2 ? EXTRA_APPEAL.tier2 : 0) + (academy ? EXTRA_APPEAL.academy : 0) + (kiosk ? EXTRA_APPEAL.kiosk : 0) + (picker ? EXTRA_APPEAL.picker : 0);
-  const appeal = (1 + own) * (1 + propsAppeal) * (1 + practice);
+  // J7: an old range still for sale draws nobody; each junk pile left on it takes a little off (golf/junk.ts junkFactor)
+  const appeal = s.forSale ? 0 : (1 + own) * (1 + propsAppeal) * (1 + practice) * junkFactor(s.junk?.length ?? 0);
   return {
     bays, targets: has('targets') ? 5 : has('greens') ? 3 : 0, covered, lights, dispenser, proShop, appeal, propsAppeal,
     ref: (PRICE_START + (covered ? 2 : 0) + (proShop ? 1 : 0) + (teeTurf ? 1 : 0)) * (1 + propsAppeal), extra: proShop ? 2 : 0, serve: dispenser ? 0.8 : proShop ? 2 : 3,
@@ -328,6 +338,7 @@ export function upgradeWhy(s: RangeBizSave, id: RangeUpgradeId, money: number): 
   const u = BY_ID.get(id); if (!u) return 'Unknown upgrade';
   if (s.owned.includes(id)) return 'Built';
   if (s.built === false) return 'Place your driving range first';
+  if (s.forSale) return 'Buy the driving range first'; // J7
   const miss = needsOf(u).find(n => !s.owned.includes(n)); if (miss) return `Build ${BY_ID.get(miss)!.name} first`;
   // T386: the ball loop's gear is paid from the range's till (what the range has taken, less its gear), and the treasury must hold it too
   if (u.till && (s.balls?.till ?? 0) < u.cost) return `Not enough in the range's till: it costs $${u.cost.toLocaleString()} (the till has $${Math.floor(s.balls?.till ?? 0).toLocaleString()})`;
