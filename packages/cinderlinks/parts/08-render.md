@@ -1117,7 +1117,7 @@ function spriteFor(o, d) {
 // page (features3p.ts TreePic) and made a sculpture once, HPIC px from its top to its ground point, kept per species and time of day: its pixels the
 // picture's own colours (light byte 255) by day, lit by the time of day's light at golden hour and dusk; a pixel counts from alpha 110. One picture is
 // made a frame at most, and until a page has loaded the tree is the sculpted stand-in, so a picture never stalls a frame. libS scales it to the tree.
-let TREEART = 0;
+let TREEART = 0;   // (Sculpted by default: under the painted filter the two looks are close, and the pictures cost about 0.6 ms a frame more in the browser, which would take the view past its 0.5 ms allowance over lead/live)
 const WIND_HOST = 30;   // a host's tree is drawn cluster by cluster (swaying) within this many metres: a fuller crown than the land's own costs more, and past 30 m the sway does not show
 const HPIC = 256, picImgs = new Map(), picSpr = new Map(); let picMade = -1, picCv = null;
 function picFor(o) {
