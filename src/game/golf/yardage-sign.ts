@@ -9,7 +9,7 @@ export const SIGN = { face: '#f3ead2', frame: '#5b3a1e', ink: '#2a1a0b', post: '
 /** the board's size for a world unit of u canvas px (32 * the zoom: about a metre and a half): the figures' size (never below minPx, so they stay legible
  *  zoomed out: the board grows a little past life then), the board's width for text w px wide, its height and the post's height. Pure */
 export function signSize(u: number, textW: (px: number) => number, minPx: number): { px: number; w: number; h: number; post: number } {
-  const px = Math.max(minPx, Math.round(0.42 * u)), w = textW(px) + px * 0.9, h = px * 1.55, post = Math.max(px * 0.9, 0.7 * u);
+  const px = Math.max(minPx, Math.round(0.5 * u)), w = textW(px) + px * 0.9, h = px * 1.55, post = Math.max(px * 0.9, 0.7 * u);
   return { px, w, h, post };
 }
 

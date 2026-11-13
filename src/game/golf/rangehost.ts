@@ -342,7 +342,7 @@ export class RangeHost {
       // J7d (#1234): in the jam each distance is a painted yardage board standing in the world (golf/yardage-sign.ts), not a floating label; a junk pile's
       // name shows while the pointer is over it (the jam's labels show on hover: world-labels.ts hoverOnly)
       if (JAM) {
-        for (const t of sc.numbers) { const p = screen(t.x, t.y); if (on(p)) drawYardageSign(c, p.x, p.y, t.text, 32 * ze, 8 * dpr); }
+        for (const t of sc.numbers) { const p = screen(t.x, t.y); if (on(p)) drawYardageSign(c, p.x, p.y, t.text, 32 * ze, 10 * dpr); }
         for (const j of sc.junk) { const q = screen(j.x, j.y); if (on(q)) labels.text(j, PRI.name, j.name, q.x, q.y - 1.4 * 32 * ze, font, px, '#f8fafc', LABEL_OUTLINE, 3 * dpr); }
       } else for (const t of sc.numbers) {
         const p = screen(t.x, t.y); if (!on(p)) continue;
