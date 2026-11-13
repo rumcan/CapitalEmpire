@@ -21,18 +21,27 @@ const gimmeEl = $('gimme'); gimmeEl.addEventListener('click', (e) => { gimme(); 
 // the course's style: a button at the top of the picture; its menu lists the course types and the biomes side by side (M steps through them too)
 const styleBtn = $('styleBtn'), styleMenu = $('styleMenu'); let shownStyle = '';
 let shownType = '';
+// T448: the Picture section: the painted look on or off, its paint radius, calm and cinematic amount (parts/09b-postfx.md); without WebGL2 it says so
+const PIC_IN = { picNear: ['near', 1, () => PIC.near + ' m'], picCalm: ['calm', 0.01, () => Math.round(PIC.calm * 100) + '%'], picCine: ['cine', 0.01, () => Math.round(PIC.cine * 100) + '%'] };
+function picMenu() {
+  if (!PFX) return '<div class="grp dist"><i>Picture</i><em>The painted look needs WebGL2: the plain picture is shown.</em></div>';
+  const sl = (id, name, lo, hi, st, v) => '<em>' + name + '</em><input id="' + id + '" type="range" min="' + lo + '" max="' + hi + '" step="' + st + '" value="' + v + '"><span id="' + id + 'V">' + PIC_IN[id][2]() + '</span>';
+  return '<div class="grp dist"><i>Picture</i><label class="simple"><input id="picOn" type="checkbox"' + (PIC.on ? ' checked' : '') + '> Painted look</label>'
+    + sl('picNear', 'Paint radius', 30, 500, 10, PIC.near) + sl('picCalm', 'Calm', 0, 85, 5, Math.round(PIC.calm * 100)) + sl('picCine', 'Cinematic', 0, 100, 5, Math.round(PIC.cine * 100)) + '</div>';
+}
 function styleShow() {   // the menu: the biome (the land and its plants) beside the course type (how the course is kept); one of each is in force
   shownStyle = biomeId; shownType = ctypeId; styleBtn.innerHTML = BIOMES[biomeId].name + ' &middot; ' + CTYPES[ctypeId].name + '<b>&#9662;</b>';
   const col = (title, kind, ids, T, cur) => '<div class="grp"><i>' + title + '</i>' + ids.map((id) => '<button type="button" data-kind="' + kind + '" data-id="' + id + '"' + (id === cur ? ' class="on"' : '') + '>' + T[id].name + '</button>').join('') + '</div>';
   styleMenu.innerHTML = col('Biome', 'b', BIOME_ORDER, BIOMES, biomeId) + col('Course type', 't', CTYPE_ORDER, CTYPES, ctypeId)
+    + picMenu()
     + '<div class="grp dist"><i>Render distance</i><input id="detail" type="range" min="150" max="400" step="25" value="' + VIEWR + '"><span id="detailV">' + VIEWR + ' m</span><label class=\"simple\"><input id=\"simpleG\" type=\"checkbox\"' + (SIMPLEG ? ' checked' : '') + '> Simple grass everywhere</label><em>How far the land, trees and grass are drawn; past 260 m the detailed ground reaches farther too. Higher needs a faster PC.</em></div>';
 }
 styleBtn.addEventListener('click', (e) => { styleMenu.className = styleMenu.className === 'on' ? '' : 'on'; if (styleBtn.blur) styleBtn.blur(); if (e.preventDefault) e.preventDefault(); });
 styleMenu.addEventListener('click', (e) => { const t = e.target, id = t && t.getAttribute ? t.getAttribute('data-id') : null, kind = id ? t.getAttribute('data-kind') : null; if (!id) return;
   if (kind === 'b' && BIOMES[id] && id !== biomeId) { useStyle(id, null); firstPicture(); } else if (kind === 't' && CTYPES[id] && id !== ctypeId) { useStyle(null, id); firstPicture(); }
   styleShow(); });   // (the menu stays open: a biome and a type are usually chosen together)
-styleMenu.addEventListener('change', (e) => { const t = e.target; if (t && t.id === 'simpleG') setSimple(t.checked); });
-styleMenu.addEventListener('input', (e) => { const t = e.target; if (!t || t.id !== 'detail') return; setDetail(+t.value); const v = document.getElementById('detailV'); if (v) v.textContent = VIEWR + ' m'; });
+styleMenu.addEventListener('change', (e) => { const t = e.target; if (t && t.id === 'simpleG') setSimple(t.checked); else if (t && t.id === 'picOn') picSet('on', t.checked); });
+styleMenu.addEventListener('input', (e) => { const t = e.target; if (t && PIC_IN[t.id]) { const [k, f, sh] = PIC_IN[t.id]; picSet(k, +t.value * f); const v = document.getElementById(t.id + 'V'); if (v) v.textContent = sh(); return; } if (!t || t.id !== 'detail') return; setDetail(+t.value); const v = document.getElementById('detailV'); if (v) v.textContent = VIEWR + ' m'; });
 try { const d0 = +localStorage.getItem('cinderlinks.view'); if (d0) setDetail(d0); const s0 = localStorage.getItem('cinderlinks.simple'); if (s0 === '0') SIMPLEG = false; } catch (e) {}
 const hudEl = $('hud'); let uiMin = true;
 try { if (localStorage.getItem('cinderlinks.ui') === 'open') uiMin = false; } catch (e) {}
@@ -119,7 +128,7 @@ function hostMessage(m) {   // one message from the host page, already known to 
   if (m.t === 'lies' && m.v === 1) { hostLies(m.lk); return; }   // T438
   if ((m.t === 'turn' || m.t === 'shot' || m.t === 'holeEnd' || m.t === 'preview') && m.v === 1) { if (course) hostPlayMsg(m); return; }   // (T418: the play, once a course is in)
   if (m.t !== 'course' || m.v !== 1) return;
-  if (m.time === 'night') setTime(TOD.length - 1); else if (m.time === 'day') setTime(0);   // T449: night golf: the darkest time until night is drawn with the floodlights
+  if (m.time === 'night') setTime(TOD.length - 1); else if (m.time === 'day') setTime(0); else if (m.time === 'golden') setTime(1); else if (m.time === 'dusk') setTime(2);   // T449: night golf: the darkest time until night is drawn with the floodlights; T448: golden, dusk (absent: the view's own, Golden hour)
   if (m.golfer) playerLook(m.golfer);   // T437: the golfer in the player card's clothes (parts/08d-actors.md)
   const C = m.course;
   if (!C || typeof C.id !== 'string' || !Array.isArray(C.holes) || !C.holes.length || !C.polys) { hostSend({ t: 'error', why: 'the course has no id, holes or shapes' }); return; }
@@ -589,7 +598,7 @@ function loop(now) {
   const q = new URLSearchParams(location.search);
   if (q.get('host') === '1') HOST = true;   // (host mode: started below, once the page is ready)
   if (q.get('seed')) SEED = +q.get('seed') | 0;
-  setTime(q.get('time') ? clamp(+q.get('time') | 0, 0, 2) : 0);
+  setTime(q.get('time') ? clamp(+q.get('time') | 0, 0, 2) : 1);   // (Golden hour unless the address says: the owner's choice with the painted look, T448)
   setBiome(BIOMES[q.get('biome')] ? q.get('biome') : 'parkland', CTYPES[q.get('type')] ? q.get('type') : 'private');   // ?biome=desert&type=links and so on
   STYLE_URL = q.has('biome') || q.has('type');   // (the address's style wins over the one kept for the course)
   if (!HOST) try { for (const c of JSON.parse(localStorage.getItem('cinderlinks.courses') || '[]')) if (c && c.id && c.holes) MORE_COURSES.push(c); } catch (e) { /* nothing kept */ }

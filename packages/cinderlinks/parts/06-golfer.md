@@ -150,14 +150,16 @@ function mkFlag(ph) {
   }
   return sDone(S, 0.6);
 }
-const flagSpr = [0, 1, 2, 3, 4, 5].map(mkFlag);
+const flagSpr = [0, 1, 2, 3, 4, 5].map(mkFlag); for (const f of flagSpr) f.keep = true;
 const ballSpr = (() => {
   const S = sculpt(5, 5, 2, 4), W = (r, g, b, L) => ((L << 24) | (b << 16) | (g << 8) | r) >>> 0;
   const rows = ['.bca.', 'bccaa', 'dbcca', 'ddbcc', '.ddb.'], pal = { a: W(255, 255, 250, 198), c: W(244, 244, 238, 180), b: W(214, 216, 226, 150), d: W(168, 172, 200, 120) };
   rows.forEach((row, y) => [...row].forEach((ch, x) => { if (ch !== '.') S.px[y * 5 + x] = pal[ch]; }));
   return sDone(S, 0);
 })();
+ballSpr.keep = true;   // (kept sharp: see sprM)
 const markSpr = (() => { const S = sculpt(11, 12, 5, 10); sBall(S, 0, -4, 4, 0, GOLDR, { seed: 3, stip: 0.05 }); return sDone(S, 0.6); })();
+markSpr.keep = true;
 // ---- the golf cart's colours (the cart itself is a small model drawn by the renderer: drawCart)
 const CARTW = ramp(['#8e96aa', '#b8bfd0', '#dde2ec', '#f6f8fc', '#ffffff']);
 const CARTG = ramp(['#14402c', '#1c5a3a', '#267848', '#34965a', '#48b46e']);
