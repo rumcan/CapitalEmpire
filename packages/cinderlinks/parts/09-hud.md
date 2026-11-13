@@ -25,9 +25,7 @@ let shownType = '';
 const PIC_IN = { picCine: ['cine', 0.01, () => Math.round(PIC.cine * 100) + '%'] };
 function picMenu() {
   if (!PFX) return '<div class="grp dist"><i>Picture</i><em>The painted look needs WebGL2: the plain picture is shown.</em></div>';
-  const sl = (id, name, lo, hi, st, v) => '<em>' + name + '</em><input id="' + id + '" type="range" min="' + lo + '" max="' + hi + '" step="' + st + '" value="' + v + '"><span id="' + id + 'V">' + PIC_IN[id][2]() + '</span>';
-  return '<div class="grp dist"><i>Picture</i>'
-    + sl('picCine', 'Cinematic', 0, 100, 5, Math.round(PIC.cine * 100)) + '</div>';
+  return '';   // (the owner, 2026-11-13: the cinematic finish hid the ball on the green: it is off, and the Picture section has nothing left to set)
 }
 function styleShow() {   // the menu: the biome (the land and its plants) beside the course type (how the course is kept); one of each is in force
   shownStyle = biomeId; shownType = ctypeId; styleBtn.innerHTML = 'Settings<b>&#9662;</b>';   // (the owner, 2026-11-13: the button always reads Settings; the biome and type are chosen in its menu)
