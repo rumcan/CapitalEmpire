@@ -84,13 +84,28 @@ function courseLineD(x, y) {   // how far a point is from the nearest hole's lin
   const C = course, i = Math.round((x - C.gx0) / CRES), j = Math.round((y - C.gy0) / CRES); if (i < 0 || j < 0 || i >= C.gw || j >= C.gh) return 999;
   return C.md[j * C.gw + i];
 }
+function hostTrees(T, S) {   // T451: a host's trees (features3p.ts TreesPack) by the land's tree cells (TGC): one a cell, the tallest first; a tree whose cell is
+  // taken goes to a free cell beside it (it keeps its own place), else is left out. The box, grown by half a cell, is where the land grows none of its own
+  const at = new Map(), t = T.t, n = Math.floor(t.length / 5), ord = [];
+  for (let i = 0; i < n; i++) ord.push(i);
+  ord.sort((a, b) => t[b * 5 + 2] - t[a * 5 + 2]);
+  for (const i of ord) {
+    const x = t[i * 5] * S, y = t[i * 5 + 1] * S, p = t[i * 5 + 4] | 0; if (!(x === x && y === y)) continue;
+    const s = { x, y, h: Math.max(1, t[i * 5 + 2] * Math.max(S, 0.8)), cw: Math.max(0.6, t[i * 5 + 3] * Math.max(S, 0.8)), f: T.form && T.form[p] !== undefined ? T.form[p] : 1, hue: T.hue && T.hue[p] !== undefined ? T.hue[p] : 0.3, p };
+    const gx = Math.floor(x / TGC), gy = Math.floor(y / TGC);
+    for (let k = 0; k < 9; k++) { const kx = gx + [0, 1, -1, 0, 0, 1, -1, 1, -1][k], ky = gy + [0, 0, 0, 1, -1, 1, -1, -1, 1][k], key = (kx + 32768) * 65536 + (ky + 32768); if (!at.has(key)) { at.set(key, s); break; } }
+  }
+  const b = T.box, h = TGC / 2;
+  return { at, x0: Math.min(b[0], b[2]) * S - h, y0: Math.min(b[1], b[3]) * S - h, x1: Math.max(b[0], b[2]) * S + h, y1: Math.max(b[1], b[3]) * S + h, pic: Array.isArray(T.pic) ? T.pic : [], sp: T.sp || [] };
+}
 function loadCourse(id) {   // make a saved course ready to play; false if there is no such course (its scale: its own `scale` if it has one, as a host page's course does; else CSCALE)
   course = null;
   const D = MORE_COURSES.find((c) => c.id === id) || courseList().find((c) => c.id === id); if (!D) return false;   // (one handed over or fetched in this visit wins over a saved one of the same id)
   const S = D.scale > 0 ? +D.scale : CSCALE, sc = (a) => { const o = new Float32Array(a.length); for (let k = 0; k < a.length; k++) o[k] = a[k] * S; return o; };
   const C = { id: D.id, name: D.name, place: D.place, credit: D.credit, hcredit: D.hg ? D.hg.src : '', S, holes: [], gx0: 0, gy0: 0, gw: 0, gh: 0, sF: null, sG: null, sB: null, sT: null, sP: null, mw: null, ma: null, md: null, wlG: null,
-    hx0: 0, hy0: 0, hstep: 1, hw: 0, hh: 0, hm: null, streams: [], raw: D.fetched ? D : null, lk: null };   // (raw: a fetched course's data, for the workers, which do not have it)
+    hx0: 0, hy0: 0, hstep: 1, hw: 0, hh: 0, hm: null, streams: [], raw: D.fetched ? D : null, lk: null, ht: null };   // (raw: a fetched course's data, for the workers, which do not have it)
   if (D.lk && Array.isArray(D.lk.r)) C.lk = lieGrid(D.lk, S);   // (T422: a host page's lies)
+  if (D.trees && Array.isArray(D.trees.t) && Array.isArray(D.trees.box)) C.ht = hostTrees(D.trees, S);   // (T451: a host page's trees)
   if (D.hg) {                                                       // the heights: metres above the grid's lowest
     const b = atob(D.hg.d), n = D.hg.w * D.hg.h, M = new Float32Array(n); let lo = 1e9;
     for (let k = 0; k < n; k++) { const v = (b.charCodeAt(k * 2) | (b.charCodeAt(k * 2 + 1) << 8)) * D.hg.q; M[k] = v; if (v < lo) lo = v; }

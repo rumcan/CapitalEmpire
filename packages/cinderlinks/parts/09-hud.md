@@ -25,14 +25,18 @@ function styleShow() {   // the menu: the biome (the land and its plants) beside
   shownStyle = biomeId; shownType = ctypeId; styleBtn.innerHTML = BIOMES[biomeId].name + ' &middot; ' + CTYPES[ctypeId].name + '<b>&#9662;</b>';
   const col = (title, kind, ids, T, cur) => '<div class="grp"><i>' + title + '</i>' + ids.map((id) => '<button type="button" data-kind="' + kind + '" data-id="' + id + '"' + (id === cur ? ' class="on"' : '') + '>' + T[id].name + '</button>').join('') + '</div>';
   styleMenu.innerHTML = col('Biome', 'b', BIOME_ORDER, BIOMES, biomeId) + col('Course type', 't', CTYPE_ORDER, CTYPES, ctypeId)
+    + '<div class="grp"><i>Trees</i>' + ['Sculpted', 'Pictures'].map((nm, i) => '<button type="button" data-kind="tr" data-id="' + i + '"' + (i === TREEART ? ' class="on"' : '') + '>' + nm + '</button>').join('') + '</div>'
     + '<div class="grp dist"><i>Render distance</i><input id="detail" type="range" min="150" max="400" step="25" value="' + VIEWR + '"><span id="detailV">' + VIEWR + ' m</span><label class=\"simple\"><input id=\"simpleG\" type=\"checkbox\"' + (SIMPLEG ? ' checked' : '') + '> Simple grass everywhere</label><em>How far the land, trees and grass are drawn; past 260 m the detailed ground reaches farther too. Higher needs a faster PC.</em></div>';
 }
 styleBtn.addEventListener('click', (e) => { styleMenu.className = styleMenu.className === 'on' ? '' : 'on'; if (styleBtn.blur) styleBtn.blur(); if (e.preventDefault) e.preventDefault(); });
 styleMenu.addEventListener('click', (e) => { const t = e.target, id = t && t.getAttribute ? t.getAttribute('data-id') : null, kind = id ? t.getAttribute('data-kind') : null; if (!id) return;
+  if (kind === 'tr') { setTreeArt(+id); firstPicture(); styleShow(); return; }   // T451: the host's trees sculpted or in its pictures
   if (kind === 'b' && BIOMES[id] && id !== biomeId) { useStyle(id, null); firstPicture(); } else if (kind === 't' && CTYPES[id] && id !== ctypeId) { useStyle(null, id); firstPicture(); }
   styleShow(); });   // (the menu stays open: a biome and a type are usually chosen together)
 styleMenu.addEventListener('change', (e) => { const t = e.target; if (t && t.id === 'simpleG') setSimple(t.checked); });
 styleMenu.addEventListener('input', (e) => { const t = e.target; if (!t || t.id !== 'detail') return; setDetail(+t.value); const v = document.getElementById('detailV'); if (v) v.textContent = VIEWR + ' m'; });
+function setTreeArt(v) { TREEART = v ? 1 : 0; try { localStorage.setItem('cinderlinks.treeart', String(TREEART)); } catch (e) { /* not kept */ } }
+try { const ta = new URLSearchParams(location.search).get('trees'), t0 = ta === 'pic' ? '1' : ta === 'sculpt' ? '0' : localStorage.getItem('cinderlinks.treeart'); if (t0 === '1') TREEART = 1; else if (t0 === '0') TREEART = 0; } catch (e) {}
 try { const d0 = +localStorage.getItem('cinderlinks.view'); if (d0) setDetail(d0); const s0 = localStorage.getItem('cinderlinks.simple'); if (s0 === '0') SIMPLEG = false; } catch (e) {}
 const hudEl = $('hud'); let uiMin = true;
 try { if (localStorage.getItem('cinderlinks.ui') === 'open') uiMin = false; } catch (e) {}
@@ -122,7 +126,7 @@ function hostMessage(m) {   // one message from the host page, already known to 
   if (m.golfer) playerLook(m.golfer);   // T437: the golfer in the player card's clothes (parts/08d-actors.md)
   const C = m.course;
   if (!C || typeof C.id !== 'string' || !Array.isArray(C.holes) || !C.holes.length || !C.polys) { hostSend({ t: 'error', why: 'the course has no id, holes or shapes' }); return; }
-  const D = Object.assign({}, C, { fetched: true, scale: +m.scale > 0 ? +m.scale : 1, hv: ++hostN });   // (fetched: the workers are handed its data; hv: a new hand-over of the same id is loaded again)
+  const D = Object.assign({}, C, { fetched: true, scale: +m.scale > 0 ? +m.scale : 1, hv: ++hostN }, m.features && m.features.trees ? { trees: m.features.trees } : {});   // (T451: the host's trees travel with the course, so the workers stand them too)   // (fetched: the workers are handed its data; hv: a new hand-over of the same id is loaded again)
   const k = MORE_COURSES.findIndex((c) => c.id === D.id); if (k >= 0) MORE_COURSES.splice(k, 1); MORE_COURSES.push(D);
   if (m.seed !== undefined && Number.isFinite(+m.seed)) SEED = +m.seed | 0;
   setBiome(BIOMES[m.biome] ? m.biome : biomeId, CTYPES[m.type] ? m.type : ctypeId); lib.clear(); libWarm = 0;   // (sculptures made in the old colours are dropped, as useStyle does)
