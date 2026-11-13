@@ -1099,11 +1099,12 @@ function libOf(kind, form, hue, vr) {   // form: 0 conifer, 1 broadleaf, 2 airy;
   return L;
 }
 function libFor(o) {   // the library sculpture that stands in for a thing, and (o.libS) the scale that makes it the thing's size
-  const L = libOf(o.k, o.k === K_TREE ? (o.c[0] < CONT ? 0 : o.c[0] < 0.66 ? 1 : 2) : 1, Math.floor(o.c[2] * 5.99), (o.seed >>> 3) & 1);
+  const L = libOf(o.k, o.k === K_TREE ? (isCon(o) ? 0 : o.c[0] < 0.66 ? 1 : 2) : 1, Math.floor(o.c[2] * 5.99), (o.seed >>> 3) & 1);
   o.libS = (o.k === K_ROCK ? o.rx / L.rx : o.H / L.H);
   return L.S;
 }
 function spriteFor(o, d) {
+  if (TREEART && o.k === K_TREE && o.sp !== undefined) { const B = picFor(o); if (B) return B; }   // T451: the host's picture of the tree's species
   if (o.spr) return o.spr;
   const heavy = o.k === K_TREE || o.k === K_BUSH || o.k === K_ROCK;
   if (!heavy) { if (smallMade >= 10 && spriteMax < 99) return null; smallMade++; return objSprite(o); }   // small things: ten new ones a frame at most (the rest wait a frame: never a stall when the camera lands among them)
@@ -1111,6 +1112,36 @@ function spriteFor(o, d) {
   if (d < 55 && madeThisFrame < spriteMax && !(bcam && ball.state === 1) && (spriteMax > 1 || (stillF > 10 ? frame % 3 === 0 : frame % 15 === 0 && d < 26))) {   /* while the camera moves: only the nearest, and seldom (each new sculpture costs a slow frame) */ madeThisFrame++; o.born = o.born === -1 ? frame : 0; return objSprite(o); }   // (born: it was on show as a stand-in, so its own sculpture dissolves in)
   o.born = -1;
   return libFor(o);
+}
+// T451: the host's trees in the game's own pictures (the style menu's Trees: Pictures; TREEART 1). Each species' picture is cut from the host's atlas
+// page (features3p.ts TreePic) and made a sculpture once, HPIC px from its top to its ground point, kept per species and time of day: its pixels the
+// picture's own colours (light byte 255) by day, lit by the time of day's light at golden hour and dusk; a pixel counts from alpha 110. One picture is
+// made a frame at most, and until a page has loaded the tree is the sculpted stand-in, so a picture never stalls a frame. libS scales it to the tree.
+let TREEART = 0;   // (Sculpted by default: under the painted filter the two looks are close, and the pictures cost about 0.6 ms a frame more in the browser, which would take the view past its 0.5 ms allowance over lead/live)
+const WIND_HOST = 30;   // a host's tree is drawn cluster by cluster (swaying) within this many metres: a fuller crown than the land's own costs more, and past 30 m the sway does not show
+const HPIC = 256, picImgs = new Map(), picSpr = new Map(); let picMade = -1, picCv = null;
+function picFor(o) {
+  const HT = course ? course.ht : null, P = HT ? HT.pic[o.sp] : null; if (!P || typeof Image === 'undefined') return null;
+  const key = o.sp * 8 + tmode; let S = picSpr.get(key);
+  if (!S) {
+    let I = picImgs.get(P.url);
+    if (!I) { I = new Image(); I.ok = false; I.onload = () => { I.ok = true; }; I.onerror = () => { I.bad = true; }; I.src = P.url; picImgs.set(P.url, I); }
+    if (I.bad) return null;
+    if (!I.ok || picMade === frame) return libFor(o);
+    picMade = frame; S = picBuild(I, P, tmode === 0 ? 255 : 170); if (!S) return null; picSpr.set(key, S);
+  }
+  o.libS = o.H / S.ph; return S;
+}
+function picBuild(I, P, L) {
+  const W = I.naturalWidth, H0 = I.naturalHeight, q = P.quad, k = HPIC / Math.max(1, P.ay - q[1]);
+  const dw = Math.max(2, Math.ceil((q[2] - q[0]) * k)), dh = Math.max(2, Math.ceil((q[3] - q[1]) * k));
+  if (!picCv) picCv = typeof document !== 'undefined' ? document.createElement('canvas') : null; if (!picCv) return null;
+  picCv.width = dw; picCv.height = dh; const g = picCv.getContext('2d', { willReadFrequently: true }); g.clearRect(0, 0, dw, dh); g.imageSmoothingEnabled = true; g.imageSmoothingQuality = 'high';
+  g.drawImage(I, P.uv[0] * W, P.uv[1] * H0, (P.uv[2] - P.uv[0]) * W, (P.uv[3] - P.uv[1]) * H0, 0, 0, dw, dh);
+  const d = g.getImageData(0, 0, dw, dh).data, S = sculpt(dw, dh, Math.round((P.ax - q[0]) * k), Math.round((P.ay - q[1]) * k));
+  for (let i = 0; i < dw * dh; i++) { if (d[i * 4 + 3] < 110) continue; S.px[i] = ((L << 24) | (d[i * 4 + 2] << 16) | (d[i * 4 + 1] << 8) | d[i * 4]) >>> 0; }
+  sDone(S, 0); S.wind = null; S.pic = true; S.ph = HPIC;
+  return S;
 }
 function farHaze(d0) { const d = d0 * HZK, h = d < 50 ? 0 : d < 200 ? (d - 50) / 300 : 0.5 + (d - 200) * 0.007; return BSAND ? (h * 2 > 0.92 ? 0.92 : h * 2) : h; }   // (over the desert the air is twice as thick with dust and heat)   // the air thickens fast toward the edge of sight: what comes into view there comes out of the haze
 let spriteMax = 1;
@@ -1227,7 +1258,7 @@ function render() {
   project(p.x, p.y, gh, PJ); const psx = PJ.x, psy = PJ.y;
   flist.sort((a, b) => b.d - a.d);
   for (const t of flist) {   // far trees: the same stand-in the near pass would draw at this distance; at the edge of sight they rise out of the haze
-    const d = t.d, k = FOC / d, S = libFor(t), gi = d > 196 ? (228 - d) / 32 : 1;
+    const d = t.d, k = FOC / d, S = (TREEART && t.sp !== undefined && picFor(t)) || libFor(t), gi = d > 196 ? (228 - d) / 32 : 1;   // (T451: in the pictures' look, far trees are their pictures too)
     blit(S, t.sx, Math.round(HZ - (t.lift / ZP - camZ) * k), DS / d * t.libS * gi, d * 100, 0, 0, false, farHaze(d));
   }
   for (const o of dlist) {
@@ -1250,14 +1281,14 @@ function render() {
       const gi = o.k === K_TREE ? 1 : o.k > K_ROCK ? (46 - d) / 9 : (DMID - d) / 14; if (gi < 0.12) continue;   // small things grow in over the last metres of their range
       const hzo = d > 50 ? farHaze(d) : 0;
       o.libS = 1; const S = spriteFor(o, d); if (!S) continue;
-      const s = s0 * o.libS * (gi < 1 ? gi : 1), soft = o.k === K_GRASS || o.k === K_REED || o.k === K_FLOWER;
+      const s = s0 * o.libS * (S.sk || 1) * (gi < 1 ? gi : 1), soft = o.k === K_GRASS || o.k === K_REED || o.k === K_FLOWER;   // (S.sk: a host's tree sculpted smaller than it stands, T451)
       const fade = o.born > 0 && frame - o.born < 16 ? frame - o.born + 1 : 0;
       const ghost = o.k === K_TREE && d < camD && Math.abs(sx - psx) < o.rx * s0 * 1.3 + 20;
       const gust = d < 60 ? gustAt(o.u / PPM, o.v / PPV) : 0;
       if (fade) { const Sl = libFor(o); blit(Sl, sx, sy, s0 * o.libS, d * 100, 0, 0, false, hzo); o.libS = 1; blitDith = fade; }   // the stand-in under, the own sculpture dissolving in over it
       if (o.k === K_TREE && d < 5.5) { if (S.wind) blit(S.wind.wood, sx, sy, s, d * 100, 0, 0, false, 0); }   // a tree right at the camera shows its trunk only: its crown would fill the screen (and cost a slow frame)
-      else if (S.wind && d < 46) drawWindTree(S, sx, sy, s, d * 100, ghost, 0, gust);
-      else blit(S, sx, sy, s, d * 100, soft ? (1.3 + o.H * 0.035) * (gust ? 1.6 : 0.3) : 0, frame * (gust ? 0.14 : 0.045) + o.u * 0.021 + o.v * 0.034, ghost, hzo);
+      else if (S.wind && d < (o.hf !== undefined ? WIND_HOST : 46)) drawWindTree(S, sx, sy, s, d * 100, ghost, 0, gust);   // (T451: a host's tree sways within WIND_HOST m; past it its crown is drawn whole)
+      else blit(S, sx, sy, s, d * 100, soft ? (1.3 + o.H * 0.035) * (gust ? 1.6 : 0.3) : S.pic ? (gust ? 2.4 : 0.6) : 0, frame * (gust ? 0.14 : 0.045) + o.u * 0.021 + o.v * 0.034, ghost, hzo);   // (a picture tree sways from its foot up, T451)
       blitDith = 0;
       if (G > 0 && d < 40) { if (o.k === K_GLOW) { const g = GLOW_LIGHT[Math.min(2, (o.c[2] * 3) | 0)], a = (0.5 + o.H * 0.03) * G * Math.min(1.5, s0); addLight(sx, sy - o.H * 0.5 * s0, g[0] * a, g[1] * a, g[2] * a); }
         else if (o.k === K_CRYSTAL) { const g = CRY_LIGHT[Math.min(2, (o.c[2] * 3) | 0)], a = (0.4 + o.H * 0.02) * G * Math.min(1.5, s0); addLight(sx, sy - o.H * 0.4 * s0, g[0] * a, g[1] * a, g[2] * a); } }

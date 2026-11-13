@@ -250,10 +250,18 @@ function mkAcacia(o, R) {   // the savanna's tree: a leaning trunk that forks in
   return flat;
 }
 function mkTree(o) {
+  if (o.hf !== undefined && !o.hs) {   // T451: a host's tree: sculpted at most HMAX px tall from a copy of it, drawn larger by S.sk (its true size stays its own)
+    const sk = Math.max(1, o.H / HMAX), q = Object.assign({}, o, { H: Math.round(o.H / sk), rx: Math.max(8, Math.round(o.rx / sk)), hs: true, spr: null });
+    const S = mkTree(q); S.sk = sk; if (S.wind) { S.wind.wood.sk = sk; } return S;
+  }
   const R = mulberry32(o.seed), H = o.H, c = o.c, rx = o.rx;
-  if (c[0] < CONT) return mkConifer(o, R);
-  if (t2(c[0])) return BT2 === 1 ? mkPalm(o, R) : BT2 === 2 ? mkCactus(o, R) : mkAcacia(o, R);   // the biome's own tree
-  if (t3(c[0])) return mkAcacia(o, R);   // its second: a thorn tree, low and flat-topped
+  if (o.hf === 0) return mkConifer(o, R);   // T451: the host's species decides the build, whatever the biome
+  if (o.hf === 3) return mkPalm(o, R);
+  if (o.hf === undefined) {
+    if (c[0] < CONT) return mkConifer(o, R);
+    if (t2(c[0])) return BT2 === 1 ? mkPalm(o, R) : BT2 === 2 ? mkCactus(o, R) : mkAcacia(o, R);   // the biome's own tree
+    if (t3(c[0])) return mkAcacia(o, R);   // its second: a thorn tree, low and flat-topped
+  }
   const airy = sstep(0.66, 0.95, c[0]), trunkH = H * (0.26 + R() * 0.08), tr = 5 + H * 0.03, tk = airy > 0.5 ? 0.62 : 1, bark = airy > 0.5 ? BIRCH : BARK, lean = (R() - 0.5) * H * 0.14;
   const ryc = Math.min(H * 0.27, rx * 0.66), cz = trunkH + ryc * 1.05;
   const W = Math.ceil(rx * 3.2 + 44), HH = Math.ceil(cz + ryc * 1.75 + rx * 0.5 + 24), wood = sculpt(W, HH, W >> 1, HH - 10);

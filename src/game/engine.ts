@@ -213,7 +213,7 @@ import { playable3p } from './golf/play/playable3p';
 import { export3pInputOf, exportCourse3p, frame3p, tileBox } from './golf/play/export3p';
 import { lieGridJob, type LieGrid } from './golf/play/lies3p';
 import { fillPack } from './golf/osm/terrarium'; // T438: the share file's heights deflated after the course has gone
-import { exportFeatures3p, gatherFeatures3p } from './golf/play/features3p';
+import { MARGIN_T, exportFeatures3p, gatherFeatures3p } from './golf/play/features3p';
 import { courseEntry3p } from './golf/play/entry3p';
 import { seedOf } from './golf/play/view3p';
 import type { Actor, CourseMsg, HostMsg, ViewInput } from './golf/play/protocol3p';
@@ -3615,6 +3615,31 @@ export class Game {
       if (q >= NN) this.plantTownCell(key, key % N, Math.floor(key / N)); else this.plantCell(key, key % N, Math.floor(key / N));
     }
     this.perf.plantMs = performance.now() - t0; // (T265: the bench's hitch check)
+  }
+  /** T451: every tree the game plants by itself in the tile box b (the woods', the river belts' and the town's), for the view from behind the golfer
+   *  (features3p.ts): a cell already planted gives its sprites back as ground points; a cell not planted yet is worked out exactly as plantCell and
+   *  plantTownCell would plant it, without making its sprites. Library id, ground point (tiles) and scale */
+  trees3p(b: readonly [number, number, number, number]): { id: string; x: number; y: number; scale: number }[] {
+    const out: { id: string; x: number; y: number; scale: number }[] = [];
+    if (!this.boot.trees) return out;
+    const N = MAP / FOREST_CELL, cl = (v: number) => clamp(Math.floor(v / FOREST_CELL), 0, N - 1), inB = (x: number, y: number) => x >= b[0] && x <= b[2] && y >= b[1] && y <= b[3];
+    const fromSprite = (p: Prop) => { const it = LIBRARY[p.item]!, bx = it.boxes[0]; const x = p.x + (bx ? bx.dx * p.scale / 2 : 0), y = p.y + (bx ? bx.dy * p.scale / 2 : 0); if (inB(x, y)) out.push({ id: it.id, x, y, scale: p.scale }); };
+    const fromTree = (t: ForestTree) => { if (inB(t.x, t.y) && !this.inPortal(t.x, t.y)) out.push({ id: t.id, x: t.x, y: t.y, scale: t.scale }); };
+    for (let cj = cl(b[1]); cj <= cl(b[3]); cj++) for (let ci = cl(b[0]); ci <= cl(b[2]); ci++) {
+      const key = cj * N + ci, f = this.forest.get(key), tt = this.townTrees.get(key);
+      if (f) f.forEach(fromSprite); if (tt) tt.forEach(fromSprite);
+      if (f && tt) continue;
+      const { lots, free } = this.treeClearance(ci, cj);
+      if (!f) {
+        this.treeCut.keep(forestCell(this.terrain.seed, this.terrain.cls, this.terrain.height, this.slope, this.clearing, ci, cj).filter(t => free(t.x, t.y, 1))).forEach(fromTree);
+        if (this.beltOn && this.belt) this.treeCut.keep(riverBeltCell(this.terrain.seed, this.terrain.cls, this.slope, this.belt, ci, cj, free, FOREST_CLEAR)).forEach(fromTree);
+      }
+      if (!tt) {
+        const near = (x: number, y: number) => { if (this.beltClaims(x, y)) return false; for (const l of lots) if (lotGap(l, x, y) <= 24) return true; return false; };
+        this.treeCut.keep(townTreeCell(this.terrain.seed, this.terrain.cls, this.townClump, ci, cj, free, near)).forEach(fromTree);
+      }
+    }
+    return out;
   }
   /** plant one forest cell as sprites (not props: no selection, bulldozing or saving), without the trees on or beside anything built (T025b) */
   private plantCell(key: number, ci: number, cj: number) {
@@ -10110,8 +10135,10 @@ export class Game {
     const pts = [...g.tees, ...g.pins, ...(g.aims ?? [])];
     const box: [number, number, number, number] | undefined = pts.length
       ? [Math.min(...pts.map(p => p.x)), Math.min(...pts.map(p => p.y)), Math.max(...pts.map(p => p.x)), Math.max(...pts.map(p => p.y))] : undefined;
+    const tb3 = tileBox(inp);   // (T451: the course's own box, which its trees are gathered round)
     const features = exportFeatures3p(gatherFeatures3p({ course: id, segs: this.net.segs, bizDefs: this.bizDefs, structures: g.structures ?? [], lots: this.estateRt?.lots ?? [],
-      props: this.props, library: LIBRARY, ...(box ? { box } : {}) }), { x: f.cx, y: f.cy });
+      props: this.props, library: LIBRARY, ...(box ? { box } : {}), ...(tb3 ? { courseBox: tb3, trees: this.trees3p([tb3[0] - MARGIN_T, tb3[1] - MARGIN_T, tb3[2] + MARGIN_T, tb3[3] + MARGIN_T]) } : {}),
+      pages: ATLAS_PAGES }), { x: f.cx, y: f.cy });   // (T451: every tree on the course and 150 m round it, with the game's pictures of them)
     // T437: the biome from the map's setting and the month, the course type from how the course is kept (the crew's condition; a tournament day: Tour)
     const st = g.crew?.staff, biome = biomeOf(this.farmMonth()), type = courseTypeOf({ condition: st ? courseCondition(st) : 100, tournament: this.traffic.round.stage !== 'free' || !!this.eventToday() });
     // T433, T434: what a ghost or a shared course file holds, once its heights are deflated (T438: after the course has gone to the view)

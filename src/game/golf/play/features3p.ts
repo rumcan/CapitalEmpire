@@ -4,7 +4,10 @@
 // tools/MAP-CLI.md): { course, v: 1, features }, a path { id, kind: 'path', name, surface, width, pts }, a building { id, kind: 'building', name,
 // at, w, d, h, rot, roof, wall, roofColour, floors }. Metres in the view's frame (protocol3p.ts: x east, y SOUTH of the course's centre), rot in
 // degrees clockwise from east (with y south, the same turn Cinderlinks draws). Buildings also carry `use` so the view can later draw a tent or a
-// stand differently; trees travel as { kind: 'tree', at, size }, which the view ignores for now.
+// stand differently. T451: the trees travel apart from the features, packed (TreesPack: the file's `trees`): every tree in the course's box and
+// 150 m round it (planted, the network's own, the woods, the town's and the river belts'), each with its species (the library id), height and
+// crown width, and per species the build the view sculpts it as (form, hue) and the game's own picture of it (pic: the atlas page and box), so the
+// view stands the course's trees where the game draws them, in its own sculpted look or in the game's pictures.
 //
 // exportFeatures3p takes plain data (FeaturesInput) and is pure; gatherFeatures3p is the small adapter that builds that data from what the game
 // keeps (the road network's segments, the business sites, the event structures, the estate's lots and the props). Pure TS, no DOM.
@@ -24,10 +27,18 @@ export type BuildingUse = 'clubhouse' | 'halfway' | 'prooffice' | 'teachhut' | '
 export interface PathFeature { id: string; kind: 'path'; name: string; surface: PathSurface; width: number; pts: ViewPt[] }
 export interface BuildingFeature { id: string; kind: 'building'; use: BuildingUse; name: string; at: ViewPt; w: number; d: number; h: number; rot: number;
   roof: Roof; wall: string; roofColour: string; floors: number }
-export interface TreeFeature { id: string; kind: 'tree'; at: ViewPt; size: number }
-export type Feature = PathFeature | BuildingFeature | TreeFeature;
-/** the features file: the course's id, the version and the features */
-export interface FeaturesFile { course: string; v: 1; features: Feature[] }
+export type Feature = PathFeature | BuildingFeature;
+/** T451: the build a tree is sculpted as in the view: 0 a conifer, 1 a broadleaf, 2 an airy broadleaf (birch, aspen), 3 a palm, 4 a dead snag */
+export type TreeForm = 0 | 1 | 2 | 3 | 4;
+/** T451: the game's picture of a species: the atlas page's address (mip 0), the picture's box on it (uv, 0..1), the display rectangle w x h (px at
+ *  128 a tile) with the ground point ax, ay in it, and the trimmed picture's box inside that rectangle (quad: x0, y0, x1, y1 display px) */
+export interface TreePic { url: string; uv: [number, number, number, number]; w: number; h: number; ax: number; ay: number; quad: [number, number, number, number] }
+/** T451: the course's trees, packed: the box they were gathered in (view metres x0, y0, x1, y1: inside it the view grows none of its own), the
+ *  species (library ids) with each one's form, hue (0..1 along the view's leaf colours: deep green, lush, lime, ember, rose) and picture (null:
+ *  none), and the trees, five numbers each: x, y (view metres), height and crown width (m), the species' index */
+export interface TreesPack { box: [number, number, number, number]; sp: string[]; form: TreeForm[]; hue: number[]; pic: (TreePic | null)[]; t: number[] }
+/** the features file: the course's id, the version, the features and (T451) the trees */
+export interface FeaturesFile { course: string; v: 1; features: Feature[]; trees?: TreesPack }
 
 // ---------------------------------------------------------------- the plain input
 
@@ -38,9 +49,27 @@ export interface PathSegIn { a: Pt; b: Pt; surface: PathSurface; width: number; 
  *  floors (absent: the use's defaults, STYLE) */
 export interface BuildingIn { key: string; use: BuildingUse; name: string; at: Pt; w: number; d: number; rot: number;
   h?: number; roof?: Roof; wall?: string; roofColour?: string; floors?: number }
-/** a planted tree: where it stands (tiles) and its height (m) */
-export interface TreeIn { at: Pt; size: number }
-export interface FeaturesInput { course: string; paths: readonly PathSegIn[]; buildings: readonly BuildingIn[]; trees: readonly TreeIn[] }
+/** a tree: where it stands (its ground point, tiles), its height and crown width (m) and its species (the library id; '' when not known) */
+export interface TreeIn { at: Pt; size: number; crown?: number; sp?: string }
+/** the plain input; T451: treeBox, the tile box the trees were gathered in (absent: the trees' own box), and pics, the species' pictures */
+export interface FeaturesInput { course: string; paths: readonly PathSegIn[]; buildings: readonly BuildingIn[]; trees: readonly TreeIn[];
+  treeBox?: readonly [number, number, number, number]; pics?: Readonly<Record<string, TreePic>> }
+
+/** T451: at most this many trees go to the view (the course message stays quick: about 1 MB); past it the ones outside the course's own box are
+ *  thinned first, evenly, and the course's own too if they alone are more */
+export const MAX_TREES = 40000;
+/** T451: how a species is sculpted in the view, from its library id: its form (a conifer, broadleaf, airy broadleaf, palm or dead snag) and its
+ *  leaf colour on the view's scale (0.1 deep green .. 0.95 rose); the names say it (gen:tree-maple-scarlet, capital:tree-pine-open, world:tree_pine_0) */
+export function treeLook(sp: string, conifers?: ReadonlySet<string>): { form: TreeForm; hue: number } {
+  const s = sp.toLowerCase();
+  if (/dead|snag/.test(s)) return { form: 4, hue: 0.3 };
+  if (/palm/.test(s)) return { form: 3, hue: 0.3 };
+  if (conifers?.has(sp) || /pine|spruce|fir\b|fir-|cedar|conifer|cypress|larch|juniper|hemlock|yew/.test(s)) return { form: 0, hue: /blue/.test(s) ? 0.02 : 0.1 };
+  const airy = /birch|aspen|willow/.test(s) ? 2 : 1;
+  const hue = /scarlet|crimson|red|rose|cherry|blossom/.test(s) ? 0.92 : /ember|amber|orange|gold|yellow|autumn/.test(s) ? 0.8
+    : /lime|birch|aspen|young/.test(s) ? 0.45 : /near-bare|patchy/.test(s) ? 0.55 : 0.25;
+  return { form: airy, hue };
+}
 
 /** each use's look when the building does not say: height (m), roof, wall and roof colours, floors */
 export const STYLE: Readonly<Record<BuildingUse, { h: number; roof: Roof; wall: string; roofColour: string; floors: number }>> = {
@@ -112,11 +141,40 @@ export function exportFeatures3p(input: FeaturesInput, centre: Pt): FeaturesFile
     features.push({ id, kind: 'building', use: b.use, name: b.name, at: rv(toView(b.at, centre)), w: r2(b.w), d: r2(b.d), h: r2(b.h ?? st.h), rot: deg360(b.rot),
       roof: b.roof ?? st.roof, wall: b.wall ?? st.wall, roofColour: b.roofColour ?? st.roofColour, floors: b.floors ?? st.floors });
   }
-  [...input.trees].map(t => ({ at: rv(toView(t.at, centre)), size: r2(t.size) }))
-    .sort((p, q) => p.at[0] - q.at[0] || p.at[1] - q.at[1] || p.size - q.size)
-    .forEach((t, i) => features.push({ id: `t${i + 1}`, kind: 'tree', at: t.at, size: t.size }));
-  return { course: input.course, v: 1, features };
+  const trees = packTrees(input, centre);
+  return trees ? { course: input.course, v: 1, features, trees } : { course: input.course, v: 1, features };
 }
+
+/** a tenth of a metre */
+const r1 = (n: number): number => Math.round(n * 10) / 10;
+/** T451: the trees packed for the view (TreesPack), or null when there are none. The trees are sorted by place, so the same input packs the same
+ *  whatever its order; past MAX_TREES the ones outside the course's own box (treeBox shrunk by the margin it was grown by, MARGIN_T) are kept one
+ *  in k, evenly, and the course's own the same way when they alone are more */
+function packTrees(input: FeaturesInput, centre: Pt): TreesPack | null {
+  if (!input.trees.length) return null;
+  let list = [...input.trees].sort((p, q) => p.at.x - q.at.x || p.at.y - q.at.y || p.size - q.size || (p.sp ?? '').localeCompare(q.sp ?? ''));
+  const tb = input.treeBox ?? [Math.min(...list.map(t => t.at.x)), Math.min(...list.map(t => t.at.y)), Math.max(...list.map(t => t.at.x)), Math.max(...list.map(t => t.at.y))];
+  if (list.length > MAX_TREES) {
+    const m = input.treeBox ? MARGIN_T : 0, inside = (t: TreeIn) => t.at.x >= tb[0] + m && t.at.x <= tb[2] - m && t.at.y >= tb[1] + m && t.at.y <= tb[3] - m;
+    // (evenly: one in k along the trees sorted by place, which leaves every stretch of the land its share; never the first n, which would bare a side)
+    const even = (a: TreeIn[], n: number): TreeIn[] => { if (a.length <= n) return a; const k = a.length / n; return a.filter((_, i) => Math.floor(i / k) !== Math.floor((i - 1) / k)).slice(0, n); };
+    const core = list.filter(inside), rim = list.filter(t => !inside(t)), keep = even(core, MAX_TREES);
+    list = [...keep, ...even(rim, MAX_TREES - keep.length)];
+    list.sort((p, q) => p.at.x - q.at.x || p.at.y - q.at.y || p.size - q.size);
+  }
+  const spIdx = new Map<string, number>(), sp: string[] = [], form: TreeForm[] = [], hue: number[] = [], pic: (TreePic | null)[] = [], t: number[] = [];
+  for (const tr of list) {
+    const id = tr.sp ?? '';
+    let k = spIdx.get(id);
+    if (k === undefined) { k = sp.length; spIdx.set(id, k); sp.push(id); const L = treeLook(id); form.push(L.form); hue.push(L.hue); pic.push(input.pics?.[id] ?? null); }
+    const v = toView(tr.at, centre);
+    t.push(r1(v[0]), r1(v[1]), r1(tr.size), r1(tr.crown ?? tr.size * 0.55), k);
+  }
+  const a = toView({ x: tb[0], y: tb[1] }, centre), b = toView({ x: tb[2], y: tb[3] }, centre);
+  return { box: [r1(a[0]), r1(a[1]), r1(b[0]), r1(b[1])], sp, form, hue, pic, t };
+}
+/** T451: how far round the course's box the trees are gathered, tiles (150 m) */
+export const MARGIN_T = 75;
 
 // ---------------------------------------------------------------- the adapter: from where the game keeps things
 
@@ -124,16 +182,22 @@ export function exportFeatures3p(input: FeaturesInput, centre: Pt): FeaturesFile
 export interface NetSegLike { a: Pt; b: Pt; cls: { base: string; family: string; h: number; name: string } }
 /** a placed prop and the library entry it shows (only what is read) */
 export interface PropLike { item: number; x: number; y: number; scale: number; auto?: string }
-export interface LibLike { kind: string; h: number; name: string }
+/** a library entry (only what is read): T451 its id and display width, its picture on the atlas (tex: page, u0, v0, u1, v1; quad) and ground point */
+export interface LibLike { kind: string; h: number; name: string; id?: string; w?: number; ax?: number; ay?: number; tex?: readonly number[]; quad?: readonly number[] }
+/** T451: a tree the game plants by itself (the woods', the town's, the river belts'): its library id, ground point (tiles) and scale */
+export interface GameTree { id: string; x: number; y: number; scale: number }
 /** where the game keeps the placed things: the road network's segments (engine.net.segs), the business sites (engine.bizDefs), the event
  *  structures (golf.structures), the estate's lots (engine.estateRt.lots), the props and the library they index (engine.props, LIBRARY), and the
- *  course's box in tiles [x0, y0, x1, y1] with the margin (tiles) inside which town roads count as near the course */
+ *  course's box in tiles [x0, y0, x1, y1] with the margin (tiles) inside which town roads count as near the course. T451: the trees the game plants
+ *  itself in the course's own box (courseBox, tiles; absent: box) grown by MARGIN_T (engine.trees3p), and the atlas pages' addresses (library.ts ATLAS_PAGES)
+ *  for the species' pictures */
 export interface GameFeatureSource {
   course: string; segs: Iterable<NetSegLike>;
   bizDefs: readonly { id: number; type: string; x: number; y: number; w: number; h: number }[];
   structures: readonly PlacedEventStructure[]; lots: readonly EstateLot[];
   props: Iterable<PropLike>; library: readonly LibLike[];
   box?: readonly [number, number, number, number]; margin?: number;
+  trees?: Iterable<GameTree>; pages?: readonly (readonly string[])[]; courseBox?: readonly [number, number, number, number];
 }
 
 /** a road class's surface in the view (Cinderlinks draws gravel, concrete, dirt or sand; asphalt shows as concrete) and its name */
@@ -187,10 +251,23 @@ export function gatherFeatures3p(src: GameFeatureSource): FeaturesInput {
     buildings.push({ key: `lot:${l.id}`, use: 'house', name: l.st === 3 ? 'House' : 'House (being built)', at, w: l.w * ul * TILE_M * 0.6, d: l.d * nl * TILE_M * 0.5,
       rot: Math.atan2(l.u.y, l.u.x) * 180 / Math.PI, wall: HOUSE_WALLS[Math.abs(l.seed) % HOUSE_WALLS.length], ...(l.st === 2 ? { h: 3 } : {}) });
   }
-  // the planted trees: props whose library entry is a tree (not the network's own, auto); the height is the picture's (px at 128 px a tile) x scale
-  for (const p of src.props) {
-    const L = src.library[p.item]; if (!L || L.kind !== 'tree' || p.auto) continue;
-    trees.push({ at: { x: p.x, y: p.y }, size: L.h / 128 * TILE_M * p.scale });
-  }
-  return { course: src.course, paths, buildings, trees };
+  // T451: the trees: the props whose library entry is a tree (planted by the player or the network's own, auto) and the trees the game plants by
+  // itself (src.trees), inside the course's box grown by MARGIN_T. A tree's height is its picture's, from the top of the trimmed picture down to its
+  // ground point, and its crown the trimmed picture's width (display px at 128 a tile, x its scale)
+  const CB = src.courseBox ?? B, tb: [number, number, number, number] | undefined = CB ? [CB[0] - MARGIN_T, CB[1] - MARGIN_T, CB[2] + MARGIN_T, CB[3] + MARGIN_T] : undefined;
+  const inBox = (x: number, y: number): boolean => !tb || (x >= tb[0] && x <= tb[2] && y >= tb[1] && y <= tb[3]);
+  const byId = new Map<string, LibLike>(), pics: Record<string, TreePic> = {};
+  for (const L of src.library) if (L.id && L.kind === 'tree' && !byId.has(L.id)) byId.set(L.id, L);
+  const add = (L: LibLike, x: number, y: number, scale: number): void => {
+    if (!inBox(x, y)) return;
+    const q = L.quad, m = TILE_M / 128 * scale, h = q && L.ay !== undefined ? (L.ay - q[1]!) * m : L.h * m, w = q ? (q[2]! - q[0]!) * m : (L.w ?? L.h * 0.7) * m;
+    const sp = L.id ?? L.name;
+    trees.push({ at: { x, y }, size: h, crown: w * 0.92, sp });
+    const page = L.tex && src.pages?.[L.tex[0]!]?.[0];
+    if (page && !pics[sp] && q && L.w !== undefined && L.ax !== undefined && L.ay !== undefined)
+      pics[sp] = { url: page, uv: [L.tex![1]!, L.tex![2]!, L.tex![3]!, L.tex![4]!], w: L.w, h: L.h, ax: L.ax, ay: L.ay, quad: [q[0]!, q[1]!, q[2]!, q[3]!] };
+  };
+  for (const p of src.props) { const L = src.library[p.item]; if (L && L.kind === 'tree') add(L, p.x, p.y, p.scale); }
+  for (const t of src.trees ?? []) { const L = byId.get(t.id); if (L) add(L, t.x, t.y, t.scale); }
+  return { course: src.course, paths, buildings, trees, ...(tb ? { treeBox: tb } : {}), pics };
 }
