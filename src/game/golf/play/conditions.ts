@@ -5,7 +5,7 @@
 // never depends on the minute), the course's height field, and the view's finer lie. T335 (the bag) and T336 (cards) add their modifiers to the same record
 // (mods.ts, T334 part 2). Pure TS, no DOM.
 import { CALM_MPH, readWindNow, windEffect, windOnShot, windRelText, windText, type Wind, type WindEffect, type WindNow } from './wind';
-import { LIE_FX, LIE_KINDS, flierChance, lieKindFor, slopeAt, slopeEffect, type LieKind, type Slope } from './lies';
+import { LIE_FX, LIE_KINDS, flierChance, lieCarry, lieKindFor, slopeAt, slopeEffect, type LieKind, type Slope } from './lies';
 import { TILE_M } from '../types';
 import type { HeightAt } from './roll';
 import type { ShapeFx } from './shape';
@@ -61,7 +61,7 @@ export type EnvFor = (ball: Pt, lie: Lie, aim: Pt) => ShotEnv | null;
 export interface ShotPreview { carryM: number; sideM: number; spread: number; windCarryM: number; windDriftM: number; wind: WindEffect }
 export function previewShot(club: Club, aimedM: number, ux: number, uy: number, env: ShotEnv | null | undefined, shape?: ShapeFx | null, windK = 1, slopeK = 1): ShotPreview {
   // (T337: `windK` and `slopeK`, the factors his mods put on the wind and on the slope under the ball: the Wind Whisperer's and Slope Mode's halves; 1: as before)
-  const lx = LIE_FX[env?.lie ?? 'fairway'], sl = slopeEffect(slopeK !== 1 && env?.slope ? { up: env.slope.up * slopeK, across: env.slope.across * slopeK } : env?.slope), carry0 = aimedM * lx.carry * sl.carry * (shape ? shape.carry : 1), pull = sl.deg * Math.PI / 180 + (shape ? shape.curve : 0), flight = shape ? shape.wind : 1;
+  const lx = LIE_FX[env?.lie ?? 'fairway'], sl = slopeEffect(slopeK !== 1 && env?.slope ? { up: env.slope.up * slopeK, across: env.slope.across * slopeK } : env?.slope), carry0 = aimedM * lieCarry(env?.lie ?? 'fairway', club) * sl.carry * (shape ? shape.carry : 1), pull = sl.deg * Math.PI / 180 + (shape ? shape.curve : 0), flight = shape ? shape.wind : 1;
   // the wind meets the shot along the line it flies (the aim turned by the slope's pull)
   const c = Math.cos(pull), s = Math.sin(pull), vx = ux * c - uy * s, vy = ux * s + uy * c;
   const wind = windEffect(env?.wind, club, vx, vy, lx.high * flight * windK), carryM = carry0 * wind.carry, windDriftM = wind.drift * carryM;
@@ -83,12 +83,13 @@ export interface LieView { kind: LieKind; name: string; note: string; carry: num
 export function lieView(kind: LieKind, club: Club): LieView {
   const lx = LIE_FX[kind], flier = flierChance(kind, club), lines: string[] = [];
   const pc = (f: number) => `${f >= 1 ? '+' : '-'}${Math.abs(Math.round((f - 1) * 100))}%`;
-  if (Math.abs(lx.carry - 1) >= 0.015) lines.push(`carry ${pc(lx.carry)}`);
+  const lc = lieCarry(kind, club);
+  if (Math.abs(lc - 1) >= 0.015) lines.push(`carry ${pc(lc)}`);
   if (lx.spread >= 1.05) lines.push(`scatter x${lx.spread.toFixed(1)}`);
   if (lx.spin < 0.95) lines.push(`${Math.round(lx.spin * 100)}% of the spin`);
   if (lx.wild >= 0.05) lines.push('wild strikes');
   if (flier >= 0.05) lines.push(`a flier in ${Math.round(flier * 10)} of 10`);
-  return { kind, name: lx.name, note: lx.note, carry: lx.carry, spread: lx.spread, spin: lx.spin, flier, lines };
+  return { kind, name: lx.name, note: lx.note, carry: lc, spread: lx.spread, spin: lx.spin, flier, lines };
 }
 
 /** one line for what the wind did to a shot that was played (the report's tail): "wind -8 m, 5 m right"; null when there was none to speak of (a calm, a putt, under

@@ -135,6 +135,7 @@ body { display: flex; align-items: center; justify-content: center; color: #eadf
 #clubs .club.on { box-shadow: 0 0 0 1px #f2c94c, 0 0 0 3px rgba(242, 201, 76, 0.25); color: #ffffff; background: rgba(22, 60, 40, 0.9); }
 #clubs .club b { color: #f2c94c; }
 #clubs .club i { display: block; font-style: normal; font-size: 9px; color: #a9c9b1; }
+#clubs .club.cut i { color: #f0b45a; }
 #keys { position: absolute; right: 1.4%; bottom: 2.4%; padding: 4px 9px; font-size: 10px; color: #a9c9b1; }
 #style { position: absolute; top: 2%; left: 50%; transform: translateX(-50%); pointer-events: auto; text-align: center; }
 #styleBtn { padding: 5px 12px; font: inherit; font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; color: #f4efdc; background: rgba(12, 34, 24, 0.86); border: 2px solid #0a1a12; box-shadow: 0 0 0 1px rgba(242, 201, 76, 0.7); cursor: pointer; }

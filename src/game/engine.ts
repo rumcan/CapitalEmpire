@@ -188,6 +188,7 @@ import { drawServePreview } from './walkserve-overlay';
 import { carParkSpotAt, carParkWhy, parkSpotWhy as spotWhyOf, snapToRoad, type Building, type CarParkCtx } from './golf/parkplace';
 import { footStart, parkLook, type ParkLook } from './event/parklook';
 import { dressCourse } from './golf/dressing';
+import { book, assetsAtCost, deposit, isBankrupt, monthEnd, newFinance, repay, signBank, signMurabaha, withdraw, type FinanceSave, type Line, type MonthReport } from './golf/finance';
 import { FIRST_TEE, MONTH_LEN, SEASON_LEN, SEASON_START, monthIndexLabel, monthsLeft, seasonLabel, seasonMonth, yearOf } from './golf/calendar';
 import { MonthMoney, golfersAMonth, type TopStats } from './golf/topstats';
 import { afterRoute, driveOffer, driveStart, type DriveStopgap } from './golf/drivestopgap';
@@ -218,7 +219,7 @@ import { courseEntry3p } from './golf/play/entry3p';
 import { seedOf } from './golf/play/view3p';
 import type { Actor, CourseMsg, CourseTime3p, Dress, HostMsg, Time3p, ViewInput } from './golf/play/protocol3p';
 import { Play3p, type Play3pOpts } from './golf/play/play3p'; // T418: the owner's play in the view from behind the golfer
-import { earned } from './golf/play/unlocks'; // T443
+import { DEV_EARNED, earned } from './golf/play/unlocks'; // T443
 import { galleryActors } from './golf/play/gallery3p'; // T429: the galleries for the view
 import { Match3p } from './golf/play/match3p'; // T428: a money match in the view
 import { readShare, shareCourseMsg, shareOf, shareText, shareView, type CourseShare } from './golf/play/share3p'; // T434: shared courses
@@ -721,7 +722,8 @@ export class Game {
   /** spends n $ of kind with its float at p: a purchase or upkeep red, a refund green */
   private spendAt(p: Omit<MoneyEvent, 'amount' | 'kind'> | null, kind: 'construction' | 'upkeep' | 'balls', n: number) { const o = this.moneySpot; this.moneySpot = p; try { this.traffic.spend(kind, n); } finally { this.moneySpot = o; } }
   /** every spend (SimClient.onSpend): one placed (a map click, spendAt) floats up there; the business takings book (the range's) float as they are made */
-  private spent(kind: 'construction' | 'compensation' | 'business' | 'upkeep' | 'lots' | 'balls', n: number) {
+  private spent(kind: 'construction' | 'compensation' | 'business' | 'upkeep' | 'lots' | 'balls' | 'bank', n: number) {
+    this.bookSpend(kind, n);
     const p = this.moneySpot; if (!p || kind === 'business' || kind === 'lots' || !n) return;
     this.floatMoney({ ...p, amount: Math.abs(n), kind: n > 0 ? 'out' : 'in' });
   }
@@ -754,7 +756,7 @@ export class Game {
   private histCnt = new Int32Array(HIST_BINS); private histStart = new Int32Array(HIST_BINS); private histFill = new Int32Array(HIST_BINS);
   private heatCnt = new Int32Array(32); private heatStart = new Int32Array(32); private heatFill = new Int32Array(32);
   /** the right-hand panel: the budget (the treasury), the bottlenecks (key B), or none */
-  panel: 'budget' | 'bottlenecks' | null = null;
+  panel: 'budget' | 'bank' | 'bottlenecks' | null = null;
   /** the win's modal (App): set once when the career is won, cleared by its 'Keep building' */
   showWin = false;
   /** the range business on the map (range starts, plan P24, T129: golf/rangehost.ts): its scene, its golfers, its card */
@@ -786,7 +788,7 @@ export class Game {
     removeProp: p => this.removeProp(p), setGround: (k, p) => this.setLotGround(k, p),
     layPaths: legs => { this.edit.addLegs(legs, classOf('cart-slab'), 0, undefined, true); this.commitNetwork(); },
     clearTrees: b => this.dropTownTrees(b[0], b[1], b[2], b[3]),
-    money: () => this.money, spend: n => this.spendAt(this.rangeSpot(), 'construction', n), book: n => this.traffic.spend('business', -n),
+    money: () => this.money, spend: n => this.spendAt(this.rangeSpot(), 'construction', n), book: n => this.as('range', () => this.traffic.spend('business', -n)),
     month: () => this.golfMonthIndex(), payUpkeep: n => this.spendAt(this.rangeSpot(), 'upkeep', n), balls: n => this.spendAt(this.rangeSpot(), 'balls', n), // (T386: the supplier's balls)
     once: id => { const p = this.golf?.progress; if (!p || p.seen.includes(id)) return false; p.seen.push(id); this.scheduleSave(); return true; },
     demand: () => ({ tier: this.golf?.tier ?? 1, exits: this.golf?.exits?.length ?? 2, residents: this.traffic.pop, propsAppeal: this.decor.appeal(), practiceAppeal: this.golf?.range ? practiceAppeal(this.golf.range) : 0 }),
@@ -3164,7 +3166,9 @@ export class Game {
       this.foundingSeasonEnd(l);
       // the range business's season closes with the books (P24, T129): the season card read it, the next season counts from zero
       if (this.golf?.range) { rangeNewSeason(this.golf.range); this.sendGolf(); } // T295: the town's tier reads the closed count period (its takings) each day
-      if (this.bankrupt && this.traffic.budget.debtDays === DEBT_DAYS) { this.setSpeed(0); this.toast('Bankrupt: the town is out of money', 'warn'); }
+      this.bookLedger(l);
+      if (this.golf) { /* golf mode: the Bank's month end decides (stepFinance) */ }
+      else if (this.bankrupt && this.traffic.budget.debtDays === DEBT_DAYS) { this.setSpeed(0); this.toast('Bankrupt: the town is out of money', 'warn'); }
       else if (this.bankrupt) { /* already bankrupt: the player keeps watching */ }
       else if (l.money < 0 && !this.traffic.unlimited) this.toast(`In the red: bankrupt in ${DEBT_DAYS - this.traffic.budget.debtDays} days unless the books recover`, 'warn');
       else this.toast(`Day ${l.day}: ${l.net >= 0 ? '+' : '−'}$${Math.abs(l.net).toLocaleString()}`, l.net >= 0 ? 'good' : 'info');
@@ -6676,6 +6680,8 @@ export class Game {
   keysSheet: { open(): boolean; show(on: boolean): void } | null = null;
   /** the App's own menus and cards for Esc (Help, the gear menu, Course stats): which are open, and closing one (the App sets it) */
   uiCards: { open(): Partial<Record<EscCard, boolean>>; close(c: EscCard): void } | null = null;
+  /** T455: the Developer toggle (App.tsx, F3), set by the app: opens every shot unlock (shaping, ball control, the boost) in the view's holes without earning them (golf/play/unlocks.ts DEV_EARNED); a hole already begun keeps what it started with */
+  devMode = false;
   /** T392 (#1057), T393 (#1060), T394 (#1061): THE cancel-or-close step, the one handler Esc and a right click on the map both call: the topmost menu
    *  or card closes, else the tool steps back or drops what is in hand, else a build tool is put down for Select (tool-modes.ts escapeLadder). Esc
    *  hands it its key (a focused text box keeps Esc from the tool); a right click, no key (null), where a route in hand answers by taking back its
@@ -7095,7 +7101,7 @@ export class Game {
     const club = this.bizDefs.find(d => d.type === 'clubhouse'), v = club ? this.traffic.biz.find(q => q.id === club.id)?.visitors ?? 0 : 0;
     if (this.halfwaySeen < 0 || v < this.halfwaySeen) { this.halfwaySeen = v; return; }
     const n = halfwayTakings(v - this.halfwaySeen); this.halfwaySeen = v;
-    if (n > 0) { this.traffic.spend('business', -n); this.halfwayTaken += n; }
+    if (n > 0) { this.as('shop', () => this.traffic.spend('business', -n)); this.halfwayTaken += n; }
   }
   /** starts (on) or ends placing the clubhouse (golf games; Buildings opens) */
   placeClubhouse(on: boolean) {
@@ -7185,7 +7191,7 @@ export class Game {
   this.sendGolf();
   const book = computeTournamentCloseBook(ye, this.traffic.round.last.tickets ?? 0, this.courseAreaList(), this.traffic.round.last.upkeep, this.traffic.round.last.toll ?? 0);
   if (book.bizIncome > 0) {
-  this.traffic.spend('business', -book.bizIncome);
+  this.as('events', () => this.traffic.spend('business', -book.bizIncome));
   }
   if (book.upkeepCost > 0) {
   this.traffic.spend('upkeep', book.upkeepCost);
@@ -7819,7 +7825,7 @@ export class Game {
   /** the last closed day's ledger, or null before the first day closes */
   get ledger(): Ledger | null { const h = this.traffic.budget.history; return h[h.length - 1] ?? null; }
   /** true once the city went too long in the red (the books stay so) */
-  get bankrupt() { return this.traffic.budget.bankrupt; }
+  get bankrupt() { return this.golf ? !this.traffic.unlimited && isBankrupt(this.finance, this.traffic.budget.money) : this.traffic.budget.bankrupt; } // (golf mode: the Bank's rule, golf/finance.ts isBankrupt; classic keeps the days in the red)
   /** the index of the highest career milestone reached (see career.ts; the city worker's, mirrored) */
   get reached() { return this.traffic.career.reached; }
   /** true once the career is won (WIN_POP residents; it stays so) */
@@ -8249,6 +8255,88 @@ export class Game {
     }
     this.cardsApplied = cards.length; this.scheduleSave(); this.emit();
   }
+  // ---------- J2 (docs/JAM.md, golf/finance.ts): the Bank ----------
+  /** the line the next booked spend goes to (set by `as`; null: the kind's default line) */
+  private finLine: Line | null = null;
+  /** today's upkeep spends so far: the day's ledger holds the road and signal upkeep on top, which no spend booked */
+  private dayUpkeepBooked = 0;
+  private monthCbs: Array<(r: MonthReport) => void> = [];
+  private classicFinance: FinanceSave | null = null;
+  /** runs fn with its spends and takings booked on `line` */
+  private as(line: Line, fn: () => void): void { const o = this.finLine; this.finLine = line; try { fn(); } finally { this.finLine = o; } }
+  /** the golf game's bank (made fresh when the save has none; classic games have an unused one) */
+  get finance(): FinanceSave { const g = this.golf; if (!g) return (this.classicFinance ??= newFinance()); return (g.finance ??= newFinance()); }
+  /** books amount on a statement line of this month (+ in, - out); only in golf mode */
+  bookLine(line: Line, amount: number): void { if (this.golf) book(this.finance, line, amount); }
+  /** tells cb each month's statement as the month closes; returns the way to stop */
+  onMonthEnd(cb: (r: MonthReport) => void): () => void { this.monthCbs.push(cb); return () => { this.monthCbs = this.monthCbs.filter(c => c !== cb); }; }
+  /** every spend the treasury sees, booked on the statement (golf mode only): the kind's line, or the one `as` set */
+  private bookSpend(kind: 'construction' | 'compensation' | 'business' | 'upkeep' | 'lots' | 'balls' | 'bank', n: number): void {
+    if (!this.golf || !n || kind === 'bank' || !Number.isFinite(n)) return;
+    const f = this.finance;
+    if (kind === 'construction' || kind === 'compensation') book(f, 'build', -n);
+    else if (kind === 'balls') book(f, 'stock', -n);
+    else if (kind === 'upkeep') { book(f, this.finLine ?? 'upkeep', -n); if (!this.finLine) this.dayUpkeepBooked += n; }
+    else book(f, this.finLine ?? 'otherIn', -n); // business takings and lot sales come in as negative spends
+  }
+  /** the worker's day ledger into the statement: what it took in on its own (parking, tolls, grants, the town's tax) and the road upkeep no spend booked */
+  private bookLedger(l: Ledger): void {
+    if (!this.golf) return;
+    const f = this.finance;
+    book(f, 'parking', l.parking ?? 0);
+    book(f, 'otherIn', (l.toll ?? 0) + l.grants + l.property + (l.sales ?? 0) + (l.fees ?? 0));
+    book(f, 'upkeep', -Math.max(0, l.upkeep + l.signals - this.dayUpkeepBooked));
+    this.dayUpkeepBooked = 0;
+  }
+  /** a change of the treasury by the Bank: + into the cash, - out of it (nothing in the dev sandbox's unlimited money) */
+  private cashMove(n: number): void { if (n && Number.isFinite(n) && !this.traffic.unlimited) this.traffic.spend('bank', -n); }
+  /** every 2 s in golf: closes each game month that has ended (golfMonthIndex above the months the bank has closed): the instalments, premiums
+   *  and overdraft interest come out of the treasury, the statement goes to onMonthEnd's listeners */
+  private stepFinance(): void {
+    const g = this.golf; if (!g) return;
+    const f = this.finance, idx = this.golfMonthIndex();
+    if (f.month > idx) return; // (a save from a later month: wait)
+    if (f.month === 0 && f.history.length === 0 && idx > 1 && Object.keys(f.cur).length === 0) f.month = idx - 1; // (an old save: the books start at the month before)
+    for (let k = 0; f.month < idx && k < 12; k++) {
+      const open = f.month;
+      const { cashChange, report } = monthEnd(f, { cash: this.traffic.budget.money, assets: assetsAtCost(f), label: monthIndexLabel(open) });
+      this.cashMove(cashChange);
+      for (const cb of this.monthCbs) { try { cb(report); } catch (e) { console.error('onMonthEnd', e); } }
+      this.toast(`${report.label}: net worth $${Math.round(report.netWorth).toLocaleString('en-US')}${report.events[0] ? `. ${report.events[0]}` : ''}`, report.events.length ? 'warn' : 'info');
+      if (this.bankrupt) { this.setSpeed(0); this.toast('Bankrupt: the overdraft is too big or has lasted too long', 'warn'); }
+      this.scheduleSave(); this.emit();
+    }
+  }
+  /** borrow `amount` from the bank over `term` months (for a named purchase when label is given); the cash arrives at once. False (with a toast) if refused */
+  bankBorrow(amount: number, term: number, label = 'Bank loan'): boolean {
+    const r = signBank(this.finance, amount, term, label);
+    if (!r.ok) { this.toast(r.reason ?? 'The bank said no', 'warn'); return false; }
+    this.cashMove(r.cash); this.toast(`Borrowed $${r.cash.toLocaleString('en-US')} at ${r.loan!.aprPct.toFixed(1)}% for ${term} months`, 'good'); this.scheduleSave(); this.emit(); return true;
+  }
+  /** buy a named purchase of `cost` with murabaha over `term` months: the bank pays for it, you pay it back at cost plus the fixed markup */
+  bankMurabaha(cost: number, term: number, label: string): boolean {
+    const r = signMurabaha(this.finance, cost, term, label);
+    if (!r.ok) { this.toast(r.reason ?? 'The bank said no', 'warn'); return false; }
+    this.cashMove(r.cash); this.toast(`Murabaha: $${r.cash.toLocaleString('en-US')} for ${label || 'your purchase'}, $${r.loan!.payment.toLocaleString('en-US')} a month for ${term} months`, 'good'); this.scheduleSave(); this.emit(); return true;
+  }
+  /** pay `amount` of a loan early (a murabaha is settled in full, at its settle cost) */
+  bankRepay(id: number, amount: number): boolean {
+    const r = repay(this.finance, id, amount, this.traffic.budget.money);
+    if (!r.ok) { this.toast(r.reason ?? 'Could not repay', 'warn'); return false; }
+    this.cashMove(-r.paid); this.toast(r.closed ? `Loan cleared: $${r.paid.toLocaleString('en-US')}` : `Paid $${r.paid.toLocaleString('en-US')} off the loan`, 'good'); this.scheduleSave(); this.emit(); return true;
+  }
+  /** cash into savings (4% a year, paid monthly) */
+  bankDeposit(amount: number): number {
+    const a = deposit(this.finance, amount, this.traffic.budget.money); if (a <= 0) { this.toast('Nothing to deposit', 'warn'); return 0; }
+    this.cashMove(-a); this.scheduleSave(); this.emit(); return a;
+  }
+  /** savings back to cash */
+  bankWithdraw(amount: number): number {
+    const a = withdraw(this.finance, amount); if (a <= 0) { this.toast('Nothing to withdraw', 'warn'); return 0; }
+    this.cashMove(a); this.scheduleSave(); this.emit(); return a;
+  }
+  /** opens the treasury chip's panel: the Bank in golf mode, the budget in a classic game */
+  toggleMoneyPanel() { const want = this.golf ? 'bank' : 'budget'; this.panel = this.panel === want ? null : want; this.emit(); }
   /** takes a loan unit if the town can hold one more (else says why); the worker books it */
   borrow() { const b = Budget.from(this.traffic.budget); if (b.loans >= b.maxLoans(this.traffic.pop)) this.toast('No more credit: grow the town for more', 'warn'); else this.traffic.loan(true); }
   /** repays a loan unit if there is one and the treasury covers LOAN (else says why); the worker books it */
@@ -8917,7 +9005,7 @@ export class Game {
     this.dayMinute = at.dayMin;
     const b = this.dayBook.step(at.day, at.dayMin, free, () => this.dayInputs(), feeScale(tr.dayLen), (r, wx) => this.dayPaceOf(r, now, wx));
     if (b.fees > 0) {
-      tr.spend('business', -b.fees);
+      this.as('greenFees', () => tr.spend('business', -b.fees));
       const c = g.clubhouse; this.floatMoney({ x: c.x, y: c.y, amount: Math.round(b.fees), kind: 'in', group: 'clubhouse', gx: c.x, gy: c.y });
     }
     if (b.members + b.visitors > 0) this.scheduleSave();
@@ -10210,7 +10298,7 @@ export class Game {
     const p = this.playerNow(), yr = this.view3pRound && !sh ? this.yourRound() : null;
     if (yr && !yr.match && !yr.over) {
       // T430: your round in the view: the game's own round (play/yours3p.ts), its strokes saved, its end recorded, its own gimme rule
-      const sk = this.yourSkills(), earn = earned({ skills: p?.skills ?? {}, bag: p?.bag ?? null, mech: MECH_IDS.filter(id => hasMech(sk, id)) });
+      const sk = this.yourSkills(), earn = this.devMode ? DEV_EARNED : earned({ skills: p?.skills ?? {}, bag: p?.bag ?? null, mech: MECH_IDS.filter(id => hasMech(sk, id)) });   // (T455: the Developer toggle opens every shot unlock)
       const driver = yoursDriver(v, sk, this.seed, { get: () => this.yourRound(), set: r => this.setYourRound(r), played: (s, b, a, up) => this.yourPlayed3p(s, b, a, up), next: () => this.yourNextHole() });
       this.play3p = new Play3p({ view: v, holes: [idx], skills: sk, earned: earn, gimmeM: gimmeM(yr), driver, owner: this.youDress3p(), sex: p?.sex ?? 'm', seed: this.seed, frame: f,
         height: this.ballHeight, wind: () => this.windNow(), fit: putterFitName(p?.bag), gust: () => { const w = this.worldWind(); return w ? windView(this.windNow(), w, 1, 0).peak : null; } });
@@ -10218,7 +10306,7 @@ export class Game {
     }
     const mode = this.fair3p, sk = kitFor(mode, this.yourSkills());   // (T436: his own kit, or the level kit)
     // T443: what he has earned: his card's skills, his clubs' levels, his cards' mechanics (golf/play/unlocks.ts); the level kit has the level golfer's, no cards
-    const earn = mode === 'level' ? earned({ skills: LEVEL_PROFILE, bag: null, mech: [] }) : earned({ skills: p?.skills ?? {}, bag: p?.bag ?? null, mech: MECH_IDS.filter(id => hasMech(sk, id)) });
+    const earn = this.devMode ? DEV_EARNED : mode === 'level' ? earned({ skills: LEVEL_PROFILE, bag: null, mech: [] }) : earned({ skills: p?.skills ?? {}, bag: p?.bag ?? null, mech: MECH_IDS.filter(id => hasMech(sk, id)) });
     const seed3p = (this.seed ^ Math.imul(n, 7919) ^ Math.imul(this.play3pN + 1, 104729)) | 0, ghost = this.ghostOpts3p(v, [idx]);   // (T433: a loaded ghost of this hole plays alongside)
     this.ghostMeta3p = { holes: [idx], seed: seed3p, skills: sk, sex: p?.sex ?? 'm', name: p?.name ?? 'You', mode, hcp: mode === 'level' ? levelHcp() : p ? handicapOf(p.skills) : levelHcp() };
     this.play3p = new Play3p({ view: v, holes: [idx], skills: sk, earned: earn, ...ghost, gimmeM: GIMME_RULES.find(r => r.id === DEFAULT_RULES.gimme)?.m ?? 0, /* (T423: a practice hole's rules: the leather) */ owner: this.youDress3p(), sex: p?.sex ?? 'm', seed: (this.seed ^ Math.imul(n, 7919) ^ Math.imul(++this.play3pN, 104729)) | 0, frame: f,
@@ -10414,14 +10502,14 @@ export class Game {
     // T449: night golf's money: the tickets, the field's entries and the novelty in, the staff and the lights out
     if (d.id === 'night') {
       const m = nightMoney({ rep: g.rep, field: d.field.length, before: ev.nights ?? 0, towers: this.floodlights().length }); ev.nights = (ev.nights ?? 0) + 1;
-      this.traffic.spend('business', -m.net); const c = g.clubhouse; this.floatMoney({ x: c.x, y: c.y, amount: Math.abs(m.net), kind: m.net >= 0 ? 'in' : 'out', group: 'clubhouse', gx: c.x, gy: c.y });
+      this.as('events', () => this.traffic.spend('business', -m.net)); const c = g.clubhouse; this.floatMoney({ x: c.x, y: c.y, amount: Math.abs(m.net), kind: m.net >= 0 ? 'in' : 'out', group: 'clubhouse', gx: c.x, gy: c.y });
       this.toast(nightMoneyLine(m), m.net >= 0 ? 'good' : 'info');
     }
     // T336: a title (gold), a podium finish (silver) or the top quarter of the field (bronze) pays a card pull (golf/cards earning.ts)
     const earn = earnFromPlace(res.pos, res.of, `the ${CLUB_EVENTS[d.id].name}`); if (earn) this.pullFor.set(`event:${d.id}`, this.grantPull(earn)); else this.pullFor.delete(`event:${d.id}`);
     if (res.won) {
       g.rep = Math.min(100, Math.max(0, g.rep + res.rep));
-      if (res.money > 0) { this.traffic.spend('business', -res.money); const c = g.clubhouse; this.floatMoney({ x: c.x, y: c.y, amount: res.money, kind: 'in', group: 'clubhouse', gx: c.x, gy: c.y }); }
+      if (res.money > 0) { this.as('events', () => this.traffic.spend('business', -res.money)); const c = g.clubhouse; this.floatMoney({ x: c.x, y: c.y, amount: res.money, kind: 'in', group: 'clubhouse', gx: c.x, gy: c.y }); }
       // (T335: a title's prize also brings a sponsor's voucher: one club of your bag upgraded free, up to Tour)
       const p = this.playerNow(); if (p) { const t = withTitle(p, res, d.holes); this.setPlayer(withBag(t, addVoucher(t.bag))); this.toast('A sponsor’s voucher: upgrade a club free (your bag)', 'good'); }
     }
@@ -11073,7 +11161,7 @@ export class Game {
     const { s: s0, due } = payWages(st, this.golfMonthIndex()); if (s0 === st) return;
     const s = this.prosMonth(s0, s0.paid - st.paid); // T214: the club buildings' upkeep and the lessons, each month begun
     this.setStaff(s);
-    if (due > 0) { const c = g.clubhouse; this.spendAt({ x: c.x, y: c.y, group: 'clubhouse', gx: c.x, gy: c.y }, 'upkeep', due); this.scheduleSave(); }
+    if (due > 0) { const c = g.clubhouse; this.as('wages', () => this.spendAt({ x: c.x, y: c.y, group: 'clubhouse', gx: c.x, gy: c.y }, 'upkeep', due)); this.scheduleSave(); }
   }
   /** the quality factor of the course's condition (golf/staff.ts qualityFactor; 1 with no staff state yet) */
   private crewQuality(): number { const st = this.golf?.crew?.staff; return st ? qualityFactor(courseCondition(st)) : 1; }
@@ -11083,7 +11171,7 @@ export class Game {
     const g = this.golf; if (!g) return;
     const r = changeStaff(this.staffNow(), role, delta); if (!r) return;
     this.setStaff(r.s);
-    if (r.cost > 0) { const c = g.clubhouse; this.spendAt({ x: c.x, y: c.y, group: 'clubhouse', gx: c.x, gy: c.y }, 'upkeep', r.cost); }
+    if (r.cost > 0) { const c = g.clubhouse; this.as('wages', () => this.spendAt({ x: c.x, y: c.y, group: 'clubhouse', gx: c.x, gy: c.y }, 'upkeep', r.cost)); }
     this.toast(delta > 0 ? `Hired a ${ROLE_NAME[role][0]}: $${WAGE[role]} a month, at work from tomorrow morning` : `Let a ${ROLE_NAME[role][0]} go: a month's wage, $${WAGE[role]}`, delta > 0 ? 'good' : 'info');
     this.scheduleSave(); this.emit();
   }
@@ -11124,7 +11212,7 @@ export class Game {
     }
     const r = stepClubTo(g.club, month, () => this.clubInputs()), b = r.booked; g.club = r.s;
     if (b.months > 0) this.creditSales(b.joined, g.club.members * b.months, g.club.price); // T214: the head pro's and the secretary's work
-    if (b.dues > 0) { this.traffic.spend('business', -b.dues); this.floatMoney({ x: c.x, y: c.y, amount: Math.round(b.dues), kind: 'in', group: 'clubhouse', gx: c.x, gy: c.y }); }
+    if (b.dues > 0) { this.as('members', () => this.traffic.spend('business', -b.dues)); this.floatMoney({ x: c.x, y: c.y, amount: Math.round(b.dues), kind: 'in', group: 'clubhouse', gx: c.x, gy: c.y }); }
     if (b.upkeep > 0) this.spendAt({ x: c.x, y: c.y, group: 'clubhouse', gx: c.x, gy: c.y }, 'upkeep', b.upkeep);
     if (g.club !== was) { this.scheduleSave(); if (this.clubCardOpen) this.emit(); }
   }
@@ -11537,7 +11625,7 @@ export class Game {
     const g = this.golf, st = g?.crew?.staff; if (!g || !st?.pros?.length) return;
     const r = dropProsAt(st, new Set(this.bizDefs.map(d => d.id))); if (!r.gone.length) return;
     this.setStaff(r.s); this.proBeatsKey = '';
-    const c = g.clubhouse; this.spendAt({ x: c.x, y: c.y, group: 'clubhouse', gx: c.x, gy: c.y }, 'upkeep', r.cost);
+    const c = g.clubhouse; this.as('wages', () => this.spendAt({ x: c.x, y: c.y, group: 'clubhouse', gx: c.x, gy: c.y }, 'upkeep', r.cost));
     this.toast(`${r.gone.map(p => p.name).join(' and ')} let go with the building: a month's wage, $${r.cost.toLocaleString()}`, 'info');
   }
   /** the club buildings' upkeep and the lessons for `months` game months just begun (payStaff, beside the wages): the upkeep booked at each
@@ -11555,12 +11643,12 @@ export class Game {
     for (const h of taught) {
       const l = L.at[h.at]; if (!l || l.takings <= 0) continue;
       const p = mid(h.def), pro = pros.find(q => q.role === 'teach' && q.at === h.id)!;
-      this.traffic.spend('business', -l.takings); this.floatMoney({ ...p, amount: l.takings, kind: 'in', group: 'teachhut' + h.id, gx: p.x, gy: p.y, note: 'lessons' });
+      this.as('range', () => this.traffic.spend('business', -l.takings)); this.floatMoney({ ...p, amount: l.takings, kind: 'in', group: 'teachhut' + h.id, gx: p.x, gy: p.y, note: 'lessons' });
       pro.work.lessons += l.lessons; pro.work.takings += l.takings;
     }
     if (L.members.takings > 0) {
       const p = office ? mid(office) : g.clubhouse, who = pros.filter(q => q.role === 'teach').length ? pros.filter(q => q.role === 'teach') : pros.filter(q => q.role === 'head');
-      this.traffic.spend('business', -L.members.takings); this.floatMoney({ ...p, amount: L.members.takings, kind: 'in', group: 'clubhouse', gx: g.clubhouse.x, gy: g.clubhouse.y, note: "members' lessons" });
+      this.as('members', () => this.traffic.spend('business', -L.members.takings)); this.floatMoney({ ...p, amount: L.members.takings, kind: 'in', group: 'clubhouse', gx: g.clubhouse.x, gy: g.clubhouse.y, note: "members' lessons" });
       for (const q of who) { q.work.lessons += L.members.lessons / who.length; q.work.takings += L.members.takings / who.length; }
     }
     return pros.length ? { ...s, pros, seen: L.seen } : { ...s, seen: L.seen };
@@ -11841,7 +11929,7 @@ export class Game {
       g.dayPins = rollDayPins(g.dayPins ?? null, day, g.pins.map(p => ({ hole: p.hole, x: p.x, y: p.y })), (n, prev) => (cut.has(n) ? this.nextPin(day, n, prev) : null));
       this.pinRev++; this.dayCourse = null; this.scheduleSave();
     }
-    if (now - this.pinsCheckedAt >= 2000) { this.pinsCheckedAt = now; this.checkDayPins(); this.payStaff(); this.stepClub(); this.estateStep(); } // (T214: the members' month beside the wages)
+    if (now - this.pinsCheckedAt >= 2000) { this.pinsCheckedAt = now; this.checkDayPins(); this.payStaff(); this.stepClub(); this.estateStep(); this.stepFinance(); } // (T214: the members' month beside the wages)
     if (this.flagRev !== this.pinRev) this.syncFlags();
   }
   /** the day's cups against the course (when the grid or the pins changed): a hole with no cup today is given its placed pin, and a cup no longer on

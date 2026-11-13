@@ -3,7 +3,7 @@
 import { TILE_M } from '../types';
 import type { Club, CourseView, GameSkills, Landing, Lie, Pt, PlayHole } from './types';
 import { SPIN, curveOf, spinRollM, type SpinEffect } from './spin';
-import { FLIER, LIE_FX, flierChance, kindOfLie, slopeEffect } from './lies';
+import { FLIER, LIE_FX, flierChance, kindOfLie, lieCarry, slopeEffect } from './lies';
 import { windEffect } from './wind';
 import type { ShotEnv } from './conditions';
 import { CLUB_BASE, PART_OF, applyMods, type ModCtx } from './mods';
@@ -155,7 +155,7 @@ export function hitShot(r: () => number, sk: ShotSkill, lie: Lie, from: Pt, aim:
   const mis = r() < MISHIT.base + MISHIT.skillK * (1 - skill) ** 2 + (lx ? lx.wild : 0) + (kit ? kit.mishit : 0) + (shape ? shape.mishit : 0), mf = mis ? MISHIT.carry[0] + (MISHIT.carry[1] - MISHIT.carry[0]) * r() : 1;
   // T334: a flier: from the grass the ball may jump out with no spin on it (one draw, only from a lie and a club that can give it)
   const fp = kind ? flierChance(kind, club) : 0, flier = fp > 0 && r() < fp;
-  let carry = (sand ? dM : Math.min(dM, carryM(club, skill) * (kit ? kit.carry : 1) * (mod?.maxF ?? 1)) * (lx ? lx.carry : CARRY_F[lie])) * mf;
+  let carry = (sand ? dM : Math.min(dM, carryM(club, skill) * (kit ? kit.carry : 1) * (mod?.maxF ?? 1)) * (lx ? lieCarry(kind!, club) : CARRY_F[lie])) * mf;
   if (lx && slope) carry *= slope.carry * (flier ? FLIER.carry : 1);
   if (shape) carry *= shape.carry;
   const spread = (sand ? 1.6 : lx ? lx.spread : SPREAD_F[lie]) * (mod?.spread ?? 1) * (lx && slope ? slope.spread * (flier ? FLIER.spread : 1) : 1) * (kit ? kit.spread : 1) * (shape ? shape.spread : 1);
