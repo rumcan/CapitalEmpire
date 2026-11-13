@@ -30,7 +30,7 @@ function picMenu() {
     + sl('picNear', 'Paint radius', 30, 500, 10, PIC.near) + sl('picCalm', 'Calm', 0, 85, 5, Math.round(PIC.calm * 100)) + sl('picCine', 'Cinematic', 0, 100, 5, Math.round(PIC.cine * 100)) + '</div>';
 }
 function styleShow() {   // the menu: the biome (the land and its plants) beside the course type (how the course is kept); one of each is in force
-  shownStyle = biomeId; shownType = ctypeId; styleBtn.innerHTML = BIOMES[biomeId].name + ' &middot; ' + CTYPES[ctypeId].name + '<b>&#9662;</b>';
+  shownStyle = biomeId; shownType = ctypeId; styleBtn.innerHTML = 'Settings<b>&#9662;</b>';   // (the owner, 2026-11-13: the button always reads Settings; the biome and type are chosen in its menu)
   const col = (title, kind, ids, T, cur) => '<div class="grp"><i>' + title + '</i>' + ids.map((id) => '<button type="button" data-kind="' + kind + '" data-id="' + id + '"' + (id === cur ? ' class="on"' : '') + '>' + T[id].name + '</button>').join('') + '</div>';
   // T447: inside the game the biome and the course type are the course's own (the host sends them): those two columns go; the trees, the picture and the render distance stay
   styleMenu.innerHTML = (HOST ? '' : col('Biome', 'b', BIOME_ORDER, BIOMES, biomeId) + col('Course type', 't', CTYPE_ORDER, CTYPES, ctypeId) + golferCol())   // (T450: the golfer, without a host)

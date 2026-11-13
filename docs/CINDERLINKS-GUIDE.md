@@ -33,6 +33,7 @@ The same points are in the view's own help: press **H** there.
 | C | the camera behind the hole |
 | U | show or hide the panels; P the picture's scale |
 | H | the help |
+| Settings (the button at the top) | the biome and course type, the picture, the render distance (and, outside your game, the golfer) |
 | Esc | back to the map |
 
 Some keys belong to the view on its own and do nothing in your game: B (drop a ball), N (new land), K and L (real courses), M and V (the

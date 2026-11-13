@@ -49,7 +49,7 @@ start "" "%EDGE%" --app="file:///%~dp0index.html" --new-window --user-data-dir="
     <div id="power"><div class="track"><i id="powerBar"></i></div><div id="powerTxt"></div></div>
     <div id="clubs"></div>
     <div id="keys"></div>
-    <div id="style"><button id="styleBtn" type="button">Parkland</button><div id="styleMenu"></div></div>
+    <div id="style"><button id="styleBtn" type="button">Settings</button><div id="styleMenu"></div></div>
     <button id="jump" type="button">Jump to ball <b>J</b></button>
     <button id="gimme" type="button">Gimme <b>Y</b></button>
     <div id="help"></div>
