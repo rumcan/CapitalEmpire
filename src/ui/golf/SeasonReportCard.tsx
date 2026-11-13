@@ -3,8 +3,7 @@
 import type { SeasonReport } from '../../game/engine';
 import { Icon } from '../Icon';
 import { roomLine } from '../../game/golf/towngrowth';
-
-const money = (n: number) => '$' + Math.round(n).toLocaleString();
+import { money } from './money';
 const tick = (ok: boolean) => <span className={ok ? 'text-emerald-400' : 'text-rose-400'}>{ok ? '✓' : '✗'}</span>;
 
 /** the card over the map (centred, like the results screen) */

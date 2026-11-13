@@ -1,10 +1,11 @@
 // J4 (#1207, docs/JAM.md): every money decision readable. The payback of an investment (its cost, its upkeep a month, the extra income a month the
 // game's own demand models expect from it, and the months until that pays the cost back), and the price ladder (golfers and takings at the price
 // now and a step either side). Golf mode's time: one game day is a season of 12 months (golf/calendar.ts, MONTH_LEN sim s each), so a season's
-// figure is a month's times 12. Every figure here is an estimate: the live range, the weather and the town move the real takings.
+// figure is a month's times 12; the range runs on the town's clock (a town day of dayLen sim s, 600 by default), so its day is scaled by
+// MONTH_LEN / dayLen. Every figure here is an estimate: the live range, the weather and the town move the real takings.
 // Pure TS, no DOM.
 import { MONTH_LEN } from './calendar';
-import { COFFEE, LESSON, PRACTICE_FEE, practiceUsers, rangeScale, saleValue, skippedVisits, withPrice, type DemandCtx, type RangeBizSave, type RangeUpgradeId, PRACTICE_APPEAL, type PracticeId, MONTHS_A_SEASON } from './rangesave';
+import { RANGE_UPGRADES, needsOf, COFFEE, LESSON, PRACTICE_FEE, practiceUsers, rangeScale, saleValue, skippedVisits, withPrice, type DemandCtx, type RangeBizSave, type RangeUpgradeId, PRACTICE_APPEAL, type PracticeId, MONTHS_A_SEASON } from './rangesave';
 import { GREEN_FEE_PER_ROUND, OFF_SEASON_PLAY_DAYS, dailyGolfers } from './yearend';
 import { HALFWAY_SPEND, HALFWAY_STOP } from './halfway';
 import { PRICE_STEP, clampPrice, monthStep, newClub, type ClubInputs, type ClubSave } from './club';
@@ -47,35 +48,43 @@ export function paybackWords(p: Payback): string {
     case 'pays': return p.months === 1 ? 'Pays back in about a month' : `Pays back in about ${p.months} months`;
     case 'slow': return `Takes over ${PAYBACK_MAX_MONTHS / MONTHS_A_SEASON} seasons to pay back`;
     case 'never': return 'Does not pay back: its upkeep is more than the extra income';
-    case 'none': return 'No extra income the game can count: it saves work or time instead';
+    case 'none': return 'Earns nothing extra by itself (yet)';
   }
 }
 
 // ---- the range ----
 
-/** what the range expects to take in a season (an estimate, $): the golfers its demand sends that the bays can serve (golf/rangesave.ts
- *  skippedVisits over a whole town day: the season), each paying the bucket and the shop's extra spend, plus the coffees, the lessons and the
- *  practice greens' fees; and the golfers (customers: each golfer you see stands for rangeScale of them) */
-export function rangeSeason(s: RangeBizSave, c: DemandCtx, dayLen: number): { golfers: number; takings: number } {
+/** what the range expects to take in a month (an estimate, $): the golfers its demand sends over a town day that the bays can serve
+ *  (golf/rangesave.ts skippedVisits over the whole town day of dayLen sim s), each paying the bucket and the shop's extra spend, plus the coffees,
+ *  the lessons and the practice greens' fees, scaled from the town day to a month (MONTH_LEN sim s: a town day is not a season, the range's
+ *  clock runs on the town's); and the golfers a month (customers: each golfer you see stands for rangeScale of them) */
+export function rangeMonth(s: RangeBizSave, c: DemandCtx, dayLen: number): { golfers: number; takings: number } {
   const L = Math.max(24, fin(dayLen)), k = rangeScale(L);
   const v = skippedVisits(s, c, 0, L, L, null), served = fin(v.served);
   const pr = practiceUsers(s, served);
-  const takings = served * saleValue(s, L) + (fin(v.coffees) * COFFEE + fin(v.lessons) * LESSON + (pr.putting + pr.chipping) * PRACTICE_FEE) * k;
-  return { golfers: served * k, takings: fin(takings) };
+  const day = served * saleValue(s, L) + (fin(v.coffees) * COFFEE + fin(v.lessons) * LESSON + (pr.putting + pr.chipping) * PRACTICE_FEE) * k;
+  return { golfers: perMonthFromSim(served * k, L), takings: perMonthFromSim(fin(day), L) };
 }
-/** the extra income a month (estimate, $) the range's upgrade `id` brings: the season with it less the season without, over 12 months */
+/** the upgrades `id` needs first, all the way down (its prerequisites and theirs), not yet owned */
+export function missingNeeds(owned: readonly RangeUpgradeId[], id: RangeUpgradeId): RangeUpgradeId[] {
+  const out: RangeUpgradeId[] = [], seen = new Set<RangeUpgradeId>(owned);
+  const walk = (x: RangeUpgradeId) => { const u = RANGE_UPGRADES.find(q => q.id === x); for (const n of u ? needsOf(u) : []) if (!seen.has(n)) { seen.add(n); walk(n); out.push(n); } };
+  walk(id);
+  return out;
+}
+/** the extra income a month (estimate, $) the range's upgrade `id` brings: the month with it less the month without, both on top of the
+ *  upgrades it needs first (12 bays is worth what it adds to 8, not to the 4 you start with) */
 export function rangeUpgradeExtra(s: RangeBizSave, c: DemandCtx, dayLen: number, id: RangeUpgradeId): number {
   if (s.owned.includes(id)) return 0;
-  const was = rangeSeason(s, c, dayLen).takings, now = rangeSeason({ ...s, owned: [...s.owned, id] }, c, dayLen).takings;
-  return Math.max(0, perMonthFromSeason(now - was));
+  const base = { ...s, owned: [...s.owned, ...missingNeeds(s.owned, id)] };
+  return Math.max(0, rangeMonth({ ...base, owned: [...base.owned, id] }, c, dayLen).takings - rangeMonth(base, c, dayLen).takings);
 }
 /** the extra income a month (estimate, $) an open practice facility brings: its appeal on the range's demand and its fees */
 export function practiceExtra(s: RangeBizSave, c: DemandCtx, dayLen: number, id: PracticeId): number {
   if (s.practice?.[id]?.open) return 0;
-  const was = rangeSeason(s, c, dayLen).takings;
   const open = { ...s, practice: { ...s.practice, [id]: { ...s.practice[id], open: true } } };
   const appeal = ((1 + fin(c.practiceAppeal ?? 0)) * (1 + PRACTICE_APPEAL[id])) - 1;
-  return Math.max(0, perMonthFromSeason(rangeSeason(open, { ...c, practiceAppeal: appeal }, dayLen).takings - was));
+  return Math.max(0, rangeMonth(open, { ...c, practiceAppeal: appeal }, dayLen).takings - rangeMonth(s, c, dayLen).takings);
 }
 
 /** one rung of a price ladder: the price, the golfers (or members) a month and the takings a month at it */
@@ -86,8 +95,8 @@ export function rangePriceLadder(s: RangeBizSave, c: DemandCtx, dayLen: number):
   for (const d of [-1, 0, 1]) {
     const t = withPrice(s, s.price + d);
     if (d !== 0 && t.price === s.price) continue;
-    const r = rangeSeason(t, c, dayLen);
-    out.push({ price: t.price, golfers: perMonthFromSeason(r.golfers), takings: perMonthFromSeason(r.takings), now: d === 0 });
+    const r = rangeMonth(t, c, dayLen);
+    out.push({ price: t.price, golfers: r.golfers, takings: r.takings, now: d === 0 });
   }
   return out;
 }

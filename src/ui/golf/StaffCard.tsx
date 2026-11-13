@@ -8,8 +8,7 @@ import type { ClubRole } from '../../game/golf/staff';
 import { GOLFER_BASE, GOLFER_CLIPS, GOLFER_FRAMES, GOLFER_PEOPLE, LIBRARY, SPECTATOR_BASE, SPECTATOR_CLIPS, SPECTATOR_FRAMES, SPECTATOR_PEOPLE, WALK_DIRS } from '../../game/library';
 import { Icon } from '../Icon';
 import { Thumb } from '../Thumb';
-
-const money = (v: number) => `$${Math.round(v).toLocaleString()}`;
+import { money } from './money';
 /** each role's stand-in picture (P26 3.5: the head pro golf_pro_m2, the teaching pro golf_pro_w1, the secretary spec_w_older_cardigan) */
 const ART: Record<ClubRole, string> = { head: 'golfer:golf_pro_m2', teach: 'golfer:golf_pro_w1', sec: 'spectator:spec_w_older_cardigan' };
 /** the stand-in's idle frame facing you (the engine's crowd frames: base + (person x directions + row) x frames + frame) */

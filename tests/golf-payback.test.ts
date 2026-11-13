@@ -5,7 +5,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
   NO_INCOME, PAYBACK_MAX_MONTHS, greenFeesMonth, halfwayMonth, holeExtra, memberPriceLadder, payback, paybackWords, perMonthFromSeason, perMonthFromSim,
-  practiceExtra, rangePriceLadder, rangeSeason, rangeUpgradeExtra,
+  missingNeeds, practiceExtra, rangePriceLadder, rangeMonth, rangeUpgradeExtra,
 } from '../src/game/golf/payback';
 import { MONTH_LEN } from '../src/game/golf/calendar';
 import { RANGE_UPGRADES, defaultRangeBiz, type DemandCtx } from '../src/game/golf/rangesave';
@@ -14,7 +14,8 @@ import { AED_PER_USD, loadMoneyPrefs, money, moneyDelta, setMoneyPrefs } from '.
 
 /** a quiet start (the 4 bays have room) and a busy one (they are full) */
 const CTX: DemandCtx = { tier: 0, exits: 1, residents: 300 }, BUSY: DemandCtx = { tier: 1, exits: 2, residents: 3000 };
-const DAY = 1440;
+/** the town day's length (sim s) the range runs on: the default 600 */
+const DAY = 600;
 
 test('payback: cost over the net a month, rounded up', () => {
   const p = payback(12000, 100, 1100);
@@ -63,18 +64,27 @@ test('months: a season is 12 months, a month is MONTH_LEN sim s', () => {
   assert.equal(perMonthFromSeason(NaN), 0);
 });
 
-test('range: the season estimate is finite and positive at the start; bad day lengths are guarded', () => {
-  const r = rangeSeason(defaultRangeBiz(), CTX, DAY);
+test('range: the month estimate is finite and positive at the start, a town day scaled to MONTH_LEN; bad day lengths are guarded', () => {
+  const r = rangeMonth(defaultRangeBiz(), CTX, DAY);
   assert.ok(r.golfers > 0 && r.takings > 0, JSON.stringify(r));
-  for (const d of [0, NaN, -5]) { const q = rangeSeason(defaultRangeBiz(), CTX, d); assert.ok(Number.isFinite(q.takings) && q.takings >= 0); }
+  // full bays (4 x 11 hours = 44 golfers seen a town day) at $6 x the scale (40 at a 600 s day): a town day takes $10,560, a month a fifth of it
+  const busy = rangeMonth(defaultRangeBiz(), BUSY, DAY);
+  assert.equal(Math.round(busy.takings), Math.round(44 * 6 * 40 * MONTH_LEN / DAY));
+  for (const d of [0, NaN, -5]) { const q = rangeMonth(defaultRangeBiz(), CTX, d); assert.ok(Number.isFinite(q.takings) && q.takings >= 0); }
 });
 test('range: an appeal upgrade brings extra income; an owned one none; every upgrade gives a finite verdict', () => {
   const s = defaultRangeBiz();
-  assert.ok(rangeSeason(s, CTX, DAY).golfers < rangeSeason(s, BUSY, DAY).golfers, 'the quiet start has room');
+  assert.ok(rangeMonth(s, CTX, DAY).golfers < rangeMonth(s, BUSY, DAY).golfers, 'the quiet start has room');
   assert.ok(rangeUpgradeExtra(s, CTX, DAY, 'teeturf') > 0);
   // full bays: more appeal sends golfers who find no mat, more bays serve them
   assert.equal(rangeUpgradeExtra(s, BUSY, DAY, 'greens'), 0);
   assert.ok(rangeUpgradeExtra(s, BUSY, DAY, 'bays8') > 0);
+  // 12 bays is measured on top of 8 (its prerequisite): it adds 4 bays' golfers, as 8 does to the 4 of the start
+  assert.deepEqual(missingNeeds([], 'bays24'), ['bays8', 'bays12']);
+  assert.deepEqual(missingNeeds(['bays8'], 'bays24'), ['bays12']);
+  const e8 = rangeUpgradeExtra(s, BUSY, DAY, 'bays8'), e12 = rangeUpgradeExtra(s, BUSY, DAY, 'bays12');
+  assert.ok(e12 > 0 && e12 <= e8 + 1e-6, `${e8} ${e12}`);
+  assert.equal(rangeUpgradeExtra(s, BUSY, DAY, 'bays12'), rangeUpgradeExtra({ ...s, owned: ['bays8'] }, BUSY, DAY, 'bays12'));
   assert.equal(rangeUpgradeExtra({ ...s, owned: ['teeturf'] }, CTX, DAY, 'teeturf'), 0);
   for (const u of RANGE_UPGRADES) {
     const x = rangeUpgradeExtra(s, CTX, DAY, u.id), p = payback(u.cost, u.upkeep, x);

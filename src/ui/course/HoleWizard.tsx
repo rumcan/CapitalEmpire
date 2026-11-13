@@ -7,6 +7,7 @@ import { aboutMoney, planShape, type WizCheck } from '../../game/ext/hole-wizard
 import { SHAPE_RATE_M3, growInMonths, monthlyUpkeepSqm } from '../../game/golf/costs';
 import { holeExtra, payback } from '../../game/golf/payback';
 import { PaybackLine } from '../golf/Decisions';
+import { money } from '../golf/money';
 import { FRAME_TREE_PRICE } from '../../game/golf/holeframe';
 import { SURFACE_BRUSHES, type BrushKind } from '../../game/paint';
 import { BrushShape, GrassEdgesEntry, GroundHeight, SurfaceSwatches, surfaceKeysOf } from './BrushControls';
@@ -21,7 +22,6 @@ const ASK: readonly string[] = ['Click a tee: the camera then frames 450 m round
 const SPLIT: readonly [number, string][] = [[SURF.fairway, 'Fairway'], [SURF.green, 'Green'], [SURF.tee, 'Tee'], [SURF.rough, 'Rough']];
 /** yards in a metre */
 const YD = 1.0936;
-const money = (n: number) => `$${Math.round(n).toLocaleString()}`;
 
 /** the New hole wizard's card (T102, finished in T119: plan P23 4.3 and 4.4), on top of the Holes panel in New hole's place while the plan
  *  mode is on: the hole and its number (Number ▾ offers the free ones), the steps, Build · $X and Cancel on top, par and length, the price
