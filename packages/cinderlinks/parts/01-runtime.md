@@ -68,9 +68,11 @@ The page keeps Cinderdeep's frame (black surround, pixelated canvas) and wears C
 R: The canvas is scaled with no smoothing and keeps 16:9.
 R: The HUD's tokens are CapitalEmpire's: --gold #f5b52e, --gold-hi #ffd166, --panel rgba(20, 21, 25, 0.9), --ink #efe9da, --muted #a9a394, hairline borders, rounded corners, soft drop shadows; the panels are solid enough to read over the painted picture (no backdrop blur: it would be redrawn over the moving picture every frame).
 R: The HUD's text size follows the picture's width (13 px at 1280 px wide, 11 to 15 px), so it reads the same inside CapitalEmpire's frame and in its own window.
+R: Inside CapitalEmpire (host mode: the body carries the class host) the hole map and the wind sit below CapitalEmpire's own buttons along the top right. The help never runs off the picture: a long help scrolls up and down (CapitalEmpire's thin scrollbar), never sideways.
 File: style.css
 Check: image-rendering: pixelated
 Check: --panel: rgba(20, 21, 25, 0.9)
+Check: body.host #mini
 
 ````css file=style.css
 :root {
@@ -117,6 +119,8 @@ body > .panel > b:first-child { font-size: 0.85em; letter-spacing: 0.12em; text-
 #windArrow { font-size: 1.6em; line-height: 1.25; color: var(--ink); transition: transform 0.25s; }
 #wind.gust #windArrow { color: var(--gold-hi); }
 #wind.gust { border-color: var(--gold); background: linear-gradient(var(--gold-wash), var(--gold-wash)), var(--panel); }
+/* (inside CapitalEmpire its own buttons, the ghost and share chips and the close button, run along the top right: the map and the wind sit below them) */
+body.host #mini, body.host #wind { top: 56px; }
 #mini { position: absolute; right: 1.4%; top: 2%; width: 11.5em; height: 11.5em; image-rendering: pixelated; border: 1px solid var(--line-hi); border-radius: 0.9em; box-shadow: var(--shadow); }
 
 /* the power bar (the view's own play) and the swing button (in CapitalEmpire): a rounded track, the fill from green to gold, the gold aim mark and the white hole mark */
@@ -174,7 +178,10 @@ body > .panel > b:first-child { font-size: 0.85em; letter-spacing: 0.12em; text-
 /* the key hints and the help: CapitalEmpire's keycaps */
 #keys { position: absolute; right: 1.4%; bottom: 2.4%; padding: 0.35em 0.75em; border-radius: 999px; font-size: 0.9em; color: var(--muted); }
 #keys b { display: inline-block; min-width: 1.4em; padding: 0 0.3em; border-radius: 0.35em; border: 1px solid var(--line-hi); background: rgba(255, 255, 255, 0.06); font-weight: 700; line-height: 1.45; text-align: center; color: var(--ink); }
-#help { position: absolute; right: 1.4%; bottom: calc(2.4% + 2.9em); padding: 0.7em 0.95em; font-size: 0.9em; line-height: 1.75; display: none; white-space: pre; color: var(--ink); }
+#help { position: absolute; right: 1.4%; bottom: calc(2.4% + 2.9em); max-width: 58%; max-height: calc(100% - 2.4% - 2.9em - 2% - 5em); overflow-y: auto; overflow-x: hidden; overscroll-behavior: contain; pointer-events: auto; padding: 0.7em 0.95em; font-size: 0.9em; line-height: 1.6; display: none; white-space: pre-wrap; color: var(--ink); }
+/* CapitalEmpire's thin scrollbar (src/index.css, T205): a light thumb, gold under the pointer, no arrows; never a sideways one */
+#help::-webkit-scrollbar { width: 8px; background: transparent; } #help::-webkit-scrollbar-button { display: none; width: 0; height: 0; }
+#help::-webkit-scrollbar-thumb { min-height: 28px; border: 2px solid transparent; border-radius: 999px; background: rgba(239, 233, 218, 0.26) padding-box; } #help::-webkit-scrollbar-thumb:hover { background: rgba(245, 181, 46, 0.85) padding-box; }
 #help.on { display: block; }
 #help b { display: inline-block; min-width: 7.5em; margin-right: 0.6em; font-weight: 700; color: var(--gold-hi); }
 #help b.h { border: 0; background: none; padding: 0; font-size: 0.85em; letter-spacing: 0.12em; text-transform: uppercase; color: var(--gold); }

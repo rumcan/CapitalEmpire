@@ -154,6 +154,7 @@ function hostLies(L) {   // T438: the host's lies, after the course: the grass b
 }
 function hostStart() {
   HOST = true; hostOff = true;   // (nothing is drawn until a course comes)
+  try { document.body.classList.add('host'); } catch (e) { /* (no page: the harness) */ }   // (J5: the style moves the map and the wind below CapitalEmpire's buttons)
   helpEl.innerHTML = HELP.filter((h) => h[0] !== 'M' && h[0] !== 'V').map((h) => '<b>' + h[0] + '</b>' + h[1]).join('\n');   // (T447: M and V choose nothing in the game)
   try { hostOrigin = (location.ancestorOrigins && location.ancestorOrigins.length ? location.ancestorOrigins[0] : '') || (document.referrer ? new URL(document.referrer).origin : '') || location.origin || ''; } catch (e) { hostOrigin = ''; }
   addEventListener('message', (e) => {
