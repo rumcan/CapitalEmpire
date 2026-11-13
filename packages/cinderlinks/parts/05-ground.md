@@ -4,8 +4,10 @@ R: Woods hold trees, bushes and ferns; rough and meadow hold grass clumps, flowe
 R: At the feet of the cliffs lie fallen boulders of many sizes, with grass and bushes between them.
 R: Nothing grows on the tee, the fairway, the green, the first cut, sand, water, a cliff face or the tee's ramp.
 R: A thing's four numbers (form, size, hue, fullness) come from slow noise over the land plus its own hash.
+R: On a host's course that sends its trees (T451), the trees inside the box it sent them for are the host's own, each where the host has it, of its species' build and its height and crown; outside that box the land grows its own as ever.
 File: game.js
 Check: function cellObjects(
+Check: function hostTree(
 
 ````js file=game.js
 
@@ -22,6 +24,8 @@ function treeAt(gx, gy) {
   const key = (gx + 32768) * 65536 + (gy + 32768);
   let t = treeMemo.get(key); if (t !== undefined) return t;
   t = null;
+  const HT = course ? course.ht : null;   // T451: inside the box a host sent its trees for, the host's tree of this cell (or none) and never one of the land's own
+  if (HT) { const cx = (gx + 0.5) * TGC, cy = (gy + 0.5) * TGC; if (cx >= HT.x0 && cx <= HT.x1 && cy >= HT.y0 && cy <= HT.y1) { const s = HT.at.get(key); t = s ? hostTree(s, gx, gy) : null; treeMemo.set(key, t); return t; } }
   const q = hash2(gx, gy, SEED + 342);
   if (q < 0.26 * BTREE) {
     const x = (gx + hash2(gx, gy, SEED + 340)) * TGC, y = (gy + hash2(gx, gy, SEED + 341)) * TGC, H = hole;
@@ -43,6 +47,19 @@ function treeAt(gx, gy) {
   treeMemo.set(key, t);
   return t;
 }
+// T451: a host's tree (course.ht, made by hostTrees in parts/03b-realcourse.md): s = { x, y (m), h (height, m), cw (crown width, m), f (form: 0 conifer,
+// 1 broadleaf, 2 airy broadleaf, 3 palm, 4 dead), hue (0..1 along the leaf colours), p (its species' index) }. H and rx are its true size (px at PPM a
+// metre), so its shadow, its reach and the far stand-in that borrows its size are right; its own sculpture is made smaller (mkTree: at most HMAX
+// px tall) and drawn larger by S.sk. c[0] is set to the form's place on the land's own scale (conifer, full, airy) for whatever reads it.
+const HMAX = 340;
+function hostTree(s, gx, gy) {
+  field(s.x, s.y, FO);
+  const H = Math.max(40, Math.round(s.h * PPM)), rx = Math.max(12, Math.round(s.cw * 0.5 * PPM)), f = s.f;
+  const c = [f === 0 ? 0.02 : f === 2 || f === 4 ? 0.85 : 0.45, clamp((s.h - 4) / 16, 0, 1), s.hue, f === 4 ? 0 : 0.6];
+  return { k: K_TREE, u: Math.round(s.x * PPM), v: Math.round(s.y * PPV), lift: Math.round(FO.h * ZP), seed: (hash2(gx * 7, gy * 3, SEED + 331) * 2147483647) | 0, c, H, rx,
+    hf: f, sp: s.p, spr: null, flat: false, d: 0, sx: 0, libS: 1, born: 0, x: s.x, y: s.y, gx, gy, spk: 0, spk2: 0 };
+}
+function isCon(o) { return o.hf !== undefined ? o.hf === 0 : o.c[0] < CONT; }   // a conifer: the host's word for its own trees, the land's share for the rest
 // The mower's plaid (after the owner's photograph of a criss-cross fairway): strong stripes along the hole, light and dark by turns, crossed by a fainter
 // set at right angles. plaid() = 2 light stripe under a light cross band, 1 light under dark, -1 dark under light, -2 dark under dark.
 const MOW_W = 3.6, MOW_IN = 2.2;   // a stripe's width, m; the width of the border mown round the fairway's edge, m
@@ -404,7 +421,7 @@ function shadeEllipse(uc, vc, ru, rv, dapple, seed) {
 }
 function castShadow(o) {
   if (o.k === K_TREE) {
-    if (o.c[0] < CONT) { for (let k = 0; k <= 9; k++) { const s = k / 9, z = o.H * s, r = o.rx * (1 - s * 0.86) + 3; shadeEllipse(o.u + SHU * z, o.v + SHV * z, r * 0.9, r * 0.5 + 1, k > 0, o.seed); } }
+    if (isCon(o)) { for (let k = 0; k <= 9; k++) { const s = k / 9, z = o.H * s, r = o.rx * (1 - s * 0.86) + 3; shadeEllipse(o.u + SHU * z, o.v + SHV * z, r * 0.9, r * 0.5 + 1, k > 0, o.seed); } }
     else { const zc = o.H * 0.66; for (let k = 1; k < 10; k++) shadeEllipse(o.u + SHU * zc * k / 10, o.v + SHV * zc * k / 10, 4.5, 2.6, false, o.seed); shadeEllipse(o.u + SHU * zc, o.v + SHV * zc, o.rx * 1.02, o.rx * 0.52, true, o.seed); }
   } else if (o.k === K_BUSH || o.k === K_ROCK) shadeEllipse(o.u + SHU * o.H * 0.4, o.v + SHV * o.H * 0.4 + 1, o.rx * 0.95, o.rx * 0.42 + 1, false, o.seed);
   else shadeEllipse(o.u + SHU * o.H * 0.3, o.v + SHV * o.H * 0.3 + 1, o.H * 0.3 + 3, 2.5 + o.H * 0.06, true, o.seed);
@@ -553,7 +570,7 @@ function gridShadows(col, W, H, u0, v0, su, sv, T) {   // T: the tile whose own 
   const xa = u0 / PPM - 8, xb = (u0 + W * su) / PPM + 8, ya = v0 / PPV - 8, yb = (v0 + H * sv) / PPV + 8;
   for (let gy = Math.floor(ya / TGC); gy <= Math.floor(yb / TGC); gy++) for (let gx = Math.floor(xa / TGC); gx <= Math.floor(xb / TGC); gx++) {
     const o = treeAt(gx, gy); if (!o) continue;
-    if (o.c[0] < CONT) { for (let k = 0; k <= 9; k += 3) { const s = k / 9, z = o.H * s, r = o.rx * (1 - s * 0.86) + 3; markEllipse(W, H, u0, v0, su, sv, o.u + SHU * z, o.v + SHV * z, r * 0.9 + su * 0.5, r * 0.5 + 1 + sv * 0.5); } }
+    if (isCon(o)) { for (let k = 0; k <= 9; k += 3) { const s = k / 9, z = o.H * s, r = o.rx * (1 - s * 0.86) + 3; markEllipse(W, H, u0, v0, su, sv, o.u + SHU * z, o.v + SHV * z, r * 0.9 + su * 0.5, r * 0.5 + 1 + sv * 0.5); } }
     else { const zc = o.H * 0.66; markEllipse(W, H, u0, v0, su, sv, o.u + SHU * zc, o.v + SHV * zc, o.rx * 1.02, o.rx * 0.52); }
   }
   if (T) for (let cj = 0; cj < 2; cj++) for (let ci = 0; ci < 2; ci++) for (const o of cellObjects(T.tx * 2 + ci, T.ty * 2 + cj)) if (o.k === K_BUSH || o.k === K_ROCK) markEllipse(W, H, u0, v0, su, sv, o.u + SHU * o.H * 0.4, o.v + SHV * o.H * 0.4 + 1, o.rx * 0.95, o.rx * 0.42 + 1);

@@ -12,6 +12,7 @@ import { ADDRESS_TIME, SWING_TIME, stateAt } from './round';
 import { RIDE, WALK, type CartPlay, type PlayCart } from './carts';
 import type { Frame3p } from './export3p';
 import { centreOf } from './turn3p';
+import { artFor } from './golfart3p';
 import { PROTOCOL_V, toView, type Actor, type ActorsMsg, type Doing, type Dress } from './protocol3p';
 
 /** a golfer is shown this many game minutes before his group's tee time (standing at the first tee); before that he is not on the course */
@@ -56,7 +57,8 @@ export function dressOf(g: Pick<Golfer, 'id' | 'look' | 'sex'>): Dress {
   // a shirt and trousers of one colour read as overalls: the trousers move on one
   const tr = trousers === shirt ? pick(TROUSERS, (h >>> 5) + 1) : trousers;
   const build = Math.round((g.sex === 'w' ? 0.93 : 0.98) * 100 + ((h >>> 13) % 8)) / 100;
-  return { shirt, trousers: tr, cap, skin: SKINS[look]!, hair: pick(HAIRS, (h >>> 17) + look), build, sex: g.sex };
+  // (T450: and the golfer art the manager view gives him, so the view draws the same person)
+  return { shirt, trousers: tr, cap, skin: SKINS[look]!, hair: pick(HAIRS, (h >>> 17) + look), build, sex: g.sex, art: artFor(g.sex, g.look) };
 }
 /** a caddie's dress: the bib and dark trousers, his own skin and build (from his golfer's id, so he too is always the same man) */
 export function caddieDress(golferId: number): Dress {

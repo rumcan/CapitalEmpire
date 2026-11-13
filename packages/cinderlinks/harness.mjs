@@ -54,7 +54,12 @@ const run = (src) => (0, eval)(src);
 globalThis.hostMsg = () => {   // (made only when asked: a course this size held from the start slows the gate's chunk timings)
   // (T445: HOSTCOURSE=<file>: a course file CapitalEmpire exported (play/export3p.ts) instead of the importer's Woodhill, to see the game's own ground in the view)
   const raw = JSON.parse(fs.readFileSync(process.env.HOSTCOURSE || new URL('./courses/raw/woodhill.json', import.meta.url), 'utf8')), ed = new URL('./courses/edits/woodhill.json', import.meta.url);
-  return { v: 1, t: 'course', course: convert(raw, 'woodhill.json'), features: fs.existsSync(ed) ? JSON.parse(fs.readFileSync(ed, 'utf8')) : null, biome: 'parkland', type: 'private', seed: 4242, scale: 1, hole: 1 };
+  const m = { v: 1, t: 'course', course: convert(raw, 'woodhill.json'), features: fs.existsSync(ed) ? JSON.parse(fs.readFileSync(ed, 'utf8')) : null, biome: 'parkland', type: 'private', seed: 4242, scale: 1, hole: 1 };
+  // (T451: HOSTTREES=<file>: the course's own trees, a pack as CapitalEmpire sends them (play/features3p.ts TreesPack); HOSTTREES=1: made up in the
+  //  treesms scene from the view's own trees)
+  const ht = process.env.HOSTTREES;
+  if (ht && ht !== '1') m.features = Object.assign({ course: 'woodhill', v: 1, features: [] }, m.features || {}, { trees: JSON.parse(fs.readFileSync(ht, 'utf8')) });
+  return m;
 };
 
 // T424: 'actors' messages as CapitalEmpire sends them (its play/actors3p.ts), in the view's metres. A dress like actors3p.ts dressOf makes
@@ -453,6 +458,27 @@ ${HOST_PLAY}
       setCourse(a); useStyle('desert', 'links'); setCourse(b); useStyle('snow', 'public'); const onB = biomeId + '/' + ctypeId; setCourse(a); const backA = biomeId + '/' + ctypeId; setCourse(b); const backB = biomeId + '/' + ctypeId;
       STYLE_URL = true; setCourse(a); const url = biomeId + '/' + ctypeId; STYLE_URL = false;
       out.info.push({ stylekeep: { kept: JSON.parse(localStorage.getItem(STYLE_KEY)), a, b, onB, backA, backB, urlWins: url === backB, ok: backA === 'desert/links' && backB === 'snow/public' && url === backB } }); globalThis.localStorage = LS0; STYLE_URL = U0; },
+    treesms() { // T451: the view's frame on Woodhill in host mode (HOSTTREES=1: with the course's own trees), walking hole 1 from the tee and turning:
+      // the median and the 95th percentile of a whole frame (render), the land and things made as they come (the page's own budgets), and how many trees
+      const synth = (m) => {   // the course is loaded once without trees, to read where the land puts its own; each becomes one of the game's species at the game's size (3.5 to 8 m: a woods tree, its picture x FOREST_SIZE 0.55 x its owner size), over the course's box and 150 m round it
+        hostMessage(m);
+        const SP = ['capital:tree-pine-open', 'gen:tree-fir-tall:ne', 'capital:tree-oak-open', 'capital:tree-maple-moderate', 'gen:tree-maple-scarlet:se', 'gen:tree-aspen-young:sw'], FORM = [0, 0, 1, 1, 1, 2], HUE = [0.1, 0.1, 0.25, 0.3, 0.92, 0.45];
+        const x0 = course.gx0 - 106, y0 = course.gy0 - 106, x1 = course.gx0 + course.gw * CRES + 106, y1 = course.gy0 + course.gh * CRES + 106, t = [];
+        for (let gy = Math.floor(y0 / TGC); gy <= Math.floor(y1 / TGC); gy++) for (let gx = Math.floor(x0 / TGC); gx <= Math.floor(x1 / TGC); gx++) {
+          const o = treeAt(gx, gy); if (!o) continue;
+          const q = hash2(gx, gy, 77), sp = o.c[0] < CONT ? (q < 0.5 ? 0 : 1) : 2 + Math.floor(q * 3.99), h = process.env.HOSTSIZE === 'own' ? o.H / PPM : 3.5 + hash2(gx, gy, 78) * 4.5;
+          t.push(+o.x.toFixed(1), +o.y.toFixed(1), +h.toFixed(1), +(process.env.HOSTSIZE === 'own' ? o.rx * 2 / PPM : h * (FORM[sp] === 0 ? 0.42 : 0.62)).toFixed(1), sp);
+        }
+        return { box: [x0, y0, x1, y1], sp: SP, form: FORM, hue: HUE, pic: SP.map(() => null), t };
+      };
+      const m = hostMsg(); if (process.env.HOSTTREES === '1') m.features = Object.assign({ course: 'woodhill', v: 1, features: [] }, m.features || {}, { trees: synth(m) });
+      hostMessage(m); for (let w = 0; w < 400 && (farQ.length || tileQ.length); w++) render();
+      const T = []; let host = 0, own = 0, x0 = player.x, y0 = player.y, yaw0 = camYaw;
+      for (let k = 0; k < 360; k++) { player.x = x0 + FX * k * 0.12; player.y = y0 + FY * k * 0.12; camYaw = yaw0 + Math.sin(k / 40) * 0.5; aimCam(); camZ = groundH(player.x, player.y) + HC;
+        const t0 = performance.now(); render(); T.push(performance.now() - t0); FX = Math.sin(yaw0); FY = -Math.cos(yaw0); }
+      for (const o of dlist) if (o.k === K_TREE) { if (o.hf !== undefined) host++; else own++; }
+      const W = T.slice(40).sort((a, b) => a - b), n = W.length;
+      out.info.push({ treesms: { med: +W[n >> 1].toFixed(2), p95: +W[Math.floor(n * 0.95)].toFixed(2), max: +W[n - 1].toFixed(1), packed: m.features && m.features.trees ? m.features.trees.t.length / 5 : 0, nearHost: host, nearOwn: own } }); },
     cartms() { // what drawing the cart costs a frame (any build: drawCart alone), seen from 6, 14 and 40 m, turning: the median and the 95th percentile
       idle(); const base = Math.atan2(Math.cos(cart.th), -Math.sin(cart.th)), res = {};
       for (const d of [6, 14, 40]) {
@@ -750,6 +776,18 @@ try {
       hostMessage({ v: 1, t: 'actors', at: 600, actors: [] }); if (actors.size) res.errors.push('actors: an empty list did not clear them'); }
     // host play (T418 to T420): the turn, the bag, the ring, one input and a wait, the host's shot played back to its rest
     { const hp = hostPlayRun(null); res.hostPlay = hp.info; res.errors.push(...hp.errs); }
+    { // T450: the golfer art's frames and rows (the pictures themselves need a browser: here the voxel figure stands in)
+      const F = (pose, ph, al, rel, putt) => artFrame(pose, ph, al, rel, putt).join(':'), want = [
+        [F('i', 0, 0, false, false), 'sheet:0'], [F('w', 3, 0, false, false), 'sheet:4'], [F('w', 15, 0, false, false), 'sheet:8'],
+        [F('s', -10, -2, false, false), 'golf_drive:3'], [F('s', -5, -1, false, false), 'golf_drive:2'], [F('s', -8, -1.6, true, false), 'golf_drive:4'], [F('s', -3, -0.6, true, false), 'golf_drive:5'],
+        [F('s', 0, 0, true, false), 'golf_drive:6'], [F('s', 11, 2.2, true, false), 'golf_drive:11'],
+        [F('s', -10, -2, false, true), 'golf_putt:3'], [F('s', 0, 0, true, true), 'golf_putt:4'], [F('s', 11, 2.2, true, true), 'golf_putt:7'],
+        [String([12, 4, 8, 0, 14].map(artRow)), '4,0,2,6,5']];
+      res.golfArt = { frames: want.filter((w) => w[0] !== w[1]).map((w) => w[0] + ' (want ' + w[1] + ')'), menu: (golferCol().match(/data-kind="g"/g) || []).length, ids: GOLFART_IDS.length };
+      if (res.golfArt.frames.length) res.errors.push('golfer art: frames ' + res.golfArt.frames.join(', '));
+      if (res.golfArt.menu !== GOLFART_IDS.length + 1) res.errors.push('golfer art: the style menu offers ' + res.golfArt.menu + ' golfers');
+      if (artIdOf({ art: 'golf_pro_w2' }) !== 'golf_pro_w2' || artIdOf({ art: 'nobody' }) || artIdOf(null)) res.errors.push('golfer art: the art of a dress is not read');
+    }
     { const hc = hostCraftRun(); res.hostCraft = hc.info; res.errors.push(...hc.errs); }
     { const hg = hostGreenRun(); res.hostGreen = hg.info; res.errors.push(...hg.errs); }
     { const hd = hostDoneRun(); res.hostDone = hd.info; res.errors.push(...hd.errs); }
