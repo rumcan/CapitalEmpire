@@ -152,9 +152,9 @@ function menuCtx(game: Game): MenuCtx {
     ],
     // T288: the placements still to make first (the range, its car park, the practice area: a click takes it in hand), then the card's sections
     range: [
-      // (T459, the jam MVP: no practice area, practice facilities, kiosk or academy: docs/JAM.md "Future development")
-      ...game.rangePlaces().filter(q => !q.done && !(JAM && q.id === 'practice')).map(q => ({ id: q.id, name: `Place ${q.name.replace(/^The /, 'the ')}`, place: true, why: q.why || null })),
-      ...(game.range.scene ? (JAM ? [{ id: 'card', name: 'Range card' }, { id: 'range-upgrades', name: 'Upgrades' }] : [{ id: 'card', name: 'Range card' }, { id: 'range-practice', name: 'Practice facilities' }, { id: 'range-extras', name: 'Kiosk and academy' }, { id: 'range-upgrades', name: 'Upgrades' }]) : []),
+      // (T459, the jam MVP: no kiosk or academy: docs/JAM.md "Future development"; the practice area stays for J6's practice mode)
+      ...game.rangePlaces().filter(q => !q.done).map(q => ({ id: q.id, name: `Place ${q.name.replace(/^The /, 'the ')}`, place: true, why: q.why || null })),
+      ...(game.range.scene ? (JAM ? [{ id: 'card', name: 'Range card' }, { id: 'range-practice', name: 'Practice facilities' }, { id: 'range-upgrades', name: 'Upgrades' }] : [{ id: 'card', name: 'Range card' }, { id: 'range-practice', name: 'Practice facilities' }, { id: 'range-extras', name: 'Kiosk and academy' }, { id: 'range-upgrades', name: 'Upgrades' }]) : []),
     ],
   };
 }

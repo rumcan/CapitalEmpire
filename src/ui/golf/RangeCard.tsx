@@ -42,11 +42,10 @@ export function RangeCard({ view, places = [], onPlace, onClose, onPrice, onBuy,
         </div>
       </div>
       {/* T288 (#873): what the player places himself: each comes into his hand as a ghost, a click on the map builds it */}
-      {/* (T459, the jam MVP: no practice area to place) */}
-      {places.filter(p => !(JAM && p.id === 'practice')).some(p => !p.done) && (
+      {places.some(p => !p.done) && (
         <div className="space-y-1.5 rounded-lg border border-amber-300/30 bg-amber-300/5 p-2 text-xs" data-testid="range-places">
           <div className="text-[12px] uppercase text-amber-200">Place on your land</div>
-          {places.filter(p => !(JAM && p.id === 'practice')).map(p => (
+          {places.map(p => (
             <div key={p.id} className="flex items-center justify-between gap-2" data-testid={`range-place-${p.id}`} data-guide={`range-place-${p.id}`}>
               <span className={p.done ? 'text-emerald-300' : 'text-white'}>{p.name}{p.why && !p.done ? <span className="block text-[12px] text-amber-300/80">{p.why}</span> : null}</span>
               {p.done ? <span className="text-emerald-300">Placed</span>
@@ -126,8 +125,7 @@ export function RangeCard({ view, places = [], onPlace, onClose, onPrice, onBuy,
         {/* J4 (#1207): golfers and takings a month at this price and a dollar either side (golf/payback.ts, the demand curve above) */}
         <PriceLadder rungs={rangePriceLadder(biz, view.demand, view.dayLen)} who="Golfers" testid="range-price-ladder" />
       </div>
-      {/* (T459, the jam MVP: no golfer profile, props appeal, practice facilities, kiosk, academy or home on the card: docs/JAM.md "Future development") */}
-      {!JAM && you && (
+      {you && (
         <div className="space-y-1 rounded-lg border border-sky-400/25 bg-sky-400/5 p-2 text-xs" data-testid="range-you">
           <div className="flex items-center justify-between gap-2">
             <span className="text-[12px] uppercase text-slate-400">Your golf</span>
@@ -140,9 +138,10 @@ export function RangeCard({ view, places = [], onPlace, onClose, onPrice, onBuy,
           {you.last && <div className="text-[12px] text-slate-400" data-testid="range-you-last">Last: {you.last.text} · ${you.last.cost.toLocaleString()} · handicap {hcp(you.last.hcp[0])} to <span className="text-emerald-300">{hcp(you.last.hcp[1])}</span></div>}
         </div>
       )}
-      {!JAM && <><div className="flex items-center justify-between rounded-lg border border-white/10 bg-white/5 px-2 py-1.5 text-xs" data-testid="range-props-appeal" title="Props within 15 tiles of the shop or the mats (the Props tool): more golfers, and a higher fair price">
+      {/* (T459, the jam MVP: no props appeal, kiosk, academy or home on the card: docs/JAM.md "Future development"; Your golf and the practice facilities stay for J6) */}
+      {!JAM && <div className="flex items-center justify-between rounded-lg border border-white/10 bg-white/5 px-2 py-1.5 text-xs" data-testid="range-props-appeal" title="Props within 15 tiles of the shop or the mats (the Props tool): more golfers, and a higher fair price">
         <span className="text-slate-300">Appeal from props: <span className={st.propsAppeal > 0 ? 'font-semibold text-emerald-300' : 'text-white'}>{appealText(st.propsAppeal)}</span> <span className="text-slate-400">(of {appealText(PROPS_APPEAL_CAP)})</span></span>
-      </div>
+      </div>}
       <div className="space-y-1.5" data-testid="range-practice">
         <div className="flex items-center justify-between text-[12px] uppercase text-slate-400">
           <span>Practice facilities</span>
@@ -168,7 +167,7 @@ export function RangeCard({ view, places = [], onPlace, onClose, onPrice, onBuy,
         ))}
         <div className="text-[12px] text-slate-400">In the Practice area beside the car park. A share of the range's golfers walk over after their bucket.</div>
       </div>
-      {view.extras.some(e => e.owned) && (
+      {!JAM && <>{view.extras.some(e => e.owned) && (
         <div className="space-y-1.5" data-testid="range-extras">
           <div className="text-[12px] uppercase text-slate-400">Kiosk and academy</div>
           {view.extras.filter(e => e.owned).map(e => (

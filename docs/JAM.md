@@ -120,10 +120,8 @@ is a candidate for the GDD's roadmap.
 - Glossary: dotted underlines that explain money words on hover, and the "Money words explained" list in Settings.
 
 **Range**
-- Practice area and practice facilities: the putting green, the chipping green and bunker beside the range.
 - Coffee kiosk and golf academy: extra takings from the range's golfers.
 - Range upgrades: 24 bays, floodlights (night), the pro shop, the second tier of bays, the car park building.
-- Your golf on the range card: your handicap, practice sessions and the profile.
 - Props appeal and Your home: decoration that draws golfers, and the house that grows with the takings.
 - Range › Build: painting the property freely, apart from the holes.
 
@@ -132,7 +130,8 @@ is a candidate for the GDD's roadmap.
 - Tee sets: blue, yellow and red tees placed and moved per hole.
 - Land for sale: buying the blocks next to your land.
 - Ground height: raising, lowering and smoothing the land.
-- Facilities: Plants (trees and flower beds) and Props (course furniture and decoration).
+- Facilities' Plants (trees and flower beds) and Props (course furniture and decoration); Facilities keeps Practice (the putting and chipping
+  greens J6's practice mode uses).
 - Halfway house, pro's office, teaching huts and house lots (the Buildings beyond the clubhouse).
 - The hole card's top-down Play, Build, Save hole and Play a shared course.
 

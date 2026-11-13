@@ -87,12 +87,13 @@ const RAIL_FULL: readonly RailItem[] = [
 ];
 
 /** The jam build's rail, the MVP (docs/JAM.md, T459: "simplify the ui and the game"): Select, Range, Course (holes and buildings; no Tournament, no Land for
- *  sale), Cart paths, Bulldoze. Facilities (practice, plants, props), Ground height, Traffic (the range has its own car park) and Town decoration go: they are
- *  listed under "Future development (hidden in the MVP)" */
-export const JAM_RAIL_CUT: readonly string[] = ['towndecor', 'facilities', 'ground', 'traffic'];
+ *  sale), Cart paths, Facilities with Practice alone (the putting and chipping greens J6's practice mode needs; no Plants or Props), Bulldoze. Ground height,
+ *  Traffic (the range has its own car park) and Town decoration go: they are listed under "Future development (hidden in the MVP)" */
+export const JAM_RAIL_CUT: readonly string[] = ['towndecor', 'ground', 'traffic'];
 export function jamRail(full: readonly RailItem[]): readonly RailItem[] {
   return full.filter(r => !JAM_RAIL_CUT.includes(r.id)).map((r): RailItem => {
     if (r.id === 'course') return { ...r, extras: [] };
+    if (r.id === 'facilities') return { ...r, tools: r.tools.filter(t => t.id === 'practice') };
     if (r.id === 'paths') return { ...r, tools: r.tools.filter(t => t.id === 'path') };
     if (r.id === 'traffic') return { ...r, label: 'Car park', tools: r.tools.filter(t => t.id === 'park').map(({ sub: _sub, ...t }) => ({ ...t, label: 'Car park' })) };
     return r;
