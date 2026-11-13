@@ -5,6 +5,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { TILE_M } from '../src/game/golf/types';
 import { fromView, isHostMsg, isViewMsg, toView } from '../src/game/golf/play/protocol3p';
+import { FLOODLIGHT_HEIGHT_M, FLOODLIGHT_ID, LIGHT_REACH_M } from '../src/game/golf/nightgolf';
 import { MARGIN_T, MAX_TREES, exportFeatures3p, gatherFeatures3p, treeLook, type BuildingFeature, type FeaturesInput, type PathFeature, type TreeIn } from '../src/game/golf/play/features3p';
 
 const centre = { x: 1000, y: 1000 };
@@ -202,4 +203,33 @@ test('T454: the forms of the desert\'s and the garden\'s plants by their ids', (
   assert.equal(treeLook('kit:shrub-blue-juniper').form, 6, 'a juniper shrub is a bush, not a conifer');
   assert.equal(treeLook('newprop:desert-tall-cattails').form, 6);
   assert.equal(treeLook('capital:tree-pine-open').form, 0, 'the trees as before');
+});
+
+// ---- #1200: the floodlight towers of night golf travel as 'light' features
+
+test('#1200: a floodlight tower is a light feature (place, height, reach), not a building; two exports match whatever the order', () => {
+  const lights = [{ key: 'event:12', at: { x: 1020, y: 1010 } }, { key: 'event:3', at: { x: 990, y: 1000 }, h: 12, reach: 60 }];
+  const a = exportFeatures3p({ course: 'n', paths: [], buildings: [], trees: [], lights }, centre);
+  const b = exportFeatures3p({ course: 'n', paths: [], buildings: [], trees: [], lights: [...lights].reverse() }, centre);
+  assert.equal(JSON.stringify(a), JSON.stringify(b));
+  assert.deepEqual(a.features.map(f => f.id), ['l:event:12', 'l:event:3'].sort());
+  const L = a.features.find(f => f.id === 'l:event:12')!;
+  assert.deepEqual(L, { id: 'l:event:12', kind: 'light', name: 'Floodlight tower', at: [20 * TILE_M, 10 * TILE_M], h: FLOODLIGHT_HEIGHT_M, reach: LIGHT_REACH_M });
+  const M = a.features.find(f => f.id === 'l:event:3')!;
+  assert.equal(M.kind === 'light' && M.h, 12); assert.equal(M.kind === 'light' && M.reach, 60);
+  assert.deepEqual(exportFeatures3p({ course: 'n', paths: [], buildings: [], trees: [] }, centre).features, [], 'no towers: no lights, nothing added to an old course');
+});
+
+test('#1200: the adapter turns the placed floodlight structures into lights at the middle of their footprint, and a tent stays a building', () => {
+  const g = gatherFeatures3p({
+    course: 'n', segs: [], bizDefs: [], lots: [], props: [], library: [],
+    structures: [{ id: 5, typeId: FLOODLIGHT_ID, x: 1000, y: 1000, mode: 'buy' }, { id: 6, typeId: 'standS', x: 1010, y: 1000, mode: 'rent' }],
+  });
+  assert.equal(g.lights?.length, 1);
+  assert.deepEqual(g.lights![0]!.at, { x: 1000.5, y: 1000.5 }, 'the mast stands in the middle of its one tile');
+  assert.ok(!g.buildings.some(b => b.key === 'event:5'), 'a floodlight is not a building');
+  assert.ok(g.buildings.some(b => b.key === 'event:6'));
+  const f = exportFeatures3p(g, centre);
+  assert.equal(f.features.filter(x => x.kind === 'light').length, 1);
+  assert.equal(gatherFeatures3p({ course: 'n', segs: [], bizDefs: [], lots: [], props: [], library: [], structures: [{ id: 6, typeId: 'standS', x: 1010, y: 1000, mode: 'rent' }] }).lights, undefined, 'no towers: no lights key');
 });

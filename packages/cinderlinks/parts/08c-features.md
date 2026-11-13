@@ -5,8 +5,10 @@ R: A path is laid on the ground as it is seen: every ground pixel near a path is
 R: Nothing grows on a path or inside a building: no standing grass, no bush, flower, rock or tree trunk.
 R: A building is a box with a roof (gable, hip or flat) with courses of tiles, a ridge, eaves and a chimney; windows by floor in frames with sills and glazing bars, a door, a plinth and a band between floors, drawn as flat faces lit by the one sun, in front of and behind things by its true depth; it throws its shadow where the sun reaches it.
 R: A concrete path is laid in slabs (a joint across it every 1.7 m, each slab its own shade); any path may carry a fallen leaf here and there; none has flecks or stains.
+R: A floodlight tower (a `light` feature: its place, its height, its reach; #1200) is drawn as a mast on a plinth with a lamp head of lamp panels. By day and golden hour the panels are plain glass; at dusk and at night they shine, with a soft bloom round each. At dusk and night every tower lights the ground, the trees, the buildings and the golfers within its reach: a pool of warm white light, brightest at the mast and fading smoothly to nothing at its reach, many towers adding up. What no tower reaches stays as dark as the night.
 R: A course without the file plays as before.
 File: game.js
+Check: function lampLight(
 Check: function drawPaths(
 Check: function drawBuildings(
 Check: function setFeatures(
@@ -21,7 +23,7 @@ function hexRgb(h, d) { const m = /^#?([0-9a-f]{6})$/i.exec(h || ''); if (!m) re
 function setFeatures(F) {   // F: the edits file's object (or nothing): made ready to draw, in the game's own metres
   feats = null; featFor = course ? course.id : '';
   if (!F || !course || !Array.isArray(F.features)) return;
-  const S = course.S, paths = [], builds = [];
+  const S = course.S, paths = [], builds = [], lamps = [];
   let x0 = 1e9, y0 = 1e9, x1 = -1e9, y1 = -1e9;
   for (const f of F.features) {
     if (!f) continue;
@@ -33,6 +35,11 @@ function setFeatures(F) {   // F: the edits file's object (or nothing): made rea
       const x = +f.at[0] * S, y = +f.at[1] * S; if (!(x === x && y === y)) continue;
       builds.push({ x, y, w: clamp(+f.w || 10, 2, 120) * S, d: clamp(+f.d || 8, 2, 120) * S, h: clamp(+f.h || 4.5, 2, 20) * Math.max(S, 0.8), rot: (+f.rot || 0) * Math.PI / 180, roof: f.roof || 'gable',
         wall: hexRgb(f.wall, [232, 220, 192]), rc: hexRgb(f.roofColour, [138, 59, 42]), floors: clamp(Math.round(+f.floors || 1), 1, 4), faces: null, use: typeof f.use === 'string' ? f.use : '' });
+    } else if (f.kind === 'light' && Array.isArray(f.at)) {   // #1200: a floodlight tower: a mast with its lamp head (a building of use 'light'), and a lamp that lights the ground within its reach
+      const x = +f.at[0] * S, y = +f.at[1] * S; if (!(x === x && y === y)) continue;
+      const u = Math.max(S, 0.8), h = clamp(+f.h || 14, 4, 40) * u, reach = clamp(+f.reach || 75, 10, 200) * S;
+      builds.push({ x, y, w: 1, d: 1, h, rot: 0, roof: 'flat', wall: [92, 98, 108], rc: [60, 64, 72], floors: 1, faces: null, use: 'light', u });
+      lamps.push({ x, y, h, reach, r2: reach * reach, z: undefined });
     }
   }
   for (const B of builds) if (B.use === 'stand' || B.use === 'board') faceStand(B);   // (a grandstand or a scoreboard turned to its green or tee: parts/08h-dress.md)
@@ -55,7 +62,7 @@ function setFeatures(F) {   // F: the edits file's object (or nothing): made rea
   }
   let bmap = null;                                                  // the buildings by 16 m square, to ask quickly what stands at a place
   if (builds.length) { bmap = new Map(); for (const B of builds) { const r = Math.hypot(B.w, B.d) / 2 + 1; for (let j = Math.floor((B.y - r) / 16); j <= Math.floor((B.y + r) / 16); j++) for (let i = Math.floor((B.x - r) / 16); i <= Math.floor((B.x + r) / 16); i++) { const k = (i + 4096) * 8192 + j + 4096; let L = bmap.get(k); if (!L) bmap.set(k, L = []); L.push(B); } } }
-  feats = { paths, builds, sd, kind, seg, SG: Float64Array.from(SG), gx0: x0, gy0: y0, res, gw, gh, bmap };
+  feats = { paths, builds, lamps, sd, kind, seg, SG: Float64Array.from(SG), gx0: x0, gy0: y0, res, gw, gh, bmap };
 }
 function pollFeatures() {   // the edits file read again; a change in it shows within two seconds
   if (!course || typeof fetch !== 'function' || hostMode()) return;   // (in host mode the host page's features are the course's: no file)
@@ -103,6 +110,22 @@ function drawPaths() {   // the picture gone over in 8 x 8 blocks: only blocks n
   }
 }
 
+// #1200: a floodlight tower's faces: a plinth, a square mast, and a lamp head: a dark box with two rows of three lamp panels on each side (emit 2: they shine at dusk and night)
+function lightFaces(B, P, N, add, zm) {
+  const u = B.u, m = 0.2 * u, bw = 0.5 * u, hw = 1.5 * u, zt = zm + B.h, zh0 = zt - 1.1 * u, zh1 = zt + 0.7 * u;
+  const SIDES = [[-1, -1, 1, -1, 0, -1], [1, -1, 1, 1, 1, 0], [1, 1, -1, 1, 0, 1], [-1, 1, -1, -1, -1, 0]];   // (a side: from its corner to the next, in half widths, and its facing)
+  const post = (h, z0, z1, col) => { for (const [a0, f0, a1, f1, na, nf] of SIDES) add([P(a0 * h, f0 * h, z0), P(a1 * h, f1 * h, z0), P(a1 * h, f1 * h, z1), P(a0 * h, f0 * h, z1)], N(na, nf, 0), col, 0); };
+  post(bw, zm - 0.4, zm + 0.5 * u, [78, 82, 90]); post(m, zm + 0.5 * u, zh0, [104, 110, 120]); post(hw, zh0, zh1, [46, 50, 58]);
+  for (const [a0, f0, a1, f1, na, nf] of SIDES) {
+    const len = Math.hypot(a1 - a0, f1 - f0) * hw, ua = (a1 - a0) / 2, uf = (f1 - f0) / 2, n = N(na, nf, 0), rh = (zh1 - zh0) / 2;   // (ua, uf: the side's run, a unit along it)
+    for (let r = 0; r < 2; r++) for (let c = 0; c < 3; c++) {
+      const s0 = (c + 0.12) / 3 * len, s1 = (c + 0.88) / 3 * len, zl = zh0 + r * rh + rh * 0.14, zh = zh0 + (r + 1) * rh - rh * 0.14, o = 0.05 * u;
+      const pa = (s, z) => P(a0 * hw + ua * s + na * o, f0 * hw + uf * s + nf * o, z);
+      add([pa(s0, zl), pa(s1, zl), pa(s1, zh), pa(s0, zh)], n, [190, 206, 226], 8, 2);
+    }
+  }
+  add([P(-hw, -hw, zh1), P(hw, -hw, zh1), P(hw, hw, zh1), P(-hw, hw, zh1)], [0, 0, 1], [74, 78, 88]);
+}
 // a building's faces: each a few corners in the world (metres), a colour, how it faces the sun
 function buildFaces(B) {
   const cr = Math.cos(B.rot), sr = Math.sin(B.rot), hw = B.w / 2, hd = B.d / 2, faces = [];
@@ -110,6 +133,7 @@ function buildFaces(B) {
   let zb = 1e9, zm = -1e9; for (const [a, f] of [[-hw, -hd], [hw, -hd], [hw, hd], [-hw, hd], [0, 0]]) { const g = groundH(B.x + a * cr - f * sr, B.y + a * sr + f * cr); if (g < zb) zb = g; if (g > zm) zm = g; }
   const z0 = zb - 0.4, z1 = zm + B.h, mul = (c, k) => [Math.min(255, c[0] * k), Math.min(255, c[1] * k), Math.min(255, c[2] * k)];
   const add = (pts, n, col, bias = 0, emit = false) => faces.push({ pts, n, col, bias, emit });   // bias: how far in front of its wall a detail counts (cm); also its rank of detail (see drawBuildings)
+  if (B.use === 'light') { lightFaces(B, P, N, add, zm); B.faces = faces; B.z0 = zm; B.top = zm + B.h; return; }   // (#1200: a floodlight tower)
   if (B.use === 'tent' || B.use === 'stand' || B.use === 'board') { dressFaces(B, P, N, add, mul, zm); B.faces = faces; B.z0 = zm; B.top = zm + B.h; return; }   // (T429: a marquee, a grandstand: parts/08h-dress.md)
   const FRAME = [246, 242, 230], G1 = [74, 96, 128], G2 = [116, 148, 184];
   const walls = [[-hw, -hd, hw, -hd, 0, -1], [hw, -hd, hw, hd, 1, 0], [hw, hd, -hw, hd, 0, 1], [-hw, hd, -hw, -hd, -1, 0]];
@@ -177,7 +201,7 @@ function drawBuildings() {
       for (let i = 0; i < n; i++) { const ex = v[i][0] - camX, ey = v[i][1] - camY, d = ex * FX + ey * FY; if (d < 0.8) { ok = false; break; } const k = FOC / d; PXs[i] = VW / 2 + (ex * RX + ey * RY) * k; PYs[i] = HZ - (v[i][2] - camZ) * k; PWs[i] = 1 / d; }
       if (!ok) continue;
       const dot = Fc.n[0] * SUNX + Fc.n[1] * SUNY + Fc.n[2] * SUNZ, L = clamp(Math.round(200 * (0.42 + 0.56 * (dot > 0 ? dot : dot * 0.25))), 30, 200), c = Fc.col;
-      let col = Fc.emit && night ? rgb(255, 214, 130) : lit(((L << 24) | (Math.min(255, c[2] | 0) << 16) | (Math.min(255, c[1] | 0) << 8) | Math.min(255, c[0] | 0)) >>> 0);
+      let col = Fc.emit && night ? (Fc.emit === 2 ? rgb(255, 246, 224) : rgb(255, 214, 130)) : lit(((L << 24) | (Math.min(255, c[2] | 0) << 16) | (Math.min(255, c[1] | 0) << 8) | Math.min(255, c[0] | 0)) >>> 0);
       if (hf > 0) col = hazed(col, hf, HAZ);
       const x1 = PXs[1] - PXs[0], y1 = PYs[1] - PYs[0], w1 = PWs[1] - PWs[0], x2 = PXs[2] - PXs[0], y2 = PYs[2] - PYs[0], w2 = PWs[2] - PWs[0], det = x1 * y2 - x2 * y1;   // the face's depth as a plane over the screen
       let A = 0, Bc = 0, C = PWs[0]; if (det > 1e-4 || det < -1e-4) { A = (w1 * y2 - w2 * y1) / det; Bc = (x1 * w2 - x2 * w1) / det; C = PWs[0] - A * PXs[0] - Bc * PYs[0]; }
@@ -201,4 +225,44 @@ function drawBuildings() {
     }
   }
 }
+// ---- the floodlights' light (#1200). At dusk and at night every tower lights what is within its reach. The light is put into Cinderdeep's light grid (the glow's, one sample
+// per 8 x 8 px) after the grid has been spread, so it is not smeared into the dark: each sample reads the distance of what the picture shows there (the ground, a tree, a
+// golfer, a wall), works out where in the world that is, and adds, from every tower within reach, warm white light that is brightest at its mast and fades to nothing at its
+// reach (1 - (r / reach)^2, squared). The glow pass then lights every pixel of the picture the same way, whatever it is: what no tower reaches stays dark.
+const LAMP_COL = [1.0, 0.92, 0.76], LAMP_E = 0.5, LAMP_MAX = 1.15, lampNear = [], lampG = [0, 0, 0];   // (LAMP_COL: the lamp's warm white; LAMP_E: how much of the day's light a lamp gives at its mast, 0..1; LAMP_MAX: the most many towers add up to, in towers' worth)
+function lampsOn() { const F = feats; return !!(F && F.lamps && F.lamps.length && course && featFor === course.id && TOD[tmode].glow >= 1); }
+function lampLight() {
+  const F = feats; lampNear.length = 0;
+  for (const L of F.lamps) { const dx = L.x - camX, dy = L.y - camY; if (dx * dx + dy * dy < (L.reach + 300) * (L.reach + 300)) lampNear.push(L); }   // (a tower farther than its reach plus the view's range cannot light anything seen)
+  const n = lampNear.length; if (!n) return;
+  { const T = TOD[tmode]; for (let c = 0; c < 3; c++) lampG[c] = LAMP_E * LAMP_COL[c] / (2.6 * T.glow * (T.sun[c] + T.sh[c]) * 0.5); }   // (the glow pass multiplies the picture, which the hour has already tinted blue: so each channel's light is what makes the lit ground neutral and warm, not blue)
+  const gx1 = LM + Math.ceil(VW / LS), gy1 = LM + Math.ceil(VH / LS);
+  for (let gy = LM; gy <= gy1; gy++) for (let gx = LM; gx <= gx1; gx++) {
+    const X = Math.min(VW - 1, (gx - LM) * LS); let Y = Math.min(VH - 1, (gy - LM) * LS), z = zbuf[Y * VW + X];
+    for (let t = 0; t < 3 && z === 65535 && Y + LS < VH; t++) { Y += LS; z = zbuf[Y * VW + X]; }   // (a sample on the sky takes the ground just below it, so the horizon's blocks are lit)
+    if (z === 65535) continue;
+    const d = z * 0.01, lat = (X + 0.5 - VW / 2) * d / FOC, wx = camX + FX * d + RX * lat, wy = camY + FY * d + RY * lat;
+    let s = 0;
+    for (let i = 0; i < n; i++) { const L = lampNear[i], dx = wx - L.x, dy = wy - L.y, d2 = dx * dx + dy * dy; if (d2 >= L.r2) continue; const f = 1 - d2 / L.r2; s += f * f; }
+    if (s <= 0) continue;
+    if (s > LAMP_MAX) s = LAMP_MAX;
+    const k = gy * GW + gx; lr[k] += s * lampG[0]; lg[k] += s * lampG[1]; lb[k] += s * lampG[2];
+  }
+}
+function lampBloom() {   // a soft glow round each lamp head in view, added to the picture (the sky takes no grid light, so this is drawn straight): a bright core, a halo that fades out
+  const rad = Math.min(24, 14 * RS * 1.0);
+  for (const L of lampNear) {
+    if (L.z === undefined) L.z = groundH(L.x, L.y) + L.h;
+    project(L.x, L.y, L.z, PJ); if (PJ.s <= 0) continue;
+    const d = PJ.d, r = Math.max(3, Math.min(rad * 1.7, 2 + 150 * RS / d)), cx = PJ.x, cy = PJ.y; if (cx < -r || cx >= VW + r || cy < -r || cy >= VH + r) continue;
+    const dq = d * 100 - 500, hz = d > 50 ? farHaze(d) : 0, a0 = 1 - 0.55 * hz;
+    for (let y = Math.max(0, Math.floor(cy - r)); y <= Math.min(VH - 1, Math.ceil(cy + r)); y++) for (let x = Math.max(0, Math.floor(cx - r)); x <= Math.min(VW - 1, Math.ceil(cx + r)); x++) {
+      const q = y * VW + x; if (zbuf[q] < dq) continue;                       // (something nearer than the lamp is in front of it)
+      const rr = Math.hypot(x - cx, y - cy) / r; if (rr >= 1) continue;
+      const w = (1 - rr) * (1 - rr) * a0, c = fb[q], R = (c & 255) + 255 * w * LAMP_COL[0], G = ((c >> 8) & 255) + 255 * w * LAMP_COL[1], B = ((c >> 16) & 255) + 255 * w * LAMP_COL[2];
+      fb[q] = (0xff000000 | ((B > 255 ? 255 : B) << 16) | ((G > 255 ? 255 : G) << 8) | (R > 255 ? 255 : R)) >>> 0;
+    }
+  }
+}
+
 ````
