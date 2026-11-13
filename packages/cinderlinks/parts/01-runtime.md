@@ -37,6 +37,7 @@ start "" "%EDGE%" --app="file:///%~dp0index.html" --new-window --user-data-dir="
 <meta charset="utf-8">
 <title>Cinderlinks</title>
 <link rel="stylesheet" href="style.css">
+<link rel="icon" href="data:,">
 </head>
 <body>
 <div id="stage">
