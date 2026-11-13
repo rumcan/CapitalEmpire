@@ -3,6 +3,7 @@
 // Pure TS, no DOM. index.ts re-exports this file, so its import from './index' is read inside function bodies only.
 import { STUCK_PLAY_SEC } from './index';
 import type { Rect } from '../../golf/mode';
+import { JAM } from '../../features';
 
 /** the facts the guide reads: the player's counters (T033a), placed course pieces by kind, tournaments run, and the guide's saved state */
 export interface GuideFacts {
@@ -230,7 +231,7 @@ export type GuideLineState = 'done' | 'skipped' | 'todo';
 /** the guide card's line for a step: the step, its state, and whether it is the current one (the first still to do) */
 export interface GuideLine { step: GuideStep; state: GuideLineState; current: boolean }
 /** the guide card's lines (null: no guide: an old save's, skipped, or every step done or skipped) */
-export function rangeGuideLines(g: RangeGuideSave | null | undefined): GuideLine[] | null { return guideLines(RANGE_GUIDE, g); }
+export function rangeGuideLines(g: RangeGuideSave | null | undefined): GuideLine[] | null { return JAM ? null : guideLines(RANGE_GUIDE, g); } // (J7 #1225: the jam build has no step list: its tips are ui/jam/tips.ts)
 /** a guide card's lines for any table of steps (the range's guided build, T293's start tutorial): null when there is no guide, it is off, or
  *  every step is done or skipped */
 export function guideLines(table: readonly GuideStep[], g: RangeGuideSave | null | undefined): GuideLine[] | null {
@@ -249,7 +250,7 @@ export function rangeGuideCurrent(g: RangeGuideSave | null | undefined): number 
 }
 /** the steps whose build is done now and not yet ticked (or skipped), ticked in the save; the caller pays their rewards */
 export function rangeGuideTick(g: RangeGuideSave, f: GuideFacts): GuideStep[] {
-  if (g.off) return [];
+  if (g.off || JAM) return []; // (J7: nothing ticks or pays in the jam build: no build order is rewarded)
   const out = RANGE_GUIDE.filter(s => !g.done.includes(s.id) && !g.skipped.includes(s.id) && rangeStepMet(s.n, f));
   for (const s of out) g.done.push(s.id);
   return out;

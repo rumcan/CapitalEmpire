@@ -1786,35 +1786,53 @@ export class Game {
         g.clubhouse = { x: s.door.x, y: s.door.y };
         this.dropTownTrees(s.plot[0], s.plot[1], s.plot[0] + s.plot[2], s.plot[1] + s.plot[3]);
         this.range.sync(true);
-        this.toast(`Your driving range is built (-$${RANGE_PLACE_COST.toLocaleString()}): next, place its car park (Range ▸ Place the car park)`, 'good');
+        // J7 (#1225; the owner, 2026-11-13: "def add a built in dirt parking lot at the start"): a jam range comes with its dirt car park, no extra step
+        const lot = JAM && this.autoRangeLot(s.J, s.end);
+        this.toast(lot ? `Your driving range is built with its dirt car park (-$${RANGE_PLACE_COST.toLocaleString()}): gravel or pave the car park from Build for more cars`
+          : `Your driving range is built (-$${RANGE_PLACE_COST.toLocaleString()}): next, place its car park (Range ▸ Place the car park)`, 'good');
         return true;
       },
     };
   }
   /** the range's first car park in hand (T288: the owner, "Let him also place the first parking lot"): a packed-dirt lot of the range's size,
    *  its long side along the road, snapped onto the road beside it (parkplace.ts snapToRoad); its gravel and paving are the range's upgrades */
-  private carParkPlaceable(): Placeable<CarParkDef> | null {
+  private carParkPlaceable(free = false): Placeable<CarParkDef> | null {
     const g = this.golf, b = g?.start === 'range' ? g.range : undefined; if (!g || !b) return null;
     const land = this.landCheck();
     return {
-      id: 'carpark', name: 'Car park', cost: CAR_PARK_PLACE_COST,
+      id: 'carpark', name: 'Car park', cost: free ? 0 : CAR_PARK_PLACE_COST,
       spot: (x, y) => carParkSpotAt(this.net, g.dir, x, y),
       // (T387: golf/parkplace.ts carParkWhy: every reason named, woodland is open ground, only water is refused)
       why: d => carParkWhy(d, this.carParkCtx(b, land)),
       polys: d => [rectPolyOf([d.x, d.y, d.w, d.h])],
       build: d => {
         const pk = buildPark(this.net, d); if (!pk) { this.toast('Car park: no road along its sides', 'warn'); return false; }
-        if (!this.payPlaced('The car park', CAR_PARK_PLACE_COST, { x: d.x + d.w / 2, y: d.y + d.h / 2 })) return false;
+        if (!free && !this.payPlaced('The car park', CAR_PARK_PLACE_COST, { x: d.x + d.w / 2, y: d.y + d.h / 2 })) return false;
         const id = Math.max(0, ...this.parkDefs.map(q => q.id)) + 1;
         this.parkDefs.push({ ...d, id, ground: 'dirt' }); b.lot = [d.x, d.y, d.w, d.h];
         this.bump('parks'); this.guideEvent('carpark');
         this.dropTownTrees(d.x, d.y, d.x + d.w, d.y + d.h);
         this.syncParks(); this.range.sync(true);
         // (T459: the cars a dirt lot holds, as the range card counts them; the paved lot's bays only once it is paved)
-        this.toast(`Car park: room for ${looseBays(pk.bays, 'dirt').length} cars on packed dirt (-$${CAR_PARK_PLACE_COST.toLocaleString()}); gravel and pave it from the range card for up to ${pk.bays.length}`, 'good');
+        if (!free) this.toast(`Car park: room for ${looseBays(pk.bays, 'dirt').length} cars on packed dirt (-$${CAR_PARK_PLACE_COST.toLocaleString()}); gravel and pave it from the range card for up to ${pk.bays.length}`, 'good');
         return true;
       },
     };
+  }
+  /** J7 (#1225): the range's dirt car park laid for free beside the range just placed (a jam game's range comes with it): the first spot carParkSpotAt
+   *  and carParkWhy accept, along the county road from the range's drive (J, its end inland), nearest the drive first, on the range's side of the road.
+   *  False when none fits (the Build menu's Car park card then places it, at its price) */
+  private autoRangeLot(J: Pt, end: Pt): boolean {
+    const g = this.golf, p = this.carParkPlaceable(true); if (!g || !p) return false;
+    const along = g.dir === 0 || g.dir === 2 ? { x: 1, y: 0 } : { x: 0, y: 1 }, dx = end.x - J.x, dy = end.y - J.y, L = Math.hypot(dx, dy) || 1, inl = { x: dx / L, y: dy / L };
+    for (let k = 0; k <= 60; k++) {
+      const a = (k % 2 ? 1 : -1) * Math.ceil(k / 2) * 4;
+      for (const c of [8, 14]) {
+        const d = p.spot(J.x + along.x * a + inl.x * c, J.y + along.y * a + inl.y * c);
+        if (!p.why(d) && p.build(d)) return true;
+      }
+    }
+    return false;
   }
   /** the practice area in hand (T288: the owner, "let him place ... the practice area himself"): its rect on the player's land, off the range,
    *  the home, the car parks and the course; built, Facilities ▸ Practice builds its greens on it */

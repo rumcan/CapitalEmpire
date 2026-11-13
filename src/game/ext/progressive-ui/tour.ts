@@ -28,10 +28,11 @@ const JAM_TOUR: readonly GuideStep[] = Object.freeze([
   {
     id: 'tour-golf',
     n: 3,
-    title: 'Now your golf',
-    body: 'Place your driving range first (Range › Place the driving range): the guide in the corner walks you through it and the rest, step by step.',
+    title: 'Build what you like',
+    // J7 (#1225; the owner: "let the player decide"): the menu, not an order. Tips (Build ▸ Tips) hold what the guided build used to say
+    body: 'Build (on the left) shows everything you can build, with its price, its upkeep and how long it takes to pay back. Choose what and when: a driving range earns quickly and comes with its car park. Build ▸ Tips has hints.',
     done: 'next',
-    target: { ui: 'rail-range' },
+    target: { ui: 'rail-build' },
   },
 ]);
 

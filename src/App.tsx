@@ -18,7 +18,7 @@ import { Budget, DEBT_DAYS, GAME_DAY, LOAN, LOAN_RATE } from './game/budget';
 import { compare, type Delta, type Window } from './game/beforeafter';
 import { MILESTONES, WIN_POP, unlockOf } from './game/career';
 import { BUS_ROUTE_COST, CARDS, CURB_BAY_COST, LOT_TILE_COST, PARTY, TOLL_BASE_COST, TOLL_BOOTH_COST, TOWN_GROWTH, tollPrice } from './game/event/config';
-import { BUSINESS, BUSINESSES, ESTATE_LOTS, unlockText, type BusinessType } from './game/business/catalogue';
+import { BUSINESS, BUSINESSES, CLUBHOUSE_RANGE_COST, ESTATE_LOTS, unlockText, type BusinessType } from './game/business/catalogue';
 import { freshStats } from './game/business/state';
 import { BUSINESS_IMAGE } from './game/business/art';
 import { BUSINESS_THUMBS } from './game/business-library';
@@ -102,6 +102,10 @@ import { RealPlaceDialog, RealPlaceHud } from './ui/course/RealPlaceCard';
 import { OSM_COURSES } from './game/golf/osm';
 import { keptCourses, refreshKept, watchKept } from './game/golf/osm/kept';
 import { RangeGuideCard } from './ui/golf/RangeGuideCard';
+import { BuildMenu } from './ui/jam/BuildMenu'; // J7
+import { TipsCard } from './ui/jam/TipsCard';
+import { buildCards, type BuildCard, type BuildGroupId } from './ui/jam/build-menu';
+import { MONTHS_A_SEASON } from './game/golf/rangesave';
 import { TooltipLayer } from './ui/Tooltip';
 import { UI_SCALES, applyUiScale, currentUiScale, saveUiScale } from './ui/uiScale';
 import { AccessSettings } from './ui/golf/AccessSettings';
@@ -240,6 +244,9 @@ export default function App() {
   /** T193: the open flyouts (the rail item, the rows opened at first, whether the keyboard leads, the item's button's top in the rail's box;
    *  T250: a town footer item's, its button's left edge in the footer's box) */
   const [fly, setFly] = useState<{ item: string; path: number[]; keyboard: boolean; top: number; left: number } | null>(null);
+  /** J7 (#1225): the jam's Build menu (its tab; null: shut) and its tips card */
+  const [build, setBuild] = useState<BuildGroupId | null>(null);
+  const [tips, setTips] = useState(false);
   /** T193: the leaf last picked in each rail item (its row keys and its labels: the tool panel's back arrow and breadcrumb) */
   const lastLeaf = useRef<Record<string, { keys: string[]; crumb: string[]; tool: Tool }>>({});
   const railRef = useRef<HTMLElement | null>(null), railBox = useRef<HTMLDivElement | null>(null);
@@ -330,7 +337,42 @@ export default function App() {
   };
   if (game && item) last.current[item.id] = game.uiTool;
   /** T193: a rail item's flyout rows (none: Select and Bulldoze, a click picks their tool) */
-  const menuFor = (r: RailItem): MenuRow[] => (game ? menuOf(r, menuCtx(game)) : []);
+  const menuFor = (r: RailItem): MenuRow[] => (game && !(JAM && (r.id === 'course' || r.id === 'range' || r.action === 'build')) ? menuOf(r, menuCtx(game)) : []); // (J7: the jam builds from the Build menu: Range and Course open their card and panel at a click)
+  /** J7 (#1225): the jam's own rail clicks: Build opens and shuts the Build menu; Range opens its card (the Build menu while the range is not placed yet).
+   *  True when the click was one of these */
+  const jamPick = (r: RailItem): boolean => {
+    if (!game || !JAM) return false;
+    if (r.action === 'build') { setFly(null); setBuild(b => (b ? null : 'range')); return true; }
+    if (r.id !== 'range') return false;
+    setFly(null); activeRail.current = 'range';
+    if (game.rangePlaces().find(p => p.id === 'range')?.done === false) { setBuild('range'); return true; }
+    setBuild(null); game.setTool('select'); game.openRangeCard(); return true;
+  };
+  /** J7: what the Build menu shows (build-menu.ts buildCards, from the engine) */
+  const buildSource = (g: Game) => {
+    const ui = g.toolUi(), rv = g.range.view();
+    return buildCards({
+      places: g.rangePlaces(), range: rv, rangeUpkeep: rv?.upkeep ?? 0,
+      locks: { newHole: ui?.newHoleLock ?? g.toolLock('course'), buildings: g.toolLock('buildings'), path: g.toolLock('path'), practice: g.toolLock('practice') },
+      clubhouse: { built: g.bizDefs.some(d => d.type === 'clubhouse'), cost: CLUBHOUSE_RANGE_COST, upkeep: BUSINESS.clubhouse!.upkeepPerDay / MONTHS_A_SEASON },
+      course: g.paybackCourse(), money: g.money,
+    });
+  };
+  /** J7: a Build menu card picked: the same placement the rail and the range card start; the menu shuts */
+  const runBuild = (c: BuildCard) => {
+    if (!game || !c.act) return;
+    const a = c.act; setBuild(null); setFly(null);
+    if (a.k !== 'rangeCard' && game.range.cardOpen) game.openRangeCard(false);
+    switch (a.k) {
+      case 'place': activeRail.current = 'range'; game.placeRangePart(a.id); break;
+      case 'upgrade': { activeRail.current = 'range'; const sc = game.range.scene; if (sc) game.lookAt(sc.counter.x, sc.counter.y); game.buyRangeUpgrade(a.id); break; }
+      case 'rangeCard': activeRail.current = 'range'; game.setTool('select'); game.openRangeCard(true); break;
+      case 'newHole': activeRail.current = 'course'; game.paint.setProperty(false); game.startFirstHole(); break;
+      case 'paths': activeRail.current = null; game.setTool('path'); break;
+      case 'clubhouse': activeRail.current = 'course'; game.placeClubhouse(true); break;
+      case 'green': activeRail.current = null; game.armPractice(a.id, true); break;
+    }
+  };
   /** T193: opens a rail item's flyout beside its button (T250: a town footer item's above its button) */
   const openFly = (r: RailItem, el: HTMLElement | undefined, keyboard: boolean, path: number[] = []) => {
     const s = currentUiScale() || 1;
@@ -354,6 +396,7 @@ export default function App() {
     const r = numberedGroups(game.golfMode, !!game.range.scene)[n - 1]; if (!r) return;
     const e = railEntries(game.toolUi(), game.golfMode, game.uiTool, { range: !!game.range.scene || game.rangePlaces().length > 0 }).find(x => x.item.id === r.id);
     if (e?.locked) { game.toast(`${r.label}: ${e.locked}`); return; }
+    if (jamPick(r)) return; // J7
     const el = railButton(r.id);
     if (menuFor(r).length) { if (fly?.item === r.id) setFly(null); else openFly(r, el, true); return; }
     setFly(null); activeRail.current = r.id; const t = pickEntry(r, game.golfMode, game.toolUi(), null); if (t) openEntry(r.id, t);
@@ -755,10 +798,12 @@ export default function App() {
           {(() => {
             // T250 (#721): the rail split in two: the course drawer on the left (Select, the COURSE groups, Bulldoze) and the town footer along
             // the bottom (the TOWN groups); the same groups, states and keys, one handler for both
-            const entries = railEntries(ui, game.golfMode, game.uiTool, { active: item?.id, range: !!game.range.scene || game.rangePlaces().length > 0, rangeOpen: game.range.cardOpen });
+            const entries = railEntries(ui, game.golfMode, game.uiTool, { active: item?.id, range: !!game.range.scene || game.rangePlaces().length > 0, rangeOpen: game.range.cardOpen, buildOpen: !!build });
             const rail = {
               open: fly?.item ?? null,
               onPick: (r: RailItem, keyboard?: boolean, el?: HTMLElement) => {
+                if (jamPick(r)) return; // J7: Build, and the jam's Range
+                setBuild(null);
                 // the owner, 2026-10-29: "footer menu now never closes": a second click on a lit footer group (its flyout open) closes the flyout
                 // and puts its tool down too, so the panel above the footer closes with it (the side drawer keeps its tool, as before)
                 if (menuFor(r).length) { if (fly?.item === r.id) { setFly(null); if (drawerOf(r) === 'footer' && activeRail.current === r.id && toolDrawer(game.uiTool, activeRail.current) === 'footer') game.setTool('select'); } else openFly(r, el, !!keyboard); return; }
@@ -839,6 +884,8 @@ export default function App() {
             {/* T193: a group opens its flyout (a click again, Esc or a click on the map closes it); Select and Bulldoze pick their tool */}
             <Rail {...rail} navRef={railRef} entries={drawerEntries(entries, 'side')} walk={game.you ? { on: game.youWalkMode, set: (on: boolean) => { setFly(null); activeRail.current = 'select'; if (game.range.cardOpen) game.openRangeCard(false); game.setYouWalk(on); } } : undefined} />
             {!up && flyouts}
+            {/* J7 (#1225): the jam's Build menu, beside the rail */}
+            {JAM && build && game.golf && <BuildMenu cards={buildSource(game)} tab={build} onTab={setBuild} onPick={runBuild} onClose={() => setBuild(null)} onTips={() => { setTips(true); setBuild(null); }} />}
             {/* T255: a club tool's panel (and Select's) in the left tool panel; a town tool's is docked above the town footer (TownFooter) */}
             {dock === 'side' && (
             <div className={`glass tool-panel w-[330px] max-h-[calc(var(--vh-ui,100vh)-var(--hud-top,5.75rem)-8.25rem)] overflow-y-auto overflow-x-hidden p-3 ${sideFly || idle ? 'hidden' : ''}`} data-tool={game.uiTool} data-testid="tool-panel" data-dock="side">
@@ -992,7 +1039,7 @@ export default function App() {
               below={toasts.length ? <div className="flex flex-col items-center gap-1" data-testid="toasts">{toastEls(game)}</div> : undefined} />
             {rv.card && <ScoreCard v={rv} onNext={() => game.yourNextHole()} onDone={() => game.yourRoundEnd()} onClose={() => game.toggleYourCard(false)} />}</>; })()}
           {(game.youInCart ? game.youCart : game.you)?.skip && <div className="pointer-events-none absolute inset-x-0 bottom-24 z-20 flex justify-center"><button className="btn-gold pointer-events-auto px-4 py-1.5 text-sm" onClick={() => game.youSkip()} data-tip="A long walk: arrive now" data-testid="you-skip"><Icon name="play" size={16} />Skip the walk</button></div>}
-          {(() => { const w = !game.seasonReport ? game.welcomeView() : null; return w && <WelcomeCard road={w.road} newHole={w.newHole} guide={!!game.rangeGuideView()} onGo={() => game.closeWelcome(true)} onClose={() => game.closeWelcome(false)} />; })()}
+          {(() => { const w = !JAM && !game.seasonReport ? game.welcomeView() : null; /* (J7: not in the jam: its start tutorial welcomes, and the card's button pointed at a step order) */ return w && <WelcomeCard road={w.road} newHole={w.newHole} guide={!!game.rangeGuideView()} onGo={() => game.closeWelcome(true)} onClose={() => game.closeWelcome(false)} />; })()}
           {(() => { // T293 (#878): the start tutorial, where the guided build's card stands (that card waits for it): the town grows only along your roads
             const tv = !game.seasonReport && !game.sceneRef && !game.playerCardOpen && !game.bagCardOpen && !game.cardsCardOpen && !game.cardsFolded() ? game.tourView() : null; // (T348: and away while a shot is open: the cards fold)
             return tv && <RangeGuideCard view={tv} heading={JAM ? 'Tutorial · your club' : 'Tutorial · your town'} tid="tour" foot="Do each step, or skip it" offLabel="Skip tutorial" right={stack!.guide()} onShow={id => { game.tourShowMe(id); bump(); }} onNext={() => { game.tourNextStep(); bump(); }} onSkip={id => { game.tourSkipStep(id); bump(); }} onFold={f => { game.tourFolded = f; bump(); }} />;
@@ -1001,6 +1048,8 @@ export default function App() {
             const gv = !game.seasonReport && !game.sceneRef && !game.playerCardOpen && !game.bagCardOpen && !game.cardsCardOpen && !game.cardsFolded() ? game.rangeGuideView() : null; // (T348: and while a shot is open)
             return gv && <RangeGuideCard view={gv} right={stack!.guide()} onShow={id => { game.guideShowMe(id); bump(); }} onSkip={id => { game.skipGuideStep(id); bump(); }} onFold={f => { game.guideFolded = f; bump(); }} onScene={game.sceneArt('range') ? () => game.openScene({ kind: 'range', view: 'road' }) : undefined} />;
           })()}
+          {/* J7 (#1225): the jam's optional tips (Build ▸ Tips), where the guided build's card stood */}
+          {JAM && tips && !game.seasonReport && <TipsCard right={stack!.guide()} onClose={() => setTips(false)} onShow={s => { if (s === 'build') { setTips(false); setBuild('range'); } else if (s === 'bank') { if (game.panel !== 'bank') game.toggleMoneyPanel(); } else game.guideShowMe('guide-range-buckets'); bump(); }} />}
           {(() => { // the tournament prep checklist (golf/prep.ts), bottom right like the guide: on a free day only (the round is not running), after the tutorial and the guide
             const pv = !game.seasonReport && !game.sceneRef && !game.playerCardOpen && !game.cardsFolded() && game.traffic.round.stage === 'free' ? game.prepCardView() : null, busy = game.range.cardOpen || !!game.clubCard() || !!game.placeCard() || game.holeCardHole !== null;
             return pv && <RangeGuideCard view={pv} heading={pv.heading} tid="prep" foot="Each step pays once when it is done" offLabel="Hide this checklist" right={busy ? (game.panel ? 'right-[41rem]' : 'right-[23rem]') : game.eventTool ? (game.panel ? 'right-[40.25rem]' : 'right-[21.5rem]') : game.panel ? 'right-[19.5rem]' : 'right-3'} onShow={id => { game.prepShowMe(id); bump(); }} onSkip={id => { game.prepSkip(id); bump(); }} onFold={f => { game.prepFolded = f; bump(); }} />;
@@ -1011,7 +1060,7 @@ export default function App() {
             const sv = game.staffCard(); if (!sv) return null;
             return <StaffCard view={sv} right={stack!.right('staff')} onClose={() => game.openStaffCard(false)} onHire={(r, at) => game.hireClubStaff(r, at)} onLetGo={k => game.letGoClubStaff(k)} />;
           })()}
-          {(() => { const rc = game.rangeCard(); return rc && <><RangeCard view={rc} places={game.rangePlaces()} onPlace={id => game.placeRangePart(id)} right={game.panel ? 'right-[19.5rem]' : 'right-3'} onClose={() => game.openRangeCard(false)} onPrice={p => game.setRangePrice(p)} onBuy={id => game.buyRangeUpgrade(id)} onShowPractice={() => game.showPracticeArea()} onBuildPractice={id => { game.openRangeCard(false); activeRail.current = 'facilities'; game.armPractice(id, true); }} practiceWhy={game.toolLock('practice')} onScene={game.sceneArt('range') ? () => game.openScene({ kind: 'range' }) : undefined} you={game.youRange(rc)} onPractise={k => game.youPractise(k)} onHit={pl => { game.openRangeCard(false); game.openPractice3p(pl); }} hitWhy={{ range: game.practice3pWhy('range'), short: game.practice3pWhy('short') }} drillsDone={game.playerNow()?.drills?.done.length ?? 0} onQuickPractice={id => game.quickPractice(id)} onProfile={() => game.openPlayerCard()} profileOpen={game.playerCardOpen} onTree={() => game.toggleBallTree()} treeOpen={rc.treeOpen} onOrderBalls={() => game.orderRangeBalls(1)} onShift={h => game.range.setShift(h)} />{rc.treeOpen && <BallTree view={rc} onBuy={id => game.buyRangeUpgrade(id)} onClose={() => game.toggleBallTree()} rightRem={game.panel ? 19.5 : 0.75} />}</>; })()}
+          {(() => { const rc = game.rangeCard(); return rc && <><RangeCard view={rc} places={JAM ? game.rangePlaces().filter(q => q.id !== 'practice') : game.rangePlaces()} onPlace={id => game.placeRangePart(id)} right={game.panel ? 'right-[19.5rem]' : 'right-3'} onClose={() => game.openRangeCard(false)} onPrice={p => game.setRangePrice(p)} onBuy={id => game.buyRangeUpgrade(id)} onShowPractice={() => game.showPracticeArea()} onBuildPractice={id => { game.openRangeCard(false); activeRail.current = 'facilities'; game.armPractice(id, true); }} practiceWhy={game.toolLock('practice')} onScene={game.sceneArt('range') ? () => game.openScene({ kind: 'range' }) : undefined} you={game.youRange(rc)} onPractise={k => game.youPractise(k)} onHit={pl => { game.openRangeCard(false); game.openPractice3p(pl); }} hitWhy={{ range: game.practice3pWhy('range'), short: game.practice3pWhy('short') }} drillsDone={game.playerNow()?.drills?.done.length ?? 0} onQuickPractice={id => game.quickPractice(id)} onProfile={() => game.openPlayerCard()} profileOpen={game.playerCardOpen} onTree={() => game.toggleBallTree()} treeOpen={rc.treeOpen} onOrderBalls={() => game.orderRangeBalls(1)} onShift={h => game.range.setShift(h)} />{rc.treeOpen && <BallTree view={rc} onBuy={id => game.buyRangeUpgrade(id)} onClose={() => game.toggleBallTree()} rightRem={game.panel ? 19.5 : 0.75} />}</>; })()}
           {(() => { // T241: your golf, left of the card on the right (the range's, the club's, a place's) when one is open
             const pv = game.playerCard(); if (!pv) return null;
             return <PlayerCard view={pv} right={stack!.right('player')} onClose={() => game.openPlayerCard(false)} onBook={() => game.bookYourRound()} onCancel={() => game.cancelYourRound()} onBag={() => game.openBagCard(true)} />;
