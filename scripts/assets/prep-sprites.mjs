@@ -328,6 +328,7 @@ fs.writeFileSync(path.join(ROOT, 'src/game/library.ts'), [
   "import { appendGolf, appendKit, appendRangeArt, appendLandscapeArt } from './golf-library';",
   "import { appendNewProps } from './new-props-library';",
   "import { appendAnimals } from './animals-library';",
+  "import { appendObjectEight } from './object-eight-library';",   // (kept: the reviewed eight-facing art, appended after the animals)
   "import { appendViews } from './views-library';",
   "import { appendTrees } from './trees-library';",
   "import { appendAxisViews } from './axis-library';",
@@ -370,6 +371,7 @@ fs.writeFileSync(path.join(ROOT, 'src/game/library.ts'), [
   'appendLandscapeArt(LIBRARY); // T274: accepted organic art at the tail, on the same golf page',
   'appendNewProps(LIBRARY, ATLAS_PAGES); // the owner\'s new props (art/new-props): their own pages, at the tail so no saved index moves',
   'appendAnimals(LIBRARY, ATLAS_PAGES); // T309: the farm animals (art/animals, prep-animals.mjs): their own page, at the very tail',
+  'appendObjectEight(LIBRARY, ATLAS_PAGES); // reviewed eight-facing art is always appended, after the animals; existing save indices stay stable',
   '// #1235: the range staff (the attendant) after everything else, so no saved index moves',
   ...crowdLines('STAFF', 'Staff', staff, "'idle' | 'walk' | 'pick'", false), ''].join('\n'));
 console.log(`walkers: ${people.length} people, ${walkers.length} frames; frame fixes: ${flipped.length ? flipped.join(', ') : 'none'}`);
