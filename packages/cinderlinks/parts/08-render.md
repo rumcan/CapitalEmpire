@@ -25,11 +25,13 @@ R: A small plant too far for its sculpture is a speck of its colour (a stem, and
 R: New land is made by a background worker (tiles and painted chunks), so the page itself only draws; without a worker the page makes it within a ration of milliseconds a frame. With workers, a thing's own sculpture is made there too (T438): its stand-in shows until it comes, then it dissolves in.
 R: The sun breaks through the clouds in soft-edged gaps that drift over the land with the wind and change shape as they go (CapitalEmpire's sun patches). Nothing dark is drawn: in a gap of sun the picture's own pixels are brighter and a little warmer, the dark parts kept dark; elsewhere it is the overcast, the picture as it always was. None at night.
 R: Glow (Cinderdeep's light grid, swept and blurred): the lantern, glowcaps, crystals, fireflies, sparks, the ball and the cup light what is around them at dusk, faintly at golden hour.
+R: The aim (J5b, the owner: "a blue ribbon static"): the way the shot will go is one steady see-through blue band with a lighter edge, along the flight and, for a putt, along the green, ending in the aim ring; it never blinks or marches, hides behind what stands nearer, and is never drawn over the golfer, the ball or a tree.
 File: game.js
 Check: function drawGround(
 Check: function makeSky(
 Check: function blit(
 Check: function spreadLight(
+Check: function ribbonO(
 
 ````js file=game.js
 
@@ -1032,40 +1034,75 @@ function plotZO(sx, sy, d, c) {   // a mark on the ground: hidden where the game
   const gx = (sx * RS) | 0, gy = (sy * RS) | 0; if (gx < 0 || gy < 0 || gx >= VW || gy >= VH) return;
   const q = gy * VW + gx; if (zbuf[q] >= d * 100 - 40 && sprM[q] !== 1 && czS[q] !== frame) overPut(sx, sy, c);
 }
+// J5b (the owner, 2026-11-13: "change the dots that show where you are aiming to a blue ribbon static"): the aim's way is one steady band, not a march of
+// dots: a see-through blue with a lighter edge and a faint dark rim (so it reads over sky, grass and sand alike), RIB_W metres wide (never under 1.5 px
+// or over RIB_MAXPX px either side of its middle), drawn on the full-size layer. As the ground's marks do, it hides behind whatever stands nearer in the
+// picture, and it is never drawn over the golfer, the ball, the flag, the cart or a tree (sprM). It never covers another mark: the rings drawn before
+// it stay whole, and those drawn after it lie over it. The points go in with ribAdd (world metres, the height included); ribbonO draws them.
+const rgba = (r, g, b, a) => (((a << 24) | (b << 16) | (g << 8) | r) >>> 0);
+const RIB_W = 0.7, RIB_MAXPX = 9, RIB_N = 1024, RIB = { n: 0, p: new Float64Array(3 * RIB_N) };
+const RIB_FILL = rgba(52, 140, 255, 140), RIB_EDGE = rgba(200, 230, 255, 235), RIB_RIM = rgba(8, 28, 72, 120);              // the aim's flight or roll
+const RIB_SOFT = rgba(110, 185, 255, 90), RIB_SOFT_EDGE = rgba(205, 232, 255, 165);                                         // the preview's bounce and roll after the landing
+const RSX = new Float32Array(RIB_N), RSY = new Float32Array(RIB_N), RSD = new Float32Array(RIB_N), RSH = new Float32Array(RIB_N), RQ = { x: 0, y: 0, d: 0, s: 0 };
+function ribStart() { RIB.n = 0; }
+function ribAdd(x, y, z) { if (RIB.n >= RIB_N) return; const i = RIB.n * 3; RIB.p[i] = x; RIB.p[i + 1] = y; RIB.p[i + 2] = z; RIB.n++; }
+function ribRank(c) { return c === RIB_FILL || c === RIB_SOFT ? 3 : c === RIB_EDGE || c === RIB_SOFT_EDGE ? 2 : c === RIB_RIM ? 1 : c === 0 ? 0 : 9; }   // (9: another mark: never covered)
+function ribbonO(wM, soft) {   // the band along the points added since ribStart, wM metres wide; soft: the fainter roll after a landing
+  const n = RIB.n, P = RIB.p, fill = soft ? RIB_SOFT : RIB_FILL, edge = soft ? RIB_SOFT_EDGE : RIB_EDGE;
+  for (let i = 0; i < n; i++) {   // each point on the layer, and the band's half width there (the world's width across the way, as the camera sees it)
+    const x = P[i * 3], y = P[i * 3 + 1], z = P[i * 3 + 2], j = i + 1 < n ? i + 1 : i - 1;
+    let tx = j >= 0 ? P[j * 3] - x : 1, ty = j >= 0 ? P[j * 3 + 1] - y : 0; if (j < i) { tx = -tx; ty = -ty; }
+    const tl = Math.sqrt(tx * tx + ty * ty) || 1;
+    projectO(x, y, z, PJ); RSX[i] = PJ.x; RSY[i] = PJ.y; RSD[i] = PJ.s > 0 ? PJ.d : -1; if (PJ.s <= 0) continue;
+    projectO(x - ty / tl * wM * 0.5, y + tx / tl * wM * 0.5, z, RQ);
+    const h = RQ.s > 0 ? Math.sqrt((RQ.x - PJ.x) * (RQ.x - PJ.x) + (RQ.y - PJ.y) * (RQ.y - PJ.y)) : 1.5; RSH[i] = h < 1.5 ? 1.5 : h > RIB_MAXPX ? RIB_MAXPX : h;
+  }
+  for (let i = 0; i + 1 < n; i++) {   // each piece between two points: the pixels within the half width of its middle line (its ends round)
+    if (RSD[i] < 0 || RSD[i + 1] < 0) continue;
+    const ax = RSX[i], ay = RSY[i], bx = RSX[i + 1], by = RSY[i + 1], ha = RSH[i], hb = RSH[i + 1], da = RSD[i], db = RSD[i + 1], vx = bx - ax, vy = by - ay, L2 = vx * vx + vy * vy, hm = (ha > hb ? ha : hb) + 1.5;
+    const x0 = Math.max(0, Math.floor((ax < bx ? ax : bx) - hm)), x1 = Math.min(OW - 1, Math.ceil((ax > bx ? ax : bx) + hm)), y0 = Math.max(0, Math.floor((ay < by ? ay : by) - hm)), y1 = Math.min(OH - 1, Math.ceil((ay > by ? ay : by) + hm));
+    for (let py = y0; py <= y1; py++) for (let px = x0; px <= x1; px++) {
+      let u = L2 > 0 ? ((px - ax) * vx + (py - ay) * vy) / L2 : 0; u = u < 0 ? 0 : u > 1 ? 1 : u;
+      const ex = px - ax - vx * u, ey = py - ay - vy * u, e2 = ex * ex + ey * ey, h = ha + (hb - ha) * u; if (e2 > (h + 1) * (h + 1)) continue;
+      const e = Math.sqrt(e2);
+      const c = e <= h - 1.1 ? fill : e <= h ? edge : RIB_RIM, o = py * OW + px; if (ribRank(ob[o]) >= ribRank(c)) continue;   // (the fill over the edge over the rim; never over another mark)
+      const gx = (px * RS) | 0, gy = (py * RS) | 0; if (gx >= VW || gy >= VH) continue;
+      const q = gy * VW + gx; if (sprM[q] !== 0 || czS[q] === frame || zbuf[q] < (da + (db - da) * u) * 100 - 40) continue;   // (behind what stands nearer; never over a figure, the ball or a tree)
+      overPut(px, py, c);
+    }
+  }
+}
 function aimH(x, y) {   // T438: the ground's height for the aim's marks: never made here (a far tile took ~2 ms, thirty of them a slow frame); a tile not made yet is
   const u = x * PPM, v = y * PPV, tx = Math.floor(u / TPX), ty = Math.floor(v / TPX);   // asked of the workers and the ball's height stands in until it comes
   if (tileHave(tx, ty)) return hUV(u, v);
   tileWant(tx, ty); return groundH(ball.x, ball.y);
 }
-function drawAim() {   // the shot's shape: a dotted arc that marches toward the target, its faint shadow on the ground, and a double ring where the ball will land
+function drawAim() {   // the shot's shape: a steady blue ribbon along its flight (J5b), and a double ring where the ball will land
   overBegin();
   drawPuttGrid();   // (the putting grid lies on the full-size layer too, drawn after everything so it hides behind what stands on the green)
   if (!nearBall() || player.swing >= 0) { overEnd(); return; }
   if (HP) { if (!hostBusy()) hostAim(); overEnd(); return; }        // (host mode: the host's numbers for the club in hand, T420)
   const c = CLUBS[club], m = matAt(ball.x, ball.y), pw = charging ? power : 0.7, sp = c.v * clubK() * (0.22 + 0.78 * pw) * (club === 2 && m === M_SAND ? 0.85 : club === 3 ? 1 : LIEPOW[m]);
   let x = ball.x, y = ball.y, z = aimH(x, y) + 0.02, vx = aim.dx * sp * Math.cos(c.loft), vy = aim.dy * sp * Math.cos(c.loft), vz = sp * Math.sin(c.loft);
-  const hot = charging ? AIM_R : AIM_G, ph = (frame >> 1) % 6;
-  if (c.loft === 0) {                                                  // a putt: a line of dots along the green, an arrowhead at its end
+  const hot = charging ? AIM_R : AIM_G;
+  ribStart(); ribAdd(x, y, z);
+  if (c.loft === 0) {                                                  // a putt: the ribbon along the green to where it stops
     const len = Math.min(18 * clubK() * clubK(), sp * sp / 3.4);
-    for (let k = 0, d = 0.4 + ph * 0.07; d < len; d += 0.42, k++) { const qx = ball.x + aim.dx * d, qy = ball.y + aim.dy * d; projectO(qx, qy, aimH(qx, qy) + 0.03, PJ); if (PJ.s > 0) aimDotO(PJ.x, PJ.y, PJ.s > 0.8 ? 1 : 0, k & 1 ? hot : AIM_W); }
-    const ex = ball.x + aim.dx * len, ey = ball.y + aim.dy * len; projectO(ex, ey, aimH(ex, ey) + 0.03, PJ); if (PJ.s > 0) aimDotO(PJ.x, PJ.y, 2, hot);
-    overEnd(); return;
+    for (let d = 0.35; d < len + 0.34; d += 0.35) { const e = d < len ? d : len, qx = ball.x + aim.dx * e, qy = ball.y + aim.dy * e; ribAdd(qx, qy, aimH(qx, qy) + 0.03); }
+    ribbonO(RIB_W * 0.35, false); overEnd(); return;
   }
   for (let k = 0; k < 500; k++) {
     vz -= 9.81 / 60; vx *= 0.9986; vy *= 0.9986; x += vx / 60; y += vy / 60; z += vz / 60;
     const gz = aimH(x, y);
-    if (k % 6 === ph) {
-      projectO(x, y, gz + 0.03, PJ); if (PJ.s > 0) plotZO(PJ.x, PJ.y, PJ.d, AIM_D);                 // the arc's shadow on the ground
-      projectO(x, y, z, PJ); if (PJ.s > 0) aimDotO(PJ.x, PJ.y, PJ.s > 1.1 ? 2 : PJ.s > 0.35 ? 1 : 0, (k / 6 | 0) & 1 ? hot : AIM_W);
-    }
-    if (z <= gz) {                                                     // where it lands: two rings (the outer one breathes), a dot in the middle
+    if (k % 3 === 2 || z <= gz) ribAdd(x, y, z > gz + 0.03 ? z : gz + 0.03);
+    if (z <= gz) {                                                     // where it lands: the ribbon ends; two rings over it (the outer one breathes)
+      ribbonO(RIB_W, false);
       const rr = 1.3 + 0.2 * Math.sin(frame * 0.12);
       for (let a = 0; a < 40; a++) {
         const ca = Math.cos(a * 0.157), sa = Math.sin(a * 0.157);
         let qx = x + ca * rr, qy = y + sa * rr; projectO(qx, qy, aimH(qx, qy) + 0.03, PJ); if (PJ.s > 0) { plotZO(PJ.x, PJ.y + 1, PJ.d - 0.3, AIM_D); plotZO(PJ.x, PJ.y, PJ.d - 0.3, a & 1 ? hot : AIM_W); plotZO(PJ.x + 1, PJ.y, PJ.d - 0.3, a & 1 ? hot : AIM_W); }
         if (a & 1) { qx = x + ca * 0.55; qy = y + sa * 0.55; projectO(qx, qy, aimH(qx, qy) + 0.03, PJ); if (PJ.s > 0) { plotZO(PJ.x, PJ.y, PJ.d - 0.3, AIM_W); plotZO(PJ.x + 1, PJ.y, PJ.d - 0.3, AIM_W); } }
       }
-      projectO(x, y, gz + 0.03, PJ); if (PJ.s > 0) aimDotO(PJ.x, PJ.y, PJ.s > 0.5 ? 2 : 1, hot);
       break;
     }
   }
@@ -1108,7 +1145,7 @@ function libFor(o) {   // the library sculpture that stands in for a thing, and 
   return L.S;
 }
 function spriteFor(o, d) {
-  if (o.k === K_TREE && o.sp !== undefined) { const B = picFor(o); if (B) return B; }   // T451, T454: a host's tree is its species' picture
+  if (o.k === K_TREE && o.sp !== undefined) { const B = picFor(o); if (B === PIC_WAIT) return null; if (B) return B; }   // T451, T454: a host's tree is its species' picture (J5b: nothing while it loads)
   if (o.spr) return o.spr;
   const heavy = o.k === K_TREE || o.k === K_BUSH || o.k === K_ROCK;
   if (!heavy) { if (smallMade >= 10 && spriteMax < 99) return null; smallMade++; return objSprite(o); }   // small things: ten new ones a frame at most (the rest wait a frame: never a stall when the camera lands among them)
@@ -1126,7 +1163,29 @@ function spriteFor(o, d) {
 const WIND_HOST = 30;   // a host's sculpted tree is drawn cluster by cluster (swaying) within this many metres: a fuller crown than the land's own costs more, and past 30 m the sway does not show
 const HPIC = 256, picBase = new Map(), picSpr = new Map(), picDecQ = [], picMakeQ = [];   // (picBase: species -> 'wait', 'bad' or its cut pixels)
 let picGen = 0, picSched = false, picWk = null, picWkOk = true;
+const PIC_WKN = typeof navigator !== 'undefined' && navigator.hardwareConcurrency >= 6 ? 3 : 2, picWks = [null, null, null];
 function picReset() { picGen++; picBase.clear(); picSpr.clear(); picDecQ.length = 0; picMakeQ.length = 0; }   // a new host course: its species are numbered anew
+// J5b (the owner, 2026-11-13: "i dont like seeing the other pixel art sprites in the golf game for a few min before the capital art shows up"): a tree whose
+// species has a picture draws nothing (PIC_WAIT) until that picture is made, never the sculpted stand-in; only a picture that failed leaves the tree
+// sculpted. And every species is fetched and cut as soon as the course comes (picPrefetch), not when a tree of it is first in sight, so the loading
+// cover (parts/09-hud.md) waits for all of them at once; picPending says how many are left.
+const PIC_WAIT = { wait: true };
+function picPrefetch() {
+  const L = course && course.ht ? course.ht.pic : null; if (!L) return;
+  for (let sp = 0; sp < L.length; sp++) if (L[sp] && picBase.get(sp) === undefined) { picBase.set(sp, 'wait'); picDecQ.push(sp); }
+  picKick();
+}
+function picPending(only) {   // the species (of `only`, a Set, when given) with a picture not made yet for this light (a failed one counts as done: it stays sculpted)
+  const L = course && course.ht ? course.ht.pic : null; if (!L) return 0;
+  let n = 0; for (let sp = 0; sp < L.length; sp++) if (L[sp] && (!only || only.has(sp)) && picBase.get(sp) !== 'bad' && !picSpr.get(sp * 8 + tmode)) n++;
+  return n;
+}
+function picCount(only) { const L = course && course.ht ? course.ht.pic : null; let n = 0; if (L) for (let sp = 0; sp < L.length; sp++) if (L[sp] && (!only || only.has(sp))) n++; return n; }
+function picNear(x, y, r) {   // the species of the host's trees within r metres of a point (the loading cover waits for these; the rest come in behind it)
+  const S = new Set(), H = course && course.ht ? course.ht.at : null; if (!H) return S;
+  for (const t of H.values()) if (Math.hypot(t.x - x, t.y - y) <= r) S.add(t.p);
+  return S;
+}
 function picFor(o) {
   const HT = course ? course.ht : null, P = HT ? HT.pic[o.sp] : null; if (!P) return null;
   const key = o.sp * 8 + tmode, S = picSpr.get(key);
@@ -1135,12 +1194,12 @@ function picFor(o) {
   if (b === 'bad') return null;
   if (b === undefined) { picBase.set(o.sp, 'wait'); picDecQ.push(o.sp); picKick(); }
   else if (b !== 'wait' && !b.queued[tmode]) { b.queued[tmode] = 1; picMakeQ.push(key); picKick(); }
-  return libFor(o);
+  return PIC_WAIT;   // (J5b: nothing until its picture is made; never the sculpted stand-in)
 }
 function picKick() { if (!picSched && typeof setTimeout === 'function') { picSched = true; setTimeout(picPump, 0); } }
 function picPump() {   // between frames: one picture cut (by the worker, or here from the harness's decoded pages) and the finished ones made sculptures, 2 ms at most
-  picSched = false; const t0 = performance.now();
-  while (performance.now() - t0 < 2) {
+  picSched = false; const t0 = performance.now(), ms = coverOn ? 12 : 2;   // (J5b: behind the loading cover nothing has to be smooth: 12 ms a turn)
+  while (performance.now() - t0 < ms) {
     if (picMakeQ.length) {
       const key = picMakeQ.shift(), b = picBase.get(key >> 3); if (!b || typeof b === 'string') continue;
       const L = (key & 7) === 0 ? 255 : 170, S = sculpt(b.w, b.h, b.ax, b.ay);
@@ -1150,7 +1209,7 @@ function picPump() {   // between frames: one picture cut (by the worker, or her
     if (!picDecQ.length) break;
     const sp = picDecQ.shift(), P = course && course.ht ? course.ht.pic[sp] : null; if (!P) { picBase.set(sp, 'bad'); continue; }
     if (typeof PIC_DECODE === 'function') { picDone(sp, picGen, picCut(PIC_DECODE(P.url), P)); continue; }   // (the harness: its pages decoded beforehand)
-    const W = picWorker(); if (W) { W.postMessage({ sp, gen: picGen, P: Object.assign({}, P, { url: new URL(P.url, location.href).href }), H: HPIC }); continue; }
+    const W = picWorker(sp); if (W) { W.postMessage({ sp, gen: picGen, P: Object.assign({}, P, { url: new URL(P.url, location.href).href }), H: HPIC }); continue; }
     picBase.set(sp, 'bad');   // (no worker to cut it off the page: the sculpted tree)
   }
   if (picMakeQ.length || picDecQ.length) picKick();
@@ -1168,15 +1227,18 @@ const PIC_WK_SRC = 'const bm = new Map();\n' +
   '    postMessage({ sp, gen, w: dw, h: dh, ax: Math.round((P.ax - q[0]) * k), ay: Math.round((P.ay - q[1]) * k), px }, [px.buffer]);\n' +
   '  } catch (err) { postMessage({ sp, gen, bad: true }); }\n' +
   '};';
-function picWorker() {   // the cutting worker (null where a page cannot have one: then the trees stay sculpted)
-  if (picWk || !picWkOk) return picWk;
+function picWorker(sp) {   // a cutting worker (null where a page cannot have one: then the trees stay sculpted). J5b: PIC_WKN of them, a species to each in turn, so a
+  // course's pictures are cut side by side (each worker reads the atlas pages for itself)
+  if (!picWkOk) return null;
+  const k = (sp | 0) % PIC_WKN; if (picWks[k]) return picWks[k];
   try {
     if (typeof Worker === 'undefined' || typeof OffscreenCanvas === 'undefined' || typeof Blob === 'undefined') { picWkOk = false; return null; }
-    picWk = new Worker(URL.createObjectURL(new Blob([PIC_WK_SRC], { type: 'text/javascript' })));
-    picWk.onmessage = (e) => { const m = e.data; picDone(m.sp, m.gen, m.bad ? null : { w: m.w, h: m.h, ax: m.ax, ay: m.ay, px: m.px }); };
-    picWk.onerror = () => { picWkOk = false; picWk = null; };
-  } catch (e) { picWkOk = false; picWk = null; }
-  return picWk;
+    const W = new Worker(URL.createObjectURL(new Blob([PIC_WK_SRC], { type: 'text/javascript' })));
+    W.onmessage = (e) => { const m = e.data; picDone(m.sp, m.gen, m.bad ? null : { w: m.w, h: m.h, ax: m.ax, ay: m.ay, px: m.px }); };
+    W.onerror = () => { picWkOk = false; picWks.fill(null); };
+    picWks[k] = W; picWk = picWks[0] || W;
+  } catch (e) { picWkOk = false; picWks.fill(null); }
+  return picWks[k];
 }
 function picCut(img, P) {   // the worker's cut, here (the harness's decoded pages): the picture's box scaled to HPIC by the nearest pixel
   if (!img) return null;
@@ -1304,7 +1366,8 @@ function render() {
   project(p.x, p.y, gh, PJ); const psx = PJ.x, psy = PJ.y;
   flist.sort((a, b) => b.d - a.d);
   for (const t of flist) {   // far trees: the same stand-in the near pass would draw at this distance; at the edge of sight they rise out of the haze
-    const d = t.d, k = FOC / d, S = (t.sp !== undefined && picFor(t)) || libFor(t), gi = d > 196 ? (228 - d) / 32 : 1;   // (T451: a host's far trees are their pictures too)
+    const P0 = t.sp !== undefined ? picFor(t) : null; if (P0 === PIC_WAIT) continue;   // (J5b: a far tree whose picture is loading is not drawn either)
+    const d = t.d, k = FOC / d, S = P0 || libFor(t), gi = d > 196 ? (228 - d) / 32 : 1;   // (T451: a host's far trees are their pictures too)
     blit(S, t.sx, Math.round(HZ - (t.lift / ZP - camZ) * k), DS / d * t.libS * gi, d * 100, 0, 0, false, farHaze(d));
   }
   for (const o of dlist) {
