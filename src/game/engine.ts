@@ -6236,6 +6236,8 @@ export class Game {
   tourShowMe(id: string) {
     const st = tourLines(this.golf?.progress?.tour, this.tourFacts())?.find(l => l.step.id === id)?.step; if (!st) return;
     if (this.guideRings && !this.guideRings.walk) this.guideRings = null;
+    if (JAM && st.id === 'tour-room') { if (this.panel !== 'bank') this.toggleMoneyPanel(); this.emit(); return; }   // (the jam's step 2, the Bank: Show me opens it; the owner, 2026-11-13: it did nothing)
+    if (JAM && st.n === 1) { const r = this.rangeSpot(); if (r) { this.lookAt(r.x, r.y, 0.14); this.guideRings = { pts: [{ x: r.x, y: r.y }], until: performance.now() + 15000 }; this.emit(); return; } }   // (the jam: the old range for sale, not the town)
     if (st.n === 1) {
       const c = this.townPts[0] ?? this.townCentreOfLots(); if (!c) return;
       const all = [...this.traffic.lots.values()], built = all.filter(v => this.houseLots.has(v.key)); // its houses first, else its first lots
