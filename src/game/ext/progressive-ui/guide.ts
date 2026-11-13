@@ -3,6 +3,7 @@
 // Pure TS, no DOM. index.ts re-exports this file, so its import from './index' is read inside function bodies only.
 import { STUCK_PLAY_SEC } from './index';
 import type { Rect } from '../../golf/mode';
+import { JAM } from '../../features';
 
 /** the facts the guide reads: the player's counters (T033a), placed course pieces by kind, tournaments run, and the guide's saved state */
 export interface GuideFacts {
@@ -216,7 +217,8 @@ export interface RangeGuideSave { done: string[]; skipped: string[]; off: boolea
 /** T288: the steps a range from before T288 has done already (it was built for the player): a load ticks them with no reward */
 export const PLACED_STEPS: readonly string[] = ['guide-range-place', 'guide-range-lot'];
 /** a new range game's guide: nothing done */
-export function newRangeGuide(): RangeGuideSave { return { done: [], skipped: [], off: false }; }
+// (T459, the jam MVP: the practice area is hidden, so its step starts skipped)
+export function newRangeGuide(): RangeGuideSave { return { done: [], skipped: JAM ? ['guide-range-practice'] : [], off: false }; }
 /** a loaded guide made well formed (null: none, an old save's) */
 export function normalizeRangeGuide(x: unknown): RangeGuideSave | null {
   if (!x || typeof x !== 'object') return null;

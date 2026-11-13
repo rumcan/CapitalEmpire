@@ -18,6 +18,3 @@ export const JAM_RAMP_TAKINGS = 2_000;
  *  $26k earns about $1,300 a month once grown in, paying itself back in about 20 months). Without it nine holes took about what one did, so a hole never
  *  paid back what it cost and borrowing to build never paid */
 export const JAM_FEE_PER_HOLE = 2;
-/** T459 ("Balance"): the share of the report card's money-management points a club that built nothing toward the goal still gets (golf/reports.ts
- *  MANAGE_FLOOR): clean books from doing nothing scored a C */
-export const JAM_MANAGE_FLOOR = 0.3;

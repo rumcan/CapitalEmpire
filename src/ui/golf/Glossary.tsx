@@ -3,6 +3,7 @@
 // The explanations are written for a player who has never borrowed money: no word in them needs its own explanation.
 import { useEffect, useId, useLayoutEffect, useRef, useState, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
+import { JAM } from '../../game/features';
 
 export type TermId = 'apr' | 'compound' | 'principal' | 'instalment' | 'murabaha' | 'markup' | 'credit' | 'overdraft' | 'networth' | 'asset'
   | 'liability' | 'premium' | 'deductible' | 'emergency' | 'payback' | 'profit' | 'cashflow' | 'estimate';
@@ -31,7 +32,12 @@ export const GLOSSARY: Readonly<Record<TermId, { word: string; text: string }>> 
 
 /** one money word, explained on hover, tap or focus. children: the word as written (default: the glossary's own word). The explanation is drawn
  *  in a fixed box on the page's body (a card's scrolling would clip it), below the word or, near the bottom of the window, above it */
+/** a word with its plain meaning on hover, focus or tap; in the jam MVP (T459) plain text, no underline (docs/JAM.md "Future development") */
 export function Term({ id, children }: { id: TermId; children?: ReactNode }) {
+  if (JAM) return <>{children ?? GLOSSARY[id]?.word}</>;
+  return <TermTip id={id}>{children}</TermTip>;
+}
+function TermTip({ id, children }: { id: TermId; children?: ReactNode }) {
   const g = GLOSSARY[id], tipId = useId(), [hover, setHover] = useState(false), [focus, setFocus] = useState(false), [pinned, setPinned] = useState(false);
   const ref = useRef<HTMLSpanElement>(null), box = useRef<HTMLDivElement>(null), open = !!g && (hover || focus || pinned);
   // a tap elsewhere unpins it

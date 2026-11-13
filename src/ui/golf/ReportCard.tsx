@@ -9,7 +9,7 @@ const VERDICT: Record<string, string> = {
   A: 'A thriving club, and the money was handled well.',
   B: 'A solid club. A little more cushion or less debt and it is an A.',
   C: 'The club stands, but money decisions held it back.',
-  D: 'A hard two seasons: the club grew too slowly to reach the goal.',
+  D: 'A hard two seasons. Debt and costs ate the gains.',
   F: 'The club is in trouble. Look at the reasons: each one is a lesson.',
 };
 

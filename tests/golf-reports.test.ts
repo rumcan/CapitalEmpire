@@ -1,7 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { statementOf, netWorthSeries, interestToDate, emergencyTotals, goalState, reportCard, GOAL, type Report } from '../src/game/golf/reports';
-import { JAM_MANAGE_FLOOR } from '../src/game/features';
 
 const rep = (month: number, lines: Report['lines'], nw: number, extra: Partial<Report> = {}): Report =>
   ({ month, label: `M${month}`, lines, cash: 1000, savings: 0, debt: 0, assets: nw, netWorth: nw, credit: 650, events: [], ...extra });
@@ -37,27 +36,14 @@ test('NaN and missing lines are safe', () => {
 
 test('goal state and grades', () => {
   const good: Report[] = Array.from({ length: 24 }, (_, i) => rep(i, { range: 10000, wages: -2000 }, 100000 + i * 10000));
-  const win = reportCard(good, { holes: 9, cash: 5000, netWorth: GOAL.netWorth + 10000, debt: 0 });
+  const win = reportCard(good, { holes: 9, cash: 5000, netWorth: 260000, debt: 0 });
   assert.equal(win.grade, 'A'); assert.ok(win.final); assert.ok(win.goal.met);
   const poor = reportCard(good, { holes: 2, cash: -9000, netWorth: 20000, debt: 90000 });
   assert.equal(poor.grade, 'F'); assert.ok(!poor.goal.met);
-  assert.ok(goalState([], { holes: 3, cash: 1, netWorth: GOAL.netWorth / 2, debt: 0 }).netWorthPct === 0.5);
+  assert.ok(goalState([], { holes: 3, cash: 1, netWorth: 125000, debt: 0 }).netWorthPct === 0.5);
   assert.equal(GOAL.holes, 9);
-  const nearly = reportCard(good, { holes: 8, cash: 5000, netWorth: GOAL.netWorth - 1000, debt: 0 });
+  const nearly = reportCard(good, { holes: 8, cash: 5000, netWorth: 249000, debt: 0 });
   assert.ok(nearly.grade !== 'A');
-});
-
-test('T459: clean books earned by building nothing are no longer a C; building toward the goal is what the money points reward', () => {
-  // the playtest's idle run: the range placed, nothing built, five emergencies paid from cash, no loan: it scored a C
-  const idle: Report[] = Array.from({ length: 24 }, (_, i) => rep(i, { range: 300 }, 74000, i % 5 === 0 ? { emergencies: [{ id: 'pump', name: 'Pump', cost: 6000, insured: 0, youPay: 6000 }] } : {}));
-  const c = reportCard(idle, { holes: 0, cash: 58000, netWorth: 74000, debt: 0 }, JAM_MANAGE_FLOOR);
-  assert.equal(c.grade, 'F', `idle: ${c.score}`);
-  // a cautious club half way there (5 holes, two thirds of the net worth, no debt) sits in the middle; the goal met with clean books is an A
-  const half = reportCard(idle, { holes: 5, cash: 4000, netWorth: Math.round(GOAL.netWorth * 0.66), debt: 0 }, JAM_MANAGE_FLOOR);
-  assert.ok(half.grade === 'C' || half.grade === 'D', `half: ${half.grade} ${half.score}`);
-  const won = reportCard(idle, { holes: 9, cash: 4000, netWorth: GOAL.netWorth, debt: 20000 }, JAM_MANAGE_FLOOR);
-  assert.equal(reportCard(idle, { holes: 0, cash: 58000, netWorth: 74000, debt: 0 }).grade, 'C', 'outside the jam the card scores as before (the owner\'s balance)');
-  assert.equal(won.grade, 'A', `won: ${won.score}`);
 });
 
 import { pendingMoments, MOMENTS } from '../src/game/golf/reports';

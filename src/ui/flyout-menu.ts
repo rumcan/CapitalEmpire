@@ -8,7 +8,7 @@ import type { Tool } from '../game/types';
 import type { ProgressiveUiState } from '../game/ext/progressive-ui';
 import type { IconName } from './Icon';
 import { entryKey, extraLock, toolLock, toolNew, toolsIn, type RailItem, type RailTool } from './rail-items';
-import { GREENKEEPING } from '../game/features';
+import { GREENKEEPING, JAM } from '../game/features';
 import { EXTRA_TILE, PLANT_TILE, PRACTICE_TILE, PROP_GROUP_TILE, PROP_KIND_TILE, ROW_TILE, SURFACE_TILE, type ToolTile } from './tool-tiles';
 
 /** T400: the icon of a golf props' kind row in Facilities */
@@ -95,7 +95,8 @@ export function menuOf(item: RailItem, c: MenuCtx): MenuRow[] {
       rows.push(leaf(item.tools[0], s.name, { k: 'range', section: s.id === 'card' ? null : s.id }, 'pin'));
     }
     // T256: Build, gold, last: the holes' painting tools on the range, the practice area and the rest of your land
-    if (c.golf && c.range.length) { const b = leaf(BUILD_TOOL, 'Build', { k: 'build' }, 'terrain'); if (b) rows.push({ ...b, gold: true, note: 'Paint your property, apart from the holes' }); }
+    // (T459, the jam MVP: no free painting of the property: holes come from New hole)
+    if (!JAM && c.golf && c.range.length) { const b = leaf(BUILD_TOOL, 'Build', { k: 'build' }, 'terrain'); if (b) rows.push({ ...b, gold: true, note: 'Paint your property, apart from the holes' }); }
     return rows.filter((r): r is MenuRow => !!r);
   }
   switch (item.id) {
@@ -114,10 +115,12 @@ export function menuOf(item: RailItem, c: MenuCtx): MenuRow[] {
       rows.push(tiled(group('holes', 'Holes', 'trophy', h ? [
         tiled({ ...leaf(h, 'New hole', { k: 'newHole' }, 'trophy')!, why: toolLock(c.ui, h.id) ?? c.newHoleWhy }, ROW_TILE.newHole),
         leaf(h, 'Your holes', { k: 'holes' }, 'pin'),
-        tiled(group('shape', 'Shape by hand', 'terrain', c.surfaces.map(s => tiled({ ...leaf(h, s.name, { k: 'surface', id: s.id })!, mark: s.id }, SURFACE_TILE[s.id]))), ROW_TILE.shape),
+        // (T459, the jam MVP: holes come from New hole; Shape by hand, the surface brushes, is hidden)
+        ...(JAM ? [] : [tiled(group('shape', 'Shape by hand', 'terrain', c.surfaces.map(s => tiled({ ...leaf(h, s.name, { k: 'surface', id: s.id })!, mark: s.id }, SURFACE_TILE[s.id]))), ROW_TILE.shape)]),
       ] : [], h), ROW_TILE.holes));
       const b = byId('buildings');
-      if (b) rows.push(tiled(group('buildings', 'Buildings', 'house', [tiled(leaf(b, 'Clubhouse', { k: 'club' }, 'house'), ROW_TILE.club), tiled(leaf(b, 'Halfway house', { k: 'halfway' }, 'house'), ROW_TILE.halfway), tiled(leaf(b, "Pro's office", { k: 'pro', id: 'prooffice' }, 'house'), ROW_TILE.proOffice), leaf(b, 'House lots', { k: 'estate' }, 'house')], b), ROW_TILE.buildings));
+      // (T459, the jam MVP: the clubhouse alone)
+      if (b) rows.push(tiled(group('buildings', 'Buildings', 'house', JAM ? [tiled(leaf(b, 'Clubhouse', { k: 'club' }, 'house'), ROW_TILE.club)] : [tiled(leaf(b, 'Clubhouse', { k: 'club' }, 'house'), ROW_TILE.club), tiled(leaf(b, 'Halfway house', { k: 'halfway' }, 'house'), ROW_TILE.halfway), tiled(leaf(b, "Pro's office", { k: 'pro', id: 'prooffice' }, 'house'), ROW_TILE.proOffice), leaf(b, 'House lots', { k: 'estate' }, 'house')], b), ROW_TILE.buildings));
       // T356 (#998, the owner: "add a way for the user to place the golf course he imported into his map"): the real courses, each placed with its outline in hand
       // (the shipped ones first; the player's downloaded courses under a caption of their own, only when there are some: without, the list is the three alone)
       if (c.golf && c.real?.length) {

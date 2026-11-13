@@ -2,7 +2,6 @@
 // that finance.ts keeps. Pure TS, no DOM, nothing here changes the game.
 import type { Line, MonthReport } from './finance';
 import type { Emergency } from './risk';
-import { JAM, JAM_MANAGE_FLOOR } from '../features';
 
 /** a report that may carry the month's emergencies (set by the month hook; older saves have none) */
 export type Report = MonthReport & { emergencies?: Emergency[] };
@@ -96,10 +95,6 @@ export function emergencyTotals(history: readonly Report[]): { count: number; co
 /** the goal (JAM.md): by the end of season 2 */
 export const GOAL = { months: 24, holes: 9, netWorth: 250_000 } as const;
 
-/** T459: the share of the money-management points (55 of 100) a club with no progress toward the goal still gets; the rest scales with the goal's progress.
- *  The jam build's (JAM_MANAGE_FLOOR); 1 elsewhere: the points in full, as before */
-export const MANAGE_FLOOR = JAM ? JAM_MANAGE_FLOOR : 1;
-
 export interface Live { holes: number; cash: number; netWorth: number; debt: number }
 export interface GoalState {
   monthsDone: number; monthsLeft: number;
@@ -129,7 +124,7 @@ const m = (n: number) => (n < 0 ? '-$' : '$') + Math.round(Math.abs(n)).toLocale
 
 /** the grade A to F with the reasons. 100 points: the goal (60: holes 20, net worth 25, no overdraft 15), debt left (15), interest paid against earned (10),
  *  emergencies weathered (15). A club that missed the goal cannot score above B. `final` is true once the two seasons are over. */
-export function reportCard(history: readonly Report[], live: Live, manageFloor: number = MANAGE_FLOOR): Card {
+export function reportCard(history: readonly Report[], live: Live): Card {
   const goal = goalState(history, live);
   const { paid, earned } = interestToDate(history);
   const em = emergencyTotals(history);
@@ -144,10 +139,7 @@ export function reportCard(history: readonly Report[], live: Live, manageFloor: 
   const drag = Math.max(0, paid - earned);
   const pInt = 10 * (1 - Math.min(1, drag / Math.max(1, 0.1 * income)));
   const pEm = em.count === 0 ? 15 : 15 * (em.weathered / em.count);
-  // T459 (docs/JAM.md "Balance"): the money-management points (no overdraft, little debt, little interest, emergencies weathered) count in full only for a
-  // club that built toward the goal: a player who built nothing kept clean books by doing nothing, and that scored a C
-  const effort = manageFloor + (1 - manageFloor) * (goal.holesPct + goal.netWorthPct) / 2;
-  const score = Math.round(pHoles + pNw + (pOver + pDebt + pInt + pEm) * effort);
+  const score = Math.round(pHoles + pNw + pOver + pDebt + pInt + pEm);
 
   let grade: Grade = score >= 85 ? 'A' : score >= 72 ? 'B' : score >= 58 ? 'C' : score >= 45 ? 'D' : 'F';
   if (!goal.met && grade === 'A') grade = 'B';

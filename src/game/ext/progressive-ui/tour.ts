@@ -20,8 +20,8 @@ const JAM_TOUR: readonly GuideStep[] = Object.freeze([
   {
     id: 'tour-room',
     n: 2,
-    title: 'The Bank and your goal',
-    body: 'Click your cash at the top to open the Bank: loans (see the total interest before you sign), murabaha, savings and insurance. Each month ends with a statement. The goal chip shows the challenge: a nine-hole club in two seasons, with no overdraft.',
+    title: 'The Bank',
+    body: 'Click your cash to open the Bank: borrow (see the total interest first) or save. Each month ends with a short statement of what came in and went out.',
     done: 'next',
     target: {},
   },

@@ -3,6 +3,7 @@
 // with the select tool, or the top bar's Range chip; the map changes the moment an upgrade is built. T206: each practice facility's row has a
 // Build button (Facilities ▸ Practice armed with it, the practice area shown). T241: your golf (the "You" block: hit a bucket, with its gain and cost, and
 // the last session's result; an open practice green's row has its own Practise button) and the profile card behind it.
+import { JAM } from '../../game/features';
 import type { RangeCardView } from '../../game/golf/rangehost';
 import type { PracticeKind, YouPracticeView, YouRangeView } from '../../game/golf/player';
 import { PRICE_MAX, PRICE_MIN, PROPS_APPEAL_CAP, dayDemand, priceFactor, rangeScale } from '../../game/golf/rangesave';
@@ -17,6 +18,10 @@ import { payback, practiceExtra, rangePriceLadder, rangeUpgradeExtra } from '../
 
 /** T288: a placement the card offers (the range, its car park, the practice area): its name, price, whether placed and why not yet */
 export interface RangePlace { id: 'range' | 'carpark' | 'practice'; name: string; cost: number; done: boolean; why: string }
+/** T459 (the jam MVP): the range upgrades the jam build hides (night lights, the pro shop, the second tier, the academy, the kiosk, the car park building, the
+ *  biggest bays): docs/JAM.md "Future development" */
+const JAM_HIDDEN_UPGRADES: readonly string[] = ['bays24', 'lights', 'proshop', 'tier2', 'academy', 'kiosk', 'parking'];
+
 export function RangeCard({ view, places = [], onPlace, onClose, onPrice, onBuy, onShowPractice, onBuildPractice, practiceWhy = null, right = 'right-3', onScene, you = null, onPractise, onProfile, profileOpen = false, onTree, treeOpen = false, onOrderBalls, onShift }: { view: RangeCardView; /** T288: the placements and their Place (the build in hand) */ places?: RangePlace[]; onPlace?: (id: RangePlace['id']) => void; onClose: () => void; onPrice: (p: number) => void; onBuy: (id: RangeCardView['upgrades'][number]['id']) => void; onShowPractice?: () => void; /** T206: a facility's Build: Facilities ▸ Practice armed with it, the practice area shown */ onBuildPractice?: (id: RangeCardView['practice'][number]['id']) => void; /** the practice tools' lock (null: open) */ practiceWhy?: string | null; right?: string; /** T242: Set the scene (the range's picture card; absent: no art) */ onScene?: () => void;
   /** T241: your golf (null: none) and its actions: a practice session, and the profile card (open: profileOpen) */ you?: YouRangeView | null; onPractise?: (k: PracticeKind) => void; onProfile?: () => void; profileOpen?: boolean;
   /** T386: the ball room's upgrade tree (a flyout beside the card: Ball room upgrades), whether it is open, and an order of balls from the supplier */ onTree?: () => void; treeOpen?: boolean; onOrderBalls?: () => void; /** T386 part 2: the attendants' shift starts at this town hour */ onShift?: (h: number) => void }) {
@@ -37,10 +42,11 @@ export function RangeCard({ view, places = [], onPlace, onClose, onPrice, onBuy,
         </div>
       </div>
       {/* T288 (#873): what the player places himself: each comes into his hand as a ghost, a click on the map builds it */}
-      {places.some(p => !p.done) && (
+      {/* (T459, the jam MVP: no practice area to place) */}
+      {places.filter(p => !(JAM && p.id === 'practice')).some(p => !p.done) && (
         <div className="space-y-1.5 rounded-lg border border-amber-300/30 bg-amber-300/5 p-2 text-xs" data-testid="range-places">
           <div className="text-[12px] uppercase text-amber-200">Place on your land</div>
-          {places.map(p => (
+          {places.filter(p => !(JAM && p.id === 'practice')).map(p => (
             <div key={p.id} className="flex items-center justify-between gap-2" data-testid={`range-place-${p.id}`} data-guide={`range-place-${p.id}`}>
               <span className={p.done ? 'text-emerald-300' : 'text-white'}>{p.name}{p.why && !p.done ? <span className="block text-[12px] text-amber-300/80">{p.why}</span> : null}</span>
               {p.done ? <span className="text-emerald-300">Placed</span>
@@ -120,7 +126,8 @@ export function RangeCard({ view, places = [], onPlace, onClose, onPrice, onBuy,
         {/* J4 (#1207): golfers and takings a month at this price and a dollar either side (golf/payback.ts, the demand curve above) */}
         <PriceLadder rungs={rangePriceLadder(biz, view.demand, view.dayLen)} who="Golfers" testid="range-price-ladder" />
       </div>
-      {you && (
+      {/* (T459, the jam MVP: no golfer profile, props appeal, practice facilities, kiosk, academy or home on the card: docs/JAM.md "Future development") */}
+      {!JAM && you && (
         <div className="space-y-1 rounded-lg border border-sky-400/25 bg-sky-400/5 p-2 text-xs" data-testid="range-you">
           <div className="flex items-center justify-between gap-2">
             <span className="text-[12px] uppercase text-slate-400">Your golf</span>
@@ -133,7 +140,7 @@ export function RangeCard({ view, places = [], onPlace, onClose, onPrice, onBuy,
           {you.last && <div className="text-[12px] text-slate-400" data-testid="range-you-last">Last: {you.last.text} · ${you.last.cost.toLocaleString()} · handicap {hcp(you.last.hcp[0])} to <span className="text-emerald-300">{hcp(you.last.hcp[1])}</span></div>}
         </div>
       )}
-      <div className="flex items-center justify-between rounded-lg border border-white/10 bg-white/5 px-2 py-1.5 text-xs" data-testid="range-props-appeal" title="Props within 15 tiles of the shop or the mats (the Props tool): more golfers, and a higher fair price">
+      {!JAM && <><div className="flex items-center justify-between rounded-lg border border-white/10 bg-white/5 px-2 py-1.5 text-xs" data-testid="range-props-appeal" title="Props within 15 tiles of the shop or the mats (the Props tool): more golfers, and a higher fair price">
         <span className="text-slate-300">Appeal from props: <span className={st.propsAppeal > 0 ? 'font-semibold text-emerald-300' : 'text-white'}>{appealText(st.propsAppeal)}</span> <span className="text-slate-400">(of {appealText(PROPS_APPEAL_CAP)})</span></span>
       </div>
       <div className="space-y-1.5" data-testid="range-practice">
@@ -178,10 +185,10 @@ export function RangeCard({ view, places = [], onPlace, onClose, onPrice, onBuy,
       <div className="flex items-center justify-between rounded-lg border border-white/10 bg-white/5 px-2 py-1.5 text-xs" data-testid="range-home" title="Your home beside the range grows with the range's lifetime takings">
         <span className="text-slate-300">Your home: <span className="font-semibold text-white">{view.home.name}</span></span>
         <span className="text-slate-400">{view.home.next ? `${view.home.next.name} at ${money(view.home.next.at)} taken (${money(view.home.total)} so far)` : `${money(view.home.total)} taken in all`}</span>
-      </div>
+      </div></>}
       <div className="space-y-1.5" data-testid="range-upgrades">
         <div className="text-[12px] uppercase text-slate-400">Upgrades</div>
-        {view.upgrades.filter(u => !u.branch).map(u => (
+        {view.upgrades.filter(u => !u.branch && !(JAM && JAM_HIDDEN_UPGRADES.includes(u.id))).map(u => (
           <div key={u.id} className={`rounded-lg border p-2 text-xs ${u.owned ? 'border-emerald-500/30 bg-emerald-500/5' : 'border-white/5 bg-white/5'}`} data-guide={`range-buy-${u.id}`}>
             <div className="flex items-center justify-between gap-2">
               <span className="font-medium text-white">{u.name}</span>

@@ -86,11 +86,13 @@ const RAIL_FULL: readonly RailItem[] = [
   { id: 'bulldoze', label: 'Bulldoze', icon: 'bulldozer', key: 'X', section: null, group: 'bulldoze', tools: [{ id: 'bulldoze', label: 'Bulldoze', key: 'X', icon: 'bulldozer' }] },
 ];
 
-/** The jam build's rail (docs/JAM.md "Out of the jam build"): Select, Range, Course (holes, buildings, land for sale; no Tournament), Cart paths, Facilities,
- *  Ground height, the car park alone from Traffic (no roads, junctions, bus or toll), Bulldoze. Town decoration goes. */
+/** The jam build's rail, the MVP (docs/JAM.md, T459: "simplify the ui and the game"): Select, Range, Course (holes and buildings; no Tournament, no Land for
+ *  sale), Cart paths, Bulldoze. Facilities (practice, plants, props), Ground height, Traffic (the range has its own car park) and Town decoration go: they are
+ *  listed under "Future development (hidden in the MVP)" */
+export const JAM_RAIL_CUT: readonly string[] = ['towndecor', 'facilities', 'ground', 'traffic'];
 export function jamRail(full: readonly RailItem[]): readonly RailItem[] {
-  return full.filter(r => r.id !== 'towndecor').map((r): RailItem => {
-    if (r.id === 'course') return { ...r, extras: r.extras?.filter(x => x.id === 'land') };
+  return full.filter(r => !JAM_RAIL_CUT.includes(r.id)).map((r): RailItem => {
+    if (r.id === 'course') return { ...r, extras: [] };
     if (r.id === 'paths') return { ...r, tools: r.tools.filter(t => t.id === 'path') };
     if (r.id === 'traffic') return { ...r, label: 'Car park', tools: r.tools.filter(t => t.id === 'park').map(({ sub: _sub, ...t }) => ({ ...t, label: 'Car park' })) };
     return r;

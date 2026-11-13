@@ -75,52 +75,80 @@ export function book(f: FinanceSave, line: Line, amount: number): void;   // + m
 - The goal: by the end of season 2 (Aug 1986): 9 playable holes, net worth at least $250k, not in overdraft. Report card grade A to F.
 
 ## Balance (T459, 2026-11-13: measured on the built jam, then tuned)
-Every number below is behind the JAM flag (`features.ts`: `JAM ? jamValue : currentValue`); the normal game's balance is unchanged.
-*Measured before the MVP scope change above:* the goal chip, the report card and the emergencies are now hidden in the jam, so the goal and
-grade figures below say how hard the hidden goal would be; the two changes that shape the MVP's core loop are New hole opening after two
-months of range takings and the green fees paid per hole (a hole, and a loan to build it, pay back within the two seasons).
+Every number here is behind the JAM flag (`features.ts`: `JAM ? jamValue : currentValue`); the normal game's balance is unchanged. After the
+owner's MVP change the goal, the report card and the emergencies are hidden, so only what makes the loop fair from the $75k start is kept.
 
-**How it was measured.** The jam build (`npm run build:jam`, served with `vite preview`) played by a scripted player in the page at 20x: the
-range placed, then its car park; balls picked up perfectly (the field's balls back in the ball room, an upper bound for a diligent player);
-holes built by the New hole wizard's defaults (seeded, framed with trees, ground shaped: $18k to $37k a hole, about $23k on average); the
-clubhouse $45k. Two seasons is 24 game months, about 3 to 5 minutes at 20x (a 20 to 40 minute session at 1x to 4x with the pauses to build).
-Holes count at cost in net worth (no depreciation), so net worth is the start plus what the club earned: building never lowers it, interest,
-upkeep, insurance and emergencies do.
+**How it was measured.** The jam build (`npm run build:jam`, `vite preview`) played by a scripted player in the page at 20x: the range and its
+car park placed, every ball picked up (an upper bound for a diligent player), holes built by the New hole wizard's defaults ($18k to $37k a
+hole, about $23k; $12k to $17k without frame trees and earthworks), the clubhouse $45k.
 
-**What the playtest found before tuning (lead/live 14c206b).**
+**What it found (lead/live 14c206b).**
 - New hole and the clubhouse opened only at $20,000 of range takings in a season, or in season 2. A bare range takes $0 to $1,200 a month
-  (seasonal), so even a player who picks up every ball waited 7 to 8 months; a normal one, until September 1985, half the two seasons.
+  (seasonal), so even a player who picked up every ball waited 7 to 8 months, and a normal one half the two seasons.
 - Green fees did not grow with the holes: one hole took about $660 a month, nine holes $880 to $1,540. A $23k hole earned about $110 a month
-  while its interest at 10% cost $190: **borrowing to build never paid**, and the $250k goal was out of reach (the best scripted run: $103k).
-- The report card gave an idle club (range only, nothing built, emergencies paid from cash) a **C**: 55 of its 100 points (no overdraft, no
-  debt, no interest, emergencies weathered) came from doing nothing.
-- At the end of season 1 the tour invites the club and its tournament's result opens a card draft (Express entry, First-aid posts,
-  Roundabout: event and road unlocks the jam hides); the season's clock waits until a card is picked.
+  while its interest at 10% cost about $190: building a hole never paid back, so borrowing to build never paid.
 
-**What changed.**
+**What changed (kept).**
 - `JAM_RAMP_TAKINGS = 2_000` (game: $20,000): New hole and the clubhouse open after about two months of range takings.
-- `JAM_FEE_PER_HOLE = 2`: the everyday green fees are paid per playable hole (fees x 2 x holes). A grown-in hole earns about $1,300 a month and
-  pays itself back in about 20 months; a loan's interest on it is about $190 a month, so borrowing to build pays, and building late costs.
-- `JAM_MANAGE_FLOOR = 0.3` (`reports.ts MANAGE_FLOOR`; game: 1, as before): the money-management points scale from 30% to 100% with the
-  goal's progress (holes and net worth). The idle club is now an F; clean books with the goal met is an A.
-- No card draft in the jam (`event/round.ts draftFor`): the tournament's result closes with Back to the valley.
-- Kept: `JAM_START_MONEY = 75_000`, the goal (9 holes, $250k, no overdraft), the bank, savings, insurance and the 8% emergency rate (measured
-  over 2,000 seeds: 8.0% a month, 1.9 emergencies in two seasons, 12% of games get 4 or more; no clustering). A $4k to $12k bill is felt:
-  it is a month or two of green fees.
+- `JAM_FEE_PER_HOLE = 2`: the everyday green fees are paid per playable hole (fees x 2 x holes): a grown-in hole earns about $1,300 a month and
+  pays itself back in about 20 months, so a loan to build one pays and building early beats hoarding cash.
+- Kept: `JAM_START_MONEY = 75_000`, the Bank's numbers.
 
-**Runs after tuning** (one seed each; emergencies are luck):
-| Player | Choices | Holes | Net worth | Notes |
-|---|---|---|---|---|
-| Aggressive | $200k over 5 years at month 2, all nine holes by month 5, full insurance | 9 | $327k | 1 emergency ($9k, insured: $1.8k paid); interest $40k; goal met |
-| Smart, slower | $150k over 5 years at month 2, six holes at once, the rest as cash allowed (months 12, 16, 20), no insurance | 9 | $227k | 4 emergencies, $28k all paid; just short |
-| Cautious | no loan; the clubhouse at month 2, then bare holes (no frame trees, no earthworks: $12k to $17k) whenever the cash allowed | 4 | $129k | holes at months 3, 11, 17, 21; no emergencies; no debt; report card about D |
-| Idle | range and car park only | 0 | about $74k | report card F (was C) |
-
-So the goal is tense but winnable: it takes one well-sized loan taken early and the holes built while it lasts; a player who builds late or
-leaves the club uninsured through bad luck falls just short, and one who never borrows cannot get there in two seasons.
+**Runs after tuning** (one seed each; the hidden goal, 9 holes and $250k, for the record):
+| Player | Choices | Holes | Net worth |
+|---|---|---|---|
+| Borrows early | $200k over 5 years at month 2, all nine holes by month 5 | 9 | $327k |
+| Borrows, builds slower | $150k at month 2, six holes at once, the rest as cash allowed | 9 | $227k |
+| Never borrows | the clubhouse at month 2, then bare holes as cash allowed (months 3, 11, 17, 21) | 4 | $129k |
+| Idle | the range and its car park only | 0 | about $74k |
 
 ## Out of the jam build (J1 hides them when JAM)
 Traffic tools but the car park and cart paths (bus, toll, junction tiers, road up/downgrades); town decoration; career milestones and
 the city win; the natural disasters toggle (J3's emergencies replace it); the Studio, DEV badge, perf panels; Empty map; real places /
 downloaded courses; the tournament event tool and night golf (unless the playtest clears them); portrait placeholders ("not yet available");
 greenkeeping (already off). Unlimited dev money never applies in a JAM build.
+
+## Future development (hidden in the MVP)
+Hidden when JAM (T459, the owner: "simplify the ui and the game ... Call it the MVP"); the code stays and normal builds are unchanged. Each one
+is a candidate for the GDD's roadmap.
+
+**Money**
+- Goal chip and report card: the two-season challenge (9 holes, $250k net worth, no overdraft) graded A to F.
+- Money moments: one-line lessons that pop up the first time a loan, interest, a profit or an overdraft happens.
+- Emergencies and insurance: a monthly 8% chance of a storm, a broken pump or a drought bill, and the plans that cover it.
+- Murabaha ("Finance a purchase"): Islamic financing, a fixed markup agreed up front, compared side by side with a bank loan.
+- Glossary: dotted underlines that explain money words on hover, and the "Money words explained" list in Settings.
+
+**Range**
+- Practice area and practice facilities: the putting green, the chipping green and bunker beside the range.
+- Coffee kiosk and golf academy: extra takings from the range's golfers.
+- Range upgrades: 24 bays, floodlights (night), the pro shop, the second tier of bays, the car park building.
+- Your golf on the range card: your handicap, practice sessions and the profile.
+- Props appeal and Your home: decoration that draws golfers, and the house that grows with the takings.
+- Range › Build: painting the property freely, apart from the holes.
+
+**Course**
+- Shape by hand: painting greens, fairways, bunkers and water with brushes instead of New hole.
+- Tee sets: blue, yellow and red tees placed and moved per hole.
+- Land for sale: buying the blocks next to your land.
+- Ground height: raising, lowering and smoothing the land.
+- Facilities: Plants (trees and flower beds) and Props (course furniture and decoration).
+- Halfway house, pro's office, teaching huts and house lots (the Buildings beyond the clubhouse).
+- The hole card's top-down Play, Build, Save hole and Play a shared course.
+
+**Club and golfer**
+- Club card and Staff card: members and dues, green fee price, staff hiring and wages, the club's day.
+- Your golf, your bag and your cards: the golfer's skills and handicap, the 14 clubs and upgrades, the card collection and vending machine.
+- The golf view's ghosts, kits and shared courses: Save ghost, Ghost…, Own kit / Level kit, Share course.
+
+**Seasons and events**
+- The tour's invitation and the season-end tournament (the Club Championship), its result card and its card draft.
+- The season card (the founding season's checklist) and the Season chip with the course stats.
+- Watch golf, Skip to the rush hour, the tier and the reputation, golfers and course-rating chips.
+- The town hints (roads, the event gate, junctions and transport).
+
+**Map and settings**
+- Traffic: roads, junctions, transport and the town car parks (the range keeps its own car park).
+- Town decoration.
+- Display options in Settings: the map grid, putt break lines, the ball's trace, stand-in labels, money floats, shadows, grass looks, sun patches,
+  desert litter and yards, the world switch, the graphics grade and the night.

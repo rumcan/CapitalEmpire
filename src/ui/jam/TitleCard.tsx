@@ -4,14 +4,13 @@ import { useState } from 'react';
 
 export const TITLE = 'Fairway Fortune';
 export const TAGLINE = 'Build a golf club from a driving range. Borrow wisely.';
-/** the five things to know before the first click */
+/** the four things to know before the first click */
 export const HOW_TO_PLAY: readonly string[] = [
-  'The driving range earns your money: golfers hit buckets of balls all day.',
-  'Spend it on holes: paint tees, fairways and greens in the Course tool, one hole at a time.',
-  'Play the holes you built: pick one and take your own shots.',
-  'The Bank lends you cash (interest grows), or finances a purchase for a fixed markup. Save first, or borrow wisely.',
-  'The goal: nine playable holes and a net worth of $250,000 in two seasons, without drowning in debt.',
-];
+  'The driving range earns your first money: golfers hit buckets of balls, and you pick the balls up again.',
+  'Spend it on holes: Course > Holes > New hole, click a tee, then a green, and Build. A clubhouse brings the green fees.',
+  'Play the holes you built: open a hole and press Play this hole.',
+  'Click your cash to open the Bank: borrow (see the total interest first), repay early, or save.',
+]; // (T459, the jam MVP: no goal, no murabaha: docs/JAM.md "Future development")
 
 export function TitleCard({ canContinue, onNew, onContinue }: { canContinue: boolean; onNew: () => void; onContinue: () => void }) {
   const [how, setHow] = useState(false);

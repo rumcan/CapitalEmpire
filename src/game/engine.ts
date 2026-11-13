@@ -6174,7 +6174,8 @@ export class Game {
   /** the tour's invitation (range starts, about twice a second): the moment the checklist is met, golf.invited is the clock's time, the worker
    *  hears of it (setGolf) and a toast says which season's end holds the first tournament */
   private foundingCheck() {
-    const g = this.golf; if (g?.start !== 'range' || g.invited || ++this.foundTick % 30) return;
+    // (T459, the jam MVP: no tour, so no invitation and no tournament at a season's end)
+    const g = this.golf; if (JAM || g?.start !== 'range' || g.invited || ++this.foundTick % 30) return;
     if (!this.inviteCheck()?.met) return;
     const c = this.traffic.clockTime(performance.now()), next = Math.floor(c / GAME_DAY) * GAME_DAY + GAME_DAY;
     g.invited = { at: c };
@@ -6191,7 +6192,8 @@ export class Game {
     const year = yearOf(this.seasonsDone());
     g.founding = (g.founding ?? 0) + 1;
     const cl = g.club;
-    this.seasonReport = { year, takings: l.business, residents: this.traffic.pop, check: this.inviteCheck()!, invited: !!g.invited, ...(g.range ? { range: { ...g.range.season } } : {}), ...(this.traffic.room !== null ? { room: this.traffic.room } : {}), ...(cl && this.hasClubhouse ? { club: { members: Math.round(cl.members), dues: Math.round(cl.season.dues) } } : {}) };
+    // (T459, the jam MVP: no season card: its residents and the tour's checklist are not in it)
+    if (!JAM) this.seasonReport = { year, takings: l.business, residents: this.traffic.pop, check: this.inviteCheck()!, invited: !!g.invited, ...(g.range ? { range: { ...g.range.season } } : {}), ...(this.traffic.room !== null ? { room: this.traffic.room } : {}), ...(cl && this.hasClubhouse ? { club: { members: Math.round(cl.members), dues: Math.round(cl.season.dues) } } : {}) };
     if (cl) g.club = closeClubSeason(cl); // T214: the season's dues were booked month by month; a founding season books nothing more (and an old save's months before its load are dropped)
     this.scheduleSave();
   }
@@ -6993,6 +6995,7 @@ export class Game {
   setInsurancePlan(p: Plan): void { setInsurance(this.finance, p); this.scheduleSave(); this.emit(); }
   /** J3: the month's emergency, rolled just before the Bank closes the month: the player's share leaves the treasury now and is booked on the 'emergency' line */
   private rollMonthRisk(month: number) {
+    if (JAM) return null; // (T459, the jam MVP: no emergencies; with no insurance chosen there is no premium either)
     const f = this.finance, e = settleRisk(f, { seed: this.seed, month, holes: this.holesBuilt(), weeklyGreenFees: weeklyFees(f.history) }, n => this.cashMove(-n));
     return e;
   }
