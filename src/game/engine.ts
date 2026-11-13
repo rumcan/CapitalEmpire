@@ -3635,7 +3635,7 @@ export class Game {
         if (this.beltOn && this.belt) this.treeCut.keep(riverBeltCell(this.terrain.seed, this.terrain.cls, this.slope, this.belt, ci, cj, free, FOREST_CLEAR)).forEach(fromTree);
       }
       if (!tt) {
-        const near = (x: number, y: number) => { if (this.beltClaims(x, y)) return false; for (const l of lots) if (lotGap(l, x, y) <= 24) return true; return false; };
+        const bk = this.beltKeys(ci, cj), near = (x: number, y: number) => { if (this.beltClaims(x, y)) return false; if (bk.has(treeKey(x, y))) return false; for (const l of lots) if (lotGap(l, x, y) <= 24) return true; return false; };
         this.treeCut.keep(townTreeCell(this.terrain.seed, this.terrain.cls, this.townClump, ci, cj, free, near)).forEach(fromTree);
       }
     }
@@ -3650,6 +3650,17 @@ export class Game {
     const belt = this.beltOn && this.belt ? this.treeSprites(this.treeCut.keep(riverBeltCell(this.terrain.seed, this.terrain.cls, this.slope, this.belt, ci, cj, free, FOREST_CLEAR))) : [];
     if (belt.length) { out.push(...belt); this.beltN.set(key, belt.length); this.perf.belt += belt.length; }
     this.forest.set(key, out); this.perf.forest += out.length - belt.length; this.ground.casters([['f:' + key, this.casterRecs(out)]]);
+  }
+  /** T452: the keys (treecut.ts treeKey: the place to 1/64 tile) of the river-belt trees of cell (ci, cj): a town tree never stands on one, so no two
+   *  trees share a place or a key (Rub out or the bulldozer would take both). The town's and the belt's grids are apart, but past BELT.full + 3 tiles of
+   *  the bank, where both plant, two of their points can fall in one key's square (the 4 km map's seed 1 has one) */
+  private beltKeys(ci: number, cj: number): Set<number> {
+    const out = new Set<number>(); if (!this.beltOn || !this.belt) return out;
+    // (a tree's grid point picks its cell but its jitter can carry it a tile or two over the edge: the neighbours' belt trees near the edge count too)
+    const N = MAP / FOREST_CELL, x0 = ci * FOREST_CELL - 3, y0 = cj * FOREST_CELL - 3, x1 = x0 + FOREST_CELL + 6, y1 = y0 + FOREST_CELL + 6;
+    for (let j = Math.max(0, cj - 1); j <= Math.min(N - 1, cj + 1); j++) for (let i = Math.max(0, ci - 1); i <= Math.min(N - 1, ci + 1); i++)
+      for (const t of riverBeltCell(this.terrain.seed, this.terrain.cls, this.slope, this.belt, i, j, () => true, FOREST_CLEAR)) if (t.x >= x0 && t.x <= x1 && t.y >= y0 && t.y <= y1) out.add(treeKey(t.x, t.y));
+    return out;
   }
   /** T265: the belts (river-trees.ts) take the ground near the water: a town tree is not planted where the belt is thick (within BELT.full + 3
    *  tiles of the bank, outside its open stretches), so their trunks never stand in each other */
@@ -3720,7 +3731,7 @@ export class Game {
   /** plant one town-tree cell as sprites: the predicates are built from the lots, roads, businesses, car parks, toll plazas, painted areas and portals near the cell */
   private plantTownCell(key: number, ci: number, cj: number) {
     const { lots, free } = this.treeClearance(ci, cj);
-    const near = (x: number, y: number) => { if (this.beltClaims(x, y)) return false; for (const l of lots) if (lotGap(l, x, y) <= 24) return true; return false; };
+    const bk = this.beltKeys(ci, cj), near = (x: number, y: number) => { if (this.beltClaims(x, y)) return false; if (bk.has(treeKey(x, y))) return false; for (const l of lots) if (lotGap(l, x, y) <= 24) return true; return false; };
     const out = this.treeSprites(this.treeCut.keep(townTreeCell(this.terrain.seed, this.terrain.cls, this.townClump, ci, cj, free, near)));
     this.townTrees.set(key, out); this.perf.townTrees += out.length; this.ground.casters([['t:' + key, this.casterRecs(out)]]);
   }
