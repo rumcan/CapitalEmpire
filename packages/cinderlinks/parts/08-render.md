@@ -25,7 +25,7 @@ R: A small plant too far for its sculpture is a speck of its colour (a stem, and
 R: New land is made by a background worker (tiles and painted chunks), so the page itself only draws; without a worker the page makes it within a ration of milliseconds a frame. With workers, a thing's own sculpture is made there too (T438): its stand-in shows until it comes, then it dissolves in.
 R: The sun breaks through the clouds in soft-edged gaps that drift over the land with the wind and change shape as they go (CapitalEmpire's sun patches). Nothing dark is drawn: in a gap of sun the picture's own pixels are brighter and a little warmer, the dark parts kept dark; elsewhere it is the overcast, the picture as it always was. None at night.
 R: Glow (Cinderdeep's light grid, swept and blurred): the lantern, glowcaps, crystals, fireflies, sparks, the ball and the cup light what is around them at dusk, faintly at golden hour.
-R: The aim (J5b, the owner: "a blue ribbon static"): the way the shot will go is one steady see-through blue band with a lighter edge, along the flight and, for a putt, along the green, ending in the aim ring; it never blinks or marches, hides behind what stands nearer, and is never drawn over the golfer, the ball or a tree.
+R: The aim (J5b, the owner: "a blue ribbon static"): the way the shot will go is one steady see-through blue band with a lighter edge, along the flight and, for a putt, along the green, ending in the aim ring; it never blinks or marches. J5d: it and the aim rings are drawn over the scenery (trees, rocks, hills along the shot); only the golfer, the ball and what is nearer than them hide them.
 File: game.js
 Check: function drawGround(
 Check: function makeSky(
@@ -1034,6 +1034,18 @@ function plotZO(sx, sy, d, c) {   // a mark on the ground: hidden where the game
   const gx = (sx * RS) | 0, gy = (sy * RS) | 0; if (gx < 0 || gy < 0 || gx >= VW || gy >= VH) return;
   const q = gy * VW + gx; if (zbuf[q] >= d * 100 - 40 && sprM[q] !== 1 && czS[q] !== frame) overPut(sx, sy, c);
 }
+// J5d (the owner, 2026-11-14: "can we also make sure the ribbon isnt behind trees when it should clearly end on the green? ribbon doesnt go above
+// trees"): the aim's marks are a guide drawn over the scenery. Only what stands at or nearer than the golfer and his ball (AIM_NZ: the farther of the
+// two, and 1.5 m) hides them: the golfer, the ball, anything between them and the camera. A tree, a rock or a hill out along the shot does not.
+// The putting grid stays a mark on the ground (plotZO).
+let AIM_NZ = 0;
+const golB = [0, 0, -1, -1], balB = [0, 0, -1, -1];   // (J5d: the golfer's and the ball's boxes on the game's picture this frame: x0, y0, x1, y1)
+function aimFig(q, gx, gy) { return sprM[q] !== 0 && ((gx >= golB[0] && gx <= golB[2] && gy >= golB[1] && gy <= golB[3]) || (gx >= balB[0] && gx <= balB[2] && gy >= balB[1] && gy <= balB[3])); }
+function aimNearZ() { const dg = (player.x - camX) * FX + (player.y - camY) * FY, db = (ball.x - camX) * FX + (ball.y - camY) * FY; return (Math.max(dg, db, 0) + 1.5) * 100; }
+function plotZA(sx, sy, d, c) {   // an aim mark: hidden only where something at or nearer than the golfer and his ball is drawn
+  const gx = (sx * RS) | 0, gy = (sy * RS) | 0; if (gx < 0 || gy < 0 || gx >= VW || gy >= VH) return;
+  const q = gy * VW + gx, z = zbuf[q]; if (czS[q] !== frame && !aimFig(q, gx, gy) && !(z < AIM_NZ && z < d * 100 - 40)) overPut(sx, sy, c);
+}
 // J5b (the owner, 2026-11-13: "change the dots that show where you are aiming to a blue ribbon static"): the aim's way is one steady band, not a march of
 // dots: a see-through blue with a lighter edge and a faint dark rim (so it reads over sky, grass and sand alike), RIB_W metres wide (never under 1.5 px
 // or over RIB_MAXPX px either side of its middle), drawn on the full-size layer. As the ground's marks do, it hides behind whatever stands nearer in the
@@ -1067,7 +1079,7 @@ function ribbonO(wM, soft) {   // the band along the points added since ribStart
       const e = Math.sqrt(e2);
       const c = e <= h - 1.1 ? fill : e <= h ? edge : RIB_RIM, o = py * OW + px; if (ribRank(ob[o]) >= ribRank(c)) continue;   // (the fill over the edge over the rim; never over another mark)
       const gx = (px * RS) | 0, gy = (py * RS) | 0; if (gx >= VW || gy >= VH) continue;
-      const q = gy * VW + gx; if (sprM[q] !== 0 || czS[q] === frame || zbuf[q] < (da + (db - da) * u) * 100 - 40) continue;   // (behind what stands nearer; never over a figure, the ball or a tree)
+      const q = gy * VW + gx, z = zbuf[q]; if (czS[q] === frame || aimFig(q, gx, gy) || (z < AIM_NZ && z < (da + (db - da) * u) * 100 - 40)) continue;   // (J5d: over the scenery; only the golfer, the ball and what is nearer than them hide it)
       overPut(px, py, c);
     }
   }
@@ -1078,7 +1090,7 @@ function aimH(x, y) {   // T438: the ground's height for the aim's marks: never 
   tileWant(tx, ty); return groundH(ball.x, ball.y);
 }
 function drawAim() {   // the shot's shape: a steady blue ribbon along its flight (J5b), and a double ring where the ball will land
-  overBegin();
+  overBegin(); AIM_NZ = aimNearZ();   // (J5d: the aim's marks are hidden only by what is at or nearer than the golfer and his ball)
   drawPuttGrid();   // (the putting grid lies on the full-size layer too, drawn after everything so it hides behind what stands on the green)
   if (!nearBall() || player.swing >= 0) { overEnd(); return; }
   if (HP) { if (!hostBusy()) hostAim(); overEnd(); return; }        // (host mode: the host's numbers for the club in hand, T420)
@@ -1100,8 +1112,8 @@ function drawAim() {   // the shot's shape: a steady blue ribbon along its fligh
       const rr = 1.3 + 0.2 * Math.sin(frame * 0.12);
       for (let a = 0; a < 40; a++) {
         const ca = Math.cos(a * 0.157), sa = Math.sin(a * 0.157);
-        let qx = x + ca * rr, qy = y + sa * rr; projectO(qx, qy, aimH(qx, qy) + 0.03, PJ); if (PJ.s > 0) { plotZO(PJ.x, PJ.y + 1, PJ.d - 0.3, AIM_D); plotZO(PJ.x, PJ.y, PJ.d - 0.3, a & 1 ? hot : AIM_W); plotZO(PJ.x + 1, PJ.y, PJ.d - 0.3, a & 1 ? hot : AIM_W); }
-        if (a & 1) { qx = x + ca * 0.55; qy = y + sa * 0.55; projectO(qx, qy, aimH(qx, qy) + 0.03, PJ); if (PJ.s > 0) { plotZO(PJ.x, PJ.y, PJ.d - 0.3, AIM_W); plotZO(PJ.x + 1, PJ.y, PJ.d - 0.3, AIM_W); } }
+        let qx = x + ca * rr, qy = y + sa * rr; projectO(qx, qy, aimH(qx, qy) + 0.03, PJ); if (PJ.s > 0) { plotZA(PJ.x, PJ.y + 1, PJ.d - 0.3, AIM_D); plotZA(PJ.x, PJ.y, PJ.d - 0.3, a & 1 ? hot : AIM_W); plotZA(PJ.x + 1, PJ.y, PJ.d - 0.3, a & 1 ? hot : AIM_W); }
+        if (a & 1) { qx = x + ca * 0.55; qy = y + sa * 0.55; projectO(qx, qy, aimH(qx, qy) + 0.03, PJ); if (PJ.s > 0) { plotZA(PJ.x, PJ.y, PJ.d - 0.3, AIM_W); plotZA(PJ.x + 1, PJ.y, PJ.d - 0.3, AIM_W); } }
       }
       break;
     }
@@ -1267,6 +1279,7 @@ function speck(o, X, sy, d) {   // a small plant seen from far: a stem a pixel w
 const dlist = [], flist = [];
 function farHas(x, y) { const F = ftiles.get((Math.floor(x / FTS) + 32768) * 65536 + (Math.floor(y / FTS) + 32768)); return F !== undefined && F.ready; }
 function render() {
+  golB[2] = golB[3] = balB[2] = balB[3] = -1;   // (J5d: set again as the golfer and the ball are drawn)
   frame++; madeThisFrame = 0; smallMade = 0; genUsed = 0; sprM.fill(0);
   if (Math.abs(camX - stX) + Math.abs(camY - stY) > 0.02 || Math.abs(camYaw - stYaw) > 0.002) stillF = 0; else stillF++; stX = camX; stY = camY; stYaw = camYaw;
   // the camera: behind the golfer (wherever "behind" has been turned to), raised over any ground that would hide him
@@ -1374,11 +1387,12 @@ function render() {
   for (const o of dlist) {
     if (o.k === 24) drawCart(cart.on ? gs : null, G);
     else if (o.k === K_ACTOR) drawActor(o.a, o.d);   // T424: another person or cart from the host (parts/08d-actors.md)
-    else if (o.k === 21) { if (cart.on || o.d < 1) continue; ghostX = psx; ghostY = psy - 46; blit(gs, psx, psy, DS / o.d / golfK, o.d * 100, 0, 0, false, 0); if (G > 0) addLight(psx, psy - 30, (tmode >= 3 ? 0.5 : 2.2) * G, (tmode >= 3 ? 0.4 : 1.6) * G, (tmode >= 3 ? 0.2 : 0.8) * G); }   // (at night his lantern is small: the floodlights light the holes)
+    else if (o.k === 21) { if (cart.on || o.d < 1) continue; { const sc = DS / o.d / golfK; golB[0] = Math.floor(psx - gs.ax * sc) - 1; golB[1] = Math.floor(psy - gs.ay * sc) - 1; golB[2] = Math.ceil(psx + (gs.w - gs.ax) * sc) + 1; golB[3] = Math.ceil(psy + (gs.h - gs.ay) * sc) + 1; }   /* (J5d: the aim's marks keep off him) */ ghostX = psx; ghostY = psy - 46; blit(gs, psx, psy, DS / o.d / golfK, o.d * 100, 0, 0, false, 0); if (G > 0) addLight(psx, psy - 30, (tmode >= 3 ? 0.5 : 2.2) * G, (tmode >= 3 ? 0.4 : 1.6) * G, (tmode >= 3 ? 0.2 : 0.8) * G); }   // (at night his lantern is small: the floodlights light the holes)
     else if (o.k === 20) { project(H.pin.x, H.pin.y, groundH(H.pin.x, H.pin.y), PJ); if (PJ.s > 0) blit(fs, PJ.x, PJ.y, Math.max(0.3, PJ.s), PJ.d * 100, 0, 0, false, 0); }
     else if (o.k === 22) {
       if (ball.state === 3) continue;
       project(ball.x, ball.y, bz, PJ); if (PJ.s === 0) continue;
+      balB[0] = PJ.x - 4; balB[1] = PJ.y - 5; balB[2] = PJ.x + 4; balB[3] = PJ.y + 2;   // (J5d: the aim's marks keep off the ball)
       if (PJ.s > 0.55) blit(ballSpr, PJ.x, PJ.y, PJ.s, PJ.d * 100 - 40, 0, 0, false, 0);
       else { const w = rgb(255, 255, 250); plotZ(PJ.x, PJ.y, PJ.d - 1, w); plotZ(PJ.x + 1, PJ.y, PJ.d - 1, w); plotZ(PJ.x, PJ.y - 1, PJ.d - 1, w); plotZ(PJ.x + 1, PJ.y - 1, PJ.d - 1, rgb(214, 216, 226)); }
       if (tmode >= 2) addLight(PJ.x, PJ.y, 0.25, 0.7, 0.7);

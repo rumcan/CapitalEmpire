@@ -103,7 +103,7 @@ function golferPic(fa, pose, ph, K) {
   const id = gaPlayerId();
   if (id && pose !== 'c') {
     for (const c of GOLFART_CLIPS) gaLoad(id, c);
-    const released = player.swing >= 0 || !!(HP && HP.sw && HP.sw.rel), S = artSprite(id, fa, pose, ph, K, player.al, released, puttNow());
+    const released = player.swing >= 0 || !!(HP && HP.sw && HP.sw.rel), S = artSprite(id, fa, pose, ph, K, player.al, released, pose === 'a' ? addressPutt() : puttNow());   // (J5d: waiting at the ball, the stance by its ground)
     gaWarm(id, artRow(fa), K); gaPump();
     if (S) return S;
     if (!gaBad(id)) return gaNone();   // (J5b: his art is still coming: nothing, not the voxel figure)

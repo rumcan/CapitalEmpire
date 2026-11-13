@@ -327,7 +327,7 @@ function hostAim() {   // T420: the aim tells the truth: the arc to where the mo
   const na = Math.max(40, Math.min(160, Math.round((across + along) * 3)));
   for (let a = 0; a < na; a++) {                                       // the ring: one standard deviation across the line and along it
     const an = a / na * 6.2832, ca = Math.cos(an), sa = Math.sin(an), qx = lx + dx * along * ca + rx * across * sa, qy = ly + dy * along * ca + ry * across * sa;
-    projectO(qx, qy, aimH(qx, qy) + 0.03, PJ); if (PJ.s > 0) { plotZO(PJ.x, PJ.y + 1, PJ.d - 0.3, AIM_D); plotZO(PJ.x, PJ.y, PJ.d - 0.3, a & 1 ? hot : AIM_W); plotZO(PJ.x + 1, PJ.y, PJ.d - 0.3, a & 1 ? hot : AIM_W); }
+    projectO(qx, qy, aimH(qx, qy) + 0.03, PJ); if (PJ.s > 0) { plotZA(PJ.x, PJ.y + 1, PJ.d - 0.3, AIM_D); plotZA(PJ.x, PJ.y, PJ.d - 0.3, a & 1 ? hot : AIM_W); plotZA(PJ.x + 1, PJ.y, PJ.d - 0.3, a & 1 ? hot : AIM_W); }
   }
   HP.ring = { x: lx, y: ly, across, along };   // (kept for the harness)
 }
@@ -363,7 +363,7 @@ function hostTarget() {
 function hostTargetRing(T, C) {
   const S = hostS(), dx = aim.dx, dy = aim.dy, rx = -dy, ry = dx;
   const R = T.putt ? Math.max(0.25 * S, 0.05 * T.d) : Math.max(1.2 * S, (C.scatterM || 0) / 2 * T.pw * S);
-  const mark = (qx, qy, c) => { projectO(qx, qy, aimH(qx, qy) + 0.03, PJ); if (PJ.s > 0) { plotZO(PJ.x, PJ.y + 1, PJ.d - 0.3, AIM_D); plotZO(PJ.x, PJ.y, PJ.d - 0.3, c); plotZO(PJ.x + 1, PJ.y, PJ.d - 0.3, c); } };
+  const mark = (qx, qy, c) => { projectO(qx, qy, aimH(qx, qy) + 0.03, PJ); if (PJ.s > 0) { plotZA(PJ.x, PJ.y + 1, PJ.d - 0.3, AIM_D); plotZA(PJ.x, PJ.y, PJ.d - 0.3, c); plotZA(PJ.x + 1, PJ.y, PJ.d - 0.3, c); } };
   const n = Math.max(48, Math.min(220, Math.round(R / S * 30)));
   for (let a = 0; a < n; a++) { const an = a / n * 6.2832; mark(T.x + Math.cos(an) * R, T.y + Math.sin(an) * R, AIM_G); }
   const c = R * 0.6, tx = T.x + dx * c * 0.5, ty = T.y + dy * c * 0.5;   // (the chevron's point, a little past the centre, along the line)
@@ -434,7 +434,9 @@ swingBtn.id = 'swingBtn'; swingAimMk.className = 'aimmk'; swingHoleMk.className 
 {
   const up = (e) => { swingBtnDown = false; if (e && e.stopPropagation) e.stopPropagation(); };
   swingBtn.addEventListener('pointerdown', (e) => {
-    if (e.button) return; swingBtnDown = true;
+    if (e.button) return;
+    if (!nearBall() && ball.state === 0 && !bcam && !(HP && hostBusy())) { jumpToBall(); if (e.preventDefault) e.preventDefault(); if (e.stopPropagation) e.stopPropagation(); return; }   // (J5d: it reads "Walk to your ball (J)": a press does that, and he is at address)
+    swingBtnDown = true;
     try { if (swingBtn.setPointerCapture) swingBtn.setPointerCapture(e.pointerId); } catch (x) { /* (no capture: pointerup on the button still ends it) */ }
     const a = audio(); if (a && a.state === 'suspended') a.resume();
     if (e.preventDefault) e.preventDefault(); if (e.stopPropagation) e.stopPropagation();
@@ -551,7 +553,7 @@ function hostAimPreview(C, pw, hot, ph) {   // the preview's flight (scaled to t
   const L = at(F[n - 1]), dx0 = L[0] - bx, dy0 = L[1] - by, dl = Math.hypot(dx0, dy0) || 1, dx = dx0 / dl, dy = dy0 / dl, rx = -dy, ry = dx;
   const across = Math.max(0.4, (C.scatterM || 0) / 2 * pv.spread * pw * S), along = Math.max(0.4, (C.longM !== undefined ? C.longM : C.scatterM || 0) / 2 * pv.spread * pw * S);
   const na = Math.max(40, Math.min(160, Math.round((across + along) * 3)));
-  for (let a = 0; a < na; a++) { const an = a / na * 6.2832, qx = L[0] + dx * along * Math.cos(an) + rx * across * Math.sin(an), qy = L[1] + dy * along * Math.cos(an) + ry * across * Math.sin(an); projectO(qx, qy, aimH(qx, qy) + 0.03, PJ); if (PJ.s > 0) { plotZO(PJ.x, PJ.y + 1, PJ.d - 0.3, AIM_D); plotZO(PJ.x, PJ.y, PJ.d - 0.3, a & 1 ? hot : AIM_W); } }
+  for (let a = 0; a < na; a++) { const an = a / na * 6.2832, qx = L[0] + dx * along * Math.cos(an) + rx * across * Math.sin(an), qy = L[1] + dy * along * Math.cos(an) + ry * across * Math.sin(an); projectO(qx, qy, aimH(qx, qy) + 0.03, PJ); if (PJ.s > 0) { plotZA(PJ.x, PJ.y + 1, PJ.d - 0.3, AIM_D); plotZA(PJ.x, PJ.y, PJ.d - 0.3, a & 1 ? hot : AIM_W); } }
   const R = [F[n - 1]].concat(m.roll || []);   // the bounce and roll: a fainter, narrower ribbon from the landing to where it stops
   ribStart();
   for (let i = 0; i + 1 < R.length; i++) { const a = at(R[i]), b = at(R[i + 1]), seg = Math.hypot(b[0] - a[0], b[1] - a[1]); for (let d = 0; d < seg; d += 0.6) { const u = d / seg, x = a[0] + (b[0] - a[0]) * u, y = a[1] + (b[1] - a[1]) * u; ribAdd(x, y, aimH(x, y) + 0.04); } }

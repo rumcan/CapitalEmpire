@@ -160,18 +160,30 @@ function nearBall() { return ball.state === 0 && Math.hypot(player.x - ball.x, p
 // target to his left), not in a frame of the walk sheet, and drawn where the swing will stand him (addressSpot: beside the ball, the line to his
 // left). Only his picture moves there, not he: his place, the camera and the aim stay as they were until the swing takes him there itself. Turning
 // to aim only turns him; the walk frames are for walking.
+// J5d (the owner, 2026-11-14: "can we get the guy setup to the ball like this when you click walk to ball ... the neutral pose is wrong"): at his still
+// ball he is ALWAYS at address, whatever brought him there (the tee, J, walking up, a new turn, practice) and whether or not his turn has come yet: the
+// idle frame (upright, arms down) is never drawn at the ball. On his turn he addresses the aim's line; while he waits for it (the aim still the last
+// shot's) he addresses the line to the pin, and on the green with the putter's stance.
 function addressAt() {
   const p = player; if (cart.on || p.swing >= 0 || charging || p.moving || !nearBall()) return false;
-  if (typeof HP !== 'undefined' && HP) { if (HP.sw || !HP.turn || HP.over || HP.play || HP.wait > 0) return false; }
+  if (typeof HP !== 'undefined' && HP && (HP.sw || HP.play)) return false;   // (his swing has its own frames; a ball being played back is not at rest)
   return true;
 }
-function addressFa() {   // his facing at address, in sixteenths of a turn: side-on to the aim, the target to his left (as the swing stands him)
-  const l = Math.hypot(aim.dx, aim.dy); if (!(l > 0)) return player.fa;
-  const th = Math.atan2(aim.dx / l, -aim.dy / l); return ((Math.round(th / 6.2832 * 16) % 16) + 16) % 16;
+function addressOnTurn() {   // his turn has come for the ball where it lies (the aim is this ball's)
+  if (typeof HP === 'undefined' || !HP) return true;
+  const t = HP.turn, S = hostS(); if (!t || HP.wait > 0 || HP.over || HP.q.length || !t.ball) return false;
+  return Math.hypot(t.ball[0] * S - ball.x, t.ball[1] * S - ball.y) < 0.5;
+}
+function addressDir() {   // the line he addresses: the aim's on his turn; else the pin's
+  if (addressOnTurn()) { const l = Math.hypot(aim.dx, aim.dy); if (l > 0.5) return [aim.dx / l, aim.dy / l]; }
+  const dx = hole.pin.x - ball.x, dy = hole.pin.y - ball.y, l = Math.hypot(dx, dy) || 1; return [dx / l, dy / l];
+}
+function addressPutt() { return addressOnTurn() ? puttNow() : matAt(ball.x, ball.y) === M_GREEN; }   // (waiting on the green: the putter's stance, whatever was last in hand)
+function addressFa() {   // his facing at address, in sixteenths of a turn: side-on to the line, the target to his left (as the swing stands him)
+  const [dx, dy] = addressDir(), th = Math.atan2(dx, -dy); return ((Math.round(th / 6.2832 * 16) % 16) + 16) % 16;
 }
 function addressSpot() {   // where he is drawn at address: the stance the swing takes (0.64 m beside the ball, the line to his left); null: where he is
-  const l = Math.hypot(aim.dx, aim.dy); if (!(l > 0)) return null;
-  const x = ball.x + aim.dy / l * 0.64, y = ball.y - aim.dx / l * 0.64;
+  const [dx, dy] = addressDir(), x = ball.x + dy * 0.64, y = ball.y - dx * 0.64;
   return canStand(x, y, player.x, player.y) ? [x, y] : null;
 }
 function pickClub() {
