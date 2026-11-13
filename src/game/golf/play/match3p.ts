@@ -16,11 +16,12 @@ import type { ShotSkill } from './shot';
 import type { HeightAt } from './roll';
 import type { WindNow } from './wind';
 import type { Frame3p } from './export3p';
-import { PROTOCOL_V, fromView, toView, type Actor, type ActorsMsg, type HoleEndMsg, type HostMsg, type MatchMsg, type ViewInput } from './protocol3p';
+import { PROTOCOL_V, fromView, toView, type Actor, type ActorsMsg, type HoleEndMsg, type Dress, type HostMsg, type MatchMsg, type ViewInput } from './protocol3p';
 import { centreOf, turnMsg } from './turn3p';
 import { allowedClubs } from './owner';
 import { fieldShotMsg, shotMsg } from './shot3p';
 import { dressOf } from './actors3p';
+import { GOLFER_ART_IDS } from './golfart3p';
 
 /** the owner's and the opponent's golfer ids in the view */
 export const OWNER_M3P = 0, OPP_3P = 1;
@@ -31,6 +32,15 @@ export const OWNER_M3P = 0, OPP_3P = 1;
 export interface Match3pOpts {
   view: CourseView; round: YourRound; skills: ShotSkill; sex: Sex; oppSex?: Sex; seed: number; frame: Frame3p | Pt;
   height?: HeightAt | null; wind?: () => WindNow | null; fit?: string; envFor?: EnvFor;
+}
+
+/** T450b: the opponent's sex: the host's (oppSex), else his look's (engine.ts matchBegin draws him as GOLFER_PEOPLE[look]; an id with _w is a woman) */
+export const oppSexOf = (look: number, sex?: Sex): Sex => sex ?? (GOLFER_ART_IDS[look]?.includes('_w') ? 'w' : 'm');
+/** T450b: the opponent's dress: his clothes from his name and look, and the golfer art the map draws him as (GOLFER_PEOPLE[look], whose ids are
+ *  GOLFER_ART_IDS in the same order), so the view shows the same person */
+export function oppDress(name: string, look: number, sex?: Sex): Dress {
+  const s = oppSexOf(look, sex), d = dressOf({ id: nameSeed(name) % 100000, look, sex: s }), art = GOLFER_ART_IDS[look];
+  return art ? { ...d, art } : d;
 }
 
 export class Match3p {
@@ -122,8 +132,8 @@ export class Match3p {
   actors(doing: 'address' | 'watch' = 'watch'): ActorsMsg {
     const m = this.r.match!, row = rowOf(this.r), h = this.o.view.holes[row.i], c = this.centre, n = h?.n ?? row.i + 1;
     const toward = doing === 'address' ? h?.pin ?? this.r.ball : this.r.ball, hd = Math.round(Math.atan2(toward.y - m.ball.y, toward.x - m.ball.x) * 180 / Math.PI);
-    const opp: Actor = { id: OPP_3P, role: 'golfer', at: toView(m.ball, c), hole: n, name: m.name, sex: this.o.oppSex ?? 'm', look: m.look, doing: m.holed ? 'stand' : doing, phase: doing === 'address' ? 0.3 : 0,
-      ball: m.holed ? null : toView(m.ball, c), dress: dressOf({ id: nameSeed(m.name) % 100000, look: m.look, sex: this.o.oppSex ?? 'm' }) };
+    const opp: Actor = { id: OPP_3P, role: 'golfer', at: toView(m.ball, c), hole: n, name: m.name, sex: oppSexOf(m.look, this.o.oppSex), look: m.look, doing: m.holed ? 'stand' : doing, phase: doing === 'address' ? 0.3 : 0,
+      ball: m.holed ? null : toView(m.ball, c), dress: oppDress(m.name, m.look, this.o.oppSex) };
     if (Number.isFinite(hd)) opp.heading = hd;
     const you: Actor = { id: OWNER_M3P, role: 'golfer', at: toView(this.r.ball, c), hole: n, owner: true };
     return { v: PROTOCOL_V, t: 'actors', at: this.tick + (doing === 'address' ? 0.99 : 0.5), actors: [you, opp], play: true };

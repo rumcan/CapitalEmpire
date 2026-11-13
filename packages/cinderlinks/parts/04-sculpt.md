@@ -257,6 +257,9 @@ function mkTree(o) {
   const R = mulberry32(o.seed), H = o.H, c = o.c, rx = o.rx;
   if (o.hf === 0) return mkConifer(o, R);   // T451: the host's species decides the build, whatever the biome
   if (o.hf === 3) return mkPalm(o, R);
+  if (o.hf === 5) return mkCactus(o, R);   // T454: the desert's own, and the bushes, shrubs and grasses a host plants
+  if (o.hf === 7) return mkAcacia(o, R);
+  if (o.hf === 6) { const B = mkBush(o); B.wind = null; return B; }
   if (o.hf === undefined) {
     if (c[0] < CONT) return mkConifer(o, R);
     if (t2(c[0])) return BT2 === 1 ? mkPalm(o, R) : BT2 === 2 ? mkCactus(o, R) : mkAcacia(o, R);   // the biome's own tree

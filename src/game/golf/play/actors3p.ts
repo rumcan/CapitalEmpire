@@ -27,7 +27,10 @@ const TEND_SIDE = 0.35;
 
 /** what actorsMsg reads: the round plan and its course (the plan the playback draws: playRound's, with LiveGroup's shots appended), the game minute, and
  *  the carts' playback (view.ts' cartPlay; absent or null: nobody rides) */
-export interface ActorsState { plan: RoundPlan; view: CourseView; minute: number; carts?: CartPlay | null }
+export interface ActorsState { plan: RoundPlan; view: CourseView; minute: number; carts?: CartPlay | null;
+  /** T450b: the owner's own dress (look3p.ts playerDress of the look picked on his "Who are you?" card): his figure among the actors is the golfer he picked,
+   *  the same one the map walks and the view's own golfer is. Absent: dressed as any golfer, by his id and look */
+  owner?: Dress }
 
 // ---------------------------------------------------------------- looks
 
@@ -141,7 +144,7 @@ export function actorsMsg(st: ActorsState, frame: Frame3p | Pt): ActorsMsg {
       if (Number.isNaN(heading) && pin) heading = headingOf(at, pin);
     }
     const a: Actor = { id: g.id, role: 'golfer', at: roundPt(toView(at, c)), hole: view.holes[s.hole]?.n ?? s.hole + 1, action: s.action, ball: s.ball ? roundPt(toView(s.ball, c)) : null,
-      name: g.name, sex: g.sex, look: g.look, doing, phase: round2(phase), dress: dressOf(g) };
+      name: g.name, sex: g.sex, look: g.look, doing, phase: round2(phase), dress: g.owner && st.owner ? st.owner : dressOf(g) };
     if (!Number.isNaN(heading)) a.heading = Math.round(heading);
     if (g.owner) a.owner = true;
     if (g.cart !== undefined) a.cart = CART_ID + g.cart;

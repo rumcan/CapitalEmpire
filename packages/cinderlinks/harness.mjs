@@ -51,6 +51,14 @@ globalThis.window = globalThis; globalThis.self = globalThis;
 const RSH = +process.env.RSCALE || 1; if (RSH !== 1) globalThis.RSCALE = RSH;   // the picture's scale, to try smaller pictures (RSCALE=0.5)
 const run = (src) => (0, eval)(src);
 // host mode (T415): the message a host page sends, made from the importer's Woodhill file as CapitalEmpire would send it (true size, its paths and buildings)
+// (T454: HOSTPICS=<json>: { sp: [library ids], pics: { id: TreePic with url a page file } } (scripts/cinder/hostpics.ts makes it, see its header): the treesms
+//  scene's trees are these species with these pictures, and the pages are decoded here, before any frame, for the page's picture cut)
+globalThis.HOSTPICS = process.env.HOSTPICS ? JSON.parse(fs.readFileSync(process.env.HOSTPICS, 'utf8')) : null;
+if (globalThis.HOSTPICS) {
+  const { default: sharp } = await import('sharp'), pages = new Map();
+  for (const P of Object.values(globalThis.HOSTPICS.pics)) if (!pages.has(P.url)) { const r = await sharp(P.url).ensureAlpha().raw().toBuffer({ resolveWithObject: true }); pages.set(P.url, { w: r.info.width, h: r.info.height, data: r.data }); }
+  globalThis.PIC_DECODE = (url) => pages.get(url) || null;
+}
 globalThis.hostMsg = () => {   // (made only when asked: a course this size held from the start slows the gate's chunk timings)
   // (T445: HOSTCOURSE=<file>: a course file CapitalEmpire exported (play/export3p.ts) instead of the importer's Woodhill, to see the game's own ground in the view)
   const raw = JSON.parse(fs.readFileSync(process.env.HOSTCOURSE || new URL('./courses/raw/woodhill.json', import.meta.url), 'utf8')), ed = new URL('./courses/edits/woodhill.json', import.meta.url);
@@ -469,16 +477,18 @@ ${HOST_PLAY}
           const q = hash2(gx, gy, 77), sp = o.c[0] < CONT ? (q < 0.5 ? 0 : 1) : 2 + Math.floor(q * 3.99), h = process.env.HOSTSIZE === 'own' ? o.H / PPM : 3.5 + hash2(gx, gy, 78) * 4.5;
           t.push(+o.x.toFixed(1), +o.y.toFixed(1), +h.toFixed(1), +(process.env.HOSTSIZE === 'own' ? o.rx * 2 / PPM : h * (FORM[sp] === 0 ? 0.42 : 0.62)).toFixed(1), sp);
         }
-        return { box: [x0, y0, x1, y1], sp: SP, form: FORM, hue: HUE, pic: SP.map(() => null), t };
+        const HP = globalThis.HOSTPICS; return { box: [x0, y0, x1, y1], sp: HP ? HP.sp : SP, form: FORM, hue: HUE, pic: (HP ? HP.sp : SP).map((id) => (HP && HP.pics[id]) || null), t };
       };
       const m = hostMsg(); if (process.env.HOSTTREES === '1') m.features = Object.assign({ course: 'woodhill', v: 1, features: [] }, m.features || {}, { trees: synth(m) });
       hostMessage(m); for (let w = 0; w < 400 && (farQ.length || tileQ.length); w++) render();
+      const pump = () => { if (typeof picPump === 'function') for (let k = 0; k < 50 && (picDecQ.length || picMakeQ.length); k++) picPump(); };   // (T454: between frames, as setTimeout runs it in a page)
+      for (let w = 0; w < 6; w++) { render(); pump(); }
       const T = []; let host = 0, own = 0, x0 = player.x, y0 = player.y, yaw0 = camYaw;
       for (let k = 0; k < 360; k++) { player.x = x0 + FX * k * 0.12; player.y = y0 + FY * k * 0.12; camYaw = yaw0 + Math.sin(k / 40) * 0.5; aimCam(); camZ = groundH(player.x, player.y) + HC;
-        const t0 = performance.now(); render(); T.push(performance.now() - t0); FX = Math.sin(yaw0); FY = -Math.cos(yaw0); }
-      for (const o of dlist) if (o.k === K_TREE) { if (o.hf !== undefined) host++; else own++; }
+        const t0 = performance.now(); render(); T.push(performance.now() - t0); FX = Math.sin(yaw0); FY = -Math.cos(yaw0); pump(); }
+      let pics = 0; for (const o of dlist) if (o.k === K_TREE) { if (o.hf !== undefined) host++; else own++; if (o.hf !== undefined && typeof picSpr !== 'undefined' && picSpr.has(o.sp * 8 + tmode)) pics++; }
       const W = T.slice(40).sort((a, b) => a - b), n = W.length;
-      out.info.push({ treesms: { med: +W[n >> 1].toFixed(2), p95: +W[Math.floor(n * 0.95)].toFixed(2), max: +W[n - 1].toFixed(1), packed: m.features && m.features.trees ? m.features.trees.t.length / 5 : 0, nearHost: host, nearOwn: own } }); },
+      out.info.push({ treesms: { med: +W[n >> 1].toFixed(2), p95: +W[Math.floor(n * 0.95)].toFixed(2), max: +W[n - 1].toFixed(1), packed: m.features && m.features.trees ? m.features.trees.t.length / 5 : 0, nearHost: host, nearOwn: own, nearPictures: pics } }); },
     cartms() { // what drawing the cart costs a frame (any build: drawCart alone), seen from 6, 14 and 40 m, turning: the median and the 95th percentile
       idle(); const base = Math.atan2(Math.cos(cart.th), -Math.sin(cart.th)), res = {};
       for (const d of [6, 14, 40]) {

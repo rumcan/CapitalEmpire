@@ -217,7 +217,7 @@ import { fillPack } from './golf/osm/terrarium'; // T438: the share file's heigh
 import { MARGIN_T, exportFeatures3p, gatherFeatures3p } from './golf/play/features3p';
 import { courseEntry3p } from './golf/play/entry3p';
 import { seedOf } from './golf/play/view3p';
-import type { Actor, CourseMsg, CourseTime3p, HostMsg, Time3p, ViewInput } from './golf/play/protocol3p';
+import type { Actor, CourseMsg, CourseTime3p, Dress, HostMsg, Time3p, ViewInput } from './golf/play/protocol3p';
 import { Play3p, type Play3pOpts } from './golf/play/play3p'; // T418: the owner's play in the view from behind the golfer
 import { earned } from './golf/play/unlocks'; // T443
 import { galleryActors } from './golf/play/gallery3p'; // T429: the galleries for the view
@@ -3632,8 +3632,14 @@ export class Game {
     const out: { id: string; x: number; y: number; scale: number }[] = [];
     if (!this.boot.trees) return out;
     const N = MAP / FOREST_CELL, cl = (v: number) => clamp(Math.floor(v / FOREST_CELL), 0, N - 1), inB = (x: number, y: number) => x >= b[0] && x <= b[2] && y >= b[1] && y <= b[3];
-    const fromSprite = (p: Prop) => { const it = LIBRARY[p.item]!, bx = it.boxes[0]; const x = p.x + (bx ? bx.dx * p.scale / 2 : 0), y = p.y + (bx ? bx.dy * p.scale / 2 : 0); if (inB(x, y)) out.push({ id: it.id, x, y, scale: p.scale }); };
-    const fromTree = (t: ForestTree) => { if (inB(t.x, t.y) && !this.inPortal(t.x, t.y)) out.push({ id: t.id, x: t.x, y: t.y, scale: t.scale }); };
+    // (T454: each as the game draws it, newart.ts lookOf: in a desert game a woods tree is a palm or a rock, a bush a desert plant)
+    const drawn = (item: number, ax: number, ay: number, flip: boolean, scale: number, x: number, y: number) => { const l = lookOf({ item, x: ax, y: ay, flip, scale }); out.push({ id: LIBRARY[l.item]!.id, x, y, scale: l.scale }); };
+    const fromSprite = (p: Prop) => { const it = LIBRARY[p.item]!, bx = it.boxes[0]; const x = p.x + (bx ? bx.dx * p.scale / 2 : 0), y = p.y + (bx ? bx.dy * p.scale / 2 : 0); if (inB(x, y)) drawn(p.item, p.x, p.y, p.flip, p.scale, x, y); };
+    const fromTree = (t: ForestTree) => {
+      if (!inB(t.x, t.y) || this.inPortal(t.x, t.y)) return;
+      let item = this.forestItem.get(t.id); if (item === undefined) { item = LIBRARY.findIndex(i => i.id === t.id); this.forestItem.set(t.id, item); } if (item < 0) return;
+      const b = LIBRARY[item]!.boxes[0]; drawn(item, t.x - (b ? b.dx * t.scale / 2 : 0), t.y - (b ? b.dy * t.scale / 2 : 0), false, t.scale, t.x, t.y);   // (its anchor as treeSprites sets it)
+    };
     for (let cj = cl(b[1]); cj <= cl(b[3]); cj++) for (let ci = cl(b[0]); ci <= cl(b[2]); ci++) {
       const key = cj * N + ci, f = this.forest.get(key), tt = this.townTrees.get(key);
       if (f) f.forEach(fromSprite); if (tt) tt.forEach(fromSprite);
@@ -10142,9 +10148,12 @@ export class Game {
   get time3p(): CourseTime3p { return this.golf?.time3p ?? 'golden'; }
   setTime3p(t: CourseTime3p) { const g = this.golf; if (!g) return; if (t === 'day') g.time3p = 'day'; else delete g.time3p; this.scheduleSave(); }
   /** roundTime: the round's own time of day (a night-golf event, T449), which wins over the course's setting */
+  /** T450b: the player in the view from behind the golfer: the clothes and the golfer art of the look he picked on the "Who are you?" card (youArt, the
+   *  same look the map walks), for the course message's golfer and for his own figure among the actors */
+  private youDress3p(): Dress { return playerDress(GOLFER_PEOPLE[this.youArt()]?.id, this.golf?.player?.sex ?? 'm'); }
   async course3pMsg(n: number, roundTime?: Time3p): Promise<CourseMsg | null> {
     const sh = this.shared3p; this.lies3pRun(null);
-    const golfer = playerDress(GOLFER_PEOPLE[this.youArt()]?.id, this.golf?.player?.sex ?? 'm');   // (T437: the golfer in the player card's clothes)
+    const golfer = this.youDress3p();   // (T437: the golfer in the player card's clothes; T450b: drawn as the golfer he picked)
     if (sh) { this.view3pFrame = sh.frame; this.course3pShare = sh.share; return { ...(await shareCourseMsg(sh.share, sh.view, n)), golfer, time: roundTime ?? this.time3p }; }   // (T434: a shared course)
     const g = this.golf; if (!g) return null;
     const name = this.titleName()?.name ?? 'Your course', id = 'ce-' + (name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'course');
@@ -10161,7 +10170,8 @@ export class Game {
       ? [Math.min(...pts.map(p => p.x)), Math.min(...pts.map(p => p.y)), Math.max(...pts.map(p => p.x)), Math.max(...pts.map(p => p.y))] : undefined;
     const tb3 = tileBox(inp);   // (T451: the course's own box, which its trees are gathered round)
     const features = exportFeatures3p(gatherFeatures3p({ course: id, segs: this.net.segs, bizDefs: this.bizDefs, structures: g.structures ?? [], lots: this.estateRt?.lots ?? [],
-      props: this.props, library: LIBRARY, ...(box ? { box } : {}), ...(tb3 ? { courseBox: tb3, trees: this.trees3p([tb3[0] - MARGIN_T, tb3[1] - MARGIN_T, tb3[2] + MARGIN_T, tb3[3] + MARGIN_T]) } : {}),
+      props: [...this.props].map(p => { const l = lookOf(p); return { item: l.item, x: p.x, y: p.y, scale: l.scale, ...(p.auto ? { auto: p.auto } : {}) }; }), library: LIBRARY,   // (T454: each prop as the game draws it)
+      ...(box ? { box } : {}), ...(tb3 ? { courseBox: tb3, trees: this.trees3p([tb3[0] - MARGIN_T, tb3[1] - MARGIN_T, tb3[2] + MARGIN_T, tb3[3] + MARGIN_T]) } : {}),
       pages: ATLAS_PAGES }), { x: f.cx, y: f.cy });   // (T451: every tree on the course and 150 m round it, with the game's pictures of them)
     // T447: the biome and course type from what the course looks like (look3p.ts biomeFor3p, courseTypeFor3p): the Desert theme, the month on the home map, a
     // shipped real course's latitude, the sand, water and trees of the course file; the club's members, tour tier and condition, and a tournament day
@@ -10202,7 +10212,7 @@ export class Game {
     if (pl && own?.turn && own.caddie === null && !sh) {
       const gi = pl.plan.groups.findIndex(g => g.players.includes(own.id));
       this.play3p = new Play3p({ view: pl.view, holes: [], skills: own.skill, sex: own.sex, seed: 0, frame: f, height: this.ballHeight, wind: () => this.windNow(),
-        paths: this.cartPathsNow(), galleries: () => this.galleries3p(), attach: { plan: pl.plan, view: pl.view, live: own.live, owner: own.id, group: Math.max(0, gi) } });
+        paths: this.cartPathsNow(), galleries: () => this.galleries3p(), owner: this.youDress3p(), attach: { plan: pl.plan, view: pl.view, live: own.live, owner: own.id, group: Math.max(0, gi) } });
       return this.play3p.start();
     }
     const idx = v.holes.findIndex(h => h.n === n); if (idx < 0) return [];
@@ -10211,7 +10221,7 @@ export class Game {
       // T430: your round in the view: the game's own round (play/yours3p.ts), its strokes saved, its end recorded, its own gimme rule
       const sk = this.yourSkills(), earn = earned({ skills: p?.skills ?? {}, bag: p?.bag ?? null, mech: MECH_IDS.filter(id => hasMech(sk, id)) });
       const driver = yoursDriver(v, sk, this.seed, { get: () => this.yourRound(), set: r => this.setYourRound(r), played: (s, b, a, up) => this.yourPlayed3p(s, b, a, up), next: () => this.yourNextHole() });
-      this.play3p = new Play3p({ view: v, holes: [idx], skills: sk, earned: earn, gimmeM: gimmeM(yr), driver, sex: p?.sex ?? 'm', seed: this.seed, frame: f,
+      this.play3p = new Play3p({ view: v, holes: [idx], skills: sk, earned: earn, gimmeM: gimmeM(yr), driver, owner: this.youDress3p(), sex: p?.sex ?? 'm', seed: this.seed, frame: f,
         height: this.ballHeight, wind: () => this.windNow(), fit: putterFitName(p?.bag), gust: () => { const w = this.worldWind(); return w ? windView(this.windNow(), w, 1, 0).peak : null; } });
       return this.play3p.start();
     }
@@ -10220,7 +10230,7 @@ export class Game {
     const earn = mode === 'level' ? earned({ skills: LEVEL_PROFILE, bag: null, mech: [] }) : earned({ skills: p?.skills ?? {}, bag: p?.bag ?? null, mech: MECH_IDS.filter(id => hasMech(sk, id)) });
     const seed3p = (this.seed ^ Math.imul(n, 7919) ^ Math.imul(this.play3pN + 1, 104729)) | 0, ghost = this.ghostOpts3p(v, [idx]);   // (T433: a loaded ghost of this hole plays alongside)
     this.ghostMeta3p = { holes: [idx], seed: seed3p, skills: sk, sex: p?.sex ?? 'm', name: p?.name ?? 'You', mode, hcp: mode === 'level' ? levelHcp() : p ? handicapOf(p.skills) : levelHcp() };
-    this.play3p = new Play3p({ view: v, holes: [idx], skills: sk, earned: earn, ...ghost, gimmeM: GIMME_RULES.find(r => r.id === DEFAULT_RULES.gimme)?.m ?? 0, /* (T423: a practice hole's rules: the leather) */ sex: p?.sex ?? 'm', seed: (this.seed ^ Math.imul(n, 7919) ^ Math.imul(++this.play3pN, 104729)) | 0, frame: f,
+    this.play3p = new Play3p({ view: v, holes: [idx], skills: sk, earned: earn, ...ghost, gimmeM: GIMME_RULES.find(r => r.id === DEFAULT_RULES.gimme)?.m ?? 0, /* (T423: a practice hole's rules: the leather) */ owner: this.youDress3p(), sex: p?.sex ?? 'm', seed: (this.seed ^ Math.imul(n, 7919) ^ Math.imul(++this.play3pN, 104729)) | 0, frame: f,
       height: sh ? sh.height : this.ballHeight, wind: () => this.windNow(), fit: putterFitName(p?.bag), gust: () => { const w = this.worldWind(); return w ? windView(this.windNow(), w, 1, 0).peak : null; } });
     return this.play3p.start();
   }
