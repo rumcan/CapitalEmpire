@@ -96,6 +96,11 @@ button { font-family: var(--sans); }
 /* the glass panels (CapitalEmpire's .glass): the card, the help, the shot panel, the settings menu, the leaderboard and match cards */
 .panel, #card, #keys, #help, #wind, #shotc, #styleMenu { background: var(--panel); border: 1px solid var(--line); border-radius: 1.1em; box-shadow: var(--shadow); color: var(--ink); }
 body > .panel { border-radius: 0.9em; }
+#prac .ph { font-size: 0.85em; letter-spacing: 0.12em; color: var(--gold); margin-bottom: 0.35em; } #prac .pd { padding: 0.3em 0.45em; margin: 0.2em 0; border: 1px solid var(--line); border-radius: 0.6em; cursor: pointer; }
+#prac .pd.on { border-color: var(--gold-line); background: var(--gold-wash); } #prac .pd.off { opacity: 0.45; cursor: default; } #prac .pd.done .pt i { color: var(--good); } #prac .pd:hover:not(.off) { border-color: var(--line-hi); }
+#prac .pt { display: flex; justify-content: space-between; gap: 0.5em; } #prac .pt i { font-style: normal; color: var(--gold-hi); } #prac .pg { color: var(--ink); font-size: 0.92em; } #prac .pr { color: var(--muted); font-size: 0.85em; }
+#prac .pn { margin-top: 0.45em; color: var(--gold-hi); } #prac .pf { margin-top: 0.25em; color: var(--muted); font-size: 0.88em; }
+.pflag { padding: 0.1em 0.45em; border-radius: 0.5em; background: var(--panel); border: 1px solid var(--gold-line); color: var(--ink); font: 600 clamp(10px, 0.85vw, 13px) system-ui, sans-serif; white-space: nowrap; }
 body > .panel > b:first-child { font-size: 0.85em; letter-spacing: 0.12em; text-transform: uppercase; color: var(--gold); }
 
 /* the card: the hole in the serif, gold; its facts as CapitalEmpire's stat lines (muted name, bold cream figure) */

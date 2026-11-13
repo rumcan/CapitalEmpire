@@ -236,7 +236,8 @@ function updatePlayer() {
     return;
   }
   if (ball.state === 1 || ball.state === 2 || ball.state === 3) { p.moving = false; return; }
-  const fwd = (keys.KeyW || keys.ArrowUp ? 1 : 0) - (keys.KeyS || keys.ArrowDown ? 1 : 0), turn = (keys.KeyD || keys.ArrowRight ? 1 : 0) - (keys.KeyA || keys.ArrowLeft ? 1 : 0), side = (keys.KeyE ? 1 : 0) - (keys.KeyQ ? 1 : 0);
+  const held = pracLock();   // (J6: practising, he is held to his spot: he turns, he does not walk)
+  const fwd = held ? 0 : (keys.KeyW || keys.ArrowUp ? 1 : 0) - (keys.KeyS || keys.ArrowDown ? 1 : 0), turn = (keys.KeyD || keys.ArrowRight ? 1 : 0) - (keys.KeyA || keys.ArrowLeft ? 1 : 0), side = held ? 0 : (keys.KeyE ? 1 : 0) - (keys.KeyQ ? 1 : 0);
   p.moving = false;
   if (!fwd && !turn && !side) return;
   if (turn) { p.th += turn * 0.045; p.fa = ((Math.round(p.th / 6.2832 * 16) % 16) + 16) % 16; }      // A and D turn him

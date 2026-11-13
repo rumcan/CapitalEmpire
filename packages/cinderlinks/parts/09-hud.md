@@ -71,11 +71,11 @@ function updateHud() {
   const H = hole, m = matAt(ball.x, ball.y), d = Math.hypot(H.pin.x - ball.x, H.pin.y - ball.y);
   const score = strokes - H.par, row = (a, b) => '<div class="row"><span>' + a + '</span><b>' + b + '</b></div>';
   const card = (course ? '<div class="course">' + course.name + '</div>' : '') + '<div class="hole">Hole ' + (course ? course.holes[(holeN - 1) % course.holes.length].n : holeN) + '<span>par ' + H.par + '</span></div>' + row('Strokes', strokes + (strokes ? ' (' + (score > 0 ? '+' : '') + score + ')' : '')) + row('Round', total) + row('To pin', (d < 10 ? d.toFixed(1) : Math.round(d)) + ' m') + row('Lie', hostOnTurn() ? HP.turn.lieName || HP.turn.lieKind : MAT_NAME[m]) + (hostOnTurn() ? hostCardRows(row) : '') + row('Light', TOD[tmode].name) + (course ? '<div class="credit">' + course.credit + (course.hcredit ? ' &middot; heights: ' + course.hcredit : '') + ' &middot; ' + Math.round(course.S * 10) + '/10 size</div>' : '');
-  if (card !== shownCard) { cardEl.innerHTML = card; shownCard = card; }
+  if (PRAC) { const pc = pracCard(); if (pc !== shownCard) { cardEl.innerHTML = pc; shownCard = pc; } } else if (card !== shownCard) { cardEl.innerHTML = card; shownCard = card; }   // (J6: practising: the place, not the hole)
   if (club !== shownClub) { shownClub = club; clubsEl.className = HP && HP.clubs.length ? 'bag' : ''; clubsEl.innerHTML = HP && HP.clubs.length ? hostTabs() : CLUBS.map((c, k) => '<div class="club' + (k === club ? ' on' : '') + '"><b>' + (k + 1) + '</b> ' + c.name + '<i>' + (c.loft ? Math.round(c.v * c.v * clubK() * clubK() * Math.sin(2 * c.loft) / 9.81 / 5) * 5 + ' m' : 'on the green') + '</i></div>').join(''); }
   if (!HP) { powerEl.className = charging || player.swing >= 0 ? 'on' : ''; powerBar.style.width = (power * 100).toFixed(0) + '%'; }   // (host mode: the meter, hostMeterShow)
   if (charging && !HP) powerTxt.textContent = Math.round(power * 100) + '%  ' + clubName(club);
-  const byCart = !cart.on && Math.hypot(player.x - cart.x, player.y - cart.y) < 3.2;
+  const byCart = !cart.on && !pracLock() && Math.hypot(player.x - cart.x, player.y - cart.y) < 3.2;
   const hint = msgT > 0 ? msgText : '';
   if (hint !== shownMsg) { msgEl.textContent = hint; shownMsg = hint; }
   const kh = (cart.on ? '<b>G</b> get out &middot; <b>W S</b> go, brake &middot; <b>A D</b> steer' : byCart ? '<b>G</b> drive the cart' : nearBall() ? '<b>hold click</b> swing &middot; <b>' + (HP ? '1-9, wheel' : '1-4') + '</b> club' + (HP ? ' &middot; <b>Z X</b> shape &middot; <b>I</b> boost' : '') : '<b>W</b> walk &middot; <b>A D</b> turn &middot; to the ball') + ' &middot; <b>H</b> help';
@@ -126,6 +126,7 @@ function hostMessage(m) {   // one message from the host page, already known to 
   if (m.t === 'leave') { hostOff = true; return; }
   if (m.t === 'actors' || m.t === 'board' || m.t === 'match') { if (m.t === 'match') matchIn(m); else groupMsg(m); return; }   // T424, T427, T428: who else is on the course, the leaderboard, a money match (parts/08d-actors.md, 08e-group.md, 08g-match.md)
   if (m.t === 'lies' && m.v === 1) { hostLies(m.lk); return; }   // T438
+  if (m.t === 'practice' && m.v === 1) { if (course) pracIn(m); return; }   // J6: practice (parts/08l-practice.md)
   if ((m.t === 'turn' || m.t === 'shot' || m.t === 'holeEnd' || m.t === 'preview') && m.v === 1) { if (course) hostPlayMsg(m); return; }   // (T418: the play, once a course is in)
   if (m.t !== 'course' || m.v !== 1) return;
   if (m.time === 'night') setTime(3); else if (m.time === 'day') setTime(0); else if (m.time === 'golden') setTime(1); else if (m.time === 'dusk') setTime(2);   // T449, #1200: night golf: the Night time of day (TOD 3), lit by the host's floodlight towers; T448: golden, dusk (absent: the view's own, Golden hour)
@@ -136,7 +137,7 @@ function hostMessage(m) {   // one message from the host page, already known to 
   const k = MORE_COURSES.findIndex((c) => c.id === D.id); if (k >= 0) MORE_COURSES.splice(k, 1); MORE_COURSES.push(D);
   if (m.seed !== undefined && Number.isFinite(+m.seed)) SEED = +m.seed | 0;
   setBiome(BIOMES[m.biome] ? m.biome : biomeId, CTYPES[m.type] ? m.type : ctypeId); lib.clear(); libWarm = 0;   // (sculptures made in the old colours are dropped, as useStyle does)
-  HP = null; course = null; if (!setCourse(D.id)) { hostSend({ t: 'error', why: 'the course could not be laid out' }); return; }
+  HP = null; PRAC = null; course = null; if (!setCourse(D.id)) { hostSend({ t: 'error', why: 'the course could not be laid out' }); return; }
   picReset();   // (T454: a new course's species pictures)
   setFeatures(m.features || null); featTxt = ''; featFor = course.id;
   const n = Math.max(1, Math.min(course.holes.length, +m.hole | 0 || 1)); if (n !== 1) newHole(n, 0, 0);
@@ -195,7 +196,7 @@ function hostTurn(m) {   // the owner's turn: the ball and the pin where the mod
   strokes = m.stroke - 1; autoClub = false; club = Math.max(0, HP.clubs.findIndex((c) => c.club === m.suggested.club)); shownClub = -2;
   HP.pick = null; HP.pv = null; HP.pvSig = ''; hostAimPin = false;   // (T441: each turn starts from a plain shot; T446: and the aim follows the mouse until a click sets it)
   const ax = m.suggested.aim[0] * S - ball.x, ay = m.suggested.aim[1] * S - ball.y, al = Math.hypot(ax, ay); if (al > 0.3) { aim.dx = ax / al; aim.dy = ay / al; }
-  if (m.stroke === 1 && Math.hypot(player.x - ball.x, player.y - ball.y) > 2.5) jumpToBall();   // (on the tee he stands at his ball; later he walks to it, or J)
+  if ((m.stroke === 1 || pracLock()) && Math.hypot(player.x - ball.x, player.y - ball.y) > (pracLock() ? 0.3 : 2.5)) jumpToBall();   // (J6: practising, each ball is teed up where he stands)   // (on the tee he stands at his ball; later he walks to it, or J)
 }
 function hostStrike() {   // the club meets the ball: the input goes to the host, and the ball waits for its answer
   const c = hostClub(), t = HP.turn, S = hostS(); if (!c || !t) return;
@@ -255,7 +256,7 @@ function hostRest() {   // the playback is over: the ball lies at the host's res
   else if (m.penalty) { splash(ball.x, ball.y, wlAt(ball.x, ball.y), 26); say(m.restLie === 'water' ? 'Water: one stroke, and a drop' : 'Out of bounds: one stroke', 260); }
   groupShotEnd(m);   // (T425: after another's stroke the owner's ball and score come back, 08e-group.md)
   galleryReact(m);   // (T429: the crowd near it cheers a holed putt, groans at a short miss: 08f-gallery.md)
-  while (HP.q.length && !HP.play) { const q = HP.q.shift(); if (q.t === 'shot') hostShot(q); else if (q.t === 'turn') hostTurn(q); else if (q.t === 'holeEnd') hostHoleEnd(q); }
+  while (HP.q.length && !HP.play) { const q = HP.q.shift(); if (q.t === 'shot') hostShot(q); else if (q.t === 'turn') hostTurn(q); else if (q.t === 'holeEnd') hostHoleEnd(q); else if (q.t === 'practice') pracShow(q); }
 }
 function hostHoleEnd(m) {   // the hole is over: its score is said; after the last, the view waits for Escape
   const d = m.strokes - m.par, name = m.strokes === 1 ? 'Hole in one!' : d <= -2 ? 'Eagle!' : d === -1 ? 'Birdie!' : d === 0 ? 'Par' : d === 1 ? 'Bogey' : '+' + d;
@@ -264,7 +265,7 @@ function hostHoleEnd(m) {   // the hole is over: its score is said; after the la
   say(name + '  -  hole ' + m.hole + ' in ' + m.strokes + (m.last ? '  -  Esc goes back to the course' : '  -  on to the next tee'), m.last ? 100000 : 330);
 }
 function hostTick() {   // each step: the playback, the meter, and the wait for an answer
-  hostBall(); hostMeterShow(); hostShotShow(); hostAimAsk();
+  hostBall(); hostMeterShow(); hostShotShow(); hostAimAsk(); pracTick();
   if (HP.doneAt > 0 && --HP.doneAt === 0) hostSend({ t: 'holeDone', holeIdx: HP.doneHole });
   if (HP.wait > 0 && ++HP.wait > HOST_WAIT && (HP.wait - HOST_WAIT) % 120 === 1) say('Waiting for the course...', 130);
 }
@@ -277,7 +278,7 @@ function hostAim() {   // T420: the aim tells the truth: the arc to where the mo
   { const T = hostTarget(); if (T) hostTargetRing(T, C); else HP.target = null; }   // (T456: the aimed point on the ground)
   const dx = aim.dx, dy = aim.dy, rx = -dy, ry = dx;                  // (the line, and his right as he faces it: x east, y south)
   if (!putt && hostAimPreview(C, pw, hot, ph)) return;               // (T441, T442: the model's preview of the shot picked, when it has come)
-  if (putt && hostPuttAim(pw, hot, ph)) return;                      // (T423: the host's read: the way a putt struck along this aim takes)
+  if (putt && hostRead() && hostPuttAim(pw, hot, ph)) return;        // (T423: the host's read: the way a putt struck along this aim takes; J6: once earned)
   if (putt) {                                                          // a putt: its length is a share of the way to the pin
     const len = Math.hypot(hole.pin.x - ball.x, hole.pin.y - ball.y) * pw;
     for (let k = 0, d = 0.4 + ph * 0.07; d < len; d += 0.42, k++) { const qx = ball.x + dx * d, qy = ball.y + dy * d; projectO(qx, qy, aimH(qx, qy) + 0.03, PJ); if (PJ.s > 0) aimDotO(PJ.x, PJ.y, PJ.s > 0.8 ? 1 : 0, k & 1 ? hot : AIM_W); }
@@ -416,12 +417,13 @@ swingBtn.id = 'swingBtn'; swingAimMk.className = 'aimmk'; swingHoleMk.className 
 
 // T422: the card says what the model will use: the lie (its kind and what it does), the slope under the ball, and the wind now with the day's gusts
 const COMPASS = ['north', 'north-east', 'east', 'south-east', 'south', 'south-west', 'west', 'north-west'];
+function hostRead() { const e = HP && HP.turn && HP.turn.earned; return !e || e.read !== false; }   // J6: the putt read (its line and pace) is earned; an older host's turn: open
 function hostOnTurn() { return !!(HP && HP.turn && !HP.play && ball.state === 0); }
 function hostCardRows(row) {
   const t = HP.turn, s = t.slope || { up: 0, across: 0 }, w = t.wind || { mph: 0, from: 0 }, pc = (v) => Math.round(Math.abs(v) * 100) + '%';
   const up = Math.abs(s.up) < 0.01 ? 'level' : (s.up > 0 ? 'uphill ' : 'downhill ') + pc(s.up), side = Math.abs(s.across) < 0.01 ? '' : ', ball ' + (s.across > 0 ? 'above' : 'below') + ' feet ' + pc(s.across);
   const wind = w.mph < 1 ? 'calm' : Math.round(w.mph) + ' mph from the ' + COMPASS[Math.round((((w.from % 360) + 360) % 360) / 45) % 8] + (t.gust > w.mph + 1 ? ', gusts ' + Math.round(t.gust) : '');
-  return (t.green ? row('Read', t.green.read.replace(/^Green read: /, '')) : '') + row('Slope', up + side) + row('Wind', wind) + (hostClub() && hostClub().club !== 'putter' ? row('Shot', hostPickText()) : '') + (t.lieNote ? '<div class="credit">' + t.lieNote + '</div>' : '');
+  return (t.green ? row('Read', hostRead() ? t.green.read.replace(/^Green read: /, '') : 'locked: ' + ((t.earned && t.earned.why && t.earned.why.read) || 'the Putting drill')) : '') + row('Slope', up + side) + row('Wind', wind) + (hostClub() && hostClub().club !== 'putter' ? row('Shot', hostPickText()) : '') + (t.lieNote ? '<div class="credit">' + t.lieNote + '</div>' : '');
 }
 function hostWindDir() {   // the way the host's wind blows (toward), on the ground: the arrow shows it; null without a turn (the view's own wind)
   if (!HP || !HP.turn || !HP.turn.wind || HP.turn.wind.mph < 1) return null;
@@ -589,7 +591,8 @@ addEventListener('keydown', (e) => {
   keys[e.code] = true;
   if (e.code === 'KeyT') setTime((tmode + 1) % TOD.length);
   else if (e.code === 'KeyC') { behindHole(); camD = D0; camHk = 1; HZ = HZ0; }
-  else if (e.code === 'KeyN') { SEED = (Math.random() * 1e9) | 0; total = 0; newHole(1, 0, 0); firstPicture(); }   // (on a real course: the same course, new trees and rough)
+  else if (e.code === 'KeyN' && !pracLock()) { SEED = (Math.random() * 1e9) | 0; total = 0; newHole(1, 0, 0); firstPicture(); }   // (on a real course: the same course, new trees and rough)
+  else if (pracLock() && /^Key[BKLGJN]$/.test(e.code)) { /* (J6: practising, he stays on his spot) */ }
   else if (e.code === 'KeyB') dropBall();
   else if (e.code === 'KeyK') { nextCourse(); firstPicture(); }
   else if (e.code === 'KeyL') { keys.KeyL = false; askCourse(); }
