@@ -3,6 +3,7 @@
 // (label-place.ts: by priority, none overlapping, stable across frames) and writes the placed ones. The money floats are drawn after, clear of them.
 // No allocation a frame once warm: the labels are pooled and the text widths cached by font.
 import { labelFade } from './ext/hole-wizard/extras';
+import { JAM } from './features';
 import { LabelPlacer, type PlaceLabel } from './label-place';
 
 /** one label and how it is written: its text (and an optional second piece in another colour on the line, and a line under it), font, colours,
@@ -72,6 +73,7 @@ export class WorldLabels {
   }
   /** text on a rounded plate (w x h, corner radius) centred on (x, y): the stand-in pills and the range's markers; ty nudges the text */
   pill(key: unknown, pri: number, text: string, x: number, y: number, font: string, w: number, h: number, bg: string, radius: number, fill: string, ty = 0): WorldLabel {
+    if (JAM && text.startsWith('Stand In')) { const z = this.add(key, pri, x, y, 0, 0); z.text = ''; z.font = font; z.fill = 'transparent'; z.bg = 'transparent'; z.radius = 0; z.ty = 0; return z; }   // (the jam MVP: no STAND IN text anywhere, the owner 2026-11-13)
     const l = this.add(key, pri, x, y, w, h);
     l.text = text; l.font = font; l.fill = fill; l.bg = bg; l.radius = radius; l.ty = ty;
     return l;

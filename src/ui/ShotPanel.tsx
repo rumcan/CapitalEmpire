@@ -1,3 +1,4 @@
+import { JAM } from '../game/features';
 // The owner's shot panel (docs/GOLF-PLAY.md decision 7, P4b; T316 #902 the 3-click swing): open while his shot is due (the game is paused for it). The
 // hole, par and stroke; the distance to the pin and to the aim; his lie; the clubs his lie allows (the suggested one marked; Q/E or the wheel cycle them)
 // with the club's full carry; the half-circle swing meter (swing.ts SwingMeter): Enter or a click on the meter starts the swing, the second sets the power,
@@ -78,7 +79,7 @@ function drawMeter(c: HTMLCanvasElement, m: SwingMeter | null, t: number, look: 
   ctx.font = '600 11px system-ui, sans-serif'; ctx.fillStyle = b > 0 ? '#fca5a5' : 'rgba(226,232,240,0.6)';
   ctx.fillText(b > 0 ? `boost +${Math.round(b * 100)}%${b >= BOOST.max ? ' (max)' : ''}` : look.boost ? 'Space: boost' : '', CX, CY + 8);
   if (result) { ctx.font = '700 13px system-ui, sans-serif'; ctx.fillStyle = '#fde68a'; ctx.fillText(result, CX, CY + 34); }
-  ctx.font = '500 8px system-ui, sans-serif'; ctx.fillStyle = 'rgba(226,232,240,0.4)'; ctx.textAlign = 'left'; ctx.fillText('Stand In for swing meter art', 4, CH - 4);
+  ctx.font = '500 8px system-ui, sans-serif'; ctx.fillStyle = 'rgba(226,232,240,0.4)'; ctx.textAlign = 'left'; if (!JAM) ctx.fillText('Stand In for swing meter art', 4, CH - 4);
 }
 
 /** the wind dial and the lie's box for the open shot (T334): re-read ten times a second, as the gusts move */

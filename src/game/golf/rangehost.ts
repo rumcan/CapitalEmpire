@@ -384,6 +384,7 @@ export class RangeHost {
   /** a stand-in pill of the range's own (the picker cart, the practice strokes): amber words on a dark pill centred on (x, y), a world label of the
    *  last rank */
   private standInPill(labels: WorldLabels, key: unknown, t: string, x: number, y: number, dpr: number): void {
+    if (JAM) return;   // (the jam MVP: no stand-in labels, the owner 2026-11-13)
     const fp = Math.round(dpr * 10), font = `600 ${fp}px system-ui, sans-serif`;
     labels.pill(key, PRI.standIn, t, x, y, font, labels.width(font, t) + 10 * dpr, fp * 1.6, 'rgba(15,23,42,0.78)', 6 * dpr, '#fde68a', 0.5 * dpr);
   }
