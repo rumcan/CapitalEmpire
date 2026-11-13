@@ -10,6 +10,7 @@ import type { CourseView, Golfer, Group, Lie, PlayHole } from '../src/game/golf/
 import { fromView } from '../src/game/golf/play/protocol3p';
 import { CADDIE_ID, CART_ID, actorsMsg, caddieDress, dressOf } from '../src/game/golf/play/actors3p';
 import { artFor } from '../src/game/golf/play/golfart3p';
+import { playerDress } from '../src/game/golf/play/look3p';
 
 const centre = { x: 300, y: 100 };
 function course(): CourseView {
@@ -99,4 +100,16 @@ test('actors: carts carry their riders', () => {
     const ids = msg.actors.map(x => x.id); assert.equal(new Set(ids).size, ids.length, 'no id twice');
   }
   assert.ok(seen > 0 && rode > 0, `carts out (${seen}) with riders (${rode})`);
+});
+
+test('T450b: the owner among the actors is the golfer he picked: a profile whose look is golfer:golf_pro_w1 is drawn as golf_pro_w1', () => {
+  const view = course(), { f, gs } = field(4, 11);
+  f[4] = { ...f[4]!, owner: true, sex: 'w', look: 0 }; // (his plan's look is 0: dressed by it he would be the first woman's art, golf_am_w1)
+  const plan = playRound(view, f, gs, 11), me = (msg: ReturnType<typeof actorsMsg>) => msg.actors.find(x => x.id === 4)!;
+  const card = playerDress('golfer:golf_pro_w1', 'w'), a = actorsMsg({ plan, view, minute: 500, owner: card }, centre);
+  assert.equal(me(a).owner, true);
+  assert.equal(me(a).dress!.art, 'golf_pro_w1', 'the picked look');
+  assert.deepEqual(me(a).dress, card, 'his own clothes and art, as the course message sends them');
+  assert.equal(me(actorsMsg({ plan, view, minute: 500 }, centre)).dress!.art, artFor('w', 0), 'without it: by his plan look, as before');
+  for (const x of a.actors) if (x.id !== 4 && x.dress) assert.notDeepEqual(x.dress, card, `actor ${x.id} keeps his own dress`);
 });

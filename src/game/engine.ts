@@ -216,7 +216,7 @@ import { fillPack } from './golf/osm/terrarium'; // T438: the share file's heigh
 import { MARGIN_T, exportFeatures3p, gatherFeatures3p } from './golf/play/features3p';
 import { courseEntry3p } from './golf/play/entry3p';
 import { seedOf } from './golf/play/view3p';
-import type { Actor, CourseMsg, CourseTime3p, HostMsg, Time3p, ViewInput } from './golf/play/protocol3p';
+import type { Actor, CourseMsg, CourseTime3p, Dress, HostMsg, Time3p, ViewInput } from './golf/play/protocol3p';
 import { Play3p, type Play3pOpts } from './golf/play/play3p'; // T418: the owner's play in the view from behind the golfer
 import { earned } from './golf/play/unlocks'; // T443
 import { galleryActors } from './golf/play/gallery3p'; // T429: the galleries for the view
@@ -10133,9 +10133,12 @@ export class Game {
   get time3p(): CourseTime3p { return this.golf?.time3p ?? 'golden'; }
   setTime3p(t: CourseTime3p) { const g = this.golf; if (!g) return; if (t === 'day') g.time3p = 'day'; else delete g.time3p; this.scheduleSave(); }
   /** roundTime: the round's own time of day (a night-golf event, T449), which wins over the course's setting */
+  /** T450b: the player in the view from behind the golfer: the clothes and the golfer art of the look he picked on the "Who are you?" card (youArt, the
+   *  same look the map walks), for the course message's golfer and for his own figure among the actors */
+  private youDress3p(): Dress { return playerDress(GOLFER_PEOPLE[this.youArt()]?.id, this.golf?.player?.sex ?? 'm'); }
   async course3pMsg(n: number, roundTime?: Time3p): Promise<CourseMsg | null> {
     const sh = this.shared3p; this.lies3pRun(null);
-    const golfer = playerDress(GOLFER_PEOPLE[this.youArt()]?.id, this.golf?.player?.sex ?? 'm');   // (T437: the golfer in the player card's clothes)
+    const golfer = this.youDress3p();   // (T437: the golfer in the player card's clothes; T450b: drawn as the golfer he picked)
     if (sh) { this.view3pFrame = sh.frame; this.course3pShare = sh.share; return { ...(await shareCourseMsg(sh.share, sh.view, n)), golfer, time: roundTime ?? this.time3p }; }   // (T434: a shared course)
     const g = this.golf; if (!g) return null;
     const name = this.titleName()?.name ?? 'Your course', id = 'ce-' + (name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'course');
@@ -10193,7 +10196,7 @@ export class Game {
     if (pl && own?.turn && own.caddie === null && !sh) {
       const gi = pl.plan.groups.findIndex(g => g.players.includes(own.id));
       this.play3p = new Play3p({ view: pl.view, holes: [], skills: own.skill, sex: own.sex, seed: 0, frame: f, height: this.ballHeight, wind: () => this.windNow(),
-        paths: this.cartPathsNow(), galleries: () => this.galleries3p(), attach: { plan: pl.plan, view: pl.view, live: own.live, owner: own.id, group: Math.max(0, gi) } });
+        paths: this.cartPathsNow(), galleries: () => this.galleries3p(), owner: this.youDress3p(), attach: { plan: pl.plan, view: pl.view, live: own.live, owner: own.id, group: Math.max(0, gi) } });
       return this.play3p.start();
     }
     const idx = v.holes.findIndex(h => h.n === n); if (idx < 0) return [];
@@ -10202,7 +10205,7 @@ export class Game {
       // T430: your round in the view: the game's own round (play/yours3p.ts), its strokes saved, its end recorded, its own gimme rule
       const sk = this.yourSkills(), earn = earned({ skills: p?.skills ?? {}, bag: p?.bag ?? null, mech: MECH_IDS.filter(id => hasMech(sk, id)) });
       const driver = yoursDriver(v, sk, this.seed, { get: () => this.yourRound(), set: r => this.setYourRound(r), played: (s, b, a, up) => this.yourPlayed3p(s, b, a, up), next: () => this.yourNextHole() });
-      this.play3p = new Play3p({ view: v, holes: [idx], skills: sk, earned: earn, gimmeM: gimmeM(yr), driver, sex: p?.sex ?? 'm', seed: this.seed, frame: f,
+      this.play3p = new Play3p({ view: v, holes: [idx], skills: sk, earned: earn, gimmeM: gimmeM(yr), driver, owner: this.youDress3p(), sex: p?.sex ?? 'm', seed: this.seed, frame: f,
         height: this.ballHeight, wind: () => this.windNow(), fit: putterFitName(p?.bag), gust: () => { const w = this.worldWind(); return w ? windView(this.windNow(), w, 1, 0).peak : null; } });
       return this.play3p.start();
     }
@@ -10211,7 +10214,7 @@ export class Game {
     const earn = mode === 'level' ? earned({ skills: LEVEL_PROFILE, bag: null, mech: [] }) : earned({ skills: p?.skills ?? {}, bag: p?.bag ?? null, mech: MECH_IDS.filter(id => hasMech(sk, id)) });
     const seed3p = (this.seed ^ Math.imul(n, 7919) ^ Math.imul(this.play3pN + 1, 104729)) | 0, ghost = this.ghostOpts3p(v, [idx]);   // (T433: a loaded ghost of this hole plays alongside)
     this.ghostMeta3p = { holes: [idx], seed: seed3p, skills: sk, sex: p?.sex ?? 'm', name: p?.name ?? 'You', mode, hcp: mode === 'level' ? levelHcp() : p ? handicapOf(p.skills) : levelHcp() };
-    this.play3p = new Play3p({ view: v, holes: [idx], skills: sk, earned: earn, ...ghost, gimmeM: GIMME_RULES.find(r => r.id === DEFAULT_RULES.gimme)?.m ?? 0, /* (T423: a practice hole's rules: the leather) */ sex: p?.sex ?? 'm', seed: (this.seed ^ Math.imul(n, 7919) ^ Math.imul(++this.play3pN, 104729)) | 0, frame: f,
+    this.play3p = new Play3p({ view: v, holes: [idx], skills: sk, earned: earn, ...ghost, gimmeM: GIMME_RULES.find(r => r.id === DEFAULT_RULES.gimme)?.m ?? 0, /* (T423: a practice hole's rules: the leather) */ owner: this.youDress3p(), sex: p?.sex ?? 'm', seed: (this.seed ^ Math.imul(n, 7919) ^ Math.imul(++this.play3pN, 104729)) | 0, frame: f,
       height: sh ? sh.height : this.ballHeight, wind: () => this.windNow(), fit: putterFitName(p?.bag), gust: () => { const w = this.worldWind(); return w ? windView(this.windNow(), w, 1, 0).peak : null; } });
     return this.play3p.start();
   }
