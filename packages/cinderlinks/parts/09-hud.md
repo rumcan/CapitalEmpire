@@ -491,8 +491,8 @@ function hostShotShow() {   // the panel, written only when something changed
   const bt = shotEl.querySelector('#boostTxt'); if (bt) bt.textContent = hostEarned('boost') ? hostCharges() + ' left this hole' : 'locked';
   const pt = shotEl.querySelector('#pickTxt'); if (pt) pt.textContent = hostPickText();
   if (sctx) {   // the ball and its strike point
-    sctx.clearRect(0, 0, 40, 40); sctx.fillStyle = '#f4efdc'; sctx.beginPath(); sctx.arc(20, 20, 17, 0, 6.2832); sctx.fill();
-    sctx.fillStyle = 'rgba(12,34,24,0.25)'; if (!hostEarned('back')) sctx.fillRect(3, 20, 34, 17); if (!hostEarned('side')) { sctx.fillRect(3, 3, 9, 34); sctx.fillRect(28, 3, 9, 34); }
+    sctx.clearRect(0, 0, 40, 40); sctx.fillStyle = '#efe9da'; sctx.beginPath(); sctx.arc(20, 20, 17, 0, 6.2832); sctx.fill();
+    sctx.fillStyle = 'rgba(20,21,25,0.3)'; if (!hostEarned('back')) sctx.fillRect(3, 20, 34, 17); if (!hostEarned('side')) { sctx.fillRect(3, 3, 9, 34); sctx.fillRect(28, 3, 9, 34); }
     sctx.fillStyle = '#e8573c'; sctx.beginPath(); sctx.arc(20 + P.sx * 15, 20 - P.sy * 15, 3.5, 0, 6.2832); sctx.fill();
   }
 }

@@ -27,7 +27,7 @@ function matchShow(m) {   // the card, and the words for why it was sent
   matchNow = m;
   if (!matchEl && typeof document !== 'undefined') {
     matchEl = document.createElement('div'); matchEl.className = 'panel';
-    Object.assign(matchEl.style, { position: 'absolute', left: '1.4%', top: '12%', padding: '5px 8px', fontSize: '11px', lineHeight: '1.4', pointerEvents: 'none', whiteSpace: 'nowrap' });
+    Object.assign(matchEl.style, { position: 'absolute', left: '1.4%', top: '12%', padding: '0.5em 0.8em', fontSize: 'clamp(11px, 1.016vw, 15px)', lineHeight: '1.45', pointerEvents: 'none', whiteSpace: 'nowrap' });
     if (document.body && document.body.appendChild) document.body.appendChild(matchEl);
   }
   const esc = (v) => String(v == null ? '' : v).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
