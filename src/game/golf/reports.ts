@@ -189,3 +189,6 @@ export function pendingMoments(f: { loans: readonly unknown[]; history: readonly
   if (fin(cash) < 0 || h.some(r => fin(r.cash) < 0)) due.add('overdraft');
   return MOMENT_ORDER.filter(id => due.has(id) && !done.has(id));
 }
+
+/** a week of green fees, from the last month's: what flooded bunkers would cost (0 before any green fee came in) */
+export function weeklyFees(history: readonly Report[]): number { return Math.max(0, get(history[history.length - 1], 'greenFees')) / 4; }

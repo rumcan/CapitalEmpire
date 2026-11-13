@@ -105,6 +105,7 @@ import { stackCol, stackFit, stackRight, type StackCard, type StackOpen } from '
 import { HoleCard } from './ui/golf/HoleCard';
 import { View3pPanel } from './ui/golf/View3pPanel';
 import { BankPanel } from './ui/golf/BankPanel';
+import { FinLitHud } from './ui/golf/FinLitHud'; // J3
 import { affordKind, balanceKind, statusIcon, trendKind, withIcon } from './ui/status-icon';
 import stadiumArt from './assets/ui/art/stadium.webp';
 import { StatChips } from './ui/StatChips';
@@ -866,6 +867,7 @@ export default function App() {
           )}
           {game.panel === 'budget' && <BudgetPanel game={game} />}
           {game.panel === 'bank' && <BankPanel game={game} />}
+          {game.golfMode && <FinLitHud game={game} />}
           {GREENKEEPING && game.grassPanel && game.tool !== 'greenkeeping' && <GrassManagementPanel game={game} />}
           {courseStats && (
           <div className={`pointer-events-auto absolute ${game.panel ? 'right-[19.5rem]' : 'right-3'} top-[var(--hud-top,6rem)] z-20`}>

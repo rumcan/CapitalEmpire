@@ -12,10 +12,11 @@ export function ProtectionSection({ finance, onChange }: { finance: FinanceSave;
   const [, bump] = useState(0);
   const cur = finance.insurance;
   return (
-    <section className="space-y-2" data-testid="protection" aria-label="Protection">
-      <div className="text-[12px] font-semibold uppercase tracking-wider text-slate-400">Protection</div>
+    <section className="space-y-1.5" data-testid="protection" aria-label="Protection">
+      <div className="text-[12px] uppercase text-slate-400">Protection <span className="ml-1 normal-case text-slate-500">for storms and breakdowns</span></div>
+      <div className="space-y-1.5 rounded-lg border border-white/10 bg-white/5 px-2 py-2 text-xs">
       <p className="text-xs text-slate-400">About one month in twelve something breaks. Insurance is a steady monthly price for not facing a big bill alone.</p>
-      <div className="grid gap-2">
+      <div className="grid gap-1.5">
         {PLAN_IDS.map(id => {
           const p = PLANS[id], hit = applyInsurance(EXAMPLE, id);
           return (
@@ -28,6 +29,7 @@ export function ProtectionSection({ finance, onChange }: { finance: FinanceSave;
             </button>
           );
         })}
+      </div>
       </div>
     </section>
   );
