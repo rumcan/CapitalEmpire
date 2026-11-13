@@ -776,6 +776,18 @@ try {
       hostMessage({ v: 1, t: 'actors', at: 600, actors: [] }); if (actors.size) res.errors.push('actors: an empty list did not clear them'); }
     // host play (T418 to T420): the turn, the bag, the ring, one input and a wait, the host's shot played back to its rest
     { const hp = hostPlayRun(null); res.hostPlay = hp.info; res.errors.push(...hp.errs); }
+    { // T450: the golfer art's frames and rows (the pictures themselves need a browser: here the voxel figure stands in)
+      const F = (pose, ph, al, rel, putt) => artFrame(pose, ph, al, rel, putt).join(':'), want = [
+        [F('i', 0, 0, false, false), 'sheet:0'], [F('w', 3, 0, false, false), 'sheet:4'], [F('w', 15, 0, false, false), 'sheet:8'],
+        [F('s', -10, -2, false, false), 'golf_drive:3'], [F('s', -5, -1, false, false), 'golf_drive:2'], [F('s', -8, -1.6, true, false), 'golf_drive:4'], [F('s', -3, -0.6, true, false), 'golf_drive:5'],
+        [F('s', 0, 0, true, false), 'golf_drive:6'], [F('s', 11, 2.2, true, false), 'golf_drive:11'],
+        [F('s', -10, -2, false, true), 'golf_putt:3'], [F('s', 0, 0, true, true), 'golf_putt:4'], [F('s', 11, 2.2, true, true), 'golf_putt:7'],
+        [String([12, 4, 8, 0, 14].map(artRow)), '4,0,2,6,5']];
+      res.golfArt = { frames: want.filter((w) => w[0] !== w[1]).map((w) => w[0] + ' (want ' + w[1] + ')'), menu: (golferCol().match(/data-kind="g"/g) || []).length, ids: GOLFART_IDS.length };
+      if (res.golfArt.frames.length) res.errors.push('golfer art: frames ' + res.golfArt.frames.join(', '));
+      if (res.golfArt.menu !== GOLFART_IDS.length + 1) res.errors.push('golfer art: the style menu offers ' + res.golfArt.menu + ' golfers');
+      if (artIdOf({ art: 'golf_pro_w2' }) !== 'golf_pro_w2' || artIdOf({ art: 'nobody' }) || artIdOf(null)) res.errors.push('golfer art: the art of a dress is not read');
+    }
     { const hc = hostCraftRun(); res.hostCraft = hc.info; res.errors.push(...hc.errs); }
     { const hg = hostGreenRun(); res.hostGreen = hg.info; res.errors.push(...hg.errs); }
     { const hd = hostDoneRun(); res.hostDone = hd.info; res.errors.push(...hd.errs); }

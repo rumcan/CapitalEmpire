@@ -82,7 +82,7 @@ function actorsIn(m) {   // a host's 'actors' message: the whole list (one missi
       if (Math.hypot(x - r.cx, y - r.cy) > ACT_SNAP) { r.x0 = r.px = x; r.y0 = r.py = y; }   // (a jump: a new hole, a cart's hop)
     }
     r.x1 = x; r.y1 = y; r.th1 = Number.isFinite(th) ? r.th0 + wrapA(th - r.th0) : r.th0; r.ph1 = ph; r.t0 = now; r.dur = dur; r.doing = doing; r.role = a.role;
-    r.L = lookOf(a.dress); r.build = a.dress && a.dress.build >= 0.8 && a.dress.build <= 1.2 ? +a.dress.build : 1; r.riders = Array.isArray(a.riders) ? a.riders : []; r.ghost = !!a.ghost;   // (T433: a ghost round's golfer)
+    r.L = lookOf(a.dress); r.art = artIdOf(a.dress); r.build = a.dress && a.dress.build >= 0.8 && a.dress.build <= 1.2 ? +a.dress.build : 1; r.riders = Array.isArray(a.riders) ? a.riders : []; r.ghost = !!a.ghost;   // (T433: a ghost round's golfer)
     seen.add(a.id);
   }
   for (const id of actors.keys()) if (!seen.has(id)) actors.delete(id);
@@ -123,8 +123,8 @@ function actorsList() {   // render's hook: every actor in view joins its list (
       const K = golferK(DS / d), ps = actorPose(r, d > ACT_NEAR), fa = faOf(r.cth);
       if (ps[0] === 's') { const fx = Math.cos(r.cth), fy = Math.sin(r.cth); r.dx = r.cx - fx * 0.6 + fy * 0.2; r.dy = r.cy - fy * 0.6 - fx * 0.2; }   // (at a stroke he stands back from his ball and a little to its side, as the player does)
       else { r.dx = r.cx; r.dy = r.cy; }
-      r.K = K; r.S = actorSprite(r.L, fa, ps[0], ps[1], K) || actSpr.get((r.L ? r.L.key : '-') + 'i' + fa + '_0' + (TOD[tmode].glow > 0 ? 'L' : '') + 'k' + K) || null;   // (not made yet: standing, if that one is)
-      if (r.S && d < ACT_SHADOW && !r.ghost) { if (d < 15) castSprite(r.S, r.dx, r.dy, K / r.build); else castSprite(r.S.mip || mipOf(r.S), r.dx, r.dy, K / 2 / r.build); }
+      r.K = K; r.S = actorArt(r, fa, ps, K) || actorSprite(r.L, fa, ps[0], ps[1], K) || actSpr.get((r.L ? r.L.key : '-') + 'i' + fa + '_0' + (TOD[tmode].glow > 0 ? 'L' : '') + 'k' + K) || null;   // (not made yet: standing, if that one is)
+      if (r.S && d < ACT_SHADOW && !r.ghost) { if (d < 15) castSprite(r.S, r.dx, r.dy, K / (r.S.art ? 1 : r.build)); else castSprite(r.S.mip || mipOf(r.S), r.dx, r.dy, K / 2 / (r.S.art ? 1 : r.build)); }   // (T450: his golfer art is his own size)
     }
     r.dl.d = d; dlist.push(r.dl);
   }
@@ -141,7 +141,7 @@ function drawActor(r, d) {   // render's hook: one actor, in its turn far to nea
   if (r.role === 'cart') drawActorCart(r, d);
   else if (r.role === 'gallery') drawGallery(r, d);
   else if (r.role === 'ball') drawGroupBall(r, d);
-  else if (r.S) { project(r.dx, r.dy, groundH(r.dx, r.dy), PJ); if (PJ.s > 0) { if (r.ghost) blitDith = 7; blit(r.S, PJ.x, PJ.y, PJ.s / r.K * r.build, PJ.d * 100, 0, 0, false, d > 50 ? farHaze(d) : 0); blitDith = 0; } }   // (T433: a ghost is drawn see-through)
+  else if (r.S) { project(r.dx, r.dy, groundH(r.dx, r.dy), PJ); if (PJ.s > 0) { if (r.ghost) blitDith = 7; blit(r.S, PJ.x, PJ.y, PJ.s / r.K * (r.S.art ? 1 : r.build), PJ.d * 100, 0, 0, false, d > 50 ? farHaze(d) : 0); blitDith = 0; } }   // (T433: a ghost is drawn see-through)
   else if (r.L) actorDots(r, d, [[0, lit(tone(r.L.trou, 0.6)), 0], [0, lit(tone(r.L.shirt, 0.7)), 1]]);
   else actorDots(r, d, [[0, lit(tone(TROW, 0.6)), 0], [0, lit(tone(CAPR, 0.7)), 1]]);
   ACT_MS += performance.now() - t;
