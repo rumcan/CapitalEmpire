@@ -13,6 +13,12 @@ emergency fund or insurance decides whether they hurt. Each month ends with a st
 range into a nine-hole golf club in two seasons without drowning in debt; a report card grades how you did it.
 Jam rubric: FinLit integration 25, gameplay 25, commercial plan 20, educational impact 15, creativity 15; bonus 5 accessibility, 5 UAE/Arab region.
 
+**Scope change (the owner, 2026-11-13 evening): "too much financial literacy. they said anything where the player manages money is
+enough."** The jam build keeps the money the player manages through play: cash and prices, build costs with a one-line payback, the Bank
+opened on demand (borrow with the total interest shown, repay, savings), one month-end toast that opens the statement, USD/AED. Hidden when
+JAM (the code stays, normal builds unchanged): money moments, the goal chip and report card, emergencies and insurance, the murabaha
+section, the glossary underlines. The GDD and the video follow this lighter scope.
+
 ## The jam flag
 `src/game/features.ts`: `export const JAM = import.meta.env.VITE_JAM === '1'` (false in tests and normal builds). `npm run build:jam` builds
 with VITE_JAM=1 into `dist-jam/`. Everything below that hides or changes behaviour for the jam checks `JAM`; the finance features are
