@@ -142,8 +142,7 @@ function hostLies(L) {   // T438: the host's lies, after the course: the grass b
 }
 function hostStart() {
   HOST = true; hostOff = true;   // (nothing is drawn until a course comes)
-  helpEl.innerHTML = HELP.filter((h) => h[0] !== 'M' && h[0] !== 'V').map((h) => '<b>' + h[0] + '</b>' + h[1]).join('
-');   // (T447: M and V choose nothing in the game)
+  helpEl.innerHTML = HELP.filter((h) => h[0] !== 'M' && h[0] !== 'V').map((h) => '<b>' + h[0] + '</b>' + h[1]).join('\n');   // (T447: M and V choose nothing in the game)
   try { hostOrigin = (location.ancestorOrigins && location.ancestorOrigins.length ? location.ancestorOrigins[0] : '') || (document.referrer ? new URL(document.referrer).origin : '') || location.origin || ''; } catch (e) { hostOrigin = ''; }
   addEventListener('message', (e) => {
     if (typeof window !== 'undefined' && e.source !== window.parent) return;   // only the page that holds this one
