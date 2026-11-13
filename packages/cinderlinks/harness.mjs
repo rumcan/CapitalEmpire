@@ -759,7 +759,7 @@ try {
       res.golfArt = { frames: want.filter((w) => w[0] !== w[1]).map((w) => w[0] + ' (want ' + w[1] + ')'), menu: (golferCol().match(/data-kind="g"/g) || []).length, ids: GOLFART_IDS.length };
       if (res.golfArt.frames.length) res.errors.push('golfer art: frames ' + res.golfArt.frames.join(', '));
       if (res.golfArt.menu !== GOLFART_IDS.length + 1) res.errors.push('golfer art: the style menu offers ' + res.golfArt.menu + ' golfers');
-      if (artIdOf({ art: 'golf_pro_w2' }) !== 'golf_pro_w2' || artIdOf({ art: 'nobody' }) || artIdOf(null)) res.errors.push('golfer art: a dress\'s art is not read');
+      if (artIdOf({ art: 'golf_pro_w2' }) !== 'golf_pro_w2' || artIdOf({ art: 'nobody' }) || artIdOf(null)) res.errors.push('golfer art: the art of a dress is not read');
     }
     { const hc = hostCraftRun(); res.hostCraft = hc.info; res.errors.push(...hc.errs); }
     { const hg = hostGreenRun(); res.hostGreen = hg.info; res.errors.push(...hg.errs); }
