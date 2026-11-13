@@ -50,6 +50,7 @@ export function StatementCard({ history }: { history: readonly Report[] }) {
         <div className="text-[11px] font-semibold uppercase tracking-wider text-emerald-300/80">{toast.label} statement</div>
         <div className="text-sm font-semibold text-white">{headline(toast.profit)}</div>
         <div className="text-xs text-slate-400">Net worth {money(toast.netWorth)} ({signed(toast.netWorthChange)}). Click for details.</div>
+        {history[toastAt!]?.events[0] && <div className="mt-1 text-xs text-amber-200">{history[toastAt!].events[0]}</div>}
       </button>
     )}
     {s && full !== null && (

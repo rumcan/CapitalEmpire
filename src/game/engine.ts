@@ -189,7 +189,7 @@ import { carParkSpotAt, carParkWhy, parkSpotWhy as spotWhyOf, snapToRoad, type B
 import { footStart, parkLook, type ParkLook } from './event/parklook';
 import { dressCourse } from './golf/dressing';
 import { book, assetsAtCost, debtOf, netWorthOf, deposit, isBankrupt, monthEnd, newFinance, repay, signBank, signMurabaha, withdraw, type FinanceSave, type Line, type MonthReport } from './golf/finance';
-import { settleRisk, noteEmergency, setInsurance, emergencyLine, type Plan } from './golf/risk'; // J3
+import { settleRisk, noteEmergency, setInsurance, type Plan } from './golf/risk'; // J3
 import { weeklyFees, type Live } from './golf/reports'; // J3
 import { FIRST_TEE, MONTH_LEN, SEASON_LEN, SEASON_START, monthIndexLabel, monthsLeft, seasonLabel, seasonMonth, yearOf } from './golf/calendar';
 import { MonthMoney, golfersAMonth, type TopStats } from './golf/topstats';
@@ -6948,7 +6948,6 @@ export class Game {
   /** J3: the month's emergency, rolled just before the Bank closes the month: the player's share leaves the treasury now and is booked on the 'emergency' line */
   private rollMonthRisk(month: number) {
     const f = this.finance, e = settleRisk(f, { seed: this.seed, month, holes: this.holesBuilt(), weeklyGreenFees: weeklyFees(f.history) }, n => this.cashMove(-n));
-    if (e) this.toast(emergencyLine(e), 'warn');
     return e;
   }
   /** the terrain of the valley for the city worker: its classes, the highway entry (a range start's: its map exit nearer the town; the start
@@ -8319,7 +8318,7 @@ export class Game {
       noteEmergency(report, em); // J3
       this.cashMove(cashChange);
       for (const cb of this.monthCbs) { try { cb(report); } catch (e) { console.error('onMonthEnd', e); } }
-      this.toast(`${report.label}: net worth $${Math.round(report.netWorth).toLocaleString('en-US')}${report.events[0] ? `. ${report.events[0]}` : ''}`, report.events.length ? 'warn' : 'info');
+      // (J3: the month's toast is the StatementCard's: profit, net worth and the first event)
       if (this.bankrupt) { this.setSpeed(0); this.toast('Bankrupt: the overdraft is too big or has lasted too long', 'warn'); }
       this.scheduleSave(); this.emit();
     }
