@@ -165,8 +165,12 @@ export class PracticeDriver implements RoundDriver {
     if (this.active) {
       const ds: DrillShot = { spot: this.spot, club: input.club, shape: o.shape, landing: o.landing?.at ?? null, landLie: o.landing?.lie ?? null, rest: o.landing?.rest ?? o.to,
         restLie: o.landing?.restLie ?? o.lie, holed: o.holed, pin: t.pin, greens: this.course.greens, from: t.lie };
-      const call = judgeDrill(this.active, ds); this.note = call.note;
-      this.hooks.judged(this.active, call);
+      const id = this.active, was = drillProgress(this.hooks.drills(), id).done, call = judgeDrill(id, ds); this.note = call.note;
+      this.hooks.judged(id, call);
+      if (!was && drillProgress(this.hooks.drills(), id).done) {   // (just done: on to the next drill not done here, from the next ball; none left: he keeps this one)
+        const sv = this.hooks.drills(), next = drillsAt(this.place).find(d => d !== id && this.canPlay(d) && !drillProgress(sv, d).done);
+        if (next) this.active = next;
+      }
     } else this.note = null;
     return shot;
   }

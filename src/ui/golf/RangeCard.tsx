@@ -158,7 +158,7 @@ export function RangeCard({ view, places = [], onPlace, onClose, onPrice, onBuy,
               <span className="font-medium text-white">{f.name}</span>
               {f.state === 'open' ? <span className="text-emerald-300">Open</span>
                 : onBuildPractice ? <span className="flex items-center gap-1">
-                  {onQuickPractice && f.state === 'none' && <button className="chip normal-case disabled:opacity-40" disabled={!!practiceWhy} title={practiceWhy || undefined} aria-label={`Lay the ${f.name.toLowerCase()} for you where it fits in the practice area, at its starting size`} onClick={() => onQuickPractice(f.id)} data-testid={`range-practice-quick-${f.id}`}>Quick build</button>}
+                  {onQuickPractice && f.state === 'none' && <button className="chip normal-case disabled:opacity-40" disabled={!!practiceWhy} title={practiceWhy || `Lay the ${f.name.toLowerCase()} for you where it fits in the practice area, at its starting size`} onClick={() => onQuickPractice(f.id)} data-testid={`range-practice-quick-${f.id}`}>Quick build</button>}
                   <button className="chip chip-on disabled:opacity-40" disabled={!!practiceWhy} title={practiceWhy || `Pick the ${f.name.toLowerCase()} and place it in the practice area`} onClick={() => onBuildPractice(f.id)} data-testid={`range-practice-build-${f.id}`}>Build</button></span>
                 : <span className={f.state === 'none' ? 'text-slate-400' : 'text-amber-300'}>{f.state === 'none' ? 'Not built' : 'Not open yet'}</span>}
             </div>

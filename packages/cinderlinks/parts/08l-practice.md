@@ -3,7 +3,7 @@ When the owner practises (CapitalEmpire's `play/practice3p.ts`, `play/drills.ts`
 R: While practising the golfer is held to his spot (a range mat, the chip stand, the putt, the practice bunker): W, S, Q and E do not walk him, there is no cart (G does nothing and none is drawn), J, B, N, K and L do nothing; A and D still turn him, and the mouse aims. Each ball is teed up where he stands, and he is set beside it.
 R: A panel on the left lists the drills: each its name, its goal, its progress (3/5) and its reward, the one being played marked, a done one ticked; a drill played at the other place is greyed with where it is played. A click on a drill played here picks it (the next ball comes from its spot). Under the list: the last ball's line, the balls hit and the handicap. A drill just done is said, with its reward.
 R: On the range each target green has its flag, with its distance over it (50 m, 100 m, ...).
-R: The card at the top says Practice and the place instead of the hole, par and strokes.
+R: The card at the top says Practice and the place instead of the hole, par and strokes, and the words as it opens say where he practises, not the hole and its par.
 File: game.js
 Check: function pracIn(
 Check: function pracShow(
@@ -28,7 +28,7 @@ function pracIn(m) {   // the host's 'practice': now, or once the ball in the ai
 }
 function pracEsc(v) { return String(v == null ? '' : v).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]); }
 function pracShow(m) {   // the panel, the flags, and a drill done said
-  PRAC = m;
+  const first = !PRAC; PRAC = m;
   if (!pracEl && typeof document !== 'undefined' && document.createElement) {
     pracEl = document.createElement('div'); pracEl.className = 'panel'; pracEl.id = 'prac';
     Object.assign(pracEl.style, { position: 'absolute', left: '1.4%', top: '20%', width: 'clamp(220px, 21vw, 330px)', padding: '0.55em 0.7em', fontSize: 'clamp(11px, 0.95vw, 14px)', lineHeight: '1.35', pointerEvents: 'auto', zIndex: '5' });
@@ -51,6 +51,7 @@ function pracShow(m) {   // the panel, the flags, and a drill done said
     '<div class="pn">' + (m.note ? pracEsc(m.note) : (m.active ? 'Hit away: every ball counts for the marked drill' : 'Pick a drill')) + '</div>' +
     '<div class="pf">Balls ' + (m.balls | 0) + ' &middot; handicap ' + pracEsc(m.hcp) + ' &middot; <b>Esc</b> back</div>';
   if (m.paid) say(String(m.paid), 420);
+  else if (first) say('Practice at ' + (m.place === 'range' ? 'the range' : 'the chipping green') + '  -  pick a drill on the left', 300);   // (in place of the hole's own words)
   // the range's flags: a label over each green
   for (const L of pracLab) if (L.parentNode) L.parentNode.removeChild(L);
   pracLab = [];

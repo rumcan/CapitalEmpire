@@ -10437,8 +10437,8 @@ export class Game {
     let next = { ...p, drills: save };
     if (paid) {
       const h0 = handicapOf(p.skills), d = DRILLS[paid]; next = { ...next, skills: drillGains(p.skills, paid) };
-      const text = `${d.name} done: ${d.reward.text} · handicap ${hcpText(h0)} to ${hcpText(handicapOf(next.skills))}`;
-      if (pr) pr.paid = text; this.toast(text, 'good');
+      const h1 = hcpText(handicapOf(next.skills)), text = `${d.name} done: ${d.reward.text} · handicap ${hcpText(h0)} to ${h1}`;
+      if (pr) pr.paid = `${d.name} done  -  handicap ${hcpText(h0)} to ${h1}`; this.toast(text, 'good');   // (the view's words short: its panel lists the reward)
     }
     this.setPlayer(next); this.emit();
   }

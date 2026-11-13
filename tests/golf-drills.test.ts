@@ -145,3 +145,12 @@ test('protocol3p: practice and pick are messages of the bridge', () => {
   assert.equal(isHostMsg({ v: 1, t: 'practice' }), true);
   assert.equal(isViewMsg({ v: 1, t: 'pick', drill: 'distance' }), true);
 });
+test('practice3p: a drill just done moves the next ball on to the next drill not done here', () => {
+  const c = practiceCourse(input);
+  let save = normalizeDrills({ v: 1, hits: { distance: DRILLS.distance.need - 1 }, marks: {}, done: [] });
+  const drv = new PracticeDriver(c, 'range', sk, 5, { drills: () => save ?? null, judged: (id) => { save = recordDrill(save, id, { hit: true, note: '' }).save; } });
+  assert.equal(drv.active, 'distance');
+  const t = drv.turn(); drv.play({ holeIdx: t.holeIdx, stroke: t.stroke, club: t.suggested.club, aim: t.suggested.aim, power: t.suggested.power });
+  assert.ok(save!.done.includes('distance'));
+  assert.equal(drv.active, 'shaping');
+});
