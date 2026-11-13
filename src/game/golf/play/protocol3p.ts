@@ -39,8 +39,9 @@ export function fromView(v: readonly [number, number], centre: Pt): Pt {
 
 // ---------------------------------------------------------------- host to view
 
-/** how the course is kept, which picks Cinderlinks' course type (section 2: neglected plays as public, well kept as private, a tour week as tour) */
-export type CourseType = 'public' | 'private' | 'tour';
+/** how the course is kept, which picks Cinderlinks' course type (section 2: neglected plays as public, well kept as private, a tour week as tour; T447: a
+ *  treeless sandy course by the sea as links. look3p.ts courseTypeFor3p). A view that does not know a type keeps its own */
+export type CourseType = 'public' | 'private' | 'tour' | 'links';
 
 /** the course: the course file (export3p.ts, T412: shapes in metres and the packed height grid; typed loosely until that exporter lands), the
  *  placed things (features3p.ts), the biome, the course type and the seed fine detail is grown from (from the course's name, so it looks the same on

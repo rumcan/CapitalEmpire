@@ -210,7 +210,7 @@ import { buildCourseStatsPanel, type CourseStatsPanel } from './golf/coursestats
 import { TILE_M, type CourseArea, type CourseLayout, type GolfSurface, type Pin, type TeeBoxRec, type TeeKind, type TeeMark } from './golf/types';
 import { deriveHoles, surfaceAt, surfaceAtIx, areaIndex, validateMarkerPlacement, type AreaIndex, type Hole } from './golf/holes';
 import { playable3p } from './golf/play/playable3p';
-import { export3pInputOf, exportCourse3p, frame3p, tileBox } from './golf/play/export3p';
+import { export3pInputOf, exportCourse3p, frame3p, groundOf3p, tileBox } from './golf/play/export3p';
 import { lieGridJob, type LieGrid } from './golf/play/lies3p';
 import { fillPack } from './golf/osm/terrarium'; // T438: the share file's heights deflated after the course has gone
 import { exportFeatures3p, gatherFeatures3p } from './golf/play/features3p';
@@ -224,7 +224,7 @@ import { Match3p } from './golf/play/match3p'; // T428: a money match in the vie
 import { readShare, shareCourseMsg, shareOf, shareText, shareView, type CourseShare } from './golf/play/share3p'; // T434: shared courses
 import { ghostActor, ghostOf, ghostShots, ghostText, readGhost, replayGhost, type GhostFile } from './golf/play/ghost3p'; // T433: ghost rounds
 import { fairRows, kitFor, levelHcp, LEVEL_PROFILE, type KitMode } from './golf/play/fair3p'; // T436: own kit or level kit
-import { biomeOf, courseTypeOf, playerDress } from './golf/play/look3p'; // T437: one look
+import { SHIPPED_LAT, biomeFor3p, courseTypeFor3p, playerDress } from './golf/play/look3p'; // T437: one look; T447: the style from the course
 import type { Frame3p } from './golf/play/export3p';
 import { putterFitName } from './golf/play/bag';
 import { BallRoll, FX_SAND, FX_SPLASH, ballRoll, type HeightAt } from './golf/play/roll';
@@ -10088,8 +10088,11 @@ export class Game {
       ? [Math.min(...pts.map(p => p.x)), Math.min(...pts.map(p => p.y)), Math.max(...pts.map(p => p.x)), Math.max(...pts.map(p => p.y))] : undefined;
     const features = exportFeatures3p(gatherFeatures3p({ course: id, segs: this.net.segs, bizDefs: this.bizDefs, structures: g.structures ?? [], lots: this.estateRt?.lots ?? [],
       props: this.props, library: LIBRARY, ...(box ? { box } : {}) }), { x: f.cx, y: f.cy });
-    // T437: the biome from the map's setting and the month, the course type from how the course is kept (the crew's condition; a tournament day: Tour)
-    const st = g.crew?.staff, biome = biomeOf(this.farmMonth()), type = courseTypeOf({ condition: st ? courseCondition(st) : 100, tournament: this.traffic.round.stage !== 'free' || !!this.eventToday() });
+    // T447: the biome and course type from what the course looks like (look3p.ts biomeFor3p, courseTypeFor3p): the Desert theme, the month on the home map, a
+    // shipped real course's latitude, the sand, water and trees of the course file; the club's members, tour tier and condition, and a tournament day
+    const st = g.crew?.staff, ground = groundOf3p(file, features.features.filter(q => q.kind === 'tree').length);
+    const biome = biomeFor3p({ desert: this.desertTheme, month: this.farmMonth(), lat: g.osm ? SHIPPED_LAT[g.osm.id] ?? null : null, ground });
+    const type = courseTypeFor3p({ tournament: this.traffic.round.stage !== 'free' || !!this.eventToday(), condition: st ? courseCondition(st) : 100, tier: g.tier, members: g.club?.members ?? 0, biome, ground });
     // T433, T434: what a ghost or a shared course file holds, once its heights are deflated (T438: after the course has gone to the view)
     this.course3pShare = null; const sg = this.lies3pGen;
     void (file.height ? fillPack(file.height) : Promise.resolve()).then(() => { if (sg === this.lies3pGen) this.course3pShare = shareOf(file, features, { name, biome, type, seed: seedOf(name) }); });

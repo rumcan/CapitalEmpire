@@ -257,9 +257,9 @@ function hFar(wx, wy) {   // the far land's height (metres) at a point if its pi
   return F.h[Math.min(FTN - 1, ((wy - fy * FTS) / FTD) | 0) * FTN + Math.min(FTN - 1, ((wx - fx * FTS) / FTD) | 0)];
 }
 const PW_NEAR = [], PW_FAR = [];                            // the chunks within 31 m of the golfer and the far pieces within 260 m, nearest first
-let SIMPLEG = true;   // the simple grass everywhere (the owner, 2026-11-12: "make that the main grass, I want to see what it looks like up close"); false: the painted ground near by, as before
+const SIMPLEG = true;   // T447 (the owner, 2026-11-13: "simple grass is the only option"): always on, no box, no saved choice. The painted near ground it replaces is still behind
+                      // the `SIMPLEG ?` branches and the workers' near chunks; it is woven through the render and the workers, so it stays (dead) rather than risk the gate. Before: the simple grass everywhere (the owner, 2026-11-12: "make that the main grass, I want to see what it looks like up close"); false: the painted ground near by, as before
 const CAMMIN = 18;   // the closest the camera may come behind the golfer (the owner, 2026-11-12: the zoom of their screenshot, for now)
-function setSimple(on) { SIMPLEG = !!on; try { localStorage.setItem('cinderlinks.simple', on ? '1' : '0'); } catch (e) {} }
 let DNEAR = 30, DFAR = 260, HZK = 1, VIEWR = 260;   // how far the painted ground is drawn (30 to 60 m) and how far the land is drawn at all (150 to 400 m): the player's render distance (setDetail); HZK thins the air to suit
 function nearList() { PW_NEAR.length = 0; const R = DNEAR + 1, ny = Math.ceil(R * PPV / CH), nx = Math.ceil(R * PPM / CH); for (let dy = -ny; dy <= ny; dy++) for (let dx = -nx; dx <= nx; dx++) { const d = Math.hypot(dx * CH / PPM, dy * CH / PPV); if (d < R) PW_NEAR.push([d, dx, dy]); } PW_NEAR.sort((a, b) => a[0] - b[0]); }
 nearList();
