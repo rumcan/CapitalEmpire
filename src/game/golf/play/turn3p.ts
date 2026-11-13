@@ -10,7 +10,7 @@ import type { Club, CourseView, Lie, Pt } from './types';
 import type { OwnerTurn } from './live';
 import { CLUB_ORDER, CLUB_RUN, MISHIT, SHOT_SCATTER, carryFor, type ShotSkill } from './shot';
 import { CLUB_BASE, hasMech, kitOf, type ModCtx } from './mods';
-import { LIE_FX, kindOfLie, slopeEffect, lieKindFor } from './lies';
+import { LIE_FX, kindOfLie, slopeEffect, lieKindFor, lieCarry } from './lies';
 import { envOf, previewShot, type ShotEnv } from './conditions';
 import { LOFT, launchWord } from './bag';
 import { markerSpeed, sweetSpot } from './swing';
@@ -60,7 +60,7 @@ export function clubChoice(sk: ShotSkill, club: Club, lie: Lie, env: ShotEnv | n
   const longM = putter ? 0 : 2 * (SHOT_SCATTER.dist0 + SHOT_SCATTER.distK * un) * playsM * spread;
   const mishitP = putter ? 0 : Math.max(0, MISHIT.base + MISHIT.skillK * un * un + (env ? lx.wild : 0) + kit.mishit);
   return {
-    club, carryM, scatterM, kit, playsM, longM, mishitP, sideM: pv ? pv.sideM : 0,
+    club, carryM, lieM: putter ? 0 : carryM * lieCarry(kind, club), scatterM, kit, playsM, longM, mishitP, sideM: pv ? pv.sideM : 0,
     sweet: sweetSpot(kit.skill, 0, kit.sweet, kit.speed), speed: markerSpeed(kit.skill, kit.speed),
     loftDeg: LOFT[club], launch: putter ? '' : launchWord(LOFT[club]),
     run: putter ? 1 : CLUB_RUN[club] * kit.roll / (CLUB_BASE[club]?.roll ?? 1), // (bag.ts bagView's run: what a shot with conditions rolls by)

@@ -540,8 +540,8 @@ function hostCanGimme() {   // a gimme the round's rule allows: his turn, on the
   const t = HP.turn; return !!t && hostOnTurn() && !hostBusy() && !bcam && t.gimmeM > 0 && !!t.green && t.distM <= t.gimmeM;
 }
 function hostGimme() { if (!hostCanGimme()) return; const t = HP.turn; hostSend({ t: 'gimme', holeIdx: t.holeIdx, stroke: t.stroke }); HP.wait = 1; }
-function hostTabs() {   // T419: his clubs in the tabs: the name, its full carry after his mods (the putter: its fitting); keys 1 to 9 and the wheel change club
-  return HP.clubs.map((c, k) => '<div class="club' + (k === club ? ' on' : '') + '">' + (k < 9 ? '<b>' + (k + 1) + '</b> ' : '') + (CLUB_NAME[c.club] || c.club) + '<i>' + (c.club === 'putter' ? (c.fit || 'on the green') : Math.round(c.carryM) + ' m') + '</i></div>').join('');
+function hostTabs() {   // T419: his clubs in the tabs: the name, its carry after his mods (the putter: its fitting); keys 1 to 9 and the wheel change club. T455: the carry FROM THIS LIE (the host's lieM: rough, sand, long grass cut it; a cut one is amber with a down arrow), so he can club up
+  return HP.clubs.map((c, k) => { const lie = c.lieM !== undefined ? c.lieM : c.carryM, cut = c.club !== 'putter' && lie < c.carryM - 0.5; return '<div class="club' + (k === club ? ' on' : '') + (cut ? ' cut' : '') + '">' + (k < 9 ? '<b>' + (k + 1) + '</b> ' : '') + (CLUB_NAME[c.club] || c.club) + '<i>' + (c.club === 'putter' ? (c.fit || 'on the green') : Math.round(lie) + ' m' + (cut ? ' ▼' : '')) + '</i></div>'; }).join('');
 }
 function hostPickClub(k) { if (!HP || !HP.clubs.length || charging || player.swing >= 0) return; club = Math.max(0, Math.min(HP.clubs.length - 1, k)); }
 clubsEl.addEventListener('wheel', (e) => { if (!HP || !HP.clubs.length) return; hostPickClub(club + (e.deltaY > 0 ? 1 : -1)); if (e.preventDefault) e.preventDefault(); if (e.stopPropagation) e.stopPropagation(); }, { passive: false });
