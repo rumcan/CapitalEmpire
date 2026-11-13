@@ -123,7 +123,7 @@ def import_one(path, gid, heading, tol=60, soft=40, scale=None, dry=False, previ
     fw, fh, ax, ay = j['frameWidth'], j['frameHeight'], j['anchor']['x'], j['anchor']['y']
     row = j['directions'].index(heading)
     olds = [cell(sheet, j, row, c) for c in range(len(j['frames']))]
-    old_h = np.median([measure(o)[0] for o in olds]); ground = int(np.median([measure(o)[1] for o in olds]))
+    old_h = np.median([measure(o)[0] for o in olds]); ground = min(int(np.median([measure(o)[1] for o in olds])), fh - 4)   # (the old renders' soles were cut at the cell's last row: keep the new ones 3 px inside)
     figs, bg = figures(path, tol, soft)
     new_h = np.median([measure(f)[0] for f in figs])
     k = scale or old_h / new_h
@@ -148,7 +148,7 @@ def import_one(path, gid, heading, tol=60, soft=40, scale=None, dry=False, previ
         shutil.copyfile(base / 'sheet.webp', base / 'sheet-old.webp'); shutil.copyfile(base / 'sheet.json', base / 'sheet-old.json')
     for c in range(9):
         sheet.paste(Image.new('RGBA', (fw, fh), (0, 0, 0, 0)), (c * fw, row * fh)); sheet.paste(cells[c], (c * fw, row * fh))
-    sheet.save(base / 'sheet.webp', lossless=True, quality=100, method=6)
+    sheet.save(base / 'sheet.webp', quality=90, alpha_quality=100, method=6)   # (lossy colour, exact alpha: about the old sheet's size)
     ch = j.setdefault('chatgpt', {})
     ch[heading] = {'picture': path.name, 'date': datetime.date.today().isoformat(), 'scale': round(k, 4)}
     j['clips']['walk'] = j['clips'].get('walk', '') if len(ch) < 8 else 'ChatGPT painted walk (8 frames, issue #1235)'

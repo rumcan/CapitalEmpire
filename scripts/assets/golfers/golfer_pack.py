@@ -25,9 +25,9 @@ FACING = {
     'S': 'facing the viewer, walking straight toward the bottom of the picture (his front and face seen)',
     'SW': 'walking toward the lower left of the picture (his front seen at three-quarters, his face turned to the left)',
     'W': 'walking to the left (seen from his side, his face in profile looking left)',
-    'NW': 'walking toward the upper left of the picture, away from the viewer (seen at three-quarters from behind, the back of his head, a little of his left cheek)',
-    'N': 'walking straight away from the viewer toward the top of the picture (seen from behind: his back and the back of his head)',
-    'NE': 'walking toward the upper right of the picture, away from the viewer (seen at three-quarters from behind, the back of his head, a little of his right cheek)',
+    'NW': 'walking toward the upper left of the picture, away from the viewer (seen at three-quarters from behind, the back of his head, a little of his left cheek); the sun is ahead of him at the upper right, so his back is mostly in soft shade with only his right shoulder and right side catching the light',
+    'N': 'walking straight away from the viewer toward the top of the picture (seen from behind: his back and the back of his head); the sun is ahead of him at the upper right, so his back is mostly in soft shade with only his right shoulder and right side catching the light',
+    'NE': 'walking toward the upper right of the picture, away from the viewer (seen at three-quarters from behind, the back of his head, a little of his right cheek); the sun is ahead of him at the upper right, so his back is mostly in soft shade with only his right shoulder and right side catching the light',
     'E': 'walking to the right (seen from his side, his face in profile looking right)',
     'SE': 'walking toward the lower right of the picture (his front seen at three-quarters, his face turned to the right)',
 }
