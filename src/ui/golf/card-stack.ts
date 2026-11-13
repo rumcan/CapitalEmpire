@@ -18,19 +18,24 @@ export function stackCol(open: StackOpen, card: StackCard): number {
   return n;
 }
 
-/** the offsets from the right edge, in Tailwind's classes (written whole: its scanner reads this file): [no side panel, with it] for columns 0 to 3 (a column is 22rem
- *  wide: a 340 px card and a gap; the first step is 23rem from the 0.75rem margin, 41rem from the Budget panel's 19.5rem) */
-const RIGHT: readonly (readonly [string, string])[] = [
-  ['right-3', 'right-[19.5rem]'], ['right-[23rem]', 'right-[41rem]'], ['right-[45rem]', 'right-[63rem]'], ['right-[67rem]', 'right-[85rem]'],
+/** the side panel open at the right edge: none, the Budget panel (19.5rem from the edge), or a wide one (T459: the jam's Bank panel, 360 px from the
+ *  0.75rem margin: 24rem) */
+export type StackPanel = boolean | 'wide';
+/** the offsets from the right edge, in Tailwind's classes (written whole: its scanner reads this file): [no side panel, with it, with a wide one] for columns 0
+ *  to 3 (a column is 22rem wide: a 340 px card and a gap; the first step is 23rem from the 0.75rem margin, 41rem from the Budget panel's 19.5rem, 46rem from the
+ *  wide panel's 24rem) */
+const RIGHT: readonly (readonly [string, string, string])[] = [
+  ['right-3', 'right-[19.5rem]', 'right-[24rem]'], ['right-[23rem]', 'right-[41rem]', 'right-[46rem]'], ['right-[45rem]', 'right-[63rem]', 'right-[68rem]'], ['right-[67rem]', 'right-[85rem]', 'right-[90rem]'],
 ];
+const slot = (panel: StackPanel): 0 | 1 | 2 => (panel === 'wide' ? 2 : panel ? 1 : 0);
 /** how many columns fit in a window width (the UI layer's units: window width over its scale), left of the rail (about 100 px) and of the Budget panel when it
  *  is open: at least one. Past that a card stands over the last column's (the one opened later on top) rather than off the screen */
-export function stackFit(width: number, panel: boolean): number {
-  const edge = panel ? 312 : 12; // (px: the offset of column 0)
+export function stackFit(width: number, panel: StackPanel): number {
+  const edge = [12, 312, 384][slot(panel)]!; // (px: the offset of column 0)
   return Math.min(RIGHT.length, Math.max(1, Math.floor((width - 100 - edge) / 352)));
 }
 /** the class that puts a card at column col from the right edge (col is held to what fits, fit: stackFit) */
-export function stackRight(col: number, panel: boolean, fit: number = RIGHT.length): string {
+export function stackRight(col: number, panel: StackPanel, fit: number = RIGHT.length): string {
   const c = Math.max(0, Math.min(Math.floor(col), fit - 1, RIGHT.length - 1));
-  return RIGHT[c]![panel ? 1 : 0];
+  return RIGHT[c]![slot(panel)];
 }

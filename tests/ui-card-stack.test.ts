@@ -56,3 +56,12 @@ test("the classes are written whole in the source, where Tailwind's scanner read
   const src = readFileSync('src/ui/golf/card-stack.ts', 'utf8');
   for (const c of ['right-3', 'right-[19.5rem]', 'right-[23rem]', 'right-[41rem]', 'right-[45rem]', 'right-[63rem]', 'right-[67rem]', 'right-[85rem]']) assert.ok(src.includes(`'${c}'`), c);
 });
+
+test('T459 (the jam): beside the wide Bank panel (360 px from the 0.75rem margin) the cards and the tutorial stand clear of it, 24rem from the edge', () => {
+  assert.equal(stackRight(0, 'wide'), 'right-[24rem]'); assert.equal(stackRight(1, 'wide'), 'right-[46rem]');
+  assert.ok(24 * 16 >= 12 + 360, 'column 0 starts left of the Bank panel');
+  assert.equal(stackRight(0, true), 'right-[19.5rem]', 'the Budget panel keeps its slot'); assert.equal(stackRight(0, false), 'right-3');
+  assert.ok(stackFit(1366, 'wide') <= stackFit(1366, true), 'a wide panel leaves no more columns than the Budget panel');
+  const src = readFileSync('src/ui/golf/card-stack.ts', 'utf8');
+  for (const c of ['right-[24rem]', 'right-[46rem]', 'right-[68rem]', 'right-[90rem]']) assert.ok(src.includes(`'${c}'`), c);
+});

@@ -73,6 +73,8 @@ import { GuidePulse } from './ui/GuidePulse';
 import { ClubTitleText } from './ui/ClubTitle';
 import { GrassManagementPanel } from './ui/GrassManagementPanel';
 import { GREENKEEPING, JAM } from './game/features';
+import { COST_GROUPS, INCOME_LINES } from './game/golf/reports';
+import { debtOf } from './game/golf/finance';
 import { TitleCard } from './ui/jam/TitleCard';
 import { formatPercent } from './ui/TournamentResults';
 import { SeasonReportCard } from './ui/golf/SeasonReportCard';
@@ -103,7 +105,7 @@ import { RangeGuideCard } from './ui/golf/RangeGuideCard';
 import { TooltipLayer } from './ui/Tooltip';
 import { UI_SCALES, applyUiScale, currentUiScale, saveUiScale } from './ui/uiScale';
 import { AccessSettings } from './ui/golf/AccessSettings';
-import { stackCol, stackFit, stackRight, type StackCard, type StackOpen } from './ui/golf/card-stack';
+import { stackCol, stackFit, stackRight, type StackCard, type StackOpen, type StackPanel } from './ui/golf/card-stack';
 import { HoleCard } from './ui/golf/HoleCard';
 import { View3pPanel } from './ui/golf/View3pPanel';
 import { BankPanel } from './ui/golf/BankPanel';
@@ -422,6 +424,21 @@ export default function App() {
 
   /** the top bar's money figure (a button: it opens the budget) */
   const treasury = (g: Game) => <Stat icon="bank" label="Treasury" value={g.unlimited ? '∞' : withIcon(balanceKind(g.money), money(g.money))} tone={g.money < 0 ? 'text-red-300' : 'text-emerald-300'} sub={debtDays ? `bankrupt in ${DEBT_DAYS - debtDays} days` : undefined} subTone="text-red-300" onClick={() => g.toggleMoneyPanel()} />;
+  /** T459 (the jam build): the money chip's drawer is the money only: the cash, this month's money in and out so far (the statement's lines), the
+   *  savings and the debt when there are any; no town figures */
+  const jamMoneyStats = (g: Game) => {
+    const f = g.finance, cur = f.cur, v = (l: string) => { const n = (cur as Record<string, number | undefined>)[l]; return typeof n === 'number' && Number.isFinite(n) ? n : 0; };
+    const inc = INCOME_LINES.reduce((a, l) => a + v(l), 0) + v('savingsInterest'), out = -COST_GROUPS.reduce((a, gr) => a + gr.lines.reduce((b, l) => b + v(l), 0), 0), debt = debtOf(f);
+    return (
+      <>
+        <Stat icon="bank" label="Cash" value={money(g.money)} tone={g.money < 0 ? 'text-red-300' : 'text-emerald-300'} title="The club's cash in the bank account (below zero it is an overdraft, at 2.5% a month)" />
+        <Stat icon="income" label="In this month" value={`+${money(inc)}`} tone="text-emerald-300" title="What the club has taken this month so far: the range, green fees, members and the rest, and savings interest" />
+        <Stat icon="income" label="Costs this month" value={`−${money(out)}`} tone="text-red-300" title="This month's costs so far: wages, upkeep, interest, insurance, emergencies (building and loan repayments are not costs: they turn cash into the course or cut the debt)" />
+        {f.savings > 0 && <Stat icon="bank" label="Savings" value={money(f.savings)} tone="text-sky-300" title="In the savings account, at 4% a year" />}
+        {debt > 0 && <Stat icon="bank" label="Debt" value={money(debt)} tone="text-amber-300" title="What the club still owes the bank" />}
+      </>
+    );
+  };
   /** the population, jobs, day and daily income: inline in classic mode, in the money chip's drawer in golf mode (T035, T233) */
   const moreStats = (g: Game) => (
     <>
@@ -447,7 +464,7 @@ export default function App() {
    *  so the Staff card never hides under your profile; the guide cards (hidden while your profile, bag or cards are open) stand left of the card and the Staff card */
   const stack = (() => {
     const g = game; if (!g) return null;
-    const golf = !!g.golf, panel = !!g.panel;
+    const golf = !!g.golf, panel: StackPanel = g.panel === 'bank' ? 'wide' : !!g.panel; // (T459: the Bank panel is wider than the Budget panel: the cards and the tutorial stand clear of it)
     const open: StackOpen = {
       main: g.range.cardOpen || (g.clubCardOpen && g.hasClubhouse) || !!g.selectedPlace || g.holeCardHole !== null || (golf && !!g.eventCardOpen && !g.youTeeOpen),
       staff: golf && g.staffCardOpen, player: golf && g.playerCardOpen, bag: golf && (g.bagCardOpen || (g.cardsCardOpen && !g.vendingOpen)),
@@ -508,7 +525,7 @@ export default function App() {
                   {/* T233 (#674, the concept's top bar): the stat chips first: the money and its change a month (a click: the books; its drawer: the
                       town's figures, the golf Treasury's since T035), the reputation, the golfers a month (a click: the Club card) and the course
                       rating (a click: the Season card's Course stats) */}
-                  {stats && <StatChips chips={statChips(stats, debtDays ? DEBT_DAYS - debtDays : null)} drawer={moreStats(game)} on={{
+                  {stats && <StatChips chips={statChips(stats, debtDays ? DEBT_DAYS - debtDays : null)} drawer={JAM ? jamMoneyStats(game) : moreStats(game)} on={{
                     money: () => game.toggleMoneyPanel(),
                     golfers: game.hasClubhouse ? () => game.openClubCard() : undefined,
                     rating: chip('courseStats') ? () => { setSeasonOpen(true); setCourseStats(null); } : undefined,
