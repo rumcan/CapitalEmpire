@@ -10,6 +10,7 @@ import {
   LEGACY_HINT_STEP,
   RANGE_GUIDE,
   FIRST_BUCKETS,
+  FIRST_FETCH,
   fallbackTeeSpot,
   newRangeGuide,
   normalizeRangeGuide,
@@ -178,6 +179,12 @@ describe("a range start's guided build (T239: the guide's card)", () => {
     assert.equal(stepMet(1, range({ rangePlaced: false })), false); assert.equal(stepMet(1, range({ rangePlaced: true })), true);
     assert.equal(stepMet(2, range({ lotPlaced: false })), false); assert.equal(stepMet(2, range({ lotPlaced: true })), true);
     assert.equal(stepMet(3, range({ golfers: FIRST_BUCKETS - 1 })), false); assert.equal(stepMet(3, range({ golfers: FIRST_BUCKETS })), true);
+    // T459 (#1211): with the ball loop, the step also waits for a bucket's worth of balls fetched back to the ball room
+    assert.equal(stepMet(3, range({ golfers: FIRST_BUCKETS, ballsBack: 0 })), false, 'buckets sold, no balls fetched yet');
+    assert.equal(stepMet(3, range({ golfers: FIRST_BUCKETS, ballsBack: FIRST_FETCH - 1 })), false);
+    assert.equal(stepMet(3, range({ golfers: FIRST_BUCKETS, ballsBack: FIRST_FETCH })), true);
+    assert.equal(stepMet(3, range({ golfers: FIRST_BUCKETS - 1, ballsBack: 999 })), false, 'balls fetched but no buckets sold yet');
+    assert.match(RANGE_GUIDE[2]!.body, /hold F/, 'the step says how to pick the balls up'); assert.equal(RANGE_GUIDE[2]!.target.ui, 'rail-walk');
     assert.equal(stepMet(4, range({ owned: ['gravel'] })), false); assert.equal(stepMet(4, range({ owned: ['greens'] })), true);
     assert.equal(stepMet(5, range()), false); assert.equal(stepMet(5, range({ walkway: true })), true);
     assert.equal(stepMet(6, range({ owned: ['gravel'] })), false, 'gravel alone: not yet'); assert.equal(stepMet(6, range({ owned: ['gravel', 'pave'] })), true);

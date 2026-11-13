@@ -61,7 +61,7 @@ import { fountainAt, fountainFrame } from './kit';
 import { HALFWAY_COST, halfwaySpotWhy, halfwayTakings } from './golf/halfway';
 import { DESK_SIGN_LABEL, HUT_COST, HUT_LABEL, HUT_NAME, HUT_UPKEEP, OFFICE_COST, OFFICE_LABEL, OFFICE_UPKEEP, ROLE_TITLE, dropProsAt, hireWhy, hirePro, hutSpotWhy, lessonWhy, lessonsMonth, letGoPro, officeSpotWhy, PLAYER_LESSON_PRICE, proPose, rectGap, staffCardView, staffWork, type HutAt, type HutPlace, type ProBeat, type ProPose, type StaffCardView, type StaffNeeds } from './golf/pros';
 import { newTour, tourCurrent, tourLines, tourNext, tourOff, tourRunning, tourSkip, tourTick, type TourFacts } from './ext/progressive-ui/tour';
-import { PLACED_STEPS, RANGE_GUIDE, guideTable, newRangeGuide, rangeGuideCurrent, rangeGuideLines, rangeGuideOff, rangeGuideSkip, rangeGuideTick, type GuideEvent, type GuideLine } from './ext/progressive-ui/guide';
+import { FIRST_BUCKETS, PLACED_STEPS, RANGE_GUIDE, guideTable, newRangeGuide, rangeGuideCurrent, rangeGuideLines, rangeGuideOff, rangeGuideSkip, rangeGuideTick, type GuideEvent, type GuideLine } from './ext/progressive-ui/guide';
 import { welcomeReady } from './golf/firstview';
 /** the hints' anchors (T188: their Show me pulses the control) where the hint is no guide step */
 const HINT_ANCHOR: Readonly<Record<string, string>> = { 'hint-range-open': 'range-chip', 'hint-range-upgrade': 'range-chip', 'hint-range-props': 'rail-facilities', 'hint-range-first-hole': 'new-hole' };
@@ -5925,6 +5925,8 @@ export class Game {
       putting: this.range.practiceFacts()?.putting ?? 'none',
       // T288: the bare start's placements
       rangePlaced: b.built !== false, lotPlaced: !!this.rangeLotDef(), practicePlaced: b.practiceAt !== null,
+      // T459 (#1211): the balls picked up and brought back (the picked counts, less what is still in the basket and the hopper)
+      ballsBack: b.balls ? Math.max(0, Object.values(b.balls.total.picked).reduce((a, n) => a + n, 0) - b.balls.basket - b.balls.hopper) : undefined,
     };
   }
   /** the guide's card: its lines (null: no guide running) and whether it is folded */
@@ -5984,7 +5986,15 @@ export class Game {
     const b = this.golf?.range, P = (u: number, v: number) => { const o = sc.anchors.lot[0]!; return { x: o.x + sc.roadDir.x * (u - 49) + sc.rangeSide.x * (v - 2), y: o.y + sc.roadDir.y * (u - 49) + sc.rangeSide.y * (v - 2) }; };
     const card = (anchor: string, at: Pt, z: number) => { this.setTool('select'); this.lookAt(at.x, at.y, z); this.openRangeCard(true); queueMicrotask(() => this.pulseAnchor(anchor)); };
     switch (st.n) {
-      case 3: card('range-takings', sc.counter, RANGE_CAM_ZOOM); return;
+      case 3: {
+        // T459 (#1211): once the first buckets are sold, the second half: Walk in hand, the camera on the balls lying out on the range
+        const bk = b?.balls; if ((b?.total.golfers ?? 0) < FIRST_BUCKETS || !bk) { card('range-takings', sc.counter, RANGE_CAM_ZOOM); return; }
+        if (this.range.cardOpen) this.openRangeCard(false);
+        this.setTool('select'); this.setYouWalk(true);
+        const n = Math.min(200, bk.field.length / 2), at = n ? { x: bk.field.slice(0, n * 2).filter((_, i) => i % 2 === 0).reduce((a, v) => a + v, 0) / n, y: bk.field.slice(0, n * 2).filter((_, i) => i % 2 === 1).reduce((a, v) => a + v, 0) / n } : sc.counter;
+        this.lookAt(at.x, at.y, RANGE_CAM_ZOOM);
+        queueMicrotask(() => this.pulseAnchor('rail-walk')); this.emit(); return;
+      }
       case 4: card('range-buy-greens', P(35, 50), 0.15); return;
       case 5: {
         if (this.refuseLocked('path')) return;
