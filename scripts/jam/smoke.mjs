@@ -113,7 +113,8 @@ try {
       const title = `step ${k + 1}`;
       const show = page.locator(`${tour} button`, { hasText: 'Show me' }).first();
       // (a step shows itself as it becomes current: put that away first, as a player who closed it would, so Show me has to show it again)
-      await game(() => { const g = window.__game; if (g.panel === 'bank') g.toggleMoneyPanel(); g.guideAnchor = null; g.openRangeCard(false); g.emit(); }); await settle(200);
+      await settle(1200); // (the new step shows itself a frame or two after Next: let it, then put it away)
+      await game(() => { const g = window.__game; if (g.panel === 'bank') g.toggleMoneyPanel(); g.guideAnchor = null; g.openRangeCard(false); g.emit(); }); await settle(300);
       if (await show.isVisible().catch(() => false)) await click('tutorial', `Show me: ${title}`, show, { wait: 800 });
       if (await game(() => window.__game.panel === 'bank')) await game(() => { window.__game.toggleMoneyPanel(); });
       await game(() => window.__game.openRangeCard(false));
