@@ -64,6 +64,7 @@ globalThis.hostMsg = () => {   // (made only when asked: a course this size held
   return m;
 };
 
+globalThis.readJson = (f) => JSON.parse(fs.readFileSync(f, 'utf8'));   // (T452: for the scenes, which run in the game's scope)
 // T424: 'actors' messages as CapitalEmpire sends them (its play/actors3p.ts), in the view's metres. A dress like actors3p.ts dressOf makes
 const ACT_SHIRTS = ['#c8323a', '#f2f2ee', '#2f5fae', '#2f8a4e', '#f2c94c', '#e8803a', '#7a4fa0', '#1f2a44', '#5ab8d8', '#e87aa8'];
 const ACT_TROU = ['#2a3550', '#d8cfb4', '#5a5f6a', '#1e1e24', '#f0f0ea', '#6e5a3c'], ACT_CAPS = ['#f6f6f2', '#1f2a44', '#c8323a', '#2f5fae', '#2a2a2e'];
@@ -308,6 +309,15 @@ ${HOST_PLAY}
   const mid = pathAt(0.5);
   const SC = {
     host: () => { hostMessage(hostMsg()); idle(); snap('host'); const r = hostPlayRun(snap); out.info.push({ hostPlay: r.info, errors: r.errs }); const c = hostCraftRun(); out.info.push({ hostCraft: c.info, errors: c.errs }); const gr = hostGreenRun(); out.info.push({ hostGreen: gr.info, errors: gr.errs }); snap('host-green'); const dn = hostDoneRun(); out.info.push({ hostDone: dn.info, errors: dn.errs }); const l = hostLieRun(); out.info.push({ hostLies: l.info, errors: l.errs }); snap('host-lies'); },   // (T418: then a turn, a strike and a canned shot)   // (T415: Woodhill handed over by message, hole 1 from its tee)
+    // T452: a course as built, from behind the golfer: HOSTMSG=<file> a host's 'course' message (else the harness's Woodhill), HOSTBIOME a biome for it;
+    // hole HOSTHOLE (1): from the tee toward the green, and from halfway along looking on
+    asbuilt: () => {
+      const m = process.env.HOSTMSG ? readJson(process.env.HOSTMSG) : hostMsg(); if (process.env.HOSTBIOME) m.biome = process.env.HOSTBIOME;
+      m.hole = +(process.env.HOSTHOLE || 1); hostMessage(m); idle();
+      const L = course.holes[m.hole - 1].line, n = L.length >> 1, tx = L[0], ty = L[1], gx = L[n * 2 - 2], gy = L[n * 2 - 1], yaw = Math.atan2(gx - tx, -(gy - ty));
+      const at = (f, side = 0) => { go(tx + (gx - tx) * f - Math.sin(yaw) * 6 + Math.cos(yaw) * side, ty + (gy - ty) * f + Math.cos(yaw) * 6 + Math.sin(yaw) * side, yaw + (side ? +(process.env.HOSTTURN || 0) : 0)); for (let w = 0; w < 600 && (farQ.length || tileQ.length); w++) render(); };
+      at(0); snap('built-tee'); at(0.5); snap('built-mid'); at(0.35, +(process.env.HOSTSIDE || 40)); snap('built-side');   // (side: metres to the right of the line)
+    },
     tee() { idle(); frames(20); snap('tee'); },
     aim() { idle(); newHole(holeN, hole.tee.x, hole.tee.y); frames(20); player.x = ball.x - 0.3; player.y = ball.y + 0.6; mouse.x = VW / 2 + 60; mouse.y = VH / 2 - 150; frames(6); snap('aim'); mouse.down = true; frames(40); snap('aim-charge'); mouse.down = false; frames(60); snap('ballcam-a'); frames(70); snap('ballcam-b'); for (let k = 0; k < 900 && ball.state !== 0; k++) frames(1); frames(20); snap('ballcam-end'); frames(60); snap('aim-after'); },
     stuck() { // can the golfer be trapped? On every steep point found near the hole (and its flatter neighbours), count the points from which no step in any of 16 directions is allowed
