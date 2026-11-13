@@ -40,7 +40,7 @@ test('no mowing lines on a tee by default: its look sets none, the finish lays n
 });
 
 test('a tee\'s walls: the bunker\'s by default, the old rock a setting; the finish being off does not touch them', () => {
-  assert.deepEqual([...TEE_WALLS], ['bunker', 'sand', 'rock']);
+  assert.deepEqual([...TEE_WALLS], ['bunker', 'sand', 'rock', 'cliff']); // (T372: grey cliff rock)
   assert.equal(DEFAULT_COURSE_FINISH.teeWall, 'bunker'); assert.equal(finishOf(F).teeWall, 'bunker'); assert.equal(finishOf(null).teeWall, 'bunker');
   assert.equal(FINISH_OFF.teeWall, 'bunker', 'the tees\' walls are T127\'s, not T227\'s: the finish off keeps them');
   assert.equal(clampCourseFinish({ teeWall: 'rock' }).teeWall, 'rock');

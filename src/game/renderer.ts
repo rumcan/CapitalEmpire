@@ -27,7 +27,7 @@ import { BUNKER_WALL_MEAN, BUNKER_WALL_METRES, BUNKER_WALL_PICTURE, SAND_WALL_ME
 import { quadBox, type CourseLayer, type CoursePatch, type CourseRim, type CourseTex, type CourseWall, type LotPatch, type MowStripes, type PatchTex, type ShineMaskData } from './ground-protocol';
 import { BunkerStageRegistry } from './ext/bunker-look/stage-registry';
 import { SHINE_TEXEL, SHINE_TEXEL_PX, SHINE_WEIGHTS, maskColour, maskPad, shineMaskPixels, shineWeight, type ShineWeights } from './grass-shine';
-import { DRAW_ORDER, FaceForm, GREEN_FACE, STAIR_TREAD, SURF_HEIGHT, SUN_DIR, WALL_DROP, WALL_PX_PER_M, WALL_TEX, WallMat, defaultShadow, faceLight, faceScale, isOverlay, layerCode, shadowOwner, slopeLight, stairSteps, wallShade, type Stair, type WallShade } from './ext/course-walls';
+import { DRAW_ORDER, FaceForm, cliffRun, GREEN_FACE, STAIR_TREAD, SURF_HEIGHT, SUN_DIR, WALL_DROP, WALL_PX_PER_M, WALL_TEX, WallMat, defaultShadow, faceLight, faceScale, isOverlay, layerCode, shadowOwner, slopeLight, stairSteps, wallShade, type Stair, type WallShade } from './ext/course-walls';
 import { CUSTOM0, SURF } from './ext/course-grid';
 import { SPROUT_PERIOD, growDraws, seedColour, seedSprouts, sproutRes, type GrowDraw } from './ext/course-fx/seed';
 import { courseImages, courseRes, lineField } from './ext/course-grid/field';
@@ -328,6 +328,8 @@ const BANK_SHADE = 0.95, BANK_SUN = 0.8;
  *  the picture's colour is multiplied in this hue, so a shaded wall reads as sky-lit shade, never a flat dark wash (the full cast turned the red-brown black) */
 const WALL_COOL = [0.86, 0.9] as const;
 /** the rock's painted earth and its stones, in full shade and in full sun (a stone's own shade varies a little round them) */
+/** T372: a cliff tee's rock in its shade and its light (grey stone with a warm cast, the sun at the upper right) */
+const CLIFF_ROCK: readonly (readonly number[])[] = [[78, 76, 72], [204, 196, 182]];
 const ROCK_EARTH: readonly (readonly number[])[] = [[92, 78, 62], [196, 174, 138]], ROCK_STONE: readonly (readonly number[])[] = [[100, 96, 88], [232, 224, 206]];
 /** the rock's stones: one where the top edge crosses a lattice line every STONE_GAP tiles (x or y, the segment's longer way: a place on the
  *  map, the same in every chunk, never a repeating tile), in rows down the face, STONE_PX world px across (zoom 1), STONE_SKIP left out */
@@ -3263,12 +3265,14 @@ export class GroundPainter {
     const bOfBin = (k: number) => BANK_B0 + (BANK_B1 - BANK_B0) * (k / (NB - 1));
     // T364: a tee's rock faces in the bunker's wall (the course finish's teeWall, the default: its picture; 'sand': the native bunker wall's painting) or in
     // the painted earth and set stones of before ('rock')
-    const earth = this.finish().teeWall !== 'rock', sand = this.finish().teeWall === 'sand';
+    // T372: grey cliff rock for 'cliff', and for the default's tees CLIFF_FROM_H high or more (a face that steep is a cliff, never a bunker's wall)
+    const tw = this.finish().teeWall, cliff = tw === 'cliff' || (tw === 'bunker' && ws.some(w => w.f === FaceForm.Rock && w.hs === SURF.tee && cliffRun(w.r ?? 1)));
+    const earth = tw !== 'rock' && !cliff, sand = tw === 'sand';
     type Group = { f: FaceForm; hs: number; face: Path2D; bands: Path2D[]; upper: Path2D; toe: Path2D[]; crest: Path2D; body: Path2D; foot: Path2D; shadow: Path2D[]; shade: boolean;
       stoneShade: Path2D; stones: Path2D[]; lights: Path2D[]; tufts: Path2D[]; sides: Path2D[]; treads: Path2D[]; risers: Path2D[]; noses: Path2D; cheeks: Path2D; timber: boolean; stairs: boolean };
     // T217: the faces' paths are made once for these runs (tile space, the same at every level) and kept for the next bake they reach (T204's
     // warped wall tops have ten times the points: a re-bake of a chunk under a bank built them all again)
-    const bkey = this.bankKey(ws, lite, stairs, earth), built = this.bankBuilt.get(bkey) as Map<number, Group> | undefined;
+    const bkey = this.bankKey(ws, lite, stairs, earth) + (cliff ? 'c' : ''), built = this.bankBuilt.get(bkey) as Map<number, Group> | undefined;
     const groups = built ?? new Map<number, Group>(), ends = built ? null : endNormals(ws);
     if (built) { this.bankBuilt.delete(bkey); this.bankBuilt.set(bkey, built); }
     if (!built) for (const w of ws) {
@@ -3331,7 +3335,7 @@ export class GroundPainter {
         ctx.save(); ctx.setTransform(M); ctx.lineJoin = 'round'; ctx.lineCap = 'round';
         if (lite) {
           // the light steps only: grass or earth, mixed by the slope's light (T364: the bunker's wall: its mean colour in the wall's shade)
-          const pair = rock ? ROCK_EARTH : [[70, 104, 52], [150, 190, 104]] as const;
+          const pair = rock ? (cliff ? CLIFF_ROCK : ROCK_EARTH) : [[70, 104, 52], [150, 190, 104]] as const;
           for (let b = 0; b < NB; b++) {
             ctx.fillStyle = earthy ? rgb((sand ? SAND_WALL_MEAN : BUNKER_WALL_MEAN).map(v => v * (sand ? 1 : TEE_WALL_EXPOSURE) * teeWallShade(bOfBin(b), BANK_B0, BANK_B1))) : rgb(mixRGB(pair[0]!, pair[1]!, b / (NB - 1)));
             for (let q = 0; q < NQ; q++) ctx.fill(G.bands[q * NB + b]!);
@@ -3377,7 +3381,7 @@ export class GroundPainter {
           // the painted earth in its light steps, its texture, the stones, then the texture once more over all of it (never a flat face)
           for (let b = 0; b < NB; b++) {
             const lt = Math.max(0, Math.min(1, (bOfBin(b) - BANK_B0) / (BANK_B1 - BANK_B0)));
-            for (let q = 1; q < NQ; q++) { ctx.fillStyle = rgb(mixRGB(ROCK_EARTH[0]!, ROCK_EARTH[1]!, lt * weight[q]! + 0.5 * (1 - weight[q]!)).map(v => v * (q === NQ - 1 ? 0.95 : 1))); ctx.fill(G.bands[q * NB + b]!); }
+            for (let q = 1; q < NQ; q++) { ctx.fillStyle = rgb(mixRGB((cliff ? CLIFF_ROCK : ROCK_EARTH)[0]!, (cliff ? CLIFF_ROCK : ROCK_EARTH)[1]!, lt * weight[q]! + 0.5 * (1 - weight[q]!)).map(v => v * (q === NQ - 1 ? 0.95 : 1))); ctx.fill(G.bands[q * NB + b]!); }
           }
           const art = this.wallArt(ctx, 'wallRock', L, Minv, X0, Y0) ?? this.wallArt(ctx, WALL_TEX[WallMat.Turf]!, L, Minv, X0, Y0);
           if (art) { ctx.globalCompositeOperation = 'overlay'; ctx.globalAlpha = 0.75; ctx.fillStyle = art; ctx.fill(G.body); }
