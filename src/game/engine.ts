@@ -184,6 +184,7 @@ import { CLUB_REACH, RANGE_PLOT, clubhouseSpotWhy, plotOfFront, plotPoint, range
 import { PRACTICE_LOT_NAME, inPractice, practiceArea, practiceDims } from './golf/practice';
 import { JUNK_BY_ID, JUNK_CLEAR_COST } from './golf/junk';
 import { newRangeJunk, type RangeJunkSpot } from './golf/rangebiz';
+import { rangeSpotAlong } from './golf/placing';
 import { CAR_PARK_PLACE_COST, PRACTICE_PLACE_COST, RANGE_PLACE_COST, landWhy, placeVerdict, rangeSpotAt, rectAt, rectPoly as rectPolyOf, rectsMeet, type LandCheck, type Placeable, type RangeSpot } from './golf/placing';
 import { RANGE_UPGRADES, homeYardBox, rangeTakes, upgradeFoot, upgradeWhy, type RangeBizSave } from './golf/rangebiz';
 import { baysByDoor, servesOf, servingParks, type Serve, type Venue } from './golf/walkserve';
@@ -1826,17 +1827,24 @@ export class Game {
    *  and its junk, for sale: no golfer comes until Buy (buyRange). Tried once a session while a range start's range is still unplaced */
   private jamOfferRange() {
     const g = this.golf, b = g?.start === 'range' ? g.range : undefined;
-    if (!JAM || this.jamOffered || !g || !b || b.built !== false || !b.home || !this.firstViewBaked) return;
+    if (!JAM || this.jamOffered || !g || !b || b.built !== false || !b.home || !welcomeReady(this.firstViewBaked, performance.now() - this.readyAt)) return; // (as the welcome: the ground first, or a while)
     this.jamOffered = true;
     const p = this.rangePlaceable(true); if (!p) return;
-    const h = b.home, c = { x: h[0] + h[2] / 2, y: h[1] + h[3] / 2 }, along = g.dir === 0 || g.dir === 2 ? { x: 1, y: 0 } : { x: 0, y: 1 };
-    for (let k = 0; k <= 40; k++) {
-      const a = (k % 2 ? 1 : -1) * Math.ceil(k / 2) * 6, s = p.spot(c.x + along.x * a, c.y + along.y * a);
-      if (p.why(s)) continue;
+    // every spot along the road at the start's set-back that the range may take, the one leaving the most of the parcel free on one side first (room
+    // for a course beside it), then the nearest the start's own
+    const alongX = g.dir === 0 || g.dir === 2, [qx, qy, qw, qh] = g.parcel, p0 = alongX ? qx : qy, p1 = p0 + (alongX ? qw : qh);
+    const spots: { s: RangeSpot; room: number; du: number }[] = [];
+    for (let du = -120; du <= 120; du += 6) { // (within a walk of the player's home, the trailer)
+      const s = rangeSpotAlong(b.home, g.dir, du); if (p.why(s)) continue;
+      const a0 = alongX ? s.plot[0] : s.plot[1], a1 = a0 + (alongX ? s.plot[2] : s.plot[3]);
+      spots.push({ s, room: Math.max(a0 - p0, p1 - a1), du });
+    }
+    spots.sort((a, c) => c.room - a.room || Math.abs(a.du) - Math.abs(c.du));
+    for (const { s } of spots) {
       b.forSale = true; // (before the build: the range is laid for sale, so no golfer turns off the road for it)
       b.junk = newRangeJunk(this.seed ^ 0x4a37);
       if (!p.build(s)) { delete b.forSale; delete b.junk; continue; }
-      this.range.sync(true); this.scheduleSave(); this.emit();
+      this.range.sync(true); const sc = this.range.scene; if (sc) this.lookAt(sc.counter.x, sc.counter.y); this.scheduleSave(); this.emit();
       return;
     }
   }
@@ -1856,6 +1864,7 @@ export class Game {
   /** J7: clears junk pile i (its index in RangeBizSave.junk): JUNK_CLEAR_COST paid, its scrap value back; false with a toast when the cash is short */
   clearJunk(i: number): boolean {
     const b = this.golf?.range, j = b?.junk?.[i]; if (!b || !j) return false;
+    if (b.forSale) { this.toast('Buy the driving range first: then the junk is yours to clear', 'warn'); return false; }
     const k = JUNK_BY_ID.get(j.id), scrap = k?.scrap ?? 0, at = this.range.scene?.junk[i] ?? { x: 0, y: 0 };
     if (!this.payPlaced(`Clearing the ${(k?.name ?? 'junk').toLowerCase()}`, JUNK_CLEAR_COST, at)) return false;
     if (scrap > 0) this.traffic.spend('construction', -scrap);

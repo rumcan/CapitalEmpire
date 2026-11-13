@@ -237,6 +237,8 @@ export function newRangeJunk(seed: number): JunkPile[] {
   const v0 = Math.max(TEE[3] + TEE_GAP + 6, STAND_V + 15);
   return scatterJunk(seed, { u0: 7, u1: 63, v0, v1: FAR_V - 6, ok: (u, v) => TARGET_U.every((tu, i) => Math.hypot(u - tu, v - STAND_V - TARGET_D[i]!) > TARGET_R[i]! + 6) && !(u < 24 && v > FAR_V - 20) });
 }
+/** J7: how much larger than life the junk is drawn (a car at its true size is a smudge on the outfield at the closest zoom) */
+export const JUNK_SCALE = 1.8;
 /** J7: a spot's distance from the tee line (the mats' stand line), m */
 export const junkMetres = (v: number): number => Math.max(0, Math.round((v - STAND_V) * TILE_M));
 export function rangeScene(plot: Rect, facing: 0 | 1 | 2 | 3, s: RangeBizSave, opts: SceneOpts = {}): RangeScene {
@@ -328,7 +330,7 @@ export function rangeScene(plot: Rect, facing: 0 | 1 | 2 | 3, s: RangeBizSave, o
   }
   // ---- J7 (#1225): the junk on an old jam range, each pile with its distance pill (numbers, low) like a yardage board: fun targets until cleared
   const junk: RangeJunkSpot[] = (s.junk ?? []).map((j, i) => { const p = P(j.u, j.v); return { i, id: j.id, name: JUNK_BY_ID.get(j.id)?.name ?? 'Junk', x: p.x, y: p.y, m: junkMetres(j.v) }; });
-  (s.junk ?? []).forEach((j, i) => put(`junk${i}`, j.id, j.u, j.v));
+  (s.junk ?? []).forEach((j, i) => put(`junk${i}`, j.id, j.u, j.v, 0, { scale: JUNK_SCALE })); // (drawn larger than life: they read at the range's zoom)
   // ---- the sign at the drive, the bench and bins at the tee, a bag trolley by the shop
   // (T258: each drawn as the owner's ChatGPT picture once it lands, its label gone)
   // (T237: a set-back range's sign stands by the road at the drive's mouth, across the drive from its car park in the frontage strip)

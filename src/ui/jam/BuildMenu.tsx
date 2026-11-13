@@ -47,7 +47,7 @@ export function BuildMenu({ cards, tab, onTab, onPick, onClose, onTips }: {
           );
         })}
       </div>
-      <div className="grid grid-cols-[repeat(auto-fill,minmax(210px,1fr))] gap-2 overflow-y-auto overflow-x-hidden p-3" role="tabpanel">
+      <div className="grid min-h-0 flex-1 auto-rows-max grid-cols-[repeat(auto-fill,minmax(210px,1fr))] gap-2 overflow-y-auto overflow-x-hidden p-3" role="tabpanel">
         {shown.map(c => <Card key={c.id} c={c} onPick={onPick} />)}
         {!shown.length && <div className="text-[12px] text-slate-400">Nothing here yet.</div>}
       </div>
