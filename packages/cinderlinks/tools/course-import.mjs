@@ -9,7 +9,7 @@ import path from 'path';
 import { pathToFileURL } from 'url';
 
 const r1 = (v) => Math.round(v * 10) / 10;
-const KIND = { tee: 'T', fairway: 'F', green: 'G', bunker: 'B', water_hazard: 'W', lateral_water_hazard: 'W', water: 'W' };
+const KIND = { tee: 'T', fairway: 'F', green: 'G', bunker: 'B', water_hazard: 'W', lateral_water_hazard: 'W', water: 'W', rough: 'R', waste: 'X' };   // (T452: R the rough round the rest, X waste; as src/game/golf/play/entry3p.ts ENTRY_KIND)
 
 function unpackHeights(p) {   // CapitalEmpire's HeightPack (terrarium.ts): 16-bit units of q metres over base, a predictive delta, zigzag, two byte planes, raw deflate, base64
   if (!p || p.v !== 1) return null;
@@ -26,7 +26,7 @@ function unpackHeights(p) {   // CapitalEmpire's HeightPack (terrarium.ts): 16-b
 }
 
 export function convert(j, file) {   // (also used by the build and by the harness's host scene)
-  const F = j.features || {}, polys = { T: [], F: [], G: [], B: [], W: [] };
+  const F = j.features || {}, polys = { T: [], F: [], G: [], B: [], W: [], R: [], X: [] };
   for (const [kind, key] of Object.entries(KIND)) for (const ft of F[kind] || []) for (const p of ft.polys || []) {
     if (!p.outer || p.outer.length < 3) continue;
     const ring = []; for (const q of p.outer) ring.push(r1(q[0]), r1(-q[1]));

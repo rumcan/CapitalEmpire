@@ -2,6 +2,8 @@
 //   node harness.mjs [public/cinderlinks/game.js]                the gate: one JSON line, exit 0 = pass (npm run cinder:gate: at RSCALE 0.75)
 //   node harness.mjs public/cinderlinks/game.js --shot shots/x --scenes a,b,c   one PNG per scene: shots/x-a.png ... (no gate)
 //        [--seed N] [--time 0|1|2] [--scale N]
+//   node harness.mjs public/cinderlinks/game.js --mats req.json   T452: the ground the view makes of a course handed over: req { msg, probes: [[x, y], ...] }
+//        (a host's 'course' message; points in the view's metres, y south) -> one JSON line { loaded, mats: [code per probe], names, h: [land height per probe] }
 import fs from 'node:fs';
 import zlib from 'node:zlib';
 import { convert } from './tools/course-import.mjs';
@@ -10,7 +12,7 @@ import { pathToFileURL, fileURLToPath } from 'node:url';
 
 const argv = process.argv.slice(2);
 const optOf = (name, def) => { const k = argv.indexOf(name); return k >= 0 && k + 1 < argv.length ? argv[k + 1] : def; };
-const VALUE_FLAGS = new Set(['--shot', '--scenes', '--seed', '--scale', '--time', '--course']);
+const VALUE_FLAGS = new Set(['--shot', '--scenes', '--seed', '--scale', '--time', '--course', '--mats']);
 const positional = argv.filter((a, k) => !a.startsWith('--') && !(k > 0 && VALUE_FLAGS.has(argv[k - 1])));
 const file = positional[0] || new URL('../../public/cinderlinks/game.js', import.meta.url).pathname.replace(/^\/(\w:)/, '$1');
 const shotBase = optOf('--shot', null);
@@ -706,6 +708,18 @@ try {
   let code = fs.readFileSync(file, 'utf8');
   { const cf = file.replace(/game\.js$/, 'courses.js'); if (cf !== file && fs.existsSync(cf)) code = fs.readFileSync(cf, 'utf8') + ';' + code; }   // (the real courses, if they are there, as the page loads them)
   out.bytes = code.length;
+  if (optOf('--mats', null)) {   // T452 (see the top)
+    globalThis.MATS_REQ = JSON.parse(fs.readFileSync(optOf('--mats', null), 'utf8'));
+    const r = run(code + `
+;(() => {
+      const Q = MATS_REQ; hostMessage(Q.msg);
+      if (!course || !hostLast || hostLast.t !== 'loaded') return { loaded: false, why: hostLast && hostLast.why };
+      const S = course.S, names = { M_WATER, M_GREEN, M_SAND, M_TEE, M_FAIR, M_CUT, M_ROUGH, M_DEEP, M_FOREST, M_HILL, M_ROCK, M_CLIFF, M_MUD, M_WASTE, M_DUNE };
+      return { loaded: true, biome: biomeId, names, mats: Q.probes.map(([x, y]) => matAt(x * S, y * S)), h: Q.probes.map(([x, y]) => +groundH(x * S, y * S).toFixed(3)) };
+    })()`);
+    console.log(JSON.stringify(r));
+    process.exit(0);
+  }
   if (shotBase) {
     const names = optOf('--scenes', 'tee,fair,green').split(','), scale = +optOf('--scale', '1');
     if (names.includes('script')) globalThis.SCRIPT = await hostScript();   // (T439)

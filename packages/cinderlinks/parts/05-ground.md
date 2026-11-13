@@ -92,11 +92,12 @@ function cellObjects(ix, iy) {
     if (al > -2 && al < 12 && Math.abs(ay * H.rx - ax * H.ry) < 3.2) continue;   // the ramp stays clear
     let kind = -1;
     if (m === M_FOREST) kind = q < 0.1 ? K_TREE : q < 0.2 ? K_BUSH : q < 0.42 ? K_GRASS : q < 0.47 ? K_FLOWER : q < 0.49 ? K_ROCK : -1;
-    else if (m === M_ROUGH) kind = q < 0.014 ? K_TREE : q < 0.045 ? K_BUSH : q < 0.2 ? K_GRASS : q < 0.26 ? K_FLOWER : q < 0.28 ? K_ROCK : -1;
+    else if (m === M_ROUGH || m === M_DUNE) kind = q < 0.014 ? K_TREE : q < 0.045 ? K_BUSH : q < 0.2 ? K_GRASS : q < 0.26 ? K_FLOWER : q < 0.28 ? K_ROCK : -1;
     else if (m === M_DEEP) kind = q < 0.36 ? K_GRASS : q < 0.56 ? K_FLOWER : q < 0.59 ? K_BUSH : q < 0.6 ? K_TREE : q < 0.615 ? K_ROCK : -1;
     else if (m === M_HILL) kind = q < 0.16 ? K_ROCK : q < 0.31 ? K_GRASS : q < 0.35 ? K_BUSH : -1;
     else if (m === M_ROCK) kind = q < 0.2 ? K_ROCK : q < 0.26 ? K_GRASS : -1;
     else if (m === M_MUD) kind = q < 0.6 ? K_REED : -1;
+    else if (m === M_WASTE) kind = q < 0.08 ? K_ROCK : -1;   // (T452: stones lie about a waste area)
     if (kind === K_TREE) kind = -1;   // (trees have their own rule: treeAt)
     if (kind >= 0) kind = bioKind(kind, hash2(ix * 5 + k, iy * 7 - k, SEED + 305));
     const tl = T.tal[tk], qf = hash2(ix * 11 + k, iy * 13 - k, SEED + 303), pf = tl > 0.04 ? 0.16 + tl * 0.74 : 0;   // at a cliff's foot: fallen boulders, with grass and bushes come up between them
@@ -165,6 +166,8 @@ const G_LITTER = ramp(['#2a2a33', '#3a3536', '#4c4236', '#5e5038', '#725f3c', '#
 const G_HILL = ramp(['#3e6a44', '#52803f', '#6a9440', '#86a646', '#a4b652', '#c2c466']);
 const G_SOIL = ramp(['#3f2d2c', '#523a31', '#664937', '#7a593e', '#8f6b48', '#a47f56']);
 const G_SAND = ramp(['#c9a36a', '#dcb97c', '#ebcd90', '#f5dda6', '#fbeabc', '#fff4d2']);
+const G_WASTE = Uint32Array.from(G_SAND);   // T452: a waste area: the biome's sand with its soil in it (set by setBiome), stones and scrub on it
+const G_DUNE = ramp(['#a07c50', '#b4905e', '#c6a46e', '#d4b680', '#e0c692', '#ead4a6', '#f2e0ba']);   // T452: the biome's blown sand off the course (the desert's; no other biome has it)
 const G_WATER = ramp(['#17457e', '#1c5a9c', '#2474b6', '#3690cc', '#52acdc', '#7cc8e8', '#aee0f0']);
 const G_LICHEN = ramp(['#b8863a', '#d6a84a', '#a8c088', '#c4d8a4']);
 
@@ -175,9 +178,9 @@ const ROCKB = ramp(['#2a2540', '#443a54', '#62566a', '#857278', '#a99386', '#cab
 // ---- biomes and course styles: one course, seven looks. A biome is a set of colours for every ground and every plant, how thickly trees stand, how many
 // of them are conifers, and how tall the grass grows. The ramps the painters and sculptors read are overwritten in place, so nothing else changes; the
 // land's makers (the page and the workers alike) are told the biome and start over. Fairways, greens and tees stay green everywhere: they are watered.
-const BIO_R = { green: G_GREEN, fair: G_FAIR, tee: G_TEE, cut: G_CUT, rough: G_ROUGH, deep: G_DEEP, litter: G_LITTER, hill: G_HILL, soil: G_SOIL, sand: G_SAND, water: G_WATER, rockb: ROCKB,
+const BIO_R = { green: G_GREEN, fair: G_FAIR, tee: G_TEE, cut: G_CUT, rough: G_ROUGH, deep: G_DEEP, litter: G_LITTER, hill: G_HILL, soil: G_SOIL, sand: G_SAND, water: G_WATER, rockb: ROCKB, dune: G_DUNE,
   conif: CONIF, blade: BLADE, straw: STRAW, moss: MOSSR, reed: REEDR, rockr: ROCKR, rockw: ROCKW, leaf0: LEAF[0], leaf1: LEAF[1], leaf2: LEAF[2], leaf3: LEAF[3], leaf4: LEAF[4] };
-const BIO_BASE = {}, GBASE0 = [0, 0, 0, 0, 0, 2, 6, 17, 2, 5, 0, 0, 0];
+const BIO_BASE = {}, GBASE0 = [0, 0, 0, 0, 0, 2, 6, 17, 2, 5, 0, 0, 0, 4, 1];   // (T452: waste, in patches of scrub; dune)
 let BTREE = 1, CONT = 0.26, BGR = 1, BSP = 0, BFL = 1, BBU = 1, BRK = 0, BGC = 1, biomeId = 'parkland';   // (BSP: how much sparser the grass's tufts stand; BFL, BBU, BGC: how many of the flowers, bushes and grass clumps are kept; BRK: how many lost bushes become rocks)
 let BSAND = 0;   // the biome's open ground is wind-blown sand (the desert)
 // Sand the wind has shaped: long ripples across the wind, a little bowed and forked, each a light crest with its shadow on the lee side, strong on
@@ -213,8 +216,9 @@ const BIOMES = {
     hill: ['#5a8a4a', '#70a04c', '#88b452', '#a2c45e', '#bcd270', '#d4de88'], sand: ['#d8c49a', '#e6d4ac', '#f0e2c0', '#f8eed2', '#fdf6e2', '#fffcf0'],
     water: ['#0e5a7a', '#127694', '#1a92ac', '#2caec0', '#4cc8d0', '#7adcdc', '#aeece8'], rockb: ['#3a3440', '#544a52', '#706466', '#8e807c', '#ac9e94', '#c8bcac', '#e2d8c6'],
     leaf2: ['#1c5a36', '#2a7a3c', '#40983e', '#62b442', '#8ccc4c', '#bce064'] },
-  desert: { name: 'Desert', sandy: 1, tree2: 2, t2h: 0.55, t2rx: 0.45, tree3: 3, t3h: 0.5, t3rx: 1.05, gb: [0, 0, 0, 0, 0, 1, 1, 3, 0, 1, 0, 0, 0], sparse: 0.6, fl: 0.06, bu: 0.55, rk: 0.35, gc: 0.35, trees: 0.22, conShare: 0, grass: 0.3,
-    rough: ['#a07c50', '#b4905e', '#c6a46e', '#d4b680', '#e0c692', '#ead4a6', '#f2e0ba'], deep: ['#96724a', '#aa8658', '#bc9a68', '#ccae7a', '#dac08c', '#e6d0a0', '#f0deb6'],   // (more sand than grass: the rough is pale sand with a little dry grass in it)
+  desert: { name: 'Desert', sandy: 1, tree2: 2, t2h: 0.55, t2rx: 0.45, tree3: 3, t3h: 0.5, t3rx: 1.05, gb: [0, 0, 0, 0, 0, 1, 4, 9, 0, 1, 0, 0, 0, 3, 1], sparse: 0.6, fl: 0.06, bu: 0.55, rk: 0.35, gc: 0.35, trees: 0.22, conShare: 0, grass: 0.3,
+    dune: ['#a07c50', '#b4905e', '#c6a46e', '#d4b680', '#e0c692', '#ead4a6', '#f2e0ba'],   // (the land round the course: pale sand with a little dry grass in it)
+    rough: ['#3c5430', '#4a6436', '#5a763c', '#6c8644', '#80964e', '#96a65c', '#acb46e'], deep: ['#5a5a32', '#6c6a3a', '#807c44', '#948e50', '#a89e5e', '#bab06e', '#cac080'],   // (T452: a desert course's own rough is watered grass, sun-dried, and its long grass straw; the sand is off the course)
     hill: ['#9c7650', '#b08a5c', '#c29e6a', '#d2b27c', '#e0c490', '#ecd4a6'], litter: ['#b89060', '#caa472', '#d8b684', '#e4c696', '#eed4a8', '#f6e0ba'], moss: ['#a88456', '#bc9866', '#ccac78', '#dabe8a', '#e6ce9e'],   // (where a wood's floor would lie, far from the fairway: soft sand, no green in it)
     soil: ['#8a6442', '#a0784e', '#b48c5c', '#c6a06c', '#d6b47e', '#e4c692'], sand: ['#cfa66e', '#dfba80', '#ecca92', '#f4d8a6', '#f9e4ba', '#fdeece'],
     rockb: ['#4a2420', '#6a3428', '#8a4834', '#a85e42', '#c27852', '#d89468', '#e8b488'], rockr: ['#5a342c', '#744438', '#8e5846', '#a86e56', '#c08868', '#d4a47e', '#e4c098'], rockw: ['#6a3a2a', '#864a32', '#a05e3e', '#b8764c', '#cc905e', '#deac76', '#ecc692'],
@@ -269,8 +273,9 @@ function setBiome(id, ty) {
   if (B.fair && !B.tee) G_TEE.set(mixRamp(G_FAIR, G_GREEN, 0.35));       // (the tee between the fairway and the green; the first cut between the fairway and the rough)
   if (B.fair && !B.cut) G_CUT.set(mixRamp(G_FAIR, fit(G_ROUGH, G_FAIR.length), 0.4));
   BTREE = B.trees === undefined ? 1 : B.trees; CONT = B.conShare === undefined ? 0.26 : B.conShare; BGR = B.grass === undefined ? 1 : B.grass;
-  for (let i = 0; i < GBASE0.length; i++) GBASE[i] = Math.min(60, Math.round((B.gb ? B.gb[i] : GBASE0[i] * BGR) * C.gm[i]));   // the biome's grass, as long as this type of course keeps it   // how tall the grass stands on each ground: the biome's own, or the usual scaled
+  for (let i = 0; i < GBASE0.length; i++) GBASE[i] = Math.min(60, Math.round((B.gb && B.gb[i] !== undefined ? B.gb[i] : GBASE0[i] * BGR) * (C.gm[i] === undefined ? 1 : C.gm[i])));   // the biome's grass, as long as this type of course keeps it   // how tall the grass stands on each ground: the biome's own, or the usual scaled
   BSAND = B.sandy || 0;
+  G_WASTE.set(mixRamp(G_SAND, fit(G_SOIL, G_SAND.length), 0.3));   // (T452: waste is the biome's sand with its soil in it)
   BT2 = B.tree2 || 0; BT2H = B.t2h || 1; BT2RX = B.t2rx || 1; BT3 = B.tree3 || 0; BT3H = B.t3h || 1; BT3RX = B.t3rx || 1;
   BTREE *= C.trees; FWO = C.fwo; CUTW = C.cutw; COLLAR = C.collar; DEEPD = C.deepd; DRYT = C.dryt; WOODT = C.woodt; MOWK = C.mow; GMOWK = C.gmow; PATCH = C.patch; RTRIM = C.trim;
   BSP = (B.sparse || 0) + C.sparse; BFL = (B.fl === undefined ? 1 : B.fl) * C.fl; if (BFL > 1) BFL = 1;
@@ -372,8 +377,8 @@ function stStone(u, v, rx, ry, rp, s) {
 }
 function stamp(m, u, v, q, s) {   // one small thing rooted at ground pixel (u, v)
   const r = (k) => hash2(u * 31 + k, v * 17 - k, s);
-  if (m === M_ROUGH || m === M_DEEP || m === M_CUT || m === M_HILL || m === M_MUD) {
-    const rp = m === M_HILL ? G_HILL : m === M_DEEP ? G_DEEP : m === M_CUT ? G_CUT : m === M_MUD ? REEDR : G_ROUGH;
+  if (m === M_ROUGH || m === M_DEEP || m === M_CUT || m === M_HILL || m === M_MUD || m === M_DUNE) {
+    const rp = m === M_HILL ? G_HILL : m === M_DEEP ? G_DEEP : m === M_CUT ? G_CUT : m === M_MUD ? REEDR : m === M_DUNE ? STRAW : G_ROUGH;
     if (q < (m === M_CUT ? 0.3 : m === M_HILL ? 0.45 : 0.78)) {            // a tuft of blades, lighter toward the tips, dark at the foot
       const nb = m === M_CUT ? 2 : 3 + ((r(1) * 4) | 0), mx = m === M_CUT ? 3 : m === M_DEEP ? 9 : 6;
       for (let b = 0; b < nb; b++) {
@@ -397,6 +402,10 @@ function stamp(m, u, v, q, s) {   // one small thing rooted at ground pixel (u, 
     if (q < 0.34) { let x = u, y = v; const lc = G_LICHEN[(r(1) * 4) | 0], n = 4 + ((r(2) * 7) | 0); for (let k = 0; k < n; k++) { stPx(x, y, lc, 4); const d = (r(10 + k) * 4) | 0; x += d === 0 ? 1 : d === 1 ? -1 : 0; y += d === 2 ? 1 : d === 3 ? -1 : 0; } }   // a lichen blotch
     else if (q < 0.5) { for (let b = 0; b < 3; b++) { const bx = u + ((r(2 + b) * 5) | 0) - 2, len = 2 + ((r(10 + b) * 3) | 0); for (let k = 0; k < len; k++) stPx(bx, v - k, rampAt(G_HILL, 0.3 + 0.6 * k / len), -6 + k * 6); } }
     else if (q < 0.7) stStone(u, v, 1 + ((r(7) * 3) | 0), 1 + ((r(8) * 2) | 0), ROCKR, s + 5);
+  } else if (m === M_WASTE) {   // T452: a waste area: pebbles and stones, the odd dry tuft
+    if (q < 0.35) { stPx(u, v, ROCKR[1 + ((r(2) * 4) | 0)], r(1) < 0.5 ? -8 : 10); if (r(3) < 0.5) stPx(u + 1, v, ROCKR[2 + ((r(4) * 3) | 0)], -4); stL(u - 1, v + 1, -14); }
+    else if (q < 0.5) stStone(u, v, 1 + ((r(7) * 2) | 0), 1, ROCKR, s + 5);
+    else if (q < 0.6) { for (let b = 0; b < 3; b++) { const bx = u + ((r(2 + b) * 5) | 0) - 2, len = 2 + ((r(10 + b) * 3) | 0); for (let k = 0; k < len; k++) stPx(bx, v - k, rampAt(STRAW, 0.3 + 0.6 * k / len), -10 + ((20 * k / len) | 0)); } }
   } else if (m === M_SAND) {
     if (q < 0.1) { stPx(u, v, r(1) < 0.5 ? ROCKR[2 + ((r(2) * 3) | 0)] : 0xf4f4f8, r(1) < 0.5 ? -6 : 20); stL(u - 1, v + 1, -16); }   // a pebble or a shell
     else if (q < 0.3) { const len = 5 + ((r(1) * 9) | 0); let y = v; for (let k = 0; k < len; k++) { if (r(10 + k) < 0.3) y += r(30 + k) < 0.5 ? 1 : -1; stL(u + k, y, 14); stL(u + k, y + 1, -12); } }   // a wind ripple
@@ -441,9 +450,9 @@ function noiseFill(out, U0, V0, sx, sy, s) {   // vnoise(u / sx, v / sy, s) for 
   }
 }
 const NF = 15, c00 = new Float32Array(NF), c10 = new Float32Array(NF), c01 = new Float32Array(NF), c11 = new Float32Array(NF), fv = new Float32Array(NF);
-const GBASE = new Uint8Array([0, 0, 0, 0, 0, 2, 6, 17, 2, 5, 0, 0, 0]), GFL = new Uint8Array(128 * 128);   // how tall each ground's grass stands (height px); what the stamps left on each pixel (1 a flower, 2 a stone)
+const GBASE = new Uint8Array([0, 0, 0, 0, 0, 2, 6, 17, 2, 5, 0, 0, 0, 4, 1]), GFL = new Uint8Array(128 * 128);   // how tall each ground's grass stands (height px); what the stamps left on each pixel (1 a flower, 2 a stone)
 let gflOn = 0;
-const RANK = new Int8Array([-9, 0, -1, 0, 1, 2, 3, 4, -9, -9, -9, -9, -9]);   // how tall each ground's grass stands (sand is sunken; -9 = not ranked)
+const RANK = new Int8Array([-9, 0, -1, 0, 1, 2, 3, 4, -9, -9, -9, -9, -9, -9, 3]);   // how tall each ground's grass stands (sand is sunken; -9 = not ranked)
 function genChunk(cx, cy) {
   const T = tileAt(cx >> 1, cy >> 1); tileLight(T);
   const FL = [T.h, T.g, T.dF, T.dG, T.dB, T.dT, T.dP, T.wood, T.dry, T.tone, T.lt, T.sh, T.tal, T.mow, T.mow2];
@@ -493,6 +502,8 @@ function genChunk(cx, cy) {
       else if (m === M_CUT) { rgb = rampAt(G_CUT, t = tp + ck2 * 0.12); if (fv[2] < 2.6) mowL = mowLines(fv[2]); }   // (the first cut: its passes follow the fairway's outline too)
       else if (m === M_ROUGH) rgb = rampAt(G_ROUGH, t = tp + ck * 0.15 + (ck === 0 ? ck2 * 0.08 : 0));
       else if (m === M_DEEP) rgb = rampAt(G_DEEP, t = tp + ck * 0.15 + (ck === 0 ? ck2 * 0.1 : 0));
+      else if (m === M_DUNE) rgb = rampAt(G_DUNE, t = tp + ck * 0.15 + (ck === 0 ? ck2 * 0.08 : 0));
+      else if (m === M_WASTE) rgb = rampAt(G_WASTE, t = 0.5 + (fv[9] - 0.5) * 0.5 + n3 * 0.5 + ck * 0.12 + (n1 - 0.5) * 0.12);   // (T452: compacted sand and grit, mottled, never raked)
       else if (m === M_FOREST) { tb *= 0.9; rgb = vnoise(u / 21, v / 10.5, SEED + 92) + nc * 0.5 > 0.6 ? rampAt(MOSSR, t = tp + ck2 * 0.2) : rampAt(G_LITTER, t = tp + ck * 0.17 + (ck === 0 ? ck2 * 0.1 : 0)); }
       else if (m === M_HILL) rgb = vnoise(u / 6.3, v / 3.1, SEED + 93) + (g - 0.3) * 1.2 + nc * 0.5 > 0.82 ? rampAt(G_SOIL, t = tp + ck2 * 0.17)
         : rampAt(G_HILL, t = tp + ck * 0.17 + (ck === 0 ? ck2 * 0.1 : 0));
@@ -507,7 +518,7 @@ function genChunk(cx, cy) {
         rgb = rampAt(G_SAND, t);
       }
       else rgb = nc + n2 * 0.6 > 0.12 ? rampAt(ROCKB, t = 0.35 + nc + (n1 - 0.5) * 0.2) : rampAt(G_SAND, t = 0.3 + (fv[9] - 0.5) * 0.5 + nc * 0.5 + (n1 - 0.5) * 0.1);   // the shore: wet sand and pebbles
-      if (BSAND && (m === M_ROUGH || m === M_DEEP || m === M_HILL || m === M_FOREST)) mowL += sandRipple(u, v);
+      if (BSAND && (m === M_DUNE || m === M_HILL || m === M_FOREST)) mowL += sandRipple(u, v);   // (T452: never on a course's own rough)
       let L = Math.round(14 + 186 * tb + (t - 0.5) * 16) + mowL; L = L < 1 ? 1 : L > 200 ? 200 : L;
       col[i] = ((L << 24) | rgb) >>> 0; lift[i] = lf; if (lf > maxLift) maxLift = lf;
       const gb = GBASE[mt[i]];                                               // grass: clumps (the same noise that colours them) of blades of uneven height, with gaps
@@ -544,7 +555,7 @@ function genChunk(cx, cy) {
   return { cx, cy, col, lift, mt, maxLift: maxLift + 62, gr, lc: null, lt: -1, l1: null, l2: null, g1: null, g2: null };
 }
 // middle land: a tile's own colours, one per sample (no painted detail, no cast shadows: it is far enough away)
-const FAR_RAMP = [G_WATER, G_GREEN, G_SAND, G_TEE, G_FAIR, G_CUT, G_ROUGH, G_DEEP, G_LITTER, G_HILL, ROCKB, ROCKB, G_SAND];
+const FAR_RAMP = [G_WATER, G_GREEN, G_SAND, G_TEE, G_FAIR, G_CUT, G_ROUGH, G_DEEP, G_LITTER, G_HILL, ROCKB, ROCKB, G_SAND, G_WASTE, G_DUNE];
 function shadeSample(m, h, hx, hy, tone, q, st, wl) {   // one far or middle sample -> a packed colour with its light. q: the slow noise the painted ground uses (0..1); st: the mower's stripe (-1, 0, 1)
   if (m === M_WATER) return (((201 + clamp(Math.round((wl - h) * 14), 0, 29)) << 24) | rampAt(G_WATER, clamp(1 - (wl - h) / 1.2, 0.02, 0.98))) >>> 0;
   const d = (-hx * SUNX - hy * SUNY + SUNZ) / Math.sqrt(hx * hx + hy * hy + 1), n3 = q - 0.5;
@@ -555,6 +566,7 @@ function shadeSample(m, h, hx, hy, tone, q, st, wl) {   // one far or middle sam
   else if (m === M_GREEN) { if (st === 0) { t = 0.46; dL = -2; } else { t = 0.5 + (st > 0 ? 0.12 : -0.12); dL = (st > 0 ? 5 : -5) + (st === 2 || st === -1 ? 3 : -3); } t = 0.5 + (t - 0.5) * GMOWK; dL *= GMOWK; }
   else if (m === M_TEE) { t = 0.5 + (tone - 0.5) * 0.45 + n3 * 0.2 + st * 0.06 * MOWK; dL = st * 3 * MOWK; }
   else if (m === M_SAND) t = 0.6 + (tone - 0.5) * 0.25 + n3 * 0.12;
+  else if (m === M_WASTE) t = 0.5 + (tone - 0.5) * 0.6 + n3 * 0.55;   // (T452: mottled grit, darker and patchier than a bunker)
   else { t = 0.5 + (tone - 0.5) * 1.1 + n3 * 0.3; if (m === M_FOREST) tb *= 0.9; }   // (calmer than the painted ground: far things take fewer tones)
   let L = Math.round(14 + 186 * tb + (t - 0.5) * 16) + dL; L = L < 1 ? 1 : L > 200 ? 200 : L;
   return ((L << 24) | rampAt(FAR_RAMP[m], t)) >>> 0;
@@ -590,7 +602,7 @@ function tileLook(T) {
     else if (m === M_GREEN) st = greenSt(T.dG[k], T.mow[k], T.mow2[k]);
     else if (m === M_TEE) st = ((Math.floor(u / PPM / 1.1 + 4000) + Math.floor(v / PPV / 1.1 + 4000)) & 1) ? 1 : -1;
     L[k] = shadeSample(scree ? M_ROCK : m, H[k], hx, hy, T.tone[k], n3, st, T.wl); if (m === M_SAND || m === M_MUD || m === M_WATER) GH[k] = 255;   // (255: soft ground, never a rock face)
-    const gb = scree ? 0 : GBASE[m];                          // how tall the grass stands here (the painted ground's own clumps, at this grid's grain)
+    const gb = scree || (m === M_WASTE && vnoise(u / 5.3 + 3.1, v / 2.7, SEED + 141) < 0.66) ? 0 : GBASE[m];   // (T452: on waste, scrub in patches)   // how tall the grass stands here (the painted ground's own clumps, at this grid's grain)
     if (gb) GH[k] = Math.round(gb * (0.5 + 0.9 * vnoise(u / 9.1, v / 4.6, SEED + 90) * (0.55 + 0.9 * n3)) * 0.9 * (RTRIM && T.dB[k] < 0.6 ? (T.dB[k] < 0.15 ? 0 : (T.dB[k] - 0.15) / 0.45) : 1));   // (smooth from sample to sample: nothing here may twinkle as the camera moves)
   }
   gridShadows(L, TN, TN, u0, v0, 4, 4, T);
