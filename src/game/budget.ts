@@ -187,7 +187,8 @@ export class Budget {
    *  (1440 calls of DT land on 1439.9999999998), so the midnight is booked on the step that reaches it */
   dayOf(t: number): number { return Math.floor((t - this.base + 1e-6) / GAME_DAY) + 1; }
   /** spends n $ on kind today: out of the treasury now, into the next ledger */
-  spend(kind: 'construction' | 'compensation' | 'business' | 'upkeep' | 'lots' | 'balls', n: number) {  
+  spend(kind: 'construction' | 'compensation' | 'business' | 'upkeep' | 'lots' | 'balls' | 'bank', n: number) {  
+ if (kind === 'bank') { if (!this.unlimited) this.money -= n; return; } // J2 (golf/finance.ts): a loan paid in (n < 0), an instalment, a premium or a deposit out: the cash moves, no ledger line (the Bank keeps its own statement)
  if (kind === 'balls') { this.ballsBought(n); return; } // T386 (#1043): the range's balls from the supplier go out as a Range balls line
  if (kind === 'lots') { this.lotSale(-n); return; } // T353 (#995): the house lots' sales come in as a negative spend, like the business takings
  if (kind === 'business') { this.bizIncome(-n); return; }  
