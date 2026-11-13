@@ -7,6 +7,7 @@
 // The staff's terms (the head pro's and the secretary's sales and renewals) read golf/staff.ts's club roles, hired from P26's phase 4; until then
 // they are off. Pure TS, no DOM; dollars, game months (the engine's golfMonthIndex).
 import { GREEN_FEE_PER_ROUND, OFF_SEASON_PLAY_DAYS, legacyMonthlyMembership } from './yearend';
+import type { PriceRung } from './payback';
 
 // ---- the owner's balance questions (P26 6.4), each at the lead's recommendation (pre-approved): a later answer is a one-line change ----
 /** Q1, how big memberships get: the residents' share of the pool. Recommended: as modelled, 4% (the smaller option halves it to 2%) */
@@ -191,6 +192,8 @@ export interface MembersView {
   appeal: Appeal; priceEffect: number; residents: number; visitors: number; quality: number; rep: number; holes: number; level: number; waitAvg: number;
   season: { dues: number; joined: number; left: number };
   founded: boolean;
+  /** J4 (#1207): the dues a step either side of the price, with the members and the dues expected next month (golf/payback.ts memberPriceLadder) */
+  ladder?: PriceRung[];
 }
 /** the card's view of the club this month */
 export function membersView(s: ClubSave, i: ClubInputs): MembersView {

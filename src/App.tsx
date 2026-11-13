@@ -101,6 +101,7 @@ import { keptCourses, refreshKept, watchKept } from './game/golf/osm/kept';
 import { RangeGuideCard } from './ui/golf/RangeGuideCard';
 import { TooltipLayer } from './ui/Tooltip';
 import { UI_SCALES, applyUiScale, currentUiScale, saveUiScale } from './ui/uiScale';
+import { AccessSettings } from './ui/golf/AccessSettings';
 import { stackCol, stackFit, stackRight, type StackCard, type StackOpen } from './ui/golf/card-stack';
 import { HoleCard } from './ui/golf/HoleCard';
 import { View3pPanel } from './ui/golf/View3pPanel';
@@ -573,9 +574,11 @@ export default function App() {
                     )}
                     {/* T179 (P23 P2-7): the UI scale, the UI layer only (the map keeps its size); kept in this browser */}
                     <div className="flex items-center gap-2 px-2 py-2 text-sm" role="group" aria-label="UI scale">
-                      <span className="flex-1">UI scale</span>
+                      <span className="flex-1">Text size</span>
                       {UI_SCALES.map(v => <button key={v} className={`chip ${uiScale === v ? 'chip-on' : ''}`} aria-pressed={uiScale === v} data-scale={v} onClick={() => setUiScale(applyUiScale(saveUiScale(v)))}>{Math.round(v * 100)}%</button>)}
                     </div>
+                    {/* J4 (#1207): the golf mode's currency (USD or AED, display only) and colour-blind-safe money */}
+                    {game.golfMode && <AccessSettings />}
                     <label className="flex cursor-pointer items-center gap-2 px-2 py-2 text-sm" data-tip="A subtle iso grid of the 2 m tiles roads and lots snap to, shown over land that is not yours while a build or paint tool is in hand: your own land stays clear. It fades out as you zoom out (G)">
                       <input type="checkbox" checked={game.showGrid} onChange={e => { game.setShowGrid(e.target.checked); bump(); }} />
                       Map grid (G)

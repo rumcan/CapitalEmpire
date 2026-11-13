@@ -4,7 +4,9 @@ import { SURF } from '../../game/ext/course-grid';
 import { affordKind, statusIcon } from '../status-icon';
 import { SURF_SURFACE } from '../../game/ext/course-grid/areas';
 import { aboutMoney, planShape, type WizCheck } from '../../game/ext/hole-wizard';
-import { SHAPE_RATE_M3, growInMonths } from '../../game/golf/costs';
+import { SHAPE_RATE_M3, growInMonths, monthlyUpkeepSqm } from '../../game/golf/costs';
+import { holeExtra, payback } from '../../game/golf/payback';
+import { PaybackLine } from '../golf/Decisions';
 import { FRAME_TREE_PRICE } from '../../game/golf/holeframe';
 import { SURFACE_BRUSHES, type BrushKind } from '../../game/paint';
 import { BrushShape, GrassEdgesEntry, GroundHeight, SurfaceSwatches, surfaceKeysOf } from './BrushControls';
@@ -214,6 +216,13 @@ function Planting({ game }: { game: Game }) {
           : `Seed: playable in ${grow}. Sod is ready now but costs ${ratio} times as much: nine holes like this would cost about ${aboutMoney(9 * k.sod)}.`}
       </p>
       <p className="wiz-money">{`Nine holes like this: about ${aboutMoney(9 * cost)} · you have `}<b className={have >= cost ? 'text-emerald-300' : 'text-red-300'}>{`${aboutMoney(have)} ${statusIcon(affordKind(cost, have))}`}</b></p>
+      {/* J4 (#1207): the hole's payback: the green fees one more playable hole brings a month (golf/payback.ts), against its turf's upkeep */}
+      {(() => {
+        const pc = game.paybackCourse(); if (!pc) return null;
+        const upkeep = [...w.split()].reduce((a, [sf, v]) => { const g = SURF_SURFACE[sf]; return a + (g ? monthlyUpkeepSqm(g, v.cells) : 0); }, 0);
+        return <PaybackLine p={payback(cost, upkeep, holeExtra(pc.course, pc.clubhouse))} what="green fees" testid="wiz-payback"
+          note={!pc.clubhouse ? 'Green fees start once your clubhouse stands.' : sod ? 'Sod plays at once.' : `Seed: the green fees start once it plays (${grow}).`} />;
+      })()}
     </section>
   );
 }
