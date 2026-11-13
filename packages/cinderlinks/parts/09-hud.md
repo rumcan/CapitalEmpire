@@ -375,7 +375,7 @@ function hostSwingHeld() { return swingBtnDown || !!keys.Space; }
 function hostLineUp(S) {   // one step of the camera's glide behind the ball, along the aim, with the green ahead; true once it is lined up
   const g = S.g; if (!g) return true;
   g.t = Math.min(1, g.t + 1 / 60 / HMETER.glide); const e = g.t * g.t * (3 - 2 * g.t);
-  camYaw = g.y0 + g.dy * e; camD = g.d0 + (D0 - g.d0) * e; camHk = g.h0 + (1 - g.h0) * e; aimCam();
+  camYaw = g.y0 + g.dy * e; camD = g.d0 + (camK.d - g.d0) * e; camHk = g.h0 + (camK.hk - g.h0) * e; aimCam();
   if (g.t >= 1) S.g = null;
   return !S.g;
 }
@@ -383,10 +383,15 @@ function hostSwing(p) {   // one step of the swing; true while it holds the golf
   const down = hostSwingHeld(), edge = down && !HP.mwas; HP.mwas = down;
   const S = HP.sw, C = hostClub();
   if (!S) {
-    if (!edge || !C || hostBusy() || !nearBall() || player.swing >= 0 || cart.on) return false;
+    // J5e ("holding the swing button left the meter at 0%"): a press made while he cannot swing yet (the last shot still settling, a turn not come)
+    // is kept while it is held, and starts the swing the moment he can; it used to be spent on the moment it was made, and the hold did nothing
+    const ready = !!C && !hostBusy() && nearBall() && player.swing < 0 && !cart.on;
+    if (!down) HP.pend = false; else if (edge && !ready) HP.pend = true;
+    if (!(edge || HP.pend) || !down || !ready) return false;
+    HP.pend = false;
     let dy = Math.atan2(aim.dy, aim.dx) + 1.5708 - camYaw; dy = Math.atan2(Math.sin(dy), Math.cos(dy));   // (the camera behind him looks his way: its yaw is his heading plus a quarter turn)
-    const g = Math.abs(dy) > HMETER.line || Math.abs(camD - D0) > 0.5 || Math.abs(camHk - 1) > 0.05 ? { t: 0, y0: camYaw, dy, d0: camD, h0: camHk } : null;
-    HP.sw = { t: 0, u: 0, presses: 0, spd: C.speed > 0 ? C.speed : 1, g, rel: false }; heartT = 0; charging = true; power = 0; hostAimPin = true;
+    const g = Math.abs(dy) > HMETER.line || Math.abs(camD - camK.d) > 0.5 || Math.abs(camHk - camK.hk) > 0.05 ? { t: 0, y0: camYaw, dy, d0: camD, h0: camHk } : null;   // (J5e: to the framing the tee chose, not the default view)
+    HP.sw = { t: 0, u: 0, presses: 0, spd: Math.max(0.3, C.speed > 0 ? C.speed : 1), g, rel: false };   // (J5e: never a meter too slow to see move) heartT = 0; charging = true; power = 0; hostAimPin = true;
     if (HP.ring) prewarmAt(HP.ring.x, HP.ring.y);   // (the land where it will come down is made while he lines up and swings)
     return true;
   }
@@ -406,6 +411,7 @@ function hostSwing(p) {   // one step of the swing; true while it holds the golf
     power = S.u; p.al = -2 * S.u;
     return true;
   }
+  if (S.u < 0.02) { HP.sw = null; charging = false; power = 0; p.al = 0; return true; }   // (J5e: let go before the meter moved: no swing, not a stroke spent at 0%)
   HP.out = { power: S.u * (C.club === 'putter' ? hostPuttTop() : 1), u: S.u, acc: 0, boost: HP.pick && HP.pick.armed && hostEarned('boost') && hostCharges() > 0 ? HMETER.max : hostBoost(S.presses), v: HMETER.v }; HP.lastSw = HP.out;
   S.rel = true; charging = false; if (C.club !== 'putter') sndBreath();   // (let go: he draws a breath and swings down)
   return true;
@@ -624,7 +630,7 @@ addEventListener('keydown', (e) => {
   if (HOST && e.code === 'Escape') { hostSend({ t: 'exit' }); return; }   // (the host page closes the view)
   keys[e.code] = true;
   if (e.code === 'KeyT') setTime((tmode + 1) % TOD.length);
-  else if (e.code === 'KeyC') { behindHole(); camD = D0; camHk = 1; HZ = HZ0; }
+  else if (e.code === 'KeyC') { behindHole(); camD = D0; camHk = 1; HZ = HZ0; camK = { d: D0, hk: 1 }; }
   else if (e.code === 'KeyN' && !pracLock()) { SEED = (Math.random() * 1e9) | 0; total = 0; newHole(1, 0, 0); firstPicture(); }   // (on a real course: the same course, new trees and rough)
   else if (pracLock() && /^Key[BKLGJN]$/.test(e.code)) { /* (J6: practising, he stays on his spot) */ }
   else if (e.code === 'KeyB') dropBall();
@@ -643,6 +649,9 @@ addEventListener('keydown', (e) => {
   if (/^Arrow|^Space/.test(e.code) && e.preventDefault) e.preventDefault();
 });
 addEventListener('keyup', (e) => { keys[e.code] = false; });
+// J5e: the page losing the keyboard (the host page took it, another window) while a key is held: its key-up never comes. Every key is let go, and a swing
+// being held is called off (no stroke), rather than left holding or struck at whatever the meter showed
+addEventListener('blur', () => { for (const k of Object.keys(keys)) keys[k] = false; swingBtnDown = false; if (HP && HP.sw && !HP.sw.rel) { HP.sw = null; charging = false; power = 0; player.al = 0; } });
 let camDrag = false;
 view.addEventListener('mousemove', (e) => {
   const r = view.getBoundingClientRect(); mouse.x = clamp((e.clientX - r.left) / r.width * VW, 0, VW - 1); mouse.y = clamp((e.clientY - r.top) / r.height * VH, 0, VH - 1);

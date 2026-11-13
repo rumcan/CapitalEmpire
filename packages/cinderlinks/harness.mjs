@@ -168,6 +168,16 @@ const HOST_PLAY = String.raw`
     if (strokes !== 1) errs.push('host play: the stroke was not counted');
     hostMessage(turn(R, 2, 40));
     if (near([ball.x / S, ball.y / S], R) > 1e-6 || strokes !== 1 || hostBusy()) errs.push('host play: the next turn is not from the rest');
+    // J5e: a press made while he could not swing yet (the host still busy) is kept: held on, it starts the swing the moment he can; and let go before the
+    // meter has moved, no stroke is spent
+    { step(60, 0); jumpToBall(); for (const c of Object.keys(keys)) keys[c] = false; step(5, 0);   // (the ball camera lets go first: the jump waits for it)
+      HP.wait = 1; keys.Space = true; step(3, 0); const early = !!HP.sw; HP.wait = 0; step(2, 0); const started = !!HP.sw;
+      for (let k = 0; k < 90 && HP.sw && HP.sw.g; k++) step(1, 0);
+      keys.Space = false; hostLast = null; step(40, 0); const spent = !!(hostLast && hostLast.t === 'input');
+      info.heldPress = { early, started, spent };
+      if (early || !started) errs.push('host play: a press made before he could swing was lost (' + JSON.stringify(info.heldPress) + ')');
+      if (spent) errs.push('host play: a swing let go at 0% spent a stroke');
+      HP.sw = null; charging = false; power = 0; player.al = 0; player.swing = -1; }
     if (snapAt) { step(60, 0); jumpToBall(); step(30, 0); snapAt('host-rest'); }
     return { errs, info };
   }
