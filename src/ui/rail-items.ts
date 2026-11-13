@@ -33,7 +33,7 @@ export interface RailExtra { id: GolfChipId; label: string; icon: IconName }
  *  range card (the range's buildings, practice facilities and upgrades), shown only in a game with a range */
 export interface RailItem {
   id: string; label: string; icon: IconName; key: string; section: 'course' | 'town' | null; group: RailGroupId; tools: RailTool[];
-  extras?: RailExtra[]; only?: 'golf' | 'classic'; action?: 'range';
+  extras?: RailExtra[]; only?: 'golf' | 'classic'; action?: 'range' | 'build'; // (J7: 'build' opens the jam's Build menu)
   /** T366: the words the rail button draws when the label is too long for one line (the tip and the aria-label keep the full label) */
   short?: string;
 }
@@ -89,9 +89,15 @@ const RAIL_FULL: readonly RailItem[] = [
 /** The jam build's rail, the MVP (docs/JAM.md, T459: "simplify the ui and the game"): Select, Range, Course (holes and buildings; no Tournament, no Land for
  *  sale), Cart paths, Facilities with Practice alone (the putting and chipping greens J6's practice mode needs; no Plants or Props), Bulldoze. Ground height,
  *  Traffic (the range has its own car park) and Town decoration go: they are listed under "Future development (hidden in the MVP)" */
-export const JAM_RAIL_CUT: readonly string[] = ['towndecor', 'ground', 'traffic'];
+export const JAM_RAIL_CUT: readonly string[] = ['towndecor', 'ground', 'traffic', 'paths', 'facilities'];
+/** J7 (#1225; the owner, 2026-11-13: "make a better build menu with pictures and let the player decide"): the jam's Build button, after Select: it opens the
+ *  Build menu (ui/jam/BuildMenu.tsx, picture cards for the range, its car park and upgrades, holes, cart paths, the clubhouse and the practice area), which
+ *  replaces the building flyouts; Cart paths & roads and Facilities leave the rail (their tools open from the menu) and Range and Course open their card
+ *  and their Holes panel at a click */
+export const JAM_BUILD_ITEM: RailItem = { id: 'build', label: 'Build', icon: 'buildings', key: '', section: 'course', group: 'course', tools: [{ id: 'select', label: 'Build', key: '', icon: 'buildings' }], only: 'golf', action: 'build' };
 export function jamRail(full: readonly RailItem[]): readonly RailItem[] {
-  return full.filter(r => !JAM_RAIL_CUT.includes(r.id)).map((r): RailItem => {
+  const kept = full.filter(r => !JAM_RAIL_CUT.includes(r.id)), at = kept.findIndex(r => r.id === 'select') + 1;
+  return [...kept.slice(0, at), JAM_BUILD_ITEM, ...kept.slice(at)].map((r): RailItem => {
     if (r.id === 'course') return { ...r, extras: [] };
     if (r.id === 'facilities') return { ...r, tools: r.tools.filter(t => t.id === 'practice') };
     if (r.id === 'paths') return { ...r, tools: r.tools.filter(t => t.id === 'path') };
@@ -130,7 +136,7 @@ export const toolNew = (ui: ProgressiveUiState | null, t: Tool): boolean => !!ui
 
 /** what the rail reads besides the unlocks: the item the player opened (it is the one lit when the tool in hand sits in two), whether the game
  *  has a driving range and whether its card is open */
-export interface RailView { active?: string | null; range?: boolean; rangeOpen?: boolean }
+export interface RailView { active?: string | null; range?: boolean; rangeOpen?: boolean; /** J7: the jam's Build menu is open */ buildOpen?: boolean }
 
 /** the rail for a game: golf (with the unlocks in force, or null for every tool) or the classic town game, and the tool in hand. Every item
  *  of the game is listed, in the rail's order, whatever the stage: a locked one carries its why, and the first item under a heading carries it */
@@ -147,7 +153,7 @@ export function railEntries(ui: ProgressiveUiState | null, golf: boolean, uiTool
     // others' own badges until they are opened)
     const newT = (t: RailTool) => (ui!.newTools as string[]).includes(t.id), opened = (t: RailTool) => NEW_BADGE_IDS.includes(t.id) && !newT(t) && !toolLock(ui, t.id);
     const isNew = golf && !!ui && !locked && !r.action && tools.some(newT) && !tools.some(opened);
-    const on = r.action === 'range' ? !!v.rangeOpen : lit === r;
+    const on = r.action === 'range' ? !!v.rangeOpen : r.action === 'build' ? !!v.buildOpen : lit === r;
     out.push({ item: r, on, locked, isNew, heading: r.section !== last ? r.section : null });
     last = r.section;
   }

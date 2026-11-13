@@ -27,6 +27,7 @@ import RANGE_PICS_FILE from '../../assets/ground/range-pics.json';
 import RANGE_ART_FILE from './range-art.json';
 import type { OffRoad } from '../offroad';
 import { DESERT_IDS, desertScatter } from '../desert-props';
+import { JUNK_BY_ID, scatterJunk, type JunkPile } from './junk';
 
 // ---------------------------------------------------------------- the scene
 
@@ -187,6 +188,9 @@ export interface RangeScene {
   J: Pt; driveEnd: Pt; roadDir: Pt; rangeSide: Pt;
   /** the distance numbers over their markers (street tier) and where the district map's "Driving Range" label stands */
   numbers: { x: number; y: number; text: string; low?: boolean }[]; label: Pt;
+  /** J7 (#1225): the junk lying on the range (RangeBizSave.junk): each pile's index in the save, its library id and name, its world spot and its
+   *  distance from the tee line (m). Cinderlinks' practice range (J6) draws the same items from this (Engine.rangeJunk) */
+  junk: RangeJunkSpot[];
   /** the world box of the plot (x0 y0 x1 y1) */
   box: [number, number, number, number];
   /** T239: the range front's world box (x0 y0 x1 y1: the shop, the car park and the tee box, a little grown), where the player's paths are read */
@@ -225,6 +229,18 @@ export function rangeLot(setback = 0): [number, number, number, number] { return
 /** T237: the shop's counter (world tiles) on a plot for a facing: the range's door for the walking rule (golf/walkserve.ts), as the scene's counter */
 export function rangeCounter(plot: Rect, facing: 0 | 1 | 2 | 3): Pt { return plotPoint(plot, facing, COUNTER.u, COUNTER.v); }
 /** the range's scene on its plot for a facing and the save (plan 2.1): deterministic; everything turns with the facing, nothing is mirrored */
+/** J7: a junk pile as the scene has it (RangeScene.junk) */
+export interface RangeJunkSpot { i: number; id: string; name: string; x: number; y: number; m: number }
+/** J7 (#1225): a new jam range's junk, scattered from a seed over its outfield (golf/junk.ts scatterJunk): past the tee's apron and 30 m out, short of the
+ *  far fence, off every target green the range can buy (with room round it) and the far corner's oasis */
+export function newRangeJunk(seed: number): JunkPile[] {
+  const v0 = Math.max(TEE[3] + TEE_GAP + 6, STAND_V + 15);
+  return scatterJunk(seed, { u0: 7, u1: 63, v0, v1: FAR_V - 6, ok: (u, v) => TARGET_U.every((tu, i) => Math.hypot(u - tu, v - STAND_V - TARGET_D[i]!) > TARGET_R[i]! + 6) && !(u < 24 && v > FAR_V - 20) });
+}
+/** J7: how much larger than life the junk is drawn (a car at its true size is a smudge on the outfield at the closest zoom) */
+export const JUNK_SCALE = 1.8;
+/** J7: a spot's distance from the tee line (the mats' stand line), m */
+export const junkMetres = (v: number): number => Math.max(0, Math.round((v - STAND_V) * TILE_M));
 export function rangeScene(plot: Rect, facing: 0 | 1 | 2 | 3, s: RangeBizSave, opts: SceneOpts = {}): RangeScene {
   const st = rangeStats(s), P = (u: number, v: number) => plotPoint(plot, facing, u, v), toRoad = roadView(facing), toRange = (toRoad + 2) % 4;
   // T237: the plot's set-back from the road (a new game's: its car park in the frontage strip; an old save's 0: on the plot's front)
@@ -312,6 +328,9 @@ export function rangeScene(plot: Rect, facing: 0 | 1 | 2 | 3, s: RangeBizSave, o
     const oasis: [string, number, number][] = [['oasis-pool', 12.5, FAR_V - 9], ['date-palm-pair', 5.5, FAR_V - 11], ['slender-date-palm', 19.5, FAR_V - 12.5], ['tall-cattails', 15.5, FAR_V - 6], ['cattail-clump', 8.5, FAR_V - 6.5], ['sandstone-boulder', 18.5, FAR_V - 7.5]];
     oasis.forEach(([slug, u, v], i) => { const id = `newprop:desert-${slug}`; if (DESERT_IDS.includes(id)) put(`oasis${i}`, id, u, v); });
   }
+  // ---- J7 (#1225): the junk on an old jam range, each pile with its distance pill (numbers, low) like a yardage board: fun targets until cleared
+  const junk: RangeJunkSpot[] = (s.junk ?? []).map((j, i) => { const p = P(j.u, j.v); return { i, id: j.id, name: JUNK_BY_ID.get(j.id)?.name ?? 'Junk', x: p.x, y: p.y, m: junkMetres(j.v) }; });
+  (s.junk ?? []).forEach((j, i) => put(`junk${i}`, j.id, j.u, j.v, 0, { scale: JUNK_SCALE })); // (drawn larger than life: they read at the range's zoom)
   // ---- the sign at the drive, the bench and bins at the tee, a bag trolley by the shop
   // (T258: each drawn as the owner's ChatGPT picture once it lands, its label gone)
   // (T237: a set-back range's sign stands by the road at the drive's mouth, across the drive from its car park in the frontage strip)
@@ -320,6 +339,7 @@ export function rangeScene(plot: Rect, facing: 0 | 1 | 2 | 3, s: RangeBizSave, o
   put('bench', 'world:bench', 43, 15); put('bins-tee', 'gen:trash-cans-row', 25.5, 15); put('trolley', 'business:golf-bag-trolley', 29.4, 13.6);
   // ---- the distance markers down both sides every 50 m, flags on the greens, the yardage boards (upgrade)
   const numbers: RangeScene['numbers'] = [], post = art('golf-range-distance-post', 0), board = art('golf-range-yardage-board', toRoad);
+  for (const j of junk) numbers.push({ x: j.x, y: j.y, text: `${j.name} · ${j.m} m`, low: true }); // J7: the junk's distance pills
   for (let k = 1; k <= 5; k++) for (const [j, u] of [2.2, 67.8].entries()) {
     if (post) put(`mark${k}-${j}`, post, u, STAND_V + 25 * k);
     else put(`mark${k}-${j}`, 'ce:parking-sign', u, STAND_V + 25 * k, 0, k === 1 && j === 0 ? { label: 'Stand In for Range distance marker' } : {});
@@ -422,7 +442,7 @@ export function rangeScene(plot: Rect, facing: 0 | 1 | 2 | 3, s: RangeBizSave, o
     // (T237: from the path's end off the set-back lot's back edge, round the car park building's far side when it stands)
     lotWalk: sb ? (garage ? [P(LOT_CORNER.u, LOT_CORNER.v), P(LOT_CORNER.u, lot[3] + LOT_STEP)] : [P(CAR_EDGE_U, lot[3] + LOT_STEP)]) : garage ? [P(LOT_CORNER.u, LOT_CORNER.v)] : [],
     J: P(RANGE_PLOT[0] + 2, -NEAR - sb), driveEnd: P(RANGE_PLOT[0] + 2, 16), roadDir: { x: du.x - o.x, y: du.y - o.y }, rangeSide: { x: dv.x - o.x, y: dv.y - o.y },
-    numbers, label: P(35, 60), box: [Math.min(c0.x, c1.x), Math.min(c0.y, c1.y), Math.max(c0.x, c1.x), Math.max(c0.y, c1.y)],
+    numbers, junk, label: P(35, 60), box: [Math.min(c0.x, c1.x), Math.min(c0.y, c1.y), Math.max(c0.x, c1.x), Math.max(c0.y, c1.y)],
     mowFrom: P(U_MID, TEE[3] + TEE_GAP + 0.6),
     fence: { o, u: { x: du.x - o.x, y: du.y - o.y }, v: { x: dv.x - o.x, y: dv.y - o.y }, u0: SIDE_U[0] + FENCE_GAP, u1: SIDE_U[1] - FENCE_GAP, v1: FAR_V - FENCE_GAP },
     front: [Math.min(f0.x, f1.x), Math.min(f0.y, f1.y), Math.max(f0.x, f1.x), Math.max(f0.y, f1.y)], walk: null,

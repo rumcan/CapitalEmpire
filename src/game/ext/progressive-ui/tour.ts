@@ -13,7 +13,7 @@ const JAM_TOUR: readonly GuideStep[] = Object.freeze([
     id: 'tour-town',
     n: 1,
     title: 'Your club, your money',
-    body: 'You have $75,000 and an empty plot. A driving range earns your first income; that money builds a golf course hole by hole. Money is tight: every build is a choice between paying cash, saving first, or borrowing.',
+    body: 'You have $75,000, a plot with plenty of room, and an old driving range on it for sale (junk and all). A range earns your first income; that money builds a golf course hole by hole. Money is tight: every build is a choice between paying cash, saving first, or borrowing.',
     done: 'next',
     target: {},
   },
@@ -28,10 +28,11 @@ const JAM_TOUR: readonly GuideStep[] = Object.freeze([
   {
     id: 'tour-golf',
     n: 3,
-    title: 'Now your golf',
-    body: 'Place your driving range first (Range › Place the driving range): the guide in the corner walks you through it and the rest, step by step.',
+    title: 'Build what you like',
+    // J7 (#1225; the owner: "let the player decide"): the menu, not an order. Tips (Build ▸ Tips) hold what the guided build used to say
+    body: 'Build (on the left) shows everything you can build or buy, with its price, its upkeep and how long it takes to pay back. Choose what and when: buying the old range starts your income. Build ▸ Tips has hints.',
     done: 'next',
-    target: { ui: 'rail-range' },
+    target: { ui: 'rail-build' },
   },
 ]);
 
