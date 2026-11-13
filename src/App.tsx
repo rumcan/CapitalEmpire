@@ -106,6 +106,8 @@ import { BuildMenu } from './ui/jam/BuildMenu'; // J7
 import { TipsCard } from './ui/jam/TipsCard';
 import { buildCards, type BuildCard, type BuildGroupId } from './ui/jam/build-menu';
 import { MONTHS_A_SEASON } from './game/golf/rangesave';
+import { JUNK_BY_ID, JUNK_CLEAR_COST } from './game/golf/junk';
+import { RANGE_PLACE_COST } from './game/golf/placing';
 import { TooltipLayer } from './ui/Tooltip';
 import { UI_SCALES, applyUiScale, currentUiScale, saveUiScale } from './ui/uiScale';
 import { AccessSettings } from './ui/golf/AccessSettings';
@@ -356,6 +358,7 @@ export default function App() {
       locks: { newHole: ui?.newHoleLock ?? g.toolLock('course'), buildings: g.toolLock('buildings'), path: g.toolLock('path'), practice: g.toolLock('practice') },
       clubhouse: { built: g.bizDefs.some(d => d.type === 'clubhouse'), cost: CLUBHOUSE_RANGE_COST, upkeep: BUSINESS.clubhouse!.upkeepPerDay / MONTHS_A_SEASON },
       course: g.paybackCourse(), money: g.money,
+      forSale: !!rv?.biz.forSale, junk: rv?.biz.junk?.length ? { n: rv.biz.junk.length, cost: JUNK_CLEAR_COST, first: rv.biz.junk[0]!.id } : undefined,
     });
   };
   /** J7: a Build menu card picked: the same placement the rail and the range card start; the menu shuts */
@@ -371,6 +374,12 @@ export default function App() {
       case 'paths': activeRail.current = null; game.setTool('path'); break;
       case 'clubhouse': activeRail.current = 'course'; game.placeClubhouse(true); break;
       case 'green': activeRail.current = null; game.armPractice(a.id, true); break;
+      case 'buyRange': game.buyRange(); break;
+      case 'junk': {
+        activeRail.current = 'range'; game.setTool('select'); game.openRangeCard(true);
+        window.setTimeout(() => { const el = document.querySelector<HTMLElement>('[data-testid="range-junk"]'), card = el?.closest<HTMLElement>('.overflow-y-auto'); if (el && card) card.scrollTop += el.getBoundingClientRect().top - card.getBoundingClientRect().top - 8; }, 60);
+        break;
+      }
     }
   };
   /** T193: opens a rail item's flyout beside its button (T250: a town footer item's above its button) */
@@ -1060,7 +1069,7 @@ export default function App() {
             const sv = game.staffCard(); if (!sv) return null;
             return <StaffCard view={sv} right={stack!.right('staff')} onClose={() => game.openStaffCard(false)} onHire={(r, at) => game.hireClubStaff(r, at)} onLetGo={k => game.letGoClubStaff(k)} />;
           })()}
-          {(() => { const rc = game.rangeCard(); return rc && <><RangeCard view={rc} places={JAM ? game.rangePlaces().filter(q => q.id !== 'practice') : game.rangePlaces()} onPlace={id => game.placeRangePart(id)} right={game.panel ? 'right-[19.5rem]' : 'right-3'} onClose={() => game.openRangeCard(false)} onPrice={p => game.setRangePrice(p)} onBuy={id => game.buyRangeUpgrade(id)} onShowPractice={() => game.showPracticeArea()} onBuildPractice={id => { game.openRangeCard(false); activeRail.current = 'facilities'; game.armPractice(id, true); }} practiceWhy={game.toolLock('practice')} onScene={game.sceneArt('range') ? () => game.openScene({ kind: 'range' }) : undefined} you={game.youRange(rc)} onPractise={k => game.youPractise(k)} onHit={pl => { game.openRangeCard(false); game.openPractice3p(pl); }} hitWhy={{ range: game.practice3pWhy('range'), short: game.practice3pWhy('short') }} drillsDone={game.playerNow()?.drills?.done.length ?? 0} onQuickPractice={id => game.quickPractice(id)} onProfile={() => game.openPlayerCard()} profileOpen={game.playerCardOpen} onTree={() => game.toggleBallTree()} treeOpen={rc.treeOpen} onOrderBalls={() => game.orderRangeBalls(1)} onShift={h => game.range.setShift(h)} />{rc.treeOpen && <BallTree view={rc} onBuy={id => game.buyRangeUpgrade(id)} onClose={() => game.toggleBallTree()} rightRem={game.panel ? 19.5 : 0.75} />}</>; })()}
+          {(() => { const rc = game.rangeCard(); return rc && <><RangeCard forSale={rc.biz.forSale ? { cost: RANGE_PLACE_COST, why: game.money < RANGE_PLACE_COST ? `Not enough cash: $${Math.round(RANGE_PLACE_COST - Math.max(0, game.money)).toLocaleString('en-US')} short (the Bank lends)` : null } : undefined} onBuyRange={() => game.buyRange()} junk={game.rangeJunk().map(j => ({ i: j.i, name: j.name, m: j.m, scrap: JUNK_BY_ID.get(j.id)?.scrap ?? 0 }))} junkCost={JUNK_CLEAR_COST} onClearJunk={i => game.clearJunk(i)} view={rc} places={JAM ? game.rangePlaces().filter(q => q.id !== 'practice') : game.rangePlaces()} onPlace={id => game.placeRangePart(id)} right={game.panel ? 'right-[19.5rem]' : 'right-3'} onClose={() => game.openRangeCard(false)} onPrice={p => game.setRangePrice(p)} onBuy={id => game.buyRangeUpgrade(id)} onShowPractice={() => game.showPracticeArea()} onBuildPractice={id => { game.openRangeCard(false); activeRail.current = 'facilities'; game.armPractice(id, true); }} practiceWhy={game.toolLock('practice')} onScene={game.sceneArt('range') ? () => game.openScene({ kind: 'range' }) : undefined} you={game.youRange(rc)} onPractise={k => game.youPractise(k)} onHit={pl => { game.openRangeCard(false); game.openPractice3p(pl); }} hitWhy={{ range: game.practice3pWhy('range'), short: game.practice3pWhy('short') }} drillsDone={game.playerNow()?.drills?.done.length ?? 0} onQuickPractice={id => game.quickPractice(id)} onProfile={() => game.openPlayerCard()} profileOpen={game.playerCardOpen} onTree={() => game.toggleBallTree()} treeOpen={rc.treeOpen} onOrderBalls={() => game.orderRangeBalls(1)} onShift={h => game.range.setShift(h)} />{rc.treeOpen && <BallTree view={rc} onBuy={id => game.buyRangeUpgrade(id)} onClose={() => game.toggleBallTree()} rightRem={game.panel ? 19.5 : 0.75} />}</>; })()}
           {(() => { // T241: your golf, left of the card on the right (the range's, the club's, a place's) when one is open
             const pv = game.playerCard(); if (!pv) return null;
             return <PlayerCard view={pv} right={stack!.right('player')} onClose={() => game.openPlayerCard(false)} onBook={() => game.bookYourRound()} onCancel={() => game.cancelYourRound()} onBag={() => game.openBagCard(true)} />;

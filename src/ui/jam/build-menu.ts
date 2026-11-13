@@ -12,12 +12,15 @@ export type BuildGroupId = 'range' | 'course' | 'club' | 'practice';
 export const BUILD_GROUPS: readonly { id: BuildGroupId; label: string }[] = [
   { id: 'range', label: 'Range' }, { id: 'course', label: 'Course' }, { id: 'club', label: 'Club' }, { id: 'practice', label: 'Practice' },
 ];
-/** a card's picture: a scene (src/assets/scenes; pos: the part of it to show, a CSS object-position) or a menu tile (src/assets/ui/tiles) */
-export type BuildPic = { scene: string; pos?: string } | { tile: ToolTile };
+/** a card's picture: a scene (src/assets/scenes; pos: the part of it to show, a CSS object-position), a menu tile (src/assets/ui/tiles) or a library
+ *  item (its sprite: lib, a library id) */
+export type BuildPic = { scene: string; pos?: string } | { tile: ToolTile } | { lib: string };
 /** what a card's click starts */
 export type BuildAct =
   | { k: 'place'; id: 'range' | 'carpark' | 'practice' } | { k: 'upgrade'; id: RangeUpgradeId } | { k: 'rangeCard' }
-  | { k: 'newHole' } | { k: 'paths' } | { k: 'clubhouse' } | { k: 'green'; id: 'putting' | 'chipping' };
+  | { k: 'newHole' } | { k: 'paths' } | { k: 'clubhouse' } | { k: 'green'; id: 'putting' | 'chipping' }
+  /** J7: buy the old range standing for sale; open the range card at its junk list */
+  | { k: 'buyRange' } | { k: 'junk' };
 export interface BuildCard {
   id: string; group: BuildGroupId; name: string; line: string; pic: BuildPic;
   /** the price ($; null: priced as it is laid, costNote says how) */ cost: number | null; costNote?: string;
@@ -58,6 +61,8 @@ export interface BuildSource {
   course: { course: CourseNow; clubhouse: boolean } | null;
   /** the cash on hand */
   money: number;
+  /** J7: the old range stands for sale (the player buys it); the junk piles left on it (golf/junk.ts) and what clearing one costs */
+  forSale?: boolean; junk?: { n: number; cost: number; first: string | null };
 }
 
 const usd = (n: number) => `$${Math.round(n).toLocaleString('en-US')}`;
@@ -72,9 +77,18 @@ const upWhy = (why: string, cost: number, money: number): string | null =>
 /** the menu's cards, in their groups' order */
 export function buildCards(s: BuildSource): BuildCard[] {
   const out: BuildCard[] = [], v = s.range, place = (id: 'range' | 'carpark' | 'practice') => s.places.find(p => p.id === id);
-  const rangeP = place('range'), rangeBuilt = !rangeP || rangeP.done, noRange = rangeBuilt ? null : 'Place your driving range first';
+  const rangeP = place('range'), rangeBuilt = !rangeP || rangeP.done, noRange = !rangeBuilt ? 'Place your driving range first' : s.forSale ? 'Buy the driving range first' : null;
   // ---- Range
-  if (rangeP) {
+  if (rangeP && s.forSale && v) {
+    // J7 (the owner: "lets place the range for him. he has to buy it"): the old range on the plot, with its car park and its junk
+    const open = { ...v.biz }; delete open.forSale;
+    out.push({
+      id: 'range', group: 'range', name: 'Buy the driving range', pic: { scene: 'range-road-rundown.webp' },
+      line: 'The old range on your plot, with its dirt car park and junk on the outfield. Buy it and drivers stop for a bucket.',
+      cost: rangeP.cost, upkeep: s.rangeUpkeep, payback: payback(rangeP.cost, s.rangeUpkeep, rangeMonth(open, v.demand, v.dayLen).takings),
+      why: shortWhy(rangeP.cost, s.money), done: null, act: { k: 'buyRange' },
+    });
+  } else if (rangeP) {
     const extra = v ? rangeMonth(v.biz, v.demand, v.dayLen).takings : 0;
     out.push({
       id: 'range', group: 'range', name: 'Driving range', pic: { scene: rangeBuilt ? 'range-road-upgraded.webp' : 'range-road-rundown.webp' },
@@ -96,6 +110,17 @@ export function buildCards(s: BuildSource): BuildCard[] {
       cost: u ? u.cost : null, upkeep: u ? u.upkeep : null, payback: u ? payback(u.cost, u.upkeep, rangeUpgradeExtra(v.biz, v.demand, v.dayLen, u.id)) : null,
       why: !u ? null : noRange ?? upWhy(u.why, u.cost, s.money), done: u ? null : 'Built', act: u ? { k: 'upgrade', id: u.id } : { k: 'rangeCard' },
     });
+    // J7: the junk on the old range: cleared pile by pile from the range card's list (each its distance; keep any you like as a target)
+    const jn = s.junk?.n ?? 0;
+    if (s.junk && jn > 0) {
+      const less = { ...v.biz, junk: v.biz.junk?.slice(1) }, now = rangeMonth(v.biz, v.demand, v.dayLen).takings;
+      out.push({
+        id: 'junk', group: 'range', name: `Clear the junk (${jn} left)`, pic: s.junk.first ? { lib: s.junk.first } : { tile: 'rocks' },
+        line: 'Old cars, tyres and scrap on the outfield: each pile cleared draws a few more golfers and pays its scrap back. Keep any you like as a target.',
+        cost: s.junk.cost, costNote: 'A pile, less its scrap', upkeep: 0, payback: s.forSale ? null : payback(s.junk.cost, 0, Math.max(0, rangeMonth(less, v.demand, v.dayLen).takings - now)),
+        why: noRange ?? shortWhy(s.junk.cost, s.money), done: null, act: { k: 'junk' },
+      });
+    }
     for (const id of MENU_UPGRADES) {
       const q = v.upgrades.find(x => x.id === id); if (!q) continue;
       out.push({
@@ -130,11 +155,11 @@ export function buildCards(s: BuildSource): BuildCard[] {
   // ---- Practice (offered like everything else, never pushed)
   const prP = place('practice');
   if (prP) {
-    const areaDone = prP.done;
+    const areaDone = prP.done, prWhy = prP.why || null;
     out.push({
       id: 'practice', group: 'practice', name: 'Practice area', pic: { scene: 'practice-green-rundown.webp' }, line: 'A plot beside the car park for a putting green and a chipping green.',
       cost: prP.cost, upkeep: 0, payback: areaDone ? null : payback(prP.cost, 0, 0), note: areaDone ? undefined : 'Its greens earn: a share of the range golfers walk over.',
-      why: areaDone ? null : noRange ?? (prP.why || shortWhy(prP.cost, s.money)), done: areaDone ? 'Placed' : null, act: areaDone ? null : { k: 'place', id: 'practice' },
+      why: areaDone ? null : noRange ?? prWhy ?? shortWhy(prP.cost, s.money), done: areaDone ? 'Placed' : null, act: areaDone ? null : { k: 'place', id: 'practice' },
     });
     for (const f of v?.practice ?? []) {
       const open = f.state === 'open', extra = v ? practiceExtra(v.biz, v.demand, v.dayLen, f.id) : 0;

@@ -7,10 +7,13 @@ import { paybackWords } from '../../game/golf/payback';
 import { Icon } from '../Icon';
 import { sceneUrl } from '../SceneCard';
 import { tileUrl } from '../tool-tiles';
+import { Thumb } from '../Thumb';
+import { LIBRARY } from '../../game/library';
 import { money } from '../golf/money';
 import { BUILD_GROUPS, type BuildCard, type BuildGroupId, type BuildPic } from './build-menu';
 
-const picUrl = (p: BuildPic): string | undefined => ('scene' in p ? sceneUrl(p.scene) : tileUrl(p.tile));
+const LIB_BY_ID = new Map(LIBRARY.map(it => [it.id, it]));
+const picUrl = (p: BuildPic): string | undefined => ('scene' in p ? sceneUrl(p.scene) : 'tile' in p ? tileUrl(p.tile) : undefined);
 
 export function BuildMenu({ cards, tab, onTab, onPick, onClose, onTips }: {
   cards: BuildCard[]; tab: BuildGroupId;
@@ -53,6 +56,7 @@ export function BuildMenu({ cards, tab, onTab, onPick, onClose, onTips }: {
 }
 
 function Card({ c, onPick }: { c: BuildCard; onPick: (c: BuildCard) => void }) {
+  const lib = 'lib' in c.pic ? LIB_BY_ID.get(c.pic.lib) : undefined;
   const url = picUrl(c.pic), off = !!c.why || (!c.act && !c.done), p = c.payback;
   const tone = !p ? '' : p.verdict === 'pays' || p.verdict === 'free' ? 'text-emerald-300' : p.verdict === 'slow' ? 'text-amber-300' : 'text-slate-300';
   return (
@@ -60,6 +64,7 @@ function Card({ c, onPick }: { c: BuildCard; onPick: (c: BuildCard) => void }) {
       onClick={() => { if (!c.why && c.act) onPick(c); }} aria-disabled={off || undefined} title={c.why ?? (c.done && c.act ? `${c.name}: open it` : c.act ? `${c.name}: place it on your land` : c.name)}
       data-testid={`build-card-${c.id}`} data-state={c.done ? 'done' : c.why ? 'locked' : 'open'}>
       <div className="relative h-[92px] w-full bg-slate-900">
+        {lib && <div className={`grid h-full w-full place-items-center ${c.why ? 'opacity-40 grayscale' : ''}`}><Thumb it={lib} size={84} /></div>}
         {url && <img src={url} alt="" draggable={false} className={`h-full w-full object-cover ${c.why ? 'opacity-40 grayscale' : ''}`} style={'scene' in c.pic && c.pic.pos ? { objectPosition: c.pic.pos } : undefined} />}
         {c.done && <span className="absolute right-1.5 top-1.5 rounded bg-emerald-600/90 px-1.5 py-0.5 text-[11px] font-semibold text-white">✓ {c.done}</span>}
       </div>

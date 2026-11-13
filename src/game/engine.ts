@@ -182,6 +182,8 @@ import { specMarkers } from './golf/osm/raster';
 import { RANGE_CAM_ZOOM, planRangeStart } from './golf/rangestart';
 import { CLUB_REACH, RANGE_PLOT, clubhouseSpotWhy, plotOfFront, plotPoint, rangeLayout } from './golf/range';
 import { PRACTICE_LOT_NAME, inPractice, practiceArea, practiceDims } from './golf/practice';
+import { JUNK_BY_ID, JUNK_CLEAR_COST } from './golf/junk';
+import { newRangeJunk, type RangeJunkSpot } from './golf/rangebiz';
 import { CAR_PARK_PLACE_COST, PRACTICE_PLACE_COST, RANGE_PLACE_COST, landWhy, placeVerdict, rangeSpotAt, rectAt, rectPoly as rectPolyOf, rectsMeet, type LandCheck, type Placeable, type RangeSpot } from './golf/placing';
 import { RANGE_UPGRADES, homeYardBox, rangeTakes, upgradeFoot, upgradeWhy, type RangeBizSave } from './golf/rangebiz';
 import { baysByDoor, servesOf, servingParks, type Serve, type Venue } from './golf/walkserve';
@@ -1759,7 +1761,7 @@ export class Game {
   }
   /** the driving range in hand (a bare start's, until placed): its plot slides along the county road and back from it on the player's land,
    *  its front toward the road; built, its drive is laid from the road to its front and the range opens (null: placed already, or no range) */
-  private rangePlaceable(): Placeable<RangeSpot> | null {
+  private rangePlaceable(free = false): Placeable<RangeSpot> | null {
     const g = this.golf, b = g?.start === 'range' ? g.range : undefined; if (!g || !b || b.built !== false || !b.home) return null;
     const home = b.home, f = g.dir, land = this.landCheck();
     const quadOf = (a: Pt, c: Pt, w: number): number[] => { const dx = c.x - a.x, dy = c.y - a.y, L = Math.hypot(dx, dy) || 1, nx = -dy / L * w, ny = dx / L * w; return [a.x + nx, a.y + ny, c.x + nx, c.y + ny, c.x - nx, c.y - ny, a.x - nx, a.y - ny]; };
@@ -1778,7 +1780,7 @@ export class Game {
       },
       polys: s => [rectPolyOf(s.plot), rectPolyOf(s.front), quadOf(s.J, s.end, 1)],
       build: s => {
-        if (!this.payPlaced('The driving range', RANGE_PLACE_COST, s.door)) return false;
+        if (!free && !this.payPlaced('The driving range', RANGE_PLACE_COST, s.door)) return false;
         delete b.built; b.setback = s.setback;
         this.setBizDefs([...this.bizDefs.filter(d => d.type !== 'range'), { id: Math.max(0, ...this.bizDefs.map(d => d.id)) + 1, type: 'range', x: s.front[0], y: s.front[1], w: s.front[2], h: s.front[3] }]);
         this.traffic.setBusinesses(this.bizDefs);
@@ -1788,7 +1790,7 @@ export class Game {
         this.range.sync(true);
         // J7 (#1225; the owner, 2026-11-13: "def add a built in dirt parking lot at the start"): a jam range comes with its dirt car park, no extra step
         const lot = JAM && this.autoRangeLot(s.J, s.end);
-        this.toast(lot ? `Your driving range is built with its dirt car park (-$${RANGE_PLACE_COST.toLocaleString()}): gravel or pave the car park from Build for more cars`
+        if (!free) this.toast(lot ? `Your driving range is built with its dirt car park (-$${RANGE_PLACE_COST.toLocaleString()}): gravel or pave the car park from Build for more cars`
           : `Your driving range is built (-$${RANGE_PLACE_COST.toLocaleString()}): next, place its car park (Range ▸ Place the car park)`, 'good');
         return true;
       },
@@ -1818,6 +1820,49 @@ export class Game {
         return true;
       },
     };
+  }
+  /** J7 (#1225; the owner, 2026-11-13: "lets place the range for him. he has to buy it. place it in a way so he has alot of room to expand"): a new jam
+   *  game's old range, laid once on the plot the start chose for it (golf/rangestart.ts: the parcel beside it holds a course), with its dirt car park
+   *  and its junk, for sale: no golfer comes until Buy (buyRange). Tried once a session while a range start's range is still unplaced */
+  private jamOfferRange() {
+    const g = this.golf, b = g?.start === 'range' ? g.range : undefined;
+    if (!JAM || this.jamOffered || !g || !b || b.built !== false || !b.home || !this.firstViewBaked) return;
+    this.jamOffered = true;
+    const p = this.rangePlaceable(true); if (!p) return;
+    const h = b.home, c = { x: h[0] + h[2] / 2, y: h[1] + h[3] / 2 }, along = g.dir === 0 || g.dir === 2 ? { x: 1, y: 0 } : { x: 0, y: 1 };
+    for (let k = 0; k <= 40; k++) {
+      const a = (k % 2 ? 1 : -1) * Math.ceil(k / 2) * 6, s = p.spot(c.x + along.x * a, c.y + along.y * a);
+      if (p.why(s)) continue;
+      b.forSale = true; // (before the build: the range is laid for sale, so no golfer turns off the road for it)
+      b.junk = newRangeJunk(this.seed ^ 0x4a37);
+      if (!p.build(s)) { delete b.forSale; delete b.junk; continue; }
+      this.range.sync(true); this.scheduleSave(); this.emit();
+      return;
+    }
+  }
+  private jamOffered = false;
+  /** J7: Buy the driving range (a jam game's old range, for sale on the plot): RANGE_PLACE_COST, and it opens; false with a toast when the cash is short */
+  buyRange(): boolean {
+    const b = this.golf?.range; if (!b?.forSale) return false;
+    const at = this.range.scene?.counter ?? { x: 0, y: 0 };
+    if (!this.payPlaced('The driving range', RANGE_PLACE_COST, at)) return false;
+    delete b.forSale; this.range.sync(true); this.scheduleSave();
+    this.toast(`The driving range is yours (-$${RANGE_PLACE_COST.toLocaleString()}): golfers turn off the road for a bucket now. Clear the junk when you like`, 'good');
+    this.emit(); return true;
+  }
+  /** J7: the range's junk piles (each with its index in the save, library id, name, world spot and distance from the tee line, m): Cinderlinks' practice
+   *  range (J6) draws the same items from this; empty when there is none */
+  rangeJunk(): RangeJunkSpot[] { return this.range.scene?.junk ?? []; }
+  /** J7: clears junk pile i (its index in RangeBizSave.junk): JUNK_CLEAR_COST paid, its scrap value back; false with a toast when the cash is short */
+  clearJunk(i: number): boolean {
+    const b = this.golf?.range, j = b?.junk?.[i]; if (!b || !j) return false;
+    const k = JUNK_BY_ID.get(j.id), scrap = k?.scrap ?? 0, at = this.range.scene?.junk[i] ?? { x: 0, y: 0 };
+    if (!this.payPlaced(`Clearing the ${(k?.name ?? 'junk').toLowerCase()}`, JUNK_CLEAR_COST, at)) return false;
+    if (scrap > 0) this.traffic.spend('construction', -scrap);
+    b.junk!.splice(i, 1); if (!b.junk!.length) delete b.junk;
+    this.range.sync(true); this.scheduleSave();
+    this.toast(`Cleared: ${k?.name ?? 'junk'} (-$${JUNK_CLEAR_COST}${scrap ? `, +$${scrap} scrap` : ''})${b.junk ? `; ${b.junk.length} left` : ': the range is clean'}`, 'good');
+    this.emit(); return true;
   }
   /** J7 (#1225): the range's dirt car park laid for free beside the range just placed (a jam game's range comes with it): the first spot carParkSpotAt
    *  and carParkWhy accept, along the county road from the range's drive (J, its end inland), nearest the drive first, on the range's side of the road.
@@ -1892,7 +1937,7 @@ export class Game {
     return [
       { id: 'range', name: 'The driving range', cost: RANGE_PLACE_COST, done: range, why: '' },
       { id: 'carpark', name: 'The car park', cost: CAR_PARK_PLACE_COST, done: lot, why: range ? '' : 'Place your driving range first' },
-      { id: 'practice', name: 'The practice area', cost: PRACTICE_PLACE_COST, done: practice, why: g.practiceLot ? 'For sale beside the car park: Course ▸ Land for sale' : range ? '' : 'Place your driving range first' },
+      { id: 'practice', name: 'The practice area', cost: PRACTICE_PLACE_COST, done: practice, why: g.practiceLot ? 'For sale beside the car park: Course ▸ Land for sale' : !range ? 'Place your driving range first' : b.forSale ? 'Buy the driving range first' : '' },
     ];
   }
   /** T288: takes one of the range's places in hand (the Range menu's and the card's Place); a toast says why when it cannot be placed */
@@ -8134,6 +8179,7 @@ export class Game {
    *  opened (its NEW badge goes) */
   private progressCheck() {
     const p = this.golf?.progress; if (!p || ++this.progTick % 10) return;
+    this.jamOfferRange(); // J7: a jam game's old range, for sale, laid once the ground is ready
     this.rangeGuideCheck(); // T239: the guided build's steps tick
     this.tourCheck(); // T293: the start tutorial's steps
     this.prepCheck(); // the tournament prep quests: each built step pays once
