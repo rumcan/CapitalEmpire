@@ -76,6 +76,9 @@ export function book(f: FinanceSave, line: Line, amount: number): void;   // + m
 
 ## Balance (T459, 2026-11-13: measured on the built jam, then tuned)
 Every number below is behind the JAM flag (`features.ts`: `JAM ? jamValue : currentValue`); the normal game's balance is unchanged.
+*Measured before the MVP scope change above:* the goal chip, the report card and the emergencies are now hidden in the jam, so the goal and
+grade figures below say how hard the hidden goal would be; the two changes that shape the MVP's core loop are New hole opening after two
+months of range takings and the green fees paid per hole (a hole, and a loan to build it, pay back within the two seasons).
 
 **How it was measured.** The jam build (`npm run build:jam`, served with `vite preview`) played by a scripted player in the page at 20x: the
 range placed, then its car park; balls picked up perfectly (the field's balls back in the ball room, an upper bound for a diligent player);
