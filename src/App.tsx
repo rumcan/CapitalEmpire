@@ -172,7 +172,7 @@ export default function App() {
   // the jam build's title card (ui/jam/TitleCard.tsx): shown over the game until New game / Continue; the game waits (paused) behind it
   const [titleOpen, setTitleOpen] = useState(JAM);
   const [hasSave, setHasSave] = useState(false);
-  useEffect(() => { if (JAM) void readSave().then(r => setHasSave(r.status === 'ok')); }, []);
+  useEffect(() => { if (JAM) { document.title = 'Fairway Fortune'; void readSave().then(r => setHasSave(r.status === 'ok')); } }, []);
   const titlePaused = useRef(false);
   useEffect(() => { if (game?.ready && titleOpen && !titlePaused.current) { titlePaused.current = true; game.setSpeed(0); } }, [game?.ready, titleOpen, game]);
   const leaveTitle = (fresh: boolean) => { if (!game) return; if (fresh && hasSave) game.newTown(); setTitleOpen(false); game.setSpeed(1); };
