@@ -81,8 +81,8 @@ function coverShow(n) {
   LOADT.course = performance.now(); LOADT.ready = 0; LOADT.pics = picCount(coverNeed); LOADT.picsAt = 0; LOADT.artAt = 0; LOADT.timedOut = false;
   if (typeof document === 'undefined' || !document.createElement) return;
   if (!coverEl) { coverEl = document.createElement('div'); coverEl.id = 'cover'; const st = document.getElementById('stage'); if (st && st.appendChild) st.appendChild(coverEl); }
-  const prac = !!(course && course.name === 'Practice');   // (the host's practice course, src/game/golf/play/practice3p.ts: not a numbered hole)
-  coverEl.innerHTML = '<div class="cv"><i>' + (prac ? 'Practice' : 'Hole ' + n) + '</i><b>' + (prac ? 'Out to the range' : 'Walking out to the tee') + '</b><s><u></u></s><em></em></div>'; coverTxt = ''; coverOn = true; coverEl.className = 'on';
+  const prac = !!(course && typeof course.id === 'string' && /-practice$/.test(course.id));   // (J5c: the host's practice course: its id ends -practice, engine.ts course3pMsg; hole 1 the range, hole 2 the short game area)
+  coverEl.innerHTML = '<div class="cv"><i>' + (prac ? 'Practice' : 'Hole ' + n) + '</i><b>' + (prac ? (n === 2 ? 'Out to the short game area' : 'Out to the range') : 'Walking out to the tee') + '</b><s><u></u></s><em></em></div>'; coverTxt = ''; coverOn = true; coverEl.className = 'on';
 }
 function coverHide() { coverOn = false; if (coverEl) coverEl.className = ''; }
 function coverTick() {
@@ -224,7 +224,8 @@ function hostTurn(m) {   // the owner's turn: the ball and the pin where the mod
   strokes = m.stroke - 1; autoClub = false; club = Math.max(0, HP.clubs.findIndex((c) => c.club === m.suggested.club)); shownClub = -2;
   HP.pick = null; HP.pv = null; HP.pvSig = ''; hostAimPin = false;   // (T441: each turn starts from a plain shot; T446: and the aim follows the mouse until a click sets it)
   const ax = m.suggested.aim[0] * S - ball.x, ay = m.suggested.aim[1] * S - ball.y, al = Math.hypot(ax, ay); if (al > 0.3) { aim.dx = ax / al; aim.dy = ay / al; }
-  if ((m.stroke === 1 || pracLock()) && Math.hypot(player.x - ball.x, player.y - ball.y) > (pracLock() ? 0.3 : 2.5)) jumpToBall();   // (J6: practising, each ball is teed up where he stands)   // (on the tee he stands at his ball; later he walks to it, or J)
+  aim.x = m.suggested.aim[0] * S; aim.y = m.suggested.aim[1] * S;   // (J5c: the target too: it was left where the last turn, or the mouse passing, put it, and the strike went there)
+  if (pracLock() ? Math.hypot(player.x - ball.x, player.y - ball.y) > 0.3 : m.stroke === 1 && ball.state === 0 && !bcam) jumpToBall();   // (J5c: on the tee always: he stands at his ball facing down the aim, the camera behind him)   // (J6: practising, each ball is teed up where he stands)   // (on the tee he stands at his ball; later he walks to it, or J)
 }
 function hostStrike() {   // the club meets the ball: the input goes to the host, and the ball waits for its answer
   const c = hostClub(), t = HP.turn, S = hostS(); if (!c || !t) return;

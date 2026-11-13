@@ -220,6 +220,7 @@ body.host #mini, body.host #wind { top: 56px; }
 /* J5b: the loading cover in host mode: a CapitalEmpire card on the dimmed picture until the course's pictures are in (parts/09-hud.md coverShow) */
 #cover { position: absolute; inset: 0; display: none; place-items: center; z-index: 5; background: radial-gradient(ellipse at center, rgba(20, 21, 25, 0.92), rgba(8, 9, 12, 0.99)); font-size: clamp(11px, 1.016cqw, 15px); }
 #cover.on { display: grid; }
+body:has(#cover.on) > .panel { visibility: hidden; }   /* (J5c: the panels outside the picture, the practice drills, the leaderboard, the match, wait behind the cover too) */
 #cover .cv { min-width: 19em; padding: 1.1em 1.4em 1.2em; text-align: center; background: var(--panel); border: 1px solid var(--line); border-radius: 1.1em; box-shadow: var(--shadow); color: var(--ink); }
 #cover i { display: block; font-style: normal; font-size: 0.8em; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: var(--gold); }
 #cover b { display: block; margin-top: 0.25em; font: 700 1.5em/1.25 var(--serif); color: var(--gold-hi); }
