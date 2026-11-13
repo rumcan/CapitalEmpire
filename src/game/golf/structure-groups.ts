@@ -11,6 +11,7 @@ export const STRUCTURE_GROUPS: readonly { id: string; name: string; ids: readonl
   { id: 'shops', name: 'Shops & sponsors', ids: ['merchTent', 'merchPavilion', 'sponsorDisplay'] },
   { id: 'hospitality', name: 'Hospitality', ids: ['chalet', 'village', 'helipad', 'hotel'] },
   { id: 'transport', name: 'Transport', ids: ['rideshare', 'coach', 'interchange'] },
+  { id: 'lights', name: 'Lights', ids: ['floodlight'] },
 ];
 
 /** the purpose group a structure type belongs to (undefined when it is in none) */
