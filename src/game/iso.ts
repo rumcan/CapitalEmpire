@@ -1,11 +1,16 @@
+import { mapSizeSources, pickMapSize } from './mapsize';
 /** World units are tiles (2 m). At zoom 1 a tile is a 128x64 px diamond (the town builder's native scale). */
 export const TW = 128;
 export const TH = 64;
 export const HW = 64;
 export const HH = 32;
-/** tiles per side of the map: 4 x 4 km. The one setting (T280, #859: every copy of the size follows it; T280 halved it to 1024 for a while,
- *  T444 put it back to 2048 so a real course fits beside the town) */
-export const MAP = 2048;
+/** tiles per side of the map: 4 x 4 km for a new game. The one setting (T280, #859: every copy of the size follows it; T280 halved it to 1024 for a while,
+ *  T444 put it back to 2048 so a real course fits beside the town). Since #1174 it is one per save: read once when this module is first evaluated, so
+ *  a constant for the page's life (mapsize.ts says from where; a save of another size, or a map that grows, reloads the page into the new size) */
+const PICKED = pickMapSize(mapSizeSources());
+export const MAP = PICKED.size;
+/** true when the page itself fixed the size (?map=, a worker's name, the node tests' CE_MAP): a save of another size does not move it */
+export const MAP_FIXED = PICKED.fixed;
 /** the map's side in km, for the sentences that name it ("the 4 km map"): tiles are 2 m */
 export const MAP_KM = Math.round((MAP * 2) / 1000);
 /** simulation / content cells (tiles per side) */

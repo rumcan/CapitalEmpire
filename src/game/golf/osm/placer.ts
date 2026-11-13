@@ -7,7 +7,8 @@
 import { drawGhostHint, drawGhostPoly, type GhostView } from '../../ext/ghost-preview';
 import type { Pt } from '../../network';
 import { loadOsmSpec, osmCourseInfo, osmDisplayName, type OsmCourseInfo } from './index';
-import { PLACE_EDGE, placeLabel, planPlace, popupText, priceLines, type PlacePlan, type PlaceWorld } from './place';
+import { growSizeFor, MAP_MAX } from '../../mapsize';
+import { PLACE_EDGE, placeLabel, planPlace, popupText, priceLines, type PlacePlan, type PlacePose, type PlaceWorld } from './place';
 import { gridBuildCost, scratchOf } from './placegrid';
 import { ROT_FINE, ROT_STEP, coverOutline, firstFittingAngle, normDeg, rotateSpec } from './rotate';
 import type { OsmCourseSpec } from './types';
@@ -34,7 +35,7 @@ export interface RealHost {
   /** how many holes the game has now (the pop-up says they are replaced) */
   holes(): number;
   /** lays the course: buys the land, takes down what stands there, paints the grid, puts the markers, pays (the plan is the one just worked out); true when it did */
-  lay(c: { id: string; info: RealInfo; spec: OsmCourseSpec; turned: OsmCourseSpec; plan: PlacePlan; deg: number }): boolean;
+  lay(c: { id: string; info: RealInfo; spec: OsmCourseSpec; turned: OsmCourseSpec; plan: PlacePlan; deg: number; at: Pt }): boolean;
   /** a downloaded course (T358's library) by its id, as a spec the game would build (scaled to fit the map when it must be): null when it is no longer kept or
    *  has no holes. Absent (the tests): only the shipped courses */
   kept?(id: string): Promise<{ info: RealInfo; spec: OsmCourseSpec } | null>;
@@ -73,6 +74,24 @@ function sketchOf(spec: OsmCourseSpec): Sketch | null {
   const lines = new Path2D();
   for (const h of spec.holes) { const l = h.line; for (let i = 0; i + 1 < l.length; i += 2) { if (i) lines.lineTo(l[i]!, l[i + 1]!); else lines.moveTo(l[i]!, l[i + 1]!); } }
   return { layers: layers.map(l => ({ path: l.path, fill: l.fill })), lines, w: spec.w, h: spec.h };
+}
+
+/** #1174: the plan of a pose, and when it is off the east or south edge and the map can grow to hold it (to MAP_MAX, in whole 512-tile steps), the plan on the grown map with
+ *  `grow` set. A pose off the north or west edge is not helped: the old map keeps its north-west corner, so nothing already built has to move (the plan says 'map'). */
+export function growPlan(world: PlaceWorld, rotated: Parameters<typeof planPlace>[1], pose: PlacePose, build: number): PlacePlan {
+  const p = planPlace(world, rotated, pose, build);
+  if (p.fits || p.whyKind !== 'map' || !p.bounds) return p;
+  const E = PLACE_EDGE, o = p.outline;
+  let lo = Infinity, hi = -Infinity;
+  for (const v of o) { if (v < lo) lo = v; if (v > hi) hi = v; }
+  const [bx, by, bw, bh] = p.bounds;
+  if (lo < E - 1e-6 || bx < 0 || by < 0) return p; // off the north or west edge: the map only grows to the east and south
+  const to = growSizeFor(Math.max(hi, bx + bw, by + bh), E, world.map);
+  if (to === null) return p;
+  const g = planPlace({ ...world, map: to }, rotated, pose, build);
+  if (!g.fits) return p;
+  g.grow = { from: world.map, to };
+  return g;
 }
 
 /** the placing mode */
@@ -122,9 +141,10 @@ export class RealPlacer {
   /** the course in hand: its turn that fits the map first, the price of painting it, the land's middle at the camera's, the hint; refused (and said) when it fits the
    *  map in no turn. True when it is in hand */
   private take(id: string, info: RealInfo, spec: OsmCourseSpec): boolean {
-    const room = this.host.map - 2 * PLACE_EDGE, deg = firstFittingAngle(spec.w, spec.h, room);
+    // (#1174: the turn that fits this map, else one that fits the biggest map: the placing bar then offers to grow the map)
+    const deg = firstFittingAngle(spec.w, spec.h, this.host.map - 2 * PLACE_EDGE) ?? firstFittingAngle(spec.w, spec.h, MAP_MAX - 2 * PLACE_EDGE);
     if (deg === null) {
-      this.host.toast(`${osmDisplayName(info.name)} is bigger than the map in every direction (${spec.w} x ${spec.h} tiles; the map is ${this.host.map}): the map cannot grow, so pick a smaller or a scaled course`, 'warn');
+      this.host.toast(`${osmDisplayName(info.name)} is bigger than the biggest map in every direction (${spec.w} x ${spec.h} tiles; the map grows to ${MAP_MAX} at most): pick a smaller or a scaled course`, 'warn');
       return false;
     }
     this.host.enter(); // (Select in hand: picking a tool puts a course in hand down, so this comes first)
@@ -135,6 +155,9 @@ export class RealPlacer {
     this.host.emit();
     return true;
   }
+
+  /** #1174: the pose a grown map was reloaded for: the turn and where the land's middle stands (the pop-up is asked at once: click) */
+  setPose(deg: number, at: Pt): void { if (!this.spec) return; this.deg = normDeg(deg); this.at = { x: Math.round(at.x), y: Math.round(at.y) }; this.cache = null; this.host.emit(); }
 
   /** puts the course down: nothing was bought, taken down or paid */
   cancel(emit = true): void {
@@ -178,7 +201,7 @@ export class RealPlacer {
     const t = this.turned();
     if (!t || !this.at) return null;
     const key = `${this.id}|${this.deg}|${this.at.x},${this.at.y}|${this.host.revision()}`;
-    if (fresh || this.cache?.key !== key) this.cache = { key, plan: planPlace(this.host.world(fresh), t, { x: this.at.x, y: this.at.y, deg: this.deg }, this.build) };
+    if (fresh || this.cache?.key !== key) this.cache = { key, plan: growPlan(this.host.world(fresh), t, { x: this.at.x, y: this.at.y, deg: this.deg }, this.build) };
     return this.cache.plan;
   }
 
@@ -199,10 +222,10 @@ export class RealPlacer {
   confirm(): boolean {
     const t = this.turned();
     if (!this.confirming || !t || !this.at || !this.id || !this.info || !this.spec) return false;
-    const fresh = planPlace(this.host.world(true), t, { x: this.at.x, y: this.at.y, deg: this.deg }, this.build);
+    const fresh = growPlan(this.host.world(true), t, { x: this.at.x, y: this.at.y, deg: this.deg }, this.build);
     const l = placeLabel(fresh, this.info.name);
     if (l.bad) { this.confirming = null; this.host.toast(l.text, 'warn'); this.host.emit(); return false; }
-    const ok = this.host.lay({ id: this.id, info: this.info, spec: this.spec, turned: t, plan: fresh, deg: this.deg });
+    const ok = this.host.lay({ id: this.id, info: this.info, spec: this.spec, turned: t, plan: fresh, deg: this.deg, at: { x: this.at.x, y: this.at.y } });
     if (ok) this.cancel(); else this.host.emit();
     return ok;
   }

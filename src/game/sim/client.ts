@@ -1,6 +1,8 @@
 // The main thread's side of the traffic simulation: it posts edits and settings to the sim worker, keeps the last two
 // frames, and interpolates the cars between them so they move smoothly at 60 fps while the sim runs at 10 Hz.
 import SimWorker from './sim.worker?worker';
+import { MAP } from '../iso';
+import { workerNameFor } from '../mapsize';
 import type { GallerySpot } from '../golf/galleries';
 import type { WalkField } from '../golf/walkfield';
 import type { NetOp } from '../ground-protocol';
@@ -141,7 +143,7 @@ export class SimClient {
   /** starts the city worker, empty: the terrain and the network follow (terrain, then netOps). run false (a light boot, the lot lab: T157,
    *  boot.ts): no worker at all; every message is dropped, so no cars, town growth or books, and this mirror stays empty */
   constructor(run = true) {
-    this.worker = run ? new SimWorker() : null;
+    this.worker = run ? new SimWorker({ name: workerNameFor(MAP) }) : null;
     if (this.worker) this.worker.onmessage = (e: MessageEvent<FromSim>) => this.onMessage(e.data);
   }
   private post(m: ToSim) { this.worker?.postMessage(m); }

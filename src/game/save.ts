@@ -1,7 +1,9 @@
 /** Saves: gzip-compressed JSON in IndexedDB. v4 stores only the map seed: the valley is regenerated from it. v5 adds the town's
  *  lots and the sim clock. Old v2 saves (160-tile maps in localStorage), v3 saves (with the painted terrain) and v4 saves (no lots)
  *  are migrated. */
-import { MAP } from './iso';
+import { MAP, MAP_FIXED } from './iso';
+import { MAP_POINTER_KEY, validMapSize } from './mapsize';
+import type { GrownSave } from './terrain/grow';
 import type { SaveData } from './types';
 import type { LotTuple } from './lots/town';
 import type { PaintTuple } from './paint';
@@ -59,6 +61,9 @@ export interface SaveV5 {
   /** Optional managed turf grid; older saves retain their existing base/lawn/paint choices. */
   grass?: GrassSave;
   version: number; map: number;
+  /** #1174: the map has grown (terrain/grow.ts): the terrain it had before, put back over the seed's valley at this size. Written by every save of a grown map;
+   *  optional, no version bump; missing = the seed's valley is the whole terrain */
+  grown?: GrownSave;
   /** T342 (#970): the game's look, chosen when it started (the "Who are you?" card) or in the gear menu: 'desert' (desert-theme.ts), else
    *  autumn (optional, no version bump: a save from before is autumn) */
   theme?: 'autumn' | 'desert';
@@ -153,24 +158,37 @@ const V2_IDS = ['world:house_1', 'world:house_3', 'world:house_4', 'gen:house-du
 /** the save with the tournament day under way (T209, SaveV5.tourney) added last; with none, the very same object, so every other save is byte for byte
  *  as before */
 export function withTourney(d: SaveV5, tourney: DaySave | null): SaveV5 { return tourney ? { ...d, tourney } : d; }
-export async function writeSave(d: SaveV5) { const buf = await gzip(JSON.stringify({ ...d, build: BUILD })); await store.put(SLOT, buf); return buf.byteLength; }
+export async function writeSave(d: SaveV5) { const buf = await gzip(JSON.stringify({ ...d, build: BUILD })); await store.put(SLOT, buf); setMapPointer(d.map); return buf.byteLength; }
+/** keeps the size of the game saved last where the next page load reads it (iso.ts picks MAP from it; mapsize.ts); false when the platform has no storage */
+export function setMapPointer(map: number): boolean {
+  try { if (typeof localStorage === 'undefined' || !validMapSize(map)) return false; localStorage.setItem(MAP_POINTER_KEY, String(map)); return true; } catch { return false; }
+}
+/** sessionStorage key: the size this tab last reloaded into, so a save that still does not match after that reload is kept as a backup, never looped on */
+const RESIZE_KEY = 'capitalempire.resizedTo';
+/** moves the pointer to a save's size so the page can reload into it: true to reload now; false when the page fixed its own size (?map=), when this tab already
+ *  reloaded into that size once, or when the pointer cannot be kept */
+export function adoptMapSize(map: number, force = false): boolean {
+  if (MAP_FIXED || !validMapSize(map) || map === MAP) return false;
+  try { if (!force && sessionStorage.getItem(RESIZE_KEY) === String(map)) return false; sessionStorage.setItem(RESIZE_KEY, String(map)); } catch { /* no sessionStorage: one try */ }
+  return setMapPointer(map);
+}
 /** the save migrations, one step per version: step `from` turns a save of that version into the next one's shape; upgradeSave runs them in order */
 export const MIGRATIONS: { from: number; up(d: any): any }[] = [
   // v3: the same town with the painted terrain dropped; the seed came in v3 but was optional, so default to 1
-  { from: 3, up: d => ({ version: 4, map: MAP, seed: d.seed ?? 1, segs: d.segs, nodes: d.nodes, props: d.props, money: d.money, day: d.day, cam: d.cam }) },
+  { from: 3, up: d => ({ version: 4, map: d.map ?? MAP, seed: d.seed ?? 1, segs: d.segs, nodes: d.nodes, props: d.props, money: d.money, day: d.day, cam: d.cam }) },
   // v4: the same town, no lots yet
   { from: 4, up: d => ({ ...d, version: 5 }) },
 ];
 /** a parsed save of any version we read as the current one (null if it is not ours or not a version we read) */
-export function upgradeSave(d: { version: number; map: number } & Partial<SaveV5>): SaveV5 | null {
-  if (d.map !== MAP) return null;
+export function upgradeSave(d: { version: number; map: number } & Partial<SaveV5>, map: number = MAP): SaveV5 | null {
+  if (d.map !== map) return null;
   if (d.version === SAVE_VERSION) return d as SaveV5;
   let x: any = d;
   while (x.version !== SAVE_VERSION) { const m = MIGRATIONS.find(s => s.from === x.version); if (!m) return null; x = m.up(x); }
   return x as SaveV5;
 }
 /** what reading the save found: ok (the save, maybe migrated from an older version), none (no save), future (a newer build's), otherMap, corrupt (unreadable bytes, bad JSON, an unknown older version); backedUp: the unreadable save's bytes were copied to a backup slot first */
-export interface SaveRead { save: SaveV5 | null; status: 'ok' | 'none' | 'future' | 'otherMap' | 'corrupt'; version?: number; migratedFrom?: number; backedUp: boolean; backup?: string }
+export interface SaveRead { save: SaveV5 | null; status: 'ok' | 'none' | 'future' | 'otherMap' | 'resize' | 'corrupt'; /** resize: the save's own map size, which the page reloads into (nothing is backed up: the slot is untouched) */ map?: number; version?: number; migratedFrom?: number; backedUp: boolean; backup?: string }
 /** reads the town slot. A save is never overwritten unless it was read or copied to a backup slot first (T042). Never throws. */
 export async function readSave(): Promise<SaveRead> {
   try { return await readSlot(); } catch { return { save: null, status: 'none', backedUp: false }; }
@@ -187,8 +205,10 @@ async function readSlot(): Promise<SaveRead> {
   try { d = JSON.parse(await gunzip(buf)); } catch { d = undefined; }
   if (!d || typeof d !== 'object') return unreadable('corrupt', buf);
   const v: number | undefined = typeof d.version === 'number' ? d.version : undefined;
-  if (d.map !== MAP) return unreadable('otherMap', buf, v);
   if (v !== undefined && v > SAVE_VERSION) return unreadable('future', buf, v);
+  // #1174: a save keeps its own map size. Another size than this page's: the page reloads into it (adoptMapSize), the slot untouched; a size the game cannot run at,
+  // or one this tab already reloaded into (unless `force`: the player's own choice, a new game or a grown map), is the old "another map size" backup
+  if (d.map !== MAP) { if (validMapSize(d.map) && adoptMapSize(d.map)) return { save: null, status: 'resize', map: d.map, version: v, backedUp: true }; return unreadable('otherMap', buf, v); }
   const save = v === undefined || v < 3 ? null : upgradeSave(d);
   if (!save) return unreadable('corrupt', buf, v);
   if (v! < SAVE_VERSION) { // a migrated save: keep the original bytes once per version
@@ -244,14 +264,15 @@ export async function importSaveBytes(buf: ArrayBuffer): Promise<{ ok: boolean; 
   if (!d || typeof d !== 'object') return { ok: false, why: 'Not a Capital Empire save' };
   const v: number | undefined = typeof d.version === 'number' ? d.version : undefined;
   if (v !== undefined && v > SAVE_VERSION) return { ok: false, why: `This save is from a newer build (v${v})`, version: v };
-  if (d.map !== MAP) return { ok: false, why: 'This save is for another map size', version: v };
-  const save = v === undefined || v < 3 ? null : upgradeSave(d);
+  if (!validMapSize(d.map)) return { ok: false, why: 'This save is for a map size the game cannot run', version: v };
+  const save = v === undefined || v < 3 ? null : upgradeSave(d, d.map);
   if (!save) return { ok: false, why: 'This save could not be read', version: v };
   try {
     // a current save that cannot be copied to a backup is never written over
     if ((await store.get(SLOT)) !== undefined && !(await backupTownSlot('import'))) return { ok: false, why: 'The current save could not be backed up, so nothing was loaded', version: v };
     await store.put(SLOT, buf);
   } catch { return { ok: false, why: 'The save could not be written', version: v }; }
+  if (d.map !== MAP) { try { sessionStorage.removeItem(RESIZE_KEY); } catch { /* none */ } setMapPointer(d.map); } // the page reloads into the file's size
   return { ok: true, version: v };
 }
 /** a backup slot's bytes (null if missing or not a backup slot: only the keys listSaveBackups lists are read) */

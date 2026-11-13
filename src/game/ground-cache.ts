@@ -1,7 +1,8 @@
 /** The main thread's side of ground baking: which chunks are on screen, which are baked (as GL textures), which are
  *  stale after an edit, and a small pool of ground workers that bake them. Edits never block drawing: a stale chunk
  *  keeps showing its old picture until the new one arrives, and every visible chunk falls back to the planner map. */
-import { CHUNK_H, CHUNK_W, MID_H, MID_W, PLAN_H, PLAN_W, PLAN_K } from './iso';
+import { CHUNK_H, CHUNK_W, MAP, MID_H, MID_W, PLAN_H, PLAN_W, PLAN_K } from './iso';
+import { workerNameFor } from './mapsize';
 import { GROUND_ART } from './ground-art';
 import { HEIGHT_LIGHT_REACH, HEIGHT_LIGHT_STRENGTH, clampHeightLight } from './ext/course-height/light';
 import { groundRect, landLightRect, type LandField } from './golf/osm/land';
@@ -110,7 +111,7 @@ export class GroundCache {
   private stopped = false;
   constructor(public gl: GLRenderer, workers = Math.max(1, Math.min(3, (navigator.hardwareConcurrency || 4) - 2))) {
     for (let w = 0; w < workers; w++) {
-      const wk = new GroundWorker(); wk.onmessage = (e: MessageEvent<FromWorker>) => this.onMessage(w, e.data);
+      const wk = new GroundWorker({ name: workerNameFor(MAP) }); wk.onmessage = (e: MessageEvent<FromWorker>) => this.onMessage(w, e.data);
       this.workers.push(wk); this.inflight.push(0);
     }
     let baker: BunkerStageBaker | null = null;

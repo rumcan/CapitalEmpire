@@ -107,6 +107,9 @@ export interface PlacePlan {
   fits: boolean;
   /** the first reason it cannot go there ('' when it can) and its kind */
   why: string; whyKind: PlaceWhyKind;
+  /** #1174: set (by the placer, growPlan) when the pose is off the east or south edge and the map can grow to hold it: this plan is worked out on the grown map, `from`
+   *  tiles a side now and `to` after the grow (the old map keeps its place at the north-west corner); laying it grows the map first */
+  grow?: { from: number; to: number };
   /** the land bought: tiles (the cover less what is the player's already), hectares, the price, the tiles of it that were his */
   land: { tiles: number; ha: number; price: number; mine: number };
   /** the built lots under the cover (keys, counts by use) and what bringing them down costs */
@@ -451,10 +454,13 @@ export function planPlace(world: PlaceWorld, rotated: PlaceSpec, pose: PlacePose
 export function placeLabel(plan: PlacePlan, name: string): { text: string; bad: boolean } {
   if (plan.why) return { text: plan.why, bad: true };
   if (!plan.affordable) return { text: `Not enough money: ${money(plan.total)} (short ${money(plan.short)})`, bad: true };
+  if (plan.grow) return { text: `${name} · ${money(plan.total)} · click to grow the map to ${mapKm(plan.grow.to)} km and place${plan.over.warn.length ? ` · ⚠ ${plan.over.warn.join('; ')}` : ''}`, bad: false };
   // (T444: a road link the course cuts is said in the bar, though it does not stop the course)
   return { text: `${name} · ${money(plan.total)} · click to place${plan.over.warn.length ? ` · ⚠ ${plan.over.warn.join('; ')}` : ''}`, bad: false };
 }
 
+/** a map's side in km, tiles being 2 m ("4", "5", "5.5"; to the nearest half) */
+export const mapKm = (tiles: number): string => String(Math.round(tiles * 2 / 500) / 2);
 const plural = (n: number, one: string, many = one + 's'): string => `${n} ${n === 1 ? one : many}`;
 /** what goes, as a phrase ("14 houses, 2 shops and 1.3 km of road"), or '' when nothing does */
 export function goesPhrase(plan: PlacePlan): string {
@@ -474,7 +480,8 @@ export function popupText(plan: PlacePlan): string {
   const head = `This will buy ${ha.toLocaleString('en-US')} ha${goes ? `, demolish ${goes}` : ''} (${money(plan.total)}).`;
   const tail = plan.roads.segs ? ' Roads cut by the course end at its boundary (a lot left with no road is cleared too).' : '';
   const over = plan.over.notes.length ? ` ${plan.over.notes.join('. ')}.` : '';
-  return `${head}${tail}${orph ? ` ${plural(orph, 'building')} left with no road or no way out ${orph === 1 ? 'is' : 'are'} cleared too.` : ''}${over}`;
+  const grow = plan.grow ? ` The map grows first, from ${mapKm(plan.grow.from)} to ${mapKm(plan.grow.to)} km a side, to the east and south (the town and everything built stay where they are); the game reloads once to do it, with your old save kept as a backup.` : '';
+  return `${grow ? grow.trimStart() + ' ' : ''}${head}${tail}${orph ? ` ${plural(orph, 'building')} left with no road or no way out ${orph === 1 ? 'is' : 'are'} cleared too.` : ''}${over}`;
 }
 
 /** the sum the pop-up lists, line by line: the label and the money */

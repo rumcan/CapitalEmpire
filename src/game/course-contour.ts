@@ -10,6 +10,8 @@ import { gridAreas, type GridArea } from './ext/course-grid/areas';
 import { applyDiff, setLook, type Grid, type GridDiff } from './ext/course-grid';
 import { MapWater } from './map-water';
 import CourseWorker from './course.worker?worker';
+import { MAP } from './iso';
+import { workerNameFor } from './mapsize';
 
 /** a chunk job: chunks as cx cy pairs, the looks, the effective game month, the holes' centre lines and the cart paths and drives (flat
  *  segments ax, ay, bx, by in tiles: the tees' stairs face the nearest, T127) */
@@ -69,7 +71,7 @@ export class CourseContour {
   private w(): Worker | null {
     if (this.worker || this.failed) return this.worker;
     try {
-      const w = new CourseWorker();
+      const w = new CourseWorker({ name: workerNameFor(MAP) });
       w.onmessage = (e: MessageEvent<FromCourse>) => { const p = this.jobs.get(e.data.id); if (!p) return; this.jobs.delete(e.data.id); if (e.data.t === 'error') { console.warn('course worker:', e.data.message); this.local(p); } else p.done(e.data); };
       w.onerror = e => { e.preventDefault(); console.warn('course worker failed; its jobs run on the main thread', e.message); this.fail(); };
       this.worker = w;

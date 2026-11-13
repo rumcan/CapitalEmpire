@@ -1,4 +1,4 @@
-import { CHUNK_H, CHUNK_W, DISTRICT_Z, HH, HW, MAP, MID_H, MID_W, PLANNER_Z, PLAN_H, PLAN_W, SPR_H, SPR_W, ZOOM_MAX, ZOOM_MIN, ZOOM_STEP, clamp, clampZoom, planLevelFor, tileOf, worldX, worldY, mulberry } from './iso';
+import { CHUNK_H, CHUNK_W, DISTRICT_Z, HH, HW, MAP, MAP_FIXED, MAP_KM, MID_H, MID_W, PLANNER_Z, PLAN_H, PLAN_W, SPR_H, SPR_W, ZOOM_MAX, ZOOM_MIN, ZOOM_STEP, clamp, clampZoom, planLevelFor, tileOf, worldX, worldY, mulberry } from './iso';
 import { ATLAS_PAGES, GOLFER_BASE, GOLFER_CLIPS, GOLFER_FRAMES, GOLFER_PEOPLE, LIBRARY, SPECTATOR_BASE, SPECTATOR_CLIPS, SPECTATOR_FRAMES, SPECTATOR_PEOPLE, WALKER_BASE, WALKER_PEOPLE, WALK_DIRS, WALK_FRAMES } from './library';
 import { BoundedLru, hasPickingPixel, mapConcurrent, pickingMask } from './ext/asset-residency';
 import { releaseBuffer } from './release-buffer';
@@ -92,7 +92,7 @@ import type { BayRowDef } from './event/rows';
 import { inQuad, type CurbDef } from './event/curb';
 import { CAR_SCALE, SpriteTiles, spriteRect, VECTOR, type Drawable } from './sprites';
 import { releaseVectorMeshData, vectorMeshData } from './shadow-vector';
-import { readSave, writeSave, withTourney, clearSave, backupTownSlot, SAVE_VERSION, segRec, exportSaveBytes, importSaveBytes, listSaveBackups, readBackup, deleteBackup, type SaveV5 } from './save';
+import { adoptMapSize, readSave, writeSave, withTourney, clearSave, backupTownSlot, SAVE_VERSION, segRec, exportSaveBytes, importSaveBytes, listSaveBackups, readBackup, deleteBackup, type SaveV5 } from './save';
 import { CAR_COLOURS, carHeading, facings } from './traffic';
 import { bayCar, bayFoot, isWagon } from './vehicles';
 import { DayBook, clubCardView, dayConditions, dayCourse, dayPace, dayPlan, feeScale, normalizeDaySave, paceSlow, seasonPaceRep, type ClubCardView, type DayInputs, type DayRoster } from './golf/everyday';
@@ -169,6 +169,8 @@ import { HEIGHT_LIGHT_STRENGTH, clampHeightLight } from './ext/course-height/lig
 import { planGolfGame } from './golf/start';
 import { loadOsmLand, loadOsmSpec, osmCourseInfo, osmDisplayName, OSM_COURSES, OSM_CREDIT, OSM_LICENCE, type OsmCourseJson, type OsmCourseSpec, type OsmLand } from './golf/osm';
 import { previewOfKept, realDeps } from './golf/osm/find';
+import { DEFAULT_MAP, MAP_MAX, validMapSize } from './mapsize';
+import { applyGrown, extendHighway, packGrown, type GrownSave } from './terrain/grow';
 import { RealPlacer, realInfoOf, type RealInfo, type RealView } from './golf/osm/placer';
 import { cutSpan, goesPhrase, type KeepItem, type PlacePlan, type PlaceWorld } from './golf/osm/place';
 import { placeDiff, scratchOf } from './golf/osm/placegrid';
@@ -344,6 +346,8 @@ export const LOS_COL: Record<string, string> = { A: '#3ddc84', B: '#3ddc84', C: 
 /** a fresh random map seed (Math.random is fine here: the generator itself is seeded) */
 const newSeed = () => (Math.random() * 0x7fffffff) | 0 || 1;
 /** the browser's localStorage, or null where it is unavailable */
+/** #1174: localStorage key of the real course that was being placed when the map grew (the pose to ask for again after the reload) */
+const GROW_PLACE_KEY = 'capitalempire.growPlace';
 const storageOf = (): Storage | null => { try { return typeof localStorage === 'undefined' ? null : localStorage; } catch { return null; } };
 /** a filled disc of radius r at (x, y) in device px (the overlay's identity transform), colour col */
 function disc(ctx: CanvasRenderingContext2D, x: number, y: number, r: number, col: string) { ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fillStyle = col; ctx.fill(); }
@@ -1627,10 +1631,12 @@ export class Game {
    *  dead ends, trimmed as the bulldozer trims them), takes the player's placed items away, paints the course into the grid as one diff through the
    *  grid's own pipeline (the workers, the ground that re-bakes itself, the trees that go), puts the tee markers, pins and aim points (the old holes' go),
    *  and keeps the course's credit. True when it did */
-  private layRealCourse(c: { id: string; info: RealInfo; spec: OsmCourseSpec; turned: OsmCourseSpec; plan: PlacePlan; deg: number }): boolean {
+  private layRealCourse(c: { id: string; info: RealInfo; spec: OsmCourseSpec; turned: OsmCourseSpec; plan: PlacePlan; deg: number; at: Pt }): boolean {
     const g = this.golf; if (!g) return false;
     const { plan, turned } = c;
     if (!plan.ok || plan.total > this.money) return false;
+    // #1174: the pose is off the east or south edge: the map grows first (the page reloads), then the course is asked for again at the same pose
+    if (plan.grow) { void this.growMap(plan.grow.to, { id: c.id, deg: c.deg, x: c.at.x, y: c.at.y }); return true; }
     // the buildings go, bought out (the worker pays their compensation); the land, the roads taken and the course are paid here, less what the club's own
     // buildings in the way bring back (T444: they are cleared first)
     for (const key of [...plan.lots.keys, ...plan.orphans.keys]) this.traffic.buyLot(key);
@@ -3240,6 +3246,9 @@ export class Game {
     // T340 (#967): ?osmcourse=<id> is a new game on that real course in place of any stored save, which is neither read nor written over
     if (this.osmId && !fixName) { this.osmSpec = await loadOsmSpec(this.osmId); this.osmLand = this.osmSpec ? await loadOsmLand(this.osmId) : null; if (this.dead) return; if (this.osmSpec) this.saveBlocked = true; }
     const read = opts.bench || fixName || this.osmSpec || !this.boot.save ? null : await readSave(); if (this.dead) return;
+    // #1174: the save is of another map size (readSave moved the pointer), or there is no save and the pointer is a past game's: the page reloads into the right size
+    // once (a new game is DEFAULT_MAP); sizeFixed (?map=) pages never reload
+    if (read?.status === 'resize' || (read?.status === 'none' && read.backedUp && MAP !== DEFAULT_MAP && adoptMapSize(DEFAULT_MAP))) { this.saveBlocked = true; location.reload(); return; }
     const save = fixture ?? read?.save ?? null;
     // T357: a saved game's real ground unpacks (the platform's inflate is async) before load() reads it; one that does not unpack is a flat course, not a failed load
     this.landIn = save?.golf?.land ? await unpackLand(save.golf.land) : null; if (this.dead) return;
@@ -3285,6 +3294,7 @@ export class Game {
     if (this.dead) return;
     this.ready = true; this.readyAt = performance.now(); tick(1);
     if (readNote) this.toast(readNote.text, readNote.kind);
+    void this.resumeGrowPlace(); // #1174: a map that has just grown: the course being placed is in hand again
     this.last = performance.now();
     this.raf = requestAnimationFrame(this.frame);
   }
@@ -3293,7 +3303,7 @@ export class Game {
   private genTerrain(seed: number, model: number = this.devTerrain || TERRAIN_MODEL) { this.useTerrain(generateTerrain(seed, model), seed); }
   /** a map to play on (a generated valley, or a light boot's flat map), with the seed the save keeps */
   private useTerrain(t: Terrain, seed: number) {
-    this.seed = seed; this.terrain = t;
+    this.seed = seed; this.terrain = t; this.grownBase = null;
     this.names = new Names(seed); this.townPts = townCentres(this.terrain); this.roadNames = new RoadNames(this.names, this.townPts);
     for (const ps of this.forest.values()) for (const p of ps) this.sprites.remove(p);
     this.forest.clear(); this.perf.forest = 0; this.slope = slopeField(this.terrain.height); this.clearing = makeNoise(this.terrain.seed ^ 0x5f0e);
@@ -8255,6 +8265,10 @@ export class Game {
   repay() { const b = this.traffic.budget; if (!b.loans) this.toast('No loans to repay', 'warn'); else if (b.money < LOAN) this.toast('Not enough money to repay', 'warn'); else this.traffic.loan(false); }
   scheduleSave() { if (this.benchMode) return; clearTimeout(this.saveTimer); this.saveTimer = window.setTimeout(() => void this.save(), 800); }
   benchMode = false;
+  /** #1174: the terrain a grown map had before it grew (a save of it keeps it, terrain/grow.ts), and the grow under way: the size to write the save at, the old terrain, and the
+   *  road that carries the county road out to the new edge (save() writes them, then the page reloads) */
+  private grownBase: GrownSave | null = null;
+  private growTo: { map: number; grown: GrownSave; extra: SaveV5['segs'] } | null = null;
   /** the lots still to compose (queued, or staged part-way): the bench's grown-town scene waits for them before its tour (T098) */
   get lotsPending() { return this.lotQueue.size + this.staged.size; }
   async save() {
@@ -8291,7 +8305,8 @@ export class Game {
       speed: this.net.speedTier,
       golf: this.golf ? { ...this.golf, bunkers: this.bunkers.serialize(), teeSets: 1 as const, height: this.courseHeightChunks(), ...(landSave ? { land: landSave } : {}), grid: this.gridSave(), plans: this.golf.plans?.length ? this.golf.plans : undefined, play: this.golf.play && this.traffic.round.stage !== 'free' ? this.golf.play : undefined, everyday: this.dayBook?.save ?? this.golf.everyday, estate: ES.encodeEstate(this.estateRt) } : undefined,
     };
-    try { return await writeSave(withTourney(d, tourney)); } catch { return 0; }
+    const g = this.growTo, out: SaveV5 = g ? { ...d, map: g.map, grown: g.grown, segs: [...d.segs, ...g.extra] } : this.grownBase ? { ...d, grown: this.grownBase } : d;
+    try { return await writeSave(withTourney(out, tourney)); } catch { return 0; }
   }
   /** the course height as save chunks (undefined when flat), recomputed only when the field changed */
   private courseHeightChunks(): CourseHeightSaveChunk[] | undefined {
@@ -8310,7 +8325,10 @@ export class Game {
       // T340: a map-data game is laid on the flat map whatever its seed (the save's golf state says so)
       const osm = (d.golf as { osm?: { id?: unknown; entry?: { x?: unknown; y?: unknown; edge?: unknown } } } | undefined)?.osm, en = osm?.entry;
       if (osm?.id && !(osm as { placed?: unknown }).placed) this.useTerrain(typeof en?.x === 'number' && typeof en.y === 'number' && (en.edge === 'N' || en.edge === 'E' || en.edge === 'S' || en.edge === 'W') ? { ...flatTerrain(), highway: { x: en.x, y: en.y, edge: en.edge } } : flatTerrain(), d.seed);
-      else this.genTerrain(d.seed, terrainModelOf(d.terrainModel)); // T360: a save without a terrain model is model 1, its river as it was
+      else { // T360: a save without a terrain model is model 1, its river as it was. #1174: a grown map's old terrain goes back over the valley made at this size
+        const gen = generateTerrain(d.seed, terrainModelOf(d.terrainModel)), grown = d.grown && d.grown.from < MAP ? d.grown : null;
+        this.useTerrain(grown ? applyGrown(gen, grown, MAP) : gen, d.seed); this.grownBase = grown;
+      }
       this.peds.restoreIdentities(d.pedestrianIdentities); this.pedNet = -1; this.pedLots = -1; this.pedTick = 0;
       // a golf game has one town (its centre, saved); a legacy save has none of these, and keeps the valley's three
       this.golf = normalizeGolfSave(d.golf);
@@ -8398,6 +8416,7 @@ export class Game {
     this.traffic.setBudget(null, null); this.showWin = false; this.route = []; this.selected = null; this.builds = [];
   }
   newTown() {
+    if (MAP !== DEFAULT_MAP && !MAP_FIXED) { void this.newTownAtDefaultMap(); return; } // #1174: a new game is DEFAULT_MAP; this page runs at another size
     this.reset(); const golf = this.newGame();
     if (!golf) this.genTerrain(newSeed());
     this.ground.terrain(this.terrain); this.sendTerrain();
@@ -8405,6 +8424,41 @@ export class Game {
     this.afterLoad(); this.rangeMorning();
     if (this.stampPending) { this.stampPending = false; this.traffic.stamp(TOWN_POP); this.scheduleSave(); }
     void this.save(); this.toast(`New game (seed ${this.seed})`); this.emit();
+  }
+  /** #1174: a new game while this page runs at another map size than DEFAULT_MAP (a past game's): the old game is kept as a backup, then the page reloads into a new 4 km game */
+  private async newTownAtDefaultMap(): Promise<void> {
+    const was = this.saveBlocked; this.saveBlocked = true; clearTimeout(this.saveTimer);
+    if (await backupTownSlot('newgame')) { await clearSave(); if (adoptMapSize(DEFAULT_MAP, true)) { location.reload(); return; } }
+    this.saveBlocked = was; this.toast('The old game could not be kept as a backup, so the new game was not started', 'warn');
+  }
+  /** #1174: the map grows to `to` tiles a side (a whole 512-tile step above this one, up to MAP_MAX): the old map keeps its north-west corner and gains land to the east and south, so
+   *  nothing built moves. The game as it is (kept first as a backup, so the old map size can always be loaded again) is written as a save of the new size that carries the old terrain
+   *  (terrain/grow.ts) and the county road carried out to the new edge, the pointer moves to the new size and the page reloads into it. `place` is the real course to ask for again after the
+   *  reload, at its pose. True when the reload was started */
+  async growMap(to: number, place?: { id: string; deg: number; x: number; y: number }): Promise<boolean> {
+    const no = (why: string) => { this.toast(why, 'warn'); return false; };
+    if (!validMapSize(to) || to <= MAP || to > MAP_MAX) return no('The map cannot grow to that size');
+    if (MAP_FIXED || this.saveBlocked || this.benchMode) return no('The map cannot grow in this session: saving is off');
+    if (this.traffic.round.stage !== 'free') return no('The map cannot grow while a tournament is under way');
+    clearTimeout(this.saveTimer);
+    if (!(await backupTownSlot(`grow${MAP}`))) return no('The game could not be backed up, so the map did not grow');
+    this.growTo = { map: to, grown: packGrown(this.terrain, MAP), extra: extendHighway([...this.net.segs].map(segRec), this.terrain.highway, to) };
+    const bytes = await this.save();
+    if (!bytes) { this.growTo = null; return no('The grown map could not be saved, so the map did not grow'); }
+    this.saveBlocked = true; // (the page reloads into the new size: no save of the old one may land over it)
+    try { if (place) localStorage.setItem(GROW_PLACE_KEY, JSON.stringify({ ...place, map: to })); } catch { /* the course is picked again */ }
+    adoptMapSize(to, true);
+    location.reload();
+    return true;
+  }
+  /** #1174: after a grow, the course that was being placed is in hand again at its pose with the pop-up asked (Place it lays it, as before) */
+  private async resumeGrowPlace(): Promise<void> {
+    let p: { id?: unknown; deg?: unknown; x?: unknown; y?: unknown; map?: unknown } | null = null;
+    try { const s = localStorage.getItem(GROW_PLACE_KEY); localStorage.removeItem(GROW_PLACE_KEY); p = s ? JSON.parse(s) : null; } catch { p = null; }
+    if (!p || p.map !== MAP || typeof p.id !== 'string' || typeof p.deg !== 'number' || typeof p.x !== 'number' || typeof p.y !== 'number' || !this.golf) return;
+    this.toast(`The map is now ${MAP_KM} km a side.`, 'good');
+    if (!(await this.startRealPlace(p.id)) || this.dead) return;
+    this.real.setPose(p.deg, { x: p.x, y: p.y }); this.real.click();
   }
   clearTown() { this.reset(); this.sendTerrain(); this.afterLoad(); void clearSave(); void this.save(); this.emit(); }
   /** downloads the current save as capital-empire-YYYY-MM-DD.cesave (saves first, unless saving is blocked) */
