@@ -5381,6 +5381,7 @@ export class Game {
     });
     const structs = [lens[SK.BRIDGE] ? `${Math.round(lens[SK.BRIDGE] * 2)} m bridge` : '', lens[SK.TUNNEL] ? `${Math.round(lens[SK.TUNNEL] * 2)} m tunnel` : ''].filter(Boolean);
     this.toast(`Built ${Math.round(total * 2)} m of ${cls.name.toLowerCase()}${structs.length ? ` (${structs.join(', ')})` : ''} ${paid < 0 ? `(refund $${(-paid).toLocaleString()})` : `for $${paid.toLocaleString()}`}${comp ? `, $${comp.toLocaleString()} compensation for ${hit.length} building${hit.length > 1 ? 's' : ''}` : ''}${cleared.length ? ` (cleared ${cleared.length} item${cleared.length > 1 ? 's' : ''})` : ''}${cuts.length ? `, replaced ${cuts.length} road piece${cuts.length > 1 ? 's' : ''} worth $${Math.round(removed).toLocaleString()}` : ''}`, 'good');
+    this.walkPathFeedback(cls);
     this.clubDriveBuilt(cls); this.estateStreetBuilt(cls); // T175, T353: the clubhouse stopgap's drive
     { const t = this.golf?.progress?.tour; if (t && !isCourseClass(cls.id) && tourRunning(t)) { t.roads++; this.scheduleSave(); } } // T293: the tutorial's road step
     // a one-way road that ends in a dead end traps cars: warned, not refused
@@ -5951,6 +5952,25 @@ export class Game {
     if (id === null) rangeGuideOff(gd); else if (!rangeGuideSkip(gd, id)) return;
     this.scheduleSave(); this.emit();
   }
+  /** T459 (#1215): a path built while the guide is on its walking-path step and the walkway is not whole yet: a toast says which of the car
+   *  park, the shop and the tee box's back the paths reach, and the step's rings show again, framed */
+  private walkPathFeedback(cls: { family?: string }) {
+    if (cls.family !== 'cart' || rangeGuideCurrent(this.golf?.progress?.guide) !== 5 || this.range.hasWalkway()) return;
+    const r = this.range.walkReach(); if (!r) return;
+    const mark = (ok: boolean, what: string) => `${ok ? '✓' : '✗'} ${what}`;
+    const missing = !r.lot ? 'the car park' : !r.shop ? 'the shop' : !r.tee ? 'the back of the mats' : null;
+    this.toast(`Walking path: ${mark(r.lot, 'car park')} · ${mark(r.shop, 'shop')} · ${mark(r.tee, 'behind the mats')}. ${missing ? `Lay it on to ${missing} (the rings show where)` : 'Join the pieces into one path'}`, 'warn');
+    this.showWalkRings();
+  }
+  /** the walking path step's rings (the car park's edge, the shop's counter, the tee's back) for 20 s, all three framed in the free map */
+  private showWalkRings() {
+    const sc = this.range.scene; if (!sc) return;
+    const o = sc.anchors.lot[0]!, P = (u: number, v: number) => ({ x: o.x + sc.roadDir.x * (u - 49) + sc.rangeSide.x * (v - 2), y: o.y + sc.roadDir.y * (u - 49) + sc.rangeSide.y * (v - 2) });
+    const pts = [sc.carEdge, sc.counter, P(30, 17)];
+    this.guideRings = { pts, until: performance.now() + 20000, walk: true };
+    this.fitView(pts.flatMap(p => [p, { x: p.x - 6, y: p.y - 6 }, { x: p.x + 6, y: p.y + 6 }]), true);
+    this.emit();
+  }
   /** the rings the walking path step points at (T239: the car park's edge, the shack's counter, the tee's back), until a time */
   private guideRings: { pts: Pt[]; until: number; /** the walking path's (gone once the path is laid) */ walk?: boolean } | null = null;
   /** Show me on a guide line: the tool or card it needs, the camera on its spot and its control pulsed */
@@ -5968,10 +5988,10 @@ export class Game {
       case 4: card('range-buy-greens', P(35, 50), 0.15); return;
       case 5: {
         if (this.refuseLocked('path')) return;
-        const c = sc.carEdge, s = sc.counter, t = P(30, 17); this.lookAt((c.x + t.x) / 2, (c.y + t.y) / 2, 0.3);
         if (this.range.cardOpen) this.openRangeCard(false);
         this.setTool('path'); this.roadClass = 'cart-walk'; // the rail's Cart paths & roads, its Walking path
-        this.guideRings = { pts: [c, s, t], until: performance.now() + 20000, walk: true };
+        // (T459 #1215: all three rings framed beside the panel, not a fixed zoom that lost the tee's ring off a small window)
+        this.showWalkRings();
         queueMicrotask(() => this.pulseAnchor('rail-paths')); this.emit(); return;
       }
       case 6: card(b?.owned.includes('gravel') ? 'range-buy-pave' : 'range-buy-gravel', P(59, 10), 0.3); return;
@@ -5980,7 +6000,11 @@ export class Game {
         if (this.practiceForSale()) { this.showPracticeSale(); queueMicrotask(() => this.pulseAnchor('land-buy')); }
         else { this.showPracticeArea(); queueMicrotask(() => this.pulseAnchor('rail-facilities')); }
         return;
-      default: this.startFirstHole(); queueMicrotask(() => this.pulseAnchor('new-hole')); return;
+      default: {
+        // (T459 #1215: before New hole opens, say what opens it, not the Course tool's own lock of an earlier step)
+        const lock = this.toolUi()?.newHoleLock; if (lock) { this.toast(`New hole: ${lock}, or when the guide's steps above are done`); return; }
+        this.startFirstHole(); queueMicrotask(() => this.pulseAnchor('new-hole')); return;
+      }
     }
   }
   // ---------- the tournament prep quests (golf/prep.ts; the RangeGuideCard's look): this tier's chapter (or the next) as a checklist, the first
