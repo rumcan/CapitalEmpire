@@ -360,7 +360,7 @@ function spawnCreatures() { for (let k = 0; k < MAXC; k++) placeCreature(k, fals
 function updateCreatures() {
   for (let k = 0; k < MAXC; k++) {
     CA[k] += (rnd() - 0.5) * 0.5;
-    const sp = tmode === 2 ? 0.012 : 0.03;
+    const sp = tmode >= 2 ? 0.012 : 0.03;
     CX[k] += Math.cos(CA[k]) * sp; CY[k] += Math.sin(CA[k]) * sp; CZ[k] = clamp(CZ[k] + (rnd() - 0.5) * 0.03, 0.3, 2.2);
     if (Math.abs(CX[k] - player.x) > 13 || Math.abs(CY[k] - player.y) > 15) placeCreature(k, true);
   }

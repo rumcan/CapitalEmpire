@@ -130,7 +130,7 @@ function hostMessage(m) {   // one message from the host page, already known to 
   if (m.t === 'lies' && m.v === 1) { hostLies(m.lk); return; }   // T438
   if ((m.t === 'turn' || m.t === 'shot' || m.t === 'holeEnd' || m.t === 'preview') && m.v === 1) { if (course) hostPlayMsg(m); return; }   // (T418: the play, once a course is in)
   if (m.t !== 'course' || m.v !== 1) return;
-  if (m.time === 'night') setTime(TOD.length - 1); else if (m.time === 'day') setTime(0); else if (m.time === 'golden') setTime(1); else if (m.time === 'dusk') setTime(2);   // T449: night golf: the darkest time until night is drawn with the floodlights; T448: golden, dusk (absent: the view's own, Golden hour)
+  if (m.time === 'night') setTime(3); else if (m.time === 'day') setTime(0); else if (m.time === 'golden') setTime(1); else if (m.time === 'dusk') setTime(2);   // T449, #1200: night golf: the Night time of day (TOD 3), lit by the host's floodlight towers; T448: golden, dusk (absent: the view's own, Golden hour)
   if (m.golfer) { playerLook(m.golfer); gaHost = artIdOf(m.golfer); }   // T437: the golfer in the player card's clothes (parts/08d-actors.md); T450: and drawn as that golfer (parts/08k-golfart.md)
   const C = m.course;
   if (!C || typeof C.id !== 'string' || !Array.isArray(C.holes) || !C.holes.length || !C.polys) { hostSend({ t: 'error', why: 'the course has no id, holes or shapes' }); return; }
@@ -588,7 +588,7 @@ addEventListener('keydown', (e) => {
   if (HP && HP.turn && !HP.sw && (e.code === 'KeyZ' || e.code === 'KeyX' || e.code === 'KeyI')) { hostPickSet(e.code === 'KeyZ' ? 'curve' : e.code === 'KeyX' ? 'flight' : 'boost'); return; }   // (T441, T443: the shape and the boost)
   if (HOST && e.code === 'Escape') { hostSend({ t: 'exit' }); return; }   // (the host page closes the view)
   keys[e.code] = true;
-  if (e.code === 'KeyT') setTime((tmode + 1) % 3);
+  if (e.code === 'KeyT') setTime((tmode + 1) % TOD.length);
   else if (e.code === 'KeyC') { behindHole(); camD = D0; camHk = 1; HZ = HZ0; }
   else if (e.code === 'KeyN') { SEED = (Math.random() * 1e9) | 0; total = 0; newHole(1, 0, 0); firstPicture(); }   // (on a real course: the same course, new trees and rough)
   else if (e.code === 'KeyB') dropBall();
@@ -658,7 +658,7 @@ function loop(now) {
   const q = new URLSearchParams(location.search);
   if (q.get('host') === '1') HOST = true;   // (host mode: started below, once the page is ready)
   if (q.get('seed')) SEED = +q.get('seed') | 0;
-  setTime(q.get('time') ? clamp(+q.get('time') | 0, 0, 2) : 1);   // (Golden hour unless the address says: the owner's choice with the painted look, T448)
+  setTime(q.get('time') ? clamp(+q.get('time') | 0, 0, TOD.length - 1) : 1);   // (Golden hour unless the address says: the owner's choice with the painted look, T448)
   setBiome(BIOMES[q.get('biome')] ? q.get('biome') : 'parkland', CTYPES[q.get('type')] ? q.get('type') : 'private');   // ?biome=desert&type=links and so on
   STYLE_URL = q.has('biome') || q.has('type');   // (the address's style wins over the one kept for the course)
   if (!HOST) try { for (const c of JSON.parse(localStorage.getItem('cinderlinks.courses') || '[]')) if (c && c.id && c.holes) MORE_COURSES.push(c); } catch (e) { /* nothing kept */ }

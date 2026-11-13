@@ -1,7 +1,7 @@
 // Cinderlinks' headless gate and camera (after Cinderdeep's harness): runs the compiled game.js in Node with a stub page.
 //   node harness.mjs [public/cinderlinks/game.js]                the gate: one JSON line, exit 0 = pass (npm run cinder:gate: at RSCALE 0.75)
 //   node harness.mjs public/cinderlinks/game.js --shot shots/x --scenes a,b,c   one PNG per scene: shots/x-a.png ... (no gate)
-//        [--seed N] [--time 0|1|2] [--scale N]
+//        [--seed N] [--time 0|1|2|3] [--scale N]
 import fs from 'node:fs';
 import zlib from 'node:zlib';
 import { convert } from './tools/course-import.mjs';
@@ -557,6 +557,35 @@ ${HOST_PLAY}
       const me = at(-6, 0); go(me[0], me[1], Math.atan2(ux, -uy)); frames(30); snap('dress'); { const c = at(18, 3); go(c[0], c[1], Math.atan2(ux, -uy)); camHk = 2.2; frames(20); snap('dress-stand'); camHk = 1; }
       const B = feats ? feats.builds.filter((b) => b.use === 'tent' || b.use === 'stand') : []; for (const b of B) if (!b.faces) buildFaces(b);
       out.info.push({ dress: { builds: B.length, faces: B.map((b) => b.use + ':' + (b.faces ? b.faces.length : 0)) } }); },
+    night() { // #1200: night golf: floodlight towers (as the host sends them: 'light' features) along Woodhill's first holes; the 1st from its tee (lit), then a far hole none of them reaches (dark), a golfer standing in a pool, and the frame time with and without the towers (NTOWERS=20)
+      const nT = +(process.env.NTOWERS || 20), mk = () => {
+        const hm = hostMsg(), H = hm.course.holes, lights = []; hm.time = 'night';
+        for (let h = 0; h < Math.min(3, H.length) && lights.length < nT; h++) {
+          const ln = H[h].line;
+          for (let i = 0; i + 3 < ln.length && lights.length < nT; i += 2) {
+            const x0 = ln[i], y0 = ln[i + 1], x1 = ln[i + 2], y1 = ln[i + 3], L = Math.hypot(x1 - x0, y1 - y0) || 1, ux = (x1 - x0) / L, uy = (y1 - y0) / L;
+            for (let f = (i === 0 ? 8 : 20); f < L && lights.length < nT; f += 52) { const sd = lights.length % 2 ? 24 : -24; lights.push({ id: 'l:t' + lights.length, kind: 'light', name: 'Floodlight tower', at: [+(x0 + ux * f - uy * sd).toFixed(1), +(y0 + uy * f + ux * sd).toFixed(1)], h: 14, reach: 75 }); }
+          }
+        }
+        hm.features = hm.features || { features: [] }; hm.features.features = (hm.features.features || []).concat(lights); return { hm, lights };
+      };
+      const med = (n, runs = 12) => { const a = []; for (let r = 0; r < runs; r++) { frames(6); const t0 = performance.now(); for (let k = 0; k < n; k++) render(); a.push((performance.now() - t0) / n); } a.sort((p, q) => p - q); return +a[0].toFixed(2); };   // (the fastest run of the batch: the machine's other work only ever slows a run)
+      const { hm, lights } = mk(); hostMessage(hm); idle(); ACT_MAKE = 999;
+      const S = course.S, tee = [hole.tee.x, hole.tee.y], ux = Math.cos(hole.dir || 0), p0 = [hole.pin.x, hole.pin.y], dl = Math.hypot(p0[0] - tee[0], p0[1] - tee[1]), dx = (p0[0] - tee[0]) / dl, dy = (p0[1] - tee[1]) / dl;
+      const yaw = Math.atan2(dx, -dy);
+      go(tee[0] - dx * 1, tee[1] - dy * 1, yaw); frames(30); for (let w = 0; w < 400 && (farQ.length || tileQ.length); w++) frames(1); frames(20); snap('night-lit-tee');
+      go(tee[0] + dx * 60, tee[1] + dy * 60, yaw); frames(25); snap('night-lit-fairway');
+      const lamp = feats && feats.lamps && feats.lamps[0] || { x: tee[0] + dx * 30, y: tee[1] + dy * 30 }; go(lamp.x + 6, lamp.y + 2, yaw); frames(25); snap('night-pool');   // (a golfer standing in a tower's pool)
+      const lit = med(20);
+      // the dark one: the same lights, a hole they do not reach
+      const far = hostMsg(); far.time = 'night'; far.hole = Math.min(far.course.holes.length, 14); far.features = hm.features; hostMessage(far); idle(); ACT_MAKE = 999;
+      { const t2 = [hole.tee.x, hole.tee.y], p2 = [hole.pin.x, hole.pin.y], l2 = Math.hypot(p2[0] - t2[0], p2[1] - t2[1]), x2 = (p2[0] - t2[0]) / l2, y2 = (p2[1] - t2[1]) / l2;
+        go(t2[0] - x2, t2[1] - y2, Math.atan2(x2, -y2)); frames(30); for (let w = 0; w < 400 && (farQ.length || tileQ.length); w++) frames(1); frames(20); snap('night-dark-tee'); }
+      const dark = med(20);
+      // the frame time: night with no towers, and by day
+      const bare = hostMsg(); bare.time = 'night'; bare.hole = 1; hostMessage(bare); idle(); ACT_MAKE = 999; go(tee[0] - dx, tee[1] - dy, yaw); frames(40); const noTowers = med(20);
+      const dm = hostMsg(); dm.time = 'day'; dm.hole = 1; hostMessage(dm); idle(); ACT_MAKE = 999; go(tee[0] - dx, tee[1] - dy, yaw); frames(40); const day = med(20);
+      out.info.push({ night: { towers: lights.length, ms: { dayNoTowers: day, nightNoTowers: noTowers, nightLitHole: lit, nightDarkHole: dark }, faces: feats ? 0 : 0 } }); },
     ghostball() { // T433: a ghost's stroke on Woodhill's 1st, beside the owner's turn: his ball flies see-through while the owner's stays on the tee; the help says what a round in the game is
       hostMessage(hostMsg()); idle(); ACT_MAKE = 999;
       const S = course.S, b0 = [hole.tee.x / S, hole.tee.y / S], p0 = [hole.pin.x / S, hole.pin.y / S], dl = Math.hypot(p0[0] - b0[0], p0[1] - b0[1]), ux = (p0[0] - b0[0]) / dl, uy = (p0[1] - b0[1]) / dl, rx = -uy, ry = ux;

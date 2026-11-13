@@ -3,7 +3,7 @@ The people of the course can be drawn as CapitalEmpire's own rendered golfers (a
 R: In host mode the player is the golfer of his player card and every other golfer is the one the manager view shows (the dress's `art`, protocol3p.ts); a caddie, a person with no art and anyone in a cart seat keep the voxel figure.
 R: Without a host the style menu has a Golfer choice: the voxel figure or one of the golfers; the choice is kept in the browser.
 R: A golfer's art is as tall as the voxel figure at the same scale; all of a golfer's clips share one scale; the direction row follows the facing the camera sees (a sixteenth turns 22.5 degrees).
-R: The art is lit by the time of day (its colours times the sun's colour against the day's) and casts the same shadow as the voxel figure.
+R: The art is lit by the time of day (its colours times the sun's colour against the day's; at night the moon's, between its light and its shade) and casts the same shadow as the voxel figure. The glow pass (the floodlights' pools, a lantern) then lights it like everything else on the picture, so a golfer in a floodlit pool is lit and one in the dark is dark (#1200).
 R: Nothing stalls: the pictures load in the background; a frame is made from them only when it is needed, a few milliseconds of it a step at most, and until it is made the nearest frame already made (or the voxel figure) stands in.
 File: game.js
 Check: function golferPic(
@@ -58,7 +58,7 @@ function gaVoxel(K) {   // the voxel golfer's height at scale K, in sprite pixel
   for (let y = 0; y < S.h; y++) if (S.x1[y] >= S.x0[y]) { top = y; break; }
   h = Math.max(1, S.ay - top); gaVoxH.set(K, h); return h;
 }
-function gaTint() { const s = TOD[tmode].sun, d = TOD[0].sun; return [Math.min(1.15, s[0] / d[0]), Math.min(1.15, s[1] / d[1]), Math.min(1.15, s[2] / d[2])]; }   // the light of the hour against the day's
+function gaTint() { const T = TOD[tmode], d = TOD[0].sun, s = tmode >= 3 ? T.sun.map((v, i) => T.sh[i] + (v - T.sh[i]) * 0.7) : T.sun; return [Math.min(1.15, s[0] / d[0]), Math.min(1.15, s[1] / d[1]), Math.min(1.15, s[2] / d[2])]; }   // the light of the hour against the day's
 function gaKey(id, clip, row, f, K) { return id + clip + row + '_' + f + '_' + K + '_' + tmode; }
 function gaMake(id, clip, row, f, K) {   // one frame as a sculpture: the art scaled to the voxel figure's height, lit by the hour; null when it cannot be made yet
   const a = gaLoad(id, clip), s0 = gaLoad(id, 'sheet'); if (!a.ready || !s0.ready || !s0.personH) return null;

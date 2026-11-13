@@ -13,6 +13,8 @@ export const NIGHT_UNLOCK_TIER = 2;
 export const FLOODLIGHT_ID = 'floodlight';
 /** how far a tower lights, m: a hole's line within this of a tower is lit */
 export const LIGHT_REACH_M = 75;
+/** #1200: how tall a floodlight tower stands, m (the view draws the mast and its lamp head at this height) */
+export const FLOODLIGHT_HEIGHT_M = 14;
 /** a hole is lit when at least this share of its line (sampled every LINE_STEP_M) is within a tower's reach */
 export const HOLE_LIT_SHARE = 0.8, LINE_STEP_M = 10;
 /** the share of the course's holes that must be lit to host (rounded up: 15 of 18, 8 of 9) */

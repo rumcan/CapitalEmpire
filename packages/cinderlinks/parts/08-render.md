@@ -14,7 +14,7 @@ R: The sky is painted once per light: banded colour from the top to the horizon,
 R: Ground far enough away that one screen pixel covers several ground pixels is read from smaller, averaged copies of the painted ground, so small flowers and stones do not blink as the camera moves.
 R: Grass stands up: within 30 metres every blade is drawn raised from the ground the way the cliffs are, nearer blades covering farther ones, dark at the root and bright at the tip, with flowers at the tips. The wind rolls through it in long fronts: where a gust passes the blades bend lower and shine. The grass lies flat round the ball.
 R: Every drawn pixel records how far away it is, so a thing behind a hill or a cliff is hidden by it.
-R: Three lights: day (the default), golden hour and dusk. A pixel's light level picks between a warm sun colour and a cool shadow colour; shadows are never black.
+R: Four lights: day, golden hour (the default), dusk and night (#1200, for night golf). A pixel's light level picks between a warm sun colour and a cool shadow colour; shadows are never black. At night the sky is dark blue with many stars of different brightness and a moon high at the upper right, the land is only the moon's pale blue light, and the glow (lanterns, fireflies, the floodlight towers) lights what is near it.
 R: Water moves: two drifting noise fields make glints and dark bands, and the shore has a foam line; far water narrows into streaks.
 R: Water is see-through close by and takes the sky's colour far off; rings of foam lap in toward the shore; light dances on the bed in the shallows; toward the sun the far water glitters.
 R: The banks, the trees, the reeds and the clouds lie mirrored on the water, broken by ripples; far water mirrors strongly, near water faintly.
@@ -48,7 +48,10 @@ const TOD = [
   { name: 'Golden hour', sun: [1.2, 1.0, 0.76], sh: [0.5, 0.45, 0.72], water: [1.08, 0.94, 0.86], glow: 0.3, haze: [246, 192, 152],
     sky: [[74, 112, 170], [226, 160, 150], [250, 188, 122]], cloud: [[255, 216, 152], [234, 152, 132], [132, 102, 152]], mtn: [[172, 132, 162], [208, 162, 162], [122, 98, 142], [162, 122, 152]], disc: [1023, 44, 21, [255, 244, 200]] },
   { name: 'Dusk', sun: [0.5, 0.44, 0.64], sh: [0.17, 0.19, 0.4], water: [0.42, 0.42, 0.7], glow: 1, haze: [112, 82, 132],
-    sky: [[22, 26, 70], [84, 56, 120], [226, 112, 120]], cloud: [[240, 142, 132], [132, 82, 132], [52, 46, 92]], mtn: [[72, 62, 112], [98, 78, 126], [42, 42, 86], [60, 54, 102]], disc: [1023, 16, 23, [255, 222, 164]] }];
+    sky: [[22, 26, 70], [84, 56, 120], [226, 112, 120]], cloud: [[240, 142, 132], [132, 82, 132], [52, 46, 92]], mtn: [[72, 62, 112], [98, 78, 126], [42, 42, 86], [60, 54, 102]], disc: [1023, 16, 23, [255, 222, 164]], stars: 0.0016 },
+  // (the night of night golf, #1200: a dark blue sky with many stars and a moon high at the upper right; the ground is the moon's pale blue light, dark enough that the floodlights' pools stand out)
+  { name: 'Night', sun: [0.2, 0.26, 0.42], sh: [0.07, 0.09, 0.19], water: [0.3, 0.36, 0.64], glow: 1, haze: [20, 28, 58],
+    sky: [[5, 8, 26], [12, 20, 52], [28, 42, 84]], cloud: [[84, 98, 140], [42, 52, 92], [18, 24, 54]], mtn: [[26, 34, 66], [34, 44, 80], [16, 22, 48], [22, 30, 60]], disc: [1023, 120, 15, [238, 242, 255]], stars: 0.0042 }];
 const LR = new Uint16Array(256), LG = new Uint16Array(256), LB = new Uint16Array(256);
 function setTime(k) {
   tmode = k; const T = TOD[k];
@@ -114,7 +117,7 @@ function makeSky(T) {
       if (dd < 1) { r = D[3][0]; gg = D[3][1]; b = D[3][2]; }
       else { const q = Math.floor(Math.min(1, 1.4 / (dd * dd)) * 6) / 6 * 0.75; r = lerp(r, D[3][0], q); gg = lerp(gg, D[3][1], q); b = lerp(b, D[3][2], q); }
     }
-    if (T.glow === 1 && up > 70 && hash2(x, y, 904) < 0.0016) { r = gg = b = 235; }   // stars
+    if (T.stars && up > 70 && hash2(x, y, 904) < T.stars) { r = gg = b = T.stars > 0.003 ? 150 + hash2(x, y, 905) * 105 : 235; }   // stars (at night more of them, some dimmer)
     for (let mn = 0; mn < 2; mn++) {                        // the two ranges: a light rim on the sunward side of each ridge, and each fades into the air at its foot
       const mt = mn ? m2[x] : m1[x]; if (y < mt) continue;
       const sm = mn ? s2 : s1, slope = (sm[(x - 14) & W] - sm[(x + 14) & W]) * 60, dn = y - mt, C = T.mtn[mn * 2 + (dn < 2 + slope * (3 + 5 * pnoise(x / 16, y / 9, 913 + mn, 256)) ? 1 : 0)];
@@ -948,11 +951,12 @@ function applyGlow() {   // each lit 8 x 8 block: the picture there is brightene
     const X0 = (gx - LM) * LS, Y0 = (gy - LM) * LS;
     for (let y = 0; y < LS; y++) {
       const Y = Y0 + y; if (Y >= VH) break;
-      const fy = (y + 0.5) / LS;
-      for (let x = 0; x < LS; x++) {
-        const fx = (x + 0.5) / LS, w0 = (1 - fx) * (1 - fy), w1 = fx * (1 - fy), w2 = (1 - fx) * fy, w3 = fx * fy;
-        const Lr = lr[k] * w0 + lr[k1] * w1 + lr[k2] * w2 + lr[k3] * w3, Lg = lg[k] * w0 + lg[k1] * w1 + lg[k2] * w2 + lg[k3] * w3, Lb = lb[k] * w0 + lb[k1] * w1 + lb[k2] * w2 + lb[k3] * w3;
-        const q = Y * VW + X0 + x; if (zbuf[q] === 65535) continue;   // the sky takes no lantern light
+      const fy = (y + 0.5) / LS;   // (the bilinear blend as two edge values for this row and a step along it: the same numbers, a third of the work a pixel; #1200: the floodlights light most of the picture)
+      const r0 = lr[k] + (lr[k2] - lr[k]) * fy, r1 = lr[k1] + (lr[k3] - lr[k1]) * fy, g0 = lg[k] + (lg[k2] - lg[k]) * fy, g1 = lg[k1] + (lg[k3] - lg[k1]) * fy, b0 = lb[k] + (lb[k2] - lb[k]) * fy, b1 = lb[k1] + (lb[k3] - lb[k1]) * fy;
+      const sr = (r1 - r0) / LS, sg = (g1 - g0) / LS, sb = (b1 - b0) / LS;
+      let Lr = r0 + sr * 0.5, Lg = g0 + sg * 0.5, Lb = b0 + sb * 0.5, q = Y * VW + X0;
+      for (let x = 0; x < LS; x++, q++, Lr += sr, Lg += sg, Lb += sb) {
+        if (zbuf[q] === 65535) continue;   // the sky takes no lantern light
         const c = fb[q];
         const r = (c & 255) * (1 + K * Lr) + A * Lr, g = ((c >> 8) & 255) * (1 + K * Lg) + A * Lg, b = ((c >> 16) & 255) * (1 + K * Lb) + A * Lb;
         fb[q] = (0xff000000 | ((b > 255 ? 255 : b) << 16) | ((g > 255 ? 255 : g) << 8) | (r > 255 ? 255 : r)) >>> 0;
@@ -984,7 +988,7 @@ function drawCreatures() {
   for (let k = 0; k < MAXC; k++) {
     project(CX[k], CY[k], groundH(CX[k], CY[k]) + CZ[k], PJ);
     const sx = PJ.x, sy = PJ.y, d = PJ.d; if (PJ.s === 0 || sx < 2 || sy < 2 || sx >= VW - 2 || sy >= VH - 2) continue;
-    if (tmode === 2 || (tmode === 1 && (k & 1))) {            // a firefly: it blinks, and lights the ground
+    if (tmode >= 2 || (tmode === 1 && (k & 1))) {            // a firefly: it blinks, and lights the ground
       if (Math.sin(frame * 0.07 + CS[k]) <= -0.2) continue;
       plotZ(sx, sy, d, rgb(226, 255, 130)); plotZ(sx + 1, sy, d, rgb(170, 230, 90)); addLight(sx, sy + 20 * PJ.s, 0.3 * G, 0.36 * G, 0.1 * G);
     } else {                                                  // a butterfly: two wings that open and close
@@ -1305,14 +1309,14 @@ function render() {
   for (const o of dlist) {
     if (o.k === 24) drawCart(cart.on ? gs : null, G);
     else if (o.k === K_ACTOR) drawActor(o.a, o.d);   // T424: another person or cart from the host (parts/08d-actors.md)
-    else if (o.k === 21) { if (cart.on || o.d < 1) continue; ghostX = psx; ghostY = psy - 46; blit(gs, psx, psy, DS / o.d / golfK, o.d * 100, 0, 0, false, 0); if (G > 0) addLight(psx, psy - 30, 2.2 * G, 1.6 * G, 0.8 * G); }
+    else if (o.k === 21) { if (cart.on || o.d < 1) continue; ghostX = psx; ghostY = psy - 46; blit(gs, psx, psy, DS / o.d / golfK, o.d * 100, 0, 0, false, 0); if (G > 0) addLight(psx, psy - 30, (tmode >= 3 ? 0.5 : 2.2) * G, (tmode >= 3 ? 0.4 : 1.6) * G, (tmode >= 3 ? 0.2 : 0.8) * G); }   // (at night his lantern is small: the floodlights light the holes)
     else if (o.k === 20) { project(H.pin.x, H.pin.y, groundH(H.pin.x, H.pin.y), PJ); if (PJ.s > 0) blit(fs, PJ.x, PJ.y, Math.max(0.3, PJ.s), PJ.d * 100, 0, 0, false, 0); }
     else if (o.k === 22) {
       if (ball.state === 3) continue;
       project(ball.x, ball.y, bz, PJ); if (PJ.s === 0) continue;
       if (PJ.s > 0.55) blit(ballSpr, PJ.x, PJ.y, PJ.s, PJ.d * 100 - 40, 0, 0, false, 0);
       else { const w = rgb(255, 255, 250); plotZ(PJ.x, PJ.y, PJ.d - 1, w); plotZ(PJ.x + 1, PJ.y, PJ.d - 1, w); plotZ(PJ.x, PJ.y - 1, PJ.d - 1, w); plotZ(PJ.x + 1, PJ.y - 1, PJ.d - 1, rgb(214, 216, 226)); }
-      if (tmode === 2) addLight(PJ.x, PJ.y, 0.25, 0.7, 0.7);
+      if (tmode >= 2) addLight(PJ.x, PJ.y, 0.25, 0.7, 0.7);
       if (PJ.d > 24 && ball.state === 0) { const by = PJ.y - 12 - Math.round(Math.abs(Math.sin(frame * 0.08)) * 4), gc = rgb(255, 226, 150); for (let k = 0; k < 4; k++) { plotZ(PJ.x - k, by - k, 0, gc); plotZ(PJ.x + 1 + k, by - k, 0, gc); plotZ(PJ.x - k, by - k - 1, 0, rgb(60, 40, 30)); plotZ(PJ.x + 1 + k, by - k - 1, 0, rgb(60, 40, 30)); } }   // a marker over a far ball
     }
     else if (o.k === 23) { project(o.x, o.y, groundH(o.x, o.y), PJ); if (PJ.s > 0) blit(markSpr, PJ.x, PJ.y, PJ.s, PJ.d * 100, 0, 0, false, 0); }
@@ -1341,7 +1345,8 @@ function render() {
   if (BSAND && TOD[tmode].glow < 1) heatHaze();
   drawParticles();
   drawCreatures();
-  if (G > 0 && lights) { spreadLight(); applyGlow(); }
+  { const lampOn = G >= 1 && lampsOn();   // (#1200: at dusk and night the floodlight towers light what is within their reach: parts/08c-features.md)
+    if (G > 0 && (lights || lampOn)) { if (lights) spreadLight(); if (lampOn) lampLight(); applyGlow(); if (lampOn) lampBloom(); } }
   lr.fill(0); lg.fill(0); lb.fill(0); lights = 0;
   drawAim();
   vctx.putImageData(img, 0, 0);
