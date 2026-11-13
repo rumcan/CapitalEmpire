@@ -32,6 +32,7 @@ test('the golfer\'s look: every golfer art has its clothes; an unknown one wears
 
 test('T450: the view draws CapitalEmpire golfers: the art ids are GOLFER_PEOPLE ids, a golfer wears the art the manager view gives him, the player his card art', () => {
   assert.deepEqual([...GOLFER_ART_IDS], GOLFER_PEOPLE.map(p => p.id.replace(/^golfer:/, '')), 'the ids, in the library order');
+  assert.deepEqual(Object.keys(ART_DRESS).map(k => k.replace(/^golfer:/, '')), [...GOLFER_ART_IDS], 'and every one has its clothes');
   // engine.ts GOLFER_ART: a sex's art is the ids with _m or _w (all of them when it has none), and the look picks one
   const own = (tag: string) => { const a = GOLFER_PEOPLE.flatMap((p, i) => p.id.includes(tag) ? [i] : []); return a.length ? a : GOLFER_PEOPLE.map((_, i) => i); };
   const ART = { m: own('_m'), w: own('_w') } as const;

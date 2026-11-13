@@ -12,7 +12,7 @@ import { ADDRESS_TIME, SWING_TIME, stateAt } from './round';
 import { RIDE, WALK, type CartPlay, type PlayCart } from './carts';
 import type { Frame3p } from './export3p';
 import { centreOf } from './turn3p';
-import { artFor } from './look3p';
+import { artFor } from './golfart3p';
 import { PROTOCOL_V, toView, type Actor, type ActorsMsg, type Doing, type Dress } from './protocol3p';
 
 /** a golfer is shown this many game minutes before his group's tee time (standing at the first tee); before that he is not on the course */

@@ -9,7 +9,7 @@ import { CartPlay, SWING_TIME, fieldEntourage, makeField, playRound, stateAt } f
 import type { CourseView, Golfer, Group, Lie, PlayHole } from '../src/game/golf/play';
 import { fromView } from '../src/game/golf/play/protocol3p';
 import { CADDIE_ID, CART_ID, actorsMsg, caddieDress, dressOf } from '../src/game/golf/play/actors3p';
-import { artFor } from '../src/game/golf/play/look3p';
+import { artFor } from '../src/game/golf/play/golfart3p';
 
 const centre = { x: 300, y: 100 };
 function course(): CourseView {
