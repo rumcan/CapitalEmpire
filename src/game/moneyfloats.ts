@@ -186,7 +186,7 @@ function columnLifts(floats: readonly MoneyFloat[], screen: (x: number, y: numbe
 }
 
 /** a lost golfer's caption by its reason (T146's why) */
-export const LOST_WHY: Readonly<Record<NonNullable<RangeMoneyEvent['why']>, string>> = { queue: 'lost · line too long', parking: 'lost · car park full', patience: 'lost · gave up waiting', balls: 'lost · out of balls' };
+export const LOST_WHY: Readonly<Record<NonNullable<RangeMoneyEvent['why']>, string>> = { queue: 'lost · line too long', parking: 'lost · no room to park', patience: 'lost · gave up waiting', balls: 'lost · out of balls' };
 /** the range's money event as a float (merged over the range's shop at the mid zoom, at at): a sale, fee, coffee or lesson green, a lost golfer
  *  red with its reason and the bucket it would have bought; a skip's money (no place) none */
 export function rangeFloat(e: RangeMoneyEvent, at: { x: number; y: number } | null): MoneyEvent | null {

@@ -186,6 +186,7 @@ import { RANGE_UPGRADES, homeYardBox, rangeTakes, upgradeFoot, upgradeWhy, type 
 import { baysByDoor, servesOf, servingParks, type Serve, type Venue } from './golf/walkserve';
 import { drawServePreview } from './walkserve-overlay';
 import { carParkSpotAt, carParkWhy, parkSpotWhy as spotWhyOf, snapToRoad, type Building, type CarParkCtx } from './golf/parkplace';
+import { looseBays } from './golf/rangelot';
 import { footStart, parkLook, type ParkLook } from './event/parklook';
 import { dressCourse } from './golf/dressing';
 import { noteMoment } from '../ui/golf/finevents';
@@ -1804,7 +1805,8 @@ export class Game {
         this.bump('parks'); this.guideEvent('carpark');
         this.dropTownTrees(d.x, d.y, d.x + d.w, d.y + d.h);
         this.syncParks(); this.range.sync(true);
-        this.toast(`Car park: ${pk.bays.length} bays of packed dirt (-$${CAR_PARK_PLACE_COST.toLocaleString()}); gravel and pave it from the range card`, 'good');
+        // (T459: the cars a dirt lot holds, as the range card counts them; the paved lot's bays only once it is paved)
+        this.toast(`Car park: room for ${looseBays(pk.bays, 'dirt').length} cars on packed dirt (-$${CAR_PARK_PLACE_COST.toLocaleString()}); gravel and pave it from the range card for up to ${pk.bays.length}`, 'good');
         return true;
       },
     };
