@@ -5,6 +5,7 @@ import type { Game } from '../game/engine';
 import { DISTRICT_Z, MAP } from '../game/iso';
 import { TC } from '../game/terrain/types';
 import { Icon } from './Icon';
+import { JAM } from '../game/features';
 
 const W = 200, H = 100; // minimap CSS size, px
 const S = W / (2 * MAP); // px per tile along each iso axis: the whole map fits the frame
@@ -135,8 +136,10 @@ export function Minimap({ game }: { game: Game }) {
   }
   // a new range game's town has no name until its first building finishes (T095, P22 2.8: "... is on the map")
   const named = near >= 0 ? game.townName(near) : null;
-  const line1 = near >= 0 ? named ?? 'New town' : 'Maple Falls';
-  const line2 = near >= 0 ? (named ? 'Town' : 'Not named yet') : 'Overview';
+  // (T459, the jam build: the club's name, as the top bar's title says it, never "New town / Not named yet")
+  const club = JAM ? game.titleName()?.name ?? null : null;
+  const line1 = club ?? (near >= 0 ? named ?? 'New town' : 'Maple Falls');
+  const line2 = club ? 'Your club' : near >= 0 ? (named ? 'Town' : 'Not named yet') : 'Overview';
 
   return (
     <div className="pointer-events-auto absolute bottom-3 left-3 z-20 flex items-end gap-2" data-testid="minimap" onPointerDown={stop} onPointerMove={stop} onPointerUp={stop}>
@@ -166,7 +169,7 @@ export function Minimap({ game }: { game: Game }) {
           <div className="glass p-1 flex flex-col min-w-40 absolute bottom-full mb-2 left-0 max-h-72 overflow-y-auto">
             <button type="button" className="btn w-full justify-start" onClick={() => { game.lookAt(MAP / 2, MAP / 2, 0.03); setOpen(false); }}>Overview</button>
             {game.townPts.map((p, i) => (
-              <button key={i} type="button" className="btn w-full justify-start" onClick={() => { game.lookAt(p.x, p.y, Math.max(game.cam.z, 0.14)); setOpen(false); }}>{game.townName(i) ?? 'New town'}</button>
+              <button key={i} type="button" className="btn w-full justify-start" onClick={() => { game.lookAt(p.x, p.y, Math.max(game.cam.z, 0.14)); setOpen(false); }}>{game.townName(i) ?? (JAM ? 'The town' : 'New town')}</button>
             ))}
           </div>
         )}

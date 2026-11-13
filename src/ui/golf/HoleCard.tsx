@@ -4,6 +4,7 @@
 // T205); Build at the top right (the Course tool with this hole in hand, its brushes ready); Delete with a confirm that states the refund; the number, which
 // trades places with another hole's (D4.12, as dragging the Holes panel's badges). Opened by a hole's badge in the Holes panel or a click on the
 // hole with Select; Esc or ✕ closes it. In New hole's card style; colour never alone (P23 D8.1: ✓ ◔ ! ✗ beside the colours, 13 px body).
+import { JAM } from '../../game/features';
 import { useState } from 'react';
 import type { Game } from '../../game/engine';
 import { deleteNote, type HoleCardCheck, type HoleCardView } from '../../game/golf/holecard';
@@ -58,9 +59,10 @@ export function HoleCard({ game, right = 'right-3' }: { game: Game; right?: stri
         </div>
         <div className="flex shrink-0 items-center gap-1.5">
           {/* Build: straight to painting this hole (the Course tool, this hole in hand, its brushes) */}
-          <button className="chip" onClick={() => game.buildHole(c.n)} title={`Build on hole ${c.n}: the Course tool opens with hole ${c.n} in hand, ready to paint its surfaces`} data-testid="hole-build"><Icon name="trophy" size={14} />Build</button>
+          {/* (T459, the jam MVP: no Build-by-brush, no top-down practice Play: Play this hole below is the way to play) */}
+          {!JAM && <button className="chip" onClick={() => game.buildHole(c.n)} title={`Build on hole ${c.n}: the Course tool opens with hole ${c.n} in hand, ready to paint its surfaces`} data-testid="hole-build"><Icon name="trophy" size={14} />Build</button>}
           {/* T349 (#992): Play: asks for just this hole or all of the course, then your own practice round (free, not recorded) */}
-          <button className="chip disabled:opacity-40" disabled={!!playWhy} onClick={() => setPick(p => !p)} title={playWhy ?? `Play hole ${c.n} yourself: a practice round on this hole or on the whole course, free and not recorded`} data-testid="hole-play"><Icon name="play" size={14} />Play</button>
+          {!JAM && <button className="chip disabled:opacity-40" disabled={!!playWhy} onClick={() => setPick(p => !p)} title={playWhy ?? `Play hole ${c.n} yourself: a practice round on this hole or on the whole course, free and not recorded`} data-testid="hole-play"><Icon name="play" size={14} />Play</button>}
           <button className="btn-icon" onClick={() => game.closeHoleCard()} title="Close (Esc)" aria-label="Close the hole card"><Icon name="close" size={18} /></button>
         </div>
       </div>
@@ -78,12 +80,12 @@ export function HoleCard({ game, right = 'right-3' }: { game: Game; right?: stri
           ))}
         </div>
         {/* T434: a course another player shared (its file), played from behind the golfer with your own golfer */}
-        <button className="chip self-start" onClick={() => { void pickText().then(async t => { if (!t) return; const why = await game.shareLoad3p(t); if (why) game.toast(why, 'warn'); }); }} title="Open a course file another player shared and play it with your golfer" data-testid="hole-play-shared">Play a shared course…</button>
+        {!JAM && <button className="chip self-start" onClick={() => { void pickText().then(async t => { if (!t) return; const why = await game.shareLoad3p(t); if (why) game.toast(why, 'warn'); }); }} title="Open a course file another player shared and play it with your golfer" data-testid="hole-play-shared">Play a shared course…</button>}
       </div>
 
       {pick && !playWhy && <HolePlayChoice n={c.n} count={game.practiceHoleCount()} onHole={() => { setPick(false); game.practiceStart(c.n, 'hole'); }} onAll={() => { setPick(false); game.practiceStart(c.n, 'all'); }} onCancel={() => setPick(false)} />}
 
-      {c.tees.length > 0 && (
+      {!JAM && c.tees.length > 0 && (
         <div className="wiz-stats" data-testid="hole-tees">
           <div className="text-[12px] text-[var(--muted)]">From each tee</div>
           {/* T268: each set's row: Move and ✕ for a set it has, Place and Add (T254's quick box along the line) for one it has not */}
@@ -125,7 +127,7 @@ export function HoleCard({ game, right = 'right-3' }: { game: Game; right?: stri
             <button className={`chip ${editing ? 'chip-editing' : 'disabled:opacity-40'}`} disabled={!c.planned || editing} onClick={() => game.editHole(c.n)} title={editing ? `Hole ${c.n}'s layout editor is open in the Holes panel: drag the tee, the green or the line, then Move tees and flag` : c.planned ? 'Drag the tee, the green or the line: the tee markers and the flag move, no grass is laid (fix the course with the paint brushes)' : 'Painted by hand: shape it with the brush'} data-testid="hole-edit"><Icon name="pin" size={14} />{editing ? `Editing hole ${c.n}` : 'Edit Hole Layout'}</button>
             <button className="chip" onClick={ask} title="Delete the hole with its paint, or keep its grass as your property's paint, after a confirm" data-testid="hole-delete"><Icon name="bulldozer" size={14} />Delete</button>
             {/* T256: the hole with its cells, plan, heights and looks (and its frame trees) as a My holes entry */}
-            <SaveHole game={game} n={c.n} />
+            {!JAM && <SaveHole game={game} n={c.n} />}
           </div>
           {!c.planned && <p className="sub-line mt-1" data-testid="hole-edit-why">Painted by hand: shape it with the brush. Edit Hole Layout is for holes New hole planned.</p>}
         </>

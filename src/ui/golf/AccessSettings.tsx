@@ -1,6 +1,7 @@
 // J4 (#1207, docs/JAM.md): the golf mode's money and access rows in Settings (App.tsx's gear menu, under the UI scale, which is the text size):
 // the currency the money shows in (US dollars, or UAE dirhams at the fixed peg: display only) and colour-blind-safe money (a gain or a loss
 // carries a sign and an arrow, not only green or red; on by default). Kept in this browser (./money).
+import { JAM } from '../../game/features';
 import { AED_PER_USD, setMoneyPrefs, useMoneyPrefs, type Currency } from './money';
 import { GLOSSARY, type TermId } from './Glossary';
 
@@ -19,12 +20,13 @@ export function AccessSettings() {
         Colour-blind-safe money (+/− ▲▼)
       </label>
       {/* the glossary in one place (the cards underline these words where they are used: <Term>) */}
-      <details className="px-2 py-1 text-sm" data-testid="settings-money-words">
+      {/* (T459, the jam MVP: no glossary) */}
+      {!JAM && <details className="px-2 py-1 text-sm" data-testid="settings-money-words">
         <summary className="cursor-pointer py-1">Money words explained</summary>
         <dl className="mt-1 space-y-1.5 text-[12px] leading-snug">
           {(Object.keys(GLOSSARY) as TermId[]).map(id => <div key={id}><dt className="font-semibold text-amber-200">{GLOSSARY[id].word}</dt><dd className="text-slate-300">{GLOSSARY[id].text}</dd></div>)}
         </dl>
-      </details>
+      </details>}
     </>
   );
 }
