@@ -10507,6 +10507,7 @@ export class Game {
   practice3pWhy(place: PracticePlace): string | null {
     if (!this.golf) return 'No club yet';
     if (!this.range.scene) return 'Place the range first';
+    if (this.golf.range?.forSale) return 'Buy the driving range first';   // (J7: a jam game's old range stands for sale)
     if (this.yourRound()) return 'Finish or quit the round you are playing first';
     if (place === 'short' && this.range.practice?.chipping.state !== 'open') return 'Build the chipping green and bunker first';
     return null;
