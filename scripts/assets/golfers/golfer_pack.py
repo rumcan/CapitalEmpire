@@ -18,7 +18,7 @@ from pathlib import Path
 from PIL import Image
 
 ROOT = Path(__file__).resolve().parents[3]
-ART = ROOT / 'art' / 'golfers'
+ART = ROOT / 'art' / 'golfers'   # (--family spectators: art/spectators, e.g. the range attendant staff_range_m)
 HEADINGS = ['S', 'SW', 'W', 'NW', 'N', 'NE', 'E', 'SE']
 # where the golfer faces and walks on screen (the rows of the sheet; S is toward the viewer, E is to the right)
 FACING = {
@@ -36,13 +36,13 @@ KEYS = {'magenta': ((255, 0, 255), '#FF00FF'), 'green': ((0, 177, 64), '#00B140'
 GRID, CELL, K, FEET = 1024, 1024 // 3, 1.15, 315   # the guide: 3x3 cells of 341 px, the current frames at 1.15x, feet 315 px down a cell
 # the clips (#1235, the owner 2026-11-14: "the animations too"): each its own picture per heading, on a landscape 1536 x 1024 grid; the sheet
 # (standing + walk) keeps the 3x3 square above. The guide crops each clip to its reach at that heading (all frames' union), so the figure is big
-CLIPS = {'sheet': (3, 3, 1024, 1024), 'golf_drive': (4, 3, 1536, 1024), 'golf_putt': (4, 2, 1536, 1024)}
+CLIPS = {'sheet': (3, 3, 1024, 1024), 'golf_drive': (4, 3, 1536, 1024), 'golf_putt': (4, 2, 1536, 1024), 'pick': (2, 2, 1024, 1024)}
 
-PROMPT = """Use only the two pictures attached to this message (ignore earlier pictures in this chat). Create an image: a 3x3 sprite sheet of one golfer for a painted isometric golf game.
+PROMPT = """Use only the two pictures attached to this message (ignore earlier pictures in this chat). Create an image: a 3x3 sprite sheet of one {who} for a painted isometric golf game.
 
-Reference 1 shows who the golfer is (him standing, from the front, the side and the back): keep his face, hair, skin, build and his exact clothes and colours ({outfit}). Mid-1980s golf clothes, no logos, no text.
+Reference 1 shows who the {who} is (him standing, from the front, the side and the back): keep his face, hair, skin, build and his exact clothes and colours ({outfit}). Mid-1980s golf clothes, no logos, no text.
 
-Reference 2 is the layout to paint over: nine cells, the golfer in each, all at the same heading: {facing}. Keep that heading, the camera, the size and the place of the figure in every cell exactly as reference 2 has them, and keep his feet on the same ground line in every cell. The renders' poses are only rough; paint these poses:
+Reference 2 is the layout to paint over: nine cells, the {who} in each, all at the same heading: {facing}. Keep that heading, the camera, the size and the place of the figure in every cell exactly as reference 2 has them, and keep his feet on the same ground line in every cell. The renders' poses are only rough; paint these poses:
 - cell 1 (top left): standing still, relaxed and upright, weight on both feet a little apart, arms hanging loosely at his sides, head up looking ahead.
 - cells 2 to 9 (left to right, then the next row): one smooth loop of a confident, relaxed walk, in order: right heel touching down in front; weight settling on the right foot; left leg swinging past the right; rising on the right foot; left heel touching down in front; weight settling on the left foot; right leg swinging past the left; rising on the left foot (so cell 9 leads back into cell 2). Clear strides and an easy arm swing opposite to the legs, head up looking where he walks, never looking down. The same person, clothes and size in every cell.
 
@@ -50,11 +50,11 @@ Style: a painterly isometric game sprite, soft brushwork, natural colours, clean
 
 Background: one flat, even {keyname} colour ({key}) filling the whole picture and every gap (between the legs, between an arm and the body). No ground, no shadow on the ground, no grid lines, no borders, no text, no numbers."""
 
-CLIP_HEAD = """Use only the two pictures attached to this message (ignore earlier pictures in this chat). Create an image: a landscape {cols}x{rows} sprite sheet of one golfer for a painted isometric golf game.
+CLIP_HEAD = """Use only the two pictures attached to this message (ignore earlier pictures in this chat). Create an image: a {cols}x{rows} sprite sheet of one {who} for a painted isometric golf game.
 
-Reference 1 shows who the golfer is (him standing, from the front, the side and the back): keep his face, hair, skin, build and his exact clothes and colours ({outfit}). Mid-1980s golf clothes, no logos, no text.
+Reference 1 shows who the {who} is (him standing, from the front, the side and the back): keep his face, hair, skin, build and his exact clothes and colours ({outfit}). Mid-1980s clothes, no logos, no text.
 
-Reference 2 is the layout to paint over: {n} cells ({cols} across, {rows} down, read left to right then the next row), the golfer in each, all at the same heading: {facing}. Keep that heading, the camera, the size and the place of the figure in every cell exactly as reference 2 has them, his feet planted on the same spot of the same ground line in every cell (they do not move during the stroke), and keep each pose close to reference 2's (the renders are rough: paint them as a real golfer)."""
+Reference 2 is the layout to paint over: {n} cells ({cols} across, {rows} down, read left to right then the next row), the {who} in each, all at the same heading: {facing}. Keep that heading, the camera, the size and the place of the figure in every cell exactly as reference 2 has them, his feet planted on the same spot of the same ground line in every cell (they do not move during the stroke), and keep each pose close to reference 2's (the renders are rough: paint them as a real person)."""
 CLIP_POSES = {
     'golf_drive': """One full drive with a driver (a wooden-headed 1985 driver, a dark shaft, no ball, no tee), twelve phases in this order (the game times them, so keep each in its own cell):
 1 address: knees flexed, back tilted, arms hanging, the club head on the ground behind where the ball would be;
@@ -80,6 +80,12 @@ The swing is the same smooth motion through all twelve; the club is one straight
 7 holding the follow-through, head still down;
 8 looking up after the ball, the putter still forward.
 Only the arms, shoulders and putter move; the body stays still, the feet planted.""",
+    'pick': """Picking up golf balls from the grass, four phases in this order (a loop): he carries a round wire range basket half full of white golf balls in his left hand in every cell, no other tool:
+1 standing over a ball, the basket at his side, looking down at the ball by his right foot;
+2 bending at the hips and knees, reaching down with his right hand;
+3 crouched low, his right hand at the grass picking up the ball;
+4 rising again, dropping the ball into the basket.
+His feet stay planted on the same spot in all four cells.""",
 }
 CLIP_TAIL = """
 
@@ -100,9 +106,10 @@ SHORT = {'S': 'the viewer', 'SW': 'the lower left', 'W': 'the left', 'NW': 'the 
          'NE': 'the upper right (from behind)', 'E': 'the right', 'SE': 'the lower right'}
 
 
-def frames(gid, clip='sheet'):
+def frames(gid, clip='sheet', like=None):
     """the current sheet (or a clip sheet: golf_drive, golf_putt): frames[heading][column] as RGBA cells, and its json. A clip sheet that was
     already imported reads its kept original (<clip>-old.webp), so a re-run is painted over the 3D renders, not over ChatGPT's last try"""
+    gid = like or gid   # (a new person's guide frames come from the person it is modelled on: --like)
     old = ART / gid / f'{clip}-old.webp'
     j = json.loads((ART / gid / f'{clip}.json').read_text())
     sheet = Image.open(old if clip != 'sheet' and old.exists() else ART / gid / f'{clip}.webp').convert('RGBA'); fw, fh = j['frameWidth'], j['frameHeight']
@@ -161,6 +168,22 @@ def guide_png(row, j, key, path):
     out.convert('RGB').save(path)
 
 
+def pick_frames(gid, a):
+    """the pick clip's guide frames per heading: the person's standing frame (cells 1 and 4) and a crouch from another rigged person
+    (--guide-pick, the caddie's read_putt: cells 2 and 3), the crouch scaled to the standing frame's height share"""
+    cells, j = frames(gid, like=a.like)
+    pid, pclip, pf = a.guide_pick.split(':'); pj = json.loads((ART / pid / f'{pclip}.json').read_text())
+    psheet = Image.open(ART / pid / f'{pclip}.webp').convert('RGBA'); pw, ph = pj['frameWidth'], pj['frameHeight']
+    k = (j['heightMetres'] / pj.get('heightMetres', j['heightMetres'])) * (j['anchor']['y'] / pj['anchor']['y'])
+    out = {}
+    for r, h in enumerate(j['directions']):
+        c = psheet.crop((int(pf) * pw, pj['directions'].index(h) * ph, (int(pf) + 1) * pw, (pj['directions'].index(h) + 1) * ph))
+        c = c.resize((round(pw * k), round(ph * k)), Image.LANCZOS)
+        crouch = Image.new('RGBA', cells[h][0].size, (0, 0, 0, 0)); crouch.paste(c, (round(j['anchor']['x'] - pj['anchor']['x'] * k), round(j['anchor']['y'] - pj['anchor']['y'] * k)), c)
+        out[h] = [cells[h][0], crouch, crouch, cells[h][0]]
+    return out, j
+
+
 def clip_guide_png(row, layout, key, path):
     """a clip's guide: the frames of one heading in a cols x rows grid, cropped to their union (the reach of the swing) plus a margin and
     scaled to fill a cell; returns the crop box and the scale (the importer does not need them: it measures)"""
@@ -192,19 +215,28 @@ def main():
     ap.add_argument('--golfer', nargs='*'); ap.add_argument('--heading', nargs='*', default=HEADINGS)
     ap.add_argument('--out', default='D:/AI/chatgpt-bridge/guides/golfers'); ap.add_argument('--bridge', default='D:/AI/chatgpt-bridge')
     ap.add_argument('--skip-done', action='store_true')
-    ap.add_argument('--clip', default='sheet', choices=list(CLIPS), help='sheet (standing + walk), golf_drive or golf_putt')
+    ap.add_argument('--clip', default='sheet', choices=list(CLIPS), help='sheet (standing + walk), golf_drive, golf_putt or pick')
+    ap.add_argument('--family', default='golfers', help='the art folder: golfers or spectators (the staff: staff_range_m)')
+    ap.add_argument('--who', default='golfer', help='the prompt\'s word for the person: golfer, range attendant ...')
+    ap.add_argument('--ref', help='reference 1 instead of the sheet\'s standing frames (a new person: its painted design picture)')
+    ap.add_argument('--like', help='a new person: the guide frames come from this person of the family (same rig and camera)')
+    ap.add_argument('--guide-pick', default='staff_caddie_w:read_putt:1', help='pick clip: the crouch frame for cells 2-3 (person:clip:frame)')
     ap.add_argument('--note', help='words added to the clothes line, e.g. "the trousers pure white, not beige or cream" (a re-run of a colour that drifted)')
     a = ap.parse_args()
+    global ART
+    ART = ROOT / 'art' / a.family
     gids = a.golfer or sorted(d.name for d in ART.iterdir() if (d / 'sheet.json').exists())
     out, bridge, queue = Path(a.out), Path(a.bridge), []
     for gid in gids:
-        cells, j = frames(gid)
+        cells, j = frames(gid, like=a.like)
         keyname = pick_key(cells); key, keyhex = KEYS[keyname]; wear = outfit(cells)
         if a.clip != 'sheet':
-            ccells, cj = frames(gid, a.clip)
+            ccells, cj = pick_frames(gid, a) if a.clip == 'pick' else frames(gid, a.clip, like=a.like)
             wear = 'exactly as in reference 1 (his painted standing pose: the clothes to copy)' + ('; ' + a.note if a.note else '')   # (the sampled colours misread shorts and skirts)
         if a.note: wear += '; ' + a.note
-        (out / gid).mkdir(parents=True, exist_ok=True); ref = out / gid / 'ref.png'; ref_png(cells, ref)
+        (out / gid).mkdir(parents=True, exist_ok=True); ref = out / gid / 'ref.png'
+        if a.ref: Image.open(a.ref).convert('RGB').save(ref)
+        else: ref_png(cells, ref)
         for h in a.heading:
             name = f'{gid}~{h}' + ('' if a.clip == 'sheet' else f'~{a.clip}')
             if a.skip_done and (bridge / 'in' / f'{name}-golfers.png').exists(): continue
@@ -212,18 +244,18 @@ def main():
             (d / 'ref.png').write_bytes(ref.read_bytes())
             if a.clip == 'sheet':
                 guide_png(cells[h], j, key, d / 'guide.png')
-                p = gender(PROMPT.format(outfit=wear, facing=FACING[h], keyname=keyname, key=keyhex), gid)
+                p = gender(PROMPT.format(who=a.who, outfit=wear, facing=FACING[h], keyname=keyname, key=keyhex), gid)
             else:
                 cols, rows, _, _ = CLIPS[a.clip]
                 clip_guide_png(ccells[h], CLIPS[a.clip], key, d / 'guide.png')
-                p = gender(CLIP_HEAD.format(cols=cols, rows=rows, n=cols * rows, outfit=wear, facing=FACING[h].replace('walking', 'his body facing')) + '\n\n' + CLIP_POSES[a.clip]
+                p = gender(CLIP_HEAD.format(who=a.who, cols=cols, rows=rows, n=cols * rows, outfit=wear, facing=FACING[h].replace('walking', 'his body facing')) + '\n\n' + CLIP_POSES[a.clip]
                            + CLIP_TAIL.format(keyname=keyname, key=keyhex), gid)
             (d / 'PROMPT.md').write_text(p + '\n', encoding='utf-8')
             (d / 'CHECKS.md').write_text(CHECKS.format(name=name, heading=h, facing_short=SHORT[h], key=keyhex), encoding='utf-8')
             queue.append([name, (d / 'ref.png').as_posix(), (d / 'guide.png').as_posix(), p])
         print(f'{gid}: key {keyname}, {wear}')
     (bridge / 'queue-golfers.json').write_text(json.dumps(queue))
-    (bridge / 'prompt-golfers.txt').write_text(PROMPT.format(outfit='{outfit}', facing='{facing}', keyname='{keyname}', key='{key}') + '\n', encoding='utf-8')
+    (bridge / 'prompt-golfers.txt').write_text(PROMPT.format(who='{who}', outfit='{outfit}', facing='{facing}', keyname='{keyname}', key='{key}') + '\n', encoding='utf-8')
     print(f'{len(queue)} pictures queued in {bridge / "queue-golfers.json"}')
 
 

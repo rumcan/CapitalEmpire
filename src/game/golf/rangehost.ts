@@ -20,7 +20,7 @@ import { homeScene } from './rangebiz';
 import { RangeSim, garageSlots, rangeCounter, rangeScene, rangeStats, upgradeWhy, walkwayOf, walkwayReach, withPrice, withUpgrade, RANGE_UPGRADES, type CarSlot, type DemandCtx, type RangeBizSave, type RangeClock, type RangeScene, type RangeUpgradeId, type ScenePatch, type ScenePiece } from './rangebiz';
 import { CASE_BALLS, DUMP_REACH, STANDING_LOW, ballsNear, bucketsLeft, caseCost, dump, fieldCount, nearestBall, orderBalls, perHour, pickAround, pickKit, pickSwath, stockOf, supplyKit, visitBalls, type BallSave, type PickKit } from './rangeballs';
 import { worldX, worldY } from '../iso';
-import { SPECTATOR_BASE, SPECTATOR_CLIPS, SPECTATOR_FRAMES, SPECTATOR_PEOPLE } from '../library';
+import { SPECTATOR_BASE, SPECTATOR_CLIPS, SPECTATOR_FRAMES, SPECTATOR_PEOPLE, STAFF_BASE, STAFF_CLIPS, STAFF_FRAMES, STAFF_PEOPLE } from '../library';
 import { clipFrame, rowToward } from '../crowdview';
 import { PLAYER_CART, PLAYER_RUN, PLAYER_WORKING, SHIFT_HOURS, SHIFT_STARTS, autoKit, bucketBalls, flowOf, nodeRates, onShift, robotBps, sellBps, staffBps, tripBps, washBps } from './rangeauto';
 import { CELL_T, type Grid, type GridDiff } from '../ext/course-grid';
@@ -116,6 +116,8 @@ export const BALL_DRAW_MAX = 4000, BALL_POINT_FLOATS = 6, PILE_REACH = 2.4;
 const ORDER_REACH = 7;
 /** T386 part 2: the range attendant's stand-in: a young man in a cap from the spectators' art (staff_range_m is not rigged yet) */
 const ATTENDANT_ART = Math.max(0, SPECTATOR_PEOPLE.findIndex(p => p.id === 'spectator:spec_m_young_cap'));
+/** #1235: the painted range attendant (art/spectators/staff_range_m: walk, idle and a pick clip), once prep-sprites has packed it; -1 until then */
+const ATTENDANT_STAFF = STAFF_PEOPLE.findIndex(p => p.id === 'staff:staff_range_m');
 /** the practice area is read again at most this often (frames) while the grid changes (T130) */
 const SCAN_FRAMES = 6;
 /** the world labels' keys of the range's own stand-in pills (T151: the moving picker cart's and the practice strokes'), kept from frame to frame */
@@ -295,8 +297,15 @@ export class RangeHost {
     // T386 part 2: the attendants on shift (a spectator in a young man's cap stands in for staff_range_m), walking between the ball room and the pile
     for (let k = 0; k < d.nAgents; k++) {
       const g = d.agents[k]!; if (g.kind !== 'attendant' || g.x < x0 || g.x > x1 || g.y < y0 || g.y > y1) continue;
-      const m = this.mover(out.length), W = SPECTATOR_CLIPS.walk, row = rowToward(Math.cos(g.ang), Math.sin(g.ang)), frame = clipFrame(W, W.times[0]! + ((this.sim.clockT + g.id * 0.7) % 1.4));
-      m.item = SPECTATOR_BASE + (ATTENDANT_ART * WALK_DIRS.length + row) * SPECTATOR_FRAMES + frame; m.x = g.x; m.y = g.y; m.flip = false; m.scale = 1; m.moving = false; m.lift = 0;
+      const m = this.mover(out.length), row = rowToward(Math.cos(g.ang), Math.sin(g.ang));
+      if (ATTENDANT_STAFF >= 0) {   // #1235: the painted attendant: walking with his basket, or picking at the pile
+        const C = g.pick ? STAFF_CLIPS.pick : STAFF_CLIPS.walk, span = g.pick ? 1.6 : 1.4;
+        m.item = STAFF_BASE + (ATTENDANT_STAFF * WALK_DIRS.length + row) * STAFF_FRAMES + clipFrame(C, C.times[0]! + ((this.sim.clockT + g.id * 0.7) % span));
+      } else {
+        const W = SPECTATOR_CLIPS.walk, frame = clipFrame(W, W.times[0]! + ((this.sim.clockT + g.id * 0.7) % 1.4));
+        m.item = SPECTATOR_BASE + (ATTENDANT_ART * WALK_DIRS.length + row) * SPECTATOR_FRAMES + frame;
+      }
+      m.x = g.x; m.y = g.y; m.flip = false; m.scale = 1; m.moving = false; m.lift = 0;
       m.x0 = g.x - 0.12; m.y0 = g.y - 0.12; m.x1 = g.x + 0.12; m.y1 = g.y + 0.12; out.push(m);
     }
     for (let k = 0; k < d.nCars; k++) {
@@ -373,7 +382,7 @@ export class RangeHost {
           c.fillStyle = '#2dd4bf'; c.strokeStyle = '#134e4a'; c.lineWidth = 1.2 * dpr; c.beginPath(); c.roundRect(q.x - w / 2, q.y - w * 0.5, w, w * 0.55, w * 0.18); c.fill(); c.stroke();
           c.fillStyle = '#ffffff'; c.beginPath(); c.arc(q.x, q.y - w * 0.62, Math.max(1.2 * dpr, w * 0.17), 0, Math.PI * 2); c.fill();
           if (!rob) { rob = true; this.standInPill(labels, ROBOT_KEY, 'Stand In for robot picker', q.x, q.y - w - 12 * dpr, dpr); }
-        } else if (!att) { att = true; this.standInPill(labels, ATTENDANT_KEY, 'Stand In for the range attendant (staff_range_m)', q.x, q.y - Math.max(44 * dpr, 4.6 * 32 * ze), dpr); }
+        } else if (!att && ATTENDANT_STAFF < 0) { att = true; this.standInPill(labels, ATTENDANT_KEY, 'Stand In for the range attendant (staff_range_m)', q.x, q.y - Math.max(44 * dpr, 4.6 * 32 * ze), dpr); }
       }
       // the ball picker cart's stand-in pill (T133: the eight-way wagon stands in for it)
       const pk = ag.picker;
