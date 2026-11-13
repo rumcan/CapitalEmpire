@@ -99,6 +99,7 @@ test('J7: the old range for sale: its card is Buy, everything on the range waits
   assert.equal(r.name, 'Buy the driving range'); assert.deepEqual(r.act, { k: 'buyRange' }); assert.equal(r.why, null);
   assert.ok(r.payback && r.payback.extra > 0, 'the payback reads the range as it will be once bought');
   assert.equal(card(cs, 'practice').why, 'Buy the driving range first');
+  assert.ok(card(cs, 'bays8').payback!.extra > 0, 'an upgrade is priced against the range once bought');
   assert.equal(rangeStats(b).appeal, 0);
   assert.equal(rangeStats({ ...b, forSale: undefined }).appeal > 0, true);
 });

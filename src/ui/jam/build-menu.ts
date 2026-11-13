@@ -74,18 +74,20 @@ export const shortWhy = (cost: number, money: number): string | null =>
 const upWhy = (why: string, cost: number, money: number): string | null =>
   !why || why === 'Built' ? null : why.startsWith('Not enough money') ? shortWhy(cost, money) ?? why : why;
 
+/** J7: the range as it will be once bought (a range for sale draws nobody, so its paybacks read the bought one) */
+const bought = (b: RangeCardView['biz']): RangeCardView['biz'] => { if (!b.forSale) return b; const o = { ...b }; delete o.forSale; return o; };
+
 /** the menu's cards, in their groups' order */
 export function buildCards(s: BuildSource): BuildCard[] {
-  const out: BuildCard[] = [], v = s.range, place = (id: 'range' | 'carpark' | 'practice') => s.places.find(p => p.id === id);
+  const out: BuildCard[] = [], v = s.range, vb = v ? bought(v.biz) : null, place = (id: 'range' | 'carpark' | 'practice') => s.places.find(p => p.id === id);
   const rangeP = place('range'), rangeBuilt = !rangeP || rangeP.done, noRange = !rangeBuilt ? 'Place your driving range first' : s.forSale ? 'Buy the driving range first' : null;
   // ---- Range
   if (rangeP && s.forSale && v) {
     // J7 (the owner: "lets place the range for him. he has to buy it"): the old range on the plot, with its car park and its junk
-    const open = { ...v.biz }; delete open.forSale;
     out.push({
       id: 'range', group: 'range', name: 'Buy the driving range', pic: { scene: 'range-road-rundown.webp' },
       line: 'The old range on your plot, with its dirt car park and junk on the outfield. Buy it and drivers stop for a bucket.',
-      cost: rangeP.cost, upkeep: s.rangeUpkeep, payback: payback(rangeP.cost, s.rangeUpkeep, rangeMonth(open, v.demand, v.dayLen).takings),
+      cost: rangeP.cost, upkeep: s.rangeUpkeep, payback: payback(rangeP.cost, s.rangeUpkeep, rangeMonth(vb!, v.demand, v.dayLen).takings),
       why: shortWhy(rangeP.cost, s.money), done: null, act: { k: 'buyRange' },
     });
   } else if (rangeP) {
@@ -107,13 +109,13 @@ export function buildCards(s: BuildSource): BuildCard[] {
     else out.push({
       id: 'carpark', group: 'range', name: u ? `Car park: ${u.name.replace(/ the car park$/, '').toLowerCase()} it` : 'Car park', pic: { scene: next === 'gravel' || !next ? 'range-road-upgraded.webp' : 'range-road-rundown.webp', pos: '0% 60%' },
       line: u ? `Enlarge your car park. ${u.effect}` : 'Paved, with every bay of the lot in use.',
-      cost: u ? u.cost : null, upkeep: u ? u.upkeep : null, payback: u ? payback(u.cost, u.upkeep, rangeUpgradeExtra(v.biz, v.demand, v.dayLen, u.id)) : null,
+      cost: u ? u.cost : null, upkeep: u ? u.upkeep : null, payback: u ? payback(u.cost, u.upkeep, rangeUpgradeExtra(vb!, v.demand, v.dayLen, u.id)) : null,
       why: !u ? null : noRange ?? upWhy(u.why, u.cost, s.money), done: u ? null : 'Built', act: u ? { k: 'upgrade', id: u.id } : { k: 'rangeCard' },
     });
     // J7: the junk on the old range: cleared pile by pile from the range card's list (each its distance; keep any you like as a target)
     const jn = s.junk?.n ?? 0;
     if (s.junk && jn > 0) {
-      const less = { ...v.biz, junk: v.biz.junk?.slice(1) }, now = rangeMonth(v.biz, v.demand, v.dayLen).takings;
+      const less = { ...vb!, junk: vb!.junk?.slice(1) }, now = rangeMonth(vb!, v.demand, v.dayLen).takings;
       out.push({
         id: 'junk', group: 'range', name: `Clear the junk (${jn} left)`, pic: s.junk.first ? { lib: s.junk.first } : { tile: 'rocks' },
         line: 'Old cars, tyres and scrap on the outfield: each pile cleared draws a few more golfers and pays its scrap back. Keep any you like as a target.',
@@ -125,7 +127,7 @@ export function buildCards(s: BuildSource): BuildCard[] {
       const q = v.upgrades.find(x => x.id === id); if (!q) continue;
       out.push({
         id, group: 'range', name: q.name, line: q.effect, pic: UPGRADE_PIC[id] ?? { tile: 'range-bays' }, cost: q.cost, upkeep: q.upkeep,
-        payback: q.owned ? null : payback(q.cost, q.upkeep, rangeUpgradeExtra(v.biz, v.demand, v.dayLen, id)),
+        payback: q.owned ? null : payback(q.cost, q.upkeep, rangeUpgradeExtra(vb!, v.demand, v.dayLen, id)),
         why: q.owned ? null : noRange ?? upWhy(q.why, q.cost, s.money),
         done: q.owned ? 'Built' : null, act: q.owned ? { k: 'rangeCard' } : { k: 'upgrade', id },
       });
@@ -162,7 +164,7 @@ export function buildCards(s: BuildSource): BuildCard[] {
       why: areaDone ? null : noRange ?? prWhy ?? shortWhy(prP.cost, s.money), done: areaDone ? 'Placed' : null, act: areaDone ? null : { k: 'place', id: 'practice' },
     });
     for (const f of v?.practice ?? []) {
-      const open = f.state === 'open', extra = v ? practiceExtra(v.biz, v.demand, v.dayLen, f.id) : 0;
+      const open = f.state === 'open', extra = v ? practiceExtra(vb!, v.demand, v.dayLen, f.id) : 0;
       out.push({
         id: f.id, group: 'practice', name: f.name, pic: f.id === 'putting' ? { scene: 'practice-green-upgraded.webp' } : { tile: 'chipping-green' },
         line: f.id === 'putting' ? 'A putting green in the practice area: golfers pay a fee to use it, and you can practise your putting.' : 'A chipping green and bunker in the practice area: a fee a golfer, and your short game.',

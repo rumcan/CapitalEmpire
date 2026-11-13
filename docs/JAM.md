@@ -102,6 +102,22 @@ hole, about $23k; $12k to $17k without frame trees and earthworks), the clubhous
 | Never borrows | the clubhouse at month 2, then bare holes as cash allowed (months 3, 11, 17, 21) | 4 | $129k |
 | Idle | the range and its car park only | 0 | about $74k |
 
+## J7: the Build menu, no pushing, the old range for sale (#1225, the owner 2026-11-13)
+"make a better build menu with pictures and let the player decide. dont push them to build the practice green and chipping area"; "def add a
+built in dirt parking lot"; "lets place the range for him. he has to buy it ... junk yard stuff ... stuff he has to clean up ... with distance to them".
+- **Build** (rail, after Select; `src/ui/jam/BuildMenu.tsx`, data in `build-menu.ts`): picture cards in four tabs (Range, Course, Club, Practice), each
+  with its price, upkeep a month and payback line (`golf/payback.ts`), greyed with the reason; a click starts the same placement as before. Paths & roads
+  and Facilities left the rail; Range opens its card, Course its Holes panel.
+- **No step list**: the range's guided build (step list, rings, rewards) is off in the jam; `Build ▸ Tips` (`src/ui/jam/tips.ts`) holds optional tips. The
+  start tutorial ends on "Build what you like". Cart paths and the practice greens are open from the start; New hole and the clubhouse still open at
+  `JAM_RAMP_TAKINGS`. The ramp's hints and the practice-area toast are gone; the welcome card is not shown.
+- **The old range for sale**: a new jam game lays the range (with its free dirt car park) on the start's plot at the start's set-back, at the spot within
+  reach of the home that leaves the most of the parcel free on one side. It draws no golfer until **Buy** ($15,000: Build or the range card). The Car park
+  card then enlarges it (gravel, then paving). The guide's rewards are gone and the car park is free: the start is about $7.5k leaner than T459's runs.
+- **Junk** (`golf/junk.ts` `RANGE_JUNK`, the library's scrapyard set): nine piles scattered (seeded) over the outfield, each with a distance pill; each pile
+  left takes 1.6% off the range's appeal; Clear on the range card costs $250 and pays its scrap back. For Cinderlinks (J6): `Engine.rangeJunk()` /
+  `RangeScene.junk` give each pile's library id, name, world spot and metres from the mats; the save holds `golf.range.junk` (range frame u, v).
+
 ## Out of the jam build (J1 hides them when JAM)
 Traffic tools but the car park and cart paths (bus, toll, junction tiers, road up/downgrades); town decoration; career milestones and
 the city win; the natural disasters toggle (J3's emergencies replace it); the Studio, DEV badge, perf panels; Empty map; real places /
