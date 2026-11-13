@@ -96,7 +96,7 @@ export function RangeCard({ view, places = [], onPlace, onClose, onPrice, onBuy,
       )}
       <div className="flex items-center justify-between gap-2 rounded-lg border border-white/10 bg-white/5 px-2 py-1.5 text-xs" data-testid="range-parking" title="The range's car park: its golfers' cars parked now of its bays (the lot's and the car park building's), and the cars that drove on today because it was full">
         <span className="text-slate-300">Parking: <span className="font-semibold text-white">{view.parking.parked}/{view.parking.bays}</span> cars{view.parking.garage ? <span className="text-slate-400"> · building {view.parking.garage.parked}/{view.parking.garage.cars}</span> : null}</span>
-        <span className={view.parking.turned > 0 ? 'font-semibold text-rose-300' : 'text-slate-400'}>{view.parking.turned} turned away today{view.parking.turned > 0 && !st.parking ? ' (car park full)' : ''}</span>
+        <span className={view.parking.turned > 0 ? 'font-semibold text-rose-300' : 'text-slate-400'}>{view.parking.turned} turned away today{view.parking.turned > 0 && !st.parking ? ' (no room to park: no car park yet, or a full one)' : ''}</span>
       </div>
       {/* T237: the car parks within walking distance of the shop (golf/walkserve.ts): only their bays count for the range */}
       <div className={`rounded-lg border border-white/10 bg-white/5 px-2 py-1.5 text-xs ${view.parking.lots.length ? 'text-slate-300' : 'font-semibold text-rose-300'}`} data-testid="range-lots" title={`A car park serves the range when its nearest bay is within ${WALK_SERVE_M} m of walking (about 2 minutes) of the shop; car parks further away add no bays`}>{lotsLine(view.parking.lots)}</div>

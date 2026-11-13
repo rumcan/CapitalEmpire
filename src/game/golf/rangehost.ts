@@ -15,7 +15,7 @@ import { SURFACE_TEX } from './paintcourse';
 import type { GolfSurface } from './types';
 import type { OffRoad } from '../offroad';
 import { homeScene } from './rangebiz';
-import { RangeSim, garageSlots, rangeCounter, rangeScene, rangeStats, upgradeWhy, walkwayOf, withPrice, withUpgrade, RANGE_UPGRADES, type CarSlot, type DemandCtx, type RangeBizSave, type RangeClock, type RangeScene, type RangeUpgradeId, type ScenePatch, type ScenePiece } from './rangebiz';
+import { RangeSim, garageSlots, rangeCounter, rangeScene, rangeStats, upgradeWhy, walkwayOf, walkwayReach, withPrice, withUpgrade, RANGE_UPGRADES, type CarSlot, type DemandCtx, type RangeBizSave, type RangeClock, type RangeScene, type RangeUpgradeId, type ScenePatch, type ScenePiece } from './rangebiz';
 import { CASE_BALLS, DUMP_REACH, STANDING_LOW, ballsNear, bucketsLeft, caseCost, dump, fieldCount, nearestBall, orderBalls, perHour, pickAround, pickKit, pickSwath, stockOf, supplyKit, visitBalls, type BallSave, type PickKit } from './rangeballs';
 import { worldX, worldY } from '../iso';
 import { SPECTATOR_BASE, SPECTATOR_CLIPS, SPECTATOR_FRAMES, SPECTATOR_PEOPLE } from '../library';
@@ -218,7 +218,12 @@ export class RangeHost {
     sc.walk = walkwayOf(sc, legs);
   }
   /** T239: whether the range's walkers have a walking path joining the car park, the shop and the tee */
-  hasWalkway(): boolean { return !!this.scene?.walk; }
+  hasWalkway(): boolean { this.syncWalk(); return !!this.scene?.walk; }
+  /** T459 (#1215): which of the car park, the shop and the tee box's back the paths near the range front reach now (null: no range scene) */
+  walkReach(): { lot: boolean; shop: boolean; tee: boolean } | null {
+    const sc = this.scene; if (!sc || !this.ctx.pathLegs) return null;
+    return walkwayReach(sc, this.ctx.pathLegs(sc.front));
+  }
   /** everything off the map (a new game, a load, not a range start) */
   drop(): void {
     for (const p of this.props.values()) this.ctx.removeProp(p);

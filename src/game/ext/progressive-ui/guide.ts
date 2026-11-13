@@ -34,6 +34,8 @@ export interface GuideFacts {
   golfers?: number; owned?: readonly string[]; walkway?: boolean; practiceForSale?: boolean; putting?: string;
   /** T288 (#873), a bare start's placements: the driving range placed, the range's own car park placed, the practice area placed (missing: no) */
   rangePlaced?: boolean; lotPlaced?: boolean; practicePlaced?: boolean;
+  /** T459 (#1211): the range balls picked up (any way) and brought back to the ball room, lifetime (missing: no ball loop, the step does not wait for it) */
+  ballsBack?: number;
 }
 
 /** what a step points at: a UI element by its data-guide id, and/or a map spot the engine resolves (T239: 'walkway', rings at the car park's
@@ -141,10 +143,11 @@ export const RANGE_GUIDE: readonly GuideStep[] = Object.freeze([
   {
     id: 'guide-range-buckets',
     n: 3,
-    title: 'Sell your first buckets',
-    body: 'Drivers on the county road stop to hit a bucket at your shack. Open the range card to watch the takings and set the bucket price.',
+    title: 'Sell your first buckets, then fetch the balls',
+    // (T459 #1211: the ball room's 200 balls are gone in a month; a player never told to pick them up took $1,200 in a whole season)
+    body: 'Drivers on the county road stop to hit a bucket at your shack, and their balls stay out on the range: when the ball room runs dry, golfers drive on. Take Walk, go out onto the range, hold F over the balls (or click a pile) and empty your basket at the ball room.',
     done: 'auto',
-    target: { ui: 'range-chip' },
+    target: { ui: 'rail-walk' },
     reward: 500,
   },
   {
@@ -204,6 +207,8 @@ export const RANGE_GUIDE: readonly GuideStep[] = Object.freeze([
 ]);
 /** the golfers a range start's first step waits for (T239: the range's lifetime golfers who bought a bucket) */
 export const FIRST_BUCKETS = 3;
+/** T459 (#1211): the balls the buckets step then waits for, picked up and brought back to the ball room (a bucket's worth) */
+export const FIRST_FETCH = 40;
 
 /** a range start's guide in the save (T239, GolfProgress.guide): the steps ticked (done: their reward paid) and skipped, and whether the whole
  *  guide was skipped. A save without it (made before T239) has no guide card */
@@ -268,7 +273,7 @@ function rangeStepMet(n: number, f: GuideFacts): boolean {
   switch (n) {
     case 1: return f.rangePlaced !== false; // (T288: a fact missing is a range from before T288: placed)
     case 2: return f.lotPlaced !== false;
-    case 3: return (f.golfers ?? 0) >= FIRST_BUCKETS;
+    case 3: return (f.golfers ?? 0) >= FIRST_BUCKETS && (f.ballsBack === undefined || f.ballsBack >= FIRST_FETCH); // (a fact missing: a save from before T386's balls)
     case 4: return own('greens');
     case 5: return !!f.walkway;
     case 6: return own('pave');

@@ -38,7 +38,7 @@ test('the labels: green +$X in, red -$X out and lost, commas for thousands (not 
   assert.equal(moneyText({ kind: 'in', amount: 12.5 }), '+$13');
   // a lost sale says so under its amount: its reason close up, the count in a place's total
   assert.equal(floatNote({ kind: 'lost', note: '', n: 1, merged: false }), 'lost sale');
-  assert.equal(floatNote({ kind: 'lost', note: LOST_WHY.parking, n: 1, merged: false }), 'lost · car park full');
+  assert.equal(floatNote({ kind: 'lost', note: LOST_WHY.parking, n: 1, merged: false }), 'lost · no room to park');
   assert.equal(floatNote({ kind: 'lost', note: LOST_WHY.queue, n: 4, merged: true }), '4 sales lost');
   assert.equal(floatNote({ kind: 'in', note: '', n: 3, merged: true }), '');
 });
