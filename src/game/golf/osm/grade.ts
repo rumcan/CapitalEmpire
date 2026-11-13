@@ -23,7 +23,7 @@ export interface CourseReport {
   madeUp: string[]; madeUpLine: string; warnings: string[];
 }
 
-/** a course that would have to shrink below this to fit the 2 km map is not built (its holes would be under a third of their real length) */
+/** a course that would have to shrink below this to fit the map is not built (its holes would be under a third of their real length) */
 export const MIN_SCALE = 0.3;
 const GRADE_LABEL: Record<Grade, string> = { full: 'Full', partial: 'Partial', outline: 'Outline only' };
 /** the number of hole lines of the course built that carry a hole number 1..18 (distinct numbers) */

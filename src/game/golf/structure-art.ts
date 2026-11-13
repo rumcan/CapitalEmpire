@@ -11,6 +11,7 @@ export const STRUCTURE_SPRITE: Record<string, string> = {
   holeBoard: 'poi:fishing-board', screen: 'poi:movie-display', tvTower: 'ref:landmark-water-tower', broadcast: 'business:golf-cart-garage', media: 'business:golf-clubhouse',
   gate: 'ce:parking-entry', toilets: 'golf:toilet-block', firstAid: 'expansion:backyard-tent', info: 'ce:parking-kiosk', rideshare: 'town:bus_stop',
   coach: 'business:golf-cart-garage', hotel: 'business:golf-clubhouse', interchange: 'ce:parking-entry', rangeStand: 'golf:grandstand-s', sponsorDisplay: 'poi:movie-display', helipad: 'business:golf-halfway-pavilion',
+  floodlight: 'world:streetlamp', // (T449: a stand-in until the floodlight tower has its own art)
 };
 /** the picture of a structure type not in STRUCTURE_SPRITE */
 export const FALLBACK_STRUCTURE_SPRITE = 'expansion:backyard-tent';

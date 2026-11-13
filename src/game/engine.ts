@@ -170,7 +170,7 @@ import { planGolfGame } from './golf/start';
 import { loadOsmLand, loadOsmSpec, osmCourseInfo, osmDisplayName, OSM_COURSES, OSM_CREDIT, OSM_LICENCE, type OsmCourseJson, type OsmCourseSpec, type OsmLand } from './golf/osm';
 import { previewOfKept, realDeps } from './golf/osm/find';
 import { RealPlacer, realInfoOf, type RealInfo, type RealView } from './golf/osm/placer';
-import { cutSpan, goesPhrase, type PlacePlan, type PlaceWorld } from './golf/osm/place';
+import { cutSpan, goesPhrase, type KeepItem, type PlacePlan, type PlaceWorld } from './golf/osm/place';
 import { placeDiff, scratchOf } from './golf/osm/placegrid';
 import { boundsOf, inRects } from './golf/osm/rotate';
 import { addLandPatch, clearLandIn, createLandField, designGreens, groundAt, layLand, packLand, patchBox, turnedFrame, unpackLand, type LandField, type LandSave } from './golf/osm/land';
@@ -242,6 +242,8 @@ import { CLUB_NAME, LEVEL_NAME, addVoucher, bagView, carryFor, fitPart, kitOf, l
 import { CALM_MPH, NO_WIND, dailyWind, envOf, lieKindFor, lieView, previewShot, slopeLines, windAt, windNote, windText, windToward, windView, type Conditions, type EnvFor, type LieView, type ShotEnv, type ShotPreview, type Slope, type Wind, type WindNow, type WindView } from './golf/play';
 import { CART_REACH, CART_TILES, COMPETITION_RULES, isCompetition, addressOf, canGimme, gimmeM, takeGimme, canMulligan, mulligansLeft, noHandicapWhy, takeMulligan, type RoundRules, cardTotals, cupTime, flightSpin, holeOf, holeOptions, nearBall, nextHole, pickHoles, playYours, rowOf, flightOf, ordinal, scoreName, startRound, yourBallAt, yourTurn, type CardRow, type HoleChoice, type YourFlight, type YourRound, type YourRoundView } from './golf/play/yours';
 import { missingParts, missingWhy, practicePick, realHoleCount, type PracticeScope } from './golf/play/practice';
+import { FLOODLIGHT_ID, darkStrokes, hostWhy, lighting, nightMoney, nightMoneyLine, nightUnlocked, type Lighting } from './golf/nightgolf';
+import type { EventDay } from './golf/clubevents';
 import { CLUB_EVENTS, MODE_OF, announceDue, entryWhy, eventBoard, eventDay, eventDue, eventOfMode, eventResult, eventWhen, fieldEntries, fieldIds, freshEvents, isEntered, resultLine, withTitle, type BoardEntry, type ClubEventsSave, type EventId, type EventResult } from './golf/clubevents';
 import { BOOK_LEAD, LESSON_BONUS, PRESSURE, bookRound, gearOf, handicapOf, bookedGolfer, clock, entryText, freeTee, gameSkills, hcpText, playedRound, playerCardView, practise, practiceWhy, rebook, startProfile, toParWord, withBag, withYou, youRangeView, type Booking, type Lesson, type PlayerCardView, type PlayerProfile, type PracticeCtx, type PracticeKind, type RoundState, type YouRangeView } from './golf/player';
 import { gearFor, withCards, gainOf } from './golf/player'; // T336 (#962): your cards
@@ -1564,18 +1566,34 @@ export class Game {
   /** what the planner's kept work (the lots' boxes, the land classes, the road graph) is for: the roads, the lots, the club's buildings, and a couple of seconds
    *  (a lot's level can change with no count changing) */
   private realPrepRevision(): string { const t = this.traffic; return `${this.net.version}|${t.lots.size}|${t.built}|${this.bizDefs.length}|${this.parkDefs.length}|${Math.floor(performance.now() / 2000)}`; }
-  /** the club's own things a real course cannot cover: its buildings, car parks, driving range, practice area and a tournament's structures, and the iconic places */
-  private realKeep(): { name: string; rect: Rect }[] {
-    const g = this.golf, out: { name: string; rect: Rect }[] = [];
+  /** the club's own things a real course may be laid over: its buildings, car parks, driving range, practice area and a tournament's structures, and the iconic
+   *  places. T444: a course laid over one clears it (`ref`: the step that takes it away, run by layRealCourse) and pays back `refund`, its value now: half what a
+   *  building or car park cost (as demolishing one pays), half a bought structure's price (as removing one does); the practice area is painted over by the
+   *  course (nothing back), a landmark is the town's (nothing back) */
+  private realKeep(): KeepItem[] {
+    const g = this.golf, out: KeepItem[] = [];
     if (!g) return out;
     const NAMES: Record<string, string> = { clubhouse: 'clubhouse', halfway: 'halfway house', prooffice: "pro's office", teachhut: 'teaching hut' };
-    for (const d of this.bizDefs) out.push(d.type === 'range' ? { name: 'driving range', rect: plotOfFront([d.x, d.y, d.w, d.h], g.dir) } : { name: NAMES[d.type] ?? 'building', rect: [d.x, d.y, d.w, d.h] });
-    for (const p of this.parkDefs) out.push({ name: 'car park', rect: [p.x, p.y, p.w, p.h] });
+    for (const d of this.bizDefs) {
+      const clear = () => {
+        this.setBizDefs(this.bizDefs.filter(q => q.id !== d.id)); this.traffic.setBusinesses(this.bizDefs);
+        // a range start's own range: its record goes back to "not built", so the start's checklist offers it again (Range ▸ Place the driving range)
+        const b = this.golf?.range; if (d.type === 'range' && b) { b.built = false; this.range.sync(true); }
+      };
+      // (the range is placed at RANGE_PLACE_COST, not priced in the business catalogue: half of that comes back, as for any building)
+      const refund = Math.round((d.type === 'range' ? RANGE_PLACE_COST : BUSINESS[d.type]?.buildCost ?? 0) / 2);
+      out.push(d.type === 'range' ? { name: 'driving range', rect: plotOfFront([d.x, d.y, d.w, d.h], g.dir), refund, ref: clear } : { name: NAMES[d.type] ?? 'building', rect: [d.x, d.y, d.w, d.h], refund, ref: clear });
+    }
+    for (const p of this.parkDefs) out.push({ name: 'car park', rect: [p.x, p.y, p.w, p.h], refund: Math.round(parkCost(p) / 2), ref: () => { const k = this.parkDefs.findIndex(q => q.id === p.id); if (k >= 0) this.removePark(k); } });
     if (g.practiceLot) out.push({ name: 'practice area', rect: g.practiceLot });
     const pts = this.range.scene?.practice?.pts;
     if (pts && pts.length >= 6) { const b = ptsBox(pts); out.push({ name: 'practice area', rect: [b[0]!, b[1]!, b[2]! - b[0]!, b[3]! - b[1]!] }); }
-    for (const s of g.structures ?? []) out.push({ name: STRUCTURE[s.typeId]?.name?.toLowerCase() ?? 'tournament structure', rect: structureRect(s) });
-    for (const b of this.placeBoxes()) out.push({ name: 'landmark', rect: [b[0], b[1], b[2] - b[0], b[3] - b[1]] });
+    for (const s of g.structures ?? []) {
+      const def = STRUCTURE[s.typeId];
+      out.push({ name: def?.name?.toLowerCase() ?? 'tournament structure', rect: structureRect(s), refund: s.mode === 'buy' && def?.buy ? Math.round(def.buy * 0.5) : 0,
+        ref: () => { const list = this.golf?.structures; const i = list ? list.findIndex(q => q.id === s.id) : -1; if (i < 0 || !list) return; const prop = this.golfStructureProps.get(s.id); if (prop) this.removeProp(prop); this.golfStructureProps.delete(s.id); list.splice(i, 1); } });
+    }
+    for (const p of this.places) { const d = placeDef(p.id); if (!d) continue; const b = placeBox(p, d); out.push({ name: 'landmark', rect: [b[0], b[1], b[2] - b[0], b[3] - b[1]], ref: () => { this.places = this.places.filter(q => q.id !== p.id); } }); }
     return out.filter(k => k.rect[2] > 0 && k.rect[3] > 0);
   }
   /** the world as the planner reads it, from the game's live collections (nothing copied but the small lists) */
@@ -1613,9 +1631,14 @@ export class Game {
     const g = this.golf; if (!g) return false;
     const { plan, turned } = c;
     if (!plan.ok || plan.total > this.money) return false;
-    // the buildings go, bought out (the worker pays their compensation); the land, the roads taken and the course are paid here
+    // the buildings go, bought out (the worker pays their compensation); the land, the roads taken and the course are paid here, less what the club's own
+    // buildings in the way bring back (T444: they are cleared first)
     for (const key of [...plan.lots.keys, ...plan.orphans.keys]) this.traffic.buyLot(key);
-    this.traffic.spend('construction', plan.land.price + plan.roads.value + plan.build);
+    if (plan.over.club.length) {
+      for (const c of plan.over.club) if (typeof c.ref === 'function') (c.ref as () => void)();
+      this.farmsUpdate(); this.dropGoneStaff(); this.syncCourseGates(); this.syncPlaces();
+    }
+    this.traffic.spend('construction', plan.land.price + plan.roads.value + plan.build - plan.over.refund);
     // the land: the cover's rects join the player's (and are kept apart for Land for sale and the survey lines), the course grid grows to hold them; the
     // city worker hears of it before the roads change, so no new lot starts on it
     const parcels = g.parcels ?? [g.parcel], own = plan.cover.map(r => [...r] as Rect);
@@ -1661,6 +1684,7 @@ export class Game {
     this.scheduleSave();
     const goes = goesPhrase(plan);
     this.toast(`Placed ${c.info.name}: ${plan.land.ha >= 10 ? Math.round(plan.land.ha) : plan.land.ha} ha bought${goes ? `, ${goes} cleared` : ''} ($${plan.total.toLocaleString()})`, 'good');
+    if (plan.over.warn.length) this.toast(plan.over.warn.join('. '), 'warn'); // (T444: a road link the course cut)
     this.emit();
     return true;
   }
@@ -10120,7 +10144,8 @@ export class Game {
     // T433, T434: what a ghost or a shared course file holds, once its heights are deflated (T438: after the course has gone to the view)
     this.course3pShare = null; const sg = this.lies3pGen;
     void (file.height ? fillPack(file.height) : Promise.resolve()).then(() => { if (sg === this.lies3pGen) this.course3pShare = shareOf(file, features, { name, biome, type, seed: seedOf(name) }); });
-    return { v: 1, t: 'course', course: course as unknown as Record<string, unknown>, features, biome, type, seed: seedOf(name), scale: 1, hole: n, golfer };
+    const night = this.golf?.player?.round?.mode === 'night-golf';   // (T449: a night-golf round is played at night)
+    return { v: 1, t: 'course', course: course as unknown as Record<string, unknown>, features, biome, type, seed: seedOf(name), scale: 1, hole: n, golfer, ...(night ? { time: 'night' as const } : {}) };
   }
   // ---------- T418: the owner's play in the view from behind the golfer (golf/play/play3p.ts: LiveGroup decides every stroke; the view shows them) ----------
   /** the frame the last course message was made in (course3pMsg) */
@@ -10321,7 +10346,10 @@ export class Game {
     if (d && !d.done && day > d.day && !(r && eventOfMode(r.mode) === d.id && r.day === d.day)) this.finishEvent(null);
     if (this.traffic.round.stage !== 'free' || !this.dayPlay) return; // (announced once the course has a day of play)
     const id = announceDue(ev, season, this.seasonMonthNow(now));
-    if (id) {
+    // T449: night golf that cannot be hosted (not unlocked, or the course not lit) is announced with the reason, and no card opens
+    const nw = id === 'night' ? this.nightWhy() : null;
+    if (id && nw) { ev.announced[id] = season; this.scheduleSave(); if (nightUnlocked(this.golf?.tier ?? 1)) this.toast(`${CLUB_EVENTS[id].name} (${eventWhen(id, season)}): ${nw}`, 'info'); this.emit(); }
+    else if (id) {
       ev.announced[id] = season; if (!this.eventCardOpen) this.eventCardOpen = id; this.scheduleSave(); // (a card already open stays: the toast names it)
       this.toast(`${CLUB_EVENTS[id].name}: ${eventWhen(id, season)} at your club`, 'info'); this.emit();
     }
@@ -10330,15 +10358,17 @@ export class Game {
   private eventDayBuilt(day: number, view: CourseView, now: number) {
     const dp = this.dayPlay; if (!dp || !this.golf) return;
     const ev = this.clubEv(), season = this.seasonsDone();
-    if (ev.today && ev.today.day === day) { if (!ev.today.done) ev.today = eventDay(ev.today.id, ev.today.season, day, dp.view.plan, view, dp.base); return; }
+    if (ev.today && ev.today.day === day) { if (!ev.today.done) { ev.today = eventDay(ev.today.id, ev.today.season, day, dp.view.plan, view, dp.base); this.darken(ev.today); } return; }
     if (this.evDayChecked === day) return;
     this.evDayChecked = day;
     // (an event's day waits while your round in the last one goes on: its result comes with your card)
     const r = this.golf.player?.round; if (ev.today && !ev.today.done && r && eventOfMode(r.mode) === ev.today.id && r.day === ev.today.day) return;
-    const id = this.devEvent ?? eventDue(ev, season, this.seasonMonthNow(now)); if (!id) return;
+    const id = this.devEvent ?? eventDue(ev, season, this.seasonMonthNow(now), e => e !== 'night' || this.nightWhy() === null); if (!id) return;
     this.devEvent = null;
     if (ev.today && !ev.today.done) this.finishEvent(null);
     ev.today = eventDay(id, season, day, dp.view.plan, view, dp.base); ev.held[id] = season; ev.announced[id] = season;
+    // T449: night golf: the field drops strokes on the holes left dark
+    this.darken(ev.today);
     this.eventCardOpen = id; this.evBoardCache = null; this.scheduleSave();
     this.toast(`Today: the ${CLUB_EVENTS[id].name} at your club (${ev.today.field.length} in the field)`, 'good'); this.emit();
   }
@@ -10350,6 +10380,12 @@ export class Game {
     const res: EventResult = eventResult(d, you);
     { const k = res.won ? cardEco(this.playerNow()?.cards, true).prize : 1; if (k !== 1) res.money = Math.round(res.money * k); } // (T337: the Sponsor Tent: a title's prize is half as much again)
     d.done = true; ev.last = res;
+    // T449: night golf's money: the tickets, the field's entries and the novelty in, the staff and the lights out
+    if (d.id === 'night') {
+      const m = nightMoney({ rep: g.rep, field: d.field.length, before: ev.nights ?? 0, towers: this.floodlights().length }); ev.nights = (ev.nights ?? 0) + 1;
+      this.traffic.spend('business', -m.net); const c = g.clubhouse; this.floatMoney({ x: c.x, y: c.y, amount: Math.abs(m.net), kind: m.net >= 0 ? 'in' : 'out', group: 'clubhouse', gx: c.x, gy: c.y });
+      this.toast(nightMoneyLine(m), m.net >= 0 ? 'good' : 'info');
+    }
     // T336: a title (gold), a podium finish (silver) or the top quarter of the field (bronze) pays a card pull (golf/cards earning.ts)
     const earn = earnFromPlace(res.pos, res.of, `the ${CLUB_EVENTS[d.id].name}`); if (earn) this.pullFor.set(`event:${d.id}`, this.grantPull(earn)); else this.pullFor.delete(`event:${d.id}`);
     if (res.won) {
@@ -10360,6 +10396,22 @@ export class Game {
     }
     this.eventCardOpen = d.id; this.evBoardCache = null; this.scheduleSave();
     this.toast(`${CLUB_EVENTS[d.id].name}: ${resultLine(res)}`, res.won ? 'good' : 'info'); this.emit();
+  }
+  /** T449: a night-golf day's field drops strokes on the holes left dark (another event's day: unchanged) */
+  private darken(d: EventDay) { if (d.id !== 'night') return; const L = this.nightLighting(); if (L) for (const f of d.field) f.strokes += darkStrokes(f.name, L.shares); }
+  /** T449: the floodlight towers placed (their tile points) */
+  private floodlights(): { x: number; y: number }[] { return (this.golf?.structures ?? []).filter(s => s.typeId === FLOODLIGHT_ID).map(s => ({ x: s.x, y: s.y })); }
+  /** T449: the course's lighting for night golf (null: no course) */
+  private nightLighting(): Lighting | null {
+    const g = this.golf; if (!g) return null;
+    const holes = deriveHoles(this.courseAreaList(), g.tees, g.pins, g.aims ?? []).filter(h => h.line.length >= 2);
+    return lighting(holes, this.floodlights());
+  }
+  /** T449: why night golf cannot be hosted now (null: it can): its unlock, then the lights */
+  nightWhy(): string | null {
+    const g = this.golf; if (!g) return 'No golf course';
+    const holes = deriveHoles(this.courseAreaList(), g.tees, g.pins, g.aims ?? []).filter(h => h.line.length >= 2);
+    return hostWhy(g.tier ?? 1, holes, this.floodlights());
   }
   /** today's event, not over yet (null: none) */
   private eventToday(): ClubEventsSave['today'] | null {
@@ -11953,7 +12005,11 @@ export class Game {
       const d0 = drawn && i >= 0 ? drawn.at(x, y) : i >= 0 && grid!.draw ? grid!.draw[i]! : c;
       const k = grassSlot(d0), p = k ? plays.get(k) : undefined, d = k ? (p ? PLAY_SURF[p] : c) : d0;
       const s = i >= 0 ? (p ? golfSurfaceOf(p) : SURF_SURFACE[d]) : null;
-      return s ?? surfaceAtIx(ixOf(d !== c && c ? areasBut(c) : areas), x, y);   // (T438: the areas of the point's cell only: the same answer)
+      const a = s ?? surfaceAtIx(ixOf(d !== c && c ? areasBut(c) : areas), x, y);   // (T438: the areas of the point's cell only: the same answer)
+      if (a !== null) return a;
+      // T444: the river under the course (its cells are left unpainted when a course is laid over it) plays as water
+      const tx = Math.floor(x), ty = Math.floor(y), tc = tx >= 0 && ty >= 0 && tx < MAP && ty < MAP ? this.terrain.cls[ty * MAP + tx]! : -1;
+      return tc === TC.WATER || tc === TC.CREEK ? 'water' : null;
     };
     // T269: play reads the day's cups (golf/daypins.ts): the pin and the end of each line; the par and the tees are the placed pin's
     // T353: a ball that comes to rest on a house lot is out of bounds (golf/estate.ts lotAt)

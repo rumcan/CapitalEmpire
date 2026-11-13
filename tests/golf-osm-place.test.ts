@@ -7,7 +7,7 @@ import magnoliaJson from '../src/game/golf/osm/data/magnolia-national.json';
 import { osmCourseToSpec } from '../src/game/golf/osm';
 import type { OsmCourseJson, OsmCourseSpec } from '../src/game/golf/osm/types';
 import { ROT_STEP, boundsOf, coverStrips, inConvex, inRects, measuredLengthM, normDeg, outlineAt, originFor, rectsArea, rotateSpec, snapDeg, turnedSize } from '../src/game/golf/osm/rotate';
-import { PLACE_EDGE, RIVER_RULE, TOWN_KEEP, cutSpan, goesPhrase, money, placeLabel, planPlace, popupText, priceLines, unionArea, type PlaceLot, type PlaceSeg, type PlaceSpec, type PlaceWorld } from '../src/game/golf/osm/place';
+import { NOTE, PLACE_EDGE, RIVER_RULE, TOWN_KEEP, cutSpan, goesPhrase, money, placeLabel, planPlace, popupText, priceLines, unionArea, type PlaceLot, type PlaceSeg, type PlaceSpec, type PlaceWorld } from '../src/game/golf/osm/place';
 import { compensation } from '../src/game/budget';
 import { LAND_PRICE_SQM } from '../src/game/golf/parcels';
 import { paintSpec } from '../src/game/golf/osm/raster';
@@ -284,21 +284,24 @@ describe('what goes (T356)', () => {
     assert.equal(p.why, '', 'no target is named: nothing is refused');
   });
 
-  it('refuses a cut that leaves the town’s centre or the clubhouse with no way to the county road, and allows it when another road joins them', () => {
+  it('allows a cut that leaves the town’s centre or the clubhouse with no way to the county road, warning of it in the bar, and says nothing when another road joins them (T444)', () => {
     const segs = [seg(0, 500, 300, 500), seg(300, 500, 700, 500), seg(700, 500, 800, 500), seg(700, 500, 700, 600)];
     const targets = [{ name: 'the town', x: 800, y: 500 }];
     const p = planPlace(world({ segs, entries: [{ x: 0, y: 500 }], targets }), LAND, AT, 0);
-    assert.equal(p.why, 'That would cut the town off from the county road');
-    assert.equal(p.whyKind, 'link');
-    assert.equal(p.ok, false);
+    assert.equal(p.why, '');
+    assert.ok(p.ok);
+    assert.deepEqual(p.over.cutOff, ['the town']);
+    assert.deepEqual(p.over.warn, ['The town loses its road link to the county road']);
+    assert.match(placeLabel(p, 'Rondebosch').text, /click to place · ⚠ The town loses its road link to the county road$/);
+    assert.match(popupText(p), /The town loses its road link to the county road\.$/);
     // a way round: from the entry south and east to the town’s branch
     const around = [...segs, seg(0, 500, 0, 700), seg(0, 700, 700, 700), seg(700, 700, 700, 600)];
     const q = planPlace(world({ segs: around, entries: [{ x: 0, y: 500 }], targets }), LAND, AT, 0);
-    assert.equal(q.why, '');
-    assert.ok(q.ok);
+    assert.deepEqual(q.over.warn, []);
+    assert.ok(!placeLabel(q, 'x').text.includes('⚠'));
     // a target nothing reached before is not the course’s doing
     const lonely = planPlace(world({ segs, entries: [{ x: 0, y: 500 }], targets: [{ name: 'the farm', x: 500, y: 900 }] }), LAND, AT, 0);
-    assert.equal(lonely.why, '');
+    assert.deepEqual(lonely.over.cutOff, []);
   });
 
   it('says what it does in the pop-up: the hectares, the buildings, the road and the price', () => {
@@ -348,16 +351,25 @@ describe('red: can’t afford it, or can’t go there (T356)', () => {
     assert.equal(planPlace(world(), t, { x: 300, y: 512, deg: 45 }, 0).fits, false);
   });
 
-  it('is red over the river, over the club’s own buildings, over the town’s centre, and during a tournament', () => {
-    assert.equal(planPlace(world({ river: (x, y) => x >= 519 && x <= 525 && y >= 490 && y <= 510 }), LAND, AT, 0).whyKind, 'river');
-    assert.equal(planPlace(world({ river: (x) => x > 560 }), LAND, AT, 0).whyKind, '', 'a river beside it is no matter');
-    const club = planPlace(world({ keep: [{ name: 'clubhouse', rect: [540, 480, 20, 20] }] }), LAND, AT, 0);
-    assert.equal(club.whyKind, 'club');
-    assert.equal(club.why, 'Your clubhouse is in the way');
-    assert.equal(planPlace(world({ keep: [{ name: 'clubhouse', rect: [550, 480, 20, 20] }] }), LAND, AT, 0).whyKind, '', 'a clubhouse that touches the edge is not under it');
+  it('is red only off the map and during a tournament: over the river, the club’s own buildings and the town’s centre it goes, and says so (T444)', () => {
+    const river = planPlace(world({ river: (x, y) => x >= 519 && x <= 525 && y >= 490 && y <= 510 }), LAND, AT, 0);
+    assert.equal(river.whyKind, ''); assert.ok(river.ok);
+    assert.equal(river.over.river, NOTE.river);
+    assert.equal(planPlace(world({ river: (x) => x > 560 }), LAND, AT, 0).over.river, '', 'a river beside it is no matter');
+    const ref = { id: 7 };
+    const club = planPlace(world({ keep: [{ name: 'clubhouse', rect: [540, 480, 20, 20], refund: 60000, ref }, { name: 'car park', rect: [700, 480, 20, 20], refund: 5000 }] }), LAND, AT, 0);
+    assert.equal(club.whyKind, ''); assert.ok(club.ok);
+    assert.deepEqual(club.over.club, [{ name: 'clubhouse', refund: 60000, ref }], 'only the one under the land, with the game’s handle on it');
+    assert.equal(club.over.refund, 60000);
+    assert.ok(club.over.notes.includes('Your clubhouse is cleared ($60,000 back)'));
+    const bare = planPlace(world(), LAND, AT, 0);
+    assert.equal(club.total, bare.total - 60000, 'its value comes off the price');
+    assert.equal(priceLines(club).reduce((s, l) => s + l.amount, 0), club.total, 'the lines still add up, the refund as a minus line');
+    assert.deepEqual(planPlace(world({ keep: [{ name: 'clubhouse', rect: [550, 480, 20, 20] }] }), LAND, AT, 0).over.club, [], 'a clubhouse that touches the edge is not under it');
     const town = planPlace(world({ townCentre: { x: 550 + TOWN_KEEP - 1, y: 500 } }), LAND, AT, 0);
-    assert.equal(town.whyKind, 'town');
-    assert.equal(planPlace(world({ townCentre: { x: 550 + TOWN_KEEP + 1, y: 500 } }), LAND, AT, 0).whyKind, '');
+    assert.equal(town.whyKind, ''); assert.ok(town.over.town);
+    assert.ok(town.over.notes.includes(NOTE.town));
+    assert.equal(planPlace(world({ townCentre: { x: 550 + TOWN_KEEP + 1, y: 500 } }), LAND, AT, 0).over.town, false);
     assert.equal(planPlace(world({ roundLive: true }), LAND, AT, 0).whyKind, 'round');
   });
 
@@ -373,36 +385,38 @@ describe('red: can’t afford it, or can’t go there (T356)', () => {
     // a stream across the middle of the fairway, between the tee and the green: allowed (the course is laid round it)
     const across = at(x => x >= 520 && x < 523);
     assert.equal(across.whyKind, '', across.why); assert.ok(across.ok);
-    // the river over the green, over the tee: refused, naming the hole
-    assert.equal(at(x => x >= 534 && x < 537).why, "The river runs over hole 1's green");
-    assert.equal(at(x => x >= 460 && x < 463).why, "The river runs over hole 1's tee");
-    // the river only clipping a tee box (a corner of it, not its marker): a bitten box, allowed (the cells on the river are left unpainted)
-    assert.equal(at((x, y) => x >= 460 && x < 461 && y >= 495 && y < 496).whyKind, '');
-    // a practice green on the river is no hole's: allowed
+    assert.equal(across.over.river, NOTE.river, 'a stream across the fairway is said once');
+    // the river over the green, over the tee: allowed (T444), naming the hole
+    assert.equal(at(x => x >= 534 && x < 537).over.river, "The river runs over hole 1's green: it stays, as water on the hole");
+    assert.ok(at(x => x >= 534 && x < 537).ok);
+    assert.equal(at(x => x >= 460 && x < 463).over.river, "The river runs over hole 1's tee: it stays, as water on the hole");
+    // the river only clipping a tee box (a corner of it, not its marker): a bitten box, allowed (one tile the cover's 4-tile sampling may not see)
+    assert.ok(at((x, y) => x >= 460 && x < 461 && y >= 495 && y < 496).ok);
+    // a practice green on the river is no hole's
     const withPractice = { ...spec, areas: [...spec.areas!, { surf: 'green', hole: 0, rings: [[60, 5, 66, 5, 66, 11, 60, 11]] }] } as PlaceSpec;
     assert.equal(planPlace(world({ river: (x, y) => x >= 510 && x < 517 && y >= 480 && y < 487 }), withPractice, AT, 0).whyKind, '');
-    // a river that runs along the hole (most of its line on the water, tee and green dry): refused
+    // a river that runs along the hole (most of its line on the water, tee and green dry): allowed, said
     const along = at(x => x >= 470 && x < 520);
-    assert.equal(along.whyKind, 'river');
-    assert.equal(along.why, 'The river runs along hole 1: turn the course or move it');
-    // no river near: fine; a river beside the land: fine
-    assert.equal(at(() => false).whyKind, ''); assert.equal(at(x => x >= 600).whyKind, '');
-    // a spec without areas and holes (a made-up land) is judged by its cover, as before
-    assert.equal(planPlace(world({ river: x => x >= 520 && x < 523 }), LAND, AT, 0).whyKind, 'river');
+    assert.equal(along.whyKind, ''); assert.ok(along.ok);
+    assert.equal(along.over.river, 'The river runs along hole 1: it stays, as a water hazard');
+    // no river near: nothing said; a river beside the land: nothing
+    assert.equal(at(() => false).over.river, ''); assert.equal(at(x => x >= 600).over.river, '');
+    // a spec without areas and holes (a made-up land) is told by its cover
+    assert.equal(planPlace(world({ river: x => x >= 520 && x < 523 }), LAND, AT, 0).over.river, NOTE.river);
   });
 
-  it('tells the place’s own reasons before the river’s: the town’s centre or the club’s buildings first, the river after', () => {
-    const spec = { w: 100, h: 50, areas: [{ surf: 'green', hole: 1, rings: [[80, 20, 90, 20, 90, 30, 80, 30]] }], holes: [{ n: 1, tees: [{ kind: 'middle', x: 12, y: 22 }], pin: { x: 85, y: 25 }, aims: [], line: [12, 22, 85, 25] }] } as unknown as PlaceSpec;
-    const river = (x: number) => x >= 534 && x < 537; // over the green
-    assert.equal(planPlace(world({ river }), spec, AT, 0).whyKind, 'river');
-    assert.equal(planPlace(world({ river, townCentre: { x: 500, y: 500 } }), spec, AT, 0).whyKind, 'town');
-    assert.equal(planPlace(world({ river, keep: [{ name: 'clubhouse', rect: [500, 490, 10, 10] }] }), spec, AT, 0).whyKind, 'club');
+  it('says every thing it is laid over in the pop-up, the warnings first (T444)', () => {
+    const segs = [seg(0, 500, 300, 500), seg(300, 500, 700, 500), seg(700, 500, 800, 500)];
+    const p = planPlace(world({ segs, entries: [{ x: 0, y: 500 }], targets: [{ name: 'the clubhouse', x: 800, y: 500 }], townCentre: { x: 500, y: 500 },
+      keep: [{ name: 'halfway house', rect: [500, 490, 10, 10], refund: 1000 }], river: x => x >= 520 && x < 523 }), LAND, AT, 0);
+    assert.ok(p.ok, p.why);
+    assert.deepEqual(p.over.notes, ['The clubhouse loses its road link to the county road', 'Your halfway house is cleared ($1,000 back)', NOTE.town, NOTE.river]);
   });
 
-  it('tells the reason before the money, and an unaffordable pose that is also refused is told as refused', () => {
+  it('is still red for the money: an unaffordable pose over the town’s centre is told as short', () => {
     const p = planPlace(world({ townCentre: { x: 500, y: 500 }, money: 0 }), LAND, AT, 100);
-    assert.equal(p.whyKind, 'town');
-    assert.equal(placeLabel(p, 'x').text, p.why);
+    assert.equal(p.whyKind, '');
+    assert.match(placeLabel(p, 'x').text, /^Not enough money/);
   });
 });
 
