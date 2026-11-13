@@ -289,7 +289,8 @@ export class RangeHost {
     for (let k = 0; k < d.nPeople; k++) {
       const p = d.people[k]!; if (p.x < x0 || p.x > x1 || p.y < y0 || p.y > y1) continue;
       const m = this.mover(out.length);
-      m.item = GOLFER_BASE + (p.person * WALK_DIRS.length + p.row) * GOLFER_FRAMES + p.frame; m.x = p.x; m.y = p.y; m.flip = false; m.scale = 1; m.moving = false;
+      m.item = (p.group === 2 ? STAFF_BASE + (p.person * WALK_DIRS.length + p.row) * STAFF_FRAMES : GOLFER_BASE + (p.person * WALK_DIRS.length + p.row) * GOLFER_FRAMES) + p.frame;   // (#1235: the academy pro may be the painted staff)
+      m.x = p.x; m.y = p.y; m.flip = false; m.scale = 1; m.moving = false;
       // on the upper deck (T133): drawn up there, its footprint (the painter's order) kept on its bay
       m.lift = p.lift;
       m.x0 = p.x - 0.12; m.y0 = p.y - 0.12; m.x1 = p.x + 0.12; m.y1 = p.y + 0.12; out.push(m);

@@ -10,8 +10,8 @@ import { arrivalRate, hourWeight, practiceUsers, rangeScale, rangeStats, saleVal
 import { KIOSK_QMAX, KIOSK_SERVE, KIOSK_SHARE, LESSON_SHARE, TIER2_BAYS, extraValue, homeStage, type ExtraId, type HomeStage } from './rangesave';
 export * from './rangesave';
 import { NEAR, RANGE_LOT } from './rangestart';
-import { GOLFER_CLIPS, LIBRARY } from '../library';
-import { PUTT_IMPACT_S, clipFrame, golferRow, hash, rowToward, type CrowdPerson } from '../crowdview';
+import { GOLFER_CLIPS, LIBRARY, STAFF_CLIPS } from '../library';
+import { PUTT_IMPACT_S, clipFrame, golferRow, hash, rowToward, staffDrive, staffPerson, type CrowdPerson } from '../crowdview';
 import { mulberry } from '../iso';
 import { NO_PRACTICE, practiceArea, practiceAreaAt, type PracticeArea, type PracticeScan } from './practice';
 import { PRACTICE_FEE, PRACTICE_IDS, PRACTICE_SHARE, type PracticeId } from './rangesave';
@@ -697,6 +697,8 @@ const ADDRESS = 1.2, CLIP = GOLFER_CLIPS.golf_drive.times[GOLFER_CLIPS.golf_driv
 const SWING = ADDRESS + CLIP + PAUSE;
 /** the academy's pro is drawn as this golfer (T133), and the ball picker cart as this car type (a stand-in: the eight-way wagon, never mirrored) */
 const PRO_PERSON = 3, PICKER_CAR = 1;
+/** #1235: the academy's pro is the club's painted teaching pro (a staff person, never a customer's look) once packed, -1 until then */
+const PRO_STAFF = staffPerson('staff_role_teachpro');
 /** the most balls lying on the range, and of golfers queued patiently (town hours) */
 const LYING_MAX = 800, PATIENCE_H = 2;
 /** the practice facilities (T130): a golfer practises this long (town hours); a putt's beats (address, the stroke: T212's putt clip for PUTT_STROKE
@@ -1622,11 +1624,12 @@ export class RangeSim {
     const pr = this.pro;
     if (sc?.academy && pr.placed) {
       const p = P[np] ?? (P[np] = { x: 0, y: 0, group: 1, person: 0, row: 0, frame: 0, lift: 0, id: 0 }); np++;
-      p.id = 0; p.x = pr.x; p.y = pr.y; p.group = 1; p.person = PRO_PERSON % Math.max(1, this.golfers); p.lift = 0;
+      const staff = PRO_STAFF >= 0, Gw = staff ? STAFF_CLIPS.walk : G.walk, Gi = staff ? STAFF_CLIPS.idle : G.idle, Gd = staff ? staffDrive() : G.golf_drive;
+      p.id = 0; p.x = pr.x; p.y = pr.y; p.group = staff ? 2 : 1; p.person = staff ? PRO_STAFF : PRO_PERSON % Math.max(1, this.golfers); p.lift = 0;
       const lt = (this.t - pr.since) % (2 * SWING);
-      if (pr.walking) { p.row = rowToward(Math.cos(pr.ang), Math.sin(pr.ang)); p.frame = clipFrame(G.walk, G.walk.times[0]! + (this.t % 1.4)); }
-      else if (pr.coach >= 0 && lt >= SWING) { const k = lt - SWING; p.row = golferRow(sc.aim.x, sc.aim.y); p.frame = k < ADDRESS ? G.golf_drive.start : k < ADDRESS + CLIP ? clipFrame(G.golf_drive, G.golf_drive.times[0]! + k - ADDRESS) : G.idle.start; }
-      else { p.row = rowToward(Math.cos(pr.ang), Math.sin(pr.ang)); p.frame = G.idle.start; }
+      if (pr.walking) { p.row = rowToward(Math.cos(pr.ang), Math.sin(pr.ang)); p.frame = clipFrame(Gw, Gw.times[0]! + (this.t % 1.4)); }
+      else if (pr.coach >= 0 && lt >= SWING && Gd) { const k = lt - SWING; p.row = golferRow(sc.aim.x, sc.aim.y); p.frame = k < ADDRESS ? Gd.start : k < ADDRESS + CLIP ? clipFrame(Gd, Gd.times[0]! + k - ADDRESS) : Gi.start; }
+      else { p.row = rowToward(Math.cos(pr.ang), Math.sin(pr.ang)); p.frame = Gi.start; }
     }
     // the ball picker cart (T133): parked by the outfield by day, out on its lanes after closing (the last of the cars)
     if (sc?.picker) {
