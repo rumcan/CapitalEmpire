@@ -10,13 +10,14 @@ export const INCOME_LINES: readonly Line[] = ['range', 'greenFees', 'members', '
 export const LINE_NAMES: Record<string, string> = {
   range: 'Driving range', greenFees: 'Green fees', members: 'Memberships', events: 'Events', shop: 'Pro shop', parking: 'Parking', otherIn: 'Other income',
   savingsInterest: 'Savings interest', wages: 'Wages', upkeep: 'Upkeep', build: 'Building', stock: 'Stock', otherOut: 'Other costs',
-  loanInterest: 'Loan interest', overdraftInterest: 'Overdraft interest', loanPrincipal: 'Loan repayments', emergency: 'Emergencies', insurance: 'Insurance',
+  loanInterest: 'Loan interest', markup: 'Murabaha markup', overdraftInterest: 'Overdraft interest', loanPrincipal: 'Loan repayments', emergency: 'Emergencies', insurance: 'Insurance',
 };
 /** the cost groups of the statement, in the order shown */
 export const COST_GROUPS: readonly { name: string; lines: readonly Line[] }[] = [
   { name: 'Staff and upkeep', lines: ['wages', 'upkeep'] },
   { name: 'Stock and other', lines: ['stock', 'otherOut'] },
   { name: 'Interest paid', lines: ['loanInterest', 'overdraftInterest'] },
+  { name: 'Murabaha markup', lines: ['markup'] },
   { name: 'Insurance', lines: ['insurance'] },
   { name: 'Emergencies (your share)', lines: ['emergency'] },
 ];
