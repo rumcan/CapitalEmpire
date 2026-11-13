@@ -7,6 +7,7 @@
 // same spec.
 import { deriveHoles, parFromLength } from '../holes';
 import { TILE_M, type AimPoint, type Pin, type TeeKind, type TeeMark } from '../types';
+import { MAP_KM } from '../../iso';
 import {
   bandRings, bendDeg, boxOf, boxesMeet, circleRing, distToLine, distToPoly, distToRing, inPoly, interiorPoint, lineLen, polyArea, sampleLine, sliceLine,
   type Box, type P, type Poly,
@@ -104,7 +105,7 @@ export function osmCourseToSpec(json0: OsmCourseJson, opt: ConvertOptions = {}):
   const warnings: SpecNote[] = [], fills: SpecNote[] = [];
   const warn = (code: string, hole: number, text: string) => warnings.push({ code, hole, text });
   const fill = (code: string, hole: number, text: string) => fills.push({ code, hole, text });
-  if (scale < 1) warn('scaled', 0, `The course is bigger than the 2 km map: every coordinate scaled to ${Math.round(scale * 100)}% (the holes' lengths too, so a par may differ)`);
+  if (scale < 1) warn('scaled', 0, `The course is bigger than the ${MAP_KM} km map: every coordinate scaled to ${Math.round(scale * 100)}% (the holes' lengths too, so a par may differ)`);
 
   // ---- the map's areas ----
   const tees = areasOf(F.tee), greens = areasOf(F.green), fairways = areasOf(F.fairway), bunkers = areasOf(F.bunker);

@@ -12,6 +12,7 @@ import { candidatesOf, courseQuery, nearQuery, runOverpass, type Candidate, type
 import { realNet, type Net } from './polite';
 import { parseCourseQuery, refText, type OsmRef } from './query';
 import type { OsmCourseJson, OsmCourseSpec } from './types';
+import { MAP_KM } from '../../iso';
 
 /** the parts a search and an import run on */
 export interface FindDeps { net: Net; lib: CourseLibrary; nominatim: NominatimClient }
@@ -106,11 +107,11 @@ export async function fetchPreview(ref: OsmRef, hint: Hint, d: FindDeps, opt: { 
 /** the spec of a kept course for "Build" on a Downloaded row (null: not kept) */
 export async function specOfKept(id: string, d: FindDeps): Promise<Preview | undefined> { return previewOfKept(id, d); }
 
-/** the sentence about the size and fit of a previewed course ("fits the map at true size", "scaled to 90% to fit the 2 km map", "too big for the map") */
+/** the sentence about the size and fit of a previewed course ("fits the map at true size", "scaled to 90% to fit the 4 km map", "too big for the map") */
 export function sizeLine(r: CourseReport): string {
   const km = (m: number) => (m >= 1000 ? `${(m / 1000).toFixed(1)} km` : `${m} m`);
   const size = `${km(r.landM[0])} x ${km(r.landM[1])}`;
   if (r.holes === 0) return `Size ${size}`;
-  if (!r.fits) return `Size ${size}: too big for the 2 km map (it would have to shrink to ${r.scalePct}%)`;
-  return r.scalePct >= 100 ? `Size ${size}: fits the 2 km map at true size` : `Size ${size}: scaled to ${r.scalePct}% to fit the 2 km map (the holes get that much shorter)`;
+  if (!r.fits) return `Size ${size}: too big for the ${MAP_KM} km map (it would have to shrink to ${r.scalePct}%)`;
+  return r.scalePct >= 100 ? `Size ${size}: fits the ${MAP_KM} km map at true size` : `Size ${size}: scaled to ${r.scalePct}% to fit the ${MAP_KM} km map (the holes get that much shorter)`;
 }

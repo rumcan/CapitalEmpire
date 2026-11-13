@@ -1,5 +1,5 @@
 // A new golf game on a map-data course (T340 stage 2, #967): where the course, its clubhouse parcel, car park and entry road go on the map, and the
-// golf state and course grid the engine lays. The real courses are 1 to 2 km across and the map is 2 km (MAP 1024), and any generated valley has its
+// golf state and course grid the engine lays. The real courses are 1 to 2 km across and the map is 4 km (MAP 2048; T280 had it at 2 km for a while), and any generated valley has its
 // river through every 700-tile window (12 seeds checked), so the game sits on the flat plain (boot.ts flatTerrain): the land in the middle of the map,
 // and the clubhouse parcel, car park and drive on the side of it nearest the first tee (a real clubhouse stands by the first tee: a cart ride of a kilometre
 // to it is no way to start a round), the entry road from the map's edge on that side (the highway enters there: the terrain's `highway` is that point).
