@@ -9,7 +9,7 @@ import { FACING_ROW, Pedestrians, facing as facingOf, sidewalks, type Door, type
 import { personIdentity, type PersonIdentity } from './person-identity';
 import { legacySeating, placeSeating, seatLiftWorldPixels, seatingProblems, type PlacedSeating } from './golf/event-seating';
 import { facilityCondition, facilityImprovement, hasUpgradedArt, improvementCost, type FacilityCondition } from './golf/facility-models';
-import { GREENKEEPING, JAM } from './features';
+import { GREENKEEPING, JAM, JAM_FEE_PER_HOLE } from './features';
 import { GRASS_ACTION_NAME, GrassManagement, grassSurface, type GrassAction, type GrassCellView, type GrassScope, type GrassSettings } from './ext/grass-management';
 import { drawGhostBlueprint, drawGhostHint, drawGhostPoly, drawGhostRing, drawRefusedMarks, ghostStatus, rgbaOf, type GhostBlueprint, type GhostView } from './ext/ghost-preview';
 import { drawRefusedCross, strokeHatch } from './ext/refused-mark';
@@ -9114,8 +9114,10 @@ export class Game {
     this.dayMinute = at.dayMin;
     const b = this.dayBook.step(at.day, at.dayMin, free, () => this.dayInputs(), feeScale(tr.dayLen), (r, wx) => this.dayPaceOf(r, now, wx));
     if (b.fees > 0) {
-      this.as('greenFees', () => tr.spend('business', -b.fees));
-      const c = g.clubhouse; this.floatMoney({ x: c.x, y: c.y, amount: Math.round(b.fees), kind: 'in', group: 'clubhouse', gx: c.x, gy: c.y });
+      // T459 (docs/JAM.md "Balance"): in the jam the fees are paid per playable hole, so each hole built earns its share (features.ts JAM_FEE_PER_HOLE)
+      const fees = JAM ? b.fees * JAM_FEE_PER_HOLE * Math.max(1, this.playableHoles) : b.fees;
+      this.as('greenFees', () => tr.spend('business', -fees));
+      const c = g.clubhouse; this.floatMoney({ x: c.x, y: c.y, amount: Math.round(fees), kind: 'in', group: 'clubhouse', gx: c.x, gy: c.y });
     }
     if (b.members + b.visitors > 0) this.scheduleSave();
     // the card follows the day (the golfers out, the waits): once a second while it is open
