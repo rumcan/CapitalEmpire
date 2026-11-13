@@ -563,9 +563,11 @@ function loop(now) {
   if (q.get('seed')) SEED = +q.get('seed') | 0;
   setTime(q.get('time') ? clamp(+q.get('time') | 0, 0, 2) : 0);
   setBiome(BIOMES[q.get('biome')] ? q.get('biome') : 'parkland', CTYPES[q.get('type')] ? q.get('type') : 'private');   // ?biome=desert&type=links and so on
+  STYLE_URL = q.has('biome') || q.has('type');   // (the address's style wins over the one kept for the course)
   if (!HOST) try { for (const c of JSON.parse(localStorage.getItem('cinderlinks.courses') || '[]')) if (c && c.id && c.holes) MORE_COURSES.push(c); } catch (e) { /* nothing kept */ }
   if (q.get('find') && !HOST) setTimeout(() => importCourse(q.get('find')), 800);
-  if (!HOST) { const c = q.get('course'); if (c !== 'none') loadCourse(c || 'woodhill') || loadCourse(courseList().length ? courseList()[0].id : ''); }   // the game starts on Woodhill (the owner's choice, 2026-11-12); ?course=<id> starts on another, ?course=none on the invented course
+  if (!HOST) { const c = q.get('course'); if (c !== 'none') loadCourse(c || 'woodhill') || loadCourse(courseList().length ? courseList()[0].id : ''); }
+  if (!HOST) styleRestore(course ? course.id : null);   // the style last chosen for this course (parts/07-play.md)   // the game starts on Woodhill (the owner's choice, 2026-11-12); ?course=<id> starts on another, ?course=none on the invented course
 }
 if (!/[?&]worker=0/.test(location.search || '')) wkStart();   // (?worker=0: the page makes the land itself, for comparing)
 newHole(1, 0, 0);   // (in host mode: the invented hole, never drawn, so that everything has a hole until the course comes)

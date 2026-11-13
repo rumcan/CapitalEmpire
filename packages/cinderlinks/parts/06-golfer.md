@@ -3,7 +3,7 @@ The golfer is a person in golf clothes: a white cap with a peak and a red button
 R: The golfer is a small rig of balls and capsules in three dimensions, turned to one of 16 facings and projected by the game's camera, so every pose and facing is lit by the same sun.
 R: Poses: standing with the club's head resting on the grass, an eight-step walk with the club carried at his side, a golf swing from address through the top of the backswing to the finish, and sitting at the cart's wheel.
 R: Sprites are made when first needed and kept.
-R: A golf cart waits by the tee: a white body with a green stripe and a green roof on four posts, a tan seat, a steering wheel, two golf bags on the back, four wheels. It is a small model of flat faces drawn through the game's own camera every frame, so its wheels stand on the ground from every view, it leans with the slope, and its front wheels turn.
+R: A golf cart waits by the tee: a white body with a green stripe and a green roof on four posts, a tan bench seat, a steering wheel, two golf bags on a rack at the back, four small wheels with dark tyres. It is built of blocks like the golfer (parts/08i-cart.md), so its wheels stand on the ground from every view, it leans with the slope, and its front wheels turn.
 R: The ball is 5 pixels across; the pin is a pole with a waving ember-red flag.
 File: game.js
 Check: function mkGolfer(

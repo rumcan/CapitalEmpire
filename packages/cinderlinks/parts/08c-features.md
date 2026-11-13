@@ -35,6 +35,7 @@ function setFeatures(F) {   // F: the edits file's object (or nothing): made rea
         wall: hexRgb(f.wall, [232, 220, 192]), rc: hexRgb(f.roofColour, [138, 59, 42]), floors: clamp(Math.round(+f.floors || 1), 1, 4), faces: null, use: typeof f.use === 'string' ? f.use : '' });
     }
   }
+  for (const B of builds) if (B.use === 'stand' || B.use === 'board') faceStand(B);   // (a grandstand or a scoreboard turned to its green or tee: parts/08h-dress.md)
   let sd = null, kind = null, seg = null, gw = 0, gh = 0, res = 0.5; const SG = [];   // (SG: every stretch of every path: its start, its run, its length squared, how far along its path it starts, its length)
   if (paths.length) {                                               // how far every place near a path is from the path's edge (below 0: on it), on a grid
     x0 -= 6; y0 -= 6; x1 += 6; y1 += 6; while (((x1 - x0) / res) * ((y1 - y0) / res) > 3e6) res *= 2;
@@ -109,7 +110,7 @@ function buildFaces(B) {
   let zb = 1e9, zm = -1e9; for (const [a, f] of [[-hw, -hd], [hw, -hd], [hw, hd], [-hw, hd], [0, 0]]) { const g = groundH(B.x + a * cr - f * sr, B.y + a * sr + f * cr); if (g < zb) zb = g; if (g > zm) zm = g; }
   const z0 = zb - 0.4, z1 = zm + B.h, mul = (c, k) => [Math.min(255, c[0] * k), Math.min(255, c[1] * k), Math.min(255, c[2] * k)];
   const add = (pts, n, col, bias = 0, emit = false) => faces.push({ pts, n, col, bias, emit });   // bias: how far in front of its wall a detail counts (cm); also its rank of detail (see drawBuildings)
-  if (B.use === 'tent' || B.use === 'stand') { dressFaces(B, P, N, add, mul, zm); B.faces = faces; B.z0 = zm; B.top = zm + B.h; return; }   // (T429: a marquee, a grandstand: parts/08h-dress.md)
+  if (B.use === 'tent' || B.use === 'stand' || B.use === 'board') { dressFaces(B, P, N, add, mul, zm); B.faces = faces; B.z0 = zm; B.top = zm + B.h; return; }   // (T429: a marquee, a grandstand: parts/08h-dress.md)
   const FRAME = [246, 242, 230], G1 = [74, 96, 128], G2 = [116, 148, 184];
   const walls = [[-hw, -hd, hw, -hd, 0, -1], [hw, -hd, hw, hd, 1, 0], [hw, hd, -hw, hd, 0, 1], [-hw, hd, -hw, -hd, -1, 0]];
   walls.forEach(([a0, f0, a1, f1, na, nf], wi) => {
