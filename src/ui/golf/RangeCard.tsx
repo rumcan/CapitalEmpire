@@ -17,8 +17,9 @@ import { payback, practiceExtra, rangePriceLadder, rangeUpgradeExtra } from '../
 
 /** T288: a placement the card offers (the range, its car park, the practice area): its name, price, whether placed and why not yet */
 export interface RangePlace { id: 'range' | 'carpark' | 'practice'; name: string; cost: number; done: boolean; why: string }
-export function RangeCard({ view, places = [], onPlace, onClose, onPrice, onBuy, onShowPractice, onBuildPractice, practiceWhy = null, right = 'right-3', onScene, you = null, onPractise, onProfile, profileOpen = false, onTree, treeOpen = false, onOrderBalls, onShift }: { view: RangeCardView; /** T288: the placements and their Place (the build in hand) */ places?: RangePlace[]; onPlace?: (id: RangePlace['id']) => void; onClose: () => void; onPrice: (p: number) => void; onBuy: (id: RangeCardView['upgrades'][number]['id']) => void; onShowPractice?: () => void; /** T206: a facility's Build: Facilities ▸ Practice armed with it, the practice area shown */ onBuildPractice?: (id: RangeCardView['practice'][number]['id']) => void; /** the practice tools' lock (null: open) */ practiceWhy?: string | null; right?: string; /** T242: Set the scene (the range's picture card; absent: no art) */ onScene?: () => void;
-  /** T241: your golf (null: none) and its actions: a practice session, and the profile card (open: profileOpen) */ you?: YouRangeView | null; onPractise?: (k: PracticeKind) => void; onProfile?: () => void; profileOpen?: boolean;
+export function RangeCard({ view, places = [], onPlace, onClose, onPrice, onBuy, onShowPractice, onBuildPractice, practiceWhy = null, right = 'right-3', onScene, you = null, onPractise, onHit, hitWhy, drillsDone = 0, onProfile, profileOpen = false, onTree, treeOpen = false, onOrderBalls, onShift }: { view: RangeCardView; /** T288: the placements and their Place (the build in hand) */ places?: RangePlace[]; onPlace?: (id: RangePlace['id']) => void; onClose: () => void; onPrice: (p: number) => void; onBuy: (id: RangeCardView['upgrades'][number]['id']) => void; onShowPractice?: () => void; /** T206: a facility's Build: Facilities ▸ Practice armed with it, the practice area shown */ onBuildPractice?: (id: RangeCardView['practice'][number]['id']) => void; /** the practice tools' lock (null: open) */ practiceWhy?: string | null; right?: string; /** T242: Set the scene (the range's picture card; absent: no art) */ onScene?: () => void;
+  /** T241: your golf (null: none) and its actions: a practice session, and the profile card (open: profileOpen) */ you?: YouRangeView | null; onPractise?: (k: PracticeKind) => void;
+  /** J6 (#1223): practice from behind the golfer: Hit balls (the range's mats) and Chip and putt (the chipping green), each with why it cannot open (null: it can), and the drills done */ onHit?: (place: 'range' | 'short') => void; hitWhy?: { range: string | null; short: string | null }; drillsDone?: number; onProfile?: () => void; profileOpen?: boolean;
   /** T386: the ball room's upgrade tree (a flyout beside the card: Ball room upgrades), whether it is open, and an order of balls from the supplier */ onTree?: () => void; treeOpen?: boolean; onOrderBalls?: () => void; /** T386 part 2: the attendants' shift starts at this town hour */ onShift?: (h: number) => void }) {
   const { biz, stats: st, today } = view, scale = Math.round(rangeScale(view.dayLen)), pf = priceFactor(biz.price, st.ref);
   const want = Math.round(dayDemand(biz, view.demand, st)), cap = st.bays * (st.close - st.open);
@@ -130,6 +131,15 @@ export function RangeCard({ view, places = [], onPlace, onClose, onPrice, onBuy,
             </span>
           </div>
           <Session s={you.sessions.find(x => x.kind === 'bucket')!} onPractise={onPractise} />
+          {onHit && (
+            <div className="flex flex-wrap items-center gap-1.5" data-testid="range-you-hit">
+              <button className="chip chip-on normal-case disabled:opacity-40" disabled={!!hitWhy?.range} onClick={() => onHit('range')} data-testid="range-hit-balls"
+                title={hitWhy?.range ?? 'Stand on a mat and hit balls yourself, from behind the golfer: drills open shots for the course and lower your handicap'}>Hit balls</button>
+              <button className="chip normal-case disabled:opacity-40" disabled={!!hitWhy?.short} onClick={() => onHit('short')} data-testid="range-chip-putt"
+                title={hitWhy?.short ?? 'Chip, putt and play out of the bunker at your chipping green: drills open the putt read and sharpen your short game'}>Chip and putt</button>
+              <span className="text-[12px] text-slate-400" data-testid="range-drills">{drillsDone}/6 drills done</span>
+            </div>
+          )}
           {you.last && <div className="text-[12px] text-slate-400" data-testid="range-you-last">Last: {you.last.text} · ${you.last.cost.toLocaleString()} · handicap {hcp(you.last.hcp[0])} to <span className="text-emerald-300">{hcp(you.last.hcp[1])}</span></div>}
         </div>
       )}

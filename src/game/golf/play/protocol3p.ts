@@ -177,7 +177,15 @@ export interface LeaveMsg { v: 1; t: 'leave'; why?: string }
  *  them from then on. The first turn comes after them */
 export interface LiesMsg { v: 1; t: 'lies'; lk: LieGrid }
 
-export type HostMsg = CourseMsg | ActorsMsg | BoardMsg | MatchMsg | TurnMsg | ShotMsg | HoleEndMsg | PreviewMsg | ClockMsg | LeaveMsg | LiesMsg;
+/** J6 (#1223): a practice session (play/practice3p.ts, drills.ts), sent before the first turn and after each ball and pick: the place (the range's mats, or
+ *  the short game area), the drills with their progress (here: playable in this session; the others are played at the other place), the drill being played
+ *  (null: free hitting), the last ball's line, a drill just done (its name and reward, once), the flags to stand on the range's greens with their distances,
+ *  the handicap now and the balls hit. The view holds the golfer to his spot while it has one (no walking, no cart) */
+export interface PracticeMsg { v: 1; t: 'practice'; place: 'range' | 'short';
+  drills: { id: string; name: string; goal: string; got: number; need: number; done: boolean; reward: string; here: boolean }[];
+  active: string | null; note: string | null; paid: string | null; flags: { at: ViewPt; label: string }[]; hcp: string; balls: number }
+
+export type HostMsg = CourseMsg | ActorsMsg | BoardMsg | MatchMsg | TurnMsg | ShotMsg | HoleEndMsg | PreviewMsg | ClockMsg | LeaveMsg | LiesMsg | PracticeMsg;
 
 // ---------------------------------------------------------------- view to host
 
@@ -204,11 +212,14 @@ export interface HoleDoneMsg { v: 1; t: 'holeDone'; holeIdx: number }
 /** the owner left the view (Esc, the round over, or a page error): why */
 export interface ExitMsg { v: 1; t: 'exit'; why?: 'esc' | 'done' | 'error'; detail?: string }
 
-export type ViewMsg = ReadyMsg | LoadedMsg | ErrorMsg | InputMsg | AimMsg | WalkedMsg | GimmeMsg | HoleDoneMsg | ExitMsg;
+/** J6: the player picked a drill in the practice panel (answered with a `practice` and the turn from its spot) */
+export interface PickMsg { v: 1; t: 'pick'; drill: string }
+
+export type ViewMsg = ReadyMsg | LoadedMsg | ErrorMsg | InputMsg | AimMsg | WalkedMsg | GimmeMsg | HoleDoneMsg | ExitMsg | PickMsg;
 
 /** the message types each side sends */
-export const HOST_TYPES: readonly HostMsg['t'][] = ['course', 'actors', 'board', 'match', 'turn', 'shot', 'holeEnd', 'preview', 'clock', 'leave', 'lies'];
-export const VIEW_TYPES: readonly ViewMsg['t'][] = ['ready', 'loaded', 'error', 'input', 'aim', 'walked', 'gimme', 'holeDone', 'exit'];
+export const HOST_TYPES: readonly HostMsg['t'][] = ['course', 'actors', 'board', 'match', 'turn', 'shot', 'holeEnd', 'preview', 'clock', 'leave', 'lies', 'practice'];
+export const VIEW_TYPES: readonly ViewMsg['t'][] = ['ready', 'loaded', 'error', 'input', 'aim', 'walked', 'gimme', 'holeDone', 'exit', 'pick'];
 
 const isMsg = (m: unknown, types: readonly string[]): boolean =>
   typeof m === 'object' && m !== null && (m as { v?: unknown }).v === PROTOCOL_V && types.includes((m as { t?: unknown }).t as string);

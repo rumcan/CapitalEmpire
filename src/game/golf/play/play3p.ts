@@ -249,6 +249,9 @@ export class Play3p {
     return out;
   }
 
+  /** J6: the turn read again from the driver (a practice drill picked moves the ball and the pin): the turn as it is now */
+  refresh(): HostMsg[] { if (this.done) return []; const out: HostMsg[] = []; this.next(out, null, -1); return out; }
+
   /** T430: the view has seen the hole out: on his own round, on to the next hole (its turn); nothing more once the round is over */
   holeDone(holeIdx: number): HostMsg[] {
     if (this.turn || !this.drv.nextHole || this.drv.over() || holeIdx !== this.lastHole) return this.turn ? [this.turnMsg(this.turn)] : [];
