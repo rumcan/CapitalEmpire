@@ -16,16 +16,28 @@ export const RAMP_GRADE = 0.4;
 export const RAMP_MIN_RAISE = 0.6;
 /** the ramp's margin either side of the stairs' width, tiles */
 const RAMP_MARGIN = 0.5;
+/** the side of the squares the ramps are binned in, tiles */
+const RAMP_BIN = 16;
 
 /** the lift at a tile point (m): the raise on a tee, the ramp's height on a ramp, else 0. Null when there is nothing to lift */
 export function teeLift(inp: TeeLiftInput): ((x: number, y: number) => number) | null {
   const raise = inp.raise;
   if (!(raise > 0)) return null;
   const ramps = raise >= RAMP_MIN_RAISE ? inp.stairs.map(s => ({ ...s, len: raise / RAMP_GRADE / TILE_M })) : [];
+  // (the ramps binned by RAMP_BIN-tile squares they touch: the export asks for a million points or more, and each looks only at the ramps near it)
+  const bins = new Map<number, typeof ramps>(), key = (bx: number, by: number) => bx * 65536 + by;
+  for (const r of ramps) {
+    const ex = r.x + r.nx * r.len, ey = r.y + r.ny * r.len, m = r.half + RAMP_MARGIN;
+    const bx0 = Math.floor((Math.min(r.x, ex) - m) / RAMP_BIN), bx1 = Math.floor((Math.max(r.x, ex) + m) / RAMP_BIN);
+    const by0 = Math.floor((Math.min(r.y, ey) - m) / RAMP_BIN), by1 = Math.floor((Math.max(r.y, ey) + m) / RAMP_BIN);
+    for (let by = by0; by <= by1; by++) for (let bx = bx0; bx <= bx1; bx++) { const k = key(bx, by), l = bins.get(k); if (l) l.push(r); else bins.set(k, [r]); }
+  }
   return (x, y) => {
     if (inp.isTee(x, y)) return raise;
+    const near = bins.size ? bins.get(key(Math.floor(x / RAMP_BIN), Math.floor(y / RAMP_BIN))) : undefined;
+    if (!near) return 0;
     let best = 0;
-    for (const r of ramps) {
+    for (const r of near) {
       const dx = x - r.x, dy = y - r.y, d = dx * r.nx + dy * r.ny, side = Math.abs(-dx * r.ny + dy * r.nx);
       if (d < 0 || d > r.len || side > r.half + RAMP_MARGIN) continue;
       best = Math.max(best, raise * (1 - d / r.len));
