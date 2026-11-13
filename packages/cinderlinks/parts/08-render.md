@@ -39,6 +39,8 @@ view.width = VW; view.height = VH;
 const vctx = view.getContext('2d', { alpha: false });   // (the picture's top byte carries the shadow mark as far as the sun pass: the canvas must not read it as see-through)
 const img = vctx.createImageData(VW, VH), px = img.data, fb = new Uint32Array(px.buffer);
 const zbuf = new Uint16Array(VW * VH), smark = new Uint16Array(VW * VH);   // zbuf: the distance of each drawn pixel, in centimetres
+const sprM = new Uint8Array(VW * VH);   // the pixels of things drawn this frame (figures, trees, the flag, the ball): 1, or 2 for the small ones kept sharp (the ball, the flag, the marker);
+                                        // the marks on the ground (the putting grid, the aim's dots) are never drawn over them, and the picture filter does not paint the kept ones
 const rgb = (r, g, b) => (0xff000000 | (b << 16) | (g << 8) | r) >>> 0;
 const TOD = [
   { name: 'Day', sun: [1.1, 1.06, 0.9], sh: [0.5, 0.62, 0.88], water: [1, 1, 1], glow: 0, haze: [196, 228, 244],
@@ -258,7 +260,7 @@ function hFar(wx, wy) {   // the far land's height (metres) at a point if its pi
 }
 const PW_NEAR = [], PW_FAR = [];                            // the chunks within 31 m of the golfer and the far pieces within 260 m, nearest first
 let SIMPLEG = true;   // the simple grass everywhere (the owner, 2026-11-12: "make that the main grass, I want to see what it looks like up close"); false: the painted ground near by, as before
-const CAMMIN = 18;   // the closest the camera may come behind the golfer (the owner, 2026-11-12: the zoom of their screenshot, for now)
+const CAMMIN = 7;   // the closest the camera may come behind the golfer (the owner, 2026-11-13: back to 7 m, with the painted look)
 function setSimple(on) { SIMPLEG = !!on; try { localStorage.setItem('cinderlinks.simple', on ? '1' : '0'); } catch (e) {} }
 let DNEAR = 30, DFAR = 260, HZK = 1, VIEWR = 260;   // how far the painted ground is drawn (30 to 60 m) and how far the land is drawn at all (150 to 400 m): the player's render distance (setDetail); HZK thins the air to suit
 function nearList() { PW_NEAR.length = 0; const R = DNEAR + 1, ny = Math.ceil(R * PPV / CH), nx = Math.ceil(R * PPM / CH); for (let dy = -ny; dy <= ny; dy++) for (let dx = -nx; dx <= nx; dx++) { const d = Math.hypot(dx * CH / PPM, dy * CH / PPV); if (d < R) PW_NEAR.push([d, dx, dy]); } PW_NEAR.sort((a, b) => a[0] - b[0]); }
@@ -737,6 +739,7 @@ function mipOf(S) {
 let ghostX = 0, ghostY = 0, blitDith = 0;   // blitDith 1..16: only that many sixteenths of the sprite's pixels are drawn (a dissolve)
 const BAY4 = new Uint8Array([0, 8, 2, 10, 12, 4, 14, 6, 3, 11, 1, 9, 15, 7, 13, 5]);
 function blit(S, bx, by, s, zr, swayAmp, swayPh, ghost, hz) {
+  const keep = S.keep ? 2 : 1;   // (read before the shrunk copy takes its place)
   if (s < 0.5) { while (s < 0.5 && S.w > 6) { S = S.mip || mipOf(S); s *= 2; } s = Math.round(s * 48) / 48; if (s <= 0) return; }   // drawn small: from the shrunk copy, its size in steps
   const w = S.w, sp = S.px, inv = 1 / s, x0 = bx - S.ax * s, y0 = by - S.ay * s, Ya = Math.max(0, Math.floor(y0)), Yb = Math.min(VH - 1, Math.ceil(y0 + S.h * s)), zmin = zr - 30, HAZ = TOD[tmode].haze;
   for (let Y = Ya; Y <= Yb; Y++) {
@@ -754,7 +757,7 @@ function blit(S, bx, by, s, zr, swayAmp, swayPh, ghost, hz) {
       if (wz[q] > 1) wz[q] = 1;                                         // (it stands in front of water: that pixel is no longer water)
       if (ghost && ((X + Y) & 1)) { const dx = X - ghostX, dy = Y - ghostY; if (dx * dx + dy * dy * 0.6 < 2700) continue; }
       const o = (c >>> 24) === 255 ? c : lit(c);
-      fb[q] = hz > 0 ? hazed(o, hz, HAZ) : o;
+      fb[q] = hz > 0 ? hazed(o, hz, HAZ) : o; sprM[q] = keep;
     }
   }
 }
@@ -870,7 +873,7 @@ function puttGrid() {
 }
 function gridPix(x, y, d, r, g, b, a) {   // a pixel of the grid on the full-size layer, on the ground only (a: how solid it is, of 255)
   const gx = (x * RS) | 0, gy = (y * RS) | 0; if (gx < 0 || gy < 0 || gx >= VW || gy >= VH) return;
-  const dz = zbuf[gy * VW + gx] - d * 100; if (dz > 70 || dz < -70) return;
+  const q = gy * VW + gx, dz = zbuf[q] - d * 100; if (dz > 70 || dz < -70 || sprM[q] || czS[q] === frame) return;   // (on the ground only: never over the golfer, the cart or the ball)
   overPut(x, y, ((a << 24) | (b << 16) | (g << 8) | r) >>> 0);
 }
 function drawPuttGrid() {
@@ -1007,7 +1010,7 @@ function aimDotO(x, y, r, c) {   // a round dot with a dark edge, over everythin
 }
 function plotZO(sx, sy, d, c) {   // a mark on the ground: hidden where the game's picture has something nearer
   const gx = (sx * RS) | 0, gy = (sy * RS) | 0; if (gx < 0 || gy < 0 || gx >= VW || gy >= VH) return;
-  if (zbuf[gy * VW + gx] >= d * 100 - 40) overPut(sx, sy, c);
+  const q = gy * VW + gx; if (zbuf[q] >= d * 100 - 40 && sprM[q] !== 1 && czS[q] !== frame) overPut(sx, sy, c);
 }
 function aimH(x, y) {   // T438: the ground's height for the aim's marks: never made here (a far tile took ~2 ms, thirty of them a slow frame); a tile not made yet is
   const u = x * PPM, v = y * PPV, tx = Math.floor(u / TPX), ty = Math.floor(v / TPX);   // asked of the workers and the ball's height stands in until it comes
@@ -1109,7 +1112,7 @@ function speck(o, X, sy, d) {   // a small plant seen from far: a stem a pixel w
 const dlist = [], flist = [];
 function farHas(x, y) { const F = ftiles.get((Math.floor(x / FTS) + 32768) * 65536 + (Math.floor(y / FTS) + 32768)); return F !== undefined && F.ready; }
 function render() {
-  frame++; madeThisFrame = 0; smallMade = 0; genUsed = 0;
+  frame++; madeThisFrame = 0; smallMade = 0; genUsed = 0; sprM.fill(0);
   if (Math.abs(camX - stX) + Math.abs(camY - stY) > 0.02 || Math.abs(camYaw - stYaw) > 0.002) stillF = 0; else stillF++; stX = camX; stY = camY; stYaw = camYaw;
   // the camera: behind the golfer (wherever "behind" has been turned to), raised over any ground that would hide him
   const p = player, gh = groundH(p.x, p.y);
