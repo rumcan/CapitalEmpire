@@ -69,6 +69,9 @@ describe('T447 the ground and two real cases', () => {
     // a pond in the middle is no shore
     const pond = groundOf3p(await exportCourse3p({ areas: [rect('rough', 0, 0, 300, 300), rect('water', 120, 120, 180, 180)], tees: [], pins: [], aims: [] }));
     assert.equal(pond.coast, false);
+    // a stream that runs off the land (Woodhill's, in the game) is long and thin: no shore
+    const stream = groundOf3p(await exportCourse3p({ areas: [rect('rough', 0, 0, 300, 300), rect('water', 140, 0, 150, 300)], tees: [], pins: [], aims: [] }));
+    assert.equal(stream.coast, false);
     assert.deepEqual(groundOf3p({ features: {} } as CourseFile), { paintedM2: 0, sand: 0, water: 0, coast: false, treesPerHa: 0 });
   });
 

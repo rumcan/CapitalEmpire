@@ -288,8 +288,11 @@ export async function exportCourse3p(inp: Export3pInput, opts: { deflate?: boole
 }
 
 // ------------------------------------------------------------------------------------------------------------------------ T447: the ground, for the style
-/** a water at least this big (m2, one hectare) that comes within COAST_EDGE_M of the course's edge is the sea or a lake shore: the course lies by the water */
-export const COAST_M2 = 10_000, COAST_EDGE_M = 6;
+/** a water at least this big (m2, one hectare) and this broad (COAST_BREADTH_M: its area over its outline's length, half a strip's width; a stream that runs
+ *  off the land is long and thin, a sea or a lake is not) that comes within COAST_EDGE_M of the course's edge is a shore: the course lies by the water */
+export const COAST_M2 = 10_000, COAST_EDGE_M = 6, COAST_BREADTH_M = 15;
+/** a ring's length, m */
+const ringLen = (r: readonly JPt[]): number => { let s = 0; for (let i = 0, j = r.length - 1; i < r.length; j = i++) s += Math.hypot(r[i]![0] - r[j]![0], r[i]![1] - r[j]![1]); return s; };
 /** a polygon's area, m2 (its outer ring less its holes) */
 const polyM2 = (p: JPoly): number => Math.abs(ringArea(p.outer)) - p.inner.reduce((a, r) => a + Math.abs(ringArea(r)), 0);
 /** the box round a ring: west, south, east, north */
@@ -299,7 +302,7 @@ const ringBox = (r: readonly JPt[]): [number, number, number, number] => {
   return [x0, y0, x1, y1];
 };
 /** the ground of a course file, for the view's style (look3p.ts biomeFor3p, courseTypeFor3p): the painted area (every surface kind), the shares of it that are sand
- *  (bunkers) and water, whether a big water reaches the course's edge, and `trees` (the planted trees, features3p.ts) a hectare */
+ *  (bunkers) and water, whether a big broad water reaches the course's edge (a shore, not a stream), and `trees` (the planted trees, features3p.ts) a hectare */
 export function groundOf3p(file: CourseFile, trees = 0): Ground3p {
   let painted = 0, sand = 0, water = 0, box: [number, number, number, number] | null = null;
   const waters: { m2: number; b: [number, number, number, number] }[] = [];
@@ -307,11 +310,11 @@ export function groundOf3p(file: CourseFile, trees = 0): Ground3p {
     for (const p of (file.features[k] ?? []).flatMap(q => q.polys ?? [])) {
       const m2 = polyM2(p), b = ringBox(p.outer);
       painted += m2; if (k === 'bunker') sand += m2;
-      if (k === 'water') { water += m2; waters.push({ m2, b }); }
+      if (k === 'water') { water += m2; if (m2 >= COAST_M2 && m2 / Math.max(1, ringLen(p.outer)) >= COAST_BREADTH_M) waters.push({ m2, b }); }
       box = box ? [Math.min(box[0], b[0]), Math.min(box[1], b[1]), Math.max(box[2], b[2]), Math.max(box[3], b[3])] : b;
     }
   }
-  const B = box, coast = !!B && waters.some(w => w.m2 >= COAST_M2 && (w.b[0] - B[0] <= COAST_EDGE_M || B[2] - w.b[2] <= COAST_EDGE_M || w.b[1] - B[1] <= COAST_EDGE_M || B[3] - w.b[3] <= COAST_EDGE_M));
+  const B = box, coast = !!B && waters.some(w => (w.b[0] - B[0] <= COAST_EDGE_M || B[2] - w.b[2] <= COAST_EDGE_M || w.b[1] - B[1] <= COAST_EDGE_M || B[3] - w.b[3] <= COAST_EDGE_M));
   const r3 = (v: number) => Math.round(v * 1000) / 1000;
   return { paintedM2: Math.round(painted), sand: painted > 0 ? r3(sand / painted) : 0, water: painted > 0 ? r3(water / painted) : 0, coast, treesPerHa: painted > 0 ? r3(trees / (painted / 10_000)) : 0 };
 }
