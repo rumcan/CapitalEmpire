@@ -6,6 +6,8 @@
 import woodhillJson from '../../src/game/golf/osm/data/woodhill.json';
 import { osmCourseToSpec } from '../../src/game/golf/osm/convert';
 import { specMarkers } from '../../src/game/golf/osm/raster';
+import { scratchOf } from '../../src/game/golf/osm/placegrid';
+import { gridAreas } from '../../src/game/ext/course-grid/areas';
 import { inRing } from '../../src/game/golf/osm/geom';
 import type { OsmCourseJson } from '../../src/game/golf/osm/types';
 import type { AimPoint, CourseArea, GolfSurface, Pin, TeeMark } from '../../src/game/golf/types';
@@ -35,6 +37,13 @@ function woodhill(): Export3pInput {
   const spec = osmCourseToSpec(woodhillJson as unknown as OsmCourseJson, { id: 'woodhill' });
   const areas: CourseArea[] = spec.areas.filter(a => !a.clip).map((a, k) => ({ id: k + 1, surface: a.surf, pts: a.rings[0]! }));
   return { areas, ...specMarkers(spec, 0, 0), heightAt: ground, name: 'Woodhill', date: '2026-11-13' };
+}
+
+/** T445: Woodhill as the game holds it once laid: the painted grid's areas (what the engine's courseAreaList hands the exporter), rough only as the band
+ *  beside the play (osm/band.ts). Worked out before the clock starts, as the engine has them already */
+function woodhillGrid(): Export3pInput {
+  const spec = osmCourseToSpec(woodhillJson as unknown as OsmCourseJson, { id: 'woodhill' }), g = scratchOf(spec, 0, 0);
+  return { areas: gridAreas(g, Array.from({ length: 19 }, (_, i) => i)), ...specMarkers(spec, 0, 0), heightAt: ground, name: 'Woodhill', date: '2026-11-13' };
 }
 
 /** eighteen painted holes in three rows of six, 150 to 260 m: a tee, a fairway with a bend, a green, two bunkers, a pond on every third, on rough */
@@ -68,5 +77,5 @@ async function time(inp: Export3pInput, runs: number) {
   return { firstMs: +ms[0]!.toFixed(1), medianMs: +sorted[Math.floor(sorted.length / 2)]!.toFixed(1), ...parts, areas: inp.areas.length };
 }
 
-const out = { woodhill: await time(woodhill(), 5), painted: await time(painted(), 5) };
+const out = { woodhill: await time(woodhill(), 5), woodhillGrid: await time(woodhillGrid(), 5), painted: await time(painted(), 5) };
 console.log(JSON.stringify(out));

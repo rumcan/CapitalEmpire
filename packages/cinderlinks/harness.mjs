@@ -52,7 +52,8 @@ const RSH = +process.env.RSCALE || 1; if (RSH !== 1) globalThis.RSCALE = RSH;   
 const run = (src) => (0, eval)(src);
 // host mode (T415): the message a host page sends, made from the importer's Woodhill file as CapitalEmpire would send it (true size, its paths and buildings)
 globalThis.hostMsg = () => {   // (made only when asked: a course this size held from the start slows the gate's chunk timings)
-  const raw = JSON.parse(fs.readFileSync(new URL('./courses/raw/woodhill.json', import.meta.url), 'utf8')), ed = new URL('./courses/edits/woodhill.json', import.meta.url);
+  // (T445: HOSTCOURSE=<file>: a course file CapitalEmpire exported (play/export3p.ts) instead of the importer's Woodhill, to see the game's own ground in the view)
+  const raw = JSON.parse(fs.readFileSync(process.env.HOSTCOURSE || new URL('./courses/raw/woodhill.json', import.meta.url), 'utf8')), ed = new URL('./courses/edits/woodhill.json', import.meta.url);
   return { v: 1, t: 'course', course: convert(raw, 'woodhill.json'), features: fs.existsSync(ed) ? JSON.parse(fs.readFileSync(ed, 'utf8')) : null, biome: 'parkland', type: 'private', seed: 4242, scale: 1, hole: 1 };
 };
 
