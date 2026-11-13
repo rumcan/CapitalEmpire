@@ -305,7 +305,7 @@ describe("a game on a map-data course: where everything goes (T340)", () => {
   for (const [name, spec] of [['Rondebosch', specR], ['Magnolia National', specM], ['Woodhill', specWh]] as const) {
     it(`${name}: the land is clear of the map's edge, the clubhouse parcel, car park and road keep off it and stand by the first tee, the grid holds it all with its markers right`, () => {
       const p = planOsmGame(spec)!;
-      assert.ok(p, 'it fits the 1024-tile map');
+      assert.ok(p, 'it fits the map');
       const [lx, ly, lw, lh] = p.land;
       assert.ok(lx >= OSM_EDGE && ly >= OSM_EDGE && lx + lw <= MAP - OSM_EDGE && ly + lh <= MAP - OSM_EDGE, 'away from the map edge');
       assert.ok(!rectsMeet(p.land, p.venue) && !rectsMeet(p.land, p.carpark) && !rectsMeet(p.venue, p.carpark), 'land, venue and car park apart');
@@ -338,17 +338,18 @@ describe("a game on a map-data course: where everything goes (T340)", () => {
   it('puts the clubhouse parcel on the side nearest the first tee, and says no when the land does not fit the map on any side', () => {
     const sides = new Set([specR, specM, specWh].map(s => planOsmGame(s)!.side));
     assert.ok(sides.size >= 2, `the parcel is not always on the same side (${[...sides]})`);
-    assert.equal(osmFits({ ...specR, w: 1000, h: 1000 }), false);
-    assert.equal(osmFits({ ...specR, w: 990, h: 400 }), false);
-    assert.equal(osmFits({ ...specR, w: 400, h: 990 }), false);
-    assert.equal(planOsmGame({ ...specR, w: 1000, h: 400 }), null);
-    assert.equal(osmFits({ ...specR, w: 960, h: 300 }), true, 'a wide land fits with the parcel north or south');
-    assert.equal(osmFits({ ...specR, w: 300, h: 960 }), true, 'a tall land fits with the parcel west or east');
+    // (the sizes follow the map: on the 2 km map these were 1000, 990 and 960 tiles)
+    assert.equal(osmFits({ ...specR, w: MAP - 24, h: MAP - 24 }), false);
+    assert.equal(osmFits({ ...specR, w: MAP - 34, h: 400 }), false);
+    assert.equal(osmFits({ ...specR, w: 400, h: MAP - 34 }), false);
+    assert.equal(planOsmGame({ ...specR, w: MAP - 24, h: 400 }), null);
+    assert.equal(osmFits({ ...specR, w: MAP - 64, h: 300 }), true, 'a wide land fits with the parcel north or south');
+    assert.equal(osmFits({ ...specR, w: 300, h: MAP - 64 }), true, 'a tall land fits with the parcel west or east');
     assert.equal(osmFits(specR), true);
   });
 });
 
-describe('Woodhill (T340): fully mapped, too big for the 2 km map at true size', () => {
+describe('Woodhill (T340, T444): fully mapped, and on the 4 km map at true size', () => {
   it('has 18 holes in order, par 73 as mapped, every tee marker and pin on its surface and its hole once rasterised', () => {
     assert.equal(specWh1.holes.length, 18);
     specWh1.holes.forEach((h, i) => { assert.equal(h.n, i + 1); assert.equal(h.ref, i + 1); assert.ok(h.tees.length >= 1 && h.tagPar !== null); });
@@ -369,18 +370,15 @@ describe('Woodhill (T340): fully mapped, too big for the 2 km map at true size',
     assert.ok(specWh1.warnings.some(w => w.code === 'par-differs' && w.hole === 2));
     assert.equal(specWh1.gameParTotal, 72);
   });
-  it('is bigger than the map at true size (1079 tiles wide), so the game scales it to 90% (the parcel goes north or south) and says so; the scaled land fits', () => {
+  it('fits the 4 km map at true size (1079 tiles wide: on the 2 km map it had to be scaled to 90%), with no scaling warning', () => {
     assert.ok(specWh1.w > 1024 - OSM_EDGE - 78, `${specWh1.w} tiles wide at true size`);
-    assert.equal(osmFits(specWh1), false);
-    assert.equal(osmScaleFor(specWh1.w, specWh1.h), 0.9);
-    assert.equal(specWh.scale, 0.9);
-    assert.equal(osmFits(specWh), true);
-    assert.ok(specWh.warnings.some(w => w.code === 'scaled' && /90%/.test(w.text)));
-    assert.ok(specWh.lengthM > specWh1.lengthM * 0.88 && specWh.lengthM < specWh1.lengthM * 0.92, `${specWh.lengthM} against ${specWh1.lengthM} m`);
-    const p = planOsmGame(specWh)!;
-    assert.ok(p, 'a game can be planned on it');
-    assert.ok(p.side === 'N' || p.side === 'S', `the clubhouse parcel is north or south of the wide land (${p.side})`);
-    assert.equal(planOsmGame(specWh1), null, 'at true size the plan says no');
+    assert.equal(osmFits(specWh1), true);
+    assert.equal(osmScaleFor(specWh1.w, specWh1.h), 1);
+    assert.equal(specWh.scale, 1);
+    assert.ok(!specWh.warnings.some(w => w.code === 'scaled'));
+    assert.equal(osmFits(specWh1, 1024), false, 'the 2 km map could not hold it');
+    assert.equal(osmScaleFor(specWh1.w, specWh1.h, 1024), 0.9, 'and scaled it to 90%');
+    assert.ok(planOsmGame(specWh1), 'a game can be planned on it at true size');
   });
   it('keeps the estate boundary as course land (the housing inside it is not cut out), and the rest of the data as for any course', () => {
     assert.ok(specWh1.counts.boundary! >= 1 && specWh1.counts.rough! >= 10);

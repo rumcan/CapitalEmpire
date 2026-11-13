@@ -8,8 +8,10 @@
 //     by the land classes of the 40-tile blocks it lies in (golf/parcels.ts: the Land for sale rates), the town's growth on top;
 //   - what goes: the town's built lots under it (bought out at their compensation), the public roads under it (their value, by the length cut), the
 //     lots left with no road in front of them or no way to the county road (cleared too, and counted), the club's own cart paths and drives (free);
-//   - what stops it: off the map, the river, the club's own buildings, the town's centre, a cut that would leave the town or the clubhouse with no way
-//     to the county road, a tournament under way;
+//   - what stops it: off the map, a tournament under way. Nothing else (T444, the owner 2026-11-13: "it should actually be able to build it over
+//     anything"): the river stays where it is and plays as water on the course, the town's centre is bought out with its lots, the club's own buildings
+//     in the way are cleared and their value comes back, and a cut that leaves the town or the clubhouse with no way to the county road is allowed with
+//     a warning (plan.over, said in the placing bar and the pop-up);
 //   - what it costs: land + demolition + the course's build price (given: the surfaces at the paint prices), against the treasury.
 // Pure TypeScript, no DOM: the engine hands it a PlaceWorld made of its live collections (no copies), the tests hand it small made-up ones.
 import { LAND_BLOCK, LAND_PRICE_SQM, POP_GROWTH_RATE, rectsOverlap, type ParcelLandClass } from '../parcels';
@@ -20,14 +22,14 @@ import type { OsmCourseSpec } from './types';
 
 /** the land the course keeps from the map's edges, tiles */
 export const PLACE_EDGE = 4;
-/** the river rule. A generated valley has its river (and creeks) through every 700-tile window of the 2 km map (docs/OSM-COURSES.md, T340), so a course that
- *  may not lie over any river tile could never be placed in the game. 'features': a tee, a green or a pin on the river, or a hole's line running mostly
- *  along it, refuses the pose ("The river runs over hole 7's green"); the river elsewhere stays where it is and the course is laid round it (the cells
- *  on river tiles are left unpainted: a stream across a fairway is a hazard, as on a real course). 'cover': any river tile under the land refuses */
+/** how the river under a course is told (T444: it never refuses). 'features': a tee, a green or a pin on the river, or a hole's line running mostly along
+ *  it, is named ("The river runs over hole 7's green: it stays, as water on the hole"), else any river under the land is ("The river crosses the course");
+ *  the river stays where it is and the course is laid round it (the cells on river tiles are left unpainted and play as water, the engine's surfAt: a
+ *  stream across a fairway is a hazard, as on a real course). 'cover': only the general sentence */
 export const RIVER_RULE: 'features' | 'cover' = 'features';
-/** a hole's line with more than this share of its samples on the river is refused (the river runs along the hole, not across it) */
+/** a hole's line with more than this share of its samples on the river has the river along it (named apart: it runs along the hole, not across it) */
 const RIVER_ALONG = 0.25;
-/** the town's centre is kept clear this far round it, tiles (the course's land may not come nearer) */
+/** the town's centre counts as under the course this far round it, tiles (T444: then it is bought out, said in plan.over.town) */
 export const TOWN_KEEP = 26;
 /** a road end counts as an entry's (or a place's) own node within this, tiles */
 const NODE_NEAR = 14;
@@ -70,8 +72,9 @@ export interface PlaceWorld {
   entries: readonly { x: number; y: number }[];
   /** the places that must keep a way to the entries (the town's centre, the clubhouse's door): [name, x, y] */
   targets: readonly { name: string; x: number; y: number }[];
-  /** the club's own things the course cannot cover: the clubhouse, the car parks, the range, the practice area, a tournament's structures */
-  keep: readonly { name: string; rect: Rect }[];
+  /** the club's own things: the clubhouse, the car parks, the range, the practice area, a tournament's structures, the landmarks. T444: a course laid over one
+   *  clears it and pays `refund` back (its value now: absent, nothing); `ref` is the game's own handle on it, carried into the plan for the lay */
+  keep: readonly KeepItem[];
   /** how far back from the cover's edge a cut leaves the end of a road piece, tiles (its turning circle and verge, so the dead end stays off the course's land);
    *  absent: 0 */
   endMargin?(s: PlaceSeg): number;
@@ -85,12 +88,14 @@ export interface PlaceWorld {
   props?(r: Rect): number;
 }
 
+/** one of the club's own things a course may be laid over (T444) */
+export interface KeepItem { name: string; rect: Rect; refund?: number; ref?: unknown }
+
 /** the pose of the course on the map: where its land's middle goes (whole tiles) and how far the course is turned (degrees clockwise) */
 export interface PlacePose { x: number; y: number; deg: number }
 
-/** the reasons a pose is refused (the first found is the one told: a tournament under way first, as it stops every pose, then the map, the river, the club's
- *  own buildings, the town's centre, the way to the county road) */
-export type PlaceWhyKind = '' | 'map' | 'river' | 'club' | 'town' | 'link' | 'round';
+/** the reasons a pose is refused (T444: only off the map, and a tournament under way) */
+export type PlaceWhyKind = '' | 'map' | 'round';
 
 /** a pose's plan: the land and what it takes, the price and whether it may go there */
 export interface PlacePlan {
@@ -112,6 +117,10 @@ export interface PlacePlan {
   roads: { segs: number; m: number; value: number; ownSegs: number; ownM: number };
   /** the player's placed items under the cover (they go for nothing) */
   props: number;
+  /** T444: what the course is laid over and is not refused for: the club's own things cleared (each with what comes back) and their refund, the river's
+   *  sentence ('' when none is under it), whether the town's centre is under it, the places cut off from the county road ("the town"), and every one of
+   *  these as the sentences the placing bar and the pop-up say (`notes`; `warn`: the ones that are a warning: the lost road links) */
+  over: { club: { name: string; refund: number; ref?: unknown }[]; refund: number; river: string; town: boolean; cutOff: string[]; notes: string[]; warn: string[] };
   /** what the demolition costs (lots, orphans, roads), the course's build price, the whole price and the treasury, and what is short of it */
   demolish: number; build: number; total: number; money: number; short: number;
   /** may be laid: no reason against it and the money is there */
@@ -267,13 +276,16 @@ function onRiver(world: PlaceWorld, cover: readonly Rect[]): boolean {
 /** the words for a refusal */
 export const WHY = {
   map: 'Off the map (the map cannot grow): move it inward or turn it',
-  river: 'The river is in the way',
-  riverOn: (hole: number, what: 'tee' | 'green') => (hole > 0 ? `The river runs over hole ${hole}'s ${what}` : `The river runs over a practice ${what}`),
-  riverAlong: (hole: number) => `The river runs along hole ${hole}: turn the course or move it`,
-  town: "The town's centre is there: place the course beside the town",
-  link: (name: string) => `That would cut ${name} off from the county road`,
-  club: (name: string) => `Your ${name} is in the way`,
   round: 'Not while a tournament is under way',
+} as const;
+/** T444: what a course laid over something says of it (none of these refuses a pose any more) */
+export const NOTE = {
+  river: 'The river crosses the course: it stays, and plays as a water hazard',
+  riverOn: (hole: number, what: 'tee' | 'green') => `The river runs over ${hole > 0 ? `hole ${hole}'s` : 'a practice'} ${what}: it stays, as water on the hole`,
+  riverAlong: (hole: number) => `The river runs along hole ${hole}: it stays, as a water hazard`,
+  town: "The town's centre is under the course: its buildings are bought out",
+  link: (name: string) => `${name.charAt(0).toUpperCase()}${name.slice(1)} loses its road link to the county road`,
+  club: (name: string, refund: number) => `Your ${name} is cleared${refund > 0 ? ` (${money(refund)} back)` : ''}`,
 } as const;
 
 const empty = () => ({ keys: [] as string[], houses: 0, shops: 0, works: 0, others: 0, comp: 0 });
@@ -286,7 +298,7 @@ function tally(c: ReturnType<typeof empty>, l: PlaceLot, comp: number) {
 /** the part of a (turned) spec the planner reads: its frame and outline, and, for the river rule, its areas and holes (a spec without them is judged by its cover) */
 export type PlaceSpec = Pick<OsmCourseSpec, 'w' | 'h' | 'outline'> & Partial<Pick<OsmCourseSpec, 'areas' | 'holes'>>;
 
-/** why the river forbids the spec at (ox, oy), or '' when it does not (RIVER_RULE 'features'): a hole's green with a corner or its middle on the river, a tee
+/** what the river does to the spec at (ox, oy) worth naming (T444: told, never refused), or '' when it does nothing (RIVER_RULE 'features'): a hole's green with a corner or its middle on the river, a tee
  *  marker or the pin on it, or a hole whose line runs more than RIVER_ALONG of its length along it (a tee box the river only clips is a bitten box: the cells
  *  on the river are left unpainted; a practice green or tee is no hole's) */
 function riverOnFeatures(world: PlaceWorld, spec: PlaceSpec, ox: number, oy: number): string {
@@ -296,17 +308,17 @@ function riverOnFeatures(world: PlaceWorld, spec: PlaceSpec, ox: number, oy: num
     const r = a.rings[0]; if (!r || r.length < 6) continue;
     let sx = 0, sy = 0, n = 0, hit = false;
     for (let i = 0; i + 1 < r.length; i += 2) { sx += r[i]!; sy += r[i + 1]!; n++; if (wet(r[i]!, r[i + 1]!)) hit = true; }
-    if (hit || wet(sx / n, sy / n)) return WHY.riverOn(a.hole, a.surf);
+    if (hit || wet(sx / n, sy / n)) return NOTE.riverOn(a.hole, a.surf);
   }
   for (const h of spec.holes ?? []) {
-    for (const t of h.tees) if (wet(t.x, t.y)) return WHY.riverOn(h.n, 'tee');
-    if (wet(h.pin.x, h.pin.y)) return WHY.riverOn(h.n, 'green');
+    for (const t of h.tees) if (wet(t.x, t.y)) return NOTE.riverOn(h.n, 'tee');
+    if (wet(h.pin.x, h.pin.y)) return NOTE.riverOn(h.n, 'green');
     const l = h.line; let n = 0, w = 0;
     for (let i = 0; i + 3 < l.length; i += 2) {
       const dx = l[i + 2]! - l[i]!, dy = l[i + 3]! - l[i + 1]!, k = Math.max(1, Math.ceil(Math.hypot(dx, dy) / 4));
       for (let j = 0; j < k; j++) { n++; if (wet(l[i]! + (dx * j) / k, l[i + 1]! + (dy * j) / k)) w++; }
     }
-    if (n && w / n > RIVER_ALONG) return WHY.riverAlong(h.n);
+    if (n && w / n > RIVER_ALONG) return NOTE.riverAlong(h.n);
   }
   return '';
 }
@@ -344,15 +356,17 @@ export function planPlace(world: PlaceWorld, rotated: PlaceSpec, pose: PlacePose
     ox, oy, outline, cover, bounds, fits, why: '', whyKind: '',
     land: { tiles: 0, ha: 0, price: 0, mine: 0 }, lots: empty(), orphans: empty(), roads: { segs: 0, m: 0, value: 0, ownSegs: 0, ownM: 0 }, props: 0,
     demolish: 0, build, total: 0, money: world.money, short: 0, affordable: false, ok: false,
+    over: { club: [], refund: 0, river: '', town: false, cutOff: [], notes: [], warn: [] },
   };
   const refuse = (kind: PlaceWhyKind, why: string) => { if (!plan.why) { plan.why = why; plan.whyKind = kind; } };
   if (!fits) { refuse('map', WHY.map); plan.total = build; plan.short = Math.max(0, build - world.money); return plan; }
 
-  // ---- what stops it ----
+  // ---- what stops it (only a tournament under way, T444) and what it is laid over ----
   if (world.roundLive) refuse('round', WHY.round);
-  for (const k of world.keep) if (cover.some(r => rectsOverlap(r, k.rect))) { refuse('club', WHY.club(k.name)); break; }
+  const over = plan.over;
+  for (const k of world.keep) if (cover.some(r => rectsOverlap(r, k.rect))) { const back = Math.max(0, Math.round(k.refund ?? 0)); over.club.push({ name: k.name, refund: back, ...(k.ref !== undefined ? { ref: k.ref } : {}) }); over.refund += back; }
   const tc = world.townCentre;
-  if (tc && cover.some(r => Math.hypot(Math.max(r[0] - tc.x, 0, tc.x - (r[0] + r[2])), Math.max(r[1] - tc.y, 0, tc.y - (r[1] + r[3]))) < TOWN_KEEP)) refuse('town', WHY.town);
+  over.town = !!tc && cover.some(r => Math.hypot(Math.max(r[0] - tc.x, 0, tc.x - (r[0] + r[2])), Math.max(r[1] - tc.y, 0, tc.y - (r[1] + r[3]))) < TOWN_KEEP);
 
   // ---- the land ----
   const P = prep(world), L = landCost(cover, world.owned, P.classes, world.pop);
@@ -378,13 +392,12 @@ export function planPlace(world: PlaceWorld, rotated: PlaceSpec, pose: PlacePose
   let after = before;
   if (P.entries.length && cut.size) {
     after = reachable(P.adj, P.entries, cut);
-    for (const t of P.targets) if (t.key && before.has(t.key) && !after.has(t.key)) { refuse('link', WHY.link(t.name)); break; }
+    for (const t of P.targets) if (t.key && before.has(t.key) && !after.has(t.key)) over.cutOff.push(t.name);
   }
 
-  // the river (RIVER_RULE) is looked at last: the place's own reasons come first (the club's buildings, the town's centre, the county road), the river's, which a
-  // turn or a move often cures, after
-  if (RIVER_RULE === 'features' && rotated.areas && rotated.holes) { const why = riverOnFeatures(world, rotated, ox, oy); if (why) refuse('river', why); }
-  else if (onRiver(world, cover)) refuse('river', WHY.river);
+  // the river (RIVER_RULE): named where it crosses a hole's tee or green or runs along a hole, else said once when it is anywhere under the land
+  if (RIVER_RULE === 'features' && rotated.areas && rotated.holes) over.river = riverOnFeatures(world, rotated, ox, oy);
+  if (!over.river && onRiver(world, cover)) over.river = NOTE.river;
 
   // ---- the built lots under the cover, and the lots left with no road in front of them or no way out: cleared too ----
   // (only a lot within a road's reach of the cover can have lost the road in front of it, and only a lot beside a road the cut leaves with no way out can
@@ -424,7 +437,10 @@ export function planPlace(world: PlaceWorld, rotated: PlaceSpec, pose: PlacePose
 
   // ---- the price ----
   plan.demolish = plan.lots.comp + plan.orphans.comp + plan.roads.value;
-  plan.total = plan.land.price + plan.demolish + build;
+  plan.total = plan.land.price + plan.demolish + build - over.refund;
+  // the sentences, in the order the pop-up says them: the warnings (a road link lost) first, then what is cleared, the town's centre, the river
+  over.warn = over.cutOff.map(n => NOTE.link(n));
+  over.notes = [...over.warn, ...over.club.map(c => NOTE.club(c.name, c.refund)), ...(over.town ? [NOTE.town] : []), ...(over.river ? [over.river] : [])];
   plan.short = Math.max(0, plan.total - world.money);
   plan.affordable = plan.short <= 0;
   plan.ok = !plan.why && plan.affordable;
@@ -435,7 +451,8 @@ export function planPlace(world: PlaceWorld, rotated: PlaceSpec, pose: PlacePose
 export function placeLabel(plan: PlacePlan, name: string): { text: string; bad: boolean } {
   if (plan.why) return { text: plan.why, bad: true };
   if (!plan.affordable) return { text: `Not enough money: ${money(plan.total)} (short ${money(plan.short)})`, bad: true };
-  return { text: `${name} · ${money(plan.total)} · click to place`, bad: false };
+  // (T444: a road link the course cuts is said in the bar, though it does not stop the course)
+  return { text: `${name} · ${money(plan.total)} · click to place${plan.over.warn.length ? ` · ⚠ ${plan.over.warn.join('; ')}` : ''}`, bad: false };
 }
 
 const plural = (n: number, one: string, many = one + 's'): string => `${n} ${n === 1 ? one : many}`;
@@ -456,7 +473,8 @@ export function popupText(plan: PlacePlan): string {
   const ha = plan.land.ha >= 10 ? Math.round(plan.land.ha) : plan.land.ha, goes = goesPhrase(plan), orph = plan.orphans.keys.length;
   const head = `This will buy ${ha.toLocaleString('en-US')} ha${goes ? `, demolish ${goes}` : ''} (${money(plan.total)}).`;
   const tail = plan.roads.segs ? ' Roads cut by the course end at its boundary (a lot left with no road is cleared too).' : '';
-  return `${head}${tail}${orph ? ` ${plural(orph, 'building')} left with no road or no way out ${orph === 1 ? 'is' : 'are'} cleared too.` : ''}`;
+  const over = plan.over.notes.length ? ` ${plan.over.notes.join('. ')}.` : '';
+  return `${head}${tail}${orph ? ` ${plural(orph, 'building')} left with no road or no way out ${orph === 1 ? 'is' : 'are'} cleared too.` : ''}${over}`;
 }
 
 /** the sum the pop-up lists, line by line: the label and the money */
@@ -465,6 +483,7 @@ export function priceLines(plan: PlacePlan): { label: string; amount: number }[]
   if (plan.lots.comp + plan.orphans.comp) lines.push({ label: `Buildings bought out · ${plan.lots.keys.length + plan.orphans.keys.length}`, amount: plan.lots.comp + plan.orphans.comp });
   if (plan.roads.value) lines.push({ label: 'Roads taken', amount: plan.roads.value });
   lines.push({ label: 'The course laid', amount: plan.build });
+  if (plan.over.refund) lines.push({ label: `Your buildings cleared · ${plan.over.club.length} (their value back)`, amount: -plan.over.refund });
   return lines;
 }
 

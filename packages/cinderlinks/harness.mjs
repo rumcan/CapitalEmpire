@@ -733,6 +733,7 @@ try {
     res.mem = { chunks: chunks.size, tiles: tiles.size, cells: ocells.size };
     // host mode (T415): Woodhill handed over by message at true size: answered 'loaded', hole 1 drawn with a tee under the golfer
     { a = t(); hostMessage(hostMsg()); res.hostLoadMs = +(t() - a).toFixed(0);
+      render();   // (T438: the land the host's first picture left for later, beyond 60 m, is made here, untimed: the page's workers make it)
       const lie = matAt(player.x, player.y); let s = 0; for (let k = 0; k < 30; k++) { const s0 = t(); render(); s += t() - s0; }
       res.host = { answer: hostLast && hostLast.t, holes: hostLast && hostLast.holes, course: course && course.id, scale: course && course.S, hole: holeN, lie: MAT_NAME[lie], renderMs: +(s / 30).toFixed(2) };
       if (!course || course.id !== 'woodhill' || course.S !== 1) res.errors.push('host: Woodhill was not loaded at scale 1');
