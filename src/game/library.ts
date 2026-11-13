@@ -1098,3 +1098,17 @@ appendLandscapeArt(LIBRARY); // T274: accepted organic art at the tail, on the s
 appendNewProps(LIBRARY, ATLAS_PAGES); // the owner's new props (art/new-props): their own pages, at the tail so no saved index moves
 appendAnimals(LIBRARY, ATLAS_PAGES); // T309: the farm animals (art/animals, prep-animals.mjs): their own page, at the very tail
 appendObjectEight(LIBRARY, ATLAS_PAGES); // reviewed eight-facing art is always appended, after the animals; existing save indices stay stable
+// #1235: the range staff (the attendant) after everything else, so no saved index moves
+/** the staff (3D renders): display size, anchor (feet) at the native scale, height in metres */
+export const STAFF_PEOPLE: { id: string; w: number; h: number; ax: number; ay: number; m: number }[] = [];
+/** frames per facing: the template (idle, walk1..8), then the clips in the order of STAFF_CLIPS */
+export const STAFF_FRAMES = 13;
+export const STAFF_CLIPS: Record<'idle' | 'walk' | 'pick', PeopleClip> = {"idle":{"start":0,"n":1,"times":[0],"loop":true},"walk":{"start":1,"n":8,"times":[0],"loop":true},"pick":{"start":9,"n":4,"times":[0],"loop":true}};
+/** every STAFF frame (person, facing, frame in order), in the walker encoding */
+const STAFF_WF: number[] = [];
+/** the index of the first STAFF frame in LIBRARY: frame (person p, facing d, frame f) is STAFF_BASE + (p * WALK_DIRS.length + d) * STAFF_FRAMES + f */
+export const STAFF_BASE = LIBRARY.length;
+for (let i = 0; i < STAFF_WF.length / 9; i++) {
+  const p = STAFF_PEOPLE[Math.floor(i / (WALK_DIRS.length * STAFF_FRAMES))], o = i * 9;
+  LIBRARY.push({ id: `${p.id}:${i % (WALK_DIRS.length * STAFF_FRAMES)}`, name: p.id, cat: 'Staff', kind: 'walker', w: p.w, h: p.h, ax: p.ax, ay: p.ay, boxes: [{ hx: 0.25, hy: 0.25, dx: 0, dy: 0 }], solid: 0, big: false, door: false, cost: 0, tex: [STAFF_WF[o], STAFF_WF[o + 1], STAFF_WF[o + 2], STAFF_WF[o + 3], STAFF_WF[o + 4]], quad: [STAFF_WF[o + 5], STAFF_WF[o + 6], STAFF_WF[o + 7], STAFF_WF[o + 8]] });
+}

@@ -1,0 +1,36 @@
+{
+  "id": "staff:staff_range_m:pick",
+  "name": "staff_range_m pick",
+  "clip": "pick",
+  "heightMetres": 1.82,
+  "frameWidth": 160,
+  "frameHeight": 277,
+  "anchor": {
+    "x": 80,
+    "y": 267
+  },
+  "directions": [
+    "S",
+    "SW",
+    "W",
+    "NW",
+    "N",
+    "NE",
+    "E",
+    "SE"
+  ],
+  "frames": [
+    "pick1",
+    "pick2",
+    "pick3",
+    "pick4"
+  ],
+  "times": [
+    0,
+    0.45,
+    0.8,
+    1.2
+  ],
+  "loop": true,
+  "note": "stand, bend, pick, rise (the attendant at the ball pile, rangehost.ts); starts as idle copies until imported"
+}

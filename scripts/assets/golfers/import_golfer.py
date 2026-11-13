@@ -20,9 +20,9 @@ from PIL import Image
 
 ROOT = Path(__file__).resolve().parents[3]
 ART = ROOT / 'art' / 'golfers'
-NAME = re.compile(r'^(golf_[a-z]+_[mw]\d+)~(S|SW|W|NW|N|NE|E|SE)(?:~(golf_drive|golf_putt))?-golfers\.png$')
+NAME = re.compile(r'^([a-z]+_[a-z0-9_]+?)~(S|SW|W|NW|N|NE|E|SE)(?:~(golf_drive|golf_putt|pick))?-golfers\.png$')
 # the grid of each picture (golfer_pack.py CLIPS): columns, rows
-GRIDS = {'sheet': (3, 3), 'golf_drive': (4, 3), 'golf_putt': (4, 2)}
+GRIDS = {'sheet': (3, 3), 'golf_drive': (4, 3), 'golf_putt': (4, 2), 'pick': (2, 2)}
 GRASS = (104, 132, 84)
 
 
@@ -33,6 +33,13 @@ def key_out(rgb, tol, soft):
     bg = np.median(border, axis=0)
     d = np.sqrt(((rgb - bg) ** 2).sum(-1))
     a = np.clip((d - tol) / soft, 0, 1)
+    # the key's own hue painted darker (the inside of a wire basket, a gap in shade): R and B both well above G for magenta (G above R and
+    # B for green) is background, not the subject; a pink shirt (219,135,152) scores 17, the basket's shaded magenta 90+ (#1235, 2026-11-14)
+    hi0 = bg > 128
+    if hi0.any() and (~hi0).any():
+        score = rgb[..., hi0].min(-1) - rgb[..., ~hi0].max(-1)
+        bal = (rgb[..., hi0].max(-1) - rgb[..., hi0].min(-1)) < 70 if hi0.sum() > 1 else True
+        a = np.where((score > 70) & bal, 0, a)
     # un-mix the background from the rim pixels: c = a*fg + (1-a)*bg  ->  fg = (c - (1-a)*bg) / a
     am = np.maximum(a, 1e-3)[..., None]
     fg = np.clip((rgb - (1 - am) * bg) / am, 0, 255)
@@ -130,7 +137,7 @@ def import_clip(path, gid, heading, clip, tol=60, soft=40, scale=None, dry=False
     olds = [olds_sheet.crop((c * fw, row * fh, (c + 1) * fw, (row + 1) * fh)) for c in range(n)]
     figs, bg = figures(path, tol, soft, GRIDS[clip])
     figs = figs[:n]
-    probe = [9, 10, 11] if clip == 'golf_drive' else [0, 7]   # (the drive's upright finish frames: ChatGPT stands the address more upright than the renders)
+    probe = {'golf_drive': [9, 10, 11], 'golf_putt': [0, 7], 'pick': [0, 3]}[clip]   # (the drive's upright finish frames: ChatGPT stands the address more upright than the renders)
     k = scale or float(np.median([measure(olds[i])[0] / max(1, measure(figs[i])[0]) for i in probe]))
     # one feet line and one body x for the whole row (the feet stay planted through a stroke): the medians of the frames' lowest pixels
     # (a club head below the feet in two or three frames does not move it) and of their body middles, old and new
@@ -244,11 +251,14 @@ def main():
     ap.add_argument('--tol', type=float, default=60); ap.add_argument('--soft', type=float, default=40); ap.add_argument('--scale', type=float)
     ap.add_argument('--dry-run', action='store_true'); ap.add_argument('--preview')
     ap.add_argument('--all', action='store_true'); ap.add_argument('--in', dest='inp', default='D:/AI/chatgpt-bridge/in')
+    ap.add_argument('--family', default='golfers', help='golfers or spectators (the staff)')
     ap.add_argument('--contact'); ap.add_argument('--out'); ap.add_argument('--clip', default='sheet', choices=list(GRIDS))
     a = ap.parse_args()
+    global ART
+    ART = ROOT / 'art' / a.family
     if a.contact: return contact(a.contact, a.out or f'{a.contact}-{a.clip}-contact.png', a.clip)
     if a.all:
-        for p in sorted(Path(a.inp).glob('golf_*~*-golfers.png'), key=lambda p: p.stat().st_mtime):
+        for p in sorted(Path(a.inp).glob('*~*-golfers.png'), key=lambda p: p.stat().st_mtime):
             m = NAME.match(p.name)
             if m and (not a.golfer or m.group(1) == a.golfer) and (m.group(3) or 'sheet') == a.clip:
                 if a.clip == 'sheet': import_one(p, m.group(1), m.group(2), a.tol, a.soft, a.scale, a.dry_run)

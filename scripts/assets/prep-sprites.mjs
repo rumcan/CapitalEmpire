@@ -222,6 +222,8 @@ async function crowd(dir, prefix, label, sheets) {
   return { people, frames, clips, frameCount: start };
 }
 const spec = await crowd('spectators', 'spec_', 'spectator', SPEC_CLIPS), golf = await crowd('golfers', 'golf_', 'golfer', GOLF_CLIPS);
+// #1235: the range staff painted in ChatGPT (art/spectators/staff_range_*: the attendant), their own group: the template and a pick clip
+const STAFF_CLIPS = [['pick', 4]], staff = await crowd('spectators', 'staff_range', 'staff', STAFF_CLIPS);
 
 // ---- 1c. the baked house lots (lot-variants.mjs): one picture per variant, rendered straight at mip-0 resolution, the whole lot
 // as its footprint and the house as its planner block
@@ -255,7 +257,7 @@ function pack(list, gut, align) {
 }
 pack(sprites, GUT, ALIGN);
 // the walker pages hold the townspeople, the spectators and the golfers together
-const walkerList = [...walkers, ...spec.frames, ...golf.frames];
+const walkerList = [...walkers, ...spec.frames, ...golf.frames, ...staff.frames];
 if (walkerList.length) pack(walkerList, 4, 4);
 console.log(`atlas: ${pages.length} pages; the last is ${Math.round(100 * pages[pages.length - 1].shelves.reduce((m, sh) => Math.max(m, sh.y + sh.h), 0) / PAGE)}% full (shelf height)`);
 
@@ -367,9 +369,11 @@ fs.writeFileSync(path.join(ROOT, 'src/game/library.ts'), [
   'appendRangeArt(LIBRARY); // T258: range art on the existing golf page',
   'appendLandscapeArt(LIBRARY); // T274: accepted organic art at the tail, on the same golf page',
   'appendNewProps(LIBRARY, ATLAS_PAGES); // the owner\'s new props (art/new-props): their own pages, at the tail so no saved index moves',
-  'appendAnimals(LIBRARY, ATLAS_PAGES); // T309: the farm animals (art/animals, prep-animals.mjs): their own page, at the very tail', ''].join('\n'));
+  'appendAnimals(LIBRARY, ATLAS_PAGES); // T309: the farm animals (art/animals, prep-animals.mjs): their own page, at the very tail',
+  '// #1235: the range staff (the attendant) after everything else, so no saved index moves',
+  ...crowdLines('STAFF', 'Staff', staff, "'idle' | 'walk' | 'pick'", false), ''].join('\n'));
 console.log(`walkers: ${people.length} people, ${walkers.length} frames; frame fixes: ${flipped.length ? flipped.join(', ') : 'none'}`);
-console.log(`spectators: ${spec.people.length} people, ${spec.frames.length} frames; golfers: ${golf.people.length} people, ${golf.frames.length} frames`);
+console.log(`spectators: ${spec.people.length} people, ${spec.frames.length} frames; golfers: ${golf.people.length} people, ${golf.frames.length} frames; staff: ${staff.people.length} people, ${staff.frames.length} frames`);
 console.log(`walk frames still needed: ${needed.length}${needed.length ? ` (${needed.join(', ')})` : ''}`);
 const used = sprites.reduce((s, x) => s + (x.cw + 2 * GUT) * (x.ch + 2 * GUT), 0);
 console.log(`sprites ${sprites.length}, pages ${pages.length}, fill ${(used / (pages.length * PAGE * PAGE) * 100).toFixed(0)}%`);

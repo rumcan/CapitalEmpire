@@ -856,7 +856,7 @@ export interface RangeDraw {
   /** the ball picker cart (T133; null: none): where it is, and whether it is out on its lanes (it is also the last of the cars) */
   picker: { x: number; y: number; out: boolean } | null;
   /** T386 part 2: the range attendants on shift and the robot pickers at work (their stand-ins): point, heading (radians, world), kind */
-  agents: { x: number; y: number; ang: number; kind: 'attendant' | 'robot'; moving: boolean; id: number }[]; nAgents: number;
+  agents: { x: number; y: number; ang: number; kind: 'attendant' | 'robot'; moving: boolean; id: number; /** #1235: an attendant at the pile, picking (drawn with the pick clip) */ pick: boolean }[]; nAgents: number;
 }
 /** the town clock as the sim reads it: the hour (fractional) and the day number */
 export interface RangeClock { hour: number; day: number }
@@ -1641,8 +1641,11 @@ export class RangeSim {
       const room = sc.ballRoom, to = this.front ?? room, dx = to.x - room.x, dy = to.y - room.y, L = Math.hypot(dx, dy) || 1, nx = -dy / L, ny = dx / L, total = this.crew.att + this.crew.robots;
       for (let i = 0; i < total; i++) {
         const kind = i < this.crew.att ? 'attendant' as const : 'robot' as const, p = (this.t / (kind === 'robot' ? 30 : 40) + i * 0.37) % 1, u = p < 0.5 ? p * 2 : (1 - p) * 2, side = (i % 3 - 1) * 0.9;
-        const a = d.agents[d.nAgents] ?? (d.agents[d.nAgents] = { x: 0, y: 0, ang: 0, kind, moving: true, id: 0 });
-        a.x = room.x + dx * u + nx * side; a.y = room.y + dy * u + ny * side; a.kind = kind; a.id = i; a.moving = L > 0.5; a.ang = Math.atan2(dy, dx) + (p < 0.5 ? 0 : Math.PI); d.nAgents++;
+        const a = d.agents[d.nAgents] ?? (d.agents[d.nAgents] = { x: 0, y: 0, ang: 0, kind, moving: true, id: 0, pick: false });
+        // #1235: an attendant walks out in 85% of his half-trip and picks at the pile for the rest (about 6 s of his 40 s round)
+        const w = kind === 'attendant' ? Math.min(1, u / 0.85) : u;
+        a.x = room.x + dx * w + nx * side; a.y = room.y + dy * w + ny * side; a.kind = kind; a.id = i; a.pick = kind === 'attendant' && u >= 0.85 && L > 0.5;
+        a.moving = L > 0.5 && !a.pick; a.ang = Math.atan2(dy, dx) + (p < 0.5 || a.pick ? 0 : Math.PI); d.nAgents++;
       }
     }
     return d;
