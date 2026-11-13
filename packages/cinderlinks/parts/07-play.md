@@ -173,6 +173,7 @@ function canStand(x, y, x0, y0) {
   return !(matAt(x, y) === M_WATER && h1 < wlAt(x, y) - 0.12);   // only the pond itself is water: low ground elsewhere is just low ground
 }
 function rideCart() {                                                // G: into the cart when beside it, out of it when in it
+  if (!CART_SHOWN && !cart.on) return;                               // (the cart is hidden for now: 08i-cart.md CART_SHOWN)
   const p = player;
   if (cart.on) { for (const sd of [-1, 1, -2, 2]) { const a = cart.th, x = cart.x - Math.sin(a) * sd * 1.3, y = cart.y + Math.cos(a) * sd * 1.3; if (canStand(x, y, cart.x, cart.y)) { p.x = x; p.y = y; break; } } cart.on = false; cart.v = 0; p.th = cart.th; }
   else if (p.swing < 0 && !charging && Math.hypot(p.x - cart.x, p.y - cart.y) < 3.2) { cart.on = true; p.x = cart.x; p.y = cart.y; p.moving = false; }
