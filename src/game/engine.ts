@@ -9,7 +9,7 @@ import { FACING_ROW, Pedestrians, facing as facingOf, sidewalks, type Door, type
 import { personIdentity, type PersonIdentity } from './person-identity';
 import { legacySeating, placeSeating, seatLiftWorldPixels, seatingProblems, type PlacedSeating } from './golf/event-seating';
 import { facilityCondition, facilityImprovement, hasUpgradedArt, improvementCost, type FacilityCondition } from './golf/facility-models';
-import { GREENKEEPING } from './features';
+import { GREENKEEPING, JAM } from './features';
 import { GRASS_ACTION_NAME, GrassManagement, grassSurface, type GrassAction, type GrassCellView, type GrassScope, type GrassSettings } from './ext/grass-management';
 import { drawGhostBlueprint, drawGhostHint, drawGhostPoly, drawGhostRing, drawRefusedMarks, ghostStatus, rgbaOf, type GhostBlueprint, type GhostView } from './ext/ghost-preview';
 import { drawRefusedCross, strokeHatch } from './ext/refused-mark';
@@ -3104,6 +3104,7 @@ export class Game {
     this.ground.limits = { tiles: boot.tileSources, painted: boot.paintedSources, eager: boot.eagerPhotos ? [...boot.eagerPhotos] : null, saveCache: boot.saveTextureCache, readCache: boot.readTextureCache, soft: boot.softCanvases, lazy: boot.lazyTextures, tints: boot.lazyTints };
     this.traffic = new SimClient(boot.sim);
     try { this.disastersEnabled = localStorage.getItem('capitalempire.disasters') !== 'false'; } catch { /* default on */ }
+    if (JAM) this.disastersEnabled = false; // the jam build's emergencies (golf/risk.ts) replace the natural disasters
     try { this.showStandIns = localStorage.getItem('capitalempire.standins') !== 'false'; } catch { /* default on */ }
     try { this.showMoneyFloats = localStorage.getItem('capitalempire.moneyFloats') !== 'false'; } catch { /* default on */ }
     if (!boot.moneyFloats) this.showMoneyFloats = false;
@@ -3150,6 +3151,7 @@ export class Game {
     this.unfinish?.(); this.unfinish = this.watchFinish();
     try { const v = parseFloat(localStorage.getItem('capitalempire.roughYards') ?? ''); if (Number.isFinite(v)) this.roughYards = clampRoughYards(v); } catch { /* the default */ }
     try { const n = localStorage.getItem('capitalempire.night'); if (n) this.night = clampNight(JSON.parse(n)); } catch { /* the defaults */ }
+    if (JAM) this.night = clampNight({ ...this.night, mode: 'off' }); // the jam build has no night golf
     try { const d = JSON.parse(localStorage.getItem('capitalempire.townday') ?? 'null'); if (d && typeof d === 'object') this.townDay = { minutes: Math.min(30, Math.max(0.5, +d.minutes || 10)), traffic: Math.min(4, Math.max(0, Number.isFinite(+d.traffic) ? +d.traffic : 1)) }; } catch { /* the defaults */ }
     // T266 (#800): golf's pace, the gear menu's (remembered; watchable by default), or the dev server's ?golfPace=main|daynight|walk|long|mix for
     // the session (golf/pace.ts; long plays a longer town day, not remembered)
@@ -3163,12 +3165,12 @@ export class Game {
     // the dev sandbox options (see sandboxGrow): the URL, else the defaults of the dev server or the build
     const q = new URLSearchParams(location.search), dev = import.meta.env.DEV;
     this.sandboxGrow = Number(q.get('grow') ?? 1) || 1; // the game's speed everywhere (the owner, 2026-10-27: the dev server's default of 20 grew the town too fast); ?grow=N still speeds it for tests
-    this.startMode = q.get('start') === 'town' ? 'town' : q.get('start') === 'valley' ? 'valley' : 'range'; { const gb = Number(q.get('golfers')); if (import.meta.env.DEV && q.has('golfers') && gb >= 0) this.dayBusy = gb; const sd = Number(q.get('seed')); if (import.meta.env.DEV && sd > 0) this.devSeed = Math.floor(sd); if (import.meta.env.DEV && (q.get('terrain') === '1' || q.get('terrain') === '2')) this.devTerrain = Number(q.get('terrain')); if (import.meta.env.DEV && q.get('everyday') === '0') this.dayOff = true; if (import.meta.env.DEV && q.get('spacing') === '0') this.spacingOff = true; if (import.meta.env.DEV && q.get('animals') === '0') this.animalsOff = true; /* T309: ?animals=0, no farm animals (dev; the bench's before) */ if (import.meta.env.DEV && q.get('tourney') === '1') this.devTourney = true; { const wd = q.get('wind'); if (import.meta.env.DEV && wd) { const [a, b, c] = wd.split(',').map(Number); this.devWind = wd === 'off' ? NO_WIND : { mph: a! >= 0 ? a! : 8, from: Number.isFinite(b) ? b! : 270, gusty: Number.isFinite(c) ? c! : 0.5, seed: 7 }; } } /* (T334: ?wind=off | mph,from,gusty) */ const ce = q.get('clubevent'); if (import.meta.env.DEV && (ce === 'club' || ce === 'mayor')) this.devEvent = ce; } // T208: ?golfers=N, a busy everyday day; ?seed=N, the old start's map; ?everyday=0, no everyday golf (dev, the bench's before and after)
-    this.osmId = osmCourseInfo(q.get('osmcourse'))?.id ?? null; // T340: ?osmcourse=rondebosch | magnolia-national, a new game on that real course (saving off for the session, as a fixture)
+    this.startMode = JAM ? 'range' : q.get('start') === 'town' ? 'town' : q.get('start') === 'valley' ? 'valley' : 'range'; { const gb = Number(q.get('golfers')); if (import.meta.env.DEV && q.has('golfers') && gb >= 0) this.dayBusy = gb; const sd = Number(q.get('seed')); if (import.meta.env.DEV && sd > 0) this.devSeed = Math.floor(sd); if (import.meta.env.DEV && (q.get('terrain') === '1' || q.get('terrain') === '2')) this.devTerrain = Number(q.get('terrain')); if (import.meta.env.DEV && q.get('everyday') === '0') this.dayOff = true; if (import.meta.env.DEV && q.get('spacing') === '0') this.spacingOff = true; if (import.meta.env.DEV && q.get('animals') === '0') this.animalsOff = true; /* T309: ?animals=0, no farm animals (dev; the bench's before) */ if (import.meta.env.DEV && q.get('tourney') === '1') this.devTourney = true; { const wd = q.get('wind'); if (import.meta.env.DEV && wd) { const [a, b, c] = wd.split(',').map(Number); this.devWind = wd === 'off' ? NO_WIND : { mph: a! >= 0 ? a! : 8, from: Number.isFinite(b) ? b! : 270, gusty: Number.isFinite(c) ? c! : 0.5, seed: 7 }; } } /* (T334: ?wind=off | mph,from,gusty) */ const ce = q.get('clubevent'); if (import.meta.env.DEV && (ce === 'club' || ce === 'mayor')) this.devEvent = ce; } // T208: ?golfers=N, a busy everyday day; ?seed=N, the old start's map; ?everyday=0, no everyday golf (dev, the bench's before and after)
+    this.osmId = JAM ? null : osmCourseInfo(q.get('osmcourse'))?.id ?? null; // T340: ?osmcourse=rondebosch | magnolia-national, a new game on that real course (saving off for the session, as a fixture)
     this.stampOn = q.has('stamp') ? q.get('stamp') === '1' : !dev;
-    this.sandboxMoney = q.has('money') ? q.get('money') === '1' : dev;
+    this.sandboxMoney = !JAM && (q.has('money') ? q.get('money') === '1' : dev); // JAM: never unlimited money
     // every road class, junction (the roundabout without its card), tunnel and signal tier open from the start (?unlock=0 plays the unlocks)
-    this.sandboxUnlock = q.has('unlock') ? q.get('unlock') === '1' : dev;
+    this.sandboxUnlock = !JAM && (q.has('unlock') ? q.get('unlock') === '1' : dev); // JAM: the progressive unlocks always play
     this.traffic.onGrow = (legs) => this.townGrow(legs);
     this.traffic.onNoRoom = () => this.toast('The town has no room left to grow: build a road to give it new lots'); // T292 (#877)
     this.traffic.onTown = (events) => { for (const e of events) this.lotQueue.add(e.key); this.townFirsts(events); this.placesCheck(); this.roughCheck(); };

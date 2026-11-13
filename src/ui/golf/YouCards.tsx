@@ -1,6 +1,7 @@
 // Your character's cards (T240, #704; docs/plans/P28.md section 1): the "Who are you?" card at a new game (your name, your look, your starting
 // handicap), the talk card when you walk up to a person (T243 brings the portraits), the first tee's "Start a round" card (T317 builds the round you
 // play yourself on it), and the cursors that say what a click does (walk / talk / look / use), as the point-and-click adventure games do.
+import { JAM } from '../../game/features';
 import { useEffect, useState } from 'react';
 import { LIBRARY } from '../../game/library';
 import type { RoundState } from '../../game/golf/player';
@@ -81,7 +82,7 @@ export function WhoCard({ name, look, looks, hcp, onDone, desert, onTheme, cours
             </div>
           </div>
         )}
-        {course && (
+        {course && !JAM && (
           <div>
             <div className="mb-1 text-xs text-slate-400">Your course <span className="text-slate-500">(build your own, or play a real one)</span></div>
             <button className="flex w-full items-center justify-between gap-2 rounded-lg border border-white/10 bg-white/5 px-2 py-1.5 text-left text-xs hover:bg-white/10" onClick={() => setPick(o => !o)} aria-expanded={pick} data-testid="who-course-open">
@@ -97,7 +98,7 @@ export function WhoCard({ name, look, looks, hcp, onDone, desert, onTheme, cours
         <p className="text-xs text-slate-400">You stand beside the shack. With Walk (the walking figure on the left; Alt swaps it with Select) click the ground to walk, a person to talk, a building to look, the range to hit a bucket. WASD walk too; the arrows pan. C calls your golf cart, E gets in.</p>
         <button className="btn-gold w-full py-2 text-sm" onClick={() => onDone(n, l)} data-testid="who-go"><Icon name="people" size={18} />That's me</button>
       </div>
-      {course && pick && <CoursePicker featured={course.featured} current={course.current} onOwn={course.onOwn} onFeatured={course.onFeatured} onBuild={course.onBuild} onPlace={course.onPlace} onClose={() => setPick(false)} />}
+      {course && !JAM && pick && <CoursePicker featured={course.featured} current={course.current} onOwn={course.onOwn} onFeatured={course.onFeatured} onBuild={course.onBuild} onPlace={course.onPlace} onClose={() => setPick(false)} />}
     </div>
   );
 }

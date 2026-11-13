@@ -215,7 +215,10 @@ function devSave(): Plugin {
  *  load: every atlas page level (library.ts ATLAS_PAGES) the bundle emits gets a sibling with the same name and a .ktx2 extension. The encoding
  *  is cached by the WebP's sha256 (scripts/assets/atlas-ktx2.mjs: shared by the clone's worktrees, so only a changed page encodes again). If it
  *  fails the build goes on without them and the game uses the WebP pages. ATLAS_KTX2=0 turns it off. */
-const KTX2_ON = process.env.ATLAS_KTX2 !== "0";
+/** the jam build (docs/JAM.md, `npm run build:jam`): itch.io allows 1,000 files and 500 MB, so it drops the KTX2 siblings (the WebP pages are used) and inlines every
+ *  picture under 128 KB into the code (no file of its own); see scripts/jam/pack.mjs */
+const JAM_BUILD = process.env.VITE_JAM === "1", JAM_INLINE_BYTES = 128 * 1024;
+const KTX2_ON = process.env.ATLAS_KTX2 !== "0" && !JAM_BUILD;
 function atlasKtx2(): Plugin {
   interface Ktx2Script {
     atlasPageSources(root: string): Promise<string[][]>;
@@ -227,7 +230,7 @@ function atlasKtx2(): Plugin {
     name: "capitalempire-atlas-ktx2",
     apply: "build",
     // a page level small enough to inline (a sparse page's 128 px mip) would become a data: URL with no file to sit beside: never inline them
-    config: () => ({ build: { assetsInlineLimit: (file: string) => (sources.has(rel(file)) ? false : undefined) } }),
+    config: () => ({ build: { assetsInlineLimit: (file: string, content: Buffer) => (sources.has(rel(file)) ? false : JAM_BUILD ? content.length < JAM_INLINE_BYTES : undefined) } }),
     async buildStart() {
       if (!KTX2_ON) return;
       const t0 = Date.now();
@@ -253,9 +256,26 @@ function atlasKtx2(): Plugin {
   };
 }
 
+/** the jam build's asset cut (docs/JAM.md; itch.io's 500 MB): files that only a switched-off feature loads are not bundled. Greenkeeping is off (features.ts), so its
+ *  condition-layer pictures (src/assets/ground/grass-management, about 160 MB) are never fetched: the ground worker's glob is pointed at nothing. */
+function jamCut(): Plugin {
+  return {
+    name: "capitalempire-jam-cut",
+    apply: "build",
+    enforce: "pre",
+    transform(code, id) {
+      if (!JAM_BUILD || !id.endsWith("src/game/ground.worker.ts")) return null;
+      const from = "'../assets/ground/grass-management/**/*.{webp,png}'";
+      if (!code.includes(from)) throw new Error("jam cut: the ground worker's grass-management glob moved; update vite.config.ts jamCut");
+      return code.replace(from, "'../assets/ground/grass-management/__jam_none__/*.png'");
+    },
+  };
+}
+
 // https://vite.dev/config/
 export default defineConfig(({ command }) => ({
-  plugins: [react(), tailwindcss(), devSave(), atlasKtx2()],
+  plugins: [react(), tailwindcss(), devSave(), atlasKtx2(), jamCut()],
+  worker: { plugins: () => [jamCut()] }, // (the ground worker is bundled by its own pipeline)
   // the KTX2 atlas pages exist in a production build only: the dev server always shows the WebP pages, fresh as the art is edited
   define: { __ATLAS_KTX2__: JSON.stringify(command === "build" && KTX2_ON), __BUILD__: JSON.stringify({ app: pkg.version, sha }) },
   // T080: the build is index.html plus hashed files next to it (dist/assets: the code, the workers, every atlas, view and ground picture), not one

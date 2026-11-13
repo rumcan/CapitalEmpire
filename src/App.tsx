@@ -23,7 +23,7 @@ import { freshStats } from './game/business/state';
 import { BUSINESS_IMAGE } from './game/business/art';
 import { BUSINESS_THUMBS } from './game/business-library';
 import type { SurgeView } from './game/event/surge';
-import { BUILD } from './game/save';
+import { BUILD, readSave } from './game/save';
 import { DEM_CREDIT_DEFAULT, DEM_TILES_CREDIT } from './game/golf/osm/terrarium';
 import { bootFor } from './game/dev/lab-boot';
 import { PaintPanel } from './PaintPanel';
@@ -72,7 +72,8 @@ import { seasonChip, seasonPhase } from './ui/golf/season';
 import { GuidePulse } from './ui/GuidePulse';
 import { ClubTitleText } from './ui/ClubTitle';
 import { GrassManagementPanel } from './ui/GrassManagementPanel';
-import { GREENKEEPING } from './game/features';
+import { GREENKEEPING, JAM } from './game/features';
+import { TitleCard } from './ui/jam/TitleCard';
 import { formatPercent } from './ui/TournamentResults';
 import { SeasonReportCard } from './ui/golf/SeasonReportCard';
 import { GolfLeaderboard } from './ui/GolfLeaderboard';
@@ -143,7 +144,7 @@ function menuCtx(game: Game): MenuCtx {
     practice: [{ id: 'putting', name: 'Putting green' }, { id: 'chipping', name: 'Chipping green and bunker' }].map(f => ({ ...f, why: game.range.scene ? null : 'Comes with a driving range (its practice area)' })),
     newHoleWhy: ui?.newHoleLock ?? null,
     // T356: Course > Place a real course: the shipped map-data courses, then the player's downloaded ones (T358: kept in this browser)
-    real: [
+    real: JAM ? [] : [
       ...OSM_COURSES.map(c => ({ id: c.id, name: c.name, place: c.place, holes: c.holes, par: c.par })),
       ...keptCourses().map(r => ({ id: r.id, name: r.name, place: r.place || 'Downloaded', holes: r.holes ?? 0, par: r.par ?? 0, kept: true })),
     ],
@@ -160,7 +161,7 @@ const hhmm = (c: { hour: number; minute: number }) => `${String(c.hour).padStart
 const hod = (h: number) => `${String(h % 24).padStart(2, '0')}:00`;
 /** the Developer toggle (T035): the perf panel, the dev badge, the Studio button and the cars/growth controls; F3 flips it, ?debug forces it on, remembered in localStorage, off by default */
 const DEV_KEY = 'capitalempire.dev';
-function devStart(): boolean { try { return new URLSearchParams(location.search).has('debug') || localStorage.getItem(DEV_KEY) === '1'; } catch { return false; } }
+function devStart(): boolean { if (JAM) return false; try { return new URLSearchParams(location.search).has('debug') || localStorage.getItem(DEV_KEY) === '1'; } catch { return false; } }
 
 export default function App() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -171,6 +172,13 @@ export default function App() {
   const [boot] = useState(() => bootFor(location.search, import.meta.env.DEV));
   const lab = boot.kind === 'lab';
   const [, bump] = useReducer((x: number) => x + 1, 0);
+  // the jam build's title card (ui/jam/TitleCard.tsx): shown over the game until New game / Continue; the game waits (paused) behind it
+  const [titleOpen, setTitleOpen] = useState(JAM);
+  const [hasSave, setHasSave] = useState(false);
+  useEffect(() => { if (JAM) { document.title = 'Fairway Fortune'; void readSave().then(r => setHasSave(r.status === 'ok')); } }, []);
+  const titlePaused = useRef(false);
+  useEffect(() => { if (game?.ready && titleOpen && !titlePaused.current) { titlePaused.current = true; game.setSpeed(0); } }, [game?.ready, titleOpen, game]);
+  const leaveTitle = (fresh: boolean) => { if (!game) return; if (fresh && hasSave) game.newTown(); setTitleOpen(false); game.setSpeed(1); };
   // T356: the downloaded courses (T358's library) the Course flyout offers under Place a real course: listed when the page starts and each time that flyout opens (openFly); a change draws the menu again
   useEffect(() => { void refreshKept(); return watchKept(bump); }, []);
   const [help, setHelp] = useState(false);
@@ -215,7 +223,7 @@ export default function App() {
   const [dev, setDevState] = useState(devStart);
   const devRef = useRef(dev);
   useEffect(() => { if (game) game.devMode = dev; }, [game, dev]);   // (T455: the Developer toggle unlocks the shot extras)
-  const setDev = (v: boolean) => { devRef.current = v; setDevState(v); try { localStorage.setItem(DEV_KEY, v ? '1' : '0'); } catch { /* storage may be unavailable */ } };
+  const setDev = (v: boolean) => { if (JAM) return; devRef.current = v; setDevState(v); try { localStorage.setItem(DEV_KEY, v ? '1' : '0'); } catch { /* storage may be unavailable */ } };
   /** the developer readouts (the tile sets in view and the frame time and traffic panel): off unless F4 shows them (the owner, 2026-10-29) */
   const [readouts, setReadouts] = useState(false);
   useEffect(() => { const f4 = (e: KeyboardEvent) => { if (e.key === 'F4') { e.preventDefault(); setReadouts(v => !v); } }; window.addEventListener('keydown', f4); return () => window.removeEventListener('keydown', f4); }, []);
@@ -531,7 +539,7 @@ export default function App() {
                   {chip('courseStats') && (() => { const ph = seasonPhase(fv, game.traffic.round.runs); return <button className={`chip ${seasonOpen ? 'chip-on' : ''} ${ph === 'founding' ? 'font-semibold text-amber-300' : ''}`} onClick={() => { setSeasonOpen(!seasonOpen); setCourseStats(null); }} data-guide="season-chip" data-testid={ph === 'founding' ? 'founding-chip' : 'season-chip'} data-tip={founding ? `${founding}: the tour invites you with ${fv!.check.holesNeeded} holes, a car park and a clubhouse. Open the season's checklist and Course stats` : "The season: its tournament plan and the Course stats"} aria-label="Season"><Icon name="calendar" size={16} />{ph === 'founding' && fv ? <><span className="max-[1599px]:hidden">{seasonChip(ph, fv.check)}</span><span className="min-[1600px]:hidden">{`◔ ${Math.min(fv.check.holes, fv.check.holesNeeded)}/${fv.check.holesNeeded}`}</span></> : <span className={WIDE}>{seasonChip(ph, fv?.check)}</span>}</button>; })()}
                   {chip('land') && <button className={`chip ${game.landMode ? 'chip-on' : ''}`} onClick={() => { if (game.landMode) game.closeLandSale(); else game.openLandSale(); bump(); }} data-tip="Land for sale: the blocks next to your land, priced; click one to see it, Buy on its card (also Course › Land for sale)" aria-label="Land for sale"><Icon name="compass" size={16} /><span className={WIDE}>Land</span></button>}
                   {chip('holes') && <button className={`chip ${game.holesTool ? 'chip-on' : ''}`} onClick={() => { game.toggleHolesTool(); bump(); }} data-tip="Holes: move pins and tee markers" aria-label="Holes"><Icon name="pin" size={16} /><span className={WIDE}>Holes</span></button>}
- {chip('event') && <button data-guide="chip-event" className={`chip ${game.eventTool ? 'chip-on' : ''}`} onClick={() => { game.toggleEventTool(); bump(); }} data-tip="Event: the event structures catalogue" aria-label="Event"><Icon name="buildings" size={16} /><span className={WIDE}>Event</span></button>}
+ {!JAM && chip('event') && <button data-guide="chip-event" className={`chip ${game.eventTool ? 'chip-on' : ''}`} onClick={() => { game.toggleEventTool(); bump(); }} data-tip="Event: the event structures catalogue" aria-label="Event"><Icon name="buildings" size={16} /><span className={WIDE}>Event</span></button>}
                 </>
               ) : game.eventMode
                 ? <Stat icon="trophy" label="Level" value={String(game.traffic.round.xp)} sub={`${game.traffic.round.cards.length} cards`} tone="text-amber-200" />
@@ -564,9 +572,9 @@ export default function App() {
                 <button className={`btn-icon ${menu ? 'on' : ''}`} onClick={() => setMenu(!menu)} data-tip="Settings"><Icon name="gear" size={22} /></button>
                 {menu && (
                   <div className="glass absolute right-0 top-full z-30 mt-2 flex max-h-[calc(100vh-8rem)] w-80 flex-col gap-1 overflow-y-auto p-2">
-                    <label className="flex cursor-pointer items-center gap-2 px-2 py-2 text-sm" data-tip="Dev badge and Studio (F3); F4 shows the performance, traffic and growth panel and the tile readout"><input type="checkbox" checked={dev} onChange={e => setDev(e.target.checked)} />Developer (F3)</label>
+                    {!JAM && <label className="flex cursor-pointer items-center gap-2 px-2 py-2 text-sm" data-tip="Dev badge and Studio (F3); F4 shows the performance, traffic and growth panel and the tile readout"><input type="checkbox" checked={dev} onChange={e => setDev(e.target.checked)} />Developer (F3)</label>}
                     {/* T117: the unlocks' Settings switch (was the top bar's All tools chip): every tool and fine control now, whatever the stage */}
-                    {game.playerProgressFacts() && (
+                    {!JAM && game.playerProgressFacts() && (
                       <label className="flex cursor-pointer items-center gap-2 px-2 py-2 text-sm" data-tip={ui ? `Tools open as your course grows (${ui.stageLabel}). Tick to show every tool and fine control now` : 'The dev sandbox shows every tool (?unlock=0 plays the unlocks)'}>
                         <input type="checkbox" checked={!ui || ui.advancedMode} disabled={!ui} onChange={e => { game.setAdvancedTools(e.target.checked); bump(); }} />
                         Show every tool now
@@ -593,6 +601,7 @@ export default function App() {
                       Shot tracers
                     </label>
                     {/* T135: the traffic views moved here from the top bar (it keeps one row at 1366 px); their keys are unchanged (F, B) */}
+                    {!JAM && <>
                     <div className="flex items-center gap-2 px-2 py-2 text-sm">
                       <label className="flex cursor-pointer items-center gap-2" data-tip="Live congestion heat map (F)">
                         <input type="checkbox" checked={game.showFlow} onChange={e => { game.setFlow(e.target.checked); bump(); }} />
@@ -606,6 +615,7 @@ export default function App() {
                       <input type="checkbox" checked={game.panel === 'bottlenecks'} onChange={e => { game.panel = e.target.checked ? 'bottlenecks' : null; if (game.panel) game.traffic.requestReport(); bump(); }} />
                       Bottlenecks (B)
                     </label>
+                    </>}
                     <label className="flex cursor-pointer items-center gap-2 px-2 py-2 text-sm" data-tip="A small label over each building drawn as a stand-in (another building of its kind) until its own art arrives: Stand In for Church">
                       <input type="checkbox" checked={game.showStandIns} onChange={e => { game.setShowStandIns(e.target.checked); bump(); }} />
                       Show stand-in labels
@@ -614,10 +624,12 @@ export default function App() {
                       <input type="checkbox" checked={game.showMoneyFloats} onChange={e => { game.setShowMoneyFloats(e.target.checked); bump(); }} />
                       Money floats
                     </label>
+                    {!JAM && (
                     <label className="flex cursor-pointer items-center gap-2 px-2 py-2 text-sm" data-tip="Floods, storms, landslides, wildfires and earthquakes close roads now and then">
                       <input type="checkbox" checked={game.disastersEnabled} onChange={e => { game.setDisasters(e.target.checked); bump(); }} />
                       Natural disasters
                     </label>
+                    )}
                     <label className="flex items-center gap-2 px-2 py-2 text-sm" data-tip="The contact shadows under every building, car, tree and prop (TrickOrTreat's town-builder shadows). 100% = the builder's, 0 = off">
                       <span className="w-16 shrink-0">Shadows</span>
                       <input type="range" className="min-w-0 flex-1" min={0} max={2} step={0.05} value={game.shadowStrength} onChange={e => { game.setShadowStrength(+e.target.value); bump(); }} />
@@ -690,8 +702,8 @@ export default function App() {
                         <span className="w-10 text-right tabular-nums">{show}</span>
                       </label>
                     ))}
-                    <GradePanel game={game} bump={bump} />
-                    <NightPanel game={game} bump={bump} />
+                    {!JAM && <GradePanel game={game} bump={bump} />}
+                    {!JAM && <NightPanel game={game} bump={bump} />}
                     <button className="btn w-full" onClick={() => { setMenu(false); game.save(); }} data-tip="Saved automatically; force a save now">Save</button>
                     <button className="btn w-full" onClick={() => { setMenu(false); void game.downloadSave(); }} data-tip="Download the save as a .cesave file (for a bug report, or to carry it to another computer)">Download save</button>
                     <button className="btn w-full" onClick={() => saveFile.current?.click()} data-tip="Load a .cesave file in place of this game: this game is backed up first">Load save file…</button>
@@ -709,7 +721,7 @@ export default function App() {
                     <div className="px-2 pt-1 text-[12px] opacity-50" data-tip={`${DEM_TILES_CREDIT}. The land under a real course comes from public elevation data: ${(game.landInfo()?.credit ?? DEM_CREDIT_DEFAULT)}.`} data-testid="dem-credit">Credits: real-course ground height {game.landInfo()?.credit ?? DEM_CREDIT_DEFAULT}</div>
                     {/* asked in the menu (the browser's confirm() is not shown in every embedded browser): a first click arms, a second acts */}
                     <button className={`btn w-full ${armed === 'new' ? '!border-red-400 !text-red-300' : ''}`} data-tip="Start a new game: your current game is replaced" onClick={() => { if (armed !== 'new') { setArmed('new'); return; } setArmed(null); setMenu(false); game.newTown(); }}>{armed === 'new' ? 'Click again: replace this game' : 'New game'}</button>
-                    <button className={`btn w-full ${armed === 'empty' ? '!border-red-400 !text-red-300' : ''}`} data-tip="Clear everything and start from an empty field" onClick={() => { if (armed !== 'empty') { setArmed('empty'); return; } setArmed(null); setMenu(false); game.clearTown(); }}>{armed === 'empty' ? 'Click again: clear everything' : 'Empty map'}</button>
+                    {!JAM && <button className={`btn w-full ${armed === 'empty' ? '!border-red-400 !text-red-300' : ''}`} data-tip="Clear everything and start from an empty field" onClick={() => { if (armed !== 'empty') { setArmed('empty'); return; } setArmed(null); setMenu(false); game.clearTown(); }}>{armed === 'empty' ? 'Click again: clear everything' : 'Empty map'}</button>}
                   </div>
                 )}
               </div>
@@ -1039,6 +1051,7 @@ export default function App() {
           )}
 
           <Minimap game={game} />
+          {JAM && titleOpen && <TitleCard canContinue={hasSave} onNew={() => leaveTitle(true)} onContinue={() => leaveTitle(false)} />}
           {dev && readouts && <PerfPanel game={game} />}
           {dev && readouts && <TilesPanel game={game} />}
         </>

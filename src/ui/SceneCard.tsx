@@ -3,6 +3,7 @@
 // Inside), the line written for the picture and the place's numbers. It sits left of the card on the right (the range's, the club's, a place's)
 // and fits from 1366 px wide. The picture is fetched only when the card shows it: the URLs are plain strings until an <img> asks; nothing of it
 // runs while the card is shut. Esc, the close button or a press on the map put it away.
+import { JAM } from '../game/features';
 import type { SceneCardView } from '../game/scenes';
 import { Icon } from './Icon';
 
@@ -34,7 +35,7 @@ export function SceneCard({ view, onView, onClose, padRight = '1rem' }: { view: 
         </div>
         <div className="overflow-hidden rounded-lg border border-white/10 bg-slate-900" style={{ aspectRatio: `${v.pic.w} / ${v.pic.h}` }}>
           {url && !v.pendingArt && <img key={v.pic.file} src={url} width={v.pic.w} height={v.pic.h} alt={`${view.title}: ${v.label}`} loading="lazy" decoding="async" draggable={false} className="block h-full w-full select-none object-cover" data-testid="scene-picture" />}
-          {v.pendingArt && <div className="flex h-full items-center justify-center p-5 text-center text-sm text-slate-400" data-testid="scene-picture-pending">A matching picture of this place is not yet available.</div>}
+          {v.pendingArt && !JAM && <div className="flex h-full items-center justify-center p-5 text-center text-sm text-slate-400" data-testid="scene-picture-pending">A matching picture of this place is not yet available.</div>}
         </div>
         {view.views.length > 1 && (
           <div className="mt-2 flex flex-wrap gap-1.5" role="tablist" aria-label="Views">
