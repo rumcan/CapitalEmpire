@@ -48,7 +48,7 @@ function treeAt(gx, gy) {
   return t;
 }
 // T451: a host's tree (course.ht, made by hostTrees in parts/03b-realcourse.md): s = { x, y (m), h (height, m), cw (crown width, m), f (form: 0 conifer,
-// 1 broadleaf, 2 airy broadleaf, 3 palm, 4 dead), hue (0..1 along the leaf colours), p (its species' index) }. H and rx are its true size (px at PPM a
+// 1 broadleaf, 2 airy broadleaf, 3 palm, 4 dead, T454: 5 cactus, 6 bush, 7 acacia), hue (0..1 along the leaf colours), p (its species' index) }. H and rx are its true size (px at PPM a
 // metre), so its shadow, its reach and the far stand-in that borrows its size are right; its own sculpture is made smaller (mkTree: at most HMAX
 // px tall) and drawn larger by S.sk. c[0] is set to the form's place on the land's own scale (conifer, full, airy) for whatever reads it.
 const HMAX = 340;
