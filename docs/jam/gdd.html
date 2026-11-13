@@ -10,7 +10,7 @@ h3 { font-size: 11pt; margin: 12px 0 4px; break-after: avoid; }
 p { margin: 4px 0 8px; } ul { margin: 4px 0 8px 18px; padding: 0; } li { margin: 2px 0; }
 .sub { font-size: 12pt; color: var(--soft); margin: 4px 0 10px; }
 .box { background: var(--bg); border: 1px solid var(--line); border-radius: 6px; padding: 8px 12px; margin: 8px 0; break-inside: avoid; }
-table { border-collapse: collapse; width: 100%; margin: 6px 0 10px; font-size: 9.5pt; break-inside: auto; }
+table { border-collapse: collapse; width: 100%; margin: 6px 0 10px; font-size: 9.5pt; }
 th, td { border: 1px solid var(--line); padding: 4px 6px; text-align: left; vertical-align: top; }
 th { background: #e6ede4; }
 tr { break-inside: avoid; }
@@ -19,114 +19,102 @@ tr { break-inside: avoid; }
 .loop b { color: var(--gold); }
 .meta { display: grid; grid-template-columns: 1fr 1fr; gap: 4px 18px; font-size: 9.5pt; }
 .foot { color: var(--soft); font-size: 8.5pt; margin-top: 14px; }
-.todo { background: #fff3cd; }
 </style></head><body>
 
 <h1>Fairway Fortune</h1>
-<div class="sub">Build a golf club from a driving range. Every swing of the business is a money decision.</div>
+<div class="sub">Build a golf club from a driving range, manage its money, and play the holes you built.</div>
 <div class="box meta">
   <div><b>Genre:</b> management simulation with arcade golf</div>
   <div><b>Platform:</b> web browser (desktop) for the jam; PC (Steam) and tablets next</div>
   <div><b>Audience:</b> players 16+ who like tycoon, builder and sports games; schools and financial-education programmes</div>
-  <div><b>Session:</b> 20 to 40 minutes for the jam challenge; open-ended after it</div>
+  <div><b>Session:</b> 20 to 40 minutes to grow the first holes; open-ended after that</div>
   <div><b>Jam:</b> Zoud GameLab, theme "Make FinLit Fun"</div>
-  <div><b>Version:</b> jam build, November 2026</div>
+  <div><b>Build:</b> the jam MVP, November 2026</div>
 </div>
 
 <h2>1. Game overview</h2>
-<p>You own a plot of land on a country road, a little cash and a driving range. Golfers drive in, park, buy buckets and hit balls. That small, steady
-income is your first business. You use it to build a golf course hole by hole: shape fairways and greens, place bunkers, ponds and trees, lay cart paths,
-open a clubhouse. Then you walk out and <b>play the holes you built</b> in a painted, behind-the-golfer golf view.</p>
-<p>Money is the language of every choice. A new hole costs more than the range earns in a month: do you save up, borrow from the bank at compound
-interest, or use Islamic financing with a fixed, agreed markup? A storm floods your bunkers: does your emergency fund or your insurance cover it, or do you
-slide into an expensive overdraft? Raise the bucket price and you earn more per golfer but see fewer of them. Each month ends with a statement: what came
-in, what went out, what the interest cost you, and your net worth.</p>
-<div class="box"><b>The jam challenge:</b> turn the range into a nine-hole golf club within two seasons, finishing with a net worth of at least $250,000
-and no overdraft. A report card grades how you did it: debt left, interest paid against interest earned, emergencies weathered, holes built.</div>
+<p>You own an empty plot on a country road and $75,000. You place a driving range, lay a car park and a walking path, and golfers start to
+drive in, buy buckets and hit balls. That small, steady income is your business. Run it well (set the bucket price, fetch the balls before you
+run out) and it pays for a golf course, one hole at a time, and a clubhouse that charges green fees.</p>
+<p>Then you walk out and <b>play the holes you built</b> in a painted, behind-the-golfer golf view. Between rounds you practise on your own
+range and chipping green: drills unlock shot shaping, flight control and the putt read, and lower your handicap.</p>
+<p>Every step is a money decision you make yourself: what to charge, what to build next, whether an upgrade will pay for itself, and whether
+to wait and save or borrow now and pay interest. Each month ends with a short statement of what came in, what went out and what you are worth.</p>
 
 <h2>2. Core gameplay</h2>
-<div class="loop"><span>Run the range</span><b>→</b><span>Earn and save</span><b>→</b><span>Choose how to pay</span><b>→</b><span>Build holes and facilities</span><b>→</b><span>Golfers pay green fees</span><b>→</b><span>Play your holes</span><b>→</b><span>Month-end statement</span><b>→</b><span>Emergencies and choices</span><b>↺</b></div>
-<h3>Build</h3>
+<div class="loop"><span>Run the range</span><b>→</b><span>Set prices, fetch balls</span><b>→</b><span>Save or borrow</span><b>→</b><span>Build holes and a clubhouse</span><b>→</b><span>Green fees</span><b>→</b><span>Play your holes</span><b>→</b><span>Practise, earn skills</span><b>→</b><span>Month-end statement</span><b>↺</b></div>
+<h3>Run the business</h3>
 <ul>
-<li><b>Driving range:</b> bays, targets, a ball shop, coffee, lessons; upgrades such as covered bays, floodlights and a pro shop. Set the bucket price.</li>
-<li><b>Course:</b> place holes from tees to greens; paint fairway, rough, bunkers and water; plant trees; shape the ground; lay cart paths and a car park.</li>
-<li><b>Club:</b> a clubhouse with green fees, staff with wages, practice areas.</li>
+<li><b>Driving range:</b> place it, add a car park and a walking path, set the bucket price, pick up the balls golfers leave on the range, buy range upgrades.</li>
+<li><b>Course:</b> the New hole tool lays a hole from tee to green on your land; holes open once the range has proved itself.</li>
+<li><b>Clubhouse:</b> golfers pay green fees for every round; more holes, more fees.</li>
+<li><b>The Bank:</b> opened when you choose: borrow (the monthly payment, the rate and the total interest are shown before you sign), repay early, or move cash into savings that earn interest.</li>
 </ul>
-<h3>Play</h3>
+<h3>Play and practise</h3>
 <ul>
-<li>"Play this hole" opens a painted, behind-the-golfer golf view of the exact hole you built: its trees, slopes, rough and hazards.</li>
-<li>Hold to swing and release at the right strength; click the ground to aim; a full 14-club bag; the lie (rough, sand) costs distance.</li>
-<li>Playing your own course is how you feel its quality: a hole that is no fun to play will not keep paying golfers.</li>
-</ul>
-<h3>Manage money</h3>
-<ul>
-<li><b>The Bank:</b> loans with a chosen amount and term (APR, monthly payment and total interest shown before signing); murabaha financing for a named
-purchase; a savings account; your credit score.</li>
-<li><b>Protection:</b> no insurance, basic or full cover, each with a monthly premium and a deductible.</li>
-<li><b>Month end:</b> instalments are paid, savings earn interest, an overdraft costs interest, and a statement toast shows profit and the change in net worth.</li>
+<li>"Play this hole" opens the exact hole you built, with its trees, slopes and hazards. Hold to swing and release at the right strength;
+click the ground to aim; a 14-club bag; rough and sand cost distance, so you club up.</li>
+<li>"Hit balls" and "Chip and putt" put your golfer on a range mat or at the chipping green. Six drills (distance control, shot shaping,
+flight, up and down, putting, bunker) each grant skill once: shaping, flight and the putt read then work on the course, and the handicap drops.</li>
 </ul>
 <h3>Controls</h3>
-<p>Mouse throughout: the tool rail on the left, cards on the right, click and drag to build. In the golf view: hold the swing button (or Space) and
-release; click the ground to aim; number keys or the wheel for clubs.</p>
+<p>Mouse throughout: the tool rail on the left, one card at a time on the right, click to build. In the golf view: hold the swing button (or Space)
+and release; click the ground to aim; number keys or the wheel for clubs.</p>
 
 <h2>3. Financial literacy integration</h2>
-<p>Fairway Fortune does not explain finance with text screens. Each concept is a system the player runs into and has to handle, and the consequences
-show up in the month's statement.</p>
+<p>The game teaches through the money the player manages, not through lessons. There are no quizzes or text screens: the consequences arrive
+in the cash figure and in the month's statement.</p>
 <table>
-<tr><th style="width:22%">Mechanic</th><th style="width:22%">Concept</th><th>What the player experiences and learns</th></tr>
-<tr><td>Bucket price, green fee</td><td>Pricing, demand</td><td>A higher price earns more per golfer but brings fewer; the cards show expected golfers and takings at nearby prices.</td></tr>
-<tr><td>Bank loan</td><td>Debt, APR, compound interest</td><td>Borrowing builds a hole now; the total interest is shown before signing and is paid every month after. A longer term means smaller payments but more interest.</td></tr>
-<tr><td>Murabaha</td><td>Alternative (Islamic) financing</td><td>The bank buys the item and sells it to you at cost plus a markup fixed up front. The price never grows; paying late costs a fixed charity donation, never interest. Shown side by side with a loan.</td></tr>
-<tr><td>Savings account</td><td>Saving, interest earned</td><td>Cash put aside earns interest monthly and becomes the emergency fund.</td></tr>
-<tr><td>Random emergencies</td><td>Emergency fund, risk</td><td>Storms, a broken pump, a drought bill. With a fund they are an inconvenience; without one they push you into overdraft.</td></tr>
-<tr><td>Insurance plans</td><td>Premium, deductible, risk transfer</td><td>Pay a small amount every month to cap a large unknown cost; see what the insurer paid and what you paid.</td></tr>
-<tr><td>Overdraft</td><td>High-cost debt</td><td>Running out of cash is allowed but costs about 34% a year, and lasting overdraft ends the game.</td></tr>
-<tr><td>Credit score</td><td>Creditworthiness</td><td>Paying on time lowers the rate offered on the next loan; missed payments raise it.</td></tr>
-<tr><td>Upgrades and buildings</td><td>Investment, payback, opportunity cost</td><td>Each purchase shows its cost, upkeep, expected extra income and the months until it pays back.</td></tr>
-<tr><td>Monthly statement, net worth</td><td>Cash flow, profit, assets and liabilities</td><td>Profit is not cash and cash is not wealth: the statement and the net-worth chart show all three.</td></tr>
-<tr><td>Report card</td><td>Reflection, financial goals</td><td>The two-season goal is graded with reasons, inviting another run with a different strategy.</td></tr>
+<tr><th style="width:24%">What the player does</th><th style="width:22%">Concept</th><th>What they experience</th></tr>
+<tr><td>Sets the bucket price</td><td>Pricing and demand</td><td>A higher price earns more per golfer but brings fewer; the card shows the golfers and takings expected at nearby prices.</td></tr>
+<tr><td>Fetches the balls, restocks</td><td>Running costs, stock</td><td>A range that runs out of balls earns nothing; buying stock is a cost that keeps the income flowing.</td></tr>
+<tr><td>Buys an upgrade or a building</td><td>Investment, payback</td><td>Each purchase shows its cost, its monthly upkeep, the extra income expected and "pays back in about N months", or that it never will.</td></tr>
+<tr><td>Builds the next hole now or later</td><td>Saving versus borrowing</td><td>Waiting costs nothing but time; a loan builds it today. The Bank shows the total interest before signing, and the payment comes out every month after.</td></tr>
+<tr><td>Chooses the loan term</td><td>Interest and term</td><td>A longer term means smaller payments but more interest in total; repaying early saves interest.</td></tr>
+<tr><td>Keeps cash in savings</td><td>Saving, interest earned</td><td>Savings earn a little every month; cash in hand earns nothing.</td></tr>
+<tr><td>Reads the month-end statement</td><td>Cash flow, profit, net worth</td><td>Profit is not cash and cash is not wealth: the statement and the net-worth line show all three.</td></tr>
+<tr><td>Practises instead of building</td><td>Investing in skills</td><td>Time on the range does not earn money, but the skills it unlocks make every later round better.</td></tr>
 </table>
 <h3>Learning outcomes</h3>
 <ul>
-<li>Compare the total cost of credit options before borrowing (APR, term, total interest; interest-based and markup-based financing).</li>
-<li>Explain why an emergency fund and insurance protect a plan, and how a premium and a deductible work.</li>
-<li>Read a simple income statement and tell profit, cash flow and net worth apart.</li>
+<li>Price for a profit, knowing that higher prices bring fewer customers.</li>
 <li>Judge an investment by its payback time and its running costs.</li>
-<li>See how prices trade volume for margin.</li>
+<li>Compare saving up with borrowing, and read a loan's rate, term and total interest before signing.</li>
+<li>Tell profit, cash flow and net worth apart on a simple monthly statement.</li>
 </ul>
-<h3>Behavioural design</h3>
-<p>The game puts known biases on the table instead of lecturing about them. <b>Present bias:</b> borrowing to build now is tempting, and the statement
-shows the interest month after month. <b>Optimism bias:</b> emergencies are rare, so skipping insurance feels free until one hits. <b>Mental accounting:</b>
-the range has its own till and the club its treasury, so where money sits matters. Short one-line "money moments" appear the first time each consequence
-happens (your first month of interest, your first emergency without a fund), so the lesson arrives at the moment of the experience.</p>
 <h3>Accuracy</h3>
-<p>Loan payments use the standard amortisation formula with monthly compounding. Murabaha follows the common cost-plus-markup instalment sale. The AED
-display uses the fixed peg of 3.6725 AED per US dollar. Numbers are simplified for play and stated as such.</p>
+<p>Loan payments use the standard amortisation formula with monthly compounding; savings interest is credited monthly. The AED display uses the
+fixed peg of 3.6725 AED per US dollar. Numbers are simplified for play.</p>
 
 <h2>4. Visual style and player experience</h2>
 <ul>
-<li><b>World:</b> a hand-painted isometric countryside with a single sun at the upper right, a living range with golfers who drive in, park and hit balls,
-and grass, sand and water textures with no visible tiling.</li>
-<li><b>Golf view:</b> a painted pixel look with an anti-flicker filter and a light cinematic finish at golden hour, using the same golfer art as the builder.</li>
-<li><b>First minutes:</b> a guided start (place the range, the car park, sell your first buckets, build your first hole) with tools unlocking as you grow.</li>
-<li><b>Accessibility and inclusion:</b> adjustable interface size; gains and losses marked by sign and arrow, not only by colour; plain-language
-explanations on every financial term (hover, tap or keyboard focus); US dollars or UAE dirhams.</li>
-<li><b>Regional relevance:</b> murabaha financing alongside conventional loans, AED display, and desert courses among the biomes.</li>
+<li><b>World:</b> a hand-painted isometric countryside in autumn or desert, with a single sun at the upper right and a living range: golfers
+drive in, park, queue at the shop and hit balls that land on the target greens.</li>
+<li><b>Golf view:</b> a painted pixel look with an anti-flicker filter, using the same golfer art as the builder and the same interface style.</li>
+<li><b>First minutes:</b> a title card, a three-step start tutorial and a guide that walks through the range, the car park, the first buckets
+and the first hole, with tools unlocking as the club grows.</li>
+<li><b>Accessibility:</b> adjustable text size; gains and losses marked by sign and arrow, not only by colour; US dollars or UAE dirhams;
+mouse-only play.</li>
 </ul>
 
 <h2>5. Development and future plans</h2>
-<h3>Built during the jam</h3>
-<p>The course-building engine and the golf view existed as a work in progress before the jam. During the jam it was rebuilt around financial literacy:
-the Bank (loans, murabaha, savings, overdraft, credit score), monthly accounting and statements, emergencies and insurance, payback and price readouts,
-the glossary, the two-season challenge and report card, and a focused jam build with unfinished systems removed.</p>
-<h3>Roadmap after the jam</h3>
-<ul>
-<li><b>Season mode:</b> tournaments with sponsors, prize purses and TV deals; a career across several clubs.</li>
-<li><b>Deeper finance:</b> a share issue to bring in investors (equity versus debt), leasing versus buying equipment, taxes, inflation.</li>
-<li><b>Arabic localisation</b> with right-to-left layout and a review of the financial content by an Islamic finance advisor.</li>
-<li><b>Classroom mode:</b> fixed scenarios, a teacher dashboard and discussion prompts after each report card.</li>
-<li><b>Platforms:</b> Steam (PC), then tablets.</li>
-</ul>
+<h3>The jam MVP</h3>
+<p>The course-building engine and the golf view existed as a work in progress before the jam. During the jam they were cut down to a tested
+core loop and rebuilt around the money the player manages: the Bank and monthly accounts, payback and price readouts, the month-end
+statement, the practice mode with its skill drills, a new title card and tutorial, and a single interface style across the builder and the golf view.
+Systems that were built but not yet tested enough were hidden from the jam build; they are the roadmap below.</p>
+<h3>Roadmap</h3>
+<table>
+<tr><th style="width:24%">Area</th><th>Built, to be finished and tested after the jam</th></tr>
+<tr><td>Money</td><td>Random emergencies and insurance (premium, deductible, an emergency fund); murabaha financing beside bank loans; a two-season challenge
+with a graded report card; one-line "money moments" when a consequence first happens; a glossary of money words.</td></tr>
+<tr><td>Range</td><td>Coffee kiosk and golf academy; more bays, floodlights, a pro shop and a second tier; decoration that draws golfers.</td></tr>
+<tr><td>Course</td><td>Shaping greens, fairways, bunkers and water by hand; tee sets; buying neighbouring land; raising and lowering the ground; trees,
+flower beds and course furniture; a halfway house and teaching huts.</td></tr>
+<tr><td>Club and golfer</td><td>Staff with wages; members and dues; setting the green fee; the golfer's bag, club upgrades and collectable cards.</td></tr>
+<tr><td>Seasons and events</td><td>Season-end tournaments with sponsors and prize purses; night golf under floodlights; watching rounds play out.</td></tr>
+<tr><td>Reach</td><td>Arabic localisation with right-to-left layout; a classroom mode with fixed scenarios and a teacher dashboard; Steam and tablets.</td></tr>
+</table>
 <p>The production plan and costs are in the separate budget document.</p>
 
 <h2>6. The team</h2>
@@ -136,5 +124,5 @@ the glossary, the two-season challenge and report card, and a focused jam build 
 </table>
 <p>A solo creator working with AI coding and art tools under his direction; their use is disclosed in the submission.</p>
 
-<div class="foot">Fairway Fortune · Zoud GameLab FinLit Jam 2026 · Game Design Document</div>
+<div class="foot">Fairway Fortune · Zoud GameLab FinLit Jam 2026 · Game Design Document (jam MVP)</div>
 </body></html>
