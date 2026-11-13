@@ -1,6 +1,7 @@
 // The city (Phase 3 step 7): the road network replica, the lane graph, the traffic Sim, the parcels, the reachable segs, the water
 // field, the Town and the growth planner. Pure TS, no worker globals: the city worker (sim/sim.worker.ts) is a thin shell that
 // posts what City returns, and the town gate (scripts/sim/town-gate.ts) drives it headless.
+import { JAM, JAM_START_MONEY } from './features';
 import type { NetOp } from './ground-protocol';
 import { RoadNetwork, SK, dot, keyOf, norm, perp, sub, type Leg, type Node, type Pt, type Seg } from './network';
 import { applyOps } from './netops';
@@ -611,7 +612,7 @@ export class City {
   /** the books replaced: a saved budget, or null for a fresh one (its day 1 starts at the midnight of the current sim day); the career
    *  saved with them, or a fresh one (at the hamlet) if none is given */
   setBudget(s: BudgetSave | null, career?: CareerSave | null, golf = false): void {
-  this.budget = s ? Budget.from(s) : Budget.from(undefined, (golf || this.golf) ? 600000 : startMoney(this.centres.length > 0));
+  this.budget = s ? Budget.from(s) : Budget.from(undefined, (golf || this.golf) ? (JAM ? JAM_START_MONEY : 600000) : startMoney(this.centres.length > 0));
     this.feeKeys = new Set(s?.feeKeys ?? []);
     this.budget.unlimited = this.unlimited;
     if (!s) this.budget.base = Math.floor(this.sim.clock / GAME_DAY) * GAME_DAY;

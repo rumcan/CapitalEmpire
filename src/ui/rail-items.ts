@@ -17,7 +17,7 @@ import type { Tool } from '../game/types';
 import { CHIP_STAGE, NEW_BADGE_IDS, STAGE_WHY, type GolfChipId, type ProgressiveUiState, type RailGroupId } from '../game/ext/progressive-ui';
 import type { IconName } from './Icon';
 import type { TipParts } from './tip';
-import { GREENKEEPING } from '../game/features';
+import { GREENKEEPING, JAM } from '../game/features';
 
 /** a tool in a rail item: its button in the row at the top of the item's panel; sub: the section it sits in (Traffic's Roads, Junctions,
  *  Transport); only: the game it shows in */
@@ -39,7 +39,7 @@ export interface RailItem {
 }
 
 /** the rail in order (the keys stay the tools' own: C Holes, Z Props, R roads, J junctions, U P T transport, A Paint, X Bulldoze, V Select) */
-export const RAIL: readonly RailItem[] = [
+const RAIL_FULL: readonly RailItem[] = [
   { id: 'select', label: 'Select', icon: 'compass', key: 'V', section: null, group: 'select', tools: [{ id: 'select', label: 'Select / Pan', key: 'V', icon: 'compass' }] },
   // COURSE
   { id: 'range', label: 'Range', icon: 'pin', key: '', section: 'course', group: 'course', tools: [{ id: 'select', label: 'Range card', key: '', icon: 'pin' }], only: 'golf', action: 'range' },
@@ -85,6 +85,19 @@ export const RAIL: readonly RailItem[] = [
   ] },
   { id: 'bulldoze', label: 'Bulldoze', icon: 'bulldozer', key: 'X', section: null, group: 'bulldoze', tools: [{ id: 'bulldoze', label: 'Bulldoze', key: 'X', icon: 'bulldozer' }] },
 ];
+
+/** The jam build's rail (docs/JAM.md "Out of the jam build"): Select, Range, Course (holes, buildings, land for sale; no Tournament), Cart paths, Facilities,
+ *  Ground height, the car park alone from Traffic (no roads, junctions, bus or toll), Bulldoze. Town decoration goes. */
+export function jamRail(full: readonly RailItem[]): readonly RailItem[] {
+  return full.filter(r => r.id !== 'towndecor').map((r): RailItem => {
+    if (r.id === 'course') return { ...r, extras: r.extras?.filter(x => x.id === 'land') };
+    if (r.id === 'paths') return { ...r, tools: r.tools.filter(t => t.id === 'path') };
+    if (r.id === 'traffic') return { ...r, label: 'Car park', tools: r.tools.filter(t => t.id === 'park').map(({ sub: _sub, ...t }) => ({ ...t, label: 'Car park' })) };
+    return r;
+  });
+}
+/** the rail in order, as this build has it */
+export const RAIL: readonly RailItem[] = JAM ? jamRail(RAIL_FULL) : RAIL_FULL;
 
 /** the rail items a tool sits in (Props: Facilities and Town decoration; Paint: Town decoration, and Facilities' Plants) */
 export const railItemsOf = (t: Tool): RailItem[] => RAIL.filter(r => !r.action && r.tools.some(x => x.id === t));

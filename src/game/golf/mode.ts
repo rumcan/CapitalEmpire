@@ -1,5 +1,6 @@
 // Golf mode (G1; docs/GOLF-PLAN.md sections 2-3 and 11): what a golf game saves and what the HUD reads. A save with a `golf` field is a golf
 // game; a save without one is a legacy (classic) game and loads as before. Pure TS, no DOM.
+import { JAM, JAM_START_MONEY } from '../features';
 import type { Pt } from '../network';
 import type { AimPoint, Pin, TeeBoxRec, TeeKind, TeeMark } from './types';
 import type { PlacedEventStructure } from './eventtool';
@@ -159,7 +160,7 @@ function normalizePlaySave(p: Partial<GolfPlaySave> | null | undefined): GolfPla
 }
 
 /** a golf game's start money, $ (City.setBudget's golf treasury) */
-export const GOLF_START_MONEY = 600000;
+export const GOLF_START_MONEY = JAM ? JAM_START_MONEY : 600000; // the jam build (features.ts) starts with its own cash
 
 /** the golf HUD's view (Engine.golfView): the tier and its event name, the month label ("Mar 1985"), the months left to the tournament
  *  (0..12, fractional), the tournament's year, and whether the tournament day is under way (the round's surge or its results) */
