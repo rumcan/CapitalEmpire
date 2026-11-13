@@ -40,43 +40,43 @@
   "chatgpt": {
     "S": {
       "picture": "golf_pro_m3~S-golfers.png",
-      "date": "2026-11-13",
-      "scale": 0.6272
+      "date": "2026-11-14",
+      "scale": 0.709
     },
     "SW": {
       "picture": "golf_pro_m3~SW-golfers.png",
-      "date": "2026-11-13",
-      "scale": 0.6364
+      "date": "2026-11-14",
+      "scale": 0.6863
     },
     "W": {
       "picture": "golf_pro_m3~W-golfers.png",
-      "date": "2026-11-13",
-      "scale": 0.6409
+      "date": "2026-11-14",
+      "scale": 0.6235
     },
     "NW": {
       "picture": "golf_pro_m3~NW-golfers.png",
-      "date": "2026-11-13",
-      "scale": 0.6463
+      "date": "2026-11-14",
+      "scale": 0.6347
     },
     "N": {
       "picture": "golf_pro_m3~N-golfers.png",
-      "date": "2026-11-13",
-      "scale": 0.6413
+      "date": "2026-11-14",
+      "scale": 0.6029
     },
     "NE": {
       "picture": "golf_pro_m3~NE-golfers.png",
-      "date": "2026-11-13",
-      "scale": 0.6604
+      "date": "2026-11-14",
+      "scale": 0.6235
     },
     "E": {
       "picture": "golf_pro_m3~E-golfers.png",
-      "date": "2026-11-13",
-      "scale": 0.6913
+      "date": "2026-11-14",
+      "scale": 0.6006
     },
     "SE": {
       "picture": "golf_pro_m3~SE-golfers.png",
-      "date": "2026-11-13",
-      "scale": 0.7114
+      "date": "2026-11-14",
+      "scale": 0.6057
     }
   }
 }

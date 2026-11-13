@@ -20,7 +20,9 @@ from PIL import Image
 
 ROOT = Path(__file__).resolve().parents[3]
 ART = ROOT / 'art' / 'golfers'
-NAME = re.compile(r'^(golf_[a-z]+_[mw]\d+)~(S|SW|W|NW|N|NE|E|SE)-golfers\.png$')
+NAME = re.compile(r'^(golf_[a-z]+_[mw]\d+)~(S|SW|W|NW|N|NE|E|SE)(?:~(golf_drive|golf_putt))?-golfers\.png$')
+# the grid of each picture (golfer_pack.py CLIPS): columns, rows
+GRIDS = {'sheet': (3, 3), 'golf_drive': (4, 3), 'golf_putt': (4, 2)}
 GRASS = (104, 132, 84)
 
 
@@ -66,20 +68,22 @@ def components(mask):
         return lab, np.array(sizes)
 
 
-def figures(path, tol, soft):
-    """the nine figures of a 3x3 picture, in reading order: each an RGBA image cropped to its pieces"""
+def figures(path, tol, soft, grid=(3, 3)):
+    """the figures of a cols x rows picture (the sheet's 3x3, a clip's 4x3 or 4x2), in reading order: each an RGBA image cropped to its pieces
+    (a club's thin shaft may come apart from the hands: every piece goes to the cell its middle is in)"""
+    cols, rows = grid
     im = Image.open(path).convert('RGB'); rgb = np.asarray(im).astype(np.float32)
     fg, a, bg = key_out(rgb, tol, soft)
     h, w = a.shape
     lab, sizes = components(a > 0.5)
-    big = max(200, int(sizes[1:].max() * 0.004)) if len(sizes) > 1 else 200   # specks below this are noise
-    cells = [[] for _ in range(9)]
+    big = (max(200, int(sizes[1:].max() * 0.004)) if grid == (3, 3) else 60) if len(sizes) > 1 else 200   # specks below this are noise
+    cells = [[] for _ in range(cols * rows)]
     ys, xs = np.nonzero(lab)
     for k in range(1, len(sizes)):
         if sizes[k] < big: continue
         sel = lab == k; yy, xx = np.nonzero(sel)
         cy, cx = yy.mean(), xx.mean()
-        c = min(2, int(cy / (h / 3))) * 3 + min(2, int(cx / (w / 3)))
+        c = min(rows - 1, int(cy / (h / rows))) * cols + min(cols - 1, int(cx / (w / cols)))
         cells[c].append(k)
     out = []
     for c, ks in enumerate(cells):
@@ -108,9 +112,61 @@ def measure(im):
     return hgt, bot, cx
 
 
-def sheet_of(gid):
-    j = json.loads((ART / gid / 'sheet.json').read_text()); sheet = Image.open(ART / gid / 'sheet.webp').convert('RGBA')
+def sheet_of(gid, clip='sheet'):
+    j = json.loads((ART / gid / f'{clip}.json').read_text()); sheet = Image.open(ART / gid / f'{clip}.webp').convert('RGBA')
     return j, sheet
+
+
+def import_clip(path, gid, heading, clip, tol=60, soft=40, scale=None, dry=False, preview=None):
+    """a clip picture (golf_drive 4x3, golf_putt 4x2) into <clip>.webp's row: one scale for the row (the old and new address, takeaway
+    and impact frames' heights: the club at the ground in all three), then each frame stood on its old frame's lowest pixel with its body
+    over the old frame's body, so the game's timing and feet stay as they were. The first import keeps <clip>-old.webp/json"""
+    base = ART / gid
+    old_path = base / f'{clip}-old.webp'
+    j, sheet = sheet_of(gid, clip)
+    olds_sheet = Image.open(old_path).convert('RGBA') if old_path.exists() else sheet
+    fw, fh = j['frameWidth'], j['frameHeight']; n = len(j['frames'])
+    row = j['directions'].index(heading)
+    olds = [olds_sheet.crop((c * fw, row * fh, (c + 1) * fw, (row + 1) * fh)) for c in range(n)]
+    figs, bg = figures(path, tol, soft, GRIDS[clip])
+    figs = figs[:n]
+    probe = [9, 10, 11] if clip == 'golf_drive' else [0, 7]   # (the drive's upright finish frames: ChatGPT stands the address more upright than the renders)
+    k = scale or float(np.median([measure(olds[i])[0] / max(1, measure(figs[i])[0]) for i in probe]))
+    # one feet line and one body x for the whole row (the feet stay planted through a stroke): the medians of the frames' lowest pixels
+    # (a club head below the feet in two or three frames does not move it) and of their body middles, old and new
+    scaled = [f.resize((max(1, round(f.width * k)), max(1, round(f.height * k))), Image.LANCZOS) for f in figs]
+    def mass_x(im):
+        a = np.asarray(im)[..., 3].astype(np.float32); m = a.sum(0)
+        return float((m * np.arange(a.shape[1])).sum() / m.sum()) if m.sum() else im.width / 2
+    nm, om = [measure(s) for s in scaled], [measure(o) for o in olds]
+    obot = min(float(np.median([m[1] for m in om])), fh - 4); ocx = float(np.median([mass_x(o) for o in olds]))
+    cells, over = [], []
+    for i, s in enumerate(scaled):
+        # each frame's own feet: its lowest pixel unless that is a club head well below the row's feet (then the row's median)
+        nb = float(np.median([m[1] for m in nm])); bot = nm[i][1] if nm[i][1] <= nb + 6 else nb
+        cx = mass_x(s)   # (each frame's own crop: its body's middle over the row's)
+        c = Image.new('RGBA', (fw, fh), (0, 0, 0, 0))
+        x, y = round(ocx - cx), round(obot - bot)
+        c.paste(s, (x, y), s)
+        if x < 0 or y < 0 or x + s.width > fw or y + s.height > fh: over.append(i)
+        cells.append(c)
+    note = f'{path.name}: {gid} {heading} {clip} key {bg}, scale {k:.3f}' + (f', cut at the cell edge: frames {over}' if over else '')
+    print(note)
+    if preview:
+        pv = Image.new('RGBA', (fw * n, fh * 2), GRASS + (255,))
+        for c in range(n): pv.alpha_composite(olds[c], (c * fw, 0)); pv.alpha_composite(cells[c], (c * fw, fh))
+        pv.convert('RGB').save(preview)
+    if dry: return note
+    if not old_path.exists():
+        shutil.copyfile(base / f'{clip}.webp', old_path); shutil.copyfile(base / f'{clip}.json', base / f'{clip}-old.json')
+    for c in range(n):
+        sheet.paste(Image.new('RGBA', (fw, fh), (0, 0, 0, 0)), (c * fw, row * fh)); sheet.paste(cells[c], (c * fw, row * fh))
+    sheet.save(base / f'{clip}.webp', quality=90, alpha_quality=100, method=6)
+    ch = j.setdefault('chatgpt', {})
+    ch[heading] = {'picture': path.name, 'date': datetime.date.today().isoformat(), 'scale': round(k, 4)}
+    if len(ch) == 8: j['name'] = f'{gid} {clip} (ChatGPT painted)'
+    (base / f'{clip}.json').write_text(json.dumps(j, indent=2) + '\n')
+    return note
 
 
 def cell(sheet, j, row, col):
@@ -157,10 +213,10 @@ def import_one(path, gid, heading, tol=60, soft=40, scale=None, dry=False, previ
     return note
 
 
-def contact(gid, out):
-    """old (top) and new (below) rows of every heading on grass, and an animated walk of all eight headings (walk.gif next to out)"""
-    j, sheet = sheet_of(gid)
-    old = Image.open(ART / gid / 'sheet-old.webp').convert('RGBA') if (ART / gid / 'sheet-old.webp').exists() else sheet
+def contact(gid, out, clip='sheet'):
+    """old (top) and new (below) rows of every heading on grass, and an animated clip of all eight headings (<out>-walk.gif)"""
+    j, sheet = sheet_of(gid, clip)
+    old = Image.open(ART / gid / f'{clip}-old.webp').convert('RGBA') if (ART / gid / f'{clip}-old.webp').exists() else sheet
     fw, fh = j['frameWidth'], j['frameHeight']; n = len(j['frames'])
     pv = Image.new('RGBA', (fw * n + 40, fh * 16), GRASS + (255,))
     from PIL import ImageDraw
@@ -171,12 +227,14 @@ def contact(gid, out):
         d.text((4, 2 * r * fh + 8), h + '\nold', fill=(255, 255, 255)); d.text((4, (2 * r + 1) * fh + 8), h + '\nnew', fill=(255, 255, 0))
     pv.convert('RGB').save(out)
     gif = []
-    for f in list(range(1, n)) + [0] * 3:
+    for f in (list(range(1, n)) + [0] * 3 if clip == 'sheet' else list(range(n)) + [n - 1] * 4):
         g = Image.new('RGBA', (fw * 8, fh), GRASS + (255,))
         for r in range(8): g.alpha_composite(cell(sheet, j, r, f), (r * fw, 0))
         gif.append(g.convert('RGB'))
     gp = Path(out).with_name(Path(out).stem + '-walk.gif')
-    gif[0].save(gp, save_all=True, append_images=gif[1:], duration=[int(1000 / j.get('walkFps', 6))] * (n - 1) + [500] * 3, loop=0)
+    if clip == 'sheet': dur = [int(1000 / j.get('walkFps', 6))] * (n - 1) + [500] * 3
+    else: t = j['times']; dur = [max(40, int(1000 * (t[i + 1] - t[i]))) for i in range(n - 1)] + [400] + [300] * 4
+    gif[0].save(gp, save_all=True, append_images=gif[1:], duration=dur, loop=0)
     print(out, gp)
 
 
@@ -186,18 +244,22 @@ def main():
     ap.add_argument('--tol', type=float, default=60); ap.add_argument('--soft', type=float, default=40); ap.add_argument('--scale', type=float)
     ap.add_argument('--dry-run', action='store_true'); ap.add_argument('--preview')
     ap.add_argument('--all', action='store_true'); ap.add_argument('--in', dest='inp', default='D:/AI/chatgpt-bridge/in')
-    ap.add_argument('--contact'); ap.add_argument('--out')
+    ap.add_argument('--contact'); ap.add_argument('--out'); ap.add_argument('--clip', default='sheet', choices=list(GRIDS))
     a = ap.parse_args()
-    if a.contact: return contact(a.contact, a.out or f'{a.contact}-contact.png')
+    if a.contact: return contact(a.contact, a.out or f'{a.contact}-{a.clip}-contact.png', a.clip)
     if a.all:
         for p in sorted(Path(a.inp).glob('golf_*~*-golfers.png'), key=lambda p: p.stat().st_mtime):
             m = NAME.match(p.name)
-            if m and (not a.golfer or m.group(1) == a.golfer): import_one(p, m.group(1), m.group(2), a.tol, a.soft, a.scale, a.dry_run)
+            if m and (not a.golfer or m.group(1) == a.golfer) and (m.group(3) or 'sheet') == a.clip:
+                if a.clip == 'sheet': import_one(p, m.group(1), m.group(2), a.tol, a.soft, a.scale, a.dry_run)
+                else: import_clip(p, m.group(1), m.group(2), a.clip, a.tol, a.soft, a.scale, a.dry_run)
         return
     p = Path(a.picture); m = NAME.match(p.name)
     gid, h = a.golfer or (m and m.group(1)), a.heading or (m and m.group(2))
     if not gid or not h: raise SystemExit('name the golfer and heading (--golfer, --heading) or use <id>~<H>-golfers.png')
-    import_one(p, gid, h, a.tol, a.soft, a.scale, a.dry_run, a.preview)
+    clip = (m and m.group(3)) or a.clip
+    if clip == 'sheet': import_one(p, gid, h, a.tol, a.soft, a.scale, a.dry_run, a.preview)
+    else: import_clip(p, gid, h, clip, a.tol, a.soft, a.scale, a.dry_run, a.preview)
 
 
 if __name__ == '__main__':
