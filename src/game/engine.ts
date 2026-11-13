@@ -3109,7 +3109,7 @@ export class Game {
     this.traffic = new SimClient(boot.sim);
     try { this.disastersEnabled = localStorage.getItem('capitalempire.disasters') !== 'false'; } catch { /* default on */ }
     if (JAM) this.disastersEnabled = false; // the jam build's emergencies (golf/risk.ts) replace the natural disasters
-    try { this.showStandIns = localStorage.getItem('capitalempire.standins') !== 'false'; } catch { /* default on */ }
+    try { this.showStandIns = !JAM && localStorage.getItem('capitalempire.standins') !== 'false'; } catch { /* default on */ } // (the jam MVP: never: the owner, 2026-11-13, no STAND IN text)
     try { this.showMoneyFloats = localStorage.getItem('capitalempire.moneyFloats') !== 'false'; } catch { /* default on */ }
     if (!boot.moneyFloats) this.showMoneyFloats = false;
     // T147: the money floats' sources: every spend (placed ones float), the range's sales and lost golfers
