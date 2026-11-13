@@ -2,7 +2,11 @@
 // the walking parties, each as a sheet row and a frame of the 3D people (library.ts); the golfers' frames come from the golf round's playback
 // (golf/play/view.ts). Pure TS, no DOM, no engine: every person is seeded (hash), so a spot keeps its people and their times from frame to frame,
 // and the engine only packs the sprites.
-import { SPECTATOR_CLIPS, type PeopleClip } from './library';
+import { SPECTATOR_CLIPS, STAFF_CLIPS, STAFF_PEOPLE, type PeopleClip } from './library';
+/** #1235: a painted staff person's index in STAFF_PEOPLE (art/spectators/<id>: staff_role_headpro and so on), -1 until prep-sprites packed it */
+export const staffPerson = (id: string): number => STAFF_PEOPLE.findIndex(p => p.id === `staff:${id}`);
+/** the staff's drive (the pros' demonstration), absent until prep-sprites packs the staff group with it */
+export const staffDrive = (): PeopleClip | undefined => (STAFF_CLIPS as Record<string, PeopleClip | undefined>).golf_drive;
 import { facing } from './ext/pedestrians';
 import { WALK_STRIDE } from './event/crowd';
 import type { PlacedSeating } from './golf/event-seating';
@@ -13,7 +17,7 @@ export const PUTT_IMPACT_S = 0.8;
 
 /** a person to draw: its tile position, group (0 spectator, 1 golfer), person (its index in the group's people), sheet row (0-7, the rows
  *  S SW W NW N NE E SE) and frame (absolute in that row: the clip's start + k) */
-export interface CrowdPerson { x: number; y: number; group: 0 | 1; person: number; row: number; frame: number; /** Authored bench-top height, in metres, for aligning the person's seated hips. */ seatHeightMetres?: number; benchPixelsPerMetre?: number }
+export interface CrowdPerson { x: number; y: number; /** 0 a spectator, 1 a golfer, 2 the staff (#1235: art/spectators/staff_role_*) */ group: 0 | 1 | 2; person: number; row: number; frame: number; /** Authored bench-top height, in metres, for aligning the person's seated hips. */ seatHeightMetres?: number; benchPixelsPerMetre?: number }
 
 /** a deterministic hash of two integers: a float in [0, 1) (the seeds of every person, place and time) */
 export function hash(a: number, b: number): number {
