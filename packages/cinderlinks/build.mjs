@@ -43,6 +43,19 @@ if (fs.existsSync(editDir)) {
   if (edits.length) { fs.mkdirSync(path.join(OUT, 'edits'), { recursive: true }); for (const f of edits) fs.copyFileSync(path.join(editDir, f), path.join(OUT, 'edits', f)); }
 }
 
+// 4b. T450: CapitalEmpire's golfers (art/golfers/<id>): only the three clips the view draws (idle and walk, the drive, the putt), each picture and its
+// frame table; the models and previews stay behind. A checkout without the art builds without it (the view then draws its own figure)
+{
+  const ART = path.join(HERE, '..', '..', 'art', 'golfers'), CLIPS = ['sheet', 'golf_drive', 'golf_putt'];
+  const ids = fs.existsSync(ART) ? fs.readdirSync(ART).filter((id) => CLIPS.every((c) => fs.existsSync(path.join(ART, id, c + '.webp')) && fs.existsSync(path.join(ART, id, c + '.json')))) : [];
+  let bytes = 0;
+  for (const id of ids) {
+    const to = path.join(OUT, 'golfart', id); fs.mkdirSync(to, { recursive: true });
+    for (const c of CLIPS) for (const ext of ['.webp', '.json']) { fs.copyFileSync(path.join(ART, id, c + ext), path.join(to, c + ext)); bytes += fs.statSync(path.join(to, c + ext)).size; }
+  }
+  console.log(ids.length ? 'golfer art: ' + ids.length + ' golfers (' + (bytes / 1e6).toFixed(1) + ' MB)' : 'golfer art: none found in art/golfers (the view draws its own figure)');
+}
+
 // 5. game.js must at least parse
 const game = path.join(OUT, 'game.js');
 const chk = spawnSync(process.execPath, ['--check', game], { encoding: 'utf8' });

@@ -24,7 +24,7 @@ const lastJson = (s) => JSON.parse(s.trim().split('\n').filter((l) => l.startsWi
 // (c) the export
 fs.mkdirSync(OUT, { recursive: true });
 const esbuild = path.join(ROOT, 'node_modules', 'esbuild', 'bin', 'esbuild');
-run(process.execPath, [esbuild, 'scripts/cinder/bench-export.ts', '--bundle', '--platform=node', '--format=esm', '--outfile=' + path.join(OUT, 'export.mjs'), '--log-level=warning']);
+run(process.execPath, [esbuild, 'scripts/cinder/bench-export.ts', '--bundle', '--platform=node', '--format=esm', '--outfile=' + path.join(OUT, 'export.mjs'), '--loader:.webp=empty', '--loader:.png=empty', '--loader:.jpg=empty', '--log-level=warning']);
 const ex = lastJson(run(process.execPath, [path.join(OUT, 'export.mjs')]));
 
 // (a), (d): the harness on the built page

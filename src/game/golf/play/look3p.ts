@@ -43,8 +43,10 @@ export const ART_DRESS: Readonly<Record<string, { shirt: string; trousers: strin
   'golfer:golf_pro_m3': { shirt: '#8e2b22', trousers: '#c1bab7' }, 'golfer:golf_pro_m4': { shirt: '#2a2d39', trousers: '#979a9e' },
   'golfer:golf_pro_w1': { shirt: '#ca9486', trousers: '#d9b2b1' }, 'golfer:golf_pro_w2': { shirt: '#2b5c4f', trousers: '#262b45' },
 };
+export { GOLFER_ART_IDS, artFor } from './golfart3p'; // (T450: the golfer art ids and the rule for a golfer's, kept where actors3p.ts can import them alone)
 /** the player's dress in the view: the clothes of his card's golfer art (`artId`; unknown: the view's own red polo and navy trousers), a white cap, his sex */
 export function playerDress(artId: string | undefined, sex: Sex): Dress {
   const d = (artId && ART_DRESS[artId]) || { shirt: '#c8323a', trousers: '#2a3550' };
-  return { shirt: d.shirt, trousers: d.trousers, cap: '#f6f6f2', skin: '#e2b48a', hair: '#47291a', build: sex === 'w' ? 0.94 : 1, sex };
+  const art = artId && ART_DRESS[artId] ? artId.slice('golfer:'.length) : undefined; // (T450: he is drawn as that golfer)
+  return { shirt: d.shirt, trousers: d.trousers, cap: '#f6f6f2', skin: '#e2b48a', hair: '#47291a', build: sex === 'w' ? 0.94 : 1, sex, ...(art ? { art } : {}) };
 }

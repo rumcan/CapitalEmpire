@@ -1213,7 +1213,7 @@ function render() {
 
   const fav = (((p.fa - Math.round(camYaw * 16 / 6.2832)) % 16) + 16) % 16;   // his facing as this camera sees it
   golfK = golferK(DS / Math.max(1, (p.x - camX) * FX + (p.y - camY) * FY));   // the sculpture that suits how big he is seen: the larger one when the camera is close
-  const gs = cart.on ? golferSprite(fav, 'c', 0, golfK) : p.swing >= 0 || charging ? golferSprite(fav, 's', Math.round(p.al / 0.2), golfK) : p.moving ? golferSprite(fav, 'w', Math.floor(p.walk) % 8, golfK) : golferSprite(fav, 'i', 0, golfK);
+  const gs = cart.on ? golferSprite(fav, 'c', 0, golfK) : p.swing >= 0 || charging || (HP && HP.sw) ? golferPic(fav, 's', Math.round(p.al / 0.2), golfK) : p.moving ? golferPic(fav, 'w', Math.floor(p.walk) % 8, golfK) : golferPic(fav, 'i', 0, golfK);   // (T450: golferPic draws his CapitalEmpire golfer when he has one; HP.sw: the host swing's downswing is a swing too)
   const fs = flagSpr[(frame >> 3) % 6], bz = ball.state === 3 ? groundH(ball.x, ball.y) - 0.2 : ball.z;
   if (!cart.on) castSprite(gs, p.x, p.y, golfK);
   if (flag.d > 2 && flag.d < 40) castSprite(fs, H.pin.x, H.pin.y);
