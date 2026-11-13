@@ -112,10 +112,12 @@ SHORT = {'S': 'the viewer', 'SW': 'the lower left', 'W': 'the left', 'NW': 'the 
 def frames(gid, clip='sheet', like=None):
     """the current sheet (or a clip sheet: golf_drive, golf_putt): frames[heading][column] as RGBA cells, and its json. A clip sheet that was
     already imported reads its kept original (<clip>-old.webp), so a re-run is painted over the 3D renders, not over ChatGPT's last try"""
-    gid = like or gid   # (a new person's guide frames come from the person it is modelled on: --like)
-    old = ART / gid / f'{clip}-old.webp'
-    j = json.loads((ART / gid / f'{clip}.json').read_text())
-    sheet = Image.open(old if clip != 'sheet' and old.exists() else ART / gid / f'{clip}.webp').convert('RGBA'); fw, fh = j['frameWidth'], j['frameHeight']
+    gid = like or gid   # (a new person's guide frames come from the person it is modelled on: --like, 'family:id' from another family)
+    base = ART
+    if ':' in gid: fam, gid = gid.split(':'); base = ROOT / 'art' / fam
+    old = base / gid / f'{clip}-old.webp'
+    j = json.loads((base / gid / f'{clip}.json').read_text())
+    sheet = Image.open(old if clip != 'sheet' and old.exists() else base / gid / f'{clip}.webp').convert('RGBA'); fw, fh = j['frameWidth'], j['frameHeight']
     out = {}
     for r, h in enumerate(j['directions']):
         out[h] = [sheet.crop((c * fw, r * fh, (c + 1) * fw, (r + 1) * fh)) for c in range(len(j['frames']))]
