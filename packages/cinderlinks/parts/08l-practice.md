@@ -9,12 +9,18 @@ Check: function pracIn(
 Check: function pracShow(
 Check: function pracLock(
 Check: function pracTick(
+Check: function pracClear(
 
 ````js file=game.js
 
 // ---- practice (J6): the drills panel, the golfer held to his spot, the range's flags. The message waits behind a ball being played back, as a turn does.
 var PRAC = null, pracEl = null, pracLab = [];   // (var: read by the render and the keys, which may run before this line has)
 function pracLock() { return !!PRAC; }   // the golfer is held to his spot
+function pracClear() {   // a new course: no practice (the panel and the flags' labels go)
+  PRAC = null; if (pracEl) pracEl.style.display = 'none';
+  for (const L of pracLab) if (L.parentNode) L.parentNode.removeChild(L);
+  pracLab = [];
+}
 function pracIn(m) {   // the host's 'practice': now, or once the ball in the air has come to rest (hostRest takes it from the queue)
   if (HP && (HP.play || HP.q.length)) { HP.q.push(m); return; }
   pracShow(m);
@@ -39,6 +45,7 @@ function pracShow(m) {   // the panel, the flags, and a drill done said
     return '<div class="' + cls + '" data-drill="' + pracEsc(d.id) + '" data-here="' + (d.here ? 1 : 0) + '" title="' + pracEsc(d.here ? (d.done ? 'Done: play it again for practice' : 'Click to play this drill') : (m.place === 'range' ? 'Played at the chipping green' : 'Played on the range')) + '">' +
       '<div class="pt"><b>' + pracEsc(d.name) + '</b><i>' + prog + '</i></div><div class="pg">' + pracEsc(d.goal) + '</div><div class="pr">' + (d.done ? 'Earned: ' : 'Reward: ') + pracEsc(d.reward) + '</div></div>';
   }).join('');
+  if (pracEl) pracEl.style.display = 'block';
   if (pracEl) pracEl.innerHTML = '<div class="ph">PRACTICE &middot; ' + (m.place === 'range' ? 'the range' : 'the chipping green') + '</div>' + rows +
     '<div class="pn">' + (m.note ? pracEsc(m.note) : (m.active ? 'Hit away: every ball counts for the marked drill' : 'Pick a drill')) + '</div>' +
     '<div class="pf">Balls ' + (m.balls | 0) + ' &middot; handicap ' + pracEsc(m.hcp) + ' &middot; <b>Esc</b> back</div>';

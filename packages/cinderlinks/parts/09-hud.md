@@ -137,7 +137,7 @@ function hostMessage(m) {   // one message from the host page, already known to 
   const k = MORE_COURSES.findIndex((c) => c.id === D.id); if (k >= 0) MORE_COURSES.splice(k, 1); MORE_COURSES.push(D);
   if (m.seed !== undefined && Number.isFinite(+m.seed)) SEED = +m.seed | 0;
   setBiome(BIOMES[m.biome] ? m.biome : biomeId, CTYPES[m.type] ? m.type : ctypeId); lib.clear(); libWarm = 0;   // (sculptures made in the old colours are dropped, as useStyle does)
-  HP = null; PRAC = null; course = null; if (!setCourse(D.id)) { hostSend({ t: 'error', why: 'the course could not be laid out' }); return; }
+  HP = null; pracClear(); course = null; if (!setCourse(D.id)) { hostSend({ t: 'error', why: 'the course could not be laid out' }); return; }
   picReset();   // (T454: a new course's species pictures)
   setFeatures(m.features || null); featTxt = ''; featFor = course.id;
   const n = Math.max(1, Math.min(course.holes.length, +m.hole | 0 || 1)); if (n !== 1) newHole(n, 0, 0);
