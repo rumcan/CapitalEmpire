@@ -143,7 +143,8 @@ function nextCourse() { const L = courseList(), k = course ? L.findIndex((c) => 
 function cartNo(x, y) { const m = matAt(x, y); return m === M_WATER || m === M_CLIFF || m === M_SAND || m === M_TEE || m === M_GREEN ? 9 : 0; }   // ground a cart may not stand on (it keeps off tees and greens itself: parked on one, it could not leave)
 function jumpToBall() {   // J: the golfer is set down beside his ball, facing the pin, the camera behind him; the cart is brought along and parked near by
   if (ball.state !== 0 || player.swing >= 0 || charging || bcam) { say('Wait for the ball to lie still', 90); return; }
-  const H = hole, dx = H.pin.x - ball.x, dy = H.pin.y - ball.y, l = Math.hypot(dx, dy) || 1, ux = dx / l, uy = dy / l, p = player;
+  const H = hole, onAim = !!(HP && HP.turn) && Math.hypot(aim.dx, aim.dy) > 0.5;   // (J5c: in host mode he faces down the aim's line, the camera behind him: not at the pin)
+  const dx = onAim ? aim.dx : H.pin.x - ball.x, dy = onAim ? aim.dy : H.pin.y - ball.y, l = Math.hypot(dx, dy) || 1, ux = dx / l, uy = dy / l, p = player;
   cart.on = false; cart.v = 0;
   for (const [a, b] of [[-0.9, 0.75], [-0.9, -0.75], [-1.3, 0], [0.9, 0.9]]) { const x = ball.x + ux * a - uy * b, y = ball.y + uy * a + ux * b; if (matAt(x, y) !== M_WATER) { p.x = x; p.y = y; break; } }
   p.th = Math.atan2(uy, ux); p.fa = ((Math.round(p.th / 6.2832 * 16) % 16) + 16) % 16; p.moving = false;
@@ -217,6 +218,10 @@ function driveCart() {   // W goes, S brakes and backs up, A and D steer; the ca
   if (Math.abs(cart.v) > 0.6 && !camDrag) { let dy = cart.th + 1.5708 - camYaw; dy = Math.atan2(Math.sin(dy), Math.cos(dy)); camYaw += dy * 0.07 * Math.min(1, Math.abs(cart.v) / 4); }   // the camera swings round behind the cart as it turns
   if (cart.v > 6 && (frame & 3) === 0) { const mm = matAt(p.x, p.y); if (mm === M_HILL || mm === M_MUD || mm === M_ROCK) addParticle(P_SAND, p.x - wx * 0.8, p.y - wy * 0.8, groundH(p.x, p.y) + 0.05, -wx * 0.6 + (rnd() - 0.5) * 0.6, -wy * 0.6 + (rnd() - 0.5) * 0.6, 0.6 + rnd() * 0.8, 18 + rndi(14), rndi(6)); }   // dust on bare ground
 }
+function aimTurn(a) {   // J5c: the aim turned about the ball by a radians (the turn keys at the ball, host mode): its line and its target point together
+  const c = Math.cos(a), s = Math.sin(a), dx = aim.dx, dy = aim.dy, px = aim.x - ball.x, py = aim.y - ball.y;
+  aim.dx = dx * c - dy * s; aim.dy = dx * s + dy * c; aim.x = ball.x + px * c - py * s; aim.y = ball.y + px * s + py * c;
+}
 function aimToMouse() {   // the aim is the ground point under the mouse: the line from the ball to it, and the point itself (T456: the target the ring is drawn at)
   screenToGround(mouse.x, mouse.y, GP);
   let dx = GP.x - ball.x, dy = GP.y - ball.y; const l = Math.hypot(dx, dy);
@@ -237,7 +242,7 @@ function updatePlayer() {
   }
   const near = nearBall();
   if (near && ball.state === 0 && !(HP && hostBusy())) {               // (host mode: not while the course decides, or plays back, a shot)
-    if (!HP || !hostAimPin || mouse.down) {                            // (host mode, T446: a click on the course sets the aim and holds it, so the mouse can go to the swing button)
+    if (!HP || mouse.down) {                                           // (host mode, J5c: only a click on the course aims, never the mouse passing over it on its way to the swing button)
       aimToMouse();
       if (HP && mouse.down) hostAimPin = true;
     }
@@ -260,7 +265,7 @@ function updatePlayer() {
   const fwd = held ? 0 : (keys.KeyW || keys.ArrowUp ? 1 : 0) - (keys.KeyS || keys.ArrowDown ? 1 : 0), turn = (keys.KeyD || keys.ArrowRight ? 1 : 0) - (keys.KeyA || keys.ArrowLeft ? 1 : 0), side = held ? 0 : (keys.KeyE ? 1 : 0) - (keys.KeyQ ? 1 : 0);
   p.moving = false;
   if (!fwd && !turn && !side) return;
-  if (turn) { p.th += turn * 0.045; p.fa = ((Math.round(p.th / 6.2832 * 16) % 16) + 16) % 16; }      // A and D turn him
+  if (turn) { p.th += turn * 0.045; p.fa = ((Math.round(p.th / 6.2832 * 16) % 16) + 16) % 16; if (HP && ball.state === 0 && nearBall() && !hostBusy()) aimTurn(turn * 0.045); }      // A and D turn him (J5c: at his ball in host mode, the aim with him)
   if (!camDrag) { let dy = p.th + 1.5708 - camYaw; dy = Math.atan2(Math.sin(dy), Math.cos(dy)); camYaw += dy * 0.12; }   // the camera swings back behind him whenever he moves
   if (!fwd && !side) return;
   const hx = Math.cos(p.th), hy = Math.sin(p.th), l = fwd && side ? 0.7071 : 1, sp = (fwd < 0 ? 2.6 : keys.ShiftLeft ? 7.5 : 4.6) / 60;   // (backward is a slower walk)
