@@ -30,14 +30,16 @@ test('the golfer\'s look: every golfer art has its clothes; an unknown one wears
   assert.equal(playerDress(undefined, 'w').shirt, '#c8323a'); assert.equal(playerDress(undefined, 'w').sex, 'w');
 });
 
-test('T450: the view draws CapitalEmpire's golfers: the art ids are GOLFER_PEOPLE's, a golfer wears the art the manager view gives him, the player his card's', () => {
-  assert.deepEqual([...GOLFER_ART_IDS], GOLFER_PEOPLE.map(p => p.id.replace(/^golfer:/, '')), 'the ids, in the library's order');
+test('T450: the view draws CapitalEmpire golfers: the art ids are GOLFER_PEOPLE ids, a golfer wears the art the manager view gives him, the player his card art', () => {
+  assert.deepEqual([...GOLFER_ART_IDS], GOLFER_PEOPLE.map(p => p.id.replace(/^golfer:/, '')), 'the ids, in the library order');
   // engine.ts GOLFER_ART: a sex's art is the ids with _m or _w (all of them when it has none), and the look picks one
   const own = (tag: string) => { const a = GOLFER_PEOPLE.flatMap((p, i) => p.id.includes(tag) ? [i] : []); return a.length ? a : GOLFER_PEOPLE.map((_, i) => i); };
   const ART = { m: own('_m'), w: own('_w') } as const;
   for (const sex of ['m', 'w'] as const) for (let look = 0; look < 12; look++) assert.equal('golfer:' + artFor(sex, look), GOLFER_PEOPLE[ART[sex][look % ART[sex].length]!]!.id, `sex ${sex} look ${look}`);
   for (const p of GOLFER_PEOPLE) assert.equal(playerDress(p.id, 'm').art, p.id.replace(/^golfer:/, ''));
-  assert.equal(playerDress(undefined, 'm').art, undefined, 'no card: the view's own golfer');
-  // the view's build copies these folders (packages/cinderlinks/build.mjs) and the view's list is the same
-  assert.match(part('08k-golfart.md'), new RegExp("GOLFART_IDS = \[" + GOLFER_ART_IDS.map(id => "'" + id + "'").join(', ') + "\]"));
+  assert.equal(playerDress(undefined, 'm').art, undefined, 'no card: the view draws its own golfer');
+  // the view's list (packages/cinderlinks/parts/08k-golfart.md) is the same, in the same order
+  const list = /const GOLFART_IDS = \[([^\]]*)\]/.exec(part('08k-golfart.md'));
+  assert.ok(list, 'the view lists its golfers');
+  assert.deepEqual(list![1]!.split(',').map(x => x.trim().replace(/'/g, '')), [...GOLFER_ART_IDS]);
 });

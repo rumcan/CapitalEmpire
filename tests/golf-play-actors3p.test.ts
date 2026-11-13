@@ -59,7 +59,7 @@ test('actors: three groups, each golfer once, stable ids and dress, places round
   assert.ok(pros.length > 0, 'the field has pros with caddies');
   for (const g of pros) {
     const cd = a.actors.find(x => x.id === CADDIE_ID + g.id), me = a.actors.find(x => x.id === g.id)!;
-    assert.ok(cd, `golfer ${g.id}'s caddie`); assert.equal(cd!.role, 'caddie'); assert.deepEqual(cd!.dress, caddieDress(g.id)); assert.equal(cd!.dress!.art, undefined, 'a caddie keeps the view's own figure');
+    assert.ok(cd, `golfer ${g.id}'s caddie`); assert.equal(cd!.role, 'caddie'); assert.deepEqual(cd!.dress, caddieDress(g.id)); assert.equal(cd!.dress!.art, undefined, 'a caddie keeps the view figure');
     assert.ok(Math.hypot(cd!.at[0] - me.at[0], cd!.at[1] - me.at[1]) < 3.5 * TILE_M, 'beside his golfer');
   }
   // nobody shows long before his group's tee time, nor once he is done

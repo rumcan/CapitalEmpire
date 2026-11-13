@@ -24,12 +24,12 @@ let shownType = '';
 function styleShow() {   // the menu: the biome (the land and its plants) beside the course type (how the course is kept); one of each is in force
   shownStyle = biomeId; shownType = ctypeId; styleBtn.innerHTML = BIOMES[biomeId].name + ' &middot; ' + CTYPES[ctypeId].name + '<b>&#9662;</b>';
   const col = (title, kind, ids, T, cur) => '<div class="grp"><i>' + title + '</i>' + ids.map((id) => '<button type="button" data-kind="' + kind + '" data-id="' + id + '"' + (id === cur ? ' class="on"' : '') + '>' + T[id].name + '</button>').join('') + '</div>';
-  styleMenu.innerHTML = col('Biome', 'b', BIOME_ORDER, BIOMES, biomeId) + col('Course type', 't', CTYPE_ORDER, CTYPES, ctypeId)
+  styleMenu.innerHTML = col('Biome', 'b', BIOME_ORDER, BIOMES, biomeId) + col('Course type', 't', CTYPE_ORDER, CTYPES, ctypeId) + (HOST ? '' : golferCol())   // (T450: the golfer, without a host)
     + '<div class="grp dist"><i>Render distance</i><input id="detail" type="range" min="150" max="400" step="25" value="' + VIEWR + '"><span id="detailV">' + VIEWR + ' m</span><label class=\"simple\"><input id=\"simpleG\" type=\"checkbox\"' + (SIMPLEG ? ' checked' : '') + '> Simple grass everywhere</label><em>How far the land, trees and grass are drawn; past 260 m the detailed ground reaches farther too. Higher needs a faster PC.</em></div>';
 }
 styleBtn.addEventListener('click', (e) => { styleMenu.className = styleMenu.className === 'on' ? '' : 'on'; if (styleBtn.blur) styleBtn.blur(); if (e.preventDefault) e.preventDefault(); });
 styleMenu.addEventListener('click', (e) => { const t = e.target, id = t && t.getAttribute ? t.getAttribute('data-id') : null, kind = id ? t.getAttribute('data-kind') : null; if (!id) return;
-  if (kind === 'b' && BIOMES[id] && id !== biomeId) { useStyle(id, null); firstPicture(); } else if (kind === 't' && CTYPES[id] && id !== ctypeId) { useStyle(null, id); firstPicture(); }
+  if (kind === 'b' && BIOMES[id] && id !== biomeId) { useStyle(id, null); firstPicture(); } else if (kind === 't' && CTYPES[id] && id !== ctypeId) { useStyle(null, id); firstPicture(); } else if (kind === 'g') golferPick(id);
   styleShow(); });   // (the menu stays open: a biome and a type are usually chosen together)
 styleMenu.addEventListener('change', (e) => { const t = e.target; if (t && t.id === 'simpleG') setSimple(t.checked); });
 styleMenu.addEventListener('input', (e) => { const t = e.target; if (!t || t.id !== 'detail') return; setDetail(+t.value); const v = document.getElementById('detailV'); if (v) v.textContent = VIEWR + ' m'; });
@@ -119,7 +119,7 @@ function hostMessage(m) {   // one message from the host page, already known to 
   if (m.t === 'lies' && m.v === 1) { hostLies(m.lk); return; }   // T438
   if ((m.t === 'turn' || m.t === 'shot' || m.t === 'holeEnd' || m.t === 'preview') && m.v === 1) { if (course) hostPlayMsg(m); return; }   // (T418: the play, once a course is in)
   if (m.t !== 'course' || m.v !== 1) return;
-  if (m.golfer) playerLook(m.golfer);   // T437: the golfer in the player card's clothes (parts/08d-actors.md)
+  if (m.golfer) { playerLook(m.golfer); gaHost = artIdOf(m.golfer); }   // T437: the golfer in the player card's clothes (parts/08d-actors.md); T450: and drawn as that golfer (parts/08k-golfart.md)
   const C = m.course;
   if (!C || typeof C.id !== 'string' || !Array.isArray(C.holes) || !C.holes.length || !C.polys) { hostSend({ t: 'error', why: 'the course has no id, holes or shapes' }); return; }
   const D = Object.assign({}, C, { fetched: true, scale: +m.scale > 0 ? +m.scale : 1, hv: ++hostN });   // (fetched: the workers are handed its data; hv: a new hand-over of the same id is loaded again)
