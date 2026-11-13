@@ -1312,7 +1312,7 @@ function render() {
   const H = hole, G = TOD[tmode].glow, HAZ = TOD[tmode].haze;
   const dist = (x, y) => (x - camX) * FX + (y - camY) * FY;
   const flag = { k: 20, d: dist(H.pin.x, H.pin.y) + 0.02 }, gol = { k: 21, d: bcam ? dist(p.x, p.y) : camD }, bl = { k: 22, d: dist(ball.x, ball.y) };
-  dlist.push(flag, gol, bl); if (!pracLock()) dlist.push({ k: 24, d: cart.on ? camD - 0.02 : dist(cart.x, cart.y) });   // (J6: no cart while practising)
+  dlist.push(flag, gol, bl); if (!pracLock() && CART_SHOWN) dlist.push({ k: 24, d: cart.on ? camD - 0.02 : dist(cart.x, cart.y) });   // (J6: no cart while practising)
   pracFlags(dlist, dist);   // (J6: the range's flags, parts/08l-practice.md)
   for (const sd of [-1, 1]) { const mx = H.tee.x - H.ry * sd * 2.5 + H.rx * 2.2, my = H.tee.y + H.rx * sd * 2.5 + H.ry * 2.2; dlist.push({ k: 23, d: dist(mx, my), x: mx, y: my }); }
   flist.length = 0;

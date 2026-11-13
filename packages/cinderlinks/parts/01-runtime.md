@@ -156,7 +156,7 @@ body.host #mini, body.host #wind { top: 56px; }
 #power .track b.top { width: 2px; margin-left: -1px; background: #fff; }
 
 /* the shot panel: CapitalEmpire's segmented choices (.seg): a dark well, the picked one in the gold button's gradient */
-#shotc { position: absolute; right: 1.4%; bottom: 13%; display: none; padding: 0.55em 0.65em; font-size: 0.92em; line-height: 1.4; }
+#shotc { position: absolute; right: 1.4%; bottom: 13%; display: none; padding: 0.55em 0.65em; font-size: 0.92em; line-height: 1.4; pointer-events: auto; }   /* (it takes its own clicks: under #hud's pointer-events none they fell through and aimed the shot, the owner 2026-11-13) */
 #shotc.on { display: block; }
 #shotc .row { display: flex; align-items: center; gap: 0.2em; margin: 0.2em 0; padding: 0.15em; border-radius: 0.7em; background: rgba(0, 0, 0, 0.25); }
 #shotc .row span { width: 3.6em; padding-left: 0.35em; font-size: 0.9em; font-weight: 700; color: var(--muted); }
