@@ -24,9 +24,19 @@ const N = MAP / FOREST_CELL, always = () => true;
 function cellsWith(kind: 'forest' | 'town' | 'belt', min: number): { ci: number; cj: number; trees: ForestTree[] }[] {
   const out: { ci: number; cj: number; trees: ForestTree[] }[] = [];
   for (let cj = 0; cj < N; cj++) for (let ci = 0; ci < N; ci++) {
-    const trees = kind === 'forest' ? forestCell(t.seed, t.cls, t.height, slope, clearing, ci, cj) : kind === 'town' ? townTreeCell(t.seed, t.cls, clump, ci, cj, always, always) : riverBeltCell(t.seed, t.cls, slope, belt, ci, cj, always, 1);
+    // (the town's trees as the game plants them beside the belts: never on a belt tree's place, T452 engine beltKeys)
+    const bk = kind === 'town' ? beltKeys(ci, cj) : null;
+    const trees = kind === 'forest' ? forestCell(t.seed, t.cls, t.height, slope, clearing, ci, cj) : kind === 'town' ? townTreeCell(t.seed, t.cls, clump, ci, cj, always, (x, y) => !bk!.has(treeKey(x, y))) : riverBeltCell(t.seed, t.cls, slope, belt, ci, cj, always, 1);
     if (trees.length >= min) out.push({ ci, cj, trees });
   }
+  return out;
+}
+
+/** the keys of the belt trees in and just round cell (ci, cj), as the game's engine beltKeys reads them (T452) */
+function beltKeys(ci: number, cj: number): Set<number> {
+  const out = new Set<number>(), x0 = ci * FOREST_CELL - 3, y0 = cj * FOREST_CELL - 3, x1 = x0 + FOREST_CELL + 6, y1 = y0 + FOREST_CELL + 6;
+  for (let j = Math.max(0, cj - 1); j <= Math.min(N - 1, cj + 1); j++) for (let i = Math.max(0, ci - 1); i <= Math.min(N - 1, ci + 1); i++)
+    for (const b of riverBeltCell(t.seed, t.cls, slope, belt, i, j, always, 1)) if (b.x >= x0 && b.x <= x1 && b.y >= y0 && b.y <= y1) out.add(treeKey(b.x, b.y));
   return out;
 }
 
