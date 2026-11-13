@@ -442,6 +442,15 @@ ${HOST_PLAY}
       setCourse(a); useStyle('desert', 'links'); setCourse(b); useStyle('snow', 'public'); const onB = biomeId + '/' + ctypeId; setCourse(a); const backA = biomeId + '/' + ctypeId; setCourse(b); const backB = biomeId + '/' + ctypeId;
       STYLE_URL = true; setCourse(a); const url = biomeId + '/' + ctypeId; STYLE_URL = false;
       out.info.push({ stylekeep: { kept: JSON.parse(localStorage.getItem(STYLE_KEY)), a, b, onB, backA, backB, urlWins: url === backB, ok: backA === 'desert/links' && backB === 'snow/public' && url === backB } }); globalThis.localStorage = LS0; STYLE_URL = U0; },
+    cartms() { // what drawing the cart costs a frame (any build: drawCart alone), seen from 6, 14 and 40 m, turning: the median and the 95th percentile
+      idle(); const base = Math.atan2(Math.cos(cart.th), -Math.sin(cart.th)), res = {};
+      for (const d of [6, 14, 40]) {
+        player.x = cart.x - Math.sin(base) * (d - D0) ; player.y = cart.y + Math.cos(base) * (d - D0); camYaw = base; aimCam(); camX = cart.x - Math.sin(base) * d; camY = cart.y + Math.cos(base) * d; camZ = groundH(cart.x, cart.y) + HC; render();
+        let cold = 0; for (let k = 0; k < 400; k++) { frame++; cart.th += 0.0157; const t0 = performance.now(); drawCart(null, 0); cold = Math.max(cold, performance.now() - t0); }   // (the first turn: the pictures made)
+        const t = []; for (let k = 0; k < 400; k++) { frame++; cart.th += 0.0157; const t0 = performance.now(); drawCart(null, 0); t.push(performance.now() - t0); }
+        t.sort((a, b) => a - b); res['d' + d] = { med: +t[200].toFixed(3), p95: +t[380].toFixed(3), max: +t[399].toFixed(2), coldMax: +cold.toFixed(2) };
+      }
+      out.info.push({ cartms: res }); },
     cartsheet() { // the cart's pictures on a plain ground, eight headings (four on top, close; four below), to judge the blocks themselves
       idle(); render(); for (let i = 0; i < fb.length; i++) fb[i] = 0xff58a04c; zbuf.fill(65535); frame++;
       const K = GK, sc = Math.max(1, Math.floor(VW / 4 / (170 * K)));
