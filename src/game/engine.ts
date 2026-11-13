@@ -170,7 +170,7 @@ import { planGolfGame } from './golf/start';
 import { loadOsmLand, loadOsmSpec, osmCourseInfo, osmDisplayName, OSM_COURSES, OSM_CREDIT, OSM_LICENCE, type OsmCourseJson, type OsmCourseSpec, type OsmLand } from './golf/osm';
 import { previewOfKept, realDeps } from './golf/osm/find';
 import { RealPlacer, realInfoOf, type RealInfo, type RealView } from './golf/osm/placer';
-import { cutSpan, goesPhrase, type PlacePlan, type PlaceWorld } from './golf/osm/place';
+import { cutSpan, goesPhrase, type KeepItem, type PlacePlan, type PlaceWorld } from './golf/osm/place';
 import { placeDiff, scratchOf } from './golf/osm/placegrid';
 import { boundsOf, inRects } from './golf/osm/rotate';
 import { addLandPatch, clearLandIn, createLandField, designGreens, groundAt, layLand, packLand, patchBox, turnedFrame, unpackLand, type LandField, type LandSave } from './golf/osm/land';
@@ -1564,18 +1564,29 @@ export class Game {
   /** what the planner's kept work (the lots' boxes, the land classes, the road graph) is for: the roads, the lots, the club's buildings, and a couple of seconds
    *  (a lot's level can change with no count changing) */
   private realPrepRevision(): string { const t = this.traffic; return `${this.net.version}|${t.lots.size}|${t.built}|${this.bizDefs.length}|${this.parkDefs.length}|${Math.floor(performance.now() / 2000)}`; }
-  /** the club's own things a real course cannot cover: its buildings, car parks, driving range, practice area and a tournament's structures, and the iconic places */
-  private realKeep(): { name: string; rect: Rect }[] {
-    const g = this.golf, out: { name: string; rect: Rect }[] = [];
+  /** the club's own things a real course may be laid over: its buildings, car parks, driving range, practice area and a tournament's structures, and the iconic
+   *  places. T444: a course laid over one clears it (`ref`: the step that takes it away, run by layRealCourse) and pays back `refund`, its value now: half what a
+   *  building or car park cost (as demolishing one pays), half a bought structure's price (as removing one does); the practice area is painted over by the
+   *  course (nothing back), a landmark is the town's (nothing back) */
+  private realKeep(): KeepItem[] {
+    const g = this.golf, out: KeepItem[] = [];
     if (!g) return out;
     const NAMES: Record<string, string> = { clubhouse: 'clubhouse', halfway: 'halfway house', prooffice: "pro's office", teachhut: 'teaching hut' };
-    for (const d of this.bizDefs) out.push(d.type === 'range' ? { name: 'driving range', rect: plotOfFront([d.x, d.y, d.w, d.h], g.dir) } : { name: NAMES[d.type] ?? 'building', rect: [d.x, d.y, d.w, d.h] });
-    for (const p of this.parkDefs) out.push({ name: 'car park', rect: [p.x, p.y, p.w, p.h] });
+    for (const d of this.bizDefs) {
+      const clear = () => { this.setBizDefs(this.bizDefs.filter(q => q.id !== d.id)); this.traffic.setBusinesses(this.bizDefs); };
+      const refund = Math.round((BUSINESS[d.type]?.buildCost ?? 0) / 2);
+      out.push(d.type === 'range' ? { name: 'driving range', rect: plotOfFront([d.x, d.y, d.w, d.h], g.dir), refund, ref: clear } : { name: NAMES[d.type] ?? 'building', rect: [d.x, d.y, d.w, d.h], refund, ref: clear });
+    }
+    for (const p of this.parkDefs) out.push({ name: 'car park', rect: [p.x, p.y, p.w, p.h], refund: Math.round(parkCost(p) / 2), ref: () => { const k = this.parkDefs.findIndex(q => q.id === p.id); if (k >= 0) this.removePark(k); } });
     if (g.practiceLot) out.push({ name: 'practice area', rect: g.practiceLot });
     const pts = this.range.scene?.practice?.pts;
     if (pts && pts.length >= 6) { const b = ptsBox(pts); out.push({ name: 'practice area', rect: [b[0]!, b[1]!, b[2]! - b[0]!, b[3]! - b[1]!] }); }
-    for (const s of g.structures ?? []) out.push({ name: STRUCTURE[s.typeId]?.name?.toLowerCase() ?? 'tournament structure', rect: structureRect(s) });
-    for (const b of this.placeBoxes()) out.push({ name: 'landmark', rect: [b[0], b[1], b[2] - b[0], b[3] - b[1]] });
+    for (const s of g.structures ?? []) {
+      const def = STRUCTURE[s.typeId];
+      out.push({ name: def?.name?.toLowerCase() ?? 'tournament structure', rect: structureRect(s), refund: s.mode === 'buy' && def?.buy ? Math.round(def.buy * 0.5) : 0,
+        ref: () => { const list = this.golf?.structures; const i = list ? list.findIndex(q => q.id === s.id) : -1; if (i < 0 || !list) return; const prop = this.golfStructureProps.get(s.id); if (prop) this.removeProp(prop); this.golfStructureProps.delete(s.id); list.splice(i, 1); } });
+    }
+    for (const p of this.places) { const d = placeDef(p.id); if (!d) continue; const b = placeBox(p, d); out.push({ name: 'landmark', rect: [b[0], b[1], b[2] - b[0], b[3] - b[1]], ref: () => { this.places = this.places.filter(q => q.id !== p.id); } }); }
     return out.filter(k => k.rect[2] > 0 && k.rect[3] > 0);
   }
   /** the world as the planner reads it, from the game's live collections (nothing copied but the small lists) */
@@ -1613,9 +1624,14 @@ export class Game {
     const g = this.golf; if (!g) return false;
     const { plan, turned } = c;
     if (!plan.ok || plan.total > this.money) return false;
-    // the buildings go, bought out (the worker pays their compensation); the land, the roads taken and the course are paid here
+    // the buildings go, bought out (the worker pays their compensation); the land, the roads taken and the course are paid here, less what the club's own
+    // buildings in the way bring back (T444: they are cleared first)
     for (const key of [...plan.lots.keys, ...plan.orphans.keys]) this.traffic.buyLot(key);
-    this.traffic.spend('construction', plan.land.price + plan.roads.value + plan.build);
+    if (plan.over.club.length) {
+      for (const c of plan.over.club) if (typeof c.ref === 'function') (c.ref as () => void)();
+      this.farmsUpdate(); this.dropGoneStaff(); this.syncCourseGates(); this.syncPlaces();
+    }
+    this.traffic.spend('construction', plan.land.price + plan.roads.value + plan.build - plan.over.refund);
     // the land: the cover's rects join the player's (and are kept apart for Land for sale and the survey lines), the course grid grows to hold them; the
     // city worker hears of it before the roads change, so no new lot starts on it
     const parcels = g.parcels ?? [g.parcel], own = plan.cover.map(r => [...r] as Rect);
@@ -1661,6 +1677,7 @@ export class Game {
     this.scheduleSave();
     const goes = goesPhrase(plan);
     this.toast(`Placed ${c.info.name}: ${plan.land.ha >= 10 ? Math.round(plan.land.ha) : plan.land.ha} ha bought${goes ? `, ${goes} cleared` : ''} ($${plan.total.toLocaleString()})`, 'good');
+    if (plan.over.warn.length) this.toast(plan.over.warn.join('. '), 'warn'); // (T444: a road link the course cut)
     this.emit();
     return true;
   }
@@ -11926,7 +11943,11 @@ export class Game {
       const d0 = drawn && i >= 0 ? drawn.at(x, y) : i >= 0 && grid!.draw ? grid!.draw[i]! : c;
       const k = grassSlot(d0), p = k ? plays.get(k) : undefined, d = k ? (p ? PLAY_SURF[p] : c) : d0;
       const s = i >= 0 ? (p ? golfSurfaceOf(p) : SURF_SURFACE[d]) : null;
-      return s ?? surfaceAtIx(ixOf(d !== c && c ? areasBut(c) : areas), x, y);   // (T438: the areas of the point's cell only: the same answer)
+      const a = s ?? surfaceAtIx(ixOf(d !== c && c ? areasBut(c) : areas), x, y);   // (T438: the areas of the point's cell only: the same answer)
+      if (a !== null) return a;
+      // T444: the river under the course (its cells are left unpainted when a course is laid over it) plays as water
+      const tx = Math.floor(x), ty = Math.floor(y), tc = tx >= 0 && ty >= 0 && tx < MAP && ty < MAP ? this.terrain.cls[ty * MAP + tx]! : -1;
+      return tc === TC.WATER || tc === TC.CREEK ? 'water' : null;
     };
     // T269: play reads the day's cups (golf/daypins.ts): the pin and the end of each line; the par and the tees are the placed pin's
     // T353: a ball that comes to rest on a house lot is out of bounds (golf/estate.ts lotAt)

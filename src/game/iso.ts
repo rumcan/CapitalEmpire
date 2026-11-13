@@ -3,9 +3,11 @@ export const TW = 128;
 export const TH = 64;
 export const HW = 64;
 export const HH = 32;
-/** tiles per side of the map: 4 x 4 km. The one setting (T280, #859: every copy of the size follows it; 1024 halves the map once the
- *  generator's distances scale with it) */
-export const MAP = 1024;
+/** tiles per side of the map: 4 x 4 km. The one setting (T280, #859: every copy of the size follows it; T280 halved it to 1024 for a while,
+ *  T444 put it back to 2048 so a real course fits beside the town) */
+export const MAP = 2048;
+/** the map's side in km, for the sentences that name it ("the 4 km map"): tiles are 2 m */
+export const MAP_KM = (MAP * 2) / 1000;
 /** simulation / content cells (tiles per side) */
 export const CELL = 64;
 /** The builder's 30% zoom is the closest the game camera gets. */
