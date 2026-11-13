@@ -75,7 +75,10 @@ export interface Actor { id: number; role: ActorRole; at: ViewPt; hole: number; 
  *  watching another's shot (standing turned to it) */
 export type Doing = 'walk' | 'stand' | 'address' | 'swing' | 'putt' | 'ride' | 'watch';
 /** T424: how a person is drawn: the shirt, trousers, cap, skin and hair colours ('#rrggbb'), his build (a height factor, about 0.92..1.06) and sex */
-export interface Dress { shirt: string; trousers: string; cap: string; skin: string; hair: string; build: number; sex: 'm' | 'w' }
+export interface Dress { shirt: string; trousers: string; cap: string; skin: string; hair: string; build: number; sex: 'm' | 'w';
+  /** T450: the CapitalEmpire golfer this person is (look3p.ts GOLFER_ART_IDS: 'golf_pro_m1' and so on; art/golfers/<id>), drawn from its rendered art; absent (a caddie,
+   *  an older host): the view's own figure in these clothes */
+  art?: string }
 /** who is on the course and where at game minute t: the full list each time (an actor missing from it has left) */
 export interface ActorsMsg { v: 1; t: 'actors'; at: number; actors: Actor[];
   /** T425: a list of a played round (play3p.ts with company): the view keeps it by its minute and places people by the play's own minute, not as it arrives */

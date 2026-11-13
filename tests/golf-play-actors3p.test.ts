@@ -9,6 +9,7 @@ import { CartPlay, SWING_TIME, fieldEntourage, makeField, playRound, stateAt } f
 import type { CourseView, Golfer, Group, Lie, PlayHole } from '../src/game/golf/play';
 import { fromView } from '../src/game/golf/play/protocol3p';
 import { CADDIE_ID, CART_ID, actorsMsg, caddieDress, dressOf } from '../src/game/golf/play/actors3p';
+import { artFor } from '../src/game/golf/play/look3p';
 
 const centre = { x: 300, y: 100 };
 function course(): CourseView {
@@ -51,13 +52,14 @@ test('actors: three groups, each golfer once, stable ids and dress, places round
   for (const x of a.actors) { const y = b.actors.find(o => o.id === x.id); if (y) { assert.equal(y.role, x.role); assert.deepEqual(y.dress, x.dress, `actor ${x.id}: the same dress a minute later`); } }
   // the dress is the golfer's own: the same from his id, look and sex alone, and the nine are not all dressed alike
   for (const g of f) assert.deepEqual(a.actors.find(x => x.id === g.id)!.dress, dressOf(g));
+  for (const g of f) assert.equal(dressOf(g).art, artFor(g.sex, g.look), `golfer ${g.id}: drawn as the golfer art the manager view gives him (T450)`);
   assert.ok(new Set(a.actors.filter(x => x.role === 'golfer').map(x => x.dress!.shirt + x.dress!.trousers + x.dress!.cap)).size >= 5, 'varied clothes');
   // tier 4: the pros have caddies, beside them, in the bib
   const pros = f.filter(g => g.caddie);
   assert.ok(pros.length > 0, 'the field has pros with caddies');
   for (const g of pros) {
     const cd = a.actors.find(x => x.id === CADDIE_ID + g.id), me = a.actors.find(x => x.id === g.id)!;
-    assert.ok(cd, `golfer ${g.id}'s caddie`); assert.equal(cd!.role, 'caddie'); assert.deepEqual(cd!.dress, caddieDress(g.id));
+    assert.ok(cd, `golfer ${g.id}'s caddie`); assert.equal(cd!.role, 'caddie'); assert.deepEqual(cd!.dress, caddieDress(g.id)); assert.equal(cd!.dress!.art, undefined, 'a caddie keeps the view's own figure');
     assert.ok(Math.hypot(cd!.at[0] - me.at[0], cd!.at[1] - me.at[1]) < 3.5 * TILE_M, 'beside his golfer');
   }
   // nobody shows long before his group's tee time, nor once he is done

@@ -43,8 +43,17 @@ export const ART_DRESS: Readonly<Record<string, { shirt: string; trousers: strin
   'golfer:golf_pro_m3': { shirt: '#8e2b22', trousers: '#c1bab7' }, 'golfer:golf_pro_m4': { shirt: '#2a2d39', trousers: '#979a9e' },
   'golfer:golf_pro_w1': { shirt: '#ca9486', trousers: '#d9b2b1' }, 'golfer:golf_pro_w2': { shirt: '#2b5c4f', trousers: '#262b45' },
 };
+/** T450: the golfer art ids, in library.ts GOLFER_PEOPLE's order without its 'golfer:' prefix: the folders of art/golfers the view draws people from */
+export const GOLFER_ART_IDS: readonly string[] = Object.keys(ART_DRESS).map(k => k.slice('golfer:'.length));
+/** T450: the golfer art a golfer of this sex and look wears, by the manager view's own rule (engine.ts GOLFER_ART: a sex's art is the ids with _m or _w,
+ *  and his look picks one of them), so the view shows the same person the course does */
+export function artFor(sex: Sex, look: number): string {
+  const own = GOLFER_ART_IDS.filter(id => id.includes(sex === 'w' ? '_w' : '_m')), list = own.length ? own : GOLFER_ART_IDS;
+  return list[((Math.floor(look) % list.length) + list.length) % list.length]!;
+}
 /** the player's dress in the view: the clothes of his card's golfer art (`artId`; unknown: the view's own red polo and navy trousers), a white cap, his sex */
 export function playerDress(artId: string | undefined, sex: Sex): Dress {
   const d = (artId && ART_DRESS[artId]) || { shirt: '#c8323a', trousers: '#2a3550' };
-  return { shirt: d.shirt, trousers: d.trousers, cap: '#f6f6f2', skin: '#e2b48a', hair: '#47291a', build: sex === 'w' ? 0.94 : 1, sex };
+  const art = artId && ART_DRESS[artId] ? artId.slice('golfer:'.length) : undefined; // (T450: he is drawn as that golfer)
+  return { shirt: d.shirt, trousers: d.trousers, cap: '#f6f6f2', skin: '#e2b48a', hair: '#47291a', build: sex === 'w' ? 0.94 : 1, sex, ...(art ? { art } : {}) };
 }

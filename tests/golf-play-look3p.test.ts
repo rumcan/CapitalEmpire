@@ -5,7 +5,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
-import { BIOMES_3P, COURSE_TYPES_3P, KEPT_CONDITION, biomeOf, courseTypeOf, playerDress, ART_DRESS } from '../src/game/golf/play/look3p';
+import { BIOMES_3P, COURSE_TYPES_3P, KEPT_CONDITION, biomeOf, courseTypeOf, playerDress, ART_DRESS, GOLFER_ART_IDS, artFor } from '../src/game/golf/play/look3p';
 import { GOLFER_PEOPLE } from '../src/game/library';
 
 const part = (f: string) => fs.readFileSync(`${process.cwd()}/packages/cinderlinks/parts/${f}`, 'utf8');   // (npm test runs from the repo's root)
@@ -28,4 +28,16 @@ test('the biome follows the map\'s season; the course type how it is kept', () =
 test('the golfer\'s look: every golfer art has its clothes; an unknown one wears the view\'s own', () => {
   for (const p of GOLFER_PEOPLE) { assert.ok(ART_DRESS[p.id], `${p.id} has clothes`); const d = playerDress(p.id, 'm'); assert.equal(d.shirt, ART_DRESS[p.id]!.shirt); assert.match(d.trousers, /^#[0-9a-f]{6}$/); }
   assert.equal(playerDress(undefined, 'w').shirt, '#c8323a'); assert.equal(playerDress(undefined, 'w').sex, 'w');
+});
+
+test('T450: the view draws CapitalEmpire's golfers: the art ids are GOLFER_PEOPLE's, a golfer wears the art the manager view gives him, the player his card's', () => {
+  assert.deepEqual([...GOLFER_ART_IDS], GOLFER_PEOPLE.map(p => p.id.replace(/^golfer:/, '')), 'the ids, in the library's order');
+  // engine.ts GOLFER_ART: a sex's art is the ids with _m or _w (all of them when it has none), and the look picks one
+  const own = (tag: string) => { const a = GOLFER_PEOPLE.flatMap((p, i) => p.id.includes(tag) ? [i] : []); return a.length ? a : GOLFER_PEOPLE.map((_, i) => i); };
+  const ART = { m: own('_m'), w: own('_w') } as const;
+  for (const sex of ['m', 'w'] as const) for (let look = 0; look < 12; look++) assert.equal('golfer:' + artFor(sex, look), GOLFER_PEOPLE[ART[sex][look % ART[sex].length]!]!.id, `sex ${sex} look ${look}`);
+  for (const p of GOLFER_PEOPLE) assert.equal(playerDress(p.id, 'm').art, p.id.replace(/^golfer:/, ''));
+  assert.equal(playerDress(undefined, 'm').art, undefined, 'no card: the view's own golfer');
+  // the view's build copies these folders (packages/cinderlinks/build.mjs) and the view's list is the same
+  assert.match(part('08k-golfart.md'), new RegExp("GOLFART_IDS = \[" + GOLFER_ART_IDS.map(id => "'" + id + "'").join(', ') + "\]"));
 });
