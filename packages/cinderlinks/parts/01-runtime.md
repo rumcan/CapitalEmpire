@@ -97,6 +97,13 @@ body { display: flex; align-items: center; justify-content: center; color: #eadf
 #mini { position: absolute; right: 1.4%; top: 2%; width: 150px; height: 150px; image-rendering: pixelated; border: 2px solid #0a1a12; box-shadow: 0 0 0 1px rgba(242, 201, 76, 0.55); opacity: 0.95; }
 #power { position: absolute; left: 36%; right: 36%; bottom: 8%; opacity: 0; transition: opacity 0.15s; text-align: center; }
 #power.on { opacity: 1; }
+#swingBtn { position: absolute; left: 50%; bottom: 2.2%; transform: translateX(-50%); width: 300px; height: 50px; display: none; pointer-events: auto; cursor: pointer; touch-action: none; user-select: none; overflow: hidden;
+  background: rgba(12, 34, 24, 0.86); border: 2px solid #0a1a12; box-shadow: 0 0 0 1px rgba(242, 201, 76, 0.75); color: #f4efdc; }
+#swingBtn.on { display: block; }
+#swingBtn.idle { opacity: 0.55; cursor: default; }
+#swingBtn.swinging { box-shadow: 0 0 0 2px #f2c94c; }
+#swingBtn i { position: absolute; left: 0; top: 0; bottom: 0; width: 0; background: linear-gradient(90deg, #3c8a52, #58c070 40%, #f2c94c 90%); opacity: 0.85; }
+#swingBtn span { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 12px; letter-spacing: 1px; text-shadow: 2px 2px 0 #000; white-space: nowrap; }
 #powerTxt { margin-top: 4px; font-size: 11px; color: #f4efdc; text-shadow: 2px 2px 0 #000; }
 .track { height: 13px; background: #0c2218; border: 2px solid #0a1a12; box-shadow: 0 0 0 1px rgba(242, 201, 76, 0.55); position: relative; }
 .track i { display: block; height: 100%; width: 0%; background: linear-gradient(90deg, #58c070, #f2c94c 72%, #e8573c); }

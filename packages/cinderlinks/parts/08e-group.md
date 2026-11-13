@@ -183,6 +183,7 @@ function groupBoard(m) {   // the leaderboard card (the leaders, his row lit) an
 // ---- T440: the in-game help (H) in host mode: what the round inside CapitalEmpire is (added once to the help panel the page already has)
 let hostHelpDone = false;
 const HOST_HELP = [['', ''], ['IN YOUR GAME', ''], ['the shots', 'the course decides each one: your skills, clubs, cards and unlocks count'], ['the land', 'its fine detail (grass, trees, rocks) is grown here, not copied'],
+  ['swing button', 'hold it (or Space): the camera lines up, then the distance fills; let go to hit'], ['click', 'on the course: sets the aim and holds it'], ['Shift', 'tap while holding: the power boost, if your cards give it'], ['Z X I', 'the shot: curve, flight, arm the full boost'],
   ['1-9, wheel', 'your own clubs, with their real carries'], ['Esc', 'back to the course (a round under way is kept)'], ['Save ghost', 'your round as a file a friend can race'],
   ['Ghost...', 'race a saved round: he plays beside you, see-through'], ['Share course', 'this course as a file; Play a shared course... opens one'], ['Kit', 'own kit (scored net of handicaps) or level kit (everyone the same)']];
 function hostHelp() {   // (from actorsList, each frame until done: the help panel is the page's, made after the parts load)

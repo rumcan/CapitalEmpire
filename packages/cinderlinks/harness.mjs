@@ -111,12 +111,22 @@ const HOST_PLAY = String.raw`
     if (snapAt) snapAt('host-aim');
     hostMessage(turn(b0, 1, 16)); step(2, 1); info.ringTight = HP.ring && HP.ring.across;
     if (!(info.ringTight < r1)) errs.push('host play: a steadier club did not tighten the ring');
-    // T421: the meter in the hold-and-release: held 45 steps at 0.9 a second (power 0.675), Space three times (boost 0.03), clicked 40 steps into
-    // the downswing (accuracy 0.675 - 0.6 = 0.075: early)
-    mouse.down = true; step(45, 0); mouse.down = false; if (HP.sw) HP.sw.presses += 3; step(40, 0); mouse.down = true; step(1, 0); mouse.down = false;
+    // T446: the hold and release. A click on the course sets the aim and holds it (it never swings); the camera turned away, Space held lines it up
+    // behind the ball first, then the power fills; Shift three times (boost 0.03); let go: the strike at the power held, no timing (acc 0), version 3
+    mouse.down = true; step(2, 0); mouse.down = false; step(2, 0);
+    if (HP.sw || (hostLast && hostLast.t === 'input')) errs.push('host play: a click on the course started a swing');
+    const aim0 = [aim.x, aim.y]; mouse.x = VW / 2 + 220; step(3, 0);
+    if (aim.x !== aim0[0] || aim.y !== aim0[1]) errs.push('host play: the aim moved after a click set it');
+    camYaw += 1.2; aimCam();
+    keys.Space = true; step(1, 0); const glide = !!(HP.sw && HP.sw.g), u0 = HP.sw ? HP.sw.u : -1; step(30, 0);
+    const off = camYaw - Math.atan2(aim.dy, aim.dx) - 1.5708, lined = Math.abs(Math.atan2(Math.sin(off), Math.cos(off))) < 1e-6;
+    step(30, 0); if (HP.sw) HP.sw.presses += 3; const held = HP.sw ? HP.sw.u : -1; keys.Space = false;
+    info.swing = { glide, u0, lined, held: +held.toFixed(4) };
+    if (!glide || u0 !== 0 || !lined) errs.push('host play: the camera did not line up behind the ball before the power filled');
+    if (!(held > 0.2 && held <= 1)) errs.push('host play: the power did not fill while held (' + held + ')');
     let sent = null; for (let k = 0; k < 120 && !sent; k++) { step(1, 0); if (hostLast && hostLast.t === 'input') sent = hostLast.input; }
     info.input = sent;
-    { const w = sent && sent.swing; if (!w || Math.abs(w.power - 0.675) > 1e-6 || Math.abs(w.acc - 0.075) > 1e-6 || Math.abs(w.boost - 0.03) > 1e-9 || w.v !== 2) errs.push('host play: the meter\'s outcome is not the timing (' + JSON.stringify(w) + ')'); }
+    { const w = sent && sent.swing; if (!w || Math.abs(w.power - held) > 1e-9 || w.acc !== 0 || Math.abs(w.boost - 0.03) > 1e-9 || w.v !== 3) errs.push('host play: the swing\'s outcome is not the power held (' + JSON.stringify(w) + ')'); }
     if (!sent || sent.club !== 'driver' || !(sent.power >= 0.3 && sent.power <= 1) || !Array.isArray(sent.aim) || !Number.isFinite(sent.aim[0]) || sent.holeIdx !== 0 || sent.stroke !== 1) errs.push('host play: no input, or a wrong one');
     const bw = [ball.x, ball.y]; step(60, 0);
     if (ball.state !== 0 || near([ball.x, ball.y], bw) > 1e-9 || !hostBusy()) errs.push('host play: the ball moved (or he could swing) before the host answered');
@@ -164,7 +174,7 @@ const HOST_PLAY = String.raw`
     if (took !== false || HP.pick.curve !== 0 || !/Accuracy 60/.test(msgText) || hostPickSet('boost') !== false) errs.push('host craft: a locked pick was taken');
     hostMessage(turn(2, Object.assign({}, none, { boost: true, charges: 1, why: {} }), 1)); jumpToBall(); step(4, 0);
     hostPickSet('boost'); const armed = HP.pick.armed;
-    mouse.down = true; step(30, 0); mouse.down = false; for (let k = 0; k < 120 && !(hostLast && hostLast.t === 'input'); k++) step(1, 0);
+    keys.Space = true; step(60, 0); keys.Space = false; for (let k = 0; k < 120 && !(hostLast && hostLast.t === 'input'); k++) step(1, 0);   // (T446: Space held swings)
     const sw = hostLast && hostLast.t === 'input' && hostLast.input.swing; info.boost = { armed, sent: sw && sw.boost, after: HP.pick.armed };
     if (!armed || !sw || sw.boost !== 0.06 || HP.pick.armed) errs.push('host craft: the armed boost was not a full boost, or was not spent');
     return { errs, info };
@@ -259,7 +269,7 @@ const HOST_SCRIPT = String.raw`
         for (let k = 0; k < 400 && (bcam || player.swing >= 0); k++) step(1);   // (the ball camera lingers on a ball at rest a moment: the jump waits for it)
         jumpToBall(); mouse.x = VW / 2; mouse.y = VH / 2 - 100; step(6);
         sent.length = 0;
-        mouse.down = true; step(45); mouse.down = false; step(40); mouse.down = true; step(1); mouse.down = false;
+        keys.Space = true; step(60); keys.Space = false;   // (T446: Space held swings, let go strikes)
         let inp = null; for (let k = 0; k < 240 && !inp; k++) { step(1); inp = sent.find((m) => m.t === 'input') || null; }
         if (!inp) { errs.push('script: no input from the view at turn ' + turn + ' ' + JSON.stringify({ wait: HP.wait, sw: !!HP.sw, swing: player.swing, near: nearBall(), busy: hostBusy(), bcam, cart: cart.on, club: hostClub() && hostClub().club, clubs: HP.clubs.length, sent: sent.map((m) => m.t), d: Math.hypot(player.x - ball.x, player.y - ball.y) })); break; }
         seen = null; feed(S.input(inp.input));

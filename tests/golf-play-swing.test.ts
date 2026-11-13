@@ -6,7 +6,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { TILE_M } from '../src/game/golf/types';
-import { BOOST, LiveGroup, METER, METER_TIME, METER_V, SWEET, SWEET_V1, SwingMeter, applyMods, boostOf, clickError, kitOf, makeField, markerSpeed, meterMark, playRound, readSwing, rng, shotOutcome, shotReport, swingEffect, sweetSeconds, sweetSpot, sweetSpotV1, swingTime, teeTimes } from '../src/game/golf/play';
+import { BOOST, HOLD_V, LiveGroup, METER, METER_TIME, METER_V, SWEET, SWEET_V1, SwingMeter, applyMods, boostOf, clickError, kitOf, makeField, markerSpeed, meterMark, playRound, readSwing, rng, shotOutcome, shotReport, swingEffect, sweetSeconds, sweetSpot, sweetSpotV1, swingTime, teeTimes } from '../src/game/golf/play';
 import type { CourseView, GameSkills, Lie, OwnerInput, OwnerTurn, PlayHole, Pt, Shot, SwingOutcome } from '../src/game/golf/play';
 import { HUMANS, botSwing } from './helpers/swing-bot';
 
@@ -324,4 +324,24 @@ test('swing shots: the saved outcomes replay to the same round (the inputs keep 
   const plan1 = (lg as unknown as { plan: { shots: Shot[] } }).plan;
   assert.deepEqual(mine(plan2), mine(plan1));
   assert.deepEqual(mine(plan2).map(s => s.to), shots.map(s => s.to));
+});
+
+test('T446: the hold-and-release swing (HOLD_V) has no timing miss: straight whatever its acc, its power and boost count, and the shot keeps all of the model\'s direction spread', () => {
+  assert.deepEqual(readSwing({ power: 0.7, acc: 0, boost: 0.03, v: HOLD_V }), { power: 0.7, acc: 0, boost: 0.03, v: HOLD_V }, 'a save keeps its version');
+  for (const acc of [0, 0.15, -0.2]) {
+    const e = swingEffect({ power: 0.7, acc, boost: 0.03, v: HOLD_V }, 0.3, false);
+    assert.equal(e.shape, 'straight'); near(e.deg, 0); near(e.power, 0.73);
+  }
+  near(swingEffect({ power: 0.6, acc: 0.1, boost: 0, v: HOLD_V }, 0.3, true).deg, 0, 1e-12);
+  // over many seeds a hold shot spreads across the line by the model's whole direction spread; a click on the line of the clicked meter keeps METER_ANG of it
+  const view = course(), hole = view.holes[1]!, from = { x: hole.tee.x, y: hole.tee.y }, aim = { x: hole.tee.x + 60, y: hole.tee.y };
+  const mk = (swing: SwingOutcome): Omit<OwnerInput, 'holeIdx' | 'stroke'> => ({ club: 'iron6', aim, power: 1, swing });
+  const across = (sw: SwingOutcome): number => {
+    const ys: number[] = [];
+    for (let s = 1; s <= 80; s++) ys.push(shotOutcome(view, hole, from, 'fairway', 0.3, mk(sw), rng(s, 1, 1)).landing!.at.y - from.y);
+    const m = ys.reduce((a, b) => a + b, 0) / ys.length;
+    return Math.sqrt(ys.reduce((a, b) => a + (b - m) ** 2, 0) / ys.length);
+  };
+  const hold = across({ power: 1, acc: 0, boost: 0, v: HOLD_V }), click = across({ power: 1, acc: 0, boost: 0, v: METER_V });
+  assert.ok(hold > click * 1.5, `the hold shot's spread across the line (${hold.toFixed(3)}) is the model's whole one, about twice the clicked meter's (${click.toFixed(3)})`);
 });
