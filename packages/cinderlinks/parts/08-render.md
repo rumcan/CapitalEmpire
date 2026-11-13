@@ -1250,7 +1250,8 @@ function render() {
   const H = hole, G = TOD[tmode].glow, HAZ = TOD[tmode].haze;
   const dist = (x, y) => (x - camX) * FX + (y - camY) * FY;
   const flag = { k: 20, d: dist(H.pin.x, H.pin.y) + 0.02 }, gol = { k: 21, d: bcam ? dist(p.x, p.y) : camD }, bl = { k: 22, d: dist(ball.x, ball.y) };
-  dlist.push(flag, gol, bl, { k: 24, d: cart.on ? camD - 0.02 : dist(cart.x, cart.y) });
+  dlist.push(flag, gol, bl); if (!pracLock()) dlist.push({ k: 24, d: cart.on ? camD - 0.02 : dist(cart.x, cart.y) });   // (J6: no cart while practising)
+  pracFlags(dlist, dist);   // (J6: the range's flags, parts/08l-practice.md)
   for (const sd of [-1, 1]) { const mx = H.tee.x - H.ry * sd * 2.5 + H.rx * 2.2, my = H.tee.y + H.rx * sd * 2.5 + H.ry * 2.2; dlist.push({ k: 23, d: dist(mx, my), x: mx, y: my }); }
   flist.length = 0;
   {   // trees: every tree is listed by its far piece, whatever its distance (near ones join the things drawn with sway and shadow, far ones are drawn small)
@@ -1320,6 +1321,7 @@ function render() {
       if (PJ.d > 24 && ball.state === 0) { const by = PJ.y - 12 - Math.round(Math.abs(Math.sin(frame * 0.08)) * 4), gc = rgb(255, 226, 150); for (let k = 0; k < 4; k++) { plotZ(PJ.x - k, by - k, 0, gc); plotZ(PJ.x + 1 + k, by - k, 0, gc); plotZ(PJ.x - k, by - k - 1, 0, rgb(60, 40, 30)); plotZ(PJ.x + 1 + k, by - k - 1, 0, rgb(60, 40, 30)); } }   // a marker over a far ball
     }
     else if (o.k === 23) { project(o.x, o.y, groundH(o.x, o.y), PJ); if (PJ.s > 0) blit(markSpr, PJ.x, PJ.y, PJ.s, PJ.d * 100, 0, 0, false, 0); }
+    else if (o.k === K_PFLAG) { project(o.x, o.y, groundH(o.x, o.y), PJ); if (PJ.s > 0) blit(fs, PJ.x, PJ.y, Math.max(0.3, PJ.s), PJ.d * 100, 0, 0, false, 0); }   // (J6: a range green's flag)
     else {
       const d = o.d, k = FOC / d, s0 = DS / d, sx = o.sx; let oz = o.lift / ZP; if (d < capEnd) { const cp = capAt(d, (sx - VW / 2) / k); if (oz > cp) oz = cp; }
       const sy = Math.round(HZ - (oz - camZ) * k);

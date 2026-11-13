@@ -42,6 +42,7 @@ export function View3pPanel({ game }: { game: Game }) {
         else if (m.t === 'input') relay(game.input3p(m.input));
         else if (m.t === 'gimme') relay(game.gimme3p(m.holeIdx, m.stroke));
         else if (m.t === 'holeDone') relay(game.holeDone3p(m.holeIdx));
+        else if (m.t === 'pick') relay(game.pick3p(m.drill));   // (J6: a drill picked in the practice panel)
         else if (m.t === 'aim') { const p = game.preview3p(m.key, m.input); if (p) v.send(p); }
         else if (m.t === 'error') setState(m.why);
       } catch (err) { console.warn('[view3p] the play could not go on', err); }
@@ -53,17 +54,18 @@ export function View3pPanel({ game }: { game: Game }) {
   }, [game, hole]);
 
   if (hole === null) return null;
+  const practice = game.practice3pPlace;   // (J6: practice at the range or the short game area: no ghost, kit or share)
   return (
     <section className="pointer-events-auto fixed inset-0 z-50 bg-black" data-testid="view3p" aria-label={`Playing hole ${hole}`}>
       <div ref={box} className="h-full w-full" />
       {state !== 'loaded' && (
         <div className="pointer-events-none absolute inset-0 flex items-center justify-center text-[14px] text-slate-300" data-testid="view3p-state">
-          {state === 'loading' ? `Walking out to hole ${hole}…` : `The view could not open the course: ${state}`}
+          {state === 'loading' ? (practice ? `Walking out to ${practice === 'range' ? 'the range' : 'the chipping green'}…` : `Walking out to hole ${hole}…`) : `The view could not open the course: ${state}`}
         </div>
       )}
       {/* T433, T434: the round as a ghost file, a ghost to play alongside (the hole starts again with it), the course as a file to share */}
-      {/* (T459, the jam MVP: no ghosts, kits or shared courses: docs/JAM.md "Future development") */}
-      {!JAM && <div className="absolute right-14 top-3 flex gap-1.5" data-testid="view3p-files">
+      {/* (T459, the jam MVP: no ghosts, kits or shared courses: docs/JAM.md "Future development"; J6: nor in practice) */}
+      {!JAM && !practice && <div className="absolute right-14 top-3 flex gap-1.5" data-testid="view3p-files">
         <button className="chip bg-slate-950/70" title="Save the round you have played here as a ghost file" onClick={() => { const t = game.ghostSave3p(); if (t) downloadText(`ghost-hole-${hole}.json`, t); else game.toast('Play a shot first: the ghost is the round you play', 'info'); }}>Save ghost</button>
         <button className="chip bg-slate-950/70" title="Play alongside a ghost round of this hole (the hole starts again)" onClick={() => { void pickText().then(t => { if (!t) return; const why = game.ghostLoad3p(t); if (why) game.toast(why, 'warn'); else bridge.current?.open(hole); }); }}>Ghost…</button>
         {/* T436: own kit (your skills, clubs and cards, scored net of handicaps) or level kit (everyone the same golfer and bag); the hole starts again with it */}

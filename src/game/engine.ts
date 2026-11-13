@@ -180,7 +180,7 @@ import { fetchLand, tilesKept, tilesOfCourse } from './golf/osm/dem';
 import { planOsmGame } from './golf/osm/start';
 import { specMarkers } from './golf/osm/raster';
 import { RANGE_CAM_ZOOM, planRangeStart } from './golf/rangestart';
-import { CLUB_REACH, clubhouseSpotWhy, plotOfFront, rangeLayout } from './golf/range';
+import { CLUB_REACH, RANGE_PLOT, clubhouseSpotWhy, plotOfFront, plotPoint, rangeLayout } from './golf/range';
 import { PRACTICE_LOT_NAME, inPractice, practiceArea, practiceDims } from './golf/practice';
 import { CAR_PARK_PLACE_COST, PRACTICE_PLACE_COST, RANGE_PLACE_COST, landWhy, placeVerdict, rangeSpotAt, rectAt, rectPoly as rectPolyOf, rectsMeet, type LandCheck, type Placeable, type RangeSpot } from './golf/placing';
 import { RANGE_UPGRADES, homeYardBox, rangeTakes, upgradeFoot, upgradeWhy, type RangeBizSave } from './golf/rangebiz';
@@ -222,9 +222,11 @@ import { fillPack } from './golf/osm/terrarium'; // T438: the share file's heigh
 import { MARGIN_T, exportFeatures3p, gatherFeatures3p } from './golf/play/features3p';
 import { courseEntry3p } from './golf/play/entry3p';
 import { seedOf } from './golf/play/view3p';
-import type { Actor, CourseMsg, CourseTime3p, Dress, HostMsg, Time3p, ViewInput } from './golf/play/protocol3p';
+import type { Actor, CourseMsg, CourseTime3p, Dress, HostMsg, PracticeMsg, Time3p, ViewInput } from './golf/play/protocol3p';
 import { Play3p, type Play3pOpts } from './golf/play/play3p'; // T418: the owner's play in the view from behind the golfer
-import { DEV_EARNED, earned } from './golf/play/unlocks'; // T443
+import { DEV_EARNED, earned, practiceEarned } from './golf/play/unlocks'; // T443
+import { PracticeDriver, RANGE_HOLE, SHORT_HOLE, practiceCourse, practiceFlags, type PracticeCourse, type PracticePlace } from './golf/play/practice3p'; // J6
+import { DRILLS, DRILL_IDS, drillGains, drillProgress, recordDrill, type DrillCall, type DrillId } from './golf/play/drills'; // J6
 import { galleryActors } from './golf/play/gallery3p'; // T429: the galleries for the view
 import { Match3p } from './golf/play/match3p'; // T428: a money match in the view
 import { readShare, shareCourseMsg, shareOf, shareText, shareView, type CourseShare } from './golf/play/share3p'; // T434: shared courses
@@ -987,6 +989,8 @@ export class Game {
     save: () => this.scheduleSave(), toast: (t, k) => this.toast(t, k), emit: () => this.emit(),
   });
   /** a practice facility in hand (Facilities ▸ Practice, the range card's Build; null puts it down); show: the camera on the practice area */
+  /** J6 (#1223): the range card's Quick build: the facility laid at the first spot of the practice area where it fits (practicetool.ts quick); the reason when it cannot be */
+  quickPractice(kind: 'putting' | 'chipping'): string | null { const lock = this.toolLock('practice'); if (lock) { this.toast(lock, 'warn'); return lock; } return this.practice.quick(kind); }   // (the practice tools' own lock holds: a jam game opens them with the first range upgrade)
   armPractice(kind: 'putting' | 'chipping' | null, show = false) {
     if (!kind) { this.practice.cancel(); this.emit(); return; }
     if (this.refuseLocked('practice')) return;
@@ -10312,7 +10316,7 @@ export class Game {
   /** the view from behind the golfer closed (its Esc, the page's Esc, ✕): the manager view comes back and the sim runs at the speed it had */
   close3p() {
     if (this.view3pHole === null) return;
-    this.play3p = null; this.shared3p = null; this.view3pRound = false; this.lies3pRun(null);   // (T434: a shared course is played only while the view is open)
+    this.play3p = null; this.shared3p = null; this.view3pRound = false; this.lies3pRun(null); this.prac3p = null;   // (J6: a practice session ends with the view)   // (T434: a shared course is played only while the view is open)
     this.view3pHole = null; this.lastFrame = 0; this.last = performance.now();
     if (this.view3pSpeed && !this.speed) this.setSpeed(this.view3pSpeed);
     this.emit();
@@ -10349,16 +10353,17 @@ export class Game {
     const golfer = this.youDress3p();   // (T437: the golfer in the player card's clothes; T450b: drawn as the golfer he picked)
     if (sh) { this.view3pFrame = sh.frame; this.course3pShare = sh.share; return { ...(await shareCourseMsg(sh.share, sh.view, n)), golfer, time: roundTime ?? this.time3p }; }   // (T434: a shared course)
     const g = this.golf; if (!g) return null;
-    const name = this.titleName()?.name ?? 'Your course', id = 'ce-' + (name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'course');
-    const inp = export3pInputOf(this, name); if (!inp) return null;
+    const pr = this.prac3p;   // (J6: a practice session: the range and the short game area as a course of their own, practice3p.ts)
+    const name = this.titleName()?.name ?? 'Your course', id = 'ce-' + (name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'course') + (pr ? '-practice' : '');
+    const inp = pr ? { ...pr.course.input } : export3pInputOf(this, name); if (!inp) return null;
     inp.id = id;
     const f = frame3p(inp), file = await exportCourse3p(inp, { deflate: false }), course = await courseEntry3p(file);   // (T438: the heights deflated after, for the share file)
     this.view3pFrame = f; // (T418: the turns and shots are sent in this same frame)
     // T422: the model's lies over the course (and 40 tiles round it), so the view draws its grass where the model reads it
     // T438: read in slices after the course has gone (lies3pReady), so the first picture does not wait for them; the first turn does
-    { const v = this.yrView(), b = tileBox(inp); this.lies3pRun(v && b ? lieGridJob(v, [b[0] - 40, b[1] - 40, b[2] + 40, b[3] + 40], { x: f.cx, y: f.cy }) : null); }
+    { const v = pr ? pr.course.view : this.yrView(), b = tileBox(inp); this.lies3pRun(v && b ? lieGridJob(v, [b[0] - 40, b[1] - 40, b[2] + 40, b[3] + 40], { x: f.cx, y: f.cy }) : null); }
     // the box town roads must be near to count as the course's: every marker of the course (tees, pins, aims), in tiles
-    const pts = [...g.tees, ...g.pins, ...(g.aims ?? [])];
+    const pts = pr ? [...inp.tees, ...inp.pins] : [...g.tees, ...g.pins, ...(g.aims ?? [])];
     const box: [number, number, number, number] | undefined = pts.length
       ? [Math.min(...pts.map(p => p.x)), Math.min(...pts.map(p => p.y)), Math.max(...pts.map(p => p.x)), Math.max(...pts.map(p => p.y))] : undefined;
     const tb3 = tileBox(inp);   // (T451: the course's own box, which its trees are gathered round)
@@ -10366,6 +10371,13 @@ export class Game {
       props: [...this.props].map(p => { const l = lookOf(p); return { item: l.item, x: p.x, y: p.y, scale: l.scale, ...(p.auto ? { auto: p.auto } : {}) }; }), library: LIBRARY,   // (T454: each prop as the game draws it)
       ...(box ? { box } : {}), ...(tb3 ? { courseBox: tb3, trees: this.trees3p([tb3[0] - MARGIN_T, tb3[1] - MARGIN_T, tb3[2] + MARGIN_T, tb3[3] + MARGIN_T]) } : {}),
       pages: ATLAS_PAGES }), { x: f.cx, y: f.cy });   // (T451: every tree on the course and 150 m round it, with the game's pictures of them)
+    if (pr) {   // (J6: the range's business site is one block over its whole front (shop, mats and car park); in practice only its shop stands, so the mats look down the range)
+      const sc = this.range.scene, fs = features.features, i = fs.findIndex(x => x.kind === 'building' && x.use === 'range'), b = fs[i];
+      if (sc && b && b.kind === 'building') {
+        const [x0, y0, x1, y1] = sc.box, hut = rangeLayout([x0, y0, x1 - x0, y1 - y0], sc.facing).hut.rect, c = { x: hut[0] + hut[2] / 2 - f.cx, y: hut[1] + hut[3] / 2 - f.cy };
+        fs[i] = { ...b, name: 'Pro shop', at: [c.x * TILE_M, c.y * TILE_M], w: hut[2] * TILE_M, d: hut[3] * TILE_M, h: 5, rot: 0 };
+      }
+    }
     // T447: the biome and course type from what the course looks like (look3p.ts biomeFor3p, courseTypeFor3p): the Desert theme, the month on the home map, a
     // shipped real course's latitude, the sand, water and trees of the course file; the club's members, tour tier and condition, and a tournament day
     // (the trees on the course itself, T451's own and planted props, in the course's tile box: the per-hectare count reads the course, not its 150 m rim)
@@ -10376,9 +10388,75 @@ export class Game {
     const type = courseTypeFor3p({ tournament: this.traffic.round.stage !== 'free' || !!this.eventToday(), condition: st ? courseCondition(st) : 100, tier: g.tier, members: g.club?.members ?? 0, biome, ground });
     // T433, T434: what a ghost or a shared course file holds, once its heights are deflated (T438: after the course has gone to the view)
     this.course3pShare = null; const sg = this.lies3pGen;
-    void (file.height ? fillPack(file.height) : Promise.resolve()).then(() => { if (sg === this.lies3pGen) this.course3pShare = shareOf(file, features, { name, biome, type, seed: seedOf(name) }); });
+    if (!pr) void (file.height ? fillPack(file.height) : Promise.resolve()).then(() => { if (sg === this.lies3pGen) this.course3pShare = shareOf(file, features, { name, biome, type, seed: seedOf(name) }); });
     const night = this.golf?.player?.round?.mode === 'night-golf';   // (T449: a night-golf round is played at night)
     return { v: 1, t: 'course', course: course as unknown as Record<string, unknown>, features, biome, type, seed: seedOf(name), scale: 1, hole: n, golfer, time: roundTime ?? (night ? 'night' : this.time3p) };
+  }
+  // ---------- J6 (#1223): practice from behind the golfer: the range's mats and the short game area (golf/play/practice3p.ts, drills.ts) ----------
+  /** the practice session open in the view (null: none): its place, its course, its driver (made once the view has loaded) and a drill's reward to say once */
+  private prac3p: { place: PracticePlace; course: PracticeCourse; drv: PracticeDriver | null; paid: string | null } | null = null;
+  /** the place of the practice session open in the view (null: none) */
+  get practice3pPlace(): PracticePlace | null { return this.prac3p?.place ?? null; }
+  /** the practice course of the range as it stands now (practice3p.ts): the outfield past the mats, the tee box, the target greens (or the distance markers'),
+   *  and with a range start's practice area its painted greens and bunkers and the chipping green when it is open. Null without a range */
+  private practiceCourse3p(): PracticeCourse | null {
+    const sc = this.range.scene, g = this.golf; if (!sc || !g) return null;
+    const [x0, y0, x1, y1] = sc.box, [W, D] = RANGE_PLOT, P = (u: number, v: number) => plotPoint([x0, y0, x1 - x0, y1 - y0], sc.facing, u, v);
+    const outfield = [P(0, 18), P(W, 18), P(W, D), P(0, D)].flatMap(q => [q.x, q.y]);   // (the plot past the shop and the car park: the tee box at 18..24, then the outfield)
+    const area = g.start === 'range' && sc.practice.pts.length ? sc.practice.box : null, cf = area ? this.range.practice?.chipping ?? null : null;
+    return practiceCourse({ outfield, teeBox: sc.teeBox, bays: sc.bays.filter(b => !b.lift).map(b => b.stand), greens: sc.targets.length ? sc.targets : sc.aims, area,
+      areas: area ? this.courseAreaList() : [], chip: cf && cf.state === 'open' && cf.cups[0] ? { cup: cf.cups[0], stands: cf.stands } : null,
+      heightAt: (x, y) => this.groundHeightAt(x, y), name: `${this.titleName()?.name ?? 'Your'} practice` });
+  }
+  /** why a practice place cannot open now (null: it can): the range not placed, a round under way, the short game area with no open chipping green */
+  practice3pWhy(place: PracticePlace): string | null {
+    if (!this.golf) return 'No club yet';
+    if (!this.range.scene) return 'Place the range first';
+    if (this.yourRound()) return 'Finish or quit the round you are playing first';
+    if (place === 'short' && this.range.practice?.chipping.state !== 'open') return 'Build the chipping green and bunker first';
+    return null;
+  }
+  /** opens the view from behind the golfer on a practice place: the golfer on a range mat, or at the chipping green (the sim pauses, as for a hole) */
+  openPractice3p(place: PracticePlace) {
+    const why = this.practice3pWhy(place); if (why) { this.toast(why, 'warn'); return; }
+    const course = this.practiceCourse3p(); if (!course || course.idx[place] < 0) { this.toast('The practice area is not ready yet', 'warn'); return; }
+    if (this.view3pHole !== null) this.close3p();
+    this.prac3p = { place, course, drv: null, paid: null };
+    this.releaseKeys(); this.view3pSpeed = this.speed; if (this.speed) this.setSpeed(0);
+    this.view3pHole = place === 'range' ? RANGE_HOLE : SHORT_HOLE; this.emit();
+  }
+  /** the practice session starts once the view has loaded its course: the drills' panel, then the first ball's turn. In practice he may try the curve and
+   *  the flight (practiceEarned); the course still asks for them to be earned */
+  private practiceStart3p(f: Frame3p): HostMsg[] {
+    const pr = this.prac3p!, p = this.playerNow(), sk = this.yourSkills();
+    const base = this.devMode ? DEV_EARNED : earned({ skills: p?.skills ?? {}, bag: p?.bag ?? null, mech: MECH_IDS.filter(id => hasMech(sk, id)), drills: p?.drills?.done ?? null });
+    pr.drv = new PracticeDriver(pr.course, pr.place, sk, (this.seed ^ Math.imul(++this.play3pN, 104729)) | 0, { drills: () => this.playerNow()?.drills ?? null, judged: (id, call) => this.drillJudged(id, call) });
+    this.play3p = new Play3p({ view: pr.course.view, holes: [Math.max(0, pr.course.idx[pr.place])], skills: sk, earned: practiceEarned(base), driver: pr.drv, owner: this.youDress3p(), sex: p?.sex ?? 'm',
+      seed: this.seed, frame: f, height: this.ballHeight, wind: () => this.windNow(), fit: putterFitName(p?.bag) });
+    return [this.practiceMsg3p(), ...this.play3p.start()];
+  }
+  /** a ball judged for a drill: the drills saved with the profile; a drill done pays its skill points (the handicap comes down with them) and is toasted */
+  private drillJudged(id: DrillId, call: DrillCall) {
+    const p = this.playerNow(), pr = this.prac3p; if (!p) return;
+    const { save, paid } = recordDrill(p.drills, id, call);
+    let next = { ...p, drills: save };
+    if (paid) {
+      const h0 = handicapOf(p.skills), d = DRILLS[paid]; next = { ...next, skills: drillGains(p.skills, paid) };
+      const h1 = hcpText(handicapOf(next.skills)), text = `${d.name} done: ${d.reward.text} · handicap ${hcpText(h0)} to ${h1}`;
+      if (pr) pr.paid = `${d.name} done  -  handicap ${hcpText(h0)} to ${h1}`; this.toast(text, 'good');   // (the view's words short: its panel lists the reward)
+    }
+    this.setPlayer(next); this.emit();
+  }
+  /** the practice panel's message: the drills and their progress, the one being played, the last ball's line, a reward to say once, the range's flags */
+  private practiceMsg3p(): PracticeMsg {
+    const pr = this.prac3p!, d = pr.drv, p = this.playerNow(), f = this.view3pFrame, paid = pr.paid; pr.paid = null;
+    return { v: 1, t: 'practice', place: pr.place, drills: DRILL_IDS.map(id => { const g = drillProgress(p?.drills, id), D = DRILLS[id]; return { id, name: D.name, goal: D.goal, got: g.got, need: g.need, done: g.done, reward: D.reward.text, here: !!d && d.canPlay(id) }; }),
+      active: d?.active ?? null, note: d?.note ?? null, paid, flags: f ? practiceFlags(pr.course, pr.place, { x: f.cx, y: f.cy }) : [], hcp: p ? hcpText(handicapOf(p.skills)) : '', balls: d?.balls ?? 0 };
+  }
+  /** the view's drill picked in the practice panel: the panel again and the next ball from the drill's spot (nothing when no practice is open or it is not here) */
+  pick3p(id: string): HostMsg[] {
+    const pr = this.prac3p, d = pr?.drv; if (!pr || !d || !this.play3p || !(DRILL_IDS as readonly string[]).includes(id) || !d.pick(id as DrillId)) return [];
+    return [this.practiceMsg3p(), ...this.play3p.refresh()];
   }
   // ---------- T418: the owner's play in the view from behind the golfer (golf/play/play3p.ts: LiveGroup decides every stroke; the view shows them) ----------
   /** the frame the last course message was made in (course3pMsg) */
@@ -10390,7 +10468,8 @@ export class Game {
   /** the view has loaded the course (its `loaded`): a fresh play of the open hole starts, alone, free and not recorded (as a practice hole), and the
    *  view is sent its first turn. Nothing when the view is closed or the hole cannot be played (the course changed under it) */
   start3p(): HostMsg[] {
-    const n = this.view3pHole, sh = this.shared3p, v = sh ? sh.view : this.yrView(), f = this.view3pFrame; this.play3p = null; this.match3p = null;   // (T434: a shared course is played on its own view)
+    const n = this.view3pHole, sh = this.shared3p, v = sh ? sh.view : this.yrView(), f = this.view3pFrame; this.play3p = null; this.match3p = null;
+    if (this.prac3p) return n !== null && f ? this.practiceStart3p(f) : [];   // (J6: practice at the range or the short game area)   // (T434: a shared course is played on its own view)
     if (n === null || !v || !f) return [];
     // T428: a money match under way is played on in the view (the very match: its round saved after each input, settled when it ends)
     const mr = this.yourRound();
@@ -10412,7 +10491,7 @@ export class Game {
     const p = this.playerNow(), yr = this.view3pRound && !sh ? this.yourRound() : null;
     if (yr && !yr.match && !yr.over) {
       // T430: your round in the view: the game's own round (play/yours3p.ts), its strokes saved, its end recorded, its own gimme rule
-      const sk = this.yourSkills(), earn = this.devMode ? DEV_EARNED : earned({ skills: p?.skills ?? {}, bag: p?.bag ?? null, mech: MECH_IDS.filter(id => hasMech(sk, id)) });   // (T455: the Developer toggle opens every shot unlock)
+      const sk = this.yourSkills(), earn = this.devMode ? DEV_EARNED : earned({ skills: p?.skills ?? {}, bag: p?.bag ?? null, mech: MECH_IDS.filter(id => hasMech(sk, id)), drills: p?.drills?.done ?? null });   // (T455: the Developer toggle opens every shot unlock)
       const driver = yoursDriver(v, sk, this.seed, { get: () => this.yourRound(), set: r => this.setYourRound(r), played: (s, b, a, up) => this.yourPlayed3p(s, b, a, up), next: () => this.yourNextHole() });
       this.play3p = new Play3p({ view: v, holes: [idx], skills: sk, earned: earn, gimmeM: gimmeM(yr), driver, owner: this.youDress3p(), sex: p?.sex ?? 'm', seed: this.seed, frame: f,
         height: this.ballHeight, wind: () => this.windNow(), fit: putterFitName(p?.bag), gust: () => { const w = this.worldWind(); return w ? windView(this.windNow(), w, 1, 0).peak : null; } });
@@ -10420,7 +10499,7 @@ export class Game {
     }
     const mode = this.fair3p, sk = kitFor(mode, this.yourSkills());   // (T436: his own kit, or the level kit)
     // T443: what he has earned: his card's skills, his clubs' levels, his cards' mechanics (golf/play/unlocks.ts); the level kit has the level golfer's, no cards
-    const earn = this.devMode ? DEV_EARNED : mode === 'level' ? earned({ skills: LEVEL_PROFILE, bag: null, mech: [] }) : earned({ skills: p?.skills ?? {}, bag: p?.bag ?? null, mech: MECH_IDS.filter(id => hasMech(sk, id)) });
+    const earn = this.devMode ? DEV_EARNED : mode === 'level' ? earned({ skills: LEVEL_PROFILE, bag: null, mech: [] }) : earned({ skills: p?.skills ?? {}, bag: p?.bag ?? null, mech: MECH_IDS.filter(id => hasMech(sk, id)), drills: p?.drills?.done ?? null });
     const seed3p = (this.seed ^ Math.imul(n, 7919) ^ Math.imul(this.play3pN + 1, 104729)) | 0, ghost = this.ghostOpts3p(v, [idx]);   // (T433: a loaded ghost of this hole plays alongside)
     this.ghostMeta3p = { holes: [idx], seed: seed3p, skills: sk, sex: p?.sex ?? 'm', name: p?.name ?? 'You', mode, hcp: mode === 'level' ? levelHcp() : p ? handicapOf(p.skills) : levelHcp() };
     this.play3p = new Play3p({ view: v, holes: [idx], skills: sk, earned: earn, ...ghost, gimmeM: GIMME_RULES.find(r => r.id === DEFAULT_RULES.gimme)?.m ?? 0, /* (T423: a practice hole's rules: the leather) */ owner: this.youDress3p(), sex: p?.sex ?? 'm', seed: (this.seed ^ Math.imul(n, 7919) ^ Math.imul(++this.play3pN, 104729)) | 0, frame: f,
@@ -10477,6 +10556,7 @@ export class Game {
    *  hole's end, the next turn) */
   input3p(input: ViewInput): HostMsg[] {
     if (this.match3p) return this.match3pSync(this.match3p.input(input));   // (T428: a money match)
+    if (this.prac3p) { const ms = this.play3p ? this.play3p.input(input) : []; return this.prac3p.drv ? [...ms, this.practiceMsg3p()] : ms; }   // (J6: a practice ball, and the drills after it)
     const ms = this.play3p ? this.play3p.input(input) : [], pl = this.play, own = pl?.own;
     if (pl && own && this.play3p?.me === own.id && this.play3p.plan === pl.plan) { own.turn = own.live.advance(); this.saveOwner(); if (!own.turn) this.ownerDone(pl); this.emit(); }   // (T425: his real round moved on: kept as the manager game's)
     return ms;

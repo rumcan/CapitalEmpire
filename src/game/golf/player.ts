@@ -21,6 +21,7 @@ import { normalizeYou, type YouSave } from './you';
 import { normalizeYourRound, type YourRound } from './play/yours';
 import { normalizeChallenge, normalizeRivals, type Challenge, type Rival } from './play/match';
 import { normalizeTitles, titleText, type Title } from './clubevents';
+import { normalizeDrills, type DrillsSave } from './play/drills';
 
 /** the eight skills, in the order the cards show them */
 export const SKILL_IDS = ['driving', 'irons', 'short', 'putting', 'power', 'accuracy', 'touch', 'nerve'] as const;
@@ -156,6 +157,8 @@ export interface PlayerProfile {
   /** T336 (#962): your cards (golf/cards): the ones you own, the 8 slots, the pulls waiting at the vending machine. A new game has them (empty: the Space power-spam and the spin added in the air are the cards' to unlock);
    *  ABSENT is a save from before the cards, which keeps both mechanics (and makes its cards, `legacy`, with its first pull) */
   cards?: CardsSave;
+  /** J6 (#1223): the practice drills played from behind the golfer (play/drills.ts: the hits so far and the drills done); absent: none played (an older save) */
+  drills?: DrillsSave;
 }
 /** the practice log and the rounds keep this many (newest last) */
 export const LOG_MAX = 30, ROUNDS_MAX = 20;
@@ -212,7 +215,8 @@ export function normalizePlayer(x: unknown): PlayerProfile | null {
     ...(normalizeTitles(p.titles) ? { titles: normalizeTitles(p.titles) } : {}),
     ...(p.lesson && typeof p.lesson === 'object' && Number.isFinite(p.lesson.day) && typeof p.lesson.with === 'string' ? { lesson: { day: Math.round(p.lesson.day), with: p.lesson.with.slice(0, 40), used: p.lesson.used === true } } : {}),
     ...(normalizeBag(p.bag) ? { bag: normalizeBag(p.bag)! } : {}),
-    ...(normalizeCards(p.cards) ? { cards: normalizeCards(p.cards)! } : {}), // T336: absent stays absent: a save from before the cards keeps the mechanics the game had
+    ...(normalizeCards(p.cards) ? { cards: normalizeCards(p.cards)! } : {}),
+    ...(normalizeDrills(p.drills) ? { drills: normalizeDrills(p.drills)! } : {}), // J6: the drills (absent: none played) // T336: absent stays absent: a save from before the cards keeps the mechanics the game had
   };
 }
 
