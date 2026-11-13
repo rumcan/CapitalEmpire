@@ -4,7 +4,7 @@
 // No allocation a frame once warm: the labels are pooled and the text widths cached by font.
 import { labelFade } from './ext/hole-wizard/extras';
 import { JAM } from './features';
-import { LabelPlacer, type PlaceLabel } from './label-place';
+import { LabelPlacer, PRI, type PlaceLabel } from './label-place';
 
 /** one label and how it is written: its text (and an optional second piece in another colour on the line, and a line under it), font, colours,
  *  an optional dark outline and an optional rounded plate behind it */
@@ -85,8 +85,35 @@ export class WorldLabels {
     return l;
   }
 
-  /** places this frame's labels in the view (canvas px w x h); the number shown */
-  place(w: number, h: number): number { return (this.shown = this.placer.place(this.list, this.n, 0, 0, w, h)); }
+  /** J7d (#1234; the owner, 2026-11-13: "pls make all the labels show on hover ... cant put pallets down with a massive label that says pallets and now i cant even
+   *  see the pallets"): on (the jam build: the engine sets it), a name label is written only while the pointer is over its thing (hoverAt, canvas px; null: the
+   *  pointer is off the map) or its key is the selected thing's (keep). The labels that are not names stay: the hints under the pointer (PRI.hint), the
+   *  warnings (PRI.warn) and the town's growth floats (PRI.growth) */
+  hoverOnly = false;
+  hoverAt: { x: number; y: number } | null = null;
+  /** the keys of the selected things, whose labels stay in hoverOnly */
+  keep: ReadonlySet<unknown> = new Set();
+  /** how far round a label's spot the pointer counts as over its thing (canvas px; the engine scales it by the dpr): sideways, above the label, and below it,
+   *  where the thing stands under its name */
+  hoverReach = { side: 40, up: 12, down: 90 };
+  /** whether label l is written under the hover rule */
+  hovered(l: WorldLabel): boolean {
+    if (!this.hoverOnly || l.pri === PRI.hint || l.pri === PRI.warn || (l.pri <= PRI.growth && l.pri >= PRI.growth - 1) || this.keep.has(l.key)) return true;
+    const p = this.hoverAt; if (!p) return false;
+    const r = this.hoverReach, hw = l.w / 2 + r.side, top = l.y - l.h / 2 - r.up, bottom = l.y + l.h / 2 + r.down;
+    return p.x >= l.x - hw && p.x <= l.x + hw && p.y >= top && p.y <= bottom;
+  }
+
+  /** places this frame's labels in the view (canvas px w x h); the number shown. J7d: under the hover rule the labels not hovered are left out first, so they
+   *  neither show nor push the hovered one aside */
+  place(w: number, h: number): number {
+    if (this.hoverOnly) {
+      let k = 0;
+      for (let i = 0; i < this.n; i++) { const l = this.list[i]!; if (this.hovered(l)) { if (k !== i) { this.list[i] = this.list[k]!; this.list[k] = l; } k++; } else l.shown = false; }
+      return (this.shown = this.placer.place(this.list, k, 0, 0, w, h));
+    }
+    return (this.shown = this.placer.place(this.list, this.n, 0, 0, w, h));
+  }
 
   /** the pointer the labels fade near (canvas px, its reach and the alpha; T176: while New hole's ghost is up), or null */
   fadeNear: { x: number; y: number; r: number; a: number } | null = null;
