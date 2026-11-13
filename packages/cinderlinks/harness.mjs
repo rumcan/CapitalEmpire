@@ -435,6 +435,13 @@ ${HOST_PLAY}
       for (const [n, k] of [['a', 0], ['b', 1], ['c', 2], ['d', 3]]) { player.x = cart.x; player.y = cart.y; cart.on = true; camYaw = base + k * 1.5708 + 0.4; camD = 6; camHk = 0.8; aimCam(); camZ = groundH(cart.x, cart.y) + HC * 0.8; frames(4); snap('cart4-' + n); n0++; }
       cart.on = false; player.x = cart.x - Math.sin(cart.th) * 2.6; player.y = cart.y + Math.cos(cart.th) * 2.6; camYaw = base + 0.9; aimCam(); frames(4); snap('cart4-e'); camD = D0; camHk = 1;
       out.info.push({ cart4: { pictures: cartPics.size, ms: +(performance.now() - t0).toFixed(0), views: n0 } }); },
+    stylekeep() { // the style chosen for a course comes back when it is played again (a stand-in localStorage that keeps what it is given; the harness's own keeps nothing)
+      const LS0 = globalThis.localStorage; { const m = new Map(); globalThis.localStorage = { getItem: (k) => (m.has(k) ? m.get(k) : null), setItem: (k, v) => m.set(k, '' + v), removeItem: (k) => m.delete(k) }; }
+      idle(); const L = courseList(), a = L[0] && L[0].id, b = L[1] && L[1].id; if (!a || !b) { out.info.push({ stylekeep: 'needs two courses' }); return; }
+      const U0 = STYLE_URL; STYLE_URL = false;   // (the harness's address may name a style)
+      setCourse(a); useStyle('desert', 'links'); setCourse(b); useStyle('snow', 'public'); const onB = biomeId + '/' + ctypeId; setCourse(a); const backA = biomeId + '/' + ctypeId; setCourse(b); const backB = biomeId + '/' + ctypeId;
+      STYLE_URL = true; setCourse(a); const url = biomeId + '/' + ctypeId; STYLE_URL = false;
+      out.info.push({ stylekeep: { kept: JSON.parse(localStorage.getItem(STYLE_KEY)), a, b, onB, backA, backB, urlWins: url === backB, ok: backA === 'desert/links' && backB === 'snow/public' && url === backB } }); globalThis.localStorage = LS0; STYLE_URL = U0; },
     cartsheet() { // the cart's pictures on a plain ground, eight headings (four on top, close; four below), to judge the blocks themselves
       idle(); render(); for (let i = 0; i < fb.length; i++) fb[i] = 0xff58a04c; zbuf.fill(65535); frame++;
       const K = GK, sc = Math.max(1, Math.floor(VW / 4 / (170 * K)));

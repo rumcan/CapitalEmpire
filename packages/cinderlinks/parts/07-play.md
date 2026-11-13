@@ -1,6 +1,7 @@
 ## play Playing a hole
 You walk the golfer around the course, to your ball, and hit it. The art comes first; the golf is simple and complete.
 R: The camera follows from behind, as in World of Warcraft: W and S walk the golfer forward and back the way he faces, A and D turn him, Q and E step sideways, and whenever he moves the camera swings back behind him. While he stands still the player may turn the camera anywhere.
+R: The biome and course type chosen for a course are remembered in the browser and come back when that course is played again; a biome or type in the page's address wins.
 R: A golf cart waits near the tee. G gets the golfer into it when he stands beside it and out of it again. It drives like a cart: W goes, S brakes and backs up, A and D steer (less at speed), up to three times walking pace, and the camera swings round behind it as it turns. It keeps off the green, the tee and the bunkers. He must get out to play a shot.
 R: A full shot is played like a marksman's: a heartbeat sounds while the power is held, quickening as it builds; on release he holds at the top for a drawn breath; the strike cracks like a rifle; time runs slow for a moment and the camera leaves him to fly behind the ball until it lies still, then cuts back.
 R: The wind that bends the grass also pushes a flying ball a little; an arrow on the HUD shows which way it blows.
@@ -115,12 +116,25 @@ function newHole(n, ox, oy) {
 }
 // the course's style (see the biomes): everything made so far is dropped and made again in the new colours
 const BIOME_ORDER = ['parkland', 'coastal', 'beachside', 'desert', 'savanna', 'jungle', 'snow'], CTYPE_ORDER = ['links', 'tour', 'private', 'public'];
-function useStyle(b, t) { setBiome(b || biomeId, t || ctypeId); lib.clear(); libWarm = 0; total = 0; newHole(holeN, 0, 0); say(BIOMES[biomeId].name + ' ' + CTYPES[ctypeId].name + ' course', 220); }
+function useStyle(b, t) { setBiome(b || biomeId, t || ctypeId); styleKeep(); lib.clear(); libWarm = 0; total = 0; newHole(holeN, 0, 0); say(BIOMES[biomeId].name + ' ' + CTYPES[ctypeId].name + ' course', 220); }
 function useBiome(id) { useStyle(id, null); }
+// the style chosen for each course is kept (localStorage 'cinderlinks.styles': course id, or '-' for the invented course -> [biome, type]) and comes back
+// when that course is played again; ?biome= or ?type= in the address wins for the whole visit; in host mode the host says the style, so nothing is kept
+let STYLE_URL = false;
+const STYLE_KEY = 'cinderlinks.styles';
+function styleKeep() { if (HOST) return; try { const all = JSON.parse(localStorage.getItem(STYLE_KEY) || '{}') || {}; all[course ? course.id : '-'] = [biomeId, ctypeId]; localStorage.setItem(STYLE_KEY, JSON.stringify(all)); } catch (e) { /* not kept */ } }
+function styleRestore(id) {   // the style kept for course id, put in force; false when none is kept (or the address or the host decides)
+  if (STYLE_URL || HOST) return false;
+  let s = null; try { s = (JSON.parse(localStorage.getItem(STYLE_KEY) || '{}') || {})[id || '-']; } catch (e) { return false; }
+  if (!Array.isArray(s) || !BIOMES[s[0]] || !CTYPES[s[1]]) return false;
+  if (s[0] !== biomeId || s[1] !== ctypeId) { setBiome(s[0], s[1]); lib.clear(); libWarm = 0; }
+  return true;
+}
 function dragK(m) { const C = CTYPES[ctypeId]; return m === M_GREEN ? C.greenDrag : m === M_FAIR || m === M_TEE || m === M_CUT ? C.fairDrag : m === M_ROUGH || m === M_DEEP ? C.roughDrag : 1; }   // how the course type's turf holds a rolling ball
 function setCourse(id) {   // play a real course (its id), or the invented one (null); false if there is no such course
   if (id && !loadCourse(id)) return false;
   if (!id) course = null;
+  styleRestore(course ? course.id : null);   // (the style last chosen for this course)
   total = 0; newHole(1, 0, 0); shownClub = -2;   // (the clubs' reach differs on a real course: the tabs are written again)
   if (course) say(course.name + (course.place ? ', ' + course.place : '') + '  -  hole 1, par ' + hole.par, 360);
   return true;
