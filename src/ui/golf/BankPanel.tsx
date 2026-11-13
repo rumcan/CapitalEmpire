@@ -9,6 +9,7 @@ import {
 } from '../../game/golf/finance';
 import { Icon } from '../Icon';
 import { ProtectionSection } from './ProtectionSection'; // J3
+import { JAM } from '../../game/features';
 
 const money = (v: number) => `${v < 0 ? '−' : ''}$${Math.abs(Math.round(v)).toLocaleString('en-US')}`;
 const pct = (v: number) => `${v.toFixed(1)}%`;
@@ -102,7 +103,8 @@ export function BankPanel({ game }: { game: Game }) {
         <button className="chip chip-on w-full" disabled={!q.ok} onClick={() => game.bankBorrow(amount, term)} data-testid="bank-sign">Borrow {money(amount)} for {termText(term)}</button>
       </Section>
 
-      <Section title="Finance a purchase" hint="bank loan or murabaha" testId="bank-finance">
+      {/* T459 (the jam MVP): the murabaha comparison and the insurance plans are hidden in the jam build (docs/JAM.md "Future development") */}
+      {!JAM && <Section title="Finance a purchase" hint="bank loan or murabaha" testId="bank-finance">
         <div className="flex items-center gap-2">
           <input className="min-w-0 flex-1 rounded bg-black/30 px-2 py-1" value={what} maxLength={30} onChange={e => setWhat(e.target.value)} aria-label="What you are buying" placeholder="What are you buying?" />
           <input type="number" className="w-24 rounded bg-black/30 px-2 py-1 tabular-nums" min={MURABAHA_MIN} max={BANK_MAX} step={step} value={buy} onChange={e => setBuy(Math.max(0, Number(e.target.value) || 0))} aria-label="Price" data-testid="bank-buy" />
@@ -127,7 +129,7 @@ export function BankPanel({ game }: { game: Game }) {
           <button className="chip" disabled={!bq.ok} onClick={() => game.bankBorrow(buy, buyTerm, what.trim() || 'Purchase')} data-testid="bank-sign-loan">Bank loan</button>
           <button className="chip chip-on" disabled={!mq.ok} onClick={() => game.bankMurabaha(buy, buyTerm, what.trim() || 'Purchase')} data-testid="bank-sign-murabaha">Murabaha</button>
         </div>
-      </Section>
+      </Section>}
 
       <Section title="Your loans" testId="bank-loans">
         {f.loans.length === 0 && <p className="text-slate-400">No loans. Cash and savings are free of interest costs.</p>}
@@ -143,9 +145,9 @@ export function BankPanel({ game }: { game: Game }) {
           <button className="chip" disabled={f.savings < 1} onClick={() => game.bankWithdraw(step)} data-testid="bank-wd">Take {money(step)}</button>
           <button className="chip" disabled={f.savings < 1} onClick={() => game.bankWithdraw(f.savings)}>Take all</button>
         </div>
-        <p className="text-[11px] text-slate-400">Savings are a cushion for storms and repairs. They earn {SAVINGS_APR}%, but a loan costs more than that, so pay a loan off before you save when you can.</p>
+        <p className="text-[11px] text-slate-400">{JAM ? 'Savings are a cushion for lean months.' : 'Savings are a cushion for storms and repairs.'} They earn {SAVINGS_APR}%, but a loan costs more than that, so pay a loan off before you save when you can.</p>
       </Section>
-      <ProtectionSection finance={f} onChange={p => game.setInsurancePlan(p)} />
+      {!JAM && <ProtectionSection finance={f} onChange={p => game.setInsurancePlan(p)} />}
     </div>
   );
 }

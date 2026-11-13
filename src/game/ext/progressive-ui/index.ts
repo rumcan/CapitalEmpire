@@ -5,6 +5,8 @@
 // until it is first opened (the seen ids are saved in golf.progress). Settings > "Show every tool now" opens every tool and fine control at once.
 // Pure TypeScript, no DOM globals, deterministic.
 
+import { JAM, JAM_RAMP_TAKINGS } from '../../features';
+
 /** top-level rail tool group ids matching GROUPS in src/App.tsx */
 export type RailGroupId = 'select' | 'roads' | 'paint' | 'course' | 'junction' | 'bulldoze' | 'transport' | 'business';
 
@@ -275,7 +277,7 @@ export function isStuck(f: PlayerProgressFacts): boolean {
 // ---------------------------------------------------------------- a range start's ramp (plan P24 Phase 4a, T132)
 
 /** the range's takings in one season that open New hole ($) */
-export const RAMP_TAKINGS = 20000;
+export const RAMP_TAKINGS = JAM ? JAM_RAMP_TAKINGS : 20000; // (T459: the jam opens New hole sooner: features.ts JAM_RAMP_TAKINGS)
 /** the ramp step each tool opens at in a range start (the rest follow the stages): Holes and Paths with the first upgrade (to paint the
  *  practice greens), Props once the putting green opens, Buildings (the clubhouse) with New hole */
 export const RAMP_TOOL_STEP: Readonly<Partial<Record<UiToolId, RampStep>>> = Object.freeze({ course: 1, path: 1, practice: 1, props: 2, buildings: 3 }); // T206: the practice tools open with the first range upgrade, as the brushes that painted them did
@@ -292,7 +294,7 @@ export const RAMP_WHY: Readonly<Record<RampStep, string>> = Object.freeze({
   0: '',
   1: 'Unlocks with your first range upgrade',
   2: 'Unlocks when your putting green opens',
-  3: 'Unlocks when the range takes $20,000 in a season, or in season 2',
+  3: `Unlocks when the range takes $${RAMP_TAKINGS.toLocaleString('en-US')} in a season, or in season 2`,
 });
 /** the toast as each ramp step opens */
 export const RAMP_TOAST: Readonly<Partial<Record<RampStep, string>>> = Object.freeze({
@@ -334,7 +336,7 @@ export const RANGE_HINTS: Readonly<Record<'open' | 'upgrade' | 'props' | 'wait' 
   open: { id: 'hint-range-open', stage: 1, title: 'Your driving range is open', body: 'Golfers are already driving in. Click the range (or the Range chip) to open its card: the takings, the bucket price and the upgrades.', targetTool: 'select', show: true },
   upgrade: { id: 'hint-range-upgrade', stage: 1, title: 'Buy your first upgrade', body: 'More bays, target greens or a ball dispenser on the range card: the first one opens the Practice area beside the car park.', targetTool: 'select', show: true },
   props: { id: 'hint-range-props', stage: 1, title: 'Props are open (Z)', body: 'Pot plants, a fountain, a statue: props within 15 tiles of the shop or the mats draw more golfers. Each more of a kind counts less.', targetTool: 'props', show: true },
-  wait: { id: 'hint-range-wait', stage: 1, title: 'Next: your first hole', body: 'New hole opens when the range takes $20,000 in a season, or in season 2. Grow the range meanwhile.', targetTool: 'select' },
+  wait: { id: 'hint-range-wait', stage: 1, title: 'Next: your first hole', body: `New hole opens when the range takes $${RAMP_TAKINGS.toLocaleString('en-US')} in a season, or in season 2. Grow the range meanwhile.`, targetTool: 'select' },
   firstHole: { id: 'hint-range-first-hole', stage: 1, title: 'New hole is open: start with a par-3', body: `Open Holes (C) and press New hole: click a tee and point the way, and a ${FIRST_PAR3_M} m par-3 is planned for you. Build when it looks right.`, targetTool: 'course', show: true },
 });
 /** a whole number of dollars as the hints say it: $20,000 */
@@ -371,7 +373,7 @@ export function nextFirstRunHint(f: PlayerProgressFacts): FirstRunHint | null {
   const dismissed = new Set(f.dismissedHints ?? []), stage = resolveOnboardingStage(f), [h1, h2, h3, h4] = FIRST_RUN_HINTS;
   if (isStuck(f) && !dismissed.has(STUCK_HINT.id)) return STUCK_HINT;
   // the jam's hint points at the Junction tool, so only once it is open
-  if (f.townJammed && (f.advancedMode || stage >= TOOL_STAGE.junction!) && !dismissed.has(JAM_HINT.id)) return JAM_HINT;
+  if (!JAM && f.townJammed && (f.advancedMode || stage >= TOOL_STAGE.junction!) && !dismissed.has(JAM_HINT.id)) return JAM_HINT; // (T459: not in the jam build: no Junction tool)
   // a range start (T132): the ramp's hints until the first hole (never Step 1's: the range is the job), then the stages' as everywhere
   if (f.ramp && f.playableHoles < 1) return f.guideStep !== undefined ? null : rampHint(f, dismissed); // (T239: the guide's card says it while it runs)
   // a range start's practice facilities first (T130): the putting green, then the chipping green and bunker
@@ -382,6 +384,7 @@ export function nextFirstRunHint(f: PlayerProgressFacts): FirstRunHint | null {
   }
   if (f.playableHoles < 1 && !dismissed.has(h1!.id)) return h1!;
   if (stage < 3) return null;
+  if (JAM) return null; // (T459: the stage-3 hints point at Roads, the Event gate, Junctions and Transport, which the jam build hides)
   if (f.carParksBuilt < 1 && !dismissed.has(h2!.id)) return h2!;
   if (f.eventStructuresPlaced < 1 && !dismissed.has(h3!.id)) return h3!;
   if (!dismissed.has(h4!.id)) return h4!;

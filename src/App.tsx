@@ -73,6 +73,8 @@ import { GuidePulse } from './ui/GuidePulse';
 import { ClubTitleText } from './ui/ClubTitle';
 import { GrassManagementPanel } from './ui/GrassManagementPanel';
 import { GREENKEEPING, JAM } from './game/features';
+import { COST_GROUPS, INCOME_LINES } from './game/golf/reports';
+import { debtOf } from './game/golf/finance';
 import { TitleCard } from './ui/jam/TitleCard';
 import { formatPercent } from './ui/TournamentResults';
 import { SeasonReportCard } from './ui/golf/SeasonReportCard';
@@ -103,7 +105,7 @@ import { RangeGuideCard } from './ui/golf/RangeGuideCard';
 import { TooltipLayer } from './ui/Tooltip';
 import { UI_SCALES, applyUiScale, currentUiScale, saveUiScale } from './ui/uiScale';
 import { AccessSettings } from './ui/golf/AccessSettings';
-import { stackCol, stackFit, stackRight, type StackCard, type StackOpen } from './ui/golf/card-stack';
+import { stackCol, stackFit, stackRight, type StackCard, type StackOpen, type StackPanel } from './ui/golf/card-stack';
 import { HoleCard } from './ui/golf/HoleCard';
 import { View3pPanel } from './ui/golf/View3pPanel';
 import { BankPanel } from './ui/golf/BankPanel';
@@ -150,8 +152,9 @@ function menuCtx(game: Game): MenuCtx {
     ],
     // T288: the placements still to make first (the range, its car park, the practice area: a click takes it in hand), then the card's sections
     range: [
+      // (T459, the jam MVP: no kiosk or academy: docs/JAM.md "Future development"; the practice area stays for J6's practice mode)
       ...game.rangePlaces().filter(q => !q.done).map(q => ({ id: q.id, name: `Place ${q.name.replace(/^The /, 'the ')}`, place: true, why: q.why || null })),
-      ...(game.range.scene ? [{ id: 'card', name: 'Range card' }, { id: 'range-practice', name: 'Practice facilities' }, { id: 'range-extras', name: 'Kiosk and academy' }, { id: 'range-upgrades', name: 'Upgrades' }] : []),
+      ...(game.range.scene ? (JAM ? [{ id: 'card', name: 'Range card' }, { id: 'range-practice', name: 'Practice facilities' }, { id: 'range-upgrades', name: 'Upgrades' }] : [{ id: 'card', name: 'Range card' }, { id: 'range-practice', name: 'Practice facilities' }, { id: 'range-extras', name: 'Kiosk and academy' }, { id: 'range-upgrades', name: 'Upgrades' }]) : []),
     ],
   };
 }
@@ -422,6 +425,21 @@ export default function App() {
 
   /** the top bar's money figure (a button: it opens the budget) */
   const treasury = (g: Game) => <Stat icon="bank" label="Treasury" value={g.unlimited ? '∞' : withIcon(balanceKind(g.money), money(g.money))} tone={g.money < 0 ? 'text-red-300' : 'text-emerald-300'} sub={debtDays ? `bankrupt in ${DEBT_DAYS - debtDays} days` : undefined} subTone="text-red-300" onClick={() => g.toggleMoneyPanel()} />;
+  /** T459 (the jam build): the money chip's drawer is the money only: the cash, this month's money in and out so far (the statement's lines), the
+   *  savings and the debt when there are any; no town figures */
+  const jamMoneyStats = (g: Game) => {
+    const f = g.finance, cur = f.cur, v = (l: string) => { const n = (cur as Record<string, number | undefined>)[l]; return typeof n === 'number' && Number.isFinite(n) ? n : 0; };
+    const inc = INCOME_LINES.reduce((a, l) => a + v(l), 0) + v('savingsInterest'), out = -COST_GROUPS.reduce((a, gr) => a + gr.lines.reduce((b, l) => b + v(l), 0), 0), debt = debtOf(f);
+    return (
+      <>
+        <Stat icon="bank" label="Cash" value={money(g.money)} tone={g.money < 0 ? 'text-red-300' : 'text-emerald-300'} title="The club's cash in the bank account (below zero it is an overdraft, at 2.5% a month)" />
+        <Stat icon="income" label="In this month" value={`+${money(inc)}`} tone="text-emerald-300" title="What the club has taken this month so far: the range, green fees, members and the rest, and savings interest" />
+        <Stat icon="income" label="Costs this month" value={`−${money(out)}`} tone="text-red-300" title="This month's costs so far: wages, upkeep, interest, insurance, emergencies (building and loan repayments are not costs: they turn cash into the course or cut the debt)" />
+        {f.savings > 0 && <Stat icon="bank" label="Savings" value={money(f.savings)} tone="text-sky-300" title="In the savings account, at 4% a year" />}
+        {debt > 0 && <Stat icon="bank" label="Debt" value={money(debt)} tone="text-amber-300" title="What the club still owes the bank" />}
+      </>
+    );
+  };
   /** the population, jobs, day and daily income: inline in classic mode, in the money chip's drawer in golf mode (T035, T233) */
   const moreStats = (g: Game) => (
     <>
@@ -447,7 +465,7 @@ export default function App() {
    *  so the Staff card never hides under your profile; the guide cards (hidden while your profile, bag or cards are open) stand left of the card and the Staff card */
   const stack = (() => {
     const g = game; if (!g) return null;
-    const golf = !!g.golf, panel = !!g.panel;
+    const golf = !!g.golf, panel: StackPanel = g.panel === 'bank' ? 'wide' : !!g.panel; // (T459: the Bank panel is wider than the Budget panel: the cards and the tutorial stand clear of it)
     const open: StackOpen = {
       main: g.range.cardOpen || (g.clubCardOpen && g.hasClubhouse) || !!g.selectedPlace || g.holeCardHole !== null || (golf && !!g.eventCardOpen && !g.youTeeOpen),
       staff: golf && g.staffCardOpen, player: golf && g.playerCardOpen, bag: golf && (g.bagCardOpen || (g.cardsCardOpen && !g.vendingOpen)),
@@ -508,7 +526,7 @@ export default function App() {
                   {/* T233 (#674, the concept's top bar): the stat chips first: the money and its change a month (a click: the books; its drawer: the
                       town's figures, the golf Treasury's since T035), the reputation, the golfers a month (a click: the Club card) and the course
                       rating (a click: the Season card's Course stats) */}
-                  {stats && <StatChips chips={statChips(stats, debtDays ? DEBT_DAYS - debtDays : null)} drawer={moreStats(game)} on={{
+                  {stats && <StatChips chips={statChips(stats, debtDays ? DEBT_DAYS - debtDays : null).filter(c => !JAM || c.id === 'money') /* (T459, the jam MVP: the money chip alone) */} drawer={JAM ? jamMoneyStats(game) : moreStats(game)} on={{
                     money: () => game.toggleMoneyPanel(),
                     golfers: game.hasClubhouse ? () => game.openClubCard() : undefined,
                     rating: chip('courseStats') ? () => { setSeasonOpen(true); setCourseStats(null); } : undefined,
@@ -519,26 +537,26 @@ export default function App() {
                       under 1900 px, the chips' words and the invitation's sentence under 2200 px go into their tooltips; the traffic views are in the
                       gear menu */}
                   {/* T095 (P22 2.8): before the tour's invitation the Tier's line says the founding season's holes (one row at 1366-1920 px, T135) */}
-                  <Stat icon="trophy" label="Tier" value={`T${gv.tier}`} sub={gv.tierName} subClass="max-[2399px]:hidden" title={founding ? `${founding}: the tour invites you with ${fv!.check.holesNeeded} holes, a car park and a clubhouse (Tier ${gv.tier}: ${gv.tierName})` : `Tier ${gv.tier}: ${gv.tierName}`} tone="text-amber-200" />
-                  {(() => { const left = gv.live ? 'Tournament day' : `${Math.ceil(gv.monthsLeft)} ${Math.ceil(gv.monthsLeft) === 1 ? 'month' : 'months'} to ${fv && !fv.due ? 'season end' : 'the tournament'}`; return <Stat icon="calendar" label="Month" guide="month" value={gv.month} sub={left} subClass="max-[2399px]:hidden" title={`${gv.month}: ${left}`} />; })()}
+                  {!JAM && <Stat icon="trophy" label="Tier" value={`T${gv.tier}`} sub={gv.tierName} subClass="max-[2399px]:hidden" title={founding ? `${founding}: the tour invites you with ${fv!.check.holesNeeded} holes, a car park and a clubhouse (Tier ${gv.tier}: ${gv.tierName})` : `Tier ${gv.tier}: ${gv.tierName}`} tone="text-amber-200" />}
+                  {(() => { const left = gv.live ? 'Tournament day' : `${Math.ceil(gv.monthsLeft)} ${Math.ceil(gv.monthsLeft) === 1 ? 'month' : 'months'} to ${JAM || (fv && !fv.due) ? 'season end' : 'the tournament'}`; return <Stat icon="calendar" label="Month" guide="month" value={gv.month} sub={left} subClass="max-[2399px]:hidden" title={`${gv.month}: ${left}`} />; })()}
                   {game.golf?.start === 'range' && <button className={`chip ${game.range.cardOpen ? 'chip-on' : ''}`} onClick={() => game.openRangeCard()} data-tip="The driving range: golfers, takings, bucket price and upgrades" aria-label="Range" data-testid="range-chip" data-guide="range-chip"><Icon name="income" size={16} /><span className={WIDE}>Range</span></button>}
-                  {game.hasClubhouse && <button className={`chip ${game.clubCardOpen ? 'chip-on' : ''}`} onClick={() => game.openClubCard()} data-tip="The clubhouse: today's members, visitors, green fees and waits" aria-label="Clubhouse" data-testid="club-chip"><Icon name="house" size={16} /><span className={WIDE}>Club</span></button>}
+                  {!JAM && game.hasClubhouse && <button className={`chip ${game.clubCardOpen ? 'chip-on' : ''}`} onClick={() => game.openClubCard()} data-tip="The clubhouse: today's members, visitors, green fees and waits" aria-label="Clubhouse" data-testid="club-chip"><Icon name="house" size={16} /><span className={WIDE}>Club</span></button>}
                   {/* T241: your golf (the profile card: your skills, handicap, practice and your tee time) */}
-                  {game.golf && <button className={`chip ${game.playerCardOpen ? 'chip-on' : ''}`} onClick={() => game.openPlayerCard()} data-tip="Your golf: your skills, handicap, practice log and your round today" aria-label="You" data-testid="you-chip"><Icon name="people" size={16} /><span className={WIDE}>You</span></button>}
+                  {!JAM && game.golf && <button className={`chip ${game.playerCardOpen ? 'chip-on' : ''}`} onClick={() => game.openPlayerCard()} data-tip="Your golf: your skills, handicap, practice log and your round today" aria-label="You" data-testid="you-chip"><Icon name="people" size={16} /><span className={WIDE}>You</span></button>}
                   {/* T335: your bag (the 14 clubs, their upgrades, the putter's shaft and head) */}
-                  {game.golf && <button className={`chip ${game.bagCardOpen ? 'chip-on' : ''}`} onClick={() => game.openBagCard()} data-tip="Your bag: the 14 clubs, their upgrades, and the putter's shaft and head" aria-label="Bag" data-testid="bag-chip"><Icon name="briefcase" size={16} /><span className={WIDE}>Bag</span></button>}
+                  {!JAM && game.golf && <button className={`chip ${game.bagCardOpen ? 'chip-on' : ''}`} onClick={() => game.openBagCard()} data-tip="Your bag: the 14 clubs, their upgrades, and the putter's shaft and head" aria-label="Bag" data-testid="bag-chip"><Icon name="briefcase" size={16} /><span className={WIDE}>Bag</span></button>}
                   {/* T336: your cards (the 8 slots, the collection, the vending machine); the number is the pulls waiting */}
-                  {game.golf && <button className={`chip ${game.cardsCardOpen ? 'chip-on' : ''}`} onClick={() => game.openCardsCard()} data-tip={game.cardsPulls() > 0 ? `Your cards: ${game.cardsPulls()} pull${game.cardsPulls() === 1 ? '' : 's'} waiting at the vending machine` : 'Your cards: 8 slots, earned from wins, opened in the vending machine'} aria-label="Cards" data-testid="cards-chip"><Icon name="layers" size={16} /><span className={WIDE}>Cards</span>{game.cardsPulls() > 0 && <span className="rounded-full bg-amber-400 px-1.5 text-[11px] font-bold leading-4 text-slate-900" data-testid="cards-badge">{game.cardsPulls()}</span>}</button>}
+                  {!JAM && game.golf && <button className={`chip ${game.cardsCardOpen ? 'chip-on' : ''}`} onClick={() => game.openCardsCard()} data-tip={game.cardsPulls() > 0 ? `Your cards: ${game.cardsPulls()} pull${game.cardsPulls() === 1 ? '' : 's'} waiting at the vending machine` : 'Your cards: 8 slots, earned from wins, opened in the vending machine'} aria-label="Cards" data-testid="cards-chip"><Icon name="layers" size={16} /><span className={WIDE}>Cards</span>{game.cardsPulls() > 0 && <span className="rounded-full bg-amber-400 px-1.5 text-[11px] font-bold leading-4 text-slate-900" data-testid="cards-badge">{game.cardsPulls()}</span>}</button>}
                   {/* T240: your character: Me frames you once (T323: the camera no longer follows; Walk and Select are the rail's two cursors) */}
                   {game.you && <button className="chip" onClick={() => game.youMe()} data-tip="Me: the camera on your character (once: it does not follow)" aria-label="Me" data-testid="me-chip"><Icon name="pin" size={16} /><span className={WIDE}>Me</span></button>}
                   {game.you && !game.yourRound() && game.youCartFar() && <button className="chip" onClick={() => game.youCartCall()} data-tip="Your cart: it drives to you (C in the Walk cursor); then E gets in" aria-label="Call your cart" data-testid="cart-chip"><Icon name="compass" size={16} /><span className={WIDE}>Cart</span></button>}
-                  {fv?.invited && game.traffic.round.runs === 0 && !gv.live && <span className="flex items-center gap-1 whitespace-nowrap rounded-md border border-amber-400/40 bg-amber-400/15 px-2 py-1 text-xs font-semibold text-amber-200" data-testid="invite-pill" data-guide="invite-pill" data-tip={`The tour's invitation: the Club Championship at the end of ${fv.due ? 'this' : 'next'} season (the first tournament is held at the end of the season it names)`}><Icon name="trophy" size={14} /><span className="min-[2200px]:hidden">Invited</span><span className={WIDE}>The Club Championship: end of {fv.due ? 'this' : 'next'} season</span></span>}
+                  {!JAM && fv?.invited && game.traffic.round.runs === 0 && !gv.live && <span className="flex items-center gap-1 whitespace-nowrap rounded-md border border-amber-400/40 bg-amber-400/15 px-2 py-1 text-xs font-semibold text-amber-200" data-testid="invite-pill" data-guide="invite-pill" data-tip={`The tour's invitation: the Club Championship at the end of ${fv.due ? 'this' : 'next'} season (the first tournament is held at the end of the season it names)`}><Icon name="trophy" size={14} /><span className="min-[2200px]:hidden">Invited</span><span className={WIDE}>The Club Championship: end of {fv.due ? 'this' : 'next'} season</span></span>}
                   {gv.live && (() => { const w = getTournamentWeather(game.seed, game.weatherRun()); return <span className="rounded-md border border-amber-400/40 bg-amber-400/15 px-2 py-1 text-xs font-semibold text-amber-200" data-tip={w.summary}>{w.icon} {w.label}</span>; })()}
                   {/* T188 (P23-UX P2-2): the season chip opens the Season card (the founding checklist or the tournament plan, and the Course stats, which had a
                       chip of their own); in a founding season it says the holes ("◔ 3/9 holes", T095's founding line) */}
-                  {chip('courseStats') && (() => { const ph = seasonPhase(fv, game.traffic.round.runs); return <button className={`chip ${seasonOpen ? 'chip-on' : ''} ${ph === 'founding' ? 'font-semibold text-amber-300' : ''}`} onClick={() => { setSeasonOpen(!seasonOpen); setCourseStats(null); }} data-guide="season-chip" data-testid={ph === 'founding' ? 'founding-chip' : 'season-chip'} data-tip={founding ? `${founding}: the tour invites you with ${fv!.check.holesNeeded} holes, a car park and a clubhouse. Open the season's checklist and Course stats` : "The season: its tournament plan and the Course stats"} aria-label="Season"><Icon name="calendar" size={16} />{ph === 'founding' && fv ? <><span className="max-[1599px]:hidden">{seasonChip(ph, fv.check)}</span><span className="min-[1600px]:hidden">{`◔ ${Math.min(fv.check.holes, fv.check.holesNeeded)}/${fv.check.holesNeeded}`}</span></> : <span className={WIDE}>{seasonChip(ph, fv?.check)}</span>}</button>; })()}
-                  {chip('land') && <button className={`chip ${game.landMode ? 'chip-on' : ''}`} onClick={() => { if (game.landMode) game.closeLandSale(); else game.openLandSale(); bump(); }} data-tip="Land for sale: the blocks next to your land, priced; click one to see it, Buy on its card (also Course › Land for sale)" aria-label="Land for sale"><Icon name="compass" size={16} /><span className={WIDE}>Land</span></button>}
-                  {chip('holes') && <button className={`chip ${game.holesTool ? 'chip-on' : ''}`} onClick={() => { game.toggleHolesTool(); bump(); }} data-tip="Holes: move pins and tee markers" aria-label="Holes"><Icon name="pin" size={16} /><span className={WIDE}>Holes</span></button>}
+                  {!JAM && chip('courseStats') && (() => { const ph = seasonPhase(fv, game.traffic.round.runs); return <button className={`chip ${seasonOpen ? 'chip-on' : ''} ${ph === 'founding' ? 'font-semibold text-amber-300' : ''}`} onClick={() => { setSeasonOpen(!seasonOpen); setCourseStats(null); }} data-guide="season-chip" data-testid={ph === 'founding' ? 'founding-chip' : 'season-chip'} data-tip={founding ? `${founding}: the tour invites you with ${fv!.check.holesNeeded} holes, a car park and a clubhouse. Open the season's checklist and Course stats` : "The season: its tournament plan and the Course stats"} aria-label="Season"><Icon name="calendar" size={16} />{ph === 'founding' && fv ? <><span className="max-[1599px]:hidden">{seasonChip(ph, fv.check)}</span><span className="min-[1600px]:hidden">{`◔ ${Math.min(fv.check.holes, fv.check.holesNeeded)}/${fv.check.holesNeeded}`}</span></> : <span className={WIDE}>{seasonChip(ph, fv?.check)}</span>}</button>; })()}
+                  {!JAM && chip('land') && <button className={`chip ${game.landMode ? 'chip-on' : ''}`} onClick={() => { if (game.landMode) game.closeLandSale(); else game.openLandSale(); bump(); }} data-tip="Land for sale: the blocks next to your land, priced; click one to see it, Buy on its card (also Course › Land for sale)" aria-label="Land for sale"><Icon name="compass" size={16} /><span className={WIDE}>Land</span></button>}
+                  {!JAM && chip('holes') && <button className={`chip ${game.holesTool ? 'chip-on' : ''}`} onClick={() => { game.toggleHolesTool(); bump(); }} data-tip="Holes: move pins and tee markers" aria-label="Holes"><Icon name="pin" size={16} /><span className={WIDE}>Holes</span></button>}
  {!JAM && chip('event') && <button data-guide="chip-event" className={`chip ${game.eventTool ? 'chip-on' : ''}`} onClick={() => { game.toggleEventTool(); bump(); }} data-tip="Event: the event structures catalogue" aria-label="Event"><Icon name="buildings" size={16} /><span className={WIDE}>Event</span></button>}
                 </>
               ) : game.eventMode
@@ -557,10 +575,10 @@ export default function App() {
               <div className="glass flex items-center gap-1 px-2 py-1.5">
                 <button className="btn-icon" onClick={() => game.togglePause()} data-tip="Pause (Space)"><Icon name={game.speed ? 'pause' : 'play'} size={22} /></button>
                 {SPEEDS.map(k => <button key={k} className={`chip ${k < 1 ? 'px-1.5 text-[11px]' : ''} ${game.speed === k ? 'chip-on' : ''} disabled:opacity-40`} disabled={game.paceLock && k > WATCH_SPEED} onClick={() => game.setSpeed(k)} data-tip={k === WATCH_SPEED ? 'The watching speed: golfers walk at a natural pace (, and .)' : k < 1 ? 'Slow motion (, and .)' : 'Speed (, and .)'} data-testid={`speed-${speedLabel(k)}`}>{speedLabel(k)}×</button>)}
-                {game.golfMode && (game.golfWatch
+                {!JAM && game.golfMode && (game.golfWatch
                   ? <button className="chip chip-on" onClick={() => game.stopWatching()} data-tip="Stop watching: back to the speed before (Esc)" data-testid="watch-stop">Watching {game.golfWatch.label} ✕</button>
                   : <button className="chip" onClick={() => game.watchNearest()} data-tip="Follow the golf group nearest the middle of the screen at the watching speed" data-testid="watch-golf">Watch golf</button>)}
-                <button className="chip disabled:opacity-40" disabled={game.traffic.skipping} onClick={() => game.skipToRush()} data-tip="Skip to the next rush hour (H)"><Icon name="skip" size={16} />{game.traffic.skipping ? 'Skipping…' : ''}</button>
+                {!JAM && <button className="chip disabled:opacity-40" disabled={game.traffic.skipping} onClick={() => game.skipToRush()} data-tip="Skip to the next rush hour (H)"><Icon name="skip" size={16} />{game.traffic.skipping ? 'Skipping…' : ''}</button>}
                 {game.night.mode === 'clock' && game.clockNight() > 0 && <button className="chip" onClick={() => game.skipNight()} data-tip="Skip this night: daylight until the next one (how often nights come: gear menu, Night)"><Icon name="sun" size={16} /> Skip night</button>}
               </div>
               <div className="glass flex items-center gap-1 px-2 py-1.5">
@@ -587,6 +605,8 @@ export default function App() {
                     </div>
                     {/* J4 (#1207): the golf mode's currency (USD or AED, display only) and colour-blind-safe money */}
                     {game.golfMode && <AccessSettings />}
+                    {/* (T459, the jam MVP: settings are the text size, the currency and saving; the display options are hidden) */}
+                    {!JAM && <>
                     <label className="flex cursor-pointer items-center gap-2 px-2 py-2 text-sm" data-tip="A subtle iso grid of the 2 m tiles roads and lots snap to, shown over land that is not yours while a build or paint tool is in hand: your own land stays clear. It fades out as you zoom out (G)">
                       <input type="checkbox" checked={game.showGrid} onChange={e => { game.setShowGrid(e.target.checked); bump(); }} />
                       Map grid (G)
@@ -704,6 +724,7 @@ export default function App() {
                     ))}
                     {!JAM && <GradePanel game={game} bump={bump} />}
                     {!JAM && <NightPanel game={game} bump={bump} />}
+                    </>}
                     <button className="btn w-full" onClick={() => { setMenu(false); game.save(); }} data-tip="Saved automatically; force a save now">Save</button>
                     <button className="btn w-full" onClick={() => { setMenu(false); void game.downloadSave(); }} data-tip="Download the save as a .cesave file (for a bug report, or to carry it to another computer)">Download save</button>
                     <button className="btn w-full" onClick={() => saveFile.current?.click()} data-tip="Load a .cesave file in place of this game: this game is backed up first">Load save file…</button>
@@ -984,7 +1005,8 @@ export default function App() {
             const pv = !game.seasonReport && !game.sceneRef && !game.playerCardOpen && !game.cardsFolded() && game.traffic.round.stage === 'free' ? game.prepCardView() : null, busy = game.range.cardOpen || !!game.clubCard() || !!game.placeCard() || game.holeCardHole !== null;
             return pv && <RangeGuideCard view={pv} heading={pv.heading} tid="prep" foot="Each step pays once when it is done" offLabel="Hide this checklist" right={busy ? (game.panel ? 'right-[41rem]' : 'right-[23rem]') : game.eventTool ? (game.panel ? 'right-[40.25rem]' : 'right-[21.5rem]') : game.panel ? 'right-[19.5rem]' : 'right-3'} onShow={id => { game.prepShowMe(id); bump(); }} onSkip={id => { game.prepSkip(id); bump(); }} onFold={f => { game.prepFolded = f; bump(); }} />;
           })()}
-          {(() => { const cc = game.clubCard(); return cc && <ClubhouseCard view={cc} right={game.panel ? 'right-[19.5rem]' : 'right-3'} onClose={() => game.openClubCard(false)} onStaff={(r, d) => game.crewHire(r, d)} onPrice={p => game.setClubPrice(p)} onScene={game.sceneArt('club') ? () => game.openScene({ kind: 'club' }) : undefined} staffLine={game.staffLine()} onStaffCard={() => game.openStaffCard()} />; })()}
+          {/* (T459, the jam MVP: no Club card: its staff, members, dues and prices are "Future development"; the clubhouse takes its green fees by itself) */}
+          {!JAM && (() => { const cc = game.clubCard(); return cc && <ClubhouseCard view={cc} right={game.panel ? 'right-[19.5rem]' : 'right-3'} onClose={() => game.openClubCard(false)} onStaff={(r, d) => game.crewHire(r, d)} onPrice={p => game.setClubPrice(p)} onScene={game.sceneArt('club') ? () => game.openScene({ kind: 'club' }) : undefined} staffLine={game.staffLine()} onStaffCard={() => game.openStaffCard()} />; })()}
           {(() => { // T214: the Staff card, beside the Clubhouse card (to its left) when that is open
             const sv = game.staffCard(); if (!sv) return null;
             return <StaffCard view={sv} right={stack!.right('staff')} onClose={() => game.openStaffCard(false)} onHire={(r, at) => game.hireClubStaff(r, at)} onLetGo={k => game.letGoClubStaff(k)} />;

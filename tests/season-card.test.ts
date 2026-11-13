@@ -44,6 +44,8 @@ function anchorsInSource(): Set<string> {
   walk('src');
   const app = readFileSync('src/App.tsx', 'utf8'), rail = readFileSync('src/ui/Rail.tsx', 'utf8'), card = readFileSync('src/ui/golf/SeasonCard.tsx', 'utf8');
   assert.match(rail, /data-guide=\{`rail-\$\{r\.id\}`\}/); for (const r of RAIL) out.add(`rail-${r.id}`);
+  // T323: the Select slot's two cursors (T459: the buckets step points at Walk)
+  assert.match(rail, /data-guide=\{isWalk \? 'rail-walk' : 'rail-select'\}/); out.add('rail-walk'); out.add('rail-select');
   // T193: the group's tools are the flyouts' leaves now (Flyouts.tsx: tool-<id>, the Props tool's group for its Buildings)
   const fly = readFileSync('src/ui/Flyouts.tsx', 'utf8');
   assert.match(fly, /data-guide=\{r\.leaf \? `tool-\$\{r\.leaf\.entry\.view\?\.group \?\? r\.leaf\.entry\.id\}` : undefined\}/); for (const r of RAIL) for (const t of r.tools) out.add(`tool-${t.view?.group ?? t.id}`);

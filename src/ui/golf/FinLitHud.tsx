@@ -5,12 +5,16 @@ import type { Live, Report } from '../../game/golf/reports';
 import { GoalChip, ReportCard } from './ReportCard';
 import { StatementCard } from './StatementCard';
 import { MoneyMoments } from './MoneyMoments';
+import { JAM } from '../../game/features';
 
 /** what the HUD needs of the game (engine.ts `Game` provides it) */
 export interface FinHost { finance: FinanceSave; finLive(): Live }
 
 export function FinLitHud({ game }: { game: FinHost }) {
   const f = game.finance, live = game.finLive(), history = f.history as Report[];
+  // T459 (the jam MVP, the owner: "too much financial literacy"): the jam build keeps the month-end statement only; the goal chip, the money moments and
+  // the report card are hidden there (docs/JAM.md "Future development")
+  if (JAM) return <StatementCard history={history} />;
   return <>
     <div className="pointer-events-none absolute left-28 top-[calc(var(--hud-top,4.75rem)+0.25rem)] z-20" data-testid="finlit-goal"><GoalChip history={history} live={live} /></div>
     <StatementCard history={history} />

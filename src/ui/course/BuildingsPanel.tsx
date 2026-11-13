@@ -1,3 +1,4 @@
+import { JAM } from '../../game/features';
 import { useEffect, useRef } from 'react';
 import type { Game } from '../../game/engine';
 import { BUSINESS, CLUBHOUSE_RANGE_COST } from '../../game/business/catalogue';
@@ -37,7 +38,7 @@ export function BuildingsPanel({ game }: { game: Game }) {
             <div className="sub-line">{`${B.footprint.w} × ${B.footprint.h} tiles · one only`}</div>
           </div>
         </div>
-        <div className="sub-line leading-snug">The course's front door: green fees start, the tournament's crowd heads here, and the tour needs it before it invites you.</div>
+        <div className="sub-line leading-snug">{JAM ? "The course's front door: golfers pay their green fees here." : "The course's front door: green fees start, the tournament's crowd heads here, and the tour needs it before it invites you."}</div>
       </button>
       <p className="mt-2 leading-snug">{built ? 'Your clubhouse stands: there is one only.' : placing ? 'Click beside a drive on your land (its front snaps to the drive); R turns it, Esc puts it down.' : 'Pick the clubhouse to place it.'}</p>
       {/* J4 (#1207): what the clubhouse pays back: the green fees your playable holes would take a month (golf/payback.ts), against its upkeep
@@ -45,12 +46,15 @@ export function BuildingsPanel({ game }: { game: Game }) {
       {!built && (() => { const pc = game.paybackCourse(); return pc && <PaybackLine p={payback(CLUBHOUSE_RANGE_COST, B.upkeepPerDay / MONTHS_A_SEASON, greenFeesMonth(pc.course))} what="green fees" testid="clubhouse-payback"
         note={pc.course.holes > 0 ? `With your ${pc.course.holes} playable hole${pc.course.holes === 1 ? '' : 's'}; memberships come on top.` : 'No playable holes yet: green fees start when your first hole plays.'} />; })()}
       {/* T187: the halfway house, placed like the clubhouse: on the course by a tee, its front on a cart path */}
+      {/* T459 (the jam MVP): the clubhouse alone; the halfway house, the pro's office, the teaching huts and the house lots are hidden (docs/JAM.md "Future development") */}
+      {!JAM && <>
       <HalfwayCard game={game} />
       {/* T214 (P26 3.1): the pro's office by the clubhouse, the teaching huts at the range's mats and the practice greens */}
       <ProBuildingCard game={game} kind="prooffice" />
       <ProBuildingCard game={game} kind="teachhut" />
       {/* T353 (#995): house lots beside the holes, sold to the townsfolk, who build on them */}
       <EstateCard game={game} />
+      </>}
       {!built && game.clubDriveOffer && (
         <div className="mt-2 rounded-lg border border-amber-400/40 bg-amber-400/10 p-2" data-testid="club-drive-offer">
           <div className="flex items-center gap-1.5 text-amber-200"><span aria-hidden className="font-bold">!</span>No drive within reach of the spot you tried</div>

@@ -1,6 +1,7 @@
 // T416: the view from behind the golfer, full screen over the map (docs/CINDERLINKS-PORT.md). Shown while game.view3pHole is set (the hole card's
 // "Play this hole"); it holds the Cinderlinks iframe and the bridge (golf/play/view3p.ts), which sends the hole's course once the view says it is
 // ready. Escape (in the view or here) or ✕ closes it and the manager view comes back (engine close3p).
+import { JAM } from '../../game/features';
 import { useEffect, useRef, useState } from 'react';
 import type { Game } from '../../game/engine';
 import { View3p, type View3pFrame, type View3pHost } from '../../game/golf/play/view3p';
@@ -63,7 +64,8 @@ export function View3pPanel({ game }: { game: Game }) {
         </div>
       )}
       {/* T433, T434: the round as a ghost file, a ghost to play alongside (the hole starts again with it), the course as a file to share */}
-      {!practice && <div className="absolute right-14 top-3 flex gap-1.5" data-testid="view3p-files">
+      {/* (T459, the jam MVP: no ghosts, kits or shared courses: docs/JAM.md "Future development"; J6: nor in practice) */}
+      {!JAM && !practice && <div className="absolute right-14 top-3 flex gap-1.5" data-testid="view3p-files">
         <button className="chip bg-slate-950/70" title="Save the round you have played here as a ghost file" onClick={() => { const t = game.ghostSave3p(); if (t) downloadText(`ghost-hole-${hole}.json`, t); else game.toast('Play a shot first: the ghost is the round you play', 'info'); }}>Save ghost</button>
         <button className="chip bg-slate-950/70" title="Play alongside a ghost round of this hole (the hole starts again)" onClick={() => { void pickText().then(t => { if (!t) return; const why = game.ghostLoad3p(t); if (why) game.toast(why, 'warn'); else bridge.current?.open(hole); }); }}>Ghost…</button>
         {/* T436: own kit (your skills, clubs and cards, scored net of handicaps) or level kit (everyone the same golfer and bag); the hole starts again with it */}

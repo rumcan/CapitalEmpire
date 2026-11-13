@@ -4,6 +4,7 @@
 import { BUILD_S, CARDS, DRAFT, PERFECT_RATE, SURGE_SEED, SURGE_S, type CardId } from './config';
 import type { SurgeView, TownResult } from './surge';
 import { mulberry } from '../iso';
+import { JAM } from '../features';
 
 /** the round's stage: free (no round), build, surge (kick-off to come), eval (the result is in last, to be closed) */
 export type Stage = 'free' | 'build' | 'surge' | 'eval';
@@ -36,6 +37,7 @@ export type RoundSave = Omit<RoundView, 'surge' | 'year'>;
  *  from the pool: every upgrade, and each unlock not yet taken; null when the pool is empty */
 import { golfDraftFor } from '../golf/golfcards';
 export function draftFor(xp: number, runs: number, taken: CardId[], golf = false): CardId[] | null {
+  if (JAM) return null; // (T459: the jam build has no card draft: its cards unlock the event and road tools the jam hides, and an open draft held the season's clock until one was picked)
   if (golf) return golfDraftFor(xp, runs, taken);
   const pool: CardId[] = CARDS.filter(c => c.kind === 'upgrade' || !taken.includes(c.id)).map(c => c.id);
   const rnd = mulberry(SURGE_SEED + 1000 * xp + runs), out: CardId[] = [];

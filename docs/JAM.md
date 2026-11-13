@@ -74,8 +74,80 @@ export function book(f: FinanceSave, line: Line, amount: number): void;   // + m
   flooded bunkers (a week's green fees lost); scaled by the number of holes (x1 at the range, up to x2 at 18 holes).
 - The goal: by the end of season 2 (Aug 1986): 9 playable holes, net worth at least $250k, not in overdraft. Report card grade A to F.
 
+## Balance (T459, 2026-11-13: measured on the built jam, then tuned)
+Every number here is behind the JAM flag (`features.ts`: `JAM ? jamValue : currentValue`); the normal game's balance is unchanged. After the
+owner's MVP change the goal, the report card and the emergencies are hidden, so only what makes the loop fair from the $75k start is kept.
+
+**How it was measured.** The jam build (`npm run build:jam`, `vite preview`) played by a scripted player in the page at 20x: the range and its
+car park placed, every ball picked up (an upper bound for a diligent player), holes built by the New hole wizard's defaults ($18k to $37k a
+hole, about $23k; $12k to $17k without frame trees and earthworks), the clubhouse $45k.
+
+**What it found (lead/live 14c206b).**
+- New hole and the clubhouse opened only at $20,000 of range takings in a season, or in season 2. A bare range takes $0 to $1,200 a month
+  (seasonal), so even a player who picked up every ball waited 7 to 8 months, and a normal one half the two seasons.
+- Green fees did not grow with the holes: one hole took about $660 a month, nine holes $880 to $1,540. A $23k hole earned about $110 a month
+  while its interest at 10% cost about $190: building a hole never paid back, so borrowing to build never paid.
+
+**What changed (kept).**
+- `JAM_RAMP_TAKINGS = 2_000` (game: $20,000): New hole and the clubhouse open after about two months of range takings.
+- `JAM_FEE_PER_HOLE = 2`: the everyday green fees are paid per playable hole (fees x 2 x holes): a grown-in hole earns about $1,300 a month and
+  pays itself back in about 20 months, so a loan to build one pays and building early beats hoarding cash.
+- Kept: `JAM_START_MONEY = 75_000`, the Bank's numbers.
+
+**Runs after tuning** (one seed each; the hidden goal, 9 holes and $250k, for the record):
+| Player | Choices | Holes | Net worth |
+|---|---|---|---|
+| Borrows early | $200k over 5 years at month 2, all nine holes by month 5 | 9 | $327k |
+| Borrows, builds slower | $150k at month 2, six holes at once, the rest as cash allowed | 9 | $227k |
+| Never borrows | the clubhouse at month 2, then bare holes as cash allowed (months 3, 11, 17, 21) | 4 | $129k |
+| Idle | the range and its car park only | 0 | about $74k |
+
 ## Out of the jam build (J1 hides them when JAM)
 Traffic tools but the car park and cart paths (bus, toll, junction tiers, road up/downgrades); town decoration; career milestones and
 the city win; the natural disasters toggle (J3's emergencies replace it); the Studio, DEV badge, perf panels; Empty map; real places /
 downloaded courses; the tournament event tool and night golf (unless the playtest clears them); portrait placeholders ("not yet available");
 greenkeeping (already off). Unlimited dev money never applies in a JAM build.
+
+## Future development (hidden in the MVP)
+Hidden when JAM (T459, the owner: "simplify the ui and the game ... Call it the MVP"); the code stays and normal builds are unchanged. Each one
+is a candidate for the GDD's roadmap.
+
+**Money**
+- Goal chip and report card: the two-season challenge (9 holes, $250k net worth, no overdraft) graded A to F.
+- Money moments: one-line lessons that pop up the first time a loan, interest, a profit or an overdraft happens.
+- Emergencies and insurance: a monthly 8% chance of a storm, a broken pump or a drought bill, and the plans that cover it.
+- Murabaha ("Finance a purchase"): Islamic financing, a fixed markup agreed up front, compared side by side with a bank loan.
+- Glossary: dotted underlines that explain money words on hover, and the "Money words explained" list in Settings.
+
+**Range**
+- Coffee kiosk and golf academy: extra takings from the range's golfers.
+- Range upgrades: 24 bays, floodlights (night), the pro shop, the second tier of bays, the car park building.
+- Props appeal and Your home: decoration that draws golfers, and the house that grows with the takings.
+- Range › Build: painting the property freely, apart from the holes.
+
+**Course**
+- Shape by hand: painting greens, fairways, bunkers and water with brushes instead of New hole.
+- Tee sets: blue, yellow and red tees placed and moved per hole.
+- Land for sale: buying the blocks next to your land.
+- Ground height: raising, lowering and smoothing the land.
+- Facilities' Plants (trees and flower beds) and Props (course furniture and decoration); Facilities keeps Practice (the putting and chipping
+  greens J6's practice mode uses).
+- Halfway house, pro's office, teaching huts and house lots (the Buildings beyond the clubhouse).
+- The hole card's top-down Play, Build, Save hole and Play a shared course.
+
+**Club and golfer**
+- Club card and Staff card: members and dues, green fee price, staff hiring and wages, the club's day.
+- Your golf, your bag and your cards: the golfer's skills and handicap, the 14 clubs and upgrades, the card collection and vending machine.
+- The golf view's ghosts, kits and shared courses: Save ghost, Ghost…, Own kit / Level kit, Share course.
+
+**Seasons and events**
+- The tour's invitation and the season-end tournament (the Club Championship), its result card and its card draft.
+- The season card (the founding season's checklist) and the Season chip with the course stats.
+- Watch golf, Skip to the rush hour, the tier and the reputation, golfers and course-rating chips.
+- The town hints (roads, the event gate, junctions and transport).
+
+**Map and settings**
+- Traffic: roads, junctions, transport and the town car parks (the range keeps its own car park).
+- Town decoration.
+- Display options in Settings: the map grid, putt break lines, the ball's trace, stand-in labels, money floats, shadows, grass looks, sun patches,
+  desert litter and yards, the world switch, the graphics grade and the night.

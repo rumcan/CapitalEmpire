@@ -11,3 +11,10 @@ export const GREENKEEPING = false;
 export const JAM: boolean = (() => { try { return import.meta.env?.VITE_JAM === '1'; } catch { return false; } })();
 /** the jam game's starting cash, $ */
 export const JAM_START_MONEY = 75_000;
+/** T459 (docs/JAM.md "Balance"): the range takings in a season that open New hole and the clubhouse in the jam (the game's own is $20,000 or season 2,
+ *  which kept a jam player off the course for half of the two-season goal) */
+export const JAM_RAMP_TAKINGS = 2_000;
+/** T459 ("Balance"): in the jam the green fees are paid per playable hole: the everyday golf's fees times this for each playable hole (2: a hole of about
+ *  $26k earns about $1,300 a month once grown in, paying itself back in about 20 months). Without it nine holes took about what one did, so a hole never
+ *  paid back what it cost and borrowing to build never paid */
+export const JAM_FEE_PER_HOLE = 2;
