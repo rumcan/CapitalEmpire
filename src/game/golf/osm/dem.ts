@@ -20,7 +20,7 @@ export interface KeptTile { b: Uint8Array; s: string }
 
 /** the pause between two tile requests, ms */
 export const DEM_GAP_MS = 250;
-/** the most tiles one course may ask for (a 2 km map is 3 or 4 a side at most: more means a course far bigger than the map was allowed) */
+/** the most tiles one course may ask for (a 4 km map is 5 or 6 a side at most: more means a course far bigger than the map was allowed) */
 export const DEM_MAX_TILES = 25;
 
 /** the ground height could not be had: the elevation server did not answer or has no data here (the course is built flat, and the card says so) */

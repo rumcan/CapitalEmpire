@@ -19,7 +19,7 @@ test('tour.ts restores hotelRooms in tier 4 and interchange in tier 5 (20 needs 
 });
 
 test('tents.ts defines hotel (tier 3, rent+buy, rooms) and interchange (tier 4, buy-only, large footprint)', () => {
-  assert.equal(STRUCTURES.length, 28);
+  assert.equal(STRUCTURES.length, 33); // (the seating facilities, and T449's floodlight tower)
   const hotel = STRUCTURE.hotel;
   assert.ok(hotel, 'hotel structure exists in STRUCTURE');
   assert.equal(hotel.tier, 3);

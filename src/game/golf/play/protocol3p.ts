@@ -57,8 +57,8 @@ export interface CourseMsg { v: 1; t: 'course'; course: Record<string, unknown>;
   scale?: number; hole?: number;
   /** T437: the player's golfer in his player card's clothes (look3p.ts playerDress; absent: the view's own red polo) */
   golfer?: Dress;
-  /** T447: the time of day the course is played at: the course's own setting (golden hour unless the player chose day, GolfSave.time3p), or the round's when
-   *  the host sends one (night is for night-golf events, T449). Absent: golden hour. The view honours it from T448 on; an older view ignores it */
+  /** The time of day the round is played at. T447: the course's own setting (golden hour unless the player chose day, GolfSave.time3p); T449: a round's
+   *  own time wins ('night' for night golf). T448: the view draws 'day', 'golden' (Golden hour) or 'dusk'; absent: the view's own (Golden hour). Older views ignore it */
   time?: Time3p }
 
 /** what an actor is: a golfer, a caddie, a cart, or a gallery (a crowd standing at one spot, `count` people) */

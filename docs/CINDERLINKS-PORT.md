@@ -222,6 +222,32 @@ Each ticket: what, where, done when. "Lead" means design-heavy work for the lead
   slow frames left are sculptures (a thing's own sculpture, one every 15 frames while moving, 10 to 30 ms; the people's, three a frame) and the
   ground sweep while turning; sculpting in a worker is the fix; (7) the people's heights (08d, 08e, 08f `groundH`) can still make a far tile: the
   actors' owner's parts, left to them.
+  **Third pass (2026-11-13).** Measured in headless Edge driven over DevTools (the pane was hidden and throttled: its numbers had drifted to 2 to 3
+  times slower), the game's Maple Falls save loaded into a fresh profile, lead/live and the branch run in turn on one dev server; frames timed by the
+  view's own `render()` on the same scripted scene (tee, green with 40 people, a putting grid, walking, turning). The machine was busy (p95 varies by
+  about 5 ms run to run), so the frame numbers are medians of three runs each.
+
+  | Budget | lead/live | branch |
+  |---|---|---|
+  | (d) `loaded` (first picture) | 4.1 s | 2.56 s |
+  | (d) the first turn (after the lies) | 8.6 s | 4.7 s |
+  | (a) p95, green with 40 people | 33.5 ms | 25.1 |
+  | (a) p95, turning (worst frame) | 28.9 (235) | 29.9 (42) |
+  | (a) p95, walking / putting | 24.5 / 23.7 | 25.4 / 23.6 |
+  | `cinder:bench` (d) headless | 3.4 s | 1.84 s |
+
+  What changed: the host's first picture is whole within 60 m (`firstPicture(FP_NEAR)`); beyond, the far land stands in until the workers make the
+  tiles (the 800-odd tiles of the whole view were 1.7 s on the page's thread). Until the first turn or the lies come, the view draws one frame in four:
+  the host page reads the lies on the same thread, and the view's 60 fps had left it about a quarter of it. A tree's, bush's or rock's own sculpture
+  is made by a worker (`wkSprite`; the stand-in shows until it comes, then dissolves in), so its 10 to 30 ms no longer lands in a frame; the distance
+  rule is unchanged (the nearest only while the camera moves). The putting grid's points keep their heights for the green (`hostPuttPts`).
+  Tried and dropped: waiting for the workers to make the whole first picture (each must load the course first: `loaded` came later, 4.85 s);
+  starting the export as the iframe loads (it shares the page's thread: the course went 0.15 s later); small things' sculptures in the workers
+  (slower). Profiled, not the cause: the putting grid (no measurable cost), tile sorting (none per frame), the far ring (0.5 ms).
+  Left: (8) the frame's floor is p50 17 to 21 ms at 720 x 405 on this machine: the middle-land sweep about 10 ms, wind-blown trees 2 to 2.6, cloud
+  shade 2; p95 under 20 ms needs that floor lowered (the GPU engine, or the sweep in a worker), not the spikes, which are gone; (9) the people's
+  first sculptures (08d, three a frame) are the green's remaining spikes: the actors' parts; (10) after the lies the dirt reads as blocky patches,
+  the same on lead/live.
 - **T439 Tests** (coder). Unit: exporter, protocol encode and decode, sampler. Headless: the Cinderlinks harness fed by a scripted host plays
   three holes and checks rest points against the model. Nightly, as the testing policy says. Done when: `npm run cinder:gate` covers it.
 - **T440 The player's guide** (coder). The hole card's button, keys, what carries over (skills, clubs, cards) and what does not (fine detail is

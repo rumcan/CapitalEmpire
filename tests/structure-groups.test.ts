@@ -13,7 +13,7 @@ test('structure groups: every structure type is in exactly one group, and every 
 });
 
 test('structure groups: the panel order, and groupOf', () => {
-  assert.deepEqual(STRUCTURE_GROUPS.map(g => g.name), ['Entry & tickets', 'Spectator needs', 'Food & drink', 'Seating & viewing', 'Scoring', 'TV & media', 'Shops & sponsors', 'Hospitality', 'Transport']);
+  assert.deepEqual(STRUCTURE_GROUPS.map(g => g.name), ['Entry & tickets', 'Spectator needs', 'Food & drink', 'Seating & viewing', 'Scoring', 'TV & media', 'Shops & sponsors', 'Hospitality', 'Transport', 'Lights']);
   assert.equal(groupOf('gate')?.id, 'entry');
   assert.equal(groupOf('seatedPavilion60')?.id, 'seating');
   assert.equal(groupOf('interchange')?.id, 'transport');

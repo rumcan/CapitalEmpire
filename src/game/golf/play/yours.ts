@@ -112,8 +112,8 @@ export interface YourRound { v: 1; day: number; holes: number[]; at: number; car
   /** T431: the feats that have paid a card pull this round (play/feats.ts; once a round each); absent: none */
   feats?: FeatId[] }
 /** T246/T244: a round's mode (YourRound.mode) */
-export type RoundMode = 'casual' | 'championship' | 'mayors-cup' | 'match';
-export const ROUND_MODES: readonly RoundMode[] = ['casual', 'championship', 'mayors-cup', 'match'];
+export type RoundMode = 'casual' | 'championship' | 'mayors-cup' | 'match' | 'night-golf';
+export const ROUND_MODES: readonly RoundMode[] = ['casual', 'championship', 'mayors-cup', 'match', 'night-golf'];
 /** a competition round: any mode but casual (no mulligans, no gimmies; golf/player.ts PRESSURE.tournament or .match) */
 export const isCompetition = (r: Pick<YourRound, 'mode'> | null | undefined): boolean => !!r?.mode && r.mode !== 'casual';
 /** a round without its undo (what the undo keeps) */
