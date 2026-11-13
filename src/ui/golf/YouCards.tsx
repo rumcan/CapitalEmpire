@@ -59,7 +59,7 @@ export function WhoCard({ name, look, looks, hcp, onDone, desert, onTheme, cours
           <input className="mt-1 w-full rounded-lg border border-white/10 bg-slate-900 px-2 py-1.5 text-sm text-white" value={n} maxLength={40} placeholder="Your name" autoFocus onChange={e => setN(e.target.value)} onKeyDown={e => { if (e.key === 'Enter') onDone(n, l); }} data-testid="who-name" />
         </label>
         <div>
-          <div className="mb-1 text-xs text-slate-400">Your look <span className="text-slate-500">(stand-ins until the player looks are made)</span></div>
+          <div className="mb-1 text-xs text-slate-400">Your look{!JAM && <span className="text-slate-500"> (stand-ins until the player looks are made)</span>}</div>
           <div className="grid grid-cols-5 gap-1.5" data-testid="who-looks">
             {looks.map((o, i) => (
               <button key={o.id} className={`flex h-[72px] items-end justify-center rounded-lg border ${i === l ? 'border-amber-300 bg-amber-300/15' : 'border-white/10 bg-white/5 hover:bg-white/10'}`} onClick={() => setL(i)} title={o.sex === 'w' ? 'A woman' : 'A man'} data-testid={`who-look-${i}`}>
@@ -70,7 +70,7 @@ export function WhoCard({ name, look, looks, hcp, onDone, desert, onTheme, cours
         </div>
         {onTheme && (
           <div>
-            <div className="mb-1 text-xs text-slate-400">Your world <span className="text-slate-500">(saved with this game; the gear menu changes it later)</span></div>
+            <div className="mb-1 text-xs text-slate-400">Your world{!JAM && <span className="text-slate-500"> (saved with this game; the gear menu changes it later)</span>}</div>
             <div className="grid grid-cols-2 gap-1.5" data-testid="who-theme">
               {THEMES.map(t => (
                 <button key={t.name} className={`flex flex-col items-center rounded-lg border px-1 pb-1 pt-0.5 ${!!desert === t.desert ? 'border-amber-300 bg-amber-300/15' : 'border-white/10 bg-white/5 hover:bg-white/10'}`} onClick={() => onTheme(t.desert)} title={t.note} data-testid={`who-theme-${t.desert ? 'desert' : 'autumn'}`}>

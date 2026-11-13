@@ -3176,7 +3176,7 @@ export class Game {
     // every road class, junction (the roundabout without its card), tunnel and signal tier open from the start (?unlock=0 plays the unlocks)
     this.sandboxUnlock = !JAM && (q.has('unlock') ? q.get('unlock') === '1' : dev); // JAM: the progressive unlocks always play
     this.traffic.onGrow = (legs) => this.townGrow(legs);
-    this.traffic.onNoRoom = () => this.toast('The town has no room left to grow: build a road to give it new lots'); // T292 (#877)
+    this.traffic.onNoRoom = () => { if (!JAM) this.toast('The town has no room left to grow: build a road to give it new lots'); }; // T292 (#877) (not in the jam MVP: it has no road tool)
     this.traffic.onTown = (events) => { for (const e of events) this.lotQueue.add(e.key); this.townFirsts(events); this.placesCheck(); this.roughCheck(); };
     // a lot whose road was widened (or narrowed) keeps its house but moves back to the new verge: composed again there, not left over the road
     this.traffic.onLotsMoved = (keys) => { for (const k of keys) this.lotQueue.add(k); };

@@ -9,6 +9,7 @@ export const HOW_TO_PLAY: readonly string[] = [
   'The driving range earns your first money: golfers hit buckets of balls, and you pick the balls up again.',
   'Spend it on holes: Course > Holes > New hole, click a tee, then a green, and Build. A clubhouse brings the green fees.',
   'Play the holes you built: open a hole and press Play this hole.',
+  'Practise on your range: Hit balls and Chip and putt. Drills unlock shot shaping and the putt read, and lower your handicap.',
   'Click your cash to open the Bank: borrow (see the total interest first), repay early, or save.',
 ]; // (T459, the jam MVP: no goal, no murabaha: docs/JAM.md "Future development")
 
