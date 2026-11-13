@@ -24,7 +24,7 @@ import type { ShotSkill } from './shot';
 import type { HeightAt } from './roll';
 import type { WindNow } from './wind';
 import type { Frame3p } from './export3p';
-import { PROTOCOL_V, fromView, type Actor, type ActorsMsg, type BoardMsg, type HoleEndMsg, type HostMsg, type PreviewMsg, type ShotMsg, type ViewInput } from './protocol3p';
+import { PROTOCOL_V, fromView, type Actor, type ActorsMsg, type BoardMsg, type HoleEndMsg, type Dress, type HostMsg, type PreviewMsg, type ShotMsg, type ViewInput } from './protocol3p';
 import { CartPlay, type CartPaths } from './carts';
 import type { WalkField } from '../walkfield';
 import { actorsMsg } from './actors3p';
@@ -49,6 +49,8 @@ export interface Play3pOpts {
    *  his golfer's id and his group's index. The session plays that group on (no new plan; `holes`, `seed` and `company` are not used); the strokes already
    *  played count as sent, so the view opens on his turn as it stands. Absent: a fresh session, as above */
   attach?: { plan: RoundPlan; view: CourseView; live: LiveGroup; owner: number; group: number };
+  /** T450b: the owner's own dress (look3p.ts playerDress of his picked look), so his figure among the actors is the golfer he picked */
+  owner?: Dress;
   /** T429: the galleries to put in each actors list (gallery3p.ts galleryActors, as the engine has them now; absent: none) */
   galleries?: () => Actor[];
   /** T433: more people at game minute m (a ghost round's golfer: ghost3p.ts ghostActor); with it, the actors lists are sent as with company */
@@ -283,7 +285,7 @@ export class Play3p {
 
   /** T424/T425: who is on the course at game minute m, in the view's frame (actors3p.ts), carts and riders included */
   actors(m: number): ActorsMsg {
-    const a = actorsMsg({ plan: this.plan, view: this.view, minute: m, carts: this.carts }, this.centre), g = [...(this.o.galleries ? this.o.galleries() : []), ...(this.o.more ? this.o.more(m) : [])];
+    const a = actorsMsg({ plan: this.plan, view: this.view, minute: m, carts: this.carts, ...(this.o.owner ? { owner: this.o.owner } : {}) }, this.centre), g = [...(this.o.galleries ? this.o.galleries() : []), ...(this.o.more ? this.o.more(m) : [])];
     return { ...a, actors: g.length ? [...a.actors, ...g] : a.actors, play: true };
   }
   /** T427: the leaderboard at game minute m and his group's wait on the group ahead */

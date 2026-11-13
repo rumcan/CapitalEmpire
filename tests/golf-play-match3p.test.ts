@@ -12,7 +12,8 @@ import { MODEL_V } from '../src/game/golf/play/live';
 import type { CourseView, Lie, PlayHole } from '../src/game/golf/play/types';
 import type { ActorsMsg, HostMsg, MatchMsg, ShotMsg, TurnMsg, ViewInput } from '../src/game/golf/play/protocol3p';
 import { fromView } from '../src/game/golf/play/protocol3p';
-import { Match3p, OPP_3P, OWNER_M3P } from '../src/game/golf/play/match3p';
+import { Match3p, OPP_3P, OWNER_M3P, oppDress, oppSexOf } from '../src/game/golf/play/match3p';
+import { GOLFER_PEOPLE } from '../src/game/library';
 
 const holes: PlayHole[] = Array.from({ length: 18 }, (_, h) => { const tee = { x: 0, y: 10 + 30 * h }, pin = { x: 150, y: tee.y }; return { n: h + 1, par: h % 6 === 2 ? 3 : 4, tee, pin, line: [tee, pin] }; });
 const lieAt = (x: number, y: number): Lie => {
@@ -76,4 +77,13 @@ test('a strong golfer beats a weak one, and settling it moves the stake', () => 
   assert.equal(end.score.result, 'w', `won (${end.score.text})`);
   const s = settleMatch({ ...startProfile(), round: m.round }, m.round);
   assert.equal(s.result, 'w'); assert.equal(s.money, 200, 'the stake is his');
+});
+
+test('T450b: the opponent is drawn as the golfer the map shows him as (engine.ts matchBegin: GOLFER_PEOPLE[look]), his sex the look sex', () => {
+  GOLFER_PEOPLE.forEach((p, look) => {
+    const id = p.id.replace(/^golfer:/, ''), d = oppDress('Pat Doe', look);
+    assert.equal(d.art, id, `look ${look}`);
+    assert.equal(d.sex, id.includes('_w') ? 'w' : 'm'); assert.equal(oppSexOf(look), d.sex);
+  });
+  assert.equal(oppSexOf(8, 'm'), 'm', 'the host sex wins when it sends one');
 });
