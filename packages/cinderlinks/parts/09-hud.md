@@ -21,13 +21,13 @@ const gimmeEl = $('gimme'); gimmeEl.addEventListener('click', (e) => { gimme(); 
 // the course's style: a button at the top of the picture; its menu lists the course types and the biomes side by side (M steps through them too)
 const styleBtn = $('styleBtn'), styleMenu = $('styleMenu'); let shownStyle = '';
 let shownType = '';
-// T448: the Picture section: the painted look on or off, its paint radius, calm and cinematic amount (parts/09b-postfx.md); without WebGL2 it says so
-const PIC_IN = { picNear: ['near', 1, () => PIC.near + ' m'], picCalm: ['calm', 0.01, () => Math.round(PIC.calm * 100) + '%'], picCine: ['cine', 0.01, () => Math.round(PIC.cine * 100) + '%'] };
+// T448: the Picture section: the calm and the cinematic amount (the painted look is always on and covers everything: the owner, 2026-11-13) (parts/09b-postfx.md); without WebGL2 it says so
+const PIC_IN = { picCalm: ['calm', 0.01, () => Math.round(PIC.calm * 100) + '%'], picCine: ['cine', 0.01, () => Math.round(PIC.cine * 100) + '%'] };
 function picMenu() {
   if (!PFX) return '<div class="grp dist"><i>Picture</i><em>The painted look needs WebGL2: the plain picture is shown.</em></div>';
   const sl = (id, name, lo, hi, st, v) => '<em>' + name + '</em><input id="' + id + '" type="range" min="' + lo + '" max="' + hi + '" step="' + st + '" value="' + v + '"><span id="' + id + 'V">' + PIC_IN[id][2]() + '</span>';
-  return '<div class="grp dist"><i>Picture</i><label class="simple"><input id="picOn" type="checkbox"' + (PIC.on ? ' checked' : '') + '> Painted look</label>'
-    + sl('picNear', 'Paint radius', 30, 500, 10, PIC.near) + sl('picCalm', 'Calm', 0, 85, 5, Math.round(PIC.calm * 100)) + sl('picCine', 'Cinematic', 0, 100, 5, Math.round(PIC.cine * 100)) + '</div>';
+  return '<div class="grp dist"><i>Picture</i>'
+    + sl('picCalm', 'Calm', 0, 85, 5, Math.round(PIC.calm * 100)) + sl('picCine', 'Cinematic', 0, 100, 5, Math.round(PIC.cine * 100)) + '</div>';
 }
 function styleShow() {   // the menu: the biome (the land and its plants) beside the course type (how the course is kept); one of each is in force
   shownStyle = biomeId; shownType = ctypeId; styleBtn.innerHTML = 'Settings<b>&#9662;</b>';   // (the owner, 2026-11-13: the button always reads Settings; the biome and type are chosen in its menu)
@@ -42,7 +42,6 @@ styleMenu.addEventListener('click', (e) => { const t = e.target, id = t && t.get
   if (HOST) return;   // (T447: in the game the biome and course type are the course's)
   if (kind === 'b' && BIOMES[id] && id !== biomeId) { useStyle(id, null); firstPicture(); } else if (kind === 't' && CTYPES[id] && id !== ctypeId) { useStyle(null, id); firstPicture(); } else if (kind === 'g') golferPick(id);
   styleShow(); });   // (the menu stays open: a biome and a type are usually chosen together)
-styleMenu.addEventListener('change', (e) => { const t = e.target; if (t && t.id === 'picOn') picSet('on', t.checked); });
 styleMenu.addEventListener('input', (e) => { const t = e.target; if (t && PIC_IN[t.id]) { const [k, f, sh] = PIC_IN[t.id]; picSet(k, +t.value * f); const v = document.getElementById(t.id + 'V'); if (v) v.textContent = sh(); return; } if (!t || t.id !== 'detail') return; setDetail(+t.value); const v = document.getElementById('detailV'); if (v) v.textContent = VIEWR + ' m'; });
 try { localStorage.removeItem('cinderlinks.treeart'); } catch (e) { /* nothing kept */ }   // (T454: the Trees setting is gone: a host's trees are always its pictures)
 try { const d0 = +localStorage.getItem('cinderlinks.view'); if (d0) setDetail(d0); } catch (e) {}   // (T447: the simple grass is the only grass: no choice kept)

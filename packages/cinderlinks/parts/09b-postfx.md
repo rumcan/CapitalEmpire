@@ -1,7 +1,7 @@
 ## postfx The painted look (T448)
-The finished picture is passed through a WebGL2 layer before it reaches the screen. The owner chose "Painterly near + cinematic" as the game's look: an oil-paint filter on what stands near the golfer, an anti-flicker calm, and a light cinematic finish.
-R: Each frame the picture (and how far each pixel is) goes to the GPU: within the paint radius of the golfer (500 m to start, faded over 30 m) the land, trees and people are painted (a Kuwahara filter: flat strokes that keep the edges); a temporal calm (85% to start) holds each pixel to its last frames inside its neighbours' colours, so shimmer settles; the picture is scaled to the screen with sharp pixel edges; a cinematic finish (40% to start: a filmic tone curve, a teal and orange grade, bloom, sun rays from the upper right, a little lens fringe, grain and vignette) and a contrast-adaptive sharpen end it.
-R: The style menu's Picture section turns the painted look on and off and sets the paint radius, the calm and the cinematic amount; the browser keeps them. Without WebGL2 the plain picture is shown and the menu says so.
+The finished picture is passed through a WebGL2 layer before it reaches the screen. The owner chose "Painted + cinematic" as the game's look, always on: an oil-paint filter over the whole picture, an anti-flicker calm, and a light cinematic finish (the owner, 2026-11-13: the paint covers everything, no radius, and the look has no off switch).
+R: Each frame the picture goes to the GPU: all of it (the land, the trees, the people and the sky) is painted (a Kuwahara filter: flat strokes that keep the edges); a temporal calm (85% to start) holds each pixel to its last frames inside its neighbours' colours, so shimmer settles; the picture is scaled to the screen with sharp pixel edges; a cinematic finish (40% to start: a filmic tone curve, a teal and orange grade, bloom, sun rays from the upper right, a little lens fringe, grain and vignette) and a contrast-adaptive sharpen end it.
+R: The ball, the flag and the marker are kept sharp. The style menu's Picture section sets the calm and the cinematic amount; the browser keeps them. Without WebGL2 the plain picture is shown and the menu says so.
 R: The aiming marks, the putting grid and the panels stay above the layer at full sharpness; the layer never takes a click.
 R: With ?fx=test in the address a bar at the top steps through the filters tried (the backquote key too; hold Backslash for the original) with the sliders and the frame rate, the slowest frame and the filter's GPU and CPU time.
 File: game.js
@@ -11,14 +11,14 @@ Check: PAINTED = PRESETS.findIndex(
 ````js file=game.js
 
 // ---- the painted look (T448): a WebGL2 layer between the game's picture and the overlay. PIC: the player's settings (localStorage cinderlinks.picture:
-// { on, near (m), calm (0..0.85), cine (0..1) }); PFX: the layer once it runs (null: no WebGL2, or headless); picSet changes a setting.
+// { calm (0..0.85), cine (0..1) }); PFX: the layer once it runs (null: no WebGL2, or headless); picSet changes a setting.
 var PFX = null;
-const PIC = { on: true, near: 500, calm: 0.85, cine: 0.4 };
-try { const s = JSON.parse(localStorage.getItem('cinderlinks.picture') || 'null'); if (s && typeof s === 'object') { if (typeof s.on === 'boolean') PIC.on = s.on; for (const k of ['near', 'calm', 'cine']) if (Number.isFinite(s[k])) PIC[k] = s[k]; } } catch (e) { /* the defaults */ }
-PIC.near = clamp(PIC.near, 30, 500); PIC.calm = clamp(PIC.calm, 0, 0.85); PIC.cine = clamp(PIC.cine, 0, 1);
+const PIC = { calm: 0.85, cine: 0.4 };
+try { const s = JSON.parse(localStorage.getItem('cinderlinks.picture') || 'null'); if (s && typeof s === 'object') { for (const k of ['calm', 'cine']) if (Number.isFinite(s[k])) PIC[k] = s[k]; } } catch (e) { /* the defaults */ }
+PIC.calm = clamp(PIC.calm, 0, 0.85); PIC.cine = clamp(PIC.cine, 0, 1);
 const FX_TEST = typeof location !== 'undefined' && /[?&]fx=test(&|$)/.test(location.search || '');
 function picSet(k, v) {   // a Picture setting from the style menu (or the test bar), kept in the browser
-  if (k === 'on') PIC.on = !!v; else if (k === 'near') PIC.near = clamp(+v, 30, 500); else if (k === 'calm') PIC.calm = clamp(+v, 0, 0.85); else if (k === 'cine') PIC.cine = clamp(+v, 0, 1);
+  if (k === 'calm') PIC.calm = clamp(+v, 0, 0.85); else if (k === 'cine') PIC.cine = clamp(+v, 0, 1);
   try { localStorage.setItem('cinderlinks.picture', JSON.stringify(PIC)); } catch (e) { /* not kept */ }
   if (PFX) PFX.changed(k);
 }
@@ -26,8 +26,8 @@ function picSet(k, v) {   // a Picture setting from the style menu (or the test 
   if (typeof document === 'undefined' || typeof WebGL2RenderingContext === 'undefined' || typeof img === 'undefined' || typeof vctx === 'undefined') return;   // (headless, a worker, or no WebGL2: the plain picture)
   const PRESETS = [
     { name: 'Original', desc: 'The game as it is: hard pixels, scaled with no smoothing.', off: true },
-    { name: 'Painterly near', desc: 'The oil-paint filter only on the land, trees and people near the golfer (the radius slider), with the anti-flicker calm on top; the rest stays as it is.', pre: 3, up: 2, near: 300, cine: 0 },
-    { name: 'Painterly near + cinematic', desc: 'Painterly near the golfer, anti-flicker calm on top, and the Cinematic finish mixed in (40% by default).', pre: 3, up: 2, near: 300, cine: 0.5 },
+    { name: 'Painted', desc: 'The oil-paint filter over the whole picture (the ball, the flag and the marker kept sharp), with the anti-flicker calm on top.', pre: 3, up: 2, paint: true, cine: 0 },
+    { name: 'Painted + cinematic', desc: 'Painted all over, anti-flicker calm on top, and the Cinematic finish mixed in (40% by default).', pre: 3, up: 2, paint: true, cine: 0.5 },
     { name: 'Smooth', desc: 'Plain bilinear smoothing: soft, slightly blurry.', up: 1 },
     { name: 'Sharp pixels AA', desc: 'Pixels stay crisp; only their edges are smoothed, so nothing shimmers when the camera turns (the Unity "smooth pixel" filter).', up: 2 },
     { name: 'Edge smoothing (xBR)', desc: 'Rebuilds diagonal edges and curves from the pixels (the xBR family of pixel-art upscalers).', up: 3 },
@@ -57,8 +57,8 @@ out vec2 vUv; void main(){ vec2 p = vec2((gl_VertexID << 1) & 2, gl_VertexID & 2
 precision highp float; in vec2 vUv; out vec4 o; uniform sampler2D uT; uniform vec2 uTS;
 const vec3 LW = vec3(0.2126, 0.7152, 0.0722);
 `;
-  // the picture at its own size, turned the GL way up; 1 smudge (bilateral), 2 paint (Kuwahara)
-  const PRE = HEAD + `uniform int uMode; uniform highp usampler2D uZ, uM; uniform float uNear, uCamD;
+  // the picture at its own size, turned the GL way up; 1 smudge (bilateral), 2 paint (Kuwahara), 3 paint all but the kept-sharp pixels
+  const PRE = HEAD + `uniform int uMode; uniform highp usampler2D uM;
 vec3 S(ivec2 q){ q = clamp(q, ivec2(0), ivec2(uTS) - 1); return texelFetch(uT, ivec2(q.x, int(uTS.y) - 1 - q.y), 0).rgb; }
 vec3 KUW(ivec2 p, vec3 c){   // Kuwahara: of the four 3 x 3 squares that share this pixel, the mean of the calmest (the 5 x 5 read once: 25 reads, not 36)
   vec3 t[25];
@@ -80,11 +80,8 @@ void main(){
     c = acc / w;
   } else if (uMode == 2) {
     c = KUW(p, c);
-  } else if (uMode == 3) {   // paint fades out over 30 m around the radius (distance from the golfer: the pixel's distance from the camera less the camera's)
-    float d = float(texelFetch(uZ, ivec2(p.x, int(uTS.y) - 1 - p.y), 0).r) * 0.01 - uCamD;
-    float m = 1.0 - smoothstep(uNear - 15.0, uNear + 15.0, d);
-    if (texelFetch(uM, ivec2(p.x, int(uTS.y) - 1 - p.y), 0).r == 2u) m = 0.0;   // the ball, the flag, the marker: kept sharp
-    if (m > 0.0) c = mix(c, KUW(p, c), m);
+  } else if (uMode == 3) {   // all of it, but the ball, the flag and the marker: kept sharp
+    if (texelFetch(uM, ivec2(p.x, int(uTS.y) - 1 - p.y), 0).r != 2u) c = KUW(p, c);
   }
   o = vec4(c, 1.0);
 }`;
@@ -237,9 +234,6 @@ void main(){
     return { t, w, h };
   }
   function target(w, h) { const x = tex(w, h); x.fb = gl.createFramebuffer(); gl.bindFramebuffer(gl.FRAMEBUFFER, x.fb); gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, x.t, 0); return x; }
-  const ztex = gl.createTexture(); gl.bindTexture(gl.TEXTURE_2D, ztex); gl.texStorage2D(gl.TEXTURE_2D, 1, gl.R16UI, VW, VH);
-  for (const [k, v] of [[gl.TEXTURE_MIN_FILTER, gl.NEAREST], [gl.TEXTURE_MAG_FILTER, gl.NEAREST]]) gl.texParameteri(gl.TEXTURE_2D, k, v);
-  const hasZ = typeof zbuf !== 'undefined' && zbuf.length === VW * VH;
   const mtex = gl.createTexture(); gl.bindTexture(gl.TEXTURE_2D, mtex); gl.texStorage2D(gl.TEXTURE_2D, 1, gl.R8UI, VW, VH);
   for (const [k, v] of [[gl.TEXTURE_MIN_FILTER, gl.NEAREST], [gl.TEXTURE_MAG_FILTER, gl.NEAREST]]) gl.texParameteri(gl.TEXTURE_2D, k, v);
   const hasM = typeof sprM !== 'undefined' && sprM.length === VW * VH; const zeroM = new Uint8Array(VW * VH);
@@ -265,14 +259,14 @@ void main(){
   let gpuMs = 0, gpuN = 0, gpuShow = 0, cpuMs = 0, fpsT = performance.now(), fpsN = 0, fps = 0, frameMax = 0, lastT = 0, maxShow = 0;
 
   // the preset in force: the painted look (or none) in play; any of them with ?fx=test (the bar steps through them; &fxp=<n> starts on the nth)
-  const PAINTED = PRESETS.findIndex((p) => p.name === 'Painterly near + cinematic');
-  let cur = PIC.on ? PAINTED : 0, peek = false;
+  const PAINTED = PRESETS.findIndex((p) => p.name === 'Painted + cinematic');
+  let cur = PAINTED, peek = false;   // (always painted: the owner, 2026-11-13)
   if (FX_TEST) { const k = +(new URLSearchParams(location.search).get('fxp')); if (k >= 1 && k <= PRESETS.length) cur = k - 1; }
   const FORCE_W = +(new URLSearchParams(location.search).get('fxw')) || 0;   // (testing: the screen picture's width, whatever the window's)
   const CINE = { up: 2, post: 2, sharp: 0.5, bloom: 0.25, clar: 0.15, vig: 0.45, grade: 2, ca: 1, grain: 0.02, rays: 0.4 };
   function resolve(p) {
-    if (p.near === undefined) return p;
-    const k = p.cine ? PIC.cine : 0, r = { pre: 3, up: 2, near: PIC.near, calm: PIC.calm > 0 ? Math.min(0.85, PIC.calm) : 0 };
+    if (!p.paint) return p;
+    const k = p.cine ? PIC.cine : 0, r = { pre: 3, up: 2, calm: PIC.calm > 0 ? Math.min(0.85, PIC.calm) : 0 };
     if (k > 0) { r.post = 2; r.sharp = CINE.sharp * k; r.bloom = CINE.bloom * k; r.clar = CINE.clar * k; r.vig = CINE.vig * k; r.grade = 2; r.gradeK = k; r.ca = CINE.ca * k; r.grain = CINE.grain * k; r.rays = CINE.rays * k; }
     return r;
   }
@@ -291,13 +285,9 @@ void main(){
     gl.bindTexture(gl.TEXTURE_2D, src.t);
     gl.texSubImage2D(gl.TEXTURE_2D, 0, 0, 0, VW, VH, gl.RGBA, gl.UNSIGNED_BYTE, img.data);
     gl.bindTexture(gl.TEXTURE_2D, mtex); gl.pixelStorei(gl.UNPACK_ALIGNMENT, 1); gl.texSubImage2D(gl.TEXTURE_2D, 0, 0, 0, VW, VH, gl.RED_INTEGER, gl.UNSIGNED_BYTE, hasM ? sprM : zeroM); gl.pixelStorei(gl.UNPACK_ALIGNMENT, 4);
-    if (pr.pre === 3 && hasZ) { gl.bindTexture(gl.TEXTURE_2D, ztex); gl.pixelStorei(gl.UNPACK_ALIGNMENT, 2); gl.texSubImage2D(gl.TEXTURE_2D, 0, 0, 0, VW, VH, gl.RED_INTEGER, gl.UNSIGNED_SHORT, zbuf); gl.pixelStorei(gl.UNPACK_ALIGNMENT, 4); }
     pass(P.pre, pre, src, (u) => {
-      gl.uniform1i(u.uMode, pr.pre === 3 && !hasZ ? 2 : pr.pre || 0);
-      if (u.uZ) { gl.activeTexture(gl.TEXTURE3); gl.bindTexture(gl.TEXTURE_2D, ztex); gl.uniform1i(u.uZ, 3); gl.activeTexture(gl.TEXTURE0); }
+      gl.uniform1i(u.uMode, pr.pre || 0);
       if (u.uM) { gl.activeTexture(gl.TEXTURE4); gl.bindTexture(gl.TEXTURE_2D, mtex); gl.uniform1i(u.uM, 4); gl.activeTexture(gl.TEXTURE0); }
-      if (u.uNear) gl.uniform1f(u.uNear, pr.near || 100);
-      if (u.uCamD) gl.uniform1f(u.uCamD, typeof camD === 'number' ? camD : 14);
     });
     let base = pre;
     if (pr.calm) { const h0 = hist[hi], h1 = hist[hi ^ 1]; pass(P.calm, h1, pre, (u) => { gl.activeTexture(gl.TEXTURE1); gl.bindTexture(gl.TEXTURE_2D, h0.t); gl.uniform1i(u.uH, 1); gl.uniform1f(u.uK, pr.calm); gl.activeTexture(gl.TEXTURE4); gl.bindTexture(gl.TEXTURE_2D, mtex); gl.uniform1i(u.uM, 4); gl.activeTexture(gl.TEXTURE0); }); hi ^= 1; base = h1; }
@@ -330,7 +320,7 @@ void main(){
   const put = vctx.putImageData.bind(vctx);
   vctx.putImageData = function (im) { put.apply(null, arguments); if (im === img && !failed) { try { draw(); } catch (e) { failed = true; cv.style.display = 'none'; console.error(e); } if (bar) tickStats(); } };
   cv.addEventListener('webglcontextlost', (e) => { e.preventDefault(); failed = true; cv.style.display = 'none'; });
-  PFX = { changed(k) { if (k === 'on' && !FX_TEST) cur = PIC.on ? PAINTED : 0; resetStats(); show(); }, get: () => cur, stats: () => ({ fps, frameMax: maxShow, gpu: gpuShow }) };
+  PFX = { changed() { resetStats(); show(); }, get: () => cur, stats: () => ({ fps, frameMax: maxShow, gpu: gpuShow }) };
   if (typeof styleShow === 'function') styleShow();   // (the style menu was written before the layer ran: its Picture section again)
 
   // ---- the test bar (?fx=test only): the filters tried, the sliders and the stats
@@ -348,22 +338,21 @@ void main(){
   #fxTune input{width:110px;accent-color:#f2c94c;vertical-align:middle}`;
   document.head.appendChild(css);
   bar = document.createElement('div'); bar.id = 'fxBar';
-  bar.innerHTML = '<button id="fxPrev" type="button" title="previous filter">&#9664;</button><div id="fxMid" title="click: next filter (right-click: previous); the backquote key; hold Backslash for the original"><div id="fxName"></div><div id="fxDesc"></div><div id="fxStat"></div><div id="fxTune"><label>Paint radius <input id="fxNear" type="range" min="30" max="500" step="10"> <b id="fxNearV"></b></label><label>Calm <input id="fxCalm" type="range" min="0" max="85" step="5"> <b id="fxCalmV"></b></label><label id="fxCineL">Cinematic <input id="fxCine" type="range" min="0" max="100" step="5"> <b id="fxCineV"></b></label></div></div><button id="fxNext" type="button" title="next filter">&#9654;</button>';
+  bar.innerHTML = '<button id="fxPrev" type="button" title="previous filter">&#9664;</button><div id="fxMid" title="click: next filter (right-click: previous); the backquote key; hold Backslash for the original"><div id="fxName"></div><div id="fxDesc"></div><div id="fxStat"></div><div id="fxTune"><label>Calm <input id="fxCalm" type="range" min="0" max="85" step="5"> <b id="fxCalmV"></b></label><label id="fxCineL">Cinematic <input id="fxCine" type="range" min="0" max="100" step="5"> <b id="fxCineV"></b></label></div></div><button id="fxNext" type="button" title="next filter">&#9654;</button>';
   (document.getElementById('hud') || stage).appendChild(bar);
   for (const ev of ['mousedown', 'mouseup', 'pointerdown', 'pointerup', 'click', 'contextmenu', 'wheel']) bar.addEventListener(ev, (e) => e.stopPropagation());
-  const q = (id) => bar.querySelector('#' + id), tuneEl = q('fxTune'), nearEl = q('fxNear'), calmEl = q('fxCalm'), cineEl = q('fxCine'), nameEl = q('fxName'), descEl = q('fxDesc'), statEl = q('fxStat');
-  nearEl.addEventListener('input', () => picSet('near', +nearEl.value));
+  const q = (id) => bar.querySelector('#' + id), tuneEl = q('fxTune'), calmEl = q('fxCalm'), cineEl = q('fxCine'), nameEl = q('fxName'), descEl = q('fxDesc'), statEl = q('fxStat');
   calmEl.addEventListener('input', () => picSet('calm', +calmEl.value / 100));
   cineEl.addEventListener('input', () => picSet('cine', +cineEl.value / 100));
   show = () => {
     const pr = PRESETS[cur];
     nameEl.textContent = 'Filter ' + (cur + 1) + '/' + PRESETS.length + ': ' + pr.name + (peek ? ' (showing the original)' : '');
     descEl.textContent = pr.desc;
-    tuneEl.style.display = pr.near !== undefined ? 'flex' : 'none';
+    tuneEl.style.display = pr.paint ? 'flex' : 'none';
     q('fxCineL').style.display = pr.cine ? '' : 'none';
     calmEl.value = String(Math.round(PIC.calm * 100)); q('fxCalmV').textContent = Math.round(PIC.calm * 100) + '%';
-    nearEl.value = String(PIC.near); cineEl.value = String(Math.round(PIC.cine * 100));
-    q('fxNearV').textContent = PIC.near + ' m'; q('fxCineV').textContent = Math.round(PIC.cine * 100) + '%';
+    cineEl.value = String(Math.round(PIC.cine * 100));
+    q('fxCineV').textContent = Math.round(PIC.cine * 100) + '%';
   };
   resetStats = () => { gpuMs = gpuN = cpuMs = 0; fpsN = 0; frameMax = 0; fpsT = performance.now(); };
   const step = (d) => { cur = (cur + d + PRESETS.length) % PRESETS.length; resetStats(); show(); };
