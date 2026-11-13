@@ -5,9 +5,38 @@
 // build; the old town start's course). It runs on the guide's machinery (guide.ts guideLines, the RangeGuideCard): the steps go in order, each
 // can be skipped, Skip tutorial ends it, and it is saved (GolfProgress.tour) so it shows once; Help replays it. Pure TS, no DOM.
 import { guideLines, type GuideLine, type GuideStep, type RangeGuideSave } from './guide';
+import { JAM } from '../../features';
 
-/** the tutorial's steps in order (n = 1..4); target.ui: the control its ring points at (map rings: the engine's, Engine.tourShowMe) */
-export const TOWN_TOUR: readonly GuideStep[] = Object.freeze([
+/** the jam build's start tutorial (docs/JAM.md, "Fairway Fortune"): the money game, not the town's roads (no road tool in the jam build) */
+const JAM_TOUR: readonly GuideStep[] = Object.freeze([
+  {
+    id: 'tour-town',
+    n: 1,
+    title: 'Your club, your money',
+    body: 'You have $75,000 and an empty plot. A driving range earns your first income; that money builds a golf course hole by hole. Money is tight: every build is a choice between paying cash, saving first, or borrowing.',
+    done: 'next',
+    target: {},
+  },
+  {
+    id: 'tour-room',
+    n: 2,
+    title: 'The Bank and your goal',
+    body: 'Click your cash at the top to open the Bank: loans (see the total interest before you sign), murabaha, savings and insurance. Each month ends with a statement. The goal chip shows the challenge: a nine-hole club in two seasons, with no overdraft.',
+    done: 'next',
+    target: {},
+  },
+  {
+    id: 'tour-golf',
+    n: 3,
+    title: 'Now your golf',
+    body: 'Place your driving range first (Range › Place the driving range): the guide in the corner walks you through it and the rest, step by step.',
+    done: 'next',
+    target: { ui: 'rail-range' },
+  },
+]);
+
+/** the tutorial's steps in order (n = 1..4); target.ui: the control its ring points at (map rings: the engine's, Engine.tourShowMe). The jam build has its own (JAM_TOUR) */
+export const TOWN_TOUR: readonly GuideStep[] = JAM ? JAM_TOUR : Object.freeze([
   {
     id: 'tour-town',
     n: 1,
