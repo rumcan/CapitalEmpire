@@ -1052,7 +1052,7 @@ function plotZA(sx, sy, d, c) {   // an aim mark: hidden only where something at
 // picture, and it is never drawn over the golfer, the ball, the flag, the cart or a tree (sprM). It never covers another mark: the rings drawn before
 // it stay whole, and those drawn after it lie over it. The points go in with ribAdd (world metres, the height included); ribbonO draws them.
 const rgba = (r, g, b, a) => (((a << 24) | (b << 16) | (g << 8) | r) >>> 0);
-const RIB_W = 0.7, RIB_MAXPX = 9, RIB_N = 1024, RIB = { n: 0, p: new Float64Array(3 * RIB_N) };
+const RIB_W = 0.35, RIB_MAXPX = 4.5,   /* (the owner, 2026-11-14: the ribbon half as thick) */ RIB_N = 1024, RIB = { n: 0, p: new Float64Array(3 * RIB_N) };
 const RIB_FILL = rgba(52, 140, 255, 140), RIB_EDGE = rgba(200, 230, 255, 235), RIB_RIM = rgba(8, 28, 72, 120);              // the aim's flight or roll
 const RIB_SOFT = rgba(110, 185, 255, 90), RIB_SOFT_EDGE = rgba(205, 232, 255, 165);                                         // the preview's bounce and roll after the landing
 const RSX = new Float32Array(RIB_N), RSY = new Float32Array(RIB_N), RSD = new Float32Array(RIB_N), RSH = new Float32Array(RIB_N), RQ = { x: 0, y: 0, d: 0, s: 0 };
@@ -1388,7 +1388,7 @@ function render() {
     if (o.k === 24) drawCart(cart.on ? gs : null, G);
     else if (o.k === K_ACTOR) drawActor(o.a, o.d);   // T424: another person or cart from the host (parts/08d-actors.md)
     else if (o.k === 21) { if (cart.on || o.d < 1) continue; { const sc = DS / o.d / golfK; golB[0] = Math.floor(psx - gs.ax * sc) - 1; golB[1] = Math.floor(psy - gs.ay * sc) - 1; golB[2] = Math.ceil(psx + (gs.w - gs.ax) * sc) + 1; golB[3] = Math.ceil(psy + (gs.h - gs.ay) * sc) + 1; }   /* (J5d: the aim's marks keep off him) */ ghostX = psx; ghostY = psy - 46; blit(gs, psx, psy, DS / o.d / golfK, o.d * 100, 0, 0, false, 0); if (G > 0) addLight(psx, psy - 30, (tmode >= 3 ? 0.5 : 2.2) * G, (tmode >= 3 ? 0.4 : 1.6) * G, (tmode >= 3 ? 0.2 : 0.8) * G); }   // (at night his lantern is small: the floodlights light the holes)
-    else if (o.k === 20) { project(H.pin.x, H.pin.y, groundH(H.pin.x, H.pin.y), PJ); if (PJ.s > 0) blit(fs, PJ.x, PJ.y, Math.max(0.3, PJ.s), PJ.d * 100, 0, 0, false, 0); }
+    else if (o.k === 20) { project(H.pin.x, H.pin.y, groundH(H.pin.x, H.pin.y), PJ); if (PJ.s > 0) blit(fs, PJ.x, PJ.y, Math.max(0.3, PJ.s) * FLAG_K, PJ.d * 100, 0, 0, false, 0); }
     else if (o.k === 22) {
       if (ball.state === 3) continue;
       project(ball.x, ball.y, bz, PJ); if (PJ.s === 0) continue;
@@ -1399,7 +1399,7 @@ function render() {
       if (PJ.d > 24 && ball.state === 0) { const by = PJ.y - 12 - Math.round(Math.abs(Math.sin(frame * 0.08)) * 4), gc = rgb(255, 226, 150); for (let k = 0; k < 4; k++) { plotZ(PJ.x - k, by - k, 0, gc); plotZ(PJ.x + 1 + k, by - k, 0, gc); plotZ(PJ.x - k, by - k - 1, 0, rgb(60, 40, 30)); plotZ(PJ.x + 1 + k, by - k - 1, 0, rgb(60, 40, 30)); } }   // a marker over a far ball
     }
     else if (o.k === 23) { project(o.x, o.y, groundH(o.x, o.y), PJ); if (PJ.s > 0) blit(markSpr, PJ.x, PJ.y, PJ.s, PJ.d * 100, 0, 0, false, 0); }
-    else if (o.k === K_PFLAG) { project(o.x, o.y, groundH(o.x, o.y), PJ); if (PJ.s > 0) blit(fs, PJ.x, PJ.y, Math.max(0.3, PJ.s), PJ.d * 100, 0, 0, false, 0); }   // (J6: a range green's flag)
+    else if (o.k === K_PFLAG) { project(o.x, o.y, groundH(o.x, o.y), PJ); if (PJ.s > 0) blit(fs, PJ.x, PJ.y, Math.max(0.3, PJ.s) * FLAG_K, PJ.d * 100, 0, 0, false, 0); }   // (J6: a range green's flag)
     else {
       const d = o.d, k = FOC / d, s0 = DS / d, sx = o.sx; let oz = o.lift / ZP; if (d < capEnd) { const cp = capAt(d, (sx - VW / 2) / k); if (oz > cp) oz = cp; }
       const sy = Math.round(HZ - (oz - camZ) * k);

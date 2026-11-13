@@ -151,6 +151,7 @@ function mkFlag(ph) {
   return sDone(S, 0.6);
 }
 const flagSpr = [0, 1, 2, 3, 4, 5].map(mkFlag); for (const f of flagSpr) f.keep = true;
+const FLAG_K = 1.5;   // the flag drawn half as big again (the owner, 2026-11-14: "the green flag ... is too small by 50%")
 const ballSpr = (() => {
   const S = sculpt(5, 5, 2, 4), W = (r, g, b, L) => ((L << 24) | (b << 16) | (g << 8) | r) >>> 0;
   const rows = ['.bca.', 'bccaa', 'dbcca', 'ddbcc', '.ddb.'], pal = { a: W(255, 255, 250, 198), c: W(244, 244, 238, 180), b: W(214, 216, 226, 150), d: W(168, 172, 200, 120) };
