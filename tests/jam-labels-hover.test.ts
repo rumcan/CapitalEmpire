@@ -11,9 +11,9 @@ import { JUNK_SCALE, SMALL_JUNK_SCALE, junkScale, newRangeJunk, rangeScene, defa
 const ctx = { font: '', measureText: (t: string) => ({ width: t.length * 7 }) } as unknown as CanvasRenderingContext2D;
 function frame(hover: { x: number; y: number } | null, on = true) {
   const L = new WorldLabels(); L.begin(ctx, 1); L.hoverOnly = on; L.hoverAt = hover;
-  const pallets = L.text('pallets', PRI.name, 'Pallets', 400, 300, '12px x', 12);
-  const lot = L.text('lot', PRI.count, 'P · 3/24', 100, 100, '12px x', 12);
-  const hint = L.text('hint', PRI.hint, 'Not your land', 700, 500, '12px x', 12);
+  const pallets = L.text('pallets', PRI.name, 'Pallets', 400, 300, '12px x', 12, '#fff');
+  const lot = L.text('lot', PRI.count, 'P · 3/24', 100, 100, '12px x', 12, '#fff');
+  const hint = L.text('hint', PRI.hint, 'Not your land', 700, 500, '12px x', 12, '#fff');
   const warn = L.pill('room', PRI.warn, 'Ball room · OUT OF BALLS', 200, 400, '12px x', 160, 18, '#000', 4, '#fff');
   const grow = L.pair('grow', PRI.growth, '+3', '#0f0', '', '#f00', 600, 200, '12px x', 12, '#000', 2);
   L.place(1000, 800);
@@ -40,7 +40,7 @@ test('on: the pointer a little way off the thing shows nothing; over the car par
 });
 test('on: a selected thing (keep) keeps its label without the pointer', () => {
   const L = new WorldLabels(); L.begin(ctx, 1); L.hoverOnly = true; L.hoverAt = null; L.keep = new Set(['sel']);
-  const a = L.text('sel', PRI.name, 'Clubhouse', 300, 300, '12px x', 12), b = L.text('other', PRI.name, 'Shop', 600, 300, '12px x', 12);
+  const a = L.text('sel', PRI.name, 'Clubhouse', 300, 300, '12px x', 12, '#fff'), b = L.text('other', PRI.name, 'Shop', 600, 300, '12px x', 12, '#fff');
   L.place(1000, 800); assert.equal(a.shown, true); assert.equal(b.shown, false);
 });
 test('the yardage board: the figures never below the legible size, the board wider than its text, the post standing it off the ground', () => {
