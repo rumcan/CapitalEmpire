@@ -5,15 +5,16 @@
 // (balls an hour) and the flow panel says where the loop jams. Pure TS, no DOM. All rates are balls a sim second at the reference day (bps); perHour says them in balls a
 // town hour.
 import { DIRTY_VALUE, perHour, type PickKit } from './rangeballs';
+import { JAM, JAM_STAFF_X } from '../features';
 
 /** you, the scripted player of the pacing test and the flow panel's estimate of what you bring in: your run (tiles a second: golf/you.ts YOU_RUN), your golf cart's speed (golf/play/yours.ts
  *  CART_TILES) and the share of your time you really pick (the trips, the turns, a look at the card) */
 export const PLAYER_RUN = 1.9, PLAYER_CART = 2.4, PLAYER_WORKING = 0.85;
 /** washing: the balls a second you rinse at the shack's tap (always there) and a ball washer scrubs (a tumbler) */
 export const HAND_WASH = 2.5, WASHER_BPS = 14;
-/** the range attendant: a shift of SHIFT_HOURS town hours (you set when it starts: SHIFT_STARTS), the share of it at the counter without a dispenser, and how well he picks
+/** the range attendant (J7c: in the jam a 12-hour shift, the range's opening hours from 07:00, so the one attendant the bought range comes with covers the day): a shift of SHIFT_HOURS town hours (you set when it starts: SHIFT_STARTS), the share of it at the counter without a dispenser, and how well he picks
  *  against the trip model of a player working without a break (tripBps); his pace (tiles a second) */
-export const SHIFT_HOURS = 8, COUNTER_SHARE = 0.4, ATTENDANT_SKILL = 0.8, ATTENDANT_PACE = 1.5;
+export const SHIFT_HOURS = JAM ? 12 : 8, COUNTER_SHARE = 0.4, ATTENDANT_SKILL = 0.8, ATTENDANT_PACE = 1.5;
 /** T386 part 3: Pro shop training (the attendants pick at this skill) and the Staff golf cart (an attendant tows the picker at this many tiles a second) */
 export const ATTENDANT_TRAINED = 1, ATTENDANT_CART = 2;
 export const SHIFT_STARTS: readonly number[] = [7, 11, 15];
@@ -63,16 +64,16 @@ export function onShift(i: number, h: number, start: number): boolean {
 /** the balls a second the attendants pick at town hour h (the first starts at `start`): each on his shift, less the counter's share unless a dispenser stands */
 export function staffBps(a: AutoKit, pick: PickKit, h: number, start: number): number {
   let n = 0; for (let i = 0; i < a.attendants; i++) if (onShift(i, h, start)) n++;
-  return n * attendantBps(pick, a) * (a.dispenser ? 1 : 1 - COUNTER_SHARE);
+  return n * attendantBps(pick, a) * (a.dispenser ? 1 : 1 - COUNTER_SHARE) * (JAM ? JAM_STAFF_X : 1); // (J7c: the jam's attendants keep a fresh range in balls)
 }
 /** the balls a second the robots pick on average: each runs `robotHours` of every `robotHours + ROBOT_CHARGE` town hours, at the drive motor's speed */
 export function robotBps(a: AutoKit): number { return a.robots * ROBOT_BPS * a.robotSpeed * a.robotHours / (a.robotHours + a.robotCharge); }
 /** the balls a second that can be washed: the tap and the washer */
-export const washBps = (a: AutoKit): number => HAND_WASH + (a.washer ? WASHER_BPS : 0);
+export const washBps = (a: AutoKit): number => HAND_WASH * (JAM && a.attendants > 0 ? JAM_STAFF_X : 1) + (a.washer ? WASHER_BPS : 0); // (J7c: in the jam the attendant rinses at the tap as fast as he picks)
 /** the balls an hour (a town hour at this day length) the tree's staff and machine nodes each take through their stage, with the tools and machines owned now: an attendant picking on his shift
  *  (less the counter's share unless a dispenser stands), the washer's drum, a pair of robots (averaged over a charge). The node's card says it */
 export function nodeRates(kit: PickKit, a: AutoKit, dayLen: number): Partial<Record<string, number>> {
-  const h = (bps: number) => Math.round(perHour(bps, dayLen)), att = h(attendantBps(kit, a) * (a.dispenser ? 1 : 1 - COUNTER_SHARE));
+  const h = (bps: number) => Math.round(perHour(bps, dayLen)), att = h(attendantBps(kit, a) * (a.dispenser ? 1 : 1 - COUNTER_SHARE) * (JAM ? JAM_STAFF_X : 1));
   const pair = h(ROBOTS_A_NODE * ROBOT_BPS * a.robotSpeed * a.robotHours / (a.robotHours + a.robotCharge));
   return { attendant: att, attendant2: att, attendant3: att, washer: h(WASHER_BPS), robot: pair, robot2: pair, robot3: pair };
 }

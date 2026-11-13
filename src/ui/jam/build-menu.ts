@@ -86,7 +86,7 @@ export function buildCards(s: BuildSource): BuildCard[] {
     // J7 (the owner: "lets place the range for him. he has to buy it"): the old range on the plot, with its car park and its junk
     out.push({
       id: 'range', group: 'range', name: 'Buy the driving range', pic: { scene: 'range-road-rundown.webp' },
-      line: 'The old range on your plot, with its dirt car park and junk on the outfield. Buy it and drivers stop for a bucket.',
+      line: 'The old range on your plot: a dirt car park, a push picker and an attendant for the balls, and junk on the outfield. Buy it and drivers stop for a bucket.',
       cost: rangeP.cost, upkeep: s.rangeUpkeep, payback: payback(rangeP.cost, s.rangeUpkeep, rangeMonth(vb!, v.demand, v.dayLen).takings),
       why: shortWhy(rangeP.cost, s.money), done: null, act: { k: 'buyRange' },
     });

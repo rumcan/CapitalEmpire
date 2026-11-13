@@ -2,6 +2,7 @@
 // the money. Light and pure (it imports only the range's numbers), so the save's normalizer (golf/mode.ts) and the UI can use it; the scene and
 // the golfers are golf/rangebiz.ts.
 import { junkFactor, normalizeJunk, type JunkPile } from './junk';
+import { JAM } from '../features';
 import { RANGE_PASS_POP } from './range';
 import { LOT_SHARE } from './rangelot';
 import { BALL_COST, CASES_A_DAY, CASE_BALLS, legacyBalls, newBalls, normalizeBalls, type BallSave } from './rangeballs';
@@ -341,7 +342,7 @@ export function upgradeWhy(s: RangeBizSave, id: RangeUpgradeId, money: number): 
   if (s.forSale) return 'Buy the driving range first'; // J7
   const miss = needsOf(u).find(n => !s.owned.includes(n)); if (miss) return `Build ${BY_ID.get(miss)!.name} first`;
   // T386: the ball loop's gear is paid from the range's till (what the range has taken, less its gear), and the treasury must hold it too
-  if (u.till && (s.balls?.till ?? 0) < u.cost) return `Not enough in the range's till: it costs $${u.cost.toLocaleString()} (the till has $${Math.floor(s.balls?.till ?? 0).toLocaleString()})`;
+  if (u.till && !JAM && (s.balls?.till ?? 0) < u.cost) return `Not enough in the range's till: it costs $${u.cost.toLocaleString()} (the till has $${Math.floor(s.balls?.till ?? 0).toLocaleString()})`;
   if (u.cost > money) return `Not enough money: it costs $${u.cost.toLocaleString()}`;
   return '';
 }

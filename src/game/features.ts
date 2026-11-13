@@ -18,3 +18,13 @@ export const JAM_RAMP_TAKINGS = 2_000;
  *  $26k earns about $1,300 a month once grown in, paying itself back in about 20 months). Without it nine holes took about what one did, so a hole never
  *  paid back what it cost and borrowing to build never paid */
 export const JAM_FEE_PER_HOLE = 2;
+/** J7c (#1230; the lead's playtest: the bought range ran dry and earned nothing): the old range comes with its ball kit when bought, a ball tube, a push picker and a
+ *  part-time range attendant (his wage, the attendant upgrade's upkeep, on the statement every month), so it keeps itself in balls at its starting demand; better
+ *  pickers stay upgrades and the player may let the attendant go and pick by hand */
+export const JAM_RANGE_KIT: readonly string[] = ['tube', 'pushpick', 'attendant'];
+/** J7c: in the jam the attendants pick this many times as fast (measured on the built jam at 20x: a fresh range's golfers hit about 200 balls a town hour from its
+ *  200-ball stock, the stock attendant picked about 23 an hour, so the bought range ran dry in its first month and earned nothing) */
+export const JAM_STAFF_X = 12;
+/** J7c: the balls the bought old range's ball room holds on top of a new range's 200 (5 buckets): each golfer walking in from the car park reserves a bucket, and at the
+ *  lunchtime rush 13 come at once onto four bays (measured at 20x on the jam), so with 200 the rush drove on however fast the attendant picked; 800 is 20 buckets */
+export const JAM_RANGE_BALLS = 600;
