@@ -282,14 +282,17 @@ let preOn = false, preX = 0, preY = 0, preList = [], preI = 0;
 function prewarmShot() {
   let x = ball.x, y = ball.y, z = ball.z, vx = ball.vx, vy = ball.vy, vz = ball.vz; const dt = 1 / 60;
   for (let k = 0; k < 1500; k++) { vz -= 9.81 * dt; vx *= 0.9986; vy *= 0.9986; vx += WDX * WIND * 0.9 * dt; vy += WDY * WIND * 0.9 * dt; x += vx * dt; y += vy * dt; z += vz * dt; if (vz < 0 && (k & 3) === 0) { field(x, y, FO); if (z <= FO.h) break; } }
-  const sp = Math.hypot(vx, vy) || 1; preX = x + vx / sp * 6; preY = y + vy / sp * 6; preOn = true; preI = 0;   // (a little beyond: it will run on)
+  const sp = Math.hypot(vx, vy) || 1; prewarmAt(x + vx / sp * 6, y + vy / sp * 6);   // (a little beyond: it will run on)
+}
+function prewarmAt(x, y) {   // the land round a point made ahead (the shot's landing; in host mode the aimed landing, from the start of the swing: T446)
+  preX = x; preY = y; preOn = true; preI = 0;
   const L = [], c0 = Math.floor(preX * PPM / CH), c1 = Math.floor(preY * PPV / CH);
   for (let j = -11; j <= 11; j++) for (let i = -21; i <= 21; i++) { const r = Math.hypot(i * CH / PPM, j * CH / PPV); if (r < 46) L.push([r, c0 + i, c1 + j]); }
   L.sort((a, b) => a[0] - b[0]); preList = L;
 }
 function prewarmStep() {
   if (!preOn) return;
-  if (ball.state === 0 && !bcam && preI > 0) { preOn = false; return; }   // the ball lies still and the camera is back with the golfer
+  if (ball.state === 0 && !bcam && preI > 0 && !(HP && (HP.sw || HP.wait > 0 || HP.play))) { preOn = false; return; }   // the ball lies still and the camera is back with the golfer (host mode: not while he swings or the course decides)
   if (!wkOn) return;
   if ((frame & 15) === 0) { const ptx = Math.floor(preX * PPM / TPX), pty = Math.floor(preY * PPV / TPX); for (let dy = -7; dy <= 7; dy++) for (let dx = -13; dx <= 13; dx++) { if (Math.hypot(dx * TPX / PPM, dy * TPX / PPV) > 58) continue; if (!tileHave(ptx + dx, pty + dy)) wkTile(ptx + dx, pty + dy, false); } }
   let n = 0; while (preI < preList.length && wkChunks.size < 38 && n < 12) { const o = preList[preI++]; if (!hasChunk(o[1], o[2])) { wkTile(o[1] >> 1, o[2] >> 1, true); chunkTry(o[1], o[2]); n++; } }
