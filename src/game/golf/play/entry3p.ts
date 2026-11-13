@@ -10,17 +10,20 @@ import type { LieGrid } from './lies3p';
 export interface EntryHole { n: number; par: number; lenM: number; line: number[]; pin: [number, number] }
 /** the heights as the view reads them: the 16-bit units, unpacked (base64 of a little-endian Uint16Array), with the pack's frame */
 export interface EntryHeights { x0: number; y0: number; step: number; w: number; h: number; base: number; q: number; d: string; reliefM: number; src: string; credit: string }
-/** the entry: the course's id and names, its holes, its shapes by kind (T tee, F fairway, G green, B bunker, W water; each a flat ring), the
- *  streams, and the heights (null: flat) */
+/** the entry: the course's id and names, its holes, its shapes by kind (T tee, F fairway, G green, B bunker, W water; T452: R rough, the painted
+ *  ground round the rest, and X waste; each a flat ring), the streams, and the heights (null: flat). A view older than T452 reads only T, F, G, B, W */
 export interface CourseEntry {
   id: string; name: string; place: string; osm: string; credit: string; licence: string;
-  holes: EntryHole[]; polys: Record<'T' | 'F' | 'G' | 'B' | 'W', number[][]>; streams: number[][]; hg: EntryHeights | null;
+  holes: EntryHole[]; polys: Record<PolyKey, number[][]>; streams: number[][]; hg: EntryHeights | null;
   /** T422: the host's lies over the course (lies3p.ts), so the view draws the first cut, the rough and the fescue where the model reads them; absent: the view's own */
   lk?: LieGrid;
 }
 
 const r1 = (v: number): number => Math.round(v * 10) / 10;
-const KIND: Record<string, 'T' | 'F' | 'G' | 'B' | 'W'> = { tee: 'T', fairway: 'F', green: 'G', bunker: 'B', water_hazard: 'W', lateral_water_hazard: 'W', water: 'W' };
+/** the shape kinds of the entry */
+export type PolyKey = 'T' | 'F' | 'G' | 'B' | 'W' | 'R' | 'X';
+/** the file's kinds by the entry's keys (T452: the rough and the waste too, so the view knows the course's own ground from the land round it) */
+export const ENTRY_KIND: Record<string, PolyKey> = { tee: 'T', fairway: 'F', green: 'G', bunker: 'B', water_hazard: 'W', lateral_water_hazard: 'W', water: 'W', rough: 'R', waste: 'X' };
 
 /** the heights unpacked to their 16-bit units (the predictive delta and zigzag undone), as course-import.mjs unpackHeights */
 export async function unpackHeights3p(p: (HeightPack & { label?: string; src?: string; credit?: string }) | undefined | null): Promise<EntryHeights | null> {
@@ -48,8 +51,8 @@ interface LooseFeature { polys?: { outer?: Pt2[] }[]; line?: Pt2[]; pos?: Pt2; r
 /** the course file as the view's course entry; throws when it has no hole lines (the view cannot guess holes) */
 export async function courseEntry3p(file: CourseFile): Promise<CourseEntry> {
   const F = (file.features ?? {}) as Record<string, LooseFeature[] | undefined>;
-  const polys: CourseEntry['polys'] = { T: [], F: [], G: [], B: [], W: [] };
-  for (const [kind, key] of Object.entries(KIND)) for (const ft of F[kind] ?? []) for (const p of ft.polys ?? []) {
+  const polys: CourseEntry['polys'] = { T: [], F: [], G: [], B: [], W: [], R: [], X: [] };
+  for (const [kind, key] of Object.entries(ENTRY_KIND)) for (const ft of F[kind] ?? []) for (const p of ft.polys ?? []) {
     if (!p.outer || p.outer.length < 3) continue;
     const ring: number[] = []; for (const q of p.outer) ring.push(r1(q[0]), r1(-q[1]));
     polys[key].push(ring);

@@ -47,7 +47,7 @@ function stitch(pieces) {   // the ways of a shape's outline joined end to end i
 function osmToCourse(hit, els) {   // the map's answer -> a course as courses.js holds one (real metres, x east, y south of the course's middle)
   const kx = 6371008.8 * Math.cos(hit.lat * Math.PI / 180) * Math.PI / 180, ky = 6371008.8 * Math.PI / 180;
   const ring = (gm) => { const o = []; for (const g of gm) o.push(fr1((g.lon - hit.lon) * kx), fr1(-(g.lat - hit.lat) * ky)); return o; };
-  const polys = { T: [], F: [], G: [], B: [], W: [] }, streams = [], byRef = new Map(), pins = [];
+  const polys = { T: [], F: [], G: [], B: [], W: [], R: [] }, streams = [], byRef = new Map(), pins = [];
   for (const e of els) {
     const tg = e.tags || {}, golf = tg.golf;
     if (e.type === 'node') { if (golf === 'pin') pins.push([(e.lon - hit.lon) * kx, -(e.lat - hit.lat) * ky]); continue; }
@@ -56,7 +56,7 @@ function osmToCourse(hit, els) {   // the map's answer -> a course as courses.js
       if (!gm || gm.length < 2) continue;
       if (golf === 'hole') { const ref = parseInt(tg.ref, 10); if (ref >= 1 && !byRef.has(ref)) byRef.set(ref, { n: ref, par: +tg.par || 0, line: ring(gm) }); }
       else if (tg.waterway) streams.push(ring(gm));
-      else { const key = golf === 'tee' ? 'T' : golf === 'fairway' ? 'F' : golf === 'green' ? 'G' : golf === 'bunker' ? 'B' : golf === 'water_hazard' || golf === 'lateral_water_hazard' || tg.natural === 'water' ? 'W' : null; if (key && gm.length >= 4) polys[key].push(ring(gm)); }
+      else { const key = golf === 'tee' ? 'T' : golf === 'fairway' ? 'F' : golf === 'green' ? 'G' : golf === 'bunker' ? 'B' : golf === 'rough' ? 'R' : golf === 'water_hazard' || golf === 'lateral_water_hazard' || tg.natural === 'water' ? 'W' : null; if (key && gm.length >= 4) polys[key].push(ring(gm)); }
     }
   }
   const holes = [...byRef.values()].sort((a, b) => a.n - b.n);

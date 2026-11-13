@@ -27,7 +27,7 @@ const CLUBS = [{ name: 'Driver', v: 31, loft: 0.42 }, { name: 'Iron', v: 24.5, l
 const BOUNCE = [0, 0.28, 0.03, 0.36, 0.36, 0.28, 0.16, 0.1, 0.14, 0.3, 0.55, 0.5, 0.05];
 const GRIP = [0, 0.25, 0.9, 0.3, 0.3, 0.4, 0.6, 0.7, 0.6, 0.45, 0.2, 0.15, 0.8];      // how much of its speed a landing takes
 const DRAG = [0, 1.5, 14, 3, 3, 4.5, 8, 11, 9, 6, 2.5, 0.5, 12];                     // rolling: metres per second lost each second
-const LIEPOW = [1, 1, 0.6, 1, 1, 0.95, 0.85, 0.72, 0.78, 0.85, 0.9, 0.9, 0.7];
+const LIEPOW = [1, 1, 0.6, 1, 1, 0.95, 0.85, 0.72, 0.78, 0.85, 0.9, 0.9, 0.7, 0.9, 0.8];   // (T452: waste plays firm, a little short of the fairway; dune like soft rough)
 const keys = {}, mouse = { x: VW / 2, y: VH / 2 - 60, down: false };
 const player = { x: 0, y: 0, fa: 4, walk: 0, moving: false, swing: -1, al: 0, th: 0 };   // (th: the way he faces, radians; fa: the same in sixteenths of a turn, for his picture)
 const cart = { x: 0, y: 0, fa: 4, on: false, v: 0, th: 0, steer: 0, sf: 0, sr: 0, zc: 0 };   // the golf cart: where it stands, the way it faces (fa in sixteenths, th in radians), whether the golfer is in it, its speed, its steering, how it leans, its height
@@ -130,7 +130,7 @@ function styleRestore(id) {   // the style kept for course id, put in force; fal
   if (s[0] !== biomeId || s[1] !== ctypeId) { setBiome(s[0], s[1]); lib.clear(); libWarm = 0; }
   return true;
 }
-function dragK(m) { const C = CTYPES[ctypeId]; return m === M_GREEN ? C.greenDrag : m === M_FAIR || m === M_TEE || m === M_CUT ? C.fairDrag : m === M_ROUGH || m === M_DEEP ? C.roughDrag : 1; }   // how the course type's turf holds a rolling ball
+function dragK(m) { const C = CTYPES[ctypeId]; return m === M_GREEN ? C.greenDrag : m === M_FAIR || m === M_TEE || m === M_CUT ? C.fairDrag : m === M_ROUGH || m === M_DEEP || m === M_DUNE ? C.roughDrag : 1; }   // how the course type's turf holds a rolling ball
 function setCourse(id) {   // play a real course (its id), or the invented one (null); false if there is no such course
   if (id && !loadCourse(id)) return false;
   if (!id) course = null;

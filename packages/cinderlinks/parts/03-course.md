@@ -19,6 +19,7 @@ Check: function tileLight(
 // ---- course: the hole, the land's height, the tiles
 let SEED = 4242, hole = null, course = null;   // (course: a real course being played, or null: the invented one)
 const M_WATER = 0, M_GREEN = 1, M_SAND = 2, M_TEE = 3, M_FAIR = 4, M_CUT = 5, M_ROUGH = 6, M_DEEP = 7, M_FOREST = 8, M_HILL = 9, M_ROCK = 10, M_CLIFF = 11, M_MUD = 12;
+const M_WASTE = 13, M_DUNE = 14;   // T452: a painted waste area (sandy, stony, sparse scrub; played as waste, not a bunker); the biome's own blown sand (the desert's open land, off the course)
 const MAT_NAME = ['Water', 'Green', 'Bunker', 'Tee', 'Fairway', 'First cut', 'Rough', 'Meadow', 'Woods', 'Hillside', 'Rock', 'Cliff', 'Shore'];
 
 function baseH(x, y) { return 7 + 9 * (fbm(x / 72 + 11.3, y / 72 - 4.1, SEED, 4) - 0.5); }
@@ -126,19 +127,22 @@ function field(x, y, o) {   // everything the land is at one point (plan metres)
 // is (CUTW) and the collar round a green (COLLAR), how far from the fairway the long grass takes over everywhere (DEEPD), how readily it grows in patches
 // nearer than that (DRYT), how much less woodland there is (WOODT).
 let FWO = 0, CUTW = 2.3, COLLAR = 2, DEEPD = 1e9, DRYT = 0.53, WOODT = 0;
+function cutW() { return course && course.lk && CUTW < 2 ? 2 : CUTW; }   // (T452: where a host's lies say first cut, it is drawn, whatever the course type keeps)
 function matOf(h, g, dF, dG, dB, dT, dP, wood, dry, e, es) {
-  const wl = hole.wl;
+  const wl = hole.wl, onC = wood < 0;   // (T452: `wood` below zero is a host course's own ground, not a wood: -1 its rough, below -2 its waste; see fieldCourse)
   if (course ? dP + e * 0.25 < -0.2 : h < wl && dP < 5) return M_WATER;   // (the bank round a pond stands above the water out to 6 m, so water is only ever inside it; a real course's water is the mapped shape, its bed dug below its own level)
   if (g > 1.25 + es) return M_CLIFF;
   if (dG + e * 0.3 < 0) return M_GREEN;
   if (dB + e * 0.4 < 0) return M_SAND;
   if (dT + e * 0.3 < -0.75) return M_TEE;
+  if (wood < -2 + e * 0.3) return M_WASTE;
   if (g > 0.62 + es * 0.5) return M_ROCK;
   if (dF + e < FWO) return M_FAIR;
-  if (dF + e < FWO + CUTW || dG + e < COLLAR || dT < 0.2) return M_CUT;
+  if (dF + e < FWO + cutW() || dG + e < COLLAR || dT < 0.2) return M_CUT;
   if (course ? dP + e * 0.3 < 0.7 : h < wl + 0.1 + e * 0.07 && dP < 5) return M_MUD;
-  if (g > 0.3 + es * 0.5) return M_HILL;
+  if (!onC && g > 0.3 + es * 0.5) return M_HILL;           // (a course's own banks are its rough, as painted)
   if (wood > 0.57 + WOODT + e * 0.02) return M_FOREST;
+  if (BSAND && !onC) return M_DUNE;                         // (the desert's sand: off a course that came with its rough, or everywhere on one that did not)
   return dry > DRYT + e * 0.03 || dF > FWO + CUTW + DEEPD ? M_DEEP : M_ROUGH;
 }
 

@@ -5,7 +5,8 @@ R: The land's function reads the course: how far a point is from each kind of gr
 R: Each stretch of water lies at its own level (the lowest ground on its rim); the land round it is banked and its bed dug as for an invented pond.
 R: A mapped stream or river is water about 2.6 m wide along its line, running at the level of the ground under it and never uphill; its surface is level within each tile, so on a slope it comes down in small steps.
 R: A hole's tee is the start of its mapped line, its pin the mapped pin (else the line's end), its par the mapped par. A hole with no mapped green gets a round one at its pin.
-R: The game's own cliffs and plateaus stand only well away from the course's ground, round the outside.
+R: The game's own cliffs and plateaus stand only well away from the course's ground, round the outside; where the course came with its heights they stand only beyond the land those heights cover (T452).
+R: A course handed over with its rough and waste (T452) is the course as built: inside its painted ground every surface is the one painted, in every biome (the desert's blown sand only on the land round it), no wood floor or hillside replaces its rough, and its land is the heights it came with (only a few centimetres of the game's own roll).
 R: The credit for the map data (OpenStreetMap contributors) and for the heights is shown on the card while a real course is played.
 R: The game starts on Woodhill. K steps through the courses and back to the invented one; `?course=<id>` starts on another, `?course=none` on the invented one.
 File: game.js
@@ -33,9 +34,9 @@ function courseElev(C, x, y) {   // the real height (metres above the grid's low
   }
   return s;
 }
-function courseH(C, x, y) { return C.hm ? 5 + courseElev(C, x, y) * C.S * CVEX : 6; }
+function courseH(C, x, y) { return C.hm ? 5 + courseElev(C, x, y) * C.S * (C.built ? 1 : CVEX) : 6; }   // (T452: a course as built keeps its own heights, not raised by CVEX)
 // the signed distance from every cell near a ring to the ring (negative inside), kept where it is the smallest so far; lvG / lv: the water level that goes with it
-function sdfRing(C, grid, ring, R, lvG, lv) {
+function sdfRing(C, grid, ring, R, lvG, lv, near) {   // near: deep inside, -SDF_REACH is enough (T452: the rough, which may be the whole course; only its edge is read)
   // T438: the same distances as testing every cell against every edge, made edge by edge: each edge measures only the cells within SDF_REACH of it, and
   // inside or out is read from each row's crossings (the same sums). A cell no edge reaches lies farther than SDF_REACH from the ring: outside, the map
   // keeps what it has (never more than SDF_REACH); inside (deep in a big pond) it is measured against every edge, as before. A painted course's shapes
@@ -64,7 +65,7 @@ function sdfRing(C, grid, ring, R, lvG, lv) {
     for (let i = i0; i <= i1; i++) {
       const px = C.gx0 + i * CRES; while (c0 < xs.length && !(px < xs[c0])) c0++;
       const inside = ((xs.length - c0) & 1) === 1; let b2 = best[(j - j0) * W + (i - i0)];
-      if (b2 > RE * RE) { if (!inside) continue; b2 = 1e18; for (let k = 0, q = n - 1; k < n; q = k++) { const ax = ring[k * 2], ay = ring[k * 2 + 1], ex = ring[q * 2] - ax, ey = ring[q * 2 + 1] - ay, l2 = ex * ex + ey * ey; let t = l2 > 0 ? ((px - ax) * ex + (py - ay) * ey) / l2 : 0; t = t < 0 ? 0 : t > 1 ? 1 : t; const dx = px - ax - ex * t, dy = py - ay - ey * t, d = dx * dx + dy * dy; if (d < b2) b2 = d; } }
+      if (b2 > RE * RE) { if (!inside) continue; if (near) b2 = RE * RE; else { b2 = 1e18; for (let k = 0, q = n - 1; k < n; q = k++) { const ax = ring[k * 2], ay = ring[k * 2 + 1], ex = ring[q * 2] - ax, ey = ring[q * 2 + 1] - ay, l2 = ex * ex + ey * ey; let t = l2 > 0 ? ((px - ax) * ex + (py - ay) * ey) / l2 : 0; t = t < 0 ? 0 : t > 1 ? 1 : t; const dx = px - ax - ex * t, dy = py - ay - ey * t, d = dx * dx + dy * dy; if (d < b2) b2 = d; } } }
       const sd = inside ? -Math.sqrt(b2) : Math.sqrt(b2), g = j * C.gw + i;
       if (sd < grid[g]) { grid[g] = sd; if (lvG && sd < R) lvG[g] = lv; }
     }
@@ -103,7 +104,7 @@ function loadCourse(id) {   // make a saved course ready to play; false if there
   const D = MORE_COURSES.find((c) => c.id === id) || courseList().find((c) => c.id === id); if (!D) return false;   // (one handed over or fetched in this visit wins over a saved one of the same id)
   const S = D.scale > 0 ? +D.scale : CSCALE, sc = (a) => { const o = new Float32Array(a.length); for (let k = 0; k < a.length; k++) o[k] = a[k] * S; return o; };
   const C = { id: D.id, name: D.name, place: D.place, credit: D.credit, hcredit: D.hg ? D.hg.src : '', S, holes: [], gx0: 0, gy0: 0, gw: 0, gh: 0, sF: null, sG: null, sB: null, sT: null, sP: null, mw: null, ma: null, md: null, wlG: null,
-    hx0: 0, hy0: 0, hstep: 1, hw: 0, hh: 0, hm: null, streams: [], raw: D.fetched ? D : null, lk: null, ht: null };   // (raw: a fetched course's data, for the workers, which do not have it)
+    hx0: 0, hy0: 0, hstep: 1, hw: 0, hh: 0, hm: null, streams: [], raw: D.fetched ? D : null, lk: null, ht: null, sR: null, sX: null, own: false, built: D.hv > 0, hb: null };   // (T452: sR, sX the rough and waste maps; own: the course came with its rough or waste; built: handed over by a host page, the course as built; hb: the box its heights cover)   // (raw: a fetched course's data, for the workers, which do not have it)
   if (D.lk && Array.isArray(D.lk.r)) C.lk = lieGrid(D.lk, S);   // (T422: a host page's lies)
   if (D.trees && Array.isArray(D.trees.t) && Array.isArray(D.trees.box)) C.ht = hostTrees(D.trees, S);   // (T451: a host page's trees)
   if (D.hg) {                                                       // the heights: metres above the grid's lowest
@@ -111,12 +112,13 @@ function loadCourse(id) {   // make a saved course ready to play; false if there
     for (let k = 0; k < n; k++) { const v = (b.charCodeAt(k * 2) | (b.charCodeAt(k * 2 + 1) << 8)) * D.hg.q; M[k] = v; if (v < lo) lo = v; }
     for (let k = 0; k < n; k++) M[k] -= lo;
     C.hx0 = D.hg.x0; C.hy0 = -D.hg.y0; C.hstep = D.hg.step; C.hw = D.hg.w; C.hh = D.hg.h; C.hm = M;   // (hy0: the grid's north edge in the game's y, which runs south; rows go south from it)
+    C.hb = [C.hx0 * S, C.hy0 * S, (C.hx0 + (C.hw - 1) * C.hstep) * S, (C.hy0 + (C.hh - 1) * C.hstep) * S];   // (T452: the land the heights cover, in the game's frame)
   }
-  const P = { T: D.polys.T.map(sc), F: D.polys.F.map(sc), G: D.polys.G.map(sc), B: D.polys.B.map(sc), W: D.polys.W.map(sc) };
+  const P = { T: D.polys.T.map(sc), F: D.polys.F.map(sc), G: D.polys.G.map(sc), B: D.polys.B.map(sc), W: D.polys.W.map(sc), R: (D.polys.R || []).map(sc), X: (D.polys.X || []).map(sc) };   // (T452: R, X from newer hosts)
   for (const h of D.holes) C.holes.push({ n: h.n, par: h.par, line: sc(h.line), pin: [h.pin[0] * S, h.pin[1] * S] });
   let x0 = 1e9, x1 = -1e9, y0 = 1e9, y1 = -1e9;
   const see = (a) => { for (let k = 0; k < a.length; k += 2) { if (a[k] < x0) x0 = a[k]; if (a[k] > x1) x1 = a[k]; if (a[k + 1] < y0) y0 = a[k + 1]; if (a[k + 1] > y1) y1 = a[k + 1]; } };
-  for (const key of ['T', 'F', 'G', 'B', 'W']) for (const r of P[key]) see(r);
+  for (const key of ['T', 'F', 'G', 'B', 'W', 'R', 'X']) for (const r of P[key]) see(r);
   for (const h of C.holes) see(h.line);
   C.gx0 = x0 - 44; C.gy0 = y0 - 44; C.gw = Math.ceil((x1 - x0 + 88) / CRES) + 1; C.gh = Math.ceil((y1 - y0 + 88) / CRES) + 1;
   const n = C.gw * C.gh, mk = () => new Float32Array(n).fill(60);
@@ -125,6 +127,8 @@ function loadCourse(id) {   // make a saved course ready to play; false if there
   for (const r of P.G) sdfRing(C, C.sG, r, 38, null, 0);
   for (const r of P.T) sdfRing(C, C.sT, r, 38, null, 0);
   for (const r of P.B) sdfRing(C, C.sB, r, 12, null, 0);
+  C.own = P.R.length + P.X.length > 0;
+  if (C.own) { C.sR = mk(); C.sX = mk(); for (const r of P.R) sdfRing(C, C.sR, r, 38, null, 0, true); for (const r of P.X) sdfRing(C, C.sX, r, 12, null, 0, true); }   // (T452: the course's own ground and its waste)
   for (const r of P.W) {                                            // water: its level is the lowest ground on its rim (so every bank stands at or above it)
     let lv = 1e9; for (let k = 0; k < r.length; k += 2) { const h = courseH(C, r[k], r[k + 1]); if (h < lv) lv = h; }
     sdfRing(C, C.sP, r, 38, C.wlG, lv - 0.15);
@@ -161,7 +165,7 @@ function loadCourse(id) {   // make a saved course ready to play; false if there
 // everything the land is at one point of a real course (the invented course's function, with the course's shapes and heights in place of the invented hole's)
 function fieldCourse(x, y, o) {
   const C = course, w1 = vnoise(x / 5.3 + 1.1, y / 5.3 + 7.7, SEED + 60) - 0.5, w2 = vnoise(x / 1.7 + 4.2, y / 1.7 - 2.9, SEED + 61) - 0.5;
-  let dF = 60, dG = 60, dB = 60, dT = 60, dP = 60, mow = 0, mow2 = 0, wl = -99;
+  let dF = 60, dG = 60, dB = 60, dT = 60, dP = 60, dR = 60, dX = 60, mow = 0, mow2 = 0, wl = -99;
   const gx = (x - C.gx0) / CRES, gy = (y - C.gy0) / CRES;
   if (gx >= 0 && gy >= 0 && gx < C.gw - 1 && gy < C.gh - 1) {
     const i = gx | 0, j = gy | 0, a = gx - i, b = gy - j, k = j * C.gw + i, k1 = k + C.gw, w00 = (1 - a) * (1 - b), w10 = a * (1 - b), w01 = (1 - a) * b, w11 = a * b, kn = (b < 0.5 ? k : k1) + (a < 0.5 ? 0 : 1);
@@ -170,12 +174,19 @@ function fieldCourse(x, y, o) {
     dB = C.sB[k] * w00 + C.sB[k + 1] * w10 + C.sB[k1] * w01 + C.sB[k1 + 1] * w11 - 0.3 + 0.5 * (vnoise(x / 2.9, y / 2.9, SEED + 63) - 0.5) + 0.2 * w2;
     dT = C.sT[k] * w00 + C.sT[k + 1] * w10 + C.sT[k1] * w01 + C.sT[k1 + 1] * w11 - 0.3 + 0.3 * w2;
     dP = C.sP[k] * w00 + C.sP[k + 1] * w10 + C.sP[k1] * w01 + C.sP[k1 + 1] * w11 + 0.8 * w1 + 0.3 * w2;
+    if (C.own) {   // T452: the rough round the rest (its edge bent like the fairway's) and the waste (like a bunker's, its own grain)
+      dR = C.sR[k] * w00 + C.sR[k + 1] * w10 + C.sR[k1] * w01 + C.sR[k1 + 1] * w11 + 1.1 * w1 + 0.4 * w2;
+      dX = C.sX[k] * w00 + C.sX[k + 1] * w10 + C.sX[k1] * w01 + C.sX[k1 + 1] * w11 + 0.5 * (vnoise(x / 3.7 + 9.1, y / 3.7, SEED + 64) - 0.5) + 0.2 * w2;
+    }
     { const m0 = C.mw[k], m1 = C.mw[k + 1], m2 = C.mw[k1], m3 = C.mw[k1 + 1], lo = Math.min(m0, m1, m2, m3), hi = Math.max(m0, m1, m2, m3); const ok = hi - lo < 9; mow = ok ? m0 * w00 + m1 * w10 + m2 * w01 + m3 * w11 : C.mw[kn]; mow2 = ok ? C.ma[k] * w00 + C.ma[k + 1] * w10 + C.ma[k1] * w01 + C.ma[k1 + 1] * w11 : C.ma[kn]; }   // (read smoothly, so a stripe's edge is a straight line, not steps; where two holes' lines meet, the nearest cell's)
     wl = C.wlG[kn];
   }
   let h = courseH(C, x, y);
-  h += 0.7 * (fbm(x / 15 + 2.2, y / 15 + 6.1, SEED + 7, 3) - 0.5) * (0.25 + 0.75 * sstep(-1, 4, dG));   // the game's own small roll (the height grid is smooth); the green is the calmest ground
-  const wm = sstep(16, 34, Math.min(dF, dG, dB, dT, dP));
+  const dC = Math.min(dF, dG, dB, dT, dP, dR, dX);   // how far the point is from the course's own ground (below 0: on it)
+  h += 0.7 * (fbm(x / 15 + 2.2, y / 15 + 6.1, SEED + 7, 3) - 0.5) * (0.25 + 0.75 * sstep(-1, 4, dG))   // the game's own small roll (the height grid is smooth); the green is the calmest ground
+    * (C.built ? 0.15 + 0.85 * sstep(0, 16, dC) : 1);   // (T452: a course as built keeps its own slopes: on it, a few centimetres of roll at most)
+  let wm = sstep(16, 34, dC);
+  if (C.hb) { const b = C.hb, out = Math.max(b[0] - x, x - b[2], b[1] - y, y - b[3]); wm *= sstep(0, 24, out); }   // (T452: the game's own land only beyond the land the course's heights cover, coming in over 24 m)
   let tal = 0;
   if (wm > 0) {                    // the game's plateaus and cliffs, only well away from the course's ground
     const wx = x + 9 * (vnoise(x / 21 + 3.7, y / 21, SEED + 40) - 0.5), wy = y + 9 * (vnoise(x / 21, y / 21 + 8.2, SEED + 41) - 0.5);
@@ -193,6 +204,9 @@ function fieldCourse(x, y, o) {
   } else dP = 60;
   o.tal = tal; o.mow = mow; o.mow2 = mow2; o.h = h; o.dF = dF; o.dG = dG; o.dB = dB; o.dT = dT; o.dP = dP; o.wl = wl;
   o.wood = fbm(x / 34 + 5.5, y / 34 + 9.1, SEED + 80, 3); o.dry = fbm(x / 27 - 3.3, y / 27 + 1.7, SEED + 81, 3); o.tone = fbm(x / 8.5, y / 8.5, SEED + 82, 2);
+  // T452: on a course that came with its rough and waste, `wood` below zero marks its own ground for matOf (no wood's noise is ever below zero): -1 the
+  // course, -3 its waste, between them across the waste's edge (so the edge is read smoothly from the tiles' samples, as the distances are)
+  if (C.own && dC < 0) o.wood = -1 - 2 * sstep(-0.5, 0.5, -dX);
   if (C.lk) hostLie(C.lk, x, y, o);
 }
 // T422: a host page's lies (the course entry's `lk`: its model's kind for every 2 m cell, run-length coded) decide where the first cut, the rough and the
@@ -206,9 +220,9 @@ function hostLie(L, x, y, o) {   // codes: 1 fairway, 2 first cut, 3 rough, 4 de
   const i = Math.floor((x - L.x0) / L.step), j = Math.floor((y - L.y0) / L.step); if (i < 0 || j < 0 || i >= L.w || j >= L.h) return;
   const k = L.g[j * L.w + i];
   if (k === 1) { if (o.dF > FWO - 1) o.dF = FWO - 1; }
-  else if (k === 2) { o.dF = FWO + CUTW * 0.5; o.dry = 0; }
+  else if (k === 2) { o.dF = FWO + cutW() * 0.5; o.dry = 0; }
   else if (k >= 3 && k <= 5) {
-    o.dF = Math.max(o.dF, FWO + CUTW + 1.2); if (DEEPD < 1e8) o.dF = Math.max(FWO + CUTW + 1.2, Math.min(o.dF, FWO + CUTW + DEEPD - 1.2));
+    o.dF = Math.max(o.dF, FWO + cutW() + 1.2); if (DEEPD < 1e8) o.dF = Math.max(FWO + cutW() + 1.2, Math.min(o.dF, FWO + cutW() + DEEPD - 1.2));
     o.dry = k === 3 ? 0 : 1;
     if (o.dG > -0.3 && o.dG < COLLAR + 1) o.dG = COLLAR + 1; if (o.dT > -0.6 && o.dT < 1) o.dT = 1;
   }

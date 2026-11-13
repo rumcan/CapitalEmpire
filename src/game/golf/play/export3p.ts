@@ -1,6 +1,6 @@
 // The course exporter for the view from behind the golfer (T412, docs/CINDERLINKS-PORT.md): the painted course turned into the course file Cinderlinks
 // loads. That file is the map importer's own stage-1 JSON (osm/types.ts OsmCourseJson, what osm/data/woodhill.json holds): metres, x east and y NORTH of
-// the course's centre, the surfaces as polygons by kind ('fairway', 'green', 'tee', 'bunker', 'water', 'rough'), each hole as a 'hole' line with its
+// the course's centre, the surfaces as polygons by kind ('fairway', 'green', 'tee', 'bunker', 'water', 'rough', and T452's 'waste'), each hole as a 'hole' line with its
 // number (ref), par and length, each pin as a 'pin' point, and the ground height as a packed grid (osm/terrarium.ts packGrid). No second format.
 //
 // How the outlines are made: the painted areas are filled in paint order onto a 1 m lattice (a later area paints over an earlier one, as the game reads
@@ -21,15 +21,16 @@ import type { Ground3p } from './look3p';
 export type CourseFile = OsmCourseJson;
 
 /** the kinds of surface the file holds, as the map importer names them */
-export type ExportKind = 'fairway' | 'green' | 'tee' | 'bunker' | 'water' | 'rough';
+export type ExportKind = 'fairway' | 'green' | 'tee' | 'bunker' | 'water' | 'rough' | 'waste';
 /** the kind each painted surface is exported as (null: not a surface of the file; paths and other paint travel as features, T413). The fringe and the first
- *  cut are mown short and go with the fairway; the waste area is sand; the long grass and the fescue are rough */
+ *  cut are mown short and go with the fairway; the long grass and the fescue are rough (the host's lies tell the view which is which, T422). T452: the
+ *  waste area is its own kind (sandy, stony ground with sparse scrub, played as waste), no longer a bunker */
 export const EXPORT_KIND: Record<GolfSurface, ExportKind | null> = {
   green: 'green', fringe: 'fairway', tee: 'tee', fairway: 'fairway', firstCut: 'fairway', rough: 'rough', longGrass: 'rough', fescue: 'rough',
-  bunker: 'bunker', waste: 'bunker', water: 'water', path: null, other: null,
+  bunker: 'bunker', waste: 'waste', water: 'water', path: null, other: null,
 };
 /** the kinds in the order they are written */
-const KINDS: readonly ExportKind[] = ['rough', 'fairway', 'bunker', 'water', 'tee', 'green'];
+const KINDS: readonly ExportKind[] = ['rough', 'fairway', 'bunker', 'water', 'tee', 'green', 'waste'];
 
 /** the lattice the outlines are traced on, m */
 export const OUTLINE_STEP_M = 1;
@@ -302,14 +303,14 @@ const ringBox = (r: readonly JPt[]): [number, number, number, number] => {
   return [x0, y0, x1, y1];
 };
 /** the ground of a course file, for the view's style (look3p.ts biomeFor3p, courseTypeFor3p): the painted area (every surface kind), the shares of it that are sand
- *  (bunkers) and water, whether a big broad water reaches the course's edge (a shore, not a stream), and `trees` (the planted trees, features3p.ts) a hectare */
+ *  (bunkers and waste areas) and water, whether a big broad water reaches the course's edge (a shore, not a stream), and `trees` (the planted trees, features3p.ts) a hectare */
 export function groundOf3p(file: CourseFile, trees = 0): Ground3p {
   let painted = 0, sand = 0, water = 0, box: [number, number, number, number] | null = null;
   const waters: { m2: number; b: [number, number, number, number] }[] = [];
   for (const k of KINDS) {
     for (const p of (file.features[k] ?? []).flatMap(q => q.polys ?? [])) {
       const m2 = polyM2(p), b = ringBox(p.outer);
-      painted += m2; if (k === 'bunker') sand += m2;
+      painted += m2; if (k === 'bunker' || k === 'waste') sand += m2;
       if (k === 'water') { water += m2; if (m2 >= COAST_M2 && m2 / Math.max(1, ringLen(p.outer)) >= COAST_BREADTH_M) waters.push({ m2, b }); }
       box = box ? [Math.min(box[0], b[0]), Math.min(box[1], b[1]), Math.max(box[2], b[2]), Math.max(box[3], b[3])] : b;
     }
