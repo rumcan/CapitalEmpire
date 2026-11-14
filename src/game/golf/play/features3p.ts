@@ -23,7 +23,7 @@ import { FLOODLIGHT_HEIGHT_M, FLOODLIGHT_ID, LIGHT_REACH_M } from '../nightgolf'
 export type PathSurface = 'gravel' | 'concrete' | 'dirt' | 'sand' | 'earth' | 'turf';   // (J6c: earth, a bare range outfield's dirt; turf, a hitting mat's artificial grass: pads only)
 export type Roof = 'gable' | 'hip' | 'flat';
 /** what a building is, so the view can draw each kind its own way later */
-export type BuildingUse = 'clubhouse' | 'halfway' | 'prooffice' | 'teachhut' | 'range' | 'house' | 'tent' | 'stand' | 'board' | 'structure' | 'building' | 'fence';
+export type BuildingUse = 'clubhouse' | 'halfway' | 'prooffice' | 'teachhut' | 'range' | 'house' | 'tent' | 'stand' | 'board' | 'structure' | 'building' | 'fence' | 'hut' | 'shelter';
 
 export interface PathFeature { id: string; kind: 'path'; name: string; surface: PathSurface; width: number; pts: ViewPt[];
   /** J6b: a ground pad, not a path: pts is a closed ring laid whole (a concrete slab, the shop's dirt yard, a car park); width 0. An older view lays its outline */
@@ -110,6 +110,9 @@ export const STYLE: Readonly<Record<BuildingUse, { h: number; roof: Roof; wall: 
   building: { h: 4.5, roof: 'gable', wall: '#e8dcc0', roofColour: '#8a3b2a', floors: 1 },
   /** #1308: a run of fence: the view stands posts and wire along it (a building w long, FENCE_D thick, turned to its axis) */
   fence: { h: 1.8, roof: 'flat', wall: '#a6adb4', roofColour: '#a6adb4', floors: 1 },
+  /** #1308: a hut (the range's shop, kiosk, caravan): a plain box with a flat roof; a shelter (the hitting deck): a flat roof on posts */
+  hut: { h: 2.6, roof: 'flat', wall: '#e8e0c6', roofColour: '#9ca3a0', floors: 1 },
+  shelter: { h: 3.2, roof: 'flat', wall: '#8b9097', roofColour: '#c9ccd0', floors: 1 },
 };
 
 /** n to the centimetre (the file stays short and two exports of the same input match byte for byte) */
@@ -286,6 +289,19 @@ function fenceRuns(pieces: readonly FencePiece[]): BuildingIn[] {
   return out;
 }
 
+/** #1308 (the owner: "this building is skew as F"): the game's pictures of buildings are drawn for one turn of the map, so stood up facing the camera they look sheared from every other side. The range's
+ *  big pictures (the shop, the coffee kiosk, the ball dispenser, the caravan, a shed, the hitting deck, a house) go to the view as its own boxes instead: its real footprint (the library box, metres: 2 hx
+ *  by 2 hy, the picture's views turn it), upright and square on its spot, a height and the picture's colours by the piece. Anything else stays a picture (signs, boards, bins, chairs, flags: flat things) */
+export const BOX_LOOKS: readonly { re: RegExp; use: BuildingUse; h: number; wall: string; roofColour: string; roof?: Roof; floors?: number }[] = [
+  { re: /clubhouse-shanty|golf-pro-shop/i, use: 'hut', h: 2.7, wall: '#e8e0c6', roofColour: '#8e9694' },       // (cream asbestos panels, a corrugated grey roof)
+  { re: /coffee-kiosk|rental-kiosk/i, use: 'hut', h: 2.7, wall: '#d9c8a2', roofColour: '#6b4a34' },
+  { re: /ball-dispenser|utility-cabinet/i, use: 'hut', h: 1.8, wall: '#6f8794', roofColour: '#58707c' },
+  { re: /pop-up-caravan/i, use: 'hut', h: 2.3, wall: '#efece2', roofColour: '#cfd6d8' },
+  { re: /lean-to-shed/i, use: 'hut', h: 2.4, wall: '#8a7660', roofColour: '#5e5348' },
+  { re: /golf-range-deck/i, use: 'shelter', h: 3.2, wall: '#8b9097', roofColour: '#c9ccd0' },
+];
+const boxLookOf = (L: { kind: string; id?: string; cat?: string }) => (L.id ? BOX_LOOKS.find(b => b.re.test(L.id!)) : undefined);
+
 /** the plain input of the placed things where the game keeps them (GameFeatureSource) */
 export function gatherFeatures3p(src: GameFeatureSource): FeaturesInput {
   const paths: PathSegIn[] = [], buildings: BuildingIn[] = [], trees: TreeIn[] = [], lights: LightIn[] = [];
@@ -340,7 +356,7 @@ export function gatherFeatures3p(src: GameFeatureSource): FeaturesInput {
       pics[sp] = { url: page, uv: [L.tex![1]!, L.tex![2]!, L.tex![3]!, L.tex![4]!], w: L.w, h: L.h, ax: L.ax, ay: L.ay, quad: [q[0]!, q[1]!, q[2]!, q[3]!] };
   };
   const TB = src.things, inThings = (x: number, y: number): boolean => !!TB && x >= TB[0] && x <= TB[2] && y >= TB[1] && y <= TB[3];
-  const fence: FencePiece[] = [];
+  const fence: FencePiece[] = [], boxes: BuildingIn[] = [];
   for (const p of src.props) {
     const L = src.library[p.item];
     if (L && isFencePiece(L) && (inThings(p.x, p.y) || inBox(p.x, p.y))) {   // (#1308: a fence, on the range or on a hole: a run the view builds from posts and wire, not a picture standing up facing the camera)
@@ -348,9 +364,14 @@ export function gatherFeatures3p(src: GameFeatureSource): FeaturesInput {
       fence.push({ id, name: L.name, x: p.x, y: p.y, hl: hx * FENCE_FILL * p.scale, h: Math.min(2.4, Math.max(/chain/i.test(id) ? 1.8 : 0.8, ph)), alongX: L.kind === 'fencex' });
       continue;
     }
+    const bx = L && !isPlant(L) && inThings(p.x, p.y) && L.boxes?.[0] ? (boxLookOf(L) ?? (L.kind === 'house' ? { use: 'house' as BuildingUse, h: STYLE.house.h, wall: STYLE.house.wall, roofColour: STYLE.house.roofColour } : undefined)) : undefined;
+    if (L && bx) {   // (#1308: a big picture of a building: its own box in the view)
+      const b0 = L.boxes![0]!; boxes.push({ key: `box:${L.id ?? L.name}:${Math.round(p.x * 10)}:${Math.round(p.y * 10)}`, use: bx.use, name: L.name, at: { x: p.x, y: p.y }, w: 2 * b0.hx * p.scale, d: 2 * b0.hy * p.scale, rot: 0, h: bx.h, wall: bx.wall, roofColour: bx.roofColour, ...(bx.use === 'house' ? {} : { roof: 'flat' as Roof, floors: 1 }) });
+      continue;
+    }
     if (L && isPlant(L)) add(L, p.x, p.y, p.scale); else if (L && inThings(p.x, p.y)) add(L, p.x, p.y, p.scale, true);   // (J6b: the things)
   }
-  buildings.push(...fenceRuns(fence));   // (T454: every plant, not only kind tree: the desert's palms, cacti and shrubs are kinds of their own)
+  buildings.push(...fenceRuns(fence), ...boxes);   // (T454: every plant, not only kind tree: the desert's palms, cacti and shrubs are kinds of their own)
   for (const t of src.trees ?? []) { const L = byId.get(t.id); if (L) add(L, t.x, t.y, t.scale); }
   return { course: src.course, paths, buildings, trees, ...(lights.length ? { lights } : {}), ...(tb ? { treeBox: tb } : {}), pics };
 }
