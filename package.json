@@ -8,6 +8,7 @@
     "cinder:build": "node packages/cinderlinks/build.mjs",
     "build:jam": "npm run cinder:build && node scripts/jam/build.mjs",
     "jam:smoke": "node scripts/jam/smoke.mjs",
+    "holes:playthrough": "node scripts/dev/holes-playthrough.mjs",
     "cinder:gate": "node packages/cinderlinks/gate.mjs",
     "cinder:bench": "node scripts/cinder/bench.mjs",
     "build": "npm run cinder:build && node --max-old-space-size=8192 node_modules/vite/bin/vite.js build",
