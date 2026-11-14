@@ -31,7 +31,10 @@ async function open(size, scale, query = '', ctx0 = null) {
   await page.route('**/*', r => { const x = r.request(); return x.method() !== 'GET' && x.method() !== 'HEAD' ? r.fulfill({ status: 200, contentType: 'application/json', body: '{"ok":true}' }) : r.continue(); });
   await page.goto(`${base}${query}`, { timeout: 300000, waitUntil: 'domcontentloaded' });
   await start(page);
-  if (scale !== 1) await page.evaluate(s => document.documentElement.style.setProperty('--ui-scale', String(s)), scale);
+  if (scale !== 1) { // the Text size as a player sets it (Settings, the chip of that size: the UI's own state follows, the top bar drops its tiles at the largest)
+    const gear = page.locator('[data-tip="Settings"]').first();
+    await gear.click(); await page.locator(`[data-scale="${scale}"]`).click(); await gear.click();
+  }
   await sleep(800);
   return { ctx, page };
 }
@@ -57,6 +60,9 @@ const cluster = page => page.locator('[data-testid="speed-toggle"]').locator('xp
 const barBox = page => cluster(page).boundingBox();
 const shotBar = async (page, name) => {
   if (noShots) return;
+  // (a picture the bar shows for the first time (the chevron's other way, the skip icon) loads from the dev server: shot only when every picture of the cluster is in)
+  await page.waitForFunction(() => { const c = document.querySelector('[data-testid="speed-toggle"]').parentElement.parentElement; return [...c.querySelectorAll('img')].every(i => i.complete && i.naturalWidth > 0); }, null, { timeout: 20000 }).catch(() => console.log('  (some picture of the bar was still loading)'));
+  await sleep(150);
   const b = await barBox(page), vp = page.viewportSize(), pad = 10;
   const x0 = Math.max(0, Math.floor(b.x - pad)), y0 = Math.max(0, Math.floor(b.y - pad)), w = Math.min(vp.width - x0, Math.ceil(b.width + 2 * pad)), h = Math.ceil(b.height + 2 * pad);
   const png = await page.screenshot({ type: 'png', clip: { x: x0, y: y0, width: w, height: h } });
