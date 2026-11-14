@@ -91,3 +91,15 @@ test('the model: a wedge with full backspin from the fairway stops within 2 m of
   assert.ok(along(tourSpin, { x: 262, y: 100 }) < 0, 'with tour spin it comes back past its pitch mark');
   void rng;
 });
+
+// J5f (the owner, 2026-11-14: sliders for the curve and the flight): a view's input carries an amount, and the host plays it as it is, held to the side he has earned
+test('play3p (J5f): a slider amount is played as it is, held to -1..1 and to the side he has earned: a locked side is none', () => {
+  const played = (e: typeof ALL_EARNED, shape: { curve: number; flight: number }) => { const s = session(sk(0.5), e), t = firstTurn(s); s.input({ ...base(t), shape }); return s.inputs[0]!.shape; };
+  const drawLow = { ...ALL_EARNED, fade: false, high: false, why: { fade: 'Accuracy 60', high: 'Touch 60' } };
+  assert.deepEqual(played(ALL_EARNED, { curve: 0.35, flight: -0.5 }), { curve: 0.35, flight: -0.5 }, 'both earned: as slid');
+  assert.deepEqual(played(drawLow, { curve: -0.6, flight: 0.8 }), { curve: -0.6, flight: 0 }, 'a draw he has earned stays; a high flight he has not is none');
+  assert.equal(played(drawLow, { curve: 0.6, flight: 0.8 }), undefined, 'a fade and a high flight, neither earned: no shape at all');
+  assert.deepEqual(played(drawLow, { curve: -0.4, flight: -0.25 }), { curve: -0.4, flight: -0.25 }, 'a draw and a low flight, both earned');
+  assert.deepEqual(played(ALL_EARNED, { curve: -9, flight: Number.NaN }), { curve: -1, flight: 0 }, 'a wild amount is held to -1..1; not a number is none');
+  assert.deepEqual(played(ALL_EARNED, { curve: 0.333333, flight: 0 }), { curve: 0.33, flight: 0 }, 'to the hundredth');
+});

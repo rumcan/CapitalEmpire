@@ -227,7 +227,8 @@ export class Play3p {
     const aim = putting && this.green ? puttAim(t.ball, aim0, this.green.startDeg) : aim0; // (T423: a putt is aimed along the read; the model judges it at the pin's line)
     const env = putting ? null : envOf(this.windNow(), this.view.kindAt, this.o.height ?? null, t.ball, t.lie, aim);
     const { shape: sh0, spin: sp0, swing: sw0, ...rest } = vi;
-    const shape = sh0 ? { curve: (sh0.curve < 0 ? (e.draw ? -1 : 0) : sh0.curve > 0 ? (e.fade ? 1 : 0) : 0) as -1 | 0 | 1, flight: (sh0.flight > 0 ? (e.high ? 1 : 0) : sh0.flight < 0 ? (e.low ? -1 : 0) : 0) as -1 | 0 | 1 } : null;
+    const amt = (v: unknown, lo: number, hi: number) => { const n = Number(v); return Number.isFinite(n) ? Math.round(Math.max(lo, Math.min(hi, n)) * 100) / 100 : 0; };   // (J5f: a continuous amount, held to the side he has earned)
+    const shape = sh0 ? { curve: amt(sh0.curve, e.draw ? -1 : 0, e.fade ? 1 : 0), flight: amt(sh0.flight, e.low ? -1 : 0, e.high ? 1 : 0) } : null;
     const spin = sp0 ? { x: e.side ? sp0.x : 0, y: sp0.y < 0 && !e.back ? 0 : sp0.y, pump: e.tour ? sp0.pump : 0 } : null;
     let swing = sw0;
     if (swing && swing.boost > 0) {
