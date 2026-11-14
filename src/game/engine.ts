@@ -63,7 +63,7 @@ import { HALFWAY_COST, halfwaySpotWhy, halfwayTakings } from './golf/halfway';
 import { DESK_SIGN_LABEL, HUT_COST, HUT_LABEL, HUT_NAME, HUT_UPKEEP, OFFICE_COST, OFFICE_LABEL, OFFICE_UPKEEP, ROLE_TITLE, dropProsAt, hireWhy, hirePro, hutSpotWhy, lessonWhy, lessonsMonth, letGoPro, officeSpotWhy, PLAYER_LESSON_PRICE, proPose, rectGap, staffCardView, staffWork, type HutAt, type HutPlace, type ProBeat, type ProPose, type StaffCardView, type StaffNeeds } from './golf/pros';
 import { newTour, tourCurrent, tourLines, tourNext, tourOff, tourRunning, tourShowOf, tourSkip, tourTick, type TourFacts } from './ext/progressive-ui/tour';
 import { FIRST_BUCKETS, PLACED_STEPS, RANGE_GUIDE, guideTable, newRangeGuide, rangeGuideCurrent, rangeGuideLines, rangeGuideOff, rangeGuideSkip, rangeGuideTick, type GuideEvent, type GuideLine } from './ext/progressive-ui/guide';
-import { welcomeReady } from './golf/firstview';
+import { WELCOME_WAIT_MS, welcomeReady } from './golf/firstview';
 /** the hints' anchors (T188: their Show me pulses the control) where the hint is no guide step */
 const HINT_ANCHOR: Readonly<Record<string, string>> = { 'hint-range-open': 'range-chip', 'hint-range-upgrade': 'range-chip', 'hint-range-props': 'rail-facilities', 'hint-range-first-hole': 'new-hole' };
 import { RANGE_LABEL_Z, defaultRangeBiz, parkLabel, rangeKeepOut, practiceAppeal, rangeMapLabel, rangeNewSeason, rangeStats, rangeStructures, rangeCarLines, type RangeCounts, type RangeUpgradeId } from './golf/rangebiz';
@@ -181,7 +181,7 @@ import { fetchLand, tilesKept, tilesOfCourse } from './golf/osm/dem';
 import { planOsmGame } from './golf/osm/start';
 import { specMarkers } from './golf/osm/raster';
 import { RANGE_CAM_ZOOM, planRangeStart, settleSpot, startOfSpot, startProbe, startSpotAt, type RangeSave, type RangeStart, type StartProbe, type StartSpot } from './golf/rangestart';
-import { FACING_WORDS, START_CARD_TITLE, START_CLICK_GRACE_MS, START_PICK_ZOOM, START_REST_MS, spotPolys, startCardText, startOkText, turnedFacing } from './golf/startpick';
+import { FACING_WORDS, START_CARD_TITLE, START_CLICK_GRACE_MS, START_FIRST_VIEW_WAIT_MS, START_PICK_ZOOM, START_REST_MS, spotPolys, startCardText, startOkText, turnedFacing } from './golf/startpick';
 import { CLUB_REACH, RANGE_PLOT, clubhouseSpotWhy, plotOfFront, plotPoint, rangeLayout } from './golf/range';
 import { PRACTICE_LOT_NAME, inPractice, practiceArea, practiceDims } from './golf/practice';
 import { JUNK_BY_ID, JUNK_CLEAR_COST } from './golf/junk';
@@ -3579,7 +3579,7 @@ export class Game {
     this.you = null; this.guideRings = null; this.guideAnchor = null; this.tourShown = null;
     const c = sc ? sc.counter : { x: site.rangeFront[0] + site.rangeFront[2] / 2, y: site.rangeFront[1] + site.rangeFront[3] / 2 };
     this.lookAt(c.x, c.y, RANGE_CAM_ZOOM);
-    this.firstViewBaked = false; this.readyAt = performance.now();
+    this.firstViewBaked = false; this.readyAt = performance.now() - (WELCOME_WAIT_MS - START_FIRST_VIEW_WAIT_MS); // (the tutorial's card waits for the new view's ground, but 4 s at most)
     this.setSpeed(this.lastSpeed || 1); this.scheduleSave(); this.emit();
     return true;
   }

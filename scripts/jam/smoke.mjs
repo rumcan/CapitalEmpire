@@ -155,6 +155,7 @@ try {
   await game(() => window.__game.setSpeed(0));
   // ---- the tutorial: every Show me, then Next to the end
   const tour = '[data-testid="tour"]';
+  await page.locator(tour).waitFor({ state: 'visible', timeout: 30000 }).catch(() => {}); // (J9: the card follows the start's click once the new view's ground is baked, a few seconds)
   if (await page.locator(tour).isVisible().catch(() => false)) {
     for (let k = 0; k < 6 && await page.locator(tour).isVisible().catch(() => false); k++) {
       const title = `step ${k + 1}`;

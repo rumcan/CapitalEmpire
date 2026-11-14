@@ -4,7 +4,8 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { generateTerrain } from '../src/game/terrain';
 import { RANGE_PLACE_COST, placeVerdict, type Placeable } from '../src/game/golf/placing';
-import { START_CARD_TITLE, START_PICK_ZOOM, START_REST_MS, FACING_WORDS, spotPolys, startCardText, startOkText, startPolys, turnedFacing } from '../src/game/golf/startpick';
+import { WELCOME_WAIT_MS, welcomeReady } from '../src/game/golf/firstview';
+import { START_CARD_TITLE, START_FIRST_VIEW_WAIT_MS, START_PICK_ZOOM, START_REST_MS, FACING_WORDS, spotPolys, startCardText, startOkText, startPolys, turnedFacing } from '../src/game/golf/startpick';
 import { ZOOM_MAX, ZOOM_MIN } from '../src/game/iso';
 import { planRangeStart, settleSpot, startProbe, startSpotAt } from '../src/game/golf/rangestart';
 
@@ -70,6 +71,11 @@ test('the engine wires the choice: a new range game chooses (but not a bench, a 
   assert.match(eng, /startSpotAt\(pk\.probe, x, y, pk\.turn, pk\.last, true\)/);
   assert.match(eng, /settleSpot\(pk\.probe, sp\); \/\/ \(a click on a spot the pointer had not rested on/);
   assert.match(eng, /if \(drawPlan\(\) && !this\.firstViewBaked && this\.ready\)/);
+  // after the click the tutorial's card waits for the new view's ground, but START_FIRST_VIEW_WAIT_MS at most (not the 10 s a game's first view may wait)
+  assert.match(eng, /this\.firstViewBaked = false; this\.readyAt = performance\.now\(\) - \(WELCOME_WAIT_MS - START_FIRST_VIEW_WAIT_MS\);/);
+  assert.ok(START_FIRST_VIEW_WAIT_MS > 0 && START_FIRST_VIEW_WAIT_MS < WELCOME_WAIT_MS);
+  const shift = WELCOME_WAIT_MS - START_FIRST_VIEW_WAIT_MS; // (readyAt is set this far back at the click)
+  assert.equal(welcomeReady(false, shift + START_FIRST_VIEW_WAIT_MS - 1), false); assert.equal(welcomeReady(false, shift + START_FIRST_VIEW_WAIT_MS), true); assert.equal(welcomeReady(true, 0), true);
   assert.match(readFileSync('src/game/features.ts', 'utf8'), /export const START_PICK = true;/);
   assert.match(app, /const picking = !!game\?\.startPick;/); assert.match(app, /\{picking && <StartPickCard game=\{game\} \/>\}/); assert.match(app, /\{!picking && <Minimap game=\{game\} \/>\}/);
 });

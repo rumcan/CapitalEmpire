@@ -166,7 +166,10 @@ try {
     await page.mouse.down(); await page.mouse.up();
     await page.waitForFunction(() => !window.__game.startPick, null, { timeout: 30000 });
     console.log('click to laid', Date.now() - t1, 'ms');
-    await settle(2500); console.log('after click', JSON.stringify(await state())); await shot('05-after-click.jpg');
+    // the ground under the new view bakes (the tutorial's card waits for it, at most START_FIRST_VIEW_WAIT_MS): how long, then the picture
+    const baked = await page.waitForFunction(() => window.__game.firstViewBaked, null, { timeout: 30000, polling: 100 }).then(() => Date.now() - t1, () => null);
+    console.log('first view baked', baked === null ? 'not within 30 s' : `${baked} ms after the click`);
+    await settle(900); console.log('after click', JSON.stringify(await state())); await shot('05-after-click.jpg');
     await settle(6000); console.log('6 s later', JSON.stringify(await state())); await shot('06-after-6s.jpg');
   }
   if (only.has('run')) {

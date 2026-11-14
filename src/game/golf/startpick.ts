@@ -47,3 +47,6 @@ export function spotPolys(sp: StartSpot): number[][] {
 export const START_REST_MS = 140;
 /** a click this soon (ms) after the start came into hand lays nothing: the second click of a double click on the Who card's button must not choose the start */
 export const START_CLICK_GRACE_MS = 700;
+/** how long (ms) the tutorial's card waits for the ground under the range's view after a start is laid: golf/firstview.ts waits up to WELCOME_WAIT_MS for a game's first view; the view
+ *  the camera flies to at the click is baked by then or the map still shows its coarser pictures, so the card waits 4 s at most */
+export const START_FIRST_VIEW_WAIT_MS = 4000;
