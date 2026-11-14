@@ -19,12 +19,18 @@ export interface Placeable<S = unknown> {
   why(s: S): string;
   polys(s: S): number[][];
   build(s: S): boolean;
+  /** J9 (the start's placement, golf/startpick.ts): the build in hand cannot be put down (Esc and a right click leave it; a click places it, a drag pans) */
+  sticky?: boolean;
+  /** J9: R (Shift+R back) turns it, as the game's other placements turn */
+  turn?(back: boolean): void;
+  /** J9: what the ghost says where it may stand (default: its name, its price and "click to build here") */
+  ok?(s: S): string;
 }
 /** the ghost's verdict at a spot with the treasury: refused (its reason), short of money, or fine (its name and price) */
 export function placeVerdict<S>(p: Placeable<S>, s: S, money: number): { bad: boolean; label: string } {
   const why = p.why(s); if (why) return { bad: true, label: why };
   if (p.cost > money) return { bad: true, label: `Not enough money: ${p.name} costs $${p.cost.toLocaleString()}` };
-  return { bad: false, label: `${p.name}${p.cost ? ` · $${p.cost.toLocaleString()}` : ''} · click to build here` };
+  return { bad: false, label: p.ok?.(s) ?? `${p.name}${p.cost ? ` · $${p.cost.toLocaleString()}` : ''} · click to build here` };
 }
 
 /** what placing the range, its first car park and the practice area cost ($): the range's shack, mats and dirt tee box; the first car park as

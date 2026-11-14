@@ -10,7 +10,7 @@ import { FACING_ROW, Pedestrians, facing as facingOf, sidewalks, type Door, type
 import { personIdentity, type PersonIdentity } from './person-identity';
 import { legacySeating, placeSeating, seatLiftWorldPixels, seatingProblems, type PlacedSeating } from './golf/event-seating';
 import { facilityCondition, facilityImprovement, hasUpgradedArt, improvementCost, type FacilityCondition } from './golf/facility-models';
-import { GREENKEEPING, JAM, JAM_FEE_PER_HOLE, JAM_RANGE_BALLS, JAM_RANGE_KIT } from './features';
+import { GREENKEEPING, JAM, JAM_FEE_PER_HOLE, JAM_RANGE_BALLS, JAM_RANGE_KIT, START_PICK } from './features';
 import { GRASS_ACTION_NAME, GrassManagement, grassSurface, type GrassAction, type GrassCellView, type GrassScope, type GrassSettings } from './ext/grass-management';
 import { drawGhostBlueprint, drawGhostHint, drawGhostPoly, drawGhostRing, drawRefusedMarks, ghostStatus, rgbaOf, type GhostBlueprint, type GhostView } from './ext/ghost-preview';
 import { drawRefusedCross, strokeHatch } from './ext/refused-mark';
@@ -64,7 +64,7 @@ import { HALFWAY_COST, halfwaySpotWhy, halfwayTakings } from './golf/halfway';
 import { DESK_SIGN_LABEL, HUT_COST, HUT_LABEL, HUT_NAME, HUT_UPKEEP, OFFICE_COST, OFFICE_LABEL, OFFICE_UPKEEP, ROLE_TITLE, dropProsAt, hireWhy, hirePro, hutSpotWhy, lessonWhy, lessonsMonth, letGoPro, officeSpotWhy, PLAYER_LESSON_PRICE, proPose, rectGap, staffCardView, staffWork, type HutAt, type HutPlace, type ProBeat, type ProPose, type StaffCardView, type StaffNeeds } from './golf/pros';
 import { newTour, tourCurrent, tourLines, tourNext, tourOff, tourRunning, tourShowOf, tourSkip, tourTick, type TourFacts } from './ext/progressive-ui/tour';
 import { FIRST_BUCKETS, PLACED_STEPS, RANGE_GUIDE, guideTable, newRangeGuide, rangeGuideCurrent, rangeGuideLines, rangeGuideOff, rangeGuideSkip, rangeGuideTick, type GuideEvent, type GuideLine } from './ext/progressive-ui/guide';
-import { welcomeReady } from './golf/firstview';
+import { WELCOME_WAIT_MS, welcomeReady } from './golf/firstview';
 import { practicePath } from './golf/menu-path';
 /** the hints' anchors (T188: their Show me pulses the control) where the hint is no guide step */
 const HINT_ANCHOR: Readonly<Record<string, string>> = { 'hint-range-open': 'range-chip', 'hint-range-upgrade': 'range-chip', 'hint-range-props': 'rail-facilities', 'hint-range-first-hole': 'new-hole' };
@@ -182,7 +182,8 @@ import { realNet, type AnswerCache } from './golf/osm/polite';
 import { fetchLand, tilesKept, tilesOfCourse } from './golf/osm/dem';
 import { planOsmGame } from './golf/osm/start';
 import { specMarkers } from './golf/osm/raster';
-import { RANGE_CAM_ZOOM, planRangeStart } from './golf/rangestart';
+import { RANGE_CAM_ZOOM, planRangeStart, settleSpot, startOfSpot, startProbe, startSpotAt, type RangeSave, type RangeStart, type StartProbe, type StartSpot } from './golf/rangestart';
+import { FACING_WORDS, START_CARD_TITLE, START_CLICK_GRACE_MS, START_FIRST_VIEW_WAIT_MS, START_PICK_ZOOM, START_REST_MS, spotPolys, startCardText, startOkText, turnedFacing } from './golf/startpick';
 import { CLUB_REACH, RANGE_PLOT, clubhouseSpotWhy, plotOfFront, plotPoint, rangeLayout } from './golf/range';
 import { PRACTICE_LOT_NAME, inPractice, practiceArea, practiceDims } from './golf/practice';
 import { JUNK_BY_ID, JUNK_CLEAR_COST } from './golf/junk';
@@ -1176,7 +1177,7 @@ export class Game {
   private frameTimes: number[] = [];
   // input
   /** a drag in progress; build: a right-button press in the road tool (released without moving, it builds the route, as Enter) */
-  private dragging: null | { kind: 'pan' | 'bulldoze' | 'park'; sx: number; sy: number; camX: number; camY: number; moved: boolean; /** T392, T393: a plain right press that became the pan: on release without a drag it takes the step Esc takes (cancelOrClose; a route in hand: its last point back, T207) */ rc?: boolean; aim?: Pt; /** a Select click's hole under it (0: none; T174) */ hole?: number; /** T200: a click on Land for sale's overlay (it opens the block's card on release, never buys) */ land?: Pt; /** T240: a Walk mode click (your character walks there on release) */ you?: boolean } = null;
+  private dragging: null | { kind: 'pan' | 'bulldoze' | 'park'; sx: number; sy: number; camX: number; camY: number; moved: boolean; /** T392, T393: a plain right press that became the pan: on release without a drag it takes the step Esc takes (cancelOrClose; a route in hand: its last point back, T207) */ rc?: boolean; aim?: Pt; /** a Select click's hole under it (0: none; T174) */ hole?: number; /** T200: a click on Land for sale's overlay (it opens the block's card on release, never buys) */ land?: Pt; /** T240: a Walk mode click (your character walks there on release) */ you?: boolean; /** J9: a click (no drag) with the start in hand places it on release */ place?: boolean } = null;
   /** the Paint tool: painted ground areas, its settings and the outline being drawn (docs/PAINT-TOOL.md) */
   paint = new PaintTool({ collarDefault: s => borderDefault(s, finishOf(paintedSurfaces())), progress: () => this.bump('pieces'), setLotGround: (k, p) => { this.paintRev++; this.setLotGround(k, p); }, emit: () => this.emit(), save: () => this.scheduleSave(), toast: (t, k) => this.toast(t, k), affine: o => this.paintAffine(o), placeProps: (ps, seed) => this.placePresetProps(ps, seed), golfMode: () => this.golfMode, money: () => this.money, spend: n => this.traffic.spend('construction', n), ownedLand: pts => !this.golf || polyInParcels(this.golf.parcels ?? [this.golf.parcel], pts), currentMonth: () => !this.golf ? 0 : this.golfMonthIndex(), plant: (ids, x, y, r, spacing, size, seed) => this.plantProps(ids, x, y, r, spacing, size, seed), unplant: (x, y, r, trees) => this.unplantProps(x, y, r, trees), plantPool: (k, f) => plantPool(LIBRARY, k, f), courseHeight: () => this.courseHeight, roadsNear: (x, y, r) => { let k = 0; return [...this.net.segsNear({ x, y }, r)].map(s => ({ id: ++k, ax: s.a.x, ay: s.a.y, bx: s.b.x, by: s.b.y, halfWidthTiles: s.cls.h + s.cls.walk })); }, roadRev: () => this.net.version, heightChanged:b => { this.courseHeightChanged(unionCourseBox(b, this.flattenRoadsIn(b))!); },
     journal: { begin: () => { this.propLog = { added: [], removed: [], cut: [], cutAuto: [] }; }, end: () => { const j = this.propLog; this.propLog = null; return j && (j.added.length || j.removed.length || j.cut.length || j.cutAuto.length) ? j : null; }, undo: j => this.swapProps(j as PropLog, true), redo: j => this.swapProps(j as PropLog, false) },
@@ -1582,7 +1583,7 @@ export class Game {
     this.placing = p; this.toast(`${p.name}: move it to a spot and click to build it there · Esc puts it down`, 'info'); this.emit();
   }
   /** puts the build in hand down (nothing built, nothing paid) */
-  cancelPlacing() { if (!this.placing) return; this.placing = null; this.emit(); }
+  cancelPlacing() { if (!this.placing || this.placing.sticky) return; this.placing = null; this.emit(); } // (J9: the start in hand stays)
   /** a click with a build in hand: built at the spot under the pointer when it may stand there and is affordable, else the toast says why */
   private placeAt() {
     const p = this.placing, h = this.hover; if (!p || !h) return;
@@ -1879,17 +1880,7 @@ export class Game {
     if (!JAM || this.jamOffered || !g || !b || b.built !== false || !b.home || !welcomeReady(this.firstViewBaked, performance.now() - this.readyAt)) return; // (as the welcome: the ground first, or a while)
     this.jamOffered = true;
     const p = this.rangePlaceable(true); if (!p) return;
-    // every spot along the road at the start's set-back that the range may take, the one leaving the most of the parcel free on one side first (room
-    // for a course beside it), then the nearest the start's own
-    const alongX = g.dir === 0 || g.dir === 2, [qx, qy, qw, qh] = g.parcel, p0 = alongX ? qx : qy, p1 = p0 + (alongX ? qw : qh);
-    const spots: { s: RangeSpot; room: number; du: number }[] = [];
-    for (let du = -120; du <= 120; du += 6) { // (within a walk of the player's home, the trailer)
-      const s = rangeSpotAlong(b.home, g.dir, du); if (p.why(s)) continue;
-      const a0 = alongX ? s.plot[0] : s.plot[1], a1 = a0 + (alongX ? s.plot[2] : s.plot[3]);
-      spots.push({ s, room: Math.max(a0 - p0, p1 - a1), du });
-    }
-    spots.sort((a, c) => c.room - a.room || Math.abs(a.du) - Math.abs(c.du));
-    for (const { s } of spots) {
+    for (const s of this.rangeSpotsBest(p)) {
       b.forSale = true; // (before the build: the range is laid for sale, so no golfer turns off the road for it)
       b.junk = newRangeJunk(this.seed ^ 0x4a37);
       if (!p.build(s)) { delete b.forSale; delete b.junk; continue; }
@@ -1898,6 +1889,20 @@ export class Game {
     }
   }
   private jamOffered = false;
+  /** every spot along the road at the start's set-back that the range may take, the one leaving the most of the parcel free on one side first (room for a course
+   *  beside it), then the nearest the start's own (the home's plot: du 0) */
+  private rangeSpotsBest(p: Placeable<RangeSpot>): RangeSpot[] {
+    const g = this.golf, b = g?.range; if (!g || !b?.home) return [];
+    const alongX = g.dir === 0 || g.dir === 2, [qx, qy, qw, qh] = g.parcel, p0 = alongX ? qx : qy, p1 = p0 + (alongX ? qw : qh);
+    const spots: { s: RangeSpot; room: number; du: number }[] = [];
+    for (let du = -120; du <= 120; du += 6) { // (within a walk of the player's home, the trailer)
+      const s = rangeSpotAlong(b.home, g.dir, du); if (p.why(s)) continue;
+      const a0 = alongX ? s.plot[0] : s.plot[1], a1 = a0 + (alongX ? s.plot[2] : s.plot[3]);
+      spots.push({ s, room: Math.max(a0 - p0, p1 - a1), du });
+    }
+    spots.sort((a, c) => c.room - a.room || Math.abs(a.du) - Math.abs(c.du));
+    return spots.map(q => q.s);
+  }
   /** J7: Buy the driving range (a jam game's old range, for sale on the plot): RANGE_PLACE_COST, and it opens; false with a toast when the cash is short */
   buyRange(): boolean {
     const b = this.golf?.range; if (!b?.forSale) return false;
@@ -3487,8 +3492,11 @@ export class Game {
     for (let k = 0; k < 8; k++) {
       const seed = k === 0 && this.devSeed ? this.devSeed : newSeed(); // (T266: ?seed=N on the dev server, the same range start before and after)
       this.genTerrain(seed);
-      const s = planRangeStart(this.terrain, seed);
+      // J9: a new game chooses its start (the probe's integral images are the automatic plan's too: "Pick a spot for me" lays that plan)
+      const probe = this.picksStart() ? startProbe(this.terrain, seed) : undefined;
+      const s = planRangeStart(this.terrain, seed, probe);
       if (!s) continue;
+      if (probe) { this.beginPick(s, probe); return true; }
       const { road, site } = s;
       this.townPts = [site.centre]; this.roadNames = new RoadNames(this.names, this.townPts);
       this.edit.addLegs(road.legs, CLASS.road, 0, road.kinds, true);
@@ -3510,6 +3518,108 @@ export class Game {
     }
     console.warn('golf: none of 8 seeds has a range start; the old start instead');
     return false;
+  }
+  // ---------- J9 (#1268, the owner 2026-11-14: "the start should be placing the driving range and that should buit your house and buy the property. so the guy can
+  // start where he wants"): a new game's start is chosen, not laid (golf/startpick.ts, golf/rangestart.ts startSpotAt)
+  /** the start being chosen (null: none: an old save, a bench, a fixture, a ?seed= game, or the start is laid): the valley's probe, today's automatic plan ("Pick a
+   *  spot for me"), the facing the player turned to (null: the first that fits), the facing last shown and the look picked on "Who are you?" */
+  startPick: { probe: StartProbe; auto: RangeStart; turn: 0 | 1 | 2 | 3 | null; last: 0 | 1 | 2 | 3 | null; look: number | null; /** the spot under the pointer and since when (ms): the ghost's county road is worked out once the pointer rests */ at: StartSpot | null; since: number; /** when the start came into hand (ms): a click just after it (the second of a double click on the Who card's button) places nothing */ armed: number } | null = null;
+  /** whether a new game chooses its start: not with START_PICK off, ?pick=0, a bench or a dev ?seed= (each keeps the automatic start it always had) */
+  private picksStart(): boolean { return START_PICK && !this.benchMode && !this.devSeed && new URLSearchParams(location.search).get('pick') !== '0'; }
+  /** a new game that chooses its start: the valley is bare and today's automatic plan waits behind "Pick a spot for me". The golf state is that plan's geometry
+   *  (everything that reads the land has a valid one; layStart replaces it) with nothing laid, nothing saved and the clock stopped; the camera is far out over the
+   *  middle of the map, over the plan's spot (a spot that fits is in view) */
+  private beginPick(auto: RangeStart, probe: StartProbe) {
+    this.townPts = [auto.site.centre]; this.roadNames = new RoadNames(this.names, this.townPts);
+    this.setBizDefs([]); this.parkDefs = [];
+    this.golf = { ...auto.save, progress: { ...emptyProgress(), ramp: 0, guide: newRangeGuide(), tour: newTour() }, range: { ...defaultRangeBiz(), built: false, practiceAt: null } };
+    this.clubLegacy = false;
+    this.startPick = { probe, auto, turn: null, last: null, look: null, at: null, since: 0, armed: 0 };
+    this.cam.X = worldX(auto.cam.x, auto.cam.y); this.cam.Y = worldY(auto.cam.x, auto.cam.y); this.cam.z = START_PICK_ZOOM; this.camEase = null;
+    this.setTool('select'); this.setSpeed(0);
+  }
+  /** the start in hand (golf/placing.ts Placeable, the one placement helper): its ghost follows the pointer, green where a start fits and red with the reason where not, R
+   *  turns it, a click lays the start there (layStart); it cannot be put down. Its spot is golf/rangestart.ts startSpotAt's, kept per lattice cell: a pointer that
+   *  stays in one costs nothing, a new one a few lookups, and the county road of a new J about 5 to 9 ms once */
+  private startPlaceable(): Placeable<StartSpot> | null {
+    const pk = this.startPick; if (!pk) return null;
+    return {
+      id: 'start', name: 'Your driving range', cost: RANGE_PLACE_COST, sticky: true,
+      // (every frame: the spot's geometry, a comparison when the pointer has not moved to another cell, a few lookups when it has; its county road, 5 to 30 ms, is
+      //  worked out once the pointer has rested on the spot START_REST_MS, and at the click, so a pointer on the move never waits for one)
+      spot: (x, y) => {
+        const sp = startSpotAt(pk.probe, x, y, pk.turn, pk.last, true), now = performance.now();
+        if (sp !== pk.at) { pk.at = sp; pk.since = now; } else if (sp.pending && now - pk.since >= START_REST_MS) settleSpot(pk.probe, sp);
+        if (!sp.why) pk.last = sp.dir;
+        return sp;
+      },
+      why: sp => sp.why,
+      polys: spotPolys,
+      ok: () => startOkText(RANGE_PLACE_COST),
+      build: sp => {
+        if (performance.now() - pk.armed < START_CLICK_GRACE_MS) return false; // (the second click of a double click on the Who card's button: nothing is laid by it)
+        settleSpot(pk.probe, sp); // (a click on a spot the pointer had not rested on: its road now)
+        if (sp.why) { this.toast(sp.why, 'warn'); return false; }
+        return this.layStart(startOfSpot(sp));
+      },
+      turn: back => this.startPickTurn(back),
+    };
+  }
+  /** whether the start's card and ghost may show: the "Who are you?" card is closed and the ground under the first view is baked (or has waited) */
+  private pickReady(): boolean { return !!this.startPick && !!this.golf?.progress?.seen.includes('who') && welcomeReady(this.firstViewBaked, performance.now() - this.readyAt); }
+  /** about 6 times a second while the start is chosen: the placement is in hand once the card may show (and again if anything put it down) */
+  private pickStep() {
+    if (this.placing || !this.pickReady()) return;
+    this.placing = this.startPlaceable();
+    if (this.startPick) this.startPick.armed = performance.now();
+    // (the ghost shows at once, on the automatic plan's spot under the camera's middle, until the pointer is over the map: green, with what a click does)
+    const pk = this.startPick;
+    if (pk && !this.hover) { this.hover = { x: pk.auto.cam.x, y: pk.auto.cam.y }; this.ghostMouse = { mx: this.cssW / 2, my: this.cssH / 2 }; }
+    this.emit();
+  }
+  /** the start's card: its words and the facing (null: not choosing yet) */
+  startPickView(): { title: string; text: string; facing: string | null } | null {
+    const pk = this.startPick; if (!pk || !this.pickReady()) return null;
+    const f = pk.turn ?? pk.last;
+    return { title: START_CARD_TITLE, text: startCardText(JAM, RANGE_PLACE_COST), facing: f === null ? null : FACING_WORDS[f] };
+  }
+  /** R (Shift+R back), or the card's Turn: the range turns a quarter (the way the golfers hit) from the facing last shown */
+  startPickTurn(back = false) {
+    const pk = this.startPick; if (!pk) return;
+    pk.turn = turnedFacing(pk.turn ?? pk.last ?? pk.auto.site.dir, back); pk.last = pk.turn; this.emit();
+  }
+  /** "Pick a spot for me": today's automatic start for this valley (the same start for the same seed) */
+  startPickAuto(): boolean { const pk = this.startPick; return !!pk && this.layStart(pk.auto); }
+  /** lays the start at the spot chosen (a RangeStart: the county road, the site, the golf state): the county road edge to edge (free town road pieces, bridged
+   *  over water), the town's seed across it, the owned parcel and the home on it (the trailer, in the corner of the range's plot), and the driving range on its plot
+   *  with its dirt car park (jam) or at its price (a normal game); a jam game's old range is bought at once ($15,000, its kit, its balls, the junk on its outfield:
+   *  the same as Buy was). Everything is as a new game's start has always been, on a map that was bare a moment ago; the worker's town and books start again
+   *  (nothing is spent yet), the clock starts and the camera goes to the range. False (nothing laid) with no start to lay */
+  private layStart(rs: RangeStart | null): boolean {
+    const pk = this.startPick, g = this.golf; if (!pk || !g || !rs) return false;
+    const { road, site } = rs, next: RangeSave = { ...rs.save, progress: g.progress, ...(g.player ? { player: g.player } : {}) };
+    this.golf = next; this.startPick = null; this.placing = null; this.hover = null; this.ghostMouse = null; // (the pick's pointer goes with it: a map point from the far view)
+    this.townPts = [site.centre]; this.roadNames = new RoadNames(this.names, this.townPts);
+    this.sendTerrain(); this.rangeMorning();
+    this.edit.addLegs(road.legs, CLASS.road, 0, road.kinds, true); this.commitNetwork();
+    this.setBizDefs([]); this.parkDefs = [];
+    const b = next.range = { ...defaultRangeBiz(), setback: site.setback, built: false, home: [...site.rangePlot], practiceAt: null };
+    this.dropCourseGrid(); this.setupCourseGrid(); this.sendGolf();
+    // the range on its plot, the home's own (jam: for sale a moment: its price is taken below, with its kit and its balls)
+    this.jamOffered = true;
+    if (JAM) { b.forSale = true; b.junk = newRangeJunk(this.seed ^ 0x4a37); }
+    const p = this.rangePlaceable(JAM), spot = rangeSpotAlong(site.rangePlot, site.dir, 0), at = !p ? null : p.why(spot) ? this.rangeSpotsBest(p)[0] ?? null : spot;
+    if (p && at && p.build(at)) { if (JAM && !this.buyRange()) { /* (short of cash: the range stands for sale, as the old start had it) */ } }
+    else if (JAM) { delete b.forSale; delete b.junk; } // (nothing placed: a bare start, the range is placed from the Range menu as an older game's)
+    // your character in the start, in the look picked on "Who are you?"; the camera on the range at the street tier; the clock running; the tutorial waits for the ground
+    const sc = this.range.scene, pl = this.playerNow(), ys = this.youStart();
+    if (pl && ys) this.setPlayer({ ...pl, you: { x: ys.x, y: ys.y, f: 0, look: pk.look ?? pl.you?.look ?? this.youArt() } });
+    this.you = null; this.guideRings = null; this.guideAnchor = null; this.tourShown = null;
+    const c = sc ? sc.counter : { x: site.rangeFront[0] + site.rangeFront[2] / 2, y: site.rangeFront[1] + site.rangeFront[3] / 2 };
+    this.lookAt(c.x, c.y, RANGE_CAM_ZOOM);
+    this.firstViewBaked = false; this.readyAt = performance.now() - (WELCOME_WAIT_MS - START_FIRST_VIEW_WAIT_MS); // (the tutorial's card waits for the new view's ground, but 4 s at most)
+    this.setSpeed(this.lastSpeed || 1); this.scheduleSave(); this.emit();
+    return true;
   }
   /** whether tile (x, y) lies on the driving range's plot (a range start's course keeps off it: the course grid's brushes refuse its cells) */
   private onRangePlot(x: number, y: number): boolean {
@@ -5278,7 +5388,7 @@ export class Game {
     }
 
   // ---------- road routing ----------
-  setTool(t: Tool) { if (t !== 'course') this.paint.setProperty(false); /* T256: Range › Build ends with the course tool */ const wasGk = this.tool === 'greenkeeping'; if (t === 'business' && this.golfMode) return; /* golf mode: the game places the clubhouse, so no Business tool */ if (this.refuseLocked(t)) return; /* P23 4.10: a locked tool says what unlocks it */ const scope = t === 'path' ? 'course' : t === 'road' ? 'town' : this.roadScope; if (t === 'path') t = 'road'; /* T084: Paths & drives is the road tool on the course */ const cScope = t === 'buildings' ? 'buildings' : t === 'course' ? 'holes' : this.courseScope; if (t === 'buildings') t = 'course'; /* P23 P1-E: Buildings is the course tool's clubhouse scope */ if (this.tool !== t || scope !== this.roadScope || cScope !== this.courseScope) { this.paint.cancel(); this.cancelRoute(); this.teePlace = null; /* T268 */ this.placing = null; /* T288 */ this.real.cancel(false); /* T356 */ this.selected = null; this.selectedPlace = null; this.selectedJunction = null; this.parkDrag = null; this.parking.drag = null; this.tollHover = null; this.bizHover = null; this.busPick = null; this.busHover = null; this.laneHover = null; this.decor.cancel(); this.practice.cancel(); } this.tool = t; if (t !== 'road') this.estateStreet = null; /* T353: an estate street not drawn is no longer wanted */ if (pickTool(this, t)) this.tidySideModes(); /* P23 P1-A: a build tool closes the Grass panel, Land, Holes and Event */ if (t === 'road') this.setRoadScope(scope); if (t === 'course') this.courseScope = cScope; if (t !== 'course' || cScope === 'holes') { this.clubPlacing = false; this.halfwayPlacing = false; this.estateOff(); } else if (this.golf && !this.bizDefs.some(d => d.type === 'clubhouse')) this.clubPlacing = true; /* Buildings arms the clubhouse until it stands */ if (t === 'course') { this.paint.enterCourse(); this.ground.prewarm(brushTextures()); /* T168: what its brushes lay, made ahead */ } else if (t === 'paint') this.paint.enterPaint(); /* T175: Greenkeeping's panel is the Grass panel; leaving it puts its care down */ if (t === 'greenkeeping') this.grassPanel = true; else if (wasGk) { this.grassPanel = false; this.grassAction = null; } this.emit(); }
+  setTool(t: Tool) { if (this.startPick && t !== 'select') return; /* J9: the start is chosen first */ if (t !== 'course') this.paint.setProperty(false); /* T256: Range › Build ends with the course tool */ const wasGk = this.tool === 'greenkeeping'; if (t === 'business' && this.golfMode) return; /* golf mode: the game places the clubhouse, so no Business tool */ if (this.refuseLocked(t)) return; /* P23 4.10: a locked tool says what unlocks it */ const scope = t === 'path' ? 'course' : t === 'road' ? 'town' : this.roadScope; if (t === 'path') t = 'road'; /* T084: Paths & drives is the road tool on the course */ const cScope = t === 'buildings' ? 'buildings' : t === 'course' ? 'holes' : this.courseScope; if (t === 'buildings') t = 'course'; /* P23 P1-E: Buildings is the course tool's clubhouse scope */ if (this.tool !== t || scope !== this.roadScope || cScope !== this.courseScope) { this.paint.cancel(); this.cancelRoute(); this.teePlace = null; /* T268 */ this.placing = null; /* T288 */ this.real.cancel(false); /* T356 */ this.selected = null; this.selectedPlace = null; this.selectedJunction = null; this.parkDrag = null; this.parking.drag = null; this.tollHover = null; this.bizHover = null; this.busPick = null; this.busHover = null; this.laneHover = null; this.decor.cancel(); this.practice.cancel(); } this.tool = t; if (t !== 'road') this.estateStreet = null; /* T353: an estate street not drawn is no longer wanted */ if (pickTool(this, t)) this.tidySideModes(); /* P23 P1-A: a build tool closes the Grass panel, Land, Holes and Event */ if (t === 'road') this.setRoadScope(scope); if (t === 'course') this.courseScope = cScope; if (t !== 'course' || cScope === 'holes') { this.clubPlacing = false; this.halfwayPlacing = false; this.estateOff(); } else if (this.golf && !this.bizDefs.some(d => d.type === 'clubhouse')) this.clubPlacing = true; /* Buildings arms the clubhouse until it stands */ if (t === 'course') { this.paint.enterCourse(); this.ground.prewarm(brushTextures()); /* T168: what its brushes lay, made ahead */ } else if (t === 'paint') this.paint.enterPaint(); /* T175: Greenkeeping's panel is the Grass panel; leaving it puts its care down */ if (t === 'greenkeeping') this.grassPanel = true; else if (wasGk) { this.grassPanel = false; this.grassAction = null; } this.emit(); }
   /** the snap radius in tiles: about 14 screen px (at least 2 tiles) */
   private snapRadius() { return Math.max(2, 14 / (HW * this.cam.z)); }
   /** the road tool's snap under the cursor, or null with no cursor */
@@ -6052,6 +6162,7 @@ export class Game {
   }
   welcomeView(): { road: string; newHole: boolean } | null {
     if (!welcomeReady(this.firstViewBaked, performance.now() - this.readyAt)) return null; // T188: the card waits for the ground
+    if (this.startPick) return null; // (J9: and for the start)
     const g = this.golf, p = g?.progress;
     if (!this.welcomeFreshNow() || !p || p.seen.includes('welcome') || this.playableHoles > 0) return null;
     if (!p.seen.includes('who')) return null; // T240: the "Who are you?" card first
@@ -6100,6 +6211,7 @@ export class Game {
   /** the guide's card: its lines (null: no guide running) and whether it is folded */
   rangeGuideView(): { lines: GuideLine[]; folded: boolean } | null {
     if (tourRunning(this.golf?.progress?.tour)) return null; // T293: the start tutorial goes first
+    if (this.startPick) return null; // (J9: and the start)
     const lines = rangeGuideLines(this.golf?.progress?.guide); return lines ? { lines, folded: this.guideFolded } : null;
   }
   /** the guide's card folded to its current line (the player's; not saved) */
@@ -6279,10 +6391,10 @@ export class Game {
   }
   // ---------- T293 (#878): the start tutorial (tour.ts TOWN_TOUR; the RangeGuideCard's look): the town grows only along the roads you build
   /** what the tutorial's steps read: the road tool's lock and the start */
-  private tourFacts(): TourFacts { return { roadLock: this.toolLock('road'), start: this.golf?.start === 'range' ? 'range' : 'town' }; }
+  private tourFacts(): TourFacts { return { roadLock: this.toolLock('road'), start: this.golf?.start === 'range' ? 'range' : 'town', rangePlaced: this.golf?.range?.built !== false, rangeForSale: !!this.golf?.range?.forSale }; }
   /** the tutorial's card (null: none running, or not yet: it waits for the ground and, in a new range game, the "Who are you?" card) */
   tourView(): { lines: GuideLine[]; folded: boolean } | null {
-    const g = this.golf, p = g?.progress; if (!g || !p || !tourRunning(p.tour)) return null;
+    const g = this.golf, p = g?.progress; if (!g || !p || !tourRunning(p.tour) || this.startPick) return null; // (J9: the start first)
     if (!welcomeReady(this.firstViewBaked, performance.now() - this.readyAt)) return null;
     if (g.start === 'range' && this.welcomeFreshNow() && !p.seen.includes('who')) return null; // T240: "Who are you?" first
     const lines = tourLines(p.tour, this.tourFacts()); return lines ? { lines, folded: this.tourFolded } : null;
@@ -6306,7 +6418,7 @@ export class Game {
     // (T459: what a step's Show me does is tour.ts tourShowOf's, so a test can check every step does something)
     for (const a of tourShowOf(st)) {
       if (a.k === 'bank') { if (this.panel !== 'bank') this.toggleMoneyPanel(); }   // (the jam's step 2, the Bank: Show me opens it; the owner, 2026-11-13: it did nothing)
-      // (the jam: the old range for sale, not the town; T459: and its card, with Buy, open: a new game already frames the range, so the camera alone moved nothing)
+      // (the jam: the old range bought with the land (J9; for sale in a game from before), not the town; T459: and its card open: a new game already frames the range, so the camera alone moved nothing)
       else if (a.k === 'range') { const r = this.rangeSpot(); if (r) { this.lookAt(r.x, r.y, 0.14); this.guideRings = { pts: [{ x: r.x, y: r.y }], until: performance.now() + 15000 }; } this.setTool('select'); this.openRangeCard(true); }
       else if (a.k === 'town') {
         const c = this.townPts[0] ?? this.townCentreOfLots(); if (!c) continue;
@@ -6550,8 +6662,10 @@ export class Game {
   if (this.teePlace && !this.teePlace.drag && !this.keys.has(' ') && (e.button === 0 || e.button === 2)) { this.hover = this.tileAt(mx, my); if (e.button === 0) this.placeTeeAt(); else this.cancelTeePlace(); return; }
   // T356: a real course in hand: a click asks (the pop-up), a right click puts it down (the pop-up open: back to the course in hand); the middle button and Space still pan
   if (this.real.active && !this.keys.has(' ') && (e.button === 0 || e.button === 2)) { this.hover = this.tileAt(mx, my); this.real.move(this.hover); if (this.real.confirming) { if (e.button === 2) this.real.closePopup(); } else if (e.button === 0) this.real.click(); else this.real.cancel(); return; }
+  // J9: the start in hand: a click places it, a drag pans the map (the middle and right buttons pan too); it cannot be put down
+  if (this.placing?.sticky && e.button === 0 && !this.keys.has(' ')) { this.overlay.setPointerCapture(e.pointerId); this.hover = this.tileAt(mx, my); this.dragging = { kind: 'pan', sx: mx, sy: my, camX: this.cam.X, camY: this.cam.Y, moved: false, place: true }; return; }
   // T288: a build in hand: a click builds it there, a right click puts it down
-  if (this.placing && !this.keys.has(' ') && (e.button === 0 || e.button === 2)) { this.hover = this.tileAt(mx, my); if (e.button === 0) this.placeAt(); else this.cancelPlacing(); return; }
+  if (this.placing && !this.placing.sticky && !this.keys.has(' ') && (e.button === 0 || e.button === 2)) { this.hover = this.tileAt(mx, my); if (e.button === 0) this.placeAt(); else this.cancelPlacing(); return; }
   // the side modes live in Select (P23 P1-A): the Grass panel, Land, Event and Holes never take a build tool's click
   const side = this.tool === 'select';
   if (this.tool === 'greenkeeping' && e.button === 0 && !this.keys.has(' ')) { this.grassTarget = this.tileAt(mx, my); if (this.grassAction) this.careGrass(this.grassAction); this.emit(); return; } // T175
@@ -6708,6 +6822,7 @@ export class Game {
     if (d?.kind === 'pan' && d.aim && !d.moved) this.aimAt(d.aim);
     if (d?.kind === 'pan' && d.you && !d.moved) this.youClick(d.sx, d.sy); // T240
     if (d?.kind === 'pan' && d.land && !d.moved && this.landMode) { this.land.click(d.land.x, d.land.y); this.emit(); }
+    if (d?.kind === 'pan' && d.place && !d.moved) this.placeAt(); // J9
     // a right click (no drag) takes Esc's step (the owner, 2026-11-09, T392 and T393: every tool and mode, with one handler for the key and the click);
     // in the road tool with a route in hand it takes back the last point, as Backspace does (the owner, 2026-10-27, T207); a right drag still pans
     if (d?.kind === 'pan' && d.rc && !d.moved) this.cancelOrClose(null);
@@ -6922,6 +7037,8 @@ export class Game {
       if (e.key === 'r' || e.key === 'R') { e.preventDefault(); this.real.turn(e.shiftKey ? -1 : 1, e.altKey); return; }
       if (e.key === 'Enter' && this.real.confirming) { e.preventDefault(); this.real.confirm(); return; }
     }
+    // J9: the start in hand: R turns it (Shift+R back)
+    if (this.placing?.turn && !e.ctrlKey && !e.metaKey && !e.altKey && (e.key === 'r' || e.key === 'R')) { e.preventDefault(); this.placing.turn(e.shiftKey); return; }
     // T268: the tee set in hand: R turns it (Shift+R back), [ ] size it
     if (this.teePlace && !e.ctrlKey && !e.metaKey && !e.altKey) {
       if (e.key === 'r' || e.key === 'R') { this.turnTeePlace(e.shiftKey); return; }
@@ -7108,6 +7225,7 @@ export class Game {
   setGrowth(id: string) { this.traffic.setOption(id); this.emit(); }
   /** the sim speed (0 pauses); a speed above 0 is remembered for the resume */
   setSpeed(k: number) {
+    if (k > 0 && this.startPick) { this.lastSpeed = k; this.emit(); return; } // J9: the clock starts when the start is laid
     // while the owner's shot is open the clock waits for it: only a pause goes through (closeShot clears the shot before it resumes)
     if (k > 0 && this.shot && !this.shot.mine) { this.toast(SHOT_HOLD, 'warn'); return; }
     // T350: a Start round fast-forwarding to your tee time ends when you touch the speed (its own steps set ffSetting)
@@ -8390,6 +8508,7 @@ export class Game {
    *  opened (its NEW badge goes) */
   private progressCheck() {
     const p = this.golf?.progress; if (!p || ++this.progTick % 10) return;
+    if (this.startPick) { this.pickStep(); return; } // J9: nothing ticks until the start is laid
     this.jamOfferRange(); // J7: a jam game's old range, for sale, laid once the ground is ready
     this.rangeGuideCheck(); // T239: the guided build's steps tick
     this.tourCheck(); // T293: the start tutorial's steps
@@ -8732,12 +8851,12 @@ export class Game {
   borrow() { const b = Budget.from(this.traffic.budget); if (b.loans >= b.maxLoans(this.traffic.pop)) this.toast('No more credit: grow the town for more', 'warn'); else this.traffic.loan(true); }
   /** repays a loan unit if there is one and the treasury covers LOAN (else says why); the worker books it */
   repay() { const b = this.traffic.budget; if (!b.loans) this.toast('No loans to repay', 'warn'); else if (b.money < LOAN) this.toast('Not enough money to repay', 'warn'); else this.traffic.loan(false); }
-  scheduleSave() { if (this.benchMode) return; clearTimeout(this.saveTimer); this.saveTimer = window.setTimeout(() => void this.save(), 800); }
+  scheduleSave() { if (this.benchMode || this.startPick) return; /* J9: nothing is saved while the start is chosen */ clearTimeout(this.saveTimer); this.saveTimer = window.setTimeout(() => void this.save(), 800); }
   benchMode = false;
   /** the lots still to compose (queued, or staged part-way): the bench's grown-town scene waits for them before its tour (T098) */
   get lotsPending() { return this.lotQueue.size + this.staged.size; }
   async save() {
-    if (this.benchMode) return 0; if (this.saveBlocked) return 0;
+    if (this.benchMode || this.startPick) return 0; if (this.saveBlocked) return 0;
     // the tournament day under way (T209): the worker's snapshot of it, asked for first (only while a golf round is in its surge or eval: every other save
     // is written at once, as before, without it)
     const rs = this.traffic.round.stage, tourney = this.golf && (rs === 'surge' || rs === 'eval') ? await this.traffic.daySave() : null;
@@ -8858,6 +8977,7 @@ export class Game {
     this.tollDefs = []; this.tollSegs.clear(); this.tollHover = null; for (const k of this.tollGround) this.setLotGround(k, null); this.tollGround.clear();
     this.busDefs = []; this.busPick = null; this.busHover = null; this.paint.clear(); this.dropCourseGrid();
     for (const k of this.stopCuts.keys()) this.setLotGround(k, null); this.stopCuts.clear();
+    this.startPick = null; this.placing = null; this.jamOffered = false; // (J9: a game never inherits the last one's start in hand)
     this.golf = null; this.prepCached = null; this.prepFolded = null; this.estateRt = null; this.estateDrawn.clear(); this.estateViews.clear(); this.estateRev = -1; this.estateOffer = null; this.estateStreet = null; this.estatePlacing = false; this.estateTool.on = false; this.townPts = []; this.golfProps.clear(); this.golfStructureProps.clear(); this.range.drop(); this.range.cardOpen = false;
     this.landMode = false; this.land.hover = null; this.land.cancel(); this.holesTool = false; this.selectedGolfMarker = null;
     this.eventTool = false; this.eventStructurePending = null; this.lastGolfMonth = -1;
@@ -9732,7 +9852,7 @@ export class Game {
    *  use on arriving, the camera following, the save when you stop. No allocation */
   private youStep(dt: number) {
     if (this.youFor !== this.golf) { this.youFor = this.golf; this.you = null; this.youThen = null; this.youTalk = null; this.youTeeOpen = false; this.youCart = null; this.youInCart = false; this.yrFlight = null; this.yrCard = false; }
-    const g = this.golf; if (!g) return;
+    const g = this.golf; if (!g || this.startPick) return; // (J9: your character stands in the start once it is laid)
     if (!this.you) {
       const sv = g.player?.you, at = sv ? { x: sv.x, y: sv.y } : this.youStart(); if (!at) return;
       this.you = makeYou(at.x, at.y, sv?.f ?? 0);
@@ -10059,6 +10179,8 @@ export class Game {
   closeWho(name: string, look: number) {
     const p = this.playerNow(), gp = this.golf?.progress; if (!p) return;
     const id = GOLFER_PEOPLE[look]?.id ?? GOLFER_PEOPLE[0]!.id, y = this.you;
+    // (J9: the start is not laid yet: your character comes with it, in the look picked here)
+    if (this.startPick) { this.startPick.look = Math.max(0, Math.min(GOLFER_PEOPLE.length - 1, look)); this.setPlayer({ ...p, name: name.trim().slice(0, 40) || p.name, sex: lookSex(id) }); if (gp && !gp.seen.includes('who')) gp.seen.push('who'); this.pickStep(); this.emit(); return; }
     this.setPlayer({ ...p, name: name.trim().slice(0, 40) || p.name, sex: lookSex(id), you: { x: y?.x ?? p.you?.x ?? 0, y: y?.y ?? p.you?.y ?? 0, f: y?.face ?? 0, look: Math.max(0, Math.min(GOLFER_PEOPLE.length - 1, look)) } });
     if (gp && !gp.seen.includes('who')) { gp.seen.push('who'); this.scheduleSave(); }
     if (y) this.lookAt(y.x, y.y, Math.max(this.cam.z, 0.2));
@@ -13236,14 +13358,17 @@ export class Game {
     const dist = (cx: number, cy: number) => Math.hypot(cx - cam.X, cy - cam.Y) * ze;
     // ---- planner map: the whole view at the planner tier, otherwise under any chunk not baked yet
     const pL = planLevelFor(ze), pi0 = Math.floor(X0 / PLAN_W), pi1 = Math.floor(X1 / PLAN_W), pj0 = Math.floor(Y0 / PLAN_H), pj1 = Math.floor(Y1 / PLAN_H);
-    const drawPlan = () => {
+    const drawPlan = (): boolean => {
+      let baked = true;
       for (let j = pj0; j <= pj1; j++) for (let i = pi0; i <= pi1; i++) {
         const t = this.ground.tile('p', i, j); this.ground.need(t, pL, (tier === 'planner' ? 0 : 1e6) + dist((i + 0.5) * PLAN_W, (j + 0.5) * PLAN_H), now, pL, ts);
-        if (t.tex) gl.drawChunk(t.tex, i * PLAN_W, j * PLAN_H, (i + 1) * PLAN_W, (j + 1) * PLAN_H);
+        if (t.tex) gl.drawChunk(t.tex, i * PLAN_W, j * PLAN_H, (i + 1) * PLAN_W, (j + 1) * PLAN_H); else baked = false;
       }
+      return baked;
     };
     if (tier === 'planner') {
-      drawPlan();
+      // J9: a new game's start is chosen from the planner view (the whole valley): its first view is baked once the planner map's chunks are, as the street view's are below
+      if (drawPlan() && !this.firstViewBaked && this.ready) { this.firstViewBaked = true; this.emit(); }
       // T197: the planner map shown, the district chunks a zoom in reaches are baked ahead meanwhile (as at the other tiers)
       if (z !== this.prebakeZ) { this.prebakeZ = z; this.prebakeHold = now + Game.PREBAKE_SETTLE_MS; }
       if (this.ground.idle && now >= this.prebakeHold) this.prebake(z, 'p', X0, Y0, X1, Y1, now);
