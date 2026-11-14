@@ -124,7 +124,7 @@ test('the hole brushes are refused in the practice area: Green and Bunker lay no
     stroke(tool, inside.x, inside.y);
     const i = cellAt(g, inside.x, inside.y); assert.equal(g.surf[i], SURF.none, `${k}: nothing laid in the practice area`);
     assert.equal(tool.brushSkipWhy()!(inside.x, inside.y), PRACTICE_BRUSH_WHY);
-    assert.equal(PRACTICE_BRUSH_WHY, 'Practice greens are built with Facilities ▸ Practice');
+    assert.equal(PRACTICE_BRUSH_WHY, 'Practice greens are built with Course ▸ Facilities ▸ Practice'); // (#1282: Facilities is the Course menu's sixth tile)
     stroke(tool, outside.x, outside.y);
     assert.equal(g.surf[cellAt(g, outside.x, outside.y)], k === 'green' ? SURF.green : SURF.bunker, `${k}: paints outside it`);
   }

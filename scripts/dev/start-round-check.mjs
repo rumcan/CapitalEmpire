@@ -85,6 +85,7 @@ log('== 1. book, Start round');
     await page.evaluate(() => window.__game.setSpeed(20)); await page.waitForTimeout(200);
     const s3 = await state(page);
     check(s3.speed <= 1 / 40 + 1e-9 && s3.toasts.some(t => /pace of play/.test(t)), 'a faster speed is held to the pace of play');
+    if (!(await page.locator('[data-testid=speed-20]').count())) await page.click('[data-testid=speed-toggle]'); // (#1275: the speed bar is collapsed by default: open it)
     check(await page.locator('[data-testid=speed-20]').isDisabled(), 'the speed bar’s fast buttons are off');
     check(!s3.toasts.some(t => SCORE.test(t)) && !s3.card, 'no score is shown before the last putt');
     await page.waitForTimeout(800);

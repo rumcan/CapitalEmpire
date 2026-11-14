@@ -240,8 +240,10 @@ try {
   await sweep('radio', '[data-testid="radio-card"]', async () => { await page.locator('[data-testid="radio-more"]').click(); }, { same: b => /^Mute/.test(b.label) ? 'a mute may already be as it is pressed' : undefined });
   await esc();
   if ((await page.locator('[data-testid="radio-play"]').getAttribute('aria-pressed')) === 'true') await click('radio', 'Radio (off)', page.locator('[data-testid="radio-play"]')); // (the card's own Play may have turned it off already)
-  // ---- the speeds
+  // ---- the speeds (#1275: the bar is collapsed by default: its chevron shows every speed, and shuts them again)
+  await click('top bar', 'speed bar: show every speed', page.locator('[data-testid="speed-toggle"]'));
   for (const s of ['1', '4', '20']) await click('top bar', `speed ${s}x`, page.locator(`[data-testid="speed-${s}"]`));
+  await click('top bar', 'speed bar: hide the speeds', page.locator('[data-testid="speed-toggle"]'));
   await click('top bar', 'pause', page.locator('[data-tip="Pause (Space)"]').first());
 } finally {
   if (!has('keep')) { await browser.close().catch(() => {}); await server?.close?.().catch?.(() => {}); server?.httpServer?.close?.(); }
