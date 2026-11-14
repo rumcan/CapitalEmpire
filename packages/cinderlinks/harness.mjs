@@ -887,6 +887,10 @@ ${HOST_PLAY}
       const mode = process.env.RV_FENCE || 'after', SIDES = [[-12, -26, 90, -26], [-12, 26, 90, 26]];   // (RV_FENCE: after, the runs as the host sends them now; pics, the fence pieces as pictures stood up facing the camera, as the host sent them before #1308 (HOSTPICS=<file with the chain-link pictures>); none)
       const fences = mode !== 'after' ? [] : SIDES.map(([f0, s0, f1, s1], i) => { const a = P(f0, s0), b = P(f1, s1), len = Math.hypot(b[0] - a[0], b[1] - a[1]);
         return { id: 'b:fence' + i, kind: 'building', use: 'fence', name: 'Chain-link fence', at: [(a[0] + b[0]) / 2 / S, (a[1] + b[1]) / 2 / S], w: len, d: 0.12, h: 1.8, rot: Math.atan2(b[1] - a[1], b[0] - a[0]) * 180 / Math.PI, roof: 'flat', wall: '#a6adb4', roofColour: '#a6adb4', floors: 1 }; });
+      if (mode === 'after') {   // #1308: the range's shop, kiosk, caravan and hitting deck as the host now sends them: boxes of their real size
+        const hut = (id, f, s0, w, d, h, wall, roofC, use = 'hut', rot = hd) => { const c = P(f, s0); return { id: 'b:' + id, kind: 'building', use, name: id, at: [c[0] / S, c[1] / S], w, d, h, rot, roof: 'flat', wall, roofColour: roofC, floors: 1 }; };
+        fences.push(hut('shop', -14, -18, 7.5, 4.5, 2.7, '#e8e0c6', '#8e9694'), hut('kiosk', -14, -9, 3, 2.5, 2.7, '#d9c8a2', '#6b4a34'), hut('caravan', -14, 14, 3.6, 1.9, 2.3, '#efece2', '#cfd6d8'), hut('dispenser', -10, -3, 1.5, 1, 1.8, '#6f8794', '#58707c'), hut('deck', 2, 0, 24, 7, 3.2, '#8b9097', '#c9ccd0', 'shelter', hd + 90));
+      }
       if (mode === 'pics' && globalThis.HOSTPICS) {
         const H0 = globalThis.HOSTPICS, t = [], ids = H0.sp, ix = Math.abs(ux) >= Math.abs(uy) ? 0 : 1, pic = H0.pics[ids[ix]], ph = (pic.ay - pic.quad[1]) * 2 / 128, pw = (pic.quad[2] - pic.quad[0]) * 2 / 128 * 0.92;
         for (const [f0, s0, f1, s1] of SIDES) for (let f = f0 + 3.36; f < f1; f += 6.72) { const c = P(f, s0); t.push(c[0], c[1], ph, pw, ix); }
@@ -903,6 +907,8 @@ ${HOST_PLAY}
       view('rv-behind', -9, 0, th + 1.5708);
       view('rv-outfield', 60, -6, th - 1.5708);
       view('rv-outfield-fence', 40, 14, th - 1.5708 + 0.5);
+      view('rv-huts', -6, -4, th - 3.1416 + 0.2);   // (looking back past the mats at the shop, kiosk and caravan)
+      view('rv-huts2', 6, 6, th - 1.5708 + 0.9);
       PRAC = null; },
     actors() { // T424: a three-ball on the fairway, a caddie and two carts beside it, from an 'actors' message; then the swing; then forty actors timed
       idle(); newHole(holeN, hole.tee.x, hole.tee.y); frames(4); ACT_MAKE = 999;
