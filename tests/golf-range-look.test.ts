@@ -61,7 +61,7 @@ test('J6b: the range ground lies under everything: rough to the model off the ou
 import { DRILLS, judgeDrill, junkHit, junkReach, recordDrill } from '../src/game/golf/play/drills';
 import { PracticeDriver, practiceFlags } from '../src/game/golf/play/practice3p';
 import { TILE_M } from '../src/game/golf/types';
-test('J6b: junk piles (J7) are targets: a ball that lands on one or stops by it hits it; the junk drill counts three; labels carry name and distance', () => {
+test('J6b: junk piles (J7) are targets: a ball that lands on one or stops by it hits it; the junk drill counts three; the view is sent no label (J6c)', () => {
   const m = (v: number) => v / TILE_M, car = { x: 35, y: m(140), r: junkReach('expansion:junk-car'), name: 'Old car', distM: 140 }, tyres = { x: 10, y: m(80), r: junkReach('expansion:tyre-stack'), name: 'Tyres', distM: 80 };
   assert.equal(car.r, 4); assert.equal(tyres.r, 2.5);
   assert.equal(junkHit([car, tyres], { x: 35 + m(4.8), y: m(140) }, { x: 35, y: m(160) })?.name, 'Old car', 'landed within its reach + 1 m');
