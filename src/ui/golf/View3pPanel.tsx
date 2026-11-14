@@ -8,6 +8,7 @@ import { View3p, type View3pFrame, type View3pHost } from '../../game/golf/play/
 import type { HostMsg } from '../../game/golf/play/protocol3p';
 import { Icon } from '../Icon';
 import { downloadText, fileName, pickText } from './files3p';
+import { golfSound } from '../../game/sound/sfx'; // J11 (#1270)
 
 export function View3pPanel({ game }: { game: Game }) {
   const hole = game.view3pHole, box = useRef<HTMLDivElement>(null), bridge = useRef<View3p | null>(null);
@@ -43,6 +44,7 @@ export function View3pPanel({ game }: { game: Game }) {
         else if (m.t === 'gimme') relay(game.gimme3p(m.holeIdx, m.stroke));
         else if (m.t === 'holeDone') relay(game.holeDone3p(m.holeIdx));
         else if (m.t === 'pick') relay(game.pick3p(m.drill));   // (J6: a drill picked in the practice panel)
+        else if (m.t === 'sound') golfSound(m);                  // (J11: the strike, the landing, the cup: played here, through the sound settings)
         else if (m.t === 'aim') { const p = game.preview3p(m.key, m.input); if (p) v.send(p); }
         else if (m.t === 'error') setState(m.why);
       } catch (err) { console.warn('[view3p] the play could not go on', err); }

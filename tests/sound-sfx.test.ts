@@ -187,6 +187,7 @@ test('the golf view\'s messages play the club and the surface they name, and any
     assert.equal(golfSound({ k: 'tap' }), true);
     for (const k of ['heart', 'breath', 'applause', 'groan']) assert.equal(golfSound({ k }), true, k);
     assert.deepEqual(s.calls.map(c => c.id), ['strike-driver', 'strike-driver', 'strike-iron', 'strike-wedge', 'strike-putter', 'swish-iron', 'land-sand', 'land-fairway', 'cup-drop', 'cup-lip', 'strike-putter', 'heart', 'breath', 'applause', 'groan']);
+    assert.equal(sound.get().muted, false); assert.equal(golfSound({ k: 'mute' }), true); assert.equal(sound.get().muted, true, 'F8 in the view mutes the page'); assert.equal(golfSound({ k: 'mute' }), true); assert.equal(sound.get().muted, false, 'and again lifts it');
     for (const bad of [{}, { k: 'boom' }, { k: 42 }, { k: null }, { k: '__proto__' }, { k: 'constructor' }]) assert.equal(golfSound(bad as never), false, JSON.stringify(bad));
     // a strength is held to 0..1 and a missing one gets a default
     s.calls.length = 0; golfSound({ k: 'strike', club: 'iron5', p: 9 }); golfSound({ k: 'strike', club: 'iron5', p: -3 }); golfSound({ k: 'strike', club: 'iron5', p: NaN }); golfSound({ k: 'strike', club: 'iron5' });

@@ -223,11 +223,16 @@ export interface ExitMsg { v: 1; t: 'exit'; why?: 'esc' | 'done' | 'error'; deta
 /** J6: the player picked a drill in the practice panel (answered with a `practice` and the turn from its spot) */
 export interface PickMsg { v: 1; t: 'pick'; drill: string }
 
-export type ViewMsg = ReadyMsg | LoadedMsg | ErrorMsg | InputMsg | AimMsg | WalkedMsg | GimmeMsg | HoleDoneMsg | ExitMsg | PickMsg;
+/** J11 (#1270): a sound the view wants made: the host plays it through its own volume and mute (game/sound/sfx.ts golfSound), so the view makes none of its own in the game.
+ *  k: swish (the club coming down), strike (it meets the ball), tap (a ball turning back), land (a landing or a bounce), cup (the putt drops, or drop: false, lips out), heart,
+ *  breath, applause, groan, and mute (the Mute key, F8, pressed in the view: the host toggles every mute); club: the model's club id; mat: fairway, green, sand, water, rough or rock; p: how hard, 0..1 */
+export interface SoundMsg { v: 1; t: 'sound'; k: 'swish' | 'strike' | 'tap' | 'land' | 'cup' | 'heart' | 'breath' | 'applause' | 'groan' | 'mute'; club?: string; mat?: string; p?: number; drop?: boolean }
+
+export type ViewMsg = ReadyMsg | LoadedMsg | ErrorMsg | InputMsg | AimMsg | WalkedMsg | GimmeMsg | HoleDoneMsg | ExitMsg | PickMsg | SoundMsg;
 
 /** the message types each side sends */
 export const HOST_TYPES: readonly HostMsg['t'][] = ['course', 'actors', 'board', 'match', 'turn', 'shot', 'holeEnd', 'preview', 'clock', 'leave', 'lies', 'practice'];
-export const VIEW_TYPES: readonly ViewMsg['t'][] = ['ready', 'loaded', 'error', 'input', 'aim', 'walked', 'gimme', 'holeDone', 'exit', 'pick'];
+export const VIEW_TYPES: readonly ViewMsg['t'][] = ['ready', 'loaded', 'error', 'input', 'aim', 'walked', 'gimme', 'holeDone', 'exit', 'pick', 'sound'];
 
 const isMsg = (m: unknown, types: readonly string[]): boolean =>
   typeof m === 'object' && m !== null && (m as { v?: unknown }).v === PROTOCOL_V && types.includes((m as { t?: unknown }).t as string);

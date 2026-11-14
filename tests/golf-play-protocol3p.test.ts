@@ -43,7 +43,7 @@ test('every message of a real session survives the wire and reads back the same'
 
 test('a view message survives the wire; another version or an unknown type is refused', () => {
   const vm: ViewMsg[] = [{ v: 1, t: 'ready' }, { v: 1, t: 'loaded', holes: 3 }, { v: 1, t: 'input', input: { holeIdx: 0, stroke: 1, club: 'driver', aim: [10.5, -3.25], power: 0.8 } },
-    { v: 1, t: 'gimme', holeIdx: 0, stroke: 3 }, { v: 1, t: 'exit', why: 'esc' }];
+    { v: 1, t: 'gimme', holeIdx: 0, stroke: 3 }, { v: 1, t: 'exit', why: 'esc' }, { v: 1, t: 'sound', k: 'strike', club: 'driver', p: 0.8 }, { v: 1, t: 'sound', k: 'cup', drop: false }];
   for (const m of vm) { const w = wire(m); assert.ok(isViewMsg(w)); assert.ok(!isHostMsg(w)); assert.deepEqual(w, m); }
   assert.ok(!isHostMsg({ v: PROTOCOL_V + 1, t: 'turn' }), 'another version');
   assert.ok(!isHostMsg({ v: PROTOCOL_V, t: 'teleport' }), 'an unknown type');

@@ -62,8 +62,8 @@ export function strengthOf(p: unknown, dflt = 0.7): number { return typeof p ===
 
 /** what the golf view sends for a sound (protocol3p.ts SoundMsg, the part of it that matters here) */
 export interface GolfSoundMsg { k?: unknown; club?: unknown; mat?: unknown; p?: unknown; drop?: unknown }
-export const GOLF_KINDS = ['swish', 'strike', 'tap', 'land', 'cup', 'heart', 'breath', 'applause', 'groan'] as const;
-/** plays one of the view's sounds; false for anything that is not one (the message is not trusted: a wrong kind is ignored, a wrong club or surface is played as the nearest) */
+export const GOLF_KINDS = ['swish', 'strike', 'tap', 'land', 'cup', 'heart', 'breath', 'applause', 'groan', 'mute'] as const;
+/** plays one of the view's sounds (or, for 'mute', toggles the mute); false for anything that is not one (the message is not trusted: a wrong kind is ignored, a wrong club or surface is played as the nearest) */
 export function golfSound(m: GolfSoundMsg): boolean {
   switch (m.k) {
     case 'swish': { const c = clubClass(m.club); return sound.play(`swish-${c}`, SWISH[c], strengthOf(m.p), 100); }
@@ -75,6 +75,7 @@ export function golfSound(m: GolfSoundMsg): boolean {
     case 'breath': return playSfx('breath', strengthOf(m.p, 1));
     case 'applause': return playSfx('applause', strengthOf(m.p, 0.6));
     case 'groan': return playSfx('groan');
+    case 'mute': { const muted = sound.toggleMute(); if (!muted) playSfx('tick'); return true; } // (the Mute key, F8, pressed in the view: the page mutes everything, or lifts every mute)
     default: return false;
   }
 }
