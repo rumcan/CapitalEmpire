@@ -43,10 +43,12 @@ test('wind: the day’s wind is deterministic from the seed and the day, mostly 
   assert.notDeepEqual(dailyWind(7, 12), dailyWind(8, 12));
   const days = Array.from({ length: 600 }, (_, d) => dailyWind(3, d + 1));
   const mph = days.map(w => w.mph), calm = mph.filter(v => v < CALM_MPH).length / days.length, windy = mph.filter(v => v >= 15).length / days.length;
-  assert.ok(mean(mph) > 5 && mean(mph) < 10, `the mean day is light: ${mean(mph).toFixed(1)} mph`);
-  assert.ok(Math.max(...mph) <= 30 && Math.max(...mph) > 18, `the worst day is blustery, not a gale: ${Math.max(...mph)}`);
-  assert.ok(calm > 0.04 && calm < 0.2, `some calm days: ${(calm * 100).toFixed(0)}%`);
-  assert.ok(windy > 0.03 && windy < 0.25, `some windy ones: ${(windy * 100).toFixed(0)}%`);
+  // the owner's range (2026-11-14): 4 to 30 mph, as in other golf games; most days a breeze, some blowy
+  assert.ok(mph.every(v => v >= 4 && v <= 30), `every day is 4 to 30 mph: ${Math.min(...mph)} to ${Math.max(...mph)}`);
+  assert.ok(mean(mph) > 8 && mean(mph) < 16, `the mean day is a breeze: ${mean(mph).toFixed(1)} mph`);
+  assert.ok(Math.max(...mph) > 22, `the worst day is blowy: ${Math.max(...mph)}`);
+  assert.ok(calm === 0, `no calm days in the owner's range: ${(calm * 100).toFixed(0)}%`);
+  assert.ok(windy > 0.15 && windy < 0.6, `windy days (15 mph or more) now and then: ${(windy * 100).toFixed(0)}%`);
   const west = days.filter(w => w.from >= 225 && w.from <= 315).length / days.length;
   assert.ok(west > 0.5 && west < 0.75, `the prevailing wind from the west: ${(west * 100).toFixed(0)}%`);
   assert.ok(days.every(w => w.from >= 0 && w.from < 360 && w.gusty >= 0 && w.gusty <= 1 && Number.isInteger(w.seed)), 'bearings, gustiness and seed are in range');
