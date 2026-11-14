@@ -57,18 +57,18 @@ export const TOWN_TOUR: readonly GuideStep[] = JAM ? JAM_TOUR : Object.freeze([
     n: 2,
     title: 'Roads are your job',
     // T288: the road tool is open from the start (the owner, 2026-11-04: "Yes, unlock it"): the step is done when you build a town road
-    body: 'The town never lays a road of its own. Build one with the road tool (Cart paths & roads › Roads, or Traffic › Build) to give it new lots: paved roads sell their lots to the town and pay you. Build a short road to go on.',
+    body: 'The town never lays a road of its own. Build one with the road tool (Cart paths & roads › Roads, or Traffic › Roads › Build) to give it new lots: paved roads sell their lots to the town and pay you. Build a short road to go on.',
     done: 'auto',
-    target: { ui: 'rail-traffic' },
+    target: { ui: 'traffic-build' }, // (#1297: the entry at the end of the menu path the text names: the spotlight leads down to it, Traffic first)
   },
   {
     id: 'tour-room',
     tile: 'land-plot',
     n: 3,
     title: 'When the town is out of room',
-    body: 'You are told when the town has no room left to grow: build another road to keep it growing. Busy streets jam, and upgrading them (Traffic › Upgrade) is your job too.',
+    body: 'You are told when the town has no room left to grow: build another road to keep it growing. Busy streets jam, and upgrading them (Traffic › Roads › Upgrade) is your job too.',
     done: 'next',
-    target: { ui: 'rail-traffic' },
+    target: { ui: 'road-upgrade' },
   },
   {
     id: 'tour-golf',
@@ -116,9 +116,9 @@ export interface TourFacts { roadLock: string | null; start: 'range' | 'town'; r
  *  player cannot build); step 4 in the old town start points at the course (no range there) */
 export function tourStepFor(s: GuideStep, f: TourFacts): GuideStep {
   if (s === JAM_TOUR[0] && f.rangeForSale) return { ...s, body: 'You have $75,000, a plot with plenty of room, and an old driving range on it for sale (junk and all). A range earns your first income; that money builds a golf course hole by hole. Money is tight: every build is a choice between paying cash, saving first, or borrowing.' }; // (a game from before J9: Buy the range)
-  if (s.id === 'tour-roads' && f.roadLock) return { ...s, done: 'next', body: `The town never lays a road of its own. Build roads with the road tool (Traffic › Build) to give it new lots: paved roads sell their lots to the town and pay you. The road tool is locked for now: ${f.roadLock.replace(/^Unlocks/, 'it opens').replace(/\.$/, '')}.` };
-  if (s.id === 'tour-golf' && f.start === 'range' && f.rangePlaced === false) return { ...s, body: 'Your land is bare: only your trailer. Place your driving range next (Range › Place the driving range): the guide in the corner walks you through it and the rest, step by step.' }; // (an older save's bare start)
-  if (s.id === 'tour-golf' && f.start === 'town') return { ...s, body: 'Your golf course is beside the town: its holes, buildings and paths are in the Course drawer on the left.', target: { ui: 'rail-course' } };
+  if (s.id === 'tour-roads' && f.roadLock) return { ...s, done: 'next', body: `The town never lays a road of its own. Build roads with the road tool (Traffic › Roads › Build) to give it new lots: paved roads sell their lots to the town and pay you. The road tool is locked for now: ${f.roadLock.replace(/^Unlocks/, 'it opens').replace(/\.$/, '')}.` };
+  if (s.id === 'tour-golf' && f.start === 'range' && f.rangePlaced === false) return { ...s, body: 'Your land is bare: only your trailer. Place your driving range next (Range › Place the driving range): the guide in the corner walks you through it and the rest, step by step.', target: { ui: 'place-range' } }; // (an older save's bare start)
+  if (s.id === 'tour-golf' && f.start === 'town') return { ...s, body: 'Your golf course is beside the town: its holes and buildings are in Course on the left, its cart paths in Cart paths & roads.', target: { ui: 'rail-course' } };
   return s;
 }
 /** the tutorial card's lines (null: no tutorial: an old save's, skipped, or every step done or skipped), each step as this game shows it */

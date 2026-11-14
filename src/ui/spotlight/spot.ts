@@ -15,10 +15,12 @@ export type SpotTarget = { ui: string } | { pulse: string | null } | { tiles: Ti
 /** one Show me: the caption's title and line, and what it lights (the first target is the one the caption stands beside) */
 export interface SpotRequest { title: string; line: string; targets: readonly SpotTarget[] }
 
-/** css px of air between a target and its ring */
-export const HOLE_PAD = 8;
-/** the smallest a cut-out is, so a tiny target still shows */
-export const HOLE_MIN_W = 56, HOLE_MIN_H = 40;
+/** css px of air between a target and its ring. #1297: a few px, no more: the cut-out is the clickable part of the page, so it is the control and not the neighbours (the
+ *  rail's buttons are 4 px apart: 8 px of air reached the buttons above and below, and the dead strip round the rail) */
+export const HOLE_PAD = 3;
+/** the smallest a cut-out is, so a tiny target still shows: a finger's worth, square (#1297: with the air a few px, a round 40 px control still gets a round cut-out, and a tiny
+ *  one reaches no further than it must: everything in the cut-out is clickable) */
+export const HOLE_MIN_W = 44, HOLE_MIN_H = 44;
 /** how far from the window's edge a cut-out's ring may stand */
 export const SCREEN_INSET = 3;
 
@@ -88,21 +90,23 @@ export interface Placement { side: Side; x: number; y: number; arrow: number; cl
 /** the gap between a hole and its caption (the arrow stands in it), the caption's least distance from the window's edge, and how near the caption's
  *  corners its arrow may stand */
 export const CAP_GAP = 20, CAP_MARGIN = 12, ARROW_EDGE = 22;
+/** how much wider than tall a cut-out is to count as flat (a top-bar chip, a menu row): its caption goes above or below it before beside it */
+export const FLAT = 2;
 
 /**
  * where a caption of size cap stands beside the first of the holes in a window of size S. A side is used when the caption fits there whole, inside the
  * window's margin and clear of every hole; sides are tried roomiest first, the vertical pair before the horizontal one for a wide, flat target (a top-bar
  * chip) and the other way round for a tall or square one (a rail button), so near an edge it flips to the side that has room
  */
-export function placeCaption(holes: readonly Hole[], cap: Size, S: Size, o: { gap?: number; margin?: number } = {}): Placement {
-  const gap = o.gap ?? CAP_GAP, m = o.margin ?? CAP_MARGIN, H = holes[0];
+export function placeCaption(holes: readonly Hole[], cap: Size, S: Size, o: { gap?: number; margin?: number; avoid?: readonly Box[] } = {}): Placement {
+  const gap = o.gap ?? CAP_GAP, m = o.margin ?? CAP_MARGIN, H = holes[0], avoid = o.avoid ?? [];
   const fitX = (v: number) => clamp(v, m, S.w - m - cap.w), fitY = (v: number) => clamp(v, m, S.h - m - cap.h);
   if (!H) return { side: 'below', x: fitX((S.w - cap.w) / 2), y: fitY((S.h - cap.h) / 2), arrow: 0, clear: true };
   const cx = H.x + H.w / 2, cy = H.y + H.h / 2;
   const space: Record<Side, number> = { right: S.w - (H.x + H.w), left: H.x, below: S.h - (H.y + H.h), above: H.y };
   const horiz: Side[] = space.right >= space.left ? ['right', 'left'] : ['left', 'right'];
   const vert: Side[] = space.below >= space.above ? ['below', 'above'] : ['above', 'below'];
-  const order = H.w >= H.h * 1.6 ? [...vert, ...horiz] : [...horiz, ...vert];
+  const order = H.w >= H.h * FLAT ? [...vert, ...horiz] : [...horiz, ...vert]; // (#1297: the cut-outs hug their controls now: a rail button, 99 x 62, is not flat; a chip is)
   const at = (side: Side): Box => {
     switch (side) {
       case 'right': return { x: H.x + H.w + gap, y: fitY(cy - cap.h / 2), w: cap.w, h: cap.h };
@@ -112,7 +116,9 @@ export function placeCaption(holes: readonly Hole[], cap: Size, S: Size, o: { ga
     }
   };
   const inside = (b: Box) => b.x >= m - 0.01 && b.y >= m - 0.01 && b.x + b.w <= S.w - m + 0.01 && b.y + b.h <= S.h - m + 0.01;
-  let side = order.find(s => { const b = at(s); return inside(b) && !holes.some(h => near(b, h, 6)); });
+  // (#1297: a side that also stands clear of the avoid boxes, the other rows of an open menu, is the better; else any side clear of the cut-outs)
+  const free = (b: Box) => inside(b) && !holes.some(h => near(b, h, 6));
+  let side = order.find(s => { const b = at(s); return free(b) && !avoid.some(a => near(b, a, 0)); }) ?? order.find(s => free(at(s)));
   const clear = side !== undefined;
   if (!side) side = [...order].sort((a, b) => space[b] - space[a])[0]!; // no room anywhere: the roomiest side, held on the screen
   const b = at(side), x = fitX(b.x), y = fitY(b.y);

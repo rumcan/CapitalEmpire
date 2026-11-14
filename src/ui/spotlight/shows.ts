@@ -35,7 +35,8 @@ export function tourSpot(st: GuideStep, host: SpotHost, jam: boolean = JAM): Spo
   return targets.length ? { title: st.title, line: firstLine(st.body), targets } : null;
 }
 
-/** a guided-build step's Show me: the control the engine pulses (else the step's own), and the walking path's ends for the walking path step */
+/** a guided-build step's Show me: the control the engine pulses (else the step's own: the entry at the end of its menu path, which the spotlight leads down to, level by level:
+ *  leads.ts), and the walking path's ends for a step that has them (none of the three steps of the guide now: #1297 took the walking path out) */
 export function guideSpot(st: GuideStep, host: SpotHost): SpotRequest | null {
   const targets: SpotTarget[] = [];
   if (st.target.map === 'walkway') { const b = host.spotRingsBox(); if (b) targets.push({ tiles: b }); }

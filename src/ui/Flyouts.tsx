@@ -111,6 +111,8 @@ export function Flyouts({ rows, top, left, up = false, startPath = [], keyboard 
     const onDown = (e: PointerEvent) => {
       const t = e.target as Node | null;
       if (!t || box.current?.contains(t) || railRefs.some(r => r.current?.contains(t))) return;
+      // (#1297: a press on the Show me spotlight's layer or caption only ends the spotlight: the flyout the spotlight led the player to stays open)
+      if (t instanceof Element && t.closest('.spot-layer, .spot-cap')) return;
       e.stopPropagation(); e.preventDefault(); onClose();
     };
     window.addEventListener('keydown', onKey, true); window.addEventListener('pointerdown', onDown, true);

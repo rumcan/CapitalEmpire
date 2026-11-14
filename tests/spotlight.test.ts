@@ -16,6 +16,7 @@ import { RANGE_GUIDE } from '../src/game/ext/progressive-ui/guide';
 import { JAM_TIPS } from '../src/ui/jam/tips';
 import { RAIL, jamRail } from '../src/ui/rail-items';
 import { RANGE_UPGRADES } from '../src/game/golf/rangesave';
+import { LEADS } from '../src/ui/spotlight/leads';
 
 const S = { w: 1920, h: 1080 };
 const hole = (x: number, y: number, w: number, h: number, r = 10): Hole => ({ x, y, w, h, r });
@@ -169,6 +170,8 @@ function anchors(): Set<string> {
   out.add('rail-walk'); out.add('rail-select');
   assert.match(readFileSync('src/ui/golf/RangeCard.tsx', 'utf8'), /data-guide=\{`range-buy-\$\{u\.id\}`\}/);
   for (const u of RANGE_UPGRADES) out.add(`range-buy-${u.id}`);
+  // #1297: the flyout rows a Show me leads down to (tests/spotlight-leads.test.ts walks them in the real menus)
+  for (const [id, l] of Object.entries(LEADS)) { out.add(id); for (const st of l.steps) out.add(st.guide); }
   return out;
 }
 const anchorsOf = (r: SpotRequest): string[] => r.targets.flatMap(t => ('ui' in t ? [t.ui] : 'pulse' in t && t.pulse ? [t.pulse] : []));
@@ -209,8 +212,8 @@ test('every guided-build step\'s Show me names a target that resolves', () => {
     const names = anchorsOf(r); assert.ok(names.length > 0, `${st.id}: no control to light`);
     for (const a of names) assert.ok(have.has(a), `${st.id}: lights data-guide="${a}", which no control draws`);
   }
-  const walk = RANGE_GUIDE.find(s => s.target.map === 'walkway')!;
-  assert.deepEqual(guideSpot(walk, host())!.targets[0], { tiles: [40, 40, 60, 60] });
+  // (#1297: no step of the guide has a place on the map to ring now: the walking path's rings went with its step; a step that names one still gets its rings)
+  assert.deepEqual(guideSpot({ ...RANGE_GUIDE[0]!, target: { ui: 'place-range', map: 'walkway' } }, host())!.targets[0], { tiles: [40, 40, 60, 60] });
   assert.equal(guideSpot(RANGE_GUIDE[0]!, host())!.targets.some(t => 'tiles' in t), false);
 });
 
@@ -304,7 +307,7 @@ test('the Show me entry points run the engine\'s act and then light their target
     guideShowMe: (id: string) => calls.push(`guide ${id}`), showHint: (id: string) => calls.push(`hint ${id}`),
   });
   showTour(g, step.id, true); assert.deepEqual(calls, [`tour ${step.id}`]); assert.deepEqual(spotNow()!.req.targets, [{ ui: 'rail-build' }]); assert.equal(spotNow()!.req.title, step.title);
-  showGuide(g, RANGE_GUIDE[3]!.id); assert.equal(calls[1], `guide ${RANGE_GUIDE[3]!.id}`); assert.equal(spotNow()!.req.title, RANGE_GUIDE[3]!.title);
+  showGuide(g, RANGE_GUIDE[2]!.id); assert.equal(calls[1], `guide ${RANGE_GUIDE[2]!.id}`); assert.equal(spotNow()!.req.title, RANGE_GUIDE[2]!.title);
   showTip(g, 'bank', () => calls.push('tip')); assert.equal(calls[2], 'tip'); assert.deepEqual(spotNow()!.req.targets, [{ ui: 'bank-panel' }]);
   showHint(g, { id: 'hint-x', title: 'H', body: 'b.' }); assert.equal(calls[3], 'hint hint-x'); assert.equal(spotNow()!.req.title, 'H');
   showCheck(g, () => calls.push('check'), { kind: 'warn', text: 'close.' }, [{ x: 5, y: 5 }]); assert.equal(calls[4], 'check');
@@ -321,7 +324,7 @@ test('every Show me button in the UI goes through the spotlight', () => {
   assert.match(app, /onShow=\{s => \{ showTip\(game, s, \(\) => runTipShow\(game, s, actUi\)\)/); assert.match(app, /showHint\(game, hint\)/);
   assert.match(app, /onShow=\{id => \{ showPrep\(game, id, /);
   assert.match(app, /game\.closeWelcome\(false\); showGuide\(game, id\);/, 'the welcome card: Show me the first step');
-  assert.match(app, /<Spotlight game=\{game\} \/>/);
+  assert.match(app, /<Spotlight game=\{game\} reveal=\{revealMenu\} \/>/);
   assert.match(readFileSync('src/ui/course/HoleWizard.tsx', 'utf8'), /showCheck\(game, \(\) => p\.showMe\(r\.show!\)/);
   // and nothing calls the engine's Show me directly from a button any more (the engine's own auto-pointing at a new step stays a pulse)
   assert.ok(!/onShow=\{id => \{ game\.(tourShowMe|guideShowMe|prepShowMe)/.test(app));

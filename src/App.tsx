@@ -73,6 +73,7 @@ import { SeasonCard } from './ui/golf/SeasonCard';
 import { seasonChip, seasonPhase } from './ui/golf/season';
 import { GuidePulse } from './ui/GuidePulse';
 import { Spotlight } from './ui/spotlight/Spotlight';
+import { LEADS, keysToReveal } from './ui/spotlight/leads';
 import { showGuide, showHint, showPrep, showTip, showTour } from './ui/spotlight/shows';
 import { ClubTitleText } from './ui/ClubTitle';
 import { GrassManagementPanel } from './ui/GrassManagementPanel';
@@ -121,7 +122,8 @@ import { stackCol, stackFit, stackRight, type StackCard, type StackOpen, type St
 import { HoleCard } from './ui/golf/HoleCard';
 import { View3pPanel } from './ui/golf/View3pPanel';
 import { BankPanel } from './ui/golf/BankPanel';
-import { FinLitHud } from './ui/golf/FinLitHud'; // J3
+import { FinLitHud, GoalChipInBar, GoalRowInBar } from './ui/golf/FinLitHud'; // J3
+import { loadGoalOpen, saveGoalOpen } from './ui/golf/goal-pill'; // #1297: the Goal pill is part of the top bar
 import { affordKind, balanceKind, statusIcon, trendKind, withIcon } from './ui/status-icon';
 import stadiumArt from './assets/ui/art/stadium.webp';
 import { StatChips } from './ui/StatChips';
@@ -221,6 +223,8 @@ export default function App() {
   const [uiScale, setUiScale] = useState(currentUiScale);
   /** #1275: the speed bar open (every speed, Watch golf, skip) or collapsed (the default: pause, the speed now, a chevron); remembered in this browser */
   const [speedOpen, setSpeedOpen] = useState(() => loadSpeedBarOpen());
+  /** #1297: the Goal pill's choice (goal-pill.ts): the full pill in a row of the top bar (open) or only the chip in it (folded, the default); remembered in this browser */
+  const [goalOpen, setGoalOpen] = useState(() => loadGoalOpen());
   /** J8 (#1261), J13: how many of the top bar's pictures there is room for (uiScale.ts topBarTier: the screen's width over the Text size): 2, all of them; 1, not the ones beside the
    *  speed bar and the zoom buttons; 0, not the Cash chip's either. It keeps the bar one row, clear of the month note under it, down to 1280 px at the largest Text size */
   const [tbTier, setTbTier] = useState<0 | 1 | 2>(() => topBarTier(window.innerWidth, currentUiScale()));
@@ -257,7 +261,8 @@ export default function App() {
   const lastEntry = useRef<Record<string, string>>({});
   /** T193: the open flyouts (the rail item, the rows opened at first, whether the keyboard leads, the item's button's top in the rail's box;
    *  T250: a town footer item's, its button's left edge in the footer's box) */
-  const [fly, setFly] = useState<{ item: string; path: number[]; keyboard: boolean; top: number; left: number } | null>(null);
+  const [fly, setFly] = useState<{ item: string; path: number[]; keyboard: boolean; top: number; left: number; /** #1297: bumped when the flyouts are asked to open at a row (the back arrow, the spotlight's lead): they start again there */ rev: number } | null>(null);
+  const flyRev = useRef(0);
   /** J7 (#1225): the jam's Build menu (its tab; null: shut) and its tips card */
   const [build, setBuild] = useState<BuildGroupId | null>(null);
   const [tips, setTips] = useState(false);
@@ -389,13 +394,22 @@ export default function App() {
     if (r.id === 'course') void refreshKept(); // (T356: the downloaded courses under Place a real course, as the library has them now)
     if (drawerOf(r) === 'footer') {
       const box = footBox.current, left = el && box ? (el.getBoundingClientRect().left - box.getBoundingClientRect().left) / s : 0;
-      setFly({ item: r.id, path, keyboard, top: 0, left: Math.max(0, Math.round(left)) }); return;
+      setFly({ item: r.id, path, keyboard, top: 0, left: Math.max(0, Math.round(left)), rev: path.length ? ++flyRev.current : 0 }); return;
     }
     const box = railBox.current, top = el && box ? (el.getBoundingClientRect().top - box.getBoundingClientRect().top) / s : 0;
-    setFly({ item: r.id, path, keyboard, top: Math.max(0, Math.round(top)), left: 0 });
+    setFly({ item: r.id, path, keyboard, top: Math.max(0, Math.round(top)), left: 0, rev: path.length ? ++flyRev.current : 0 });
   };
   /** T250: a group's button, in whichever drawer holds it */
   const railButton = (id: string): HTMLElement | undefined => (railRef.current?.querySelector<HTMLElement>(`[data-rail="${id}"]`) ?? footRef.current?.querySelector<HTMLElement>(`[data-rail="${id}"]`)) ?? undefined;
+  /** #1297: the Show me spotlight's lead (ui/spotlight/leads.ts): when the player leaves the lit level alone for a moment the spotlight opens the next level itself: the flyouts of the
+   *  rail item that holds the target, opened down to the group row that holds the next control. False when there is nothing to open (no flyouts: the jam's Range and Course; a level that
+   *  is a leaf that acts, which is never pressed for the player) */
+  const revealMenu = (id: string, level: number): boolean => {
+    const keys = keysToReveal(id, level), lead = LEADS[id], r = lead ? RAIL.find(x => x.id === lead.item) : undefined;
+    if (!game || !keys || !r) return false;
+    const rows = menuFor(r); if (!rows.length) return false;
+    openFly(r, railButton(r.id), false, indicesOf(rows, keys)); return true;
+  };
   /** T250: the side drawer's flyouts are open (the tool panel beside it makes way; the town footer's open above it and leave it be) */
   const sideFly = !!fly && drawerOf(RAIL.find(x => x.id === fly.item) ?? RAIL[0]!) === 'side';
   /** T202: Help › Keys for the engine (the lot lab's ? and its button open it) */
@@ -534,7 +548,7 @@ export default function App() {
     <div className="ui-root fixed inset-0 overflow-hidden bg-[#1b2816] text-slate-100 select-none" style={{ fontFamily: 'ui-sans-serif, system-ui, sans-serif' }}>
       <TooltipLayer />
       {game && <GuidePulse anchor={game.guideAnchor} />}
-      {game && <Spotlight game={game} />}{/* J10 (#1269): every Show me's spotlight: the rest dimmed and blurred, its target cut out */}
+      {game && <Spotlight game={game} reveal={revealMenu} />}{/* J10 (#1269): every Show me's spotlight: the rest dimmed and blurred, its target cut out */}
       <canvas ref={canvasRef} className="absolute inset-0 h-full w-full" />
       <canvas
         ref={overlayRef}
@@ -616,6 +630,8 @@ export default function App() {
                   {!JAM && chip('land') && <button className={`chip ${game.landMode ? 'chip-on' : ''}`} onClick={() => { if (game.landMode) game.closeLandSale(); else game.openLandSale(); bump(); }} data-tip="Land for sale: the blocks next to your land, priced; click one to see it, Buy on its card (also Course › Land for sale)" aria-label="Land for sale"><Icon name="compass" size={16} /><span className={WIDE}>Land</span></button>}
                   {!JAM && chip('holes') && <button className={`chip ${game.holesTool ? 'chip-on' : ''}`} onClick={() => { game.toggleHolesTool(); bump(); }} data-tip="Holes: move pins and tee markers" aria-label="Holes"><Icon name="pin" size={16} /><span className={WIDE}>Holes</span></button>}
  {!JAM && chip('event') && <button data-guide="chip-event" className={`chip ${game.eventTool ? 'chip-on' : ''}`} onClick={() => { game.toggleEventTool(); bump(); }} data-tip="Event: the event structures catalogue" aria-label="Event"><Icon name="buildings" size={16} /><span className={WIDE}>Event</span></button>}
+                  {/* #1297: the Goal pill's chip (the jam has no goal): a click shows the full pill in a row of this bar, or folds it; the rail and the panels stand under the bar's last row, so it covers nothing */}
+                  {!JAM && <GoalChipInBar game={game} open={goalOpen} onToggle={() => setGoalOpen(saveGoalOpen(!goalOpen))} />}
                 </>
               ) : game.eventMode
                 ? <Stat icon="trophy" label="Level" value={String(game.traffic.round.xp)} sub={`${game.traffic.round.cards.length} cards`} tone="text-amber-200" />
@@ -819,6 +835,9 @@ export default function App() {
               {dev && ON_PC && <a className="btn" href="/__dev/studio" target="studio" rel="noopener" title="The sprite studio (5191; started if it is not running): sprites, lots, holes, the ground grass and map decals. Its Rebuild game sprites rebuilds this game: reload to see it">Studio</a>}
               <button className="btn-icon" onClick={() => { setHelpTab('keys'); setHelp(true); }} data-tip="Help: the keys and how it works" data-tip-key="? or F1" aria-label="Help"><Icon name="help" size={22} /></button>
             </div>
+            {/* #1297 (the owner: "goals cover menu ui. cant be closed either"): the full Goal pill is a row of this bar while it is open (its chip, in the bar's first row, shows and folds it): the bar's
+                bottom (--hud-top) is under it, so the rail, the panels, the flyouts and the cards all stand below it and it covers none of them. The row takes no clicks beyond the pill's own */}
+            {!JAM && gv && goalOpen && <div className="pointer-events-none order-last basis-full" data-testid="goal-row"><GoalRowInBar game={game} onFold={() => setGoalOpen(saveGoalOpen(false))} /></div>}
           </div>
 
           {/* T174: the box round the rail and the panel takes no clicks itself (it is as tall as the rail, so it covered the map under a short panel) */}
@@ -847,7 +866,7 @@ export default function App() {
             };
             const flyR = fly ? RAIL.find(x => x.id === fly.item) : undefined, flyRows = flyR ? menuFor(flyR) : [], up = !!flyR && drawerOf(flyR) === 'footer';
             const flyouts = fly && flyRows.length ? (
-              <Flyouts key={fly.item} rows={flyRows} top={fly.top} left={up ? fly.left : (railRef.current?.offsetWidth ?? 96) + 8} up={up} startPath={fly.path} keyboard={fly.keyboard} railRefs={[railRef, footRef]}
+              <Flyouts key={`${fly.item}:${fly.rev}`} rows={flyRows} top={fly.top} left={up ? fly.left : (railRef.current?.offsetWidth ?? 96) + 8} up={up} startPath={fly.path} keyboard={fly.keyboard} railRefs={[railRef, footRef]}
                 onLeaf={pickLeaf} onLocked={row => game.toast(`${row.label}: ${row.why}`)} onClose={() => setFly(null)} />
             ) : null;
             // T255 (#739, the owner 2026-10-29: "these windows need to move to the center footer where town moved to"): the tool's panel (its crumb

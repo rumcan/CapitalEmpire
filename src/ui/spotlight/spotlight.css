@@ -7,7 +7,8 @@
   -webkit-backdrop-filter: blur(6px) saturate(0.85);
   backdrop-filter: blur(6px) saturate(0.85);
 }
-.spot-layer[data-on='0'] { opacity: 0; }
+/* (#1297: the layer takes no click until something is lit and it shows: before that it is no more than an invisible sheet over the page, and a click on the page lands on the page) */
+.spot-layer[data-on='0'] { opacity: 0; pointer-events: none; }
 .spot-layer[data-on='1'] { animation: spot-fade 180ms ease-out both; }
 @keyframes spot-fade { from { opacity: 0; } to { opacity: 1; } }
 /* no blur (not supported, reduced motion, or the frames came slow with it up): a plain, darker tint */
@@ -40,6 +41,12 @@
   font-size: calc(13px * var(--ui-scale, 1)); line-height: 1.4;
 }
 .spot-cap-title { font-family: Georgia, "Palatino Linotype", "Book Antiqua", Palatino, serif; font-weight: 700; font-size: calc(15.5px * var(--ui-scale, 1)); line-height: 1.25; color: var(--gold-hi); }
+/* #1297: the way down the menu (Course > Facilities > Practice > Putting green): the levels passed dimmed, the one lit now in gold */
+.spot-cap-crumbs { margin-top: 3px; font-size: calc(12px * var(--ui-scale, 1)); line-height: 1.35; color: var(--muted); }
+.spot-cap-crumbs[hidden] { display: none; }
+.spot-crumb[data-done='1'] { color: #cfc8b4; }
+.spot-crumb[data-on='1'] { color: var(--gold-hi); font-weight: 700; }
+.spot-crumb-sep { color: var(--muted); }
 .spot-cap-line { margin-top: 3px; color: #e7e1d0; }
 .spot-cap-hint { margin-top: 6px; font-size: calc(12px * var(--ui-scale, 1)); color: var(--muted); }
 .spot-cap::before { content: ''; position: absolute; width: 12px; height: 12px; box-sizing: border-box; background: rgba(2, 6, 23, 0.97); border: 0 solid var(--gold-line); transform: rotate(45deg); }

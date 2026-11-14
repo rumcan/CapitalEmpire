@@ -20,6 +20,7 @@ const DIR = 'src/assets/ui/tiles', ALL = new Set<string>([...TOOL_TILES, ...ACTI
  *  Painter's button (#1282's rename) */
 const NOT_YET: readonly string[] = [
   'natural-props', 'fences', 'signs', 'fountain', 'texture-painter', 'clear-plants', 'nursery-plants',
+  'walking-path', // (#1297, the owner, 2026-11-14: the guide's Lay a walking path step went: its tile, the step's only wearer, waits for another use)
 ];
 
 test('every tile id has its WebP, a small 144 px picture, and no picture lacks an id', async () => {
@@ -149,10 +150,11 @@ test('every one of the 120 action tiles and 12 props tiles is on an action (the 
   assert.match(build, /jump-to-ball\|gimme\|go-for-it/, 'build.mjs copies Jump to ball, Gimme and Go for it');
 });
 
-test('no step of the tutorial or the guide is text only: each of the 9 + 7 + 3 + 4 steps wears an existing tile', () => {
+test('no step of the tutorial or the guide is text only: each of the 3 + 7 + 3 + 4 steps wears an existing tile', () => { // (#1297: the range guide has three steps now)
   const lists: [string, readonly { id: string; tile?: string }[]][] = [['RANGE_GUIDE', RANGE_GUIDE], ['GUIDE', GUIDE], ['JAM_TOUR', JAM_TOUR], ['TOWN_TOUR', TOWN_TOUR], ['GUIDE_STUCK', [GUIDE_STUCK]]];
-  assert.deepEqual(lists.map(([, l]) => l.length), [9, 7, 3, 4, 1]);
+  assert.deepEqual(lists.map(([, l]) => l.length), [3, 7, 3, 4, 1]);
   for (const [name, list] of lists) for (const st of list) assert.ok(st.tile && ALL.has(st.tile), `${name} ${st.id}: no tile (a new step needs one: tile: '<id>' from ui/tool-tiles.ts)`);
   // the guide's own picks (the coordinator's list for the range start)
-  assert.deepEqual(RANGE_GUIDE.map(st => st.tile), ['place-range', 'gravel-car-park', 'sell-buckets', 'target-green', 'walking-path', 'paved-car-park', 'turf-tee', 'putting-green', 'golf-hole']);
+  // (the tiles of the steps taken out, target-green, walking-path, paved-car-park, turf-tee, putting-green and golf-hole, are the guide's no more; the range card, the Build menu and the tips still wear them)
+  assert.deepEqual(RANGE_GUIDE.map(st => st.tile), ['place-range', 'gravel-car-park', 'sell-buckets']);
 });
