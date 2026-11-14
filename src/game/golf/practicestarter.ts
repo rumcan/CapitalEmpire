@@ -26,6 +26,8 @@ export interface StarterPiece { id: number; kind: StarterKind; centre: Pt; pts: 
 /** the save's part (RangeBizSave.starter): the seed the layout grows from and the ids of the pieces proper facilities have replaced */
 export interface StarterSave { seed: number; gone: number[] }
 
+/** the bunker scrape's sand a little duller than the course's own bunker sand (a home-made scrape: not raked and washed) */
+const SAND_TONE = { t: 1 as const, ta: 0.07 };
 /** the least room (tiles) the set asks of an area: kept clear of every edge, so a facility built beside it keeps its room */
 const MARGIN = 6;
 /** the seed a placed area's starter set grows from: the game's seed and where the area lies (two games differ, and so do two spots) */
@@ -90,7 +92,7 @@ export function starterPatches(set: readonly StarterPiece[], gone: readonly numb
   for (const p of set) {
     if (gone.includes(p.id)) continue;
     if (p.kind === 'dirt') out.push({ pts: p.pts, surf: 'dirtGreen', edge: 'raised' });
-    else { if (p.rim) out.push({ pts: p.rim, surf: 'scrape', edge: 'flat' }); out.push({ pts: p.pts, surf: 'sand', edge: 'turf' }); }
+    else { if (p.rim) out.push({ pts: p.rim, surf: 'scrape', edge: 'flat' }); out.push({ pts: p.pts, surf: 'sand', edge: 'turf', tone: SAND_TONE }); }
   }
   return out;
 }
@@ -101,13 +103,13 @@ export function starterPieces(set: readonly StarterPiece[], gone: readonly numbe
   return out;
 }
 
-/** the ids of the pieces still standing that the cells (indices of g) cover or touch: any cell of a piece's outline grown a quarter (a bunker's rim) lies among them */
+/** the ids of the pieces still standing that the cells (indices of g) cover or touch: any cell of a piece's outline (a bunker's: its earth rim) grown by a seventh lies among them */
 export function coveredBy(set: readonly StarterPiece[], gone: readonly number[], g: Grid, cells: ReadonlySet<number>): number[] {
   const out: number[] = [];
   for (const p of set) {
     if (gone.includes(p.id)) continue;
-    const grown: number[] = [];
-    for (let i = 0; i + 1 < p.pts.length; i += 2) grown.push(p.centre.x + (p.pts[i]! - p.centre.x) * 1.25, p.centre.y + (p.pts[i + 1]! - p.centre.y) * 1.25);
+    const ring = p.rim ?? p.pts, grown: number[] = [];
+    for (let i = 0; i + 1 < ring.length; i += 2) grown.push(p.centre.x + (ring[i]! - p.centre.x) * 1.15, p.centre.y + (ring[i + 1]! - p.centre.y) * 1.15);
     let hit = cells.has(cellAt(g, p.centre.x, p.centre.y));
     if (!hit) polyCells(g, grown, i => { if (cells.has(i)) hit = true; });
     if (hit) out.push(p.id);

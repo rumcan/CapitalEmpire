@@ -189,7 +189,7 @@ export class RangeHost {
     // (T132: the target greens raised with a sun-lit edge in feathered collars, the outfield's stripes laid on its top)
     const mw = outfieldStripes(sc, rangePreset('outfield')?.stripes);
     // (T258: a picture laid flat by its lay: its turn, scale and corner)
-    this.ctx.setGround('range:ground', sc.patches.map((p, i) => ({ pts: p.pts, tex: patchTex(p.surf), paint: { s: p.lay?.s ?? 1, a: p.lay?.a ?? 0, b: 0, bt: 'kerb', z: -1e6 + i, ...(p.edge ? { e: p.edge } : {}), ...(p.mow && mw ? { mw } : {}), ...(p.lay ? { o: [p.lay.x, p.lay.y] as [number, number] } : {}) } })));
+    this.ctx.setGround('range:ground', sc.patches.map((p, i) => ({ pts: p.pts, tex: patchTex(p.surf), paint: { s: p.lay?.s ?? 1, a: p.lay?.a ?? 0, b: 0, bt: 'kerb', z: -1e6 + i, ...(p.edge ? { e: p.edge } : {}), ...(p.tone ? { t: p.tone.t, ta: p.tone.ta } : {}), ...(p.mow && mw ? { mw } : {}), ...(p.lay ? { o: [p.lay.x, p.lay.y] as [number, number] } : {}) } })));
     if (!this.scene) { this.ctx.clearTrees(sc.box); this.ctx.clearTrees(sc.practice.box); }
     // the old start's cement walkway, laid once (an old save's first load); T239: a guided start's walkway is the player's to lay
     if (b.paths === false) { this.ctx.layPaths(sc.paths); b.paths = true; this.ctx.save(); }

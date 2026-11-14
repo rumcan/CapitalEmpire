@@ -128,7 +128,8 @@ export interface ScenePiece { key: string; id: string; x: number; y: number; q: 
  *  flat by their lay */
 export interface ScenePatch { pts: number[]; surf: 'fairway' | 'firstCut' | 'tee' | 'fringe' | 'green' | 'rough' | 'dirt' | 'grassDry' | 'asphaltDark' | 'gravel' | 'concrete' | 'outfield' | 'target' | 'desert' | 'teeDirt' | 'teeTurf' | 'yard' | 'mats' | 'targetGreen' | 'bullseye'
     | 'dirtGreen' | 'scrape' | 'sand'; edge?: 'raised' | 'turf' | 'flat'; mow?: true;
-  /** T258: a picture's lay (its surf one of the pictures) */ lay?: PicLay }
+  /** T258: a picture's lay (its surf one of the pictures) */ lay?: PicLay;
+  /** #1281: its fill's exposure (PatchPaint.t and .ta: 1 darker, 2 lighter, by this much: paint-edges' exposure.ts), the starter bunker's sand a little duller */ tone?: { t: 1 | 2; ta: number } }
 // (#1281: the surfaces 'dirtGreen', 'scrape' and 'sand' are the practice area's starter set (golf/practicestarter.ts): packed earth (the range's tee dirt), the earth rim of a
 // crude bunker and its sand. None of them is a pad of the practice view: it draws the range's slabs, yards and tee dirt, not these)
 /** T258: how a range picture lies on the ground: the corner of one picture (world tiles), its turn (degrees: its x axis along (cos a, sin a),

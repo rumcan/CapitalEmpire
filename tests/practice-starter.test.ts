@@ -166,7 +166,7 @@ test('the starter pieces as the scene lays them: dirt greens and the bunker\'s e
   const set = starterSet(BOX, AREA.entry, 7);
   const all = starterPatches(set, []), flags = starterPieces(set, []);
   assert.deepEqual(all.map(p => p.surf), ['dirtGreen', 'dirtGreen', 'dirtGreen', 'scrape', 'sand'], 'three greens, the bunker\'s rim then its sand');
-  assert.ok(all.filter(p => p.surf === 'dirtGreen').every(p => p.edge === 'raised'), 'a gentle sun-lit mound'); assert.equal(all[4]!.edge, 'turf'); assert.equal(all[3]!.edge, 'flat');
+  assert.ok(all.filter(p => p.surf === 'dirtGreen').every(p => p.edge === 'raised'), 'a gentle sun-lit mound'); assert.equal(all[4]!.edge, 'turf'); assert.equal(all[3]!.edge, 'flat'); assert.deepEqual(all[4]!.tone, { t: 1, ta: 0.07 }, 'the sand a little duller than the bunker sand of the course'); assert.equal(all[0]!.tone, undefined);
   assert.equal(flags.length, 3); for (const f of flags) { assert.equal(f.id, STARTER_FLAG); assert.equal(f.scale, STARTER_FLAG_SCALE); assert.ok(f.scale! < 0.26, 'a short flag: shorter than the red flags of the proper greens'); }
   assert.equal(new Set(flags.map(f => f.key)).size, 3, 'unique keys');
   const f0 = flags[0]!; assert.ok(set[0]!.pts.length > 0 && Math.hypot(f0.x - set[0]!.centre.x, f0.y - set[0]!.centre.y) < 1e-9, 'the flag on its green');
