@@ -53,7 +53,7 @@ test('Facilities lists the golf props by kind: a row each after Decoration, ever
   assert.deepEqual(kinds.map(k => k.id), PROP_KINDS.map(k => k.id), 'every kind has a card');
   for (const k of PROP_KINDS) assert.ok(!DECOR_GROUPS.some(g => (g.id as string) === k.id), `${k.id}: a kind's id is no group's (a flyout's focus is one or the other)`);
   assert.deepEqual(kinds.find(k => k.id === 'structures')!.groups.map(g => g.id).slice(0, 2), ['new:Event structures', 'new:Event structures (shabby)'], 'the structures, the event ones first');
-  assert.deepEqual(fac().map(r => r.label), ['Practice', 'Plants', 'Decoration', ...PROP_KINDS.map(k => k.name), 'Build on your property'], 'a row a kind, after Decoration');
+  assert.deepEqual(fac().map(r => r.label), ['Practice', 'Plants', 'Decoration', ...PROP_KINDS.map(k => k.name), 'Texture Painter'], 'a row a kind, after Decoration');
   const rows = fac();
   for (const k of kinds) {
     const row = rows.find(r => r.label === k.name)!;

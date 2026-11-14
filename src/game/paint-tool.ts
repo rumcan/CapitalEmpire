@@ -1,5 +1,6 @@
 // The Paint tool's state and input (docs/PAINT-TOOL.md "The tool (UI)"): drawing outlines by clicks or a lasso, picking, erasing, the shape handles of the selected area, and the preview. No React; the engine and PaintPanel call it.
 import type { LotPatch } from './ground-protocol';
+import { practicePath } from './golf/menu-path';
 import type { BunkerState } from './ext/bunker-look/controller';
 import { lookChanged, type BrushLooks, type LookStyle } from './course-look';
 import { kindName, settingLabel, styleWords } from './setting-labels';
@@ -91,7 +92,7 @@ export type LandRefusal = 'off' | 'range' | 'estate';
 export const LAND_WHY: Readonly<Record<LandRefusal, string>> = { off: 'Not your land', range: 'The driving range stands here', estate: 'A house lot stands here (T353): the estate is not course land' };
 /** why Rub out leaves a cell as it is when the land rules let it (T125): nothing above the base there, or (rubHoleOnly) another hole's cell */
 /** T206: the Green and Bunker brushes in the practice area */
-export const PRACTICE_BRUSH_WHY = 'Practice greens are built with Facilities ▸ Practice';
+export const PRACTICE_BRUSH_WHY = `Practice greens are built with ${practicePath()}`;
 /** T338: why the Water brush skips the map's own water (it joins it there) */
 export const MAP_WATER_WHY = 'The river is water already: your water joins it';
 /** whether surface s is one the practice tools lay (the brushes are refused with it in the practice area) */

@@ -37,7 +37,7 @@ const shot = async (page, name, clip) => {
 const lookAt = (page, p, z) => page.evaluate(([x, y, z]) => { const g = window.__game; g.camEase = null; g.lookAt(x, y, z); g.emit(); }, [p.x, p.y, z]);
 /** the pointer on world tile p (the camera already there): css px */
 const screenOf = (page, p) => page.evaluate(([x, y]) => { const g = window.__game, q = g.screen(x, y); return { x: q.x / g.dpr, y: q.y / g.dpr }; }, [p.x, p.y]);
-const state = page => page.evaluate(() => { const g = window.__game, c = document.querySelector('canvas.touch-none'); return { card: g.range.cardOpen, selected: g.range.practiceSelected, tool: g.tool, walk: g.youWalkMode, hover: g.hoverPractice, cursor: c ? getComputedStyle(c).cursor : null }; });
+const state = page => page.evaluate(() => { const g = window.__game, c = document.querySelector('canvas.touch-none'); return { card: g.range.cardOpen, selected: g.range.practiceSelected, tool: g.tool, walk: g.youWalkMode, hover: g.hoverOpens, cursor: c ? getComputedStyle(c).cursor : null }; });
 const starterState = page => page.evaluate(() => { const g = window.__game, sc = g.range.scene, b = g.golf.range; return { save: b.starter ? { seed: b.starter.seed, gone: [...b.starter.gone] } : null, pieces: sc.starter.length, flags: sc.pieces.filter(p => p.key.startsWith('starter-flag')).length, patches: sc.patches.length, money: Math.round(g.money) }; });
 
 try {
@@ -100,7 +100,7 @@ try {
     await page.mouse.move(lp.x + 70, lp.y + 24); await page.waitForTimeout(150); await page.mouse.move(lp.x, lp.y); await page.waitForTimeout(450);
     const lab = await page.evaluate(() => { const g = window.__game, sc = g.range.scene; for (let i = 0; i < g.labels.n; i++) { const l = g.labels.list[i]; if (l.key === sc.practice && l.shown) return { px: l.px / g.dpr, py: l.py / g.dpr, text: l.text }; } return null; });
     check(!!lab && lab.text === 'Practice area', 'the area\'s name shows on hover (labels show on hover only)');
-    st = await state(page); check(st.hover && /pointer|data:image/.test(st.cursor ?? ''), `a hand over the area in Walk (${st.walk})`);
+    st = await state(page); check(st.walk && /data:image/.test(st.cursor ?? ''), 'Walk: the use hand over the area');
     await shot(page, `2-label-hover-${look}`);
     await page.mouse.click(lab ? lab.px : lp.x, lab ? lab.py : lp.y); await page.waitForTimeout(800);
     st = await state(page); check(st.card && st.selected, 'Walk: a click on the label opens the build window at once, the area selected');

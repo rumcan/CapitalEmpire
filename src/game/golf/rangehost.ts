@@ -2,6 +2,7 @@
 // its auto props and, once, its cart paths), steps the golfers on the town clock and books their sales, and hands the engine the golfers and cars
 // to draw as movers and the balls and labels to draw over the map. The engine gives it a small context, so its own edits stay a few lines.
 import { JAM } from '../features';
+import { practicePath } from './menu-path';
 import type { Drawable } from '../sprites';
 import { CAR_SCALE } from '../sprites';
 import type { Prop } from '../types';
@@ -507,7 +508,7 @@ export class RangeHost {
       if (on(q, 200)) {
         // the area's name and (at the street tier, while nothing is built there) its hint under it: one world label (T151) whose box holds both lines
         const px = Math.round(dpr * 13), lw = 3 * dpr, l = labels.text(pa, PRI.area, 'Practice area', q.x, q.y, `700 ${px}px system-ui, sans-serif`, px, '#ecfccb', 'rgba(10,30,10,0.85)', lw);
-        const hint = this.quietLabel ? '' : this.practiceSale !== null ? `For sale: $${this.practiceSale.toLocaleString()} (Course ▸ Land for sale)` : this.practiceLocked ? 'Opens with your first range upgrade' : built ? '' : JAM ? 'Click to build proper greens here' : 'Click here to build a putting green';
+        const hint = this.quietLabel ? '' : this.practiceSale !== null ? `For sale: $${this.practiceSale.toLocaleString()} (Course ▸ Land for sale)` : this.practiceLocked ? 'Opens with your first range upgrade' : built ? '' : JAM ? 'Click to build proper greens here' : `Click here (or ${practicePath()}) to build a putting green`;
         if (zoom >= 0.12 && hint) {
           const sf = `600 ${Math.round(px * 0.8)}px system-ui, sans-serif`, t = hint;
           // the box from the name's top to the hint's foot, its centre moved down to the middle

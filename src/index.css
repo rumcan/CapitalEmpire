@@ -49,6 +49,8 @@
 button.stat-chip:hover { background: rgba(255, 255, 255, 0.06); }
 .stat-chip-icon { display: grid; place-items: center; border-radius: 0.55rem; }
 .stat-chip-icon > img { width: 17px; height: 17px; }
+/* J13: the top bar's tier 0 (uiScale.ts topBarTier: a 1280 px screen at the largest Text size) leaves the Cash chip's picture out so the bar stays one row */
+[data-tb-tier="0"] .stat-chip-icon { display: none; }
 @media (min-width: 1600px) { .stat-chip { gap: 0.4rem; padding: 0.2rem 0.6rem 0.2rem 0.45rem; } .stat-chip-icon > img { width: 20px; height: 20px; } }
 @media (min-width: 1900px) {
   .stat-chip { gap: 0.5rem; padding: 0.25rem 0.75rem 0.25rem 0.4rem; }
@@ -248,7 +250,7 @@ button.stat-chip:hover { background: rgba(255, 255, 255, 0.06); }
 .flyout-row:hover, .flyout-row:focus-visible { background: rgba(255, 255, 255, 0.07); outline: none; }
 .flyout-row:focus-visible { border-color: var(--gold); }
 .flyout-row-open { background: var(--gold-wash); border-color: rgba(245, 181, 46, 0.45); color: var(--gold-hi); }
-/* T256: the Range's Build (and Facilities › Build on your property): a gold button, as New hole */
+/* T256: the Texture Painter (the Range's, Facilities' and the Practice panel's): a gold button, as New hole */
 .flyout-row-gold { margin-top: 0.3rem; background: linear-gradient(#ffc94a, #f0a91e); color: #1b1406; font-weight: 700; box-shadow: 0 2px 10px rgba(245, 181, 46, 0.3); }
 .flyout-row-gold:hover, .flyout-row-gold:focus-visible { background: linear-gradient(#ffd166, #f5b52e); color: #1b1406; }
 .flyout-row-gold .flyout-why, .flyout-row-gold .flyout-label { color: #1b1406; }
