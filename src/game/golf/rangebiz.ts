@@ -11,6 +11,10 @@ import { KIOSK_QMAX, KIOSK_SERVE, KIOSK_SHARE, LESSON_SHARE, TIER2_BAYS, extraVa
 export * from './rangesave';
 import { NEAR, RANGE_LOT } from './rangestart';
 import { GOLFER_CLIPS, LIBRARY, STAFF_CLIPS } from '../library';
+import { JAM } from '../features';
+import { yardageSignId } from './yardage-signs';
+/** J7e: the library's ids (a yardage sign is placed only once its picture is in the library) */
+const LIB_IDS: ReadonlySet<string> = new Set(LIBRARY.map(it => it.id));
 import { PUTT_IMPACT_S, WALK_RATE, clipFrame, golferRow, hash, rowToward, staffDrive, staffPerson, type CrowdPerson } from '../crowdview';
 import { mulberry } from '../iso';
 import { NO_PRACTICE, practiceArea, practiceAreaAt, type PracticeArea, type PracticeScan } from './practice';
@@ -136,7 +140,10 @@ export function picLay(c: Pt, e: Pt, w: number, h: number): PicLay {
 export function lightScore(e: Pt): number { const ux = e.x + e.y, uy = e.y - e.x; return (ux - uy) - (ux + uy) / 2; }
 /** T258: rangeScene's options: the range's ground art as the studio has it (golf/range-look.ts), and the ChatGPT pictures that have landed by
  *  slug (default RANGE_ART) */
-export interface SceneOpts { look?: RangeLook; art?: Readonly<Record<string, readonly string[]>> }
+export interface SceneOpts { look?: RangeLook; art?: Readonly<Record<string, readonly string[]>>;
+  /** J7e: the jam's range (default: the build's JAM): its distances are PNG yardage signs (yardage-signs.ts) or nothing, never a number pill or a stand-in post;
+   *  signs: the distance's sign id (default: the table's, when the library holds it) */
+  jam?: boolean; signs?: (m: number) => string | null }
 /** T258: the patch that is a target green's own green, one a green whatever the look: the stand-in's 'target', the picture's raised inner disc
  *  (its picture's outer disc is its collar, feathered), or the bullseye */
 export const isTargetGreen = (p: ScenePatch): boolean => p.surf === 'target' || p.surf === 'bullseye' || (p.surf === 'targetGreen' && p.edge !== 'flat');
@@ -244,8 +251,7 @@ export const JUNK_SCALE = 1.8;
 export const SMALL_JUNK_SCALE = 2.8, SMALL_JUNK_W = 110;
 const JUNK_W = new Map(LIBRARY.filter(it => JUNK_BY_ID.has(it.id)).map(it => [it.id, it.w]));
 export const junkScale = (id: string): number => ((JUNK_W.get(id) ?? SMALL_JUNK_W) < SMALL_JUNK_W ? SMALL_JUNK_SCALE : JUNK_SCALE);
-/** J7d: how far across the range (tiles) a pile's yardage board stands from it */
-export const JUNK_SIGN_U = 3;
+
 /** J7: a spot's distance from the tee line (the mats' stand line), m */
 export const junkMetres = (v: number): number => Math.max(0, Math.round((v - STAND_V) * TILE_M));
 export function rangeScene(plot: Rect, facing: 0 | 1 | 2 | 3, s: RangeBizSave, opts: SceneOpts = {}): RangeScene {
@@ -346,14 +352,22 @@ export function rangeScene(plot: Rect, facing: 0 | 1 | 2 | 3, s: RangeBizSave, o
   put('bench', 'world:bench', 43, 15); put('bins-tee', 'gen:trash-cans-row', 25.5, 15); put('trolley', 'business:golf-bag-trolley', 29.4, 13.6);
   // ---- the distance markers down both sides every 50 m, flags on the greens, the yardage boards (upgrade)
   const numbers: RangeScene['numbers'] = [], post = art('golf-range-distance-post', 0), board = art('golf-range-yardage-board', toRoad);
-  // J7d (#1234): each pile's distance on a yardage board standing beside it (its name is a hover label: rangehost.ts drawOver)
-  (s.junk ?? []).forEach((j, i) => { const p = P(j.u + JUNK_SIGN_U, j.v + 0.6); numbers.push({ x: p.x, y: p.y, text: `${junk[i]!.m} m`, low: true }); });
-  for (let k = 1; k <= 5; k++) for (const [j, u] of [2.2, 67.8].entries()) {
+  // J7e (#1258; the owner: "no vector distance signs. only png sprites allowed"): in the jam each distance is its ChatGPT yardage sign (a sprite) or nothing: the
+  // markers and the greens get their sign when its picture has landed, no stand-in post and no number pill; the junk's distance is in its hover label
+  const jam = opts.jam ?? JAM, sign = opts.signs ?? ((m: number) => yardageSignId(m, id => LIB_IDS.has(id)));
+  if (jam) {
+    for (let k = 1; k <= 5; k++) for (const [j, u] of [2.2, 67.8].entries()) { const id = sign(50 * k); if (id) put(`mark${k}-${j}`, id, u, STAND_V + 25 * k, toRoad); }
+    for (let i = 0; i < st.targets; i++) {
+      put(`flag${i}`, 'business:golf-pin-red', TARGET_U[i]!, STAND_V + TARGET_D[i]!, 0, { scale: 0.32 });
+      const id = sign(TARGET_D[i]! * 2); if (id) put(`board${i}`, id, TARGET_U[i]! + TARGET_R[i]! + 2.4, STAND_V + TARGET_D[i]! - 1, toRoad);
+    }
+  }
+  if (!jam) for (let k = 1; k <= 5; k++) for (const [j, u] of [2.2, 67.8].entries()) {
     if (post) put(`mark${k}-${j}`, post, u, STAND_V + 25 * k);
     else put(`mark${k}-${j}`, 'ce:parking-sign', u, STAND_V + 25 * k, 0, k === 1 && j === 0 ? { label: 'Stand In for Range distance marker' } : {});
     const p = P(u, STAND_V + 25 * k); numbers.push({ x: p.x, y: p.y, text: `${50 * k} m` });
   }
-  for (let i = 0; i < st.targets; i++) {
+  if (!jam) for (let i = 0; i < st.targets; i++) {
     put(`flag${i}`, 'business:golf-pin-red', TARGET_U[i]!, STAND_V + TARGET_D[i]!, 0, { scale: 0.32 });
     if (st.targets > 3) { // the boards come with the 'targets' upgrade (T239: the first three greens have flags only)
       if (board) put(`board${i}`, board, TARGET_U[i]! + TARGET_R[i]! + 2.4, STAND_V + TARGET_D[i]! - 1);
