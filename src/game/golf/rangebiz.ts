@@ -910,6 +910,34 @@ export function rollOut(x: number, y: number, ux: number, uy: number, len: numbe
 }
 
 /** The golfers you see (plan 2.2). step() moves them on and returns the takings booked ($); the counts go into the save's season and total */
+/** T459 (the owner, 2026-11-14: "the pro, i assume me, walks to pick up balls and teleports all over"): the range attendants and the robot pickers walk
+ *  their rounds instead of being placed by a formula. Their spot was the ball room plus the round's share of the way to the pile; the pile is the ball
+ *  nearest the room, found again every second, and as the attendant picked (12x as fast in the jam) it moved, so he jumped with it. Now each keeps his
+ *  own spot and walks it at a walker's pace: out to the pile, picks there, back to the room, drops the balls, out again; a pile that moves is walked to.
+ *  The paces: an attendant walks as the range's customers do (WALK, tiles a sim second), a robot trundles slower */
+export const AGENT_SPEED = { attendant: WALK, robot: 1 } as const;
+/** the sim seconds an attendant picks at the pile and empties his basket at the room */
+export const AGENT_PICK_S = 6, AGENT_DROP_S = 1.5;
+/** an attendant's or a robot's round: his spot (tiles), the leg he is on, the sim seconds left of a pick or a drop, the way he faces (radians) */
+export interface AgentWalk { x: number; y: number; leg: 'out' | 'pick' | 'back' | 'drop'; left: number; ang: number }
+/** dt sim seconds of a round, never faster than speed (tiles a sim second): to the pile (none: back to the room), picking, back, dropping. Pure */
+export function walkAgent(a: AgentWalk, room: Pt, pile: Pt | null, dt: number, speed: number, pickS = AGENT_PICK_S, dropS = AGENT_DROP_S): void {
+  let t = Number.isFinite(dt) ? Math.max(0, dt) : 0;
+  for (let guard = 0; guard < 12 && t > 1e-9; guard++) {
+    if (a.leg === 'pick' || a.leg === 'drop') {
+      const s = Math.min(t, a.left); a.left -= s; t -= s;
+      if (a.left > 1e-9) break;
+      a.leg = a.leg === 'pick' ? 'back' : 'out'; continue;
+    }
+    if (a.leg === 'out' && !pile) { a.leg = 'back'; continue; }   // (no balls out: home)
+    const to = a.leg === 'out' ? pile! : room, dx = to.x - a.x, dy = to.y - a.y, d = Math.hypot(dx, dy), step = speed * t;
+    if (d > 1e-6) a.ang = Math.atan2(dy, dx);
+    if (step < d) { a.x += (dx / d) * step; a.y += (dy / d) * step; break; }
+    a.x = to.x; a.y = to.y; t -= speed > 0 ? d / speed : t;
+    if (a.leg === 'out') { a.leg = 'pick'; a.left = pickS; } else { a.leg = 'drop'; a.left = dropS; }
+  }
+}
+
 export class RangeSim {
   private visits: Visit[] = []; private queue: number[] = []; private balls: Ball[] = [];
   /** the lying balls, x y pairs (a ring of LYING_MAX) and how many */
@@ -1439,6 +1467,8 @@ export class RangeSim {
    *  robots) with the pile they work (the nearest ball to the ball room, read again each town second) */
   get clockT(): number { return this.t; }
   private nets = false; private autoAcc = 0; private washAcc = 0; private crew = { att: 0, robots: 0 }; private front: Pt | null = null; private frontT = -9;
+  /** T459: the attendants' and robots' own rounds (walkAgent), their kinds, and the sim time they were last stepped to (-1: none yet) */
+  private agentWalk: AgentWalk[] = []; private agentKind: ('attendant' | 'robot')[] = []; private agentT = -1;
   /** T386 part 2: one step of the staff and the machines: the attendants on shift (with your tools, not the cart) and the robots pick balls up, the nearest piles to the ball room first,
    *  into the ball room dirty; the tap and the washer wash what they can (the balls a second each can take) */
   private automate(dt: number, hour: number, B: BallSave, s: RangeBizSave, a: AutoKit, sc: RangeScene): void {
@@ -1638,19 +1668,25 @@ export class RangeSim {
       c.type = PICKER_CAR; d.picker = { x: c.x, y: c.y, out };
     }
     d.nPeople = np; d.nCars = nc;
-    // T386 part 2: the attendants on shift and the robots at work, as stand-ins walking between the ball room and the pile being picked
+    // T386 part 2: the attendants on shift and the robots at work, walking between the ball room and the pile being picked (T459: each walks his own round,
+    // walkAgent: no jump when the pile moves). A load or a new game (the clock going back) puts them at the room
     d.nAgents = 0;
+    const dtA = this.agentT < 0 || this.t < this.agentT ? -1 : Math.min(30, this.t - this.agentT); this.agentT = this.t;
     if (this.book && sc && (this.crew.att > 0 || this.crew.robots > 0)) {
-      const room = sc.ballRoom, to = this.front ?? room, dx = to.x - room.x, dy = to.y - room.y, L = Math.hypot(dx, dy) || 1, nx = -dy / L, ny = dx / L, total = this.crew.att + this.crew.robots;
+      const room = sc.ballRoom, front = this.front, to = front ?? room, dx = to.x - room.x, dy = to.y - room.y, L = Math.hypot(dx, dy) || 1, nx = -dy / L, ny = dx / L, total = this.crew.att + this.crew.robots;
+      this.agentWalk.length = Math.min(this.agentWalk.length, total);
       for (let i = 0; i < total; i++) {
-        const kind = i < this.crew.att ? 'attendant' as const : 'robot' as const, p = (this.t / (kind === 'robot' ? 30 : 40) + i * 0.37) % 1, u = p < 0.5 ? p * 2 : (1 - p) * 2, side = (i % 3 - 1) * 0.9;
+        const kind = i < this.crew.att ? 'attendant' as const : 'robot' as const, side = (i % 3 - 1) * 0.9;
+        const home = { x: room.x + nx * side, y: room.y + ny * side }, pile = front ? { x: front.x + nx * side, y: front.y + ny * side } : null;
+        let w = this.agentWalk[i];
+        // (a new one starts at the room, the later ones a little after the first so they do not walk in step)
+        if (!w || dtA < 0 || this.agentKind[i] !== kind) { w = this.agentWalk[i] = { x: home.x, y: home.y, leg: 'drop', left: AGENT_DROP_S + i * 4, ang: Math.atan2(dy, dx) }; this.agentKind[i] = kind; }
+        else walkAgent(w, home, pile, dtA, AGENT_SPEED[kind]);
         const a = d.agents[d.nAgents] ?? (d.agents[d.nAgents] = { x: 0, y: 0, ang: 0, kind, moving: true, id: 0, pick: false });
-        // #1235: an attendant walks out in 85% of his half-trip and picks at the pile for the rest (about 6 s of his 40 s round)
-        const w = kind === 'attendant' ? Math.min(1, u / 0.85) : u;
-        a.x = room.x + dx * w + nx * side; a.y = room.y + dy * w + ny * side; a.kind = kind; a.id = i; a.pick = kind === 'attendant' && u >= 0.85 && L > 0.5;
-        a.moving = L > 0.5 && !a.pick; a.ang = Math.atan2(dy, dx) + (p < 0.5 || a.pick ? 0 : Math.PI); d.nAgents++;
+        a.x = w.x; a.y = w.y; a.kind = kind; a.id = i; a.ang = w.ang;
+        a.pick = kind === 'attendant' && w.leg === 'pick'; a.moving = w.leg === 'out' || w.leg === 'back'; d.nAgents++;
       }
-    }
+    } else this.agentWalk.length = 0;
     return d;
   }
 }
