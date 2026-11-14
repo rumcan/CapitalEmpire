@@ -4,7 +4,7 @@
 // with a short reason where it does not; a click lays the start there. This file holds what is pure: the words and the ghost's shapes. Pure TS, no DOM.
 import type { Pt } from '../network';
 import { RANGE_PLACE_COST, rectPoly } from './placing';
-import type { CountyRoad, RangeSite } from './rangestart';
+import type { CountyRoad, RangeSite, StartSpot } from './rangestart';
 
 /** the camera's zoom while the start is chosen: far out over the middle of the map (the whole valid area is a diamond about 1,100 tiles across: the 4 km map's middle) */
 export const START_PICK_ZOOM = 0.014;
@@ -37,3 +37,13 @@ export function startPolys(site: RangeSite, road: CountyRoad | null = null): num
   const d = site.drive[0]!;
   return [rectPoly(site.rangePlot), rectPoly(site.rangeFront), rectPoly(site.carpark), strip(d.a, d.b, 1), rectPoly(site.parcel), ...(road ? road.legs.map(l => strip(l.a, l.b, 1.5)) : [])];
 }
+/** the ghost's shapes of a start spot, made once for the spot (and again when its county road is settled): the ghost is drawn every frame, and a frame allocates nothing */
+const POLYS = new WeakMap<StartSpot, { road: CountyRoad | null; polys: number[][] }>();
+export function spotPolys(sp: StartSpot): number[][] {
+  let m = POLYS.get(sp); if (!m || m.road !== sp.road) POLYS.set(sp, m = { road: sp.road, polys: startPolys(sp.site, sp.road) });
+  return m.polys;
+}
+/** how long the pointer rests on a spot (ms) before the ghost works out its county road (5 to 30 ms): a pointer on the move asks the spot's geometry only */
+export const START_REST_MS = 140;
+/** a click this soon (ms) after the start came into hand lays nothing: the second click of a double click on the Who card's button must not choose the start */
+export const START_CLICK_GRACE_MS = 700;

@@ -955,7 +955,7 @@ export default function App() {
           )}
           {game.panel === 'budget' && <BudgetPanel game={game} />}
           {game.panel === 'bank' && <BankPanel game={game} />}
-          {game.golfMode && <FinLitHud game={game} />}
+          {game.golfMode && !picking && <FinLitHud game={game} />}
           {GREENKEEPING && game.grassPanel && game.tool !== 'greenkeeping' && <GrassManagementPanel game={game} />}
           {courseStats && (
           <div className={`pointer-events-auto absolute ${game.panel ? 'right-[19.5rem]' : 'right-3'} top-[var(--hud-top,6rem)] z-20`}>
@@ -1028,7 +1028,7 @@ export default function App() {
           {game.shotState() && <ShotPanel game={game} />}
           {game.spinView() && <SpinBall game={game} right={game.panel ? 'right-[19.5rem]' : 'right-3'} />}
           {game.seasonReport && game.traffic.round.stage === 'free' && <SeasonReportCard report={game.seasonReport} onContinue={() => game.dismissSeasonReport()} />}
-          {(() => { const w = !game.seasonReport ? game.whoView() : null; return w && <WhoCard hidden={game.real.active} name={w.name} look={w.look} looks={w.looks} hcp={w.hcp} onDone={(n, l) => game.closeWho(n, l)} desert={game.desertTheme} onTheme={on => { game.setDesertTheme(on); bump(); }} course={{ featured: game.osmChoices(), current: game.osmGame()?.id ?? null, currentName: game.osmGame()?.name ?? null, onOwn: () => { void game.startRealCourse(null); }, onFeatured: id => { void game.startRealCourse(id); }, onBuild: (spec, land) => { void game.startRealCourse(spec, land); }, onPlace: (spec, land) => { void game.startRealPlaceSpec(spec, land); } }} />; })()}
+          {(() => { const w = !game.seasonReport ? game.whoView() : null; return w && <WhoCard hidden={game.real.active} start={!!game.startPick} name={w.name} look={w.look} looks={w.looks} hcp={w.hcp} onDone={(n, l) => game.closeWho(n, l)} desert={game.desertTheme} onTheme={on => { game.setDesertTheme(on); bump(); }} course={{ featured: game.osmChoices(), current: game.osmGame()?.id ?? null, currentName: game.osmGame()?.name ?? null, onOwn: () => { void game.startRealCourse(null); }, onFeatured: id => { void game.startRealCourse(id); }, onBuild: (spec, land) => { void game.startRealCourse(spec, land); }, onPlace: (spec, land) => { void game.startRealPlaceSpec(spec, land); } }} />; })()}
           {game.youTalk && <TalkCard talk={game.youTalk} right={game.panel ? 'right-[19.5rem]' : 'right-3'} onClose={() => game.closeYouTalk()} offer={game.matchOffer()} onChallenge={(st, n) => game.challengeMatch(st, n)} lesson={game.lessonView()} onLesson={() => game.bookLesson()} />}
           {(() => { const c = !game.youTalk && !game.youTeeOpen && !game.eventCard() ? game.challengeView() : null; return c && <ReturnChallengeCard c={c} right={game.panel ? 'right-[19.5rem]' : 'right-3'} onAnswer={y => game.answerChallenge(y)} />; })()}
           {game.matchResult && <MatchResultCard r={game.matchResult} onClose={() => game.closeMatchResult()} onMachine={() => game.openVending(true)} />}

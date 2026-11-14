@@ -12,7 +12,7 @@ import { TC, generateTerrain, type Terrain } from '../src/game/terrain';
 import type { Rect } from '../src/game/golf/mode';
 import { COURSE_SIZES } from '../src/game/golf/place';
 import { RANGE_FRONT, RANGE_PLOT } from '../src/game/golf/range';
-import { NEAR, SETBACK, START_WHY, STRAIGHT, TOWN_WINDOW, bridgeRuns, planRangeStart, planRangeStartAt, startProbe, startSpotAt, type RangeStart } from '../src/game/golf/rangestart';
+import { NEAR, SETBACK, START_WHY, STRAIGHT, TOWN_WINDOW, bridgeRuns, planRangeStart, planRangeStartAt, settleSpot, startOfSpot, startProbe, startSpotAt, type RangeStart } from '../src/game/golf/rangestart';
 
 const terrains = new Map<number, Terrain>();
 const terrain = (s: number) => { let t = terrains.get(s); if (!t) terrains.set(s, t = generateTerrain(s)); return t; };
@@ -131,4 +131,31 @@ test('the reasons: the map edge, water at the shop, too little open land, no roo
   // two narrow rivers: bridged, the spot fits
   const two = flat(x => (x >= 1500 && x < 1520) || (x >= 400 && x < 420)); p = startProbe(two, 1);
   const bridged = planRangeStartAt(p, 1000, MID, 2); assert.ok(!('why' in bridged), 'two narrow rivers are bridged'); assert.equal(bridgeRuns((bridged as RangeStart).road.kinds), 2);
+});
+
+test('a lazy question works out the geometry only (the county road stays pending), settleSpot gives the answer a full question gives, and the same question is answered from memory', () => {
+  const seed = 4, t = terrain(seed);
+  let n = 0;
+  for (let y = 560; y < 1500; y += 80) for (let x = 560; x < 1500; x += 80) {
+    const p = startProbe(t, seed), full = startSpotAt(startProbe(t, seed), x, y), lazy = startSpotAt(p, x, y, null, null, true);
+    if (full.why && full.why !== START_WHY.road) { assert.equal(lazy.why, full.why, 'a refusal by the land is the same lazy or not'); assert.ok(!lazy.pending); continue; }
+    n++;
+    assert.ok(lazy.pending, 'a spot whose geometry fits is pending'); assert.equal(lazy.road, null); assert.equal(lazy.why, ''); assert.equal(p.roads.size, 0, 'no county road worked out yet');
+    assert.equal(startOfSpot(lazy), null, 'nothing can be laid until the road is settled');
+    assert.equal(startSpotAt(p, x, y, null, null, true), lazy, 'the same question: the same answer, from memory');
+    assert.equal(settleSpot(p, lazy), lazy, 'settled in place'); assert.ok(!lazy.pending); assert.equal(p.roads.size, 1);
+    assert.equal(hash(lazy), hash(full), 'the settled spot is the one a full question gives');
+    assert.equal(settleSpot(p, lazy), lazy); assert.equal(p.roads.size, 1, 'settling twice works nothing out twice');
+    assert.equal(startSpotAt(p, x, y), lazy, 'a full question after: the settled spot');
+    if (n >= 6) return;
+  }
+  assert.ok(n >= 3, `only ${n} spots fit`);
+});
+
+test('a lazy spot whose county road cannot be made is refused once settled, with the reason, and the ghost can try the other facing', () => {
+  const MID = MAP / 2, river = flat(x => x >= 1300 && x < 1500), p = startProbe(river, 1);
+  const lazy = startSpotAt(p, 1000, MID, 2, null, true); assert.ok(lazy.pending); assert.equal(lazy.why, '');
+  settleSpot(p, lazy); assert.equal(lazy.why, START_WHY.road); assert.equal(lazy.road, null); assert.equal(startOfSpot(lazy), null);
+  // the facing north is the other side of the same road: its road is the same one (kept per J and axis), refused the same way
+  const other = startSpotAt(p, 1000, MID, null, 2, true); settleSpot(p, other); assert.equal(other.why, START_WHY.road);
 });

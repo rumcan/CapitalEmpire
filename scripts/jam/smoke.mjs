@@ -114,24 +114,29 @@ try {
     row('start', 'the card says what a click does', /buys the land and the old range for \$[\d,. ]+ and builds your house/.test(text) ? 'PASS' : 'FAIL', text.slice(0, 120));
     await click('start', 'Turn (R)', page.locator('[data-testid="start-pick-turn"]'));
     await page.keyboard.press('r'); await settle(250);
-    // the ghost is the game's placement ghost: a spot that fits (green) and one that does not (red, with its reason), found as a player looks over the map
-    const spots = await game(() => {
-      const g = window.__game, p = g.placing, out = { fit: null, refused: null, n: 0 }; if (!p) return { ...out, none: true };
-      const W = g.cssW, H = g.cssH;
+    // the ghost is the game's placement ghost: spots that fit (green) and one that does not (red, with its reason), found as a player looks over the map (the ghost's own test at
+    // each pointer position: a spot whose geometry fits is only settled once the pointer rests on it, when its county road is worked out: so each candidate is hovered a moment)
+    const found = await game(() => {
+      const g = window.__game, p = g.placing, out = { fit: [], refused: null, n: 0 }; if (!p) return { ...out, none: true };
+      const W = g.cssW, H = g.cssH, cx = W / 2, cy = H / 2;
       for (let y = 60; y < H - 160; y += 24) for (let x = 40; x < W - 40; x += 24) {
         const t = g.tileAt(x, y), s = p.spot(t.x, t.y); out.n++;
-        if (!s.why && !out.fit) out.fit = { x, y };
-        if (s.why && !out.refused) out.refused = { x, y, why: s.why };
+        if (!s.why) out.fit.push({ x, y }); else if (!out.refused) out.refused = { x, y, why: s.why };
       }
+      out.fit.sort((a, b) => Math.hypot(a.x - cx, a.y - cy) - Math.hypot(b.x - cx, b.y - cy)); out.fit = out.fit.slice(0, 12);
       return out;
     });
-    if (spots.none) row('start', 'the start is in hand (the placement ghost)', 'FAIL', 'no placement in hand');
+    const hoverAt = async c => { await page.mouse.move(c.x - 10, c.y - 10); await page.mouse.move(c.x, c.y, { steps: 3 }); await settle(450); };
+    const verdict = () => game(() => { const g = window.__game, p = g.placing, h = g.hover; if (!p || !h) return null; const s = p.spot(h.x, h.y); return { why: p.why(s), pending: !!s.pending }; });
+    if (found.none) row('start', 'the start is in hand (the placement ghost)', 'FAIL', 'no placement in hand');
     else {
-      if (spots.refused) { await page.mouse.move(spots.refused.x - 10, spots.refused.y - 10); await page.mouse.move(spots.refused.x, spots.refused.y, { steps: 3 }); await settle(300); row('start', 'a spot that does not fit says why', spots.refused.why ? 'PASS' : 'FAIL', spots.refused.why); }
+      if (found.refused) { await hoverAt(found.refused); const v = await verdict(); row('start', 'a spot that does not fit says why', v?.why ? 'PASS' : 'FAIL', v?.why ?? found.refused.why); }
       else row('start', 'a spot that does not fit says why', 'SAME', 'every spot on this view fits');
+      let fit = null; for (const c of found.fit) { await hoverAt(c); const v = await verdict(); if (v && !v.why && !v.pending) { fit = c; break; } }
+      row('start', 'a spot that fits is green once the pointer rests on it', fit ? 'PASS' : 'FAIL', fit ? '' : 'no spot on the view fits');
       if (opt('pick', 'auto') === 'spot') {
-        if (!spots.fit) row('start', 'a click on a spot that fits', 'FAIL', 'no spot on the view fits');
-        else { await page.mouse.move(spots.fit.x - 10, spots.fit.y - 10); await page.mouse.move(spots.fit.x, spots.fit.y, { steps: 3 }); await settle(300); newErrors(); await page.mouse.down(); await page.mouse.up(); await settle(2500); const errs = newErrors(); row('start', 'a click on a spot that fits lays the start', errs.length ? 'FAIL' : 'PASS', errs.join(' / ')); }
+        if (!fit) row('start', 'a click on a spot that fits', 'FAIL', 'no spot on the view fits');
+        else { await hoverAt(fit); newErrors(); await page.mouse.down(); await page.mouse.up(); await settle(2500); const errs = newErrors(); row('start', 'a click on a spot that fits lays the start', errs.length ? 'FAIL' : 'PASS', errs.join(' / ')); }
       } else await click('start', 'Pick a spot for me', page.locator('[data-testid="start-pick-auto"]'), { wait: 2500 });
     }
     const laid = await game(() => { const g = window.__game, b = g.golf?.range; return { picking: !!g.startPick, money: Math.round(g.money), built: b?.built !== false, forSale: !!b?.forSale, scene: !!g.range?.scene, owned: b?.owned?.length ?? 0, speed: g.speed }; });

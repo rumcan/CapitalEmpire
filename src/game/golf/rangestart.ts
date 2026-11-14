@@ -296,46 +296,58 @@ function startOf(site: RangeSite, road: CountyRoad): RangeStart {
 /** a facing's frame: dir (0 north, 1 east, 2 south, 3 west: the way the golfers hit, the side of the road the course lies on) as the road's axis and side */
 const DIR_FRAME: readonly { axis: 'x' | 'y'; side: 1 | -1 }[] = [{ axis: 'x', side: -1 }, { axis: 'y', side: 1 }, { axis: 'x', side: 1 }, { axis: 'y', side: -1 }];
 /** what a start spot is checked against, made once for a terrain: its integral images (a spot's fit is a few lookups), the county road of each J and axis
- *  tried (about 5 to 9 ms each, kept), the spots seen (a pointer that stays in one lattice cell costs nothing) and the facings in the order the automatic
- *  start prefers them */
-export interface StartProbe { t: Terrain; seed: number; I: Integrals; order: (0 | 1 | 2 | 3)[]; roads: Map<string, CountyRoad | null>; spots: Map<string, StartSpot> }
+ *  tried (about 5 to 9 ms each, kept), the spots seen (a pointer that stays in one lattice cell costs nothing), the facings in the order the automatic
+ *  start prefers them and the last question asked (a pointer at rest asks the same every frame) */
+export interface StartProbe {
+  t: Terrain; seed: number; I: Integrals; order: (0 | 1 | 2 | 3)[]; roads: Map<string, CountyRoad | null>; spots: Map<string, StartSpot>;
+  memo: { x: number; y: number; dir: 0 | 1 | 2 | 3 | null; prefer: 0 | 1 | 2 | 3 | null; lazy: boolean; spot: StartSpot } | null;
+}
 /** the probe of a terrain and its seed (about 40 ms: the same integral images the automatic start reads; planRangeStart takes the probe to share them) */
 export function startProbe(t: Terrain, seed: number): StartProbe {
   const [axes, sides] = preference(t, seed), order: (0 | 1 | 2 | 3)[] = [];
   for (const axis of axes) for (const side of sides) order.push(DIR_FRAME.findIndex(f => f.axis === axis && f.side === side) as 0 | 1 | 2 | 3);
-  return { t, seed, I: integrals(t.cls), order, roads: new Map(), spots: new Map() };
+  return { t, seed, I: integrals(t.cls), order, roads: new Map(), spots: new Map(), memo: null };
 }
 /** a start spot: the site a start at this place and facing would have (its rects, whether it fits or not: a refused spot's ghost is drawn from them), why
- *  it does not fit ('' when it does: START_WHY) and the county road it comes with (null when it does not fit) */
-export interface StartSpot { site: RangeSite; why: string; road: CountyRoad | null; dir: 0 | 1 | 2 | 3 }
+ *  it does not fit ('' when it does: START_WHY) and the county road it comes with (null when it does not fit). pending: its geometry fits but its county road is
+ *  not worked out yet (a lazy question, settleSpot): a ghost under a moving pointer must not pay 5 to 30 ms for a road each time it enters a new cell */
+export interface StartSpot { site: RangeSite; why: string; road: CountyRoad | null; dir: 0 | 1 | 2 | 3; pending?: boolean }
 /** the lattice (the 40-tile town grid) J a facing's start puts the range front's middle nearest to the point (x, y), tiles */
 function jFor(dir: 0 | 1 | 2 | 3, x: number, y: number): Pt {
   const { axis, side } = DIR_FRAME[dir]!, f = frameOf(axis, side), sc = -(2 * DRIVE_GAP + RANGE_PLOT[0]) / 2, tc = NEAR + SETBACK + RANGE_FRONT / 2, snap = (v: number) => Math.round(v / BLOCK) * BLOCK;
   return { x: snap(x - sc * f.s.x - tc * f.t.x), y: snap(y - sc * f.s.y - tc * f.t.y) };
 }
+/** works out the county road of a pending spot (regionalRoute through its J on its axis, kept per J and axis): the spot then has its road, or the reason there is
+ *  none. The spot is changed in place (the probe keeps it), so whoever holds it sees the answer; a spot already settled is returned as it is */
+export function settleSpot(p: StartProbe, s: StartSpot): StartSpot {
+  if (!s.pending) return s;
+  const { J, axis } = s.site, rk = `${J.x},${J.y},${axis}`;
+  if (!p.roads.has(rk)) p.roads.set(rk, regionalRoute(p.t, J, axis));
+  s.road = p.roads.get(rk) ?? null; delete s.pending; if (!s.road) s.why = START_WHY.road;
+  p.memo = null; // (a spot's reason changed: the facing a question picks may too)
+  return s;
+}
 /** the start spot for a facing nearest the point (x, y): J on the lattice, then the rules siteAt has always applied (a first nine's room: the largest
- *  COURSE_SIZES parcel that fits, with the range plot dry), the straight run of the county road each side of J, and a county road through J (regionalRoute) */
-function spotFor(p: StartProbe, x: number, y: number, dir: 0 | 1 | 2 | 3): StartSpot {
-  const J = jFor(dir, x, y), key = `${J.x},${J.y},${dir}`, seen = p.spots.get(key); if (seen) return seen;
+ *  COURSE_SIZES parcel that fits, with the range plot dry), the straight run of the county road each side of J, and a county road through J (regionalRoute;
+ *  with lazy it is left pending: the spot's geometry only, a few lookups) */
+function spotFor(p: StartProbe, x: number, y: number, dir: 0 | 1 | 2 | 3, lazy: boolean): StartSpot {
+  const J = jFor(dir, x, y), key = `${J.x},${J.y},${dir}`, seen = p.spots.get(key); if (seen) return lazy ? seen : settleSpot(p, seen);
   const { axis, side } = DIR_FRAME[dir]!, sizes = COURSE_SIZES, a = axis === 'x' ? J.x : J.y;
   // (the smallest parcel is drawn when nothing fits, and gives the reason: it asks the least)
-  let g = geomAt(J, axis, side, sizes[sizes.length - 1]!), why = a < STRAIGHT || a > MAP - 1 - STRAIGHT ? START_WHY.edge : geomWhy(p.I, g, true), road: CountyRoad | null = null;
-  if (!why) {
-    for (const size of sizes) { const q = geomAt(J, axis, side, size); if (!geomWhy(p.I, q, true)) { g = q; break; } }
-    const rk = `${J.x},${J.y},${axis}`;
-    if (!p.roads.has(rk)) p.roads.set(rk, regionalRoute(p.t, J, axis));
-    road = p.roads.get(rk) ?? null; if (!road) why = START_WHY.road;
-  }
-  const spot: StartSpot = { site: g.site, why, road, dir };
-  p.spots.set(key, spot); return spot;
+  let g = geomAt(J, axis, side, sizes[sizes.length - 1]!), why = a < STRAIGHT || a > MAP - 1 - STRAIGHT ? START_WHY.edge : geomWhy(p.I, g, true);
+  if (!why) for (const size of sizes) { const q = geomAt(J, axis, side, size); if (!geomWhy(p.I, q, true)) { g = q; break; } }
+  const spot: StartSpot = { site: g.site, why, road: null, dir, ...(why ? {} : { pending: true }) };
+  p.spots.set(key, spot); return lazy ? spot : settleSpot(p, spot);
 }
 /** the start spot for the point (x, y), tiles (the range front's middle there, moved to the town lattice): with dir the one facing, else the first facing that
- *  fits (prefer first, then the automatic start's order); a spot that fits nowhere is the first facing's, with its reason */
-export function startSpotAt(p: StartProbe, x: number, y: number, dir: 0 | 1 | 2 | 3 | null = null, prefer: 0 | 1 | 2 | 3 | null = null): StartSpot {
+ *  fits (prefer first, then the automatic start's order); a spot that fits nowhere is the first facing's, with its reason. lazy: the county road is not worked
+ *  out (a spot whose geometry fits is returned pending, its road settleSpot's): the same question again costs a comparison */
+export function startSpotAt(p: StartProbe, x: number, y: number, dir: 0 | 1 | 2 | 3 | null = null, prefer: 0 | 1 | 2 | 3 | null = null, lazy = false): StartSpot {
+  const m = p.memo; if (m && m.x === x && m.y === y && m.dir === dir && m.prefer === prefer && m.lazy === lazy) return m.spot;
   const dirs = dir !== null ? [dir] : prefer !== null ? [prefer, ...p.order.filter(d => d !== prefer)] : p.order;
-  let first: StartSpot | null = null;
-  for (const d of dirs) { const s = spotFor(p, x, y, d); if (!s.why) return s; first ??= s; }
-  return first!;
+  let spot: StartSpot | null = null;
+  for (const d of dirs) { const s = spotFor(p, x, y, d, lazy); if (!s.why) { spot = s; break; } spot ??= s; }
+  p.memo = { x, y, dir, prefer, lazy, spot: spot! }; return spot!;
 }
 /** the range start a start spot that fits gives (null when it does not fit): what planRangeStart gives for its site */
 export function startOfSpot(s: StartSpot): RangeStart | null { return s.why || !s.road ? null : startOf(s.site, s.road); }

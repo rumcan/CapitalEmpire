@@ -3,9 +3,9 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { generateTerrain } from '../src/game/terrain';
 import { RANGE_PLACE_COST, placeVerdict, type Placeable } from '../src/game/golf/placing';
-import { START_CARD_TITLE, START_PICK_ZOOM, FACING_WORDS, startCardText, startOkText, startPolys, turnedFacing } from '../src/game/golf/startpick';
+import { START_CARD_TITLE, START_PICK_ZOOM, START_REST_MS, FACING_WORDS, spotPolys, startCardText, startOkText, startPolys, turnedFacing } from '../src/game/golf/startpick';
 import { ZOOM_MAX, ZOOM_MIN } from '../src/game/iso';
-import { planRangeStart, startProbe, startSpotAt } from '../src/game/golf/rangestart';
+import { planRangeStart, settleSpot, startProbe, startSpotAt } from '../src/game/golf/rangestart';
 
 const cost = RANGE_PLACE_COST.toLocaleString();
 
@@ -43,4 +43,14 @@ test('placeVerdict: a refused spot says why, a spot that fits says what the plac
   assert.equal(placeVerdict(base, 1, 1e9).label, 'Thing · $100 · click to build here');
   assert.equal(placeVerdict({ ...base, ok: () => 'Fits here' }, 1, 1e9).label, 'Fits here');
   assert.equal(placeVerdict({ ...base, ok: () => 'Fits here' }, 1, 50).bad, true);
+});
+
+test("the ghost's shapes are made once for a spot (a frame allocates none), and made again when its county road is settled", () => {
+  const seed = 1, t = generateTerrain(seed), p = startProbe(t, seed), auto = planRangeStart(t, seed, p)!, f = auto.site.rangeFront;
+  const sp = startSpotAt(p, f[0] + f[2] / 2, f[1] + f[3] / 2, null, null, true);
+  assert.ok(sp.pending, 'a lazy spot has no road yet');
+  const a = spotPolys(sp); assert.equal(spotPolys(sp), a, 'the same shapes the next frame'); assert.equal(a.length, 5, 'the plot, front, car park, drive and parcel: no road yet');
+  settleSpot(p, sp);
+  const b = spotPolys(sp); assert.notEqual(b, a, 'the road settled: the shapes are made again'); assert.equal(b.length, 5 + sp.road!.legs.length); assert.equal(spotPolys(sp), b);
+  assert.ok(START_REST_MS >= 50 && START_REST_MS <= 500, 'the pointer rests a moment, not a long while, before its road is worked out');
 });

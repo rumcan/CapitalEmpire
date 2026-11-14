@@ -14,11 +14,11 @@ export function StartPickCard({ game }: { game: Game }) {
         <div className="min-w-0 flex-1 basis-60">
           <div className="font-display text-lg font-bold leading-tight text-[var(--gold-hi)]">{v.title}</div>
           <p className="mt-0.5 text-sm leading-snug text-slate-100" data-testid="start-pick-text">{v.text}</p>
-          <div className="mt-1 text-[11px] text-slate-400">Green: a start fits. Red: it does not, and the note by the pointer says why. R turns the range{v.facing ? ` (the golfers hit ${v.facing})` : ''}. Drag the map to look around.</div>
+          <div className="mt-1 text-[11px] leading-snug text-slate-400" data-testid="start-pick-hint">Green: you can start there. Red: you cannot, and the note by the pointer says why. R turns the range{v.facing ? ` (the golfers hit ${v.facing})` : ''}. Drag the map to look around, scroll to zoom.</div>
         </div>
         <div className="flex shrink-0 flex-col gap-1.5">
           <button className="btn-gold w-full px-3 py-1.5 text-sm" onClick={() => game.startPickAuto()} data-tip="Start where the game would put you: the same start as always" data-testid="start-pick-auto">Pick a spot for me</button>
-          <button className="btn w-full" onClick={() => game.startPickTurn()} data-tip="Turn the range a quarter (R)" data-testid="start-pick-turn"><Icon name="forward2" size={16} />Turn (R)</button>
+          <button className="btn w-full" onClick={() => game.startPickTurn()} data-tip="Turn the range a quarter (R)" data-testid="start-pick-turn"><Icon name="compass" size={16} />Turn (R)</button>
         </div>
       </div>
     </div>

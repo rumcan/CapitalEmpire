@@ -127,8 +127,7 @@ export const RANGE_GUIDE: readonly GuideStep[] = Object.freeze([
     id: 'guide-range-place',
     n: 1,
     title: 'Place your driving range',
-    // (J9: a new game places its range when the player chooses where to start, so this step is ticked at once; an older save's bare start places it here, on its plot beside the county road)
-    body: 'Your land is bare: only your trailer. Range › Place the driving range puts it in your hand: move it along the county road on your land and click to build it. (A new game places it when you choose where to start.)',
+    body: 'Your land is bare: only your trailer. Range › Place the driving range puts it in your hand: move it along the county road and click to build it.',
     done: 'auto',
     target: { ui: 'rail-range' },
     reward: 1000,

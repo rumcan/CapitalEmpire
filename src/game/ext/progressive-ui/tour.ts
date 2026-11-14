@@ -101,12 +101,14 @@ export function normalizeTour(x: unknown): TourSave | null {
 }
 
 /** what the tutorial's steps read: the road tool's lock (its why; null: open) and the start (a range start's, or the old town start's); J9: whether the range is
- *  placed (a new game places it when the start is chosen; a save from before has a bare start, its range still to place; absent: placed) */
-export interface TourFacts { roadLock: string | null; start: 'range' | 'town'; rangePlaced?: boolean }
+ *  placed (a new game places it when the start is chosen; a save from before has a bare start, its range still to place; absent: placed) and whether it is still
+ *  for sale (a jam game from before J9: Buy, not the start's purchase) */
+export interface TourFacts { roadLock: string | null; start: 'range' | 'town'; rangePlaced?: boolean; rangeForSale?: boolean }
 
 /** a step as this game shows it: step 4 of a bare start (an older save's) says to place the range; step 2 with the road tool still locked (T288: never in a golf game now; kept for a lock of another kind) says when it opens and goes on with Next (it cannot wait for a road the
  *  player cannot build); step 4 in the old town start points at the course (no range there) */
 export function tourStepFor(s: GuideStep, f: TourFacts): GuideStep {
+  if (s === JAM_TOUR[0] && f.rangeForSale) return { ...s, body: 'You have $75,000, a plot with plenty of room, and an old driving range on it for sale (junk and all). A range earns your first income; that money builds a golf course hole by hole. Money is tight: every build is a choice between paying cash, saving first, or borrowing.' }; // (a game from before J9: Buy the range)
   if (s.id === 'tour-roads' && f.roadLock) return { ...s, done: 'next', body: `The town never lays a road of its own. Build roads with the road tool (Traffic › Build) to give it new lots: paved roads sell their lots to the town and pay you. The road tool is locked for now: ${f.roadLock.replace(/^Unlocks/, 'it opens').replace(/\.$/, '')}.` };
   if (s.id === 'tour-golf' && f.start === 'range' && f.rangePlaced === false) return { ...s, body: 'Your land is bare: only your trailer. Place your driving range next (Range › Place the driving range): the guide in the corner walks you through it and the rest, step by step.' }; // (an older save's bare start)
   if (s.id === 'tour-golf' && f.start === 'town') return { ...s, body: 'Your golf course is beside the town: its holes, buildings and paths are in the Course drawer on the left.', target: { ui: 'rail-course' } };
