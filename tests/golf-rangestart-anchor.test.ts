@@ -85,6 +85,19 @@ test('anchors over the map on three seeds: every spot that fits keeps every inva
   assert.ok(fits >= 30, `only ${fits} spots fit`); assert.ok(refused >= 300, `only ${refused} refused`);
 });
 
+test('many seeds, a coarser grid of anchors: every spot that fits keeps every invariant, every other is refused with one of the reasons (never a start the automatic rules would not make)', () => {
+  let fits = 0, refused = 0;
+  for (const seed of [2, 3, 5, 6, 8, 9, 10, 11, 12]) {
+    const t = terrain(seed), p = startProbe(t, seed);
+    for (let y = 100; y < MAP; y += 200) for (let x = 100; x < MAP; x += 200) {
+      const s = startSpotAt(p, x, y);
+      if (s.why) { refused++; assert.ok(REASONS.includes(s.why), `seed ${seed}: ${s.why}`); assert.equal(s.road, null); assert.equal(startOfSpot(s), null); continue; }
+      fits++; invariants(t, planRangeStartAt(p, x, y) as RangeStart, `seed ${seed} at ${x},${y}`);
+    }
+  }
+  assert.ok(fits >= 25, `only ${fits} spots fit`); assert.ok(refused >= 300, `only ${refused} refused`);
+});
+
 test('a forced facing is honoured, the automatic one prefers the last facing and falls back to another, and a spot is the same every time', () => {
   const seed = 4, t = terrain(seed), p = startProbe(t, seed);
   let tried = 0;

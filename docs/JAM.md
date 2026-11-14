@@ -141,7 +141,7 @@ built in dirt parking lot"; "lets place the range for him. he has to buy it ... 
   `planRangeStart` is untouched (`tests/golf-rangestart-anchor.test.ts` keeps the sha1 of its plan for seeds 1 to 12, with and without the probe, and checks every invariant of the
   automatic start on every anchored spot that fits on three seeds, at every facing).
 - **Where a start is refused** (red, one of six reasons, by the pointer): too near the map's edge for the road and the town (the road needs 600 tiles of straight run each way, so J is
-  in the middle of the map: about a fifth of the planner view is green); needs clear, flat ground for the shop and car park (water, a creek or the river's bank where they go); not enough
+  in the middle of the map: 11 to 19% of the whole map fits, a quarter to a third of the view the choice opens on); needs clear, flat ground for the shop and car park (water, a creek or the river's bank where they go); not enough
   open land beside it for a course; no room for the town across the road; water or a creek on the range land; the county road cannot get past the water. Water, mountains and the map's
   edge are all among these. A refusal at the click shows the same words as a toast.
 - **Cost**: a refusal is a few lookups in the terrain's integral images (the same ones the automatic plan reads: the probe makes them once, about 30 ms, and the plan shares them) kept per
@@ -154,6 +154,10 @@ built in dirt parking lot"; "lets place the range for him. he has to buy it ... 
 - **The normal game shares all of it** (no fork): its new game is chosen the same way, the range costs the same `RANGE_PLACE_COST` at the click (no dirt car park, no kit: its guide's step 2 asks
   for the car park as before), its guide's first step ("Place your driving range") is ticked at once and its text is read only by a bare start from an older save, where it is true. The refusal
   "Off your land: place it on your plot" cannot meet a new game's first placement: the choice is the first placement, the land comes with it.
+- **Looking at it**: `node scripts/jam/j9-shots.mjs [--base url] [--only shots,turn,drag,sweep,place,auto,run,second,reload,gen,zoom] [--tag x-] [--scale 1.25]` drives the jam build
+  (or a dev server) through the choice with headless Chrome: shots of the step, a green and each red ghost, R, a drag, the ghost's cost, a click, the game running, a second
+  new game, a reload, a new game's timing; `node scripts/jam/j9-legacy.mjs` starts a game from before (`?pick=0`), reloads into it and Buys. `jam:smoke` goes through the choice
+  (`--pick spot` clicks a spot that fits instead of "Pick a spot for me"). Shots: `docs/jam-shots/j9-*.jpg`.
 - **Texts** that say what is true now: the tutorial's first step ("You started with $75,000. The land, your house and this old driving range (junk and all) took $15,000."), the Build step,
   the Build tips, the normal game's last tutorial step and welcome card, the Who card's footnote (`tour.ts`, `tips.ts`, `WelcomeCard.tsx`, `YouCards.tsx`).
 

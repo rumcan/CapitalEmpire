@@ -1,6 +1,7 @@
 // J9 (#1268): the start's placement words and ghost shapes (golf/startpick.ts), and the Placeable helper's new optional fields (golf/placing.ts).
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
 import { generateTerrain } from '../src/game/terrain';
 import { RANGE_PLACE_COST, placeVerdict, type Placeable } from '../src/game/golf/placing';
 import { START_CARD_TITLE, START_PICK_ZOOM, START_REST_MS, FACING_WORDS, spotPolys, startCardText, startOkText, startPolys, turnedFacing } from '../src/game/golf/startpick';
@@ -53,4 +54,22 @@ test("the ghost's shapes are made once for a spot (a frame allocates none), and 
   settleSpot(p, sp);
   const b = spotPolys(sp); assert.notEqual(b, a, 'the road settled: the shapes are made again'); assert.equal(b.length, 5 + sp.road!.legs.length); assert.equal(spotPolys(sp), b);
   assert.ok(START_REST_MS >= 50 && START_REST_MS <= 500, 'the pointer rests a moment, not a long while, before its road is worked out');
+});
+
+test('the engine wires the choice: a new range game chooses (but not a bench, a dev seed or ?pick=0), nothing is saved while it is chosen, the click pays what Buy paid, reset drops it, the HUD waits', () => {
+  const eng = readFileSync('src/game/engine.ts', 'utf8'), app = readFileSync('src/App.tsx', 'utf8');
+  assert.match(eng, /private picksStart\(\): boolean \{ return START_PICK && !this\.benchMode && !this\.devSeed && new URLSearchParams\(location\.search\)\.get\('pick'\) !== '0'; \}/);
+  assert.match(eng, /scheduleSave\(\) \{ if \(this\.benchMode \|\| this\.startPick\) return;/);
+  assert.match(eng, /async save\(\) \{\n\s+if \(this\.benchMode \|\| this\.startPick\) return 0;/);
+  assert.match(eng, /this\.startPick = null; this\.placing = null; this\.jamOffered = false;/);
+  // the jam's click: the old range laid for sale with its junk, built free, then bought in the same call ($15,000, its kit, its balls: buyRange)
+  assert.match(eng, /if \(JAM\) \{ b\.forSale = true; b\.junk = newRangeJunk\(this\.seed \^ 0x4a37\); \}/);
+  assert.match(eng, /if \(p && at && p\.build\(at\)\) \{ if \(JAM && !this\.buyRange\(\)\)/);
+  assert.match(eng, /const p = this\.rangePlaceable\(JAM\)/);
+  // the pointer asks the geometry only (lazy), its road settles at rest and at the click; the planner view counts as the first baked view
+  assert.match(eng, /startSpotAt\(pk\.probe, x, y, pk\.turn, pk\.last, true\)/);
+  assert.match(eng, /settleSpot\(pk\.probe, sp\); \/\/ \(a click on a spot the pointer had not rested on/);
+  assert.match(eng, /if \(drawPlan\(\) && !this\.firstViewBaked && this\.ready\)/);
+  assert.match(readFileSync('src/game/features.ts', 'utf8'), /export const START_PICK = true;/);
+  assert.match(app, /const picking = !!game\?\.startPick;/); assert.match(app, /\{picking && <StartPickCard game=\{game\} \/>\}/); assert.match(app, /\{!picking && <Minimap game=\{game\} \/>\}/);
 });

@@ -34,7 +34,7 @@ page.on('console', m => { const t = m.text(); if (m.type() === 'error' && !/favi
 const settle = (ms = 400) => page.waitForTimeout(ms);
 const game = (fn, arg) => page.evaluate(fn, arg);
 const shot = async name => { const p = resolve(SHOTS, tag + name); await page.screenshot({ path: p, type: 'jpeg', quality: 82 }); console.log(`shot ${p}`); };
-const state = () => game(() => { const g = window.__game, b = g.golf?.range; return { picking: !!g.startPick, money: Math.round(g.money), built: b?.built !== false, forSale: !!b?.forSale, scene: !!g.range?.scene, owned: b?.owned ?? [], speed: g.speed, cam: [Math.round(g.cam.X), Math.round(g.cam.Y), +g.cam.z.toFixed(3)], placing: g.placing?.id ?? null, dir: g.golf?.dir, parcel: g.golf?.parcel, home: b?.home, junk: b?.junk?.length, balls: b?.balls?.clean, seen: g.golf?.progress?.seen, tour: !!g.tourView(), baked: g.firstViewBaked, lots: g.traffic?.lots?.size, pop: g.traffic?.pop, golfers: b?.total?.golfers, houses: g.houseLots?.size, demand: (document.querySelector('[data-testid="range-card"]')?.innerText.match(/DEMAND A DAY\s*(\d+)/i) ?? [])[1] ?? null }; });
+const state = () => game(() => { const g = window.__game, b = g.golf?.range; return { picking: !!g.startPick, money: Math.round(g.money), built: b?.built !== false, forSale: !!b?.forSale, scene: !!g.range?.scene, owned: b?.owned ?? [], speed: g.speed, cam: [Math.round(g.cam.X), Math.round(g.cam.Y), +g.cam.z.toFixed(3)], placing: g.placing?.id ?? null, dir: g.golf?.dir, parcel: g.golf?.parcel, home: b?.home, junk: b?.junk?.length, balls: b?.balls?.clean, seen: g.golf?.progress?.seen, tour: !!g.tourView(), baked: g.firstViewBaked, lots: g.traffic?.lots?.size, pop: g.traffic?.pop, golfers: b?.total?.golfers, houses: g.houseLots?.size, guideDone: g.golf?.progress?.guide?.done, goalChip: !!document.querySelector('[data-testid="goal-chip"]'), demand: (document.querySelector('[data-testid="range-card"]')?.innerText.match(/DEMAND A DAY\s*(\d+)/i) ?? [])[1] ?? null }; });
 const hover = async (x, y) => { await page.mouse.move(x - 12, y - 12); await page.mouse.move(x, y, { steps: 4 }); await settle(500); };
 /** every 20 px of the screen: whether the placement ghost fits there (the ghost's own test at each pointer position) */
 const scan = () => game(() => {
@@ -92,6 +92,15 @@ try {
     for (let i = 0; i < 4; i++) { await page.keyboard.press('r'); await settle(250); console.log('after R', i + 1, JSON.stringify(await dirOf())); }
     await page.keyboard.press('Shift+R'); await settle(250); console.log('after Shift+R', JSON.stringify(await dirOf()));
     await page.locator('[data-testid="start-pick-turn"]').click(); await settle(250); console.log('after Turn button', JSON.stringify(await dirOf()));
+  }
+  if (only.has('drag')) {
+    // a drag pans the map and places nothing; Esc and a right click put nothing down; a click on the Turn button turns and places nothing
+    const cam = () => game(() => { const g = window.__game; return { x: Math.round(g.cam.X), y: Math.round(g.cam.Y), picking: !!g.startPick, placing: g.placing?.id ?? null }; });
+    const c0 = await cam(); await page.mouse.move(400, 300); await page.mouse.down(); await page.mouse.move(470, 340, { steps: 6 }); await page.mouse.move(540, 380, { steps: 6 }); await page.mouse.up(); await settle(500);
+    const c1 = await cam(); console.log('drag', JSON.stringify(c0), '->', JSON.stringify(c1), 'panned:', c0.x !== c1.x || c0.y !== c1.y, 'still choosing:', c1.picking && c1.placing === 'start');
+    await page.keyboard.press('Escape'); await settle(300); await page.mouse.click(600, 300, { button: 'right' }); await settle(500);
+    const c2 = await cam(); console.log('after Esc and a right click', JSON.stringify(c2), 'still choosing:', c2.picking && c2.placing === 'start');
+    await page.mouse.wheel(0, -300); await settle(500); console.log('wheel zoom', (await game(() => window.__game.cam.z)).toFixed(4));
   }
   if (only.has('gen')) {
     // a new game's work on the page's thread: Game.newTown (terrain, plan, and with the pick the probe) then, with the pick, the click's own work (layStart: Pick a spot for me)

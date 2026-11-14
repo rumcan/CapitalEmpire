@@ -10011,7 +10011,7 @@ export class Game {
     const p = this.playerNow(), gp = this.golf?.progress; if (!p) return;
     const id = GOLFER_PEOPLE[look]?.id ?? GOLFER_PEOPLE[0]!.id, y = this.you;
     // (J9: the start is not laid yet: your character comes with it, in the look picked here)
-    if (this.startPick) { this.startPick.look = Math.max(0, Math.min(GOLFER_PEOPLE.length - 1, look)); this.setPlayer({ ...p, name: name.trim().slice(0, 40) || p.name, sex: lookSex(id) }); if (gp && !gp.seen.includes('who')) gp.seen.push('who'); this.emit(); return; }
+    if (this.startPick) { this.startPick.look = Math.max(0, Math.min(GOLFER_PEOPLE.length - 1, look)); this.setPlayer({ ...p, name: name.trim().slice(0, 40) || p.name, sex: lookSex(id) }); if (gp && !gp.seen.includes('who')) gp.seen.push('who'); this.pickStep(); this.emit(); return; }
     this.setPlayer({ ...p, name: name.trim().slice(0, 40) || p.name, sex: lookSex(id), you: { x: y?.x ?? p.you?.x ?? 0, y: y?.y ?? p.you?.y ?? 0, f: y?.face ?? 0, look: Math.max(0, Math.min(GOLFER_PEOPLE.length - 1, look)) } });
     if (gp && !gp.seen.includes('who')) { gp.seen.push('who'); this.scheduleSave(); }
     if (y) this.lookAt(y.x, y.y, Math.max(this.cam.z, 0.2));
