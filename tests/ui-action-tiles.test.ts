@@ -69,3 +69,26 @@ test('the scan reads literals, conditionals and tables', () => {
   assert.deepEqual(tileIdsIn("pic: { tile: 'clear-junk' }, other: 1"), ['clear-junk']);
   assert.deepEqual(tileIdsIn("x = { tile: s.first ? 'a-b' : 'c-d', y: 1 }"), ['a-b', 'c-d']);
 });
+
+/** the tile ids the golf view (packages/cinderlinks/parts) names: the markup's tiles/<id>.webp and the practice drills' table */
+function viewTileIds(): string[] {
+  const out: string[] = [], dir = 'packages/cinderlinks/parts';
+  for (const f of readdirSync(dir).filter(n => n.endsWith('.md'))) {
+    const s = readFileSync(join(dir, f), 'utf8');
+    for (const m of s.matchAll(/tiles\/([a-z][a-z0-9-]*)\.webp/g)) out.push(m[1]!);
+    for (const m of s.matchAll(/'((?:drill|shot)-[a-z0-9-]+)'/g)) out.push(m[1]!);
+  }
+  return out;
+}
+
+test('every one of the 48 action tiles is on an action (the UI, or the golf view), and the golf view names only tiles that exist', () => {
+  const used = new Set<string>(), view = viewTileIds();
+  for (const f of [...sources('src/ui'), 'src/App.tsx']) if (!f.endsWith('tool-tiles.ts')) for (const id of tileIdsIn(readFileSync(f, 'utf8'))) used.add(id);
+  for (const [k, v] of Object.entries(T)) if (/_TILE$/.test(k) && v && typeof v === 'object' && !Array.isArray(v)) for (const id of Object.values(v as Record<string, string>)) used.add(id);
+  for (const id of view) { assert.ok(ALL.has(id), `the golf view names "${id}": not a tile`); used.add(id); }
+  assert.ok(view.length >= 12, 'the golf view names its drills and shot tiles');
+  assert.deepEqual(ACTION_TILES.filter(id => !used.has(id)), [], 'a tile no action wears');
+  // the build copies the golf view's tiles (drill-* and shot-*) next to its page
+  const build = readFileSync('packages/cinderlinks/build.mjs', 'utf8');
+  assert.match(build, /\(drill\|shot\)-/, 'build.mjs copies the drill and shot tiles');
+});
