@@ -315,17 +315,26 @@ try {
     const sc = await page.evaluate(() => { const s = window.__game.range.scene; return { box: s.box, facing: s.facing, junk: s.junk?.length ?? 0 }; });
     const spots = { bunker: [18, 76], pond: [44, 92], waste: [30, 112], rough: [12, 96], bunker2: [48, 72], pond2: [18, 120], fescue: [52, 98], green: [50, 118] };
     const P = {}; for (const [k, [u, v]] of Object.entries(spots)) P[k] = await plotPt(page, u, v);
-    // (the camera fits the spots into the part of the screen clear of the bars: the guide's panel on the right, the buttons along the bottom, the top bar)
+    // (the camera fits the spots into the part of the screen clear of the bars: the Texture Painter's panel on the left, the guide's on the right, the buttons along the bottom, the top bar)
     const mid = { x: Object.values(P).reduce((a, p) => a + p.x, 0) / 8, y: Object.values(P).reduce((a, p) => a + p.y, 0) / 8 };
+    // where the Texture Painter's panel stands on the left once the tool is in hand: a stroke that starts under it is the panel's press, not the map's
+    await arm(page, 'bunker', 3.5);
+    const panel = await page.evaluate(() => { let r = 0; for (const el of document.querySelectorAll('div.glass')) { const b = el.getBoundingClientRect(); if (b.left < 120 && b.height > 150 && b.width < 700) r = Math.max(r, b.right); } return r; });
+    await page.evaluate(() => window.__game.setTool('select')); await page.mouse.move(8, 8);
+    const left = Math.max(380, panel + 60);
+    console.log(`  the painter's panel reaches x ${Math.round(panel)}: the spots keep right of ${Math.round(left)}`);
     const focus = async z => {
       await lookAt(page, mid, z);
-      await page.evaluate(([W, H, spots]) => { const g = window.__game, pts = spots.map(p => g.screen(p.x, p.y)); const x0 = Math.min(...pts.map(p => p.x)), x1 = Math.max(...pts.map(p => p.x)), y0 = Math.min(...pts.map(p => p.y)), y1 = Math.max(...pts.map(p => p.y)); g.cam.X += ((x0 + x1) / 2 - (W - 260) / 2) / (g.cam.z * g.dpr); g.cam.Y += ((y0 + y1) / 2 - (H - 40) / 2) / (g.cam.z * g.dpr); g.emit(); }, [W, H, Object.values(P)]);
+      // the asked zoom, or less when the spots would not fit the clear part of the screen at it (the spread on the screen is in proportion to the zoom)
+      const fit = await page.evaluate(([W, H, spots, left]) => { const g = window.__game, pts = spots.map(p => g.screen(p.x, p.y)), xs = pts.map(p => p.x / g.dpr), ys = pts.map(p => p.y / g.dpr); return Math.min(1, (W - 480 - left - 80) / (Math.max(...xs) - Math.min(...xs)), (H - 360) / (Math.max(...ys) - Math.min(...ys))); }, [W, H, Object.values(P), left]);
+      if (fit < 1) await lookAt(page, mid, z * fit * 0.98);
+      await page.evaluate(([W, H, spots, left]) => { const g = window.__game, pts = spots.map(p => g.screen(p.x, p.y)); const x0 = Math.min(...pts.map(p => p.x)), x1 = Math.max(...pts.map(p => p.x)), y0 = Math.min(...pts.map(p => p.y)), y1 = Math.max(...pts.map(p => p.y)); g.cam.X += ((x0 + x1) / 2 - (left + W - 480) / 2) / (g.cam.z * g.dpr); g.cam.Y += ((y0 + y1) / 2 - (H - 20) / 2) / (g.cam.z * g.dpr); g.emit(); }, [W, H, Object.values(P), left]);
       await settle(page, 900); await page.mouse.move(8, 8);
     };
-    await focus(0.18);
+    await focus(0.14);
     const onScreen = [];
-    for (const k of Object.keys(P)) { const s = await screenOf(page, P[k]); onScreen.push(s.x > 150 && s.x < W - 500 && s.y > 150 && s.y < H - 160); }
-    check(onScreen.every(Boolean), 'the spots are on screen at 18%, clear of the bars');
+    for (const k of Object.keys(P)) { const s = await screenOf(page, P[k]); onScreen.push(s.x > left && s.x < W - 480 && s.y > 150 && s.y < H - 170); }
+    check(onScreen.every(Boolean), 'the spots are on screen, clear of the bars and the painter panel');
     const kinds = { bunker: ['bunker', 3.5], pond: ['water', 5], waste: ['waste', 4], rough: ['rough', 3.5] };
     const sample = async (pic, names) => { const o = {}; for (const k of names) { const s = await screenOf(page, P[k]); o[k] = meanAt(pic, s.x, s.y, 3); } return o; };
     const pic0 = await grab(page);
@@ -388,7 +397,7 @@ try {
     // the grid holds them: cells of each surface on the outfield
     const grid1 = await page.evaluate(() => { const g = window.__game, grid = g.courseGrid, cnt = {}; for (let i = 0; i < grid.surf.length; i++) cnt[grid.surf[i]] = (cnt[grid.surf[i]] ?? 0) + 1; return cnt; });
     // ---- save, load, and the same again
-    await focus(0.18);
+    await focus(0.14);
     const picS = await grab(page), nowS = await sample(picS, Object.keys(spots));
     await page.evaluate(() => window.__game.save()); await page.waitForTimeout(1500);
     await page.reload({ timeout: 240000, waitUntil: 'domcontentloaded' });
@@ -397,7 +406,7 @@ try {
     if (legacy) await installLegacy(page);
     const grid2 = await page.evaluate(() => { const g = window.__game, grid = g.courseGrid, cnt = {}; for (let i = 0; i < grid.surf.length; i++) cnt[grid.surf[i]] = (cnt[grid.surf[i]] ?? 0) + 1; return cnt; });
     check(JSON.stringify(grid1) === JSON.stringify(grid2), `the saved game loads the same cells (${JSON.stringify(grid2)})`);
-    await focus(0.18); await settle(page, 2200);
+    await focus(0.14); await settle(page, 2200);
     const picL = await grab(page), nowL = await sample(picL, Object.keys(spots));
     await shot(page, `8-after-save-and-load-${look}`, { x: 200, y: 100, width: 1400, height: 820 }, rprefix);
     for (const k of Object.keys(nowS)) check(dist(nowS[k], nowL[k]) < 40, `${k} after a save and a load: ${nowS[k].map(Math.round)} then ${nowL[k].map(Math.round)}`);
