@@ -57,10 +57,23 @@ export const ROW_TILE = {
 export const EXTRA_TILE: Readonly<Partial<Record<string, ToolTile>>> = { event: 'grandstand-scoreboard', land: 'land-plot' };
 
 // ---- J8 (#1261): the action tiles' homes (ACTION_TILES, sheets v3 to v6). A table says which tile an action wears; ActionTile.tsx draws it.
-/** the range upgrades (rangesave.ts ids), on the range card and the Build menu; the car park's two steps are Gravel and Pave */
+/** J13 (#1277): every range upgrade (rangesave.ts RANGE_UPGRADES, by id) has its tile: on its row of the ball room's tree, on the tree's open card, on the range card's
+ *  upgrade rows and on the Build menu's cards; the car park's two steps are Gravel and Pave. tests/ui-action-tiles.test.ts fails an upgrade with no tile that exists.
+ *  Four have a stand-in (an existing tile) until their own is painted: the Putting stroke trainer (the putting green), the Second tier of bays (the roofed bays), the
+ *  Golf academy (the pro's lesson wall) and the Car park building (the paved lot) */
 export const RANGE_UPGRADE_TILE: Readonly<Partial<Record<string, ToolTile>>> = {
+  // the grounds and the car park
   teeturf: 'turf-tee', grass: 'grass-outfield', greens: 'target-green', targets: 'target-green', gravel: 'gravel-car-park', pave: 'paved-car-park',
-  bays8: 'open-bays', bays12: 'open-bays', bays24: 'open-bays', covered: 'covered-bays', dispenser: 'ball-dispenser',
+  // the bays and the range's extras
+  bays8: 'open-bays', bays12: 'open-bays', bays24: 'bays-24', covered: 'covered-bays', lights: 'floodlights', dispenser: 'ball-dispenser', proshop: 'pro-shop', kiosk: 'coffee-kiosk',
+  // the ball room: picking, staff, machines, supply, your game
+  tube: 'ball-tube', basket: 'wire-basket', pushpick: 'push-picker', picker: 'pull-picker', hopper2: 'bigger-hopper', gang: 'gang-picker', nightpick: 'night-picking',
+  attendant: 'hire-attendant', training: 'staff-training', attendant2: 'second-attendant', attendant3: 'night-attendant', staffcart: 'staff-cart',
+  washer: 'ball-washer', polisher: 'ball-polisher', robot: 'robot-pickers', robot2: 'robots-4', robot3: 'robots-6', robotbat: 'robot-batteries', robotspd: 'robot-speed', chargers: 'fast-chargers', nets: 'target-nets', counter: 'bucket-counter',
+  supplier: 'supplier', autoorder: 'standing-order', bulk: 'trade-price', pallet: 'pallet-deliveries', stamp: 'stamped-balls',
+  swingcam: 'swing-video', fans: 'fans-lemonade', weighted: 'weighted-clubs', lmon: 'launch-monitor', radar: 'ball-tracker', puttlab: 'putting-green',
+  // (stand-ins) the second tier, the academy and the car park building
+  tier2: 'covered-bays', academy: 'staff-training', parking: 'paved-car-park',
 };
 /** the range card's practice sessions (player.ts PracticeKind): Hit a bucket, Putting practice, Chipping practice */
 export const SESSION_TILE: Readonly<Partial<Record<string, ToolTile>>> = { bucket: 'hit-balls', putting: 'putting-green', chipping: 'chip-and-putt' };
@@ -69,6 +82,4 @@ export const PRACTICE_BUILD_TILE: Readonly<Partial<Record<string, ToolTile>>> = 
 /** the range card's placements (the range, its car park, the practice area) */
 export const PLACE_TILE: Readonly<Partial<Record<string, ToolTile>>> = { range: 'buy-range', carpark: 'gravel-car-park', practice: 'putting-green' };
 /** the ball room tree's branches (rangesave.ts TreeBranch): Picking, Staff, Machines, Supply and Your game */
-export const BRANCH_TILE: Readonly<Partial<Record<string, ToolTile>>> = { picking: 'pick-balls', staff: 'hire-attendant', machines: 'ball-washer', supply: 'bucket-price', golf: 'profile' };
-/** the tree's nodes that have a picture of their own (rangesave.ts ids; the others wear their branch's): the attendants, the washer and the bucket counter */
-export const BALL_NODE_TILE: Readonly<Partial<Record<string, ToolTile>>> = { attendant: 'hire-attendant', attendant2: 'hire-attendant', attendant3: 'hire-attendant', washer: 'ball-washer', counter: 'bucket-price' };
+export const BRANCH_TILE: Readonly<Partial<Record<string, ToolTile>>> = { picking: 'pick-balls', staff: 'hire-attendant', machines: 'ball-washer', supply: 'supplier', golf: 'profile' };

@@ -143,6 +143,11 @@ Four more sheets of 12 (`golf-build-tool-tiles-sheet-v10..v13.png`, provenance b
 script (`--version v10` to `v13`; crops in `art/ui-tool-tiles/sheet-v10..v13.json`) into 48 more 144 px WebPs: `src/assets/ui/tiles` now holds 156 (about 0.7 MB in all; the jam build inlines each, they are
 under its 128 KB limit). v10 to v12 are `ACTION_TILES` (the ball room tree's upgrades, one tile each, plus the range till and the home); v13 is `PROP_TILES` (the Props menu's entries and the Texture Painter).
 `tests/ui-action-tiles.test.ts` keeps a `NOT_YET` list of tiles cut but worn by nothing; each commit that places one takes it off.
+- **The ball room tree** (`BallTree.tsx`): every upgrade in `rangesave.ts` has its tile by id (`RANGE_UPGRADE_TILE`): on its row of the tree (40 px), bigger (64 px) beside the name on the open card, on the Range
+  card's upgrade rows and on the Build menu's cards. Supply wears `supplier` (the `bucket-price` stand-in is gone); the Range till line, on the card and in the tree, wears `range-till`; Your home wears `home-caravan`
+  while it is the caravan (the cottage and the house have no picture yet). Four upgrades wear an existing tile until their own is painted: Putting stroke trainer (`putting-green`), Second tier of bays
+  (`covered-bays`), Golf academy (`staff-training`), Car park building (`paved-car-park`). `tests/ui-action-tiles.test.ts` fails an upgrade with no tile that exists. The tree's columns scroll up and down only: at the
+  largest Text size (125%) it is 800 px wide on a 1366 px screen, no sideways scrollbar (shots: `docs/jam-shots/j13-ball-tree*.jpg`).
 
 ## Button tests: run them before every jam build (T459, the owner 2026-11-13: "are you guys not testing buttons?")
 A dead button must not ship. Two checks:

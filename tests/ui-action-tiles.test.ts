@@ -9,16 +9,13 @@ import * as T from '../src/ui/tool-tiles';
 import { ACTION_TILES, PROP_TILES, SOUND_TILES, TOOL_TILES } from '../src/ui/tool-tiles';
 import { GUIDE, GUIDE_STUCK, RANGE_GUIDE } from '../src/game/ext/progressive-ui/guide';
 import { JAM_TOUR, TOWN_TOUR } from '../src/game/ext/progressive-ui/tour';
+import { BRANCH_NAME, RANGE_UPGRADES } from '../src/game/golf/rangesave';
 
 const DIR = 'src/assets/ui/tiles', ALL = new Set<string>([...TOOL_TILES, ...ACTION_TILES, ...PROP_TILES]);
 
-/** the tiles cut but worn by nothing yet: each commit that places one takes it off this list (J13, #1277). The ball room's tiles wait for the tree and the cards (the first
- *  commits of J13); the props tiles that no menu row wears wait for #1284's natural / man-made restructure of the Props menu (another coder's) and the Texture Painter's
- *  button (#1282's rename) */
+/** the tiles cut but worn by nothing yet: each commit that places one takes it off this list (J13, #1277). the props tiles that no menu row wears wait for #1284's natural / man-made restructure of the Props menu (another coder's) and the Texture
+ *  Painter's button (#1282's rename) */
 const NOT_YET: readonly string[] = [
-  'ball-tube', 'wire-basket', 'push-picker', 'pull-picker', 'bigger-hopper', 'gang-picker', 'night-picking', 'staff-training', 'second-attendant', 'night-attendant', 'staff-cart', 'supplier',
-  'ball-polisher', 'robot-pickers', 'robots-4', 'robots-6', 'robot-batteries', 'robot-speed', 'fast-chargers', 'target-nets', 'bucket-counter', 'standing-order', 'trade-price', 'pallet-deliveries',
-  'stamped-balls', 'swing-video', 'fans-lemonade', 'weighted-clubs', 'launch-monitor', 'ball-tracker', 'floodlights', 'bays-24', 'pro-shop', 'coffee-kiosk', 'range-till', 'home-caravan',
   'all-props', 'natural-props', 'man-made-props', 'desert-oasis', 'trees-mixed', 'lake-props', 'fences', 'signs', 'fountain', 'texture-painter', 'clear-plants', 'nursery-plants',
 ];
 
@@ -39,6 +36,28 @@ test('every table of tiles names only tiles that exist', () => {
   const tables = Object.entries(T).filter(([k, v]) => /_TILE$/.test(k) && v && typeof v === 'object' && !Array.isArray(v));
   assert.ok(tables.length >= 8, 'the scan finds the tables');
   for (const [name, table] of tables) for (const [key, id] of Object.entries(table as Record<string, string>)) assert.ok(ALL.has(id), `${name}.${key}: no tile "${id}"`);
+});
+
+test('every range upgrade has a tile that exists, and so has each branch of the ball room tree (J13, #1277)', () => {
+  assert.ok(RANGE_UPGRADES.length >= 50, `the upgrade list (${RANGE_UPGRADES.length})`);
+  for (const u of RANGE_UPGRADES) {
+    const id = T.RANGE_UPGRADE_TILE[u.id];
+    assert.ok(id && ALL.has(id), `${u.id} (${u.name}): no tile (a new upgrade needs one in RANGE_UPGRADE_TILE, tool-tiles.ts)`);
+    assert.ok(existsSync(`${DIR}/${id}.webp`), `${u.id}: ${id}.webp is missing`);
+  }
+  // (the table names no upgrade that does not exist)
+  const ids = new Set<string>(RANGE_UPGRADES.map(u => u.id));
+  for (const k of Object.keys(T.RANGE_UPGRADE_TILE)) assert.ok(ids.has(k), `RANGE_UPGRADE_TILE.${k}: there is no such upgrade`);
+  for (const b of Object.keys(BRANCH_NAME)) assert.ok(T.BRANCH_TILE[b] && ALL.has(T.BRANCH_TILE[b]!), `branch ${b}: no tile`);
+  assert.equal(T.BRANCH_TILE.supply, 'supplier', 'Supply wears the supplier, not the bucket price');
+  // the picture is on the tree's rows and open card, the Range card's rows, its till line and its home
+  const tree = readFileSync('src/ui/golf/BallTree.tsx', 'utf8'), card = readFileSync('src/ui/golf/RangeCard.tsx', 'utf8');
+  assert.match(tree, /tile=\{nodeTile\(n\.id, branch\)\} size=\{TILE_ROW\}/, 'a tile on every node row of the tree');
+  assert.match(tree, /tile=\{nodeTile\(node\.id, branch\)\} size=\{TILE_BIG\}/, "a bigger tile beside the open node's name");
+  assert.match(tree, /tile="range-till"/, "the tree's till line");
+  assert.match(card, /tile=\{RANGE_UPGRADE_TILE\[u\.id\]\}/, "the Range card's upgrade rows");
+  assert.match(card, /tile="range-till"/, "the Range card's till line");
+  assert.match(card, /tile="home-caravan"/, 'Your home');
 });
 
 /** the files of the UI (and of the guide's step lists, whose steps carry their own tile) that may name a tile */
