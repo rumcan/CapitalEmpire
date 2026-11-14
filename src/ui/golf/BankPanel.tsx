@@ -8,6 +8,7 @@ import {
   debtOf, monthlyDue, overdraftStreak, quoteBank, quoteMurabaha, savingsMonthly, settleCost, type Loan,
 } from '../../game/golf/finance';
 import { Icon } from '../Icon';
+import { ActionTile, TILE_ROW, TILE_SMALL } from '../ActionTile'; // J8 (#1261): the Bank's header and each of its actions wear a painted tile
 import { ProtectionSection } from './ProtectionSection'; // J3
 import { JAM } from '../../game/features';
 
@@ -61,10 +62,13 @@ export function BankPanel({ game }: { game: Game }) {
   const step = 5_000;
   return (
     <div className="pointer-events-auto absolute right-3 top-[var(--hud-top,6rem)] z-20 max-h-[calc(var(--vh-ui,100vh)-var(--hud-top,6rem)-4.5rem)] w-[360px] space-y-3 overflow-y-auto overflow-x-hidden rounded-xl border border-white/10 bg-slate-950/90 p-3 text-slate-200 shadow-lg backdrop-blur" data-testid="bank-panel">
-      <div className="win-head win-head-slate flex items-center justify-between">
-        <div>
-          <div className="font-semibold text-amber-200">Bank</div>
-          <div className="text-[12px] text-slate-400">Loans, savings and your credit. Payments come out at each month end.</div>
+      <div className="win-head win-head-slate flex items-center justify-between gap-2">
+        <div className="flex min-w-0 items-center gap-2.5">
+          <ActionTile tile="bank" size={TILE_ROW + 8} />
+          <div className="min-w-0">
+            <div className="font-semibold text-amber-200">Bank</div>
+            <div className="text-[12px] text-slate-400">Loans, savings and your credit. Payments come out at each month end.</div>
+          </div>
         </div>
         <button className="btn-icon" onClick={() => { game.panel = null; game.emit(); }} title="Close" aria-label="Close the bank" data-testid="bank-close"><Icon name="close" size={18} /></button>
       </div>
@@ -100,7 +104,8 @@ export function BankPanel({ game }: { game: Game }) {
             </p>
           </div>
         ) : <p className="text-red-300">{q.reason}</p>}
-        <button className="chip chip-on w-full" disabled={!q.ok} onClick={() => game.bankBorrow(amount, term)} data-testid="bank-sign">Borrow {money(amount)} for {termText(term)}</button>
+        {/* J8: the main action of the panel: its picture large, inside the button, so the whole of it is the click */}
+        <button className="chip chip-on w-full justify-center gap-2.5 py-1.5 text-sm" disabled={!q.ok} onClick={() => game.bankBorrow(amount, term)} data-testid="bank-sign"><ActionTile tile="borrow" size={TILE_ROW + 16} />Borrow {money(amount)} for {termText(term)}</button>
       </Section>
 
       {/* T459 (the jam MVP): the murabaha comparison and the insurance plans are hidden in the jam build (docs/JAM.md "Future development") */}
@@ -139,11 +144,11 @@ export function BankPanel({ game }: { game: Game }) {
       <Section title="Savings" hint={`${SAVINGS_APR}% a year, paid monthly`} testId="bank-savings">
         <div className="flex justify-between tabular-nums"><span>Saved</span><b>{money(f.savings)}</b></div>
         <div className="flex justify-between tabular-nums text-slate-400"><span>Next month's interest</span><span>+{money(savingsMonthly(f.savings))}</span></div>
-        <div className="grid grid-cols-4 gap-1">
-          <button className="chip" disabled={cash < step} onClick={() => game.bankDeposit(step)} data-testid="bank-dep">Save {money(step)}</button>
-          <button className="chip" disabled={cash < 1} onClick={() => game.bankDeposit(Math.max(0, cash))}>Save all</button>
-          <button className="chip" disabled={f.savings < 1} onClick={() => game.bankWithdraw(step)} data-testid="bank-wd">Take {money(step)}</button>
-          <button className="chip" disabled={f.savings < 1} onClick={() => game.bankWithdraw(f.savings)}>Take all</button>
+        <div className="grid grid-cols-2 gap-1">
+          <button className="chip" disabled={cash < step} onClick={() => game.bankDeposit(step)} data-testid="bank-dep"><ActionTile tile="save-money" size={TILE_SMALL} />Save {money(step)}</button>
+          <button className="chip" disabled={cash < 1} onClick={() => game.bankDeposit(Math.max(0, cash))}><ActionTile tile="save-money" size={TILE_SMALL} />Save all</button>
+          <button className="chip" disabled={f.savings < 1} onClick={() => game.bankWithdraw(step)} data-testid="bank-wd"><ActionTile tile="take-money" size={TILE_SMALL} />Take {money(step)}</button>
+          <button className="chip" disabled={f.savings < 1} onClick={() => game.bankWithdraw(f.savings)}><ActionTile tile="take-money" size={TILE_SMALL} />Take all</button>
         </div>
         <p className="text-[11px] text-slate-400">{JAM ? 'Savings are a cushion for lean months.' : 'Savings are a cushion for storms and repairs.'} They earn {SAVINGS_APR}%, but a loan costs more than that, so pay a loan off before you save when you can.</p>
       </Section>
@@ -171,8 +176,8 @@ function LoanRow({ l, cash, game, ask, setAsk }: { l: Loan; cash: number; game: 
         </div>
       ) : (
         <div className="flex gap-1">
-          {bank && l.balance > part && <button className="chip flex-1" disabled={cash < part} onClick={() => game.bankRepay(l.id, part)}>Pay {money(part)}</button>}
-          <button className="chip flex-1" disabled={cash < cost} onClick={() => setAsk(l.id)} data-testid={`bank-payoff-${l.id}`}>{bank ? `Pay off ${money(cost)}` : `Settle ${money(cost)}`}</button>
+          {bank && l.balance > part && <button className="chip flex-1" disabled={cash < part} onClick={() => game.bankRepay(l.id, part)}><ActionTile tile="repay" size={TILE_SMALL} />Pay {money(part)}</button>}
+          <button className="chip flex-1" disabled={cash < cost} onClick={() => setAsk(l.id)} data-testid={`bank-payoff-${l.id}`}><ActionTile tile="repay" size={TILE_SMALL} />{bank ? `Pay off ${money(cost)}` : `Settle ${money(cost)}`}</button>
         </div>
       )}
     </div>
