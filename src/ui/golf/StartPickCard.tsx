@@ -3,6 +3,7 @@
 // its reason by the pointer); this card says what a click does, and offers "Pick a spot for me" (today's automatic start: nobody is stuck, and the keyboard has a way)
 // and Turn (R). The same look as the real-course placer's card (ui/course/RealPlaceCard.tsx). Pure view: the engine owns the choice.
 import type { Game } from '../../game/engine';
+import { ActionTile, TILE_BIG } from '../ActionTile';
 import { Icon } from '../Icon';
 
 export function StartPickCard({ game }: { game: Game }) {
@@ -10,7 +11,8 @@ export function StartPickCard({ game }: { game: Game }) {
   if (!v) return null;
   return (
     <div className="pointer-events-none absolute inset-x-0 bottom-6 z-20 flex justify-center px-3" data-testid="start-pick-card">
-      <div className="pointer-events-auto flex w-[34rem] max-w-full flex-wrap items-center gap-x-4 gap-y-2 rounded-2xl border border-white/10 bg-slate-950/90 px-4 py-3 text-slate-200 shadow-2xl backdrop-blur" role="dialog" aria-label={v.title}>
+      <div className="pointer-events-auto flex w-[38rem] max-w-full flex-wrap items-center gap-x-4 gap-y-2 rounded-2xl border border-white/10 bg-slate-950/90 px-4 py-3 text-slate-200 shadow-2xl backdrop-blur" role="dialog" aria-label={v.title}>
+        <ActionTile tile="place-range" size={TILE_BIG} />
         <div className="min-w-0 flex-1 basis-60">
           <div className="font-display text-lg font-bold leading-tight text-[var(--gold-hi)]">{v.title}</div>
           <p className="mt-0.5 text-sm leading-snug text-slate-100" data-testid="start-pick-text">{v.text}</p>
