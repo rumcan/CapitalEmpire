@@ -5,6 +5,8 @@
 // the town footer along the bottom (a slim row: each group's icon beside its name; compact, its icons alone, the names in the tooltip and the
 // buttons' labels). The buttons, their states and their anchors (data-rail, data-guide: the guide's Show me) are the same in both.
 import { Icon } from './Icon';
+import { ActionTile } from './ActionTile'; // J8 (#1261): an item with a painted tile draws it in place of its icon
+import { tileUrl } from './tool-tiles';
 import { railLabel, railTip, type Drawer, type RailEntry, type RailItem } from './rail-items';
 import { tipAttrs } from './tip';
 
@@ -81,7 +83,7 @@ export function Rail({ walk, entries, onPick, onLocked, onHover, open = null, na
           >
             {locked && <span className="rail-lock"><LockMark /></span>}
             {isNew && <NewBadge className="rail-new" />}
-            <Icon name={r.icon} size={foot ? 24 : 28} />
+            {r.tile && tileUrl(r.tile) ? <ActionTile tile={r.tile} size={foot ? 24 : 30} /> : <Icon name={r.icon} size={foot ? 24 : 28} />}
             {!(foot && compact) && <span>{railLabel(r)}</span>}
           </button>}
         </div>
