@@ -136,6 +136,7 @@ function actorsList() {   // render's hook: every actor in view joins its list (
       const K = golferK(DS / d), ps = actorPose(r, d > ACT_NEAR), fa = faOf(r.cth);
       if (ps[0] === 's' || r.cyc > 0) { const fx = Math.cos(r.cth), fy = Math.sin(r.cth); r.dx = r.cx - fx * 0.6 + fy * 0.2; r.dy = r.cy - fy * 0.6 - fx * 0.2; }   // (at a stroke he stands back from his ball and a little to its side, as the player does; J6c: and a golfer who keeps hitting rests where he swings)
       else { r.dx = r.cx; r.dy = r.cy; }
+      if (!r.ghost && d < 120) blobShadow(r.dx, r.dy, BLOB_R, BLOB_K);   // (#1308: the contact shadow under his feet, a golfer or a caddie, drawn before he is)
       r.K = K; r.S = actorArt(r, fa, ps, K) || actorSprite(r.L, fa, ps[0], ps[1], K) || actSpr.get((r.L ? r.L.key : '-') + 'i' + fa + '_0' + (TOD[tmode].glow > 0 ? 'L' : '') + 'k' + K) || null;   // (not made yet: standing, if that one is)
       if (r.S && d < ACT_SHADOW && !r.ghost) { if (d < 15) castSprite(r.S, r.dx, r.dy, K / (r.S.art ? 1 : r.build)); else castSprite(r.S.mip || mipOf(r.S), r.dx, r.dy, K / 2 / (r.S.art ? 1 : r.build)); }   // (T450: his golfer art is his own size)
     }
