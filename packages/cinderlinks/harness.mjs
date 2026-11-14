@@ -335,7 +335,8 @@ const HOST_PLAY = String.raw`
   // #1308: a run of fence is built, not drawn as a picture: a fence building 18 m long is six bays, seven posts evenly spaced (3 m), each upright and standing on the ground under it,
   // the wire 1.8 m high above it, and a frame with the fence in it differs from one without
   function fenceRun() {
-    const errs = [], info = {}, S = course.S, keepF = feats, keepFor = featFor;
+    const errs = [], info = {}, S = course.S, keepF = feats, keepFor = featFor, keepCam = [camYaw, camD, camHk, HZ, camZ];
+    camD = D0; camHk = 1; HZ = Math.round(190 * RS); aimCam(); camZ = groundH(player.x, player.y) + HC;   // (the camera as it stands behind a golfer: the gate's own may be left high up after a ball's flight, where a fence is seen from above)
     const q = [camX + FX * 12 + RX * -9, camY + FY * 12 + RY * -9], th = Math.atan2(RY, RX) * 180 / Math.PI, run = { id: 'b:f', kind: 'building', use: 'fence', name: 'Chain-link fence', at: [q[0] / S, q[1] / S], w: 18, d: 0.12, h: 1.8, rot: th, roof: 'flat', wall: '#a6adb4', roofColour: '#a6adb4', floors: 1 };
     setFeatures({ course: course.id, features: [] }); render(); const empty = Uint32Array.from(fb);
     setFeatures({ course: course.id, features: [run] }); render(); const withF = Uint32Array.from(fb);
@@ -353,11 +354,11 @@ const HOST_PLAY = String.raw`
     const wire = B.faces.filter((f) => f.mesh === 1); if (wire.length !== 6 || wire.some((f) => Math.abs((f.pts[3][2] - f.pts[0][2]) - (1.8 - 0.14)) > 0.5 && false)) errs.push('fence: ' + wire.length + ' bays of wire (want 6)');
     { const long = { id: 'b:g', kind: 'building', use: 'fence', name: 'Chain-link fence', at: [(camX + FX * 65 + RX * -8) / S, (camY + FY * 65 + RY * -8) / S], w: 120, d: 0.12, h: 1.8, rot: Math.atan2(FY, FX) * 180 / Math.PI, roof: 'flat', wall: '#a6adb4', roofColour: '#a6adb4', floors: 1 };   // (120 m of fence running away from the camera, 40 bays in view)
       setFeatures({ course: course.id, features: [] }); render(); const fb0 = Uint32Array.from(fb), zb0 = Uint16Array.from(zbuf);   // (the frame as the ground and the sky leave it: what drawing the fence alone costs on it, the fastest of fifteen)
-      setFeatures({ course: course.id, features: [long] }); fb.set(fb0); zbuf.set(zb0); drawBuildings(); let m = 1e9;
+      setFeatures({ course: course.id, features: [long] }); for (let r = 0; r < 80; r++) { fb.set(fb0); zbuf.set(zb0); drawBuildings(); } let m = 1e9;   // (warmed up: the engine has made the draw fast after a few frames, as it has in play)
       for (let r = 0; r < 15; r++) { fb.set(fb0); zbuf.set(zb0); const t0 = performance.now(); drawBuildings(); m = Math.min(m, performance.now() - t0); }
-      info.fenceMs = +m.toFixed(3); info.fenceFaces = feats.builds[0].faces.length;
+      info.fenceMs = +m.toFixed(3); info.fenceFaces = feats.builds[0].faces.length; { fb.set(fb0); zbuf.set(zb0); drawBuildings(); let n = 0; for (let i = 0; i < fb.length; i++) if (fb[i] !== fb0[i]) n++; info.fencePx = n; info.cam = [+camX.toFixed(1), +camY.toFixed(1), +camZ.toFixed(1), HZ, +camD.toFixed(1)]; }
       if (!(info.fenceMs < 0.3)) errs.push('fence: 120 m of fence costs ' + info.fenceMs + ' ms a frame (budget 0.3 ms)'); }
-    feats = keepF; featFor = keepFor;
+    feats = keepF; featFor = keepFor; camYaw = keepCam[0]; camD = keepCam[1]; camHk = keepCam[2]; HZ = keepCam[3]; aimCam(); camZ = keepCam[4];
     return { errs, info };
   }
   function hostGreenRun() {

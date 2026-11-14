@@ -279,7 +279,7 @@ function buildFaces(B) {
   const P = (a, f, z) => [B.x + a * cr - f * sr, B.y + a * sr + f * cr, z], N = (a, f, z) => [a * cr - f * sr, a * sr + f * cr, z];
   let zb = 1e9, zm = -1e9; for (const [a, f] of [[-hw, -hd], [hw, -hd], [hw, hd], [-hw, hd], [0, 0]]) { const g = groundH(B.x + a * cr - f * sr, B.y + a * sr + f * cr); if (g < zb) zb = g; if (g > zm) zm = g; }
   const z0 = zb - 0.4, z1 = zm + B.h, mul = (c, k) => [Math.min(255, c[0] * k), Math.min(255, c[1] * k), Math.min(255, c[2] * k)];
-  const add = (pts, n, col, bias = 0, emit = false) => faces.push({ pts, n, col, bias, emit });   // bias: how far in front of its wall a detail counts (cm); also its rank of detail (see drawBuildings)
+  const add = (pts, n, col, bias = 0, emit = false) => faces.push({ pts, n, col, bias, emit, mesh: 0 });   // bias: how far in front of its wall a detail counts (cm); also its rank of detail (see drawBuildings)
   if (B.use === 'light') { lightFaces(B, P, N, add, zm); B.faces = faces; B.z0 = zm; B.top = zm + B.h; return; }   // (#1200: a floodlight tower)
   if (B.use === 'fence') { fenceFaces(B, P, faces); B.faces = faces; B.z0 = zm; B.top = zm + B.h; return; }   // (#1308: a run of fence)
   if (B.use === 'tent' || B.use === 'stand' || B.use === 'board') { dressFaces(B, P, N, add, mul, zm); B.faces = faces; B.z0 = zm; B.top = zm + B.h; return; }   // (T429: a marquee, a grandstand: parts/08h-dress.md)
@@ -358,10 +358,11 @@ function drawBuildings() {
       let ya = 1e9, yb = -1e9; for (let i = 0; i < n; i++) { if (PYs[i] < ya) ya = PYs[i]; if (PYs[i] > yb) yb = PYs[i]; }
       let Y0 = Math.ceil(ya - 0.5), Y1 = Math.floor(yb - 0.5); if (Y0 < 0) Y0 = 0; if (Y1 >= VH) Y1 = VH - 1;
       for (let y = Y0; y <= Y1; y++) {
+        if (mesh === 1 && (y & 1)) continue;   // (#1308: chain-link wire is every second pixel of every second row: a quarter of the fill, and it reads as wire)
         const yc = y + 0.5; let xa = 1e9, xb = -1e9;
         for (let i = 0, j = n - 1; i < n; j = i++) { const p0 = PYs[i], p1 = PYs[j]; if ((p0 <= yc) === (p1 <= yc)) continue; const xx = PXs[i] + (yc - p0) / (p1 - p0) * (PXs[j] - PXs[i]); if (xx < xa) xa = xx; if (xx > xb) xb = xx; }
         let X0 = Math.ceil(xa - 0.5), X1 = Math.floor(xb - 0.5); if (X0 < 0) X0 = 0; if (X1 >= VW) X1 = VW - 1;
-        for (let x = mesh === 1 ? X0 + ((X0 + y) & 1) : X0, sx = mesh === 1 ? 2 : 1; x <= X1; x += sx) { if (mesh > 1 && (mesh === 2 ? (x & 3) === 3 : (x & 3) !== 0)) continue; const w = A * (x + 0.5) + Bc * yc + C; if (w <= 0) continue; const zc = (100 / w) | 0, q = y * VW + x; if (zc < zbuf[q] + bi) { fb[q] = col; zbuf[q] = zc < 65534 ? zc : 65534; } }
+        for (let x = mesh === 1 ? X0 + (X0 & 1) : X0, sx = mesh === 1 ? 2 : 1; x <= X1; x += sx) { if (mesh > 1 && (mesh === 2 ? (x & 3) === 3 : (x & 3) !== 0)) continue; const w = A * (x + 0.5) + Bc * yc + C; if (w <= 0) continue; const zc = (100 / w) | 0, q = y * VW + x; if (zc < zbuf[q] + bi) { fb[q] = col; zbuf[q] = zc < 65534 ? zc : 65534; } }
       }
     }
     const bsn = night ? 0 : sunAt(B.x, B.y, frame * 0.055);
