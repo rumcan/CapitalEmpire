@@ -34,3 +34,11 @@ export function currentUiScale(): number {
   if (typeof document === 'undefined') return 1;
   return clampUiScale(document.documentElement.style.getPropertyValue('--ui-scale') || 1);
 }
+
+/** J8 (#1261), J13 (#1277): how many of the top bar's pictures it has room for, from the screen's width over the Text size (the UI layer's own px). 2: all of them. 1: the ones
+ *  beside the speed bar and the zoom buttons are left out. 0: the Cash chip's too. Measured on the jam's bar: it takes about 1130 / 1050 / 1020 px of the UI layer in a row, so on
+ *  a 1366 px screen the largest Text size (125%, 1093 px) is tier 1 and a 1280 px one (1024 px) is tier 0; narrower than that the bar wraps to a second row, as it always has */
+export function topBarTier(width: number, scale: number): 0 | 1 | 2 {
+  const room = (Number.isFinite(width) ? width : 1920) / (scale > 0 ? scale : 1);
+  return room >= 1150 ? 2 : room >= 1065 ? 1 : 0;
+}

@@ -47,8 +47,9 @@ export function StatementCard({ history }: { history: readonly Report[] }) {
   return <>
     {toast && !s && (
       // (the owner, 2026-11-14: "this menu satement cant be closed and it covers the ui": it sits under the top bar, clear of the rail and its menus, and has
-      // its own close button; it still goes by itself after TOAST_MS. J8 (#1261): its painted tile sits at the left of the words)
-      <div className="pointer-events-auto absolute left-1/2 top-16 z-30 w-72 max-w-[calc(100%-1.5rem)] -translate-x-1/2" data-testid="statement-toast-box">
+      // its own close button; it still goes by itself after TOAST_MS. J8 (#1261): its painted tile sits at the left of the words. J13: it starts under the bar however many rows
+      // the bar wraps to (--hud-top, as the toasts do), not at a fixed 4 rem)
+      <div className="pointer-events-auto absolute left-1/2 top-[calc(var(--hud-top,4rem)+0.25rem)] z-30 w-72 max-w-[calc(100%-1.5rem)] -translate-x-1/2" data-testid="statement-toast-box">
         <button type="button" onClick={() => { setFull(toastAt); setToastAt(null); }} aria-live="polite" data-testid="statement-toast"
           className="w-full rounded-xl border border-white/10 bg-slate-950/90 p-3 pr-9 text-left text-slate-200 shadow-xl backdrop-blur hover:border-emerald-400/60">
           <div className="flex items-start gap-2.5">

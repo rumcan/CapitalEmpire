@@ -113,7 +113,7 @@ import { MONTHS_A_SEASON } from './game/golf/rangesave';
 import { JUNK_BY_ID, JUNK_CLEAR_COST } from './game/golf/junk';
 import { RANGE_PLACE_COST } from './game/golf/placing';
 import { TooltipLayer } from './ui/Tooltip';
-import { UI_SCALES, applyUiScale, currentUiScale, saveUiScale } from './ui/uiScale';
+import { UI_SCALES, applyUiScale, currentUiScale, saveUiScale, topBarTier } from './ui/uiScale';
 import { AccessSettings } from './ui/golf/AccessSettings';
 import { stackCol, stackFit, stackRight, type StackCard, type StackOpen, type StackPanel } from './ui/golf/card-stack';
 import { HoleCard } from './ui/golf/HoleCard';
@@ -217,9 +217,10 @@ export default function App() {
   const [menu, setMenu] = useState(false);
   /** the UI scale in force (T179: Settings; applied at boot from this browser's storage) */
   const [uiScale, setUiScale] = useState(currentUiScale);
-  /** J8 (#1261): at the largest text size (125%) the top bar has no room on a 1366 px screen for the pictures beside the speed bar and the zoom buttons: they are left out
-   *  there (the pause, speed and zoom controls keep their icons) so the bar stays one row, clear of the statement note under it */
-  const tight = uiScale >= 1.2;
+  /** J8 (#1261), J13: how many of the top bar's pictures there is room for (uiScale.ts topBarTier: the screen's width over the Text size): 2, all of them; 1, not the ones beside the
+   *  speed bar and the zoom buttons; 0, not the Cash chip's either. It keeps the bar one row, clear of the month note under it, down to 1280 px at the largest Text size */
+  const [tbTier, setTbTier] = useState<0 | 1 | 2>(() => topBarTier(window.innerWidth, currentUiScale()));
+  useEffect(() => { const on = () => setTbTier(topBarTier(window.innerWidth, currentUiScale())); on(); window.addEventListener('resize', on); return () => window.removeEventListener('resize', on); }, [uiScale]);
   /** the menu button waiting for its second click (New game, Empty map), or null */
   const [armed, setArmed] = useState<'new' | 'empty' | null>(null);
   useEffect(() => { if (!menu) setArmed(null); }, [menu]);
@@ -554,7 +555,7 @@ export default function App() {
 
       {game && game.ready && !lab && (
         <>
-          <div ref={topBar} className="pointer-events-none absolute left-0 right-0 top-0 z-30 flex flex-wrap items-start justify-between gap-2 p-3">
+          <div ref={topBar} data-tb-tier={tbTier} className="pointer-events-none absolute left-0 right-0 top-0 z-30 flex flex-wrap items-start justify-between gap-2 p-3">
             <div className="pointer-events-auto glass flex items-center gap-1.5 px-3 py-2 min-[1600px]:gap-3 min-[1600px]:px-4">
               {/* T235 (#690, the concept's title): in a golf game the club's name over "Year 3 • October • Sunny 16°C" (ui/ClubTitle.tsx); its full
                   text is the tooltip, on the leaf too, so it is there where the words are hidden. The classic town game keeps its old line */}
@@ -622,7 +623,7 @@ export default function App() {
             </div>
             <div className="pointer-events-auto ml-auto flex items-center gap-2">
               <div className="glass flex items-center gap-1 px-2 py-1.5">
-                {!tight && <ActionTile tile="game-speed" size={TILE_ROW - 6} />}
+                {tbTier === 2 && <ActionTile tile="game-speed" size={TILE_ROW - 6} />}
                 <button className="btn-icon" onClick={() => game.togglePause()} data-tip="Pause (Space)"><Icon name={game.speed ? 'pause' : 'play'} size={22} /></button>
                 {SPEEDS.map(k => <button key={k} className={`chip ${k < 1 ? 'px-1.5 text-[11px]' : ''} ${game.speed === k ? 'chip-on' : ''} disabled:opacity-40`} disabled={game.paceLock && k > WATCH_SPEED} onClick={() => game.setSpeed(k)} data-tip={k === WATCH_SPEED ? 'The watching speed: golfers walk at a natural pace (, and .)' : k < 1 ? 'Slow motion (, and .)' : 'Speed (, and .)'} data-testid={`speed-${speedLabel(k)}`}>{speedLabel(k)}×</button>)}
                 {!JAM && game.golfMode && (game.golfWatch
@@ -632,7 +633,7 @@ export default function App() {
                 {game.night.mode === 'clock' && game.clockNight() > 0 && <button className="chip" onClick={() => game.skipNight()} data-tip="Skip this night: daylight until the next one (how often nights come: gear menu, Night)"><Icon name="sun" size={16} /> Skip night</button>}
               </div>
               <div className="glass flex items-center gap-1 px-2 py-1.5">
-                {!tight && <ActionTile tile="zoom" size={TILE_ROW - 6} />}
+                {tbTier === 2 && <ActionTile tile="zoom" size={TILE_ROW - 6} />}
                 <button className="btn-icon" onClick={() => game.zoomAt(clampZoom(game.cam.z / ZOOM_STEP))} data-tip="Zoom out (-)"><Icon name="zoom-out" size={20} /></button>
                 <button className="btn-icon" onClick={() => game.zoomAt(clampZoom(game.cam.z * ZOOM_STEP))} data-tip="Zoom in (+)"><Icon name="zoom-in" size={20} /></button>
               </div>
