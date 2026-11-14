@@ -840,6 +840,17 @@ try {
       if (holeN !== 1 || lie !== M_TEE) res.errors.push('host: hole 1 has no tee under the golfer (' + MAT_NAME[lie] + ')');
       if (!(feats && feats.paths && feats.paths.length)) res.errors.push('host: the features were not applied');
       let lit = 0; for (let i = 0; i < VW * VH; i += 7) if (px[i * 4] + px[i * 4 + 1] + px[i * 4 + 2] > 30) lit++; if (lit < VW * VH / 7 * 0.5) res.errors.push('host: the picture is mostly black'); }
+    // J6c: while practising, a still picture's pad pass is kept and put back: the frame it puts back is, pixel for pixel, the one making the pass again paints (earth, a slab and a mat
+    // laid round the golfer here), and the pass is the same with no practice open. The host's own features are put back after
+    { const keepF = feats, keepFor = featFor, keepP = PRAC, x = player.x / course.S, y = player.y / course.S, ring = (id, surface, x0, y0, x1, y1) => ({ kind: 'path', id, ring: true, surface, pts: [[x + x0, y + y0], [x + x1, y + y0], [x + x1, y + y1], [x + x0, y + y1]] });
+      setFeatures({ course: course.id, features: [ring('a', 'earth', -70, -70, 70, 70), ring('b', 'concrete', -6, -3, 6, 9), ring('c', 'turf', -2, 0, 2, 4)] });
+      render(); const base = Uint32Array.from(fb), pass = (prac) => { PRAC = prac; fb.set(base); drawPaths(); return Uint32Array.from(fb); };
+      padKeep = null; const a = pass({ place: 'range' }), n = padKeep ? padKeep.n : 0, b = pass({ place: 'range' }), hits = padKeep ? padKeep.hits : 0, c = pass(null);
+      feats = keepF; featFor = keepFor; PRAC = keepP; padKeep = null;
+      let da = 0, db = 0; for (let i = 0; i < a.length; i++) { if (a[i] !== c[i]) da++; if (b[i] !== c[i]) db++; }
+      res.padKeep = { pixels: n, hits, differ: [da, db] };
+      const bad = !(n > 1000) ? 'it kept ' + n + ' pixels' : hits !== 1 ? 'the second frame was not the kept one (' + hits + ' hits)' : da || db ? 'what it puts back is not what making it again paints (' + da + ', ' + db + ' pixels differ)' : '';
+      if (bad) res.errors.push('features: the pad pass kept for a still picture: ' + bad); }
     // T424: forty actors (36 people in every pose from 8 to 190 m, 4 carts) in front of the golfer: what drawing them costs a frame, once their sculptures are made
     { const mk = ACT_MAKE; ACT_MAKE = 999; hostMessage(actors40(player.x, player.y, FX, FY)); for (let k = 0; k < 4; k++) render(); ACT_MAKE = mk;
       let drawn = 0; for (const o of dlist) if (o.k === K_ACTOR) drawn++;
@@ -847,6 +858,13 @@ try {
       if (actors.size !== 40) res.errors.push('actors: ' + actors.size + ' kept of 40 sent');
       if (drawn < 30) res.errors.push('actors: only ' + drawn + ' of 40 in view');
       hostMessage({ v: 1, t: 'actors', at: 600, actors: [] }); if (actors.size) res.errors.push('actors: an empty list did not clear them'); }
+    // J6c: a golfer sent with a cycle keeps hitting on the view's own clock (address, then the swing through, then rest, again and again, from his phase); one sent without it does what he is told
+    { hostMessage({ v: 1, t: 'actors', at: 600, actors: [{ id: 5001, role: 'golfer', at: [0, 0], hole: 1, heading: 0, doing: 'address', phase: 0.25, cycle: 4, dress: actDress(2) },
+        { id: 5002, role: 'golfer', at: [3, 0], hole: 1, heading: 0, doing: 'address', phase: 0.6, dress: actDress(3) }] });
+      const c = actors.get(5001), s = actors.get(5002), at = (ms) => { actorCycle(c, ms); return c.doing + ':' + c.cph.toFixed(3); };
+      const got = c && s ? [c.cyc, c.cy0, s.cyc, at(0), at(1500), at(2500), at(4000)].join(' ') : 'missing', want = [4, 0.25, 0, 'address:0.417', 'swing:0.114', 'stand:0.000', 'address:0.417'].join(' ');
+      res.cycle = got; if (got !== want) res.errors.push('actors: a golfer sent with a cycle does not hit on his own clock (' + got + ', want ' + want + ')');
+      hostMessage({ v: 1, t: 'actors', at: 600, actors: [] }); }
     // host play (T418 to T420): the turn, the bag, the ring, one input and a wait, the host's shot played back to its rest
     { const hp = hostPlayRun(null); res.hostPlay = hp.info; res.errors.push(...hp.errs); }
     { // T450: the golfer art's frames and rows (the pictures themselves need a browser: here the voxel figure stands in)

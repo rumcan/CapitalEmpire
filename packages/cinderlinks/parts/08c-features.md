@@ -8,9 +8,11 @@ R: A concrete path is laid in slabs (a joint across it every 1.7 m, each slab it
 R: A floodlight tower (a `light` feature: its place, its height, its reach; #1200) is drawn as a mast on a plinth with a lamp head of lamp panels. By day and golden hour the panels are plain glass; at dusk and at night they shine, with a soft bloom round each. At dusk and night every tower lights the ground, the trees, the buildings and the golfers within its reach: a pool of warm white light, brightest at the mast and fading smoothly to nothing at its reach, many towers adding up. What no tower reaches stays as dark as the night.
 R: Bare earth (a pad of `earth`: a range's outfield before it is grassed) is mottled, drier and darker in slow patches, with a fine grain and a pebble here and there; a hitting mat (`turf`) is green artificial grass in fine rows, no leaves on it. A later pad lies over an earlier one (the mat on the slab).
 R: A pad (a path feature with `ring`: J6b, the practice range's concrete slabs, dirt yards and car park) is laid whole: everything inside its ring takes its surface, its edge as a path's edge.
+R: J6c: while he practises, a still picture's pad pass is not made again: what it painted is kept and put back while the camera, the light, the pads and the ground's depth are the same as in the frame before (pixel for pixel what making it again would paint), so the bare outfield's earth costs a still picture nothing.
 R: A course without the file plays as before.
 File: game.js
 Check: function lampLight(
+Check: let padKeep
 Check: function drawPaths(
 Check: function drawBuildings(
 Check: function setFeatures(
@@ -102,8 +104,19 @@ function pathSd(x, y) {
 }
 function pathNearPx(u, v, r) { return pathSd(u / PPM, v / PPV) < r; }   // (asked from drawGround in ground pixels: the sums are kept out of that function, which the browser stops optimising when small pieces of arithmetic are written into it)
 const PSB = new Float32Array(CLW * CLH);
+// J6c: while he practises the picture stands still most of the time (the golfer is held to his spot): what the pad pass painted (each pixel and its colour) is kept, and put back
+// while the camera, the light, the pads and the ground's depth are what they were in the frame before, not made again (the bare outfield is a pad: its earth cost 3 to 4 ms a frame)
+let padKeep = null;
 function drawPaths() {   // the picture gone over in 8 x 8 blocks: only blocks near a path are looked at pixel by pixel
   const F = feats; if (!F || !F.sd || !course || featFor !== course.id) return;
+  let rec = null;
+  if (PRAC) {
+    const K = padKeep || (padKeep = { F: null, k: [], z: new Uint16Array(VW * VH), n: 0, hits: 0, idx: new Int32Array(VW * VH), col: new Uint32Array(VW * VH) }), k = [camX, camY, FX, FY, RX, RY, FOC, tmode, BSAND, HZK];
+    let same = K.F === F; for (let i = 0; same && i < k.length; i++) if (K.k[i] !== k[i]) same = false;
+    if (same) { const z = K.z; for (let i = 0; i < z.length; i++) if (z[i] !== zbuf[i]) { same = false; break; } }
+    if (same) { const idx = K.idx, col = K.col; for (let n = 0; n < K.n; n++) { const q = idx[n]; fb[q] = ((fb[q] & 0xff000000) | col[n]) >>> 0; } K.hits++; return; }
+    K.F = null; K.k = k; K.n = 0; rec = K;
+  }
   for (let j = 0; j < CLH; j++) for (let i = 0; i < CLW; i++) {
     const X = i * 8 < VW ? i * 8 : VW - 1, Y = j * 8 < VH ? j * 8 : VH - 1, z = zbuf[Y * VW + X];
     if (z === 65535) { PSB[j * CLW + i] = 99; continue; }
@@ -130,9 +143,12 @@ function drawPaths() {   // the picture gone over in 8 x 8 blocks: only blocks n
       if (!P0.mat) { const lx = Math.floor(wx * 6), ly = Math.floor(wy * 6); if (ih(lx, ly) < 4) { const lf = PLEAF[ih(lx + 9, ly + 5) & 3]; r0 = lf[0]; g0 = lf[1]; b0 = lf[2]; t = 256; } }   // a fallen leaf here and there (no flecks or stains)
       let r = (r0 * t * lr) >> 16, g = (g0 * t * lg) >> 16, bl = (b0 * t * lb) >> 16;
       if (d > 50) { const hf = farHaze(d), H = TOD[tmode].haze; if (hf > 0) { r += (H[0] - r) * hf; g += (H[1] - g) * hf; bl += (H[2] - bl) * hf; } }
-      fb[q] = ((fb[q] & 0xff000000) | ((bl > 255 ? 255 : bl) << 16) | ((g > 255 ? 255 : g) << 8) | (r > 255 ? 255 : r)) >>> 0;   // (the top byte kept: a tree's shadow still falls across the path)
+      const rgb = ((bl > 255 ? 255 : bl) << 16) | ((g > 255 ? 255 : g) << 8) | (r > 255 ? 255 : r);
+      fb[q] = ((fb[q] & 0xff000000) | rgb) >>> 0;   // (the top byte kept: a tree's shadow still falls across the path)
+      if (rec) { rec.idx[rec.n] = q; rec.col[rec.n++] = rgb; }
     }
   }
+  if (rec) { rec.z.set(zbuf); rec.F = F; }
 }
 
 // #1200: a floodlight tower's faces: a plinth, a square mast, and a lamp head: a dark box with two rows of three lamp panels on each side (emit 2: they shine at dusk and night)

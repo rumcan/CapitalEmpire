@@ -16,7 +16,7 @@ import { MODEL_V, POWER, shotOutcome, type OwnerTurn } from './live';
 import { carryFor, chooseShot, type ShotSkill } from './shot';
 import type { RoundDriver } from './play3p';
 import { DRILLS, drillProgress, drillsAt, greenAt, judgeDrill, junkHit, junkReach, type DrillCall, type DrillGreen, type DrillId, type DrillJunk, type DrillShot, type DrillSpot, type DrillsSave } from './drills';
-import { toView, type ViewPt } from './protocol3p';
+import type { ViewPt } from './protocol3p';
 import { mulberry } from '../../iso';
 
 /** the two practice places: the range's mats, and the short game area (the chipping green and its bunker) */
@@ -203,11 +203,31 @@ export class PracticeDriver implements RoundDriver {
   over(): boolean { return false; }
 }
 
-/** the range's flags as the view stands them: each target green's centre and its distance in words, in the view's frame */
-export function practiceFlags(c: PracticeCourse, place: PracticePlace, centre: Pt): { at: ViewPt; label: string; only?: true }[] {
-  // J6c (the owner: "labels overlapping ... make sprites with distance markers only"): no labels and no flags of the view's own. The range's distances stand as its own
-  // pictures (J7d's distance posts and yardage boards, the scene's pieces: the practice export's things)
-  void c; void place; void centre; return [];
-  // (J6b: and each junk pile's name and distance, a label only: the pile itself is the game's picture)
-  return [...c.greens.map(g => ({ at: toView(g, centre), label: `${g.distM} m` })), ...c.junk.map(j => ({ at: toView(j, centre), label: `${j.name} · ${j.distM} m`, only: true as const }))];
+/** the range's flags as the view stands them. J6c (the owner: "labels overlapping ... make sprites with distance markers only"): none, at either place. The practice view draws no
+ *  flag and no label of its own, never text drawn by code: the range's distances are its own PNG pictures (the yardage signs: yardage-signs.ts, placed by rangebiz.ts rangeScene) and a
+ *  built target green's pin is the range's own pin picture, all sent with the range's things. The message keeps its (empty) `flags` list for a view that still reads one */
+export function practiceFlags(_c: PracticeCourse, _place: PracticePlace, _centre: Pt): { at: ViewPt; label: string; only?: true }[] { return []; }
+
+/** J6c (the owner: the golfers at the other mats must not stand frozen): how a range golfer keeps hitting in the practice view. The view plays it on its own clock (protocol3p.ts
+ *  Actor.cycle: he stands to the ball, takes the club back, swings through and rests, again and again): the seconds one ball takes him, 3.6 to 5.4 by his visit's id (the range
+ *  sim's own swing is about 4: rangebiz.ts SWING), and where in it he starts (`phase`, 0..1), so no two of them swing together */
+export function rangeSwingCycle(id: number): { cycle: number; phase: number } {
+  const r = mulberry((Math.imul(Math.trunc(id) | 0, 2654435761) ^ 0x5bd1e995) | 0);
+  return { cycle: Math.round((3.6 + r() * 1.8) * 100) / 100, phase: Math.floor(r() * 1000) / 1000 };
+}
+
+/** J6c: the bare earth under a range's tee in the practice view, as plot-frame rectangles [u0, v0, u1, v1] (tiles; w: the plot's width, tee: rangebiz.ts RANGE_TEE): the whole band from
+ *  the shop's walk to past the tee when the tee is dirt (the dirt tee, the slab and the mats lie over it); round a turfed tee only its front and its two sides, so the tee's own turf
+ *  shows, as the game draws it */
+export function bareEarthRects(w: number, tee: readonly [number, number, number, number], turfed: boolean): [number, number, number, number][] {
+  const [u0, u1, v0, v1] = tee, a = 0.3, b = w - 0.3, front = 16.5, back = 30;
+  return turfed ? [[a, front, b, v0], [a, v0, u0, v1], [u1, v0, b, v1]] : [[a, front, b, back]];
+}
+
+/** J6c: the practice course's tee area: the tee box, and once it is turfed (the scene's `apron`: rangebiz.ts RangeScene.apron) the strip of turf between it and the outfield with it,
+ *  as the game lays them into the course grid: one stepped polygon through the corners of the two rectangles (each as rangebiz.ts `quad` makes it: its corners in turn) */
+export function teeAreaOf(teeBox: readonly number[], apron: readonly number[] | null): number[] {
+  if (!apron || apron.length < 8 || teeBox.length < 8) return teeBox.slice();
+  const t = (i: number) => [teeBox[2 * i]!, teeBox[2 * i + 1]!], a = (i: number) => [apron[2 * i]!, apron[2 * i + 1]!];
+  return [...t(0), ...t(1), ...t(2), ...a(1), ...a(2), ...a(3), ...a(0), ...t(3)];
 }

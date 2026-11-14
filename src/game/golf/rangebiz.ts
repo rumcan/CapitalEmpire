@@ -37,7 +37,9 @@ import { JUNK_BY_ID, scatterJunk, type JunkPile } from './junk';
 
 /** the plot frame's spots (u along the road 0..70, v away from it 0..150; the drive beside u = 70, see range.ts plotPoint) */
 const U_MID = 35.5, BAY_W = 2.5, SLOTS = 24, STAND_V = 21, PATH_V = 16.2, TEE: [number, number, number, number] = [4, 67, 18, 24];
-const SHOP = { u: 34, v: 8.5 }, COUNTER = { u: 34, v: 13.4 }, QUEUE_V = 14.5, CAR_EDGE_U = 48.4, YARD: [number, number, number, number] = [4, 22, 3, 13];
+/** J6c: the tee box in the plot frame (u0 u1 v0 v1, tiles): the practice view lays a bare range's earth round it (play/practice3p.ts bareEarthRects) */
+export const RANGE_TEE: Readonly<[number, number, number, number]> = TEE;
+const SHOP ={ u: 34, v: 8.5 }, COUNTER = { u: 34, v: 13.4 }, QUEUE_V = 14.5, CAR_EDGE_U = 48.4, YARD: [number, number, number, number] = [4, 22, 3, 13];
 /** T386 (#1043): the ball room's door, where your basket (or your cart's hopper) is emptied into the ball room: beside the shop's front, by the ball trolley
  *  (a stand-in for the ball room until its art lands, GOLF-SPRITES) */
 const BALLROOM = { u: 29.4, v: 12.4 };
