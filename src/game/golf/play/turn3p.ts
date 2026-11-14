@@ -9,7 +9,8 @@
 import type { Club, CourseView, Lie, Pt } from './types';
 import type { OwnerTurn } from './live';
 import { CLUB_ORDER, CLUB_RUN, MISHIT, SHOT_SCATTER, carryFor, type ShotSkill } from './shot';
-import { CLUB_BASE, hasMech, kitOf, type ModCtx } from './mods';
+import { CLUB_BASE, hasMech, kitOf, type ClubKit, type ModCtx } from './mods';
+import { shapeEffect } from './shape';
 import { LIE_FX, kindOfLie, slopeEffect, lieKindFor, lieCarry } from './lies';
 import { envOf, previewShot, type ShotEnv } from './conditions';
 import { LOFT, launchWord } from './bag';
@@ -66,7 +67,16 @@ export function clubChoice(sk: ShotSkill, club: Club, lie: Lie, env: ShotEnv | n
     run: putter ? 1 : CLUB_RUN[club] * kit.roll / (CLUB_BASE[club]?.roll ?? 1), // (bag.ts bagView's run: what a shot with conditions rolls by)
     backspin: spinCap(club, lie, 0, -1, kind, kit.spin), topspin: spinCap(club, lie, 0, 1, kind, kit.spin),
     shapes: !putter, spin: !putter,
+    ...(putter ? {} : { bend: bendOf(club, carryM, kit) }),
   };
+}
+
+/** #1301: what a full draw or fade bends a club's full shot (ClubChoice.bend): the model's own numbers (shape.ts shapeEffect), the sideways metres at the end of the carry for this kit and for a scratch
+ *  golfer with a plain kit (skill SCRATCH_SKILL: the handicap curve's skill at 0) */
+export const SCRATCH_SKILL = 0.737;
+export function bendOf(club: Club, carryM: number, kit: ClubKit): NonNullable<ClubChoice['bend']> {
+  const me = shapeEffect({ curve: 1, flight: 0 }, club, carryM, kit.skill, kit), sc = shapeEffect({ curve: 1, flight: 0 }, club, carryM, SCRATCH_SKILL, null), m = (fx: { curve: number }) => Math.round(carryM * Math.sin(fx.curve) * 10) / 10;
+  return { m: m(me), scrM: m(sc), pulled: Math.round(me.pulled * 1000) / 1000, scrPulled: Math.round(sc.pulled * 1000) / 1000, skill: Math.round(kit.skill * 1000) / 1000, accuracy: Math.round(kit.stats.accuracy * 1000) / 1000 };
 }
 
 /** the clubs in his bag (GameSkills.clubs), in bag order; a golfer without a bag: the plain clubs */
