@@ -492,7 +492,8 @@ async function jamChecks(S) {
     check(n1 === n0, `a click on the map with the Course tool in hand lays nothing in the jam (${n0} painted cells before, ${n1} after)`);
   }
   await hole1(S);
-  await page.click('[data-rail="course"]'); await sleep(900); // (the Holes panel again, the Course tool in hand, New hole's card closed: where Shape by hand and More options showed after the first hole)
+  await page.click('[data-rail="course"]'); await sleep(900); // (the Holes panel again: the wizard still waits on hole 2's tee; Done closes its card: where Shape by hand and More options showed after the first hole)
+  await page.locator('[data-primary="wizard"] button', { hasText: 'Done' }).click(); await sleep(800);
   h = await hand();
   check(await page.locator('[data-panel="holes"]').count() === 1 && await page.locator('[data-primary="wizard"]').count() === 0 && none(h), "and none after the first hole, the wizard's card closed", JSON.stringify(h));
   const add = await page.evaluate(() => { const b = document.querySelector('[data-testid="hole-add"]'); return { exists: !!b, menu: b?.getAttribute('aria-haspopup') ?? null }; });
