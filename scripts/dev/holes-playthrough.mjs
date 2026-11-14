@@ -231,7 +231,8 @@ async function holeBox(page, pair) {
   const a = await scr(page, pair.tee), b = await scr(page, pair.green), m = 90;
   return [Math.min(a.x, b.x) - m, Math.min(a.y, b.y) - m, Math.max(a.x, b.x) + m, Math.max(a.y, b.y) + m];
 }
-const CLEAR = [0, 0, W, H];
+/** the share of the pixels over a new hole that must change: by day 25% (63 to 76% in practice); at night the scene is dark and the hole is dark in it (22% measured at full night) */
+const NEED = Number(opt('night', '0')) > 0.3 ? 0.08 : 0.25;
 
 async function hole1(S) {
   const { page } = S;
@@ -254,7 +255,7 @@ async function hole1(S) {
   check(st.cells > 1500, `the hole's cells are in the course grid (${st.cells} cells of hole 1)`);
   const after = await mapPixels(page);
   const share = changed(before, after, S.box1);
-  check(share > 0.25, `the hole is DRAWN on the map: ${(share * 100).toFixed(0)}% of the pixels over it changed`);
+  check(share > NEED, `the hole is DRAWN on the map: ${(share * 100).toFixed(0)}% of the pixels over it changed`);
   await shot(page, `${S.tag}-03-hole1-built`);
   await alive(page, 'after the first Build');
   await noStandIn(page, 'after the first hole');
@@ -315,7 +316,7 @@ async function hole2(S) {
   const st = await holesState(page);
   check(st.built.length === 2, 'a second hole exists in the Holes panel', st.built.join(', '));
   const share = changed(before, await mapPixels(page), box);
-  check(share > 0.25, `the second hole is DRAWN on the map: ${(share * 100).toFixed(0)}% of the pixels over it changed`);
+  check(share > NEED, `the second hole is DRAWN on the map: ${(share * 100).toFixed(0)}% of the pixels over it changed`);
   await shot(page, `${S.tag}-06-hole2-built`);
   await alive(page, 'after the second Build');
 }
