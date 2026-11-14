@@ -5,6 +5,7 @@ import { useSyncExternalStore, type ReactNode } from 'react';
 import { sound } from '../game/sound/core';
 import { MUTE_KEY } from '../game/sound/ui-hook';
 import { TRACKS } from '../game/sound/radio';
+import { voice } from '../game/sound/voice';
 
 /** the sound settings now, and a re-render when they change */
 export function useSoundPrefs() { return useSyncExternalStore(fn => sound.subscribe(fn), () => sound.get(), () => sound.get()); }
@@ -33,6 +34,12 @@ export function SoundSettings({ children }: { children?: ReactNode }) {
     <div role="group" aria-label="Sound" data-testid="settings-sound">
       {TRACKS.length > 0 && <VolumeRow label="Music" kind="music" tip="The volume of the radio. The radio itself is in the top bar, and off until you turn it on. Kept in this browser" />}
       <VolumeRow label="Effects" kind="sfx" tip="The volume of the clicks, the coins and the golf sounds. Kept in this browser" />
+      {voice.available() && (
+        <label className="flex cursor-pointer items-center gap-2 px-2 py-1.5 text-sm" data-tip="A voice reads each tutorial step aloud when it opens, at the effects' volume. The words are always on the card">
+          <input type="checkbox" checked={p.voice} data-testid="sound-voice" onChange={e => sound.setVoice(e.target.checked)} />
+          Tutorial voice
+        </label>
+      )}
       {children}
       <label className="flex cursor-pointer items-center gap-2 px-2 py-1.5 text-sm" data-tip={`Silence everything: the music and the effects. ${MUTE_KEY} does the same from the keyboard`}>
         <input type="checkbox" checked={p.muted} data-testid="sound-mute-all" onChange={e => sound.setMuted('all', e.target.checked)} />
