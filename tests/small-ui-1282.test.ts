@@ -65,15 +65,14 @@ test('#1282: the way to the practice facilities: Course > Facilities > Practice 
   assert.equal(practicePath('▸', true), 'Build ▸ Practice');
   assert.equal(practicePath('›', true), 'Build › Practice');
 });
-test('#1282: the guide, the hints and the toasts name Course > Facilities > Practice, and the Show me anchor of the Facilities tile falls back to the Course button while the flyout is shut', () => {
-  const guide = RANGE_GUIDE.find(s => s.id === 'guide-range-practice')!;
-  assert.match(guide.body, /Then Course › Facilities › Practice › Putting green on it\./);
+test('#1282: the hints and the toasts name Course > Facilities > Practice, and the Show me anchor of the Facilities tile falls back to the Course button while the flyout is shut', () => {
+  assert.ok(!RANGE_GUIDE.some(s => s.id === 'guide-range-practice'), '(#1297: the practice area is no step of the guide any more)');
   assert.match(PRACTICE_HINTS[0]!.body, /^Course ▸ Facilities ▸ Practice ▸ Putting green:/);
   assert.match(PRACTICE_HINTS[1]!.body, /^Course ▸ Facilities ▸ Practice ▸ Chipping green and bunker:/);
   assert.match(PRACTICE_BUY_HINT.body, /\(Course ▸ Facilities ▸ Practice\)/);
   assert.match(RAMP_TOAST[1]!, /\(Course ▸ Facilities ▸ Practice\)/);
   assert.equal(PRACTICE_BRUSH_WHY, 'Practice greens are built with Course ▸ Facilities ▸ Practice');
-  assert.match(readFileSync('src/ui/GuidePulse.tsx', 'utf8'), /'rail-facilities': \['rail-course'\]/, 'a ring on Course until the Facilities tile is on screen');
+  assert.match(readFileSync('src/ui/spotlight/leads.ts', 'utf8'), /'rail-facilities': \['rail-course'\]/, 'a ring on Course until the Facilities tile is on screen'); // (#1297: the table moved to spotlight/leads.ts)
   assert.match(readFileSync('src/ui/flyout-menu.ts', 'utf8'), /guide: 'rail-facilities'/, 'the tile carries the anchor');
 });
 test('#1282: no text says "Facilities > Practice" without Course before it (the notes in the code may)', () => {

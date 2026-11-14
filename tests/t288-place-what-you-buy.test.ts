@@ -12,8 +12,8 @@ import { plotOfFront, plotPoint, RANGE_PLOT } from '../src/game/golf/range';
 import { NEAR, SETBACK } from '../src/game/golf/rangestart';
 import { RANGE_UPGRADES, defaultRangeBiz, homeScene, homeYardBox, normalizeRangeBiz, rangeScene, rangeStructures, rangeTakes, upgradeFoot, upgradeWhy, withUpgrade, type RangeBizSave, type RangeUpgradeId } from '../src/game/golf/rangebiz';
 import { NO_PRACTICE, PRACTICE_UV, inPractice, practiceAreaAt, practiceDims } from '../src/game/golf/practice';
-import { PLACED_STEPS, RANGE_GUIDE, newRangeGuide, rangeGuideTick, type GuideFacts } from '../src/game/ext/progressive-ui/guide';
-import { TOOL_STAGE, GROUP_STAGE } from '../src/game/ext/progressive-ui';
+import { PLACED_STEPS, RANGE_GUIDE, newRangeGuide, rangeGuideCurrent, rangeGuideTick, type GuideFacts } from '../src/game/ext/progressive-ui/guide';
+import { TOOL_STAGE, GROUP_STAGE, RAMP_TOAST } from '../src/game/ext/progressive-ui';
 import { TOWN_TOUR, tourStepFor } from '../src/game/ext/progressive-ui/tour';
 import { RAIL, railEntries } from '../src/ui/rail-items';
 import type { Rect } from '../src/game/golf/mode';
@@ -154,7 +154,11 @@ describe('T288: the guide\'s placement steps, the tutorial, the rail', () => {
     assert.deepEqual(rangeGuideTick(g, f), []);
     assert.deepEqual(rangeGuideTick(g, { ...f, rangePlaced: true }).map(s => s.id), ['guide-range-place']);
     assert.deepEqual(rangeGuideTick(g, { ...f, rangePlaced: true, lotPlaced: true }).map(s => s.id), ['guide-range-lot']);
-    assert.match(RANGE_GUIDE.find(s => s.id === 'guide-range-practice')!.body, /Place the practice area/);
+    // (#1297, the owner, 2026-11-14: the practice area is no step of the guide any more: it is placed from the Range menu, Range › Place the practice area, when the player likes)
+    assert.ok(!RANGE_GUIDE.some(s => s.id === 'guide-range-practice'));
+    assert.match(RAMP_TOAST[1]!, /Range ▸ Place the practice area/, 'the ramp says where the practice area is placed, when its tools open');
+    // a new game starts by placing the range (PR #1274): the first step is ticked at the first check, the car park is the one to do
+    const fresh = newRangeGuide(); assert.deepEqual(rangeGuideTick(fresh, { ...f, rangePlaced: true }).map(s => s.id), ['guide-range-place']); assert.equal(rangeGuideCurrent(fresh), 2);
   });
   it('the road tool is open from the start (the owner, 2026-11-04: "Yes, unlock it"): the tutorial\'s roads step waits for a road', () => {
     assert.equal(TOOL_STAGE.road, 1); assert.equal(GROUP_STAGE.roads, 1);

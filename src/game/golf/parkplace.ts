@@ -71,7 +71,7 @@ export const PARK_LAND_INSET = 3;
  *  to put its entrance on. Never a bare "not buildable" */
 export function carParkWhy(d: CarParkDef, c: CarParkCtx): string {
   if (!c.built) return 'Place your driving range first';
-  if (c.lot) return 'Your range has its car park: more come from Traffic ▸ Car park';
+  if (c.lot) return 'Your range has its car park: more come from Traffic ▸ Transport ▸ Car park';
   const r: Rect = [d.x, d.y, d.w, d.h], k = PARK_LAND_INSET, inner: Rect = [d.x + k, d.y + k, d.w - 2 * k, d.h - 2 * k];
   return parkSpotWhy(d, c.keepOut, c.buildings) || parkValid(d, c.cls, c.net, c.site, c.parks, true) || (c.lotsUnder(d) ? 'buildings stand there' : '')
     || landWhy(inner, c.land) || (c.yard && rectsMeet(r, c.yard) ? 'Your home is there' : '')

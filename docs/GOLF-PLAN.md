@@ -124,13 +124,14 @@ No more prepainted streets for the town." The full design is [plans/P22.md](plan
   markers until **Target greens** ($2,500: three with flags); the old 'targets' upgrade adds two more and the boards. The practice area is
   land for sale (Land for sale names it, T232's survey line pegs it out) until bought; Facilities › Practice refuses it until then. Old saves
   own their greens, paved lot, walkway and practice area (rangesave.ts LEGACY_UPGRADES).
-- **The guide's card (T239 Phase B):** a new range game's guide is a card in the corner (ui/golf/RangeGuideCard.tsx; guide.ts RANGE_GUIDE,
-  saved as golf.progress.guide): 1 sell your first buckets, 2 place the target greens, 3 lay a walking path, 4 gravel then pave the car park,
-  5 turf the tee box, 6 buy the practice area and build a putting green, 7 build the first hole. A step ticks when its build is done (in any
-  order) and pays $1,000 ($500 the first, $2,500 the hole: $8,000 in all, booked against construction); Show me opens its card or tool, moves
-  the camera and pulses its control (the walking path step rings the car park, the shack and the tee); Skip leaves a step unpaid; Skip guide
-  ends it. While it runs it replaces the ramp's hints, and the tools open along it: the paths at step 3, Land for sale, Holes and
-  Facilities › Practice at step 6, New hole and Buildings at step 7 (or earlier by the ramp). A range save from before T239 has no card.
+- **The guide's card (T239 Phase B; #1297 trimmed it, the owner 2026-11-14):** a new range game's guide is a card in the corner (ui/golf/RangeGuideCard.tsx; guide.ts RANGE_GUIDE,
+  saved as golf.progress.guide): 1 place the driving range, 2 place its car park, 3 sell your first buckets and fetch the balls. A new game starts by placing the range (J9, PR #1274),
+  so step 1 ticks at once. A step ticks when its build is done (in any order) and pays ($1,000, $500 and $500: $2,000 in all, booked against construction); Show me opens its card or tool,
+  moves the camera and pulses its control, and the spotlight leads the player down the menu to it, level by level (ui/spotlight/leads.ts); Skip leaves a step unpaid; Skip guide ends it.
+  While it runs it replaces the ramp's hints. The steps the guide had from the target greens to the first hole (the target greens, the walking path, gravel then pave the car park, turf the
+  tee box, the practice area with its putting green, the first hole: $9,500 in all with the first three) are out of it: an older save's ticked or pending ones load cleanly and are not
+  shown (normalizeRangeGuide drops their ids), and the tools no longer open along the guide: the ramp alone opens them (Holes, the paths and Facilities › Practice with the first range upgrade,
+  Land for sale with it, New hole and Buildings with the takings or the second season); course building unlocks later (#1305). A range save from before T239 has no card.
 - **Still to come** (P22's tickets): the grown-town growth rules (T090, T091), the exits feeding the range (T092), through traffic
   (T093), the off-map tournament crowd (T094), the first-minute guide (T095) and the range's look (T096).
 - **Old saves keep their towns.** A save without `golf.start` is the old start: one seeded town (one asphalt main avenue with gravel

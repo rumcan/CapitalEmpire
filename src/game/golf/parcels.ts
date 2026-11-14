@@ -173,7 +173,7 @@ export function blockOnRoad(r: Rect, roads: readonly LandRoad[]): boolean {
 
 /** the road tool's reason for a town road over the course land (T124, the owner: "you should not be allowed to paint normal roads on the course
  *  only paths and drives") */
-export const COURSE_LAND_MSG = 'Course land: build cart paths and drives with Course › Paths & drives';
+export const COURSE_LAND_MSG = 'Course land: build cart paths and drives with Cart paths & roads › Cart paths & drives';
 /** how deep (tiles) a road's corridor must reach into the land to count as on it: a corridor that only touches the land's edge (a road
  *  ending square on the boundary, a road along the outside of it) is off the land */
 const LAND_EPS = 0.01;
