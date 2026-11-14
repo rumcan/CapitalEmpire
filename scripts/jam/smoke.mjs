@@ -13,11 +13,12 @@ import { resolve } from 'node:path';
 
 const args = process.argv.slice(2), has = k => args.includes(`--${k}`), opt = (k, d) => { const i = args.indexOf(`--${k}`); return i >= 0 ? args[i + 1] : d; };
 const ROOT = resolve('.'), OUT = 'dist-jam';
-if (!existsSync(resolve(ROOT, OUT, 'index.html'))) { console.error(`no ${OUT}/index.html: run npm run build:jam first`); process.exit(2); }
+const URL_GIVEN = opt('url', null); // (J11: --url http://127.0.0.1:PORT/ drives a dev server of your own (VITE_JAM=1 vite on a scratch port) instead of serving dist-jam)
+if (!URL_GIVEN && !existsSync(resolve(ROOT, OUT, 'index.html'))) { console.error(`no ${OUT}/index.html: run npm run build:jam first`); process.exit(2); }
 const freePort = () => new Promise(res => { const s = createServer(); s.listen(0, () => { const p = s.address().port; s.close(() => res(p)); }); });
 const port = Number(opt('port', 0)) || await freePort();
-const server = await preview({ root: ROOT, logLevel: 'error', build: { outDir: OUT }, preview: { port, strictPort: true, host: '127.0.0.1' } });
-const base = `http://127.0.0.1:${port}/`;
+const server = URL_GIVEN ? null : await preview({ root: ROOT, logLevel: 'error', build: { outDir: OUT }, preview: { port, strictPort: true, host: '127.0.0.1' } });
+const base = URL_GIVEN ?? `http://127.0.0.1:${port}/`;
 
 const rows = [], errors = [];
 let lastErrors = 0;
@@ -243,7 +244,7 @@ try {
   for (const s of ['1', '4', '20']) await click('top bar', `speed ${s}x`, page.locator(`[data-testid="speed-${s}"]`));
   await click('top bar', 'pause', page.locator('[data-tip="Pause (Space)"]').first());
 } finally {
-  if (!has('keep')) { await browser.close().catch(() => {}); await server.close?.().catch?.(() => {}); server.httpServer?.close?.(); }
+  if (!has('keep')) { await browser.close().catch(() => {}); await server?.close?.().catch?.(() => {}); server?.httpServer?.close?.(); }
 }
 
 const fail = rows.filter(r => r.result === 'FAIL');

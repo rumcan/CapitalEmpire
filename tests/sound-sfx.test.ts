@@ -7,7 +7,7 @@ import assert from 'node:assert/strict';
 import { SOUNDS, TARGET_DB, TRIM, recipeOf, rng, noiseBuffer } from '../src/game/sound/recipes';
 import { SoundCore, sound } from '../src/game/sound/core';
 import { GOLF_KINDS, SFX_NAMES, clubClass, golfSound, playRangeStrike, playSfx, strengthOf, surfaceOf } from '../src/game/sound/sfx';
-import { installMuteKey, installUiSounds, pickUiSound, type UiFacts } from '../src/game/sound/ui-hook';
+import { installMuteKey, installUiSounds, isPanelNode, pickUiSound, type UiFacts } from '../src/game/sound/ui-hook';
 import { mapSounds, soundOfSpend } from '../src/game/sound/map-sounds';
 
 // ---------------------------------------------------------------- a fake context
@@ -217,4 +217,16 @@ test('the named effects, the range strike and the map\'s toast sound go through 
     s.calls.length = 0; playRangeStrike(2, 0.5); playRangeStrike(-0.04, 1);
     assert.deepEqual(s.calls.map(c => c.id), ['rangeStrike', 'rangeStrike']);
   } finally { s.restore(); }
+});
+
+test('which nodes coming onto the page or going off it are panels: the cards, the panels, the Build menu, the Keys sheet and what holds one; not the title card, a button or text', () => {
+  const node = (id: string | null, holds?: string): unknown => ({ nodeType: 1, getAttribute: (k: string) => (k === 'data-testid' ? id : null), querySelector: () => (holds ? { getAttribute: () => holds } : null) });
+  for (const id of ['range-card', 'hole-card', 'bank-panel', 'build-menu', 'keys-sheet', 'radio-card', 'tool-panel', 'tips', 'tour']) assert.equal(isPanelNode(node(id)), true, id);
+  for (const id of ['title-card', 'range-chip', 'stat-chips', 'speed-1', 'statement-toast-box', 'radio', 'cardboard']) assert.equal(isPanelNode(node(id)), false, id);
+  assert.equal(isPanelNode(node(null, 'range-card')), true, 'a wrapper with no id that holds a card');
+  assert.equal(isPanelNode(node(null, 'title-card')), false, 'or one that holds only the title card');
+  assert.equal(isPanelNode(node(null)), false); assert.equal(isPanelNode({ nodeType: 3 }), false, 'text'); assert.equal(isPanelNode(null), false); assert.equal(isPanelNode(undefined), false);
+  // under node there is no MutationObserver: a document with a body is hooked for clicks and changes and nothing throws
+  const doc = fakeDoc() as unknown as Document & { body: object }; (doc as { body: object }).body = {};
+  assert.doesNotThrow(() => installUiSounds(doc)());
 });

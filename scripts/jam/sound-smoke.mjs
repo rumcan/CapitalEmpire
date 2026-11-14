@@ -129,7 +129,10 @@ try {
   await page.waitForFunction(() => __snd.audio[0] && __snd.audio[0].currentTime > 0.5, null, { timeout: 20000 }).catch(() => {}); // (the first bytes come from the server: a moment)
   const play1 = await deck();
   check('turning the radio on plays a track from the page', !!play1 && !play1.paused && play1.t > 0.5 && !play1.err && /audio\/music\/.+\.mp3$/.test(play1.src), JSON.stringify(play1));
+  const nOpen0 = (await counts()).nodes;
   await page.locator('[data-testid="radio-more"]').click(); await settle(400);
+  const nOpen1 = (await counts()).nodes;
+  check('a panel opening makes a sound (the radio card: open, and not also a plain click)', nOpen1 - nOpen0 >= 2 && nOpen1 - nOpen0 <= 6, `nodes ${nOpen0} -> ${nOpen1}`);
   const card = await page.evaluate(() => document.querySelector('[data-testid="radio-track"]')?.textContent ?? '');
   check('the radio card names the track and its author', /CC0/.test(card) && /Track 1 of 6/.test(card), card);
   await shot('radio-card');
@@ -159,6 +162,8 @@ try {
   const bar = await page.evaluate(() => { const r = document.querySelector('[data-testid="radio"]')?.getBoundingClientRect(); return r ? { right: r.right, w: innerWidth } : null; });
   check('the radio pill is inside the window at 125%', !!bar && bar.right <= bar.w, JSON.stringify(bar));
   await shot('radio-card-125');
+  const nIdle0 = (await counts()).nodes; await settle(4000);
+  check('an idle page makes no sound by itself (no panel flicker, no stray timers)', (await counts()).nodes === nIdle0, `nodes ${nIdle0} -> ${(await counts()).nodes}`);
   await page.keyboard.press('Escape'); await settle(200);
   check('Escape closes the radio card', (await page.locator('[data-testid="radio-card"]').count()) === 0);
   await gear.click(); await settle(300); await page.locator('[data-scale="1"]').click(); await settle(200); await page.keyboard.press('Escape');

@@ -3,7 +3,8 @@
 // when it is let go. A control that wants another sound, or none, says so with data-sound ("none", or the sound's name: click, tick, on, off, open, close);
 // a region opts out the same way (its controls inherit). The explicit sounds (cash for a purchase, the low "can't" for a refusal, the chimes) are played by
 // the code that knows (sfx.ts) and win over the plain click that went with them: the click waits one turn of the event loop and gives way to anything that
-// sounded meanwhile (SoundCore.lastPlayedAt).
+// sounded meanwhile (SoundCore.lastPlayedAt). A panel (a card, a panel, the Build menu, the Keys sheet: their test ids) coming onto the page sounds "open" and going off it "close",
+// whichever way it was opened or shut (a MutationObserver on the page, childList only), and that is the sound the click that opened it gives way to.
 import { sound as theSound, type SoundCore } from './core';
 import { playSfx, type SfxName } from './sfx';
 
@@ -61,8 +62,21 @@ export function factsOf(target: EventTarget | null): UiFacts | null {
   };
 }
 
+/** the panels: the UI's cards and panels, the Build menu, the Keys sheet, the tips and the tutorial (their test ids); the title card is the game's front door, not a panel */
+const PANEL_ID = /(-card|-panel)$|^(build-menu|keys-sheet|tips|tour)$/;
+const PANEL_SEL = '[data-testid$="-card"], [data-testid$="-panel"], [data-testid="build-menu"], [data-testid="keys-sheet"], [data-testid="tips"], [data-testid="tour"]';
+/** whether a node added to or taken off the page is, or holds, a panel */
+export function isPanelNode(n: unknown): boolean {
+  const e = n as Element | null;
+  if (!e || e.nodeType !== 1) return false;
+  const id = typeof e.getAttribute === 'function' ? e.getAttribute('data-testid') ?? '' : '';
+  if (id) return id !== 'title-card' && PANEL_ID.test(id);
+  const inner = typeof e.querySelector === 'function' ? e.querySelector(PANEL_SEL) : null;
+  return !!inner && inner.getAttribute('data-testid') !== 'title-card';
+}
+
 /** the page's listeners: returns the way to take them away. doc: the document (null: no page, nothing to hook) */
-export function installUiSounds(doc: Pick<Document, 'addEventListener' | 'removeEventListener'> | null = typeof document === 'undefined' ? null : document, core: SoundCore = theSound, play: (id: SfxName) => boolean = playSfx, later: (fn: () => void) => void = fn => { setTimeout(fn, 0); }): () => void {
+export function installUiSounds(doc: Pick<Document, 'addEventListener' | 'removeEventListener'> & { body?: Node | null } | null = typeof document === 'undefined' ? null : document, core: SoundCore = theSound, play: (id: SfxName) => boolean = playSfx, later: (fn: () => void) => void = fn => { setTimeout(fn, 0); }): () => void {
   if (!doc) return () => { /* no page */ };
   const now = (): number => (typeof performance !== 'undefined' ? performance.now() : Date.now());
   // capture phase: before the page's own handlers run, so aria-expanded and <details> still show their state from before the click
@@ -78,7 +92,21 @@ export function installUiSounds(doc: Pick<Document, 'addEventListener' | 'remove
   };
   doc.addEventListener('click', onClick, true);
   doc.addEventListener('change', onChange, true);
-  return () => { doc.removeEventListener('click', onClick, true); doc.removeEventListener('change', onChange, true); };
+  // panels coming and going: one observer, childList only (nothing is watched for attributes or text, so a re-render that changes words costs nothing); a batch that opens one
+  // is an "open" even if it shuts another (a card swapped for a card)
+  let mo: MutationObserver | null = null;
+  if (doc.body && typeof MutationObserver !== 'undefined') {
+    mo = new MutationObserver(records => {
+      let opened = false, closed = false;
+      for (const r of records) {
+        if (!opened) for (const n of r.addedNodes) if (isPanelNode(n)) { opened = true; break; }
+        if (!closed) for (const n of r.removedNodes) if (isPanelNode(n)) { closed = true; break; }
+      }
+      if (opened) play('open'); else if (closed) play('close');
+    });
+    mo.observe(doc.body, { childList: true, subtree: true });
+  }
+  return () => { doc.removeEventListener('click', onClick, true); doc.removeEventListener('change', onChange, true); mo?.disconnect(); };
 }
 /** facts of "no control": makes pickUiSound answer null */
 const NONE: UiFacts = { tag: '', type: '', role: '', sound: 'none', label: '', testid: '', checked: false, expanded: null, pressed: null, open: false, disabled: true };
