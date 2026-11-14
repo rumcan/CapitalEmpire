@@ -44,9 +44,10 @@ try {
     if (has('docs')) {
       await camTo(s, 0.4); await page.waitForTimeout(1500); await hide(false);
       await jpeg(join(docsDir, `j12-${s.id}.jpg`), await page.screenshot({ type: 'png' }));
-      if (s.id === 'range') { // two frames a few seconds apart, the card over them
-        await jpeg(join(docsDir, 'j12-moves-a.jpg'), await page.screenshot({ type: 'png' })); await page.waitForTimeout(5000);
-        await jpeg(join(docsDir, 'j12-moves-b.jpg'), await page.screenshot({ type: 'png' }));
+      if (s.id === 'range') { // two frames five seconds apart, the card over them: the camera has glided a third of the stop and the people, cars and balls have moved
+        await camTo(s, 0.15); await page.waitForTimeout(800); await jpeg(join(docsDir, 'j12-moves-a.jpg'), await page.screenshot({ type: 'png' }));
+        const t0 = Date.now(); for (let k = 1; k <= 25; k++) { await camTo(s, 0.15 + 0.35 * Math.min(1, (Date.now() - t0) / 5000)); await page.waitForTimeout(200); }
+        await camTo(s, 0.5); await jpeg(join(docsDir, 'j12-moves-b.jpg'), await page.screenshot({ type: 'png' }));
       }
     }
   }

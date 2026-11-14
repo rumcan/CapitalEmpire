@@ -235,6 +235,7 @@ export default function App() {
   const snapRef = useRef<HTMLCanvasElement>(null);
   const [posterOn, setPosterOn] = useState(true);
   const [startStop] = useState(() => {
+    if (choice) return 0; // (a page the card's choice started shows no card, so it does not use up a visit: the next visit still starts somewhere new)
     let last: number | null = null; try { const v = localStorage.getItem('fairwayfortune.scene'); if (v !== null && Number.isFinite(Number(v))) last = Number(v); } catch { /* no storage */ }
     const k = pickStart(SHOW_STOPS.length, Math.random(), last); try { localStorage.setItem('fairwayfortune.scene', String(k)); } catch { /* no storage */ }
     return k;
