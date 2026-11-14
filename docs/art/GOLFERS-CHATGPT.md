@@ -46,3 +46,22 @@ and blue farthest from the golfer's clothes (golfer_pack.py picks it). A woman g
 ## The owner's rules this keeps
 Sun at the screen's upper right; never mirrored; the golfer's identity from the old sheet; the same scale (the importer matches the old height per
 heading); background keyed out; 1985 clothes, no logos; art goes straight in, the old kept as an option.
+
+## The clips and the staff (2026-11-14: "the animations too")
+- **A golfer's swing and putt**: `golfer_pack.py --clip golf_drive` (12 frames, one 4x3 landscape picture per heading) or `--clip golf_putt`
+  (8 frames, 4x2). Pictures are named `<id>~<H>~<clip>-golfers.png`; import with `import_golfer.py --all --golfer <id> --clip golf_drive`
+  (the frame count, cells, anchor and `times` stay as they were, so the game plays them unchanged; `<clip>-old.*` is kept) and look with
+  `--contact <id> --clip golf_drive`. Reference 1 is the golfer's new painted standing pose, so the clothes stay the same.
+- **A new person** (the staff: art/spectators/staff_range_m, staff_role_headpro, _teachpro, _secretary, _caddie, _greenkeeper, _mower):
+  1. a design picture: the body of a similar rigged person (`--like`) as a 4-view grey mannequin + the role's description, painted once;
+  2. `golfer_pack.py --family spectators --golfer <id> --like <body> --ref <id>/design.png --who "<role>"` (add `--clip golf_drive` for the
+     pros, `--clip pick` for the attendant): the guide frames become grey mannequins (with coloured guides ChatGPT painted the guide's person);
+  3. import with `import_golfer.py --family spectators ...`. The game draws them from prep-sprites' **staff** group (staff_range_*,
+     staff_role_*; clips pick and golf_drive, a missing clip shows the person standing) once prep-sprites has run.
+- **Re-runs**: `--note "..."` adds words to the clothes line (a colour that drifted); `--heading W` for one heading. `import_golfer.py --all`
+  skips a picture whose figures touch (two in one cell) and says so: paint that heading again.
+- **Runners**: `__start('golfers')` (one picture per item) or the pairs runner `__start2('<kind>')` (queue-<kind>.json items `[name~v, [refs],
+  prompt 1, prompt 2]`: two views of one object in one chat, the stand-in buildings; one view when prompt 2 is empty). Never start a second
+  loop in the same tab while one runs (they race and mix attachments): reload the tab first. Several tabs can run queues side by side.
+- **Into the game**: the golf view on `npm run cinder:build`; the map (the range customers, the pros, the staff, you) after
+  `scripts/assets/prep-sprites.mjs` in a full checkout with TrickOrTreat.
