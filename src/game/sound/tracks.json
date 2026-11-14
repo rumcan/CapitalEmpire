@@ -62,53 +62,58 @@
   },
   {
    "id": "chip-title-screen",
-   "title": "Chiptune: Title Screen",
+   "title": "Title Screen",
    "artist": "Juhani Junkala (SubspaceAudio)",
    "licence": "CC0 1.0",
    "page": "https://opengameart.org/content/5-chiptunes-action",
    "file": "audio/music/chip-title-screen.mp3",
    "seconds": 45,
-   "bytes": 452632
+   "bytes": 452622,
+   "station": "chiptunes"
   },
   {
    "id": "chip-level-1",
-   "title": "Chiptune: Level 1",
+   "title": "Level 1",
    "artist": "Juhani Junkala (SubspaceAudio)",
    "licence": "CC0 1.0",
    "page": "https://opengameart.org/content/5-chiptunes-action",
    "file": "audio/music/chip-level-1.mp3",
    "seconds": 74,
-   "bytes": 743370
+   "bytes": 743360,
+   "station": "chiptunes"
   },
   {
    "id": "chip-level-2",
-   "title": "Chiptune: Level 2",
+   "title": "Level 2",
    "artist": "Juhani Junkala (SubspaceAudio)",
    "licence": "CC0 1.0",
    "page": "https://opengameart.org/content/5-chiptunes-action",
    "file": "audio/music/chip-level-2.mp3",
    "seconds": 73,
-   "bytes": 728741
+   "bytes": 728731,
+   "station": "chiptunes"
   },
   {
    "id": "chip-level-3",
-   "title": "Chiptune: Level 3",
+   "title": "Level 3",
    "artist": "Juhani Junkala (SubspaceAudio)",
    "licence": "CC0 1.0",
    "page": "https://opengameart.org/content/5-chiptunes-action",
    "file": "audio/music/chip-level-3.mp3",
    "seconds": 82,
-   "bytes": 819908
+   "bytes": 819898,
+   "station": "chiptunes"
   },
   {
    "id": "chip-ending",
-   "title": "Chiptune: Ending",
+   "title": "Ending",
    "artist": "Juhani Junkala (SubspaceAudio)",
    "licence": "CC0 1.0",
    "page": "https://opengameart.org/content/5-chiptunes-action",
    "file": "audio/music/chip-ending.mp3",
    "seconds": 45,
-   "bytes": 447401
+   "bytes": 447391,
+   "station": "chiptunes"
   }
  ]
 }

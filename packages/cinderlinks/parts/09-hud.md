@@ -373,13 +373,15 @@ function hostTarget() {
 // distance; a putt: a little more than a cup) and a small chevron inside it pointing along the shot line; marks on the ground, hidden behind whatever
 // stands nearer (the golfer, a tree), as the putting grid is
 function hostTargetRing(T, C) {
+  // (the owner, 2026-11-14: "change this circle with the chevron to a simple isometric circle, it does not translate"): the ring laid flat on the ground
+  // read as a thin sliver with a chevron from the low camera; it is now one clean ellipse on the screen, twice as wide as it is tall (the isometric circle),
+  // centred on the target, its size the spread's (in pixels from the camera's own projection of R across the line), with a dark outline under it
   const S = hostS(), dx = aim.dx, dy = aim.dy, rx = -dy, ry = dx;
   const R = T.putt ? Math.max(0.25 * S, 0.05 * T.d) : Math.max(1.2 * S, (C.scatterM || 0) / 2 * T.pw * S);
-  const mark = (qx, qy, c) => { projectO(qx, qy, aimH(qx, qy) + 0.03, PJ); if (PJ.s > 0) { plotZA(PJ.x, PJ.y + 1, PJ.d - 0.3, AIM_D); plotZA(PJ.x, PJ.y, PJ.d - 0.3, c); plotZA(PJ.x + 1, PJ.y, PJ.d - 0.3, c); } };
-  const n = Math.max(48, Math.min(220, Math.round(R / S * 30)));
-  for (let a = 0; a < n; a++) { const an = a / n * 6.2832; mark(T.x + Math.cos(an) * R, T.y + Math.sin(an) * R, AIM_G); }
-  const c = R * 0.6, tx = T.x + dx * c * 0.5, ty = T.y + dy * c * 0.5;   // (the chevron's point, a little past the centre, along the line)
-  for (const sd of [-1, 1]) { const bx = tx - dx * c + rx * c * 0.75 * sd, by = ty - dy * c + ry * c * 0.75 * sd, m = Math.max(24, Math.round(c / S * 40)); for (let k = 0; k <= m; k++) { const u = k / m; mark(bx + (tx - bx) * u, by + (ty - by) * u, AIM_W); } }
+  const h = aimH(T.x, T.y) + 0.03; projectO(T.x, T.y, h, PJ); if (PJ.s <= 0) { HP.target = { x: T.x, y: T.y, d: T.d, u: T.u, pw: T.pw, top: T.top, R }; return; }
+  const cx = PJ.x, cy = PJ.y, cd = PJ.d - 0.3; projectO(T.x + rx * R, T.y + ry * R, h, RQ);
+  const a = RQ.s > 0 ? Math.min(90, Math.max(5, Math.hypot(RQ.x - cx, RQ.y - cy))) : 8, b = a * 0.5, n = Math.max(40, Math.round(a * 4.5));
+  for (let k = 0; k < n; k++) { const an = k / n * 6.2832, x = Math.round(cx + Math.cos(an) * a), y = Math.round(cy + Math.sin(an) * b); plotZA(x, y + 1, cd, AIM_D); plotZA(x, y, cd, AIM_G); plotZA(x + 1, y, cd, AIM_G); }
   HP.target = { x: T.x, y: T.y, d: T.d, u: T.u, pw: T.pw, top: T.top, R };   // (kept for the harness)
 }
 let swingBtnDown = false, hostAimPin = false;
@@ -541,19 +543,29 @@ function hostShotIn() {   // what the pick adds to an input (none for a putt)
 }
 // the panel: built once, shown while it is his turn with a full shot in hand
 const shotEl = document.createElement('div'); shotEl.id = 'shotc';
-shotEl.innerHTML = '<div class="row sl"><span data-z="curve" title="Click to centre">Curve</span><small data-e="draw"><img src="tiles/shot-draw.webp" alt="" aria-hidden="true" draggable="false">Draw</small><input type="range" data-s="curve" min="-100" max="100" step="5" value="0" aria-label="Curve: draw to fade"><small data-e="fade"><img src="tiles/shot-fade.webp" alt="" aria-hidden="true" draggable="false">Fade</small></div>'   // (J5f: sliders, a draw .. a fade, low .. high)
-  + '<div class="row sl"><span data-z="flight" title="Click to centre">Flight</span><small data-e="low"><img src="tiles/shot-low.webp" alt="" aria-hidden="true" draggable="false">Low</small><input type="range" data-s="flight" min="-100" max="100" step="5" value="0" aria-label="Flight: low to high"><small data-e="high"><img src="tiles/shot-high.webp" alt="" aria-hidden="true" draggable="false">High</small></div>'
-  + '<div class="row"><span>Spin</span><canvas id="spinBall" width="40" height="40"></canvas><b data-k="tour"><img src="tiles/shot-spin.webp" alt="" aria-hidden="true" draggable="false">Tour</b></div>'
-  + '<div class="row"><b data-k="boost" class="boost"><img src="tiles/go-for-it.webp" alt="" aria-hidden="true" draggable="false">Go for it</b><i id="boostTxt"></i></div><div id="pickTxt"></div>';
+shotEl.innerHTML = '<div class="tab" id="shotTab" title="Fold the shot panel away">SHOT &#9656;</div><div class="sb">'
+  + '<div class="sec"><div class="sh"><span data-z="curve" title="Click to centre">Curve</span><em id="curveTxt"></em></div><div class="sl"><small data-e="draw"><img src="tiles/shot-draw.webp" alt="" aria-hidden="true" draggable="false">Draw</small><input type="range" data-s="curve" min="-100" max="100" step="5" value="0" aria-label="Curve: draw to fade"><small data-e="fade"><img src="tiles/shot-fade.webp" alt="" aria-hidden="true" draggable="false">Fade</small></div>'
+  + '<div class="rc" title="A scratch golfer full curve (the whole bar), yours (soft) and the one picked (gold)"><u class="me" id="rcMe"></u><u class="pk" id="rcPk"></u></div><div class="why" id="curveWhy"></div></div>'
+  + '<div class="sec"><div class="sh"><span data-z="flight" title="Click to centre">Flight</span><em id="flightTxt"></em></div><div class="sl"><small data-e="low"><img src="tiles/shot-low.webp" alt="" aria-hidden="true" draggable="false">Low</small><input type="range" data-s="flight" min="-100" max="100" step="5" value="0" aria-label="Flight: low to high"><small data-e="high"><img src="tiles/shot-high.webp" alt="" aria-hidden="true" draggable="false">High</small></div><div class="why" id="flightWhy"></div></div>'
+  + '<div class="sec"><div class="sh"><span>Spin <i>click or drag the ball</i></span><em id="spinTxt"></em></div><div class="sp"><canvas id="spinBall" width="192" height="192" title="Click or drag on the ball: where you strike it. Top to run on, bottom for backspin, left or right for side spin. Right-click: none"></canvas><div class="st"><b data-k="tour"><img src="tiles/shot-spin.webp" alt="" aria-hidden="true" draggable="false"><span class="tx"><span class="nm">Tour spin</span><em class="lw"></em></span></b><b data-k="boost" class="boost"><img src="tiles/go-for-it.webp" alt="" aria-hidden="true" draggable="false"><span class="tx"><span class="nm">Go for it</span><em class="lw" id="boostTxt"></em></span></b></div></div></div><div id="pickTxt"></div></div>';
 if (typeof hudEl !== 'undefined' && hudEl.appendChild) hudEl.appendChild(shotEl);
 const spinBall = shotEl.querySelector ? shotEl.querySelector('#spinBall') : null, sctx = spinBall && spinBall.getContext ? spinBall.getContext('2d') : null;
-let shotShown = '';
+let shotShown = '', shotFold = false, spinDrag = false;
+try { shotFold = localStorage.getItem('cl_shotfold') === '1'; } catch (e) { /* (no storage: open) */ }
+function spinFrom(e) { if (!HP || !spinBall || !spinBall.getBoundingClientRect) return; const r = spinBall.getBoundingClientRect(); hostSpinAt(((e.clientX - r.left) / r.width - 0.5) * 2.2, -((e.clientY - r.top) / r.height - 0.5) * 2.2); }
+if (typeof addEventListener === 'function') {   // #1301: a drag that began on the ball goes on past its edge; let go anywhere
+  addEventListener('mousemove', (e) => { if (spinDrag) spinFrom(e); });
+  addEventListener('mouseup', () => { spinDrag = false; });
+}
+if (shotEl.addEventListener) shotEl.addEventListener('contextmenu', (e) => { if (e.preventDefault) e.preventDefault(); if (e.target === spinBall && HP) hostSpinAt(0, 0); });   // (#1301: right-click on the ball: no spin)
 if (shotEl.addEventListener) shotEl.addEventListener('mousedown', (e) => {
   if (e.stopPropagation) e.stopPropagation();
   const t = e.target; if (t && t.dataset && t.dataset.s) return;   // (J5f: a slider takes its own press: dragging it needs the browser's own handling)
   if (e.preventDefault) e.preventDefault();
-  if (!HP || !t) return;
-  if (t === spinBall && spinBall.getBoundingClientRect) { const r = spinBall.getBoundingClientRect(); hostSpinAt(((e.clientX - r.left) / r.width - 0.5) * 2.2, -((e.clientY - r.top) / r.height - 0.5) * 2.2); }
+  if (!t) return;
+  if (t.id === 'shotTab') { shotFold = !shotFold; try { localStorage.setItem('cl_shotfold', shotFold ? '1' : '0'); } catch (err) { /* (not kept) */ } shotShown = ''; return; }   // (#1301: fold the panel away, or back)
+  if (!HP) return;
+  if (t === spinBall) { if ((e.button | 0) === 0) { spinDrag = true; spinFrom(e); } }
   else if (t.dataset && t.dataset.k) hostPickSet(t.dataset.k);
   else if (t.dataset && t.dataset.z) hostPickAmt(t.dataset.z, 0);   // (J5f: a click on a slider's name puts it back in the middle)
 });
@@ -564,11 +576,13 @@ if (shotEl.addEventListener) {   // J5f: the sliders: each move is an amount (a 
 }
 function hostShotShow() {   // the panel, written only when something changed
   const on = hostOnTurn() && !hostBusy() && !HP.sw && !!hostClub() && hostClub().club !== 'putter', P = hostPick();
-  const sig = on ? [P.curve, P.flight, P.sx, P.sy, P.tour, P.armed, hostCharges(), JSON.stringify((HP.turn && HP.turn.earned) || '')].join('|') : 'off';
-  if (sig === shotShown) return; shotShown = sig; shotEl.className = on ? 'on' : ''; if (!on || !shotEl.querySelectorAll) return;
+  const sig = on ? [P.curve, P.flight, P.sx, P.sy, P.tour, P.armed, hostCharges(), club, shotFold, JSON.stringify((HP.turn && HP.turn.earned) || '')].join('|') : 'off';
+  if (sig === shotShown) return; shotShown = sig; shotEl.className = (on ? 'on' : '') + (on && shotFold ? ' fold' : ''); if (!on || !shotEl.querySelectorAll) return;
+  const tabEl = shotEl.querySelector('#shotTab'); if (tabEl) { tabEl.innerHTML = shotFold ? '&#9666; SHOT' : 'SHOT &#9656;'; tabEl.title = shotFold ? 'Open the shot panel' : 'Fold the shot panel away'; }
   for (const b of shotEl.querySelectorAll('b[data-k]')) {   // (the Tour and Go for it buttons)
     const k = b.dataset.k, earnedK = hostEarned(k), sel = (k === 'tour' && P.tour) || (k === 'boost' && P.armed);
     b.className = (k === 'boost' ? 'boost ' : '') + (sel ? 'sel' : '') + (earnedK ? '' : ' lock'); b.title = earnedK ? '' : 'Locked: ' + hostWhy(k);
+    if (k === 'tour') { const lw = b.querySelector('.lw'); if (lw) lw.textContent = earnedK ? (P.tour ? 'on' : '') : 'Locked: ' + hostWhy(k); }   // (#1301: a locked one says what unlocks it, in words, not only on hover)
   }
   for (const e of shotEl.querySelectorAll('small[data-e]')) { const ok = hostEarned(e.dataset.e); e.className = ok ? '' : 'lock'; e.title = ok ? '' : 'Locked: ' + hostWhy(e.dataset.e); }   // (J5f: a slider's end he has not earned is struck through)
   for (const s of shotEl.querySelectorAll('input[data-s]')) {   // J5f: each slider: where the amount stands, gold from the middle to the thumb, the side he has not earned dimmed and saying what unlocks it
@@ -578,13 +592,39 @@ function hostShotShow() {   // the panel, written only when something changed
     s.title = lo && hi ? 'Double-click to centre' : 'Locked: ' + [lo ? '' : neg + ': ' + (hostWhy(neg) || 'not earned yet'), hi ? '' : pos + ': ' + (hostWhy(pos) || 'not earned yet')].filter(Boolean).join(' / ');
     if (s.style && s.style.setProperty) { s.style.setProperty('--a', Math.min(50, p) + '%'); s.style.setProperty('--b', Math.max(50, p) + '%'); s.style.setProperty('--l', lo ? 'rgba(255,255,255,0.22)' : 'rgba(255,255,255,0.07)'); s.style.setProperty('--r', hi ? 'rgba(255,255,255,0.22)' : 'rgba(255,255,255,0.07)'); }
   }
-  const bt = shotEl.querySelector('#boostTxt'); if (bt) bt.textContent = hostEarned('boost') ? hostCharges() + ' left this hole' : 'locked';
+  const bt = shotEl.querySelector('#boostTxt'); if (bt) bt.textContent = hostEarned('boost') ? hostCharges() + ' left this hole' : 'Locked: ' + hostWhy('boost');
   const pt = shotEl.querySelector('#pickTxt'); if (pt) pt.textContent = hostPickText();
-  if (sctx) {   // the ball and its strike point
-    sctx.clearRect(0, 0, 40, 40); sctx.fillStyle = '#efe9da'; sctx.beginPath(); sctx.arc(20, 20, 17, 0, 6.2832); sctx.fill();
-    sctx.fillStyle = 'rgba(20,21,25,0.3)'; if (!hostEarned('back')) sctx.fillRect(3, 20, 34, 17); if (!hostEarned('side')) { sctx.fillRect(3, 3, 9, 34); sctx.fillRect(28, 3, 9, 34); }
-    sctx.fillStyle = '#e8573c'; sctx.beginPath(); sctx.arc(20 + P.sx * 15, 20 - P.sy * 15, 3.5, 0, 6.2832); sctx.fill();
-  }
+  hostBendShow(P);
+  if (sctx) { if (sctx.createRadialGradient) paintBall(P); else { sctx.clearRect(0, 0, 192, 192); sctx.fillStyle = '#efe9da'; sctx.beginPath(); sctx.arc(96, 96, 88, 0, 6.2832); sctx.fill(); } }
+}
+// #1301: the painted ball: a lit sphere (the light is at the upper right) with dimples; the strike point where he picked it (red); the parts he has not earned dimmed; and an arrow along the top for the curve picked, so
+// the ball and the Curve slider tell the same story (a draw points left, a fade right)
+function paintBall(P) {
+  const c = sctx, R = 88, cx = 96, cy = 96; c.clearRect(0, 0, 192, 192);
+  const g = c.createRadialGradient(cx + 28, cy - 30, 6, cx, cy, R); g.addColorStop(0, '#fffef8'); g.addColorStop(0.55, '#e9e3d2'); g.addColorStop(1, '#8d8777');
+  c.fillStyle = g; c.beginPath(); c.arc(cx, cy, R, 0, 6.2832); c.fill();
+  c.fillStyle = 'rgba(80, 74, 60, 0.16)'; for (let i = 0; i < 46; i++) { const a = i * 2.39996, r = Math.sqrt((i + 0.5) / 46) * (R - 9), k = 1 - 0.35 * (r / R); c.beginPath(); c.arc(cx + Math.cos(a) * r, cy + Math.sin(a) * r, 5.4 * k, 0, 6.2832); c.fill(); }
+  if (c.save && c.clip) { c.save(); c.beginPath(); c.arc(cx, cy, R, 0, 6.2832); c.clip(); c.fillStyle = 'rgba(20, 21, 25, 0.5)'; if (!hostEarned('back')) c.fillRect(0, cy, 192, 96); if (!hostEarned('side')) { c.fillRect(0, 0, 34, 192); c.fillRect(158, 0, 34, 192); } c.restore(); }
+  c.strokeStyle = 'rgba(60, 54, 40, 0.35)'; c.lineWidth = 1.5; c.beginPath(); c.moveTo(cx - R + 10, cy); c.lineTo(cx + R - 10, cy); c.moveTo(cx, cy - R + 10); c.lineTo(cx, cy + R - 10); c.stroke();
+  if (P.curve) { const y = cy - R + 26, x1 = cx + P.curve * 62, d = P.curve > 0 ? 1 : -1; c.strokeStyle = '#f5b52e'; c.fillStyle = '#f5b52e'; c.lineWidth = 6; c.beginPath(); c.moveTo(cx, y); c.lineTo(x1 - d * 8, y); c.stroke(); c.beginPath(); c.moveTo(x1, y); c.lineTo(x1 - d * 16, y - 10); c.lineTo(x1 - d * 16, y + 10); c.fill(); }
+  c.strokeStyle = 'rgba(0, 0, 0, 0.55)'; c.lineWidth = 3; c.beginPath(); c.arc(cx, cy, R, 0, 6.2832); c.stroke();
+  c.fillStyle = '#e8573c'; c.strokeStyle = '#fff'; c.lineWidth = 3; c.beginPath(); c.arc(cx + P.sx * (R - 14), cy - P.sy * (R - 14), 9, 0, 6.2832); c.fill(); c.stroke();
+}
+// #1301 (the owner: "difference between fade and draw is very low. indicate if that is my handicap limit or not"): beside Curve and Flight, how much of the shape he can pull off now and what limits it, from the
+// numbers the host sends with the club (turn.clubs[].bend: the model's own, shape.ts shapeEffect): the metres a full draw bends this club's shot, his share pulled off, a scratch golfer's. Three bars on one scale
+function hostLockWords(neg, pos) { const lo = hostEarned(neg), hi = hostEarned(pos); return lo && hi ? '' : ' <b>Locked:</b> ' + [lo ? '' : neg + ' (' + (hostWhy(neg) || 'not earned yet') + ')', hi ? '' : pos + ' (' + (hostWhy(pos) || 'not earned yet') + ')'].filter(Boolean).join(', ') + '.'; }   // (#1301: what is locked, and what unlocks it, in words)
+function hostBendShow(P) {
+  const C = hostClub(), B = C && C.bend, set = (id, t) => { const el = shotEl.querySelector(id); if (el) el.textContent = t; };
+  if (!B || !(B.scrM > 0)) { set('#curveTxt', ''); set('#flightTxt', ''); const w1 = shotEl.querySelector('#curveWhy'), w2 = shotEl.querySelector('#flightWhy'); if (w1) w1.innerHTML = hostLockWords('draw', 'fade'); if (w2) w2.innerHTML = hostLockWords('low', 'high'); return; }
+  const carry = Math.round(C.carryM), pc = Math.round(B.pulled * 100), cu = Math.abs(P.curve), fl = Math.abs(P.flight), lim = B.pulled < B.scrPulled - 0.02;
+  set('#curveTxt', cu ? (P.curve < 0 ? 'Draw ' : 'Fade ') + Math.round(cu * 100) + '% = ' + (cu * B.m).toFixed(1) + ' m ' + (P.curve < 0 ? 'left' : 'right') : 'full: ' + B.m.toFixed(1) + ' m at ' + carry + ' m');
+  const me = shotEl.querySelector('#rcMe'), pk = shotEl.querySelector('#rcPk'); if (me && me.style) me.style.width = Math.min(100, B.m / B.scrM * 100).toFixed(1) + '%'; if (pk && pk.style) pk.style.width = Math.min(100, cu * B.m / B.scrM * 100).toFixed(1) + '%';
+  const why = shotEl.querySelector('#curveWhy');
+  if (why) why.innerHTML = lim ? 'You pull off <b>' + pc + '%</b> of a draw or fade (club skill ' + Math.round(B.skill * 100) + ', accuracy ' + Math.round(B.accuracy * 100) + '). A scratch golfer bends it <b>' + B.scrM.toFixed(1) + ' m</b>, you <b>' + B.m.toFixed(1) + ' m</b>. <b>Your handicap is the limit</b>: practise Shot shaping.' + hostLockWords('draw', 'fade')
+    : 'A full draw or fade bends this shot <b>' + B.m.toFixed(1) + ' m</b> at ' + carry + ' m, as far as a scratch golfer\'s (' + B.scrM.toFixed(1) + ' m). <b>Not your limit</b>: the game curves a shot a few degrees over 200 m at most.' + hostLockWords('draw', 'fade');
+  set('#flightTxt', fl ? (P.flight > 0 ? 'High ' : 'Low ') + Math.round(fl * 100) + '%' : 'level');
+  const fw = shotEl.querySelector('#flightWhy'); if (fw) fw.innerHTML = 'High lands soft and the wind pushes it more; low runs on and bores through the wind. You pull off <b>' + pc + '%</b> of a high or low shot' + (lim ? ': <b>your handicap limits it</b>.' : '.') + hostLockWords('low', 'high');
+  const sp = Math.round(Math.hypot(P.sx, P.sy) * 100); set('#spinTxt', sp ? (P.sy < -0.2 ? 'backspin ' : P.sy > 0.2 ? 'topspin ' : 'side spin ') + sp + '%' + (P.tour ? ' + tour' : '') : P.tour ? 'tour only' : 'none');
 }
 // the preview: asked for when the pick, the club or the line changes (a few times a second at most), drawn when the answer is for what is picked now
 function hostAimSig() { const c = hostClub(), P = hostPick(); return c ? [c.club, P.curve, P.flight, P.sx, P.sy, P.tour, P.armed, Math.round(Math.atan2(aim.dy, aim.dx) * 360 / Math.PI)].join('|') : ''; }

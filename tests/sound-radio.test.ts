@@ -6,7 +6,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
 import { join } from 'node:path';
-import { RADIO_DEFAULT_ON, RADIO_KEY, Radio, TRACKS, nextIndex, parseRadio, serializeRadio, type AudioLike, type Track } from '../src/game/sound/radio';
+import { RADIO_DEFAULT_ON, RADIO_KEY, Radio, STATIONS, TRACKS, nextIndex, parseRadio, serializeRadio, stationOf, tracksOf, type AudioLike, type Track } from '../src/game/sound/radio';
 import { SoundCore } from '../src/game/sound/core';
 
 const tr = (id: string): Track => ({ id, title: id.toUpperCase(), artist: 'A', licence: 'CC0 1.0', page: 'https://example.org/' + id, file: `audio/music/${id}.mp3`, seconds: 60, bytes: 1000 });
@@ -36,10 +36,10 @@ function rig(opts: { stored?: Record<string, string>; hidden?: () => boolean; re
 
 test('the stored state: off by default, the track forgotten when it is not in the list, bad text gives the defaults', () => {
   assert.equal(RADIO_DEFAULT_ON, false, 'a new player\'s radio is off: nothing downloads until it is turned on');
-  assert.deepEqual(parseRadio(null, LIST), { on: false, id: null });
-  assert.deepEqual(parseRadio(serializeRadio({ on: true, id: 'b' }), LIST), { on: true, id: 'b' });
-  assert.deepEqual(parseRadio(serializeRadio({ on: true, id: 'zzz' }), LIST), { on: true, id: null });
-  for (const bad of ['', 'x', '42', 'null', '{"on":"yes","id":5}', '[]']) assert.deepEqual(parseRadio(bad, LIST), { on: false, id: null }, bad);
+  assert.deepEqual(parseRadio(null, LIST), { on: false, id: null, station: 'clubhouse' });
+  assert.deepEqual(parseRadio(serializeRadio({ on: true, id: 'b', station: 'clubhouse' }), LIST), { on: true, id: 'b', station: 'clubhouse' });
+  assert.deepEqual(parseRadio(serializeRadio({ on: true, id: 'zzz', station: 'clubhouse' }), LIST), { on: true, id: null, station: 'clubhouse' });
+  for (const bad of ['', 'x', '42', 'null', '{"on":"yes","id":5}', '[]']) assert.deepEqual(parseRadio(bad, LIST), { on: false, id: null, station: 'clubhouse' }, bad);
 });
 
 test('next and previous wrap round the list; an empty list or a bad index gives 0', () => {
@@ -63,9 +63,9 @@ test('turning it on plays the first track from the page\'s base, and off pauses 
   assert.equal(made.length, 1); const a = made[0]!;
   assert.equal(a.src, './audio/music/a.mp3'); assert.equal(a.preload, 'none'); assert.equal(a.plays, 1);
   assert.deepEqual([radio.get().on, radio.get().playing], [true, true]);
-  assert.deepEqual(JSON.parse(store.m.get(RADIO_KEY)!), { v: 1, on: true, id: 'a' });
+  assert.deepEqual(JSON.parse(store.m.get(RADIO_KEY)!), { v: 2, on: true, id: 'a', station: 'clubhouse' });
   radio.toggle(); assert.deepEqual([radio.get().on, radio.get().playing, a.paused], [false, false, true]);
-  assert.deepEqual(JSON.parse(store.m.get(RADIO_KEY)!), { v: 1, on: false, id: 'a' });
+  assert.deepEqual(JSON.parse(store.m.get(RADIO_KEY)!), { v: 2, on: false, id: 'a', station: 'clubhouse' });
   radio.toggle(); assert.equal(a.plays, 2, 'on again plays the same element'); assert.equal(made.length, 1);
 });
 
@@ -79,13 +79,13 @@ test('before the first click the radio plays nothing: turning it on waits for th
 });
 
 test('a remembered "on" and its track start at the first click, never before', () => {
-  const { core, radio, made } = rig({ stored: { [RADIO_KEY]: serializeRadio({ on: true, id: 'c' }) } });
+  const { core, radio, made } = rig({ stored: { [RADIO_KEY]: serializeRadio({ on: true, id: 'c', station: 'clubhouse' }) } });
   assert.equal(radio.get().on, true); assert.equal(radio.get().track?.id, 'c');
   assert.equal(made.length, 0, 'not at load');
   core.unlock();
   assert.equal(made.length, 1); assert.equal(made[0]!.src, './audio/music/c.mp3'); assert.equal(made[0]!.plays, 1);
   // turned off before the click: the click starts nothing
-  const r2 = rig({ stored: { [RADIO_KEY]: serializeRadio({ on: true, id: 'a' }) } });
+  const r2 = rig({ stored: { [RADIO_KEY]: serializeRadio({ on: true, id: 'a', station: 'clubhouse' }) } });
   r2.radio.turnOff(); r2.core.unlock(); assert.equal(r2.made.length, 0);
 });
 
@@ -187,4 +187,29 @@ test('every shipped track is a file on disk, the audio is inside the budget, and
   const credits = readFileSync(join(ROOT, 'docs', 'jam', 'AUDIO-CREDITS.md'), 'utf8');
   for (const f of files) assert.ok(credits.includes(f.path.slice(ROOT.length + 1).split('\\').join('/')), `${f.path} is not in docs/jam/AUDIO-CREDITS.md`);
   for (const t of TRACKS) assert.ok(credits.includes(t.page) && credits.includes(t.title), `${t.title} is not credited with its page`);
+});
+
+// The owner, 2026-11-14: "make chip tunes station"
+test('stations: each plays its own tracks; the dial turns to the next from its first track; next and previous stay inside the station; the station is remembered', () => {
+  const two: Track[] = [...LIST, { ...LIST[0]!, id: 'x', file: 'audio/music/x.mp3', station: 'chiptunes' }, { ...LIST[0]!, id: 'y', file: 'audio/music/y.mp3', station: 'chiptunes' }];
+  assert.deepEqual(STATIONS.map(s => s.id), ['clubhouse', 'chiptunes']);
+  assert.deepEqual(tracksOf('clubhouse', two).map(t => t.id), ['a', 'b', 'c']); assert.deepEqual(tracksOf('chiptunes', two).map(t => t.id), ['x', 'y']);
+  assert.equal(stationOf({ ...LIST[0]!, station: 'no-such' }), 'clubhouse', 'an unknown station is the first');
+  // a state saved before there were stations takes its track's own station; a track of another station is forgotten
+  assert.deepEqual(parseRadio(JSON.stringify({ v: 1, on: true, id: 'y' }), two), { on: true, id: 'y', station: 'chiptunes' });
+  assert.deepEqual(parseRadio(JSON.stringify({ v: 2, on: true, id: 'y', station: 'clubhouse' }), two), { on: true, id: null, station: 'clubhouse' });
+  const made: FakeAudio[] = [], store = memStore();
+  class Ctx { state = 'running'; currentTime = 0; destination = {}; createGain() { return { gain: { value: 1, setTargetAtTime() { /* */ } }, connect: () => ({}) }; } createDynamicsCompressor() { const p = () => ({ value: 0 }); return { threshold: p(), knee: p(), ratio: p(), attack: p(), release: p(), connect: () => ({}) }; } resume() { return Promise.resolve(); } suspend() { return Promise.resolve(); } }
+  const core = new SoundCore({ AudioContext: Ctx as unknown as new () => AudioContext, store: memStore(), hidden: () => false });
+  const radio = new Radio(core, { audio: () => { const a = new FakeAudio(); made.push(a); return a; }, store, tracks: two, base: './', hidden: () => false, win: fakeWin() as unknown as Window });
+  core.unlock();
+  assert.equal(radio.get().station.id, 'clubhouse'); assert.equal(radio.get().count, 3); assert.equal(radio.get().stations, 2);
+  radio.nextStation();
+  assert.equal(radio.get().station.id, 'chiptunes'); assert.equal(radio.get().track?.id, 'x'); assert.equal(radio.get().count, 2); assert.equal(radio.get().on, true, 'turning the dial turns the radio on');
+  assert.equal(made[0]!.src, './audio/music/x.mp3');
+  radio.next(); assert.equal(radio.get().track?.id, 'y'); radio.next(); assert.equal(radio.get().track?.id, 'x', 'next wraps inside the station');
+  assert.deepEqual(JSON.parse(store.m.get(RADIO_KEY)!), { v: 2, on: true, id: 'x', station: 'chiptunes' });
+  radio.nextStation(); assert.equal(radio.get().station.id, 'clubhouse'); assert.equal(radio.get().track?.id, 'a');
+  // the shipped list: both stations have music
+  for (const st of STATIONS) assert.ok(tracksOf(st.id).length >= 4, `${st.name} has ${tracksOf(st.id).length} tracks`);
 });

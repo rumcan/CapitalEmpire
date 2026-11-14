@@ -78,6 +78,8 @@ Check: #cover.on
 R: J5f: the shot panel's Curve and Flight are sliders (a track with a gold run from the middle to the thumb, a tick at the middle, the end he has not earned dimmed and struck through), and the aim's distance sits in a small panel above the club box.
 Check: #shotc input[type=range]
 Check: #shotc small img
+Check: #shotc .tab
+Check: #shotc .rc
 Check: #clubs .club .ci
 Check: #aimd
 
@@ -103,10 +105,11 @@ button { font-family: var(--sans); }
 /* the glass panels (CapitalEmpire's .glass): the card, the help, the shot panel, the settings menu, the leaderboard and match cards */
 .panel, #card, #keys, #help, #wind, #shotc, #styleMenu { background: var(--panel); border: 1px solid var(--line); border-radius: 1.1em; box-shadow: var(--shadow); color: var(--ink); }
 body > .panel { border-radius: 0.9em; }
-#prac .ph { font-size: 0.85em; letter-spacing: 0.12em; color: var(--gold); margin-bottom: 0.35em; } #prac .pd { display: flex; gap: 0.5em; align-items: flex-start; padding: 0.3em 0.45em; margin: 0.2em 0; border: 1px solid var(--line); border-radius: 0.6em; cursor: pointer; }
+#prac .ph { font-size: 0.85em; letter-spacing: 0.12em; color: var(--gold); margin-bottom: 0.35em; } #prac .pd { display: flex; gap: 0.7em; align-items: flex-start; padding: 0.5em 0.55em; margin: 0.35em 0; border: 1px solid var(--line); border-radius: 0.8em; background: rgba(0, 0, 0, 0.22); cursor: pointer; }
 #prac .pd.on { border-color: var(--gold-line); background: var(--gold-wash); } #prac .pd.off { opacity: 0.45; cursor: default; } #prac .pd.done .pt i { color: var(--good); } #prac .pd:hover:not(.off) { border-color: var(--line-hi); }
-#prac .pt { display: flex; justify-content: space-between; gap: 0.5em; } #prac .pt i { font-style: normal; color: var(--gold-hi); } #prac .pg { color: var(--ink); font-size: 0.92em; } #prac .pr { color: var(--muted); font-size: 0.85em; }
-#prac .pi { flex: none; width: 3em; height: 3em; border-radius: 12%; pointer-events: none; } #prac .px { flex: 1; min-width: 0; }   /* (J8: a drill's tile at the left of its words) */
+#prac .pt { display: flex; justify-content: space-between; gap: 0.5em; } #prac .pt b { color: var(--ink); } #prac .pt i { font-style: normal; color: var(--gold-hi); } #prac .pg { color: var(--ink); font-size: 0.92em; margin-top: 0.15em; } #prac .pr { color: var(--muted); font-size: 0.85em; } #prac .pw { color: var(--warn); font-size: 0.85em; margin-top: 0.1em; }
+#prac .pb { height: 0.4em; margin: 0.25em 0; border-radius: 999px; background: rgba(255, 255, 255, 0.1); overflow: hidden; } #prac .pb u { display: block; height: 100%; text-decoration: none; border-radius: 999px; background: var(--gold); } #prac .pd.done .pb u { background: var(--good); }
+#prac .pi { flex: none; width: 64px; height: 64px; border-radius: 12%; pointer-events: none; } #prac .px { flex: 1; min-width: 0; }   /* (J8: a drill's tile at the left of its words; #1301: 64 px, a card) */
 #prac .pn { margin-top: 0.45em; color: var(--gold-hi); } #prac .pf { margin-top: 0.25em; color: var(--muted); font-size: 0.88em; }
 .pflag { padding: 0.1em 0.45em; border-radius: 0.5em; background: var(--panel); border: 1px solid var(--gold-line); color: var(--ink); font: 600 clamp(10px, 0.85vw, 13px) system-ui, sans-serif; white-space: nowrap; }
 body > .panel > b:first-child { font-size: 0.85em; letter-spacing: 0.12em; text-transform: uppercase; color: var(--gold); }
@@ -162,38 +165,56 @@ body.host #mini, body.host #wind { top: 56px; }
 #power .track b.sweet { background: rgba(116, 227, 164, 0.35); border-left: 1px solid #b8ffc8; border-right: 1px solid #b8ffc8; }
 #power .track b.top { width: 2px; margin-left: -1px; background: #fff; }
 
-/* the shot panel: CapitalEmpire's segmented choices (.seg): a dark well, the picked one in the gold button's gradient */
-#shotc { position: absolute; right: 1.4%; bottom: 13%; display: none; padding: 0.55em 0.65em; font-size: 0.92em; line-height: 1.4; pointer-events: auto; }   /* (it takes its own clicks: under #hud's pointer-events none they fell through and aimed the shot, the owner 2026-11-13) */
+/* #1301 (the owner: "these icons are too small to see what they are showing. make it a side menu and make them larger"): the shot panel is a side menu down the right of the view: its tiles are 64 px, its
+   sliders as wide as the panel, a tab on its left edge folds it away (the panel slides off, the tab stays), and what does not fit scrolls up and down inside it (never sideways). It keeps clear of the
+   ball, the aim and the swing bar (the middle of the view). #shotc is the frame that slides, .sb the panel that scrolls, .tab the handle. */
+#shotc { position: absolute; right: 0; top: 15%; bottom: 7%; width: clamp(290px, 28vw, 380px); display: none; font-size: 0.92em; line-height: 1.35; pointer-events: none; transition: transform 0.22s ease; background: none; border: 0; box-shadow: none; border-radius: 0; }   /* (the frame itself takes no clicks: the panel and the tab do, so the view beside it still aims) */
 #shotc.on { display: block; }
-#shotc .row { display: flex; align-items: center; gap: 0.2em; margin: 0.2em 0; padding: 0.15em; border-radius: 0.7em; background: rgba(0, 0, 0, 0.25); }
-#shotc .row span { width: 3.6em; padding-left: 0.35em; font-size: 0.9em; font-weight: 700; color: var(--muted); }
-#shotc b { cursor: pointer; padding: 0.2em 0.6em; border-radius: 0.55em; border: 1px solid transparent; color: #d9d3c4; font-weight: 500; }
+#shotc.fold { transform: translateX(100%); }
+#shotc .sb { position: absolute; inset: 0; box-sizing: border-box; padding: 0.55em 0.7em 0.7em; overflow-y: auto; overflow-x: hidden; pointer-events: auto; background: var(--panel); border: 1px solid var(--line); border-right: 0; border-radius: 1.1em 0 0 1.1em; box-shadow: var(--shadow); color: var(--ink); }
+#shotc .tab { position: absolute; left: -2.1em; top: 0.4em; width: 2.1em; padding: 0.7em 0; text-align: center; cursor: pointer; pointer-events: auto; font-size: 0.85em; font-weight: 700; letter-spacing: 0.08em; color: var(--gold-hi); background: var(--panel); border: 1px solid var(--line); border-right: 0; border-radius: 0.8em 0 0 0.8em; writing-mode: vertical-rl; transform: rotate(180deg); }
+#shotc .tab:hover { border-color: var(--gold-line); }
+#shotc .sec { margin: 0.35em 0 0.6em; padding: 0.3em 0.4em 0.45em; border-radius: 0.8em; background: rgba(0, 0, 0, 0.25); }
+#shotc .sh { display: flex; justify-content: space-between; align-items: baseline; gap: 0.5em; margin-bottom: 0.2em; }
+#shotc .sh span { cursor: pointer; font-weight: 700; color: var(--ink); letter-spacing: 0.04em; }
+#shotc .sh em { font-style: normal; font-size: 0.9em; color: var(--gold-hi); text-align: right; }
+#shotc .sl { display: flex; align-items: flex-start; gap: 0.4em; }
+#shotc .sl small { flex: none; display: flex; flex-direction: column; align-items: center; gap: 0.15em; width: 64px; font-size: 0.85em; text-align: center; color: var(--muted); }
+#shotc .sl input[type=range] { flex: 1 1 auto; min-width: 0; margin-top: 22px; }
+#shotc small.lock { opacity: 0.45; text-decoration: line-through; }
+/* J8 (#1261), #1301: the painted tile at each end of Curve (draw, fade) and Flight (low, high) and on Tour spin and Go for it: 64 px, pictures only, never in the way of a click */
+#shotc small img, #shotc b img { width: 64px; height: 64px; border-radius: 12%; pointer-events: none; display: block; }
+#shotc b { cursor: pointer; display: flex; align-items: center; gap: 0.6em; flex: 1; min-width: 0; padding: 0.25em 0.6em 0.25em 0.25em; border-radius: 0.7em; border: 1px solid var(--line); color: #d9d3c4; font-weight: 600; }
 #shotc b:hover { background: rgba(255, 255, 255, 0.06); }
 #shotc b.sel { background: var(--gold-btn); color: #1b1406; font-weight: 700; }
-#shotc b.lock { opacity: 0.45; cursor: not-allowed; text-decoration: line-through; }
-#shotc b.boost { border-color: var(--line); }
+#shotc b.lock { opacity: 0.6; cursor: not-allowed; }
 #shotc b.boost.sel { background: linear-gradient(#ef6a4a, #c2410c); border-color: transparent; color: #fff; }
-#shotc canvas { width: 3.1em; height: 3.1em; cursor: crosshair; image-rendering: auto; }
-#shotc i { font-style: normal; font-size: 0.9em; color: var(--muted); padding: 0 0.3em; }
+#shotc b.sel .lw { color: inherit; }
+#shotc .sp { display: flex; align-items: center; gap: 0.7em; }
+#shotc canvas { flex: none; width: 96px; height: 96px; cursor: crosshair; touch-action: none; }
+#shotc .sp .st { display: flex; flex-direction: column; gap: 0.4em; flex: 1; min-width: 0; }
+#shotc .tx { display: flex; flex-direction: column; min-width: 0; } #shotc b.lock .nm { text-decoration: line-through; } #shotc .lw { font-style: normal; font-size: 0.8em; font-weight: 500; color: var(--warn); text-decoration: none; white-space: normal; }
+#shotc .sh span i { font-weight: 500; font-size: 0.8em; margin-left: 0.4em; }
+#shotc i { font-style: normal; font-size: 0.85em; color: var(--muted); }
 /* J5f: Curve and Flight are sliders: the track has a gold run from the middle to the thumb (--a to --b, set by the view) and a tick at the middle; a side he has not earned is dimmed
    (--l, --r) and its end name struck through; the thumb is gold once the amount is off the middle. Each vendor's pseudo-elements get their own rule (one unknown one drops a list) */
-#shotc .row.sl { gap: 0.3em; padding-right: 0.5em; }
-#shotc .row.sl span { cursor: pointer; }
-#shotc small { flex: none; display: flex; flex-direction: column; align-items: center; gap: 0.1em; width: 2.7em; font-size: 0.85em; text-align: center; color: var(--muted); }
-#shotc small.lock { opacity: 0.45; text-decoration: line-through; }
-/* J8 (#1261): a painted tile at each end of Curve (draw, fade) and Flight (low, high) and on Tour spin: pictures only, never in the way of a click (the end names and Tour keep their own) */
-#shotc small img { width: 2.7em; height: 2.7em; border-radius: 12%; pointer-events: none; }
-#shotc b img { width: 2.2em; height: 2.2em; margin-right: 0.3em; vertical-align: middle; border-radius: 12%; pointer-events: none; }
-#shotc input[type=range] { -webkit-appearance: none; appearance: none; flex: none; width: 7.5em; height: 1.4em; margin: 0; padding: 0; background: transparent; cursor: pointer; --a: 50%; --b: 50%; --l: rgba(255, 255, 255, 0.22); --r: rgba(255, 255, 255, 0.22);
+#shotc input[type=range] { -webkit-appearance: none; appearance: none; height: 1.6em; margin: 0; padding: 0; background: transparent; cursor: pointer; --a: 50%; --b: 50%; --l: rgba(255, 255, 255, 0.22); --r: rgba(255, 255, 255, 0.22);
   --trk: linear-gradient(to right, transparent calc(50% - 1px), rgba(255, 255, 255, 0.7) calc(50% - 1px), rgba(255, 255, 255, 0.7) calc(50% + 1px), transparent calc(50% + 1px)),
     linear-gradient(to right, transparent var(--a), var(--gold) var(--a), var(--gold) var(--b), transparent var(--b)), linear-gradient(to right, var(--l) 50%, var(--r) 50%); }
 #shotc input[type=range]:focus { outline: none; }
-#shotc input[type=range]::-webkit-slider-runnable-track { height: 0.45em; border-radius: 999px; background: var(--trk); }
-#shotc input[type=range]::-moz-range-track { height: 0.45em; border-radius: 999px; background: var(--trk); }
-#shotc input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 1.1em; height: 1.1em; margin-top: -0.325em; border-radius: 50%; border: 1px solid rgba(0, 0, 0, 0.6); background: #d9d3c4; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.55); }
-#shotc input[type=range]::-moz-range-thumb { width: 1.1em; height: 1.1em; box-sizing: border-box; border-radius: 50%; border: 1px solid rgba(0, 0, 0, 0.6); background: #d9d3c4; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.55); }
+#shotc input[type=range]::-webkit-slider-runnable-track { height: 0.6em; border-radius: 999px; background: var(--trk); }
+#shotc input[type=range]::-moz-range-track { height: 0.6em; border-radius: 999px; background: var(--trk); }
+#shotc input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 1.4em; height: 1.4em; margin-top: -0.4em; border-radius: 50%; border: 1px solid rgba(0, 0, 0, 0.6); background: #d9d3c4; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.55); }
+#shotc input[type=range]::-moz-range-thumb { width: 1.4em; height: 1.4em; box-sizing: border-box; border-radius: 50%; border: 1px solid rgba(0, 0, 0, 0.6); background: #d9d3c4; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.55); }
 #shotc input[type=range].on::-webkit-slider-thumb { background: var(--gold-btn); }
 #shotc input[type=range].on::-moz-range-thumb { background: var(--gold-btn); }
+/* #1301: how much of a draw or fade he can pull off: three bars on one scale of metres: a scratch golfer's full curve (faint, the whole width), his own full curve (soft), and the one picked now (gold),
+   and the words that say why it is small */
+#shotc .rc { position: relative; height: 0.5em; margin: 0.4em 0 0.15em; border-radius: 999px; background: rgba(255, 255, 255, 0.1); overflow: hidden; }
+#shotc .rc u { position: absolute; left: 0; top: 0; bottom: 0; text-decoration: none; border-radius: 999px; }
+#shotc .rc .me { background: rgba(255, 255, 255, 0.28); width: 70%; } #shotc .rc .pk { background: var(--gold); width: 0; }
+#shotc .why { font-size: 0.85em; color: var(--muted); white-space: normal; }
+#shotc .why b { display: inline; flex: none; padding: 0; border: 0; color: var(--ink); background: none; cursor: default; font-weight: 700; }
 #pickTxt { margin-top: 0.3em; padding-left: 0.2em; color: var(--gold-hi); }
 
 /* the clubs: CapitalEmpire's rail tabs, the one in hand ringed in gold on the gold wash */
