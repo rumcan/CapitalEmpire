@@ -1,0 +1,13 @@
+{
+  "_": "The living scene's world (J12, #1271): what scripts/jam/menu-scene-build.mjs lays on a new jam game. Tiles of 2 m on the 2048 map. Change a number, run the build, look at the shots (menu-scene-shots.mjs), move the stops in src/game/showcase.ts to match.",
+  "seed": 11,
+  "growNote": "seconds the built club runs at 20x (about 18 months) so the county road has its houses and its traffic",
+  "grow": 90,
+  "clubTry": [[948, 1012], [946, 1016], [944, 1010], [950, 1014], [942, 1014]],
+  "holes": [
+    { "n": 1, "tee": { "x": 925, "y": 990 }, "green": { "x": 905, "y": 850 }, "bends": [{ "x": 922, "y": 925 }] },
+    { "n": 2, "tee": { "x": 895, "y": 842 }, "green": { "x": 800, "y": 850 } },
+    { "n": 3, "tee": { "x": 790, "y": 858 }, "green": { "x": 800, "y": 985 } },
+    { "n": 4, "tee": { "x": 812, "y": 993 }, "green": { "x": 890, "y": 1000 } }
+  ]
+}
