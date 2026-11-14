@@ -211,7 +211,9 @@ export interface PaintHost { setLotGround(key: string, patches: LotPatch[] | nul
   /** the road network's revision (changes on every road edit): a planned cart path re-snaps when it does (T031) */
   roadRev?(): number;
   /** a plant brush dab: props from ids scattered in the circle (spaced, sized size[0]..size[1]); returns how many were placed */
-  plant(ids: string[], x: number, y: number, r: number, spacing: number, size: [number, number], seed: number): number;
+  plant(ids: string[], x: number, y: number, r: number, spacing: number, size: [number, number], seed: number, ok?: (x: number, y: number) => boolean): number;
+  /** #1296: a desert game (the hole's Trees brush plants the look's own trees: desert plants there, the autumn trees else) */
+  desertLook?(): boolean;
   /** removes the plant-brush props in the circle; returns how many. T381: `trees` (the Trees brush): the map's own trees in the circle go too (the
    *  forest's, the river belts', the town's and the road network's), each counted */
   unplant(x: number, y: number, r: number, trees?: boolean): number;
@@ -995,8 +997,10 @@ export class PaintTool {
     const h = n ?? this.nextFreeHole();
     if (!h) { this.host.toast(`All ${HOLE_COUNT} holes are in use: delete one first`, 'warn'); return false; }
     this.leaveEditPaint(); this.mode = 'plan'; this.cancel(); this.selected = 0; this.hover = 0; this.hoverH = null; this.pill = null;
-    this.wizard.start(h); this.wizard.suggestM = this.host.suggestM?.() ?? 0; this.host.emit(); return true;
+    this.wizard.start(h); this.wizard.suggestM = this.host.suggestM?.() ?? 0; this.planNudge++; this.host.emit(); return true;
   }
+  /** #1296: counts every New hole opening (setPlan), also one that finds the wizard open on the same tee step: the Holes panel scrolls back to the wizard's card on each (HoleWizard) */
+  planNudge = 0;
   /** whether hole n has a built plan */
   hasPlan(n: number): boolean { return !!this.wizard.planOf(n); }
   /** opens hole n's plan with its handles (plan mode); false when it has none */
@@ -1018,7 +1022,7 @@ export class PaintTool {
   /** whether New hole's editor is on screen: plan mode, or Edit hole with a brush in hand (T238: a surface; T252: the ground's height) */
   get planOpen(): boolean { return this.mode === 'plan' || (this.editTool() && this.editPaint > 0 && this.wizard.base?.hole === this.editPaint); }
   /** T252: whether the tool's mode is one Edit hole can hold in hand (its surface brush, its Ground height), the plan's handles kept on the map */
-  private editTool(): boolean { return this.mode === 'brush' || this.mode === 'height'; }
+  private editTool(): boolean { return this.mode === 'brush' || this.mode === 'height' || (this.mode === 'plant' && this.editPaint > 0); } // (#1296: the hole's Trees brush too)
   /** T252: whether the plan's handle is dragged or under the pointer (a press there is the plan's, not the brush's) */
   private onHandle(): boolean { const w = this.wizard; return !!w.drag || (!!w.hover && w.hover.k !== 'line'); }
   /** T252: Edit hole with a tool in hand (a surface or the ground's height): its plan's handles still drag */
@@ -1493,7 +1497,7 @@ export class PaintTool {
     this.undos.push({ label: t.label, before: t.before, after, props, spent: t.spent, height, grid, plans, ...(looks.length ? { looks } : {}), ...(net ? { net } : {}), ...(t.aside ? { aside: t.aside } : {}) }); if (this.undos.length > UNDO_MAX) this.undos.shift();
     this.commits++;
     // T238: a stroke laid in Edit hole is ordered against the plan's own steps (undoTop); the course's redo goes, and Edit hole's with it
-    if (this.editInHand && (grid || height) && !plans) this.editMarks.push(this.wizard.depth); // T252: a height stroke too
+    if (this.editInHand && (grid || height || props) && !plans) this.editMarks.push(this.wizard.depth); // T252: a height stroke too; #1296: and a Trees stroke (props only)
     this.editRedo.length = 0;
     // a few big grid steps (a whole preset hole, a long stroke) can outweigh a hundred small ones: the steps are capped by their cells too
     const cellsOf = (u: UndoEntry) => (isSetting(u) ? 0 : u.grid?.n ?? 0);
@@ -1809,7 +1813,29 @@ export class PaintTool {
   }
 
   /** the plant brush: Trees, Bushes or Flowers scattered by dragging (Rub out / Alt removes them) */
-  setPlant(kind: PlantBrushKind) { this.leaveEditPaint(); this.mode = 'plant'; this.plantBrush = kind; this.cancel(); this.selected = 0; this.hover = 0; this.hoverH = null; this.host.emit(); }
+  setPlant(kind: PlantBrushKind) { this.leaveEditPaint(); this.holeTrees = false; this.mode = 'plant'; this.plantBrush = kind; this.cancel(); this.selected = 0; this.hover = 0; this.hoverH = null; this.host.emit(); }
+  /** #1296 (the owner, 2026-11-14: "add trees to the paint hole 1 list at nr 9"): the Trees brush of the hole palettes (key 9; Create your own moved to key 0): the plant brush's Trees, painted
+   *  where the brush goes, the look's own trees (the ones Frame with trees plants: the autumn broadleaves and conifers, in a desert game the desert plants) and never on a green or a tee.
+   *  The Plants tool's own Trees (setPlant) plant anywhere. holeTrees says the plant brush in hand is the palette's */
+  holeTrees = false;
+  /** the palette's Trees in hand (Shape by hand, the Texture Painter's) */
+  setHoleTrees() { this.setPlant('trees'); this.holeTrees = true; this.host.emit(); }
+  /** the palette's Trees in hand inside Edit hole: its plan stays open (the handles still drag), as the surface brushes do. False when no built hole is open */
+  setEditTrees(): boolean {
+    const n = this.editingHole; if (!n) return false;
+    if (this.wizard.drag) this.wizard.release();
+    this.cancel(); this.dropRun();
+    this.property = false; this.mode = 'plant'; this.plantBrush = 'trees'; this.editPaint = n; this.brushHole = n; this.rubOut = false; this.holeTrees = true;
+    this.selected = 0; this.hover = 0; this.hoverH = null; this.host.emit(); return true;
+  }
+  /** whether the Trees brush of the palette is in hand */
+  get treesInHand(): boolean { return this.mode === 'plant' && this.holeTrees; }
+  /** whether a tree may stand at (x, y) tiles under the palette's Trees brush: not on a green or a tee of any hole */
+  private treeSpotOk(x: number, y: number): boolean {
+    const g = this.courseGrid(); if (!g) return true;
+    const i = cellAt(g, x, y); if (i < 0) return true;
+    const s = g.surf[i]; return s !== SURF.green && s !== SURF.tee;
+  }
   /** piece mode: takes archetype arch in hand (T030) */
   setPiece(arch: CoursePieceArchetype) { this.leaveEditPaint(); this.mode = 'piece'; this.pieceArch = arch; this.cancel(); this.selected = 0; this.hover = 0; this.hoverH = null; this.piece = null; this.refreshPiece(); }
   /** piece mode: the turn (degrees, wrapped to 0..345), the size (0.5 to 2.5) and snapping of the piece in hand */
@@ -1957,7 +1983,8 @@ export class PaintTool {
   }
   /** the sprites the current plant brush picks from (its ids, or every sprite of the kind) */
   plantIds(): string[] {
-    const s = this.plant[this.plantBrush], all = this.host.plantPool(this.plantBrush, this.plantFilter).map(x => x.id);
+    // (#1296: the palette's Trees are the look's own: the autumn trees, or in a desert game the desert plants, whatever the Plants tool's filter says)
+    const s = this.plant[this.plantBrush], all = this.host.plantPool(this.plantBrush, this.treesInHand ? (this.host.desertLook?.() ? 'desert' : 'autumn') : this.plantFilter).map(x => x.id);
     // (T342: picks made under another filter: the filter's plants when none of the picks is among them)
     if (!s.ids) return all; const picked = s.ids.filter(id => all.includes(id)); return picked.length || !s.ids.length ? picked : all;
   }
@@ -1965,7 +1992,7 @@ export class PaintTool {
   private plantDab(t: { x: number; y: number }, erase: boolean) {
     const s = this.plant[this.plantBrush];
     // (T381: the Trees brush's Rub out takes every tree under the brush, the map's own as well as the ones planted)
-    const n = erase ? this.host.unplant(t.x, t.y, s.r, this.plantBrush === 'trees') : this.host.plant(this.plantIds(), t.x, t.y, s.r, s.spacing, [s.lo, s.hi], this.plantSeed++);
+    const n = erase ? this.host.unplant(t.x, t.y, s.r, this.plantBrush === 'trees') : this.host.plant(this.plantIds(), t.x, t.y, s.r, s.spacing, [s.lo, s.hi], this.plantSeed++, this.treesInHand ? (x, y) => this.treeSpotOk(x, y) : undefined);
     if (this.planting) this.planting.n += n;
   }
   /** drops the outline being drawn (its corners, the lasso and the press) and a stroke in progress (not applied); a handle drag in progress ends (its shape is kept, or reverted when it cannot be placed) */
@@ -2356,11 +2383,13 @@ export class PaintTool {
     }
     // T238: in Edit hole the number keys pick its brush (the surface's key in Shape by hand); with the brush in hand Esc puts it down (the
     // stroke in hand first), and Enter, R and Delete stay the plan's ([ ] size the brush)
-    // T271: Shift with a number picks the course's own grass in that place (1..8), 9 opens Create your own (Shape by hand and Edit hole alike)
-    if (this.course && this.host.golfMode?.() && !e.altKey && /^Digit[1-9]$/.test(e.code) && (this.editingHole || (this.mode !== 'plan' && this.mode !== 'myhole'))) {
+    // T271: Shift with a number picks the course's own grass in that place (1..8), 0 opens Create your own (Shape by hand and Edit hole alike)
+    // #1296 (the owner: "add trees to the paint hole 1 list at nr 9"): 9 is the Trees brush, and Create your own moved after it, to 0
+    if (this.course && this.host.golfMode?.() && !e.altKey && /^Digit[0-9]$/.test(e.code) && (this.editingHole || (this.mode !== 'plan' && this.mode !== 'myhole'))) {
       const q = +e.code.slice(5);
-      if (e.shiftKey) { const g = this.grasses[q - 1]; if (!g) return false; this.setGrass(g.k); return true; }
-      if (q === 9) { this.openGrass(); return true; }
+      if (e.shiftKey) { const g = q ? this.grasses[q - 1] : undefined; if (!g) return false; this.setGrass(g.k); return true; }
+      if (q === 9) { if (this.editingHole) this.setEditTrees(); else this.setHoleTrees(); return true; }
+      if (q === 0) { this.openGrass(); return true; }
     }
     if (this.editingHole && e.key >= '1' && e.key <= '9' && !e.altKey) { const b = SURFACE_BRUSHES[+e.key - 1]; if (b) { this.setEditBrush(b.kind, 0); return true; } }
     if (this.editInHand) { // T252: the height brush too

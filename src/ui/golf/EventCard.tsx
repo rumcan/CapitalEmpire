@@ -1,24 +1,10 @@
 // T246 (#708): the club's own events' card (golf/clubevents.ts): the announcement a month before (enter when your handicap qualifies), the day itself
 // (play it: your round on every hole under competition rules), and the result: the Club Championship's champion, the Mayor's Cup's presentation by the
-// mayor. The mayor's picture is a labelled stand-in until GOLF-ART-LIST 222 (the town hall and the mayor) is drawn.
+// mayor. #1296 (the owner: nothing on screen says Stand In, and no code-drawn stand-in pictures): the card has no picture of the mayor until GOLF-ART-LIST 222 (the town hall and the mayor) is painted; it was a drawn figure labelled "Stand In for the Mayor".
 import type { EventCardView } from '../../game/engine';
 import { clock } from '../../game/golf/player';
 import { Icon } from '../Icon';
 import { PullBanner } from './CardsCard';
-
-/** the mayor's stand-in: a framed figure with the label the owner's rule asks for ("Stand In for <name>") */
-function MayorStandIn({ presenting }: { presenting: boolean }) {
-  return (
-    <div className="relative flex h-24 w-20 shrink-0 flex-col items-center justify-end overflow-hidden rounded-lg border border-amber-300/30 bg-gradient-to-b from-sky-900/60 to-slate-900" data-testid="mayor-standin">
-      {/* head, sash and suit drawn in plain shapes */}
-      <div className="absolute top-3 h-6 w-6 rounded-full bg-[#e8c39e]" />
-      <div className="absolute top-[2.1rem] h-12 w-14 rounded-t-2xl bg-slate-700" />
-      <div className="absolute top-[2.3rem] h-10 w-2 rotate-[30deg] bg-amber-400/80" />
-      {presenting && <div className="absolute right-0.5 top-8 text-amber-300"><Icon name="trophy" size={18} /></div>}
-      <div className="relative z-10 w-full bg-amber-500/25 px-0.5 text-center text-[9px] leading-tight text-amber-100">Stand In for the Mayor</div>
-    </div>
-  );
-}
 
 export function EventCard({ view: v, right, onClose, onEnter, onPlay, onMachine }: { view: EventCardView; right: string; onClose: () => void; onEnter: () => void; onPlay: () => void; /** T336: opens the vending machine (the card pull this result paid) */ onMachine?: () => void }) {
   const mayor = v.id === 'mayor', r = v.result;
@@ -37,7 +23,6 @@ export function EventCard({ view: v, right, onClose, onEnter, onPlay, onMachine 
       {v.phase === 'result' && r ? (
         <div className="space-y-2" data-testid="event-result">
           <div className="flex gap-2">
-            {mayor && <MayorStandIn presenting />}
             <div className="space-y-1 text-xs">
               {mayor
                 ? <p className="text-slate-200">The mayor presents the Mayor&apos;s Cup {r.won ? <>to <span className="font-semibold text-amber-200">you</span></> : <>to <span className="font-semibold text-white">{r.champion || 'nobody'}</span></>}.</p>
@@ -52,7 +37,6 @@ export function EventCard({ view: v, right, onClose, onEnter, onPlay, onMachine 
       ) : (
         <div className="space-y-2 text-xs">
           <div className="flex gap-2">
-            {mayor && <MayorStandIn presenting={false} />}
             <p className="text-slate-300">{about}</p>
           </div>
           <div className="flex items-center justify-between rounded-lg border border-white/10 bg-white/5 px-2 py-1.5">

@@ -16,6 +16,9 @@ import { SurfaceMark } from './SurfaceMark';
 import { grassPuckImage, swatchPuckOf, useSwatchPucks } from './swatch-puck';
 import { SurfaceFocus } from './SurfaceFocus';
 import { SideMenuRow } from '../SideMenuRow';
+import { ActionTile } from '../ActionTile'; // #1296: the Trees swatch wears the painted `trees` tile, as its neighbours wear their surface's picture
+import { PLANT_R } from '../../game/plant';
+import { PLANT_TILE } from '../tool-tiles';
 
 /** a k x k grid of dots, the size pills' glyph */
 export function SizeGlyph({ k }: { k: number }) {
@@ -46,15 +49,19 @@ export function surfaceKeysOf(game: Game): number {
   return Math.max(1, ...SURFACE_BRUSHES.map((b, i) => (ok(b.kind) ? i + 1 : 0)));
 }
 
+/** whether the palette is a golf course's own (Create your own, your grasses and, #1296, Trees: a golf game with a course grid; a classic game paints areas) */
+export const ownPalette = (game: Game): boolean => game.golfMode && !!game.courseGrid && !!game.paint.grasses;
+
 /** the surfaces as swatches with their keys (SURFACE_BRUSHES' order: 1 fairway .. 8 long grass; T252: no cart path, Course › Cart paths & roads
  *  lays them), those open at this stage, in an even grid of four columns; each swatch is the surface's puck (swatch-puck.ts: its real texture
  *  and border; its marked disc under plain node), its name under it and its key in the corner. `on` is the surface in hand (none: no swatch
- *  lit), `pick` arms one */
-export function SurfaceSwatches({ game, on, pick, pickGrass }: { game: Game; on: BrushKind | null; pick: (kind: BrushKind) => void; pickGrass?: (k: number) => void }) {
+ *  lit), `pick` arms one. #1296 (the owner: "add trees to the paint hole 1 list at nr 9"): in a golf course's palette `trees` adds the Trees brush as the ninth
+ *  swatch (key 9, the painted `trees` tile; `on`: it is in hand; `pick`: arms it, or puts it down) and Create your own moves after it, to key 0 */
+export function SurfaceSwatches({ game, on, pick, pickGrass, trees }: { game: Game; on: BrushKind | null; pick: (kind: BrushKind) => void; pickGrass?: (k: number) => void; trees?: { on: boolean; pick: () => void } }) {
   const ok = brushOkOf(game), p = game.paint;
   // T271 (#812): the course's own grasses after the eight, each its puck and Shift + its place as its key, then 9, Create your own (a golf
   // course's grid only: a classic game paints areas). A grass in hand lights its own swatch, not its carrier surface's
-  const own = game.golfMode && !!game.courseGrid && !!p.grasses, gk = on ? p.grassInHand ?? 0 : 0;
+  const own = ownPalette(game), gk = on ? p.grassInHand ?? 0 : 0;
   // the owner, 2026-11-01: a click on a surface shows it alone, in focus (SurfaceFocus: its look large, quick textures, saved grasses, edit,
   // whose look); the keys still switch surfaces, and the focus follows the one in hand
   // (T359: Course › Holes › Shape by hand › <surface> asks for the focus too: p.openSurface sets focusWanted, taken here once, on the panel's
@@ -77,6 +84,13 @@ export function SurfaceSwatches({ game, on, pick, pickGrass }: { game: Game; on:
             </button>
           );
         })}
+        {own && trees && (
+          <button key="trees" data-swatch="trees" aria-pressed={trees.on} title="Trees (key 9): the look's own trees, painted with the brush, as Frame with trees plants them; never on a green or a tee" className={`swatch ${trees.on ? 'swatch-on' : ''}`} data-puck="tile" onClick={trees.pick}>
+            <span className="swatch-puck"><ActionTile tile={PLANT_TILE.trees} size={34} /></span>
+            <span className="swatch-key" aria-hidden>9</span>
+            <span className="swatch-name">Trees</span>
+          </button>
+        )}
         {own && p.grasses.map((g, i) => {
           const lit = gk === g.k, puck = grassPuckImage(game, g), play = GRASS_PLAYS.find(q => q.play === g.plays)?.name ?? '';
           return (
@@ -88,9 +102,9 @@ export function SurfaceSwatches({ game, on, pick, pickGrass }: { game: Game; on:
           );
         })}
         {own && p.grasses.length < MAX_GRASSES && (
-          <button key="own-new" data-swatch="grass-new" aria-pressed={!!p.grassDraft && !p.grassDraft.k} title="Create your own grass: its name, how it plays, its painted grass, scale, exposure, stripes and edges (key 9)" className={`swatch ${p.grassDraft && !p.grassDraft.k ? 'swatch-on' : ''}`} onClick={() => p.openGrass()}>
+          <button key="own-new" data-swatch="grass-new" aria-pressed={!!p.grassDraft && !p.grassDraft.k} title={`Create your own grass: its name, how it plays, its painted grass, scale, exposure, stripes and edges (key ${trees ? 0 : 9})`} className={`swatch ${p.grassDraft && !p.grassDraft.k ? 'swatch-on' : ''}`} onClick={() => p.openGrass()}>
             <span className="swatch-puck"><NewGrassMark /></span>
-            <span className="swatch-key" aria-hidden>9</span>
+            <span className="swatch-key" aria-hidden>{trees ? 0 : 9}</span>
             <span className="swatch-name">Create your own</span>
           </button>
         )}
@@ -136,6 +150,25 @@ function GrassInHand({ game }: { game: Game }) {
         <SideMenuRow label="Edit" sub={`${g.name}: its texture, scale, stripes and edges`} open={p.grassDraft?.k === g.k} data-testid="grass-edit" onClick={() => p.openGrass(g.k)} />
         <button className="chip" data-testid="grass-delete" title={`Delete ${g.name}: its cells keep how they play and take that surface's own look (Undo brings it back)`} onClick={() => setAsk(g.k)}>Delete</button>
       </>)}
+    </div>
+  );
+}
+
+/** #1296: the palette's Trees brush in hand: its size (the radius the dabs cover, as the Plants tool's) and Rub out (the trees the brush planted, and the map's own under it).
+ *  Shown where the surface brush's shape and size would be; the trees are the look's own (autumn broadleaves and conifers, desert plants in a desert game), free like the
+ *  Plants tool's, never on a green or a tee */
+export function TreesBrush({ game }: { game: Game }) {
+  const p = game.paint, s = p.plant.trees;
+  return (
+    <div className="mt-2" data-testid="trees-brush">
+      <div className="flex items-center gap-2">
+        <input type="range" aria-label="Trees brush size" min={PLANT_R[0]} max={PLANT_R[1]} step={0.5} value={s.r} onChange={e => p.setPlantSet({ r: +e.target.value })} className="min-w-0 flex-1" />
+        <span className="w-16 text-right" title={`${s.r} tiles across the radius ([ ] size)`}>{`${Math.round(4 * s.r)} m`}</span>
+      </div>
+      <div className="mt-2 flex flex-wrap items-center gap-1.5">
+        <button className={`chip ${p.rubOut ? 'chip-on' : ''}`} aria-pressed={p.rubOut} data-testid="trees-rub" title="Rub out takes the trees under the brush (hold Alt for a moment while brushing)" onClick={() => { p.rubOut = !p.rubOut; game.emit(); }}>Rub out</button>
+      </div>
+      <div className="sub-line mt-1.5">Drag to plant the look's own trees, with room between them: never on a green or a tee. Free; Ctrl+Z takes a stroke back. [ ] size.</div>
     </div>
   );
 }
