@@ -9,6 +9,7 @@
 // and are not frames.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
+import { PATH_PACE, PathNet } from '../src/game/golf/pathroute';
 import { AGENT_SPEED, PICK_HOURS, RANGE_PACE, RangeSim, defaultRangeBiz, garageSlots, rangeScene, rangeStats, withUpgrade, type CarSlot, type RangeUpgradeId } from '../src/game/golf/rangebiz';
 import { newBalls, pickNear } from '../src/game/golf/rangeballs';
 import { scanPractice } from '../src/game/golf/practice';
@@ -36,6 +37,8 @@ interface Opts {
   garage?: boolean;
   /** the practice greens are there (golfers putt and chip) */
   practice?: boolean;
+  /** #1295: the walking paths laid (the scene's walkNet): the golfers are then drawn over them (a frame of theirs is up to 1 + PATH_PACE steps), the staff turn at their corners */
+  net?: PathNet | null;
   /** called after each frame's step (the targeted tests act on the range here); returns true to stop */
   each?: (f: { book: ReturnType<typeof newBalls>; sc: ReturnType<typeof rangeScene>; hour: number; open: number; t: number; view: ReturnType<RangeSim['view']> }) => boolean;
 }
@@ -45,6 +48,7 @@ const hh = (h: number): string => `${String(Math.floor(h % 24)).padStart(2, '0')
 function audit(o: Opts) {
   const s = o.owned.reduce((q, id) => withUpgrade(q, id), defaultRangeBiz()), book = newBalls(); book.shift = o.shift ?? 7; s.balls = book;
   const sc = rangeScene(plot, 2, s), slots: CarSlot[] = o.garage && sc.garage ? [...lot(sc, 6), ...garageSlots(sc.garage, 20)] : lot(sc), room = sc.ballRoom;
+  sc.walkNet = o.net ?? null;
   // a field spread down the range: twelve clumps, so the nearest ball to the ball room (the pile) moves on as the staff pick
   const au = Math.hypot(sc.aim.x, sc.aim.y) || 1, ax = sc.aim.x / au, ay = sc.aim.y / au;
   for (let k = 0; k < 12; k++) { const t = sc.aims[k % sc.aims.length]!; for (let i = 0; i < (o.clump ?? 60); i++) { const d = ((k >> 2) - 1) * 8 + (i % 10) * 0.3, c = (k % 4 - 1.5) * 6 + Math.floor(i / 10) * 0.3; book.field.push(t.x + ax * d - ay * c, t.y + ay * d + ax * c); } }
@@ -55,11 +59,11 @@ function audit(o: Opts) {
     sim.setPractice(scanPractice(g, sc.practice.box)); s.practice.putting.open = true; s.practice.chipping.open = true;
   }
   const lanes = sc.picker ? sc.picker.lanes : [], laneLen = lanes.reduce((n, p, i) => n + (i ? Math.hypot(p.x - lanes[i - 1]!.x, p.y - lanes[i - 1]!.y) : 0), 0), cartV = laneLen / (PICK_HOURS * HOUR_S);
-  const pace: Record<Kind, number> = { golfer: 2 * RANGE_PACE.walk, pro: RANGE_PACE.walk, attendant: AGENT_SPEED.attendant, robot: AGENT_SPEED.robot, car: RANGE_PACE.road, cart: cartV };
+  const pace: Record<Kind, number> = { golfer: (o.net ? 1 + PATH_PACE : 2) * RANGE_PACE.walk, pro: RANGE_PACE.walk, attendant: AGENT_SPEED.attendant, robot: AGENT_SPEED.robot, car: RANGE_PACE.road, cart: cartV };
   const dt = o.dt, frames = Math.round(o.hours * HOUR_S / dt), open = rangeStats(s).open;
   const last = new Map<string, { x: number; y: number; kind: Kind }>(), now = new Set<string>(), bad: string[] = [];
   const worst: Record<Kind, number> = { golfer: 0, pro: 0, attendant: 0, robot: 0, car: 0, cart: 0 }, appeared = { ...worst }, vanished = { ...worst };
-  const seen = { picks: 0, stood: 0, farthest: 0, robotPath: 0, proPath: 0, cartOut: 0, cartOutAfterOpening: 0, cartHome: true, walkFrames: 0, wrongWay: 0, att: new Set<number>() };
+  const seen = { picks: 0, stood: 0, farthest: 0, robotPath: 0, proPath: 0, cartOut: 0, cartOutAfterOpening: 0, cartHome: true, walkFrames: 0, wrongWay: 0, att: new Set<number>(), golferFrames: 0, golferOn: 0, attFrames: 0, attOn: 0 };
   const note = (m: string) => { if (bad.length < 12) bad.push(m); };
   let f = 0, hour = o.h0, eatAcc = 0;
   const atDoor = (x: number, y: number) => Math.hypot(x - room.x, y - room.y) <= 1.2;                                         // (a lane across the door)
@@ -74,7 +78,7 @@ function audit(o: Opts) {
     worst[kind] = Math.max(worst[kind], m / lim);
     if (m > lim + 1e-6) note(`${key} moved ${m.toFixed(3)} tiles in a ${dt.toFixed(4)} s frame at ${hh(hour)} (at most ${lim.toFixed(3)}): from (${p.x.toFixed(1)}, ${p.y.toFixed(1)}) to (${x.toFixed(1)}, ${y.toFixed(1)})`);
     // the staff face the way they go
-    if (ang !== undefined && m > 1e-9) { seen.walkFrames++; if (Math.cos(ang) * (x - p.x) + Math.sin(ang) * (y - p.y) < 0.999 * m) { seen.wrongWay++; note(`${key} moved ${m.toFixed(3)} tiles facing ${(ang * 57.3).toFixed(0)} degrees at ${hh(hour)}`); } }
+    if (ang !== undefined && m > 1e-9) { seen.walkFrames++; if (Math.cos(ang) * (x - p.x) + Math.sin(ang) * (y - p.y) < 0.999 * m) { seen.wrongWay++; if (!o.net) note(`${key} moved ${m.toFixed(3)} tiles facing ${(ang * 57.3).toFixed(0)} degrees at ${hh(hour)}`); } }   // (with paths laid he turns at their corners: a frame round one faces the new leg)
     if (kind === 'pro') seen.proPath += m; if (kind === 'robot') seen.robotPath += m;
     p.x = x; p.y = y;
   };
@@ -88,11 +92,13 @@ function audit(o: Opts) {
     for (let k = 0; k < d.nPeople; k++) {
       const p = d.people[k]!, key = p.id === 0 ? 'pro' : `golfer ${p.id}`, before = last.get(key), px = before?.x ?? p.x, py = before?.y ?? p.y;
       see(key, p.id === 0 ? 'pro' : 'golfer', p.x, p.y);
+      if (o.net && before && p.id !== 0 && Math.hypot(p.x - px, p.y - py) > 1e-9) { seen.golferFrames++; if (o.net.on(p.x, p.y, 0.4)) seen.golferOn++; }
       // a golfer in his walk clip faces the way he moves (a step round a corner of his route turns a frame early: only a share of the frames may differ)
       if (before && p.id !== 0 && p.frame >= WALKF.start && p.frame < WALKF.start + WALKF.n) { const mx = p.x - px, my = p.y - py; if (Math.hypot(mx, my) > 0.5 * RANGE_PACE.walk * dt) { face.checked++; const r = rowToward(mx, my); if (Math.min((p.row - r + 8) % 8, (r - p.row + 8) % 8) > 1) face.off++; } }
     }
     for (let k = 0; k < d.nAgents; k++) {
       const a = d.agents[k]!; see(`${a.kind} ${a.id}`, a.kind, a.x, a.y, a.ang);
+      if (o.net && a.kind === 'attendant' && a.moving) { seen.attFrames++; if (o.net.on(a.x, a.y, 0.3)) seen.attOn++; }
       if (a.kind === 'attendant') { seen.att.add(a.id); if (a.pick) seen.picks++; else if (!a.moving) seen.stood++; seen.farthest = Math.max(seen.farthest, Math.hypot(a.x - room.x, a.y - room.y)); }
     }
     for (let k = 0; k < d.nCars; k++) { const c = d.cars[k]!; if (c.id >= 0) see(`car ${c.id}`, 'car', c.x, c.y); }
@@ -128,6 +134,27 @@ test('T459: the grown range, a frame at a time over a day and more: nobody jumps
     // the fastest frame of each kind, as a share of its allowance (a golfer's is two steps: the end of his route and his first step in the line fall in one frame)
     for (const k of ['pro', 'attendant', 'robot', 'car', 'cart'] as const) assert.ok(r.worst[k] <= 1 + 1e-6, `${k}: ${r.worst[k].toFixed(3)}`);
     assert.ok(r.worst.golfer <= 1 + 1e-6, `golfer: ${r.worst.golfer.toFixed(3)} of two steps`);
+  }
+});
+
+test('#1295 (T459 with walking paths laid): the grown range over a day and more with the guide\'s path and a path out onto the field: nobody jumps, turns up or goes out of the picture but at a door, the golfers are drawn on the path and the attendants walk it', () => {
+  // (the plot's frame: from the car park's edge to the shack and along behind the mats, and from the ball room's door out over the tee box and down the range)
+  const P = (u: number, v: number) => plotPoint(plot, 2, u, v), legs = (...uv: [number, number][]) => uv.slice(1).map((q, i) => ({ a: P(uv[i]![0], uv[i]![1]), b: P(q[0], q[1]) }));
+  const net = PathNet.of([...legs([48.4, 16.2], [42, 14.5], [34, 14], [30, 16.8], [4, 16.8]), ...legs([29.4, 13], [29.4, 30], [36, 100])])!;
+  for (const [dt, hours] of [[1 / 60, 30], [1 / 3, 54], [0.5, 54]] as const) {
+    const r = audit({ owned: FULL, h0: 3, hours, dt, net });
+    assert.deepEqual(r.bad, [], `dt ${dt.toFixed(4)}`);
+    assert.ok(r.appeared.golfer >= 25 && r.appeared.car >= 25, `golfers came and went (${r.appeared.golfer})`);
+    assert.ok(r.appeared.attendant >= 3 && r.vanished.attendant >= 2, `shifts began (${r.appeared.attendant}) and ended (${r.vanished.attendant}): each at the ball room's door`);
+    assert.ok(r.seen.picks > 0 && r.seen.stood > 0 && r.seen.farthest > 15, `the attendants picked at the pile, stood at the door to drop and went far (${r.seen.farthest.toFixed(0)} tiles)`);
+    assert.ok(r.seen.proPath > 5, `the academy's pro walked to his pupils (${r.seen.proPath.toFixed(0)} tiles)`);
+    assert.ok(r.seen.walkFrames > 500 && r.seen.wrongWay / r.seen.walkFrames < 0.03, `the staff faced the way they went but at the paths' corners (${r.seen.wrongWay} of ${r.seen.walkFrames} frames)`);
+    assert.ok(r.face.checked > 300 && r.face.off / r.face.checked < 0.02, `the golfers faced the way they walked (${r.face.off} of ${r.face.checked} frames off by more than a turn)`);
+    for (const k of ['pro', 'attendant', 'robot', 'car', 'cart'] as const) assert.ok(r.worst[k] <= 1 + 1e-6, `${k}: ${r.worst[k].toFixed(3)}`);
+    assert.ok(r.worst.golfer <= 1 + 1e-6, `golfer: ${r.worst.golfer.toFixed(3)} of the most a frame may be (the end of a route, the first step in the line, and the path's pace)`);
+    // the paths are used
+    assert.ok(r.seen.golferFrames > 1000 && r.seen.golferOn / r.seen.golferFrames > 0.3, `${r.seen.golferOn} of ${r.seen.golferFrames} frames the golfers walked were on a path`);
+    assert.ok(r.seen.attFrames > 500 && r.seen.attOn / r.seen.attFrames > 0.2, `${r.seen.attOn} of ${r.seen.attFrames} frames the attendants walked out and back were on a path`);
   }
 });
 
