@@ -218,6 +218,13 @@ A dead button must not ship. Two checks:
   (a tab already open, the currency already set) says why. It prints the table and exits 1 on a FAIL (about 4 minutes; `--headed` to watch,
   `--debug` prints the state of a click that changed nothing, `--stop-after tutorial` stops early).
 
+- **`npm run holes:playthrough`** (`scripts/dev/holes-playthrough.mjs`, #1296: "WE need alot more testing"): a headless run of the real game with real clicks, on its own dev servers
+  (the normal game, then the jam build). A new game -> Course > Holes > New hole -> a tee, a green, Build (the hole's ground is DRAWN: the map's pixels over it change; the frame loop and
+  the ground's bakes are alive) -> the + beside Hole 1 (its dropdown whole at 100% and at the largest Text size, no horizontal scrollbar) -> Plan a hole (it shows what it did) -> a second
+  hole by two clicks -> Edit Hole Layout: the Paint hole 1 palette (1 Fairway ... 8 Long grass, 9 Trees, 0 Create your own), each surface painted and Trees planted (none on a green or a
+  tee) -> the hole card's Play: Just hole N and All N holes open the golf view (Cinderlinks), not the old top-down round -> nothing on screen or in a canvas says "Stand In". The jam
+  part checks the same first hole is drawn and that no hand shaping shows (no Shape by hand, More options, Paint hole, saved or empty holes). About 6 minutes; exits 1 on a FAIL or a console error.
+
 Order before a jam build: `npm run typecheck`, `npm test`, `npm run build:jam`, `npm run jam:smoke`.
 
 ## Out of the jam build (J1 hides them when JAM)

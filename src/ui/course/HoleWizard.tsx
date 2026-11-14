@@ -10,12 +10,13 @@ import { PaybackLine } from '../golf/Decisions';
 import { money } from '../golf/money';
 import { FRAME_TREE_PRICE } from '../../game/golf/holeframe';
 import { SURFACE_BRUSHES, type BrushKind } from '../../game/paint';
-import { BrushShape, GrassEdgesEntry, GroundHeight, SurfaceSwatches, surfaceKeysOf } from './BrushControls';
+import { BrushShape, GrassEdgesEntry, GroundHeight, SurfaceSwatches, TreesBrush, ownPalette, surfaceKeysOf } from './BrushControls';
 import { CourseEdges } from './CourseEdges';
 import { GRID_KINDS } from '../../game/paint-tool';
 import { EditTees } from '../golf/TeeSets';
 import { showCheck } from '../spotlight/shows';
 import { ActionTile, TILE_SMALL } from '../ActionTile'; // J8 (#1261): Seed, Sod, Frame with trees, Edit Hole Layout and Delete wear painted tiles
+import { JAM } from '../../game/features';
 
 const STEPS = ['Tee', 'Green', 'Shape'] as const;
 /** what each step asks for, under the steps */
@@ -44,7 +45,7 @@ export function HoleWizardPanel({ game }: { game: Game }) {
   // T205: the editor opening (New hole, or Edit hole from the card or the status line, scrolled down to the badges) brings the panel back to
   // its top, so "New hole n" / "Edit hole n" and its steps show
   const ref = useRef<HTMLDivElement>(null), opened = w.base ? w.hole : 0;
-  useEffect(() => { const panel = ref.current?.closest('[data-testid="tool-panel"]'); if (panel) panel.scrollTop = 0; }, [opened]);
+  useEffect(() => { const panel = ref.current?.closest('[data-testid="tool-panel"]'); if (panel) panel.scrollTop = 0; }, [opened, p.planNudge]); // (#1296: and at every Plan a hole, even on the tee step it was on)
   return (
     <div className="wizard-card" data-primary="wizard" ref={ref}>
       <div className="flex flex-wrap items-center justify-between gap-2">
@@ -80,8 +81,9 @@ export function HoleWizardPanel({ game }: { game: Game }) {
         </div>
       )}
       {gh && <Stats game={game} />}
-      {w.base && w.step === 'shape' && <EditTees game={game} n={w.base.hole} /> /* T268: place, move and remove each tee set */}
-      {w.base && w.step === 'shape' && <EditPaint game={game} />}
+      {/* (#1296, docs/JAM.md "Future development": the jam has no tee sets and no painting by hand: Edit Hole Layout moves the tee, the green and the bends alone) */}
+      {w.base && w.step === 'shape' && !JAM && <EditTees game={game} n={w.base.hole} /> /* T268: place, move and remove each tee set */}
+      {w.base && w.step === 'shape' && !JAM && <EditPaint game={game} />}
       {gh && !w.base && <Planting game={game} /> /* T254: Edit Hole Layout plants nothing */}
       {gh && w.step === 'shape' && !w.base && <Frame game={game} cost={gh.cost} />}
       {gh && w.step === 'shape' && !w.base && <Ground game={game} cost={gh.cost} />}
@@ -144,22 +146,25 @@ function FromMyHoles({ game }: { game: Game }) {
  *  Flatten: the owner, 2026-10-28: "add the sculpting too to raise and lower and flatten ground to the hole editing"), the handles still
  *  dragging under it; picking a surface puts it down, and Ground height puts the surface brush down */
 function EditPaint({ game }: { game: Game }) {
-  const p = game.paint, n = p.editingHole, on = p.mode === 'brush' && p.planOpen, height = p.mode === 'height' && p.planOpen;
+  const p = game.paint, n = p.editingHole, on = p.mode === 'brush' && p.planOpen, height = p.mode === 'height' && p.planOpen, trees = p.treesInHand && p.planOpen;
   // T271: a custom grass in hand paints too (its swatch after the eight); the lit swatch again puts the brush down
   const gr = on ? p.grass : null, name = gr?.name ?? SURFACE_BRUSHES.find(b => b.kind === p.brushKind)?.name ?? '', keys = surfaceKeysOf(game);
   const pick = (k: BrushKind) => p.setEditBrush(on && p.brushKind === k && !p.grassInHand ? null : k, 0);
   const pickGrass = (k: number) => (on && p.grassInHand === k ? p.setEditBrush(null) : p.setGrass(k));
-  const help = on ? `Drag on the map to paint ${name.toLowerCase()} into hole ${n}; the tee, the green and the bends still drag. Esc puts the brush down.`
-    : `Pick a surface to paint into hole ${n} (keys 1–${keys}); the tee, the green and the bends still drag.`;
+  // #1296 (the owner: "add trees to the paint hole 1 list at nr 9"): Trees, the ninth swatch (key 9): the lit swatch again puts the brush down
+  const pickTrees = () => (trees ? p.setEditBrush(null) : p.setEditTrees());
+  const help = trees ? `Drag on the map to plant the look's own trees round hole ${n}: never on a green or a tee; the tee, the green and the bends still drag. Esc puts the brush down.`
+    : on ? `Drag on the map to paint ${name.toLowerCase()} into hole ${n}; the tee, the green and the bends still drag. Esc puts the brush down.`
+    : `Pick a surface to paint into hole ${n} (keys 1–${keys}${ownPalette(game) ? ', 9 trees' : ''}); the tee, the green and the bends still drag.`;
   return (
     <section className="mt-2" aria-label="Paint this hole" data-section="edit-paint">
       <h4 className="sub-head">{`Paint hole ${n}`}</h4>
-      <SurfaceSwatches game={game} on={on ? p.brushKind : null} pick={pick} pickGrass={pickGrass} />
-      <BrushShape game={game} brush={on} arm={() => p.setEditBrush(p.brushKind)} />
+      <SurfaceSwatches game={game} on={on ? p.brushKind : null} pick={pick} pickGrass={pickGrass} trees={{ on: trees, pick: pickTrees }} />
+      {trees ? <TreesBrush game={game} /> : <BrushShape game={game} brush={on} arm={() => p.setEditBrush(p.brushKind)} />}
       <div className="mt-2 flex flex-wrap items-center gap-1.5">
-        <button className={`chip ${on && p.rubOut ? 'chip-on' : ''}`} aria-pressed={on && p.rubOut} title="Erase takes the top surface under the brush (hold Alt for a moment while brushing); no refund" onClick={() => { const v = !(on && p.rubOut); if (!on) p.setEditBrush(p.brushKind); p.rubOut = v; game.emit(); }}>Erase</button>
+        {!trees && <button className={`chip ${on && p.rubOut ? 'chip-on' : ''}`} aria-pressed={on && p.rubOut} title="Erase takes the top surface under the brush (hold Alt for a moment while brushing); no refund" onClick={() => { const v = !(on && p.rubOut); if (!on) p.setEditBrush(p.brushKind); p.rubOut = v; game.emit(); }}>Erase</button>}
         <button className={`chip ${height ? 'chip-on' : ''}`} data-ground-height aria-pressed={height} aria-expanded={height} title="Ground height: raise, lower, smooth or flatten the ground round this hole (earthworks are paid for)" onClick={() => p.setEditHeight(height ? null : {})}>Ground height <span aria-hidden>{height ? '▾' : '▸'}</span></button>
-        {(on || height) && <button className="chip" title="Put the brush down: the plan's handles alone (Esc)" onClick={() => p.setEditBrush(null)}>Handles only</button>}
+        {(on || height || trees) && <button className="chip" title="Put the brush down: the plan's handles alone (Esc)" onClick={() => p.setEditBrush(null)}>Handles only</button>}
       </div>
       {height ? <GroundHeight game={game} on={height} arm={() => p.setEditHeight()} note="The tee, the green and the bends still drag; Esc puts it down." /> : <p className="sub-line mt-1">{help}</p>}
       {/* T253 (#735; the owner, 2026-10-28, editing hole 1: "Edges is just a heading ... there is no checkbox or slider yet to make shit

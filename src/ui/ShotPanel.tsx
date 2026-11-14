@@ -1,4 +1,3 @@
-import { JAM } from '../game/features';
 // The owner's shot panel (docs/GOLF-PLAY.md decision 7, P4b; T316 #902 the 3-click swing): open while his shot is due (the game is paused for it). The
 // hole, par and stroke; the distance to the pin and to the aim; his lie; the clubs his lie allows (the suggested one marked; Q/E or the wheel cycle them)
 // with the club's full carry; the half-circle swing meter (swing.ts SwingMeter): Enter or a click on the meter starts the swing, the second sets the power,
@@ -7,7 +6,7 @@ import { JAM } from '../game/features';
 // T334 (#960): the conditions (play/conditions.ts, Game.shotConditions): the wind (a dial: the arrow is the way it blows against the shot, up the line a tailwind; its speed, gusts and
 // what it adds to this shot), the lie and what it does (carry, scatter, spin, a flier's chance) and the slope under the ball; the meter's aim mark is where to stop the power for the
 // distance the shot PLAYS like in them.
-// The meter is a plain canvas (no atlas page): a labelled stand-in until meter art exists.
+// The meter is a plain canvas (no atlas page), with no caption on it (#1296: nothing on screen says Stand In).
 import { useEffect, useRef, useState } from 'react';
 import type { Game, ShotState } from '../game/engine';
 import { BOOST, CLUB_GROUPS, CLUB_NAME, CLUB_SHORT, LEVEL_NAME, METER, SwingMeter, allowedClubs, compassOf, meterMark, pickText, shapeText, sweetSpot, swingEffect, type Lie, type SwingPhase } from '../game/golf/play';
@@ -79,7 +78,6 @@ function drawMeter(c: HTMLCanvasElement, m: SwingMeter | null, t: number, look: 
   ctx.font = '600 11px system-ui, sans-serif'; ctx.fillStyle = b > 0 ? '#fca5a5' : 'rgba(226,232,240,0.6)';
   ctx.fillText(b > 0 ? `boost +${Math.round(b * 100)}%${b >= BOOST.max ? ' (max)' : ''}` : look.boost ? 'Space: boost' : '', CX, CY + 8);
   if (result) { ctx.font = '700 13px system-ui, sans-serif'; ctx.fillStyle = '#fde68a'; ctx.fillText(result, CX, CY + 34); }
-  ctx.font = '500 8px system-ui, sans-serif'; ctx.fillStyle = 'rgba(226,232,240,0.4)'; ctx.textAlign = 'left'; if (!JAM) ctx.fillText('Stand In for swing meter art', 4, CH - 4);
 }
 
 /** the wind dial and the lie's box for the open shot (T334): re-read ten times a second, as the gusts move */

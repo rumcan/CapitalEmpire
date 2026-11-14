@@ -1181,7 +1181,7 @@ export class Game {
   /** a drag in progress; build: a right-button press in the road tool (released without moving, it builds the route, as Enter) */
   private dragging: null | { kind: 'pan' | 'bulldoze' | 'park'; sx: number; sy: number; camX: number; camY: number; moved: boolean; /** T392, T393: a plain right press that became the pan: on release without a drag it takes the step Esc takes (cancelOrClose; a route in hand: its last point back, T207) */ rc?: boolean; aim?: Pt; /** a Select click's hole under it (0: none; T174) */ hole?: number; /** T200: a click on Land for sale's overlay (it opens the block's card on release, never buys) */ land?: Pt; /** T240: a Walk mode click (your character walks there on release) */ you?: boolean; /** J9: a click (no drag) with the start in hand places it on release */ place?: boolean } = null;
   /** the Paint tool: painted ground areas, its settings and the outline being drawn (docs/PAINT-TOOL.md) */
-  paint = new PaintTool({ collarDefault: s => borderDefault(s, finishOf(paintedSurfaces())), progress: () => this.bump('pieces'), setLotGround: (k, p) => { this.paintRev++; this.setLotGround(k, p); }, emit: () => this.emit(), save: () => this.scheduleSave(), toast: (t, k) => this.toast(t, k), affine: o => this.paintAffine(o), placeProps: (ps, seed) => this.placePresetProps(ps, seed), golfMode: () => this.golfMode, money: () => this.money, spend: n => this.traffic.spend('construction', n), ownedLand: pts => !this.golf || polyInParcels(this.golf.parcels ?? [this.golf.parcel], pts), currentMonth: () => !this.golf ? 0 : this.golfMonthIndex(), plant: (ids, x, y, r, spacing, size, seed) => this.plantProps(ids, x, y, r, spacing, size, seed), unplant: (x, y, r, trees) => this.unplantProps(x, y, r, trees), plantPool: (k, f) => plantPool(LIBRARY, k, f), courseHeight: () => this.courseHeight, roadsNear: (x, y, r) => { let k = 0; return [...this.net.segsNear({ x, y }, r)].map(s => ({ id: ++k, ax: s.a.x, ay: s.a.y, bx: s.b.x, by: s.b.y, halfWidthTiles: s.cls.h + s.cls.walk })); }, roadRev: () => this.net.version, heightChanged:b => { this.courseHeightChanged(unionCourseBox(b, this.flattenRoadsIn(b))!); },
+  paint = new PaintTool({ collarDefault: s => borderDefault(s, finishOf(paintedSurfaces())), progress: () => this.bump('pieces'), setLotGround: (k, p) => { this.paintRev++; this.setLotGround(k, p); }, emit: () => this.emit(), save: () => this.scheduleSave(), toast: (t, k) => this.toast(t, k), affine: o => this.paintAffine(o), placeProps: (ps, seed) => this.placePresetProps(ps, seed), golfMode: () => this.golfMode, money: () => this.money, spend: n => this.traffic.spend('construction', n), ownedLand: pts => !this.golf || polyInParcels(this.golf.parcels ?? [this.golf.parcel], pts), currentMonth: () => !this.golf ? 0 : this.golfMonthIndex(), plant: (ids, x, y, r, spacing, size, seed, ok) => this.plantProps(ids, x, y, r, spacing, size, seed, ok), desertLook: () => this.desertTheme, unplant: (x, y, r, trees) => this.unplantProps(x, y, r, trees), plantPool: (k, f) => plantPool(LIBRARY, k, f), courseHeight: () => this.courseHeight, roadsNear: (x, y, r) => { let k = 0; return [...this.net.segsNear({ x, y }, r)].map(s => ({ id: ++k, ax: s.a.x, ay: s.a.y, bx: s.b.x, by: s.b.y, halfWidthTiles: s.cls.h + s.cls.walk })); }, roadRev: () => this.net.version, heightChanged:b => { this.courseHeightChanged(unionCourseBox(b, this.flattenRoadsIn(b))!); },
     journal: { begin: () => { this.propLog = { added: [], removed: [], cut: [], cutAuto: [] }; }, end: () => { const j = this.propLog; this.propLog = null; return j && (j.added.length || j.removed.length || j.cut.length || j.cutAuto.length) ? j : null; }, undo: j => this.swapProps(j as PropLog, true), redo: j => this.swapProps(j as PropLog, false) },
     netJournal: this.netJ, // T396: a road step's changes to the network
     changed: pins => this.syncCourseMarkers(pins),
@@ -3812,12 +3812,14 @@ export class Game {
     this.scheduleSave(); return n;
   }
   /** a plant brush dab (paint-tool.ts, plant.ts): sprites from ids at the candidate spots of the circle, each at least 0.9 x spacing from
-   *  every prop (planted, lot, town or forest) and where canPlace allows; sized lo..hi times the sprite's map scale; free, like Paint. Returns how many */
-  plantProps(ids: string[], x: number, y: number, r: number, spacing: number, size: [number, number], seed: number): number {
+   *  every prop (planted, lot, town or forest) and where canPlace allows (and where ok, when given, says so); sized lo..hi times the sprite's map scale; free, like Paint.
+   *  Returns how many */
+  plantProps(ids: string[], x: number, y: number, r: number, spacing: number, size: [number, number], seed: number, ok?: (x: number, y: number) => boolean): number {
     const pool = ids.flatMap(id => LIB_INDEX.get(id) ?? []); if (!pool.length) return 0;
     const rnd = mulberry(seed * 7919 + 13), s2 = (0.9 * spacing) ** 2; let n = 0;
     for (const q of plantPoints(x, y, r, spacing, seed)) {
       if (q.x < 1 || q.y < 1 || q.x > MAP - 1 || q.y > MAP - 1) continue;
+      if (ok && !ok(q.x, q.y)) continue; // (#1296: the hole's Trees brush leaves the greens and tees bare)
       let near = false;
       for (const p of this.propGrid.query([q.x - spacing, q.y - spacing, q.x + spacing, q.y + spacing])) if ((p.x - q.x) ** 2 + (p.y - q.y) ** 2 < s2) { near = true; break; }
       if (near) continue;
@@ -6170,6 +6172,18 @@ export class Game {
     if (this.refuseLocked('course')) return;
     const t = this.teeSpot(); if (t) this.lookAt(t.x, t.y, 0.12);
     this.setTool('course'); this.paint.setPlan(); if (this.playableHoles < 1) this.teeRingOn = true; this.emit();
+  }
+  /** #1296 (the owner: "clicking on plan a hole does nothing"): what Plan a hole shows once New hole's wizard waits on hole n's tee (it waits there after every Build, so the same
+   *  card again changed nothing on screen): a toast says which hole and what to click, and the camera goes to where its tee may go (the first hole's ring spot in a range start, as
+   *  startFirstHole; else beside the last built hole's pin: the next tee often goes by the last green). The Holes panel scrolls to the card (PaintTool.planNudge) */
+  planHoleShown(): void {
+    const p = this.paint, n = p.wizard.hole;
+    if (this.playableHoles < 1) { const t = this.teeSpot(); if (t) { this.lookAt(t.x, t.y, 0.12); this.teeRingOn = true; } }
+    else {
+      const last = this.courseHoleViews().filter(v => v.started && v.n !== n).pop(), pin = last ? this.golf?.pins.find(q => q.hole === last.n) : undefined;
+      if (pin) this.lookAt(pin.x, pin.y, Math.min(0.2, Math.max(0.08, this.cam.z)));
+    }
+    this.toast(`New hole ${n}: click a tee on your land, then a green`, 'info'); this.emit();
   }
   /** the ring's suggested tee in a range start (P22 2.8): P06's newHoleSpot once T047 lands; until then guide.ts's fallbackTeeSpot, beside the
    *  range on the parcel. Null in other games */
@@ -10351,7 +10365,7 @@ export class Game {
     if (sp.kind === 'booked') this.yourRoundStart('all', []);
     else if (sp.kind === 'event' && sp.id) this.playEvent(sp.id as EventId);
     else if (sp.kind === 'tournament') this.toast('Your group tees off soon', 'info');
-    if (this.yourRound()) { this.watchFor('round', true); if (!this.shot) this.yourJump(); }
+    if (this.yourRound()) { if (this.view3pHole === null) { this.watchFor('round', true); if (!this.shot) this.yourJump(); } } // (#1296: a round that opened the golf view holds the clock still: the view's own pause)
     this.emit();
   }
   /** Start round on the first-tee card: your booked round (the clock runs to its tee time; when that has passed, it begins now) */
@@ -10424,8 +10438,9 @@ export class Game {
     return { options: holeOptions(holes.length), holes, why: w ?? (v ? null : 'The course has no holes to play yet') };
   }
   /** starts your round on the holes chosen at the first tee (all, the front 9, the back 9, or a pick): the ball on its first tee, the card empty. A round
-   *  booked today and not yet under way is cancelled (you play this one by hand instead); one under way is refused */
-  yourRoundStart(choice: HoleChoice, picked: number[] = [], rules?: RoundRules) {
+   *  booked today and not yet under way is cancelled (you play this one by hand instead); one under way is refused. #1296: the golf view from behind the golfer opens
+   *  on it at once (openRoundView), unless inView is false (an event's round opens it itself once its competition rules are set) */
+  yourRoundStart(choice: HoleChoice, picked: number[] = [], rules?: RoundRules, inView = true) {
     const p = this.playerNow(), v = this.yrView(), c = this.yourChoices(); if (!p) return;
     if (c.why) { this.toast(c.why, 'warn'); return; }
     if (!v) return;
@@ -10438,9 +10453,11 @@ export class Game {
     this.setYourRound(r); this.youTeeOpen = false; this.yrCard = false; this.yrFlight = null;
     this.shutToolsForRound(); // T328: your round clears the tool panels
     this.welcomePull('round'); // T389: a new game's first round deals the welcome pull
-    const h = holeOf(v, holes[0]!)!, brought = this.youCartBring(h.tee);
-    this.toast(`Your round: ${holes.length} hole${holes.length > 1 ? 's' : ''}. Hole ${h.n}, par ${h.par}: walk up to the tee to address the ball${brought ? ' (your cart is by the tee)' : ''}`, 'good');
+    const h = holeOf(v, holes[0]!)!, brought = this.youCartBring(h.tee), view = inView && !this.hole3pWhy(h.n).length;
+    this.toast(view ? `Your round: ${holes.length} hole${holes.length > 1 ? 's' : ''}. Hole ${h.n}, par ${h.par}: the golf view opens on its tee`
+      : `Your round: ${holes.length} hole${holes.length > 1 ? 's' : ''}. Hole ${h.n}, par ${h.par}: walk up to the tee to address the ball${brought ? ' (your cart is by the tee)' : ''}`, 'good');
     this.emit();
+    if (inView) this.openRoundView();
   }
   /** each frame (real seconds): your ball's flight (the camera follows it), then the snap: near your ball (SNAP_TILES), on foot or in the cart, you
    *  stand at the address and the shot opens */
@@ -11042,6 +11059,18 @@ export class Game {
     this.yrCard = false; this.shot = null; this.view3pRound = !now.match; this.open3p(h.n);   // (a money match: start3p plays it as T428's Match3p)
     if (this.view3pHole === null) this.view3pRound = false;
   }
+  /** #1296 (the owner, 2026-11-14: "I clicked on play just this hole and it started up the wrong golf game? is should be the cider one??"): a round of yours that has just
+   *  begun (the hole card's Play chip, just this hole or all of the course; the first tee's Play a round yourself; a booked round or an event's; a money match) is played
+   *  in the golf view from behind the golfer at once (open3pRound), not on the map's top-down shot panel. That top-down round stays as the fallback for a hole the view
+   *  refuses (golf/play/playable3p.ts): the toast then says why and the round plays on from above. Returns whether the view opened */
+  private openRoundView(): boolean {
+    const r = this.yourRound(), v = this.yrView(); if (!r || !v || r.over) return false;
+    const h = holeOf(v, rowOf(r).i); if (!h) return false;
+    const why = this.hole3pWhy(h.n);
+    if (why.length) { this.toast(`The golf view cannot open hole ${h.n} (${why.join(', ')}): you play it from above`, 'warn'); return false; }
+    this.open3pRound();
+    return this.view3pHole !== null;
+  }
   /** whether the open view plays your round (else the free hole) */
   private view3pRound = false;
   /** T430: a stroke of your round played in the view: the shot's report, its progress (T431), and the hole's end as the top view has it */
@@ -11084,6 +11113,7 @@ export class Game {
     const h = holeOf(v, holes[0]!)!; this.youCartBring(h.tee);
     this.toast(scope === 'hole' ? `Practice: hole ${h.n}, par ${h.par}. Free, and not recorded` : `Practice round: ${holes.length} holes. Free, and not recorded`, 'good');
     this.yourJump(); this.emit();
+    this.openRoundView(); // (#1296: the Play chip plays in the golf view, hole by hole for all of the course; the top-down round is the fallback for a hole the view refuses)
   }
   /** a practice round has ended (or was quit): back where you were, as you were: the camera, the tool and the side modes, and the hole card */
   private practiceReturn() {
@@ -11218,11 +11248,12 @@ export class Game {
     const why = this.eventPlayWhy(id); if (why) { this.toast(why, 'warn'); return; }
     const ev = this.clubEv(), d = this.eventToday()!;
     ev.entered[id] = d.season;
-    this.yourRoundStart('all', [], { ...COMPETITION_RULES });
+    this.yourRoundStart('all', [], { ...COMPETITION_RULES }, false); // (#1296: the golf view opens below, once the round is the event's)
     const r = this.yourRound(); if (!r || r.mode) return;
     this.setYourRound({ ...r, mode: MODE_OF[id], rules: { ...COMPETITION_RULES } });
     this.eventCardOpen = null; this.evBoardCache = null;
     this.toast(`The ${CLUB_EVENTS[id].name}: competition rules (no mulligans, no gimmies). Good luck!`, 'good'); this.emit();
+    this.openRoundView();
   }
   /** the first tee's offer of today's event (null: none today, or you play it already) */
   eventTee(): { id: EventId; name: string; why: string | null } | null {
@@ -11312,7 +11343,8 @@ export class Game {
     this.welcomePull('round'); // T389: a new game's first round deals the welcome pull (a money match is one)
     const h = holeOf(v, hs[0]!)!, brought = this.youCartBring(h.tee);
     this.toast(`${firstName(o.name)} is on: ${hs.length} holes of match play for $${stake.toLocaleString('en-US')}. Meet at the ${ordinal(h.n)} tee${brought ? ' (your cart is by the tee)' : ''}`, 'good');
-    this.emit(); return true;
+    this.emit(); this.openRoundView(); // (#1296: the match is played in the golf view, as T428's Match3p plays it)
+    return true;
   }
   /** the opponent's figure: placed beside their ball (at its address, facing the pin; on the green by the cup once holed), its swing clip running */
   private matchFigure(dt: number, r: YourRound) {
