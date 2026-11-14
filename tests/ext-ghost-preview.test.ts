@@ -138,3 +138,22 @@ describe('ext/ghost-preview (T018)', () => {
     assert.deepEqual(colorsForStatus('invalid'), { fill: GHOST_STYLE.invalidFill, stroke: GHOST_STYLE.invalidStroke });
   });
 });
+
+describe('ext/ghost-preview: the note by the pointer (J9, #1268)', () => {
+  /** a mock view whose context measures text (8 px a letter) and has a canvas 400 px wide: the real context has both */
+  function measured(dpr = 1) {
+    const { view, ops } = makeMockView(dpr), ctx = view.ctx as GhostCanvasCtx & { align?: string[] };
+    ctx.measureText = (t: string) => ({ width: t.length * 8 * dpr }); ctx.canvas = { width: 400 * dpr };
+    const aligns: string[] = []; const fill = ctx.fillText.bind(ctx); ctx.fillText = (t, x, y) => { aligns.push(ctx.textAlign); fill(t, x, y); };
+    return { view, ops, aligns };
+  }
+  it('stays right of the pointer where it fits, flips to the left where it would run off the right edge, and leaves the alignment as it found it', () => {
+    const a = measured(); drawGhostHint(a.view, 50, 60, 'Too near the edge', true);
+    assert.ok(a.ops.some(o => o.startsWith('fillText:Too near the edge@64,48')), 'right of the pointer: x = 50 + 14'); assert.deepEqual(a.aligns, ['left']);
+    const b = measured(); drawGhostHint(b.view, 380, 60, 'Too near the edge', true);
+    assert.ok(b.ops.some(o => o.startsWith('fillText:Too near the edge@366,48')), 'left of the pointer: x = 380 - 14'); assert.deepEqual(b.aligns, ['right']);
+    assert.equal(b.view.ctx.textAlign, 'left', 'the alignment is left again after the note');
+    // a note wider than the room on either side stays where it was (never off the left edge instead)
+    const c = measured(); drawGhostHint(c.view, 150, 60, 'x'.repeat(40), false); assert.deepEqual(c.aligns, ['left']);
+  });
+});

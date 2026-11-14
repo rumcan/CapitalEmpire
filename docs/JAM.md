@@ -102,7 +102,7 @@ hole, about $23k; $12k to $17k without frame trees and earthworks), the clubhous
 | Never borrows | the clubhouse at month 2, then bare holes as cash allowed (months 3, 11, 17, 21) | 4 | $129k |
 | Idle | the range and its car park only | 0 | about $74k |
 
-## J7: the Build menu, no pushing, the old range for sale (#1225, the owner 2026-11-13)
+## J7: the Build menu, no pushing, the old range for sale (#1225, the owner 2026-11-13; J9 below: now bought with the land, where the player starts)
 "make a better build menu with pictures and let the player decide. dont push them to build the practice green and chipping area"; "def add a
 built in dirt parking lot"; "lets place the range for him. he has to buy it ... junk yard stuff ... stuff he has to clean up ... with distance to them".
 - **Build** (rail, after Select; `src/ui/jam/BuildMenu.tsx`, data in `build-menu.ts`): picture cards in four tabs (Range, Course, Club, Practice), each
@@ -111,7 +111,7 @@ built in dirt parking lot"; "lets place the range for him. he has to buy it ... 
 - **No step list**: the range's guided build (step list, rings, rewards) is off in the jam; `Build ▸ Tips` (`src/ui/jam/tips.ts`) holds optional tips. The
   start tutorial ends on "Build what you like". Cart paths and the practice greens are open from the start; New hole and the clubhouse still open at
   `JAM_RAMP_TAKINGS`. The ramp's hints and the practice-area toast are gone; the welcome card is not shown.
-- **The old range for sale**: a new jam game lays the range (with its free dirt car park) on the start's plot at the start's set-back, at the spot within
+- **The old range for sale** (J9: only a game saved before it; a new game buys it when the start is chosen): a new jam game lays the range (with its free dirt car park) on the start's plot at the start's set-back, at the spot within
   reach of the home that leaves the most of the parcel free on one side. It draws no golfer until **Buy** ($15,000: Build or the range card). The Car park
   card then enlarges it (gravel, then paving). The guide's rewards are gone and the car park is free: the start is about $7.5k leaner than T459's runs.
 - **Junk** (`golf/junk.ts` `RANGE_JUNK`, the library's scrapyard set): nine piles scattered (seeded) over the outfield, each with a distance pill; each pile
@@ -155,6 +155,54 @@ under its 128 KB limit). v10 to v12 are `ACTION_TILES` (the ball room tree's upg
 - **The top bar** keeps one row by tiers (`topBarTier` in `uiScale.ts`, the screen's width over the Text size): every picture from 1150 px of the UI layer, without the speed bar's and zoom's below 1065 (1366 px at 125%),
   without the Cash chip's too below that (1280 px at 125%); narrower, the bar wraps to a second row as it always has. The month note starts under the bar (`--hud-top`), however many rows it has.
 
+## J9: the start is placing your driving range (#1268, the owner 2026-11-14)
+"the start should be placing the driving range and that should buit your house and buy the property. so the guy can start where he wants".
+- **The flow**: title card, who-are-you, then **Choose where to start** (a small card at the bottom: "Click to place your driving range. This buys the land and the old range
+  for $15,000 and builds your house."). The valley is bare (no road, no land, no house), seen whole from the planner view over the middle of the map, the clock stopped and
+  nothing saved. The driving range is in hand as the game's own placement ghost (`golf/placing.ts` `Placeable`, `sticky`): its plot and front, its car park and drive, the land the
+  start buys (the parcel) and the county road it comes with, **green** where a start fits and **red** with a short reason by the pointer. A click lays the start there
+  (`Engine.layStart`); a drag pans, the wheel zooms, Esc and a right click put nothing down; **R** (Shift+R back, or the card's Turn) turns the range a quarter (the way the
+  golfers hit: the generator takes a facing for free, a facing is one more geometry check). **Pick a spot for me** lays today's automatic start (the same start for the same seed:
+  nobody is stuck, the keyboard has a way, the smoke test a button). Then the tutorial as before. The rail, the top bar, the hint bar, the goal chip and the minimap show once the
+  start is laid. A click in the first 0.7 s after the card shows places nothing (the second click of a double click on "That's me"). Before the pointer is over the map the ghost
+  stands on the automatic plan's spot (the camera is on it), green, so there is a green ghost to read first.
+- **What a click does**: the county road edge to edge (free town road pieces, bridged), the town's seed across it, the parcel (the player's land), the home (the trailer yard in the
+  corner of the range's plot, as the start always had it), the range on its plot with its free dirt car park, and the old range **bought at once**: $15,000 of the $75,000 (so
+  **$60,000**, its push picker and attendant, 800 balls, the junk on the outfield, `forSale` false): exactly what Buy gave, so the Balance above does not move (the same demand a
+  day, 47, on the county road at a chosen spot and at the automatic one). The worker's town and books start again at the click (nothing is spent before it), the camera goes to the
+  range at the street zoom, the clock runs and the character stands in the start in the look picked on Who are you. A game chosen this way saves at the click and loads as any other.
+- **The generator takes an anchor** (`golf/rangestart.ts`: `startProbe`, `startSpotAt`, `settleSpot`, `planRangeStartAt`): the pointer's tile is the middle of the range front; J (the
+  range's junction on the county road) snaps to the town's 40-tile lattice for the facing, so the range moves in 80 m steps. Then the same rules the automatic start has always
+  applied (`geomWhy`: the parcel's size from `COURSE_SIZES` and 98% playable, the range plot dry, the front, car park and drive corridor buildable, the town window across the road 75%
+  buildable, all of it 64 tiles inside the map) and the same county road (`regionalRoute`: 600 tiles straight each way, at most two bridges, no tunnel, edge to edge). With no anchor
+  `planRangeStart` is untouched (`tests/golf-rangestart-anchor.test.ts` keeps the sha1 of its plan for seeds 1 to 12, with and without the probe, and checks every invariant of the
+  automatic start on every anchored spot that fits, on twelve seeds and at every facing, and that every other spot is refused with one of the six reasons below).
+- **Where a start is refused** (red, one of six reasons, by the pointer): too near the map's edge for the road and the town (the road needs 600 tiles of straight run each way, so J is
+  in the middle of the map: 11 to 19% of the whole map fits, a quarter to a third of the view the choice opens on); needs clear, flat ground for the shop and car park (water, a creek, the river's bank or woodland where they go); not enough
+  open land beside it for a course; no room for the town across the road; water or a creek on the range land; the county road cannot get past the water. Water, woodland under the shop and the map's
+  edge are all among these. A refusal at the click shows the same words as a toast.
+- **Cost** (measured on the jam build in headless Chrome, and in node for the generator): a spot the pointer asks about is a few lookups in the terrain's integral images (the ones the automatic
+  plan reads: the probe makes them once, 16 ms, and the plan shares them), kept per lattice cell: over 10,906 pointer positions of the opening view (6,311 of them green) the ghost's test took 1.3 us
+  a position on average and 0.2 ms at worst, none over 4 ms, and a pointer standing still costs 0.2 us a frame (its shapes are made once per spot, so a frame allocates nothing). The county road, 9 ms
+  median (11 ms at p90, up to about 55 ms the first time on a map), is worked out only once the pointer has rested on a spot for 140 ms, and at the click, never while it moves; kept per J and axis.
+  Generation is no slower: `planRangeStart` took 24.9 ms before J9 and takes 24.3 ms now (the probe's 16 ms included; mean of 12 seeds, best of 5 each), and a new game's work on the page's thread
+  (`Game.newTown`, four runs each) is 0.49 to 0.62 s with the choice (terrain, plan, probe) plus 26 to 61 ms for the click, against 0.52 to 0.89 s with `?pick=0` (the automatic start laid at
+  once): the valley's generation is nearly all of it. The click lays the start in about 0.2 s (county road, land, house, range, the purchase), the new view's ground is baked about 3 s later.
+  After the click the tutorial's card waits for the new view's ground, 4 s at most (`START_FIRST_VIEW_WAIT_MS`).
+- **Old saves** load as they were (the choice runs only for a brand-new game, and nothing is saved while it is chosen). A game from before J9 with the old range still for sale keeps Buy ($15,000:
+  Build and the range card; its tutorial's first step still says the range is for sale), and a bare start (the trailer, the range not placed) keeps the old placement along the county road on its
+  plot. `?pick=0` (any build) starts the automatic start at once, as a bench, a fixture and a dev `?seed=` do: a script that starts a new game with none of them now gets the choice (click
+  "Pick a spot for me"); `START_PICK` in `features.ts` is the one-line switch back to today's start.
+- **The normal game shares all of it** (no fork): its new game is chosen the same way, the range costs the same `RANGE_PLACE_COST` at the click (no dirt car park, no kit: its guide's step 2 asks
+  for the car park as before), its guide's first step ("Place your driving range") is ticked at once and its text is read only by a bare start from an older save, where it is true. The refusal
+  "Off your land: place it on your plot" cannot meet a new game's first placement: the choice is the first placement, the land comes with it.
+- **Looking at it**: `node scripts/jam/j9-shots.mjs [--base url] [--only shots,turn,drag,sweep,place,auto,run,second,reload,gen,zoom] [--tag x-] [--scale 1.25]` drives the jam build
+  (or a dev server) through the choice with headless Chrome: shots of the step, a green and each red ghost, R, a drag, the ghost's cost, a click, the game running, a second
+  new game, a reload, a new game's timing; `node scripts/jam/j9-legacy.mjs` starts a game from before (`?pick=0`), reloads into it and Buys. `jam:smoke` goes through the choice
+  (`--pick spot` clicks a spot that fits instead of "Pick a spot for me"). Shots: `docs/jam-shots/j9-*.jpg`.
+- **Texts** that say what is true now: the tutorial's first step ("You started with $75,000. The land, your house and this old driving range (junk and all) took $15,000."), the Build step,
+  the Build tips, the normal game's last tutorial step and welcome card, the Who card's footnote (`tour.ts`, `tips.ts`, `WelcomeCard.tsx`, `YouCards.tsx`).
+
 ## J12: a living scene behind the title card (#1271, the owner 2026-11-14)
 "animated town/golfcourse/farms etc behind the main menu like the factorio main menu ... very pretty and zoomed in, inspire the player to build a pretty golf course and customise his town".
 - **The real game runs behind the card, on a prepared world; not recordings.** The engine boots behind the jam's card anyway, so a live scene costs no extra boot, stays sharp at any size and shows
@@ -183,8 +231,9 @@ A dead button must not ship. Two checks:
   Build card that is not built has an act; every `<button>` in the jam's cards has an `onClick`; every `game.x` they call is a member of the engine.
   A new card, tip or step goes through `acts.ts` / `tourShowOf` so the test covers it.
 - **`npm run jam:smoke`** (`scripts/jam/smoke.mjs`, after `npm run build:jam`): serves `dist-jam` on a free port, opens it in the installed Chrome
-  (playwright-core, headless with WebGL), starts a fresh game and clicks every visible button in turn: the title card, who-are-you, the tutorial
-  (each Show me and Next), the rail, the Build menu's tabs and cards, the tips and their Show me, buying the range, every Range card button, the
+  (playwright-core, headless with WebGL), starts a fresh game and clicks every visible button in turn: the title card, who-are-you, the choose-your-start card (Turn, a refused
+  spot's reason, then "Pick a spot for me", or with `--pick spot` a click on a spot that fits), the tutorial
+  (each Show me and Next), the rail, the Build menu's tabs and cards, the tips and their Show me, the range's card, every Range card button, the
   Bank (a small loan, repay, save, take), a hole's card, Play this hole and Back to the course, Settings, the speeds. A click passes when the page
   or the game's state changes and no console error appears; a locked card or button is listed with its reason; a click that may change nothing
   (a tab already open, the currency already set) says why. It prints the table and exits 1 on a FAIL (about 4 minutes; `--headed` to watch,
