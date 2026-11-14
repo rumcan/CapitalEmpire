@@ -310,8 +310,10 @@ try {
     const after = await state(), toasts = await lastToasts(), last = toasts[toasts.length - 1] ?? '';
     check(after.route === 0 && (JAM ? /^Built .* of (walking|dirt|cement|paved)/ : /^Built .* of street/).test(last), `${TAG}: the release builds the ${JAM ? 'path' : 'street'}`, last);
     const nodesAfter = await page.evaluate(() => [...window.__game.net.nodes.values()].filter(n => n.segs.length >= 3).length);
-    const atRoad = await page.evaluate(M => [...window.__game.net.nodes.values()].some(n => n.segs.length >= 3 && Math.hypot(n.x - M.x, n.y - M.y) < 4), jp.M);
-    check(nodesAfter >= nodesBefore + 1 && atRoad && (await segCount()) > before, `${TAG}: it joined the road: a new junction where it meets it`, `junctions ${nodesBefore} -> ${nodesAfter}, one within 4 tiles of the pointer: ${atRoad}`);
+    // (where it meets the road: the foot of the press on the road's line, which the end is aimed at, or the pointer's own point on it)
+    const foot = (() => { const { a, b } = jp.seg, dx = b.x - a.x, dy = b.y - a.y, t = ((jp.A.x - a.x) * dx + (jp.A.y - a.y) * dy) / (dx * dx + dy * dy || 1); return { x: a.x + dx * t, y: a.y + dy * t }; })();
+    const atRoad = await page.evaluate(([M, F]) => [...window.__game.net.nodes.values()].some(n => n.segs.length >= 3 && (Math.hypot(n.x - M.x, n.y - M.y) < 2.5 || Math.hypot(n.x - F.x, n.y - F.y) < 2.5)), [jp.M, foot]);
+    check(nodesAfter >= nodesBefore + 1 && atRoad && (await segCount()) > before, `${TAG}: it joined the road: a new junction where it meets it`, `junctions ${nodesBefore} -> ${nodesAfter}, one at the road's foot of the press or the pointer: ${atRoad}`);
     await settle(2200); await frame(jp.A, jp.M); await settle(600);
     await shot('join-2-built');
   }
