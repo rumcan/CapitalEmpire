@@ -87,5 +87,5 @@ export function MyLooksCard({ game, onClose, embedded = false }: { game: Game; o
     </section>
   );
 }
-/** T256: the surfaces a practice facility lays (Facilities ▸ Practice: its green, the chipping bunker, the chip mat's tee) */
-const FACILITY_KINDS = ['green', 'bunker', 'tee'] as const;
+/** T256: the surfaces a practice facility lays (Facilities ▸ Practice: its green, the chipping bunker and, #1281, the band of rough round them; the chip mat's tee is no longer built) */
+const FACILITY_KINDS = ['green', 'bunker', 'rough'] as const;
