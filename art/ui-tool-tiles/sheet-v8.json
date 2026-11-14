@@ -1,0 +1,267 @@
+{
+  "schema": 1,
+  "version": "v8",
+  "source": {
+    "file": "art/theme-consistency/generated/ui/golf-build-tool-tiles-sheet-v8.png",
+    "sha256": "3caf616ceb0edbc1fc3f4959bc4e5f7c1c0a09e9bea1224ec0116d50349d237f",
+    "dimensions": [
+      1447,
+      1087
+    ]
+  },
+  "grid": {
+    "columns": 4,
+    "rows": 3,
+    "detectedRows": [
+      [
+        43,
+        363
+      ],
+      [
+        386,
+        706
+      ],
+      [
+        728,
+        1050
+      ]
+    ],
+    "detectedColumns": [
+      [
+        43,
+        362
+      ],
+      [
+        391,
+        708
+      ],
+      [
+        738,
+        1055
+      ],
+      [
+        1086,
+        1403
+      ]
+    ]
+  },
+  "processing": "Source unchanged; detected card crops, normal UI resize to144px, rounded-corner alpha mask, WebP encoding.",
+  "tiles": [
+    {
+      "name": "club-driver",
+      "row": 0,
+      "column": 0,
+      "sourceRect": {
+        "left": 44,
+        "top": 45,
+        "width": 317,
+        "height": 317
+      },
+      "file": "src/assets/ui/tiles/club-driver.webp",
+      "dimensions": [
+        144,
+        144
+      ],
+      "sha256": "f28875c286f2aa6331e2ffa111113cac36b2b56b2ca487da2976d7f3697cbed9",
+      "bytes": 5160
+    },
+    {
+      "name": "club-wood",
+      "row": 0,
+      "column": 1,
+      "sourceRect": {
+        "left": 392,
+        "top": 46,
+        "width": 315,
+        "height": 315
+      },
+      "file": "src/assets/ui/tiles/club-wood.webp",
+      "dimensions": [
+        144,
+        144
+      ],
+      "sha256": "d66f67ba1d9e5c9a943454970cbca649425f47b573d28192e4dcd07f20aad542",
+      "bytes": 5206
+    },
+    {
+      "name": "club-long-iron",
+      "row": 0,
+      "column": 2,
+      "sourceRect": {
+        "left": 739,
+        "top": 46,
+        "width": 315,
+        "height": 315
+      },
+      "file": "src/assets/ui/tiles/club-long-iron.webp",
+      "dimensions": [
+        144,
+        144
+      ],
+      "sha256": "a7fb838c8cd50a44f2663c2361991d74080a721a78afdaf8c37e9c61404fae98",
+      "bytes": 5162
+    },
+    {
+      "name": "club-iron",
+      "row": 0,
+      "column": 3,
+      "sourceRect": {
+        "left": 1087,
+        "top": 46,
+        "width": 315,
+        "height": 315
+      },
+      "file": "src/assets/ui/tiles/club-iron.webp",
+      "dimensions": [
+        144,
+        144
+      ],
+      "sha256": "e5f6669b05a106d2a82ca988ff145f92bc8bc2fd95e3b7b339eb93cc5835a322",
+      "bytes": 5284
+    },
+    {
+      "name": "club-wedge",
+      "row": 1,
+      "column": 0,
+      "sourceRect": {
+        "left": 44,
+        "top": 388,
+        "width": 317,
+        "height": 317
+      },
+      "file": "src/assets/ui/tiles/club-wedge.webp",
+      "dimensions": [
+        144,
+        144
+      ],
+      "sha256": "bb4b12eee7156253eece3742ad34418cdc20e069bed1cfe7511a3dd1f811ce79",
+      "bytes": 6448
+    },
+    {
+      "name": "club-putter",
+      "row": 1,
+      "column": 1,
+      "sourceRect": {
+        "left": 392,
+        "top": 389,
+        "width": 315,
+        "height": 315
+      },
+      "file": "src/assets/ui/tiles/club-putter.webp",
+      "dimensions": [
+        144,
+        144
+      ],
+      "sha256": "2a9814e58e421b47c01c95b732826f8515af8f3a5ba1aee7163464bb36c93720",
+      "bytes": 5174
+    },
+    {
+      "name": "jump-to-ball",
+      "row": 1,
+      "column": 2,
+      "sourceRect": {
+        "left": 739,
+        "top": 389,
+        "width": 315,
+        "height": 315
+      },
+      "file": "src/assets/ui/tiles/jump-to-ball.webp",
+      "dimensions": [
+        144,
+        144
+      ],
+      "sha256": "df65d2c28446bb9fb8e0eca216c7fd5cb340903fad572a126a79d0931a7bebee",
+      "bytes": 6042
+    },
+    {
+      "name": "gimme",
+      "row": 1,
+      "column": 3,
+      "sourceRect": {
+        "left": 1087,
+        "top": 389,
+        "width": 315,
+        "height": 315
+      },
+      "file": "src/assets/ui/tiles/gimme.webp",
+      "dimensions": [
+        144,
+        144
+      ],
+      "sha256": "76f914837fa551186b1cdfc4371831b86c22a52c53e5431753e14db2a149236f",
+      "bytes": 5366
+    },
+    {
+      "name": "go-for-it",
+      "row": 2,
+      "column": 0,
+      "sourceRect": {
+        "left": 44,
+        "top": 731,
+        "width": 317,
+        "height": 317
+      },
+      "file": "src/assets/ui/tiles/go-for-it.webp",
+      "dimensions": [
+        144,
+        144
+      ],
+      "sha256": "b5f93d5da1a0a3f3e09fe5ac0c493b303dec6e7a499c6e4e28e8eb4427878872",
+      "bytes": 6260
+    },
+    {
+      "name": "back-to-course",
+      "row": 2,
+      "column": 1,
+      "sourceRect": {
+        "left": 392,
+        "top": 732,
+        "width": 315,
+        "height": 315
+      },
+      "file": "src/assets/ui/tiles/back-to-course.webp",
+      "dimensions": [
+        144,
+        144
+      ],
+      "sha256": "6ec4afe4d20c98573f7d4d6b872e9219205c5605220b0ccd873ea062263040df",
+      "bytes": 6324
+    },
+    {
+      "name": "help-keys",
+      "row": 2,
+      "column": 2,
+      "sourceRect": {
+        "left": 739,
+        "top": 732,
+        "width": 315,
+        "height": 315
+      },
+      "file": "src/assets/ui/tiles/help-keys.webp",
+      "dimensions": [
+        144,
+        144
+      ],
+      "sha256": "ccfa64ffe26935a56643f3bd214377e47bd325685c053b58b3df8cb72533fd6e",
+      "bytes": 5050
+    },
+    {
+      "name": "closed-gate",
+      "row": 2,
+      "column": 3,
+      "sourceRect": {
+        "left": 1087,
+        "top": 732,
+        "width": 315,
+        "height": 315
+      },
+      "file": "src/assets/ui/tiles/closed-gate.webp",
+      "dimensions": [
+        144,
+        144
+      ],
+      "sha256": "a3d81fa9fa14380ca8817893cc6487e9515f53da32e6721bdc2a0b69a722b017",
+      "bytes": 6914
+    }
+  ]
+}

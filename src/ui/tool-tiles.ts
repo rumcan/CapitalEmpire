@@ -8,12 +8,19 @@ export const TOOL_TILES_V3 = ['buy-range', 'hit-balls', 'chip-and-putt', 'clear-
 export const TOOL_TILES_V4 = ['open-bays', 'ball-dispenser', 'gravel-car-park', 'paved-car-park', 'putting-green', 'play-hole', 'edit-hole', 'frame-trees', 'draw-drive', 'seed', 'sod', 'bulldoze'] as const;
 export const TOOL_TILES_V5 = ['bank', 'borrow', 'repay', 'save-money', 'take-money', 'statement', 'tips', 'how-to-play', 'settings', 'save-game', 'new-game', 'profile'] as const;
 export const TOOL_TILES_V6 = ['drill-distance', 'drill-shaping', 'drill-flight', 'drill-junk', 'drill-up-down', 'drill-putting', 'drill-bunker', 'shot-draw', 'shot-fade', 'shot-high', 'shot-low', 'shot-spin'] as const;
-export type ToolTile = typeof TOOL_TILES_V1[number] | typeof TOOL_TILES_V2[number] | typeof TOOL_TILES_V3[number] | typeof TOOL_TILES_V4[number] | typeof TOOL_TILES_V5[number] | typeof TOOL_TILES_V6[number];
+// the second pair: every tutorial and guide step, the rail and top bar, the range card's shift and scene, the daylight, the earthworks, Help, and the golf view's clubs and buttons
+export const TOOL_TILES_V7 = ['place-range', 'walking-path', 'sell-buckets', 'select-tool', 'walk', 'find-me', 'game-speed', 'zoom', 'shift-hours', 'scene', 'daylight', 'earthworks'] as const;
+export const TOOL_TILES_V8 = ['club-driver', 'club-wood', 'club-long-iron', 'club-iron', 'club-wedge', 'club-putter', 'jump-to-ball', 'gimme', 'go-for-it', 'back-to-course', 'help-keys', 'closed-gate'] as const;
+// the last sheet: the sound tiles (SOUND_TILES: for J11's music radio and sound settings), Settings' text size, currency, colour-safe money, backups and load, and the title card's front door
+export const TOOL_TILES_V9 = ['radio', 'boombox', 'headphones', 'bell', 'radio-off', 'jukebox', 'currency', 'text-size', 'colour-safe', 'backups', 'load-save', 'front-door'] as const;
+export type ToolTile = typeof TOOL_TILES_V1[number] | typeof TOOL_TILES_V2[number] | typeof TOOL_TILES_V3[number] | typeof TOOL_TILES_V4[number] | typeof TOOL_TILES_V5[number] | typeof TOOL_TILES_V6[number] | typeof TOOL_TILES_V7[number] | typeof TOOL_TILES_V8[number] | typeof TOOL_TILES_V9[number];
 /** Row-major sheet identities; v1 asset files remain byte-for-byte unchanged. These are the Course and Facilities flyouts' tiles (ui-flyouts.test.ts
  *  checks each is on a tool): the action tiles of sheets v3 to v6 are ACTION_TILES. */
 export const TOOL_TILES: readonly ToolTile[] = [...TOOL_TILES_V1, ...TOOL_TILES_V2];
-/** J8: the action tiles (sheets v3 to v6), 48 of them, each on an action somewhere in the UI (tests/ui-action-tiles.test.ts checks every id used exists) */
-export const ACTION_TILES: readonly ToolTile[] = [...TOOL_TILES_V3, ...TOOL_TILES_V4, ...TOOL_TILES_V5, ...TOOL_TILES_V6];
+/** J8: the action tiles (sheets v3 to v9), 84 of them, each on an action somewhere in the UI (tests/ui-action-tiles.test.ts checks every id used exists) */
+export const ACTION_TILES: readonly ToolTile[] = [...TOOL_TILES_V3, ...TOOL_TILES_V4, ...TOOL_TILES_V5, ...TOOL_TILES_V6, ...TOOL_TILES_V7, ...TOOL_TILES_V8, ...TOOL_TILES_V9];
+/** the six sound tiles of sheet v9, cut for J11 (#1270, branch arena/j11-sound: the music radio and the sound settings): no action in the jam wears them until that lands */
+export const SOUND_TILES: readonly ToolTile[] = ['radio', 'boombox', 'headphones', 'bell', 'radio-off', 'jukebox'];
 
 // Vite resolves these normal imported assets; Node tests intentionally use the existing icon fallback.
 const URLS: Record<string, string> = (() => { try { return import.meta.glob('../assets/ui/tiles/*.webp', { eager: true, query: '?url', import: 'default' }) as Record<string, string>; } catch { return {}; } })();

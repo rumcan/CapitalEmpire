@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
-import { ACTION_TILES, TOOL_TILES, TOOL_TILES_V1, TOOL_TILES_V2, TOOL_TILES_V3, TOOL_TILES_V4, TOOL_TILES_V5, TOOL_TILES_V6 } from '../src/ui/tool-tiles';
+import { ACTION_TILES, TOOL_TILES, TOOL_TILES_V1, TOOL_TILES_V2, TOOL_TILES_V3, TOOL_TILES_V4, TOOL_TILES_V5, TOOL_TILES_V6, TOOL_TILES_V7, TOOL_TILES_V8, TOOL_TILES_V9 } from '../src/ui/tool-tiles';
 
 test('each sheet keeps its subject identity; unknown or contradictory versions fail before writing', async () => {
   const prep = await import(pathToFileURL(path.resolve('scripts/assets/prep-ui-tool-tiles.mjs')).href);
@@ -15,10 +15,13 @@ test('each sheet keeps its subject identity; unknown or contradictory versions f
   assert.deepEqual(prep.SHEET_NAMES.v4.flat(), [...TOOL_TILES_V4]);
   assert.deepEqual(prep.SHEET_NAMES.v5.flat(), [...TOOL_TILES_V5]);
   assert.deepEqual(prep.SHEET_NAMES.v6.flat(), [...TOOL_TILES_V6]);
-  assert.equal(ACTION_TILES.length, 48);
-  assert.equal(new Set([...TOOL_TILES, ...ACTION_TILES]).size, 72, 'seventy-two different names');
-  for (const v of ['v1', 'v2', 'v3', 'v4', 'v5', 'v6']) assert.equal(prep.sheetVersion(`golf-build-tool-tiles-sheet-${v}.png`), v);
-  assert.throws(() => prep.sheetVersion('golf-build-tool-tiles-sheet-v7.png'), /specify --version/);
+  assert.deepEqual(prep.SHEET_NAMES.v7.flat(), [...TOOL_TILES_V7]);
+  assert.deepEqual(prep.SHEET_NAMES.v8.flat(), [...TOOL_TILES_V8]);
+  assert.deepEqual(prep.SHEET_NAMES.v9.flat(), [...TOOL_TILES_V9]);
+  assert.equal(ACTION_TILES.length, 84);
+  assert.equal(new Set([...TOOL_TILES, ...ACTION_TILES]).size, 108, 'one hundred and eight different names');
+  for (const v of ['v1', 'v2', 'v3', 'v4', 'v5', 'v6', 'v7', 'v8', 'v9']) assert.equal(prep.sheetVersion(`golf-build-tool-tiles-sheet-${v}.png`), v);
+  assert.throws(() => prep.sheetVersion('golf-build-tool-tiles-sheet-v10.png'), /specify --version/);
   assert.throws(() => prep.sheetVersion('unknown.png'), /specify --version/);
   assert.throws(() => prep.sheetVersion('golf-build-tool-tiles-sheet-v2.png', 'v1'), /not v1/);
   assert.throws(() => prep.sheetVersion('golf-build-tool-tiles-sheet-v5.png', 'v3'), /not v3/);

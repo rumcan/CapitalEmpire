@@ -6,12 +6,12 @@ import assert from 'node:assert/strict';
 import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 import * as T from '../src/ui/tool-tiles';
-import { ACTION_TILES, TOOL_TILES } from '../src/ui/tool-tiles';
+import { ACTION_TILES, SOUND_TILES, TOOL_TILES } from '../src/ui/tool-tiles';
 
 const DIR = 'src/assets/ui/tiles', ALL = new Set<string>([...TOOL_TILES, ...ACTION_TILES]);
 
 test('every tile id has its WebP, a small 144 px picture, and no picture lacks an id', async () => {
-  assert.equal(ACTION_TILES.length, 48);
+  assert.equal(ACTION_TILES.length, 84);
   const sharp = (await import(['sharp'][0]!)).default;
   for (const id of ALL) {
     const f = `${DIR}/${id}.webp`; assert.ok(existsSync(f), `${f}: missing`);
@@ -81,13 +81,21 @@ function viewTileIds(): string[] {
   return out;
 }
 
-test('every one of the 48 action tiles is on an action (the UI, or the golf view), and the golf view names only tiles that exist', () => {
+/** the tiles cut from sheets v7 and v8 that no action wears yet: each commit that places one takes it off this list (it is empty when the pictures are all in) */
+const NOT_YET: readonly string[] = [
+  'select-tool', 'walk', 'find-me', 'game-speed', 'zoom', 'shift-hours', 'scene', 'daylight', 'earthworks', 'help-keys', 'closed-gate',
+  'club-driver', 'club-wood', 'club-long-iron', 'club-iron', 'club-wedge', 'club-putter', 'jump-to-ball', 'gimme', 'go-for-it', 'back-to-course',
+  'place-range', 'walking-path', 'sell-buckets', 'currency', 'text-size', 'colour-safe', 'backups', 'load-save', 'front-door',
+];
+
+test('every one of the 84 action tiles is on an action (the UI, or the golf view), and the golf view names only tiles that exist', () => {
   const used = new Set<string>(), view = viewTileIds();
   for (const f of [...sources('src/ui'), 'src/App.tsx']) if (!f.endsWith('tool-tiles.ts')) for (const id of tileIdsIn(readFileSync(f, 'utf8'))) used.add(id);
   for (const [k, v] of Object.entries(T)) if (/_TILE$/.test(k) && v && typeof v === 'object' && !Array.isArray(v)) for (const id of Object.values(v as Record<string, string>)) used.add(id);
   for (const id of view) { assert.ok(ALL.has(id), `the golf view names "${id}": not a tile`); used.add(id); }
   assert.ok(view.length >= 12, 'the golf view names its drills and shot tiles');
-  assert.deepEqual(ACTION_TILES.filter(id => !used.has(id)), [], 'a tile no action wears');
+  assert.deepEqual(ACTION_TILES.filter(id => !used.has(id) && !NOT_YET.includes(id) && !SOUND_TILES.includes(id)), [], 'a tile no action wears');
+  assert.deepEqual(NOT_YET.filter(id => used.has(id)), [], 'a tile an action now wears: take it off NOT_YET');
   // the build copies the golf view's tiles (drill-* and shot-*) next to its page
   const build = readFileSync('packages/cinderlinks/build.mjs', 'utf8');
   assert.match(build, /\(drill\|shot\)-/, 'build.mjs copies the drill and shot tiles');
