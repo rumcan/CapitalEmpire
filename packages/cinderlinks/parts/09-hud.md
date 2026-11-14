@@ -230,10 +230,11 @@ function hostTurn(m) {   // the owner's turn: the ball and the pin where the mod
   if (m.hole !== holeN) newHole(m.hole, 0, 0);
   ball.x = ball.lx = m.ball[0] * S; ball.y = ball.ly = m.ball[1] * S; ball.z = groundH(ball.x, ball.y); ball.vx = ball.vy = ball.vz = 0; ball.state = 0;
   hole.pin.x = hole.green.x = m.pin[0] * S; hole.pin.y = hole.green.y = m.pin[1] * S;
-  strokes = m.stroke - 1; autoClub = false; club = Math.max(0, HP.clubs.findIndex((c) => c.club === m.suggested.club)); shownClub = -2;
-  HP.pick = null; HP.pv = null; HP.pvSig = ''; hostAimPin = false;   // (T441: each turn starts from a plain shot; T446: and the aim follows the mouse until a click sets it)
-  const ax = m.suggested.aim[0] * S - ball.x, ay = m.suggested.aim[1] * S - ball.y, al = Math.hypot(ax, ay); if (al > 0.3) { aim.dx = ax / al; aim.dy = ay / al; }
-  aim.x = m.suggested.aim[0] * S; aim.y = m.suggested.aim[1] * S;   // (J5c: the target too: it was left where the last turn, or the mouse passing, put it, and the strike went there)
+  const kp = pracKept(m);   // (#1308: practising, the next ball is hit with what the last one was: his aim, club, curve, flight and spin stay until he moves them; a drill picked, or the first ball, takes the suggestion once)
+  strokes = m.stroke - 1; autoClub = false; club = kp ? kp.ci : Math.max(0, HP.clubs.findIndex((c) => c.club === m.suggested.club)); shownClub = -2;
+  HP.pick = kp ? kp.pick : null; HP.pv = null; HP.pvSig = ''; hostAimPin = kp ? kp.pin : false;   // (T441: each turn starts from a plain shot; T446: and the aim follows the mouse until a click sets it)
+  const ax = (kp ? kp.ax : m.suggested.aim[0] * S) - ball.x, ay = (kp ? kp.ay : m.suggested.aim[1] * S) - ball.y, al = Math.hypot(ax, ay); if (al > 0.3) { aim.dx = ax / al; aim.dy = ay / al; }
+  aim.x = kp ? kp.ax : m.suggested.aim[0] * S; aim.y = kp ? kp.ay : m.suggested.aim[1] * S;   // (J5c: the target too: it was left where the last turn, or the mouse passing, put it, and the strike went there)
   if (pracLock() ? Math.hypot(player.x - ball.x, player.y - ball.y) > 0.3 : m.stroke === 1 && ball.state === 0 && !bcam) jumpToBall();   // (J5c: on the tee always: he stands at his ball facing down the aim, the camera behind him)   // (J6: practising, each ball is teed up where he stands)   // (on the tee he stands at his ball; later he walks to it, or J)
 }
 function hostStrike() {   // the club meets the ball: the input goes to the host, and the ball waits for its answer
@@ -242,6 +243,7 @@ function hostStrike() {   // the club meets the ball: the input goes to the host
   const sw = HP.out; HP.out = null;   // (T421: the meter's outcome; the power is then only what it would be without one)
   hostSend({ t: 'input', input: Object.assign({ holeIdx: t.holeIdx, stroke: t.stroke, club: c.club, aim: [aim.x / S, aim.y / S], power: sw ? Math.min(putt ? HOLD_PUTT_TOP : 1, Math.max(putt ? 0.05 : 0.3, sw.power)) : hostPower(power, putt) }, sw ? { swing: { power: sw.power, acc: sw.acc, boost: sw.boost, v: sw.v } } : {}, hostShotIn()) });   // (T441, T442: the shape and spin picked)
   if (HP.pick) HP.pick.armed = false;   // (spin and shape: T441, T442)
+  pracSave(c);   // (#1308: what the next practice ball starts from)
   HP.wait = 1;
   if (!sndMsg('strike', { club: c.club, p: Math.min(1, Math.max(0, power)) })) { if (!putt) sndShot(); else sndTap(); }   // (J11: the club's own strike, played by the host)
   for (let k = 0, n = putt ? 3 : 10 + ((power * 14) | 0); k < n; k++) {   // sparks off the club, and turf or sand
