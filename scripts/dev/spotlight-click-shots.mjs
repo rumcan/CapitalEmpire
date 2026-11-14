@@ -64,16 +64,25 @@ const probe = page => G(page, () => {
 });
 /** the state the clicks change */
 const world = page => G(page, () => { const g = window.__game; return { tool: g.tool, uiTool: g.uiTool, placing: g.placing?.id ?? null, card: g.range.cardOpen, fly: document.querySelectorAll('[data-flyout-col]').length, panel: g.panel, plan: !!g.paint?.planOpen, kind: g.practice?.kind ?? null, roadClass: g.roadClass ?? null, practiceAt: !!g.golf?.range?.practiceAt, lot: !!g.golf?.range?.lot, money: Math.round(g.money), land: g.landMode }; });
-/** a control's box and what a click at its middle and at points just inside its corners would hit (the control, or something else) */
+/** a control's box and what a click at its middle and at other points would hit (the control, or something else). A button or a tile: its middle and points just inside its edges
+ *  and corners (a click anywhere on what is lit must reach it). A panel, a card or a menu (200 x 120 or more): its middle and a 3 x 3 grid well inside it: its margins can stand
+ *  under a neighbour that the layout owns (a card at the same edge, the minimap), which is not the spotlight's doing; a click in its body must still reach it */
 const ctrl = (page, anchor) => G(page, a => {
   const el = [...document.querySelectorAll(`[data-guide="${a}"]`)].find(e => { const r = e.getBoundingClientRect(); return r.width > 0 && r.height > 0; });
   if (!el) return null;
-  const r = el.getBoundingClientRect(), pts = [[r.x + r.width / 2, r.y + r.height / 2], [r.x + 3, r.y + 3], [r.right - 3, r.y + 3], [r.x + 3, r.bottom - 3], [r.right - 3, r.bottom - 3], [r.x + r.width / 2, r.y + 3], [r.x + r.width / 2, r.bottom - 3]];
+  const r = el.getBoundingClientRect(), mx = r.x + r.width / 2, my = r.y + r.height / 2, big = r.width >= 200 && r.height >= 120;
   // (a rounded control: its corners are cut: the points are taken a few px in along the diagonal)
-  const rad = parseFloat(getComputedStyle(el).borderTopLeftRadius) || 0, k = Math.min(rad * 0.3, 8);
-  const fails = [];
-  const hits = pts.map(([x, y], i) => { const px = i >= 1 && i <= 4 ? x + (x < r.x + r.width / 2 ? k : -k) : x, py = i >= 1 && i <= 4 ? y + (y < r.y + r.height / 2 ? k : -k) : y, t = document.elementFromPoint(px, py), ok = !!t && (t === el || el.contains(t)); if (!ok) fails.push(`${['mid', 'tl', 'tr', 'bl', 'br', 'top', 'bottom'][i]}@${Math.round(px)},${Math.round(py)}: ${t ? `${t.tagName}.${String(t.className).slice(0, 30)}[${t.closest('[data-guide]')?.dataset.guide ?? ''}]` : 'nothing'}`); return ok; });
-  return { x: r.x + r.width / 2, y: r.y + r.height / 2, w: r.width, h: r.height, hits, mid: hits[0], all: hits.every(Boolean), fails, box: [r.x, r.y, r.width, r.height].map(Math.round).join(',') };
+  const rad = parseFloat(getComputedStyle(el).borderTopLeftRadius) || 0, k = Math.min(rad * 0.3, 8), n = 3 + k;
+  const grid = [0.25, 0.5, 0.75].flatMap(fy => [0.25, 0.5, 0.75].filter(fx => fx !== 0.5 || fy !== 0.5).map(fx => [r.x + r.width * fx, r.y + r.height * fy, `${fx * 100}%,${fy * 100}%`]));
+  const pts = big ? [[mx, my, 'mid'], ...grid]
+    : [[mx, my, 'mid'], [r.x + n, r.y + n, 'tl'], [r.right - n, r.y + n, 'tr'], [r.x + n, r.bottom - n, 'bl'], [r.right - n, r.bottom - n, 'br'], [mx, r.y + 3, 'top'], [mx, r.bottom - 3, 'bottom']];
+  const fails = [], box = e => { const b = e?.getBoundingClientRect(); return b ? [b.x, b.y, b.width, b.height].map(Math.round).join(',') : '?'; };
+  const hits = pts.map(([px, py, name]) => {
+    const t = document.elementFromPoint(px, py), ok = !!t && (t === el || el.contains(t)), up = t?.closest('[data-testid]');
+    if (!ok) fails.push(`${name}@${Math.round(px)},${Math.round(py)}: ${t ? `${t.tagName}.${String(t.className).slice(0, 30)}[${t.closest('[data-guide]')?.dataset.guide ?? ''}] in ${up?.dataset.testid ?? '?'} (box ${box(up)}), z ${getComputedStyle(up ?? t).zIndex}` : 'nothing'}`);
+    return ok;
+  });
+  return { x: mx, y: my, w: r.width, h: r.height, big, hits, mid: hits[0], all: hits.every(Boolean), fails, box: box(el) };
 }, anchor);
 /** waits until a control's box stops moving (a smooth scroll into its card, a column placing itself) */
 async function settled(page, anchor, ms = 3000) { let prev = ''; const t = Date.now(); for (;;) { const c = await ctrl(page, anchor); const k = c ? c.box : ''; if (k && k === prev) return c; prev = k; if (Date.now() - t > ms) return c; await sleep(120); } }
@@ -98,8 +107,9 @@ async function follow(page, name, anchors, o = {}) {
     if (p.crumbs) console.log(`     ${p.crumbs}   [${p.level}]  "${p.line}"`);
     const c = await settled(page, a);
     ok = check(!!c && c.mid, `${name}: ${a}: the pointer at the middle of the cut-out is over the control (the click goes through)${c && !c.mid ? ` ${c.fails.join(' | ')}` : ''}`) && ok;
-    ok = check(!!c && c.all, `${name}: ${a}: and just inside its edges and corners too (what is lit is what a click reaches)${c && !c.all ? ` ${c.fails.join(' | ')}` : ''}`) && ok;
+    ok = check(!!c && c.all, `${name}: ${a}: and the rest of what is lit too (just inside a control's edges and corners, a panel's body: what is lit is what a click reaches)${c && !c.all ? ` [lit box ${c.box}] ${c.fails.join(' | ')}` : ''}`) && ok;
     if (o.shots?.[i]) await shot(page, o.shots[i]);
+    else if (c && !c.all) await shot(page, `diag-${name.replace(/[^a-z0-9]+/gi, '-')}-${a}`);   // (a failed edge check keeps a picture of what covers what)
     if (o.before?.[i]) await o.before[i]();
     await page.mouse.click(c.x, c.y); await sleep(o.settle ?? 500); // (the move and the click at once: a pointer that rests on a lit tile opens its column by hover, which the spotlight holds the lead for)
     const up = !!(await probe(page));

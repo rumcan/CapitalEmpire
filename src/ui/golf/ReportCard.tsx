@@ -20,7 +20,8 @@ export function GoalToggle({ history, live, open, onToggle }: { history: readonl
   const g = goalState(history, live), v = goalChipView(g, open);
   return (
     <button type="button" className={`chip ${open ? 'chip-on' : ''}`} onClick={onToggle} aria-expanded={open} aria-label={v.label} data-tip={v.tip} data-testid="goal-toggle">
-      <Icon name="trophy" size={16} /><span className="font-semibold text-amber-300">{v.short}</span><span className="text-slate-400 max-[1599px]:hidden">{v.months}</span>
+      {/* (the bar keeps one row at 1366 px: there the chip is its icon alone, as the bar's other chips are; the holes show from 1600 px and the months from 1900 px; the tooltip and the name say it all) */}
+      <Icon name="trophy" size={16} /><span className="font-semibold text-amber-300 max-[1599px]:hidden">{v.short}</span><span className="text-slate-400 max-[1899px]:hidden">{v.months}</span>
     </button>
   );
 }

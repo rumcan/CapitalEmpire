@@ -22,7 +22,7 @@ export function GoalRowInBar({ game, onFold }: { game: FinHost; onFold: () => vo
   return (
     <div className="flex items-center gap-1.5" data-testid="finlit-goal">
       <GoalChip history={game.finance.history as Report[]} live={game.finLive()} />
-      <button type="button" className="chip pointer-events-auto" onClick={onFold} aria-label="Fold the goal to a small chip" data-tip="Fold the goal to a small chip in the top bar" data-testid="goal-fold"><Icon name="up" size={14} />Fold</button>
+      <button type="button" className="pointer-events-auto flex items-center gap-1 rounded-full border border-white/10 bg-slate-950/80 px-2.5 py-1 text-xs text-slate-200 backdrop-blur hover:border-emerald-400/60" onClick={onFold} aria-label="Fold the goal to a small chip" data-tip="Fold the goal to a small chip in the top bar" data-testid="goal-fold"><Icon name="up" size={14} />Fold</button>
     </div>
   );
 }

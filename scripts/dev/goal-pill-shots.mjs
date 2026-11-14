@@ -30,6 +30,11 @@ async function boot(W, H, scale, ctx0) {
   page.on('dialog', d => d.dismiss().catch(() => {}));
   await page.route('**/*', r => { const x = r.request(); return x.method() !== 'GET' && x.method() !== 'HEAD' ? r.fulfill({ status: 200, contentType: 'application/json', body: '{"ok":true}' }) : r.continue(); });
   await page.goto(`${base}${jam ? '' : '?fixture=range20'}`, { timeout: 240000, waitUntil: 'domcontentloaded' });
+  await bringUp(page);
+  return { ctx, page };
+}
+/** a loaded page up as a new game: the title card (jam), Who are you, the start laid, the tutorial off, the clock stopped */
+async function bringUp(page) {
   if (jam) { await page.locator('[data-testid="title-card"]').waitFor({ timeout: 240000 }); await page.locator('[data-testid="title-new"]').click(); }
   await page.waitForFunction(() => window.__game?.ready, null, { timeout: 240000 });
   await page.evaluate(() => { const g = window.__game; g.prebake = () => {}; g.setSpeed(0); });
@@ -39,7 +44,6 @@ async function boot(W, H, scale, ctx0) {
   await page.waitForFunction(() => !!window.__game.range?.scene, null, { timeout: 240000 });
   await page.evaluate(() => { const g = window.__game, p = g.golf.progress; g.setSpeed(0); for (const k of ['who', 'welcome']) if (!p.seen.includes(k)) p.seen.push(k); if (p.tour) p.tour.off = true; g.setAdvancedTools(true); g.closeWelcome?.(false); g.emit(); });
   await sleep(1500);
-  return { ctx, page };
 }
 /** the boxes that matter now: the bar, its chip and row, the pill, and every panel, flyout column, card and the rail (window css px) */
 const measure = page => page.evaluate(() => {
@@ -83,7 +87,7 @@ try {
     check(!!m.pill && !!m.bar && m.pill.y >= m.kids[0].b - 2 && m.pill.b <= m.bar.b + 1, `${tagS}: the pill stands in the bar, under its first row (bar bottom ${Math.round(m.bar?.b ?? 0)}, pill ${Math.round(m.pill?.y ?? 0)}..${Math.round(m.pill?.b ?? 0)})`);
     check(!!m.pill && m.pill.x >= 0 && m.pill.r <= W - 4 && m.pillOverflow <= 1, `${tagS}: the pill is whole on the screen (${Math.round(m.pill?.x ?? 0)}..${Math.round(m.pill?.r ?? 0)} of ${W}, overflow ${m.pillOverflow})`);
     check((m.pillFont ?? 0) >= 11.5, `${tagS}: its text is ${m.pillFont}px (the Text size scales it: ${pct}%)`);
-    check(m.hud >= m.pill.b - 8, `${tagS}: the rail and the panels start under it (--hud-top ${Math.round(m.hud)}, pill bottom ${Math.round(m.pill.b)})`);
+    check(m.hud * scale >= m.pill.b - 8, `${tagS}: the rail and the panels start under it (--hud-top ${Math.round(m.hud)} UI px = ${Math.round(m.hud * scale)} on the screen, pill bottom ${Math.round(m.pill.b)})`);
     check(Object.entries(m.others).every(([, b]) => !meets(m.pill, b)), `${tagS}: the pill covers no panel, rail, flyout or card (${Object.keys(m.others).join(', ')})`);
     await shot(page, name('2-unfolded'), { x: 0, y: 0, width: W, height: Math.min(H, 330) });
     // ---- with a panel and a flyout open: the pill covers neither
@@ -108,9 +112,11 @@ try {
     await page.keyboard.press('Escape'); await page.locator('[data-testid="report-card"] button').first().click().catch(() => {}); await sleep(300);
     // ---- remembered: open when the page is loaded again
     await page.reload({ waitUntil: 'domcontentloaded' });
-    await page.waitForFunction(() => window.__game?.ready, null, { timeout: 240000 }); await sleep(1500);
+    await bringUp(page);
+    const stored = await page.evaluate(() => { try { return localStorage.getItem('capitalempire.goalPill'); } catch { return null; } });
     const after = await measure(page);
-    check(!!after.row || !!after.chip, `${tagS}: after a reload the game is up with the chip`);
+    check(stored === 'open', `${tagS}: the browser's storage keeps it (capitalempire.goalPill: ${stored})`);
+    check(!!after.chip, `${tagS}: after a reload the game is up with the chip`);
     check(!!after.row, `${tagS}: and the pill is open as it was left (remembered in this browser)`);
     await ctx.close();
   }
