@@ -47,7 +47,7 @@ test('the catalogue: four groups of real library pictures (and the T187 town bui
 
 test("the rail (T182): Props sits in both decorations (the course's and the town's) of golf games, on Z", () => {
   const holds = RAIL.filter(r => r.tools.some(t => t.id === 'props'));
-  assert.deepEqual(holds.map(r => r.id), ['facilities', 'towndecor']);
+  assert.deepEqual(holds.map(r => r.id), ['course', 'towndecor'], "#1272: the course's is Course's Facilities tile, no rail button of its own");
   for (const r of holds) { const t = r.tools.find(x => x.id === 'props')!; assert.equal(t.only, 'golf'); assert.equal(t.key, 'Z'); }
   assert.equal(holds[0]!.section, 'course'); assert.equal(holds[1]!.section, 'town');
   assert.ok(!RAIL.some(q => q.tools.some(t => t.key === 'Z' && t.id !== 'props')), "Z is no other tool's key");

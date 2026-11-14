@@ -78,9 +78,11 @@ try {
     const { ctx, page } = await open('?fixture=range20&desert=on');
     await page.waitForTimeout(3000);
     await page.evaluate(() => { const g = window.__game; g.closeWho?.('Tester', 2); g.closeWelcome?.(false); g.setSpeed(0); });
-    const fac = await page.$('[data-rail="facilities"]');
-    if (fac) {
-      await fac.click(); await page.waitForTimeout(400);
+    // (#1272: Facilities is the sixth tile of the Course flyout)
+    const course = await page.$('[data-rail="course"]');
+    if (course) {
+      await course.click(); await page.waitForTimeout(400);
+      const fac = page.locator('[data-flyout-col="0"] [data-key="facilities"]'); await fac.hover(); await fac.click(); await page.waitForTimeout(400);
       const plants = page.locator('text=Plants').first(); await plants.hover().catch(() => {}); await plants.click().catch(() => {}); await page.waitForTimeout(500);
       await shot(page, 'menu-facilities-plants');
       const trees = page.locator('text=Trees').first(); await trees.click().catch(() => console.log('  (no Trees row)')); await page.waitForTimeout(800);

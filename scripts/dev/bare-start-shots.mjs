@@ -105,10 +105,10 @@ try {
   await page.evaluate(() => window.__game.buyRangeUpgrade('teeturf')); await page.keyboard.press('Escape'); await page.waitForTimeout(200);
   st = await state(page); check(st.placing === null && !st.owned.includes('teeturf') && st.money === m0, 'Esc puts the tee turf down: nothing built or paid');
 
-  // the rail: Cart paths & roads above Facilities, its flyout
+  // the rail: Cart paths & roads under Course (#1272: Facilities is a tile of the Course flyout, no rail button), its flyout
   const order = await page.evaluate(() => [...document.querySelectorAll('[data-testid="rail"] [data-rail]')].map(b => b.getAttribute('data-rail')));
   console.log('  rail', order.join(' '));
-  check(order.indexOf('paths') > order.indexOf('course') && order.indexOf('paths') === order.indexOf('facilities') - 1, 'Cart paths & roads sits right above Facilities');
+  check(order.indexOf('paths') === order.indexOf('course') + 1 && !order.includes('facilities'), 'Cart paths & roads sits right under Course (no Facilities button)');
   await page.click('[data-rail="paths"]'); await page.waitForTimeout(400); await shot(page, '13-rail-cart-paths-and-roads-flyout');
   const rows = await page.evaluate(() => [...document.querySelectorAll('[data-flyout-col="0"] [data-key]')].map(b => `${b.textContent}${b.getAttribute('aria-disabled') ? ' (locked)' : ''}`));
   console.log('  flyout', rows.join(' | ')); check(rows.length === 2, 'its flyout: the cart paths and the roads');
