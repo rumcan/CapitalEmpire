@@ -43,7 +43,7 @@ const shot = async name => { if (SHOTS) await page.screenshot({ path: resolve(SH
 
 try {
   console.log(`sound golf smoke: ${base} (Chrome ${browser.version()})`);
-  await page.goto(base, { waitUntil: 'domcontentloaded', timeout: 400000 });
+  await page.goto(`${base}?pick=0`, { waitUntil: 'domcontentloaded', timeout: 400000 }); // (?pick=0: the automatic start, the old range for sale, not J9's choose-your-start card)
   await page.locator('[data-testid="title-card"]').waitFor({ timeout: 400000 });
   await page.locator('[data-testid="title-new"]').click();
   await page.waitForFunction(() => window.__game?.ready, null, { timeout: 400000 });

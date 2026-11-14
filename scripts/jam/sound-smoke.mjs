@@ -56,7 +56,7 @@ const overflow = sel => page.evaluate(s => { const e = document.querySelector(s)
 
 try {
   console.log(`sound smoke: ${base} (Chrome ${browser.version()})`);
-  await page.goto(base, { waitUntil: 'domcontentloaded', timeout: 400000 }); // (a dev server compiles the game's modules on the first visit: minutes)
+  await page.goto(`${base}?pick=0`, { waitUntil: 'domcontentloaded', timeout: 400000 }); // (?pick=0: the automatic start, not J9's choose-your-start card; a dev server compiles the game's modules on the first visit: minutes)
   await page.locator('[data-testid="title-card"]').waitFor({ timeout: 400000 });
   await settle(1500);
   let c = await counts();
