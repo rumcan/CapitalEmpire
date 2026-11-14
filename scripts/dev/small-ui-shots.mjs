@@ -165,15 +165,27 @@ async function cursorPart() {
     return 'no spot';
   });
   console.log('  hole built:', JSON.stringify(built));
-  await page.evaluate(() => { const g = window.__game; g.setYouWalk(false); g.setSpeed(1); }); await sleep(jam ? 9000 : 5000);
+  await page.evaluate(j => { const g = window.__game; g.setYouWalk(false); g.setSpeed(j ? 8 : 1); }, jam); await sleep(jam ? 12000 : 5000);
   await page.evaluate(() => window.__game.setSpeed(0));
   await sleep(300);
+  // the practice area (the Build menu's Practice card places it): the engine's own placement, a spot on your land beside the range that it accepts
+  const practice = await page.evaluate(() => {
+    const g = window.__game, pl = g.practicePlaceable?.(), sc = g.range.scene; if (!pl || !sc) return 'not placeable here';
+    for (let r = 6; r < 140; r += 6) for (let a = 0; a < 16; a++) {
+      const x = Math.round(sc.counter.x + Math.cos(a * Math.PI / 8) * r), y = Math.round(sc.counter.y + Math.sin(a * Math.PI / 8) * r), rect = pl.spot(x, y);
+      if (!pl.why(rect)) return pl.build(rect) ? `placed at ${rect.join(',')}` : 'refused';
+    }
+    return 'no spot';
+  });
+  console.log('  practice area:', practice);
+  await sleep(600);
   const sceneInfo = await page.evaluate(() => { const g = window.__game, sc = g.range.scene; return { scene: !!sc, counter: sc ? { x: sc.counter.x, y: sc.counter.y } : null, practice: sc ? { x: sc.practice.label.x, y: sc.practice.label.y } : null, you: !!g.you, holes: g.golf.pins.length, parcel: g.golf.parcel }; });
   console.log('  game:', JSON.stringify(sceneInfo));
 
   // ---- the views to look at: the range (when there is one), the town's street, the hole
   const views = [];
   if (sceneInfo.scene) views.push({ name: 'the range', x: sceneInfo.counter.x, y: sceneInfo.counter.y, z: 0.2 });
+  if (sceneInfo.scene && String(practice).startsWith('placed')) views.push({ name: 'the practice area', x: sceneInfo.practice.x, y: sceneInfo.practice.y, z: 0.2 });
   // (the fixture's town road runs along the top edge of your land: its lots, houses and people are seen from there)
   if (!jam) for (const dx of [-220, -120, -20, 80, 180, 280]) views.push({ name: `the town street ${dx}`, x: sceneInfo.parcel[0] + dx, y: sceneInfo.parcel[1] - 8, z: 0.2 });
   if (built && built.x !== undefined) views.push({ name: 'the hole', x: built.x, y: built.y, z: 0.2 });
@@ -212,6 +224,7 @@ async function cursorPart() {
       const after = await page.evaluate(snap);
       const did = after.range && !before.range || after.club && !before.club || after.staff && !before.staff || (after.place && after.place !== before.place) || (after.sel !== null && after.sel !== before.sel) || (after.hole !== null && after.hole !== before.hole) || (after.talk && !before.talk) || (after.scene && !before.scene) || (after.car >= 0 && after.car !== before.car) || after.tool !== before.tool;
       n++; rows.push(1); if (pre.want) predictedOpen++; if (did) opened++;
+      if (did && after.range && !before.range && !found.range) found.range = { x, y, view: v }; // (a point a real click opened the range card from)
       if (did) { const k = after.range && !before.range ? 'range card' : after.club && !before.club ? 'club card' : after.staff && !before.staff ? 'staff card' : after.place && after.place !== before.place ? 'place card' : after.sel !== null && after.sel !== before.sel ? 'a prop selected' : after.hole !== null && after.hole !== before.hole ? 'a hole card' : after.talk && !before.talk ? 'a person' : after.scene && !before.scene ? 'a scene card' : after.car >= 0 && after.car !== before.car ? 'a car' : 'a tool change (bunker)'; kinds[k] = (kinds[k] ?? 0) + 1; }
       if (pre.want !== !!did) { mm++; mism.push({ view: v.name, x, y, predicted: pre.want, opened: !!did, prop: pre.prop, before, after }); }
       await page.evaluate(reset); await sleep(8);

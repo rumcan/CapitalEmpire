@@ -43,7 +43,7 @@ test('#1282: the tools keep their own cursors, whatever the pick says: a build a
   assert.equal(mapCursor({ ...base, teePlace: { drag: false }, opens: true }), 'copy', 'a tee in hand over a building: still copy');
   assert.equal(mapCursor({ ...base, verb: 'url(talk.svg) 4 4, pointer' }), 'url(talk.svg) 4 4, pointer', 'Walk: the speech bubble over a person, as before');
   assert.equal(mapCursor({ ...base, verb: 'not-allowed' }), 'not-allowed');
-  assert.equal(mapCursor({ ...base, verb: 'url(walk.svg) 12 20, pointer', opens: true }), 'pointer', 'Walk: what opens at once (a hole's badge) is a pointer, not footprints');
+  assert.equal(mapCursor({ ...base, verb: 'url(walk.svg) 12 20, pointer', opens: true }), 'pointer', 'Walk: what opens at once (the badge of a hole) is a pointer, not footprints');
 });
 
 // ---------------------------------------------------------------- the name
