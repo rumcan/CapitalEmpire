@@ -199,8 +199,9 @@ test('prep-range-art.mjs: finds each slug\'s newest views, sizes by the art list
     // sizing: a building by its footprint's diamond (32 px a metre of width plus depth), its views' footprints turned; a mast by its height
     const pic = { w: 200, h: 300, rgba: Buffer.alloc(200 * 300 * 4, 255) }, shop = ITEMS.find(i => i.slug === 'golf-clubhouse-shanty')!, mast = ITEMS.find(i => i.slug === 'golf-range-floodlight')!;
     const v1 = mod.geometry(shop, 1, pic), v2 = mod.geometry(shop, 2, pic), m = mod.geometry(mast, 1, pic);
-    assert.equal(v1.w, 32 * 20); assert.equal(v1.h, 32 * 20 * 1.5);
-    assert.deepEqual([v1.boxes[0]!.hx, v1.boxes[0]!.hy], [6, 4]); assert.deepEqual([v2.boxes[0]!.hx, v2.boxes[0]!.hy], [4, 6]);
+    // (the shop is a hut of 7.5 x 4.5 m with its dirt patch: the owner, 2026-11-14, "the size of this is not to the right scale. its huge" at 12 x 8)
+    assert.equal(v1.w, 32 * 12); assert.equal(v1.h, 32 * 12 * 1.5);
+    assert.deepEqual([v1.boxes[0]!.hx, v1.boxes[0]!.hy], [3.75, 2.25]); assert.deepEqual([v2.boxes[0]!.hx, v2.boxes[0]!.hy], [2.25, 3.75]);
     assert.equal(m.h, 64 * 12); assert.equal(m.w, 64 * 12 / 1.5);
   } finally { fs.rmSync(tmp, { recursive: true, force: true }); }
 });

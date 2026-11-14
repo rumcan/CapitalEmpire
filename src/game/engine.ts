@@ -422,6 +422,8 @@ function seeThrough(d: Drawable, g: Drawable): Drawable {
  *  polo and visor, as an index into SPECTATOR_PEOPLE; and its label */
 /** T214: a club staff member's beat in the world (Game.beatsNow) */
 type ProBeatRow = { k: number; role: ClubRole; name: string; beat: ProBeat };
+/** how many times a person's pace you and your cart may go at a fast game speed (engine frame: youStep) */
+const YOU_PACE_MAX = 8;
 const CADDIE_ART = Math.max(0, SPECTATOR_PEOPLE.findIndex(p => p.id === 'spectator:spec_m_polo_visor')), CADDIE_LABEL = 'Stand In for caddie';
 /** #1235: the painted caddie (staff_role_caddie), -1 until packed: then the stand-in above and its label */
 const CADDIE_STAFF = staffPerson('staff_role_caddie');
@@ -715,7 +717,7 @@ export class Game {
   setShowGrid(on: boolean) { this.showGrid = on; saveMapGrid(storageOf(), on); this.emit(); }
   /** the stand-in labels (T114, newart.ts standInLabel): "Stand In for Church" over each building drawn as a stand-in until its own art lands; on
    *  by default (the owner wants to see them), remembered. Set it with setShowStandIns */
-  showStandIns = true;
+  showStandIns = false;
   setShowStandIns(on: boolean) {
     this.showStandIns = on;
     try { localStorage.setItem('capitalempire.standins', String(on)); } catch { /* storage may be unavailable */ }
@@ -3209,7 +3211,7 @@ export class Game {
     this.traffic = new SimClient(boot.sim);
     try { this.disastersEnabled = localStorage.getItem('capitalempire.disasters') !== 'false'; } catch { /* default on */ }
     if (JAM) this.disastersEnabled = false; // the jam build's emergencies (golf/risk.ts) replace the natural disasters
-    try { this.showStandIns = !JAM && localStorage.getItem('capitalempire.standins') !== 'false'; } catch { /* default on */ } // (the jam MVP: never: the owner, 2026-11-13, no STAND IN text)
+    try { this.showStandIns = !JAM && localStorage.getItem('capitalempire.standins') === 'true'; } catch { /* default off */ } // (the jam MVP: never: the owner, 2026-11-13, no STAND IN text)
     try { this.showMoneyFloats = localStorage.getItem('capitalempire.moneyFloats') !== 'false'; } catch { /* default on */ }
     if (!boot.moneyFloats) this.showMoneyFloats = false;
     // T147: the money floats' sources: every spend (placed ones float), the range's sales and lost golfers
@@ -9559,7 +9561,7 @@ export class Game {
     if (club) return { x: club.x + club.w / 2, y: club.y + club.h + 1.5 };
     const t = tileOf(this.cam.X, this.cam.Y); return { x: t.x, y: t.y };
   }
-  /** one frame of your character (real seconds: you walk at a person's pace whatever the sim's speed): placed once, the keys or the route, the
+  /** one frame of your character (dt: real seconds times the game's speed, capped at YOU_PACE_MAX: you keep pace with the game): placed once, the keys or the route, the
    *  use on arriving, the camera following, the save when you stop. No allocation */
   private youStep(dt: number) {
     if (this.youFor !== this.golf) { this.youFor = this.golf; this.you = null; this.youThen = null; this.youTalk = null; this.youTeeOpen = false; this.youCart = null; this.youInCart = false; this.yrFlight = null; this.yrCard = false; }
@@ -12897,7 +12899,9 @@ export class Game {
     if (this.golf) this.halfwayStep();
     if (this.golf) { this.decor.frame(); this.pondsFrame(now); } // T231: the ponds' stone edges and the jets
     this.updatePeds(dt);
-    this.youStep(pdt); // T240: your character, in real time
+    // (the owner, 2026-11-14: "my player walks at the same speed no matter what speed the game is": you and your cart keep pace with the game's speed, up to
+    // YOU_PACE_MAX times a person's pace so the keys stay usable; paused or slower than 1x you still walk at a person's pace)
+    this.youStep(pdt * (this.speed > 1 ? Math.min(this.speed, YOU_PACE_MAX) : 1));
     this.updateGrass();
     // the followed car: the camera centres on its interpolated place (the info itself comes at 10 Hz)
     if (this.followCar && this.traffic.car) {
@@ -13496,7 +13500,9 @@ export class Game {
     // T151: the world labels drawn below are collected (this.labels) and written together after the tolls, placed so none overlap
     this.labels.begin(ctx, this.dpr);
     // J7d (#1234; the owner: "pls make all the labels show on hover"): in the jam a name label shows only while the pointer is over its thing (world-labels.ts)
-    if (JAM) { const L = this.labels, gm = this.ghostMouse, d = this.dpr; L.hoverOnly = true; L.hoverAt = gm ? (L.hoverAt ?? { x: 0, y: 0 }) : null; if (gm && L.hoverAt) { L.hoverAt.x = gm.mx * d; L.hoverAt.y = gm.my * d; } L.hoverReach.side = 40 * d; L.hoverReach.up = 12 * d; L.hoverReach.down = 90 * d; }
+    // (the owner, 2026-11-14: "stop covering the art with your labels" ... "make sure we have no labels that says Stand in": the hover rule in every build,
+    // and a Stand In label only when Settings' stand-in labels are switched on)
+    { const L = this.labels, gm = this.ghostMouse, d = this.dpr; L.standIns = this.showStandIns; L.hoverOnly = true; L.hoverAt = gm ? (L.hoverAt ?? { x: 0, y: 0 }) : null; if (gm && L.hoverAt) { L.hoverAt.x = gm.mx * d; L.hoverAt.y = gm.my * d; } L.hoverReach.side = 40 * d; L.hoverReach.up = 12 * d; L.hoverReach.down = 90 * d; }
     if (this.showLanes && this.cam.z > 0.12) this.drawLanes(ctx);
     if (this.showLots && this.cam.z > 0.06) this.drawLots(ctx);
     if (this.showAccess || this.cam.z < PLANNER_Z) this.drawAccess(ctx);
