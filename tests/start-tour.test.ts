@@ -8,7 +8,7 @@ import { readFileSync } from 'node:fs';
 import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server.edge';
 import { RangeGuideCard } from '../src/ui/golf/RangeGuideCard';
-import { TOWN_TOUR, newTour, normalizeTour, tourCurrent, tourLines, tourNext, tourOff, tourRunning, tourSkip, tourTick, type TourFacts } from '../src/game/ext/progressive-ui/tour';
+import { JAM_TOUR, TOWN_TOUR, newTour, normalizeTour, tourCurrent, tourLines, tourNext, tourOff, tourRunning, tourSkip, tourStepFor, tourTick, type TourFacts } from '../src/game/ext/progressive-ui/tour';
 import { normalizeProgress } from '../src/game/ext/progressive-ui/progress';
 
 const OPEN: TourFacts = { roadLock: null, start: 'range' };
@@ -89,11 +89,21 @@ test('the card: the guide card with the tutorial heading, Next on a next step, S
 
 test('the engine: a new game starts it, it waits for the Who card, the welcome card and guided build wait for it, a town road counts, Help replays it', () => {
   const src = readFileSync('src/game/engine.ts', 'utf8'), app = readFileSync('src/App.tsx', 'utf8');
-  assert.equal((src.match(/tour: newTour\(\)/g) ?? []).length, 2, 'the range start and the town start');
+  assert.equal((src.match(/tour: newTour\(\)/g) ?? []).length, 3, 'the range start (laid, and while it is chosen: J9) and the town start');
   assert.match(src, /if \(tourRunning\(p\.tour\)\) return null; \/\/ T293: then the start tutorial/);
   assert.match(src, /rangeGuideView\(\)[^\n]*\{\n\s*if \(tourRunning\(this\.golf\?\.progress\?\.tour\)\) return null;/);
   assert.match(src, /!p\.seen\.includes\('who'\)\) return null; \/\/ T240: "Who are you\?" first/);
   assert.match(src, /!isCourseClass\(cls\.id\) && tourRunning\(t\)\) \{ t\.roads\+\+/);
   assert.match(src, /this\.tourCheck\(\); \/\/ T293/);
   assert.match(app, /game\.tourView\(\)/); assert.match(app, /game\.replayTour\(\)/); assert.match(app, /Replay the start tutorial/);
+});
+
+test("J9 (#1268): the jam tutorial's first step says the old range was bought with the land, and a game from before (its range still for sale) says so", () => {
+  const f: TourFacts = { roadLock: null, start: 'range' };
+  assert.match(tourStepFor(JAM_TOUR[0]!, f).body, /You started with \$75,000\. The land, your house and this old driving range .* took \$15,000/);
+  assert.match(tourStepFor(JAM_TOUR[0]!, { ...f, rangeForSale: true }).body, /old driving range on it for sale/);
+  assert.doesNotMatch(JAM_TOUR[2]!.body, /buying the old range/, 'the menu step no longer tells to buy it');
+  // the normal game's last step: the range stands where the player chose; a bare start (an older save) still says to place it
+  assert.match(tourStepFor(TOWN_TOUR[3]!, { ...f, rangePlaced: true }).body, /you chose where/);
+  assert.match(tourStepFor(TOWN_TOUR[3]!, { ...f, rangePlaced: false }).body, /Place your driving range next/);
 });
