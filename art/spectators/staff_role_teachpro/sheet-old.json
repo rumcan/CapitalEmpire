@@ -1,0 +1,41 @@
+{
+  "id": "person:staff_role_teachpro",
+  "name": "staff_role_teachpro (ChatGPT painted, #1235)",
+  "size": "adult",
+  "heightMetres": 1.7,
+  "frameWidth": 160,
+  "frameHeight": 262,
+  "anchor": {
+    "x": 80,
+    "y": 252
+  },
+  "directions": [
+    "S",
+    "SW",
+    "W",
+    "NW",
+    "N",
+    "NE",
+    "E",
+    "SE"
+  ],
+  "frames": [
+    "idle",
+    "walk1",
+    "walk2",
+    "walk3",
+    "walk4",
+    "walk5",
+    "walk6",
+    "walk7",
+    "walk8"
+  ],
+  "walkFps": 5.7,
+  "mirrored": {},
+  "source": "art/spectators/staff_role_teachpro",
+  "clips": {
+    "walk": "ChatGPT painted walk (8 frames, issue #1235)",
+    "idle": "ChatGPT painted standing pose (issue #1235)"
+  },
+  "note": "Starts as a copy of golfers:golf_pro_w1 (a stand-in) until import_golfer.py --family spectators replaces each heading; design.png is the painted design."
+}

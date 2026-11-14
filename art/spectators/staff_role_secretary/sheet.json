@@ -1,0 +1,83 @@
+{
+  "id": "person:staff_role_secretary",
+  "name": "staff_role_secretary (ChatGPT painted)",
+  "size": "adult",
+  "heightMetres": 1.58,
+  "frameWidth": 160,
+  "frameHeight": 247,
+  "anchor": {
+    "x": 80,
+    "y": 237
+  },
+  "directions": [
+    "S",
+    "SW",
+    "W",
+    "NW",
+    "N",
+    "NE",
+    "E",
+    "SE"
+  ],
+  "frames": [
+    "idle",
+    "walk1",
+    "walk2",
+    "walk3",
+    "walk4",
+    "walk5",
+    "walk6",
+    "walk7",
+    "walk8"
+  ],
+  "walkFps": 5.7,
+  "mirrored": {},
+  "source": "art/spectators/staff_role_secretary",
+  "clips": {
+    "walk": "ChatGPT painted walk (8 frames, issue #1235)",
+    "idle": "ChatGPT painted standing pose (issue #1235)"
+  },
+  "note": "Starts as a copy of spectators:spec_w_older_cardigan (a stand-in) until import_golfer.py --family spectators replaces each heading; design.png is the painted design.",
+  "chatgpt": {
+    "E": {
+      "picture": "staff_role_secretary~E-golfers.png",
+      "date": "2026-11-14",
+      "scale": 0.65
+    },
+    "N": {
+      "picture": "staff_role_secretary~N-golfers.png",
+      "date": "2026-11-14",
+      "scale": 0.6562
+    },
+    "NE": {
+      "picture": "staff_role_secretary~NE-golfers.png",
+      "date": "2026-11-14",
+      "scale": 0.662
+    },
+    "NW": {
+      "picture": "staff_role_secretary~NW-golfers.png",
+      "date": "2026-11-14",
+      "scale": 0.7148
+    },
+    "S": {
+      "picture": "staff_role_secretary~S-golfers.png",
+      "date": "2026-11-14",
+      "scale": 0.609
+    },
+    "SE": {
+      "picture": "staff_role_secretary~SE-golfers.png",
+      "date": "2026-11-14",
+      "scale": 0.675
+    },
+    "SW": {
+      "picture": "staff_role_secretary~SW-golfers.png",
+      "date": "2026-11-14",
+      "scale": 0.6385
+    },
+    "W": {
+      "picture": "staff_role_secretary~W-golfers.png",
+      "date": "2026-11-14",
+      "scale": 0.6203
+    }
+  }
+}
