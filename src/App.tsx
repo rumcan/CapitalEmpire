@@ -154,7 +154,7 @@ function menuCtx(game: Game): MenuCtx {
     newHoleWhy: ui?.newHoleLock ?? null,
     // T356: Course > Place a real course: the shipped map-data courses, then the player's downloaded ones (T358: kept in this browser)
     real: JAM ? [] : [
-      ...OSM_COURSES.map(c => ({ id: c.id, name: c.name, place: c.place, holes: c.holes, par: c.par })),
+      ...OSM_COURSES.map(c => ({ id: c.id, name: c.name, place: c.place, holes: c.holes, par: c.par, ...(c.region ? { group: c.region } : {}) })),
       ...keptCourses().map(r => ({ id: r.id, name: r.name, place: r.place || 'Downloaded', holes: r.holes ?? 0, par: r.par ?? 0, kept: true })),
     ],
     // T288: the placements still to make first (the range, its car park, the practice area: a click takes it in hand), then the card's sections

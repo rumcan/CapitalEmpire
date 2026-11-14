@@ -180,14 +180,26 @@ way(4261725)->.src;
   way(area.course)["waterway"~"^(stream|river|canal|ditch|drain)$"];
   nwr(area.course)["natural"~"^(wood|scrub)$"];
   nwr(area.course)["landuse"="forest"];
+  way(area.course)["natural"="tree_row"];
+  node(area.course)["natural"="tree"];
 );
 out geom;`;
   it('is the query scripts/dev/osm-course.mjs asks, word for word (a course mapped as a point takes what is within 1200 m)', () => {
     assert.equal(courseQuery({ type: 'way', id: 4261725 }), WAY);
     const node = courseQuery({ type: 'node', id: 5 });
     assert.ok(node.includes('node(5)->.src;') && node.includes('nwr(around.src:1200)["golf"];') && !node.includes('map_to_area'));
+    // (#1273: the query gained the tree rows and single trees; the script's cached run of 2026-11-08 was made before, so its text is the new one less those two lines)
     const cache = 'E:/ClaudeTemp/T340/raw/overpass-way-4261725-9705c606.json.meta';
-    if (existsSync(cache)) assert.equal(courseQuery({ type: 'way', id: 4261725 }), JSON.parse(readFileSync(cache, 'utf8')).query, 'the same text the script sent');
+    if (existsSync(cache)) {
+      const was = (JSON.parse(readFileSync(cache, 'utf8')).query as string).split('\n'), now = courseQuery({ type: 'way', id: 4261725 }).split('\n');
+      assert.deepEqual(now.filter(l => !/tree_row|"tree"/.test(l)), was, 'the same text the script sent, but for the tree lines');
+    }
+  });
+  it('asks for the map\'s tree rows and single trees, as the script does (#1273)', () => {
+    const q = courseQuery({ type: 'relation', id: 5974410 });
+    assert.ok(q.includes('way(area.course)["natural"="tree_row"];') && q.includes('node(area.course)["natural"="tree"];'));
+    const near = courseQuery({ type: 'node', id: 5 });
+    assert.ok(near.includes('way(around.src:1200)["natural"="tree_row"];') && near.includes('node(around.src:1200)["natural"="tree"];'));
   });
   it('the look near a place asks for the golf courses and features round it and the areas that hold it', () => {
     const q = nearQuery(-25.8206, 28.3127);

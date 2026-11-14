@@ -1,5 +1,5 @@
 // The map data of "Find a real course" (T358, #1003): Overpass, from the player's browser. ONE query makes a course (the same one scripts/dev/osm-course.mjs
-// asks: the course's boundary and, inside it, every golf=* feature, water, streams and woods, as geometry), tried on the main server and then on the mirrors (a
+// asks: the course's boundary and, inside it, every golf=* feature, water, streams, woods and (#1273) tree rows and single trees, as geometry), tried on the main server and then on the mirrors (a
 // timeout or a busy answer moves on; nothing is retried on the same server). T378 (#1034): the servers are asked in the order of their measured health, not the order
 // they are listed in: the ones whose last answer was good first (the fastest first), then the ones not asked yet, then the ones that failed last; a server that hung is
 // left alone for five minutes and one that was busy for one; what was learned is kept for half an hour (in the library's answers) so a reload does not wait on a dead
@@ -118,6 +118,8 @@ export function courseQuery(src: OsmRef, radius = 1200): string {
     `  way(${sel})["waterway"~"^(stream|river|canal|ditch|drain)$"];`,
     `  nwr(${sel})["natural"~"^(wood|scrub)$"];`,
     `  nwr(${sel})["landuse"="forest"];`,
+    `  way(${sel})["natural"="tree_row"];`,
+    `  node(${sel})["natural"="tree"];`,
     ');',
     'out geom;',
   ].join('\n');

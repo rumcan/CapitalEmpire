@@ -17,12 +17,19 @@ export interface JPoly { outer: JPt[]; inner: JPt[][] }
 /** a feature of the JSON: its OSM id and tags, and its geometry (areas as polys, hole lines and waterways as line, pins as pos) */
 export interface JFeature {
   id?: string; tags?: Record<string, string>; polys?: JPoly[]; line?: JPt[]; pos?: JPt;
+  /** #1273: a list of single points (a fixture's trees: one feature per leaf type, not one per tree) */ pts?: JPt[];
   /** a hole line's number and par, as the script read them */ ref?: number; par?: number; length?: number;
 }
+/** #1273: how wooded a course is, the course file's `meta.trees` (scripts/dev/osm-trim-fixture.mjs --trees): a parkland course has its holes framed in woods, a links course almost
+ *  no trees, a desert course scattered desert plants (golf/osm/trees.ts). `conifers`: the share of conifers among its trees (the style's own when absent), `density`: the share of
+ *  the style's trees kept (1 when absent) */
+export type TreeStyle = 'parkland' | 'links' | 'desert';
+export interface TreeSetting { style: TreeStyle; conifers?: number; density?: number }
 /** the stage-1 JSON, the parts the converter reads (a fixture is the same shape with less in it) */
 export interface OsmCourseJson {
   meta?: {
     attribution?: string; credit?: string; licence?: string; id?: string; place?: string; course?: { osm?: string; name?: string; tags?: Record<string, string> | null };
+    /** #1273: how wooded the course is (a style, or a style with its conifer share and density) */ trees?: TreeStyle | TreeSetting;
     /** (T358: what the browser's import writes besides) the projection's centre, the size m, the counts by kind, where the answer came from */
     centre?: { lat: number; lon: number }; sizeM?: [number, number]; counts?: Record<string, number>; overpass?: { server: string | null; fetchedAt: string | null };
   };
@@ -60,6 +67,17 @@ export interface SpecHole {
 /** a warning or note about the build: a code, the hole it is about (0: the course) and a sentence */
 export interface SpecNote { code: string; hole: number; text: string }
 
+/** #1273: what grows there as the map says: needle (needleleaved: pines, firs), broad (broadleaved), or not said (null) */
+export type TreeLeaf = 'needle' | 'broad' | null;
+/** #1273: the map's trees inside the land, in the spec's frame (tiles): woods (natural=wood, landuse=forest, natural=scrub) as rings (the outer ring and the holes in it, flat x, y; filled
+ *  together by the even-odd rule), tree rows (natural=tree_row) as lines, and single trees (natural=tree) as lists of points (flat x, y) by leaf type. None of it is painted: golf/osm/trees.ts
+ *  plants it with the game's own trees, round the holes (never on a surface the course plays on) */
+export interface SpecTrees {
+  woods: { scrub: boolean; leaf: TreeLeaf; rings: number[][] }[];
+  rows: { leaf: TreeLeaf; pts: number[] }[];
+  points: { leaf: TreeLeaf; xy: number[] }[];
+}
+
 /** a course ready for the game: its size and holes, its areas in paint order, and the notes */
 export interface OsmCourseSpec {
   id: string; name: string; credit: string; licence: string; source: string; place: string;
@@ -78,6 +96,8 @@ export interface OsmCourseSpec {
   parTotal: number; gameParTotal: number; lengthM: number;
   /** how many polygons of each map kind the spec uses (for the tests and the card) */
   counts: Record<string, number>;
+  /** #1273: the map's trees inside the land (absent: it has none), and how wooded the course is (absent: the file says nothing, parkland) */
+  trees?: SpecTrees; treeSetting?: TreeSetting;
   /** T356 (#998): a spec turned by the placing mode (rotate.ts rotateSpec): the turn, degrees clockwise (absent: as converted), and the land's outline in
    *  the frame, the four corners of the oriented rectangle the land is, flat x, y (absent: the frame itself); w and h are then the box round it. A turned spec
    *  keeps the unturned `originM` (the preview, which reads it, only ever sees the spec as converted) */

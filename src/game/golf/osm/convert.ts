@@ -14,7 +14,8 @@ import {
 } from './geom';
 import { deriveHoleLines } from './derive';
 import {
-  OSM_CREDIT, OSM_LICENCE, OSM_MARGIN_M, type JFeature, type OsmCourseJson, type OsmCourseSpec, type SpecArea, type SpecHole, type SpecNote, type SpecSurface, type SpecTee, type TPt,
+  OSM_CREDIT, OSM_LICENCE, OSM_MARGIN_M, type JFeature, type OsmCourseJson, type OsmCourseSpec, type SpecArea, type SpecHole, type SpecNote, type SpecSurface, type SpecTee, type SpecTrees, type TPt,
+  type TreeLeaf, type TreeSetting,
 } from './types';
 
 /** a tee polygon within this of a hole line's start belongs to that hole's tee, m */
@@ -88,7 +89,7 @@ function areasOf(list: JFeature[] | undefined): Area[] {
 /** the JSON with every coordinate times k (a copy; the course scaled about its centre) */
 export function scaleJson(json: OsmCourseJson, k: number): OsmCourseJson {
   const pt = (p: [number, number]): [number, number] => [Math.round(p[0] * k * 100) / 100, Math.round(p[1] * k * 100) / 100];
-  const feat = (f: JFeature): JFeature => ({ ...f, ...(f.polys ? { polys: f.polys.map(q => ({ outer: q.outer.map(pt), inner: (q.inner ?? []).map(r => r.map(pt)) })) } : {}), ...(f.line ? { line: f.line.map(pt) } : {}), ...(f.pos ? { pos: pt(f.pos) } : {}) });
+  const feat = (f: JFeature): JFeature => ({ ...f, ...(f.polys ? { polys: f.polys.map(q => ({ outer: q.outer.map(pt), inner: (q.inner ?? []).map(r => r.map(pt)) })) } : {}), ...(f.line ? { line: f.line.map(pt) } : {}), ...(f.pos ? { pos: pt(f.pos) } : {}), ...(f.pts ? { pts: f.pts.map(pt) } : {}) });
   const features: OsmCourseJson['features'] = {};
   for (const [kind, list] of Object.entries(json.features ?? {})) (features as Record<string, JFeature[]>)[kind] = (list ?? []).map(feat);
   return { ...json, ...(json.boundary ? { boundary: feat(json.boundary) } : {}), features };
@@ -96,6 +97,35 @@ export function scaleJson(json: OsmCourseJson, k: number): OsmCourseJson {
 
 /** the playing length through a tee marker, aim points and pin, m (golf/holes.ts: metres, whole) */
 const playLen = (tee: P, aims: P[], pin: P): number => Math.round(lineLen([tee, ...aims, pin]));
+
+/** #1273: how wooded the course is, from the JSON's `meta.trees` (a style, or an object with the style): undefined when the file says nothing (or says nonsense) */
+export function treeSettingOf(v: unknown): TreeSetting | undefined {
+  const style = typeof v === 'string' ? v : v && typeof v === 'object' ? (v as { style?: unknown }).style : undefined;
+  if (style !== 'parkland' && style !== 'links' && style !== 'desert') return undefined;
+  const o = v && typeof v === 'object' ? (v as { conifers?: unknown; density?: unknown }) : {}, share = (x: unknown): number | undefined => (typeof x === 'number' && Number.isFinite(x) ? Math.max(0, Math.min(1, x)) : undefined);
+  const conifers = share(o.conifers), density = share(o.density);
+  return { style, ...(conifers !== undefined ? { conifers } : {}), ...(density !== undefined ? { density } : {}) };
+}
+/** what grows in a wood or tree row, as its tags say (leaf_type needleleaved / broadleaved, or the old wood=coniferous / deciduous) */
+const leafOf = (t: Record<string, string> | undefined): TreeLeaf => {
+  const l = (t?.leaf_type ?? '').toLowerCase(), w = (t?.wood ?? '').toLowerCase();
+  return l === 'needleleaved' || w === 'coniferous' ? 'needle' : l === 'broadleaved' || w === 'deciduous' ? 'broad' : null;
+};
+/** a ring clipped to a box (Sutherland-Hodgman, metres): a wood that runs for kilometres keeps its part inside the land. Empty when none of it is */
+function clipRing(ring: readonly P[], box: Box): P[] {
+  let out: P[] = ring.slice();
+  for (const [axis, edge, low] of [[0, box[0], false], [0, box[2], true], [1, box[1], false], [1, box[3], true]] as const) {
+    const inp = out; out = [];
+    const inside = (p: P): boolean => (low ? p[axis] <= edge : p[axis] >= edge);
+    for (let i = 0; i < inp.length; i++) {
+      const a = inp[i]!, b = inp[(i + 1) % inp.length]!, ia = inside(a), ib = inside(b);
+      if (ia) out.push(a);
+      if (ia !== ib) { const t = (edge - a[axis]) / (b[axis] - a[axis]), q: P = [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t]; q[axis] = edge; out.push(q); }
+    }
+    if (!out.length) break;
+  }
+  return out;
+}
 
 /** converts the JSON of a real course into a course spec; see the file's header. Never throws for a well-formed JSON: a course with no hole lines gives a
  *  spec with no holes and a warning */
@@ -420,11 +450,35 @@ export function osmCourseToSpec(json0: OsmCourseJson, opt: ConvertOptions = {}):
   }
   for (const h of holes) if (!h.tees.length) warn('no-tee-marker', h.n, `Hole ${h.n} has no tee marker`);
 
+  // ---- the map's trees inside the land (#1273): woods as rings, tree rows as lines, single trees as points. None of it is painted (it is no ground): golf/osm/trees.ts plants
+  //      it with the game's own trees, where no surface of play is ----
+  const trees: SpecTrees = { woods: [], rows: [], points: [] };
+  for (const w of areasOf(F.wood)) {
+    if (!boxesMeet(w.box, lbox)) continue;
+    const outer = clipRing(w.poly.outer, lbox);
+    if (outer.length < 3) continue;
+    trees.woods.push({ scrub: w.tags.natural === 'scrub', leaf: leafOf(w.tags), rings: [flat(outer), ...w.poly.inner.map(r => clipRing(r, lbox)).filter(r => r.length >= 3).map(flat)] });
+  }
+  for (const f of F.tree_row ?? []) {
+    if (!f.line || f.line.length < 2) continue;
+    const bx = boxOf(f.line as P[]);
+    if (bx && boxesMeet(bx, lbox)) trees.rows.push({ leaf: leafOf(f.tags), pts: flat(f.line as P[]) });
+  }
+  for (const f of F.tree ?? []) {
+    const ps = ((f.pts ?? (f.pos ? [f.pos] : [])) as P[]).filter(p => p[0] >= lbox[0] && p[0] <= lbox[2] && p[1] >= lbox[1] && p[1] <= lbox[3]);
+    if (!ps.length) continue;
+    const leaf = leafOf(f.tags);
+    let g = trees.points.find(q => q.leaf === leaf);
+    if (!g) trees.points.push(g = { leaf, xy: [] });
+    for (const p of ps) { const q = T(p); g.xy.push(q.x, q.y); }
+  }
+  const hasTrees = trees.woods.length > 0 || trees.rows.length > 0 || trees.points.length > 0, setting = treeSettingOf(json.meta?.trees);
+
   const place = opt.place ?? json.meta?.place ?? '';
   return {
     id: opt.id ?? json.meta?.id ?? 'course', name: opt.name ?? json.meta?.course?.name ?? 'Course', credit: OSM_CREDIT, licence: OSM_LICENCE, scale, derived: fromFairways,
     source: json.meta?.course?.osm ?? '', place, w: W, h: H, originM: [ox, oy], holes, areas, warnings, fills, otherCourses, course: chosen || null,
     parTotal: holes.reduce((s, h) => s + h.par, 0), gameParTotal: holes.reduce((s, h) => s + h.gamePar, 0), lengthM: holes.reduce((s, h) => s + h.lengthM, 0),
-    counts,
+    counts, ...(hasTrees ? { trees } : {}), ...(setting ? { treeSetting: setting } : {}),
   };
 }

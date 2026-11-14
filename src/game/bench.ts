@@ -260,7 +260,10 @@ async function realPlaceBench(g: Game, spec: string, info: Record<string, unknow
     g.onFrame = null;
     console.log('[bench] first frames after the lay (main-thread ms)', JSON.stringify(after));
     g.lookAt(best.x, best.y, 0.3);
-    startTour(g, { ...info, realplace: spec, laid, layMs: ms, afterLayFramesMs: after }, zoomStages(new URLSearchParams(location.search).get('zooms')) ?? SCENE_STAGES[scene]);
+    // (#1273: the props after the lay and the trees the course was planted with, those the plant brush marks: ?ctrees=0 is the same run without them)
+    const planted = [...g.props].filter(p => p.plant).length;
+    console.log('[bench] real course trees planted', planted, 'props now', g.props.size);
+    startTour(g, { ...info, realplace: spec, laid, layMs: ms, afterLayFramesMs: after, propsAfterLay: g.props.size, courseTrees: planted }, zoomStages(new URLSearchParams(location.search).get('zooms')) ?? SCENE_STAGES[scene]);
     return;
   }
   const zooms = [0.3, 0.15], states = ['off', 'hand', 'move'] as const, runs: { z: number; st: (typeof states)[number] }[] = [];

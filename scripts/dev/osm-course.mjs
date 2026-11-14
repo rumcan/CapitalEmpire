@@ -7,7 +7,9 @@
 //   1. Nominatim search for the name; takes the first leisure=golf_course hit (--list prints the hits and stops; --pick N takes the Nth
 //      golf-course hit; --osm way/ID or relation/ID skips the search).
 //   2. one Overpass query: the course boundary and, inside it, every golf=* feature (tee fairway green bunker water_hazard
-//      lateral_water_hazard rough hole pin cartpath ...), natural=water, streams/rivers/ditches and woods, as geometry.
+//      lateral_water_hazard rough hole pin cartpath ...), natural=water, streams/rivers/ditches, woods (natural=wood / scrub, landuse=forest) and,
+//      since #1273, the map's tree rows (natural=tree_row, lines) and single trees (natural=tree, points), as geometry. The placed course is planted
+//      from them (golf/osm/trees.ts); scripts/dev/osm-trim-fixture.mjs keeps the ones near its holes.
 //   3. <out>/<slug>.json: the features in metres, x east and y north of the course's centre (the middle of the boundary's bounding box),
 //      grouped by kind, with counts and an analysis of how well the holes can be ordered (hole lines, and the guess from tee/green pairs).
 //   4. <out>/<slug>.png: top-down preview of the polygons coloured per kind, hole lines numbered, the legend on the left (PNG encoded here
@@ -37,7 +39,8 @@ const CREDIT = '© OpenStreetMap contributors (ODbL 1.0, https://www.openstreetm
 const AREA_KINDS = ['tee', 'fairway', 'green', 'bunker', 'water_hazard', 'lateral_water_hazard', 'rough', 'driving_range'];
 const LINE_KINDS = ['hole', 'cartpath', 'path'];
 const GOLF_KINDS = [...AREA_KINDS, ...LINE_KINDS, 'pin'];
-const KINDS = [...GOLF_KINDS, 'water', 'waterway', 'wood', 'other'];
+// (#1273: the map's trees too: 'wood' is natural=wood, natural=scrub and landuse=forest (areas), 'tree_row' natural=tree_row (lines), 'tree' natural=tree (single points))
+const KINDS = [...GOLF_KINDS, 'water', 'waterway', 'wood', 'tree_row', 'tree', 'other'];
 const NEAR = 15;                                  // metres: a hole line "starts on" a tee / "ends on" a green within this
 const log = (...a) => console.log(...a);
 const sleep = ms => new Promise(r => setTimeout(r, ms));
@@ -110,6 +113,8 @@ function overpassQuery(src, radius) {
     `  way(${sel})["waterway"~"^(stream|river|canal|ditch|drain)$"];`,
     `  nwr(${sel})["natural"~"^(wood|scrub)$"];`,
     `  nwr(${sel})["landuse"="forest"];`,
+    `  way(${sel})["natural"="tree_row"];`,
+    `  node(${sel})["natural"="tree"];`,
     ');',
     'out geom;',
   ].join('\n');
@@ -238,6 +243,8 @@ function kindOf(el, srcKey) {
   if (t.golf) return GOLF_KINDS.includes(t.golf) ? t.golf : 'other';
   if (t.natural === 'water') return 'water';
   if (t.waterway) return 'waterway';
+  if (t.natural === 'tree_row') return 'tree_row';
+  if (t.natural === 'tree') return 'tree';
   if (t.natural === 'wood' || t.natural === 'scrub' || t.landuse === 'forest') return 'wood';
   return 'other';
 }
@@ -258,7 +265,7 @@ function buildModel(elements, src, fallbackCentre) {
   const F = Object.fromEntries(KINDS.map(k => [k, []])), skipped = [];
   let boundary = null;
   for (const el of elements) {
-    const kind = kindOf(el, srcKey), areaLike = !LINE_KINDS.includes(kind) && kind !== 'waterway' && kind !== 'pin';
+    const kind = kindOf(el, srcKey), areaLike = !LINE_KINDS.includes(kind) && kind !== 'waterway' && kind !== 'pin' && kind !== 'tree_row' && kind !== 'tree';
     const shape = shapeOf(el, areaLike);
     if (!shape) { skipped.push({ id: `${el.type}/${el.id}`, kind, why: 'no usable geometry' }); continue; }
     const f = { id: `${el.type}/${el.id}`, tags: el.tags || {} };
@@ -499,10 +506,10 @@ function encodePng(r) {
 const COLOURS = {
   background: [26, 32, 38], boundary: [60, 96, 56], rough: [84, 128, 66], wood: [28, 62, 38], water: [96, 152, 224], water_hazard: [44, 108, 214], lateral_water_hazard: [64, 178, 208],
   waterway: [96, 152, 224], fairway: [136, 196, 88], tee: [216, 226, 118], bunker: [240, 220, 152], green: [92, 236, 132], driving_range: [104, 156, 84],
-  cartpath: [176, 176, 168], path: [146, 136, 116], hole: [255, 255, 255], pin: [236, 52, 52],
+  cartpath: [176, 176, 168], path: [146, 136, 116], hole: [255, 255, 255], pin: [236, 52, 52], tree_row: [56, 120, 60], tree: [46, 104, 52],
 };
 const LEGEND = [['boundary', 'COURSE AREA'], ['rough', 'ROUGH'], ['wood', 'WOOD'], ['water', 'WATER'], ['water_hazard', 'WATER HAZARD'], ['lateral_water_hazard', 'LATERAL WATER'], ['waterway', 'STREAM'],
-  ['fairway', 'FAIRWAY'], ['tee', 'TEE'], ['bunker', 'BUNKER'], ['green', 'GREEN'], ['driving_range', 'RANGE'], ['cartpath', 'CART PATH'], ['path', 'PATH'], ['hole', 'HOLE LINE'], ['pin', 'PIN']];
+  ['fairway', 'FAIRWAY'], ['tee', 'TEE'], ['bunker', 'BUNKER'], ['green', 'GREEN'], ['driving_range', 'RANGE'], ['cartpath', 'CART PATH'], ['path', 'PATH'], ['tree_row', 'TREE ROW'], ['tree', 'TREE'], ['hole', 'HOLE LINE'], ['pin', 'PIN']];
 const wrap = (str, n) => {
   const out = []; let cur = '';
   for (const w of String(str).normalize('NFD').replace(/[̀-ͯ]/g, '').toUpperCase().split(/\s+/)) {
@@ -528,7 +535,8 @@ function renderPreview({ boundary, F, title }, maxPx) {
   fillKind('wood', 0.85); fillKind('rough'); fillKind('driving_range'); fillKind('water'); lineKind('waterway', 1.6);
   fillKind('fairway'); fillKind('water_hazard'); fillKind('lateral_water_hazard'); fillKind('tee'); fillKind('bunker'); fillKind('green');
   for (const kind of AREA_KINDS) lineKind(kind, 1.6);
-  lineKind('cartpath', 1.4); lineKind('path', 1);
+  lineKind('cartpath', 1.4); lineKind('path', 1); lineKind('tree_row', 2.2);
+  for (const p of F.tree) if (p.pos) { const [x, y] = T(p.pos); big.disc(x, y, 1.6 * SS, COLOURS.tree); }   // (#1273: single mapped trees as dots)
   if (boundary) for (const p of boundary.polys || []) for (const r of [p.outer, ...p.inner]) big.stroke([...r, r[0]].map(T), 1.2 * SS, [236, 236, 236]);
   const holes = F.hole.filter(h => h.line);
   for (const h of holes) big.stroke(h.line.map(T), 4.4 * SS, [8, 10, 12]);

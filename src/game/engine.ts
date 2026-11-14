@@ -180,6 +180,7 @@ import { realNet, type AnswerCache } from './golf/osm/polite';
 import { fetchLand, tilesKept, tilesOfCourse } from './golf/osm/dem';
 import { planOsmGame } from './golf/osm/start';
 import { specMarkers } from './golf/osm/raster';
+import { planCourseTrees } from './golf/osm/trees';
 import { RANGE_CAM_ZOOM, planRangeStart } from './golf/rangestart';
 import { CLUB_REACH, RANGE_PLOT, clubhouseSpotWhy, plotOfFront, plotPoint, rangeLayout } from './golf/range';
 import { PRACTICE_LOT_NAME, inPractice, practiceArea, practiceDims } from './golf/practice';
@@ -1688,7 +1689,7 @@ export class Game {
     for (const r of plan.cover) for (const p of [...this.propGrid.query([r[0], r[1], r[0] + r[2], r[1] + r[3]])]) if (this.realPropGoes(p) && inRects([r], (p.x0 + p.x1) / 2, (p.y0 + p.y1) / 2)) this.removeProp(p);
     // the course: one diff on the grid, through the grid's own pipeline
     const grid = this.courseGrid!;
-    const cls = this.terrain.cls, diff = placeDiff(grid, scratchOf(turned, plan.ox, plan.oy), plan.cover, true, (x, y) => { const tx = Math.floor(x), ty = Math.floor(y); return tx >= 0 && ty >= 0 && tx < MAP && ty < MAP && cls[ty * MAP + tx] === TC.WATER; });
+    const cls = this.terrain.cls, scratch = scratchOf(turned, plan.ox, plan.oy), diff = placeDiff(grid, scratch, plan.cover, true, (x, y) => { const tx = Math.floor(x), ty = Math.floor(y); return tx >= 0 && ty >= 0 && tx < MAP && ty < MAP && cls[ty * MAP + tx] === TC.WATER; });
     this.gaDirty = null; this.gaRev++; this.caCache = null; this.holeCache = null; this.cardCache = null;
     applyDiff(grid, diff, false); this.courseGridChanged(diff, true);
     // the holes: the old markers go, the real course's are laid (tee sets, pins, aim points)
@@ -1699,6 +1700,7 @@ export class Game {
     for (const t of mk.tees) this.setGolfMarker(t.hole, t.kind, t.x, t.y);
     for (const p of mk.pins) this.setGolfMarker(p.hole, 'pin', p.x, p.y);
     g.aims = mk.aims;
+    const trees = this.plantRealTrees(turned, scratch, { x: plan.ox, y: plan.oy }); // #1273: the course's trees (the map's own, the holes framed), free like the plant brush's
     this.layPlacedLand(c.id, c.spec, turned, plan.ox, plan.oy, c.deg); // T357: the course's real ground, laid with it
     // (a game that was laid on the flat map for a map-data course keeps that: its entry road and no `placed`, so a load lays the flat map again; any other game keeps its own map)
     const was = g.osm, flat = !!was && !was.placed;
@@ -1712,10 +1714,27 @@ export class Game {
     this.ground.purgeUnused();
     this.scheduleSave();
     const goes = goesPhrase(plan);
-    this.toast(`Placed ${c.info.name}: ${plan.land.ha >= 10 ? Math.round(plan.land.ha) : plan.land.ha} ha bought${goes ? `, ${goes} cleared` : ''} ($${plan.total.toLocaleString()})`, 'good');
+    this.toast(`Placed ${c.info.name}: ${plan.land.ha >= 10 ? Math.round(plan.land.ha) : plan.land.ha} ha bought${goes ? `, ${goes} cleared` : ''}${trees ? `, ${trees.toLocaleString()} trees planted` : ''} ($${plan.total.toLocaleString()})`, 'good');
     if (plan.over.warn.length) this.toast(plan.over.warn.join('. '), 'warn'); // (T444: a road link the course cut)
     this.emit();
     return true;
+  }
+  /** #1273 (the owner, 2026-11-14: "I placed Magnolia national and there are no trees on the course"): a real course's trees (golf/osm/trees.ts): the map's own where it has them, each hole
+   *  framed where the map has few and a backdrop behind its green, the game's own trees for its look (a desert game's: the desert plants). Planted as the plant brush plants: free (the
+   *  course's price covers them), no refund when bulldozed, the Trees brush's Rub out takes them. `grid` is the course painted (the spec's cells), `at` the spec's north-west corner on it.
+   *  `?ctrees=0` leaves them out (a dev switch: the A/B of the shots and the bench). Returns how many trees went in */
+  private plantRealTrees(spec: OsmCourseSpec, grid: CourseGrid, at: { x: number; y: number }): number {
+    if (new URLSearchParams(location.search).get('ctrees') === '0') return 0;
+    const plan = planCourseTrees(spec, grid, at, { desert: this.desertTheme });
+    let n = 0;
+    for (const t of plan.trees) {
+      const i = LIB_INDEX.get(t.id); if (i === undefined) continue;
+      const k = Math.min(maxDrawScale(i), t.scale);
+      if (this.canPlace(LIBRARY[i]!, t.x, t.y, false, k)) continue;
+      this.addProp(i, t.x, t.y, false, k).plant = 1; n++;
+    }
+    if (n) this.scheduleSave();
+    return n;
   }
   /** T357 (#999): the real ground of a course placed into the game under way, laid with it: the course's land (the turned spec read through turnedFrame, so its heights turn with it) replaces
    *  what an older course laid inside its rectangle and fades out over its skirt into what is round it, and the greens have their own tilt; the workers are told, the save keeps it.
@@ -3539,6 +3558,7 @@ export class Game {
     for (const t of mk.tees) this.setGolfMarker(t.hole, t.kind, t.x, t.y);
     for (const p of mk.pins) this.setGolfMarker(p.hole, 'pin', p.x, p.y);
     this.golf.aims = mk.aims;
+    this.plantRealTrees(spec, plan.grid, plan.at); // #1273: the course's trees (the flat map has none of its own)
     // the camera over the whole land at the start, at the closest zoom that holds it (the player zooms in)
     const [lx, ly, lw, lh] = plan.land, wx = [worldX(lx, ly), worldX(lx + lw, ly), worldX(lx, ly + lh), worldX(lx + lw, ly + lh)], wy = [worldY(lx, ly), worldY(lx + lw, ly), worldY(lx, ly + lh), worldY(lx + lw, ly + lh)];
     const x0 = Math.min(...wx), x1 = Math.max(...wx), y0 = Math.min(...wy), y1 = Math.max(...wy);

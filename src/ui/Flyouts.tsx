@@ -7,6 +7,8 @@
 // T233 (#674, the concept's Golf Course panel): a column with an illustrated tool tile (MenuRow.tile, tool-tiles.ts) is laid out as a grid of
 // tiles, each picture above its name, as many across as its width holds (three at full width, two when the columns narrow); a row of it with no
 // tile shows its icon, mark or swatch on the same navy square. Captions span the grid; a locked tile is dimmed with its lock and its reason.
+// #1273: a row may carry a second line under its name (MenuRow.sub: the real courses' place, holes and par), and a column a credit caption stuck to its bottom while a long list
+// scrolls up and down (MenuRow.credit: "© OpenStreetMap contributors" under Place a real course); the headings and the credit are captions, so the keyboard walks past them.
 // T250 (#721): the town footer's flyouts open upward (up): the first column stands on the footer, above its button, and each deeper level opens
 // to its side as on the rail, beside the row that opened it, all in the room between the top bar and the footer. The first column slides left
 // only when the menu's deepest walk would not fit to the right at the narrowest columns (upLeft). The rows, tiles, keys and locks are the same.
@@ -136,14 +138,14 @@ export function Flyouts({ rows, top, left, up = false, startPath = [], keyboard 
       {cols.map((col, level) => { const grid = isTileGrid(col); return (
         <div key={level} role="menu" aria-orientation="vertical" data-flyout-col={level} className={`flyout glass ${grid ? 'flyout-grid' : ''}`} style={{ top: tops[level] ?? (level ? 0 : top), width: widths[level], maxHeight: room.h }}>
           {col.map((r, index) => {
-            if (r.caption) return <div key={r.key} className="flyout-caption" role="presentation">{r.label}</div>;
+            if (r.caption) return <div key={r.key} className={r.credit ? 'flyout-credit' : 'flyout-caption'} role="presentation" data-credit={r.credit || undefined}>{r.label}</div>;
             const opened = nav.path[level] === index && !!r.children, focused = nav.focus?.level === level && nav.focus.index === index;
             // T233: a tile: the picture (or the row's icon on the navy square), its lock, NEW and more marks on it, the name and the reason under it
             const pic = r.tile ? tileUrl(r.tile) : undefined, mark = r.mark ? <SurfaceMark kind={r.mark} size={grid ? 40 : 22} /> : r.swatch ? <span className="flyout-swatch" style={{ background: r.swatch }} /> : r.icon ? <Icon name={r.icon} size={grid ? 36 : 20} /> : null;
             return (
               <button key={r.key} type="button" role="menuitem" data-row={`${level}:${index}`} data-key={r.key} tabIndex={focused ? 0 : -1}
                 data-guide={r.leaf ? `tool-${r.leaf.entry.view?.group ?? r.leaf.entry.id}` : undefined}
-                {...(grid && r.why ? { 'data-tip': `${r.label}: ${r.why}` } : r.note && !r.why ? { 'data-tip': r.note } : {})}
+                {...(grid && r.why ? { 'data-tip': `${r.label}: ${r.why}` } : r.note && !r.why && !r.sub ? { 'data-tip': r.note } : {})}
                 {...(grid && r.tile ? { 'data-tile': r.tile } : {})}
                 aria-haspopup={r.children ? 'menu' : undefined} aria-expanded={r.children ? opened : undefined} aria-disabled={r.why ? true : undefined}
                 className={`flyout-row ${grid ? 'flyout-tile' : ''} ${opened ? 'flyout-row-open' : ''} ${r.why ? 'flyout-row-locked' : ''}${r.gold ? ' flyout-row-gold' : ''}`}
@@ -167,6 +169,7 @@ export function Flyouts({ rows, top, left, up = false, startPath = [], keyboard 
                   <span className="flyout-mark">{r.why ? <LockMark size={13} /> : mark}</span>
                   <span className="flyout-text">
                     <span className="flyout-label">{r.label}{r.isNew && !r.why && <NewBadge className="ml-1.5" />}</span>
+                    {r.sub && !r.why && <span className="flyout-sub">{r.sub}</span>}
                     {r.why && <span className="flyout-why">{r.why}</span>}
                   </span>
                   {r.children && <span className="flyout-more" aria-hidden>▸</span>}

@@ -29,6 +29,10 @@ export interface Leaf { item: string; entry: RailTool; act?: LeafAct }
 /** a flyout row: a caption (no action), a row with children (opens the next flyout), or a leaf. why: locked (dimmed, the reason shown) */
 export interface MenuRow {
   key: string; label: string; icon?: IconName; swatch?: string; /** a course surface's mark (SurfaceMark) */ mark?: string; caption?: boolean; children?: MenuRow[]; leaf?: Leaf; why?: string | null; isNew?: boolean; note?: string;
+  /** #1273: a second line shown under the label in the row itself (the real courses: its place, holes and par), where `note` is only the hover tip */
+  sub?: string;
+  /** #1273: a caption that is the list's credit line (small, plain, stuck to the column's bottom while the list scrolls), not a heading */
+  credit?: boolean;
   /** T233: its illustrated tile (art 174, tool-tiles.ts), drawn above its name; a column with a tiled row is laid out as a grid of tiles */
   tile?: ToolTile;
   /** T256: drawn as a gold button (the Range's Build) */
@@ -57,12 +61,36 @@ export interface MenuCtx {
   practice?: { id: string; name: string; why: string | null }[];
   /** T356: the real courses (Course > Place a real course): the id and the name the menu shows, with its place, holes and par; `kept`: one the player downloaded
    *  (T358's library, listed under its own caption), else one the game ships (listed first) */
-  real?: { id: string; name: string; place: string; holes: number; par: number; kept?: boolean }[];
+  real?: { id: string; name: string; place: string; holes: number; par: number; kept?: boolean;
+    /** #1273: the heading a shipped course is listed under ("Featured", "Scotland and Ireland", ...); its group's first row carries a caption (none of them has one: no captions) */ group?: string }[];
   /** New hole's lock (null: open) */
   newHoleWhy: string | null;
   /** the range card's sections (a game with a range); T288: place, a placement (the range, its car park, the practice area: a click takes it in
    *  hand) with its lock (why) */
   range: { id: string; name: string; place?: boolean; why?: string | null }[];
+}
+
+/** the credit line the real courses' list ends with (the data is OpenStreetMap's, ODbL: the credit stays in sight while the list scrolls) */
+export const REAL_CREDIT = '© OpenStreetMap contributors';
+/** #1273 (the owner, 2026-11-14: "import some more famous courses and make this longer and scrollable"): the rows of Course › Place a real course. A row is the course's name with its
+ *  place, holes and par under it (always shown, not a hover tip); the shipped courses go in the order they are given, under a small heading for each group they carry (the three first
+ *  ones "Featured", then a region each); with none carrying one there is no heading, as before, and a game with downloaded courses has a "Featured" heading over the shipped ones and
+ *  "Downloaded courses" over its own. The list ends with the credit. A long list scrolls up and down in its column (Flyouts.tsx: never sideways); the headings and the credit are
+ *  captions: the keyboard walks past them */
+export function realCourseRows(real: readonly NonNullable<MenuCtx['real']>[number][], itemId: string): MenuRow[] {
+  const row = (x: NonNullable<MenuCtx['real']>[number]): MenuRow => {
+    const line = `${x.place} · ${x.holes} holes · par ${x.par}`;
+    return { key: `real:${x.id}`, label: x.name, icon: 'pin', note: line, sub: line, leaf: { item: itemId, entry: { id: 'select', label: x.name, key: '', icon: 'pin' }, act: { k: 'real', id: x.id } } };
+  };
+  const shipped = real.filter(x => !x.kept), kept = real.filter(x => x.kept), out: MenuRow[] = [];
+  if (shipped.some(x => x.group)) {
+    let last: string | undefined;
+    shipped.forEach((x, i) => { if (i === 0 || x.group !== last) { last = x.group; if (x.group) out.push({ key: `real:cap:${x.group}`, label: x.group, caption: true }); } out.push(row(x)); });
+  } else if (kept.length && shipped.length) out.push({ key: 'real:cap-featured', label: 'Featured', caption: true }, ...shipped.map(row));
+  else out.push(...shipped.map(row));
+  if (kept.length) out.push({ key: 'real:cap-kept', label: 'Downloaded courses', caption: true }, ...kept.map(row));
+  out.push({ key: 'real:credit', label: REAL_CREDIT, caption: true, credit: true });
+  return out;
 }
 
 /** the group's flyout rows: its sub-groups and tools (a single-tool group, Select or Bulldoze, has none: a click picks its tool) */
@@ -124,9 +152,7 @@ export function menuOf(item: RailItem, c: MenuCtx): MenuRow[] {
       // T356 (#998, the owner: "add a way for the user to place the golf course he imported into his map"): the real courses, each placed with its outline in hand
       // (the shipped ones first; the player's downloaded courses under a caption of their own, only when there are some: without, the list is the three alone)
       if (c.golf && c.real?.length) {
-        const real = (x: NonNullable<MenuCtx['real']>[number]): MenuRow => ({ key: `real:${x.id}`, label: x.name, icon: 'pin', note: `${x.place} · ${x.holes} holes · par ${x.par}`, leaf: { item: item.id, entry: { id: 'select', label: x.name, key: '', icon: 'pin' }, act: { k: 'real', id: x.id } } });
-        const shipped = c.real.filter(x => !x.kept), kept = c.real.filter(x => x.kept);
-        rows.push(group('real', 'Place a real course…', 'trophy', kept.length ? [...(shipped.length ? [{ key: 'real:cap-featured', label: 'Featured', caption: true }, ...shipped.map(real)] : []), { key: 'real:cap-kept', label: 'Downloaded courses', caption: true }, ...kept.map(real)] : shipped.map(real), h));
+        rows.push(group('real', 'Place a real course…', 'trophy', realCourseRows(c.real, item.id), h));
       }
       // (T288: Cart paths & roads is a rail button of its own, below Course)
       const g = GREENKEEPING ? byId('greenkeeping') : undefined; // hidden for now (features.ts)

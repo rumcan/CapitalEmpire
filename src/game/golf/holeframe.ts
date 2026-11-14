@@ -36,7 +36,8 @@ export const FRAME_RULES = {
   /** the trees in a clump */
   min: 3, max: 9,
 } as const;
-export type FrameRules = typeof FRAME_RULES;
+/** (#1273: widened to numbers, so a course can plant a lighter frame than the default, e.g. a desert's clumps of one to four: golf/osm/trees.ts) */
+export type FrameRules = { readonly [K in keyof typeof FRAME_RULES]: number };
 
 /** what a frame tree costs ($): the plant brush is free and the Props tool's ornamental maple $300; the frame's young nursery trees come by the
  *  hundred at a fifth of that: a 340 m par 4's woods (about 150 trees) cost about half its seeded surfaces, an eighth of them sodded */

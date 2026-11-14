@@ -17,6 +17,7 @@ export interface OsmCourseInfo {
   id: string; name: string; place: string; holes: number; par: number; mappedPar: number;
   /** the course is scaled to fit the 2 km map (below 1; absent: true size) */ scale?: number;
   /** T357: the source of its real ground height as the card words it ("SRTM, 30 m"; absent: none; checked against the fixture by tests/golf-osm-land.test.ts) */ ground?: string;
+  /** #1273: the heading it is listed under in Course › Place a real course ("Featured", a region): the list keeps the order of OSM_COURSES, a heading over each run of one region */ region?: string;
   load: () => Promise<OsmCourseJson>;
 }
 

@@ -11,7 +11,8 @@ const EARTH_R = 6371008.8;
 export const AREA_KINDS = ['tee', 'fairway', 'green', 'bunker', 'water_hazard', 'lateral_water_hazard', 'rough', 'driving_range'] as const;
 export const LINE_KINDS = ['hole', 'cartpath', 'path'] as const;
 export const GOLF_KINDS = [...AREA_KINDS, ...LINE_KINDS, 'pin'] as const;
-export const KINDS = [...GOLF_KINDS, 'water', 'waterway', 'wood', 'other'] as const;
+/** (#1273: the map's trees too: 'wood' is natural=wood, natural=scrub and landuse=forest (areas), 'tree_row' natural=tree_row (lines), 'tree' natural=tree (points)) */
+export const KINDS = [...GOLF_KINDS, 'water', 'waterway', 'wood', 'tree_row', 'tree', 'other'] as const;
 type Kind = (typeof KINDS)[number];
 const isIn = (list: readonly string[], k: string): boolean => list.includes(k);
 
@@ -100,6 +101,8 @@ function kindOf(el: OverpassElement, srcKey: string): Kind | 'boundary' {
   if (t.golf) return isIn(GOLF_KINDS, t.golf) ? (t.golf as Kind) : 'other';
   if (t.natural === 'water') return 'water';
   if (t.waterway) return 'waterway';
+  if (t.natural === 'tree_row') return 'tree_row';
+  if (t.natural === 'tree') return 'tree';
   if (t.natural === 'wood' || t.natural === 'scrub' || t.landuse === 'forest') return 'wood';
   return 'other';
 }
@@ -121,7 +124,7 @@ export function buildModel(elements: OverpassElement[], src: OsmRef, fallbackCen
   const F: Record<string, ModelFeature[]> = Object.fromEntries(KINDS.map(k => [k, [] as ModelFeature[]])), skipped: Model['skipped'] = [];
   let boundary: ModelFeature | null = null;
   for (const el of elements) {
-    const kind = kindOf(el, srcKey), areaLike = !isIn(LINE_KINDS, kind) && kind !== 'waterway' && kind !== 'pin';
+    const kind = kindOf(el, srcKey), areaLike = !isIn(LINE_KINDS, kind) && kind !== 'waterway' && kind !== 'pin' && kind !== 'tree_row' && kind !== 'tree';
     const shape = shapeOf(el, areaLike);
     if (!shape) { skipped.push({ id: `${el.type}/${el.id}`, kind, why: 'no usable geometry' }); continue; }
     const f: ModelFeature = { id: `${el.type}/${el.id}`, tags: el.tags ?? {} };
