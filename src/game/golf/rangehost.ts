@@ -17,6 +17,7 @@ import { SURFACE_TEX } from './paintcourse';
 import type { GolfSurface } from './types';
 import type { OffRoad } from '../offroad';
 import { homeScene } from './rangebiz';
+import { PathNet } from './pathroute';
 import { RangeSim, garageSlots, rangeCounter, rangeScene, rangeStats, upgradeWhy, walkwayOf, walkwayReach, withPrice, withUpgrade, RANGE_UPGRADES, type CarSlot, type DemandCtx, type RangeBizSave, type RangeClock, type RangeScene, type RangeUpgradeId, type ScenePatch, type ScenePiece } from './rangebiz';
 import { CASE_BALLS, DUMP_REACH, STANDING_LOW, ballsNear, bucketsLeft, caseCost, dump, fieldCount, nearestBall, orderBalls, perHour, pickAround, pickKit, pickSwath, stockOf, supplyKit, visitBalls, type BallSave, type PickKit } from './rangeballs';
 import { worldX, worldY } from '../iso';
@@ -200,7 +201,7 @@ export class RangeHost {
       this.ctx.fitPark?.(sc.garage.lot);
       if (!b.garage) { this.ctx.layPaths([sc.garage.path]); b.garage = true; this.ctx.save(); }
     }
-    this.scene = sc; this.walkVer = -1; this.walkKey = ''; this.syncWalk();
+    this.scene = sc; this.walkVer = -1; this.walkKey = ''; this.netKey = ''; this.syncWalk();
     this.sim.setScene(sc, [...(cp?.bays ?? []), ...(cp && sc.garage ? garageSlots(sc.garage, GARAGE_CARS).map(g => (cp.off ? { ...g, off: cp.off } : g)) : [])], cp?.entrance ?? null);
   }
   /** T288: the bare start's home laid now (its frame and stage; '' none) and its gate (where you first stand; null: none) */
@@ -218,15 +219,20 @@ export class RangeHost {
     this.bareGate = hs.gate;
   }
   /** T239: the network's version and the paths' signature the walkway was read for */
-  private walkVer = -1; private walkKey = '';
-  /** T239: the walkway the walkers use (rangebiz walkwayOf), read again when the paths near the range front change: the scene the sim holds
-   *  takes it at once (golfers already walking keep their way) */
+  private walkVer = -1; private walkKey = ''; private netKey = '';
+  /** T239: the walkway the guide's walking-path step looks for (rangebiz walkwayOf: a path joining the car park, the shop and the tee), read again when the paths near the range
+   *  front change; #1295: and the graph of the paths round the range (golf/pathroute.ts PathNet, over the plot, the front and the practice area) the walkers' ways are made over:
+   *  the scene the sim holds takes it at once (golfers already walking keep their way; the next trip is made over the new paths) */
   private syncWalk(): void {
     const sc = this.scene; if (!sc || !this.ctx.pathLegs) return;
     const v = this.ctx.netVersion?.() ?? 0; if (v === this.walkVer) return; this.walkVer = v;
-    const legs = this.ctx.pathLegs(sc.front), k = legs.map(l => `${l.a.x},${l.a.y},${l.b.x},${l.b.y}`).sort().join(';');
-    if (k === this.walkKey) return; this.walkKey = k;
-    sc.walk = walkwayOf(sc, legs);
+    const sig = (legs: { a: Pt; b: Pt }[]) => legs.map(l => `${l.a.x},${l.a.y},${l.b.x},${l.b.y}`).sort().join(';');
+    const legs = this.ctx.pathLegs(sc.front), k = sig(legs);
+    if (k !== this.walkKey) { this.walkKey = k; sc.walk = walkwayOf(sc, legs); }
+    // (the walkers go wherever the range's people go: the whole plot, the front and the practice area beside it)
+    const pb = sc.practice.box, hasPb = pb[2] > pb[0] && pb[3] > pb[1];   // (no practice area: its box is empty, at the origin)
+    const wide = this.ctx.pathLegs([Math.min(sc.box[0], sc.front[0], hasPb ? pb[0] : Infinity), Math.min(sc.box[1], sc.front[1], hasPb ? pb[1] : Infinity), Math.max(sc.box[2], sc.front[2], hasPb ? pb[2] : -Infinity), Math.max(sc.box[3], sc.front[3], hasPb ? pb[3] : -Infinity)]), k2 = sig(wide);
+    if (k2 !== this.netKey) { this.netKey = k2; sc.walkNet = PathNet.of(wide); }
   }
   /** T239: whether the range's walkers have a walking path joining the car park, the shop and the tee */
   hasWalkway(): boolean { this.syncWalk(); return !!this.scene?.walk; }

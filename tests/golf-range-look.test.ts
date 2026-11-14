@@ -149,3 +149,23 @@ test('#1308: fence pieces become runs of fence (a building of use fence), not pi
   const hole = gatherFeatures3p({ course: 'c', segs: [], bizDefs: [], structures: [], lots: [], library: [fx], pages: [['p0.webp']], courseBox: [990, 990, 1010, 1010], props: [piece(0, 1000, 1000), piece(0, 1003.36, 1000), piece(0, 1500, 1000)] });
   assert.equal(hole.buildings.filter(b => b.use === 'fence').length, 1, 'a fence on a hole is a run too');
 });
+
+// #1308 (the owner: "this building is skew as F", "the caravan also skew", "the fences around the trailer is screwed"): the range's own pieces, as the game places them with the real library: the shop,
+// kiosk, dispenser and caravan are boxes of their real size (hut), the hitting deck a shelter, the yard's picket fence runs, and the flat things (signs, boards) stay pictures
+import { homeScene, type ScenePiece } from '../src/game/golf/rangebiz';
+import { defaultRangeBiz } from '../src/game/golf/rangesave';
+import { LIBRARY } from '../src/game/library';
+test('#1308: the shop, kiosk, caravan and deck are boxes, the yard fence is runs, signs stay pictures (the real library)', () => {
+  const home = homeScene([0, 0, 40, 30], 0, defaultRangeBiz()), at = (id: string) => LIBRARY.findIndex(l => l.id === id);
+  const extra: ScenePiece[] = [{ key: 'shop', id: 'range:golf-clubhouse-shanty-view1', x: 5, y: 5, q: 0 }, { key: 'kiosk', id: 'range:golf-range-coffee-kiosk-view2', x: 20, y: 5, q: 0 }, { key: 'deck', id: 'range:golf-range-deck-view1', x: 30, y: 30, q: 0 },
+    { key: 'sign', id: 'range:golf-range-sign-view1', x: 8, y: 20, q: 0 }];
+  const pieces = [...home.pieces, ...extra].filter(p => at(p.id) >= 0);
+  const g = gatherFeatures3p({ course: 'c', segs: [], bizDefs: [], structures: [], lots: [], library: LIBRARY, pages: [], courseBox: [-10, -10, 200, 200], things: [-10, -10, 200, 200],
+    props: pieces.map(p => ({ item: at(p.id), x: p.x, y: p.y, scale: 1 })) });
+  const huts = g.buildings.filter(b => b.use === 'hut'), shop = huts.find(b => /shanty/i.test(b.key))!;
+  assert.ok(shop, 'the shop is a hut'); assert.equal(shop.w, 7.5); assert.equal(shop.d, 4.5); assert.equal(shop.rot, 0);
+  assert.ok(huts.some(b => /caravan/i.test(b.key)) || g.buildings.some(b => b.use === 'house' && /house_4/.test(b.key)), 'the home (caravan or cottage) is a box: ' + g.buildings.map(b => b.key).join()); assert.ok(huts.some(b => /kiosk/i.test(b.key)), 'the kiosk is a hut');
+  assert.equal(g.buildings.filter(b => b.use === 'shelter').length, 1, 'the deck is a shelter');
+  assert.ok(g.buildings.filter(b => b.use === 'fence').length >= 4, 'the yard fence is runs: ' + g.buildings.filter(b => b.use === 'fence').length);
+  assert.ok(g.trees.some(t => /sign/.test(t.sp ?? '')) || !g.trees.some(t => /shanty|caravan|kiosk|deck/.test(t.sp ?? '')), 'no building is a picture');
+});

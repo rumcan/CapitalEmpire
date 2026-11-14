@@ -7,9 +7,9 @@
    "cat": "Range art",
    "kind": "business",
    "w": 384,
-   "h": 214.01,
+   "h": 296.219,
    "ax": 192,
-   "ay": 173.385,
+   "ay": 212.908,
    "boxes": [
     {
      "hx": 3.75,
@@ -23,14 +23,14 @@
    "door": false,
    "cost": 0,
    "src": {
-    "file": "art/theme-consistency/generated/buildings/golf-clubhouse-shanty-view1-v5.png",
+    "file": "art/theme-consistency/generated/buildings/golf-clubhouse-shanty-view1-v6.png",
     "rect": [
-     13,
-     23,
-     1652,
-     936
+     195,
+     10,
+     1397,
+     937
     ],
-    "sha256": "1ab64514a09bd7eb58acdf540904361358fdd0a6cbfd8a41888d5503aee1f15f"
+    "sha256": "c958b7b62a2d44b0cb242d6f250a04a316e879cae3a20c23d3d70b10f40ffd36"
    }
   },
   {
@@ -39,9 +39,9 @@
    "cat": "Range art",
    "kind": "business",
    "w": 384,
-   "h": 214.012,
+   "h": 288.484,
    "ax": 192,
-   "ay": 164.771,
+   "ay": 205.392,
    "boxes": [
     {
      "hx": 2.25,
@@ -55,14 +55,14 @@
    "door": false,
    "cost": 0,
    "src": {
-    "file": "art/theme-consistency/generated/buildings/golf-clubhouse-shanty-view2-v5.png",
+    "file": "art/theme-consistency/generated/buildings/golf-clubhouse-shanty-view2-v6.png",
     "rect": [
-     138,
-     16,
-     1646,
-     856
+     258,
+     28,
+     1447,
+     921
     ],
-    "sha256": "26f58009cdd4e6f9911c155af31a0d07a963d56e1f9f52d2c65e69df9ca6541d"
+    "sha256": "408cf1a4e6471415d876db880f87428ffd77b6b5d49b119435e40945e8808012"
    }
   },
   {
