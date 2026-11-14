@@ -8,9 +8,9 @@ import { readFileSync, readdirSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 import {
   ARROW_EDGE, CAP_GAP, CAP_MARGIN, HOLE_MIN_H, HOLE_MIN_W, HOLE_PAD, SCREEN_INSET, firstLine, framePoints, holeOf, holePath, mergeHoles, near, placeCaption,
-  sameHoles, spotHide, spotNow, spotShow, spotSubscribe, tilesAround, type Hole, type SpotRequest, type TileRect,
+  spotHide, spotNow, spotShow, spotSubscribe, tilesAround, type Hole, type SpotRequest, type TileRect,
 } from '../src/ui/spotlight/spot';
-import { checkSpot, guideSpot, hintSpot, showCheck, showGuide, showHint, showMe, showTip, showTour, tipSpot, tourSpot, type SpotGame, type SpotHost } from '../src/ui/spotlight/shows';
+import { checkSpot, guideSpot, hintSpot, prepSpot, showCheck, showGuide, showHint, showMe, showPrep, showTip, showTour, tipSpot, tourSpot, type SpotGame, type SpotHost } from '../src/ui/spotlight/shows';
 import { JAM_TOUR, TOWN_TOUR, tourShowOf } from '../src/game/ext/progressive-ui/tour';
 import { RANGE_GUIDE } from '../src/game/ext/progressive-ui/guide';
 import { JAM_TIPS } from '../src/ui/jam/tips';
@@ -66,14 +66,6 @@ test('holePath: the window with one rounded cut-out per hole (even-odd)', () => 
   assert.equal(holePath([], { w: 10, h: 10 }), 'path(evenodd, "M0 0H10V10H0Z")');
   // a square hole of radius half its side is a circle: its arcs meet
   assert.ok(holePath([hole(0, 0, 40, 40, 20)], { w: 100, h: 100 }).includes('A20 20 0 0 1'));
-});
-
-test('sameHoles: the tracker writes the layer only when a hole moved', () => {
-  const a = [hole(10, 10, 50, 50)];
-  assert.equal(sameHoles(a, [hole(10.3, 10, 50, 50)]), true);
-  assert.equal(sameHoles(a, [hole(11, 10, 50, 50)]), false);
-  assert.equal(sameHoles(a, [...a, hole(1, 1, 1, 1)]), false);
-  assert.equal(sameHoles([], []), true);
 });
 
 test('placeCaption: beside a tall target at the left edge it stands to the right, level with it, its arrow at the hole\'s middle', () => {
@@ -268,6 +260,42 @@ test('showMe: runs the act, frames a map target, then lights it; a pulse older t
   assert.deepEqual(k.log, []); assert.ok(spotNow()); spotHide();
 });
 
+test('showMe: with a frame to wait for, the map target is framed after the render, and not for a spotlight that is over by then', () => {
+  const g0 = globalThis as { requestAnimationFrame?: (f: () => void) => number };
+  const had = g0.requestAnimationFrame, queued: (() => void)[] = [];
+  g0.requestAnimationFrame = f => { queued.push(f); return queued.length; };
+  try {
+    spotHide();
+    const g = game(), req = (): SpotRequest => ({ title: 'A', line: 'a', targets: [{ ui: 'rail-build' }, { tiles: [1, 2, 3, 4] }] });
+    showMe(g, () => g.log.push('act'), req);
+    assert.deepEqual(g.log, ['act'], 'the cards the act opened are not drawn yet: the camera waits for them');
+    assert.equal(queued.length, 1); queued.shift()!();
+    assert.deepEqual(g.log, ['act', 'frame 1,2,3,4']);
+    // Esc (or a click) before the frame came: nothing to frame for
+    const h = game(); showMe(h, () => {}, req); spotHide(); queued.shift()!();
+    assert.deepEqual(h.log, [], 'a spotlight that is over does not move the camera');
+    // another Show me before the frame came: only the newer one frames
+    const k = game(); showMe(k, () => {}, req); showMe(k, () => {}, () => ({ title: 'B', line: 'b', targets: [{ tiles: [9, 9, 12, 12] }] }));
+    while (queued.length) queued.shift()!();
+    assert.deepEqual(k.log, ['frame 9,9,12,12']);
+    // a request with no map target asks for no frame at all
+    const u = game(); showMe(u, () => {}, () => ({ title: 'A', line: 'a', targets: [{ ui: 'rail-build' }] })); assert.equal(queued.length, 0);
+  } finally { if (had) g0.requestAnimationFrame = had; else delete g0.requestAnimationFrame; spotHide(); }
+});
+
+test('the prep checklist\'s Show me lights the spot the engine suggested, with the step\'s own words', () => {
+  const step = { title: 'Build an entrance gate (1/2)', body: 'Fans pay at the gate: 600 an hour a lane. Put it between the car park and the course.' };
+  assert.deepEqual(prepSpot(step, [10, 20, 26, 36]), { title: 'Build an entrance gate', line: 'Fans pay at the gate: 600 an hour a lane.', targets: [{ tiles: [10, 20, 26, 36] }] });
+  assert.equal(prepSpot({ title: 'Hang a hole scoreboard · optional', body: 'A board.' }, [1, 1, 2, 2])!.title, 'Hang a hole scoreboard');
+  assert.equal(prepSpot({ title: 'Open an info booth (2/3) · optional', body: 'A booth.' }, [1, 1, 2, 2])!.title, 'Open an info booth');
+  assert.equal(prepSpot(step, null), null, 'no spot suggested (place it where you like): nothing to light');
+  spotHide();
+  const calls: string[] = [], g = Object.assign(game(), { prepShowMe: (id: string) => calls.push(`prep ${id}`), spotSuggestBox: (): TileRect | null => [5, 5, 9, 9] });
+  showPrep(g, 'prep-gate', step); assert.deepEqual(calls, ['prep prep-gate']); assert.deepEqual(spotNow()!.req.targets, [{ tiles: [5, 5, 9, 9] }]); assert.deepEqual(g.log, ['frame 5,5,9,9']);
+  spotHide(); showPrep(g, 'prep-x', undefined); assert.equal(spotNow(), null, 'a line the card no longer has lights nothing'); assert.equal(calls[1], 'prep prep-x', 'but the engine still ran its act');
+  spotHide();
+});
+
 test('the Show me entry points run the engine\'s act and then light their target', () => {
   spotHide();
   const calls: string[] = [];
@@ -291,8 +319,10 @@ test('every Show me button in the UI goes through the spotlight', () => {
   const app = readFileSync('src/App.tsx', 'utf8');
   assert.match(app, /onShow=\{id => \{ showTour\(game, id\)/); assert.match(app, /onShow=\{id => \{ showGuide\(game, id\)/);
   assert.match(app, /onShow=\{s => \{ showTip\(game, s, \(\) => runTipShow\(game, s, actUi\)\)/); assert.match(app, /showHint\(game, hint\)/);
+  assert.match(app, /onShow=\{id => \{ showPrep\(game, id, /);
+  assert.match(app, /game\.closeWelcome\(false\); showGuide\(game, id\);/, 'the welcome card: Show me the first step');
   assert.match(app, /<Spotlight game=\{game\} \/>/);
   assert.match(readFileSync('src/ui/course/HoleWizard.tsx', 'utf8'), /showCheck\(game, \(\) => p\.showMe\(r\.show!\)/);
   // and nothing calls the engine's Show me directly from a button any more (the engine's own auto-pointing at a new step stays a pulse)
-  assert.ok(!/onShow=\{id => \{ game\.(tourShowMe|guideShowMe)/.test(app));
+  assert.ok(!/onShow=\{id => \{ game\.(tourShowMe|guideShowMe|prepShowMe)/.test(app));
 });

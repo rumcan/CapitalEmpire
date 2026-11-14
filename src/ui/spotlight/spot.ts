@@ -81,11 +81,6 @@ export function holePath(holes: readonly Hole[], S: Size): string {
   return `path(evenodd, "${d}")`;
 }
 
-/** whether two lists of holes are the same to within eps px (the tracker writes the layer only when a hole has moved) */
-export function sameHoles(a: readonly Hole[], b: readonly Hole[], eps = 0.5): boolean {
-  return a.length === b.length && a.every((h, i) => { const k = b[i]!; return Math.abs(h.x - k.x) <= eps && Math.abs(h.y - k.y) <= eps && Math.abs(h.w - k.w) <= eps && Math.abs(h.h - k.h) <= eps && Math.abs(h.r - k.r) <= eps; });
-}
-
 export type Side = 'right' | 'left' | 'below' | 'above';
 /** where the caption stands: its side of the first hole, its top left, how far along the edge facing the hole its arrow stands, and whether it is clear of
  *  every hole (false only when no side had room: it is then held on the screen, touching a hole) */
@@ -139,7 +134,7 @@ export function firstLine(body: string, max = 120): string {
 
 /** the corners of a tile rect grown by k about its middle, at least min tiles a side (a point's box): what the camera frames for a map target. The camera fits
  *  these corners in the free map, so the target itself fills about 1/k of it: room round it to see where it lies, not a close-up */
-export function framePoints(r: TileRect, k = 2, min = 6): { x: number; y: number }[] {
+export function framePoints(r: TileRect, k = 1.7, min = 6): { x: number; y: number }[] {
   const cx = (r[0] + r[2]) / 2, cy = (r[1] + r[3]) / 2, hx = Math.max(min, ((r[2] - r[0]) / 2) * k), hy = Math.max(min, ((r[3] - r[1]) / 2) * k);
   return [{ x: cx - hx, y: cy - hy }, { x: cx + hx, y: cy - hy }, { x: cx + hx, y: cy + hy }, { x: cx - hx, y: cy + hy }];
 }

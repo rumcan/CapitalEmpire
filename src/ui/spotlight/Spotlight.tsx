@@ -7,19 +7,21 @@
 // backdrop-filter is missing, under reduced motion, or if the frames come slow while it is up.
 import { Fragment, useEffect, useLayoutEffect, useRef, useSyncExternalStore } from 'react';
 import { ANCHOR_FALLBACK } from '../GuidePulse';
-import { holeOf, holePath, mergeHoles, placeCaption, sameHoles, spotHide, spotNow, spotSubscribe, type Box, type Hole, type SpotState, type TileRect } from './spot';
+import { holeOf, holePath, mergeHoles, placeCaption, spotHide, spotNow, spotSubscribe, type Box, type Hole, type SpotState, type TileRect } from './spot';
 import './spotlight.css';
 
-/** what the spotlight needs of the game: the pulse it set (a pulse target), the map as screen boxes, and a repaint */
-export interface SpotView { guideAnchor: { id: string; until: number } | null; spotScreen(r: TileRect): Box | null; emit(): void }
+/** what the spotlight needs of the game: the pulse it set (a pulse target), the map as screen boxes (spotScreen writes the box into out: no allocation a frame), and a repaint */
+export interface SpotView { guideAnchor: { id: string; until: number } | null; spotScreen(r: TileRect, out: Box): boolean; emit(): void }
 
 /** how long a target's control may take to come on screen (its card or menu is opening) before its fallback (the rail group that opens it) is used */
 const GRACE_MS = 600;
 /** how long nothing at all to light ends the spotlight (the thing was never drawn, or went: its card was closed) */
 const GONE_MS = 1500, LOST_MS = 900;
-/** the mean frame time (ms) over the first frames with the blur up that turns the blur off: the plain tint is then used for the rest of the session */
-const SLOW_MS = 40;
-let blurSlow = false;
+/** the median frame time (ms) with the blur up above which the blur is given up for the plain tint: just under 30 frames a second. It is judged on frames where nothing moved, from
+ *  JUDGE_AFTER_MS after the spotlight came up (the camera easing to a map target, and the ground baking there, make slow frames on any machine, and are not the blur's). One
+ *  spotlight that came up slow loses its blur; the second does so for the rest of the session (one slow spell, the machine busy for a moment, does not take the blur away for good) */
+const SLOW_MS = 34, JUDGE_AFTER_MS = 1000;
+let blurSlow = false, slowStrikes = 0;
 
 /** Esc ends the spotlight and nothing else: this listener is the first on the window (installed when this module loads), so no card or menu below sees the key */
 if (typeof window !== 'undefined') {
@@ -28,9 +30,12 @@ if (typeof window !== 'undefined') {
 
 /** whether the player has asked for less motion */
 function reducedMotion(): boolean { try { return window.matchMedia('(prefers-reduced-motion: reduce)').matches; } catch { return false; } }
-/** whether the page can blur what is behind a layer and the player has not asked for less motion */
+/** whether the page can blur what is behind a layer and the player has asked for neither less motion nor less transparency */
 function blurAvailable(): boolean {
-  try { return typeof CSS !== 'undefined' && (CSS.supports('backdrop-filter', 'blur(1px)') || CSS.supports('-webkit-backdrop-filter', 'blur(1px)')) && !reducedMotion(); } catch { return false; }
+  try {
+    return typeof CSS !== 'undefined' && (CSS.supports('backdrop-filter', 'blur(1px)') || CSS.supports('-webkit-backdrop-filter', 'blur(1px)')) && !reducedMotion()
+      && !window.matchMedia('(prefers-reduced-transparency: reduce)').matches;
+  } catch { return false; }
 }
 /** a control's corner radius in px (its first corner; a percentage is read against its box) */
 function radiusOf(el: Element, w: number, h: number): number {
@@ -55,7 +60,7 @@ function controlFor(id: string, cached: HTMLElement | null, grace: boolean): HTM
   if (grace) for (const f of ANCHOR_FALLBACK[id] ?? []) { const el = anchorEl(f); if (el) return el; }
   return null;
 }
-const FOCUSABLE ='button, a[href], input, select, textarea, summary, [tabindex]:not([tabindex="-1"])';
+const FOCUSABLE = 'button, a[href], input, select, textarea, summary, [tabindex]:not([tabindex="-1"])';
 
 export function Spotlight({ game }: { game: SpotView | null }) {
   const spot = useSyncExternalStore(spotSubscribe, spotNow);
@@ -92,14 +97,20 @@ export function Spotlight({ game }: { game: SpotView | null }) {
   );
 }
 
+/** a box is the same as last frame's to within this many px (the tracker writes the layer only when a target has moved more) */
+const EPS = 0.5;
+
 /**
- * runs while a spotlight is up: one requestAnimationFrame reader finds every target's box (reads), then writes the cut-out, the rings and the caption only when something
- * moved, so a still target costs a few reads a frame and no layout. Returns what undoes it
+ * runs while a spotlight is up: one requestAnimationFrame reader finds every target's box (reads, as numbers in two small typed arrays) and writes the cut-out, the rings
+ * and the caption only when a box has moved, so a frame where nothing moved reads one rectangle per target and compares numbers: no writes, nothing allocated but the
+ * browser's own rectangles. Returns what undoes it
  */
 function track(spot: SpotState, gameRef: { current: SpotView | null }, layerEl: HTMLDivElement, capEl: HTMLDivElement, ringEls: (HTMLDivElement | null)[]): () => void {
-  const t0 = performance.now(), targets = spot.req.targets;
+  const t0 = performance.now(), targets = spot.req.targets, n = targets.length;
   const els: (HTMLElement | null)[] = targets.map(() => null), radius = new WeakMap<Element, number>();
-  let raf = 0, last: Hole[] = [], lastKey = '', capW = 0, capH = 0, remeasure = true, focused = false, shown = false, lastHole = t0, prevT = 0, frames = 0, sum = 0, n = 0;
+  // each target's box this frame and last: x, y, w, h, radius (w -1: not found), and one box the map's boxes are written into
+  const cur = new Float64Array(n * 5), was = new Float64Array(n * 5).fill(-1e9), mapBox: Box = { x: 0, y: 0, w: 0, h: 0 }, ivs = new Float64Array(24);
+  let raf = 0, last: Hole[] = [], lastW = 0, lastH = 0, capW = 0, capH = 0, remeasure = true, focused = false, shown = false, lastHole = t0, prevT = 0, tShown = 0, steady = 0, slowN = 0, tJudge = 0, judged = false;
   const blur = blurAvailable() && !blurSlow;
   layerEl.dataset.blur = blur ? 'on' : 'off';
   const resize = () => { remeasure = true; };
@@ -110,43 +121,61 @@ function track(spot: SpotState, gameRef: { current: SpotView | null }, layerEl: 
 
   const tick = (now: number) => {
     raf = requestAnimationFrame(tick);
-    const g = gameRef.current, S = { w: window.innerWidth, h: window.innerHeight }, grace = now - t0 > GRACE_MS;
+    const g = gameRef.current, sw = window.innerWidth, sh = window.innerHeight, grace = now - t0 > GRACE_MS;
     // ---- reads: the caption's size, then every target's box
     if (remeasure) { const r = capEl.getBoundingClientRect(); if (r.width > 0) { capW = r.width; capH = r.height; } }
-    const found: { box: Box; radius: number }[] = [];
-    targets.forEach((t, i) => {
-      if ('tiles' in t) { const b = g?.spotScreen(t.tiles); if (b) found.push({ box: b, radius: 9999 }); return; }
-      let id: string | null;
-      if ('ui' in t) id = t.ui;
-      else { const a = g?.guideAnchor; id = a && a !== spot.base ? a.id : grace ? t.pulse : null; }
-      if (!id) return;
-      const prev = els[i] ?? null, el = els[i] = controlFor(id, prev, grace);
-      if (!el) return;
-      if (el !== prev) el.scrollIntoView?.({ block: 'nearest', behavior: reducedMotion() ? 'auto' : 'smooth' }); // a control scrolled out of its card (an upgrade on the range card) is brought into view, and the cut-out follows it
-      const r = el.getBoundingClientRect();
-      let rad = radius.get(el); if (rad === undefined) { rad = radiusOf(el, r.width, r.height); radius.set(el, rad); }
-      found.push({ box: { x: r.left, y: r.top, w: r.width, h: r.height }, radius: rad });
-    });
-    const holes = mergeHoles(found.map(f => holeOf(f.box, { screen: S, radius: f.radius })).filter((h): h is Hole => !!h));
-    // ---- writes, only on a change
-    const key = `${S.w}x${S.h}`;
-    if (holes.length) {
-      lastHole = now;
-      if (!sameHoles(holes, last) || key !== lastKey || remeasure) {
-        remeasure = false;
-        const clip = holePath(holes, S);
+    let moved = remeasure || sw !== lastW || sh !== lastH;
+    for (let i = 0; i < n; i++) {
+      const t = targets[i]!, o = i * 5;
+      let found = false;
+      if ('tiles' in t) {
+        if (g && g.spotScreen(t.tiles, mapBox)) { cur[o] = mapBox.x; cur[o + 1] = mapBox.y; cur[o + 2] = mapBox.w; cur[o + 3] = mapBox.h; cur[o + 4] = 9999; found = true; }
+      } else {
+        let id: string | null;
+        if ('ui' in t) id = t.ui;
+        else { const a = g?.guideAnchor; id = a && a !== spot.base ? a.id : grace ? t.pulse : null; }
+        if (id) {
+          const prev = els[i] ?? null;
+          // the common frame: the control found already is still on screen under its own anchor: one read. Else look again (it moved to another card, was hidden, or is not drawn yet)
+          let el: HTMLElement | null = prev && prev.isConnected && prev.dataset.guide === id ? prev : null, r = el ? el.getBoundingClientRect() : null;
+          if (r && (r.width <= 0 || r.height <= 0)) { el = null; r = null; }
+          if (!el) { el = controlFor(id, prev, grace); r = el ? el.getBoundingClientRect() : null; }
+          els[i] = el;
+          if (el && r) {
+            if (el !== prev) el.scrollIntoView?.({ block: 'nearest', behavior: reducedMotion() ? 'auto' : 'smooth' }); // a control scrolled out of its card (an upgrade on the range card) is brought into view, and the cut-out follows it
+            let rad = radius.get(el); if (rad === undefined) { rad = radiusOf(el, r.width, r.height); radius.set(el, rad); }
+            cur[o] = r.left; cur[o + 1] = r.top; cur[o + 2] = r.width; cur[o + 3] = r.height; cur[o + 4] = rad; found = true;
+          }
+        }
+      }
+      if (!found) cur[o + 2] = -1;
+      if (!moved) for (let k = 0; k < 5; k++) if (Math.abs(cur[o + k]! - was[o + k]!) > EPS) { moved = true; break; }
+    }
+    // ---- writes, only when a box moved (or the window did)
+    if (moved) {
+      remeasure = false; lastW = sw; lastH = sh; was.set(cur);
+      const S = { w: sw, h: sh }, holes: Hole[] = [];
+      for (let i = 0; i < n; i++) {
+        const o = i * 5; if (cur[o + 2]! < 0) continue;
+        const h = holeOf({ x: cur[o]!, y: cur[o + 1]!, w: cur[o + 2]!, h: cur[o + 3]! }, { screen: S, radius: cur[o + 4]! }); if (h) holes.push(h);
+      }
+      last = mergeHoles(holes);
+      if (last.length) {
+        const clip = holePath(last, S);
         layerEl.style.clipPath = clip; layerEl.style.setProperty('-webkit-clip-path', clip);
         ringEls.forEach((el, i) => {
-          const h = holes[i]; if (!el) return;
+          const h = last[i]; if (!el) return;
           if (!h) { el.style.display = 'none'; return; }
           el.style.display = ''; el.style.width = `${h.w}px`; el.style.height = `${h.h}px`; el.style.borderRadius = `${h.r}px`; el.style.transform = `translate(${h.x}px, ${h.y}px)`;
         });
-        const p = placeCaption(holes, { w: capW || 300, h: capH || 90 }, S);
+        const p = placeCaption(last, { w: capW || 300, h: capH || 90 }, S);
         capEl.style.transform = `translate(${Math.round(p.x)}px, ${Math.round(p.y)}px)`; capEl.style.setProperty('--arrow', `${Math.round(p.arrow)}px`);
         if (capEl.dataset.side !== p.side) capEl.dataset.side = p.side;
-        last = holes; lastKey = key;
       }
-      if (!shown) { shown = true; layerEl.dataset.on = '1'; capEl.style.visibility = 'visible'; }
+    }
+    if (last.length) {
+      lastHole = now;
+      if (!shown) { shown = true; tShown = now; layerEl.dataset.on = '1'; capEl.style.visibility = 'visible'; }
       // focus goes to the first control it lights, once, when that takes focus (never trapped: nothing here takes it back)
       if (!focused) {
         focused = true;
@@ -154,10 +183,15 @@ function track(spot: SpotState, gameRef: { current: SpotView | null }, layerEl: 
         if (f && !(f as HTMLButtonElement).disabled) try { f.focus({ preventScroll: true }); } catch { /* not focusable now */ }
       }
     } else if (now - (shown ? lastHole : t0) > (shown ? LOST_MS : GONE_MS)) { spotHide(); return; } // nothing to light: it was never drawn, or it went
-    // ---- the blur gives way to the plain tint when the frames come slow with it up
-    if (blur && shown && n >= 0 && layerEl.dataset.blur === 'on' && prevT && ++frames > 8) {
-      sum += now - prevT;
-      if (++n >= 40) { if (sum / n > SLOW_MS) { blurSlow = true; layerEl.dataset.blur = 'off'; } n = -1; }
+    // ---- the blur gives way to the plain tint when the frames come slow with it up: judged on the median frame over up to 24 frames where nothing moved, from JUDGE_AFTER_MS on
+    // (the camera easing to a map target and the ground baking there make slow frames on any machine), leaving out the first two of them
+    if (blur && shown && !judged && prevT && !moved && now - tShown > JUDGE_AFTER_MS && ++steady > 2) {
+      if (slowN === 0) tJudge = now;
+      ivs[slowN++] = now - prevT;
+      if (slowN >= ivs.length || (slowN >= 4 && now - tJudge > 1500)) {
+        judged = true;
+        if (ivs.subarray(0, slowN).sort()[slowN >> 1]! > SLOW_MS && layerEl.dataset.blur === 'on') { layerEl.dataset.blur = 'off'; if (++slowStrikes >= 2) blurSlow = true; }
+      }
     }
     prevT = now;
   };

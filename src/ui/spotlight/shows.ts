@@ -6,7 +6,7 @@ import { tourShowOf } from '../../game/ext/progressive-ui/tour';
 import { RANGE_GUIDE, type GuideStep } from '../../game/ext/progressive-ui/guide';
 import { JAM } from '../../game/features';
 import { JAM_TIPS, type Tip, type TipShow } from '../jam/tips';
-import { firstLine, spotShow, tilesAround, type SpotRequest, type SpotTarget, type TileRect } from './spot';
+import { firstLine, spotNow, spotShow, tilesAround, type SpotRequest, type SpotTarget, type TileRect } from './spot';
 
 /** the map facts a request needs (Engine has them: spotRangeBox, spotBallsBox, spotRingsBox) */
 export interface SpotHost {
@@ -62,14 +62,19 @@ export function checkSpot(c: { kind: string; text: string }, pts: readonly { x: 
   return b ? { title: c.kind === 'block' ? 'This blocks Build' : 'Worth a look', line: firstLine(c.text), targets: [{ tiles: b }] } : null;
 }
 
+/** after the next render: the act has opened cards and menus but React has not drawn them yet, and the camera frames a map target in what they leave free, so
+ *  the framing waits for them (a frame at most). With no requestAnimationFrame (a test under Node) it is at once */
+const afterRender = (f: () => void): void => { if (typeof requestAnimationFrame === 'function') requestAnimationFrame(f); else f(); };
+
 /** runs a Show me's own act (the engine's: it opens, frames and pulses as it always did), then puts the spotlight on what request() names; a map target is framed
- *  in the free map first (the spotlight follows it as the camera eases there) */
+ *  in the free map beside the cards the act opened (the spotlight follows it as the camera eases there) */
 export function showMe(game: Pick<SpotGame, 'guideAnchor' | 'spotFrame'>, act: () => void, request: () => SpotRequest | null): void {
   const base = game.guideAnchor; // (a pulse the act sets is the spotlight's: one older than this is not)
   act();
   const r = request(); if (!r) return;
-  for (const t of r.targets) if ('tiles' in t) { game.spotFrame(t.tiles); break; }
   spotShow(r, base);
+  const id = spotNow()!.id, map = r.targets.find((t): t is { tiles: TileRect } => 'tiles' in t);
+  if (map) afterRender(() => { if (spotNow()?.id === id) game.spotFrame(map.tiles); }); // (not for a spotlight that is over, or replaced by another Show me)
 }
 
 export function showTour(game: SpotGame & { tourShowMe(id: string): void; tourView(): { lines: { step: GuideStep }[] } | null }, id: string, jam: boolean = JAM): void {
@@ -90,4 +95,14 @@ export function showHint(game: SpotGame & { showHint(id: string): void }, h: { i
 }
 export function showCheck(game: SpotGame, act: () => void, c: { kind: string; text: string }, pts: readonly { x: number; y: number }[]): void {
   showMe(game, act, () => checkSpot(c, pts));
+}
+
+/** a tournament prep line's Show me: the spot the engine suggested for the structure (the Event tool is in hand with its ghost there), the step's words as the caption. With no
+ *  spot suggested (a later structure of its type: place it where you like) the engine's toast says so and nothing is lit */
+export function prepSpot(step: { title: string; body: string }, box: TileRect | null): SpotRequest | null {
+  // (the card's line title carries "(2/3)" and "· optional" after the step's own: the caption says the step's own)
+  return box ? { title: step.title.replace(/(?: \([^()]*\))?(?: · optional)?$/, ''), line: firstLine(step.body), targets: [{ tiles: box }] } : null;
+}
+export function showPrep(game: SpotGame & { prepShowMe(id: string): void; spotSuggestBox(): TileRect | null }, id: string, step: { title: string; body: string } | undefined): void {
+  showMe(game, () => game.prepShowMe(id), () => (step ? prepSpot(step, game.spotSuggestBox()) : null));
 }

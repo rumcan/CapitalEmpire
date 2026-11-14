@@ -17,6 +17,8 @@
   .spot-layer { -webkit-backdrop-filter: none; backdrop-filter: none; background: rgba(4, 8, 6, 0.78); }
   .spot-layer[data-on='1'] { animation: none; }
 }
+/* a player who asked for less transparency gets the plain tint too */
+@media (prefers-reduced-transparency: reduce) { .spot-layer { -webkit-backdrop-filter: none; backdrop-filter: none; background: rgba(4, 8, 6, 0.78); } }
 
 /* the soft gold ring round a cut-out: it breathes slowly (no flashing), and is still under reduced motion */
 .spot-ring {

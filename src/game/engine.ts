@@ -6710,15 +6710,22 @@ export class Game {
   }
   /** a box round the rings a Show me put on the map (the town's first houses, the walking path's ends), null when there are none */
   spotRingsBox(): TileRect | null { return tilesAround(this.guideRings?.pts ?? [], 10); }
-  /** a tile rect as a box in window css px under the camera as it is now: the four corners of the diamond it makes on the ground, boxed (the canvas fills the window) */
-  spotScreen(r: TileRect): SpotBox | null {
-    if (!(this.cssW > 0 && this.cssH > 0)) return null;
-    let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
-    for (const [x, y] of [[r[0], r[1]], [r[2], r[1]], [r[2], r[3]], [r[0], r[3]]] as const) {
-      const sx = (worldX(x, y) - this.cam.X) * this.cam.z + this.cssW / 2, sy = (worldY(x, y) - this.cam.Y) * this.cam.z + this.cssH / 2;
-      x0 = Math.min(x0, sx); y0 = Math.min(y0, sy); x1 = Math.max(x1, sx); y1 = Math.max(y1, sy);
-    }
-    return { x: x0, y: y0, w: x1 - x0, h: y1 - y0 };
+  /** a box round the spot the prep checklist's Show me suggested for its structure (the Event tool's ghost there), null when it suggested none */
+  spotSuggestBox(): TileRect | null {
+    const s = this.eventSuggest; if (!s) return null;
+    const r = structureRect({ typeId: s.typeId, x: s.x, y: s.y });
+    return tilesAround([{ x: r[0] + r[2] / 2, y: r[1] + r[3] / 2 }], 8);
+  }
+  /** a tile rect as a box in window css px under the camera as it is now, written into out (the spotlight asks every frame: nothing is allocated): the four corners of the
+   *  diamond it makes on the ground, boxed (the canvas fills the window). False without a window */
+  spotScreen(r: TileRect, out: SpotBox): boolean {
+    if (!(this.cssW > 0 && this.cssH > 0)) return false;
+    const c = this.cam, k = c.z, ox = this.cssW / 2 - c.X * k, oy = this.cssH / 2 - c.Y * k;
+    const ax = worldX(r[0], r[1]) * k + ox, bx = worldX(r[2], r[1]) * k + ox, cx = worldX(r[2], r[3]) * k + ox, dx = worldX(r[0], r[3]) * k + ox;
+    const ay = worldY(r[0], r[1]) * k + oy, by = worldY(r[2], r[1]) * k + oy, cy = worldY(r[2], r[3]) * k + oy, dy = worldY(r[0], r[3]) * k + oy;
+    out.x = Math.min(ax, bx, cx, dx); out.y = Math.min(ay, by, cy, dy);
+    out.w = Math.max(ax, bx, cx, dx) - out.x; out.h = Math.max(ay, by, cy, dy) - out.y;
+    return true;
   }
   /** the camera frames a tile rect in the free map (clear of the rail on the left, the top bar and the cards docked at the right): it eases there, or jumps under
    *  reduced motion, and the spotlight follows */
