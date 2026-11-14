@@ -21,7 +21,7 @@ import { RangeSim, garageSlots, rangeCounter, rangeScene, rangeStats, upgradeWhy
 import { CASE_BALLS, DUMP_REACH, STANDING_LOW, ballsNear, bucketsLeft, caseCost, dump, fieldCount, nearestBall, orderBalls, perHour, pickAround, pickKit, pickSwath, stockOf, supplyKit, visitBalls, type BallSave, type PickKit } from './rangeballs';
 import { worldX, worldY } from '../iso';
 import { SPECTATOR_BASE, SPECTATOR_CLIPS, SPECTATOR_FRAMES, SPECTATOR_PEOPLE, STAFF_BASE, STAFF_CLIPS, STAFF_FRAMES, STAFF_PEOPLE } from '../library';
-import { clipFrame, rowToward } from '../crowdview';
+import { WALK_RATE, clipFrame, rowToward } from '../crowdview';
 import { PLAYER_CART, PLAYER_RUN, PLAYER_WORKING, SHIFT_HOURS, SHIFT_STARTS, autoKit, bucketBalls, flowOf, nodeRates, onShift, robotBps, sellBps, staffBps, tripBps, washBps } from './rangeauto';
 import { CELL_T, type Grid, type GridDiff } from '../ext/course-grid';
 import { inPractice, practiceWords, scanPractice, type PracticeScan, type PracticeState } from './practice';
@@ -300,10 +300,10 @@ export class RangeHost {
       const g = d.agents[k]!; if (g.kind !== 'attendant' || g.x < x0 || g.x > x1 || g.y < y0 || g.y > y1) continue;
       const m = this.mover(out.length), row = rowToward(Math.cos(g.ang), Math.sin(g.ang));
       if (ATTENDANT_STAFF >= 0) {   // #1235: the painted attendant: walking with his basket, or picking at the pile
-        const C = g.pick ? STAFF_CLIPS.pick : STAFF_CLIPS.walk, span = g.pick ? 1.6 : 1.4;
-        m.item = STAFF_BASE + (ATTENDANT_STAFF * WALK_DIRS.length + row) * STAFF_FRAMES + clipFrame(C, C.times[0]! + ((this.sim.clockT + g.id * 0.7) % span));
+        const C = g.pick ? STAFF_CLIPS.pick : STAFF_CLIPS.walk, span = g.pick ? 1.6 : 1.4, rate = g.pick ? 1 : WALK_RATE;
+        m.item = STAFF_BASE + (ATTENDANT_STAFF * WALK_DIRS.length + row) * STAFF_FRAMES + clipFrame(C, C.times[0]! + ((this.sim.clockT * rate + g.id * 0.7) % span));
       } else {
-        const W = SPECTATOR_CLIPS.walk, frame = clipFrame(W, W.times[0]! + ((this.sim.clockT + g.id * 0.7) % 1.4));
+        const W = SPECTATOR_CLIPS.walk, frame = clipFrame(W, W.times[0]! + ((this.sim.clockT * WALK_RATE + g.id * 0.7) % 1.4));
         m.item = SPECTATOR_BASE + (ATTENDANT_ART * WALK_DIRS.length + row) * SPECTATOR_FRAMES + frame;
       }
       m.x = g.x; m.y = g.y; m.flip = false; m.scale = 1; m.moving = false; m.lift = 0;

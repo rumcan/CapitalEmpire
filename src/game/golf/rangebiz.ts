@@ -11,7 +11,7 @@ import { KIOSK_QMAX, KIOSK_SERVE, KIOSK_SHARE, LESSON_SHARE, TIER2_BAYS, extraVa
 export * from './rangesave';
 import { NEAR, RANGE_LOT } from './rangestart';
 import { GOLFER_CLIPS, LIBRARY, STAFF_CLIPS } from '../library';
-import { PUTT_IMPACT_S, clipFrame, golferRow, hash, rowToward, staffDrive, staffPerson, type CrowdPerson } from '../crowdview';
+import { PUTT_IMPACT_S, WALK_RATE, clipFrame, golferRow, hash, rowToward, staffDrive, staffPerson, type CrowdPerson } from '../crowdview';
 import { mulberry } from '../iso';
 import { NO_PRACTICE, practiceArea, practiceAreaAt, type PracticeArea, type PracticeScan } from './practice';
 import { PRACTICE_FEE, PRACTICE_IDS, PRACTICE_SHARE, type PracticeId } from './rangesave';
@@ -1618,7 +1618,7 @@ export class RangeSim {
         // the coffee line (T133) faces the kiosk's counter
         p.row = rowToward(-sc.kiosk.queueStep.x, -sc.kiosk.queueStep.y); p.frame = G.idle.start;
       }
-      else { p.row = rowToward(Math.cos(v.ang), Math.sin(v.ang)); p.frame = clipFrame(G.walk, G.walk.times[0]! + ((this.t + hash(v.id, 3) * 2) % 1.4)); }
+      else { p.row = rowToward(Math.cos(v.ang), Math.sin(v.ang)); p.frame = clipFrame(G.walk, G.walk.times[0]! + ((this.t * WALK_RATE + hash(v.id, 3) * 2) % 1.4)); }
     }
     // the academy's pro (T133): walking over, standing by its pupil facing it, every other swing of the pupil's showing the swing down the range
     const pr = this.pro;
@@ -1627,7 +1627,7 @@ export class RangeSim {
       const staff = PRO_STAFF >= 0, Gw = staff ? STAFF_CLIPS.walk : G.walk, Gi = staff ? STAFF_CLIPS.idle : G.idle, Gd = staff ? staffDrive() : G.golf_drive;
       p.id = 0; p.x = pr.x; p.y = pr.y; p.group = staff ? 2 : 1; p.person = staff ? PRO_STAFF : PRO_PERSON % Math.max(1, this.golfers); p.lift = 0;
       const lt = (this.t - pr.since) % (2 * SWING);
-      if (pr.walking) { p.row = rowToward(Math.cos(pr.ang), Math.sin(pr.ang)); p.frame = clipFrame(Gw, Gw.times[0]! + (this.t % 1.4)); }
+      if (pr.walking) { p.row = rowToward(Math.cos(pr.ang), Math.sin(pr.ang)); p.frame = clipFrame(Gw, Gw.times[0]! + ((this.t * WALK_RATE) % 1.4)); }
       else if (pr.coach >= 0 && lt >= SWING && Gd) { const k = lt - SWING; p.row = golferRow(sc.aim.x, sc.aim.y); p.frame = k < ADDRESS ? Gd.start : k < ADDRESS + CLIP ? clipFrame(Gd, Gd.times[0]! + k - ADDRESS) : Gi.start; }
       else { p.row = rowToward(Math.cos(pr.ang), Math.sin(pr.ang)); p.frame = Gi.start; }
     }

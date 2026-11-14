@@ -2,7 +2,7 @@
 // the walking parties. Pure TS: no DOM.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { clipFrame, galleryPeople, golferRow, hash, queuePeople, rowToward, walkerPeople, type CrowdPerson } from '../src/game/crowdview';
+import { WALK_RATE, clipFrame, galleryPeople, golferRow, hash, queuePeople, rowToward, walkerPeople, type CrowdPerson } from '../src/game/crowdview';
 import { SPECTATOR_CLIPS, SPECTATOR_FRAMES, SPECTATOR_PEOPLE } from '../src/game/library';
 
 const PEOPLE = SPECTATOR_PEOPLE.length;
@@ -148,7 +148,7 @@ test('walkerPeople (T377, #1033: "spectators walking in step, 3 at a time"): the
   // the pace: the walk loop at 0.85 to 1.15 of its rate, a person's own (frames wrapping 8 to 1 over 28 s: 20 loops at the clip's own rate)
   const loops = (id: number, j: number): number => { let w = 0, prev = -1; for (let t = 0; t < 28; t += 0.02) { walkerPeople(walkBuf(3, 20, 10, id), 0, 0, t, PEOPLE, out); const f = out[j]!.frame; if (prev === 8 && f === 1) w++; prev = f; } return w; };
   const counts: number[] = []; for (let id = 1; id <= 20; id++) for (let j = 0; j < 3; j++) counts.push(loops(id, j));
-  assert.ok(counts.every(c => c >= 16 && c <= 24), `every person walks at 0.85 to 1.15 of the clip's rate: ${counts.join(' ')} loops in 28 s`);
+  assert.ok(counts.every(c => c >= 16 * WALK_RATE && c <= 24 * WALK_RATE), `every person walks at 0.85 to 1.15 of the walk rate (the clip's x WALK_RATE): ${counts.join(' ')} loops in 28 s`);
   assert.ok(Math.max(...counts) - Math.min(...counts) >= 3, `and the paces differ from person to person: ${Math.min(...counts)} to ${Math.max(...counts)} loops`);
   // the places: along the heading and across it a person drifts (a minute covers whole periods of the drift), and the three are not on a line of fixed spacing
   for (let id = 1; id <= 20; id++) {

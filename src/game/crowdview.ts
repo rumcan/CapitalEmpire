@@ -28,6 +28,9 @@ export function hash(a: number, b: number): number {
 
 /** the frame (absolute: start + k) of a clip t seconds in, on the clip's own time axis (`times`: frame k shows from times[k] to the next; the last
  *  lasts the mean gap). A loop wraps after its last frame, a one-shot holds it; before the first time: the first frame */
+/** the walk loop's rate for people who walk at the crowd's and the range's 1.4 tiles/s (2.8 m/s): twice the clip's own (its 1.4 s loop is a stride of
+ *  1.4 m/s), so a stride covers about 2 m and the feet keep to the ground (the owner, 2026-11-14: "the animation plays too slow for how much they move") */
+export const WALK_RATE = 2;
 export function clipFrame(clip: PeopleClip, t: number): number {
   const { start, n, times, loop } = clip;
   if (n <= 1) return start;
@@ -140,7 +143,7 @@ export function walkerPeople(W: ArrayLike<number>, o: number, idx: number, now: 
   for (let j = 0; j < k; j++) {
     const s = 11 + j * 7, h1 = hash(id, s), h2 = hash(id, s + 1), h3 = hash(id, s + 2), h4 = hash(id, s + 3), h5 = hash(id, s + 4), h6 = hash(id, s + 5), c = j - (k - 1) / 2;
     // the pace and the phase: the clip at 0.85 to 1.15 of its rate, from a start of his own
-    const frame = at(C, now * (0.85 + 0.3 * h1) + h2 * 3);
+    const frame = at(C, now * WALK_RATE * (0.85 + 0.3 * h1) + h2 * 3);
     // along the heading: his place in the party (0.35 to 0.75 tiles apart) and a slow drift of 0.45 (a period of 5 to 11 s); across it: 0.35 to 0.6 apart, drifting 0.15
     const along = c * (0.35 + 0.4 * h3) + Math.sin(now * (0.55 + 0.6 * h4) + h5 * 6.2832) * 0.45, across = c * (0.35 + 0.25 * h4) + Math.sin(now * (0.3 + 0.35 * h6) + h1 * 6.2832) * 0.15, p = slot(out, j);
     p.x = x + ux * along + vx * across; p.y = y + uy * along + vy * across; p.group = 0; p.person = Math.floor(hash(id, j) * people); p.row = row; p.frame = frame; p.seatHeightMetres = undefined; p.benchPixelsPerMetre = undefined;
