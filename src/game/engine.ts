@@ -13819,7 +13819,13 @@ export class Game {
     const a = this.range.scene?.practice, v = this.ghostView(ctx);
     if (a) drawGhostPoly(v, a.pts, 'valid', { dashed: true, fillColor: 'rgba(236,252,203,0.05)' });
     const g = this.practice.ghost; if (!g) return;
-    const st = g.why ? 'invalid' : 'valid', p = g.plan;
+    const st = g.why ? 'invalid' : 'valid', p = g.plan, grid = this.courseGrid;
+    // #1281: the rough band the facility lays round the green and bunker, as the cells it takes (faint: under the green and the sand)
+    if (grid && g.cells.rough.length && !g.why) {
+      v.setIso(ctx); ctx.beginPath();
+      for (const i of g.cells.rough) { const cx = i % grid.w, cy = (i - cx) / grid.w; ctx.rect(grid.x0 + cx * CELL_T, grid.y0 + cy * CELL_T, CELL_T, CELL_T); }
+      ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.fillStyle = 'rgba(120,170,70,0.3)'; ctx.fill();
+    }
     drawGhostPoly(v, p.green, st, { fillColor: g.why ? undefined : 'rgba(110,190,90,0.55)', borderWidthTiles: 1, borderColor: 'rgba(80,150,70,0.35)' });
     if (p.bunker) drawGhostPoly(v, p.bunker, st, { fillColor: g.why ? undefined : 'rgba(230,214,160,0.7)' });
     if (p.spot) drawGhostPoly(v, p.spot, st, { fillColor: g.why ? undefined : 'rgba(150,200,110,0.7)' });
