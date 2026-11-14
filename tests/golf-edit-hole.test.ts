@@ -104,6 +104,7 @@ function fakeGame(o: { cur?: number; open?: number; editing?: number; hand?: num
     paint: { brushHole: o.cur ?? 1, brushKind: 'fairway', editingHole: o.editing ?? 0, hasPlan: (n: number) => n <= 2 && !hand.includes(n), nextFreeHole: () => 3 },
     editHole: () => true,
     holePlayWhy: () => null, // (T349: the card's Play button asks why it is off; null: it is on)
+    hole3pWhy: () => [] as string[], // (T416: why the view from behind the golfer cannot open the hole; none: it can)
   } as unknown as Game;
   return { game };
 }
@@ -138,7 +139,7 @@ test('the badges read "Hole 1" with their status icon; the status line ends in �
   assert.match(h, /<button data-hole="1"[^>]*><span class="hole-icon" aria-hidden="true">✓<\/span>Hole 1<\/button>/);
   assert.match(h, /<button data-hole="2"[^>]*><span class="hole-icon" aria-hidden="true">✓<\/span>Hole 2<\/button>/);
   const status = /<div class="status-line[^"]*" data-status="true">([\s\S]*?)<\/div>/.exec(h)?.[1] ?? '';
-  assert.match(status, /^<span[^>]*>Hole 1 · par 4 · 342 m · ready<\/span><button[^>]*data-testid="status-edit"[^>]*>✎ Edit Hole Layout<\/button>$/, 'the status line ends in the button');
+  assert.match(status, /^<span[^>]*>Hole 1 · par 4 · 342 m · ready<\/span><button[^>]*data-testid="status-edit"[^>]*>Edit Hole Layout<\/button>$/, 'the status line ends in the button (J8: its painted tile, no pencil, in place of the glyph; none under node)');
   h = stripHtml(fakeGame({ cur: 1, editing: 1 }).game);
   assert.match(h, /<button[^>]*disabled=""[^>]*data-testid="status-edit"[^>]*>Editing hole 1<\/button>/);
   h = stripHtml(fakeGame({ cur: 2, hand: [2] }).game);

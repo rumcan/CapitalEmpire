@@ -4,18 +4,21 @@ R: While practising the golfer is held to his spot (a range mat, the chip stand,
 R: A panel on the left lists the drills: each its name, its goal, its progress (3/5) and its reward, the one being played marked, a done one ticked; a drill played at the other place is greyed with where it is played. A click on a drill played here picks it (the next ball comes from its spot). Under the list: the last ball's line, the balls hit and the handicap. A drill just done is said, with its reward.
 R: J6c: the view draws no text over the range, never any label made by code, and on the range no flag of its own: the distances are the range's own pictures (its yardage signs, sent with its things), a built target green's flag is the range's own pin picture, and a junk pile (an old car, tyres, oil drums: J7's) is its picture alone (its name and distance show as the game's hover label on the map). (Before J6c: on the range each target green had its flag, with its distance over it, and each junk pile its name and distance.) A host that still sends `flags` gets their flag sprites, never their words. A ball that lands on or stops by a junk pile is said (Hit the old car!).
 R: The card at the top says Practice and the place instead of the hole, par and strokes, and the words as it opens say where he practises, not the hole and its par.
+R: J8 (#1261; the owner: "add ALOT more images to the UI. especially on stuff you can do"): each drill in the panel wears its painted tile (CapitalEmpire's src/assets/ui/tiles: Distance control, Shot shaping, Flight, Junk targets, Up and down, Putting, Bunker; build.mjs copies them into tiles/) at the left of its name, goal and progress, as a picture only (alt empty: the name beside it says it); a drill with no tile shows none. The panel is never taller than the picture: past 76% of its height it scrolls up and down (never sideways).
 File: game.js
 Check: function pracIn(
 Check: function pracShow(
 Check: function pracLock(
 Check: function pracTick(
 Check: function pracClear(
+Check: var PRAC_TILE
 
 ````js file=game.js
 
 // ---- practice (J6): the drills panel, the golfer held to his spot, the range's flags. The message waits behind a ball being played back, as a turn does.
 var K_PFLAG = 26;     // a range flag's entry in render's list (08d-actors.md K_ACTOR is 25)
 var PRAC = null, pracEl = null, pracLab = [];   // (var: read by the render and the keys, which may run before this line has)
+var PRAC_TILE = { distance: 'drill-distance', shaping: 'drill-shaping', flight: 'drill-flight', junk: 'drill-junk', updown: 'drill-up-down', putting: 'drill-putting', bunker: 'drill-bunker' };   // J8 (#1261): a drill's painted tile (tiles/<name>.webp, copied by build.mjs from CapitalEmpire's src/assets/ui/tiles)
 function pracLock() { return !!PRAC; }   // the golfer is held to his spot
 function pracClear() {   // a new course: no practice (the panel and the flags' labels go)
   PRAC = null; if (pracEl) pracEl.style.display = 'none'; padKeep = null;   // (J6c: the pad pass kept for a still picture goes with it: parts/08c-features.md)
@@ -31,7 +34,7 @@ function pracShow(m) {   // the panel and a drill done said (J6c: no labels over
   const first = !PRAC; PRAC = m;
   if (!pracEl && typeof document !== 'undefined' && document.createElement) {
     pracEl = document.createElement('div'); pracEl.className = 'panel'; pracEl.id = 'prac';
-    Object.assign(pracEl.style, { position: 'absolute', left: '1.4%', top: '20%', width: 'clamp(220px, 21vw, 330px)', padding: '0.55em 0.7em', fontSize: 'clamp(11px, 0.95vw, 14px)', lineHeight: '1.35', pointerEvents: 'auto', zIndex: '5' });
+    Object.assign(pracEl.style, { position: 'absolute', left: '1.4%', top: '20%', width: 'clamp(220px, 21vw, 330px)', padding: '0.55em 0.7em', fontSize: 'clamp(11px, 0.95vw, 14px)', lineHeight: '1.35', pointerEvents: 'auto', zIndex: '5', maxHeight: '76vh', overflowY: 'auto', overflowX: 'hidden' });
     pracEl.addEventListener('click', (e) => {   // a drill picked: the host answers with the panel and the next ball from its spot
       let el = e.target; while (el && el !== pracEl && !(el.dataset && el.dataset.drill)) el = el.parentNode;
       if (el && el !== pracEl && el.dataset && el.dataset.here === '1' && PRAC && el.dataset.drill !== PRAC.active && !hostBusy() && player.swing < 0 && !charging) hostSend({ t: 'pick', drill: el.dataset.drill });
@@ -43,8 +46,9 @@ function pracShow(m) {   // the panel and a drill done said (J6c: no labels over
   const rows = (Array.isArray(m.drills) ? m.drills : []).map((d) => {
     const on = d.id === m.active, cls = 'pd' + (on ? ' on' : '') + (d.here ? '' : ' off') + (d.done ? ' done' : '');
     const prog = d.done ? '&#10003;' : (d.got | 0) + '/' + (d.need | 0);
-    return '<div class="' + cls + '" data-drill="' + pracEsc(d.id) + '" data-here="' + (d.here ? 1 : 0) + '" title="' + pracEsc(d.here ? (d.done ? 'Done: play it again for practice' : 'Click to play this drill') : (m.place === 'range' ? 'Played at the chipping green' : 'Played on the range')) + '">' +
-      '<div class="pt"><b>' + pracEsc(d.name) + '</b><i>' + prog + '</i></div><div class="pg">' + pracEsc(d.goal) + '</div><div class="pr">' + (d.done ? 'Earned: ' : 'Reward: ') + pracEsc(d.reward) + '</div></div>';
+    const tile = PRAC_TILE[d.id] ? '<img class="pi" src="tiles/' + PRAC_TILE[d.id] + '.webp" alt="" aria-hidden="true" draggable="false">' : '';   // (J8: its picture; a click on it is a click on the drill)
+    return '<div class="' + cls + '" data-drill="' + pracEsc(d.id) + '" data-here="' + (d.here ? 1 : 0) + '" title="' + pracEsc(d.here ? (d.done ? 'Done: play it again for practice' : 'Click to play this drill') : (m.place === 'range' ? 'Played at the chipping green' : 'Played on the range')) + '">' + tile +
+      '<div class="px"><div class="pt"><b>' + pracEsc(d.name) + '</b><i>' + prog + '</i></div><div class="pg">' + pracEsc(d.goal) + '</div><div class="pr">' + (d.done ? 'Earned: ' : 'Reward: ') + pracEsc(d.reward) + '</div></div></div>';
   }).join('');
   if (pracEl) pracEl.style.display = 'block';
   if (pracEl) pracEl.innerHTML = '<div class="ph">PRACTICE &middot; ' + (m.place === 'range' ? 'the range' : 'the chipping green') + '</div>' + rows +

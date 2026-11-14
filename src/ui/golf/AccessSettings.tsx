@@ -4,6 +4,7 @@
 import { JAM } from '../../game/features';
 import { AED_PER_USD, setMoneyPrefs, useMoneyPrefs, type Currency } from './money';
 import { GLOSSARY, type TermId } from './Glossary';
+import { ActionTile, TILE_SMALL } from '../ActionTile'; // J8 (#1261): the Currency and Colour-blind-safe rows wear painted tiles
 
 export function AccessSettings() {
   const p = useMoneyPrefs();
@@ -11,13 +12,13 @@ export function AccessSettings() {
     <>
       <div className="flex items-center gap-2 px-2 py-2 text-sm" role="group" aria-label="Currency" data-testid="settings-currency"
         data-tip={`Show money in US dollars or UAE dirhams (1 USD = ${AED_PER_USD} AED, the fixed peg). Display only: the game counts in dollars`}>
-        <span className="flex-1">Currency</span>
+        <span className="flex flex-1 items-center gap-2"><ActionTile tile="currency" size={TILE_SMALL + 4} />Currency</span>
         {(['USD', 'AED'] as Currency[]).map(c => <button key={c} className={`chip ${p.currency === c ? 'chip-on' : ''}`} aria-pressed={p.currency === c} data-currency={c} onClick={() => setMoneyPrefs({ currency: c })}>{c === 'USD' ? '$ USD' : 'AED د.إ'}</button>)}
       </div>
       <label className="flex cursor-pointer items-center gap-2 px-2 py-2 text-sm" data-testid="settings-safe-money"
         data-tip="Gains and losses carry a + or − and an arrow (▲ ▼), not only green or red: easier to read with colour blindness">
         <input type="checkbox" checked={p.safe} onChange={e => setMoneyPrefs({ safe: e.target.checked })} />
-        Colour-blind-safe money (+/− ▲▼)
+        <ActionTile tile="colour-safe" size={TILE_SMALL + 4} />Colour-blind-safe money (+/− ▲▼)
       </label>
       {/* the glossary in one place (the cards underline these words where they are used: <Term>) */}
       {/* (T459, the jam MVP: no glossary) */}

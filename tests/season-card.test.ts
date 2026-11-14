@@ -48,7 +48,9 @@ function anchorsInSource(): Set<string> {
   assert.match(rail, /data-guide=\{isWalk \? 'rail-walk' : 'rail-select'\}/); out.add('rail-walk'); out.add('rail-select');
   // T193: the group's tools are the flyouts' leaves now (Flyouts.tsx: tool-<id>, the Props tool's group for its Buildings)
   const fly = readFileSync('src/ui/Flyouts.tsx', 'utf8');
-  assert.match(fly, /data-guide=\{r\.leaf \? `tool-\$\{r\.leaf\.entry\.view\?\.group \?\? r\.leaf\.entry\.id\}` : undefined\}/); for (const r of RAIL) for (const t of r.tools) out.add(`tool-${t.view?.group ?? t.id}`);
+  assert.match(fly, /data-guide=\{r\.guide \?\? \(r\.leaf \? `tool-\$\{r\.leaf\.entry\.view\?\.group \?\? r\.leaf\.entry\.id\}` : undefined\)\}/); for (const r of RAIL) for (const t of r.tools) out.add(`tool-${t.view?.group ?? t.id}`);
+  // #1272: Facilities is a tile of the Course flyout, no rail button: the tile carries rail-facilities (flyout-menu.ts MenuRow.guide) while that is open, the Course button when shut
+  assert.match(readFileSync('src/ui/flyout-menu.ts', 'utf8'), /guide: 'rail-facilities'/); out.add('rail-facilities');
   assert.match(app, /guide="month"/); out.add('month');
   assert.match(card, /data-guide=\{`fix-\$\{it\.id\}`\}/); for (const k of Object.keys(FIX)) out.add(`fix-${k}`);
   // T239: the range card's upgrade rows (range-buy-<id>), the guide's Show me anchors

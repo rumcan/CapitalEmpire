@@ -5,6 +5,8 @@
 // the town footer along the bottom (a slim row: each group's icon beside its name; compact, its icons alone, the names in the tooltip and the
 // buttons' labels). The buttons, their states and their anchors (data-rail, data-guide: the guide's Show me) are the same in both.
 import { Icon } from './Icon';
+import { ActionTile } from './ActionTile'; // J8 (#1261): an item with a painted tile draws it in place of its icon
+import { tileUrl } from './tool-tiles';
 import { railLabel, railTip, type Drawer, type RailEntry, type RailItem } from './rail-items';
 import { tipAttrs } from './tip';
 
@@ -29,16 +31,7 @@ export const NewBadge = ({ className = '' }: { className?: string }) => <span cl
 /** T323 (#921): the Select slot's two cursors, a pointer (Select: a click inspects) and a walking figure (Walk: a click walks your character
  *  there); Alt swaps them. Present only while you have a character (a golf game) */
 export interface RailWalk { on: boolean; set: (on: boolean) => void }
-/** the pointer (an arrow) and the walking figure: simple line drawings in the rail's colour (stand-ins until icon art lands, GOLF-SPRITES.md) */
-const PointerGlyph = ({ size }: { size: number }) => (
-  <svg width={size} height={size} viewBox="0 0 24 24" aria-hidden className="pointer-events-none"><path d="M6 3 L6 19 L10.2 15.2 L13 21.2 L15.6 20 L12.9 14.1 L18.5 14 Z" fill="currentColor" stroke="#0f172a" strokeWidth="1.2" strokeLinejoin="round" /></svg>
-);
-const WalkerGlyph = ({ size }: { size: number }) => (
-  <svg width={size} height={size} viewBox="0 0 24 24" aria-hidden className="pointer-events-none" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-    <circle cx="13" cy="4" r="2.2" fill="currentColor" stroke="none" /><path d="M12.5 7.5 L10.5 14 L13.5 17 L14.5 22" /><path d="M10.5 14 L8 21.5" /><path d="M12 9 L8.5 11.5 L7 14.5" /><path d="M12 9 L15 12 L18 12.5" />
-  </svg>
-);
-/** T323: the Select slot split in two (the pointer above the walking figure, each with its name): the lit one is the cursor in hand */
+/** T323: the Select slot split in two (Select above Walk, each with its name): the lit one is the cursor in hand. J8 (#1261): each wears its painted tile (select-tool, walk) */
 function CursorPair({ walk, sel }: { walk: RailWalk; sel: boolean }) {
   const b = (isWalk: boolean) => {
     const lit = sel && walk.on === isWalk;
@@ -47,7 +40,7 @@ function CursorPair({ walk, sel }: { walk: RailWalk; sel: boolean }) {
         onClick={() => walk.set(isWalk)} aria-pressed={lit} aria-label={isWalk ? 'Walk' : 'Select'}
         {...tipAttrs({ name: isWalk ? 'Walk: a click walks your character there and uses what you clicked (Ctrl+click looks at once); WASD walk you, the arrows pan' : 'Select: a click inspects what is there; WASD still walk you, the arrows pan', key: 'Alt' })}
         className={`rail-tab rail-tab-half ${lit ? 'rail-tab-on' : ''}`}>
-        {isWalk ? <WalkerGlyph size={28} /> : <PointerGlyph size={28} />}
+        <ActionTile tile={isWalk ? 'walk' : 'select-tool'} size={30} />
         <span>{isWalk ? 'Walk' : 'Select'}</span>
       </button>
     );
@@ -81,7 +74,7 @@ export function Rail({ walk, entries, onPick, onLocked, onHover, open = null, na
           >
             {locked && <span className="rail-lock"><LockMark /></span>}
             {isNew && <NewBadge className="rail-new" />}
-            <Icon name={r.icon} size={foot ? 24 : 28} />
+            {r.tile && tileUrl(r.tile) ? <ActionTile tile={r.tile} size={foot ? 24 : 30} /> : <Icon name={r.icon} size={foot ? 24 : 28} />}
             {!(foot && compact) && <span>{railLabel(r)}</span>}
           </button>}
         </div>

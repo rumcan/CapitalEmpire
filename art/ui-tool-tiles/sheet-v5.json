@@ -1,0 +1,267 @@
+{
+  "schema": 1,
+  "version": "v5",
+  "source": {
+    "file": "art/theme-consistency/generated/ui/golf-build-tool-tiles-sheet-v5.png",
+    "sha256": "da47abd5bf249945997acb0f850eb2afe98c31ee8bf6a446ebc399487cba3d3e",
+    "dimensions": [
+      1448,
+      1086
+    ]
+  },
+  "grid": {
+    "columns": 4,
+    "rows": 3,
+    "detectedRows": [
+      [
+        42,
+        347
+      ],
+      [
+        378,
+        694
+      ],
+      [
+        724,
+        1041
+      ]
+    ],
+    "detectedColumns": [
+      [
+        45,
+        361
+      ],
+      [
+        392,
+        708
+      ],
+      [
+        739,
+        1056
+      ],
+      [
+        1085,
+        1404
+      ]
+    ]
+  },
+  "processing": "Source unchanged; detected card crops, normal UI resize to144px, rounded-corner alpha mask, WebP encoding.",
+  "tiles": [
+    {
+      "name": "bank",
+      "row": 0,
+      "column": 0,
+      "sourceRect": {
+        "left": 52,
+        "top": 43,
+        "width": 303,
+        "height": 303
+      },
+      "file": "src/assets/ui/tiles/bank.webp",
+      "dimensions": [
+        144,
+        144
+      ],
+      "sha256": "8a5317193d6957e6cc9309db8e398d288372a71de0cf5b614b36115226c44a94",
+      "bytes": 5712
+    },
+    {
+      "name": "borrow",
+      "row": 0,
+      "column": 1,
+      "sourceRect": {
+        "left": 399,
+        "top": 43,
+        "width": 303,
+        "height": 303
+      },
+      "file": "src/assets/ui/tiles/borrow.webp",
+      "dimensions": [
+        144,
+        144
+      ],
+      "sha256": "3cfacfad90a2aafce32a18730b927d2a798c7e09347683442832b2da4e3398f2",
+      "bytes": 4330
+    },
+    {
+      "name": "repay",
+      "row": 0,
+      "column": 2,
+      "sourceRect": {
+        "left": 746,
+        "top": 43,
+        "width": 303,
+        "height": 303
+      },
+      "file": "src/assets/ui/tiles/repay.webp",
+      "dimensions": [
+        144,
+        144
+      ],
+      "sha256": "c0fcb42d250303d961c46cac131e5b5ae107128ffed956c9e8e76955ec6d389a",
+      "bytes": 3852
+    },
+    {
+      "name": "save-money",
+      "row": 0,
+      "column": 3,
+      "sourceRect": {
+        "left": 1093,
+        "top": 43,
+        "width": 303,
+        "height": 303
+      },
+      "file": "src/assets/ui/tiles/save-money.webp",
+      "dimensions": [
+        144,
+        144
+      ],
+      "sha256": "04889ce6c6936a88382904d0498c1d8e7f39e01b3ee2477619fc7bd59525f38d",
+      "bytes": 3964
+    },
+    {
+      "name": "take-money",
+      "row": 1,
+      "column": 0,
+      "sourceRect": {
+        "left": 46,
+        "top": 379,
+        "width": 314,
+        "height": 314
+      },
+      "file": "src/assets/ui/tiles/take-money.webp",
+      "dimensions": [
+        144,
+        144
+      ],
+      "sha256": "a59942e6121c9bf9b6ab51644bf1ed11d264293bc22423207bcddf6efd822c76",
+      "bytes": 4922
+    },
+    {
+      "name": "statement",
+      "row": 1,
+      "column": 1,
+      "sourceRect": {
+        "left": 393,
+        "top": 379,
+        "width": 314,
+        "height": 314
+      },
+      "file": "src/assets/ui/tiles/statement.webp",
+      "dimensions": [
+        144,
+        144
+      ],
+      "sha256": "cfed34df378b14e1f5bfefacaa89f7ab7d510f6c8a7bb7508dc802b0029d166a",
+      "bytes": 4576
+    },
+    {
+      "name": "tips",
+      "row": 1,
+      "column": 2,
+      "sourceRect": {
+        "left": 741,
+        "top": 379,
+        "width": 314,
+        "height": 314
+      },
+      "file": "src/assets/ui/tiles/tips.webp",
+      "dimensions": [
+        144,
+        144
+      ],
+      "sha256": "f7c92feb61d33990b4a2b64c4d1144ed71b4ebb5c76ad850ce0ba35231574898",
+      "bytes": 4106
+    },
+    {
+      "name": "how-to-play",
+      "row": 1,
+      "column": 3,
+      "sourceRect": {
+        "left": 1088,
+        "top": 379,
+        "width": 314,
+        "height": 314
+      },
+      "file": "src/assets/ui/tiles/how-to-play.webp",
+      "dimensions": [
+        144,
+        144
+      ],
+      "sha256": "abe607e4de78499a496f342f660b50a2e28845df693aa4254cdbb511e43d0fa5",
+      "bytes": 4820
+    },
+    {
+      "name": "settings",
+      "row": 2,
+      "column": 0,
+      "sourceRect": {
+        "left": 46,
+        "top": 726,
+        "width": 314,
+        "height": 314
+      },
+      "file": "src/assets/ui/tiles/settings.webp",
+      "dimensions": [
+        144,
+        144
+      ],
+      "sha256": "9987a3cdbd67950107992a2b0d2933fd29cf3eef57a815779119d698f9541eb2",
+      "bytes": 4902
+    },
+    {
+      "name": "save-game",
+      "row": 2,
+      "column": 1,
+      "sourceRect": {
+        "left": 393,
+        "top": 726,
+        "width": 314,
+        "height": 314
+      },
+      "file": "src/assets/ui/tiles/save-game.webp",
+      "dimensions": [
+        144,
+        144
+      ],
+      "sha256": "dcc2ea865cef61bcb213ea62d2b23603309453d1e3ab28ac730d527967f5ef7d",
+      "bytes": 4296
+    },
+    {
+      "name": "new-game",
+      "row": 2,
+      "column": 2,
+      "sourceRect": {
+        "left": 740,
+        "top": 725,
+        "width": 315,
+        "height": 315
+      },
+      "file": "src/assets/ui/tiles/new-game.webp",
+      "dimensions": [
+        144,
+        144
+      ],
+      "sha256": "b1813d1ae46f57bf42de0ae0b2efd6ec991627ffe18c35951a5ca035010b9763",
+      "bytes": 5332
+    },
+    {
+      "name": "profile",
+      "row": 2,
+      "column": 3,
+      "sourceRect": {
+        "left": 1087,
+        "top": 725,
+        "width": 315,
+        "height": 315
+      },
+      "file": "src/assets/ui/tiles/profile.webp",
+      "dimensions": [
+        144,
+        144
+      ],
+      "sha256": "fd3fd17b8319b03043ab05dfb759b5b7b241e17715f47b648f82a78cb7422029",
+      "bytes": 5362
+    }
+  ]
+}

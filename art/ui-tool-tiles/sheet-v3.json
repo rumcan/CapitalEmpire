@@ -1,0 +1,267 @@
+{
+  "schema": 1,
+  "version": "v3",
+  "source": {
+    "file": "art/theme-consistency/generated/ui/golf-build-tool-tiles-sheet-v3.png",
+    "sha256": "27d43eb4dacbe334173d1eac9e60f38c41a031fd15daa26451204d82b9482745",
+    "dimensions": [
+      1448,
+      1086
+    ]
+  },
+  "grid": {
+    "columns": 4,
+    "rows": 3,
+    "detectedRows": [
+      [
+        42,
+        354
+      ],
+      [
+        376,
+        696
+      ],
+      [
+        723,
+        1040
+      ]
+    ],
+    "detectedColumns": [
+      [
+        44,
+        360
+      ],
+      [
+        390,
+        709
+      ],
+      [
+        739,
+        1056
+      ],
+      [
+        1085,
+        1403
+      ]
+    ]
+  },
+  "processing": "Source unchanged; detected card crops, normal UI resize to144px, rounded-corner alpha mask, WebP encoding.",
+  "tiles": [
+    {
+      "name": "buy-range",
+      "row": 0,
+      "column": 0,
+      "sourceRect": {
+        "left": 47,
+        "top": 43,
+        "width": 310,
+        "height": 310
+      },
+      "file": "src/assets/ui/tiles/buy-range.webp",
+      "dimensions": [
+        144,
+        144
+      ],
+      "sha256": "c9a562dd645ea8c25564af92851eea2e303d5f48e01b34f92c2e5d86d2fe19d5",
+      "bytes": 6782
+    },
+    {
+      "name": "hit-balls",
+      "row": 0,
+      "column": 1,
+      "sourceRect": {
+        "left": 395,
+        "top": 43,
+        "width": 310,
+        "height": 310
+      },
+      "file": "src/assets/ui/tiles/hit-balls.webp",
+      "dimensions": [
+        144,
+        144
+      ],
+      "sha256": "3f738dbda4c113b609cea1010fc248e9198a6b3a6c294c816b12bf7952f5aa4d",
+      "bytes": 4350
+    },
+    {
+      "name": "chip-and-putt",
+      "row": 0,
+      "column": 2,
+      "sourceRect": {
+        "left": 743,
+        "top": 43,
+        "width": 310,
+        "height": 310
+      },
+      "file": "src/assets/ui/tiles/chip-and-putt.webp",
+      "dimensions": [
+        144,
+        144
+      ],
+      "sha256": "042b4faec429ddbbe339f933118490f41dc1f1a94c03e8ed7dc1d4dcbbea2093",
+      "bytes": 4524
+    },
+    {
+      "name": "clear-junk",
+      "row": 0,
+      "column": 3,
+      "sourceRect": {
+        "left": 1089,
+        "top": 43,
+        "width": 310,
+        "height": 310
+      },
+      "file": "src/assets/ui/tiles/clear-junk.webp",
+      "dimensions": [
+        144,
+        144
+      ],
+      "sha256": "994f79b7dea10720993ba79e08e49b84855d80c12b9f765033e90b3c4ba7cb5c",
+      "bytes": 6372
+    },
+    {
+      "name": "pick-balls",
+      "row": 1,
+      "column": 0,
+      "sourceRect": {
+        "left": 45,
+        "top": 379,
+        "width": 314,
+        "height": 314
+      },
+      "file": "src/assets/ui/tiles/pick-balls.webp",
+      "dimensions": [
+        144,
+        144
+      ],
+      "sha256": "44588dcd6164ecbd216b4779a89b7d6004b95cd43c9f72b0c75457f67ac1456f",
+      "bytes": 6944
+    },
+    {
+      "name": "hire-attendant",
+      "row": 1,
+      "column": 1,
+      "sourceRect": {
+        "left": 391,
+        "top": 378,
+        "width": 317,
+        "height": 317
+      },
+      "file": "src/assets/ui/tiles/hire-attendant.webp",
+      "dimensions": [
+        144,
+        144
+      ],
+      "sha256": "d1ed06c92ce4c70c0fe07038211b3e6ae72b231ac3407cda6dca14debfc858af",
+      "bytes": 5816
+    },
+    {
+      "name": "ball-washer",
+      "row": 1,
+      "column": 2,
+      "sourceRect": {
+        "left": 740,
+        "top": 379,
+        "width": 315,
+        "height": 315
+      },
+      "file": "src/assets/ui/tiles/ball-washer.webp",
+      "dimensions": [
+        144,
+        144
+      ],
+      "sha256": "3cfe108a4ebd9ee4239ad98c416d95583b56f935eba46838ca25368492a4478e",
+      "bytes": 6194
+    },
+    {
+      "name": "bucket-price",
+      "row": 1,
+      "column": 3,
+      "sourceRect": {
+        "left": 1086,
+        "top": 378,
+        "width": 316,
+        "height": 316
+      },
+      "file": "src/assets/ui/tiles/bucket-price.webp",
+      "dimensions": [
+        144,
+        144
+      ],
+      "sha256": "5961dd3baac97a7ed0e8e5cd46dbd9da187bfa967e0efcd367e283cb3d6eb39a",
+      "bytes": 5550
+    },
+    {
+      "name": "turf-tee",
+      "row": 2,
+      "column": 0,
+      "sourceRect": {
+        "left": 45,
+        "top": 725,
+        "width": 314,
+        "height": 314
+      },
+      "file": "src/assets/ui/tiles/turf-tee.webp",
+      "dimensions": [
+        144,
+        144
+      ],
+      "sha256": "151b1a7316a5a380f294bd9e9156f9caae9f4f4a5c96237e3d05e5c2137d2f12",
+      "bytes": 4586
+    },
+    {
+      "name": "grass-outfield",
+      "row": 2,
+      "column": 1,
+      "sourceRect": {
+        "left": 392,
+        "top": 724,
+        "width": 315,
+        "height": 315
+      },
+      "file": "src/assets/ui/tiles/grass-outfield.webp",
+      "dimensions": [
+        144,
+        144
+      ],
+      "sha256": "a61ee15323d943e7ab6c1cb33ec1f0bbb2dd174891cd301d1f79ac1db608470d",
+      "bytes": 5350
+    },
+    {
+      "name": "target-green",
+      "row": 2,
+      "column": 2,
+      "sourceRect": {
+        "left": 740,
+        "top": 724,
+        "width": 315,
+        "height": 315
+      },
+      "file": "src/assets/ui/tiles/target-green.webp",
+      "dimensions": [
+        144,
+        144
+      ],
+      "sha256": "76104c3f1b4a9cdca4a3633b80f32f141fcdd91e9ada9825b2a0c0c875db49fb",
+      "bytes": 4902
+    },
+    {
+      "name": "covered-bays",
+      "row": 2,
+      "column": 3,
+      "sourceRect": {
+        "left": 1087,
+        "top": 724,
+        "width": 315,
+        "height": 315
+      },
+      "file": "src/assets/ui/tiles/covered-bays.webp",
+      "dimensions": [
+        144,
+        144
+      ],
+      "sha256": "b56025a271e80476664522b9749870ddc5501a156ff3bcb500f93ab09792d091",
+      "bytes": 5024
+    }
+  ]
+}

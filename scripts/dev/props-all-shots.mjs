@@ -76,10 +76,11 @@ try {
   };
 
   // A: Props > Plants, then the box
+  // (#1272: Facilities is the sixth tile of the Course flyout, so every level is one column to the right)
   await flow('A', async () => {
-  await page.click('[data-rail="facilities"]'); await sleep(600);
-  await row(0, '[role="menuitem"]:has-text("Decoration")'); await row(1, '[role="menuitem"]:has-text("Props")');
-  await (await row(2, `[data-key*='"group":"plants"']`)).click(); await sleep(900);
+  await page.click('[data-rail="course"]'); await sleep(600); await (await row(0, '[data-key="facilities"]')).click(); await sleep(500);
+  await row(1, '[role="menuitem"]:has-text("Decoration")'); await row(2, '[role="menuitem"]:has-text("Props")');
+  await (await row(3, `[data-key*='"group":"plants"']`)).click(); await sleep(900);
   await record('A1-props-plants');
   await tick(true); await record('A2-plants-then-all-ticked');
   await tick(false); await record('A3-all-unticked-again', false);
@@ -87,9 +88,9 @@ try {
 
   // B: Props > All props
   await flow('B', async () => {
-  await page.click('[data-rail="facilities"]'); await sleep(600);
-  await row(0, '[role="menuitem"]:has-text("Decoration")'); await row(1, '[role="menuitem"]:has-text("Props")');
-  await (await row(2, `[data-key*='"group":null']`)).click(); await sleep(900);
+  await page.click('[data-rail="course"]'); await sleep(600); await (await row(0, '[data-key="facilities"]')).click(); await sleep(500);
+  await row(1, '[role="menuitem"]:has-text("Decoration")'); await row(2, '[role="menuitem"]:has-text("Props")');
+  await (await row(3, `[data-key*='"group":null']`)).click(); await sleep(900);
   await page.evaluate(() => { window.__game.decor.setAll?.(false); if (!window.__game.decor.setAll) window.__game.decor.all = false; window.__game.emit(); }); await sleep(300);
   await record('B1-all-props-leaf', false);
   await tick(true); await record('B2-all-props-ticked');
