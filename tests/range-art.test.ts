@@ -221,3 +221,19 @@ test('prep-range-art.mjs decontaminate: the pink rim of a ragged outline takes t
   assert.deepEqual(at(60, 20), [120, 80, 40, 255], 'a thin brown strand stays');
   const g = at(70, 20); assert.ok(g[0] === g[1] && g[1] === g[2] && g[0] < 60 && g[3] === 120, `a pinkish see-through strand is grey: ${g}`);
 });
+
+test('the yardage sign masters keep their headings: view 1 stands with its lowest post on the right (front facing the lower left), view 2 on the left (a second view 2 once came back as the 100 m view 1)', async t => {
+  const kit = path.join(process.cwd(), 'art/range-kit'), name = 'sharp';
+  if (!fs.existsSync(path.join(kit, 'golf-range-yard-50-view1.webp'))) return t.skip('no art/range-kit in this checkout');
+  type Sharp = (f: string) => { ensureAlpha(): { raw(): { toBuffer(o: { resolveWithObject: true }): Promise<{ data: Buffer; info: { width: number; height: number } }> } } };
+  const mod = await import(name).catch(() => null) as { default: Sharp } | null; // (by a name, so the test bundle leaves the native module out)
+  if (!mod) return t.skip('no sharp here');
+  const sharp = mod.default;
+  for (const m of [50, 75, 100, 125, 150, 175, 200, 250]) for (const view of [1, 2]) {
+    const { data, info } = await sharp(path.join(kit, `golf-range-yard-${m}-view${view}.webp`)).ensureAlpha().raw().toBuffer({ resolveWithObject: true });
+    let low = -1; for (let y = info.height - 1; y >= 0 && low < 0; y--) for (let x = 0; x < info.width; x++) if (data[(y * info.width + x) * 4 + 3]! > 128) { low = y; break; }
+    let sx = 0, n = 0; for (let y = Math.max(0, low - 2); y <= low; y++) for (let x = 0; x < info.width; x++) if (data[(y * info.width + x) * 4 + 3]! > 128) { sx += x; n++; }
+    const at = sx / n / info.width;
+    assert.ok(view === 1 ? at > 0.6 : at < 0.4, `${m} m view ${view}: its lowest post at ${(at * 100).toFixed(0)}% across`);
+  }
+});

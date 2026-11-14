@@ -5,7 +5,7 @@ import assert from 'node:assert/strict';
 import { WorldLabels } from '../src/game/world-labels';
 import { PRI } from '../src/game/label-place';
 import { JUNK_SCALE, RANGE_ART, SMALL_JUNK_SCALE, junkScale, newRangeJunk, rangeScene, defaultRangeBiz } from '../src/game/golf/rangebiz';
-import { WRONG_HEADING, YARDAGE_DISTANCES, yardageSign, yardageSlug } from '../src/game/golf/yardage-signs';
+import { YARDAGE_DISTANCES, yardageSign, yardageSlug } from '../src/game/golf/yardage-signs';
 import { LIBRARY } from '../src/game/library';
 import type { Rect } from '../src/game/golf/mode';
 
@@ -60,9 +60,8 @@ const greens = () => ({ ...defaultRangeBiz(), owned: ['greens', 'targets'] as ne
 const LIB = new Set(LIBRARY.map(it => it.id));
 /** the markers' distances (every 50 m down both sides) and the target greens' (tee line to flag, m), as the scene lays them */
 const MARKERS = [50, 100, 150, 200, 250], GREEN_M = [50, 100, 150, 200, 240];
-/** the picture the scene should draw for a distance at a facing: its view by the facing (1 for 0 and 1, 2 for 2 and 3), the wrong-heading view's sibling in its place */
-const wantView = (m: number, f: number): 1 | 2 => { const v = f < 2 ? 1 : 2; return WRONG_HEADING[`golf-range-yard-${m}`] === v - 1 ? (v === 1 ? 2 : 1) : v; };
-const wantId = (m: number, f: number) => `range:golf-range-yard-${m}-view${wantView(m, f)}`;
+/** the picture the scene should draw for a distance at a facing: its view by the facing (1 for 0 and 1, 2 for 2 and 3), every distance alike */
+const wantId = (m: number, f: number) => `range:golf-range-yard-${m}-view${f < 2 ? 1 : 2}`;
 
 test('J7e: every painted distance has its two pictures packed in the library (50 to 250 m, no 240), each its own slug', () => {
   assert.deepEqual([...YARDAGE_DISTANCES], [50, 75, 100, 125, 150, 175, 200, 250]);
@@ -114,21 +113,20 @@ test('J7e: each sign faces the way the range faces: view 1 at the facings 0 and 
     assert.equal(signs.length, 14);
     for (const p of signs) {
       assert.equal(p.q, 0, `${p.key}: never turned (the view is the facing's)`); assert.equal(p.scale, undefined); assert.equal(p.fit, undefined); assert.equal(p.label, undefined, `${p.key}: no stand-in label`);
-      if (!/yard-100-/.test(p.id)) assert.ok(p.id.endsWith(f < 2 ? '-view1' : '-view2'), `facing ${f}: ${p.id}`);
+      assert.ok(p.id.endsWith(f < 2 ? '-view1' : '-view2'), `facing ${f}: ${p.id}`); // (every distance alike: the 100 m sign's view 1 is repainted, no exception)
     }
   }
   // the same lookup as the yardage board's: the board's slug has its view 1 first and view 2 second, as the signs'
   for (const f of FACINGS) assert.ok(RANGE_ART['golf-range-yardage-board']![f < 2 ? 0 : 1]!.endsWith(f < 2 ? '-view1' : '-view2'));
 });
-test('J7e: the 100 m "view 1" was painted facing the other way (a second view 2), so it is not drawn: view 2 stands in on the facings that ask for view 1, and no other sign is swapped', () => {
-  assert.deepEqual({ ...WRONG_HEADING }, { 'golf-range-yard-100': 0 });
+test('J7e: the 100 m sign is its own view 1 on the facings 0 and 1 (its first painting came out facing the other way and was swapped for its view 2; repainted, no exception left)', () => {
   for (const f of [0, 1] as const) {
-    const sc = rangeScene(PLOTS[f], f, greens(), { jam: true });
-    assert.ok(sc.pieces.filter(p => /yard-100-/.test(p.id)).every(p => p.id === 'range:golf-range-yard-100-view2'), `facing ${f}: the 100 m signs are view 2`);
-    assert.ok(!sc.pieces.some(p => p.id === 'range:golf-range-yard-100-view1'), `facing ${f}: the wrong-way picture is not drawn`);
-    assert.ok(sc.pieces.some(p => p.id === 'range:golf-range-yard-50-view1'), `facing ${f}: the others keep their view 1`);
+    const hundreds = rangeScene(PLOTS[f], f, greens(), { jam: true }).pieces.filter(p => /yard-100-/.test(p.id));
+    assert.equal(hundreds.length, 3, `facing ${f}: both markers and the 100 m green`);
+    assert.ok(hundreds.every(p => p.id === 'range:golf-range-yard-100-view1'), `facing ${f}: the 100 m signs are view 1`);
   }
-  for (const f of [2, 3] as const) assert.ok(rangeScene(PLOTS[f], f, greens(), { jam: true }).pieces.some(p => p.id === 'range:golf-range-yard-100-view2'));
+  for (const f of [2, 3] as const) assert.ok(rangeScene(PLOTS[f], f, greens(), { jam: true }).pieces.filter(p => /yard-100-/.test(p.id)).every(p => p.id === 'range:golf-range-yard-100-view2'));
+  assert.equal(yardageSign(100, 0, (slug, q) => `${slug}:${q}`), 'golf-range-yard-100:0', 'the lookup is the facing\'s, nothing swapped');
 });
 test('J7e: the normal game keeps its markers and number pills (the jam rule only in the jam), and draws none of the yardage signs', () => {
   for (const f of FACINGS) {
