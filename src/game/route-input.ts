@@ -69,3 +69,27 @@ export class RouteGesture {
   /** Esc, Backspace, a right click, a tool change: no press is down any more */
   cancel(): void { this.d = null; }
 }
+
+/** The words about the bend, in one place for the hint line, the Paths panel, Help and the Keys sheet (App.tsx, ui/keymap.ts), so the one constant that switches the 45 degree
+ *  bend (route-legs.ts BEND_45, `on`) takes them all away together (#1317, the owner: "remove the 45 degree angle for now"): off, none of them speaks of 45 degrees, or of a
+ *  Q key; on, they say what #1276 made them say. Shift's one straight run is not about the bend and is told either way. */
+export function bendWords(on: boolean): {
+  /** after "build a street" in the hint, "lay a run" and "build a road" in the panel's description */
+  bends: string;
+  /** the end of the hint while a route is in hand */
+  handKeys: string;
+  /** the panel's last line from the Bends words to the Shift sentence */
+  shift: string;
+  /** Help's line on the bends and Shift */
+  help: string;
+  /** the Keys sheet's Q row (null: none) */
+  qRow: [string, string] | null;
+} {
+  return {
+    bends: on ? ' (it bends at 45°)' : '',
+    handKeys: on ? ', Q for 90° bends' : '',
+    shift: on ? 'Bends are 45° (Q: 90°); hold Shift for one straight run.' : 'Hold Shift for one straight run.',
+    help: on ? 'Bends are 45° (Q toggles 90° bends); hold Shift to draw one straight run in any of the eight directions.' : 'Hold Shift to draw one straight run in any of the eight directions.',
+    qRow: on ? ['Q', 'bends of 45° (every game starts with them) or 90°'] : null,
+  };
+}

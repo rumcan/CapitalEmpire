@@ -1,11 +1,12 @@
-// #1276 (the owner, 2026-11-14: "make 45 degree bends the default ... always"): the road tool's routing between two route points. route-legs.ts is what the
-// engine asks (Game.legsTo: the preview, a click and a drag's release all use it): by default a diagonal run and a straight one, one 45 degree bend between,
-// for every road and path class; Q toggles the right angle for the visit, Shift one straight run. The default is a constant the game starts with, in every build
-// and after every load: it is not in the save, and nothing but the toggle and the Fine tuning chips sets it. Headless: npm test.
+// #1276 (the owner, 2026-11-14: "make 45 degree bends the default ... always"), then #1317 (the same day: "remove the 45 degree angle for now"): the road tool's routing
+// between two route points. route-legs.ts is what the engine asks (Game.legsTo: the preview, a click and a drag's release all use it). The 45 degree bend (a diagonal run and
+// a straight one, one bend between) is OFF behind one constant, BEND_45: the default is the right angle in every build and after every load, Q does nothing, no chip, hint,
+// Help line or Keys sheet row speaks of 45 degrees; Shift draws one straight run either way. The 45 routing itself stays tested here (explicitly, with the bend given), so
+// it comes back when the constant does. The default is a constant the game starts with: it is not in the save. Headless: npm test.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { DEFAULT_BEND, legsLength, routeLegs } from '../src/game/route-legs';
+import { BEND_45, DEFAULT_BEND, bendInUse, legsLength, routeLegs } from '../src/game/route-legs';
 import type { Leg, Pt } from '../src/game/network';
 
 const P = (x: number, y: number): Pt => ({ x, y });
@@ -26,23 +27,48 @@ const chain = (legs: Leg[], from: Pt, to: Pt, eps = 1e-9) => {
   assert.ok(Math.hypot(legs[legs.length - 1]!.b.x - to.x, legs[legs.length - 1]!.b.y - to.y) < eps, 'the last leg ends at the pointer');
 };
 
-test('the default bend is 45 degrees: a constant the engine starts every game with, that no save holds and only the toggle changes', () => {
-  assert.equal(DEFAULT_BEND, 45);
+test('the 45 degree bend is off for now (#1317): the default is the right angle, a constant the engine starts every game with and no save holds; while it is off nothing sets 45', () => {
+  assert.equal(BEND_45, false); assert.equal(DEFAULT_BEND, 90);
+  // the bend the legs are made with: always the right angle while it is off (a 45 set by a script, the stress test or an old call changes nothing); switched on, the mode in hand
+  for (const b of [45, 90] as const) assert.equal(bendInUse(b), 90, `${b} is a right angle while it is off`);
+  assert.equal(bendInUse(45, true), 45); assert.equal(bendInUse(90, true), 90);
   const eng = readFileSync('src/game/engine.ts', 'utf8'), app = readFileSync('src/App.tsx', 'utf8');
   // a new game, every build, every load or reload: the Game's field is the constant (a loaded save leaves the page to reload, so a Game is always new)
   assert.match(eng, /bendMode: BendMode = DEFAULT_BEND\b/, 'the field starts at the default');
   assert.match(eng, /import \{[^}]*\bDEFAULT_BEND\b[^}]*\} from '\.\/route-legs'/);
-  // nothing in the engine sets the bend but the Q key (a visit's toggle); the Fine tuning chips are the panel's own; no save or load code knows the word
+  assert.match(eng, /routeLegs\(from, p, bendInUse\(this\.bendMode\), straight, this\.roadStep\(\)\)/, 'every leg is made with the bend in use');
+  // nothing in the engine sets the bend but the Q key, and the Q key is on only while the bend is: no `case 'q'` in keyDown (the Keys sheet would have to list it); the Fine
+  // tuning chips are the panel's own and only drawn while it is on; no save or load code knows the word
   const sets = [...eng.matchAll(/\.bendMode\s*=[^=]/g)];
   assert.equal(sets.length, 1, `the engine sets the bend in one place (${sets.length})`);
-  assert.match(eng, /case 'q': case 'Q': this\.bendMode = this\.bendMode === 90 \? 45 : 90;/, 'Q toggles between the two');
+  assert.match(eng, /if \(BEND_45 && \(e\.key === 'q' \|\| e\.key === 'Q'\)\) \{ this\.bendMode = this\.bendMode === 90 \? 45 : 90;/, 'Q toggles between the two, while the 45 degree bend is on');
+  const keyDown = eng.slice(eng.indexOf('  keyDown(e: KeyboardEvent) {'), eng.indexOf('  keyUp(e: KeyboardEvent) {'));
+  assert.ok(!/case 'q'/.test(keyDown), 'no case q in keyDown');
   assert.deepEqual([...app.matchAll(/game\.bendMode = (\w+)/g)].map(m => m[1]), ['b'], 'the Fine tuning chips set the bend they show');
+  assert.match(app, /\{BEND_45 && <>\s*<span[^>]*>Bends<\/span>\s*\{\(\[45, 90\] as const\)\.map\(b =>/, 'the chips are drawn only while the 45 degree bend is on (the default first)');
   for (const f of ['src/game/save.ts', 'src/game/types.ts', 'src/game/golf/rangesave.ts']) assert.ok(!/bendMode/.test(readFileSync(f, 'utf8')), `${f} does not save the bend`);
-  // the chips list the default first
-  assert.match(app, /\(\[45, 90\] as const\)\.map\(b =>/);
 });
 
-test('45 degrees: a diagonal run, one bend, a straight run along the axis: the corner is where the shorter side runs out', () => {
+test('by default a route is a right angle: along the longer side, then the other; never a diagonal leg (Shift draws those)', () => {
+  const grids: { step: number; pts: Pt[] }[] = [{ step: 1, pts: [] }, { step: 0.5, pts: [] }];
+  for (let x = 4; x <= 44; x += 2) for (let y = 4; y <= 44; y += 2) grids[0]!.pts.push(P(x, y));
+  for (let x = 10; x <= 24; x += 0.5) for (let y = 10; y <= 24; y += 0.5) grids[1]!.pts.push(P(x, y));
+  let n = 0;
+  for (const g of grids) for (const from of [P(24, 24), P(10, 30), P(17.5, 12.5)]) for (const to of g.pts) {
+    const legs = routeLegs(from, to, bendInUse(DEFAULT_BEND), false, g.step);
+    if (!legs.length) { assert.ok(from.x === to.x && from.y === to.y); continue; }
+    n++; chain(legs, from, to, 1e-9); assert.ok(legs.length <= 2, 'at most one bend');
+    for (const l of legs) assert.ok(heading(l) === 0 || heading(l) === 90, `an axis leg: ${JSON.stringify(l)}`);
+    if (legs.length === 2) { assert.equal(turn(legs[0]!, legs[1]!), 90, 'a right angle'); const a = Math.hypot(legs[0]!.b.x - legs[0]!.a.x, legs[0]!.b.y - legs[0]!.a.y), b = Math.hypot(legs[1]!.b.x - legs[1]!.a.x, legs[1]!.b.y - legs[1]!.a.y); assert.ok(a >= b - 1e-9, 'the longer side first'); }
+  }
+  assert.ok(n > 500, `${n} routes judged`);
+  const l = routeLegs(P(10, 10), P(30, 18), bendInUse(DEFAULT_BEND));
+  assert.deepEqual([l[0]!.a, ...l.map(q => q.b)], [P(10, 10), P(30, 10), P(30, 18)], 'along x first, then y: the route of a click is what it was before #1276');
+  // Shift's one straight run is the same either way (it is not the bend)
+  assert.deepEqual(routeLegs(P(10, 10), P(30, 24), bendInUse(DEFAULT_BEND), true), [{ a: P(10, 10), b: P(27, 27) }]);
+});
+
+test('45 degrees (off for now, BEND_45): a diagonal run, one bend, a straight run along the axis: the corner is where the shorter side runs out', () => {
   const cases: [Pt, Pt, Pt[]][] = [
     // from, to, the route's points (start, the corner when there is one, the end)
     [P(10, 10), P(30, 18), [P(10, 10), P(18, 18), P(30, 18)]],      // wider than tall: down-right 8, then along x

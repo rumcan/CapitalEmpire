@@ -1,11 +1,12 @@
-// #1276, and the owner's "make sure people use walking paths if they are there and they can follow them" (a ticket of its own): what the road tool's drag and its 45 degree
-// default give the people who walk. A dragged walking path is made of segs of class cart-walk like a clicked one; two things read them: the range's walkway (golf/rangebiz.ts
-// walkwayOf: the paths' legs joined where they share an end point, the golfers' way from the car park to the shop and the tee) and the course's walk field (golf/walkground.ts
-// buildWalkField: every seg a way, a walking path laid as ground `walk`, which a spectator takes at half the cost of the rough). These tests play dragged runs through routeLegs
-// (the second run starting where the first ended, as a press on a path's end node does) and give the legs to both. Headless: npm test.
+// #1276, and the owner's "make sure people use walking paths if they are there and they can follow them" (a ticket of its own): what the road tool's drag gives the people who
+// walk. A dragged walking path is made of segs of class cart-walk like a clicked one; two things read them: the range's walkway (golf/rangebiz.ts walkwayOf: the paths' legs
+// joined where they share an end point, the golfers' way from the car park to the shop and the tee) and the course's walk field (golf/walkground.ts buildWalkField: every seg a
+// way, a walking path laid as ground `walk`, which a spectator takes at half the cost of the rough). These tests play dragged runs through routeLegs (the second run starting where
+// the first ended, as a press on a path's end node does) and give the legs to both: with the bend in use (the right angle while the 45 degree bend is off, #1317) and with a
+// diagonal run (the Shift straight run draws one today; the 45 bend does when BEND_45 comes back). Headless: npm test.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { routeLegs } from '../src/game/route-legs';
+import { DEFAULT_BEND, bendInUse, routeLegs } from '../src/game/route-legs';
 import { CLASS, type Leg, type Pt } from '../src/game/network';
 import { defaultRangeBiz, rangeScene, walkwayOf, walkwayReach } from '../src/game/golf/rangebiz';
 import { plotPoint } from '../src/game/golf/range';
@@ -14,8 +15,9 @@ import { buildWalkField, type Way } from '../src/game/golf/walkground';
 import { CART, G, SPECTATOR, findRoute, groundAt, makeField, type WalkField } from '../src/game/golf/walkfield';
 
 const PLOT: Rect = [200, 200, 70, 150], F = 2 as const, P = (u: number, v: number): Pt => plotPoint(PLOT, F, u, v);
-/** a drag from `a` to `b` as the road tool builds it (the course's half grid, 45 degree bends by default) */
-const drag = (a: Pt, b: Pt, bend: 45 | 90 = 45): Leg[] => routeLegs(a, b, bend, false, 0.5);
+/** a drag from `a` to `b` as the road tool builds it (the course's half grid; the bend in use by default: the right angle while the 45 degree bend is off, #1317). A test of a diagonal run
+ *  says 45: the Shift straight run draws diagonals today, and the 45 bend does when BEND_45 comes back */
+const drag = (a: Pt, b: Pt, bend: 45 | 90 = bendInUse(DEFAULT_BEND)): Leg[] => routeLegs(a, b, bend, false, 0.5);
 const ptsOf = (legs: Leg[]): Pt[] => [legs[0]!.a, ...legs.map(l => l.b)];
 
 test('a dragged walking path is the range golfers\' walkway: two runs, the second from the first\'s end, join the car park, the shop and the tee', () => {
@@ -23,7 +25,7 @@ test('a dragged walking path is the range golfers\' walkway: two runs, the secon
   // run 1: from the car park's edge to the shop's counter; run 2 on from the counter to the back of the mats (the guide's walking path step)
   const a1 = P(50, 12), b1 = P(34, 13.5), b2 = P(28, 17.5);
   const run1 = drag(a1, b1), run2 = drag(b1, b2);
-  assert.equal(run1.length, 2, 'a diagonal run and a straight one: one 45 degree bend'); assert.equal(run2.length, 2);
+  assert.equal(run1.length, 2, 'two legs: one bend'); assert.equal(run2.length, 2);
   assert.deepEqual(walkwayReach(sc, run1), { lot: true, shop: true, tee: false }, 'the first run alone leaves the tee out');
   assert.equal(walkwayOf(sc, run1), null, 'so it is no walkway yet');
   assert.deepEqual(walkwayReach(sc, [...run1, ...run2]), { lot: true, shop: true, tee: true });
@@ -33,7 +35,7 @@ test('a dragged walking path is the range golfers\' walkway: two runs, the secon
   const apart = drag(P(34, 14), b2);
   assert.equal(walkwayOf(sc, [...run1, ...apart]), null, 'half a tile off the end is no join');
   // the right-angle bend the Q toggle gives joins the same way
-  assert.ok(walkwayOf(sc, [...drag(a1, b1, 90), ...drag(b1, b2, 90)]), 'with 90 degree bends too');
+  for (const bend of [45, 90] as const) assert.ok(walkwayOf(sc, [...drag(a1, b1, bend), ...drag(b1, b2, bend)]), `with ${bend} degree bends too (the 45 bend is off for now, #1317; Shift draws diagonals)`);
 });
 
 /** the field of a bare 90 x 60 tile course with the legs laid as ways of class cart (a cart path) or cart-walk (a walking path) */
@@ -53,7 +55,7 @@ function shareOn(f: WalkField, from: Pt, route: readonly Pt[], g: number): numbe
 const length = (from: Pt, route: readonly Pt[]) => { let s = 0, p = from; for (const q of route) { s += Math.hypot(q.x - p.x, q.y - p.y); p = q; } return s; };
 
 test('the walk field lays a dragged walking path whole: its diagonal run is a chain of cells with no gap, as is its straight run', () => {
-  const legs = drag({ x: 10, y: 10 }, { x: 36, y: 19 }), f = fieldOf(legs, 'cart-walk'); // 9 tiles on the diagonal, then 17 along x
+  const legs = drag({ x: 10, y: 10 }, { x: 36, y: 19 }, 45), f = fieldOf(legs, 'cart-walk'); // 9 tiles on the diagonal, then 17 along x
   assert.equal(legs.length, 2);
   // every cell the centre line passes through is a walking path (sampled every tenth of a tile along the legs; not at a cell's corner, where four cells meet and a float's last digit picks one)
   for (const l of legs) {
@@ -84,7 +86,7 @@ test('walkers follow a dragged walking path: a spectator takes it while it is un
     assert.ok(c && length({ x: a.x + 0.25, y: a.y + 0.25 }, c) <= direct * 1.02, `${bend}: a cart cuts across (${length({ x: a.x + 0.25, y: a.y + 0.25 }, c).toFixed(1)} tiles)`);
   }
   // from beside the path's two ends the spectators come on to it and go along it
-  const legs = drag(a, b), f = fieldOf(legs, 'cart-walk'), from = { x: 6.5, y: 14.5 }, to = { x: 40.5, y: 15.5 }, r = findRoute(f, SPECTATOR, from, to)!;
+  const legs = drag(a, b, 45), f = fieldOf(legs, 'cart-walk'), from = { x: 6.5, y: 14.5 }, to = { x: 40.5, y: 15.5 }, r = findRoute(f, SPECTATOR, from, to)!;
   assert.ok(r && shareOn(f, from, r, G.walk) > 0.6, `from beside its ends: ${(shareOn(f, from, r, G.walk) * 100).toFixed(0)}% on the path`);
   // the rough is dear enough that a path twice as long as the way across is not taken: the line a spectator cuts when the path wanders far round
   const far = [...drag({ x: 10, y: 10 }, { x: 10, y: 50 }), ...drag({ x: 10, y: 50 }, { x: 70, y: 50 }), ...drag({ x: 70, y: 50 }, { x: 70, y: 12 })], g = fieldOf(far, 'cart-walk');

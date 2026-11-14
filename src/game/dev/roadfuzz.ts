@@ -6,6 +6,7 @@
 import { CLASSES, type Node, type Pt, type RoadNetwork, type Seg } from '../network';
 import { checkGraph, type LaneGraph } from '../sim/lanes';
 import { MIN_ANGLE, MIN_SEP } from '../snap';
+import { BEND_45 } from '../route-legs';
 import type { Game } from '../engine';
 
 /** a seeded generator (mulberry32) */
@@ -137,7 +138,7 @@ export function roadFuzz(game: Game, seed = 1, steps = 300, opts: { at?: Pt; hal
     const r = R(); let action = '';
     if (r < 0.55) {
       // a route of 2 to 4 clicks
-      G.setTool('road'); G.cancelRoute(); G.roadClass = pick(classes); G.bendMode = R() < 0.5 ? 90 : 45; G.replaceMode = R() < 0.35;
+      G.setTool('road'); G.cancelRoute(); G.roadClass = pick(classes); { const b45 = R() < 0.5; G.bendMode = BEND_45 && b45 ? 45 : 90; /* (#1317: the 45 degree bend is off for now: the draw is still made, so the seeds keep their sequence) */ } G.replaceMode = R() < 0.35;
       const shift = R() < 0.2; if (shift) G.keys.add('Shift'); else G.keys.delete('Shift');
       const pts: Pt[] = []; for (let k = 0, n = 2 + Math.floor(R() * 3); k < n; k++) pts.push(point());
       for (const p of pts) click(p, (x, y) => G.roadClick(x, y));

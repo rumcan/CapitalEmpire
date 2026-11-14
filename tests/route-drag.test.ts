@@ -7,7 +7,8 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { DRAG_MIN_TILES, DRAG_PX, isSecondTap, routeAct, RouteGesture, type RouteInput, type Tap } from '../src/game/route-input';
+import { bendWords, DRAG_MIN_TILES, DRAG_PX, isSecondTap, routeAct, RouteGesture, type RouteInput, type Tap } from '../src/game/route-input';
+import { BEND_45 } from '../src/game/route-legs';
 import { keySheet } from '../src/ui/keymap';
 
 /** a stand-in road tool for the drag (css px on the map, 10 px a tile; a stand-in route's length is the straight line from its last point to the pointer) */
@@ -134,10 +135,36 @@ test('the engine\'s glue: the press that began the route arms the drag, the rele
   assert.match(eng, /private roadRelease\(\) \{[\s\S]*?this\.addRoutePoint\(t\)[\s\S]*?this\.finishRoute\(\);/);
   // the hint line and the panel say it, and click, click, double-click is named as still working
   assert.match(app, /g\.routeDragging \? `Let go to build/);
-  assert.match(app, /Press, drag and let go to build a \$\{g\.cls\.name\.toLowerCase\(\)\} \(it bends at 45°\), or click to start a route/);
+  assert.match(app, /Press, drag and let go to build a \$\{g\.cls\.name\.toLowerCase\(\)\}\$\{BW\.bends\}, or click to start a route/);
   assert.match(app, /Drag from where it starts to where it ends and let go to build it[^<]*Or click point by point: double-click the last point or press Enter to build/);
   const s = keySheet({ golf: true, range: true, ui: null }).find(x => x.id === 'in:road')!, row = (k: string) => s.rows.find(r => r.keys === k)?.what ?? '';
   assert.match(row('Press, drag, let go'), /^build the run from the press to the pointer; Esc or a right click while you drag cancels it/);
-  assert.match(row('Q'), /^bends of 45° \(every game starts with them\) or 90°/);
   assert.match(s.rows[0]!.keys, /^1 – \d+$/, 'the class keys stay the first row');
+});
+
+test('the 45 degree bend is off for now (#1317): no hint, panel, Help or Keys sheet line speaks of it or of a Q key; switched on, the words come back', () => {
+  assert.equal(BEND_45, false);
+  const off = bendWords(false), on = bendWords(true);
+  for (const [k, v] of Object.entries(off)) assert.ok(v === null || !/45|\bQ\b/.test(Array.isArray(v) ? v.join(' ') : v), `off: ${k} says "${JSON.stringify(v)}"`);
+  assert.equal(off.bends, ''); assert.equal(off.handKeys, ''); assert.equal(off.qRow, null);
+  assert.match(off.shift, /^Hold Shift for one straight run\.$/); assert.match(off.help, /^Hold Shift to draw one straight run in any of the eight directions\.$/);
+  assert.match(on.bends, /45°/); assert.match(on.handKeys, /Q for 90°/); assert.match(on.shift, /Bends are 45° \(Q: 90°\)/); assert.match(on.help, /Bends are 45° \(Q toggles 90° bends\)/);
+  assert.deepEqual(on.qRow, ['Q', 'bends of 45° (every game starts with them) or 90°']);
+  // the Keys sheet: no Q row and nothing about 45 degrees on the road card, now; asked for with the bend on, the Q row is the first after Tab
+  const card = (o: { bend45?: boolean }) => keySheet({ golf: true, range: true, ui: null, ...o }).find(x => x.id === 'in:road')!;
+  assert.ok(!card({}).rows.some(r => r.keys === 'Q' || /45/.test(r.what) || /45/.test(r.keys)), 'no Q row, no 45 on the card');
+  assert.ok(card({ bend45: false }).rows.every(r => !/45/.test(r.what)), 'asked off: the same');
+  const q = card({ bend45: true }).rows.find(r => r.keys === 'Q'); assert.ok(q && /^bends of 45° \(every game starts with them\) or 90°/.test(q.what), 'asked on: the Q row is back');
+  for (const golf of [true, false]) assert.ok(!JSON.stringify(keySheet({ golf, range: golf, ui: null })).includes('45°'), `the whole sheet (golf ${golf}) says nothing of 45 degrees`);
+  // App.tsx: every word of it goes through the constant: outside the Bends chips (drawn only while it is on) the source says nothing of 45 degrees or a Q key for the bend
+  const app = readFileSync('src/App.tsx', 'utf8'), chips = app.slice(app.indexOf('{BEND_45 && <>'), app.indexOf('</>}', app.indexOf('{BEND_45 && <>')) + 4);
+  assert.match(chips, /Bends<\/span>[\s\S]*\[45, 90\]/, 'the chips block is the one found');
+  const rest = app.replace(chips, '');
+  assert.ok(!/45°/.test(rest), `App.tsx outside the chips: ${(rest.match(/.{40}45°.{40}/) ?? [''])[0]}`);
+  assert.ok(!/Q: 90|Q toggles|Q for 90/.test(rest), 'and no Q for the bend');
+  assert.match(app, /\{BW\.shift\}/); assert.match(app, /\{BW\.help\}/); assert.match(app, /\$\{BW\.handKeys\}/);
+  // the range guide's walking path step does not speak of it either
+  const guide = readFileSync('src/game/ext/progressive-ui/guide.ts', 'utf8'); assert.ok(!/45/.test(guide.slice(guide.indexOf("id: 'guide-range-path'"), guide.indexOf("id: 'guide-range-carpark'"))));
+  // the engine: the Q key's guard is the constant, the stress test keeps its draws
+  assert.match(readFileSync('src/game/engine.ts', 'utf8'), /if \(BEND_45 && \(e\.key === 'q' \|\| e\.key === 'Q'\)\)/);
 });

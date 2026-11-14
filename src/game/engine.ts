@@ -222,7 +222,7 @@ import { surfaceOfTex, unitBuildCost } from './golf/costs';
 import { bizName, inSentence, inTheWay, overlaps, rectPoly, ringWhy, routeObstacles, structureObstacles, type Obstacle, type Structure } from './route-obstacles';
 import { inRingClear, judgeRing, rangePieceName, ringGrows, type RingProp, type RingVerdict } from './ring-clear';
 import { isSecondTap, routeAct, RouteGesture, type RouteInput, type Tap } from './route-input';
-import { DEFAULT_BEND, legsLength, routeLegs } from './route-legs';
+import { BEND_45, DEFAULT_BEND, bendInUse, legsLength, routeLegs } from './route-legs';
 import { buyAdjacentBlock, blockOnRoad, blockOnWater, clampBlock, mergeParcelBounds, playInWay, polyInParcels, startWhy, type LandRoad, type ParcelLandClass } from './golf/parcels';
 import { BAND_LABEL, LandSale } from './golf/land-sale';
 import { buildCourseStatsPanel, type CourseStatsPanel } from './golf/coursestats';
@@ -700,7 +700,7 @@ export class Game {
   // tools
   /** the tool in hand (T328, #936: Select at first; it was the road tool, so a ?start=town game, which picks no tool, opened with the Traffic
    *  panel docked over the course. The range start picks the Course tool itself) */
-  tool: Tool = 'select'; roadClass: ClassId = 'street'; bendMode: BendMode = DEFAULT_BEND /* #1276: 45 degrees in every game, every build and after every load; Q toggles 90 for the visit only */; lineStyle: LineStyle = 0;
+  tool: Tool = 'select'; roadClass: ClassId = 'street'; bendMode: BendMode = DEFAULT_BEND /* #1276, #1317: 90 in every game, every build and after every load while BEND_45 (route-legs.ts) is off; on, 45, and Q toggles 90 for the visit only */; lineStyle: LineStyle = 0;
   /** the road tool's scope (T084): 'course' when the Course menu's Paths & drives opened it (it lays the course's cart paths and drives), 'town'
    *  from Roads; scopeClass: the class last picked in each scope, picked again on coming back to it */
   roadScope: 'town' | 'course' = 'town'; private scopeClass: Record<'town' | 'course', ClassId> = { town: 'street', course: 'cart-dirt' };
@@ -5451,9 +5451,9 @@ export class Game {
     const stubs = ringStubs(this.net, legs), cuts = this.replaceMode ? replaceCuts(this.net, legs, this.cls) : [];
     return [...stubs, ...cuts.filter(c => !stubs.some(x => x.seg === c.seg))];
   }
-  /** legs from `from` to `p` on the 0, 45 and 90 degree lattice (route-legs.ts routeLegs): by default a diagonal run and a straight one with one 45 degree bend between
-   *  (#1276), a right angle in the 90 degree mode (Q), one straight run in any of the eight directions with Shift */
-  private legsTo(from: Pt, p: Pt, straight = false): Leg[] { return routeLegs(from, p, this.bendMode, straight, this.roadStep()); }
+  /** legs from `from` to `p` on the 0, 45 and 90 degree lattice (route-legs.ts routeLegs): a right angle (the 90 degree bend: the only one while BEND_45 is off, #1317); with
+   *  BEND_45 on, a diagonal run and a straight one with one 45 degree bend between by default (#1276), a right angle with Q; one straight run in any of the eight directions with Shift */
+  private legsTo(from: Pt, p: Pt, straight = false): Leg[] { return routeLegs(from, p, bendInUse(this.bendMode), straight, this.roadStep()); }
   /** a snap onto a road, seen from the route's last point: the point on that road square across from `from`, so the new road meets it
    *  straight (a T) instead of an L whose corner and last stretch would lie on the road itself; the snap as it is when that foot is off the
    *  road's span (within MIN_SEP of its ends) or `from` lies on the road's line */
@@ -7077,6 +7077,7 @@ export class Game {
     // T396 (#1064; the owner, 2026-11-08: "ctrl/z should always work"): Ctrl+Z and Ctrl+Y (Ctrl+Shift+Z) work from any tool, on the one stack the brush, the props and the practice tools
     // above already use: the roads, paths, drives and junctions a player builds are steps on it now, in time order with the course, the paint, the props and the settings
     if ((e.ctrlKey || e.metaKey) && !e.altKey && /^[yz]$/i.test(e.key)) { e.preventDefault(); if (e.key.toLowerCase() === 'z' && !e.shiftKey) this.paint.undoTop(); else this.paint.redoTop(); return; }
+    if (BEND_45 && (e.key === 'q' || e.key === 'Q')) { this.bendMode = this.bendMode === 90 ? 45 : 90; this.emit(); return; } // (#1317: the 45 degree bend is off for now: Q does nothing; route-legs.ts BEND_45)
     switch (e.key) {
       case 'Enter': this.routeInput('enter'); break;
       case 'Backspace': this.routeInput('backspace'); break;
@@ -7087,7 +7088,6 @@ export class Game {
       case 'o': case 'O': this.showAccess = !this.showAccess; this.emit(); break;
       case 'f': case 'F': this.setFlow(!this.showFlow); this.emit(); break;
       case 'b': case 'B': this.panel = this.panel === 'bottlenecks' ? null : 'bottlenecks'; if (this.panel) this.traffic.requestReport(); this.emit(); break;
-      case 'q': case 'Q': this.bendMode = this.bendMode === 90 ? 45 : 90; this.emit(); break;
       case 'e': case 'E': this.replaceMode = !this.replaceMode; this.toast(this.replaceMode ? 'Replace: on (roads in the way are bulldozed)' : 'Replace: off', 'info'); this.emit(); break;
       case 'r': case 'R': if (this.tool === 'toll') { this.tollFlip = !this.tollFlip; if (this.tollHover) this.tollUpdate(this.tollHover.mx, this.tollHover.my); this.emit(); }
         else if (this.tool === 'business') { this.bizRot = !this.bizRot; if (this.bizHover) this.bizUpdate(this.bizHover.mx, this.bizHover.my); this.emit(); }
