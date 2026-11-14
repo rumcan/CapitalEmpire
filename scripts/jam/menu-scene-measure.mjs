@@ -22,6 +22,9 @@ try {
   // a game with a save first, so Continue exists (this page is the game's own boot: #play=new)
   const g0 = await ctx.newPage(); await g0.goto(`${base}#play=new`);
   await g0.waitForFunction(() => window.__game?.ready, null, { timeout: 240000 }); await g0.waitForTimeout(2500);
+  // (J9: a new game chooses its start first and saves nothing until it is laid: take the automatic start, then save)
+  await g0.evaluate(() => { const g = window.__game; if (g.startPick && g.startPickAuto) g.startPickAuto(); });
+  await g0.waitForFunction(() => !window.__game.startPick, null, { timeout: 60000 }); await g0.waitForTimeout(2000);
   await g0.evaluate(async () => { await window.__game.save(); }); await g0.close();
 
   /** one load of the page without the scene (#scene=off: the card over the game's own boot) */
