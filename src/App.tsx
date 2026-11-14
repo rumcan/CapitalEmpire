@@ -76,6 +76,10 @@ import { GREENKEEPING, JAM } from './game/features';
 import { COST_GROUPS, INCOME_LINES } from './game/golf/reports';
 import { debtOf } from './game/golf/finance';
 import { TitleCard } from './ui/jam/TitleCard';
+import { MenuScene, posterOf } from './ui/jam/MenuScene';
+import { SHOW_STOPS, choiceHash, choiceOf, pickStart, sceneOff, showBoot, showWanted, weakMachine } from './game/showcase';
+import { ShowDirector } from './game/showcase-director';
+import { loadShowcaseSave } from './game/showcase-load';
 import { formatPercent } from './ui/TournamentResults';
 import { SeasonReportCard } from './ui/golf/SeasonReportCard';
 import { GolfLeaderboard } from './ui/GolfLeaderboard';
@@ -178,17 +182,72 @@ export default function App() {
   const overlayRef = useRef<HTMLCanvasElement>(null);
   const [fatal, setFatal] = useState('');
   const [game, setGame] = useState<Game | null>(null);
-  /** what the engine boots with (T157): the lot lab's light boot under ?lotlab (dev builds), else the game's; the lab draws no HUD or minimap */
-  const [boot] = useState(() => bootFor(location.search, import.meta.env.DEV));
+  // J12 (#1271): the living scene behind the jam's title card (game/showcase.ts). A choice made on the card reloads the page with it in the address (the scene's world is never the
+  // player's), so a page that finds one starts the game at once, as it always did; else the scene runs when this page may spare it; else the card shows its still picture over the game's own boot
+  const [choice] = useState(() => (JAM ? choiceOf(location.hash) : null));
+  const [sceneWanted] = useState(() => {
+    if (!JAM) return false;
+    const q = new URLSearchParams(location.search), nav = navigator as Navigator & { deviceMemory?: number; connection?: { saveData?: boolean } };
+    let reduced = false; try { reduced = matchMedia('(prefers-reduced-motion: reduce)').matches; } catch { /* no media queries */ }
+    return showWanted({ jam: true, chose: !!choice, reducedMotion: reduced, hidden: document.hidden, weak: weakMachine(nav), other: sceneOff(location.hash) || ['bench', 'fixture', 'osmcourse', 'lotlab', 'lotreview'].some(k => q.has(k)) });
+  });
+  /** what the engine boots with (T157): the lot lab's light boot under ?lotlab (dev builds), else the game's (the scene's: no save read or written, no money floats); the lab draws no HUD or minimap */
+  const [boot] = useState(() => { const b = bootFor(location.search, import.meta.env.DEV); return sceneWanted && b.kind === 'game' ? showBoot(b) : b; });
   const lab = boot.kind === 'lab';
   const [, bump] = useReducer((x: number) => x + 1, 0);
-  // the jam build's title card (ui/jam/TitleCard.tsx): shown over the game until New game / Continue; the game waits (paused) behind it
-  const [titleOpen, setTitleOpen] = useState(JAM);
+  // the jam build's title card (ui/jam/TitleCard.tsx): shown over the game until New game / Continue; the game waits (paused) behind it (the scene's runs: engine.ts show)
+  const [titleOpen, setTitleOpen] = useState(JAM && !choice);
   const [hasSave, setHasSave] = useState(false);
-  useEffect(() => { if (JAM) { document.title = 'Fairway Fortune'; void readSave().then(r => setHasSave(r.status === 'ok')); } }, []);
+  const saveSeen = useRef<Promise<boolean> | null>(null);
+  useEffect(() => { if (JAM) { document.title = 'Fairway Fortune'; const p = readSave().then(r => r.status === 'ok'); saveSeen.current = p; void p.then(setHasSave); } }, []);
+  // the choice is read once: the address is cleared at once, so a reload of the game (F5) never starts a new one
+  useEffect(() => { if (choice) { try { history.replaceState(null, '', location.pathname + location.search); } catch { /* the address stays */ } } }, [choice]);
   const titlePaused = useRef(false);
-  useEffect(() => { if (game?.ready && titleOpen && !titlePaused.current) { titlePaused.current = true; game.setSpeed(0); } }, [game?.ready, titleOpen, game]);
-  const leaveTitle = (fresh: boolean) => { if (!game) return; if (fresh && hasSave) game.newTown(); setTitleOpen(false); game.setSpeed(1); };
+  useEffect(() => { if (game?.ready && titleOpen && !game.show && !titlePaused.current) { titlePaused.current = true; game.setSpeed(0); } }, [game?.ready, titleOpen, game]);
+  /** the title card's choice made, and the game it starts once the engine is ready (a click before that waits for it, as the card was only there after it) */
+  const [starting, setStarting] = useState(false);
+  const pending = useRef<boolean | null>(null);
+  const startGame = (g: Game, fresh: boolean) => { if (fresh && hasSave) g.newTown(); setTitleOpen(false); g.setSpeed(1); };
+  const leaveTitle = (fresh: boolean) => {
+    if (starting) return;
+    if (sceneWanted) { // the scene's world is not the player's: the page starts again with the choice in its address and the game boots as it always did
+      setStarting(true);
+      try { history.replaceState(null, '', choiceHash(fresh ? 'new' : 'continue')); } catch { /* the address stays: the page starts on the title again */ }
+      window.setTimeout(() => location.reload(), 60);
+      return;
+    }
+    if (!game?.ready) { pending.current = fresh; setStarting(true); return; }
+    startGame(game, fresh);
+  };
+  useEffect(() => { if (game?.ready && pending.current !== null) { const f = pending.current; pending.current = null; setStarting(false); startGame(game, f); } }, [game?.ready]); // eslint-disable-line react-hooks/exhaustive-deps
+  // a page started by the card's choice: the game's own boot, then the new game (when a save stood) or the saved one, at the normal speed
+  const choiceDone = useRef(false);
+  useEffect(() => {
+    if (!game?.ready || !choice || choiceDone.current) return;
+    choiceDone.current = true;
+    void (async () => { const had = await (saveSeen.current ?? Promise.resolve(false)); if (choice === 'new' && had) game.newTown(); game.setSpeed(1); })();
+  }, [game?.ready, choice, game]);
+  // the scene: the director glides the camera over the prepared world; its first picture fades the still out; a machine too slow for it gives way to the still
+  const snapRef = useRef<HTMLCanvasElement>(null);
+  const [posterOn, setPosterOn] = useState(true);
+  const [startStop] = useState(() => {
+    let last: number | null = null; try { const v = localStorage.getItem('fairwayfortune.scene'); if (v !== null && Number.isFinite(Number(v))) last = Number(v); } catch { /* no storage */ }
+    const k = pickStart(SHOW_STOPS.length, Math.random(), last); try { localStorage.setItem('fairwayfortune.scene', String(k)); } catch { /* no storage */ }
+    return k;
+  });
+  const director = useRef<ShowDirector | null>(null);
+  useEffect(() => {
+    if (!game?.ready || !sceneWanted || director.current) return;
+    if (!game.show) { try { history.replaceState(null, '', '#scene=off'); } catch { /* none */ } location.reload(); return; } // the scene's world could not be had: start again without it
+    if (!snapRef.current) return;
+    const d = new ShowDirector(game, SHOW_STOPS, startStop, snapRef.current, e => { if (e === 'first') setPosterOn(false); else if (e === 'slow') { d.end(); game.freeze(); setPosterOn(true); } });
+    director.current = d; d.begin();
+  }, [game?.ready, sceneWanted, game, startStop]);
+  useEffect(() => () => { director.current?.end(); director.current = null; }, []);
+  useEffect(() => { if (JAM) { try { performance.mark('ff-title-card'); } catch { /* no marks */ } } }, []);
+  useEffect(() => { if (game?.ready) { try { performance.mark('ff-game-ready'); } catch { /* no marks */ } } }, [game?.ready]);
+  /** the jam's title card is up (and the HUD behind it hidden: the picture is the scene's, or the still's) */
+  const onTitle = JAM && titleOpen && !lab;
   // T356: the downloaded courses (T358's library) the Course flyout offers under Place a real course: listed when the page starts and each time that flyout opens (openFly); a change draws the menu again
   useEffect(() => { void refreshKept(); return watchKept(bump); }, []);
   const [help, setHelp] = useState(false);
@@ -290,6 +349,7 @@ export default function App() {
     const canvas = overlayRef.current!;
     let g: Game;
     try { g = new Game(canvasRef.current!, canvas, boot); } catch (e) { setFatal((e as Error).message); return; }
+    if (sceneWanted) g.showcaseLoader = loadShowcaseSave; // J12: the living scene's prepared world, in place of the player's save
     // debug and headless-screenshot hooks
     Object.assign(window as unknown as Record<string, unknown>, { __game: g, __CLASSES: CLASSES });
     // the road builder's stress test (dev only): __roadFuzz(seed, steps) drives the road tools at random and reports what broke (on the live
@@ -534,7 +594,7 @@ export default function App() {
       />
 
       {fatal && <div className="absolute inset-0 z-50 flex items-center justify-center bg-[#15200f] p-8 text-center text-red-200">This game needs WebGL2 and OffscreenCanvas. {fatal}</div>}
-      {game && !game.ready && (
+      {game && !game.ready && !onTitle && (
         <div className="absolute inset-0 z-50 flex flex-col items-center justify-center bg-[#15200f]">
           <div className="text-3xl font-bold tracking-tight text-amber-200" style={JAM ? { fontFamily: 'Georgia, serif' } : undefined}>{JAM ? 'Fairway Fortune' : 'Maple Falls'}</div>
           <div className="mt-1 text-sm uppercase tracking-[0.3em] text-amber-400/80">{JAM ? 'A golf club money game' : 'Town Builder'}</div>
@@ -545,7 +605,14 @@ export default function App() {
         </div>
       )}
 
-      {game && game.ready && !lab && (
+      {/* J12 (#1271): the jam's title card is up at once, over the scene (the game running behind it) or its still picture; the HUD waits behind it */}
+      {onTitle && (
+        <>
+          <MenuScene poster={posterOf(SHOW_STOPS[startStop]!.id)} alt={SHOW_STOPS[startStop]!.name} posterOn={posterOn} snapRef={snapRef} />
+          <TitleCard canContinue={hasSave} starting={starting} onNew={() => leaveTitle(true)} onContinue={() => leaveTitle(false)} />
+        </>
+      )}
+      {game && game.ready && !lab && !onTitle && (
         <>
           <div ref={topBar} className="pointer-events-none absolute left-0 right-0 top-0 z-30 flex flex-wrap items-start justify-between gap-2 p-3">
             <div className="pointer-events-auto glass flex items-center gap-1.5 px-3 py-2 min-[1600px]:gap-3 min-[1600px]:px-4">
@@ -1121,7 +1188,6 @@ export default function App() {
           )}
 
           <Minimap game={game} />
-          {JAM && titleOpen && <TitleCard canContinue={hasSave} onNew={() => leaveTitle(true)} onContinue={() => leaveTitle(false)} />}
           {dev && readouts && <PerfPanel game={game} />}
           {dev && readouts && <TilesPanel game={game} />}
         </>

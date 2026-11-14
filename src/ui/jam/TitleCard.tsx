@@ -13,11 +13,17 @@ export const HOW_TO_PLAY: readonly string[] = [
   'Click your cash to open the Bank: borrow (see the total interest first), repay early, or save.',
 ]; // (T459, the jam MVP: no goal, no murabaha: docs/JAM.md "Future development")
 
-export function TitleCard({ canContinue, onNew, onContinue }: { canContinue: boolean; onNew: () => void; onContinue: () => void }) {
+/** J12 (#1271): the dark pool behind the card: a soft ellipse a little wider than the card, fading to nothing. It is never a layer over the picture (the owner's rule:
+ *  no flat colour washes hiding the art); the card sits on the left of a wide screen and the scene's point of interest on the right (showcase.ts SHOW_ANCHOR) */
+export const CARD_POOL = 'radial-gradient(closest-side, rgba(6,10,4,0.62) 0%, rgba(6,10,4,0.46) 55%, rgba(6,10,4,0) 100%)';
+
+export function TitleCard({ canContinue, onNew, onContinue, starting = false }: { canContinue: boolean; onNew: () => void; onContinue: () => void; starting?: boolean }) {
   const [how, setHow] = useState(false);
   return (
-    <div className="absolute inset-0 z-[60] flex items-center justify-center bg-slate-950/80 p-4 backdrop-blur-sm" data-testid="title-card" role="dialog" aria-modal="true" aria-label={TITLE}>
-      <div className="glass w-full max-w-md rounded-2xl border border-white/10 p-6 text-center shadow-2xl">
+    <div className="absolute inset-0 z-[60] flex items-center justify-center p-4 min-[900px]:justify-start min-[900px]:pl-[7vw]" data-testid="title-card" role="dialog" aria-modal="true" aria-label={TITLE}>
+      <div className="relative w-full max-w-md">
+      <div className="pointer-events-none absolute -inset-x-24 -inset-y-20" style={{ background: CARD_POOL }} aria-hidden="true" data-testid="title-pool" />
+      <div className="glass relative w-full rounded-2xl border border-white/10 p-6 text-center shadow-2xl">
         <div className="text-[11px] font-semibold uppercase tracking-[0.2em] text-amber-400/80">A golf club money game</div>
         <h1 className="font-display mt-1 text-4xl font-bold leading-tight text-[var(--gold-hi)]">{TITLE}</h1>
         <p className="mt-2 text-sm text-slate-300">{TAGLINE}</p>
@@ -31,6 +37,8 @@ export function TitleCard({ canContinue, onNew, onContinue }: { canContinue: boo
           <button className={`btn w-full !py-2 text-base ${canContinue ? '' : 'font-semibold'}`} onClick={onNew} data-testid="title-new" autoFocus={!canContinue}>New game</button>
           <button className="btn w-full" onClick={() => setHow(!how)} aria-expanded={how} data-testid="title-how">{how ? 'Hide how to play' : 'How to play'}</button>
         </div>
+        {starting && <div className="mt-3 text-xs text-slate-400" role="status" data-testid="title-starting">Mowing the fairways and filling the ball buckets…</div>}
+      </div>
       </div>
     </div>
   );

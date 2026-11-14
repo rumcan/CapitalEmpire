@@ -28,6 +28,7 @@ import { STRUCT_COST, STRUCT_MAX, groundClass, highwayRoute, longestRun, splitBy
 import { CULL_MIN_PX, FULL_UV, GLRenderer, POINT_STRIDE, SHADOW_STRIDE, SPRITE_STRIDE, VECTOR_STRIDE } from './gl';
 import { GroundCache } from './ground-cache';
 import { GAME_BOOT, clampCentre, flatTerrain, type BootOptions } from './boot';
+import { SHOW_GOLFERS } from './showcase';
 import { TILE_BANDS, TILES_REVISION, anchorAt, bandAt, bandRange, bandsAhead, cellOf, cellsIn, coverageOf, drawnScale, nearUntil, nextBand, tiledFamily, tileIndex, tilePermutation, tileScreenPx, tileSize, tileSpec } from './painted-tiles';
 import { desertLeavesDev, onPaintedSurfaces, paintedSurfaces, setDesertSurfaces } from './painted-surfaces-live';
 import { borderDefault, crewBandLook, finishBorders, finishOf, finishStripeLook, mowSpec } from './course-finish';
@@ -3078,6 +3079,11 @@ export class Game {
   private saveTimer = 0; private blocksTimer = 0;
   /** set when the slot holds a save we could neither read nor back up: never write over it (T042) */
   private saveBlocked = false;
+  /** J12 (#1271, the living scene behind the jam's title card, showcase.ts): the loader of the prepared world (set before init; its save, or null when it cannot be had) and
+   *  whether this game is that scene: its world is the prepared save, never read from or written to the player's slot (saveBlocked), and nothing of the game's own
+   *  shows or answers (no toasts, keys, clicks or wheel); onAfterDraw is called in the frame's task right after the picture is drawn (the director copies it for a cross-fade) */
+  showcaseLoader: (() => Promise<SaveV5 | null>) | null = null; show = false; showFailed = false;
+  onAfterDraw: ((now: number) => void) | null = null;
   /** the town's lots: their props by key, the keys queued to apply, the lots staged by the contact sheet (stageLots; they win until a reset) */
   private lotProps = new Map<string, Prop[]>(); private lotQueue = new Set<string>(); private staged = new Map<string, { g: LotGeom; st: ComposeState }>();
   /** the lay-bys' quads by their 'curb:' key (their pts), and the boxes (grown by a tile) of the lay-bys that went or changed since the lots last heard */
@@ -3310,6 +3316,7 @@ export class Game {
   subscribe(fn: () => void) { this.listeners.add(fn); return () => { this.listeners.delete(fn); }; }
   emit() { for (const l of this.listeners) l(); }
   toast(text: string, kind: Toast['kind'] = 'info', scene?: SceneRef) {
+    if (this.show) return; // (J12: the scene behind the title card shows nothing of the game's own)
     this.toasts.push({ id: this.toastId++, text, t: performance.now(), kind, ...(scene ? { scene } : {}) });
     if (this.toasts.length > 4) this.toasts.shift();
     this.emit();
@@ -3361,8 +3368,12 @@ export class Game {
     if (benchScene) { this.benchMode = true; this.saveBlocked = true; }
     // T340 (#967): ?osmcourse=<id> is a new game on that real course in place of any stored save, which is neither read nor written over
     if (this.osmId && !fixName) { this.osmSpec = await loadOsmSpec(this.osmId); this.osmLand = this.osmSpec ? await loadOsmLand(this.osmId) : null; if (this.dead) return; if (this.osmSpec) this.saveBlocked = true; }
-    const read = opts.bench || fixName || this.osmSpec || !this.boot.save ? null : await readSave(); if (this.dead) return;
-    const save = fixture ?? read?.save ?? null;
+    // J12 (#1271): the living scene behind the jam's title card plays a prepared world in place of the stored save, which is neither read nor written over (saving is off)
+    let showSave: SaveV5 | null = null;
+    if (this.showcaseLoader && !fixName && !opts.bench && !this.osmSpec) { try { showSave = await this.showcaseLoader(); } catch { showSave = null; } if (this.dead) return; }
+    if (showSave) this.saveBlocked = true;
+    const read = opts.bench || fixName || showSave || this.osmSpec || !this.boot.save ? null : await readSave(); if (this.dead) return;
+    const save = fixture ?? showSave ?? read?.save ?? null;
     // T357: a saved game's real ground unpacks (the platform's inflate is async) before load() reads it; one that does not unpack is a flat course, not a failed load
     this.landIn = save?.golf?.land ? await unpackLand(save.golf.land) : null; if (this.dead) return;
     // T042: an unreadable save is kept as a backup (then a new game starts); if the backup failed, the slot is never written over
@@ -3379,10 +3390,12 @@ export class Game {
     else if (!save && this.newGame()) { /* a new golf game: the range start's road and range, or the old start's town and course (see newGame) */ }
     else if (!save || !this.load(save)) {
       // a save that read fine but failed to load: keep its bytes before the new game's autosave (T042), or never save over it
-      if (save) { if (await backupTownSlot('loadfailed')) readNote = { text: 'The save could not be loaded. It is kept as a backup; a new game started.', kind: 'warn' }; else { this.saveBlocked = true; readNote = { text: 'The save could not be loaded or backed up: saving is off for this session so it is not overwritten.', kind: 'warn' }; } if (this.dead) return; }
+      if (save && showSave) this.showFailed = true; // (J12: the scene's world did not load: the page starts again without the scene, and the player's slot is not touched)
+      else if (save) { if (await backupTownSlot('loadfailed')) readNote = { text: 'The save could not be loaded. It is kept as a backup; a new game started.', kind: 'warn' }; else { this.saveBlocked = true; readNote = { text: 'The save could not be loaded or backed up: saving is off for this session so it is not overwritten.', kind: 'warn' }; } if (this.dead) return; }
       setLotModel(LATEST_LOT_MODEL); this.farmModel = FARM_MODEL; this.farmsNew.clear(); this.golf = null; this.genTerrain(newSeed()); this.seedTowns();
     }
     else loaded = save;
+    if (showSave && loaded === showSave) { this.show = true; this.dayBusy = SHOW_GOLFERS; } // J12: the scene's course has a busy day (its golfers are always on the holes)
     tick(0.7);
     const tl = performance.now();
     this.ground.init(this.terrain);
@@ -6475,6 +6488,7 @@ export class Game {
 
   // ---------- input ----------
   pointerDown(e: PointerEvent) {
+  if (this.show) return; // (J12: the scene behind the title card takes no input)
   const mx = e.offsetX, my = e.offsetY;
   this.keys.clearMoves(); this.keys.syncMods(e); // T330: a map click lets go of a stuck movement key (a held one comes back with its repeat)
   this.moneyAt(this.tileAt(mx, my)); // T147: a spend this click makes floats up here
@@ -6592,6 +6606,7 @@ export class Game {
     }
   }
   pointerMove(e: PointerEvent) {
+  if (this.show) return;
   const mx = e.offsetX, my = e.offsetY;
   this.ghostMouse = { mx, my };
   if (this.badgeDrag) { const b = this.badgeDrag; b.mx = mx; b.my = my; if (Math.hypot(mx - b.sx, my - b.sy) > 4) b.moved = true; } // T174
@@ -6630,6 +6645,7 @@ export class Game {
     }
   }
   pointerUp() {
+    if (this.show) return;
     if (this.estatePlacing && this.tool === 'course' && this.estateTool.dragging) { const gm = this.ghostMouse; if (gm) this.estateTool.up(gm.mx, gm.my); else this.estateTool.cancel(); } // T353: the row is laid
     const d = this.dragging; this.moneyAt(this.hover); // T147: a spend this release makes floats up here
     if (this.markerDrag) this.holeCardDrop(); // T174
@@ -6662,8 +6678,9 @@ export class Game {
   junctionName(n: Node): string { const names: string[] = []; for (const a of n.arms) { const s = this.roadNameOfSeg(a.seg); if (s) names.push(s); } return this.names.junction(names); }
   /** the name of the junction at tile position (x, y) (a node's position), or '' when there is no junction there */
   junctionNameAt(x: number, y: number): string { const n = this.net.nodeAt({ x, y }); return n ? this.junctionName(n) : ''; }
-  doubleClick() { this.routeInput('double'); if (this.paintOn) this.paint.doubleClick(); if (this.youControls()) this.youRun(); }
+  doubleClick() { if (this.show) return; this.routeInput('double'); if (this.paintOn) this.paint.doubleClick(); if (this.youControls()) this.youRun(); }
   wheel(e: WheelEvent) {
+    if (this.show) { e.preventDefault(); return; }
     this.youAlt.other();
     e.preventDefault();
     // T356: a real course in hand: the wheel with Shift (or Ctrl) turns it a step, with Alt freely (the browser gives Shift's wheel as a sideways one)
@@ -6731,6 +6748,7 @@ export class Game {
   /** shows or hides the parking demand overlay (the Car park panel) and keeps the worker's heat on with it; callers emit */
   setParkDemand(on: boolean) { this.showParkDemand = on; this.traffic.heatOn(on || this.showFlow); }
   keyDown(e: KeyboardEvent) {
+    if (this.show) return; // (J12: the scene behind the title card: no pan, pause or tool keys)
     const el = e.target as HTMLInputElement | null, tag = el?.tagName, typing = tag === 'INPUT' || tag === 'TEXTAREA';
     // Esc (P23 4.10): the topmost menu or card first (even from a checkbox or slider in it), then the tool's own step, then out to Select; a
     // focused text box keeps Esc from the tool
@@ -12907,14 +12925,38 @@ export class Game {
     const t1 = performance.now();
     this.draw(now);
     const t2 = performance.now();
+    this.onAfterDraw?.(now); // (J12: the scene's director copies the picture for a cross-fade, in this task, while the canvas still holds it)
     // perf counters (rolling one second)
     this.frameTimes.push(frameMs); if (this.frameTimes.length > 60) this.frameTimes.shift();
     const avg = this.frameTimes.reduce((s, v) => s + v, 0) / this.frameTimes.length;
     Object.assign(this.perf, { fps: 1000 / avg, frameMs: avg, cpuMs: t2 - t0, drawMs: t2 - t1, instances: this.gl.stats.instances, draws: this.gl.stats.draws, uploadKB: this.gl.stats.uploadFloats * 4 / 1024, chunksPending: this.ground.busy, simActive: this.traffic.stats.active, simTickMs: this.traffic.stats.tickMs, simMaxTickMs: this.traffic.stats.maxTickMs, pop: this.traffic.pop, jobs: this.traffic.jobs, built: this.traffic.built });
     this.perf.frames++;
   };
-  /** a hook for the benchmark's camera path */
+  /** a hook for the benchmark's camera path (J12: and the living scene's camera, showcase-director.ts) */
   onFrame: ((now: number, dt: number) => void) | null = null;
+  /** J12: the scene gives way to its still picture (a machine too slow for it): the frame loop stops, so the workers idle and the GPU rests; the page starts the game afresh when the player chooses */
+  freeze() { cancelAnimationFrame(this.raf); this.onFrame = null; this.onAfterDraw = null; }
+  /** J12: the chunks of the ground the view at camera c draws and the trees round it, asked for a few seconds before the scene cuts to it (the same asks the draw makes,
+   *  at a lower priority than what is on screen), so the cut finds them baked; called each frame of the warm-up (it keeps them from being evicted) */
+  warmView(c: Camera, now: number) {
+    const ze = c.z * this.dpr, hw = this.cw / 2 / ze, hh = this.ch / 2 / ze, X0 = c.X - hw, X1 = c.X + hw, Y0 = c.Y - hh, Y1 = c.Y + hh;
+    const { district: mid, artL, rasterL: L } = grassZoomLevels(c.z, this.dpr), kind = mid ? 'm' : 'g', CW = mid ? MID_W : CHUNK_W, CH = mid ? MID_H : CHUNK_H;
+    const ts = tileSpec(this.tileBand ?? nextBand(c.z, null), this.dpr), i0 = Math.floor(X0 / CW), i1 = Math.floor(X1 / CW), j0 = Math.floor(Y0 / CH), j1 = Math.floor(Y1 / CH);
+    if (this.ground.castersUsed) this.plantForest(i0 * CW, j0 * CH, (i1 + 1) * CW, (j1 + 1) * CH, LIVING_PLANT_MARGIN); else this.plantForest(X0, Y0, X1, Y1);
+    for (let j = j0; j <= j1; j++) for (let i = i0; i <= i1; i++) {
+      if (!this.ground.castersUsed || this.casterReady(i * CW, j * CH, (i + 1) * CW, (j + 1) * CH)) this.ground.need(this.ground.tile(kind, i, j), L, 2e5 + Math.hypot((i + 0.5) * CW - c.X, (j + 0.5) * CH - c.Y) * ze, now, artL, ts);
+    }
+  }
+  /** J12: whether the ground the view at camera c draws is baked (every chunk's picture current at the level the zoom wants) and its trees planted: the scene shows a stop when it is */
+  viewReady(c: Camera): boolean {
+    const ze = c.z * this.dpr, hw = this.cw / 2 / ze, hh = this.ch / 2 / ze;
+    const { district: mid, artL, rasterL: L } = grassZoomLevels(c.z, this.dpr), kind = mid ? 'm' : 'g', CW = mid ? MID_W : CHUNK_W, CH = mid ? MID_H : CHUNK_H;
+    const ts = tileSpec(this.tileBand ?? nextBand(c.z, null), this.dpr);
+    for (let j = Math.floor((c.Y - hh) / CH); j <= Math.floor((c.Y + hh) / CH); j++) for (let i = Math.floor((c.X - hw) / CW); i <= Math.floor((c.X + hw) / CW); i++) {
+      const t = this.ground.tile(kind, i, j); if (!pictureCurrent(t, L, artL, ts) || t.stale) return false;
+    }
+    return this.perf.atlasSoft < 0.06;
+  }
 
   /** T080: tell the atlas which cells this frame draws (on screen, weighted by their screen px) and which are near the view (the prepared
    *  sprite tiles within half a screen around it, every few frames), at the mip the zoom needs; atlas-pages.ts streams them, finest wants and
