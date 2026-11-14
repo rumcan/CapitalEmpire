@@ -118,6 +118,26 @@ built in dirt parking lot"; "lets place the range for him. he has to buy it ... 
   left takes 1.6% off the range's appeal; Clear on the range card costs $250 and pays its scrap back. For Cinderlinks (J6): `Engine.rangeJunk()` /
   `RangeScene.junk` give each pile's library id, name, world spot and metres from the mats; the save holds `golf.range.junk` (range frame u, v).
 
+## J8: a picture on every action (#1261, the owner 2026-11-14)
+"add ALOT more images to the UI. especially on stuff you can do", then "a picture on every step of the tutorial and the guide". Seven sheets of 12 painted tiles in the Build menu tiles' style
+(`art/theme-consistency/generated/ui/golf-build-tool-tiles-sheet-v3..v9.png`) are cut by `scripts/assets/prep-ui-tool-tiles.mjs` (`--version v3` to `v9`) into 144 px WebPs in
+`src/assets/ui/tiles/` (84 more; `ACTION_TILES` in `src/ui/tool-tiles.ts`; provenance beside each sheet, crops in `art/ui-tool-tiles/sheet-vN.json`). The six sound tiles of v9 (`SOUND_TILES`: radio,
+boombox, headphones, bell, radio-off, jukebox) are cut for J11 (#1270, the music radio); no action wears them yet.
+- **One component**: `src/ui/ActionTile.tsx` draws a tile as a square thumbnail (`alt=""`, `aria-hidden`: the button's words name it; fixed width and height, lazy; px sizes scale
+  with Settings' text size because the UI layer is zoomed). Small (28) on a chip, row (40) beside a row, big (56 to 64) on a card's main action. A button gets its picture inside it, so the
+  whole of it is the click.
+- **Which tile where** is data: the tables in `tool-tiles.ts` (`RANGE_UPGRADE_TILE`, `SESSION_TILE`, `PRACTICE_BUILD_TILE`, `PLACE_TILE`, `BRANCH_TILE` ...), a `tile` field on a tip
+  (`ui/jam/tips.ts`), on a rail item (`rail-items.ts`), on a stat chip, and on every guide and tutorial step (`GuideStep.tile`: `RANGE_GUIDE`, `GUIDE`, `JAM_TOUR`, `TOWN_TOUR`; the guide card draws it
+  at the left of the step's row, bigger on the open step). A new action or step takes a tile the same way; `tests/ui-action-tiles.test.ts` fails a tile id with no file, a step with no tile and a tile
+  on no action.
+- **Where**: the Range card and its ball room tree, the Build menu (a tile card shows it whole on the tile's navy, never cropped to the 92 px strip), the Bank, the hole card, the Holes panel
+  and New hole's wizard, the rail (Select, Walk, Bulldoze; in the jam also Build, Range and Course) and the top bar (the Cash chip, Me, a picture beside the speed bar and the zoom buttons: the pause
+  and zoom icons stay, they show a state and a direction; at Settings' largest Text size, 125%, the speed bar's and zoom's pictures are left out: with them the top bar needs a second row on a 1366 px screen
+  and the month note would cover it), the title card, the tutorial and the guide, the tips, the statement, Scene, Help's Keys, the bankrupt pop-up, Settings' rows.
+- **Golf view** (a separate page): `packages/cinderlinks/build.mjs` copies the `drill-*`, `shot-*` and `club-*` tiles and `jump-to-ball`, `gimme` and `go-for-it` into `public/cinderlinks/tiles/` (the page cannot
+  import them); the practice drills panel, the shot panel (Curve and Flight ends, Tour spin, Go for it), the club tabs, Jump to ball and Gimme show them, and the host's Back to the course button wears
+  its tile. `npm run cinder:build` needs no dev server holding `public/cinderlinks` open (Windows refuses to delete it).
+
 ## Button tests: run them before every jam build (T459, the owner 2026-11-13: "are you guys not testing buttons?")
 A dead button must not ship. Two checks:
 - **`npm test`** includes `tests/jam-buttons.test.ts` (node, seconds): every tutorial step's Show me does something (`tour.ts tourShowOf`) and every

@@ -1,6 +1,7 @@
 // T219 (P27, #594): an iconic place's card (the drive-in, the high school): its name after the town, what it is, the residents it opened at, its
 // size, and the art it still waits for (its stand-ins). Opened by clicking any of its props with the select tool. No economy yet.
 import { Icon } from './Icon';
+import { ActionTile, TILE_SMALL } from './ActionTile'; // J8 (#1261): Scene wears its painted tile
 
 /** what the card shows (engine.ts placeCard) */
 export interface PlaceCardView { id: string; name: string; kind: string; pop: number; w: number; d: number; standIns: string[]; town: number }
@@ -14,7 +15,7 @@ export function PlaceCard({ view, onClose, right = 'right-3', onScene }: { view:
           <div className="text-[12px] text-slate-400">{view.kind} · a landmark of the town</div>
         </div>
         <div className="flex shrink-0 items-center gap-1">
-          {onScene && <button className="chip" onClick={onScene} title="Set the scene: a picture of the place" data-testid="place-scene"><Icon name="camera" size={16} />Scene</button>}
+          {onScene && <button className="chip" onClick={onScene} title="Set the scene: a picture of the place" data-testid="place-scene"><ActionTile tile="scene" size={TILE_SMALL} />Scene</button>}
           <button className="btn-icon" onClick={onClose} title="Close"><Icon name="close" size={18} /></button>
         </div>
       </div>

@@ -19,6 +19,7 @@
 import type { Tool } from '../game/types';
 import { CHIP_STAGE, NEW_BADGE_IDS, STAGE_WHY, type GolfChipId, type ProgressiveUiState, type RailGroupId } from '../game/ext/progressive-ui';
 import type { IconName } from './Icon';
+import type { ToolTile } from './tool-tiles';
 import type { TipParts } from './tip';
 import { GREENKEEPING, JAM } from '../game/features';
 
@@ -38,6 +39,8 @@ export interface RailExtra { id: GolfChipId; label: string; icon: IconName }
 export interface RailItem {
   id: string; label: string; icon: IconName; key: string; section: 'course' | 'town' | null; group: RailGroupId; tools: RailTool[];
   extras?: RailExtra[]; only?: 'golf' | 'classic'; action?: 'range' | 'build'; // (J7: 'build' opens the jam's Build menu)
+  /** J8 (#1261): a painted tile the rail draws in place of the icon (the icon stays the fallback and the name) */
+  tile?: ToolTile;
   /** T366: the words the rail button draws when the label is too long for one line (the tip and the aria-label keep the full label) */
   short?: string;
 }
@@ -87,7 +90,7 @@ const RAIL_FULL: readonly RailItem[] = [
     { id: 'props', label: 'Buildings', key: '', icon: 'buildings', only: 'golf', view: { where: 'town', group: 'buildings' } },
     { id: 'business', label: 'Buildings', key: 'M', icon: 'buildings', only: 'classic' },
   ] },
-  { id: 'bulldoze', label: 'Bulldoze', icon: 'bulldozer', key: 'X', section: null, group: 'bulldoze', tools: [{ id: 'bulldoze', label: 'Bulldoze', key: 'X', icon: 'bulldozer' }] },
+  { id: 'bulldoze', label: 'Bulldoze', icon: 'bulldozer', key: 'X', section: null, group: 'bulldoze', tools: [{ id: 'bulldoze', label: 'Bulldoze', key: 'X', icon: 'bulldozer' }], tile: 'bulldoze' },
 ];
 
 /** The jam build's rail, the MVP (docs/JAM.md, T459: "simplify the ui and the game"): Select, Range, Course (holes and buildings; no Tournament, no Land for
@@ -99,11 +102,13 @@ export const JAM_RAIL_CUT: readonly string[] = ['towndecor', 'ground', 'traffic'
  *  Build menu (ui/jam/BuildMenu.tsx, picture cards for the range, its car park and upgrades, holes, cart paths, the clubhouse and the practice area), which
  *  replaces the building flyouts; Cart paths & roads and the Facilities tile leave the rail (their tools open from the menu) and Range and Course open their
  *  card and their Holes panel at a click */
-export const JAM_BUILD_ITEM: RailItem = { id: 'build', label: 'Build', icon: 'buildings', key: '', section: 'course', group: 'course', tools: [{ id: 'select', label: 'Build', key: '', icon: 'buildings' }], only: 'golf', action: 'build' };
+export const JAM_BUILD_ITEM: RailItem = { id: 'build', label: 'Build', icon: 'buildings', key: '', section: 'course', group: 'course', tools: [{ id: 'select', label: 'Build', key: '', icon: 'buildings' }], only: 'golf', action: 'build', tile: 'surveyor-turf' };
+/** J8 (#1261): the jam rail's painted tiles, where a tile reads at the rail's size: Build (the surveyor's stakes), Range (its bays) and Course (a hole); Bulldoze has its own in RAIL_FULL */
 export function jamRail(full: readonly RailItem[]): readonly RailItem[] {
   const kept = full.filter(r => !JAM_RAIL_CUT.includes(r.id)), at = kept.findIndex(r => r.id === 'select') + 1;
   return [...kept.slice(0, at), JAM_BUILD_ITEM, ...kept.slice(at)].map((r): RailItem => {
-    if (r.id === 'course') return { ...r, extras: [], tools: r.tools.filter(t => !t.within) }; // (#1272: no Facilities tile: Practice opens from the Build menu)
+    if (r.id === 'course') return { ...r, extras: [], tools: r.tools.filter(t => !t.within), tile: 'golf-hole' }; // (#1272: no Facilities tile: Practice opens from the Build menu)
+    if (r.id === 'range') return { ...r, tile: 'range-bays' };
     if (r.id === 'paths') return { ...r, tools: r.tools.filter(t => t.id === 'path') };
     if (r.id === 'traffic') return { ...r, label: 'Car park', tools: r.tools.filter(t => t.id === 'park').map(({ sub: _sub, ...t }) => ({ ...t, label: 'Car park' })) };
     return r;

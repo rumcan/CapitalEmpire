@@ -5,6 +5,7 @@ import { STUCK_PLAY_SEC } from './index';
 import type { Rect } from '../../golf/mode';
 import { JAM } from '../../features';
 import { practicePath } from '../../golf/menu-path';
+import type { ToolTile } from '../../../ui/tool-tiles'; // (a type only: J8, #1261, each step names its painted tile)
 
 /** the facts the guide reads: the player's counters (T033a), placed course pieces by kind, tournaments run, and the guide's saved state */
 export interface GuideFacts {
@@ -44,8 +45,9 @@ export interface GuideFacts {
  *  edge, the shack and the tee a walking path joins) */
 export interface GuideTarget { ui?: string; map?: 'newHoleSpot' | 'nearestRoad' | 'walkway' }
 
-/** one step of the guide; reward (T239, a range start's steps): the dollars its tick pays */
-export interface GuideStep { id: string; n: number; title: string; body: string; done: 'next' | 'auto'; target: GuideTarget; reward?: number }
+/** one step of the guide; reward (T239, a range start's steps): the dollars its tick pays; tile (J8, #1261; the owner: a picture on every step of the tutorial
+ *  and the guide): the painted tile (ui/tool-tiles.ts) the guide card shows at the left of the step's row, bigger on the open step */
+export interface GuideStep { id: string; n: number; title: string; body: string; done: 'next' | 'auto'; target: GuideTarget; reward?: number; tile?: ToolTile }
 
 /** an engine event that moves the guide on at once (T188): a hole built, the clubhouse placed, a car park built */
 export type GuideEvent = 'hole' | 'clubhouse' | 'carpark';
@@ -63,6 +65,7 @@ export const GUIDE_STEPS = 7;
 export const GUIDE: readonly GuideStep[] = Object.freeze([
   {
     id: 'guide-welcome',
+    tile: 'front-door',
     n: 1,
     title: 'Welcome to your golf resort',
     body: 'Your course and town are ready; prepare for your first tournament at the end of August.',
@@ -71,6 +74,7 @@ export const GUIDE: readonly GuideStep[] = Object.freeze([
   },
   {
     id: 'guide-hole',
+    tile: 'golf-hole',
     n: 2,
     title: 'Lay out a new hole',
     body: 'Open Holes and press New hole: click a tee, then a green, and Build.',
@@ -79,6 +83,7 @@ export const GUIDE: readonly GuideStep[] = Object.freeze([
   },
   {
     id: 'guide-connect',
+    tile: 'cart-path',
     n: 3,
     title: 'Connect your hole',
     body: 'Lay a cart path or build a road to link your hole to the road network.',
@@ -87,6 +92,7 @@ export const GUIDE: readonly GuideStep[] = Object.freeze([
   },
   {
     id: 'guide-park',
+    tile: 'gravel-car-park',
     n: 4,
     title: 'Build a car park',
     body: 'Place a car park beside a road so arriving spectators have space to park.',
@@ -95,6 +101,7 @@ export const GUIDE: readonly GuideStep[] = Object.freeze([
   },
   {
     id: 'guide-gate',
+    tile: 'draw-drive',
     n: 5,
     title: 'Open an entrance gate',
     body: 'Place an entrance gate from Event so visitors can enter the venue.',
@@ -103,6 +110,7 @@ export const GUIDE: readonly GuideStep[] = Object.freeze([
   },
   {
     id: 'guide-tournament',
+    tile: 'grandstand-scoreboard',
     n: 6,
     title: 'Play the tournament',
     body: 'Open the Season card and skip to the tournament, then watch the spectator crowd arrive.',
@@ -111,6 +119,7 @@ export const GUIDE: readonly GuideStep[] = Object.freeze([
   },
   {
     id: 'guide-results',
+    tile: 'statement',
     n: 7,
     title: 'Review your results',
     body: 'Check the tournament verdict and get ready for Year 2 with full tools unlocked.',
@@ -126,6 +135,7 @@ export const GUIDE: readonly GuideStep[] = Object.freeze([
 export const RANGE_GUIDE: readonly GuideStep[] = Object.freeze([
   {
     id: 'guide-range-place',
+    tile: 'place-range',
     n: 1,
     title: 'Place your driving range',
     body: 'Your land is bare: only your trailer. Range › Place the driving range puts it in your hand: move it along the county road and click to build it.',
@@ -135,6 +145,7 @@ export const RANGE_GUIDE: readonly GuideStep[] = Object.freeze([
   },
   {
     id: 'guide-range-lot',
+    tile: 'gravel-car-park',
     n: 2,
     title: 'Place its car park',
     body: 'Range › Place the car park: a packed-dirt lot beside the road, near the shack. Golfers drive on without one.',
@@ -144,6 +155,7 @@ export const RANGE_GUIDE: readonly GuideStep[] = Object.freeze([
   },
   {
     id: 'guide-range-buckets',
+    tile: 'sell-buckets',
     n: 3,
     title: 'Sell your first buckets, then fetch the balls',
     // (T459 #1211: the ball room's 200 balls are gone in a month; a player never told to pick them up took $1,200 in a whole season)
@@ -154,6 +166,7 @@ export const RANGE_GUIDE: readonly GuideStep[] = Object.freeze([
   },
   {
     id: 'guide-range-greens',
+    tile: 'target-green',
     n: 4,
     title: 'Place the target greens',
     body: 'On the range card, Target greens puts three greens with flags in your hand: click them onto your range, and more golfers stop.',
@@ -163,6 +176,7 @@ export const RANGE_GUIDE: readonly GuideStep[] = Object.freeze([
   },
   {
     id: 'guide-range-path',
+    tile: 'walking-path',
     n: 5,
     title: 'Lay a walking path',
     body: 'Cart paths & roads › Walking path: from the car park to the shack and along behind the mats. Your golfers walk it instead of the dirt.',
@@ -172,6 +186,7 @@ export const RANGE_GUIDE: readonly GuideStep[] = Object.freeze([
   },
   {
     id: 'guide-range-carpark',
+    tile: 'paved-car-park',
     n: 6,
     title: 'Gravel, then pave, the car park',
     body: 'On the range card: Gravel the car park (more cars, tidier rows), then Pave the car park (painted bays and lamps).',
@@ -181,6 +196,7 @@ export const RANGE_GUIDE: readonly GuideStep[] = Object.freeze([
   },
   {
     id: 'guide-range-turf',
+    tile: 'turf-tee',
     n: 7,
     title: 'Turf the tee box',
     body: 'On the range card, Turf the tee box: grass under the mats, golfers pay a dollar more.',
@@ -190,6 +206,7 @@ export const RANGE_GUIDE: readonly GuideStep[] = Object.freeze([
   },
   {
     id: 'guide-range-practice',
+    tile: 'putting-green',
     n: 8,
     title: 'Place the practice area, build a putting green',
     body: `Range › Place the practice area: put it on your land near the car park. Then ${practicePath('›')} › Putting green on it.`, // (#1282: Facilities is the Course menu's sixth tile)
@@ -199,6 +216,7 @@ export const RANGE_GUIDE: readonly GuideStep[] = Object.freeze([
   },
   {
     id: 'guide-range-hole',
+    tile: 'golf-hole',
     n: 9,
     title: 'Build the first hole',
     body: 'Your land has room for a first nine; Land for sale buys more as the course grows. Open Holes, press New hole, click a tee, then a green, and Build.',
@@ -342,6 +360,7 @@ export function guideSkip(): { tutorial: 'off' } {
 /** the stuck player's offer (P23 4.2): New hole, pointing at the Course tool and a good spot */
 export const GUIDE_STUCK: GuideStep = Object.freeze({
   id: 'guide-stuck',
+  tile: 'golf-hole',
   n: 2,
   title: 'Need a hand with your first hole?',
   body: 'Open Holes and press New hole: click a tee, then a green, and the whole hole is planned for you. Build when it looks right.',

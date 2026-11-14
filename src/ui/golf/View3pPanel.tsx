@@ -6,7 +6,7 @@ import { useEffect, useRef, useState } from 'react';
 import type { Game } from '../../game/engine';
 import { View3p, type View3pFrame, type View3pHost } from '../../game/golf/play/view3p';
 import type { HostMsg } from '../../game/golf/play/protocol3p';
-import { Icon } from '../Icon';
+import { ActionTile } from '../ActionTile'; // J8 (#1261): Back to the course wears its painted tile
 import { downloadText, fileName, pickText } from './files3p';
 
 export function View3pPanel({ game }: { game: Game }) {
@@ -74,7 +74,7 @@ export function View3pPanel({ game }: { game: Game }) {
         <button className="chip bg-slate-950/70" title="Save this course as a file another player can play" onClick={() => { const t = game.shareSave3p(); if (t) downloadText(`${fileName(JSON.parse(t).name ?? 'course')}.course.json`, t); }}>Share course</button>
       </div>}
       <button className="btn-icon absolute right-3 top-3 bg-slate-950/70" onClick={() => bridge.current?.close('host')} title="Back to the course (Esc)" aria-label="Back to the course">
-        <Icon name="close" size={18} />
+        <ActionTile tile="back-to-course" size={32} />
       </button>
     </section>
   );

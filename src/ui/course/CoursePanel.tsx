@@ -14,6 +14,7 @@ import { GRID_KINDS } from '../../game/paint-tool';
 import { BunkerPickEntry } from '../BunkerSettings';
 import { OsmNote } from './OsmNote';
 import { TEXTURE_PAINTER } from '../flyout-menu';
+import { ActionTile, TILE_BIG, TILE_SMALL } from '../ActionTile'; // J8 (#1261): New hole, Seed, Sod and Edit Hole Layout wear painted tiles
 
 /** the paint modes that live under More options (the brush is Shape by hand's; plan is New hole's) */
 const MORE_MODES = new Set(['draw', 'piece', 'height', 'plant', 'hole']);
@@ -47,6 +48,7 @@ export function CoursePanel({ game, looks = false, onLooks }: { game: Game; look
       {p.mode === 'myhole' && p.myHole ? <MyHolePlace game={game} /> : plan ? <HoleWizardPanel game={game} /> : (
         <button className={`pill-gold ${lock ? 'opacity-50' : ''}`} data-primary="new-hole" data-guide="new-hole" aria-disabled={!!lock} title={lock ? `New hole: ${lock}` : 'Click the tee, then the green: the whole hole is planned, ready to shape and build'} onClick={() => newHole(game)}>
           <span className="pill-plus" aria-hidden>{lock ? <LockMark size={12} /> : '+'}</span>
+          <ActionTile tile="golf-hole" size={TILE_BIG - 20} className={lock ? 'opacity-60' : ''} />
           <span className="min-w-0"><span className="block">New hole</span>{lock ? <small data-testid="new-hole-lock">{lock}</small> : !shape && <small>Click a tee, then a green</small>}</span>
         </button>
       )}
@@ -213,15 +215,15 @@ function MoreOptions({ game, looks, onLooks }: { game: Game; looks: boolean; onL
           {game.golfMode && (
             <Sub title="Planting">
               <div className="flex flex-wrap gap-1.5" role="group" aria-label="Planting">
-                <button className={`chip ${p.plantKind === 'seed' ? 'chip-on' : ''}`} aria-pressed={p.plantKind === 'seed'} title="Seed: the cheap way; the grass grows in over a few months" onClick={() => { p.plantKind = 'seed'; game.emit(); }}>Seed · grows in</button>
-                <button className={`chip ${p.plantKind === 'sod' ? 'chip-on' : ''}`} aria-pressed={p.plantKind === 'sod'} title="Sod: rolls of grown turf, playable at once, 3 to 5 times the price" onClick={() => { p.plantKind = 'sod'; game.emit(); }}>Sod · ready now, 3–5×</button>
+                <button className={`chip ${p.plantKind === 'seed' ? 'chip-on' : ''}`} aria-pressed={p.plantKind === 'seed'} title="Seed: the cheap way; the grass grows in over a few months" onClick={() => { p.plantKind = 'seed'; game.emit(); }}><ActionTile tile="seed" size={TILE_SMALL} />Seed · grows in</button>
+                <button className={`chip ${p.plantKind === 'sod' ? 'chip-on' : ''}`} aria-pressed={p.plantKind === 'sod'} title="Sod: rolls of grown turf, playable at once, 3 to 5 times the price" onClick={() => { p.plantKind = 'sod'; game.emit(); }}><ActionTile tile="sod" size={TILE_SMALL} />Sod · ready now, 3–5×</button>
               </div>
             </Sub>
           )}
           <Sub title="Hole · plants · ground">
             <div className="flex flex-wrap gap-1.5">
               <button className={`chip ${p.mode === 'hole' ? 'chip-on' : ''}`} aria-pressed={p.mode === 'hole'} onClick={() => p.setMode('hole')}>Saved holes <span aria-hidden>▸</span></button>
-              {game.golfMode && p.hasPlan(n) && <button className="chip" title={`Hole ${n}'s layout: move the tee, the green and the bends; the tee markers and the flag follow, no grass is laid`} onClick={() => p.editPlan(n)}>{`Edit Hole Layout ${n}`}</button>}
+              {game.golfMode && p.hasPlan(n) && <button className="chip" title={`Hole ${n}'s layout: move the tee, the green and the bends; the tee markers and the flag follow, no grass is laid`} onClick={() => p.editPlan(n)}><ActionTile tile="edit-hole" size={TILE_SMALL} />{`Edit Hole Layout ${n}`}</button>}
               <button className={`chip ${p.mode === 'plant' ? 'chip-on' : ''}`} aria-pressed={p.mode === 'plant'} onClick={() => p.setPlant(p.plantBrush)}>Plants <span aria-hidden>▸</span></button>
             </div>
             {p.mode === 'hole' && (

@@ -1,0 +1,62 @@
+{
+  "schema": 1,
+  "id": "golf:build-tool-tiles",
+  "category": "ui",
+  "catalogueItem": null,
+  "ticket": "J8 (#1261): the owner, 2026-11-14: \"add ALOT more images to the UI. especially on stuff you can do.\"",
+  "subjobKey": "1261-golf-build-tool-tiles-sheet-v4",
+  "date": "2026-11-14",
+  "stage": "action-tiles-v4-build-and-holes",
+  "background": "opaque-charcoal-with-navy-rounded-cards",
+  "transparent": false,
+  "references": [
+    "art/theme-consistency/generated/ui/golf-build-tool-tiles-sheet-v2.png",
+    "art/theme-consistency/generated/ui/golf-build-tool-tiles-sheet-v1.png"
+  ],
+  "output": "art/theme-consistency/generated/ui/golf-build-tool-tiles-sheet-v4.png",
+  "provenance": "art/theme-consistency/generated/ui/golf-build-tool-tiles-sheet-v4.provenance.json",
+  "grid": {
+    "columns": 4,
+    "rows": 3
+  },
+  "subjects": [
+    "open-bays",
+    "ball-dispenser",
+    "gravel-car-park",
+    "paved-car-park",
+    "putting-green",
+    "play-hole",
+    "edit-hole",
+    "frame-trees",
+    "draw-drive",
+    "seed",
+    "sod",
+    "bulldoze"
+  ],
+  "prompt": "Use only the two pictures attached to this message (ignore any earlier pictures). They are tile sheets already in this painted isometric golf game: match their style, scale, framing, camera angle, detail level and colours exactly.\n\nCreate an image, 4:3 landscape: a sheet of TWELVE tiny isometric dioramas in a 4 x 3 grid. Each scene sits on its own small slab of ground, on its own dark navy (#1E2A44) rounded square; the twelve squares are the same size, evenly spaced, and do not touch, on a flat charcoal (#1C1F26) background. Light from the upper right, soft shadows falling to the lower left, warm autumn colours, the year 1985 (no modern things). NO lettering, numbers, logos or symbols anywhere: every sign, board, paper, tag and screen is blank. No people. Each scene must be easy to tell apart from the others at a small size, with one clear main object. Row by row, left to right:\nRow 1: (1) a row of four open-air green hitting mats separated by low white dividers, a ball basket at each; (2) a 1985 golf ball dispenser machine, boxy painted steel with a chute, a wire bucket under the chute catching balls; (3) a small gravel car park with two 1985 cars parked and timber wheel stops; (4) fresh black asphalt with crisp white parking bay lines and a small yellow road roller.\nRow 2: (5) a putting green with three holes, each with a tiny flag on a short pin, and a putter lying beside a ball; (6) a tee box with two tee markers, a golf bag on its stand and a ball on a wooden tee, a fairway running away behind; (7) a drawing board on trestles with a blueprint plan of a golf hole (shapes only), a pencil, and two surveyor's stakes in the grass; (8) three young trees held by stakes along the edge of a fairway, with a spade stuck in the soil.\nRow 3: (9) a short gravel driveway curving to an open timber gate, with a shovel and two orange road cones; (10) a wheeled seed spreader on raked bare soil with two plain sacks of grass seed; (11) a pallet stacked with rolls of green turf, one roll lying open on the ground; (12) a small yellow bulldozer pushing a heap of rubble and broken planks.",
+  "authority": {
+    "file": "F:/ClaudeTemp/jam/queue-ui-tiles.json",
+    "queueId": "golf-build-tool-tiles-sheet~v4",
+    "sha256": "51d03196e9b44fa70989b66822ba5e10809745baaab9043c26d1ad9db3d4ca9c"
+  },
+  "generator": "ChatGPT image generation through the chatgpt-bridge (D:/AI/chatgpt-bridge), 2026-11-14",
+  "generatorSource": "D:/AI/chatgpt-bridge/in/golf-build-tool-tiles-sheet-1view-v4.png",
+  "referenceHashes": [
+    {
+      "file": "art/theme-consistency/generated/ui/golf-build-tool-tiles-sheet-v2.png",
+      "sha256": "b8fe637c1ff3b6bfa301ea6597732ae4030b0bb54c1b9149423367325947527b"
+    },
+    {
+      "file": "art/theme-consistency/generated/ui/golf-build-tool-tiles-sheet-v1.png",
+      "sha256": "6c02339c56474af6ae64e953972244a6bc4d9d716c30b8d080d3893a9e5d2b6f"
+    }
+  ],
+  "referenceGuides": [
+    "D:/AI/chatgpt-bridge/guides/ui/style-tiles-v2.png",
+    "D:/AI/chatgpt-bridge/guides/ui/style-tiles-v1.png"
+  ],
+  "lighting": "screen upper-right toward lower-left; soft shadows to the lower left; warm autumn colours; 1985",
+  "integrationStatus": "cut-and-shown-in-the-ui-by-J8; pending-owner-visual-review",
+  "processing": "Native generator output copied byte-for-byte (the generatorSource file has the same sha256); no repaint, resample, mirror, recolour or transform. Cut by scripts/assets/prep-ui-tool-tiles.mjs (version v4) into 144 px rounded WebP tiles in src/assets/ui/tiles/; crop rectangles and hashes in art/ui-tool-tiles/sheet-v4.json.",
+  "sheetSha256": "6787833ad83e83be69b320a9a868c52ad019c9a1fe9a2e2f563cf812c54f0f8e"
+}
