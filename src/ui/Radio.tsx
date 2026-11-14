@@ -1,7 +1,7 @@
 // J11 (#1270): the music radio's control, at the bottom left beside the minimap and the club's name (ui/Minimap.tsx): one small pill, its left half the painted radio (lit when the
 // music plays, under its cloth when it is off: the play and pause key, so a first-time player turns the music on with one click), its right half a drop for the details: the track
-// and who made it, Previous, Play / Pause, Next, and the Music volume with its mute (the same settings as Settings' own Music row). It opens upward and to the left (over the map, never over the rail or the minimap, and clear of the cards at the right), and stays clear of the rail, the
-// top bar (J8's one row at the largest Text size is untouched) and the cards at the right. The radio is OFF until the player turns it on and nothing is downloaded before
+// and who made it, Previous, Play / Pause, Next, and the Music volume with its mute (the same settings as Settings' own Music row). It opens upward and to the left (over the map, never over the rail or the minimap, and clear of the cards at the right), and the
+// top bar (J8's one row at the largest Text size) is untouched. The radio is OFF until the player turns it on and nothing is downloaded before
 // (game/sound/radio.ts). The pictures are the owner's painted ones: the radio tiles of J8 (src/assets/ui/tiles: radio, radio-off, boombox) with the icon set's play, pause,
 // rewind and skip for the transport keys; RADIO_PIC is the one place a different picture goes.
 import { useEffect, useRef, useState, useSyncExternalStore } from 'react';

@@ -32,7 +32,12 @@ const ctx = await browser.newContext({ viewport: { width: 1366, height: 860 }, d
 // the counters: the page's own code is not touched, only what it asks of the browser is counted
 await ctx.addInitScript(() => {
   try { if (!sessionStorage.getItem('__keep')) localStorage.clear(); } catch { /* none */ }
-  const S = window.__snd = { ctx: 0, osc: 0, src: 0, plays: [], audio: [], fetched: [] };
+  const S = window.__snd = { ctx: 0, osc: 0, src: 0, plays: [], audio: [], fetched: [], log: [] };
+  // a diagnostic log (what made a sound, and what happened on the page just before): the first frequency of each oscillator, the panels that came and went, the clicks and keys
+  { const sv = AudioParam.prototype.setValueAtTime; AudioParam.prototype.setValueAtTime = function (v, t) { if (this.defaultValue === 440 && this.maxValue > 20000 && !this.__logged) { this.__logged = true; S.log.push([Math.round(performance.now()), 'tone', Math.round(v)]); } return sv.call(this, v, t); }; }
+  const tid = n => { try { return n.nodeType === 1 ? (n.getAttribute('data-testid') || (n.querySelector && n.querySelector('[data-testid]')?.getAttribute('data-testid')) || '') : ''; } catch { return ''; } };
+  addEventListener('DOMContentLoaded', () => { new MutationObserver(rs => { for (const r of rs) { for (const n of r.addedNodes) { const t = tid(n); if (t) S.log.push([Math.round(performance.now()), '+', t]); } for (const n of r.removedNodes) { const t = tid(n); if (t) S.log.push([Math.round(performance.now()), '-', t]); } } }).observe(document.body, { childList: true, subtree: true }); });
+  for (const k of ['click', 'change', 'keydown']) addEventListener(k, e => S.log.push([Math.round(performance.now()), k, (e.target && e.target.getAttribute && (e.target.getAttribute('data-testid') || e.target.getAttribute('aria-label'))) || e.key || '']), true);
   const AC = window.AudioContext;
   window.AudioContext = class extends AC { constructor(...a) { super(...a); S.ctx++; S.last = this; } };
   for (const [P, k] of [[window.OscillatorNode.prototype, 'osc'], [window.AudioBufferSourceNode.prototype, 'src']]) { const o = P.start; P.start = function (...a) { S[k]++; return o.apply(this, a); }; }
@@ -162,8 +167,11 @@ try {
   const bar = await page.evaluate(() => { const r = document.querySelector('[data-testid="radio"]')?.getBoundingClientRect(); return r ? { right: r.right, w: innerWidth } : null; });
   check('the radio pill is inside the window at 125%', !!bar && bar.right <= bar.w, JSON.stringify(bar));
   await shot('radio-card-125');
-  const nIdle0 = (await counts()).nodes; await settle(4000);
-  check('an idle page makes no sound by itself (no panel flicker, no stray timers)', (await counts()).nodes === nIdle0, `nodes ${nIdle0} -> ${(await counts()).nodes}`);
+  const nIdle0 = (await counts()).nodes, tIdle0 = await page.evaluate(() => Math.round(performance.now())); await settle(4000);
+  const idleLog = await page.evaluate(t => __snd.log.filter(e => e[0] >= t), tIdle0);
+  // (the camera is close on the range after the tutorial's first Show me, so the range's ambience is on, and a bird now and then, 2300 to 3000 Hz, is meant: anything else is a stray)
+  const strays = idleLog.filter(e => e[1] === 'tone' && !(e[2] >= 2200 && e[2] <= 3100));
+  check('an idle page makes no sound by itself but the range\x27s birds (no panel flicker, no stray timers)', strays.length === 0, `nodes ${nIdle0} -> ${(await counts()).nodes}${idleLog.length ? `; the page did: ${JSON.stringify(idleLog.map(e => [e[0] - tIdle0, ...e.slice(1)]))}` : ''}`);
   await page.keyboard.press('Escape'); await settle(200);
   check('Escape closes the radio card', (await page.locator('[data-testid="radio-card"]').count()) === 0);
   await gear.click(); await settle(300); await page.locator('[data-scale="1"]').click(); await settle(200); await page.keyboard.press('Escape');

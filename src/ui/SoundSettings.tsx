@@ -1,6 +1,6 @@
 // J11 (#1270): the sound rows of Settings (App.tsx's gear menu, under the Text size): the music's and the effects' volume, each with its mute, the tutorial voice's switch (only when
 // voice files are shipped) and one mute for everything (F8). The settings are the sound core's (game/sound/core.ts): kept in this browser, and the same ones the radio's volume and
-// mute use. Every control is a real button or slider, so the keyboard reaches them (Tab, arrows). The rows wear J8's painted tiles (headphones, bell, the covered radio).
+// mute use. Every control is a real button or slider, so the keyboard reaches them (Tab, arrows). The rows wear J8's painted tiles (headphones, bell, jukebox, the covered radio).
 import { useSyncExternalStore, type ReactNode } from 'react';
 import { sound } from '../game/sound/core';
 import { MUTE_KEY } from '../game/sound/ui-hook';
@@ -46,7 +46,7 @@ export function SoundSettings({ children }: { children?: ReactNode }) {
       {voice.available() && (
         <label className="flex cursor-pointer items-center gap-2 px-2 py-1.5 text-sm" data-tip="A voice reads each tutorial step aloud when it opens, at the effects' volume. The words are always on the card">
           <input type="checkbox" checked={p.voice} data-testid="sound-voice" onChange={e => sound.setVoice(e.target.checked)} />
-          Tutorial voice
+          <ActionTile tile="jukebox" size={TILE_SMALL + 4} />Tutorial voice
         </label>
       )}
       {children}
