@@ -14,9 +14,11 @@ export interface SoundPrefs {
   sfx: number;
   musicMuted: boolean;
   sfxMuted: boolean;
+  /** the tutorial's voice-over is on (it plays under the effects' volume and mute; its own switch in Settings) */
+  voice: boolean;
 }
 
-export const SOUND_DEFAULTS: Readonly<SoundPrefs> = Object.freeze({ muted: false, music: 0.5, sfx: 0.8, musicMuted: false, sfxMuted: false });
+export const SOUND_DEFAULTS: Readonly<SoundPrefs> = Object.freeze({ muted: false, music: 0.6, sfx: 0.8, musicMuted: false, sfxMuted: false, voice: true });
 
 /** a volume held to 0..1 and to whole percents; null for anything that is not a finite number (NaN, Infinity, a word, nothing): the caller keeps what it had */
 export function clampVolume(v: unknown): number | null {
@@ -45,16 +47,19 @@ export function parseSoundPrefs(raw: string | null | undefined): SoundPrefs {
   if (typeof r.muted === 'boolean') out.muted = r.muted;
   if (typeof r.musicMuted === 'boolean') out.musicMuted = r.musicMuted;
   if (typeof r.sfxMuted === 'boolean') out.sfxMuted = r.sfxMuted;
+  if (typeof r.voice === 'boolean') out.voice = r.voice;
   return out;
 }
 
 /** the text to store */
 export function serializeSoundPrefs(p: SoundPrefs): string {
-  return JSON.stringify({ v: 1, muted: p.muted, music: p.music, sfx: p.sfx, musicMuted: p.musicMuted, sfxMuted: p.sfxMuted });
+  return JSON.stringify({ v: 1, muted: p.muted, music: p.music, sfx: p.sfx, musicMuted: p.musicMuted, sfxMuted: p.sfxMuted, voice: p.voice });
 }
 
 /** the effects' volume as heard: 0 when muted (all, or effects) */
 export const effectiveSfx = (p: SoundPrefs): number => (p.muted || p.sfxMuted ? 0 : p.sfx);
+/** the voice-over's volume as heard: the effects' volume, 0 when its own switch, the effects or everything is off */
+export const effectiveVoice = (p: SoundPrefs): number => (p.voice ? effectiveSfx(p) : 0);
 /** the music's volume as heard: 0 when muted (all, or music) */
 export const effectiveMusic = (p: SoundPrefs): number => (p.muted || p.musicMuted ? 0 : p.music);
 

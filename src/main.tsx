@@ -4,11 +4,15 @@ import "./index.css";
 import App from "./App";
 import { applyUiScale, loadUiScale } from "./ui/uiScale";
 import { installSound } from "./game/sound/core";
+import { installMuteKey, installUiSounds } from "./game/sound/ui-hook";
 
 // T179: the UI scale kept in this browser, before the first paint
 applyUiScale(loadUiScale());
 // J11 (#1270): sound starts at the player's first click or key, never before (game/sound/core.ts)
 installSound();
+// the UI's sounds from one delegated listener (clicks, ticks, open and close), and the Mute key (F8): game/sound/ui-hook.ts
+installUiSounds();
+installMuteKey();
 
 // the shadow audit sheet (T141, dev only: ?shadows=audit) draws in place of the game
 if (import.meta.env.DEV && new URLSearchParams(location.search).get("shadows") === "audit")

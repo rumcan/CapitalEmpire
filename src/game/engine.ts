@@ -53,6 +53,7 @@ import { sizeKey, turned } from './lots/preset-art';
 import { FARMHOUSE_SUBJECTS, LOT_PLACES, clubScene, farmScene, lotPlaceOf, lotScene, placeHasArt, placeScene, rangeNews, rangeScene, rangeSceneKeys, rangeViewOfKey, sceneArt, townFortune, lotGood, propertyScene, objectScene, rangeGood, type RangeSceneFacts, type RangeSceneView, type SceneCardView, type SceneRef } from './scenes';
 import { homeStage, rangeScale } from './golf/rangesave';
 import { BALL_DRAW_MAX, BALL_POINT_FLOATS, RangeHost, type RangeCardView } from './golf/rangehost';
+import { mapSounds } from './sound/map-sounds'; // J11 (#1270)
 import { PropsTool } from './golf/propstool';
 import { PracticeTool } from './golf/practicetool';
 import { DECOR_BY_KEY, inPoly, lotTouches, propTuple, sellBack, tupleMarks } from './golf/decor';
@@ -745,6 +746,7 @@ export class Game {
   /** every spend (SimClient.onSpend): one placed (a map click, spendAt) floats up there; the business takings book (the range's) float as they are made */
   private spent(kind: 'construction' | 'compensation' | 'business' | 'upkeep' | 'lots' | 'balls' | 'bank', n: number) {
     this.bookSpend(kind, n);
+    mapSounds.spent(kind, n, !!this.moneySpot); // J11: a thump for what a map click built, a scrape for the bulldozer, a coin for a purchase in a card
     const p = this.moneySpot; if (!p || kind === 'business' || kind === 'lots' || !n) return;
     this.floatMoney({ ...p, amount: Math.abs(n), kind: n > 0 ? 'out' : 'in' });
   }
@@ -3314,6 +3316,7 @@ export class Game {
   toast(text: string, kind: Toast['kind'] = 'info', scene?: SceneRef) {
     this.toasts.push({ id: this.toastId++, text, t: performance.now(), kind, ...(scene ? { scene } : {}) });
     if (this.toasts.length > 4) this.toasts.shift();
+    mapSounds.toast(kind); // J11: a warning has its low 'can't'
     this.emit();
   }
 

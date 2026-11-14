@@ -4,8 +4,10 @@
 // its spot, its control pulsed: Engine.guideShowMe) and Skip; every line still to do has Show me too. Skip guide puts the whole card away. It
 // folds to the current line. The clock never stops for it.
 // T293 (#878): the start tutorial runs on this card too (heading, testid, Next on its 'next' steps, Skip tutorial): one guide look, not two.
+import { useEffect, useRef } from 'react';
 import type { GuideLine } from '../../game/ext/progressive-ui/guide';
 import { Icon } from '../Icon';
+import { sfx } from '../../game/sound/sfx'; // J11 (#1270)
 import { money } from './money';
 
 export function RangeGuideCard({ view, right = 'right-3', onShow, onSkip, onFold, onScene, onNext, heading = 'Guide · build your range', tid = 'range-guide', foot = 'Each step pays when it is done', offLabel = 'Skip guide' }: {
@@ -16,6 +18,9 @@ export function RangeGuideCard({ view, right = 'right-3', onShow, onSkip, onFold
   /** T242: Set the scene: your range (its picture card; absent: no art) */ onScene?: () => void;
 }) {
   const { lines, folded } = view, done = lines.filter(l => l.state !== 'todo').length, cur = lines.find(l => l.current)!;
+  // J11: a step done (ticked by its build, or Next) rings a short bell; the card showing for the first time rings nothing
+  const was = useRef(done);
+  useEffect(() => { if (done > was.current) sfx.ding(); was.current = done; }, [done]);
   return (
     <section className={`pointer-events-auto absolute bottom-3 ${right} z-20 w-[330px] max-w-[calc(100vw-1.5rem)] rounded-xl border border-white/10 bg-slate-950/90 p-3 text-slate-200 shadow-2xl backdrop-blur`} data-testid={tid} aria-label={heading.replace(' · ', ': ')}>
       <div className="flex items-center justify-between gap-2">
@@ -38,7 +43,7 @@ export function RangeGuideCard({ view, right = 'right-3', onShow, onSkip, onFold
             {l.current && <>
               <p className="mt-1 pl-6 text-[12px] text-slate-300">{l.step.body}</p>
               <div className="mt-1.5 flex gap-1.5 pl-6">
-                {onNext && l.step.done === 'next' && <button className="chip chip-on" onClick={() => onNext(l.step.id)} data-testid={`${tid}-next`}>{l.step.n === lines.length ? 'Done' : 'Next'}</button>}
+                {onNext && l.step.done === 'next' && <button className="chip chip-on" onClick={() => { sfx.ding(); onNext(l.step.id); }} data-testid={`${tid}-next`}>{l.step.n === lines.length ? 'Done' : 'Next'}</button>}
                 <button className={`chip ${onNext && l.step.done === 'next' ? '' : 'chip-on'}`} onClick={() => onShow(l.step.id)} data-testid={`${tid}-show`}>Show me</button>
                 <button className="chip" onClick={() => onSkip(l.step.id)} title={l.step.reward ? 'Skip this step (no reward)' : 'Skip this step'} data-testid={`${tid}-skip`}>Skip</button>
               </div>

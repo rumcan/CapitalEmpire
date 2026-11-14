@@ -9,7 +9,7 @@
 //     scheduled on a suspended context would all come out at once when it starts), a recipe that throws is swallowed. Every call is a no-op then.
 //  3. Cheap: a recipe builds its few nodes when it is played and they free themselves when they end (no per-frame work, no pool to leak); each sound has
 //     its own shortest gap, and a burst of more than BURST_MAX plays in BURST_MS is thinned, so a loop that calls a sound every frame cannot pile up.
-import { clampVolume, effectiveMusic, effectiveSfx, loadSoundPrefs, saveSoundPrefs, volumeGain, type SoundPrefs } from './prefs';
+import { clampVolume, effectiveMusic, effectiveSfx, effectiveVoice, loadSoundPrefs, saveSoundPrefs, volumeGain, type SoundPrefs } from './prefs';
 
 /** a sound: builds its nodes on ctx, into out, to start at ctx time t; v (0..1) is how strong this one is */
 export type Recipe = (ctx: BaseAudioContext, out: AudioNode, t: number, v: number) => void;
@@ -68,6 +68,8 @@ export class SoundCore {
     if (this.prefs[kind] !== n) this.set(kind === 'music' ? { music: n } : { sfx: n });
     return true;
   }
+  /** the tutorial voice-over's switch */
+  setVoice(on: boolean): void { if (this.prefs.voice !== !!on) this.set({ voice: !!on }); }
   /** mutes or unmutes the music, the effects, or everything ('all') */
   setMuted(kind: 'music' | 'sfx' | 'all', muted: boolean): void {
     if (kind === 'all') { if (this.prefs.muted !== muted) this.set({ muted }); }
@@ -86,6 +88,8 @@ export class SoundCore {
   musicLevel(): number { return volumeGain(effectiveMusic(this.prefs)); }
   /** the effects' volume as heard */
   sfxLevel(): number { return volumeGain(effectiveSfx(this.prefs)); }
+  /** the voice-over's volume as heard (the effects', or 0 with its switch off) */
+  voiceLevel(): number { return volumeGain(effectiveVoice(this.prefs)); }
 
   // ---- the context
 

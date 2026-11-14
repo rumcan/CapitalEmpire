@@ -62,6 +62,7 @@ export function burst(ctx: BaseAudioContext, out: AudioNode, t: number, o: Burst
   g.gain.setValueAtTime(FLOOR, t0);
   g.gain.exponentialRampToValueAtTime(Math.max(MIN_PEAK, o.peak), t0 + a);
   g.gain.exponentialRampToValueAtTime(FLOOR, end);
+  src.loop = true; // (a wash longer than the noise buffer goes round again)
   src.connect(f); f.connect(g); g.connect(out);
   src.start(t0, rng.next() * 0.5); src.stop(end + 0.02);
 }
@@ -180,10 +181,11 @@ export const SURFACES: readonly Surface[] = ['fairway', 'green', 'sand', 'water'
 export function swish(club: GolfClub): Recipe {
   return (ctx, out, t, v) => {
     switch (club) {
-      case 'driver': burst(ctx, out, t, { filter: 'bandpass', f0: 300, f1: 2000, q: 1.3, attack: 0.15, decay: 0.12, peak: 0.2 * v }); break;
-      case 'iron': burst(ctx, out, t, { filter: 'bandpass', f0: 400, f1: 2400, q: 1.3, attack: 0.12, decay: 0.09, peak: 0.16 * v }); break;
-      case 'wedge': burst(ctx, out, t, { filter: 'bandpass', f0: 500, f1: 2100, q: 1.2, attack: 0.1, decay: 0.08, peak: 0.12 * v }); break;
-      default: burst(ctx, out, t, { filter: 'bandpass', f0: 700, f1: 1500, q: 1, attack: 0.05, decay: 0.05, peak: 0.04 * v });
+      // (the downswing is 50 to 100 ms in the view: the rise is short, so the swish peaks about at the strike)
+      case 'driver': burst(ctx, out, t, { filter: 'bandpass', f0: 300, f1: 2000, q: 1.3, attack: 0.07, decay: 0.1, peak: 0.2 * v }); break;
+      case 'iron': burst(ctx, out, t, { filter: 'bandpass', f0: 400, f1: 2400, q: 1.3, attack: 0.06, decay: 0.08, peak: 0.16 * v }); break;
+      case 'wedge': burst(ctx, out, t, { filter: 'bandpass', f0: 500, f1: 2100, q: 1.2, attack: 0.055, decay: 0.07, peak: 0.12 * v }); break;
+      default: burst(ctx, out, t, { filter: 'bandpass', f0: 700, f1: 1500, q: 1, attack: 0.03, decay: 0.04, peak: 0.06 * v });
     }
   };
 }
@@ -264,25 +266,61 @@ export const breath: Recipe = (ctx, out, t, v) => {
   burst(ctx, out, t, { filter: 'bandpass', f0: 420, f1: 2600, q: 1.1, attack: 0.3, decay: 0.12, peak: 0.13 * v });
 };
 
-// ---------------------------------------------------------------- the lists (the level script and the tests walk them)
+/** the crowd round a green cheers a holed putt: a wash of noise with many loose claps on it (the view's old sndApplause; about 2.5 s); v how big the crowd is */
+export const applause: Recipe = (ctx, out, t, v) => {
+  burst(ctx, out, t, { filter: 'bandpass', f0: 1500, f1: 1100, q: 0.5, attack: 0.25, decay: 2.1, peak: 0.16 * (0.4 + v) });
+  for (let k = 0; k < 30; k++) burst(ctx, out, t, { at: k * 0.075 + rng.next() * 0.05, filter: 'bandpass', f0: 1500 + rng.next() * 1400, q: 2, attack: 0.003, decay: 0.05, peak: (0.05 + rng.next() * 0.06) * (0.4 + v) });
+};
+/** a short putt that stays out: a low sigh from the crowd (the view's old sndGroan; about 1.2 s) */
+export const groan: Recipe = (ctx, out, t, v) => {
+  tone(ctx, out, t, { f0: 210, f1: 130, attack: 0.012, decay: 1.0, peak: 0.12 * v, lp: 600 });
+  burst(ctx, out, t, { filter: 'lowpass', f0: 520, f1: 260, q: 0.7, attack: 0.2, decay: 0.95, peak: 0.16 * v });
+};
+
+// ---------------------------------------------------------------- the levels, and the lists (the level script and the tests walk them)
+
+/** each sound's peak at full strength (dBFS) that it is trimmed to: the UI's about -14, the strikes about -9, the quiet ones -15 to -17 (the master bus then
+ *  takes the effects' volume off: at the default 80% about -5 dB more). The level script (scripts/jam/sound-levels.mjs) checks every sound is within -18..-6 */
+export const TARGET_DB: Readonly<Record<string, number>> = {
+  click: -14, tick: -14.5, on: -14.5, off: -14.5, open: -14, close: -14, cash: -13, refuse: -13.5, chime: -13, ding: -14,
+  place: -9, bulldoze: -9, rangeStrike: -14, bird: -17,
+  'swish-driver': -11, 'swish-iron': -12, 'swish-wedge': -13, 'swish-putter': -15,
+  'strike-driver': -8, 'strike-iron': -9, 'strike-wedge': -10, 'strike-putter': -10,
+  'land-fairway': -11, 'land-green': -12, 'land-sand': -10, 'land-water': -10, 'land-rough': -11, 'land-rock': -11,
+  'cup-drop': -10, 'cup-lip': -14, heart: -9, breath: -13, applause: -11, groan: -14,
+};
+/** each sound's trim: the factor its recipe's strength is multiplied by, so its peak at full strength lands on TARGET_DB (node scripts/jam/sound-levels.mjs
+ *  --suggest prints the numbers to put here; a recipe's own constants are the sound's shape, this is its level) */
+export const TRIM: Readonly<Record<string, number>> = {
+  click: 1.3, tick: 1.24, on: 1.39, off: 1.58, open: 1.31, close: 1.4, cash: 1.49, refuse: 1.24, chime: 1.19, ding: 1.4,
+  place: 1.06, bulldoze: 4.97, rangeStrike: 0.93, bird: 2.36,
+  'swish-driver': 5.45, 'swish-iron': 6.67, 'swish-wedge': 5.74, 'swish-putter': 10.64,
+  'strike-driver': 1.09, 'strike-iron': 1.12, 'strike-wedge': 1.36, 'strike-putter': 1.23,
+  'land-fairway': 1.11, 'land-green': 1.36, 'land-sand': 2.74, 'land-water': 1.28, 'land-rough': 2.4, 'land-rock': 1.28,
+  'cup-drop': 1.39, 'cup-lip': 1.75, heart: 1.11, breath: 3.95, applause: 1.95, groan: 1.57,
+};
+/** a recipe played at its trim (the recipe itself when its trim is 1) */
+export const trimmed = (id: string, r: Recipe): Recipe => { const k = TRIM[id] ?? 1; return k === 1 ? r : (ctx, out, t, v) => r(ctx, out, t, v * k); };
 
 export interface SoundInfo {
   id: string; recipe: Recipe; group: 'ui' | 'map' | 'golf';
   /** the longest it may last (ms): 200 for the UI's but the chimes */
   maxMs: number;
+  /** it fades in slowly on purpose (a swish, a breath, a crowd): the level script does not mind it starting late */
+  rise?: true;
 }
-/** every sound, by id */
+const S = (id: string, recipe: Recipe, group: SoundInfo['group'], maxMs: number, rise?: true): SoundInfo => ({ id, recipe: trimmed(id, recipe), group, maxMs, ...(rise ? { rise } : {}) });
+/** every sound, by id, at its level */
 export const SOUNDS: readonly SoundInfo[] = [
-  { id: 'click', recipe: click, group: 'ui', maxMs: 200 }, { id: 'tick', recipe: tick, group: 'ui', maxMs: 200 },
-  { id: 'on', recipe: on, group: 'ui', maxMs: 200 }, { id: 'off', recipe: off, group: 'ui', maxMs: 200 },
-  { id: 'open', recipe: open, group: 'ui', maxMs: 200 }, { id: 'close', recipe: close, group: 'ui', maxMs: 200 },
-  { id: 'cash', recipe: cash, group: 'ui', maxMs: 200 }, { id: 'refuse', recipe: refuse, group: 'ui', maxMs: 200 },
-  { id: 'chime', recipe: chime, group: 'ui', maxMs: 2000 }, { id: 'ding', recipe: ding, group: 'ui', maxMs: 1000 },
-  { id: 'place', recipe: place, group: 'map', maxMs: 400 }, { id: 'bulldoze', recipe: bulldoze, group: 'map', maxMs: 500 },
-  { id: 'rangeStrike', recipe: rangeStrike(0), group: 'map', maxMs: 600 }, { id: 'bird', recipe: bird, group: 'map', maxMs: 500 },
-  ...GOLF_CLUBS.map((c): SoundInfo => ({ id: `swish-${c}`, recipe: swish(c), group: 'golf', maxMs: 450 })),
-  ...GOLF_CLUBS.map((c): SoundInfo => ({ id: `strike-${c}`, recipe: strike(c), group: 'golf', maxMs: 300 })),
-  ...SURFACES.map((s): SoundInfo => ({ id: `land-${s}`, recipe: land(s), group: 'golf', maxMs: 500 })),
-  { id: 'cup-drop', recipe: cup('drop'), group: 'golf', maxMs: 400 }, { id: 'cup-lip', recipe: cup('lip'), group: 'golf', maxMs: 400 },
-  { id: 'heart', recipe: heart, group: 'golf', maxMs: 500 }, { id: 'breath', recipe: breath, group: 'golf', maxMs: 700 },
+  S('click', click, 'ui', 200), S('tick', tick, 'ui', 200), S('on', on, 'ui', 200), S('off', off, 'ui', 200), S('open', open, 'ui', 200), S('close', close, 'ui', 200),
+  S('cash', cash, 'ui', 200), S('refuse', refuse, 'ui', 200), S('chime', chime, 'ui', 2000), S('ding', ding, 'ui', 1000),
+  S('place', place, 'map', 400), S('bulldoze', bulldoze, 'map', 500), S('rangeStrike', rangeStrike(0), 'map', 600), S('bird', bird, 'map', 500),
+  ...GOLF_CLUBS.map(c => S(`swish-${c}`, swish(c), 'golf', 450, true)),
+  ...GOLF_CLUBS.map(c => S(`strike-${c}`, strike(c), 'golf', 300)),
+  ...SURFACES.map(s => S(`land-${s}`, land(s), 'golf', 500)),
+  S('cup-drop', cup('drop'), 'golf', 400), S('cup-lip', cup('lip'), 'golf', 400),
+  S('heart', heart, 'golf', 500), S('breath', breath, 'golf', 700, true), S('applause', applause, 'golf', 2800, true), S('groan', groan, 'golf', 1500, true),
 ];
+const BY_ID = new Map(SOUNDS.map(s => [s.id, s]));
+/** the sound with this id at its level (an Error for an id there is no sound for: a typo is found when the module loads, not when the sound is wanted) */
+export function recipeOf(id: string): Recipe { const s = BY_ID.get(id); if (!s) throw new Error(`no sound ${id}`); return s.recipe; }

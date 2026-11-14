@@ -112,6 +112,7 @@ import { RANGE_PLACE_COST } from './game/golf/placing';
 import { TooltipLayer } from './ui/Tooltip';
 import { UI_SCALES, applyUiScale, currentUiScale, saveUiScale } from './ui/uiScale';
 import { AccessSettings } from './ui/golf/AccessSettings';
+import { SoundSettings } from './ui/SoundSettings'; // J11 (#1270)
 import { stackCol, stackFit, stackRight, type StackCard, type StackOpen, type StackPanel } from './ui/golf/card-stack';
 import { HoleCard } from './ui/golf/HoleCard';
 import { View3pPanel } from './ui/golf/View3pPanel';
@@ -645,6 +646,8 @@ export default function App() {
                       <span className="flex-1">Text size</span>
                       {UI_SCALES.map(v => <button key={v} className={`chip ${uiScale === v ? 'chip-on' : ''}`} aria-pressed={uiScale === v} data-scale={v} onClick={() => setUiScale(applyUiScale(saveUiScale(v)))}>{Math.round(v * 100)}%</button>)}
                     </div>
+                    {/* J11 (#1270): the sound: the effects' volume and mute, and the one switch for all of it (F8) */}
+                    <SoundSettings />
                     {/* J4 (#1207): the golf mode's currency (USD or AED, display only) and colour-blind-safe money */}
                     {game.golfMode && <AccessSettings />}
                     {/* (T459, the jam MVP: settings are the text size, the currency and saving; the display options are hidden) */}

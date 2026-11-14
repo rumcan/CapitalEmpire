@@ -5,6 +5,7 @@ import { GOAL, emergencyTotals, interestToDate, netWorthSeries, statementOf, typ
 import { emergencyLine } from '../../game/golf/risk';
 import { NetWorthChart } from './NetWorthChart';
 import { money, onFinlit, signed } from './finevents';
+import { sfx } from '../../game/sound/sfx'; // J11 (#1270)
 
 const TOAST_MS = 10_000;
 
@@ -28,6 +29,7 @@ export function StatementCard({ history }: { history: readonly Report[] }) {
   useEffect(() => {
     if (history.length > seen) {
       setToastAt(history.length - 1);
+      if (history.length === seen + 1) sfx.chime(); // (J11: a soft chime for the month's statement: one month on, not a different save loaded)
       const t = window.setTimeout(() => setToastAt(null), TOAST_MS);
       setSeen(history.length);
       return () => window.clearTimeout(t);

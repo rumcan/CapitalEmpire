@@ -40,7 +40,7 @@ test('volumes clamp to 0..1 and a NaN, an Infinity or a word is refused', () => 
 test('the settings round trip through a store, field by field, and bad text gives the defaults', () => {
   const store = memStore();
   assert.deepEqual(loadSoundPrefs(store), SOUND_DEFAULTS);
-  const p = { muted: true, music: 0.3, sfx: 0.65, musicMuted: true, sfxMuted: false };
+  const p = { muted: true, music: 0.3, sfx: 0.65, musicMuted: true, sfxMuted: false, voice: false };
   saveSoundPrefs(p, store);
   assert.deepEqual(loadSoundPrefs(store), p);
   assert.deepEqual(parseSoundPrefs(serializeSoundPrefs(p)), p);
@@ -129,7 +129,7 @@ test('volumes: set, clamp, persist, and refuse NaN; mutes persist and the Mute k
   assert.equal(core.setVolume('sfx', 'x'), false); assert.equal(core.get().sfx, 1);
   const before = told; core.setVolume('music', 0.3); assert.equal(told, before, 'the same volume tells no one');
   assert.ok(told >= 2);
-  assert.deepEqual(JSON.parse(store.m.get(SOUND_KEY)!), { v: 1, muted: false, music: 0.3, sfx: 1, musicMuted: false, sfxMuted: false });
+  assert.deepEqual(JSON.parse(store.m.get(SOUND_KEY)!), { v: 1, muted: false, music: 0.3, sfx: 1, musicMuted: false, sfxMuted: false, voice: true });
   core.setMuted('music', true);
   assert.equal(core.toggleMute(), true, 'with sound on, the key mutes all'); assert.equal(core.get().muted, true); assert.equal(core.allMuted, true);
   assert.equal(core.toggleMute(), false, 'and again lifts every mute'); assert.deepEqual([core.get().muted, core.get().musicMuted, core.get().sfxMuted], [false, false, false]);
