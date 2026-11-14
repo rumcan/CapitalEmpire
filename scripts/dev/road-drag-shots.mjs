@@ -1,14 +1,16 @@
-// #1276 (the owner, 2026-11-14: "make 45 degree bends the default ... always", "a click and drag and release builds like in sim city"): looks at the road tool's
+// #1276 (the owner, 2026-11-14: "a click and drag and release builds like in sim city"; and "make 45 degree bends the default ... always", which #1317 switched off the same day:
+// "remove the 45 degree angle for now", route-legs.ts BEND_45): looks at the road tool's
 // press, drag and release on a live page with real mouse events, and checks what the ticket asks of it. Headless Chrome with WebGL (playwright-core, the installed
 // Chrome) on a scratch port of its own: the normal game on a vite dev server (?start=town&seed=7: a seeded town, its roads, the course), or the built jam
 // (--jam: dist-jam, served by vite preview; build it first with: node scripts/jam/build.mjs --no-pack, through E:/ClaudeTemp/heavy.sh).
 //   node scripts/dev/road-drag-shots.mjs [--jam] [--out docs/ui-shots] [--port N] [--bench] [--no-shots]
-// It checks: the default bend is 45 after every load (Q toggles it for the visit only); a cart path dragged with one 45 degree bend (the ghost mid-drag, the built
-// path, one undo step); a town street dragged onto an existing road (a T junction; the normal game) or a path dragged onto the path just built (the jam); a cancelled drag
+// The script asks the engine whether the 45 degree bend is on (it is off for now) and judges by that: off, the default is the right angle after every load, Q does nothing and the
+// ghost is a right angle; on, the default is 45 (Q toggles 90 for the visit) and the ghost is a diagonal run, one bend, a straight run.
+// It checks: the default bend after every load; a cart path dragged with its one bend (the ghost mid-drag, the built path, one undo step); a town street dragged onto an existing road (a T junction; the normal game) or a path dragged onto the path just built (the jam); a cancelled drag
 // (Esc; a right click) builds nothing; a click without a drag is still click, click, Enter; a finger's drag (touch emulation) builds like the mouse's; in the jam, the range
 // guide's Show me puts the Walking path in hand and a dragged run builds (the walkway's reach is told: in a set-back range the guide's car park ring is out of the lot's
 // reach, which is no fault of the road tool). --bench measures what the preview costs per pointer move (the ghost's work in the draw, 3000 moves x 5 rounds, drag against
-// hover, 90 against 45). Screenshots: <out>/road-drag-<normal|jam>-*.jpg. Prints PASS / FAIL per check (exit 1 on a FAIL). The server and the browser are closed at the end,
+// hover; at 90 against 45 too while the 45 bend is on). Screenshots: <out>/road-drag-<normal|jam>-*.jpg. Prints PASS / FAIL per check (exit 1 on a FAIL). The server and the browser are closed at the end,
 // whatever happens. The jam's start is J9's (the choose-your-start card: "Pick a spot for me"); a build from before it has no card and the flow skips it.
 import { chromium } from 'playwright-core';
 import { createServer as viteServer, preview } from 'vite';
@@ -77,6 +79,10 @@ try {
     await sleep(500);
   }
   await loadGame();
+  /** whether the 45 degree bend is on in this build (route-legs.ts BEND_45; off for now, #1317): a 45 asked of the engine gives a diagonal first leg only when it is */
+  const BEND_ON = await page.evaluate(() => { const g = window.__game, was = g.bendMode; g.bendMode = 45; const l = g.legsTo({ x: 100, y: 100 }, { x: 110, y: 104 }); g.bendMode = was; return l.length === 2 && l[0].b.y !== l[0].a.y; });
+  const DEFAULT = BEND_ON ? 45 : 90;
+  console.log(`      the 45 degree bend is ${BEND_ON ? 'ON' : 'off'} in this build: the default is ${DEFAULT}`);
 
   // ------------------------------------------------------------------ helpers
   const G = fn => page.evaluate(fn);
@@ -175,12 +181,16 @@ try {
   // ------------------------------------------------------------------ 1. the default bend, after every load
   console.log('== the default bend');
   let st = await state();
-  check(st.bend === 45, `${TAG}: a fresh game starts with 45 degree bends`, `bendMode ${st.bend}`);
-  await page.keyboard.press('q'); await page.waitForTimeout(150);
-  check((await state()).bend === 90, `${TAG}: Q toggles to 90 for the visit`);
-  await page.keyboard.press('q'); await page.waitForTimeout(150);
-  check((await state()).bend === 45, `${TAG}: Q toggles back to 45`);
-  await page.keyboard.press('q'); await page.waitForTimeout(150); // left on 90: the next load must not remember it (checked at the end)
+  check(st.bend === DEFAULT, `${TAG}: a fresh game starts with ${BEND_ON ? '45 degree' : 'right-angle'} bends`, `bendMode ${st.bend}`);
+  if (BEND_ON) {
+    await page.keyboard.press('q'); await page.waitForTimeout(150);
+    check((await state()).bend === 90, `${TAG}: Q toggles to 90 for the visit`);
+    await page.keyboard.press('q'); await page.waitForTimeout(150);
+    check((await state()).bend === 45, `${TAG}: Q toggles back to 45`);
+  } else {
+    await page.keyboard.press('q'); await page.waitForTimeout(150); await page.keyboard.press('Q'); await page.waitForTimeout(150);
+    check((await state()).bend === 90, `${TAG}: Q does nothing: the 45 degree bend is off for now`);
+  }
 
   // ------------------------------------------------------------------ 1b. the range guide's walking path step (the jam): Show me, then two dragged runs
   if (JAM) {
@@ -236,10 +246,10 @@ try {
     await page.evaluate(() => { const g = window.__game; g.cancelRoute(); g.setTool('select'); });
   }
 
-  // ------------------------------------------------------------------ 2. a cart path dragged with one 45 degree bend
+  // ------------------------------------------------------------------ 2. a cart path dragged with its one bend
   console.log('== a cart path dragged');
-  await page.keyboard.press('q'); await page.waitForTimeout(150); // back to 45 for the shots
   await armPath(JAM ? 'cart-dirt' : 'cart');
+  if (!BEND_ON) { const chips = await page.locator('[data-testid^="bend-"]').count(); check(chips === 0, `${TAG}: the Fine tuning panel has no Bends chips`, `${chips} found`); }
   let p = await plan(26, 9, { open: true });
   if (p.none) p = await plan(26, 9); // (a town with no open land round the camera: any free spot)
   check(!p.none, `${TAG}: a free spot for a path of 26 x 9 tiles`, p.none ? JSON.stringify(p.tried) : `from ${p.A.x},${p.A.y} to ${p.B.x},${p.B.y}`);
@@ -251,7 +261,8 @@ try {
     const before = await segCount();
     const { mid } = await drag(p.A, p.B, { name: 'path', release: false });
     check(mid.dragging && mid.route === 1, `${TAG}: mid-drag: the press began a route and is still down`, `route ${mid.route}, dragging ${mid.dragging}`);
-    check(mid.legs.length === 2 && mid.legs.every(l => heading(l) >= 0) && heading(mid.legs[0]) % 90 !== 0 && heading(mid.legs[1]) % 90 === 0, `${TAG}: mid-drag: the ghost is a diagonal run, one 45 degree bend, a straight run`, mid.legs.map(l => `${heading(l)}deg`).join(' + '));
+    const rightAngle = mid.legs.length === 2 && mid.legs.every(l => heading(l) === 0 || heading(l) === 90) && heading(mid.legs[0]) !== heading(mid.legs[1]);
+    check(BEND_ON ? mid.legs.length === 2 && mid.legs.every(l => heading(l) >= 0) && heading(mid.legs[0]) % 90 !== 0 && heading(mid.legs[1]) % 90 === 0 : rightAngle, `${TAG}: mid-drag: the ghost is ${BEND_ON ? 'a diagonal run, one 45 degree bend, a straight run' : 'a right angle: along the longer side, then the other'}`, mid.legs.map(l => `${heading(l)}deg`).join(' + '));
     check(mid.block === '', `${TAG}: mid-drag: nothing refuses it`, mid.block);
     check((await segCount()) === before, `${TAG}: mid-drag: nothing is built while the button is down`);
     await page.mouse.up(); await page.waitForTimeout(600);
@@ -259,7 +270,7 @@ try {
     check(after.route === 0 && !after.dragging, `${TAG}: the release builds and leaves no route in hand`, `route ${after.route}`);
     check(/^Built .* of (walking|dirt|cement|paved)/.test(toasts[toasts.length - 1] ?? ''), `${TAG}: the game says what it built and for how much`, toasts[toasts.length - 1] ?? '');
     const mine = await page.evaluate(([A, jam]) => [...window.__game.net.segs].filter(s => s.cls.id.startsWith('cart') && Math.abs(s.a.x - A.x) <= 27 && Math.abs(s.a.y - A.y) <= 27 && Math.abs(s.b.x - A.x) <= 27 && Math.abs(s.b.y - A.y) <= 27).map(s => ({ a: { x: s.a.x, y: s.a.y }, b: { x: s.b.x, y: s.b.y }, cls: s.cls.id })), [p.A, JAM]);
-    check((await segCount()) > before && mine.length >= 2 && mine.every(s => heading(s) >= 0), `${TAG}: the built path is on the 0 / 45 / 90 lattice`, mine.map(s => `${heading(s)}`).join(' '));
+    check((await segCount()) > before && mine.length >= 2 && mine.every(s => BEND_ON ? heading(s) >= 0 : heading(s) === 0 || heading(s) === 90), `${TAG}: the built path is ${BEND_ON ? 'on the 0 / 45 / 90 lattice' : 'all along the axes'}`, mine.map(s => `${heading(s)}`).join(' '));
     await settle(2200); await frame(p.A, p.B); await settle(600);
     await shot('path-2-built');
     // one undo step takes the whole path back
@@ -380,14 +391,14 @@ try {
 
   // ------------------------------------------------------------------ 6. the default again after a reload, with Q left on 90
   console.log('== after a reload');
-  await page.evaluate(() => { window.__game.bendMode = 90; });
+  await page.evaluate(d => { window.__game.bendMode = d === 45 ? 90 : 45; }, DEFAULT); // (the other bend set in this visit: it must not come back)
   await page.reload({ waitUntil: 'domcontentloaded' });
   if (JAM) {
     await page.locator('[data-testid="title-card"]').waitFor({ timeout: 180000 });
     const cont = page.locator('[data-testid="title-continue"]'); if (await cont.count()) await cont.click(); else await page.locator('[data-testid="title-new"]').click();
   }
   await page.waitForFunction(() => window.__game?.ready, null, { timeout: 420000 });
-  check((await page.evaluate(() => window.__game.bendMode)) === 45, `${TAG}: after a reload the bend is 45 again (the 90 left by Q was not remembered)`);
+  check((await page.evaluate(() => window.__game.bendMode)) === DEFAULT, `${TAG}: after a reload the bend is the default, ${DEFAULT}, again (the other one set in the visit was not remembered)`);
 
   // ------------------------------------------------------------------ 7. what the preview costs per pointer move
   if (BENCH) {
@@ -396,7 +407,7 @@ try {
     const pb = await plan(26, 9);
     if (!pb.none) {
       await camAt(pb.A.x, pb.A.y, 0.3); await settle(1000);
-      const res = await page.evaluate(([A]) => {
+      const res = await page.evaluate(([A, bendOn]) => {
         const g = window.__game, N = 3000, offs = []; for (let i = 0; i < 97; i++) offs.push({ x: A.x - 14 + ((i * 7) % 43), y: A.y - 10 + ((i * 11) % 37) });
         /** ms per pointer move of what the draw does each frame with the ghost up (drawGroundOverlays): the legs, why not, the pieces Replace would take, the cost; the whole loop timed at once (the clock is 0.1 ms) */
         const frame = (bend, down) => {
@@ -411,27 +422,27 @@ try {
           const t0 = performance.now(); for (let i = 0; i < 30000; i++) g.pointerMove({ offsetX: 600 + (i % 300), offsetY: 400 + ((i * 3) % 200), buttons: 1 });
           const us = (performance.now() - t0) / 30000 * 1000; g.cancelRoute(); return us;
         };
-        const cfg = [['hover90', 90, false], ['hover45', 45, false], ['drag45', 45, true], ['drag90', 90, true]], got = { hover90: [], hover45: [], drag45: [], drag90: [] };
+        // (the 45 bend is off for now: only the right angle is measured; with it on, both, as before)
+        const cfg = bendOn ? [['hover90', 90, false], ['hover45', 45, false], ['drag45', 45, true], ['drag90', 90, true]] : [['hover90', 90, false], ['drag90', 90, true]], got = Object.fromEntries(cfg.map(c => [c[0], []]));
         for (let r = 0; r < 5; r++) for (let k = 0; k < cfg.length; k++) { const [n, b, d] = cfg[(k + r) % cfg.length]; got[n].push(frame(b, d).ms); } // (rotated: no one configuration always goes first, cold)
         const med = a => [...a].sort((x, y) => x - y)[a.length >> 1];
         const out = {}; for (const n of Object.keys(got)) out[n] = { med: med(got[n]), min: Math.min(...got[n]), max: Math.max(...got[n]) };
         out.handlerHover = handler(false); out.handlerDrag = handler(true);
-        g.bendMode = 45; g.hover = null; return out;
-      }, [pb.A]);
+        g.hover = null; return out;
+      }, [pb.A, BEND_ON]);
       const f = r => `median ${(r.med * 1000).toFixed(1)} us (best ${(r.min * 1000).toFixed(1)}, worst ${(r.max * 1000).toFixed(1)} of 5 rounds of 3000 moves)`;
-      console.log(`      preview per pointer move, hover at 90 degrees (the old default): ${f(res.hover90)}`);
-      console.log(`      preview per pointer move, hover at 45 degrees (the new default): ${f(res.hover45)}`);
-      console.log(`      preview per pointer move, mid-drag at 45 degrees:                ${f(res.drag45)}`);
-      console.log(`      preview per pointer move, mid-drag at 90 degrees:                ${f(res.drag90)}`);
+      console.log(`      preview per pointer move, hover at 90 degrees${BEND_ON ? ' (the old default)' : ' (the default)'}: ${f(res.hover90)}`);
+      console.log(`      preview per pointer move, mid-drag at 90 degrees: ${f(res.drag90)}`);
+      if (BEND_ON) { console.log(`      preview per pointer move, hover at 45 degrees (the new default): ${f(res.hover45)}`); console.log(`      preview per pointer move, mid-drag at 45 degrees: ${f(res.drag45)}`); }
       console.log(`      the pointerMove handler itself: ${res.handlerHover.toFixed(3)} us with no drag, ${res.handlerDrag.toFixed(3)} us with one`);
       const us = r => (r.med * 1000).toFixed(1);
-      check(res.drag45.med <= res.hover45.med * 1.1 + 0.0005 && res.drag90.med <= res.hover90.med * 1.1 + 0.0005, `${TAG}: a drag's preview costs no more per move than the hover preview at the same bend`, `45: ${us(res.hover45)} hover, ${us(res.drag45)} drag; 90: ${us(res.hover90)} hover, ${us(res.drag90)} drag (us)`);
-      check(Math.max(res.hover90.med, res.hover45.med, res.drag45.med) < 0.05, `${TAG}: and under 50 us a move (0.3% of a 60 fps frame) at either bend`, `the default's change, 90 -> 45: ${us(res.hover90)} -> ${us(res.hover45)} us a move`);
+      check(res.drag90.med <= res.hover90.med * 1.1 + 0.0005 && (!BEND_ON || res.drag45.med <= res.hover45.med * 1.1 + 0.0005), `${TAG}: a drag's preview costs no more per move than the hover preview at the same bend`, `90: ${us(res.hover90)} hover, ${us(res.drag90)} drag${BEND_ON ? `; 45: ${us(res.hover45)} hover, ${us(res.drag45)} drag` : ''} (us)`);
+      check(Math.max(res.hover90.med, res.drag90.med, BEND_ON ? res.hover45.med : 0, BEND_ON ? res.drag45.med : 0) < 0.05, `${TAG}: and under 50 us a move (0.3% of a 60 fps frame)`, `${us(res.hover90)} us hover, ${us(res.drag90)} us mid-drag at 90`);
     } else check(false, `${TAG}: a free spot for the benchmark`);
   }
 
-  // ------------------------------------------------------------------ 6b. what the ghost says as the pointer crosses a line from the press (informational)
-  {
+  // ------------------------------------------------------------------ 6b. what the ghost says as the pointer crosses a line from the press (informational; only while the 45 degree bend is on: it is about the bend's near-axis bands)
+  if (BEND_ON) {
     if (!JAM) await armStreet(); else await armPath(null);
     let ps = await plan(28, 28, { open: true, legs: 1 });
     if (ps.none) ps = await plan(28, 28, { legs: 1 });
