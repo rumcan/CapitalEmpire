@@ -174,14 +174,15 @@ test('every shipped track is a file on disk, the audio is inside the budget, and
   walk(dir);
   assert.ok(files.length <= 30, `${files.length} audio files (at most 30)`);
   assert.ok(files.reduce((a, f) => a + f.size, 0) <= 12 * 1024 * 1024, 'all audio is at most 12 MB');
-  assert.ok(TRACKS.length >= 4 && TRACKS.length <= 6, `${TRACKS.length} tracks (4 to 6)`);
+  // (4 to 6 at first; the owner added five chiptunes on 2026-11-14: up to 12, still inside the 12 MB budget above)
+  assert.ok(TRACKS.length >= 4 && TRACKS.length <= 12, `${TRACKS.length} tracks (4 to 12)`);
   const ids = new Set<string>();
   for (const t of TRACKS) {
     assert.ok(!ids.has(t.id), `${t.id} twice`); ids.add(t.id);
     const f = join(ROOT, 'public', t.file); assert.ok(existsSync(f), `${t.file} is missing`);
     assert.equal(statSync(f).size, t.bytes, `${t.id}'s size is not the manifest's`);
     assert.equal(t.licence, 'CC0 1.0', `${t.id} is not CC0`); assert.match(t.page, /^https:\/\/opengameart\.org\/content\//);
-    assert.ok(t.seconds >= 60 && t.seconds <= 300, `${t.id} is ${t.seconds} s`);
+    assert.ok(t.seconds >= 40 && t.seconds <= 300, `${t.id} is ${t.seconds} s`);   // (the chiptune loops are 45 to 82 s)
   }
   const credits = readFileSync(join(ROOT, 'docs', 'jam', 'AUDIO-CREDITS.md'), 'utf8');
   for (const f of files) assert.ok(credits.includes(f.path.slice(ROOT.length + 1).split('\\').join('/')), `${f.path} is not in docs/jam/AUDIO-CREDITS.md`);

@@ -25,6 +25,11 @@ into its own untrusted folder `F:/ClaudeTemp/jam/audio-src/<name>/`, never run),
 | Seaside Village | KarateStudios | https://opengameart.org/content/seaside-village | CC0 1.0 | 2026-11-14 | seaside_village.flac (flac, 11.43 MB, 76 s) | public/audio/music/seaside-village.mp3 (mp3 80 kbps, 0.72 MB, 76 s; input -15.1 LUFS to -18) |
 | Two Left Socks | congusbongus | https://opengameart.org/content/two-left-socks | CC0 1.0 | 2026-11-14 | two_left_socks.ogg (vorbis, 4.61 MB, 200 s) | public/audio/music/two-left-socks.mp3 (mp3 80 kbps, 1.91 MB, 200 s; input -14.9 LUFS to -18) |
 | Sunny Side Up 2 | Pro Sensory (Alex McCulloch) | https://opengameart.org/content/sunny-side-up-2 | CC0 1.0 | 2026-11-14 | sunny_side_up_2.mp3 (mp3, 5.38 MB, 141 s) | public/audio/music/sunny-side-up-2.mp3 (mp3 80 kbps, 1.35 MB, 141 s; input -16.9 LUFS to -18) |
+| Chiptune: Title Screen | Juhani Junkala (SubspaceAudio) | https://opengameart.org/content/5-chiptunes-action | CC0 1.0 | 2026-11-14 | WAV from "5 Action Chiptunes By Juhani Junkala.zip" (pcm_s16le, 7.60 MB, 45 s) | public/audio/music/chip-title-screen.mp3 (mp3 80 kbps, 0.43 MB, 45 s; input -8.3 LUFS to -18) |
+| Chiptune: Level 1 | Juhani Junkala (SubspaceAudio) | https://opengameart.org/content/5-chiptunes-action | CC0 1.0 | 2026-11-14 | WAV from "5 Action Chiptunes By Juhani Junkala.zip" (pcm_s16le, 12.49 MB, 74 s) | public/audio/music/chip-level-1.mp3 (mp3 80 kbps, 0.71 MB, 74 s; input -7.1 LUFS to -18) |
+| Chiptune: Level 2 | Juhani Junkala (SubspaceAudio) | https://opengameart.org/content/5-chiptunes-action | CC0 1.0 | 2026-11-14 | WAV from "5 Action Chiptunes By Juhani Junkala.zip" (pcm_s16le, 12.25 MB, 73 s) | public/audio/music/chip-level-2.mp3 (mp3 80 kbps, 0.69 MB, 73 s; input -6.9 LUFS to -18) |
+| Chiptune: Level 3 | Juhani Junkala (SubspaceAudio) | https://opengameart.org/content/5-chiptunes-action | CC0 1.0 | 2026-11-14 | WAV from "5 Action Chiptunes By Juhani Junkala.zip" (pcm_s16le, 13.78 MB, 82 s) | public/audio/music/chip-level-3.mp3 (mp3 80 kbps, 0.78 MB, 82 s; input -7.1 LUFS to -18) |
+| Chiptune: Ending | Juhani Junkala (SubspaceAudio) | https://opengameart.org/content/5-chiptunes-action | CC0 1.0 | 2026-11-14 | WAV from "5 Action Chiptunes By Juhani Junkala.zip" (pcm_s16le, 7.51 MB, 45 s) | public/audio/music/chip-ending.mp3 (mp3 80 kbps, 0.43 MB, 45 s; input -12.5 LUFS to -18) |
 
 The six shipped files are 8.17 MB in all (856 s of music); `src/game/sound/tracks.json` lists them for the radio. Why these six: they are the soft jazz, bossa nova, Rhodes
 blues and sunny easy-listening pieces among the 25 candidates, the mood of a small-town golf club in 1985. The Halloween tunes of the owner's other game do not fit.
@@ -60,3 +65,7 @@ has no voice until the script is run again (it also removes the files of words n
 <!-- voices:start -->
 No voice files yet.
 <!-- voices:end -->
+
+
+## Added 2026-11-14: five chiptunes (the owner: "https://opengameart.org/content/5-chiptunes-action add these chiptunes to the radio")
+"5 Chiptunes (Action)" by Juhani Junkala (SubspaceAudio): one zip, 49.6 MB, five seamlessly looping WAV files and an INFO.txt. The lead read the licence on the live OpenGameArt page (CC0) and in the zip's INFO.txt ("released under CC0 creative commons license. You can do anything you want with these tunes"). The 11-second Title Screen loop is played four times to make a 45-second track. The lead also opened the six earlier tracks' pages the same day: each shows CC0 with the author named above.
