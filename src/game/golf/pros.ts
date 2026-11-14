@@ -63,7 +63,7 @@ export function officeSpotWhy(r: Rect4, s: OfficeSpot): string {
   const land = landWhy(r, s); if (land) return land;
   if (rectGap(r, s.clubhouse) > OFFICE_CLUB_REACH) return `Near the clubhouse: within ${OFFICE_CLUB_REACH * 2} m of it`;
   if (s.pathGap < 0) return 'Not on the path: beside it';
-  if (s.pathGap > OFFICE_PATH_GAP) return 'Its front on a path, drive or road: draw one to it (Course › Cart paths & roads)';
+  if (s.pathGap > OFFICE_PATH_GAP) return 'Its front on a path, drive or road: draw one to it (Cart paths & roads)';
   if (OFFICE_COST > s.money) return `Not enough money: the pro's office costs $${OFFICE_COST.toLocaleString()}`;
   return '';
 }

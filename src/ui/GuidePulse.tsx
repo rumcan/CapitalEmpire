@@ -3,19 +3,13 @@
 // group that opens it), following it each frame until the pulse ends. Reduced motion: a still ring.
 import { useEffect, useRef, useState, useSyncExternalStore } from 'react';
 import { spotNow, spotSubscribe } from './spotlight/spot';
+import { ANCHOR_FALLBACK, chainOf } from './spotlight/leads';
 
-/** where an anchor falls back to while its control is not on screen (its panel closed) */
-export const ANCHOR_FALLBACK: Readonly<Record<string, readonly string[]>> = {
-  'new-hole': ['rail-course'], 'clubhouse-card': ['rail-course'], 'tool-park': ['rail-traffic'], 'fix-holes': ['season-chip'], 'fix-carpark': ['season-chip'],
-  // #1272: Facilities is a tile of the Course flyout (it carries this anchor while that is open), no rail button: shut, the guide points at Course
-  'rail-facilities': ['rail-course'],
-  'fix-clubhouse': ['season-chip'], 'invite-pill': ['season-chip'], 'results': ['season-chip'],
-  // T366: the Skip to tournament button is a row of the Season card: while the card is shut the guide points at the chip that opens it
-  'chip-skip': ['season-chip'],
-};
-/** the element an anchor id points at now: the first visible one of the id, then of its fallbacks */
+/** where an anchor falls back to while its control is not on screen (its panel closed): spotlight/leads.ts, which also holds the menu levels (#1297) */
+export { ANCHOR_FALLBACK };
+/** the element an anchor id points at now: the first visible one of the id, then of the controls that lead to it (its menu's levels, the rail button: leads.ts chainOf), nearest first */
 export function anchorElement(id: string, doc: Pick<Document, 'querySelectorAll'> = document): HTMLElement | null {
-  for (const a of [id, ...(ANCHOR_FALLBACK[id] ?? [])]) {
+  for (const a of chainOf(id)) {
     for (const el of Array.from(doc.querySelectorAll<HTMLElement>(`[data-guide="${a}"]`))) {
       const r = el.getBoundingClientRect(); if (r.width > 0 && r.height > 0) return el;
     }

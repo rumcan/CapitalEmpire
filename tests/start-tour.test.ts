@@ -18,7 +18,8 @@ test('four steps in order: your town, roads are your job, out of room, then the 
   assert.deepEqual(TOWN_TOUR.map(s => s.id), ['tour-town', 'tour-roads', 'tour-room', 'tour-golf']);
   assert.deepEqual(TOWN_TOUR.map(s => s.n), [1, 2, 3, 4]);
   assert.deepEqual(TOWN_TOUR.map(s => s.done), ['next', 'auto', 'next', 'next']);
-  assert.equal(TOWN_TOUR[1]!.target.ui, 'rail-traffic'); // the ring on the road tool's group
+  assert.equal(TOWN_TOUR[1]!.target.ui, 'traffic-build'); // (#1297: the entry at the end of the menu path its words name, Traffic › Roads › Build: the spotlight leads down to it from the Traffic button)
+  assert.equal(TOWN_TOUR[2]!.target.ui, 'road-upgrade'); // (Traffic › Roads › Upgrade)
   assert.match(TOWN_TOUR[0]!.body, /only on land that has a road/); assert.match(TOWN_TOUR[0]!.body, /county road/);
   assert.match(TOWN_TOUR[1]!.body, /never lays a road/);
 });
@@ -51,7 +52,7 @@ test('the road tool still locked: step 2 says when it opens and goes on with Nex
 
 test('the old town start: step 4 points at the course, not a range', () => {
   const g = newTour(); g.done.push('tour-town', 'tour-roads', 'tour-room');
-  const s = tourCurrent(g, { roadLock: null, start: 'town' })!; assert.equal(s.target.ui, 'rail-course'); assert.match(s.body, /Course drawer/);
+  const s = tourCurrent(g, { roadLock: null, start: 'town' })!; assert.equal(s.target.ui, 'rail-course'); assert.match(s.body, /Course on the left/);
   assert.equal(tourCurrent(g, OPEN)!.target.ui, 'rail-range');
 });
 

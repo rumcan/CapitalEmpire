@@ -10,7 +10,7 @@ import { RANGE_GUIDE, type GuideStep } from '../ext/progressive-ui/guide';
 
 export interface VoiceStep { id: string; title: string; body: string; /** where the step is shown: the jam's tutorial, the town game's tutorial, the range guide */ set: 'jam' | 'tour' | 'guide' }
 
-/** every step that gets a voice-over, in the order the game shows them: the jam tutorial's 3, the town tutorial's 4 and the range guide's 9 */
+/** every step that gets a voice-over, in the order the game shows them: the jam tutorial's 3, the town tutorial's 4 and the range guide's 3 (#1297: it had 9) */
 export function voiceSteps(): VoiceStep[] {
   const of = (set: VoiceStep['set'], steps: readonly GuideStep[]): VoiceStep[] => steps.map(s => ({ id: s.id, title: s.title, body: s.body, set }));
   return [...of('jam', JAM_TOUR), ...of('tour', TOWN_TOUR.filter(s => !JAM_TOUR.some(j => j.id === s.id && j.body === s.body))), ...of('guide', RANGE_GUIDE)];
