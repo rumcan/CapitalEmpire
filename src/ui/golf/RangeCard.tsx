@@ -10,6 +10,8 @@ import { PRICE_MAX, PRICE_MIN, PROPS_APPEAL_CAP, dayDemand, priceFactor, rangeSc
 import { appealText } from '../../game/golf/decor';
 import { WALK_SERVE_M, lotsLine } from '../../game/golf/walkserve';
 import { Icon } from '../Icon';
+import { ActionTile, TILE_BIG, TILE_ROW, TILE_SMALL } from '../ActionTile'; // J8 (#1261): a picture on each action
+import { PLACE_TILE, PRACTICE_BUILD_TILE, RANGE_UPGRADE_TILE, SESSION_TILE } from '../tool-tiles';
 import { statusIcon } from '../status-icon';
 
 import { money } from './money';
@@ -49,9 +51,13 @@ export function RangeCard({ ballFix, onBallFix, attendantWage, onLetGo, forSale,
       {/* J7 (#1225): a jam game's old range stands for sale: Buy opens it (no golfer comes before) */}
       {forSale && (
         <div className="space-y-1.5 rounded-lg border border-amber-300/40 bg-amber-300/10 p-2 text-xs" data-testid="range-for-sale">
-          <div className="flex items-center justify-between gap-2">
-            <span className="font-medium text-white">For sale: this old range, its dirt car park and the junk on it</span>
-            <button className="chip chip-on shrink-0 disabled:opacity-40" disabled={!!forSale.why || !onBuyRange} title={forSale.why ?? `Buy it (${money(forSale.cost)}): golfers stop for a bucket from then on`} onClick={() => onBuyRange?.()} data-testid="range-buy">Buy {money(forSale.cost)}</button>
+          {/* J8: the old range's gate, large: the card's main action */}
+          <div className="flex items-center gap-2.5">
+            <ActionTile tile="buy-range" size={TILE_BIG} />
+            <div className="min-w-0 flex-1 space-y-1.5">
+              <div className="font-medium text-white">For sale: this old range, its dirt car park and the junk on it</div>
+              <button className="chip chip-on disabled:opacity-40" disabled={!!forSale.why || !onBuyRange} title={forSale.why ?? `Buy it (${money(forSale.cost)}): golfers stop for a bucket from then on`} onClick={() => onBuyRange?.()} data-testid="range-buy">Buy {money(forSale.cost)}</button>
+            </div>
           </div>
           {forSale.why && <div className="text-[12px] text-amber-300/80">{forSale.why}</div>}
         </div>
@@ -62,7 +68,7 @@ export function RangeCard({ ballFix, onBallFix, attendantWage, onLetGo, forSale,
           <div className="text-[12px] uppercase text-amber-200">Place on your land</div>
           {places.map(p => (
             <div key={p.id} className="flex items-center justify-between gap-2" data-testid={`range-place-${p.id}`} data-guide={`range-place-${p.id}`}>
-              <span className={p.done ? 'text-emerald-300' : 'text-white'}>{p.name}{p.why && !p.done ? <span className="block text-[12px] text-amber-300/80">{p.why}</span> : null}</span>
+              <span className="flex min-w-0 items-center gap-2"><ActionTile tile={PLACE_TILE[p.id]} size={TILE_ROW} /><span className={p.done ? 'text-emerald-300' : 'text-white'}>{p.name}{p.why && !p.done ? <span className="block text-[12px] text-amber-300/80">{p.why}</span> : null}</span></span>
               {p.done ? <span className="text-emerald-300">Placed</span>
                 : <button className="chip chip-on disabled:opacity-40" disabled={!!p.why || !onPlace} title={p.why || `In hand as a ghost: click the map to build it (${money(p.cost)})`} onClick={() => onPlace?.(p.id)} data-testid={`range-place-${p.id}-go`}>Place {money(p.cost)}</button>}
             </div>
@@ -86,7 +92,7 @@ export function RangeCard({ ballFix, onBallFix, attendantWage, onLetGo, forSale,
             <Tile label="You carry" value={`${balls.basket}/${balls.kit.basket}`} sub={balls.kit.cart ? `cart ${balls.hopper}/${balls.kit.hopper}` : 'basket'} />
           </div>
           {balls.out && <div className="text-[12px] text-rose-300" data-testid="range-balls-out">Out of balls: {balls.noBalls} golfer{balls.noBalls === 1 ? '' : 's'} drove on today. Walk out (Walk mode) and pick them up: hold F over the balls, or click a pile. Empty your basket at the ball room by the shop.
-            {ballFix && onBallFix && <button className="chip chip-on ml-1 mt-1 normal-case" onClick={onBallFix} data-testid="range-balls-fix">{ballFix}</button>}</div>}
+            {ballFix && onBallFix && <button className="chip chip-on ml-1 mt-1 normal-case" onClick={onBallFix} data-testid="range-balls-fix"><ActionTile tile={/attendant/i.test(ballFix) ? 'hire-attendant' : 'pick-balls'} size={TILE_SMALL} />{ballFix}</button>}</div>}
           {attendantWage !== undefined && onLetGo && <div className="flex items-center justify-between gap-2 text-[12px] text-slate-400" data-testid="range-attendant">
             <span>Your range attendant picks the balls up on his shift: <span className="text-slate-200">${attendantWage} a month</span></span>
             <button className="chip normal-case" onClick={onLetGo} title="Save his wage: you pick the balls up yourself (Walk)" data-testid="range-attendant-go">Let go</button></div>}
@@ -113,7 +119,7 @@ export function RangeCard({ ballFix, onBallFix, attendantWage, onLetGo, forSale,
             </div>
           )}
           <div className="flex flex-wrap items-center gap-1.5">
-            {onTree && <button className={`chip ${treeOpen ? 'chip-on' : ''}`} onClick={onTree} title="The ball room's tools, staff and machines: bought with the range's till" data-testid="range-balls-tree" data-guide="range-balls-tree">Ball room upgrades {view.upgrades.filter(u => u.branch && u.owned).length}/{view.upgrades.filter(u => u.branch).length} ▸</button>}
+            {onTree && <button className={`chip ${treeOpen ? 'chip-on' : ''}`} onClick={onTree} title="The ball room's tools, staff and machines: bought with the range's till" data-testid="range-balls-tree" data-guide="range-balls-tree"><ActionTile tile="ball-washer" size={TILE_SMALL} />Ball room upgrades {view.upgrades.filter(u => u.branch && u.owned).length}/{view.upgrades.filter(u => u.branch).length} ▸</button>}
             {balls.supplier && onOrderBalls && <button className="chip disabled:opacity-40" disabled={balls.casesLeft <= 0} onClick={onOrderBalls} title={`A case of ${balls.caseBalls} balls from the supplier: ${money(balls.caseCost)}, ${balls.casesLeft} left today`} data-testid="range-balls-order">Order {balls.caseBalls} balls {money(balls.caseCost)}</button>}
           </div>
         </div>
@@ -133,12 +139,18 @@ export function RangeCard({ ballFix, onBallFix, attendantWage, onLetGo, forSale,
         <span className="text-slate-400">{money(view.upkeepSeason)} this season</span>
       </div>
       <div className="rounded-lg border border-white/10 bg-white/5 p-2 text-xs">
-        <div className="mb-1 flex items-center justify-between"><span className="text-[12px] uppercase text-slate-400">Bucket price</span><span className="text-slate-400">{demandWord}</span></div>
-        <div className="flex items-center gap-2">
-          <button className="chip" disabled={biz.price <= PRICE_MIN} onClick={() => onPrice(biz.price - 1)} title="Cheaper">−</button>
-          <span className="min-w-[3rem] text-center text-base font-bold text-white">{money(biz.price)}</span>
-          <button className="chip" disabled={biz.price >= PRICE_MAX} onClick={() => onPrice(biz.price + 1)} title="Dearer">+</button>
-          <span className="text-[12px] text-slate-400">{st.extra ? `+ ${money(st.extra)} shop spend · ` : ''}fair price {money(st.ref)}</span>
+        {/* J8: the bucket on its counter beside the price row */}
+        <div className="flex items-start gap-2">
+          <ActionTile tile="bucket-price" size={TILE_ROW} />
+          <div className="min-w-0 flex-1">
+            <div className="mb-1 flex items-center justify-between"><span className="text-[12px] uppercase text-slate-400">Bucket price</span><span className="text-slate-400">{demandWord}</span></div>
+            <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+              <button className="chip" disabled={biz.price <= PRICE_MIN} onClick={() => onPrice(biz.price - 1)} title="Cheaper">−</button>
+              <span className="min-w-[3rem] text-center text-base font-bold text-white">{money(biz.price)}</span>
+              <button className="chip" disabled={biz.price >= PRICE_MAX} onClick={() => onPrice(biz.price + 1)} title="Dearer">+</button>
+              <span className="text-[12px] text-slate-400">{st.extra ? `+ ${money(st.extra)} shop spend · ` : ''}fair price {money(st.ref)}</span>
+            </div>
+          </div>
         </div>
         <div className="mt-1 text-[12px] text-slate-400">Each golfer you see stands for {scale} customers over the season.</div>
         {/* J4 (#1207): golfers and takings a month at this price and a dollar either side (golf/payback.ts, the demand curve above) */}
@@ -150,16 +162,16 @@ export function RangeCard({ ballFix, onBallFix, attendantWage, onLetGo, forSale,
             <span className="text-[12px] uppercase text-slate-400">Your golf</span>
             <span className="flex items-center gap-1.5">
               <span className="text-slate-300" title="Your handicap: the strokes over par your skills average over 18 holes">{you.name} · handicap <span className="font-semibold text-white" data-testid="range-you-hcp">{you.hcpText}</span></span>
-              {onProfile && <button className={`chip normal-case ${profileOpen ? 'chip-on' : ''}`} onClick={onProfile} title="Your skills, your practice log, your rounds and your tee time" data-testid="range-you-profile">Profile</button>}
+              {onProfile && <button className={`chip normal-case ${profileOpen ? 'chip-on' : ''}`} onClick={onProfile} title="Your skills, your practice log, your rounds and your tee time" data-testid="range-you-profile"><ActionTile tile="profile" size={TILE_SMALL} />Profile</button>}
             </span>
           </div>
           <Session s={you.sessions.find(x => x.kind === 'bucket')!} onPractise={onPractise} />
           {onHit && (
             <div className="flex flex-wrap items-center gap-1.5" data-testid="range-you-hit">
               <button className="chip chip-on normal-case disabled:opacity-40" disabled={!!hitWhy?.range} onClick={() => onHit('range')} data-testid="range-hit-balls"
-                title={hitWhy?.range ?? 'Stand on a mat and hit balls yourself, from behind the golfer: drills open shots for the course and lower your handicap'}>Hit balls</button>
+                title={hitWhy?.range ?? 'Stand on a mat and hit balls yourself, from behind the golfer: drills open shots for the course and lower your handicap'}><ActionTile tile="hit-balls" size={TILE_SMALL} />Hit balls</button>
               <button className="chip normal-case disabled:opacity-40" disabled={!!hitWhy?.short} onClick={() => onHit('short')} data-testid="range-chip-putt"
-                title={hitWhy?.short ?? 'Chip, putt and play out of the bunker at your chipping green: drills open the putt read and sharpen your short game'}>Chip and putt</button>
+                title={hitWhy?.short ?? 'Chip, putt and play out of the bunker at your chipping green: drills open the putt read and sharpen your short game'}><ActionTile tile="chip-and-putt" size={TILE_SMALL} />Chip and putt</button>
               <span className="text-[12px] text-slate-400" data-testid="range-drills">{drillsDone} {drillsDone === 1 ? 'drill' : 'drills'} done</span>
             </div>
           )}
@@ -178,9 +190,9 @@ export function RangeCard({ ballFix, onBallFix, attendantWage, onLetGo, forSale,
         {view.practice.map(f => (
           <div key={f.id} className={`rounded-lg border p-2 text-xs ${f.state === 'open' ? 'border-emerald-500/30 bg-emerald-500/5' : 'border-white/5 bg-white/5'}`} data-testid={`range-practice-${f.id}`}>
             <div className="flex items-center justify-between gap-2">
-              <span className="font-medium text-white">{f.name}</span>
+              <span className="flex min-w-0 items-center gap-2 font-medium text-white"><ActionTile tile={PRACTICE_BUILD_TILE[f.id]} size={TILE_ROW} />{f.name}</span>
               {f.state === 'open' ? <span className="text-emerald-300">Open</span>
-                : onBuildPractice ? <span className="flex items-center gap-1">
+                : onBuildPractice ? <span className="flex shrink-0 items-center gap-1 whitespace-nowrap">
                   {onQuickPractice && f.state === 'none' && <button className="chip normal-case disabled:opacity-40" disabled={!!practiceWhy} title={practiceWhy || `Lay the ${f.name.toLowerCase()} for you where it fits in the practice area, at its starting size`} onClick={() => onQuickPractice(f.id)} data-testid={`range-practice-quick-${f.id}`}>Quick build</button>}
                   <button className="chip chip-on disabled:opacity-40" disabled={!!practiceWhy} title={practiceWhy || `Pick the ${f.name.toLowerCase()} and place it in the practice area`} onClick={() => onBuildPractice(f.id)} data-testid={`range-practice-build-${f.id}`}>Build</button></span>
                 : <span className={f.state === 'none' ? 'text-slate-400' : 'text-amber-300'}>{f.state === 'none' ? 'Not built' : 'Not open yet'}</span>}
@@ -222,7 +234,7 @@ export function RangeCard({ ballFix, onBallFix, attendantWage, onLetGo, forSale,
           {junk.map(j => (
             <div key={j.i} className="flex items-center justify-between gap-2 rounded-lg border border-white/5 bg-white/5 px-2 py-1 text-xs" data-testid={`range-junk-${j.i}`}>
               <span className="text-white">{j.name} <span className="text-slate-400">· {j.m} m</span></span>
-              <button className="chip disabled:opacity-40" disabled={!onClearJunk} title={`Clear it: ${money(junkCost)}, ${money(j.scrap)} of scrap back`} onClick={() => onClearJunk?.(j.i)} data-testid={`range-junk-clear-${j.i}`}>Clear {money(junkCost)}</button>
+              <button className="chip disabled:opacity-40" disabled={!onClearJunk} title={`Clear it: ${money(junkCost)}, ${money(j.scrap)} of scrap back`} onClick={() => onClearJunk?.(j.i)} data-testid={`range-junk-clear-${j.i}`}><ActionTile tile="clear-junk" size={TILE_SMALL - 4} />Clear {money(junkCost)}</button>
             </div>
           ))}
         </div>
@@ -231,17 +243,23 @@ export function RangeCard({ ballFix, onBallFix, attendantWage, onLetGo, forSale,
         <div className="text-[12px] uppercase text-slate-400">Upgrades</div>
         {view.upgrades.filter(u => !u.branch && !(JAM && JAM_HIDDEN_UPGRADES.includes(u.id))).map(u => (
           <div key={u.id} className={`rounded-lg border p-2 text-xs ${u.owned ? 'border-emerald-500/30 bg-emerald-500/5' : 'border-white/5 bg-white/5'}`} data-guide={`range-buy-${u.id}`}>
-            <div className="flex items-center justify-between gap-2">
-              <span className="font-medium text-white">{u.name}</span>
-              {u.owned ? <span className="text-emerald-300">Built</span> : (
-                <button className="chip chip-on disabled:opacity-40" disabled={!!u.why} title={u.why || `In hand as a ghost: click it onto your range to build it (${money(u.cost)})`} onClick={() => onBuy(u.id)} data-testid={`range-buy-${u.id}`}>Place {money(u.cost)}</button>
-              )}
+            {/* J8: the upgrade's picture at the left of the whole row */}
+            <div className="flex gap-2">
+              <ActionTile tile={RANGE_UPGRADE_TILE[u.id]} size={TILE_ROW} className={u.owned ? 'opacity-70' : ''} />
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center justify-between gap-2">
+                  <span className="font-medium text-white">{u.name}</span>
+                  {u.owned ? <span className="text-emerald-300">Built</span> : (
+                    <button className="chip chip-on disabled:opacity-40" disabled={!!u.why} title={u.why || `In hand as a ghost: click it onto your range to build it (${money(u.cost)})`} onClick={() => onBuy(u.id)} data-testid={`range-buy-${u.id}`}>Place {money(u.cost)}</button>
+                  )}
+                </div>
+                <div className="text-[12px] text-slate-400">{u.effect}</div>
+                {u.owned ? <div className="text-[12px] text-slate-400">Upkeep {money(u.upkeep)} a month</div>
+                  : <PaybackLine p={payback(u.cost, u.upkeep, rangeUpgradeExtra(biz, view.demand, view.dayLen, u.id))} testid={`range-payback-${u.id}`} />}
+                {!u.owned && view.needs[u.id].length > 0 && <div className="text-[12px] text-slate-400">Needs {view.needs[u.id].join(' and ')}</div>}
+                {!u.owned && u.why && u.why !== 'Built' && <div className="text-[12px] text-amber-300/80">{u.why}</div>}
+              </div>
             </div>
-            <div className="text-[12px] text-slate-400">{u.effect}</div>
-            {u.owned ? <div className="text-[12px] text-slate-400">Upkeep {money(u.upkeep)} a month</div>
-              : <PaybackLine p={payback(u.cost, u.upkeep, rangeUpgradeExtra(biz, view.demand, view.dayLen, u.id))} testid={`range-payback-${u.id}`} />}
-            {!u.owned && view.needs[u.id].length > 0 && <div className="text-[12px] text-slate-400">Needs {view.needs[u.id].join(' and ')}</div>}
-            {!u.owned && u.why && u.why !== 'Built' && <div className="text-[12px] text-amber-300/80">{u.why}</div>}
           </div>
         ))}
       </div>
@@ -256,7 +274,7 @@ function Session({ s, onPractise }: { s: YouPracticeView; onPractise?: (k: Pract
   return (
     <div className="space-y-0.5" data-testid={`practise-${s.kind}`}>
       <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
-        <button className="chip chip-on disabled:opacity-40" disabled={!onPractise || !!s.why} onClick={() => onPractise?.(s.kind)} title={s.why ?? `${s.name}: $${s.cost} and ${s.min} minutes; ${gains}`} data-testid={`practise-${s.kind}-go`}>{s.name}</button>
+        <button className="chip chip-on disabled:opacity-40" disabled={!onPractise || !!s.why} onClick={() => onPractise?.(s.kind)} title={s.why ?? `${s.name}: $${s.cost} and ${s.min} minutes; ${gains}`} data-testid={`practise-${s.kind}-go`}><ActionTile tile={SESSION_TILE[s.kind]} size={TILE_SMALL} />{s.name}</button>
         <span className="text-slate-300">${s.cost.toLocaleString()} · {s.min} min</span>
         <span className="text-emerald-300/90">{gains}</span>
         <span className="text-slate-400">handicap {hcp(s.hcp[0])} to {hcp(s.hcp[1])}</span>
