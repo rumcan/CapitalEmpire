@@ -23,6 +23,9 @@ export interface WorldLabel extends PlaceLabel {
   alpha: number;
 }
 
+/** a stand-in's label ("Stand In for Church", "Stand In for you") */
+export const isStandIn = (text: string): boolean => text.startsWith('Stand In');
+
 /** the outline the map's labels share */
 export const LABEL_OUTLINE = 'rgba(2,6,23,0.9)';
 
@@ -90,6 +93,8 @@ export class WorldLabels {
    *  pointer is off the map) or its key is the selected thing's (keep). The labels that are not names stay: the hints under the pointer (PRI.hint), the
    *  warnings (PRI.warn) and the town's growth floats (PRI.growth) */
   hoverOnly = false;
+  /** whether a "Stand In for ..." label is written at all (the owner, 2026-11-14: "make sure we have no labels that says Stand in"): off unless switched on */
+  standIns = false;
   hoverAt: { x: number; y: number } | null = null;
   /** the keys of the selected things, whose labels stay in hoverOnly */
   keep: ReadonlySet<unknown> = new Set();
@@ -107,9 +112,12 @@ export class WorldLabels {
   /** places this frame's labels in the view (canvas px w x h); the number shown. J7d: under the hover rule the labels not hovered are left out first, so they
    *  neither show nor push the hovered one aside */
   place(w: number, h: number): number {
-    if (this.hoverOnly) {
+    if (this.hoverOnly || !this.standIns) {
       let k = 0;
-      for (let i = 0; i < this.n; i++) { const l = this.list[i]!; if (this.hovered(l)) { if (k !== i) { this.list[i] = this.list[k]!; this.list[k] = l; } k++; } else l.shown = false; }
+      for (let i = 0; i < this.n; i++) {
+        const l = this.list[i]!, want = (this.standIns || !isStandIn(l.text)) && (!this.hoverOnly || this.hovered(l));
+        if (want) { if (k !== i) { this.list[i] = this.list[k]!; this.list[k] = l; } k++; } else l.shown = false;
+      }
       return (this.shown = this.placer.place(this.list, k, 0, 0, w, h));
     }
     return (this.shown = this.placer.place(this.list, this.n, 0, 0, w, h));
