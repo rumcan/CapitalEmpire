@@ -78,7 +78,7 @@ import { COST_GROUPS, INCOME_LINES } from './game/golf/reports';
 import { debtOf } from './game/golf/finance';
 import { TitleCard } from './ui/jam/TitleCard';
 import { MenuScene, posterOf } from './ui/jam/MenuScene';
-import { SHOW_STOPS, choiceHash, choiceOf, pickStart, sceneOff, showBoot, showWanted, weakMachine } from './game/showcase';
+import { SHOW_STOPS, choiceHash, choiceOf, pickStart, poseAt, sceneOff, showBoot, showWanted, weakMachine } from './game/showcase';
 import { ShowDirector } from './game/showcase-director';
 import { loadShowcaseSave } from './game/showcase-load';
 import { formatPercent } from './ui/TournamentResults';
@@ -242,13 +242,13 @@ export default function App() {
     if (!game.show) { try { history.replaceState(null, '', '#scene=off'); } catch { /* none */ } location.reload(); return; } // the scene's world could not be had: start again without it
     if (!snapRef.current) return;
     const d = new ShowDirector(game, SHOW_STOPS, startStop, snapRef.current, e => { if (e === 'first') setPosterOn(false); else if (e === 'slow') { d.end(); game.freeze(); setPosterOn(true); } });
-    director.current = d; d.begin(); (window as unknown as Record<string, unknown>).__showDirector = d; // (the checks' hook, like __game)
+    director.current = d; d.begin(); Object.assign(window as unknown as Record<string, unknown>, { __showDirector: d, __showcase: { stops: SHOW_STOPS, poseAt } }); // (the checks' hooks, like __game: scripts/jam/menu-scene-shots.mjs)
   }, [game?.ready, sceneWanted, game, startStop]);
   useEffect(() => () => { director.current?.end(); director.current = null; }, []);
   useEffect(() => { if (JAM) { try { performance.mark('ff-title-card'); } catch { /* no marks */ } } }, []);
   useEffect(() => { if (game?.ready) { try { performance.mark('ff-game-ready'); } catch { /* no marks */ } } }, [game?.ready]);
   /** the jam's title card is up (and the HUD behind it hidden: the picture is the scene's, or the still's) */
-  const onTitle = JAM && titleOpen && !lab;
+  const onTitle = JAM && titleOpen && !lab && !fatal; // (no card over the "needs WebGL2" message: there is no game to start)
   // T356: the downloaded courses (T358's library) the Course flyout offers under Place a real course: listed when the page starts and each time that flyout opens (openFly); a change draws the menu again
   useEffect(() => { void refreshKept(); return watchKept(bump); }, []);
   const [help, setHelp] = useState(false);
