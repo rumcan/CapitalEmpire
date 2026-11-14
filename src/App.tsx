@@ -99,6 +99,7 @@ import { SceneCard } from './ui/SceneCard';
 import { LandPanel } from './ui/golf/LandPanel';
 import { WelcomeCard } from './ui/golf/WelcomeCard';
 import { RealPlaceDialog, RealPlaceHud } from './ui/course/RealPlaceCard';
+import { StartPickCard } from './ui/golf/StartPickCard';
 import { OSM_COURSES } from './game/golf/osm';
 import { keptCourses, refreshKept, watchKept } from './game/golf/osm/kept';
 import { RangeGuideCard } from './ui/golf/RangeGuideCard';
@@ -516,6 +517,9 @@ export default function App() {
     return { right: (c: StackCard) => stackRight(stackCol(open, c), panel, fit), guide: () => stackRight(stackCol({ ...open, player: false, bag: false }, 'bag'), panel, fit) };
   })();
 
+  /** J9 (#1268): a new game's start is being chosen: the map and the card, nothing else (the rail, the top bar, the hint bar and the minimap wait for the start) */
+  const picking = !!game?.startPick;
+
   return (
     <div className="ui-root fixed inset-0 overflow-hidden bg-[#1b2816] text-slate-100 select-none" style={{ fontFamily: 'ui-sans-serif, system-ui, sans-serif' }}>
       <TooltipLayer />
@@ -547,6 +551,7 @@ export default function App() {
 
       {game && game.ready && !lab && (
         <>
+          <div className={picking ? 'hidden' : 'contents'}>{/* (J9: shown once the start is laid) */}
           <div ref={topBar} className="pointer-events-none absolute left-0 right-0 top-0 z-30 flex flex-wrap items-start justify-between gap-2 p-3">
             <div className="pointer-events-auto glass flex items-center gap-1.5 px-3 py-2 min-[1600px]:gap-3 min-[1600px]:px-4">
               {/* T235 (#690, the concept's title): in a golf game the club's name over "Year 3 • October • Sunny 16°C" (ui/ClubTitle.tsx); its full
@@ -895,12 +900,13 @@ export default function App() {
           </div>
             </>;
           })()}
+          </div>
 
           {/* the hint bar, centred in the lane between the minimap's town chip and the stats card. Golf mode (T035): the first-run hint, with its Got it;
               and while a course surface is armed (T118), always the Course pill: what a click lays (the surface's disc and mark, the hole it joins, the
               price a cell, the state's words) and how to switch or stop; no bar without either. T250: it stands above the town footer; T255: and above a
               town tool's panel docked on it (--foot-stack) */}
-          {(!gv || hint || courseHint || (game.tool === 'practice' && game.practice.kind)) && (
+          {!picking && (!gv || hint || courseHint || (game.tool === 'practice' && game.practice.kind)) && (
           <div className="pointer-events-none absolute bottom-[calc(var(--foot-stack,0px)+0.5rem)] left-[24.5rem] right-[15.5rem] z-20 flex flex-col items-center gap-1.5">
             {(!gv || hint) && (
             <div className={`flex items-center gap-2 glass rounded-full! px-4 py-1.5 text-xs ${gv ? 'pointer-events-auto' : ''}`}>
@@ -1038,7 +1044,7 @@ export default function App() {
               below={toasts.length ? <div className="flex flex-col items-center gap-1" data-testid="toasts">{toastEls(game)}</div> : undefined} />
             {rv.card && <ScoreCard v={rv} onNext={() => game.yourNextHole()} onDone={() => game.yourRoundEnd()} onClose={() => game.toggleYourCard(false)} />}</>; })()}
           {(game.youInCart ? game.youCart : game.you)?.skip && <div className="pointer-events-none absolute inset-x-0 bottom-24 z-20 flex justify-center"><button className="btn-gold pointer-events-auto px-4 py-1.5 text-sm" onClick={() => game.youSkip()} data-tip="A long walk: arrive now" data-testid="you-skip"><Icon name="play" size={16} />Skip the walk</button></div>}
-          {(() => { const w = !JAM && !game.seasonReport ? game.welcomeView() : null; /* (J7: not in the jam: its start tutorial welcomes, and the card's button pointed at a step order) */ return w && <WelcomeCard road={w.road} newHole={w.newHole} guide={!!game.rangeGuideView()} onGo={() => game.closeWelcome(true)} onClose={() => game.closeWelcome(false)} />; })()}
+          {(() => { const w = !JAM && !game.seasonReport ? game.welcomeView() : null; /* (J7: not in the jam: its start tutorial welcomes, and the card's button pointed at a step order) */ return w && <WelcomeCard road={w.road} newHole={w.newHole} guide={!!game.rangeGuideView()} placed={game.golf?.range?.built !== false} onGo={() => game.closeWelcome(true)} onClose={() => game.closeWelcome(false)} />; })()}
           {(() => { // T293 (#878): the start tutorial, where the guided build's card stands (that card waits for it): the town grows only along your roads
             const tv = !game.seasonReport && !game.sceneRef && !game.playerCardOpen && !game.bagCardOpen && !game.cardsCardOpen && !game.cardsFolded() ? game.tourView() : null; // (T348: and away while a shot is open: the cards fold)
             return tv && <RangeGuideCard view={tv} heading={JAM ? 'Tutorial · your club' : 'Tutorial · your town'} tid="tour" foot="Do each step, or skip it" offLabel="Skip tutorial" right={stack!.guide()} onShow={id => { game.tourShowMe(id); bump(); }} onNext={() => { game.tourNextStep(); bump(); }} onSkip={id => { game.tourSkipStep(id); bump(); }} onFold={f => { game.tourFolded = f; bump(); }} />;
@@ -1087,6 +1093,7 @@ export default function App() {
           {game.holeCardHole !== null && <HoleCard game={game} right={game.panel ? 'right-[19.5rem]' : 'right-3'} />}
           {game.view3pHole !== null && <View3pPanel game={game} />}
           {game.real.active && <RealPlaceHud game={game} />}
+          {picking && <StartPickCard game={game} />}
           {game.real.active && <RealPlaceDialog game={game} />}
           {game.eventMode && !game.site && !game.golfMode && (
             <div className={`pointer-events-auto absolute ${game.panel ? 'right-[19.5rem]' : 'right-3'} top-[var(--hud-top,6rem)] z-20 flex items-center gap-3 glass p-3 text-sm`}>
@@ -1120,7 +1127,7 @@ export default function App() {
             </div>
           )}
 
-          <Minimap game={game} />
+          {!picking && <Minimap game={game} />}
           {JAM && titleOpen && <TitleCard canContinue={hasSave} onNew={() => leaveTitle(true)} onContinue={() => leaveTitle(false)} />}
           {dev && readouts && <PerfPanel game={game} />}
           {dev && readouts && <TilesPanel game={game} />}

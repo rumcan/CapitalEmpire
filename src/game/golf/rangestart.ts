@@ -219,7 +219,7 @@ function geomAt(J: Pt, axis: 'x' | 'y', side: 1 | -1, size: [number, number]): G
 }
 /** J9: why a start cannot lie on the land the fit rules read, in the words the placement's ghost shows by the pointer */
 export const START_WHY = {
-  edge: 'Too close to the edge of the map',
+  edge: "Too near the map's edge for the road and the town",
   ground: 'Needs clear, flat ground for the shop and car park',
   parcel: 'Not enough open land beside it for a course',
   town: 'No room for the town across the road',
