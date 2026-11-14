@@ -14062,14 +14062,17 @@ export class Game {
   }
   /** T206: Facilities ▸ Practice in hand: the practice area's outline and the facility's ghost (green, sand and mat, see-through; red with the
    *  reason where it cannot go) with its label; the bulldozer over a practice facility: what a click removes and refunds */
-  private pracHover: { key: string; f: ReturnType<PracticeTool['facilityAt']>; s: ReturnType<PracticeTool['starterAt']> } | null = null;
+  private pracHover: { hx: number; hy: number; rev: number; gone: number; f: ReturnType<PracticeTool['facilityAt']>; s: ReturnType<PracticeTool['starterAt']> } | null = null;
+  /** #1298: the starter pieces gone as one number (no allocation: the bulldozer's hover asks every frame) */
+  private starterGoneKey(): number { const k = this.golf?.range?.starter; if (!k) return 0; let v = k.gone.length; for (const id of k.gone) v = v * 7 + id + 1; return v; }
   private drawPracticeGhost(ctx: CanvasRenderingContext2D) {
     const m = this.ghostMouse;
     if (this.tool === 'bulldoze' && !this.hoverPiece && this.hover && this.golf && this.courseGrid) {
-      // (#1298: a starter piece of the practice area's set under the pointer: its outline in the bulldozer's red, "free" to remove; the key follows the pieces still standing)
-      const h = this.hover, key = `${Math.floor(h.x * 2)},${Math.floor(h.y * 2)},${this.courseGrid.rev},${this.golf.range?.starter?.gone.join('-') ?? ''}`;
-      if (this.pracHover?.key !== key) { const f = this.practice.facilityAt(h.x, h.y); this.pracHover = { key, f, s: f ? null : this.practice.starterAt(h.x, h.y) }; }
-      const f = this.pracHover.f, s = this.pracHover.s;
+      // (#1298: a starter piece of the practice area's set under the pointer: its outline in the bulldozer's red, "free" to remove; it is looked for again when the pointer moves to
+      // another half tile, the grid changes or a piece goes)
+      const h = this.hover, hx = Math.floor(h.x * 2), hy = Math.floor(h.y * 2), rev = this.courseGrid.rev, gone = this.starterGoneKey(), ph = this.pracHover;
+      if (!ph || ph.hx !== hx || ph.hy !== hy || ph.rev !== rev || ph.gone !== gone) { const f = this.practice.facilityAt(h.x, h.y); this.pracHover = { hx, hy, rev, gone, f, s: f ? null : this.practice.starterAt(h.x, h.y) }; }
+      const f = this.pracHover!.f, s = this.pracHover!.s;
       if (f && m) this.hintAt(ctx, m.mx, m.my, `Click removes the ${f.name} (+$${f.refund.toLocaleString()})`, true);
       else if (s) {
         this.setIso(ctx); ctx.beginPath(); ctx.moveTo(s.pts[0]!, s.pts[1]!); for (let k = 2; k + 1 < s.pts.length; k += 2) ctx.lineTo(s.pts[k]!, s.pts[k + 1]!); ctx.closePath(); ctx.setTransform(1, 0, 0, 1, 0, 0);

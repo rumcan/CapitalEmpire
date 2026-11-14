@@ -136,11 +136,11 @@ export function starterAt(set: readonly StarterPiece[], gone: readonly number[],
   }
   return best;
 }
-/** the share of a piece's cells (its outline's: a bunker's, its earth rim's) that lie under the course's cells for it to count as painted over: the cell at its middle
- *  (where a dirt green's flag stands, a bunker's sand lies) painted, or this share of its cells. A stroke brushing its edge leaves it standing */
-export const PAINTED_SHARE = 0.4;
-/** #1298: the ids of the pieces still standing that the course grid's painted cells (any surface but the land's own) now cover: the cell at a piece's middle holds one, or at least
- *  PAINTED_SHARE of the cells of its outline do. Only the pieces whose outline's box meets `box` (tiles x0 y0 x1 y1: the cells an edit changed) are looked at, when given */
+/** the share of a piece's cells (its outline's: a bunker's, its earth rim's) that lie under the course's cells for it to count as painted over: a third. A stroke brushing its edge, or one thin
+ *  line across it, leaves it standing; paint over the better part of it and it goes with its flag (what is left of its ground would stand out from the paint) */
+export const PAINTED_SHARE = 0.35;
+/** #1298: the ids of the pieces still standing that the course grid's painted cells (any surface but the land's own) now cover: at least PAINTED_SHARE of the cells of a piece's outline hold
+ *  one. Only the pieces whose outline's box meets `box` (tiles x0 y0 x1 y1: the cells an edit changed) are looked at, when given */
 export function paintedOver(set: readonly StarterPiece[], gone: readonly number[], g: Grid, box?: readonly [number, number, number, number]): number[] {
   const out: number[] = [];
   for (const p of set) {
@@ -151,10 +151,9 @@ export function paintedOver(set: readonly StarterPiece[], gone: readonly number[
       for (let i = 0; i + 1 < ring.length; i += 2) { x0 = Math.min(x0, ring[i]!); x1 = Math.max(x1, ring[i]!); y0 = Math.min(y0, ring[i + 1]!); y1 = Math.max(y1, ring[i + 1]!); }
       if (x1 < box[0] || x0 > box[2] || y1 < box[1] || y0 > box[3]) continue;
     }
-    const mid = cellAt(g, p.centre.x, p.centre.y);
     let n = 0, painted = 0;
-    polyCells(g, ring as number[], i => { n++; if (g.surf[i] !== SURF.none) painted++; });
-    if ((mid >= 0 && g.surf[mid] !== SURF.none) || (n > 0 && painted >= PAINTED_SHARE * n)) out.push(p.id);
+    polyCells(g, ring, i => { n++; if (g.surf[i] !== SURF.none) painted++; });
+    if (n > 0 && painted >= PAINTED_SHARE * n) out.push(p.id);
   }
   return out;
 }

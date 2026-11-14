@@ -505,7 +505,7 @@ export class RangeHost {
   /** #1298: the starter pieces a change of the course grid (d, made in place on g) painted over go, as a step aside (the Texture Painter's stroke or shape: the paint wins; its undo brings
    *  them back); null: it painted over none */
   paintedOver(g: Grid, d: GridDiff): StepAside | null {
-    const b = this.ctx.biz(), sc = this.scene; if (!b?.starter || !sc || !sc.starter.length || !d.n) return null;
+    const b = this.ctx.biz(), sc = this.scene; if (!b?.starter || !sc || !sc.starter.length || !d.n || b.starter.gone.length >= sc.starter.length) return null;   // (none left standing: nothing to look at)
     let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
     for (let k = 0; k < d.n; k++) { if (d.s1[k] === 0) continue; const i = d.idx[k]!, cx = i % d.w, cy = (i - cx) / d.w, x = d.x0 + cx * CELL_T, y = d.y0 + cy * CELL_T; if (x < x0) x0 = x; if (x + CELL_T > x1) x1 = x + CELL_T; if (y < y0) y0 = y; if (y + CELL_T > y1) y1 = y + CELL_T; }
     if (x0 > x1) return null;   // (it laid no surface: a rub out, a bulldozed facility)

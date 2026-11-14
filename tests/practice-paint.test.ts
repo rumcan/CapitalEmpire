@@ -8,7 +8,7 @@ import { COURSE_RANK, paintOrder, paintRank, paintTier } from '../src/game/paint
 import type { CoursePatch, LotPatch } from '../src/game/ground-protocol';
 import { practiceArea } from '../src/game/golf/practice';
 import { PracticeTool, type PracticeHostCtx } from '../src/game/golf/practicetool';
-import { PAINTED_SHARE, paintedOver, starterAt, starterName, starterSet, starterPatches, type StarterPiece } from '../src/game/golf/practicestarter';
+import { PAINTED_SHARE, paintedOver, starterAt, starterName, starterSet } from '../src/game/golf/practicestarter';
 import { defaultRangeBiz, rangeScene, withUpgrade, type RangeBizSave, type ScenePiece } from '../src/game/golf/rangebiz';
 import { RangeHost, type RangeHostCtx } from '../src/game/golf/rangehost';
 import { SURF, cellAt, makeGrid, paintDisc, type Grid } from '../src/game/ext/course-grid';
@@ -27,7 +27,7 @@ const start = { tier: 1, exits: 2, residents: 0 };
 
 const SQUARE = [0, 0, 1, 0, 1, 1, 0, 1];
 const area = (z: number, u?: true): LotPatch => ({ pts: SQUARE, tex: 'dirt', paint: { s: 1, a: 0, b: 0, bt: 'kerb', z, ...(u ? { u: 1 as const } : {}) } });
-const course = (): LotPatch => ({ pts: SQUARE, tex: 'grass', course: { cx: 0, cy: 0, size: 64, layers: [] } as CoursePatch });
+const course = (): LotPatch => ({ pts: SQUARE, tex: 'grass', course: { cx: 0, cy: 0, size: 64, z: 0, layers: [] } as CoursePatch });
 
 test('the range\'s ground under the course, the course under the painted areas: an area flagged under draws first whatever its z, the course chunks together, then the areas by z', () => {
   const list = [area(5), course(), area(-1e6 + 3), area(-1e6 + 9, true), area(-3, true), area(0), course(), area(-1e6 + 1, true)];
@@ -77,7 +77,7 @@ test('the range host sends the flag with its ground (PatchPaint.u), only on the 
   sc.patches.forEach((p, i) => assert.equal(sent[i]!.paint!.u, p.under ? 1 : undefined, `${p.surf}`));
   assert.ok(sent.filter(p => p.paint!.u).length >= 6, 'the outfield and the five starter patches');
   // every z is as it was (the order among the areas is the scene's own)
-  sc.patches.forEach((p, i) => assert.equal(sent[i]!.paint!.z, -1e6 + i));
+  sc.patches.forEach((_, i) => assert.equal(sent[i]!.paint!.z, -1e6 + i));
 });
 
 // ---- the starter pieces: finding one, and what counts as painted over
@@ -105,13 +105,15 @@ test('a starter piece is found under a point inside its outline (a bunker\'s: it
 /** lays surface s on the cells of a disc of radius r tiles at (x, y) */
 const dab = (g: Grid, x: number, y: number, r: number, s: number = SURF.fescue) => paintDisc(g, x, y, r, s, 0, 0);
 
-test('a piece counts as painted over when the cell at its middle holds a surface, or 40% of its cells do: a stroke brushing its edge leaves it standing', () => {
+test('a piece counts as painted over when a third of its cells hold a surface: a stroke brushing its edge, or one thin line across it, leaves it standing', () => {
   const p = dirts[0]!;
   // nothing painted: nothing covered
   let g = grid(); assert.deepEqual(paintedOver(SET, [], g), []);
-  // a dab on its middle (the flag's cell)
-  g = grid(); dab(g, p.centre.x, p.centre.y, 0.6); assert.deepEqual(paintedOver(SET, [], g), [p.id], 'the middle');
-  // a stroke along its rim only: well under 40% of it, its middle bare
+  // one thin line across its middle (a 1 m brush: the flag's cell is painted): still standing; a dab over the better part of it: gone
+  g = grid(); for (let k = -3; k <= 3; k += 0.5) dab(g, p.centre.x + k, p.centre.y, 0.3);
+  assert.notEqual(g.surf[cellAt(g, p.centre.x, p.centre.y)], SURF.none, 'its middle is painted'); assert.deepEqual(paintedOver(SET, [], g), [], 'a thin line across it');
+  g = grid(); dab(g, p.centre.x, p.centre.y, 2.0); assert.deepEqual(paintedOver(SET, [], g), [p.id], 'a dab over half of it');
+  // a stroke along its rim only: well under a third of it, its middle bare
   g = grid(); for (let a = 0; a < Math.PI * 2; a += 0.35) dab(g, p.centre.x + Math.cos(a) * 3.1, p.centre.y + Math.sin(a) * 3.1, 0.5);
   assert.equal(g.surf[cellAt(g, p.centre.x, p.centre.y)], SURF.none); assert.deepEqual(paintedOver(SET, [], g), [], 'a ring round it: still standing');
   // a wide stroke round its middle (the middle itself left bare), past the share: gone
@@ -119,9 +121,9 @@ test('a piece counts as painted over when the cell at its middle holds a surface
   assert.ok(g.surf[cellAt(g, p.centre.x, p.centre.y)] === SURF.none, 'its middle bare');
   assert.deepEqual(paintedOver(SET, [], g), [p.id], 'a wide ring over most of it');
   // the edit's box limits the look: a dab far from it leaves it
-  g = grid(); dab(g, p.centre.x, p.centre.y, 0.6); assert.deepEqual(paintedOver(SET, [], g, [BOX[0], BOX[1], BOX[0] + 1, BOX[1] + 1]), [], 'an edit elsewhere');
+  g = grid(); dab(g, p.centre.x, p.centre.y, 2.0); assert.deepEqual(paintedOver(SET, [], g, [BOX[0], BOX[1], BOX[0] + 1, BOX[1] + 1]), [], 'an edit elsewhere');
   assert.deepEqual(paintedOver(SET, [p.id], g), [], 'a piece gone is not covered again');
-  assert.ok(PAINTED_SHARE > 0.25 && PAINTED_SHARE < 0.6);
+  assert.ok(PAINTED_SHARE > 0.2 && PAINTED_SHARE < 0.6);
   // a whole area painted: every piece
   g = grid(); for (let y = BOX[1] + 1; y < BOX[3]; y += 3) for (let x = BOX[0] + 1; x < BOX[2]; x += 3) dab(g, x, y, 2.4, SURF.longGrass);
   assert.deepEqual(paintedOver(SET, [], g), SET.map(q => q.id), 'all four');
@@ -172,10 +174,10 @@ test('painted over: the Texture Painter\'s step takes the pieces it covers with 
   // a rub out (no surface laid) takes none of them
   tool.redo(); tool.redo();
   tool.gridEdit('rub out', gg => ({ diffs: [paintDisc(gg, sc.starter[3]!.centre.x, sc.starter[3]!.centre.y, 2, SURF.rough, 0, 0, { rub: true })], spent: 0 }));
-  assert.ok(!biz.starter!.gone.includes(3), 'a rub out over the bunker leaves it');
+  assert.ok(!(biz.starter!.gone as number[]).includes(3), 'a rub out over the bunker leaves it');
 });
 
-test('bulldozed on their own: the Bulldoze tool takes a dirt green with its flag or the sand scrape for nothing, as one undo step; a piece gone is not found again; a facility there wins', () => {
+test('bulldozed on their own: the Bulldoze tool takes a dirt green with its flag or the sand scrape for nothing, as one undo step; a piece gone is not found again', () => {
   const biz: RangeBizSave = defaultRangeBiz(); biz.practiceAt = RECT; biz.starter = { seed: 7, gone: [] };
   const g = grid(), { h } = hostWith(g, biz), sc = h.scene!, money = { v: 123456 }, toasts: string[] = [];
   const ph: PaintHost = {
@@ -205,8 +207,6 @@ test('bulldozed on their own: the Bulldoze tool takes a dirt green with its flag
   paint.undo(); assert.deepEqual(biz.starter!.gone, [dirt.id]); h.sync(); assert.equal(h.scene!.patches.filter(p => p.surf === 'sand').length, 1);
   paint.undo(); assert.deepEqual(biz.starter!.gone, []); paint.redo(); assert.deepEqual(biz.starter!.gone, [dirt.id]);
   assert.equal(money.v, 123456, 'nothing was ever paid or paid back');
-  // a click on a facility's cell removes the facility, not a piece under its outline
-  const spots = starterPatches(sc.starter, []).length; assert.ok(spots >= 5);
 });
 
 // ---- the practice view: what the player painted on the outfield lies in it
