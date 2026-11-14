@@ -6,7 +6,7 @@ import { PIECE_BUTTONS } from '../../game/ext/course-pieces';
 import { PlantControls } from '../../PaintPanel';
 import { LockMark } from '../Rail';
 import { ToolHead } from '../ToolHead';
-import { BrushShape, GrassEdgesEntry, GroundHeight, SurfaceSwatches, surfaceKeysOf } from './BrushControls';
+import { BrushShape, GrassEdgesEntry, GroundHeight, SurfaceSwatches, TreesBrush, ownPalette, surfaceKeysOf } from './BrushControls';
 import { HoleStrip, newHole } from './HoleStrip';
 import { HoleWizardPanel } from './HoleWizard';
 import { CourseEdges } from './CourseEdges';
@@ -15,6 +15,7 @@ import { BunkerPickEntry } from '../BunkerSettings';
 import { OsmNote } from './OsmNote';
 import { TEXTURE_PAINTER } from '../flyout-menu';
 import { ActionTile, TILE_BIG, TILE_SMALL } from '../ActionTile'; // J8 (#1261): New hole, Seed, Sod and Edit Hole Layout wear painted tiles
+import { JAM } from '../../game/features';
 
 /** the paint modes that live under More options (the brush is Shape by hand's; plan is New hole's) */
 const MORE_MODES = new Set(['draw', 'piece', 'height', 'plant', 'hole']);
@@ -34,6 +35,8 @@ export function CoursePanel({ game, looks = false, onLooks }: { game: Game; look
   const p = game.paint, ui = game.toolUi();
   // New hole's editor on screen (T238: Edit hole with a brush in hand too): its card in New hole's place, Shape by hand under it hidden
   const shape = !ui || ui.shapeByHand, plan = p.planOpen, lock = ui?.newHoleLock ?? null;
+  // #1296 (docs/JAM.md "Future development": Shape by hand is hidden in the jam, holes come from New hole): the Holes strip stays, the brushes and More options go
+  const hand = shape && !JAM;
   // ↶ ↷ name what they take back (P23 4.3); in New hole its own clicks and drags come first (P23 4.4, T119)
   const un = p.topUndo, re = p.topRedo;
   // T256 (#743): Range › Build: the same painting tools, on your property (cells of no hole)
@@ -55,14 +58,14 @@ export function CoursePanel({ game, looks = false, onLooks }: { game: Game; look
       {!shape && !plan && (
         <>
           <p className="mt-2.5 leading-snug">The whole hole is planned for you: fairway, green, tee and rough. Nothing is paid until you press Build.</p>
-          <p className="sub-line mt-2">Shape by hand (1 m cells) opens after your first hole.</p>
+          {!JAM && <p className="sub-line mt-2">Shape by hand (1 m cells) opens after your first hole.</p>}
         </>
       )}
       {shape && (
         <>
           <HoleStrip game={game} />
-          {!plan && <ShapeByHand game={game} looks={looks} onLooks={onLooks} />}
-          {!plan && <MoreOptions game={game} looks={looks} onLooks={onLooks} />}
+          {!plan && hand && <ShapeByHand game={game} looks={looks} onLooks={onLooks} />}
+          {!plan && hand && <MoreOptions game={game} looks={looks} onLooks={onLooks} />}
         </>
       )}
     </div>
@@ -75,14 +78,15 @@ function ShapeByHand({ game, looks, onLooks }: { game: Game; looks: boolean; onL
   const p = game.paint, keys = surfaceKeysOf(game);
   const brush = p.mode === 'brush', cells = p.brushCells, armed = brush || p.mode === 'draw' || p.mode === 'piece', run = brush && !!p.brushRun && cells > 0;
   // T271: a custom grass in hand goes by its own name; the keys: 1–8 the surfaces, 9 Create your own (golf), Shift + n your own grasses
-  const name = (armed && p.mode !== 'piece' ? p.grass?.name : undefined) ?? BRUSH_PRESETS.find(b => b.kind === p.brushKind)?.name ?? '', own = game.golfMode && !!game.courseGrid;
+  const name = (armed && p.mode !== 'piece' ? p.grass?.name : undefined) ?? BRUSH_PRESETS.find(b => b.kind === p.brushKind)?.name ?? '', own = game.golfMode && !!game.courseGrid, trees = p.treesInHand;
   return (
     <section data-section="shape" className="mt-3">
-      <div className="sec-head"><h3 className="label-caps">Shape by hand</h3><span className="sec-note">{`1 m cells · keys 1–${keys}${own ? ' · 9 your own' : ''}`}</span></div>
+      <div className="sec-head"><h3 className="label-caps">Shape by hand</h3><span className="sec-note">{`1 m cells · keys 1–${keys}${own ? ' · 9 trees · 0 your own' : ''}`}</span></div>
       {/* T256: whose paint the brush lays: this hole's (Range › Build paints your property) */}
-      {game.golfMode && armed && <div className="paint-owner" data-testid="paint-owner">{`Painting hole ${p.brushHole}`}</div>}
-      <SurfaceSwatches game={game} on={armed ? p.brushKind : null} pick={k => (p.mode === 'draw' ? p.setShape(k, 0) : p.setBrush(k, 0))} />
-      {p.brushKind === 'bunker' && <BunkerPickEntry game={game} looks={looks} onLooks={onLooks} />}
+      {game.golfMode && (armed || trees) && <div className="paint-owner" data-testid="paint-owner">{`Painting hole ${p.brushHole}`}</div>}
+      <SurfaceSwatches game={game} on={armed ? p.brushKind : null} pick={k => (p.mode === 'draw' ? p.setShape(k, 0) : p.setBrush(k, 0))} trees={{ on: trees, pick: () => p.setHoleTrees() }} />
+      {p.brushKind === 'bunker' && !trees && <BunkerPickEntry game={game} looks={looks} onLooks={onLooks} />}
+      {trees ? <TreesBrush game={game} /> : <>
       <BrushShape game={game} brush={brush} arm={() => p.setBrush(p.brushKind)} />
       <div className="mt-2 flex flex-wrap items-center gap-1.5">
         {/* Brush | Run (T122, P23 4.5): the brush paints where you click and drag; Run lays a strip like a road, from click to click */}
@@ -96,6 +100,7 @@ function ShapeByHand({ game, looks, onLooks }: { game: Game; looks: boolean; onL
           : <button className={`chip ${brush && p.rubOut ? 'chip-on' : ''}`} aria-pressed={brush && p.rubOut} title={`Erase takes the top surface under the ${run ? 'run' : 'brush'} (hold Alt for a moment while brushing); no refund`} onClick={() => { const v = !(brush && p.rubOut); if (!brush) p.setBrush(p.brushKind); p.rubOut = v; game.emit(); }}>Erase</button>}
       </div>
       {!game.golfMode && brush && <div className="sub-line mt-1.5">{`Click paints ${name} for hole ${p.brushHole}; drag paints a run. Alt-drag or Erase rubs out. [ ] size.`}</div>}
+      </>}
     </section>
   );
 }
@@ -117,9 +122,10 @@ function PropertyPanel({ game, looks, onLooks }: { game: Game; looks: boolean; o
       <div className="paint-owner" data-testid="paint-owner">Painting your property</div>
       <p className="sub-line mt-1.5 leading-snug">Not part of any hole: editing or deleting a hole never touches it, and it never paints over a hole. Priced as the course.</p>
       <section data-section="shape" className="mt-3">
-        <div className="sec-head"><h3 className="label-caps">Surfaces</h3><span className="sec-note">{`1 m cells · keys 1–${keys}`}</span></div>
-        <SurfaceSwatches game={game} on={brush ? p.brushKind : null} pick={k => p.setBrush(k, 0)} />
-        {p.brushKind === 'bunker' && <BunkerPickEntry game={game} looks={looks} onLooks={onLooks} />}
+        <div className="sec-head"><h3 className="label-caps">Surfaces</h3><span className="sec-note">{`1 m cells · keys 1–${keys}${ownPalette(game) ? ' · 9 trees · 0 your own' : ''}`}</span></div>
+        <SurfaceSwatches game={game} on={brush ? p.brushKind : null} pick={k => p.setBrush(k, 0)} trees={{ on: p.treesInHand, pick: () => p.setHoleTrees() }} />
+        {p.brushKind === 'bunker' && !p.treesInHand && <BunkerPickEntry game={game} looks={looks} onLooks={onLooks} />}
+        {p.treesInHand ? <TreesBrush game={game} /> : <>
         <BrushShape game={game} brush={brush} arm={() => p.setBrush(p.brushKind)} />
         <div className="mt-2 flex flex-wrap items-center gap-1.5">
           <div className="flex items-center gap-1.5" role="group" aria-label="Brush or Run" data-method={run ? 'run' : 'brush'}>
@@ -128,6 +134,7 @@ function PropertyPanel({ game, looks, onLooks }: { game: Game; looks: boolean; o
           </div>
           <button className={`chip ${brush && p.rubOut ? 'chip-on' : ''}`} aria-pressed={brush && p.rubOut} title="Erase takes your property's top surface under the brush (never a hole's); no refund" onClick={() => { const v = !(brush && p.rubOut); if (!brush) p.setBrush(p.brushKind); p.rubOut = v; game.emit(); }}>Erase</button>
         </div>
+        </>}
         {height && <GroundHeight game={game} on arm={() => p.setHeight()} />}
       </section>
       <div className="mt-3 flex flex-wrap gap-1.5">

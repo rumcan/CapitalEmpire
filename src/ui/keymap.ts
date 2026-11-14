@@ -9,6 +9,8 @@ import type { ProgressiveUiState } from '../game/ext/progressive-ui';
 import { SURFACE_BRUSHES } from '../game/paint';
 import { CLASS, KEY_CLASSES } from '../game/network';
 import { RAIL, drawerOf, railEntries, toolLock, toolsIn, type RailItem } from './rail-items';
+import { BEND_45 } from '../game/route-legs';
+import { bendWords } from '../game/route-input';
 
 /** a row: its keys (as shown: 'R', 'Ctrl+Z', '1 – 6'), what they do, the tool they pick (a tool key), and why it is locked (null: open) */
 export interface KeyRow { keys: string; what: string; tool?: Tool; why?: string | null }
@@ -37,7 +39,7 @@ const menuless = (r: RailItem): boolean => !r.action && r.tools.length === 1;
 
 /** a tool's keys while it is in hand (the engine's and the tools' own handlers: engine.ts keyDown, paint-tool.ts key, propstool.ts key,
  *  parking-tool.ts key); the number keys' rows come from the lists they pick from */
-const inHand = (): { title: string; tool: Tool; alt?: true; rows: [string, string][] }[] => [
+const inHand = (bend45: boolean): { title: string; tool: Tool; alt?: true; rows: [string, string][] }[] => [
   { title: 'Holes in hand', tool: 'course', rows: [
     [`1 – ${SURFACE_BRUSHES.length}`, `the surface: ${SURFACE_BRUSHES.map(b => b.name.toLowerCase()).join(', ')}`], ['[ / ]', 'a smaller / bigger brush or green'],
     ['R', 'turn the stamp, the hole or the green'], ['Enter', 'finish the shape or the run'], ['Backspace', 'take back the last corner'],
@@ -49,8 +51,9 @@ const inHand = (): { title: string; tool: Tool; alt?: true; rows: [string, strin
   { title: 'Props in hand', tool: 'props', rows: [['R', 'turn it (a rock or a plant: mirrored, then its next picture)'], ['[ / ]', 'smaller / bigger, 80% to 120% (the picked prop too)'], ['Delete', 'sell the picked prop']] },
   { title: 'Roads and paths in hand', tool: 'road', rows: [
     [`1 – ${KEY_CLASSES.length}`, `the road class: ${KEY_CLASSES.map(c => (CLASS[c]?.name ?? c).toLowerCase()).join(', ')}`],
-    ['Tab / Shift+Tab', 'the next / previous kind of this class (one-way, trees, a median)'], ['Q', 'bends of 90° or 45°'], ['E', 'Replace: the roads in the way are bulldozed'],
-    ['Shift', 'a straight run'], ['Enter, double-click', 'build the route'], ['Backspace, right-click', 'take back the last point (the first: drop the route)']] },
+    ['Tab / Shift+Tab', 'the next / previous kind of this class (one-way, trees, a median)'], ...(bendWords(bend45).qRow ? [bendWords(bend45).qRow!] : []), ['E', 'Replace: the roads in the way are bulldozed'],
+    ['Press, drag, let go', 'build the run from the press to the pointer; Esc or a right click while you drag cancels it (a click starts a route to click on)'],
+    ['Shift', 'one straight run in any of the eight directions'], ['Enter, double-click', 'build the route'], ['Backspace, right-click', 'take back the last point (the first: drop the route)']] },
   { title: 'Junctions in hand', tool: 'junction', rows: [['Tab / Shift+Tab', 'the next / previous type of the junction under the pointer']] },
   { title: 'Car park in hand', tool: 'park', rows: [['Tab', 'the rows\' other side']] },
   { title: 'Toll gate in hand', tool: 'toll', rows: [['R', 'turn the gate round']] },
@@ -71,7 +74,7 @@ export type LabKeys = readonly (readonly [string, readonly (readonly [string, st
 /** the Keys sheet: in the game, the rail (the number keys, Select, Bulldoze) and the keys that work anywhere, each group's tools under Course and Town (in the rail's order, a
  *  tool listed once: the Props tool sits in both decorations) with the tools' keys in hand after them, and the camera, speed and views; in the lot lab
  *  (lab given), the lab's own keys alone. ui: the unlocks in force (golf), null for every tool open */
-export function keySheet(o: { golf: boolean; ui: ProgressiveUiState | null; range: boolean; lab?: LabKeys | null }): KeySection[] {
+export function keySheet(o: { golf: boolean; ui: ProgressiveUiState | null; range: boolean; lab?: LabKeys | null; /** the 45 degree bend's Q row: BEND_45 (route-legs.ts), off for now (#1317); a test may ask for it on */ bend45?: boolean }): KeySection[] {
   if (o.lab) return o.lab.map(([title, rows]) => ({ id: `lab:${title}`, title, part: 'lab' as const, rows: rows.map(([k, w]) => ({ keys: k, what: w })) }));
   const out: KeySection[] = [], seen = new Set<Tool>(), ui = o.golf ? o.ui : null, game = o.golf ? 'golf' : 'classic';
   const locks = new Map(railEntries(ui, o.golf, 'select', { range: o.range }).map(e => [e.item.id, e.locked]));
@@ -96,7 +99,7 @@ export function keySheet(o: { golf: boolean; ui: ProgressiveUiState | null; rang
       }
       if (rows.length) out.push({ id: r.id, title: r.label, part, rows });
     }
-    for (const s of inHand()) {
+    for (const s of inHand(o.bend45 ?? BEND_45)) {
       // a tool's second home (alt: Facilities' Plants, the Paint tool's plant brush) has its own keys in hand there
       const r = RAIL.find(x => x.section === part && (!x.only || x.only === game) && toolsIn(x, o.golf).some(t => t.id === s.tool && !!t.alt === !!s.alt));
       // a tool in two groups (Props: Facilities and Town decoration) has its keys in hand once, under the first

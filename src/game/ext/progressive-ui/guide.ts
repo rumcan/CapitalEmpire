@@ -4,7 +4,6 @@
 import { STUCK_PLAY_SEC } from './index';
 import type { Rect } from '../../golf/mode';
 import { JAM } from '../../features';
-import { practicePath } from '../../golf/menu-path';
 import type { ToolTile } from '../../../ui/tool-tiles'; // (a type only: J8, #1261, each step names its painted tile)
 
 /** the facts the guide reads: the player's counters (T033a), placed course pieces by kind, tournaments run, and the guide's saved state */
@@ -32,10 +31,10 @@ export interface GuideFacts {
   invited?: boolean;
   /** false for an old save without the guide's progress (T095: a save from before the range start's ramp): no guide at all; missing = true */
   progress?: boolean;
-  /** T239, a range start's guided build: the range's lifetime golfers who bought a bucket, its upgrades owned, whether a walking path joins
-   *  the car park, the shack and the tee, whether the practice area is still for sale, and the putting green's state (missing: none of it) */
+  /** T239, a range start's guided build: the range's lifetime golfers who bought a bucket (the other facts below were read by the steps #1297 took out of the guide: the
+   *  upgrades owned, a walking path, the practice area for sale, the putting green; they are no longer given or read) */
   golfers?: number; owned?: readonly string[]; walkway?: boolean; practiceForSale?: boolean; putting?: string;
-  /** T288 (#873), a bare start's placements: the driving range placed, the range's own car park placed, the practice area placed (missing: no) */
+  /** T288 (#873), a start's placements: the driving range placed, the range's own car park placed (missing: yes; practicePlaced: no step reads it now) */
   rangePlaced?: boolean; lotPlaced?: boolean; practicePlaced?: boolean;
   /** T459 (#1211): the range balls picked up (any way) and brought back to the ball room, lifetime (missing: no ball loop, the step does not wait for it) */
   ballsBack?: number;
@@ -77,7 +76,7 @@ export const GUIDE: readonly GuideStep[] = Object.freeze([
     tile: 'golf-hole',
     n: 2,
     title: 'Lay out a new hole',
-    body: 'Open Holes and press New hole: click a tee, then a green, and Build.',
+    body: 'Course › Holes › New hole: click a tee, then a green, and Build.',
     done: 'auto',
     target: { ui: 'new-hole', map: 'newHoleSpot' },
   },
@@ -86,7 +85,7 @@ export const GUIDE: readonly GuideStep[] = Object.freeze([
     tile: 'cart-path',
     n: 3,
     title: 'Connect your hole',
-    body: 'Lay a cart path or build a road to link your hole to the road network.',
+    body: 'Lay a cart path (Cart paths & roads › Cart paths & drives) or build a road to link your hole to the road network.',
     done: 'auto',
     target: { ui: 'rail-paths', map: 'nearestRoad' }, // T288: the rail's Cart paths & roads
   },
@@ -95,7 +94,7 @@ export const GUIDE: readonly GuideStep[] = Object.freeze([
     tile: 'gravel-car-park',
     n: 4,
     title: 'Build a car park',
-    body: 'Place a car park beside a road so arriving spectators have space to park.',
+    body: 'Place a car park (Traffic › Transport › Car park) beside a road so arriving spectators have space to park.',
     done: 'auto',
     target: { ui: 'tool-park', map: 'nearestRoad' },
   },
@@ -129,9 +128,13 @@ export const GUIDE: readonly GuideStep[] = Object.freeze([
 ]);
 
 /** a range start's steps (T239, the owner 2026-10-28: "the starting tutorial on how to build to upgrade and build some of the first driving range
- *  features"): the guided build. T288 (#873, the owner: "only his trailer and plot is there"): place the driving range, then its car park; sell the first buckets, place the target greens, lay the walking path, gravel and pave the car park, turf the tee
- *  box, buy the practice area and build its putting green, then the first hole. Every step ticks itself when its build is done (in any order),
- *  pays its reward, and can be skipped; the guide's card lists them all (RangeGuideCard) */
+ *  features"): the guided build. T288 (#873, the owner: "only his trailer and plot is there"): place the driving range, then its car park; sell the first buckets and
+ *  fetch the balls. #1297 (the owner, 2026-11-14: "remove placing the target greens and path and gravel the car park etc up to build the first hole out of the Guide",
+ *  then "first hole step should go too. it wont unlock till later"): the target greens, the walking path, the car park's gravel and paving, the tee box's turf, the practice
+ *  area with its putting green, and the first hole are no steps of the guide any more (their ids, guide-range-greens, -path, -carpark, -turf, -practice and -hole, are
+ *  read from an old save and dropped: normalizeRangeGuide); the rewards they paid ($1,000, $1,000, $1,000, $1,000, $1,000 and $2,500) went with them. A new game starts by
+ *  placing the range (PR #1274), so step 1 ticks at once. Every step ticks itself when its build is done (in any order), pays its reward, and can be skipped; the guide's
+ *  card lists them all (RangeGuideCard) */
 export const RANGE_GUIDE: readonly GuideStep[] = Object.freeze([
   {
     id: 'guide-range-place',
@@ -140,7 +143,7 @@ export const RANGE_GUIDE: readonly GuideStep[] = Object.freeze([
     title: 'Place your driving range',
     body: 'Your land is bare: only your trailer. Range › Place the driving range puts it in your hand: move it along the county road and click to build it.',
     done: 'auto',
-    target: { ui: 'rail-range' },
+    target: { ui: 'place-range' }, // (#1297: the entry at the end of the menu path the text names: the spotlight leads down to it, Range first)
     reward: 1000,
   },
   {
@@ -150,7 +153,7 @@ export const RANGE_GUIDE: readonly GuideStep[] = Object.freeze([
     title: 'Place its car park',
     body: 'Range › Place the car park: a packed-dirt lot beside the road, near the shack. Golfers drive on without one.',
     done: 'auto',
-    target: { ui: 'rail-range' },
+    target: { ui: 'place-carpark' },
     reward: 500,
   },
   {
@@ -163,66 +166,6 @@ export const RANGE_GUIDE: readonly GuideStep[] = Object.freeze([
     done: 'auto',
     target: { ui: 'rail-walk' },
     reward: 500,
-  },
-  {
-    id: 'guide-range-greens',
-    tile: 'target-green',
-    n: 4,
-    title: 'Place the target greens',
-    body: 'On the range card, Target greens puts three greens with flags in your hand: click them onto your range, and more golfers stop.',
-    done: 'auto',
-    target: { ui: 'range-buy-greens' },
-    reward: 1000,
-  },
-  {
-    id: 'guide-range-path',
-    tile: 'walking-path',
-    n: 5,
-    title: 'Lay a walking path',
-    body: 'Cart paths & roads › Walking path: from the car park to the shack and along behind the mats. Your golfers walk it instead of the dirt.',
-    done: 'auto',
-    target: { ui: 'rail-paths', map: 'walkway' },
-    reward: 1000,
-  },
-  {
-    id: 'guide-range-carpark',
-    tile: 'paved-car-park',
-    n: 6,
-    title: 'Gravel, then pave, the car park',
-    body: 'On the range card: Gravel the car park (more cars, tidier rows), then Pave the car park (painted bays and lamps).',
-    done: 'auto',
-    target: { ui: 'range-buy-gravel' },
-    reward: 1000,
-  },
-  {
-    id: 'guide-range-turf',
-    tile: 'turf-tee',
-    n: 7,
-    title: 'Turf the tee box',
-    body: 'On the range card, Turf the tee box: grass under the mats, golfers pay a dollar more.',
-    done: 'auto',
-    target: { ui: 'range-buy-teeturf' },
-    reward: 1000,
-  },
-  {
-    id: 'guide-range-practice',
-    tile: 'putting-green',
-    n: 8,
-    title: 'Place the practice area, build a putting green',
-    body: `Range › Place the practice area: put it on your land near the car park (it comes with a few dirt greens and a bunker scrape). Then ${practicePath('›')} › Putting green on it. Or click the area, or its name.`, // (#1282: Facilities is the Course menu's sixth tile; #1281: the area's own window)
-    done: 'auto',
-    target: { ui: 'rail-range' },
-    reward: 1000,
-  },
-  {
-    id: 'guide-range-hole',
-    tile: 'golf-hole',
-    n: 9,
-    title: 'Build the first hole',
-    body: 'Your land has room for a first nine; Land for sale buys more as the course grows. Open Holes, press New hole, click a tee, then a green, and Build.',
-    done: 'auto',
-    target: { ui: 'new-hole', map: 'newHoleSpot' },
-    reward: 2500,
   },
 ]);
 /** the golfers a range start's first step waits for (T239: the range's lifetime golfers who bought a bucket) */
@@ -263,7 +206,7 @@ export function guideLines(table: readonly GuideStep[], g: RangeGuideSave | null
   });
   return cur ? lines : null;
 }
-/** the step the guide is on (1..9: the first still to do), or undefined when there is no guide running (an old save's, skipped, or finished) */
+/** the step the guide is on (1..3: the first still to do), or undefined when there is no guide running (an old save's, skipped, or finished) */
 export function rangeGuideCurrent(g: RangeGuideSave | null | undefined): number | undefined {
   return rangeGuideLines(g)?.find(l => l.current)?.step.n;
 }
@@ -285,21 +228,12 @@ export function rangeGuideOff(g: RangeGuideSave): void { g.off = true; }
 /** the steps for the facts' start: a range start's (RANGE_GUIDE), else the old start's (GUIDE) */
 export function guideTable(f: Pick<GuideFacts, 'start'>): readonly GuideStep[] { return f.start === 'range' ? RANGE_GUIDE : GUIDE; }
 
-/** whether a range start's step n is met (T239): 1 FIRST_BUCKETS golfers served, 2 the target greens built, 3 a walking path joining the car
- *  park, the shack and the tee, 4 the car park paved (after its gravel), 5 the tee box turfed, 6 the practice area bought and its putting green
- *  open, 7 a hole built */
+/** whether a range start's step n is met (T239): 1 the driving range placed, 2 its car park placed, 3 FIRST_BUCKETS golfers served and FIRST_FETCH balls brought back */
 function rangeStepMet(n: number, f: GuideFacts): boolean {
-  const own = (id: string) => !!f.owned?.includes(id);
   switch (n) {
     case 1: return f.rangePlaced !== false; // (T288: a fact missing is a range from before T288: placed)
     case 2: return f.lotPlaced !== false;
     case 3: return (f.golfers ?? 0) >= FIRST_BUCKETS && (f.ballsBack === undefined || f.ballsBack >= FIRST_FETCH); // (a fact missing: a save from before T386's balls)
-    case 4: return own('greens');
-    case 5: return !!f.walkway;
-    case 6: return own('pave');
-    case 7: return own('teeturf');
-    case 8: return !f.practiceForSale && f.practicePlaced !== false && f.putting === 'open';
-    case 9: return (f.holes ?? 0) >= 1;
     default: return false;
   }
 }
@@ -330,7 +264,7 @@ export function stepMet(n: number, f: GuideFacts): boolean {
 /** the step to show (null when the guide is off, past step 7, or an old save without its progress): the saved step, moved forward past every
  *  auto step already met, from the start's table */
 export function guideStep(f: GuideFacts): GuideStep | null {
-  const table = guideTable(f); // (T288: a range start's has nine steps, the old start's GUIDE_STEPS)
+  const table = guideTable(f); // (a range start's has three steps (#1297), the old start's GUIDE_STEPS)
   if (f.tutorial === 'off' || f.step > table.length || f.progress === false) return null;
   let curr = Math.max(1, f.step);
   while (curr <= table.length) {
@@ -363,7 +297,7 @@ export const GUIDE_STUCK: GuideStep = Object.freeze({
   tile: 'golf-hole',
   n: 2,
   title: 'Need a hand with your first hole?',
-  body: 'Open Holes and press New hole: click a tee, then a green, and the whole hole is planned for you. Build when it looks right.',
+  body: 'Course › Holes › New hole: click a tee, then a green, and the whole hole is planned for you. Build when it looks right.',
   done: 'auto',
   target: Object.freeze({ ui: 'new-hole', map: 'newHoleSpot' }),
 });

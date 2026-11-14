@@ -28,6 +28,7 @@ import { STRUCT_COST, STRUCT_MAX, groundClass, highwayRoute, longestRun, splitBy
 import { CULL_MIN_PX, FULL_UV, GLRenderer, POINT_STRIDE, SHADOW_STRIDE, SPRITE_STRIDE, VECTOR_STRIDE } from './gl';
 import { GroundCache } from './ground-cache';
 import { GAME_BOOT, clampCentre, flatTerrain, type BootOptions } from './boot';
+import { SHOW_FARM_MONTH, SHOW_GOLFERS } from './showcase';
 import { TILE_BANDS, TILES_REVISION, anchorAt, bandAt, bandRange, bandsAhead, cellOf, cellsIn, coverageOf, drawnScale, nearUntil, nextBand, tiledFamily, tileIndex, tilePermutation, tileScreenPx, tileSize, tileSpec } from './painted-tiles';
 import { desertLeavesDev, onPaintedSurfaces, paintedSurfaces, setDesertSurfaces } from './painted-surfaces-live';
 import { borderDefault, crewBandLook, finishBorders, finishOf, finishStripeLook, mowSpec } from './course-finish';
@@ -69,7 +70,9 @@ import { FIRST_BUCKETS, PLACED_STEPS, RANGE_GUIDE, guideTable, newRangeGuide, ra
 import { WELCOME_WAIT_MS, welcomeReady } from './golf/firstview';
 import { practicePath } from './golf/menu-path';
 /** the hints' anchors (T188: their Show me pulses the control) where the hint is no guide step */
-const HINT_ANCHOR: Readonly<Record<string, string>> = { 'hint-range-open': 'range-chip', 'hint-range-upgrade': 'range-chip', 'hint-range-props': 'rail-facilities', 'hint-range-first-hole': 'new-hole' };
+const HINT_ANCHOR: Readonly<Record<string, string>> = { 'hint-range-open': 'range-chip', 'hint-range-upgrade': 'range-chip', 'hint-range-props': 'rail-facilities', 'hint-range-first-hole': 'new-hole',
+  // #1297: the practice hints' Show me leads down Course > Facilities > Practice to the green they name (or to Land for sale > Buy while the area is land for sale)
+  'hint-practice-putting': 'practice-putting', 'hint-practice-chipping': 'practice-chipping', 'hint-practice-buy': 'land-buy' };
 import { RANGE_LABEL_Z, defaultRangeBiz, parkLabel, rangeKeepOut, practiceAppeal, rangeMapLabel, rangeNewSeason, rangeStats, rangeStructures, rangeCarLines, type RangeCounts, type RangeUpgradeId } from './golf/rangebiz';
 import { areaAt, brushTextures, toTuple, type BrushKind, type PaintTuple, type PaintTex } from './paint';
 import { CELL_T, SURF, applyDiff, cellAt, cellCentre, diffBox, encodeGrid, fillPolygon, fitGrid, grassSlot, landGridBox, lookCellsDiff, looksUsed, makeGrid, paintCells, paintDisc, paintStroke, setLook, type Grid as CourseGrid, type GridDiff, type GridSave } from './ext/course-grid';
@@ -221,7 +224,8 @@ import type { CourseFacts } from './golf/tour';
 import { surfaceOfTex, unitBuildCost } from './golf/costs';
 import { bizName, inSentence, inTheWay, overlaps, rectPoly, ringWhy, routeObstacles, structureObstacles, type Obstacle, type Structure } from './route-obstacles';
 import { inRingClear, judgeRing, rangePieceName, ringGrows, type RingProp, type RingVerdict } from './ring-clear';
-import { isSecondTap, routeAct, type RouteInput, type Tap } from './route-input';
+import { isSecondTap, routeAct, RouteGesture, type RouteInput, type Tap } from './route-input';
+import { BEND_45, DEFAULT_BEND, bendInUse, legsLength, routeLegs } from './route-legs';
 import { buyAdjacentBlock, blockOnRoad, blockOnWater, clampBlock, mergeParcelBounds, playInWay, polyInParcels, startWhy, type LandRoad, type ParcelLandClass } from './golf/parcels';
 import { BAND_LABEL, LandSale } from './golf/land-sale';
 import { buildCourseStatsPanel, type CourseStatsPanel } from './golf/coursestats';
@@ -702,7 +706,7 @@ export class Game {
   // tools
   /** the tool in hand (T328, #936: Select at first; it was the road tool, so a ?start=town game, which picks no tool, opened with the Traffic
    *  panel docked over the course. The range start picks the Course tool itself) */
-  tool: Tool = 'select'; roadClass: ClassId = 'street'; bendMode: BendMode = 90; lineStyle: LineStyle = 0;
+  tool: Tool = 'select'; roadClass: ClassId = 'street'; bendMode: BendMode = DEFAULT_BEND /* #1276, #1317: 90 in every game, every build and after every load while BEND_45 (route-legs.ts) is off; on, 45, and Q toggles 90 for the visit only */; lineStyle: LineStyle = 0;
   /** the road tool's scope (T084): 'course' when the Course menu's Paths & drives opened it (it lays the course's cart paths and drives), 'town'
    *  from Roads; scopeClass: the class last picked in each scope, picked again on coming back to it */
   roadScope: 'town' | 'course' = 'town'; private scopeClass: Record<'town' | 'course', ClassId> = { town: 'street', course: 'cart-dirt' };
@@ -1185,7 +1189,7 @@ export class Game {
   /** a drag in progress; build: a right-button press in the road tool (released without moving, it builds the route, as Enter) */
   private dragging: null | { kind: 'pan' | 'bulldoze' | 'park'; sx: number; sy: number; camX: number; camY: number; moved: boolean; /** T392, T393: a plain right press that became the pan: on release without a drag it takes the step Esc takes (cancelOrClose; a route in hand: its last point back, T207) */ rc?: boolean; aim?: Pt; /** a Select click's hole under it (0: none; T174) */ hole?: number; /** T200: a click on Land for sale's overlay (it opens the block's card on release, never buys) */ land?: Pt; /** T240: a Walk mode click (your character walks there on release) */ you?: boolean; /** J9: a click (no drag) with the start in hand places it on release */ place?: boolean } = null;
   /** the Paint tool: painted ground areas, its settings and the outline being drawn (docs/PAINT-TOOL.md) */
-  paint = new PaintTool({ collarDefault: s => borderDefault(s, finishOf(paintedSurfaces())), progress: () => this.bump('pieces'), setLotGround: (k, p) => { this.paintRev++; this.setLotGround(k, p); }, emit: () => this.emit(), save: () => this.scheduleSave(), toast: (t, k) => this.toast(t, k), affine: o => this.paintAffine(o), placeProps: (ps, seed) => this.placePresetProps(ps, seed), golfMode: () => this.golfMode, money: () => this.money, spend: n => this.traffic.spend('construction', n), ownedLand: pts => !this.golf || polyInParcels(this.golf.parcels ?? [this.golf.parcel], pts), currentMonth: () => !this.golf ? 0 : this.golfMonthIndex(), plant: (ids, x, y, r, spacing, size, seed) => this.plantProps(ids, x, y, r, spacing, size, seed), unplant: (x, y, r, trees) => this.unplantProps(x, y, r, trees), plantPool: (k, f) => plantPool(LIBRARY, k, f), courseHeight: () => this.courseHeight, roadsNear: (x, y, r) => { let k = 0; return [...this.net.segsNear({ x, y }, r)].map(s => ({ id: ++k, ax: s.a.x, ay: s.a.y, bx: s.b.x, by: s.b.y, halfWidthTiles: s.cls.h + s.cls.walk })); }, roadRev: () => this.net.version, heightChanged:b => { this.courseHeightChanged(unionCourseBox(b, this.flattenRoadsIn(b))!); },
+  paint = new PaintTool({ collarDefault: s => borderDefault(s, finishOf(paintedSurfaces())), progress: () => this.bump('pieces'), setLotGround: (k, p) => { this.paintRev++; this.setLotGround(k, p); }, emit: () => this.emit(), save: () => this.scheduleSave(), toast: (t, k) => this.toast(t, k), affine: o => this.paintAffine(o), placeProps: (ps, seed) => this.placePresetProps(ps, seed), golfMode: () => this.golfMode, money: () => this.money, spend: n => this.traffic.spend('construction', n), ownedLand: pts => !this.golf || polyInParcels(this.golf.parcels ?? [this.golf.parcel], pts), currentMonth: () => !this.golf ? 0 : this.golfMonthIndex(), plant: (ids, x, y, r, spacing, size, seed, ok) => this.plantProps(ids, x, y, r, spacing, size, seed, ok), desertLook: () => this.desertTheme, unplant: (x, y, r, trees) => this.unplantProps(x, y, r, trees), plantPool: (k, f) => plantPool(LIBRARY, k, f), courseHeight: () => this.courseHeight, roadsNear: (x, y, r) => { let k = 0; return [...this.net.segsNear({ x, y }, r)].map(s => ({ id: ++k, ax: s.a.x, ay: s.a.y, bx: s.b.x, by: s.b.y, halfWidthTiles: s.cls.h + s.cls.walk })); }, roadRev: () => this.net.version, heightChanged:b => { this.courseHeightChanged(unionCourseBox(b, this.flattenRoadsIn(b))!); },
     journal: { begin: () => { this.propLog = { added: [], removed: [], cut: [], cutAuto: [] }; }, end: () => { const j = this.propLog; this.propLog = null; return j && (j.added.length || j.removed.length || j.cut.length || j.cutAuto.length) ? j : null; }, undo: j => this.swapProps(j as PropLog, true), redo: j => this.swapProps(j as PropLog, false) },
     netJournal: this.netJ, // T396: a road step's changes to the network
     changed: pins => this.syncCourseMarkers(pins),
@@ -3086,7 +3090,11 @@ export class Game {
   }
   /** whether the Paint tool or Holes may lay what is in hand: Holes at stage 1 is New hole only (P23 4.2, 4.3), so outside New hole its brush,
    *  hidden with Shape by hand, lays nothing and draws no footprint or disc */
-  get brushOpen(): boolean { if (this.tool !== 'course' || this.paint.planOpen || this.paint.property || this.paint.mode === 'myhole') return true; /* T256: Range › Build and From My holes are open from the start */ const ui = this.toolUi(); return !ui || ui.shapeByHand; }
+  get brushOpen(): boolean {
+    if (this.tool !== 'course' || this.paint.planOpen || this.paint.property || this.paint.mode === 'myhole') return true; /* T256: Range › Build and From My holes are open from the start */
+    if (JAM) return false; // (#1296, docs/JAM.md "Future development": the jam has no Shape by hand: its Course tool outside New hole lays nothing, shows no brush pill and no footprint, though a range start's practice brushes open the progressive UI's)
+    const ui = this.toolUi(); return !ui || ui.shapeByHand;
+  }
   /** the cursor hint's change last told to the UI, and when (the pill follows within 100 ms, never more than ten times a second) */
   private hintSeen = 0; private hintEmitAt = 0;
   /** the map grid and the course half grid (T100), drawn between the ground and the sprites */
@@ -3143,6 +3151,11 @@ export class Game {
   private saveTimer = 0; private blocksTimer = 0;
   /** set when the slot holds a save we could neither read nor back up: never write over it (T042) */
   private saveBlocked = false;
+  /** J12 (#1271, the living scene behind the jam's title card, showcase.ts): the loader of the prepared world (set before init; its save, or null when it cannot be had) and
+   *  whether this game is that scene: its world is the prepared save, never read from or written to the player's slot (saveBlocked), and nothing of the game's own
+   *  shows or answers (no toasts, keys, clicks or wheel); onAfterDraw is called in the frame's task right after the picture is drawn (the director copies it for a cross-fade) */
+  showcaseLoader: (() => Promise<SaveV5 | null>) | null = null; show = false; showFailed = false;
+  onAfterDraw: ((now: number) => void) | null = null;
   /** the town's lots: their props by key, the keys queued to apply, the lots staged by the contact sheet (stageLots; they win until a reset) */
   private lotProps = new Map<string, Prop[]>(); private lotQueue = new Set<string>(); private staged = new Map<string, { g: LotGeom; st: ComposeState }>();
   /** the lay-bys' quads by their 'curb:' key (their pts), and the boxes (grown by a tile) of the lay-bys that went or changed since the lots last heard */
@@ -3376,6 +3389,7 @@ export class Game {
   subscribe(fn: () => void) { this.listeners.add(fn); return () => { this.listeners.delete(fn); }; }
   emit() { for (const l of this.listeners) l(); }
   toast(text: string, kind: Toast['kind'] = 'info', scene?: SceneRef) {
+    if (this.show) return; // (J12: the scene behind the title card shows nothing of the game's own)
     this.toasts.push({ id: this.toastId++, text, t: performance.now(), kind, ...(scene ? { scene } : {}) });
     if (this.toasts.length > 4) this.toasts.shift();
     mapSounds.toast(kind); // J11: a warning has its low 'can't'
@@ -3428,8 +3442,12 @@ export class Game {
     if (benchScene) { this.benchMode = true; this.saveBlocked = true; }
     // T340 (#967): ?osmcourse=<id> is a new game on that real course in place of any stored save, which is neither read nor written over
     if (this.osmId && !fixName) { this.osmSpec = await loadOsmSpec(this.osmId); this.osmLand = this.osmSpec ? await loadOsmLand(this.osmId) : null; if (this.dead) return; if (this.osmSpec) this.saveBlocked = true; }
-    const read = opts.bench || fixName || this.osmSpec || !this.boot.save ? null : await readSave(); if (this.dead) return;
-    const save = fixture ?? read?.save ?? null;
+    // J12 (#1271): the living scene behind the jam's title card plays a prepared world in place of the stored save, which is neither read nor written over (saving is off)
+    let showSave: SaveV5 | null = null;
+    if (this.showcaseLoader && !fixName && !opts.bench && !this.osmSpec) { try { showSave = await this.showcaseLoader(); } catch { showSave = null; } if (this.dead) return; }
+    if (showSave) this.saveBlocked = true;
+    const read = opts.bench || fixName || showSave || this.osmSpec || !this.boot.save ? null : await readSave(); if (this.dead) return;
+    const save = fixture ?? showSave ?? read?.save ?? null;
     // T357: a saved game's real ground unpacks (the platform's inflate is async) before load() reads it; one that does not unpack is a flat course, not a failed load
     this.landIn = save?.golf?.land ? await unpackLand(save.golf.land) : null; if (this.dead) return;
     // T042: an unreadable save is kept as a backup (then a new game starts); if the backup failed, the slot is never written over
@@ -3446,10 +3464,12 @@ export class Game {
     else if (!save && this.newGame()) { /* a new golf game: the range start's road and range, or the old start's town and course (see newGame) */ }
     else if (!save || !this.load(save)) {
       // a save that read fine but failed to load: keep its bytes before the new game's autosave (T042), or never save over it
-      if (save) { if (await backupTownSlot('loadfailed')) readNote = { text: 'The save could not be loaded. It is kept as a backup; a new game started.', kind: 'warn' }; else { this.saveBlocked = true; readNote = { text: 'The save could not be loaded or backed up: saving is off for this session so it is not overwritten.', kind: 'warn' }; } if (this.dead) return; }
+      if (save && showSave) this.showFailed = true; // (J12: the scene's world did not load: the page starts again without the scene, and the player's slot is not touched)
+      else if (save) { if (await backupTownSlot('loadfailed')) readNote = { text: 'The save could not be loaded. It is kept as a backup; a new game started.', kind: 'warn' }; else { this.saveBlocked = true; readNote = { text: 'The save could not be loaded or backed up: saving is off for this session so it is not overwritten.', kind: 'warn' }; } if (this.dead) return; }
       setLotModel(LATEST_LOT_MODEL); this.farmModel = FARM_MODEL; this.farmsNew.clear(); this.golf = null; this.genTerrain(newSeed()); this.seedTowns();
     }
     else loaded = save;
+    if (showSave && loaded === showSave) { this.show = true; this.dayBusy = SHOW_GOLFERS; if (this.golf) delete this.golf.everyday; this.setFarmMonth(SHOW_FARM_MONTH); } // J12: the scene's course has a busy day (its golfers are always on the holes): its day book starts afresh, so the roster is the busy day's, not the quiet one the world was built on
     tick(0.7);
     const tl = performance.now();
     this.ground.init(this.terrain);
@@ -3828,12 +3848,14 @@ export class Game {
     this.scheduleSave(); return n;
   }
   /** a plant brush dab (paint-tool.ts, plant.ts): sprites from ids at the candidate spots of the circle, each at least 0.9 x spacing from
-   *  every prop (planted, lot, town or forest) and where canPlace allows; sized lo..hi times the sprite's map scale; free, like Paint. Returns how many */
-  plantProps(ids: string[], x: number, y: number, r: number, spacing: number, size: [number, number], seed: number): number {
+   *  every prop (planted, lot, town or forest) and where canPlace allows (and where ok, when given, says so); sized lo..hi times the sprite's map scale; free, like Paint.
+   *  Returns how many */
+  plantProps(ids: string[], x: number, y: number, r: number, spacing: number, size: [number, number], seed: number, ok?: (x: number, y: number) => boolean): number {
     const pool = ids.flatMap(id => LIB_INDEX.get(id) ?? []); if (!pool.length) return 0;
     const rnd = mulberry(seed * 7919 + 13), s2 = (0.9 * spacing) ** 2; let n = 0;
     for (const q of plantPoints(x, y, r, spacing, seed)) {
       if (q.x < 1 || q.y < 1 || q.x > MAP - 1 || q.y > MAP - 1) continue;
+      if (ok && !ok(q.x, q.y)) continue; // (#1296: the hole's Trees brush leaves the greens and tees bare)
       let near = false;
       for (const p of this.propGrid.query([q.x - spacing, q.y - spacing, q.x + spacing, q.y + spacing])) if ((p.x - q.x) ** 2 + (p.y - q.y) ** 2 < s2) { near = true; break; }
       if (near) continue;
@@ -4509,7 +4531,8 @@ export class Game {
       return;
     }
     // (T331: with the lot's building tier and shop business, T295, as lotOf has them: without them every lot drew the top tier and its lattice colour)
-    this.placeLot(key, g, { use: v.use, level: v.level, decline: v.decline, seed: v.seed, tier: v.tier, biz: v.biz });
+    // (J12: the scene behind the title card draws its houses from the top building tier, the tidy street the owner asked for, not the worn tier a new town starts in)
+    this.placeLot(key, g, { use: v.use, level: v.level, decline: v.decline, seed: v.seed, ...(this.show ? {} : { tier: v.tier }), biz: v.biz });
   }
   /** a lot's share of the fence grid alone (compose fenceOnly): panels that would stand in a building or another prop are left out */
   private placeFence(key: string, g: LotGeom, seed: number, lines: FenceLines) {
@@ -5466,24 +5489,9 @@ export class Game {
     const stubs = ringStubs(this.net, legs), cuts = this.replaceMode ? replaceCuts(this.net, legs, this.cls) : [];
     return [...stubs, ...cuts.filter(c => !stubs.some(x => x.seg === c.seg))];
   }
-  /** legs from `from` to `p`: a right-angle bend, or (45° mode) a diagonal followed by a straight */
-  private legsTo(from: Pt, p: Pt, straight = false): Leg[] {
-    const dx = p.x - from.x, dy = p.y - from.y, ax = Math.abs(dx), ay = Math.abs(dy);
-    if (!ax && !ay) return [];
-    if (straight) {
-      const st = this.roadStep(), k = Math.round((ax + ay) / 2 / st) * st;
-      if (ax >= 2.4 * ay || ay >= 2.4 * ax) return [{ a: from, b: ax >= ay ? { x: p.x, y: from.y } : { x: from.x, y: p.y } }];
-      return [{ a: from, b: { x: from.x + Math.sign(dx) * k, y: from.y + Math.sign(dy) * k } }];
-    }
-    if (!ax || !ay) return [{ a: from, b: p }];
-    if (this.bendMode === 45) {
-      const k = Math.min(ax, ay), corner = { x: from.x + Math.sign(dx) * k, y: from.y + Math.sign(dy) * k };
-      if (corner.x === p.x && corner.y === p.y) return [{ a: from, b: p }];
-      return [{ a: from, b: corner }, { a: corner, b: p }];
-    }
-    const corner = ax >= ay ? { x: p.x, y: from.y } : { x: from.x, y: p.y };
-    return [{ a: from, b: corner }, { a: corner, b: p }];
-  }
+  /** legs from `from` to `p` on the 0, 45 and 90 degree lattice (route-legs.ts routeLegs): a right angle (the 90 degree bend: the only one while BEND_45 is off, #1317); with
+   *  BEND_45 on, a diagonal run and a straight one with one 45 degree bend between by default (#1276), a right angle with Q; one straight run in any of the eight directions with Shift */
+  private legsTo(from: Pt, p: Pt, straight = false): Leg[] { return routeLegs(from, p, bendInUse(this.bendMode), straight, this.roadStep()); }
   /** a snap onto a road, seen from the route's last point: the point on that road square across from `from`, so the new road meets it
    *  straight (a T) instead of an L whose corner and last stretch would lie on the road itself; the snap as it is when that foot is off the
    *  road's span (within MIN_SEP of its ends) or `from` lies on the road's line */
@@ -5550,16 +5558,50 @@ export class Game {
     // the double-click's second click adds no point: the double-click builds what the preview shows (T207)
     const tap = { t: performance.now(), mx, my }, second = isSecondTap(this.routeTap, tap); this.routeTap = second ? null : tap;
     if (routeAct('click', this.route.length, second) === 'none') return;
-    let s = snapPoint(this.net, this.tileAt(mx, my), this.snapRadius(), this.roadStep());
+    this.addRoutePoint(this.tileAt(mx, my));
+  }
+  /** the road tool's route takes the point at tile t (snapped, and aimed at a road it meets): the first point starts the route (refused on land a town road may not
+   *  start on, T124 and T355), each later one adds the legs from the last point (a bend or a stop). False, with the reason in a toast, when the route could not be
+   *  built with it: the preview shows such a point red with the same reason. A click adds its point here, and so does a drag's release (roadRelease, #1276) */
+  private addRoutePoint(t: Pt): boolean {
+    let s = snapPoint(this.net, t, this.snapRadius(), this.roadStep());
     if (this.route.length) s = this.aim(this.route[this.route.length - 1]!, s);
-    if (!this.route.length) { const why = this.startBlock(s.p); if (why) { this.toast(why, 'warn'); return; } this.routeFrom = s; this.route.push(s.p); this.routeLast = s; this.emit(); return; }
+    if (!this.route.length) { const why = this.startBlock(s.p); if (why) { this.toast(why, 'warn'); return false; } this.routeFrom = s; this.route.push(s.p); this.routeLast = s; this.emit(); return true; }
     const last = this.route[this.route.length - 1], add = this.legsTo(last, s.p, this.keys.has('Shift'));
     // a point the route could not be built with is refused at once (the preview shows it red with the same reason)
     const legs: Leg[] = []; for (let i = 1; i < this.route.length; i++) legs.push({ a: this.route[i - 1]!, b: this.route[i]! });
     const all = [...legs, ...add], why = add.length ? checkLegs(this.net, all, this.routeFrom, s, this.cls, new Set(this.routeCuts(all).map(c => c.seg)), this.golfLand()) || (this.routeInWay(all)?.why ?? '') : '';
-    if (why) { this.toast(why, 'warn'); return; }
+    if (why) { this.toast(why, 'warn'); return false; }
     for (const l of add) this.route.push(this.weld(l.b));
     this.routeLast = s; this.emit();
+    return true;
+  }
+  /** the road tool's press, drag and release (#1276; the owner, 2026-11-14: "a click and drag and release builds like in sim city"; route-input.ts RouteGesture): the
+   *  press that begins a route is a click as ever, and also the start of a drag. Dragged on, its release builds the run from the press to the pointer
+   *  (roadRelease: the preview all along is the ordinary one from the route's first point to the pointer); a press and release on the spot leave the route
+   *  begun, to click on (the old click, click, double-click). A press into a route already in hand is only a click, as before: it adds its point. */
+  private readonly routeGesture = new RouteGesture();
+  /** whether the press that began the route is still down (the hint says: let go to build) */
+  get routeDragging(): boolean { return this.routeGesture.down; }
+  /** the road tool's left press: the click, which arms the drag when it began the route */
+  private roadPress(mx: number, my: number) {
+    const began = !this.route.length;
+    this.roadClick(mx, my);
+    if (began && this.route.length === 1) this.routeGesture.begin(mx, my);
+  }
+  /** the release of the press that began the route (pointerUp): a drag builds the run to the pointer (the cost, bridges, the reasons and the one undo step are the
+   *  route's own: addRoutePoint judges the end and finishRoute builds), and a refused one drops the route with the reason said, so the next press starts afresh; a
+   *  press that stayed put (or a drag too short to be a road) leaves the route begun, as a click does */
+  private roadRelease() {
+    const g = this.routeGesture, last = this.route[this.route.length - 1], t = this.hover;
+    if (!g.down) return;
+    if (this.tool !== 'road' || !last || !t) { g.cancel(); return; }
+    const s = this.aim(last, snapPoint(this.net, t, this.snapRadius(), this.roadStep()));
+    if (g.end(legsLength(this.legsTo(last, s.p, this.keys.has('Shift')))) !== 'build') return;
+    this.routeTap = null; // a drag is no click: the next press is not the second of a double-click
+    if (!this.addRoutePoint(t)) { this.cancelRoute(); return; }
+    this.finishRoute();
+    if (this.route.length) this.cancelRoute(); // not built (money, a lock, a span too long): finishRoute said why
   }
   /** a route point within 0.05 tiles of a node lands on it: a 45° bend's corner a few hundredths off one was judged the same point by the rules
    *  but made a second node, and a road piece a few hundredths long (the road builder's stress test, 2026-10-19) */
@@ -5567,8 +5609,8 @@ export class Game {
     for (const s of this.net.segsNear(p, 0.2)) for (const n of [s.a, s.b]) if (Math.hypot(n.x - p.x, n.y - p.y) < 0.05) return { x: n.x, y: n.y };
     return p;
   }
-  undoRoutePoint() { this.route.pop(); this.emit(); }
-  cancelRoute() { this.route = []; this.routeFrom = this.routeLast = null; this.emit(); }
+  undoRoutePoint() { this.route.pop(); if (!this.route.length) this.routeGesture.cancel(); this.emit(); }
+  cancelRoute() { this.route = []; this.routeFrom = this.routeLast = null; this.routeGesture.cancel(); this.emit(); }
   /** strip test: does the prop footprint touch a leg's corridor of half width hw? */
   private propInLegs(p: Prop, legs: Leg[], hw: number) {
     const pts = [{ x: p.x0, y: p.y0 }, { x: p.x1, y: p.y0 }, { x: p.x0, y: p.y1 }, { x: p.x1, y: p.y1 }, { x: (p.x0 + p.x1) / 2, y: (p.y0 + p.y1) / 2 }];
@@ -5662,7 +5704,6 @@ export class Game {
     });
     const structs = [lens[SK.BRIDGE] ? `${Math.round(lens[SK.BRIDGE] * 2)} m bridge` : '', lens[SK.TUNNEL] ? `${Math.round(lens[SK.TUNNEL] * 2)} m tunnel` : ''].filter(Boolean);
     this.toast(`Built ${Math.round(total * 2)} m of ${cls.name.toLowerCase()}${structs.length ? ` (${structs.join(', ')})` : ''} ${paid < 0 ? `(refund $${(-paid).toLocaleString()})` : `for $${paid.toLocaleString()}`}${comp ? `, $${comp.toLocaleString()} compensation for ${hit.length} building${hit.length > 1 ? 's' : ''}` : ''}${cleared.length ? ` (cleared ${cleared.length} item${cleared.length > 1 ? 's' : ''})` : ''}${cuts.length ? `, replaced ${cuts.length} road piece${cuts.length > 1 ? 's' : ''} worth $${Math.round(removed).toLocaleString()}` : ''}`, 'good');
-    this.walkPathFeedback(cls);
     this.clubDriveBuilt(cls); this.estateStreetBuilt(cls); // T175, T353: the clubhouse stopgap's drive
     { const t = this.golf?.progress?.tour; if (t && !isCourseClass(cls.id) && tourRunning(t)) { t.roads++; this.scheduleSave(); } } // T293: the tutorial's road step
     // a one-way road that ends in a dead end traps cars: warned, not refused
@@ -6187,6 +6228,18 @@ export class Game {
     const t = this.teeSpot(); if (t) this.lookAt(t.x, t.y, 0.12);
     this.setTool('course'); this.paint.setPlan(); if (this.playableHoles < 1) this.teeRingOn = true; this.emit();
   }
+  /** #1296 (the owner: "clicking on plan a hole does nothing"): what Plan a hole shows once New hole's wizard waits on hole n's tee (it waits there after every Build, so the same
+   *  card again changed nothing on screen): a toast says which hole and what to click, and the camera goes to where its tee may go (the first hole's ring spot in a range start, as
+   *  startFirstHole; else beside the last built hole's pin: the next tee often goes by the last green). The Holes panel scrolls to the card (PaintTool.planNudge) */
+  planHoleShown(): void {
+    const p = this.paint, n = p.wizard.hole;
+    if (this.playableHoles < 1) { const t = this.teeSpot(); if (t) { this.lookAt(t.x, t.y, 0.12); this.teeRingOn = true; } }
+    else {
+      const last = this.courseHoleViews().filter(v => v.started && v.n !== n).pop(), pin = last ? this.golf?.pins.find(q => q.hole === last.n) : undefined;
+      if (pin) this.lookAt(pin.x, pin.y, Math.min(0.2, Math.max(0.08, this.cam.z)));
+    }
+    this.toast(`New hole ${n}: click a tee on your land, then a green`, 'info'); this.emit();
+  }
   /** the ring's suggested tee in a range start (P22 2.8): P06's newHoleSpot once T047 lands; until then guide.ts's fallbackTeeSpot, beside the
    *  range on the parcel. Null in other games */
   teeSpot(): { x: number; y: number } | null {
@@ -6203,10 +6256,9 @@ export class Game {
     const g = this.golf, p = g?.progress, b = g?.range; if (g?.start !== 'range' || !p || !b) return null;
     return {
       pieces: p.pieces, roads: p.roads, parks: p.parks, structures: p.structures, kinds: {}, runs: this.traffic.round.runs, holes: this.playableHoles,
-      tutorial: 'on', step: 1, start: 'range', golfers: b.total.golfers, owned: b.owned, walkway: this.range.hasWalkway(), practiceForSale: this.practiceForSale(),
-      putting: this.range.practiceFacts()?.putting ?? 'none',
-      // T288: the bare start's placements
-      rangePlaced: b.built !== false, lotPlaced: !!this.rangeLotDef(), practicePlaced: b.practiceAt !== null,
+      tutorial: 'on', step: 1, start: 'range', golfers: b.total.golfers,
+      // T288: the placements (#1297: the guide's steps are these two and the buckets: the facts the steps taken out read are no longer worked out)
+      rangePlaced: b.built !== false, lotPlaced: !!this.rangeLotDef(),
       // T459 (#1211): the balls picked up and brought back (the picked counts, less what is still in the basket and the hopper)
       ballsBack: b.balls ? Math.max(0, Object.values(b.balls.total.picked).reduce((a, n) => a + n, 0) - b.balls.basket - b.balls.hopper) : undefined,
     };
@@ -6237,67 +6289,24 @@ export class Game {
     if (id === null) rangeGuideOff(gd); else if (!rangeGuideSkip(gd, id)) return;
     this.scheduleSave(); this.emit();
   }
-  /** T459 (#1215): a path built while the guide is on its walking-path step and the walkway is not whole yet: a toast says which of the car
-   *  park, the shop and the tee box's back the paths reach, and the step's rings show again, framed */
-  private walkPathFeedback(cls: { family?: string }) {
-    if (cls.family !== 'cart' || rangeGuideCurrent(this.golf?.progress?.guide) !== 5 || this.range.hasWalkway()) return;
-    const r = this.range.walkReach(); if (!r) return;
-    const mark = (ok: boolean, what: string) => `${ok ? '✓' : '✗'} ${what}`;
-    const missing = !r.lot ? 'the car park' : !r.shop ? 'the shop' : !r.tee ? 'the back of the mats' : null;
-    this.toast(`Walking path: ${mark(r.lot, 'car park')} · ${mark(r.shop, 'shop')} · ${mark(r.tee, 'behind the mats')}. ${missing ? `Lay it on to ${missing} (the rings show where)` : 'Join the pieces into one path'}`, 'warn');
-    this.showWalkRings();
-  }
-  /** the walking path step's rings (the car park's edge, the shop's counter, the tee's back) for 20 s, all three framed in the free map */
-  private showWalkRings() {
-    const sc = this.range.scene; if (!sc) return;
-    const pts = [sc.carEdge, sc.counter, sc.anchors.behind];   // (#1295: the scene's own points: the third was found from the lot's corner, which a set-back range's lot moves 18 tiles)
-    this.guideRings = { pts, until: performance.now() + 20000, walk: true };
-    this.fitView(pts.flatMap(p => [p, { x: p.x - 6, y: p.y - 6 }, { x: p.x + 6, y: p.y + 6 }]), true);
-    this.emit();
-  }
-  /** the rings the walking path step points at (T239: the car park's edge, the shack's counter, the tee's back), until a time */
-  private guideRings: { pts: Pt[]; until: number; /** the walking path's (gone once the path is laid) */ walk?: boolean } | null = null;
-  /** Show me on a guide line: the tool or card it needs, the camera on its spot and its control pulsed */
+  /** the rings a tutorial step's Show me puts on the map (the town's first houses, the range for sale), until a time (#1297: the walking path step's rings went with the step) */
+  private guideRings: { pts: Pt[]; until: number } | null = null;
+  /** Show me on a guide line: the tool or card it needs, the camera on its spot and its control pulsed (the control at the end of its menu path: ui/spotlight/leads.ts leads down to it) */
   guideShowMe(id: string) {
-    const st0 = RANGE_GUIDE.find(s => s.id === id);
-    // T288: the placement steps: the range, its car park, the practice area in hand (Range ▸ Place ...)
-    if (st0?.id === 'guide-range-place') { const t = this.range.bareGate; if (t) this.lookAt(t.x, t.y, 0.12); this.placeRangePart('range'); queueMicrotask(() => this.pulseAnchor('rail-range')); return; }
-    if (st0?.id === 'guide-range-lot') { const sc0 = this.range.scene; if (sc0) this.lookAt(sc0.J.x, sc0.J.y, 0.2); this.placeRangePart('carpark'); queueMicrotask(() => this.pulseAnchor('rail-range')); return; }
-    if (st0?.id === 'guide-range-practice' && this.golf?.range?.practiceAt === null) { const sc0 = this.range.scene; if (sc0) this.lookAt(sc0.carEdge.x, sc0.carEdge.y, 0.15); this.placeRangePart('practice'); queueMicrotask(() => this.pulseAnchor('rail-range')); return; }
-    const st = st0, sc = this.range.scene; if (!st || !sc) return;
-    const b = this.golf?.range, P = (u: number, v: number) => { const o = sc.anchors.lot[0]!; return { x: o.x + sc.roadDir.x * (u - 49) + sc.rangeSide.x * (v - 2), y: o.y + sc.roadDir.y * (u - 49) + sc.rangeSide.y * (v - 2) }; };
-    const card = (anchor: string, at: Pt, z: number) => { this.setTool('select'); this.lookAt(at.x, at.y, z); this.openRangeCard(true); queueMicrotask(() => this.pulseAnchor(anchor)); };
-    switch (st.n) {
-      case 3: {
-        // T459 (#1211): once the first buckets are sold, the second half: Walk in hand, the camera on the balls lying out on the range
-        const bk = b?.balls; if ((b?.total.golfers ?? 0) < FIRST_BUCKETS || !bk) { card('range-takings', sc.counter, RANGE_CAM_ZOOM); return; }
-        if (this.range.cardOpen) this.openRangeCard(false);
-        this.setTool('select'); this.setYouWalk(true);
-        const n = Math.min(200, bk.field.length / 2), at = n ? { x: bk.field.slice(0, n * 2).filter((_, i) => i % 2 === 0).reduce((a, v) => a + v, 0) / n, y: bk.field.slice(0, n * 2).filter((_, i) => i % 2 === 1).reduce((a, v) => a + v, 0) / n } : sc.counter;
-        this.lookAt(at.x, at.y, RANGE_CAM_ZOOM);
-        queueMicrotask(() => this.pulseAnchor('rail-walk')); this.emit(); return;
-      }
-      case 4: card('range-buy-greens', P(35, 50), 0.15); return;
-      case 5: {
-        if (this.refuseLocked('path')) return;
-        if (this.range.cardOpen) this.openRangeCard(false);
-        this.setTool('path'); this.roadClass = 'cart-walk'; // the rail's Cart paths & roads, its Walking path
-        // (T459 #1215: all three rings framed beside the panel, not a fixed zoom that lost the tee's ring off a small window)
-        this.showWalkRings();
-        queueMicrotask(() => this.pulseAnchor('rail-paths')); this.emit(); return;
-      }
-      case 6: card(b?.owned.includes('gravel') ? 'range-buy-pave' : 'range-buy-gravel', P(59, 10), 0.3); return;
-      case 7: card('range-buy-teeturf', P(35, 21), 0.3); return;
-      case 8:
-        if (this.practiceForSale()) { this.showPracticeSale(); queueMicrotask(() => this.pulseAnchor('land-buy')); }
-        else { this.showPracticeArea(); queueMicrotask(() => this.pulseAnchor('rail-facilities')); }
-        return;
-      default: {
-        // (T459 #1215: before New hole opens, say what opens it, not the Course tool's own lock of an earlier step)
-        const lock = this.toolUi()?.newHoleLock; if (lock) { this.toast(`New hole: ${lock}, or when the guide's steps above are done`); return; }
-        this.startFirstHole(); queueMicrotask(() => this.pulseAnchor('new-hole')); return;
-      }
-    }
+    const st = RANGE_GUIDE.find(s => s.id === id);
+    // T288: the placement steps: the range, its car park in hand (Range ▸ Place ...)
+    if (st?.id === 'guide-range-place') { const t = this.range.bareGate; if (t) this.lookAt(t.x, t.y, 0.12); this.placeRangePart('range'); queueMicrotask(() => this.pulseAnchor('place-range')); return; }
+    if (st?.id === 'guide-range-lot') { const sc0 = this.range.scene; if (sc0) this.lookAt(sc0.J.x, sc0.J.y, 0.2); this.placeRangePart('carpark'); queueMicrotask(() => this.pulseAnchor('place-carpark')); return; }
+    const sc = this.range.scene; if (st?.id !== 'guide-range-buckets' || !sc) return;
+    const b = this.golf?.range;
+    // T459 (#1211): the buckets step's first half, the card with the takings; once the first buckets are sold, the second half: Walk in hand, the camera on the balls lying out on the range
+    const bk = b?.balls;
+    if ((b?.total.golfers ?? 0) < FIRST_BUCKETS || !bk) { this.setTool('select'); this.lookAt(sc.counter.x, sc.counter.y, RANGE_CAM_ZOOM); this.openRangeCard(true); queueMicrotask(() => this.pulseAnchor('range-takings')); return; }
+    if (this.range.cardOpen) this.openRangeCard(false);
+    this.setTool('select'); this.setYouWalk(true);
+    const n = Math.min(200, bk.field.length / 2), at = n ? { x: bk.field.slice(0, n * 2).filter((_, i) => i % 2 === 0).reduce((a, v) => a + v, 0) / n, y: bk.field.slice(0, n * 2).filter((_, i) => i % 2 === 1).reduce((a, v) => a + v, 0) / n } : sc.counter;
+    this.lookAt(at.x, at.y, RANGE_CAM_ZOOM);
+    queueMicrotask(() => this.pulseAnchor('rail-walk')); this.emit();
   }
   // ---------- the tournament prep quests (golf/prep.ts; the RangeGuideCard's look): this tier's chapter (or the next) as a checklist, the first
   // structure of a step suggested as a spot to click (the game never places a structure itself), each step paid once when it is built
@@ -6416,7 +6425,7 @@ export class Game {
   /** Show me on a tutorial line: its control ringed (T328: never opened), and step 1 the camera on the town with rings on its first houses */
   tourShowMe(id: string) {
     const st = tourLines(this.golf?.progress?.tour, this.tourFacts())?.find(l => l.step.id === id)?.step; if (!st) return;
-    if (this.guideRings && !this.guideRings.walk) this.guideRings = null;
+    if (this.guideRings) this.guideRings = null;
     // (T459: what a step's Show me does is tour.ts tourShowOf's, so a test can check every step does something)
     for (const a of tourShowOf(st)) {
       if (a.k === 'bank') { if (this.panel !== 'bank') this.toggleMoneyPanel(); }   // (the jam's step 2, the Bank: Show me opens it; the owner, 2026-11-13: it did nothing)
@@ -6445,7 +6454,7 @@ export class Game {
   }
   /** the tutorial is over: its rings and ring go; a new range game's welcome card and guided build follow */
   private tourEnded() {
-    if (this.guideRings && !this.guideRings.walk) this.guideRings = null;
+    if (this.guideRings) this.guideRings = null;
     if (this.guideAnchor && /^rail-(traffic|range|course)$/.test(this.guideAnchor.id)) this.guideAnchor = null;
     this.tourShown = null;
   }
@@ -6650,7 +6659,10 @@ export class Game {
 
   // ---------- input ----------
   pointerDown(e: PointerEvent) {
+  if (this.show) return; // (J12: the scene behind the title card takes no input)
   const mx = e.offsetX, my = e.offsetY;
+  // #1276: the press that began a road route is still down (a drag): a right press cancels it, another finger is ignored; a fresh left press means its release was lost, so it is no drag any more
+  if (this.routeGesture.down) { if (e.button === 2) { this.cancelRoute(); return; } if (e.isPrimary === false) return; this.routeGesture.cancel(); }
   this.keys.clearMoves(); this.keys.syncMods(e); // T330: a map click lets go of a stuck movement key (a held one comes back with its repeat)
   this.moneyAt(this.tileAt(mx, my)); // T147: a spend this click makes floats up here
   this.camEase = null; // a press takes the camera back from New hole's framing (P23 4.4)
@@ -6750,7 +6762,7 @@ export class Game {
     }
     if (e.button !== 0) return;
     switch (this.tool) {
-      case 'road': this.roadClick(mx, my); break;
+      case 'road': this.roadPress(mx, my); break; // (#1276: a click, and a drag's start)
       case 'junction': this.junctionClick(mx, my); break;
       case 'toll': this.tollUpdate(mx, my); this.tollClick(); break;
       case 'business': this.bizUpdate(mx, my); this.bizClick(); break;
@@ -6771,10 +6783,12 @@ export class Game {
     }
   }
   pointerMove(e: PointerEvent) {
+  if (this.show) return;
   const mx = e.offsetX, my = e.offsetY;
   this.ghostMouse = { mx, my }; this.hoverPick.dirty = true; // (#1282: the pointer cursor's test runs in the frame)
   if (this.badgeDrag) { const b = this.badgeDrag; b.mx = mx; b.my = my; if (Math.hypot(mx - b.sx, my - b.sy) > 4) b.moved = true; } // T174
   this.hover = this.tileAt(mx, my);
+  if (this.routeGesture.down && this.routeGesture.move(mx, my, e.buttons) === 'cancel') this.cancelRoute(); // #1276: a right click during the road drag drops the route
   if (this.real.active) this.real.move(this.hover); // T356
   // T200: the overlay's block under the pointer (a refused one too: its reason shows by the pointer)
   if (this.landMode && this.golf && this.hover) this.land.move(this.hover.x, this.hover.y);
@@ -6809,6 +6823,7 @@ export class Game {
     }
   }
   pointerUp() {
+    if (this.show) return;
     if (this.estatePlacing && this.tool === 'course' && this.estateTool.dragging) { const gm = this.ghostMouse; if (gm) this.estateTool.up(gm.mx, gm.my); else this.estateTool.cancel(); } // T353: the row is laid
     const d = this.dragging; this.moneyAt(this.hover); // T147: a spend this release makes floats up here
     if (this.markerDrag) this.holeCardDrop(); // T174
@@ -6816,6 +6831,7 @@ export class Game {
     if (this.badgeDrag) { const b = this.badgeDrag, to = b.moved ? this.badgeAt(b.mx, b.my) : 0; this.badgeDrag = null; if (!b.moved) this.openHoleCard(b.n); else if (to && to !== b.n) this.renumberHole(b.n, to); this.emit(); }
     if (d?.kind === 'pan' && d.hole !== undefined && !d.moved) { if (d.hole) this.openHoleCard(d.hole); else this.closeHoleCard(); }
     if (d?.kind === 'park') this.parkRelease();
+    if (this.routeGesture.down) this.roadRelease(); // #1276: the press that began a road route lets go: a drag builds it
     // a click (no drag) on the course aims the owner's open shot (P4b)
     if (d?.kind === 'pan' && d.aim && !d.moved) this.aimAt(d.aim);
     if (d?.kind === 'pan' && d.you && !d.moved) this.youClick(d.sx, d.sy); // T240
@@ -6889,8 +6905,9 @@ export class Game {
   junctionName(n: Node): string { const names: string[] = []; for (const a of n.arms) { const s = this.roadNameOfSeg(a.seg); if (s) names.push(s); } return this.names.junction(names); }
   /** the name of the junction at tile position (x, y) (a node's position), or '' when there is no junction there */
   junctionNameAt(x: number, y: number): string { const n = this.net.nodeAt({ x, y }); return n ? this.junctionName(n) : ''; }
-  doubleClick() { this.routeInput('double'); if (this.paintOn) this.paint.doubleClick(); if (this.youControls()) this.youRun(); }
+  doubleClick() { if (this.show) return; this.routeInput('double'); if (this.paintOn) this.paint.doubleClick(); if (this.youControls()) this.youRun(); }
   wheel(e: WheelEvent) {
+    if (this.show) { e.preventDefault(); return; }
     this.youAlt.other();
     e.preventDefault();
     // T356: a real course in hand: the wheel with Shift (or Ctrl) turns it a step, with Alt freely (the browser gives Shift's wheel as a sideways one)
@@ -7009,6 +7026,7 @@ export class Game {
   /** shows or hides the parking demand overlay (the Car park panel) and keeps the worker's heat on with it; callers emit */
   setParkDemand(on: boolean) { this.showParkDemand = on; this.traffic.heatOn(on || this.showFlow); }
   keyDown(e: KeyboardEvent) {
+    if (this.show) return; // (J12: the scene behind the title card: no pan, pause or tool keys)
     const el = e.target as HTMLInputElement | null, tag = el?.tagName, typing = tag === 'INPUT' || tag === 'TEXTAREA';
     // Esc (P23 4.10): the topmost menu or card first (even from a checkbox or slider in it), then the tool's own step, then out to Select; a
     // focused text box keeps Esc from the tool
@@ -7068,6 +7086,7 @@ export class Game {
     // T396 (#1064; the owner, 2026-11-08: "ctrl/z should always work"): Ctrl+Z and Ctrl+Y (Ctrl+Shift+Z) work from any tool, on the one stack the brush, the props and the practice tools
     // above already use: the roads, paths, drives and junctions a player builds are steps on it now, in time order with the course, the paint, the props and the settings
     if ((e.ctrlKey || e.metaKey) && !e.altKey && /^[yz]$/i.test(e.key)) { e.preventDefault(); if (e.key.toLowerCase() === 'z' && !e.shiftKey) this.paint.undoTop(); else this.paint.redoTop(); return; }
+    if (BEND_45 && (e.key === 'q' || e.key === 'Q')) { this.bendMode = this.bendMode === 90 ? 45 : 90; this.emit(); return; } // (#1317: the 45 degree bend is off for now: Q does nothing; route-legs.ts BEND_45)
     switch (e.key) {
       case 'Enter': this.routeInput('enter'); break;
       case 'Backspace': this.routeInput('backspace'); break;
@@ -7078,7 +7097,6 @@ export class Game {
       case 'o': case 'O': this.showAccess = !this.showAccess; this.emit(); break;
       case 'f': case 'F': this.setFlow(!this.showFlow); this.emit(); break;
       case 'b': case 'B': this.panel = this.panel === 'bottlenecks' ? null : 'bottlenecks'; if (this.panel) this.traffic.requestReport(); this.emit(); break;
-      case 'q': case 'Q': this.bendMode = this.bendMode === 90 ? 45 : 90; this.emit(); break;
       case 'e': case 'E': this.replaceMode = !this.replaceMode; this.toast(this.replaceMode ? 'Replace: on (roads in the way are bulldozed)' : 'Replace: off', 'info'); this.emit(); break;
       case 'r': case 'R': if (this.tool === 'toll') { this.tollFlip = !this.tollFlip; if (this.tollHover) this.tollUpdate(this.tollHover.mx, this.tollHover.my); this.emit(); }
         else if (this.tool === 'business') { this.bizRot = !this.bizRot; if (this.bizHover) this.bizUpdate(this.bizHover.mx, this.bizHover.my); this.emit(); }
@@ -10376,7 +10394,7 @@ export class Game {
     if (sp.kind === 'booked') this.yourRoundStart('all', []);
     else if (sp.kind === 'event' && sp.id) this.playEvent(sp.id as EventId);
     else if (sp.kind === 'tournament') this.toast('Your group tees off soon', 'info');
-    if (this.yourRound()) { this.watchFor('round', true); if (!this.shot) this.yourJump(); }
+    if (this.yourRound()) { if (this.view3pHole === null) { this.watchFor('round', true); if (!this.shot) this.yourJump(); } } // (#1296: a round that opened the golf view holds the clock still: the view's own pause)
     this.emit();
   }
   /** Start round on the first-tee card: your booked round (the clock runs to its tee time; when that has passed, it begins now) */
@@ -10449,8 +10467,9 @@ export class Game {
     return { options: holeOptions(holes.length), holes, why: w ?? (v ? null : 'The course has no holes to play yet') };
   }
   /** starts your round on the holes chosen at the first tee (all, the front 9, the back 9, or a pick): the ball on its first tee, the card empty. A round
-   *  booked today and not yet under way is cancelled (you play this one by hand instead); one under way is refused */
-  yourRoundStart(choice: HoleChoice, picked: number[] = [], rules?: RoundRules) {
+   *  booked today and not yet under way is cancelled (you play this one by hand instead); one under way is refused. #1296: the golf view from behind the golfer opens
+   *  on it at once (openRoundView), unless inView is false (an event's round opens it itself once its competition rules are set) */
+  yourRoundStart(choice: HoleChoice, picked: number[] = [], rules?: RoundRules, inView = true) {
     const p = this.playerNow(), v = this.yrView(), c = this.yourChoices(); if (!p) return;
     if (c.why) { this.toast(c.why, 'warn'); return; }
     if (!v) return;
@@ -10463,9 +10482,11 @@ export class Game {
     this.setYourRound(r); this.youTeeOpen = false; this.yrCard = false; this.yrFlight = null;
     this.shutToolsForRound(); // T328: your round clears the tool panels
     this.welcomePull('round'); // T389: a new game's first round deals the welcome pull
-    const h = holeOf(v, holes[0]!)!, brought = this.youCartBring(h.tee);
-    this.toast(`Your round: ${holes.length} hole${holes.length > 1 ? 's' : ''}. Hole ${h.n}, par ${h.par}: walk up to the tee to address the ball${brought ? ' (your cart is by the tee)' : ''}`, 'good');
+    const h = holeOf(v, holes[0]!)!, brought = this.youCartBring(h.tee), view = inView && !this.hole3pWhy(h.n).length;
+    this.toast(view ? `Your round: ${holes.length} hole${holes.length > 1 ? 's' : ''}. Hole ${h.n}, par ${h.par}: the golf view opens on its tee`
+      : `Your round: ${holes.length} hole${holes.length > 1 ? 's' : ''}. Hole ${h.n}, par ${h.par}: walk up to the tee to address the ball${brought ? ' (your cart is by the tee)' : ''}`, 'good');
     this.emit();
+    if (inView) this.openRoundView();
   }
   /** each frame (real seconds): your ball's flight (the camera follows it), then the snap: near your ball (SNAP_TILES), on foot or in the cart, you
    *  stand at the address and the shot opens */
@@ -11082,6 +11103,18 @@ export class Game {
     this.yrCard = false; this.shot = null; this.view3pRound = !now.match; this.open3p(h.n);   // (a money match: start3p plays it as T428's Match3p)
     if (this.view3pHole === null) this.view3pRound = false;
   }
+  /** #1296 (the owner, 2026-11-14: "I clicked on play just this hole and it started up the wrong golf game? is should be the cider one??"): a round of yours that has just
+   *  begun (the hole card's Play chip, just this hole or all of the course; the first tee's Play a round yourself; a booked round or an event's; a money match) is played
+   *  in the golf view from behind the golfer at once (open3pRound), not on the map's top-down shot panel. That top-down round stays as the fallback for a hole the view
+   *  refuses (golf/play/playable3p.ts): the toast then says why and the round plays on from above. Returns whether the view opened */
+  private openRoundView(): boolean {
+    const r = this.yourRound(), v = this.yrView(); if (!r || !v || r.over) return false;
+    const h = holeOf(v, rowOf(r).i); if (!h) return false;
+    const why = this.hole3pWhy(h.n);
+    if (why.length) { this.toast(`The golf view cannot open hole ${h.n} (${why.join(', ')}): you play it from above`, 'warn'); return false; }
+    this.open3pRound();
+    return this.view3pHole !== null;
+  }
   /** whether the open view plays your round (else the free hole) */
   private view3pRound = false;
   /** T430: a stroke of your round played in the view: the shot's report, its progress (T431), and the hole's end as the top view has it */
@@ -11124,6 +11157,7 @@ export class Game {
     const h = holeOf(v, holes[0]!)!; this.youCartBring(h.tee);
     this.toast(scope === 'hole' ? `Practice: hole ${h.n}, par ${h.par}. Free, and not recorded` : `Practice round: ${holes.length} holes. Free, and not recorded`, 'good');
     this.yourJump(); this.emit();
+    this.openRoundView(); // (#1296: the Play chip plays in the golf view, hole by hole for all of the course; the top-down round is the fallback for a hole the view refuses)
   }
   /** a practice round has ended (or was quit): back where you were, as you were: the camera, the tool and the side modes, and the hole card */
   private practiceReturn() {
@@ -11258,11 +11292,12 @@ export class Game {
     const why = this.eventPlayWhy(id); if (why) { this.toast(why, 'warn'); return; }
     const ev = this.clubEv(), d = this.eventToday()!;
     ev.entered[id] = d.season;
-    this.yourRoundStart('all', [], { ...COMPETITION_RULES });
+    this.yourRoundStart('all', [], { ...COMPETITION_RULES }, false); // (#1296: the golf view opens below, once the round is the event's)
     const r = this.yourRound(); if (!r || r.mode) return;
     this.setYourRound({ ...r, mode: MODE_OF[id], rules: { ...COMPETITION_RULES } });
     this.eventCardOpen = null; this.evBoardCache = null;
     this.toast(`The ${CLUB_EVENTS[id].name}: competition rules (no mulligans, no gimmies). Good luck!`, 'good'); this.emit();
+    this.openRoundView();
   }
   /** the first tee's offer of today's event (null: none today, or you play it already) */
   eventTee(): { id: EventId; name: string; why: string | null } | null {
@@ -11352,7 +11387,8 @@ export class Game {
     this.welcomePull('round'); // T389: a new game's first round deals the welcome pull (a money match is one)
     const h = holeOf(v, hs[0]!)!, brought = this.youCartBring(h.tee);
     this.toast(`${firstName(o.name)} is on: ${hs.length} holes of match play for $${stake.toLocaleString('en-US')}. Meet at the ${ordinal(h.n)} tee${brought ? ' (your cart is by the tee)' : ''}`, 'good');
-    this.emit(); return true;
+    this.emit(); this.openRoundView(); // (#1296: the match is played in the golf view, as T428's Match3p plays it)
+    return true;
   }
   /** the opponent's figure: placed beside their ball (at its address, facing the pin; on the green by the cup once holed), its swing clip running */
   private matchFigure(dt: number, r: YourRound) {
@@ -13246,14 +13282,38 @@ export class Game {
     const t1 = performance.now();
     this.draw(now);
     const t2 = performance.now();
+    this.onAfterDraw?.(now); // (J12: the scene's director copies the picture for a cross-fade, in this task, while the canvas still holds it)
     // perf counters (rolling one second)
     this.frameTimes.push(frameMs); if (this.frameTimes.length > 60) this.frameTimes.shift();
     const avg = this.frameTimes.reduce((s, v) => s + v, 0) / this.frameTimes.length;
     Object.assign(this.perf, { fps: 1000 / avg, frameMs: avg, cpuMs: t2 - t0, drawMs: t2 - t1, instances: this.gl.stats.instances, draws: this.gl.stats.draws, uploadKB: this.gl.stats.uploadFloats * 4 / 1024, chunksPending: this.ground.busy, simActive: this.traffic.stats.active, simTickMs: this.traffic.stats.tickMs, simMaxTickMs: this.traffic.stats.maxTickMs, pop: this.traffic.pop, jobs: this.traffic.jobs, built: this.traffic.built });
     this.perf.frames++;
   };
-  /** a hook for the benchmark's camera path */
+  /** a hook for the benchmark's camera path (J12: and the living scene's camera, showcase-director.ts) */
   onFrame: ((now: number, dt: number) => void) | null = null;
+  /** J12: the scene gives way to its still picture (a machine too slow for it): the frame loop stops, so the workers idle and the GPU rests; the page starts the game afresh when the player chooses */
+  freeze() { cancelAnimationFrame(this.raf); this.onFrame = null; this.onAfterDraw = null; }
+  /** J12: the chunks of the ground the view at camera c draws and the trees round it, asked for a few seconds before the scene cuts to it (the same asks the draw makes,
+   *  at a lower priority than what is on screen), so the cut finds them baked; called each frame of the warm-up (it keeps them from being evicted) */
+  warmView(c: Camera, now: number) {
+    const ze = c.z * this.dpr, hw = this.cw / 2 / ze, hh = this.ch / 2 / ze, X0 = c.X - hw, X1 = c.X + hw, Y0 = c.Y - hh, Y1 = c.Y + hh;
+    const { district: mid, artL, rasterL: L } = grassZoomLevels(c.z, this.dpr), kind = mid ? 'm' : 'g', CW = mid ? MID_W : CHUNK_W, CH = mid ? MID_H : CHUNK_H;
+    const ts = tileSpec(this.tileBand ?? nextBand(c.z, null), this.dpr), i0 = Math.floor(X0 / CW), i1 = Math.floor(X1 / CW), j0 = Math.floor(Y0 / CH), j1 = Math.floor(Y1 / CH);
+    if (this.ground.castersUsed) this.plantForest(i0 * CW, j0 * CH, (i1 + 1) * CW, (j1 + 1) * CH, LIVING_PLANT_MARGIN); else this.plantForest(X0, Y0, X1, Y1);
+    for (let j = j0; j <= j1; j++) for (let i = i0; i <= i1; i++) {
+      if (!this.ground.castersUsed || this.casterReady(i * CW, j * CH, (i + 1) * CW, (j + 1) * CH)) this.ground.need(this.ground.tile(kind, i, j), L, 2e5 + Math.hypot((i + 0.5) * CW - c.X, (j + 0.5) * CH - c.Y) * ze, now, artL, ts);
+    }
+  }
+  /** J12: whether the ground the view at camera c draws is baked (every chunk's picture current at the level the zoom wants) and its trees planted: the scene shows a stop when it is */
+  viewReady(c: Camera): boolean {
+    const ze = c.z * this.dpr, hw = this.cw / 2 / ze, hh = this.ch / 2 / ze;
+    const { district: mid, artL, rasterL: L } = grassZoomLevels(c.z, this.dpr), kind = mid ? 'm' : 'g', CW = mid ? MID_W : CHUNK_W, CH = mid ? MID_H : CHUNK_H;
+    const ts = tileSpec(this.tileBand ?? nextBand(c.z, null), this.dpr);
+    for (let j = Math.floor((c.Y - hh) / CH); j <= Math.floor((c.Y + hh) / CH); j++) for (let i = Math.floor((c.X - hw) / CW); i <= Math.floor((c.X + hw) / CW); i++) {
+      const t = this.ground.tile(kind, i, j); if (!pictureCurrent(t, L, artL, ts) || t.stale) return false;
+    }
+    return this.perf.atlasSoft < 0.06;
+  }
 
   /** T080: tell the atlas which cells this frame draws (on screen, weighted by their screen px) and which are near the view (the prepared
    *  sprite tiles within half a screen around it, every few frames), at the mip the zoom needs; atlas-pages.ts streams them, finest wants and
@@ -13681,8 +13741,8 @@ export class Game {
       ctx.beginPath(); ctx.arc(s.x, s.y, r, 0, Math.PI * 2); ctx.stroke(); ctx.globalAlpha = 1;
     }
     // the tee ring (P22 2.8, T095): a gold ring pulsing out from the suggested tee while a range start's first New hole is in hand
-    // (T239: and the guide's rings, the walking path's ends while its Show me holds them)
-    const gr = this.guideRings && now < this.guideRings.until && !(this.guideRings.walk && this.range.hasWalkway()) ? this.guideRings.pts : [];
+    // (T239: and the tutorial's rings while its Show me holds them)
+    const gr = this.guideRings && now < this.guideRings.until ? this.guideRings.pts : [];
     const ts = this.teeRingOn ? this.teeSpot() : null;
     for (const at of ts ? [ts, ...gr] : gr) {
       const s = this.screen(at.x, at.y), ph = (now % 1600) / 1600, d = this.dpr, R = 16 * d;
@@ -13832,9 +13892,22 @@ export class Game {
     }
     if (jn) { const s = this.screen(jn[0], jn[1]); ctx.beginPath(); ctx.arc(s.x, s.y, 12 * dpr, 0, Math.PI * 2); ctx.strokeStyle = '#fff'; ctx.lineWidth = 2 * dpr; ctx.stroke(); }
   }
+  /** J12 (#1271): the overlay of the scene behind the jam's title card: the world's own moving things only (the range's balls, the golfers' balls, the dust, the night), and
+   *  no label, badge, tee marker, outline, ghost or hint (the owner's rule for the showcase: nothing floats over the picture). The labels' list is emptied each frame and never drawn */
+  private drawShowOverlay(ctx: CanvasRenderingContext2D, now: number, ze: number) {
+    this.labels.begin(ctx, this.dpr);
+    this.drawBalls(ctx);
+    if (this.range.scene) { const o = { x: 0, y: 0 }, cx = this.cw / 2, cy = this.ch / 2; this.range.drawOver(ctx, (x, y) => { o.x = (worldX(x, y) - this.cam.X) * ze + cx; o.y = (worldY(x, y) - this.cam.Y) * ze + cy; return o; }, ze, this.cam.z, this.dpr, this.cw, this.ch, this.labels); }
+    for (const p of this.particles) {
+      const s = this.screen(p.x, p.y), a = (1 - p.age / p.life) * 0.5, r = p.r * HW * ze;
+      ctx.fillStyle = `rgba(214,190,150,${a.toFixed(3)})`; ctx.beginPath(); ctx.ellipse(s.x, s.y - p.z * HH * ze * 1.5, r, r * 0.7, 0, 0, Math.PI * 2); ctx.fill();
+    }
+    this.drawNight(ctx, now);
+  }
   private drawOverlay(now: number) {
     const ctx = this.ov, ze = this.cam.z * this.dpr;
     ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.clearRect(0, 0, this.cw, this.ch);
+    if (this.show) { this.drawShowOverlay(ctx, now, ze); return; } // (J12: the scene behind the title card)
     // T151: the world labels drawn below are collected (this.labels) and written together after the tolls, placed so none overlap
     this.labels.begin(ctx, this.dpr);
     // J7d (#1234; the owner: "pls make all the labels show on hover"): in the jam a name label shows only while the pointer is over its thing (world-labels.ts)

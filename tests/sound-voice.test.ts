@@ -45,10 +45,10 @@ test('the key of a voice file is the step id and a hash of the exact text; any c
   assert.equal(hash8('hello'), '4f9f2cab'); assert.equal(hash8(''), '811c9dc5');
 });
 
-test('the steps with a voice: the jam tutorial\'s 3, the town tutorial\'s 4 and the range guide\'s 9, each with its own key', () => {
+test('the steps with a voice: the jam tutorial\'s 3, the town tutorial\'s 4 and the range guide\'s 3 (#1297: it had 9), each with its own key', () => {
   const steps = voiceSteps();
   assert.equal(steps.filter(s => s.set === 'jam').length, JAM_TOUR.length);
-  assert.equal(steps.filter(s => s.set === 'guide').length, RANGE_GUIDE.length); assert.equal(RANGE_GUIDE.length, 9);
+  assert.equal(steps.filter(s => s.set === 'guide').length, RANGE_GUIDE.length); assert.equal(RANGE_GUIDE.length, 3);
   assert.ok(steps.filter(s => s.set === 'tour').length >= 4 - JAM_TOUR.length);
   const keys = steps.map(s => voiceKey(s.id, s.title, s.body)); assert.equal(new Set(keys).size, keys.length, 'no two steps share a key');
   for (const s of steps) { assert.ok(s.title && s.body, s.id); assert.ok(s.body.length < 700, `${s.id} is long`); }

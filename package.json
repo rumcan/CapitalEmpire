@@ -8,6 +8,7 @@
     "cinder:build": "node packages/cinderlinks/build.mjs",
     "build:jam": "npm run cinder:build && node scripts/jam/build.mjs",
     "jam:smoke": "node scripts/jam/smoke.mjs",
+    "holes:playthrough": "node scripts/dev/holes-playthrough.mjs",
     "cinder:golfsize": "node scripts/cinder/golfer-size-check.mjs",
     "cinder:gate": "node packages/cinderlinks/gate.mjs",
     "cinder:bench": "node scripts/cinder/bench.mjs",
