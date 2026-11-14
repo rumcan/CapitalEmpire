@@ -209,7 +209,7 @@ export const RANGE_GUIDE: readonly GuideStep[] = Object.freeze([
     tile: 'putting-green',
     n: 8,
     title: 'Place the practice area, build a putting green',
-    body: `Range › Place the practice area: put it on your land near the car park. Then ${practicePath('›')} › Putting green on it.`, // (#1282: Facilities is the Course menu's sixth tile)
+    body: `Range › Place the practice area: put it on your land near the car park (it comes with a few dirt greens and a bunker scrape). Then ${practicePath('›')} › Putting green on it. Or click the area, or its name.`, // (#1282: Facilities is the Course menu's sixth tile; #1281: the area's own window)
     done: 'auto',
     target: { ui: 'rail-range' },
     reward: 1000,
