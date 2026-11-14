@@ -405,13 +405,13 @@ drops it, its turned box leaving the lot). Until these exist, those lots plant a
 - **A gate** for each (the drive's gap).
 
 ## The swing meter (T316, #902: an art request)
-The owner's 3-click swing meter (the shot panel, `src/ui/ShotPanel.tsx` drawMeter) is drawn on a plain canvas, labelled "Stand In for swing meter art".
+The owner's 3-click swing meter (the shot panel, `src/ui/ShotPanel.tsx` drawMeter) is drawn on a plain canvas (#1296, the owner: nothing on screen says Stand In: the caption it drew, "Stand In for swing meter art", is gone; the request for the art stands).
 - **A half-circle meter face** (about 300 x 180 px, transparent): the arc from the snap line at the right end over the top to the left end, a gold 100%
   mark at 5/6 of the way (150 degrees), the overswing (the last sixth) in red, a short tail below the snap line on the right, a polished 1985 golf-game
   look (brass and enamel). The marker, the ticks, the sweet spot and the numbers stay drawn by the code on top.
 
 ## The spin ball (T318, #904: an art request)
-The spin ball in the bottom right of the shot view (`src/ui/SpinBall.tsx` drawBall) is drawn on a plain canvas, labelled "Stand In for spin ball art".
+The spin ball in the bottom right of the shot view (`src/ui/SpinBall.tsx` drawBall) is drawn on a plain canvas (#1296: the caption it drew, "Stand In for spin ball art", is gone; the request for the art stands).
 - **A golf ball face** (about 110 x 110 px, transparent round it): a white ball seen face on, dimpled, lit from the upper right (the sun), a cool shade at
   the lower left, a faint cross through it; the 2008-era golf game look. The dot, its pulse, the TOP / BACK / DRAW / FADE words and the meter stay drawn
   by the code on top.
