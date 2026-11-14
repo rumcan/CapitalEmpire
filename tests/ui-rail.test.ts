@@ -1,6 +1,6 @@
 // Headless tests for the rail (plan P23 4.2, P1-E, T120; regrouped by T182, #454; T206 #540: Facilities in Decoration's place, Cart paths & roads
-// in Course below Buildings): Select · COURSE: Driving range, Course, Facilities · TOWN:
-// Traffic, Town decoration · Bulldoze; every tool reachable from its group (Props from both decorations); the ramp's locks per group and per
+// in Course below Buildings; #1272 (the owner, 2026-11-14): Facilities off the rail, the sixth tile of the Course flyout): Select · COURSE: Driving range, Course,
+// Cart paths & roads · TOWN: Traffic, Town decoration · Bulldoze; every tool reachable from its group (Props from both decorations); the ramp's locks per group and per
 // tool inside a group; NEW per group; no key letters on the rail (the tooltip names them); old saves' seen ids. T250 (#721): the rail split
 // into the course drawer on the left and the town footer along the bottom, and where the footer stands. T255 (#739): a town tool's panel docks
 // above the footer, a club tool's keeps the left panel, the shared tools' follow the group they were opened from, and where the footer panel
@@ -19,10 +19,11 @@ import type { Tool } from '../src/game/types';
 import { GREENKEEPING } from '../src/game/features';
 
 // T288 (#873, the owner 2026-10-31: "make cart paths and roads its own button above facilities in the main left menu"): Cart paths & roads
-// ('paths') between Course and Facilities. T288 too (the owner, 2026-11-04, asked whether to unlock the road tool from the start of a new game:
+// ('paths') between Course and Facilities (#1272: Facilities is no rail button now, Cart paths & roads is the last group of the course drawer).
+// T288 too (the owner, 2026-11-04, asked whether to unlock the road tool from the start of a new game:
 // "Yes, unlock it"): the road tool (Traffic's Build) is open from stage 1, so Traffic is never locked in place; its other tools wait for stage 3
-const GOLF_RAIL = ['select', 'course', 'paths', 'facilities', 'ground', 'traffic', 'towndecor', 'bulldoze'];
-/** the classic town game: Facilities holds golf tools only, so it is not on its rail */
+const GOLF_RAIL = ['select', 'course', 'paths', 'ground', 'traffic', 'towndecor', 'bulldoze'];
+/** the classic town game: golf tools only are Facilities' and Course's Buildings, so they are not on its rail */
 const TOWN_RAIL = ['select', 'course', 'paths', 'traffic', 'towndecor', 'bulldoze'];
 const course = (holes: number): CourseProgress => ({ holes, seasons: 0, invited: false });
 /** the unlocks of a golf game with this progress and holes */
@@ -43,7 +44,7 @@ const WHY3 = "Unlocks with your third hole or the tour's invitation";
 const ALL_TOOLS: Tool[] = (['select', 'road', 'junction', 'bulldoze', 'park', 'toll', 'bus', 'lane', 'downgrade', 'business', 'paint', 'course', 'path', 'buildings', 'props', 'greenkeeping', 'practice'] as Tool[]).filter(t => GREENKEEPING || t !== 'greenkeeping');
 
 describe('the rail: the groups, in the same places at every stage (T182)', () => {
-  it('golf: Select · Course: Driving range, Course, Facilities · Town: Traffic, Town decoration · Bulldoze, at every stage', () => {
+  it('golf: Select · Course: Driving range, Course, Cart paths & roads · Town: Traffic, Town decoration · Bulldoze, at every stage (#1272: no Facilities button)', () => {
     for (const [holes, adv] of [[0, false], [1, false], [3, false], [0, true]] as const) {
       const p = played(holes); p.advanced = adv;
       assert.deepEqual(ids(railEntries(uiOf(p, holes), true, 'select')), GOLF_RAIL, `holes ${holes}, every tool ${adv}`);
@@ -63,19 +64,21 @@ describe('the rail: the groups, in the same places at every stage (T182)', () =>
     assert.deepEqual(toolsIn(RAIL.find(r => r.id === 'course')!, false).map(t => t.id), ['course'], 'T288: its cart paths and drives on their own button');
     assert.deepEqual(toolsIn(RAIL.find(r => r.id === 'paths')!, false).map(t => t.id), ['path', 'road']);
   });
-  it('every tool is reachable from exactly one group (Props from Facilities and Town decoration, Paint from Town decoration and Facilities\' Plants), and the groups hold what the owner asked', () => {
+  it('every tool is reachable from exactly one group (Props from Course\'s Facilities tile and Town decoration, Paint from Town decoration and Facilities\' Plants), and the groups hold what the owner asked', () => {
     for (const t of ALL_TOOLS) {
       const n = railItemsOf(t).length;
       // Course: Holes, and the footer's Ground height (its height brush); T288: the road tool in Traffic and in Cart paths & roads (a second home)
       assert.equal(n, t === 'props' || t === 'paint' || t === 'course' || t === 'road' ? 2 : 1, t);
     }
     const tools = (id: string) => RAIL.find(r => r.id === id)!.tools.map(t => t.id);
-    assert.deepEqual(tools('course'), GREENKEEPING ? ['course', 'buildings', 'greenkeeping'] : ['course', 'buildings'], 'T288: Cart paths & roads on its own button');
+    // #1272: Course holds Facilities' tools (Practice, Plants, Props) too: Facilities is the sixth tile of its flyout
+    assert.deepEqual(tools('course'), GREENKEEPING ? ['course', 'buildings', 'greenkeeping', 'practice', 'paint', 'props'] : ['course', 'buildings', 'practice', 'paint', 'props'], 'T288: Cart paths & roads on its own button');
     assert.deepEqual(tools('paths'), ['path', 'road'], 'T288: the cart paths and drives, and the town roads');
     assert.equal(railItemOf('road')?.id, 'traffic', 'the road tool lights Traffic unless opened from Cart paths & roads');
     assert.equal(railItemOf('road', 'paths')?.id, 'paths');
     assert.deepEqual(RAIL.find(r => r.id === 'course')!.extras?.map(x => x.id), ['event', 'land'], 'the tournament stuff: the Event catalogue; T200: Land for sale');
-    assert.deepEqual(tools('facilities'), ['practice', 'paint', 'props'], 'T206: Practice, Plants, Decoration (Props)');
+    assert.deepEqual(RAIL.find(r => r.id === 'course')!.tools.filter(t => t.within === 'facilities').map(t => t.id), ['practice', 'paint', 'props'], 'T206: Practice, Plants, Decoration (Props): the Facilities tile (#1272)');
+    assert.equal(RAIL.find(r => r.id === 'facilities'), undefined, '#1272: Facilities is no button of the rail');
     assert.equal(RAIL.find(r => r.id === 'decor'), undefined, 'Decoration is no group of the rail');
     assert.deepEqual(tools('traffic'), ['road', 'lane', 'downgrade', 'junction', 'bus', 'park', 'toll']);
     assert.deepEqual(toolSections(RAIL.find(r => r.id === 'traffic')!, true).map(s => [s.sub, s.tools.length]), [['Roads', 3], ['Junctions', 1], ['Transport', 3]]);
@@ -86,10 +89,12 @@ describe('the rail: the groups, in the same places at every stage (T182)', () =>
     const lit = (t: Tool, active?: string, rangeOpen = false) => railEntries(ui, true, t, { active, range: true, rangeOpen }).filter(e => e.on).map(e => e.item.id);
     assert.deepEqual(lit('course'), ['course']); assert.deepEqual(lit('buildings'), ['course']); assert.deepEqual(lit('greenkeeping'), GREENKEEPING ? ['course'] : [], 'hidden: no rail item holds it');
     assert.deepEqual(lit('path'), ['paths'], 'T288: its own button'); assert.deepEqual(lit('road', 'paths'), ['paths']); assert.deepEqual(lit('road'), ['traffic']); assert.deepEqual(lit('lane'), ['traffic']); assert.deepEqual(lit('toll'), ['traffic']); assert.deepEqual(lit('paint'), ['towndecor']);
-    assert.deepEqual(lit('paint', 'facilities'), ['facilities'], 'T206: the plant brush opened from Facilities lights it'); assert.deepEqual(lit('practice'), ['facilities']);
-    assert.deepEqual(lit('props'), ['facilities']); assert.deepEqual(lit('props', 'towndecor'), ['towndecor']); assert.deepEqual(lit('props', 'facilities'), ['facilities']);
+    // #1272: Facilities is a tile of the Course flyout: its tools in hand light Course
+    assert.deepEqual(lit('paint', 'course'), ['course'], 'T206: the plant brush opened from Facilities (Course) lights Course'); assert.deepEqual(lit('practice'), ['course']);
+    assert.deepEqual(lit('props'), ['course']); assert.deepEqual(lit('props', 'towndecor'), ['towndecor']); assert.deepEqual(lit('props', 'course'), ['course']);
     assert.deepEqual(lit('select', undefined, true), ['range']);
-    assert.equal(railItemOf('props', 'towndecor')?.id, 'towndecor'); assert.equal(railItemOf('props', 'traffic')?.id, 'facilities', 'an item that does not hold it: its first');
+    assert.equal(railItemOf('props', 'towndecor')?.id, 'towndecor'); assert.equal(railItemOf('props', 'traffic')?.id, 'course', 'an item that does not hold it: its first');
+    assert.equal(railItemOf('practice')?.id, 'course', '#1272: the practice tool sits in Course (its Facilities tile)'); assert.equal(railItemOf('paint', 'course')?.id, 'course');
     assert.equal(railItemOf('paint', 'traffic')?.id, 'towndecor', 'its first that is not a second home');
   });
 });
@@ -106,7 +111,7 @@ describe("the ramp's locks per group and inside a group (T182)", () => {
     assert.equal(toolLock(ui, 'paint'), STAGE_WHY[2], 'Paint locked inside Town decoration');
     assert.match(toolLock(ui, 'greenkeeping') ?? '', /^Unlocks when your first hole is grown in/, 'Greenkeeping locked inside Course');
     assert.equal(toolLock(ui, 'props'), null); assert.equal(toolLock(ui, 'course'), null); assert.equal(toolLock(ui, 'path'), null);
-    for (const id of ['select', 'course', 'paths', 'facilities', 'towndecor', 'bulldoze']) assert.doesNotMatch(button(h, id), /rail-tab-locked|aria-disabled/, id);
+    for (const id of ['select', 'course', 'paths', 'towndecor', 'bulldoze']) assert.doesNotMatch(button(h, id), /rail-tab-locked|aria-disabled/, id);
     assert.equal(extraLock(ui, { id: 'event', label: 'Tournament', icon: 'calendar' }), WHY3, 'the Tournament opens with the town (its chip\'s stage)');
   });
   it('a click on a group opens its last tool, else its first open one; a click on a locked group says why and opens nothing', () => {
@@ -146,7 +151,7 @@ describe('no key letters on the rail; the keys stay in the tooltip (T182)', () =
     const es = railEntries(uiOf(played(3), 3), true, 'select', { range: true }), h = html(es);
     assert.doesNotMatch(h, /rail-key/);
     for (const e of es) assert.equal(railTip(e).key, e.item.key || undefined, e.item.id);
-    assert.deepEqual(es.map(e => [e.item.id, e.item.key]), [['select', 'V'], ['range', ''], ['course', 'C'], ['paths', ''], ['facilities', 'Z'], ['ground', ''], ['traffic', 'R'], ['towndecor', 'A'], ['bulldoze', 'X']]);
+    assert.deepEqual(es.map(e => [e.item.id, e.item.key]), [['select', 'V'], ['range', ''], ['course', 'C'], ['paths', ''], ['ground', ''], ['traffic', 'R'], ['towndecor', 'A'], ['bulldoze', 'X']]);
     // the tools keep their keys (the engine's keys open them, as before)
     const keyOf = (t: Tool) => RAIL.flatMap(r => r.tools).find(x => x.id === t && !x.alt)!.key;
     assert.deepEqual(['course', 'props', 'road', 'lane', 'downgrade', 'junction', 'bus', 'park', 'toll', 'paint', 'bulldoze', 'select'].map(t => keyOf(t as Tool)), ['C', 'Z', 'R', 'N', 'Y', 'J', 'U', 'P', 'T', 'A', 'X', 'V']);
@@ -157,7 +162,7 @@ describe('NEW per group; old saves (T117 seen ids, T182)', () => {
   it('stage 2: Town decoration says NEW (its Paint) until Paint is opened, then never again (Course: its Greenkeeping, T175, while it is on the rail)', () => {
     const p = played(1);
     // Course's NEW is its Greenkeeping (T175): no Course NEW while GREENKEEPING is off (features.ts hides that tool)
-    assert.deepEqual(railEntries(uiOf(p, 1), true, 'course').filter(e => e.isNew).map(e => e.item.id), GREENKEEPING ? ['course', 'facilities', 'towndecor'] : ['facilities', 'towndecor'], 'T206: Facilities too (its Plants, the Paint tool\'s plant brush)');
+    assert.deepEqual(railEntries(uiOf(p, 1), true, 'course').filter(e => e.isNew).map(e => e.item.id), ['course', 'towndecor'], 'T206: Facilities too (its Plants, the Paint tool\'s plant brush): #1272, a tile of Course, which says NEW for it');
     assert.match(button(html(railEntries(uiOf(p, 1), true, 'course')), 'towndecor'), /class="new-badge rail-new">NEW</);
     advanceProgress(p, progressFacts(p, course(1)), 'paint');
     assert.deepEqual(railEntries(uiOf(p, 1), true, 'course').filter(e => e.isNew).map(e => e.item.id), GREENKEEPING ? ['course'] : []);
@@ -190,7 +195,7 @@ describe('the rail keeps its icons; the tiles are the flyouts\' (T233)', () => {
     assert.equal((h.match(/<img /g) ?? []).length, es.length, 'one icon a group');
     // the rail's groups and their tools are as they were: the tiles add no tool and move none
     assert.deepEqual(RAIL.map(r => [r.id, r.tools.map(t => t.id).join(' ')]), [
-      ['select', 'select'], ['range', 'select'], ['course', `course buildings${GREENKEEPING ? ' greenkeeping' : ''}`], ['paths', 'path road'], ['facilities', 'practice paint props'],
+      ['select', 'select'], ['range', 'select'], ['course', `course buildings${GREENKEEPING ? ' greenkeeping' : ''} practice paint props`], ['paths', 'path road'], // (#1272: Facilities' tools are Course's)
       ['ground', 'course'], ['traffic', 'road lane downgrade junction bus park toll'], ['towndecor', 'paint props props business'], ['bulldoze', 'bulldoze'],
     ]);
   });
@@ -202,11 +207,11 @@ describe('the rail keeps its icons; the tiles are the flyouts\' (T233)', () => {
 describe('the two drawers: the course drawer on the left, the town footer along the bottom (T250)', () => {
   const side = (es: RailEntry[]) => ids(drawerEntries(es, 'side')), foot = (es: RailEntry[]) => ids(drawerEntries(es, 'footer'));
   const draw = (es: RailEntry[], drawer: 'side' | 'footer', compact = false) => renderToStaticMarkup(createElement(Rail, { entries: drawerEntries(es, drawer), drawer, compact, onPick: () => {}, onLocked: () => {} }));
-  it('golf: Select · Course: Driving range, Course, Facilities · Bulldoze on the left; Town: Traffic, Town decoration in the footer; the classic game alike', () => {
+  it('golf: Select · Course: Driving range, Course, Cart paths & roads · Bulldoze on the left (#1272: no Facilities button); Town: Traffic, Town decoration in the footer; the classic game alike', () => {
     const es = railEntries(null, true, 'select', { range: true });
-    assert.deepEqual(side(es), ['select', 'range', 'course', 'paths', 'facilities', 'bulldoze']);
+    assert.deepEqual(side(es), ['select', 'range', 'course', 'paths', 'bulldoze']);
     assert.deepEqual(foot(es), ['ground', 'traffic', 'towndecor'], 'the owner, 2026-11-01: Ground height next to Traffic');
-    assert.deepEqual(side(railEntries(null, true, 'select')), ['select', 'course', 'paths', 'facilities', 'bulldoze'], 'no range: the Course group first under Course');
+    assert.deepEqual(side(railEntries(null, true, 'select')), ['select', 'course', 'paths', 'bulldoze'], 'no range: the Course group first under Course');
     const town = railEntries(null, false, 'road');
     assert.deepEqual(side(town), ['select', 'course', 'paths', 'bulldoze'], 'the classic town game: its Course group on the left');
     assert.deepEqual(foot(town), ['traffic', 'towndecor'], 'the classic town game shows the footer with its town tools');
@@ -223,7 +228,8 @@ describe('the two drawers: the course drawer on the left, the town footer along 
     assert.match(s, /^<nav class="glass rail-nav[^"]*" aria-label="Club tools" data-testid="rail" data-drawer="side">/);
     assert.doesNotMatch(s, /rail-heading|>Course<\/div>/, 'no heading words (the owner)'); assert.doesNotMatch(s, /data-rail="(traffic|towndecor)"/);
     assert.match(s, /data-rail="select"[\s\S]*?<div class="rail-sep" aria-hidden="true"><\/div><button data-rail="range"/, 'a rule between Select and the Course groups');
-    assert.match(s, /data-rail="facilities"[\s\S]*?<div class="rail-sep" aria-hidden="true"><\/div><button data-rail="bulldoze"/, 'a rule between Facilities and Bulldoze');
+    assert.match(s, /data-rail="paths"[\s\S]*?<div class="rail-sep" aria-hidden="true"><\/div><button data-rail="bulldoze"/, 'a rule between the last Course group and Bulldoze');
+    assert.doesNotMatch(s, /data-rail="facilities"|data-guide="rail-facilities"/, '#1272: Facilities is no rail button: it is a tile of the Course flyout');
     assert.match(f, /^<nav class="glass rail-foot " aria-label="Town tools" data-testid="rail-footer" data-drawer="footer" data-compact="false">/);
     assert.doesNotMatch(f, /rail-heading|>Town<\/div>/, 'no heading words (the owner)');
     assert.doesNotMatch(f, /data-rail="(select|range|course|facilities|bulldoze)"/);
@@ -304,12 +310,12 @@ describe("a tool's panel stands in its group's drawer: a town tool's above the f
     for (const t of TOWN) assert.equal(toolDrawer(t), 'footer', t);
     for (const t of ALL_TOOLS.filter(x => !TOWN.includes(x) && x !== 'paint' && x !== 'props')) assert.equal(toolDrawer(t), 'side', t);
     assert.deepEqual(['select', 'course', 'path', 'buildings', 'practice', 'bulldoze'].map(t => toolDrawer(t as Tool)), Array(6).fill('side'));
-    assert.equal(toolDrawer('paint'), 'footer', "Paint is Town decoration's (Facilities' Plants is its second home)");
-    assert.equal(toolDrawer('props'), 'side', 'Props opens with Facilities first');
+    assert.equal(toolDrawer('paint'), 'footer', "Paint is Town decoration's (Facilities' Plants, in Course, is its second home)");
+    assert.equal(toolDrawer('props'), 'side', 'Props opens with Course (its Facilities tile) first');
   });
   it("Paint and Props follow the group they were opened from (the rail's lit group, active), in the golf and the classic game", () => {
-    assert.equal(toolDrawer('paint', 'facilities'), 'side', 'Facilities ▸ Plants: the left panel'); assert.equal(toolDrawer('paint', 'towndecor'), 'footer');
-    assert.equal(toolDrawer('props', 'towndecor'), 'footer', 'Town decoration ▸ Props: above the footer'); assert.equal(toolDrawer('props', 'facilities'), 'side');
+    assert.equal(toolDrawer('paint', 'course'), 'side', 'Course ▸ Facilities ▸ Plants: the left panel'); assert.equal(toolDrawer('paint', 'towndecor'), 'footer');
+    assert.equal(toolDrawer('props', 'towndecor'), 'footer', 'Town decoration ▸ Props: above the footer'); assert.equal(toolDrawer('props', 'course'), 'side');
     assert.equal(toolDrawer('paint', 'traffic'), 'footer', 'a group that does not hold it: its own'); assert.equal(toolDrawer('props', 'course'), 'side');
     // the panel always stands in the drawer of the group the rail lights, whichever group was opened last
     for (const golf of [true, false]) for (const t of ALL_TOOLS) for (const active of [null, ...RAIL.map(r => r.id)]) {

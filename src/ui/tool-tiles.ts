@@ -42,6 +42,8 @@ export const ROW_TILE = {
   // T214: stand-in tiles until GOLF-SPRITES' Build-tool tiles for the pro's office and the teaching hut land
   proOffice: 'clubhouse', teachHut: 'snack-hut',
   practice: 'range-bays', plants: 'trees', decoration: 'street-furniture', build: 'surveyor-turf',
+  // #1272: Facilities, the Course grid's sixth tile (it was a rail button): the chipping green with its bunker and shrubs, its practice greens and plants
+  facilities: 'chipping-green',
 } as const satisfies Record<string, ToolTile>;
 /** Existing Course extras from rail-items.ts. */
 export const EXTRA_TILE: Readonly<Partial<Record<string, ToolTile>>> = { event: 'grandstand-scoreboard', land: 'land-plot' };

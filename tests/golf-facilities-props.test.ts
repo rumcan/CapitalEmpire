@@ -20,7 +20,8 @@ const LIB = new Map(LIBRARY.map((it, i) => [it.id, i]));
 const by = (key: string) => DECOR_BY_KEY.get(key)!;
 /** the menu context App.tsx builds, as far as these two menus read it */
 const ctx = (): MenuCtx => ({ golf: true, ui: null, roads: [], paths: [], junctions: [], surfaces: [], cares: [], practice: [{ id: 'putting', name: 'Putting green', why: null }, { id: 'chipping', name: 'Chipping green and bunker', why: null }], materials: [{ id: 'dirt', name: 'Dirt' }], plants: [{ id: 'trees', name: 'Trees' }], newHoleWhy: null, range: [], ...propMenuLists() });
-const fac = () => menuOf(RAIL.find(r => r.id === 'facilities')!, ctx()), town = () => menuOf(RAIL.find(r => r.id === 'towndecor')!, ctx());
+// (#1272: Facilities is the sixth tile of the Course flyout: its rows are that tile's children)
+const fac = () => menuOf(RAIL.find(r => r.id === 'course')!, ctx()).find(r => r.key === 'facilities')!.children!, town = () => menuOf(RAIL.find(r => r.id === 'towndecor')!, ctx());
 /** the props leaves of a menu: each one's label and group (null: All props; a kind's id: its groups) */
 const propLeaves = (rows: MenuRow[]) => leavesOf(rows).filter(l => l.row.leaf?.act?.k === 'props').map(l => ({ label: l.row.label, group: (l.row.leaf!.act as { k: 'props'; group: string | null }).group, path: l.path }));
 /** the cards a props leaf shows in a view, as the panel lists them (a flyout's group or kind a focus; the town's Buildings their own view) */
