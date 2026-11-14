@@ -807,6 +807,32 @@ ${HOST_PLAY}
     script: () => { idle(); const r = scriptRun(SCRIPT, snap); out.info.push({ script: r.info, errors: r.errs }); },   // (T439: the scripted host's three holes)
     look: () => { const hm = hostMsg(); hm.golfer = { shirt: '#c4a057', trousers: '#343d56', cap: '#f6f6f2', skin: '#e2b48a', hair: '#47291a', build: 1, sex: 'm' }; hostMessage(hm); idle(); snap('look');   // (T437: the golfer in a player card's clothes: golf_pro_m2's)
       out.info.push({ look: { dressed: playerDressKey !== '', shirt: GMAT[M_POLO] !== CAPR, trousers: GMAT[M_TROU] !== TROW } }); },
+    rangeview() { // #1308: a range's mats (the pad pass as the practice view has it), golfers on them, and the side fences: from the front of a golfer, from his side, from behind, and from the outfield
+      hostMessage(hostMsg()); idle(); frames(2); ACT_MAKE = 999;
+      const q0 = pathAt(0.3), T = { x: q0[0], y: q0[1] }, q = pathAt(0.36), L = Math.hypot(q[0] - T.x, q[1] - T.y) || 1, ux = (q[0] - T.x) / L, uy = (q[1] - T.y) / L, rx = -uy, ry = ux, th = Math.atan2(uy, ux), hd = th * 180 / Math.PI;
+      const O = [T.x, T.y], P = (f, s) => [O[0] + ux * f + rx * s, O[1] + uy * f + ry * s], S = course.S, W = (f, s) => P(f, s).map((v) => v / S);
+      const quad = (id, surface, f0, s0, f1, s1) => ({ kind: 'path', id, ring: true, surface, pts: [W(f0, s0), W(f1, s0), W(f1, s1), W(f0, s1)] });
+      const feats0 = [quad('a', 'earth', -12, -40, 90, 40), quad('b', 'dirt', -6, -30, 6, 30), quad('c', 'concrete', -4, -24, 4, 24), ...[-18, -12, -6, 0, 6, 12, 18].map((s, i) => quad('m' + i, 'turf', -1.8, s - 1.6, 1.8, s + 1.6))];
+      const mode = process.env.RV_FENCE || 'after', SIDES = [[-12, -26, 90, -26], [-12, 26, 90, 26]];   // (RV_FENCE: after, the runs as the host sends them now; pics, the fence pieces as pictures stood up facing the camera, as the host sent them before #1308 (HOSTPICS=<file with the chain-link pictures>); none)
+      const fences = mode !== 'after' ? [] : SIDES.map(([f0, s0, f1, s1], i) => { const a = P(f0, s0), b = P(f1, s1), len = Math.hypot(b[0] - a[0], b[1] - a[1]);
+        return { id: 'b:fence' + i, kind: 'building', use: 'fence', name: 'Chain-link fence', at: [(a[0] + b[0]) / 2 / S, (a[1] + b[1]) / 2 / S], w: len, d: 0.12, h: 1.8, rot: Math.atan2(b[1] - a[1], b[0] - a[0]) * 180 / Math.PI, roof: 'flat', wall: '#a6adb4', roofColour: '#a6adb4', floors: 1 }; });
+      if (mode === 'pics' && globalThis.HOSTPICS) {
+        const H0 = globalThis.HOSTPICS, t = [], ids = H0.sp, ix = Math.abs(ux) >= Math.abs(uy) ? 0 : 1, pic = H0.pics[ids[ix]], ph = (pic.ay - pic.quad[1]) * 2 / 128, pw = (pic.quad[2] - pic.quad[0]) * 2 / 128 * 0.92;
+        for (const [f0, s0, f1, s1] of SIDES) for (let f = f0 + 3.36; f < f1; f += 6.72) { const c = P(f, s0); t.push(c[0], c[1], ph, pw, ix); }
+        const m2 = hostMsg(); m2.course.id = 'woodhill-pics'; m2.features = { course: 'woodhill-pics', v: 1, features: feats0, trees: { box: [O[0] - 40, O[1] - 90, O[0] + 90, O[1] + 90], sp: ids, form: ids.map(() => 6), hue: ids.map(() => 0.3), pic: ids.map((id) => H0.pics[id]), t, st: ids.map(() => 1) } };
+        hostMessage(m2); out.info.push({ picsMode: { id: course.id, ht: !!course.ht, n: course.ht ? course.ht.at.size : 0, tcount: t.length / 5, decode: typeof PIC_DECODE } });
+      } else setFeatures({ course: course.id, features: [...feats0, ...fences] });
+      PRAC = { place: 'range' };
+      const dr = (k) => actDress(k), A = [];
+      [-18, -12, -6, 0, 6, 12, 18].forEach((s, i) => { const at = P(-0.4, s); A.push({ id: 5000 + i, role: 'golfer', at, hole: 1, heading: hd, doing: i === 3 ? 'address' : 'stand', phase: 0.2, dress: dr(i + 1) }); });
+      hostMessage({ v: 1, t: 'actors', at: 600, actors: A }); frames(4);
+      const view = (name, f, s, yaw) => { const c = P(f, s); go(c[0], c[1], yaw); frames(10); snap(name); };
+      view('rv-front', 9, 0, th - 1.5708);   // (camera yaw: looking along the hole is th + 1.5708; the other way is th - 1.5708)
+      view('rv-side', -0.4, -8, th);   // (looking across the range from his left)
+      view('rv-behind', -9, 0, th + 1.5708);
+      view('rv-outfield', 60, -6, th - 1.5708);
+      view('rv-outfield-fence', 40, 14, th - 1.5708 + 0.5);
+      PRAC = null; },
     actors() { // T424: a three-ball on the fairway, a caddie and two carts beside it, from an 'actors' message; then the swing; then forty actors timed
       idle(); newHole(holeN, hole.tee.x, hole.tee.y); frames(4); ACT_MAKE = 999;
       const q = pathAt(0.34), q0 = pathAt(0.26), L = Math.hypot(q[0] - q0[0], q[1] - q0[1]) || 1, ux = (q[0] - q0[0]) / L, uy = (q[1] - q0[1]) / L, rx = -uy, ry = ux;
