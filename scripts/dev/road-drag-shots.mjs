@@ -60,8 +60,8 @@ try {
       await page.evaluate(() => { const g = window.__game; g.setSpeed(0); const p = g.golf?.progress; if (p?.tour) p.tour.off = true; g.emit(); });
       await page.keyboard.press('Escape'); await page.waitForTimeout(300);
     } else {
-      await page.goto(`${base}?start=town&seed=7`, { waitUntil: 'domcontentloaded', timeout: 240000 });
-      await page.waitForFunction(() => window.__game?.ready, null, { timeout: 420000 });
+      await page.goto(`${base}?start=town&seed=7`, { waitUntil: 'domcontentloaded', timeout: 900000 }); // (the dev server compiles on the first load, and the PC is shared: minutes)
+      await page.waitForFunction(() => window.__game?.ready, null, { timeout: 900000 });
       await page.evaluate(() => {
         const g = window.__game; g.closeWho?.('Pat Owner', 2); g.closeWelcome?.(false); g.openEventCard?.(null); g.setSpeed(0);
         g.traffic.budget.money = Math.max(g.traffic.budget.money, 1e8);
@@ -89,11 +89,16 @@ try {
   /** the camera on tiles a and b at the closest zoom, and the shot's clip round them (at least 760 x 460, kept on the window) */
   const frame = async (a, b) => {
     const fx0 = 450, fx1 = W - 340, fy0 = 90, fy1 = H - 130; // (the free part of the window: the tool panel is at the left, the cards at the right, the bars above and below)
-    await camAt((a.x + b.x) / 2, (a.y + b.y) / 2, 0.3);
-    // the route's middle in the middle of that free part, not of the window (which the cards and the panel crowd)
-    await page.evaluate(([dx, dy]) => { const g = window.__game; g.camEase = null; g.cam.X -= dx / g.cam.z; g.cam.Y -= dy / g.cam.z; g.emit(); }, [(fx0 + fx1) / 2 - W / 2, (fy0 + fy1) / 2 - H / 2]);
+    const mid = { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 };
+    await camAt(mid.x, mid.y, 0.3);
+    // the closest zoom (0.3 at most) at which the whole run and its cost label (to the right of the pointer, about 200 px) stand in the free part of the window
+    const q0 = await toPx(a.x, a.y), q1 = await toPx(b.x, b.y);
+    const k = Math.min(1, (fx1 - fx0) / (Math.abs(q0.x - q1.x) + 80 + 210), (fy1 - fy0) / (Math.abs(q0.y - q1.y) + 130));
+    if (k < 1) await camAt(mid.x, mid.y, Math.max(0.08, 0.3 * k));
+    // the route's middle in the middle of that free part (a little left of it: the label is on the right), not of the window, which the cards and the panel crowd
+    await page.evaluate(([dx, dy]) => { const g = window.__game; g.camEase = null; g.cam.X -= dx / g.cam.z; g.cam.Y -= dy / g.cam.z; g.emit(); }, [(fx0 + fx1) / 2 - 50 - W / 2, (fy0 + fy1) / 2 - H / 2]);
     await settle(1200);
-    const pa = await toPx(a.x, a.y), pb = await toPx(b.x, b.y), m = 150, x0 = Math.min(pa.x, pb.x) - m, x1 = Math.max(pa.x, pb.x) + m, y0 = Math.min(pa.y, pb.y) - m, y1 = Math.max(pa.y, pb.y) + m;
+    const pa = await toPx(a.x, a.y), pb = await toPx(b.x, b.y), x0 = Math.min(pa.x, pb.x) - 90, x1 = Math.max(pa.x, pb.x) + 250, y0 = Math.min(pa.y, pb.y) - 100, y1 = Math.max(pa.y, pb.y) + 100;
     const w = Math.min(fx1 - fx0, Math.max(700, x1 - x0)), h = Math.min(fy1 - fy0, Math.max(440, y1 - y0)), cx = (x0 + x1) / 2, cy = (y0 + y1) / 2;
     clip = { x: Math.round(Math.max(fx0, Math.min(fx1 - w, cx - w / 2))), y: Math.round(Math.max(fy0, Math.min(fy1 - h, cy - h / 2))), width: Math.round(w), height: Math.round(h) };
     return { pa, pb };
@@ -140,6 +145,8 @@ try {
         g.cancelRoute(); if (g.startBlock(A)) continue;
         // (open: no road within 16 tiles of the run, so the picture shows the ghost on bare ground)
         if (o.open && [[A.x, A.y], [(A.x + B.x) / 2, (A.y + B.y) / 2], [B.x, B.y]].some(([x, y]) => [...g.net.segsNear({ x, y }, 16)].length)) continue;
+        // (the press and the end land on the grid as planned: a point within the snap radius of a road or a node snaps to it, and that is another route)
+        g.hover = A; const sa = g.cursorSnap(); g.hover = B; const sb = g.cursorSnap(); if (!sa || !sb || sa.kind !== 'grid' || sb.kind !== 'grid') { g.hover = null; continue; }
         g.route = [A]; g.routeFrom = g.routeLast = { p: A, kind: 'grid' }; g.hover = B;
         const legs = g.previewLegs(), why = g.routeBlock(legs), kinds = why ? [] : g.structured(legs).kinds; g.cancelRoute(); g.hover = null;
         if (!why && legs.length === want && kinds.every(k => k === 0)) return { A, B, legs: legs.length }; // (on the ground: no bridge or tunnel in the picture)
@@ -231,6 +238,7 @@ try {
   await page.keyboard.press('q'); await page.waitForTimeout(150); // back to 45 for the shots
   await armPath(JAM ? 'cart-dirt' : 'cart');
   let p = await plan(26, 9, { open: true });
+  if (p.none) p = await plan(26, 9); // (a town with no open land round the camera: any free spot)
   check(!p.none, `${TAG}: a free spot for a path of 26 x 9 tiles`, p.none ? JSON.stringify(p.tried) : `from ${p.A.x},${p.A.y} to ${p.B.x},${p.B.y}`);
   let pathA = null, pathB = null;
   if (!p.none) {
@@ -271,6 +279,9 @@ try {
       for (const t of [0.5, 0.4, 0.6, 0.35, 0.65]) for (const d of [20, 26, 32, -20, -26, -32]) for (const o of [-8, -4, 0, 4, 8]) {
         const M = { x: s.a.x + (s.b.x - s.a.x) * t, y: s.a.y + (s.b.y - s.a.y) * t }, A = { x: Math.round(M.x + n.x * d + u.x * o), y: Math.round(M.y + n.y * d + u.y * o) };
         g.cancelRoute(); if (g.startBlock(A)) continue;
+        // (a clean T: the road alone is near the run, so it crosses and meets nothing else, and its start is on bare ground)
+        if ([...g.net.segsNear({ x: (A.x + M.x) / 2, y: (A.y + M.y) / 2 }, Math.hypot(M.x - A.x, M.y - A.y) / 2 + 8)].some(q => q !== s)) continue;
+        g.hover = A; const sa = g.cursorSnap(); if (!sa || sa.kind !== 'grid') { g.hover = null; continue; }
         g.route = [A]; g.routeFrom = g.routeLast = { p: A, kind: 'grid' }; g.hover = { x: M.x, y: M.y };
         const legs = g.previewLegs(), why = g.routeBlock(legs), cs = g.cursorSnap(), kinds = why ? [] : g.structured(legs).kinds; g.cancelRoute(); g.hover = null;
         if (!why && legs.length >= 1 && cs && cs.kind !== 'grid' && kinds.every(k => k === 0)) return { A, M: { x: M.x, y: M.y }, seg: { a: { x: s.a.x, y: s.a.y }, b: { x: s.b.x, y: s.b.y }, cls: s.cls.id }, legs: legs.map(l => ({ a: { x: l.a.x, y: l.a.y }, b: { x: l.b.x, y: l.b.y } })), kind: cs.kind };
@@ -288,7 +299,8 @@ try {
     const after = await state(), toasts = await lastToasts(), last = toasts[toasts.length - 1] ?? '';
     check(after.route === 0 && (JAM ? /^Built .* of (walking|dirt|cement|paved)/ : /^Built .* of street/).test(last), `${TAG}: the release builds the ${JAM ? 'path' : 'street'}`, last);
     const nodesAfter = await page.evaluate(() => [...window.__game.net.nodes.values()].filter(n => n.segs.length >= 3).length);
-    check(nodesAfter === nodesBefore + 1 && (await segCount()) > before, `${TAG}: it joined the road: one new junction`, `junctions ${nodesBefore} -> ${nodesAfter}`);
+    const atRoad = await page.evaluate(M => [...window.__game.net.nodes.values()].some(n => n.segs.length >= 3 && Math.hypot(n.x - M.x, n.y - M.y) < 4), jp.M);
+    check(nodesAfter >= nodesBefore + 1 && atRoad && (await segCount()) > before, `${TAG}: it joined the road: a new junction where it meets it`, `junctions ${nodesBefore} -> ${nodesAfter}, one within 4 tiles of the pointer: ${atRoad}`);
     await settle(2200); await frame(jp.A, jp.M); await settle(600);
     await shot('join-2-built');
   }
@@ -421,7 +433,8 @@ try {
   // ------------------------------------------------------------------ 6b. what the ghost says as the pointer crosses a line from the press (informational)
   {
     if (!JAM) await armStreet(); else await armPath(null);
-    const ps = await plan(28, 28, { open: true, legs: 1 });
+    let ps = await plan(28, 28, { open: true, legs: 1 });
+    if (ps.none) ps = await plan(28, 28, { legs: 1 });
     if (!ps.none) {
       await camAt(ps.A.x, ps.A.y, 0.3); await settle(600);
       const sweep = await page.evaluate(([A, B]) => {
