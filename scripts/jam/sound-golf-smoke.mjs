@@ -26,11 +26,11 @@ const browser = await chromium.launch({ channel: 'chrome', headless: !has('heade
 const ctx = await browser.newContext({ viewport: { width: 1366, height: 860 }, deviceScaleFactor: 1, acceptDownloads: false });
 await ctx.addInitScript(() => {
   try { localStorage.clear(); } catch { /* none */ }
-  const S = window.__snd = { ctx: 0, osc: 0, src: 0, loops: 0, loopStops: 0, strikes: 0, msgs: [] };
+  const S = window.__snd = { ctx: 0, osc: 0, src: 0, live: new Set(), msgs: [] }; // (live: looped sources started and not yet stopped: the range's breeze is the only one that stays; a noise burst is stopped as it is made)
   const AC = window.AudioContext;
   window.AudioContext = class extends AC { constructor(...a) { super(...a); S.ctx++; } };
-  for (const [P, k] of [[window.OscillatorNode.prototype, 'osc'], [window.AudioBufferSourceNode.prototype, 'src']]) { const o = P.start; P.start = function (...a) { S[k]++; if (this.loop) S.loops++; return o.apply(this, a); }; }
-  { const P = window.AudioBufferSourceNode.prototype, o = P.stop; P.stop = function (...a) { if (this.loop) S.loopStops++; return o.apply(this, a); }; } // (the breeze is the one looped source)
+  for (const [P, k] of [[window.OscillatorNode.prototype, 'osc'], [window.AudioBufferSourceNode.prototype, 'src']]) { const o = P.start; P.start = function (...a) { S[k]++; if (this.loop) S.live.add(this); return o.apply(this, a); }; }
+  { const P = window.AudioBufferSourceNode.prototype, o = P.stop; P.stop = function (...a) { S.live.delete(this); return o.apply(this, a); }; }
   window.addEventListener('message', e => { try { const d = e.data; if (d && d.v === 1 && d.t === 'sound') S.msgs.push(d.k + (d.club ? ':' + d.club : '') + (d.mat ? ':' + d.mat : '')); } catch { /* ignore */ } }, true);
 });
 const page = await ctx.newPage();
@@ -38,7 +38,7 @@ page.on('pageerror', e => errors.push(`pageerror: ${e.message}`));
 page.on('console', m => { if (m.type() === 'error' && !/favicon|Failed to load resource: the server responded with a status of 404/.test(m.text())) errors.push(`console: ${m.text().slice(0, 300)}`); });
 const settle = (ms = 400) => page.waitForTimeout(ms);
 const game = fn => page.evaluate(fn);
-const snd = () => page.evaluate(() => ({ ctx: __snd.ctx, nodes: __snd.osc + __snd.src, loops: __snd.loops, loopStops: __snd.loopStops, msgs: [...__snd.msgs] }));
+const snd = () => page.evaluate(() => ({ ctx: __snd.ctx, nodes: __snd.osc + __snd.src, live: __snd.live.size, msgs: [...__snd.msgs] }));
 const shot = async name => { if (SHOTS) await page.screenshot({ path: resolve(SHOTS, `${name}.png`) }); };
 
 try {
@@ -56,12 +56,12 @@ try {
   await page.keyboard.press('Escape'); await game(() => { const g = window.__game; g.openRangeCard?.(false); g.setTool('select'); g.setSpeed(1); const c = g.range.scene?.counter; if (c) g.lookAt(c.x, c.y, 0.25); g.emit(); });
   await settle(6000);
   const amb = await snd();
-  check('the range ambience builds a breeze: a looped noise source starts when the camera is close on the range', amb.loops === 1, JSON.stringify({ ctx: amb.ctx, loops: amb.loops, stops: amb.loopStops }));
+  check('the range ambience builds a breeze: one looped noise source runs while the camera is close on the range', amb.live === 1, JSON.stringify({ ctx: amb.ctx, live: amb.live }));
   await shot('range-close');
   // the camera goes far away: the breeze fades and its nodes are freed a few seconds after
   await game(() => { const g = window.__game; g.zoomAt(0.03); g.emit(); }); await settle(7000);
   const far = await snd();
-  check('zoomed out, the breeze is stopped and its nodes freed', far.loopStops >= 1, JSON.stringify({ loops: far.loops, stops: far.loopStops }));
+  check('zoomed out, the breeze is stopped and its nodes freed', far.live === 0, JSON.stringify({ live: far.live }));
   await game(() => { const g = window.__game; g.setSpeed(0); });
   // ---- a hole built through the wizard, as jam:smoke builds it
   const built = await game(() => {
