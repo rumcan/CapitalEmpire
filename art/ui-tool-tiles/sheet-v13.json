@@ -1,0 +1,267 @@
+{
+  "schema": 1,
+  "version": "v13",
+  "source": {
+    "file": "art/theme-consistency/generated/ui/golf-build-tool-tiles-sheet-v13.png",
+    "sha256": "6fe130fdddab96bd954fe2fc6bc917023fd6b8e08cb75fcc6ac7f07d1678cdca",
+    "dimensions": [
+      1447,
+      1087
+    ]
+  },
+  "grid": {
+    "columns": 4,
+    "rows": 3,
+    "detectedRows": [
+      [
+        36,
+        356
+      ],
+      [
+        378,
+        699
+      ],
+      [
+        722,
+        1049
+      ]
+    ],
+    "detectedColumns": [
+      [
+        31,
+        358
+      ],
+      [
+        383,
+        711
+      ],
+      [
+        736,
+        1064
+      ],
+      [
+        1089,
+        1417
+      ]
+    ]
+  },
+  "processing": "Source unchanged; detected card crops, normal UI resize to144px, rounded-corner alpha mask, WebP encoding.",
+  "tiles": [
+    {
+      "name": "all-props",
+      "row": 0,
+      "column": 0,
+      "sourceRect": {
+        "left": 36,
+        "top": 37,
+        "width": 318,
+        "height": 318
+      },
+      "file": "src/assets/ui/tiles/all-props.webp",
+      "dimensions": [
+        144,
+        144
+      ],
+      "sha256": "3e3e7f22908750d29c7d574993edb775234823d9c3ae565a10082934998cb6fc",
+      "bytes": 5348
+    },
+    {
+      "name": "natural-props",
+      "row": 0,
+      "column": 1,
+      "sourceRect": {
+        "left": 388,
+        "top": 37,
+        "width": 318,
+        "height": 318
+      },
+      "file": "src/assets/ui/tiles/natural-props.webp",
+      "dimensions": [
+        144,
+        144
+      ],
+      "sha256": "9637eca8ea59ea40d71e6070fae90e186261e123c88e8a3ab3e7b780845dfe08",
+      "bytes": 6532
+    },
+    {
+      "name": "man-made-props",
+      "row": 0,
+      "column": 2,
+      "sourceRect": {
+        "left": 741,
+        "top": 37,
+        "width": 318,
+        "height": 318
+      },
+      "file": "src/assets/ui/tiles/man-made-props.webp",
+      "dimensions": [
+        144,
+        144
+      ],
+      "sha256": "d6557a4bcd12e980914d7c0c217469dcd9294ea26d80caab8d53fc65ffe04580",
+      "bytes": 5046
+    },
+    {
+      "name": "desert-oasis",
+      "row": 0,
+      "column": 3,
+      "sourceRect": {
+        "left": 1094,
+        "top": 37,
+        "width": 318,
+        "height": 318
+      },
+      "file": "src/assets/ui/tiles/desert-oasis.webp",
+      "dimensions": [
+        144,
+        144
+      ],
+      "sha256": "e3369dc024d88c22b2104da96670ef6652d9407f3c20ea1c43f296948599ca17",
+      "bytes": 5780
+    },
+    {
+      "name": "trees-mixed",
+      "row": 1,
+      "column": 0,
+      "sourceRect": {
+        "left": 35,
+        "top": 379,
+        "width": 319,
+        "height": 319
+      },
+      "file": "src/assets/ui/tiles/trees-mixed.webp",
+      "dimensions": [
+        144,
+        144
+      ],
+      "sha256": "1ab6f879905c40ad1c2783d259b65f125f3ad40d185c8a7ab009d1606210381e",
+      "bytes": 6398
+    },
+    {
+      "name": "lake-props",
+      "row": 1,
+      "column": 1,
+      "sourceRect": {
+        "left": 388,
+        "top": 379,
+        "width": 319,
+        "height": 319
+      },
+      "file": "src/assets/ui/tiles/lake-props.webp",
+      "dimensions": [
+        144,
+        144
+      ],
+      "sha256": "55a1834a65a973c93d1ae355dd749696abb08ff4a7ea4d081bae3ba1359f30b6",
+      "bytes": 5588
+    },
+    {
+      "name": "fences",
+      "row": 1,
+      "column": 2,
+      "sourceRect": {
+        "left": 741,
+        "top": 379,
+        "width": 319,
+        "height": 319
+      },
+      "file": "src/assets/ui/tiles/fences.webp",
+      "dimensions": [
+        144,
+        144
+      ],
+      "sha256": "1651f9b6a32d1747422797e8553fb3b664599b08b3ee43816a45d5f5c5c37666",
+      "bytes": 5338
+    },
+    {
+      "name": "signs",
+      "row": 1,
+      "column": 3,
+      "sourceRect": {
+        "left": 1094,
+        "top": 379,
+        "width": 319,
+        "height": 319
+      },
+      "file": "src/assets/ui/tiles/signs.webp",
+      "dimensions": [
+        144,
+        144
+      ],
+      "sha256": "6c1273ec75510b0466f6893b8bc4760c65de080516f21735a921159750ad4e99",
+      "bytes": 5154
+    },
+    {
+      "name": "fountain",
+      "row": 2,
+      "column": 0,
+      "sourceRect": {
+        "left": 32,
+        "top": 723,
+        "width": 325,
+        "height": 325
+      },
+      "file": "src/assets/ui/tiles/fountain.webp",
+      "dimensions": [
+        144,
+        144
+      ],
+      "sha256": "9a939c4c510cdb3ac896656189d211c5bb24226c6d7185f12f4f8070b17b0818",
+      "bytes": 5414
+    },
+    {
+      "name": "texture-painter",
+      "row": 2,
+      "column": 1,
+      "sourceRect": {
+        "left": 385,
+        "top": 723,
+        "width": 325,
+        "height": 325
+      },
+      "file": "src/assets/ui/tiles/texture-painter.webp",
+      "dimensions": [
+        144,
+        144
+      ],
+      "sha256": "62a684f9972d5274fee3b340cab54a7485d77626327b96c9b419edcac3bc6317",
+      "bytes": 5776
+    },
+    {
+      "name": "clear-plants",
+      "row": 2,
+      "column": 2,
+      "sourceRect": {
+        "left": 738,
+        "top": 723,
+        "width": 325,
+        "height": 325
+      },
+      "file": "src/assets/ui/tiles/clear-plants.webp",
+      "dimensions": [
+        144,
+        144
+      ],
+      "sha256": "5b31ebe2988cca642f693262f33cd63486bab385c340bbb9fda78e1d7b4de167",
+      "bytes": 6576
+    },
+    {
+      "name": "nursery-plants",
+      "row": 2,
+      "column": 3,
+      "sourceRect": {
+        "left": 1091,
+        "top": 723,
+        "width": 325,
+        "height": 325
+      },
+      "file": "src/assets/ui/tiles/nursery-plants.webp",
+      "dimensions": [
+        144,
+        144
+      ],
+      "sha256": "e4fcb1bcc073b068a338478b72a252447348a548931d721ab3f9a0ae685b64aa",
+      "bytes": 6272
+    }
+  ]
+}

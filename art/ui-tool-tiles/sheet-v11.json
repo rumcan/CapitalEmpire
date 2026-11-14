@@ -1,0 +1,267 @@
+{
+  "schema": 1,
+  "version": "v11",
+  "source": {
+    "file": "art/theme-consistency/generated/ui/golf-build-tool-tiles-sheet-v11.png",
+    "sha256": "50799807f20dfbdfe3d9f560b519b2197bc53f1c64777dc7506e4132b8c88240",
+    "dimensions": [
+      1448,
+      1086
+    ]
+  },
+  "grid": {
+    "columns": 4,
+    "rows": 3,
+    "detectedRows": [
+      [
+        41,
+        347
+      ],
+      [
+        377,
+        696
+      ],
+      [
+        723,
+        1040
+      ]
+    ],
+    "detectedColumns": [
+      [
+        45,
+        362
+      ],
+      [
+        390,
+        708
+      ],
+      [
+        738,
+        1055
+      ],
+      [
+        1085,
+        1404
+      ]
+    ]
+  },
+  "processing": "Source unchanged; detected card crops, normal UI resize to144px, rounded-corner alpha mask, WebP encoding.",
+  "tiles": [
+    {
+      "name": "ball-polisher",
+      "row": 0,
+      "column": 0,
+      "sourceRect": {
+        "left": 52,
+        "top": 42,
+        "width": 304,
+        "height": 304
+      },
+      "file": "src/assets/ui/tiles/ball-polisher.webp",
+      "dimensions": [
+        144,
+        144
+      ],
+      "sha256": "df64fb71f3e53f505cfbbacb36bf46d1c2befb4d434428c1d76f708c7247e280",
+      "bytes": 5902
+    },
+    {
+      "name": "robot-pickers",
+      "row": 0,
+      "column": 1,
+      "sourceRect": {
+        "left": 397,
+        "top": 42,
+        "width": 304,
+        "height": 304
+      },
+      "file": "src/assets/ui/tiles/robot-pickers.webp",
+      "dimensions": [
+        144,
+        144
+      ],
+      "sha256": "fc8ee94d9a6536305c1c097025b670953a8ee23afb884ae1b834fa4737874c83",
+      "bytes": 5564
+    },
+    {
+      "name": "robots-4",
+      "row": 0,
+      "column": 2,
+      "sourceRect": {
+        "left": 745,
+        "top": 42,
+        "width": 304,
+        "height": 304
+      },
+      "file": "src/assets/ui/tiles/robots-4.webp",
+      "dimensions": [
+        144,
+        144
+      ],
+      "sha256": "308097a09ba45d59be76a440f0acbd43e16da9431598ea21221d274c64cc835a",
+      "bytes": 5112
+    },
+    {
+      "name": "robots-6",
+      "row": 0,
+      "column": 3,
+      "sourceRect": {
+        "left": 1093,
+        "top": 42,
+        "width": 304,
+        "height": 304
+      },
+      "file": "src/assets/ui/tiles/robots-6.webp",
+      "dimensions": [
+        144,
+        144
+      ],
+      "sha256": "d0dbe7b3c2bc37b5ed572f52cec5b78db7425c51a548c3e05a156729e7c41a2b",
+      "bytes": 5890
+    },
+    {
+      "name": "robot-batteries",
+      "row": 1,
+      "column": 0,
+      "sourceRect": {
+        "left": 46,
+        "top": 379,
+        "width": 315,
+        "height": 315
+      },
+      "file": "src/assets/ui/tiles/robot-batteries.webp",
+      "dimensions": [
+        144,
+        144
+      ],
+      "sha256": "7283cf5e4fdbea5db7739a72b4105b2443c2c1d250b60f653b000dcbddb4e665",
+      "bytes": 4732
+    },
+    {
+      "name": "robot-speed",
+      "row": 1,
+      "column": 1,
+      "sourceRect": {
+        "left": 391,
+        "top": 379,
+        "width": 316,
+        "height": 316
+      },
+      "file": "src/assets/ui/tiles/robot-speed.webp",
+      "dimensions": [
+        144,
+        144
+      ],
+      "sha256": "9b196d9a9f48f839ff59c39638dc6188168fb4fa48432c6829066075f4f47364",
+      "bytes": 5610
+    },
+    {
+      "name": "fast-chargers",
+      "row": 1,
+      "column": 2,
+      "sourceRect": {
+        "left": 739,
+        "top": 379,
+        "width": 315,
+        "height": 315
+      },
+      "file": "src/assets/ui/tiles/fast-chargers.webp",
+      "dimensions": [
+        144,
+        144
+      ],
+      "sha256": "2a1de53395bd509c6e1e3969ee2a91f833d8244cd7b2b43d11a91629652f518c",
+      "bytes": 5682
+    },
+    {
+      "name": "target-nets",
+      "row": 1,
+      "column": 3,
+      "sourceRect": {
+        "left": 1086,
+        "top": 378,
+        "width": 317,
+        "height": 317
+      },
+      "file": "src/assets/ui/tiles/target-nets.webp",
+      "dimensions": [
+        144,
+        144
+      ],
+      "sha256": "c1b39494f81359e7cc0e04a188407a6d210fd38116f24f6420e250ff2d878d94",
+      "bytes": 5952
+    },
+    {
+      "name": "bucket-counter",
+      "row": 2,
+      "column": 0,
+      "sourceRect": {
+        "left": 46,
+        "top": 724,
+        "width": 315,
+        "height": 315
+      },
+      "file": "src/assets/ui/tiles/bucket-counter.webp",
+      "dimensions": [
+        144,
+        144
+      ],
+      "sha256": "ebf4ccee3b65025261de3e70c31cce465bba2389e5453b92447e27de4860d945",
+      "bytes": 5828
+    },
+    {
+      "name": "standing-order",
+      "row": 2,
+      "column": 1,
+      "sourceRect": {
+        "left": 392,
+        "top": 724,
+        "width": 315,
+        "height": 315
+      },
+      "file": "src/assets/ui/tiles/standing-order.webp",
+      "dimensions": [
+        144,
+        144
+      ],
+      "sha256": "568b6b1453651c517131e5460bb77fb047f30a5753533e884cc601afd00b2225",
+      "bytes": 5518
+    },
+    {
+      "name": "trade-price",
+      "row": 2,
+      "column": 2,
+      "sourceRect": {
+        "left": 739,
+        "top": 724,
+        "width": 315,
+        "height": 315
+      },
+      "file": "src/assets/ui/tiles/trade-price.webp",
+      "dimensions": [
+        144,
+        144
+      ],
+      "sha256": "f2ca80d8c69564448a6c23f2794b134644a591c9f35a09c534e31348d7c24241",
+      "bytes": 5160
+    },
+    {
+      "name": "pallet-deliveries",
+      "row": 2,
+      "column": 3,
+      "sourceRect": {
+        "left": 1087,
+        "top": 724,
+        "width": 315,
+        "height": 315
+      },
+      "file": "src/assets/ui/tiles/pallet-deliveries.webp",
+      "dimensions": [
+        144,
+        144
+      ],
+      "sha256": "417ec440335a2d93fe1796c724b7a23d980c598681805ca99a69c2c07fac51b4",
+      "bytes": 5604
+    }
+  ]
+}

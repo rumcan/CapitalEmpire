@@ -1,5 +1,5 @@
 // Explicit sheet identities prevent a new subject grid from overwriting an older menu icon.
-// node scripts/assets/prep-ui-tool-tiles.mjs [sheet.png] [--version v1|v2|v3|v4|v5|v6|v7|v8|v9] [--manifest file.json]
+// node scripts/assets/prep-ui-tool-tiles.mjs [sheet.png] [--version v1 ... v13] [--manifest file.json]
 import sharp from 'sharp';
 import fs from 'node:fs/promises';
 import path from 'node:path';
@@ -19,14 +19,20 @@ export const SHEET_NAMES = {
   v8: [['club-driver', 'club-wood', 'club-long-iron', 'club-iron'], ['club-wedge', 'club-putter', 'jump-to-ball', 'gimme'], ['go-for-it', 'back-to-course', 'help-keys', 'closed-gate']],
   // J8, the last sheet: the sound tiles (kept for J11, #1270: the music radio and the sound settings), Settings' rows and the title card's Continue
   v9: [['radio', 'boombox', 'headphones', 'bell'], ['radio-off', 'jukebox', 'currency', 'text-size'], ['colour-safe', 'backups', 'load-save', 'front-door']],
+  // J13 (#1277): the ball room upgrades' tiles, one per upgrade of the Range card's tree (picking and staff, machines and robots, supply, the range's extras and the till and the home)
+  v10: [['ball-tube', 'wire-basket', 'push-picker', 'pull-picker'], ['bigger-hopper', 'gang-picker', 'night-picking', 'staff-training'], ['second-attendant', 'night-attendant', 'staff-cart', 'supplier']],
+  v11: [['ball-polisher', 'robot-pickers', 'robots-4', 'robots-6'], ['robot-batteries', 'robot-speed', 'fast-chargers', 'target-nets'], ['bucket-counter', 'standing-order', 'trade-price', 'pallet-deliveries']],
+  v12: [['stamped-balls', 'swing-video', 'fans-lemonade', 'weighted-clubs'], ['launch-monitor', 'ball-tracker', 'floodlights', 'bays-24'], ['pro-shop', 'coffee-kiosk', 'range-till', 'home-caravan']],
+  // J13, the props menu (#1284's tiles half) and the Texture Painter: the Props flyout's entries and the painter's button
+  v13: [['all-props', 'natural-props', 'man-made-props', 'desert-oasis'], ['trees-mixed', 'lake-props', 'fences', 'signs'], ['fountain', 'texture-painter', 'clear-plants', 'nursery-plants']],
 };
 const hash = bytes => crypto.createHash('sha256').update(bytes).digest('hex');
 export function sheetVersion(source, explicit) {
-  const detected = /^golf-build-tool-tiles-sheet-(v[1-9])\.png$/i.exec(path.basename(source))?.[1].toLowerCase();
+  const detected = /^golf-build-tool-tiles-sheet-(v(?:1[0-3]|[1-9]))\.png$/i.exec(path.basename(source))?.[1].toLowerCase();
   if (explicit && !SHEET_NAMES[explicit]) throw Error('Unknown menu sheet version: ' + explicit);
   if (detected && explicit && detected !== explicit) throw Error(`Sheet filename is ${detected}, not ${explicit}`);
   const version = explicit ?? detected;
-  if (!version) throw Error('Unrecognised sheet filename: specify --version v1 to v9; never guess the subject order');
+  if (!version) throw Error('Unrecognised sheet filename: specify --version v1 to v13; never guess the subject order');
   return version;
 }
 
