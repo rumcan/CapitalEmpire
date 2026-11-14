@@ -1,6 +1,6 @@
 {
   "id": "golfer:golf_pro_m2:golf_drive",
-  "name": "golf_pro_m2 golf_drive",
+  "name": "golf_pro_m2 golf_drive (ChatGPT painted)",
   "clip": "golf_drive",
   "heightMetres": 1.8,
   "frameWidth": 400,
@@ -55,5 +55,47 @@
   },
   "prop": "club",
   "addressSecs": 0,
-  "shot": "right-handed: the ball flies 90 degrees to the golfer's left of the row's facing (row S, the golfer facing the viewer: toward screen right)"
+  "shot": "right-handed: the ball flies 90 degrees to the golfer's left of the row's facing (row S, the golfer facing the viewer: toward screen right)",
+  "chatgpt": {
+    "S": {
+      "picture": "golf_pro_m2~S~golf_drive-golfers.png",
+      "date": "2026-11-14",
+      "scale": 0.8148
+    },
+    "SW": {
+      "picture": "golf_pro_m2~SW~golf_drive-golfers.png",
+      "date": "2026-11-14",
+      "scale": 0.837
+    },
+    "W": {
+      "picture": "golf_pro_m2~W~golf_drive-golfers.png",
+      "date": "2026-11-14",
+      "scale": 0.9022
+    },
+    "NW": {
+      "picture": "golf_pro_m2~NW~golf_drive-golfers.png",
+      "date": "2026-11-14",
+      "scale": 0.9576
+    },
+    "N": {
+      "picture": "golf_pro_m2~N~golf_drive-golfers.png",
+      "date": "2026-11-14",
+      "scale": 1.082
+    },
+    "NE": {
+      "picture": "golf_pro_m2~NE~golf_drive-golfers.png",
+      "date": "2026-11-14",
+      "scale": 1.0
+    },
+    "E": {
+      "picture": "golf_pro_m2~E~golf_drive-golfers.png",
+      "date": "2026-11-14",
+      "scale": 0.8441
+    },
+    "SE": {
+      "picture": "golf_pro_m2~SE~golf_drive-golfers.png",
+      "date": "2026-11-14",
+      "scale": 0.8876
+    }
+  }
 }
