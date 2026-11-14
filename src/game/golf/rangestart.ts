@@ -165,6 +165,7 @@ export function regionalRoute(t: Terrain, J: Pt, axis: 'x' | 'y'): CountyRoad | 
 }
 
 /** the terrain's integral images: S counts the buildable tiles (GROUND, PATCH), H the playable ones (those and woodland, HILL) */
+type Integrals = ReturnType<typeof integrals>;
 function integrals(cls: Uint8Array) {
   const N = MAP + 1, S = new Int32Array(N * N), H = new Int32Array(N * N);
   for (let y = 0; y < MAP; y++) for (let x = 0; x < MAP; x++) {
@@ -198,7 +199,15 @@ function candidates(t: Terrain): Pt[] {
  *  range front, car park and drive corridor all buildable, the town window across the road TOWN_BUILD buildable, all of it SITE_MARGIN from the edges.
  *  T391 (#1055): with dry, the whole range plot too must be dry (no creek, bank or open water in the outfield behind the front: the placement's own test, golf/placing.ts
  *  landWhy, refuses a plot with one wet tile, so a creek through it refused the range at its start spot on a third of the maps) */
-function siteAt(I: ReturnType<typeof integrals>, J: Pt, axis: 'x' | 'y', side: 1 | -1, size: [number, number], dry: boolean): RangeSite | null {
+function siteAt(I: Integrals, J: Pt, axis: 'x' | 'y', side: 1 | -1, size: [number, number], dry: boolean): RangeSite | null {
+  const g = geomAt(J, axis, side, size);
+  return geomWhy(I, g, dry) ? null : g.site;
+}
+
+/** a site's rects at J for axis and side and a parcel size (plan 2.1.2), with no test against the terrain, and the two rects the fit rules also read: the
+ *  drive's corridor and the town window across the road */
+interface Geom { site: RangeSite; corridor: Rect; town: Rect }
+function geomAt(J: Pt, axis: 'x' | 'y', side: 1 | -1, size: [number, number]): Geom {
   const f = frameOf(axis, side), [along, deep] = size, s0 = -DRIVE_GAP - RANGE_PLOT[0];
   const parcel = rectOf(J, f, s0, s0 + along, NEAR, NEAR + deep);
   const B = NEAR + SETBACK, rangePlot = rectOf(J, f, s0, -DRIVE_GAP, B, B + RANGE_PLOT[1]);
@@ -206,22 +215,43 @@ function siteAt(I: ReturnType<typeof integrals>, J: Pt, axis: 'x' | 'y', side: 1
   const carpark = rectOf(J, f, -PARK_OFF - PARK[0], -PARK_OFF, NEAR, NEAR + PARK[1]), strip = rectOf(J, f, s0, s0 + along, NEAR, B);
   const corridor = rectOf(J, f, -2, 2, Math.floor(VERGE), B + DRIVE_IN);
   const town = rectOf(J, f, -TOWN_WINDOW[0] / 2, TOWN_WINDOW[0] / 2, -NEAR - TOWN_WINDOW[1], -NEAR);
-  const area = (r: Rect) => r[2] * r[3];
-  for (const r of [parcel, town]) if (!inside(r, SITE_MARGIN)) return null;
-  if (I.count(rangeFront, I.S) !== area(rangeFront) || I.count(carpark, I.S) !== area(carpark) || I.count(corridor, I.S) !== area(corridor)) return null;
-  if (I.count(parcel, I.H) < PARCEL_BUILD * area(parcel) || I.count(town, I.S) < TOWN_BUILD * area(town)) return null;
-  if (dry && I.count(rangePlot, I.H) !== area(rangePlot)) return null; // (I.H: grass, patch and woodland: every tile the placement accepts; water, creek and bank are the others)
-  return { J, axis, side, dir: f.dir, parcel, rangePlot, rangeFront, carpark, drive: [{ a: J, b: at(J, f, 0, B + DRIVE_IN) }], centre: at(J, f, 0, -SEED_ACROSS), setback: SETBACK, strip };
+  return { site: { J, axis, side, dir: f.dir, parcel, rangePlot, rangeFront, carpark, drive: [{ a: J, b: at(J, f, 0, B + DRIVE_IN) }], centre: at(J, f, 0, -SEED_ACROSS), setback: SETBACK, strip }, corridor, town };
+}
+/** J9: why a start cannot lie on the land the fit rules read, in the words the placement's ghost shows by the pointer */
+export const START_WHY = {
+  edge: 'Too close to the edge of the map',
+  ground: 'Needs clear, flat ground for the shop and car park',
+  parcel: 'Not enough open land beside it for a course',
+  town: 'No room for the town across the road',
+  wet: 'Water or a creek on the range land',
+  road: 'The county road cannot get past the water from here',
+} as const;
+/** the first fit rule a geometry fails ('' when it fits: the rules siteAt has always applied, in its order: inside the map's margin, the range front, car
+ *  park and drive corridor buildable, the parcel playable, the town window buildable, with dry the range plot dry too) */
+function geomWhy(I: Integrals, g: Geom, dry: boolean): string {
+  const { parcel, rangePlot, rangeFront, carpark } = g.site, { corridor, town } = g, area = (r: Rect) => r[2] * r[3];
+  for (const r of [parcel, town]) if (!inside(r, SITE_MARGIN)) return START_WHY.edge;
+  if (I.count(rangeFront, I.S) !== area(rangeFront) || I.count(carpark, I.S) !== area(carpark) || I.count(corridor, I.S) !== area(corridor)) return START_WHY.ground;
+  if (I.count(parcel, I.H) < PARCEL_BUILD * area(parcel)) return START_WHY.parcel;
+  if (I.count(town, I.S) < TOWN_BUILD * area(town)) return START_WHY.town;
+  if (dry && I.count(rangePlot, I.H) !== area(rangePlot)) return START_WHY.wet; // (I.H: grass, patch and woodland: every tile the placement accepts; water, creek and bank are the others)
+  return '';
+}
+
+/** the axes (the one with more open edges first: fewer road ends in the mountains) and the sides (in a seeded order) a start is tried in */
+function preference(t: Terrain, seed: number): [('x' | 'y')[], (1 | -1)[]] {
+  const open = (e: Edge) => (t.mountainEdges.includes(e) ? 0 : 1);
+  const axes: ('x' | 'y')[] = open('W') + open('E') >= open('N') + open('S') ? ['x', 'y'] : ['y', 'x'];
+  const sides: (1 | -1)[] = mulberry(seed)() < 0.5 ? [1, -1] : [-1, 1];
+  return [axes, sides];
 }
 
 /** the site and its road: first a site whose range plot is dry (T391: no creek through the outfield, so the range can be placed at its start spot; only a map
  *  with no such site takes the old rule, which kept every start it had), then sizes (COURSE_SIZES) outermost, then the axes (the one with more open edges
  *  first: fewer road ends in the mountains), then the J candidates, then the sides (in a seeded order); the first site that fits and whose J has a county
  *  road wins */
-function findStart(t: Terrain, seed: number): { site: RangeSite; road: CountyRoad } | null {
-  const I = integrals(t.cls), open = (e: Edge) => (t.mountainEdges.includes(e) ? 0 : 1);
-  const axes: ('x' | 'y')[] = open('W') + open('E') >= open('N') + open('S') ? ['x', 'y'] : ['y', 'x'];
-  const sides: (1 | -1)[] = mulberry(seed)() < 0.5 ? [1, -1] : [-1, 1];
+function findStart(t: Terrain, seed: number, I: Integrals = integrals(t.cls)): { site: RangeSite; road: CountyRoad } | null {
+  const [axes, sides] = preference(t, seed);
   const roads = new Map<string, CountyRoad | null>(), Js = candidates(t);
   for (const dry of [true, false]) for (const size of COURSE_SIZES) for (const axis of axes) for (const J of Js) {
     const a = axis === 'x' ? J.x : J.y;
@@ -248,12 +278,68 @@ function frontDoor(s: RangeSite): Pt {
 /** a new range start on a terrain for a seed (plan 2.1): the county road, the site, the golf state (start 'range', tier 1, the starting
  *  reputation, the exits; the town is the seed, the course and the parcel the owned parcel, the clubhouse the range front's door; no holes yet)
  *  and the camera's point. Null when no site fits. Deterministic */
-export function planRangeStart(t: Terrain, seed: number): RangeStart | null {
-  const r = findStart(t, seed); if (!r) return null;
-  const { site, road } = r, [fx, fy, fw, fh] = site.rangeFront;
+export function planRangeStart(t: Terrain, seed: number, probe?: StartProbe): RangeStart | null {
+  const r = findStart(t, seed, probe?.I); return r ? startOf(r.site, r.road) : null;
+}
+/** the range start of a site and its county road: the golf state (start 'range', tier 1, the starting reputation, the exits; the town is the seed, the course
+ *  and the parcel the owned parcel, the clubhouse the range front's door) and the camera's point (the range front's centre) */
+function startOf(site: RangeSite, road: CountyRoad): RangeStart {
+  const [fx, fy, fw, fh] = site.rangeFront;
   const save: RangeSave = {
     v: 1, tier: 1, rep: GOLF_REP_START, start: 'range', exits: [...road.exits], town: site.centre, course: site.parcel, parcel: site.parcel, dir: site.dir,
     tees: [], pins: [], aims: [], clubhouse: frontDoor(site),
   };
   return { road, site, save, cam: { x: fx + fw / 2, y: fy + fh / 2 } };
+}
+
+// ---------- J9 (#1268, the owner 2026-11-14: "the start should be placing the driving range ... so the guy can start where he wants"): the start around a chosen spot
+/** a facing's frame: dir (0 north, 1 east, 2 south, 3 west: the way the golfers hit, the side of the road the course lies on) as the road's axis and side */
+const DIR_FRAME: readonly { axis: 'x' | 'y'; side: 1 | -1 }[] = [{ axis: 'x', side: -1 }, { axis: 'y', side: 1 }, { axis: 'x', side: 1 }, { axis: 'y', side: -1 }];
+/** what a start spot is checked against, made once for a terrain: its integral images (a spot's fit is a few lookups), the county road of each J and axis
+ *  tried (about 5 to 9 ms each, kept), the spots seen (a pointer that stays in one lattice cell costs nothing) and the facings in the order the automatic
+ *  start prefers them */
+export interface StartProbe { t: Terrain; seed: number; I: Integrals; order: (0 | 1 | 2 | 3)[]; roads: Map<string, CountyRoad | null>; spots: Map<string, StartSpot> }
+/** the probe of a terrain and its seed (about 40 ms: the same integral images the automatic start reads; planRangeStart takes the probe to share them) */
+export function startProbe(t: Terrain, seed: number): StartProbe {
+  const [axes, sides] = preference(t, seed), order: (0 | 1 | 2 | 3)[] = [];
+  for (const axis of axes) for (const side of sides) order.push(DIR_FRAME.findIndex(f => f.axis === axis && f.side === side) as 0 | 1 | 2 | 3);
+  return { t, seed, I: integrals(t.cls), order, roads: new Map(), spots: new Map() };
+}
+/** a start spot: the site a start at this place and facing would have (its rects, whether it fits or not: a refused spot's ghost is drawn from them), why
+ *  it does not fit ('' when it does: START_WHY) and the county road it comes with (null when it does not fit) */
+export interface StartSpot { site: RangeSite; why: string; road: CountyRoad | null; dir: 0 | 1 | 2 | 3 }
+/** the lattice (the 40-tile town grid) J a facing's start puts the range front's middle nearest to the point (x, y), tiles */
+function jFor(dir: 0 | 1 | 2 | 3, x: number, y: number): Pt {
+  const { axis, side } = DIR_FRAME[dir]!, f = frameOf(axis, side), sc = -(2 * DRIVE_GAP + RANGE_PLOT[0]) / 2, tc = NEAR + SETBACK + RANGE_FRONT / 2, snap = (v: number) => Math.round(v / BLOCK) * BLOCK;
+  return { x: snap(x - sc * f.s.x - tc * f.t.x), y: snap(y - sc * f.s.y - tc * f.t.y) };
+}
+/** the start spot for a facing nearest the point (x, y): J on the lattice, then the rules siteAt has always applied (a first nine's room: the largest
+ *  COURSE_SIZES parcel that fits, with the range plot dry), the straight run of the county road each side of J, and a county road through J (regionalRoute) */
+function spotFor(p: StartProbe, x: number, y: number, dir: 0 | 1 | 2 | 3): StartSpot {
+  const J = jFor(dir, x, y), key = `${J.x},${J.y},${dir}`, seen = p.spots.get(key); if (seen) return seen;
+  const { axis, side } = DIR_FRAME[dir]!, sizes = COURSE_SIZES, a = axis === 'x' ? J.x : J.y;
+  // (the smallest parcel is drawn when nothing fits, and gives the reason: it asks the least)
+  let g = geomAt(J, axis, side, sizes[sizes.length - 1]!), why = a < STRAIGHT || a > MAP - 1 - STRAIGHT ? START_WHY.edge : geomWhy(p.I, g, true), road: CountyRoad | null = null;
+  if (!why) {
+    for (const size of sizes) { const q = geomAt(J, axis, side, size); if (!geomWhy(p.I, q, true)) { g = q; break; } }
+    const rk = `${J.x},${J.y},${axis}`;
+    if (!p.roads.has(rk)) p.roads.set(rk, regionalRoute(p.t, J, axis));
+    road = p.roads.get(rk) ?? null; if (!road) why = START_WHY.road;
+  }
+  const spot: StartSpot = { site: g.site, why, road, dir };
+  p.spots.set(key, spot); return spot;
+}
+/** the start spot for the point (x, y), tiles (the range front's middle there, moved to the town lattice): with dir the one facing, else the first facing that
+ *  fits (prefer first, then the automatic start's order); a spot that fits nowhere is the first facing's, with its reason */
+export function startSpotAt(p: StartProbe, x: number, y: number, dir: 0 | 1 | 2 | 3 | null = null, prefer: 0 | 1 | 2 | 3 | null = null): StartSpot {
+  const dirs = dir !== null ? [dir] : prefer !== null ? [prefer, ...p.order.filter(d => d !== prefer)] : p.order;
+  let first: StartSpot | null = null;
+  for (const d of dirs) { const s = spotFor(p, x, y, d); if (!s.why) return s; first ??= s; }
+  return first!;
+}
+/** the range start a start spot that fits gives (null when it does not fit): what planRangeStart gives for its site */
+export function startOfSpot(s: StartSpot): RangeStart | null { return s.why || !s.road ? null : startOf(s.site, s.road); }
+/** the range start around the point (x, y) (see startSpotAt), or why it cannot be there. The automatic start (no point) is planRangeStart's */
+export function planRangeStartAt(p: StartProbe, x: number, y: number, dir: 0 | 1 | 2 | 3 | null = null): RangeStart | { why: string } {
+  const s = startSpotAt(p, x, y, dir); return startOfSpot(s) ?? { why: s.why };
 }
