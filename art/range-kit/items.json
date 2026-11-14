@@ -616,9 +616,9 @@
    "cat": "Range art",
    "kind": "business",
    "w": 80,
-   "h": 123.527,
+   "h": 134.779,
    "ax": 40,
-   "ay": 114.146,
+   "ay": 125.944,
    "boxes": [
     {
      "hx": 1,
@@ -632,14 +632,14 @@
    "door": false,
    "cost": 0,
    "src": {
-    "file": "art/theme-consistency/generated/buildings/golf-range-yard-100-view1-v1.png",
+    "file": "art/theme-consistency/generated/buildings/golf-range-yard-100-view1-v2.png",
     "rect": [
-     618,
-     28,
-     1150,
-     850
+     634,
+     24,
+     1131,
+     862
     ],
-    "sha256": "1da8dee138666b136430d74091d336c94b69e16be464468e47437012d53d018a"
+    "sha256": "66af1eb81d4008e761f331ecc60f2ef5ad3a8f39b3b0125e59cd995edca0402a"
    }
   },
   {

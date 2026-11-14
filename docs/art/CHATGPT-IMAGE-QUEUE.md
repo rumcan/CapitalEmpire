@@ -594,9 +594,9 @@ Period details only: 1985 cars, signs, clothes, technology (no phones, no LEDs, 
 **Superseded (2026-11-14; the owner: "no vector distance signs. only png sprites allowed"):** the code stand-in below is gone. The yardage signs are 16 ChatGPT
 pictures with their numbers painted on, two views of each of 50, 75, 100, 125, 150, 175, 200 and 250 m (`golf-range-yard-<m>-view1/2-v1.png` under
 `art/theme-consistency/generated/buildings/`), packed by `prep-range-art.mjs` (range-art-items.json "yard") and drawn by `rangeScene` through the range art
-lookup (`yardage-signs.ts`: view 1 at the facings 0 and 1, view 2 at 2 and 3; the 240 m green has no picture, so no sign). **To redo:** `golf-range-yard-100-view1-v1.png`
-came out as a second view 2 (its front faces the lower right, not the lower left): paint it again as `-view1-v2.png`, run `prep-range-art.mjs`, then delete the
-100 m line of `WRONG_HEADING` in `yardage-signs.ts` (until then the 100 m sign is its view 2 on the facings that ask for view 1).
+lookup (`yardage-signs.ts`: view 1 at the facings 0 and 1, view 2 at 2 and 3; the 240 m green has no picture, so no sign). `golf-range-yard-100-view1-v1.png`
+came out as a second view 2 (its front faced the lower right, not the lower left); it was painted again as `golf-range-yard-100-view1-v2.png` (the prep packs the newest
+version; v1 stays as the old one, its master in `art/range-kit/old/`) and the swap for its view 2 is gone. A test (`range-art.test.ts`) now checks every sign master's heading.
 The old request, kept for the record:
 
 The range's distances (the 50 m markers, the target greens, the junk on the outfield) are drawn now as a code stand-in (`src/game/golf/yardage-sign.ts`: a cream
