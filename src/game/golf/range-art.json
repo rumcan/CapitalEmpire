@@ -5,6 +5,10 @@
    "range:golf-clubhouse-shanty-view1",
    "range:golf-clubhouse-shanty-view2"
   ],
+  "golf-range-sign": [
+   "range:golf-range-sign-view1",
+   "range:golf-range-sign-view2"
+  ],
   "golf-range-deck": [
    "range:golf-range-deck-view1",
    "range:golf-range-deck-view2"
@@ -13,8 +17,20 @@
    "range:golf-range-coffee-kiosk-view1",
    "range:golf-range-coffee-kiosk-view2"
   ],
+  "golf-range-ball-dispenser": [
+   "range:golf-range-ball-dispenser-view1",
+   "range:golf-range-ball-dispenser-view2"
+  ],
+  "golf-range-yardage-board": [
+   "range:golf-range-yardage-board-view1",
+   "range:golf-range-yardage-board-view2"
+  ],
   "golf-range-distance-post": [
    "range:golf-range-distance-post-1view"
+  ],
+  "golf-range-floodlight": [
+   "range:golf-range-floodlight-view1",
+   "range:golf-range-floodlight-view2"
   ]
  }
 }

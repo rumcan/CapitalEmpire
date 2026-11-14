@@ -127,9 +127,9 @@ async function cutOne(png) {
 function corners(p, below = 0.4) {
   const low = xs => { let y = -1; for (const x of xs) for (let r = p.h - 1; r >= 0; r--) if (p.rgba[(r * p.w + x) * 4 + 3] > 128) { y = Math.max(y, r); break; } return y; };
   // (an overhanging roof's eave reaches past the walls: an edge column with nothing below `below` of the height (a roof's eave, an awning) is skipped,
-  // up to a quarter of the width in, so the ground corner is the wall's; an item's wallBelow in range-art-items.json sets it: the coffee
+  // up to 35% of the width in (a sign's posts stand well inside its board), so the ground corner is the wall's; an item's wallBelow in range-art-items.json sets it: the coffee
   // kiosk's awning reaches 0.62 down, so it takes 0.65; #1235 stand-ins)
-  const lim = Math.round(p.w * 0.25), wall = x => low([x]) >= p.h * below;
+  const lim = Math.round(p.w * 0.35), wall = x => low([x]) >= p.h * below;
   let l = 0, r = p.w - 1;
   while (l < lim && !wall(l)) l++;
   while (p.w - 1 - r < lim && !wall(r)) r--;
