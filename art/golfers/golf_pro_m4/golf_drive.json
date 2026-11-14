@@ -55,5 +55,42 @@
   },
   "prop": "club",
   "addressSecs": 0,
-  "shot": "right-handed: the ball flies 90 degrees to the golfer's left of the row's facing (row S, the golfer facing the viewer: toward screen right)"
+  "shot": "right-handed: the ball flies 90 degrees to the golfer's left of the row's facing (row S, the golfer facing the viewer: toward screen right)",
+  "chatgpt": {
+    "S": {
+      "picture": "golf_pro_m4~S~golf_drive-golfers.png",
+      "date": "2026-11-14",
+      "scale": 0.8969
+    },
+    "W": {
+      "picture": "golf_pro_m4~W~golf_drive-golfers.png",
+      "date": "2026-11-14",
+      "scale": 0.9925
+    },
+    "NW": {
+      "picture": "golf_pro_m4~NW~golf_drive-golfers.png",
+      "date": "2026-11-14",
+      "scale": 1.0448
+    },
+    "N": {
+      "picture": "golf_pro_m4~N~golf_drive-golfers.png",
+      "date": "2026-11-14",
+      "scale": 1.1211
+    },
+    "NE": {
+      "picture": "golf_pro_m4~NE~golf_drive-golfers.png",
+      "date": "2026-11-14",
+      "scale": 1.0677
+    },
+    "E": {
+      "picture": "golf_pro_m4~E~golf_drive-golfers.png",
+      "date": "2026-11-14",
+      "scale": 0.8315
+    },
+    "SE": {
+      "picture": "golf_pro_m4~SE~golf_drive-golfers.png",
+      "date": "2026-11-14",
+      "scale": 0.8339
+    }
+  }
 }

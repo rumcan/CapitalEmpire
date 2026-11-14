@@ -261,8 +261,10 @@ def main():
         for p in sorted(Path(a.inp).glob('*~*-golfers.png'), key=lambda p: p.stat().st_mtime):
             m = NAME.match(p.name)
             if m and (not a.golfer or m.group(1) == a.golfer) and (m.group(3) or 'sheet') == a.clip:
-                if a.clip == 'sheet': import_one(p, m.group(1), m.group(2), a.tol, a.soft, a.scale, a.dry_run)
-                else: import_clip(p, m.group(1), m.group(2), a.clip, a.tol, a.soft, a.scale, a.dry_run)
+                try:
+                    if a.clip == 'sheet': import_one(p, m.group(1), m.group(2), a.tol, a.soft, a.scale, a.dry_run)
+                    else: import_clip(p, m.group(1), m.group(2), a.clip, a.tol, a.soft, a.scale, a.dry_run)
+                except SystemExit as e: print(f'SKIPPED {p.name}: {e} (the row keeps what it had; paint it again)')   # (one bad picture never stops the rest)
         return
     p = Path(a.picture); m = NAME.match(p.name)
     gid, h = a.golfer or (m and m.group(1)), a.heading or (m and m.group(2))
