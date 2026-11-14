@@ -13,6 +13,8 @@ import type { PracticeId } from './rangesave';
 
 /** a facility's name as the tool says it */
 export const FACILITY_NAME: Readonly<Record<PracticeId, string>> = { putting: 'Putting green', chipping: 'Chipping green and bunker' };
+/** #1281: a change a grid step made outside the grid, as its undo and its redo (PaintTool.gridEdit keeps it on the undo stack with the step) */
+export interface StepAside { undo(): void; redo(): void }
 
 /** what the tool needs of the engine */
 export interface PracticeHostCtx {
@@ -23,8 +25,12 @@ export interface PracticeHostCtx {
   /** T239: the practice area is still land for sale (missing: never) */
   forSale?(): boolean;
   tileAt(mx: number, my: number): Pt; money(): number; month(): number;
-  /** one step of the course tools' undo: run lays its cells (the diffs it returns) and what it spent ($; a refund below 0) */
-  gridStep(label: string, run: (g: Grid) => { diffs: GridDiff[]; spent: number } | null): void; undo(): void; redo(): void;
+  /** one step of the course tools' undo: run lays its cells (the diffs it returns) and what it spent ($; a refund below 0); aside (#1281): something besides
+   *  the grid the step changed (the starter set taken away), put back by its undo and done again by its redo */
+  gridStep(label: string, run: (g: Grid) => { diffs: GridDiff[]; spent: number; aside?: StepAside } | null): void; undo(): void; redo(): void;
+  /** #1281: the starter set's pieces a facility's cells lie over are taken away now (the practice area's own dirt greens and bunker: it replaces them); what it
+   *  did as a step's aside (null: it covered none) */
+  replaceStarters?(c: PlanCells): StepAside | null;
   /** the camera on tile (x, y) at zoom z */
   lookAt(x: number, y: number, z: number): void;
   save(): void; toast(text: string, kind: 'good' | 'info' | 'warn'): void; emit(): void;
@@ -93,13 +99,18 @@ export class PracticeTool {
     if (!done) this.ctx.toast(why, 'warn');
     return done ? null : why;
   }
-  /** builds the ghost gh of facility k: its cells laid (one undo step) and its price paid */
+  /** builds the ghost gh of facility k: its cells laid (one undo step) and its price paid. #1281: its rough band too, and the starter dirt greens and bunker
+   *  (the practice area's home-made set) it lies over are replaced by it: taken away in the same step, so undo brings them back */
   private build(gh: PracticeGhost, k: PracticeId): void {
     const c = gh.cells, month = plantMonth('seed', this.ctx.month());
-    this.ctx.gridStep(`build the ${FACILITY_NAME[k].toLowerCase()}`, g => ({
-      diffs: [paintCells(g, c.green, c.green.length, SURF.green, 0, month), paintCells(g, c.bunker, c.bunker.length, SURF.bunker, 0, month), paintCells(g, c.tee, c.tee.length, SURF.tee, 0, month)],
-      spent: gh.cost,
-    }));
+    this.ctx.gridStep(`build the ${FACILITY_NAME[k].toLowerCase()}`, g => {
+      const aside = this.ctx.replaceStarters?.(c) ?? null;
+      return {
+        diffs: [paintCells(g, c.green, c.green.length, SURF.green, 0, month), paintCells(g, c.bunker, c.bunker.length, SURF.bunker, 0, month), paintCells(g, c.tee, c.tee.length, SURF.tee, 0, month),
+          paintCells(g, c.rough, c.rough.length, SURF.rough, 0, month)],
+        spent: gh.cost, ...(aside ? { aside } : {}),
+      };
+    });
     this.ctx.toast(`${FACILITY_NAME[k]} built (-$${gh.cost.toLocaleString()})`, 'good');
     this.seed++; this.ctx.save(); this.refresh(); this.ctx.emit();
   }
@@ -134,7 +145,7 @@ export class PracticeTool {
   refresh(): void {
     const k = this.kind, t = this.at, g = this.ctx.grid(), a = this.ctx.area();
     if (!k || !t || !g) { this.ghost = null; return; }
-    const plan = practicePlan({ kind: k, x: t.x, y: t.y, m2: this.size[k], turn: this.turn, shape: this.shape, seed: this.seed }), cells = planCells(g, plan);
+    const plan = practicePlan({ kind: k, x: t.x, y: t.y, m2: this.size[k], turn: this.turn, shape: this.shape, seed: this.seed }), cells = planCells(g, plan, a?.box);
     const r = a ? planWhy(g, plan, cells, { box: a.box, owned: (x, y) => this.ctx.owned(x, y), open: this.ctx.open(k), forSale: !!this.ctx.forSale?.() }) : { why: PRACTICE_WHY.none, kind: 'outside' as RefusalKind };
     const cost = planCost(g, cells), m2 = cells.green.length;
     const label = r.why || `${FACILITY_NAME[k]} · ${m2} m² · $${cost.toLocaleString()}${cost > this.ctx.money() ? ' (not enough money)' : ''}`;

@@ -39,7 +39,7 @@ export function hoverText(kind: ThingKind | null, name = ''): string {
     case 'person': return name ? `Talk to ${name}` : 'Talk';
     case 'building': return name ? `Look at ${name}` : 'Look';
     case 'range': return 'Use the range: buy a bucket, hit at a mat';
-    case 'practice': return name ? `Use ${name}` : 'Use the practice area';
+    case 'practice': return name ? (name.startsWith('Build ') ? name : `Use ${name}`) : 'Use the practice area'; // (#1281: the area with nothing open to use says what a click does: build)
     case 'tee': return 'The first tee: start a round';
     case 'cart': return name || 'Get in your golf cart';
     case 'ball': return 'Your ball: address it';
