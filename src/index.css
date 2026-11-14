@@ -231,7 +231,8 @@ button.stat-chip:hover { background: rgba(255, 255, 255, 0.06); }
 .hole-attn .hole-icon { color: #fb9a4b; }
 .hole-empty { border-style: dashed; color: var(--muted); }
 .hole-add { border-style: dashed; color: var(--muted); }
-.hole-menu { position: absolute; left: 0; top: calc(100% + 0.3rem); z-index: 30; display: flex; width: 15rem; flex-direction: column; padding: 0.3rem; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5); }
+/* #1296 (the owner: "the window should be overflow visible"): the + badge's dropdown is a child of the UI root, fixed to the window (HoleStrip.tsx HoleMenu places it), so the panel's scroll box never cuts it */
+.hole-menu { position: fixed; left: 0; top: 0; z-index: 60; display: flex; width: 15rem; flex-direction: column; padding: 0.3rem; background: #1e1f24; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5); font-size: 13px; line-height: 1.4; } /* (opaque: it hangs over the panel's text) */
 .hole-menu > button { border-radius: 0.5rem; padding: 0.4rem 0.6rem; text-align: left; font-size: 13px; color: var(--ink); }
 .hole-menu > button small { display: block; font-size: 12px; color: var(--muted); }
 .hole-menu > button:hover { background: rgba(255, 255, 255, 0.06); }
