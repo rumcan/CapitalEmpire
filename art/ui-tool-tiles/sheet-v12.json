@@ -1,0 +1,267 @@
+{
+  "schema": 1,
+  "version": "v12",
+  "source": {
+    "file": "art/theme-consistency/generated/ui/golf-build-tool-tiles-sheet-v12.png",
+    "sha256": "4da05cb19983a38db69e574e09af49e2d199940c931ea9caac182846850fc780",
+    "dimensions": [
+      1448,
+      1086
+    ]
+  },
+  "grid": {
+    "columns": 4,
+    "rows": 3,
+    "detectedRows": [
+      [
+        34,
+        354
+      ],
+      [
+        380,
+        702
+      ],
+      [
+        725,
+        1054
+      ]
+    ],
+    "detectedColumns": [
+      [
+        34,
+        359
+      ],
+      [
+        386,
+        713
+      ],
+      [
+        737,
+        1064
+      ],
+      [
+        1090,
+        1416
+      ]
+    ]
+  },
+  "processing": "Source unchanged; detected card crops, normal UI resize to144px, rounded-corner alpha mask, WebP encoding.",
+  "tiles": [
+    {
+      "name": "stamped-balls",
+      "row": 0,
+      "column": 0,
+      "sourceRect": {
+        "left": 38,
+        "top": 35,
+        "width": 318,
+        "height": 318
+      },
+      "file": "src/assets/ui/tiles/stamped-balls.webp",
+      "dimensions": [
+        144,
+        144
+      ],
+      "sha256": "f7603ce8abe9aac3415e5bf6924940749402882368ce0bcd4725591fcc356709",
+      "bytes": 5090
+    },
+    {
+      "name": "swing-video",
+      "row": 0,
+      "column": 1,
+      "sourceRect": {
+        "left": 391,
+        "top": 35,
+        "width": 318,
+        "height": 318
+      },
+      "file": "src/assets/ui/tiles/swing-video.webp",
+      "dimensions": [
+        144,
+        144
+      ],
+      "sha256": "ba866cb963e3b0798c5ee3372754b8c8a7524daab54fe28077539c10ba5e7003",
+      "bytes": 5814
+    },
+    {
+      "name": "fans-lemonade",
+      "row": 0,
+      "column": 2,
+      "sourceRect": {
+        "left": 742,
+        "top": 35,
+        "width": 318,
+        "height": 318
+      },
+      "file": "src/assets/ui/tiles/fans-lemonade.webp",
+      "dimensions": [
+        144,
+        144
+      ],
+      "sha256": "bfa4b4af1283e3f4a9911fe2d01c69ffd720185c5e324ab8fbf71cccafaf1595",
+      "bytes": 5738
+    },
+    {
+      "name": "weighted-clubs",
+      "row": 0,
+      "column": 3,
+      "sourceRect": {
+        "left": 1094,
+        "top": 35,
+        "width": 318,
+        "height": 318
+      },
+      "file": "src/assets/ui/tiles/weighted-clubs.webp",
+      "dimensions": [
+        144,
+        144
+      ],
+      "sha256": "de28678f7225f98c5fcf95f77c79521c3378dcb32f0dc8a2ec20c1bd16f4af3c",
+      "bytes": 4990
+    },
+    {
+      "name": "launch-monitor",
+      "row": 1,
+      "column": 0,
+      "sourceRect": {
+        "left": 37,
+        "top": 381,
+        "width": 320,
+        "height": 320
+      },
+      "file": "src/assets/ui/tiles/launch-monitor.webp",
+      "dimensions": [
+        144,
+        144
+      ],
+      "sha256": "3c411e161f6bf82f4bcc6fbabc89b946c5c3ce6fe2b51e032f52ead00197f4e9",
+      "bytes": 5878
+    },
+    {
+      "name": "ball-tracker",
+      "row": 1,
+      "column": 1,
+      "sourceRect": {
+        "left": 390,
+        "top": 381,
+        "width": 320,
+        "height": 320
+      },
+      "file": "src/assets/ui/tiles/ball-tracker.webp",
+      "dimensions": [
+        144,
+        144
+      ],
+      "sha256": "3e00581a19d89874199daa1d663fe0cfa97c7b3c0837fad26bf7fcf86313d4eb",
+      "bytes": 4848
+    },
+    {
+      "name": "floodlights",
+      "row": 1,
+      "column": 2,
+      "sourceRect": {
+        "left": 741,
+        "top": 381,
+        "width": 320,
+        "height": 320
+      },
+      "file": "src/assets/ui/tiles/floodlights.webp",
+      "dimensions": [
+        144,
+        144
+      ],
+      "sha256": "05584186a91f2264ac3ac21a8e6656a93dd1c43f50325d62c60400063bdee5f4",
+      "bytes": 4754
+    },
+    {
+      "name": "bays-24",
+      "row": 1,
+      "column": 3,
+      "sourceRect": {
+        "left": 1093,
+        "top": 381,
+        "width": 320,
+        "height": 320
+      },
+      "file": "src/assets/ui/tiles/bays-24.webp",
+      "dimensions": [
+        144,
+        144
+      ],
+      "sha256": "b429230b282f9898d5e73e7b1b7519032afbba3a604b8733a5b34b6469e1241b",
+      "bytes": 5736
+    },
+    {
+      "name": "pro-shop",
+      "row": 2,
+      "column": 0,
+      "sourceRect": {
+        "left": 35,
+        "top": 728,
+        "width": 323,
+        "height": 323
+      },
+      "file": "src/assets/ui/tiles/pro-shop.webp",
+      "dimensions": [
+        144,
+        144
+      ],
+      "sha256": "74378b7693be5a7a9d45001a229092ae2cd87a11fdbc841579511aee47883185",
+      "bytes": 6746
+    },
+    {
+      "name": "coffee-kiosk",
+      "row": 2,
+      "column": 1,
+      "sourceRect": {
+        "left": 387,
+        "top": 727,
+        "width": 325,
+        "height": 325
+      },
+      "file": "src/assets/ui/tiles/coffee-kiosk.webp",
+      "dimensions": [
+        144,
+        144
+      ],
+      "sha256": "affd443befb7b237d9d624747dbc9d14e68386f4be9d6ed79022012317982126",
+      "bytes": 5658
+    },
+    {
+      "name": "range-till",
+      "row": 2,
+      "column": 2,
+      "sourceRect": {
+        "left": 738,
+        "top": 727,
+        "width": 325,
+        "height": 325
+      },
+      "file": "src/assets/ui/tiles/range-till.webp",
+      "dimensions": [
+        144,
+        144
+      ],
+      "sha256": "897e0cddc38664c91cd2fcf350472acb834ce60b8e857e4aa9617b85f3c60641",
+      "bytes": 4750
+    },
+    {
+      "name": "home-caravan",
+      "row": 2,
+      "column": 3,
+      "sourceRect": {
+        "left": 1091,
+        "top": 728,
+        "width": 324,
+        "height": 324
+      },
+      "file": "src/assets/ui/tiles/home-caravan.webp",
+      "dimensions": [
+        144,
+        144
+      ],
+      "sha256": "886aa4e0cd66f7ab628a9c83bc120f43250159436decc28f6d3ffc1a8e77ef06",
+      "bytes": 6498
+    }
+  ]
+}

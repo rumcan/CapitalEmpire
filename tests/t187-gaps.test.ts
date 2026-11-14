@@ -13,12 +13,12 @@ import { RAIL, entryKey, pickEntry, railItemsOf, toolsIn } from '../src/ui/rail-
 
 const by = (k: string) => DECOR_BY_KEY.get(k)!;
 
-test('each tool is reachable from its group: Facilities › Decoration › Props (the course; T206), Town decoration › Props and Buildings (the town)', () => {
-  const decor = RAIL.find(r => r.id === 'facilities')!, town = RAIL.find(r => r.id === 'towndecor')!;
-  assert.deepEqual(toolsIn(decor, true).map(entryKey), ['practice', 'paint', 'props:course:']);
+test('each tool is reachable from its group: Course › Facilities › Decoration › Props (the course; T206, #1272), Town decoration › Props and Buildings (the town)', () => {
+  const decor = RAIL.find(r => r.id === 'course')!, town = RAIL.find(r => r.id === 'towndecor')!;
+  assert.deepEqual(toolsIn(decor, true).filter(t => t.within === 'facilities').map(entryKey), ['practice', 'paint', 'props:course:'], "Course's Facilities tile (#1272)");
   assert.deepEqual(toolsIn(town, true).map(entryKey), ['paint', 'props:town:', 'props:town:buildings']);
   assert.deepEqual(toolsIn(town, false).map(entryKey), ['paint', 'business'], 'the classic game keeps its Business tool');
-  assert.deepEqual(railItemsOf('props').map(r => r.id), ['facilities', 'towndecor']);
+  assert.deepEqual(railItemsOf('props').map(r => r.id), ['course', 'towndecor']);
   assert.equal(pickEntry(town, true, null, 'props:town:buildings')?.label, 'Buildings', 'the entry opened last comes back');
   assert.equal(pickEntry(town, true, null)?.id, 'paint');
 });

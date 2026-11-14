@@ -1,0 +1,267 @@
+{
+  "schema": 1,
+  "version": "v10",
+  "source": {
+    "file": "art/theme-consistency/generated/ui/golf-build-tool-tiles-sheet-v10.png",
+    "sha256": "7e6b76bb67a5c0bd8d8fd1c70c0452cb907e75bad59672a3fbaf3f11efebbf91",
+    "dimensions": [
+      1448,
+      1086
+    ]
+  },
+  "grid": {
+    "columns": 4,
+    "rows": 3,
+    "detectedRows": [
+      [
+        41,
+        348
+      ],
+      [
+        377,
+        695
+      ],
+      [
+        722,
+        1045
+      ]
+    ],
+    "detectedColumns": [
+      [
+        44,
+        363
+      ],
+      [
+        391,
+        709
+      ],
+      [
+        739,
+        1055
+      ],
+      [
+        1086,
+        1406
+      ]
+    ]
+  },
+  "processing": "Source unchanged; detected card crops, normal UI resize to144px, rounded-corner alpha mask, WebP encoding.",
+  "tiles": [
+    {
+      "name": "ball-tube",
+      "row": 0,
+      "column": 0,
+      "sourceRect": {
+        "left": 51,
+        "top": 42,
+        "width": 305,
+        "height": 305
+      },
+      "file": "src/assets/ui/tiles/ball-tube.webp",
+      "dimensions": [
+        144,
+        144
+      ],
+      "sha256": "9b8cc10d4b02caaf82defb17492b7bfcc57c4c373984f606d247ebbb53309305",
+      "bytes": 6036
+    },
+    {
+      "name": "wire-basket",
+      "row": 0,
+      "column": 1,
+      "sourceRect": {
+        "left": 398,
+        "top": 42,
+        "width": 305,
+        "height": 305
+      },
+      "file": "src/assets/ui/tiles/wire-basket.webp",
+      "dimensions": [
+        144,
+        144
+      ],
+      "sha256": "6c8201326f096dc4880d1a7ae37408dbfa390b5e011091663547d686e450e924",
+      "bytes": 5914
+    },
+    {
+      "name": "push-picker",
+      "row": 0,
+      "column": 2,
+      "sourceRect": {
+        "left": 745,
+        "top": 42,
+        "width": 305,
+        "height": 305
+      },
+      "file": "src/assets/ui/tiles/push-picker.webp",
+      "dimensions": [
+        144,
+        144
+      ],
+      "sha256": "8c98315810e23a19d7017f416a6e5c8b0dcd8a18eb1b82016036494b5259bbde",
+      "bytes": 5178
+    },
+    {
+      "name": "pull-picker",
+      "row": 0,
+      "column": 3,
+      "sourceRect": {
+        "left": 1094,
+        "top": 42,
+        "width": 305,
+        "height": 305
+      },
+      "file": "src/assets/ui/tiles/pull-picker.webp",
+      "dimensions": [
+        144,
+        144
+      ],
+      "sha256": "66b4e823780ac99b5f55e98a8a82fd75fcac1d9fd92bd4b78d389918c4e6c831",
+      "bytes": 5862
+    },
+    {
+      "name": "bigger-hopper",
+      "row": 1,
+      "column": 0,
+      "sourceRect": {
+        "left": 46,
+        "top": 378,
+        "width": 316,
+        "height": 316
+      },
+      "file": "src/assets/ui/tiles/bigger-hopper.webp",
+      "dimensions": [
+        144,
+        144
+      ],
+      "sha256": "e651f952856f090594f0436c74257ab27458ea042a1ffa5d2f245edc7769ebb7",
+      "bytes": 6124
+    },
+    {
+      "name": "gang-picker",
+      "row": 1,
+      "column": 1,
+      "sourceRect": {
+        "left": 392,
+        "top": 378,
+        "width": 316,
+        "height": 316
+      },
+      "file": "src/assets/ui/tiles/gang-picker.webp",
+      "dimensions": [
+        144,
+        144
+      ],
+      "sha256": "12a557f7f3dc406c460ac3b6054ffadc3d4e2e5319be8e822bc36c793162ac17",
+      "bytes": 5878
+    },
+    {
+      "name": "night-picking",
+      "row": 1,
+      "column": 2,
+      "sourceRect": {
+        "left": 740,
+        "top": 379,
+        "width": 314,
+        "height": 314
+      },
+      "file": "src/assets/ui/tiles/night-picking.webp",
+      "dimensions": [
+        144,
+        144
+      ],
+      "sha256": "fa03bbad6e0bedc4b07ffe74e1bd59cb89b0ab97b081b1fe738b5d719022add5",
+      "bytes": 3964
+    },
+    {
+      "name": "staff-training",
+      "row": 1,
+      "column": 3,
+      "sourceRect": {
+        "left": 1088,
+        "top": 378,
+        "width": 316,
+        "height": 316
+      },
+      "file": "src/assets/ui/tiles/staff-training.webp",
+      "dimensions": [
+        144,
+        144
+      ],
+      "sha256": "b1652cb91961b6aa39c086afdc141a882f033bfa3a146e10f0fd2a11be2ceb6e",
+      "bytes": 5686
+    },
+    {
+      "name": "second-attendant",
+      "row": 2,
+      "column": 0,
+      "sourceRect": {
+        "left": 45,
+        "top": 725,
+        "width": 317,
+        "height": 317
+      },
+      "file": "src/assets/ui/tiles/second-attendant.webp",
+      "dimensions": [
+        144,
+        144
+      ],
+      "sha256": "e81ac012506b9e77730afcf0c2bd4df273033bc18e4c800e658ae059c2d0ae6a",
+      "bytes": 4546
+    },
+    {
+      "name": "night-attendant",
+      "row": 2,
+      "column": 1,
+      "sourceRect": {
+        "left": 392,
+        "top": 726,
+        "width": 316,
+        "height": 316
+      },
+      "file": "src/assets/ui/tiles/night-attendant.webp",
+      "dimensions": [
+        144,
+        144
+      ],
+      "sha256": "5b4a9e371649b2d1aa34761a363e8c2f0b356cad431c9fdc60bb3334e94a0427",
+      "bytes": 3470
+    },
+    {
+      "name": "staff-cart",
+      "row": 2,
+      "column": 2,
+      "sourceRect": {
+        "left": 740,
+        "top": 727,
+        "width": 314,
+        "height": 314
+      },
+      "file": "src/assets/ui/tiles/staff-cart.webp",
+      "dimensions": [
+        144,
+        144
+      ],
+      "sha256": "318cc529bc8cea32a95cb8932b5978ad6243e2744e5273424d955c57a0436d99",
+      "bytes": 5790
+    },
+    {
+      "name": "supplier",
+      "row": 2,
+      "column": 3,
+      "sourceRect": {
+        "left": 1087,
+        "top": 725,
+        "width": 318,
+        "height": 318
+      },
+      "file": "src/assets/ui/tiles/supplier.webp",
+      "dimensions": [
+        144,
+        144
+      ],
+      "sha256": "d32361e6e167f9f37826a882c3d87cc83e89d95cf9640254b73eba6b6b166fb4",
+      "bytes": 5530
+    }
+  ]
+}

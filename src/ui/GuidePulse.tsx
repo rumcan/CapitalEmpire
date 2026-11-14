@@ -1,11 +1,14 @@
 // The guide's pulse (T188, plan P23-UX P2-3): the guide's Show me and a checklist's Fix point at a control by its data-guide anchor, not at screen
 // coordinates. A gold ring pulses over the first visible element of the anchor (or of its fallbacks: a panel's control falls back to the rail
 // group that opens it), following it each frame until the pulse ends. Reduced motion: a still ring.
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useSyncExternalStore } from 'react';
+import { spotNow, spotSubscribe } from './spotlight/spot';
 
 /** where an anchor falls back to while its control is not on screen (its panel closed) */
 export const ANCHOR_FALLBACK: Readonly<Record<string, readonly string[]>> = {
   'new-hole': ['rail-course'], 'clubhouse-card': ['rail-course'], 'tool-park': ['rail-traffic'], 'fix-holes': ['season-chip'], 'fix-carpark': ['season-chip'],
+  // #1272: Facilities is a tile of the Course flyout (it carries this anchor while that is open), no rail button: shut, the guide points at Course
+  'rail-facilities': ['rail-course'],
   'fix-clubhouse': ['season-chip'], 'invite-pill': ['season-chip'], 'results': ['season-chip'],
   // T366: the Skip to tournament button is a row of the Season card: while the card is shut the guide points at the chip that opens it
   'chip-skip': ['season-chip'],
@@ -23,9 +26,10 @@ export function anchorElement(id: string, doc: Pick<Document, 'querySelectorAll'
 export function GuidePulse({ anchor }: { anchor: { id: string; until: number } | null }) {
   const [box, setBox] = useState<{ x: number; y: number; w: number; h: number } | null>(null);
   const raf = useRef(0);
+  const quiet = !!useSyncExternalStore(spotSubscribe, spotNow); // J10 (#1269): while a Show me's spotlight is up its own ring does the pointing
   useEffect(() => {
     cancelAnimationFrame(raf.current);
-    if (!anchor) { setBox(null); return; }
+    if (!anchor || quiet) { setBox(null); return; }
     // T239: a control scrolled out of its panel (a range card's upgrade) is brought into view once
     anchorElement(anchor.id)?.scrollIntoView?.({ block: 'nearest', behavior: 'smooth' });
     const step = () => {
@@ -36,7 +40,7 @@ export function GuidePulse({ anchor }: { anchor: { id: string; until: number } |
     };
     step();
     return () => cancelAnimationFrame(raf.current);
-  }, [anchor]);
+  }, [anchor, quiet]);
   if (!box) return null;
   return <div className="guide-pulse ui-unscaled" data-testid="guide-pulse" data-anchor={anchor?.id} style={{ left: box.x - 6, top: box.y - 6, width: box.w + 12, height: box.h + 12 }} aria-hidden />;
 }

@@ -7,7 +7,7 @@
 import type { Tool } from '../game/types';
 import type { ProgressiveUiState } from '../game/ext/progressive-ui';
 import type { IconName } from './Icon';
-import { entryKey, extraLock, toolLock, toolNew, toolsIn, type RailItem, type RailTool } from './rail-items';
+import { entryKey, extraLock, toolLock, toolNew, toolsIn, toolsNew, type RailItem, type RailTool } from './rail-items';
 import { GREENKEEPING, JAM } from '../game/features';
 import { EXTRA_TILE, PLANT_TILE, PRACTICE_TILE, PROP_GROUP_TILE, PROP_KIND_TILE, ROW_TILE, SURFACE_TILE, type ToolTile } from './tool-tiles';
 
@@ -33,6 +33,9 @@ export interface MenuRow {
   tile?: ToolTile;
   /** T256: drawn as a gold button (the Range's Build) */
   gold?: boolean;
+  /** #1272: the guide's anchor the row carries (data-guide: the Facilities tile is "rail-facilities", which GuidePulse falls back from to the Course button while
+   *  the flyout is shut); a leaf's is its tool's */
+  guide?: string;
 }
 /** the game's lists the menus are built from (App.tsx from the engine; the tests from fixtures) */
 export interface MenuCtx {
@@ -88,6 +91,34 @@ export function menuOf(item: RailItem, c: MenuCtx): MenuRow[] {
     }
     return out;
   };
+  /** #1272: the Facilities tile's rows, the Course flyout's sixth tile (they were the rows of the Facilities rail button's flyout):
+   *  T206: Practice ▸ the facilities (each its own building tool), Plants ▸ the plant brush's kinds, Decoration ▸ Props ▸ by group
+   *  T233: the tiles (tool-tiles.ts): Practice (the range bays) and its putting and chipping greens, Plants (the trees) with its Trees and
+   *  Flowers, Decoration (the boulders) and its Props' Stone, Water and Plants */
+  const facilityRows = (): MenuRow[] => {
+    const out: (MenuRow | null)[] = [], pt = byId('practice');
+    // T214: the teaching hut, after the greens (placed with the Buildings tool's ghost)
+    if (pt) out.push(tiled(group('practice', 'Practice', 'pin', [...(c.practice ?? []).map(f => tiled({ ...leaf(pt, f.name, { k: 'practice', id: f.id }, 'pin')!, why: toolLock(c.ui, pt.id) ?? f.why }, PRACTICE_TILE[f.id])),
+      ...(c.practice?.length ? [tiled({ ...leaf(pt, 'Teaching hut', { k: 'pro', id: 'teachhut' }, 'house')!, why: toolLock(c.ui, pt.id) ?? (c.practice.every(f => f.why) ? c.practice[0]!.why : null) }, ROW_TILE.teachHut)] : [])], pt), ROW_TILE.practice));
+    const pa = byId('paint');
+    if (pa) out.push(tiled(group('plants', 'Plants', 'trees', c.plants.map(m => tiled({ ...leaf(pa, m.name, { k: 'plant', id: m.id })!, ...(m.col ? { swatch: m.col } : {}) }, PLANT_TILE[m.id])), pa), ROW_TILE.plants));
+    const pr = byId('props');
+    if (pr) out.push(tiled(group('decoration', 'Decoration', 'leaf', [tiled(group('props', 'Props', 'leaf', [tiled(leaf(pr, 'All props', { k: 'props', group: null }), ROW_TILE.allProps), ...c.propGroups.map(g => tiled(leaf(pr, g.name, { k: 'props', group: g.id }), PROP_GROUP_TILE[g.id]))], pr), ROW_TILE.allProps)], pr), ROW_TILE.decoration));
+    // T400 (#1078; the owner, 2026-11-09: "why are the golf shit in the town decoration menu and not in the facilities menu?"): the golf props, by the kinds the
+    // tournament kit meant, a row each: Tournament structures ▸ (the stalls, seating, media and event structures), Course furniture ▸ (the tournament
+    // dressing and the course props), Range props, Course vehicles. Town decoration lists none of them
+    if (pr) for (const k of c.propKinds ?? []) {
+      const icon: IconName = PROP_KIND_ICON[k.id] ?? 'leaf', tile = PROP_KIND_TILE[k.id];
+      // (J13: a group of the kind that showed the maple leaf wears its own tile, else its kind's; the other kinds' groups keep their icon until their tiles are painted)
+      const kidTile = (id: string): ToolTile | undefined => PROP_GROUP_TILE[id] ?? (icon === 'leaf' ? tile : undefined);
+      out.push(tiled(k.groups.length === 1
+        ? leaf(pr, k.name, { k: 'props', group: k.groups[0]!.id }, icon)
+        : group(`kind:${k.id}`, k.name, icon, [tiled(leaf(pr, `All ${k.name.toLowerCase()}`, { k: 'props', group: k.id }, icon), icon === 'leaf' ? tile : undefined), ...k.groups.map(g => tiled(leaf(pr, g.name, { k: 'props', group: g.id }, icon), kidTile(g.id)))], pr), tile));
+    }
+    // T256: the same Build as the Range's: paint your property
+    if (c.golf) { const b = leaf(BUILD_TOOL, 'Build on your property', { k: 'build' }, 'terrain'); if (b) out.push({ ...b, gold: true, tile: ROW_TILE.build }); }
+    return out.filter((r): r is MenuRow => !!r);
+  };
   const rows: (MenuRow | null)[] = [];
   if (item.action === 'range') {
     for (const s of c.range) {
@@ -132,6 +163,14 @@ export function menuOf(item: RailItem, c: MenuCtx): MenuRow[] {
       const g = GREENKEEPING ? byId('greenkeeping') : undefined; // hidden for now (features.ts)
       if (g) rows.push(group('greenkeeping', 'Greenkeeping', 'trees', [leaf(g, 'Grass care', undefined, 'trees'), ...c.cares.map(x => leaf(g, x.name, { k: 'care', id: x.id }))], g));
       if (c.golf) for (const x of item.extras ?? []) rows.push({ key: `extra:${x.id}`, label: x.label, icon: x.icon, tile: EXTRA_TILE[x.id], leaf: { item: item.id, entry: { id: 'select', label: x.label, key: '', icon: x.icon }, act: x.id === 'land' ? { k: 'land' } : { k: 'event' } }, why: extraLock(c.ui, x) });
+      // #1272 (the owner, 2026-11-14: "move facilities button in main menu to this menu bottom right empty space"): Facilities, the sixth tile, bottom right: it
+      // opens its own tools (Practice, Plants, Props ...) as the next level, to the side like the real courses' list. It was a rail button: its lock (every one of
+      // its tools locked), its NEW mark and its Z key (the Props tool's own) are the same, and its leaves pick through Course (the item lit while one is in hand)
+      const ft = tools.filter(t => t.within === 'facilities'), fk = c.golf && ft.length ? facilityRows() : [];
+      if (fk.length) {
+        const why = ft.every(t => toolLock(c.ui, t.id)) ? toolLock(c.ui, ft[0]!.id) : null;
+        rows.push({ key: 'facilities', label: 'Facilities', icon: 'leaf', tile: ROW_TILE.facilities, children: fk, why, isNew: !why && toolsNew(c.ui, ft), note: 'Practice greens, plants and props (Z: Props)', guide: 'rail-facilities' });
+      }
       break;
     }
     case 'paths': {
@@ -143,31 +182,6 @@ export function menuOf(item: RailItem, c: MenuCtx): MenuRow[] {
       if (p) { const r = group('paths', 'Cart paths & drives', 'sidewalk', classes(p, c.paths), p); if (r) rows.push({ ...r, note: 'Roads and cart paths on your property', tile: ROW_TILE.paths }); }
       const rd = byId('road');
       if (rd) { const r = group('roads', 'Roads', 'road', classes(rd, c.roads), rd); if (r) rows.push({ ...r, note: 'Town roads: they give the town new lots' }); }
-      break;
-    }
-    case 'facilities': {
-      // T206: Practice ▸ the facilities (each its own building tool), Plants ▸ the plant brush's kinds, Decoration ▸ Props ▸ by group
-      // T233: the tiles (tool-tiles.ts): Practice (the range bays) and its putting and chipping greens, Plants (the trees) with its Trees and
-      // Flowers, Decoration (the boulders) and its Props' Stone, Water and Plants
-      const pt = byId('practice');
-      // T214: the teaching hut, after the greens (placed with the Buildings tool's ghost)
-      if (pt) rows.push(tiled(group('practice', 'Practice', 'pin', [...(c.practice ?? []).map(f => tiled({ ...leaf(pt, f.name, { k: 'practice', id: f.id }, 'pin')!, why: toolLock(c.ui, pt.id) ?? f.why }, PRACTICE_TILE[f.id])),
-        ...(c.practice?.length ? [tiled({ ...leaf(pt, 'Teaching hut', { k: 'pro', id: 'teachhut' }, 'house')!, why: toolLock(c.ui, pt.id) ?? (c.practice.every(f => f.why) ? c.practice[0]!.why : null) }, ROW_TILE.teachHut)] : [])], pt), ROW_TILE.practice));
-      const pa = byId('paint');
-      if (pa) rows.push(tiled(group('plants', 'Plants', 'trees', c.plants.map(m => tiled({ ...leaf(pa, m.name, { k: 'plant', id: m.id })!, ...(m.col ? { swatch: m.col } : {}) }, PLANT_TILE[m.id])), pa), ROW_TILE.plants));
-      const pr = byId('props');
-      if (pr) rows.push(tiled(group('decoration', 'Decoration', 'leaf', [group('props', 'Props', 'leaf', [leaf(pr, 'All props', { k: 'props', group: null }), ...c.propGroups.map(g => tiled(leaf(pr, g.name, { k: 'props', group: g.id }), PROP_GROUP_TILE[g.id]))], pr)], pr), ROW_TILE.decoration));
-      // T400 (#1078; the owner, 2026-11-09: "why are the golf shit in the town decoration menu and not in the facilities menu?"): the golf props, by the kinds the
-      // tournament kit meant, a row each: Tournament structures ▸ (the stalls, seating, media and event structures), Course furniture ▸ (the tournament
-      // dressing and the course props), Range props, Course vehicles. Town decoration lists none of them
-      if (pr) for (const k of c.propKinds ?? []) {
-        const icon: IconName = PROP_KIND_ICON[k.id] ?? 'leaf', tile = PROP_KIND_TILE[k.id];
-        rows.push(tiled(k.groups.length === 1
-          ? leaf(pr, k.name, { k: 'props', group: k.groups[0]!.id }, icon)
-          : group(`kind:${k.id}`, k.name, icon, [leaf(pr, `All ${k.name.toLowerCase()}`, { k: 'props', group: k.id }, icon), ...k.groups.map(g => leaf(pr, g.name, { k: 'props', group: g.id }, icon))], pr), tile));
-      }
-      // T256: the same Build as the Range's: paint your property
-      if (c.golf) { const b = leaf(BUILD_TOOL, 'Build on your property', { k: 'build' }, 'terrain'); if (b) rows.push({ ...b, gold: true, tile: ROW_TILE.build }); }
       break;
     }
     case 'towndecor': {

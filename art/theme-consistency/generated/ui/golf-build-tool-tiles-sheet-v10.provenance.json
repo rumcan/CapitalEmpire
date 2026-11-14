@@ -1,0 +1,62 @@
+{
+  "schema": 1,
+  "id": "golf:build-tool-tiles",
+  "category": "ui",
+  "catalogueItem": null,
+  "ticket": "J13 (#1277): the owner, 2026-11-14, of the Ball room upgrades tree: \"all this needs images ofcourse.\"",
+  "subjobKey": "1277-golf-build-tool-tiles-sheet-v10",
+  "date": "2026-11-14",
+  "stage": "action-tiles-v10-ball-room-picking-staff-and-supply",
+  "background": "opaque-charcoal-with-navy-rounded-cards",
+  "transparent": false,
+  "references": [
+    "art/theme-consistency/generated/ui/golf-build-tool-tiles-sheet-v2.png",
+    "art/theme-consistency/generated/ui/golf-build-tool-tiles-sheet-v1.png"
+  ],
+  "output": "art/theme-consistency/generated/ui/golf-build-tool-tiles-sheet-v10.png",
+  "provenance": "art/theme-consistency/generated/ui/golf-build-tool-tiles-sheet-v10.provenance.json",
+  "grid": {
+    "columns": 4,
+    "rows": 3
+  },
+  "subjects": [
+    "ball-tube",
+    "wire-basket",
+    "push-picker",
+    "pull-picker",
+    "bigger-hopper",
+    "gang-picker",
+    "night-picking",
+    "staff-training",
+    "second-attendant",
+    "night-attendant",
+    "staff-cart",
+    "supplier"
+  ],
+  "prompt": "Use only the two pictures attached to this message (ignore any earlier pictures). They are tile sheets already in this painted isometric golf game: match their style, scale, framing, camera angle, detail level and colours exactly.\n\nCreate an image, 4:3 landscape: a sheet of TWELVE tiny isometric dioramas in a 4 x 3 grid. Each scene sits on its own small slab of ground, on its own dark navy (#1E2A44) rounded square; the twelve squares are the same size, evenly spaced, and do not touch, on a flat charcoal (#1C1F26) background. Light from the upper right, soft shadows falling to the lower left, warm autumn colours, the year 1985 (no modern things). NO lettering, numbers, logos or symbols anywhere: every sign, board, paper, tag and screen is blank. No people. Each scene must be easy to tell apart from the others at a small size, with one clear main object. Row by row, left to right:\nThese are tools and staff of a 1985 golf driving range. Row 1: (1) a golf ball retriever tube: a long clear plastic tube half full of white golf balls, leaning on a fence post over balls in the grass; (2) one large deep wire basket brim-full of white golf balls with a looped carrying handle; (3) a hand-pushed ball picker: a wide rolling wire cage on two wheels with a long push handle, half full of balls; (4) a 1985 golf cart towing a wide ball-picker reel behind it across rough grass.\nRow 2: (5) the back of a ball-picker cart with an extra-large steel hopper bin heaped with golf balls; (6) a golf cart towing THREE ball-picker reels side by side, a very wide swath; (7) a golf cart with its headlamps on and a picker reel behind it at night, the scene dark blue with the lamps' warm beams and a crescent moon; (8) a blank framed certificate hanging on a plank wall above a clipboard, a whistle and a golf glove on a shelf.\nRow 3: (9) two staff caps hanging side by side on two wooden pegs with two folded aprons below; (10) one staff cap on a peg beside a lit oil lantern and a thermos flask, at night; (11) a second, plain white 1985 golf cart with a staff jacket over its seat and a wire ball basket in the back; (12) a small 1985 delivery lorry with its back doors open and plain cardboard cases of golf balls being unloaded onto a hand truck.",
+  "authority": {
+    "file": "F:/ClaudeTemp/jam/queue-ui-tiles-4.json",
+    "queueId": "golf-build-tool-tiles-sheet~v10",
+    "sha256": "f55493c0b17b0cfb16943b7a435c4aaba76933e5d4360b2c4c8b00a8a43704f5"
+  },
+  "generator": "ChatGPT image generation through the chatgpt-bridge (D:/AI/chatgpt-bridge), 2026-11-14",
+  "generatorSource": "D:/AI/chatgpt-bridge/in/golf-build-tool-tiles-sheet-1view-v10.png",
+  "referenceHashes": [
+    {
+      "file": "art/theme-consistency/generated/ui/golf-build-tool-tiles-sheet-v2.png",
+      "sha256": "b8fe637c1ff3b6bfa301ea6597732ae4030b0bb54c1b9149423367325947527b"
+    },
+    {
+      "file": "art/theme-consistency/generated/ui/golf-build-tool-tiles-sheet-v1.png",
+      "sha256": "6c02339c56474af6ae64e953972244a6bc4d9d716c30b8d080d3893a9e5d2b6f"
+    }
+  ],
+  "referenceGuides": [
+    "D:/AI/chatgpt-bridge/guides/ui/style-tiles-v2.png",
+    "D:/AI/chatgpt-bridge/guides/ui/style-tiles-v1.png"
+  ],
+  "lighting": "screen upper-right toward lower-left; soft shadows to the lower left; warm autumn colours; 1985",
+  "integrationStatus": "cut-and-shown-in-the-ui-by-J13; pending-owner-visual-review",
+  "processing": "Native generator output copied byte-for-byte (the generatorSource file has the same sha256); no repaint, resample, mirror, recolour or transform. Cut by scripts/assets/prep-ui-tool-tiles.mjs (version v10) into 144 px rounded WebP tiles in src/assets/ui/tiles/; crop rectangles and hashes in art/ui-tool-tiles/sheet-v10.json.",
+  "sheetSha256": "7e6b76bb67a5c0bd8d8fd1c70c0452cb907e75bad59672a3fbaf3f11efebbf91"
+}

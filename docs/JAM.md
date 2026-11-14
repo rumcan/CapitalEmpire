@@ -118,6 +118,43 @@ built in dirt parking lot"; "lets place the range for him. he has to buy it ... 
   left takes 1.6% off the range's appeal; Clear on the range card costs $250 and pays its scrap back. For Cinderlinks (J6): `Engine.rangeJunk()` /
   `RangeScene.junk` give each pile's library id, name, world spot and metres from the mats; the save holds `golf.range.junk` (range frame u, v).
 
+## J8: a picture on every action (#1261, the owner 2026-11-14)
+"add ALOT more images to the UI. especially on stuff you can do", then "a picture on every step of the tutorial and the guide". Seven sheets of 12 painted tiles in the Build menu tiles' style
+(`art/theme-consistency/generated/ui/golf-build-tool-tiles-sheet-v3..v9.png`) are cut by `scripts/assets/prep-ui-tool-tiles.mjs` (`--version v3` to `v9`) into 144 px WebPs in
+`src/assets/ui/tiles/` (84 more; `ACTION_TILES` in `src/ui/tool-tiles.ts`; provenance beside each sheet, crops in `art/ui-tool-tiles/sheet-vN.json`). The six sound tiles of v9 (`SOUND_TILES`: radio,
+boombox, headphones, bell, radio-off, jukebox) are cut for J11 (#1270, the music radio); no action wears them yet.
+- **One component**: `src/ui/ActionTile.tsx` draws a tile as a square thumbnail (`alt=""`, `aria-hidden`: the button's words name it; fixed width and height, lazy; px sizes scale
+  with Settings' text size because the UI layer is zoomed). Small (28) on a chip, row (40) beside a row, big (56 to 64) on a card's main action. A button gets its picture inside it, so the
+  whole of it is the click.
+- **Which tile where** is data: the tables in `tool-tiles.ts` (`RANGE_UPGRADE_TILE`, `SESSION_TILE`, `PRACTICE_BUILD_TILE`, `PLACE_TILE`, `BRANCH_TILE` ...), a `tile` field on a tip
+  (`ui/jam/tips.ts`), on a rail item (`rail-items.ts`), on a stat chip, and on every guide and tutorial step (`GuideStep.tile`: `RANGE_GUIDE`, `GUIDE`, `JAM_TOUR`, `TOWN_TOUR`; the guide card draws it
+  at the left of the step's row, bigger on the open step). A new action or step takes a tile the same way; `tests/ui-action-tiles.test.ts` fails a tile id with no file, a step with no tile and a tile
+  on no action.
+- **Where**: the Range card and its ball room tree, the Build menu (a tile card shows it whole on the tile's navy, never cropped to the 92 px strip), the Bank, the hole card, the Holes panel
+  and New hole's wizard, the rail (Select, Walk, Bulldoze; in the jam also Build, Range and Course) and the top bar (the Cash chip, Me, a picture beside the speed bar and the zoom buttons: the pause
+  and zoom icons stay, they show a state and a direction; on a narrow screen at a big Text size some of these pictures are left out so the bar stays one row: see J13's top bar), the title card, the tutorial and the guide, the tips, the statement, Scene, Help's Keys, the bankrupt pop-up, Settings' rows.
+- **Golf view** (a separate page): `packages/cinderlinks/build.mjs` copies the `drill-*`, `shot-*` and `club-*` tiles and `jump-to-ball`, `gimme` and `go-for-it` into `public/cinderlinks/tiles/` (the page cannot
+  import them); the practice drills panel, the shot panel (Curve and Flight ends, Tour spin, Go for it), the club tabs, Jump to ball and Gimme show them, and the host's Back to the course button wears
+  its tile. `npm run cinder:build` needs no dev server holding `public/cinderlinks` open (Windows refuses to delete it).
+
+## J13: the ball room's and the props' tiles (#1277, and the tiles half of #1284; the owner 2026-11-14: "all this needs images ofcourse")
+Four more sheets of 12 (`golf-build-tool-tiles-sheet-v10..v13.png`, provenance beside each, prompts from `F:/ClaudeTemp/jam/queue-ui-tiles-4.json` and `-5.json`) are cut by the same
+script (`--version v10` to `v13`; crops in `art/ui-tool-tiles/sheet-v10..v13.json`) into 48 more 144 px WebPs: `src/assets/ui/tiles` now holds 156 (about 0.7 MB in all; the jam build inlines each, they are
+under its 128 KB limit). v10 to v12 are `ACTION_TILES` (the ball room tree's upgrades, one tile each, plus the range till and the home); v13 is `PROP_TILES` (the Props menu's entries and the Texture Painter).
+`tests/ui-action-tiles.test.ts` keeps a `NOT_YET` list of tiles cut but worn by nothing; each commit that places one takes it off.
+- **The ball room tree** (`BallTree.tsx`): every upgrade in `rangesave.ts` has its tile by id (`RANGE_UPGRADE_TILE`): on its row of the tree (40 px), bigger (64 px) beside the name on the open card, on the Range
+  card's upgrade rows and on the Build menu's cards. Supply wears `supplier` (the `bucket-price` stand-in is gone); the Range till line, on the card and in the tree, wears `range-till`; Your home wears `home-caravan`
+  while it is the caravan (the cottage and the house have no picture yet). Four upgrades wear an existing tile until their own is painted: Putting stroke trainer (`putting-green`), Second tier of bays
+  (`covered-bays`), Golf academy (`staff-training`), Car park building (`paved-car-park`). `tests/ui-action-tiles.test.ts` fails an upgrade with no tile that exists. The tree's columns scroll up and down only: at the
+  largest Text size (125%) it is 800 px wide on a 1366 px screen, no sideways scrollbar (shots: `docs/jam-shots/j13-ball-tree*.jpg`).
+- **The Props menu** (`flyout-menu.ts`, tiles by `PROP_GROUP_TILE` and `ROW_TILE.allProps` in `tool-tiles.ts`; tiles only, the natural / man-made restructure is #1284's other coder): in the golf Course flyout's Facilities >
+  Decoration > Props, the Props row and All props wear `all-props`, Desert & oasis `desert-oasis`, New: Trees `trees-mixed`, New: Lake props `lake-props`; the Course furniture kind's rows, which showed the leaf, wear their
+  own or their kind's tile (Tournament dressing the scoreboard stand and New: Course props `man-made-props`, both stand-ins). Still without a tile: the classic town's Decoration > Props rows (the town's menus stay lists,
+  T233: New: Buildings and New: Eight-view objects have no tile painted) and the eight Tournament structures rows (the `buildings` icon). `natural-props`, `fences`, `signs`, `fountain`, `clear-plants`,
+  `nursery-plants` and `texture-painter` are cut and wait (`NOT_YET` in the test) for #1284's restructure and #1282's Texture Painter rename.
+- **The top bar** keeps one row by tiers (`topBarTier` in `uiScale.ts`, the screen's width over the Text size): every picture from 1150 px of the UI layer, without the speed bar's and zoom's below 1065 (1366 px at 125%),
+  without the Cash chip's too below that (1280 px at 125%); narrower, the bar wraps to a second row as it always has. The month note starts under the bar (`--hud-top`), however many rows it has.
+
 ## Button tests: run them before every jam build (T459, the owner 2026-11-13: "are you guys not testing buttons?")
 A dead button must not ship. Two checks:
 - **`npm test`** includes `tests/jam-buttons.test.ts` (node, seconds): every tutorial step's Show me does something (`tour.ts tourShowOf`) and every

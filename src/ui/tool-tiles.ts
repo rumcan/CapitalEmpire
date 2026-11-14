@@ -2,9 +2,33 @@
 // Flyouts preserve their existing actions, row labels and navigation.
 export const TOOL_TILES_V1 = ['tee', 'fairway', 'green', 'bunker', 'pond', 'rough', 'trees', 'rocks', 'cart-path', 'clubhouse', 'range-bays', 'flower-bed'] as const;
 export const TOOL_TILES_V2 = ['waste-sand', 'snack-hut', 'golf-hole', 'grandstand-scoreboard', 'land-plot', 'autumn-shrubs', 'palms', 'street-furniture', 'patio-table', 'long-grass', 'chipping-green', 'surveyor-turf'] as const;
-export type ToolTile = typeof TOOL_TILES_V1[number] | typeof TOOL_TILES_V2[number];
-/** Row-major sheet identities; v1 asset files remain byte-for-byte unchanged. */
+// J8 (#1261; the owner, 2026-11-14: "add ALOT more images to the UI. especially on stuff you can do"): four more sheets of the same kind, the pictures on
+// the jam's actions (the range card, the Bank, a hole's card, the title card, the tips, the practice drills). Shown by ActionTile.tsx.
+export const TOOL_TILES_V3 = ['buy-range', 'hit-balls', 'chip-and-putt', 'clear-junk', 'pick-balls', 'hire-attendant', 'ball-washer', 'bucket-price', 'turf-tee', 'grass-outfield', 'target-green', 'covered-bays'] as const;
+export const TOOL_TILES_V4 = ['open-bays', 'ball-dispenser', 'gravel-car-park', 'paved-car-park', 'putting-green', 'play-hole', 'edit-hole', 'frame-trees', 'draw-drive', 'seed', 'sod', 'bulldoze'] as const;
+export const TOOL_TILES_V5 = ['bank', 'borrow', 'repay', 'save-money', 'take-money', 'statement', 'tips', 'how-to-play', 'settings', 'save-game', 'new-game', 'profile'] as const;
+export const TOOL_TILES_V6 = ['drill-distance', 'drill-shaping', 'drill-flight', 'drill-junk', 'drill-up-down', 'drill-putting', 'drill-bunker', 'shot-draw', 'shot-fade', 'shot-high', 'shot-low', 'shot-spin'] as const;
+// the second pair: every tutorial and guide step, the rail and top bar, the range card's shift and scene, the daylight, the earthworks, Help, and the golf view's clubs and buttons
+export const TOOL_TILES_V7 = ['place-range', 'walking-path', 'sell-buckets', 'select-tool', 'walk', 'find-me', 'game-speed', 'zoom', 'shift-hours', 'scene', 'daylight', 'earthworks'] as const;
+export const TOOL_TILES_V8 = ['club-driver', 'club-wood', 'club-long-iron', 'club-iron', 'club-wedge', 'club-putter', 'jump-to-ball', 'gimme', 'go-for-it', 'back-to-course', 'help-keys', 'closed-gate'] as const;
+// the last sheet: the sound tiles (SOUND_TILES: for J11's music radio and sound settings), Settings' text size, currency, colour-safe money, backups and load, and the title card's front door
+export const TOOL_TILES_V9 = ['radio', 'boombox', 'headphones', 'bell', 'radio-off', 'jukebox', 'currency', 'text-size', 'colour-safe', 'backups', 'load-save', 'front-door'] as const;
+// J13 (#1277; the owner, of the Ball room upgrades tree: "all this needs images ofcourse"): one tile for each upgrade of the ball room's tree and the range's extras (sheets v10 to v12)
+export const TOOL_TILES_V10 = ['ball-tube', 'wire-basket', 'push-picker', 'pull-picker', 'bigger-hopper', 'gang-picker', 'night-picking', 'staff-training', 'second-attendant', 'night-attendant', 'staff-cart', 'supplier'] as const;
+export const TOOL_TILES_V11 = ['ball-polisher', 'robot-pickers', 'robots-4', 'robots-6', 'robot-batteries', 'robot-speed', 'fast-chargers', 'target-nets', 'bucket-counter', 'standing-order', 'trade-price', 'pallet-deliveries'] as const;
+export const TOOL_TILES_V12 = ['stamped-balls', 'swing-video', 'fans-lemonade', 'weighted-clubs', 'launch-monitor', 'ball-tracker', 'floodlights', 'bays-24', 'pro-shop', 'coffee-kiosk', 'range-till', 'home-caravan'] as const;
+// the props menu's tiles and the Texture Painter's (sheet v13; #1284's tiles half)
+export const TOOL_TILES_V13 = ['all-props', 'natural-props', 'man-made-props', 'desert-oasis', 'trees-mixed', 'lake-props', 'fences', 'signs', 'fountain', 'texture-painter', 'clear-plants', 'nursery-plants'] as const;
+export type ToolTile = typeof TOOL_TILES_V1[number] | typeof TOOL_TILES_V2[number] | typeof TOOL_TILES_V3[number] | typeof TOOL_TILES_V4[number] | typeof TOOL_TILES_V5[number] | typeof TOOL_TILES_V6[number] | typeof TOOL_TILES_V7[number] | typeof TOOL_TILES_V8[number] | typeof TOOL_TILES_V9[number] | typeof TOOL_TILES_V10[number] | typeof TOOL_TILES_V11[number] | typeof TOOL_TILES_V12[number] | typeof TOOL_TILES_V13[number];
+/** Row-major sheet identities; v1 asset files remain byte-for-byte unchanged. These are the Course and Facilities flyouts' tiles (ui-flyouts.test.ts
+ *  checks each is on a tool): the action tiles of sheets v3 to v6 are ACTION_TILES. */
 export const TOOL_TILES: readonly ToolTile[] = [...TOOL_TILES_V1, ...TOOL_TILES_V2];
+/** J8: the action tiles (sheets v3 to v12), 120 of them, each on an action somewhere in the UI (tests/ui-action-tiles.test.ts checks every id used exists) */
+export const ACTION_TILES: readonly ToolTile[] = [...TOOL_TILES_V3, ...TOOL_TILES_V4, ...TOOL_TILES_V5, ...TOOL_TILES_V6, ...TOOL_TILES_V7, ...TOOL_TILES_V8, ...TOOL_TILES_V9, ...TOOL_TILES_V10, ...TOOL_TILES_V11, ...TOOL_TILES_V12];
+/** J13: the props menu's tiles and the Texture Painter's (sheet v13), the Props flyout's entries and the painter's button wear them */
+export const PROP_TILES: readonly ToolTile[] = TOOL_TILES_V13;
+/** the six sound tiles of sheet v9, cut for J11 (#1270, branch arena/j11-sound: the music radio and the sound settings): no action in the jam wears them until that lands */
+export const SOUND_TILES: readonly ToolTile[] = ['radio', 'boombox', 'headphones', 'bell', 'radio-off', 'jukebox'];
 
 // Vite resolves these normal imported assets; Node tests intentionally use the existing icon fallback.
 const URLS: Record<string, string> = (() => { try { return import.meta.glob('../assets/ui/tiles/*.webp', { eager: true, query: '?url', import: 'default' }) as Record<string, string>; } catch { return {}; } })();
@@ -16,7 +40,13 @@ export const SURFACE_TILE: Readonly<Partial<Record<string, ToolTile>>> = { fairw
 export const PLANT_TILE: Readonly<Partial<Record<string, ToolTile>>> = { trees: 'trees', flowers: 'flower-bed', bushes: 'autumn-shrubs', palms: 'palms' };
 export const PRACTICE_TILE: Readonly<Partial<Record<string, ToolTile>>> = { putting: 'green', chipping: 'chipping-green' };
 /** Actual DECOR_GROUPS ids; Furniture is represented by its table and chairs. */
-export const PROP_GROUP_TILE: Readonly<Partial<Record<string, ToolTile>>> = { stone: 'rocks', water: 'pond', plants: 'flower-bed', furniture: 'patio-table' };
+export const PROP_GROUP_TILE: Readonly<Partial<Record<string, ToolTile>>> = {
+  stone: 'rocks', water: 'pond', plants: 'flower-bed', furniture: 'patio-table',
+  // J13 (#1277, the tiles half of #1284): the groups whose rows showed the maple leaf (Desert & oasis, New: Trees, New: Lake props)
+  desert: 'desert-oasis', 'new:Trees': 'trees-mixed', 'new:Lake props': 'lake-props',
+  // (stand-ins for the golf kinds' groups until their own are painted: the tournament dressing by the scoreboard stand, the course props by the tidy bench and lamp post)
+  tournament: 'grandstand-scoreboard', 'new:Course props': 'man-made-props',
+};
 /** T400 (#1078): the golf props' kinds in Facilities (decor.ts PROP_KINDS): the structures by the scoreboard stand, the furniture by the table and chairs,
  *  the range's props by its bays, the vehicles by the cart path. */
 export const PROP_KIND_TILE: Readonly<Partial<Record<string, ToolTile>>> = { structures: 'grandstand-scoreboard', coursefurniture: 'patio-table', rangeprops: 'range-bays', vehicles: 'cart-path' };
@@ -26,6 +56,38 @@ export const ROW_TILE = {
   // T214: stand-in tiles until GOLF-SPRITES' Build-tool tiles for the pro's office and the teaching hut land
   proOffice: 'clubhouse', teachHut: 'snack-hut',
   practice: 'range-bays', plants: 'trees', decoration: 'street-furniture', build: 'surveyor-turf',
+  // J13 (#1277): the Props row and its All props leaf, the crate of mixed garden things
+  allProps: 'all-props',
+  // #1272: Facilities, the Course grid's sixth tile (it was a rail button): the chipping green with its bunker and shrubs, its practice greens and plants
+  facilities: 'chipping-green',
 } as const satisfies Record<string, ToolTile>;
 /** Existing Course extras from rail-items.ts. */
 export const EXTRA_TILE: Readonly<Partial<Record<string, ToolTile>>> = { event: 'grandstand-scoreboard', land: 'land-plot' };
+
+// ---- J8 (#1261): the action tiles' homes (ACTION_TILES, sheets v3 to v6). A table says which tile an action wears; ActionTile.tsx draws it.
+/** J13 (#1277): every range upgrade (rangesave.ts RANGE_UPGRADES, by id) has its tile: on its row of the ball room's tree, on the tree's open card, on the range card's
+ *  upgrade rows and on the Build menu's cards; the car park's two steps are Gravel and Pave. tests/ui-action-tiles.test.ts fails an upgrade with no tile that exists.
+ *  Four have a stand-in (an existing tile) until their own is painted: the Putting stroke trainer (the putting green), the Second tier of bays (the roofed bays), the
+ *  Golf academy (the pro's lesson wall) and the Car park building (the paved lot) */
+export const RANGE_UPGRADE_TILE: Readonly<Partial<Record<string, ToolTile>>> = {
+  // the grounds and the car park
+  teeturf: 'turf-tee', grass: 'grass-outfield', greens: 'target-green', targets: 'target-green', gravel: 'gravel-car-park', pave: 'paved-car-park',
+  // the bays and the range's extras
+  bays8: 'open-bays', bays12: 'open-bays', bays24: 'bays-24', covered: 'covered-bays', lights: 'floodlights', dispenser: 'ball-dispenser', proshop: 'pro-shop', kiosk: 'coffee-kiosk',
+  // the ball room: picking, staff, machines, supply, your game
+  tube: 'ball-tube', basket: 'wire-basket', pushpick: 'push-picker', picker: 'pull-picker', hopper2: 'bigger-hopper', gang: 'gang-picker', nightpick: 'night-picking',
+  attendant: 'hire-attendant', training: 'staff-training', attendant2: 'second-attendant', attendant3: 'night-attendant', staffcart: 'staff-cart',
+  washer: 'ball-washer', polisher: 'ball-polisher', robot: 'robot-pickers', robot2: 'robots-4', robot3: 'robots-6', robotbat: 'robot-batteries', robotspd: 'robot-speed', chargers: 'fast-chargers', nets: 'target-nets', counter: 'bucket-counter',
+  supplier: 'supplier', autoorder: 'standing-order', bulk: 'trade-price', pallet: 'pallet-deliveries', stamp: 'stamped-balls',
+  swingcam: 'swing-video', fans: 'fans-lemonade', weighted: 'weighted-clubs', lmon: 'launch-monitor', radar: 'ball-tracker', puttlab: 'putting-green',
+  // (stand-ins) the second tier, the academy and the car park building
+  tier2: 'covered-bays', academy: 'staff-training', parking: 'paved-car-park',
+};
+/** the range card's practice sessions (player.ts PracticeKind): Hit a bucket, Putting practice, Chipping practice */
+export const SESSION_TILE: Readonly<Partial<Record<string, ToolTile>>> = { bucket: 'hit-balls', putting: 'putting-green', chipping: 'chip-and-putt' };
+/** the practice greens' rows on the range card (the putting green's own tile; the chipping green's is the second sheet's) */
+export const PRACTICE_BUILD_TILE: Readonly<Partial<Record<string, ToolTile>>> = { putting: 'putting-green', chipping: 'chipping-green' };
+/** the range card's placements (the range, its car park, the practice area) */
+export const PLACE_TILE: Readonly<Partial<Record<string, ToolTile>>> = { range: 'buy-range', carpark: 'gravel-car-park', practice: 'putting-green' };
+/** the ball room tree's branches (rangesave.ts TreeBranch): Picking, Staff, Machines, Supply and Your game */
+export const BRANCH_TILE: Readonly<Partial<Record<string, ToolTile>>> = { picking: 'pick-balls', staff: 'hire-attendant', machines: 'ball-washer', supply: 'supplier', golf: 'profile' };

@@ -61,6 +61,7 @@ import { roomLine } from './game/golf/towngrowth';
 import { formatMultiDayStatus } from './game/golf/multiday';
 import { decorInfo } from './game/golf/decor';
 import { Icon, type IconName } from './ui/Icon';
+import { ActionTile, TILE_ROW, TILE_SMALL } from './ui/ActionTile'; // J8 (#1261): Settings, Save, Load and New game wear painted tiles
 import { NightPanel } from './ui/NightPanel';
 import { GradePanel } from './ui/GradePanel';
 import { RoadThumb } from './ui/RoadThumb';
@@ -70,6 +71,8 @@ import { CourseStatsPanel } from './ui/CourseStatsPanel';
 import { SeasonCard } from './ui/golf/SeasonCard';
 import { seasonChip, seasonPhase } from './ui/golf/season';
 import { GuidePulse } from './ui/GuidePulse';
+import { Spotlight } from './ui/spotlight/Spotlight';
+import { showGuide, showHint, showPrep, showTip, showTour } from './ui/spotlight/shows';
 import { ClubTitleText } from './ui/ClubTitle';
 import { GrassManagementPanel } from './ui/GrassManagementPanel';
 import { GREENKEEPING, JAM } from './game/features';
@@ -110,7 +113,7 @@ import { MONTHS_A_SEASON } from './game/golf/rangesave';
 import { JUNK_BY_ID, JUNK_CLEAR_COST } from './game/golf/junk';
 import { RANGE_PLACE_COST } from './game/golf/placing';
 import { TooltipLayer } from './ui/Tooltip';
-import { UI_SCALES, applyUiScale, currentUiScale, saveUiScale } from './ui/uiScale';
+import { UI_SCALES, applyUiScale, currentUiScale, saveUiScale, topBarTier } from './ui/uiScale';
 import { AccessSettings } from './ui/golf/AccessSettings';
 import { SoundSettings } from './ui/SoundSettings'; // J11 (#1270)
 import { RadioPill } from './ui/Radio';
@@ -216,6 +219,10 @@ export default function App() {
   const [menu, setMenu] = useState(false);
   /** the UI scale in force (T179: Settings; applied at boot from this browser's storage) */
   const [uiScale, setUiScale] = useState(currentUiScale);
+  /** J8 (#1261), J13: how many of the top bar's pictures there is room for (uiScale.ts topBarTier: the screen's width over the Text size): 2, all of them; 1, not the ones beside the
+   *  speed bar and the zoom buttons; 0, not the Cash chip's either. It keeps the bar one row, clear of the month note under it, down to 1280 px at the largest Text size */
+  const [tbTier, setTbTier] = useState<0 | 1 | 2>(() => topBarTier(window.innerWidth, currentUiScale()));
+  useEffect(() => { const on = () => setTbTier(topBarTier(window.innerWidth, currentUiScale())); on(); window.addEventListener('resize', on); return () => window.removeEventListener('resize', on); }, [uiScale]);
   /** the menu button waiting for its second click (New game, Empty map), or null */
   const [armed, setArmed] = useState<'new' | 'empty' | null>(null);
   useEffect(() => { if (!menu) setArmed(null); }, [menu]);
@@ -327,7 +334,7 @@ export default function App() {
   /** T348 (#990): the toasts' markup, for the stack under the top bar and for the one hung under your round's bar (RoundBar `below`) */
   const toastEls = (g: Game) => toasts.map(t => (
     <div key={t.id} className="glass px-3 py-1.5 text-sm"><span className={t.kind === 'warn' ? 'text-red-300' : t.kind === 'good' ? 'text-emerald-300' : ''}>{t.text}</span>
-      {t.scene && <button className="chip pointer-events-auto ml-2 py-0.5" onClick={() => g.openScene(t.scene!)} data-testid="toast-scene"><Icon name="camera" size={16} />Set the scene</button>}</div>
+      {t.scene && <button className="chip pointer-events-auto ml-2 py-0.5" onClick={() => g.openScene(t.scene!)} data-testid="toast-scene"><ActionTile tile="scene" size={TILE_SMALL - 4} />Set the scene</button>}</div>
   ));
   const net = game?.ledger?.net ?? 0, debtDays = game && !game.golf ? game.traffic.budget.debtDays : 0;
   // the rail item of the tool in hand (the road tool on the course is Paths, the course tool's clubhouse scope Buildings: game.uiTool)
@@ -522,6 +529,7 @@ export default function App() {
     <div className="ui-root fixed inset-0 overflow-hidden bg-[#1b2816] text-slate-100 select-none" style={{ fontFamily: 'ui-sans-serif, system-ui, sans-serif' }}>
       <TooltipLayer />
       {game && <GuidePulse anchor={game.guideAnchor} />}
+      {game && <Spotlight game={game} />}{/* J10 (#1269): every Show me's spotlight: the rest dimmed and blurred, its target cut out */}
       <canvas ref={canvasRef} className="absolute inset-0 h-full w-full" />
       <canvas
         ref={overlayRef}
@@ -549,7 +557,7 @@ export default function App() {
 
       {game && game.ready && !lab && (
         <>
-          <div ref={topBar} className="pointer-events-none absolute left-0 right-0 top-0 z-30 flex flex-wrap items-start justify-between gap-2 p-3">
+          <div ref={topBar} data-tb-tier={tbTier} className="pointer-events-none absolute left-0 right-0 top-0 z-30 flex flex-wrap items-start justify-between gap-2 p-3">
             <div className="pointer-events-auto glass flex items-center gap-1.5 px-3 py-2 min-[1600px]:gap-3 min-[1600px]:px-4">
               {/* T235 (#690, the concept's title): in a golf game the club's name over "Year 3 • October • Sunny 16°C" (ui/ClubTitle.tsx); its full
                   text is the tooltip, on the leaf too, so it is there where the words are hidden. The classic town game keeps its old line */}
@@ -592,7 +600,7 @@ export default function App() {
                   {/* T336: your cards (the 8 slots, the collection, the vending machine); the number is the pulls waiting */}
                   {!JAM && game.golf && <button className={`chip ${game.cardsCardOpen ? 'chip-on' : ''}`} onClick={() => game.openCardsCard()} data-tip={game.cardsPulls() > 0 ? `Your cards: ${game.cardsPulls()} pull${game.cardsPulls() === 1 ? '' : 's'} waiting at the vending machine` : 'Your cards: 8 slots, earned from wins, opened in the vending machine'} aria-label="Cards" data-testid="cards-chip"><Icon name="layers" size={16} /><span className={WIDE}>Cards</span>{game.cardsPulls() > 0 && <span className="rounded-full bg-amber-400 px-1.5 text-[11px] font-bold leading-4 text-slate-900" data-testid="cards-badge">{game.cardsPulls()}</span>}</button>}
                   {/* T240: your character: Me frames you once (T323: the camera no longer follows; Walk and Select are the rail's two cursors) */}
-                  {game.you && <button className="chip" onClick={() => game.youMe()} data-tip="Me: the camera on your character (once: it does not follow)" aria-label="Me" data-testid="me-chip"><Icon name="pin" size={16} /><span className={WIDE}>Me</span></button>}
+                  {game.you && <button className="chip" onClick={() => game.youMe()} data-tip="Me: the camera on your character (once: it does not follow)" aria-label="Me" data-testid="me-chip"><ActionTile tile="find-me" size={TILE_SMALL} /><span className={WIDE}>Me</span></button>}
                   {game.you && !game.yourRound() && game.youCartFar() && <button className="chip" onClick={() => game.youCartCall()} data-tip="Your cart: it drives to you (C in the Walk cursor); then E gets in" aria-label="Call your cart" data-testid="cart-chip"><Icon name="compass" size={16} /><span className={WIDE}>Cart</span></button>}
                   {!JAM && fv?.invited && game.traffic.round.runs === 0 && !gv.live && <span className="flex items-center gap-1 whitespace-nowrap rounded-md border border-amber-400/40 bg-amber-400/15 px-2 py-1 text-xs font-semibold text-amber-200" data-testid="invite-pill" data-guide="invite-pill" data-tip={`The tour's invitation: the Club Championship at the end of ${fv.due ? 'this' : 'next'} season (the first tournament is held at the end of the season it names)`}><Icon name="trophy" size={14} /><span className="min-[2200px]:hidden">Invited</span><span className={WIDE}>The Club Championship: end of {fv.due ? 'this' : 'next'} season</span></span>}
                   {gv.live && (() => { const w = getTournamentWeather(game.seed, game.weatherRun()); return <span className="rounded-md border border-amber-400/40 bg-amber-400/15 px-2 py-1 text-xs font-semibold text-amber-200" data-tip={w.summary}>{w.icon} {w.label}</span>; })()}
@@ -617,6 +625,7 @@ export default function App() {
             </div>
             <div className="pointer-events-auto ml-auto flex items-center gap-2">
               <div className="glass flex items-center gap-1 px-2 py-1.5">
+                {tbTier === 2 && <ActionTile tile="game-speed" size={TILE_ROW - 6} />}
                 <button className="btn-icon" onClick={() => game.togglePause()} data-tip="Pause (Space)"><Icon name={game.speed ? 'pause' : 'play'} size={22} /></button>
                 {SPEEDS.map(k => <button key={k} className={`chip ${k < 1 ? 'px-1.5 text-[11px]' : ''} ${game.speed === k ? 'chip-on' : ''} disabled:opacity-40`} disabled={game.paceLock && k > WATCH_SPEED} onClick={() => game.setSpeed(k)} data-tip={k === WATCH_SPEED ? 'The watching speed: golfers walk at a natural pace (, and .)' : k < 1 ? 'Slow motion (, and .)' : 'Speed (, and .)'} data-testid={`speed-${speedLabel(k)}`}>{speedLabel(k)}×</button>)}
                 {!JAM && game.golfMode && (game.golfWatch
@@ -626,6 +635,7 @@ export default function App() {
                 {game.night.mode === 'clock' && game.clockNight() > 0 && <button className="chip" onClick={() => game.skipNight()} data-tip="Skip this night: daylight until the next one (how often nights come: gear menu, Night)"><Icon name="sun" size={16} /> Skip night</button>}
               </div>
               <div className="glass flex items-center gap-1 px-2 py-1.5">
+                {tbTier === 2 && <ActionTile tile="zoom" size={TILE_ROW - 6} />}
                 <button className="btn-icon" onClick={() => game.zoomAt(clampZoom(game.cam.z / ZOOM_STEP))} data-tip="Zoom out (-)"><Icon name="zoom-out" size={20} /></button>
                 <button className="btn-icon" onClick={() => game.zoomAt(clampZoom(game.cam.z * ZOOM_STEP))} data-tip="Zoom in (+)"><Icon name="zoom-in" size={20} /></button>
               </div>
@@ -636,6 +646,8 @@ export default function App() {
                 <button className={`btn-icon ${menu ? 'on' : ''}`} onClick={() => setMenu(!menu)} data-tip="Settings"><Icon name="gear" size={22} /></button>
                 {menu && (
                   <div className="glass absolute right-0 top-full z-30 mt-2 flex max-h-[calc(100vh-8rem)] w-80 flex-col gap-1 overflow-y-auto p-2">
+                    {/* J8 (#1261): the menu's header, with its painted tile */}
+                    <div className="flex items-center gap-2.5 px-2 pb-1 pt-0.5" data-testid="settings-head"><ActionTile tile="settings" size={TILE_ROW} /><span className="font-semibold text-amber-200">Settings</span></div>
                     {!JAM && <label className="flex cursor-pointer items-center gap-2 px-2 py-2 text-sm" data-tip="Dev badge and Studio (F3); F4 shows the performance, traffic and growth panel and the tile readout"><input type="checkbox" checked={dev} onChange={e => setDev(e.target.checked)} />Developer (F3)</label>}
                     {/* T117: the unlocks' Settings switch (was the top bar's All tools chip): every tool and fine control now, whatever the stage */}
                     {!JAM && game.playerProgressFacts() && (
@@ -645,9 +657,9 @@ export default function App() {
                       </label>
                     )}
                     {/* T179 (P23 P2-7): the UI scale, the UI layer only (the map keeps its size); kept in this browser */}
-                    <div className="flex items-center gap-2 px-2 py-2 text-sm" role="group" aria-label="UI scale">
-                      <span className="flex-1">Text size</span>
-                      {UI_SCALES.map(v => <button key={v} className={`chip ${uiScale === v ? 'chip-on' : ''}`} aria-pressed={uiScale === v} data-scale={v} onClick={() => setUiScale(applyUiScale(saveUiScale(v)))}>{Math.round(v * 100)}%</button>)}
+                    <div className="flex items-center gap-1.5 px-2 py-2 text-sm" role="group" aria-label="UI scale">
+                      <span className="flex flex-1 items-center gap-1.5 whitespace-nowrap"><ActionTile tile="text-size" size={TILE_SMALL} />Text size</span>
+                      {UI_SCALES.map(v => <button key={v} className={`chip !px-2 ${uiScale === v ? 'chip-on' : ''}`} aria-pressed={uiScale === v} data-scale={v} onClick={() => setUiScale(applyUiScale(saveUiScale(v)))}>{Math.round(v * 100)}%</button>)}
                     </div>
                     {/* J11 (#1270): the sound: the effects' volume and mute, and the one switch for all of it (F8) */}
                     <SoundSettings />
@@ -773,11 +785,11 @@ export default function App() {
                     {!JAM && <GradePanel game={game} bump={bump} />}
                     {!JAM && <NightPanel game={game} bump={bump} />}
                     </>}
-                    <button className="btn w-full" onClick={() => { setMenu(false); game.save(); }} data-tip="Saved automatically; force a save now">Save</button>
-                    <button className="btn w-full" onClick={() => { setMenu(false); void game.downloadSave(); }} data-tip="Download the save as a .cesave file (for a bug report, or to carry it to another computer)">Download save</button>
-                    <button className="btn w-full" onClick={() => saveFile.current?.click()} data-tip="Load a .cesave file in place of this game: this game is backed up first">Load save file…</button>
+                    <button className="btn w-full" onClick={() => { setMenu(false); game.save(); }} data-tip="Saved automatically; force a save now"><ActionTile tile="save-game" size={TILE_SMALL} />Save</button>
+                    <button className="btn w-full" onClick={() => { setMenu(false); void game.downloadSave(); }} data-tip="Download the save as a .cesave file (for a bug report, or to carry it to another computer)"><ActionTile tile="save-game" size={TILE_SMALL} />Download save</button>
+                    <button className="btn w-full" onClick={() => saveFile.current?.click()} data-tip="Load a .cesave file in place of this game: this game is backed up first"><ActionTile tile="load-save" size={TILE_SMALL} />Load save file…</button>
                     <input ref={saveFile} type="file" accept=".cesave,application/gzip" className="hidden" onChange={e => { const f = e.target.files?.[0]; e.target.value = ''; if (f) void game.loadSaveFile(f); }} />
-                    {backups.length > 0 && <button className="btn w-full" onClick={() => setBackupsOpen(!backupsOpen)} data-tip="Saves kept as backups: a newer build's, an unreadable one, the copy before a migration, and the one replaced by a load">Backups ({backups.length}) {backupsOpen ? '▴' : '▾'}</button>}
+                    {backups.length > 0 && <button className="btn w-full" onClick={() => setBackupsOpen(!backupsOpen)} data-tip="Saves kept as backups: a newer build's, an unreadable one, the copy before a migration, and the one replaced by a load"><ActionTile tile="backups" size={TILE_SMALL} />Backups ({backups.length}) {backupsOpen ? '▴' : '▾'}</button>}
                     {backupsOpen && backups.map(k => (
                       <div key={k} className="flex items-center gap-1 px-2 py-1 text-xs">
                         <span className="min-w-0 flex-1 truncate text-[12px] opacity-70" data-tip={k}>{k}</span>
@@ -789,7 +801,7 @@ export default function App() {
                     <div className="px-2 pt-1 text-[12px] opacity-50" data-tip="The real courses (Rondebosch, Magnolia National, Woodhill and any you download) are built from OpenStreetMap data, which is available under the Open Database Licence (ODbL 1.0): openstreetmap.org/copyright" data-testid="osm-credit">Credits: real-course map data © OpenStreetMap contributors</div>
                     <div className="px-2 pt-1 text-[12px] opacity-50" data-tip={`${DEM_TILES_CREDIT}. The land under a real course comes from public elevation data: ${(game.landInfo()?.credit ?? DEM_CREDIT_DEFAULT)}.`} data-testid="dem-credit">Credits: real-course ground height {game.landInfo()?.credit ?? DEM_CREDIT_DEFAULT}</div>
                     {/* asked in the menu (the browser's confirm() is not shown in every embedded browser): a first click arms, a second acts */}
-                    <button className={`btn w-full ${armed === 'new' ? '!border-red-400 !text-red-300' : ''}`} data-tip="Start a new game: your current game is replaced" onClick={() => { if (armed !== 'new') { setArmed('new'); return; } setArmed(null); setMenu(false); game.newTown(); }}>{armed === 'new' ? 'Click again: replace this game' : 'New game'}</button>
+                    <button className={`btn w-full ${armed === 'new' ? '!border-red-400 !text-red-300' : ''}`} data-tip="Start a new game: your current game is replaced" onClick={() => { if (armed !== 'new') { setArmed('new'); return; } setArmed(null); setMenu(false); game.newTown(); }}><ActionTile tile="new-game" size={TILE_SMALL} />{armed === 'new' ? 'Click again: replace this game' : 'New game'}</button>
                     {!JAM && <button className={`btn w-full ${armed === 'empty' ? '!border-red-400 !text-red-300' : ''}`} data-tip="Clear everything and start from an empty field" onClick={() => { if (armed !== 'empty') { setArmed('empty'); return; } setArmed(null); setMenu(false); game.clearTown(); }}>{armed === 'empty' ? 'Click again: clear everything' : 'Empty map'}</button>}
                   </div>
                 )}
@@ -885,7 +897,7 @@ export default function App() {
           <TownFooter {...rail} entries={drawerEntries(entries, 'footer')} boxRef={footBox} navRef={footRef} flyouts={up ? flyouts : null} raised={up} panel={dock === 'footer' && !idle ? { tool: game.uiTool, body: toolBody } : null} onClosePanel={() => { setFly(null); game.setTool('select'); }} />
           <div ref={railBox} className={`pointer-events-none absolute left-3 top-[var(--hud-top,5.75rem)] ${sideFly ? 'z-40' : 'z-20'} flex items-start gap-2 [&>*]:pointer-events-auto`}>
             {/* P23 P1-E: the same places from minute zero; a tool not open yet stays dimmed in place with what unlocks it, a new one says NEW */}
-            {/* T182: the groups (Driving range, Course, Facilities (T206) · Traffic, Town decoration); the range opens its card; a group opens its last tool, else its first open one */}
+            {/* T182: the groups (Driving range, Course, Cart paths & roads · Traffic, Town decoration; #1272: Facilities (T206) is the Course flyout's sixth tile, no button); the range opens its card; a group opens its last tool, else its first open one */}
             {/* T193: a group opens its flyout (a click again, Esc or a click on the map closes it); Select and Bulldoze pick their tool */}
             <Rail {...rail} navRef={railRef} entries={drawerEntries(entries, 'side')} walk={game.you ? { on: game.youWalkMode, set: (on: boolean) => { setFly(null); activeRail.current = 'select'; if (game.range.cardOpen) game.openRangeCard(false); game.setYouWalk(on); } } : undefined} />
             {!up && flyouts}
@@ -912,7 +924,7 @@ export default function App() {
             <div className={`flex items-center gap-2 glass rounded-full! px-4 py-1.5 text-xs ${gv ? 'pointer-events-auto' : ''}`}>
               <Icon name="info" size={18} />
               {gv && hint
-                ? <>{game.guideDone && performance.now() - game.guideDone.at < 6000 && <span className="font-semibold text-emerald-300" data-testid="guide-done">✓ {game.guideDone.text} · next:</span>}<span data-testid="hint-text"><b>{hint.title}</b> · {hint.body}</span>{hint.show && <button className="chip chip-on" data-testid={hint.id.startsWith('hint-practice') ? 'hint-show-practice' : 'hint-show'} onClick={() => { game.showHint(hint.id); bump(); }}>Show me</button>}<button className="chip" onClick={() => { game.dismissHint(hint.id); bump(); }}>Got it</button></>
+                ? <>{game.guideDone && performance.now() - game.guideDone.at < 6000 && <span className="font-semibold text-emerald-300" data-testid="guide-done">✓ {game.guideDone.text} · next:</span>}<span data-testid="hint-text"><b>{hint.title}</b> · {hint.body}</span>{hint.show && <button className="chip chip-on" data-testid={hint.id.startsWith('hint-practice') ? 'hint-show-practice' : 'hint-show'} onClick={() => { showHint(game, hint); bump(); }}>Show me</button>}<button className="chip" onClick={() => { game.dismissHint(hint.id); bump(); }}>Got it</button></>
                 : <span>{keyed(hintFor(game))}</span>}
             </div>
             )}
@@ -1043,21 +1055,21 @@ export default function App() {
             <RoundBar left={left} right={right} v={rv} onJump={() => game.yourJump()} onCart={() => game.youCartToggle()} onCallCart={() => game.youCartCall()} onMull={() => game.yourMulligan()} onGimme={() => game.yourGimme()} onView={() => game.open3pRound()} onCard={() => game.toggleYourCard()} onQuit={() => game.yourRoundEnd()} onSkip={() => game.matchSkip()}
               below={toasts.length ? <div className="flex flex-col items-center gap-1" data-testid="toasts">{toastEls(game)}</div> : undefined} />
             {rv.card && <ScoreCard v={rv} onNext={() => game.yourNextHole()} onDone={() => game.yourRoundEnd()} onClose={() => game.toggleYourCard(false)} />}</>; })()}
-          {(game.youInCart ? game.youCart : game.you)?.skip && <div className="pointer-events-none absolute inset-x-0 bottom-24 z-20 flex justify-center"><button className="btn-gold pointer-events-auto px-4 py-1.5 text-sm" onClick={() => game.youSkip()} data-tip="A long walk: arrive now" data-testid="you-skip"><Icon name="play" size={16} />Skip the walk</button></div>}
-          {(() => { const w = !JAM && !game.seasonReport ? game.welcomeView() : null; /* (J7: not in the jam: its start tutorial welcomes, and the card's button pointed at a step order) */ return w && <WelcomeCard road={w.road} newHole={w.newHole} guide={!!game.rangeGuideView()} onGo={() => game.closeWelcome(true)} onClose={() => game.closeWelcome(false)} />; })()}
+          {(game.youInCart ? game.youCart : game.you)?.skip && <div className="pointer-events-none absolute inset-x-0 bottom-24 z-20 flex justify-center"><button className="btn-gold pointer-events-auto px-4 py-1.5 text-sm" onClick={() => game.youSkip()} data-tip="A long walk: arrive now" data-testid="you-skip"><ActionTile tile="walk" size={TILE_SMALL} />Skip the walk</button></div>}
+          {(() => { const w = !JAM && !game.seasonReport ? game.welcomeView() : null; /* (J7: not in the jam: its start tutorial welcomes, and the card's button pointed at a step order) */ return w && <WelcomeCard road={w.road} newHole={w.newHole} guide={!!game.rangeGuideView()} onGo={() => { const id = game.rangeGuideView()?.lines.find(l => l.current)?.step.id; if (id) { game.closeWelcome(false); showGuide(game, id); /* J10 (#1269): "Show me the first step" is the guide's Show me */ } else game.closeWelcome(true); }} onClose={() => game.closeWelcome(false)} />; })()}
           {(() => { // T293 (#878): the start tutorial, where the guided build's card stands (that card waits for it): the town grows only along your roads
             const tv = !game.seasonReport && !game.sceneRef && !game.playerCardOpen && !game.bagCardOpen && !game.cardsCardOpen && !game.cardsFolded() ? game.tourView() : null; // (T348: and away while a shot is open: the cards fold)
-            return tv && <RangeGuideCard view={tv} voiced heading={JAM ? 'Tutorial · your club' : 'Tutorial · your town'} tid="tour" foot="Do each step, or skip it" offLabel="Skip tutorial" right={stack!.guide()} onShow={id => { game.tourShowMe(id); bump(); }} onNext={() => { game.tourNextStep(); bump(); }} onSkip={id => { game.tourSkipStep(id); bump(); }} onFold={f => { game.tourFolded = f; bump(); }} />;
+            return tv && <RangeGuideCard view={tv} voiced heading={JAM ? 'Tutorial · your club' : 'Tutorial · your town'} tid="tour" foot="Do each step, or skip it" offLabel="Skip tutorial" right={stack!.guide()} onShow={id => { showTour(game, id); bump(); }} onNext={() => { game.tourNextStep(); bump(); }} onSkip={id => { game.tourSkipStep(id); bump(); }} onFold={f => { game.tourFolded = f; bump(); }} />;
           })()}
           {(() => { // T239: the range start's guided build, bottom right (left of a right-hand card when one is open; T242: away while a picture card is up; T241: and while your profile card stands there)
             const gv = !game.seasonReport && !game.sceneRef && !game.playerCardOpen && !game.bagCardOpen && !game.cardsCardOpen && !game.cardsFolded() ? game.rangeGuideView() : null; // (T348: and while a shot is open)
-            return gv && <RangeGuideCard view={gv} voiced right={stack!.guide()} onShow={id => { game.guideShowMe(id); bump(); }} onSkip={id => { game.skipGuideStep(id); bump(); }} onFold={f => { game.guideFolded = f; bump(); }} onScene={game.sceneArt('range') ? () => game.openScene({ kind: 'range', view: 'road' }) : undefined} />;
+            return gv && <RangeGuideCard view={gv} voiced right={stack!.guide()} onShow={id => { showGuide(game, id); bump(); }} onSkip={id => { game.skipGuideStep(id); bump(); }} onFold={f => { game.guideFolded = f; bump(); }} onScene={game.sceneArt('range') ? () => game.openScene({ kind: 'range', view: 'road' }) : undefined} />;
           })()}
           {/* J7 (#1225): the jam's optional tips (Build ▸ Tips), where the guided build's card stood */}
-          {JAM && tips && !game.seasonReport && <TipsCard right={stack!.guide()} onClose={() => setTips(false)} onShow={s => { runTipShow(game, s, actUi); bump(); }} />}
+          {JAM && tips && !game.seasonReport && <TipsCard right={stack!.guide()} onClose={() => setTips(false)} onShow={s => { showTip(game, s, () => runTipShow(game, s, actUi)); bump(); }} />}
           {(() => { // the tournament prep checklist (golf/prep.ts), bottom right like the guide: on a free day only (the round is not running), after the tutorial and the guide
             const pv = !game.seasonReport && !game.sceneRef && !game.playerCardOpen && !game.cardsFolded() && game.traffic.round.stage === 'free' ? game.prepCardView() : null, busy = game.range.cardOpen || !!game.clubCard() || !!game.placeCard() || game.holeCardHole !== null;
-            return pv && <RangeGuideCard view={pv} heading={pv.heading} tid="prep" foot="Each step pays once when it is done" offLabel="Hide this checklist" right={busy ? (game.panel ? 'right-[41rem]' : 'right-[23rem]') : game.eventTool ? (game.panel ? 'right-[40.25rem]' : 'right-[21.5rem]') : game.panel ? 'right-[19.5rem]' : 'right-3'} onShow={id => { game.prepShowMe(id); bump(); }} onSkip={id => { game.prepSkip(id); bump(); }} onFold={f => { game.prepFolded = f; bump(); }} />;
+            return pv && <RangeGuideCard view={pv} heading={pv.heading} tid="prep" foot="Each step pays once when it is done" offLabel="Hide this checklist" right={busy ? (game.panel ? 'right-[41rem]' : 'right-[23rem]') : game.eventTool ? (game.panel ? 'right-[40.25rem]' : 'right-[21.5rem]') : game.panel ? 'right-[19.5rem]' : 'right-3'} onShow={id => { showPrep(game, id, pv.lines.find(l => l.step.id === id)?.step); bump(); }} onSkip={id => { game.prepSkip(id); bump(); }} onFold={f => { game.prepFolded = f; bump(); }} />;
           })()}
           {/* (T459, the jam MVP: no Club card: its staff, members, dues and prices are "Future development"; the clubhouse takes its green fees by itself) */}
           {!JAM && (() => { const cc = game.clubCard(); return cc && <ClubhouseCard view={cc} right={game.panel ? 'right-[19.5rem]' : 'right-3'} onClose={() => game.openClubCard(false)} onStaff={(r, d) => game.crewHire(r, d)} onPrice={p => game.setClubPrice(p)} onScene={game.sceneArt('club') ? () => game.openScene({ kind: 'club' }) : undefined} staffLine={game.staffLine()} onStaffCard={() => game.openStaffCard()} />; })()}
@@ -1065,7 +1077,7 @@ export default function App() {
             const sv = game.staffCard(); if (!sv) return null;
             return <StaffCard view={sv} right={stack!.right('staff')} onClose={() => game.openStaffCard(false)} onHire={(r, at) => game.hireClubStaff(r, at)} onLetGo={k => game.letGoClubStaff(k)} />;
           })()}
-          {(() => { const rc = game.rangeCard(); return rc && <><RangeCard {...(JAM ? { ballFix: rc.biz.owned.includes('attendant') ? 'Walk out and pick' : `Hire a range attendant`, onBallFix: () => { game.fixRangeBalls(); bump(); }, ...(rc.biz.owned.includes('attendant') ? { attendantWage: rc.upgrades.find(u => u.id === 'attendant')!.upkeep, onLetGo: () => game.letAttendantGo() } : {}) } : {})} forSale={rc.biz.forSale ? { cost: RANGE_PLACE_COST, why: game.money < RANGE_PLACE_COST ? `Not enough cash: $${Math.round(RANGE_PLACE_COST - Math.max(0, game.money)).toLocaleString('en-US')} short (the Bank lends)` : null } : undefined} onBuyRange={() => game.buyRange()} junk={game.rangeJunk().map(j => ({ i: j.i, name: j.name, m: j.m, scrap: JUNK_BY_ID.get(j.id)?.scrap ?? 0 }))} junkCost={JUNK_CLEAR_COST} onClearJunk={rc.biz.forSale ? undefined : i => game.clearJunk(i)} view={rc} places={JAM ? game.rangePlaces().filter(q => q.id !== 'practice') : game.rangePlaces()} onPlace={id => game.placeRangePart(id)} right={game.panel ? 'right-[19.5rem]' : 'right-3'} onClose={() => game.openRangeCard(false)} onPrice={p => game.setRangePrice(p)} onBuy={id => game.buyRangeUpgrade(id)} onShowPractice={() => game.showPracticeArea()} onBuildPractice={id => { game.openRangeCard(false); activeRail.current = 'facilities'; game.armPractice(id, true); }} practiceWhy={game.toolLock('practice')} onScene={game.sceneArt('range') ? () => game.openScene({ kind: 'range' }) : undefined} you={game.youRange(rc)} onPractise={k => game.youPractise(k)} onHit={pl => { game.openRangeCard(false); game.openPractice3p(pl); }} hitWhy={{ range: game.practice3pWhy('range'), short: game.practice3pWhy('short') }} drillsDone={game.playerNow()?.drills?.done.length ?? 0} onQuickPractice={id => game.quickPractice(id)} onProfile={() => game.openPlayerCard()} profileOpen={game.playerCardOpen} onTree={() => game.toggleBallTree()} treeOpen={rc.treeOpen} onOrderBalls={() => game.orderRangeBalls(1)} onShift={h => game.range.setShift(h)} />{rc.treeOpen && <BallTree view={rc} onBuy={id => game.buyRangeUpgrade(id)} onClose={() => game.toggleBallTree()} rightRem={game.panel ? 19.5 : 0.75} />}</>; })()}
+          {(() => { const rc = game.rangeCard(); return rc && <><RangeCard {...(JAM ? { ballFix: rc.biz.owned.includes('attendant') ? 'Walk out and pick' : `Hire a range attendant`, onBallFix: () => { game.fixRangeBalls(); bump(); }, ...(rc.biz.owned.includes('attendant') ? { attendantWage: rc.upgrades.find(u => u.id === 'attendant')!.upkeep, onLetGo: () => game.letAttendantGo() } : {}) } : {})} forSale={rc.biz.forSale ? { cost: RANGE_PLACE_COST, why: game.money < RANGE_PLACE_COST ? `Not enough cash: $${Math.round(RANGE_PLACE_COST - Math.max(0, game.money)).toLocaleString('en-US')} short (the Bank lends)` : null } : undefined} onBuyRange={() => game.buyRange()} junk={game.rangeJunk().map(j => ({ i: j.i, name: j.name, m: j.m, scrap: JUNK_BY_ID.get(j.id)?.scrap ?? 0 }))} junkCost={JUNK_CLEAR_COST} onClearJunk={rc.biz.forSale ? undefined : i => game.clearJunk(i)} view={rc} places={JAM ? game.rangePlaces().filter(q => q.id !== 'practice') : game.rangePlaces()} onPlace={id => game.placeRangePart(id)} right={game.panel ? 'right-[19.5rem]' : 'right-3'} onClose={() => game.openRangeCard(false)} onPrice={p => game.setRangePrice(p)} onBuy={id => game.buyRangeUpgrade(id)} onShowPractice={() => game.showPracticeArea()} onBuildPractice={id => { game.openRangeCard(false); activeRail.current = 'course'; game.armPractice(id, true); }} practiceWhy={game.toolLock('practice')} onScene={game.sceneArt('range') ? () => game.openScene({ kind: 'range' }) : undefined} you={game.youRange(rc)} onPractise={k => game.youPractise(k)} onHit={pl => { game.openRangeCard(false); game.openPractice3p(pl); }} hitWhy={{ range: game.practice3pWhy('range'), short: game.practice3pWhy('short') }} drillsDone={game.playerNow()?.drills?.done.length ?? 0} onQuickPractice={id => game.quickPractice(id)} onProfile={() => game.openPlayerCard()} profileOpen={game.playerCardOpen} onTree={() => game.toggleBallTree()} treeOpen={rc.treeOpen} onOrderBalls={() => game.orderRangeBalls(1)} onShift={h => game.range.setShift(h)} />{rc.treeOpen && <BallTree view={rc} onBuy={id => game.buyRangeUpgrade(id)} onClose={() => game.toggleBallTree()} rightRem={game.panel ? 19.5 : 0.75} />}</>; })()}
           {(() => { // T241: your golf, left of the card on the right (the range's, the club's, a place's) when one is open
             const pv = game.playerCard(); if (!pv) return null;
             return <PlayerCard view={pv} right={stack!.right('player')} onClose={() => game.openPlayerCard(false)} onBook={() => game.bookYourRound()} onCancel={() => game.cancelYourRound()} onBag={() => game.openBagCard(true)} />;
@@ -1116,10 +1128,11 @@ export default function App() {
           {game.bankrupt && !watch && (
             <div className="absolute inset-0 z-40 flex items-center justify-center bg-black/70 p-4">
               <div className="w-96 rounded-2xl border border-red-500/40 bg-slate-950 p-6 text-center text-slate-200 shadow-2xl">
-                <div className="text-2xl font-bold text-red-300">Bankrupt</div>
+                <div className="flex justify-center"><ActionTile tile="closed-gate" size={72} /></div>
+                <div className="mt-2 text-2xl font-bold text-red-300">Bankrupt</div>
                 <p className="mt-3 text-sm text-slate-300">{game.golf ? 'The overdraft passed $50,000, or stayed open for 3 month ends in a row.' : `The books stayed in the red for ${DEBT_DAYS} days in a row.`}</p>
                 <div className="mt-5 flex justify-center gap-2">
-                  <button className="chip chip-on" onClick={() => game.newTown()}>New game</button>
+                  <button className="chip chip-on" onClick={() => game.newTown()}><ActionTile tile="new-game" size={TILE_SMALL} />New game</button>
                   <button className="chip" onClick={() => setWatch(true)}>Keep watching</button>
                 </div>
               </div>
@@ -2248,7 +2261,7 @@ function Help({ onClose, tab, onTab, keys, lab, onTour, cards }: { onClose: () =
       <div className={`help-card rounded-2xl border border-white/10 bg-slate-950 p-6 text-sm text-slate-200 shadow-2xl ${tab === 'keys' ? 'help-card-wide' : tab === 'cards' ? 'max-w-3xl' : 'max-w-xl'}`} onClick={e => e.stopPropagation()} role="dialog" aria-label="Help" data-testid="help">
         <div className="flex flex-wrap items-center gap-2">
           {lab ? <div className="text-lg font-bold text-amber-200">Keys</div> : <div className="seg" role="tablist">
-            <button role="tab" aria-selected={tab === 'keys'} className={`px-4 ${tab === 'keys' ? 'on' : ''}`} onClick={() => onTab('keys')} data-testid="help-keys">Keys</button>
+            <button role="tab" aria-selected={tab === 'keys'} className={`px-4 ${tab === 'keys' ? 'on' : ''}`} onClick={() => onTab('keys')} data-testid="help-keys"><ActionTile tile="help-keys" size={TILE_SMALL} />Keys</button>
             <button role="tab" aria-selected={tab === 'how'} className={`px-4 whitespace-nowrap ${tab === 'how' ? 'on' : ''}`} onClick={() => onTab('how')}>How it works</button>
             {cards && <button role="tab" aria-selected={tab === 'cards'} className={`px-4 whitespace-nowrap ${tab === 'cards' ? 'on' : ''}`} onClick={() => onTab('cards')} data-testid="help-cards-tab">Cards</button>}
           </div>}

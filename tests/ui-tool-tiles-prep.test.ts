@@ -3,16 +3,37 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
-import { TOOL_TILES_V1, TOOL_TILES_V2 } from '../src/ui/tool-tiles';
+import { ACTION_TILES, PROP_TILES, TOOL_TILES, TOOL_TILES_V1, TOOL_TILES_V2, TOOL_TILES_V3, TOOL_TILES_V4, TOOL_TILES_V5, TOOL_TILES_V6, TOOL_TILES_V7, TOOL_TILES_V8, TOOL_TILES_V9, TOOL_TILES_V10, TOOL_TILES_V11, TOOL_TILES_V12, TOOL_TILES_V13 } from '../src/ui/tool-tiles';
 
 test('each sheet keeps its subject identity; unknown or contradictory versions fail before writing', async () => {
   const prep = await import(pathToFileURL(path.resolve('scripts/assets/prep-ui-tool-tiles.mjs')).href);
   assert.deepEqual(prep.SHEET_NAMES.v1.flat(), [...TOOL_TILES_V1]);
   assert.deepEqual(prep.SHEET_NAMES.v2.flat(), [...TOOL_TILES_V2]);
   assert.equal(new Set([...TOOL_TILES_V1, ...TOOL_TILES_V2]).size, 24);
+  // J8 (#1261): the action tiles of sheets v3 to v6, 48 more, none named like an older tile
+  assert.deepEqual(prep.SHEET_NAMES.v3.flat(), [...TOOL_TILES_V3]);
+  assert.deepEqual(prep.SHEET_NAMES.v4.flat(), [...TOOL_TILES_V4]);
+  assert.deepEqual(prep.SHEET_NAMES.v5.flat(), [...TOOL_TILES_V5]);
+  assert.deepEqual(prep.SHEET_NAMES.v6.flat(), [...TOOL_TILES_V6]);
+  assert.deepEqual(prep.SHEET_NAMES.v7.flat(), [...TOOL_TILES_V7]);
+  assert.deepEqual(prep.SHEET_NAMES.v8.flat(), [...TOOL_TILES_V8]);
+  assert.deepEqual(prep.SHEET_NAMES.v9.flat(), [...TOOL_TILES_V9]);
+  // J13 (#1277): the ball room's tiles (v10 to v12, one per upgrade) and the props menu's (v13)
+  assert.deepEqual(prep.SHEET_NAMES.v10.flat(), [...TOOL_TILES_V10]);
+  assert.deepEqual(prep.SHEET_NAMES.v11.flat(), [...TOOL_TILES_V11]);
+  assert.deepEqual(prep.SHEET_NAMES.v12.flat(), [...TOOL_TILES_V12]);
+  assert.deepEqual(prep.SHEET_NAMES.v13.flat(), [...TOOL_TILES_V13]);
+  assert.equal(ACTION_TILES.length, 120);
+  assert.equal(PROP_TILES.length, 12);
+  assert.equal(new Set([...TOOL_TILES, ...ACTION_TILES, ...PROP_TILES]).size, 156, 'one hundred and fifty-six different names');
+  for (const v of ['v1', 'v2', 'v3', 'v4', 'v5', 'v6', 'v7', 'v8', 'v9', 'v10', 'v11', 'v12', 'v13']) assert.equal(prep.sheetVersion(`golf-build-tool-tiles-sheet-${v}.png`), v);
+  assert.throws(() => prep.sheetVersion('golf-build-tool-tiles-sheet-v14.png'), /specify --version/);
+  assert.throws(() => prep.sheetVersion('golf-build-tool-tiles-sheet-v10.png', 'v1'), /not v1/);
   assert.throws(() => prep.sheetVersion('unknown.png'), /specify --version/);
   assert.throws(() => prep.sheetVersion('golf-build-tool-tiles-sheet-v2.png', 'v1'), /not v1/);
+  assert.throws(() => prep.sheetVersion('golf-build-tool-tiles-sheet-v5.png', 'v3'), /not v3/);
   assert.equal(prep.sheetVersion('an-explicit-copy.png', 'v2'), 'v2');
+  assert.equal(prep.sheetVersion('an-explicit-copy.png', 'v6'), 'v6');
 });
 
 test('preparing the second grid writes new subjects and preserves an existing tee icon', async () => {

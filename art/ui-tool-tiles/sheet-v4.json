@@ -1,0 +1,267 @@
+{
+  "schema": 1,
+  "version": "v4",
+  "source": {
+    "file": "art/theme-consistency/generated/ui/golf-build-tool-tiles-sheet-v4.png",
+    "sha256": "6787833ad83e83be69b320a9a868c52ad019c9a1fe9a2e2f563cf812c54f0f8e",
+    "dimensions": [
+      1448,
+      1086
+    ]
+  },
+  "grid": {
+    "columns": 4,
+    "rows": 3,
+    "detectedRows": [
+      [
+        42,
+        347
+      ],
+      [
+        378,
+        698
+      ],
+      [
+        724,
+        1043
+      ]
+    ],
+    "detectedColumns": [
+      [
+        44,
+        363
+      ],
+      [
+        390,
+        708
+      ],
+      [
+        739,
+        1057
+      ],
+      [
+        1086,
+        1405
+      ]
+    ]
+  },
+  "processing": "Source unchanged; detected card crops, normal UI resize to144px, rounded-corner alpha mask, WebP encoding.",
+  "tiles": [
+    {
+      "name": "open-bays",
+      "row": 0,
+      "column": 0,
+      "sourceRect": {
+        "left": 52,
+        "top": 43,
+        "width": 303,
+        "height": 303
+      },
+      "file": "src/assets/ui/tiles/open-bays.webp",
+      "dimensions": [
+        144,
+        144
+      ],
+      "sha256": "58e1b16a2eec682e72afc23af7db6de153fdf76d798193f13bb31d48085f6887",
+      "bytes": 5500
+    },
+    {
+      "name": "ball-dispenser",
+      "row": 0,
+      "column": 1,
+      "sourceRect": {
+        "left": 398,
+        "top": 43,
+        "width": 303,
+        "height": 303
+      },
+      "file": "src/assets/ui/tiles/ball-dispenser.webp",
+      "dimensions": [
+        144,
+        144
+      ],
+      "sha256": "6dfab5fc8e0636723d4351ee91404423574e2639eb27e2344b04596ef0f6a919",
+      "bytes": 4632
+    },
+    {
+      "name": "gravel-car-park",
+      "row": 0,
+      "column": 2,
+      "sourceRect": {
+        "left": 747,
+        "top": 43,
+        "width": 303,
+        "height": 303
+      },
+      "file": "src/assets/ui/tiles/gravel-car-park.webp",
+      "dimensions": [
+        144,
+        144
+      ],
+      "sha256": "8a570343b9e972a49b8e4133f84232d4036832074451e47b042c1159e4897cdf",
+      "bytes": 5940
+    },
+    {
+      "name": "paved-car-park",
+      "row": 0,
+      "column": 3,
+      "sourceRect": {
+        "left": 1094,
+        "top": 43,
+        "width": 303,
+        "height": 303
+      },
+      "file": "src/assets/ui/tiles/paved-car-park.webp",
+      "dimensions": [
+        144,
+        144
+      ],
+      "sha256": "986f6ea88dff9f149bd005d1fb5693e5dbdc6bed1e57a1fbab644e2f6316f7e8",
+      "bytes": 4914
+    },
+    {
+      "name": "putting-green",
+      "row": 1,
+      "column": 0,
+      "sourceRect": {
+        "left": 45,
+        "top": 380,
+        "width": 317,
+        "height": 317
+      },
+      "file": "src/assets/ui/tiles/putting-green.webp",
+      "dimensions": [
+        144,
+        144
+      ],
+      "sha256": "faf2f04462e0a0a09a655c69b2fb01e1e5681192a3fdf37ff8fe27a2e5f4a7ae",
+      "bytes": 5014
+    },
+    {
+      "name": "play-hole",
+      "row": 1,
+      "column": 1,
+      "sourceRect": {
+        "left": 391,
+        "top": 380,
+        "width": 316,
+        "height": 316
+      },
+      "file": "src/assets/ui/tiles/play-hole.webp",
+      "dimensions": [
+        144,
+        144
+      ],
+      "sha256": "a3fa87e167b7abfe3c4b38e9e8c64605451e901306cc11c1b81a7e65c7f3cf1e",
+      "bytes": 7124
+    },
+    {
+      "name": "edit-hole",
+      "row": 1,
+      "column": 2,
+      "sourceRect": {
+        "left": 740,
+        "top": 380,
+        "width": 316,
+        "height": 316
+      },
+      "file": "src/assets/ui/tiles/edit-hole.webp",
+      "dimensions": [
+        144,
+        144
+      ],
+      "sha256": "932055e3ee1dd8bab4a0c635f035a026c2863342406aa61a8c497cf9ec843acd",
+      "bytes": 5276
+    },
+    {
+      "name": "frame-trees",
+      "row": 1,
+      "column": 3,
+      "sourceRect": {
+        "left": 1087,
+        "top": 380,
+        "width": 317,
+        "height": 317
+      },
+      "file": "src/assets/ui/tiles/frame-trees.webp",
+      "dimensions": [
+        144,
+        144
+      ],
+      "sha256": "c30895cd119cae388fa2cf8008ad69e0747f060de8899de03b4baf3489ee2193",
+      "bytes": 7382
+    },
+    {
+      "name": "draw-drive",
+      "row": 2,
+      "column": 0,
+      "sourceRect": {
+        "left": 45,
+        "top": 725,
+        "width": 317,
+        "height": 317
+      },
+      "file": "src/assets/ui/tiles/draw-drive.webp",
+      "dimensions": [
+        144,
+        144
+      ],
+      "sha256": "7bf928041f464c49bc6507773528f3875ac8ffca5dd929e53d388fbb26655f77",
+      "bytes": 7298
+    },
+    {
+      "name": "seed",
+      "row": 2,
+      "column": 1,
+      "sourceRect": {
+        "left": 391,
+        "top": 726,
+        "width": 316,
+        "height": 316
+      },
+      "file": "src/assets/ui/tiles/seed.webp",
+      "dimensions": [
+        144,
+        144
+      ],
+      "sha256": "4495c58b2deb9181a655a6e26c68082705c528624087148410449c730363e160",
+      "bytes": 5796
+    },
+    {
+      "name": "sod",
+      "row": 2,
+      "column": 2,
+      "sourceRect": {
+        "left": 740,
+        "top": 726,
+        "width": 316,
+        "height": 316
+      },
+      "file": "src/assets/ui/tiles/sod.webp",
+      "dimensions": [
+        144,
+        144
+      ],
+      "sha256": "1535d477688c1aff464bfcab8013c99d3b0907b99e627662fa4f09eadadcb740",
+      "bytes": 6122
+    },
+    {
+      "name": "bulldoze",
+      "row": 2,
+      "column": 3,
+      "sourceRect": {
+        "left": 1087,
+        "top": 725,
+        "width": 317,
+        "height": 317
+      },
+      "file": "src/assets/ui/tiles/bulldoze.webp",
+      "dimensions": [
+        144,
+        144
+      ],
+      "sha256": "95ad67f0abb8b0f4705328f13a198f1bfb6f4b819ce55deb32a3c8f52137907d",
+      "bytes": 6944
+    }
+  ]
+}

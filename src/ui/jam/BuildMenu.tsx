@@ -5,15 +5,15 @@
 import { useEffect } from 'react';
 import { paybackWords } from '../../game/golf/payback';
 import { Icon } from '../Icon';
+import { ActionTile, TILE_SMALL } from '../ActionTile'; // J8 (#1261): a painted tile shows whole on the card; the Tips button wears one
 import { sceneUrl } from '../SceneCard';
-import { tileUrl } from '../tool-tiles';
 import { Thumb } from '../Thumb';
 import { LIBRARY } from '../../game/library';
 import { money } from '../golf/money';
 import { BUILD_GROUPS, type BuildCard, type BuildGroupId, type BuildPic } from './build-menu';
 
 const LIB_BY_ID = new Map(LIBRARY.map(it => [it.id, it]));
-const picUrl = (p: BuildPic): string | undefined => ('scene' in p ? sceneUrl(p.scene) : 'tile' in p ? tileUrl(p.tile) : undefined);
+const sceneOf = (p: BuildPic): string | undefined => ('scene' in p ? sceneUrl(p.scene) : undefined);
 
 export function BuildMenu({ cards, tab, onTab, onPick, onClose, onTips }: {
   cards: BuildCard[]; tab: BuildGroupId;
@@ -26,14 +26,14 @@ export function BuildMenu({ cards, tab, onTab, onPick, onClose, onTips }: {
   const shown = cards.filter(c => c.group === tab);
   return (
     <section className="pointer-events-auto flex max-h-[calc(var(--vh-ui,100vh)-var(--hud-top,6rem)-4.5rem)] w-[min(760px,calc(100vw-9rem))] flex-col overflow-hidden rounded-xl border border-white/10 bg-slate-950/95 text-slate-200 shadow-2xl backdrop-blur"
-      data-testid="build-menu" aria-label="Build">
+      data-testid="build-menu" data-guide="build-menu" aria-label="Build">
       <div className="win-head win-head-slate flex items-center justify-between gap-2 px-3 pt-3">
         <div>
           <div className="font-semibold text-amber-200">Build</div>
           <div className="text-[12px] text-slate-400">Anything, in any order: you decide. Takings and payback are estimates.</div>
         </div>
         <div className="flex shrink-0 items-center gap-1">
-          <button className="chip" onClick={onTips} title="Tips: how the range, the course and the money work" data-testid="build-tips"><Icon name="info" size={16} />Tips</button>
+          <button className="chip" onClick={onTips} title="Tips: how the range, the course and the money work" data-testid="build-tips"><ActionTile tile="tips" size={TILE_SMALL} />Tips</button>
           <button className="btn-icon" onClick={onClose} title="Close (Esc)" aria-label="Close the Build menu" data-testid="build-close"><Icon name="close" size={18} /></button>
         </div>
       </div>
@@ -57,15 +57,17 @@ export function BuildMenu({ cards, tab, onTab, onPick, onClose, onTips }: {
 
 function Card({ c, onPick }: { c: BuildCard; onPick: (c: BuildCard) => void }) {
   const lib = 'lib' in c.pic ? LIB_BY_ID.get(c.pic.lib) : undefined;
-  const url = picUrl(c.pic), off = !!c.why || (!c.act && !c.done), p = c.payback;
+  const url = sceneOf(c.pic), tile = 'tile' in c.pic ? c.pic.tile : undefined, off = !!c.why || (!c.act && !c.done), p = c.payback;
   const tone = !p ? '' : p.verdict === 'pays' || p.verdict === 'free' ? 'text-emerald-300' : p.verdict === 'slow' ? 'text-amber-300' : 'text-slate-300';
   return (
     <button className={`group flex flex-col overflow-hidden rounded-lg border text-left transition ${c.done ? 'border-emerald-500/30 bg-emerald-500/5' : 'border-white/10 bg-white/5'} ${off ? 'cursor-default' : 'hover:border-amber-300/60 hover:bg-white/10'}`}
       onClick={() => { if (!c.why && c.act) onPick(c); }} aria-disabled={off || undefined} title={c.why ?? (c.done && c.act ? `${c.name}: open it` : c.act ? `${c.name}: place it on your land` : c.name)}
       data-testid={`build-card-${c.id}`} data-state={c.done ? 'done' : c.why ? 'locked' : 'open'}>
-      <div className="relative h-[92px] w-full bg-slate-900">
+      <div className={`relative h-[92px] w-full ${tile ? 'bg-[#1e2a44]' : 'bg-slate-900'}`}>
         {lib && <div className={`grid h-full w-full place-items-center ${c.why ? 'opacity-40 grayscale' : ''}`}><Thumb it={lib} size={84} /></div>}
         {url && <img src={url} alt="" draggable={false} className={`h-full w-full object-cover ${c.why ? 'opacity-40 grayscale' : ''}`} style={'scene' in c.pic && c.pic.pos ? { objectPosition: c.pic.pos } : undefined} />}
+        {/* a tile is shown whole (the picture box is 92 px tall: a square tile cropped to a strip lost its subject), on the tile's own navy */}
+        {tile && <div className="grid h-full w-full place-items-center"><ActionTile tile={tile} size={88} className={c.why ? 'opacity-40 grayscale' : ''} /></div>}
         {c.done && <span className="absolute right-1.5 top-1.5 rounded bg-emerald-600/90 px-1.5 py-0.5 text-[11px] font-semibold text-white">✓ {c.done}</span>}
       </div>
       <div className="flex flex-1 flex-col gap-0.5 p-2 text-[12px]">

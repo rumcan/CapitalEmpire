@@ -9,10 +9,10 @@ import { existsSync, readFileSync, statSync } from 'node:fs';
 import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server.edge';
 import { advanceProgress, computeProgressiveUiState, emptyProgress, progressFacts, type CourseProgress, type GolfProgress } from '../src/game/ext/progressive-ui';
-import { RAIL, entryKey, toolLock, toolsIn } from '../src/ui/rail-items';
+import { RAIL, entryKey, jamRail, toolLock, toolsIn } from '../src/ui/rail-items';
 import { columnsOf, indicesOf, leavesOf, menuOf, navKey, type MenuCtx, type MenuRow, type NavState } from '../src/ui/flyout-menu';
 import { Flyouts, columnWidths, isTileGrid, menuDepth, upLeft } from '../src/ui/Flyouts';
-import { TOOL_TILES, type ToolTile } from '../src/ui/tool-tiles';
+import { PROP_TILES, TOOL_TILES, type ToolTile } from '../src/ui/tool-tiles';
 import { GREENKEEPING } from '../src/game/features';
 
 const course = (holes: number): CourseProgress => ({ holes, seasons: 0, invited: false });
@@ -42,6 +42,8 @@ const ctx = (golf: boolean, ui: MenuCtx['ui'], o: Partial<MenuCtx> = {}): MenuCt
 const labels = (rows: readonly MenuRow[]) => rows.map(r => r.label);
 const find = (rows: readonly MenuRow[], ...path: string[]): MenuRow => { let col: readonly MenuRow[] = rows, r: MenuRow | undefined; for (const l of path) { r = col.find(x => x.label === l); assert.ok(r, `${path.join(' ▸ ')}: ${l}`); col = r!.children ?? []; } return r!; };
 const ALL = ctx(true, null);
+/** #1272: the rows of the Facilities tile, the sixth of the Course flyout (they were the rows of the Facilities rail button's flyout) */
+const facilities = (c: MenuCtx): MenuRow[] => menuOf(RAIL.find(r => r.id === 'course')!, c).find(r => r.key === 'facilities')!.children!;
 
 describe('the flyouts: sub-menus to the side, as many levels as the tools have (T193)', () => {
   it('Traffic ▸ Roads ▸ Build ▸ the road classes · Upgrade · Downgrade; Junctions ▸ the junctions; Transport ▸ Bus route · Car park · Toll gate', () => {
@@ -58,7 +60,8 @@ describe('the flyouts: sub-menus to the side, as many levels as the tools have (
   it('Course ▸ Holes ▸ New hole · Your holes · Shape by hand ▸ the surfaces; Buildings ▸ Clubhouse · Halfway house; Greenkeeping ▸ the cares (while GREENKEEPING is on); Tournament', () => {
     const c = menuOf(RAIL.find(r => r.id === 'course')!, ALL);
     // T288 (#873, the owner: "make cart paths and roads its own button above facilities in the main left menu"): no longer in Course
-    assert.deepEqual(labels(c), GREENKEEPING ? ['Holes', 'Buildings', 'Greenkeeping', 'Tournament', 'Land for sale'] : ['Holes', 'Buildings', 'Tournament', 'Land for sale'], 'no Greenkeeping group while it is hidden (features.ts)');
+    // #1272 (the owner, 2026-11-14: "move facilities button in main menu to this menu bottom right empty space"): Facilities, the last tile
+    assert.deepEqual(labels(c), GREENKEEPING ? ['Holes', 'Buildings', 'Greenkeeping', 'Tournament', 'Land for sale', 'Facilities'] : ['Holes', 'Buildings', 'Tournament', 'Land for sale', 'Facilities'], 'no Greenkeeping group while it is hidden (features.ts)');
     assert.deepEqual(find(c, 'Land for sale').leaf?.act, { k: 'land' }, 'T200: the land for sale');
     assert.deepEqual(labels(find(c, 'Holes').children!), ['New hole', 'Your holes', 'Shape by hand']);
   });
@@ -83,21 +86,22 @@ describe('the flyouts: sub-menus to the side, as many levels as the tools have (
     if (GREENKEEPING) assert.deepEqual(labels(find(k, 'Greenkeeping').children!), ['Grass care', 'Mow', 'Water']);
     assert.deepEqual(find(k, 'Tournament').leaf?.act, { k: 'event' });
   });
-  it('Facilities ▸ Practice ▸ the facilities · Plants ▸ Trees, Bushes, Flowers · Decoration ▸ Props ▸ by group (T206); Town decoration ▸ Paint ▸ Areas ▸ the materials, Plants ▸ ... · Props ▸ · Buildings', () => {
-    const d = menuOf(RAIL.find(r => r.id === 'facilities')!, ALL), td = menuOf(RAIL.find(r => r.id === 'towndecor')!, ALL);
+  it('Course ▸ Facilities ▸ Practice ▸ the facilities · Plants ▸ Trees, Bushes, Flowers · Decoration ▸ Props ▸ by group (T206, #1272); Town decoration ▸ Paint ▸ Areas ▸ the materials, Plants ▸ ... · Props ▸ · Buildings', () => {
+    const d = facilities(ALL), td = menuOf(RAIL.find(r => r.id === 'towndecor')!, ALL);
     assert.deepEqual(labels(d), ['Practice', 'Plants', 'Decoration', 'Build on your property']); // T256: the property's paint, gold
     assert.deepEqual(find(d, 'Build on your property').leaf?.act, { k: 'build' }); assert.equal(find(d, 'Build on your property').gold, true);
     assert.deepEqual(labels(find(d, 'Practice').children!), ['Putting green', 'Chipping green and bunker', 'Teaching hut']); // (T214: the teaching hut)
     assert.deepEqual(find(d, 'Practice', 'Putting green').leaf?.act, { k: 'practice', id: 'putting' });
     assert.equal(find(d, 'Practice', 'Putting green').leaf?.entry.id, 'practice', 'its own building tool, not the hole brushes');
     assert.deepEqual(labels(find(d, 'Plants').children!), ['Trees', 'Bushes', 'Flowers'], 'the plant brush, reachable from the course side');
-    assert.deepEqual(find(d, 'Plants', 'Trees').leaf, { item: 'facilities', entry: RAIL.find(r => r.id === 'facilities')!.tools[1], act: { k: 'plant', id: 'trees' } });
+    // (#1272: its leaves pick through Course, the item the rail lights while one is in hand)
+    assert.deepEqual(find(d, 'Plants', 'Trees').leaf, { item: 'course', entry: RAIL.find(r => r.id === 'course')!.tools.find(t => t.id === 'paint')!, act: { k: 'plant', id: 'trees' } });
     assert.deepEqual(labels(find(d, 'Decoration').children!), ['Props']);
     assert.deepEqual(labels(find(d, 'Decoration', 'Props').children!), ['All props', 'Plants', 'Water']);
     assert.deepEqual(find(d, 'Decoration', 'Props', 'Plants').leaf?.entry.view, { where: 'course' });
     assert.ok(!leavesOf(d).some(l => l.row.leaf!.entry.id === 'path'), 'Decoration keeps no Paths');
     // not a range start: Practice locked in place with why
-    const nr = menuOf(RAIL.find(r => r.id === 'facilities')!, ctx(true, null, { practice: [{ id: 'putting', name: 'Putting green', why: 'Comes with a driving range' }, { id: 'chipping', name: 'Chipping green and bunker', why: 'Comes with a driving range' }] }));
+    const nr = facilities(ctx(true, null, { practice: [{ id: 'putting', name: 'Putting green', why: 'Comes with a driving range' }, { id: 'chipping', name: 'Chipping green and bunker', why: 'Comes with a driving range' }] }));
     assert.equal(find(nr, 'Practice').why, 'Comes with a driving range');
     assert.deepEqual(labels(td), ['Paint', 'Props', 'Buildings']);
     assert.deepEqual(labels(find(td, 'Paint').children!), ['Areas', 'Plants', 'Pick an area', 'Erase areas']);
@@ -236,9 +240,9 @@ describe('the town footer\'s flyouts open upward, their deeper levels to the sid
 describe('the tool tiles (T233)', () => {
   const tiles = (rows: readonly MenuRow[]) => rows.filter(r => !r.caption).map(r => `${r.label}${r.tile ? `=${r.tile}` : ''}`);
   const C = ctx(true, null, { surfaces: [{ id: 'fairway', name: 'Fairway' }, { id: 'green', name: 'Green' }, { id: 'tee', name: 'Tee' }, { id: 'rough', name: 'Rough' }, { id: 'bunker', name: 'Bunker' }, { id: 'water', name: 'Water' }, { id: 'waste', name: 'Waste area' }, { id: 'longGrass', name: 'Long grass' }], propGroups: [{ id: 'plants', name: 'Plants' }, { id: 'water', name: 'Water' }, { id: 'stone', name: 'Stone' }, { id: 'furniture', name: 'Furniture' }] });
-  const courseRows = menuOf(RAIL.find(r => r.id === 'course')!, C), fac = menuOf(RAIL.find(r => r.id === 'facilities')!, C), pathRows = menuOf(RAIL.find(r => r.id === 'paths')!, C);
+  const courseRows = menuOf(RAIL.find(r => r.id === 'course')!, C), fac = facilities(C), pathRows = menuOf(RAIL.find(r => r.id === 'paths')!, C);
   it('Course: Holes, Buildings; New hole and Shape by hand; the surfaces (the Waste area keeps its mark); the Clubhouse; T288: Cart paths & roads on its own button, its cart paths with the cart path tile', () => {
-    assert.deepEqual(tiles(courseRows), ['Holes=golf-hole', 'Buildings=clubhouse', 'Tournament=grandstand-scoreboard', 'Land for sale=land-plot']);
+    assert.deepEqual(tiles(courseRows), ['Holes=golf-hole', 'Buildings=clubhouse', 'Tournament=grandstand-scoreboard', 'Land for sale=land-plot', 'Facilities=chipping-green'], '#1272: Facilities, the sixth tile, with the chipping green picture');
     assert.deepEqual(tiles(pathRows), ['Cart paths & drives=cart-path', 'Roads']);
     assert.deepEqual(tiles(find(courseRows, 'Holes').children!), ['New hole=golf-hole', 'Your holes', 'Shape by hand=fairway']);
     assert.deepEqual(tiles(find(courseRows, 'Holes', 'Shape by hand').children!), ['Fairway=fairway', 'Green=green', 'Tee=tee', 'Rough=rough', 'Bunker=bunker', 'Water=pond', 'Waste area=waste-sand', 'Long grass=long-grass']); // T272: separate painted waste/long-grass art; gameplay brush IDs stay intact
@@ -252,14 +256,14 @@ describe('the tool tiles (T233)', () => {
     assert.deepEqual(tiles(find(fac, 'Practice').children!), ['Putting green=green', 'Chipping green and bunker=chipping-green', 'Teaching hut=snack-hut']);
     assert.deepEqual(tiles(find(fac, 'Plants').children!), ['Trees=trees', 'Bushes=autumn-shrubs', 'Flowers=flower-bed']);
     assert.equal(find(fac, 'Plants', 'Bushes').swatch, '#3b5', 'the plant swatch stays available with the new tile');
-    assert.deepEqual(tiles(find(fac, 'Decoration').children!), ['Props']);
-    assert.deepEqual(tiles(find(fac, 'Decoration', 'Props').children!), ['All props', 'Plants=flower-bed', 'Water=pond', 'Stone=rocks', 'Furniture=patio-table']);
+    assert.deepEqual(tiles(find(fac, 'Decoration').children!), ['Props=all-props'], 'J13: the Props row wears the crate of mixed things');
+    assert.deepEqual(tiles(find(fac, 'Decoration', 'Props').children!), ['All props=all-props', 'Plants=flower-bed', 'Water=pond', 'Stone=rocks', 'Furniture=patio-table']);
   });
   it("the town's menus and the range card stay lists; the tiles change no leaf, lock or path", () => {
     const all = (rs: readonly MenuRow[]): MenuRow[] => rs.flatMap(r => [r, ...all(r.children ?? [])]);
     for (const id of ['select', 'range', 'traffic', 'towndecor', 'bulldoze']) assert.ok(!all(menuOf(RAIL.find(r => r.id === id)!, C)).some(r => r.tile), `${id}: no tiles`);
     const ui = uiOf(played(0), 0);
-    for (const id of ['course', 'facilities']) {
+    for (const id of ['course']) { // (#1272: Facilities' rows are Course's)
       const rows = menuOf(RAIL.find(r => r.id === id)!, ctx(true, ui));
       for (const l of leavesOf(rows)) {
         const why = toolLock(ui, l.row.leaf!.entry.id); if (why) assert.equal(l.row.why, why, `${id} ${l.row.label}: its lock`);
@@ -269,8 +273,9 @@ describe('the tool tiles (T233)', () => {
   });
   it('all twenty-four named tiles are used, each a small WebP in src/assets/ui/tiles', () => {
     const used = new Set<ToolTile>(), walk = (rs: readonly MenuRow[]) => { for (const r of rs) { if (r.tile) used.add(r.tile); walk(r.children ?? []); } };
-    walk(courseRows); walk(pathRows); walk(fac); walk(menuOf(RAIL.find(r => r.id === 'facilities')!, { ...C, plants: [...C.plants, { id: 'palms', name: 'Palms' }] }));
-    assert.deepEqual([...TOOL_TILES].sort(), [...used].sort(), 'every tile on a tool, and no tile that is not one');
+    walk(courseRows); walk(pathRows); walk(fac); walk(facilities({ ...C, plants: [...C.plants, { id: 'palms', name: 'Palms' }] }));
+    // (J13, #1277: the Props rows also wear the props sheet's tiles, PROP_TILES: tests/ui-action-tiles.test.ts holds those)
+    assert.deepEqual([...TOOL_TILES].sort(), [...used].filter(t => !PROP_TILES.includes(t)).sort(), 'every tile on a tool, and no tile that is not one');
     for (const t of TOOL_TILES) { const f = `src/assets/ui/tiles/${t}.webp`; assert.ok(existsSync(f), f); assert.ok(statSync(f).size < 12_000, `${f}: small`); }
   });
   it('drawn: a level with a tile is a grid of tiles (the picture above the name, the more and lock marks on it); a level without stays a list', () => {
@@ -281,7 +286,7 @@ describe('the tool tiles (T233)', () => {
     assert.match(html, /flyout-pic flyout-pic-icon"><svg[^>]*>[\s\S]*?<\/svg><\/span><span class="flyout-label">Waste area</, 'the Waste area: its mark on the navy square');
     assert.match(html, /flyout-pic flyout-pic-icon"><img[^>]*><\/span><span class="flyout-label">Tournament</, 'an untiled row in a grid: its icon on the square');
     // locked: dimmed, its lock on the picture and its reason under the name (and whole in the tooltip)
-    const locked = menuOf(RAIL.find(r => r.id === 'facilities')!, ctx(true, null, { practice: [{ id: 'putting', name: 'Putting green', why: 'Comes with a driving range' }] }));
+    const locked = facilities(ctx(true, null, { practice: [{ id: 'putting', name: 'Putting green', why: 'Comes with a driving range' }] }));
     assert.match(draw(locked, []), /data-tip="Practice: Comes with a driving range"[^>]*aria-disabled="true" class="flyout-row flyout-tile[^"]*flyout-row-locked"[\s\S]*?flyout-pic-lock[\s\S]*?flyout-why">Comes with a driving range</);
     // the path classes: a list beside the Cart paths & roads grid (T288: its own rail button)
     const paths = draw(pathRows, indicesOf(pathRows, ['paths']));
@@ -298,5 +303,66 @@ describe('the tool tiles (T233)', () => {
     assert.deepEqual(columnWidths([grid, grid, grid, grid], 300), [184, 184, 184, 184], 'never under the narrowest (a grid of two)');
     assert.match(readFileSync('src/index.css', 'utf8'), /\.flyout-grid \{ display: grid; grid-template-columns: repeat\(auto-fill, minmax\(78px, 1fr\)\);/);
     assert.ok(2 * 78 + 6 + 12 + 2 <= 184, 'two tiles fit the narrowest column');
+  });
+});
+
+// #1272 (the owner, 2026-11-14, of the Course flyout's grid with its sixth place empty: "move facilities button in main menu to this menu bottom right empty space"):
+// Facilities left the rail and is the Course flyout's sixth tile; a click opens its own tools (Practice, Plants, Decoration's Props ...) as the next level, to the
+// side like the real courses' list; its locks, NEW mark and key (Z, the Props tool's) are what they were
+describe('Facilities, the Course flyout\'s sixth tile (#1272)', () => {
+  const courseItem = RAIL.find(r => r.id === 'course')!, C = ctx(true, null, { real: [{ id: 'a', name: 'Rondebosch', place: 'Cape Town', holes: 18, par: 70 }] });
+  const rows = menuOf(courseItem, C);
+  const draw = (r: MenuRow[], startPath: number[]) => renderToStaticMarkup(createElement(Flyouts, { rows: r, top: 100, left: 110, startPath, onLeaf: () => {}, onLocked: () => {}, onClose: () => {} }));
+  it('the last tile of the Course grid (bottom right of the three across, after the five of a game with the real courses), a picture tile with its tools as the next level', () => {
+    assert.deepEqual(labels(rows), GREENKEEPING ? ['Holes', 'Buildings', 'Place a real course…', 'Greenkeeping', 'Tournament', 'Land for sale', 'Facilities'] : ['Holes', 'Buildings', 'Place a real course…', 'Tournament', 'Land for sale', 'Facilities']);
+    const f = find(rows, 'Facilities');
+    assert.equal(f.key, 'facilities'); assert.equal(rows[rows.length - 1], f, 'the last one'); assert.equal(f.tile, 'chipping-green', 'its picture'); assert.equal(f.leaf, undefined, 'a click opens its tools, it picks none');
+    assert.deepEqual(labels(f.children!), ['Practice', 'Plants', 'Decoration', 'Build on your property'], 'Practice, Plants, Props (Decoration), as they were on the rail');
+    assert.equal(f.guide, 'rail-facilities', "the guide's anchor");
+    assert.match(f.note ?? '', /Z/, 'its tooltip names the key');
+    if (!GREENKEEPING) assert.equal(rows.length, 6, 'a three by two grid');
+  });
+  it('opens to the side: the next level a column of its own beside the Course grid, then Practice a third; every column a grid of tiles (never one long column, never a scrollbar sideways)', () => {
+    const one = draw(rows, indicesOf(rows, ['facilities'])), two = draw(rows, indicesOf(rows, ['facilities', 'practice']));
+    assert.equal((one.match(/role="menu"/g) ?? []).length, 2, 'Course and Facilities'); assert.equal((two.match(/role="menu"/g) ?? []).length, 3, 'and Practice');
+    assert.equal((one.match(/class="flyout glass flyout-grid"/g) ?? []).length, 2, 'two grids side by side');
+    assert.match(one, /data-guide="rail-facilities"[^>]*data-row="0:\d+"|data-row="0:\d+"[^>]*data-guide="rail-facilities"/, 'the tile carries the anchor');
+    assert.match(one, /data-tile="chipping-green"[^>]*aria-haspopup="menu" aria-expanded="true"[^>]*>[\s\S]*?flyout-pic-more[\s\S]*?<span class="flyout-label">Facilities<\/span>/, 'open, with its more mark and its name under the picture');
+    assert.match(two, /data-tile="range-bays"/, "Practice's tile in the second column");
+    // the keyboard: Right on the tile goes in
+    const at = rows.findIndex(r => r.key === 'facilities'), o = navKey(rows, { path: [], focus: { level: 0, index: at } }, 'ArrowRight');
+    assert.deepEqual(o.state, { path: [at], focus: { level: 1, index: 0 } }); assert.equal(columnsOf(rows, o.state.path).length, 2);
+    // the deepest walk: Course ▸ Facilities ▸ Decoration ▸ Props ▸ the groups, four columns (the Course menu's was three: ... Holes ▸ Shape by hand)
+    assert.equal(menuDepth(rows), 4, "Course, Facilities, Decoration's Props, its groups");
+  });
+  it('its leaves pick their tools through Course (the item the rail lights while one is in hand); every one reachable by its keys', () => {
+    const fk = leavesOf(find(rows, 'Facilities').children!);
+    assert.ok(fk.length >= 8, `${fk.length} leaves`);
+    for (const l of fk) {
+      assert.equal(l.row.leaf!.item, 'course', l.row.label);
+      assert.ok(courseItem.tools.some(t => entryKey(t) === entryKey(l.row.leaf!.entry)) || l.row.leaf!.entry.id === 'course', `${l.row.label}: a tool of Course`);
+    }
+    for (const l of leavesOf(rows)) { const ix = indicesOf(rows, l.path); assert.equal(ix.length, l.path.length, `${l.row.label}: its path opens`); }
+    assert.deepEqual(find(rows, 'Facilities', 'Practice', 'Putting green').leaf?.act, { k: 'practice', id: 'putting' });
+    assert.deepEqual(find(rows, 'Facilities', 'Decoration', 'Props', 'All props').leaf?.entry.view, { where: 'course' }, 'the props view');
+    // leaf keys are unique in the whole menu (App.tsx finds a picked leaf's path by its key)
+    const keys = leavesOf(rows).map(l => l.row.key); assert.equal(new Set(keys).size, keys.length, 'no two leaves share a key');
+  });
+  it('locked in place with its why when every one of its tools is locked, open while one is; NEW says so until a tool of it is opened', () => {
+    const ui = uiOf(played(0), 0), tools = ['practice', 'paint', 'props'] as const;
+    const lock = (ids: readonly (typeof tools[number])[]) => ({ ...ui, lockedTools: [...ui.lockedTools.filter(t => !tools.some(x => x === t.id)), ...ids.map(id => ({ id, stage: 2 as const, why: `${id} waits` }))] });
+    assert.equal(find(menuOf(courseItem, ctx(true, lock(tools))), 'Facilities').why, 'practice waits', 'all locked: the first one\'s reason, as the rail button said it');
+    assert.equal(find(menuOf(courseItem, ctx(true, lock(['practice', 'paint']))), 'Facilities').why, null, 'one open (Props): open');
+    assert.equal(find(menuOf(courseItem, ctx(true, ui)), 'Facilities').why, null, 'stage 1: open (Practice and Props are)');
+    // NEW: Plants (the Paint tool) opens with the first hole
+    const p = played(1), at2 = () => find(menuOf(courseItem, ctx(true, uiOf(p, 1))), 'Facilities');
+    assert.equal(at2().isNew, true, 'stage 2: its Plants are new'); advanceProgress(p, progressFacts(p, course(1)), 'paint'); assert.equal(at2().isNew, false, 'opened: never again');
+    assert.equal(find(menuOf(courseItem, ctx(true, lock(tools))), 'Facilities').isNew, false, 'a locked tile never says NEW');
+  });
+  it('golf games only (the classic game has none); the jam build has none (it opens Practice from its Build menu)', () => {
+    assert.ok(!menuOf(courseItem, ctx(false, null)).some(r => r.key === 'facilities'), 'no tile in the classic game');
+    const jam = jamRail(RAIL).find(r => r.id === 'course')!;
+    assert.deepEqual(jam.tools.map(t => t.id), courseItem.tools.filter(t => !t.within).map(t => t.id), 'the jam keeps Holes and Buildings'); assert.ok(!menuOf(jam, ctx(true, null)).some(r => r.key === 'facilities'), 'no tile in the jam build');
+    assert.ok(jamRail(RAIL).every(r => r.id !== 'facilities' && !r.tools.some(t => t.id === 'practice')), 'no rail item holds Practice in the jam (the Build menu arms it)');
   });
 });
