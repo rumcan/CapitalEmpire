@@ -1656,7 +1656,7 @@ function RoadPanel({ game, scope, compact = false }: { game: Game; scope: 'town'
   const [openFam, setOpenFam] = useState<Family | 'none' | null>(null);
   const isOpen = (f: Family) => openFam === null ? f === curFam : openFam === f;
   return (
-    <Panel title={course ? 'Paths' : 'Road Construction'} icon={course ? 'sidewalk' : 'road'} desc={course ? 'The streets of your course town: cart paths and drives, laid the way roads are built. Click to start, click again for each bend or stop; double-click or Enter to build, right-click to take back a point. Points snap to junctions, paths, roads and the 1 m half grid of the course.' : 'Draw a connected route: click to start, click again for each bend or stop; double-click or Enter to build, right-click to take back a point. Points snap to junctions, roads and the grid; crossings become junctions.'}>
+    <Panel title={course ? 'Paths' : 'Road Construction'} icon={course ? 'sidewalk' : 'road'} desc={course ? 'The streets of your course town: cart paths and drives, laid the way roads are built. Press, drag and let go to lay a run (it bends at 45°), or click to start and click again for each bend or stop; double-click or Enter to build, right-click to take back a point. Points snap to junctions, paths, roads and the 1 m half grid of the course.' : 'Press, drag and let go to build a road (it bends at 45°), or click to start a connected route and click again for each bend or stop; double-click or Enter to build, right-click to take back a point. Points snap to junctions, roads and the grid; crossings become junctions.'}>
       <div className="mt-2 flex flex-col gap-2">
         {/* T193 (compact: the toolbar's flyouts pick the class): the picked class alone, under its family's name */}
         {(compact ? families.filter(f => f.id === curFam) : families).map(f => { const ex = compact || isOpen(f.id); return (
@@ -1717,7 +1717,7 @@ function RoadPanel({ game, scope, compact = false }: { game: Game; scope: 'town'
         <div className="mt-2 text-xs font-bold uppercase tracking-[0.2em] text-amber-300">Fine tuning</div>
         <div className="mt-2 flex items-center gap-1 text-xs">
           <span className="mr-1 text-[12px] uppercase tracking-wider text-slate-400">Bends</span>
-          {([90, 45] as const).map(b => <button key={b} className={`chip ${game.bendMode === b ? 'chip-on' : ''}`} onClick={() => { game.bendMode = b; game.emit(); }} title="Q toggles">{b}°</button>)}
+          {([45, 90] as const).map(b => <button key={b} className={`chip ${game.bendMode === b ? 'chip-on' : ''}`} onClick={() => { game.bendMode = b; game.emit(); }} title={b === 45 ? 'Bends at 45° (the default: every game starts with it); Q toggles' : 'Right-angle bends, for this visit; Q toggles'} data-testid={`bend-${b}`}>{b}°</button>)}
           <span className="ml-auto text-[12px] text-slate-400">Shift: straight line</span>
         </div>
         <div className="mt-2 flex items-center gap-1 text-xs">
@@ -1749,7 +1749,7 @@ function RoadPanel({ game, scope, compact = false }: { game: Game; scope: 'town'
         <button className="chip" disabled={!game.route.length} onClick={() => game.routeInput('backspace')} title="Take back the last point (Backspace or right-click)">Undo</button>
         <button className="chip" disabled={!game.route.length} onClick={() => game.cancelRoute()} title="Esc">Cancel</button>
       </div>
-      <p className="mt-2 text-[12px] text-slate-400">Double-click the last point or press Enter to build; right-click or Backspace takes back the last point. To widen or narrow a road, use Upgrade (N) or Downgrade (Y). Trees and small items in the way are cleared; buildings block the route.</p>
+      <p className="mt-2 text-[12px] text-slate-400" data-testid="road-howto">Drag from where it starts to where it ends and let go to build it; Esc or a right click while you drag cancels. Or click point by point: double-click the last point or press Enter to build; right-click or Backspace takes back the last point. Bends are 45° (Q: 90°); hold Shift for one straight run. To widen or narrow a road, use Upgrade (N) or Downgrade (Y). Trees and small items in the way are cleared; buildings block the route.</p>
     </Panel>
   );
 }
@@ -2219,7 +2219,8 @@ function SelectPanel({ game }: { game: Game }) {
 
 function hintFor(g: Game) {
   switch (g.tool) {
-    case 'road': return (g.route.length ? `Route: ${g.route.length} point(s) — click to extend, double-click or Enter to build, right-click or Backspace to take back a point, Esc to cancel, Shift for a straight 45° run` : `BUILDING NEW ROADS — Draw a connected route: click where the ${g.cls.name.toLowerCase()} should start${VARIANTS[g.cls.base]!.length > 1 ? ' · Tab flips the variant' : ''}`) + ' · E: replace';
+    // #1276: a press that began the route and is still down is a drag (let go to build); else the click, click, double-click route as ever
+    case 'road': return (g.routeDragging ? `Let go to build the ${g.cls.name.toLowerCase()} · Esc or a right click cancels · Shift for one straight run` : g.route.length ? `Route: ${g.route.length} point(s) — click to extend, double-click or Enter to build, right-click or Backspace to take back a point, Esc to cancel, Shift for one straight run, Q for 90° bends` : `BUILDING NEW ROADS — Press, drag and let go to build a ${g.cls.name.toLowerCase()} (it bends at 45°), or click to start a route and click again for each bend${VARIANTS[g.cls.base]!.length > 1 ? ' · Tab flips the variant' : ''}`) + ' · E: replace';
     case 'junction': {
       const s = g.selectedNode(), h = g.hoverNode, what = g.brush === 'signal' ? 'traffic lights' : g.brush === 'roundabout' ? `a ${g.ringLanes}-lane roundabout` : g.brush === 'stop' ? 'an all-way stop' : g.brush === 'mini' ? 'a mini-roundabout' : 'plain';
       if (g.brush === 'select') return s ? 'Click a corner’s + or × to add or remove its slipway (lights) · Esc deselects, then returns to Select' : h ? 'Click to select this junction · Tab flips its type' : 'Hover a junction to outline it · click to select it · Tab flips the type';
@@ -2267,7 +2268,7 @@ function Help({ onClose, tab, onTab, keys, lab, onTour, cards }: { onClose: () =
           <li><b>Roads</b> are drawn as connected routes, exactly like the town builder: click points, finish with Enter or a double-click. Everything on the ground — asphalt, kerbs, sidewalk slabs, rounded corners, crossings, centre lines, manholes and drains — is generated geometry, so a new road appears instantly, no ground rebuild.</li>
           <li>The surfaces are <b>lit relief</b>, like the builder's bake: the asphalt is a cracked mosaic of facets and the sidewalk is slabs, each with a height-field; a cold key light from the upper-left shades them and puts specular glints on the facets that face it, markings are painted into the relief, kerbs get a bright top edge and a gutter shadow, and fallen leaves pile up against every kerb.</li>
           <li>Five road types: <b>Lane</b> (single lane), <b>Street</b> (2 lanes, sidewalks, your choice of centre line), <b>Road</b> (wider, darker asphalt with paved shoulders inside yellow edge lines and a gravel verge), <b>Avenue</b> and <b>Boulevard</b> (2 / 4 lanes around a tree-lined median).</li>
-          <li>Bends can be 90° or 45° (Q toggles); hold Shift to draw one straight run in any of the eight directions. Crossing an existing road makes a junction; to widen a road, use the Add lane tool.</li>
+          <li>Press, drag and let go to build a road at once; or click point by point, and finish with Enter or a double-click. Bends are 45° (Q toggles 90° bends); hold Shift to draw one straight run in any of the eight directions. Crossing an existing road makes a junction; to widen a road, use the Add lane tool.</li>
           <li><b>Junctions</b>: the tool's brush is Select, Plain, All-way stop, Mini-roundabout, Lights or Roundabout (1–3 ring lanes); a click with a type brush makes that junction the type, and right-click resets one to plain. Select a junction to set its type and options in the panel: wide corners and turn lanes, slipways on each corner (the + and × on the map; they need long approaches), the signal tier with its upgrades and the fixed-time green split, or the roundabout's ring lanes. Tab flips the junction under the pointer through the types; Esc deselects, then returns to Select.</li>
           <li>The town pays property tax (more on better roads, less where traffic jams) and business takings for every customer who arrives on time; roads and signals cost upkeep. Click the treasury for the books and loans; five days in the red and you are bankrupt. Everything autosaves in this browser.</li>
           <li><b>Signals</b> (Junctions tool, a lit junction selected): new lights take the best tier open in the year (fixed-time; actuated loop detectors from 1990, adaptive from 2000, paid upgrades). Set each phase's green time in the panel or upgrade; the year shows beside the event's run.</li>

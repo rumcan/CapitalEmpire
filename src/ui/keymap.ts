@@ -49,8 +49,9 @@ const inHand = (): { title: string; tool: Tool; alt?: true; rows: [string, strin
   { title: 'Props in hand', tool: 'props', rows: [['R', 'turn it (a rock or a plant: mirrored, then its next picture)'], ['[ / ]', 'smaller / bigger, 80% to 120% (the picked prop too)'], ['Delete', 'sell the picked prop']] },
   { title: 'Roads and paths in hand', tool: 'road', rows: [
     [`1 – ${KEY_CLASSES.length}`, `the road class: ${KEY_CLASSES.map(c => (CLASS[c]?.name ?? c).toLowerCase()).join(', ')}`],
-    ['Tab / Shift+Tab', 'the next / previous kind of this class (one-way, trees, a median)'], ['Q', 'bends of 90° or 45°'], ['E', 'Replace: the roads in the way are bulldozed'],
-    ['Shift', 'a straight run'], ['Enter, double-click', 'build the route'], ['Backspace, right-click', 'take back the last point (the first: drop the route)']] },
+    ['Tab / Shift+Tab', 'the next / previous kind of this class (one-way, trees, a median)'], ['Q', 'bends of 45° (every game starts with them) or 90°'], ['E', 'Replace: the roads in the way are bulldozed'],
+    ['Press, drag, let go', 'build the run from the press to the pointer; Esc or a right click while you drag cancels it (a click starts a route to click on)'],
+    ['Shift', 'one straight run in any of the eight directions'], ['Enter, double-click', 'build the route'], ['Backspace, right-click', 'take back the last point (the first: drop the route)']] },
   { title: 'Junctions in hand', tool: 'junction', rows: [['Tab / Shift+Tab', 'the next / previous type of the junction under the pointer']] },
   { title: 'Car park in hand', tool: 'park', rows: [['Tab', 'the rows\' other side']] },
   { title: 'Toll gate in hand', tool: 'toll', rows: [['R', 'turn the gate round']] },
