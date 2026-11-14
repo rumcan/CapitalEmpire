@@ -226,7 +226,9 @@ import { lieGridJob, type LieGrid } from './golf/play/lies3p';
 import { fillPack } from './golf/osm/terrarium'; // T438: the share file's heights deflated after the course has gone
 import { MARGIN_T, exportFeatures3p, gatherFeatures3p, type PadIn, type PathSurface } from './golf/play/features3p';
 /** J6b: the range scene's ground patches laid as pads in the practice view, by their surface (the green ones are the course file's own) */
-const PAD_SURF: Partial<Record<string, PathSurface>> = { concrete: 'concrete', asphaltDark: 'concrete', gravel: 'gravel', dirt: 'dirt', teeDirt: 'dirt', yard: 'dirt' };
+const PAD_SURF: Partial<Record<string, PathSurface>> = { concrete: 'concrete', asphaltDark: 'concrete', gravel: 'gravel', dirt: 'dirt', teeDirt: 'dirt', yard: 'dirt', desert: 'earth' };   // (J6c: desert, the bare outfield, as earth)
+/** J6c: a range bay's hitting mat in the practice view: across the bay and down it (tiles; 1.8 m by 1.5 m), round where the golfer stands to hit */
+const MAT_T: readonly [number, number] = [0.9, 0.75];
 import { courseEntry3p } from './golf/play/entry3p';
 import { seedOf } from './golf/play/view3p';
 import type { Actor, ActorsMsg, CourseMsg, CourseTime3p, Dress, HostMsg, PracticeMsg, Time3p, ViewInput } from './golf/play/protocol3p';
@@ -10531,6 +10533,10 @@ export class Game {
       pads.push({ key: 'lot', pts, surface: lot.ground === 'gravel' ? 'gravel' : lot.ground === 'dirt' ? 'dirt' : 'concrete', name: 'Car park' });
     }
     if (sc.practice.pts.length) { grow(sc.practice.box[0], sc.practice.box[1]); grow(sc.practice.box[2], sc.practice.box[3]); }
+    // J6c (the owner: "add a green hitting bay under his feet"): each open bay's hitting mat, square to the way the golfers hit, laid last so it lies on the slab
+    const ax = sc.aim.x, ay = sc.aim.y, al = Math.hypot(ax, ay) || 1, ux = ax / al, uy = ay / al, [mw, md] = MAT_T;
+    sc.bays.filter(b => !b.lift).forEach((b, i) => { const c = b.stand, P = (s: number, t: number) => ({ x: c.x - uy * s + ux * t, y: c.y + ux * s + uy * t });
+      pads.push({ key: `zmat${String(i).padStart(2, '0')}`, pts: [P(-mw, -md), P(mw, -md), P(mw, md), P(-mw, md)], surface: 'turf', name: 'Hitting mat' }); });
     return { box: [x0 - 4, y0 - 4, x1 + 4, y1 + 4], pads };
   }
   /** why a practice place cannot open now (null: it can): the range not placed, a round under way, the short game area with no open chipping green */

@@ -79,6 +79,14 @@ test('J6b: junk piles (J7) are targets: a ball that lands on one or stops by it 
   const none = practiceCourse(inp), withJ = practiceCourse({ ...inp, junk: [{ id: 'expansion:junk-car', name: 'Old car', x: 35, y: m(140), m: 140 }] });
   assert.equal(none.junk.length, 0); assert.equal(new PracticeDriver(none, 'range', 0.5, 1, { drills: () => null, judged: () => {} }).canPlay('junk'), false, 'no junk: no junk drill');
   assert.equal(new PracticeDriver(withJ, 'range', 0.5, 1, { drills: () => null, judged: () => {} }).canPlay('junk'), true);
-  const L = practiceFlags(withJ, 'range', { x: 0, y: 0 });
-  assert.deepEqual(L.map(f => [f.label, !!f.only]), [['100 m', false], ['Old car · 140 m', true]]);
+  // J6c: no labels and no flags of the view's own: the range's distances are its own pictures
+  assert.deepEqual(practiceFlags(withJ, 'range', { x: 0, y: 0 }), []);
+});
+
+test('J6c: earth and turf pads travel as rings with their surfaces', () => {
+  const F = exportFeatures3p({ course: 'c', paths: [], buildings: [], trees: [], pads: [
+    { key: 'patch001', pts: [{ x: 1000, y: 1000 }, { x: 1070, y: 1000 }, { x: 1070, y: 1130 }, { x: 1000, y: 1130 }], surface: 'earth', name: 'desert' },
+    { key: 'zmat00', pts: [{ x: 1030, y: 999 }, { x: 1031.8, y: 999 }, { x: 1031.8, y: 1000.5 }, { x: 1030, y: 1000.5 }], surface: 'turf', name: 'Hitting mat' }] }, centre);
+  const pads = F.features.filter((f): f is PathFeature => f.kind === 'path' && !!f.ring);
+  assert.deepEqual(pads.map(p => [p.id, p.surface]), [['pad:patch001', 'earth'], ['pad:zmat00', 'turf']], 'the mat comes last, so it lies on the slab and the earth');
 });

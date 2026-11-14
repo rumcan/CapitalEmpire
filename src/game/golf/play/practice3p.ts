@@ -205,7 +205,9 @@ export class PracticeDriver implements RoundDriver {
 
 /** the range's flags as the view stands them: each target green's centre and its distance in words, in the view's frame */
 export function practiceFlags(c: PracticeCourse, place: PracticePlace, centre: Pt): { at: ViewPt; label: string; only?: true }[] {
-  if (place !== 'range') return [];
+  // J6c (the owner: "labels overlapping ... make sprites with distance markers only"): no labels and no flags of the view's own. The range's distances stand as its own
+  // pictures (J7d's distance posts and yardage boards, the scene's pieces: the practice export's things)
+  void c; void place; void centre; return [];
   // (J6b: and each junk pile's name and distance, a label only: the pile itself is the game's picture)
   return [...c.greens.map(g => ({ at: toView(g, centre), label: `${g.distM} m` })), ...c.junk.map(j => ({ at: toView(j, centre), label: `${j.name} · ${j.distM} m`, only: true as const }))];
 }

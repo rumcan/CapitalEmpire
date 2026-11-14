@@ -2,7 +2,7 @@
 When the owner practises (CapitalEmpire's `play/practice3p.ts`, `play/drills.ts`), the host sends `{ v: 1, t: 'practice', place, drills, active, note, paid, flags, hcp, balls }` before the first turn and after each ball and each pick; the view answers a drill picked with `{ v: 1, t: 'pick', drill }`. The balls are the host's, as in a round: each turn tees the next one up on the spot.
 R: While practising the golfer is held to his spot (a range mat, the chip stand, the putt, the practice bunker): W, S, Q and E do not walk him, there is no cart (G does nothing and none is drawn), J, B, N, K and L do nothing; A and D still turn him, and the mouse aims. Each ball is teed up where he stands, and he is set beside it.
 R: A panel on the left lists the drills: each its name, its goal, its progress (3/5) and its reward, the one being played marked, a done one ticked; a drill played at the other place is greyed with where it is played. A click on a drill played here picks it (the next ball comes from its spot). Under the list: the last ball's line, the balls hit and the handicap. A drill just done is said, with its reward.
-R: On the range each target green has its flag, with its distance over it (50 m, 100 m, ...). Each junk pile (an old car, tyres, oil drums: J7's) carries its name and distance over it (Old car · 140 m), with no flag; a ball that lands on or stops by one is said (Hit the old car!).
+R: J6c: on the range the view adds no flags and no labels of its own: the distances are the range's own pictures (its distance posts and yardage boards, sent with its things), and a built target green's flag is the range's own pin picture. (Before J6c: on the range each target green had its flag, with its distance over it.) Each junk pile (an old car, tyres, oil drums: J7's) carries its name and distance over it (Old car · 140 m), with no flag; a ball that lands on or stops by one is said (Hit the old car!).
 R: The card at the top says Practice and the place instead of the hole, par and strokes, and the words as it opens say where he practises, not the hole and its par.
 File: game.js
 Check: function pracIn(
@@ -64,6 +64,7 @@ function pracShow(m) {   // the panel, the flags, and a drill done said
   }
 }
 function pracFlags(dlist, dist) {   // the range's flags join the draw list (the pin's own is drawn already)
+  if (PRAC && PRAC.place === 'range') { for (let i = dlist.length - 1; i >= 0; i--) if (dlist[i].k === 20) dlist.splice(i, 1); }   // (J6c: no flag of the view's own on the range: its distances are its own pictures)
   if (!PRAC || !PRAC.F || PRAC.pics) return;   // (J6b: the range's own flags stand as the game's pictures: only their labels here)
   for (const f of PRAC.F) { if (f.only || Math.hypot(f.x - hole.pin.x, f.y - hole.pin.y) < 1) continue; dlist.push({ k: K_PFLAG, d: dist(f.x, f.y) + 0.02, x: f.x, y: f.y }); }
 }

@@ -6,6 +6,7 @@ R: Nothing grows on a path or inside a building: no standing grass, no bush, flo
 R: A building is a box with a roof (gable, hip or flat) with courses of tiles, a ridge, eaves and a chimney; windows by floor in frames with sills and glazing bars, a door, a plinth and a band between floors, drawn as flat faces lit by the one sun, in front of and behind things by its true depth; it throws its shadow where the sun reaches it.
 R: A concrete path is laid in slabs (a joint across it every 1.7 m, each slab its own shade); any path may carry a fallen leaf here and there; none has flecks or stains.
 R: A floodlight tower (a `light` feature: its place, its height, its reach; #1200) is drawn as a mast on a plinth with a lamp head of lamp panels. By day and golden hour the panels are plain glass; at dusk and at night they shine, with a soft bloom round each. At dusk and night every tower lights the ground, the trees, the buildings and the golfers within its reach: a pool of warm white light, brightest at the mast and fading smoothly to nothing at its reach, many towers adding up. What no tower reaches stays as dark as the night.
+R: Bare earth (a pad of `earth`: a range's outfield before it is grassed) is mottled, drier and darker in slow patches, with a fine grain and a pebble here and there; a hitting mat (`turf`) is green artificial grass in fine rows, no leaves on it. A later pad lies over an earlier one (the mat on the slab).
 R: A pad (a path feature with `ring`: J6b, the practice range's concrete slabs, dirt yards and car park) is laid whole: everything inside its ring takes its surface, its edge as a path's edge.
 R: A course without the file plays as before.
 File: game.js
@@ -18,7 +19,7 @@ Check: function padSd(
 ````js file=game.js
 
 // ---- paths and buildings added to a course (the edits file made by tools/cinderlinks-map.mjs)
-const SURF = { gravel: [198, 186, 160], concrete: [216, 210, 196], dirt: [152, 118, 86], sand: [228, 210, 164] };
+const SURF = { gravel: [198, 186, 160], concrete: [216, 210, 196], dirt: [152, 118, 86], sand: [228, 210, 164], earth: [188, 126, 74], turf: [70, 150, 62] };   // (J6c: earth, a bare range's outfield; turf, a hitting mat)
 const PLEAF = [[204, 128, 44], [168, 92, 40], [196, 170, 62], [122, 134, 58]];
 let feats = null, featTxt = '', featFor = '';
 function hexRgb(h, d) { const m = /^#?([0-9a-f]{6})$/i.exec(h || ''); if (!m) return d; const n = parseInt(m[1], 16); return [n >> 16, (n >> 8) & 255, n & 255]; }
@@ -30,7 +31,7 @@ function setFeatures(F) {   // F: the edits file's object (or nothing): made rea
   for (const f of F.features) {
     if (!f) continue;
     if (f.kind === 'path' && Array.isArray(f.pts) && f.pts.length > 1) {
-      const p = { hw: f.ring ? 0 : Math.max(1.5, (+f.width || 2.4) * S * 1.3) / 2, col: SURF[f.surface] || SURF.gravel, slab: f.surface === 'concrete', pts: [], ring: !!f.ring };   // (J6b: ring, a pad laid whole)
+      const p = { hw: f.ring ? 0 : Math.max(1.5, (+f.width || 2.4) * S * 1.3) / 2, col: SURF[f.surface] || SURF.gravel, slab: f.surface === 'concrete', soil: f.surface === 'earth', mat: f.surface === 'turf', pts: [], ring: !!f.ring };   // (J6b: ring, a pad laid whole; J6c: soil and mat, their own grain)
       for (const q of f.pts) { const x = +q[0] * S, y = +q[1] * S; if (!(x === x && y === y)) continue; p.pts.push(x, y); if (x < x0) x0 = x; if (x > x1) x1 = x; if (y < y0) y0 = y; if (y > y1) y1 = y; }
       if (p.pts.length >= 4) paths.push(p);
     } else if (f.kind === 'building' && Array.isArray(f.at)) {
@@ -81,7 +82,7 @@ function padSd(p, pi, x0, y0, gw, gh, res, sd, kind, seg, SG) {   // J6b: a pad'
       const ex = bx - ax, ey = by - ay, L2 = ex * ex + ey * ey || 1e-6; let t = ((x - ax) * ex + (y - ay) * ey) / L2; t = t < 0 ? 0 : t > 1 ? 1 : t;
       const d = Math.hypot(x - ax - ex * t, y - ay - ey * t); if (d < dm) dm = d;
     }
-    const d = inside ? -dm : dm, k = j * gw + i; if (d < sd[k]) { sd[k] = d; kind[k] = pi & 255; seg[k] = si; }
+    const d = inside ? -dm : dm, k = j * gw + i; if (inside ? true : d < sd[k] && sd[k] >= 0) { sd[k] = inside && sd[k] < 0 ? Math.max(d, sd[k]) : d; kind[k] = pi & 255; seg[k] = si; }   // (J6c: a later pad lies over an earlier one: the mat on the slab)
   }
 }
 function pollFeatures() {   // the edits file read again; a change in it shows within two seconds
@@ -121,8 +122,12 @@ function drawPaths() {   // the picture gone over in 8 x 8 blocks: only blocks n
         const o = F.seg[ck] * 7, G = F.SG; let tt = ((wx - G[o]) * G[o + 2] + (wy - G[o + 1]) * G[o + 3]) / G[o + 4]; tt = tt < 0 ? 0 : tt > 1 ? 1 : tt;
         const al = (G[o + 5] + tt * G[o + 6]) / 1.7, sl = Math.floor(al); t = al - sl < 0.05 ? 182 : 236 + (ih(sl, pk * 7 + 3) % 5) * 8;
       }
+      if (P0.soil) {                                           // J6c: bare earth: a slow mottle of drier and darker ground, fine grain, a pebble here and there
+        const m = vnoise(wx / 2.6, wy / 2.6, 913), g = ih(Math.floor(wx * 7), Math.floor(wy * 7)); t = 206 + ((m * 64) | 0) + (g % 7) * 3;
+        if (g % 41 === 0) { r0 = 120; g0 = 96; b0 = 78; } else if (g % 53 === 1) { r0 = 222; g0 = 196; b0 = 160; }
+      } else if (P0.mat) t = 228 + (Math.floor((wx + wy) * 9) & 1) * 14 + (ih(Math.floor(wx * 12), Math.floor(wy * 12)) % 5) * 3;   // J6c: a hitting mat's fine rows of artificial grass
       if (s > -0.12) t = (t * 216) >> 8;                       // its edge, a shade darker
-      { const lx = Math.floor(wx * 6), ly = Math.floor(wy * 6); if (ih(lx, ly) < 4) { const lf = PLEAF[ih(lx + 9, ly + 5) & 3]; r0 = lf[0]; g0 = lf[1]; b0 = lf[2]; t = 256; } }   // a fallen leaf here and there (no flecks or stains)
+      if (!P0.mat) { const lx = Math.floor(wx * 6), ly = Math.floor(wy * 6); if (ih(lx, ly) < 4) { const lf = PLEAF[ih(lx + 9, ly + 5) & 3]; r0 = lf[0]; g0 = lf[1]; b0 = lf[2]; t = 256; } }   // a fallen leaf here and there (no flecks or stains)
       let r = (r0 * t * lr) >> 16, g = (g0 * t * lg) >> 16, bl = (b0 * t * lb) >> 16;
       if (d > 50) { const hf = farHaze(d), H = TOD[tmode].haze; if (hf > 0) { r += (H[0] - r) * hf; g += (H[1] - g) * hf; bl += (H[2] - bl) * hf; } }
       fb[q] = ((fb[q] & 0xff000000) | ((bl > 255 ? 255 : bl) << 16) | ((g > 255 ? 255 : g) << 8) | (r > 255 ? 255 : r)) >>> 0;   // (the top byte kept: a tree's shadow still falls across the path)
