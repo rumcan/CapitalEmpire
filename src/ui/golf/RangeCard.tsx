@@ -85,7 +85,7 @@ export function RangeCard({ ballFix, onBallFix, attendantWage, onLetGo, forSale,
         <div className={`space-y-1.5 rounded-lg border p-2 text-xs ${balls.out ? 'border-rose-400/40 bg-rose-400/5' : 'border-emerald-400/25 bg-emerald-400/5'}`} data-testid="range-balls" data-guide="range-balls">
           <div className="flex items-center justify-between gap-2">
             <span className="text-[12px] uppercase text-slate-400">Ball room</span>
-            <span className="text-slate-300" title="What the range has taken, less what it has spent on its gear: the ball room's tools, staff and machines are bought with it">Till <span className="font-semibold text-emerald-300" data-testid="range-balls-till">{money(balls.till)}</span></span>
+            <span className="flex items-center gap-1.5 text-slate-300" title="What the range has taken, less what it has spent on its gear: the ball room's tools, staff and machines are bought with it"><ActionTile tile="range-till" size={TILE_SMALL} />Till <span className="font-semibold text-emerald-300" data-testid="range-balls-till">{money(balls.till)}</span></span>
           </div>
           <div className="grid grid-cols-3 gap-1.5 text-center">
             <Tile label="Clean" value={balls.clean.toLocaleString()} sub={`${balls.buckets} bucket${balls.buckets === 1 ? '' : 's'}${balls.dirty ? ` · ${balls.dirty.toLocaleString()} dirty` : ''}`} tone={balls.out ? 'text-rose-300' : 'text-white'} />
@@ -225,7 +225,7 @@ export function RangeCard({ ballFix, onBallFix, attendantWage, onLetGo, forSale,
         </div>
       )}
       <div className="flex items-center justify-between rounded-lg border border-white/10 bg-white/5 px-2 py-1.5 text-xs" data-testid="range-home" title="Your home beside the range grows with the range's lifetime takings">
-        <span className="text-slate-300">Your home: <span className="font-semibold text-white">{view.home.name}</span></span>
+        <span className="flex items-center gap-2 text-slate-300">{view.home.stage === 0 && <ActionTile tile="home-caravan" size={TILE_ROW} />}<span>Your home: <span className="font-semibold text-white">{view.home.name}</span></span></span>
         <span className="text-slate-400">{view.home.next ? `${view.home.next.name} at ${money(view.home.next.at)} taken (${money(view.home.total)} so far)` : `${money(view.home.total)} taken in all`}</span>
       </div></>}
       {/* J7: the junk on the outfield, each pile's distance from the mats; Clear takes it away (its scrap paid back), or leave it as a target */}
