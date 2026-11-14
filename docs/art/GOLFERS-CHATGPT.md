@@ -65,3 +65,8 @@ heading); background keyed out; 1985 clothes, no logos; art goes straight in, th
   loop in the same tab while one runs (they race and mix attachments): reload the tab first. Several tabs can run queues side by side.
 - **Into the game**: the golf view on `npm run cinder:build`; the map (the range customers, the pros, the staff, you) after
   `scripts/assets/prep-sprites.mjs` in a full checkout with TrickOrTreat.
+
+## Transparent backgrounds (2026-11-14)
+The owner: "chat gpt can make transparent pngs ... dont have to key out". Stand-in and building pictures now ask for a fully transparent background, and
+`prep-range-art.mjs` uses a picture's own alpha (`key-magenta.mjs` `alphaOrKey`). The golfer and staff sheets above still use a key colour (`golfer_pack.py`,
+`import_golfer.py` find the nine figures on it); they are all painted. A new run should ask for transparency too, with `import_golfer.py` taught to read the alpha first.

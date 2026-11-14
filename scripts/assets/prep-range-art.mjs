@@ -32,7 +32,7 @@ import crypto from 'node:crypto';
 import { execFileSync, execSync, spawn } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import sharp from 'sharp';
-import { keyMagenta } from './key-magenta.mjs';
+import { alphaOrKey } from './key-magenta.mjs';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
 const args = process.argv.slice(2), opt = (k, d) => { const i = args.indexOf(`--${k}`); return i >= 0 ? args[i + 1] : d; }, flag = k => args.includes(`--${k}`);
@@ -198,7 +198,8 @@ async function buildings() {
     for (const [k, file] of views.entries()) {
       const vn = viewName(it, k), id = `range:${it.slug}-${vn}`, buf = fs.readFileSync(file), h = sha(buf), at = entries.findIndex(e => e.id === id);
       if (!FORCE && at >= 0 && entries[at].src?.sha256 === h && fs.existsSync(path.join(KIT, `${it.slug}-${vn}.webp`))) { lines.push(`${head} ${vn}: unchanged (${id})`); continue; }
-      const p = await cutOne(await keyMagenta(buf)), spill = it.decontaminate ? decontaminate(p) : 0, g = geometry(it, k + 1, p), prov = provOf(file);
+      // (a transparent picture is used as painted: nothing to key and no key colour to clean off its rim)
+      const raw = await alphaOrKey(buf), p = await cutOne(raw.png), spill = it.decontaminate && raw.keyed ? decontaminate(p) : 0, g = geometry(it, k + 1, p), prov = provOf(file);
       const mk = Math.min(1, (MASTER_MAX * g.w) / p.w), mw = Math.max(1, Math.round(p.w * mk)), mh = Math.max(1, Math.round(p.h * mk));
       const webp = await sharp(p.rgba, { raw: { width: p.w, height: p.h, channels: 4 } }).resize(mw, mh, { kernel: 'lanczos3', fit: 'fill' }).webp({ lossless: true, effort: 6 }).toBuffer();
       masters.push({ file: path.join(KIT, `${it.slug}-${vn}.webp`), webp });
@@ -206,7 +207,7 @@ async function buildings() {
         src: { file: rel(file).startsWith('..') ? path.basename(file) : rel(file), rect: p.rect, sha256: h, id: prov.id, model: prov.runModel ?? prov.model } };
       if (at >= 0) entries[at] = e; else entries.push(e);
       made.push(id);
-      lines.push(`${head} ${vn}: keyed ${p.w}x${p.h} px from ${path.basename(file)} -> ${g.w.toFixed(0)}x${g.h.toFixed(0)} display px (${it.size === 'tall' ? `${it.high} m high` : `${it.box.join(' x ')} m`}), ground point ${g.ax.toFixed(0)},${g.ay.toFixed(0)}; master ${mw}x${mh}${it.decontaminate ? `; ${spill} rim pixels cleaned of the key colour's spill` : ''}`);
+      lines.push(`${head} ${vn}: ${raw.keyed ? 'keyed' : 'transparent'} ${p.w}x${p.h} px from ${path.basename(file)} -> ${g.w.toFixed(0)}x${g.h.toFixed(0)} display px (${it.size === 'tall' ? `${it.high} m high` : `${it.box.join(' x ')} m`}), ground point ${g.ax.toFixed(0)},${g.ay.toFixed(0)}; master ${mw}x${mh}${it.decontaminate ? `; ${spill} rim pixels cleaned of the key colour's spill` : ''}`);
     }
   }
   if (!made.length || DRY) return { made, lines };
