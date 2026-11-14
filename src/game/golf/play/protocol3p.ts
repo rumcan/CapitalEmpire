@@ -114,7 +114,11 @@ export interface ClubChoice { club: Club; carryM: number; scatterM: number; kit:
    *  conditions.ts previewShot sideM) */
   sideM?: number;
   /** T419: the putter's fitting in words (the shaft and head fitted beyond the stock ones, bag.ts putterFitName); absent: none, or another club */
-  fit?: string }
+  fit?: string;
+  /** #1301 (the owner: "difference between fade and draw is very low. indicate if that is my handicap limit or not"): what a full draw or fade bends this club's full shot
+   *  (shape.ts shapeEffect, the numbers the model uses): the sideways metres at the end of the carry for him (`m`) and for a scratch golfer with a plain kit (`scrM`), the share of
+   *  the shape each pulls off (`pulled`, `scrPulled`: 0.5 at skill 0, 1 at the top), and his skill for the club and the kit's accuracy (0..1) that lift it. Absent: a putter, or an older host */
+  bend?: { m: number; scrM: number; pulled: number; scrPulled: number; skill: number; accuracy: number } }
 /** T418: what the owner may do beyond a plain swing (T443 turns these into earned unlocks): pick a shape (draw or fade, high or low), put spin on the ball, add spin
  *  in the air (the `airspin` mechanic), the Space power boost (the `boost` mechanic). Today only the two mechanics are earned (mods.ts hasMech); shapes and spin are
  *  open to every golfer */
