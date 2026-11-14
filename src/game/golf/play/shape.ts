@@ -10,8 +10,12 @@
 import type { Club } from './types';
 import type { ClubKit } from './mods';
 
-/** the pick: the curve (-1 draw, 0 straight, 1 fade) and the flight (-1 low, 0 normal, 1 high) */
-export interface ShotShape { curve: -1 | 0 | 1; flight: -1 | 0 | 1 }
+/** the pick: the curve (-1 a full draw .. 0 straight .. 1 a full fade) and the flight (-1 low .. 0 normal .. 1 high). J5f (the owner, 2026-11-14: "add a slider so you
+ *  can increase and decrease the draw or fade. low or high flight too"): each is a continuous amount (the view's sliders); the old picks, -1, 0 and 1, are its ends and
+ *  its middle, and play exactly as before. Every effect is in proportion to the amount (shapeEffect) */
+export interface ShotShape { curve: number; flight: number }
+/** an amount below this is none (a slider a hair off the middle) */
+export const SHAPE_MIN = 0.02;
 export const NO_SHAPE: Readonly<ShotShape> = { curve: 0, flight: 0 };
 /** the shape's numbers: the curve (degrees over a 200 m carry, held between curveK), the share of the shape pulled off at skill 0 (`work`), the miss's growth per pick (a curve, a flight), the
  *  scatter a shape not pulled off adds (per pick, times what was not pulled off), the mishit chance a pick adds at skill 0 (falls to 0 at skill 1), what a draw's run and a fade's check
@@ -25,8 +29,9 @@ export const SHAPE = {
 export function readShape(v: unknown): ShotShape | null {
   const o = v as Partial<ShotShape> | null;
   if (!o || typeof o !== 'object') return null;
-  const c = Math.sign(Math.round(Number(o.curve) || 0)), f = Math.sign(Math.round(Number(o.flight) || 0));
-  return c || f ? { curve: c as -1 | 0 | 1, flight: f as -1 | 0 | 1 } : null;
+  const amt = (v: unknown) => { const n = Number(v); if (!Number.isFinite(n)) return 0; const k = Math.round(Math.max(-1, Math.min(1, n)) * 100) / 100; return Math.abs(k) < SHAPE_MIN ? 0 : k; };
+  const c = amt(o.curve), f = amt(o.flight);
+  return c || f ? { curve: c, flight: f } : null;
 }
 
 /** what a shape does to a shot: the curve (radians, + right as the golfer faces the aim), the factors on the carry, the run, the wind's multiplier (the shot's height) and the scatter, the swing's
@@ -37,15 +42,16 @@ export const NO_FX: Readonly<ShapeFx> = { curve: 0, carry: 1, run: 1, wind: 1, s
 /** the effect of a shape for a club played at `skill` (0..1) over a carry of carryM metres, the golfer's kit for the club (null: none) lifting how much he pulls off. A putt has no shape */
 export function shapeEffect(shape: ShotShape | null | undefined, club: Club, carryM: number, skill: number, kit: ClubKit | null = null): ShapeFx {
   if (!shape || club === 'putter' || (!shape.curve && !shape.flight)) return { ...NO_FX };
-  const picks = (shape.curve ? 1 : 0) + (shape.flight ? 1 : 0), control = kit ? (kit.stats.accuracy - 0.5) * 0.3 : 0;
+  const cv = Math.max(-1, Math.min(1, shape.curve || 0)), fv = Math.max(-1, Math.min(1, shape.flight || 0)), ac = Math.abs(cv), af = Math.abs(fv);   // (J5f: the amounts, 0..1 of each)
+  const picks = ac + af, control = kit ? (kit.stats.accuracy - 0.5) * 0.3 : 0;
   const pulled = Math.min(1, Math.max(SHAPE.work, SHAPE.work + (1 - SHAPE.work) * (Math.min(1, Math.max(0, skill)) + control)));
-  const fl = shape.flight > 0 ? SHAPE.high : shape.flight < 0 ? SHAPE.low : null;
+  const fl = fv > 0 ? SHAPE.high : fv < 0 ? SHAPE.low : null, mix = (v: number) => 1 + (v - 1) * af;   // (a flight's factors in proportion: none at 0, all of them at 1)
   const k = Math.min(SHAPE.curveK[1], Math.max(SHAPE.curveK[0], carryM / 200));
   return {
-    curve: shape.curve * SHAPE.curveDeg * pulled * k * Math.PI / 180,
-    carry: fl ? fl.carry : 1, run: (fl ? fl.run : 1) * (1 - SHAPE.runCurve * shape.curve), wind: fl ? fl.wind : 1,
-    spread: (fl ? fl.spread : 1) * (1 + SHAPE.scatter * (1 - pulled) * picks),
-    miss: 1 + SHAPE.missCurve * (shape.curve ? 1 : 0) + SHAPE.missFlight * (shape.flight ? 1 : 0),
+    curve: cv * SHAPE.curveDeg * pulled * k * Math.PI / 180,
+    carry: fl ? mix(fl.carry) : 1, run: (fl ? mix(fl.run) : 1) * (1 - SHAPE.runCurve * cv), wind: fl ? mix(fl.wind) : 1,
+    spread: (fl ? mix(fl.spread) : 1) * (1 + SHAPE.scatter * (1 - pulled) * picks),
+    miss: 1 + SHAPE.missCurve * ac + SHAPE.missFlight * af,
     mishit: SHAPE.mishit * (1 - Math.min(1, Math.max(0, skill))) * picks, pulled,
   };
 }
@@ -53,7 +59,8 @@ export function shapeEffect(shape: ShotShape | null | undefined, club: Club, car
 /** the pick as the player reads it: "Draw, high", "Fade", "Low", "Straight" (pickText, not shapeText: swing.ts has a shapeText, the swing's own miss) */
 export function pickText(s: ShotShape | null | undefined): string {
   if (!s || (!s.curve && !s.flight)) return 'Straight';
-  const c = s.curve < 0 ? 'Draw' : s.curve > 0 ? 'Fade' : '', f = s.flight < 0 ? 'low' : s.flight > 0 ? 'high' : '';
+  const pc = (v: number) => (Math.abs(v) >= 0.995 ? '' : ` ${Math.round(Math.abs(v) * 100)}%`);   // (J5f: a part amount says how much: "Draw 40%"; a full one is just "Draw")
+  const c = s.curve < 0 ? 'Draw' + pc(s.curve) : s.curve > 0 ? 'Fade' + pc(s.curve) : '', f = s.flight < 0 ? 'low' + pc(s.flight) : s.flight > 0 ? 'high' + pc(s.flight) : '';
   return c && f ? `${c}, ${f}` : c || f[0]!.toUpperCase() + f.slice(1);
 }
 
@@ -63,8 +70,8 @@ export function shapeLines(s: ShotShape | null | undefined, fx: ShapeFx): string
   if (!s || (!s.curve && !s.flight)) return [];
   const out: string[] = [], deg = Math.abs(fx.curve) * 180 / Math.PI, pc = (f: number) => `${f >= 1 ? '+' : '-'}${Math.abs(Math.round((f - 1) * 100))}%`;
   if (s.curve) out.push(`curves ${s.curve < 0 ? 'left' : 'right'} ${deg.toFixed(deg < 10 ? 1 : 0)}°, ${s.curve < 0 ? 'runs on' : 'checks'}`);
-  if (s.flight > 0) out.push(`${pc(SHAPE.high.carry)} carry · lands soft · wind x${SHAPE.high.wind.toFixed(1)}`);
-  if (s.flight < 0) out.push(`${pc(SHAPE.low.carry)} carry · runs on · wind x${SHAPE.low.wind.toFixed(1)} · tighter`);
+  if (s.flight > 0) out.push(`${pc(fx.carry)} carry · lands soft · wind x${fx.wind.toFixed(1)}`);
+  if (s.flight < 0) out.push(`${pc(fx.carry)} carry · runs on · wind x${fx.wind.toFixed(1)} · tighter`);
   out.push(`${Math.round(fx.pulled * 100)}% pulled off · miss x${fx.miss.toFixed(2)}`);
   return out;
 }

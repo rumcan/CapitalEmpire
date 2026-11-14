@@ -154,3 +154,12 @@ test('practice3p: a drill just done moves the next ball on to the next drill not
   assert.ok(save!.done.includes('distance'));
   assert.equal(drv.active, 'shaping');
 });
+
+test('drills (J5f): with the continuous sliders, the shaping and flight drills count at least half a draw, fade, high or low; a light one does not', () => {
+  const g = { x: 35, y: m(150) };
+  assert.equal(judgeDrill('shaping', shot({ shape: { curve: -0.3, flight: 0 }, landing: g, rest: g })).hit, false, 'a light draw is not a draw for the drill');
+  const d = judgeDrill('shaping', shot({ shape: { curve: -0.6, flight: 0 }, landing: g, rest: g })); assert.equal(d.hit, true); assert.equal(d.mark, 'draw');
+  assert.equal(judgeDrill('shaping', shot({ shape: { curve: 0.5, flight: 0 }, landing: g, rest: g })).mark, 'fade');
+  assert.equal(judgeDrill('flight', shot({ shape: { curve: 0, flight: 0.4 }, landing: g, rest: g })).hit, false, 'a little higher is not a high ball');
+  assert.equal(judgeDrill('flight', shot({ shape: { curve: 0, flight: -0.7 }, landing: g, rest: g })).mark, 'low');
+});

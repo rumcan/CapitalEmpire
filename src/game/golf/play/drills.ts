@@ -84,6 +84,8 @@ export function junkHit(junk: readonly DrillJunk[] | undefined, landing: Pt | nu
 }
 /** one practice shot as a drill reads it: the spot it was played from, its club, the shape the model played (null: straight), where it landed (tiles; null: a
  *  putt) and its lie there, where it stopped and its lie there, whether it was holed, the pin (tiles), the range's target greens, and the lie it was struck from */
+/** J5f: the shaping and flight drills count a curve or a flight of at least this much (the sliders are continuous: a hair off the middle is not a draw) */
+export const DRILL_SHAPE = 0.5;
 export interface DrillShot { spot: DrillSpot; club: Club; shape: ShotShape | null; landing: Pt | null; landLie: Lie | null; rest: Pt; restLie: Lie; holed: boolean;
   pin: Pt; greens: readonly DrillGreen[]; from: Lie;
   /** J6b: the junk on the range (absent: none) */
@@ -118,13 +120,13 @@ export function judgeDrill(id: DrillId, s: DrillShot): DrillCall {
     }
     case 'shaping': {
       const g = greenAt(s.greens, d.greenM!); if (!g) return { hit: false, note: 'No 150 m green on this range' };
-      const curve = s.shape?.curve ?? 0, on = [s.landing, s.rest].some(p => p && offGreen(g, p) <= d.withinM!);
+      const c0 = s.shape?.curve ?? 0, curve = Math.abs(c0) >= DRILL_SHAPE ? c0 : 0, on = [s.landing, s.rest].some(p => p && offGreen(g, p) <= d.withinM!);   // (J5f: at least half a draw or fade)
       if (!curve) return { hit: false, note: on ? 'On the green, but straight: pick a draw or a fade (Z)' : 'Pick a draw or a fade (Z), then land it on the 150 m green' };
       const mark = curve < 0 ? 'draw' : 'fade';
       return on ? { hit: true, mark, note: `A ${mark} onto the ${g.distM} m green` } : { hit: false, note: `The ${mark} missed the ${g.distM} m green by ${m1(Math.min(...[s.landing, s.rest].filter((p): p is Pt => !!p).map(p => offGreen(g, p))))}` };
     }
     case 'flight': {
-      const fl = s.shape?.flight ?? 0, g = onAGreen(s.greens, s, d.withinM!);
+      const f0 = s.shape?.flight ?? 0, fl = Math.abs(f0) >= DRILL_SHAPE ? f0 : 0, g = onAGreen(s.greens, s, d.withinM!);   // (J5f: at least half a high or low)
       if (!fl) return { hit: false, note: g ? `On the ${g.distM} m green, but a normal flight: pick high or low (X)` : 'Pick a high or a low flight (X), then land it on a green' };
       const mark = fl > 0 ? 'high' : 'low';
       return g ? { hit: true, mark, note: `A ${mark} ball onto the ${g.distM} m green` } : { hit: false, note: `The ${mark} ball missed the greens` };
