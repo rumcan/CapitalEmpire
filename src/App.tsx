@@ -62,7 +62,6 @@ import { formatMultiDayStatus } from './game/golf/multiday';
 import { decorInfo } from './game/golf/decor';
 import { Icon, type IconName } from './ui/Icon';
 import { ActionTile, TILE_ROW, TILE_SMALL } from './ui/ActionTile'; // J8 (#1261): Settings, Save, Load and New game wear painted tiles
-import { TOUR_TILE } from './ui/tool-tiles';
 import { NightPanel } from './ui/NightPanel';
 import { GradePanel } from './ui/GradePanel';
 import { RoadThumb } from './ui/RoadThumb';
@@ -327,7 +326,7 @@ export default function App() {
   /** T348 (#990): the toasts' markup, for the stack under the top bar and for the one hung under your round's bar (RoundBar `below`) */
   const toastEls = (g: Game) => toasts.map(t => (
     <div key={t.id} className="glass px-3 py-1.5 text-sm"><span className={t.kind === 'warn' ? 'text-red-300' : t.kind === 'good' ? 'text-emerald-300' : ''}>{t.text}</span>
-      {t.scene && <button className="chip pointer-events-auto ml-2 py-0.5" onClick={() => g.openScene(t.scene!)} data-testid="toast-scene"><Icon name="camera" size={16} />Set the scene</button>}</div>
+      {t.scene && <button className="chip pointer-events-auto ml-2 py-0.5" onClick={() => g.openScene(t.scene!)} data-testid="toast-scene"><ActionTile tile="scene" size={TILE_SMALL - 4} />Set the scene</button>}</div>
   ));
   const net = game?.ledger?.net ?? 0, debtDays = game && !game.golf ? game.traffic.budget.debtDays : 0;
   // the rail item of the tool in hand (the road tool on the course is Paths, the course tool's clubhouse scope Buildings: game.uiTool)
@@ -592,7 +591,7 @@ export default function App() {
                   {/* T336: your cards (the 8 slots, the collection, the vending machine); the number is the pulls waiting */}
                   {!JAM && game.golf && <button className={`chip ${game.cardsCardOpen ? 'chip-on' : ''}`} onClick={() => game.openCardsCard()} data-tip={game.cardsPulls() > 0 ? `Your cards: ${game.cardsPulls()} pull${game.cardsPulls() === 1 ? '' : 's'} waiting at the vending machine` : 'Your cards: 8 slots, earned from wins, opened in the vending machine'} aria-label="Cards" data-testid="cards-chip"><Icon name="layers" size={16} /><span className={WIDE}>Cards</span>{game.cardsPulls() > 0 && <span className="rounded-full bg-amber-400 px-1.5 text-[11px] font-bold leading-4 text-slate-900" data-testid="cards-badge">{game.cardsPulls()}</span>}</button>}
                   {/* T240: your character: Me frames you once (T323: the camera no longer follows; Walk and Select are the rail's two cursors) */}
-                  {game.you && <button className="chip" onClick={() => game.youMe()} data-tip="Me: the camera on your character (once: it does not follow)" aria-label="Me" data-testid="me-chip"><Icon name="pin" size={16} /><span className={WIDE}>Me</span></button>}
+                  {game.you && <button className="chip" onClick={() => game.youMe()} data-tip="Me: the camera on your character (once: it does not follow)" aria-label="Me" data-testid="me-chip"><ActionTile tile="find-me" size={TILE_SMALL} /><span className={WIDE}>Me</span></button>}
                   {game.you && !game.yourRound() && game.youCartFar() && <button className="chip" onClick={() => game.youCartCall()} data-tip="Your cart: it drives to you (C in the Walk cursor); then E gets in" aria-label="Call your cart" data-testid="cart-chip"><Icon name="compass" size={16} /><span className={WIDE}>Cart</span></button>}
                   {!JAM && fv?.invited && game.traffic.round.runs === 0 && !gv.live && <span className="flex items-center gap-1 whitespace-nowrap rounded-md border border-amber-400/40 bg-amber-400/15 px-2 py-1 text-xs font-semibold text-amber-200" data-testid="invite-pill" data-guide="invite-pill" data-tip={`The tour's invitation: the Club Championship at the end of ${fv.due ? 'this' : 'next'} season (the first tournament is held at the end of the season it names)`}><Icon name="trophy" size={14} /><span className="min-[2200px]:hidden">Invited</span><span className={WIDE}>The Club Championship: end of {fv.due ? 'this' : 'next'} season</span></span>}
                   {gv.live && (() => { const w = getTournamentWeather(game.seed, game.weatherRun()); return <span className="rounded-md border border-amber-400/40 bg-amber-400/15 px-2 py-1 text-xs font-semibold text-amber-200" data-tip={w.summary}>{w.icon} {w.label}</span>; })()}
@@ -617,6 +616,7 @@ export default function App() {
             </div>
             <div className="pointer-events-auto ml-auto flex items-center gap-2">
               <div className="glass flex items-center gap-1 px-2 py-1.5">
+                <ActionTile tile="game-speed" size={TILE_ROW - 6} />
                 <button className="btn-icon" onClick={() => game.togglePause()} data-tip="Pause (Space)"><Icon name={game.speed ? 'pause' : 'play'} size={22} /></button>
                 {SPEEDS.map(k => <button key={k} className={`chip ${k < 1 ? 'px-1.5 text-[11px]' : ''} ${game.speed === k ? 'chip-on' : ''} disabled:opacity-40`} disabled={game.paceLock && k > WATCH_SPEED} onClick={() => game.setSpeed(k)} data-tip={k === WATCH_SPEED ? 'The watching speed: golfers walk at a natural pace (, and .)' : k < 1 ? 'Slow motion (, and .)' : 'Speed (, and .)'} data-testid={`speed-${speedLabel(k)}`}>{speedLabel(k)}×</button>)}
                 {!JAM && game.golfMode && (game.golfWatch
@@ -626,6 +626,7 @@ export default function App() {
                 {game.night.mode === 'clock' && game.clockNight() > 0 && <button className="chip" onClick={() => game.skipNight()} data-tip="Skip this night: daylight until the next one (how often nights come: gear menu, Night)"><Icon name="sun" size={16} /> Skip night</button>}
               </div>
               <div className="glass flex items-center gap-1 px-2 py-1.5">
+                <ActionTile tile="zoom" size={TILE_ROW - 6} />
                 <button className="btn-icon" onClick={() => game.zoomAt(clampZoom(game.cam.z / ZOOM_STEP))} data-tip="Zoom out (-)"><Icon name="zoom-out" size={20} /></button>
                 <button className="btn-icon" onClick={() => game.zoomAt(clampZoom(game.cam.z * ZOOM_STEP))} data-tip="Zoom in (+)"><Icon name="zoom-in" size={20} /></button>
               </div>
@@ -645,9 +646,9 @@ export default function App() {
                       </label>
                     )}
                     {/* T179 (P23 P2-7): the UI scale, the UI layer only (the map keeps its size); kept in this browser */}
-                    <div className="flex items-center gap-2 px-2 py-2 text-sm" role="group" aria-label="UI scale">
-                      <span className="flex-1">Text size</span>
-                      {UI_SCALES.map(v => <button key={v} className={`chip ${uiScale === v ? 'chip-on' : ''}`} aria-pressed={uiScale === v} data-scale={v} onClick={() => setUiScale(applyUiScale(saveUiScale(v)))}>{Math.round(v * 100)}%</button>)}
+                    <div className="flex items-center gap-1.5 px-2 py-2 text-sm" role="group" aria-label="UI scale">
+                      <span className="flex flex-1 items-center gap-1.5 whitespace-nowrap"><ActionTile tile="text-size" size={TILE_SMALL} />Text size</span>
+                      {UI_SCALES.map(v => <button key={v} className={`chip !px-2 ${uiScale === v ? 'chip-on' : ''}`} aria-pressed={uiScale === v} data-scale={v} onClick={() => setUiScale(applyUiScale(saveUiScale(v)))}>{Math.round(v * 100)}%</button>)}
                     </div>
                     {/* J4 (#1207): the golf mode's currency (USD or AED, display only) and colour-blind-safe money */}
                     {game.golfMode && <AccessSettings />}
@@ -773,9 +774,9 @@ export default function App() {
                     </>}
                     <button className="btn w-full" onClick={() => { setMenu(false); game.save(); }} data-tip="Saved automatically; force a save now"><ActionTile tile="save-game" size={TILE_SMALL} />Save</button>
                     <button className="btn w-full" onClick={() => { setMenu(false); void game.downloadSave(); }} data-tip="Download the save as a .cesave file (for a bug report, or to carry it to another computer)"><ActionTile tile="save-game" size={TILE_SMALL} />Download save</button>
-                    <button className="btn w-full" onClick={() => saveFile.current?.click()} data-tip="Load a .cesave file in place of this game: this game is backed up first"><ActionTile tile="save-game" size={TILE_SMALL} />Load save file…</button>
+                    <button className="btn w-full" onClick={() => saveFile.current?.click()} data-tip="Load a .cesave file in place of this game: this game is backed up first"><ActionTile tile="load-save" size={TILE_SMALL} />Load save file…</button>
                     <input ref={saveFile} type="file" accept=".cesave,application/gzip" className="hidden" onChange={e => { const f = e.target.files?.[0]; e.target.value = ''; if (f) void game.loadSaveFile(f); }} />
-                    {backups.length > 0 && <button className="btn w-full" onClick={() => setBackupsOpen(!backupsOpen)} data-tip="Saves kept as backups: a newer build's, an unreadable one, the copy before a migration, and the one replaced by a load">Backups ({backups.length}) {backupsOpen ? '▴' : '▾'}</button>}
+                    {backups.length > 0 && <button className="btn w-full" onClick={() => setBackupsOpen(!backupsOpen)} data-tip="Saves kept as backups: a newer build's, an unreadable one, the copy before a migration, and the one replaced by a load"><ActionTile tile="backups" size={TILE_SMALL} />Backups ({backups.length}) {backupsOpen ? '▴' : '▾'}</button>}
                     {backupsOpen && backups.map(k => (
                       <div key={k} className="flex items-center gap-1 px-2 py-1 text-xs">
                         <span className="min-w-0 flex-1 truncate text-[12px] opacity-70" data-tip={k}>{k}</span>
@@ -1041,11 +1042,11 @@ export default function App() {
             <RoundBar left={left} right={right} v={rv} onJump={() => game.yourJump()} onCart={() => game.youCartToggle()} onCallCart={() => game.youCartCall()} onMull={() => game.yourMulligan()} onGimme={() => game.yourGimme()} onView={() => game.open3pRound()} onCard={() => game.toggleYourCard()} onQuit={() => game.yourRoundEnd()} onSkip={() => game.matchSkip()}
               below={toasts.length ? <div className="flex flex-col items-center gap-1" data-testid="toasts">{toastEls(game)}</div> : undefined} />
             {rv.card && <ScoreCard v={rv} onNext={() => game.yourNextHole()} onDone={() => game.yourRoundEnd()} onClose={() => game.toggleYourCard(false)} />}</>; })()}
-          {(game.youInCart ? game.youCart : game.you)?.skip && <div className="pointer-events-none absolute inset-x-0 bottom-24 z-20 flex justify-center"><button className="btn-gold pointer-events-auto px-4 py-1.5 text-sm" onClick={() => game.youSkip()} data-tip="A long walk: arrive now" data-testid="you-skip"><Icon name="play" size={16} />Skip the walk</button></div>}
+          {(game.youInCart ? game.youCart : game.you)?.skip && <div className="pointer-events-none absolute inset-x-0 bottom-24 z-20 flex justify-center"><button className="btn-gold pointer-events-auto px-4 py-1.5 text-sm" onClick={() => game.youSkip()} data-tip="A long walk: arrive now" data-testid="you-skip"><ActionTile tile="walk" size={TILE_SMALL} />Skip the walk</button></div>}
           {(() => { const w = !JAM && !game.seasonReport ? game.welcomeView() : null; /* (J7: not in the jam: its start tutorial welcomes, and the card's button pointed at a step order) */ return w && <WelcomeCard road={w.road} newHole={w.newHole} guide={!!game.rangeGuideView()} onGo={() => game.closeWelcome(true)} onClose={() => game.closeWelcome(false)} />; })()}
           {(() => { // T293 (#878): the start tutorial, where the guided build's card stands (that card waits for it): the town grows only along your roads
             const tv = !game.seasonReport && !game.sceneRef && !game.playerCardOpen && !game.bagCardOpen && !game.cardsCardOpen && !game.cardsFolded() ? game.tourView() : null; // (T348: and away while a shot is open: the cards fold)
-            return tv && <RangeGuideCard view={tv} pics={JAM ? TOUR_TILE : undefined} heading={JAM ? 'Tutorial · your club' : 'Tutorial · your town'} tid="tour" foot="Do each step, or skip it" offLabel="Skip tutorial" right={stack!.guide()} onShow={id => { game.tourShowMe(id); bump(); }} onNext={() => { game.tourNextStep(); bump(); }} onSkip={id => { game.tourSkipStep(id); bump(); }} onFold={f => { game.tourFolded = f; bump(); }} />;
+            return tv && <RangeGuideCard view={tv} heading={JAM ? 'Tutorial · your club' : 'Tutorial · your town'} tid="tour" foot="Do each step, or skip it" offLabel="Skip tutorial" right={stack!.guide()} onShow={id => { game.tourShowMe(id); bump(); }} onNext={() => { game.tourNextStep(); bump(); }} onSkip={id => { game.tourSkipStep(id); bump(); }} onFold={f => { game.tourFolded = f; bump(); }} />;
           })()}
           {(() => { // T239: the range start's guided build, bottom right (left of a right-hand card when one is open; T242: away while a picture card is up; T241: and while your profile card stands there)
             const gv = !game.seasonReport && !game.sceneRef && !game.playerCardOpen && !game.bagCardOpen && !game.cardsCardOpen && !game.cardsFolded() ? game.rangeGuideView() : null; // (T348: and while a shot is open)
@@ -1114,7 +1115,8 @@ export default function App() {
           {game.bankrupt && !watch && (
             <div className="absolute inset-0 z-40 flex items-center justify-center bg-black/70 p-4">
               <div className="w-96 rounded-2xl border border-red-500/40 bg-slate-950 p-6 text-center text-slate-200 shadow-2xl">
-                <div className="text-2xl font-bold text-red-300">Bankrupt</div>
+                <div className="flex justify-center"><ActionTile tile="closed-gate" size={72} /></div>
+                <div className="mt-2 text-2xl font-bold text-red-300">Bankrupt</div>
                 <p className="mt-3 text-sm text-slate-300">{game.golf ? 'The overdraft passed $50,000, or stayed open for 3 month ends in a row.' : `The books stayed in the red for ${DEBT_DAYS} days in a row.`}</p>
                 <div className="mt-5 flex justify-center gap-2">
                   <button className="chip chip-on" onClick={() => game.newTown()}><ActionTile tile="new-game" size={TILE_SMALL} />New game</button>
@@ -2246,7 +2248,7 @@ function Help({ onClose, tab, onTab, keys, lab, onTour, cards }: { onClose: () =
       <div className={`help-card rounded-2xl border border-white/10 bg-slate-950 p-6 text-sm text-slate-200 shadow-2xl ${tab === 'keys' ? 'help-card-wide' : tab === 'cards' ? 'max-w-3xl' : 'max-w-xl'}`} onClick={e => e.stopPropagation()} role="dialog" aria-label="Help" data-testid="help">
         <div className="flex flex-wrap items-center gap-2">
           {lab ? <div className="text-lg font-bold text-amber-200">Keys</div> : <div className="seg" role="tablist">
-            <button role="tab" aria-selected={tab === 'keys'} className={`px-4 ${tab === 'keys' ? 'on' : ''}`} onClick={() => onTab('keys')} data-testid="help-keys">Keys</button>
+            <button role="tab" aria-selected={tab === 'keys'} className={`px-4 ${tab === 'keys' ? 'on' : ''}`} onClick={() => onTab('keys')} data-testid="help-keys"><ActionTile tile="help-keys" size={TILE_SMALL} />Keys</button>
             <button role="tab" aria-selected={tab === 'how'} className={`px-4 whitespace-nowrap ${tab === 'how' ? 'on' : ''}`} onClick={() => onTab('how')}>How it works</button>
             {cards && <button role="tab" aria-selected={tab === 'cards'} className={`px-4 whitespace-nowrap ${tab === 'cards' ? 'on' : ''}`} onClick={() => onTab('cards')} data-testid="help-cards-tab">Cards</button>}
           </div>}

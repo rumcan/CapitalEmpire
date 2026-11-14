@@ -28,7 +28,7 @@ export function TitleCard({ canContinue, onNew, onContinue }: { canContinue: boo
           </ol>
         ) : null}
         <div className="mt-5 flex flex-col gap-2">
-          {canContinue && <button className="btn w-full !py-2 text-base font-semibold" onClick={onContinue} data-testid="title-continue" autoFocus><ActionTile tile="play-hole" size={TILE_ROW} />Continue</button>}
+          {canContinue && <button className="btn w-full !py-2 text-base font-semibold" onClick={onContinue} data-testid="title-continue" autoFocus><ActionTile tile="front-door" size={TILE_ROW} />Continue</button>}
           <button className={`btn w-full !py-2 text-base ${canContinue ? '' : 'font-semibold'}`} onClick={onNew} data-testid="title-new" autoFocus={!canContinue}><ActionTile tile="new-game" size={TILE_ROW} />New game</button>
           <button className="btn w-full" onClick={() => setHow(!how)} aria-expanded={how} data-testid="title-how"><ActionTile tile="how-to-play" size={TILE_ROW} />{how ? 'Hide how to play' : 'How to play'}</button>
         </div>

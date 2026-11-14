@@ -9,6 +9,7 @@ import type { MembersView } from '../../game/golf/club';
 import { STAND, bandBar, factor, fairWords, membersHeadline, moneyLine, priceSteps, whyLines } from './club-members';
 import type { CrewCardView, StaffRole } from '../../game/golf/staff';
 import { Icon } from '../Icon';
+import { ActionTile, TILE_SMALL } from '../ActionTile'; // J8 (#1261): Scene wears its painted tile
 import { WALK_SERVE_M, lotsLine } from '../../game/golf/walkserve';
 
 import { money } from './money';
@@ -28,7 +29,7 @@ export function ClubhouseCard({ view, onClose, onStaff, onPrice, right = 'right-
           <div className="text-[12px] text-slate-400">{view.open ? `Open · ${clock(view.minute)} · green fee ${money(view.fee)}` : 'Closed today: the course is the tournament\'s'} · {view.clubMembers} members</div>
         </div>
         <div className="flex shrink-0 items-center gap-1">
-          {onScene && <button className="chip" onClick={onScene} title="Set the scene: a picture of your clubhouse as it stands" data-testid="club-scene"><Icon name="camera" size={16} />Scene</button>}
+          {onScene && <button className="chip" onClick={onScene} title="Set the scene: a picture of your clubhouse as it stands" data-testid="club-scene"><ActionTile tile="scene" size={TILE_SMALL} />Scene</button>}
           <button className="btn-icon" onClick={onClose} title="Close"><Icon name="close" size={18} /></button>
         </div>
       </div>

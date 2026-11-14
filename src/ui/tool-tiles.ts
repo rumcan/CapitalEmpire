@@ -56,8 +56,6 @@ export const RANGE_UPGRADE_TILE: Readonly<Partial<Record<string, ToolTile>>> = {
 export const SESSION_TILE: Readonly<Partial<Record<string, ToolTile>>> = { bucket: 'hit-balls', putting: 'putting-green', chipping: 'chip-and-putt' };
 /** the practice greens' rows on the range card (the putting green's own tile; the chipping green's is the second sheet's) */
 export const PRACTICE_BUILD_TILE: Readonly<Partial<Record<string, ToolTile>>> = { putting: 'putting-green', chipping: 'chipping-green' };
-/** the jam tutorial's steps (progressive-ui/tour.ts JAM_TOUR): Your club, your money; The Bank; Build what you like */
-export const TOUR_TILE: Readonly<Record<string, ToolTile>> = { 'tour-town': 'buy-range', 'tour-room': 'bank', 'tour-golf': 'clubhouse' };
 /** the range card's placements (the range, its car park, the practice area) */
 export const PLACE_TILE: Readonly<Partial<Record<string, ToolTile>>> = { range: 'buy-range', carpark: 'gravel-car-park', practice: 'putting-green' };
 /** the ball room tree's branches (rangesave.ts TreeBranch): Picking, Staff, Machines, Supply and Your game */

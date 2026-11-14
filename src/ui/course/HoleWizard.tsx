@@ -255,7 +255,7 @@ function Ground({ game, cost }: { game: Game; cost: number }) {
     <section className="mt-2" aria-label="Ground" data-testid="wiz-ground">
       <h4 className="sub-head">Ground</h4>
       <div className="flex items-center justify-between gap-2">
-        <button className={`chip ${on ? 'chip-on' : ''}`} aria-pressed={on} data-testid="wiz-ground-toggle" title="Gentle rolls along the fairway, low mounds and a swale in the rough, the green tilted up from front to back; the tee stays level, and roads, paths and other holes are left as they are" onClick={() => p.setShapeGround(!on)}>{on ? '✓ Shape the ground' : 'Shape the ground'}</button>
+        <button className={`chip ${on ? 'chip-on' : ''}`} aria-pressed={on} data-testid="wiz-ground-toggle" title="Gentle rolls along the fairway, low mounds and a swale in the rough, the green tilted up from front to back; the tee stays level, and roads, paths and other holes are left as they are" onClick={() => p.setShapeGround(!on)}><ActionTile tile="earthworks" size={TILE_SMALL} />{on ? '✓ Shape the ground' : 'Shape the ground'}</button>
         <span className="tabular-nums text-[13px] font-semibold" data-testid="wiz-ground-price">{!on ? 'Off' : e ? `${Math.round(e.m3).toLocaleString()} m³ · ${money(e.cost)}` : 'Nothing to shape here'}</span>
       </div>
       <p className="sub-line mt-1">{on ? `Rolls along the fairway, mounds round it and the green, the green tilted front to back. Shaped while it is built: ${money(SHAPE_RATE_M3)} a m³; Undo takes them back with the grass.` : 'Build lays the hole on the ground as it is: shape it later with Edit hole\'s Ground height.'}</p>

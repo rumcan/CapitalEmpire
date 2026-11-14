@@ -44,7 +44,7 @@ export function RangeCard({ ballFix, onBallFix, attendantWage, onLetGo, forSale,
           <div className="text-[12px] text-slate-400">{st.proShop ? 'Pro shop' : 'The shack (a crappy pro shop)'} · {st.tier2 ? `${st.lowerBays} + ${st.bays - st.lowerBays} upstairs` : st.bays} bays · {st.counters} {st.counters === 1 ? 'counter' : 'counters'} · open {view.hours}</div>
         </div>
         <div className="flex shrink-0 items-center gap-1">
-          {onScene && <button className="chip" onClick={onScene} title="Set the scene: a picture of your range as it stands" data-testid="range-scene"><Icon name="camera" size={16} />Scene</button>}
+          {onScene && <button className="chip" onClick={onScene} title="Set the scene: a picture of your range as it stands" data-testid="range-scene"><ActionTile tile="scene" size={TILE_SMALL} />Scene</button>}
           <button className="btn-icon" onClick={onClose} title="Close"><Icon name="close" size={18} /></button>
         </div>
       </div>
@@ -113,7 +113,7 @@ export function RangeCard({ ballFix, onBallFix, attendantWage, onLetGo, forSale,
           )}
           {balls.staff && balls.staff.attendants > 0 && (
             <div className="flex flex-wrap items-center gap-1.5 text-[12px] text-slate-300" data-testid="range-shift">
-              <span>Shift:</span>
+              <span className="flex items-center gap-1.5"><ActionTile tile="shift-hours" size={TILE_SMALL + 4} />Shift:</span>
               {balls.staff.starts.map(h => <button key={h} className={`chip ${balls.staff!.shift === h ? 'chip-on' : ''}`} onClick={() => onShift?.(h)} data-testid={`range-shift-${h}`}>{String(h).padStart(2, '0')}-{String((h + balls.staff!.hours) % 24).padStart(2, '0')}</button>)}
               <span className="text-slate-400">{balls.staff.onNow} of {balls.staff.attendants} on now</span>
             </div>

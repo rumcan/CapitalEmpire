@@ -75,7 +75,7 @@ export function HoleCard({ game, right = 'right-3' }: { game: Game; right?: stri
         {why3p.length > 0 && <div className="text-[12px] text-slate-400" data-testid="hole-play-3p-why">{why3p.join(' · ')}</div>}
         {/* T447: the time of day the course is played at (the whole course's setting, saved with it); golden hour unless Day is chosen */}
         <div className="flex items-center gap-1 text-[12px] text-[var(--muted)]" data-testid="hole-time-3p">
-          <span>Light</span>
+          <span className="flex items-center gap-1.5"><ActionTile tile="daylight" size={TILE_SMALL + 4} />Light</span>
           {COURSE_TIMES_3P.map(([id, name]) => (
             <button key={id} className={`chip ${time3p === id ? 'chip-on' : ''}`} aria-pressed={time3p === id} onClick={() => { game.setTime3p(id); setTime3p(id); }}
               title={id === 'golden' ? 'Play the course in the low gold light of late afternoon (the default)' : 'Play the course in full daylight'} data-testid={`hole-time-3p-${id}`}>{name}</button>
