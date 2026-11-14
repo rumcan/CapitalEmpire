@@ -242,7 +242,7 @@ try {
     const zones = await page.evaluate(() => { const z = window.__game.courseLooks().own?.zones ?? []; return z.map(q => ({ box: [q.x0, q.y0, q.x1, q.y1], ones: q.mask.reduce((a, v) => a + v, 0), all: q.mask.length })); });
     console.log('  zones', JSON.stringify(zones));
     const own = zones.reduce((a, z) => a + z.ones, 0);
-    check(legacy ? true : own === (cnt[8] ?? 0) + (cnt[6] ?? 0), `the facilities' looks zones are their own cells (the green and the sand, the band being painted over), not the boxes round them: ${zones.map(z => `${z.ones} of ${z.all} in the bounds`).join(', ') || 'none'}; ${cnt[8] ?? 0} green and ${cnt[6] ?? 0} sand cells`);
+    check(legacy ? own > ((cnt[8] ?? 0) + (cnt[6] ?? 0)) * 1.3 : own === (cnt[8] ?? 0) + (cnt[6] ?? 0), `the facilities' looks zones are their own cells (the green and the sand, the band being painted over), not the boxes round them (--legacy: the old boxes, so more): ${zones.map(z => `${z.ones} of ${z.all} in the bounds`).join(', ') || 'none'}; ${cnt[8] ?? 0} green and ${cnt[6] ?? 0} sand cells`);
     // the ring just outside each facility's rough band, and a control far from both: cells, then pixels
     const ring = await page.evaluate(([put, chip]) => {
       const g = window.__game, grid = g.courseGrid, box = g.range.scene.practice.box, Wd = grid.w;
