@@ -221,7 +221,8 @@ import type { CourseFacts } from './golf/tour';
 import { surfaceOfTex, unitBuildCost } from './golf/costs';
 import { bizName, inSentence, inTheWay, overlaps, rectPoly, ringWhy, routeObstacles, structureObstacles, type Obstacle, type Structure } from './route-obstacles';
 import { inRingClear, judgeRing, rangePieceName, ringGrows, type RingProp, type RingVerdict } from './ring-clear';
-import { isSecondTap, routeAct, type RouteInput, type Tap } from './route-input';
+import { isSecondTap, routeAct, RouteGesture, type RouteInput, type Tap } from './route-input';
+import { BEND_45, DEFAULT_BEND, bendInUse, legsLength, routeLegs } from './route-legs';
 import { buyAdjacentBlock, blockOnRoad, blockOnWater, clampBlock, mergeParcelBounds, playInWay, polyInParcels, startWhy, type LandRoad, type ParcelLandClass } from './golf/parcels';
 import { BAND_LABEL, LandSale } from './golf/land-sale';
 import { buildCourseStatsPanel, type CourseStatsPanel } from './golf/coursestats';
@@ -700,7 +701,7 @@ export class Game {
   // tools
   /** the tool in hand (T328, #936: Select at first; it was the road tool, so a ?start=town game, which picks no tool, opened with the Traffic
    *  panel docked over the course. The range start picks the Course tool itself) */
-  tool: Tool = 'select'; roadClass: ClassId = 'street'; bendMode: BendMode = 90; lineStyle: LineStyle = 0;
+  tool: Tool = 'select'; roadClass: ClassId = 'street'; bendMode: BendMode = DEFAULT_BEND /* #1276, #1317: 90 in every game, every build and after every load while BEND_45 (route-legs.ts) is off; on, 45, and Q toggles 90 for the visit only */; lineStyle: LineStyle = 0;
   /** the road tool's scope (T084): 'course' when the Course menu's Paths & drives opened it (it lays the course's cart paths and drives), 'town'
    *  from Roads; scopeClass: the class last picked in each scope, picked again on coming back to it */
   roadScope: 'town' | 'course' = 'town'; private scopeClass: Record<'town' | 'course', ClassId> = { town: 'street', course: 'cart-dirt' };
@@ -5451,24 +5452,9 @@ export class Game {
     const stubs = ringStubs(this.net, legs), cuts = this.replaceMode ? replaceCuts(this.net, legs, this.cls) : [];
     return [...stubs, ...cuts.filter(c => !stubs.some(x => x.seg === c.seg))];
   }
-  /** legs from `from` to `p`: a right-angle bend, or (45° mode) a diagonal followed by a straight */
-  private legsTo(from: Pt, p: Pt, straight = false): Leg[] {
-    const dx = p.x - from.x, dy = p.y - from.y, ax = Math.abs(dx), ay = Math.abs(dy);
-    if (!ax && !ay) return [];
-    if (straight) {
-      const st = this.roadStep(), k = Math.round((ax + ay) / 2 / st) * st;
-      if (ax >= 2.4 * ay || ay >= 2.4 * ax) return [{ a: from, b: ax >= ay ? { x: p.x, y: from.y } : { x: from.x, y: p.y } }];
-      return [{ a: from, b: { x: from.x + Math.sign(dx) * k, y: from.y + Math.sign(dy) * k } }];
-    }
-    if (!ax || !ay) return [{ a: from, b: p }];
-    if (this.bendMode === 45) {
-      const k = Math.min(ax, ay), corner = { x: from.x + Math.sign(dx) * k, y: from.y + Math.sign(dy) * k };
-      if (corner.x === p.x && corner.y === p.y) return [{ a: from, b: p }];
-      return [{ a: from, b: corner }, { a: corner, b: p }];
-    }
-    const corner = ax >= ay ? { x: p.x, y: from.y } : { x: from.x, y: p.y };
-    return [{ a: from, b: corner }, { a: corner, b: p }];
-  }
+  /** legs from `from` to `p` on the 0, 45 and 90 degree lattice (route-legs.ts routeLegs): a right angle (the 90 degree bend: the only one while BEND_45 is off, #1317); with
+   *  BEND_45 on, a diagonal run and a straight one with one 45 degree bend between by default (#1276), a right angle with Q; one straight run in any of the eight directions with Shift */
+  private legsTo(from: Pt, p: Pt, straight = false): Leg[] { return routeLegs(from, p, bendInUse(this.bendMode), straight, this.roadStep()); }
   /** a snap onto a road, seen from the route's last point: the point on that road square across from `from`, so the new road meets it
    *  straight (a T) instead of an L whose corner and last stretch would lie on the road itself; the snap as it is when that foot is off the
    *  road's span (within MIN_SEP of its ends) or `from` lies on the road's line */
@@ -5535,16 +5521,50 @@ export class Game {
     // the double-click's second click adds no point: the double-click builds what the preview shows (T207)
     const tap = { t: performance.now(), mx, my }, second = isSecondTap(this.routeTap, tap); this.routeTap = second ? null : tap;
     if (routeAct('click', this.route.length, second) === 'none') return;
-    let s = snapPoint(this.net, this.tileAt(mx, my), this.snapRadius(), this.roadStep());
+    this.addRoutePoint(this.tileAt(mx, my));
+  }
+  /** the road tool's route takes the point at tile t (snapped, and aimed at a road it meets): the first point starts the route (refused on land a town road may not
+   *  start on, T124 and T355), each later one adds the legs from the last point (a bend or a stop). False, with the reason in a toast, when the route could not be
+   *  built with it: the preview shows such a point red with the same reason. A click adds its point here, and so does a drag's release (roadRelease, #1276) */
+  private addRoutePoint(t: Pt): boolean {
+    let s = snapPoint(this.net, t, this.snapRadius(), this.roadStep());
     if (this.route.length) s = this.aim(this.route[this.route.length - 1]!, s);
-    if (!this.route.length) { const why = this.startBlock(s.p); if (why) { this.toast(why, 'warn'); return; } this.routeFrom = s; this.route.push(s.p); this.routeLast = s; this.emit(); return; }
+    if (!this.route.length) { const why = this.startBlock(s.p); if (why) { this.toast(why, 'warn'); return false; } this.routeFrom = s; this.route.push(s.p); this.routeLast = s; this.emit(); return true; }
     const last = this.route[this.route.length - 1], add = this.legsTo(last, s.p, this.keys.has('Shift'));
     // a point the route could not be built with is refused at once (the preview shows it red with the same reason)
     const legs: Leg[] = []; for (let i = 1; i < this.route.length; i++) legs.push({ a: this.route[i - 1]!, b: this.route[i]! });
     const all = [...legs, ...add], why = add.length ? checkLegs(this.net, all, this.routeFrom, s, this.cls, new Set(this.routeCuts(all).map(c => c.seg)), this.golfLand()) || (this.routeInWay(all)?.why ?? '') : '';
-    if (why) { this.toast(why, 'warn'); return; }
+    if (why) { this.toast(why, 'warn'); return false; }
     for (const l of add) this.route.push(this.weld(l.b));
     this.routeLast = s; this.emit();
+    return true;
+  }
+  /** the road tool's press, drag and release (#1276; the owner, 2026-11-14: "a click and drag and release builds like in sim city"; route-input.ts RouteGesture): the
+   *  press that begins a route is a click as ever, and also the start of a drag. Dragged on, its release builds the run from the press to the pointer
+   *  (roadRelease: the preview all along is the ordinary one from the route's first point to the pointer); a press and release on the spot leave the route
+   *  begun, to click on (the old click, click, double-click). A press into a route already in hand is only a click, as before: it adds its point. */
+  private readonly routeGesture = new RouteGesture();
+  /** whether the press that began the route is still down (the hint says: let go to build) */
+  get routeDragging(): boolean { return this.routeGesture.down; }
+  /** the road tool's left press: the click, which arms the drag when it began the route */
+  private roadPress(mx: number, my: number) {
+    const began = !this.route.length;
+    this.roadClick(mx, my);
+    if (began && this.route.length === 1) this.routeGesture.begin(mx, my);
+  }
+  /** the release of the press that began the route (pointerUp): a drag builds the run to the pointer (the cost, bridges, the reasons and the one undo step are the
+   *  route's own: addRoutePoint judges the end and finishRoute builds), and a refused one drops the route with the reason said, so the next press starts afresh; a
+   *  press that stayed put (or a drag too short to be a road) leaves the route begun, as a click does */
+  private roadRelease() {
+    const g = this.routeGesture, last = this.route[this.route.length - 1], t = this.hover;
+    if (!g.down) return;
+    if (this.tool !== 'road' || !last || !t) { g.cancel(); return; }
+    const s = this.aim(last, snapPoint(this.net, t, this.snapRadius(), this.roadStep()));
+    if (g.end(legsLength(this.legsTo(last, s.p, this.keys.has('Shift')))) !== 'build') return;
+    this.routeTap = null; // a drag is no click: the next press is not the second of a double-click
+    if (!this.addRoutePoint(t)) { this.cancelRoute(); return; }
+    this.finishRoute();
+    if (this.route.length) this.cancelRoute(); // not built (money, a lock, a span too long): finishRoute said why
   }
   /** a route point within 0.05 tiles of a node lands on it: a 45° bend's corner a few hundredths off one was judged the same point by the rules
    *  but made a second node, and a road piece a few hundredths long (the road builder's stress test, 2026-10-19) */
@@ -5552,8 +5572,8 @@ export class Game {
     for (const s of this.net.segsNear(p, 0.2)) for (const n of [s.a, s.b]) if (Math.hypot(n.x - p.x, n.y - p.y) < 0.05) return { x: n.x, y: n.y };
     return p;
   }
-  undoRoutePoint() { this.route.pop(); this.emit(); }
-  cancelRoute() { this.route = []; this.routeFrom = this.routeLast = null; this.emit(); }
+  undoRoutePoint() { this.route.pop(); if (!this.route.length) this.routeGesture.cancel(); this.emit(); }
+  cancelRoute() { this.route = []; this.routeFrom = this.routeLast = null; this.routeGesture.cancel(); this.emit(); }
   /** strip test: does the prop footprint touch a leg's corridor of half width hw? */
   private propInLegs(p: Prop, legs: Leg[], hw: number) {
     const pts = [{ x: p.x0, y: p.y0 }, { x: p.x1, y: p.y0 }, { x: p.x0, y: p.y1 }, { x: p.x1, y: p.y1 }, { x: (p.x0 + p.x1) / 2, y: (p.y0 + p.y1) / 2 }];
@@ -6636,6 +6656,8 @@ export class Game {
   // ---------- input ----------
   pointerDown(e: PointerEvent) {
   const mx = e.offsetX, my = e.offsetY;
+  // #1276: the press that began a road route is still down (a drag): a right press cancels it, another finger is ignored; a fresh left press means its release was lost, so it is no drag any more
+  if (this.routeGesture.down) { if (e.button === 2) { this.cancelRoute(); return; } if (e.isPrimary === false) return; this.routeGesture.cancel(); }
   this.keys.clearMoves(); this.keys.syncMods(e); // T330: a map click lets go of a stuck movement key (a held one comes back with its repeat)
   this.moneyAt(this.tileAt(mx, my)); // T147: a spend this click makes floats up here
   this.camEase = null; // a press takes the camera back from New hole's framing (P23 4.4)
@@ -6735,7 +6757,7 @@ export class Game {
     }
     if (e.button !== 0) return;
     switch (this.tool) {
-      case 'road': this.roadClick(mx, my); break;
+      case 'road': this.roadPress(mx, my); break; // (#1276: a click, and a drag's start)
       case 'junction': this.junctionClick(mx, my); break;
       case 'toll': this.tollUpdate(mx, my); this.tollClick(); break;
       case 'business': this.bizUpdate(mx, my); this.bizClick(); break;
@@ -6760,6 +6782,7 @@ export class Game {
   this.ghostMouse = { mx, my }; this.hoverPick.dirty = true; // (#1282: the pointer cursor's test runs in the frame)
   if (this.badgeDrag) { const b = this.badgeDrag; b.mx = mx; b.my = my; if (Math.hypot(mx - b.sx, my - b.sy) > 4) b.moved = true; } // T174
   this.hover = this.tileAt(mx, my);
+  if (this.routeGesture.down && this.routeGesture.move(mx, my, e.buttons) === 'cancel') this.cancelRoute(); // #1276: a right click during the road drag drops the route
   if (this.real.active) this.real.move(this.hover); // T356
   // T200: the overlay's block under the pointer (a refused one too: its reason shows by the pointer)
   if (this.landMode && this.golf && this.hover) this.land.move(this.hover.x, this.hover.y);
@@ -6801,6 +6824,7 @@ export class Game {
     if (this.badgeDrag) { const b = this.badgeDrag, to = b.moved ? this.badgeAt(b.mx, b.my) : 0; this.badgeDrag = null; if (!b.moved) this.openHoleCard(b.n); else if (to && to !== b.n) this.renumberHole(b.n, to); this.emit(); }
     if (d?.kind === 'pan' && d.hole !== undefined && !d.moved) { if (d.hole) this.openHoleCard(d.hole); else this.closeHoleCard(); }
     if (d?.kind === 'park') this.parkRelease();
+    if (this.routeGesture.down) this.roadRelease(); // #1276: the press that began a road route lets go: a drag builds it
     // a click (no drag) on the course aims the owner's open shot (P4b)
     if (d?.kind === 'pan' && d.aim && !d.moved) this.aimAt(d.aim);
     if (d?.kind === 'pan' && d.you && !d.moved) this.youClick(d.sx, d.sy); // T240
@@ -7053,6 +7077,7 @@ export class Game {
     // T396 (#1064; the owner, 2026-11-08: "ctrl/z should always work"): Ctrl+Z and Ctrl+Y (Ctrl+Shift+Z) work from any tool, on the one stack the brush, the props and the practice tools
     // above already use: the roads, paths, drives and junctions a player builds are steps on it now, in time order with the course, the paint, the props and the settings
     if ((e.ctrlKey || e.metaKey) && !e.altKey && /^[yz]$/i.test(e.key)) { e.preventDefault(); if (e.key.toLowerCase() === 'z' && !e.shiftKey) this.paint.undoTop(); else this.paint.redoTop(); return; }
+    if (BEND_45 && (e.key === 'q' || e.key === 'Q')) { this.bendMode = this.bendMode === 90 ? 45 : 90; this.emit(); return; } // (#1317: the 45 degree bend is off for now: Q does nothing; route-legs.ts BEND_45)
     switch (e.key) {
       case 'Enter': this.routeInput('enter'); break;
       case 'Backspace': this.routeInput('backspace'); break;
@@ -7063,7 +7088,6 @@ export class Game {
       case 'o': case 'O': this.showAccess = !this.showAccess; this.emit(); break;
       case 'f': case 'F': this.setFlow(!this.showFlow); this.emit(); break;
       case 'b': case 'B': this.panel = this.panel === 'bottlenecks' ? null : 'bottlenecks'; if (this.panel) this.traffic.requestReport(); this.emit(); break;
-      case 'q': case 'Q': this.bendMode = this.bendMode === 90 ? 45 : 90; this.emit(); break;
       case 'e': case 'E': this.replaceMode = !this.replaceMode; this.toast(this.replaceMode ? 'Replace: on (roads in the way are bulldozed)' : 'Replace: off', 'info'); this.emit(); break;
       case 'r': case 'R': if (this.tool === 'toll') { this.tollFlip = !this.tollFlip; if (this.tollHover) this.tollUpdate(this.tollHover.mx, this.tollHover.my); this.emit(); }
         else if (this.tool === 'business') { this.bizRot = !this.bizRot; if (this.bizHover) this.bizUpdate(this.bizHover.mx, this.bizHover.my); this.emit(); }

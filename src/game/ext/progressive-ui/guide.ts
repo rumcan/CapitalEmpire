@@ -179,7 +179,7 @@ export const RANGE_GUIDE: readonly GuideStep[] = Object.freeze([
     tile: 'walking-path',
     n: 5,
     title: 'Lay a walking path',
-    body: 'Cart paths & roads › Walking path: from the car park to the shack and along behind the mats. Your golfers walk it instead of the dirt.',
+    body: 'Cart paths & roads › Walking path: drag from the car park to the shack, then along behind the mats. Your golfers walk it instead of the dirt.',
     done: 'auto',
     target: { ui: 'rail-paths', map: 'walkway' },
     reward: 1000,
