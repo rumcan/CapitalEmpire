@@ -25,7 +25,7 @@ const FULL: RangeUpgradeId[] = ['greens', 'bays8', 'bays12', 'covered', 'proshop
 /** the set-back range of the new start (rangestart.ts: setback 18): its lot lies in the frontage strip in front of the plot, 18 tiles from the guide's first ring (the path's end at the car park),
  *  so a lot's bays are the lot's own corners' box and its entrance is on the drive; its walkers step off its back edge and cross the strip to the ring */
 const SETBACK = 18;
-function setbackLot(sc: ReturnType<typeof rangeScene>): { bays: CarSlot[]; entrance: Pt } {
+function setbackLot(sc: ReturnType<typeof rangeScene>): { bays: ReturnType<typeof bayGrid>; entrance: Pt } {
   const xs = sc.anchors.lot.map(p => p.x), ys = sc.anchors.lot.map(p => p.y), x0 = Math.min(...xs), y0 = Math.min(...ys), e = P(72, -SETBACK + 8);
   return { bays: bayGrid({ id: 1, x: x0, y: y0, w: Math.max(...xs) - x0, h: Math.max(...ys) - y0 }, 0, [e]), entrance: e };
 }
