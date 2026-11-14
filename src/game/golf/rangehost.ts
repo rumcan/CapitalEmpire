@@ -25,7 +25,7 @@ import { WALK_RATE, clipFrame, rowToward } from '../crowdview';
 import { PLAYER_CART, PLAYER_RUN, PLAYER_WORKING, SHIFT_HOURS, SHIFT_STARTS, autoKit, bucketBalls, flowOf, nodeRates, onShift, robotBps, sellBps, staffBps, tripBps, washBps } from './rangeauto';
 import { CELL_T, type Grid, type GridDiff } from '../ext/course-grid';
 import { inPractice, practiceWords, scanPractice, type PracticeScan, type PracticeState } from './practice';
-import { cellSet, coveredBy } from './practicestarter';
+import { cellSet, coveredBy, paintedOver, starterAt, starterName } from './practicestarter';
 import type { PlanCells } from './practicebuild';
 import type { StepAside } from './practicetool';
 import { PRACTICE_APPEAL, PRACTICE_FEE, PRACTICE_IDS, practiceAppeal, rangeScale, rangeUpkeep, type PracticeId } from './rangesave';
@@ -190,7 +190,7 @@ export class RangeHost {
     // (T132: the target greens raised with a sun-lit edge in feathered collars, the outfield's stripes laid on its top)
     const mw = outfieldStripes(sc, rangePreset('outfield')?.stripes);
     // (T258: a picture laid flat by its lay: its turn, scale and corner)
-    this.ctx.setGround('range:ground', sc.patches.map((p, i) => ({ pts: p.pts, tex: patchTex(p.surf), paint: { s: p.lay?.s ?? 1, a: p.lay?.a ?? 0, b: 0, bt: 'kerb', z: -1e6 + i, ...(p.edge ? { e: p.edge } : {}), ...(p.tone ? { t: p.tone.t, ta: p.tone.ta } : {}), ...(p.mow && mw ? { mw } : {}), ...(p.lay ? { o: [p.lay.x, p.lay.y] as [number, number] } : {}) } })));
+    this.ctx.setGround('range:ground', sc.patches.map((p, i) => ({ pts: p.pts, tex: patchTex(p.surf), paint: { s: p.lay?.s ?? 1, a: p.lay?.a ?? 0, b: 0, bt: 'kerb', z: -1e6 + i, ...(p.edge ? { e: p.edge } : {}), ...(p.tone ? { t: p.tone.t, ta: p.tone.ta } : {}), ...(p.mow && mw ? { mw } : {}), ...(p.lay ? { o: [p.lay.x, p.lay.y] as [number, number] } : {}), ...(p.under ? { u: 1 as const } : {}) } })));
     if (!this.scene) { this.ctx.clearTrees(sc.box); this.ctx.clearTrees(sc.practice.box); }
     // the old start's cement walkway, laid once (an old save's first load); T239: a guided start's walkway is the player's to lay
     if (b.paths === false) { this.ctx.layPaths(sc.paths); b.paths = true; this.ctx.save(); }
@@ -485,11 +485,31 @@ export class RangeHost {
    *  the next frame: the key follows the save) and the returned step brings them back (undo) or takes them away again (redo); null: none was under it */
   replaceStarters(c: PlanCells): StepAside | null {
     const b = this.ctx.biz(), sc = this.scene, g = this.ctx.grid(); if (!b?.starter || !sc || !g || !sc.starter.length) return null;
-    const hit = coveredBy(sc.starter, b.starter.gone, g, cellSet(c.green, c.bunker, c.tee, c.rough));
-    if (!hit.length) return null;
-    const before = [...b.starter.gone], after = [...before, ...hit].sort((x, y) => x - y), set = (gone: number[]) => { const k = this.ctx.biz()?.starter; if (k) { k.gone = [...gone]; this.ctx.save(); this.ctx.emit(); } };
-    b.starter.gone = after; this.ctx.save();
+    return this.dropStarters(coveredBy(sc.starter, b.starter.gone, g, cellSet(c.green, c.bunker, c.tee, c.rough)));
+  }
+  /** #1298: starter pieces (their ids) taken away for good: they go from the save now (the scene lays itself again at the next frame) and the returned step brings them back (undo) or
+   *  takes them away again (redo); null: none of them stands */
+  dropStarters(ids: readonly number[]): StepAside | null {
+    const b = this.ctx.biz(), k0 = b?.starter; if (!k0) return null;
+    const hit = ids.filter(id => !k0.gone.includes(id)); if (!hit.length) return null;
+    const before = [...k0.gone], after = [...before, ...hit].sort((x, y) => x - y), set = (gone: number[]) => { const k = this.ctx.biz()?.starter; if (k) { k.gone = [...gone]; this.ctx.save(); this.ctx.emit(); } };
+    k0.gone = after; this.ctx.save();
     return { undo: () => set(before), redo: () => set(after) };
+  }
+  /** #1298: the piece of the practice area's starter set standing under tile (x, y), as the Bulldoze tool sees it (null: none): its id and name */
+  starterAt(x: number, y: number): { id: number; name: string; pts: number[] } | null {
+    const b = this.ctx.biz(), sc = this.scene; if (!b?.starter || !sc || !sc.starter.length || !inPractice(sc.practice, x, y)) return null;
+    const p = starterAt(sc.starter, b.starter.gone, x, y);
+    return p ? { id: p.id, name: starterName(p), pts: p.rim ?? p.pts } : null;
+  }
+  /** #1298: the starter pieces a change of the course grid (d, made in place on g) painted over go, as a step aside (the Texture Painter's stroke or shape: the paint wins; its undo brings
+   *  them back); null: it painted over none */
+  paintedOver(g: Grid, d: GridDiff): StepAside | null {
+    const b = this.ctx.biz(), sc = this.scene; if (!b?.starter || !sc || !sc.starter.length || !d.n) return null;
+    let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
+    for (let k = 0; k < d.n; k++) { if (d.s1[k] === 0) continue; const i = d.idx[k]!, cx = i % d.w, cy = (i - cx) / d.w, x = d.x0 + cx * CELL_T, y = d.y0 + cy * CELL_T; if (x < x0) x0 = x; if (x + CELL_T > x1) x1 = x + CELL_T; if (y < y0) y0 = y; if (y + CELL_T > y1) y1 = y + CELL_T; }
+    if (x0 > x1) return null;   // (it laid no surface: a rub out, a bulldozed facility)
+    return this.dropStarters(paintedOver(sc.starter, b.starter.gone, g, [x0, y0, x1, y1]));
   }
   private drawPractice(c: CanvasRenderingContext2D, screen: (x: number, y: number) => { x: number; y: number }, zoom: number, dpr: number, on: (p: { x: number; y: number }, m?: number) => boolean, labels: WorldLabels): void {
     const sc = this.scene!, pa = sc.practice, p = this.practice;

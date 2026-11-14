@@ -31,6 +31,9 @@ export interface PracticeHostCtx {
   /** #1281: the starter set's pieces a facility's cells lie over are taken away now (the practice area's own dirt greens and bunker: it replaces them); what it
    *  did as a step's aside (null: it covered none) */
   replaceStarters?(c: PlanCells): StepAside | null;
+  /** #1298: the starter piece under tile (x, y) (its id, name and outline: x y pairs; null: none), and taking pieces away (their ids) as a step aside; the bulldozer takes one on its own */
+  starterAt?(x: number, y: number): { id: number; name: string; pts: number[] } | null;
+  dropStarters?(ids: readonly number[]): StepAside | null;
   /** the camera on tile (x, y) at zoom z */
   lookAt(x: number, y: number, z: number): void;
   save(): void; toast(text: string, kind: 'good' | 'info' | 'warn'): void; emit(): void;
@@ -161,11 +164,23 @@ export class PracticeTool {
     const f = facilityAt(g, a.box, x, y); if (!f) return null;
     return { cells: f.cells, refund: facilityRefund(f), name: f.bunker > 0 ? 'chipping green and bunker' : f.green > 0 ? 'practice green' : 'chip mat' };
   }
-  /** the bulldozer on tile (x, y): the facility there goes whole (its cells back to the land's grass), half its price back; false: none there */
+  /** the bulldozer on tile (x, y): the facility there goes whole (its cells back to the land's grass), half its price back; #1298: else a starter piece of the practice area's set on its
+   *  own (a dirt green with its flag, the sand scrape: free, nothing back; one undo step brings it back); false: none there */
   removeAt(x: number, y: number): boolean {
-    const f = this.facilityAt(x, y); if (!f) return false;
+    const f = this.facilityAt(x, y);
+    if (!f) return this.removeStarterAt(x, y);
     this.ctx.gridStep(`remove the ${f.name}`, g => ({ diffs: [paintCells(g, f.cells, f.cells.length, SURF.none, 0, 0)], spent: -f.refund }));
     this.ctx.toast(`Removed the ${f.name} (+$${f.refund.toLocaleString()})`, 'good');
+    this.ctx.save(); this.refresh(); this.ctx.emit();
+    return true;
+  }
+  /** #1298: the starter piece under tile (x, y) as the bulldozer's hover says it (null: none; the engine draws its outline) */
+  starterAt(x: number, y: number): { id: number; name: string; pts: number[] } | null { return this.ctx.starterAt?.(x, y) ?? null; }
+  /** #1298: the bulldozer on a starter piece: it goes (the scene lays itself again without it and its flag), free, as one undo step */
+  private removeStarterAt(x: number, y: number): boolean {
+    const s = this.starterAt(x, y); if (!s) return false;
+    this.ctx.gridStep(`remove the ${s.name}`, () => { const aside = this.ctx.dropStarters?.([s.id]) ?? null; return aside ? { diffs: [], spent: 0, aside } : null; });
+    this.ctx.toast(`Removed the ${s.name} (free)`, 'good');
     this.ctx.save(); this.refresh(); this.ctx.emit();
     return true;
   }

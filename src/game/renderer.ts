@@ -25,6 +25,7 @@ import { LIP, collarToneOf, finishMow, finishOf, lipRuns, mowSpec, tonedCollar, 
 import type { MowKind } from './mow-lines';
 import { BUNKER_WALL_MEAN, BUNKER_WALL_METRES, BUNKER_WALL_PICTURE, SAND_WALL_MEAN, TEE_WALL_EXPOSURE, bunkerWallContact, bunkerWallOverhang, teeWallShade } from './tee-wall';
 import { quadBox, type CourseLayer, type CoursePatch, type CourseRim, type CourseTex, type CourseWall, type LotPatch, type MowStripes, type PatchTex, type ShineMaskData } from './ground-protocol';
+import { COURSE_RANK, paintOrder, paintRank } from './paint-order';
 import { BunkerStageRegistry } from './ext/bunker-look/stage-registry';
 import { SHINE_TEXEL, SHINE_TEXEL_PX, SHINE_WEIGHTS, maskColour, maskPad, shineMaskPixels, shineWeight, type ShineWeights } from './grass-shine';
 import { DRAW_ORDER, FaceForm, GREEN_FACE, STAIR_TREAD, SURF_HEIGHT, SUN_DIR, WALL_DROP, WALL_PX_PER_M, WALL_TEX, WallMat, defaultShadow, faceLight, faceScale, isOverlay, layerCode, shadowOwner, slopeLight, stairSteps, wallShade, type Stair, type WallShade } from './ext/course-walls';
@@ -248,8 +249,8 @@ const polyPath = (pts: number[]) => {
 const ringPath = (p: Path2D, pts: ArrayLike<number>) => { if (pts.length < 6) return; p.moveTo(pts[0]!, pts[1]!); for (let k = 2; k + 1 < pts.length; k += 2) p.lineTo(pts[k]!, pts[k + 1]!); p.closePath(); };
 /** T344: open polylines (flat x, y, tiles) as one path: a painted water area's outline with the part by the map's water left out (its border band) */
 const runsOpenPath = (runs: readonly ArrayLike<number>[]) => { const p = new Path2D(); for (const r of runs) { if (r.length < 4) continue; p.moveTo(r[0]!, r[1]!); for (let k = 2; k + 1 < r.length; k += 2) p.lineTo(r[k]!, r[k + 1]!); } return p; };
-/** a painted area's or course chunk's place in the draw order among the painted areas */
-const paintZ = (p: LotPatch) => p.course ? -1e300 : p.paint!.z; // the course under every painted area, even one ordered below 0
+// (a painted area's or course chunk's place in the draw order among the painted areas: paint-order.ts paintOrder. The course is under every painted area, even one ordered below 0;
+// #1298: an area flagged PatchPaint.u, the ground under what the player paints, under the course)
 /** the course chunks' draw-order switch (renderer drawCourses): step 4, the dirt of seeded cells through the growth mask, is on (T076 landed);
  *  step 8, the fairway's mowing stripes, is GroundPainter.stripes (T218, on: the dev switch GroundCache.setStripes) */
 const COURSE_DIRT = true;
@@ -584,7 +585,7 @@ export class GroundPainter {
     const all = this.lotsIn(big).filter(p => !p.top && !p.layby);
     const isPark = (p: LotPatch) => (!!p.lines?.length || !!p.park) && p.tex !== 'field' && p.tex !== 'dirt';
     const lawns = all.filter(p => p.lawn).sort((p, q) => p.lawn!.z - q.lawn!.z), lots = all.filter(p => !p.paint && !p.course && !p.lawn && p.tex !== 'marks');
-    const paints = all.filter(p => p.paint || p.course).sort((p, q) => paintZ(p) - paintZ(q));
+    const paints = all.filter(p => p.paint || p.course).sort(paintOrder);
     /** rings (tiles, even-odd) of texture tex (null: ground that is no grass), within clip (tiles) when given, at share of its weight */
     const lay = (rings: readonly ArrayLike<number>[], tex: string | null, clip?: Path2D, share = 1) => {
       if (!rings.length) return;
@@ -925,8 +926,9 @@ export class GroundPainter {
     const segs = [...this.net.segsNear({ x: cx, y: cy }, rr)].filter(s => s.kind !== SK.TUNNEL);
     /** the ground at (x, y) as the band sees it: undefined where it must not blend (a later area, or the earlier ground on top is paving,
      *  water or sand), else the earlier area on top there (null: the map's own ground) */
-    // the course is drawn with the painted areas, under all of them (paintZ): earlier than a painted area, later than a lawn or a lot's ground
-    const courseLater = myRank[0] < 2, courseRank: readonly [number, number, number] = [2, -1e300, 0];
+    // the course is drawn with the painted areas, under all of them (paintOrder): earlier than a painted area, later than a lawn, a lot's ground or an area under it (PatchPaint.u)
+    // (#1298: the areas under the course, the range's outfield, have it later than themselves too)
+    const courseRank = COURSE_RANK, courseLater = rankAbove(courseRank, myRank);
     const groundAt = (x: number, y: number): LotPatch | string | null | undefined => {
       let top: LotPatch | null = null;
       for (let q = 0; q < near.length; q++) {
@@ -1342,7 +1344,7 @@ export class GroundPainter {
     shape('creek', 0, this.planColour('water'));
     // lot ground as flat fills (before the roads, so the kerbs stay on top)
     const planFill = (t: PatchTex) => t === 'asphalt' || t === 'asphaltDark' || t === 'asphaltWorn' ? PLAN_ASPHALT : t === 'slabs' ? '#9a9184' : t === 'concrete' ? '#48443f' : this.planColour(t);
-    const lotAll = this.lotsIn(box).filter(p => !p.top), paintsP = lotAll.filter(p => p.paint || p.course).sort((a, b) => paintZ(a) - paintZ(b));
+    const lotAll = this.lotsIn(box).filter(p => !p.top), paintsP = lotAll.filter(p => p.paint || p.course).sort(paintOrder);
     for (const p of [...lotAll.filter(p => !p.paint && !p.course && p.tex !== 'marks' && !(p.lawn && p.lawn.share < 1)), ...paintsP]) {
       // a course chunk: each surface's collar band and fill rings in their flat planner colours (even-odd)
       if (p.course) { for (const l of p.course.layers) for (const [t, rings] of [...(l.collar ? [[l.collar.tex, l.collar.fill] as const] : []), [l.tex, l.fill] as const]) { if (!rings.length) continue; const path = new Path2D(); for (const q of rings) ringPath(path, q); ctx.fillStyle = this.planTiled(ctx, t) ?? this.planColour(t); ctx.fill(path, 'evenodd'); } this.planSeeded(ctx, p.course); continue; }
@@ -1802,7 +1804,7 @@ export class GroundPainter {
     const all = this.lotsIn(box).filter(p => !p.top && !p.layby), tops = this.lotsIn(box).filter(p => p.top && p.lines?.length && !p.layby), laybys = this.lotsIn(box).filter(p => p.layby);
     // T247: a lot's lawn of dirt or desert with a soft band (soft-edges.ts) is drawn after the other lawns at its level, so the band blends into them
     const softOn = this.softDirt, softLawn = (p: LotPatch) => softOn && p.lawn!.z >= 1 && p.lawn!.share >= 1 && this.softTex(this.lawnTexOf(p)) ? 1 : 0;
-    const lawns = all.filter(p => p.lawn).sort((a, b) => a.lawn!.z - b.lawn!.z || (softOn ? softLawn(a) - softLawn(b) : 0)), marks = all.filter(p => p.tex === 'marks'), lots = all.filter(p => !p.paint && !p.course && !p.lawn && p.tex !== 'marks'), paints = all.filter(p => p.paint || p.course).sort((a, b) => paintZ(a) - paintZ(b));
+    const lawns = all.filter(p => p.lawn).sort((a, b) => a.lawn!.z - b.lawn!.z || (softOn ? softLawn(a) - softLawn(b) : 0)), marks = all.filter(p => p.tex === 'marks'), lots = all.filter(p => !p.paint && !p.course && !p.lawn && p.tex !== 'marks'), paints = all.filter(p => p.paint || p.course).sort(paintOrder);
     const isPark = (p: LotPatch) => (!!p.lines?.length || !!p.park) && p.tex !== 'field' && p.tex !== 'dirt', parks = lots.filter(isPark), rest = lots.filter(p => !isPark(p));
     // T259: a farm's lane and tracks (hard) over its fields and yard, whatever order the lot grid hands them in
     if (rest.some(p => p.hard)) rest.sort((a, b) => (a.hard ? 1 : 0) - (b.hard ? 1 : 0));
@@ -1810,7 +1812,7 @@ export class GroundPainter {
     // drawn in (lawns, lot ground, painted areas, car parks; an area drawn later or alongside keeps the hard edge between them)
     const sw0 = softOn ? softWidth(L) : 0, sReach = softOn ? sw0 / 2 + Math.max(SOFT.ease, SOFT.easeK * sw0) + Math.max(SOFT.probe, SOFT.probeK * sw0) + 4 : 0;
     const softCands = softOn ? this.lotsIn([box[0] - sReach, box[1] - sReach, box[2] + sReach, box[3] + sReach]).filter(p => !p.top && !p.layby && p.tex !== 'marks') : [];
-    const rankOf = (p: LotPatch): [number, number, number] => p.lawn ? [0, p.lawn.z, softLawn(p)] : p.course ? [2, -1e300, 0] : p.paint ? [2, p.paint.z, 0] : isPark(p) ? [3, 0, 0] : [1, 0, 0];
+    const rankOf = (p: LotPatch): [number, number, number] => p.lawn ? [0, p.lawn.z, softLawn(p)] : p.course || p.paint ? paintRank(p) : isPark(p) ? [3, 0, 0] : [1, 0, 0];
     const sc: SoftCtx | null = softOn ? {
       cands: softCands, courses: softCands.filter(p => p.course).map(p => this.warpedCourse(p.course!, lite)),
       rank: rankOf, areas: new Map(),

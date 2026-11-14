@@ -129,7 +129,10 @@ export interface ScenePiece { key: string; id: string; x: number; y: number; q: 
 export interface ScenePatch { pts: number[]; surf: 'fairway' | 'firstCut' | 'tee' | 'fringe' | 'green' | 'rough' | 'dirt' | 'grassDry' | 'asphaltDark' | 'gravel' | 'concrete' | 'outfield' | 'target' | 'desert' | 'teeDirt' | 'teeTurf' | 'yard' | 'mats' | 'targetGreen' | 'bullseye'
     | 'dirtGreen' | 'scrape' | 'sand'; edge?: 'raised' | 'turf' | 'flat'; mow?: true;
   /** T258: a picture's lay (its surf one of the pictures) */ lay?: PicLay;
-  /** #1281: its fill's exposure (PatchPaint.t and .ta: 1 darker, 2 lighter, by this much: paint-edges' exposure.ts), the starter bunker's sand a little duller */ tone?: { t: 1 | 2; ta: number } }
+  /** #1281: its fill's exposure (PatchPaint.t and .ta: 1 darker, 2 lighter, by this much: paint-edges' exposure.ts), the starter bunker's sand a little duller */ tone?: { t: 1 | 2; ta: number };
+  /** #1298: the ground the player paints over (PatchPaint.u): the outfield, bare or grassed, and the practice area's starter set are drawn under the course's painted cells, so a bunker, a pond,
+   *  waste, rough or a green painted there shows on top with its own edges. The range's fixed pieces (the tee box, the mats, the target greens, the shop's dirt and the yards) are not:
+   *  they stay over the course, each protected by its own outline */ under?: true }
 // (#1281: the surfaces 'dirtGreen', 'scrape' and 'sand' are the practice area's starter set (golf/practicestarter.ts): packed earth (the range's tee dirt), the earth rim of a
 // crude bunker and its sand. None of them is a pad of the practice view: it draws the range's slabs, yards and tee dirt, not these)
 /** T258: how a range picture lies on the ground: the corner of one picture (world tiles), its turn (degrees: its x axis along (cos a, sin a),
@@ -281,8 +284,9 @@ export function rangeScene(plot: Rect, facing: 0 | 1 | 2 | 3, s: RangeBizSave, o
   // the caravan's dry lawn
   // the outfield is the range's own preset with its mowing stripes laid on top (T132: they read at every zoom, across the line of play); a desert
   // start's (T223) is the desert, edge to edge, until the player grasses it
-  if (st.grass) patches.push({ pts: quad(0.3, 69.7, TEE[3] + TEE_GAP, 149.7), surf: 'firstCut' }, { pts: quad(2, 68, TEE[3] + TEE_GAP + 0.6, 148), surf: 'outfield', mow: true });
-  else patches.push({ pts: quad(0.3, 69.7, TEE[3] + TEE_GAP, 149.7), surf: 'desert' });
+  // (#1298: the outfield is the ground under what the player paints: the Texture Painter's cells draw over it, grassed or not)
+  if (st.grass) patches.push({ pts: quad(0.3, 69.7, TEE[3] + TEE_GAP, 149.7), surf: 'firstCut', under: true }, { pts: quad(2, 68, TEE[3] + TEE_GAP + 0.6, 148), surf: 'outfield', mow: true, under: true });
+  else patches.push({ pts: quad(0.3, 69.7, TEE[3] + TEE_GAP, 149.7), surf: 'desert', under: true });
   // the tee box wears the range's own tee (T223): packed dirt at a desert start, its divot-scarred turf once turfed (the course's tees keep theirs).
   // The dirt reaches over the tee cells' first-cut collar (TEE_DIRT_PAD), so no green ring frames a desert tee; the turf keeps its collar
   const pad = st.teeTurf ? 0 : TEE_DIRT_PAD;
