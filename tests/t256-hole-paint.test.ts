@@ -197,7 +197,8 @@ test('the chunks wear each owner\'s look: two holes\' bunkers in one chunk in tw
 test('a facility\'s zone gives the cells of no hole in it the facility\'s look', () => {
   const g = makeGrid(0, 0, 256, 256); paintDisc(g, 20, 30, 3, SURF.green, 0, 0); paintDisc(g, 44, 30, 3, SURF.green, 0, 0);
   const base = looksOf(dflt), put = courseLookSet({ ...dflt, green: { style: { ...dflt.green!.style, tex: 'dirt' } } }, pre);
-  const l = coursePatch(g, 0, 0, { ...base, own: { looks: [put], hole: [-1], zones: [0, 38, 24, 50, 36] } }, 0)!.course!.layers.find(q => q.s === SURF.green)!;
+  // (#1298: a zone is a mask over its box, the facility's own cells: here every cell of the box is)
+  const l = coursePatch(g, 0, 0, { ...base, own: { looks: [put], hole: [-1], zones: [{ k: 0, x0: 38, y0: 24, x1: 50, y1: 36, mask: new Uint8Array(24 * 24).fill(1) }] } }, 0)!.course!.layers.find(q => q.s === SURF.green)!;
   assert.equal(l.alts?.length, 1); assert.ok([l.tex, l.alts![0]!.look.tex].includes('dirt'));
 });
 

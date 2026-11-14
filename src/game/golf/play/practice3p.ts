@@ -46,6 +46,9 @@ export interface PracticeIn {
   /** J6b (J7's junk, #1225): the junk piles on the outfield: library id, name, spot (tiles) and metres from the mats (absent: none) */
   junk?: readonly { id: string; name: string; x: number; y: number; m: number }[]; bays: readonly Pt[]; greens: readonly RangeGreen[];
   area: readonly [number, number, number, number] | null; areas: readonly CourseArea[]; chip: ChipArea | null;
+  /** #1298: what the player painted on the outfield with the Texture Painter (its bunkers, ponds, waste, rough and long grass: the map's cells as areas, none of the tee's or a
+   *  collar's), laid over the outfield and under the tee and the target greens, as the game draws them (the range's fixed pieces stay on top); absent: none */
+  painted?: readonly CourseArea[];
   heightAt?: (x: number, y: number) => number; name?: string;
 }
 /** the practice course: what the exporter takes, the course the model plays, the mat he stands on, the greens (the drills' terms), the chipping green's
@@ -73,6 +76,8 @@ export function practiceCourse(p: PracticeIn): PracticeCourse {
   if (p.ground) add('rough', rect(p.ground));
   const outfieldAt = areas.length;
   add(p.outfieldSurface ?? 'fairway', p.outfield.slice());
+  // #1298: what the player painted on the outfield, over it (the ball lies in a painted bunker, rolls into a painted pond), under the fixed pieces
+  for (const a of p.painted ?? []) add(a.surface, a.pts.slice());
   add('tee', p.teeBox.slice());
   const greens: RangeGreen[] = p.greens.length ? p.greens.slice() : [];
   if (p.greensBuilt !== false) for (const g of greens) add('green', disc(g.x, g.y, g.r));

@@ -245,6 +245,27 @@ character ignored paths (your clicks only took the occupancy raster's cheaper ti
   scripts/jam/walk-on-paths-shots.mjs --base http://127.0.0.1:PORT/` on a dev server (`VITE_JAM=1 npx vite --port PORT` for the jam's flow): `docs/jam-shots/walk-on-paths-*.jpg` (customers on the
   path between the car park and the shop, two frames 2.8 s apart, over the whole view and close up; the attendant out on the field path; you walking a clicked route along the path).
 
+## Painting on the practice area and on the range's outfield (#1298, the owner 2026-11-14: "some box around the practice greens are not letting it paint there and I cannot bulldoze or remove the old sand pit and dirt green"; "the range texture painter ... when i paint there it doesnt show above the fairway grass")
+The painted ground and the game's own ground had no shared rule for who is on top, and a facility's look ended at a rectangle.
+- **The boxes.** A practice facility wears its own looks (T256, `golf/looks.ts`), and the cells of no hole it owned were found by a box: `Game.facilityBox`, the bounds of its cells grown by 2.5 tiles,
+  passed to the course chunks as `CourseOwners.zones`. Once the property's look for a surface differed from the facility's (the owner picked fescue for Long grass), what was painted round a green
+  showed in the facility's look inside a rectangle round it. The zone is now the facility's own cells (`practicebuild.facilityMaskAt`, `course-grid/patch.ts` `FacilityZone` and `zoneOwner`): a mask
+  over the bounds of its green, sand, tee and rough band. Paint round it, and band cells painted over, wear the property's looks and run up to the collar; a band left alone keeps the facility's rough.
+- **The layers** (`paint-order.ts`, `PatchPaint.u`). The range's ground (`range:ground`: the bare or grassed outfield) and the practice area's starter set are painted areas, drawn over the course's
+  own cells, which is what the Texture Painter lays: paint on them was charged for and hidden. An area flagged `u` is now drawn **under** the course: the outfield (`desert`, or `firstCut` and the mown
+  `outfield`) and the starter set. The tee box and its turf, the mats' deck, the target greens, the shop's dirt and the yards stay over the course, each protected by its own outline only (paint under
+  them is hidden and charged, as before). Grassing the outfield afterwards changes only the ground under the paint. `paintTier` and `paintOrder` (course 1, under 0, other painted areas 2) sort the
+  three renderer lists, `paintRank` the soft bands' ranks.
+- **The starter set** (three dirt greens and the sand scrape, `practicestarter.ts`) goes three ways: built over (as before, `coveredBy`), painted over (`paintedOver`: a third of its cells under
+  painted cells at the end of a stroke or shape, taken in that action's undo step), or bulldozed on its own (`PracticeTool.removeAt` then `removeStarterAt`: the hover outlines the piece in red with
+  "Click removes the dirt green (free)", free, one undo step). A proper practice green keeps the bulldozer's rules (half its price back, the hover says so).
+- **The practice view** ("Hit balls", "Chip and putt") takes the outfield's painted areas from the map (`PracticeIn.painted`): a painted bunker or pond is in the view, over the outfield and under the
+  tee and the target greens. Old saves, the golfer counts and the income do not change: the facilities read the same cells.
+- **Looking at it**: `node scripts/dev/practice-paint-shots.mjs --base <url> --out <dir> --look desert|autumn [--legacy] [--steps practice,range,perf]` (headless Chrome, real mouse, pixels sampled
+  from the screen; `--legacy` puts the three old behaviours back inside the page and reproduces the owner's play-test; `perf` times the strokes). Shots: `docs/jam-shots/practice-paint-*`, `range-paint-*`.
+- **Cost** (the perf step: seven brush strokes across the practice area with a real mouse, the main thread's time in the pointer handlers; this ticket and the old behaviour taken in turn, four
+  rounds each after a warm-up, the medians): 362.6 ms against 381.2 ms, about 2.2 ms a pointer move either way. The facility zones are 46 ms of it in both (`facilityAt` once per grid change).
+
 ## J12: a living scene behind the title card (#1271, the owner 2026-11-14)
 "animated town/golfcourse/farms etc behind the main menu like the factorio main menu ... very pretty and zoomed in, inspire the player to build a pretty golf course and customise his town".
 - **The real game runs behind the card, on a prepared world; not recordings.** The engine boots behind the jam's card anyway, so a live scene costs no extra boot, stays sharp at any size and shows

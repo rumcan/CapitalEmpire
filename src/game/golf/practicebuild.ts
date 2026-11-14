@@ -286,6 +286,17 @@ export function facilityAt(g: Grid, box: readonly [number, number, number, numbe
   }
   return { cells: out, green, bunker, tee, rough };
 }
+/** #1298: the cells of the facility under tile (x, y) (facilityAt: its green, bunker, tee and rough band, the rough still rough) as a mask over their tile box: the box on the cell lattice (x0 y0 x1 y1,
+ *  tiles), one byte a cell over it, row-major, 1 where the cell is the facility's. It is the shape the facility's own looks apply to (course-grid patch FacilityZone): the facility's outline with its
+ *  band, never a box round it. null: no facility there */
+export function facilityMaskAt(g: Grid, box: readonly [number, number, number, number], x: number, y: number): { x0: number; y0: number; x1: number; y1: number; mask: Uint8Array } | null {
+  const at = facilityAt(g, box, x, y); if (!at?.cells.length) return null;
+  let cx0 = Infinity, cy0 = Infinity, cx1 = -Infinity, cy1 = -Infinity;
+  for (const i of at.cells) { const cx = i % g.w, cy = (i - cx) / g.w; if (cx < cx0) cx0 = cx; if (cx > cx1) cx1 = cx; if (cy < cy0) cy0 = cy; if (cy > cy1) cy1 = cy; }
+  const w = cx1 - cx0 + 1, mask = new Uint8Array(w * (cy1 - cy0 + 1));
+  for (const i of at.cells) { const cx = i % g.w, cy = (i - cx) / g.w; mask[(cy - cy0) * w + cx - cx0] = 1; }
+  return { x0: g.x0 + cx0 * CELL_T, y0: g.y0 + cy0 * CELL_T, x1: g.x0 + (cx1 + 1) * CELL_T, y1: g.y0 + (cy1 + 1) * CELL_T, mask };
+}
 /** what the bulldozer refunds for a facility's cells: half their seeded price (the course's sell-back rate, as a prop's) */
 export const facilityRefund = (f: { green: number; bunker: number; tee: number; rough?: number }): number => Math.round((f.green * unitBuildCost('green') + f.bunker * unitBuildCost('bunker') + f.tee * unitBuildCost('tee') + (f.rough ?? 0) * unitBuildCost('rough')) / 2);
 /** the bunker cells within practice.ts's reach of a plan's green (the chipping green needs BUNKER_MIN of them) */
