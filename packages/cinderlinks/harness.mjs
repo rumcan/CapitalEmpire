@@ -262,6 +262,44 @@ const HOST_PLAY = String.raw`
   }
   // T423: a putt on the host's green: the read is on the card; the putt aimed along the read's start line ends in the cup, aimed at the cup it ends off by
   // the break; a gimme goes out only inside the round's rule
+  // #1308: practising, the aim is the player's. Two balls in a row: he moves the aim, the club and the curve before the first; the second turn (after the ball has landed and the panel is sent
+  // again) must start from the same aim, club and curve. A drill he clicks (a pick) takes the host's suggestion once; the ball after that keeps his again
+  function hostPracRun() {
+    const errs = [], info = {}, S = course.S, b0 = [ball.x / S, ball.y / S], p0 = [hole.pin.x / S, hole.pin.y / S], dl = Math.hypot(p0[0] - b0[0], p0[1] - b0[1]), ux = (p0[0] - b0[0]) / dl, uy = (p0[1] - b0[1]) / dl;
+    const kit = (club, carryM) => ({ club, carryM, scatterM: 18, longM: 12, playsM: carryM * 0.98, sideM: 1, loftDeg: 30, speed: 0.9, sweet: 0.08 });
+    const turn = (stroke) => ({ v: 1, t: 'turn', golfer: 0, holeIdx: 0, hole: holeN, par: hole.par, stroke, at: 0, lie: 'tee', lieKind: 'tee', ball: b0, pin: p0, distM: dl, wind: { mph: 0, from: 0 },
+      slope: { up: 0, across: 0 }, clubs: [kit('driver', 230), kit('iron7', 150)], suggested: { club: 'driver', aim: [b0[0] + ux * 230, b0[1] + uy * 230], power: 1 } });
+    const prac = (active, balls) => ({ v: 1, t: 'practice', place: 'range', drills: [{ id: 'distance', name: 'Distance', goal: 'g', got: 0, need: 5, done: false, reward: 'r', here: true }, { id: 'shaping', name: 'Shaping', goal: 'g', got: 0, need: 5, done: false, reward: 'r', here: true }], active, note: null, paid: null, flags: [], hcp: '18', balls });
+    const step = (n) => { for (let k = 0; k < n; k++) tickGame(); };
+    const rest = (stroke) => { hostMessage({ v: 1, t: 'shot', golfer: 0, hole: holeN, stroke, club: 'iron7', from: b0, flight: [], bounces: [], roll: [], rest: b0, restLie: 'tee', holed: false, penalty: 0, at: 0 }); };
+    for (const c of Object.keys(keys)) keys[c] = false; mouse.down = false; charging = false; player.swing = -1;
+    step(70); hostMessage(prac('distance', 0)); hostMessage(turn(1)); step(4);
+    if (club !== 0) errs.push('host practice: the first ball did not take the suggested club');
+    // he moves the aim 60 m on, 25 m to the right, takes the 7-iron and a 40% draw
+    const tx = ball.x + (ux * 60 - uy * 25) * S, ty = ball.y + (uy * 60 + ux * 25) * S, l = Math.hypot(tx - ball.x, ty - ball.y);
+    aim.x = tx; aim.y = ty; aim.dx = (tx - ball.x) / l; aim.dy = (ty - ball.y) / l; hostAimPin = true; club = 1; hostPickAmt('curve', -0.4); step(2);
+    const mine = [aim.x, aim.y, aim.dx, aim.dy];
+    hostStrike(); rest(1); hostMessage(prac('distance', 1)); hostMessage(turn(2));
+    for (let k = 0; k < 400 && (HP.play || HP.q.length || ball.state !== 0); k++) tickGame();
+    info.second = { club, curve: HP.pick && HP.pick.curve, aim: [aim.x === mine[0], aim.y === mine[1], aim.dx === mine[2], aim.dy === mine[3]], pin: hostAimPin };
+    if (!HP.turn || HP.turn.stroke !== 2) errs.push('host practice: the second ball was not taken');
+    if (aim.x !== mine[0] || aim.y !== mine[1] || aim.dx !== mine[2] || aim.dy !== mine[3]) errs.push('host practice: the aim jumped after the ball landed (' + JSON.stringify(info.second) + ')');
+    if (club !== 1 || !HP.pick || HP.pick.curve !== -0.4) errs.push('host practice: the club or the curve went back to the default (' + JSON.stringify(info.second) + ')');
+    // the third ball too: nothing was touched in between
+    hostStrike(); rest(2); hostMessage(prac('distance', 2)); hostMessage(turn(3));
+    for (let k = 0; k < 400 && (HP.play || HP.q.length || ball.state !== 0); k++) tickGame();
+    if (aim.x !== mine[0] || aim.y !== mine[1] || club !== 1) errs.push('host practice: the aim jumped after the second ball');
+    // a drill he clicks: the suggestion, once (the aim is the drill's 230 m, the club the driver); then his again
+    pracPicked = true; hostMessage(prac('shaping', 3)); hostMessage(turn(4)); step(2);
+    info.picked = { club, curve: HP.pick && HP.pick.curve, away: +(Math.hypot(aim.x - ball.x, aim.y - ball.y) / S).toFixed(1) };
+    if (club !== 0 || Math.abs(Math.hypot(aim.x - ball.x, aim.y - ball.y) / S - 230) > 0.01 || (HP.pick && HP.pick.curve)) errs.push('host practice: a drill picked did not take its own aim (' + JSON.stringify(info.picked) + ')');
+    aim.x = ball.x + ux * 100 * S; aim.y = ball.y + uy * 100 * S; aim.dx = ux; aim.dy = uy; club = 1;
+    hostStrike(); rest(4); hostMessage(prac('shaping', 4)); hostMessage(turn(5));
+    for (let k = 0; k < 400 && (HP.play || HP.q.length || ball.state !== 0); k++) tickGame();
+    if (club !== 1 || Math.abs(Math.hypot(aim.x - ball.x, aim.y - ball.y) / S - 100) > 0.01) errs.push('host practice: after a drill picked the aim did not stay again');
+    pracClear();
+    return { errs, info };
+  }
   function hostGreenRun() {
     const errs = [], info = {}, S = course.S, p0 = [hole.pin.x / S, hole.pin.y / S], ux = hole.dx, uy = hole.dy, deg = 5, a = deg * Math.PI / 180;
     const b0 = [p0[0] - ux * 3, p0[1] - uy * 3], path = [];
@@ -933,6 +971,7 @@ try {
       if (artIdOf({ art: 'golf_pro_w2' }) !== 'golf_pro_w2' || artIdOf({ art: 'nobody' }) || artIdOf(null)) res.errors.push('golfer art: the art of a dress is not read');
     }
     { const hc = hostCraftRun(); res.hostCraft = hc.info; res.errors.push(...hc.errs); }
+    { const hq = hostPracRun(); res.hostPrac = hq.info; res.errors.push(...hq.errs); }
     { const hg = hostGreenRun(); res.hostGreen = hg.info; res.errors.push(...hg.errs); }
     { const hd = hostDoneRun(); res.hostDone = hd.info; res.errors.push(...hd.errs); }
     { const hl = hostLieRun(); res.hostLies = hl.info; res.errors.push(...hl.errs); }
