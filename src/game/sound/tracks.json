@@ -1,0 +1,64 @@
+{
+ "tracks": [
+  {
+   "id": "bossa-town",
+   "title": "Bossa Town",
+   "artist": "KarateStudios",
+   "licence": "CC0 1.0",
+   "page": "https://opengameart.org/content/bossa-town",
+   "file": "audio/music/bossa-town.mp3",
+   "seconds": 100,
+   "bytes": 1004301
+  },
+  {
+   "id": "all-into-harmony",
+   "title": "All into Harmony",
+   "artist": "Pro Sensory (Alex McCulloch)",
+   "licence": "CC0 1.0",
+   "page": "https://opengameart.org/content/all-into-harmony",
+   "file": "audio/music/all-into-harmony.mp3",
+   "seconds": 102,
+   "bytes": 1020001
+  },
+  {
+   "id": "blue-intermission",
+   "title": "Blue Intermission",
+   "artist": "congusbongus",
+   "licence": "CC0 1.0",
+   "page": "https://opengameart.org/content/blue-intermission",
+   "file": "audio/music/blue-intermission.mp3",
+   "seconds": 237,
+   "bytes": 2368428
+  },
+  {
+   "id": "seaside-village",
+   "title": "Seaside Village",
+   "artist": "KarateStudios",
+   "licence": "CC0 1.0",
+   "page": "https://opengameart.org/content/seaside-village",
+   "file": "audio/music/seaside-village.mp3",
+   "seconds": 76,
+   "bytes": 760066
+  },
+  {
+   "id": "two-left-socks",
+   "title": "Two Left Socks",
+   "artist": "congusbongus",
+   "licence": "CC0 1.0",
+   "page": "https://opengameart.org/content/two-left-socks",
+   "file": "audio/music/two-left-socks.mp3",
+   "seconds": 200,
+   "bytes": 2002969
+  },
+  {
+   "id": "sunny-side-up-2",
+   "title": "Sunny Side Up 2",
+   "artist": "Pro Sensory (Alex McCulloch)",
+   "licence": "CC0 1.0",
+   "page": "https://opengameart.org/content/sunny-side-up-2",
+   "file": "audio/music/sunny-side-up-2.mp3",
+   "seconds": 141,
+   "bytes": 1410791
+  }
+ ]
+}

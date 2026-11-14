@@ -53,6 +53,8 @@ import { sizeKey, turned } from './lots/preset-art';
 import { FARMHOUSE_SUBJECTS, LOT_PLACES, clubScene, farmScene, lotPlaceOf, lotScene, placeHasArt, placeScene, rangeNews, rangeScene, rangeSceneKeys, rangeViewOfKey, sceneArt, townFortune, lotGood, propertyScene, objectScene, rangeGood, type RangeSceneFacts, type RangeSceneView, type SceneCardView, type SceneRef } from './scenes';
 import { homeStage, rangeScale } from './golf/rangesave';
 import { BALL_DRAW_MAX, BALL_POINT_FLOATS, RangeHost, type RangeCardView } from './golf/rangehost';
+import { mapSounds } from './sound/map-sounds'; // J11 (#1270)
+import { ambienceLevel, rangeAmbience } from './sound/range-ambience';
 import { PropsTool } from './golf/propstool';
 import { PracticeTool } from './golf/practicetool';
 import { starterSeed } from './golf/practicestarter';
@@ -750,6 +752,7 @@ export class Game {
   /** every spend (SimClient.onSpend): one placed (a map click, spendAt) floats up there; the business takings book (the range's) float as they are made */
   private spent(kind: 'construction' | 'compensation' | 'business' | 'upkeep' | 'lots' | 'balls' | 'bank', n: number) {
     this.bookSpend(kind, n);
+    mapSounds.spent(kind, n, !!this.moneySpot); // J11: a thump for what a map click built, a scrape for the bulldozer, a coin for a purchase in a card
     const p = this.moneySpot; if (!p || kind === 'business' || kind === 'lots' || !n) return;
     this.floatMoney({ ...p, amount: Math.abs(n), kind: n > 0 ? 'out' : 'in' });
   }
@@ -3260,6 +3263,7 @@ export class Game {
     if (!boot.moneyFloats) this.showMoneyFloats = false;
     // T147: the money floats' sources: every spend (placed ones float), the range's sales and lost golfers
     this.traffic.onSpend = (k, n) => this.spent(k, n);
+    this.range.sim.onStrike = (x, y) => this.rangeStrikeHeard(x, y); // J11: a golfer at the range hits a ball: a far-off strike, if the camera is close
     // T090: a range start's town success after a tournament, kept in the save (sent back with the golf state on load)
     this.traffic.onTownBoost = v => { if (this.golf?.start === 'range') { this.golf.townBoost = v; this.scheduleSave(); } };
     this.range.sim.onMoney = e => { const c = this.range.scene?.counter, f = rangeFloat(e, c ?? null); if (f) this.floatMoney(f); };
@@ -3358,6 +3362,7 @@ export class Game {
   toast(text: string, kind: Toast['kind'] = 'info', scene?: SceneRef) {
     this.toasts.push({ id: this.toastId++, text, t: performance.now(), kind, ...(scene ? { scene } : {}) });
     if (this.toasts.length > 4) this.toasts.shift();
+    mapSounds.toast(kind); // J11: a warning has its low 'can't'
     this.emit();
   }
 
@@ -8481,6 +8486,25 @@ export class Game {
     }
     return f;
   }
+  // ---------- J11 (#1270): the range's ambience (sound/range-ambience.ts): a breeze and a bird now and then while the camera is close on the range, and the far-off strike of each golfer's swing
+  /** where a map point (tiles) is on the screen now: across it (-1 left .. 1 right) and whether it is on the screen at all; null when it is farther off than a third of the screen */
+  private heardAt(x: number, y: number): { pan: number; on: boolean } | null {
+    const z = this.cam.z, W = this.cssW || 1280, H = this.cssH || 800;
+    const sx = (worldX(x, y) - this.cam.X) * z + W / 2, sy = (worldY(x, y) - this.cam.Y) * z + H / 2;
+    if (!(sx > -W / 3 && sx < W * 4 / 3 && sy > -H / 3 && sy < H * 4 / 3)) return null;
+    return { pan: Math.max(-1, Math.min(1, (sx / W - 0.5) * 2)), on: sx >= 0 && sx <= W && sy >= 0 && sy <= H };
+  }
+  /** a golfer at a bay hit a ball (RangeSim.onStrike): its far-off strike, as loud as the camera is close, quieter off the screen, none when it is far or the golf view covers the map */
+  private rangeStrikeHeard(x: number, y: number) {
+    if (this.view3pHole !== null) return;
+    const h = this.heardAt(x, y), lv = ambienceLevel(this.cam.z, true); if (!h || lv <= 0) return;
+    rangeAmbience.strike(h.pan, lv * (h.on ? 1 : 0.4));
+  }
+  /** about six times a second (progressCheck): the breeze and the birds follow how close the camera is on the range (none under the golf view, which covers the map) */
+  private ambienceTick() {
+    const sc = this.range.scene, h = sc && this.view3pHole === null ? this.heardAt(sc.counter.x, sc.counter.y) : null;
+    rangeAmbience.update(ambienceLevel(this.cam.z, !!h));
+  }
   private progTick = 0;
   /** keeps the saved progress in step (T117, about 6 times a second): the unlock stage reached (it never falls) and the tool in hand counted as
    *  opened (its NEW badge goes) */
@@ -8490,6 +8514,7 @@ export class Game {
     this.jamOfferRange(); // J7: a jam game's old range, for sale, laid once the ground is ready
     this.rangeGuideCheck(); // T239: the guided build's steps tick
     this.tourCheck(); // T293: the start tutorial's steps
+    this.ambienceTick(); // J11: the range's breeze and birds while the camera is close on it
     this.prepCheck(); // the tournament prep quests: each built step pays once
     this.sceneNewsCheck(); // T242: a range view's picture turned: a toast offers its card (about once a second)
     const f = this.playerProgressFacts(), was = p.ramp;

@@ -47,9 +47,12 @@ function ballCam() {   // after a full shot the camera leaves the golfer and fli
 }
 
 // ---- sound, made on the spot (no files): a heartbeat while the shot is charged, a breath drawn in on release, a rifle's crack at impact
+// J11 (#1270): in the game (host mode) the view makes none of these itself: each is a message (sndMsg) that the host page plays through the player's volume and mute, with the
+// swish and the strike of the club that was swung and the landing of the surface it came down on (CapitalEmpire src/game/sound). On its own the view makes them here, as before.
 let AC = null, noiseBuf = null, humO = null, humG = null;
 function audio() {
   if (AC) return AC;
+  if (HOST) return null;   // (host mode: the host plays the sounds)
   const A = typeof AudioContext !== 'undefined' ? AudioContext : typeof webkitAudioContext !== 'undefined' ? webkitAudioContext : null; if (!A) return null;
   try { AC = new A(); } catch (e) { return null; }
   noiseBuf = AC.createBuffer(1, AC.sampleRate, AC.sampleRate); const d = noiseBuf.getChannelData(0); for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
@@ -67,11 +70,17 @@ function hiss(type, f0, f1, q, dur, vol, attack, when = 0) {   // noise through 
   g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(vol, t + attack); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
   s.connect(f); f.connect(g); g.connect(a.destination); s.start(t, Math.random() * 0.5); s.stop(t + dur + 0.05);
 }
-function sndHeart() { thump(64, 38, 0.16, 0.9); thump(54, 34, 0.2, 0.6, 0.17); }                                    // lub-dub
-function sndBreath() { hiss('bandpass', 420, 2600, 1.1, 0.42, 0.4, 0.3); }                                           // a breath drawn in
-function sndShot() { hiss('lowpass', 9000, 420, 0.7, 0.32, 1, 0.002); thump(170, 36, 0.32, 1); hiss('bandpass', 1300, 260, 0.6, 1.5, 0.22, 0.012, 0.04); }   // the crack, the thump under it, the roll across the land
-function sndTap() { thump(880, 520, 0.05, 0.3); }
-function sndLand(v) { thump(120, 46, 0.13, Math.min(0.6, 0.1 + v * 0.05)); }
+function sndMsg(k, o) {   // in host mode a sound is a message to the host page (false: the view is on its own and makes it here)
+  if (!HOST) return false;
+  hostSend(Object.assign({ t: 'sound', k: k }, o || {})); return true;
+}
+const SND_MAT = ['water', 'green', 'sand', 'fairway', 'fairway', 'fairway', 'rough', 'rough', 'rough', 'fairway', 'rock', 'rock', 'rough'];   // by M_WATER .. M_MUD: what the host calls the surface a ball lands on
+function sndMat(m) { return SND_MAT[m] || 'fairway'; }
+function sndHeart() { if (sndMsg('heart')) return; thump(64, 38, 0.16, 0.9); thump(54, 34, 0.2, 0.6, 0.17); }                                    // lub-dub
+function sndBreath() { if (sndMsg('breath')) return; hiss('bandpass', 420, 2600, 1.1, 0.42, 0.4, 0.3); }                                           // a breath drawn in
+function sndShot() { if (sndMsg('strike', { club: 'driver', p: 1 })) return; hiss('lowpass', 9000, 420, 0.7, 0.32, 1, 0.002); thump(170, 36, 0.32, 1); hiss('bandpass', 1300, 260, 0.6, 1.5, 0.22, 0.012, 0.04); }   // the crack, the thump under it, the roll across the land
+function sndTap() { if (sndMsg('tap')) return; thump(880, 520, 0.05, 0.3); }
+function sndLand(v) { if (sndMsg('land', { mat: sndMat(matAt(ball.x, ball.y)), p: Math.min(1, v / 8) })) return; thump(120, 46, 0.13, Math.min(0.6, 0.1 + v * 0.05)); }
 function cartHum() {   // the cart's motor: a low hum that rises with its speed
   const a = AC; if (!a) return;
   if (!cart.on) { if (humO) { humG.gain.setTargetAtTime(0.0001, a.currentTime, 0.08); humO.stop(a.currentTime + 0.4); humO = null; } return; }
