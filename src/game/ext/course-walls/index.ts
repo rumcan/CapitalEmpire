@@ -28,9 +28,12 @@ const { water: WATER, fairway: FAIRWAY, tee: TEE, bunker: BUNKER, green: GREEN }
  *  -0.6, rough and fescue 0, fairway +0.05, tee +0.6 (T127, the owner 2026-10-25: "make the tee higher like as high as bunkers are deep"),
  *  waste 0, green +0.25, long grass 0 (T238). A tee's and a green's can be set with the Height slider (HEIGHT_RANGE, surfHeights) */
 export const SURF_HEIGHT: readonly number[] = [0, 0, 0, -0.8, 0.05, 0.6, -0.6, 0, 0.25, 0];
+/** the highest a tee may be raised, m (T372, #1027: the owner's "big tee boxes that look like cliffsides": several metres, so the cliff reads
+ *  from the game camera; T127 had 1.6) */
+export const TEE_MAX_H = 5;
 /** the Height slider's range per surface id, metres (T127): a tee from a low grass bank to a tall rock face, a green from a hint to a high
  *  bank; null: the surface's height is fixed */
-export const HEIGHT_RANGE: readonly (readonly [number, number] | null)[] = [null, null, null, null, null, [0.15, 1.6], null, null, [0.05, 0.8], null];
+export const HEIGHT_RANGE: readonly (readonly [number, number] | null)[] = [null, null, null, null, null, [0.15, TEE_MAX_H], null, null, [0.05, 0.8], null];
 /** SURF_HEIGHT with the Height slider's settings (metres by surface id; clamped to HEIGHT_RANGE; a missing or bad entry, or a surface with a
  *  fixed height, keeps the default) */
 export function surfHeights(over?: readonly (number | undefined)[]): readonly number[] {
@@ -147,8 +150,11 @@ export const BANK_RATIO = 2.5;
 export const GREEN_BANK_RATIO = 3;
 /** a tee this high (m) and up has rocky sides (the default tee, 0.6 m, has; a tee set lower falls back to a grass bank) */
 export const ROCK_FROM = 0.5;
-/** the rock slope's run per metre of rise at ROCK_FROM, and at ROCK_STEEP_H and above (a steep retaining face) */
+/** the rock slope's run per metre of rise at ROCK_FROM, and at ROCK_STEEP_H (a steep retaining face) */
 export const ROCK_RATIO_LOW = 1.3, ROCK_RATIO_HIGH = 0.45, ROCK_STEEP_H = 1.6;
+/** T372 (#1027): above ROCK_STEEP_H the face keeps steepening to a cliff, CLIFF_RATIO at CLIFF_STEEP_H and above (nearly sheer: a raised tee on a rocky
+ *  outcrop); a tee from CLIFF_FROM_H up is drawn as a cliff (grey stone, CLIFF_ROCK in the renderer) whatever the tee wall's style, unless 'sand' */
+export const CLIFF_RATIO = 0.12, CLIFF_STEEP_H = 3, CLIFF_FROM_H = 2;
 /** a raised face's form and its run, tiles of ground per metre of drop (0 for a wall), for a face over material m whose higher side is
  *  surface hs, with the surfaces at heights `heights` (surfHeights) */
 export function faceForm(hs: number, m: WallMat, heights: readonly number[] = SURF_HEIGHT): { f: FaceForm; r: number } {
@@ -156,11 +162,17 @@ export function faceForm(hs: number, m: WallMat, heights: readonly number[] = SU
   const h = heights[hs] ?? 0;
   if (hs === TEE) {
     if (h < ROCK_FROM) return { f: FaceForm.Bank, r: BANK_RATIO * 0.5 };
+    if (h > ROCK_STEEP_H) { const c = Math.min(1, (h - ROCK_STEEP_H) / (CLIFF_STEEP_H - ROCK_STEEP_H)); return { f: FaceForm.Rock, r: (ROCK_RATIO_HIGH + (CLIFF_RATIO - ROCK_RATIO_HIGH) * c) * 0.5 }; }
     const t = Math.min(1, Math.max(0, (h - ROCK_FROM) / (ROCK_STEEP_H - ROCK_FROM)));
     return { f: FaceForm.Rock, r: (ROCK_RATIO_LOW + (ROCK_RATIO_HIGH - ROCK_RATIO_LOW) * t) * 0.5 };
   }
   if (hs === GREEN) return { f: FaceForm.Bank, r: GREEN_BANK_RATIO * 0.5 };
   return { f: FaceForm.Wall, r: 0 };
+}
+/** T372: whether a tee face of run r (faceForm's) is a cliff's (its tee CLIFF_FROM_H high or more) */
+export function cliffRun(r: number): boolean {
+  const c = Math.min(1, (CLIFF_FROM_H - ROCK_STEEP_H) / (CLIFF_STEEP_H - ROCK_STEEP_H));
+  return r <= (ROCK_RATIO_HIGH + (CLIFF_RATIO - ROCK_RATIO_HIGH) * c) * 0.5 + 1e-6;
 }
 /** a bank's width on the ground, tiles, at a drop of dh metres (its run r: faceForm) */
 export const bankWidth = (r: number, dh: number) => r * Math.max(0, dh);

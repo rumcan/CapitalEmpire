@@ -70,7 +70,8 @@ import { RANGE_LABEL_Z, defaultRangeBiz, parkLabel, rangeKeepOut, practiceAppeal
 import { areaAt, brushTextures, toTuple, type BrushKind, type PaintTuple, type PaintTex } from './paint';
 import { CELL_T, SURF, applyDiff, cellAt, cellCentre, diffBox, encodeGrid, fillPolygon, fitGrid, grassSlot, landGridBox, lookCellsDiff, looksUsed, makeGrid, paintCells, paintDisc, paintStroke, setLook, type Grid as CourseGrid, type GridDiff, type GridSave } from './ext/course-grid';
 import { PLAY_SURF, golfSurfaceOf, grassLooks, normalizeGrasses, type CustomGrass, type GrassPlay } from './golf/grasses';
-import { STAIR_REACH } from './ext/course-walls';
+import { STAIR_REACH, teeStairs } from './ext/course-walls';
+import { teeLift } from './golf/play/cliff3p';
 import { SURFACE_TEX_ID, SURF_SURFACE, areaRank, growingHoles, ringArea, type GridArea } from './ext/course-grid/areas';
 import { aimsFromPlans, decodePlans, encodePlans, frameView, planSeed, type FreeRect, type WizardGhost } from './ext/hole-wizard';
 import type { HolePlan } from './ext/hole-plan';
@@ -80,7 +81,7 @@ import { FOREST_CLEAR, LABEL_FADE_ALPHA, LABEL_FADE_PX, TOWN_CLEAR, plantedTreeC
 import { holeAreas, holeCard, markerMove, swapHoleNumbers, teeLengths, type HoleCardView, type HoleFix } from './golf/holecard';
 import { captureHole, joinHoles, loadBrowserHoles, sameHole, saveBrowserHoles, type MyHole } from './golf/myholes';
 import { isCourseArea, loadCourseGrid, migrateAreas } from './ext/course-grid/migrate';
-import { COURSE_CHUNK, COURSE_PATCH_REACH, courseChunksIn, courseEditReach, courseGrowKey, courseKey, courseStyles, drawnSurfaces, growStatic, roundReach, widestCollar, type CourseLooks, type CourseOwners } from './ext/course-grid/patch';
+import { COURSE_CHUNK, COURSE_PATCH_REACH, courseChunksIn, courseEditReach, courseGrowKey, courseHeights, courseKey, courseStyles, drawnSurfaces, growStatic, roundReach, widestCollar, type CourseLooks, type CourseOwners } from './ext/course-grid/patch';
 import { CourseContour, type CourseChunkOut } from './course-contour';
 import { roadRoute } from './road-route';
 import { linesOnRoads, mainRoads, offRoadTo, type OffRoad } from './offroad';
@@ -2287,6 +2288,14 @@ export class Game {
   /** the textures the grid's surfaces wear: the Course brushes' looks (texture, scale, angle, exposure and Blend with: course-look.ts; T261 the
    *  waste area's too), the course presets for fescue and the collars, each surface's own collar band (its Border texture, scale, angle and
    *  exposure) */
+  /** T372 (#1027): the raised tees' lift for the view's export (golf/play/cliff3p.ts): the tees' raise as the looks set it (the Height slider), the tee
+   *  cells, and the stairs the map draws, so the ramp in the view is where the map's stairs are. Null with no course grid or tees too low to lift */
+  teeLift3p(): ((x: number, y: number) => number) | null {
+    const g = this.courseGrid; if (!g) return null;
+    const heights = courseHeights(this.courseLooks()), raise = heights[SURF.tee] ?? 0;
+    const stairs = teeStairs(g, [g.x0, g.y0, g.x0 + g.w * CELL_T, g.y0 + g.h * CELL_T], this.coursePaths(), heights);
+    return teeLift({ raise, isTee: (x, y) => { const i = cellAt(g, x, y); return i >= 0 && g.surf[i] === SURF.tee; }, stairs });
+  }
   private courseLooks(): CourseLooks {
     const pre = (s: string, old: string) => ({ tex: surfacePreset(s) ?? old, sc: 1, a: 0 });
     // the bank is laid in the rough's grass (the renderer paints its wet soil and stones, T099); the Border, Shadow and Height sliders ride along.

@@ -18,8 +18,8 @@ import { BAND_PATTERNS, CROSS_DEFAULT, DEFAULT_FAIRWAY_PATTERN, MOW_PATTERNS, PA
  *  are painted: 'bunker', the bunker's wall (the Bunker look's Cut wall picture, its light and shade: tee-wall.ts); 'sand', the same light on the native
  *  bunker wall's painting instead (the Bunker wall surface of the painted surfaces: golden sand, wallSand; the other reading of "the bunker's wall");
  *  'rock', the painted earth and set stones they wore before T364 (T127). T372 (#1027) adds the cliff face as another way */
-export type TeeWall = 'bunker' | 'sand' | 'rock';
-export const TEE_WALLS: readonly TeeWall[] = ['bunker', 'sand', 'rock'];
+export type TeeWall = 'bunker' | 'sand' | 'rock' | 'cliff';
+export const TEE_WALLS: readonly TeeWall[] = ['bunker', 'sand', 'rock', 'cliff'];
 
 /** the course finish's knobs */
 export interface CourseFinish {
@@ -41,7 +41,8 @@ export interface CourseFinish {
   bowl: number;
   /** T253 part 3: the greens' soft roll where they meet the fringe (bunker-look.ts greenRollImages): 0 off (as before) .. 1 tuned .. 2 strong */
   roll: number;
-  /** T364 (#1019): a raised tee's cut sides (TeeWall): the bunker's wall by default, 'sand' its native painting, 'rock' the stones of before.
+  /** T364 (#1019): a raised tee's cut sides (TeeWall): the bunker's wall by default, 'sand' its native painting, 'rock' the stones of before,
+   *  'cliff' (T372) grey cliff rock at any height (a tee CLIFF_FROM_H high or more wears it under 'bunker' too).
    *  Independent of `on` (the tees' walls are T127's, not T227's); the tee's grass is its own look in the file's surfaces (the Tee surface wears the green's) */
   teeWall: TeeWall;
   /** T365 (#1020; the owner, 2026-11-08: "make the strongest look the default for new fairways"): the pattern a fairway's mowing lines lay when its look

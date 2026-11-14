@@ -40,13 +40,14 @@ test('no mowing lines on a tee by default: its look sets none, the finish lays n
 });
 
 test('a tee\'s walls: the bunker\'s by default, the old rock a setting; the finish being off does not touch them', () => {
-  assert.deepEqual([...TEE_WALLS], ['bunker', 'sand', 'rock']);
+  assert.deepEqual([...TEE_WALLS], ['bunker', 'sand', 'rock', 'cliff']); // (T372: grey cliff rock)
   assert.equal(DEFAULT_COURSE_FINISH.teeWall, 'bunker'); assert.equal(finishOf(F).teeWall, 'bunker'); assert.equal(finishOf(null).teeWall, 'bunker');
   assert.equal(FINISH_OFF.teeWall, 'bunker', 'the tees\' walls are T127\'s, not T227\'s: the finish off keeps them');
   assert.equal(clampCourseFinish({ teeWall: 'rock' }).teeWall, 'rock');
   assert.equal(clampCourseFinish({ teeWall: 'bunker' }).teeWall, 'bunker');
   assert.equal(clampCourseFinish({ teeWall: 'sand' }).teeWall, 'sand', "the native bunker wall's painting: the other reading of \"the bunker's wall\"");
-  for (const bad of ['cliff', 7, null, undefined, {}]) assert.equal(clampCourseFinish({ teeWall: bad }).teeWall, 'bunker', `${String(bad)}: the default`);
+  assert.equal(clampCourseFinish({ teeWall: 'cliff' }).teeWall, 'cliff', 'T372: grey cliff rock');
+  for (const bad of ['granite', 7, null, undefined, {}]) assert.equal(clampCourseFinish({ teeWall: bad }).teeWall, 'bunker', `${String(bad)}: the default`);
   // it survives the file's own clamp (the Studio saves the course block whole)
   const saved = clampSurfaces(JSON.parse(JSON.stringify({ ...file, course: { ...DEFAULT_COURSE_FINISH, teeWall: 'rock' } })));
   assert.equal(saved.course!.teeWall, 'rock'); assert.equal(finishOf(saved).teeWall, 'rock');

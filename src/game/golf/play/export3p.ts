@@ -325,11 +325,14 @@ export interface Export3pGame {
   courseAreaList(): CourseArea[];
   golf: { tees: TeeMark[]; pins: Pin[]; aims: AimPoint[] } | null;
   groundHeightAt(x: number, y: number): number;
+  /** T372: the raised tees' lift at a tile point (m: cliff3p.ts teeLift), added to the ground the export samples; absent or null: none */
+  teeLift3p?(): ((x: number, y: number) => number) | null;
 }
 /** the exporter's input gathered from the game, as the played course (engine playCourse) gathers it: the painted areas, the placed markers and the ground the
  *  ball rolls on. Null without a golf course. The pins are the placed ones (the day's cups, golf/daypins.ts, are the play's, not the course's) */
 export function export3pInputOf(game: Export3pGame, name?: string): Export3pInput | null {
   const g = game.golf;
   if (!g) return null;
-  return { areas: game.courseAreaList(), tees: g.tees, pins: g.pins, aims: g.aims, heightAt: (x, y) => game.groundHeightAt(x, y), ...(name ? { name } : {}) };
+  const lift = game.teeLift3p?.() ?? null;
+  return { areas: game.courseAreaList(), tees: g.tees, pins: g.pins, aims: g.aims, heightAt: lift ? (x, y) => game.groundHeightAt(x, y) + lift(x, y) : (x, y) => game.groundHeightAt(x, y), ...(name ? { name } : {}) };
 }

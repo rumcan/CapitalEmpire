@@ -31,7 +31,12 @@ function courseElev(C, x, y) {   // the real height (metres above the grid's low
     }
     s += r * wb;
   }
-  return s;
+  // T372: held between the four samples round the point (Catmull-Rom overshoots at a sharp step: a raised tee's cliff would get a lip on top and a
+  // trench at its foot); smooth ground barely changes (a crest that falls between samples is held to its highest sample, at most a few cm on a 1.5 m grid)
+  const i0 = i < 0 ? 0 : i >= w ? w - 1 : i, i1 = i + 1 >= w ? w - 1 : i + 1 < 0 ? 0 : i + 1, j0 = j < 0 ? 0 : j >= hgt ? hgt - 1 : j, j1 = j + 1 >= hgt ? hgt - 1 : j + 1 < 0 ? 0 : j + 1;
+  const q00 = M[j0 * w + i0], q10 = M[j0 * w + i1], q01 = M[j1 * w + i0], q11 = M[j1 * w + i1];
+  const lo = Math.min(q00, q10, q01, q11), hi = Math.max(q00, q10, q01, q11);
+  return s < lo ? lo : s > hi ? hi : s;
 }
 function courseH(C, x, y) { return C.hm ? 5 + courseElev(C, x, y) * C.S * CVEX : 6; }
 // the signed distance from every cell near a ring to the ring (negative inside), kept where it is the smallest so far; lvG / lv: the water level that goes with it
