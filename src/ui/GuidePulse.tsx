@@ -7,6 +7,8 @@ import { spotNow, spotSubscribe } from './spotlight/spot';
 /** where an anchor falls back to while its control is not on screen (its panel closed) */
 export const ANCHOR_FALLBACK: Readonly<Record<string, readonly string[]>> = {
   'new-hole': ['rail-course'], 'clubhouse-card': ['rail-course'], 'tool-park': ['rail-traffic'], 'fix-holes': ['season-chip'], 'fix-carpark': ['season-chip'],
+  // #1272: Facilities is a tile of the Course flyout (it carries this anchor while that is open), no rail button: shut, the guide points at Course
+  'rail-facilities': ['rail-course'],
   'fix-clubhouse': ['season-chip'], 'invite-pill': ['season-chip'], 'results': ['season-chip'],
   // T366: the Skip to tournament button is a row of the Season card: while the card is shut the guide points at the chip that opens it
   'chip-skip': ['season-chip'],

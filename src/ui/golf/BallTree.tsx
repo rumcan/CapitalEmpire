@@ -10,6 +10,8 @@ import { BRANCH_NAME, type TreeBranch } from '../../game/golf/rangesave';
 import { money } from './money';
 import { PaybackLine } from './Decisions';
 import { payback, rangeUpgradeExtra } from '../../game/golf/payback';
+import { ActionTile, TILE_ROW, TILE_SMALL } from '../ActionTile'; // J8 (#1261): the node's picture where it has one
+import { BALL_NODE_TILE, BRANCH_TILE } from '../tool-tiles';
 /** the branches in the order the first column lists them */
 export const BRANCHES: readonly TreeBranch[] = ['picking', 'staff', 'machines', 'supply', 'golf'];
 type Node = RangeCardView['upgrades'][number];
@@ -33,6 +35,7 @@ export function BallTree({ view, onBuy, onClose, rightRem = 0.75 }: { view: Rang
         <div className="px-1.5 pb-1 text-[12px] text-slate-300" data-testid="ball-tree-till" title="What the range has taken, less what it has spent on its gear: every node here is bought with it">Range till <span className="font-semibold text-emerald-300">{money(till)}</span></div>
         {BRANCHES.map(k => { const list = nodesOf(view.upgrades, k), done = list.filter(n => n.owned).length; return (
           <button key={k} type="button" role="menuitem" className={`flyout-row ${branch === k ? 'flyout-row-open' : ''}`} onClick={() => { setBranch(k); setOpen(null); }} onMouseEnter={() => { if (branch !== k) { setBranch(k); setOpen(null); } }} data-testid={`ball-tree-branch-${k}`}>
+            <ActionTile tile={BRANCH_TILE[k]} size={TILE_SMALL + 4} />
             <span className="flyout-text"><span className="flyout-label">{BRANCH_NAME[k]}</span><span className="flyout-why">{done} of {list.length} bought</span></span>
             <span className="flyout-more" aria-hidden>▸</span>
           </button>
@@ -51,7 +54,7 @@ export function BallTree({ view, onBuy, onClose, rightRem = 0.75 }: { view: Rang
       </div>
       {node && (
         <div className="flyout glass" style={{ width: 232, maxHeight: 'calc(var(--vh-ui, 100vh) - var(--hud-top, 6rem) - 4.5rem)' }} data-flyout-col="2" data-testid="ball-tree-node">
-          <div className="px-1.5 py-1 text-[14px] font-semibold text-amber-200">{node.name}</div>
+          <div className="flex items-center gap-2 px-1.5 py-1"><ActionTile tile={BALL_NODE_TILE[node.id] ?? BRANCH_TILE[branch]} size={TILE_ROW + 4} /><span className="text-[14px] font-semibold text-amber-200">{node.name}</span></div>
           <div className="px-1.5 text-[12.5px] leading-snug text-slate-200">{node.effect}</div>
           {rate !== undefined && <div className="px-1.5 pt-1 text-[12px] text-sky-200" data-testid="ball-tree-rate">{RATE_WORDS[node.id] ?? 'Takes'} about {rate.toLocaleString()} balls an hour{node.id.startsWith('robot') ? ' (a pair, over a charge)' : node.id.startsWith('attendant') ? ' (on his shift)' : ''}</div>}
           <div className="px-1.5 pt-1 text-[12px] text-slate-400">Price {money(node.cost)}{node.upkeep ? ` · upkeep ${money(node.upkeep)} a month` : ''}{view.needs[node.id].length ? ` · needs ${view.needs[node.id].join(' and ')}` : ''}</div>

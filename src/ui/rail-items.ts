@@ -13,15 +13,20 @@
 // one of them is opened (the seen ids are T117's, saved in golf.progress: the tools' ids, so old saves keep theirs). No key letters on
 // the rail (the owner: "also remove the shortcut key indicators"): the keys still work and the tooltip names them. Pure TypeScript, no DOM (the
 // rail's buttons are Rail.tsx, the tool row App.tsx); the icon names are types only.
+// #1272 (the owner, 2026-11-14: "move facilities button in main menu to this menu bottom right empty space"): Facilities left the rail and is the sixth tile
+// of the Course flyout (flyout-menu.ts): its tools (Practice, Plants, Props) are Course's now, each marked `within: 'facilities'`, so Course is the item lit
+// while one is in hand, and Course is locked, NEW and opened by the keys with them. The Props key (Z) is the tool's own and works as before.
 import type { Tool } from '../game/types';
 import { CHIP_STAGE, NEW_BADGE_IDS, STAGE_WHY, type GolfChipId, type ProgressiveUiState, type RailGroupId } from '../game/ext/progressive-ui';
 import type { IconName } from './Icon';
+import type { ToolTile } from './tool-tiles';
 import type { TipParts } from './tip';
 import { GREENKEEPING, JAM } from '../game/features';
 
 /** a tool in a rail item: its button in the row at the top of the item's panel; sub: the section it sits in (Traffic's Roads, Junctions,
  *  Transport); only: the game it shows in */
-export interface RailTool { id: Tool; label: string; key: string; icon: IconName; sub?: string; only?: 'golf' | 'classic'; /** T187: the Props tool's view this entry opens (its place and group) */ view?: PropsView; /** T206: a second home of a tool (Facilities' Plants, the Paint tool's plant brush): the item lit only when opened from there */ alt?: true }
+export interface RailTool { id: Tool; label: string; key: string; icon: IconName; sub?: string; only?: 'golf' | 'classic'; /** T187: the Props tool's view this entry opens (its place and group) */ view?: PropsView; /** T206: a second home of a tool (Facilities' Plants, the Paint tool's plant brush): the item lit only when opened from there */ alt?: true;
+  /** #1272: the tile of its item's flyout the tool sits in (Facilities, in the Course flyout): the tile is built by flyout-menu.ts, the jam's rail drops them */ within?: 'facilities' }
 /** the Props tool's view (T187): where it places (Decoration the course, Town decoration the town) and the group it opens on */
 export interface PropsView { where: 'course' | 'town'; group?: 'buildings' }
 /** an entry's key in its item (the Props tool sits twice in Town decoration: its props and its buildings) */
@@ -34,6 +39,8 @@ export interface RailExtra { id: GolfChipId; label: string; icon: IconName }
 export interface RailItem {
   id: string; label: string; icon: IconName; key: string; section: 'course' | 'town' | null; group: RailGroupId; tools: RailTool[];
   extras?: RailExtra[]; only?: 'golf' | 'classic'; action?: 'range' | 'build'; // (J7: 'build' opens the jam's Build menu)
+  /** J8 (#1261): a painted tile the rail draws in place of the icon (the icon stays the fallback and the name) */
+  tile?: ToolTile;
   /** T366: the words the rail button draws when the label is too long for one line (the tip and the aria-label keep the full label) */
   short?: string;
 }
@@ -48,6 +55,11 @@ const RAIL_FULL: readonly RailItem[] = [
     { id: 'buildings', label: 'Buildings', key: '', icon: 'house', only: 'golf' },
     // Greenkeeping (plan P23-UX P2-5, T175): the Grass panel as a tool, its care armed like a brush; it opens with the first grown hole
     ...(GREENKEEPING ? [{ id: 'greenkeeping' as const, label: 'Greenkeeping', key: '', icon: 'trees' as const, only: 'golf' as const }] : []), // hidden for now (features.ts)
+    // T206: the practice facilities' own building tools, the plant brush (Town decoration's, on the course side too) and Decoration's Props. #1272: the Facilities
+    // tile of this flyout, no rail button of its own
+    { id: 'practice', label: 'Practice', key: '', icon: 'pin', only: 'golf', sub: 'Practice', within: 'facilities' },
+    { id: 'paint', label: 'Plants', key: '', icon: 'trees', only: 'golf', sub: 'Plants', alt: true, within: 'facilities' },
+    { id: 'props', label: 'Props', key: 'Z', icon: 'leaf', only: 'golf', view: { where: 'course' }, sub: 'Decoration', within: 'facilities' },
   ], extras: [{ id: 'event', label: 'Tournament', icon: 'calendar' }, { id: 'land', label: 'Land for sale', icon: 'terrain' }] },
   // T288 (#873, the owner 2026-10-31: "make cart paths and roads its own button above facilities in the main left menu"): the roads on the
   // player's own property (the course's cart paths and drives: the road tool on the course, T084; in Course since T206) and the town's roads
@@ -56,12 +68,7 @@ const RAIL_FULL: readonly RailItem[] = [
     { id: 'path', label: 'Cart paths & roads', key: '', icon: 'sidewalk' },
     { id: 'road', label: 'Roads', key: 'R', icon: 'road', alt: true },
   ] },
-  // T206: the practice facilities' own building tools, the plant brush (Town decoration's, on the course side too) and Decoration's Props
-  { id: 'facilities', label: 'Facilities', icon: 'leaf', key: 'Z', section: 'course', group: 'course', only: 'golf', tools: [
-    { id: 'practice', label: 'Practice', key: '', icon: 'pin', only: 'golf', sub: 'Practice' },
-    { id: 'paint', label: 'Plants', key: '', icon: 'trees', only: 'golf', sub: 'Plants', alt: true },
-    { id: 'props', label: 'Props', key: 'Z', icon: 'leaf', only: 'golf', view: { where: 'course' }, sub: 'Decoration' },
-  ] },
+  // (#1272: Facilities is no rail button: it is the Course flyout's sixth tile, its tools are Course's above)
   // TOWN
   // the owner, 2026-11-01: "move ground height to its own button in bottom right menu next to traffic": the height brush (the Course tool's
   // Ground height: Raise, Lower, Smooth, Flatten) as a group of its own in the town footer; a click takes it in hand, no flyout
@@ -83,23 +90,25 @@ const RAIL_FULL: readonly RailItem[] = [
     { id: 'props', label: 'Buildings', key: '', icon: 'buildings', only: 'golf', view: { where: 'town', group: 'buildings' } },
     { id: 'business', label: 'Buildings', key: 'M', icon: 'buildings', only: 'classic' },
   ] },
-  { id: 'bulldoze', label: 'Bulldoze', icon: 'bulldozer', key: 'X', section: null, group: 'bulldoze', tools: [{ id: 'bulldoze', label: 'Bulldoze', key: 'X', icon: 'bulldozer' }] },
+  { id: 'bulldoze', label: 'Bulldoze', icon: 'bulldozer', key: 'X', section: null, group: 'bulldoze', tools: [{ id: 'bulldoze', label: 'Bulldoze', key: 'X', icon: 'bulldozer' }], tile: 'bulldoze' },
 ];
 
 /** The jam build's rail, the MVP (docs/JAM.md, T459: "simplify the ui and the game"): Select, Range, Course (holes and buildings; no Tournament, no Land for
- *  sale), Cart paths, Facilities with Practice alone (the putting and chipping greens J6's practice mode needs; no Plants or Props), Bulldoze. Ground height,
- *  Traffic (the range has its own car park) and Town decoration go: they are listed under "Future development (hidden in the MVP)" */
-export const JAM_RAIL_CUT: readonly string[] = ['towndecor', 'ground', 'traffic', 'paths', 'facilities'];
+ *  sale, no Facilities tile: #1272, its Practice, Plants and Props are cut with it, the practice greens J6's practice mode needs open from the Build menu),
+ *  Cart paths, Bulldoze. Ground height, Traffic (the range has its own car park) and Town decoration go: they are listed under "Future development (hidden in
+ *  the MVP)" */
+export const JAM_RAIL_CUT: readonly string[] = ['towndecor', 'ground', 'traffic', 'paths'];
 /** J7 (#1225; the owner, 2026-11-13: "make a better build menu with pictures and let the player decide"): the jam's Build button, after Select: it opens the
  *  Build menu (ui/jam/BuildMenu.tsx, picture cards for the range, its car park and upgrades, holes, cart paths, the clubhouse and the practice area), which
- *  replaces the building flyouts; Cart paths & roads and Facilities leave the rail (their tools open from the menu) and Range and Course open their card
- *  and their Holes panel at a click */
-export const JAM_BUILD_ITEM: RailItem = { id: 'build', label: 'Build', icon: 'buildings', key: '', section: 'course', group: 'course', tools: [{ id: 'select', label: 'Build', key: '', icon: 'buildings' }], only: 'golf', action: 'build' };
+ *  replaces the building flyouts; Cart paths & roads and the Facilities tile leave the rail (their tools open from the menu) and Range and Course open their
+ *  card and their Holes panel at a click */
+export const JAM_BUILD_ITEM: RailItem = { id: 'build', label: 'Build', icon: 'buildings', key: '', section: 'course', group: 'course', tools: [{ id: 'select', label: 'Build', key: '', icon: 'buildings' }], only: 'golf', action: 'build', tile: 'surveyor-turf' };
+/** J8 (#1261): the jam rail's painted tiles, where a tile reads at the rail's size: Build (the surveyor's stakes), Range (its bays) and Course (a hole); Bulldoze has its own in RAIL_FULL */
 export function jamRail(full: readonly RailItem[]): readonly RailItem[] {
   const kept = full.filter(r => !JAM_RAIL_CUT.includes(r.id)), at = kept.findIndex(r => r.id === 'select') + 1;
   return [...kept.slice(0, at), JAM_BUILD_ITEM, ...kept.slice(at)].map((r): RailItem => {
-    if (r.id === 'course') return { ...r, extras: [] };
-    if (r.id === 'facilities') return { ...r, tools: r.tools.filter(t => t.id === 'practice') };
+    if (r.id === 'course') return { ...r, extras: [], tools: r.tools.filter(t => !t.within), tile: 'golf-hole' }; // (#1272: no Facilities tile: Practice opens from the Build menu)
+    if (r.id === 'range') return { ...r, tile: 'range-bays' };
     if (r.id === 'paths') return { ...r, tools: r.tools.filter(t => t.id === 'path') };
     if (r.id === 'traffic') return { ...r, label: 'Car park', tools: r.tools.filter(t => t.id === 'park').map(({ sub: _sub, ...t }) => ({ ...t, label: 'Car park' })) };
     return r;
@@ -108,7 +117,7 @@ export function jamRail(full: readonly RailItem[]): readonly RailItem[] {
 /** the rail in order, as this build has it */
 export const RAIL: readonly RailItem[] = JAM ? jamRail(RAIL_FULL) : RAIL_FULL;
 
-/** the rail items a tool sits in (Props: Facilities and Town decoration; Paint: Town decoration, and Facilities' Plants) */
+/** the rail items a tool sits in (Props: Course's Facilities tile and Town decoration; Paint: Town decoration, and Course's Facilities ▸ Plants) */
 export const railItemsOf = (t: Tool): RailItem[] => RAIL.filter(r => !r.action && r.tools.some(x => x.id === t));
 /** the rail item a tool sits in (the menus' tool: Engine.uiTool): the one the player opened it from when that holds it (active), else its first
  *  that is not a second home (alt), else its first */
@@ -133,6 +142,13 @@ export function extraLock(ui: ProgressiveUiState | null, x: RailExtra): string |
 }
 /** whether a tool carries a NEW badge (open past stage 1 and not opened yet) */
 export const toolNew = (ui: ProgressiveUiState | null, t: Tool): boolean => !!ui && (ui.newTools as string[]).includes(t);
+/** whether a set of tools (a rail item's, or its Facilities tile's) says NEW: one of them is new and none of its badged tools has been opened yet (opening
+ *  one clears the badge; the rows keep the others' own badges until they are opened) */
+export function toolsNew(ui: ProgressiveUiState | null, tools: readonly RailTool[]): boolean {
+  if (!ui) return false;
+  const newT = (t: RailTool) => (ui.newTools as string[]).includes(t.id), opened = (t: RailTool) => NEW_BADGE_IDS.includes(t.id) && !newT(t) && !toolLock(ui, t.id);
+  return tools.some(newT) && !tools.some(opened);
+}
 
 /** what the rail reads besides the unlocks: the item the player opened (it is the one lit when the tool in hand sits in two), whether the game
  *  has a driving range and whether its card is open */
@@ -150,9 +166,8 @@ export function railEntries(ui: ProgressiveUiState | null, golf: boolean, uiTool
     if (!tools.length) continue;
     const locked = golf && ui && !r.action && tools.every(t => toolLock(ui, t.id)) ? toolLock(ui, tools.find(t => toolLock(ui, t.id))!.id) : null;
     // NEW: a tool of the group is new and none of its badged tools has been opened yet (opening one clears the group's badge; the row keeps the
-    // others' own badges until they are opened)
-    const newT = (t: RailTool) => (ui!.newTools as string[]).includes(t.id), opened = (t: RailTool) => NEW_BADGE_IDS.includes(t.id) && !newT(t) && !toolLock(ui, t.id);
-    const isNew = golf && !!ui && !locked && !r.action && tools.some(newT) && !tools.some(opened);
+    // others' own badges until they are opened). #1272: the Facilities tile's tools badge apart from the item's own, so Course says NEW for either
+    const isNew = golf && !!ui && !locked && !r.action && (toolsNew(ui, tools.filter(t => !t.within)) || toolsNew(ui, tools.filter(t => t.within)));
     const on = r.action === 'range' ? !!v.rangeOpen : r.action === 'build' ? !!v.buildOpen : lit === r;
     out.push({ item: r, on, locked, isNew, heading: r.section !== last ? r.section : null });
     last = r.section;

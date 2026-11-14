@@ -1,5 +1,5 @@
 // Explicit sheet identities prevent a new subject grid from overwriting an older menu icon.
-// node scripts/assets/prep-ui-tool-tiles.mjs [sheet.png] [--version v1|v2] [--manifest file.json]
+// node scripts/assets/prep-ui-tool-tiles.mjs [sheet.png] [--version v1|v2|v3|v4|v5|v6|v7|v8|v9] [--manifest file.json]
 import sharp from 'sharp';
 import fs from 'node:fs/promises';
 import path from 'node:path';
@@ -9,14 +9,24 @@ import { fileURLToPath } from 'node:url';
 export const SHEET_NAMES = {
   v1: [['tee', 'fairway', 'green', 'bunker'], ['pond', 'rough', 'trees', 'rocks'], ['cart-path', 'clubhouse', 'range-bays', 'flower-bed']],
   v2: [['waste-sand', 'snack-hut', 'golf-hole', 'grandstand-scoreboard'], ['land-plot', 'autumn-shrubs', 'palms', 'street-furniture'], ['patio-table', 'long-grass', 'chipping-green', 'surveyor-turf']],
+  // J8 (#1261): the action tiles, the pictures on the jam's buttons (the range card, the Bank, the hole card, the title card, the tips, the drills)
+  v3: [['buy-range', 'hit-balls', 'chip-and-putt', 'clear-junk'], ['pick-balls', 'hire-attendant', 'ball-washer', 'bucket-price'], ['turf-tee', 'grass-outfield', 'target-green', 'covered-bays']],
+  v4: [['open-bays', 'ball-dispenser', 'gravel-car-park', 'paved-car-park'], ['putting-green', 'play-hole', 'edit-hole', 'frame-trees'], ['draw-drive', 'seed', 'sod', 'bulldoze']],
+  v5: [['bank', 'borrow', 'repay', 'save-money'], ['take-money', 'statement', 'tips', 'how-to-play'], ['settings', 'save-game', 'new-game', 'profile']],
+  v6: [['drill-distance', 'drill-shaping', 'drill-flight', 'drill-junk'], ['drill-up-down', 'drill-putting', 'drill-bunker', 'shot-draw'], ['shot-fade', 'shot-high', 'shot-low', 'shot-spin']],
+  // J8, the second pair: the tutorial and guide steps, the rail and top bar, the range card's shift and scene, and the golf view's clubs and buttons
+  v7: [['place-range', 'walking-path', 'sell-buckets', 'select-tool'], ['walk', 'find-me', 'game-speed', 'zoom'], ['shift-hours', 'scene', 'daylight', 'earthworks']],
+  v8: [['club-driver', 'club-wood', 'club-long-iron', 'club-iron'], ['club-wedge', 'club-putter', 'jump-to-ball', 'gimme'], ['go-for-it', 'back-to-course', 'help-keys', 'closed-gate']],
+  // J8, the last sheet: the sound tiles (kept for J11, #1270: the music radio and the sound settings), Settings' rows and the title card's Continue
+  v9: [['radio', 'boombox', 'headphones', 'bell'], ['radio-off', 'jukebox', 'currency', 'text-size'], ['colour-safe', 'backups', 'load-save', 'front-door']],
 };
 const hash = bytes => crypto.createHash('sha256').update(bytes).digest('hex');
 export function sheetVersion(source, explicit) {
-  const detected = /^golf-build-tool-tiles-sheet-(v[12])\.png$/i.exec(path.basename(source))?.[1].toLowerCase();
+  const detected = /^golf-build-tool-tiles-sheet-(v[1-9])\.png$/i.exec(path.basename(source))?.[1].toLowerCase();
   if (explicit && !SHEET_NAMES[explicit]) throw Error('Unknown menu sheet version: ' + explicit);
   if (detected && explicit && detected !== explicit) throw Error(`Sheet filename is ${detected}, not ${explicit}`);
   const version = explicit ?? detected;
-  if (!version) throw Error('Unrecognised sheet filename: specify --version v1 or v2; never guess the subject order');
+  if (!version) throw Error('Unrecognised sheet filename: specify --version v1 to v9; never guess the subject order');
   return version;
 }
 

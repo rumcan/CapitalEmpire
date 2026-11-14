@@ -2,6 +2,7 @@ import { useState } from 'react';
 import type { Game } from '../../game/engine';
 import type { HoleView } from '../../game/golf/holeview';
 import { HOLE_COUNT } from '../../game/paint-tool';
+import { ActionTile, TILE_SMALL } from '../ActionTile'; // J8 (#1261): Edit Hole Layout wears its painted tile (in place of the pencil)
 
 /** New hole: the plan mode (golf: click a tee, then a green; T102) or, in a classic game, the next free hole to paint by hand */
 export function newHole(game: Game) {
@@ -72,7 +73,7 @@ export function HoleStrip({ game }: { game: Game }) {
         <span className="min-w-0">{!cv ? '' : cv.started
           ? `Hole ${cur}${cv.par ? ` · par ${cv.par} · ${cv.lengthM} m` : ''} · ${curState!.word}`
           : built.length ? `Hole ${cur} · empty: paint a green and a tee` : 'No holes yet: New hole plans one for you'}</span>
-        {planned && <button className={`chip ${editing ? 'chip-editing' : ''}`} disabled={editing} onClick={() => game.editHole(cur)} title={editing ? `Hole ${cur}'s layout editor is open above: drag the tee, the green or the line, then Move tees and flag` : `Edit Hole Layout on hole ${cur}: drag the tee, the green or the line; it moves the tee markers and the flag, no grass is laid`} data-testid="status-edit">{editing ? `Editing hole ${cur}` : '✎ Edit Hole Layout'}</button>}
+        {planned && <button className={`chip ${editing ? 'chip-editing' : ''}`} disabled={editing} onClick={() => game.editHole(cur)} title={editing ? `Hole ${cur}'s layout editor is open above: drag the tee, the green or the line, then Move tees and flag` : `Edit Hole Layout on hole ${cur}: drag the tee, the green or the line; it moves the tee markers and the flag, no grass is laid`} data-testid="status-edit">{editing ? `Editing hole ${cur}` : <><ActionTile tile="edit-hole" size={TILE_SMALL} />Edit Hole Layout</>}</button>}
       </div>
       {missing.length > 0 && (
         <ul className="mt-1 flex flex-col gap-0.5">

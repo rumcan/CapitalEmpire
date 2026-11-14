@@ -142,7 +142,7 @@ export function Flyouts({ rows, top, left, up = false, startPath = [], keyboard 
             const pic = r.tile ? tileUrl(r.tile) : undefined, mark = r.mark ? <SurfaceMark kind={r.mark} size={grid ? 40 : 22} /> : r.swatch ? <span className="flyout-swatch" style={{ background: r.swatch }} /> : r.icon ? <Icon name={r.icon} size={grid ? 36 : 20} /> : null;
             return (
               <button key={r.key} type="button" role="menuitem" data-row={`${level}:${index}`} data-key={r.key} tabIndex={focused ? 0 : -1}
-                data-guide={r.leaf ? `tool-${r.leaf.entry.view?.group ?? r.leaf.entry.id}` : undefined}
+                data-guide={r.guide ?? (r.leaf ? `tool-${r.leaf.entry.view?.group ?? r.leaf.entry.id}` : undefined)}
                 {...(grid && r.why ? { 'data-tip': `${r.label}: ${r.why}` } : r.note && !r.why ? { 'data-tip': r.note } : {})}
                 {...(grid && r.tile ? { 'data-tile': r.tile } : {})}
                 aria-haspopup={r.children ? 'menu' : undefined} aria-expanded={r.children ? opened : undefined} aria-disabled={r.why ? true : undefined}

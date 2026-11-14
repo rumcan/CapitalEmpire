@@ -15,6 +15,7 @@ import { CourseEdges } from './CourseEdges';
 import { GRID_KINDS } from '../../game/paint-tool';
 import { EditTees } from '../golf/TeeSets';
 import { showCheck } from '../spotlight/shows';
+import { ActionTile, TILE_SMALL } from '../ActionTile'; // J8 (#1261): Seed, Sod, Frame with trees, Edit Hole Layout and Delete wear painted tiles
 
 const STEPS = ['Tee', 'Green', 'Shape'] as const;
 /** what each step asks for, under the steps */
@@ -90,7 +91,7 @@ export function HoleWizardPanel({ game }: { game: Game }) {
       )}
       <div className="mt-1.5 flex flex-wrap gap-1">
         {w.base && w.step === 'shape' && <DeleteChoice game={game} n={w.base.hole} />}
-        {canEdit && <button className="chip" onClick={() => game.editHole(cur)} title="Move this hole's tee markers and flag: no grass is laid">{`Edit Hole Layout ${cur}`}</button>}
+        {canEdit && <button className="chip" onClick={() => game.editHole(cur)} title="Move this hole's tee markers and flag: no grass is laid"><ActionTile tile="edit-hole" size={TILE_SMALL} />{`Edit Hole Layout ${cur}`}</button>}
         <button className="chip" title="Back to the brush" onClick={() => p.setBrush(p.brushKind)}>Done</button>
       </div>
     </div>
@@ -101,7 +102,7 @@ export function HoleWizardPanel({ game }: { game: Game }) {
  *  its grass kept as your property's paint; one undo step either way */
 function DeleteChoice({ game, n }: { game: Game; n: number }) {
   const [ask, setAsk] = useState(false);
-  if (!ask) return <button className="chip" title="Delete the hole: with its grass, or keeping its grass as your property's paint (undo brings it back)" onClick={() => setAsk(true)} data-testid="wiz-delete">Delete hole</button>;
+  if (!ask) return <button className="chip" title="Delete the hole: with its grass, or keeping its grass as your property's paint (undo brings it back)" onClick={() => setAsk(true)} data-testid="wiz-delete"><ActionTile tile="bulldoze" size={TILE_SMALL} />Delete hole</button>;
   return (
     <div className="mt-1 flex w-full flex-wrap gap-1.5 rounded-lg border border-rose-400/40 bg-rose-500/10 p-2" role="alertdialog" aria-label={`Delete hole ${n}?`} data-testid="wiz-delete-choice">
       <button className="chip border-rose-400/60 text-rose-100" onClick={() => { setAsk(false); game.deleteHole(n, false); }}>Delete hole and its grass</button>
@@ -208,8 +209,8 @@ function Planting({ game }: { game: Game }) {
     <section className="mt-2" aria-label="Planting">
       <h4 className="sub-head">Planting</h4>
       <div className="wiz-plant" role="group" aria-label="Seed or Sod">
-        <button className={`chip ${!sod ? 'chip-on' : ''}`} aria-pressed={!sod} title="Seed: the cheap way; the grass grows in" onClick={() => pick('seed')}>{`Seed · ${money(k.seed)}`}</button>
-        <button className={`chip ${sod ? 'chip-on' : ''}`} aria-pressed={sod} title="Sod: rolls of grown turf, playable at once" onClick={() => pick('sod')}>{`Sod · ${money(k.sod)}`}</button>
+        <button className={`chip ${!sod ? 'chip-on' : ''}`} aria-pressed={!sod} title="Seed: the cheap way; the grass grows in" onClick={() => pick('seed')}><ActionTile tile="seed" size={TILE_SMALL} />{`Seed · ${money(k.seed)}`}</button>
+        <button className={`chip ${sod ? 'chip-on' : ''}`} aria-pressed={sod} title="Sod: rolls of grown turf, playable at once" onClick={() => pick('sod')}><ActionTile tile="sod" size={TILE_SMALL} />{`Sod · ${money(k.sod)}`}</button>
       </div>
       <p className="sub-line mt-1">
         {sod
@@ -236,7 +237,7 @@ function Frame({ game, cost }: { game: Game; cost: number }) {
     <section className="mt-2" aria-label="Trees" data-testid="wiz-frame">
       <h4 className="sub-head">Trees</h4>
       <div className="flex items-center justify-between gap-2">
-        <button className={`chip ${on ? 'chip-on' : ''}`} aria-pressed={on} data-testid="wiz-frame-toggle" title="Clumps of spruce, pine, maple and birch along the rough's outer edge, with gaps: never in the line of play, on a path or on water" onClick={() => p.setFrameTrees(!on)}>{on ? '✓ Frame with trees' : 'Frame with trees'}</button>
+        <button className={`chip ${on ? 'chip-on' : ''}`} aria-pressed={on} data-testid="wiz-frame-toggle" title="Clumps of spruce, pine, maple and birch along the rough's outer edge, with gaps: never in the line of play, on a path or on water" onClick={() => p.setFrameTrees(!on)}><ActionTile tile="frame-trees" size={TILE_SMALL} />{on ? '✓ Frame with trees' : 'Frame with trees'}</button>
         <span className="tabular-nums text-[13px] font-semibold" data-testid="wiz-frame-price">{!on ? 'Off' : f ? (f.trees ? `${f.trees} trees · ${money(f.price)}` : 'No room for a frame here') : 'Working it out…'}</span>
       </div>
       <p className="sub-line mt-1">{on ? `Clumps along the rough's edge, ${money(FRAME_TREE_PRICE)} a tree, clear of the line of play, the landing zones, paths, water and the cart lanes. Bulldoze one to open a view.` : 'Build plants no trees: frame the hole later from its card.'}</p>
@@ -255,7 +256,7 @@ function Ground({ game, cost }: { game: Game; cost: number }) {
     <section className="mt-2" aria-label="Ground" data-testid="wiz-ground">
       <h4 className="sub-head">Ground</h4>
       <div className="flex items-center justify-between gap-2">
-        <button className={`chip ${on ? 'chip-on' : ''}`} aria-pressed={on} data-testid="wiz-ground-toggle" title="Gentle rolls along the fairway, low mounds and a swale in the rough, the green tilted up from front to back; the tee stays level, and roads, paths and other holes are left as they are" onClick={() => p.setShapeGround(!on)}>{on ? '✓ Shape the ground' : 'Shape the ground'}</button>
+        <button className={`chip ${on ? 'chip-on' : ''}`} aria-pressed={on} data-testid="wiz-ground-toggle" title="Gentle rolls along the fairway, low mounds and a swale in the rough, the green tilted up from front to back; the tee stays level, and roads, paths and other holes are left as they are" onClick={() => p.setShapeGround(!on)}><ActionTile tile="earthworks" size={TILE_SMALL} />{on ? '✓ Shape the ground' : 'Shape the ground'}</button>
         <span className="tabular-nums text-[13px] font-semibold" data-testid="wiz-ground-price">{!on ? 'Off' : e ? `${Math.round(e.m3).toLocaleString()} m³ · ${money(e.cost)}` : 'Nothing to shape here'}</span>
       </div>
       <p className="sub-line mt-1">{on ? `Rolls along the fairway, mounds round it and the green, the green tilted front to back. Shaped while it is built: ${money(SHAPE_RATE_M3)} a m³; Undo takes them back with the grass.` : 'Build lays the hole on the ground as it is: shape it later with Edit hole\'s Ground height.'}</p>
