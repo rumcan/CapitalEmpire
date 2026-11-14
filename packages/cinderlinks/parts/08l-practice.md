@@ -85,9 +85,9 @@ function pracTick() {   // each step: the labels over the flags follow the camer
     if (ok) { L.style.left = (r.left + PJ.x / VW * r.width).toFixed(1) + 'px'; L.style.top = (r.top + PJ.y / VH * r.height).toFixed(1) + 'px'; }
   }
 }
-function pracKept(m) {   // #1308: what the turn m starts from while practising: his last aim, club and picks (null: the host's suggestion: the first ball, a drill clicked, another lie, or a club he no longer has)
-  const k = pracKeep, fresh = pracNew; pracNew = false;
-  if (!PRAC || fresh || !k || k.lie !== m.lie || k.hole !== m.hole || !HP) return null;
+function pracKept(m, live) {   // (live: the same ball's turn sent again: the state he has now, not the last stroke's)   // #1308: what the turn m starts from while practising: his last aim, club and picks (null: the host's suggestion: the first ball, a drill clicked, another lie, or a club he no longer has)
+  const k = live || pracKeep, fresh = pracNew; pracNew = false;
+  if (!PRAC || (fresh && !live) || !k || (!live && (k.lie !== m.lie || k.hole !== m.hole)) || !HP) return null;
   const ci = HP.clubs.findIndex((c) => c.club === k.club); if (ci < 0) return null;
   return { ci, ax: k.ax, ay: k.ay, pick: k.pick, pin: k.pin };
 }

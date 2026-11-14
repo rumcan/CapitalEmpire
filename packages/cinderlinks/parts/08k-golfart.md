@@ -2,7 +2,7 @@
 The people of the course can be drawn as CapitalEmpire's own rendered golfers (art/golfers/<id>: `sheet` idle and walk, `golf_drive` 12 frames, `golf_putt` 8 frames; a row for each of eight directions, S SW W NW N NE E SE, frames across) instead of the voxel figure.
 R: In host mode the player is the golfer of his player card and every other golfer is the one the manager view shows (the dress's `art`, protocol3p.ts); a caddie, a person with no art and anyone in a cart seat keep the voxel figure.
 R: Without a host the style menu has a Golfer choice: the voxel figure or one of the golfers; the choice is kept in the browser.
-R: A golfer's art is as tall as the voxel figure at the same scale; all of a golfer's clips share one scale; the direction row follows the facing the camera sees (a sixteenth turns 22.5 degrees).
+R: A golfer's art is as tall as the voxel figure at the same scale; every clip and every facing row is scaled so that the figure standing at the ball is exactly as tall as the golfer idle (#1308: from behind the swing and putt clips were up to 35% taller in their cell, and he grew when the camera swung round behind him); the direction row follows the facing the camera sees (a sixteenth turns 22.5 degrees).
 R: The art is lit by the time of day (its colours times the sun's colour against the day's; at night the moon's, between its light and its shade) and casts the same shadow as the voxel figure. The glow pass (the floodlights' pools, a lantern) then lights it like everything else on the picture, so a golfer in a floodlit pool is lit and one in the dark is dark (#1200).
 R: Nothing stalls: the pictures load in the background; a frame is made from them only when it is needed, a few milliseconds of it a step at most, and until it is made the nearest frame already made (or the voxel figure) stands in.
 R: J5b: while a golfer's art is still loading he is not drawn at all (never the voxel figure in his place); only art that failed to load gives the voxel figure. The picture and its frame table are fetched side by side.
@@ -10,6 +10,7 @@ R: J6c: another golfer's downswing (the last tenth of his address, the club comi
 File: game.js
 Check: function golferPic(
 Check: function artFrame(
+Check: function gaFix(
 Check: GOLFART_IDS = [
 
 ````js file=game.js
@@ -60,6 +61,21 @@ function gaMeasure(a) {   // the person's height on the sheet: from the top of h
   for (let y = 0; y < fh && top === fh; y++) for (let x = 0; x < fw; x++) if (d[(y * fw + x) * 4 + 3] > 100) { top = y; break; }
   a.personH = Math.max(1, m.anchor.y - top);
 }
+// #1308 (the owner: "why does the guy grow suddenly when the angle of the camera turns to his back?", "he is significantly bigger from behind"): the clips were painted at their own cell scales and
+// the swing and putt clips from behind are 20 to 35% taller in their cell than from the front. Every clip's every row is scaled so that the figure of its first frame (standing at the ball) is as tall,
+// top of the head to the toes, as the golfer standing idle (the sheet's frame 0, the mean of its eight rows): one height for every pose and every facing
+const gaFixM = new Map(), gaRefM = new Map();
+function gaCellH(a, row, f) {   // the figure's height in one cell of a picture: its top row to its bottom row with any pixel the art draws (alpha over GA_ALPHA)
+  const m = a.meta, fw = m.frameWidth, fh = m.frameHeight, c = gaCan(fw, fh); c.drawImage(a.img, f * fw, row * fh, fw, fh, 0, 0, fw, fh);
+  const d = c.getImageData(0, 0, fw, fh).data; let top = -1, bot = -1;
+  for (let y = 0; y < fh; y++) { const o = y * fw * 4; for (let x = 0; x < fw; x++) if (d[o + x * 4 + 3] >= GA_ALPHA) { if (top < 0) top = y; bot = y; break; } }
+  return top < 0 ? 0 : bot - top + 1;
+}
+function gaFix(id, clip, row, a, s0) {   // the factor on a clip row's scale (1 for a row already as tall as the golfer idle)
+  const key = id + '/' + clip + '/' + row; let v = gaFixM.get(key); if (v) return v;
+  let ref = gaRefM.get(id); if (!ref) { ref = 0; for (let r = 0; r < 8; r++) ref += gaCellH(s0, r, 0); ref /= 8; gaRefM.set(id, ref); }
+  const h = gaCellH(a, row, 0); v = h > 0 && ref > 0 ? Math.min(1.6, Math.max(0.6, ref / h)) : 1; gaFixM.set(key, v); return v;
+}
 function gaVoxel(K) {   // the voxel golfer's height at scale K, in sprite pixels (feet to the top of his cap)
   let h = gaVoxH.get(K); if (h) return h;
   const S = golferSprite(GA_AWAY, 'i', 0, K); let top = -1;
@@ -72,7 +88,7 @@ function gaMake(id, clip, row, f, K) {   // one frame as a sculpture: the art sc
   const a = gaLoad(id, clip), s0 = gaLoad(id, 'sheet'); if (!a.ready || !s0.ready || !s0.personH) return null;
   if (frame !== gaFrame) { gaFrame = frame; gaSpent = 0; }
   if (gaSpent >= (coverOn ? 12 : GA_MS)) return null;   // (J5b: more a step behind the loading cover)
-  const t0 = performance.now(), m = a.meta, fw = m.frameWidth, fh = m.frameHeight, sc = gaVoxel(K) / s0.personH;
+  const t0 = performance.now(), m = a.meta, fw = m.frameWidth, fh = m.frameHeight, sc = gaVoxel(K) / s0.personH * gaFix(id, clip, row, a, s0);
   const w = Math.max(2, Math.ceil(fw * sc)), h = Math.max(2, Math.ceil(fh * sc)), c = gaCan(w, h);
   c.imageSmoothingEnabled = true; c.imageSmoothingQuality = 'high'; c.drawImage(a.img, f * fw, row * fh, fw, fh, 0, 0, w, h);
   const d = c.getImageData(0, 0, w, h).data, T = gaTint(), S = sculpt(w, h, Math.round(m.anchor.x * sc), Math.round(m.anchor.y * sc));

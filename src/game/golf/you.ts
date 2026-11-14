@@ -12,6 +12,7 @@
 import type { Pt } from '../network';
 import { facing } from '../ext/pedestrians';
 import { gridPath } from '../offroad';
+import { followPaths, type PathNet } from './pathroute';
 
 /** a person's walk, 1.4 m/s, in tiles per second (2 m per tile; the townspeople's WALK_SPEED) */
 export const YOU_WALK = 0.7;
@@ -65,9 +66,24 @@ export function makeYou(x: number, y: number, face = 0): You {
   return { x, y, face, path: [], seg: 0, run: false, moving: false, keys: false, phase: 0, swing: -1, skip: false, tx: NaN, ty: NaN, mark: 0, speed: 0 };
 }
 
-/** the route from a to b (tiles) round what cost(x, y) makes Infinity (paths cheapest), its points a first and b last. Found once per click */
-export function routeOf(a: Pt, b: Pt, cost: (x: number, y: number) => number): Pt[] {
-  return gridPath(a, b, cost, 256, 16);
+/** the route from a to b (tiles) round what cost(x, y) makes Infinity (paths cheapest), its points a first and b last. Found once per click.
+ *  #1295 (the owner: "make sure people use walking paths if they are there and they can follow them"): with the paths (golf/pathroute.ts: the network's walking and cart paths)
+ *  the route goes by them where one is close and leads the right way (a path within 15 m that carries you a fair way for at most 30% more walking than the route round
+ *  what blocks), exactly along its legs, bends and all, not along the grid's cells beside it; the stretches to and from the path must be clear of what blocks too, else the
+ *  route round it is kept. No paths, none that helps: the route as before */
+export function routeOf(a: Pt, b: Pt, cost: (x: number, y: number) => number, paths?: PathNet | null): Pt[] {
+  const base = gridPath(a, b, cost, 256, 16);
+  if (!paths) return base;
+  const way = followPaths(paths, base);
+  return way && clearOf(way, cost) ? way : base;
+}
+/** whether a polyline crosses nothing cost(x, y) makes Infinity, sampled every half tile along its legs */
+export function clearOf(pts: readonly Pt[], cost: (x: number, y: number) => number): boolean {
+  for (let i = 1; i < pts.length; i++) {
+    const a = pts[i - 1]!, b = pts[i]!, n = Math.max(1, Math.ceil(Math.hypot(b.x - a.x, b.y - a.y) * 2));
+    for (let k = 0; k <= n; k++) if (!Number.isFinite(cost(a.x + (b.x - a.x) * k / n, a.y + (b.y - a.y) * k / n))) return false;
+  }
+  return true;
 }
 
 /** T317: a cart's run (Shift, a second click) is this much faster than its drive */

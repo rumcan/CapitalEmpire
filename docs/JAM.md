@@ -203,6 +203,48 @@ under its 128 KB limit). v10 to v12 are `ACTION_TILES` (the ball room tree's upg
 - **Texts** that say what is true now: the tutorial's first step ("You started with $75,000. The land, your house and this old driving range (junk and all) took $15,000."), the Build step,
   the Build tips, the normal game's last tutorial step and welcome card, the Who card's footnote (`tour.ts`, `tips.ts`, `WelcomeCard.tsx`, `YouCards.tsx`).
 
+## J14: people walk the walking paths (#1295, the owner 2026-11-14: "make sure people use walking paths if they are there and they can follow them")
+The guide's walking-path step promises "Your golfers walk it instead of the dirt". Before this it was true only when one path joined the car park, the shop and the back of the mats
+(T239 `walkwayOf`: all three within 6 m, the pieces joined); a path to the shop alone, the very common state, was crossed over by every customer; the attendant, the pro and your
+character ignored paths (your clicks only took the occupancy raster's cheaper tiles, a tile a step wide, so a route wobbled beside a 1.2 m path, never along it).
+- **One helper**, `golf/pathroute.ts` (pure, tested in `tests/golf-path-route.test.ts`): `PathNet.of(legs)` is the graph of the network's cart family (walking path, dirt path, slab path, paved
+  cart path), built once per network version; `routeVia(net, from, to, base)` is the polyline a walker follows: straight to the nearest point of a path that helps, along its legs (bends kept;
+  the way is the one with the least walking when a path's legs count 0.6 of their length, so he rides it round its bends rather than leaving it for a shortcut over the grass), straight off it
+  where it comes nearest where he is going. It is used only when the start is within `PATH_REACH` (7.5 tiles, 15 m) of a path, the whole trip is at most `PATH_DETOUR` (1.3) times the way it
+  replaces, and the path carries him `PATH_MIN_ON` (3 tiles) and twice the walking it adds. Else null: he walks as before. `followPaths(net, pts, goal, from, to)` does it for a way of several
+  points (the longest stretch from the earliest point it works from; the way's own points the route would step back for are dropped). A route is made once, as a trip begins; never per frame.
+- **The range** reads the paths round it into `scene.walkNet` (`rangehost.syncWalk`: the plot, the front and the practice area; only when the network's version changes). No exact anchor
+  decides who uses a path any more: a customer's way is made over whatever paths lead where he is going. The old all-three-anchors `Walkway` (`walkwayOf`) stays for the guide's step check
+  and its toast only, and its car park anchor is now the lot **or the guide's first ring** (`anchors.edge`, the path's end at the car park): a new start's set-back range (setback 18) has its
+  lot in the frontage strip, 18 tiles from that ring, so a path laid along the guide's rings never reached the lot and the step never ticked. The guide's third ring was found from the lot's
+  corner too (18 tiles off for a set-back range): it is now the scene's own `anchors.behind`.
+- **Customers keep their timetable.** A golfer's visit, the line, the takings are those of the walk across the dirt; he is only DRAWN over the path (`Visit.gw`, `RangeSim.drawnOver`): the ghost
+  route is timed so he arrives when the ordinary way would have had him there (a path 30% longer is walked 30% briskly: `PATH_PACE`), and a golfer in the line is drawn with the ordinary way's own
+  offset. So nothing the range counts can change with a path: **60 pairs (10 scenarios x 6 layouts) have identical full digests** (takings, buckets, counts, today's counts, car hours, every
+  money event), and without paths every mover of three seeded runs (135,846 + 21,640 + 30,222 person-frames) is drawn exactly where lead/live drew it. A first version that walked the path for
+  real (the walk ending at the shop, the line joined later) changed takings by -5% to +46% on the same scenarios: the golfer joined the line, and its patience clock started, later.
+- **The staff** walk the paths: an attendant plans a way when a leg begins (out to the pile, back to the room; again when the pile has moved 4 tiles) and walks it, then on to the pile; the robots
+  trundle straight (machines); the academy's pro plans when his spot changes. Their picking is a rate, not where they stand, so their money is untouched. Facing: a frame round a path's corner
+  faces the new leg.
+- **You**: `routeOf(a, b, cost, paths)` takes the A* route round what blocks and puts it on the paths where they lead (the engine's `youRoute`, once per click, the practice walk, the run home with
+  the basket, the walk up to your ball), checked clear of what blocks; else the route as before.
+- **Who walks the paths now**: the range's customers (car park, shop, mats, coffee kiosk, practice area, back to the car), its attendants, its pro, you. **Not touched** (each says why):
+  course golfers and caddies between a green and the next tee (their positions are the round model's `play/round.ts stateAt`, a straight line between balls; riders already drive the cart paths,
+  T377), the visitors' walk from their car to the clubhouse door (the car park's aisles and footpath), the grounds crew's passes (`crewground.ts`), townspeople (the sidewalk lines of roads only,
+  `ext/pedestrians`), the robots. Spectators and golf carts already prefer paths (T377 `walkfield.ts`: a path or a walk is the cheapest ground, a route is pulled straight over a 1-tile raster,
+  so they follow a path to about half a tile, not along its centre line): unchanged.
+- **Costs** (node, the range stepped and viewed a frame at a time, 60,000 frames, best of 5, six interleaved rounds against lead/live's `RangeSim`; the machine was shared, so read them to about 10%):
+  the jam range 4.36 us a frame on the branch without paths against 4.68 on lead/live (median; best 3.55 against 3.93), the grown range 5.51 against 6.18 (best 4.98 against 5.08); with the guide's
+  path and a field path laid 4.88 and 6.89 (about +4% and +11%: the drawn-over customers cost two route lookups a frame each). Bytes a frame: no difference outside noise (a trip allocates its way,
+  once). A walk's way: `followPaths` 1.7 to 3.3 us a trip, `PathNet.of` 2.7 us for the guide's six legs (170 us for 900), a clicked route over the paths as cheap as the A* it starts from (60 us).
+  Nothing is drawn differently: the GPU bench is not touched.
+- **Checks**: `tests/golf-walk-paths.test.ts` (no paths = lead/live's routes frame by frame, for the old start and the set-back one; the business digests with five path layouts over six scenarios,
+  the set-back start's and the rings' path among them; customers on the guide's path for 92% of the walk from the car park to the line on average, and on the path along the guide's rings of a
+  set-back range for 70% or more at the worst and 90% in the middle; the attendant; your route; the host), `golf-range-walk.test.ts` (T459's per-frame pace test again, with paths laid: no jump, the
+  frame limit now `1 + PATH_PACE` steps), `golf-range-guided.test.ts` (the old walkway test now draws over a path round its bend; a set-back range's walkway along the rings). Shots: `node
+  scripts/jam/walk-on-paths-shots.mjs --base http://127.0.0.1:PORT/` on a dev server (`VITE_JAM=1 npx vite --port PORT` for the jam's flow): `docs/jam-shots/walk-on-paths-*.jpg` (customers on the
+  path between the car park and the shop, two frames 2.8 s apart, over the whole view and close up; the attendant out on the field path; you walking a clicked route along the path).
+
 ## Button tests: run them before every jam build (T459, the owner 2026-11-13: "are you guys not testing buttons?")
 A dead button must not ship. Two checks:
 - **`npm test`** includes `tests/jam-buttons.test.ts` (node, seconds): every tutorial step's Show me does something (`tour.ts tourShowOf`) and every

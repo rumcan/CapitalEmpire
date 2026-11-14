@@ -9,7 +9,8 @@ import { invitedFacts } from '../src/game/golf/tour';
 import { FIX, foundingChecklist, seasonChip, seasonPhase, seasonSentence } from '../src/ui/golf/season';
 import { GUIDE, GUIDE_STUCK, RANGE_GUIDE, applyGuideEvent, guideStep, type GuideFacts } from '../src/game/ext/progressive-ui/guide';
 import { ANCHOR_FALLBACK, anchorElement } from '../src/ui/GuidePulse';
-import { RAIL } from '../src/ui/rail-items';
+import { RAIL, jamRail } from '../src/ui/rail-items';
+import { LEADS } from '../src/ui/spotlight/leads';
 import { RANGE_UPGRADES } from '../src/game/golf/rangesave';
 import { WELCOME_WAIT_MS, allBaked, welcomeReady } from '../src/game/golf/firstview';
 
@@ -43,7 +44,9 @@ function anchorsInSource(): Set<string> {
   const out = new Set<string>(), walk = (d: string) => { for (const f of readdirSync(d)) { const p = join(d, f); if (statSync(p).isDirectory()) walk(p); else if (p.endsWith('.tsx')) for (const m of readFileSync(p, 'utf8').matchAll(/data-guide="([^"]+)"/g)) out.add(m[1]!); } };
   walk('src');
   const app = readFileSync('src/App.tsx', 'utf8'), rail = readFileSync('src/ui/Rail.tsx', 'utf8'), card = readFileSync('src/ui/golf/SeasonCard.tsx', 'utf8');
-  assert.match(rail, /data-guide=\{`rail-\$\{r\.id\}`\}/); for (const r of RAIL) out.add(`rail-${r.id}`);
+  assert.match(rail, /data-guide=\{`rail-\$\{r\.id\}`\}/); for (const r of [...RAIL, ...jamRail(RAIL)]) out.add(`rail-${r.id}`); // (the jam's Build button too)
+  // #1297: the flyout rows the Show me leads down to carry their lead's anchors (tests/spotlight-leads.test.ts walks them in the real menus)
+  for (const [id, l] of Object.entries(LEADS)) { out.add(id); for (const s of l.steps) out.add(s.guide); }
   // T323: the Select slot's two cursors (T459: the buckets step points at Walk)
   assert.match(rail, /data-guide=\{isWalk \? 'rail-walk' : 'rail-select'\}/); out.add('rail-walk'); out.add('rail-select');
   // T193: the group's tools are the flyouts' leaves now (Flyouts.tsx: tool-<id>, the Props tool's group for its Buildings)
@@ -76,10 +79,11 @@ test('the pulse finds the first visible element of an anchor, else of its fallba
 });
 
 test('engine events move the range guide on at once: a hole built, the clubhouse placed, a car park built', () => {
-  // T239: the guided build's last step is the first hole (T288: step 9, after the two placement steps): a hole built meets it at once
-  const f: GuideFacts = { pieces: 0, roads: 0, parks: 0, structures: 0, kinds: {}, runs: 0, holes: 0, tutorial: 'on', step: 9, start: 'range', clubhouse: false, invited: false, golfers: 9, owned: ['greens', 'gravel', 'pave', 'teeturf'], walkway: true, practiceForSale: false, putting: 'open' };
-  assert.equal(guideStep(f)?.id, 'guide-range-hole');
-  const a = applyGuideEvent(f, 'hole'); assert.equal(a.holes, 1); assert.equal(guideStep(a), null);
+  // T239: the guided build's last step was the first hole (#1297, the owner: it went, the hole unlocks later; the buckets step is the last now): its facts meet it at once
+  const f: GuideFacts = { pieces: 0, roads: 0, parks: 0, structures: 0, kinds: {}, runs: 0, holes: 0, tutorial: 'on', step: 3, start: 'range', clubhouse: false, invited: false, golfers: 0, rangePlaced: true, lotPlaced: true };
+  assert.equal(guideStep(f)?.id, 'guide-range-buckets');
+  assert.equal(guideStep({ ...f, golfers: 9 }), null, 'the buckets sold: the last step is met, the guide is done');
+  const a = applyGuideEvent(f, 'hole'); assert.equal(a.holes, 1); assert.equal(guideStep(a)?.id, 'guide-range-buckets', 'a hole is no step of the range guide now');
   const b = applyGuideEvent(a, 'clubhouse'); assert.equal(b.clubhouse, true);
   assert.equal(applyGuideEvent(b, 'carpark').parks, 1);
   assert.equal(f.holes, 0, 'the facts before are untouched');
