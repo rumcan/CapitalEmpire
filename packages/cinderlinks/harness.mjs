@@ -14,7 +14,7 @@ const VALUE_FLAGS = new Set(['--shot', '--scenes', '--seed', '--scale', '--time'
 const positional = argv.filter((a, k) => !a.startsWith('--') && !(k > 0 && VALUE_FLAGS.has(argv[k - 1])));
 const file = positional[0] || new URL('../../public/cinderlinks/game.js', import.meta.url).pathname.replace(/^\/(\w:)/, '$1');
 const shotBase = optOf('--shot', null);
-const BUDGET = { renderMs: 16.6, tickMs: 1.5, chunkMs: 14, tileMs: 40, actors40Ms: 2 };   // (actors40Ms: T424, drawing forty of the host's people a frame)
+const BUDGET = { renderMs: 16.6, tickMs: 1.5, chunkMs: 14, tileMs: 40, actors40Ms: 2, padNsPerPx: 38 };   // (actors40Ms: T424, drawing forty of the host's people a frame)
 
 const CRC = new Int32Array(256).map((_, n) => { let c = n; for (let k = 0; k < 8; k++) c = c & 1 ? 0xedb88320 ^ (c >>> 1) : c >>> 1; return c; });
 function crc32(buf) { let c = -1; for (let i = 0; i < buf.length; i++) c = CRC[(c ^ buf[i]) & 255] ^ (c >>> 8); return (c ^ -1) >>> 0; }
@@ -890,16 +890,19 @@ try {
       if (holeN !== 1 || lie !== M_TEE) res.errors.push('host: hole 1 has no tee under the golfer (' + MAT_NAME[lie] + ')');
       if (!(feats && feats.paths && feats.paths.length)) res.errors.push('host: the features were not applied');
       let lit = 0; for (let i = 0; i < VW * VH; i += 7) if (px[i * 4] + px[i * 4 + 1] + px[i * 4 + 2] > 30) lit++; if (lit < VW * VH / 7 * 0.5) res.errors.push('host: the picture is mostly black'); }
-    // J6c: while practising, a still picture's pad pass is kept and put back: the frame it puts back is, pixel for pixel, the one making the pass again paints (earth, a slab and a mat
-    // laid round the golfer here), and the pass is the same with no practice open. The host's own features are put back after
-    { const keepF = feats, keepFor = featFor, keepP = PRAC, x = player.x / course.S, y = player.y / course.S, ring = (id, surface, x0, y0, x1, y1) => ({ kind: 'path', id, ring: true, surface, pts: [[x + x0, y + y0], [x + x1, y + y0], [x + x1, y + y1], [x + x0, y + y1]] });
-      setFeatures({ course: course.id, features: [ring('a', 'earth', -70, -70, 70, 70), ring('b', 'concrete', -6, -3, 6, 9), ring('c', 'turf', -2, 0, 2, 4)] });
+    // J6c, J6d: the pad pass of a practice range's layout (the outfield's earth, the tee's dirt, the slab and four mats, laid in front of the camera as the practice view has them; the host's own features
+    // are put back after). Practising, the camera held two frames running is kept and the third frame puts it back, pixel for pixel what making the pass again paints (and the pass is the same with no
+    // practice open: that one asks the grid for every pixel, this one by its deep cells and whole blocks). A moving picture's pass is made every frame: it may cost BUDGET.padNsPerPx a painted pixel
+    { const keepF = feats, keepFor = featFor, keepP = PRAC, pL = (f, s) => [(camX + FX * f + RX * s) / course.S, (camY + FY * f + RY * s) / course.S];
+      const quad = (id, surface, f0, s0, f1, s1) => ({ kind: 'path', id, ring: true, surface, pts: [pL(f0, s0), pL(f1, s0), pL(f1, s1), pL(f0, s1)] });
+      setFeatures({ course: course.id, features: [quad('a', 'earth', 8, -80, 200, 80), quad('b', 'dirt', 12, -60, 26, 60), quad('c', 'concrete', 14, -12, 23, 12), ...[-9, -3, 3, 9].map((s, i) => quad('m' + i, 'turf', 16.5, s - 1.8, 19.5, s + 1.8))] });
       render(); const base = Uint32Array.from(fb), pass = (prac) => { PRAC = prac; fb.set(base); drawPaths(); return Uint32Array.from(fb); };
-      padKeep = null; const a = pass({ place: 'range' }), n = padKeep ? padKeep.n : 0, b = pass({ place: 'range' }), hits = padKeep ? padKeep.hits : 0, c = pass(null);
-      feats = keepF; featFor = keepFor; PRAC = keepP; padKeep = null;
+      padKeep = null; pass({ place: 'range' }); const a = pass({ place: 'range' }), n = padKeep ? padKeep.n : 0, b = pass({ place: 'range' }), hits = padKeep ? padKeep.hits : 0, c = pass(null);
       let da = 0, db = 0; for (let i = 0; i < a.length; i++) { if (a[i] !== c[i]) da++; if (b[i] !== c[i]) db++; }
-      res.padKeep = { pixels: n, hits, differ: [da, db] };
-      const bad = !(n > 1000) ? 'it kept ' + n + ' pixels' : hits !== 1 ? 'the second frame was not the kept one (' + hits + ' hits)' : da || db ? 'what it puts back is not what making it again paints (' + da + ', ' + db + ' pixels differ)' : '';
+      PRAC = { place: 'range' }; let ms = 1e9; for (let r = 0; r < 15; r++) { const t0 = performance.now(); for (let k = 0; k < 3; k++) { padKeep = null; fb.set(base); drawPaths(); } ms = Math.min(ms, (performance.now() - t0) / 3); }
+      feats = keepF; featFor = keepFor; PRAC = keepP; padKeep = null;
+      const ns = n > 0 ? ms * 1e6 / n : 0; res.padKeep = { pixels: n, hits, differ: [da, db] }; res.padMoving = { ms: +ms.toFixed(2), pixels: n, nsPerPixel: +ns.toFixed(1) };
+      const bad = !(n > 1000) ? 'it kept ' + n + ' pixels' : hits !== 1 ? 'the third frame was not the kept one (' + hits + ' hits)' : da || db ? 'what it puts back is not what making it again paints (' + da + ', ' + db + ' pixels differ)' : '';
       if (bad) res.errors.push('features: the pad pass kept for a still picture: ' + bad); }
     // T424: forty actors (36 people in every pose from 8 to 190 m, 4 carts) in front of the golfer: what drawing them costs a frame, once their sculptures are made
     { const mk = ACT_MAKE; ACT_MAKE = 999; hostMessage(actors40(player.x, player.y, FX, FY)); for (let k = 0; k < 4; k++) render(); ACT_MAKE = mk;
@@ -954,6 +957,7 @@ try {
   if (!r.deterministic) over.push('same seed, different ground');
   if (!r.thingsDeterministic) over.push('same seed, different plants');
   if (r.actors40Ms > BUDGET.actors40Ms) over.push('forty actors ' + r.actors40Ms + ' ms > ' + BUDGET.actors40Ms);
+  if (r.padMoving && !(r.padMoving.nsPerPixel <= BUDGET.padNsPerPx)) over.push('the pad pass of a moving picture ' + r.padMoving.nsPerPixel + ' ns a painted pixel (' + r.padMoving.ms + ' ms for ' + r.padMoving.pixels + ') > ' + BUDGET.padNsPerPx);
   if (!r.ballRests) over.push('the ball never came to rest');
   if (r.strokes !== 1) over.push('the scripted shot did not happen');
   if (!(out.patternCheckerOnTile > 0.5 && out.patternCheckerOnNoise < 0.1)) over.push('the pattern checker failed its own test');
