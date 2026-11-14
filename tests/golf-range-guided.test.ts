@@ -131,6 +131,20 @@ test('T459 (#1215): walkwayReach says which of the car park, the shop and the te
   assert.deepEqual(walkwayReach(sc, apart), { lot: true, shop: true, tee: true }); assert.equal(walkwayOf(sc, apart), null);
 });
 
+test('#1295: the new start\'s set-back range (its lot in the frontage strip, 18 tiles from the guide\'s first ring): a path laid along the guide\'s three rings is the walkway; the rings are the scene\'s own points', () => {
+  const s = defaultRangeBiz(); s.setback = 18; const sc = rangeScene(PLOT, F, s), a = sc.anchors;
+  assert.ok(near(a.edge, sc.carEdge) && near(a.shop, sc.counter), 'the first ring is the path\'s end at the car park, the second the counter');
+  assert.ok(near(a.behind, P(30, 16.2 + 0.8), 1e-6), 'the third ring is behind the mats whatever the set-back (the lot\'s corner it was once found from moves 18 tiles)');
+  const lotBox = a.lot.map(p => Math.hypot(p.x - a.edge.x, p.y - a.edge.y)); assert.ok(Math.min(...lotBox) > 15, `the lot is ${Math.min(...lotBox).toFixed(1)} tiles from the first ring`);
+  const rings = [{ a: a.edge, b: a.shop }, { a: a.shop, b: a.behind }];
+  assert.deepEqual(walkwayReach(sc, rings), { lot: true, shop: true, tee: true }, 'the path along the rings reaches the car park (its end), the shop and the tee box\'s back');
+  assert.ok(walkwayOf(sc, rings), 'joined: the walkway the guide\'s step wants');
+  const first = walkwayReach(sc, [rings[0]!]); assert.ok(first.lot && first.shop, 'the first ring to the counter alone reaches the car park and the shop');
+  assert.equal(walkwayOf(sc, [rings[1]!]), null, 'a path from the counter on to behind the mats alone does not reach the car park');
+  // the unset-back range is as it was: the lot itself counts
+  const plain = rangeScene(PLOT, F, defaultRangeBiz()); assert.ok(walkwayOf(plain, pathLegs()), 'the old start\'s walkway still counts'); assert.ok(near(plain.anchors.behind, P(30, 17), 1e-6));
+});
+
 test('the walkers: across the dirt without a path; along the laid walking path once there is one', () => {
   const run = (legs: { a: { x: number; y: number }; b: { x: number; y: number } }[] | null) => {
     const sc = rangeScene(PLOT, F, defaultRangeBiz()); sc.walkNet = legs ? PathNet.of(legs) : null;   // (#1295: the walkers are drawn over the paths: golf/pathroute.ts)

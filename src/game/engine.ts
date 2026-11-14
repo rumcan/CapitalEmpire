@@ -6228,8 +6228,7 @@ export class Game {
   /** the walking path step's rings (the car park's edge, the shop's counter, the tee's back) for 20 s, all three framed in the free map */
   private showWalkRings() {
     const sc = this.range.scene; if (!sc) return;
-    const o = sc.anchors.lot[0]!, P = (u: number, v: number) => ({ x: o.x + sc.roadDir.x * (u - 49) + sc.rangeSide.x * (v - 2), y: o.y + sc.roadDir.y * (u - 49) + sc.rangeSide.y * (v - 2) });
-    const pts = [sc.carEdge, sc.counter, P(30, 17)];
+    const pts = [sc.carEdge, sc.counter, sc.anchors.behind];   // (#1295: the scene's own points: the third was found from the lot's corner, which a set-back range's lot moves 18 tiles)
     this.guideRings = { pts, until: performance.now() + 20000, walk: true };
     this.fitView(pts.flatMap(p => [p, { x: p.x - 6, y: p.y - 6 }, { x: p.x + 6, y: p.y + 6 }]), true);
     this.emit();

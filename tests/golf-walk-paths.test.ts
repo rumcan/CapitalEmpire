@@ -22,17 +22,26 @@ const legs = (...uv: [number, number][]) => uv.slice(1).map((q, i) => ({ a: P(uv
 /** the lot as the engine hands it over: each bay with the walk from the car park's footpath (at its edge by the path's start) along its aisle to the bay (T237) */
 const withFootpath = (bays: CarSlot[]): CarSlot[] => bays.map(b => ({ ...b, walk: [P(49.4, 15.6), { x: b.x - b.hx * 1.2, y: b.y - b.hy * 1.2 }] }));
 const FULL: RangeUpgradeId[] = ['greens', 'bays8', 'bays12', 'covered', 'proshop', 'kiosk', 'tube', 'pushpick', 'attendant', 'attendant2', 'washer', 'robot'];
+/** the set-back range of the new start (rangestart.ts: setback 18): its lot lies in the frontage strip in front of the plot, 18 tiles from the guide's first ring (the path's end at the car park),
+ *  so a lot's bays are the lot's own corners' box and its entrance is on the drive; its walkers step off its back edge and cross the strip to the ring */
+const SETBACK = 18;
+function setbackLot(sc: ReturnType<typeof rangeScene>): { bays: CarSlot[]; entrance: Pt } {
+  const xs = sc.anchors.lot.map(p => p.x), ys = sc.anchors.lot.map(p => p.y), x0 = Math.min(...xs), y0 = Math.min(...ys), e = P(72, -SETBACK + 8);
+  return { bays: bayGrid({ id: 1, x: x0, y: y0, w: Math.max(...xs) - x0, h: Math.max(...ys) - y0 }, 0, [e]), entrance: e };
+}
+/** the path laid along the guide's three rings: the car park's edge, the shack's counter, behind the mats (the scene's own points) */
+const ringsOf = (sc: ReturnType<typeof rangeScene>) => [{ a: sc.anchors.edge, b: sc.anchors.shop }, { a: sc.anchors.shop, b: sc.anchors.behind }];
 /** the walking path the guide asks for: from the car park's edge to the shack's counter and along behind the mats */
 const GUIDE = legs([48.4, 16.2], [42, 14.5], [34, 14], [30, 16.8], [4, 16.8]);
 
 // ---------------------------------------------------------------- no paths: exactly today's routes
 
 /** a digest of every mover the range hands the engine to draw, frame by frame (the numbers below were taken on lead/live before this change) */
-function digest(owned: RangeUpgradeId[], garage: boolean, dt: number, hours: number, seed: number, net: PathNet | null = null): { hash: string; people: number } {
-  const s = owned.reduce((q, id) => withUpgrade(q, id), defaultRangeBiz()); s.balls = newBalls(); s.balls.clean = 400000; s.balls.shift = 7;
+function digest(owned: RangeUpgradeId[], garage: boolean, dt: number, hours: number, seed: number, net: PathNet | null = null, setback = 0): { hash: string; people: number } {
+  const s = owned.reduce((q, id) => withUpgrade(q, id), defaultRangeBiz()); s.balls = newBalls(); s.balls.clean = 400000; s.balls.shift = 7; if (setback) s.setback = setback;
   const sc = rangeScene(PLOT, F, s); sc.walkNet = net;
-  const slots: CarSlot[] = garage && sc.garage ? [...lotBays().slice(0, 12), ...garageSlots(sc.garage, 20)] : looseBays(lotBays(), 'dirt');
-  const sim = new RangeSim(seed, 10); sim.setScene(sc, slots, entrance); sim.setBalls(s.balls);
+  const lot = setback ? setbackLot(sc) : { bays: lotBays(), entrance }, slots: CarSlot[] = garage && sc.garage ? [...lot.bays.slice(0, 12), ...garageSlots(sc.garage, 20)] : looseBays(lot.bays, 'dirt');
+  const sim = new RangeSim(seed, 10); sim.setScene(sc, slots, lot.entrance); sim.setBalls(s.balls);
   let h = 2166136261 >>> 0, people = 0; const mix = (n: number) => { h = Math.imul(h ^ (Math.round(n * 1e5) | 0), 16777619) >>> 0; };
   const frames = Math.round(hours * 25 / dt), busy = { tier: 5, exits: 2, residents: 20000 };
   for (let f = 0; f < frames; f++) {
@@ -56,9 +65,15 @@ test('#1295: without paths every person and car is drawn exactly where lead/live
   assert.deepEqual(digest(['tube'], false, 1 / 30, 16, 3, far), { hash: '11d4839d', people: 135846 });
 });
 
+test('#1295: the same for the new start\'s set-back range (the lot in the frontage strip, 18 tiles from the guide\'s first ring): without paths every mover is drawn where lead/live drew it', () => {
+  assert.deepEqual(digest(['tube'], false, 1 / 30, 16, 3, null, SETBACK), { hash: '7b06f191', people: 173238 });
+  assert.deepEqual(digest(GROWN, false, 1 / 3, 30, 11, null, SETBACK), { hash: '79a93551', people: 24784 });
+  assert.deepEqual(digest([...GROWN, 'gravel', 'pave', 'tier2', 'parking'], true, 0.25, 24, 13, null, SETBACK), { hash: '5a2af94b', people: 30995 });
+});
+
 // ---------------------------------------------------------------- the money does not change
 
-interface Scenario { name: string; seed: number; owned: RangeUpgradeId[]; ample: boolean; day: number; h0: number; hours: number; dt: number; demand: { tier: number; exits: number; residents: number }; practice?: boolean }
+interface Scenario { name: string; seed: number; owned: RangeUpgradeId[]; ample: boolean; day: number; h0: number; hours: number; dt: number; demand: { tier: number; exits: number; residents: number }; practice?: boolean; setback?: number }
 const HIGH = { tier: 5, exits: 2, residents: 20000 }, MID = { tier: 3, exits: 2, residents: 6000 }, LOW = { tier: 1, exits: 2, residents: 1500 };
 const SCENARIOS: Scenario[] = [
   { name: 'a busy old range, three days', seed: 7, owned: ['bays8', 'greens'], ample: false, day: 600, h0: 5, hours: 72, dt: 0.5, demand: HIGH },
@@ -66,12 +81,14 @@ const SCENARIOS: Scenario[] = [
   { name: 'the grown range, a day and a half at 1/3 s', seed: 11, owned: FULL, ample: true, day: 600, h0: 5, hours: 36, dt: 1 / 3, demand: HIGH },
   { name: 'a short day (an hour is ten seconds), kiosk and academy', seed: 17, owned: ['bays8', 'kiosk', 'academy', 'proshop'], ample: false, day: 240, h0: 4, hours: 48, dt: 0.2, demand: LOW },
   { name: 'practice greens and a kiosk, 60 fps', seed: 23, owned: ['bays8', 'kiosk', 'greens'], ample: true, day: 600, h0: 6, hours: 10, dt: 1 / 60, demand: MID, practice: true },
+  { name: 'the new start\'s set-back range, a busy day and a half', seed: 29, owned: ['tube', 'pushpick', 'attendant', 'bays8'], ample: true, day: 600, h0: 5, hours: 36, dt: 1 / 3, demand: HIGH, setback: SETBACK },
 ];
 /** everything the range's business keeps from a run: takings, counts, today's counts, the car park's hours and every money event */
-function business(c: Scenario, net: PathNet | null): string {
-  const s = c.owned.reduce((q, id) => withUpgrade(q, id), defaultRangeBiz()); s.balls = newBalls(); if (c.ample) s.balls.clean = 400000;
-  const sc = rangeScene(PLOT, F, s); sc.walkNet = net;
-  const sim = new RangeSim(c.seed, 10); sim.setScene(sc, withFootpath(looseBays(lotBays(), 'dirt')), entrance); sim.setBalls(s.balls);
+function business(c: Scenario, layout: ((sc: ReturnType<typeof rangeScene>) => PathNet | null) | null): string {
+  const s = c.owned.reduce((q, id) => withUpgrade(q, id), defaultRangeBiz()); s.balls = newBalls(); if (c.ample) s.balls.clean = 400000; if (c.setback) s.setback = c.setback;
+  const sc = rangeScene(PLOT, F, s); sc.walkNet = layout ? layout(sc) : null;
+  const lot = c.setback ? setbackLot(sc) : { bays: lotBays(), entrance }, slots = c.setback ? looseBays(lot.bays, 'dirt') : withFootpath(looseBays(lot.bays, 'dirt'));
+  const sim = new RangeSim(c.seed, 10); sim.setScene(sc, slots, lot.entrance); sim.setBalls(s.balls);
   const money: Record<string, number[]> = {}; sim.onMoney = (e: RangeMoneyEvent) => { const m = money[e.kind + (e.why ?? '')] ?? (money[e.kind + (e.why ?? '')] = [0, 0]); m[0]! += e.n; m[1]! += e.amount; };
   let booked = 0; const frames = Math.round(c.hours * (c.day / 24) / c.dt);
   for (let f = 0; f < frames; f++) {
@@ -81,18 +98,19 @@ function business(c: Scenario, net: PathNet | null): string {
   }
   return JSON.stringify({ booked, season: s.season, total: s.total, today: sim.today, practiceToday: sim.practiceToday, carStats: sim.carStats, money });
 }
-const LAYOUTS: Record<string, PathNet> = {
-  'the guide\'s path: car park edge, shack, behind the mats': PathNet.of(GUIDE)!,
-  'car park to the shop only': PathNet.of(legs([50, 12], [42, 12], [34, 14]))!,
-  'behind the mats only': PathNet.of(legs([48.4, 16.5], [4, 16.5]))!,
-  'a path off the line, round by the road': PathNet.of([...legs([52, 6], [34, 6], [34, 14]), ...legs([34, 14], [30, 17.5], [8, 17.5])])!,
+const LAYOUTS: Record<string, (sc: ReturnType<typeof rangeScene>) => PathNet | null> = {
+  'the guide\'s path: car park edge, shack, behind the mats': () => PathNet.of(GUIDE),
+  'car park to the shop only': () => PathNet.of(legs([50, 12], [42, 12], [34, 14])),
+  'behind the mats only': () => PathNet.of(legs([48.4, 16.5], [4, 16.5])),
+  'a path off the line, round by the road': () => PathNet.of([...legs([52, 6], [34, 6], [34, 14]), ...legs([34, 14], [30, 17.5], [8, 17.5])]),
+  'laid along the guide\'s three rings (the scene\'s own points)': sc => PathNet.of(ringsOf(sc)),
 };
 
 test('#1295: the range earns exactly what it earned: with any path laid the takings, counts, money events and car hours of every scenario are those of the same scenario on the dirt', () => {
   for (const c of SCENARIOS) {
     const dirt = business(c, null), took = (JSON.parse(dirt) as { total: { takings: number; golfers: number } }).total;
     assert.ok(took.golfers >= 5 && took.takings > 0, `${c.name}: golfers came (${took.golfers}) and paid ($${took.takings})`);
-    for (const [name, net] of Object.entries(LAYOUTS)) assert.equal(business(c, net), dirt, `${c.name}, ${name}`);
+    for (const [name, layout] of Object.entries(LAYOUTS)) assert.equal(business(c, layout), dirt, `${c.name}, ${name}`);
   }
 });
 
@@ -100,11 +118,14 @@ test('#1295: the range earns exactly what it earned: with any path laid the taki
 
 /** each golfer's drawn walking outside the car park (u past its edge toward the shop), by whether it lies on the paths (within 0.35 tile): the whole of it (all), and the walk to his first stop, the line at the
  *  shop (first) */
-function trace(net: PathNet | null, hours = 6, dt = 1 / 30, owned: RangeUpgradeId[] = ['bays8', 'greens']) {
-  const s = owned.reduce((q, id) => withUpgrade(q, id), defaultRangeBiz()); s.balls = newBalls(); s.balls.clean = 1e6;
-  const sc = rangeScene(PLOT, F, s); sc.walkNet = net;
-  const sim = new RangeSim(5, 10); sim.setScene(sc, withFootpath(looseBays(lotBays(), 'dirt')), entrance); sim.setBalls(s.balls);
-  const o = P(0, 0), du = { x: P(1, 0).x - o.x, y: P(1, 0).y - o.y }, uOf = (p: Pt) => (p.x - o.x) * du.x + (p.y - o.y) * du.y;
+function trace(netOf: PathNet | null | ((sc: ReturnType<typeof rangeScene>) => PathNet | null), hours = 6, dt = 1 / 30, owned: RangeUpgradeId[] = ['bays8', 'greens'], setback = 0) {
+  const s = owned.reduce((q, id) => withUpgrade(q, id), defaultRangeBiz()); s.balls = newBalls(); s.balls.clean = 1e6; if (setback) s.setback = setback;
+  const sc = rangeScene(PLOT, F, s), net = typeof netOf === 'function' ? netOf(sc) : netOf; sc.walkNet = net;
+  const lot = setback ? setbackLot(sc) : { bays: lotBays(), entrance }, slots = setback ? looseBays(lot.bays, 'dirt') : withFootpath(looseBays(lot.bays, 'dirt'));
+  const sim = new RangeSim(5, 10); sim.setScene(sc, slots, lot.entrance); sim.setBalls(s.balls);
+  // (counted: the walking out of the car park, past its edge toward the shop; for a set-back range, from the guide's first ring on: the strip between its lot and the ring is dirt either way)
+  const o = P(0, 0), du = { x: P(1, 0).x - o.x, y: P(1, 0).y - o.y }, dv = { x: P(0, 1).x - o.x, y: P(0, 1).y - o.y }, uOf = (p: Pt) => (p.x - o.x) * du.x + (p.y - o.y) * du.y, vOf = (p: Pt) => (p.x - o.x) * dv.x + (p.y - o.y) * dv.y;
+  const skip = (p: Pt) => (setback ? vOf(p) < 15.5 || Math.hypot(p.x - sc.counter.x, p.y - sc.counter.y) < 3 : uOf(p) > 48.6);   // (and not the last 3 tiles to the counter: the line stands beside the path, a few steps off it)
   const last = new Map<number, Pt>(), per = new Map<number, { w: number; on: number; fw: number; fon: number; stopped: boolean }>(); let worst = 0, walked = 0;
   const demand = { tier: 3, exits: 2, residents: 6000 };
   for (let f = 0; f < Math.round(hours * 25 / dt); f++) {
@@ -113,9 +134,9 @@ function trace(net: PathNet | null, hours = 6, dt = 1 / 30, owned: RangeUpgradeI
       const p = d.people[k]!, q = last.get(p.id); last.set(p.id, { x: p.x, y: p.y });
       if (!q) continue;
       const m = Math.hypot(p.x - q.x, p.y - q.y); worst = Math.max(worst, m / dt);
-      if (uOf(p) > 48.6) continue;                                  // (only the walking outside the car park)
       const g = per.get(p.id) ?? { w: 0, on: 0, fw: 0, fon: 0, stopped: false }; per.set(p.id, g);
-      if (m < 1e-9) { if (g.fw > 0) g.stopped = true; continue; }
+      if (m < 1e-9) { if (g.fw > 0) g.stopped = true; continue; }   // (his first stop: the line, wherever it is)
+      if (skip(p)) continue;                                        // (only the walking outside the car park)
       const onPath = net?.on(p.x, p.y, 0.35) ? m : 0; g.w += m; g.on += onPath; walked += m; if (!g.stopped) { g.fw += m; g.fon += onPath; }
     }
   }
@@ -139,6 +160,18 @@ test('#1295: with the walking path the guide asks for, every customer is drawn o
   // nobody jumped: the fastest frame of any customer is the end of one route and the first step into the line (two steps), with the path's pace on top
   assert.ok(on.worst <= (1 + PATH_PACE) * RANGE_PACE.walk + 1e-6, `fastest ${on.worst.toFixed(2)} tiles/s of ${((1 + PATH_PACE) * RANGE_PACE.walk).toFixed(2)}`);
   assert.ok(off.worst <= 2 * RANGE_PACE.walk + 1e-6, `fastest on the dirt ${off.worst.toFixed(2)}`);
+});
+
+test('#1295: the new start\'s set-back range: a path laid along the guide\'s three rings (the lot is 18 tiles from the first) is used by every customer from the first ring to the line', () => {
+  const on = trace(sc => PathNet.of(ringsOf(sc)), 6, 1 / 30, ['bays8', 'greens'], SETBACK), off = trace(null, 6, 1 / 30, ['bays8', 'greens'], SETBACK);
+  const firsts = [...on.per.values()].filter(g => g.fw >= 8).map(g => g.fon / g.fw);
+  assert.ok(on.golfers >= 10 && firsts.length >= 10, `${on.golfers} customers, ${firsts.length} walks from the ring to the line`);
+  const sorted = [...firsts].sort((p, q) => p - q), mean = firsts.reduce((s, k) => s + k, 0) / firsts.length, median = sorted[Math.floor(sorted.length / 2)]!;
+  assert.ok(mean >= 0.8, `${(100 * mean).toFixed(0)}% of the walk from the first ring to the line is on the path, on average`);
+  assert.ok(median >= 0.9, `the middle customer was on it for ${(100 * median).toFixed(0)}% of it`);
+  assert.ok(sorted[0]! >= 0.35, `the customer who used it least: ${(100 * sorted[0]!).toFixed(0)}%`);
+  assert.ok(off.golfers === on.golfers && [...off.per.values()].reduce((s, g) => s + g.on, 0) === 0, 'the same customers came, and on the dirt none is on a path');
+  assert.ok(on.worst <= (1 + PATH_PACE) * RANGE_PACE.walk + 1e-6, `fastest ${on.worst.toFixed(2)} tiles/s`);
 });
 
 test('#1295: a path that only reaches the shop is used for that part of the way; one that wanders off the way is not used at all', () => {
@@ -211,11 +244,12 @@ test('#1295: the host reads the paths round the range into the scene when the ne
     pathLegs: b => { boxes.push([...b]); return pl; }, netVersion: () => ver,
   };
   const h = new RangeHost(ctx, 1); h.sync();
-  assert.equal(h.scene!.walkNet, null, 'no paths: no net'); assert.ok(boxes.length >= 2, 'asked for the front and for the wider box');
+  const netOf = (): PathNet | null => h.scene!.walkNet;   // (a function call: the checks below are not narrowed by the one before)
+  assert.equal(netOf(), null, 'no paths: no net'); assert.ok(boxes.length >= 2, 'asked for the front and for the wider box');
   const sc = h.scene!, wide = boxes.find(b => b[0]! <= sc.box[0] && b[3]! >= sc.box[3])!; assert.ok(wide && wide[2]! >= sc.box[2] && wide[1]! <= sc.box[1], 'the wide box holds the whole plot');
   assert.ok(wide[0]! <= sc.practice.box[0] && wide[2]! >= sc.practice.box[2], 'and the practice area beside it');
-  pl = GUIDE; h.sync(); assert.equal(h.scene!.walkNet, null, 'read again only when the network changes'); ver++; h.sync();
-  assert.equal(h.scene!.walkNet?.legs as number | undefined, GUIDE.length, 'the paths are in the scene');
-  const net = h.scene!.walkNet; ver++; h.sync(); assert.equal(h.scene!.walkNet, net, 'the same paths: the same graph (not made again)');
-  pl = []; ver++; h.sync(); assert.equal(h.scene!.walkNet, null, 'the paths bulldozed: the dirt again');
+  pl = GUIDE; h.sync(); assert.equal(netOf(), null, 'read again only when the network changes'); ver++; h.sync();
+  assert.equal(netOf()?.legs, GUIDE.length, 'the paths are in the scene');
+  const net = netOf(); ver++; h.sync(); assert.equal(netOf(), net, 'the same paths: the same graph (not made again)');
+  pl = []; ver++; h.sync(); assert.equal(netOf(), null, 'the paths bulldozed: the dirt again');
 });

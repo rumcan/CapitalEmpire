@@ -217,8 +217,10 @@ export interface RangeScene {
    *  joined into a graph; null: none. The host sets it as the paths change. Every walker's way is made over it when his trip begins (RangeSim.walk): the customers, the practice
    *  area's golfers, the attendants and the pro. With none, or none that helps, they walk the dirt as they always did */
   walkNet: PathNet | null;
-  /** T239: the anchors a walkway joins (world): the car park lot's corners, the shop's counter, the tee box's back edge (its two ends) */
-  anchors: { lot: Pt[]; shop: Pt; tee: [Pt, Pt] };
+  /** T239: the anchors a walkway joins (world): the car park lot's corners, the shop's counter, the tee box's back edge (its two ends). #1295: and the path's end at the car park (edge: the
+   *  guide's first ring, where the lot's walkers join the path: a path that starts there reaches the car park, for a set-back range's lot lies up to 18 tiles from it, in the frontage strip) and
+   *  the spot behind the mats the guide's last ring marks (behind) */
+  anchors: { lot: Pt[]; edge: Pt; shop: Pt; tee: [Pt, Pt]; behind: Pt };
   /** where the outfield's mowing stripes start (world: the tee end of the outfield, its middle) */
   mowFrom: Pt;
   /** T251: the plot frame (its origin and its unit u and v, world) and the fences a rolling ball stops short of (the side fences' u, the far
@@ -485,7 +487,7 @@ export function rangeScene(plot: Rect, facing: 0 | 1 | 2 | 3, s: RangeBizSave, o
     mowFrom: P(U_MID, TEE[3] + TEE_GAP + 0.6),
     fence: { o, u: { x: du.x - o.x, y: du.y - o.y }, v: { x: dv.x - o.x, y: dv.y - o.y }, u0: SIDE_U[0] + FENCE_GAP, u1: SIDE_U[1] - FENCE_GAP, v1: FAR_V - FENCE_GAP },
     front: [Math.min(f0.x, f1.x), Math.min(f0.y, f1.y), Math.max(f0.x, f1.x), Math.max(f0.y, f1.y)], walk: null, walkNet: null,
-    anchors: { lot: [P(lot[0], lot[2]), P(lot[1], lot[2]), P(lot[1], lot[3]), P(lot[0], lot[3])], shop: P(COUNTER.u, COUNTER.v), tee: [P(TEE[0], TEE[2]), P(TEE[1], TEE[2])] },
+    anchors: { lot: [P(lot[0], lot[2]), P(lot[1], lot[2]), P(lot[1], lot[3]), P(lot[0], lot[3])], edge: P(CAR_EDGE_U, PATH_V), shop: P(COUNTER.u, COUNTER.v), tee: [P(TEE[0], TEE[2]), P(TEE[1], TEE[2])], behind: P(30, PATH_V + 0.8) },
   };
 }
 
@@ -509,11 +511,13 @@ const inPoly = (q: Pt[], x: number, y: number): boolean => {
   for (let i = 0, j = q.length - 1; i < q.length; j = i++) { const a = q[i]!, b = q[j]!; if ((a.y > y) !== (b.y > y) && x < (b.x - a.x) * (y - a.y) / (b.y - a.y) + a.x) k = !k; }
   return k;
 };
-/** T459 (#1215): which of the walkway's three anchors (the car park lot, the shop's counter, the tee box's back edge) a path comes within
- *  WALK_REACH of, whether or not the paths join up: the guide's walking-path step says what is still missing */
+/** how far a point is from the car park for a walkway (#1295): from the lot, or from the path's end at the car park (the guide's ring): a set-back range's lot lies in the frontage strip
+ *  up to 18 tiles from the ring the guide asks the path to start at, and a path that starts there leads from the car park toward the shop */
+const toCarPark = (a: RangeScene['anchors'], p: Pt): number => Math.min(inPoly(a.lot, p.x, p.y) ? 0 : Math.min(...a.lot.map((q, i) => ptSeg(p, q, a.lot[(i + 1) % 4]!).d)), Math.hypot(p.x - a.edge.x, p.y - a.edge.y));
+/** T459 (#1215): which of the walkway's three anchors (the car park, the shop's counter, the tee box's back edge) a path comes within
+ *  WALK_REACH of, whether or not the paths join up: the guide's walking-path step says what is still missing. #1295: the car park is its lot or the path's end at it (toCarPark) */
 export function walkwayReach(sc: Pick<RangeScene, 'anchors'>, legs: readonly { a: Pt; b: Pt }[]): { lot: boolean; shop: boolean; tee: boolean } {
-  const { lot, shop, tee } = sc.anchors;
-  const toLot = (p: Pt) => (inPoly(lot, p.x, p.y) ? 0 : Math.min(...lot.map((a, i) => ptSeg(p, a, lot[(i + 1) % 4]!).d)));
+  const { shop, tee } = sc.anchors, toLot = (p: Pt) => toCarPark(sc.anchors, p);
   const reaches = (dist: (p: Pt) => number) => legs.some(l => {
     const n = Math.max(1, Math.ceil(Math.hypot(l.b.x - l.a.x, l.b.y - l.a.y) / WALK_STEP));
     for (let i = 0; i <= n; i++) { const t = i / n; if (dist({ x: l.a.x + (l.b.x - l.a.x) * t, y: l.a.y + (l.b.y - l.a.y) * t }) <= WALK_REACH) return true; }
@@ -527,8 +531,7 @@ export function walkwayReach(sc: Pick<RangeScene, 'anchors'>, legs: readonly { a
  *  and the ways are the shortest along the path between them */
 export function walkwayOf(sc: Pick<RangeScene, 'anchors' | 'bays'>, legs: readonly { a: Pt; b: Pt }[]): Walkway | null {
   if (!legs.length) return null;
-  const { lot, shop, tee } = sc.anchors;
-  const toLot = (p: Pt) => (inPoly(lot, p.x, p.y) ? 0 : Math.min(...lot.map((a, i) => ptSeg(p, a, lot[(i + 1) % 4]!).d)));
+  const { shop, tee } = sc.anchors, toLot = (p: Pt) => toCarPark(sc.anchors, p);
   type Hit = { leg: number; t: number; d: number };
   const near = (dist: (p: Pt) => number, reach: number): Hit | null => {
     let best: Hit | null = null;
@@ -1405,7 +1408,7 @@ export class RangeSim {
     const sc = this.scene!, sl = this.slots[slot]!, side = this.rnd() < 0.5 ? -1 : 1, d = sc.roadDir, n = sc.rangeSide;
     // driving toward +u keeps to the range's side of the road (right-hand traffic: a rotation of the frame, never a mirror), toward -u the far side
     const lane = side > 0 ? 0.9 : -0.9, from = sl.off ? sl.off.road[0]! : { x: sc.J.x - d.x * side * 46 + n.x * lane, y: sc.J.y - d.y * side * 46 + n.y * lane };
-    const v: Visit = { id: this.nextId++, person: Math.floor(this.rnd() * this.golfers), car: Math.floor(this.rnd() * 5), slot, stage: S.CarIn, t: 0, r: null, bay: -1, swings: 0, queued: 0, served: 0, x: from.x, y: from.y, ang: 0, born: this.t };
+    const v: Visit = { id: this.nextId++, person: Math.floor(this.rnd() * this.golfers), car: Math.floor(this.rnd() * 5), slot, stage: S.CarIn, t: 0, r: null, bay: -1, swings: 0, queued: 0, served: 0, x: from.x, y: from.y, ang: 0, born: this.t, gw: null, gr: null };   // (#1295: gw and gr from the start: one shape for every visit)
     // the academy (T133): a share of the golfers come for a lesson (drawn only with an academy, so a range without one plays as before)
     if (sc.academy && this.rnd() < LESSON_SHARE) v.lesson = true;
     v.r = this.inRoute(sl, from, lane);
