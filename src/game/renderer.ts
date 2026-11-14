@@ -36,7 +36,7 @@ import { type GrassCellView } from './ext/grass-management';
 import { grassOverlay } from './lawn-overlay';
 import { surfaceOfTex } from './golf/costs';
 import { CELL as COURSE_CELL } from './golf/paintcourse';
-import { RUGGED, SPILL, SPILL_SHADE_OFF, inPoly, ruggedKind, ruggedRing, spillBlades, spillScale, warpLine, warpPoint, warpTriples, type RuggedKind } from './rugged-edges';
+import { RUGGED, SPILL, SPILL_SHADE_OFF, inPoly, ruggedKind, ruggedKindOf, ruggedRing, spillBlades, spillScale, warpLine, warpPoint, warpTriples, type RuggedKind } from './rugged-edges';
 import { AREA_SHADE, EDGE_LOOKS, JOINT_SOFT, SHADE_RGB, areaLightEdge, areaShadeImages, areaShadeReach, areaShadow, bandRamp, edgeBox, edgeField, edgeImages, edgeReach, edgeRes, featherTiles, jointFeather, jointLen, jointRamp, jointShadeWeight, litBox, type EdgeImage } from './paint-edges';
 import { CH_SIZE, SUN_TILE_DIR } from './ext/course-height';
 import { CART_RIM, CART_SURFACE, cartCast, cartRim } from './cart-bevel';
@@ -51,6 +51,7 @@ import { SOFT, easeWeights, softAreaWidth, softDirt, softMaskImage, softRGBA, so
 import { BLEND_WAVES, blendAlpha, blendNoise, trimLru } from './painted-grass-lod';
 import { LEAF_DENSITY_DEFAULT, PIC_REACH, STAMP, layLeaves, leafSignature, type LeafRoad } from './leaf-fall';
 import { leafAtlasAt, type LeafAtlas } from './leaf-atlas';
+import { onOwnGround, ownGroundOf, scatterLitter } from './litter-scatter';
 import { DESERT_FALL_SCALE, DESERT_LITTER_SCALE, DESERT_SHADOW_A, DESERT_TINTS, DESERT_TINT_LOOK, DESERT_TUFT } from './desert-litter';
 import { SURVEY_COL, SURVEY_DASH, SURVEY_W } from './lots/survey';
 import { CROP_STATES, LANE_SURFACE, ROW_LOOK, cropArtTurn, cropSurface, rowSegments, rowStep } from './ext/farms/crops';
@@ -1008,7 +1009,7 @@ export class GroundPainter {
     if (!this.rugged) return { q: p, kind: 'hard', side: 1 };
     let f = this.ruggedForms.get(p);
     if (!f) {
-      const kind = ruggedKind(p.tex, p.paint && p.paint.b > 0 ? p.paint.bt : undefined), pts = kind === 'hard' ? p.pts : ruggedRing(p.pts, COURSE_CELL);
+      const kind = ruggedKindOf(p.tex, p.paint), pts = kind === 'hard' ? p.pts : ruggedRing(p.pts, COURSE_CELL); // (#1278: ground of its own, PatchPaint.own, takes no spill)
       f = { q: pts === p.pts ? p : { ...p, pts: pts as number[] }, kind, side: signedArea(pts as number[]) >= 0 ? 1 : -1 };
       this.ruggedForms.set(p, f);
     }
@@ -4226,17 +4227,17 @@ export class GroundPainter {
    *  what they came from is the same. X0, Y0: the chunk's corner (world px; a chunk lays only the stamps that reach its picture) */
   private leafStamps(box: BBox, X0: number, Y0: number): Float32Array {
     const casters = this.casters.query([box[0] - 12, box[1] - 12, box[2] + 12, box[3] + 12], 'f:'), pid = (o: object) => { let v = this.patchIds.get(o); if (!v) this.patchIds.set(o, (v = ++this.patchSeq)); return v; };
-    const yards: number[][] = [], hard: number[][] = [], courses: CoursePatch[] = [], off: { pts: number[]; b: BBox }[] = [], ids: number[] = [];
+    const yards: number[][] = [], hard: number[][] = [], courses: CoursePatch[] = [], off: { pts: number[]; b: BBox }[] = [], ids: number[] = [], ownPatches: LotPatch[] = [];
     for (const p of this.lotsIn([box[0] - 3, box[1] - 3, box[2] + 3, box[3] + 3])) {
       if (p.top || p.layby || p.tex === 'marks') continue;
       if (p.course) { courses.push(p.course); ids.push(pid(p)); }
-      else if (p.paint || waterTex(p.tex)) { off.push({ pts: p.pts, b: quadBox(p.pts) }); ids.push(pid(p)); }
+      else if (p.paint || waterTex(p.tex)) { off.push({ pts: p.pts, b: quadBox(p.pts) }); ids.push(pid(p)); if (p.paint?.own !== undefined) ownPatches.push(p); } // (#1278: no leaf on ground of its own, nor on its margin)
       else if (p.lawn) { if (p.lawn.z >= 1 && p.pts.length >= 8) { yards.push(p.pts); ids.push(pid(p)); } }
       else if (LEAF_HARD.has(p.tex)) { hard.push(p.pts); ids.push(pid(p)); }
     }
     const roads: LeafRoad[] = [], cx = (box[0] + box[2]) / 2, cy = (box[1] + box[3]) / 2, rr = Math.max(box[2] - box[0], box[3] - box[1]) / 2 + 4;
     for (const s of this.net.segsNear({ x: cx, y: cy }, rr)) if (s.kind !== SK.TUNNEL) roads.push({ ax: s.a.x, ay: s.a.y, bx: s.b.x, by: s.b.y, h: s.cls.h, walk: s.cls.walk, keep: LEAF_ROAD_KEEP[s.cls.family] ?? 0.6 });
-    const swampy = this.swampOn(), riverSwampy = this.riverSwampOn(), key = `${box[0]},${box[1]},${box[2]},${box[3]}`, sig = `${leafSignature({ casters, roads }, this.leafDensity)}:${this.terrainVer}:${swampy ? 1 : 0}${riverSwampy ? 1 : 0}:${ids.join(',')}`, have = this.leafMemo.get(key);
+    const own = ownGroundOf(ownPatches), swampy = this.swampOn(), riverSwampy = this.riverSwampOn(), key = `${box[0]},${box[1]},${box[2]},${box[3]}`, sig = `${leafSignature({ casters, roads }, this.leafDensity)}:${this.terrainVer}:${swampy ? 1 : 0}${riverSwampy ? 1 : 0}:${ids.join(',')}`, have = this.leafMemo.get(key);
     if (have && have.sig === sig) { this.leafMemo.delete(key); this.leafMemo.set(key, have); return have.stamps; }
     const blocked = (x: number, y: number) => {
       if (x < 0 || y < 0 || x >= MAP || y >= MAP || this.terrain[Math.floor(y) * MAP + Math.floor(x)]! > TC.PATCH) return true;
@@ -4249,7 +4250,7 @@ export class GroundPainter {
       }
       for (const c of courses) if (courseCovers(c, x, y)) return true;
       for (const q of off) if (x >= q.b[0] && x <= q.b[2] && y >= q.b[1] && y <= q.b[3] && inPoly(q.pts, x, y)) return true;
-      return false;
+      return own.length > 0 && onOwnGround(own, x, y);
     };
     const mx = (PIC_REACH + 1.5) * HW * Math.SQRT2, my = (PIC_REACH + 1.5) * HH * Math.SQRT2;
     const within = (x: number, y: number) => { const wx = (x - y) * HW, wy = (x + y) * HH; return wx >= X0 - mx && wx <= X0 + CHUNK_W + mx && wy >= Y0 - my && wy <= Y0 + CHUNK_H + my; };
@@ -4275,15 +4276,12 @@ export class GroundPainter {
     };
     const inView: { x: number; y: number; ang: number; s: number; idx: number }[] = [];
     for (const l of net.leaves) { if (l.x < tx0 - 0.5 || l.x > tx1 + 0.5 || l.y < ty0 - 0.5 || l.y > ty1 + 0.5) continue; const r = mulberry((l.x * 977 + l.y * 131 + l.ang * 100) | 0); inView.push({ x: l.x, y: l.y, ang: l.ang, s: l.s, idx: tex.pickLeaf(r, l.s) }); }
-    // a sparse scatter and a few drifts on the grass, as the builder's regionDressing does
-    const rx0 = Math.floor(tx0 / 8), rx1 = Math.floor(tx1 / 8), ry0 = Math.floor(ty0 / 8), ry1 = Math.floor(ty1 / 8);
-    for (let ry = ry0; ry <= ry1; ry++) for (let rx = rx0; rx <= rx1; rx++) {
-      const r = mulberry(((rx * 7919) ^ (ry * 104729) ^ 0x51ed) >>> 0), g2 = () => { let u = 0; while (!u) u = r(); return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * r()); };
-      const add = (x: number, y: number, sizeM: number) => { if (x < 0 || y < 0 || x >= MAP || y >= MAP || occAt(x, y)) return; if (this.terrain[Math.floor(y) * MAP + Math.floor(x)] > 1) return; inView.push({ x, y, ang: r() * Math.PI * 2, s: sizeM, idx: tex.pickLeaf(r, sizeM) }); };
-      const sizeOf = (k: string) => { const u = r(); return (k === 'stray' ? 0.96 : 1) * (u < 0.22 ? 0.11 + r() * 0.08 : u < 0.58 ? 0.2 + r() * 0.1 : u < 0.88 ? 0.32 + r() * 0.15 : 0.49 + r() * 0.16); };
-      for (let i = 0; i < 30; i++) add(rx * 8 + r() * 8, ry * 8 + r() * 8, sizeOf('stray'));
-      for (let c = 0; c < 2; c++) { if (r() > 0.6) continue; const X0 = rx * 8 + r() * 8, Y0 = ry * 8 + r() * 8, n = 4 + Math.floor(r() * r() * 22), sp = (0.35 + r() * 0.6) / 2; for (let i = 0; i < n; i++) add(X0 + g2() * sp, Y0 + g2() * sp, sizeOf('gutter')); }
-    }
+    // a sparse scatter and a few drifts on the grass, as the builder's regionDressing does (litter-scatter.ts; #1278: none on ground of its own: the range's tee box, its slab and mats, and the margin round
+    // the tee box where its raised face and apron lie)
+    const own = ownGroundOf(this.lotsIn([tx0 - 4, ty0 - 4, tx1 + 4, ty1 + 4]));
+    for (const spot of scatterLitter(Math.floor(tx0 / 8), Math.floor(ty0 / 8), Math.floor(tx1 / 8), Math.floor(ty1 / 8),
+      (x, y) => !(x < 0 || y < 0 || x >= MAP || y >= MAP || occAt(x, y) || this.terrain[Math.floor(y) * MAP + Math.floor(x)] > 1),
+      own.length ? (x, y) => onOwnGround(own, x, y) : () => false, (r, sizeM) => tex.pickLeaf(r, sizeM))) inView.push(spot);
     g.globalAlpha = 0.22; g.globalCompositeOperation = 'source-over';
     // shadows (as a darkening of the ground): drawn black through the leaf alpha
     const sh = this.buffer('leafShadow', W, H), shg = ctx2d(sh);

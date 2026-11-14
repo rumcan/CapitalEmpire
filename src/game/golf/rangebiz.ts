@@ -126,7 +126,11 @@ export interface ScenePiece { key: string; id: string; x: number; y: number; q: 
  *  top (the outfield); T258: 'mats', 'targetGreen' and 'bullseye', the range's pictures (GOLF-ART-LIST 19, 20, 27: golf/range-pics.ts) laid
  *  flat by their lay */
 export interface ScenePatch { pts: number[]; surf: 'fairway' | 'firstCut' | 'tee' | 'fringe' | 'green' | 'rough' | 'dirt' | 'grassDry' | 'asphaltDark' | 'gravel' | 'concrete' | 'outfield' | 'target' | 'desert' | 'teeDirt' | 'teeTurf' | 'yard' | 'mats' | 'targetGreen' | 'bullseye'; edge?: 'raised' | 'turf' | 'flat'; mow?: true;
-  /** T258: a picture's lay (its surf one of the pictures) */ lay?: PicLay }
+  /** T258: a picture's lay (its surf one of the pictures) */ lay?: PicLay;
+  /** #1278 (the owner, 2026-11-14: "can we remove the desert texture underneath the driving range tee box"): the area is its own ground, edge to edge (the tee box, the slab and the mats): the map's ground
+   *  (the desert's sand) never spills over its edge and no litter, scrub or fallen leaf lies on it or within `own` tiles of it (the ground painter's PatchPaint.own; the tee box's: the margin where its
+   *  raised face and apron lie) */
+  own?: number }
 /** T258: how a range picture lies on the ground: the corner of one picture (world tiles), its turn (degrees: its x axis along (cos a, sin a),
  *  its y axis a quarter turn on, so it is never mirrored) and its scale (its width in tiles over golf/range-pics.ts PIC_TILES) */
 export interface PicLay { x: number; y: number; a: number; s: number }
@@ -279,15 +283,16 @@ export function rangeScene(plot: Rect, facing: 0 | 1 | 2 | 3, s: RangeBizSave, o
   // the tee box wears the range's own tee (T223): packed dirt at a desert start, its divot-scarred turf once turfed (the course's tees keep theirs).
   // The dirt reaches over the tee cells' first-cut collar (TEE_DIRT_PAD), so no green ring frames a desert tee; the turf keeps its collar
   const pad = st.teeTurf ? 0 : TEE_DIRT_PAD;
-  patches.push({ pts: quad(TEE[0] - pad, TEE[1] + pad, TEE[2] - pad, TEE[3] + pad), surf: st.teeTurf ? 'teeTurf' : 'teeDirt' });
+  // (#1278: the tee box is its own ground from edge to edge: no desert sand spills over its edge, no litter or scrub lies on it, nor on the TEE_GAP the raised tee's face and the apron cover round it)
+  patches.push({ pts: quad(TEE[0] - pad, TEE[1] + pad, TEE[2] - pad, TEE[3] + pad), surf: st.teeTurf ? 'teeTurf' : 'teeDirt', own: TEE_GAP - pad });
   const open = openSlots(st.lowerBays); // the tee box's mats (T133: the upper deck's bays are added below)
-  patches.push({ pts: quad(slotU(open[0]!) - 1.5, slotU(open[open.length - 1]!) + 1.5, STAND_V - 2, STAND_V + 2.2), surf: 'concrete' });
+  patches.push({ pts: quad(slotU(open[0]!) - 1.5, slotU(open[open.length - 1]!) + 1.5, STAND_V - 2, STAND_V + 2.2), surf: 'concrete', own: 0 });
   if (look.mats === 'picture' && open.length) {
     // T258: the mats' picture (item 19), one a bay along the open bays (one strip: its period is the bays' pitch), its top toward the targets
     // or turned half round, whichever keeps its painted light nearer the screen's upper right (a quarter turn would lay it across the bay)
     const o = P(0, 0), dv = P(0, 1), e1 = { x: -(dv.y - o.y), y: dv.x - o.x }, e = lightScore(e1) >= lightScore({ x: -e1.x, y: -e1.y }) ? e1 : { x: -e1.x, y: -e1.y };
-    patches.push({ pts: quad(slotU(open[0]!) - BAY_W / 2, slotU(open[open.length - 1]!) + BAY_W / 2, MATS_V - MATS_D / 2, MATS_V + MATS_D / 2), surf: 'mats', lay: picLay(P(slotU(open[0]!), MATS_V), e, BAY_W, MATS_D) });
-  } else for (const k of open) { const u = slotU(k); patches.push({ pts: quad(u - 1.05, u + 1.05, STAND_V - 1.4, STAND_V + 1.6), surf: 'asphaltDark' }, { pts: quad(u - 0.65, u + 0.65, STAND_V - 0.2, STAND_V + 1.2), surf: 'green' }); }
+    patches.push({ pts: quad(slotU(open[0]!) - BAY_W / 2, slotU(open[open.length - 1]!) + BAY_W / 2, MATS_V - MATS_D / 2, MATS_V + MATS_D / 2), surf: 'mats', lay: picLay(P(slotU(open[0]!), MATS_V), e, BAY_W, MATS_D), own: 0 });
+  } else for (const k of open) { const u = slotU(k); patches.push({ pts: quad(u - 1.05, u + 1.05, STAND_V - 1.4, STAND_V + 1.6), surf: 'asphaltDark', own: 0 }, { pts: quad(u - 0.65, u + 0.65, STAND_V - 0.2, STAND_V + 1.2), surf: 'green', own: 0 }); }
   const targets: SceneTarget[] = [];
   for (let i = 0; i < st.targets; i++) {
     const u = TARGET_U[i]!, v = STAND_V + TARGET_D[i]!, r = TARGET_R[i]!, c = P(u, v);

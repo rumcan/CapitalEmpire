@@ -36,7 +36,11 @@ export interface PatchPaint { s: number; a: number; b: number; bt: string; z: nu
   mw?: MowStripes;
   /** T258: where its texture's pattern starts (tiles: the corner of one period, turned by a about it; absent: the tile grid's origin). A range
    *  picture (golf/range-pics.ts) is laid flat with it: one picture exactly over its mat or green */
-  o?: [number, number] }
+  o?: [number, number];
+  /** #1278: the area is its own ground, edge to edge (the driving range's tee box, its slab and mats): the map's ground (the desert's sand) never spills over its edge
+   *  (rugged-edges.ts ruggedKindOf), and no litter, scrub or fallen leaf lies on it or within `own` tiles of it (0: on it alone; the tee box's: its raised face and apron;
+   *  litter-scatter.ts ownGroundOf). Absent: an ordinary painted area */
+  own?: number }
 /** a painted area's mowing stripes (PatchPaint.mw) */
 export interface MowStripes { ux: number; uy: number; ox: number; oy: number; w: number; l: number; k: number; lc: string; dc: string; t: number; f: number;
   /** T227: the line of play's direction (tiles, unit), so the course finish can lay its bands along or across it (course-finish finishMow);

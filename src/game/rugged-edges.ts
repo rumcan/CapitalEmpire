@@ -251,6 +251,13 @@ export function ruggedKind(tex: string, border?: string): RuggedKind {
   if (TALL.test(tex)) return 'tall';
   return 'short';
 }
+/** #1278 (the owner, 2026-11-14: "remove the desert texture underneath the driving range tee box"): the kind of a painted area from its texture and its paint. An area of its own ground
+ *  (PatchPaint.own: the range's tee box, slab and mats) is never 'short': the map's ground (in the desert, orange sand) does not spill over its edge, whatever its texture; its outline
+ *  keeps the wobble it has (so it still meets the course's tee cells, which wobble with it) */
+export function ruggedKindOf(tex: string, paint?: { b: number; bt: string; own?: number }): RuggedKind {
+  const k = ruggedKind(tex, paint && paint.b > 0 ? paint.bt : undefined);
+  return k === 'short' && paint?.own !== undefined ? 'tall' : k;
+}
 
 /** whether a point lies inside a closed polygon (even-odd) */
 export function inPoly(pts: ArrayLike<number>, x: number, y: number): boolean {
