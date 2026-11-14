@@ -215,6 +215,9 @@ export default function App() {
   const [menu, setMenu] = useState(false);
   /** the UI scale in force (T179: Settings; applied at boot from this browser's storage) */
   const [uiScale, setUiScale] = useState(currentUiScale);
+  /** J8 (#1261): at the largest text size (125%) the top bar has no room on a 1366 px screen for the pictures beside the speed bar and the zoom buttons: they are left out
+   *  there (the pause, speed and zoom controls keep their icons) so the bar stays one row, clear of the statement note under it */
+  const tight = uiScale >= 1.2;
   /** the menu button waiting for its second click (New game, Empty map), or null */
   const [armed, setArmed] = useState<'new' | 'empty' | null>(null);
   useEffect(() => { if (!menu) setArmed(null); }, [menu]);
@@ -616,7 +619,7 @@ export default function App() {
             </div>
             <div className="pointer-events-auto ml-auto flex items-center gap-2">
               <div className="glass flex items-center gap-1 px-2 py-1.5">
-                <ActionTile tile="game-speed" size={TILE_ROW - 6} />
+                {!tight && <ActionTile tile="game-speed" size={TILE_ROW - 6} />}
                 <button className="btn-icon" onClick={() => game.togglePause()} data-tip="Pause (Space)"><Icon name={game.speed ? 'pause' : 'play'} size={22} /></button>
                 {SPEEDS.map(k => <button key={k} className={`chip ${k < 1 ? 'px-1.5 text-[11px]' : ''} ${game.speed === k ? 'chip-on' : ''} disabled:opacity-40`} disabled={game.paceLock && k > WATCH_SPEED} onClick={() => game.setSpeed(k)} data-tip={k === WATCH_SPEED ? 'The watching speed: golfers walk at a natural pace (, and .)' : k < 1 ? 'Slow motion (, and .)' : 'Speed (, and .)'} data-testid={`speed-${speedLabel(k)}`}>{speedLabel(k)}×</button>)}
                 {!JAM && game.golfMode && (game.golfWatch
@@ -626,7 +629,7 @@ export default function App() {
                 {game.night.mode === 'clock' && game.clockNight() > 0 && <button className="chip" onClick={() => game.skipNight()} data-tip="Skip this night: daylight until the next one (how often nights come: gear menu, Night)"><Icon name="sun" size={16} /> Skip night</button>}
               </div>
               <div className="glass flex items-center gap-1 px-2 py-1.5">
-                <ActionTile tile="zoom" size={TILE_ROW - 6} />
+                {!tight && <ActionTile tile="zoom" size={TILE_ROW - 6} />}
                 <button className="btn-icon" onClick={() => game.zoomAt(clampZoom(game.cam.z / ZOOM_STEP))} data-tip="Zoom out (-)"><Icon name="zoom-out" size={20} /></button>
                 <button className="btn-icon" onClick={() => game.zoomAt(clampZoom(game.cam.z * ZOOM_STEP))} data-tip="Zoom in (+)"><Icon name="zoom-in" size={20} /></button>
               </div>
