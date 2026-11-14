@@ -13,15 +13,9 @@ export function yardageSlug(m: number): string | null {
   return Number.isInteger(m) && YARDAGE_DISTANCES.includes(m) ? `golf-range-yard-${m}` : null;
 }
 
-/** a view that was painted at the wrong heading (not the one its file says), so it is not drawn: the slug's index (0: view 1) of it. The 100 m sign's "view 1"
- *  came out as a second view 2 (its front facing the lower right: the other signs' view 1 faces the lower left), so on the facings that ask for view 1 the 100 m
- *  sign is its view 2 (the right number, turned the other way, never mirrored) until a view 1 is painted again; then delete its line */
-export const WRONG_HEADING: Readonly<Record<string, 0 | 1>> = Object.freeze({ 'golf-range-yard-100': 0 });
-
 /** the library id of the yardage sign for m metres on a range whose pieces face q (rangeScene's toRoad), looked up through the range scene's own `art(slug, q)`
  *  (its picture's id once it has landed, else null): null when the distance has no picture painted or packed: no sign at all */
 export function yardageSign(m: number, q: number, art: (slug: string, q: number) => string | null): string | null {
-  const slug = yardageSlug(m); if (!slug) return null;
-  const bad = WRONG_HEADING[slug], view = q === 0 || q === 1 ? 0 : 1;
-  return art(slug, bad !== undefined && bad === view ? (view === 0 ? 2 : 0) : q);
+  const slug = yardageSlug(m);
+  return slug ? art(slug, q) : null;
 }
