@@ -6,6 +6,7 @@
 // Pure TypeScript, no DOM globals, deterministic.
 
 import { JAM, JAM_RAMP_TAKINGS } from '../../features';
+import { practicePath } from '../../golf/menu-path';
 
 /** top-level rail tool group ids matching GROUPS in src/App.tsx */
 export type RailGroupId = 'select' | 'roads' | 'paint' | 'course' | 'junction' | 'bulldoze' | 'transport' | 'business';
@@ -214,13 +215,13 @@ export const FIRST_RUN_HINTS: readonly FirstRunHint[] = [
 ];
 
 /** a range start's teaching ramp (plan P24 Phase 2, T130): build the putting green, then the chipping green and its bunker, in the practice
- *  area beside the range (the hint bar's Show me pans there and arms Facilities ▸ Practice with it: T206) */
+ *  area beside the range (the hint bar's Show me pans there and arms Course ▸ Facilities ▸ Practice with it: T206, #1272) */
 export const PRACTICE_HINTS: readonly FirstRunHint[] = [
   {
     id: 'hint-practice-putting',
     stage: 1,
     title: 'Build a putting green',
-    body: 'Facilities ▸ Practice ▸ Putting green: move it over the Practice area beside the car park and click (+10% visitors, $2 a golfer).',
+    body: `${practicePath()} ▸ Putting green: move it over the Practice area beside the car park and click (+10% visitors, $2 a golfer).`,
     targetTool: 'practice',
     show: true,
   },
@@ -228,7 +229,7 @@ export const PRACTICE_HINTS: readonly FirstRunHint[] = [
     id: 'hint-practice-chipping',
     stage: 1,
     title: 'Now a chipping green and bunker',
-    body: 'Facilities ▸ Practice ▸ Chipping green and bunker: it comes with its practice bunker and a mat to chip from.',
+    body: `${practicePath()} ▸ Chipping green and bunker: it comes with its practice bunker and a mat to chip from.`,
     targetTool: 'practice',
     show: true,
   },
@@ -240,7 +241,7 @@ export const PRACTICE_BUY_HINT: FirstRunHint = Object.freeze({
   id: 'hint-practice-buy',
   stage: 1,
   title: 'Buy the practice area',
-  body: 'The land beside the car park is for sale: Course ▸ Land for sale, click it and Buy. Then build a putting green on it (Facilities ▸ Practice).',
+  body: `The land beside the car park is for sale: Course ▸ Land for sale, click it and Buy. Then build a putting green on it (${practicePath()}).`,
   targetTool: 'land',
   show: true,
 });
@@ -282,7 +283,7 @@ export const RAMP_TAKINGS = JAM ? JAM_RAMP_TAKINGS : 20000; // (T459: the jam op
  *  practice greens), Props once the putting green opens, Buildings (the clubhouse) with New hole */
 export const RAMP_TOOL_STEP: Readonly<Partial<Record<UiToolId, RampStep>>> = JAM ? Object.freeze({ course: 1, props: 2, buildings: 3 }) : Object.freeze({ course: 1, path: 1, practice: 1, props: 2, buildings: 3 }); // (J7 #1225: in the jam the paths and the practice greens are open from the start: the Build menu offers them, nothing waits on a step) // T206: the practice tools open with the first range upgrade, as the brushes that painted them did
 /** T239: the guided build's step from which a ramp tool is open whatever the ramp (a skipped step still opens the next one's tools): the paths
- *  with the walking path, Holes and Facilities › Practice with the practice area, Buildings with the first hole. New hole and the rest of
+ *  with the walking path, Holes and Course › Facilities › Practice with the practice area, Buildings with the first hole. New hole and the rest of
  *  ramp step 3 open at the first hole's step (rampEarned), Land for sale at the practice area's (computeProgressiveUiState) */
 export const GUIDE_TOOL_STEP: Readonly<Partial<Record<UiToolId, number>>> = Object.freeze({ path: 5, course: 8, practice: 8, buildings: 9 }); // (T288: two placement steps first)
 /** T239: the guided build's steps that open Land for sale and New hole */
@@ -298,7 +299,7 @@ export const RAMP_WHY: Readonly<Record<RampStep, string>> = Object.freeze({
 });
 /** the toast as each ramp step opens */
 export const RAMP_TOAST: Readonly<Partial<Record<RampStep, string>>> = JAM ? Object.freeze({ 3: 'New hole and the clubhouse are open in Build' }) : Object.freeze({ // (J7: the jam's toasts say what opened, never what to build)
-  1: 'The Practice area opens: place it on your land (Range ▸ Place the practice area), then build a putting green on it (Facilities ▸ Practice)',
+  1: `The Practice area opens: place it on your land (Range ▸ Place the practice area), then build a putting green on it (${practicePath()})`,
   2: 'Props are open (Z): dress the range to draw more golfers',
   3: 'New hole is open: build your first hole, a par-3',
 });
