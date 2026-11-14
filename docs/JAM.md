@@ -138,6 +138,12 @@ boombox, headphones, bell, radio-off, jukebox) are cut for J11 (#1270, the music
   import them); the practice drills panel, the shot panel (Curve and Flight ends, Tour spin, Go for it), the club tabs, Jump to ball and Gimme show them, and the host's Back to the course button wears
   its tile. `npm run cinder:build` needs no dev server holding `public/cinderlinks` open (Windows refuses to delete it).
 
+## J13: the ball room's and the props' tiles (#1277, and the tiles half of #1284; the owner 2026-11-14: "all this needs images ofcourse")
+Four more sheets of 12 (`golf-build-tool-tiles-sheet-v10..v13.png`, provenance beside each, prompts from `F:/ClaudeTemp/jam/queue-ui-tiles-4.json` and `-5.json`) are cut by the same
+script (`--version v10` to `v13`; crops in `art/ui-tool-tiles/sheet-v10..v13.json`) into 48 more 144 px WebPs: `src/assets/ui/tiles` now holds 156 (about 0.7 MB in all; the jam build inlines each, they are
+under its 128 KB limit). v10 to v12 are `ACTION_TILES` (the ball room tree's upgrades, one tile each, plus the range till and the home); v13 is `PROP_TILES` (the Props menu's entries and the Texture Painter).
+`tests/ui-action-tiles.test.ts` keeps a `NOT_YET` list of tiles cut but worn by nothing; each commit that places one takes it off.
+
 ## Button tests: run them before every jam build (T459, the owner 2026-11-13: "are you guys not testing buttons?")
 A dead button must not ship. Two checks:
 - **`npm test`** includes `tests/jam-buttons.test.ts` (node, seconds): every tutorial step's Show me does something (`tour.ts tourShowOf`) and every

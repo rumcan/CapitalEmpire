@@ -6,14 +6,25 @@ import assert from 'node:assert/strict';
 import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 import * as T from '../src/ui/tool-tiles';
-import { ACTION_TILES, SOUND_TILES, TOOL_TILES } from '../src/ui/tool-tiles';
+import { ACTION_TILES, PROP_TILES, SOUND_TILES, TOOL_TILES } from '../src/ui/tool-tiles';
 import { GUIDE, GUIDE_STUCK, RANGE_GUIDE } from '../src/game/ext/progressive-ui/guide';
 import { JAM_TOUR, TOWN_TOUR } from '../src/game/ext/progressive-ui/tour';
 
-const DIR = 'src/assets/ui/tiles', ALL = new Set<string>([...TOOL_TILES, ...ACTION_TILES]);
+const DIR = 'src/assets/ui/tiles', ALL = new Set<string>([...TOOL_TILES, ...ACTION_TILES, ...PROP_TILES]);
+
+/** the tiles cut but worn by nothing yet: each commit that places one takes it off this list (J13, #1277). The ball room's tiles wait for the tree and the cards (the first
+ *  commits of J13); the props tiles that no menu row wears wait for #1284's natural / man-made restructure of the Props menu (another coder's) and the Texture Painter's
+ *  button (#1282's rename) */
+const NOT_YET: readonly string[] = [
+  'ball-tube', 'wire-basket', 'push-picker', 'pull-picker', 'bigger-hopper', 'gang-picker', 'night-picking', 'staff-training', 'second-attendant', 'night-attendant', 'staff-cart', 'supplier',
+  'ball-polisher', 'robot-pickers', 'robots-4', 'robots-6', 'robot-batteries', 'robot-speed', 'fast-chargers', 'target-nets', 'bucket-counter', 'standing-order', 'trade-price', 'pallet-deliveries',
+  'stamped-balls', 'swing-video', 'fans-lemonade', 'weighted-clubs', 'launch-monitor', 'ball-tracker', 'floodlights', 'bays-24', 'pro-shop', 'coffee-kiosk', 'range-till', 'home-caravan',
+  'all-props', 'natural-props', 'man-made-props', 'desert-oasis', 'trees-mixed', 'lake-props', 'fences', 'signs', 'fountain', 'texture-painter', 'clear-plants', 'nursery-plants',
+];
 
 test('every tile id has its WebP, a small 144 px picture, and no picture lacks an id', async () => {
-  assert.equal(ACTION_TILES.length, 84);
+  assert.equal(ACTION_TILES.length, 120);
+  assert.equal(PROP_TILES.length, 12);
   const sharp = (await import(['sharp'][0]!)).default;
   for (const id of ALL) {
     const f = `${DIR}/${id}.webp`; assert.ok(existsSync(f), `${f}: missing`);
@@ -83,13 +94,14 @@ function viewTileIds(): string[] {
   return out;
 }
 
-test('every one of the 84 action tiles is on an action (the UI, or the golf view), and the golf view names only tiles that exist', () => {
+test('every one of the 120 action tiles and 12 props tiles is on an action (the UI, or the golf view), and the golf view names only tiles that exist', () => {
   const used = new Set<string>(), view = viewTileIds();
   for (const f of [...sources('src/ui'), ...sources('src/game/ext/progressive-ui'), 'src/App.tsx']) if (!f.endsWith('tool-tiles.ts')) for (const id of tileIdsIn(readFileSync(f, 'utf8'))) used.add(id);
   for (const [k, v] of Object.entries(T)) if (/_TILE$/.test(k) && v && typeof v === 'object' && !Array.isArray(v)) for (const id of Object.values(v as Record<string, string>)) used.add(id);
   for (const id of view) { assert.ok(ALL.has(id), `the golf view names "${id}": not a tile`); used.add(id); }
   assert.ok(view.length >= 21, 'the golf view names its drills, shots, clubs and buttons');
-  assert.deepEqual(ACTION_TILES.filter(id => !used.has(id) && !SOUND_TILES.includes(id)), [], 'a tile no action wears (the six sound tiles wait for J11, #1270)');
+  assert.deepEqual([...ACTION_TILES, ...PROP_TILES].filter(id => !used.has(id) && !NOT_YET.includes(id) && !SOUND_TILES.includes(id)), [], 'a tile no action wears (the six sound tiles wait for J11, #1270)');
+  assert.deepEqual(NOT_YET.filter(id => used.has(id)), [], 'a tile an action now wears: take it off NOT_YET');
   // the build copies the golf view's tiles (drill-* and shot-*) next to its page
   const build = readFileSync('packages/cinderlinks/build.mjs', 'utf8');
   assert.match(build, /\(drill\|shot\|club\)-/, 'build.mjs copies the drill, shot and club tiles');

@@ -13,12 +13,20 @@ export const TOOL_TILES_V7 = ['place-range', 'walking-path', 'sell-buckets', 'se
 export const TOOL_TILES_V8 = ['club-driver', 'club-wood', 'club-long-iron', 'club-iron', 'club-wedge', 'club-putter', 'jump-to-ball', 'gimme', 'go-for-it', 'back-to-course', 'help-keys', 'closed-gate'] as const;
 // the last sheet: the sound tiles (SOUND_TILES: for J11's music radio and sound settings), Settings' text size, currency, colour-safe money, backups and load, and the title card's front door
 export const TOOL_TILES_V9 = ['radio', 'boombox', 'headphones', 'bell', 'radio-off', 'jukebox', 'currency', 'text-size', 'colour-safe', 'backups', 'load-save', 'front-door'] as const;
-export type ToolTile = typeof TOOL_TILES_V1[number] | typeof TOOL_TILES_V2[number] | typeof TOOL_TILES_V3[number] | typeof TOOL_TILES_V4[number] | typeof TOOL_TILES_V5[number] | typeof TOOL_TILES_V6[number] | typeof TOOL_TILES_V7[number] | typeof TOOL_TILES_V8[number] | typeof TOOL_TILES_V9[number];
+// J13 (#1277; the owner, of the Ball room upgrades tree: "all this needs images ofcourse"): one tile for each upgrade of the ball room's tree and the range's extras (sheets v10 to v12)
+export const TOOL_TILES_V10 = ['ball-tube', 'wire-basket', 'push-picker', 'pull-picker', 'bigger-hopper', 'gang-picker', 'night-picking', 'staff-training', 'second-attendant', 'night-attendant', 'staff-cart', 'supplier'] as const;
+export const TOOL_TILES_V11 = ['ball-polisher', 'robot-pickers', 'robots-4', 'robots-6', 'robot-batteries', 'robot-speed', 'fast-chargers', 'target-nets', 'bucket-counter', 'standing-order', 'trade-price', 'pallet-deliveries'] as const;
+export const TOOL_TILES_V12 = ['stamped-balls', 'swing-video', 'fans-lemonade', 'weighted-clubs', 'launch-monitor', 'ball-tracker', 'floodlights', 'bays-24', 'pro-shop', 'coffee-kiosk', 'range-till', 'home-caravan'] as const;
+// the props menu's tiles and the Texture Painter's (sheet v13; #1284's tiles half)
+export const TOOL_TILES_V13 = ['all-props', 'natural-props', 'man-made-props', 'desert-oasis', 'trees-mixed', 'lake-props', 'fences', 'signs', 'fountain', 'texture-painter', 'clear-plants', 'nursery-plants'] as const;
+export type ToolTile = typeof TOOL_TILES_V1[number] | typeof TOOL_TILES_V2[number] | typeof TOOL_TILES_V3[number] | typeof TOOL_TILES_V4[number] | typeof TOOL_TILES_V5[number] | typeof TOOL_TILES_V6[number] | typeof TOOL_TILES_V7[number] | typeof TOOL_TILES_V8[number] | typeof TOOL_TILES_V9[number] | typeof TOOL_TILES_V10[number] | typeof TOOL_TILES_V11[number] | typeof TOOL_TILES_V12[number] | typeof TOOL_TILES_V13[number];
 /** Row-major sheet identities; v1 asset files remain byte-for-byte unchanged. These are the Course and Facilities flyouts' tiles (ui-flyouts.test.ts
  *  checks each is on a tool): the action tiles of sheets v3 to v6 are ACTION_TILES. */
 export const TOOL_TILES: readonly ToolTile[] = [...TOOL_TILES_V1, ...TOOL_TILES_V2];
-/** J8: the action tiles (sheets v3 to v9), 84 of them, each on an action somewhere in the UI (tests/ui-action-tiles.test.ts checks every id used exists) */
-export const ACTION_TILES: readonly ToolTile[] = [...TOOL_TILES_V3, ...TOOL_TILES_V4, ...TOOL_TILES_V5, ...TOOL_TILES_V6, ...TOOL_TILES_V7, ...TOOL_TILES_V8, ...TOOL_TILES_V9];
+/** J8: the action tiles (sheets v3 to v12), 120 of them, each on an action somewhere in the UI (tests/ui-action-tiles.test.ts checks every id used exists) */
+export const ACTION_TILES: readonly ToolTile[] = [...TOOL_TILES_V3, ...TOOL_TILES_V4, ...TOOL_TILES_V5, ...TOOL_TILES_V6, ...TOOL_TILES_V7, ...TOOL_TILES_V8, ...TOOL_TILES_V9, ...TOOL_TILES_V10, ...TOOL_TILES_V11, ...TOOL_TILES_V12];
+/** J13: the props menu's tiles and the Texture Painter's (sheet v13), the Props flyout's entries and the painter's button wear them */
+export const PROP_TILES: readonly ToolTile[] = TOOL_TILES_V13;
 /** the six sound tiles of sheet v9, cut for J11 (#1270, branch arena/j11-sound: the music radio and the sound settings): no action in the jam wears them until that lands */
 export const SOUND_TILES: readonly ToolTile[] = ['radio', 'boombox', 'headphones', 'bell', 'radio-off', 'jukebox'];
 
