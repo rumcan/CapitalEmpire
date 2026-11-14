@@ -255,7 +255,8 @@ character ignored paths (your clicks only took the occupancy raster's cheaper ti
   server started with `VITE_JAM=1` (numbers in `scripts/jam/menu-scene-world.json`): map seed 11, the old range bought and cleared, the Build menu's range upgrades (grass outfield, target greens,
   paved car park, 12 bays, covered bays, dispenser), the clubhouse beside the range's drive, four holes through the New hole wizard (sod, frame trees; one with a dogleg), then 90 s at 20x so the county
   road has its houses, the snack shop and its traffic. The farms and the river are the map's own. Nothing in it is hidden in the jam (no tournament kit, no props, no bunkers or water painted by hand).
-  The shipped file was built before J9's start; the builder now takes J9's automatic start (`startPickAuto`), whose range may stand elsewhere on the same seed: after a rebuild look at the shots and move the stops.
+  The builder pins the map with `?seed=`, a dev-server feature under which the game keeps the old start (the range offered for sale), so J9's start pick does not come up and the world is the same on every rebuild
+  (a page without a seed would lay J9's start, which the builder also takes: `startPickAuto`, but its range may then stand elsewhere: look at the shots and move the stops).
 - **The stops** (`src/game/showcase.ts` SHOW_STOPS): the range with golfers on the mats, the car park with cars arriving, from the first tee down the fairway, a green with its flag, a farm, the county road with
   its houses, the snack shop and the bridge. Each is 14 to 17 s of slow glide at 25 to 30% zoom (30% is the closest the game goes), then a cross-fade (the picture is copied over the game while the next
   place bakes); the next place's ground is asked for 3.5 s ahead. A lap is about 90 s. A visit starts at a different place from the last (`localStorage fairwayfortune.scene`). The town clock is kept in the
