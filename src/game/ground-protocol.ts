@@ -36,7 +36,12 @@ export interface PatchPaint { s: number; a: number; b: number; bt: string; z: nu
   mw?: MowStripes;
   /** T258: where its texture's pattern starts (tiles: the corner of one period, turned by a about it; absent: the tile grid's origin). A range
    *  picture (golf/range-pics.ts) is laid flat with it: one picture exactly over its mat or green */
-  o?: [number, number] }
+  o?: [number, number];
+  /** #1298: 1, the area is drawn UNDER the course's painted cells (renderer paintOrder): ground the game lays under what the player paints, as the driving range's outfield
+   *  and the practice area's starter set. Every other area is drawn over the course (the range's tee box, mats and target greens are its fixed pieces and stay on top,
+   *  protected by their own outlines only): the player paints with the course's cells, so what they paint shows over this ground with the surface's own edges (a bunker's
+   *  lip, water's bank) against it */
+  u?: 1 }
 /** a painted area's mowing stripes (PatchPaint.mw) */
 export interface MowStripes { ux: number; uy: number; ox: number; oy: number; w: number; l: number; k: number; lc: string; dc: string; t: number; f: number;
   /** T227: the line of play's direction (tiles, unit), so the course finish can lay its bands along or across it (course-finish finishMow);

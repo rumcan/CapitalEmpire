@@ -235,6 +235,9 @@ export interface PaintHost { setLotGround(key: string, patches: LotPatch[] | nul
   grid?(): Grid | null;
   /** the grid changed by d (null: nothing new); flush: send the touched chunks now (else at most every SEND_MS) */
   gridChanged?(d: GridDiff | null, flush: boolean): void;
+  /** #1298: an action that changed the grid by d (all its cells, merged) is done: the practice area's starter pieces it painted over go (the paint wins), as a step aside its undo brings
+   *  back and its redo takes away again; null: it painted over none */
+  paintedOver?(d: GridDiff): { undo(): void; redo(): void } | null;
   /** the grid's course areas (gridAreas, cached by the engine): the holes in use, a hole's box and the pieces' snap targets */
   gridAreas?(): readonly GridArea[];
   /** whether tile (x, y) is on the golf game's owned land (the grid's cells outside it are never painted) */
@@ -1489,8 +1492,11 @@ export class PaintTool {
     // T256: the looks owners it gave, took or changed (each its whole set, before and after)
     const book = this.host.lookBook?.(), looks: [string, LookSet | null, LookSet | null][] = [];
     if (t.lk) for (const [o, b] of t.lk) { const a = book?.[o] ? copySet(book[o]!) : null; if (JSON.stringify(a) !== JSON.stringify(b)) looks.push([o, b, a]); }
-    if (!props && !t.spent && same && !height && !grid && !plans && !net) return; // (a look seeded by a stroke that laid nothing stays: no step for it alone)
-    this.undos.push({ label: t.label, before: t.before, after, props, spent: t.spent, height, grid, plans, ...(looks.length ? { looks } : {}), ...(net ? { net } : {}), ...(t.aside ? { aside: t.aside } : {}) }); if (this.undos.length > UNDO_MAX) this.undos.shift();
+    // #1298 (the owner: "I painted fescue over the practice and pittingarea ... the old sand pit and dirt green" stayed): what the action painted over of the practice area's starter set
+    // goes with it, the paint winning; the step's undo brings the pieces back (a facility built over them, or a piece bulldozed, has its aside already: gridEdit)
+    const aside = t.aside ?? (grid ? this.host.paintedOver?.(grid) ?? undefined : undefined);
+    if (!props && !t.spent && same && !height && !grid && !plans && !net && !aside) return; // (a look seeded by a stroke that laid nothing stays: no step for it alone)
+    this.undos.push({ label: t.label, before: t.before, after, props, spent: t.spent, height, grid, plans, ...(looks.length ? { looks } : {}), ...(net ? { net } : {}), ...(aside ? { aside } : {}) }); if (this.undos.length > UNDO_MAX) this.undos.shift();
     this.commits++;
     // T238: a stroke laid in Edit hole is ordered against the plan's own steps (undoTop); the course's redo goes, and Edit hole's with it
     if (this.editInHand && (grid || height) && !plans) this.editMarks.push(this.wizard.depth); // T252: a height stroke too

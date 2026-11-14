@@ -65,12 +65,27 @@ export interface CourseLooks { surf: readonly (CourseTex | undefined)[]; collar:
   /** T359 (#1006): each surface's mowing lines by surface id (the fairway's, the green's, the tee's and the rough's; mow-lines.ts MowTable: the
    *  Course default's and each hole's); absent: the course finish's own lines, as before */
   mow?: readonly (MowTable | undefined)[] }
+/** #1298 (the owner, 2026-11-14: "some box around the practice greens are not letting it paint there"): a practice facility's own cells, as the mask of a tile box: the facility's green, bunker and tee
+ *  and its rough band (practicebuild facilityAt), nothing else. The box is the cells' bounds on the cell lattice (x0 y0 x1 y1, tiles), the mask one byte a cell over it, row-major (w = (x1 - x0) / CELL_T
+ *  cells wide), 1 where the cell is the facility's. It was the bare box, grown by two and a half tiles: every cell of no hole inside it wore the facility's looks, so what the player painted round
+ *  the facility (fescue, say, in the property's look) showed in the facility's look inside a rectangle round it. Now the facility's own cells wear its looks and the paint round them the property's */
+export interface FacilityZone { k: number; x0: number; y0: number; x1: number; y1: number; mask: Uint8Array }
+/** the owner k of the facility zone the cell c (index of g, a cell of no hole) lies in, or null when it lies in none: inside the zone's box and one of the facility's own cells (its mask) */
+export function zoneOwner(g: Grid, zones: readonly FacilityZone[], c: number): number | null {
+  const ci = c % g.w, x = g.x0 + (ci + 0.5) * CELL_T, y = g.y0 + ((c - ci) / g.w + 0.5) * CELL_T;
+  for (const z of zones) {
+    if (x < z.x0 || x >= z.x1 || y < z.y0 || y >= z.y1) continue;
+    const w = Math.round((z.x1 - z.x0) / CELL_T);
+    if (z.mask[Math.floor((y - z.y0) / CELL_T) * w + Math.floor((x - z.x0) / CELL_T)]) return z.k;
+  }
+  return null;
+}
 /** T256 (#743): the looks each hole, the property and each practice facility wear (golf/looks.ts): looks[k], owner k's fills, collars, bands
  *  and lip grass (course-look.ts CourseLookSet); hole[h], the owner the cells of hole h wear (-1 or missing: the base looks of CourseLooks);
- *  zones, the facilities' boxes as five numbers each (k, x0, y0, x1, y1, tiles): a cell of no hole inside one wears owner k */
+ *  zones, the facilities' own cells (#1298: a mask, no longer a box): a cell of no hole that is one of them wears owner k */
 export interface CourseOwners {
   looks: readonly { surf: readonly (CourseTex | undefined)[]; collar: Readonly<Record<'first-cut' | 'fringe' | 'lip' | 'bank', CourseTex>>; band: readonly (CourseTex | undefined)[]; lipGrass?: CourseTex; round?: readonly (number | undefined)[] }[];
-  hole: readonly number[]; zones?: readonly number[] }
+  hole: readonly number[]; zones?: readonly FacilityZone[] }
 /** a course texture's fields alone (a look may carry more) */
 const texOf = (t: CourseTex): CourseTex => ({ tex: t.tex, sc: t.sc, a: t.a, ...(t.x !== undefined && t.x !== 1 ? { x: t.x } : {}), ...(t.m ? { m: { ...t.m } } : {}), ...(t.o ? { o: [t.o[0], t.o[1]] as [number, number] } : {}) });
 
@@ -106,10 +121,7 @@ export function roundOfLooks(g: Grid, looks: Pick<CourseLooks, 'round' | 'own'>)
   const zones = own?.zones ?? [];
   const ownerOf = (c: number): number => {
     const h = g.hole[c]!;
-    if (h === 0 && zones.length) {
-      const ci = c % g.w, x = g.x0 + (ci + 0.5) * CELL_T, y = g.y0 + ((c - ci) / g.w + 0.5) * CELL_T;
-      for (let z = 0; z + 4 < zones.length; z += 5) if (x >= zones[z + 1]! && x < zones[z + 3]! && y >= zones[z + 2]! && y < zones[z + 4]!) return zones[z]!;
-    }
+    if (h === 0 && zones.length) { const k = zoneOwner(g, zones, c); if (k !== null) return k; }
     return own?.hole[h] ?? -1;
   };
   const cache = new Map<number, RoundCellsOf>();
@@ -396,10 +408,7 @@ function ownerPicker(g: Grid, cx: number, cy: number, looks: CourseLooks): (s: n
   /** the owner of cell c */
   const ownerOf = (c: number): number => {
     const h = g.hole[c]!;
-    if (h === 0 && zones.length) {
-      const ci = c % g.w, x = g.x0 + (ci + 0.5) * CELL_T, y = g.y0 + ((c - ci) / g.w + 0.5) * CELL_T;
-      for (let z = 0; z + 4 < zones.length; z += 5) if (x >= zones[z + 1]! && x < zones[z + 3]! && y >= zones[z + 2]! && y < zones[z + 4]!) return zones[z]!;
-    }
+    if (h === 0 && zones.length) { const k = zoneOwner(g, zones, c); if (k !== null) return k; }
     return own.hole[h] ?? -1;
   };
   return (s, collar) => {

@@ -10,8 +10,9 @@
 // The layout is a pure function of the area's box and the save's seed (RangeBizSave.starter: the seed and the ids gone), so the save holds two small things.
 // Pure TS, no DOM, deterministic. Units: tiles of 2 m.
 import type { Pt } from '../network';
-import { cellAt, type Grid } from '../ext/course-grid';
+import { SURF, cellAt, type Grid } from '../ext/course-grid';
 import { polyCells } from '../ext/course-grid/areas';
+import { polyDist } from './practicebuild';
 import type { ScenePatch, ScenePiece } from './rangebiz';
 
 /** how many dirt greens the set has */
@@ -86,13 +87,13 @@ export function starterSet(box: readonly [number, number, number, number], entry
 }
 
 /** the scene's ground patches for the pieces still standing (ScenePatch: rangebiz.ts): a dirt green is packed earth with a raised, sun-lit edge; a bunker is its
- *  sand over a rim of turned earth */
+ *  sand over a rim of turned earth. #1298: all of them under the course's cells (ScenePatch.under: what the player paints over a piece shows on top of it) */
 export function starterPatches(set: readonly StarterPiece[], gone: readonly number[]): ScenePatch[] {
   const out: ScenePatch[] = [];
   for (const p of set) {
     if (gone.includes(p.id)) continue;
-    if (p.kind === 'dirt') out.push({ pts: p.pts, surf: 'dirtGreen', edge: 'raised' });
-    else { if (p.rim) out.push({ pts: p.rim, surf: 'scrape', edge: 'flat' }); out.push({ pts: p.pts, surf: 'sand', edge: 'turf', tone: SAND_TONE }); }
+    if (p.kind === 'dirt') out.push({ pts: p.pts, surf: 'dirtGreen', edge: 'raised', under: true });
+    else { if (p.rim) out.push({ pts: p.rim, surf: 'scrape', edge: 'flat', under: true }); out.push({ pts: p.pts, surf: 'sand', edge: 'turf', tone: SAND_TONE, under: true }); }
   }
   return out;
 }
@@ -118,3 +119,41 @@ export function coveredBy(set: readonly StarterPiece[], gone: readonly number[],
 }
 /** cells' index set of the given lists */
 export const cellSet = (...lists: readonly (readonly number[])[]): Set<number> => { const s = new Set<number>(); for (const l of lists) for (const i of l) s.add(i); return s; };
+
+// ---- #1298 (the owner, 2026-11-14: "I painted fescue over the practice and pittingarea ... I can[not] bulldoze or remove the old sand pit and dirt green"): each piece goes three ways:
+// built over (coveredBy: a proper facility), painted over (paintedOver: the Texture Painter's cells now cover it) and bulldozed on its own (starterAt: the Bulldoze tool)
+
+/** a piece's name as the bulldozer says it */
+export const starterName = (p: StarterPiece): string => (p.kind === 'dirt' ? 'dirt green' : 'sand scrape');
+/** the piece still standing whose outline lies under tile (x, y) (a bunker's: its earth rim), within `tol` tiles of its edge (a flag on the green, a click on its rim); the one the
+ *  point is nearest when two overlap; null: none */
+export function starterAt(set: readonly StarterPiece[], gone: readonly number[], x: number, y: number, tol = 0.4): StarterPiece | null {
+  let best: StarterPiece | null = null, bd = Infinity;
+  for (const p of set) {
+    if (gone.includes(p.id)) continue;
+    const d = polyDist(p.rim ?? p.pts, x, y);
+    if (d <= tol && (d < bd || (d === bd && Math.hypot(p.centre.x - x, p.centre.y - y) < Math.hypot(best!.centre.x - x, best!.centre.y - y)))) { best = p; bd = d; }
+  }
+  return best;
+}
+/** the share of a piece's cells (its outline's: a bunker's, its earth rim's) that lie under the course's cells for it to count as painted over: a third. A stroke brushing its edge, or one thin
+ *  line across it, leaves it standing; paint over the better part of it and it goes with its flag (what is left of its ground would stand out from the paint) */
+export const PAINTED_SHARE = 0.35;
+/** #1298: the ids of the pieces still standing that the course grid's painted cells (any surface but the land's own) now cover: at least PAINTED_SHARE of the cells of a piece's outline hold
+ *  one. Only the pieces whose outline's box meets `box` (tiles x0 y0 x1 y1: the cells an edit changed) are looked at, when given */
+export function paintedOver(set: readonly StarterPiece[], gone: readonly number[], g: Grid, box?: readonly [number, number, number, number]): number[] {
+  const out: number[] = [];
+  for (const p of set) {
+    if (gone.includes(p.id)) continue;
+    const ring = p.rim ?? p.pts;
+    if (box) {
+      let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
+      for (let i = 0; i + 1 < ring.length; i += 2) { x0 = Math.min(x0, ring[i]!); x1 = Math.max(x1, ring[i]!); y0 = Math.min(y0, ring[i + 1]!); y1 = Math.max(y1, ring[i + 1]!); }
+      if (x1 < box[0] || x0 > box[2] || y1 < box[1] || y0 > box[3]) continue;
+    }
+    let n = 0, painted = 0;
+    polyCells(g, ring, i => { n++; if (g.surf[i] !== SURF.none) painted++; });
+    if (n > 0 && painted >= PAINTED_SHARE * n) out.push(p.id);
+  }
+  return out;
+}

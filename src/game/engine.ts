@@ -45,7 +45,7 @@ import { LAND_WHY, PaintTool } from './paint-tool';
 import { collarTexes, courseLookSet, type BrushLooks, type LookStyle } from './course-look';
 import { lookOfTex } from './painted-surfaces';
 import { FACILITY_OWNERS, LOOK_KINDS, holeOwner, ownerHole, seedOwner, type FacilityOwner } from './golf/looks';
-import { facilityAt } from './golf/practicebuild';
+import { facilityAt, facilityMaskAt } from './golf/practicebuild';
 import { escapeLadder, ESC_KEY, numberKeyUse, pickTool, rightClickLadder, SIDE_MODES, switchSideMode, type ClickStep, type EscCard, type EscLadder, type SideMode } from './tool-modes';
 import type { PresetProp } from './golf/holepreset';
 import { OWNER_SCALE, STUDIO_SCALE } from './lots/scales';
@@ -84,7 +84,7 @@ import { FOREST_CLEAR, LABEL_FADE_ALPHA, LABEL_FADE_PX, TOWN_CLEAR, plantedTreeC
 import { holeAreas, holeCard, markerMove, swapHoleNumbers, teeLengths, type HoleCardView, type HoleFix } from './golf/holecard';
 import { captureHole, joinHoles, loadBrowserHoles, sameHole, saveBrowserHoles, type MyHole } from './golf/myholes';
 import { isCourseArea, loadCourseGrid, migrateAreas } from './ext/course-grid/migrate';
-import { COURSE_CHUNK, COURSE_PATCH_REACH, courseChunksIn, courseEditReach, courseGrowKey, courseKey, courseStyles, drawnSurfaces, growStatic, roundReach, widestCollar, type CourseLooks, type CourseOwners } from './ext/course-grid/patch';
+import { COURSE_CHUNK, COURSE_PATCH_REACH, courseChunksIn, courseEditReach, courseGrowKey, courseKey, courseStyles, drawnSurfaces, growStatic, roundReach, widestCollar, type CourseLooks, type CourseOwners, type FacilityZone } from './ext/course-grid/patch';
 import { CourseContour, type CourseChunkOut } from './course-contour';
 import { roadRoute } from './road-route';
 import { linesOnRoads, mainRoads, offRoadTo, type OffRoad } from './offroad';
@@ -562,6 +562,8 @@ const SHOT_HOLD = 'Your shot is open: the clock waits for it';
 /** a course area as the golf rules read it (deriveHoles, holeViews, markerPlan, the stats, the upkeep): its surface, hole, a texture that
  *  reads back as the surface, and its planting */
 type CourseAreaRec = CourseArea & { hole?: number; tex: PaintTex };
+/** #1298: the surfaces the practice view takes from what the player painted on the range's outfield (the Texture Painter's) */
+const PAINTED_ON_OUTFIELD: ReadonlySet<GolfSurface> = new Set<GolfSurface>(['bunker', 'water', 'waste', 'rough', 'longGrass', 'fescue', 'green', 'fairway']);
 /** a piece of a screen-space label at (x, y), left-aligned, filled in col and outlined in the stroke style; returns the x after it */
 /** T151: the world labels' keys for the labels with no object of their own (a town by its index, a zone, a gallery spot, a stop): a number per kind's
  *  range, so a label keeps its slot from frame to frame */
@@ -1041,6 +1043,7 @@ export class Game {
     tileAt: (mx, my) => this.tileAt(mx, my), money: () => this.money, month: () => (this.golf ? this.golfMonthIndex() : 0),
     gridStep: (label, run) => this.paint.gridEdit(label, run), undo: () => this.paint.undo(), redo: () => this.paint.redo(),
     lookAt: (x, y, z) => this.lookAt(x, y, z), replaceStarters: c => this.range.replaceStarters(c), // (#1281: a facility replaces the starter pieces it lies over)
+    starterAt: (x, y) => (this.golf?.start === 'range' ? this.range.starterAt(x, y) : null), dropStarters: ids => this.range.dropStarters(ids), // (#1298: the bulldozer takes a starter piece on its own)
     save: () => this.scheduleSave(), toast: (t, k) => this.toast(t, k), emit: () => this.emit(),
   });
   /** a practice facility in hand (Facilities ▸ Practice, the range card's Build; null puts it down); show: the camera on the practice area */
@@ -1186,6 +1189,7 @@ export class Game {
     netJournal: this.netJ, // T396: a road step's changes to the network
     changed: pins => this.syncCourseMarkers(pins),
     grid: () => this.courseGrid, gridChanged: (d, flush) => { this.range.practiceCells(this.courseGrid, d); this.courseGridChanged(d, flush); }, gridAreas: () => this.gridAreaList(),
+    paintedOver: d => { const g = this.courseGrid; return g && this.golf?.start === 'range' ? this.range.paintedOver(g, d) : null; }, // (#1298: the starter pieces a stroke painted over go, with its undo)
     bunkerState: () => this.bunkers.serialize(), setBunkerState: state => this.bunkers.load(state, this.courseGrid),
     // the course keeps off the driving range's own plot (its hut, mats, car park and the field its golfers hit into), the rest of your land is
     // the course's; the brush's footprint and the wizard say which refusal it is
@@ -2412,11 +2416,22 @@ export class Game {
     };
     const hole: number[] = [idx('property')];
     for (const o of Object.keys(book)) { const n = ownerHole(o); if (n) hole[n] = idx(o); }
-    const zones: number[] = [];
-    for (const f of FACILITY_OWNERS) { const k = idx(f), b = k === hole[0] ? null : this.facilityBox(f); if (b) zones.push(k, b[0], b[1], b[2], b[3]); }
+    // (#1298: a facility's zone is its own cells, never the box round them: the paint the player laid round it wears the property's looks)
+    const zones: FacilityZone[] = [];
+    for (const f of FACILITY_OWNERS) { const k = idx(f), z = k === hole[0] ? null : this.facilityMask(f); if (z) zones.push({ k, ...z }); }
     if (!looks.length) return undefined;
     for (let n = 0; n < hole.length; n++) hole[n] ??= -1;
     return { looks, hole, ...(zones.length ? { zones } : {}) };
+  }
+  private facMasks: { rev: number; g: CourseGrid; v: Map<string, Omit<FacilityZone, 'k'> | null> } | null = null;
+  /** #1298: a built practice facility's own cells (its green, bunker, tee and rough band: practicebuild facilityAt) as a mask over their tile box, or null (none built); kept until the grid changes.
+   *  A cell the player painted over (fescue on its rough band) is no longer one of them */
+  private facilityMask(f: FacilityOwner): Omit<FacilityZone, 'k'> | null {
+    const g = this.courseGrid, sc = this.range.scene; if (!g || !sc || this.golf?.start !== 'range') return null;
+    if (this.facMasks?.g !== g || this.facMasks.rev !== g.rev) this.facMasks = { rev: g.rev, g, v: new Map() };
+    const m = this.facMasks.v; if (m.has(f)) return m.get(f)!;
+    const c = this.range.practice?.[f]?.centre, z = c ? facilityMaskAt(g, sc.practice.box, c.x, c.y) : null;
+    m.set(f, z); return z;
   }
   private facBoxes: { rev: number; g: CourseGrid; v: Map<string, [number, number, number, number] | null> } | null = null;
   /** T256: a built practice facility's footprint (its green, bunker and chip mat's cells, practicebuild facilityAt) as a tile box grown by
@@ -10811,7 +10826,22 @@ export class Game {
       ...(look ? { ground: [look.box[0] - 26, look.box[1] - 26, look.box[2] + 26, look.box[3] + 26] as const } : {}),
       junk: (sc as { junk?: readonly { id: string; name: string; x: number; y: number; m: number }[] }).junk ?? [],   // (J7's junk, RangeScene.junk: #1225; none before it lands)
       areas: area ? this.courseAreaList() : [], chip: cf && cf.state === 'open' && cf.cups[0] ? { cup: cf.cups[0], stands: cf.stands } : null,
+      painted: this.paintedOutfield(outfield),   // (#1298: what the Texture Painter laid on the outfield shows in the view)
       heightAt: (x, y) => this.groundHeightAt(x, y), name: `${this.titleName()?.name ?? 'Your'} practice` });
+  }
+  /** #1298: what the Texture Painter laid on the range's outfield (a polygon, x y pairs) as the practice view takes it: the course's areas of no hole lying wholly inside the outfield's box,
+   *  of a surface the player paints (a bunker, water, waste, rough, long grass, fescue, a green or fairway; never the tee's or a hole's, nor a collar band, which the view draws by itself) */
+  private paintedOutfield(outfield: readonly number[]): CourseArea[] {
+    let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
+    for (let i = 0; i + 1 < outfield.length; i += 2) { x0 = Math.min(x0, outfield[i]!); x1 = Math.max(x1, outfield[i]!); y0 = Math.min(y0, outfield[i + 1]!); y1 = Math.max(y1, outfield[i + 1]!); }
+    const out: CourseArea[] = [];
+    for (const a of this.courseAreaList()) {
+      if ((a.hole ?? 0) !== 0 || (a as { collar?: string }).collar || !PAINTED_ON_OUTFIELD.has(a.surface)) continue;
+      let inside = a.pts.length >= 6;
+      for (let i = 0; inside && i + 1 < a.pts.length; i += 2) if (a.pts[i]! < x0 || a.pts[i]! > x1 || a.pts[i + 1]! < y0 || a.pts[i + 1]! > y1) inside = false;
+      if (inside) out.push(a);
+    }
+    return out;
   }
   /** J6b: the range as built for the practice view: the tile box whose props go as pictures (the plot, its car park and the practice area, grown 4 tiles) and the
    *  ground the scene lays that the course file does not hold (rangebiz.ts scene patches: the concrete slabs, the shop's and the home's dirt yards, the dirt tee
@@ -14059,13 +14089,23 @@ export class Game {
   }
   /** T206: Facilities ▸ Practice in hand: the practice area's outline and the facility's ghost (green, sand and mat, see-through; red with the
    *  reason where it cannot go) with its label; the bulldozer over a practice facility: what a click removes and refunds */
-  private pracHover: { key: string; f: ReturnType<PracticeTool['facilityAt']> } | null = null;
+  private pracHover: { hx: number; hy: number; rev: number; gone: number; f: ReturnType<PracticeTool['facilityAt']>; s: ReturnType<PracticeTool['starterAt']> } | null = null;
+  /** #1298: the starter pieces gone as one number (no allocation: the bulldozer's hover asks every frame) */
+  private starterGoneKey(): number { const k = this.golf?.range?.starter; if (!k) return 0; let v = k.gone.length; for (const id of k.gone) v = v * 7 + id + 1; return v; }
   private drawPracticeGhost(ctx: CanvasRenderingContext2D) {
     const m = this.ghostMouse;
     if (this.tool === 'bulldoze' && !this.hoverPiece && this.hover && this.golf && this.courseGrid) {
-      const h = this.hover, key = `${Math.floor(h.x * 2)},${Math.floor(h.y * 2)},${this.courseGrid.rev}`;
-      if (this.pracHover?.key !== key) this.pracHover = { key, f: this.practice.facilityAt(h.x, h.y) };
-      const f = this.pracHover.f; if (f && m) this.hintAt(ctx, m.mx, m.my, `Click removes the ${f.name} (+$${f.refund.toLocaleString()})`, true);
+      // (#1298: a starter piece of the practice area's set under the pointer: its outline in the bulldozer's red, "free" to remove; it is looked for again when the pointer moves to
+      // another half tile, the grid changes or a piece goes)
+      const h = this.hover, hx = Math.floor(h.x * 2), hy = Math.floor(h.y * 2), rev = this.courseGrid.rev, gone = this.starterGoneKey(), ph = this.pracHover;
+      if (!ph || ph.hx !== hx || ph.hy !== hy || ph.rev !== rev || ph.gone !== gone) { const f = this.practice.facilityAt(h.x, h.y); this.pracHover = { hx, hy, rev, gone, f, s: f ? null : this.practice.starterAt(h.x, h.y) }; }
+      const f = this.pracHover!.f, s = this.pracHover!.s;
+      if (f && m) this.hintAt(ctx, m.mx, m.my, `Click removes the ${f.name} (+$${f.refund.toLocaleString()})`, true);
+      else if (s) {
+        this.setIso(ctx); ctx.beginPath(); ctx.moveTo(s.pts[0]!, s.pts[1]!); for (let k = 2; k + 1 < s.pts.length; k += 2) ctx.lineTo(s.pts[k]!, s.pts[k + 1]!); ctx.closePath(); ctx.setTransform(1, 0, 0, 1, 0, 0);
+        ctx.fillStyle = 'rgba(240,80,60,0.3)'; ctx.fill(); ctx.strokeStyle = '#f87171'; ctx.lineWidth = 1.5; ctx.stroke();
+        if (m) this.hintAt(ctx, m.mx, m.my, `Click removes the ${s.name} (free)`, true);
+      }
       return;
     }
     if (this.tool !== 'practice') return;
