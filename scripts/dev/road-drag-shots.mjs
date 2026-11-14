@@ -5,8 +5,11 @@
 //   node scripts/dev/road-drag-shots.mjs [--jam] [--out docs/ui-shots] [--port N] [--bench] [--no-shots]
 // It checks: the default bend is 45 after every load (Q toggles it for the visit only); a cart path dragged with one 45 degree bend (the ghost mid-drag, the built
 // path, one undo step); a town street dragged onto an existing road (a T junction; the normal game) or a path dragged onto the path just built (the jam); a cancelled drag
-// (Esc; a right click) builds nothing; a click without a drag is still click, click, Enter. --bench measures what the preview costs per pointer move. Screenshots:
-// <out>/road-drag-<normal|jam>-*.jpg. Prints PASS / FAIL per check (exit 1 on a FAIL). The server and the browser are closed at the end, whatever happens.
+// (Esc; a right click) builds nothing; a click without a drag is still click, click, Enter; a finger's drag (touch emulation) builds like the mouse's; in the jam, the range
+// guide's Show me puts the Walking path in hand and a dragged run builds (the walkway's reach is told: in a set-back range the guide's car park ring is out of the lot's
+// reach, which is no fault of the road tool). --bench measures what the preview costs per pointer move (the ghost's work in the draw, 3000 moves x 5 rounds, drag against
+// hover, 90 against 45). Screenshots: <out>/road-drag-<normal|jam>-*.jpg. Prints PASS / FAIL per check (exit 1 on a FAIL). The server and the browser are closed at the end,
+// whatever happens. The jam's start is J9's (the choose-your-start card: "Pick a spot for me"); a build from before it has no card and the flow skips it.
 import { chromium } from 'playwright-core';
 import { createServer as viteServer, preview } from 'vite';
 import { createServer as netServer } from 'node:net';
@@ -279,9 +282,6 @@ try {
       for (const t of [0.5, 0.4, 0.6, 0.35, 0.65]) for (const d of [20, 26, 32, -20, -26, -32]) for (const o of [-8, -4, 0, 4, 8]) {
         const M = { x: s.a.x + (s.b.x - s.a.x) * t, y: s.a.y + (s.b.y - s.a.y) * t }, A = { x: Math.round(M.x + n.x * d + u.x * o), y: Math.round(M.y + n.y * d + u.y * o) };
         g.cancelRoute(); if (g.startBlock(A)) continue;
-        // (a clean T: the road alone is near the run, so it crosses and meets nothing else, and its start is on bare ground)
-        if ([...g.net.segsNear({ x: (A.x + M.x) / 2, y: (A.y + M.y) / 2 }, Math.hypot(M.x - A.x, M.y - A.y) / 2 + 8)].some(q => q !== s)) continue;
-        g.hover = A; const sa = g.cursorSnap(); if (!sa || sa.kind !== 'grid') { g.hover = null; continue; }
         g.route = [A]; g.routeFrom = g.routeLast = { p: A, kind: 'grid' }; g.hover = { x: M.x, y: M.y };
         const legs = g.previewLegs(), why = g.routeBlock(legs), cs = g.cursorSnap(), kinds = why ? [] : g.structured(legs).kinds; g.cancelRoute(); g.hover = null;
         if (!why && legs.length >= 1 && cs && cs.kind !== 'grid' && kinds.every(k => k === 0)) return { A, M: { x: M.x, y: M.y }, seg: { a: { x: s.a.x, y: s.a.y }, b: { x: s.b.x, y: s.b.y }, cls: s.cls.id }, legs: legs.map(l => ({ a: { x: l.a.x, y: l.a.y }, b: { x: l.b.x, y: l.b.y } })), kind: cs.kind };
