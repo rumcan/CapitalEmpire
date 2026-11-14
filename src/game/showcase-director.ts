@@ -4,7 +4,7 @@
 // is the real one, on the prepared world, with saving off (engine.ts show). DOM and the engine's camera only; the engine is reached through ShowHost so a
 // test can stand in for it (tests/showcase.test.ts).
 import { townTimeOf, type TownClock } from './sim/townclock';
-import { FADE_MS, READY_MAX_MS, READY_MIN_MS, SHOW_HOURS, SLOW_AFTER_MS, SLOW_FRAME_MS, WARM_MS, poseAt, type ShowPose, type ShowStop } from './showcase';
+import { FADE_MS, READY_MAX_MS, READY_MIN_MS, REST_AFTER_MS, SHOW_HOURS, SLOW_AFTER_MS, SLOW_FRAME_MS, WARM_MS, poseAt, type ShowPose, type ShowStop } from './showcase';
 
 /** what the director needs of the engine (engine.ts Game has all of it) */
 export interface ShowHost {
@@ -21,8 +21,8 @@ export interface ShowHost {
 }
 
 /** what the director tells the page: 'first' (the first stop is baked and showing: the still picture fades out), 'cut' (a stop began), 'slow' (the machine is too slow for the scene:
- *  the page gives way to its still picture) */
-export type ShowEvent = 'first' | 'cut' | 'slow';
+ *  the page gives way to its still picture), 'rest' (REST_AFTER_MS of play: the page stops the engine and the last picture stays) */
+export type ShowEvent = 'first' | 'cut' | 'slow' | 'rest';
 
 export class ShowDirector {
   private i: number;
@@ -31,6 +31,8 @@ export class ShowDirector {
   private t0 = 0; private askedAt = 0; private coverAt = 0;
   /** when the first view was shown and the stop began to play (the machine's speed is judged SLOW_AFTER_MS later: a frame time measured while the first view was still baking says little) */
   private playSince = 0; private slowChecked = false; private off = false; private hourSet = false;
+  /** the frames' time while playing (ms; a gap over 100 ms, a hidden tab's, counts as 100) and the last frame's time: the scene rests after REST_AFTER_MS of it */
+  private played = 0; private lastNow = 0;
   private fadeTimer = 0;
   /** the camera's scratch poses (this stop's, the next stop's for the warm-up): the frame hook allocates nothing */
   private pose: ShowPose = { X: 0, Y: 0, z: 0 }; private nextPose: ShowPose = { X: 0, Y: 0, z: 0 };
@@ -74,7 +76,7 @@ export class ShowDirector {
 
   private frame(now: number) {
     if (this.off) return;
-    const g = this.g;
+    const g = this.g, gap = this.lastNow ? Math.min(100, now - this.lastNow) : 0; this.lastNow = now;
     // the town clock starts at the first golf hour once the worker's time is known (before its first frame the sim time reads 0)
     if (!this.hourSet && g.traffic.simTime(now) > 0) { this.setHour(now, true); this.hourSet = true; }
     if (this.state === 'first') {
@@ -86,6 +88,7 @@ export class ShowDirector {
     if (this.state === 'play') {
       const s = this.stops[this.i]!, ms = s.secs * 1000, el = now - this.t0, u = el / ms;
       this.place(this.i, u);
+      if ((this.played += gap) >= REST_AFTER_MS) { this.emit('rest'); return; }
       if (!this.slowChecked && now - this.playSince >= SLOW_AFTER_MS) { this.slowChecked = true; if (g.perf.frameMs > SLOW_FRAME_MS) { this.emit('slow'); return; } }
       if (ms - el < WARM_MS) { const n = (this.i + 1) % this.stops.length; g.warmView(poseAt(this.stops[n]!, 0, g.cssW, g.cssH, this.nextPose), now); }
       if (u >= 1) this.state = 'capture'; // (the picture is copied after this frame's draw)

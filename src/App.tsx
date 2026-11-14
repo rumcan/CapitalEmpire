@@ -245,7 +245,7 @@ export default function App() {
     if (!game?.ready || !sceneWanted || director.current) return;
     if (!game.show) { try { history.replaceState(null, '', '#scene=off'); } catch { /* none */ } location.reload(); return; } // the scene's world could not be had: start again without it
     if (!snapRef.current) return;
-    const d = new ShowDirector(game, SHOW_STOPS, startStop, snapRef.current, e => { if (e === 'first') setPosterOn(false); else if (e === 'slow') { d.end(); game.freeze(); setPosterOn(true); } });
+    const d = new ShowDirector(game, SHOW_STOPS, startStop, snapRef.current, e => { if (e === 'first') setPosterOn(false); else if (e === 'slow') { d.end(); game.freeze(); setPosterOn(true); } else if (e === 'rest') { d.end(); game.freeze(); } });
     director.current = d; d.begin(); Object.assign(window as unknown as Record<string, unknown>, { __showDirector: d, __showcase: { stops: SHOW_STOPS, poseAt } }); // (the checks' hooks, like __game: scripts/jam/menu-scene-shots.mjs)
   }, [game?.ready, sceneWanted, game, startStop]);
   useEffect(() => () => { director.current?.end(); director.current = null; }, []);

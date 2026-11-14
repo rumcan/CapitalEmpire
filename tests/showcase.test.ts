@@ -8,7 +8,7 @@ import { readFileSync, readdirSync, statSync } from 'node:fs';
 import { gunzipSync } from 'node:zlib';
 import { GAME_BOOT } from '../src/game/boot';
 import { HH, HW, MAP, ZOOM_MAX, ZOOM_MIN, worldX, worldY } from '../src/game/iso';
-import { CHOICE_KEY, FADE_MS, choiceFromStore, READY_MAX_MS, READY_MIN_MS, SHOW_ANCHOR, SHOW_HOURS, SHOW_STOPS, SLOW_AFTER_MS, SLOW_FRAME_MS, WARM_MS, WIDE_MIN_W, choiceHash, choiceOf, pickStart, poseAt, sceneOff, showBoot, showWanted, stopProblems, weakMachine, type ShowEnv, type ShowStop } from '../src/game/showcase';
+import { CHOICE_KEY, FADE_MS, REST_AFTER_MS, choiceFromStore, READY_MAX_MS, READY_MIN_MS, SHOW_ANCHOR, SHOW_HOURS, SHOW_STOPS, SLOW_AFTER_MS, SLOW_FRAME_MS, WARM_MS, WIDE_MIN_W, choiceHash, choiceOf, pickStart, poseAt, sceneOff, showBoot, showWanted, stopProblems, weakMachine, type ShowEnv, type ShowStop } from '../src/game/showcase';
 import { ShowDirector, type ShowEvent, type ShowHost } from '../src/game/showcase-director';
 import { townClockFor, townTimeOf, type TownClock } from '../src/game/sim/townclock';
 
@@ -230,6 +230,14 @@ test('the director: the town clock starts at the first golf hour and is put back
 });
 
 test('the director: a machine too slow for the scene says so once, after the first seconds, and a quick one never does', () => {
+  // (the rest below: a scene left open for hours stops drawing after REST_AFTER_MS of play, the last picture stays; a hidden tab's pause is not play)
+  { const { g, snap } = host(); const events: ShowEvent[] = []; const d = new ShowDirector(g, [stop({ secs: 15 }), stop({ id: 'b', secs: 15 })], 0, snap, e => events.push(e)); d.begin(0); g.setReady(true);
+    let t = READY_MIN_MS + 10; frame(g, t); assert.equal(d.phase, 'play');
+    for (let k = 0; k < 20; k++) { t += 16.7 * 60; frame(g, t); g.setReady(true); } // (about 20 s of frames, a cut among them)
+    assert.ok(!events.includes('rest'), 'not within the first minutes');
+    t += 30 * 60 * 1000; frame(g, t); frame(g, t + 16); assert.ok(!events.includes('rest'), 'a gap of half an hour (a hidden tab) is not play');
+    let n = 0; for (let k = 0; k < 40000 && !events.includes('rest'); k++) { t += 16.7; frame(g, t); g.setReady(true); n++; }
+    assert.equal(events.filter(e => e === 'rest').length, 1, 'rests once'); assert.ok(n * 16.7 >= REST_AFTER_MS - 60000 && n * 16.7 <= REST_AFTER_MS * 1.06, `after ${Math.round(n * 16.7 / 1000)} s of frames (the covers between stops are not play)`); }
   for (const [ms, slow] of [[SLOW_FRAME_MS + 10, true], [SLOW_FRAME_MS - 10, false]] as const) {
     const { g, snap } = host({ perf: { frameMs: ms } });
     const events: ShowEvent[] = []; const d = new ShowDirector(g, [stop({ secs: 15 }), stop({ id: 'b', secs: 15 })], 0, snap, e => events.push(e)); d.begin(0);

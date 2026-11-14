@@ -43,6 +43,9 @@ export const SHOW_GOLFERS = 80;
 export const SHOW_FARM_MONTH = 8;
 /** the frame time (ms, the engine's mean of its last 60 frames, SLOW_AFTER_MS after the first view is showing) above which the machine is too slow for the scene: it gives way to its still picture */
 export const SLOW_FRAME_MS = 42, SLOW_AFTER_MS = 4000;
+/** the scene rests after this much play (ms of frames actually drawn, a hidden tab's pause not counted): a menu left open for the afternoon neither burns the GPU nor lets the prepared world's season
+ *  clock run on past its end (a season is 24 minutes at the normal speed); the engine stops drawing and the last picture stays under the card */
+export const REST_AFTER_MS = 10 * 60 * 1000;
 
 /** the places, in the order of a visit's lap (a visit starts at a different one each time and goes round). Each is looked at in the shots
  *  (docs/jam-shots/j12-*.jpg) and moved until it is pretty: the tile numbers are the prepared world's (scripts/jam/menu-scene-build.mjs) */
