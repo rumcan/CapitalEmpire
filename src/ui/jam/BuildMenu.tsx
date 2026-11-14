@@ -26,7 +26,7 @@ export function BuildMenu({ cards, tab, onTab, onPick, onClose, onTips }: {
   const shown = cards.filter(c => c.group === tab);
   return (
     <section className="pointer-events-auto flex max-h-[calc(var(--vh-ui,100vh)-var(--hud-top,6rem)-4.5rem)] w-[min(760px,calc(100vw-9rem))] flex-col overflow-hidden rounded-xl border border-white/10 bg-slate-950/95 text-slate-200 shadow-2xl backdrop-blur"
-      data-testid="build-menu" aria-label="Build">
+      data-testid="build-menu" data-guide="build-menu" aria-label="Build">
       <div className="win-head win-head-slate flex items-center justify-between gap-2 px-3 pt-3">
         <div>
           <div className="font-semibold text-amber-200">Build</div>
