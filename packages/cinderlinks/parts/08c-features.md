@@ -9,9 +9,11 @@ R: A floodlight tower (a `light` feature: its place, its height, its reach; #120
 R: Bare earth (a pad of `earth`: a range's outfield before it is grassed) is mottled, drier and darker in slow patches, with a fine grain and a pebble here and there; a hitting mat (`turf`) is green artificial grass in fine rows, no leaves on it. A later pad lies over an earlier one (the mat on the slab).
 R: A pad (a path feature with `ring`: J6b, the practice range's concrete slabs, dirt yards and car park) is laid whole: everything inside its ring takes its surface, its edge as a path's edge.
 R: J6c: while he practises, a still picture's pad pass is not made again: what it painted is kept and put back while the camera, the light, the pads and the ground's depth are the same as in the frame before (pixel for pixel what making it again would paint), so the bare outfield's earth costs a still picture nothing.
+R: J6d: the pad pass of a moving picture costs the bare outfield's earth little: the same pixels, made without asking the pad grid for each of them. While he practises, a pixel whose nearest grid cell is deep inside a pad (the cell and its eight neighbours more than the edge's width in) is inside it with no edge shade, and a whole 8 x 8 block whose pixels can only fall in deep cells of one pad is that pad's, with no cell asked for any pixel of it (a slab, which asks for its stretch, is asked for each); the nearest cell is found without Math.round, which costs 6 ns a call, and the air's haze is read from a table of the same function.
 R: A course without the file plays as before.
 File: game.js
 Check: function lampLight(
+Check: function padDeep(
 Check: let padKeep
 Check: function drawPaths(
 Check: function drawBuildings(
@@ -68,7 +70,7 @@ function setFeatures(F) {   // F: the edits file's object (or nothing): made rea
   }
   let bmap = null;                                                  // the buildings by 16 m square, to ask quickly what stands at a place
   if (builds.length) { bmap = new Map(); for (const B of builds) { const r = Math.hypot(B.w, B.d) / 2 + 1; for (let j = Math.floor((B.y - r) / 16); j <= Math.floor((B.y + r) / 16); j++) for (let i = Math.floor((B.x - r) / 16); i <= Math.floor((B.x + r) / 16); i++) { const k = (i + 4096) * 8192 + j + 4096; let L = bmap.get(k); if (!L) bmap.set(k, L = []); L.push(B); } } }
-  feats = { paths, builds, lamps, sd, kind, seg, SG: Float64Array.from(SG), gx0: x0, gy0: y0, res, gw, gh, bmap };
+  feats = { paths, builds, lamps, sd, kind, seg, SG: Float64Array.from(SG), gx0: x0, gy0: y0, res, gw, gh, bmap, deep: null, utile: null, utw: 0 };
 }
 function padSd(p, pi, x0, y0, gw, gh, res, sd, kind, seg, SG) {   // J6b: a pad's distances: inside the ring below 0 (how far in), outside the distance to its edge
   const P = p.pts, n = P.length >> 1, si = Math.min(65535, SG.length / 7); if (n < 3) return;
@@ -107,15 +109,51 @@ const PSB = new Float32Array(CLW * CLH);
 // J6c: while he practises the picture stands still most of the time (the golfer is held to his spot): what the pad pass painted (each pixel and its colour) is kept, and put back
 // while the camera, the light, the pads and the ground's depth are what they were in the frame before, not made again (the bare outfield is a pad: its earth cost 3 to 4 ms a frame)
 let padKeep = null;
+// J6d: the pad pass made cheaper on a moving picture, to the very same pixels (3 ms of its 7 were the bare outfield's earth). A cell of the pad grid is deep when it and its eight neighbours are all
+// inside a pad by more than the edge's width (0.12 m): a pixel whose nearest cell is deep is inside it, with no edge shade, without asking the grid between its cells (made once, while he practises).
+// The air's haze by a pixel's depth is a table of the same function; the soil's value noise keeps its four lattice values while the pixels stay in one 2.6 m cell, as a row of them does for tens of pixels.
+function padDeep(F) {
+  const gw = F.gw, gh = F.gh, sd = F.sd, out = new Uint8Array(gw * gh), E = -0.12;
+  for (let j = 1; j < gh - 1; j++) for (let i = 1; i < gw - 1; i++) {
+    const k = j * gw + i;
+    if (sd[k] < E && sd[k - 1] < E && sd[k + 1] < E && sd[k - gw] < E && sd[k - gw - 1] < E && sd[k - gw + 1] < E && sd[k + gw] < E && sd[k + gw - 1] < E && sd[k + gw + 1] < E) out[k] = 1;
+  }
+  // and the grid by tiles of 8 x 8 cells: a tile whose cells are all deep and of one kind says which (kind + 1; 0: not), for the far blocks, which cover too many cells to look at one by one
+  const tw = (gw + 7) >> 3, th = (gh + 7) >> 3, ut = new Uint16Array(tw * th), kind = F.kind;
+  for (let tj = 0; tj < th; tj++) for (let ti = 0; ti < tw; ti++) {
+    const j0 = tj * 8, i0 = ti * 8, j1 = Math.min(gh, j0 + 8), i1 = Math.min(gw, i0 + 8), k0 = kind[j0 * gw + i0]; let ok = true;
+    for (let j = j0; ok && j < j1; j++) for (let i = i0; i < i1; i++) { const c = j * gw + i; if (out[c] === 0 || kind[c] !== k0) { ok = false; break; } }
+    if (ok) ut[tj * tw + ti] = k0 + 1;
+  }
+  F.utile = ut; F.utw = tw;
+  return out;
+}
+let hazeFor = '', hazeLut = null;
+function hazeTable() {   // farHaze(depth) for every depth the buffer holds (centimetres)
+  const k = HZK + ',' + BSAND; if (hazeLut && hazeFor === k) return hazeLut;
+  hazeFor = k; if (!hazeLut) hazeLut = new Float64Array(65536);
+  for (let z = 0; z < 65536; z++) hazeLut[z] = farHaze(z * 0.01);
+  return hazeLut;
+}
+const SOIL_T = new Uint8Array(256), SOIL_P = new Uint8Array(256);   // (what each of ih's 256 values makes of the grain: its step, and the pebble: 1 dark, 2 light)
+for (let g = 0; g < 256; g++) { SOIL_T[g] = (g % 7) * 3; SOIL_P[g] = g % 41 === 0 ? 1 : g % 53 === 1 ? 2 : 0; }
+const soilK = { xi: 1e9, yi: 1e9, a: 0, b: 0, c: 0, d: 0 };
+function soilNoise(wx, wy) {   // vnoise(wx / 2.6, wy / 2.6, 913): the same numbers
+  const x = wx / 2.6, y = wy / 2.6, xi = Math.floor(x), yi = Math.floor(y), K = soilK;
+  if (xi !== K.xi || yi !== K.yi) { K.xi = xi; K.yi = yi; K.a = hash2(xi, yi, 913); K.b = hash2(xi + 1, yi, 913); K.c = hash2(xi, yi + 1, 913); K.d = hash2(xi + 1, yi + 1, 913); }
+  const xf = x - xi, yf = y - yi, u = xf * xf * (3 - 2 * xf), v = yf * yf * (3 - 2 * yf), a = K.a, b = K.b, c = K.c;
+  return a + (b - a) * u + (c - a) * v + (a - b - c + K.d) * u * v;
+}
 function drawPaths() {   // the picture gone over in 8 x 8 blocks: only blocks near a path are looked at pixel by pixel
   const F = feats; if (!F || !F.sd || !course || featFor !== course.id) return;
   let rec = null;
   if (PRAC) {
-    const K = padKeep || (padKeep = { F: null, k: [], z: new Uint16Array(VW * VH), n: 0, hits: 0, idx: new Int32Array(VW * VH), col: new Uint32Array(VW * VH) }), k = [camX, camY, FX, FY, RX, RY, FOC, tmode, BSAND, HZK];
+    const K = padKeep || (padKeep = { F: null, k: [], p: null, z: new Uint16Array(VW * VH), n: 0, hits: 0, idx: new Int32Array(VW * VH), col: new Uint32Array(VW * VH) }), k = [camX, camY, FX, FY, RX, RY, FOC, tmode, BSAND, HZK];
+    let held = K.p !== null; for (let i = 0; held && i < k.length; i++) if (K.p[i] !== k[i]) held = false; K.p = k;   // (J6d: held: the camera stood as it does the frame before too; only then is a picture kept, as one that moves is not asked for again)
     let same = K.F === F; for (let i = 0; same && i < k.length; i++) if (K.k[i] !== k[i]) same = false;
     if (same) { const z = K.z; for (let i = 0; i < z.length; i++) if (z[i] !== zbuf[i]) { same = false; break; } }
     if (same) { const idx = K.idx, col = K.col; for (let n = 0; n < K.n; n++) { const q = idx[n]; fb[q] = ((fb[q] & 0xff000000) | col[n]) >>> 0; } K.hits++; return; }
-    K.F = null; K.k = k; K.n = 0; rec = K;
+    K.F = null; K.k = k; K.n = 0; rec = held ? K : null;
   }
   for (let j = 0; j < CLH; j++) for (let i = 0; i < CLW; i++) {
     const X = i * 8 < VW ? i * 8 : VW - 1, Y = j * 8 < VH ? j * 8 : VH - 1, z = zbuf[Y * VW + X];
@@ -123,32 +161,78 @@ function drawPaths() {   // the picture gone over in 8 x 8 blocks: only blocks n
     const d = z * 0.01, lat = (X + 0.5 - VW / 2) * d / FOC; PSB[j * CLW + i] = pathSd(camX + FX * d + RX * lat, camY + FY * d + RY * lat);
   }
   const L = 150, lr = LR[L], lg = LG[L], lb = LB[L];
+  const gx0 = F.gx0, gy0 = F.gy0, res = F.res, gw = F.gw, gh = F.gh, sdA = F.sd, kindA = F.kind, segA = F.seg, SG = F.SG, paths = F.paths, H0 = TOD[tmode].haze[0], H1 = TOD[tmode].haze[1], H2 = TOD[tmode].haze[2], HL = hazeTable();   // (J6d: asked once, not a pixel at a time)
+  const ridx = rec ? rec.idx : null, rcol = rec ? rec.col : null; let rn = 0;   // (the pass kept for a still picture: its pixels and colours, written as they are made)
+  const deep = PRAC ? (F.deep || (F.deep = padDeep(F))) : null, gwd = gw - 2, ghd = gh - 2, utile = F.utile, utw = F.utw;   // (J6d: the deep cells and tiles, while he practises)
+  let lix = -999, liy = -999, lck = 0, lpk = 0, lP0 = null;   // (the last deep cell asked of and its pad: a row of pixels stays in one cell for many)
   for (let j = 0; j < CLH - 1; j++) for (let i = 0; i < CLW - 1; i++) {
     const k = j * CLW + i, a = PSB[k], b = PSB[k + 1], c = PSB[k + CLW], e = PSB[k + CLW + 1], lo = Math.min(a, b, c, e); if (lo > 2.5) continue;
     const X0 = i * 8, Y0 = j * 8, Y1 = Math.min(VH, Y0 + 8), X1 = Math.min(VW, X0 + 8);
+    // J6d: a block deep inside one pad (no slab: that asks the grid for its stretch): the cells its pixels can fall in, all of them deep and of one kind, tell it so, and no pixel of it need be asked
+    let uni = -1;
+    if (deep !== null && a < -0.5 && b < -0.5 && c < -0.5 && e < -0.5) {
+      let zmn = 65534, zmx = 0, sky = false;
+      for (let Y = Y0; Y < Y1; Y++) { const o = Y * VW; for (let X = X0; X < X1; X++) { const z = zbuf[o + X]; if (z === 65535) sky = true; else { if (z < zmn) zmn = z; if (z > zmx) zmx = z; } } }
+      if (!sky) {                                              // (a pixel's place is bilinear in its column and depth: the box its four extremes make holds them all)
+        const d0 = zmn * 0.01, d1 = zmx * 0.01, xa = (X0 + 0.5 - VW / 2) / FOC, xb = (X1 - 0.5 - VW / 2) / FOC;
+        const p0x = camX + d0 * (FX + RX * xa), p0y = camY + d0 * (FY + RY * xa), p1x = camX + d0 * (FX + RX * xb), p1y = camY + d0 * (FY + RY * xb);
+        const p2x = camX + d1 * (FX + RX * xa), p2y = camY + d1 * (FY + RY * xa), p3x = camX + d1 * (FX + RX * xb), p3y = camY + d1 * (FY + RY * xb);
+        const ga = (Math.min(p0x, p1x, p2x, p3x) - gx0) / res, gb = (Math.max(p0x, p1x, p2x, p3x) - gx0) / res, ha = (Math.min(p0y, p1y, p2y, p3y) - gy0) / res, hb = (Math.max(p0y, p1y, p2y, p3y) - gy0) / res;
+        if (ga >= 3 && ha >= 3 && gb < gwd - 3 && hb < ghd - 3) {
+          const ia = ((ga + 0.5) | 0) - 1, ib = ((gb + 0.5) | 0) + 1, ja = ((ha + 0.5) | 0) - 1, jb = ((hb + 0.5) | 0) + 1;   // (a cell wider each way)
+          const nc = (ib - ia + 1) * (jb - ja + 1);
+          if (nc <= 60) {
+            const k0 = kindA[ja * gw + ia]; let ok = !paths[k0].slab;
+            for (let jj = ja; ok && jj <= jb; jj++) for (let ii = ia, cc = jj * gw + ia; ii <= ib; ii++, cc++) if (deep[cc] === 0 || kindA[cc] !== k0) { ok = false; break; }
+            if (ok) uni = k0;
+          } else if (nc <= 4096) {                             // too many cells to look at one by one: by the tiles that hold them
+            const ta = ia >> 3, tb = ib >> 3, ua = ja >> 3, ub = jb >> 3, u0 = utile[ua * utw + ta]; let ok = u0 !== 0 && !paths[u0 - 1].slab;
+            for (let tj = ua; ok && tj <= ub; tj++) for (let ti = ta, tc = tj * utw + ta; ti <= tb; ti++, tc++) if (utile[tc] !== u0) { ok = false; break; }
+            if (ok) uni = u0 - 1;
+          }
+        }
+      }
+    }
+    const Pu = uni >= 0 ? paths[uni] : null;
     for (let Y = Y0; Y < Y1; Y++) for (let X = X0; X < X1; X++) {
       const q = Y * VW + X, z = zbuf[q]; if (z === 65535) continue;
-      const d = z * 0.01, lat = (X + 0.5 - VW / 2) * d / FOC, wx = camX + FX * d + RX * lat, wy = camY + FY * d + RY * lat, s = pathSd(wx, wy); if (s >= 0) continue;
-      const ck = Math.round((wy - F.gy0) / F.res) * F.gw + Math.round((wx - F.gx0) / F.res), pk = F.kind[ck], P0 = F.paths[pk], col = P0.col;
+      const d = z * 0.01, lat = (X + 0.5 - VW / 2) * d / FOC, wx = camX + FX * d + RX * lat, wy = camY + FY * d + RY * lat;
+      let s = -1, ck = -1, pk = 0, P0 = null;                  // (s: how far inside the pad it is, as pathSd gives it; a deep cell's pixel is inside by more than the edge's width: -1)
+      if (Pu !== null) { pk = uni; P0 = Pu; }
+      else {
+        const gx = (wx - gx0) / res, gy = (wy - gy0) / res, ix = (gx + 0.5) | 0, iy = (gy + 0.5) | 0;   // (ix, iy: the nearest cell: Math.round, which costs 6 ns a call here, for a point inside the grid)
+        if (ix === lix && iy === liy) { ck = lck; pk = lpk; P0 = lP0; }
+        else {
+          if (deep !== null && ix >= 1 && iy >= 1 && ix < gwd && iy < ghd) { ck = iy * gw + ix; if (deep[ck] === 0) ck = -1; }
+          if (ck >= 0) { lix = ix; liy = iy; lck = ck; lpk = pk = kindA[ck]; lP0 = P0 = paths[pk]; }
+          else {                                               // between the grid's cells: asked of the four round it, as pathSd does
+            if (!(gx >= 0 && gy >= 0 && gx < gw - 1 && gy < gh - 1)) continue;
+            const gi = gx | 0, gj = gy | 0, fx = gx - gi, fy = gy - gj, gk = gj * gw + gi;
+            s = (sdA[gk] * (1 - fx) + sdA[gk + 1] * fx) * (1 - fy) + (sdA[gk + gw] * (1 - fx) + sdA[gk + gw + 1] * fx) * fy; if (s >= 0) continue;
+            ck = iy * gw + ix; pk = kindA[ck]; P0 = paths[pk];
+          }
+        }
+      }
+      const col = P0.col;
       let t = 256, r0 = col[0], g0 = col[1], b0 = col[2];
       if (P0.slab) {                                           // concrete laid in slabs: a joint across the path every 1.7 m, each slab a shade of its own
-        const o = F.seg[ck] * 7, G = F.SG; let tt = ((wx - G[o]) * G[o + 2] + (wy - G[o + 1]) * G[o + 3]) / G[o + 4]; tt = tt < 0 ? 0 : tt > 1 ? 1 : tt;
+        const o = segA[ck] * 7, G = SG; let tt = ((wx - G[o]) * G[o + 2] + (wy - G[o + 1]) * G[o + 3]) / G[o + 4]; tt = tt < 0 ? 0 : tt > 1 ? 1 : tt;
         const al = (G[o + 5] + tt * G[o + 6]) / 1.7, sl = Math.floor(al); t = al - sl < 0.05 ? 182 : 236 + (ih(sl, pk * 7 + 3) % 5) * 8;
       }
       if (P0.soil) {                                           // J6c: bare earth: a slow mottle of drier and darker ground, fine grain, a pebble here and there
-        const m = vnoise(wx / 2.6, wy / 2.6, 913), g = ih(Math.floor(wx * 7), Math.floor(wy * 7)); t = 206 + ((m * 64) | 0) + (g % 7) * 3;
-        if (g % 41 === 0) { r0 = 120; g0 = 96; b0 = 78; } else if (g % 53 === 1) { r0 = 222; g0 = 196; b0 = 160; }
+        const m = soilNoise(wx, wy), g = ih(Math.floor(wx * 7), Math.floor(wy * 7)), pb = SOIL_P[g]; t = 206 + ((m * 64) | 0) + SOIL_T[g];
+        if (pb === 1) { r0 = 120; g0 = 96; b0 = 78; } else if (pb === 2) { r0 = 222; g0 = 196; b0 = 160; }
       } else if (P0.mat) t = 228 + (Math.floor((wx + wy) * 9) & 1) * 14 + (ih(Math.floor(wx * 12), Math.floor(wy * 12)) % 5) * 3;   // J6c: a hitting mat's fine rows of artificial grass
       if (s > -0.12) t = (t * 216) >> 8;                       // its edge, a shade darker
       if (!P0.mat) { const lx = Math.floor(wx * 6), ly = Math.floor(wy * 6); if (ih(lx, ly) < 4) { const lf = PLEAF[ih(lx + 9, ly + 5) & 3]; r0 = lf[0]; g0 = lf[1]; b0 = lf[2]; t = 256; } }   // a fallen leaf here and there (no flecks or stains)
       let r = (r0 * t * lr) >> 16, g = (g0 * t * lg) >> 16, bl = (b0 * t * lb) >> 16;
-      if (d > 50) { const hf = farHaze(d), H = TOD[tmode].haze; if (hf > 0) { r += (H[0] - r) * hf; g += (H[1] - g) * hf; bl += (H[2] - bl) * hf; } }
+      if (d > 50) { const hf = HL[z]; if (hf > 0) { r += (H0 - r) * hf; g += (H1 - g) * hf; bl += (H2 - bl) * hf; } }   // (HL[z]: farHaze(d), tabled)
       const rgb = ((bl > 255 ? 255 : bl) << 16) | ((g > 255 ? 255 : g) << 8) | (r > 255 ? 255 : r);
       fb[q] = ((fb[q] & 0xff000000) | rgb) >>> 0;   // (the top byte kept: a tree's shadow still falls across the path)
-      if (rec) { rec.idx[rec.n] = q; rec.col[rec.n++] = rgb; }
+      if (ridx !== null) { ridx[rn] = q; rcol[rn++] = rgb; }
     }
   }
-  if (rec) { rec.z.set(zbuf); rec.F = F; }
+  if (rec) { rec.n = rn; rec.z.set(zbuf); rec.F = F; }
 }
 
 // #1200: a floodlight tower's faces: a plinth, a square mast, and a lamp head: a dark box with two rows of three lamp panels on each side (emit 2: they shine at dusk and night)
