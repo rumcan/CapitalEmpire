@@ -181,9 +181,13 @@ under its 128 KB limit). v10 to v12 are `ACTION_TILES` (the ball room tree's upg
   in the middle of the map: 11 to 19% of the whole map fits, a quarter to a third of the view the choice opens on); needs clear, flat ground for the shop and car park (water, a creek or the river's bank where they go); not enough
   open land beside it for a course; no room for the town across the road; water or a creek on the range land; the county road cannot get past the water. Water, mountains and the map's
   edge are all among these. A refusal at the click shows the same words as a toast.
-- **Cost**: a refusal is a few lookups in the terrain's integral images (the same ones the automatic plan reads: the probe makes them once, about 30 ms, and the plan shares them) kept per
-  lattice cell; the county road, 5 to 9 ms warm and up to about 55 ms cold, is worked out only once the pointer has rested on a spot for 140 ms (and at the click), never while it moves, and kept
-  per J and axis. A frame with the pointer still costs a comparison; the ghost's shapes are made once per spot. Measured: see the J9 PR.
+- **Cost** (measured on the jam build in headless Chrome, and in node for the generator): a spot the pointer asks about is a few lookups in the terrain's integral images (the ones the automatic
+  plan reads: the probe makes them once, 16 ms, and the plan shares them), kept per lattice cell: over 10,906 pointer positions of the opening view (6,311 of them green) the ghost's test took 1.3 us
+  a position on average and 0.2 ms at worst, none over 4 ms, and a pointer standing still costs 0.2 us a frame (its shapes are made once per spot, so a frame allocates nothing). The county road, 9 ms
+  median (11 ms at p90, up to about 55 ms the first time on a map), is worked out only once the pointer has rested on a spot for 140 ms, and at the click, never while it moves; kept per J and axis.
+  Generation is no slower: `planRangeStart` took 24.9 ms before J9 and takes 24.3 ms now (the probe's 16 ms included; mean of 12 seeds, best of 5 each), and a new game's work on the page's thread
+  is 0.5 to 0.8 s with the choice (terrain, plan, probe) plus 22 to 48 ms for the click, against 0.5 to 0.6 s with `?pick=0` (the automatic start laid at once): the valley's generation is nearly all of it.
+  After the click the tutorial's card waits for the new view's ground, 4 s at most (`START_FIRST_VIEW_WAIT_MS`).
 - **Old saves** load as they were (the choice runs only for a brand-new game, and nothing is saved while it is chosen). A game from before J9 with the old range still for sale keeps Buy ($15,000:
   Build and the range card; its tutorial's first step still says the range is for sale), and a bare start (the trailer, the range not placed) keeps the old placement along the county road on its
   plot. `?pick=0` (any build) starts the automatic start at once, as a bench, a fixture and a dev `?seed=` do: a script that starts a new game with none of them now gets the choice (click
