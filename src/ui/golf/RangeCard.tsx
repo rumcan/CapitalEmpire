@@ -48,7 +48,7 @@ export function RangeCard({ ballFix, onBallFix, attendantWage, onLetGo, forSale,
       </div>
       {/* J7 (#1225): a jam game's old range stands for sale: Buy opens it (no golfer comes before) */}
       {forSale && (
-        <div className="space-y-1.5 rounded-lg border border-amber-300/40 bg-amber-300/10 p-2 text-xs" data-testid="range-for-sale">
+        <div className="space-y-1.5 rounded-lg border border-amber-300/40 bg-amber-300/10 p-2 text-xs" data-testid="range-for-sale" data-guide="range-sale">
           <div className="flex items-center justify-between gap-2">
             <span className="font-medium text-white">For sale: this old range, its dirt car park and the junk on it</span>
             <button className="chip chip-on shrink-0 disabled:opacity-40" disabled={!!forSale.why || !onBuyRange} title={forSale.why ?? `Buy it (${money(forSale.cost)}): golfers stop for a bucket from then on`} onClick={() => onBuyRange?.()} data-testid="range-buy">Buy {money(forSale.cost)}</button>
