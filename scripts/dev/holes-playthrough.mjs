@@ -20,6 +20,7 @@
 //        [--headed] [--keep] [--cdp PORT]
 //   --base      use a dev server already running (the normal game, or with --variants jam the jam build) instead of starting one
 //   --seed      the old automatic start on that map (no start spot to pick); without it the real new game, a random map (it says the seed it got)
+//   --night N   the game's night amount, 0 (day, the default: the screenshots and the pixel checks want the light steady) to 1 (night): a hole must be drawn at night too
 //   --cdp       attach to a Chrome kept alive on that remote-debugging port (a fresh context each run; --keep leaves it open): for working on a step
 //   --reuse     with --cdp: carry on in the page the last run left open (--keep), whatever state the game is in: run the steps after the ones that made it
 // One headless Chrome (the installed one, playwright-core), closed when done; the servers it started are stopped.
@@ -35,7 +36,7 @@ const ROOT = resolve('.'), OUT = resolve(opt('out', 'output/holes-playthrough'))
 const variants = opt('variants', has('base') ? 'normal' : 'normal,jam').split(','), STEPS = new Set(opt('steps', 'start,hole1,menu,hole2,paint,play').split(','));
 mkdirSync(OUT, { recursive: true });
 const t0 = Date.now(), lap = s => console.log(`[${((Date.now() - t0) / 1000).toFixed(0)}s] ${s}`);
-let bad = 0;
+let bad = 0, JAMRUN = false;
 const rows = [];
 const check = (ok, what, note = '') => { rows.push({ ok, what }); console.log(`${ok ? 'ok  ' : 'FAIL'} ${what}${note ? `  (${note})` : ''}`); if (!ok) bad++; return ok; };
 const freePort = () => new Promise(res => { const s = netServer(); s.listen(0, '127.0.0.1', () => { const p = s.address().port; s.close(() => res(p)); }); });
@@ -74,7 +75,8 @@ async function launch(jam) {
   const errors = [];
   const quiet = t => /favicon|Failed to load resource|ResizeObserver loop/.test(t);
   page.on('pageerror', e => errors.push(`pageerror: ${e.message}`));
-  page.on('console', m => { const t = m.text(); if (m.type() === 'error' && !quiet(t)) errors.push(`console: ${t.slice(0, 240)}`); });
+  // (a worker that failed and handed its jobs to the main thread warns; for the ground that is a failure to be seen: course.worker, ground.worker, the sim)
+  page.on('console', m => { const t = m.text(); if ((m.type() === 'error' && !quiet(t)) || (m.type() === 'warning' && /worker failed|failed; its jobs run/i.test(t))) errors.push(`console: ${t.slice(0, 240)}`); });
   page.on('worker', w => { try { w.on('console', m => { const t = m.text(); if (m.type() === 'error' && !quiet(t)) errors.push(`worker: ${t.slice(0, 240)}`); }); } catch { /* an older Playwright has no worker console */ } });
   page.on('dialog', d => d.dismiss().catch(() => {}));
   return { browser, ctx, page, errors, jam };
@@ -193,12 +195,17 @@ async function start(S) {
     const off = page.locator('[data-testid="tour-off"]'); if (await off.count() && await off.isVisible().catch(() => false)) { await off.click().catch(() => {}); await sleep(300); }
     const wc = page.locator('[data-testid="welcome-card"] [aria-label="Close"]'); if (await wc.count()) { await wc.first().click().catch(() => {}); await sleep(300); }
   }
-  await game(page, g => { window.__night = 0; g.nightAmount = () => window.__night; g.setSpeed(0); g.emit(); });
+  await game(page, (g, n) => { window.__night = n; g.nightAmount = () => window.__night; g.setSpeed(0); g.emit(); }, Number(opt('night', '0')));
   await settle(page, 800);
 }
 const homeOf = page => page.evaluate(() => { const [x, y, w, d] = window.__game.golf.range.home; return { x: x + w / 2, y: y + d / 2 }; });
-/** Course > Holes > New hole through the rail's flyout */
+/** Course > Holes > New hole through the rail's flyout (the jam's Course is one tool: its Holes panel opens at once and its New hole button starts the wizard) */
 async function openNewHole(page) {
+  if (JAMRUN) {
+    if (!(await page.locator('[data-panel="holes"]').count())) { await page.click('[data-rail="course"]'); await sleep(600); }
+    if (!(await page.locator('[data-primary="wizard"]').count())) { await page.locator('[data-primary="new-hole"]').click(); await sleep(700); }
+    return;
+  }
   await page.keyboard.press('Escape').catch(() => {});
   if (!(await page.locator('[data-flyout-col="0"]').count())) { await page.click('[data-rail="course"]'); await sleep(450); }
   await page.click('[data-flyout-col="0"] [data-key="holes"]'); await sleep(400);
@@ -468,14 +475,28 @@ async function jamChecks(S) {
   // (the hole gate waits for months of range takings and the tools for the old range to be bought: the run opens them, as the jam smoke does; the hand shaping the checks look for
   //  is hidden by the JAM flag itself, not by that gate, so opening the gate hides nothing from them)
   await game(page, g => { g.paint.host.planLock = () => null; g.sandboxUnlock = true; g.emit(); });
-  await openNewHole(page);
   const hand = () => page.evaluate(() => ({ shape: !!document.querySelector('[data-section="shape"]'), more: !!document.querySelector('[data-section="more"]'), swatches: !!document.querySelector('.swatches'), paintHole: !!document.querySelector('[data-section="edit-paint"]'), text: /Shape by hand|More options|Paint hole/.test(document.querySelector('[data-testid="tool-panel"]')?.innerText ?? '') }));
-  let h = await hand(); check(!h.shape && !h.more && !h.swatches && !h.text, 'the jam Holes panel shows no hand shaping before a hole (no Shape by hand, More options, brushes)', JSON.stringify(h));
+  const none = h => !h.shape && !h.more && !h.swatches && !h.paintHole && !h.text;
+  // the Holes panel with the Course tool in hand and no wizard open (Course > Holes > Your holes): where the brushes and More options used to show
+  await page.keyboard.press('Escape').catch(() => {});
+  await page.click('[data-rail="course"]'); await sleep(900);
+  let h = await hand();
+  check(await page.locator('[data-panel="holes"]').count() === 1 && none(h), 'the jam Holes panel shows no hand shaping before a hole (no Shape by hand, More options, brushes)', JSON.stringify(h));
+  // the Course tool in hand with no wizard: the brush it opens with lays nothing in the jam and shows no pill ("Painting Fairway ... 1-8 switch surface"): a click on bare land changes no cell
+  check(await page.locator('[data-testid="course-pill"]').count() === 0, 'no brush pill ("Painting Fairway ... 1-8 switch surface") shows in the jam');
+  const bare = await page.evaluate(() => { const g = window.__game, home = g.golf.range.home; for (let r = 25; r < 200; r += 5) for (let a = 0; a < 16; a++) { const x = home[0] + home[2] / 2 + Math.cos(a / 16 * 6.283) * r, y = home[1] + home[3] / 2 + Math.sin(a / 16 * 6.283) * r; if (g.ownedAt(x, y) && !g.onRangePlot(x, y)) return { x, y }; } return null; });
+  if (bare) {
+    const n0 = await page.evaluate(() => { const gr = window.__game.courseGrid; let n = 0; for (let k = 0; k < gr.surf.length; k++) if (gr.surf[k]) n++; return n; });
+    await clickMap(page, bare, 0.2); await sleep(500); await game(page, g => { g.paint.pointerUp(0.5); });
+    const n1 = await page.evaluate(() => { const gr = window.__game.courseGrid; let n = 0; for (let k = 0; k < gr.surf.length; k++) if (gr.surf[k]) n++; return n; });
+    check(n1 === n0, `a click on the map with the Course tool in hand lays nothing in the jam (${n0} painted cells before, ${n1} after)`);
+  }
   await hole1(S);
-  await openNewHole(page);
-  h = await hand(); check(!h.shape && !h.more && !h.swatches && !h.text, 'and none after the first hole', JSON.stringify(h));
+  await page.click('[data-rail="course"]'); await sleep(900); // (the Holes panel again, the Course tool in hand, New hole's card closed: where Shape by hand and More options showed after the first hole)
+  h = await hand();
+  check(await page.locator('[data-panel="holes"]').count() === 1 && await page.locator('[data-primary="wizard"]').count() === 0 && none(h), "and none after the first hole, the wizard's card closed", JSON.stringify(h));
   const add = await page.evaluate(() => { const b = document.querySelector('[data-testid="hole-add"]'); return { exists: !!b, menu: b?.getAttribute('aria-haspopup') ?? null }; });
-  check(add.exists && add.menu === null, 'the jam\'s + plans a hole at once (no saved holes, no empty hole to paint by hand)', JSON.stringify(add));
+  check(add.exists && add.menu === null, "in the jam the + plans a hole at once (no saved holes, no empty hole to paint by hand)", JSON.stringify(add));
   await page.click('[data-hole="1"]'); await sleep(500); await page.locator('[data-testid="hole-edit"]').click(); await sleep(800);
   h = await hand(); check(!h.paintHole && !h.swatches, 'Edit Hole Layout in the jam has no Paint hole palette', JSON.stringify(h));
   await noStandIn(page, 'in the jam');
@@ -484,7 +505,7 @@ async function jamChecks(S) {
 // ---------------------------------------------------------------- the run
 const steps = { start, hole1, menu, hole2, paint, play };
 async function runVariant(name) {
-  const jam = name === 'jam';
+  const jam = name === 'jam'; JAMRUN = jam;
   let srv = null, base = opt('base', '');
   if (!base) { lap(`starting a ${name} dev server`); srv = await serve(jam); base = srv.base; }
   const S = await launch(jam); S.base = base; S.tag = name;
