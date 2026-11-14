@@ -26,15 +26,15 @@ test('on a path: both ends beside a straight path, the walker goes to it, along 
   assert.deepEqual([t.on0, t.on1], [1, 2], 'the leg between is the one on the path');
   assert.ok(Math.abs(t.len - 40) < 1e-9 && Math.abs(t.onLen - 36) < 1e-9, `${t.len} tiles, ${t.onLen} on the path`);
   assert.ok(t.len <= PATH_DETOUR * 36, 'within the detour');
-  // the pace on the path keeps the trip as long as the straight one took, never more than PATH_PACE
-  assert.ok(t.pace > 1 && t.pace <= PATH_PACE, `pace ${t.pace}`); assert.ok(Math.abs((t.len - t.onLen) + t.onLen / t.pace - 36) < 1e-9, 'the same time as the straight walk');
+  // a walker timed by the straight way's 36 tiles goes this much faster over the 40: within the most a trip may be longer
+  assert.ok(t.len / 36 > 1 && t.len / 36 <= PATH_PACE, `${(t.len / 36).toFixed(3)} times as fast`);
 });
 
 test('on the path already: a start or a goal on it is its own entry or exit', () => {
   const n = net(line([0, 0], [30, 0])), t = routeVia(n, P(0, 0), P(40, 5))!;
   assert.ok(t, 'the path leads most of the way: along it, then off to the goal (the goal is far from it)');
   assert.deepEqual(t.pts.map(p => [p.x, p.y]), [[0, 0], [30, 0], [40, 5]]); assert.deepEqual([t.on0, t.on1], [0, 1]);
-  const both = routeVia(n, P(2, 0), P(28, 0))!; assert.deepEqual(both.pts.map(p => [p.x, p.y]), [[2, 0], [28, 0]], 'both ends on one leg: just the leg'); assert.deepEqual([both.on0, both.on1], [0, 1]); assert.equal(both.pace, 1, 'no hurry: it is the straight way');
+  const both = routeVia(n, P(2, 0), P(28, 0))!; assert.deepEqual(both.pts.map(p => [p.x, p.y]), [[2, 0], [28, 0]], 'both ends on one leg: just the leg'); assert.deepEqual([both.on0, both.on1], [0, 1]); assert.ok(Math.abs(both.len - 26) < 1e-9, 'it is the straight way');
 });
 
 test('off a path: no path near the start, or none that leads there, is no route', () => {
@@ -58,7 +58,7 @@ test('a detour refused: a path that leads the long way round is not taken, one a
   const cross = net(line([2, -3], [2, 3]));
   assert.equal(routeVia(cross, P(0, 0), P(20, 0)), null, 'a path that only crosses the way: 3 tiles of it for 3 tiles more walking');
   const b = routeVia(near20, P(0, 0), P(20, 0), 40)!;
-  assert.ok(b, 'the way it replaces (base) was 40 tiles: the same path is a shortcut there'); assert.equal(b.pace, 1, 'and no need to hurry');
+  assert.ok(b, 'the way it replaces (base) was 40 tiles: the same path is a shortcut there'); assert.ok(b.len < 40);
   assert.equal(routeVia(near20, P(0, 0), P(4, 0)), null, `a trip under ${PATH_MIN_TRIP} tiles is walked straight`);
 });
 
@@ -101,37 +101,42 @@ test('the network\'s own legs: crossing walking paths join where they cross, and
   const v = routeVia(n, P(121, 91), P(119, 109))!; assert.ok(v, 'and down the other path, the slab one'); assert.ok(v.pts.some(p => near(p, P(120, 100), 1e-3)));
 });
 
-test('followPaths: the long leg of a way goes by the path, the short ones stay, and each leg has its pace', () => {
+test('followPaths: a stretch of a way goes by the path as one trip, the longest from the earliest point it works from', () => {
   const legs = line([0, 10], [40, 10]), n = net(legs);
-  // a way: a short first leg, a long second (2 tiles off the path at both ends), a short third
+  // a way of four points, 2 tiles off the path: the whole of it is one stretch (the way's own points inside it go: the route steers by the path)
   const way = [P(2, 12), P(4, 12), P(36, 12), P(37, 12)], w = followPaths(n, way)!; assert.ok(w);
-  assert.deepEqual(w.pts.map(q => [q.x, q.y]), [[2, 12], [4, 12], [4, 10], [36, 10], [36, 12], [37, 12]], 'the long leg by the path (to it, along it, off it); the short legs as they were');
-  assert.equal(w.pace.length, w.pts.length - 1, 'a pace for each leg');
-  assert.deepEqual(w.pace.map(k => k > 1), [false, false, true, false, false], 'only the leg along the path is brisk');
-  assert.ok(w.pace[2]! <= PATH_PACE && w.pace[2]! > 1);
-  // the trip takes as long as the way it replaces: the straight leg's 32 tiles at the ordinary pace
-  const time = w.pts.slice(1).reduce((t, q, i) => t + Math.hypot(q.x - w.pts[i]!.x, q.y - w.pts[i]!.y) / w.pace[i]!, 0), was = polyLength(way);
-  assert.ok(Math.abs(time - was) < 1e-9, `${time.toFixed(3)} against ${was}`);
+  assert.deepEqual(w.map(q => [q.x, q.y]), [[2, 12], [2, 10], [37, 10], [37, 12]], 'to the path, along it, off it');
+  assert.ok(polyLength(w) / polyLength(way) <= PATH_PACE, 'no more than the most a trip may be longer than the way it replaces');
+  // a start too far from the path to join it: the stretch begins at the first point that is near enough
+  const late = followPaths(n, [P(2, 30), P(4, 12), P(36, 12), P(37, 12)])!; assert.ok(late);
+  assert.deepEqual(late.map(q => [q.x, q.y]), [[2, 30], [4, 12], [4, 10], [37, 10], [37, 12]], 'from the second point on; the first leg as it was');
   // none helps: exactly the way he had (null: the caller keeps its own)
   assert.equal(followPaths(n, [P(0, 40), P(20, 40), P(40, 40)]), null, 'no path near: the way is his own');
   assert.equal(followPaths(null, way), null, 'no paths at all'); assert.equal(followPaths(undefined, way), null);
   assert.equal(followPaths(n, [P(2, 12)]), null, 'a way of one point'); assert.equal(followPaths(n, []), null, 'a way of none');
+  // from and to: only the points between them are the stretches' to replace (the lot's aisles, the way round a building are kept)
+  const kept = followPaths(n, way, null, 1, 3)!; assert.ok(kept && near(kept[0]!, P(2, 12)) && near(kept[1]!, P(4, 12)), 'the first point and leg are kept when the stretches begin at the second');
+  const mid = followPaths(n, way, null, 1, 2)!; assert.deepEqual(mid.map(q => [q.x, q.y]), [[2, 12], [4, 12], [4, 10], [36, 10], [36, 12], [37, 12]], 'with the stretches between the second and third points only: the middle leg goes by the path, the others are as they were');
   // the goal: after the way's last point, as far as the paths carry him; the walk ends where they leave him
   const g = followPaths(n, [P(0, 12), P(1, 12)], P(60, 12))!; assert.ok(g, 'from the last point on to the goal, over the path');
-  assert.ok(near(g.pts.at(-1)!, P(40, 10)), 'it ends where the path leaves him (the rest is his own)'); assert.ok(g.pts.length >= 4);
+  assert.ok(near(g.at(-1)!, P(40, 10)), 'it ends where the path leaves him (the rest is his own)'); assert.ok(g.length >= 3);
   assert.equal(followPaths(n, [P(0, 12), P(1, 12)], P(30, 80)), null, 'a goal the path does not lead to');
 });
 
 test('followPaths: a waypoint beside where the route joins or leaves the path is dropped, one farther off is kept', () => {
   const n = net(line([0, 10], [40, 10]));
-  // the way steers by a point 0.6 tiles from the path at each end: the route would step back to them, so they go
-  const w = followPaths(n, [P(0, 14), P(2, 10.6), P(38, 10.6), P(38, 14)])!; assert.ok(w);
-  assert.deepEqual(w.pts.map(q => [q.x, q.y]), [[0, 14], [2, 10], [38, 10], [38, 14]], 'by the entry and by the exit: gone');
-  const k = followPaths(n, [P(0, 14), P(2, 12.5), P(38, 12.5), P(38, 14)])!; assert.ok(k);
-  assert.deepEqual(k.pts.map(q => [q.x, q.y]), [[0, 14], [2, 12.5], [2, 10], [38, 10], [38, 12.5], [38, 14]], 'a waypoint 2.5 tiles off is kept (the way steers by it)');
+  // the ends are too far from the path to join it; the way steers by a point 0.6 tiles from the path at each end: the route would step back to them, so they go
+  const w = followPaths(n, [P(0, 30), P(2, 10.6), P(38, 10.6), P(38, 30)])!; assert.ok(w);
+  assert.deepEqual(w.map(q => [q.x, q.y]), [[0, 30], [2, 10], [38, 10], [38, 30]], 'by the entry and by the exit: gone');
+  // a waypoint 2.5 tiles from the path where the route joins it is kept (he steps from it to the path); the one beyond the stretch's exit is passed by, the stretch running on to the last point
+  const k = followPaths(n, [P(0, 30), P(2, 12.5), P(38, 12.5), P(38, 30)])!; assert.ok(k);
+  assert.deepEqual(k.map(q => [q.x, q.y]), [[0, 30], [2, 12.5], [2, 10], [38, 10], [38, 30]], 'kept at the entry (2.5 tiles off); the stretch runs on to the end, leaving the path where it comes nearest');
+  // with the stretch ending at the third point (to = 2) the exit's waypoint is a boundary: 2.5 tiles off it is kept, 0.6 off it goes
+  const m = followPaths(n, [P(0, 30), P(2, 12.5), P(38, 12.5), P(38, 30)], null, 0, 2)!; assert.ok(m);
+  assert.deepEqual(m.map(q => [q.x, q.y]), [[0, 30], [2, 12.5], [2, 10], [38, 10], [38, 12.5], [38, 30]], 'both waypoints kept (a stretch from the second to the third)');
   assert.ok(PATH_SOFT > 0.6 && PATH_SOFT < 2.5);
   // the first and the last point of a way are never dropped, even beside the path
-  const e = followPaths(n, [P(2, 10.4), P(38, 10.4)])!; assert.ok(e && near(e.pts[0]!, P(2, 10.4)) && near(e.pts.at(-1)!, P(38, 10.4)), 'the ends stay');
+  const e = followPaths(n, [P(2, 10.4), P(38, 10.4)])!; assert.ok(e && near(e[0]!, P(2, 10.4)) && near(e.at(-1)!, P(38, 10.4)), 'the ends stay');
   assert.equal(polyLength([P(0, 0), P(3, 4), P(3, 10)]), 11);
 });
 

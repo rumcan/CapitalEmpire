@@ -31,6 +31,7 @@ import RANGE_ART_FILE from './range-art.json';
 import type { OffRoad } from '../offroad';
 import { DESERT_IDS, desertScatter } from '../desert-props';
 import { JUNK_BY_ID, scatterJunk, type JunkPile } from './junk';
+import { PATH_PACE, followPaths, routeVia, type PathNet } from './pathroute';
 
 // ---------------------------------------------------------------- the scene
 
@@ -212,6 +213,10 @@ export interface RangeScene {
   /** T239: the walking path the player laid joining the car park, the shop and the tee (walkwayOf; null: none, the walkers cross the dirt).
    *  The host sets it as the paths change */
   walk: Walkway | null;
+  /** #1295: the paths the walkers take (golf/pathroute.ts): every leg of the walking and cart paths the network has round the range (its plot, its front and its practice area),
+   *  joined into a graph; null: none. The host sets it as the paths change. Every walker's way is made over it when his trip begins (RangeSim.walk): the customers, the practice
+   *  area's golfers, the attendants and the pro. With none, or none that helps, they walk the dirt as they always did */
+  walkNet: PathNet | null;
   /** T239: the anchors a walkway joins (world): the car park lot's corners, the shop's counter, the tee box's back edge (its two ends) */
   anchors: { lot: Pt[]; shop: Pt; tee: [Pt, Pt] };
   /** where the outfield's mowing stripes start (world: the tee end of the outfield, its middle) */
@@ -479,7 +484,7 @@ export function rangeScene(plot: Rect, facing: 0 | 1 | 2 | 3, s: RangeBizSave, o
     numbers, junk, label: P(35, 60), box: [Math.min(c0.x, c1.x), Math.min(c0.y, c1.y), Math.max(c0.x, c1.x), Math.max(c0.y, c1.y)],
     mowFrom: P(U_MID, TEE[3] + TEE_GAP + 0.6),
     fence: { o, u: { x: du.x - o.x, y: du.y - o.y }, v: { x: dv.x - o.x, y: dv.y - o.y }, u0: SIDE_U[0] + FENCE_GAP, u1: SIDE_U[1] - FENCE_GAP, v1: FAR_V - FENCE_GAP },
-    front: [Math.min(f0.x, f1.x), Math.min(f0.y, f1.y), Math.max(f0.x, f1.x), Math.max(f0.y, f1.y)], walk: null,
+    front: [Math.min(f0.x, f1.x), Math.min(f0.y, f1.y), Math.max(f0.x, f1.x), Math.max(f0.y, f1.y)], walk: null, walkNet: null,
     anchors: { lot: [P(lot[0], lot[2]), P(lot[1], lot[2]), P(lot[1], lot[3]), P(lot[0], lot[3])], shop: P(COUNTER.u, COUNTER.v), tee: [P(TEE[0], TEE[2]), P(TEE[1], TEE[2])] },
   };
 }
@@ -717,7 +722,7 @@ const enum S { CarIn, WalkShop, Queue, WalkBay, Hit, /** to the coffee kiosk and
 /** the walking speed (tiles/s: a brisk 2.4 m/s, as a sim second is more than two town minutes), the cars' speeds on the road, the drive and in the car park (tiles/s) */
 const WALK = 1.4, ROAD_V = 9, DRIVE_V = 4.5, PARK_V = 2.5;
 /** T459: the paces the range's people walk and its cars drive at, at most (tiles a sim second): what the per-frame tests hold each mover to (golf-range-walk.test.ts) */
-export const RANGE_PACE = { walk: WALK, road: ROAD_V } as const;
+export const RANGE_PACE = { walk: WALK, road: ROAD_V, /** #1295: a walker on a path goes this fast at most (golf/pathroute.ts PATH_PACE: so a trip over a path takes as long as the one across the dirt) */ path: WALK * PATH_PACE } as const;
 /** T321: a car's speed over the grass where no road reaches its car park (tiles/s) */
 const OFF_V = 3;
 /** a swing's beats: address, the drive clip, the pause after; the ball leaves at the clip's impact (s) */
@@ -867,7 +872,11 @@ interface Visit { id: number; person: number; car: number; slot: number; stage: 
   /** T146: the counter it walks up to and is served at (index into the scene's counters), and when its car turned in (sim s) and whether it bought */
   desk?: number; born: number; bought?: boolean;
   /** T152: its car as drawn while it is on the road (driving or waiting at its start; none while parked or gone) */
-  rc?: RangeCar }
+  rc?: RangeCar;
+  /** #1295: its way over the player's paths as drawn (a route timed by the walk's own clock, v.t, and over in the time the ordinary walk takes: it is the timetable that is the ordinary one,
+   *  so the golfer's visit, the line, the takings are those of a walk across the dirt; only where he is drawn follows the path) and, for a walk that runs on into the line (WalkShop), the
+   *  ordinary way it is drawn against, taken to the head of the line (gr; absent: the golfer's own route, v.r). null: he is drawn where he is */
+  gw?: Route | null; gr?: Route | null }
 /** a ball in the air: from, to (tiles), launch time and flight time (s), and the arc's height (tiles); roll: a putt rolling on the green (it slows
  *  to the cup and is holed or picked up: it never lies) */
 interface Ball { x0: number; y0: number; x1: number; y1: number; t0: number; T: number; h: number; roll?: boolean; /** its start's height (units, T133: off the upper deck) */ h0?: number;
@@ -950,10 +959,24 @@ export const AGENT_PICK_S = 6, AGENT_DROP_S = 1.5;
 /** an attendant's or a robot's round: his spot (tiles), the leg he is on ('gone': he went in at the ball room's door), the sim seconds left of a pick or a drop, the
  *  way he faces (radians); to and has: the pile he set out for (kept when the field clears on his way: he still picks there; none: home); leave: his shift is over,
  *  he does not go out again (after his drop he goes in) */
-export interface AgentWalk { x: number; y: number; leg: 'out' | 'pick' | 'back' | 'drop' | 'gone'; left: number; ang: number; to?: Pt; has?: boolean; leave?: boolean }
+export interface AgentWalk { x: number; y: number; leg: 'out' | 'pick' | 'back' | 'drop' | 'gone'; left: number; ang: number; to?: Pt; has?: boolean; leave?: boolean;
+  /** #1295: the way he walks over the paths (the points after where he stood when it was planned, up to where the paths leave him; none: straight), the one he walks toward next,
+   *  and what it was planned for: the leg ('out' to the pile, 'back' to the room) and the goal (planned again when the leg changes or the pile moves more than WAY_REPLAN tiles) */
+  way?: Pt[] | null; wi?: number; wLeg?: 'out' | 'back' | null; wx?: number; wy?: number }
+/** #1295: the pile he walks to has moved this far since his way over the paths was planned for it: a new way is planned (tiles) */
+const WAY_REPLAN = 4;
+/** #1295: plans a's way over the paths to `to` (once, as a leg begins or when its goal has moved a good way) */
+function planWay(a: AgentWalk, to: Pt, net: PathNet): void {
+  const leg = a.leg === 'out' ? 'out' : 'back';
+  if (a.wLeg === leg && Math.hypot(to.x - (a.wx ?? 0), to.y - (a.wy ?? 0)) <= WAY_REPLAN) return;
+  const trip = routeVia(net, a, to);
+  a.way = trip ? trip.pts.slice(1, trip.on1 + 1) : null; a.wi = 0; a.wLeg = leg; a.wx = to.x; a.wy = to.y;
+}
 /** dt sim seconds of a round, never faster than speed (tiles a sim second): to the pile (the one he set out for when the field has cleared since; none at
- *  all: back to the room), picking, back, dropping; a leaver turns back from the field, drops and is gone. Pure, and allocation-free after the first pile */
-export function walkAgent(a: AgentWalk, room: Pt, pile: Pt | null, dt: number, speed: number, pickS = AGENT_PICK_S, dropS = AGENT_DROP_S): void {
+ *  all: back to the room), picking, back, dropping; a leaver turns back from the field, drops and is gone. Pure, and allocation-free after the first pile.
+ *  #1295: with the paths (net) he walks them where they lead where he is going (a way planned when a leg begins: golf/pathroute.ts), then on to the pile or the room
+ *  as before; with none, or none that helps, he walks straight as ever */
+export function walkAgent(a: AgentWalk, room: Pt, pile: Pt | null, dt: number, speed: number, pickS = AGENT_PICK_S, dropS = AGENT_DROP_S, net?: PathNet | null): void {
   let t = Number.isFinite(dt) ? Math.max(0, dt) : 0;
   for (let guard = 0; guard < 12 && t > 1e-9 && a.leg !== 'gone'; guard++) {
     if (a.leg === 'pick' || a.leg === 'drop') {
@@ -966,10 +989,15 @@ export function walkAgent(a: AgentWalk, room: Pt, pile: Pt | null, dt: number, s
       if (pile) { const o = a.to ?? (a.to = { x: 0, y: 0 }); o.x = pile.x; o.y = pile.y; a.has = true; }
       if (!a.has) { a.leg = 'back'; continue; }                    // (no balls out when he set off: home)
     }
-    const to = a.leg === 'out' ? a.to! : room, dx = to.x - a.x, dy = to.y - a.y, d = Math.sqrt(dx * dx + dy * dy), step = speed * t;   // (not Math.hypot: it allocates on every call)
+    const goal = a.leg === 'out' ? a.to! : room;
+    // #1295: the paths' way to the goal first (planned as the leg begins), then the goal itself
+    let way: Pt[] | null = null;
+    if (net) { planWay(a, goal, net); if (a.way && a.wi! < a.way.length) way = a.way; }
+    const to = way ? way[a.wi!]! : goal, dx = to.x - a.x, dy = to.y - a.y, d = Math.sqrt(dx * dx + dy * dy), step = speed * t;   // (not Math.hypot: it allocates on every call)
     if (d > 1e-6) a.ang = Math.atan2(dy, dx);
     if (step < d) { a.x += (dx / d) * step; a.y += (dy / d) * step; break; }
     a.x = to.x; a.y = to.y; t -= speed > 0 ? d / speed : t;
+    if (way) { a.wi!++; continue; }   // (a point of his way: on to the next)
     if (a.leg === 'out') { a.leg = 'pick'; a.left = pickS; a.has = false; } else { a.leg = 'drop'; a.left = dropS; }
   }
 }
@@ -1005,12 +1033,16 @@ export class RangeSim {
   /** the coffee kiosk's line (T133), the golfer served and its time left */
   private kq: number[] = []; private kServing = -1; private kLeft = 0;
   /** the academy's pro (T133): where it stands and faces, whether it walks, and since when it coaches the golfer it stands by (-1: waiting) */
-  private pro = { x: 0, y: 0, ang: 0, walking: false, coach: -1, since: 0, placed: false };
+  private pro = { x: 0, y: 0, ang: 0, walking: false, coach: -1, since: 0, placed: false,
+    /** #1295: his way over the paths to where he is going (the points after where he stood, up to where the paths leave him), the one he walks toward, the spot it was planned for (planned: it was) */
+    way: null as Pt[] | null, wi: 0, wx: 0, wy: 0, planned: false };
   /** the ball picker cart (T133): its route, its time out on it (-1: parked), and it has picked tonight; T459: it is driving home from where opening time caught it (it picks nothing on the way) */
   private pick: Route | null = null; private pickT = -1; private picked = false; private pickAt = { x: 0, y: 0, ang: 0 }; private pickBack = false;
   /** the queue limit now, and the golfers who turned back at the shop this step (counted as lost by step, where each turned back) */
   private qMax = 5; private lost: Pt[] = [];
   private tmp = { x: 0, y: 0, ang: 0 };
+  /** #1295: the scratch of a golfer drawn over the paths: where his way over them has him, and where the ordinary way has him at the same time */
+  private dg = { x: 0, y: 0, ang: 0 }; private dr = { x: 0, y: 0, ang: 0 };
   /** the practice facilities as the course grid holds them (T130: null, none read yet), each spot taken or free, and the golfers who began to
    *  practise this step (their fees are booked by step) */
   private practice: PracticeScan | null = null; private spotBusy: Record<PracticeId, boolean[]> = { putting: [], chipping: [] }; private used: PracticeId[] = [];
@@ -1036,7 +1068,7 @@ export class RangeSim {
     this.bayOrder = []; for (let k = 0; k < Math.max(low.length, up.length); k++) { if (k < low.length) this.bayOrder.push(low[k]!); if (k < up.length) this.bayOrder.push(up[k]!); }
     // the extras (T133): the picker's lanes (its speed set by step from the day's length); a kiosk or an academy that went sends its people on
     this.pick = scene.picker ? route(scene.picker.lanes, [1]) : null; if (!this.pick) { this.pickT = -1; this.pickBack = false; }
-    if (!scene.kiosk) { for (const id of this.kq) { const v = this.visits.find(q => q.id === id); if (v) this.walk(v, S.WalkCar, this.toCar(v, { x: v.x, y: v.y })); } this.kq.length = 0; this.kServing = -1; }
+    if (!scene.kiosk) { for (const id of this.kq) { const v = this.visits.find(q => q.id === id); if (v) this.goCar(v); } this.kq.length = 0; this.kServing = -1; }
     if (!scene.academy) { this.pro.placed = false; this.pro.coach = -1; }
   }
   /** the practice facilities as the course grid holds them now (T130): a golfer at a facility that closed, or at a spot that went, walks back */
@@ -1047,7 +1079,7 @@ export class RangeSim {
       busy.length = n; for (let i = 0; i < n; i++) busy[i] = false;
       for (const v of this.visits) {
         if (v.fac !== id || (v.stage !== S.WalkPractice && v.stage !== S.Practice)) continue;
-        if (v.spot! < n) busy[v.spot!] = true; else this.walk(v, S.WalkCar, this.toCar(v, { x: v.x, y: v.y }));
+        if (v.spot! < n) busy[v.spot!] = true; else this.goCar(v);
       }
     }
   }
@@ -1152,15 +1184,14 @@ export class RangeSim {
       d.id = -1; v.desk = undefined;
       // T386: the bucket's balls leave the ball room for the golfer's hands (the ball room emptied under it: it drives on)
       const mix = B ? takeMix(B, vb) : null;
-      if (B && !mix) { if (v.bay >= 0) this.bayBusy[v.bay] = false; v.bay = -1; lose(1, at, 'balls'); this.walk(v, S.WalkCar, this.toCar(v, { x: v.x, y: v.y })); continue; }
+      if (B && !mix) { if (v.bay >= 0) this.bayBusy[v.bay] = false; v.bay = -1; lose(1, at, 'balls'); this.goCar(v); continue; }
       if (B) v.left = vb;
       v.bought = true; sell(1, at, mix ? bucketValue(mix.clean, mix.dirty, auto?.polish) : 1); v.served = this.t - st.serve;
       // the academy (T133): a golfer who wanted a lesson and got a lesson bay pays for it with the bucket
       const b = sc.bays[v.bay]!; if (v.lesson && b.academy) { v.taught = true; extra('academy', 1, at); }
       if (b.lift) v.up = { x: b.stand.x, y: b.stand.y, h: b.lift };
-      // T239: along the player's walking path when one joins the shop and the tee, else across the dirt
-      const w = sc.walk;
-      this.walk(v, S.WalkBay, [{ x: v.x, y: v.y }, ...(w ? w.shopBay[v.bay] ?? [w.shop] : [sc.shopJoin]), b.back, b.stand]);
+      // behind the mats and out to the bay; #1295: along the player's walking paths where they lead there (walk), else across the dirt
+      this.walk(v, S.WalkBay, [{ x: v.x, y: v.y }, sc.shopJoin, b.back, b.stand]);
     }
     // the coffee kiosk (T133): its line's head is served, pays and goes on to the practice area or its car
     if (this.kServing < 0 && this.kq.length) {
@@ -1169,13 +1200,13 @@ export class RangeSim {
     }
     if (this.kServing >= 0 && (this.kLeft -= dt) <= 0) {
       const v = this.visits.find(q => q.id === this.kServing); this.kServing = -1; this.kq.shift();
-      if (v) { extra('kiosk', 1, sc.kiosk ? sc.kiosk.counter : null); if (!this.toPractice(v, sc)) this.walk(v, S.WalkCar, this.toCar(v, { x: v.x, y: v.y })); }
+      if (v) { extra('kiosk', 1, sc.kiosk ? sc.kiosk.counter : null); if (!this.toPractice(v, sc)) this.goCar(v); }
     }
     // closing: the queue goes home (lost); patience: a golfer queued two town hours leaves
     const patience = PATIENCE_H * dayLen / 24;
     for (let i = this.queue.length - 1; i >= 0; i--) {
       const v = this.visits.find(q => q.id === this.queue[i]); if (!v) continue;
-      if (!isOpen || this.t - v.queued > patience) { this.queue.splice(i, 1); lose(1, { x: v.x, y: v.y }, 'patience'); this.walk(v, S.WalkCar, this.toCar(v, { x: v.x, y: v.y })); }
+      if (!isOpen || this.t - v.queued > patience) { this.queue.splice(i, 1); lose(1, { x: v.x, y: v.y }, 'patience'); this.goCar(v); }
     }
     for (const v of this.visits) this.move(v, dt, dayLen, sc);
     for (const p of this.lost) lose(1, p, 'queue');
@@ -1242,7 +1273,7 @@ export class RangeSim {
    *  showing the swing (two lessons at once: it moves between them) */
   private movePro(dt: number, sc: RangeScene): void {
     const a = sc.academy, pr = this.pro; if (!a) return;
-    if (!pr.placed) { pr.x = a.home.x; pr.y = a.home.y; pr.placed = true; pr.ang = Math.atan2(sc.aim.y, sc.aim.x); }
+    if (!pr.placed) { pr.x = a.home.x; pr.y = a.home.y; pr.placed = true; pr.ang = Math.atan2(sc.aim.y, sc.aim.x); pr.way = null; pr.planned = false; }
     const pupils = this.visits.filter(v => v.taught && v.stage === S.Hit);
     if (!pupils.some(v => v.id === pr.coach) || (pupils.length > 1 && this.t - pr.since > 25)) {
       const next = pupils.find(v => v.id !== pr.coach) ?? pupils[0];
@@ -1252,9 +1283,15 @@ export class RangeSim {
     // beside its pupil (toward the other lesson bay) and a step in front of the mats (out of the roof's footprint), else its own spot on the tee
     let tx = a.home.x, ty = a.home.y;
     if (v && b) { const side = sc.bays[0] === b ? 1 : -1; tx = b.stand.x + sc.roadDir.x * 1.2 * side + sc.aim.x * 0.35; ty = b.stand.y + sc.roadDir.y * 1.2 * side + sc.aim.y * 0.35; }
-    const dx = tx - pr.x, dy = ty - pr.y, d = Math.hypot(dx, dy), m = WALK * dt;
-    pr.walking = d > 0.05;
-    if (d <= m) { pr.x = tx; pr.y = ty; } else { pr.x += dx / d * m; pr.y += dy / d * m; pr.ang = Math.atan2(dy, dx); }
+    // #1295: over the paths where they lead (a way planned when his spot changes, never per frame), then to the spot itself
+    const net = sc.walkNet; let way: Pt[] | null = null;
+    if (net) {
+      if (!pr.planned || Math.hypot(tx - pr.wx, ty - pr.wy) > WAY_REPLAN / 2) { const trip = routeVia(net, pr, { x: tx, y: ty }); pr.way = trip ? trip.pts.slice(1, trip.on1 + 1) : null; pr.wi = 0; pr.wx = tx; pr.wy = ty; pr.planned = true; }
+      if (pr.way && pr.wi < pr.way.length) way = pr.way;
+    } else pr.planned = false;
+    const gx = way ? way[pr.wi]!.x : tx, gy = way ? way[pr.wi]!.y : ty, dx = gx - pr.x, dy = gy - pr.y, d = Math.hypot(dx, dy), m = WALK * dt;
+    pr.walking = way ? true : d > 0.05;
+    if (d <= m) { pr.x = gx; pr.y = gy; if (way) pr.wi++; } else { pr.x += dx / d * m; pr.y += dy / d * m; pr.ang = Math.atan2(dy, dx); }
     if (!pr.walking) pr.ang = v ? Math.atan2(v.y - pr.y, v.x - pr.x) : Math.atan2(sc.aim.y, sc.aim.x);
   }
   /** the bay the counter gives golfer v (-1: none free; T133): a golfer who wants a lesson takes a free lesson bay first; the rest take the other
@@ -1435,16 +1472,17 @@ export class RangeSim {
   }
   /** the golfer's walk from p back to its car: along the path to the car park's edge, then to its bay's side; from a practice facility (T130) out
    *  of the practice area and round the back of the car park */
-  private toCar(v: Visit, p: Pt): Pt[] {
+  private toCar(v: Visit, p: Pt): { pts: Pt[]; to: number } {
     const sc = this.scene!, sl = this.slots[v.slot]!, side = this.carSide(sl), back = this.fromEdge(sl);
-    if (v.fac && (v.stage === S.WalkPractice || v.stage === S.Practice)) return [p, sc.practice.entry, sc.practice.behind, side];
+    if (v.fac && (v.stage === S.WalkPractice || v.stage === S.Practice)) return { pts: [p, sc.practice.entry, sc.practice.behind, side], to: 3 };
     // from the coffee kiosk's line (T133): out to the path in front of it
-    if (sc.kiosk && (v.stage === S.WalkKiosk || v.stage === S.KioskQueue)) return [p, sc.kiosk.join, sc.carEdge, ...back, side];
-    const atBay = v.stage === S.Hit || v.stage === S.WalkBay, w = sc.walk;
-    // T239: back along the player's walking path when there is one (from the bay's path point, or from the shop), else across the dirt
-    if (w) return [p, ...(atBay ? [sc.bays[v.bay]!.back, ...(w.bayCar[v.bay] ?? [w.car])] : [...w.carShop].reverse()), ...back, side];
-    return [p, ...(atBay ? [sc.bays[v.bay]!.back] : [sc.shopJoin]), sc.carEdge, ...back, side];
+    if (sc.kiosk && (v.stage === S.WalkKiosk || v.stage === S.KioskQueue)) return { pts: [p, sc.kiosk.join, sc.carEdge, ...back, side], to: 2 };
+    // back behind the mats (from the bay) or from the shop to the car park's edge (the paths may carry him to there, not into the lot: its aisles are kept)
+    const atBay = v.stage === S.Hit || v.stage === S.WalkBay;
+    return { pts: [p, ...(atBay ? [sc.bays[v.bay]!.back] : [sc.shopJoin]), sc.carEdge, ...back, side], to: 2 };
   }
+  /** the golfer sets off back to his car from where he stands (#1295: along the player's walking paths where they lead there: walk) */
+  private goCar(v: Visit): void { const w = this.toCar(v, { x: v.x, y: v.y }); this.walk(v, S.WalkCar, w.pts, undefined, 0, w.to); }
   /** where a car's golfer gets out and in (T146: the car park building's door, else beside its car) */
   private carSide(sl: CarSlot): Pt { return sl.door ?? { x: sl.x + sl.hy * 1.2, y: sl.y - sl.hx * 1.2 }; }
   /** the way from the path's end at the car park (carEdge) to a car (T146: the lot's walkers round the car park building; none from its door) */
@@ -1472,9 +1510,22 @@ export class RangeSim {
     }
     return false;
   }
-  private walk(v: Visit, stage: S, pts: Pt[]): void { v.stage = stage; v.t = 0; v.r = route(pts, [WALK]); }
+  /** a golfer sets off on `pts`: the way he has always walked (his timetable: it times the visit, the line and the takings, so nothing the range earns can change with the paths).
+   *  #1295: where the player's walking paths and cart paths (scene.walkNet) lead where he is going he is DRAWN on them (golf/pathroute.ts followPaths, once, as the trip begins):
+   *  stretches of his way replaced by trips along the paths and, with a goal, on from the last point as far as a path carries him toward it; the way over the paths is walked in the
+   *  time the ordinary way takes (view: drawnOver). With no paths, or none that helps, nothing is drawn but the ordinary way */
+  private walk(v: Visit, stage: S, pts: Pt[], goal?: Pt, from = 0, to = pts.length - 1): void {
+    v.stage = stage; v.t = 0; v.r = route(pts, [WALK]); v.gw = v.gr = null;
+    const way = followPaths(this.scene?.walkNet, pts, goal, from, to);
+    if (!way) return;
+    // the way he is drawn on: over the paths, at the pace that has him there when the ordinary way would (a path that makes the walk longer is walked a little briskly, one that is shorter
+    // a little slower); with a goal it runs on to the goal, drawn against the ordinary way's own run on to it (gr)
+    const g = goal && Math.hypot(way[way.length - 1]!.x - goal.x, way[way.length - 1]!.y - goal.y) > 1e-6 ? [...way, goal] : way, ref = goal ? route([...pts, goal], [WALK]) : v.r, T = ref.at[ref.at.length - 1]!, L = pathLen(g);
+    if (!(T > 1e-6 && L > 1e-6)) return;
+    v.gw = route(g, [L / T]); if (goal) v.gr = ref;
+  }
   /** the visit's golfer done with its bucket (or its bay gone): it walks back to its car */
-  private leave(v: Visit): void { this.spill(v); if (v.bay >= 0) this.bayBusy[v.bay] = false; this.walk(v, S.WalkCar, this.toCar(v, { x: v.x, y: v.y })); v.bay = -1; }
+  private leave(v: Visit): void { this.spill(v); if (v.bay >= 0) this.bayBusy[v.bay] = false; this.goCar(v); v.bay = -1; }
   /** T386: the balls of v's bucket it did not hit (it left early: a bay gone, a lesson cut short) land down the range now, so none is lost between hands */
   private spill(v: Visit): void {
     const B = this.book, sc = this.scene; if (!B || !sc || !v.left) return;
@@ -1546,10 +1597,11 @@ export class RangeSim {
       const att = w < HANDS_ATT, k = att ? w : w - HANDS_ATT, want = att ? k < a.attendants && onShift(k, hour, B.shift) : k < robots;
       let h = H[w] ?? null; if (!h && !want) continue;
       const side = (w % 3 - 1) * 0.9; home.x = room.x + nx * side; home.y = room.y + ny * side;
-      if (!h) h = H[w] = { x: home.x, y: home.y, leg: 'drop', left: AGENT_DROP_S + k * 4, ang: Math.atan2(dy, dx), to: undefined, has: false, leave: false };   // (every field now: one shape for all)
+      if (!h) h = H[w] = { x: home.x, y: home.y, leg: 'drop', left: AGENT_DROP_S + k * 4, ang: Math.atan2(dy, dx), to: undefined, has: false, leave: false, way: null, wi: 0, wLeg: null, wx: 0, wy: 0 };   // (every field now: one shape for all)
       h.leave = !want;
       if (front) { pile.x = front.x + nx * side; pile.y = front.y + ny * side; }
-      walkAgent(h, home, front ? pile : null, dt, att ? AGENT_SPEED.attendant : AGENT_SPEED.robot);
+      // (#1295: the attendants walk the paths where they lead; the robots are machines that trundle straight)
+      walkAgent(h, home, front ? pile : null, dt, att ? AGENT_SPEED.attendant : AGENT_SPEED.robot, AGENT_PICK_S, AGENT_DROP_S, att ? sc.walkNet : null);
       if (h.leg === 'gone') H[w] = null;
     }
   }
@@ -1580,7 +1632,7 @@ export class RangeSim {
     switch (v.stage) {
       case S.CarIn:
         if (along(v.r!, v.t, this.tmp)) {
-          const sl = this.slots[v.slot]!; this.walk(v, S.WalkShop, [this.carSide(sl), ...[...this.fromEdge(sl)].reverse(), ...(sc.walk ? sc.walk.carShop : [sc.carEdge])]);
+          const sl = this.slots[v.slot]!; const aisles = [...this.fromEdge(sl)].reverse(); this.walk(v, S.WalkShop, [this.carSide(sl), ...aisles, sc.carEdge], sc.queueAt, aisles.length);   // (#1295: by the paths from the lot's aisles on, to the shop as far as they carry him)
           // T459: the golfer steps out beside the car, where his walk begins, facing the way it goes (he was drawn on the car's middle for a frame, then 1.2 tiles aside)
           along(v.r!, 0, this.tmp); v.x = this.tmp.x; v.y = this.tmp.y; v.ang = this.tmp.ang;
         } else { v.x = this.tmp.x; v.y = this.tmp.y; v.ang = this.tmp.ang; }
@@ -1589,7 +1641,7 @@ export class RangeSim {
         const done = along(v.r!, v.t, this.tmp); v.x = this.tmp.x; v.y = this.tmp.y; v.ang = this.tmp.ang;
         // at the path's end by the car park the golfer sees the line (T146: and joins it there, walking up to its place, so a line that moved up
         // while it walked is not left empty at its head): a line two past the limit sends it back to the car (lost)
-        if (done && this.queue.length >= this.qMax + 2) { this.lost.push({ x: v.x, y: v.y }); this.walk(v, S.WalkCar, this.toCar(v, { x: v.x, y: v.y })); }
+        if (done && this.queue.length >= this.qMax + 2) { this.lost.push({ x: v.x, y: v.y }); this.goCar(v); }
         else if (done) { v.stage = S.Queue; v.queued = this.t; this.queue.push(v.id); }
         break;
       }
@@ -1606,7 +1658,7 @@ export class RangeSim {
       case S.Practice: {
         // putts (a short stroke, the ball rolling to the cup) or chips (the swing, a low arc onto the green) until its time is up
         const putt = v.fac === 'putting', T = putt ? PUTT_T : SWING, hit = putt ? PUTT_HIT : ADDRESS + IMPACT, k = Math.floor(v.t / T), lt = v.t - k * T, prev = v.t - dt - k * T;
-        if (v.t >= PRACTICE_H * dayLen / 24 && lt > hit + 1.2) { this.spotBusy[v.fac!][v.spot!] = false; this.walk(v, S.WalkCar, this.toCar(v, { x: v.x, y: v.y })); break; }
+        if (v.t >= PRACTICE_H * dayLen / 24 && lt > hit + 1.2) { this.spotBusy[v.fac!][v.spot!] = false; this.goCar(v); break; }
         if (prev < hit && lt >= hit) this.practiseShot(v, putt);
         break;
       }
@@ -1677,6 +1729,17 @@ export class RangeSim {
     this.balls.push({ x0: b.x + ux * 0.6, y0: b.y + uy * 0.6, x1, y1, t0: this.t, T: 1.6 + len / 35, h: 4 + len * 0.16, ...(lift ? { h0: lift / BALL_PX } : {}), after: ballRoll.on ? rollOut(x1, y1, ux, uy, len, sc) : undefined, ...(n > 1 ? { n } : {}) });
   }
 
+  /** #1295: golfer v drawn over the paths: his way's point at his walk's clock plus what his timetable's position is from the ordinary way's at that clock (the line's places beyond the
+   *  head: his own), so he is drawn where the timetable has him whenever the two ways meet (the start and the end of the walk). Fills this.dg (the point and the way he faces: the
+   *  way he walks while the walk lasts, else as he stood); false once the walk is over (he is where the timetable has him) */
+  private drawnOver(v: Visit): boolean {
+    const g = v.gw!, ref = v.gr ?? v.r, end = g.at[g.at.length - 1]!;
+    if (!ref || v.t >= end) return false;
+    const a = this.dg, b = this.dr; along(g, v.t, a); along(ref, v.t, b);
+    if (v.gr) { a.x += v.x - b.x; a.y += v.y - b.y; } else { /* (the timetable's own way: it is where it is drawn, on the path) */ }
+    return true;
+  }
+
   /** the people and cars to draw (reused objects): every golfer on foot as a crowd person (walking: the walk clip toward its heading; queued:
    *  idle, facing the counter; at a mat: the address, the drive, then idle, aimed down the range) and every car on the road or parked */
   view(): RangeDraw {
@@ -1696,9 +1759,11 @@ export class RangeSim {
       }
       if (v.stage < S.WalkShop || v.stage > S.WalkCar) continue;
       const p = P[np] ?? (P[np] = { x: 0, y: 0, group: 1, person: 0, row: 0, frame: 0, lift: 0, id: 0 }); np++;
-      p.id = v.id; p.x = v.x; p.y = v.y; p.group = 1; p.person = v.person;
+      // #1295: where he is drawn: where the timetable has him, moved onto his way over the paths by what that is from the ordinary way at this time (drawn: facing it)
+      const over = v.gw && v.stage !== S.Hit && v.stage !== S.Practice ? this.drawnOver(v) : false, dx = over ? this.dg.x : v.x, dy = over ? this.dg.y : v.y, dang = over ? this.dg.ang : v.ang;
+      p.id = v.id; p.x = dx; p.y = dy; p.group = 1; p.person = v.person;
       // on the upper deck (T133): full height at its bay, ramping on the stairs from the path behind it
-      p.lift = v.up ? v.up.h * Math.max(0, Math.min(1, 1 - Math.hypot(v.x - v.up.x, v.y - v.up.y) / STAIR)) : 0;
+      p.lift = v.up ? v.up.h * Math.max(0, Math.min(1, 1 - Math.hypot(dx - v.up.x, dy - v.up.y) / STAIR)) : 0;
       if (v.stage === S.Hit) {
         const k = Math.floor(v.t / SWING), lt = v.t - k * SWING;
         p.row = golferRow(sc.aim.x, sc.aim.y);
@@ -1719,7 +1784,7 @@ export class RangeSim {
         // the coffee line (T133) faces the kiosk's counter
         p.row = rowToward(-sc.kiosk.queueStep.x, -sc.kiosk.queueStep.y); p.frame = G.idle.start;
       }
-      else { p.row = rowToward(Math.cos(v.ang), Math.sin(v.ang)); p.frame = clipFrame(G.walk, G.walk.times[0]! + ((this.t * WALK_RATE + hash(v.id, 3) * 2) % 1.4)); }
+      else { p.row = rowToward(Math.cos(dang), Math.sin(dang)); p.frame = clipFrame(G.walk, G.walk.times[0]! + ((this.t * WALK_RATE + hash(v.id, 3) * 2) % 1.4)); }
     }
     // the academy's pro (T133): walking over, standing by its pupil facing it, every other swing of the pupil's showing the swing down the range
     const pr = this.pro;

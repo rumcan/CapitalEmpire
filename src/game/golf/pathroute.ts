@@ -20,9 +20,9 @@ export const PATH_DETOUR = 1.3;
 export const PATH_MIN_ON = 3, PATH_WORTH = 2;
 /** no path for a way shorter than this (tiles: 12 m): a few steps are walked straight */
 export const PATH_MIN_TRIP = 6;
-/** the pace a walker may go at on a path, as a multiple of his ordinary one (people walk a firm path a little briskly): the legs along a path that
- *  makes his way longer are walked this much faster, so a trip takes as long as the one it replaces (the range's takings do not change), at most */
-export const PATH_PACE = 1.3;
+/** the most a trip over the paths is longer than the way it replaces, so the most a walker that is to take as long as that way goes faster than his ordinary pace (a multiple):
+ *  the range's golfers are timed by the way they would have walked and only drawn over the paths, at this pace at most */
+export const PATH_PACE = PATH_DETOUR;
 /** a path's legs count this much of their length when ways are compared (a firm path is the easier walk: the way he takes is the one with the least walking
  *  at that weight, within the limits above), so he follows its bends rather than leaving it for a straight line across the grass */
 export const PATH_PREFER = 0.6;
@@ -101,7 +101,7 @@ export class PathNet {
   /** the cheapest way over the paths from `from` to `to` (see routeVia) */
   search(from: Pt, to: Pt, base: number, o: PathOpts): PathTrip | null {
     const reach = o.reach ?? PATH_REACH, limit = base * (o.detour ?? PATH_DETOUR), m = this.len.length, fx = from.x, fy = from.y, tx = to.x, ty = to.y;
-    // the legs within reach of the start (the entries) and of the goal (the exits), nearest first
+    // the legs within reach of the start (the entries) and the legs nearest the goal (the exits: he leaves a path where it comes nearest where he is going), nearest first
     const eK = this.eK.fill(-1), eT = this.eT, eD = this.eD.fill(Infinity), xK = this.xK.fill(-1), xT = this.xT, xD = this.xD.fill(Infinity);
     const take = (ks: Int32Array, ts: Float64Array, ds: Float64Array, k: number, t: number, d: number) => {
       let i = K; while (i > 0 && ds[i - 1]! > d) i--;
@@ -111,7 +111,7 @@ export class PathNet {
     };
     for (let k = 0; k < m; k++) {
       const a = this.near(k, fx, fy); if (a[1] <= reach) take(eK, eT, eD, k, a[0], a[1]);
-      const b = this.near(k, tx, ty); if (b[1] <= reach) take(xK, xT, xD, k, b[0], b[1]);
+      const b = this.near(k, tx, ty); take(xK, xT, xD, k, b[0], b[1]);
     }
     if (eK[0]! < 0) return null;
     // the search: from the entries' end nodes over the legs, never past the node from which no way to the goal fits the limit
@@ -168,9 +168,7 @@ export class PathNet {
     let len = 0, onLen = 0;
     for (let i = 1; i < pts.length; i++) { const l = Math.hypot(pts[i]!.x - pts[i - 1]!.x, pts[i]!.y - pts[i - 1]!.y); len += l; if (i > on0 && i <= on1) onLen += l; }
     if (!(len <= limit + 1e-9) || !(onLen >= (o.minOn ?? PATH_MIN_ON)) || !(onLen >= (o.worth ?? PATH_WORTH) * (len - base))) return null;
-    // the pace on the path that makes the trip take as long as the way it replaces, at most PATH_PACE: its other legs are walked at the ordinary pace
-    const room = base - (len - onLen), pace = room > 1e-9 ? Math.min(PATH_PACE, Math.max(1, onLen / room)) : PATH_PACE;
-    return { pts, on0, on1, len, onLen, pace };
+    return { pts, on0, on1, len, onLen };
   }
 }
 
@@ -178,8 +176,8 @@ export class PathNet {
 export interface PathOpts { reach?: number; detour?: number; minOn?: number; worth?: number; minTrip?: number; prefer?: number }
 
 /** a trip over the paths: the points to walk, `from` first and `to` last; the first and last of them that lie on a path (the legs between are walked on it);
- *  the whole way's length and the part on a path (tiles); and the pace on the path as a multiple of the ordinary one (1 to PATH_PACE) */
-export interface PathTrip { pts: Pt[]; on0: number; on1: number; len: number; onLen: number; pace: number }
+ *  and the whole way's length and the part on a path (tiles) */
+export interface PathTrip { pts: Pt[]; on0: number; on1: number; len: number; onLen: number }
 
 /** the way from `from` to `to` over the paths, or null when a walker should go straight (no path, none near the start, none that leads there, or the
  *  trip would be more than PATH_DETOUR times `base`: the length of the way it replaces, the straight line by default). Worked out when a trip begins */
@@ -195,30 +193,43 @@ export function routeVia(net: PathNet | null | undefined, from: Pt, to: Pt, base
 /** the length of a polyline (tiles) */
 export function polyLength(pts: readonly Pt[]): number { let L = 0; for (let i = 1; i < pts.length; i++) L += Math.hypot(pts[i]!.x - pts[i - 1]!.x, pts[i]!.y - pts[i - 1]!.y); return L; }
 
-/** a walker's way as points and, for each leg (pts[i] to pts[i + 1]), the pace on it as a multiple of his ordinary one (1: the ordinary) */
-export interface Way { pts: Pt[]; pace: number[] }
-
-/** the way a walker takes over the paths, made from the way he took without them: each leg of `pts` that is long enough is replaced by its trip over the
- *  paths when routeVia finds one (the points the way steers by that the route would only step back for are dropped), and from the last point on to
- *  `goal` (when there is one) as far as the paths carry him: the walk then ends where they leave him, and the rest to the goal is his own. null when no
- *  leg uses a path: the way is then exactly the one he had. The first and the last point are never dropped */
-export function followPaths(net: PathNet | null | undefined, pts: readonly Pt[], goal?: Pt | null): Way | null {
-  if (!net || pts.length < 1) return null;
-  const out: Pt[] = [pts[0]!], pace: number[] = [], soft: boolean[] = [false]; let changed = false;
-  const join = (q: Pt, k: number, s: boolean) => { out.push(q); pace.push(k); soft.push(s); };
-  for (let i = 0; i + 1 < pts.length; i++) {
-    const a = out[out.length - 1]!, b = pts[i + 1]!, last = i + 2 === pts.length, trip = routeVia(net, a, b);
-    if (!trip) { join(b, 1, !last); continue; }
-    changed = true;
-    // (the way's own waypoint where the route steps onto the path, or where it steps off, when that is within a step of it: the route would step back for it)
-    const n = trip.pts.length, e = trip.pts[trip.on0]!, x = trip.pts[trip.on1]!;
-    if (trip.on0 >= 1 && out.length > 1 && soft[out.length - 1] && Math.hypot(e.x - a.x, e.y - a.y) < PATH_SOFT) { out.pop(); pace.pop(); soft.pop(); }
-    const dropB = !last && trip.on1 < n - 1 && Math.hypot(x.x - b.x, x.y - b.y) < PATH_SOFT;
-    for (let k = 1; k < n - (dropB ? 1 : 0); k++) join(trip.pts[k]!, k - 1 >= trip.on0 && k - 1 < trip.on1 ? trip.pace : 1, k === n - 1 ? !last : false);
+/** the way a walker takes over the paths, made from the way he took without them (`pts`, the ordinary way). A stretch of it, from a point to a later one (or on to `goal`),
+ *  is replaced by one trip over the paths when routeVia finds one for the whole stretch: the longest stretch from the earliest point it works from (a walker leaving his car
+ *  for the shop takes the path from where he leaves the car, not from the car park's edge); the way's own points inside the stretch go (the route steers by the paths), and so
+ *  does the point where the route joins or leaves the path when it lies within PATH_SOFT of it. Only the points from index `from` to index `to` are the stretches' to replace
+ *  (the rest are kept: the lot's aisles, the way round a building); `goal`: the way's last stretch may run on to a goal beyond its last point as far as a path carries him
+ *  toward it, and the walk then ends where the path leaves him (the rest to the goal is his own). null when no stretch uses a path: the way is then exactly the one he had.
+ *  The first and the last point are never dropped. Worked out once, as a trip begins */
+export function followPaths(net: PathNet | null | undefined, pts: readonly Pt[], goal?: Pt | null, from = 0, to = pts.length - 1): Pt[] | null {
+  const n = pts.length; if (!net || n < 1) return null;
+  const lo = Math.max(0, from), hi = Math.min(n - 1, to);
+  const out: Pt[] = [pts[0]!], soft: boolean[] = [false]; let changed = false;
+  const join = (q: Pt, s: boolean) => { out.push(q); soft.push(s); };
+  // a trip's points 1 to `upto` as the way's; the last is a waypoint of the ordinary way (soft) when lastSoft
+  const take = (trip: PathTrip, upto: number, lastSoft: boolean) => { for (let k = 1; k <= upto; k++) join(trip.pts[k]!, k === upto ? lastSoft : false); };
+  // the way's own waypoint where the route steps onto the path, when that is within a step of it: the route would step back to it
+  const unstep = (trip: PathTrip) => { const a = out[out.length - 1]!, e = trip.pts[trip.on0]!; if (trip.on0 >= 1 && out.length > 1 && soft[out.length - 1] && Math.hypot(e.x - a.x, e.y - a.y) < PATH_SOFT) { out.pop(); soft.pop(); } };
+  for (let i = 0; ; ) {
+    const a = out[out.length - 1]!;
+    if (i >= lo) {
+      // the stretches from here: on to the goal first, then to the last point the stretches reach, and shorter
+      if (goal && hi === n - 1) {
+        const trip = routeVia(net, a, goal, polyLength([a, ...pts.slice(i + 1)]) + Math.hypot(goal.x - pts[n - 1]!.x, goal.y - pts[n - 1]!.y));
+        if (trip) { changed = true; unstep(trip); take(trip, trip.on1, false); break; }
+      }
+      let used = false;
+      for (let j = hi; j > i && !used; j--) {
+        const trip = routeVia(net, a, pts[j]!, Math.hypot(pts[i + 1]!.x - a.x, pts[i + 1]!.y - a.y) + polyLength(pts.slice(i + 1, j + 1)));
+        if (!trip) continue;
+        changed = used = true; unstep(trip);
+        const x = trip.pts[trip.on1]!, dropEnd = j < hi && trip.on1 < trip.pts.length - 1 && Math.hypot(x.x - pts[j]!.x, x.y - pts[j]!.y) < PATH_SOFT;
+        take(trip, trip.pts.length - 1 - (dropEnd ? 1 : 0), j < hi && !dropEnd);
+        i = j;
+      }
+      if (used) continue;   // (on from where the stretch ended: the goal's stretch, or the next)
+    }
+    if (i + 1 >= n) break;
+    join(pts[i + 1]!, i + 1 > lo && i + 1 < hi); i++;
   }
-  if (goal) {
-    const trip = routeVia(net, out[out.length - 1]!, goal);
-    if (trip) { changed = true; for (let k = 1; k <= trip.on1; k++) join(trip.pts[k]!, k - 1 >= trip.on0 && k - 1 < trip.on1 ? trip.pace : 1, false); }
-  }
-  return changed ? { pts: out, pace } : null;
+  return changed ? out : null;
 }

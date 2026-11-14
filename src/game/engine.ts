@@ -251,6 +251,7 @@ import { putterFitName } from './golf/play/bag';
 import { BallRoll, FX_SAND, FX_SPLASH, ballRoll, type HeightAt } from './golf/play/roll';
 import { BREAK_COLOURS, BREAK_STEP, CUP_DROP, CUP_LIP, PuttRoll, breakBucket, breakPinOf, type BreakTurn, buildBreakGrid, dotSpeed, loadBreakMode, loadTracers, saveBreakMode, saveTracers, shotPoint, steepShare, tracerAlpha, tracerGone, type BreakGrid, type BreakMode } from './golf/play/green';
 import { CHEER_TILES, DayFinish, IMPACT_S, LiveGroup, MODEL_V, OWNER_ADDRESS, OWNER_ART, OWNER_SKILL, POWER, PUTT_POWER, PlayView, allowedClubs, cartPaths, type CartPaths, type PlayCart, boardRows, championLine, dayRound, makeCourseView, powerFor, readSwing, resultsDue, shotReport, spinEffect, spinRoom, spinText, swingEffect, type ShotReport, type SpinInput, type SwingOutcome, type Lie, shortName as golferShort, skillFor, stateAt, standings, toParText, waitText, waveLine, type BoardRow, type Club, type CourseView, type GameSkills, type OwnerTurn, type RoundPlan, type Sex, type ShotSkill } from './golf/play';
+import { PathNet, type PathLeg } from './golf/pathroute';
 import { FRAMES_PER_TILE, SWING_EVERY, doorOf, hoverText, keyStep, lookSex, makeYou, routeOf, skipAhead, standInText, startWalk, stepYou, stopWalk, talkSpot, verbOf, youFrame, type ThingKind, type Verb as YouVerb, type You as YouChar } from './golf/you';
 import { AltTap, HeldKeys, WALK_KEYS, cameraChase, clickDoes, loadCursorMode, panAxes, saveCursorMode, walkAxes } from './golf/cursors';
 import { BRING_TILES, GREEN_CLEAR, appearSpot, callMode, callSpot, distText, edgeMarker, parkSpot, shouldPark, type ParkSurf } from './golf/play/yourcart';
@@ -9756,7 +9757,7 @@ export class Game {
     if (s.walk) { startWalk(mv, [{ x: mv.x, y: mv.y }, s.walk], false); this.youThen = null; }
     else if (s.back) {
       const at = r.scene.ballRoom; this.youRaster(mv.x, mv.y, 64, true, at.x, at.y);
-      startWalk(mv, routeOf({ x: mv.x, y: mv.y }, at, this.youCost), true); this.youThen = null; this.emit();
+      startWalk(mv, this.youRoute({ x: mv.x, y: mv.y }, at), true); this.youThen = null; this.emit();
     } else if (s.done) this.emit();
   }
   /** the frames since the card's balls were last told to redraw while you pick (it shows the basket filling) */
@@ -9817,6 +9818,16 @@ export class Game {
     }
     const S = this.youRSet, B = this.youRBox; S.clear(); B[0] = gx0; B[1] = gy0; B[2] = gx0 + w; B[3] = gy0 + h; this.propGrid.query(B, S);
     for (const p of S) { if (YOU_BLOCKS.has(LIBRARY[p.item]!.kind) || (LIBRARY[p.item]!.big && !p.auto?.startsWith('range:'))) fill(p.x0, p.y0, p.x1, p.y1, null); }
+  }
+  /** #1295: the route for your walk from a to b: round what may not be crossed (youCost), and by the walking paths and cart paths where one is close and leads the right way
+   *  (golf/you.ts routeOf, golf/pathroute.ts): along their legs, bends and all. Found once per click (the box round the ends is the raster's: youRaster before it) */
+  private youRoute(a: Pt, b: Pt): Pt[] { return routeOf(a, b, this.youCost, this.walkNet()); }
+  /** #1295: the graph of the walking and cart paths (the network's cart family: golf/pathroute.ts PathNet), made again only when the network has changed since it was last read */
+  private walkNetMemo: { ver: number; net: PathNet | null } = { ver: -1, net: null };
+  private walkNet(): PathNet | null {
+    const ver = this.net.version, m = this.walkNetMemo;
+    if (m.ver !== ver) { const legs: PathLeg[] = []; for (const s of this.net.segs) if (s.cls.family === 'cart') legs.push({ a: s.a, b: s.b }); this.walkNetMemo = { ver, net: PathNet.of(legs) }; }
+    return this.walkNetMemo.net;
   }
   /** the cost (per tile, 1 open grass) of you walking over (x, y): Infinity through water and what the raster blocks; the pavements and the
    *  walking and cart paths cheapest, the roads dear (you cross them, never walk down them), the medians dearer; a bunker dear, the greens a little */
@@ -9970,7 +9981,7 @@ export class Game {
     const d = Math.hypot(at.x - mv.x, at.y - mv.y);
     if (d < 0.3) { this.youThen = { act: t.act, face: t.face, key: t.key }; this.youArrive(); return; }
     this.youRaster(mv.x, mv.y, 64, true, at.x, at.y);
-    const route = routeOf({ x: mv.x, y: mv.y }, at, c ? this.cartCost : this.youCost);
+    const route = c ? routeOf({ x: mv.x, y: mv.y }, at, this.cartCost) : this.youRoute({ x: mv.x, y: mv.y }, at);
     startWalk(mv, route, run); this.youThen = { act: t.act, face: t.face, key: t.key };
     this.emit();
   }
@@ -10021,7 +10032,7 @@ export class Game {
     if (Math.hypot(at.x - y.x, at.y - y.y) > 80) return; // (far away: the session is booked, you stay where you are)
     this.youRaster(y.x, y.y, 32, true, at.x, at.y);
     const aim = bay ? { x: at.x + sc.aim.x * 10, y: at.y + sc.aim.y * 10 } : null;
-    startWalk(y, routeOf({ x: y.x, y: y.y }, at, this.youCost), false);
+    startWalk(y, this.youRoute({ x: y.x, y: y.y }, at), false);
     this.youThen = { face: aim, key: 'swing', act: () => { if (this.you && kind !== 'putting') { this.you.swing = 0; this.you.putt = false; } } };
   }
   /** the "Who are you?" card (a new range game, before the welcome card): your name, your look (the golfer art) and your starting handicap */
@@ -10328,7 +10339,7 @@ export class Game {
     if (Math.hypot(a.x - y.x, a.y - y.y) <= AT_ADDRESS) { this.yrWalkUp = null; this.yourAddress(); return; }
     this.yrWalkUp = a; this.youThen = null;
     this.youRaster(y.x, y.y, 8, true, a.x, a.y);
-    const route = routeOf({ x: y.x, y: y.y }, a, this.youCost);
+    const route = this.youRoute({ x: y.x, y: y.y }, a);
     startWalk(y, route.length >= 2 ? route : [{ x: y.x, y: y.y }, a], false);
   }
   /** the snap (the owner: "it can snap to the hitting position when close"): out of the cart, at the address facing the suggested aim, and the shot

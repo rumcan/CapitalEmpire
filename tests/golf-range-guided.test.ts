@@ -9,6 +9,7 @@ import {
   upgradeWhy, walkwayOf, walkwayReach, withUpgrade, type CarSlot, type RangeBizSave, type RangeUpgradeId,
 } from '../src/game/golf/rangebiz';
 import { RangeHost, type RangeHostCtx } from '../src/game/golf/rangehost';
+import { PathNet } from '../src/game/golf/pathroute';
 import { looseBays } from '../src/game/golf/rangelot';
 import { bayGrid } from '../src/game/event/carpark';
 import { plotPoint } from '../src/game/golf/range';
@@ -132,7 +133,7 @@ test('T459 (#1215): walkwayReach says which of the car park, the shop and the te
 
 test('the walkers: across the dirt without a path; along the laid walking path once there is one', () => {
   const run = (legs: { a: { x: number; y: number }; b: { x: number; y: number } }[] | null) => {
-    const sc = rangeScene(PLOT, F, defaultRangeBiz()); sc.walk = legs ? walkwayOf(sc, legs) : null;
+    const sc = rangeScene(PLOT, F, defaultRangeBiz()); sc.walkNet = legs ? PathNet.of(legs) : null;   // (#1295: the walkers are drawn over the paths: golf/pathroute.ts)
     const sim = new RangeSim(5, 10); sim.setScene(sc, looseBays(lotBays(), 'dirt'), entrance);
     const s = defaultRangeBiz(), dem = { tier: 1, exits: 2, residents: 1500 }, bend = P(BEND.u, BEND.v);
     let atBend = 0, walkers = 0;
