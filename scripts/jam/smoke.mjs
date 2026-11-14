@@ -14,11 +14,12 @@ import { resolve } from 'node:path';
 
 const args = process.argv.slice(2), has = k => args.includes(`--${k}`), opt = (k, d) => { const i = args.indexOf(`--${k}`); return i >= 0 ? args[i + 1] : d; };
 const ROOT = resolve('.'), OUT = 'dist-jam';
-if (!existsSync(resolve(ROOT, OUT, 'index.html'))) { console.error(`no ${OUT}/index.html: run npm run build:jam first`); process.exit(2); }
+const URL_GIVEN = opt('url', null); // (J11: --url http://127.0.0.1:PORT/ drives a dev server of your own (VITE_JAM=1 vite on a scratch port) instead of serving dist-jam)
+if (!URL_GIVEN && !existsSync(resolve(ROOT, OUT, 'index.html'))) { console.error(`no ${OUT}/index.html: run npm run build:jam first`); process.exit(2); }
 const freePort = () => new Promise(res => { const s = createServer(); s.listen(0, () => { const p = s.address().port; s.close(() => res(p)); }); });
 const port = Number(opt('port', 0)) || await freePort();
-const server = await preview({ root: ROOT, logLevel: 'error', build: { outDir: OUT }, preview: { port, strictPort: true, host: '127.0.0.1' } });
-const base = `http://127.0.0.1:${port}/`;
+const server = URL_GIVEN ? null : await preview({ root: ROOT, logLevel: 'error', build: { outDir: OUT }, preview: { port, strictPort: true, host: '127.0.0.1' } });
+const base = URL_GIVEN ?? `http://127.0.0.1:${port}/`;
 
 const rows = [], errors = [];
 let lastErrors = 0;
@@ -278,16 +279,25 @@ try {
   await click('top bar', 'Settings', page.locator('[data-tip="Settings"]').first());
   for (const b of await buttonsIn('div.relative:has(> button[data-tip="Settings"])')) {
     if (/New game|Load|Download|Save$|^Settings$/.test(b.label)) continue; // (they replace or download the game; the gear itself)
-    await click('settings', b.id ?? b.label, page.locator('button').filter({ hasText: b.label }).first(), { same: /100%|USD/.test(b.label) ? 'already the setting' : undefined });
+    // (J11: the Music and Effects mutes have test ids, and an aria-label that is not their text: found by id; each is pressed twice, so the sound is left as it was)
+    const loc = b.id ? page.locator(`[data-testid="${b.id}"]`).first() : page.locator('button').filter({ hasText: b.label }).first();
+    await click('settings', b.id ?? b.label, loc, { same: /100%|USD/.test(b.label) ? 'already the setting' : undefined });
+    if (b.id && /^sound-.*-mute$/.test(b.id)) await click('settings', `${b.id} (back on)`, loc);
   }
   await esc();
+  // ---- J11: the radio: off until turned on; its pill (play), its card (previous, play, next, the music's mute), off again
+  await click('radio', 'Radio (play)', page.locator('[data-testid="radio-play"]'), { wait: 800 });
+  await click('radio', 'Radio card (the drop)', page.locator('[data-testid="radio-more"]'));
+  await sweep('radio', '[data-testid="radio-card"]', async () => { await page.locator('[data-testid="radio-more"]').click(); }, { same: b => /^Mute/.test(b.label) ? 'a mute may already be as it is pressed' : undefined });
+  await esc();
+  if ((await page.locator('[data-testid="radio-play"]').getAttribute('aria-pressed')) === 'true') await click('radio', 'Radio (off)', page.locator('[data-testid="radio-play"]')); // (the card's own Play may have turned it off already)
   // ---- the speeds (#1275: the bar is collapsed by default: its chevron shows every speed, and shuts them again)
   await click('top bar', 'speed bar: show every speed', page.locator('[data-testid="speed-toggle"]'));
   for (const s of ['1', '4', '20']) await click('top bar', `speed ${s}x`, page.locator(`[data-testid="speed-${s}"]`));
   await click('top bar', 'speed bar: hide the speeds', page.locator('[data-testid="speed-toggle"]'));
   await click('top bar', 'pause', page.locator('[data-tip="Pause (Space)"]').first());
 } finally {
-  if (!has('keep')) { await browser.close().catch(() => {}); await server.close?.().catch?.(() => {}); server.httpServer?.close?.(); }
+  if (!has('keep')) { await browser.close().catch(() => {}); await server?.close?.().catch?.(() => {}); server?.httpServer?.close?.(); }
 }
 
 const fail = rows.filter(r => r.result === 'FAIL');

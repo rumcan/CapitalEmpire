@@ -115,3 +115,37 @@ test('J6c: a turfed tee shows its own turf and apron (the earth round it leaves 
   assert.ok(!earth(30, 20, turf) && !earth(30, v1 + 1, turf), 'a turfed tee and its apron are not covered');
   assert.ok(earth(30, 17, turf), 'its front is'); assert.ok(earth(2, 20, turf) && earth(68.5, 20, turf), 'and its sides');
 });
+
+// #1308: the owner: "fences on the side of the range are not working" (a few separate, tilted, see-through panels floating at odd angles across the outfield). A fence piece is
+// never sent as a picture any more: the pieces of one line that touch end to end are one run, a building of use 'fence' (centre, length, thickness, axis, height), on the range and on a hole.
+test('#1308: fence pieces become runs of fence (a building of use fence), not pictures; a gap, another kind or another line starts another run; a hedge stays a picture', () => {
+  const fx = { kind: 'fencex', id: 'expansion:chainlink-x', name: 'Chain-link fence — X axis', w: 141.5, h: 169.5, ax: 70.7, ay: 123.5, tex: [1, 0.1, 0.2, 0.3, 0.4], quad: [0, 20, 141.67, 158.33], boxes: [{ hx: 1.96, hy: 0.1 }] };
+  const fy = { ...fx, kind: 'fencey', id: 'expansion:chainlink-y', name: 'Chain-link fence — Y axis' };
+  const pk = { kind: 'fencex', id: 'world:fence_picket_x', name: 'Fence Picket X', w: 78, h: 77.5, ax: 39, ay: 53.4, tex: [1, 0.1, 0.2, 0.3, 0.4], quad: [1.14, 4.55, 77.37, 71.68], boxes: [{ hx: 0.98, hy: 0.1 }] };
+  const hedge = { ...fx, id: 'world:fence_hedge_x', name: 'Hedge' };
+  const piece = (item: number, x: number, y: number) => ({ item, x, y, scale: 1 });
+  const props = [
+    ...[0, 1, 2, 3, 4].map(i => piece(0, 1000 + i * 3.36, 1002)),           // five chain-link panels end to end along x: one run
+    ...[0, 1].map(i => piece(0, 1022 + i * 3.36, 1002)),                    // after a gap: another run on the same line
+    ...[0, 1, 2].map(i => piece(1, 1008, 995 + i * 3.36)),                  // three along y
+    ...[0, 1].map(i => piece(2, 1000 + i * 1.7, 1006)),                     // a picket fence of its own
+    piece(3, 1002, 1008),                                                    // a hedge: not a fence
+    piece(0, 1500, 1002),                                                    // far outside the course's box and the things box
+  ];
+  const g = gatherFeatures3p({ course: 'c', segs: [], bizDefs: [], structures: [], lots: [], library: [fx, fy, pk, hedge], pages: [['p0.webp'], ['p1.webp']], courseBox: [990, 990, 1010, 1010], props, things: [990, 990, 1030, 1030] });
+  const fences = g.buildings.filter(b => b.use === 'fence');
+  assert.equal(fences.length, 4, 'two chain-link runs along x, one along y, one picket run');
+  assert.ok(!g.trees.some(t => /chain|picket/.test(t.sp ?? '')), 'no fence is sent as a picture');
+  assert.ok(g.trees.some(t => t.sp === 'world:fence_hedge_x'), 'the hedge stays a picture');
+  const run = fences.find(b => b.rot === 0 && b.name.startsWith('Chain') && b.at.x < 1010)!;
+  assert.ok(Math.abs(run.w - 5 * 3.36 * TILE_M) < 0.05, 'five panels of 3.36 tiles: ' + run.w); assert.equal(run.h, 1.8, 'a chain-link fence is 1.8 m high');
+  assert.ok(Math.abs(run.at.x - (1000 + 4 * 3.36 / 2)) < 0.01 && run.at.y === 1002, 'centred on its pieces');
+  const ry = fences.find(b => b.rot === 90)!; assert.equal(ry.at.x, 1008); assert.ok(Math.abs(ry.w - 3 * 3.36 * TILE_M) < 0.05);
+  const pr = fences.find(b => b.name.startsWith('Fence Picket'))!; assert.ok(Math.abs(pr.w - 2 * 1.7 * TILE_M) < 0.1, 'a picket run: ' + pr.w); assert.ok(pr.h! >= 0.8 && pr.h! < 1.5);
+  const F = exportFeatures3p(g, centre).features.filter(f => f.kind === 'building' && f.use === 'fence');
+  assert.equal(F.length, 4);
+  for (const f of F) { if (f.kind !== 'building') continue; assert.equal(f.d, 0.12); assert.ok(f.rot === 0 || f.rot === 90); assert.ok(f.w > 2); }
+  // without the things box and the course's box a far fence is not sent; on a course hole (no things box) a fence inside the course's box goes the same way
+  const hole = gatherFeatures3p({ course: 'c', segs: [], bizDefs: [], structures: [], lots: [], library: [fx], pages: [['p0.webp']], courseBox: [990, 990, 1010, 1010], props: [piece(0, 1000, 1000), piece(0, 1003.36, 1000), piece(0, 1500, 1000)] });
+  assert.equal(hole.buildings.filter(b => b.use === 'fence').length, 1, 'a fence on a hole is a run too');
+});

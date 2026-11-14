@@ -121,6 +121,7 @@ import { RANGE_PLACE_COST } from './game/golf/placing';
 import { TooltipLayer } from './ui/Tooltip';
 import { UI_SCALES, applyUiScale, currentUiScale, saveUiScale, topBarTier } from './ui/uiScale';
 import { AccessSettings } from './ui/golf/AccessSettings';
+import { SoundSettings } from './ui/SoundSettings'; // J11 (#1270)
 import { stackCol, stackFit, stackRight, type StackCard, type StackOpen, type StackPanel } from './ui/golf/card-stack';
 import { HoleCard } from './ui/golf/HoleCard';
 import { View3pPanel } from './ui/golf/View3pPanel';
@@ -742,6 +743,8 @@ export default function App() {
                       <span className="flex flex-1 items-center gap-1.5 whitespace-nowrap"><ActionTile tile="text-size" size={TILE_SMALL} />Text size</span>
                       {UI_SCALES.map(v => <button key={v} className={`chip !px-2 ${uiScale === v ? 'chip-on' : ''}`} aria-pressed={uiScale === v} data-scale={v} onClick={() => setUiScale(applyUiScale(saveUiScale(v)))}>{Math.round(v * 100)}%</button>)}
                     </div>
+                    {/* J11 (#1270): the sound: the effects' volume and mute, and the one switch for all of it (F8) */}
+                    <SoundSettings />
                     {/* J4 (#1207): the golf mode's currency (USD or AED, display only) and colour-blind-safe money */}
                     {game.golfMode && <AccessSettings />}
                     {/* (T459, the jam MVP: settings are the text size, the currency and saving; the display options are hidden) */}
@@ -1139,11 +1142,11 @@ export default function App() {
           {(() => { const w = !JAM && !game.seasonReport ? game.welcomeView() : null; /* (J7: not in the jam: its start tutorial welcomes, and the card's button pointed at a step order) */ return w && <WelcomeCard road={w.road} newHole={w.newHole} guide={!!game.rangeGuideView()} placed={game.golf?.range?.built !== false} onGo={() => { const id = game.rangeGuideView()?.lines.find(l => l.current)?.step.id; if (id) { game.closeWelcome(false); showGuide(game, id); /* J10 (#1269): "Show me the first step" is the guide's Show me */ } else game.closeWelcome(true); }} onClose={() => game.closeWelcome(false)} />; })()}
           {(() => { // T293 (#878): the start tutorial, where the guided build's card stands (that card waits for it): the town grows only along your roads
             const tv = !game.seasonReport && !game.sceneRef && !game.playerCardOpen && !game.bagCardOpen && !game.cardsCardOpen && !game.cardsFolded() ? game.tourView() : null; // (T348: and away while a shot is open: the cards fold)
-            return tv && <RangeGuideCard view={tv} heading={JAM ? 'Tutorial · your club' : 'Tutorial · your town'} tid="tour" foot="Do each step, or skip it" offLabel="Skip tutorial" right={stack!.guide()} onShow={id => { showTour(game, id); bump(); }} onNext={() => { game.tourNextStep(); bump(); }} onSkip={id => { game.tourSkipStep(id); bump(); }} onFold={f => { game.tourFolded = f; bump(); }} />;
+            return tv && <RangeGuideCard view={tv} voiced heading={JAM ? 'Tutorial · your club' : 'Tutorial · your town'} tid="tour" foot="Do each step, or skip it" offLabel="Skip tutorial" right={stack!.guide()} onShow={id => { showTour(game, id); bump(); }} onNext={() => { game.tourNextStep(); bump(); }} onSkip={id => { game.tourSkipStep(id); bump(); }} onFold={f => { game.tourFolded = f; bump(); }} />;
           })()}
           {(() => { // T239: the range start's guided build, bottom right (left of a right-hand card when one is open; T242: away while a picture card is up; T241: and while your profile card stands there)
             const gv = !game.seasonReport && !game.sceneRef && !game.playerCardOpen && !game.bagCardOpen && !game.cardsCardOpen && !game.cardsFolded() ? game.rangeGuideView() : null; // (T348: and while a shot is open)
-            return gv && <RangeGuideCard view={gv} right={stack!.guide()} onShow={id => { showGuide(game, id); bump(); }} onSkip={id => { game.skipGuideStep(id); bump(); }} onFold={f => { game.guideFolded = f; bump(); }} onScene={game.sceneArt('range') ? () => game.openScene({ kind: 'range', view: 'road' }) : undefined} />;
+            return gv && <RangeGuideCard view={gv} voiced right={stack!.guide()} onShow={id => { showGuide(game, id); bump(); }} onSkip={id => { game.skipGuideStep(id); bump(); }} onFold={f => { game.guideFolded = f; bump(); }} onScene={game.sceneArt('range') ? () => game.openScene({ kind: 'range', view: 'road' }) : undefined} />;
           })()}
           {/* J7 (#1225): the jam's optional tips (Build ▸ Tips), where the guided build's card stood */}
           {JAM && tips && !game.seasonReport && <TipsCard right={stack!.guide()} onClose={() => setTips(false)} onShow={s => { showTip(game, s, () => runTipShow(game, s, actUi)); bump(); }} />}

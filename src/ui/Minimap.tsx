@@ -6,6 +6,7 @@ import { DISTRICT_Z, MAP } from '../game/iso';
 import { TC } from '../game/terrain/types';
 import { Icon } from './Icon';
 import { JAM } from '../game/features';
+import { RadioPill } from './Radio'; // J11 (#1270): the music radio sits in this row, which the top bar's one-row tiers and the bottom cards leave free
 
 const W = 200, H = 100; // minimap CSS size, px
 const S = W / (2 * MAP); // px per tile along each iso axis: the whole map fits the frame
@@ -174,6 +175,8 @@ export function Minimap({ game }: { game: Game }) {
           </div>
         )}
       </div>
+      {/* J11 (#1270): the music radio: the painted radio is its play key, the drop above it holds the track, next and the music volume; off until the player turns it on */}
+      <RadioPill up />
     </div>
   );
 }

@@ -64,7 +64,8 @@ test('the engine wires the choice: a new range game chooses (but not a bench, a 
   assert.match(eng, /async save\(\) \{\n\s+if \(this\.benchMode \|\| this\.startPick\) return 0;/);
   assert.match(eng, /this\.startPick = null; this\.placing = null; this\.jamOffered = false;/);
   // the jam's click: the old range laid for sale with its junk, built free, then bought in the same call ($15,000, its kit, its balls: buyRange)
-  assert.match(eng, /if \(JAM\) \{ b\.forSale = true; b\.junk = newRangeJunk\(this\.seed \^ 0x4a37\); \}/);
+  // (the junk comes with the old range in every build: the owner, 2026-11-14; only the for-sale state is the jam's)
+  assert.ok(eng.includes('b.junk = newRangeJunk(this.seed ^ 0x4a37);\n    if (JAM) b.forSale = true;'));
   assert.match(eng, /if \(p && at && p\.build\(at\)\) \{ if \(JAM && !this\.buyRange\(\)\)/);
   assert.match(eng, /const p = this\.rangePlaceable\(JAM\)/);
   // the pointer asks the geometry only (lazy), its road settles at rest and at the click; the planner view counts as the first baked view
