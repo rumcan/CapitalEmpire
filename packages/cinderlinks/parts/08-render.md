@@ -21,6 +21,7 @@ R: The banks, the trees, the reeds and the clouds lie mirrored on the water, bro
 R: Standing things are drawn far to near, scaled by distance; near ones are each their own sculpture, far trees borrow from a small library; a tree between the camera and the golfer is thinned so he stays visible, and a tree within a few metres of the camera shows its trunk only.
 R: The wind is Grove's: every 12 seconds a gust crosses the land. As it passes a tree, each leaf cluster but the core steps through eight poses from its own start and its lobes swell and shrink; the wood stays still. Grass, reeds and flowers bend hard while the gust passes and barely stir in the calm.
 R: The golfer, the cart, the ball and the flag cast live shadows; a marker hangs over a far ball.
+R: #1308: every person on foot (the player, the other golfers, caddies) and the ball at rest also have a soft contact shadow: one dark ellipse on the ground under the feet (a metre and a quarter across for a person), darkest in the middle, fading at its edge, set a little away from the sun, on whatever he stands on (a mat, a tee, the fairway, the green, sand). It does not follow the sun patches, so he is never seen floating when a cloud passes or the camera is where the live shadow falls behind him.
 R: A small plant too far for its sculpture is a speck of its colour (a stem, and a petal on a flower) out to 90 m, so meadows keep their flowers at a distance; the painted ground's levels of detail change over a band of mixed lines fixed to the ground, not at a line that moves with the camera.
 R: New land is made by a background worker (tiles and painted chunks), so the page itself only draws; without a worker the page makes it within a ration of milliseconds a frame. With workers, a thing's own sculpture is made there too (T438): its stand-in shows until it comes, then it dissolves in.
 R: The sun breaks through the clouds in soft-edged gaps that drift over the land with the wind and change shape as they go (CapitalEmpire's sun patches). Nothing dark is drawn: in a gap of sun the picture's own pixels are brighter and a little warmer, the dark parts kept dark; elsewhere it is the overcast, the picture as it always was. None at night.
@@ -757,7 +758,11 @@ function mipOf(S) {
   }
   return S.mip = { w, h, ax: S.ax / 2, ay: S.ay / 2, px, zb: null, x0, x1, wind: null, mip: null };
 }
-let ghostX = 0, ghostY = 0, blitDith = 0;   // blitDith 1..16: only that many sixteenths of the sprite's pixels are drawn (a dissolve)
+let ghostX = 0, ghostY = 0, blitDith = 0;
+// (the owner, 2026-11-14: "find out why some sprites are above the ribbon layer"): the aim's marks used to hide behind ANY sprite pixel inside the golfer's
+// box and behind anything nearer than him, so scrub, rocks and other golfers by the ball covered the ribbon. Now only the golfer's and the ball's own pixels
+// (stamped here while they are drawn) and the ground itself (a nearer rise) hide it
+let blitFig = false; const figS = new Uint32Array(VW * VH);   // blitDith 1..16: only that many sixteenths of the sprite's pixels are drawn (a dissolve)
 const BAY4 = new Uint8Array([0, 8, 2, 10, 12, 4, 14, 6, 3, 11, 1, 9, 15, 7, 13, 5]);
 function blit(S, bx, by, s, zr, swayAmp, swayPh, ghost, hz) {
   const keep = S.keep ? 2 : 1;   // (read before the shrunk copy takes its place)
@@ -778,7 +783,7 @@ function blit(S, bx, by, s, zr, swayAmp, swayPh, ghost, hz) {
       if (wz[q] > 1) wz[q] = 1;                                         // (it stands in front of water: that pixel is no longer water)
       if (ghost && ((X + Y) & 1)) { const dx = X - ghostX, dy = Y - ghostY; if (dx * dx + dy * dy * 0.6 < 2700) continue; }
       const o = (c >>> 24) === 255 ? c : lit(c);
-      fb[q] = hz > 0 ? hazed(o, hz, HAZ) : o; sprM[q] = keep;
+      fb[q] = hz > 0 ? hazed(o, hz, HAZ) : o; sprM[q] = keep; if (blitFig) figS[q] = frame;
     }
   }
 }
@@ -862,6 +867,7 @@ function shadePoint(gx, gy) {   // darken the ground at a world point, if that g
 }
 // the live shadow of a standing sprite: each of its pixels falls to the ground, away from the sun, by its height
 let golfK = GK;
+const BLOB_R = 0.62, BLOB_K = 1;   // (#1308: a person's contact shadow: its radius on the ground (m) and how dark it is in the middle)
 function castSprite(S, x0, y0, sk = 1) {   // sk: the sculpture's own scale (the golfer is sculpted at the picture's scale)
   const sn = TOD[tmode].glow < 1 ? sunAt(x0, y0, frame * 0.055) : 1; if (sn < 0.03) return;   // a thing's shadow is as strong as the sun on it: it fades in and out as the sun patches pass
   shK = sn;
@@ -871,6 +877,28 @@ function castSprite(S, x0, y0, sk = 1) {   // sk: the sculpture's own scale (the
     for (let x = a; x <= b; x++) if (S.px[y * S.w + x]) { const dx = (x - S.ax) / (PPM * sk); shadePoint(x0 + RX * dx - 0.809 * dz, y0 + RY * dx + 0.735 * dz); }
   }
   shK = 1;
+}
+// #1308 (the owner: "this view the guy looks like he is floating. why don't we have a blob shadow?"): a soft contact shadow under everyone who stands on the ground: one ellipse, r metres across
+// on the ground, darkest in the middle and fading to nothing at its edge, set a little way off from his feet the way the light falls (away from the sun, the way castSprite's own shadow
+// goes), cooler as the live shadow is. It is the ambient dark where a body keeps the sky off the ground, so it does not follow the sun patches: it stays on when a cloud passes.
+// It darkens only what is the ground there (the depth the picture holds is within the ellipse's own depth), on a mat, a tee, a path or the turf alike, and is made before anything stands
+// on the ground, so the golfer is drawn over it. Three projections and about a hundred pixels a person.
+function blobShadow(x, y, r, k) {
+  const off = r * 0.3, cx = x - 0.74 * off, cy = y + 0.67 * off, gz = groundH(cx, cy);
+  project(cx, cy, gz, PJ); if (PJ.s <= 0) return;
+  const bx = PJ.x, by = PJ.y, bd = PJ.d, rxp = r * FOC / bd; if (rxp < 0.8) return;
+  const fx = cx + FX * r, fy = cy + FY * r; project(fx, fy, groundH(fx, fy), PJ);
+  const ryp = Math.max(1.2, Math.abs(PJ.y - by)), tol = r * 150 + 30, zc = bd * 100;
+  const xa = Math.max(0, Math.floor(bx - rxp)), xb = Math.min(VW - 1, Math.ceil(bx + rxp)), ya = Math.max(0, Math.floor(by - ryp)), yb = Math.min(VH - 1, Math.ceil(by + ryp));
+  for (let yy = ya; yy <= yb; yy++) {
+    const ny = (yy - by) / ryp, o = yy * VW;
+    for (let xx = xa; xx <= xb; xx++) {
+      const nx = (xx - bx) / rxp, w = 1 - nx * nx - ny * ny; if (w <= 0) continue;
+      const q = o + xx, dz = zbuf[q] - zc; if (dz > tol || dz < -tol) continue;
+      const f = k * w * (2 - w), c = fb[q];   // (a full middle, fading smoothly to nothing at the edge)
+      fb[q] = (0xff000000 | ((((c >> 16) & 255) * (1 - 0.3 * f)) << 16) | ((((c >> 8) & 255) * (1 - 0.42 * f)) << 8) | ((c & 255) * (1 - 0.44 * f))) >>> 0;
+    }
+  }
 }
 // ---- the putting grid: when the ball lies on the green, a light grid is laid over the green's surface, a line every metre, and on every line that
 // slopes a dot runs downhill, faster the steeper it is: where the dots run, and how fast, is how a putt will turn. The grid belongs to the land (whole
@@ -1040,11 +1068,11 @@ function plotZO(sx, sy, d, c) {   // a mark on the ground: hidden where the game
 // The putting grid stays a mark on the ground (plotZO).
 let AIM_NZ = 0;
 const golB = [0, 0, -1, -1], balB = [0, 0, -1, -1];   // (J5d: the golfer's and the ball's boxes on the game's picture this frame: x0, y0, x1, y1)
-function aimFig(q, gx, gy) { return sprM[q] !== 0 && ((gx >= golB[0] && gx <= golB[2] && gy >= golB[1] && gy <= golB[3]) || (gx >= balB[0] && gx <= balB[2] && gy >= balB[1] && gy <= balB[3])); }
+function aimFig(q, gx, gy) { return figS[q] === frame || (sprM[q] !== 0 && gx >= balB[0] && gx <= balB[2] && gy >= balB[1] && gy <= balB[3]); }   // (the golfer's and the ball's own pixels; the small ball by its box)
 function aimNearZ() { const dg = (player.x - camX) * FX + (player.y - camY) * FY, db = (ball.x - camX) * FX + (ball.y - camY) * FY; return (Math.max(dg, db, 0) + 1.5) * 100; }
 function plotZA(sx, sy, d, c) {   // an aim mark: hidden only where something at or nearer than the golfer and his ball is drawn
   const gx = (sx * RS) | 0, gy = (sy * RS) | 0; if (gx < 0 || gy < 0 || gx >= VW || gy >= VH) return;
-  const q = gy * VW + gx, z = zbuf[q]; if (czS[q] !== frame && !aimFig(q, gx, gy) && !(z < AIM_NZ && z < d * 100 - 40)) overPut(sx, sy, c);
+  const q = gy * VW + gx, z = zbuf[q]; if (czS[q] !== frame && !aimFig(q, gx, gy) && !(sprM[q] === 0 && z < AIM_NZ && z < d * 100 - 40)) overPut(sx, sy, c);
 }
 // J5b (the owner, 2026-11-13: "change the dots that show where you are aiming to a blue ribbon static"): the aim's way is one steady band, not a march of
 // dots: a see-through blue with a lighter edge and a faint dark rim (so it reads over sky, grass and sand alike), RIB_W metres wide (never under 1.5 px
@@ -1079,7 +1107,7 @@ function ribbonO(wM, soft) {   // the band along the points added since ribStart
       const e = Math.sqrt(e2);
       const c = e <= h - 1.1 ? fill : e <= h ? edge : RIB_RIM, o = py * OW + px; if (ribRank(ob[o]) >= ribRank(c)) continue;   // (the fill over the edge over the rim; never over another mark)
       const gx = (px * RS) | 0, gy = (py * RS) | 0; if (gx >= VW || gy >= VH) continue;
-      const q = gy * VW + gx, z = zbuf[q]; if (czS[q] === frame || aimFig(q, gx, gy) || (z < AIM_NZ && z < (da + (db - da) * u) * 100 - 40)) continue;   // (J5d: over the scenery; only the golfer, the ball and what is nearer than them hide it)
+      const q = gy * VW + gx, z = zbuf[q]; if (czS[q] === frame || aimFig(q, gx, gy) || (sprM[q] === 0 && z < AIM_NZ && z < (da + (db - da) * u) * 100 - 40)) continue;   // (J5d: over the scenery; only the golfer, the ball and what is nearer than them hide it)
       overPut(px, py, c);
     }
   }
@@ -1367,8 +1395,9 @@ function render() {
   golfK = golferK(DS / Math.max(1, (p.x - camX) * FX + (p.y - camY) * FY));   // the sculpture that suits how big he is seen: the larger one when the camera is close
   const gs = cart.on ? golferSprite(fav, 'c', 0, golfK) : p.swing >= 0 || charging || (HP && HP.sw) ? golferPic(fav, 's', Math.round(p.al / 0.2), golfK) : p.moving ? golferPic(fav, 'w', Math.floor(p.walk) % 8, golfK) : AD ? golferPic((((addressFa() - Math.round(camYaw * 16 / 6.2832)) % 16) + 16) % 16, 'a', 0, golfK) : golferPic(fav, 'i', 0, golfK);   // (J5b: at the ball, ready: the address pose, side-on)   // (T450: golferPic draws his CapitalEmpire golfer when he has one; HP.sw: the host swing's downswing is a swing too)
   const fs = flagSpr[(frame >> 3) % 6], bz = ball.state === 3 ? groundH(ball.x, ball.y) - 0.2 : ball.z;
-  if (!cart.on) castSprite(gs, gpx, gpy, golfK);
+  if (!cart.on) { castSprite(gs, gpx, gpy, golfK); blobShadow(gpx, gpy, BLOB_R, BLOB_K); }   // (#1308: and the contact shadow under his feet)
   if (flag.d > 2 && flag.d < 40) castSprite(fs, H.pin.x, H.pin.y);
+  if (ball.state === 0 || ball.state === 2) blobShadow(ball.x, ball.y, 0.1, 0.8);   // (#1308: the ball at rest or rolling sits on the ground, not above it)
   if (ball.state !== 3) { const bh = Math.max(0, bz - groundH(ball.x, ball.y)); for (let a = -2; a <= 2; a++) for (let b = -1; b <= 1; b++) shadePoint(ball.x - 0.809 * bh + a * 0.018 - 0.02, ball.y + 0.735 * bh + b * 0.03); }
   project(H.pin.x, H.pin.y, groundH(H.pin.x, H.pin.y), PJ);
   if (PJ.s > 0.25) {                                           // the cup: a dark hole with a lit far rim
@@ -1387,13 +1416,13 @@ function render() {
   for (const o of dlist) {
     if (o.k === 24) drawCart(cart.on ? gs : null, G);
     else if (o.k === K_ACTOR) drawActor(o.a, o.d);   // T424: another person or cart from the host (parts/08d-actors.md)
-    else if (o.k === 21) { if (cart.on || o.d < 1) continue; { const sc = DS / o.d / golfK; golB[0] = Math.floor(psx - gs.ax * sc) - 1; golB[1] = Math.floor(psy - gs.ay * sc) - 1; golB[2] = Math.ceil(psx + (gs.w - gs.ax) * sc) + 1; golB[3] = Math.ceil(psy + (gs.h - gs.ay) * sc) + 1; }   /* (J5d: the aim's marks keep off him) */ ghostX = psx; ghostY = psy - 46; blit(gs, psx, psy, DS / o.d / golfK, o.d * 100, 0, 0, false, 0); if (G > 0) addLight(psx, psy - 30, (tmode >= 3 ? 0.5 : 2.2) * G, (tmode >= 3 ? 0.4 : 1.6) * G, (tmode >= 3 ? 0.2 : 0.8) * G); }   // (at night his lantern is small: the floodlights light the holes)
+    else if (o.k === 21) { if (cart.on || o.d < 1) continue; { const sc = DS / o.d / golfK; golB[0] = Math.floor(psx - gs.ax * sc) - 1; golB[1] = Math.floor(psy - gs.ay * sc) - 1; golB[2] = Math.ceil(psx + (gs.w - gs.ax) * sc) + 1; golB[3] = Math.ceil(psy + (gs.h - gs.ay) * sc) + 1; }   /* (J5d: the aim's marks keep off him) */ ghostX = psx; ghostY = psy - 46; blitFig = true; blit(gs, psx, psy, DS / o.d / golfK, o.d * 100, 0, 0, false, 0); blitFig = false; if (G > 0) addLight(psx, psy - 30, (tmode >= 3 ? 0.5 : 2.2) * G, (tmode >= 3 ? 0.4 : 1.6) * G, (tmode >= 3 ? 0.2 : 0.8) * G); }   // (at night his lantern is small: the floodlights light the holes)
     else if (o.k === 20) { project(H.pin.x, H.pin.y, groundH(H.pin.x, H.pin.y), PJ); if (PJ.s > 0) blit(fs, PJ.x, PJ.y, Math.max(0.3, PJ.s) * FLAG_K, PJ.d * 100, 0, 0, false, 0); }
     else if (o.k === 22) {
       if (ball.state === 3) continue;
       project(ball.x, ball.y, bz, PJ); if (PJ.s === 0) continue;
       balB[0] = PJ.x - 4; balB[1] = PJ.y - 5; balB[2] = PJ.x + 4; balB[3] = PJ.y + 2;   // (J5d: the aim's marks keep off the ball)
-      if (PJ.s > 0.55) blit(ballSpr, PJ.x, PJ.y, PJ.s, PJ.d * 100 - 40, 0, 0, false, 0);
+      if (PJ.s > 0.55) { blitFig = true; blit(ballSpr, PJ.x, PJ.y, PJ.s, PJ.d * 100 - 40, 0, 0, false, 0); blitFig = false; }
       else { const w = rgb(255, 255, 250); plotZ(PJ.x, PJ.y, PJ.d - 1, w); plotZ(PJ.x + 1, PJ.y, PJ.d - 1, w); plotZ(PJ.x, PJ.y - 1, PJ.d - 1, w); plotZ(PJ.x + 1, PJ.y - 1, PJ.d - 1, rgb(214, 216, 226)); }
       if (tmode >= 2) addLight(PJ.x, PJ.y, 0.25, 0.7, 0.7);
       if (PJ.d > 24 && ball.state === 0) { const by = PJ.y - 12 - Math.round(Math.abs(Math.sin(frame * 0.08)) * 4), gc = rgb(255, 226, 150); for (let k = 0; k < 4; k++) { plotZ(PJ.x - k, by - k, 0, gc); plotZ(PJ.x + 1 + k, by - k, 0, gc); plotZ(PJ.x - k, by - k - 1, 0, rgb(60, 40, 30)); plotZ(PJ.x + 1 + k, by - k - 1, 0, rgb(60, 40, 30)); } }   // a marker over a far ball
