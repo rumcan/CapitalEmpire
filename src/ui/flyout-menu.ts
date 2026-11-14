@@ -103,15 +103,17 @@ export function menuOf(item: RailItem, c: MenuCtx): MenuRow[] {
     const pa = byId('paint');
     if (pa) out.push(tiled(group('plants', 'Plants', 'trees', c.plants.map(m => tiled({ ...leaf(pa, m.name, { k: 'plant', id: m.id })!, ...(m.col ? { swatch: m.col } : {}) }, PLANT_TILE[m.id])), pa), ROW_TILE.plants));
     const pr = byId('props');
-    if (pr) out.push(tiled(group('decoration', 'Decoration', 'leaf', [group('props', 'Props', 'leaf', [leaf(pr, 'All props', { k: 'props', group: null }), ...c.propGroups.map(g => tiled(leaf(pr, g.name, { k: 'props', group: g.id }), PROP_GROUP_TILE[g.id]))], pr)], pr), ROW_TILE.decoration));
+    if (pr) out.push(tiled(group('decoration', 'Decoration', 'leaf', [tiled(group('props', 'Props', 'leaf', [tiled(leaf(pr, 'All props', { k: 'props', group: null }), ROW_TILE.allProps), ...c.propGroups.map(g => tiled(leaf(pr, g.name, { k: 'props', group: g.id }), PROP_GROUP_TILE[g.id]))], pr), ROW_TILE.allProps)], pr), ROW_TILE.decoration));
     // T400 (#1078; the owner, 2026-11-09: "why are the golf shit in the town decoration menu and not in the facilities menu?"): the golf props, by the kinds the
     // tournament kit meant, a row each: Tournament structures ▸ (the stalls, seating, media and event structures), Course furniture ▸ (the tournament
     // dressing and the course props), Range props, Course vehicles. Town decoration lists none of them
     if (pr) for (const k of c.propKinds ?? []) {
       const icon: IconName = PROP_KIND_ICON[k.id] ?? 'leaf', tile = PROP_KIND_TILE[k.id];
+      // (J13: a group of the kind that showed the maple leaf wears its own tile, else its kind's; the other kinds' groups keep their icon until their tiles are painted)
+      const kidTile = (id: string): ToolTile | undefined => PROP_GROUP_TILE[id] ?? (icon === 'leaf' ? tile : undefined);
       out.push(tiled(k.groups.length === 1
         ? leaf(pr, k.name, { k: 'props', group: k.groups[0]!.id }, icon)
-        : group(`kind:${k.id}`, k.name, icon, [leaf(pr, `All ${k.name.toLowerCase()}`, { k: 'props', group: k.id }, icon), ...k.groups.map(g => leaf(pr, g.name, { k: 'props', group: g.id }, icon))], pr), tile));
+        : group(`kind:${k.id}`, k.name, icon, [tiled(leaf(pr, `All ${k.name.toLowerCase()}`, { k: 'props', group: k.id }, icon), icon === 'leaf' ? tile : undefined), ...k.groups.map(g => tiled(leaf(pr, g.name, { k: 'props', group: g.id }, icon), kidTile(g.id)))], pr), tile));
     }
     // T256: the same Build as the Range's: paint your property
     if (c.golf) { const b = leaf(BUILD_TOOL, 'Build on your property', { k: 'build' }, 'terrain'); if (b) out.push({ ...b, gold: true, tile: ROW_TILE.build }); }
