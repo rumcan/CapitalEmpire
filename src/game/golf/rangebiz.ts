@@ -919,8 +919,9 @@ export const AGENT_SPEED = { attendant: WALK, robot: 1 } as const;
 /** the sim seconds an attendant picks at the pile and empties his basket at the room */
 export const AGENT_PICK_S = 6, AGENT_DROP_S = 1.5;
 /** an attendant's or a robot's round: his spot (tiles), the leg he is on, the sim seconds left of a pick or a drop, the way he faces (radians) */
-export interface AgentWalk { x: number; y: number; leg: 'out' | 'pick' | 'back' | 'drop'; left: number; ang: number }
-/** dt sim seconds of a round, never faster than speed (tiles a sim second): to the pile (none: back to the room), picking, back, dropping. Pure */
+export interface AgentWalk { x: number; y: number; leg: 'out' | 'pick' | 'back' | 'drop'; left: number; ang: number; /** the pile he set out for (kept when the field clears on his way: he still picks there; none: home) */ to?: Pt }
+/** dt sim seconds of a round, never faster than speed (tiles a sim second): to the pile (the one he set out for when the field has cleared since; none at
+ *  all: back to the room), picking, back, dropping. Pure */
 export function walkAgent(a: AgentWalk, room: Pt, pile: Pt | null, dt: number, speed: number, pickS = AGENT_PICK_S, dropS = AGENT_DROP_S): void {
   let t = Number.isFinite(dt) ? Math.max(0, dt) : 0;
   for (let guard = 0; guard < 12 && t > 1e-9; guard++) {
@@ -929,12 +930,12 @@ export function walkAgent(a: AgentWalk, room: Pt, pile: Pt | null, dt: number, s
       if (a.left > 1e-9) break;
       a.leg = a.leg === 'pick' ? 'back' : 'out'; continue;
     }
-    if (a.leg === 'out' && !pile) { a.leg = 'back'; continue; }   // (no balls out: home)
-    const to = a.leg === 'out' ? pile! : room, dx = to.x - a.x, dy = to.y - a.y, d = Math.hypot(dx, dy), step = speed * t;
+    if (a.leg === 'out') { if (pile) a.to = { x: pile.x, y: pile.y }; if (!a.to) { a.leg = 'back'; continue; } }   // (no balls out when he set off: home)
+    const to = a.leg === 'out' ? a.to! : room, dx = to.x - a.x, dy = to.y - a.y, d = Math.hypot(dx, dy), step = speed * t;
     if (d > 1e-6) a.ang = Math.atan2(dy, dx);
     if (step < d) { a.x += (dx / d) * step; a.y += (dy / d) * step; break; }
     a.x = to.x; a.y = to.y; t -= speed > 0 ? d / speed : t;
-    if (a.leg === 'out') { a.leg = 'pick'; a.left = pickS; } else { a.leg = 'drop'; a.left = dropS; }
+    if (a.leg === 'out') { a.leg = 'pick'; a.left = pickS; a.to = undefined; } else { a.leg = 'drop'; a.left = dropS; }
   }
 }
 

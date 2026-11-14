@@ -225,3 +225,16 @@ test('T459: walkAgent: out to the pile, picks, back to the room, drops, out agai
   const c: AgentWalk = { x: 1, y: 1, leg: 'out', left: 0, ang: 0 };
   for (const bad of [NaN, -5, Infinity]) { walkAgent(c, room, { x: 9, y: 9 }, bad, 1.4); assert.ok(Number.isFinite(c.x) && Math.hypot(c.x - 1, c.y - 1) <= 1e-9, `dt ${bad}`); }
 });
+
+test('T459: an attendant whose field clears on his way still walks to that pile and picks there, then home (in the jam he picks it faster than he walks)', () => {
+  const room = { x: 0, y: 0 }, a: AgentWalk = { x: 0, y: 0, leg: 'out', left: 0, ang: 0 }, leg = (): AgentWalk['leg'] => a.leg; // (walkAgent changes the leg)
+  walkAgent(a, room, { x: 30, y: 0 }, 2, 1.4); assert.equal(leg(), 'out');
+  let picked = false;
+  for (let f = 0; f < 600 && !picked; f++) { walkAgent(a, room, null, 0.1, 1.4); picked = leg() === 'pick'; }
+  assert.ok(picked && Math.abs(a.x - 30) < 1e-6, `he reached the pile he set out for (${a.x.toFixed(2)})`);
+  for (let f = 0; f < 600 && leg() !== 'drop'; f++) walkAgent(a, room, null, 0.1, 1.4);
+  assert.equal(leg(), 'drop'); assert.ok(Math.hypot(a.x, a.y) < 1e-6, 'and home');
+  // with no balls out when he sets off he stays home
+  for (let f = 0; f < 100; f++) walkAgent(a, room, null, 0.1, 1.4);
+  assert.ok(Math.hypot(a.x, a.y) < 1e-6);
+});
