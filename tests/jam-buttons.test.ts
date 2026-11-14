@@ -98,7 +98,7 @@ function buttonTags(src: string): string[] {
   }
   return out;
 }
-const JAM_CARDS = ['src/ui/jam/TitleCard.tsx', 'src/ui/jam/TipsCard.tsx', 'src/ui/jam/BuildMenu.tsx', 'src/ui/golf/BankPanel.tsx', 'src/ui/golf/StatementCard.tsx', 'src/ui/golf/RangeCard.tsx', 'src/ui/golf/HoleCard.tsx', 'src/ui/golf/RangeGuideCard.tsx', 'src/ui/golf/View3pPanel.tsx'];
+const JAM_CARDS = ['src/ui/jam/TitleCard.tsx', 'src/ui/golf/StartPickCard.tsx', 'src/ui/jam/TipsCard.tsx', 'src/ui/jam/BuildMenu.tsx', 'src/ui/golf/BankPanel.tsx', 'src/ui/golf/StatementCard.tsx', 'src/ui/golf/RangeCard.tsx', 'src/ui/golf/HoleCard.tsx', 'src/ui/golf/RangeGuideCard.tsx', 'src/ui/golf/View3pPanel.tsx'];
 
 test('every button in the jam\'s cards has a click', () => {
   for (const f of JAM_CARDS) {
