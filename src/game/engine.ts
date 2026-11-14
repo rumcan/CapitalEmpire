@@ -10526,6 +10526,11 @@ export class Game {
     const grow = (x: number, y: number) => { x0 = Math.min(x0, x); y0 = Math.min(y0, y); x1 = Math.max(x1, x); y1 = Math.max(y1, y); };
     const pads: PadIn[] = [], ring = (pts: readonly number[]) => { const out: { x: number; y: number }[] = []; for (let i = 0; i + 1 < pts.length; i += 2) out.push({ x: pts[i]!, y: pts[i + 1]! }); return out; };
     sc.patches.forEach((p, i) => { const s = PAD_SURF[p.surf]; if (s) pads.push({ key: `patch${String(i).padStart(3, '0')}`, pts: ring(p.pts), surface: s, name: p.surf }); });
+    // J6c: a bare range is bare up to its tee: the earth runs on under the tee band and its apron (the tee box, the slab and the mats lie over it: their keys come later)
+    if (sc.patches.some(p => p.surf === 'desert')) {
+      const [bx0, by0, bx1, by1] = sc.box, Q = (u: number, v: number) => plotPoint([bx0, by0, bx1 - bx0, by1 - by0], sc.facing, u, v);
+      pads.push({ key: 'apron', pts: [Q(0.3, 16.5), Q(RANGE_PLOT[0] - 0.3, 16.5), Q(RANGE_PLOT[0] - 0.3, 30), Q(0.3, 30)], surface: 'earth', name: 'bare apron' });
+    }
     const lot = this.rangeLotDef();
     if (lot) {   // (its w side at a degrees about its corner, as the car park tool lays it)
       const a = (lot.a ?? 0) * Math.PI / 180, c = Math.cos(a), s = Math.sin(a), P = (u: number, v: number) => ({ x: lot.x + u * c - v * s, y: lot.y + u * s + v * c });
