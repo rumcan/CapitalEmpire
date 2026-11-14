@@ -29,8 +29,11 @@ export class ShowDirector {
   private state: 'first' | 'play' | 'capture' | 'cover' = 'first';
   /** when the stop began (ms), when the first view was asked for, when the cover began */
   private t0 = 0; private askedAt = 0; private coverAt = 0;
-  private startedAt = 0; private slowChecked = false; private off = false; private hourSet = false;
+  /** when the first view was shown and the stop began to play (the machine's speed is judged SLOW_AFTER_MS later: a frame time measured while the first view was still baking says little) */
+  private playSince = 0; private slowChecked = false; private off = false; private hourSet = false;
   private fadeTimer = 0;
+  /** the camera's scratch poses (this stop's, the next stop's for the warm-up): the frame hook allocates nothing */
+  private pose: ShowPose = { X: 0, Y: 0, z: 0 }; private nextPose: ShowPose = { X: 0, Y: 0, z: 0 };
   constructor(private g: ShowHost, private stops: readonly ShowStop[], start: number, private snap: HTMLCanvasElement, private emit: (e: ShowEvent) => void = () => {}) {
     this.i = ((start % stops.length) + stops.length) % stops.length;
   }
@@ -39,7 +42,7 @@ export class ShowDirector {
   begin(now = performance.now()) {
     const g = this.g;
     this.place(this.i, 0);
-    this.askedAt = now; this.startedAt = now;
+    this.askedAt = now;
     g.onFrame = (t) => this.frame(t);
     g.onAfterDraw = (t) => this.after(t);
   }
@@ -57,7 +60,7 @@ export class ShowDirector {
 
   /** the camera at moment u of stop k */
   private place(k: number, u: number) {
-    const g = this.g, p = poseAt(this.stops[k]!, u, g.cssW, g.cssH);
+    const g = this.g, p = poseAt(this.stops[k]!, u, g.cssW, g.cssH, this.pose);
     g.cam.X = p.X; g.cam.Y = p.Y; g.cam.z = p.z; g.clampCam();
   }
 
@@ -76,15 +79,15 @@ export class ShowDirector {
     if (!this.hourSet && g.traffic.simTime(now) > 0) { this.setHour(now, true); this.hourSet = true; }
     if (this.state === 'first') {
       this.place(this.i, 0);
-      if (now - this.askedAt >= READY_MIN_MS && (g.viewReady(g.cam) || now - this.askedAt >= READY_MAX_MS * 2)) { this.state = 'play'; this.t0 = now; this.emit('first'); this.emit('cut'); }
+      if (now - this.askedAt >= READY_MIN_MS && (g.viewReady(g.cam) || now - this.askedAt >= READY_MAX_MS * 2)) { this.state = 'play'; this.t0 = now; this.playSince = now; this.emit('first'); this.emit('cut'); }
       else g.warmView(g.cam, now);
       return;
     }
     if (this.state === 'play') {
       const s = this.stops[this.i]!, ms = s.secs * 1000, el = now - this.t0, u = el / ms;
       this.place(this.i, u);
-      if (!this.slowChecked && now - this.startedAt >= SLOW_AFTER_MS) { this.slowChecked = true; if (g.perf.frameMs > SLOW_FRAME_MS) { this.emit('slow'); return; } }
-      if (ms - el < WARM_MS) { const n = (this.i + 1) % this.stops.length; g.warmView(poseAt(this.stops[n]!, 0, g.cssW, g.cssH), now); }
+      if (!this.slowChecked && now - this.playSince >= SLOW_AFTER_MS) { this.slowChecked = true; if (g.perf.frameMs > SLOW_FRAME_MS) { this.emit('slow'); return; } }
+      if (ms - el < WARM_MS) { const n = (this.i + 1) % this.stops.length; g.warmView(poseAt(this.stops[n]!, 0, g.cssW, g.cssH, this.nextPose), now); }
       if (u >= 1) this.state = 'capture'; // (the picture is copied after this frame's draw)
       return;
     }

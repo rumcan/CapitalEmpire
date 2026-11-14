@@ -78,7 +78,7 @@ import { COST_GROUPS, INCOME_LINES } from './game/golf/reports';
 import { debtOf } from './game/golf/finance';
 import { TitleCard } from './ui/jam/TitleCard';
 import { MenuScene, posterOf } from './ui/jam/MenuScene';
-import { SHOW_STOPS, choiceHash, choiceOf, pickStart, poseAt, sceneOff, showBoot, showWanted, weakMachine } from './game/showcase';
+import { CHOICE_STORE_KEY, SHOW_STOPS, choiceFromStore, choiceHash, choiceOf, pickStart, poseAt, sceneOff, showBoot, showWanted, weakMachine, type StartChoice } from './game/showcase';
 import { ShowDirector } from './game/showcase-director';
 import { loadShowcaseSave } from './game/showcase-load';
 import { formatPercent } from './ui/TournamentResults';
@@ -185,7 +185,7 @@ export default function App() {
   const [game, setGame] = useState<Game | null>(null);
   // J12 (#1271): the living scene behind the jam's title card (game/showcase.ts). A choice made on the card reloads the page with it in the address (the scene's world is never the
   // player's), so a page that finds one starts the game at once, as it always did; else the scene runs when this page may spare it; else the card shows its still picture over the game's own boot
-  const [choice] = useState(() => (JAM ? choiceOf(location.hash) : null));
+  const [choice] = useState(() => { if (!JAM) return null; let kept: StartChoice | null = null; try { kept = choiceFromStore(sessionStorage.getItem(CHOICE_STORE_KEY)); } catch { /* no storage */ } return choiceOf(location.hash) ?? kept; });
   const [sceneWanted] = useState(() => {
     if (!JAM) return false;
     const q = new URLSearchParams(location.search), nav = navigator as Navigator & { deviceMemory?: number; connection?: { saveData?: boolean } };
@@ -202,7 +202,7 @@ export default function App() {
   const saveSeen = useRef<Promise<boolean> | null>(null);
   useEffect(() => { if (JAM) { document.title = 'Fairway Fortune'; const p = readSave().then(r => r.status === 'ok'); saveSeen.current = p; void p.then(setHasSave); } }, []);
   // the choice is read once: the address is cleared at once, so a reload of the game (F5) never starts a new one
-  useEffect(() => { if (choice) { try { history.replaceState(null, '', location.pathname + location.search); } catch { /* the address stays */ } } }, [choice]);
+  useEffect(() => { if (choice) { try { history.replaceState(null, '', location.pathname + location.search); } catch { /* the address stays */ } try { sessionStorage.removeItem(CHOICE_STORE_KEY); } catch { /* no storage */ } } }, [choice]);
   const titlePaused = useRef(false);
   useEffect(() => { if (game?.ready && titleOpen && !game.show && !titlePaused.current) { titlePaused.current = true; game.setSpeed(0); } }, [game?.ready, titleOpen, game]);
   /** the title card's choice made, and the game it starts once the engine is ready (a click before that waits for it, as the card was only there after it) */
@@ -213,7 +213,8 @@ export default function App() {
     if (starting) return;
     if (sceneWanted) { // the scene's world is not the player's: the page starts again with the choice in its address and the game boots as it always did
       setStarting(true);
-      try { history.replaceState(null, '', choiceHash(fresh ? 'new' : 'continue')); } catch { /* the address stays: the page starts on the title again */ }
+      try { sessionStorage.setItem(CHOICE_STORE_KEY, fresh ? 'new' : 'continue'); } catch { /* no storage */ }
+      try { history.replaceState(null, '', choiceHash(fresh ? 'new' : 'continue')); } catch { /* the address stays: the stored choice carries it */ }
       window.setTimeout(() => location.reload(), 60);
       return;
     }

@@ -138,6 +138,25 @@ boombox, headphones, bell, radio-off, jukebox) are cut for J11 (#1270, the music
   import them); the practice drills panel, the shot panel (Curve and Flight ends, Tour spin, Go for it), the club tabs, Jump to ball and Gimme show them, and the host's Back to the course button wears
   its tile. `npm run cinder:build` needs no dev server holding `public/cinderlinks` open (Windows refuses to delete it).
 
+## J12: a living scene behind the title card (#1271, the owner 2026-11-14)
+"animated town/golfcourse/farms etc behind the main menu like the factorio main menu ... very pretty and zoomed in, inspire the player to build a pretty golf course and customise his town".
+- **The real game runs behind the card, on a prepared world; not recordings.** The engine boots behind the jam's card anyway, so a live scene costs no extra boot, stays sharp at any size and shows
+  real golfers, cars, balls, range customers and farm animals; short videos would add 6 to 9 MB, look soft on a large screen and show nothing the game does. Where the scene must not run (reduced
+  motion, a hidden tab, fewer than 4 GB or 3 cores, "save data", or a first seconds slower than 24 fps) the card shows one still picture of its first place over the game's own boot.
+- **The world** is `src/assets/showcase/menu.cesave` (about 30 KB), made by the game's own flows and rebuilt by `node scripts/jam/menu-scene-build.mjs --base http://127.0.0.1:<port>/` against a dev
+  server started with `VITE_JAM=1` (numbers in `scripts/jam/menu-scene-world.json`): map seed 11, the old range bought and cleared, the Build menu's range upgrades (grass outfield, target greens,
+  paved car park, 12 bays, covered bays, dispenser), the clubhouse beside the range's drive, four holes through the New hole wizard (sod, frame trees; one with a dogleg), then 90 s at 20x so the county
+  road has its houses, the snack shop and its traffic. The farms and the river are the map's own. Nothing in it is hidden in the jam (no tournament kit, no props, no bunkers or water painted by hand).
+- **The stops** (`src/game/showcase.ts` SHOW_STOPS): the range, the way from the clubhouse down the first fairway, a green, the whole club from above, a farm, the county road with its houses and the
+  bridge. Each is 14 to 17 s of slow glide at 25 to 30% zoom (the wide one 12%), then a cross-fade (the picture is copied over the game while the next place bakes); the next place's ground is asked for
+  3.5 s ahead. A visit starts at a different place from the last (`localStorage fairwayfortune.scene`). The town clock is kept in the golf morning (07:00 to 13:00) so a day's groups are always out.
+- **Never the player's world.** The scene loads the file in place of the save: nothing is read from or written to the player's slot (`saveBlocked` before anything could write), it takes no input, shows no
+  toast, label, badge, tee marker, outline or money float (its overlay is `Engine.drawShowOverlay`: balls and dust only), its houses are drawn from the top building tier (a tidy street), its farms are
+  in September. A choice on the card writes `#play=new|continue` (and the tab's session storage) and reloads: the page then boots exactly as the game always did and starts it.
+- **Looking at it**: `scripts/jam/menu-scene-shots.mjs --base <url> --posters --docs` keeps the stills (`src/assets/showcase/<stop>.jpg`, the card's first picture) and the shots under
+  `docs/jam-shots/j12-*.jpg`; `scripts/jam/menu-scene-measure.mjs --base <preview of dist-jam>` measures the time to the card with and without the scene and the frame time while it runs.
+  Tests: `tests/showcase.test.ts`.
+
 ## Button tests: run them before every jam build (T459, the owner 2026-11-13: "are you guys not testing buttons?")
 A dead button must not ship. Two checks:
 - **`npm test`** includes `tests/jam-buttons.test.ts` (node, seconds): every tutorial step's Show me does something (`tour.ts tourShowOf`) and every

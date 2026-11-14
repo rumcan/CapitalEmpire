@@ -39,27 +39,36 @@ export const WARM_MS = 3500;
 export const SHOW_HOURS = Object.freeze({ start: 7.0, end: 13.0 });
 /** the golfers a day the scene's course has (the sim's busiest ordinary day, so there are groups on every hole: engine dayInputs busy) */
 export const SHOW_GOLFERS = 80;
-/** the frame time (ms, over the first SLOW_AFTER_MS of running) above which the machine is too slow for the scene: it gives way to its still picture */
+/** the calendar month the scene's farms show (0 = January): September, the golden harvest (the saved world's own month is wherever its build stopped) */
+export const SHOW_FARM_MONTH = 8;
+/** the frame time (ms, the engine's mean of its last 60 frames, SLOW_AFTER_MS after the first view is showing) above which the machine is too slow for the scene: it gives way to its still picture */
 export const SLOW_FRAME_MS = 42, SLOW_AFTER_MS = 4000;
 
 /** the places, in the order of a visit's lap (a visit starts at a different one each time and goes round). Each is looked at in the shots
  *  (docs/jam-shots/j12-*.jpg) and moved until it is pretty: the tile numbers are the prepared world's (scripts/jam/menu-scene-build.mjs) */
 export const SHOW_STOPS: readonly ShowStop[] = [
-  { id: 'range', name: 'The driving range on a busy morning', x: 1000, y: 1003, dx: -12, dy: -4, z0: 0.3, z1: 0.28, secs: 15 },
-  { id: 'arrive', name: 'Cars arriving at the club', x: 962, y: 1022, dx: 8, dy: -8, z0: 0.3, z1: 0.3, secs: 15 },
-  { id: 'fairway', name: 'A fairway framed with trees', x: 922, y: 950, dx: -4, dy: -40, z0: 0.26, z1: 0.22, secs: 16 },
-  { id: 'green', name: 'A green with its flag', x: 802, y: 990, dx: 6, dy: -10, z0: 0.3, z1: 0.3, secs: 14 },
+  { id: 'range', name: 'The driving range on a busy morning', x: 1000, y: 1000, dx: -14, dy: -4, z0: 0.3, z1: 0.28, secs: 15 },
+  { id: 'arrive', name: 'Cars arriving at the club', x: 966, y: 1022, dx: 8, dy: -8, z0: 0.3, z1: 0.3, secs: 14 },
+  { id: 'fairway', name: 'From the first tee down the fairway', x: 936, y: 1000, dx: -14, dy: -48, z0: 0.28, z1: 0.25, secs: 17 },
+  { id: 'green', name: 'A green with its flag', x: 802, y: 992, dx: 6, dy: -10, z0: 0.3, z1: 0.3, secs: 14 },
   { id: 'farm', name: 'A farm by the county road', x: 474, y: 978, dx: 6, dy: 4, z0: 0.25, z1: 0.27, secs: 15 },
-  { id: 'bridge', name: 'The county road over the river', x: 1058, y: 1040, dx: 20, dy: 0, z0: 0.25, z1: 0.25, secs: 14 },
+  { id: 'road', name: 'The county road: houses, traffic and the bridge', x: 1124, y: 1043, dx: -32, dy: -3, z0: 0.27, z1: 0.25, secs: 16 },
 ];
 
-/** the camera at moment u (0 at the start of the stop, 1 at its end) so that the point of interest is at the anchor of a screen cssW x cssH */
-export function poseAt(s: ShowStop, u: number, cssW: number, cssH: number): ShowPose {
-  const k = Math.min(1, Math.max(0, u)), wide = cssW >= WIDE_MIN_W && cssW > cssH * 1.15;
-  const ax = wide ? SHOW_ANCHOR.x : 0.5, ay = wide ? SHOW_ANCHOR.y : 0.46;
+/** where the point of interest sits on a screen cssW x cssH (fractions of its width and height): right of the card on a wide screen, in the middle on a narrow or tall one */
+export function anchorOf(cssW: number, cssH: number): { x: number; y: number } {
+  const wide = cssW >= WIDE_MIN_W && cssW > cssH * 1.15;
+  return wide ? SHOW_ANCHOR : { x: 0.5, y: 0.46 };
+}
+
+/** the camera at moment u (0 at the start of the stop, 1 at its end) so that the point of interest is at the anchor of a screen cssW x cssH (written into `out` when given: the
+ *  director's frame hook reuses one, no allocation per frame) */
+export function poseAt(s: ShowStop, u: number, cssW: number, cssH: number, out: ShowPose = { X: 0, Y: 0, z: 0 }): ShowPose {
+  const k = Math.min(1, Math.max(0, u)), { x: ax, y: ay } = anchorOf(cssW, cssH);
   const z = Math.exp(Math.log(s.z0) + (Math.log(s.z1) - Math.log(s.z0)) * k);
   const tx = s.x + s.dx * k, ty = s.y + s.dy * k;
-  return { X: worldX(tx, ty) - (ax - 0.5) * cssW / z, Y: worldY(tx, ty) - (ay - 0.5) * cssH / z, z };
+  out.X = worldX(tx, ty) - (ax - 0.5) * cssW / z; out.Y = worldY(tx, ty) - (ay - 0.5) * cssH / z; out.z = z;
+  return out;
 }
 
 /** the stop a visit starts at: a different one from the last visit's when there is a choice (rnd in [0, 1): a random number; last: the stop of the
@@ -102,6 +111,10 @@ export function choiceOf(hash: string): StartChoice | null {
 }
 /** the hash that carries a choice */
 export const choiceHash = (c: StartChoice): string => `#${CHOICE_KEY}=${c}`;
+/** the same choice in the tab's session storage, for a page that cannot change its address (a sandboxed frame): the page the reload starts reads it, and the effect that clears
+ *  the address clears it too */
+export const CHOICE_STORE_KEY = 'fairwayfortune.choice';
+export const choiceFromStore = (v: string | null | undefined): StartChoice | null => (v === 'new' || v === 'continue' ? v : null);
 
 /** what the page knows when it decides about the scene */
 export interface ShowEnv {

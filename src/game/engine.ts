@@ -28,7 +28,7 @@ import { STRUCT_COST, STRUCT_MAX, groundClass, highwayRoute, longestRun, splitBy
 import { CULL_MIN_PX, FULL_UV, GLRenderer, POINT_STRIDE, SHADOW_STRIDE, SPRITE_STRIDE, VECTOR_STRIDE } from './gl';
 import { GroundCache } from './ground-cache';
 import { GAME_BOOT, clampCentre, flatTerrain, type BootOptions } from './boot';
-import { SHOW_GOLFERS } from './showcase';
+import { SHOW_FARM_MONTH, SHOW_GOLFERS } from './showcase';
 import { TILE_BANDS, TILES_REVISION, anchorAt, bandAt, bandRange, bandsAhead, cellOf, cellsIn, coverageOf, drawnScale, nearUntil, nextBand, tiledFamily, tileIndex, tilePermutation, tileScreenPx, tileSize, tileSpec } from './painted-tiles';
 import { desertLeavesDev, onPaintedSurfaces, paintedSurfaces, setDesertSurfaces } from './painted-surfaces-live';
 import { borderDefault, crewBandLook, finishBorders, finishOf, finishStripeLook, mowSpec } from './course-finish';
@@ -3397,7 +3397,7 @@ export class Game {
       setLotModel(LATEST_LOT_MODEL); this.farmModel = FARM_MODEL; this.farmsNew.clear(); this.golf = null; this.genTerrain(newSeed()); this.seedTowns();
     }
     else loaded = save;
-    if (showSave && loaded === showSave) { this.show = true; this.dayBusy = SHOW_GOLFERS; if (this.golf) delete this.golf.everyday; } // J12: the scene's course has a busy day (its golfers are always on the holes): its day book starts afresh, so the roster is the busy day's, not the quiet one the world was built on
+    if (showSave && loaded === showSave) { this.show = true; this.dayBusy = SHOW_GOLFERS; if (this.golf) delete this.golf.everyday; this.setFarmMonth(SHOW_FARM_MONTH); } // J12: the scene's course has a busy day (its golfers are always on the holes): its day book starts afresh, so the roster is the busy day's, not the quiet one the world was built on
     tick(0.7);
     const tl = performance.now();
     this.ground.init(this.terrain);
@@ -4350,7 +4350,8 @@ export class Game {
       return;
     }
     // (T331: with the lot's building tier and shop business, T295, as lotOf has them: without them every lot drew the top tier and its lattice colour)
-    this.placeLot(key, g, { use: v.use, level: v.level, decline: v.decline, seed: v.seed, tier: v.tier, biz: v.biz });
+    // (J12: the scene behind the title card draws its houses from the top building tier, the tidy street the owner asked for, not the worn tier a new town starts in)
+    this.placeLot(key, g, { use: v.use, level: v.level, decline: v.decline, seed: v.seed, ...(this.show ? {} : { tier: v.tier }), biz: v.biz });
   }
   /** a lot's share of the fence grid alone (compose fenceOnly): panels that would stand in a building or another prop are left out */
   private placeFence(key: string, g: LotGeom, seed: number, lines: FenceLines) {
