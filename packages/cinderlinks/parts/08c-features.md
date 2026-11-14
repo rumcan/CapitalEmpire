@@ -361,7 +361,7 @@ function drawBuildings() {
         const yc = y + 0.5; let xa = 1e9, xb = -1e9;
         for (let i = 0, j = n - 1; i < n; j = i++) { const p0 = PYs[i], p1 = PYs[j]; if ((p0 <= yc) === (p1 <= yc)) continue; const xx = PXs[i] + (yc - p0) / (p1 - p0) * (PXs[j] - PXs[i]); if (xx < xa) xa = xx; if (xx > xb) xb = xx; }
         let X0 = Math.ceil(xa - 0.5), X1 = Math.floor(xb - 0.5); if (X0 < 0) X0 = 0; if (X1 >= VW) X1 = VW - 1;
-        for (let x = X0; x <= X1; x++) { if (mesh && (mesh === 1 ? (x + y) & 1 : mesh === 2 ? (x & 3) === 3 : (x & 3) !== 0)) continue; const w = A * (x + 0.5) + Bc * yc + C; if (w <= 0) continue; const zc = (100 / w) | 0, q = y * VW + x; if (zc < zbuf[q] + bi) { fb[q] = col; zbuf[q] = zc < 65534 ? zc : 65534; } }
+        for (let x = mesh === 1 ? X0 + ((X0 + y) & 1) : X0, sx = mesh === 1 ? 2 : 1; x <= X1; x += sx) { if (mesh > 1 && (mesh === 2 ? (x & 3) === 3 : (x & 3) !== 0)) continue; const w = A * (x + 0.5) + Bc * yc + C; if (w <= 0) continue; const zc = (100 / w) | 0, q = y * VW + x; if (zc < zbuf[q] + bi) { fb[q] = col; zbuf[q] = zc < 65534 ? zc : 65534; } }
       }
     }
     const bsn = night ? 0 : sunAt(B.x, B.y, frame * 0.055);

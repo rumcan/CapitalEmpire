@@ -315,6 +315,9 @@ const HOST_PLAY = String.raw`
     if (info.far !== 0xa0) errs.push('blob: the ground well away from him is darkened (' + info.far + ')');
     if (!(info.rim > info.mid)) errs.push('blob: the shadow does not fade towards its edge (' + info.mid + ' in the middle, ' + info.rim + ' near the edge)');
     if (G(at(nx, ny)) !== 0xa0) errs.push('blob: a thing standing nearer than the ground was darkened');
+    { render(); const g3 = { x: 0, y: 0 }; screenToGround(VW / 2, Math.round(VH * 0.9), g3); zbuf.fill(Math.round(Math.hypot(g3.x - camX, g3.y - camY) * 100)); const t0 = performance.now(); for (let k = 0; k < 400; k++) blobShadow(g3.x, g3.y, 0.62, 1);
+      info.blobMs = +((performance.now() - t0) / 400).toFixed(4); info.blobAtM = +Math.hypot(g3.x - camX, g3.y - camY).toFixed(1);   // (a person close to the camera: the largest ellipse he gets)
+      if (!(info.blobMs < 0.1)) errs.push('blob: one contact shadow costs ' + info.blobMs + ' ms close to the camera (budget 0.1 ms)'); }
     // every person on foot and the ball at rest ask for one: the player, three golfers (a ghost round's golfer none), a golfer in his cart none
     const calls = [], keep = blobShadow; blobShadow = (x, y, r, k) => { calls.push([x, y, r]); keep(x, y, r, k); };
     try {
@@ -348,6 +351,12 @@ const HOST_PLAY = String.raw`
     if (!gaps.length || Math.abs(Math.max(...gaps) - 3) > 0.01 || Math.abs(Math.min(...gaps) - 3) > 0.01) errs.push('fence: the posts are not evenly 3 m apart (' + JSON.stringify(info.gap) + ')');
     for (const f of posts) { const gz = groundH((f.pts[0][0] + f.pts[1][0]) / 2, (f.pts[0][1] + f.pts[1][1]) / 2); if (Math.abs(f.pts[0][2] - (gz - 0.06)) > 1e-6 || Math.abs(f.pts[2][2] - (gz + 1.9)) > 1e-6) { errs.push('fence: a post does not stand on the ground under it'); break; } }
     const wire = B.faces.filter((f) => f.mesh === 1); if (wire.length !== 6 || wire.some((f) => Math.abs((f.pts[3][2] - f.pts[0][2]) - (1.8 - 0.14)) > 0.5 && false)) errs.push('fence: ' + wire.length + ' bays of wire (want 6)');
+    { const long = { id: 'b:g', kind: 'building', use: 'fence', name: 'Chain-link fence', at: [(camX + FX * 65 + RX * -8) / S, (camY + FY * 65 + RY * -8) / S], w: 120, d: 0.12, h: 1.8, rot: Math.atan2(FY, FX) * 180 / Math.PI, roof: 'flat', wall: '#a6adb4', roofColour: '#a6adb4', floors: 1 };   // (120 m of fence running away from the camera, 40 bays in view)
+      setFeatures({ course: course.id, features: [] }); render(); const fb0 = Uint32Array.from(fb), zb0 = Uint16Array.from(zbuf);   // (the frame as the ground and the sky leave it: what drawing the fence alone costs on it, the fastest of fifteen)
+      setFeatures({ course: course.id, features: [long] }); fb.set(fb0); zbuf.set(zb0); drawBuildings(); let m = 1e9;
+      for (let r = 0; r < 15; r++) { fb.set(fb0); zbuf.set(zb0); const t0 = performance.now(); drawBuildings(); m = Math.min(m, performance.now() - t0); }
+      info.fenceMs = +m.toFixed(3); info.fenceFaces = feats.builds[0].faces.length;
+      if (!(info.fenceMs < 0.3)) errs.push('fence: 120 m of fence costs ' + info.fenceMs + ' ms a frame (budget 0.3 ms)'); }
     feats = keepF; featFor = keepFor;
     return { errs, info };
   }
