@@ -371,7 +371,8 @@ export class RangeHost {
         if (on(q, 100)) {
           const out = bk.clean + bk.dirty < bucketBalls(visitBalls(this.ctx.dayLen()), autoKit(this.ctx.biz()?.owned ?? [])), px = Math.round(dpr * 11), font = `700 ${px}px system-ui, sans-serif`;
           const t = out ? 'Ball room · OUT OF BALLS' : `Ball room · ${Math.floor(bk.clean + bk.dirty).toLocaleString()} balls${bk.dirty >= 1 ? ` (${Math.floor(bk.dirty).toLocaleString()} dirty)` : ''}`; // (the dirty ones sell too)
-          labels.pill(sc.ballRoom, out ? PRI.warn : PRI.count, t, q.x, q.y - 2.1 * 32 * ze, font, labels.width(font, t) + 10 * dpr, px * 1.6, out ? 'rgba(127,29,29,0.92)' : 'rgba(16,24,16,0.8)', 4 * dpr, '#f8fafc', 0.5 * dpr);
+          labels.pill(sc.ballRoom, out ? PRI.warn : PRI.count, t, q.x, q.y - 3.6 * 32 * ze, font,   // (above the shop's roof: a label never lies on the art)
+             labels.width(font, t) + 10 * dpr, px * 1.6, out ? 'rgba(127,29,29,0.92)' : 'rgba(16,24,16,0.8)', 4 * dpr, '#f8fafc', 0.5 * dpr);
         }
       }
       // T386 part 2: the robot pickers (small teal pucks with a ball on top: stand-ins) and the stand-in pills of the robots and the attendants

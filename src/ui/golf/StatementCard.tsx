@@ -45,13 +45,19 @@ export function StatementCard({ history }: { history: readonly Report[] }) {
 
   return <>
     {toast && !s && (
-      <button type="button" onClick={() => { setFull(toastAt); setToastAt(null); }} aria-live="polite" data-testid="statement-toast"
-        className="pointer-events-auto absolute bottom-[9.5rem] left-3 z-30 w-64 rounded-xl border border-white/10 bg-slate-950/90 p-3 text-left text-slate-200 shadow-xl backdrop-blur hover:border-emerald-400/60">
-        <div className="text-[11px] font-semibold uppercase tracking-wider text-emerald-300/80">{toast.label} statement</div>
-        <div className="text-sm font-semibold text-white">{headline(toast.profit)}</div>
-        <div className="text-xs text-slate-400">Net worth {money(toast.netWorth)} ({signed(toast.netWorthChange)}). Click for details.</div>
-        {history[toastAt!]?.events[0] && <div className="mt-1 text-xs text-amber-200">{history[toastAt!].events[0]}</div>}
-      </button>
+      // (the owner, 2026-11-14: "this menu satement cant be closed and it covers the ui": it sits under the top bar, clear of the rail and its menus, and has
+      // its own close button; it still goes by itself after TOAST_MS)
+      <div className="pointer-events-auto absolute left-1/2 top-16 z-30 w-72 max-w-[calc(100%-1.5rem)] -translate-x-1/2" data-testid="statement-toast-box">
+        <button type="button" onClick={() => { setFull(toastAt); setToastAt(null); }} aria-live="polite" data-testid="statement-toast"
+          className="w-full rounded-xl border border-white/10 bg-slate-950/90 p-3 pr-9 text-left text-slate-200 shadow-xl backdrop-blur hover:border-emerald-400/60">
+          <div className="text-[11px] font-semibold uppercase tracking-wider text-emerald-300/80">{toast.label} statement</div>
+          <div className="text-sm font-semibold text-white">{headline(toast.profit)}</div>
+          <div className="text-xs text-slate-400">Net worth {money(toast.netWorth)} ({signed(toast.netWorthChange)}). Click for details.</div>
+          {history[toastAt!]?.events[0] && <div className="mt-1 text-xs text-amber-200">{history[toastAt!].events[0]}</div>}
+        </button>
+        <button type="button" onClick={() => setToastAt(null)} aria-label="Close the statement note" data-testid="statement-toast-close"
+          className="absolute right-1.5 top-1.5 flex h-6 w-6 items-center justify-center rounded-md text-slate-400 hover:bg-white/10 hover:text-white">×</button>
+      </div>
     )}
     {s && full !== null && (
       <div className="pointer-events-none absolute inset-0 z-40 flex items-center justify-center p-4" data-testid="statement-full">
