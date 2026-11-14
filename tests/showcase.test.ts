@@ -61,6 +61,14 @@ test('the scene\'s overlay draws no label, badge, marker, outline or hint: only 
   assert.match(src, /private drawOverlay\(now: number\) \{\n[^\n]*\n[^\n]*clearRect[^\n]*\n\s*if \(this\.show\) \{ this\.drawShowOverlay\(ctx, now, ze\); return; \}/, 'the scene takes its own path before any label is gathered');
 });
 
+test('the engine of the scene boots with its camera already on the first place (the ground the first picture needs bakes during the boot, not the place the world was built at)', () => {
+  const app = readFileSync('src/App.tsx', 'utf8').replace(/\r\n/g, '\n'), load = readFileSync('src/game/showcase-load.ts', 'utf8').replace(/\r\n/g, '\n');
+  assert.match(app, /g\.showcaseLoader = \(\) => loadShowcaseSave\(poseAt\(SHOW_STOPS\[startStop\]!, 0, window\.innerWidth, window\.innerHeight\)\);/);
+  assert.match(load, /export async function loadShowcaseSave\(cam\?: \{ X: number; Y: number; z: number \}\)/); assert.match(load, /if \(cam && s\) s\.cam = \{ X: cam\.X, Y: cam\.Y, z: cam\.z \};/);
+  // and the pose the loader is given is a real one on the first stop's point of interest
+  const p = poseAt(SHOW_STOPS[0]!, 0, 1600, 900); assert.ok(Number.isFinite(p.X) && Number.isFinite(p.Y) && p.z > 0 && p.z <= ZOOM_MAX);
+});
+
 test('starting a game from the title card gives the game it always gave: the scene leaves by a reload into the game\'s own boot, then New game / Continue as before', () => {
   const app = readFileSync('src/App.tsx', 'utf8').replace(/\r\n/g, '\n');
   // the one place a game starts from the card, as it was: a new game over a save is a new town, the card closes, the speed is the game's

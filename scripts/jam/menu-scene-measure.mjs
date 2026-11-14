@@ -45,9 +45,9 @@ try {
     if (sample) {
       await p.evaluate(() => { window.__frames.length = 0; });
       const samples = [];
-      for (let i = 0; i < secs; i++) { await p.waitForTimeout(1000); samples.push(await p.evaluate(() => { const g = window.__game; return { ms: g.perf.frameMs, cpu: g.perf.cpuMs, draw: g.perf.drawMs, idx: window.__showDirector.index }; })); }
+      for (let i = 0; i < secs; i++) { await p.waitForTimeout(1000); samples.push(await p.evaluate(() => { const g = window.__game, d = window.__showDirector, fr = window.__frames, last = fr.slice(Math.max(0, fr.length - 30)); return { ms: g.perf.frameMs, cpu: g.perf.cpuMs, draw: g.perf.drawMs, idx: d.index, phase: d.phase, rafMs: last.length ? last.reduce((a, v) => a + v, 0) / last.length : 0 }; })); }
       const frames = await p.evaluate(() => window.__frames.slice());
-      r.sceneFrames = { ...stat(frames), engineFrameMsMean: +(samples.reduce((a, q) => a + q.ms, 0) / samples.length).toFixed(2), engineCpuMsMean: +(samples.reduce((a, q) => a + q.cpu, 0) / samples.length).toFixed(2), engineDrawMsMean: +(samples.reduce((a, q) => a + q.draw, 0) / samples.length).toFixed(2), stopsSeen: new Set(samples.map(q => q.idx)).size, seconds: secs };
+      r.sceneFrames = { ...stat(frames), engineFrameMsMean: +(samples.reduce((a, q) => a + q.ms, 0) / samples.length).toFixed(2), engineCpuMsMean: +(samples.reduce((a, q) => a + q.cpu, 0) / samples.length).toFixed(2), engineDrawMsMean: +(samples.reduce((a, q) => a + q.draw, 0) / samples.length).toFixed(2), stopsSeen: new Set(samples.map(q => q.idx)).size, seconds: secs, perSecond: samples.map(q => `${q.phase}:${q.idx} eng ${Math.round(q.ms)} raf ${Math.round(q.rafMs)}`) };
       // a choice leaves the scene: the page reloads into the game's own boot (how long to a playable game)
       const t3 = Date.now(); await p.click('[data-testid=title-new]');
       await p.waitForFunction(() => location.hash === '' && window.__game?.ready && !window.__game.show && !document.querySelector('[data-testid=title-card]'), null, { timeout: 240000 }); r.newGameToPlayableMs = Date.now() - t3;

@@ -361,7 +361,7 @@ export default function App() {
     const canvas = overlayRef.current!;
     let g: Game;
     try { g = new Game(canvasRef.current!, canvas, boot); } catch (e) { setFatal((e as Error).message); return; }
-    if (sceneWanted) g.showcaseLoader = loadShowcaseSave; // J12: the living scene's prepared world, in place of the player's save
+    if (sceneWanted) g.showcaseLoader = () => loadShowcaseSave(poseAt(SHOW_STOPS[startStop]!, 0, window.innerWidth, window.innerHeight)); // J12: the living scene's prepared world, in place of the player's save, its camera already on the first place
     // debug and headless-screenshot hooks
     Object.assign(window as unknown as Record<string, unknown>, { __game: g, __CLASSES: CLASSES });
     // the road builder's stress test (dev only): __roadFuzz(seed, steps) drives the road tools at random and reports what broke (on the live
