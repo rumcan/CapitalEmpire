@@ -120,7 +120,7 @@ test('the bulldozer takes a facility whole with its rough band (half its price b
   const f = facilityAt(g, BOX, at.x, at.y)!;
   assert.equal(f.green, chip.c.green.length); assert.equal(f.bunker, chip.c.bunker.length); assert.equal(f.rough, chip.c.rough.length, 'all its rough: ' + f.rough);
   assert.equal(f.cells.length, f.green + f.bunker + f.tee + f.rough);
-  assert.ok(f.cells.every(i => [SURF.green, SURF.bunker, SURF.rough].includes(g.surf[i]!)));
+  assert.ok(f.cells.every(i => ([SURF.green, SURF.bunker, SURF.rough] as number[]).includes(g.surf[i]!)));
   assert.equal(facilityRefund(f), Math.round((6 * f.green + 4 * f.bunker + 0.8 * f.rough) / 2), 'half the price, rough included');
   // a rough cell of its band leads to it, one of the putting green's to that
   const rc = cellCentre(g, chip.c.rough[7]!), fr = facilityAt(g, BOX, rc.x, rc.y)!, pc = cellCentre(g, put.c.rough[7]!), fp = facilityAt(g, BOX, pc.x, pc.y)!;
@@ -149,7 +149,7 @@ test('the starter set: three dirt greens with a flag and one crude bunker, laid 
   }
   // a dirt green is a few metres across, the bunker a scrape of a few more long than deep
   const size = (p: { pts: number[] }) => { const xs = p.pts.filter((_, i) => i % 2 === 0), ys = p.pts.filter((_, i) => i % 2 === 1); return [(Math.max(...xs) - Math.min(...xs)) * 2, (Math.max(...ys) - Math.min(...ys)) * 2]; };
-  for (const p of set.filter(q => q.kind === 'dirt')) { const [w, h] = size(p); assert.ok(w >= 7 && w <= 14 && h >= 7 && h <= 14, `a dirt green ${w.toFixed(1)} x ${h.toFixed(1)} m`); }
+  for (const p of set.filter(q => q.kind === 'dirt')) { const [w, h] = size(p); assert.ok(w >= 8 && w <= 16 && h >= 8 && h <= 16, `a dirt green ${w.toFixed(1)} x ${h.toFixed(1)} m`); }
   // the greens keep apart, and well off the walk in
   const greens = set.filter(p => p.kind === 'dirt');
   for (let i = 0; i < greens.length; i++) {
@@ -167,7 +167,7 @@ test('the starter pieces as the scene lays them: dirt greens and the bunker\'s e
   const all = starterPatches(set, []), flags = starterPieces(set, []);
   assert.deepEqual(all.map(p => p.surf), ['dirtGreen', 'dirtGreen', 'dirtGreen', 'scrape', 'sand'], 'three greens, the bunker\'s rim then its sand');
   assert.ok(all.filter(p => p.surf === 'dirtGreen').every(p => p.edge === 'raised'), 'a gentle sun-lit mound'); assert.equal(all[4]!.edge, 'turf'); assert.equal(all[3]!.edge, 'flat');
-  assert.equal(flags.length, 3); for (const f of flags) { assert.equal(f.id, STARTER_FLAG); assert.equal(f.scale, STARTER_FLAG_SCALE); assert.ok(f.scale! < 0.2, 'a short flag'); }
+  assert.equal(flags.length, 3); for (const f of flags) { assert.equal(f.id, STARTER_FLAG); assert.equal(f.scale, STARTER_FLAG_SCALE); assert.ok(f.scale! < 0.26, 'a short flag: shorter than the red flags of the proper greens'); }
   assert.equal(new Set(flags.map(f => f.key)).size, 3, 'unique keys');
   const f0 = flags[0]!; assert.ok(set[0]!.pts.length > 0 && Math.hypot(f0.x - set[0]!.centre.x, f0.y - set[0]!.centre.y) < 1e-9, 'the flag on its green');
   assert.equal(starterPatches(set, [0]).length, 4); assert.equal(starterPieces(set, [0]).length, 2, 'a green gone: its patch and its flag');

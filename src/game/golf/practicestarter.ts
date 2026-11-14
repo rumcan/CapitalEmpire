@@ -16,8 +16,8 @@ import type { ScenePatch, ScenePiece } from './rangebiz';
 
 /** how many dirt greens the set has */
 export const STARTER_GREENS = 3;
-/** the flag's picture and its size (a short flag: the proper greens' flags are 0.2 to 0.32) */
-export const STARTER_FLAG = 'business:golf-pin-yellow', STARTER_FLAG_SCALE = 0.17;
+/** the flag's picture and its size (a short flag: the proper greens' flags are 0.2 to 0.32; a yellow one, so a home-made green is told from a proper one's red) */
+export const STARTER_FLAG = 'business:golf-pin-yellow', STARTER_FLAG_SCALE = 0.22;
 /** what a starter piece is: a green of packed earth with a flag, or a scrape of sand */
 export type StarterKind = 'dirt' | 'bunker';
 /** one piece: its id (its place in the set: what the save lists once it is replaced), kind, centre, outline (a ragged ring: world x y pairs), the earth rim round a
@@ -64,13 +64,13 @@ export function starterSet(box: readonly [number, number, number, number], entry
       for (const c of centres) s = Math.min(s, Math.hypot(p.x - c.p.x, p.y - c.p.y));
       if (s > bs) { bs = s; best = p; }
     }
-    const r = 2.3 + rnd() * 0.6, c = best!, rot = rnd() * Math.PI;
+    const r = 2.6 + rnd() * 0.6, c = best!, rot = rnd() * Math.PI;
     centres.push({ p: c, r });
     out.push({ id: i, kind: 'dirt', centre: c, pts: ragged(c, r * 1.05, r * 0.95, rot, rnd, 0.08, 36), rim: null, flag: { x: c.x, y: c.y } });
   }
   // the bunker: off the first green by its radius and a few tiles more, on the side with room (12 directions from a seeded one; the first inside the area's edge margin
   // and clear of the others), or at the best of them
-  const a0 = out[0]!, rx = 2 + rnd() * 0.4, ry = 1.2 + rnd() * 0.3, dir0 = rnd() * Math.PI * 2, off = centres[0]!.r + rx + 1.4;
+  const a0 = out[0]!, rx = 2.3 + rnd() * 0.5, ry = 1.4 + rnd() * 0.4, dir0 = rnd() * Math.PI * 2, off = centres[0]!.r + rx + 1.4;
   let spot: Pt | null = null, spotRoom = -1;
   for (let k = 0; k < 12; k++) {
     const a = dir0 + (k / 12) * Math.PI * 2, p = { x: a0.centre.x + Math.cos(a) * off, y: a0.centre.y + Math.sin(a) * off };

@@ -13549,7 +13549,7 @@ export class Game {
     // and a Stand In label only when Settings' stand-in labels are switched on)
     { const L = this.labels, gm = this.ghostMouse, d = this.dpr; L.standIns = this.showStandIns; L.hoverOnly = true; L.hoverAt = gm ? (L.hoverAt ?? { x: 0, y: 0 }) : null; if (gm && L.hoverAt) { L.hoverAt.x = gm.mx * d; L.hoverAt.y = gm.my * d; } L.hoverReach.side = 40 * d; L.hoverReach.up = 12 * d; L.hoverReach.down = 90 * d;
       // #1281: the practice area's name stays on the map while the area is the selected thing (its build window open)
-      const keep = this.labelKeep; keep.clear(); if (this.range.practiceSelected && this.range.scene) keep.add(this.range.scene.practice); L.keep = keep; }
+      const keep = this.labelKeep; keep.clear(); if (this.range.practiceSelected && this.range.scene) keep.add(this.range.scene.practice); L.keep = keep; this.range.quietLabel = !!this.youHover && this.youControls(); }
     if (this.showLanes && this.cam.z > 0.12) this.drawLanes(ctx);
     if (this.showLots && this.cam.z > 0.06) this.drawLots(ctx);
     if (this.showAccess || this.cam.z < PLANNER_Z) this.drawAccess(ctx);

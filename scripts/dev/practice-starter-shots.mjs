@@ -134,18 +134,17 @@ try {
     check(info?.state === 'open', `${kind} opens (${info?.m2} m²)`);
     await settle(page, 1200);
     if (info?.centre) { await lookAt(page, info.centre, 0.3); await settle(page, 800); await page.mouse.move(8, 8); await shot(page, `${name}-${look}`); }
+    if (kind === 'chipping' && a.save.gone.length) {
+      // the build's undo step brings back the starter pieces it replaced (and the money), redo takes them away again
+      await page.evaluate(() => window.__game.paint.undo()); await page.waitForTimeout(300);
+      const u = await starterState(page); check(u.save.gone.length === 0 && u.flags === b.flags && u.patches === b.patches && u.money === b.money, `undo brings the starter pieces back, and the money: ${JSON.stringify(u.save)}`);
+      await page.evaluate(() => window.__game.paint.redo()); await page.waitForTimeout(300);
+      const r = await starterState(page); check(JSON.stringify(r.save.gone) === JSON.stringify(a.save.gone) && r.patches === a.patches, 'redo replaces them again');
+    }
     return { b, a, info };
   };
-  let chip = null;
-  if (steps.has('chipping')) chip = await buildOne('chipping', '4-first-green');
+  if (steps.has('chipping')) await buildOne('chipping', '4-first-green');
   if (steps.has('putting')) await buildOne('putting', '5-putting-green');
-  if (chip && chip.a.save.gone.length) {
-    // the build's undo step brings back the starter pieces it replaced (and the money), redo takes them away again
-    await page.evaluate(() => window.__game.paint.undo()); await page.waitForTimeout(300);
-    const u = await starterState(page); check(u.save.gone.length === 0 && u.flags === chip.b.flags && u.patches === chip.b.patches, `undo brings the starter pieces back: ${JSON.stringify(u.save)}`);
-    await page.evaluate(() => window.__game.paint.redo()); await page.waitForTimeout(300);
-    const r = await starterState(page); check(JSON.stringify(r.save.gone) === JSON.stringify(chip.a.save.gone), 'redo replaces them again');
-  }
   if (steps.has('view')) {
     // the golf practice view finds the chipping green (J6: Chip and putt)
     const why = await page.evaluate(() => window.__game.practice3pWhy('short'));

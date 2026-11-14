@@ -478,6 +478,8 @@ export class RangeHost {
    *  build window (the range card at its Practice facilities) open: its outline and name stay while it is. practiceFocus counts the clicks that opened it, so the
    *  card scrolls to the Practice facilities and flashes them each time */
   practiceSelected = false; practiceFocus = 0;
+  /** #1281: the area's name stands without its hint line (the engine sets it while Walk's hover words, which say the same, are up) */
+  quietLabel = false;
   /** #1281: a facility built over the starter set (its cells: the plan's) replaces the pieces under it. They go from the save now (the scene lays itself again at
    *  the next frame: the key follows the save) and the returned step brings them back (undo) or takes them away again (redo); null: none was under it */
   replaceStarters(c: PlanCells): StepAside | null {
@@ -505,7 +507,7 @@ export class RangeHost {
       if (on(q, 200)) {
         // the area's name and (at the street tier, while nothing is built there) its hint under it: one world label (T151) whose box holds both lines
         const px = Math.round(dpr * 13), lw = 3 * dpr, l = labels.text(pa, PRI.area, 'Practice area', q.x, q.y, `700 ${px}px system-ui, sans-serif`, px, '#ecfccb', 'rgba(10,30,10,0.85)', lw);
-        const hint = this.practiceSale !== null ? `For sale: $${this.practiceSale.toLocaleString()} (Course ▸ Land for sale)` : this.practiceLocked ? 'Opens with your first range upgrade' : built ? '' : JAM ? 'Click to build proper greens here' : 'Click here to build a putting green';
+        const hint = this.quietLabel ? '' : this.practiceSale !== null ? `For sale: $${this.practiceSale.toLocaleString()} (Course ▸ Land for sale)` : this.practiceLocked ? 'Opens with your first range upgrade' : built ? '' : JAM ? 'Click to build proper greens here' : 'Click here to build a putting green';
         if (zoom >= 0.12 && hint) {
           const sf = `600 ${Math.round(px * 0.8)}px system-ui, sans-serif`, t = hint;
           // the box from the name's top to the hint's foot, its centre moved down to the middle
