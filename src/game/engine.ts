@@ -1979,7 +1979,7 @@ export class Game {
         b.starter = { seed: starterSeed(this.seed, r), gone: [] };
         this.dropTownTrees(r[0], r[1], r[0] + r[2], r[1] + r[3]);
         this.range.sync(true);
-        this.toast(`Practice area placed (-$${PRACTICE_PLACE_COST.toLocaleString()}) with a few dirt greens and a scrape of a bunker: click it to build proper greens`, 'good');
+        this.toast(`Practice area placed (-$${PRACTICE_PLACE_COST.toLocaleString()}) with a few dirt greens and a scrape of a bunker: click it, or ${practicePath()}, to build proper greens`, 'good');
         return true;
       },
     };
