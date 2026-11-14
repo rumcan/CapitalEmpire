@@ -291,12 +291,18 @@ const HOST_PLAY = String.raw`
     hostStrike(); rest(2); hostMessage(prac('distance', 2)); hostMessage(turn(3));
     for (let k = 0; k < 400 && (HP.play || HP.q.length || ball.state !== 0); k++) tickGame();
     if (aim.x !== mine[0] || aim.y !== mine[1] || club !== 1) errs.push('host practice: the aim jumped after the second ball');
+    // #1308: a fade and a club picked, and the same ball's turn sent again (new wind): they stay; then a fade struck and the next ball starts with the same fade and club
+    hostPickAmt('curve', 0.6); club = 0; step(2); hostMessage(turn(3)); step(2);
+    if (club !== 0 || !HP.pick || HP.pick.curve !== 0.6) errs.push('host practice: a turn sent again for the same ball put his club or fade back (' + club + ', ' + (HP.pick && HP.pick.curve) + ')');
+    hostStrike(); rest(3); hostMessage(prac('distance', 3)); hostMessage(turn(4));
+    for (let k = 0; k < 400 && (HP.play || HP.q.length || ball.state !== 0); k++) tickGame();
+    if (club !== 0 || !HP.pick || HP.pick.curve !== 0.6) errs.push('host practice: the next ball did not start with the same club and fade (' + club + ', ' + (HP.pick && HP.pick.curve) + ')');
     // a drill he clicks: the suggestion, once (the aim is the drill's 230 m, the club the driver); then his again
-    pracPicked = true; hostMessage(prac('shaping', 3)); hostMessage(turn(4)); step(2);
+    pracPicked = true; hostMessage(prac('shaping', 4)); hostMessage(turn(5)); step(2);
     info.picked = { club, curve: HP.pick && HP.pick.curve, away: +(Math.hypot(aim.x - ball.x, aim.y - ball.y) / S).toFixed(1) };
     if (club !== 0 || Math.abs(Math.hypot(aim.x - ball.x, aim.y - ball.y) / S - 230) > 0.01 || (HP.pick && HP.pick.curve)) errs.push('host practice: a drill picked did not take its own aim (' + JSON.stringify(info.picked) + ')');
     aim.x = ball.x + ux * 100 * S; aim.y = ball.y + uy * 100 * S; aim.dx = ux; aim.dy = uy; club = 1;
-    hostStrike(); rest(4); hostMessage(prac('shaping', 4)); hostMessage(turn(5));
+    hostStrike(); rest(5); hostMessage(prac('shaping', 5)); hostMessage(turn(6));
     for (let k = 0; k < 400 && (HP.play || HP.q.length || ball.state !== 0); k++) tickGame();
     if (club !== 1 || Math.abs(Math.hypot(aim.x - ball.x, aim.y - ball.y) / S - 100) > 0.01) errs.push('host practice: after a drill picked the aim did not stay again');
     pracClear();
