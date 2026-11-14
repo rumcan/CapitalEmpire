@@ -132,8 +132,7 @@ boombox, headphones, bell, radio-off, jukebox) are cut for J11 (#1270, the music
   on no action.
 - **Where**: the Range card and its ball room tree, the Build menu (a tile card shows it whole on the tile's navy, never cropped to the 92 px strip), the Bank, the hole card, the Holes panel
   and New hole's wizard, the rail (Select, Walk, Bulldoze; in the jam also Build, Range and Course) and the top bar (the Cash chip, Me, a picture beside the speed bar and the zoom buttons: the pause
-  and zoom icons stay, they show a state and a direction; at Settings' largest Text size, 125%, the speed bar's and zoom's pictures are left out: with them the top bar needs a second row on a 1366 px screen
-  and the month note would cover it), the title card, the tutorial and the guide, the tips, the statement, Scene, Help's Keys, the bankrupt pop-up, Settings' rows.
+  and zoom icons stay, they show a state and a direction; on a narrow screen at a big Text size some of these pictures are left out so the bar stays one row: see J13's top bar), the title card, the tutorial and the guide, the tips, the statement, Scene, Help's Keys, the bankrupt pop-up, Settings' rows.
 - **Golf view** (a separate page): `packages/cinderlinks/build.mjs` copies the `drill-*`, `shot-*` and `club-*` tiles and `jump-to-ball`, `gimme` and `go-for-it` into `public/cinderlinks/tiles/` (the page cannot
   import them); the practice drills panel, the shot panel (Curve and Flight ends, Tour spin, Go for it), the club tabs, Jump to ball and Gimme show them, and the host's Back to the course button wears
   its tile. `npm run cinder:build` needs no dev server holding `public/cinderlinks` open (Windows refuses to delete it).
@@ -148,6 +147,13 @@ under its 128 KB limit). v10 to v12 are `ACTION_TILES` (the ball room tree's upg
   while it is the caravan (the cottage and the house have no picture yet). Four upgrades wear an existing tile until their own is painted: Putting stroke trainer (`putting-green`), Second tier of bays
   (`covered-bays`), Golf academy (`staff-training`), Car park building (`paved-car-park`). `tests/ui-action-tiles.test.ts` fails an upgrade with no tile that exists. The tree's columns scroll up and down only: at the
   largest Text size (125%) it is 800 px wide on a 1366 px screen, no sideways scrollbar (shots: `docs/jam-shots/j13-ball-tree*.jpg`).
+- **The Props menu** (`flyout-menu.ts`, tiles by `PROP_GROUP_TILE` and `ROW_TILE.allProps` in `tool-tiles.ts`; tiles only, the natural / man-made restructure is #1284's other coder): in the golf Course flyout's Facilities >
+  Decoration > Props, the Props row and All props wear `all-props`, Desert & oasis `desert-oasis`, New: Trees `trees-mixed`, New: Lake props `lake-props`; the Course furniture kind's rows, which showed the leaf, wear their
+  own or their kind's tile (Tournament dressing the scoreboard stand and New: Course props `man-made-props`, both stand-ins). Still without a tile: the classic town's Decoration > Props rows (the town's menus stay lists,
+  T233: New: Buildings and New: Eight-view objects have no tile painted) and the eight Tournament structures rows (the `buildings` icon). `natural-props`, `fences`, `signs`, `fountain`, `clear-plants`,
+  `nursery-plants` and `texture-painter` are cut and wait (`NOT_YET` in the test) for #1284's restructure and #1282's Texture Painter rename.
+- **The top bar** keeps one row by tiers (`topBarTier` in `uiScale.ts`, the screen's width over the Text size): every picture from 1150 px of the UI layer, without the speed bar's and zoom's below 1065 (1366 px at 125%),
+  without the Cash chip's too below that (1280 px at 125%); narrower, the bar wraps to a second row as it always has. The month note starts under the bar (`--hud-top`), however many rows it has.
 
 ## Button tests: run them before every jam build (T459, the owner 2026-11-13: "are you guys not testing buttons?")
 A dead button must not ship. Two checks:
