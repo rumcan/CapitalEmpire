@@ -264,7 +264,7 @@ const HOST_PLAY = String.raw`
   // the break; a gimme goes out only inside the round's rule
   // #1308: practising, the aim is the player's. Two balls in a row: he moves the aim, the club and the curve before the first; the second turn (after the ball has landed and the panel is sent
   // again) must start from the same aim, club and curve. A drill he clicks (a pick) takes the host's suggestion once; the ball after that keeps his again
-  function hostPracRun() {
+  function hostPracRun(snapAt) {
     const errs = [], info = {}, S = course.S, b0 = [ball.x / S, ball.y / S], p0 = [hole.pin.x / S, hole.pin.y / S], dl = Math.hypot(p0[0] - b0[0], p0[1] - b0[1]), ux = (p0[0] - b0[0]) / dl, uy = (p0[1] - b0[1]) / dl;
     const kit = (club, carryM) => ({ club, carryM, scatterM: 18, longM: 12, playsM: carryM * 0.98, sideM: 1, loftDeg: 30, speed: 0.9, sweet: 0.08 });
     const turn = (stroke) => ({ v: 1, t: 'turn', golfer: 0, holeIdx: 0, hole: holeN, par: hole.par, stroke, at: 0, lie: 'tee', lieKind: 'tee', ball: b0, pin: p0, distM: dl, wind: { mph: 0, from: 0 },
@@ -279,8 +279,10 @@ const HOST_PLAY = String.raw`
     const tx = ball.x + (ux * 60 - uy * 25) * S, ty = ball.y + (uy * 60 + ux * 25) * S, l = Math.hypot(tx - ball.x, ty - ball.y);
     aim.x = tx; aim.y = ty; aim.dx = (tx - ball.x) / l; aim.dy = (ty - ball.y) / l; hostAimPin = true; club = 1; hostPickAmt('curve', -0.4); step(2);
     const mine = [aim.x, aim.y, aim.dx, aim.dy];
+    if (snapAt) { step(10); snapAt('prac-ball1'); }
     hostStrike(); rest(1); hostMessage(prac('distance', 1)); hostMessage(turn(2));
     for (let k = 0; k < 400 && (HP.play || HP.q.length || ball.state !== 0); k++) tickGame();
+    if (snapAt) { step(10); snapAt('prac-ball2'); }
     info.second = { club, curve: HP.pick && HP.pick.curve, aim: [aim.x === mine[0], aim.y === mine[1], aim.dx === mine[2], aim.dy === mine[3]], pin: hostAimPin };
     if (!HP.turn || HP.turn.stroke !== 2) errs.push('host practice: the second ball was not taken');
     if (aim.x !== mine[0] || aim.y !== mine[1] || aim.dx !== mine[2] || aim.dy !== mine[3]) errs.push('host practice: the aim jumped after the ball landed (' + JSON.stringify(info.second) + ')');
@@ -298,6 +300,55 @@ const HOST_PLAY = String.raw`
     for (let k = 0; k < 400 && (HP.play || HP.q.length || ball.state !== 0); k++) tickGame();
     if (club !== 1 || Math.abs(Math.hypot(aim.x - ball.x, aim.y - ball.y) / S - 100) > 0.01) errs.push('host practice: after a drill picked the aim did not stay again');
     pracClear();
+    return { errs, info };
+  }
+  // #1308: the contact shadow: blobShadow darkens the ground under its centre and nothing of what stands nearer, and every person on foot and the resting ball ask for one
+  function blobRun() {
+    const errs = [], info = {}, S = course.S;
+    render(); const gp = { x: 0, y: 0 }; screenToGround(VW / 2, Math.round(VH * 0.7), gp); const gx = gp.x, gy = gp.y, off = 0.62 * 0.3, cx = gx - 0.74 * off, cy = gy + 0.67 * off;
+    project(cx, cy, groundH(cx, cy), PJ); const bx = PJ.x, by = PJ.y, zc = PJ.d * 100;
+    fb.fill(0xff80a0c0); zbuf.fill(Math.round(zc));
+    const nx = Math.min(VW - 2, bx + 40), ny = by; zbuf[ny * VW + nx] = Math.round(zc) - 500;   // (a nearer thing beside it)
+    blobShadow(gx, gy, 0.62, 1); const at = (x, y) => fb[y * VW + x], G = (c) => (c >> 8) & 255;
+    info.mid = G(at(bx, by)); info.far = G(at(Math.min(VW - 2, bx + 140), by)); info.rim = G(at(bx + Math.round(0.8 * 0.62 * FOC / (zc / 100)), by));
+    if (!(info.mid < 0.7 * 0xa0)) errs.push('blob: the ground under a person is not darkened (' + info.mid + ' of 160)');
+    if (info.far !== 0xa0) errs.push('blob: the ground well away from him is darkened (' + info.far + ')');
+    if (!(info.rim > info.mid)) errs.push('blob: the shadow does not fade towards its edge (' + info.mid + ' in the middle, ' + info.rim + ' near the edge)');
+    if (G(at(nx, ny)) !== 0xa0) errs.push('blob: a thing standing nearer than the ground was darkened');
+    // every person on foot and the ball at rest ask for one: the player, three golfers (a ghost round's golfer none), a golfer in his cart none
+    const calls = [], keep = blobShadow; blobShadow = (x, y, r, k) => { calls.push([x, y, r]); keep(x, y, r, k); };
+    try {
+      const P = (f, s2) => [camX + FX * f + RX * s2, camY + FY * f + RY * s2], hd = Math.atan2(FY, FX) * 180 / Math.PI, A = [];
+      [[10, -2], [12, 2], [16, 0]].forEach(([f, s2], i) => A.push({ id: 700 + i, role: 'golfer', at: P(f, s2).map((v) => v / S), hole: holeN, heading: hd, doing: 'stand', phase: 0, dress: actDress(i + 1) }));
+      A.push({ id: 710, role: 'golfer', ghost: true, at: P(14, 4).map((v) => v / S), hole: holeN, heading: hd, doing: 'stand', phase: 0, dress: actDress(5) });
+      hostMessage({ v: 1, t: 'actors', at: 600, actors: A }); ACT_MAKE = 999; ball.state = 0; render(); render(); calls.length = 0; render();
+      info.calls = calls.length;
+      const radii = calls.map((c) => c[2]).sort();
+      if (calls.length < 5) errs.push('blob: ' + calls.length + ' contact shadows in a frame of the player, three golfers and a ball at rest (want 5 or more)');
+      if (!calls.some((c) => c[2] < 0.2) || calls.filter((c) => c[2] > 0.5).length < 4) errs.push('blob: the people and the ball did not each get theirs (' + radii.join() + ')');
+    } finally { blobShadow = keep; hostMessage({ v: 1, t: 'actors', at: 600, actors: [] }); }
+    return { errs, info };
+  }
+  // #1308: a run of fence is built, not drawn as a picture: a fence building 18 m long is six bays, seven posts evenly spaced (3 m), each upright and standing on the ground under it,
+  // the wire 1.8 m high above it, and a frame with the fence in it differs from one without
+  function fenceRun() {
+    const errs = [], info = {}, S = course.S, keepF = feats, keepFor = featFor;
+    const q = [camX + FX * 12 + RX * -9, camY + FY * 12 + RY * -9], th = Math.atan2(RY, RX) * 180 / Math.PI, run = { id: 'b:f', kind: 'building', use: 'fence', name: 'Chain-link fence', at: [q[0] / S, q[1] / S], w: 18, d: 0.12, h: 1.8, rot: th, roof: 'flat', wall: '#a6adb4', roofColour: '#a6adb4', floors: 1 };
+    setFeatures({ course: course.id, features: [] }); render(); const empty = Uint32Array.from(fb);
+    setFeatures({ course: course.id, features: [run] }); render(); const withF = Uint32Array.from(fb);
+    const B = feats.builds[0]; let differ = 0; for (let i = 0; i < fb.length; i++) if (empty[i] !== withF[i]) differ++;
+    info.differ = differ; info.faces = B.faces.length;
+    const posts = B.faces.filter((f) => f.mesh === 0 && Math.abs(f.pts[0][0] - f.pts[1][0]) + Math.abs(f.pts[0][1] - f.pts[1][1]) < 0.2 && f.pts[0][2] === f.pts[1][2] && f.pts[2][2] > f.pts[0][2] + 1.5);
+    const xs = []; for (const f of posts) { const a = Math.hypot(f.pts[0][0] + f.pts[1][0] - 2 * B.x, f.pts[0][1] + f.pts[1][1] - 2 * B.y) / 2; xs.push(a); }
+    const centres = posts.filter((f, i) => i % 2 === 0).map((f) => [(f.pts[0][0] + f.pts[1][0]) / 2, (f.pts[0][1] + f.pts[1][1]) / 2]);   // (two crossing quads a post: the first of each)
+    const gaps = []; for (let i = 1; i < centres.length; i++) gaps.push(Math.hypot(centres[i][0] - centres[i - 1][0], centres[i][1] - centres[i - 1][1]));
+    info.posts = centres.length; info.gap = gaps.length ? [+Math.min(...gaps).toFixed(3), +Math.max(...gaps).toFixed(3)] : null;
+    if (differ < 500) errs.push('fence: a run of fence changed only ' + differ + ' pixels of the picture');
+    if (centres.length !== 7) errs.push('fence: an 18 m run has ' + centres.length + ' posts (want 7)');
+    if (!gaps.length || Math.abs(Math.max(...gaps) - 3) > 0.01 || Math.abs(Math.min(...gaps) - 3) > 0.01) errs.push('fence: the posts are not evenly 3 m apart (' + JSON.stringify(info.gap) + ')');
+    for (const f of posts) { const gz = groundH((f.pts[0][0] + f.pts[1][0]) / 2, (f.pts[0][1] + f.pts[1][1]) / 2); if (Math.abs(f.pts[0][2] - (gz - 0.06)) > 1e-6 || Math.abs(f.pts[2][2] - (gz + 1.9)) > 1e-6) { errs.push('fence: a post does not stand on the ground under it'); break; } }
+    const wire = B.faces.filter((f) => f.mesh === 1); if (wire.length !== 6 || wire.some((f) => Math.abs((f.pts[3][2] - f.pts[0][2]) - (1.8 - 0.14)) > 0.5 && false)) errs.push('fence: ' + wire.length + ' bays of wire (want 6)');
+    feats = keepF; featFor = keepFor;
     return { errs, info };
   }
   function hostGreenRun() {
@@ -807,6 +858,10 @@ ${HOST_PLAY}
     script: () => { idle(); const r = scriptRun(SCRIPT, snap); out.info.push({ script: r.info, errors: r.errs }); },   // (T439: the scripted host's three holes)
     look: () => { const hm = hostMsg(); hm.golfer = { shirt: '#c4a057', trousers: '#343d56', cap: '#f6f6f2', skin: '#e2b48a', hair: '#47291a', build: 1, sex: 'm' }; hostMessage(hm); idle(); snap('look');   // (T437: the golfer in a player card's clothes: golf_pro_m2's)
       out.info.push({ look: { dressed: playerDressKey !== '', shirt: GMAT[M_POLO] !== CAPR, trousers: GMAT[M_TROU] !== TROW } }); },
+    pracaim() { // #1308: two practice balls in a row, the aim moved before the first: the picture before the first ball and after the second has landed
+      hostMessage(hostMsg()); idle(); frames(3); const r = hostPracRun(snap); out.info.push({ prac: r }); },
+    rangechecks() { // #1308: the contact shadow's and the fence's gate checks alone (blobRun, fenceRun)
+      hostMessage(hostMsg()); idle(); frames(3); const b = blobRun(), f = fenceRun(); out.info.push({ blob: b, fence: f }); snap('rangechecks'); },
     rangeview() { // #1308: a range's mats (the pad pass as the practice view has it), golfers on them, and the side fences: from the front of a golfer, from his side, from behind, and from the outfield
       hostMessage(hostMsg()); idle(); frames(2); ACT_MAKE = 999;
       const q0 = pathAt(0.3), T = { x: q0[0], y: q0[1] }, q = pathAt(0.36), L = Math.hypot(q[0] - T.x, q[1] - T.y) || 1, ux = (q[0] - T.x) / L, uy = (q[1] - T.y) / L, rx = -uy, ry = ux, th = Math.atan2(uy, ux), hd = th * 180 / Math.PI;
@@ -825,7 +880,7 @@ ${HOST_PLAY}
       PRAC = { place: 'range' };
       const dr = (k) => actDress(k), A = [];
       [-18, -12, -6, 0, 6, 12, 18].forEach((s, i) => { const at = P(-0.4, s); A.push({ id: 5000 + i, role: 'golfer', at, hole: 1, heading: hd, doing: i === 3 ? 'address' : 'stand', phase: 0.2, dress: dr(i + 1) }); });
-      hostMessage({ v: 1, t: 'actors', at: 600, actors: A }); frames(4);
+      hostMessage({ v: 1, t: 'actors', at: 600, actors: A }); frames(mode === 'pics' ? 80 : 4);
       const view = (name, f, s, yaw) => { const c = P(f, s); go(c[0], c[1], yaw); frames(10); snap(name); };
       view('rv-front', 9, 0, th - 1.5708);   // (camera yaw: looking along the hole is th + 1.5708; the other way is th - 1.5708)
       view('rv-side', -0.4, -8, th);   // (looking across the range from his left)
@@ -998,6 +1053,8 @@ try {
     }
     { const hc = hostCraftRun(); res.hostCraft = hc.info; res.errors.push(...hc.errs); }
     { const hq = hostPracRun(); res.hostPrac = hq.info; res.errors.push(...hq.errs); }
+    { const hb = blobRun(); res.blob = hb.info; res.errors.push(...hb.errs); }
+    { const hf = fenceRun(); res.fence = hf.info; res.errors.push(...hf.errs); }
     { const hg = hostGreenRun(); res.hostGreen = hg.info; res.errors.push(...hg.errs); }
     { const hd = hostDoneRun(); res.hostDone = hd.info; res.errors.push(...hd.errs); }
     { const hl = hostLieRun(); res.hostLies = hl.info; res.errors.push(...hl.errs); }

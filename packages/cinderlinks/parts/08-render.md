@@ -891,7 +891,7 @@ function blobShadow(x, y, r, k) {
     for (let xx = xa; xx <= xb; xx++) {
       const nx = (xx - bx) / rxp, w = 1 - nx * nx - ny * ny; if (w <= 0) continue;
       const q = o + xx, dz = zbuf[q] - zc; if (dz > tol || dz < -tol) continue;
-      const f = k * (w > 0.5 ? 1 : w * 2), c = fb[q];
+      const f = k * w * (2 - w), c = fb[q];   // (a full middle, fading smoothly to nothing at the edge)
       fb[q] = (0xff000000 | ((((c >> 16) & 255) * (1 - 0.3 * f)) << 16) | ((((c >> 8) & 255) * (1 - 0.42 * f)) << 8) | ((c & 255) * (1 - 0.44 * f))) >>> 0;
     }
   }
