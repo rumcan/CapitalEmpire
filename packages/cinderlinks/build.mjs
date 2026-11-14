@@ -56,6 +56,17 @@ if (fs.existsSync(editDir)) {
   console.log(ids.length ? 'golfer art: ' + ids.length + ' golfers (' + (bytes / 1e6).toFixed(1) + ' MB)' : 'golfer art: none found in art/golfers (the view draws its own figure)');
 }
 
+// 4c. J8 (#1261): CapitalEmpire's painted action tiles the view shows (the practice drills' and the shot panel's: src/assets/ui/tiles/drill-*.webp and shot-*.webp)
+// into tiles/, one file each (the page loads them as it needs them). A checkout without them builds without them (the view then shows no picture there)
+{
+  const SRC = path.join(HERE, '..', '..', 'src', 'assets', 'ui', 'tiles');
+  const names = fs.existsSync(SRC) ? fs.readdirSync(SRC).filter((f) => /^(drill|shot)-.+\.webp$/.test(f)).sort() : [];
+  let bytes = 0;
+  if (names.length) fs.mkdirSync(path.join(OUT, 'tiles'), { recursive: true });
+  for (const f of names) { fs.copyFileSync(path.join(SRC, f), path.join(OUT, 'tiles', f)); bytes += fs.statSync(path.join(OUT, 'tiles', f)).size; }
+  console.log(names.length ? 'action tiles: ' + names.length + ' (' + (bytes / 1e3).toFixed(0) + ' KB)' : 'action tiles: none found in src/assets/ui/tiles (the view shows no picture on its drills and shot panel)');
+}
+
 // 5. game.js must at least parse
 const game = path.join(OUT, 'game.js');
 const chk = spawnSync(process.execPath, ['--check', game], { encoding: 'utf8' });

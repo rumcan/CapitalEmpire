@@ -137,6 +137,8 @@ Check: function hostTabs(
 R: J5f (the owner, 2026-11-14), host mode: the aim's distance (from the ball to the aim ring, in metres) is read out above the club box; before the swing the blue ribbon is drawn at the aim's strength, so it ends on the aim ring (not at the club's full carry), and while he holds it grows with the meter and reaches the ring at the gold mark; Curve (draw to fade) and Flight (low to high) are sliders, any amount from none to the full old pick, and a side he has not earned is held at the middle and says what unlocks it.
 Check: function hostPickAmt(
 Check: function hostAimRead(
+R: J8 (#1261; the owner: "add ALOT more images to the UI. especially on stuff you can do"): in host mode the shot panel's pictures: a painted tile at each end of Curve (shot-draw, shot-fade) and of Flight (shot-low, shot-high), above the end's name, and one on the Tour button (shot-spin), from CapitalEmpire's src/assets/ui/tiles (build.mjs copies them into tiles/). They are pictures only (no text, never a click of their own: the end names and Tour keep theirs), and a locked end's tile dims with its name.
+Check: tiles/shot-spin.webp
 
 ````js file=game.js
 
@@ -533,9 +535,9 @@ function hostShotIn() {   // what the pick adds to an input (none for a putt)
 }
 // the panel: built once, shown while it is his turn with a full shot in hand
 const shotEl = document.createElement('div'); shotEl.id = 'shotc';
-shotEl.innerHTML = '<div class="row sl"><span data-z="curve" title="Click to centre">Curve</span><small data-e="draw">Draw</small><input type="range" data-s="curve" min="-100" max="100" step="5" value="0" aria-label="Curve: draw to fade"><small data-e="fade">Fade</small></div>'   // (J5f: sliders, a draw .. a fade, low .. high)
-  + '<div class="row sl"><span data-z="flight" title="Click to centre">Flight</span><small data-e="low">Low</small><input type="range" data-s="flight" min="-100" max="100" step="5" value="0" aria-label="Flight: low to high"><small data-e="high">High</small></div>'
-  + '<div class="row"><span>Spin</span><canvas id="spinBall" width="40" height="40"></canvas><b data-k="tour">Tour</b></div>'
+shotEl.innerHTML = '<div class="row sl"><span data-z="curve" title="Click to centre">Curve</span><small data-e="draw"><img src="tiles/shot-draw.webp" alt="" aria-hidden="true" draggable="false">Draw</small><input type="range" data-s="curve" min="-100" max="100" step="5" value="0" aria-label="Curve: draw to fade"><small data-e="fade"><img src="tiles/shot-fade.webp" alt="" aria-hidden="true" draggable="false">Fade</small></div>'   // (J5f: sliders, a draw .. a fade, low .. high)
+  + '<div class="row sl"><span data-z="flight" title="Click to centre">Flight</span><small data-e="low"><img src="tiles/shot-low.webp" alt="" aria-hidden="true" draggable="false">Low</small><input type="range" data-s="flight" min="-100" max="100" step="5" value="0" aria-label="Flight: low to high"><small data-e="high"><img src="tiles/shot-high.webp" alt="" aria-hidden="true" draggable="false">High</small></div>'
+  + '<div class="row"><span>Spin</span><canvas id="spinBall" width="40" height="40"></canvas><b data-k="tour"><img src="tiles/shot-spin.webp" alt="" aria-hidden="true" draggable="false">Tour</b></div>'
   + '<div class="row"><b data-k="boost" class="boost">Go for it</b><i id="boostTxt"></i></div><div id="pickTxt"></div>';
 if (typeof hudEl !== 'undefined' && hudEl.appendChild) hudEl.appendChild(shotEl);
 const spinBall = shotEl.querySelector ? shotEl.querySelector('#spinBall') : null, sctx = spinBall && spinBall.getContext ? spinBall.getContext('2d') : null;
