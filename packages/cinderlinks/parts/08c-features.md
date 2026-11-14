@@ -11,6 +11,7 @@ R: A pad (a path feature with `ring`: J6b, the practice range's concrete slabs, 
 R: J6c: while he practises, a still picture's pad pass is not made again: what it painted is kept and put back while the camera, the light, the pads and the ground's depth are the same as in the frame before (pixel for pixel what making it again would paint), so the bare outfield's earth costs a still picture nothing.
 R: J6d: the pad pass of a moving picture costs the bare outfield's earth little: the same pixels, made without asking the pad grid for each of them. While he practises, a pixel whose nearest grid cell is deep inside a pad (the cell and its eight neighbours more than the edge's width in) is inside it with no edge shade, and a whole 8 x 8 block whose pixels can only fall in deep cells of one pad is that pad's, with no cell asked for any pixel of it (a slab, which asks for its stretch, is asked for each); the nearest cell is found without Math.round, which costs 6 ns a call, and the air's haze is read from a table of the same function.
 R: #1308: a fence (a `building` of use `fence`: the host sends one per run, a building w long, 0.12 m thick, turned to its axis, h high, its wall colour; the host's runs are the map's fence pieces that touch end to end, on the range and on a hole) is built, never drawn as a picture: a post every 3 m or so evenly along it, each standing on the ground under it, a rail along the top, and between the posts see-through wire (a chain-link's fine checker, a picket's gaps, an iron fence's bars), 1.8 m high for a chain-link. It is upright and the same from every side; it casts no shadow of its own.
+R: #1308 (the owner: "this building is skew as F"): the range's big pictures of buildings are drawn as the view's own boxes, never as flat pictures stood up facing the camera (the game's pictures are drawn for one turn of the map and look sheared from every other side): a `hut` (the shop in cream panels with a corrugated roof, the coffee kiosk, the ball dispenser, the caravan, a shed: a box of its real footprint, upright, flat roof, a door and windows) and a `shelter` (the hitting deck: a flat roof on posts). A house is its own `house` box. Signs, boards, bins and the like stay pictures.
 R: A course without the file plays as before.
 File: game.js
 Check: function lampLight(
@@ -19,6 +20,7 @@ Check: let padKeep
 Check: function drawPaths(
 Check: function drawBuildings(
 Check: function fenceFaces(
+Check: function shelterFaces(
 Check: function setFeatures(
 Check: function padSd(
 
@@ -42,8 +44,8 @@ function setFeatures(F) {   // F: the edits file's object (or nothing): made rea
       if (p.pts.length >= 4) paths.push(p);
     } else if (f.kind === 'building' && Array.isArray(f.at)) {
       const x = +f.at[0] * S, y = +f.at[1] * S; if (!(x === x && y === y)) continue;
-      const fen = f.use === 'fence';   // (#1308: a run of fence: long, thin and low: its own limits)
-      builds.push({ x, y, w: fen ? clamp(+f.w || 3, 0.5, 600) * S : clamp(+f.w || 10, 2, 120) * S, d: fen ? clamp(+f.d || 0.12, 0.05, 0.5) * S : clamp(+f.d || 8, 2, 120) * S, h: fen ? clamp(+f.h || 1.8, 0.6, 4) * Math.max(S, 0.8) : clamp(+f.h || 4.5, 2, 20) * Math.max(S, 0.8), rot: (+f.rot || 0) * Math.PI / 180, roof: f.roof || 'gable',
+      const fen = f.use === 'fence', small = f.use === 'hut' || f.use === 'shelter';   // (#1308: a run of fence: long, thin and low: its own limits; a hut or a shelter may be small)
+      builds.push({ x, y, w: fen ? clamp(+f.w || 3, 0.5, 600) * S : clamp(+f.w || 10, small ? 0.8 : 2, 120) * S, d: fen ? clamp(+f.d || 0.12, 0.05, 0.5) * S : clamp(+f.d || 8, small ? 0.8 : 2, 120) * S, h: fen ? clamp(+f.h || 1.8, 0.6, 4) * Math.max(S, 0.8) : clamp(+f.h || 4.5, small ? 1.2 : 2, 20) * Math.max(S, 0.8), rot: (+f.rot || 0) * Math.PI / 180, roof: f.roof || 'gable',
         wall: hexRgb(f.wall, [232, 220, 192]), rc: hexRgb(f.roofColour, [138, 59, 42]), floors: clamp(Math.round(+f.floors || 1), 1, 4), faces: null, use: typeof f.use === 'string' ? f.use : '', fk: /picket/i.test(f.name || '') ? 2 : /iron/i.test(f.name || '') ? 3 : 1 });
     } else if (f.kind === 'light' && Array.isArray(f.at)) {   // #1200: a floodlight tower: a mast with its lamp head (a building of use 'light'), and a lamp that lights the ground within its reach
       const x = +f.at[0] * S, y = +f.at[1] * S; if (!(x === x && y === y)) continue;
@@ -273,6 +275,19 @@ function fenceFaces(B, P, faces) {
     faces.push({ pts: [P(a0, 0, g0 + 0.08), P(a1, 0, g1 + 0.08), P(a1, 0, g1 + h - 0.06), P(a0, 0, g0 + h - 0.06)], n: up, col: wc, bias: 0, emit: false, mesh: mm });             // (the wire, the pickets, the bars)
   }
 }
+// #1308: a shelter (the range's hitting deck): a flat roof slab on posts, a post at each corner and every 4 m or so along its long sides; the slab's top, its underside and four thin edges, each a flat face
+function shelterFaces(B, P, faces, zm) {
+  const hw = B.w / 2, hd = B.d / 2, up = [0, 0, 1], dn = [0, 0, -1], col = B.rc, pc = [B.wall[0] * 0.8, B.wall[1] * 0.8, B.wall[2] * 0.8], zt = zm + B.h, zb = zt - 0.3, hp = 0.1;
+  const add = (pts, n, c) => faces.push({ pts, n, col: c, bias: 0, emit: false, mesh: 0 });
+  add([P(-hw, -hd, zt), P(hw, -hd, zt), P(hw, hd, zt), P(-hw, hd, zt)], up, col); add([P(-hw, -hd, zb), P(hw, -hd, zb), P(hw, hd, zb), P(-hw, hd, zb)], dn, pc);
+  for (const [a0, f0, a1, f1] of [[-hw, -hd, hw, -hd], [hw, -hd, hw, hd], [hw, hd, -hw, hd], [-hw, hd, -hw, -hd]]) add([P(a0, f0, zb), P(a1, f1, zb), P(a1, f1, zt), P(a0, f0, zt)], up, pc);
+  const nl = Math.max(1, Math.round(Math.max(B.w, B.d) / 4)), long = B.w >= B.d;
+  for (let side = -1; side <= 1; side += 2) for (let i = 0; i <= nl; i++) {
+    const a = long ? -hw + 0.3 + (B.w - 0.6) * i / nl : side * (hw - 0.3), f = long ? side * (hd - 0.3) : -hd + 0.3 + (B.d - 0.6) * i / nl, q = P(a, f, 0), g = groundH(q[0], q[1]) - 0.06;
+    faces.push({ pts: [P(a - hp, f, g), P(a + hp, f, g), P(a + hp, f, zb), P(a - hp, f, zb)], n: up, col: pc, bias: 0, emit: false, mesh: 0 });
+    faces.push({ pts: [P(a, f - hp, g), P(a, f + hp, g), P(a, f + hp, zb), P(a, f - hp, zb)], n: up, col: pc, bias: 0, emit: false, mesh: 0 });
+  }
+}
 // a building's faces: each a few corners in the world (metres), a colour, how it faces the sun
 function buildFaces(B) {
   const cr = Math.cos(B.rot), sr = Math.sin(B.rot), hw = B.w / 2, hd = B.d / 2, faces = [];
@@ -281,6 +296,7 @@ function buildFaces(B) {
   const z0 = zb - 0.4, z1 = zm + B.h, mul = (c, k) => [Math.min(255, c[0] * k), Math.min(255, c[1] * k), Math.min(255, c[2] * k)];
   const add = (pts, n, col, bias = 0, emit = false) => faces.push({ pts, n, col, bias, emit, mesh: 0 });   // bias: how far in front of its wall a detail counts (cm); also its rank of detail (see drawBuildings)
   if (B.use === 'light') { lightFaces(B, P, N, add, zm); B.faces = faces; B.z0 = zm; B.top = zm + B.h; return; }   // (#1200: a floodlight tower)
+  if (B.use === 'shelter') { shelterFaces(B, P, faces, zm); B.faces = faces; B.z0 = zm; B.top = zm + B.h; return; }   // (#1308: the hitting deck)
   if (B.use === 'fence') { fenceFaces(B, P, faces); B.faces = faces; B.z0 = zm; B.top = zm + B.h; return; }   // (#1308: a run of fence)
   if (B.use === 'tent' || B.use === 'stand' || B.use === 'board') { dressFaces(B, P, N, add, mul, zm); B.faces = faces; B.z0 = zm; B.top = zm + B.h; return; }   // (T429: a marquee, a grandstand: parts/08h-dress.md)
   const FRAME = [246, 242, 230], G1 = [74, 96, 128], G2 = [116, 148, 184];

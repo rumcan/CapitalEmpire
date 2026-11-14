@@ -226,11 +226,12 @@ function hostPlayMsg(m) {   // a play message from the host: a turn, a shot, the
   if (m.t === 'turn') hostTurn(m); else if (m.t === 'holeEnd') hostHoleEnd(m);
 }
 function hostTurn(m) {   // the owner's turn: the ball and the pin where the model has them, his clubs in the tabs, the suggested club in hand
-  const S = hostS(); HP.turn = m; HP.clubs = Array.isArray(m.clubs) ? m.clubs : []; HP.wait = 0; HP.over = false;
+  const S = hostS(), live = pracLock() && !pracNew && HP.turn && HP.turn.stroke === m.stroke && HP.turn.hole === m.hole && HP.clubs[club] ? { club: HP.clubs[club].club, ax: aim.x, ay: aim.y, pick: HP.pick, pin: hostAimPin } : null;   // (the same ball's turn sent again, e.g. with a new wind: what he has set on it so far stays)
+  HP.turn = m; HP.clubs = Array.isArray(m.clubs) ? m.clubs : []; HP.wait = 0; HP.over = false;
   if (m.hole !== holeN) newHole(m.hole, 0, 0);
   ball.x = ball.lx = m.ball[0] * S; ball.y = ball.ly = m.ball[1] * S; ball.z = groundH(ball.x, ball.y); ball.vx = ball.vy = ball.vz = 0; ball.state = 0;
   hole.pin.x = hole.green.x = m.pin[0] * S; hole.pin.y = hole.green.y = m.pin[1] * S;
-  const kp = pracKept(m);   // (#1308: practising, the next ball is hit with what the last one was: his aim, club, curve, flight and spin stay until he moves them; a drill picked, or the first ball, takes the suggestion once)
+  const kp = live ? pracKept(m, live) : pracKept(m);   // (#1308: practising, the next ball is hit with what the last one was: his aim, club, curve, flight and spin stay until he moves them; a drill picked, or the first ball, takes the suggestion once)
   strokes = m.stroke - 1; autoClub = false; club = kp ? kp.ci : Math.max(0, HP.clubs.findIndex((c) => c.club === m.suggested.club)); shownClub = -2;
   HP.pick = kp ? kp.pick : null; HP.pv = null; HP.pvSig = ''; hostAimPin = kp ? kp.pin : false;   // (T441: each turn starts from a plain shot; T446: and the aim follows the mouse until a click sets it)
   const ax = (kp ? kp.ax : m.suggested.aim[0] * S) - ball.x, ay = (kp ? kp.ay : m.suggested.aim[1] * S) - ball.y, al = Math.hypot(ax, ay); if (al > 0.3) { aim.dx = ax / al; aim.dy = ay / al; }
