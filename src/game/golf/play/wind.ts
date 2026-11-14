@@ -17,6 +17,8 @@ export interface WindNow { mph: number; from: number }
 export const NO_WIND: Readonly<Wind> = { mph: 0, from: 0, gusty: 0, seed: 0 };
 /** the strongest wind the game has (mph): a saved wind is held to it */
 export const WIND_MAX = 40;
+/** the day's wind: from DAY_WIND_MIN to DAY_WIND_MAX mph (the owner's range) */
+export const DAY_WIND_MIN = 4, DAY_WIND_MAX = 30;
 /** under this many mph the day is called calm (the panel says so; the flags hang) */
 export const CALM_MPH = 2.5;
 
@@ -40,9 +42,10 @@ const clamp = (v: number, lo: number, hi: number): number => Math.min(hi, Math.m
  *  prevailing wind is from the west (six days in ten from the west's quarter), the rest from anywhere */
 export function dailyWind(seed: number, day: number): Wind {
   const u = (k: number) => unit(seed, day, k), s = u(1), blow = u(2) < 0.1;
-  const mph = Math.round((2 + 13 * s ** 1.4 + (blow ? 6 + 6 * u(3) : 0)) * 10) / 10;
+  // the owner, 2026-11-14: "wind depends on the day. from 4mph to 30mph. same as normal golf games": a breezy 4-22 mph most days, a blowy one (1 in 10) up to 30
+  const mph = Math.round((4 + 18 * s ** 1.4 + (blow ? 4 + 4 * u(3) : 0)) * 10) / 10;
   const from = u(4) < 0.6 ? 225 + 90 * u(5) : 360 * u(6);
-  return { mph: Math.min(WIND_MAX, mph), from: Math.round(from) % 360, gusty: Math.round(1000 * Math.min(1, 0.15 + 0.85 * u(7) ** 1.3)) / 1000, seed: Math.floor(u(8) * 2147483647) };
+  return { mph: Math.min(DAY_WIND_MAX, mph), from: Math.round(from) % 360, gusty: Math.round(1000 * Math.min(1, 0.15 + 0.85 * u(7) ** 1.3)) / 1000, seed: Math.floor(u(8) * 2147483647) };
 }
 
 /** the gust at time t (seconds, any clock): 0 in a lull .. 1 at the top of a gust; three slow waves (7, 13 and 23 s) of the wind's own phases, sharpened so
