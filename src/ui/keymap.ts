@@ -25,7 +25,8 @@ export const KEY_PARTS: readonly { part: KeyPart; heading: string }[] = [
 
 /** the groups the number keys open (1 the first): the rail's groups a game shows after Select, in the rail's order (railEntries): the Course
  *  groups, the Town groups, Bulldoze. T250 split the rail into the course drawer and the town footer and kept the numbers as they were (the
- *  course drawer's 1-3 and Bulldoze's 6, the footer's 4 and 5 with a driving range) */
+ *  course drawer's 1-3 and Bulldoze's 6, the footer's 4 and 5 with a driving range); #1272 took Facilities off the rail (it is a tile of the Course flyout, no
+ *  number of its own): the course drawer's 1-2 and Bulldoze's 5, the footer's 3 and 4 */
 export function numberedGroups(golf: boolean, range: boolean): RailItem[] {
   // (the footer's Ground height, 2026-11-01, has no number: the groups keep the numbers they had)
   // (T288: nor Cart paths & roads, its own button since T288: the others keep their numbers)
@@ -91,7 +92,7 @@ export function keySheet(o: { golf: boolean; ui: ProgressiveUiState | null; rang
       for (const t of toolsIn(r, o.golf)) {
         shown.add(t.id);
         if (!t.key || t.alt || seen.has(t.id)) continue; // (T288: a second home's key, the road tool's in Cart paths & roads, is listed under its own group)
-        seen.add(t.id); rows.push(toolRow(t, t.id === 'road' ? 'Roads (Build)' : t.label));
+        seen.add(t.id); rows.push(toolRow(t, t.id === 'road' ? 'Roads (Build)' : t.within === 'facilities' ? `${t.label} (Facilities)` : t.label)); // (#1272: Z, Props: a tile of Course)
       }
       if (rows.length) out.push({ id: r.id, title: r.label, part, rows });
     }

@@ -879,7 +879,7 @@ export default function App() {
           <TownFooter {...rail} entries={drawerEntries(entries, 'footer')} boxRef={footBox} navRef={footRef} flyouts={up ? flyouts : null} raised={up} panel={dock === 'footer' && !idle ? { tool: game.uiTool, body: toolBody } : null} onClosePanel={() => { setFly(null); game.setTool('select'); }} />
           <div ref={railBox} className={`pointer-events-none absolute left-3 top-[var(--hud-top,5.75rem)] ${sideFly ? 'z-40' : 'z-20'} flex items-start gap-2 [&>*]:pointer-events-auto`}>
             {/* P23 P1-E: the same places from minute zero; a tool not open yet stays dimmed in place with what unlocks it, a new one says NEW */}
-            {/* T182: the groups (Driving range, Course, Facilities (T206) · Traffic, Town decoration); the range opens its card; a group opens its last tool, else its first open one */}
+            {/* T182: the groups (Driving range, Course, Cart paths & roads · Traffic, Town decoration; #1272: Facilities (T206) is the Course flyout's sixth tile, no button); the range opens its card; a group opens its last tool, else its first open one */}
             {/* T193: a group opens its flyout (a click again, Esc or a click on the map closes it); Select and Bulldoze pick their tool */}
             <Rail {...rail} navRef={railRef} entries={drawerEntries(entries, 'side')} walk={game.you ? { on: game.youWalkMode, set: (on: boolean) => { setFly(null); activeRail.current = 'select'; if (game.range.cardOpen) game.openRangeCard(false); game.setYouWalk(on); } } : undefined} />
             {!up && flyouts}
