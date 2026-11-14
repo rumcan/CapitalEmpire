@@ -241,7 +241,7 @@ export default function App() {
     if (!game.show) { try { history.replaceState(null, '', '#scene=off'); } catch { /* none */ } location.reload(); return; } // the scene's world could not be had: start again without it
     if (!snapRef.current) return;
     const d = new ShowDirector(game, SHOW_STOPS, startStop, snapRef.current, e => { if (e === 'first') setPosterOn(false); else if (e === 'slow') { d.end(); game.freeze(); setPosterOn(true); } });
-    director.current = d; d.begin();
+    director.current = d; d.begin(); (window as unknown as Record<string, unknown>).__showDirector = d; // (the checks' hook, like __game)
   }, [game?.ready, sceneWanted, game, startStop]);
   useEffect(() => () => { director.current?.end(); director.current = null; }, []);
   useEffect(() => { if (JAM) { try { performance.mark('ff-title-card'); } catch { /* no marks */ } } }, []);

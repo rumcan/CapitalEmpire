@@ -36,7 +36,7 @@ export const POSTER_FADE_MS = 1400;
 /** how long before a cut the director asks for the next stop's ground and trees (ms) */
 export const WARM_MS = 3500;
 /** the golf hours the scene keeps the town clock in (hours of the day): it starts at the first, and a cut that finds the clock past the second sets it back */
-export const SHOW_HOURS = Object.freeze({ start: 9.5, end: 16.5 });
+export const SHOW_HOURS = Object.freeze({ start: 7.0, end: 13.0 });
 /** the golfers a day the scene's course has (the sim's busiest ordinary day, so there are groups on every hole: engine dayInputs busy) */
 export const SHOW_GOLFERS = 80;
 /** the frame time (ms, over the first SLOW_AFTER_MS of running) above which the machine is too slow for the scene: it gives way to its still picture */
@@ -45,8 +45,12 @@ export const SLOW_FRAME_MS = 42, SLOW_AFTER_MS = 4000;
 /** the places, in the order of a visit's lap (a visit starts at a different one each time and goes round). Each is looked at in the shots
  *  (docs/jam-shots/j12-*.jpg) and moved until it is pretty: the tile numbers are the prepared world's (scripts/jam/menu-scene-build.mjs) */
 export const SHOW_STOPS: readonly ShowStop[] = [
-  { id: 'fairway', name: 'A finished hole, golfers on the fairway', x: 1120, y: 1170, dx: 6, dy: 8, z0: 0.24, z1: 0.27, secs: 15 },
-  { id: 'range', name: 'The driving range', x: 1002, y: 1077, dx: -4, dy: 6, z0: 0.26, z1: 0.26, secs: 15 },
+  { id: 'range', name: 'The driving range on a busy morning', x: 1000, y: 1003, dx: -12, dy: -4, z0: 0.3, z1: 0.28, secs: 15 },
+  { id: 'arrive', name: 'Cars arriving at the club', x: 962, y: 1022, dx: 8, dy: -8, z0: 0.3, z1: 0.3, secs: 15 },
+  { id: 'fairway', name: 'A fairway framed with trees', x: 922, y: 950, dx: -4, dy: -40, z0: 0.26, z1: 0.22, secs: 16 },
+  { id: 'green', name: 'A green with its flag', x: 802, y: 990, dx: 6, dy: -10, z0: 0.3, z1: 0.3, secs: 14 },
+  { id: 'farm', name: 'A farm by the county road', x: 474, y: 978, dx: 6, dy: 4, z0: 0.25, z1: 0.27, secs: 15 },
+  { id: 'bridge', name: 'The county road over the river', x: 1058, y: 1040, dx: 20, dy: 0, z0: 0.25, z1: 0.25, secs: 14 },
 ];
 
 /** the camera at moment u (0 at the start of the stop, 1 at its end) so that the point of interest is at the anchor of a screen cssW x cssH */

@@ -3397,7 +3397,7 @@ export class Game {
       setLotModel(LATEST_LOT_MODEL); this.farmModel = FARM_MODEL; this.farmsNew.clear(); this.golf = null; this.genTerrain(newSeed()); this.seedTowns();
     }
     else loaded = save;
-    if (showSave && loaded === showSave) { this.show = true; this.dayBusy = SHOW_GOLFERS; } // J12: the scene's course has a busy day (its golfers are always on the holes)
+    if (showSave && loaded === showSave) { this.show = true; this.dayBusy = SHOW_GOLFERS; if (this.golf) delete this.golf.everyday; } // J12: the scene's course has a busy day (its golfers are always on the holes): its day book starts afresh, so the roster is the busy day's, not the quiet one the world was built on
     tick(0.7);
     const tl = performance.now();
     this.ground.init(this.terrain);
@@ -13536,9 +13536,22 @@ export class Game {
     }
     if (jn) { const s = this.screen(jn[0], jn[1]); ctx.beginPath(); ctx.arc(s.x, s.y, 12 * dpr, 0, Math.PI * 2); ctx.strokeStyle = '#fff'; ctx.lineWidth = 2 * dpr; ctx.stroke(); }
   }
+  /** J12 (#1271): the overlay of the scene behind the jam's title card: the world's own moving things only (the range's balls, the golfers' balls, the dust, the night), and
+   *  no label, badge, tee marker, outline, ghost or hint (the owner's rule for the showcase: nothing floats over the picture). The labels' list is emptied each frame and never drawn */
+  private drawShowOverlay(ctx: CanvasRenderingContext2D, now: number, ze: number) {
+    this.labels.begin(ctx, this.dpr);
+    this.drawBalls(ctx);
+    if (this.range.scene) { const o = { x: 0, y: 0 }, cx = this.cw / 2, cy = this.ch / 2; this.range.drawOver(ctx, (x, y) => { o.x = (worldX(x, y) - this.cam.X) * ze + cx; o.y = (worldY(x, y) - this.cam.Y) * ze + cy; return o; }, ze, this.cam.z, this.dpr, this.cw, this.ch, this.labels); }
+    for (const p of this.particles) {
+      const s = this.screen(p.x, p.y), a = (1 - p.age / p.life) * 0.5, r = p.r * HW * ze;
+      ctx.fillStyle = `rgba(214,190,150,${a.toFixed(3)})`; ctx.beginPath(); ctx.ellipse(s.x, s.y - p.z * HH * ze * 1.5, r, r * 0.7, 0, 0, Math.PI * 2); ctx.fill();
+    }
+    this.drawNight(ctx, now);
+  }
   private drawOverlay(now: number) {
     const ctx = this.ov, ze = this.cam.z * this.dpr;
     ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.clearRect(0, 0, this.cw, this.ch);
+    if (this.show) { this.drawShowOverlay(ctx, now, ze); return; } // (J12: the scene behind the title card)
     // T151: the world labels drawn below are collected (this.labels) and written together after the tolls, placed so none overlap
     this.labels.begin(ctx, this.dpr);
     // J7d (#1234; the owner: "pls make all the labels show on hover"): in the jam a name label shows only while the pointer is over its thing (world-labels.ts)

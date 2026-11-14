@@ -79,7 +79,7 @@ test('the scene boots with no save read or written and no money floats; the game
 });
 
 test('the engine keeps the scene away from the player\'s slot: saving is blocked before anything could write, and the slot is not read', () => {
-  const src = readFileSync('src/game/engine.ts', 'utf8');
+  const src = readFileSync('src/game/engine.ts', 'utf8').replace(/\r\n/g, '\n'); // (a Windows checkout has CRLF)
   const at = (re: RegExp) => { const m = re.exec(src); assert.ok(m, `engine.ts has ${re}`); return m!.index; };
   const block = at(/if \(showSave\) this\.saveBlocked = true;/), read = at(/const read = opts\.bench \|\| fixName \|\| showSave \|\| this\.osmSpec \|\| !this\.boot\.save \? null : await readSave\(\)/), loaded = at(/const save = fixture \?\? showSave \?\? read\?\.save \?\? null;/);
   assert.ok(block < read && read < loaded, 'saveBlocked, then the (skipped) read, then the save chosen');
