@@ -64,6 +64,21 @@ for (const s of steps) {
 if (!ONLY && SET === 'all' && !failed) for (const k of Object.keys(manifest.voices)) if (!steps.some(s => s.key === k)) { rmSync(join(OUT, `${k}.mp3`), { force: true }); delete manifest.voices[k]; console.log(`gone  ${k} (no step has these words now)`); }
 writeFileSync(MANIFEST, JSON.stringify(manifest, null, 1) + '\n');
 rmSync(work, { recursive: true, force: true });
+// docs/jam/AUDIO-CREDITS.md lists every file (a test checks it): the voices' table is rewritten between its markers
+{
+  const credits = resolve(ROOT, 'docs/jam/AUDIO-CREDITS.md'), A = '<!-- voices:start -->', Z = '<!-- voices:end -->';
+  if (existsSync(credits) && OUT === resolve(ROOT, 'public/audio/voice')) {
+    const t = readFileSync(credits, 'utf8'), i = t.indexOf(A), j = t.indexOf(Z);
+    if (i >= 0 && j > i) {
+      const date = new Date().toISOString().slice(0, 10), eng = manifest.engine ?? '(engine not named)';
+      const rows = Object.entries(manifest.voices).map(([k, v]) => `| public/${v.file} | ${k.replace(/-[0-9a-f]{8}$/, '')} | ${eng} | made ${date} | ${(v.bytes / 1024).toFixed(0)} KB, ${v.seconds} s |`);
+      const table = rows.length
+        ? `Engine: ${eng} (its licence: see its own page). AI text to speech, run by the game's tooling over the game's own text.\n\n| File | Step | Engine | Made | Size |\n|---|---|---|---|---|\n${rows.join('\n')}`
+        : 'No voice files yet.';
+      writeFileSync(credits, `${t.slice(0, i + A.length)}\n${table}\n${t.slice(j)}`);
+    }
+  }
+}
 const all = Object.values(manifest.voices);
 console.log(`\n${made} made, ${failed} failed; ${all.length} voice files, ${(all.reduce((a, v) => a + v.bytes, 0) / 1048576).toFixed(2)} MB in ${OUT}`);
 process.exit(failed ? 1 : 0);

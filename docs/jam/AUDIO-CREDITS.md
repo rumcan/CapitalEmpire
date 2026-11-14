@@ -45,3 +45,18 @@ together), and the rest of the 25 candidates for mood, length or confidence.
 
 None are shipped yet. The tutorial's voice-over files are made by `scripts/jam/make-voice.mjs` with a local voice engine (one swappable command line); when they are
 made they are listed here with the engine, its licence and the date. Windows' built-in voices are never used.
+
+To make them (nothing else to change: the game finds a step's file by the id and a hash of the exact words on the card, and shows the Voice switch in Settings once the manifest has files):
+
+```
+node scripts/jam/make-voice.mjs --list                                   # the 16 steps and the words each is said as
+VOICE_CMD='<engine> ... {textfile} ... {out}' node scripts/jam/make-voice.mjs --engine-name '<engine and voice>'
+```
+
+`{textfile}` is a UTF-8 file with the words, `{out}` the audio file the engine must write (a .wav); the command runs through the shell once per step, then ffmpeg makes a mono 24 kHz 48 kbps MP3 at
+-16 LUFS in `public/audio/voice/` (about 100 KB a step; `--set jam` makes only the jam tutorial's 3) and updates `src/game/sound/voice-manifest.json`. A step whose words change later
+has no voice until the script is run again (it also removes the files of words no step has now). The script also writes the table below (the test checks every file under `public/audio/` is on this page).
+
+<!-- voices:start -->
+No voice files yet.
+<!-- voices:end -->
