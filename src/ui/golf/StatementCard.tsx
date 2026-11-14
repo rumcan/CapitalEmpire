@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import { GOAL, emergencyTotals, interestToDate, netWorthSeries, statementOf, type Report } from '../../game/golf/reports';
 import { emergencyLine } from '../../game/golf/risk';
 import { NetWorthChart } from './NetWorthChart';
+import { ActionTile, TILE_BIG, TILE_ROW } from '../ActionTile'; // J8 (#1261): the statement's toast and card wear its painted tile
 import { money, onFinlit, signed } from './finevents';
 
 const TOAST_MS = 10_000;
@@ -47,10 +48,15 @@ export function StatementCard({ history }: { history: readonly Report[] }) {
     {toast && !s && (
       <button type="button" onClick={() => { setFull(toastAt); setToastAt(null); }} aria-live="polite" data-testid="statement-toast"
         className="pointer-events-auto absolute bottom-[9.5rem] left-3 z-30 w-64 rounded-xl border border-white/10 bg-slate-950/90 p-3 text-left text-slate-200 shadow-xl backdrop-blur hover:border-emerald-400/60">
-        <div className="text-[11px] font-semibold uppercase tracking-wider text-emerald-300/80">{toast.label} statement</div>
-        <div className="text-sm font-semibold text-white">{headline(toast.profit)}</div>
-        <div className="text-xs text-slate-400">Net worth {money(toast.netWorth)} ({signed(toast.netWorthChange)}). Click for details.</div>
-        {history[toastAt!]?.events[0] && <div className="mt-1 text-xs text-amber-200">{history[toastAt!].events[0]}</div>}
+        <div className="flex items-start gap-2.5">
+          <ActionTile tile="statement" size={TILE_ROW + 4} />
+          <div className="min-w-0 flex-1">
+            <div className="text-[11px] font-semibold uppercase tracking-wider text-emerald-300/80">{toast.label} statement</div>
+            <div className="text-sm font-semibold text-white">{headline(toast.profit)}</div>
+            <div className="text-xs text-slate-400">Net worth {money(toast.netWorth)} ({signed(toast.netWorthChange)}). Click for details.</div>
+            {history[toastAt!]?.events[0] && <div className="mt-1 text-xs text-amber-200">{history[toastAt!].events[0]}</div>}
+          </div>
+        </div>
       </button>
     )}
     {s && full !== null && (
@@ -61,9 +67,12 @@ export function StatementCard({ history }: { history: readonly Report[] }) {
             <div className="text-xs font-semibold uppercase tracking-[0.2em] text-amber-400/80">{s.label} statement</div>
             <button type="button" className="chip px-2 py-0.5 disabled:opacity-30" disabled={full >= history.length - 1} onClick={() => setFull(full + 1)} aria-label="Next month">›</button>
           </div>
-          <div className="text-center">
-            <div className={`text-2xl font-bold ${s.profit >= 0 ? 'text-emerald-300' : 'text-rose-300'}`}>{signed(s.profit)}</div>
-            <div className="text-xs text-slate-400">profit this month · net worth {money(s.netWorth)} ({signed(s.netWorthChange)})</div>
+          <div className="flex items-center justify-center gap-3">
+            <ActionTile tile="statement" size={TILE_BIG} />
+            <div className="text-center">
+              <div className={`text-2xl font-bold ${s.profit >= 0 ? 'text-emerald-300' : 'text-rose-300'}`}>{signed(s.profit)}</div>
+              <div className="text-xs text-slate-400">profit this month · net worth {money(s.netWorth)} ({signed(s.netWorthChange)})</div>
+            </div>
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div className="rounded-xl border border-white/10 bg-white/5 p-2">

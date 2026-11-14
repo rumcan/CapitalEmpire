@@ -6,10 +6,13 @@
 // T293 (#878): the start tutorial runs on this card too (heading, testid, Next on its 'next' steps, Skip tutorial): one guide look, not two.
 import type { GuideLine } from '../../game/ext/progressive-ui/guide';
 import { Icon } from '../Icon';
+import { ActionTile, TILE_SMALL } from '../ActionTile'; // J8 (#1261): a step's painted tile where the caller gives one
+import type { ToolTile } from '../tool-tiles';
 import { money } from './money';
 
-export function RangeGuideCard({ view, right = 'right-3', onShow, onSkip, onFold, onScene, onNext, heading = 'Guide · build your range', tid = 'range-guide', foot = 'Each step pays when it is done', offLabel = 'Skip guide' }: {
+export function RangeGuideCard({ view, right = 'right-3', onShow, onSkip, onFold, onScene, onNext, pics, heading = 'Guide · build your range', tid = 'range-guide', foot = 'Each step pays when it is done', offLabel = 'Skip guide' }: {
   view: { lines: GuideLine[]; folded: boolean }; right?: string;
+  /** J8 (#1261): a painted tile for a step, by its id (the jam tutorial's: tool-tiles.ts TOUR_TILE; absent: none) */ pics?: Readonly<Record<string, ToolTile>> | undefined;
   /** T293: Next on the current line when its step goes on with Next (absent: every step ticks itself) */ onNext?: (id: string) => void;
   /** T293: the card's heading, test id prefix, footnote and Skip-all label (the range guide's by default) */ heading?: string; tid?: string; foot?: string; offLabel?: string;
   onShow: (id: string) => void; /** a line's Skip (its id), or Skip guide (null) */ onSkip: (id: string | null) => void; onFold: (folded: boolean) => void;
@@ -31,6 +34,7 @@ export function RangeGuideCard({ view, right = 'right-3', onShow, onSkip, onFold
           <li key={l.step.id} className={`rounded-lg border px-2 py-1.5 text-xs ${l.current ? 'border-amber-400/40 bg-amber-400/5' : l.state === 'done' ? 'border-emerald-500/20 bg-emerald-500/5' : 'border-white/5 bg-white/5'}`} data-testid={`${tid}-${l.step.id}`} data-state={l.state}>
             <div className="flex items-center gap-2">
               <span className={`w-4 shrink-0 text-center font-bold ${l.state === 'done' ? 'text-emerald-300' : l.state === 'skipped' ? 'text-slate-500' : 'text-amber-300'}`} aria-label={l.state === 'done' ? 'Done' : l.state === 'skipped' ? 'Skipped' : `Step ${l.step.n}`}>{l.state === 'done' ? '✓' : l.state === 'skipped' ? '–' : l.step.n}</span>
+              <ActionTile tile={pics?.[l.step.id]} size={TILE_SMALL + 8} className={l.state === 'todo' ? '' : 'opacity-60'} />
               <span className={`flex-1 font-medium ${l.state === 'todo' ? 'text-white' : 'text-slate-400'} ${l.state === 'skipped' ? 'line-through' : ''}`}>{l.step.title}</span>
               {l.step.reward ? <span className={`shrink-0 tabular-nums ${l.state === 'done' ? 'text-emerald-300' : 'text-slate-400'}`} title={l.state === 'done' ? 'Paid' : 'Paid when the step is done'}>{l.state === 'done' ? '+' : ''}{money(l.step.reward)}</span> : null}
               {l.state === 'todo' && !l.current && <button className="chip px-2 py-0.5" onClick={() => onShow(l.step.id)} title="Show me: the tool and the spot" data-testid={`${tid}-show-${l.step.n}`}>Show</button>}

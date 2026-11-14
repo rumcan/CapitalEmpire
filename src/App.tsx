@@ -61,6 +61,8 @@ import { roomLine } from './game/golf/towngrowth';
 import { formatMultiDayStatus } from './game/golf/multiday';
 import { decorInfo } from './game/golf/decor';
 import { Icon, type IconName } from './ui/Icon';
+import { ActionTile, TILE_ROW, TILE_SMALL } from './ui/ActionTile'; // J8 (#1261): Settings, Save, Load and New game wear painted tiles
+import { TOUR_TILE } from './ui/tool-tiles';
 import { NightPanel } from './ui/NightPanel';
 import { GradePanel } from './ui/GradePanel';
 import { RoadThumb } from './ui/RoadThumb';
@@ -632,6 +634,8 @@ export default function App() {
                 <button className={`btn-icon ${menu ? 'on' : ''}`} onClick={() => setMenu(!menu)} data-tip="Settings"><Icon name="gear" size={22} /></button>
                 {menu && (
                   <div className="glass absolute right-0 top-full z-30 mt-2 flex max-h-[calc(100vh-8rem)] w-80 flex-col gap-1 overflow-y-auto p-2">
+                    {/* J8 (#1261): the menu's header, with its painted tile */}
+                    <div className="flex items-center gap-2.5 px-2 pb-1 pt-0.5" data-testid="settings-head"><ActionTile tile="settings" size={TILE_ROW} /><span className="font-semibold text-amber-200">Settings</span></div>
                     {!JAM && <label className="flex cursor-pointer items-center gap-2 px-2 py-2 text-sm" data-tip="Dev badge and Studio (F3); F4 shows the performance, traffic and growth panel and the tile readout"><input type="checkbox" checked={dev} onChange={e => setDev(e.target.checked)} />Developer (F3)</label>}
                     {/* T117: the unlocks' Settings switch (was the top bar's All tools chip): every tool and fine control now, whatever the stage */}
                     {!JAM && game.playerProgressFacts() && (
@@ -767,9 +771,9 @@ export default function App() {
                     {!JAM && <GradePanel game={game} bump={bump} />}
                     {!JAM && <NightPanel game={game} bump={bump} />}
                     </>}
-                    <button className="btn w-full" onClick={() => { setMenu(false); game.save(); }} data-tip="Saved automatically; force a save now">Save</button>
-                    <button className="btn w-full" onClick={() => { setMenu(false); void game.downloadSave(); }} data-tip="Download the save as a .cesave file (for a bug report, or to carry it to another computer)">Download save</button>
-                    <button className="btn w-full" onClick={() => saveFile.current?.click()} data-tip="Load a .cesave file in place of this game: this game is backed up first">Load save file…</button>
+                    <button className="btn w-full" onClick={() => { setMenu(false); game.save(); }} data-tip="Saved automatically; force a save now"><ActionTile tile="save-game" size={TILE_SMALL} />Save</button>
+                    <button className="btn w-full" onClick={() => { setMenu(false); void game.downloadSave(); }} data-tip="Download the save as a .cesave file (for a bug report, or to carry it to another computer)"><ActionTile tile="save-game" size={TILE_SMALL} />Download save</button>
+                    <button className="btn w-full" onClick={() => saveFile.current?.click()} data-tip="Load a .cesave file in place of this game: this game is backed up first"><ActionTile tile="save-game" size={TILE_SMALL} />Load save file…</button>
                     <input ref={saveFile} type="file" accept=".cesave,application/gzip" className="hidden" onChange={e => { const f = e.target.files?.[0]; e.target.value = ''; if (f) void game.loadSaveFile(f); }} />
                     {backups.length > 0 && <button className="btn w-full" onClick={() => setBackupsOpen(!backupsOpen)} data-tip="Saves kept as backups: a newer build's, an unreadable one, the copy before a migration, and the one replaced by a load">Backups ({backups.length}) {backupsOpen ? '▴' : '▾'}</button>}
                     {backupsOpen && backups.map(k => (
@@ -783,7 +787,7 @@ export default function App() {
                     <div className="px-2 pt-1 text-[12px] opacity-50" data-tip="The real courses (Rondebosch, Magnolia National, Woodhill and any you download) are built from OpenStreetMap data, which is available under the Open Database Licence (ODbL 1.0): openstreetmap.org/copyright" data-testid="osm-credit">Credits: real-course map data © OpenStreetMap contributors</div>
                     <div className="px-2 pt-1 text-[12px] opacity-50" data-tip={`${DEM_TILES_CREDIT}. The land under a real course comes from public elevation data: ${(game.landInfo()?.credit ?? DEM_CREDIT_DEFAULT)}.`} data-testid="dem-credit">Credits: real-course ground height {game.landInfo()?.credit ?? DEM_CREDIT_DEFAULT}</div>
                     {/* asked in the menu (the browser's confirm() is not shown in every embedded browser): a first click arms, a second acts */}
-                    <button className={`btn w-full ${armed === 'new' ? '!border-red-400 !text-red-300' : ''}`} data-tip="Start a new game: your current game is replaced" onClick={() => { if (armed !== 'new') { setArmed('new'); return; } setArmed(null); setMenu(false); game.newTown(); }}>{armed === 'new' ? 'Click again: replace this game' : 'New game'}</button>
+                    <button className={`btn w-full ${armed === 'new' ? '!border-red-400 !text-red-300' : ''}`} data-tip="Start a new game: your current game is replaced" onClick={() => { if (armed !== 'new') { setArmed('new'); return; } setArmed(null); setMenu(false); game.newTown(); }}><ActionTile tile="new-game" size={TILE_SMALL} />{armed === 'new' ? 'Click again: replace this game' : 'New game'}</button>
                     {!JAM && <button className={`btn w-full ${armed === 'empty' ? '!border-red-400 !text-red-300' : ''}`} data-tip="Clear everything and start from an empty field" onClick={() => { if (armed !== 'empty') { setArmed('empty'); return; } setArmed(null); setMenu(false); game.clearTown(); }}>{armed === 'empty' ? 'Click again: clear everything' : 'Empty map'}</button>}
                   </div>
                 )}
@@ -1041,7 +1045,7 @@ export default function App() {
           {(() => { const w = !JAM && !game.seasonReport ? game.welcomeView() : null; /* (J7: not in the jam: its start tutorial welcomes, and the card's button pointed at a step order) */ return w && <WelcomeCard road={w.road} newHole={w.newHole} guide={!!game.rangeGuideView()} onGo={() => game.closeWelcome(true)} onClose={() => game.closeWelcome(false)} />; })()}
           {(() => { // T293 (#878): the start tutorial, where the guided build's card stands (that card waits for it): the town grows only along your roads
             const tv = !game.seasonReport && !game.sceneRef && !game.playerCardOpen && !game.bagCardOpen && !game.cardsCardOpen && !game.cardsFolded() ? game.tourView() : null; // (T348: and away while a shot is open: the cards fold)
-            return tv && <RangeGuideCard view={tv} heading={JAM ? 'Tutorial · your club' : 'Tutorial · your town'} tid="tour" foot="Do each step, or skip it" offLabel="Skip tutorial" right={stack!.guide()} onShow={id => { game.tourShowMe(id); bump(); }} onNext={() => { game.tourNextStep(); bump(); }} onSkip={id => { game.tourSkipStep(id); bump(); }} onFold={f => { game.tourFolded = f; bump(); }} />;
+            return tv && <RangeGuideCard view={tv} pics={JAM ? TOUR_TILE : undefined} heading={JAM ? 'Tutorial · your club' : 'Tutorial · your town'} tid="tour" foot="Do each step, or skip it" offLabel="Skip tutorial" right={stack!.guide()} onShow={id => { game.tourShowMe(id); bump(); }} onNext={() => { game.tourNextStep(); bump(); }} onSkip={id => { game.tourSkipStep(id); bump(); }} onFold={f => { game.tourFolded = f; bump(); }} />;
           })()}
           {(() => { // T239: the range start's guided build, bottom right (left of a right-hand card when one is open; T242: away while a picture card is up; T241: and while your profile card stands there)
             const gv = !game.seasonReport && !game.sceneRef && !game.playerCardOpen && !game.bagCardOpen && !game.cardsCardOpen && !game.cardsFolded() ? game.rangeGuideView() : null; // (T348: and while a shot is open)
@@ -1113,7 +1117,7 @@ export default function App() {
                 <div className="text-2xl font-bold text-red-300">Bankrupt</div>
                 <p className="mt-3 text-sm text-slate-300">{game.golf ? 'The overdraft passed $50,000, or stayed open for 3 month ends in a row.' : `The books stayed in the red for ${DEBT_DAYS} days in a row.`}</p>
                 <div className="mt-5 flex justify-center gap-2">
-                  <button className="chip chip-on" onClick={() => game.newTown()}>New game</button>
+                  <button className="chip chip-on" onClick={() => game.newTown()}><ActionTile tile="new-game" size={TILE_SMALL} />New game</button>
                   <button className="chip" onClick={() => setWatch(true)}>Keep watching</button>
                 </div>
               </div>
