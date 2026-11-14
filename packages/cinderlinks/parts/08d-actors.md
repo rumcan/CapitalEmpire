@@ -8,11 +8,13 @@ R: Near ones cast their live shadow. Within 60 m a person is the full sculpture;
 R: Sculptures are made when first needed (a few a frame) and kept by pose, facing and clothes; the player's golfer is the one the host does not send (the owner).
 R: The player's own golfer wears his player card's clothes when the host sends them with the course (T437).
 R: A ghost round's golfer (T433) is drawn see-through, every other pixel left out, and casts no shadow.
+R: J6c: a golfer sent with a `cycle` (the seconds one ball takes him: the range's golfers at the other mats while the owner practises) keeps hitting on the view's own clock, from the `phase` he is sent with: he stands to the ball, takes the club back, swings through to the finish and rests, again and again, with no further message and never frozen. One sent without it does what `doing` says, as before.
 File: game.js
 Check: function actorsIn(
 Check: function actorsList(
 Check: function drawActor(
 Check: function playerLook(
+Check: function actorCycle(
 
 ````js file=game.js
 
@@ -74,7 +76,7 @@ function actorsIn(m) {   // a host's 'actors' message: the whole list (one missi
     const x = +a.at[0] * S, y = +a.at[1] * S; if (!Number.isFinite(x) || !Number.isFinite(y)) continue;
     const th = Number.isFinite(a.heading) ? a.heading * Math.PI / 180 : NaN, ph = clamp(+a.phase || 0, 0, 1), doing = a.role === 'cart' ? 'cart' : a.doing || 'stand';
     let r = actors.get(a.id);
-    if (!r) { r = { id: a.id, role: a.role, x0: x, y0: y, x1: x, y1: y, th0: 0, th1: 0, t0: now, dur: 0, ph0: ph, ph1: ph, doing, cx: x, cy: y, cth: 0, cph: ph, walk: 0, px: x, py: y,
+    if (!r) { r = { id: a.id, role: a.role, x0: x, y0: y, x1: x, y1: y, th0: 0, th1: 0, t0: now, dur: 0, ph0: ph, ph1: ph, doing, cx: x, cy: y, cth: 0, cph: ph, walk: 0, cyc: 0, cy0: 0, px: x, py: y,
       sf: 0, sr: 0, zc: groundH(x, y), L: null, build: 1, riders: [], S: null, K: GK, dl: { k: K_ACTOR, d: 0, a: null } }; r.dl.a = r; actors.set(a.id, r);
       const t0 = Number.isFinite(th) ? th : 0; r.th0 = r.th1 = r.cth = t0; }
     else {
@@ -83,6 +85,7 @@ function actorsIn(m) {   // a host's 'actors' message: the whole list (one missi
     }
     r.x1 = x; r.y1 = y; r.th1 = Number.isFinite(th) ? r.th0 + wrapA(th - r.th0) : r.th0; r.ph1 = ph; r.t0 = now; r.dur = dur; r.doing = doing; r.role = a.role;
     r.L = lookOf(a.dress); r.art = artIdOf(a.dress); r.build = a.dress && a.dress.build >= 0.8 && a.dress.build <= 1.2 ? +a.dress.build : 1; r.riders = Array.isArray(a.riders) ? a.riders : []; r.ghost = !!a.ghost;   // (T433: a ghost round's golfer)
+    r.cyc = a.role === 'golfer' && a.cycle >= 1.5 && a.cycle <= 30 ? +a.cycle : 0; r.cy0 = r.cyc ? ph : 0;   // (J6c: a golfer who keeps hitting on his own clock: how long a ball takes him, and where in it he starts)
     seen.add(a.id);
   }
   for (const id of actors.keys()) if (!seen.has(id)) actors.delete(id);
@@ -91,6 +94,16 @@ function actorAt(r, now) {   // where it is drawn now: on its way from the last 
   if (groupAt(r, now)) return;
   const u = r.dur > 0 ? clamp((now - r.t0) / r.dur, 0, 1) : 1;
   r.cx = r.x0 + (r.x1 - r.x0) * u; r.cy = r.y0 + (r.y1 - r.y0) * u; r.cth = r.th0 + (r.th1 - r.th0) * u; r.cph = r.ph0 + (r.ph1 - r.ph0) * u;
+  if (r.cyc > 0) actorCycle(r, now);   // (J6c: his own clock says what he is doing and how far through it)
+}
+// J6c: a golfer who keeps hitting (the range's golfers at the other mats: the host sends him once with a cycle, the seconds one ball takes him, and his phase into it): a ball is
+// 60% standing to it, taking the club back and bringing it down (the address pose's own phases), 22% the swing from the strike to the finish, the rest standing, watching it go
+const CYC_ADDR = 0.6, CYC_SWING = 0.22;
+function actorCycle(r, now) {   // sets what he is doing (address, swing or stand) and how far through it, from the clock
+  let u = now / 1000 / r.cyc + r.cy0; u -= Math.floor(u);
+  if (u < CYC_ADDR) { r.doing = 'address'; r.cph = u / CYC_ADDR; }
+  else if (u < CYC_ADDR + CYC_SWING) { r.doing = 'swing'; r.cph = (u - CYC_ADDR) / CYC_SWING; }
+  else { r.doing = 'stand'; r.cph = 0; }
 }
 function actorPose(r, far) {   // [pose, step] of mkGolfer for what it is doing (a swing's step is a fifth of a radian of the swing angle, as the player's)
   const p = r.cph, sw = (al) => { let k = Math.round(al / 0.2); if (far) k &= ~1; return ['s', k]; };
@@ -121,7 +134,7 @@ function actorsList() {   // render's hook: every actor in view joins its list (
     r.S = null;
     if (r.role !== 'cart' && d <= ACT_FAR) {
       const K = golferK(DS / d), ps = actorPose(r, d > ACT_NEAR), fa = faOf(r.cth);
-      if (ps[0] === 's') { const fx = Math.cos(r.cth), fy = Math.sin(r.cth); r.dx = r.cx - fx * 0.6 + fy * 0.2; r.dy = r.cy - fy * 0.6 - fx * 0.2; }   // (at a stroke he stands back from his ball and a little to its side, as the player does)
+      if (ps[0] === 's' || r.cyc > 0) { const fx = Math.cos(r.cth), fy = Math.sin(r.cth); r.dx = r.cx - fx * 0.6 + fy * 0.2; r.dy = r.cy - fy * 0.6 - fx * 0.2; }   // (at a stroke he stands back from his ball and a little to its side, as the player does; J6c: and a golfer who keeps hitting rests where he swings)
       else { r.dx = r.cx; r.dy = r.cy; }
       r.K = K; r.S = actorArt(r, fa, ps, K) || actorSprite(r.L, fa, ps[0], ps[1], K) || actSpr.get((r.L ? r.L.key : '-') + 'i' + fa + '_0' + (TOD[tmode].glow > 0 ? 'L' : '') + 'k' + K) || null;   // (not made yet: standing, if that one is)
       if (r.S && d < ACT_SHADOW && !r.ghost) { if (d < 15) castSprite(r.S, r.dx, r.dy, K / (r.S.art ? 1 : r.build)); else castSprite(r.S.mip || mipOf(r.S), r.dx, r.dy, K / 2 / (r.S.art ? 1 : r.build)); }   // (T450: his golfer art is his own size)

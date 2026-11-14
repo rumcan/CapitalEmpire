@@ -10,7 +10,8 @@
 //    and the art list's metres in src/game/golf/range-art-items.json), under <generated>/buildings/: <slug>-view1-vN.png and <slug>-view2-vN.png
 //    (code A: both views are needed; view 1 the front and right side, the front facing the screen's lower left; view 2 the left side and front,
 //    the front facing the lower right) or <slug>-1view-vN.png (code B), the highest N. For each one found that is new or changed:
-//      - the magenta keyed out (key-magenta.mjs) and the picture trimmed (its largest piece and every piece of 200+ px);
+//      - the magenta keyed out (key-magenta.mjs) and the picture trimmed (its largest piece and every piece of 200+ px); an item with "decontaminate": true
+//        in range-art-items.json also has the key colour's spill cleaned off its rim (decontaminate: a ragged dirt patch painted into the magenta left a pink edge);
 //      - sized to the art list's metres: a building by its footprint (its width spans the footprint's diamond, 32 px a metre of width plus
 //        depth: T232's site kit), a mast or post by its height (64 px a metre: T231's uprights); its ground point the middle of its left and
 //        right ground corners (a mast's: its base);
@@ -31,7 +32,7 @@ import crypto from 'node:crypto';
 import { execFileSync, execSync, spawn } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import sharp from 'sharp';
-import { keyMagenta } from './key-magenta.mjs';
+import { alphaOrKey } from './key-magenta.mjs';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
 const args = process.argv.slice(2), opt = (k, d) => { const i = args.indexOf(`--${k}`); return i >= 0 ? args[i + 1] : d; }, flag = k => args.includes(`--${k}`);
@@ -85,7 +86,10 @@ async function groundPictures() {
 }
 
 // ---------------------------------------------------------------- 2. the buildings and signs
-const ITEMS = readJson(path.join(root, 'src/game/golf/range-art-items.json'), { items: [] }).items;
+// (#1235, the owner 2026-11-14: "no vector distance signs. only png sprites": the yardage signs, one per distance with its number painted on,
+// are packed the same way but listed apart ("yard"): rangeScene's stand-in pieces stay "items"; the range code picks the signs by slug)
+const ITEMS_JSON = readJson(path.join(root, 'src/game/golf/range-art-items.json'), { items: [] });
+const ITEMS = [...ITEMS_JSON.items, ...(ITEMS_JSON.yard ?? [])];
 const KIT = path.join(root, 'art/range-kit'), KIT_FILE = path.join(KIT, 'items.json'), VIEWS_FILE = path.join(root, 'src/game/golf/range-art.json');
 const UP = 64, MASTER_MAX = 2;
 /** the newest version of each of an item's files under GEN/buildings (null: none): A items view1 and view2, B items 1view */
@@ -122,6 +126,38 @@ async function cutOne(png) {
   const w = x1 - x0 + 1, h = y1 - y0 + 1, rgba = Buffer.alloc(w * h * 4);
   for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) { const q = (y0 + y) * W + x0 + x; if (lab[q] >= 0 && keep[lab[q]]) data.copy(rgba, (y * w + x) * 4, q * 4, q * 4 + 4); }
   return { w, h, rgba, rect: [x0, y0, x1, y1] };
+}
+/** the key colour's spill on a ragged outline (the redone shop's dirt patch, painted into the magenta, 2026-11-14, left a pink rim): within `depth` px of the
+ *  outline a see-through pixel, and a solid one that is bluer and less green than the solid colour round it, takes that colour (its alpha stays); a thin feature
+ *  has no solid inside, so it stays as painted. An item's "decontaminate": true in range-art-items.json; changes p.rgba in place and returns how many pixels it recoloured */
+export function decontaminate(p, depth = 6, reach = 9) {
+  const { w, h, rgba } = p, N = w * h, d = new Float32Array(N), D3 = depth * 3, W1 = w + 1;
+  // each opaque pixel's distance (chamfer 3-4, /3 = px) to the see-through outside; the picture's own border counts as one step from it
+  for (let q = 0; q < N; q++) d[q] = rgba[q * 4 + 3] > 8 ? 1e9 : 0;
+  for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) { const q = y * w + x; let v = d[q]; if (x === 0 || y === 0 || x === w - 1 || y === h - 1) v = Math.min(v, 3);
+    if (x > 0) v = Math.min(v, d[q - 1] + 3); if (y > 0) { v = Math.min(v, d[q - w] + 3); if (x > 0) v = Math.min(v, d[q - w - 1] + 4); if (x < w - 1) v = Math.min(v, d[q - w + 1] + 4); } d[q] = v; }
+  for (let y = h - 1; y >= 0; y--) for (let x = w - 1; x >= 0; x--) { const q = y * w + x; let v = d[q];
+    if (x < w - 1) v = Math.min(v, d[q + 1] + 3); if (y < h - 1) { v = Math.min(v, d[q + w] + 3); if (x < w - 1) v = Math.min(v, d[q + w + 1] + 4); if (x > 0) v = Math.min(v, d[q + w - 1] + 4); } d[q] = v; }
+  // summed-area tables of the solid inside (alpha over 250, deeper than `depth`): its red, green, blue and pixel count
+  const S = [0, 1, 2, 3].map(() => new Float64Array(W1 * (h + 1)));
+  for (let y = 0; y < h; y++) { const s = [0, 0, 0, 0];
+    for (let x = 0; x < w; x++) { const q = y * w + x; if (rgba[q * 4 + 3] > 250 && d[q] > D3) { s[0] += rgba[q * 4]; s[1] += rgba[q * 4 + 1]; s[2] += rgba[q * 4 + 2]; s[3]++; }
+      for (let c = 0; c < 4; c++) S[c][(y + 1) * W1 + x + 1] = S[c][y * W1 + x + 1] + s[c]; } }
+  const box = (c, x0, y0, x1, y1) => S[c][(y1 + 1) * W1 + x1 + 1] - S[c][y0 * W1 + x1 + 1] - S[c][(y1 + 1) * W1 + x0] + S[c][y0 * W1 + x0];
+  const out = Buffer.from(rgba); let n = 0;
+  for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
+    const q = y * w + x; if (rgba[q * 4 + 3] === 0 || d[q] > D3) continue;
+    const x0 = Math.max(0, x - reach), x1 = Math.min(w - 1, x + reach), y0 = Math.max(0, y - reach), y1 = Math.min(h - 1, y + reach), k = box(3, x0, y0, x1, y1);
+    if (k < 12) continue;
+    const mr = box(0, x0, y0, x1, y1) / k, mg = box(1, x0, y0, x1, y1) / k, mb = box(2, x0, y0, x1, y1) / k;
+    if (rgba[q * 4 + 3] < 250 || (rgba[q * 4 + 2] - mb > 12 && mg - rgba[q * 4 + 1] > 8)) { out[q * 4] = Math.round(mr); out[q * 4 + 1] = Math.round(mg); out[q * 4 + 2] = Math.round(mb); n++; }
+  }
+  // a thin strand (a wire basket's mesh) has no solid inside to take a colour from, and the key colour's tint stays in it as a reddish pink (red well over green,
+  // blue not far under it: wood and dirt have blue well under green): such a pixel, see-through or beside a see-through one, is grey, its green's value
+  const hole = (x, y) => { for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) { const X = x + dx, Y = y + dy; if (X >= 0 && Y >= 0 && X < w && Y < h && rgba[(Y * w + X) * 4 + 3] < 128) return true; } return false; };
+  for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) { const q = y * w + x, r = out[q * 4], g = out[q * 4 + 1], b = out[q * 4 + 2], a = out[q * 4 + 3];
+    if (a > 0 && r > g + 20 && b > g - 10 && (a < 250 || hole(x, y))) { out[q * 4] = out[q * 4 + 1] = out[q * 4 + 2] = Math.min(255, g + 6); n++; } }
+  out.copy(rgba); return n;
 }
 /** the lowest opaque pixel (alpha > 128) in a trimmed picture's 3 outermost columns each side (its left and right ground corners) */
 function corners(p, below = 0.4) {
@@ -162,7 +198,8 @@ async function buildings() {
     for (const [k, file] of views.entries()) {
       const vn = viewName(it, k), id = `range:${it.slug}-${vn}`, buf = fs.readFileSync(file), h = sha(buf), at = entries.findIndex(e => e.id === id);
       if (!FORCE && at >= 0 && entries[at].src?.sha256 === h && fs.existsSync(path.join(KIT, `${it.slug}-${vn}.webp`))) { lines.push(`${head} ${vn}: unchanged (${id})`); continue; }
-      const p = await cutOne(await keyMagenta(buf)), g = geometry(it, k + 1, p), prov = provOf(file);
+      // (a transparent picture is used as painted: nothing to key and no key colour to clean off its rim)
+      const raw = await alphaOrKey(buf), p = await cutOne(raw.png), spill = it.decontaminate && raw.keyed ? decontaminate(p) : 0, g = geometry(it, k + 1, p), prov = provOf(file);
       const mk = Math.min(1, (MASTER_MAX * g.w) / p.w), mw = Math.max(1, Math.round(p.w * mk)), mh = Math.max(1, Math.round(p.h * mk));
       const webp = await sharp(p.rgba, { raw: { width: p.w, height: p.h, channels: 4 } }).resize(mw, mh, { kernel: 'lanczos3', fit: 'fill' }).webp({ lossless: true, effort: 6 }).toBuffer();
       masters.push({ file: path.join(KIT, `${it.slug}-${vn}.webp`), webp });
@@ -170,7 +207,7 @@ async function buildings() {
         src: { file: rel(file).startsWith('..') ? path.basename(file) : rel(file), rect: p.rect, sha256: h, id: prov.id, model: prov.runModel ?? prov.model } };
       if (at >= 0) entries[at] = e; else entries.push(e);
       made.push(id);
-      lines.push(`${head} ${vn}: keyed ${p.w}x${p.h} px from ${path.basename(file)} -> ${g.w.toFixed(0)}x${g.h.toFixed(0)} display px (${it.size === 'tall' ? `${it.high} m high` : `${it.box.join(' x ')} m`}), ground point ${g.ax.toFixed(0)},${g.ay.toFixed(0)}; master ${mw}x${mh}`);
+      lines.push(`${head} ${vn}: ${raw.keyed ? 'keyed' : 'transparent'} ${p.w}x${p.h} px from ${path.basename(file)} -> ${g.w.toFixed(0)}x${g.h.toFixed(0)} display px (${it.size === 'tall' ? `${it.high} m high` : `${it.box.join(' x ')} m`}), ground point ${g.ax.toFixed(0)},${g.ay.toFixed(0)}; master ${mw}x${mh}${it.decontaminate ? `; ${spill} rim pixels cleaned of the key colour's spill` : ''}`);
     }
   }
   if (!made.length || DRY) return { made, lines };

@@ -80,7 +80,11 @@ export interface Actor { id: number; role: ActorRole; at: ViewPt; hole: number; 
   /** T426: he tends the flag (stands at the pin for another's long putt) */
   tend?: true;
   /** T433: a ghost round's golfer (ghost3p.ts): drawn see-through, never in the way */
-  ghost?: true }
+  ghost?: true;
+  /** J6c: a golfer who keeps hitting on the view's own clock (the range's golfers at the other mats while the owner practises): the seconds one ball takes him (1.5 to 30);
+   *  `phase` is then where in it he starts (0..1) and `doing` is not read. The view stands him to the ball, takes the club back, swings him through and rests him, again and
+   *  again, with no further message. Absent: he does what `doing` says, as ever (an older view ignores it) */
+  cycle?: number }
 /** T424: what the view draws a person doing: walking, standing, addressing the ball, swinging, putting, riding in a cart (a golfer; the cart carries him) or
  *  watching another's shot (standing turned to it) */
 export type Doing = 'walk' | 'stand' | 'address' | 'swing' | 'putt' | 'ride' | 'watch';

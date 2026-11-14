@@ -3,13 +3,13 @@
  "items": [
   {
    "id": "range:golf-clubhouse-shanty-view1",
-   "name": "Tin-and-tarp pro shop (view 1)",
+   "name": "Range shop (asbestos-panel hut) (view 1)",
    "cat": "Range art",
    "kind": "business",
    "w": 640,
-   "h": 501.387,
+   "h": 356.683,
    "ax": 320,
-   "ay": 380.643,
+   "ay": 288.976,
    "boxes": [
     {
      "hx": 6,
@@ -23,25 +23,25 @@
    "door": false,
    "cost": 0,
    "src": {
-    "file": "art/theme-consistency/generated/buildings/golf-clubhouse-shanty-view1-v3.png",
+    "file": "art/theme-consistency/generated/buildings/golf-clubhouse-shanty-view1-v5.png",
     "rect": [
-     4,
-     4,
-     594,
-     466
+     13,
+     23,
+     1652,
+     936
     ],
-    "sha256": "e20bf804d1aec593ec266e6b8dd0a8c77446b246579310ec3e4ba6f8adeb651b"
+    "sha256": "1ab64514a09bd7eb58acdf540904361358fdd0a6cbfd8a41888d5503aee1f15f"
    }
   },
   {
    "id": "range:golf-clubhouse-shanty-view2",
-   "name": "Tin-and-tarp pro shop (view 2)",
+   "name": "Range shop (asbestos-panel hut) (view 2)",
    "cat": "Range art",
    "kind": "business",
    "w": 640,
-   "h": 519.86,
+   "h": 356.687,
    "ax": 320,
-   "ay": 368.281,
+   "ay": 274.619,
    "boxes": [
     {
      "hx": 4,
@@ -55,14 +55,14 @@
    "door": false,
    "cost": 0,
    "src": {
-    "file": "art/theme-consistency/generated/buildings/golf-clubhouse-shanty-view2-v3.png",
+    "file": "art/theme-consistency/generated/buildings/golf-clubhouse-shanty-view2-v5.png",
     "rect": [
-     5,
-     4,
-     574,
-     466
+     138,
+     16,
+     1646,
+     856
     ],
-    "sha256": "494f2590f1f8e79468c4e8f46a2220f55718f8738bdc43fd2846979351d160d6"
+    "sha256": "26f58009cdd4e6f9911c155af31a0d07a963d56e1f9f52d2c65e69df9ca6541d"
    }
   },
   {
@@ -480,6 +480,518 @@
      888
     ],
     "sha256": "689b00cb784d2577dcc1a1bc3a8220e9400636e4de7b8e52cefeadacc092e431"
+   }
+  },
+  {
+   "id": "range:golf-range-yard-50-view1",
+   "name": "Yardage sign 50 m (view 1)",
+   "cat": "Range art",
+   "kind": "business",
+   "w": 80,
+   "h": 133.798,
+   "ax": 40,
+   "ay": 124.729,
+   "boxes": [
+    {
+     "hx": 1,
+     "hy": 0.25,
+     "dx": 0,
+     "dy": 0
+    }
+   ],
+   "solid": 1,
+   "big": false,
+   "door": false,
+   "cost": 0,
+   "src": {
+    "file": "art/theme-consistency/generated/buildings/golf-range-yard-50-view1-v1.png",
+    "rect": [
+     583,
+     22,
+     1098,
+     884
+    ],
+    "sha256": "ded8075d903b29783ccb951e9663b8b9bb10afd3536bfeb0ea56328f2793a2e1"
+   }
+  },
+  {
+   "id": "range:golf-range-yard-50-view2",
+   "name": "Yardage sign 50 m (view 2)",
+   "cat": "Range art",
+   "kind": "business",
+   "w": 80,
+   "h": 140,
+   "ax": 40,
+   "ay": 128.629,
+   "boxes": [
+    {
+     "hx": 0.25,
+     "hy": 1,
+     "dx": 0,
+     "dy": 0
+    }
+   ],
+   "solid": 1,
+   "big": false,
+   "door": false,
+   "cost": 0,
+   "src": {
+    "file": "art/theme-consistency/generated/buildings/golf-range-yard-50-view2-v1.png",
+    "rect": [
+     584,
+     22,
+     1079,
+     889
+    ],
+    "sha256": "20925493cbb2f8a1a2190b2b1bb2d6a248915ed9ff59a4b318448ea78f9306e9"
+   }
+  },
+  {
+   "id": "range:golf-range-yard-75-view1",
+   "name": "Yardage sign 75 m (view 1)",
+   "cat": "Range art",
+   "kind": "business",
+   "w": 80,
+   "h": 134.72,
+   "ax": 40,
+   "ay": 125.68,
+   "boxes": [
+    {
+     "hx": 1,
+     "hy": 0.25,
+     "dx": 0,
+     "dy": 0
+    }
+   ],
+   "solid": 1,
+   "big": false,
+   "door": false,
+   "cost": 0,
+   "src": {
+    "file": "art/theme-consistency/generated/buildings/golf-range-yard-75-view1-v1.png",
+    "rect": [
+     633,
+     22,
+     1132,
+     863
+    ],
+    "sha256": "aa5619ad57a4b958e7ff6e0c3fea2741ac68dee88bc987100553212877a95bd3"
+   }
+  },
+  {
+   "id": "range:golf-range-yard-75-view2",
+   "name": "Yardage sign 75 m (view 2)",
+   "cat": "Range art",
+   "kind": "business",
+   "w": 80,
+   "h": 139.839,
+   "ax": 40,
+   "ay": 128.306,
+   "boxes": [
+    {
+     "hx": 0.25,
+     "hy": 1,
+     "dx": 0,
+     "dy": 0
+    }
+   ],
+   "solid": 1,
+   "big": false,
+   "door": false,
+   "cost": 0,
+   "src": {
+    "file": "art/theme-consistency/generated/buildings/golf-range-yard-75-view2-v1.png",
+    "rect": [
+     584,
+     22,
+     1079,
+     888
+    ],
+    "sha256": "d56845ab134a38c445c05c40b9cb6238930cdcdff80f5948fb498eef5555d46b"
+   }
+  },
+  {
+   "id": "range:golf-range-yard-100-view1",
+   "name": "Yardage sign 100 m (view 1)",
+   "cat": "Range art",
+   "kind": "business",
+   "w": 80,
+   "h": 134.779,
+   "ax": 40,
+   "ay": 125.944,
+   "boxes": [
+    {
+     "hx": 1,
+     "hy": 0.25,
+     "dx": 0,
+     "dy": 0
+    }
+   ],
+   "solid": 1,
+   "big": false,
+   "door": false,
+   "cost": 0,
+   "src": {
+    "file": "art/theme-consistency/generated/buildings/golf-range-yard-100-view1-v2.png",
+    "rect": [
+     634,
+     24,
+     1131,
+     862
+    ],
+    "sha256": "66af1eb81d4008e761f331ecc60f2ef5ad3a8f39b3b0125e59cd995edca0402a"
+   }
+  },
+  {
+   "id": "range:golf-range-yard-100-view2",
+   "name": "Yardage sign 100 m (view 2)",
+   "cat": "Range art",
+   "kind": "business",
+   "w": 80,
+   "h": 140.121,
+   "ax": 40,
+   "ay": 128.646,
+   "boxes": [
+    {
+     "hx": 0.25,
+     "hy": 1,
+     "dx": 0,
+     "dy": 0
+    }
+   ],
+   "solid": 1,
+   "big": false,
+   "door": false,
+   "cost": 0,
+   "src": {
+    "file": "art/theme-consistency/generated/buildings/golf-range-yard-100-view2-v1.png",
+    "rect": [
+     584,
+     22,
+     1078,
+     888
+    ],
+    "sha256": "8d73ca9c0c65014033ee791610b3045f67416278453da8f5bccac5013ba5df1a"
+   }
+  },
+  {
+   "id": "range:golf-range-yard-125-view1",
+   "name": "Yardage sign 125 m (view 1)",
+   "cat": "Range art",
+   "kind": "business",
+   "w": 80,
+   "h": 134.72,
+   "ax": 40,
+   "ay": 125.68,
+   "boxes": [
+    {
+     "hx": 1,
+     "hy": 0.25,
+     "dx": 0,
+     "dy": 0
+    }
+   ],
+   "solid": 1,
+   "big": false,
+   "door": false,
+   "cost": 0,
+   "src": {
+    "file": "art/theme-consistency/generated/buildings/golf-range-yard-125-view1-v1.png",
+    "rect": [
+     633,
+     22,
+     1132,
+     863
+    ],
+    "sha256": "4518a6721e9e3ab343bf5015dd39c1d7f3d8d82806d1e869f6cfa78b6c405eb8"
+   }
+  },
+  {
+   "id": "range:golf-range-yard-125-view2",
+   "name": "Yardage sign 125 m (view 2)",
+   "cat": "Range art",
+   "kind": "business",
+   "w": 80,
+   "h": 140.283,
+   "ax": 40,
+   "ay": 128.808,
+   "boxes": [
+    {
+     "hx": 0.25,
+     "hy": 1,
+     "dx": 0,
+     "dy": 0
+    }
+   ],
+   "solid": 1,
+   "big": false,
+   "door": false,
+   "cost": 0,
+   "src": {
+    "file": "art/theme-consistency/generated/buildings/golf-range-yard-125-view2-v1.png",
+    "rect": [
+     585,
+     22,
+     1079,
+     889
+    ],
+    "sha256": "c1cde5338966a5abc55f6fa08d88abbb0049bd23e2af5f6f38a97c3efb0d1001"
+   }
+  },
+  {
+   "id": "range:golf-range-yard-150-view1",
+   "name": "Yardage sign 150 m (view 1)",
+   "cat": "Range art",
+   "kind": "business",
+   "w": 80,
+   "h": 135.1,
+   "ax": 40,
+   "ay": 126.104,
+   "boxes": [
+    {
+     "hx": 1,
+     "hy": 0.25,
+     "dx": 0,
+     "dy": 0
+    }
+   ],
+   "solid": 1,
+   "big": false,
+   "door": false,
+   "cost": 0,
+   "src": {
+    "file": "art/theme-consistency/generated/buildings/golf-range-yard-150-view1-v1.png",
+    "rect": [
+     634,
+     22,
+     1131,
+     862
+    ],
+    "sha256": "64c2a03e78a2f8a3f7d8ffe30137a418e4b77a8f30a5556be7d7a251323181f0"
+   }
+  },
+  {
+   "id": "range:golf-range-yard-150-view2",
+   "name": "Yardage sign 150 m (view 2)",
+   "cat": "Range art",
+   "kind": "business",
+   "w": 80,
+   "h": 140.283,
+   "ax": 40,
+   "ay": 128.646,
+   "boxes": [
+    {
+     "hx": 0.25,
+     "hy": 1,
+     "dx": 0,
+     "dy": 0
+    }
+   ],
+   "solid": 1,
+   "big": false,
+   "door": false,
+   "cost": 0,
+   "src": {
+    "file": "art/theme-consistency/generated/buildings/golf-range-yard-150-view2-v1.png",
+    "rect": [
+     584,
+     22,
+     1078,
+     889
+    ],
+    "sha256": "b34a686ede5b0b247d2fef6535155b10ee979b919b96de68e95f058044229900"
+   }
+  },
+  {
+   "id": "range:golf-range-yard-175-view1",
+   "name": "Yardage sign 175 m (view 1)",
+   "cat": "Range art",
+   "kind": "business",
+   "w": 80,
+   "h": 134.72,
+   "ax": 40,
+   "ay": 125.6,
+   "boxes": [
+    {
+     "hx": 1,
+     "hy": 0.25,
+     "dx": 0,
+     "dy": 0
+    }
+   ],
+   "solid": 1,
+   "big": false,
+   "door": false,
+   "cost": 0,
+   "src": {
+    "file": "art/theme-consistency/generated/buildings/golf-range-yard-175-view1-v1.png",
+    "rect": [
+     633,
+     22,
+     1132,
+     863
+    ],
+    "sha256": "62e288ac3e3bff552b038b92f58ce8fa00d89c8a6005c72b52e44b18c6733121"
+   }
+  },
+  {
+   "id": "range:golf-range-yard-175-view2",
+   "name": "Yardage sign 175 m (view 2)",
+   "cat": "Range art",
+   "kind": "business",
+   "w": 80,
+   "h": 139.677,
+   "ax": 40,
+   "ay": 128.145,
+   "boxes": [
+    {
+     "hx": 0.25,
+     "hy": 1,
+     "dx": 0,
+     "dy": 0
+    }
+   ],
+   "solid": 1,
+   "big": false,
+   "door": false,
+   "cost": 0,
+   "src": {
+    "file": "art/theme-consistency/generated/buildings/golf-range-yard-175-view2-v1.png",
+    "rect": [
+     584,
+     22,
+     1079,
+     887
+    ],
+    "sha256": "c83ca146407c816225ea05b4745450687ac36a608ab08b5a3c435dcbb70149b7"
+   }
+  },
+  {
+   "id": "range:golf-range-yard-200-view1",
+   "name": "Yardage sign 200 m (view 1)",
+   "cat": "Range art",
+   "kind": "business",
+   "w": 80,
+   "h": 134.509,
+   "ax": 40,
+   "ay": 125.531,
+   "boxes": [
+    {
+     "hx": 1,
+     "hy": 0.25,
+     "dx": 0,
+     "dy": 0
+    }
+   ],
+   "solid": 1,
+   "big": false,
+   "door": false,
+   "cost": 0,
+   "src": {
+    "file": "art/theme-consistency/generated/buildings/golf-range-yard-200-view1-v1.png",
+    "rect": [
+     633,
+     24,
+     1131,
+     862
+    ],
+    "sha256": "a0b973fd60a7785ce641f321a3321f3b225c29155165fd25ba4fbfd61d22de5a"
+   }
+  },
+  {
+   "id": "range:golf-range-yard-200-view2",
+   "name": "Yardage sign 200 m (view 2)",
+   "cat": "Range art",
+   "kind": "business",
+   "w": 80,
+   "h": 140.567,
+   "ax": 40,
+   "ay": 128.988,
+   "boxes": [
+    {
+     "hx": 0.25,
+     "hy": 1,
+     "dx": 0,
+     "dy": 0
+    }
+   ],
+   "solid": 1,
+   "big": false,
+   "door": false,
+   "cost": 0,
+   "src": {
+    "file": "art/theme-consistency/generated/buildings/golf-range-yard-200-view2-v1.png",
+    "rect": [
+     584,
+     22,
+     1077,
+     889
+    ],
+    "sha256": "cfd40530dd23b6ae69cec2f4bb977f96c56dec66098dd9a437926e97d4b71ce1"
+   }
+  },
+  {
+   "id": "range:golf-range-yard-250-view1",
+   "name": "Yardage sign 250 m (view 1)",
+   "cat": "Range art",
+   "kind": "business",
+   "w": 80,
+   "h": 134.72,
+   "ax": 40,
+   "ay": 125.84,
+   "boxes": [
+    {
+     "hx": 1,
+     "hy": 0.25,
+     "dx": 0,
+     "dy": 0
+    }
+   ],
+   "solid": 1,
+   "big": false,
+   "door": false,
+   "cost": 0,
+   "src": {
+    "file": "art/theme-consistency/generated/buildings/golf-range-yard-250-view1-v1.png",
+    "rect": [
+     632,
+     22,
+     1131,
+     863
+    ],
+    "sha256": "d1851814ef344ec46c8f81f656b95e313512d67db7f47d9362e9f329e777da4d"
+   }
+  },
+  {
+   "id": "range:golf-range-yard-250-view2",
+   "name": "Yardage sign 250 m (view 2)",
+   "cat": "Range art",
+   "kind": "business",
+   "w": 80,
+   "h": 140.567,
+   "ax": 40,
+   "ay": 128.988,
+   "boxes": [
+    {
+     "hx": 0.25,
+     "hy": 1,
+     "dx": 0,
+     "dy": 0
+    }
+   ],
+   "solid": 1,
+   "big": false,
+   "door": false,
+   "cost": 0,
+   "src": {
+    "file": "art/theme-consistency/generated/buildings/golf-range-yard-250-view2-v1.png",
+    "rect": [
+     585,
+     22,
+     1078,
+     889
+    ],
+    "sha256": "738edbea60a9fb534865601dbe1e663cbaa4ee3d70c50f6f0aa98735f659c679"
    }
   }
  ]

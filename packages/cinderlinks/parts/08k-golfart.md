@@ -6,6 +6,7 @@ R: A golfer's art is as tall as the voxel figure at the same scale; all of a gol
 R: The art is lit by the time of day (its colours times the sun's colour against the day's; at night the moon's, between its light and its shade) and casts the same shadow as the voxel figure. The glow pass (the floodlights' pools, a lantern) then lights it like everything else on the picture, so a golfer in a floodlit pool is lit and one in the dark is dark (#1200).
 R: Nothing stalls: the pictures load in the background; a frame is made from them only when it is needed, a few milliseconds of it a step at most, and until it is made the nearest frame already made (or the voxel figure) stands in.
 R: J5b: while a golfer's art is still loading he is not drawn at all (never the voxel figure in his place); only art that failed to load gives the voxel figure. The picture and its frame table are fetched side by side.
+R: J6c: another golfer's downswing (the last tenth of his address, the club coming down to the ball) is drawn through the swing clip's downswing frames, not back through the backswing's.
 File: game.js
 Check: function golferPic(
 Check: function artFrame(
@@ -114,7 +115,7 @@ function golferPic(fa, pose, ph, K) {
 function actorArt(r, fa, ps, K) {
   if (!r.art) return null;
   for (const c of GOLFART_CLIPS) gaLoad(r.art, c);
-  return artSprite(r.art, fa, ps[0], ps[1], K, ps[0] === 's' ? ps[1] * 0.2 : 0, false, r.doing === 'putt') || (gaBad(r.art) ? null : gaNone());   // (J5b: nothing until his art is ready)
+  return artSprite(r.art, fa, ps[0], ps[1], K, ps[0] === 's' ? ps[1] * 0.2 : 0, r.doing === 'address' && r.cph >= 0.9, r.doing === 'putt') || (gaBad(r.art) ? null : gaNone());   // (J6c: released: the club on its way down)   // (J5b: nothing until his art is ready)
 }
 // the style menu's Golfer column (without a host: in host mode he is the golfer of his player card)
 function golferCol() {

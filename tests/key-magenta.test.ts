@@ -58,3 +58,23 @@ test('key-magenta: a see-through pixel far from the object fades with the haze l
   assert.equal((await key({}))(110, 10)[3], 0);
   assert.ok((await key({ despeckle: 0, haze: 0 }))(110, 10)[3]! > 100);
 });
+
+// The owner, 2026-11-14: "chat gpt can make transparent pngs ... dont have to key out": a picture with its own transparency is used as painted
+test('a transparent picture is not keyed: its own alpha is kept (solid 250+ made 255, clear 4- made 0, soft shadow untouched); a magenta one is keyed', async () => {
+  const { sharp } = await load();
+  const k = (await import(pathToFileURL(resolve('scripts/assets/key-magenta.mjs')).href)) as { ownAlpha: (b: Buffer) => Promise<Buffer | null>; alphaOrKey: (b: Buffer) => Promise<{ png: Buffer; keyed: boolean }> };
+  const W = 40, px = Buffer.alloc(W * W * 4);
+  for (let y = 0; y < W; y++) for (let x = 0; x < W; x++) {
+    const i = (y * W + x) * 4, inBlock = x >= 10 && x < 30 && y >= 10 && y < 30, shadow = y === 32 && x >= 10 && x < 30;
+    px[i] = 200; px[i + 1] = 60; px[i + 2] = 190;   // (a pinkish object: a keyer would eat it)
+    px[i + 3] = inBlock ? 252 : shadow ? 90 : 3;
+  }
+  const clearPng = await sharp(px, { raw: { width: W, height: W, channels: 4 } }).png().toBuffer();
+  const r = await k.alphaOrKey(clearPng); assert.equal(r.keyed, false);
+  const out = await sharp(r.png).raw().toBuffer(), at = (x: number, y: number) => [...out.subarray((y * W + x) * 4, (y * W + x) * 4 + 4)];
+  assert.deepEqual(at(20, 20), [200, 60, 190, 255], 'the object keeps its colour, fully solid');
+  assert.equal(at(2, 2)[3], 0, 'clear'); assert.equal(at(20, 32)[3], 90, 'the soft shadow as painted');
+  const opaque = await sharp({ create: { width: W, height: W, channels: 3, background: { r: 250, g: 10, b: 245 } } }).png().toBuffer();
+  assert.equal(await k.ownAlpha(opaque), null, 'no transparency of its own');
+  assert.equal((await k.alphaOrKey(opaque)).keyed, true);
+});

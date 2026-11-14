@@ -184,7 +184,7 @@ import { RANGE_CAM_ZOOM, planRangeStart } from './golf/rangestart';
 import { CLUB_REACH, RANGE_PLOT, clubhouseSpotWhy, plotOfFront, plotPoint, rangeLayout } from './golf/range';
 import { PRACTICE_LOT_NAME, inPractice, practiceArea, practiceDims } from './golf/practice';
 import { JUNK_BY_ID, JUNK_CLEAR_COST } from './golf/junk';
-import { newRangeJunk, type RangeJunkSpot } from './golf/rangebiz';
+import { RANGE_TEE, newRangeJunk, type RangeJunkSpot } from './golf/rangebiz';
 import { rangeSpotAlong } from './golf/placing';
 import { CAR_PARK_PLACE_COST, PRACTICE_PLACE_COST, RANGE_PLACE_COST, landWhy, placeVerdict, rangeSpotAt, rectAt, rectPoly as rectPolyOf, rectsMeet, type LandCheck, type Placeable, type RangeSpot } from './golf/placing';
 import { RANGE_UPGRADES, homeYardBox, rangeTakes, upgradeFoot, upgradeWhy, type RangeBizSave } from './golf/rangebiz';
@@ -226,13 +226,15 @@ import { lieGridJob, type LieGrid } from './golf/play/lies3p';
 import { fillPack } from './golf/osm/terrarium'; // T438: the share file's heights deflated after the course has gone
 import { MARGIN_T, exportFeatures3p, gatherFeatures3p, type PadIn, type PathSurface } from './golf/play/features3p';
 /** J6b: the range scene's ground patches laid as pads in the practice view, by their surface (the green ones are the course file's own) */
-const PAD_SURF: Partial<Record<string, PathSurface>> = { concrete: 'concrete', asphaltDark: 'concrete', gravel: 'gravel', dirt: 'dirt', teeDirt: 'dirt', yard: 'dirt' };
+const PAD_SURF: Partial<Record<string, PathSurface>> = { concrete: 'concrete', asphaltDark: 'concrete', gravel: 'gravel', dirt: 'dirt', teeDirt: 'dirt', yard: 'dirt', desert: 'earth' };   // (J6c: desert, the bare outfield, as earth)
+/** J6c: a range bay's hitting mat in the practice view: half its width across the bay and half its depth down it (tiles: a mat 3.6 m by 3 m), round where the golfer stands to hit */
+const MAT_T: readonly [number, number] = [0.9, 0.75];
 import { courseEntry3p } from './golf/play/entry3p';
 import { seedOf } from './golf/play/view3p';
 import type { Actor, ActorsMsg, CourseMsg, CourseTime3p, Dress, HostMsg, PracticeMsg, Time3p, ViewInput } from './golf/play/protocol3p';
 import { Play3p, type Play3pOpts } from './golf/play/play3p'; // T418: the owner's play in the view from behind the golfer
 import { DEV_EARNED, earned, practiceEarned } from './golf/play/unlocks'; // T443
-import { PracticeDriver, RANGE_HOLE, SHORT_HOLE, practiceCourse, practiceFlags, type PracticeCourse, type PracticePlace } from './golf/play/practice3p'; // J6
+import { PracticeDriver, RANGE_HOLE, SHORT_HOLE, bareEarthRects, practiceCourse, practiceFlags, rangeSwingCycle, teeAreaOf, type PracticeCourse, type PracticePlace } from './golf/play/practice3p'; // J6
 import { DRILLS, DRILL_IDS, drillGains, drillProgress, recordDrill, type DrillCall, type DrillId } from './golf/play/drills'; // J6
 import { galleryActors } from './golf/play/gallery3p'; // T429: the galleries for the view
 import { Match3p } from './golf/play/match3p'; // T428: a money match in the view
@@ -10508,7 +10510,7 @@ export class Game {
     const area = g.start === 'range' && sc.practice.pts.length ? sc.practice.box : null, cf = area ? this.range.practice?.chipping ?? null : null;
     const look = this.practiceRange3p();   // (J6b: the range's box: its ground under everything)
     // (J6b: the outfield as the range has it: mown once grassed, else the bare start's scrub; greens painted only once built)
-    return practiceCourse({ outfield, teeBox: sc.teeBox, bays: sc.bays.filter(b => !b.lift).map(b => b.stand), greens: sc.targets.length ? sc.targets : sc.aims, area,
+    return practiceCourse({ outfield, teeBox: teeAreaOf(sc.teeBox, sc.apron), bays: sc.bays.filter(b => !b.lift).map(b => b.stand), greens: sc.targets.length ? sc.targets : sc.aims, area,
       outfieldSurface: sc.patches.some(p => p.surf === 'outfield') ? 'fairway' : 'fescue', greensBuilt: sc.targets.length > 0,
       ...(look ? { ground: [look.box[0] - 26, look.box[1] - 26, look.box[2] + 26, look.box[3] + 26] as const } : {}),
       junk: (sc as { junk?: readonly { id: string; name: string; x: number; y: number; m: number }[] }).junk ?? [],   // (J7's junk, RangeScene.junk: #1225; none before it lands)
@@ -10524,6 +10526,12 @@ export class Game {
     const grow = (x: number, y: number) => { x0 = Math.min(x0, x); y0 = Math.min(y0, y); x1 = Math.max(x1, x); y1 = Math.max(y1, y); };
     const pads: PadIn[] = [], ring = (pts: readonly number[]) => { const out: { x: number; y: number }[] = []; for (let i = 0; i + 1 < pts.length; i += 2) out.push({ x: pts[i]!, y: pts[i + 1]! }); return out; };
     sc.patches.forEach((p, i) => { const s = PAD_SURF[p.surf]; if (s) pads.push({ key: `patch${String(i).padStart(3, '0')}`, pts: ring(p.pts), surface: s, name: p.surf }); });
+    // J6c: a bare range is bare up to its tee: the earth runs on under the tee band (the dirt tee, the slab and the mats lie over it: their keys come later); round a turfed
+    // tee only its front and sides are earth, so the tee's own turf shows (play/practice3p.ts bareEarthRects, teeAreaOf)
+    if (sc.patches.some(p => p.surf === 'desert')) {
+      const [bx0, by0, bx1, by1] = sc.box, Q = (u: number, v: number) => plotPoint([bx0, by0, bx1 - bx0, by1 - by0], sc.facing, u, v);
+      bareEarthRects(RANGE_PLOT[0], RANGE_TEE, sc.apron !== null).forEach(([u0, v0, u1, v1], i) => pads.push({ key: `apron${i}`, pts: [Q(u0, v0), Q(u1, v0), Q(u1, v1), Q(u0, v1)], surface: 'earth', name: 'bare apron' }));
+    }
     const lot = this.rangeLotDef();
     if (lot) {   // (its w side at a degrees about its corner, as the car park tool lays it)
       const a = (lot.a ?? 0) * Math.PI / 180, c = Math.cos(a), s = Math.sin(a), P = (u: number, v: number) => ({ x: lot.x + u * c - v * s, y: lot.y + u * s + v * c });
@@ -10531,6 +10539,10 @@ export class Game {
       pads.push({ key: 'lot', pts, surface: lot.ground === 'gravel' ? 'gravel' : lot.ground === 'dirt' ? 'dirt' : 'concrete', name: 'Car park' });
     }
     if (sc.practice.pts.length) { grow(sc.practice.box[0], sc.practice.box[1]); grow(sc.practice.box[2], sc.practice.box[3]); }
+    // J6c (the owner: "add a green hitting bay under his feet"): each open bay's hitting mat, square to the way the golfers hit, laid last so it lies on the slab
+    const ax = sc.aim.x, ay = sc.aim.y, al = Math.hypot(ax, ay) || 1, ux = ax / al, uy = ay / al, [mw, md] = MAT_T;
+    sc.bays.filter(b => !b.lift).forEach((b, i) => { const c = b.stand, P = (s: number, t: number) => ({ x: c.x - uy * s + ux * t, y: c.y + ux * s + uy * t });
+      pads.push({ key: `zmat${String(i).padStart(2, '0')}`, pts: [P(-mw, -md), P(mw, -md), P(mw, md), P(-mw, md)], surface: 'turf', name: 'Hitting mat' }); });
     return { box: [x0 - 4, y0 - 4, x1 + 4, y1 + 4], pads };
   }
   /** why a practice place cannot open now (null: it can): the range not placed, a round under way, the short game area with no open chipping green */
@@ -10562,17 +10574,17 @@ export class Game {
     return [this.practiceMsg3p(), this.rangeActors3p(), ...this.play3p.start()];
   }
   /** J6b: the range's own golfers at the other mats now (the range sim's people standing on a bay, not on his), as the view's people: in the golfer art they are
-   *  drawn with in the game, facing down the range, addressing the ball and swinging through with each ball he hits (the sim is still while the view is open) */
+   *  drawn with in the game, facing down the range. J6c: each keeps hitting on the view's own clock (a `cycle` of his own and his place in it: the sim is still while the view
+   *  is open, so it could not move them), never frozen */
   private rangeActors3p(): ActorsMsg {
     const sc = this.range.scene, pr = this.prac3p, f = this.view3pFrame, out: Actor[] = [];
     if (sc && pr && pr.place === 'range' && f) {
       const mine = pr.course.mat, stands = sc.bays.filter(b => !b.lift).map(b => b.stand), rd = this.range.sim.view(), heading = Math.atan2(sc.aim.y, sc.aim.x) * 180 / Math.PI;
-      const swing = (pr.drv?.balls ?? 0) % 2 === 1;
       for (let k = 0; k < rd.nPeople && out.length < 24; k++) {
         const q = rd.people[k]!; if (q.lift || q.id === 0) continue;
         const bay = stands.find(s => Math.hypot(s.x - q.x, s.y - q.y) < 1.2); if (!bay || Math.hypot(bay.x - mine.x, bay.y - mine.y) < 1) continue;
-        const art = GOLFER_PEOPLE[q.person]?.id;
-        out.push({ id: 5000 + q.id, role: 'golfer', at: [(bay.x - f.cx) * TILE_M, (bay.y - f.cy) * TILE_M], hole: RANGE_HOLE, heading, doing: swing ? 'swing' : 'address', phase: swing ? 1 : 0.6,
+        const art = GOLFER_PEOPLE[q.person]?.id, { cycle, phase } = rangeSwingCycle(q.id);
+        out.push({ id: 5000 + q.id, role: 'golfer', at: [(bay.x - f.cx) * TILE_M, (bay.y - f.cy) * TILE_M], hole: RANGE_HOLE, heading, doing: 'address', phase, cycle,
           ...(art ? { dress: playerDress(art, /_w\d/.test(art) ? 'w' : 'm') } : {}) });
       }
     }

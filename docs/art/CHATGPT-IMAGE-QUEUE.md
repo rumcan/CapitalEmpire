@@ -44,8 +44,10 @@ touching; no writing on the sign or scoreboard; the light from the upper right. 
 ## Next: the driving range's stand-ins (the owner, 2026-10-29: "i see some bad ones at the driving range facilities")
 These replace the labelled stand-ins on the range. A items need **two views** of the same object: make view 1, then ask for view 2 **in the same chat** as an edit ("the same object turned 90 degrees to the left: now its left side and front show"), so it stays one object. Never mirror. Attach `art/theme-consistency/references/theme-authoritative.png` first, and the item's identity picture where one is named. Save to `art/theme-consistency/generated/buildings/` as `<slug>-view1-v1.png` and `<slug>-view2-v1.png` (B items: `<slug>-1view-v1.png`). A retake is `-v2`, `-v3`: the newest is used.
 
+**Transparent pictures (the owner, 2026-11-14: "chat gpt can make transparent pngs ... dont have to key out"):** ask ChatGPT for a fully transparent background, never a key colour. Checked through the bridge: the saved PNG keeps its alpha (soft contact shadows included) and needs no clean-up of pink rims.
+
 **When you save a picture, tell the lead; the lead runs `node scripts/assets/prep-range-art.mjs`** (T258). For every item whose files are all in (an A item needs both views), it:
-- keys out the magenta;
+- uses the picture's own transparency (an older picture painted on magenta is still keyed);
 - sizes the picture to the art list's metres (`src/game/golf/range-art-items.json`);
 - packs it onto the golf page;
 - draws it in the game in place of its stand-in, view 1 or view 2 by the way the piece faces, without its "Stand In for" label;
@@ -56,7 +58,7 @@ Until a file lands nothing changes, and the run lists what it is still waiting f
 ### 1. Tin-and-tarp pro shop (`golf-clubhouse-shanty`, A)
 **View 1** (its front and right side show; the front faces the screen's lower left): save as `golf-clubhouse-shanty-view1-v1.png`
 ```text
-Two separate views of ONE subject, each its own picture. On FLAT PURE MAGENTA (#FF00FF, one uniform colour edge to edge, no gradient, floor or shadow on it); the subject itself has NO magenta, pink or purple and a crisp outline. Fixed parallel 2:1 isometric camera (ground lines at +/-26.565 degrees, verticals vertical), detailed illustrated style of the first reference picture. Early autumn: warm sun fixed at the SCREEN UPPER RIGHT, only small soft contact shadows toward the lower left. The year is 1985. No people, no ground tile or lawn, no text unless asked; 15% clear space round the subject.
+Two separate views of ONE subject, each its own picture. On a FULLY TRANSPARENT background (a PNG with an alpha channel: no backdrop colour, no floor); the subject has a crisp outline. Fixed parallel 2:1 isometric camera (ground lines at +/-26.565 degrees, verticals vertical), detailed illustrated style of the first reference picture. Early autumn: warm sun fixed at the SCREEN UPPER RIGHT, only small soft contact shadows toward the lower left. The year is 1985. No people, no ground tile or lawn, no text unless asked; 15% clear space round the subject.
 
 View 1: the front and the right side.
 
@@ -70,7 +72,7 @@ The same object exactly (same design, colours, size and light), turned so its LE
 ### 5. "Driving Range" road sign (`golf-range-sign`, A)
 **View 1** (its front and right side show; the front faces the screen's lower left): save as `golf-range-sign-view1-v1.png`
 ```text
-Two separate views of ONE subject, each its own picture. On FLAT PURE MAGENTA (#FF00FF, one uniform colour edge to edge, no gradient, floor or shadow on it); the subject itself has NO magenta, pink or purple and a crisp outline. Fixed parallel 2:1 isometric camera (ground lines at +/-26.565 degrees, verticals vertical), detailed illustrated style of the first reference picture. Early autumn: warm sun fixed at the SCREEN UPPER RIGHT, only small soft contact shadows toward the lower left. The year is 1985. No people, no ground tile or lawn, no text unless asked; 15% clear space round the subject.
+Two separate views of ONE subject, each its own picture. On a FULLY TRANSPARENT background (a PNG with an alpha channel: no backdrop colour, no floor); the subject has a crisp outline. Fixed parallel 2:1 isometric camera (ground lines at +/-26.565 degrees, verticals vertical), detailed illustrated style of the first reference picture. Early autumn: warm sun fixed at the SCREEN UPPER RIGHT, only small soft contact shadows toward the lower left. The year is 1985. No people, no ground tile or lawn, no text unless asked; 15% clear space round the subject.
 
 View 1: the front and the right side.
 
@@ -84,7 +86,7 @@ The same object exactly (same design, colours, size and light), turned so its LE
 ### 2. Double-deck hitting stand (`golf-range-deck`, A)
 **View 1** (its front and right side show; the front faces the screen's lower left): save as `golf-range-deck-view1-v1.png`
 ```text
-Two separate views of ONE subject, each its own picture. On FLAT PURE MAGENTA (#FF00FF, one uniform colour edge to edge, no gradient, floor or shadow on it); the subject itself has NO magenta, pink or purple and a crisp outline. Fixed parallel 2:1 isometric camera (ground lines at +/-26.565 degrees, verticals vertical), detailed illustrated style of the first reference picture. Early autumn: warm sun fixed at the SCREEN UPPER RIGHT, only small soft contact shadows toward the lower left. The year is 1985. No people, no ground tile or lawn, no text unless asked; 15% clear space round the subject.
+Two separate views of ONE subject, each its own picture. On a FULLY TRANSPARENT background (a PNG with an alpha channel: no backdrop colour, no floor); the subject has a crisp outline. Fixed parallel 2:1 isometric camera (ground lines at +/-26.565 degrees, verticals vertical), detailed illustrated style of the first reference picture. Early autumn: warm sun fixed at the SCREEN UPPER RIGHT, only small soft contact shadows toward the lower left. The year is 1985. No people, no ground tile or lawn, no text unless asked; 15% clear space round the subject.
 
 View 1: the front and the right side.
 
@@ -98,7 +100,7 @@ The same object exactly (same design, colours, size and light), turned so its LE
 ### 3. Coffee kiosk (`golf-range-coffee-kiosk`, A)
 **View 1** (its front and right side show; the front faces the screen's lower left): save as `golf-range-coffee-kiosk-view1-v1.png`
 ```text
-Two separate views of ONE subject, each its own picture. On FLAT PURE MAGENTA (#FF00FF, one uniform colour edge to edge, no gradient, floor or shadow on it); the subject itself has NO magenta, pink or purple and a crisp outline. Fixed parallel 2:1 isometric camera (ground lines at +/-26.565 degrees, verticals vertical), detailed illustrated style of the first reference picture. Early autumn: warm sun fixed at the SCREEN UPPER RIGHT, only small soft contact shadows toward the lower left. The year is 1985. No people, no ground tile or lawn, no text unless asked; 15% clear space round the subject.
+Two separate views of ONE subject, each its own picture. On a FULLY TRANSPARENT background (a PNG with an alpha channel: no backdrop colour, no floor); the subject has a crisp outline. Fixed parallel 2:1 isometric camera (ground lines at +/-26.565 degrees, verticals vertical), detailed illustrated style of the first reference picture. Early autumn: warm sun fixed at the SCREEN UPPER RIGHT, only small soft contact shadows toward the lower left. The year is 1985. No people, no ground tile or lawn, no text unless asked; 15% clear space round the subject.
 
 View 1: the front and the right side.
 
@@ -112,7 +114,7 @@ The same object exactly (same design, colours, size and light), turned so its LE
 ### 11. Ball dispenser (`golf-range-ball-dispenser`, A)
 **View 1** (its front and right side show; the front faces the screen's lower left): save as `golf-range-ball-dispenser-view1-v1.png`
 ```text
-Two separate views of ONE subject, each its own picture. On FLAT PURE MAGENTA (#FF00FF, one uniform colour edge to edge, no gradient, floor or shadow on it); the subject itself has NO magenta, pink or purple and a crisp outline. Fixed parallel 2:1 isometric camera (ground lines at +/-26.565 degrees, verticals vertical), detailed illustrated style of the first reference picture. Early autumn: warm sun fixed at the SCREEN UPPER RIGHT, only small soft contact shadows toward the lower left. The year is 1985. No people, no ground tile or lawn, no text unless asked; 15% clear space round the subject.
+Two separate views of ONE subject, each its own picture. On a FULLY TRANSPARENT background (a PNG with an alpha channel: no backdrop colour, no floor); the subject has a crisp outline. Fixed parallel 2:1 isometric camera (ground lines at +/-26.565 degrees, verticals vertical), detailed illustrated style of the first reference picture. Early autumn: warm sun fixed at the SCREEN UPPER RIGHT, only small soft contact shadows toward the lower left. The year is 1985. No people, no ground tile or lawn, no text unless asked; 15% clear space round the subject.
 
 View 1: the front and the right side.
 
@@ -126,7 +128,7 @@ The same object exactly (same design, colours, size and light), turned so its LE
 ### 6. Yardage board (`golf-range-yardage-board`, A)
 **View 1** (its front and right side show; the front faces the screen's lower left): save as `golf-range-yardage-board-view1-v1.png`
 ```text
-Two separate views of ONE subject, each its own picture. On FLAT PURE MAGENTA (#FF00FF, one uniform colour edge to edge, no gradient, floor or shadow on it); the subject itself has NO magenta, pink or purple and a crisp outline. Fixed parallel 2:1 isometric camera (ground lines at +/-26.565 degrees, verticals vertical), detailed illustrated style of the first reference picture. Early autumn: warm sun fixed at the SCREEN UPPER RIGHT, only small soft contact shadows toward the lower left. The year is 1985. No people, no ground tile or lawn, no text unless asked; 15% clear space round the subject.
+Two separate views of ONE subject, each its own picture. On a FULLY TRANSPARENT background (a PNG with an alpha channel: no backdrop colour, no floor); the subject has a crisp outline. Fixed parallel 2:1 isometric camera (ground lines at +/-26.565 degrees, verticals vertical), detailed illustrated style of the first reference picture. Early autumn: warm sun fixed at the SCREEN UPPER RIGHT, only small soft contact shadows toward the lower left. The year is 1985. No people, no ground tile or lawn, no text unless asked; 15% clear space round the subject.
 
 View 1: the front and the right side.
 
@@ -148,7 +150,7 @@ Subject: golf:range-distance-post, a short driving-range distance marker, about 
 ### 10. Floodlight mast (`golf-range-floodlight`, A)
 **View 1** (its front and right side show; the front faces the screen's lower left): save as `golf-range-floodlight-view1-v1.png`
 ```text
-Two separate views of ONE subject, each its own picture. On FLAT PURE MAGENTA (#FF00FF, one uniform colour edge to edge, no gradient, floor or shadow on it); the subject itself has NO magenta, pink or purple and a crisp outline. Fixed parallel 2:1 isometric camera (ground lines at +/-26.565 degrees, verticals vertical), detailed illustrated style of the first reference picture. Early autumn: warm sun fixed at the SCREEN UPPER RIGHT, only small soft contact shadows toward the lower left. The year is 1985. No people, no ground tile or lawn, no text unless asked; 15% clear space round the subject.
+Two separate views of ONE subject, each its own picture. On a FULLY TRANSPARENT background (a PNG with an alpha channel: no backdrop colour, no floor); the subject has a crisp outline. Fixed parallel 2:1 isometric camera (ground lines at +/-26.565 degrees, verticals vertical), detailed illustrated style of the first reference picture. Early autumn: warm sun fixed at the SCREEN UPPER RIGHT, only small soft contact shadows toward the lower left. The year is 1985. No people, no ground tile or lawn, no text unless asked; 15% clear space round the subject.
 
 View 1: the front and the right side.
 
@@ -591,6 +593,14 @@ Period details only: 1985 cars, signs, clothes, technology (no phones, no LEDs, 
 ```
 
 ### J7d Yardage sign (`golf-range-yardage-sign`; the owner, 2026-11-13: "add a 50m artwork sign")
+**Superseded (2026-11-14; the owner: "no vector distance signs. only png sprites allowed"):** the code stand-in below is gone. The yardage signs are 16 ChatGPT
+pictures with their numbers painted on, two views of each of 50, 75, 100, 125, 150, 175, 200 and 250 m (`golf-range-yard-<m>-view1/2-v1.png` under
+`art/theme-consistency/generated/buildings/`), packed by `prep-range-art.mjs` (range-art-items.json "yard") and drawn by `rangeScene` through the range art
+lookup (`yardage-signs.ts`: view 1 at the facings 0 and 1, view 2 at 2 and 3; the 240 m green has no picture, so no sign). `golf-range-yard-100-view1-v1.png`
+came out as a second view 2 (its front faced the lower right, not the lower left); it was painted again as `golf-range-yard-100-view1-v2.png` (the prep packs the newest
+version; v1 stays as the old one, its master in `art/range-kit/old/`) and the swap for its view 2 is gone. A test (`range-art.test.ts`) now checks every sign master's heading.
+The old request, kept for the record:
+
 The range's distances (the 50 m markers, the target greens, the junk on the outfield) are drawn now as a code stand-in (`src/game/golf/yardage-sign.ts`: a cream
 board in a dark wooden frame on a post). The game paints the figures on the board itself, so the picture has **a blank face**. Start a new chat, attach the two
 usual references, and ask for a **square** picture on a plain flat background (it is cut out), about 1024 x 1024.

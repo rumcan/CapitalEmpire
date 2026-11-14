@@ -20,7 +20,7 @@ import { structureRect, type PlacedEventStructure } from '../eventtool';
 import { cornersOf, type EstateLot } from '../estate';
 import { FLOODLIGHT_HEIGHT_M, FLOODLIGHT_ID, LIGHT_REACH_M } from '../nightgolf';
 
-export type PathSurface = 'gravel' | 'concrete' | 'dirt' | 'sand';
+export type PathSurface = 'gravel' | 'concrete' | 'dirt' | 'sand' | 'earth' | 'turf';   // (J6c: earth, a bare range outfield's dirt; turf, a hitting mat's artificial grass: pads only)
 export type Roof = 'gable' | 'hip' | 'flat';
 /** what a building is, so the view can draw each kind its own way later */
 export type BuildingUse = 'clubhouse' | 'halfway' | 'prooffice' | 'teachhut' | 'range' | 'house' | 'tent' | 'stand' | 'board' | 'structure' | 'building';

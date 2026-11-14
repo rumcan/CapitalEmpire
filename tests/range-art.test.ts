@@ -28,7 +28,7 @@ const plots: Record<0 | 1 | 2 | 3, Rect> = { 0: [500, 600, 70, 150], 1: [900, 30
 const FACINGS = [0, 1, 2, 3] as const;
 const buy = (ids: RangeUpgradeId[], s = defaultRangeBiz()): RangeBizSave => ids.reduce((q, id) => withUpgrade(q, id), s);
 const EVERY: RangeUpgradeId[] = ['bays8', 'bays12', 'greens', 'targets', 'covered', 'dispenser', 'lights', 'kiosk', 'tier2', 'teeturf', 'grass'];
-const ITEMS = ITEMS_FILE.items;
+const ITEMS = ITEMS_FILE.items, YARD = (ITEMS_FILE as { yard?: unknown[] }).yard ?? [];
 /** a world point in the plot's own frame (u along the road, v away from it) */
 function frame(plot: Rect, f: 0 | 1 | 2 | 3, x: number, y: number) {
   const o = plotPoint(plot, f, 0, 0), a = plotPoint(plot, f, 1, 0), b = plotPoint(plot, f, 0, 1);
@@ -184,7 +184,7 @@ test('prep-range-art.mjs: finds each slug\'s newest views, sizes by the art list
     const watch = ['src/game/golf/range-art.json', 'src/assets/ground/range-pics.json', 'src/game/golf-library.ts', 'src/game/shadow-shapes.json', 'art/range-kit/items.json']
       .map(f => [f, fs.existsSync(path.join(root, f)) ? fs.readFileSync(path.join(root, f), 'utf8') : null] as const);
     const out = execFileSync(process.execPath, [script, '--gen', tmp, '--no-shadows'], { cwd: root, encoding: 'utf8' });
-    assert.equal((out.match(/no file yet/g) ?? []).length, 8, out);
+    assert.equal((out.match(/no file yet/g) ?? []).length, ITEMS.length + YARD.length, out); // (the eight stand-in items and the yardage signs, #1235)
     assert.match(out, /nothing new: nothing changed/);
     for (const [f, txt] of watch) assert.equal(fs.existsSync(path.join(root, f)) ? fs.readFileSync(path.join(root, f), 'utf8') : null, txt, `${f} untouched`);
     // the newest version of each view; an A item waits for both views
@@ -203,4 +203,37 @@ test('prep-range-art.mjs: finds each slug\'s newest views, sizes by the art list
     assert.deepEqual([v1.boxes[0]!.hx, v1.boxes[0]!.hy], [6, 4]); assert.deepEqual([v2.boxes[0]!.hx, v2.boxes[0]!.hy], [4, 6]);
     assert.equal(m.h, 64 * 12); assert.equal(m.w, 64 * 12 / 1.5);
   } finally { fs.rmSync(tmp, { recursive: true, force: true }); }
+});
+
+test('prep-range-art.mjs decontaminate: the pink rim of a ragged outline takes the solid colour round it; the solid inside, a thin brown strand and the see-through outside stay; a thin pinkish strand turns grey', async () => {
+  const mod = await import(pathToFileURL(path.join(process.cwd(), 'scripts/assets/prep-range-art.mjs')).href) as { decontaminate: (p: { w: number; h: number; rgba: Buffer }, depth?: number, reach?: number) => number };
+  const w = 90, h = 60, rgba = Buffer.alloc(w * h * 4), dirt = [205, 125, 60], pink = [221, 94, 94];
+  const px = (x: number, y: number, c: number[], a: number) => rgba.set([c[0]!, c[1]!, c[2]!, a], (y * w + x) * 4);
+  const at = (x: number, y: number) => [...rgba.subarray((y * w + x) * 4, (y * w + x) * 4 + 4)];
+  // a dirt patch 40 x 40 (x 5..44, y 10..49) in the dirt colour whose outermost 2 px are the pink spill (one of them half see-through)
+  for (let y = 10; y < 50; y++) for (let x = 5; x < 45; x++) { const edge = x < 7 || x > 42 || y < 12 || y > 47; px(x, y, edge ? pink : dirt, edge && (x === 5 || y === 10) ? 140 : 255); }
+  // a thin brown strand (1 px) far from the patch: nothing solid round it, and it is not pink: it stays; a thin pinkish see-through strand beside it turns grey
+  for (let y = 10; y < 40; y++) { px(60, y, [120, 80, 40], 255); px(70, y, [200, 40, 60], 120); }
+  const before = Buffer.from(rgba), n = mod.decontaminate({ w, h, rgba });
+  assert.ok(n > 100, `recoloured ${n}`);
+  for (const [x, y] of [[5, 30], [6, 30], [43, 30], [44, 30], [20, 10], [20, 11], [20, 48], [20, 49]] as const) { const c = at(x, y); assert.ok(Math.abs(c[0]! - dirt[0]!) <= 2 && Math.abs(c[1]! - dirt[1]!) <= 2 && Math.abs(c[2]! - dirt[2]!) <= 2, `rim (${x},${y}) is dirt: ${c}`); assert.equal(c[3], before[(y * w + x) * 4 + 3], 'its alpha stays'); }
+  assert.deepEqual(at(25, 30), [...dirt, 255], 'the solid inside is untouched'); assert.deepEqual(at(1, 1), [0, 0, 0, 0], 'the outside is untouched');
+  assert.deepEqual(at(60, 20), [120, 80, 40, 255], 'a thin brown strand stays');
+  const g = at(70, 20); assert.ok(g[0] === g[1] && g[1] === g[2] && g[0] < 60 && g[3] === 120, `a pinkish see-through strand is grey: ${g}`);
+});
+
+test('the yardage sign masters keep their headings: view 1 stands with its lowest post on the right (front facing the lower left), view 2 on the left (a second view 2 once came back as the 100 m view 1)', async t => {
+  const kit = path.join(process.cwd(), 'art/range-kit'), name = 'sharp';
+  if (!fs.existsSync(path.join(kit, 'golf-range-yard-50-view1.webp'))) return t.skip('no art/range-kit in this checkout');
+  type Sharp = (f: string) => { ensureAlpha(): { raw(): { toBuffer(o: { resolveWithObject: true }): Promise<{ data: Buffer; info: { width: number; height: number } }> } } };
+  const mod = await import(name).catch(() => null) as { default: Sharp } | null; // (by a name, so the test bundle leaves the native module out)
+  if (!mod) return t.skip('no sharp here');
+  const sharp = mod.default;
+  for (const m of [50, 75, 100, 125, 150, 175, 200, 250]) for (const view of [1, 2]) {
+    const { data, info } = await sharp(path.join(kit, `golf-range-yard-${m}-view${view}.webp`)).ensureAlpha().raw().toBuffer({ resolveWithObject: true });
+    let low = -1; for (let y = info.height - 1; y >= 0 && low < 0; y--) for (let x = 0; x < info.width; x++) if (data[(y * info.width + x) * 4 + 3]! > 128) { low = y; break; }
+    let sx = 0, n = 0; for (let y = Math.max(0, low - 2); y <= low; y++) for (let x = 0; x < info.width; x++) if (data[(y * info.width + x) * 4 + 3]! > 128) { sx += x; n++; }
+    const at = sx / n / info.width;
+    assert.ok(view === 1 ? at > 0.6 : at < 0.4, `${m} m view ${view}: its lowest post at ${(at * 100).toFixed(0)}% across`);
+  }
 });

@@ -82,3 +82,20 @@ export async function keyMagenta(input, opts = {}) {
   }
   return sharp(data, { raw: { width: W, height: H, channels: 4 } }).png().toBuffer();
 }
+
+/** The owner, 2026-11-14: "chat gpt can make transparent pngs ... dont have to key out". A picture that already has real transparency (at least `share` of its
+ *  pixels clear) is used as it is: no key, no despill. Its alpha is only tidied (ChatGPT's solid pixels come back at 250 to 254, its clear ones at 0 to 4).
+ *  Returns the RGBA PNG, or null when the picture has no transparency of its own (an old magenta picture: key it). */
+export async function ownAlpha(input, share = 0.02) {
+  const { data, info } = await sharp(input).ensureAlpha().raw().toBuffer({ resolveWithObject: true });
+  let clear = 0;
+  for (let i = 3; i < data.length; i += 4) if (data[i] < 8) clear++;
+  if (clear < share * info.width * info.height) return null;
+  for (let i = 3; i < data.length; i += 4) { const a = data[i]; if (a >= 250) data[i] = 255; else if (a <= 4) data[i] = 0; }
+  return sharp(data, { raw: { width: info.width, height: info.height, channels: 4 } }).png().toBuffer();
+}
+/** a raw picture as RGBA: its own transparency when it has one, else the magenta keyed out. { png, keyed } (keyed: false for a transparent picture) */
+export async function alphaOrKey(input, opts = {}) {
+  const own = await ownAlpha(input);
+  return own ? { png: own, keyed: false } : { png: await keyMagenta(input, opts), keyed: true };
+}
