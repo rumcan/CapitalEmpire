@@ -225,6 +225,262 @@
     "sha256": "7fc809963c7a79f181fa59dbf80512d84eac814e9201d4686133498d3472b931",
     "id": "golf:range-distance-post"
    }
+  },
+  {
+   "id": "range:golf-range-sign-view1",
+   "name": "Driving Range road sign (view 1)",
+   "cat": "Range art",
+   "kind": "business",
+   "w": 144,
+   "h": 135.692,
+   "ax": 72,
+   "ay": 107.186,
+   "boxes": [
+    {
+     "hx": 2,
+     "hy": 0.25,
+     "dx": 0,
+     "dy": 0
+    }
+   ],
+   "solid": 1,
+   "big": false,
+   "door": false,
+   "cost": 0,
+   "src": {
+    "file": "art/theme-consistency/generated/buildings/golf-range-sign-view1-v1.png",
+    "rect": [
+     433,
+     35,
+     1316,
+     867
+    ],
+    "sha256": "2b5ec7149957e064c44298c505419c555904ceb5ad9c7b32004aeedffbe6a3a7"
+   }
+  },
+  {
+   "id": "range:golf-range-sign-view2",
+   "name": "Driving Range road sign (view 2)",
+   "cat": "Range art",
+   "kind": "business",
+   "w": 144,
+   "h": 151.969,
+   "ax": 72,
+   "ay": 115.923,
+   "boxes": [
+    {
+     "hx": 0.25,
+     "hy": 2,
+     "dx": 0,
+     "dy": 0
+    }
+   ],
+   "solid": 1,
+   "big": false,
+   "door": false,
+   "cost": 0,
+   "src": {
+    "file": "art/theme-consistency/generated/buildings/golf-range-sign-view2-v1.png",
+    "rect": [
+     500,
+     32,
+     1276,
+     851
+    ],
+    "sha256": "495775d718854626aece1a10b194ba37b473968189437bfef27d623292d1d3ae"
+   }
+  },
+  {
+   "id": "range:golf-range-ball-dispenser-view1",
+   "name": "Ball dispenser (view 1)",
+   "cat": "Range art",
+   "kind": "business",
+   "w": 80,
+   "h": 104.495,
+   "ax": 40,
+   "ay": 93.876,
+   "boxes": [
+    {
+     "hx": 0.75,
+     "hy": 0.5,
+     "dx": 0,
+     "dy": 0
+    }
+   ],
+   "solid": 1,
+   "big": false,
+   "door": false,
+   "cost": 0,
+   "src": {
+    "file": "art/theme-consistency/generated/buildings/golf-range-ball-dispenser-view1-v2.png",
+    "rect": [
+     553,
+     31,
+     1166,
+     832
+    ],
+    "sha256": "1449c58150a548bbb70179e06ed0c18c78876974d7ac6ec240e95a69e0cc3131"
+   }
+  },
+  {
+   "id": "range:golf-range-ball-dispenser-view2",
+   "name": "Ball dispenser (view 2)",
+   "cat": "Range art",
+   "kind": "business",
+   "w": 80,
+   "h": 107.365,
+   "ax": 40,
+   "ay": 89.034,
+   "boxes": [
+    {
+     "hx": 0.5,
+     "hy": 0.75,
+     "dx": 0,
+     "dy": 0
+    }
+   ],
+   "solid": 1,
+   "big": false,
+   "door": false,
+   "cost": 0,
+   "src": {
+    "file": "art/theme-consistency/generated/buildings/golf-range-ball-dispenser-view2-v2.png",
+    "rect": [
+     570,
+     32,
+     1180,
+     851
+    ],
+    "sha256": "0a32beba26763751ff138c4f8e63059772b82dd5bb3607e4c24efef259e43507"
+   }
+  },
+  {
+   "id": "range:golf-range-floodlight-view1",
+   "name": "Floodlight mast (view 1)",
+   "cat": "Range art",
+   "kind": "business",
+   "w": 290.405,
+   "h": 768,
+   "ax": 189.912,
+   "ay": 752,
+   "boxes": [
+    {
+     "hx": 0.5,
+     "hy": 0.5,
+     "dx": 0,
+     "dy": 0
+    }
+   ],
+   "solid": 1,
+   "big": false,
+   "door": false,
+   "cost": 0,
+   "src": {
+    "file": "art/theme-consistency/generated/buildings/golf-range-floodlight-view1-v1.png",
+    "rect": [
+     649,
+     4,
+     980,
+     881
+    ],
+    "sha256": "1153aef55129cd2656bd09060dde8a22c62b60b13586ccaf5ba2683feca9a1c9"
+   }
+  },
+  {
+   "id": "range:golf-range-floodlight-view2",
+   "name": "Floodlight mast (view 2)",
+   "cat": "Range art",
+   "kind": "business",
+   "w": 254.676,
+   "h": 768,
+   "ax": 97.373,
+   "ay": 752,
+   "boxes": [
+    {
+     "hx": 0.5,
+     "hy": 0.5,
+     "dx": 0,
+     "dy": 0
+    }
+   ],
+   "solid": 1,
+   "big": false,
+   "door": false,
+   "cost": 0,
+   "src": {
+    "file": "art/theme-consistency/generated/buildings/golf-range-floodlight-view2-v1.png",
+    "rect": [
+     202,
+     20,
+     778,
+     1759
+    ],
+    "sha256": "4faf8e55496e207b2209dbdaedb9ea8e9e47169427dd208990b385ec54177052"
+   }
+  },
+  {
+   "id": "range:golf-range-yardage-board-view1",
+   "name": "Yardage board (view 1)",
+   "cat": "Range art",
+   "kind": "business",
+   "w": 80,
+   "h": 134.72,
+   "ax": 40,
+   "ay": 125.68,
+   "boxes": [
+    {
+     "hx": 1,
+     "hy": 0.25,
+     "dx": 0,
+     "dy": 0
+    }
+   ],
+   "solid": 1,
+   "big": false,
+   "door": false,
+   "cost": 0,
+   "src": {
+    "file": "art/theme-consistency/generated/buildings/golf-range-yardage-board-view1-v3.png",
+    "rect": [
+     632,
+     22,
+     1131,
+     863
+    ],
+    "sha256": "ba5a5f8d6d57daf7d47b32ed81aeecfc8bdeaaf14576fb96eaf296d3ec162282"
+   }
+  },
+  {
+   "id": "range:golf-range-yardage-board-view2",
+   "name": "Yardage board (view 2)",
+   "cat": "Range art",
+   "kind": "business",
+   "w": 80,
+   "h": 139.557,
+   "ax": 40,
+   "ay": 128.048,
+   "boxes": [
+    {
+     "hx": 0.25,
+     "hy": 1,
+     "dx": 0,
+     "dy": 0
+    }
+   ],
+   "solid": 1,
+   "big": false,
+   "door": false,
+   "cost": 0,
+   "src": {
+    "file": "art/theme-consistency/generated/buildings/golf-range-yardage-board-view2-v3.png",
+    "rect": [
+     583,
+     22,
+     1079,
+     888
+    ],
+    "sha256": "689b00cb784d2577dcc1a1bc3a8220e9400636e4de7b8e52cefeadacc092e431"
+   }
   }
  ]
 }
