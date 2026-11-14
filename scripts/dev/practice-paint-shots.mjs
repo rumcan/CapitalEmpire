@@ -313,7 +313,7 @@ try {
   if (steps.has('range')) {
     // ---- the driving range's outfield: paint on it, bare, then grassed
     const sc = await page.evaluate(() => { const s = window.__game.range.scene; return { box: s.box, facing: s.facing, junk: s.junk?.length ?? 0 }; });
-    const spots = { bunker: [18, 76], pond: [44, 92], waste: [30, 112], rough: [12, 96], bunker2: [48, 72], pond2: [18, 120], fescue: [52, 98], green: [50, 118] };
+    const spots = { bunker: [18, 76], pond: [44, 92], waste: [30, 112], rough: [12, 96], bunker2: [58, 84], pond2: [18, 120], fescue: [52, 98], green: [50, 118] };
     const P = {}; for (const [k, [u, v]] of Object.entries(spots)) P[k] = await plotPt(page, u, v);
     // (the camera fits the spots into the part of the screen clear of the bars: the Texture Painter's panel on the left, the guide's on the right, the buttons along the bottom, the top bar)
     const mid = { x: Object.values(P).reduce((a, p) => a + p.x, 0) / 8, y: Object.values(P).reduce((a, p) => a + p.y, 0) / 8 };
@@ -367,7 +367,7 @@ try {
     check(dist(meanAt(pic1, bs.x, bs.y, 3), meanAt(pic2, bs.x, bs.y, 3)) > 40, 'while the unpainted outfield itself did change (it is grass now)');
     // ---- more on the grassed outfield
     for (const k of ['bunker2', 'pond2', 'fescue', 'green']) {
-      const [kind, r] = { bunker2: ['bunker', 3.5], pond2: ['water', 5], fescue: ['longGrass', 4], green: ['green', 3.5] }[k]; await arm(page, kind, r);
+      const [kind, r] = { bunker2: ['bunker', 3.5], pond2: ['water', 5], fescue: ['longGrass', 4], green: ['green', 3.5] }[k]; await arm(page, kind, r, k === 'fescue' ? 'golfFescue' : undefined);
       await stroke(page, { x: P[k].x - 1.5, y: P[k].y }, { x: P[k].x + 1.5, y: P[k].y });
       check((await surfAt(page, P[k])) === { bunker2: 6, pond2: 3, fescue: 9, green: 8 }[k], `${k} laid its cells on the grassed outfield (surface ${await surfAt(page, P[k])})`);
     }
@@ -390,6 +390,9 @@ try {
       check(dist(oBefore, oAfter) > 45, `while the pond shows round it: ${oBefore.map(Math.round)} then ${oAfter.map(Math.round)}`);
       await shot(page, `5-target-green-stays-on-top-${look}`, { x: 300, y: 150, width: 1200, height: 700 }, rprefix);
     }
+    // (the colours at the spots as they stand now, with nobody on them: the close-ups below stand you in the sand)
+    await focus(0.14);
+    const picS = await grab(page), nowS = await sample(picS, Object.keys(spots));
     // a close look at a bunker's lip and a pond's bank against the range's grass, with your character standing in the sand (a person is a sprite over the ground: the paint is under him)
     await page.evaluate(([x, y]) => { const g = window.__game; if (g.you) { g.you.x = x; g.you.y = y; g.you.moving = false; g.you.path.length = 0; g.emit(); } }, [P.bunker2.x + 0.6, P.bunker2.y + 0.3]);
     await lookAt(page, P.bunker2, 0.5); await settle(page, 1200); await page.mouse.move(8, 8); await shot(page, `6-bunker-lip-closeup-${look}`, { x: 300, y: 150, width: 1200, height: 700 }, rprefix);
@@ -397,8 +400,6 @@ try {
     // the grid holds them: cells of each surface on the outfield
     const grid1 = await page.evaluate(() => { const g = window.__game, grid = g.courseGrid, cnt = {}; for (let i = 0; i < grid.surf.length; i++) cnt[grid.surf[i]] = (cnt[grid.surf[i]] ?? 0) + 1; return cnt; });
     // ---- save, load, and the same again
-    await focus(0.14);
-    const picS = await grab(page), nowS = await sample(picS, Object.keys(spots));
     await page.evaluate(() => window.__game.save()); await page.waitForTimeout(1500);
     await page.reload({ timeout: 240000, waitUntil: 'domcontentloaded' });
     await page.waitForFunction(() => window.__game?.ready && window.__game.range?.scene, null, { timeout: 240000 });
@@ -431,9 +432,10 @@ try {
     //      starter step), by a real mouse sweep, with this ticket's steps on and with them off (the old code's path: the facility's looks zone as the box, no starter step)
     const box = area.box;
     await page.evaluate(() => {
-      const g = window.__game; if (g.__t) return; g.__t = { h: 0, looks: 0, flush: 0, over: 0, masks: 0 };
-      const wrap = (obj, name, key) => { const o = obj[name].bind(obj); obj[name] = (...a) => { const t = performance.now(); try { return o(...a); } finally { g.__t[key] += performance.now() - t; } }; };
-      for (const m of ['pointerDown', 'pointerMove', 'pointerUp']) wrap(g, m, 'h');
+      const g = window.__game; if (g.__t) return; g.__t = { h: 0, looks: 0, flush: 0, over: 0, masks: 0, d: 0 };
+      // (the course send is counted by itself only when the frame loop makes it: inside a pointer handler it is part of the handler's time already)
+      const wrap = (obj, name, key, nest) => { const o = obj[name].bind(obj); obj[name] = (...a) => { const t = performance.now(); if (nest) g.__t.d++; try { return o(...a); } finally { if (nest) g.__t.d--; if (!(key === 'flush' && g.__t.d > 0)) g.__t[key] += performance.now() - t; } }; };
+      for (const m of ['pointerDown', 'pointerMove', 'pointerUp']) wrap(g, m, 'h', true);
       wrap(g, 'courseLooks', 'looks'); wrap(g, 'flushCourse', 'flush'); wrap(g, 'facilityMask', 'masks');
       const ph = g.paint.host, po = ph.paintedOver; if (po) { ph.paintedOver = d => { const t = performance.now(); try { return po(d); } finally { g.__t.over += performance.now() - t; } }; window.__perfPO = ph.paintedOver; }
       window.__perfMask = g.facilityMask;
@@ -456,17 +458,24 @@ try {
       await page.evaluate(() => window.__game.setTool('select')); await page.waitForTimeout(1200);
       for (let i = 0; i < rows.length; i++) await page.evaluate(() => window.__game.paint.undo());
       await settle(page, 900);
-      const total = t.h + t.looks + t.flush;
-      console.log(`  ${label}: ${rows.length} strokes: pointer handlers ${t.h.toFixed(1)} ms, looks for the chunk jobs ${t.looks.toFixed(1)} ms (the facility zones ${t.masks.toFixed(1)}), course sends ${t.flush.toFixed(1)} ms, the starter step ${t.over.toFixed(2)} ms: ${total.toFixed(1)} ms in all`);
+      const total = t.h + t.flush;
+      console.log(`  ${label}: ${rows.length} strokes: pointer handlers ${t.h.toFixed(1)} ms, course sends from the frame loop ${t.flush.toFixed(1)} ms: ${total.toFixed(1)} ms in all (of which the looks for the chunk jobs ${t.looks.toFixed(1)} ms, the facility zones ${t.masks.toFixed(1)}, the starter step ${t.over.toFixed(2)})`);
       return total;
     };
-    const best = async label => { const a = []; for (let k = 0; k < 3; k++) a.push(await sweep(label)); return Math.min(...a); };
-    const withIt = await best('this ticket (the steps on)');
-    await page.evaluate(() => { const g = window.__game; g.paint.host.paintedOver = undefined; g.facilityMask = f => { const b = g.facilityBox(f); if (!b) return null; const x0 = Math.floor(b[0] / 0.5) * 0.5, y0 = Math.floor(b[1] / 0.5) * 0.5, x1 = Math.ceil(b[2] / 0.5) * 0.5, y1 = Math.ceil(b[3] / 0.5) * 0.5; return { x0, y0, x1, y1, mask: new Uint8Array(Math.round((x1 - x0) / 0.5) * Math.round((y1 - y0) / 0.5)).fill(1) }; }; });
-    const before = await best('before this ticket (the box zones, no starter step)');
-    await page.evaluate(() => { const g = window.__game; g.paint.host.paintedOver = window.__perfPO; g.facilityMask = window.__perfMask; });
-    console.log(`  a stroke sweep over the practice area costs ${withIt.toFixed(1)} ms now against ${before.toFixed(1)} ms before (the best of three each)`);
-    check(withIt <= before * 1.25 + 3, `the stroke costs what it cost: ${withIt.toFixed(1)} ms against ${before.toFixed(1)} ms`);
+    // the two ways taken in turn, so that a warm-up or another job on the machine cannot fall on one of them alone: a warm-up each, then four rounds with the order swapped each round
+    const setMode = mode => page.evaluate(mode => {
+      const g = window.__game;
+      if (mode === 'on') { g.paint.host.paintedOver = window.__perfPO; g.facilityMask = window.__perfMask; return; }
+      g.paint.host.paintedOver = undefined;
+      g.facilityMask = f => { const t = performance.now(); try { const b = g.facilityBox(f); if (!b) return null; const x0 = Math.floor(b[0] / 0.5) * 0.5, y0 = Math.floor(b[1] / 0.5) * 0.5, x1 = Math.ceil(b[2] / 0.5) * 0.5, y1 = Math.ceil(b[3] / 0.5) * 0.5; return { x0, y0, x1, y1, mask: new Uint8Array(Math.round((x1 - x0) / 0.5) * Math.round((y1 - y0) / 0.5)).fill(1) }; } finally { g.__t.masks += performance.now() - t; } };
+    }, mode);
+    for (const mode of ['on', 'off']) { await setMode(mode); await sweep(`warm-up (${mode}, not counted)`); }
+    const res = { on: [], off: [] };
+    for (let r = 0; r < 4; r++) for (const mode of r % 2 ? ['off', 'on'] : ['on', 'off']) { await setMode(mode); res[mode].push(await sweep(mode === 'on' ? 'this ticket (the steps on)' : 'before this ticket (the box zones, no starter step)')); }
+    await setMode('on');
+    const med = a => [...a].sort((x, y) => x - y)[a.length >> 1], withIt = med(res.on), before = med(res.off);
+    console.log(`  a stroke sweep over the practice area costs ${withIt.toFixed(1)} ms now against ${before.toFixed(1)} ms before (the median of four each, in turn; the best ${Math.min(...res.on).toFixed(1)} against ${Math.min(...res.off).toFixed(1)})`);
+    check(withIt <= before * 1.2 + 5, `the stroke costs what it cost: ${withIt.toFixed(1)} ms against ${before.toFixed(1)} ms`);
     lap('perf done');
   }
   await ctx.close();
