@@ -162,6 +162,55 @@ try {
   check((await state()).bend === 45, `${TAG}: Q toggles back to 45`);
   await page.keyboard.press('q'); await page.waitForTimeout(150); // left on 90: the next load must not remember it (checked at the end)
 
+  // ------------------------------------------------------------------ 1b. the range guide's walking path step (the jam): Show me, then two dragged runs
+  if (JAM) {
+    console.log("== the range guide's walking path step");
+    await page.evaluate(() => { const g = window.__game; g.cancelRoute(); g.setTool('select'); g.guideShowMe('guide-range-path'); });
+    await page.waitForFunction(() => !window.__game.camEase, null, { timeout: 20000 }).catch(() => {});
+    await settle(1200);
+    const w = await page.evaluate(() => {
+      const g = window.__game, sc = g.range.scene; if (!sc) return null;
+      const t = sc.anchors.tee, m = { x: (t[0].x + t[1].x) / 2, y: (t[0].y + t[1].y) / 2 };
+      return { tool: g.tool, ui: g.uiTool, cls: g.roadClass, lot: { x: sc.carEdge.x, y: sc.carEdge.y }, shop: { x: sc.counter.x, y: sc.counter.y }, tee: m, walkway: g.range.hasWalkway(), reach: g.range.walkReach() };
+    });
+    check(!!w && w.tool === 'road' && w.ui === 'path' && w.cls === 'cart-walk', `${TAG}: the guide's Show me puts the Walking path in hand`, w ? `${w.tool} / ${w.ui} / ${w.cls}` : 'no range scene');
+    if (w) {
+      check(!w.walkway, `${TAG}: no walkway yet`, JSON.stringify(w.reach));
+      /** a run from near P to near Q the engine accepts (the walking path's reach is 3 tiles); fixedA keeps the start (the end of the run before) */
+      const find = (P, Q, fixedA) => page.evaluate(([P, Q, fixedA]) => {
+        const g = window.__game, st = 0.5, R = 4, offs = []; for (let i = -R; i <= R; i += 0.5) for (let j = -R; j <= R; j += 0.5) offs.push({ x: i, y: j, d: Math.hypot(i, j) });
+        offs.sort((a, b) => a.d - b.d); const at = (T, o) => ({ x: Math.round((T.x + o.x) / st) * st, y: Math.round((T.y + o.y) / st) * st });
+        const As = fixedA ? [fixedA] : offs.slice(0, 60).map(o => at(P, o)), Bs = offs.slice(0, 220).map(o => at(Q, o)); let tried = 0;
+        for (const A of As) { if (g.startBlock(A)) continue; for (const B of Bs) {
+          if (Math.hypot(B.x - A.x, B.y - A.y) < 4) continue;
+          g.cancelRoute(); g.route = [A]; g.routeFrom = g.routeLast = { p: A, kind: 'grid' }; g.hover = B;
+          const legs = g.previewLegs(), why = g.routeBlock(legs); g.cancelRoute(); g.hover = null; tried++;
+          if (!why && legs.length >= 1) return { A, B, legs: legs.length, tried };
+        } }
+        return { none: true, tried };
+      }, [P, Q, fixedA ?? null]);
+      const r1 = await find(w.lot, w.shop, null);
+      check(!r1.none, `${TAG}: a run from the car park's edge to the shop's counter`, r1.none ? `none after ${r1.tried}` : `${r1.legs} leg(s) from ${r1.A.x},${r1.A.y} to ${r1.B.x},${r1.B.y}`);
+      let r2 = null;
+      if (!r1.none) {
+        await drag(r1.A, r1.B, { name: null, steps: 10, hold: 200 }); await page.waitForTimeout(500);
+        let reach = await page.evaluate(() => window.__game.range.walkReach());
+        check(!!reach && reach.lot && reach.shop, `${TAG}: the first dragged run reaches the car park and the shop`, JSON.stringify(reach));
+        const t1 = (await lastToasts()).pop() ?? '';
+        check(/^Walking path: /.test(t1) || /^Built /.test(t1), `${TAG}: the guide's feedback speaks after the build`, t1);
+        r2 = await find(r1.B, w.tee, r1.B);
+        check(!r2.none, `${TAG}: a run on from the counter to the back of the mats`, r2.none ? `none after ${r2.tried}` : `${r2.legs} leg(s) to ${r2.B.x},${r2.B.y}`);
+      }
+      if (r2 && !r2.none) {
+        await drag(r2.A, r2.B, { name: null, steps: 10, hold: 200 }); await page.waitForTimeout(700);
+        const done = await page.evaluate(() => ({ walkway: window.__game.range.hasWalkway(), reach: window.__game.range.walkReach(), toast: window.__game.toasts.slice(-1)[0]?.text ?? '' }));
+        check(done.walkway, `${TAG}: the two dragged runs make the walking path: the guide's step is met`, `${JSON.stringify(done.reach)} ${done.toast}`);
+        clip = null; await settle(1500); await shot('walkway');
+      }
+    }
+    await page.evaluate(() => { const g = window.__game; g.cancelRoute(); g.setTool('select'); });
+  }
+
   // ------------------------------------------------------------------ 2. a cart path dragged with one 45 degree bend
   console.log('== a cart path dragged');
   await page.keyboard.press('q'); await page.waitForTimeout(150); // back to 45 for the shots
