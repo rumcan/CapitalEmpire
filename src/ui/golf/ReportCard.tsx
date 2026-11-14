@@ -2,7 +2,9 @@
 // worth, out of overdraft by the end of season 2), and the report card (grade A to F with the reasons) that opens at the end of season 2 or on demand.
 import { useEffect, useRef, useState } from 'react';
 import { GOAL, reportCard, goalState, type Live, type Report } from '../../game/golf/reports';
+import { Icon } from '../Icon';
 import { money, onFinlit } from './finevents';
+import { goalChipView } from './goal-pill';
 
 const TONE: Record<string, string> = { A: 'text-emerald-300', B: 'text-lime-300', C: 'text-amber-300', D: 'text-orange-300', F: 'text-rose-300' };
 const VERDICT: Record<string, string> = {
@@ -12,6 +14,17 @@ const VERDICT: Record<string, string> = {
   D: 'A hard two seasons. Debt and costs ate the gains.',
   F: 'The club is in trouble. Look at the reasons: each one is a lesson.',
 };
+
+/** #1297: the small chip in the top bar: the holes built of the goal's and the months left, with a click that shows or folds the full pill (the row of the bar under it) */
+export function GoalToggle({ history, live, open, onToggle }: { history: readonly Report[]; live: Live; open: boolean; onToggle: () => void }) {
+  const g = goalState(history, live), v = goalChipView(g, open);
+  return (
+    <button type="button" className={`chip ${open ? 'chip-on' : ''}`} onClick={onToggle} aria-expanded={open} aria-label={v.label} data-tip={v.tip} data-testid="goal-toggle">
+      {/* (the bar keeps one row at 1366 px: there the chip is its icon alone, as the bar's other chips are; the holes show from 1600 px and the months from 1900 px; the tooltip and the name say it all) */}
+      <Icon name="trophy" size={16} /><span className="font-semibold text-amber-300 max-[1599px]:hidden">{v.short}</span><span className="text-slate-400 max-[1899px]:hidden">{v.months}</span>
+    </button>
+  );
+}
 
 /** the always-visible chip: the goal's three parts, and the months left */
 export function GoalChip({ history, live }: { history: readonly Report[]; live: Live }) {

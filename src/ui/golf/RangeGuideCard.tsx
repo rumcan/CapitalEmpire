@@ -1,5 +1,5 @@
 // The range start's guided build (T239, #699; the owner, 2026-10-28: "the starting tutorial on how to build to upgrade and build some of the
-// first driving range features"): a card in the corner listing the nine steps (T288: two placement steps first) (guide.ts RANGE_GUIDE). Each line ticks itself when its build is
+// first driving range features"): a card in the corner listing its steps (guide.ts RANGE_GUIDE; T288: two placement steps first; #1297: three steps in all, the owner took the rest out). Each line ticks itself when its build is
 // done and shows its reward; the current line (the first still to do) says what to do, with Show me (the tool or card it needs, the camera on
 // its spot, its control pulsed: Engine.guideShowMe) and Skip; every line still to do has Show me too. Skip guide puts the whole card away. It
 // folds to the current line. The clock never stops for it.

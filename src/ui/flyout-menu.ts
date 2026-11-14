@@ -85,6 +85,8 @@ export function menuOf(item: RailItem, c: MenuCtx): MenuRow[] {
   };
   /** T233: a row with its tile (none: as it was) */
   const tiled = (r: MenuRow | null, tile: ToolTile | undefined): MenuRow | null => (r && tile ? { ...r, tile } : r);
+  /** #1297: a row with its guide anchor, the control the Show me's spotlight lights on the way to a target (spotlight/leads.ts: every anchor here is a level or an entry of a lead) */
+  const guided = (r: MenuRow | null, guide: string): MenuRow | null => (r ? { ...r, guide } : r);
   /** class rows under family captions (the Build and Paths flyouts): a locked class carries its lock */
   const classes = (t: RailTool | undefined, list: MenuCtx['roads']) => {
     if (!t) return [];
@@ -102,8 +104,8 @@ export function menuOf(item: RailItem, c: MenuCtx): MenuRow[] {
   const facilityRows = (): MenuRow[] => {
     const out: (MenuRow | null)[] = [], pt = byId('practice');
     // T214: the teaching hut, after the greens (placed with the Buildings tool's ghost)
-    if (pt) out.push(tiled(group('practice', 'Practice', 'pin', [...(c.practice ?? []).map(f => tiled({ ...leaf(pt, f.name, { k: 'practice', id: f.id }, 'pin')!, why: toolLock(c.ui, pt.id) ?? f.why }, PRACTICE_TILE[f.id])),
-      ...(c.practice?.length ? [tiled({ ...leaf(pt, 'Teaching hut', { k: 'pro', id: 'teachhut' }, 'house')!, why: toolLock(c.ui, pt.id) ?? (c.practice.every(f => f.why) ? c.practice[0]!.why : null) }, ROW_TILE.teachHut)] : [])], pt), ROW_TILE.practice));
+    if (pt) out.push(tiled(guided(group('practice', 'Practice', 'pin', [...(c.practice ?? []).map(f => tiled({ ...leaf(pt, f.name, { k: 'practice', id: f.id }, 'pin')!, why: toolLock(c.ui, pt.id) ?? f.why, guide: `practice-${f.id}` }, PRACTICE_TILE[f.id])),
+      ...(c.practice?.length ? [tiled({ ...leaf(pt, 'Teaching hut', { k: 'pro', id: 'teachhut' }, 'house')!, why: toolLock(c.ui, pt.id) ?? (c.practice.every(f => f.why) ? c.practice[0]!.why : null) }, ROW_TILE.teachHut)] : [])], pt), 'facilities-practice'), ROW_TILE.practice));
     const pa = byId('paint');
     if (pa) out.push(tiled(group('plants', 'Plants', 'trees', c.plants.map(m => tiled({ ...leaf(pa, m.name, { k: 'plant', id: m.id })!, ...(m.col ? { swatch: m.col } : {}) }, PLANT_TILE[m.id])), pa), ROW_TILE.plants));
     const pr = byId('props');
@@ -126,8 +128,10 @@ export function menuOf(item: RailItem, c: MenuCtx): MenuRow[] {
   const rows: (MenuRow | null)[] = [];
   if (item.action === 'range') {
     for (const s of c.range) {
-      if (s.place) { const r = leaf(item.tools[0], s.name, { k: 'place', id: s.id }, 'house'); if (r) rows.push({ ...r, why: s.why ?? null, ...(s.why ? {} : { gold: true }) }); continue; }
-      rows.push(leaf(item.tools[0], s.name, { k: 'range', section: s.id === 'card' ? null : s.id }, 'pin'));
+      // (#1297: each placement is a row of its own anchor, place-range, place-carpark, place-practice, and the card's row range-card: the Show me's spotlight leads down to them)
+      if (s.place) { const r = leaf(item.tools[0], s.name, { k: 'place', id: s.id }, 'house'); if (r) rows.push({ ...r, why: s.why ?? null, guide: `place-${s.id}`, ...(s.why ? {} : { gold: true }) }); continue; }
+      const sec = leaf(item.tools[0], s.name, { k: 'range', section: s.id === 'card' ? null : s.id }, 'pin');
+      rows.push(s.id === 'card' ? guided(sec, 'range-card') : sec);
     }
     // T256: the Texture Painter, gold, last: the holes' painting tools on the range, the practice area and the rest of your land
     // (T459, the jam MVP: no free painting of the property: holes come from New hole)
@@ -137,25 +141,25 @@ export function menuOf(item: RailItem, c: MenuCtx): MenuRow[] {
   switch (item.id) {
     case 'traffic': {
       const road = byId('road');
-      rows.push(group('roads', 'Roads', 'road', [group('build', 'Build', 'road', classes(road, c.roads), road), leaf(byId('lane')), leaf(byId('downgrade'))]));
+      rows.push(guided(group('roads', 'Roads', 'road', [guided(group('build', 'Build', 'road', classes(road, c.roads), road), 'traffic-build'), guided(leaf(byId('lane')), 'road-upgrade'), leaf(byId('downgrade'))]), 'traffic-roads'));
       const j = byId('junction');
       rows.push(group('junctions', 'Junctions', 'junction', j ? [leaf(j, 'Select a junction', { k: 'junction', id: 'select' }, 'compass'), ...c.junctions.map(x => ({ ...leaf(j, x.name, { k: 'junction', id: x.id })!, why: toolLock(c.ui, j.id) ?? x.why }))] : [], j));
-      rows.push(group('transport', 'Transport', 'bus', [leaf(byId('bus')), leaf(byId('park')), leaf(byId('toll'))]));
+      rows.push(guided(group('transport', 'Transport', 'bus', [leaf(byId('bus')), leaf(byId('park')), leaf(byId('toll'))]), 'traffic-transport'));
       break;
     }
     case 'course': {
       const h = byId('course');
       // T233: the Course flyout's tools as the concept's illustrated tiles (tool-tiles.ts): Holes, New hole, Shape by hand and its surfaces,
       // Buildings and the Clubhouse, Cart paths & roads (its classes stay a list under their families)
-      rows.push(tiled(group('holes', 'Holes', 'trophy', h ? [
-        tiled({ ...leaf(h, 'New hole', { k: 'newHole' }, 'trophy')!, why: toolLock(c.ui, h.id) ?? c.newHoleWhy }, ROW_TILE.newHole),
+      rows.push(tiled(guided(group('holes', 'Holes', 'trophy', h ? [
+        tiled({ ...leaf(h, 'New hole', { k: 'newHole' }, 'trophy')!, why: toolLock(c.ui, h.id) ?? c.newHoleWhy, guide: 'new-hole' }, ROW_TILE.newHole),
         leaf(h, 'Your holes', { k: 'holes' }, 'pin'),
         // (T459, the jam MVP: holes come from New hole; Shape by hand, the surface brushes, is hidden)
         ...(JAM ? [] : [tiled(group('shape', 'Shape by hand', 'terrain', c.surfaces.map(s => tiled({ ...leaf(h, s.name, { k: 'surface', id: s.id })!, mark: s.id }, SURFACE_TILE[s.id]))), ROW_TILE.shape)]),
-      ] : [], h), ROW_TILE.holes));
+      ] : [], h), 'course-holes'), ROW_TILE.holes));
       const b = byId('buildings');
       // (T459, the jam MVP: the clubhouse alone)
-      if (b) rows.push(tiled(group('buildings', 'Buildings', 'house', JAM ? [tiled(leaf(b, 'Clubhouse', { k: 'club' }, 'house'), ROW_TILE.club)] : [tiled(leaf(b, 'Clubhouse', { k: 'club' }, 'house'), ROW_TILE.club), tiled(leaf(b, 'Halfway house', { k: 'halfway' }, 'house'), ROW_TILE.halfway), tiled(leaf(b, "Pro's office", { k: 'pro', id: 'prooffice' }, 'house'), ROW_TILE.proOffice), leaf(b, 'House lots', { k: 'estate' }, 'house')], b), ROW_TILE.buildings));
+      if (b) rows.push(tiled(guided(group('buildings', 'Buildings', 'house', JAM ? [tiled(guided(leaf(b, 'Clubhouse', { k: 'club' }, 'house'), 'clubhouse-card'), ROW_TILE.club)] : [tiled(guided(leaf(b, 'Clubhouse', { k: 'club' }, 'house'), 'clubhouse-card'), ROW_TILE.club), tiled(leaf(b, 'Halfway house', { k: 'halfway' }, 'house'), ROW_TILE.halfway), tiled(leaf(b, "Pro's office", { k: 'pro', id: 'prooffice' }, 'house'), ROW_TILE.proOffice), leaf(b, 'House lots', { k: 'estate' }, 'house')], b), 'course-buildings'), ROW_TILE.buildings));
       // T356 (#998, the owner: "add a way for the user to place the golf course he imported into his map"): the real courses, each placed with its outline in hand
       // (the shipped ones first; the player's downloaded courses under a caption of their own, only when there are some: without, the list is the three alone)
       if (c.golf && c.real?.length) {
@@ -166,7 +170,7 @@ export function menuOf(item: RailItem, c: MenuCtx): MenuRow[] {
       // (T288: Cart paths & roads is a rail button of its own, below Course)
       const g = GREENKEEPING ? byId('greenkeeping') : undefined; // hidden for now (features.ts)
       if (g) rows.push(group('greenkeeping', 'Greenkeeping', 'trees', [leaf(g, 'Grass care', undefined, 'trees'), ...c.cares.map(x => leaf(g, x.name, { k: 'care', id: x.id }))], g));
-      if (c.golf) for (const x of item.extras ?? []) rows.push({ key: `extra:${x.id}`, label: x.label, icon: x.icon, tile: EXTRA_TILE[x.id], leaf: { item: item.id, entry: { id: 'select', label: x.label, key: '', icon: x.icon }, act: x.id === 'land' ? { k: 'land' } : { k: 'event' } }, why: extraLock(c.ui, x) });
+      if (c.golf) for (const x of item.extras ?? []) rows.push({ key: `extra:${x.id}`, label: x.label, icon: x.icon, tile: EXTRA_TILE[x.id], ...(x.id === 'land' ? { guide: 'course-land' } : {}), leaf: { item: item.id, entry: { id: 'select', label: x.label, key: '', icon: x.icon }, act: x.id === 'land' ? { k: 'land' } : { k: 'event' } }, why: extraLock(c.ui, x) });
       // #1272 (the owner, 2026-11-14: "move facilities button in main menu to this menu bottom right empty space"): Facilities, the sixth tile, bottom right: it
       // opens its own tools (Practice, Plants, Props ...) as the next level, to the side like the real courses' list. It was a rail button: its lock (every one of
       // its tools locked), its NEW mark and its Z key (the Props tool's own) are the same, and its leaves pick through Course (the item lit while one is in hand)

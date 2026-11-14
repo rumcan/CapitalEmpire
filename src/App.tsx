@@ -73,10 +73,13 @@ import { SeasonCard } from './ui/golf/SeasonCard';
 import { seasonChip, seasonPhase } from './ui/golf/season';
 import { GuidePulse } from './ui/GuidePulse';
 import { Spotlight } from './ui/spotlight/Spotlight';
+import { LEADS, keysToReveal } from './ui/spotlight/leads';
 import { showGuide, showHint, showPrep, showTip, showTour } from './ui/spotlight/shows';
 import { ClubTitleText } from './ui/ClubTitle';
 import { GrassManagementPanel } from './ui/GrassManagementPanel';
 import { GREENKEEPING, JAM } from './game/features';
+import { BEND_45 } from './game/route-legs';
+import { bendWords } from './game/route-input';
 import { COST_GROUPS, INCOME_LINES } from './game/golf/reports';
 import { debtOf } from './game/golf/finance';
 import { TitleCard } from './ui/jam/TitleCard';
@@ -126,7 +129,8 @@ import { stackCol, stackFit, stackRight, type StackCard, type StackOpen, type St
 import { HoleCard } from './ui/golf/HoleCard';
 import { View3pPanel } from './ui/golf/View3pPanel';
 import { BankPanel } from './ui/golf/BankPanel';
-import { FinLitHud } from './ui/golf/FinLitHud'; // J3
+import { FinLitHud, GoalChipInBar, GoalRowInBar } from './ui/golf/FinLitHud'; // J3
+import { loadGoalOpen, saveGoalOpen } from './ui/golf/goal-pill'; // #1297: the Goal pill is part of the top bar
 import { affordKind, balanceKind, statusIcon, trendKind, withIcon } from './ui/status-icon';
 import stadiumArt from './assets/ui/art/stadium.webp';
 import { StatChips } from './ui/StatChips';
@@ -283,6 +287,8 @@ export default function App() {
   const [uiScale, setUiScale] = useState(currentUiScale);
   /** #1275: the speed bar open (every speed, Watch golf, skip) or collapsed (the default: pause, the speed now, a chevron); remembered in this browser */
   const [speedOpen, setSpeedOpen] = useState(() => loadSpeedBarOpen());
+  /** #1297: the Goal pill's choice (goal-pill.ts): the full pill in a row of the top bar (open) or only the chip in it (folded, the default); remembered in this browser */
+  const [goalOpen, setGoalOpen] = useState(() => loadGoalOpen());
   /** J8 (#1261), J13: how many of the top bar's pictures there is room for (uiScale.ts topBarTier: the screen's width over the Text size): 2, all of them; 1, not the ones beside the
    *  speed bar and the zoom buttons; 0, not the Cash chip's either. It keeps the bar one row, clear of the month note under it, down to 1280 px at the largest Text size */
   const [tbTier, setTbTier] = useState<0 | 1 | 2>(() => topBarTier(window.innerWidth, currentUiScale()));
@@ -319,7 +325,8 @@ export default function App() {
   const lastEntry = useRef<Record<string, string>>({});
   /** T193: the open flyouts (the rail item, the rows opened at first, whether the keyboard leads, the item's button's top in the rail's box;
    *  T250: a town footer item's, its button's left edge in the footer's box) */
-  const [fly, setFly] = useState<{ item: string; path: number[]; keyboard: boolean; top: number; left: number } | null>(null);
+  const [fly, setFly] = useState<{ item: string; path: number[]; keyboard: boolean; top: number; left: number; /** #1297: bumped when the flyouts are asked to open at a row (the back arrow, the spotlight's lead): they start again there */ rev: number } | null>(null);
+  const flyRev = useRef(0);
   /** J7 (#1225): the jam's Build menu (its tab; null: shut) and its tips card */
   const [build, setBuild] = useState<BuildGroupId | null>(null);
   const [tips, setTips] = useState(false);
@@ -452,13 +459,22 @@ export default function App() {
     if (r.id === 'course') void refreshKept(); // (T356: the downloaded courses under Place a real course, as the library has them now)
     if (drawerOf(r) === 'footer') {
       const box = footBox.current, left = el && box ? (el.getBoundingClientRect().left - box.getBoundingClientRect().left) / s : 0;
-      setFly({ item: r.id, path, keyboard, top: 0, left: Math.max(0, Math.round(left)) }); return;
+      setFly({ item: r.id, path, keyboard, top: 0, left: Math.max(0, Math.round(left)), rev: path.length ? ++flyRev.current : 0 }); return;
     }
     const box = railBox.current, top = el && box ? (el.getBoundingClientRect().top - box.getBoundingClientRect().top) / s : 0;
-    setFly({ item: r.id, path, keyboard, top: Math.max(0, Math.round(top)), left: 0 });
+    setFly({ item: r.id, path, keyboard, top: Math.max(0, Math.round(top)), left: 0, rev: path.length ? ++flyRev.current : 0 });
   };
   /** T250: a group's button, in whichever drawer holds it */
   const railButton = (id: string): HTMLElement | undefined => (railRef.current?.querySelector<HTMLElement>(`[data-rail="${id}"]`) ?? footRef.current?.querySelector<HTMLElement>(`[data-rail="${id}"]`)) ?? undefined;
+  /** #1297: the Show me spotlight's lead (ui/spotlight/leads.ts): when the player leaves the lit level alone for a moment the spotlight opens the next level itself: the flyouts of the
+   *  rail item that holds the target, opened down to the group row that holds the next control. False when there is nothing to open (no flyouts: the jam's Range and Course; a level that
+   *  is a leaf that acts, which is never pressed for the player) */
+  const revealMenu = (id: string, level: number): boolean => {
+    const keys = keysToReveal(id, level), lead = LEADS[id], r = lead ? RAIL.find(x => x.id === lead.item) : undefined;
+    if (!game || !keys || !r) return false;
+    const rows = menuFor(r); if (!rows.length) return false;
+    openFly(r, railButton(r.id), false, indicesOf(rows, keys)); return true;
+  };
   /** T250: the side drawer's flyouts are open (the tool panel beside it makes way; the town footer's open above it and leave it be) */
   const sideFly = !!fly && drawerOf(RAIL.find(x => x.id === fly.item) ?? RAIL[0]!) === 'side';
   /** T202: Help › Keys for the engine (the lot lab's ? and its button open it) */
@@ -597,7 +613,7 @@ export default function App() {
     <div className="ui-root fixed inset-0 overflow-hidden bg-[#1b2816] text-slate-100 select-none" style={{ fontFamily: 'ui-sans-serif, system-ui, sans-serif' }}>
       <TooltipLayer />
       {game && <GuidePulse anchor={game.guideAnchor} />}
-      {game && <Spotlight game={game} />}{/* J10 (#1269): every Show me's spotlight: the rest dimmed and blurred, its target cut out */}
+      {game && <Spotlight game={game} reveal={revealMenu} />}{/* J10 (#1269): every Show me's spotlight: the rest dimmed and blurred, its target cut out */}
       <canvas ref={canvasRef} className="absolute inset-0 h-full w-full" />
       <canvas
         ref={overlayRef}
@@ -686,6 +702,8 @@ export default function App() {
                   {!JAM && chip('land') && <button className={`chip ${game.landMode ? 'chip-on' : ''}`} onClick={() => { if (game.landMode) game.closeLandSale(); else game.openLandSale(); bump(); }} data-tip="Land for sale: the blocks next to your land, priced; click one to see it, Buy on its card (also Course › Land for sale)" aria-label="Land for sale"><Icon name="compass" size={16} /><span className={WIDE}>Land</span></button>}
                   {!JAM && chip('holes') && <button className={`chip ${game.holesTool ? 'chip-on' : ''}`} onClick={() => { game.toggleHolesTool(); bump(); }} data-tip="Holes: move pins and tee markers" aria-label="Holes"><Icon name="pin" size={16} /><span className={WIDE}>Holes</span></button>}
  {!JAM && chip('event') && <button data-guide="chip-event" className={`chip ${game.eventTool ? 'chip-on' : ''}`} onClick={() => { game.toggleEventTool(); bump(); }} data-tip="Event: the event structures catalogue" aria-label="Event"><Icon name="buildings" size={16} /><span className={WIDE}>Event</span></button>}
+                  {/* #1297: the Goal pill's chip (the jam has no goal): a click shows the full pill in a row of this bar, or folds it; the rail and the panels stand under the bar's last row, so it covers nothing */}
+                  {!JAM && <GoalChipInBar game={game} open={goalOpen} onToggle={() => setGoalOpen(saveGoalOpen(!goalOpen))} />}
                 </>
               ) : game.eventMode
                 ? <Stat icon="trophy" label="Level" value={String(game.traffic.round.xp)} sub={`${game.traffic.round.cards.length} cards`} tone="text-amber-200" />
@@ -891,6 +909,9 @@ export default function App() {
               {dev && ON_PC && <a className="btn" href="/__dev/studio" target="studio" rel="noopener" title="The sprite studio (5191; started if it is not running): sprites, lots, holes, the ground grass and map decals. Its Rebuild game sprites rebuilds this game: reload to see it">Studio</a>}
               <button className="btn-icon" onClick={() => { setHelpTab('keys'); setHelp(true); }} data-tip="Help: the keys and how it works" data-tip-key="? or F1" aria-label="Help"><Icon name="help" size={22} /></button>
             </div>
+            {/* #1297 (the owner: "goals cover menu ui. cant be closed either"): the full Goal pill is a row of this bar while it is open (its chip, in the bar's first row, shows and folds it): the bar's
+                bottom (--hud-top) is under it, so the rail, the panels, the flyouts and the cards all stand below it and it covers none of them. The row takes no clicks beyond the pill's own */}
+            {!JAM && gv && goalOpen && <div className="pointer-events-none order-last basis-full" data-testid="goal-row"><GoalRowInBar game={game} onFold={() => setGoalOpen(saveGoalOpen(false))} /></div>}
           </div>
 
           {/* T174: the box round the rail and the panel takes no clicks itself (it is as tall as the rail, so it covered the map under a short panel) */}
@@ -919,7 +940,7 @@ export default function App() {
             };
             const flyR = fly ? RAIL.find(x => x.id === fly.item) : undefined, flyRows = flyR ? menuFor(flyR) : [], up = !!flyR && drawerOf(flyR) === 'footer';
             const flyouts = fly && flyRows.length ? (
-              <Flyouts key={fly.item} rows={flyRows} top={fly.top} left={up ? fly.left : (railRef.current?.offsetWidth ?? 96) + 8} up={up} startPath={fly.path} keyboard={fly.keyboard} railRefs={[railRef, footRef]}
+              <Flyouts key={`${fly.item}:${fly.rev}`} rows={flyRows} top={fly.top} left={up ? fly.left : (railRef.current?.offsetWidth ?? 96) + 8} up={up} startPath={fly.path} keyboard={fly.keyboard} railRefs={[railRef, footRef]}
                 onLeaf={pickLeaf} onLocked={row => game.toast(`${row.label}: ${row.why}`)} onClose={() => setFly(null)} />
             ) : null;
             // T255 (#739, the owner 2026-10-29: "these windows need to move to the center footer where town moved to"): the tool's panel (its crumb
@@ -1732,6 +1753,8 @@ const VARIANT_LABEL: Record<string, string> = { '': 'Plain', tr: 'Trees', gr: 'G
 /** the variant chip icons, by the same flags */
 const VARIANT_ICON: Record<string, IconName> = { '': 'road', tr: 'trees', gr: 'forest', tl: 'swap', 'tl.tr': 'swap', ow: 'oneway', 'ow.tr': 'oneway' };
 
+/** the words about the bend (#1317: the 45 degree bend is off for now, so none speaks of it; route-input.ts bendWords, route-legs.ts BEND_45) */
+const BW = bendWords(BEND_45);
 /** the road tool's panel: the town's roads (scope town: the Roads menu) or the course's cart paths and drives (scope course: the Course menu's
  *  Paths & drives, T084); the same drawing, snapping and pricing either way */
 function RoadPanel({ game, scope, compact = false }: { game: Game; scope: 'town' | 'course'; compact?: boolean }) {
@@ -1746,7 +1769,7 @@ function RoadPanel({ game, scope, compact = false }: { game: Game; scope: 'town'
   const [openFam, setOpenFam] = useState<Family | 'none' | null>(null);
   const isOpen = (f: Family) => openFam === null ? f === curFam : openFam === f;
   return (
-    <Panel title={course ? 'Paths' : 'Road Construction'} icon={course ? 'sidewalk' : 'road'} desc={course ? 'The streets of your course town: cart paths and drives, laid the way roads are built. Click to start, click again for each bend or stop; double-click or Enter to build, right-click to take back a point. Points snap to junctions, paths, roads and the 1 m half grid of the course.' : 'Draw a connected route: click to start, click again for each bend or stop; double-click or Enter to build, right-click to take back a point. Points snap to junctions, roads and the grid; crossings become junctions.'}>
+    <Panel title={course ? 'Paths' : 'Road Construction'} icon={course ? 'sidewalk' : 'road'} desc={course ? 'The streets of your course town: cart paths and drives, laid the way roads are built. Press, drag and let go to lay a run' + BW.bends + ', or click to start and click again for each bend or stop; double-click or Enter to build, right-click to take back a point. Points snap to junctions, paths, roads and the 1 m half grid of the course.' : 'Press, drag and let go to build a road' + BW.bends + ', or click to start a connected route and click again for each bend or stop; double-click or Enter to build, right-click to take back a point. Points snap to junctions, roads and the grid; crossings become junctions.'}>
       <div className="mt-2 flex flex-col gap-2">
         {/* T193 (compact: the toolbar's flyouts pick the class): the picked class alone, under its family's name */}
         {(compact ? families.filter(f => f.id === curFam) : families).map(f => { const ex = compact || isOpen(f.id); return (
@@ -1806,9 +1829,11 @@ function RoadPanel({ game, scope, compact = false }: { game: Game; scope: 'town'
       {adv && <>
         <div className="mt-2 text-xs font-bold uppercase tracking-[0.2em] text-amber-300">Fine tuning</div>
         <div className="mt-2 flex items-center gap-1 text-xs">
-          <span className="mr-1 text-[12px] uppercase tracking-wider text-slate-400">Bends</span>
-          {([90, 45] as const).map(b => <button key={b} className={`chip ${game.bendMode === b ? 'chip-on' : ''}`} onClick={() => { game.bendMode = b; game.emit(); }} title="Q toggles">{b}°</button>)}
-          <span className="ml-auto text-[12px] text-slate-400">Shift: straight line</span>
+          {BEND_45 && <>
+            <span className="mr-1 text-[12px] uppercase tracking-wider text-slate-400">Bends</span>
+            {([45, 90] as const).map(b => <button key={b} className={`chip ${game.bendMode === b ? 'chip-on' : ''}`} onClick={() => { game.bendMode = b; game.emit(); }} title={b === 45 ? 'Bends at 45° (the default: every game starts with it); Q toggles' : 'Right-angle bends, for this visit; Q toggles'} data-testid={`bend-${b}`}>{b}°</button>)}
+          </>}
+          <span className={`text-[12px] text-slate-400 ${BEND_45 ? 'ml-auto' : ''}`}>Shift: straight line</span>
         </div>
         <div className="mt-2 flex items-center gap-1 text-xs">
           <span className="mr-1 text-[12px] uppercase tracking-wider text-slate-400">Replace</span>
@@ -1839,7 +1864,7 @@ function RoadPanel({ game, scope, compact = false }: { game: Game; scope: 'town'
         <button className="chip" disabled={!game.route.length} onClick={() => game.routeInput('backspace')} title="Take back the last point (Backspace or right-click)">Undo</button>
         <button className="chip" disabled={!game.route.length} onClick={() => game.cancelRoute()} title="Esc">Cancel</button>
       </div>
-      <p className="mt-2 text-[12px] text-slate-400">Double-click the last point or press Enter to build; right-click or Backspace takes back the last point. To widen or narrow a road, use Upgrade (N) or Downgrade (Y). Trees and small items in the way are cleared; buildings block the route.</p>
+      <p className="mt-2 text-[12px] text-slate-400" data-testid="road-howto">Drag from where it starts to where it ends and let go to build it; Esc or a right click while you drag cancels. Or click point by point: double-click the last point or press Enter to build; right-click or Backspace takes back the last point. {BW.shift} To widen or narrow a road, use Upgrade (N) or Downgrade (Y). Trees and small items in the way are cleared; buildings block the route.</p>
     </Panel>
   );
 }
@@ -2309,7 +2334,8 @@ function SelectPanel({ game }: { game: Game }) {
 
 function hintFor(g: Game) {
   switch (g.tool) {
-    case 'road': return (g.route.length ? `Route: ${g.route.length} point(s) — click to extend, double-click or Enter to build, right-click or Backspace to take back a point, Esc to cancel, Shift for a straight 45° run` : `BUILDING NEW ROADS — Draw a connected route: click where the ${g.cls.name.toLowerCase()} should start${VARIANTS[g.cls.base]!.length > 1 ? ' · Tab flips the variant' : ''}`) + ' · E: replace';
+    // #1276: a press that began the route and is still down is a drag (let go to build); else the click, click, double-click route as ever
+    case 'road': return (g.routeDragging ? `Let go to build the ${g.cls.name.toLowerCase()} · Esc or a right click cancels · Shift for one straight run` : g.route.length ? `Route: ${g.route.length} point(s) — click to extend, double-click or Enter to build, right-click or Backspace to take back a point, Esc to cancel, Shift for one straight run${BW.handKeys}` : `BUILDING NEW ROADS — Press, drag and let go to build a ${g.cls.name.toLowerCase()}${BW.bends}, or click to start a route and click again for each bend${VARIANTS[g.cls.base]!.length > 1 ? ' · Tab flips the variant' : ''}`) + ' · E: replace';
     case 'junction': {
       const s = g.selectedNode(), h = g.hoverNode, what = g.brush === 'signal' ? 'traffic lights' : g.brush === 'roundabout' ? `a ${g.ringLanes}-lane roundabout` : g.brush === 'stop' ? 'an all-way stop' : g.brush === 'mini' ? 'a mini-roundabout' : 'plain';
       if (g.brush === 'select') return s ? 'Click a corner’s + or × to add or remove its slipway (lights) · Esc deselects, then returns to Select' : h ? 'Click to select this junction · Tab flips its type' : 'Hover a junction to outline it · click to select it · Tab flips the type';
@@ -2357,7 +2383,7 @@ function Help({ onClose, tab, onTab, keys, lab, onTour, cards }: { onClose: () =
           <li><b>Roads</b> are drawn as connected routes, exactly like the town builder: click points, finish with Enter or a double-click. Everything on the ground — asphalt, kerbs, sidewalk slabs, rounded corners, crossings, centre lines, manholes and drains — is generated geometry, so a new road appears instantly, no ground rebuild.</li>
           <li>The surfaces are <b>lit relief</b>, like the builder's bake: the asphalt is a cracked mosaic of facets and the sidewalk is slabs, each with a height-field; a cold key light from the upper-left shades them and puts specular glints on the facets that face it, markings are painted into the relief, kerbs get a bright top edge and a gutter shadow, and fallen leaves pile up against every kerb.</li>
           <li>Five road types: <b>Lane</b> (single lane), <b>Street</b> (2 lanes, sidewalks, your choice of centre line), <b>Road</b> (wider, darker asphalt with paved shoulders inside yellow edge lines and a gravel verge), <b>Avenue</b> and <b>Boulevard</b> (2 / 4 lanes around a tree-lined median).</li>
-          <li>Bends can be 90° or 45° (Q toggles); hold Shift to draw one straight run in any of the eight directions. Crossing an existing road makes a junction; to widen a road, use the Add lane tool.</li>
+          <li>Press, drag and let go to build a road at once; or click point by point, and finish with Enter or a double-click. {BW.help} Crossing an existing road makes a junction; to widen a road, use the Add lane tool.</li>
           <li><b>Junctions</b>: the tool's brush is Select, Plain, All-way stop, Mini-roundabout, Lights or Roundabout (1–3 ring lanes); a click with a type brush makes that junction the type, and right-click resets one to plain. Select a junction to set its type and options in the panel: wide corners and turn lanes, slipways on each corner (the + and × on the map; they need long approaches), the signal tier with its upgrades and the fixed-time green split, or the roundabout's ring lanes. Tab flips the junction under the pointer through the types; Esc deselects, then returns to Select.</li>
           <li>The town pays property tax (more on better roads, less where traffic jams) and business takings for every customer who arrives on time; roads and signals cost upkeep. Click the treasury for the books and loans; five days in the red and you are bankrupt. Everything autosaves in this browser.</li>
           <li><b>Signals</b> (Junctions tool, a lit junction selected): new lights take the best tier open in the year (fixed-time; actuated loop detectors from 1990, adaptive from 2000, paid upgrades). Set each phase's green time in the panel or upgrade; the year shows beside the event's run.</li>
