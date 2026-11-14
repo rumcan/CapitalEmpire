@@ -7,10 +7,11 @@ import { FACILITY_NAME } from '../../game/golf/practicetool';
 import { PRACTICE_APPEAL, PRACTICE_FEE, PRACTICE_IDS, type PracticeId } from '../../game/golf/rangesave';
 import { ToolHead } from '../ToolHead';
 import { SideMenuRow } from '../SideMenuRow';
+import { TEXTURE_PAINTER } from '../flyout-menu';
 
 const BLURB: Readonly<Record<PracticeId, string>> = {
-  putting: 'An organic putting green with its fringe and practice flags.',
-  chipping: 'A chipping green with a practice bunker beside it and a mat to chip from.',
+  putting: 'An organic putting green with its fringe, a band of rough round it and practice flags.',
+  chipping: 'A chipping green with a real practice bunker beside it, a band of rough round both and a flag.',
 };
 
 export function PracticePanel({ game, looks = false, onLooks }: { game: Game; looks?: boolean; onLooks?: (open: boolean) => void }) {
@@ -55,7 +56,7 @@ export function PracticePanel({ game, looks = false, onLooks }: { game: Game; lo
           {/* T256 (#743): the facility owns its looks (its green, its bunker, its mat): My looks edits this facility's alone */}
           {game.golfMode && onLooks && (
             <div data-testid="practice-looks">
-              <SideMenuRow label="My looks" value={`${FACILITY_NAME[k]}'s looks`} open={looks} aria-pressed={looks} title={`The looks of the ${FACILITY_NAME[k].toLowerCase()}: its own, apart from the holes' and your property's`} onClick={() => { if (!looks) game.paint.pickLook(['green', 'bunker', 'tee'].includes(game.paint.brushKind) ? game.paint.brushKind : 'green'); onLooks(!looks); }} />
+              <SideMenuRow label="My looks" value={`${FACILITY_NAME[k]}'s looks`} open={looks} aria-pressed={looks} title={`The looks of the ${FACILITY_NAME[k].toLowerCase()}: its own, apart from the holes' and your property's`} onClick={() => { if (!looks) game.paint.pickLook(['green', 'bunker', 'rough'].includes(game.paint.brushKind) ? game.paint.brushKind : 'green'); onLooks(!looks); }} />
             </div>
           )}
           <p className={`leading-snug ${pt.ghost?.why ? 'text-rose-300' : ''}`} data-testid="practice-status">{pt.status}</p>
@@ -64,7 +65,7 @@ export function PracticePanel({ game, looks = false, onLooks }: { game: Game; lo
       )}
       {area && <button className="chip mt-3" onClick={() => pt.showArea()} data-testid="practice-show-area">Show area</button>}
       {/* T256: the same painting tools as the holes, on your property (the practice area, the range, the rest of your land) */}
-      {game.golfMode && <button className="pill-gold mt-3" onClick={() => game.openPropertyPaint()} data-testid="practice-build" title="Paint your property: the practice area, the range and the rest of your land, apart from the holes"><span className="min-w-0">Build on your property</span></button>}
+      {game.golfMode && <button className="pill-gold mt-3" onClick={() => game.openPropertyPaint()} data-testid="practice-build" title="Paint your property: the practice area, the range and the rest of your land, apart from the holes"><span className="min-w-0">{TEXTURE_PAINTER}</span></button>}
     </div>
   );
 }

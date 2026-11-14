@@ -1,0 +1,97 @@
+#1282: the map's pointer cursor, checked in the real game (scripts/dev/small-ui-shots.mjs, headless Chrome, one browser, a dev server on a scratch port).
+Each section: the computed cursor (getComputedStyle of the map's overlay canvas) over each kind of thing with Select in hand, with a tool in hand and with Walk; then the oracle:
+the engine's pick (Game.clickOpensAt) against a REAL mouse click at every point of a grid of the screen: they must agree.
+A pick costs a few microseconds (performance.now is coarsened to 100 us here, so the per-call p50/p95 read 0 / 100: use the means).
+
+=================== the jam build (Fairway Fortune), the range bought, the practice area placed, a hole built, with lead/live merged ===================
+
+== the map's pointer cursor (the jam build) ==
+  hole built: {"x":1048,"y":1066}
+  practice area: placed at 1045,1086,36,34
+  game: {"scene":true,"counter":{"x":1002,"y":1077.4},"practice":{"x":1063,"y":1103},"you":true,"holes":1,"parcel":[968,1046,300,450]}
+  view the range: {"ground":{"x":618,"y":516,"d":132.9699214108213}}
+    oracle here: 377 points, 0 differ
+  view the practice area: {"practice":{"x":683,"y":384},"ground":{"x":602,"y":564,"d":182.91254740995763},"building":{"x":578,"y":100,"auto":""},"hole":{"x":698,"y":100}}
+    oracle here: 377 points, 0 differ
+  view the hole: {"ground":{"x":682,"y":212,"d":188.00265955565627},"building":{"x":490,"y":100,"auto":""},"person":{"x":842,"y":212,"name":"Frank White"},"hole":{"x":602,"y":220}}
+    oracle here: 377 points, 0 differ
+  ORACLE: 1131 points over 3 views; the pick said "opens" at 662, a real click opened something at 662; kinds: {"range card":385,"a prop selected":72,"a person":2,"a hole card":203}
+ok   the pick and a real click agree at every one of 1131 points of the screen (0 differ)
+ok   the points include both kinds (some open a card, some do not)
+  Select, over a building              -> pointer  (opens true)
+ok   Select, over a building: a pointer
+  Select, over the range               -> pointer  (opens true)
+ok   Select, over the range: a pointer
+  Select, over the practice area       -> pointer  (opens true)
+ok   Select, over the practice area: a pointer
+  Select, over a hole                  -> pointer  (opens true)
+ok   Select, over a hole: a pointer
+  Select, over a person                -> pointer  (opens true)
+ok   Select, over a person: a pointer
+  Select, over open ground             -> default  (opens false)
+ok   Select, over open ground: the default arrow
+  the road tool in hand                -> crosshair
+ok   the road tool in hand: its crosshair, not a pointer
+  the bulldozer in hand                -> crosshair
+ok   the bulldozer in hand: its crosshair, not a pointer
+  the Texture Painter in hand          -> crosshair
+ok   the Texture Painter in hand: its brush cursor, not a pointer
+  Select in hand again                 -> pointer
+ok   Select in hand again: a pointer
+  Walk, over open ground               -> url("data:image/svg+xml;utf8,%3Csvg%20xmlns%…vg%3E") 12 20, pointer
+ok   Walk keeps its footprints (a picture cursor)
+  Walk, over a person                  -> url("data:image/svg+xml;utf8,%3Csvg%20xmlns%…Fsvg%3E") 4 4, pointer
+ok   Walk keeps its speech bubble over a person
+  Walk, over a building                -> url("data:image/svg+xml;utf8,%3Csvg%20xmlns%…vg%3E") 12 20, pointer
+ok   Walk keeps its eye over a building
+  the pick each frame while the pointer sweeps the map (227 moves in 4 s): 227 frames, mean 44.9 µs a frame, worst 200 µs; the frame: 56 fps, cpu 0.90 ms
+ok   the pick costs 44.9 µs a frame on average (worst 200 µs): nothing noticeable
+  clickOpensAt per call over 3000 random points: mean 10.6 µs, p50 0.0, p95 100.0, p99 100.0, max 1200 µs
+ok   a pick costs 10.6 µs on average, p95 100.0 µs
+all ok
+
+=================== the normal game, a grown town (the range20 fixture), a hole built ===================
+
+== the map's pointer cursor (the normal game, a grown town) ==
+  hole built: {"x":952,"y":604}
+  game: {"scene":false,"counter":null,"practice":null,"you":true,"holes":1,"parcel":[932,584,300,450]}
+  view the town street -220: {}
+    oracle here: 338 points, 0 differ
+  view the town street -120: {}
+    oracle here: 338 points, 0 differ
+  view the town street -20: {"building":{"x":834,"y":500,"auto":""},"hole":{"x":794,"y":652}}
+    oracle here: 338 points, 0 differ
+  view the town street 80: {"hole":{"x":130,"y":228},"building":{"x":962,"y":532,"auto":""}}
+    oracle here: 338 points, 0 differ
+  view the town street 180: {}
+    oracle here: 338 points, 0 differ
+  view the town street 280: {}
+    oracle here: 338 points, 0 differ
+  view the hole: {"building":{"x":626,"y":100,"auto":""},"hole":{"x":602,"y":220}}
+    oracle here: 338 points, 0 differ
+  ORACLE: 2366 points over 7 views; the pick said "opens" at 347, a real click opened something at 347; kinds: {"a prop selected":68,"a hole card":279}
+ok   the pick and a real click agree at every one of 2366 points of the screen (0 differ)
+ok   the points include both kinds (some open a card, some do not)
+  Select, over a building              -> pointer  (opens true)
+ok   Select, over a building: a pointer
+  (no Select, over the range found in the views: not checked)
+  (no Select, over the practice area found in the views: not checked)
+  Select, over a hole                  -> pointer  (opens true)
+ok   Select, over a hole: a pointer
+  (no Select, over a person found in the views: not checked)
+  (no Select, over open ground found in the views: not checked)
+  the road tool in hand                -> crosshair
+ok   the road tool in hand: its crosshair, not a pointer
+  the bulldozer in hand                -> crosshair
+ok   the bulldozer in hand: its crosshair, not a pointer
+  the Texture Painter in hand          -> crosshair
+ok   the Texture Painter in hand: its brush cursor, not a pointer
+  Select in hand again                 -> pointer
+ok   Select in hand again: a pointer
+  Walk, over a building                -> url("data:image/svg+xml;utf8,%3Csvg%20xmlns%…vg%3E") 12 20, pointer
+ok   Walk keeps its eye over a building
+  the pick each frame while the pointer sweeps the map (226 moves in 4 s): 227 frames, mean 22.5 µs a frame, worst 100 µs; the frame: 56 fps, cpu 0.60 ms
+ok   the pick costs 22.5 µs a frame on average (worst 100 µs): nothing noticeable
+  clickOpensAt per call over 3000 random points: mean 5.5 µs, p50 0.0, p95 100.0, p99 100.0, max 100 µs
+ok   a pick costs 5.5 µs on average, p95 100.0 µs
+all ok

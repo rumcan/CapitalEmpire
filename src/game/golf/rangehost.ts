@@ -2,6 +2,7 @@
 // its auto props and, once, its cart paths), steps the golfers on the town clock and books their sales, and hands the engine the golfers and cars
 // to draw as movers and the balls and labels to draw over the map. The engine gives it a small context, so its own edits stay a few lines.
 import { JAM } from '../features';
+import { practicePath } from './menu-path';
 import type { Drawable } from '../sprites';
 import { CAR_SCALE } from '../sprites';
 import type { Prop } from '../types';
@@ -24,6 +25,9 @@ import { WALK_RATE, clipFrame, rowToward } from '../crowdview';
 import { PLAYER_CART, PLAYER_RUN, PLAYER_WORKING, SHIFT_HOURS, SHIFT_STARTS, autoKit, bucketBalls, flowOf, nodeRates, onShift, robotBps, sellBps, staffBps, tripBps, washBps } from './rangeauto';
 import { CELL_T, type Grid, type GridDiff } from '../ext/course-grid';
 import { inPractice, practiceWords, scanPractice, type PracticeScan, type PracticeState } from './practice';
+import { cellSet, coveredBy } from './practicestarter';
+import type { PlanCells } from './practicebuild';
+import type { StepAside } from './practicetool';
 import { PRACTICE_APPEAL, PRACTICE_FEE, PRACTICE_IDS, practiceAppeal, rangeScale, rangeUpkeep, type PracticeId } from './rangesave';
 import { PRI } from '../label-place';
 import { LABEL_OUTLINE, type WorldLabels } from '../world-labels';
@@ -78,6 +82,10 @@ export interface RangeHostCtx {
  *  game texture; the rest are ground textures as they are */
 function patchTex(s: ScenePatch['surf']): LotPatch['tex'] {
   if (s === 'concrete') return 'pad'; // the Paint tool's concrete
+  // #1281: the practice area's starter set: packed earth is the range's tee dirt, the crude bunker's rim plain earth and its sand the course's bunker sand
+  if (s === 'dirtGreen') return patchTex('teeDirt');
+  if (s === 'scrape') return 'dirt';
+  if (s === 'sand') return 'bunkerSand';
   // T258: the range's pictures (golf/range-pics.ts), laid flat by the patch's lay
   if (s === 'mats') return RANGE_PIC_TEX.mats;
   if (s === 'targetGreen') return RANGE_PIC_TEX.green;
@@ -163,7 +171,7 @@ export class RangeHost {
     const home = b ? homeStage(b) : 0, look = this.look();
     // T288: a bare start's home alone while the range is not placed (the trailer and its yard: no range, no golfers)
     const bare = b && !pl ? this.ctx.bare?.() ?? null : null;
-    const key = b && pl ? `${pl.rect.join(',')}:${pl.facing}:${b.owned.join(',')}:${cp ? cp.key ?? cp.bays.length : -1}:${home}:${look.mats}:${look.greens}:${look.bullseye}:${b.practiceAt ? b.practiceAt.join(',') : b.practiceAt === null ? 'none' : ''}`
+    const key = b && pl ? `${pl.rect.join(',')}:${pl.facing}:${b.owned.join(',')}:${cp ? cp.key ?? cp.bays.length : -1}:${home}:${look.mats}:${look.greens}:${look.bullseye}:${b.practiceAt ? b.practiceAt.join(',') : b.practiceAt === null ? 'none' : ''}:${b.starter ? `${b.starter.seed}.${b.starter.gone.join('-')}` : ''}`
       : bare ? `bare:${bare.rect.join(',')}:${bare.facing}:${home}` : '';
     if (!force && key === this.key) { this.syncWalk(); return; }
     if (bare && b) { this.layBare(bare, b, home); this.key = key; return; }
@@ -182,7 +190,7 @@ export class RangeHost {
     // (T132: the target greens raised with a sun-lit edge in feathered collars, the outfield's stripes laid on its top)
     const mw = outfieldStripes(sc, rangePreset('outfield')?.stripes);
     // (T258: a picture laid flat by its lay: its turn, scale and corner)
-    this.ctx.setGround('range:ground', sc.patches.map((p, i) => ({ pts: p.pts, tex: patchTex(p.surf), paint: { s: p.lay?.s ?? 1, a: p.lay?.a ?? 0, b: 0, bt: 'kerb', z: -1e6 + i, ...(p.edge ? { e: p.edge } : {}), ...(p.mow && mw ? { mw } : {}), ...(p.lay ? { o: [p.lay.x, p.lay.y] as [number, number] } : {}), ...(p.own !== undefined ? { own: p.own } : {}) } })));
+    this.ctx.setGround('range:ground', sc.patches.map((p, i) => ({ pts: p.pts, tex: patchTex(p.surf), paint: { s: p.lay?.s ?? 1, a: p.lay?.a ?? 0, b: 0, bt: 'kerb', z: -1e6 + i, ...(p.edge ? { e: p.edge } : {}), ...(p.tone ? { t: p.tone.t, ta: p.tone.ta } : {}), ...(p.mow && mw ? { mw } : {}), ...(p.lay ? { o: [p.lay.x, p.lay.y] as [number, number] } : {}), ...(p.own !== undefined ? { own: p.own } : {}) } })));
     if (!this.scene) { this.ctx.clearTrees(sc.box); this.ctx.clearTrees(sc.practice.box); }
     // the old start's cement walkway, laid once (an old save's first load); T239: a guided start's walkway is the player's to lay
     if (b.paths === false) { this.ctx.layPaths(sc.paths); b.paths = true; this.ctx.save(); }
@@ -467,20 +475,42 @@ export class RangeHost {
   practiceLocked = false;
   /** T239: the practice area's price while it is land for sale (null: the player's) */
   practiceSale: number | null = null;
+  /** #1281 (the owner: "if you click on the practice area label it takes you to the window to build the proper green"): the practice area is the selected thing, its
+   *  build window (the range card at its Practice facilities) open: its outline and name stay while it is. practiceFocus counts the clicks that opened it, so the
+   *  card scrolls to the Practice facilities and flashes them each time */
+  practiceSelected = false; practiceFocus = 0;
+  /** #1281: the area's name stands without its hint line (the engine sets it while Walk's hover words, which say the same, are up) */
+  quietLabel = false;
+  /** #1281: a facility built over the starter set (its cells: the plan's) replaces the pieces under it. They go from the save now (the scene lays itself again at
+   *  the next frame: the key follows the save) and the returned step brings them back (undo) or takes them away again (redo); null: none was under it */
+  replaceStarters(c: PlanCells): StepAside | null {
+    const b = this.ctx.biz(), sc = this.scene, g = this.ctx.grid(); if (!b?.starter || !sc || !g || !sc.starter.length) return null;
+    const hit = coveredBy(sc.starter, b.starter.gone, g, cellSet(c.green, c.bunker, c.tee, c.rough));
+    if (!hit.length) return null;
+    const before = [...b.starter.gone], after = [...before, ...hit].sort((x, y) => x - y), set = (gone: number[]) => { const k = this.ctx.biz()?.starter; if (k) { k.gone = [...gone]; this.ctx.save(); this.ctx.emit(); } };
+    b.starter.gone = after; this.ctx.save();
+    return { undo: () => set(before), redo: () => set(after) };
+  }
   private drawPractice(c: CanvasRenderingContext2D, screen: (x: number, y: number) => { x: number; y: number }, zoom: number, dpr: number, on: (p: { x: number; y: number }, m?: number) => boolean, labels: WorldLabels): void {
     const sc = this.scene!, pa = sc.practice, p = this.practice;
-    if (zoom >= 0.03 && !(p ? p.built : this.ctx.biz()?.practice.putting.open)) {
-      const pulse = this.hint ? 0.55 + 0.35 * Math.sin(performance.now() / 260) : 0.4;
+    // (#1281: the outline stays, and brighter, while the area is the selected thing, its build window open; the name label is there for a click to find, on hover as every
+    // name is, built or not)
+    const built = !!(p ? p.built : this.ctx.biz()?.practice.putting.open), sel = this.practiceSelected;
+    if (zoom >= 0.03 && pa.pts.length && (!built || sel)) {
+      const pulse = this.hint ? 0.55 + 0.35 * Math.sin(performance.now() / 260) : sel ? 0.85 : 0.4;
       c.beginPath();
       for (let i = 0; i < pa.pts.length; i += 2) { const q = screen(pa.pts[i]!, pa.pts[i + 1]!); if (i) c.lineTo(q.x, q.y); else c.moveTo(q.x, q.y); }
-      c.closePath(); c.fillStyle = `rgba(236,252,203,${(0.06 * pulse).toFixed(3)})`; c.fill();
-      c.setLineDash([7 * dpr, 6 * dpr]); c.lineWidth = 1.6 * dpr; c.strokeStyle = `rgba(236,252,203,${pulse.toFixed(3)})`; c.stroke(); c.setLineDash([]);
+      c.closePath(); c.fillStyle = `rgba(236,252,203,${((sel ? 0.1 : 0.06) * pulse).toFixed(3)})`; c.fill();
+      c.setLineDash([7 * dpr, 6 * dpr]); c.lineWidth = (sel ? 2.4 : 1.6) * dpr; c.strokeStyle = `rgba(236,252,203,${pulse.toFixed(3)})`; c.stroke(); c.setLineDash([]);
+    }
+    if (zoom >= 0.03 && pa.pts.length) {
       const q = screen(pa.label.x, pa.label.y);
       if (on(q, 200)) {
-        // the area's name and (at the street tier) its hint under it: one world label (T151) whose box holds both lines
+        // the area's name and (at the street tier, while nothing is built there) its hint under it: one world label (T151) whose box holds both lines
         const px = Math.round(dpr * 13), lw = 3 * dpr, l = labels.text(pa, PRI.area, 'Practice area', q.x, q.y, `700 ${px}px system-ui, sans-serif`, px, '#ecfccb', 'rgba(10,30,10,0.85)', lw);
-        if (zoom >= 0.12) {
-          const sf = `600 ${Math.round(px * 0.8)}px system-ui, sans-serif`, t = this.practiceSale !== null ? `For sale: $${this.practiceSale.toLocaleString()} (Course ▸ Land for sale)` : this.practiceLocked ? 'Opens with your first range upgrade' : 'Build a putting green here (Facilities ▸ Practice)';
+        const hint = this.quietLabel ? '' : this.practiceSale !== null ? `For sale: $${this.practiceSale.toLocaleString()} (Course ▸ Land for sale)` : this.practiceLocked ? 'Opens with your first range upgrade' : built ? '' : JAM ? 'Click to build proper greens here' : `Click here (or ${practicePath()}) to build a putting green`;
+        if (zoom >= 0.12 && hint) {
+          const sf = `600 ${Math.round(px * 0.8)}px system-ui, sans-serif`, t = hint;
           // the box from the name's top to the hint's foot, its centre moved down to the middle
           const top = q.y - px / 2 - lw / 2, foot = q.y + px * 1.3 + px * 0.4 + lw / 2, mid = (top + foot) / 2;
           l.sub = t; l.subFont = sf; l.subFill = '#d9f99d'; l.w = Math.max(l.w, labels.width(sf, t) + lw); l.h = foot - top;
@@ -651,6 +681,8 @@ export class RangeHost {
         return { id, name: PRACTICE_NAME[id], state: f.state, words: practiceWords(f), appeal: PRACTICE_APPEAL[id], today: this.sim.practiceToday[id], golfers: s.season.golfers, takings: s.season.takings };
       }),
       practiceAppeal: practiceAppeal(b), fee: PRACTICE_FEE, feeEach: PRACTICE_FEE * rangeScale(this.ctx.dayLen()),
+      // #1281: how many pieces of the practice area's starter set still stand (dirt greens and the bunker scrape; 0: none, or all replaced)
+      practiceStarter: this.scene && b.starter ? this.scene.starter.filter(p => !b.starter!.gone.includes(p.id)).length : 0,
       // the upgrades' upkeep (T132): a game month now, and paid this season
       upkeep: rangeUpkeep(b), upkeepSeason: b.season.upkeep,
       // the World of Golf extras (T133): what needs what, the kiosk's and the academy's season, the home and its next step

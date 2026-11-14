@@ -6,7 +6,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { PUTT_MIN, CHIP_MIN, BUNKER_MIN, practiceArea, practiceWords, scanPractice } from '../src/game/golf/practice';
 import { PRACTICE_SIZE, PRACTICE_WHY, PUTT_SHAPES, GAP_M, TURNS, bunkerInReach, clampSize, facilityAt, facilityRefund, planCells, planCost, planWhy, practicePlan, type PlanSpec } from '../src/game/golf/practicebuild';
-import { SURF, makeGrid, paintCells, paintDisc, type Grid } from '../src/game/ext/course-grid';
+import { SURF, cellCentre, makeGrid, paintCells, paintDisc, type Grid } from '../src/game/ext/course-grid';
 import { plotPoint } from '../src/game/golf/range';
 import type { Rect } from '../src/game/golf/mode';
 import { PRACTICE_BRUSH_WHY, PaintTool, type PaintHost } from '../src/game/paint-tool';
@@ -17,10 +17,10 @@ const plot: Rect = [200, 200, 70, 150];
 const AREA = practiceArea(plot, 2), BOX = AREA.box;
 const P = (u: number, v: number) => plotPoint(plot, 2, u, v);
 const grid = (): Grid => makeGrid(190, 190, 300, 420);
-/** lays a plan's cells as the tool does (hole 0) */
+/** lays a plan's cells as the tool does (hole 0): green, bunker, tee and (#1281) the rough band, clipped to the area */
 function lay(g: Grid, spec: PlanSpec) {
-  const p = practicePlan(spec), c = planCells(g, p);
-  paintCells(g, c.green, c.green.length, SURF.green, 0, 0); paintCells(g, c.bunker, c.bunker.length, SURF.bunker, 0, 0); paintCells(g, c.tee, c.tee.length, SURF.tee, 0, 0);
+  const p = practicePlan(spec), c = planCells(g, p, BOX);
+  paintCells(g, c.green, c.green.length, SURF.green, 0, 0); paintCells(g, c.bunker, c.bunker.length, SURF.bunker, 0, 0); paintCells(g, c.tee, c.tee.length, SURF.tee, 0, 0); paintCells(g, c.rough, c.rough.length, SURF.rough, 0, 0);
   return { p, c };
 }
 const spec = (kind: PlanSpec['kind'], u: number, v: number, extra: Partial<PlanSpec> = {}): PlanSpec => { const q = P(u, v); return { kind, x: q.x, y: q.y, m2: PRACTICE_SIZE[kind].def, turn: 0, shape: 0, seed: 1, ...extra }; };
@@ -83,15 +83,18 @@ test('refused outside the area, too near another facility, or on a facility alre
 
 test('the bulldozer takes a facility whole: the chipping green with its bunker and chip mat, not the putting green beside it', () => {
   const g = grid();
-  const put = lay(g, spec('putting', 86, 19)), chip = lay(g, spec('chipping', 104, 19, { turn: 2 }));
+  const put = lay(g, spec('putting', 86, 19)), chip = lay(g, spec('chipping', 104, 19, { turn: 4 }));
   const at = chip.p.centre, f = facilityAt(g, BOX, at.x, at.y)!;
   assert.equal(f.green, chip.c.green.length); assert.equal(f.bunker, chip.c.bunker.length); assert.equal(f.tee, chip.c.tee.length);
+  assert.equal(f.rough, chip.c.rough.length, 'and its rough band'); assert.equal(f.cells.length, f.green + f.bunker + f.tee + f.rough);
   assert.ok(facilityRefund(f) > 0);
-  // from its bunker too
-  const b = chip.p.bunker!, fb = facilityAt(g, BOX, (b[0]! + b[b.length / 2]!) / 2, (b[1]! + b[b.length / 2 + 1]!) / 2);
+  // from its bunker too, and from a cell of its rough band (the cell under the pointer need not be a facility's own)
+  const bc = cellCentre(g, chip.c.bunker[chip.c.bunker.length >> 1]!), fb = facilityAt(g, BOX, bc.x, bc.y);
   assert.ok(fb && fb.cells.length === f.cells.length, 'the bunker belongs to it');
+  const rc = cellCentre(g, chip.c.rough[chip.c.rough.length >> 1]!), fr = facilityAt(g, BOX, rc.x, rc.y);
+  assert.ok(fr && fr.cells.length === f.cells.length, 'and so does its rough band');
   const fp = facilityAt(g, BOX, put.p.centre.x, put.p.centre.y)!;
-  assert.equal(fp.cells.length, put.c.green.length, 'the putting green alone');
+  assert.equal(fp.cells.length, put.c.green.length + put.c.rough.length, 'the putting green alone, with its rough band');
   assert.equal(facilityAt(g, BOX, P(60, 19).x, P(60, 19).y), null, 'nothing outside the area');
 });
 
@@ -124,7 +127,7 @@ test('the hole brushes are refused in the practice area: Green and Bunker lay no
     stroke(tool, inside.x, inside.y);
     const i = cellAt(g, inside.x, inside.y); assert.equal(g.surf[i], SURF.none, `${k}: nothing laid in the practice area`);
     assert.equal(tool.brushSkipWhy()!(inside.x, inside.y), PRACTICE_BRUSH_WHY);
-    assert.equal(PRACTICE_BRUSH_WHY, 'Practice greens are built with Facilities ▸ Practice');
+    assert.equal(PRACTICE_BRUSH_WHY, 'Practice greens are built with Course ▸ Facilities ▸ Practice'); // (#1282: Facilities is the Course menu's sixth tile)
     stroke(tool, outside.x, outside.y);
     assert.equal(g.surf[cellAt(g, outside.x, outside.y)], k === 'green' ? SURF.green : SURF.bunker, `${k}: paints outside it`);
   }
@@ -134,8 +137,8 @@ test('the hole brushes are refused in the practice area: Green and Bunker lay no
 });
 
 test("a facility is one undo step: gridEdit lays its cells and pays; undo takes both back; the bulldozer's refund is undone too", () => {
-  const { g, tool, money } = painter(), sp = spec('chipping', 104, 19, { turn: 2 }), p = practicePlan(sp), c = planCells(g, p), cost = planCost(g, c);
-  tool.gridEdit('build the chipping green and bunker', gg => ({ diffs: [paintCells(gg, c.green, c.green.length, SURF.green, 0, 0), paintCells(gg, c.bunker, c.bunker.length, SURF.bunker, 0, 0), paintCells(gg, c.tee, c.tee.length, SURF.tee, 0, 0)], spent: cost }));
+  const { g, tool, money } = painter(), sp = spec('chipping', 104, 19, { turn: 4 }), p = practicePlan(sp), c = planCells(g, p, BOX), cost = planCost(g, c);
+  tool.gridEdit('build the chipping green and bunker', gg => ({ diffs: [paintCells(gg, c.green, c.green.length, SURF.green, 0, 0), paintCells(gg, c.bunker, c.bunker.length, SURF.bunker, 0, 0), paintCells(gg, c.tee, c.tee.length, SURF.tee, 0, 0), paintCells(gg, c.rough, c.rough.length, SURF.rough, 0, 0)], spent: cost }));
   assert.equal(money.v, 1e6 - cost); assert.equal(scanPractice(g, BOX).chipping.state, 'open');
   assert.equal(tool.undoLabel, 'build the chipping green and bunker');
   tool.undo(); assert.equal(money.v, 1e6); assert.equal(scanPractice(g, BOX).built, false, 'all of it gone in one step');

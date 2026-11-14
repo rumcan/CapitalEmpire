@@ -16,6 +16,7 @@ import { yardageSign } from './yardage-signs';
 import { PUTT_IMPACT_S, WALK_RATE, clipFrame, golferRow, hash, rowToward, staffDrive, staffPerson, type CrowdPerson } from '../crowdview';
 import { mulberry } from '../iso';
 import { NO_PRACTICE, practiceArea, practiceAreaAt, type PracticeArea, type PracticeScan } from './practice';
+import { starterPatches, starterPieces, starterSet, type StarterPiece } from './practicestarter';
 import { PRACTICE_FEE, PRACTICE_IDS, PRACTICE_SHARE, type PracticeId } from './rangesave';
 import { bucketsLeft, dropInPlay, fieldCount, landBalls, nearestBall, overnight, pickKit, pickNear, pickSwath, skipBalls, STAMP_KEEP, stockOf, stow, takeMix, visitBalls, wash, zeroCounts, type BallSave } from './rangeballs';
 import { NET_SHARE, POLISH_VALUE, autoKit, bucketBalls, bucketValue, onShift, robotBps, staffBps, washBps, type AutoKit } from './rangeauto';
@@ -125,12 +126,16 @@ export interface ScenePiece { key: string; id: string; x: number; y: number; q: 
  *  its outline's profile (paint-edges.ts: a target green is raised, its collars feathered; absent: crisp); mow: its mowing stripes are laid on
  *  top (the outfield); T258: 'mats', 'targetGreen' and 'bullseye', the range's pictures (GOLF-ART-LIST 19, 20, 27: golf/range-pics.ts) laid
  *  flat by their lay */
-export interface ScenePatch { pts: number[]; surf: 'fairway' | 'firstCut' | 'tee' | 'fringe' | 'green' | 'rough' | 'dirt' | 'grassDry' | 'asphaltDark' | 'gravel' | 'concrete' | 'outfield' | 'target' | 'desert' | 'teeDirt' | 'teeTurf' | 'yard' | 'mats' | 'targetGreen' | 'bullseye'; edge?: 'raised' | 'turf' | 'flat'; mow?: true;
+export interface ScenePatch { pts: number[]; surf: 'fairway' | 'firstCut' | 'tee' | 'fringe' | 'green' | 'rough' | 'dirt' | 'grassDry' | 'asphaltDark' | 'gravel' | 'concrete' | 'outfield' | 'target' | 'desert' | 'teeDirt' | 'teeTurf' | 'yard' | 'mats' | 'targetGreen' | 'bullseye'
+    | 'dirtGreen' | 'scrape' | 'sand'; edge?: 'raised' | 'turf' | 'flat'; mow?: true;
   /** T258: a picture's lay (its surf one of the pictures) */ lay?: PicLay;
+  /** #1281: its fill's exposure (PatchPaint.t and .ta: 1 darker, 2 lighter, by this much: paint-edges' exposure.ts), the starter bunker's sand a little duller */ tone?: { t: 1 | 2; ta: number };
   /** #1278 (the owner, 2026-11-14: "can we remove the desert texture underneath the driving range tee box"): the area is its own ground, edge to edge (the tee box, the slab and the mats): the map's ground
    *  (the desert's sand) never spills over its edge and no litter, scrub or fallen leaf lies on it or within `own` tiles of it (the ground painter's PatchPaint.own; the tee box's: the margin where its
    *  raised face and apron lie) */
   own?: number }
+// (#1281: the surfaces 'dirtGreen', 'scrape' and 'sand' are the practice area's starter set (golf/practicestarter.ts): packed earth (the range's tee dirt), the earth rim of a
+// crude bunker and its sand. None of them is a pad of the practice view: it draws the range's slabs, yards and tee dirt, not these)
 /** T258: how a range picture lies on the ground: the corner of one picture (world tiles), its turn (degrees: its x axis along (cos a, sin a),
  *  its y axis a quarter turn on, so it is never mirrored) and its scale (its width in tiles over golf/range-pics.ts PIC_TILES) */
 export interface PicLay { x: number; y: number; a: number; s: number }
@@ -164,6 +169,8 @@ export interface RangeScene {
   apron: number[] | null;
   /** the practice area beside the range (T130, golf/practice.ts) */
   practice: PracticeArea;
+  /** #1281: the practice area's starter set (every piece, replaced ones too: the save lists the ids gone; golf/practicestarter.ts); none without one */
+  starter: StarterPiece[];
   /** the range's cart paths (cement slab), world legs: laid once (golf.range.paths) */
   paths: { a: Pt; b: Pt }[];
   /** every open bay: where its golfer stands, and the path point behind it; lift: an upper-deck bay (T133), its golfer drawn this high (world
@@ -459,10 +466,14 @@ export function rangeScene(plot: Rect, facing: 0 | 1 | 2 | 3, s: RangeBizSave, o
   // the golfers' aim with no target green built (T239): the distance markers' line down the middle
   const aims = targets.length ? targets : AIM_D.map(d => { const c = P(U_MID, STAND_V + d); return { x: c.x, y: c.y, r: 4, m: d * 2 }; });
   const q0 = P(COUNTER.u, COUNTER.v), q1 = P(COUNTER.u + 0.8, COUNTER.v);
+  // T288: the practice area where the player placed it (none yet: an empty box), else the plot's own spot (a save from before T288)
+  const practice = s.practiceAt === null ? NO_PRACTICE : s.practiceAt ? practiceAreaAt(s.practiceAt, P(CAR_EDGE_U, PATH_V)) : practiceArea(plot, facing);
+  // #1281: its starter set (dirt greens with flags and a crude bunker), laid with it: ground paint under the course and a few flag sprites, the pieces proper facilities replaced left out
+  const starter = s.starter && practice.pts.length ? starterSet(practice.box, practice.entry, s.starter.seed) : [];
+  if (starter.length) { patches.push(...starterPatches(starter, s.starter!.gone)); pieces.push(...starterPieces(starter, s.starter!.gone)); }
   return {
     facing, pieces, patches, teeBox: quad(TEE[0], TEE[1], TEE[2], TEE[3]), apron: st.teeTurf ? quad(0.3, 69.7, TEE[3], TEE[3] + TEE_GAP) : null,
-    // T288: the practice area where the player placed it (none yet: an empty box), else the plot's own spot (a save from before T288)
-    practice: s.practiceAt === null ? NO_PRACTICE : s.practiceAt ? practiceAreaAt(s.practiceAt, P(CAR_EDGE_U, PATH_V)) : practiceArea(plot, facing),
+    practice, starter,
     paths, bays, academy, kiosk, picker, home, homeGate: PH(13, YARDS[home]![3] + 1.6), aim: { x: dv.x - o.x, y: dv.y - o.y }, targets, aims,
     counter: q0, queueStep: { x: q1.x - q0.x, y: q1.y - q0.y }, queueAt: P(COUNTER.u + 0.8, QUEUE_V), shopJoin: P(COUNTER.u, PATH_V), carEdge: P(CAR_EDGE_U, PATH_V), ballRoom: P(BALLROOM.u, BALLROOM.v),
     // the counters side by side along the shop's front about its middle, the nearest to the line's head first (it calls the next golfer first)

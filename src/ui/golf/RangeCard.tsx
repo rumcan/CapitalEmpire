@@ -3,6 +3,7 @@
 // with the select tool, or the top bar's Range chip; the map changes the moment an upgrade is built. T206: each practice facility's row has a
 // Build button (Facilities ▸ Practice armed with it, the practice area shown). T241: your golf (the "You" block: hit a bucket, with its gain and cost, and
 // the last session's result; an open practice green's row has its own Practise button) and the profile card behind it.
+import { useEffect, useRef, useState } from 'react';
 import { JAM } from '../../game/features';
 import type { RangeCardView } from '../../game/golf/rangehost';
 import type { PracticeKind, YouPracticeView, YouRangeView } from '../../game/golf/player';
@@ -24,7 +25,10 @@ export interface RangePlace { id: 'range' | 'carpark' | 'practice'; name: string
  *  biggest bays): docs/JAM.md "Future development" */
 const JAM_HIDDEN_UPGRADES: readonly string[] = ['bays24', 'lights', 'proshop', 'tier2', 'academy', 'kiosk', 'parking'];
 
-export function RangeCard({ ballFix, onBallFix, attendantWage, onLetGo, forSale, onBuyRange, junk = [], junkCost = 0, onClearJunk, view, places = [], onPlace, onClose, onPrice, onBuy, onShowPractice, onBuildPractice, practiceWhy = null, right = 'right-3', onScene, you = null, onPractise, onHit, hitWhy, drillsDone = 0, onQuickPractice, onProfile, profileOpen = false, onTree, treeOpen = false, onOrderBalls, onShift }: { view: RangeCardView; /** T288: the placements and their Place (the build in hand) */ places?: RangePlace[]; onPlace?: (id: RangePlace['id']) => void; onClose: () => void; onPrice: (p: number) => void; onBuy: (id: RangeCardView['upgrades'][number]['id']) => void; onShowPractice?: () => void; /** T206: a facility's Build: Facilities ▸ Practice armed with it, the practice area shown */ onBuildPractice?: (id: RangeCardView['practice'][number]['id']) => void; /** the practice tools' lock (null: open) */ practiceWhy?: string | null; right?: string; /** T242: Set the scene (the range's picture card; absent: no art) */ onScene?: () => void;
+export function RangeCard({ ballFix, onBallFix, attendantWage, onLetGo, forSale, onBuyRange, junk = [], junkCost = 0, onClearJunk, view, places = [], onPlace, onClose, onPrice, onBuy, onShowPractice, focusPractice = 0, practiceSelected = false, onBuildPractice, practiceWhy = null, right = 'right-3', onScene, you = null, onPractise, onHit, hitWhy, drillsDone = 0, onQuickPractice, onProfile, profileOpen = false, onTree, treeOpen = false, onOrderBalls, onShift }: { view: RangeCardView; /** T288: the placements and their Place (the build in hand) */ places?: RangePlace[]; onPlace?: (id: RangePlace['id']) => void; onClose: () => void; onPrice: (p: number) => void; onBuy: (id: RangeCardView['upgrades'][number]['id']) => void; onShowPractice?: () => void;
+  /** #1281 (the owner: "if you click on the practice area label it takes you to the window to build the proper green"): a click on the practice area or its name opens this card with the
+   *  area selected (practiceSelected) and bumps focusPractice: the card scrolls to its Practice facilities and flashes them */ focusPractice?: number; practiceSelected?: boolean;
+  /** T206: a facility's Build: Facilities ▸ Practice armed with it, the practice area shown */ onBuildPractice?: (id: RangeCardView['practice'][number]['id']) => void; /** the practice tools' lock (null: open) */ practiceWhy?: string | null; right?: string; /** T242: Set the scene (the range's picture card; absent: no art) */ onScene?: () => void;
   /** T241: your golf (null: none) and its actions: a practice session, and the profile card (open: profileOpen) */ you?: YouRangeView | null; onPractise?: (k: PracticeKind) => void;
   /** J6 (#1223): practice from behind the golfer: Hit balls (the range's mats) and Chip and putt (the chipping green), each with why it cannot open (null: it can), and the drills done */ onHit?: (place: 'range' | 'short') => void; hitWhy?: { range: string | null; short: string | null }; drillsDone?: number;
   /** J6: Quick build: the facility laid where it fits in the practice area, no tool needed (absent: no button) */ onQuickPractice?: (id: RangeCardView['practice'][number]['id']) => void; onProfile?: () => void; profileOpen?: boolean;
@@ -32,6 +36,14 @@ export function RangeCard({ ballFix, onBallFix, attendantWage, onLetGo, forSale,
   /** J7 (#1225): the old range for sale (its price and why it cannot be bought yet; absent: owned) and Buy; the junk piles on it (name, distance, scrap) and
    *  Clear (each JUNK_CLEAR_COST) */ /** J7c (#1230): the empty ball room's one-click fix (its button's words; absent: none) and the range attendant's wage a month with Let go
    *  (absent: no attendant, or not the jam) */ ballFix?: string; onBallFix?: () => void; attendantWage?: number; onLetGo?: () => void; forSale?: { cost: number; why: string | null }; onBuyRange?: () => void; junk?: { i: number; name: string; m: number; scrap: number }[]; junkCost?: number; onClearJunk?: (i: number) => void }) {
+  // #1281: opened from the practice area, the card scrolls to its Practice facilities and flashes them (only while the area is the selected thing: a later opening from the rail stays at the top)
+  const practiceRef = useRef<HTMLDivElement>(null), [flash, setFlash] = useState(false);
+  useEffect(() => {
+    if (!focusPractice || !practiceSelected) return;
+    const t0 = setTimeout(() => practiceRef.current?.scrollIntoView({ block: 'start', behavior: 'smooth' }), 60), t1 = setTimeout(() => setFlash(false), 2400);
+    setFlash(true);
+    return () => { clearTimeout(t0); clearTimeout(t1); };
+  }, [focusPractice]); // eslint-disable-line react-hooks/exhaustive-deps
   const { biz, stats: st, today } = view, scale = Math.round(rangeScale(view.dayLen)), pf = priceFactor(biz.price, st.ref);
   const want = Math.round(dayDemand(biz, view.demand, st)), cap = st.bays * (st.close - st.open);
   const balls = view.balls;
@@ -182,11 +194,12 @@ export function RangeCard({ ballFix, onBallFix, attendantWage, onLetGo, forSale,
       {!JAM && <div className="flex items-center justify-between rounded-lg border border-white/10 bg-white/5 px-2 py-1.5 text-xs" data-testid="range-props-appeal" title="Props within 15 tiles of the shop or the mats (the Props tool): more golfers, and a higher fair price">
         <span className="text-slate-300">Appeal from props: <span className={st.propsAppeal > 0 ? 'font-semibold text-emerald-300' : 'text-white'}>{appealText(st.propsAppeal)}</span> <span className="text-slate-400">(of {appealText(PROPS_APPEAL_CAP)})</span></span>
       </div>}
-      <div className="space-y-1.5" data-testid="range-practice">
+      <div ref={practiceRef} className={`scroll-mt-24 space-y-1.5 rounded-lg transition-shadow duration-500 ${flash ? 'ring-2 ring-emerald-300/80' : practiceSelected ? 'ring-1 ring-emerald-300/30' : ''}`} data-testid="range-practice" data-selected={practiceSelected ? '1' : undefined}>
         <div className="flex items-center justify-between text-[12px] uppercase text-slate-400">
           <span>Practice facilities</span>
           {onShowPractice && <button className="chip normal-case" onClick={onShowPractice} title="Show the practice area with the next facility in hand">Show area</button>}
         </div>
+        {view.practiceStarter > 0 && <div className="text-[12px] text-slate-400" data-testid="range-practice-starter">Your practice area starts with {view.practiceStarter === 1 ? 'one home-made piece' : `${view.practiceStarter} home-made pieces`} (dirt greens, a scrape of a bunker): a proper green built over one replaces it.</div>}
         {view.practice.map(f => (
           <div key={f.id} className={`rounded-lg border p-2 text-xs ${f.state === 'open' ? 'border-emerald-500/30 bg-emerald-500/5' : 'border-white/5 bg-white/5'}`} data-testid={`range-practice-${f.id}`}>
             <div className="flex items-center justify-between gap-2">
@@ -199,7 +212,7 @@ export function RangeCard({ ballFix, onBallFix, attendantWage, onLetGo, forSale,
             </div>
             <div className="text-[12px] text-slate-400">{f.words}</div>
             {f.state !== 'open' && practiceWhy && <div className="text-[12px] text-amber-300/80">{practiceWhy}</div>}
-            {f.state !== 'open' && <PaybackLine p={payback(0, 0, practiceExtra(biz, view.demand, view.dayLen, f.id))} note="Plus the price of the green you lay (Facilities ▸ Practice)." testid={`range-practice-payback-${f.id}`} />}
+            {f.state !== 'open' && <PaybackLine p={payback(0, 0, practiceExtra(biz, view.demand, view.dayLen, f.id))} note="Plus the price of the green you lay: Quick build lays one for you, Build lets you place it." testid={`range-practice-payback-${f.id}`} />}
             {f.state === 'open' && you && (() => { const s = you.sessions.find(x => x.kind === f.id); return s && <div className="mt-1"><Session s={s} onPractise={onPractise} /></div>; })()}
             <div className="mt-0.5 flex justify-between text-[12px] text-slate-400">
               <span>+{Math.round(f.appeal * 100)}% visitors · ${view.fee} a golfer</span>
