@@ -703,6 +703,8 @@ export function parkLabel(worker: number, range: number, bays: number): string {
 const enum S { CarIn, WalkShop, Queue, WalkBay, Hit, /** to the coffee kiosk and in its line (T133) */ WalkKiosk, KioskQueue, WalkPractice, Practice, WalkCar, CarOut, Done }
 /** the walking speed (tiles/s: a brisk 2.4 m/s, as a sim second is more than two town minutes), the cars' speeds on the road, the drive and in the car park (tiles/s) */
 const WALK = 1.4, ROAD_V = 9, DRIVE_V = 4.5, PARK_V = 2.5;
+/** T459: the paces the range's people walk and its cars drive at, at most (tiles a sim second): what the per-frame tests hold each mover to (golf-range-walk.test.ts) */
+export const RANGE_PACE = { walk: WALK, road: ROAD_V } as const;
 /** T321: a car's speed over the grass where no road reaches its car park (tiles/s) */
 const OFF_V = 3;
 /** a swing's beats: address, the drive clip, the pause after; the ball leaves at the clip's impact (s) */
@@ -720,7 +722,7 @@ const PRACTICE_H = 0.45, PUTT_ADDR = 1.3, PUTT_STROKE = 1.6, PUTT_HIT = PUTT_ADD
 /** the upper deck's stairs (T133): a golfer climbs over the leg from the path behind to its bay (tiles), so the lift ramps over it */
 const STAIR = STAND_V - PATH_V;
 /** the ball picker cart drives its lanes in this many town hours (T133), whatever the day's length */
-const PICK_HOURS = 7;
+export const PICK_HOURS = 7;
 
 /** a car-park bay a range car parks in: its point and heading (unit); inside (T146): a place in the car park building (the point is its ramp:
  *  the car drives in there and is not drawn while parked), its golfer walking out of its door */
@@ -868,9 +870,10 @@ export interface RangeDraw {
   people: RangePerson[]; nPeople: number;
   /** the cars (driving or parked): point, heading (radians, world), type and its golfer's visit (T228: its paint; -1 the ball picker) */
   cars: { x: number; y: number; ang: number; type: number; id: number }[]; nCars: number;
-  /** the ball picker cart (T133; null: none): where it is, and whether it is out on its lanes (it is also the last of the cars) */
+  /** the ball picker cart (T133; null: none): where it is, and whether it is out on its lanes (it is also the last of the cars; T459: or driving home from them, caught out by opening time) */
   picker: { x: number; y: number; out: boolean } | null;
-  /** T386 part 2: the range attendants on shift and the robot pickers at work (their stand-ins): point, heading (radians, world), kind */
+  /** T386 part 2: the range attendants on shift and the robot pickers at work (their stand-ins): point, heading (radians, world), kind; T459: id is the hand's own slot (an attendant's
+   *  shift, a robot's number) for as long as he works here; moving: on his way out to the pile or back (else standing at the door to drop his basket, or picking) */
   agents: { x: number; y: number; ang: number; kind: 'attendant' | 'robot'; moving: boolean; id: number; /** #1235: an attendant at the pile, picking (drawn with the pick clip) */ pick: boolean }[]; nAgents: number;
 }
 /** the town clock as the sim reads it: the hour (fractional) and the day number */
@@ -922,6 +925,45 @@ export function rollOut(x: number, y: number, ux: number, uy: number, len: numbe
   return new BallRoll().set(land, { x: ex, y: ey }, lie, lie, len * TILE_M, ROLL_S, null, cross);
 }
 
+/** T459 (the owner, 2026-11-14: "the pro, i assume me, walks to pick up balls and teleports all over"): the range attendants and the robot pickers walk
+ *  their rounds instead of being placed by a formula. Their spot was the ball room plus the round's share of the way to the pile; the pile is the ball
+ *  nearest the room, found again every second, and as the attendant picked (12x as fast in the jam) it moved, so he jumped with it. Now each keeps his
+ *  own spot and walks it at a walker's pace: out to the pile, picks there, back to the room, drops the balls, out again; a pile that moves is walked to.
+ *  His shift ending (or his machine going) sends him home to drop his basket and go in at the door, not out of the picture where he stands.
+ *  The paces: an attendant walks as the range's customers do (WALK, tiles a sim second), a robot trundles slower */
+export const AGENT_SPEED = { attendant: WALK, robot: 1 } as const;
+/** the sim seconds an attendant picks at the pile and empties his basket at the room */
+export const AGENT_PICK_S = 6, AGENT_DROP_S = 1.5;
+/** an attendant's or a robot's round: his spot (tiles), the leg he is on ('gone': he went in at the ball room's door), the sim seconds left of a pick or a drop, the
+ *  way he faces (radians); to and has: the pile he set out for (kept when the field clears on his way: he still picks there; none: home); leave: his shift is over,
+ *  he does not go out again (after his drop he goes in) */
+export interface AgentWalk { x: number; y: number; leg: 'out' | 'pick' | 'back' | 'drop' | 'gone'; left: number; ang: number; to?: Pt; has?: boolean; leave?: boolean }
+/** dt sim seconds of a round, never faster than speed (tiles a sim second): to the pile (the one he set out for when the field has cleared since; none at
+ *  all: back to the room), picking, back, dropping; a leaver turns back from the field, drops and is gone. Pure, and allocation-free after the first pile */
+export function walkAgent(a: AgentWalk, room: Pt, pile: Pt | null, dt: number, speed: number, pickS = AGENT_PICK_S, dropS = AGENT_DROP_S): void {
+  let t = Number.isFinite(dt) ? Math.max(0, dt) : 0;
+  for (let guard = 0; guard < 12 && t > 1e-9 && a.leg !== 'gone'; guard++) {
+    if (a.leg === 'pick' || a.leg === 'drop') {
+      const s = Math.min(t, a.left); a.left -= s; t -= s;
+      if (a.left > 1e-9) break;
+      a.leg = a.leg === 'pick' ? 'back' : a.leave ? 'gone' : 'out'; continue;
+    }
+    if (a.leg === 'out') {
+      if (a.leave) { a.leg = 'back'; a.has = false; continue; }   // (his shift ended on his way out: he turns round)
+      if (pile) { const o = a.to ?? (a.to = { x: 0, y: 0 }); o.x = pile.x; o.y = pile.y; a.has = true; }
+      if (!a.has) { a.leg = 'back'; continue; }                    // (no balls out when he set off: home)
+    }
+    const to = a.leg === 'out' ? a.to! : room, dx = to.x - a.x, dy = to.y - a.y, d = Math.sqrt(dx * dx + dy * dy), step = speed * t;   // (not Math.hypot: it allocates on every call)
+    if (d > 1e-6) a.ang = Math.atan2(dy, dx);
+    if (step < d) { a.x += (dx / d) * step; a.y += (dy / d) * step; break; }
+    a.x = to.x; a.y = to.y; t -= speed > 0 ? d / speed : t;
+    if (a.leg === 'out') { a.leg = 'pick'; a.left = pickS; a.has = false; } else { a.leg = 'drop'; a.left = dropS; }
+  }
+}
+/** T459: the hands the range can have at once: its attendants (a slot a shift, the tree's three) then its robots (the nodes' six): each slot is one person or machine
+ *  that keeps his own round for as long as he works here, so a change of crew never moves anybody but the one who comes or goes */
+const HANDS_ATT = 3, HANDS_ROBOT = 6;
+
 /** The golfers you see (plan 2.2). step() moves them on and returns the takings booked ($); the counts go into the save's season and total */
 export class RangeSim {
   private visits: Visit[] = []; private queue: number[] = []; private balls: Ball[] = [];
@@ -945,14 +987,14 @@ export class RangeSim {
    *  before the ball loop: the older tests' sim). With them a bucket takes its balls out of the ball room (an empty one sells nothing), every ball hit lies
    *  on the outfield until it is picked up, and the night cart picks what it reaches. Set with setBalls */
   book: BallSave | null = null;
-  setBalls(b: BallSave | null): void { this.book = b; }
+  setBalls(b: BallSave | null): void { if (b !== this.book) this.hands.fill(null); this.book = b; }   // (T459: another game's balls bring another game's crew)
   private draw: RangeDraw = { people: [], nPeople: 0, cars: [], nCars: 0, picker: null, agents: [], nAgents: 0 };
   /** the coffee kiosk's line (T133), the golfer served and its time left */
   private kq: number[] = []; private kServing = -1; private kLeft = 0;
   /** the academy's pro (T133): where it stands and faces, whether it walks, and since when it coaches the golfer it stands by (-1: waiting) */
   private pro = { x: 0, y: 0, ang: 0, walking: false, coach: -1, since: 0, placed: false };
-  /** the ball picker cart (T133): its route, its time out on it (-1: parked), and it has picked tonight */
-  private pick: Route | null = null; private pickT = -1; private picked = false; private pickAt = { x: 0, y: 0, ang: 0 };
+  /** the ball picker cart (T133): its route, its time out on it (-1: parked), and it has picked tonight; T459: it is driving home from where opening time caught it (it picks nothing on the way) */
+  private pick: Route | null = null; private pickT = -1; private picked = false; private pickAt = { x: 0, y: 0, ang: 0 }; private pickBack = false;
   /** the queue limit now, and the golfers who turned back at the shop this step (counted as lost by step, where each turned back) */
   private qMax = 5; private lost: Pt[] = [];
   private tmp = { x: 0, y: 0, ang: 0 };
@@ -980,7 +1022,7 @@ export class RangeSim {
     scene.bays.forEach((b, i) => { if (b.lift) up.push(i); else if (!b.academy) low.push(i); });
     this.bayOrder = []; for (let k = 0; k < Math.max(low.length, up.length); k++) { if (k < low.length) this.bayOrder.push(low[k]!); if (k < up.length) this.bayOrder.push(up[k]!); }
     // the extras (T133): the picker's lanes (its speed set by step from the day's length); a kiosk or an academy that went sends its people on
-    this.pick = scene.picker ? route(scene.picker.lanes, [1]) : null; if (!this.pick) this.pickT = -1;
+    this.pick = scene.picker ? route(scene.picker.lanes, [1]) : null; if (!this.pick) { this.pickT = -1; this.pickBack = false; }
     if (!scene.kiosk) { for (const id of this.kq) { const v = this.visits.find(q => q.id === id); if (v) this.walk(v, S.WalkCar, this.toCar(v, { x: v.x, y: v.y })); } this.kq.length = 0; this.kServing = -1; }
     if (!scene.academy) { this.pro.placed = false; this.pro.coach = -1; }
   }
@@ -1154,14 +1196,22 @@ export class RangeSim {
    *  picking every lying ball within PICK_SWATH of the leg it drove this step; home once done. Opening time sends it home and the rest are picked */
   private drivePicker(dt: number, isOpen: boolean, empty: boolean, dayLen: number): void {
     const r = this.pick!, len = r.at[r.at.length - 1]!, speed = len / (PICK_HOURS * dayLen / 24);
-    // (T386: with the ball loop, opening time sends the cart home and what it did not reach stays out on the range)
-    if (isOpen) { if (this.pickT >= 0 && !this.book) this.nLying = 0; this.pickT = -1; this.picked = false; return; }
+    // (T386: with the ball loop, opening time sends the cart home and what it did not reach stays out on the range; T459: it drives home from where it is, it does not jump there)
+    if (isOpen) { if (this.pickT >= 0 && !this.book) this.nLying = 0; if (this.pickT >= 0) this.pickBack = true; this.pickT = -1; this.picked = false; this.driveHome(dt, speed); return; }
+    if (this.pickBack) { this.driveHome(dt, speed); return; }
     if (this.pickT < 0) { if (!empty || this.picked) return; this.pickT = 0; along(r, 0, this.pickAt); }
     const a = { x: this.pickAt.x, y: this.pickAt.y };
     this.pickT += dt * speed;
     const done = along(r, this.pickT, this.pickAt);
     this.sweep(a, this.pickAt, PICK_SWATH);
     if (done) { this.pickT = -1; this.picked = true; if (!this.book) this.nLying = 0; }
+  }
+  /** T459: the cart opening time caught out on its lanes drives on to its home spot at the speed of its lanes (dt sim seconds) */
+  private driveHome(dt: number, speed: number): void {
+    if (!this.pickBack) return;
+    const h = this.scene!.picker!.home, p = this.pickAt, dx = h.x - p.x, dy = h.y - p.y, d = Math.sqrt(dx * dx + dy * dy), m = speed * dt;
+    if (d <= m) { p.x = h.x; p.y = h.y; this.pickBack = false; return; }
+    p.x += dx / d * m; p.y += dy / d * m; p.ang = Math.atan2(dy, dx);
   }
   /** the lying balls within w of the leg a-b are picked (the ring is packed again; T386: with the ball loop they come off the outfield into the ball room) */
   private sweep(a: Pt, b: Pt, w: number): void {
@@ -1293,7 +1343,7 @@ export class RangeSim {
   clear(): void {
     if (this.book && this.scene) this.settle(this.scene); // (T386: the balls golfers had bought and not yet hit land on the range first)
     this.visits = []; this.queue = []; this.balls = []; for (const d of this.desks) { d.id = -1; d.on = false; } this.nLying = 0; this.bayBusy.fill(false); this.slotBusy.fill(false); this.spotBusy.putting.fill(false); this.spotBusy.chipping.fill(false); this.used.length = 0;
-    this.kq = []; this.kServing = -1; this.pickT = -1; this.picked = false; this.pro.coach = -1; this.pro.placed = false; this.lyingAt = 0; this.seatsIn = 0; this.seatsOut = 0;
+    this.kq = []; this.kServing = -1; this.pickT = -1; this.pickBack = false; this.picked = false; this.pro.coach = -1; this.pro.placed = false; this.lyingAt = 0; this.seatsIn = 0; this.seatsOut = 0; this.hands.fill(null);
   }
   /** today's counts start again with the next step (a new game or a load: the town day starts again, maybe on the same day number: T135) */
   newDay(): void {
@@ -1448,16 +1498,17 @@ export class RangeSim {
     }
     const i = this.lyingAt; this.lying[2 * i] = x; this.lying[2 * i + 1] = y; this.lyingAt = (i + 1) % LYING_MAX; this.nLying = Math.min(LYING_MAX, this.nLying + 1);
   }
-  /** T386 part 2: the nets' catch is on (the range owns them), the staff's and the washer's fractions of a ball carried between steps, and the crew at work (attendants on shift,
-   *  robots) with the pile they work (the nearest ball to the ball room, read again each town second) */
+  /** T386 part 2: the nets' catch is on (the range owns them), the staff's and the washer's fractions of a ball carried between steps, and the pile the crew works (the nearest ball
+   *  to the ball room, read again each town second) */
   get clockT(): number { return this.t; }
-  private nets = false; private autoAcc = 0; private washAcc = 0; private crew = { att: 0, robots: 0 }; private front: Pt | null = null; private frontT = -9;
+  private nets = false; private autoAcc = 0; private washAcc = 0; private front: Pt | null = null; private frontT = -9;
+  /** T459: the hands at work on the range (HANDS_ATT attendant slots, then HANDS_ROBOT robot slots), each his own round (walkAgent; null: not here, inside the ball room). They are
+   *  stepped with the sim (automate), so what view() hands out never depends on who looked or how often; and the two spots they are walked to and from (reused, no allocation) */
+  private hands: (AgentWalk | null)[] = new Array<AgentWalk | null>(HANDS_ATT + HANDS_ROBOT).fill(null); private handHome: Pt = { x: 0, y: 0 }; private handPile: Pt = { x: 0, y: 0 };
   /** T386 part 2: one step of the staff and the machines: the attendants on shift (with your tools, not the cart) and the robots pick balls up, the nearest piles to the ball room first,
-   *  into the ball room dirty; the tap and the washer wash what they can (the balls a second each can take) */
+   *  into the ball room dirty; the tap and the washer wash what they can (the balls a second each can take); the hands walk their rounds (walkHands) */
   private automate(dt: number, hour: number, B: BallSave, s: RangeBizSave, a: AutoKit, sc: RangeScene): void {
     const pk = pickKit(s.owned), staff = staffBps(a, pk, hour, B.shift), rob = robotBps(a);
-    let att = 0; for (let i = 0; i < a.attendants; i++) if (onShift(i, hour, B.shift)) att++;
-    this.crew.att = att; this.crew.robots = Math.min(6, a.robots);
     this.autoAcc += (staff + rob) * dt;
     const n = Math.floor(this.autoAcc);
     if (n > 0) {
@@ -1470,6 +1521,24 @@ export class RangeSim {
     const w = Math.floor(this.washAcc);
     if (w > 0) { this.washAcc -= w; if (wash(B, w) < w) this.washAcc = 0; }
     if (this.t - this.frontT >= 1) { this.frontT = this.t; this.front = fieldCount(B) ? nearestBall(B, sc.ballRoom.x, sc.ballRoom.y, 1024) : null; }
+    this.walkHands(dt, hour, B, a, sc);
+  }
+  /** T459: dt sim seconds of the hands' rounds. An attendant whose shift has begun (a robot owned) and is not out yet comes out of the ball room's door (a few seconds after his mate, so they
+   *  do not walk in step); one whose shift is over (a machine gone) is sent home: he turns back from the field, drops his basket at the door and goes in, so nobody ever vanishes where he
+   *  stands. Each walks at his own pace (AGENT_SPEED) between the door and the pile (the nearest ball to it), on a lane of his own a pace apart across the way */
+  private walkHands(dt: number, hour: number, B: BallSave, a: AutoKit, sc: RangeScene): void {
+    const room = sc.ballRoom, front = this.front, to = front ?? room, dx = to.x - room.x, dy = to.y - room.y, L2 = dx * dx + dy * dy, L = L2 > 0 ? Math.sqrt(L2) : 1, nx = -dy / L, ny = dx / L;
+    const H = this.hands, home = this.handHome, pile = this.handPile, robots = Math.min(HANDS_ROBOT, a.robots);
+    for (let w = 0; w < HANDS_ATT + HANDS_ROBOT; w++) {
+      const att = w < HANDS_ATT, k = att ? w : w - HANDS_ATT, want = att ? k < a.attendants && onShift(k, hour, B.shift) : k < robots;
+      let h = H[w] ?? null; if (!h && !want) continue;
+      const side = (w % 3 - 1) * 0.9; home.x = room.x + nx * side; home.y = room.y + ny * side;
+      if (!h) h = H[w] = { x: home.x, y: home.y, leg: 'drop', left: AGENT_DROP_S + k * 4, ang: Math.atan2(dy, dx), to: undefined, has: false, leave: false };   // (every field now: one shape for all)
+      h.leave = !want;
+      if (front) { pile.x = front.x + nx * side; pile.y = front.y + ny * side; }
+      walkAgent(h, home, front ? pile : null, dt, att ? AGENT_SPEED.attendant : AGENT_SPEED.robot);
+      if (h.leg === 'gone') H[w] = null;
+    }
   }
   /** T386: the golfers waiting for a bucket (on their way to the line, in it, or at a counter): each will need the balls of one */
   private awaiting(): number { let n = 0; for (const v of this.visits) if (v.stage <= S.Queue && !v.bought) n++; return n; }
@@ -1496,7 +1565,13 @@ export class RangeSim {
   private move(v: Visit, dt: number, dayLen: number, sc: RangeScene): void {
     v.t += dt;
     switch (v.stage) {
-      case S.CarIn: if (along(v.r!, v.t, this.tmp)) { v.x = this.tmp.x; v.y = this.tmp.y; const sl = this.slots[v.slot]!; v.ang = Math.atan2(sl.hy, sl.hx); this.walk(v, S.WalkShop, [this.carSide(sl), ...[...this.fromEdge(sl)].reverse(), ...(sc.walk ? sc.walk.carShop : [sc.carEdge])]); } else { v.x = this.tmp.x; v.y = this.tmp.y; v.ang = this.tmp.ang; } break;
+      case S.CarIn:
+        if (along(v.r!, v.t, this.tmp)) {
+          const sl = this.slots[v.slot]!; this.walk(v, S.WalkShop, [this.carSide(sl), ...[...this.fromEdge(sl)].reverse(), ...(sc.walk ? sc.walk.carShop : [sc.carEdge])]);
+          // T459: the golfer steps out beside the car, where his walk begins, facing the way it goes (he was drawn on the car's middle for a frame, then 1.2 tiles aside)
+          along(v.r!, 0, this.tmp); v.x = this.tmp.x; v.y = this.tmp.y; v.ang = this.tmp.ang;
+        } else { v.x = this.tmp.x; v.y = this.tmp.y; v.ang = this.tmp.ang; }
+        break;
       case S.WalkShop: {
         const done = along(v.r!, v.t, this.tmp); v.x = this.tmp.x; v.y = this.tmp.y; v.ang = this.tmp.ang;
         // at the path's end by the car park the golfer sees the line (T146: and joins it there, walking up to its place, so a line that moved up
@@ -1646,23 +1721,20 @@ export class RangeSim {
     }
     // the ball picker cart (T133): parked by the outfield by day, out on its lanes after closing (the last of the cars)
     if (sc?.picker) {
-      const out = this.pickT >= 0, c = C[nc] ?? (C[nc] = { x: 0, y: 0, ang: 0, type: 0, id: -1 }); nc++; c.id = -1;
+      const out = this.pickT >= 0 || this.pickBack, c = C[nc] ?? (C[nc] = { x: 0, y: 0, ang: 0, type: 0, id: -1 }); nc++; c.id = -1;
       if (out) { c.x = this.pickAt.x; c.y = this.pickAt.y; c.ang = this.pickAt.ang; } else { c.x = sc.picker.home.x; c.y = sc.picker.home.y; c.ang = sc.picker.ang; }
       c.type = PICKER_CAR; d.picker = { x: c.x, y: c.y, out };
     }
     d.nPeople = np; d.nCars = nc;
-    // T386 part 2: the attendants on shift and the robots at work, as stand-ins walking between the ball room and the pile being picked
+    // T386 part 2: the attendants on shift and the robots at work, walking between the ball room and the pile being picked. T459: each is his own slot's round
+    // (walkHands, stepped with the sim: nothing moves here, so who looks, and how often, changes nothing); a slot's id is his, for as long as he works here
     d.nAgents = 0;
-    if (this.book && sc && (this.crew.att > 0 || this.crew.robots > 0)) {
-      const room = sc.ballRoom, to = this.front ?? room, dx = to.x - room.x, dy = to.y - room.y, L = Math.hypot(dx, dy) || 1, nx = -dy / L, ny = dx / L, total = this.crew.att + this.crew.robots;
-      for (let i = 0; i < total; i++) {
-        const kind = i < this.crew.att ? 'attendant' as const : 'robot' as const, p = (this.t / (kind === 'robot' ? 30 : 40) + i * 0.37) % 1, u = p < 0.5 ? p * 2 : (1 - p) * 2, side = (i % 3 - 1) * 0.9;
-        const a = d.agents[d.nAgents] ?? (d.agents[d.nAgents] = { x: 0, y: 0, ang: 0, kind, moving: true, id: 0, pick: false });
-        // #1235: an attendant walks out in 85% of his half-trip and picks at the pile for the rest (about 6 s of his 40 s round)
-        const w = kind === 'attendant' ? Math.min(1, u / 0.85) : u;
-        a.x = room.x + dx * w + nx * side; a.y = room.y + dy * w + ny * side; a.kind = kind; a.id = i; a.pick = kind === 'attendant' && u >= 0.85 && L > 0.5;
-        a.moving = L > 0.5 && !a.pick; a.ang = Math.atan2(dy, dx) + (p < 0.5 || a.pick ? 0 : Math.PI); d.nAgents++;
-      }
+    if (this.book && sc) for (let w = 0; w < this.hands.length; w++) {
+      const h = this.hands[w]; if (!h) continue;
+      const kind = w < HANDS_ATT ? 'attendant' as const : 'robot' as const;
+      const a = d.agents[d.nAgents] ?? (d.agents[d.nAgents] = { x: 0, y: 0, ang: 0, kind, moving: true, id: 0, pick: false });
+      a.x = h.x; a.y = h.y; a.kind = kind; a.id = w; a.ang = h.ang;
+      a.pick = kind === 'attendant' && h.leg === 'pick'; a.moving = h.leg === 'out' || h.leg === 'back'; d.nAgents++;
     }
     return d;
   }
