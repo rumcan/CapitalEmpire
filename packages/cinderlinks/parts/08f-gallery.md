@@ -89,8 +89,9 @@ function galleryReact(m) {   // a stroke has come to rest (hostRest): a holed pu
   else if (m.club === 'putter' && Math.hypot(hole.pin.x - rx, hole.pin.y - ry) < 3) sndGroan();
 }
 function sndApplause(v) {   // claps, many and loose, over a wash of noise
+  if (sndMsg('applause', { p: v })) return;   // (host mode: the host plays it)
   hiss('bandpass', 1500, 1100, 0.5, 2.8, 0.16 * (0.4 + v), 0.25);
   for (let k = 0; k < 46; k++) hiss('bandpass', 1500 + Math.random() * 1400, 1200, 2, 0.05, (0.04 + Math.random() * 0.05) * (0.4 + v), 0.003, k * 0.055 + Math.random() * 0.05);
 }
-function sndGroan() { thump(210, 130, 1.1, 0.18); hiss('lowpass', 520, 260, 0.7, 1.2, 0.16, 0.2); }
+function sndGroan() { if (sndMsg('groan')) return; thump(210, 130, 1.1, 0.18); hiss('lowpass', 520, 260, 0.7, 1.2, 0.16, 0.2); }
 ````
