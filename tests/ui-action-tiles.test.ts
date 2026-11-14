@@ -78,27 +78,22 @@ function viewTileIds(): string[] {
   for (const f of readdirSync(dir).filter(n => n.endsWith('.md'))) {
     const s = readFileSync(join(dir, f), 'utf8');
     for (const m of s.matchAll(/tiles\/([a-z][a-z0-9-]*)\.webp/g)) out.push(m[1]!);
-    for (const m of s.matchAll(/'((?:drill|shot)-[a-z0-9-]+)'/g)) out.push(m[1]!);
+    for (const m of s.matchAll(/'((?:drill|shot|club)-[a-z0-9-]+)'/g)) out.push(m[1]!);
   }
   return out;
 }
-
-/** the tiles cut from sheets v7 and v8 that no action wears yet: each commit that places one takes it off this list (it is empty when the pictures are all in) */
-const NOT_YET: readonly string[] = [
-  'club-driver', 'club-wood', 'club-long-iron', 'club-iron', 'club-wedge', 'club-putter', 'jump-to-ball', 'gimme', 'go-for-it', 'back-to-course',
-];
 
 test('every one of the 84 action tiles is on an action (the UI, or the golf view), and the golf view names only tiles that exist', () => {
   const used = new Set<string>(), view = viewTileIds();
   for (const f of [...sources('src/ui'), ...sources('src/game/ext/progressive-ui'), 'src/App.tsx']) if (!f.endsWith('tool-tiles.ts')) for (const id of tileIdsIn(readFileSync(f, 'utf8'))) used.add(id);
   for (const [k, v] of Object.entries(T)) if (/_TILE$/.test(k) && v && typeof v === 'object' && !Array.isArray(v)) for (const id of Object.values(v as Record<string, string>)) used.add(id);
   for (const id of view) { assert.ok(ALL.has(id), `the golf view names "${id}": not a tile`); used.add(id); }
-  assert.ok(view.length >= 12, 'the golf view names its drills and shot tiles');
-  assert.deepEqual(ACTION_TILES.filter(id => !used.has(id) && !NOT_YET.includes(id) && !SOUND_TILES.includes(id)), [], 'a tile no action wears');
-  assert.deepEqual(NOT_YET.filter(id => used.has(id)), [], 'a tile an action now wears: take it off NOT_YET');
+  assert.ok(view.length >= 21, 'the golf view names its drills, shots, clubs and buttons');
+  assert.deepEqual(ACTION_TILES.filter(id => !used.has(id) && !SOUND_TILES.includes(id)), [], 'a tile no action wears (the six sound tiles wait for J11, #1270)');
   // the build copies the golf view's tiles (drill-* and shot-*) next to its page
   const build = readFileSync('packages/cinderlinks/build.mjs', 'utf8');
-  assert.match(build, /\(drill\|shot\)-/, 'build.mjs copies the drill and shot tiles');
+  assert.match(build, /\(drill\|shot\|club\)-/, 'build.mjs copies the drill, shot and club tiles');
+  assert.match(build, /jump-to-ball\|gimme\|go-for-it/, 'build.mjs copies Jump to ball, Gimme and Go for it');
 });
 
 test('no step of the tutorial or the guide is text only: each of the 9 + 7 + 3 + 4 steps wears an existing tile', () => {

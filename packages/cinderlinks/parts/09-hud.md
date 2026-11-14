@@ -139,6 +139,8 @@ Check: function hostPickAmt(
 Check: function hostAimRead(
 R: J8 (#1261; the owner: "add ALOT more images to the UI. especially on stuff you can do"): in host mode the shot panel's pictures: a painted tile at each end of Curve (shot-draw, shot-fade) and of Flight (shot-low, shot-high), above the end's name, and one on the Tour button (shot-spin), from CapitalEmpire's src/assets/ui/tiles (build.mjs copies them into tiles/). They are pictures only (no text, never a click of their own: the end names and Tour keep theirs), and a locked end's tile dims with its name.
 Check: tiles/shot-spin.webp
+R: J8: and each club tab wears its club's painted tile (club-driver, club-wood, club-long-iron for a hybrid and a 4-iron, club-iron, club-wedge, club-putter) at the left of its number, name and carry; Go for it wears go-for-it, and the page's Jump to ball and Gimme buttons jump-to-ball and gimme. Pictures only: a click on one is a click on its tab or button, and the tabs keep their class, number and carry (the host and the harness read them).
+Check: function clubTile(
 
 ````js file=game.js
 
@@ -538,7 +540,7 @@ const shotEl = document.createElement('div'); shotEl.id = 'shotc';
 shotEl.innerHTML = '<div class="row sl"><span data-z="curve" title="Click to centre">Curve</span><small data-e="draw"><img src="tiles/shot-draw.webp" alt="" aria-hidden="true" draggable="false">Draw</small><input type="range" data-s="curve" min="-100" max="100" step="5" value="0" aria-label="Curve: draw to fade"><small data-e="fade"><img src="tiles/shot-fade.webp" alt="" aria-hidden="true" draggable="false">Fade</small></div>'   // (J5f: sliders, a draw .. a fade, low .. high)
   + '<div class="row sl"><span data-z="flight" title="Click to centre">Flight</span><small data-e="low"><img src="tiles/shot-low.webp" alt="" aria-hidden="true" draggable="false">Low</small><input type="range" data-s="flight" min="-100" max="100" step="5" value="0" aria-label="Flight: low to high"><small data-e="high"><img src="tiles/shot-high.webp" alt="" aria-hidden="true" draggable="false">High</small></div>'
   + '<div class="row"><span>Spin</span><canvas id="spinBall" width="40" height="40"></canvas><b data-k="tour"><img src="tiles/shot-spin.webp" alt="" aria-hidden="true" draggable="false">Tour</b></div>'
-  + '<div class="row"><b data-k="boost" class="boost">Go for it</b><i id="boostTxt"></i></div><div id="pickTxt"></div>';
+  + '<div class="row"><b data-k="boost" class="boost"><img src="tiles/go-for-it.webp" alt="" aria-hidden="true" draggable="false">Go for it</b><i id="boostTxt"></i></div><div id="pickTxt"></div>';
 if (typeof hudEl !== 'undefined' && hudEl.appendChild) hudEl.appendChild(shotEl);
 const spinBall = shotEl.querySelector ? shotEl.querySelector('#spinBall') : null, sctx = spinBall && spinBall.getContext ? spinBall.getContext('2d') : null;
 let shotShown = '';
@@ -660,8 +662,10 @@ function hostCanGimme() {   // a gimme the round's rule allows: his turn, on the
   const t = HP.turn; return !!t && hostOnTurn() && !hostBusy() && !bcam && t.gimmeM > 0 && !!t.green && t.distM <= t.gimmeM;
 }
 function hostGimme() { if (!hostCanGimme()) return; const t = HP.turn; hostSend({ t: 'gimme', holeIdx: t.holeIdx, stroke: t.stroke }); HP.wait = 1; }
+// J8 (#1261): a club tab's painted tile by its club: the driver, the woods, the long irons and the hybrid (a 4-iron and longer), the irons, the wedges, the putter (tiles/<name>.webp, copied by build.mjs)
+function clubTile(id) { return id === 'driver' ? 'club-driver' : id === 'putter' ? 'club-putter' : id === 'wood3' || id === 'wood5' ? 'club-wood' : id === 'hybrid' || /^iron[234]$/.test(id) ? 'club-long-iron' : /^(pw|gw|sw|lw)$/.test(id) ? 'club-wedge' : 'club-iron'; }
 function hostTabs() {   // T419: his clubs in the tabs: the name, its carry after his mods (the putter: its fitting); keys 1 to 9 and the wheel change club. T455: the carry FROM THIS LIE (the host's lieM: rough, sand, long grass cut it; a cut one is amber with a down arrow), so he can club up
-  return HP.clubs.map((c, k) => { const lie = c.lieM !== undefined ? c.lieM : c.carryM, cut = c.club !== 'putter' && lie < c.carryM - 0.5; return '<div class="club' + (k === club ? ' on' : '') + (cut ? ' cut' : '') + '">' + (k < 9 ? '<b>' + (k + 1) + '</b> ' : '') + (CLUB_NAME[c.club] || c.club) + '<i>' + (c.club === 'putter' ? (c.fit || 'on the green') : Math.round(lie) + ' m' + (cut ? ' ▼' : '')) + '</i></div>'; }).join('');
+  return HP.clubs.map((c, k) => { const lie = c.lieM !== undefined ? c.lieM : c.carryM, cut = c.club !== 'putter' && lie < c.carryM - 0.5; return '<div class="club' + (k === club ? ' on' : '') + (cut ? ' cut' : '') + '"><img class="ci" src="tiles/' + clubTile(c.club) + '.webp" alt="" aria-hidden="true" draggable="false"><div class="ct">' + (k < 9 ? '<b>' + (k + 1) + '</b> ' : '') + (CLUB_NAME[c.club] || c.club) + '<i>' + (c.club === 'putter' ? (c.fit || 'on the green') : Math.round(lie) + ' m' + (cut ? ' ▼' : '')) + '</i></div></div>'; }).join('');
 }
 function hostPickClub(k) { if (!HP || !HP.clubs.length || charging || player.swing >= 0) return; club = Math.max(0, Math.min(HP.clubs.length - 1, k)); }
 clubsEl.addEventListener('wheel', (e) => { if (!HP || !HP.clubs.length) return; hostPickClub(club + (e.deltaY > 0 ? 1 : -1)); if (e.preventDefault) e.preventDefault(); if (e.stopPropagation) e.stopPropagation(); }, { passive: false });

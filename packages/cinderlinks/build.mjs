@@ -56,11 +56,11 @@ if (fs.existsSync(editDir)) {
   console.log(ids.length ? 'golfer art: ' + ids.length + ' golfers (' + (bytes / 1e6).toFixed(1) + ' MB)' : 'golfer art: none found in art/golfers (the view draws its own figure)');
 }
 
-// 4c. J8 (#1261): CapitalEmpire's painted action tiles the view shows (the practice drills' and the shot panel's: src/assets/ui/tiles/drill-*.webp and shot-*.webp)
-// into tiles/, one file each (the page loads them as it needs them). A checkout without them builds without them (the view then shows no picture there)
+// 4c. J8 (#1261): CapitalEmpire's painted action tiles the view shows (the practice drills', the shot panel's, the club tabs', and Jump to ball, Gimme and Go for it:
+// src/assets/ui/tiles/drill-*, shot-*, club-*, jump-to-ball, gimme, go-for-it) into tiles/, one file each (the page loads them as it needs them). A checkout without them builds without them (the view then shows no picture there)
 {
   const SRC = path.join(HERE, '..', '..', 'src', 'assets', 'ui', 'tiles');
-  const names = fs.existsSync(SRC) ? fs.readdirSync(SRC).filter((f) => /^(drill|shot)-.+\.webp$/.test(f)).sort() : [];
+  const names = fs.existsSync(SRC) ? fs.readdirSync(SRC).filter((f) => /^(drill|shot|club)-.+\.webp$|^(jump-to-ball|gimme|go-for-it)\.webp$/.test(f)).sort() : [];
   let bytes = 0;
   if (names.length) fs.mkdirSync(path.join(OUT, 'tiles'), { recursive: true });
   for (const f of names) { fs.copyFileSync(path.join(SRC, f), path.join(OUT, 'tiles', f)); bytes += fs.statSync(path.join(OUT, 'tiles', f)).size; }

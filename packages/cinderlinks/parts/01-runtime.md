@@ -51,8 +51,8 @@ start "" "%EDGE%" --app="file:///%~dp0index.html" --new-window --user-data-dir="
     <div id="clubs"></div>
     <div id="keys"></div>
     <div id="style"><button id="styleBtn" type="button">Settings</button><div id="styleMenu"></div></div>
-    <button id="jump" type="button">Jump to ball <b>J</b></button>
-    <button id="gimme" type="button">Gimme <b>Y</b></button>
+    <button id="jump" type="button"><img src="tiles/jump-to-ball.webp" alt="" aria-hidden="true" draggable="false">Jump to ball <b>J</b></button>
+    <button id="gimme" type="button"><img src="tiles/gimme.webp" alt="" aria-hidden="true" draggable="false">Gimme <b>Y</b></button>
     <div id="help"></div>
     <div id="msg"></div>
   </div>
@@ -78,6 +78,7 @@ Check: #cover.on
 R: J5f: the shot panel's Curve and Flight are sliders (a track with a gold run from the middle to the thumb, a tick at the middle, the end he has not earned dimmed and struck through), and the aim's distance sits in a small panel above the club box.
 Check: #shotc input[type=range]
 Check: #shotc small img
+Check: #clubs .club .ci
 Check: #aimd
 
 ````css file=style.css
@@ -198,9 +199,10 @@ body.host #mini, body.host #wind { top: 56px; }
 /* the clubs: CapitalEmpire's rail tabs, the one in hand ringed in gold on the gold wash */
 #clubs { position: absolute; left: 1.4%; bottom: 2.4%; display: flex; flex-wrap: wrap; gap: 0.45em; max-width: 64%; }
 #clubs.bag { gap: 0.3em; max-width: 34%; }   /* (his whole bag wraps in the left third: the power bar stays clear) */
-#clubs .club { padding: 0.35em 0.7em 0.4em; border-radius: 0.8em; background: var(--panel); border: 1px solid var(--line); box-shadow: var(--shadow); font-size: 1em; font-weight: 600; color: #d9d3c4; line-height: 1.3; }
+#clubs .club { display: flex; align-items: center; gap: 0.4em; padding: 0.35em 0.7em 0.4em; border-radius: 0.8em; background: var(--panel); border: 1px solid var(--line); box-shadow: var(--shadow); font-size: 1em; font-weight: 600; color: #d9d3c4; line-height: 1.3; }
 #clubs.bag .club { padding: 0.25em 0.55em 0.3em; font-size: 0.88em; }
 #clubs .club.on { border-color: var(--gold); background: linear-gradient(var(--gold-wash), var(--gold-wash)), var(--panel); color: var(--gold-hi); box-shadow: var(--shadow), inset 0 0 12px rgba(245, 181, 46, 0.18); }
+#clubs .club .ci { flex: none; width: 2.5em; height: 2.5em; margin: -0.2em 0; border-radius: 12%; pointer-events: none; } #clubs.bag .club .ci { width: 2.2em; height: 2.2em; }   /* (J8: a club tab's painted tile, its club's: driver, wood, long iron, iron, wedge, putter) */
 #clubs .club b { margin-right: 0.1em; color: var(--muted); font-weight: 700; }
 #clubs .club.on b { color: var(--gold); }
 #clubs .club i { display: block; font-style: normal; font-weight: 500; font-size: 0.85em; color: var(--muted); font-variant-numeric: tabular-nums; }
@@ -239,6 +241,7 @@ body.host #mini, body.host #wind { top: 56px; }
 /* Jump to ball (.btn) and Gimme (the gold button: the thing to take now), each with its key as a keycap */
 #jump, #gimme { position: absolute; right: 1.4%; bottom: 8%; display: none; align-items: center; gap: 0.45em; padding: 0.45em 0.9em; font-size: 1em; font-weight: 600; color: var(--ink); background: var(--panel); border: 1px solid var(--line-hi); border-radius: 0.8em; box-shadow: var(--shadow); cursor: pointer; pointer-events: auto; }
 #jump.on, #gimme.on { display: inline-flex; } #jump:hover { border-color: var(--gold-line); }
+#jump img, #gimme img { width: 2.1em; height: 2.1em; margin: -0.35em 0; border-radius: 12%; pointer-events: none; }   /* (J8: their painted tiles; a click on one is a click on the button) */
 #jump b, #gimme b { min-width: 1.4em; padding: 0 0.3em; border-radius: 0.35em; border: 1px solid var(--line-hi); background: rgba(255, 255, 255, 0.06); font-size: 0.85em; line-height: 1.45; color: var(--ink); }
 #gimme { bottom: calc(8% + 2.9em); background: var(--gold-btn); border-color: transparent; color: #1b1406; font-weight: 700; box-shadow: 0 2px 10px rgba(245, 181, 46, 0.35), var(--shadow); }
 #gimme:hover { filter: brightness(1.06); } #gimme b { border-color: rgba(27, 20, 6, 0.35); background: rgba(27, 20, 6, 0.1); color: #1b1406; }
