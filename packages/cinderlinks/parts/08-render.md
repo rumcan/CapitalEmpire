@@ -21,6 +21,7 @@ R: The banks, the trees, the reeds and the clouds lie mirrored on the water, bro
 R: Standing things are drawn far to near, scaled by distance; near ones are each their own sculpture, far trees borrow from a small library; a tree between the camera and the golfer is thinned so he stays visible, and a tree within a few metres of the camera shows its trunk only.
 R: The wind is Grove's: every 12 seconds a gust crosses the land. As it passes a tree, each leaf cluster but the core steps through eight poses from its own start and its lobes swell and shrink; the wood stays still. Grass, reeds and flowers bend hard while the gust passes and barely stir in the calm.
 R: The golfer, the cart, the ball and the flag cast live shadows; a marker hangs over a far ball.
+R: #1308: every person on foot (the player, the other golfers, caddies) and the ball at rest also have a soft contact shadow: one dark ellipse on the ground under the feet (a metre and a quarter across for a person), darkest in the middle, fading at its edge, set a little away from the sun, on whatever he stands on (a mat, a tee, the fairway, the green, sand). It does not follow the sun patches, so he is never seen floating when a cloud passes or the camera is where the live shadow falls behind him.
 R: A small plant too far for its sculpture is a speck of its colour (a stem, and a petal on a flower) out to 90 m, so meadows keep their flowers at a distance; the painted ground's levels of detail change over a band of mixed lines fixed to the ground, not at a line that moves with the camera.
 R: New land is made by a background worker (tiles and painted chunks), so the page itself only draws; without a worker the page makes it within a ration of milliseconds a frame. With workers, a thing's own sculpture is made there too (T438): its stand-in shows until it comes, then it dissolves in.
 R: The sun breaks through the clouds in soft-edged gaps that drift over the land with the wind and change shape as they go (CapitalEmpire's sun patches). Nothing dark is drawn: in a gap of sun the picture's own pixels are brighter and a little warmer, the dark parts kept dark; elsewhere it is the overcast, the picture as it always was. None at night.
@@ -862,6 +863,7 @@ function shadePoint(gx, gy) {   // darken the ground at a world point, if that g
 }
 // the live shadow of a standing sprite: each of its pixels falls to the ground, away from the sun, by its height
 let golfK = GK;
+const BLOB_R = 0.62, BLOB_K = 1;   // (#1308: a person's contact shadow: its radius on the ground (m) and how dark it is in the middle)
 function castSprite(S, x0, y0, sk = 1) {   // sk: the sculpture's own scale (the golfer is sculpted at the picture's scale)
   const sn = TOD[tmode].glow < 1 ? sunAt(x0, y0, frame * 0.055) : 1; if (sn < 0.03) return;   // a thing's shadow is as strong as the sun on it: it fades in and out as the sun patches pass
   shK = sn;
@@ -871,6 +873,28 @@ function castSprite(S, x0, y0, sk = 1) {   // sk: the sculpture's own scale (the
     for (let x = a; x <= b; x++) if (S.px[y * S.w + x]) { const dx = (x - S.ax) / (PPM * sk); shadePoint(x0 + RX * dx - 0.809 * dz, y0 + RY * dx + 0.735 * dz); }
   }
   shK = 1;
+}
+// #1308 (the owner: "this view the guy looks like he is floating. why don't we have a blob shadow?"): a soft contact shadow under everyone who stands on the ground: one ellipse, r metres across
+// on the ground, darkest in the middle and fading to nothing at its edge, set a little way off from his feet the way the light falls (away from the sun, the way castSprite's own shadow
+// goes), cooler as the live shadow is. It is the ambient dark where a body keeps the sky off the ground, so it does not follow the sun patches: it stays on when a cloud passes.
+// It darkens only what is the ground there (the depth the picture holds is within the ellipse's own depth), on a mat, a tee, a path or the turf alike, and is made before anything stands
+// on the ground, so the golfer is drawn over it. Three projections and about a hundred pixels a person.
+function blobShadow(x, y, r, k) {
+  const off = r * 0.3, cx = x - 0.74 * off, cy = y + 0.67 * off, gz = groundH(cx, cy);
+  project(cx, cy, gz, PJ); if (PJ.s <= 0) return;
+  const bx = PJ.x, by = PJ.y, bd = PJ.d, rxp = r * FOC / bd; if (rxp < 0.8) return;
+  const fx = cx + FX * r, fy = cy + FY * r; project(fx, fy, groundH(fx, fy), PJ);
+  const ryp = Math.max(1.2, Math.abs(PJ.y - by)), tol = r * 150 + 30, zc = bd * 100;
+  const xa = Math.max(0, Math.floor(bx - rxp)), xb = Math.min(VW - 1, Math.ceil(bx + rxp)), ya = Math.max(0, Math.floor(by - ryp)), yb = Math.min(VH - 1, Math.ceil(by + ryp));
+  for (let yy = ya; yy <= yb; yy++) {
+    const ny = (yy - by) / ryp, o = yy * VW;
+    for (let xx = xa; xx <= xb; xx++) {
+      const nx = (xx - bx) / rxp, w = 1 - nx * nx - ny * ny; if (w <= 0) continue;
+      const q = o + xx, dz = zbuf[q] - zc; if (dz > tol || dz < -tol) continue;
+      const f = k * w * (2 - w), c = fb[q];   // (a full middle, fading smoothly to nothing at the edge)
+      fb[q] = (0xff000000 | ((((c >> 16) & 255) * (1 - 0.3 * f)) << 16) | ((((c >> 8) & 255) * (1 - 0.42 * f)) << 8) | ((c & 255) * (1 - 0.44 * f))) >>> 0;
+    }
+  }
 }
 // ---- the putting grid: when the ball lies on the green, a light grid is laid over the green's surface, a line every metre, and on every line that
 // slopes a dot runs downhill, faster the steeper it is: where the dots run, and how fast, is how a putt will turn. The grid belongs to the land (whole
@@ -1367,8 +1391,9 @@ function render() {
   golfK = golferK(DS / Math.max(1, (p.x - camX) * FX + (p.y - camY) * FY));   // the sculpture that suits how big he is seen: the larger one when the camera is close
   const gs = cart.on ? golferSprite(fav, 'c', 0, golfK) : p.swing >= 0 || charging || (HP && HP.sw) ? golferPic(fav, 's', Math.round(p.al / 0.2), golfK) : p.moving ? golferPic(fav, 'w', Math.floor(p.walk) % 8, golfK) : AD ? golferPic((((addressFa() - Math.round(camYaw * 16 / 6.2832)) % 16) + 16) % 16, 'a', 0, golfK) : golferPic(fav, 'i', 0, golfK);   // (J5b: at the ball, ready: the address pose, side-on)   // (T450: golferPic draws his CapitalEmpire golfer when he has one; HP.sw: the host swing's downswing is a swing too)
   const fs = flagSpr[(frame >> 3) % 6], bz = ball.state === 3 ? groundH(ball.x, ball.y) - 0.2 : ball.z;
-  if (!cart.on) castSprite(gs, gpx, gpy, golfK);
+  if (!cart.on) { castSprite(gs, gpx, gpy, golfK); blobShadow(gpx, gpy, BLOB_R, BLOB_K); }   // (#1308: and the contact shadow under his feet)
   if (flag.d > 2 && flag.d < 40) castSprite(fs, H.pin.x, H.pin.y);
+  if (ball.state === 0 || ball.state === 2) blobShadow(ball.x, ball.y, 0.1, 0.8);   // (#1308: the ball at rest or rolling sits on the ground, not above it)
   if (ball.state !== 3) { const bh = Math.max(0, bz - groundH(ball.x, ball.y)); for (let a = -2; a <= 2; a++) for (let b = -1; b <= 1; b++) shadePoint(ball.x - 0.809 * bh + a * 0.018 - 0.02, ball.y + 0.735 * bh + b * 0.03); }
   project(H.pin.x, H.pin.y, groundH(H.pin.x, H.pin.y), PJ);
   if (PJ.s > 0.25) {                                           // the cup: a dark hole with a lit far rim

@@ -152,8 +152,9 @@ Check: function clubTile(
 let HOST = false, hostOrigin = '', hostLast = null, hostN = 0, hostOff = false, looping = false;
 function hostMode() { return HOST; }
 function hostSend(m) {
-  hostLast = Object.assign({ v: 1 }, m);   // (kept: the harness reads it, having no parent page)
-  try { if (typeof window !== 'undefined' && window.parent && window.parent !== window) window.parent.postMessage(hostLast, hostOrigin || '*'); } catch (e) { /* the parent is gone */ }
+  const msg = Object.assign({ v: 1 }, m);
+  if (m.t !== 'sound') hostLast = msg;   // (kept: the harness reads it, having no parent page; J11: a sound is no answer to read, it never replaces the last message)
+  try { if (typeof window !== 'undefined' && window.parent && window.parent !== window) window.parent.postMessage(msg, hostOrigin || '*'); } catch (e) { /* the parent is gone */ }
 }
 function hostMessage(m) {   // one message from the host page, already known to come from it
   if (!m || typeof m !== 'object') return;
@@ -229,10 +230,11 @@ function hostTurn(m) {   // the owner's turn: the ball and the pin where the mod
   if (m.hole !== holeN) newHole(m.hole, 0, 0);
   ball.x = ball.lx = m.ball[0] * S; ball.y = ball.ly = m.ball[1] * S; ball.z = groundH(ball.x, ball.y); ball.vx = ball.vy = ball.vz = 0; ball.state = 0;
   hole.pin.x = hole.green.x = m.pin[0] * S; hole.pin.y = hole.green.y = m.pin[1] * S;
-  strokes = m.stroke - 1; autoClub = false; club = Math.max(0, HP.clubs.findIndex((c) => c.club === m.suggested.club)); shownClub = -2;
-  HP.pick = null; HP.pv = null; HP.pvSig = ''; hostAimPin = false;   // (T441: each turn starts from a plain shot; T446: and the aim follows the mouse until a click sets it)
-  const ax = m.suggested.aim[0] * S - ball.x, ay = m.suggested.aim[1] * S - ball.y, al = Math.hypot(ax, ay); if (al > 0.3) { aim.dx = ax / al; aim.dy = ay / al; }
-  aim.x = m.suggested.aim[0] * S; aim.y = m.suggested.aim[1] * S;   // (J5c: the target too: it was left where the last turn, or the mouse passing, put it, and the strike went there)
+  const kp = pracKept(m);   // (#1308: practising, the next ball is hit with what the last one was: his aim, club, curve, flight and spin stay until he moves them; a drill picked, or the first ball, takes the suggestion once)
+  strokes = m.stroke - 1; autoClub = false; club = kp ? kp.ci : Math.max(0, HP.clubs.findIndex((c) => c.club === m.suggested.club)); shownClub = -2;
+  HP.pick = kp ? kp.pick : null; HP.pv = null; HP.pvSig = ''; hostAimPin = kp ? kp.pin : false;   // (T441: each turn starts from a plain shot; T446: and the aim follows the mouse until a click sets it)
+  const ax = (kp ? kp.ax : m.suggested.aim[0] * S) - ball.x, ay = (kp ? kp.ay : m.suggested.aim[1] * S) - ball.y, al = Math.hypot(ax, ay); if (al > 0.3) { aim.dx = ax / al; aim.dy = ay / al; }
+  aim.x = kp ? kp.ax : m.suggested.aim[0] * S; aim.y = kp ? kp.ay : m.suggested.aim[1] * S;   // (J5c: the target too: it was left where the last turn, or the mouse passing, put it, and the strike went there)
   if (pracLock() ? Math.hypot(player.x - ball.x, player.y - ball.y) > 0.3 : m.stroke === 1 && ball.state === 0 && !bcam) jumpToBall();   // (J5c: on the tee always: he stands at his ball facing down the aim, the camera behind him)   // (J6: practising, each ball is teed up where he stands)   // (on the tee he stands at his ball; later he walks to it, or J)
 }
 function hostStrike() {   // the club meets the ball: the input goes to the host, and the ball waits for its answer
@@ -241,8 +243,9 @@ function hostStrike() {   // the club meets the ball: the input goes to the host
   const sw = HP.out; HP.out = null;   // (T421: the meter's outcome; the power is then only what it would be without one)
   hostSend({ t: 'input', input: Object.assign({ holeIdx: t.holeIdx, stroke: t.stroke, club: c.club, aim: [aim.x / S, aim.y / S], power: sw ? Math.min(putt ? HOLD_PUTT_TOP : 1, Math.max(putt ? 0.05 : 0.3, sw.power)) : hostPower(power, putt) }, sw ? { swing: { power: sw.power, acc: sw.acc, boost: sw.boost, v: sw.v } } : {}, hostShotIn()) });   // (T441, T442: the shape and spin picked)
   if (HP.pick) HP.pick.armed = false;   // (spin and shape: T441, T442)
+  pracSave(c);   // (#1308: what the next practice ball starts from)
   HP.wait = 1;
-  if (!putt) sndShot(); else sndTap();
+  if (!sndMsg('strike', { club: c.club, p: Math.min(1, Math.max(0, power)) })) { if (!putt) sndShot(); else sndTap(); }   // (J11: the club's own strike, played by the host)
   for (let k = 0, n = putt ? 3 : 10 + ((power * 14) | 0); k < n; k++) {   // sparks off the club, and turf or sand
     addParticle(P_SPARK, ball.x, ball.y, ball.z + 0.05, aim.dx * (1 + rnd() * 3) + (rnd() - 0.5) * 2, aim.dy * (1 + rnd() * 3) + (rnd() - 0.5) * 2, 1 + rnd() * 3, 16 + rndi(18), 0);
     if (!putt) addParticle(m === M_SAND ? P_SAND : P_TURF, ball.x, ball.y, ball.z + 0.05, aim.dx * (0.5 + rnd() * 2.5) + (rnd() - 0.5) * 1.6, aim.dy * (0.5 + rnd() * 2.5) + (rnd() - 0.5) * 1.6, 1.5 + rnd() * 2.5, 30 + rndi(30), rndi(6));
@@ -289,7 +292,7 @@ function hostRest() {   // the playback is over: the ball lies at the host's res
   if (!P.landed) hostLand(8);
   ball.x = m.rest[0] * S; ball.y = m.rest[1] * S; ballRest();
   strokes = m.stroke + (m.penalty || 0); total += 1 + (m.penalty || 0);
-  if (m.holed) { ball.state = 3; ball.x = hole.pin.x; ball.y = hole.pin.y; for (let k = 0; k < 120; k++) addParticle(k & 1 ? P_SPARK : P_EMBER, hole.pin.x, hole.pin.y, ball.z + 0.1, (rnd() - 0.5) * 3, (rnd() - 0.5) * 3, 2 + rnd() * 5, 40 + rndi(70), rndi(4)); }
+  if (m.holed) { sndMsg('cup', { drop: true }); ball.state = 3; ball.x = hole.pin.x; ball.y = hole.pin.y; for (let k = 0; k < 120; k++) addParticle(k & 1 ? P_SPARK : P_EMBER, hole.pin.x, hole.pin.y, ball.z + 0.1, (rnd() - 0.5) * 3, (rnd() - 0.5) * 3, 2 + rnd() * 5, 40 + rndi(70), rndi(4)); }
   else if (m.penalty) { splash(ball.x, ball.y, wlAt(ball.x, ball.y), 26); say(m.restLie === 'water' ? 'Water: one stroke, and a drop' : 'Out of bounds: one stroke', 260); }
   groupShotEnd(m);   // (T425: after another's stroke the owner's ball and score come back, 08e-group.md)
   galleryReact(m);   // (T429: the crowd near it cheers a holed putt, groans at a short miss: 08f-gallery.md)
@@ -423,6 +426,7 @@ function hostSwing(p) {   // one step of the swing; true while it holds the golf
   if (S.u < 0.02) { HP.sw = null; charging = false; power = 0; p.al = 0; return true; }   // (J5e: let go before the meter moved: no swing, not a stroke spent at 0%)
   HP.out = { power: S.u * (C.club === 'putter' ? hostPuttTop() : 1), u: S.u, acc: 0, boost: HP.pick && HP.pick.armed && hostEarned('boost') && hostCharges() > 0 ? HMETER.max : hostBoost(S.presses), v: HMETER.v }; HP.lastSw = HP.out;
   S.rel = true; charging = false; if (C.club !== 'putter') sndBreath();   // (let go: he draws a breath and swings down)
+  sndMsg('swish', { club: C.club, p: S.u });   // (J11: and the club comes down through the air: its swish, by the club)
   return true;
 }
 function hostMeterShow() {   // the meter on the swing button: the power held, the club and the boost; after the strike the power played
@@ -676,6 +680,7 @@ addEventListener('keydown', (e) => {
   if (HP && HP.sw && (e.code === 'ShiftLeft' || e.code === 'ShiftRight')) { HP.sw.presses++; return; }   // (host mode: the boost, tapped while the swing is held: T421, T443; Shift since T446, Space now swings)
   if (HP && HP.turn && !HP.sw && (e.code === 'KeyZ' || e.code === 'KeyX' || e.code === 'KeyI')) { hostPickSet(e.code === 'KeyZ' ? 'curve' : e.code === 'KeyX' ? 'flight' : 'boost'); return; }   // (T441, T443: the shape and the boost)
   if (HOST && e.code === 'Escape') { hostSend({ t: 'exit' }); return; }   // (the host page closes the view)
+  if (HOST && e.code === 'F8') { e.preventDefault(); sndMsg('mute'); return; }   // (J11: the Mute key works in the view too: the host page mutes, or lifts every mute)
   keys[e.code] = true;
   if (e.code === 'KeyT') setTime((tmode + 1) % TOD.length);
   else if (e.code === 'KeyC') { behindHole(); camD = D0; camHk = 1; HZ = HZ0; camK = { d: D0, hk: 1 }; }
