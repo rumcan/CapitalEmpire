@@ -61,8 +61,9 @@ export const SHOW_STOPS: readonly ShowStop[] = [
 /** where the point of interest sits on a screen cssW x cssH (fractions of its width and height): right of the card on a wide screen, in the middle on a narrow or tall one */
 export function anchorOf(cssW: number, cssH: number): { x: number; y: number } {
   const wide = cssW >= WIDE_MIN_W && cssW > cssH * 1.15;
-  return wide ? SHOW_ANCHOR : { x: 0.5, y: 0.46 };
+  return wide ? SHOW_ANCHOR : NARROW_ANCHOR;
 }
+const NARROW_ANCHOR = Object.freeze({ x: 0.5, y: 0.46 });
 
 /** the camera at moment u (0 at the start of the stop, 1 at its end) so that the point of interest is at the anchor of a screen cssW x cssH (written into `out` when given: the
  *  director's frame hook reuses one, no allocation per frame) */
