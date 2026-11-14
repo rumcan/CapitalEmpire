@@ -1,0 +1,83 @@
+{
+  "id": "person:staff_role_greenkeeper",
+  "name": "staff_role_greenkeeper (ChatGPT painted)",
+  "size": "adult",
+  "heightMetres": 1.76,
+  "frameWidth": 160,
+  "frameHeight": 270,
+  "anchor": {
+    "x": 80,
+    "y": 260
+  },
+  "directions": [
+    "S",
+    "SW",
+    "W",
+    "NW",
+    "N",
+    "NE",
+    "E",
+    "SE"
+  ],
+  "frames": [
+    "idle",
+    "walk1",
+    "walk2",
+    "walk3",
+    "walk4",
+    "walk5",
+    "walk6",
+    "walk7",
+    "walk8"
+  ],
+  "walkFps": 5.7,
+  "mirrored": {},
+  "source": "art/spectators/staff_role_greenkeeper",
+  "clips": {
+    "walk": "ChatGPT painted walk (8 frames, issue #1235)",
+    "idle": "ChatGPT painted standing pose (issue #1235)"
+  },
+  "note": "Starts as a copy of spectators:spec_m_bucket_hat (a stand-in) until import_golfer.py --family spectators replaces each heading; design.png is the painted design.",
+  "chatgpt": {
+    "E": {
+      "picture": "staff_role_greenkeeper~E-golfers.png",
+      "date": "2026-11-14",
+      "scale": 0.6833
+    },
+    "N": {
+      "picture": "staff_role_greenkeeper~N-golfers.png",
+      "date": "2026-11-14",
+      "scale": 0.6531
+    },
+    "NE": {
+      "picture": "staff_role_greenkeeper~NE-golfers.png",
+      "date": "2026-11-14",
+      "scale": 0.6451
+    },
+    "NW": {
+      "picture": "staff_role_greenkeeper~NW-golfers.png",
+      "date": "2026-11-14",
+      "scale": 0.6677
+    },
+    "S": {
+      "picture": "staff_role_greenkeeper~S-golfers.png",
+      "date": "2026-11-14",
+      "scale": 0.6564
+    },
+    "SE": {
+      "picture": "staff_role_greenkeeper~SE-golfers.png",
+      "date": "2026-11-14",
+      "scale": 0.6656
+    },
+    "SW": {
+      "picture": "staff_role_greenkeeper~SW-golfers.png",
+      "date": "2026-11-14",
+      "scale": 0.6667
+    },
+    "W": {
+      "picture": "staff_role_greenkeeper~W-golfers.png",
+      "date": "2026-11-14",
+      "scale": 0.6797
+    }
+  }
+}
