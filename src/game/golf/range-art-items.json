@@ -9,5 +9,15 @@
   { "slug": "golf-range-yardage-board", "item": 6, "code": "A", "name": "Yardage board", "box": [2, 0.5], "high": 2.5, "size": "box", "piece": "board", "wallBelow": 0.85 },
   { "slug": "golf-range-distance-post", "item": 7, "code": "B", "name": "Distance marker post", "box": [0.5, 0.5], "high": 1.5, "size": "tall", "piece": "mark" },
   { "slug": "golf-range-floodlight", "item": 10, "code": "A", "name": "Floodlight mast", "box": [1, 1], "high": 12, "size": "tall", "piece": "light" }
+ ],
+ "yard": [
+  { "slug": "golf-range-yard-50", "item": 6, "code": "A", "name": "Yardage sign 50 m", "box": [2, 0.5], "high": 2.5, "size": "box", "piece": "yard", "wallBelow": 0.85 },
+  { "slug": "golf-range-yard-75", "item": 6, "code": "A", "name": "Yardage sign 75 m", "box": [2, 0.5], "high": 2.5, "size": "box", "piece": "yard", "wallBelow": 0.85 },
+  { "slug": "golf-range-yard-100", "item": 6, "code": "A", "name": "Yardage sign 100 m", "box": [2, 0.5], "high": 2.5, "size": "box", "piece": "yard", "wallBelow": 0.85 },
+  { "slug": "golf-range-yard-125", "item": 6, "code": "A", "name": "Yardage sign 125 m", "box": [2, 0.5], "high": 2.5, "size": "box", "piece": "yard", "wallBelow": 0.85 },
+  { "slug": "golf-range-yard-150", "item": 6, "code": "A", "name": "Yardage sign 150 m", "box": [2, 0.5], "high": 2.5, "size": "box", "piece": "yard", "wallBelow": 0.85 },
+  { "slug": "golf-range-yard-175", "item": 6, "code": "A", "name": "Yardage sign 175 m", "box": [2, 0.5], "high": 2.5, "size": "box", "piece": "yard", "wallBelow": 0.85 },
+  { "slug": "golf-range-yard-200", "item": 6, "code": "A", "name": "Yardage sign 200 m", "box": [2, 0.5], "high": 2.5, "size": "box", "piece": "yard", "wallBelow": 0.85 },
+  { "slug": "golf-range-yard-250", "item": 6, "code": "A", "name": "Yardage sign 250 m", "box": [2, 0.5], "high": 2.5, "size": "box", "piece": "yard", "wallBelow": 0.85 }
  ]
 }

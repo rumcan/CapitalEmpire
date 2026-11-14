@@ -85,7 +85,10 @@ async function groundPictures() {
 }
 
 // ---------------------------------------------------------------- 2. the buildings and signs
-const ITEMS = readJson(path.join(root, 'src/game/golf/range-art-items.json'), { items: [] }).items;
+// (#1235, the owner 2026-11-14: "no vector distance signs. only png sprites": the yardage signs, one per distance with its number painted on,
+// are packed the same way but listed apart ("yard"): rangeScene's stand-in pieces stay "items"; the range code picks the signs by slug)
+const ITEMS_JSON = readJson(path.join(root, 'src/game/golf/range-art-items.json'), { items: [] });
+const ITEMS = [...ITEMS_JSON.items, ...(ITEMS_JSON.yard ?? [])];
 const KIT = path.join(root, 'art/range-kit'), KIT_FILE = path.join(KIT, 'items.json'), VIEWS_FILE = path.join(root, 'src/game/golf/range-art.json');
 const UP = 64, MASTER_MAX = 2;
 /** the newest version of each of an item's files under GEN/buildings (null: none): A items view1 and view2, B items 1view */

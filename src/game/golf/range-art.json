@@ -31,6 +31,38 @@
   "golf-range-floodlight": [
    "range:golf-range-floodlight-view1",
    "range:golf-range-floodlight-view2"
+  ],
+  "golf-range-yard-50": [
+   "range:golf-range-yard-50-view1",
+   "range:golf-range-yard-50-view2"
+  ],
+  "golf-range-yard-75": [
+   "range:golf-range-yard-75-view1",
+   "range:golf-range-yard-75-view2"
+  ],
+  "golf-range-yard-100": [
+   "range:golf-range-yard-100-view1",
+   "range:golf-range-yard-100-view2"
+  ],
+  "golf-range-yard-125": [
+   "range:golf-range-yard-125-view1",
+   "range:golf-range-yard-125-view2"
+  ],
+  "golf-range-yard-150": [
+   "range:golf-range-yard-150-view1",
+   "range:golf-range-yard-150-view2"
+  ],
+  "golf-range-yard-175": [
+   "range:golf-range-yard-175-view1",
+   "range:golf-range-yard-175-view2"
+  ],
+  "golf-range-yard-200": [
+   "range:golf-range-yard-200-view1",
+   "range:golf-range-yard-200-view2"
+  ],
+  "golf-range-yard-250": [
+   "range:golf-range-yard-250-view1",
+   "range:golf-range-yard-250-view2"
   ]
  }
 }
