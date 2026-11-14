@@ -3606,10 +3606,12 @@ export class Game {
     this.dropCourseGrid(); this.setupCourseGrid(); this.sendGolf();
     // the range on its plot, the home's own (jam: for sale a moment: its price is taken below, with its kit and its balls)
     this.jamOffered = true;
-    if (JAM) { b.forSale = true; b.junk = newRangeJunk(this.seed ^ 0x4a37); }
+    // (the owner, 2026-11-14: "I dont see random junk yard trash on your range anymore?": the old range comes with its junk in every build, not the jam's alone)
+    b.junk = newRangeJunk(this.seed ^ 0x4a37);
+    if (JAM) b.forSale = true;
     const p = this.rangePlaceable(JAM), spot = rangeSpotAlong(site.rangePlot, site.dir, 0), at = !p ? null : p.why(spot) ? this.rangeSpotsBest(p)[0] ?? null : spot;
     if (p && at && p.build(at)) { if (JAM && !this.buyRange()) { /* (short of cash: the range stands for sale, as the old start had it) */ } }
-    else if (JAM) { delete b.forSale; delete b.junk; } // (nothing placed: a bare start, the range is placed from the Range menu as an older game's)
+    else { delete b.forSale; delete b.junk; } // (nothing placed: a bare start, the range is placed from the Range menu as an older game's)
     // your character in the start, in the look picked on "Who are you?"; the camera on the range at the street tier; the clock running; the tutorial waits for the ground
     const sc = this.range.scene, pl = this.playerNow(), ys = this.youStart();
     if (pl && ys) this.setPlayer({ ...pl, you: { x: ys.x, y: ys.y, f: 0, look: pk.look ?? pl.you?.look ?? this.youArt() } });
