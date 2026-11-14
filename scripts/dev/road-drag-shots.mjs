@@ -50,6 +50,13 @@ try {
       await page.locator('input[placeholder="Your name"]').fill('Road Drag').catch(() => {});
       for (const w of ['Desert', 'Autumn']) { const b = page.locator('button', { hasText: w }).first(); if (await b.isVisible().catch(() => false)) await b.click().catch(() => {}); }
       await who.click(); await page.waitForTimeout(1500);
+      // J9: the start is chosen, not laid: the card over the bare map; "Pick a spot for me" buys the land and the old range and builds the house (a build from before J9 has no card)
+      const pick = page.locator('[data-testid="start-pick-auto"]');
+      if (await pick.waitFor({ timeout: 20000 }).then(() => true, () => false)) {
+        await pick.click();
+        await page.waitForFunction(() => { const g = window.__game; return !g.startPick && !!g.range?.scene; }, null, { timeout: 90000 }).catch(() => console.log('      (the start was not laid in time)'));
+        await page.waitForTimeout(2500);
+      }
       await page.evaluate(() => { const g = window.__game; g.setSpeed(0); const p = g.golf?.progress; if (p?.tour) p.tour.off = true; g.emit(); });
       await page.keyboard.press('Escape'); await page.waitForTimeout(300);
     } else {
@@ -336,6 +343,27 @@ try {
     await page.keyboard.press('Enter'); await page.waitForTimeout(700);
     s3 = await state();
     check(s3.route === 0 && (await segCount()) > before, `${TAG}: Enter builds it`, `segs ${before} -> ${await segCount()}`);
+  }
+
+  // ------------------------------------------------------------------ 5c. a finger: a touch drag builds the same (touch emulation: pointer events of type touch)
+  console.log('== a touch drag');
+  if (!JAM) await armStreet(); else await armPath(null);
+  const pt = await plan(22, 8, { legs: 2, cx: pathA ? pathA.x + 30 : undefined, cy: pathA ? pathA.y + 30 : undefined });
+  check(!pt.none, `${TAG}: a free spot for the touch drag`, pt.none ? JSON.stringify(pt.tried) : `from ${pt.A.x},${pt.A.y}`);
+  if (!pt.none) {
+    const { pa, pb } = await frame(pt.A, pt.B), before = await segCount(), cdp = await ctx.newCDPSession(page);
+    await cdp.send('Emulation.setTouchEmulationEnabled', { enabled: true, maxTouchPoints: 1 });
+    const touch = (type, x, y) => cdp.send('Input.dispatchTouchEvent', { type, touchPoints: type === 'touchEnd' ? [] : [{ x, y, id: 1 }] });
+    await touch('touchStart', pa.x, pa.y);
+    for (let i = 1; i <= 12; i++) await touch('touchMove', pa.x + (pb.x - pa.x) * i / 12, pa.y + (pb.y - pa.y) * i / 12);
+    await page.waitForTimeout(250);
+    const mid = await state();
+    check(mid.dragging && mid.route === 1 && mid.legs.length === 2 && mid.block === '', `${TAG}: a finger down and dragging: the ghost is up`, `route ${mid.route}, dragging ${mid.dragging}, legs ${mid.legs.length} ${mid.block}`);
+    await touch('touchEnd');
+    await page.waitForTimeout(600);
+    const after = await state(), tt = await lastToasts();
+    check(after.route === 0 && (await segCount()) > before && /^Built /.test(tt[tt.length - 1] ?? ''), `${TAG}: lifting the finger builds it`, tt[tt.length - 1] ?? '');
+    await cdp.send('Emulation.setTouchEmulationEnabled', { enabled: false }); await cdp.detach().catch(() => {});
   }
 
   // ------------------------------------------------------------------ 6. the default again after a reload, with Q left on 90
