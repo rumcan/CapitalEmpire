@@ -996,6 +996,8 @@ export class RangeSim {
   private desks: { id: number; left: number; on: boolean }[] = [];
   /** the range's money as it happens (T146; T147 hangs the floating money on it): every sale, fee, coffee, lesson and lost golfer */
   onMoney: ((e: RangeMoneyEvent) => void) | null = null;
+  /** J11 (#1270): a golfer at a bay hits a ball (the map point he stands at, in tiles): the engine plays a far-off strike if the camera is close (sound/range-ambience.ts) */
+  onStrike: ((x: number, y: number) => void) | null = null;
   /** the cars that left after a bucket (T146): how many and their town hours in the car park in all (a check on carHours) */
   readonly carStats = { n: 0, hours: 0 };
   private scene: RangeScene | null = null; private slots: CarSlot[] = []; private entrance: Pt | null = null; private slotBusy: boolean[] = [];
@@ -1674,7 +1676,8 @@ export class RangeSim {
   }
   /** a ball from bay k toward the targets, its chances from the stream rnd (the range's own; the bench's busy range, its own); n: the balls of its swing (T386) */
   private launchFrom(bay: number, sc: RangeScene, rnd: () => number, n = 1): void {
-    const b = sc.bays[bay]!.stand, tg = sc.aims, i = Math.min(tg.length - 1, Math.floor(Math.pow(rnd(), 1.4) * tg.length)), t = tg[i]!;
+    const b = sc.bays[bay]!.stand; this.onStrike?.(b.x, b.y);
+    const tg = sc.aims, i = Math.min(tg.length - 1, Math.floor(Math.pow(rnd(), 1.4) * tg.length)), t = tg[i]!;
     const dx = t.x - b.x, dy = t.y - b.y, L = Math.hypot(dx, dy) || 1, ux = dx / L, uy = dy / L, len = L * (0.82 + 0.3 * rnd()), side = (rnd() - 0.5) * L * 0.22;
     const x1 = b.x + ux * len - uy * side, y1 = b.y + uy * len + ux * side, lift = sc.bays[bay]!.lift;
     // off the upper deck (T133) the ball starts at the deck's height; T251: it bounces and rolls out after it lands

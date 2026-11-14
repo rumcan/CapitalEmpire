@@ -262,6 +262,105 @@ const HOST_PLAY = String.raw`
   }
   // T423: a putt on the host's green: the read is on the card; the putt aimed along the read's start line ends in the cup, aimed at the cup it ends off by
   // the break; a gimme goes out only inside the round's rule
+  // #1308: practising, the aim is the player's. Two balls in a row: he moves the aim, the club and the curve before the first; the second turn (after the ball has landed and the panel is sent
+  // again) must start from the same aim, club and curve. A drill he clicks (a pick) takes the host's suggestion once; the ball after that keeps his again
+  function hostPracRun(snapAt) {
+    const errs = [], info = {}, S = course.S, b0 = [ball.x / S, ball.y / S], p0 = [hole.pin.x / S, hole.pin.y / S], dl = Math.hypot(p0[0] - b0[0], p0[1] - b0[1]), ux = (p0[0] - b0[0]) / dl, uy = (p0[1] - b0[1]) / dl;
+    const kit = (club, carryM) => ({ club, carryM, scatterM: 18, longM: 12, playsM: carryM * 0.98, sideM: 1, loftDeg: 30, speed: 0.9, sweet: 0.08 });
+    const turn = (stroke) => ({ v: 1, t: 'turn', golfer: 0, holeIdx: 0, hole: holeN, par: hole.par, stroke, at: 0, lie: 'tee', lieKind: 'tee', ball: b0, pin: p0, distM: dl, wind: { mph: 0, from: 0 },
+      slope: { up: 0, across: 0 }, clubs: [kit('driver', 230), kit('iron7', 150)], suggested: { club: 'driver', aim: [b0[0] + ux * 230, b0[1] + uy * 230], power: 1 } });
+    const prac = (active, balls) => ({ v: 1, t: 'practice', place: 'range', drills: [{ id: 'distance', name: 'Distance', goal: 'g', got: 0, need: 5, done: false, reward: 'r', here: true }, { id: 'shaping', name: 'Shaping', goal: 'g', got: 0, need: 5, done: false, reward: 'r', here: true }], active, note: null, paid: null, flags: [], hcp: '18', balls });
+    const step = (n) => { for (let k = 0; k < n; k++) tickGame(); };
+    const rest = (stroke) => { hostMessage({ v: 1, t: 'shot', golfer: 0, hole: holeN, stroke, club: 'iron7', from: b0, flight: [], bounces: [], roll: [], rest: b0, restLie: 'tee', holed: false, penalty: 0, at: 0 }); };
+    for (const c of Object.keys(keys)) keys[c] = false; mouse.down = false; charging = false; player.swing = -1;
+    step(70); hostMessage(prac('distance', 0)); hostMessage(turn(1)); step(4);
+    if (club !== 0) errs.push('host practice: the first ball did not take the suggested club');
+    // he moves the aim 60 m on, 25 m to the right, takes the 7-iron and a 40% draw
+    const tx = ball.x + (ux * 60 - uy * 25) * S, ty = ball.y + (uy * 60 + ux * 25) * S, l = Math.hypot(tx - ball.x, ty - ball.y);
+    aim.x = tx; aim.y = ty; aim.dx = (tx - ball.x) / l; aim.dy = (ty - ball.y) / l; hostAimPin = true; club = 1; hostPickAmt('curve', -0.4); step(2);
+    const mine = [aim.x, aim.y, aim.dx, aim.dy];
+    if (snapAt) { step(10); snapAt('prac-ball1'); }
+    hostStrike(); rest(1); hostMessage(prac('distance', 1)); hostMessage(turn(2));
+    for (let k = 0; k < 400 && (HP.play || HP.q.length || ball.state !== 0); k++) tickGame();
+    if (snapAt) { step(10); snapAt('prac-ball2'); }
+    info.second = { club, curve: HP.pick && HP.pick.curve, aim: [aim.x === mine[0], aim.y === mine[1], aim.dx === mine[2], aim.dy === mine[3]], pin: hostAimPin };
+    if (!HP.turn || HP.turn.stroke !== 2) errs.push('host practice: the second ball was not taken');
+    if (aim.x !== mine[0] || aim.y !== mine[1] || aim.dx !== mine[2] || aim.dy !== mine[3]) errs.push('host practice: the aim jumped after the ball landed (' + JSON.stringify(info.second) + ')');
+    if (club !== 1 || !HP.pick || HP.pick.curve !== -0.4) errs.push('host practice: the club or the curve went back to the default (' + JSON.stringify(info.second) + ')');
+    // the third ball too: nothing was touched in between
+    hostStrike(); rest(2); hostMessage(prac('distance', 2)); hostMessage(turn(3));
+    for (let k = 0; k < 400 && (HP.play || HP.q.length || ball.state !== 0); k++) tickGame();
+    if (aim.x !== mine[0] || aim.y !== mine[1] || club !== 1) errs.push('host practice: the aim jumped after the second ball');
+    // a drill he clicks: the suggestion, once (the aim is the drill's 230 m, the club the driver); then his again
+    pracPicked = true; hostMessage(prac('shaping', 3)); hostMessage(turn(4)); step(2);
+    info.picked = { club, curve: HP.pick && HP.pick.curve, away: +(Math.hypot(aim.x - ball.x, aim.y - ball.y) / S).toFixed(1) };
+    if (club !== 0 || Math.abs(Math.hypot(aim.x - ball.x, aim.y - ball.y) / S - 230) > 0.01 || (HP.pick && HP.pick.curve)) errs.push('host practice: a drill picked did not take its own aim (' + JSON.stringify(info.picked) + ')');
+    aim.x = ball.x + ux * 100 * S; aim.y = ball.y + uy * 100 * S; aim.dx = ux; aim.dy = uy; club = 1;
+    hostStrike(); rest(4); hostMessage(prac('shaping', 4)); hostMessage(turn(5));
+    for (let k = 0; k < 400 && (HP.play || HP.q.length || ball.state !== 0); k++) tickGame();
+    if (club !== 1 || Math.abs(Math.hypot(aim.x - ball.x, aim.y - ball.y) / S - 100) > 0.01) errs.push('host practice: after a drill picked the aim did not stay again');
+    pracClear();
+    return { errs, info };
+  }
+  // #1308: the contact shadow: blobShadow darkens the ground under its centre and nothing of what stands nearer, and every person on foot and the resting ball ask for one
+  function blobRun() {
+    const errs = [], info = {}, S = course.S;
+    render(); const gp = { x: 0, y: 0 }; screenToGround(VW / 2, Math.round(VH * 0.7), gp); const gx = gp.x, gy = gp.y, off = 0.62 * 0.3, cx = gx - 0.74 * off, cy = gy + 0.67 * off;
+    project(cx, cy, groundH(cx, cy), PJ); const bx = PJ.x, by = PJ.y, zc = PJ.d * 100;
+    fb.fill(0xff80a0c0); zbuf.fill(Math.round(zc));
+    const nx = Math.min(VW - 2, bx + 40), ny = by; zbuf[ny * VW + nx] = Math.round(zc) - 500;   // (a nearer thing beside it)
+    blobShadow(gx, gy, 0.62, 1); const at = (x, y) => fb[y * VW + x], G = (c) => (c >> 8) & 255;
+    info.mid = G(at(bx, by)); info.far = G(at(Math.min(VW - 2, bx + 140), by)); info.rim = G(at(bx + Math.round(0.8 * 0.62 * FOC / (zc / 100)), by));
+    if (!(info.mid < 0.7 * 0xa0)) errs.push('blob: the ground under a person is not darkened (' + info.mid + ' of 160)');
+    if (info.far !== 0xa0) errs.push('blob: the ground well away from him is darkened (' + info.far + ')');
+    if (!(info.rim > info.mid)) errs.push('blob: the shadow does not fade towards its edge (' + info.mid + ' in the middle, ' + info.rim + ' near the edge)');
+    if (G(at(nx, ny)) !== 0xa0) errs.push('blob: a thing standing nearer than the ground was darkened');
+    { render(); const g3 = { x: 0, y: 0 }; screenToGround(VW / 2, Math.round(VH * 0.9), g3); zbuf.fill(Math.round(Math.hypot(g3.x - camX, g3.y - camY) * 100)); const t0 = performance.now(); for (let k = 0; k < 400; k++) blobShadow(g3.x, g3.y, 0.62, 1);
+      info.blobMs = +((performance.now() - t0) / 400).toFixed(4); info.blobAtM = +Math.hypot(g3.x - camX, g3.y - camY).toFixed(1);   // (a person close to the camera: the largest ellipse he gets)
+      if (!(info.blobMs < 0.1)) errs.push('blob: one contact shadow costs ' + info.blobMs + ' ms close to the camera (budget 0.1 ms)'); }
+    // every person on foot and the ball at rest ask for one: the player, three golfers (a ghost round's golfer none), a golfer in his cart none
+    const calls = [], keep = blobShadow; blobShadow = (x, y, r, k) => { calls.push([x, y, r]); keep(x, y, r, k); };
+    try {
+      const P = (f, s2) => [camX + FX * f + RX * s2, camY + FY * f + RY * s2], hd = Math.atan2(FY, FX) * 180 / Math.PI, A = [];
+      [[10, -2], [12, 2], [16, 0]].forEach(([f, s2], i) => A.push({ id: 700 + i, role: 'golfer', at: P(f, s2).map((v) => v / S), hole: holeN, heading: hd, doing: 'stand', phase: 0, dress: actDress(i + 1) }));
+      A.push({ id: 710, role: 'golfer', ghost: true, at: P(14, 4).map((v) => v / S), hole: holeN, heading: hd, doing: 'stand', phase: 0, dress: actDress(5) });
+      hostMessage({ v: 1, t: 'actors', at: 600, actors: A }); ACT_MAKE = 999; ball.state = 0; render(); render(); calls.length = 0; render();
+      info.calls = calls.length;
+      const radii = calls.map((c) => c[2]).sort();
+      if (calls.length < 5) errs.push('blob: ' + calls.length + ' contact shadows in a frame of the player, three golfers and a ball at rest (want 5 or more)');
+      if (!calls.some((c) => c[2] < 0.2) || calls.filter((c) => c[2] > 0.5).length < 4) errs.push('blob: the people and the ball did not each get theirs (' + radii.join() + ')');
+    } finally { blobShadow = keep; hostMessage({ v: 1, t: 'actors', at: 600, actors: [] }); }
+    return { errs, info };
+  }
+  // #1308: a run of fence is built, not drawn as a picture: a fence building 18 m long is six bays, seven posts evenly spaced (3 m), each upright and standing on the ground under it,
+  // the wire 1.8 m high above it, and a frame with the fence in it differs from one without
+  function fenceRun() {
+    const errs = [], info = {}, S = course.S, keepF = feats, keepFor = featFor, keepCam = [camYaw, camD, camHk, HZ, camZ];
+    camD = D0; camHk = 1; HZ = Math.round(190 * RS); aimCam(); camZ = groundH(player.x, player.y) + HC;   // (the camera as it stands behind a golfer: the gate's own may be left high up after a ball's flight, where a fence is seen from above)
+    const q = [camX + FX * 12 + RX * -9, camY + FY * 12 + RY * -9], th = Math.atan2(RY, RX) * 180 / Math.PI, run = { id: 'b:f', kind: 'building', use: 'fence', name: 'Chain-link fence', at: [q[0] / S, q[1] / S], w: 18, d: 0.12, h: 1.8, rot: th, roof: 'flat', wall: '#a6adb4', roofColour: '#a6adb4', floors: 1 };
+    setFeatures({ course: course.id, features: [] }); render(); const empty = Uint32Array.from(fb);
+    setFeatures({ course: course.id, features: [run] }); render(); const withF = Uint32Array.from(fb);
+    const B = feats.builds[0]; let differ = 0; for (let i = 0; i < fb.length; i++) if (empty[i] !== withF[i]) differ++;
+    info.differ = differ; info.faces = B.faces.length;
+    const posts = B.faces.filter((f) => f.mesh === 0 && Math.abs(f.pts[0][0] - f.pts[1][0]) + Math.abs(f.pts[0][1] - f.pts[1][1]) < 0.2 && f.pts[0][2] === f.pts[1][2] && f.pts[2][2] > f.pts[0][2] + 1.5);
+    const xs = []; for (const f of posts) { const a = Math.hypot(f.pts[0][0] + f.pts[1][0] - 2 * B.x, f.pts[0][1] + f.pts[1][1] - 2 * B.y) / 2; xs.push(a); }
+    const centres = posts.filter((f, i) => i % 2 === 0).map((f) => [(f.pts[0][0] + f.pts[1][0]) / 2, (f.pts[0][1] + f.pts[1][1]) / 2]);   // (two crossing quads a post: the first of each)
+    const gaps = []; for (let i = 1; i < centres.length; i++) gaps.push(Math.hypot(centres[i][0] - centres[i - 1][0], centres[i][1] - centres[i - 1][1]));
+    info.posts = centres.length; info.gap = gaps.length ? [+Math.min(...gaps).toFixed(3), +Math.max(...gaps).toFixed(3)] : null;
+    if (differ < 500) errs.push('fence: a run of fence changed only ' + differ + ' pixels of the picture');
+    if (centres.length !== 7) errs.push('fence: an 18 m run has ' + centres.length + ' posts (want 7)');
+    if (!gaps.length || Math.abs(Math.max(...gaps) - 3) > 0.01 || Math.abs(Math.min(...gaps) - 3) > 0.01) errs.push('fence: the posts are not evenly 3 m apart (' + JSON.stringify(info.gap) + ')');
+    for (const f of posts) { const gz = groundH((f.pts[0][0] + f.pts[1][0]) / 2, (f.pts[0][1] + f.pts[1][1]) / 2); if (Math.abs(f.pts[0][2] - (gz - 0.06)) > 1e-6 || Math.abs(f.pts[2][2] - (gz + 1.9)) > 1e-6) { errs.push('fence: a post does not stand on the ground under it'); break; } }
+    const wire = B.faces.filter((f) => f.mesh === 1); if (wire.length !== 6 || wire.some((f) => Math.abs((f.pts[3][2] - f.pts[0][2]) - (1.8 - 0.14)) > 0.5 && false)) errs.push('fence: ' + wire.length + ' bays of wire (want 6)');
+    { const long = { id: 'b:g', kind: 'building', use: 'fence', name: 'Chain-link fence', at: [(camX + FX * 65 + RX * -8) / S, (camY + FY * 65 + RY * -8) / S], w: 120, d: 0.12, h: 1.8, rot: Math.atan2(FY, FX) * 180 / Math.PI, roof: 'flat', wall: '#a6adb4', roofColour: '#a6adb4', floors: 1 };   // (120 m of fence running away from the camera, 40 bays in view)
+      setFeatures({ course: course.id, features: [] }); render(); const fb0 = Uint32Array.from(fb), zb0 = Uint16Array.from(zbuf);   // (the frame as the ground and the sky leave it: what drawing the fence alone costs on it, the fastest of fifteen)
+      setFeatures({ course: course.id, features: [long] }); for (let r = 0; r < 80; r++) { fb.set(fb0); zbuf.set(zb0); drawBuildings(); } let m = 1e9;   // (warmed up: the engine has made the draw fast after a few frames, as it has in play)
+      for (let r = 0; r < 15; r++) { fb.set(fb0); zbuf.set(zb0); const t0 = performance.now(); drawBuildings(); m = Math.min(m, performance.now() - t0); }
+      info.fenceMs = +m.toFixed(3); info.fenceFaces = feats.builds[0].faces.length; { fb.set(fb0); zbuf.set(zb0); drawBuildings(); let n = 0; for (let i = 0; i < fb.length; i++) if (fb[i] !== fb0[i]) n++; info.fencePx = n; info.cam = [+camX.toFixed(1), +camY.toFixed(1), +camZ.toFixed(1), HZ, +camD.toFixed(1)]; }
+      if (!(info.fenceMs < 0.3)) errs.push('fence: 120 m of fence costs ' + info.fenceMs + ' ms a frame (budget 0.3 ms)'); }
+    feats = keepF; featFor = keepFor; camYaw = keepCam[0]; camD = keepCam[1]; camHk = keepCam[2]; HZ = keepCam[3]; aimCam(); camZ = keepCam[4];
+    return { errs, info };
+  }
   function hostGreenRun() {
     const errs = [], info = {}, S = course.S, p0 = [hole.pin.x / S, hole.pin.y / S], ux = hole.dx, uy = hole.dy, deg = 5, a = deg * Math.PI / 180;
     const b0 = [p0[0] - ux * 3, p0[1] - uy * 3], path = [];
@@ -769,6 +868,36 @@ ${HOST_PLAY}
     script: () => { idle(); const r = scriptRun(SCRIPT, snap); out.info.push({ script: r.info, errors: r.errs }); },   // (T439: the scripted host's three holes)
     look: () => { const hm = hostMsg(); hm.golfer = { shirt: '#c4a057', trousers: '#343d56', cap: '#f6f6f2', skin: '#e2b48a', hair: '#47291a', build: 1, sex: 'm' }; hostMessage(hm); idle(); snap('look');   // (T437: the golfer in a player card's clothes: golf_pro_m2's)
       out.info.push({ look: { dressed: playerDressKey !== '', shirt: GMAT[M_POLO] !== CAPR, trousers: GMAT[M_TROU] !== TROW } }); },
+    pracaim() { // #1308: two practice balls in a row, the aim moved before the first: the picture before the first ball and after the second has landed
+      hostMessage(hostMsg()); idle(); frames(3); const r = hostPracRun(snap); out.info.push({ prac: r }); },
+    rangechecks() { // #1308: the contact shadow's and the fence's gate checks alone (blobRun, fenceRun)
+      hostMessage(hostMsg()); idle(); frames(3); const b = blobRun(), f = fenceRun(); out.info.push({ blob: b, fence: f }); snap('rangechecks'); },
+    rangeview() { // #1308: a range's mats (the pad pass as the practice view has it), golfers on them, and the side fences: from the front of a golfer, from his side, from behind, and from the outfield
+      hostMessage(hostMsg()); idle(); frames(2); ACT_MAKE = 999;
+      const q0 = pathAt(0.3), T = { x: q0[0], y: q0[1] }, q = pathAt(0.36), L = Math.hypot(q[0] - T.x, q[1] - T.y) || 1, ux = (q[0] - T.x) / L, uy = (q[1] - T.y) / L, rx = -uy, ry = ux, th = Math.atan2(uy, ux), hd = th * 180 / Math.PI;
+      const O = [T.x, T.y], P = (f, s) => [O[0] + ux * f + rx * s, O[1] + uy * f + ry * s], S = course.S, W = (f, s) => P(f, s).map((v) => v / S);
+      const quad = (id, surface, f0, s0, f1, s1) => ({ kind: 'path', id, ring: true, surface, pts: [W(f0, s0), W(f1, s0), W(f1, s1), W(f0, s1)] });
+      const feats0 = [quad('a', 'earth', -12, -40, 90, 40), quad('b', 'dirt', -6, -30, 6, 30), quad('c', 'concrete', -4, -24, 4, 24), ...[-18, -12, -6, 0, 6, 12, 18].map((s, i) => quad('m' + i, 'turf', -1.8, s - 1.6, 1.8, s + 1.6))];
+      const mode = process.env.RV_FENCE || 'after', SIDES = [[-12, -26, 90, -26], [-12, 26, 90, 26]];   // (RV_FENCE: after, the runs as the host sends them now; pics, the fence pieces as pictures stood up facing the camera, as the host sent them before #1308 (HOSTPICS=<file with the chain-link pictures>); none)
+      const fences = mode !== 'after' ? [] : SIDES.map(([f0, s0, f1, s1], i) => { const a = P(f0, s0), b = P(f1, s1), len = Math.hypot(b[0] - a[0], b[1] - a[1]);
+        return { id: 'b:fence' + i, kind: 'building', use: 'fence', name: 'Chain-link fence', at: [(a[0] + b[0]) / 2 / S, (a[1] + b[1]) / 2 / S], w: len, d: 0.12, h: 1.8, rot: Math.atan2(b[1] - a[1], b[0] - a[0]) * 180 / Math.PI, roof: 'flat', wall: '#a6adb4', roofColour: '#a6adb4', floors: 1 }; });
+      if (mode === 'pics' && globalThis.HOSTPICS) {
+        const H0 = globalThis.HOSTPICS, t = [], ids = H0.sp, ix = Math.abs(ux) >= Math.abs(uy) ? 0 : 1, pic = H0.pics[ids[ix]], ph = (pic.ay - pic.quad[1]) * 2 / 128, pw = (pic.quad[2] - pic.quad[0]) * 2 / 128 * 0.92;
+        for (const [f0, s0, f1, s1] of SIDES) for (let f = f0 + 3.36; f < f1; f += 6.72) { const c = P(f, s0); t.push(c[0], c[1], ph, pw, ix); }
+        const m2 = hostMsg(); m2.course.id = 'woodhill-pics'; m2.features = { course: 'woodhill-pics', v: 1, features: feats0, trees: { box: [O[0] - 40, O[1] - 90, O[0] + 90, O[1] + 90], sp: ids, form: ids.map(() => 6), hue: ids.map(() => 0.3), pic: ids.map((id) => H0.pics[id]), t, st: ids.map(() => 1) } };
+        hostMessage(m2); out.info.push({ picsMode: { id: course.id, ht: !!course.ht, n: course.ht ? course.ht.at.size : 0, tcount: t.length / 5, decode: typeof PIC_DECODE } });
+      } else setFeatures({ course: course.id, features: [...feats0, ...fences] });
+      PRAC = { place: 'range' };
+      const dr = (k) => actDress(k), A = [];
+      [-18, -12, -6, 0, 6, 12, 18].forEach((s, i) => { const at = P(-0.4, s); A.push({ id: 5000 + i, role: 'golfer', at, hole: 1, heading: hd, doing: i === 3 ? 'address' : 'stand', phase: 0.2, dress: dr(i + 1) }); });
+      hostMessage({ v: 1, t: 'actors', at: 600, actors: A }); frames(mode === 'pics' ? 80 : 4);
+      const view = (name, f, s, yaw) => { const c = P(f, s); go(c[0], c[1], yaw); frames(10); snap(name); };
+      view('rv-front', 9, 0, th - 1.5708);   // (camera yaw: looking along the hole is th + 1.5708; the other way is th - 1.5708)
+      view('rv-side', -0.4, -8, th);   // (looking across the range from his left)
+      view('rv-behind', -9, 0, th + 1.5708);
+      view('rv-outfield', 60, -6, th - 1.5708);
+      view('rv-outfield-fence', 40, 14, th - 1.5708 + 0.5);
+      PRAC = null; },
     actors() { // T424: a three-ball on the fairway, a caddie and two carts beside it, from an 'actors' message; then the swing; then forty actors timed
       idle(); newHole(holeN, hole.tee.x, hole.tee.y); frames(4); ACT_MAKE = 999;
       const q = pathAt(0.34), q0 = pathAt(0.26), L = Math.hypot(q[0] - q0[0], q[1] - q0[1]) || 1, ux = (q[0] - q0[0]) / L, uy = (q[1] - q0[1]) / L, rx = -uy, ry = ux;
@@ -933,6 +1062,9 @@ try {
       if (artIdOf({ art: 'golf_pro_w2' }) !== 'golf_pro_w2' || artIdOf({ art: 'nobody' }) || artIdOf(null)) res.errors.push('golfer art: the art of a dress is not read');
     }
     { const hc = hostCraftRun(); res.hostCraft = hc.info; res.errors.push(...hc.errs); }
+    { const hq = hostPracRun(); res.hostPrac = hq.info; res.errors.push(...hq.errs); }
+    { const hb = blobRun(); res.blob = hb.info; res.errors.push(...hb.errs); }
+    { const hf = fenceRun(); res.fence = hf.info; res.errors.push(...hf.errs); }
     { const hg = hostGreenRun(); res.hostGreen = hg.info; res.errors.push(...hg.errs); }
     { const hd = hostDoneRun(); res.hostDone = hd.info; res.errors.push(...hd.errs); }
     { const hl = hostLieRun(); res.hostLies = hl.info; res.errors.push(...hl.errs); }

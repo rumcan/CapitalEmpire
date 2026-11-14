@@ -23,7 +23,7 @@ import { FLOODLIGHT_HEIGHT_M, FLOODLIGHT_ID, LIGHT_REACH_M } from '../nightgolf'
 export type PathSurface = 'gravel' | 'concrete' | 'dirt' | 'sand' | 'earth' | 'turf';   // (J6c: earth, a bare range outfield's dirt; turf, a hitting mat's artificial grass: pads only)
 export type Roof = 'gable' | 'hip' | 'flat';
 /** what a building is, so the view can draw each kind its own way later */
-export type BuildingUse = 'clubhouse' | 'halfway' | 'prooffice' | 'teachhut' | 'range' | 'house' | 'tent' | 'stand' | 'board' | 'structure' | 'building';
+export type BuildingUse = 'clubhouse' | 'halfway' | 'prooffice' | 'teachhut' | 'range' | 'house' | 'tent' | 'stand' | 'board' | 'structure' | 'building' | 'fence';
 
 export interface PathFeature { id: string; kind: 'path'; name: string; surface: PathSurface; width: number; pts: ViewPt[];
   /** J6b: a ground pad, not a path: pts is a closed ring laid whole (a concrete slab, the shop's dirt yard, a car park); width 0. An older view lays its outline */
@@ -108,6 +108,8 @@ export const STYLE: Readonly<Record<BuildingUse, { h: number; roof: Roof; wall: 
   board: { h: 4.5, roof: 'flat', wall: '#2f5a3e', roofColour: '#e8e0c4', floors: 1 },
   structure: { h: 3, roof: 'flat', wall: '#5f646b', roofColour: '#3f444a', floors: 1 },
   building: { h: 4.5, roof: 'gable', wall: '#e8dcc0', roofColour: '#8a3b2a', floors: 1 },
+  /** #1308: a run of fence: the view stands posts and wire along it (a building w long, FENCE_D thick, turned to its axis) */
+  fence: { h: 1.8, roof: 'flat', wall: '#a6adb4', roofColour: '#a6adb4', floors: 1 },
 };
 
 /** n to the centimetre (the file stays short and two exports of the same input match byte for byte) */
@@ -216,7 +218,8 @@ export interface NetSegLike { a: Pt; b: Pt; cls: { base: string; family: string;
 /** a placed prop and the library entry it shows (only what is read) */
 export interface PropLike { item: number; x: number; y: number; scale: number; auto?: string }
 /** a library entry (only what is read): T451 its id and display width, its picture on the atlas (tex: page, u0, v0, u1, v1; quad) and ground point */
-export interface LibLike { kind: string; h: number; name: string; id?: string; w?: number; ax?: number; ay?: number; tex?: readonly number[]; quad?: readonly number[] }
+export interface LibLike { kind: string; h: number; name: string; id?: string; w?: number; ax?: number; ay?: number; tex?: readonly number[]; quad?: readonly number[];
+  /** #1308: its footprint boxes (half extents, tiles): a fence piece's length along its axis */ boxes?: readonly { hx: number; hy: number }[] }
 /** T451: a tree the game plants by itself (the woods', the town's, the river belts'): its library id, ground point (tiles) and scale */
 export interface GameTree { id: string; x: number; y: number; scale: number }
 /** where the game keeps the placed things: the road network's segments (engine.net.segs), the business sites (engine.bizDefs), the event
@@ -253,6 +256,35 @@ const STRUCT_USE: Partial<Record<StructureKind, BuildingUse>> = {
 const STRUCT_H: Partial<Record<StructureKind, number>> = { grandstand: 6, board: 4.5, tv: 5, gate: 4, toilet: 2.6, display: 3, transport: 3 };
 /** a built estate house's wall colours, picked by the lot's seed */
 const HOUSE_WALLS = ['#e6dcc8', '#d8c7a8', '#c9c3b6', '#eadfd0', '#b9a58a'];
+
+/** #1308: a fence piece of the library (a run piece: kind fencex along the map's x axis, fencey along y; the hedge is a plant's picture, not a fence) */
+export const isFencePiece = (L: { kind: string; id?: string }): boolean => (L.kind === 'fencex' || L.kind === 'fencey') && !/hedge/i.test(L.id ?? '');
+/** #1308: a fence run's thickness (m), and the share of a piece's footprint box its panel fills (a chain-link panel's box is 3.92 tiles, its pieces stand 3.36 apart) */
+export const FENCE_D = 0.12, FENCE_FILL = 0.857;
+/** #1308: a fence's wall colour by its kind: chain-link steel, picket white, iron black, any other a plain grey */
+const fenceColour = (id: string): string => /chain/i.test(id) ? '#a6adb4' : /picket/i.test(id) ? '#ece6d6' : /iron/i.test(id) ? '#2c2f35' : '#8a8f95';
+interface FencePiece { id: string; name: string; x: number; y: number; hl: number; h: number; alongX: boolean }
+/** #1308: the fence pieces as runs: the pieces on one line of one kind that touch end to end (within half a tile) are one run, so the view stands one fence
+ *  (posts at an even spacing and wire between them), never one floating panel a piece. A building of use 'fence' each: centred, w long (m), turned to its axis */
+function fenceRuns(pieces: readonly FencePiece[]): BuildingIn[] {
+  const out: BuildingIn[] = [], groups = new Map<string, FencePiece[]>();
+  for (const p of pieces) { const k = `${p.id.replace(/[-_ ]?[xy]$/i, '')}|${p.alongX ? 'x' : 'y'}|${Math.round((p.alongX ? p.y : p.x) * 3)}`; let g = groups.get(k); if (!g) groups.set(k, g = []); g.push(p); }
+  for (const [, g] of [...groups].sort((a, b) => (a[0] < b[0] ? -1 : a[0] > b[0] ? 1 : 0))) {
+    const ax = g[0]!.alongX, pos = (p: FencePiece) => (ax ? p.x : p.y), line = (p: FencePiece) => (ax ? p.y : p.x);
+    g.sort((a, b) => pos(a) - pos(b));
+    let i = 0;
+    while (i < g.length) {
+      let j = i, end = pos(g[i]!) + g[i]!.hl, h = g[i]!.h; const start = pos(g[i]!) - g[i]!.hl;
+      while (j + 1 < g.length && pos(g[j + 1]!) - g[j + 1]!.hl <= end + 0.5) { j++; end = Math.max(end, pos(g[j]!) + g[j]!.hl); h = Math.max(h, g[j]!.h); }
+      let l = 0; for (let k = i; k <= j; k++) l += line(g[k]!); l /= j - i + 1;
+      const mid = (start + end) / 2, f = g[i]!;
+      out.push({ key: `fence:${f.id}:${Math.round(start * 10)}:${Math.round(l * 10)}:${ax ? 'x' : 'y'}`, use: 'fence', name: f.name, at: ax ? { x: mid, y: l } : { x: l, y: mid }, w: (end - start) * TILE_M, d: FENCE_D, rot: ax ? 0 : 90, h,
+        wall: fenceColour(f.id), roofColour: fenceColour(f.id), roof: 'flat', floors: 1 });
+      i = j + 1;
+    }
+  }
+  return out;
+}
 
 /** the plain input of the placed things where the game keeps them (GameFeatureSource) */
 export function gatherFeatures3p(src: GameFeatureSource): FeaturesInput {
@@ -308,7 +340,17 @@ export function gatherFeatures3p(src: GameFeatureSource): FeaturesInput {
       pics[sp] = { url: page, uv: [L.tex![1]!, L.tex![2]!, L.tex![3]!, L.tex![4]!], w: L.w, h: L.h, ax: L.ax, ay: L.ay, quad: [q[0]!, q[1]!, q[2]!, q[3]!] };
   };
   const TB = src.things, inThings = (x: number, y: number): boolean => !!TB && x >= TB[0] && x <= TB[2] && y >= TB[1] && y <= TB[3];
-  for (const p of src.props) { const L = src.library[p.item]; if (L && isPlant(L)) add(L, p.x, p.y, p.scale); else if (L && inThings(p.x, p.y)) add(L, p.x, p.y, p.scale, true); }   // (J6b: the things)   // (T454: every plant, not only kind tree: the desert's palms, cacti and shrubs are kinds of their own)
+  const fence: FencePiece[] = [];
+  for (const p of src.props) {
+    const L = src.library[p.item];
+    if (L && isFencePiece(L) && (inThings(p.x, p.y) || inBox(p.x, p.y))) {   // (#1308: a fence, on the range or on a hole: a run the view builds from posts and wire, not a picture standing up facing the camera)
+      const id = L.id ?? L.name, hx = L.boxes?.[0]?.hx ?? (/chain/i.test(id) ? 1.96 : 0.98), ph = L.quad && L.ay !== undefined ? (L.ay - L.quad[1]!) * TILE_M / 128 * p.scale : 1.2;
+      fence.push({ id, name: L.name, x: p.x, y: p.y, hl: hx * FENCE_FILL * p.scale, h: Math.min(2.4, Math.max(/chain/i.test(id) ? 1.8 : 0.8, ph)), alongX: L.kind === 'fencex' });
+      continue;
+    }
+    if (L && isPlant(L)) add(L, p.x, p.y, p.scale); else if (L && inThings(p.x, p.y)) add(L, p.x, p.y, p.scale, true);   // (J6b: the things)
+  }
+  buildings.push(...fenceRuns(fence));   // (T454: every plant, not only kind tree: the desert's palms, cacti and shrubs are kinds of their own)
   for (const t of src.trees ?? []) { const L = byId.get(t.id); if (L) add(L, t.x, t.y, t.scale); }
   return { course: src.course, paths, buildings, trees, ...(lights.length ? { lights } : {}), ...(tb ? { treeBox: tb } : {}), pics };
 }
