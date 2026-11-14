@@ -22,6 +22,12 @@ const TRACKS = [
   { id: 'seaside-village', title: 'Seaside Village', artist: 'KarateStudios', src: 'oga-seaside-village/seaside_village.flac', page: 'https://opengameart.org/content/seaside-village', licence: 'CC0 1.0', fetched: '2026-11-14' },
   { id: 'two-left-socks', title: 'Two Left Socks', artist: 'congusbongus', src: 'oga-two-left-socks/two_left_socks.ogg', page: 'https://opengameart.org/content/two-left-socks', licence: 'CC0 1.0', fetched: '2026-11-14' },
   { id: 'sunny-side-up-2', title: 'Sunny Side Up 2', artist: 'Pro Sensory (Alex McCulloch)', src: 'oga-sunny-side-up-2/sunny_side_up_2.mp3', page: 'https://opengameart.org/content/sunny-side-up-2', licence: 'CC0 1.0', fetched: '2026-11-14' },
+  // the owner, 2026-11-14: "https://opengameart.org/content/5-chiptunes-action add these chiptunes to the radio" (one zip, 49.6 MB, five looping WAVs; CC0 on the page and in its INFO.txt)
+  { id: 'chip-title-screen', title: 'Chiptune: Title Screen', artist: 'Juhani Junkala (SubspaceAudio)', src: 'chiptunes-action/x/title-screen-x4.wav' /* the 11 s loop played four times (ffmpeg -stream_loop 3 -c copy), so it is a track of its own */, page: 'https://opengameart.org/content/5-chiptunes-action', licence: 'CC0 1.0', fetched: '2026-11-14' },
+  { id: 'chip-level-1', title: 'Chiptune: Level 1', artist: 'Juhani Junkala (SubspaceAudio)', src: 'chiptunes-action/x/Juhani Junkala [Retro Game Music Pack] Level 1.wav', page: 'https://opengameart.org/content/5-chiptunes-action', licence: 'CC0 1.0', fetched: '2026-11-14' },
+  { id: 'chip-level-2', title: 'Chiptune: Level 2', artist: 'Juhani Junkala (SubspaceAudio)', src: 'chiptunes-action/x/Juhani Junkala [Retro Game Music Pack] Level 2.wav', page: 'https://opengameart.org/content/5-chiptunes-action', licence: 'CC0 1.0', fetched: '2026-11-14' },
+  { id: 'chip-level-3', title: 'Chiptune: Level 3', artist: 'Juhani Junkala (SubspaceAudio)', src: 'chiptunes-action/x/Juhani Junkala [Retro Game Music Pack] Level 3.wav', page: 'https://opengameart.org/content/5-chiptunes-action', licence: 'CC0 1.0', fetched: '2026-11-14' },
+  { id: 'chip-ending', title: 'Chiptune: Ending', artist: 'Juhani Junkala (SubspaceAudio)', src: 'chiptunes-action/x/Juhani Junkala [Retro Game Music Pack] Ending.wav', page: 'https://opengameart.org/content/5-chiptunes-action', licence: 'CC0 1.0', fetched: '2026-11-14' },
 ];
 
 const run = (cmd, a) => spawnSync(cmd, a, { encoding: 'utf8', maxBuffer: 64 * 1024 * 1024 });
