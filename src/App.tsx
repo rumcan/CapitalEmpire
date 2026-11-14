@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useReducer, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { FLOW_COLS, Game, HEAT_COLS, HIST_RAMP, LOS_COL, SPEEDS, UPGRADE_COST } from './game/engine';
-import { WATCH_SPEED, speedLabel } from './game/golf/watch';
+import { mapCursor } from './ui/map-cursor'; // #1282: a pointer over anything a click opens a window for
+import { speedBarView, loadSpeedBarOpen, saveSpeedBarOpen } from './ui/speed-bar'; // #1275: the speed bar collapses (WATCH_SPEED and speedLabel went with its model)
 import { ROW_BAY_COST, rowLots } from './game/event/rows';
 import { LIBRARY } from './game/library';
 import { type Tool } from './game/types';
@@ -214,6 +215,8 @@ export default function App() {
   const [menu, setMenu] = useState(false);
   /** the UI scale in force (T179: Settings; applied at boot from this browser's storage) */
   const [uiScale, setUiScale] = useState(currentUiScale);
+  /** #1275: the speed bar open (every speed, Watch golf, skip) or collapsed (the default: pause, the speed now, a chevron); remembered in this browser */
+  const [speedOpen, setSpeedOpen] = useState(() => loadSpeedBarOpen());
   /** the menu button waiting for its second click (New game, Empty map), or null */
   const [armed, setArmed] = useState<'new' | 'empty' | null>(null);
   useEffect(() => { if (!menu) setArmed(null); }, [menu]);
@@ -412,7 +415,7 @@ export default function App() {
     if (act?.k === 'land') { activeRail.current = itemId; if (game.range.cardOpen) game.openRangeCard(false); game.openLandSale(); return; }
     // T356: Course > Place a real course > (a course): in hand over the map, Select under it
     if (act?.k === 'real') { activeRail.current = itemId; void game.startRealPlace(act.id); return; }
-    // T256: Range › Build (and Facilities › Build on your property): the holes' painting tools on your property
+    // T256: the Texture Painter (Range › Texture Painter, Facilities › Texture Painter): the holes' painting tools on your property
     if (act?.k === 'build') { activeRail.current = itemId; game.openPropertyPaint(); return; }
     if (act?.k === 'newHole' || act?.k === 'holes' || act?.k === 'surface') game.paint.setProperty(false); // the Holes panel's tools paint holes
     if (act?.k === 'place') { activeRail.current = itemId; game.placeRangePart(act.id as Parameters<Game['placeRangePart']>[0]); return; } // T288
@@ -524,7 +527,7 @@ export default function App() {
       <canvas
         ref={overlayRef}
         className="absolute inset-0 h-full w-full touch-none"
-        style={{ cursor: game?.youHover && game.youControls() ? VERB_CURSOR[game.youHover.verb ?? 'none'] : game?.teePlace ? (game.teePlace.drag ? 'grabbing' : 'copy') : game?.tool === 'select' ? (game.hoverProp ? 'pointer' : game.you ? 'default' : 'grab') : game?.paintOn ? game.paint.cursorStyle : 'crosshair' }}
+        style={{ cursor: game ? mapCursor({ verb: game.youHover && game.youControls() ? VERB_CURSOR[game.youHover.verb ?? 'none'] : null, teePlace: game.teePlace ? { drag: game.teePlace.drag } : null, tool: game.tool, opens: game.hoverOpens, hasYou: !!game.you, paintOn: game.paintOn, paintCursor: game.paintOn ? game.paint.cursorStyle : '' }) : 'crosshair' }}
         onPointerDown={e => game?.pointerDown(e.nativeEvent)}
         onPointerMove={e => game?.pointerMove(e.nativeEvent)}
         onPointerUp={() => game?.pointerUp()}
@@ -616,12 +619,20 @@ export default function App() {
             <div className="pointer-events-auto ml-auto flex items-center gap-2">
               <div className="glass flex items-center gap-1 px-2 py-1.5">
                 <button className="btn-icon" onClick={() => game.togglePause()} data-tip="Pause (Space)"><Icon name={game.speed ? 'pause' : 'play'} size={22} /></button>
-                {SPEEDS.map(k => <button key={k} className={`chip ${k < 1 ? 'px-1.5 text-[11px]' : ''} ${game.speed === k ? 'chip-on' : ''} disabled:opacity-40`} disabled={game.paceLock && k > WATCH_SPEED} onClick={() => game.setSpeed(k)} data-tip={k === WATCH_SPEED ? 'The watching speed: golfers walk at a natural pace (, and .)' : k < 1 ? 'Slow motion (, and .)' : 'Speed (, and .)'} data-testid={`speed-${speedLabel(k)}`}>{speedLabel(k)}×</button>)}
-                {!JAM && game.golfMode && (game.golfWatch
-                  ? <button className="chip chip-on" onClick={() => game.stopWatching()} data-tip="Stop watching: back to the speed before (Esc)" data-testid="watch-stop">Watching {game.golfWatch.label} ✕</button>
-                  : <button className="chip" onClick={() => game.watchNearest()} data-tip="Follow the golf group nearest the middle of the screen at the watching speed" data-testid="watch-golf">Watch golf</button>)}
-                {!JAM && <button className="chip disabled:opacity-40" disabled={game.traffic.skipping} onClick={() => game.skipToRush()} data-tip="Skip to the next rush hour (H)"><Icon name="skip" size={16} />{game.traffic.skipping ? 'Skipping…' : ''}</button>}
-                {game.night.mode === 'clock' && game.clockNight() > 0 && <button className="chip" onClick={() => game.skipNight()} data-tip="Skip this night: daylight until the next one (how often nights come: gear menu, Night)"><Icon name="sun" size={16} /> Skip night</button>}
+                {/* #1275 (the owner: "this can collapse right? and expand"): collapsed (the default) the bar is pause, the speed now and a chevron; open it is every speed,
+                    Watch golf and skip (ui/speed-bar.ts decides which; the keys , . and Space are the engine's and work either way; "Watching ✕" and Skip night never hide) */}
+                {(() => {
+                  const sb = speedBarView({ open: speedOpen, speeds: SPEEDS, speed: game.speed, resume: game.resumeSpeed, paceLock: game.paceLock, jam: JAM, golf: game.golfMode, watching: game.golfWatch?.label ?? null, skipNight: game.night.mode === 'clock' && game.clockNight() > 0 });
+                  return <>
+                    {sb.speeds.map(s => <button key={s.k} className={`chip ${s.slow ? 'px-1.5 text-[11px]' : ''} ${s.on ? 'chip-on' : ''} disabled:opacity-40`} disabled={s.off} onClick={() => game.setSpeed(s.k)} data-tip={s.tip} data-testid={`speed-${s.label}`}>{s.label}×</button>)}
+                    {sb.current && <button className={`chip ${sb.current.paused ? 'opacity-70' : 'chip-on'}`} onClick={() => setSpeedOpen(saveSpeedBarOpen(true))} aria-expanded={false} data-tip={sb.current.tip} data-testid="speed-current">{sb.current.label}×</button>}
+                    {sb.watch === 'stop' && game.golfWatch && <button className="chip chip-on" onClick={() => game.stopWatching()} data-tip="Stop watching: back to the speed before (Esc)" data-testid="watch-stop">Watching {game.golfWatch.label} ✕</button>}
+                    {sb.watch === 'start' && <button className="chip" onClick={() => game.watchNearest()} data-tip="Follow the golf group nearest the middle of the screen at the watching speed" data-testid="watch-golf">Watch golf</button>}
+                    {sb.skipRush && <button className="chip disabled:opacity-40" disabled={game.traffic.skipping} onClick={() => game.skipToRush()} data-tip="Skip to the next rush hour (H)"><Icon name="skip" size={16} />{game.traffic.skipping ? 'Skipping…' : ''}</button>}
+                    {sb.skipNight && <button className="chip" onClick={() => game.skipNight()} data-tip="Skip this night: daylight until the next one (how often nights come: gear menu, Night)"><Icon name="sun" size={16} /> Skip night</button>}
+                    <button className="btn-icon" onClick={() => setSpeedOpen(saveSpeedBarOpen(!sb.open))} aria-expanded={sb.open} aria-label={sb.toggle.label} data-tip={sb.toggle.tip} data-testid="speed-toggle"><Icon name={sb.open ? 'right' : 'left'} size={22} /></button>
+                  </>;
+                })()}
               </div>
               <div className="glass flex items-center gap-1 px-2 py-1.5">
                 <button className="btn-icon" onClick={() => game.zoomAt(clampZoom(game.cam.z / ZOOM_STEP))} data-tip="Zoom out (-)"><Icon name="zoom-out" size={20} /></button>

@@ -248,7 +248,7 @@ button.stat-chip:hover { background: rgba(255, 255, 255, 0.06); }
 .flyout-row:hover, .flyout-row:focus-visible { background: rgba(255, 255, 255, 0.07); outline: none; }
 .flyout-row:focus-visible { border-color: var(--gold); }
 .flyout-row-open { background: var(--gold-wash); border-color: rgba(245, 181, 46, 0.45); color: var(--gold-hi); }
-/* T256: the Range's Build (and Facilities › Build on your property): a gold button, as New hole */
+/* T256: the Texture Painter (the Range's, Facilities' and the Practice panel's): a gold button, as New hole */
 .flyout-row-gold { margin-top: 0.3rem; background: linear-gradient(#ffc94a, #f0a91e); color: #1b1406; font-weight: 700; box-shadow: 0 2px 10px rgba(245, 181, 46, 0.3); }
 .flyout-row-gold:hover, .flyout-row-gold:focus-visible { background: linear-gradient(#ffd166, #f5b52e); color: #1b1406; }
 .flyout-row-gold .flyout-why, .flyout-row-gold .flyout-label { color: #1b1406; }

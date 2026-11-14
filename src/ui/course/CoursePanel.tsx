@@ -13,6 +13,7 @@ import { CourseEdges } from './CourseEdges';
 import { GRID_KINDS } from '../../game/paint-tool';
 import { BunkerPickEntry } from '../BunkerSettings';
 import { OsmNote } from './OsmNote';
+import { TEXTURE_PAINTER } from '../flyout-menu';
 
 /** the paint modes that live under More options (the brush is Shape by hand's; plan is New hole's) */
 const MORE_MODES = new Set(['draw', 'piece', 'height', 'plant', 'hole']);
@@ -98,7 +99,8 @@ function ShapeByHand({ game, looks, onLooks }: { game: Game; looks: boolean; onL
 }
 
 /** T256 (#743; the owner, 2026-10-29: "add a build button that gets you to the same painting tools we have for holes but these painting tool
- *  work on you range and practice area and around the whole property, they are not connected to you hole"): Range › Build's panel. The
+ *  work on you range and practice area and around the whole property, they are not connected to you hole"): the Texture Painter's panel (#1282: the one
+ *  name for it everywhere, the Range's row, Facilities' tile and the Practice panel's button; it was called Build). The
  *  holes' painting tools (the surfaces, Square or Round, Brush or Run, Erase, My looks, Ground height) on your property: they lay cells of no
  *  hole, never touch a hole's, and hole edits and deletes never touch them. Done goes back to the Holes panel */
 function PropertyPanel({ game, looks, onLooks }: { game: Game; looks: boolean; onLooks?: (open: boolean) => void }) {
@@ -106,7 +108,7 @@ function PropertyPanel({ game, looks, onLooks }: { game: Game; looks: boolean; o
   const name = BRUSH_PRESETS.find(b => b.kind === p.brushKind)?.name ?? '', un = p.topUndo, re = p.topRedo;
   return (
     <div className="tp" data-panel="property">
-      <ToolHead icon="terrain" title="Build" desc="Paint your property: the range, the practice area and the rest of your land">
+      <ToolHead icon="terrain" title={TEXTURE_PAINTER} desc="Paint your property: the range, the practice area and the rest of your land">
         <button className="round-btn" disabled={!un} aria-label={un ? `Undo ${un}` : 'Nothing to undo'} title={un ? `Undo: ${un} (Ctrl+Z)` : 'Nothing to undo'} onClick={() => p.undoTop()}>↶</button>
         <button className="round-btn" disabled={!re} aria-label={re ? `Redo ${re}` : 'Nothing to redo'} title={re ? `Redo: ${re} (Ctrl+Y)` : 'Nothing to redo'} onClick={() => p.redoTop()}>↷</button>
       </ToolHead>

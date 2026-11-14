@@ -8,6 +8,7 @@ import type { RangeCardView } from '../../game/golf/rangehost';
 import type { PracticeKind, YouPracticeView, YouRangeView } from '../../game/golf/player';
 import { PRICE_MAX, PRICE_MIN, PROPS_APPEAL_CAP, dayDemand, priceFactor, rangeScale } from '../../game/golf/rangesave';
 import { appealText } from '../../game/golf/decor';
+import { practicePath } from '../../game/golf/menu-path';
 import { WALK_SERVE_M, lotsLine } from '../../game/golf/walkserve';
 import { Icon } from '../Icon';
 import { statusIcon } from '../status-icon';
@@ -187,7 +188,7 @@ export function RangeCard({ ballFix, onBallFix, attendantWage, onLetGo, forSale,
             </div>
             <div className="text-[12px] text-slate-400">{f.words}</div>
             {f.state !== 'open' && practiceWhy && <div className="text-[12px] text-amber-300/80">{practiceWhy}</div>}
-            {f.state !== 'open' && <PaybackLine p={payback(0, 0, practiceExtra(biz, view.demand, view.dayLen, f.id))} note="Plus the price of the green you lay (Facilities ▸ Practice)." testid={`range-practice-payback-${f.id}`} />}
+            {f.state !== 'open' && <PaybackLine p={payback(0, 0, practiceExtra(biz, view.demand, view.dayLen, f.id))} note={`Plus the price of the green you lay (${practicePath()}).`} testid={`range-practice-payback-${f.id}`} />}
             {f.state === 'open' && you && (() => { const s = you.sessions.find(x => x.kind === f.id); return s && <div className="mt-1"><Session s={s} onPractise={onPractise} /></div>; })()}
             <div className="mt-0.5 flex justify-between text-[12px] text-slate-400">
               <span>+{Math.round(f.appeal * 100)}% visitors · ${view.fee} a golfer</span>

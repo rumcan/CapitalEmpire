@@ -4,6 +4,7 @@
 import { STUCK_PLAY_SEC } from './index';
 import type { Rect } from '../../golf/mode';
 import { JAM } from '../../features';
+import { practicePath } from '../../golf/menu-path';
 
 /** the facts the guide reads: the player's counters (T033a), placed course pieces by kind, tournaments run, and the guide's saved state */
 export interface GuideFacts {
@@ -191,7 +192,7 @@ export const RANGE_GUIDE: readonly GuideStep[] = Object.freeze([
     id: 'guide-range-practice',
     n: 8,
     title: 'Place the practice area, build a putting green',
-    body: 'Range › Place the practice area: put it on your land near the car park. Then Facilities › Practice › Putting green on it.',
+    body: `Range › Place the practice area: put it on your land near the car park. Then ${practicePath('›')} › Putting green on it.`, // (#1282: Facilities is the Course menu's sixth tile)
     done: 'auto',
     target: { ui: 'rail-range' },
     reward: 1000,

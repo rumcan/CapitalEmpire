@@ -21,9 +21,13 @@ export type LeafAct =
   | { k: 'practice'; id: string } | { k: 'build' } | { k: 'place'; id: string } | { k: 'pro'; id: 'prooffice' | 'teachhut' } | { k: 'estate' }
   /** T356 (#998): Course > Place a real course > (a course): takes that map-data course in hand */
   | { k: 'real'; id: string };
-/** T256 (#743): Build, the holes' painting tools on your property (Range › Build, Facilities › Build on your property): the course tool's
+/** #1282 (the owner, 2026-11-14: the gold button that was called Build, in Facilities and on the Practice panel, "to say Texture Painter"): the name of the holes'
+ *  painting tools on your property, wherever they are offered (Range › Texture Painter, Facilities › Texture Painter, the Practice panel's gold button, the
+ *  panel's own heading) */
+export const TEXTURE_PAINTER = 'Texture Painter';
+/** T256 (#743): the Texture Painter, the holes' painting tools on your property (Range › Texture Painter, Facilities › Texture Painter): the course tool's
  *  entry with the property's brush */
-const BUILD_TOOL: RailTool = { id: 'course', label: 'Build', key: '', icon: 'terrain' };
+const BUILD_TOOL: RailTool = { id: 'course', label: TEXTURE_PAINTER, key: '', icon: 'terrain' };
 /** a leaf: the rail item it opens from, its tool entry (the Props tool's view with it), what else it does */
 export interface Leaf { item: string; entry: RailTool; act?: LeafAct }
 /** a flyout row: a caption (no action), a row with children (opens the next flyout), or a leaf. why: locked (dimmed, the reason shown) */
@@ -113,8 +117,8 @@ export function menuOf(item: RailItem, c: MenuCtx): MenuRow[] {
         ? leaf(pr, k.name, { k: 'props', group: k.groups[0]!.id }, icon)
         : group(`kind:${k.id}`, k.name, icon, [leaf(pr, `All ${k.name.toLowerCase()}`, { k: 'props', group: k.id }, icon), ...k.groups.map(g => leaf(pr, g.name, { k: 'props', group: g.id }, icon))], pr), tile));
     }
-    // T256: the same Build as the Range's: paint your property
-    if (c.golf) { const b = leaf(BUILD_TOOL, 'Build on your property', { k: 'build' }, 'terrain'); if (b) out.push({ ...b, gold: true, tile: ROW_TILE.build }); }
+    // T256: the same Texture Painter as the Range's: paint your property
+    if (c.golf) { const b = leaf(BUILD_TOOL, TEXTURE_PAINTER, { k: 'build' }, 'terrain'); if (b) out.push({ ...b, gold: true, tile: ROW_TILE.build, note: 'Paint your property, apart from the holes' }); }
     return out.filter((r): r is MenuRow => !!r);
   };
   const rows: (MenuRow | null)[] = [];
@@ -123,9 +127,9 @@ export function menuOf(item: RailItem, c: MenuCtx): MenuRow[] {
       if (s.place) { const r = leaf(item.tools[0], s.name, { k: 'place', id: s.id }, 'house'); if (r) rows.push({ ...r, why: s.why ?? null, ...(s.why ? {} : { gold: true }) }); continue; }
       rows.push(leaf(item.tools[0], s.name, { k: 'range', section: s.id === 'card' ? null : s.id }, 'pin'));
     }
-    // T256: Build, gold, last: the holes' painting tools on the range, the practice area and the rest of your land
+    // T256: the Texture Painter, gold, last: the holes' painting tools on the range, the practice area and the rest of your land
     // (T459, the jam MVP: no free painting of the property: holes come from New hole)
-    if (!JAM && c.golf && c.range.length) { const b = leaf(BUILD_TOOL, 'Build', { k: 'build' }, 'terrain'); if (b) rows.push({ ...b, gold: true, note: 'Paint your property, apart from the holes' }); }
+    if (!JAM && c.golf && c.range.length) { const b = leaf(BUILD_TOOL, TEXTURE_PAINTER, { k: 'build' }, 'terrain'); if (b) rows.push({ ...b, gold: true, note: 'Paint your property, apart from the holes' }); }
     return rows.filter((r): r is MenuRow => !!r);
   }
   switch (item.id) {
