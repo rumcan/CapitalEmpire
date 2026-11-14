@@ -1,6 +1,6 @@
 {
   "id": "golfer:golf_pro_m4:golf_putt",
-  "name": "golf_pro_m4 golf_putt",
+  "name": "golf_pro_m4 golf_putt (ChatGPT painted)",
   "clip": "golf_putt",
   "heightMetres": 1.86,
   "frameWidth": 400,
@@ -49,5 +49,47 @@
   "impactSecs": 0.8,
   "prop": "putter",
   "addressSecs": 0,
-  "shot": "right-handed: the ball flies 90 degrees to the golfer's left of the row's facing (row S, the golfer facing the viewer: toward screen right)"
+  "shot": "right-handed: the ball flies 90 degrees to the golfer's left of the row's facing (row S, the golfer facing the viewer: toward screen right)",
+  "chatgpt": {
+    "E": {
+      "picture": "golf_pro_m4~E~golf_putt-golfers.png",
+      "date": "2026-11-14",
+      "scale": 0.5957
+    },
+    "N": {
+      "picture": "golf_pro_m4~N~golf_putt-golfers.png",
+      "date": "2026-11-14",
+      "scale": 0.6071
+    },
+    "NE": {
+      "picture": "golf_pro_m4~NE~golf_putt-golfers.png",
+      "date": "2026-11-14",
+      "scale": 0.5789
+    },
+    "NW": {
+      "picture": "golf_pro_m4~NW~golf_putt-golfers.png",
+      "date": "2026-11-14",
+      "scale": 0.588
+    },
+    "S": {
+      "picture": "golf_pro_m4~S~golf_putt-golfers.png",
+      "date": "2026-11-14",
+      "scale": 0.5796
+    },
+    "SE": {
+      "picture": "golf_pro_m4~SE~golf_putt-golfers.png",
+      "date": "2026-11-14",
+      "scale": 0.547
+    },
+    "SW": {
+      "picture": "golf_pro_m4~SW~golf_putt-golfers.png",
+      "date": "2026-11-14",
+      "scale": 0.5684
+    },
+    "W": {
+      "picture": "golf_pro_m4~W~golf_putt-golfers.png",
+      "date": "2026-11-14",
+      "scale": 0.5697
+    }
+  }
 }
