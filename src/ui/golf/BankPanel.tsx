@@ -61,7 +61,7 @@ export function BankPanel({ game }: { game: Game }) {
   const buyOk = bq.ok && mq.ok;
   const step = 5_000;
   return (
-    <div className="pointer-events-auto absolute right-3 top-[var(--hud-top,6rem)] z-20 max-h-[calc(var(--vh-ui,100vh)-var(--hud-top,6rem)-4.5rem)] w-[360px] space-y-3 overflow-y-auto overflow-x-hidden rounded-xl border border-white/10 bg-slate-950/90 p-3 text-slate-200 shadow-lg backdrop-blur" data-testid="bank-panel">
+    <div className="pointer-events-auto absolute right-3 top-[var(--hud-top,6rem)] z-20 max-h-[calc(var(--vh-ui,100vh)-var(--hud-top,6rem)-4.5rem)] w-[360px] space-y-3 overflow-y-auto overflow-x-hidden rounded-xl border border-white/10 bg-slate-950/90 p-3 text-slate-200 shadow-lg backdrop-blur" data-testid="bank-panel" data-guide="bank-panel">
       <div className="win-head win-head-slate flex items-center justify-between gap-2">
         <div className="flex min-w-0 items-center gap-2.5">
           <ActionTile tile="bank" size={TILE_ROW + 8} />
