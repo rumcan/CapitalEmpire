@@ -3,16 +3,27 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
-import { TOOL_TILES_V1, TOOL_TILES_V2 } from '../src/ui/tool-tiles';
+import { ACTION_TILES, TOOL_TILES, TOOL_TILES_V1, TOOL_TILES_V2, TOOL_TILES_V3, TOOL_TILES_V4, TOOL_TILES_V5, TOOL_TILES_V6 } from '../src/ui/tool-tiles';
 
 test('each sheet keeps its subject identity; unknown or contradictory versions fail before writing', async () => {
   const prep = await import(pathToFileURL(path.resolve('scripts/assets/prep-ui-tool-tiles.mjs')).href);
   assert.deepEqual(prep.SHEET_NAMES.v1.flat(), [...TOOL_TILES_V1]);
   assert.deepEqual(prep.SHEET_NAMES.v2.flat(), [...TOOL_TILES_V2]);
   assert.equal(new Set([...TOOL_TILES_V1, ...TOOL_TILES_V2]).size, 24);
+  // J8 (#1261): the action tiles of sheets v3 to v6, 48 more, none named like an older tile
+  assert.deepEqual(prep.SHEET_NAMES.v3.flat(), [...TOOL_TILES_V3]);
+  assert.deepEqual(prep.SHEET_NAMES.v4.flat(), [...TOOL_TILES_V4]);
+  assert.deepEqual(prep.SHEET_NAMES.v5.flat(), [...TOOL_TILES_V5]);
+  assert.deepEqual(prep.SHEET_NAMES.v6.flat(), [...TOOL_TILES_V6]);
+  assert.equal(ACTION_TILES.length, 48);
+  assert.equal(new Set([...TOOL_TILES, ...ACTION_TILES]).size, 72, 'seventy-two different names');
+  for (const v of ['v1', 'v2', 'v3', 'v4', 'v5', 'v6']) assert.equal(prep.sheetVersion(`golf-build-tool-tiles-sheet-${v}.png`), v);
+  assert.throws(() => prep.sheetVersion('golf-build-tool-tiles-sheet-v7.png'), /specify --version/);
   assert.throws(() => prep.sheetVersion('unknown.png'), /specify --version/);
   assert.throws(() => prep.sheetVersion('golf-build-tool-tiles-sheet-v2.png', 'v1'), /not v1/);
+  assert.throws(() => prep.sheetVersion('golf-build-tool-tiles-sheet-v5.png', 'v3'), /not v3/);
   assert.equal(prep.sheetVersion('an-explicit-copy.png', 'v2'), 'v2');
+  assert.equal(prep.sheetVersion('an-explicit-copy.png', 'v6'), 'v6');
 });
 
 test('preparing the second grid writes new subjects and preserves an existing tee icon', async () => {

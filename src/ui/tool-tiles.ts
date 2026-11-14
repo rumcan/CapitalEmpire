@@ -2,9 +2,18 @@
 // Flyouts preserve their existing actions, row labels and navigation.
 export const TOOL_TILES_V1 = ['tee', 'fairway', 'green', 'bunker', 'pond', 'rough', 'trees', 'rocks', 'cart-path', 'clubhouse', 'range-bays', 'flower-bed'] as const;
 export const TOOL_TILES_V2 = ['waste-sand', 'snack-hut', 'golf-hole', 'grandstand-scoreboard', 'land-plot', 'autumn-shrubs', 'palms', 'street-furniture', 'patio-table', 'long-grass', 'chipping-green', 'surveyor-turf'] as const;
-export type ToolTile = typeof TOOL_TILES_V1[number] | typeof TOOL_TILES_V2[number];
-/** Row-major sheet identities; v1 asset files remain byte-for-byte unchanged. */
+// J8 (#1261; the owner, 2026-11-14: "add ALOT more images to the UI. especially on stuff you can do"): four more sheets of the same kind, the pictures on
+// the jam's actions (the range card, the Bank, a hole's card, the title card, the tips, the practice drills). Shown by ActionTile.tsx.
+export const TOOL_TILES_V3 = ['buy-range', 'hit-balls', 'chip-and-putt', 'clear-junk', 'pick-balls', 'hire-attendant', 'ball-washer', 'bucket-price', 'turf-tee', 'grass-outfield', 'target-green', 'covered-bays'] as const;
+export const TOOL_TILES_V4 = ['open-bays', 'ball-dispenser', 'gravel-car-park', 'paved-car-park', 'putting-green', 'play-hole', 'edit-hole', 'frame-trees', 'draw-drive', 'seed', 'sod', 'bulldoze'] as const;
+export const TOOL_TILES_V5 = ['bank', 'borrow', 'repay', 'save-money', 'take-money', 'statement', 'tips', 'how-to-play', 'settings', 'save-game', 'new-game', 'profile'] as const;
+export const TOOL_TILES_V6 = ['drill-distance', 'drill-shaping', 'drill-flight', 'drill-junk', 'drill-up-down', 'drill-putting', 'drill-bunker', 'shot-draw', 'shot-fade', 'shot-high', 'shot-low', 'shot-spin'] as const;
+export type ToolTile = typeof TOOL_TILES_V1[number] | typeof TOOL_TILES_V2[number] | typeof TOOL_TILES_V3[number] | typeof TOOL_TILES_V4[number] | typeof TOOL_TILES_V5[number] | typeof TOOL_TILES_V6[number];
+/** Row-major sheet identities; v1 asset files remain byte-for-byte unchanged. These are the Course and Facilities flyouts' tiles (ui-flyouts.test.ts
+ *  checks each is on a tool): the action tiles of sheets v3 to v6 are ACTION_TILES. */
 export const TOOL_TILES: readonly ToolTile[] = [...TOOL_TILES_V1, ...TOOL_TILES_V2];
+/** J8: the action tiles (sheets v3 to v6), 48 of them, each on an action somewhere in the UI (tests/ui-action-tiles.test.ts checks every id used exists) */
+export const ACTION_TILES: readonly ToolTile[] = [...TOOL_TILES_V3, ...TOOL_TILES_V4, ...TOOL_TILES_V5, ...TOOL_TILES_V6];
 
 // Vite resolves these normal imported assets; Node tests intentionally use the existing icon fallback.
 const URLS: Record<string, string> = (() => { try { return import.meta.glob('../assets/ui/tiles/*.webp', { eager: true, query: '?url', import: 'default' }) as Record<string, string>; } catch { return {}; } })();
