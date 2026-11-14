@@ -1,6 +1,7 @@
 // The jam build's title card (docs/JAM.md, J1): "Fairway Fortune", one line, New game / Continue / How to play. Shown over the game when JAM
 // (src/game/features.ts) until the player chooses; pure view, App.tsx owns the choice. Same look as the game's other cards (glass, gold display type).
 import { useState } from 'react';
+import { ActionTile, TILE_ROW } from '../ActionTile'; // J8 (#1261): each button of the title card wears a painted tile
 
 export const TITLE = 'Fairway Fortune';
 export const TAGLINE = 'Build a golf club from a driving range. Borrow wisely.';
@@ -27,9 +28,9 @@ export function TitleCard({ canContinue, onNew, onContinue }: { canContinue: boo
           </ol>
         ) : null}
         <div className="mt-5 flex flex-col gap-2">
-          {canContinue && <button className="btn w-full !py-2 text-base font-semibold" onClick={onContinue} data-testid="title-continue" autoFocus>Continue</button>}
-          <button className={`btn w-full !py-2 text-base ${canContinue ? '' : 'font-semibold'}`} onClick={onNew} data-testid="title-new" autoFocus={!canContinue}>New game</button>
-          <button className="btn w-full" onClick={() => setHow(!how)} aria-expanded={how} data-testid="title-how">{how ? 'Hide how to play' : 'How to play'}</button>
+          {canContinue && <button className="btn w-full !py-2 text-base font-semibold" onClick={onContinue} data-testid="title-continue" autoFocus><ActionTile tile="front-door" size={TILE_ROW} />Continue</button>}
+          <button className={`btn w-full !py-2 text-base ${canContinue ? '' : 'font-semibold'}`} onClick={onNew} data-testid="title-new" autoFocus={!canContinue}><ActionTile tile="new-game" size={TILE_ROW} />New game</button>
+          <button className="btn w-full" onClick={() => setHow(!how)} aria-expanded={how} data-testid="title-how"><ActionTile tile="how-to-play" size={TILE_ROW} />{how ? 'Hide how to play' : 'How to play'}</button>
         </div>
       </div>
     </div>

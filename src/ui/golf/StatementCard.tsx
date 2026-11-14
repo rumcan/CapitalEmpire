@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import { GOAL, emergencyTotals, interestToDate, netWorthSeries, statementOf, type Report } from '../../game/golf/reports';
 import { emergencyLine } from '../../game/golf/risk';
 import { NetWorthChart } from './NetWorthChart';
+import { ActionTile, TILE_BIG, TILE_ROW } from '../ActionTile'; // J8 (#1261): the statement's toast and card wear its painted tile
 import { money, onFinlit, signed } from './finevents';
 
 const TOAST_MS = 10_000;
@@ -46,14 +47,19 @@ export function StatementCard({ history }: { history: readonly Report[] }) {
   return <>
     {toast && !s && (
       // (the owner, 2026-11-14: "this menu satement cant be closed and it covers the ui": it sits under the top bar, clear of the rail and its menus, and has
-      // its own close button; it still goes by itself after TOAST_MS)
+      // its own close button; it still goes by itself after TOAST_MS. J8 (#1261): its painted tile sits at the left of the words)
       <div className="pointer-events-auto absolute left-1/2 top-16 z-30 w-72 max-w-[calc(100%-1.5rem)] -translate-x-1/2" data-testid="statement-toast-box">
         <button type="button" onClick={() => { setFull(toastAt); setToastAt(null); }} aria-live="polite" data-testid="statement-toast"
           className="w-full rounded-xl border border-white/10 bg-slate-950/90 p-3 pr-9 text-left text-slate-200 shadow-xl backdrop-blur hover:border-emerald-400/60">
-          <div className="text-[11px] font-semibold uppercase tracking-wider text-emerald-300/80">{toast.label} statement</div>
-          <div className="text-sm font-semibold text-white">{headline(toast.profit)}</div>
-          <div className="text-xs text-slate-400">Net worth {money(toast.netWorth)} ({signed(toast.netWorthChange)}). Click for details.</div>
-          {history[toastAt!]?.events[0] && <div className="mt-1 text-xs text-amber-200">{history[toastAt!].events[0]}</div>}
+          <div className="flex items-start gap-2.5">
+            <ActionTile tile="statement" size={TILE_ROW + 4} />
+            <div className="min-w-0 flex-1">
+              <div className="text-[11px] font-semibold uppercase tracking-wider text-emerald-300/80">{toast.label} statement</div>
+              <div className="text-sm font-semibold text-white">{headline(toast.profit)}</div>
+              <div className="text-xs text-slate-400">Net worth {money(toast.netWorth)} ({signed(toast.netWorthChange)}). Click for details.</div>
+              {history[toastAt!]?.events[0] && <div className="mt-1 text-xs text-amber-200">{history[toastAt!].events[0]}</div>}
+            </div>
+          </div>
         </button>
         <button type="button" onClick={() => setToastAt(null)} aria-label="Close the statement note" data-testid="statement-toast-close"
           className="absolute right-1.5 top-1.5 flex h-6 w-6 items-center justify-center rounded-md text-slate-400 hover:bg-white/10 hover:text-white">×</button>
@@ -67,9 +73,12 @@ export function StatementCard({ history }: { history: readonly Report[] }) {
             <div className="text-xs font-semibold uppercase tracking-[0.2em] text-amber-400/80">{s.label} statement</div>
             <button type="button" className="chip px-2 py-0.5 disabled:opacity-30" disabled={full >= history.length - 1} onClick={() => setFull(full + 1)} aria-label="Next month">›</button>
           </div>
-          <div className="text-center">
-            <div className={`text-2xl font-bold ${s.profit >= 0 ? 'text-emerald-300' : 'text-rose-300'}`}>{signed(s.profit)}</div>
-            <div className="text-xs text-slate-400">profit this month · net worth {money(s.netWorth)} ({signed(s.netWorthChange)})</div>
+          <div className="flex items-center justify-center gap-3">
+            <ActionTile tile="statement" size={TILE_BIG} />
+            <div className="text-center">
+              <div className={`text-2xl font-bold ${s.profit >= 0 ? 'text-emerald-300' : 'text-rose-300'}`}>{signed(s.profit)}</div>
+              <div className="text-xs text-slate-400">profit this month · net worth {money(s.netWorth)} ({signed(s.netWorthChange)})</div>
+            </div>
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div className="rounded-xl border border-white/10 bg-white/5 p-2">

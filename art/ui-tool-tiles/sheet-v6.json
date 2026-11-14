@@ -1,0 +1,267 @@
+{
+  "schema": 1,
+  "version": "v6",
+  "source": {
+    "file": "art/theme-consistency/generated/ui/golf-build-tool-tiles-sheet-v6.png",
+    "sha256": "e702634e636254f0139d2a247cd3115acb56db993a90294f454a831f4cb2b2dd",
+    "dimensions": [
+      1448,
+      1086
+    ]
+  },
+  "grid": {
+    "columns": 4,
+    "rows": 3,
+    "detectedRows": [
+      [
+        39,
+        355
+      ],
+      [
+        379,
+        698
+      ],
+      [
+        724,
+        1049
+      ]
+    ],
+    "detectedColumns": [
+      [
+        41,
+        359
+      ],
+      [
+        385,
+        711
+      ],
+      [
+        737,
+        1065
+      ],
+      [
+        1090,
+        1409
+      ]
+    ]
+  },
+  "processing": "Source unchanged; detected card crops, normal UI resize to144px, rounded-corner alpha mask, WebP encoding.",
+  "tiles": [
+    {
+      "name": "drill-distance",
+      "row": 0,
+      "column": 0,
+      "sourceRect": {
+        "left": 43,
+        "top": 40,
+        "width": 314,
+        "height": 314
+      },
+      "file": "src/assets/ui/tiles/drill-distance.webp",
+      "dimensions": [
+        144,
+        144
+      ],
+      "sha256": "510fbe3fc93233501de83ac7ccddebdff347fcdd7f1d94260303756b1293c09e",
+      "bytes": 4520
+    },
+    {
+      "name": "drill-shaping",
+      "row": 0,
+      "column": 1,
+      "sourceRect": {
+        "left": 391,
+        "top": 40,
+        "width": 314,
+        "height": 314
+      },
+      "file": "src/assets/ui/tiles/drill-shaping.webp",
+      "dimensions": [
+        144,
+        144
+      ],
+      "sha256": "7ed5fe067e302422a7396bbf8a9c551ae0d60cd7ece3d8f9971ecad98c3b9ae8",
+      "bytes": 6420
+    },
+    {
+      "name": "drill-flight",
+      "row": 0,
+      "column": 2,
+      "sourceRect": {
+        "left": 744,
+        "top": 40,
+        "width": 314,
+        "height": 314
+      },
+      "file": "src/assets/ui/tiles/drill-flight.webp",
+      "dimensions": [
+        144,
+        144
+      ],
+      "sha256": "fc54943b828f2f8486d2e090ddc21eb63c361b0558854ee98c7e59bb6658a868",
+      "bytes": 5584
+    },
+    {
+      "name": "drill-junk",
+      "row": 0,
+      "column": 3,
+      "sourceRect": {
+        "left": 1093,
+        "top": 40,
+        "width": 314,
+        "height": 314
+      },
+      "file": "src/assets/ui/tiles/drill-junk.webp",
+      "dimensions": [
+        144,
+        144
+      ],
+      "sha256": "a502e7678ea0a2680a31e4f100257ac00794ace4923d9ace071371a5bbe1749d",
+      "bytes": 5486
+    },
+    {
+      "name": "drill-up-down",
+      "row": 1,
+      "column": 0,
+      "sourceRect": {
+        "left": 42,
+        "top": 381,
+        "width": 316,
+        "height": 316
+      },
+      "file": "src/assets/ui/tiles/drill-up-down.webp",
+      "dimensions": [
+        144,
+        144
+      ],
+      "sha256": "3236b6d1be8f70a5e14001ee1f6adab4373a1992da5765a68bd8bee16daf0817",
+      "bytes": 6062
+    },
+    {
+      "name": "drill-putting",
+      "row": 1,
+      "column": 1,
+      "sourceRect": {
+        "left": 390,
+        "top": 380,
+        "width": 317,
+        "height": 317
+      },
+      "file": "src/assets/ui/tiles/drill-putting.webp",
+      "dimensions": [
+        144,
+        144
+      ],
+      "sha256": "d6fa901b23ed12b83b7b84cd3d76e361277cac60347422c3ffb9b15153a73dcb",
+      "bytes": 4236
+    },
+    {
+      "name": "drill-bunker",
+      "row": 1,
+      "column": 2,
+      "sourceRect": {
+        "left": 743,
+        "top": 380,
+        "width": 317,
+        "height": 317
+      },
+      "file": "src/assets/ui/tiles/drill-bunker.webp",
+      "dimensions": [
+        144,
+        144
+      ],
+      "sha256": "674032ca9c6facd33ff039df9b3b63a0a5ea3bcd54ec2fc655eff077d29cef7d",
+      "bytes": 6204
+    },
+    {
+      "name": "shot-draw",
+      "row": 1,
+      "column": 3,
+      "sourceRect": {
+        "left": 1091,
+        "top": 380,
+        "width": 317,
+        "height": 317
+      },
+      "file": "src/assets/ui/tiles/shot-draw.webp",
+      "dimensions": [
+        144,
+        144
+      ],
+      "sha256": "69b34775ccde4e4e460da7fc460703da97daa56632e35457706a1847e26c1dac",
+      "bytes": 5838
+    },
+    {
+      "name": "shot-fade",
+      "row": 2,
+      "column": 0,
+      "sourceRect": {
+        "left": 42,
+        "top": 729,
+        "width": 316,
+        "height": 316
+      },
+      "file": "src/assets/ui/tiles/shot-fade.webp",
+      "dimensions": [
+        144,
+        144
+      ],
+      "sha256": "61dac4869aac78420b3e0f9674c0d1f48b32c8ec9e9fa24c1067b60a47c27195",
+      "bytes": 5792
+    },
+    {
+      "name": "shot-high",
+      "row": 2,
+      "column": 1,
+      "sourceRect": {
+        "left": 387,
+        "top": 725,
+        "width": 323,
+        "height": 323
+      },
+      "file": "src/assets/ui/tiles/shot-high.webp",
+      "dimensions": [
+        144,
+        144
+      ],
+      "sha256": "eee321946c1d26302f5ddf6b717f837301fba6526e3107abcf5ccb39ae7d6203",
+      "bytes": 5086
+    },
+    {
+      "name": "shot-low",
+      "row": 2,
+      "column": 2,
+      "sourceRect": {
+        "left": 740,
+        "top": 725,
+        "width": 323,
+        "height": 323
+      },
+      "file": "src/assets/ui/tiles/shot-low.webp",
+      "dimensions": [
+        144,
+        144
+      ],
+      "sha256": "73ba1d4d7d2fd9d0bf683fd99d6a126d0068e21c49319856c206ade5f50968a8",
+      "bytes": 6750
+    },
+    {
+      "name": "shot-spin",
+      "row": 2,
+      "column": 3,
+      "sourceRect": {
+        "left": 1091,
+        "top": 728,
+        "width": 317,
+        "height": 317
+      },
+      "file": "src/assets/ui/tiles/shot-spin.webp",
+      "dimensions": [
+        144,
+        144
+      ],
+      "sha256": "df09a241ea8c9adc372627644f899ed62c3f25234f7c643be9200b6c6427d99a",
+      "bytes": 5174
+    }
+  ]
+}
