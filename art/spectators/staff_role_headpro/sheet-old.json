@@ -1,0 +1,41 @@
+{
+  "id": "person:staff_role_headpro",
+  "name": "staff_role_headpro (ChatGPT painted, #1235)",
+  "size": "adult",
+  "heightMetres": 1.83,
+  "frameWidth": 160,
+  "frameHeight": 279,
+  "anchor": {
+    "x": 80,
+    "y": 269
+  },
+  "directions": [
+    "S",
+    "SW",
+    "W",
+    "NW",
+    "N",
+    "NE",
+    "E",
+    "SE"
+  ],
+  "frames": [
+    "idle",
+    "walk1",
+    "walk2",
+    "walk3",
+    "walk4",
+    "walk5",
+    "walk6",
+    "walk7",
+    "walk8"
+  ],
+  "walkFps": 5.7,
+  "mirrored": {},
+  "source": "art/spectators/staff_role_headpro",
+  "clips": {
+    "walk": "Armature|Casual_Walk|baselayer 4.20s, stride 1.40s, body turned -1 deg",
+    "idle": "Armature|Idle|baselayer"
+  },
+  "note": "Starts as a copy of spectators:staff_pro_m1 (a stand-in) until import_golfer.py --family spectators replaces each heading; design.png is the painted design."
+}
