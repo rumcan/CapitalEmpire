@@ -26,7 +26,7 @@ function volley(club: Club, m: number, shape: ShotShape | null, env?: ShotEnv, s
 
 test('shape: a pick is read from a save (junk is none, the straight normal shot is none), and named for the player', () => {
   assert.deepEqual(readShape({ curve: -1, flight: 1 }), { curve: -1, flight: 1 }); assert.deepEqual(readShape({ curve: 3, flight: -9 }), { curve: 1, flight: -1 });
-  assert.deepEqual(readShape({ curve: 0.2, flight: 0 }), null); assert.equal(readShape({ curve: 0, flight: 0 }), null); assert.equal(readShape(null), null); assert.equal(readShape('x'), null); assert.deepEqual(readShape({ curve: 'fade' }), null);
+  assert.deepEqual(readShape({ curve: 0.2, flight: 0 }), { curve: 0.2, flight: 0 }, 'J5f: an amount is read as it is (a light fade)'); assert.equal(readShape({ curve: 0, flight: 0 }), null); assert.equal(readShape(null), null); assert.equal(readShape('x'), null); assert.deepEqual(readShape({ curve: 'fade' }), null);
   assert.equal(pickText({ curve: -1, flight: 0 }), 'Draw'); assert.equal(pickText({ curve: 1, flight: 1 }), 'Fade, high'); assert.equal(pickText({ curve: 0, flight: -1 }), 'Low'); assert.equal(pickText(null), 'Straight'); assert.equal(pickText({ curve: 0, flight: 0 }), 'Straight');
 });
 
