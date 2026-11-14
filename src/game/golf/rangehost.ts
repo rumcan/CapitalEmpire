@@ -298,11 +298,12 @@ export class RangeHost {
     for (let k = 0; k < d.nAgents; k++) {
       const g = d.agents[k]!; if (g.kind !== 'attendant' || g.x < x0 || g.x > x1 || g.y < y0 || g.y > y1) continue;
       const m = this.mover(out.length), row = rowToward(Math.cos(g.ang), Math.sin(g.ang));
+      // (T459: at the ball room's door, emptying his basket, he stands: he does not walk on the spot)
       if (ATTENDANT_STAFF >= 0) {   // #1235: the painted attendant: walking with his basket, or picking at the pile
         const C = g.pick ? STAFF_CLIPS.pick : STAFF_CLIPS.walk, span = g.pick ? 1.6 : 1.4, rate = g.pick ? 1 : WALK_RATE;
-        m.item = STAFF_BASE + (ATTENDANT_STAFF * WALK_DIRS.length + row) * STAFF_FRAMES + clipFrame(C, C.times[0]! + ((this.sim.clockT * rate + g.id * 0.7) % span));
+        m.item = STAFF_BASE + (ATTENDANT_STAFF * WALK_DIRS.length + row) * STAFF_FRAMES + (g.moving || g.pick ? clipFrame(C, C.times[0]! + ((this.sim.clockT * rate + g.id * 0.7) % span)) : STAFF_CLIPS.idle.start);
       } else {
-        const W = SPECTATOR_CLIPS.walk, frame = clipFrame(W, W.times[0]! + ((this.sim.clockT * WALK_RATE + g.id * 0.7) % 1.4));
+        const W = SPECTATOR_CLIPS.walk, frame = g.moving ? clipFrame(W, W.times[0]! + ((this.sim.clockT * WALK_RATE + g.id * 0.7) % 1.4)) : SPECTATOR_CLIPS.idle.start;
         m.item = SPECTATOR_BASE + (ATTENDANT_ART * WALK_DIRS.length + row) * SPECTATOR_FRAMES + frame;
       }
       m.x = g.x; m.y = g.y; m.flip = false; m.scale = 1; m.moving = false; m.lift = 0;

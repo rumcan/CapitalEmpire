@@ -7,7 +7,7 @@ import {
   ATTENDANT_SKILL, BUCKET_CUT, COUNTER_SHARE, HAND_WASH, NET_SHARE, PLAYER_CART, PLAYER_RUN, ROBOTS_A_NODE, ROBOT_BAT, ROBOT_BPS, ROBOT_CHARGE, ROBOT_HOURS, ROBOT_SPEED, SHIFT_HOURS, SHIFT_STARTS, WASHER_BPS,
   attendantBps, autoKit, bucketBalls, bucketValue, flowOf, onShift, robotBps, sellBps, staffBps, tripBps, washBps,
 } from '../src/game/golf/rangeauto';
-import { RANGE_UPGRADES, RangeSim, defaultRangeBiz, rangeScene, upgradeWhy, withUpgrade, type CarSlot, type RangeUpgradeId } from '../src/game/golf/rangebiz';
+import { AGENT_PICK_S, AGENT_SPEED, RANGE_UPGRADES, RangeSim, defaultRangeBiz, rangeScene, upgradeWhy, walkAgent, withUpgrade, type AgentWalk, type CarSlot, type RangeUpgradeId } from '../src/game/golf/rangebiz';
 import { RangeHost, type RangeHostCtx } from '../src/game/golf/rangehost';
 import { YOU_RUN } from '../src/game/golf/you';
 import { CART_TILES } from '../src/game/golf/play/yours';
@@ -179,4 +179,82 @@ test('the host: the flow panel reads the stages and the bottleneck; the shift is
   const plain = makeHost([], 0); plain.h.sim.step(1, { hour: 9, day: 1 }, plain.biz, busy, 600); assert.equal(plain.h.sim.view().nAgents, 0, 'nobody without staff or robots');
   const dirt = makeHost([], 0); dirt.bs.clean = 0; dirt.bs.dirty = 200; assert.equal(dirt.h.view()!.balls!.out, false, 'dirty balls sell: the ball room is not out'); dirt.bs.dirty = 10; assert.equal(dirt.h.view()!.balls!.out, true, 'less than a bucket of both: out');
   assert.ok(HAND.rate > 0 && stockOf(newBalls()) === 200);
+});
+
+test('T459 (the owner: "walks to pick up balls and teleports all over"): the attendant and the robots walk their rounds, never faster than a walker, while the pile they pick moves', () => {
+  // the range as it runs: an attendant and two robots picking a spread-out field (the pile, the ball nearest the room, moves as they pick), stepped
+  // a frame at a time (1x and 20x: 1/60 s and 1/3 s of sim time a frame); every agent's move a frame is at most its walking speed times the frame
+  for (const dt of [1 / 60, 1 / 3]) {
+    const m = makeHost(['tube', 'pushpick', 'attendant', 'washer', 'robot'], 0);
+    for (let k = 0; k < 6; k++) field(m.bs, 60, 230 + k * 9, 200 + (k % 3) * 12);
+    for (let i = 0; i < 4; i++) m.h.step();
+    const last = new Map<string, { x: number; y: number }>();   // (each hand by his slot's id: golf-range-walk.test.ts follows everyone the range draws, for whole days)
+    let worst = 0, moved = 0, picks = 0;
+    const frames = Math.round(240 / dt);
+    for (let f = 0; f < frames; f++) {
+      m.h.sim.step(dt, { hour: 9 + f * dt / 3600, day: 1 }, m.biz, busy, 600);
+      const d = m.h.sim.view();
+      for (let i = 0; i < d.nAgents; i++) {
+        const g = d.agents[i]!, key = `${g.kind} ${g.id}`, p = last.get(key), v = AGENT_SPEED[g.kind];
+        if (p) { const s = Math.hypot(g.x - p.x, g.y - p.y); worst = Math.max(worst, s / (v * dt)); moved += s; assert.ok(s <= v * dt + 1e-6, `${key} moved ${s.toFixed(3)} tiles in a ${dt.toFixed(3)} s frame (at most ${(v * dt).toFixed(3)})`); }
+        last.set(key, { x: g.x, y: g.y }); if (g.pick) picks++;
+      }
+    }
+    assert.ok(moved > 20, `they walked (${moved.toFixed(1)} tiles)`); assert.ok(picks > 0, 'and the attendant picked at the pile');
+    assert.ok(worst <= 1 + 1e-6, `the fastest frame ${worst.toFixed(3)} of a walker's pace`);
+  }
+});
+
+test('T459: walkAgent: out to the pile, picks, back to the room, drops, out again; a pile that jumps is walked to; no step faster than its speed', () => {
+  const room = { x: 0, y: 0 }, a: AgentWalk = { x: 0, y: 0, leg: 'out', left: 0, ang: 0 }, legs = new Set<string>();
+  let pile: { x: number; y: number } | null = { x: 20, y: 0 };
+  for (let f = 0; f < 4000; f++) {
+    if (f === 300) pile = { x: -15, y: 25 };      // the pile jumps (the nearest ball picked up): he turns and walks to it
+    if (f === 900) pile = null;                    // the field is clear: home
+    if (f === 1500) pile = { x: 8, y: -8 };
+    const x0 = a.x, y0 = a.y, dt = f % 7 === 0 ? 0.5 : 0.05;
+    walkAgent(a, room, pile, dt, 1.4);
+    assert.ok(Math.hypot(a.x - x0, a.y - y0) <= 1.4 * dt + 1e-9, `frame ${f}: a jump`);
+    legs.add(a.leg);
+  }
+  assert.deepEqual([...legs].sort(), ['back', 'drop', 'out', 'pick']);
+  // a pick lasts AGENT_PICK_S; nonsense times move nobody
+  const b: AgentWalk = { x: 5, y: 5, leg: 'pick', left: AGENT_PICK_S, ang: 0 };
+  walkAgent(b, room, { x: 5, y: 5 }, AGENT_PICK_S - 0.1, 1.4); assert.equal(b.leg, 'pick');
+  walkAgent(b, room, { x: 5, y: 5 }, 0.2, 1.4); assert.equal(b.leg, 'back');
+  const c: AgentWalk = { x: 1, y: 1, leg: 'out', left: 0, ang: 0 };
+  for (const bad of [NaN, -5, Infinity]) { walkAgent(c, room, { x: 9, y: 9 }, bad, 1.4); assert.ok(Number.isFinite(c.x) && Math.hypot(c.x - 1, c.y - 1) <= 1e-9, `dt ${bad}`); }
+});
+
+test('T459: an attendant whose field clears on his way still walks to that pile and picks there, then home (in the jam he picks it faster than he walks)', () => {
+  const room = { x: 0, y: 0 }, a: AgentWalk = { x: 0, y: 0, leg: 'out', left: 0, ang: 0 }, leg = (): AgentWalk['leg'] => a.leg; // (walkAgent changes the leg)
+  walkAgent(a, room, { x: 30, y: 0 }, 2, 1.4); assert.equal(leg(), 'out');
+  let picked = false;
+  for (let f = 0; f < 600 && !picked; f++) { walkAgent(a, room, null, 0.1, 1.4); picked = leg() === 'pick'; }
+  assert.ok(picked && Math.abs(a.x - 30) < 1e-6, `he reached the pile he set out for (${a.x.toFixed(2)})`);
+  for (let f = 0; f < 600 && leg() !== 'drop'; f++) walkAgent(a, room, null, 0.1, 1.4);
+  assert.equal(leg(), 'drop'); assert.ok(Math.hypot(a.x, a.y) < 1e-6, 'and home');
+  // with no balls out when he sets off he stays home
+  for (let f = 0; f < 100; f++) walkAgent(a, room, null, 0.1, 1.4);
+  assert.ok(Math.hypot(a.x, a.y) < 1e-6);
+});
+
+test('T459: walkAgent: a hand whose shift is over turns back from the field, drops his basket at the room and is gone; at the pile he finishes the pick first, at the door the drop', () => {
+  const room = { x: 0, y: 0 }, pile = { x: 30, y: 0 }, a: AgentWalk = { x: 0, y: 0, leg: 'out', left: 0, ang: 0 }, leg = (w: AgentWalk): AgentWalk['leg'] => w.leg; // (walkAgent changes the leg)
+  for (let f = 0; f < 200 && a.x < 12; f++) walkAgent(a, room, pile, 0.1, 1.4);
+  assert.ok(a.x >= 12 && leg(a) === 'out', 'out in the field');
+  a.leave = true; const legs: string[] = [], x12 = a.x; let steps = 0;
+  while (leg(a) !== 'gone' && steps++ < 2000) {
+    const x0 = a.x; walkAgent(a, room, pile, 0.1, 1.4); assert.ok(Math.abs(a.x - x0) <= 1.4 * 0.1 + 1e-9, `step ${steps}: a jump`);
+    assert.ok(a.x < x0 + 1e-9, 'and no further out');
+    if (legs[legs.length - 1] !== leg(a)) legs.push(leg(a));
+  }
+  assert.deepEqual(legs, ['back', 'drop', 'gone']); assert.ok(Math.hypot(a.x, a.y) < 1e-6, 'home'); assert.ok(steps * 0.1 >= x12 / 1.4 - 0.1, `${(steps * 0.1).toFixed(1)} s for ${x12.toFixed(1)} tiles: at his pace`);
+  walkAgent(a, room, pile, 30, 1.4); assert.equal(leg(a), 'gone', 'and he stays in');
+  const b: AgentWalk = { x: 30, y: 0, leg: 'pick', left: 4, ang: 0, leave: true };
+  walkAgent(b, room, pile, 3.9, 1.4); assert.equal(leg(b), 'pick', 'the pick is finished'); assert.equal(b.x, 30); walkAgent(b, room, pile, 0.2, 1.4); assert.equal(leg(b), 'back');
+  const c: AgentWalk = { x: 0, y: 0, leg: 'drop', left: 1.5, ang: 0, leave: true };
+  walkAgent(c, room, pile, 1.4, 1.4); assert.equal(leg(c), 'drop', 'the drop is finished'); walkAgent(c, room, pile, 0.2, 1.4); assert.equal(leg(c), 'gone'); assert.equal(c.x, 0, 'in at the door');
+  // a hand still on his shift is never sent in
+  const d: AgentWalk = { x: 0, y: 0, leg: 'drop', left: 0.1, ang: 0 }; walkAgent(d, room, pile, 0.2, 1.4); assert.equal(leg(d), 'out');
 });

@@ -73,7 +73,7 @@ export function bendOf(o: ShotOutcome, club: Club, carryM: number, ux: number, u
 
 /** the drawn apex (m) of a full shot of carryM metres with `club` (and the input's picked flight) */
 export function apexOf(club: Club, carryM: number, input?: ShotOutcome['input']): number {
-  const sh = input?.shape ? readShape(input.shape) : null, f = sh && sh.flight > 0 ? APEX.high : sh && sh.flight < 0 ? APEX.low : 1;
+  const sh = input?.shape ? readShape(input.shape) : null, a = sh ? Math.abs(sh.flight) : 0, end = sh && sh.flight < 0 ? APEX.low : APEX.high, f = a >= 1 ? end : 1 + (end - 1) * a;   // (J5f: in proportion to the flight's amount; a full one is exactly the old pick's)
   return carryM * (APEX.k0 + APEX.k1 * LOFT[club]) * f;
 }
 

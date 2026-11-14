@@ -128,10 +128,15 @@ const HOST_PLAY = String.raw`
       info.target = T && { d: +(T.d / S).toFixed(1), u: +T.u.toFixed(3), ring: +(T.R / S).toFixed(2), mark: swingAimMk.style.left };
       if (!T || Math.abs(T.d - Math.min(100 * S * 0.5, unit)) > 1e-6 || Math.abs(T.u - T.d / unit) > 1e-6) errs.push('host play: the aim is not a target at the club reach (' + JSON.stringify(info.target) + ')');
       if (!T || !(T.R > 0) || Math.abs(parseFloat(swingAimMk.style.left) - T.u * 100) > 0.2) errs.push('host play: the bar does not mark the aim (' + JSON.stringify(info.target) + ')');
+      info.read = aimEl.innerHTML;   // (J5f: the aim's distance above the club box: the ring's, from the ball)
+      if (!/^Aim <b>50 m<\/b>$/.test(aimEl.innerHTML)) errs.push('host play: the aim is not read out as 50 m (' + aimEl.innerHTML + ')');
+      { const t1 = performance.now(); for (let k = 0; k < 2000; k++) hostMeterShow(); info.meterMs = +((performance.now() - t1) / 2000).toFixed(4);   // (J5f: the swing bar's tick with the read-out in it: a budget of 0.1 ms)
+        if (!(info.meterMs < 0.1)) errs.push('host play: the swing bar and the aim read-out cost ' + info.meterMs + ' ms a tick (budget 0.1 ms)'); }
       { const T2 = hostTarget(), C2 = hostClub(), t0 = performance.now(); for (let k = 0; k < 50; k++) hostTargetRing(T2, C2); info.ringMs = +((performance.now() - t0) / 50).toFixed(3);   // (the ring's cost a frame: a budget of 1 ms)
         if (!(info.ringMs < 1)) errs.push('host play: the target ring costs ' + info.ringMs + ' ms a frame (budget 1 ms)'); }
       aim.x = ball.x + aim.dx * 400 * S; aim.y = ball.y + aim.dy * 400 * S; step(3, 1);
       if (!HP.target || Math.abs(HP.target.u - 1) > 1e-9) errs.push('host play: an aim beyond the club is not held at full power');
+      if (!/^Aim <b>225 m<\/b><i>max<\/i>$/.test(aimEl.innerHTML)) errs.push('host play: an aim beyond the club is not read out as its reach (' + aimEl.innerHTML + ')');
       hostAimPin = false; }
     hostMessage(turn(b0, 1, 16)); step(2, 1); info.ringTight = HP.ring && HP.ring.across;
     if (!(info.ringTight < r1)) errs.push('host play: a steadier club did not tighten the ring');
@@ -183,7 +188,7 @@ const HOST_PLAY = String.raw`
   }
   // T441 to T443: the picks go out in an aim message and the preview that answers it is drawn (its ring at its landing); a locked pick is refused and says why;
   // an armed boost is a full boost in the swing's outcome, and is spent
-  function hostCraftRun() {
+  function hostCraftRun(snapAt) {
     const errs = [], info = {}, S = course.S, b0 = [ball.x / S, ball.y / S], p0 = [hole.pin.x / S, hole.pin.y / S], dl = Math.hypot(p0[0] - b0[0], p0[1] - b0[1]), ux = (p0[0] - b0[0]) / dl, uy = (p0[1] - b0[1]) / dl;
     const kit = { club: 'iron7', carryM: 150, scatterM: 18, longM: 12, playsM: 147, sideM: 1, loftDeg: 34, speed: 0.9, sweet: 0.08 };
     const turn = (stroke, earned, charges) => Object.assign({ v: 1, t: 'turn', golfer: 0, holeIdx: 0, hole: holeN, par: hole.par, stroke, at: 600, lie: 'fairway', lieKind: 'fairway', ball: b0, pin: p0, distM: dl, wind: { mph: 0, from: 0 },
@@ -202,15 +207,57 @@ const HOST_PLAY = String.raw`
       step(2, 1); info.ring = HP.ring && { pv: HP.ring.pv, x: +(HP.ring.x / S).toFixed(2), y: +(HP.ring.y / S).toFixed(2), across: +HP.ring.across.toFixed(2) };
       if (!HP.ring || !HP.ring.pv || Math.hypot(HP.ring.x / S - L[0], HP.ring.y / S - L[1]) > 1e-6 || Math.abs(HP.ring.across - 9 * 1.2 * S) > 1e-6) errs.push('host craft: the preview is not what the aim draws');
     }
+    // J5f: the ribbon ends on the aim ring, and the aim's distance is read out above the club box. The preview is the model's shot at full power; before the swing it is drawn at the
+    // aim's share of it (it used to run the club's whole carry past a nearer ring), and held at the gold mark it is the same. A straight pick is answered with a straight flight
+    {
+      hostPickAmt('curve', 0); hostSpinAt(0, 0); step(12, 0);
+      const ask2 = hostLast && hostLast.t === 'aim' ? hostLast : null;
+      if (!ask2 || ask2.input.shape || ask2.input.spin) errs.push('host craft: a straight pick went out with a shape or a spin (' + JSON.stringify(ask2 && ask2.input) + ')');
+      else {
+        const L2 = [b0[0] + ux * 147, b0[1] + uy * 147], F2 = [];
+        for (let k = 0; k <= 30; k++) { const u = k / 30; F2.push([b0[0] + (L2[0] - b0[0]) * u, b0[1] + (L2[1] - b0[1]) * u, 28 * 4 * u * (1 - u)]); }
+        hostMessage({ v: 1, t: 'preview', key: ask2.key, spread: 1, shot: { v: 1, t: 'shot', golfer: 0, hole: holeN, stroke: 2, club: 'iron7', from: b0, flight: F2, bounces: [L2], roll: [], rest: L2, restLie: 'fairway', holed: false, penalty: 0, at: 600 } });
+        aim.x = ball.x + aim.dx * 60 * S; aim.y = ball.y + aim.dy * 60 * S; hostAimPin = true;
+        let rEnd = null; const rO = ribbonO;   // (the end of the flight's ribbon: the last point it was given)
+        ribbonO = (w, soft) => { if (!soft && RIB.n > 1) rEnd = [RIB.p[(RIB.n - 1) * 3], RIB.p[(RIB.n - 1) * 3 + 1]]; return rO(w, soft); };
+        const onRing = (when) => { const T = HP.target, e = rEnd && T ? Math.hypot(rEnd[0] - T.x, rEnd[1] - T.y) : -1, r = HP.ring && HP.ring.pv && T ? Math.hypot(HP.ring.x - T.x, HP.ring.y - T.y) : -1;
+          info['ribbon ' + when] = { endOffRing: +(e / S).toFixed(6), landingOffRing: +(r / S).toFixed(6) };
+          if (!(e >= 0 && e < 1e-6) || !(r >= 0 && r < 1e-6)) errs.push('host craft: the ribbon does not end on the aim ring ' + when + ' (' + e + ', ' + r + ' off)'); };
+        rEnd = null; step(3, 1); info.read = aimEl.innerHTML; onRing('before the swing');
+        if (!/^Aim <b>60 m<\/b>$/.test(aimEl.innerHTML)) errs.push('host craft: the aim is not read out as 60 m (' + aimEl.innerHTML + ')');
+        if (snapAt) snapAt('host-ribbon');
+        { const T = HP.target; rEnd = null; HP.sw = { t: 0, u: T.u, presses: 0, spd: 1, g: null, rel: false }; hostAim(); HP.sw = null; onRing('held at the gold mark'); }
+        ribbonO = rO; hostAimPin = false;
+      }
+      // the sliders: an amount goes out as it is; a side he has not earned is held at the middle and says what unlocks it; Z and X pass over a locked side
+      const half = { draw: true, fade: false, high: false, low: true, side: false, back: false, tour: false, boost: false, charges: 0, why: { fade: 'Accuracy 60', high: 'Touch 60' } };
+      hostMessage(turn(2, half, 0)); jumpToBall(); step(2, 0); msgText = '';
+      const a2 = hostPickAmt('curve', 0.6), said1 = msgText; msgText = '';
+      const f1 = hostPickAmt('flight', 0.5), said2 = msgText, a1 = hostPickAmt('curve', -0.4), f2 = hostPickAmt('flight', -0.25);
+      info.sliders = { a1, a2, f1, f2, said1, said2, shot: hostShotIn().shape, text: hostPickText() };
+      if (a1 !== -0.4 || a2 !== 0 || f1 !== 0 || f2 !== -0.25) errs.push('host craft: the sliders did not hold to the sides he has earned (' + JSON.stringify(info.sliders) + ')');
+      if (!/Fade is locked: Accuracy 60/.test(said1) || !/High is locked: Touch 60/.test(said2)) errs.push('host craft: a locked side did not say what unlocks it (' + said1 + ' / ' + said2 + ')');
+      if (hostPickText() !== 'Draw 40%, low 25%') errs.push('host craft: the pick is not told with its amounts (' + hostPickText() + ')');
+      step(12, 0); { const m = hostLast && hostLast.t === 'aim' ? hostLast.input.shape : null; if (!m || m.curve !== -0.4 || m.flight !== -0.25) errs.push('host craft: the sliders\' amounts did not go out in the aim (' + JSON.stringify(m) + ')'); }
+      hostPickAmt('curve', 0); hostPickAmt('flight', 0);
+      const zs = [], xs = []; for (let k = 0; k < 3; k++) { hostPickSet('curve'); zs.push(HP.pick.curve); } for (let k = 0; k < 3; k++) { hostPickSet('flight'); xs.push(HP.pick.flight); }
+      info.keys = { z: zs, x: xs };
+      if (zs.join() !== '-1,0,-1' || xs.join() !== '-1,0,-1') errs.push('host craft: Z and X did not pass over a side he has not earned (' + zs.join() + ' / ' + xs.join() + ')');
+      hostPickAmt('curve', 0); hostPickAmt('flight', 0);
+      hostPickAmt('curve', Number.NaN); hostPickAmt('flight', 9); if (HP.pick.curve !== 0 || HP.pick.flight !== 0) errs.push('host craft: not a number is not none, or a locked end was taken');
+    }
     const none = { draw: false, fade: false, high: false, low: false, side: false, back: false, tour: false, boost: false, charges: 0, why: { draw: 'Accuracy 60', boost: 'The Power Mash card' } };
     hostMessage(turn(2, none, 0)); msgText = '';
     const took = hostPickSet('draw'); info.locked = { took, said: msgText, curve: HP.pick.curve };
     if (took !== false || HP.pick.curve !== 0 || !/Accuracy 60/.test(msgText) || hostPickSet('boost') !== false) errs.push('host craft: a locked pick was taken');
+    msgText = ''; { const z = hostPickSet('curve'); if (z !== false || !/Draw is locked: Accuracy 60/.test(msgText) || HP.pick.curve !== 0) errs.push('host craft: Z took a curve he has not earned'); }
+    msgText = ''; { const s = hostPickAmt('curve', -0.5); if (s !== 0 || !/Draw is locked/.test(msgText)) errs.push('host craft: a slider took a draw he has not earned'); }
     hostMessage(turn(2, Object.assign({}, none, { boost: true, charges: 1, why: {} }), 1)); jumpToBall(); step(4, 0);
     hostPickSet('boost'); const armed = HP.pick.armed;
     keys.Space = true; step(60, 0); keys.Space = false; for (let k = 0; k < 120 && !(hostLast && hostLast.t === 'input'); k++) step(1, 0);   // (T446: Space held swings)
     const sw = hostLast && hostLast.t === 'input' && hostLast.input.swing; info.boost = { armed, sent: sw && sw.boost, after: HP.pick.armed };
     if (!armed || !sw || sw.boost !== 0.06 || HP.pick.armed) errs.push('host craft: the armed boost was not a full boost, or was not spent');
+    if (aimEl.innerHTML !== '') errs.push('host craft: the aim is still read out after the strike (' + aimEl.innerHTML + ')');
     return { errs, info };
   }
   // T423: a putt on the host's green: the read is on the card; the putt aimed along the read's start line ends in the cup, aimed at the cup it ends off by
@@ -342,12 +389,15 @@ ${HOST_PLAY}
   genBudget = 1e9; spriteMax = 999;
   const go = (x, y, yaw = 0) => { player.x = x; player.y = y; camYaw = yaw; player.th = yaw - 1.5708; player.fa = ((Math.round(player.th / 6.2832 * 16) % 16) + 16) % 16; camD = D0; camHk = 1; HZ = Math.round(190 * RS); aimCam(); camZ = groundH(x, y) + HC; };
   const frames = (n) => { for (let k = 0; k < n; k++) { tickGame(); render(); } };
-  const snap = (name) => { render(); render(); render(); out.names.push(name); out.frames.push(Uint8ClampedArray.from(px)); out.info.push({ name, mat: MAT_NAME[matAt(player.x, player.y)], objs: visObjs.length, chunks: chunks.size, tiles: tiles.size }); };
+  const snap = (name) => { render(); render(); render(); out.names.push(name); const fr = Uint8ClampedArray.from(px);
+    // (SHOT_OVERLAY=1: the full-size layer, the aim's ribbon and rings, is laid over the picture as the page lays it; at scale 1 only, where both are 960 x 540)
+    if (typeof process !== 'undefined' && process.env.SHOT_OVERLAY && ob && ob.length * 4 === fr.length) for (let i = 0; i < ob.length; i++) { const c = ob[i], a = c >>> 24; if (!a) continue; const q = i * 4, k = a / 255; fr[q] = fr[q] * (1 - k) + (c & 255) * k; fr[q + 1] = fr[q + 1] * (1 - k) + ((c >>> 8) & 255) * k; fr[q + 2] = fr[q + 2] * (1 - k) + ((c >>> 16) & 255) * k; }
+    out.frames.push(fr); out.info.push({ name, mat: MAT_NAME[matAt(player.x, player.y)], objs: visObjs.length, chunks: chunks.size, tiles: tiles.size }); };
   const pathAt = (t) => { const k = Math.min(23, Math.floor(t * 24)); return [hole.path[k * 2], hole.path[k * 2 + 1]]; };
   const find = (test, cx, cy, rad) => { for (let r = 0; r < rad; r += 1.5) for (let a = 0; a < 6.283; a += 1.5 / Math.max(r, 1.5)) { const x = cx + Math.cos(a) * r, y = cy + Math.sin(a) * r; if (test(x, y)) return [x, y]; } return null; };
   const mid = pathAt(0.5);
   const SC = {
-    host: () => { hostMessage(hostMsg()); idle(); snap('host'); const r = hostPlayRun(snap); out.info.push({ hostPlay: r.info, errors: r.errs }); const c = hostCraftRun(); out.info.push({ hostCraft: c.info, errors: c.errs }); const gr = hostGreenRun(); out.info.push({ hostGreen: gr.info, errors: gr.errs }); snap('host-green'); const dn = hostDoneRun(); out.info.push({ hostDone: dn.info, errors: dn.errs }); const l = hostLieRun(); out.info.push({ hostLies: l.info, errors: l.errs }); snap('host-lies'); },   // (T418: then a turn, a strike and a canned shot)   // (T415: Woodhill handed over by message, hole 1 from its tee)
+    host: () => { hostMessage(hostMsg()); idle(); snap('host'); const r = hostPlayRun(snap); out.info.push({ hostPlay: r.info, errors: r.errs }); const c = hostCraftRun(snap); out.info.push({ hostCraft: c.info, errors: c.errs }); const gr = hostGreenRun(); out.info.push({ hostGreen: gr.info, errors: gr.errs }); snap('host-green'); const dn = hostDoneRun(); out.info.push({ hostDone: dn.info, errors: dn.errs }); const l = hostLieRun(); out.info.push({ hostLies: l.info, errors: l.errs }); snap('host-lies'); },   // (T418: then a turn, a strike and a canned shot)   // (T415: Woodhill handed over by message, hole 1 from its tee)
     tee() { idle(); frames(20); snap('tee'); },
     aim() { idle(); newHole(holeN, hole.tee.x, hole.tee.y); frames(20); player.x = ball.x - 0.3; player.y = ball.y + 0.6; mouse.x = VW / 2 + 60; mouse.y = VH / 2 - 150; frames(6); snap('aim'); mouse.down = true; frames(40); snap('aim-charge'); mouse.down = false; frames(60); snap('ballcam-a'); frames(70); snap('ballcam-b'); for (let k = 0; k < 900 && ball.state !== 0; k++) frames(1); frames(20); snap('ballcam-end'); frames(60); snap('aim-after'); },
     stuck() { // can the golfer be trapped? On every steep point found near the hole (and its flatter neighbours), count the points from which no step in any of 16 directions is allowed

@@ -75,6 +75,9 @@ Check: image-rendering: pixelated
 Check: --panel: rgba(20, 21, 25, 0.9)
 Check: body.host #mini
 Check: #cover.on
+R: J5f: the shot panel's Curve and Flight are sliders (a track with a gold run from the middle to the thumb, a tick at the middle, the end he has not earned dimmed and struck through), and the aim's distance sits in a small panel above the club box.
+Check: #shotc input[type=range]
+Check: #aimd
 
 ````css file=style.css
 :root {
@@ -169,6 +172,22 @@ body.host #mini, body.host #wind { top: 56px; }
 #shotc b.boost.sel { background: linear-gradient(#ef6a4a, #c2410c); border-color: transparent; color: #fff; }
 #shotc canvas { width: 3.1em; height: 3.1em; cursor: crosshair; image-rendering: auto; }
 #shotc i { font-style: normal; font-size: 0.9em; color: var(--muted); padding: 0 0.3em; }
+/* J5f: Curve and Flight are sliders: the track has a gold run from the middle to the thumb (--a to --b, set by the view) and a tick at the middle; a side he has not earned is dimmed
+   (--l, --r) and its end name struck through; the thumb is gold once the amount is off the middle. Each vendor's pseudo-elements get their own rule (one unknown one drops a list) */
+#shotc .row.sl { gap: 0.3em; padding-right: 0.5em; }
+#shotc .row.sl span { cursor: pointer; }
+#shotc small { flex: none; width: 2.3em; font-size: 0.85em; text-align: center; color: var(--muted); }
+#shotc small.lock { opacity: 0.45; text-decoration: line-through; }
+#shotc input[type=range] { -webkit-appearance: none; appearance: none; flex: none; width: 7.5em; height: 1.4em; margin: 0; padding: 0; background: transparent; cursor: pointer; --a: 50%; --b: 50%; --l: rgba(255, 255, 255, 0.22); --r: rgba(255, 255, 255, 0.22);
+  --trk: linear-gradient(to right, transparent calc(50% - 1px), rgba(255, 255, 255, 0.7) calc(50% - 1px), rgba(255, 255, 255, 0.7) calc(50% + 1px), transparent calc(50% + 1px)),
+    linear-gradient(to right, transparent var(--a), var(--gold) var(--a), var(--gold) var(--b), transparent var(--b)), linear-gradient(to right, var(--l) 50%, var(--r) 50%); }
+#shotc input[type=range]:focus { outline: none; }
+#shotc input[type=range]::-webkit-slider-runnable-track { height: 0.45em; border-radius: 999px; background: var(--trk); }
+#shotc input[type=range]::-moz-range-track { height: 0.45em; border-radius: 999px; background: var(--trk); }
+#shotc input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 1.1em; height: 1.1em; margin-top: -0.325em; border-radius: 50%; border: 1px solid rgba(0, 0, 0, 0.6); background: #d9d3c4; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.55); }
+#shotc input[type=range]::-moz-range-thumb { width: 1.1em; height: 1.1em; box-sizing: border-box; border-radius: 50%; border: 1px solid rgba(0, 0, 0, 0.6); background: #d9d3c4; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.55); }
+#shotc input[type=range].on::-webkit-slider-thumb { background: var(--gold-btn); }
+#shotc input[type=range].on::-moz-range-thumb { background: var(--gold-btn); }
 #pickTxt { margin-top: 0.3em; padding-left: 0.2em; color: var(--gold-hi); }
 
 /* the clubs: CapitalEmpire's rail tabs, the one in hand ringed in gold on the gold wash */
@@ -181,6 +200,12 @@ body.host #mini, body.host #wind { top: 56px; }
 #clubs .club.on b { color: var(--gold); }
 #clubs .club i { display: block; font-style: normal; font-weight: 500; font-size: 0.85em; color: var(--muted); font-variant-numeric: tabular-nums; }
 #clubs .club.cut i { color: var(--warn); }
+/* J5f: the aim's distance ("Aim 128 m", written by the view's hostAimRead): a small panel above the club box, whatever height the box is (it is the box's own last child, the box
+   is the positioned parent); hidden while empty */
+#aimd { position: absolute; left: 0; bottom: calc(100% + 0.45em); padding: 0.3em 0.75em 0.35em; border-radius: 0.8em; background: var(--panel); border: 1px solid var(--gold-line); box-shadow: var(--shadow); font-size: 1em; font-weight: 600; color: var(--muted); white-space: nowrap; font-variant-numeric: tabular-nums; }
+#aimd:empty { display: none; }
+#aimd b { color: var(--gold-hi); font-weight: 700; }
+#aimd i { margin-left: 0.5em; font-style: normal; font-size: 0.78em; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); }
 
 /* the key hints and the help: CapitalEmpire's keycaps */
 #keys { position: absolute; right: 1.4%; bottom: 2.4%; padding: 0.35em 0.75em; border-radius: 999px; font-size: 0.9em; color: var(--muted); }

@@ -1,7 +1,7 @@
 {
- "note": "T258: the driving range's stand-ins the owner makes in ChatGPT (docs/art/CHATGPT-IMAGE-QUEUE.md 'First: the driving range's stand-ins'; GOLF-ART-LIST section 1). slug: the file name's stem under art/theme-consistency/generated/buildings/ (<slug>-view1-vN.png and <slug>-view2-vN.png for code A, <slug>-1view-vN.png for B); box: the footprint in metres (front width, depth); high: metres; size: 'box' sizes the picture by its footprint (its width spans the footprint's diamond, as T232's site kit), 'tall' by its height (64 px a metre, the uprights' scale, as T231's kit); piece: the range scene's piece key (rangebiz.ts rangeScene) the picture replaces (a prefix: every key starting with it).",
+ "note": "T258: the driving range's stand-ins the owner makes in ChatGPT (docs/art/CHATGPT-IMAGE-QUEUE.md 'First: the driving range's stand-ins'; GOLF-ART-LIST section 1). slug: the file name's stem under art/theme-consistency/generated/buildings/ (<slug>-view1-vN.png and <slug>-view2-vN.png for code A, <slug>-1view-vN.png for B); box: the footprint in metres (front width, depth); high: metres; size: 'box' sizes the picture by its footprint (its width spans the footprint's diamond, as T232's site kit), 'tall' by its height (64 px a metre, the uprights' scale, as T231's kit); piece: the range scene's piece key (rangebiz.ts rangeScene) the picture replaces (a prefix: every key starting with it); decontaminate: true cleans the key colour's spill off the picture's rim (prep-range-art.mjs). 'yard': the yardage signs (#1235: one slug a painted distance, two views each, looked up by rangeScene through yardage-signs.ts).",
  "items": [
-  { "slug": "golf-clubhouse-shanty", "item": 1, "code": "A", "name": "Tin-and-tarp pro shop", "box": [12, 8], "high": 4, "size": "box", "piece": "shop" },
+  { "slug": "golf-clubhouse-shanty", "item": 1, "code": "A", "name": "Range shop (asbestos-panel hut)", "box": [12, 8], "high": 4, "size": "box", "piece": "shop", "decontaminate": true },
   { "slug": "golf-range-sign", "item": 5, "code": "A", "name": "Driving Range road sign", "box": [4, 0.5], "high": 3, "size": "box", "piece": "sign", "wallBelow": 0.75 },
   { "slug": "golf-range-deck", "item": 2, "code": "A", "name": "Double-deck hitting stand", "box": [20, 7], "high": 7, "size": "box", "piece": "roof" },
   { "slug": "golf-range-coffee-kiosk", "item": 3, "code": "A", "name": "Coffee kiosk", "box": [3, 2.5], "high": 3, "size": "box", "piece": "kiosk", "wallBelow": 0.65 },
@@ -9,5 +9,15 @@
   { "slug": "golf-range-yardage-board", "item": 6, "code": "A", "name": "Yardage board", "box": [2, 0.5], "high": 2.5, "size": "box", "piece": "board", "wallBelow": 0.85 },
   { "slug": "golf-range-distance-post", "item": 7, "code": "B", "name": "Distance marker post", "box": [0.5, 0.5], "high": 1.5, "size": "tall", "piece": "mark" },
   { "slug": "golf-range-floodlight", "item": 10, "code": "A", "name": "Floodlight mast", "box": [1, 1], "high": 12, "size": "tall", "piece": "light" }
+ ],
+ "yard": [
+  { "slug": "golf-range-yard-50", "item": 6, "code": "A", "name": "Yardage sign 50 m", "box": [2, 0.5], "high": 2.5, "size": "box", "piece": "yard", "wallBelow": 0.85 },
+  { "slug": "golf-range-yard-75", "item": 6, "code": "A", "name": "Yardage sign 75 m", "box": [2, 0.5], "high": 2.5, "size": "box", "piece": "yard", "wallBelow": 0.85 },
+  { "slug": "golf-range-yard-100", "item": 6, "code": "A", "name": "Yardage sign 100 m", "box": [2, 0.5], "high": 2.5, "size": "box", "piece": "yard", "wallBelow": 0.85 },
+  { "slug": "golf-range-yard-125", "item": 6, "code": "A", "name": "Yardage sign 125 m", "box": [2, 0.5], "high": 2.5, "size": "box", "piece": "yard", "wallBelow": 0.85 },
+  { "slug": "golf-range-yard-150", "item": 6, "code": "A", "name": "Yardage sign 150 m", "box": [2, 0.5], "high": 2.5, "size": "box", "piece": "yard", "wallBelow": 0.85 },
+  { "slug": "golf-range-yard-175", "item": 6, "code": "A", "name": "Yardage sign 175 m", "box": [2, 0.5], "high": 2.5, "size": "box", "piece": "yard", "wallBelow": 0.85 },
+  { "slug": "golf-range-yard-200", "item": 6, "code": "A", "name": "Yardage sign 200 m", "box": [2, 0.5], "high": 2.5, "size": "box", "piece": "yard", "wallBelow": 0.85 },
+  { "slug": "golf-range-yard-250", "item": 6, "code": "A", "name": "Yardage sign 250 m", "box": [2, 0.5], "high": 2.5, "size": "box", "piece": "yard", "wallBelow": 0.85 }
  ]
 }
