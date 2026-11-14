@@ -197,6 +197,8 @@ import { looseBays } from './golf/rangelot';
 import { footStart, parkLook, type ParkLook } from './event/parklook';
 import { dressCourse } from './golf/dressing';
 import { noteMoment } from '../ui/golf/finevents';
+import { framePoints, tilesAround, type Box as SpotBox, type TileRect } from '../ui/spotlight/spot'; // J10 (#1269): the Show me spotlight's map side
+import { currentUiScale } from '../ui/uiScale';
 import { balanceBooks, cashLinesSum, book, assetsAtCost, debtOf, netWorthOf, deposit, isBankrupt, monthEnd, newFinance, repay, signBank, signMurabaha, withdraw, type FinanceSave, type Line, type MonthReport } from './golf/finance';
 import { settleRisk, noteEmergency, setInsurance, type Plan } from './golf/risk'; // J3
 import { weeklyFees, type Live } from './golf/reports'; // J3
@@ -6792,8 +6794,8 @@ export class Game {
   private camEase: { a: Camera; b: Camera; t0: number; ms: number } | null = null;
   /** the camera frames tiles pts in the free map beside the panel (New hole's tee and green clicks, a check's Show me): it eases there in
    *  CAM_EASE_MS at most, or jumps under reduced motion; zoomIn false only eases out */
-  fitView(pts: { x: number; y: number }[], zoomIn: boolean) {
-    const to = frameView(pts, this.freeRect(), this.cssW, this.cssH, this.cam, zoomIn, ZOOM_MIN, ZOOM_MAX);
+  fitView(pts: { x: number; y: number }[], zoomIn: boolean, free: FreeRect = this.freeRect()) {
+    const to = frameView(pts, free, this.cssW, this.cssH, this.cam, zoomIn, ZOOM_MIN, ZOOM_MAX);
     if (!to) return;
     const c = this.cam;
     if (Math.abs(to.z - c.z) < c.z * 0.01 && Math.abs(to.X - c.X) * c.z < 2 && Math.abs(to.Y - c.Y) * c.z < 2) return;
@@ -6810,6 +6812,57 @@ export class Game {
       if (p && p.width > 0) { l = Math.max(0, p.right - c.left); t = Math.max(0, p.top - c.top); }
     } catch { /* no layout (a test) */ }
     return { l: l + 8, t: t + 8, r: this.cssW - 8, b: this.cssH - 56 };
+  }
+  // ---------- J10 (#1269): the Show me spotlight's map side (ui/spotlight: shows.ts builds the request, Spotlight.tsx follows it every frame)
+  /** the range's front (its shop, car park and tee box) as tiles x0 y0 x1 y1, or null without a range scene */
+  spotRangeBox(): TileRect | null { const f = this.range.scene?.front; return f ? [f[0], f[1], f[2], f[3]] : null; }
+  /** a box round the middle of the balls lying out on the range (null: none lie out) */
+  spotBallsBox(): TileRect | null {
+    const f = this.golf?.range?.balls?.field; if (!f || f.length < 2) return null;
+    const n = Math.min(200, f.length >> 1); let sx = 0, sy = 0;
+    for (let i = 0; i < n; i++) { sx += f[i * 2]!; sy += f[i * 2 + 1]!; }
+    return tilesAround([{ x: sx / n, y: sy / n }], 14);
+  }
+  /** a box round the rings a Show me put on the map (the town's first houses, the walking path's ends), null when there are none */
+  spotRingsBox(): TileRect | null { return tilesAround(this.guideRings?.pts ?? [], 10); }
+  /** a box round the spot the prep checklist's Show me suggested for its structure (the Event tool's ghost there), null when it suggested none */
+  spotSuggestBox(): TileRect | null {
+    const s = this.eventSuggest; if (!s) return null;
+    const r = structureRect({ typeId: s.typeId, x: s.x, y: s.y });
+    return tilesAround([{ x: r[0] + r[2] / 2, y: r[1] + r[3] / 2 }], 8);
+  }
+  /** a tile rect as a box in window css px under the camera as it is now, written into out (the spotlight asks every frame: nothing is allocated): the four corners of the
+   *  diamond it makes on the ground, boxed (the canvas fills the window). False without a window */
+  spotScreen(r: TileRect, out: SpotBox): boolean {
+    if (!(this.cssW > 0 && this.cssH > 0)) return false;
+    const c = this.cam, k = c.z, ox = this.cssW / 2 - c.X * k, oy = this.cssH / 2 - c.Y * k;
+    const ax = worldX(r[0], r[1]) * k + ox, bx = worldX(r[2], r[1]) * k + ox, cx = worldX(r[2], r[3]) * k + ox, dx = worldX(r[0], r[3]) * k + ox;
+    const ay = worldY(r[0], r[1]) * k + oy, by = worldY(r[2], r[1]) * k + oy, cy = worldY(r[2], r[3]) * k + oy, dy = worldY(r[0], r[3]) * k + oy;
+    out.x = Math.min(ax, bx, cx, dx); out.y = Math.min(ay, by, cy, dy);
+    out.w = Math.max(ax, bx, cx, dx) - out.x; out.h = Math.max(ay, by, cy, dy) - out.y;
+    return true;
+  }
+  /** the camera frames a tile rect in the free map (clear of the rail on the left, the top bar and the cards docked at the right): it eases there, or jumps under
+   *  reduced motion, and the spotlight follows */
+  spotFrame(r: TileRect) {
+    const f = this.freeRect();
+    try {
+      if (typeof document !== 'undefined') {
+        const rail = document.querySelector('[data-testid="rail"]')?.getBoundingClientRect();
+        if (rail && rail.width > 0) f.l = Math.max(f.l, rail.right + 16);
+        const hud = parseFloat(document.documentElement.style.getPropertyValue('--hud-top')) * currentUiScale();
+        if (hud > 0) f.t = Math.max(f.t, hud + 8);
+        // the cards at the right (the range card, the Bank, the tutorial's card) are direct children of the UI layer: the free map ends where the first of them begins
+        let right = f.r;
+        for (const el of Array.from(document.querySelector('.ui-root')?.children ?? [])) {
+          if (!el.classList.contains('pointer-events-auto')) continue;
+          const c = el.getBoundingClientRect();
+          if (c.width > 120 && c.height > 60 && c.left > this.cssW * 0.45) right = Math.min(right, c.left - 12);
+        }
+        if (right - f.l >= 360) f.r = right; // (a window too narrow for the cards keeps the whole width: they are dimmed under the spotlight anyway)
+      }
+    } catch { /* no layout (a test) */ }
+    this.fitView(framePoints(r), true, f);
   }
   /** the camera's ease, once a frame: an ease out in X, Y and the zoom (the zoom in log steps, so it reads even) */
   private stepCamEase(now: number) {

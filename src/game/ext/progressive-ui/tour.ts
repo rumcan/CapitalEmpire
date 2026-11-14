@@ -11,6 +11,7 @@ import { JAM } from '../../features';
 export const JAM_TOUR: readonly GuideStep[] = Object.freeze([
   {
     id: 'tour-town',
+    tile: 'buy-range', // (J8, #1261: every step wears a painted tile, shown by the guide card)
     n: 1,
     title: 'Your club, your money',
     // (J9: the range is bought with the land when the start is chosen: $75,000 less its $15,000)
@@ -20,6 +21,7 @@ export const JAM_TOUR: readonly GuideStep[] = Object.freeze([
   },
   {
     id: 'tour-room',
+    tile: 'bank',
     n: 2,
     title: 'The Bank',
     body: 'Click your cash to open the Bank: borrow (see the total interest first) or save. Each month ends with a short statement of what came in and went out.',
@@ -28,6 +30,7 @@ export const JAM_TOUR: readonly GuideStep[] = Object.freeze([
   },
   {
     id: 'tour-golf',
+    tile: 'clubhouse',
     n: 3,
     title: 'Build what you like',
     // J7 (#1225; the owner: "let the player decide"): the menu, not an order. Tips (Build ▸ Tips) hold what the guided build used to say
@@ -41,6 +44,7 @@ export const JAM_TOUR: readonly GuideStep[] = Object.freeze([
 export const TOWN_TOUR: readonly GuideStep[] = JAM ? JAM_TOUR : Object.freeze([
   {
     id: 'tour-town',
+    tile: 'street-furniture',
     n: 1,
     title: 'Your town',
     body: 'Your town grows here, along the county road (the rings): houses go up on the lots beside a road by themselves, but only on land that has a road.',
@@ -49,6 +53,7 @@ export const TOWN_TOUR: readonly GuideStep[] = JAM ? JAM_TOUR : Object.freeze([
   },
   {
     id: 'tour-roads',
+    tile: 'cart-path',
     n: 2,
     title: 'Roads are your job',
     // T288: the road tool is open from the start (the owner, 2026-11-04: "Yes, unlock it"): the step is done when you build a town road
@@ -58,6 +63,7 @@ export const TOWN_TOUR: readonly GuideStep[] = JAM ? JAM_TOUR : Object.freeze([
   },
   {
     id: 'tour-room',
+    tile: 'land-plot',
     n: 3,
     title: 'When the town is out of room',
     body: 'You are told when the town has no room left to grow: build another road to keep it growing. Busy streets jam, and upgrading them (Traffic › Upgrade) is your job too.',
@@ -66,6 +72,7 @@ export const TOWN_TOUR: readonly GuideStep[] = JAM ? JAM_TOUR : Object.freeze([
   },
   {
     id: 'tour-golf',
+    tile: 'golf-hole',
     n: 4,
     title: 'Now your golf',
     body: 'Your driving range stands on your land, and your home beside it: you chose where. The guide in the corner walks you through the rest, step by step.',

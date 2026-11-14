@@ -5,6 +5,7 @@
 import { courseRating, type TopStats } from '../game/golf/topstats';
 import { monthIndexLabel } from '../game/golf/calendar';
 import type { IconName } from './Icon';
+import type { ToolTile } from './tool-tiles';
 import { balanceKind, trendKind, withIcon } from './status-icon';
 import { inCurrency, moneyPrefs } from './golf/money';
 
@@ -12,7 +13,7 @@ import { inCurrency, moneyPrefs } from './golf/money';
  *  below 2200 px; null: none), the line under the figure (sub: the money's change, from 1600 px; subAlways: shown at every width, the debt's
  *  warning) and its tone, and its tooltip */
 export interface StatChipView {
-  id: 'money' | 'rep' | 'golfers' | 'rating'; icon: IconName; value: string; short?: string; unit?: string; tone?: 'up' | 'down';
+  id: 'money' | 'rep' | 'golfers' | 'rating'; icon: IconName; /** J8 (#1261): a painted tile drawn in place of the icon (the Cash chip's bank) */ tile?: ToolTile; value: string; short?: string; unit?: string; tone?: 'up' | 'down';
   label: string | null; sub?: string; subTone?: 'up' | 'down' | 'flat'; subAlways?: true; tip: string;
 }
 
@@ -52,7 +53,7 @@ export function statChips(s: TopStats, debtLeft: number | null = null): StatChip
   const unlimited = !Number.isFinite(s.money);
   const ch = s.monthChange, change = ch === null ? '' : `${changeWhen(s)}: ${signedMoney(ch)}`;
   const moneyChip: StatChipView = {
-    id: 'money', icon: 'bank', value: unlimited ? '∞' : withIcon(balanceKind(s.money), plainMoney(s.money)), ...(unlimited ? {} : { short: withIcon(balanceKind(s.money), shortMoney(s.money)) }),
+    id: 'money', icon: 'bank', tile: 'bank', value: unlimited ? '∞' : withIcon(balanceKind(s.money), plainMoney(s.money)), ...(unlimited ? {} : { short: withIcon(balanceKind(s.money), shortMoney(s.money)) }),
     ...(s.money < 0 ? { tone: 'down' as const } : {}), label: null,
     ...(debtLeft !== null && !unlimited ? { sub: `bankrupt in ${debtLeft} ${debtLeft === 1 ? 'day' : 'days'}`, subTone: 'down' as const, subAlways: true as const }
       : ch === null ? {} : { sub: withIcon(trendKind(ch), `${signedMoney(ch)}/mo`), subTone: ch > 0 ? 'up' as const : ch < 0 ? 'down' as const : 'flat' as const }),

@@ -66,6 +66,15 @@ const buttonsIn = root => page.evaluate(sel => {
 const byButton = (root, b) => b.id ? page.locator(`${root} [data-testid="${b.id}"]`).first() : page.locator(`${root} button`).filter({ hasText: b.label }).first();
 const esc = async () => { await page.keyboard.press('Escape'); await settle(200); };
 const game = fn => page.evaluate(fn);
+/** J10 (#1269): every Show me puts the spotlight up (the rest dimmed and blurred, its target cut out) and finds its target: checked here, then put away with Esc (the layer
+ *  covers the page, so the next click would land on it; Esc ends it and nothing else) */
+async function spotlightOn(area, label) {
+  const found = await page.waitForFunction(() => document.querySelector('[data-testid="spotlight"]')?.dataset.on === '1', null, { timeout: 4000 }).then(() => true, () => false);
+  const note = found ? await page.evaluate(() => { const L = document.querySelector('[data-testid="spotlight"]'), C = document.querySelector('[data-testid="spotlight-caption"]'); return `blur ${L?.dataset.blur}, caption "${C?.querySelector('.spot-cap-title')?.textContent ?? ''}"`; }) : 'Show me did not light its target';
+  row(area, `${label}: spotlight`, found ? 'PASS' : 'FAIL', note);
+  await esc();
+  if (found && await page.locator('[data-testid="spotlight"]').count()) row(area, `${label}: Esc ends the spotlight`, 'FAIL', 'it is still up');
+}
 /** a click that opened the view from behind the golfer (Play this hole, Hit balls): Back to the course, itself a button under test */
 async function closeView(area) {
   if (!(await game(() => window.__game.view3pHole !== null))) return;
@@ -153,7 +162,7 @@ try {
       // (a step shows itself as it becomes current: put that away first, as a player who closed it would, so Show me has to show it again)
       await settle(1200); // (the new step shows itself a frame or two after Next: let it, then put it away)
       await game(() => { const g = window.__game; if (g.panel === 'bank') g.toggleMoneyPanel(); g.guideAnchor = null; g.openRangeCard(false); g.emit(); }); await settle(300);
-      if (await show.isVisible().catch(() => false)) await click('tutorial', `Show me: ${title}`, show, { wait: 800 });
+      if (await show.isVisible().catch(() => false)) { await click('tutorial', `Show me: ${title}`, show, { wait: 800 }); await spotlightOn('tutorial', `Show me: ${title}`); }
       if (await game(() => window.__game.panel === 'bank')) await game(() => { window.__game.toggleMoneyPanel(); });
       await game(() => window.__game.openRangeCard(false));
       const next = page.locator(`${tour} button`, { hasText: /^Next$/ }).first();
@@ -192,7 +201,7 @@ try {
       const head = page.locator(`[data-testid="${id}"] button[aria-expanded]`).first();
       if (await head.getAttribute('aria-expanded') !== 'true') await click('tips', id.replace('tips-', ''), head);
       const show = page.locator(`[data-testid="tips-show-${id.replace('tips-', '')}"]`);
-      if (await show.isVisible().catch(() => false)) { await click('tips', `Show me: ${id.replace('tips-', '')}`, show, { wait: 800 }); await putDown(); await page.locator('[data-testid="build-close"]').click({ timeout: 500 }).catch(() => {}); if (!(await page.locator(tipsRoot).isVisible().catch(() => false))) { await openBuild(); await page.locator('[data-testid="build-tips"]').click(); await settle(); } }
+      if (await show.isVisible().catch(() => false)) { await click('tips', `Show me: ${id.replace('tips-', '')}`, show, { wait: 800 }); await spotlightOn('tips', `Show me: ${id.replace('tips-', '')}`); await putDown(); await page.locator('[data-testid="build-close"]').click({ timeout: 500 }).catch(() => {}); if (!(await page.locator(tipsRoot).isVisible().catch(() => false))) { await openBuild(); await page.locator('[data-testid="build-tips"]').click(); await settle(); } }
     }
     await click('tips', 'Close the tips', page.locator('[data-testid="tips-close"]'));
   } else row('tips', '(no tips card)', 'FAIL', 'Build › Tips did not open the tips');

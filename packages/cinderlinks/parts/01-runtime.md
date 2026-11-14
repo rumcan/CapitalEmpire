@@ -51,8 +51,8 @@ start "" "%EDGE%" --app="file:///%~dp0index.html" --new-window --user-data-dir="
     <div id="clubs"></div>
     <div id="keys"></div>
     <div id="style"><button id="styleBtn" type="button">Settings</button><div id="styleMenu"></div></div>
-    <button id="jump" type="button">Jump to ball <b>J</b></button>
-    <button id="gimme" type="button">Gimme <b>Y</b></button>
+    <button id="jump" type="button"><img src="tiles/jump-to-ball.webp" alt="" aria-hidden="true" draggable="false">Jump to ball <b>J</b></button>
+    <button id="gimme" type="button"><img src="tiles/gimme.webp" alt="" aria-hidden="true" draggable="false">Gimme <b>Y</b></button>
     <div id="help"></div>
     <div id="msg"></div>
   </div>
@@ -77,6 +77,8 @@ Check: body.host #mini
 Check: #cover.on
 R: J5f: the shot panel's Curve and Flight are sliders (a track with a gold run from the middle to the thumb, a tick at the middle, the end he has not earned dimmed and struck through), and the aim's distance sits in a small panel above the club box.
 Check: #shotc input[type=range]
+Check: #shotc small img
+Check: #clubs .club .ci
 Check: #aimd
 
 ````css file=style.css
@@ -101,9 +103,10 @@ button { font-family: var(--sans); }
 /* the glass panels (CapitalEmpire's .glass): the card, the help, the shot panel, the settings menu, the leaderboard and match cards */
 .panel, #card, #keys, #help, #wind, #shotc, #styleMenu { background: var(--panel); border: 1px solid var(--line); border-radius: 1.1em; box-shadow: var(--shadow); color: var(--ink); }
 body > .panel { border-radius: 0.9em; }
-#prac .ph { font-size: 0.85em; letter-spacing: 0.12em; color: var(--gold); margin-bottom: 0.35em; } #prac .pd { padding: 0.3em 0.45em; margin: 0.2em 0; border: 1px solid var(--line); border-radius: 0.6em; cursor: pointer; }
+#prac .ph { font-size: 0.85em; letter-spacing: 0.12em; color: var(--gold); margin-bottom: 0.35em; } #prac .pd { display: flex; gap: 0.5em; align-items: flex-start; padding: 0.3em 0.45em; margin: 0.2em 0; border: 1px solid var(--line); border-radius: 0.6em; cursor: pointer; }
 #prac .pd.on { border-color: var(--gold-line); background: var(--gold-wash); } #prac .pd.off { opacity: 0.45; cursor: default; } #prac .pd.done .pt i { color: var(--good); } #prac .pd:hover:not(.off) { border-color: var(--line-hi); }
 #prac .pt { display: flex; justify-content: space-between; gap: 0.5em; } #prac .pt i { font-style: normal; color: var(--gold-hi); } #prac .pg { color: var(--ink); font-size: 0.92em; } #prac .pr { color: var(--muted); font-size: 0.85em; }
+#prac .pi { flex: none; width: 3em; height: 3em; border-radius: 12%; pointer-events: none; } #prac .px { flex: 1; min-width: 0; }   /* (J8: a drill's tile at the left of its words) */
 #prac .pn { margin-top: 0.45em; color: var(--gold-hi); } #prac .pf { margin-top: 0.25em; color: var(--muted); font-size: 0.88em; }
 .pflag { padding: 0.1em 0.45em; border-radius: 0.5em; background: var(--panel); border: 1px solid var(--gold-line); color: var(--ink); font: 600 clamp(10px, 0.85vw, 13px) system-ui, sans-serif; white-space: nowrap; }
 body > .panel > b:first-child { font-size: 0.85em; letter-spacing: 0.12em; text-transform: uppercase; color: var(--gold); }
@@ -176,8 +179,11 @@ body.host #mini, body.host #wind { top: 56px; }
    (--l, --r) and its end name struck through; the thumb is gold once the amount is off the middle. Each vendor's pseudo-elements get their own rule (one unknown one drops a list) */
 #shotc .row.sl { gap: 0.3em; padding-right: 0.5em; }
 #shotc .row.sl span { cursor: pointer; }
-#shotc small { flex: none; width: 2.3em; font-size: 0.85em; text-align: center; color: var(--muted); }
+#shotc small { flex: none; display: flex; flex-direction: column; align-items: center; gap: 0.1em; width: 2.7em; font-size: 0.85em; text-align: center; color: var(--muted); }
 #shotc small.lock { opacity: 0.45; text-decoration: line-through; }
+/* J8 (#1261): a painted tile at each end of Curve (draw, fade) and Flight (low, high) and on Tour spin: pictures only, never in the way of a click (the end names and Tour keep their own) */
+#shotc small img { width: 2.7em; height: 2.7em; border-radius: 12%; pointer-events: none; }
+#shotc b img { width: 2.2em; height: 2.2em; margin-right: 0.3em; vertical-align: middle; border-radius: 12%; pointer-events: none; }
 #shotc input[type=range] { -webkit-appearance: none; appearance: none; flex: none; width: 7.5em; height: 1.4em; margin: 0; padding: 0; background: transparent; cursor: pointer; --a: 50%; --b: 50%; --l: rgba(255, 255, 255, 0.22); --r: rgba(255, 255, 255, 0.22);
   --trk: linear-gradient(to right, transparent calc(50% - 1px), rgba(255, 255, 255, 0.7) calc(50% - 1px), rgba(255, 255, 255, 0.7) calc(50% + 1px), transparent calc(50% + 1px)),
     linear-gradient(to right, transparent var(--a), var(--gold) var(--a), var(--gold) var(--b), transparent var(--b)), linear-gradient(to right, var(--l) 50%, var(--r) 50%); }
@@ -193,9 +199,10 @@ body.host #mini, body.host #wind { top: 56px; }
 /* the clubs: CapitalEmpire's rail tabs, the one in hand ringed in gold on the gold wash */
 #clubs { position: absolute; left: 1.4%; bottom: 2.4%; display: flex; flex-wrap: wrap; gap: 0.45em; max-width: 64%; }
 #clubs.bag { gap: 0.3em; max-width: 34%; }   /* (his whole bag wraps in the left third: the power bar stays clear) */
-#clubs .club { padding: 0.35em 0.7em 0.4em; border-radius: 0.8em; background: var(--panel); border: 1px solid var(--line); box-shadow: var(--shadow); font-size: 1em; font-weight: 600; color: #d9d3c4; line-height: 1.3; }
+#clubs .club { display: flex; align-items: center; gap: 0.4em; padding: 0.35em 0.7em 0.4em; border-radius: 0.8em; background: var(--panel); border: 1px solid var(--line); box-shadow: var(--shadow); font-size: 1em; font-weight: 600; color: #d9d3c4; line-height: 1.3; }
 #clubs.bag .club { padding: 0.25em 0.55em 0.3em; font-size: 0.88em; }
 #clubs .club.on { border-color: var(--gold); background: linear-gradient(var(--gold-wash), var(--gold-wash)), var(--panel); color: var(--gold-hi); box-shadow: var(--shadow), inset 0 0 12px rgba(245, 181, 46, 0.18); }
+#clubs .club .ci { flex: none; width: 2.5em; height: 2.5em; margin: -0.2em 0; border-radius: 12%; pointer-events: none; } #clubs.bag .club .ci { width: 2.2em; height: 2.2em; }   /* (J8: a club tab's painted tile, its club's: driver, wood, long iron, iron, wedge, putter) */
 #clubs .club b { margin-right: 0.1em; color: var(--muted); font-weight: 700; }
 #clubs .club.on b { color: var(--gold); }
 #clubs .club i { display: block; font-style: normal; font-weight: 500; font-size: 0.85em; color: var(--muted); font-variant-numeric: tabular-nums; }
@@ -234,6 +241,7 @@ body.host #mini, body.host #wind { top: 56px; }
 /* Jump to ball (.btn) and Gimme (the gold button: the thing to take now), each with its key as a keycap */
 #jump, #gimme { position: absolute; right: 1.4%; bottom: 8%; display: none; align-items: center; gap: 0.45em; padding: 0.45em 0.9em; font-size: 1em; font-weight: 600; color: var(--ink); background: var(--panel); border: 1px solid var(--line-hi); border-radius: 0.8em; box-shadow: var(--shadow); cursor: pointer; pointer-events: auto; }
 #jump.on, #gimme.on { display: inline-flex; } #jump:hover { border-color: var(--gold-line); }
+#jump img, #gimme img { width: 2.1em; height: 2.1em; margin: -0.35em 0; border-radius: 12%; pointer-events: none; }   /* (J8: their painted tiles; a click on one is a click on the button) */
 #jump b, #gimme b { min-width: 1.4em; padding: 0 0.3em; border-radius: 0.35em; border: 1px solid var(--line-hi); background: rgba(255, 255, 255, 0.06); font-size: 0.85em; line-height: 1.45; color: var(--ink); }
 #gimme { bottom: calc(8% + 2.9em); background: var(--gold-btn); border-color: transparent; color: #1b1406; font-weight: 700; box-shadow: 0 2px 10px rgba(245, 181, 46, 0.35), var(--shadow); }
 #gimme:hover { filter: brightness(1.06); } #gimme b { border-color: rgba(27, 20, 6, 0.35); background: rgba(27, 20, 6, 0.1); color: #1b1406; }

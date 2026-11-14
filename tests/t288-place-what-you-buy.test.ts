@@ -165,9 +165,9 @@ describe('T288: the guide\'s placement steps, the tutorial, the rail', () => {
     assert.match(tourStepFor(golf, { roadLock: null, start: 'range', rangePlaced: false }).body, /only your trailer/);
     assert.match(tourStepFor(golf, { roadLock: null, start: 'range', rangePlaced: true }).body, /you chose where/);
   });
-  it('the rail: Cart paths & roads right above Facilities, under Course; its tools the cart paths and the town roads', () => {
+  it('the rail: Cart paths & roads right under Course (#1272: Facilities is a tile of the Course flyout, no button); its tools the cart paths and the town roads', () => {
     const ids = railEntries(null, true, 'select', { range: true }).map(e => e.item.id);
-    assert.equal(ids.indexOf('paths'), ids.indexOf('facilities') - 1); assert.equal(ids.indexOf('paths'), ids.indexOf('course') + 1);
+    assert.ok(!ids.includes('facilities')); assert.equal(ids.indexOf('paths'), ids.indexOf('course') + 1);
     const p = RAIL.find(r => r.id === 'paths')!; assert.equal(p.label, 'Cart paths & roads'); assert.equal(p.section, 'course');
     assert.deepEqual(p.tools.map(t => [t.id, !!t.alt]), [['path', false], ['road', true]]);
     assert.ok(!RAIL.find(r => r.id === 'course')!.tools.some(t => t.id === 'path'), 'out of Course');

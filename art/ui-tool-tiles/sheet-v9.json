@@ -1,0 +1,267 @@
+{
+  "schema": 1,
+  "version": "v9",
+  "source": {
+    "file": "art/theme-consistency/generated/ui/golf-build-tool-tiles-sheet-v9.png",
+    "sha256": "7a366f019d8bb9561b5383da849bc29c7f8db6d28af8e23dc6031c7d99a784fc",
+    "dimensions": [
+      1447,
+      1087
+    ]
+  },
+  "grid": {
+    "columns": 4,
+    "rows": 3,
+    "detectedRows": [
+      [
+        36,
+        358
+      ],
+      [
+        382,
+        705
+      ],
+      [
+        726,
+        1054
+      ]
+    ],
+    "detectedColumns": [
+      [
+        34,
+        359
+      ],
+      [
+        385,
+        710
+      ],
+      [
+        737,
+        1062
+      ],
+      [
+        1088,
+        1413
+      ]
+    ]
+  },
+  "processing": "Source unchanged; detected card crops, normal UI resize to144px, rounded-corner alpha mask, WebP encoding.",
+  "tiles": [
+    {
+      "name": "radio",
+      "row": 0,
+      "column": 0,
+      "sourceRect": {
+        "left": 37,
+        "top": 37,
+        "width": 320,
+        "height": 320
+      },
+      "file": "src/assets/ui/tiles/radio.webp",
+      "dimensions": [
+        144,
+        144
+      ],
+      "sha256": "20d6aa627c6c9c7001f5d41d4c286bf1dd528597c74c933b87eeaf4eb48549ea",
+      "bytes": 4954
+    },
+    {
+      "name": "boombox",
+      "row": 0,
+      "column": 1,
+      "sourceRect": {
+        "left": 388,
+        "top": 37,
+        "width": 320,
+        "height": 320
+      },
+      "file": "src/assets/ui/tiles/boombox.webp",
+      "dimensions": [
+        144,
+        144
+      ],
+      "sha256": "655a8376e93d8695d42c782b211767fce56574df88e06c88917271e1780f536a",
+      "bytes": 4848
+    },
+    {
+      "name": "headphones",
+      "row": 0,
+      "column": 2,
+      "sourceRect": {
+        "left": 740,
+        "top": 37,
+        "width": 320,
+        "height": 320
+      },
+      "file": "src/assets/ui/tiles/headphones.webp",
+      "dimensions": [
+        144,
+        144
+      ],
+      "sha256": "eb58f9e40a84ebc80eed64e1a4fc8e05c49aa1f6342db0d304e09c63e619a399",
+      "bytes": 4662
+    },
+    {
+      "name": "bell",
+      "row": 0,
+      "column": 3,
+      "sourceRect": {
+        "left": 1091,
+        "top": 37,
+        "width": 320,
+        "height": 320
+      },
+      "file": "src/assets/ui/tiles/bell.webp",
+      "dimensions": [
+        144,
+        144
+      ],
+      "sha256": "ca85fb5cfaed4eba03196f17a3b34a5cd57ccc94dd5e5ac6445ae8d94222eba4",
+      "bytes": 3726
+    },
+    {
+      "name": "radio-off",
+      "row": 1,
+      "column": 0,
+      "sourceRect": {
+        "left": 36,
+        "top": 383,
+        "width": 321,
+        "height": 321
+      },
+      "file": "src/assets/ui/tiles/radio-off.webp",
+      "dimensions": [
+        144,
+        144
+      ],
+      "sha256": "cc0876fe1d03bfd67251c523a8cf9c70f49efa24dbd63b13a9718c6481c7d07a",
+      "bytes": 4492
+    },
+    {
+      "name": "jukebox",
+      "row": 1,
+      "column": 1,
+      "sourceRect": {
+        "left": 387,
+        "top": 383,
+        "width": 321,
+        "height": 321
+      },
+      "file": "src/assets/ui/tiles/jukebox.webp",
+      "dimensions": [
+        144,
+        144
+      ],
+      "sha256": "315708e60f41b229f6583bbbdd613dea9457f018e95e5758f1880d411f452005",
+      "bytes": 5548
+    },
+    {
+      "name": "currency",
+      "row": 1,
+      "column": 2,
+      "sourceRect": {
+        "left": 739,
+        "top": 383,
+        "width": 321,
+        "height": 321
+      },
+      "file": "src/assets/ui/tiles/currency.webp",
+      "dimensions": [
+        144,
+        144
+      ],
+      "sha256": "4aec145aa349413dafa75d091c48dc3831223c5ab2eb8acb9652196ada46d259",
+      "bytes": 5156
+    },
+    {
+      "name": "text-size",
+      "row": 1,
+      "column": 3,
+      "sourceRect": {
+        "left": 1090,
+        "top": 383,
+        "width": 321,
+        "height": 321
+      },
+      "file": "src/assets/ui/tiles/text-size.webp",
+      "dimensions": [
+        144,
+        144
+      ],
+      "sha256": "96f96640664806393e527f2d701088c3d2e7a7f7e8cd49d2bc057bbf912cf9ac",
+      "bytes": 4584
+    },
+    {
+      "name": "colour-safe",
+      "row": 2,
+      "column": 0,
+      "sourceRect": {
+        "left": 35,
+        "top": 729,
+        "width": 323,
+        "height": 323
+      },
+      "file": "src/assets/ui/tiles/colour-safe.webp",
+      "dimensions": [
+        144,
+        144
+      ],
+      "sha256": "2bee98d8d0e23c559df656f3596eb018f006dbe30c6bdeffa2e370140beabdb3",
+      "bytes": 4646
+    },
+    {
+      "name": "backups",
+      "row": 2,
+      "column": 1,
+      "sourceRect": {
+        "left": 386,
+        "top": 729,
+        "width": 323,
+        "height": 323
+      },
+      "file": "src/assets/ui/tiles/backups.webp",
+      "dimensions": [
+        144,
+        144
+      ],
+      "sha256": "8d6f35d8f8371ae546bf6f868b11ffc6b51245f89602a20ff4c32b4e8e63cb95",
+      "bytes": 4572
+    },
+    {
+      "name": "load-save",
+      "row": 2,
+      "column": 2,
+      "sourceRect": {
+        "left": 738,
+        "top": 729,
+        "width": 323,
+        "height": 323
+      },
+      "file": "src/assets/ui/tiles/load-save.webp",
+      "dimensions": [
+        144,
+        144
+      ],
+      "sha256": "a58df0f68026231fe0b052ce4511dd2a810b5a8db5eaa75e12b17166e6618604",
+      "bytes": 4262
+    },
+    {
+      "name": "front-door",
+      "row": 2,
+      "column": 3,
+      "sourceRect": {
+        "left": 1089,
+        "top": 729,
+        "width": 323,
+        "height": 323
+      },
+      "file": "src/assets/ui/tiles/front-door.webp",
+      "dimensions": [
+        144,
+        144
+      ],
+      "sha256": "a36708d0537c36fd7109a88e8d347ee2ff0150412e7c4b6cb436e7d42e14e595",
+      "bytes": 7124
+    }
+  ]
+}

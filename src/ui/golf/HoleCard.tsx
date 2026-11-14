@@ -11,6 +11,7 @@ import { deleteNote, type HoleCardCheck, type HoleCardView } from '../../game/go
 import { monthIndexLabel } from '../../game/golf/calendar';
 import { SurfaceMark } from '../course/SurfaceMark';
 import { Icon } from '../Icon';
+import { ActionTile, TILE_SMALL } from '../ActionTile'; // J8 (#1261): the hole card's actions wear painted tiles
 import { pickText } from './files3p';
 import { TeeSetRows } from './TeeSets';
 import { allLabel } from '../../game/golf/play/practice';
@@ -69,11 +70,12 @@ export function HoleCard({ game, right = 'right-3' }: { game: Game; right?: stri
 
       {/* T416: the hole from behind the golfer (Cinderlinks, full screen; Esc comes back), greyed with the reasons when it cannot be played */}
       <div className="mt-2 flex flex-col gap-1">
-        <button className="chip self-start disabled:opacity-40" disabled={why3p.length > 0} onClick={() => game.open3p(c.n)} title={why3p.length ? why3p.join('. ') : `Walk hole ${c.n} from its tee, seen from behind the golfer (Esc comes back)`} data-testid="hole-play-3p"><Icon name="play" size={14} />Play this hole</button>
+        {/* J8: the card's main action, with its picture large */}
+        <button className="chip self-start gap-2.5 py-1.5 pr-3 text-sm font-semibold disabled:opacity-40" disabled={why3p.length > 0} onClick={() => game.open3p(c.n)} title={why3p.length ? why3p.join('. ') : `Walk hole ${c.n} from its tee, seen from behind the golfer (Esc comes back)`} data-testid="hole-play-3p"><ActionTile tile="play-hole" size={56} />Play this hole</button>
         {why3p.length > 0 && <div className="text-[12px] text-slate-400" data-testid="hole-play-3p-why">{why3p.join(' · ')}</div>}
         {/* T447: the time of day the course is played at (the whole course's setting, saved with it); golden hour unless Day is chosen */}
         <div className="flex items-center gap-1 text-[12px] text-[var(--muted)]" data-testid="hole-time-3p">
-          <span>Light</span>
+          <span className="flex items-center gap-1.5"><ActionTile tile="daylight" size={TILE_SMALL + 4} />Light</span>
           {COURSE_TIMES_3P.map(([id, name]) => (
             <button key={id} className={`chip ${time3p === id ? 'chip-on' : ''}`} aria-pressed={time3p === id} onClick={() => { game.setTime3p(id); setTime3p(id); }}
               title={id === 'golden' ? 'Play the course in the low gold light of late afternoon (the default)' : 'Play the course in full daylight'} data-testid={`hole-time-3p-${id}`}>{name}</button>
@@ -124,8 +126,8 @@ export function HoleCard({ game, right = 'right-3' }: { game: Game; right?: stri
         <>
           <div className="mt-2 flex flex-wrap gap-1.5">
             {/* T205: Edit hole always shows what it did: the editor opens on this hole, framed, with a toast; while it is open it says so */}
-            <button className={`chip ${editing ? 'chip-editing' : 'disabled:opacity-40'}`} disabled={!c.planned || editing} onClick={() => game.editHole(c.n)} title={editing ? `Hole ${c.n}'s layout editor is open in the Holes panel: drag the tee, the green or the line, then Move tees and flag` : c.planned ? 'Drag the tee, the green or the line: the tee markers and the flag move, no grass is laid (fix the course with the paint brushes)' : 'Painted by hand: shape it with the brush'} data-testid="hole-edit"><Icon name="pin" size={14} />{editing ? `Editing hole ${c.n}` : 'Edit Hole Layout'}</button>
-            <button className="chip" onClick={ask} title="Delete the hole with its paint, or keep its grass as your property's paint, after a confirm" data-testid="hole-delete"><Icon name="bulldozer" size={14} />Delete</button>
+            <button className={`chip ${editing ? 'chip-editing' : 'disabled:opacity-40'}`} disabled={!c.planned || editing} onClick={() => game.editHole(c.n)} title={editing ? `Hole ${c.n}'s layout editor is open in the Holes panel: drag the tee, the green or the line, then Move tees and flag` : c.planned ? 'Drag the tee, the green or the line: the tee markers and the flag move, no grass is laid (fix the course with the paint brushes)' : 'Painted by hand: shape it with the brush'} data-testid="hole-edit"><ActionTile tile="edit-hole" size={TILE_SMALL} />{editing ? `Editing hole ${c.n}` : 'Edit Hole Layout'}</button>
+            <button className="chip" onClick={ask} title="Delete the hole with its paint, or keep its grass as your property's paint, after a confirm" data-testid="hole-delete"><ActionTile tile="bulldoze" size={TILE_SMALL} />Delete</button>
             {/* T256: the hole with its cells, plan, heights and looks (and its frame trees) as a My holes entry */}
             {!JAM && <SaveHole game={game} n={c.n} />}
           </div>
@@ -175,7 +177,7 @@ function FrameRow({ game, n }: { game: Game; n: number }) {
   return (
     <div className="mt-2" data-testid="hole-frame">
       <div className="mb-1 text-[12px] text-[var(--muted)]">Trees</div>
-      <button className={`chip ${can ? 'chip-on' : ''} disabled:opacity-40`} disabled={!can} onClick={() => game.frameHoleTrees(n)} title={can ? 'Plants the clumps (Ctrl+Z takes them and the money back)' : 'Nothing to plant'} data-testid="hole-frame-go"><Icon name="trees" size={14} />{label}</button>
+      <button className={`chip ${can ? 'chip-on' : ''} disabled:opacity-40`} disabled={!can} onClick={() => game.frameHoleTrees(n)} title={can ? 'Plants the clumps (Ctrl+Z takes them and the money back)' : 'Nothing to plant'} data-testid="hole-frame-go"><ActionTile tile="frame-trees" size={TILE_SMALL} />{label}</button>
       <p className="sub-line mt-1">{note}</p>
     </div>
   );
