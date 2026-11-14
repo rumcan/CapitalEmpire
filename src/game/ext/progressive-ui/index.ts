@@ -229,7 +229,7 @@ export const PRACTICE_HINTS: readonly FirstRunHint[] = [
     id: 'hint-practice-chipping',
     stage: 1,
     title: 'Now a chipping green and bunker',
-    body: `${practicePath()} ▸ Chipping green and bunker: it comes with its practice bunker and a mat to chip from.`,
+    body: `${practicePath()} ▸ Chipping green and bunker: it comes with its practice bunker and a band of rough round it.`,
     targetTool: 'practice',
     show: true,
   },
