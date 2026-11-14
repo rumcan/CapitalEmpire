@@ -163,8 +163,6 @@ test('the 45 degree bend is off for now (#1317): no hint, panel, Help or Keys sh
   assert.ok(!/45°/.test(rest), `App.tsx outside the chips: ${(rest.match(/.{40}45°.{40}/) ?? [''])[0]}`);
   assert.ok(!/Q: 90|Q toggles|Q for 90/.test(rest), 'and no Q for the bend');
   assert.match(app, /\{BW\.shift\}/); assert.match(app, /\{BW\.help\}/); assert.match(app, /\$\{BW\.handKeys\}/);
-  // the range guide's walking path step does not speak of it either
-  const guide = readFileSync('src/game/ext/progressive-ui/guide.ts', 'utf8'); assert.ok(!/45/.test(guide.slice(guide.indexOf("id: 'guide-range-path'"), guide.indexOf("id: 'guide-range-carpark'"))));
   // the engine: the Q key's guard is the constant, the stress test keeps its draws
   assert.match(readFileSync('src/game/engine.ts', 'utf8'), /if \(BEND_45 && \(e\.key === 'q' \|\| e\.key === 'Q'\)\)/);
 });

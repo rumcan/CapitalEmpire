@@ -22,7 +22,7 @@ const ptsOf = (legs: Leg[]): Pt[] => [legs[0]!.a, ...legs.map(l => l.b)];
 
 test('a dragged walking path is the range golfers\' walkway: two runs, the second from the first\'s end, join the car park, the shop and the tee', () => {
   const sc = rangeScene(PLOT, F, defaultRangeBiz());
-  // run 1: from the car park's edge to the shop's counter; run 2 on from the counter to the back of the mats (the guide's walking path step)
+  // run 1: from the car park's edge to the shop's counter; run 2 on from the counter to the back of the mats (the old guide's walking path step; the guide is three steps now)
   const a1 = P(50, 12), b1 = P(34, 13.5), b2 = P(28, 17.5);
   const run1 = drag(a1, b1), run2 = drag(b1, b2);
   assert.equal(run1.length, 2, 'two legs: one bend'); assert.equal(run2.length, 2);
