@@ -162,4 +162,9 @@ test('drills (J5f): with the continuous sliders, the shaping and flight drills c
   assert.equal(judgeDrill('shaping', shot({ shape: { curve: 0.5, flight: 0 }, landing: g, rest: g })).mark, 'fade');
   assert.equal(judgeDrill('flight', shot({ shape: { curve: 0, flight: 0.4 }, landing: g, rest: g })).hit, false, 'a little higher is not a high ball');
   assert.equal(judgeDrill('flight', shot({ shape: { curve: 0, flight: -0.7 }, landing: g, rest: g })).mark, 'low');
+  // the panel says why a light one did not count, and what does (a hair off the middle is told apart from none)
+  assert.match(judgeDrill('shaping', shot({ shape: { curve: -0.3, flight: 0 }, landing: g, rest: g })).note, /at least halfway/);
+  assert.match(judgeDrill('flight', shot({ shape: { curve: 0, flight: 0.4 }, landing: g, rest: g })).note, /at least halfway/);
+  assert.match(judgeDrill('shaping', shot({ shape: null, landing: g, rest: g })).note, /straight: slide Curve/);
+  assert.match(DRILLS.shaping.goal, /Curve/); assert.match(DRILLS.flight.goal, /Flight/);
 });

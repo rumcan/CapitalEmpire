@@ -45,7 +45,7 @@ export function shapeEffect(shape: ShotShape | null | undefined, club: Club, car
   const cv = Math.max(-1, Math.min(1, shape.curve || 0)), fv = Math.max(-1, Math.min(1, shape.flight || 0)), ac = Math.abs(cv), af = Math.abs(fv);   // (J5f: the amounts, 0..1 of each)
   const picks = ac + af, control = kit ? (kit.stats.accuracy - 0.5) * 0.3 : 0;
   const pulled = Math.min(1, Math.max(SHAPE.work, SHAPE.work + (1 - SHAPE.work) * (Math.min(1, Math.max(0, skill)) + control)));
-  const fl = fv > 0 ? SHAPE.high : fv < 0 ? SHAPE.low : null, mix = (v: number) => 1 + (v - 1) * af;   // (a flight's factors in proportion: none at 0, all of them at 1)
+  const fl = fv > 0 ? SHAPE.high : fv < 0 ? SHAPE.low : null, mix = (v: number) => (af >= 1 ? v : 1 + (v - 1) * af);   // (a flight's factors in proportion: none at 0, exactly the old pick's at 1, so a saved round or a ghost plays as it did)
   const k = Math.min(SHAPE.curveK[1], Math.max(SHAPE.curveK[0], carryM / 200));
   return {
     curve: cv * SHAPE.curveDeg * pulled * k * Math.PI / 180,

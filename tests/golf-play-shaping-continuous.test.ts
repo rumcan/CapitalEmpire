@@ -57,3 +57,17 @@ test('shape (J5f): the player reads how much ("Draw 40%"); a full pick reads as 
   const s = { curve: 0, flight: 0.5 }, lines = shapeLines(s, shapeEffect(s, 'iron6', 150, 0.5));
   assert.match(lines[0]!, /^-3% carry · lands soft · wind x1\.1/);
 });
+
+test('shape (J5f): a full pick is exactly the old one, bit for bit: a round saved before the sliders, or a ghost, plays as it did', () => {
+  for (const f of [1, -1] as const) {
+    const fl = f > 0 ? SHAPE.high : SHAPE.low, fx = shapeEffect({ curve: 0, flight: f }, 'iron6', 150, 0.5);
+    assert.equal(fx.carry, fl.carry); assert.equal(fx.wind, fl.wind); assert.equal(fx.run, fl.run);
+    assert.equal(fx.spread, fl.spread * (1 + SHAPE.scatter * (1 - fx.pulled) * 1));
+    assert.equal(fx.miss, 1 + SHAPE.missFlight * 1);
+  }
+  for (const c of [1, -1] as const) {
+    const fx = shapeEffect({ curve: c, flight: 0 }, 'iron6', 200, 0.5);
+    assert.equal(fx.curve, c * SHAPE.curveDeg * fx.pulled * 1 * Math.PI / 180); assert.equal(fx.run, 1 - SHAPE.runCurve * c); assert.equal(fx.miss, 1 + SHAPE.missCurve * 1);
+  }
+  assert.equal(readShape({ curve: -1, flight: 1 })!.curve, -1); assert.equal(readShape({ curve: -1, flight: 1 })!.flight, 1);
+});
