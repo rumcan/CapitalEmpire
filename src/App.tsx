@@ -536,12 +536,12 @@ export default function App() {
       {fatal && <div className="absolute inset-0 z-50 flex items-center justify-center bg-[#15200f] p-8 text-center text-red-200">This game needs WebGL2 and OffscreenCanvas. {fatal}</div>}
       {game && !game.ready && (
         <div className="absolute inset-0 z-50 flex flex-col items-center justify-center bg-[#15200f]">
-          <div className="text-3xl font-bold tracking-tight text-amber-200">Maple Falls</div>
-          <div className="mt-1 text-sm uppercase tracking-[0.3em] text-amber-400/80">Town Builder</div>
+          <div className="text-3xl font-bold tracking-tight text-amber-200" style={JAM ? { fontFamily: 'Georgia, serif' } : undefined}>{JAM ? 'Fairway Fortune' : 'Maple Falls'}</div>
+          <div className="mt-1 text-sm uppercase tracking-[0.3em] text-amber-400/80">{JAM ? 'A golf club money game' : 'Town Builder'}</div>
           <div className="mt-6 h-2 w-64 overflow-hidden rounded-full bg-white/10">
             <div className="h-full bg-amber-400 transition-all" style={{ width: `${Math.round(game.loadProgress * 100)}%` }} />
           </div>
-          <div className="mt-2 text-xs text-slate-400">Painting ground textures and unpacking sprites…</div>
+          <div className="mt-2 text-xs text-slate-400">{JAM ? 'Mowing the fairways and filling the ball buckets…' : 'Painting ground textures and unpacking sprites…'}</div>
         </div>
       )}
 
