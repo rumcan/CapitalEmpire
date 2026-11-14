@@ -1314,7 +1314,7 @@ function render() {
       for (const o of cellObjects(i, j)) {
         if (o.k === K_TREE && farHas(o.x, o.y)) continue;      // (its far piece lists it: see below)
         const ox = o.u / PPM - camX, oy = o.v / PPV - camY, d = ox * FX + oy * FY; if (d < 3 || d > DMID) continue;
-        if (feats && !o.still && featClear(o.u / PPM, o.v / PPV, o.k === K_TREE ? 0.5 : 0.2)) continue;   // nothing grows on a path or in a building (J6b: a still thing stands on its pad)
+        if (feats && o.sp === undefined && featClear(o.u / PPM, o.v / PPV, o.k === K_TREE ? 0.5 : 0.2)) continue;   // nothing grows on a path or in a building (J6b, J6c: what the host stood there stays: a range's things and its outfield's plants on its pads)
         const small = o.k > K_ROCK, k = FOC / d, sx = VW / 2 + (ox * RX + oy * RY) * k, reach = ((o.k === K_TREE ? o.rx * 1.3 : o.H) + 30) * k / PPM;
         if (sx < -reach || sx > VW + reach) continue;
         if (small && d > 37) { speck(o, Math.round(sx), Math.round(HZ - (o.lift / ZP - camZ) * k), d); if (d > 46) continue; }   // far off a small plant is a speck of its colour; nearer, its sculpture grows in over the speck
@@ -1338,7 +1338,7 @@ function render() {
       if (!F.ready) continue;
       for (const t of F.trees) {
         const tx = t.x - camX, ty = t.y - camY, d = tx * FX + ty * FY; if (d < 3 || d >= DFAR - 34) continue;
-        if (feats && !t.still && featClear(t.x, t.y, 0.5)) continue;
+        if (feats && t.sp === undefined && featClear(t.x, t.y, 0.5)) continue;
         const k = FOC / d, sx = VW / 2 + (tx * RX + ty * RY) * k, reach = (t.rx * 1.3 + 30) * k / PPM; if (sx < -reach || sx > VW + reach) continue;
         t.d = d; t.sx = Math.round(sx); if (d >= DMID) flist.push(t); else { dlist.push(t); if (d < 30) visObjs.push(t); }
       }

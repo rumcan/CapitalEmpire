@@ -61,7 +61,7 @@ test('J6b: the range ground lies under everything: rough to the model off the ou
 import { DRILLS, judgeDrill, junkHit, junkReach, recordDrill } from '../src/game/golf/play/drills';
 import { PracticeDriver, practiceFlags } from '../src/game/golf/play/practice3p';
 import { TILE_M } from '../src/game/golf/types';
-test('J6b: junk piles (J7) are targets: a ball that lands on one or stops by it hits it; the junk drill counts three; labels carry name and distance', () => {
+test('J6b: junk piles (J7) are targets: a ball that lands on one or stops by it hits it; the junk drill counts three; the view is sent no label (J6c)', () => {
   const m = (v: number) => v / TILE_M, car = { x: 35, y: m(140), r: junkReach('expansion:junk-car'), name: 'Old car', distM: 140 }, tyres = { x: 10, y: m(80), r: junkReach('expansion:tyre-stack'), name: 'Tyres', distM: 80 };
   assert.equal(car.r, 4); assert.equal(tyres.r, 2.5);
   assert.equal(junkHit([car, tyres], { x: 35 + m(4.8), y: m(140) }, { x: 35, y: m(160) })?.name, 'Old car', 'landed within its reach + 1 m');
@@ -79,6 +79,39 @@ test('J6b: junk piles (J7) are targets: a ball that lands on one or stops by it 
   const none = practiceCourse(inp), withJ = practiceCourse({ ...inp, junk: [{ id: 'expansion:junk-car', name: 'Old car', x: 35, y: m(140), m: 140 }] });
   assert.equal(none.junk.length, 0); assert.equal(new PracticeDriver(none, 'range', 0.5, 1, { drills: () => null, judged: () => {} }).canPlay('junk'), false, 'no junk: no junk drill');
   assert.equal(new PracticeDriver(withJ, 'range', 0.5, 1, { drills: () => null, judged: () => {} }).canPlay('junk'), true);
-  const L = practiceFlags(withJ, 'range', { x: 0, y: 0 });
-  assert.deepEqual(L.map(f => [f.label, !!f.only]), [['100 m', false], ['Old car · 140 m', true]]);
+  // J6c: no labels and no flags of the view's own: the range's distances are its own pictures
+  assert.deepEqual(practiceFlags(withJ, 'range', { x: 0, y: 0 }), []);
+});
+
+test('J6c: earth and turf pads travel as rings with their surfaces', () => {
+  const F = exportFeatures3p({ course: 'c', paths: [], buildings: [], trees: [], pads: [
+    { key: 'patch001', pts: [{ x: 1000, y: 1000 }, { x: 1070, y: 1000 }, { x: 1070, y: 1130 }, { x: 1000, y: 1130 }], surface: 'earth', name: 'desert' },
+    { key: 'zmat00', pts: [{ x: 1030, y: 999 }, { x: 1031.8, y: 999 }, { x: 1031.8, y: 1000.5 }, { x: 1030, y: 1000.5 }], surface: 'turf', name: 'Hitting mat' }] }, centre);
+  const pads = F.features.filter((f): f is PathFeature => f.kind === 'path' && !!f.ring);
+  assert.deepEqual(pads.map(p => [p.id, p.surface]), [['pad:patch001', 'earth'], ['pad:zmat00', 'turf']], 'the mat comes last, so it lies on the slab and the earth');
+});
+
+import { bareEarthRects, rangeSwingCycle, teeAreaOf } from '../src/game/golf/play/practice3p';
+import { RANGE_TEE } from '../src/game/golf/rangebiz';
+test('J6c: each golfer at another mat keeps hitting on a cycle of his own (3.6 to 5.4 s) and his own place in it, the same every time', () => {
+  const c = [1, 2, 3, 4, 5, 17, 40, 999].map(id => rangeSwingCycle(id));
+  for (const k of c) { assert.ok(k.cycle >= 3.6 && k.cycle <= 5.4, `cycle ${k.cycle}`); assert.ok(k.phase >= 0 && k.phase < 1, `phase ${k.phase}`); }
+  assert.deepEqual(rangeSwingCycle(7), rangeSwingCycle(7));
+  assert.ok(new Set(c.map(k => k.phase)).size >= 7, 'not in step');
+  assert.ok(new Set(c.map(k => k.cycle)).size >= 5, 'nor in time');
+  const odd = rangeSwingCycle(NaN); assert.ok(Number.isFinite(odd.cycle) && Number.isFinite(odd.phase), 'a bad id still gives a cycle');
+});
+test('J6c: a turfed tee shows its own turf and apron (the earth round it leaves them out); a dirt tee lies on one band of earth', () => {
+  const quad = (u0: number, u1: number, v0: number, v1: number) => [u0, v0, u1, v0, u1, v1, u0, v1];
+  const [t0, t1, v0, v1] = RANGE_TEE, gap = 2.6, tee = quad(t0, t1, v0, v1), apron = quad(0.3, 69.7, v1, v1 + gap);
+  const inside = (poly: number[], x: number, y: number) => { let c = false; for (let i = 0, j = poly.length - 2; i < poly.length; j = i, i += 2) { const xi = poly[i]!, yi = poly[i + 1]!, xj = poly[j]!, yj = poly[j + 1]!; if ((yi > y) !== (yj > y) && x < (xj - xi) * (y - yi) / (yj - yi) + xi) c = !c; } return c; };
+  const area = teeAreaOf(tee, apron);
+  assert.ok(inside(area, 30, 20), 'the tee box'); assert.ok(inside(area, 30, v1 + 1), 'the apron past it'); assert.ok(inside(area, 1, v1 + 1), 'the apron past the tee\'s side');
+  assert.ok(!inside(area, 1, 20), 'not beside the tee'); assert.ok(!inside(area, 30, v1 + gap + 0.5), 'not past the apron'); assert.ok(!inside(area, 30, v0 - 0.5), 'not in front of the tee');
+  assert.deepEqual(teeAreaOf(tee, null), tee, 'a dirt tee: the tee box alone');
+  const dirt = bareEarthRects(70, RANGE_TEE, false), turf = bareEarthRects(70, RANGE_TEE, true);
+  const earth = (x: number, y: number, R: readonly (readonly number[])[]) => R.some(([a, b, c, d]) => x >= a! && x <= c! && y >= b! && y <= d!);
+  assert.equal(dirt.length, 1); assert.ok(earth(30, 20, dirt), 'a dirt tee lies on earth'); assert.ok(earth(30, 27, dirt));
+  assert.ok(!earth(30, 20, turf) && !earth(30, v1 + 1, turf), 'a turfed tee and its apron are not covered');
+  assert.ok(earth(30, 17, turf), 'its front is'); assert.ok(earth(2, 20, turf) && earth(68.5, 20, turf), 'and its sides');
 });
