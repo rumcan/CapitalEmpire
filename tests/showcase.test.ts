@@ -134,7 +134,7 @@ test('the engine keeps the scene away from the player\'s slot: saving is blocked
   // the scene takes no input and shows no toasts
   for (const re of [/toast\(text: string[^\n]*\n\s*if \(this\.show\) return;/, /pointerDown\(e: PointerEvent\) \{\n\s*if \(this\.show\) return;/, /pointerMove\(e: PointerEvent\) \{\n\s*if \(this\.show\) return;/, /pointerUp\(\) \{\n\s*if \(this\.show\) return;/, /keyDown\(e: KeyboardEvent\) \{\n\s*if \(this\.show\) return;/, /wheel\(e: WheelEvent\) \{\n\s*if \(this\.show\)/, /doubleClick\(\) \{ if \(this\.show\) return;/]) assert.match(src, re);
   // every writer of the slot is behind saveBlocked (save) or out of the scene's reach (the gear menu's)
-  assert.match(src, /async save\(\) \{\n\s*if \(this\.benchMode\) return 0; if \(this\.saveBlocked\) return 0;/);
+  assert.match(src, /async save\(\) \{\n\s*if \(this\.benchMode(?: \|\| this\.startPick)?\) return 0; if \(this\.saveBlocked\) return 0;/); // (J9 added the start pick, which writes nothing either)
 });
 
 test('a choice on the title card rides the address to the game\'s own boot', () => {
