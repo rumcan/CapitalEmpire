@@ -72,6 +72,16 @@ test('a bend followed: the route goes round the path\'s bends, not across them',
   assert.ok(t.len <= PATH_DETOUR * Math.hypot(43, 8));
 });
 
+test('a path is ridden from its start, not joined at a bend that is nearer: the way that stays on the path beats a shorter one that leaves it', () => {
+  // a walker beside the start of a path that bends toward his goal: the bend is as near as the start is, but riding the path from its start is the way he takes
+  const legs = line([48.4, 16.2], [42, 14.5], [34, 14]), n = net(legs), t = routeVia(n, P(49.4, 15.6), P(34.8, 14.5), 14.9)!;
+  assert.ok(t, 'used');
+  assert.deepEqual(t.pts.slice(0, 3).map(p => [p.x, p.y]), [[49.4, 15.6], [48.4, 16.2], [42, 14.5]], 'on at the start of the path, then round its bend');
+  assert.ok(t.onLen > 13, `${t.onLen.toFixed(1)} tiles on the path (from its start to where it comes nearest the goal)`);
+  // a goal beside the path's first leg: he leaves it there (the weighting does not take him on past it)
+  const mid = routeVia(n, P(49.4, 15.6), P(44, 12), 8)!; assert.ok(mid && mid.pts.length === 4 && near(mid.pts[1]!, P(48.4, 16.2)), 'on at the start, off where it comes nearest the goal');
+});
+
 test('the shortest way over the graph: a junction picks the short side; legs that do not join make no way', () => {
   // two ways from the left end to the right end: over a short bump (B) and a long loop (C); a spur at the left
   const short = line([0, 0], [10, 3], [20, 0]), long = line([0, 0], [10, -14], [20, 0]), n = net(short, long);

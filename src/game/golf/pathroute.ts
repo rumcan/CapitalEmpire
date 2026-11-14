@@ -37,8 +37,9 @@ export class PathNet {
   readonly nx: Float64Array; readonly ny: Float64Array;
   readonly la: Int32Array; readonly lb: Int32Array; readonly ax: Float64Array; readonly ay: Float64Array; readonly bx: Float64Array; readonly by: Float64Array; readonly len: Float64Array;
   readonly adjAt: Int32Array; readonly adj: Int32Array;
-  /** the search's scratch (a search clears what it uses, so it allocates nothing): the cost to each node, how it was reached (a node, or -1 - the entry), whether it is settled, the heap */
-  private dist: Float64Array; private prev: Int32Array; private src: Int32Array; private done: Uint8Array; private hv: Float64Array; private hn: Int32Array; private heap = 0; private chainBuf: Int32Array;
+  /** the search's scratch (a search clears what it uses, so it allocates nothing): the cost to each node (the walking, a path's legs at PATH_PREFER of their length) and the length of the way it was found by, how it was
+   *  reached (a node, or -1 - the entry) and which entry, whether it is settled, the heap */
+  private dist: Float64Array; private real: Float64Array; private prev: Int32Array; private src: Int32Array; private done: Uint8Array; private hv: Float64Array; private hn: Int32Array; private heap = 0; private chainBuf: Int32Array;
   private constructor(nx: number[], ny: number[], legs: { a: number; b: number; len: number }[]) {
     const n = nx.length, m = legs.length;
     this.nx = Float64Array.from(nx); this.ny = Float64Array.from(ny);
@@ -48,7 +49,7 @@ export class PathNet {
     this.adjAt = new Int32Array(n + 1); for (let i = 0; i < n; i++) this.adjAt[i + 1] = this.adjAt[i]! + deg[i + 1]!;
     this.adj = new Int32Array(2 * m); const at = this.adjAt.slice(0, n);
     for (let k = 0; k < m; k++) { this.adj[at[this.la[k]!]!++] = k; this.adj[at[this.lb[k]!]!++] = k; }
-    this.dist = new Float64Array(n); this.prev = new Int32Array(n); this.src = new Int32Array(n); this.done = new Uint8Array(n); this.chainBuf = new Int32Array(n);
+    this.dist = new Float64Array(n); this.real = new Float64Array(n); this.prev = new Int32Array(n); this.src = new Int32Array(n); this.done = new Uint8Array(n); this.chainBuf = new Int32Array(n);
     this.hv = new Float64Array(2 * m + 2 * K + 8); this.hn = new Int32Array(2 * m + 2 * K + 8);
   }
   get nodes(): number { return this.nx.length }
@@ -95,8 +96,8 @@ export class PathNet {
     if (m > 0) { let k = 0; for (;;) { let c = 2 * k + 1; if (c >= m) break; if (c + 1 < m && hv[c + 1]! < hv[c]!) c++; if (hv[c]! >= lv) break; hv[k] = hv[c]!; hn[k] = hn[c]!; k = c; } hv[k] = lv; hn[k] = ln; }
     return top;
   }
-  /** a way to node u of cost d from node `from` (or, below 0, from the entry -1 - from), when it beats the one found */
-  private relax(u: number, d: number, from: number): void { if (d < this.dist[u]!) { this.dist[u] = d; this.prev[u] = from; this.src[u] = from < 0 ? -1 - from : this.src[from]!; this.push(u, d); } }
+  /** a way to node u of cost d (and length r) from node `from` (or, below 0, from the entry -1 - from), when it beats the one found */
+  private relax(u: number, d: number, r: number, from: number): void { if (d < this.dist[u]!) { this.dist[u] = d; this.real[u] = r; this.prev[u] = from; this.src[u] = from < 0 ? -1 - from : this.src[from]!; this.push(u, d); } }
 
   /** the cheapest way over the paths from `from` to `to` (see routeVia) */
   search(from: Pt, to: Pt, base: number, o: PathOpts): PathTrip | null {
@@ -114,15 +115,17 @@ export class PathNet {
       const b = this.near(k, tx, ty); take(xK, xT, xD, k, b[0], b[1]);
     }
     if (eK[0]! < 0) return null;
-    // the search: from the entries' end nodes over the legs, never past the node from which no way to the goal fits the limit
+    // the search: from the entries' end nodes over the legs, by the cost with the path's legs at PATH_PREFER of their length (the way that stays on a path beats a shorter one that leaves it),
+    // never past the node from which no way to the goal fits the limit in real length
+    const wl = o.prefer ?? PATH_PREFER;
     this.dist.fill(Infinity); this.done.fill(0); this.heap = 0;
     for (let i = 0; i < K && eK[i]! >= 0; i++) {
       const k = eK[i]!, t = eT[i]!, d = eD[i]!;
-      this.relax(this.la[k]!, d + t * this.len[k]!, -1 - i); this.relax(this.lb[k]!, d + (1 - t) * this.len[k]!, -1 - i);
+      this.relax(this.la[k]!, d + wl * t * this.len[k]!, d + t * this.len[k]!, -1 - i); this.relax(this.lb[k]!, d + wl * (1 - t) * this.len[k]!, d + (1 - t) * this.len[k]!, -1 - i);
     }
     // the best way found among those that use a path enough (PATH_MIN_ON, PATH_WORTH) within the limit: the least walking with the path's legs at PATH_PREFER of their
     // length; and how it leaves the paths (a node; or a leg's point, by one of its ends; or along the entry's own leg)
-    const minOn = o.minOn ?? PATH_MIN_ON, worth = o.worth ?? PATH_WORTH, wOn = 1 - (o.prefer ?? PATH_PREFER);
+    const minOn = o.minOn ?? PATH_MIN_ON, worth = o.worth ?? PATH_WORTH, wOn = 1 - wl;
     let best = Infinity, kind = 0, bu = -1, bj = -1, bEntry = -1;   // kind 1 a node, 2 an exit leg's point by its a end, 3 by its b end, 4 along one leg
     const consider = (total: number, on: number, k: number, u: number, j: number, ei: number) => {
       if (!(total <= limit) || !(on >= minOn) || !(on >= worth * (total - base))) return;
@@ -131,14 +134,15 @@ export class PathNet {
     while (this.heap > 0) {
       const u = this.pop(), d = this.popped; if (this.done[u] || d > this.dist[u]!) continue; this.done[u] = 1;
       const h = Math.hypot(this.nx[u]! - tx, this.ny[u]! - ty);
-      consider(d + h, d - eD[this.src[u]!]!, 1, u, -1, -1);
-      if (d + h > limit) continue;
-      for (let q = this.adjAt[u]!; q < this.adjAt[u + 1]!; q++) { const k = this.adj[q]!, v = this.la[k] === u ? this.lb[k]! : this.la[k]!; if (!this.done[v]) this.relax(v, d + this.len[k]!, u); }
+      const r = this.real[u]!;
+      consider(r + h, r - eD[this.src[u]!]!, 1, u, -1, -1);
+      if (r + h > limit) continue;
+      for (let q = this.adjAt[u]!; q < this.adjAt[u + 1]!; q++) { const k = this.adj[q]!, v = this.la[k] === u ? this.lb[k]! : this.la[k]!; if (!this.done[v]) this.relax(v, d + wl * this.len[k]!, r + this.len[k]!, u); }
     }
     for (let j = 0; j < K && xK[j]! >= 0; j++) {
       const k = xK[j]!, s = xT[j]!, d = xD[j]!, L = this.len[k]!, na = this.la[k]!, nb = this.lb[k]!;
-      if (this.dist[na]! < Infinity) consider(this.dist[na]! + s * L + d, this.dist[na]! - eD[this.src[na]!]! + s * L, 2, -1, j, -1);
-      if (this.dist[nb]! < Infinity) consider(this.dist[nb]! + (1 - s) * L + d, this.dist[nb]! - eD[this.src[nb]!]! + (1 - s) * L, 3, -1, j, -1);
+      if (this.dist[na]! < Infinity) consider(this.real[na]! + s * L + d, this.real[na]! - eD[this.src[na]!]! + s * L, 2, -1, j, -1);
+      if (this.dist[nb]! < Infinity) consider(this.real[nb]! + (1 - s) * L + d, this.real[nb]! - eD[this.src[nb]!]! + (1 - s) * L, 3, -1, j, -1);
       for (let i = 0; i < K && eK[i]! >= 0; i++) if (eK[i] === k) { const on = Math.abs(eT[i]! - s) * L; consider(eD[i]! + on + d, on, 4, -1, j, i); }
     }
     if (kind === 0) return null;

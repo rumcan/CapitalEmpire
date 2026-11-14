@@ -1515,12 +1515,16 @@ export class RangeSim {
    *  stretches of his way replaced by trips along the paths and, with a goal, on from the last point as far as a path carries him toward it; the way over the paths is walked in the
    *  time the ordinary way takes (view: drawnOver). With no paths, or none that helps, nothing is drawn but the ordinary way */
   private walk(v: Visit, stage: S, pts: Pt[], goal?: Pt, from = 0, to = pts.length - 1): void {
+    // (a walk begun while the last one is still drawn over the paths goes on from where he is drawn, so nobody jumps: his drawn way starts there)
+    const drawn = v.gw && v.stage !== S.Hit && v.stage !== S.Practice && this.drawnOver(v) ? { x: this.dg.x, y: this.dg.y } : null;
     v.stage = stage; v.t = 0; v.r = route(pts, [WALK]); v.gw = v.gr = null;
     const way = followPaths(this.scene?.walkNet, pts, goal, from, to);
-    if (!way) return;
+    if (!way && !drawn) return;
     // the way he is drawn on: over the paths, at the pace that has him there when the ordinary way would (a path that makes the walk longer is walked a little briskly, one that is shorter
     // a little slower); with a goal it runs on to the goal, drawn against the ordinary way's own run on to it (gr)
-    const g = goal && Math.hypot(way[way.length - 1]!.x - goal.x, way[way.length - 1]!.y - goal.y) > 1e-6 ? [...way, goal] : way, ref = goal ? route([...pts, goal], [WALK]) : v.r, T = ref.at[ref.at.length - 1]!, L = pathLen(g);
+    const base = way ?? pts, g = goal && Math.hypot(base[base.length - 1]!.x - goal.x, base[base.length - 1]!.y - goal.y) > 1e-6 ? [...base, goal] : [...base];
+    if (drawn) g[0] = drawn;
+    const ref = goal ? route([...pts, goal], [WALK]) : v.r, T = ref.at[ref.at.length - 1]!, L = pathLen(g);
     if (!(T > 1e-6 && L > 1e-6)) return;
     v.gw = route(g, [L / T]); if (goal) v.gr = ref;
   }
@@ -1777,10 +1781,10 @@ export class RangeSim {
       } else if (v.stage === S.Queue && v.desk !== undefined && this.desks[v.desk]?.on) {
         // at a counter (T146): facing it (toward the road)
         p.row = rowToward(-sc.aim.x, -sc.aim.y); p.frame = G.idle.start;
-      } else if (v.stage === S.Queue && this.atSpot(v)) {
+      } else if (v.stage === S.Queue && this.atSpot(v) && !over) {   // (#1295: still drawn on his way over the paths: he walks on to his place)
         // the line faces up it, toward the counters
         p.row = rowToward(-sc.queueStep.x, -sc.queueStep.y); p.frame = G.idle.start;
-      } else if (v.stage === S.KioskQueue && sc.kiosk && this.atKiosk(v)) {
+      } else if (v.stage === S.KioskQueue && sc.kiosk && this.atKiosk(v) && !over) {
         // the coffee line (T133) faces the kiosk's counter
         p.row = rowToward(-sc.kiosk.queueStep.x, -sc.kiosk.queueStep.y); p.frame = G.idle.start;
       }
