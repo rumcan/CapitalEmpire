@@ -4,7 +4,8 @@
 // rail, the Build menu (its tabs and cards), the Bank (a small loan quote, borrow, repay, save), the Range card, the tips, a hole's card and its
 // Play this hole, Settings. Each click must change something (the page's text or controls, or the game's state through window.__game) and raise no
 // console error. Prints a table of every button (PASS, SAME with the reason it may, LOCKED with its reason, or FAIL) and exits 1 on any FAIL.
-//   npm run jam:smoke                 (node scripts/jam/smoke.mjs [--headed] [--keep] [--port N])
+// J9: after who-are-you the start is chosen (the card, Turn, a refused spot's reason, then "Pick a spot for me", or with --pick spot a click on a spot that fits).
+//   npm run jam:smoke                 (node scripts/jam/smoke.mjs [--headed] [--keep] [--port N] [--pick auto|spot])
 import { chromium } from 'playwright-core';
 import { preview } from 'vite';
 import { createServer } from 'node:net';
@@ -115,9 +116,47 @@ try {
   if (await looks.count() > 1) await click('who', 'a second look', looks.nth(1), { same: 'it may already be picked' });
   for (const w of ['Desert', 'Autumn']) { const b = page.locator('button', { hasText: w }).first(); if (await b.isVisible().catch(() => false)) await click('who', w, b, { same: 'already the world' }); }
   await click('who', "That's me", who, { wait: 1500 });
+  // ---- J9: the start is chosen, not laid: the card over the bare map, Turn, a refused spot says why, then the start is laid (Pick a spot for me, or a click on a spot that fits)
+  const pickCard = page.locator('[data-testid="start-pick-card"]');
+  try { await pickCard.waitFor({ timeout: 60000 }); row('start', 'the choose-your-start card shows', 'PASS'); } catch { row('start', 'the choose-your-start card shows', 'FAIL', 'no start-pick card after Who are you'); }
+  if (await pickCard.isVisible().catch(() => false)) {
+    const text = (await page.locator('[data-testid="start-pick-text"]').innerText().catch(() => '')).replace(/\s+/g, ' ');
+    row('start', 'the card says what a click does', /buys the land and the old range for \$[\d,. ]+ and builds your house/.test(text) ? 'PASS' : 'FAIL', text.slice(0, 120));
+    await click('start', 'Turn (R)', page.locator('[data-testid="start-pick-turn"]'));
+    await page.keyboard.press('r'); await settle(250);
+    // the ghost is the game's placement ghost: spots that fit (green) and one that does not (red, with its reason), found as a player looks over the map (the ghost's own test at
+    // each pointer position: a spot whose geometry fits is only settled once the pointer rests on it, when its county road is worked out: so each candidate is hovered a moment)
+    const found = await game(() => {
+      const g = window.__game, p = g.placing, out = { fit: [], refused: null, n: 0 }; if (!p) return { ...out, none: true };
+      const W = g.cssW, H = g.cssH, cx = W / 2, cy = H / 2;
+      for (let y = 60; y < H - 160; y += 24) for (let x = 40; x < W - 40; x += 24) {
+        const t = g.tileAt(x, y), s = p.spot(t.x, t.y); out.n++;
+        if (!s.why) out.fit.push({ x, y }); else if (!out.refused) out.refused = { x, y, why: s.why };
+      }
+      out.fit.sort((a, b) => Math.hypot(a.x - cx, a.y - cy) - Math.hypot(b.x - cx, b.y - cy)); out.fit = out.fit.slice(0, 12);
+      return out;
+    });
+    const hoverAt = async c => { await page.mouse.move(c.x - 10, c.y - 10); await page.mouse.move(c.x, c.y, { steps: 3 }); await settle(450); };
+    const verdict = () => game(() => { const g = window.__game, p = g.placing, h = g.hover; if (!p || !h) return null; const s = p.spot(h.x, h.y); return { why: p.why(s), pending: !!s.pending }; });
+    if (found.none) row('start', 'the start is in hand (the placement ghost)', 'FAIL', 'no placement in hand');
+    else {
+      if (found.refused) { await hoverAt(found.refused); const v = await verdict(); row('start', 'a spot that does not fit says why', v?.why ? 'PASS' : 'FAIL', v?.why ?? found.refused.why); }
+      else row('start', 'a spot that does not fit says why', 'SAME', 'every spot on this view fits');
+      let fit = null; for (const c of found.fit) { await hoverAt(c); const v = await verdict(); if (v && !v.why && !v.pending) { fit = c; break; } }
+      row('start', 'a spot that fits is green once the pointer rests on it', fit ? 'PASS' : 'FAIL', fit ? '' : 'no spot on the view fits');
+      if (opt('pick', 'auto') === 'spot') {
+        if (!fit) row('start', 'a click on a spot that fits', 'FAIL', 'no spot on the view fits');
+        else { await hoverAt(fit); newErrors(); await page.mouse.down(); await page.mouse.up(); await settle(2500); const errs = newErrors(); row('start', 'a click on a spot that fits lays the start', errs.length ? 'FAIL' : 'PASS', errs.join(' / ')); }
+      } else await click('start', 'Pick a spot for me', page.locator('[data-testid="start-pick-auto"]'), { wait: 2500 });
+    }
+    const laid = await game(() => { const g = window.__game, b = g.golf?.range; return { picking: !!g.startPick, money: Math.round(g.money), built: b?.built !== false, forSale: !!b?.forSale, scene: !!g.range?.scene, owned: b?.owned?.length ?? 0, speed: g.speed }; });
+    const ok = !laid.picking && laid.built && !laid.forSale && laid.scene && laid.money === 60000 && laid.owned >= 3;
+    row('start', 'the start is laid: the range bought with the land ($75,000 less $15,000), no Buy step', ok ? 'PASS' : 'FAIL', JSON.stringify(laid));
+  }
   await game(() => window.__game.setSpeed(0));
   // ---- the tutorial: every Show me, then Next to the end
   const tour = '[data-testid="tour"]';
+  await page.locator(tour).waitFor({ state: 'visible', timeout: 30000 }).catch(() => {}); // (J9: the card follows the start's click once the new view's ground is baked, a few seconds)
   if (await page.locator(tour).isVisible().catch(() => false)) {
     for (let k = 0; k < 6 && await page.locator(tour).isVisible().catch(() => false); k++) {
       const title = `step ${k + 1}`;
@@ -150,7 +189,7 @@ try {
     const cards = await page.evaluate(() => [...document.querySelectorAll('[data-testid^="build-card-"]')].filter(b => b.offsetParent !== null).map(b => b.getAttribute('data-testid')));
     for (const c of cards) {
       await openBuild(); await page.locator(`[data-testid="${t}"]`).click();
-      if (c === 'build-card-range') continue; // (bought once below, as a player would)
+      if (c === 'build-card-range') continue; // (opened once below, as a player would)
       await click('build', `card ${c.replace('build-card-', '')}`, page.locator(`[data-testid="${c}"]`), { wait: 600 });
       await closeView('build'); await putDown();
     }
@@ -168,10 +207,10 @@ try {
     }
     await click('tips', 'Close the tips', page.locator('[data-testid="tips-close"]'));
   } else row('tips', '(no tips card)', 'FAIL', 'Build › Tips did not open the tips');
-  // ---- buy the range (the Build card, as the player would), then the Range card
+  // ---- the range's card from Build (J9: the range was bought with the land; a game from before may still show Buy), then the Range card
   await openBuild(); await page.locator('[data-testid="build-tab-range"]').click();
   const buy = page.locator('[data-testid="build-card-range"]');
-  await click('build', 'card range (buy the range)', buy, { wait: 1200 });
+  await click('build', 'card range (open the range card)', buy, { wait: 1200 });
   await putDown();
   const rangeChip = page.locator('[data-testid="range-chip"]');
   if (await rangeChip.isVisible().catch(() => false)) {

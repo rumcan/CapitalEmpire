@@ -130,7 +130,10 @@ describe('T288: the placement helper (golf/placing.ts)', () => {
   });
   it('the engine: the build in hand takes the click and the right click, Esc puts it down, its ghost is drawn; an upgrade bought is placed', () => {
     const eng = readFileSync('src/game/engine.ts', 'utf8');
-    assert.match(eng, /if \(this\.placing && !this\.keys\.has\(' '\) && \(e\.button === 0 \|\| e\.button === 2\)\) \{ this\.hover = this\.tileAt\(mx, my\); if \(e\.button === 0\) this\.placeAt\(\); else this\.cancelPlacing\(\); return; \}/);
+    assert.match(eng, /if \(this\.placing && !this\.placing\.sticky && !this\.keys\.has\(' '\) && \(e\.button === 0 \|\| e\.button === 2\)\) \{ this\.hover = this\.tileAt\(mx, my\); if \(e\.button === 0\) this\.placeAt\(\); else this\.cancelPlacing\(\); return; \}/);
+    // (J9: the start in hand is sticky: a press and release without a drag places it, a drag pans, Esc and a right click do not put it down)
+    assert.match(eng, /if \(this\.placing\?\.sticky && e\.button === 0 && !this\.keys\.has\(' '\)\) \{[^\n]*place: true \}; return; \}/);
+    assert.match(eng, /cancelPlacing\(\) \{ if \(!this\.placing \|\| this\.placing\.sticky\) return;/);
     assert.match(eng, /if \(this\.placing\) \{ this\.cancelPlacing\(\); return true; \} \/\/ T288/);
     assert.match(eng, /this\.drawPlacing\(ctx\); \/\/ T288/);
     // (T386, #1043: the ball room's upgrade tree, the upgrades with a `branch` (the picking tools, the supply, staff and machines: gear, not buildings), is bought at once from the range's till; the buildings of the Upgrades list
@@ -157,7 +160,10 @@ describe('T288: the guide\'s placement steps, the tutorial, the rail', () => {
     assert.equal(TOOL_STAGE.road, 1); assert.equal(GROUP_STAGE.roads, 1);
     const st = TOWN_TOUR.find(s => s.id === 'tour-roads')!, shown = tourStepFor(st, { roadLock: null, start: 'range' });
     assert.equal(shown.done, 'auto', 'done when a town road is built'); assert.doesNotMatch(shown.body, /locked/); assert.match(shown.body, /Cart paths & roads/);
-    assert.match(TOWN_TOUR.find(s => s.id === 'tour-golf')!.body, /only your trailer/);
+    // (J9: a new game places its range when the start is chosen, so its last step says it stands; an older save's bare start still says to place it)
+    const golf = TOWN_TOUR.find(s => s.id === 'tour-golf')!;
+    assert.match(tourStepFor(golf, { roadLock: null, start: 'range', rangePlaced: false }).body, /only your trailer/);
+    assert.match(tourStepFor(golf, { roadLock: null, start: 'range', rangePlaced: true }).body, /you chose where/);
   });
   it('the rail: Cart paths & roads right under Course (#1272: Facilities is a tile of the Course flyout, no button); its tools the cart paths and the town roads', () => {
     const ids = railEntries(null, true, 'select', { range: true }).map(e => e.item.id);

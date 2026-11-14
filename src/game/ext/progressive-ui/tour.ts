@@ -14,7 +14,8 @@ export const JAM_TOUR: readonly GuideStep[] = Object.freeze([
     tile: 'buy-range', // (J8, #1261: every step wears a painted tile, shown by the guide card)
     n: 1,
     title: 'Your club, your money',
-    body: 'You have $75,000, a plot with plenty of room, and an old driving range on it for sale (junk and all). A range earns your first income; that money builds a golf course hole by hole. Money is tight: every build is a choice between paying cash, saving first, or borrowing.',
+    // (J9: the range is bought with the land when the start is chosen: $75,000 less its $15,000)
+    body: 'You started with $75,000. The land, your house and this old driving range (junk and all) took $15,000. A range earns your first income; that money builds a golf course hole by hole. Money is tight: every build is a choice between paying cash, saving first, or borrowing.',
     done: 'next',
     target: {},
   },
@@ -33,7 +34,7 @@ export const JAM_TOUR: readonly GuideStep[] = Object.freeze([
     n: 3,
     title: 'Build what you like',
     // J7 (#1225; the owner: "let the player decide"): the menu, not an order. Tips (Build ▸ Tips) hold what the guided build used to say
-    body: 'Build (on the left) shows everything you can build or buy, with its price, its upkeep and how long it takes to pay back. Choose what and when: buying the old range starts your income. Build ▸ Tips has hints.',
+    body: 'Build (on the left) shows everything you can build or buy, with its price, its upkeep and how long it takes to pay back. Choose what and when. Build ▸ Tips has hints.',
     done: 'next',
     target: { ui: 'rail-build' },
   },
@@ -74,7 +75,7 @@ export const TOWN_TOUR: readonly GuideStep[] = JAM ? JAM_TOUR : Object.freeze([
     tile: 'golf-hole',
     n: 4,
     title: 'Now your golf',
-    body: 'Your land is bare: only your trailer. Place your driving range next (Range › Place the driving range): the guide in the corner walks you through it and the rest, step by step.',
+    body: 'Your driving range stands on your land, and your home beside it: you chose where. The guide in the corner walks you through the rest, step by step.',
     done: 'next',
     target: { ui: 'rail-range' },
   },
@@ -106,13 +107,17 @@ export function normalizeTour(x: unknown): TourSave | null {
   return { done, skipped: list(o.skipped).filter(id => !done.includes(id)), off: o.off === true, roads: Number.isFinite(r) && r > 0 ? Math.floor(r) : 0 };
 }
 
-/** what the tutorial's steps read: the road tool's lock (its why; null: open) and the start (a range start's, or the old town start's) */
-export interface TourFacts { roadLock: string | null; start: 'range' | 'town' }
+/** what the tutorial's steps read: the road tool's lock (its why; null: open) and the start (a range start's, or the old town start's); J9: whether the range is
+ *  placed (a new game places it when the start is chosen; a save from before has a bare start, its range still to place; absent: placed) and whether it is still
+ *  for sale (a jam game from before J9: Buy, not the start's purchase) */
+export interface TourFacts { roadLock: string | null; start: 'range' | 'town'; rangePlaced?: boolean; rangeForSale?: boolean }
 
-/** a step as this game shows it: step 2 with the road tool still locked (T288: never in a golf game now; kept for a lock of another kind) says when it opens and goes on with Next (it cannot wait for a road the
+/** a step as this game shows it: step 4 of a bare start (an older save's) says to place the range; step 2 with the road tool still locked (T288: never in a golf game now; kept for a lock of another kind) says when it opens and goes on with Next (it cannot wait for a road the
  *  player cannot build); step 4 in the old town start points at the course (no range there) */
 export function tourStepFor(s: GuideStep, f: TourFacts): GuideStep {
+  if (s === JAM_TOUR[0] && f.rangeForSale) return { ...s, body: 'You have $75,000, a plot with plenty of room, and an old driving range on it for sale (junk and all). A range earns your first income; that money builds a golf course hole by hole. Money is tight: every build is a choice between paying cash, saving first, or borrowing.' }; // (a game from before J9: Buy the range)
   if (s.id === 'tour-roads' && f.roadLock) return { ...s, done: 'next', body: `The town never lays a road of its own. Build roads with the road tool (Traffic › Build) to give it new lots: paved roads sell their lots to the town and pay you. The road tool is locked for now: ${f.roadLock.replace(/^Unlocks/, 'it opens').replace(/\.$/, '')}.` };
+  if (s.id === 'tour-golf' && f.start === 'range' && f.rangePlaced === false) return { ...s, body: 'Your land is bare: only your trailer. Place your driving range next (Range › Place the driving range): the guide in the corner walks you through it and the rest, step by step.' }; // (an older save's bare start)
   if (s.id === 'tour-golf' && f.start === 'town') return { ...s, body: 'Your golf course is beside the town: its holes, buildings and paths are in the Course drawer on the left.', target: { ui: 'rail-course' } };
   return s;
 }

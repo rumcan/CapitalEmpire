@@ -28,3 +28,7 @@ export const JAM_STAFF_X = 12;
 /** J7c: the balls the bought old range's ball room holds on top of a new range's 200 (5 buckets): each golfer walking in from the car park reserves a bucket, and at the
  *  lunchtime rush 13 come at once onto four bays (measured at 20x on the jam), so with 200 the rush drove on however fast the attendant picked; 800 is 20 buckets */
 export const JAM_RANGE_BALLS = 600;
+/** J9 (#1268, the owner 2026-11-14: "the start should be placing the driving range ... so the guy can start where he wants"): a new game starts with the
+ *  driving range in hand (golf/startpick.ts): the player chooses where, and the start (the county road, the land, the house, the range) is laid around it.
+ *  Off: the automatic start as it was (the same start for the same seed). A new game's `?pick=0` (any build) skips the choice for that session too */
+export const START_PICK = true;

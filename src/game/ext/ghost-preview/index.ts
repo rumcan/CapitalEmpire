@@ -48,6 +48,9 @@ export interface GhostCanvasCtx {
   setLineDash(segments: number[]): void;
   fillText(text: string, x: number, y: number): void;
   strokeText(text: string, x: number, y: number): void;
+  /** J9: the real context has both (a test's mock may not: its note stays to the right of the pointer) */
+  measureText?(text: string): { width: number };
+  canvas?: { width: number };
 }
 
 /** overlay view adapter matching PaintView in src/game/paint-tool.ts and engine.ts */
@@ -299,14 +302,17 @@ export function drawGhostSnap(v: GhostView, snap: GhostSnapPoint): void {
 /** draws a one-line status or refusal hint beside the cursor at (mx, my) in CSS pixels */
 export function drawGhostHint(v: GhostView, mx: number, my: number, text: string, bad: boolean): void {
   if (!text) return;
-  const ctx = v.ctx, dpr = v.dpr, x = mx * dpr + 14 * dpr, y = my * dpr - 12 * dpr;
+  const ctx = v.ctx, dpr = v.dpr, y = my * dpr - 12 * dpr;
   ctx.font = `bold ${12 * dpr}px ui-sans-serif, system-ui, sans-serif`;
-  ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
+  // (J9: a note that would run off the right edge of the view goes to the left of the pointer: the start's refusals are read anywhere on the map)
+  const w = ctx.measureText?.(text)?.width ?? 0, edge = ctx.canvas?.width ?? Infinity, left = mx * dpr + 14 * dpr + w + 6 * dpr > edge && mx * dpr - 14 * dpr - w > 0;
+  const x = left ? mx * dpr - 14 * dpr : mx * dpr + 14 * dpr;
+  ctx.textAlign = left ? 'right' : 'left'; ctx.textBaseline = 'middle';
   ctx.lineJoin = 'round'; ctx.lineWidth = 3 * dpr;
   ctx.strokeStyle = GHOST_STYLE.hintOutline; ctx.strokeText(text, x, y);
   ctx.fillStyle = bad ? GHOST_STYLE.hintBadFill : GHOST_STYLE.hintGoodFill;
   ctx.fillText(text, x, y);
-  ctx.lineJoin = 'miter'; ctx.textBaseline = 'alphabetic';
+  ctx.lineJoin = 'miter'; ctx.textBaseline = 'alphabetic'; ctx.textAlign = 'left'; // (left after the call, as it always was)
 }
 
 /** renders a full GhostBlueprint onto the overlay view (mx, my are cursor CSS pixels for the label) */
