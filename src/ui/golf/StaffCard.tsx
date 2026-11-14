@@ -5,6 +5,7 @@
 import { useState } from 'react';
 import type { StaffCardView, StaffRow } from '../../game/golf/pros';
 import type { ClubRole } from '../../game/golf/staff';
+import { practicePath } from '../../game/golf/menu-path';
 import { GOLFER_BASE, GOLFER_CLIPS, GOLFER_FRAMES, GOLFER_PEOPLE, LIBRARY, SPECTATOR_BASE, SPECTATOR_CLIPS, SPECTATOR_FRAMES, SPECTATOR_PEOPLE, WALK_DIRS } from '../../game/library';
 import { Icon } from '../Icon';
 import { Thumb } from '../Thumb';
@@ -33,7 +34,7 @@ export function StaffCard({ view, right, onClose, onHire, onLetGo }: { view: Sta
         </div>
         <button className="btn-icon" onClick={onClose} title="Close" data-testid="staff-close"><Icon name="close" size={18} /></button>
       </div>
-      {!view.built && <p className="rounded-lg bg-white/5 px-2 py-1.5 text-xs text-slate-300" data-testid="staff-empty">Build the pro's office (Course › Buildings) for a head pro and a secretary, and a teaching hut (Facilities › Practice) for a teaching pro.</p>}
+      {!view.built && <p className="rounded-lg bg-white/5 px-2 py-1.5 text-xs text-slate-300" data-testid="staff-empty">Build the pro's office (Course › Buildings) for a head pro and a secretary, and a teaching hut ({practicePath('›')}) for a teaching pro.</p>}
       {view.sections.map(sec => (
         <div key={sec.key} className="space-y-1" data-testid={`staff-sec-${sec.key}`}>
           <div className="text-[12px] uppercase text-slate-400">{sec.title}</div>
