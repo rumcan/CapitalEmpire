@@ -48,8 +48,10 @@ No quizzes and no lectures: you learn by running the business. Pricing against d
 ### Credits and AI use
 Made by **Francois Smit** (South Africa), solo creator. Built with AI coding and art tools under the creator's direction; disclosed in the jam submission. The golf view's pixel renderer and all art are the creator's own pipeline.
 
+**Sound:** every sound effect is synthesized in the game's own code (no recordings). The radio plays six free CC0 tracks from OpenGameArt.org: "Bossa Town" and "Seaside Village" by KarateStudios, "All into Harmony" and "Sunny Side Up 2" by Pro Sensory (Alex McCulloch), "Blue Intermission" and "Two Left Socks" by congusbongus. Each file, its page and its licence are in docs/jam/AUDIO-CREDITS.md.
+
 ## Jam submission form (itch.io/jam/zoud-gamelab)
 - Team: Francois Smit (solo), South Africa
 - FinLit theme description: "Fairway Fortune teaches money through running a business: pricing and demand, payback on investments, saving versus borrowing with the total cost of a loan shown before signing, and monthly statements that separate profit, cash and net worth. The player learns by consequences, not lessons."
-- AI use (judges only): "Yes. Code: written with Anthropic's Claude (Claude Code) under the creator's design and review. Art: 2D and 3D art made with AI image and 3D tools (RUN.world image generation, Meshy rigging, local Idol 3D renders) from the creator's direction, then edited in the creator's own pipeline. No AI voices or music."
+- AI use (judges only): "Yes. Code: written with Anthropic's Claude (Claude Code) under the creator's design and review. Art: 2D and 3D art made with AI image and 3D tools (RUN.world image generation, Meshy rigging, local Idol 3D renders) from the creator's direction, then edited in the creator's own pipeline. Sound: the sound effects are synthesized in code (written by Claude under the creator's direction); the music is six CC0 tracks by human composers from OpenGameArt (credited on the page). No AI-made music. Tutorial voice-over: none shipped yet; if it ships, its spoken lines are AI text-to-speech (engine named in docs/jam/AUDIO-CREDITS.md) and this line must say so."
 - Links: GDD PDF and budget PDF (the itch downloads, public), video link if any.

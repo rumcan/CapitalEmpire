@@ -113,6 +113,7 @@ import { TooltipLayer } from './ui/Tooltip';
 import { UI_SCALES, applyUiScale, currentUiScale, saveUiScale } from './ui/uiScale';
 import { AccessSettings } from './ui/golf/AccessSettings';
 import { SoundSettings } from './ui/SoundSettings'; // J11 (#1270)
+import { RadioPill } from './ui/Radio';
 import { stackCol, stackFit, stackRight, type StackCard, type StackOpen, type StackPanel } from './ui/golf/card-stack';
 import { HoleCard } from './ui/golf/HoleCard';
 import { View3pPanel } from './ui/golf/View3pPanel';
@@ -629,6 +630,8 @@ export default function App() {
                 <button className="btn-icon" onClick={() => game.zoomAt(clampZoom(game.cam.z * ZOOM_STEP))} data-tip="Zoom in (+)"><Icon name="zoom-in" size={20} /></button>
               </div>
               {GREENKEEPING && <button className={`btn ${game.grassPanel ? 'on' : ''}`} onClick={() => game.toggleGrassPanel()} data-tip={game.golfMode ? `Greenkeeping: keep the course's turf${game.toolLock('greenkeeping') ? ` (${game.toolLock('greenkeeping')})` : ''}` : 'Inspect and maintain course and town grass'}>Grass</button>}
+              {/* J11 (#1270): the music radio: one pill (play and pause, and a drop with the track, next and the music volume); off until the player turns it on */}
+              <RadioPill />
               <div className="relative">
                 <button className={`btn-icon ${menu ? 'on' : ''}`} onClick={() => setMenu(!menu)} data-tip="Settings"><Icon name="gear" size={22} /></button>
                 {menu && (

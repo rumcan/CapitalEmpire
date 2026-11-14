@@ -218,9 +218,18 @@ try {
   await click('top bar', 'Settings', page.locator('[data-tip="Settings"]').first());
   for (const b of await buttonsIn('div.relative:has(> button[data-tip="Settings"])')) {
     if (/New game|Load|Download|Save$|^Settings$/.test(b.label)) continue; // (they replace or download the game; the gear itself)
-    await click('settings', b.id ?? b.label, page.locator('button').filter({ hasText: b.label }).first(), { same: /100%|USD/.test(b.label) ? 'already the setting' : undefined });
+    // (J11: the Music and Effects mutes have test ids, and an aria-label that is not their text: found by id; each is pressed twice, so the sound is left as it was)
+    const loc = b.id ? page.locator(`[data-testid="${b.id}"]`).first() : page.locator('button').filter({ hasText: b.label }).first();
+    await click('settings', b.id ?? b.label, loc, { same: /100%|USD/.test(b.label) ? 'already the setting' : undefined });
+    if (b.id && /^sound-.*-mute$/.test(b.id)) await click('settings', `${b.id} (back on)`, loc);
   }
   await esc();
+  // ---- J11: the radio: off until turned on; its pill (play), its card (previous, play, next, the music's mute), off again
+  await click('radio', 'Radio (play)', page.locator('[data-testid="radio-play"]'), { wait: 800 });
+  await click('radio', 'Radio card (the drop)', page.locator('[data-testid="radio-more"]'));
+  await sweep('radio', '[data-testid="radio-card"]', async () => { await page.locator('[data-testid="radio-more"]').click(); }, { same: b => /^Mute/.test(b.label) ? 'a mute may already be as it is pressed' : undefined });
+  await esc();
+  if ((await page.locator('[data-testid="radio-play"]').getAttribute('aria-pressed')) === 'true') await click('radio', 'Radio (off)', page.locator('[data-testid="radio-play"]')); // (the card's own Play may have turned it off already)
   // ---- the speeds
   for (const s of ['1', '4', '20']) await click('top bar', `speed ${s}x`, page.locator(`[data-testid="speed-${s}"]`));
   await click('top bar', 'pause', page.locator('[data-tip="Pause (Space)"]').first());

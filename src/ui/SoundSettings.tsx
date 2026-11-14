@@ -1,9 +1,10 @@
-// J11 (#1270): the sound rows of Settings (App.tsx's gear menu, under the Text size): the effects' volume with its mute, and one mute for everything (F8).
+// J11 (#1270): the sound rows of Settings (App.tsx's gear menu, under the Text size): the music's and the effects' volume, each with its mute, and one mute for everything (F8).
 // The settings are the sound core's (game/sound/core.ts): kept in this browser, and the same ones the radio's volume and mute use. Every control is a real
 // button or slider, so the keyboard reaches them (Tab, arrows).
 import { useSyncExternalStore, type ReactNode } from 'react';
 import { sound } from '../game/sound/core';
 import { MUTE_KEY } from '../game/sound/ui-hook';
+import { TRACKS } from '../game/sound/radio';
 
 /** the sound settings now, and a re-render when they change */
 export function useSoundPrefs() { return useSyncExternalStore(fn => sound.subscribe(fn), () => sound.get(), () => sound.get()); }
@@ -30,6 +31,7 @@ export function SoundSettings({ children }: { children?: ReactNode }) {
   const p = useSoundPrefs();
   return (
     <div role="group" aria-label="Sound" data-testid="settings-sound">
+      {TRACKS.length > 0 && <VolumeRow label="Music" kind="music" tip="The volume of the radio. The radio itself is in the top bar, and off until you turn it on. Kept in this browser" />}
       <VolumeRow label="Effects" kind="sfx" tip="The volume of the clicks, the coins and the golf sounds. Kept in this browser" />
       {children}
       <label className="flex cursor-pointer items-center gap-2 px-2 py-1.5 text-sm" data-tip={`Silence everything: the music and the effects. ${MUTE_KEY} does the same from the keyboard`}>

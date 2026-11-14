@@ -51,12 +51,13 @@ const overflow = sel => page.evaluate(s => { const e = document.querySelector(s)
 
 try {
   console.log(`sound smoke: ${base} (Chrome ${browser.version()})`);
-  await page.goto(base, { waitUntil: 'domcontentloaded', timeout: 120000 });
-  await page.locator('[data-testid="title-card"]').waitFor({ timeout: 120000 });
+  await page.goto(base, { waitUntil: 'domcontentloaded', timeout: 400000 }); // (a dev server compiles the game's modules on the first visit: minutes)
+  await page.locator('[data-testid="title-card"]').waitFor({ timeout: 400000 });
   await settle(1500);
   let c = await counts();
   check('nothing before the first click: no context, no sound node, no <audio> played', c.ctx === 0 && c.nodes === 0 && c.plays === 0, JSON.stringify(c));
-  const early = await page.evaluate(() => __snd.fetched.filter(u => /\.(mp3|ogg|opus|wav|m4a)(\?|$)/i.test(u)));
+  // (resource timing sees media loads; fetch() does not)
+  const early = await page.evaluate(() => performance.getEntriesByType('resource').map(e => e.name).filter(u => /\.(mp3|ogg|opus|wav|m4a)(\?|$)/i.test(u)));
   check('no audio file fetched before the radio is turned on', early.length === 0, early.join(', '));
 
   // ---- the first click makes the one context
@@ -112,6 +113,69 @@ try {
   await shot('settings-125');
   await page.locator('[data-scale="1"]').click(); await settle(300);
   await page.keyboard.press('Escape');
+
+  // ---- the radio: off until turned on, nothing fetched; then plays, pauses, next, volume, mute
+  const mp3s = () => page.evaluate(() => performance.getEntriesByType('resource').filter(e => /\.mp3/.test(e.name)).length);
+  const deck = () => page.evaluate(() => { const a = __snd.audio[0]; return a ? { src: a.currentSrc, t: a.currentTime, paused: a.paused, vol: a.volume, err: a.error ? a.error.code : 0 } : null; });
+  await gear.click(); await settle(300);
+  check('Settings has the Music row', await page.evaluate(() => !!document.querySelector('[data-testid="sound-music-slider"]')));
+  await page.keyboard.press('Escape'); await settle(200);
+  const pill = page.locator('[data-testid="radio-play"]');
+  check('the radio is in the top bar and off for a new player', (await pill.count()) === 1 && (await pill.getAttribute('aria-pressed')) === 'false');
+  const fetched0 = await mp3s();
+  check('no music fetched while the radio is off', fetched0 === 0 && (await counts()).plays === 0, `${fetched0} files`);
+  await shot('radio-off');
+  await pill.click();
+  await page.waitForFunction(() => __snd.audio[0] && __snd.audio[0].currentTime > 0.5, null, { timeout: 20000 }).catch(() => {}); // (the first bytes come from the server: a moment)
+  const play1 = await deck();
+  check('turning the radio on plays a track from the page', !!play1 && !play1.paused && play1.t > 0.5 && !play1.err && /audio\/music\/.+\.mp3$/.test(play1.src), JSON.stringify(play1));
+  await page.locator('[data-testid="radio-more"]').click(); await settle(400);
+  const card = await page.evaluate(() => document.querySelector('[data-testid="radio-track"]')?.textContent ?? '');
+  check('the radio card names the track and its author', /CC0/.test(card) && /Track 1 of 6/.test(card), card);
+  await shot('radio-card');
+  const title = () => page.evaluate(() => document.querySelector('[data-testid="radio-track"] .font-semibold')?.textContent);
+  const t1 = await title();
+  await page.locator('[data-testid="radio-next"]').click(); await page.waitForFunction(() => __snd.audio[0] && __snd.audio[0].currentTime > 0.5 && /all-into/.test(__snd.audio[0].currentSrc), null, { timeout: 20000 }).catch(() => {});
+  const t2 = await title(), d2 = await deck();
+  check('Next plays the next track', t2 !== t1 && !!d2 && !d2.paused && d2.t > 0.5, JSON.stringify({ t1, t2, ...d2 }));
+  await page.locator('[data-testid="sound-music-slider"]').last().fill('0.3'); await settle(200);
+  const vol = (await deck()).vol;
+  check("the Music slider sets the audio element's volume (squared: 0.3 gives 0.09)", Math.abs(vol - 0.09) < 0.011, `volume ${vol}`);
+  await page.locator('[data-testid="sound-music-mute"]').last().click(); await settle(200);
+  check('the Music mute silences it', (await deck()).vol === 0);
+  await page.locator('[data-testid="sound-music-mute"]').last().click(); await settle(200);
+  await page.keyboard.press('F8'); await settle(200);
+  check('F8 silences the music too', (await deck()).vol === 0);
+  await page.keyboard.press('F8'); await settle(200);
+  check('and F8 again brings it back', (await deck()).vol > 0);
+  // the largest Text size: the card fits and stays inside the window
+  await page.keyboard.press('Escape');
+  await gear.click(); await settle(300); await page.locator('[data-scale="1.25"]').click(); await settle(300); await page.keyboard.press('Escape');
+  await page.locator('[data-testid="radio-more"]').click(); await settle(400);
+  const ovr = await overflow('[data-testid="radio-card"]');
+  check('the radio card fits at the largest Text size (no sideways scroll)', ovr === '', ovr);
+  const inView = await page.evaluate(() => { const r = document.querySelector('[data-testid="radio-card"]')?.getBoundingClientRect(); return r ? r.left >= 0 && r.right <= innerWidth && r.top >= 0 && r.bottom <= innerHeight : false; });
+  check('and it stays inside the window', inView);
+  const bar = await page.evaluate(() => { const r = document.querySelector('[data-testid="radio"]')?.getBoundingClientRect(); return r ? { right: r.right, w: innerWidth } : null; });
+  check('the radio pill is inside the window at 125%', !!bar && bar.right <= bar.w, JSON.stringify(bar));
+  await shot('radio-card-125');
+  await page.keyboard.press('Escape'); await settle(200);
+  check('Escape closes the radio card', (await page.locator('[data-testid="radio-card"]').count()) === 0);
+  await gear.click(); await settle(300); await page.locator('[data-scale="1"]').click(); await settle(200); await page.keyboard.press('Escape');
+  await pill.click(); await settle(500);
+  check('Pause stops the music', (await deck()).paused);
+
+  // ---- a reload remembers the radio "on" and starts it at the first click, not before
+  await pill.click(); await settle(1500); // (on again)
+  await page.evaluate(() => { try { sessionStorage.setItem('__keep', '1'); } catch { /* none */ } });
+  await page.reload({ waitUntil: 'domcontentloaded', timeout: 400000 });
+  await page.locator('[data-testid="title-card"]').waitFor({ timeout: 400000 });
+  await settle(2500);
+  const after = await page.evaluate(() => ({ plays: __snd.plays.length, ctx: __snd.ctx, mp3: performance.getEntriesByType('resource').filter(e => /\.mp3/.test(e.name)).length }));
+  check('after a reload the remembered radio plays nothing and fetches nothing before the first click', after.plays === 0 && after.ctx === 0 && after.mp3 === 0, JSON.stringify(after));
+  await page.locator('[data-testid="title-how"]').click(); await settle(3500);
+  const again = await deck();
+  check('the first click starts it', !!again && !again.paused && again.t > 0.5, JSON.stringify(again));
 } finally {
   await settle(300);
   if (errors.length) for (const e of errors) console.log(`  ${e}`);
