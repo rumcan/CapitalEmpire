@@ -1,0 +1,62 @@
+{
+  "schema": 1,
+  "id": "golf:build-tool-tiles",
+  "category": "ui",
+  "catalogueItem": null,
+  "ticket": "J8 (#1261): the owner, 2026-11-14: \"add ALOT more images to the UI. especially on stuff you can do.\"",
+  "subjobKey": "1261-golf-build-tool-tiles-sheet-v5",
+  "date": "2026-11-14",
+  "stage": "action-tiles-v5-bank-and-menus",
+  "background": "opaque-charcoal-with-navy-rounded-cards",
+  "transparent": false,
+  "references": [
+    "art/theme-consistency/generated/ui/golf-build-tool-tiles-sheet-v2.png",
+    "art/theme-consistency/generated/ui/golf-build-tool-tiles-sheet-v1.png"
+  ],
+  "output": "art/theme-consistency/generated/ui/golf-build-tool-tiles-sheet-v5.png",
+  "provenance": "art/theme-consistency/generated/ui/golf-build-tool-tiles-sheet-v5.provenance.json",
+  "grid": {
+    "columns": 4,
+    "rows": 3
+  },
+  "subjects": [
+    "bank",
+    "borrow",
+    "repay",
+    "save-money",
+    "take-money",
+    "statement",
+    "tips",
+    "how-to-play",
+    "settings",
+    "save-game",
+    "new-game",
+    "profile"
+  ],
+  "prompt": "Use only the two pictures attached to this message (ignore any earlier pictures). They are tile sheets already in this painted isometric golf game: match their style, scale, framing, camera angle, detail level and colours exactly.\n\nCreate an image, 4:3 landscape: a sheet of TWELVE tiny isometric dioramas in a 4 x 3 grid. Each scene sits on its own small slab of ground, on its own dark navy (#1E2A44) rounded square; the twelve squares are the same size, evenly spaced, and do not touch, on a flat charcoal (#1C1F26) background. Light from the upper right, soft shadows falling to the lower left, warm autumn colours, the year 1985 (no modern things). NO lettering, numbers, logos or symbols anywhere: every sign, board, paper, tag and screen is blank. No people. Each scene must be easy to tell apart from the others at a small size, with one clear main object. Row by row, left to right:\nRow 1: (1) a small-town brick bank front with two white columns, stone steps and a brass door; (2) a banded stack of green banknotes beside a blank signed-looking contract paper and a fountain pen on a desk blotter; (3) a brass bank-counter tray with an envelope of banknotes on it and a rubber stamp with its ink pad; (4) a pink ceramic piggy bank with neat stacks of gold coins beside it.\nRow 2: (5) an open cash register drawer, 1985 style, with banknotes and coins in its compartments; (6) an open ledger book with ruled blank pages, a paper-roll adding machine and a pencil; (7) an open guide book on a wooden lectern with a lit brass desk lamp; (8) a blackboard on a wooden easel with a chalk drawing of a golf hole (a tee, a curving fairway and a flag, shapes only) and a piece of chalk.\nRow 3: (9) a workbench with a wrench, a screwdriver, a brass gear wheel and an oil can; (10) a beige 1985 home computer with a blank screen and a 5.25-inch floppy disk lying in front of it; (11) a brand-new white golf ball on a wooden tee on perfect grass, with the low sun rising behind a small hill; (12) a leather golf bag with clubs, a blank scorecard on a clipboard leaning against it and a small silver trophy cup.",
+  "authority": {
+    "file": "F:/ClaudeTemp/jam/queue-ui-tiles.json",
+    "queueId": "golf-build-tool-tiles-sheet~v5",
+    "sha256": "51d03196e9b44fa70989b66822ba5e10809745baaab9043c26d1ad9db3d4ca9c"
+  },
+  "generator": "ChatGPT image generation through the chatgpt-bridge (D:/AI/chatgpt-bridge), 2026-11-14",
+  "generatorSource": "D:/AI/chatgpt-bridge/in/golf-build-tool-tiles-sheet-1view-v5.png",
+  "referenceHashes": [
+    {
+      "file": "art/theme-consistency/generated/ui/golf-build-tool-tiles-sheet-v2.png",
+      "sha256": "b8fe637c1ff3b6bfa301ea6597732ae4030b0bb54c1b9149423367325947527b"
+    },
+    {
+      "file": "art/theme-consistency/generated/ui/golf-build-tool-tiles-sheet-v1.png",
+      "sha256": "6c02339c56474af6ae64e953972244a6bc4d9d716c30b8d080d3893a9e5d2b6f"
+    }
+  ],
+  "referenceGuides": [
+    "D:/AI/chatgpt-bridge/guides/ui/style-tiles-v2.png",
+    "D:/AI/chatgpt-bridge/guides/ui/style-tiles-v1.png"
+  ],
+  "lighting": "screen upper-right toward lower-left; soft shadows to the lower left; warm autumn colours; 1985",
+  "integrationStatus": "cut-and-shown-in-the-ui-by-J8; pending-owner-visual-review",
+  "processing": "Native generator output copied byte-for-byte (the generatorSource file has the same sha256); no repaint, resample, mirror, recolour or transform. Cut by scripts/assets/prep-ui-tool-tiles.mjs (version v5) into 144 px rounded WebP tiles in src/assets/ui/tiles/; crop rectangles and hashes in art/ui-tool-tiles/sheet-v5.json.",
+  "sheetSha256": "da47abd5bf249945997acb0f850eb2afe98c31ee8bf6a446ebc399487cba3d3e"
+}

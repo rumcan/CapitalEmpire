@@ -12,6 +12,7 @@ import { money } from '../golf/money';
 import { MONTHS_A_SEASON } from '../../game/golf/rangesave';
 import { greenFeesMonth, halfwayMonth, payback } from '../../game/golf/payback';
 import { ToolHead } from '../ToolHead';
+import { ActionTile, TILE_SMALL } from '../ActionTile'; // J8 (#1261): Draw a drive wears its painted tile
 
 /** the starting clubhouse's picture (the tin-and-tarp shack the game places: business/art.ts) */
 const CLUB_ART = LIBRARY.find(it => it.id === 'golf:clubhouse-shanty');
@@ -58,7 +59,7 @@ export function BuildingsPanel({ game }: { game: Game }) {
       {!built && game.clubDriveOffer && (
         <div className="mt-2 rounded-lg border border-amber-400/40 bg-amber-400/10 p-2" data-testid="club-drive-offer">
           <div className="flex items-center gap-1.5 text-amber-200"><span aria-hidden className="font-bold">!</span>No drive within reach of the spot you tried</div>
-          <button className="chip chip-on mt-1.5" onClick={() => game.drawDriveForClub()} data-testid="club-draw-drive">Draw a drive</button>
+          <button className="chip chip-on mt-1.5" onClick={() => game.drawDriveForClub()} data-testid="club-draw-drive"><ActionTile tile="draw-drive" size={TILE_SMALL} />Draw a drive</button>
           <div className="sub-line mt-1 leading-snug">It starts at the nearest road. When it is built, the clubhouse comes back armed at that spot.</div>
         </div>
       )}

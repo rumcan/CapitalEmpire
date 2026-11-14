@@ -178,14 +178,16 @@ try {
   if (only.has('menus')) {
     const { page, ctx } = await open();
     // Facilities > Plants (the brushes: Trees, Bushes, Flowers, Palms) and Decoration > Props > the groups
-    await page.click('[data-rail="facilities"]'); await page.waitForTimeout(700);
+    // (#1272: Facilities is the sixth tile of the Course flyout, so every level is one column to the right)
     const row = async (level, text) => { const el = page.locator(`[data-flyout-col="${level}"] [role="menuitem"]`, { hasText: text }).first(); await el.hover(); await page.waitForTimeout(400); };
-    await row(0, 'Plants'); files.menuPlants = await shot(page, 'menu-facilities-plants', { x: 0, y: 0, width: 760, height: 560 });
+    const openFacilities = async () => { await page.click('[data-rail="course"]'); await page.waitForTimeout(700); await row(0, 'Facilities'); await page.locator('[data-flyout-col="0"] [data-key="facilities"]').click(); await page.waitForTimeout(500); };
+    await openFacilities();
+    await row(1, 'Plants'); files.menuPlants = await shot(page, 'menu-facilities-plants', { x: 0, y: 0, width: 1040, height: 560 });
     // Plants > Palms: the plant brush's panel with the palms listed
-    { const el = page.locator('[data-flyout-col="1"] [role="menuitem"]', { hasText: 'Palms' }).first(); await el.click(); await page.waitForTimeout(800); files.menuPalms = await shot(page, 'menu-plant-brush-palms'); }
-    await page.click('[data-rail="facilities"]'); await page.waitForTimeout(700);
-    await row(0, 'Decoration'); await row(1, 'Props'); files.menuProps = await shot(page, 'menu-facilities-decoration-props', { x: 0, y: 0, width: 900, height: 560 });
-    { const el = page.locator('[data-flyout-col="2"] [role="menuitem"]', { hasText: 'All props' }).first(); await el.click(); await page.waitForTimeout(800); }
+    { const el = page.locator('[data-flyout-col="2"] [role="menuitem"]', { hasText: 'Palms' }).first(); await el.click(); await page.waitForTimeout(800); files.menuPalms = await shot(page, 'menu-plant-brush-palms'); }
+    await openFacilities();
+    await row(1, 'Decoration'); await row(2, 'Props'); files.menuProps = await shot(page, 'menu-facilities-decoration-props', { x: 0, y: 0, width: 1180, height: 560 });
+    { const el = page.locator('[data-flyout-col="3"] [role="menuitem"]', { hasText: 'All props' }).first(); await el.click(); await page.waitForTimeout(800); }
     // the Props panel: every group's cards (the kit's among them), a pond edge in hand
     await page.mouse.move(W - 10, H - 10);
     await page.evaluate(() => { const g = window.__game; g.decor.pick('kit-pond-stones'); g.emit(); });

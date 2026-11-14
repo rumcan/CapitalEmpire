@@ -99,8 +99,9 @@ test("the menus: Facilities > Plants has the palms among the Trees (T342: no Pal
   for (const id of KIT_SHRUBS) assert.ok(plantPool(LIBRARY, 'bushes').some(p => p.id === id), id);
   for (const id of KIT_FLOWERS) assert.ok(plantPool(LIBRARY, 'flowers').some(p => p.id === id), id);
   // the flyout: Facilities > Plants (no Palms), and Decoration > Props > the groups
-  const fac = RAIL.find(r => r.id === 'facilities')!;
-  const rows = menuOf(fac, { golf: true, ui: null, roads: [], paths: [], junctions: [], surfaces: [], cares: [], practice: [], plants: PLANT_KINDS.map(k => ({ id: k.kind, name: k.name, col: k.col })), propGroups: [{ id: 'plants', name: 'Plants' }, { id: 'water', name: 'Water' }, { id: 'stone', name: 'Stone' }, { id: 'furniture', name: 'Furniture' }], materials: [], range: [], newHoleWhy: null } as never);
+  // (#1272: Facilities is the sixth tile of the Course flyout: its rows are that tile's children)
+  const course = RAIL.find(r => r.id === 'course')!;
+  const rows = menuOf(course, { golf: true, ui: null, roads: [], paths: [], junctions: [], surfaces: [], cares: [], practice: [], plants: PLANT_KINDS.map(k => ({ id: k.kind, name: k.name, col: k.col })), propGroups: [{ id: 'plants', name: 'Plants' }, { id: 'water', name: 'Water' }, { id: 'stone', name: 'Stone' }, { id: 'furniture', name: 'Furniture' }], materials: [], range: [], newHoleWhy: null } as never).find(r => r.key === 'facilities')!.children!;
   const labels = leavesOf(rows).map(l => [...l.path.map(k => k.split(':')[0]), l.row.label].join(' > '));
   assert.ok(!labels.some(l => /Palms$/.test(l)), `no Palms in the Facilities menu: ${labels.join(' | ')}`);
   assert.ok(labels.some(l => /^plants > .* > Trees$/.test(l)), `Trees in the Facilities menu: ${labels.join(' | ')}`);

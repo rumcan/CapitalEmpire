@@ -1,0 +1,267 @@
+{
+  "schema": 1,
+  "version": "v7",
+  "source": {
+    "file": "art/theme-consistency/generated/ui/golf-build-tool-tiles-sheet-v7.png",
+    "sha256": "e814fee5d2de86bbe69af293423a887d1f9cce389b6706f64b5014d96cae7e6a",
+    "dimensions": [
+      1448,
+      1086
+    ]
+  },
+  "grid": {
+    "columns": 4,
+    "rows": 3,
+    "detectedRows": [
+      [
+        39,
+        348
+      ],
+      [
+        376,
+        695
+      ],
+      [
+        718,
+        1045
+      ]
+    ],
+    "detectedColumns": [
+      [
+        44,
+        361
+      ],
+      [
+        390,
+        711
+      ],
+      [
+        739,
+        1057
+      ],
+      [
+        1086,
+        1406
+      ]
+    ]
+  },
+  "processing": "Source unchanged; detected card crops, normal UI resize to144px, rounded-corner alpha mask, WebP encoding.",
+  "tiles": [
+    {
+      "name": "place-range",
+      "row": 0,
+      "column": 0,
+      "sourceRect": {
+        "left": 49,
+        "top": 40,
+        "width": 307,
+        "height": 307
+      },
+      "file": "src/assets/ui/tiles/place-range.webp",
+      "dimensions": [
+        144,
+        144
+      ],
+      "sha256": "1144b6b2dfbf59f63aacae4297840349d246c8e7940aa5e2cdc72848d971961b",
+      "bytes": 5434
+    },
+    {
+      "name": "walking-path",
+      "row": 0,
+      "column": 1,
+      "sourceRect": {
+        "left": 397,
+        "top": 40,
+        "width": 307,
+        "height": 307
+      },
+      "file": "src/assets/ui/tiles/walking-path.webp",
+      "dimensions": [
+        144,
+        144
+      ],
+      "sha256": "9d7afbafc17fc85a8bb6819a556d278acd53bc6b0260c54e2debebb0543b4ec1",
+      "bytes": 7732
+    },
+    {
+      "name": "sell-buckets",
+      "row": 0,
+      "column": 2,
+      "sourceRect": {
+        "left": 745,
+        "top": 40,
+        "width": 307,
+        "height": 307
+      },
+      "file": "src/assets/ui/tiles/sell-buckets.webp",
+      "dimensions": [
+        144,
+        144
+      ],
+      "sha256": "da5e20f86a18a6d544f95f4811c1e7ae57fc50b4fa66c3748e13dfad12f7a249",
+      "bytes": 5400
+    },
+    {
+      "name": "select-tool",
+      "row": 0,
+      "column": 3,
+      "sourceRect": {
+        "left": 1093,
+        "top": 40,
+        "width": 307,
+        "height": 307
+      },
+      "file": "src/assets/ui/tiles/select-tool.webp",
+      "dimensions": [
+        144,
+        144
+      ],
+      "sha256": "179fe3381d62e84c06bff26b590481ae332c26de03e5fa8c877a8cea864d7dd8",
+      "bytes": 5298
+    },
+    {
+      "name": "walk",
+      "row": 1,
+      "column": 0,
+      "sourceRect": {
+        "left": 45,
+        "top": 378,
+        "width": 315,
+        "height": 315
+      },
+      "file": "src/assets/ui/tiles/walk.webp",
+      "dimensions": [
+        144,
+        144
+      ],
+      "sha256": "ca53b7562e1027622bbc098ecdf3c47171703023124f62894e9fed0d01df5674",
+      "bytes": 7076
+    },
+    {
+      "name": "find-me",
+      "row": 1,
+      "column": 1,
+      "sourceRect": {
+        "left": 392,
+        "top": 377,
+        "width": 317,
+        "height": 317
+      },
+      "file": "src/assets/ui/tiles/find-me.webp",
+      "dimensions": [
+        144,
+        144
+      ],
+      "sha256": "6d1593ed03f6db02eac5d6634b34dd0316404161b7539235164173f83095278c",
+      "bytes": 4254
+    },
+    {
+      "name": "game-speed",
+      "row": 1,
+      "column": 2,
+      "sourceRect": {
+        "left": 740,
+        "top": 378,
+        "width": 316,
+        "height": 316
+      },
+      "file": "src/assets/ui/tiles/game-speed.webp",
+      "dimensions": [
+        144,
+        144
+      ],
+      "sha256": "a6343a038e5228f7c3ef09ba4c9f43de02cc70b4212867d469a94f3bb31e3149",
+      "bytes": 4946
+    },
+    {
+      "name": "zoom",
+      "row": 1,
+      "column": 3,
+      "sourceRect": {
+        "left": 1088,
+        "top": 377,
+        "width": 317,
+        "height": 317
+      },
+      "file": "src/assets/ui/tiles/zoom.webp",
+      "dimensions": [
+        144,
+        144
+      ],
+      "sha256": "97be1d444d8d81032e981f694ed881f912bd13cbcafcc933db208d82fda2c8d1",
+      "bytes": 5156
+    },
+    {
+      "name": "shift-hours",
+      "row": 2,
+      "column": 0,
+      "sourceRect": {
+        "left": 45,
+        "top": 724,
+        "width": 315,
+        "height": 315
+      },
+      "file": "src/assets/ui/tiles/shift-hours.webp",
+      "dimensions": [
+        144,
+        144
+      ],
+      "sha256": "ab70ce466062264e4224f849115cd05692076ef82f6ec352e36d7fa8fecdb1b4",
+      "bytes": 7274
+    },
+    {
+      "name": "scene",
+      "row": 2,
+      "column": 1,
+      "sourceRect": {
+        "left": 391,
+        "top": 722,
+        "width": 319,
+        "height": 319
+      },
+      "file": "src/assets/ui/tiles/scene.webp",
+      "dimensions": [
+        144,
+        144
+      ],
+      "sha256": "523277d0db84c34332308e0bb77a9787349c45f327727b2b70e34e39f62de3ba",
+      "bytes": 6252
+    },
+    {
+      "name": "daylight",
+      "row": 2,
+      "column": 2,
+      "sourceRect": {
+        "left": 740,
+        "top": 724,
+        "width": 316,
+        "height": 316
+      },
+      "file": "src/assets/ui/tiles/daylight.webp",
+      "dimensions": [
+        144,
+        144
+      ],
+      "sha256": "ad2033c1d8b18266741c3530999c4e94e28229bb1294b240ebd89816e6927315",
+      "bytes": 6386
+    },
+    {
+      "name": "earthworks",
+      "row": 2,
+      "column": 3,
+      "sourceRect": {
+        "left": 1087,
+        "top": 723,
+        "width": 318,
+        "height": 318
+      },
+      "file": "src/assets/ui/tiles/earthworks.webp",
+      "dimensions": [
+        144,
+        144
+      ],
+      "sha256": "7234efac92709f47a59dab3cc07b5930caf66292acabfed12ef910ad37fbd396",
+      "bytes": 5560
+    }
+  ]
+}

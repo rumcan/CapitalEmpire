@@ -73,7 +73,7 @@ test('the left rail: every label is one line (the long one is shortened, its tip
   assert.equal(railLabel(paths), 'Paths & roads'); assert.equal(paths.label, 'Cart paths & roads', 'the tip and the name keep it');
   for (const r of RAIL.filter(x => drawerOf(x) === 'side')) assert.ok(railLabel(r).length <= 13, `${r.id}: "${railLabel(r)}" fits a rail button (the footer's buttons are as wide as their words)`);
   const entry = (item: (typeof RAIL)[number]): RailEntry => ({ item, on: false, locked: null, isNew: false, heading: item.section });
-  const h = renderToStaticMarkup(createElement(Rail, { entries: ['select', 'range', 'course', 'paths', 'facilities', 'bulldoze'].map(id => entry(RAIL.find(r => r.id === id)!)), onPick: noop, onLocked: noop }));
+  const h = renderToStaticMarkup(createElement(Rail, { entries: ['select', 'range', 'course', 'paths', 'bulldoze'].map(id => entry(RAIL.find(r => r.id === id)!)), onPick: noop, onLocked: noop }));
   assert.match(h, /aria-label="Cart paths &amp; roads"/); assert.match(h, /<span>Paths &amp; roads<\/span>/); assert.ok(!/<span>Cart paths/.test(h));
   assert.match(rule('.rail-tab span') + (css.match(/\.rail-tab span \{[^}]*\}/)?.[0] ?? ''), /white-space: nowrap/, 'a label never wraps');
   // the button is wide enough for the longest label (Paths & roads is 74 px at 12 px; the button was 70)

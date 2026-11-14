@@ -6,7 +6,7 @@
 import type { RangeCardView } from '../../game/golf/rangehost';
 import type { RangeUpgradeId } from '../../game/golf/rangesave';
 import { holeExtra, greenFeesMonth, payback, practiceExtra, rangeMonth, rangeUpgradeExtra, type CourseNow, type Payback } from '../../game/golf/payback';
-import type { ToolTile } from '../tool-tiles';
+import { PRACTICE_BUILD_TILE, RANGE_UPGRADE_TILE, type ToolTile } from '../tool-tiles';
 
 export type BuildGroupId = 'range' | 'course' | 'club' | 'practice';
 export const BUILD_GROUPS: readonly { id: BuildGroupId; label: string }[] = [
@@ -39,10 +39,13 @@ export const HOLE_FROM = 12_000, HOLE_TYPICAL = 23_000, HOLE_UPKEEP = 600;
 export const MENU_UPGRADES: readonly RangeUpgradeId[] = ['greens', 'targets', 'teeturf', 'grass', 'bays8', 'bays12', 'covered', 'dispenser'];
 /** the car park's enlargements, in order */
 export const LOT_STEPS: readonly RangeUpgradeId[] = ['gravel', 'pave'];
+/** J8 (#1261; the owner: "add ALOT more images to the UI"): an upgrade's painted tile (RANGE_UPGRADE_TILE: Target greens, Turf the tee box, Grass the outfield,
+ *  Covered bays, the Ball dispenser); the hitting bays keep their own scenes (real pictures of them) */
+const upTile = (id: string): BuildPic => ({ tile: RANGE_UPGRADE_TILE[id] ?? 'range-bays' });
 const UPGRADE_PIC: Readonly<Record<string, BuildPic>> = {
-  greens: { scene: 'range-road-upgraded.webp', pos: '85% 40%' }, targets: { tile: 'green' }, teeturf: { scene: 'hitting-bays-upgraded.webp' },
-  grass: { scene: 'range-road-upgraded.webp', pos: '100% 30%' }, bays8: { scene: 'hitting-bays-rundown.webp' }, bays12: { scene: 'hitting-bays-upgraded.webp', pos: '30% 50%' },
-  covered: { scene: 'range-road-upgraded.webp', pos: '55% 40%' }, dispenser: { tile: 'range-bays' },
+  greens: upTile('greens'), targets: upTile('targets'), teeturf: upTile('teeturf'),
+  grass: upTile('grass'), bays8: { scene: 'hitting-bays-rundown.webp' }, bays12: { scene: 'hitting-bays-upgraded.webp', pos: '30% 50%' },
+  covered: upTile('covered'), dispenser: upTile('dispenser'),
 };
 
 /** what the menu reads from the game */
@@ -104,10 +107,10 @@ export function buildCards(s: BuildSource): BuildCard[] {
   if (v) {
     // the car park: placed with the range (J7); its card enlarges it (gravel, then paving: room for more cars), or places it when there is none
     const lotP = place('carpark'), lot = !lotP || lotP.done, next = LOT_STEPS.find(id => !v.biz.owned.includes(id)), u = next ? v.upgrades.find(q => q.id === next) : undefined;
-    if (!lot && lotP) out.push({ id: 'carpark', group: 'range', name: 'Car park', pic: { scene: 'range-road-rundown.webp', pos: '0% 60%' }, line: 'A packed-dirt lot beside the road, near the shack: golfers drive on without one.',
+    if (!lot && lotP) out.push({ id: 'carpark', group: 'range', name: 'Car park', pic: upTile('gravel'), line: 'A packed-dirt lot beside the road, near the shack: golfers drive on without one.',
       cost: lotP.cost, upkeep: 0, payback: null, why: lotP.why || shortWhy(lotP.cost, s.money), done: null, act: { k: 'place', id: 'carpark' } });
     else out.push({
-      id: 'carpark', group: 'range', name: u ? `Car park: ${u.name.replace(/ the car park$/, '').toLowerCase()} it` : 'Car park', pic: { scene: next === 'gravel' || !next ? 'range-road-upgraded.webp' : 'range-road-rundown.webp', pos: '0% 60%' },
+      id: 'carpark', group: 'range', name: u ? `Car park: ${u.name.replace(/ the car park$/, '').toLowerCase()} it` : 'Car park', pic: upTile(next ?? 'pave'),
       line: u ? `Enlarge your car park. ${u.effect}` : 'Paved, with every bay of the lot in use.',
       cost: u ? u.cost : null, upkeep: u ? u.upkeep : null, payback: u ? payback(u.cost, u.upkeep, rangeUpgradeExtra(vb!, v.demand, v.dayLen, u.id)) : null,
       why: !u ? null : noRange ?? upWhy(u.why, u.cost, s.money), done: u ? null : 'Built', act: u ? { k: 'upgrade', id: u.id } : { k: 'rangeCard' },
@@ -117,7 +120,7 @@ export function buildCards(s: BuildSource): BuildCard[] {
     if (s.junk && jn > 0) {
       const less = { ...vb!, junk: vb!.junk?.slice(1) }, now = rangeMonth(vb!, v.demand, v.dayLen).takings;
       out.push({
-        id: 'junk', group: 'range', name: `Clear the junk (${jn} left)`, pic: s.junk.first ? { lib: s.junk.first } : { tile: 'rocks' },
+        id: 'junk', group: 'range', name: `Clear the junk (${jn} left)`, pic: s.junk.first ? { lib: s.junk.first } : { tile: 'clear-junk' },
         line: 'Old cars, tyres and scrap on the outfield: each pile cleared draws a few more golfers and pays its scrap back. Keep any you like as a target.',
         cost: s.junk.cost, costNote: 'A pile, less its scrap', upkeep: 0, payback: s.forSale ? null : payback(s.junk.cost, 0, Math.max(0, rangeMonth(less, v.demand, v.dayLen).takings - now)),
         why: noRange ?? shortWhy(s.junk.cost, s.money), done: null, act: { k: 'junk' },
@@ -166,7 +169,7 @@ export function buildCards(s: BuildSource): BuildCard[] {
     for (const f of v?.practice ?? []) {
       const open = f.state === 'open', extra = v ? practiceExtra(vb!, v.demand, v.dayLen, f.id) : 0;
       out.push({
-        id: f.id, group: 'practice', name: f.name, pic: f.id === 'putting' ? { scene: 'practice-green-upgraded.webp' } : { tile: 'chipping-green' },
+        id: f.id, group: 'practice', name: f.name, pic: { tile: PRACTICE_BUILD_TILE[f.id] ?? 'chipping-green' },
         line: f.id === 'putting' ? 'A putting green in the practice area: golfers pay a fee to use it, and you can practise your putting.' : 'A chipping green and bunker in the practice area: a fee a golfer, and your short game.',
         cost: null, costNote: 'Priced by its size as you lay it', upkeep: null, payback: null,
         note: open ? undefined : extra >= 0.5 ? `About +${usd(extra)} a month in takings (estimate)` : undefined,

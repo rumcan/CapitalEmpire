@@ -130,16 +130,19 @@ describe('Help › Keys (T202)', () => {
 describe('the number keys (T202)', () => {
   it('1. 1-6 open the rail\'s groups after Select, in the rail\'s order (the six with a driving range)', () => {
     const order = (golf: boolean, range: boolean) => railEntries(null, golf, 'select', { range }).map(e => e.item.id).filter(id => id !== 'select' && id !== 'ground' && id !== 'paths'); // (T288: Cart paths & roads has no number)
-    assert.deepEqual(numberedGroups(true, true).map(r => r.id), ['range', 'course', 'facilities', 'traffic', 'towndecor', 'bulldoze']);
+    // #1272 (the owner, 2026-11-14): Facilities is a tile of the Course flyout, no rail group: it has no number, the groups after it count up from where it was
+    assert.deepEqual(numberedGroups(true, true).map(r => r.id), ['range', 'course', 'traffic', 'towndecor', 'bulldoze']);
     for (const g of GAMES) assert.deepEqual(numberedGroups(g.golf, g.range).map(r => r.id), order(g.golf, g.range).slice(0, 6), JSON.stringify(g));
-    // T250: the sheet's drawer cards name them by number, as laid out: the course drawer's top to bottom, the town footer's left to right; the
-    // numbers are the ones they had (the course drawer's 1-3 and Bulldoze's 6, the footer's 4 and 5)
+    // T250: the sheet's drawer cards name them by number, as laid out: the course drawer's top to bottom, the town footer's left to right (#1272: the
+    // course drawer's 1-2 and Bulldoze's 5, the footer's 3 and 4)
     const sheet = keySheet({ golf: true, range: true, ui: null }), card = (id: string) => sheet.find(x => x.id === id)!;
     const nums = (id: string) => card(id).rows.filter(r => /^\d$/.test(r.keys)).map(r => [r.keys, r.what]);
     assert.equal(card('drawer').title, 'The course drawer (left)'); assert.equal(card('footer').title, 'The town footer (bottom)');
-    assert.deepEqual(nums('drawer'), [['1', 'the Range menu'], ['2', 'the Course menu'], ['3', 'the Facilities menu'], ['6', 'Bulldoze']], 'Bulldoze has no flyout: its number picks it');
-    assert.deepEqual(nums('footer'), [['4', 'the Traffic menu'], ['5', 'the Town decoration menu']]);
-    assert.deepEqual(card('drawer').rows.map(r => r.keys), ['V', '1', '2', '3', '6', 'X'], 'Select first, Bulldoze\'s key last');
+    assert.deepEqual(nums('drawer'), [['1', 'the Range menu'], ['2', 'the Course menu'], ['5', 'Bulldoze']], 'Bulldoze has no flyout: its number picks it');
+    assert.deepEqual(nums('footer'), [['3', 'the Traffic menu'], ['4', 'the Town decoration menu']]);
+    assert.deepEqual(card('drawer').rows.map(r => r.keys), ['V', '1', '2', '5', 'X'], 'Select first, Bulldoze\'s key last');
+    // Z stays Props' key: listed once, under Course, named for its Facilities tile
+    assert.deepEqual(sheet.find(x => x.id === 'course')!.rows.map(r => [r.keys, r.what]), [['C', 'Holes'], ['Z', 'Props (Facilities)']]);
     // the classic town game: the course drawer's Course and Bulldoze, the footer's Traffic and Town decoration
     const town = keySheet({ golf: false, range: false, ui: null });
     assert.deepEqual(town.find(x => x.id === 'drawer')!.rows.filter(r => /^\d$/.test(r.keys)).map(r => [r.keys, r.what]), [['1', 'the Course menu'], ['4', 'Bulldoze']]);

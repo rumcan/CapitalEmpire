@@ -66,7 +66,7 @@ try {
     await pick(page, 'traffic', 'junctions', ':first'); await shot(page, `junctions-${W}`);
     await pick(page, 'traffic', 'transport', 'park'); await shot(page, `carpark-${W}`);
     await pick(page, 'towndecor', 'paint', 'materials', ':first'); await shot(page, `paint-town-${W}`);
-    await pick(page, 'facilities', 'plants', ':first'); await shot(page, `paint-facilities-${W}`);
+    await pick(page, 'course', 'facilities', 'plants', ':first'); await shot(page, `paint-facilities-${W}`); // (#1272: Facilities is a tile of the Course flyout)
     // a footer panel beside the range card (and the guide card, which moves left of it): Upgrade in hand, the range card opened on top
     await pick(page, 'traffic', 'roads', 'lane');
     await page.evaluate(() => { const g = window.__game; g.openRangeCard(true); g.emit(); }); await sleep(600);
