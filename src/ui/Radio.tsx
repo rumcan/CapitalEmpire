@@ -12,8 +12,8 @@ import type { ToolTile } from './tool-tiles';
 import { VolumeRow } from './SoundSettings';
 
 /** the radio's pictures: the pill's key (on or off), the card's header, and the transport keys (the icon set's) */
-const RADIO_PIC: { key: (on: boolean) => ToolTile; head: ToolTile; play: (playing: boolean) => IconName; prev: IconName; next: IconName; more: IconName } =
-  { key: on => (on ? 'radio' : 'radio-off'), head: 'boombox', play: playing => (playing ? 'pause' : 'play'), prev: 'rewind', next: 'skip', more: 'up' };
+const RADIO_PIC: { key: (on: boolean) => ToolTile; head: ToolTile; station: ToolTile; play: (playing: boolean) => IconName; prev: IconName; next: IconName; more: IconName } =
+  { key: on => (on ? 'radio' : 'radio-off'), head: 'boombox', station: 'jukebox', play: playing => (playing ? 'pause' : 'play'), prev: 'rewind', next: 'skip', more: 'up' };
 
 export function useRadio() { return useSyncExternalStore(fn => radio.subscribe(fn), () => radio.get(), () => radio.get()); }
 
@@ -57,6 +57,15 @@ export function RadioPill({ up = true }: { up?: boolean }) {
               <div className="text-[12px] text-slate-500">Track {v.index + 1} of {v.count}</div>
             </div>
           ) : <div className="text-[12px] text-slate-400">No music is installed.</div>}
+          {/* the stations (the owner, 2026-11-14: "make chip tunes station"): one key turns the dial to the next */}
+          {v.stations > 1 && (
+            <button type="button" className="chip w-full justify-start gap-2.5 py-1 text-left" aria-label={`Station: ${v.station.name}. Change station`} data-testid="radio-station"
+              data-tip="Turn the dial to the next station" onClick={() => radio.nextStation()}>
+              <ActionTile tile={RADIO_PIC.station} size={TILE_ROW} />
+              <span className="min-w-0 flex-1"><span className="block truncate font-semibold text-white" data-testid="radio-station-name">{v.station.name}</span>
+                <span className="block text-[12px] text-slate-400">Station · click to change</span></span>
+            </button>
+          )}
           <div className="mt-1 flex items-center justify-center gap-2">
             <button type="button" className="btn-icon" aria-label="Previous track" data-testid="radio-prev" data-tip="Previous track" onClick={() => radio.prev()}><Icon name={RADIO_PIC.prev} size={20} /></button>
             <button type="button" className={`btn-icon ${v.on ? 'on' : ''}`} aria-label={v.on ? 'Pause the radio' : 'Play the radio'} data-testid="radio-card-play" data-sound="none" onClick={() => radio.toggle()}>

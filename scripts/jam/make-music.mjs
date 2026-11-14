@@ -23,11 +23,11 @@ const TRACKS = [
   { id: 'two-left-socks', title: 'Two Left Socks', artist: 'congusbongus', src: 'oga-two-left-socks/two_left_socks.ogg', page: 'https://opengameart.org/content/two-left-socks', licence: 'CC0 1.0', fetched: '2026-11-14' },
   { id: 'sunny-side-up-2', title: 'Sunny Side Up 2', artist: 'Pro Sensory (Alex McCulloch)', src: 'oga-sunny-side-up-2/sunny_side_up_2.mp3', page: 'https://opengameart.org/content/sunny-side-up-2', licence: 'CC0 1.0', fetched: '2026-11-14' },
   // the owner, 2026-11-14: "https://opengameart.org/content/5-chiptunes-action add these chiptunes to the radio" (one zip, 49.6 MB, five looping WAVs; CC0 on the page and in its INFO.txt)
-  { id: 'chip-title-screen', title: 'Chiptune: Title Screen', artist: 'Juhani Junkala (SubspaceAudio)', src: 'chiptunes-action/x/title-screen-x4.wav' /* the 11 s loop played four times (ffmpeg -stream_loop 3 -c copy), so it is a track of its own */, page: 'https://opengameart.org/content/5-chiptunes-action', licence: 'CC0 1.0', fetched: '2026-11-14' },
-  { id: 'chip-level-1', title: 'Chiptune: Level 1', artist: 'Juhani Junkala (SubspaceAudio)', src: 'chiptunes-action/x/Juhani Junkala [Retro Game Music Pack] Level 1.wav', page: 'https://opengameart.org/content/5-chiptunes-action', licence: 'CC0 1.0', fetched: '2026-11-14' },
-  { id: 'chip-level-2', title: 'Chiptune: Level 2', artist: 'Juhani Junkala (SubspaceAudio)', src: 'chiptunes-action/x/Juhani Junkala [Retro Game Music Pack] Level 2.wav', page: 'https://opengameart.org/content/5-chiptunes-action', licence: 'CC0 1.0', fetched: '2026-11-14' },
-  { id: 'chip-level-3', title: 'Chiptune: Level 3', artist: 'Juhani Junkala (SubspaceAudio)', src: 'chiptunes-action/x/Juhani Junkala [Retro Game Music Pack] Level 3.wav', page: 'https://opengameart.org/content/5-chiptunes-action', licence: 'CC0 1.0', fetched: '2026-11-14' },
-  { id: 'chip-ending', title: 'Chiptune: Ending', artist: 'Juhani Junkala (SubspaceAudio)', src: 'chiptunes-action/x/Juhani Junkala [Retro Game Music Pack] Ending.wav', page: 'https://opengameart.org/content/5-chiptunes-action', licence: 'CC0 1.0', fetched: '2026-11-14' },
+  { id: 'chip-title-screen', title: 'Title Screen', artist: 'Juhani Junkala (SubspaceAudio)', station: 'chiptunes', src: 'chiptunes-action/x/title-screen-x4.wav' /* the 11 s loop played four times (ffmpeg -stream_loop 3 -c copy), so it is a track of its own */, page: 'https://opengameart.org/content/5-chiptunes-action', licence: 'CC0 1.0', fetched: '2026-11-14' },
+  { id: 'chip-level-1', title: 'Level 1', artist: 'Juhani Junkala (SubspaceAudio)', station: 'chiptunes', src: 'chiptunes-action/x/Juhani Junkala [Retro Game Music Pack] Level 1.wav', page: 'https://opengameart.org/content/5-chiptunes-action', licence: 'CC0 1.0', fetched: '2026-11-14' },
+  { id: 'chip-level-2', title: 'Level 2', artist: 'Juhani Junkala (SubspaceAudio)', station: 'chiptunes', src: 'chiptunes-action/x/Juhani Junkala [Retro Game Music Pack] Level 2.wav', page: 'https://opengameart.org/content/5-chiptunes-action', licence: 'CC0 1.0', fetched: '2026-11-14' },
+  { id: 'chip-level-3', title: 'Level 3', artist: 'Juhani Junkala (SubspaceAudio)', station: 'chiptunes', src: 'chiptunes-action/x/Juhani Junkala [Retro Game Music Pack] Level 3.wav', page: 'https://opengameart.org/content/5-chiptunes-action', licence: 'CC0 1.0', fetched: '2026-11-14' },
+  { id: 'chip-ending', title: 'Ending', artist: 'Juhani Junkala (SubspaceAudio)', station: 'chiptunes', src: 'chiptunes-action/x/Juhani Junkala [Retro Game Music Pack] Ending.wav', page: 'https://opengameart.org/content/5-chiptunes-action', licence: 'CC0 1.0', fetched: '2026-11-14' },
 ];
 
 const run = (cmd, a) => spawnSync(cmd, a, { encoding: 'utf8', maxBuffer: 64 * 1024 * 1024 });
@@ -54,7 +54,7 @@ for (const t of TRACKS) {
   if (e.status !== 0) { console.error(`ffmpeg failed on ${t.id}:\n${e.stderr.slice(-800)}`); process.exit(4); }
   const after = probe(to), bytes = statSync(to).size;
   if (!(after.seconds > 30) || Math.abs(after.seconds - before.seconds) > 1.5 || after.codec !== 'mp3') { console.error(`${t.id}: the output is wrong: ${JSON.stringify(after)} (source ${before.seconds}s)`); process.exit(5); }
-  done.push({ id: t.id, title: t.title, artist: t.artist, licence: t.licence, page: t.page, file: `audio/music/${t.id}.mp3`, seconds: Math.round(after.seconds), bytes });
+  done.push({ id: t.id, title: t.title, artist: t.artist, licence: t.licence, page: t.page, file: `audio/music/${t.id}.mp3`, seconds: Math.round(after.seconds), bytes, ...(t.station ? { station: t.station } : {}) });
   credits.push(`| ${t.title} | ${t.artist} | ${t.page} | ${t.licence} | ${t.fetched} | ${t.src.split('/')[1]} (${before.codec}, ${mb(orig)}, ${Math.round(before.seconds)} s) | public/audio/music/${t.id}.mp3 (mp3 ${KBPS} kbps, ${mb(bytes)}, ${Math.round(after.seconds)} s; input ${Number(L.input_i).toFixed(1)} LUFS to ${TARGET_LUFS}) |`);
   console.log(`${t.id.padEnd(18)} ${Math.round(after.seconds)} s  ${mb(bytes)}  (source ${before.codec} ${mb(orig)}, ${Number(L.input_i).toFixed(1)} LUFS, true peak ${Number(L.input_tp).toFixed(1)} dB)`);
 }

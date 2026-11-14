@@ -12,9 +12,17 @@
 import { sound as theSound, type SoundCore } from './core';
 import manifest from './tracks.json';
 
-export interface Track { id: string; title: string; artist: string; licence: string; page: string; file: string; seconds: number; bytes: number }
+export interface Track { id: string; title: string; artist: string; licence: string; page: string; file: string; seconds: number; bytes: number; /** the station it plays on (absent: the first) */ station?: string }
 /** the radio's tracks, in playing order (src/game/sound/tracks.json) */
 export const TRACKS: readonly Track[] = manifest.tracks;
+
+/** the radio's stations (the owner, 2026-11-14: "make chip tunes station"): each plays its own tracks, in order, round and round */
+export interface Station { id: string; name: string }
+export const STATIONS: readonly Station[] = [{ id: 'clubhouse', name: 'Clubhouse Radio' }, { id: 'chiptunes', name: 'Chiptunes' }];
+/** the station a track plays on */
+export const stationOf = (t: Track): string => (t.station && STATIONS.some(s => s.id === t.station) ? t.station : STATIONS[0]!.id);
+/** a station's tracks, in playing order */
+export const tracksOf = (station: string, tracks: readonly Track[] = TRACKS): Track[] => tracks.filter(t => stationOf(t) === station);
 
 /** where the radio's state is kept in this browser (the sound settings, music volume and mute, are core.ts's own) */
 export const RADIO_KEY = 'capitalempire.radio';
@@ -23,20 +31,24 @@ export const RADIO_DEFAULT_ON = false;
 /** how far the tutorial's voice pulls the music down while it speaks (a share of its volume) */
 export const DUCK_TO = 0.3;
 
-export interface RadioState { on: boolean; id: string | null }
+export interface RadioState { on: boolean; id: string | null; /** the station it is tuned to */ station: string }
 /** the state from stored text (off with no track for anything missing or bad; a track that is no longer in the list is forgotten) */
 export function parseRadio(raw: string | null | undefined, tracks: readonly Track[] = TRACKS): RadioState {
-  const out: RadioState = { on: RADIO_DEFAULT_ON, id: null };
+  const out: RadioState = { on: RADIO_DEFAULT_ON, id: null, station: STATIONS[0]!.id };
   if (!raw) return out;
   try {
-    const o = JSON.parse(raw) as { on?: unknown; id?: unknown } | null;
+    const o = JSON.parse(raw) as { on?: unknown; id?: unknown; station?: unknown } | null;
     if (!o || typeof o !== 'object') return out;
     if (typeof o.on === 'boolean') out.on = o.on;
     if (typeof o.id === 'string' && tracks.some(t => t.id === o.id)) out.id = o.id;
+    // the station: the stored one when it still exists, else the remembered track's own (a state saved before there were stations)
+    const st = typeof o.station === 'string' && STATIONS.some(s => s.id === o.station) ? o.station : null, tk = tracks.find(t => t.id === out.id);
+    out.station = st ?? (tk ? stationOf(tk) : out.station);
+    if (tk && stationOf(tk) !== out.station) out.id = null; // (a track of another station is not this station's place)
   } catch { /* bad text: the defaults */ }
   return out;
 }
-export function serializeRadio(s: RadioState): string { return JSON.stringify({ v: 1, on: s.on, id: s.id }); }
+export function serializeRadio(s: RadioState): string { return JSON.stringify({ v: 2, on: s.on, id: s.id, station: s.station }); }
 
 /** the track after (dir 1) or before (dir -1) i in a list of n, wrapping round; 0 for a list with nothing in it or an index that is no number */
 export function nextIndex(i: number, n: number, dir: 1 | -1 = 1): number {
@@ -68,7 +80,8 @@ export interface RadioView {
   /** the player wants music (turned on, and remembered) */ on: boolean;
   /** the music is playing now (false while it waits for a click, loads or has failed) */ playing: boolean;
   /** every track failed to load: it rests until it is turned on again */ error: boolean;
-  /** the track it is on, and its place in the list */ track: Track | null; index: number; count: number;
+  /** the track it is on, and its place in its station's list */ track: Track | null; index: number; count: number;
+  /** the station it is tuned to, and how many there are */ station: Station; stations: number;
 }
 
 export class Radio {
@@ -82,11 +95,14 @@ export class Radio {
   private view: RadioView;
   private subs = new Set<() => void>();
   private waiting = false;
+  /** the tuned station's tracks (the radio steps through these) and every track */
   private tracks: readonly Track[];
+  private all: readonly Track[];
 
   constructor(private core: SoundCore = theSound, private env: RadioEnv = {}) {
-    this.tracks = env.tracks ?? TRACKS;
-    this.state = parseRadio(this.read(), this.tracks);
+    this.all = env.tracks ?? TRACKS;
+    this.state = parseRadio(this.read(), this.all);
+    this.tracks = tracksOf(this.state.station, this.all);
     this.idx = Math.max(0, this.tracks.findIndex(t => t.id === this.state.id));
     this.view = this.makeView();
     core.subscribe(() => this.syncVolume());
@@ -99,10 +115,10 @@ export class Radio {
 
   private read(): string | null { try { const s = this.env.store === undefined ? globalThis.localStorage : this.env.store; return s ? s.getItem(RADIO_KEY) : null; } catch { return null; } }
   private save(): void { try { const s = this.env.store === undefined ? globalThis.localStorage : this.env.store; s?.setItem(RADIO_KEY, serializeRadio(this.state)); } catch { /* storage may be unavailable */ } }
-  private makeView(): RadioView { const t = this.tracks[this.idx] ?? null; return { on: this.state.on, playing: this.playing, error: this.error, track: t, index: this.idx, count: this.tracks.length }; }
+  private makeView(): RadioView { const t = this.tracks[this.idx] ?? null; return { on: this.state.on, playing: this.playing, error: this.error, track: t, index: this.idx, count: this.tracks.length, station: STATIONS.find(s => s.id === this.state.station) ?? STATIONS[0]!, stations: STATIONS.length }; }
   private changed(): void {
     const v = this.makeView(), o = this.view;
-    if (v.on === o.on && v.playing === o.playing && v.error === o.error && v.index === o.index && v.track === o.track && v.count === o.count) return; // (the same object until something changed: useSyncExternalStore)
+    if (v.on === o.on && v.playing === o.playing && v.error === o.error && v.index === o.index && v.track === o.track && v.count === o.count && v.station === o.station) return; // (the same object until something changed: useSyncExternalStore)
     this.view = v; for (const f of this.subs) { try { f(); } catch { /* a dead listener */ } }
   }
   /** the radio now (the same object until it changes) */
@@ -183,6 +199,15 @@ export class Radio {
   next(): void { this.state = { ...this.state, on: true }; this.error = false; this.failures = 0; this.step(1, true); }
   /** the track before it */
   prev(): void { this.state = { ...this.state, on: true }; this.error = false; this.failures = 0; this.step(-1, true); }
+  /** the next station (wrapping round), from its first track, playing: the radio turns on if it was off. A station with no tracks is passed over */
+  nextStation(dir: 1 | -1 = 1): void {
+    let k = Math.max(0, STATIONS.findIndex(s => s.id === this.state.station));
+    for (let n = 0; n < STATIONS.length; n++) { k = nextIndex(k, STATIONS.length, dir); if (tracksOf(STATIONS[k]!.id, this.all).length) break; }
+    const st = STATIONS[k]!.id;
+    this.tracks = tracksOf(st, this.all); this.idx = 0;
+    this.state = { on: true, id: this.tracks[0]?.id ?? null, station: st }; this.save();
+    this.error = false; this.failures = 0; this.changed(); this.start();
+  }
   /** the tutorial's voice starts (true) or ends (false): the music dips under it */
   duck(on: boolean): void { this.ducks = Math.max(0, this.ducks + (on ? 1 : -1)); this.syncVolume(); }
 }
