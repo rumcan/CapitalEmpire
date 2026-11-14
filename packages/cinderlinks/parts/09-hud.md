@@ -373,13 +373,15 @@ function hostTarget() {
 // distance; a putt: a little more than a cup) and a small chevron inside it pointing along the shot line; marks on the ground, hidden behind whatever
 // stands nearer (the golfer, a tree), as the putting grid is
 function hostTargetRing(T, C) {
+  // (the owner, 2026-11-14: "change this circle with the chevron to a simple isometric circle, it does not translate"): the ring laid flat on the ground
+  // read as a thin sliver with a chevron from the low camera; it is now one clean ellipse on the screen, twice as wide as it is tall (the isometric circle),
+  // centred on the target, its size the spread's (in pixels from the camera's own projection of R across the line), with a dark outline under it
   const S = hostS(), dx = aim.dx, dy = aim.dy, rx = -dy, ry = dx;
   const R = T.putt ? Math.max(0.25 * S, 0.05 * T.d) : Math.max(1.2 * S, (C.scatterM || 0) / 2 * T.pw * S);
-  const mark = (qx, qy, c) => { projectO(qx, qy, aimH(qx, qy) + 0.03, PJ); if (PJ.s > 0) { plotZA(PJ.x, PJ.y + 1, PJ.d - 0.3, AIM_D); plotZA(PJ.x, PJ.y, PJ.d - 0.3, c); plotZA(PJ.x + 1, PJ.y, PJ.d - 0.3, c); } };
-  const n = Math.max(48, Math.min(220, Math.round(R / S * 30)));
-  for (let a = 0; a < n; a++) { const an = a / n * 6.2832; mark(T.x + Math.cos(an) * R, T.y + Math.sin(an) * R, AIM_G); }
-  const c = R * 0.6, tx = T.x + dx * c * 0.5, ty = T.y + dy * c * 0.5;   // (the chevron's point, a little past the centre, along the line)
-  for (const sd of [-1, 1]) { const bx = tx - dx * c + rx * c * 0.75 * sd, by = ty - dy * c + ry * c * 0.75 * sd, m = Math.max(24, Math.round(c / S * 40)); for (let k = 0; k <= m; k++) { const u = k / m; mark(bx + (tx - bx) * u, by + (ty - by) * u, AIM_W); } }
+  const h = aimH(T.x, T.y) + 0.03; projectO(T.x, T.y, h, PJ); if (PJ.s <= 0) { HP.target = { x: T.x, y: T.y, d: T.d, u: T.u, pw: T.pw, top: T.top, R }; return; }
+  const cx = PJ.x, cy = PJ.y, cd = PJ.d - 0.3; projectO(T.x + rx * R, T.y + ry * R, h, RQ);
+  const a = RQ.s > 0 ? Math.min(90, Math.max(5, Math.hypot(RQ.x - cx, RQ.y - cy))) : 8, b = a * 0.5, n = Math.max(40, Math.round(a * 4.5));
+  for (let k = 0; k < n; k++) { const an = k / n * 6.2832, x = Math.round(cx + Math.cos(an) * a), y = Math.round(cy + Math.sin(an) * b); plotZA(x, y + 1, cd, AIM_D); plotZA(x, y, cd, AIM_G); plotZA(x + 1, y, cd, AIM_G); }
   HP.target = { x: T.x, y: T.y, d: T.d, u: T.u, pw: T.pw, top: T.top, R };   // (kept for the harness)
 }
 let swingBtnDown = false, hostAimPin = false;
