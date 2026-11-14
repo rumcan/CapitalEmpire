@@ -3,13 +3,13 @@
  "items": [
   {
    "id": "range:golf-clubhouse-shanty-view1",
-   "name": "Tin-and-tarp pro shop (view 1)",
+   "name": "Range shop (asbestos-panel hut) (view 1)",
    "cat": "Range art",
    "kind": "business",
    "w": 640,
-   "h": 501.387,
+   "h": 361.381,
    "ax": 320,
-   "ay": 380.643,
+   "ay": 284.252,
    "boxes": [
     {
      "hx": 6,
@@ -23,25 +23,25 @@
    "door": false,
    "cost": 0,
    "src": {
-    "file": "art/theme-consistency/generated/buildings/golf-clubhouse-shanty-view1-v3.png",
+    "file": "art/theme-consistency/generated/buildings/golf-clubhouse-shanty-view1-v4.png",
     "rect": [
-     4,
-     4,
-     594,
-     466
+     140,
+     22,
+     1616,
+     855
     ],
-    "sha256": "e20bf804d1aec593ec266e6b8dd0a8c77446b246579310ec3e4ba6f8adeb651b"
+    "sha256": "2a8d5f7251fa941ddaa52a28d969aa497e40e5689070bee20deed4ce4c79eb7b"
    }
   },
   {
    "id": "range:golf-clubhouse-shanty-view2",
-   "name": "Tin-and-tarp pro shop (view 2)",
+   "name": "Range shop (asbestos-panel hut) (view 2)",
    "cat": "Range art",
    "kind": "business",
    "w": 640,
-   "h": 519.86,
+   "h": 356.499,
    "ax": 320,
-   "ay": 368.281,
+   "ay": 274.589,
    "boxes": [
     {
      "hx": 4,
@@ -55,14 +55,14 @@
    "door": false,
    "cost": 0,
    "src": {
-    "file": "art/theme-consistency/generated/buildings/golf-clubhouse-shanty-view2-v3.png",
+    "file": "art/theme-consistency/generated/buildings/golf-clubhouse-shanty-view2-v4.png",
     "rect": [
-     5,
-     4,
-     574,
-     466
+     138,
+     17,
+     1645,
+     856
     ],
-    "sha256": "494f2590f1f8e79468c4e8f46a2220f55718f8738bdc43fd2846979351d160d6"
+    "sha256": "9ea0b1c3fb425c0b1eec89ed5f7c799544bd9a14081044a3bc14c6a9306874fa"
    }
   },
   {

@@ -12,9 +12,7 @@ export * from './rangesave';
 import { NEAR, RANGE_LOT } from './rangestart';
 import { GOLFER_CLIPS, LIBRARY, STAFF_CLIPS } from '../library';
 import { JAM } from '../features';
-import { yardageSignId } from './yardage-signs';
-/** J7e: the library's ids (a yardage sign is placed only once its picture is in the library) */
-const LIB_IDS: ReadonlySet<string> = new Set(LIBRARY.map(it => it.id));
+import { yardageSign } from './yardage-signs';
 import { PUTT_IMPACT_S, WALK_RATE, clipFrame, golferRow, hash, rowToward, staffDrive, staffPerson, type CrowdPerson } from '../crowdview';
 import { mulberry } from '../iso';
 import { NO_PRACTICE, practiceArea, practiceAreaAt, type PracticeArea, type PracticeScan } from './practice';
@@ -141,9 +139,9 @@ export function lightScore(e: Pt): number { const ux = e.x + e.y, uy = e.y - e.x
 /** T258: rangeScene's options: the range's ground art as the studio has it (golf/range-look.ts), and the ChatGPT pictures that have landed by
  *  slug (default RANGE_ART) */
 export interface SceneOpts { look?: RangeLook; art?: Readonly<Record<string, readonly string[]>>;
-  /** J7e: the jam's range (default: the build's JAM): its distances are PNG yardage signs (yardage-signs.ts) or nothing, never a number pill or a stand-in post;
-   *  signs: the distance's sign id (default: the table's, when the library holds it) */
-  jam?: boolean; signs?: (m: number) => string | null }
+  /** J7e: the jam's range (default: the build's JAM): its distances are PNG yardage signs (yardage-signs.ts, looked up in `art` like every other picture) or
+   *  nothing, never a number pill or a stand-in post */
+  jam?: boolean }
 /** T258: the patch that is a target green's own green, one a green whatever the look: the stand-in's 'target', the picture's raised inner disc
  *  (its picture's outer disc is its collar, feathered), or the bullseye */
 export const isTargetGreen = (p: ScenePatch): boolean => p.surf === 'target' || p.surf === 'bullseye' || (p.surf === 'targetGreen' && p.edge !== 'flat');
@@ -353,13 +351,14 @@ export function rangeScene(plot: Rect, facing: 0 | 1 | 2 | 3, s: RangeBizSave, o
   // ---- the distance markers down both sides every 50 m, flags on the greens, the yardage boards (upgrade)
   const numbers: RangeScene['numbers'] = [], post = art('golf-range-distance-post', 0), board = art('golf-range-yardage-board', toRoad);
   // J7e (#1258; the owner: "no vector distance signs. only png sprites allowed"): in the jam each distance is its ChatGPT yardage sign (a sprite) or nothing: the
-  // markers and the greens get their sign when its picture has landed, no stand-in post and no number pill; the junk's distance is in its hover label
-  const jam = opts.jam ?? JAM, sign = opts.signs ?? ((m: number) => yardageSignId(m, id => LIB_IDS.has(id)));
+  // markers and the greens get the sign of their distance (golf-range-yard-<m>, view 1 or view 2 by the range's facing, as the yardage board's: never turned or
+  // mirrored) when it has a picture; no picture (the 240 m green's), no sign at all: no stand-in post and no number pill; the junk's distance is in its hover label
+  const jam = opts.jam ?? JAM, sign = (m: number) => yardageSign(m, toRoad, art);
   if (jam) {
-    for (let k = 1; k <= 5; k++) for (const [j, u] of [2.2, 67.8].entries()) { const id = sign(50 * k); if (id) put(`mark${k}-${j}`, id, u, STAND_V + 25 * k, toRoad); }
+    for (let k = 1; k <= 5; k++) for (const [j, u] of [2.2, 67.8].entries()) { const id = sign(50 * k); if (id) put(`mark${k}-${j}`, id, u, STAND_V + 25 * k); }
     for (let i = 0; i < st.targets; i++) {
       put(`flag${i}`, 'business:golf-pin-red', TARGET_U[i]!, STAND_V + TARGET_D[i]!, 0, { scale: 0.32 });
-      const id = sign(TARGET_D[i]! * 2); if (id) put(`board${i}`, id, TARGET_U[i]! + TARGET_R[i]! + 2.4, STAND_V + TARGET_D[i]! - 1, toRoad);
+      const id = sign(TARGET_D[i]! * 2); if (id) put(`board${i}`, id, TARGET_U[i]! + TARGET_R[i]! + 2.4, STAND_V + TARGET_D[i]! - 1);
     }
   }
   if (!jam) for (let k = 1; k <= 5; k++) for (const [j, u] of [2.2, 67.8].entries()) {

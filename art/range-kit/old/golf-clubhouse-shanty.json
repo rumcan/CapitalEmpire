@@ -1,0 +1,69 @@
+{
+ "note": "The tin-and-tarp pro shop as it was before the redone range shop (2026-11-14, the -v4 pictures): its two kit masters beside this file, its kit entries below, its pictures the -v3 files under art/theme-consistency/generated/buildings/. Kept in old/ because Vite's glob of art/range-kit/*.webp (src/ui/thumb-source.ts) ships every master in the folder. To bring it back: delete the -v4 pictures there and run node scripts/assets/prep-range-art.mjs (it packs the newest version it finds: the v3 pair), or put these masters over art/range-kit/golf-clubhouse-shanty-view1.webp and -view2.webp and these entries over the shop's in art/range-kit/items.json, then run node scripts/assets/prep-golf.mjs.",
+ "items": [
+  {
+   "id": "range:golf-clubhouse-shanty-view1",
+   "name": "Tin-and-tarp pro shop (view 1)",
+   "cat": "Range art",
+   "kind": "business",
+   "w": 640,
+   "h": 501.387,
+   "ax": 320,
+   "ay": 380.643,
+   "boxes": [
+    {
+     "hx": 6,
+     "hy": 4,
+     "dx": 0,
+     "dy": 0
+    }
+   ],
+   "solid": 1,
+   "big": true,
+   "door": false,
+   "cost": 0,
+   "src": {
+    "file": "art/theme-consistency/generated/buildings/golf-clubhouse-shanty-view1-v3.png",
+    "rect": [
+     4,
+     4,
+     594,
+     466
+    ],
+    "sha256": "e20bf804d1aec593ec266e6b8dd0a8c77446b246579310ec3e4ba6f8adeb651b"
+   }
+  },
+  {
+   "id": "range:golf-clubhouse-shanty-view2",
+   "name": "Tin-and-tarp pro shop (view 2)",
+   "cat": "Range art",
+   "kind": "business",
+   "w": 640,
+   "h": 519.86,
+   "ax": 320,
+   "ay": 368.281,
+   "boxes": [
+    {
+     "hx": 4,
+     "hy": 6,
+     "dx": 0,
+     "dy": 0
+    }
+   ],
+   "solid": 1,
+   "big": true,
+   "door": false,
+   "cost": 0,
+   "src": {
+    "file": "art/theme-consistency/generated/buildings/golf-clubhouse-shanty-view2-v3.png",
+    "rect": [
+     5,
+     4,
+     574,
+     466
+    ],
+    "sha256": "494f2590f1f8e79468c4e8f46a2220f55718f8738bdc43fd2846979351d160d6"
+   }
+  }
+ ]
+}
