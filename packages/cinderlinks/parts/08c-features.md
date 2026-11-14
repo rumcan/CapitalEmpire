@@ -10,6 +10,7 @@ R: Bare earth (a pad of `earth`: a range's outfield before it is grassed) is mot
 R: A pad (a path feature with `ring`: J6b, the practice range's concrete slabs, dirt yards and car park) is laid whole: everything inside its ring takes its surface, its edge as a path's edge.
 R: J6c: while he practises, a still picture's pad pass is not made again: what it painted is kept and put back while the camera, the light, the pads and the ground's depth are the same as in the frame before (pixel for pixel what making it again would paint), so the bare outfield's earth costs a still picture nothing.
 R: J6d: the pad pass of a moving picture costs the bare outfield's earth little: the same pixels, made without asking the pad grid for each of them. While he practises, a pixel whose nearest grid cell is deep inside a pad (the cell and its eight neighbours more than the edge's width in) is inside it with no edge shade, and a whole 8 x 8 block whose pixels can only fall in deep cells of one pad is that pad's, with no cell asked for any pixel of it (a slab, which asks for its stretch, is asked for each); the nearest cell is found without Math.round, which costs 6 ns a call, and the air's haze is read from a table of the same function.
+R: #1308: a fence (a `building` of use `fence`: the host sends one per run, a building w long, 0.12 m thick, turned to its axis, h high, its wall colour; the host's runs are the map's fence pieces that touch end to end, on the range and on a hole) is built, never drawn as a picture: a post every 3 m or so evenly along it, each standing on the ground under it, a rail along the top, and between the posts see-through wire (a chain-link's fine checker, a picket's gaps, an iron fence's bars), 1.8 m high for a chain-link. It is upright and the same from every side; it casts no shadow of its own.
 R: A course without the file plays as before.
 File: game.js
 Check: function lampLight(
@@ -17,6 +18,7 @@ Check: function padDeep(
 Check: let padKeep
 Check: function drawPaths(
 Check: function drawBuildings(
+Check: function fenceFaces(
 Check: function setFeatures(
 Check: function padSd(
 
@@ -40,8 +42,9 @@ function setFeatures(F) {   // F: the edits file's object (or nothing): made rea
       if (p.pts.length >= 4) paths.push(p);
     } else if (f.kind === 'building' && Array.isArray(f.at)) {
       const x = +f.at[0] * S, y = +f.at[1] * S; if (!(x === x && y === y)) continue;
-      builds.push({ x, y, w: clamp(+f.w || 10, 2, 120) * S, d: clamp(+f.d || 8, 2, 120) * S, h: clamp(+f.h || 4.5, 2, 20) * Math.max(S, 0.8), rot: (+f.rot || 0) * Math.PI / 180, roof: f.roof || 'gable',
-        wall: hexRgb(f.wall, [232, 220, 192]), rc: hexRgb(f.roofColour, [138, 59, 42]), floors: clamp(Math.round(+f.floors || 1), 1, 4), faces: null, use: typeof f.use === 'string' ? f.use : '' });
+      const fen = f.use === 'fence';   // (#1308: a run of fence: long, thin and low: its own limits)
+      builds.push({ x, y, w: fen ? clamp(+f.w || 3, 0.5, 600) * S : clamp(+f.w || 10, 2, 120) * S, d: fen ? clamp(+f.d || 0.12, 0.05, 0.5) * S : clamp(+f.d || 8, 2, 120) * S, h: fen ? clamp(+f.h || 1.8, 0.6, 4) * Math.max(S, 0.8) : clamp(+f.h || 4.5, 2, 20) * Math.max(S, 0.8), rot: (+f.rot || 0) * Math.PI / 180, roof: f.roof || 'gable',
+        wall: hexRgb(f.wall, [232, 220, 192]), rc: hexRgb(f.roofColour, [138, 59, 42]), floors: clamp(Math.round(+f.floors || 1), 1, 4), faces: null, use: typeof f.use === 'string' ? f.use : '', fk: /picket/i.test(f.name || '') ? 2 : /iron/i.test(f.name || '') ? 3 : 1 });
     } else if (f.kind === 'light' && Array.isArray(f.at)) {   // #1200: a floodlight tower: a mast with its lamp head (a building of use 'light'), and a lamp that lights the ground within its reach
       const x = +f.at[0] * S, y = +f.at[1] * S; if (!(x === x && y === y)) continue;
       const u = Math.max(S, 0.8), h = clamp(+f.h || 14, 4, 40) * u, reach = clamp(+f.reach || 75, 10, 200) * S;
@@ -251,6 +254,25 @@ function lightFaces(B, P, N, add, zm) {
   }
   add([P(-hw, -hw, zh1), P(hw, -hw, zh1), P(hw, hw, zh1), P(-hw, hw, zh1)], [0, 0, 1], [74, 78, 88]);
 }
+// #1308: a run of fence (the owner: "fences on the side of the range are not working": the game's fence pictures are drawn for one turn of the map and stood up as flat
+// panels facing the camera, floating a piece apart). Here it is built as the world has it: a post every 3 m or so, evenly along the run, each standing on the ground under it, a top
+// rail on the posts, and between them the wire: a quad drawn see-through (a chain-link's fine checker, a picket's gaps, an iron fence's bars: `mesh`), 1.8 m for chain-link.
+// Every part is a flat face drawn by drawBuildings, so it is right from any side and hides what is behind it only where it is solid. Five faces a bay; at 3 m a bay, a 100 m side is 170.
+function fenceFaces(B, P, faces) {
+  const w = B.w, h = B.h, nb = Math.max(1, Math.round(w / 3)), st = w / nb, hp = 0.07, mm = B.fk || 1, up = [0, 0, 1];
+  const pc = [B.wall[0] * 0.6, B.wall[1] * 0.6, B.wall[2] * 0.6], wc = mm === 1 ? [B.wall[0], B.wall[1], B.wall[2]] : B.wall;
+  const G = []; for (let i = 0; i <= nb; i++) { const q = P(-w / 2 + i * st, 0, 0); G.push(groundH(q[0], q[1])); }
+  for (let i = 0; i <= nb; i++) {
+    const a = -w / 2 + i * st, g = G[i] - 0.06, zt = G[i] + h + 0.1;
+    faces.push({ pts: [P(a - hp, 0, g), P(a + hp, 0, g), P(a + hp, 0, zt), P(a - hp, 0, zt)], n: up, col: pc, bias: 0, emit: false, mesh: 0 });
+    faces.push({ pts: [P(a, -hp, g), P(a, hp, g), P(a, hp, zt), P(a, -hp, zt)], n: up, col: pc, bias: 0, emit: false, mesh: 0 });
+  }
+  for (let i = 0; i < nb; i++) {
+    const a0 = -w / 2 + i * st, a1 = a0 + st, g0 = G[i], g1 = G[i + 1];
+    faces.push({ pts: [P(a0, 0, g0 + h - 0.06), P(a1, 0, g1 + h - 0.06), P(a1, 0, g1 + h + 0.06), P(a0, 0, g0 + h + 0.06)], n: up, col: pc, bias: 0, emit: false, mesh: 0 });   // (the top rail)
+    faces.push({ pts: [P(a0, 0, g0 + 0.08), P(a1, 0, g1 + 0.08), P(a1, 0, g1 + h - 0.06), P(a0, 0, g0 + h - 0.06)], n: up, col: wc, bias: 0, emit: false, mesh: mm });             // (the wire, the pickets, the bars)
+  }
+}
 // a building's faces: each a few corners in the world (metres), a colour, how it faces the sun
 function buildFaces(B) {
   const cr = Math.cos(B.rot), sr = Math.sin(B.rot), hw = B.w / 2, hd = B.d / 2, faces = [];
@@ -259,6 +281,7 @@ function buildFaces(B) {
   const z0 = zb - 0.4, z1 = zm + B.h, mul = (c, k) => [Math.min(255, c[0] * k), Math.min(255, c[1] * k), Math.min(255, c[2] * k)];
   const add = (pts, n, col, bias = 0, emit = false) => faces.push({ pts, n, col, bias, emit });   // bias: how far in front of its wall a detail counts (cm); also its rank of detail (see drawBuildings)
   if (B.use === 'light') { lightFaces(B, P, N, add, zm); B.faces = faces; B.z0 = zm; B.top = zm + B.h; return; }   // (#1200: a floodlight tower)
+  if (B.use === 'fence') { fenceFaces(B, P, faces); B.faces = faces; B.z0 = zm; B.top = zm + B.h; return; }   // (#1308: a run of fence)
   if (B.use === 'tent' || B.use === 'stand' || B.use === 'board') { dressFaces(B, P, N, add, mul, zm); B.faces = faces; B.z0 = zm; B.top = zm + B.h; return; }   // (T429: a marquee, a grandstand: parts/08h-dress.md)
   const FRAME = [246, 242, 230], G1 = [74, 96, 128], G2 = [116, 148, 184];
   const walls = [[-hw, -hd, hw, -hd, 0, -1], [hw, -hd, hw, hd, 1, 0], [hw, hd, -hw, hd, 0, 1], [-hw, hd, -hw, -hd, -1, 0]];
@@ -317,14 +340,16 @@ function drawBuildings() {
   const F = feats; if (!F || !F.builds.length || !course || featFor !== course.id) return;
   const night = TOD[tmode].glow >= 1, HAZ = TOD[tmode].haze;
   for (const B of F.builds) {
-    const dC = (B.x - camX) * FX + (B.y - camY) * FY, rad = Math.hypot(B.w, B.d) * 0.5; if (dC < -rad || dC > 250) continue;
+    const dC = (B.x - camX) * FX + (B.y - camY) * FY, rad = Math.hypot(B.w, B.d) * 0.5; if (dC < -rad || dC > (B.use === 'fence' ? 260 + rad : 250)) continue;
     if (!B.faces) buildFaces(B);
-    const hf = dC > 50 ? farHaze(dC) : 0;
+    const hf = dC > 50 ? farHaze(dC) : 0, fence = B.use === 'fence';
     for (const Fc of B.faces) {
       const bi = Fc.bias; if (bi && (dC > 110 || (dC > 45 && (bi === 3 || bi === 4 || bi === 6 || bi === 11)))) continue;   // far off, the small details are left out
       const v = Fc.pts, n = v.length; let ok = true;
-      for (let i = 0; i < n; i++) { const ex = v[i][0] - camX, ey = v[i][1] - camY, d = ex * FX + ey * FY; if (d < 0.8) { ok = false; break; } const k = FOC / d; PXs[i] = VW / 2 + (ex * RX + ey * RY) * k; PYs[i] = HZ - (v[i][2] - camZ) * k; PWs[i] = 1 / d; }
+      for (let i = 0; i < n; i++) { const ex = v[i][0] - camX, ey = v[i][1] - camY, d = ex * FX + ey * FY; if (d < 0.8 || (fence && d > 260)) { ok = false; break; } const k = FOC / d; PXs[i] = VW / 2 + (ex * RX + ey * RY) * k; PYs[i] = HZ - (v[i][2] - camZ) * k; PWs[i] = 1 / d; }
       if (!ok) continue;
+      if (fence && ((PXs[0] < 0 && PXs[1] < 0 && PXs[2] < 0 && PXs[3] < 0) || (PXs[0] >= VW && PXs[1] >= VW && PXs[2] >= VW && PXs[3] >= VW))) continue;   // (#1308: a run's bays off the side of the picture cost nothing)
+      const mesh = Fc.mesh | 0;
       const dot = Fc.n[0] * SUNX + Fc.n[1] * SUNY + Fc.n[2] * SUNZ, L = clamp(Math.round(200 * (0.42 + 0.56 * (dot > 0 ? dot : dot * 0.25))), 30, 200), c = Fc.col;
       let col = Fc.emit && night ? (Fc.emit === 2 ? rgb(255, 246, 224) : rgb(255, 214, 130)) : lit(((L << 24) | (Math.min(255, c[2] | 0) << 16) | (Math.min(255, c[1] | 0) << 8) | Math.min(255, c[0] | 0)) >>> 0);
       if (hf > 0) col = hazed(col, hf, HAZ);
@@ -336,11 +361,11 @@ function drawBuildings() {
         const yc = y + 0.5; let xa = 1e9, xb = -1e9;
         for (let i = 0, j = n - 1; i < n; j = i++) { const p0 = PYs[i], p1 = PYs[j]; if ((p0 <= yc) === (p1 <= yc)) continue; const xx = PXs[i] + (yc - p0) / (p1 - p0) * (PXs[j] - PXs[i]); if (xx < xa) xa = xx; if (xx > xb) xb = xx; }
         let X0 = Math.ceil(xa - 0.5), X1 = Math.floor(xb - 0.5); if (X0 < 0) X0 = 0; if (X1 >= VW) X1 = VW - 1;
-        for (let x = X0; x <= X1; x++) { const w = A * (x + 0.5) + Bc * yc + C; if (w <= 0) continue; const zc = (100 / w) | 0, q = y * VW + x; if (zc < zbuf[q] + bi) { fb[q] = col; zbuf[q] = zc < 65534 ? zc : 65534; } }
+        for (let x = X0; x <= X1; x++) { if (mesh && (mesh === 1 ? (x + y) & 1 : mesh === 2 ? (x & 3) === 3 : (x & 3) !== 0)) continue; const w = A * (x + 0.5) + Bc * yc + C; if (w <= 0) continue; const zc = (100 / w) | 0, q = y * VW + x; if (zc < zbuf[q] + bi) { fb[q] = col; zbuf[q] = zc < 65534 ? zc : 65534; } }
       }
     }
     const bsn = night ? 0 : sunAt(B.x, B.y, frame * 0.055);
-    if (bsn > 0.03 && dC < 80) { shK = bsn;   // its shadow, where the sun reaches it: the box swept away from the sun, each ground pixel darkened once
+    if (bsn > 0.03 && dC < 80 && B.use !== 'fence') { shK = bsn;   // its shadow, where the sun reaches it: the box swept away from the sun, each ground pixel darkened once
       const cr = Math.cos(B.rot), sr = Math.sin(B.rot), hw = B.w / 2, hd = B.d / 2, st = dC < 35 ? 0.3 : 0.5, id = frame * 64 + (F.builds.indexOf(B) & 63) + 1;
       for (let zz = B.h; zz > 0.1; zz -= B.h / 4) for (let f = -hd; f <= hd; f += st) for (let a = -hw; a <= hw; a += st) {
         const gx = B.x + a * cr - f * sr - 0.809 * zz, gy = B.y + a * sr + f * cr + 0.735 * zz; project(gx, gy, groundH(gx, gy), PJ);
