@@ -281,7 +281,33 @@ async function cursorPart() {
   await ctx.close();
 }
 
+// ================================================================ the top bar's rows (J13 keeps it one row by the room it has: does the open speed bar still fit?)
+async function rowsPart() {
+  console.log(`
+== the top bar's rows (${jam ? 'the jam build' : 'the normal game'}) ==`);
+  const q = jam ? '' : '?start=range&seed=1';
+  for (const [W, H, sc] of [[1920, 1080, 1], [1366, 768, 1], [1280, 720, 1], [1366, 768, 1.25], [1280, 720, 1.25]]) {
+    const { ctx, page } = await open({ width: W, height: H }, sc, q);
+    for (const open_ of [false, true]) {
+      if (open_) await page.click('[data-testid="speed-toggle"]');
+      await sleep(500);
+      const r = await page.evaluate(() => {
+        const bar = document.querySelector('[data-testid="speed-toggle"]').parentElement, top = bar.parentElement.parentElement; // the top bar
+        const kids = [...top.children].map(e => e.getBoundingClientRect()).filter(b => b.width > 0 && b.height > 0);
+        return { rows: new Set(kids.map(b => Math.round(b.top / 12))).size, h: Math.round(top.getBoundingClientRect().height), vw: window.innerWidth, sw: document.documentElement.scrollWidth };
+      });
+      console.log(`  ${W} x ${H} at ${Math.round(sc * 100)}%, bar ${open_ ? 'open' : 'collapsed'}: ${r.rows} row(s), the top bar ${r.h} px high`);
+      // (the jam's collapsed bar is one row at every size, the default state J13 measured; open it is one row but at 1280 px at the largest Text size, where the chevron's
+      //  42 px push it to a second row, as every top bar narrower than its content has always wrapped; the normal game's left cluster is wider and wraps at 1280 px and below)
+      if (!open_ && jam) check(r.rows === 1 && r.sw <= r.vw, `${W} x ${H} at ${Math.round(sc * 100)}%, collapsed: one row, no sideways scroll`);
+      else check(r.sw <= r.vw, `${W} x ${H} at ${Math.round(sc * 100)}%, ${open_ ? 'open' : 'collapsed'}: no sideways scroll (${r.rows} row(s))`);
+    }
+    await ctx.close();
+  }
+}
+
 try {
+  if (part === 'rows') await rowsPart();
   if (part === 'all' || part === 'speed') await speedPart();
   if (part === 'all' || part === 'cursor') await cursorPart();
 } catch (e) {
