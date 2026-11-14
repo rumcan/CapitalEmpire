@@ -1,10 +1,9 @@
 // J7d (#1234; the owner, 2026-11-13: "pls make all the labels show on hover otherwise add a 50m artwork sign"): the jam's world labels show only while the
-// pointer is over their thing (world-labels.ts hoverOnly); the hints, warnings and growth floats stay; distances are painted yardage boards (yardage-sign.ts).
+// pointer is over their thing (world-labels.ts hoverOnly); the hints, warnings and growth floats stay; distances are PNG yardage signs or nothing (J7e, yardage-signs.ts).
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { WorldLabels } from '../src/game/world-labels';
 import { PRI } from '../src/game/label-place';
-import { signSize } from '../src/game/golf/yardage-sign';
 import { JUNK_SCALE, SMALL_JUNK_SCALE, junkScale, newRangeJunk, rangeScene, defaultRangeBiz } from '../src/game/golf/rangebiz';
 
 /** a canvas with measureText only (the labels measure their text) */
@@ -43,19 +42,41 @@ test('on: a selected thing (keep) keeps its label without the pointer', () => {
   const a = L.text('sel', PRI.name, 'Clubhouse', 300, 300, '12px x', 12, '#fff'), b = L.text('other', PRI.name, 'Shop', 600, 300, '12px x', 12, '#fff');
   L.place(1000, 800); assert.equal(a.shown, true); assert.equal(b.shown, false);
 });
-test('the yardage board: the figures never below the legible size, the board wider than its text, the post standing it off the ground', () => {
-  const w = (px: number) => 3 * px * 0.6;
-  const far = signSize(4, w, 8), near = signSize(40, w, 8);
-  assert.equal(far.px, 8, 'zoomed out: the least legible size'); assert.ok(near.px > far.px, 'zoomed in: larger');
-  for (const s of [far, near]) { assert.ok(s.w > w(s.px)); assert.ok(s.h > s.px); assert.ok(s.post > 0); }
-});
-test('the junk reads at the range zoom: the small piles drawn larger than the big ones, and each pile has its own yardage board beside it', () => {
+test('J7e: the junk reads at the range zoom (the small piles drawn larger than the big ones) and gets no sign: its name and distance are its hover label', () => {
   assert.equal(junkScale('expansion:pallet-stack'), SMALL_JUNK_SCALE); assert.equal(junkScale('expansion:tyre-stack'), SMALL_JUNK_SCALE);
   assert.equal(junkScale('expansion:junk-car'), JUNK_SCALE);
-  const s = { ...defaultRangeBiz(), junk: newRangeJunk(5) }, sc = rangeScene([200, 200, 70, 150], 2, s);
-  for (const j of sc.junk) {
-    const n = sc.numbers.find(t => t.text === `${j.m} m` && Math.hypot(t.x - j.x, t.y - j.y) < 6);
-    assert.ok(n, `${j.name}: its board within reach`); assert.ok(Math.hypot(n!.x - j.x, n!.y - j.y) > 1.5, `${j.name}: beside, not on it`);
-    assert.ok(!sc.numbers.some(t => t.text.includes(j.name)), 'no name painted on the board');
-  }
+  const s = { ...defaultRangeBiz(), junk: newRangeJunk(5) }, sc = rangeScene([200, 200, 70, 150], 2, s, { jam: true, signs: () => 'world:bench' });
+  assert.equal(sc.junk.length, 9);
+  for (const j of sc.junk) assert.ok(!sc.numbers.some(t => Math.hypot(t.x - j.x, t.y - j.y) < 8), `${j.name}: no distance drawn by it`);
+});
+// J7e (#1258; the owner: "no vector distance signs. only png sprites allowed")
+const PLOT: [number, number, number, number] = [200, 200, 70, 150];
+const greens = () => ({ ...defaultRangeBiz(), owned: ['greens', 'targets'] as never[] });
+test('J7e: the jam range draws no distance as a number or a board: its scene has no numbers, with or without the sign pictures', () => {
+  for (const signs of [() => null, () => 'world:bench']) assert.equal(rangeScene(PLOT, 2, greens(), { jam: true, signs }).numbers.length, 0);
+});
+test('J7e: until the pictures land there is no sign at all: no marker post, no stand-in board', () => {
+  const sc = rangeScene(PLOT, 2, greens(), { jam: true, signs: () => null });
+  assert.ok(!sc.pieces.some(p => p.key.startsWith('mark') || p.key.startsWith('board')), 'no sign pieces');
+  assert.ok(!sc.pieces.some(p => p.id === 'ce:parking-sign' || p.id === 'poi:fishing-board'), 'no stand-ins');
+  assert.equal(sc.pieces.filter(p => p.key.startsWith('flag')).length, 5, 'the greens keep their flags');
+});
+test('J7e: with the pictures in, each marker (both sides, 50 to 250 m) and each target green gets the PNG sign of its own distance', () => {
+  const asked: number[] = [];
+  const sc = rangeScene(PLOT, 2, greens(), { jam: true, signs: m => { asked.push(m); return `sign-${m}`; } });
+  for (const m of [50, 100, 150, 200, 250]) assert.equal(sc.pieces.filter(p => p.id === `sign-${m}` && p.key.startsWith('mark')).length, 2, `${m} m markers`);
+  for (const m of [50, 100, 150, 200, 240]) assert.ok(sc.pieces.some(p => p.id === `sign-${m}` && p.key.startsWith('board')), `the ${m} m green's sign`);
+  assert.ok(asked.length > 0);
+});
+test('J7e: the normal game keeps its markers and number pills (the jam rule only in the jam)', () => {
+  const sc = rangeScene(PLOT, 2, greens(), { jam: false });
+  assert.ok(sc.numbers.length >= 10); assert.ok(sc.pieces.some(p => p.key.startsWith('mark')));
+});
+test('J7e: no code-drawn sign is left in the source: the vector board is gone and the range overlay draws no distance in the jam', async () => {
+  const fs = await import('node:fs');
+  assert.equal(fs.existsSync('src/game/golf/yardage-sign.ts'), false, 'the vector yardage board module is gone');
+  const host = fs.readFileSync('src/game/golf/rangehost.ts', 'utf8');
+  assert.ok(!/drawYardageSign|yardage-sign'/.test(host), 'the range overlay draws no yardage board');
+  const jamBlock = host.slice(host.indexOf('if (JAM) {', host.indexOf('const px = Math.round(dpr * Math.max(9')), host.indexOf('} else for (const t of sc.numbers)'));
+  assert.ok(jamBlock.length > 0 && !/sc\.numbers|fillText|roundRect|fillRect/.test(jamBlock), 'the jam branch draws no numbers or boards');
 });
