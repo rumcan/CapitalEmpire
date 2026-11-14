@@ -104,7 +104,19 @@ try {
   await page.locator('[data-testid="title-card"]').waitFor({ timeout: 120000 });
   await click('title', 'How to play', page.locator('[data-testid="title-how"]'));
   await click('title', 'Hide how to play', page.locator('[data-testid="title-how"]'));
-  await click('title', 'New game', page.locator('[data-testid="title-new"]'), { wait: 1500 });
+  // J12 (#1271): with the living scene behind the card, New game reloads the page into the game's own boot (the scene's world is never the player's); on a page without the scene
+  // (reduced motion, a slow machine) it starts the game in place. Either way the card goes and a game is ready: the click is judged by that, and a reload is not an error
+  {
+    newErrors();
+    const loc = page.locator('[data-testid="title-new"]'), reload = page.waitForNavigation({ waitUntil: 'commit', timeout: 6000 }).then(() => true, () => false);
+    try {
+      await loc.click({ timeout: 4000 });
+      const reloaded = await reload;
+      await page.waitForFunction(() => window.__game?.ready && !window.__game.show && !document.querySelector('[data-testid="title-card"]'), null, { timeout: 180000 });
+      const errs = newErrors();
+      row('title', 'New game', errs.length ? 'FAIL' : 'PASS', errs.length ? errs.join(' / ') : reloaded ? 'reloaded into the game, the scene gone' : 'started in place');
+    } catch (e) { row('title', 'New game', 'FAIL', String(e.message ?? e).split('\n')[0]); }
+  }
   // ---- who are you
   await page.waitForFunction(() => window.__game?.ready, null, { timeout: 180000 });
   const who = page.locator('button', { hasText: "That's me" });
