@@ -10,13 +10,16 @@ import { ACTION_TILES, PROP_TILES, SOUND_TILES, TOOL_TILES } from '../src/ui/too
 import { GUIDE, GUIDE_STUCK, RANGE_GUIDE } from '../src/game/ext/progressive-ui/guide';
 import { JAM_TOUR, TOWN_TOUR } from '../src/game/ext/progressive-ui/tour';
 import { BRANCH_NAME, RANGE_UPGRADES } from '../src/game/golf/rangesave';
+import { RAIL } from '../src/ui/rail-items';
+import { menuOf, type MenuCtx, type MenuRow } from '../src/ui/flyout-menu';
+import { propMenuLists } from '../src/game/golf/decor';
 
 const DIR = 'src/assets/ui/tiles', ALL = new Set<string>([...TOOL_TILES, ...ACTION_TILES, ...PROP_TILES]);
 
 /** the tiles cut but worn by nothing yet: each commit that places one takes it off this list (J13, #1277). the props tiles that no menu row wears wait for #1284's natural / man-made restructure of the Props menu (another coder's) and the Texture
  *  Painter's button (#1282's rename) */
 const NOT_YET: readonly string[] = [
-  'all-props', 'natural-props', 'man-made-props', 'desert-oasis', 'trees-mixed', 'lake-props', 'fences', 'signs', 'fountain', 'texture-painter', 'clear-plants', 'nursery-plants',
+  'natural-props', 'fences', 'signs', 'fountain', 'texture-painter', 'clear-plants', 'nursery-plants',
 ];
 
 test('every tile id has its WebP, a small 144 px picture, and no picture lacks an id', async () => {
@@ -58,6 +61,25 @@ test('every range upgrade has a tile that exists, and so has each branch of the 
   assert.match(card, /tile=\{RANGE_UPGRADE_TILE\[u\.id\]\}/, "the Range card's upgrade rows");
   assert.match(card, /tile="range-till"/, "the Range card's till line");
   assert.match(card, /tile="home-caravan"/, 'Your home');
+});
+
+test('no row of the golf Course flyout shows the maple leaf where a tile fits: the Props menu wears its tiles (J13, #1277)', () => {
+  const ctx = { golf: true, ui: null, roads: [], paths: [], junctions: [], surfaces: [], cares: [], materials: [], plants: [{ id: 'trees', name: 'Trees' }], practice: [], newHoleWhy: null, range: [], ...propMenuLists() } as unknown as MenuCtx;
+  const bare: string[] = [], tiles = new Map<string, string | undefined>();
+  const walk = (rows: readonly MenuRow[], path: string[]) => {
+    for (const r of rows) { const p = [...path, r.label]; if (!r.caption && !r.tile && r.icon === 'leaf') bare.push(p.join(' > ')); tiles.set(p.join(' > '), r.tile); if (r.children) walk(r.children, p); }
+  };
+  walk(menuOf(RAIL.find(r => r.id === 'course')!, ctx), ['course']);
+  assert.deepEqual(bare, [], 'a Props row with the leaf and no tile: pick one in tool-tiles.ts (PROP_GROUP_TILE)');
+  // (the classic town's Decoration > Props stays a list with icons: T233, ui-flyouts.test.ts; its New: Buildings and New: Eight-view objects have no tile painted at all)
+  const at = (path: string) => tiles.get(path), root = 'course > Facilities > Decoration > Props';
+  assert.equal(at(root), 'all-props', root);
+  assert.equal(at(`${root} > All props`), 'all-props', `${root} > All props`);
+  assert.equal(at(`${root} > Desert & oasis`), 'desert-oasis', `${root} > Desert & oasis`);
+  assert.equal(at(`${root} > New: Trees`), 'trees-mixed', `${root} > New: Trees`);
+  assert.equal(at(`${root} > New: Lake props`), 'lake-props', `${root} > New: Lake props`);
+  // the golf kind that showed the leaf (Course furniture) wears a tile on every row of it
+  for (const row of ['All course furniture', 'Tournament dressing', 'New: Course props']) assert.ok(at(`course > Facilities > Course furniture > ${row}`), row);
 });
 
 /** the files of the UI (and of the guide's step lists, whose steps carry their own tile) that may name a tile */

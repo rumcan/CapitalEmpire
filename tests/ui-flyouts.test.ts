@@ -12,7 +12,7 @@ import { advanceProgress, computeProgressiveUiState, emptyProgress, progressFact
 import { RAIL, entryKey, jamRail, toolLock, toolsIn } from '../src/ui/rail-items';
 import { columnsOf, indicesOf, leavesOf, menuOf, navKey, type MenuCtx, type MenuRow, type NavState } from '../src/ui/flyout-menu';
 import { Flyouts, columnWidths, isTileGrid, menuDepth, upLeft } from '../src/ui/Flyouts';
-import { TOOL_TILES, type ToolTile } from '../src/ui/tool-tiles';
+import { PROP_TILES, TOOL_TILES, type ToolTile } from '../src/ui/tool-tiles';
 import { GREENKEEPING } from '../src/game/features';
 
 const course = (holes: number): CourseProgress => ({ holes, seasons: 0, invited: false });
@@ -256,8 +256,8 @@ describe('the tool tiles (T233)', () => {
     assert.deepEqual(tiles(find(fac, 'Practice').children!), ['Putting green=green', 'Chipping green and bunker=chipping-green', 'Teaching hut=snack-hut']);
     assert.deepEqual(tiles(find(fac, 'Plants').children!), ['Trees=trees', 'Bushes=autumn-shrubs', 'Flowers=flower-bed']);
     assert.equal(find(fac, 'Plants', 'Bushes').swatch, '#3b5', 'the plant swatch stays available with the new tile');
-    assert.deepEqual(tiles(find(fac, 'Decoration').children!), ['Props']);
-    assert.deepEqual(tiles(find(fac, 'Decoration', 'Props').children!), ['All props', 'Plants=flower-bed', 'Water=pond', 'Stone=rocks', 'Furniture=patio-table']);
+    assert.deepEqual(tiles(find(fac, 'Decoration').children!), ['Props=all-props'], 'J13: the Props row wears the crate of mixed things');
+    assert.deepEqual(tiles(find(fac, 'Decoration', 'Props').children!), ['All props=all-props', 'Plants=flower-bed', 'Water=pond', 'Stone=rocks', 'Furniture=patio-table']);
   });
   it("the town's menus and the range card stay lists; the tiles change no leaf, lock or path", () => {
     const all = (rs: readonly MenuRow[]): MenuRow[] => rs.flatMap(r => [r, ...all(r.children ?? [])]);
@@ -274,7 +274,8 @@ describe('the tool tiles (T233)', () => {
   it('all twenty-four named tiles are used, each a small WebP in src/assets/ui/tiles', () => {
     const used = new Set<ToolTile>(), walk = (rs: readonly MenuRow[]) => { for (const r of rs) { if (r.tile) used.add(r.tile); walk(r.children ?? []); } };
     walk(courseRows); walk(pathRows); walk(fac); walk(facilities({ ...C, plants: [...C.plants, { id: 'palms', name: 'Palms' }] }));
-    assert.deepEqual([...TOOL_TILES].sort(), [...used].sort(), 'every tile on a tool, and no tile that is not one');
+    // (J13, #1277: the Props rows also wear the props sheet's tiles, PROP_TILES: tests/ui-action-tiles.test.ts holds those)
+    assert.deepEqual([...TOOL_TILES].sort(), [...used].filter(t => !PROP_TILES.includes(t)).sort(), 'every tile on a tool, and no tile that is not one');
     for (const t of TOOL_TILES) { const f = `src/assets/ui/tiles/${t}.webp`; assert.ok(existsSync(f), f); assert.ok(statSync(f).size < 12_000, `${f}: small`); }
   });
   it('drawn: a level with a tile is a grid of tiles (the picture above the name, the more and lock marks on it); a level without stays a list', () => {

@@ -40,7 +40,13 @@ export const SURFACE_TILE: Readonly<Partial<Record<string, ToolTile>>> = { fairw
 export const PLANT_TILE: Readonly<Partial<Record<string, ToolTile>>> = { trees: 'trees', flowers: 'flower-bed', bushes: 'autumn-shrubs', palms: 'palms' };
 export const PRACTICE_TILE: Readonly<Partial<Record<string, ToolTile>>> = { putting: 'green', chipping: 'chipping-green' };
 /** Actual DECOR_GROUPS ids; Furniture is represented by its table and chairs. */
-export const PROP_GROUP_TILE: Readonly<Partial<Record<string, ToolTile>>> = { stone: 'rocks', water: 'pond', plants: 'flower-bed', furniture: 'patio-table' };
+export const PROP_GROUP_TILE: Readonly<Partial<Record<string, ToolTile>>> = {
+  stone: 'rocks', water: 'pond', plants: 'flower-bed', furniture: 'patio-table',
+  // J13 (#1277, the tiles half of #1284): the groups whose rows showed the maple leaf (Desert & oasis, New: Trees, New: Lake props)
+  desert: 'desert-oasis', 'new:Trees': 'trees-mixed', 'new:Lake props': 'lake-props',
+  // (stand-ins for the golf kinds' groups until their own are painted: the tournament dressing by the scoreboard stand, the course props by the tidy bench and lamp post)
+  tournament: 'grandstand-scoreboard', 'new:Course props': 'man-made-props',
+};
 /** T400 (#1078): the golf props' kinds in Facilities (decor.ts PROP_KINDS): the structures by the scoreboard stand, the furniture by the table and chairs,
  *  the range's props by its bays, the vehicles by the cart path. */
 export const PROP_KIND_TILE: Readonly<Partial<Record<string, ToolTile>>> = { structures: 'grandstand-scoreboard', coursefurniture: 'patio-table', rangeprops: 'range-bays', vehicles: 'cart-path' };
@@ -50,6 +56,8 @@ export const ROW_TILE = {
   // T214: stand-in tiles until GOLF-SPRITES' Build-tool tiles for the pro's office and the teaching hut land
   proOffice: 'clubhouse', teachHut: 'snack-hut',
   practice: 'range-bays', plants: 'trees', decoration: 'street-furniture', build: 'surveyor-turf',
+  // J13 (#1277): the Props row and its All props leaf, the crate of mixed garden things
+  allProps: 'all-props',
   // #1272: Facilities, the Course grid's sixth tile (it was a rail button): the chipping green with its bunker and shrubs, its practice greens and plants
   facilities: 'chipping-green',
 } as const satisfies Record<string, ToolTile>;
