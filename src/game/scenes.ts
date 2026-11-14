@@ -11,6 +11,7 @@
 // (Engine.sceneCard) and the card draws them (ui/SceneCard.tsx), which loads the picture only when it opens.
 import MANIFEST_FILE from '../assets/scenes/manifest.json';
 import type { RangeUpgradeId } from './golf/rangesave';
+import { practicePath } from './golf/menu-path';
 
 /** one picture of the manifest: a place's slug, the state it shows, its file under src/assets/scenes and its size (px, bytes) */
 export interface ScenePic { slug: string; state: string; file: string; w: number; h: number; bytes: number;
@@ -174,7 +175,7 @@ export function rangeScene(f: RangeSceneFacts, want?: string): SceneCardView | n
       { label: 'Today', value: `${f.green.today}`, sub: 'putting' },
       { label: 'This season', value: `${Math.round(f.green.golfers)}`, sub: 'golfers' },
       { label: 'Takings', value: money(f.green.takings), tone: 'good' },
-    ] : [{ label: 'Putting green', value: 'Not built', sub: 'Facilities › Practice' }]),
+    ] : [{ label: 'Putting green', value: 'Not built', sub: practicePath('›') }]),
     viewOf('home', `Your ${f.homeName.toLowerCase()}`, homeSlug, good('home'), [
       { label: 'Home', value: f.homeName },
       { label: 'Taken in all', value: money(f.lifetime), tone: 'good' },

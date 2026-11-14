@@ -308,7 +308,7 @@ the tile's navy square; a second sheet in 174's style would finish the panel (on
 | `furniture` | Decoration › Props › Furniture | a patio table with a red umbrella and two chairs | P2 |
 | `long-grass` | Course › Shape by hand › Long grass (wears `rough` today) | a patch of tall, wispy golden-green long grass, looser than rough | P1 |
 | `chipping` | Facilities › Practice › Chipping green and bunker (wears `bunker` today) | a small chipping green with a flag, a bunker beside it, a few balls | P2 |
-| `build` | Facilities › Build on your property; Range › Build | surveyor's stakes with orange tape and a wheelbarrow of turf on a lawn edge | P2 |
+| `build` | Course › Facilities › Texture Painter; Range › Texture Painter | surveyor's stakes with orange tape and a wheelbarrow of turf on a lawn edge | P2 |
 
 | `pro-office` | Course › Buildings › Pro's office (T214; wears `clubhouse` today) | a small white clapboard office with a green door and a "Pro" window, a flag on a short pole | P2 |
 | `teaching-hut` | Facilities › Practice › Teaching hut (T214; wears `snack-hut` today) | a tiny timber hut with an open front, a bucket of balls and an alignment stick beside it | P2 |

@@ -5,6 +5,7 @@
 // gains, golf/player.ts Lesson), and where each stands in the world through the working day (proPose: 3 to 6 movers). Pure TS, no DOM; tiles,
 // dollars, game months, game minutes of the town day and sim seconds.
 import type { Pt } from '../network';
+import { practicePath } from './menu-path';
 import { facing } from '../ext/pedestrians';
 import { GOLFER_NAMES } from './play/field';
 import { LESSON, LESSON_SHARE } from './rangesave';
@@ -99,7 +100,7 @@ export interface StaffNeeds { clubhouse: boolean; office: number | null; huts: r
 export function hireWhy(s: Pick<StaffState, 'pros'>, role: ClubRole, at: number | null, n: StaffNeeds): string {
   const pros = s.pros ?? [];
   if (role === 'teach') {
-    if (at === null || !n.huts.some(h => h.id === at)) return 'Needs a teaching hut (Facilities › Practice)';
+    if (at === null || !n.huts.some(h => h.id === at)) return `Needs a teaching hut (${practicePath('›')})`;
     if (pros.some(p => p.role === 'teach' && p.at === at)) return 'This hut has its teaching pro';
     return '';
   }
