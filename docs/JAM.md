@@ -176,17 +176,18 @@ under its 128 KB limit). v10 to v12 are `ACTION_TILES` (the ball room tree's upg
   applied (`geomWhy`: the parcel's size from `COURSE_SIZES` and 98% playable, the range plot dry, the front, car park and drive corridor buildable, the town window across the road 75%
   buildable, all of it 64 tiles inside the map) and the same county road (`regionalRoute`: 600 tiles straight each way, at most two bridges, no tunnel, edge to edge). With no anchor
   `planRangeStart` is untouched (`tests/golf-rangestart-anchor.test.ts` keeps the sha1 of its plan for seeds 1 to 12, with and without the probe, and checks every invariant of the
-  automatic start on every anchored spot that fits on three seeds, at every facing).
+  automatic start on every anchored spot that fits, on twelve seeds and at every facing, and that every other spot is refused with one of the six reasons below).
 - **Where a start is refused** (red, one of six reasons, by the pointer): too near the map's edge for the road and the town (the road needs 600 tiles of straight run each way, so J is
-  in the middle of the map: 11 to 19% of the whole map fits, a quarter to a third of the view the choice opens on); needs clear, flat ground for the shop and car park (water, a creek or the river's bank where they go); not enough
-  open land beside it for a course; no room for the town across the road; water or a creek on the range land; the county road cannot get past the water. Water, mountains and the map's
+  in the middle of the map: 11 to 19% of the whole map fits, a quarter to a third of the view the choice opens on); needs clear, flat ground for the shop and car park (water, a creek, the river's bank or woodland where they go); not enough
+  open land beside it for a course; no room for the town across the road; water or a creek on the range land; the county road cannot get past the water. Water, woodland under the shop and the map's
   edge are all among these. A refusal at the click shows the same words as a toast.
 - **Cost** (measured on the jam build in headless Chrome, and in node for the generator): a spot the pointer asks about is a few lookups in the terrain's integral images (the ones the automatic
   plan reads: the probe makes them once, 16 ms, and the plan shares them), kept per lattice cell: over 10,906 pointer positions of the opening view (6,311 of them green) the ghost's test took 1.3 us
   a position on average and 0.2 ms at worst, none over 4 ms, and a pointer standing still costs 0.2 us a frame (its shapes are made once per spot, so a frame allocates nothing). The county road, 9 ms
   median (11 ms at p90, up to about 55 ms the first time on a map), is worked out only once the pointer has rested on a spot for 140 ms, and at the click, never while it moves; kept per J and axis.
   Generation is no slower: `planRangeStart` took 24.9 ms before J9 and takes 24.3 ms now (the probe's 16 ms included; mean of 12 seeds, best of 5 each), and a new game's work on the page's thread
-  is 0.5 to 0.8 s with the choice (terrain, plan, probe) plus 22 to 48 ms for the click, against 0.5 to 0.6 s with `?pick=0` (the automatic start laid at once): the valley's generation is nearly all of it.
+  (`Game.newTown`, four runs each) is 0.49 to 0.62 s with the choice (terrain, plan, probe) plus 26 to 61 ms for the click, against 0.52 to 0.89 s with `?pick=0` (the automatic start laid at
+  once): the valley's generation is nearly all of it. The click lays the start in about 0.2 s (county road, land, house, range, the purchase), the new view's ground is baked about 3 s later.
   After the click the tutorial's card waits for the new view's ground, 4 s at most (`START_FIRST_VIEW_WAIT_MS`).
 - **Old saves** load as they were (the choice runs only for a brand-new game, and nothing is saved while it is chosen). A game from before J9 with the old range still for sale keeps Buy ($15,000:
   Build and the range card; its tutorial's first step still says the range is for sale), and a bare start (the trailer, the range not placed) keeps the old placement along the county road on its
