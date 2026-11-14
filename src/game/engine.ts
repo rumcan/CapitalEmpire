@@ -64,6 +64,7 @@ import { DESK_SIGN_LABEL, HUT_COST, HUT_LABEL, HUT_NAME, HUT_UPKEEP, OFFICE_COST
 import { newTour, tourCurrent, tourLines, tourNext, tourOff, tourRunning, tourShowOf, tourSkip, tourTick, type TourFacts } from './ext/progressive-ui/tour';
 import { FIRST_BUCKETS, PLACED_STEPS, RANGE_GUIDE, guideTable, newRangeGuide, rangeGuideCurrent, rangeGuideLines, rangeGuideOff, rangeGuideSkip, rangeGuideTick, type GuideEvent, type GuideLine } from './ext/progressive-ui/guide';
 import { welcomeReady } from './golf/firstview';
+import { practicePath } from './golf/menu-path';
 /** the hints' anchors (T188: their Show me pulses the control) where the hint is no guide step */
 const HINT_ANCHOR: Readonly<Record<string, string>> = { 'hint-range-open': 'range-chip', 'hint-range-upgrade': 'range-chip', 'hint-range-props': 'rail-facilities', 'hint-range-first-hole': 'new-hole' };
 import { RANGE_LABEL_Z, defaultRangeBiz, parkLabel, rangeKeepOut, practiceAppeal, rangeMapLabel, rangeNewSeason, rangeStats, rangeStructures, rangeCarLines, type RangeCounts, type RangeUpgradeId } from './golf/rangebiz';
@@ -1270,7 +1271,7 @@ export class Game {
     return ok;
   }
   // ---------- T256 (#743): Range › Build, My holes ----------
-  /** Range › Build (and Facilities › Build on your property): the course tool with the property's brush (the same painting tools as the holes,
+  /** the Texture Painter (Range › Texture Painter, Facilities › Texture Painter): the course tool with the property's brush (the same painting tools as the holes,
    *  painting cells of no hole: the range, the practice area, the rest of your land) */
   openPropertyPaint(kind: BrushKind = this.paint.brushKind === 'path' ? 'fairway' : this.paint.brushKind) {
     if (!this.golf || !this.courseGrid) { this.toast('Build paints a golf course\'s land', 'warn'); return; }
@@ -1943,7 +1944,7 @@ export class Game {
         b.practiceAt = [r[0], r[1], r[2], r[3]];
         this.dropTownTrees(r[0], r[1], r[0] + r[2], r[1] + r[3]);
         this.range.sync(true);
-        this.toast(`Practice area placed (-$${PRACTICE_PLACE_COST.toLocaleString()}): build a putting green on it (Facilities ▸ Practice)`, 'good');
+        this.toast(`Practice area placed (-$${PRACTICE_PLACE_COST.toLocaleString()}): build a putting green on it (${practicePath()})`, 'good');
         return true;
       },
     };
@@ -6574,7 +6575,7 @@ export class Game {
         const car = this.cam.z >= DISTRICT_Z ? this.carAt(mx, my) : -1;
         if (car >= 0) { this.inspectCar(car); return; }
         // Select can inspect a person's identity immediately; Walk still walks up before opening the same card.
-        if (this.cam.z >= DISTRICT_Z && this.you) { const person = this.youThingAt(mx, my); if (person?.kind === 'person') { person.act?.(); return; } }
+        if (this.cam.z >= DISTRICT_Z && this.you) { const person = this.youThingAt(mx, my, true); if (person?.kind === 'person') { person.act?.(); return; } }
         if (this.cam.z >= DISTRICT_Z && this.repairAt(mx, my)) return;
         const p = this.propAt(mx, my, true), tl = this.tileAt(mx, my);
         // the range's own props and its front open the range card (P24, T129)
@@ -6619,7 +6620,7 @@ export class Game {
   }
   pointerMove(e: PointerEvent) {
   const mx = e.offsetX, my = e.offsetY;
-  this.ghostMouse = { mx, my };
+  this.ghostMouse = { mx, my }; this.hoverPick.dirty = true; // (#1282: the pointer cursor's test runs in the frame)
   if (this.badgeDrag) { const b = this.badgeDrag; b.mx = mx; b.my = my; if (Math.hypot(mx - b.sx, my - b.sy) > 4) b.moved = true; } // T174
   this.hover = this.tileAt(mx, my);
   if (this.routeGesture.down && this.routeGesture.move(mx, my, e.buttons) === 'cancel') this.cancelRoute(); // #1276: a right click during the road drag drops the route
@@ -6679,6 +6680,52 @@ export class Game {
     this.dragging = null;
   }
   pointerLeave() { this.estateTool.leave(); this.paint.cursor = null; this.paint.mouse = null; this.paint.hover = 0; this.paint.hoverH = null; this.hover = null; this.hoverProp = null; this.hoverNode = null; this.hoverPiece = null; this.hoverRoad = ''; this.tollHover = null; this.bizHover = null; this.ghostMouse = null; this.busHover = null; this.laneHover = null; this.decor.ghost = null; this.practice.leave(); this.youHover = null; }
+  // ---------- #1282 (the owner, 2026-11-14: "show a pointer cursor over anything the will pop up a window if you click it"): the map's pointer cursor ----------
+  /** whether a click at the pointer would open a window or a card (a building, the range and its practice area, a hole or its badge, a person you can talk to, a car, a
+   *  block of land for sale, a bunker, a prop you select): the map's cursor is a pointer over it (ui/map-cursor.ts). Select in hand only: the other tools keep their own
+   *  cursors, and the Walk cursor its verbs (a click walks you there; only a hole's badge opens at once). Set by pickHover, once a frame at most */
+  hoverOpens = false;
+  private hoverPick = { dirty: true, at: 0, x: NaN, y: NaN, z: NaN };
+  /** the hover's test, at most once a frame and only when something changed (the pointer moved, the camera moved), else about four times a second (a person walks
+   *  past a resting pointer, a card shuts); the cursor re-draws (emit) only when the answer flips. Its cost counts in the frame's cpuMs */
+  private pickHover(now: number): void {
+    const gm = this.ghostMouse, h = this.hoverPick;
+    if (!gm || this.tool !== 'select') { if (this.hoverOpens) { this.hoverOpens = false; this.emit(); } return; }
+    const c = this.cam;
+    if (!h.dirty && c.X === h.x && c.Y === h.y && c.z === h.z && now - h.at < 250) return;
+    h.dirty = false; h.at = now; h.x = c.X; h.y = c.Y; h.z = c.z;
+    const v = this.clickOpensAt(gm.mx, gm.my);
+    if (v !== this.hoverOpens) { this.hoverOpens = v; this.emit(); }
+  }
+  /** whether tile h is on a pin, a tee box or a tee marker of hole n: a press there picks the marker up (holeCardGrab, which this mirrors), it opens no window */
+  private holeMarkerAt(n: number, h: Pt): boolean {
+    const g = this.golf; if (!g) return false;
+    return g.pins.some(p => p.hole === n && Math.hypot(h.x - p.x, h.y - p.y) <= 3) || !!this.teeBoxAt(n, h.x, h.y) || g.tees.some(t => t.hole === n && Math.hypot(h.x - t.x, h.y - t.y) <= 2);
+  }
+  /** whether a plain left click at (mx, my) (css px) opens a window or a card: pointerDown's Select branch asked without acting, its tests in its order (the order
+   *  matters only for the ones that take the click and open nothing: they come first). KEEP IN STEP with pointerDown: a new thing Select's click opens is added here.
+   *  A closure's repair X (it pays at once, no window) is not counted. No allocation but the tile and the pick's own */
+  clickOpensAt(mx: number, my: number): boolean {
+    // what takes the click first and opens nothing: your shot's aim, a tee, a real course or a build in hand, the grass care, an event structure being placed
+    if (this.tool !== 'select' || this.shot || this.teePlace || this.real.active || this.placing || this.grassPanel || (this.eventTool && this.eventStructurePending)) return false;
+    if (this.landMode) return this.land.hover !== null; // Land for sale: only a block's card opens (a press elsewhere pans)
+    if (this.badgeAt(mx, my)) return true; // a hole's badge on the map: its card, at once, with Walk in hand too
+    const g = this.golf, tl = this.tileAt(mx, my);
+    // a pin or a tee picked up (the open card's hole, or the Holes tool's): a drag, no window
+    if (g && this.holeCardHole !== null && this.holeMarkerAt(this.holeCardHole, tl)) return false;
+    if (g && this.holesTool && (this.selectedGolfMarker || g.pins.some(p => { const cup = this.todayPin(p.hole) ?? p; return Math.hypot(tl.x - p.x, tl.y - p.y) <= 3 || Math.hypot(tl.x - cup.x, tl.y - cup.y) <= 3; }) || g.tees.some(t => Math.hypot(tl.x - t.x, tl.y - t.y) <= 2))) return false;
+    if (this.youControls()) return false; // Walk in hand: a click walks you there (its verbs show: footprints, a speech bubble, an eye, a hand), and the thing opens when you arrive
+    const street = this.cam.z >= DISTRICT_Z;
+    if (street && this.carAt(mx, my) >= 0) return true; // a car: its inspector
+    if (street && this.you && this.youThingAt(mx, my, true)?.kind === 'person') return true; // a person you can talk to
+    if (this.propAt(mx, my, true)) return true; // a prop, a business's or the clubhouse's picture, a pro's hut, an iconic place, the range's pieces: a card or its selection
+    if (this.range.hit(tl.x, tl.y)) return true; // the range's front and its practice area: the range card
+    const club = g ? this.bizDefs.find(d => d.type === 'clubhouse') : undefined; // the clubhouse (and its height up the screen, 6 tiles back): its card
+    if (club && tl.x >= club.x - 6 && tl.x < club.x + club.w && tl.y >= club.y - 6 && tl.y < club.y + club.h) return true;
+    if (this.bunkers.componentAt(tl)) return true; // a bunker: its look
+    if (g) { const n = this.courseHoleAt(tl); if (n && this.courseHoleViews()[n - 1]?.started) return true; } // a hole's ground: its card
+    return false;
+  }
   /** the name of the road under tile t (the piece under it, then its route), or '' */
   roadNameAt(t: Pt | null): string {
     const piece = t ? this.net.pieceNear(t) : null;
@@ -7117,6 +7164,8 @@ export class Game {
   }
   /** pauses, or resumes at the last speed */
   togglePause() { this.setSpeed(this.speed ? 0 : this.lastSpeed); }
+  /** the speed the game runs at, or while it is paused the one Space resumes at (the collapsed speed bar's chip, #1275) */
+  get resumeSpeed(): number { return this.speed || this.lastSpeed; }
   /** the game clock: the economy's day, and the time of day from the sim clock (one sim second is one game minute) */
   /** the time of day: in a golf game the town day's (LEAD.md M1: its own length, separate from the season; day counts town days from 1),
    *  else the classic game day (hours of GAME_HOUR) */
@@ -8242,7 +8291,7 @@ export class Game {
     if (price > this.money) { this.toast(`Not enough money: the practice area costs $${price.toLocaleString()}`, 'warn'); return false; }
     delete g.practiceLot; g.parcels = [...(g.parcels ?? [g.parcel]), [...q] as [number, number, number, number]];
     this.traffic.spend('construction', price); this.surveySig = '';
-    this.scheduleSave(); this.toast(`Bought the practice area: $${price.toLocaleString()}. Facilities › Practice builds on it`, 'good');
+    this.scheduleSave(); this.toast(`Bought the practice area: $${price.toLocaleString()}. ${practicePath('›')} builds on it`, 'good');
     this.land.hover = null; this.emit();
     return true;
   }
@@ -9767,7 +9816,7 @@ export class Game {
   };
   /** what is under the pointer (css px) for your character: a person, the first tee, the range's practice greens or its pieces, the clubhouse, an
    *  iconic place, a building; else open ground; null where you cannot go. Each with its name, where you walk to and what you do there */
-  youThingAt(mx: number, my: number): { kind: ThingKind; name: string; at: Pt; face: Pt | null; act: (() => void) | null; key: string } | null {
+  youThingAt(mx: number, my: number, personOnly = false): { kind: ThingKind; name: string; at: Pt; face: Pt | null; act: (() => void) | null; key: string } | null {
     const y = this.you; if (!y) return null;
     const tl = this.tileAt(mx, my), from = { x: y.x, y: y.y }, dpr = this.dpr, ze = this.cam.z * dpr, px = mx * dpr, py = my * dpr;
     // a person: a townsperson on the pavement or an everyday golfer, by his picture's box on the screen (feet to head)
@@ -9823,6 +9872,7 @@ export class Game {
         return { kind: 'person', name: person.name, at: talkSpot(pt, from), face: pt, key: person.id, act: () => this.youTalkTo(person.name, 'watching the tournament', pt, null, undefined, person) };
       }
     }
+    if (personOnly) return null; // (#1282: Select's click and its pointer's hover ask only whether a person stands there: the first tests above, none of the walk's below)
     // T317: your golf cart (get in; get out when you sit in it) and your ball in your round (walk up to it: you snap to the address when near)
     const cart = this.youCart;
     if (cart && Math.hypot(tl.x - cart.x, tl.y - cart.y) <= 1.6) {
@@ -12985,6 +13035,7 @@ export class Game {
       const tr = this.traffic, i = this.inspecting, live = tr.alive[i] === 1, x = live ? tr.px[i]! : tr.car!.x, y = live ? tr.py[i]! : tr.car!.y;
       this.cam.X = worldX(x, y); this.cam.Y = worldY(x, y);
     }
+    this.pickHover(now); // #1282: the pointer cursor: what a click would open under the pointer (once a frame at most)
     const t1 = performance.now();
     this.draw(now);
     const t2 = performance.now();

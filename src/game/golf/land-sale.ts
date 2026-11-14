@@ -4,6 +4,7 @@
 // next to your land yet); a click opens the block's card, never buys; Buy buys exactly the card's block at the card's price. Pure TypeScript,
 // no DOM: the engine is its host (golf/parcels.ts does the pricing and the purchase), the overlay and the card read it, the tests drive it.
 import type { Rect } from './mode';
+import { practicePath } from './menu-path';
 import { LAND_BLOCK, adjacentBlockPrice, blockAt, isAdjacentBlock, mergeParcelBounds, parcelsAreaSqm, rectAreaSqm, rectsOverlap, type ParcelLandClass } from './parcels';
 
 /** a price band (by the price a square metre): the overlay's colour and its label */
@@ -103,7 +104,7 @@ export function offerFacts(o: LandOffer, parcels: readonly Rect[], trees = 0): {
   return {
     size: `${sqm.toLocaleString()} m² · ${o.rect[2]} × ${o.rect[3]} tiles (${side} × ${side} m)`,
     on: on.length ? on.join(', ') : 'Open ground: nothing built',
-    adds: o.name ? `${sqm.toLocaleString()} m² beside the range: Facilities › Practice builds its putting and chipping greens here`
+    adds: o.name ? `${sqm.toLocaleString()} m² beside the range: ${practicePath('›')} builds its putting and chipping greens here`
       : `${sqm.toLocaleString()} m² more course land${own > 0 ? ` (+${Math.round((100 * sqm) / own)}% of yours)` : ''}`,
   };
 }
