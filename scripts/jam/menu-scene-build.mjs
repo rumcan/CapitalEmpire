@@ -58,8 +58,10 @@ try {
   page.on('console', m => { if (m.type() === 'error') console.log('[console]', m.text().slice(0, 300)); });
   await page.goto(`${base}?seed=${spec.seed}#play=new`, { waitUntil: 'commit', timeout: 120000 });
   await page.waitForFunction(() => window.__game?.ready, null, { timeout: 240000 });
-  // the old range is offered once the first view is baked
-  await page.waitForFunction(() => window.__game.golf?.range?.forSale === true, null, { timeout: 60000 });
+  // J9: a new game chooses its start first: take the automatic one (it lays the range on its plot and, in the jam, buys it). Before J9 the old range was offered for sale once the first view was baked
+  await page.waitForTimeout(2500);
+  await page.evaluate(() => { const g = window.__game; if (g.startPick && g.startPickAuto) g.startPickAuto(); });
+  await page.waitForFunction(() => { const g = window.__game; return !g.startPick && !!g.golf?.range && g.golf.range.built === true; }, null, { timeout: 60000 });
   const log = await page.evaluate(buildInPage, spec);
   for (const [k, v] of log) console.log(k.padEnd(10), JSON.stringify(v));
   const bad = log.filter(([k, v]) => v === false || v === null || typeof v === 'string');

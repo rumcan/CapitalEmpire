@@ -213,6 +213,7 @@ under its 128 KB limit). v10 to v12 are `ACTION_TILES` (the ball room tree's upg
   server started with `VITE_JAM=1` (numbers in `scripts/jam/menu-scene-world.json`): map seed 11, the old range bought and cleared, the Build menu's range upgrades (grass outfield, target greens,
   paved car park, 12 bays, covered bays, dispenser), the clubhouse beside the range's drive, four holes through the New hole wizard (sod, frame trees; one with a dogleg), then 90 s at 20x so the county
   road has its houses, the snack shop and its traffic. The farms and the river are the map's own. Nothing in it is hidden in the jam (no tournament kit, no props, no bunkers or water painted by hand).
+  The shipped file was built before J9's start; the builder now takes J9's automatic start (`startPickAuto`), whose range may stand elsewhere on the same seed: after a rebuild look at the shots and move the stops.
 - **The stops** (`src/game/showcase.ts` SHOW_STOPS): the range with golfers on the mats, the car park with cars arriving, from the first tee down the fairway, a green with its flag, a farm, the county road with
   its houses, the snack shop and the bridge. Each is 14 to 17 s of slow glide at 25 to 30% zoom (30% is the closest the game goes), then a cross-fade (the picture is copied over the game while the next
   place bakes); the next place's ground is asked for 3.5 s ahead. A lap is about 90 s. A visit starts at a different place from the last (`localStorage fairwayfortune.scene`). The town clock is kept in the
@@ -223,6 +224,12 @@ under its 128 KB limit). v10 to v12 are `ACTION_TILES` (the ball room tree's upg
 - **Looking at it**: `scripts/jam/menu-scene-shots.mjs --base <url> --posters --docs` keeps the stills (`src/assets/showcase/<stop>.jpg`, the card's first picture) and the shots under
   `docs/jam-shots/j12-*.jpg`; `scripts/jam/menu-scene-measure.mjs --base <preview of dist-jam>` measures the time to the card with and without the scene and the frame time while it runs.
   Tests: `tests/showcase.test.ts`.
+- **Measured** (the built jam, headless Chrome 1600 x 900 with the GPU, medians of 3 alternating loads on a quiet PC; `menu-scene-measure.mjs`): the title card renders at 1.4 s with the scene (1.5 s
+  over the game's own boot without it; before J12 the card was drawn only once the game was ready, at 5.2 s), Continue at 1.9 s, the still picture at 1.9 s; the first live picture at 8 to 10 s (the engine is
+  ready at 5.0 s, then the first view's ground and sprites bake behind the still); frames: 60 fps for 97% of them (p50 16.7 ms, p95 16.8 ms; 3% over 20 ms, in the second or two when the next place's
+  ground arrives); the engine's own work is 1.2 ms CPU and 0.9 ms draw a frame and the director's under 0.2 ms. New game and Continue reload the page into the game's own boot: 6.5 s from the click to
+  the game's first card (the game used to be booted behind the card, but the card itself came 3.8 s later). Added to the build: 6 files, 1.68 MB (the stills), and the world (31 KB, inlined in the code).
+  The button smoke test (`npm run jam:smoke`) clicks New game through the reload.
 
 ## Button tests: run them before every jam build (T459, the owner 2026-11-13: "are you guys not testing buttons?")
 A dead button must not ship. Two checks:
