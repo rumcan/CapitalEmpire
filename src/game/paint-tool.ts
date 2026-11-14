@@ -113,7 +113,9 @@ interface UndoStep { label: string; before: AreaSnap; after: AreaSnap; props: Pr
   /** T254: Edit Hole Layout's step: the pins and tee markers before and after (Engine.markersKey) */
   markers?: { before: string; after: string };
   /** T396 (#1064): a road step's changes to the network (the roads, paths, drives and junctions it made or took away; netStep): undo applies them back, redo again */
-  net?: NetStep }
+  net?: NetStep;
+  /** #1281: a grid step's change outside the grid (a practice facility replaces the practice area's starter set): undone with it and done again with its redo */
+  aside?: { undo(): void; redo(): void } }
 /** T359 (#1006; the owner, 2026-11-08: "ctrl/z should always work to reset your prev menu setting change"): the build menus' settings on the undo
  *  stack, in time order with the ground edits. A setting step keeps just the items its change touched, each as it was before and as it is after:
  *  the brush presets by surface (each BrushSet as text: the course default's look, the brush's size, Border, Shadow, Length, Height), the looks book
@@ -419,6 +421,7 @@ export class PaintTool {
   private commits = 0;
   private tx: { before: AreaSnap; spent: number; depth: number; label: string; gd: GridDiff[]; plans: string; /** only looks changed (no shape: the holes' markers stay) */ looks?: boolean;
     /** T396: a road step (netStep): the network's journal is open for it */ net?: boolean;
+    /** #1281: what a grid step changed outside the grid (gridEdit) */ aside?: { undo(): void; redo(): void };
     /** T256: the looks owners touched so far, as they were before (lookTouch) */ lk?: Map<string, LookSet | null> } | null = null;
   /** the course height blocks the action in progress touches, for undo (T027) */
   private hj = new CourseHeightJournal();
@@ -1486,7 +1489,7 @@ export class PaintTool {
     const book = this.host.lookBook?.(), looks: [string, LookSet | null, LookSet | null][] = [];
     if (t.lk) for (const [o, b] of t.lk) { const a = book?.[o] ? copySet(book[o]!) : null; if (JSON.stringify(a) !== JSON.stringify(b)) looks.push([o, b, a]); }
     if (!props && !t.spent && same && !height && !grid && !plans && !net) return; // (a look seeded by a stroke that laid nothing stays: no step for it alone)
-    this.undos.push({ label: t.label, before: t.before, after, props, spent: t.spent, height, grid, plans, ...(looks.length ? { looks } : {}), ...(net ? { net } : {}) }); if (this.undos.length > UNDO_MAX) this.undos.shift();
+    this.undos.push({ label: t.label, before: t.before, after, props, spent: t.spent, height, grid, plans, ...(looks.length ? { looks } : {}), ...(net ? { net } : {}), ...(t.aside ? { aside: t.aside } : {}) }); if (this.undos.length > UNDO_MAX) this.undos.shift();
     this.commits++;
     // T238: a stroke laid in Edit hole is ordered against the plan's own steps (undoTop); the course's redo goes, and Edit hole's with it
     if (this.editInHand && (grid || height) && !plans) this.editMarks.push(this.wizard.depth); // T252: a height stroke too
@@ -1656,12 +1659,12 @@ export class PaintTool {
   /** an outside edit of the course grid as one undo step (T206: the practice tools build and the bulldozer removes a practice facility): run
    *  lays its cells into the grid (the diffs it returns, made in place) and returns what it spent ($, below 0 for a refund), which is paid
    *  here; undo takes the cells and the money back. Nothing happens without a grid */
-  gridEdit(label: string, run: (g: Grid) => { diffs: GridDiff[]; spent: number } | null) {
+  gridEdit(label: string, run: (g: Grid) => { diffs: GridDiff[]; spent: number; aside?: { undo(): void; redo(): void } } | null) {
     const g = this.host.grid?.(); if (!g) return;
     this.begin(label);
     try {
       const r = run(g);
-      if (r) { for (const d of r.diffs) this.gridApply(d); if (r.spent) { this.host.spend?.(r.spent); if (this.tx) this.tx.spent += r.spent; } }
+      if (r) { for (const d of r.diffs) this.gridApply(d); if (r.spent) { this.host.spend?.(r.spent); if (this.tx) this.tx.spent += r.spent; } if (r.aside && this.tx) this.tx.aside = r.aside; }
     } finally { this.commit(); }
     this.host.save(); this.host.emit();
   }
@@ -1683,6 +1686,7 @@ export class PaintTool {
     const f = this.host.courseHeight?.(); if (u.height && f) { const b = this.hj.apply(f, u.height, 'before'); if (b) this.host.heightChanged?.(b); }
     if (u.net && this.host.netJournal) u.net = this.host.netJournal.undo(u.net); // (T396: the roads go before the props they cleared come back)
     if (u.props && this.host.journal) u.props = this.host.journal.undo(u.props);
+    u.aside?.undo(); // (#1281: the practice area's starter set comes back with the cells it made way for)
     if (u.spent) this.host.spend?.(-u.spent);
     this.host.changed?.();
     // the plans changed under the wizard (T238: not an Edit hole stroke's step, which changes no plan: Edit hole stays open)
@@ -1700,6 +1704,7 @@ export class PaintTool {
     const f = this.host.courseHeight?.(); if (u.height && f) { const b = this.hj.apply(f, u.height, 'after'); if (b) this.host.heightChanged?.(b); }
     if (u.props && this.host.journal) u.props = this.host.journal.redo(u.props);
     if (u.net && this.host.netJournal) u.net = this.host.netJournal.redo(u.net); // (T396: the props the route clears go first, then it is laid)
+    u.aside?.redo(); // (#1281)
     if (u.spent) this.host.spend?.(u.spent);
     this.host.changed?.();
     if (this.planOpen && (u.plans || !this.wizard.base)) this.wizard.plansChanged(this.nextFreeHole(), n => this.usedHoles().has(n));

@@ -119,12 +119,17 @@ export function scanPractice(g: Grid, box: readonly [number, number, number, num
     const stands: Pt[] = [];
     const sand = [...chipB.bunker].map(tile).sort((p, q) => Math.hypot(q.x - cup.x, q.y - cup.y) - Math.hypot(p.x - cup.x, p.y - cup.y) || p.y - q.y || p.x - q.x);
     for (const p of sand) { if (stands.length >= 2) break; if (stands.every(q => Math.hypot(q.x - p.x, q.y - p.y) >= 1.5)) stands.push(p); }
+    // (#1281: the rough band round a built facility is no place to chip from: the stands keep to the grass past it while there are at least three; the cells
+    // the rough lies on count only when the grass gives too few)
     const r = Math.sqrt(chipB.cells.length / Math.PI) * CELL_T + 2.5;
-    for (let k = 0; k < 8 && stands.length < 5; k++) {
-      const a = k / 8 * Math.PI * 2 + 0.3, p = { x: c.x + Math.cos(a) * r, y: c.y + Math.sin(a) * r };
-      if (!inPractice({ box }, p.x, p.y)) continue;
-      const i = Math.floor((p.y - g.y0) / CELL_T) * g.w + Math.floor((p.x - g.x0) / CELL_T), s = g.surf[i] ?? 0;
-      if (s !== SURF.green && s !== SURF.water && s !== SURF.bunker && stands.every(q => Math.hypot(q.x - p.x, q.y - p.y) >= 1.5)) stands.push(p);
+    for (const roughToo of [false, true]) {
+      if (stands.length >= 3) break;
+      for (let k = 0; k < 8 && stands.length < 5; k++) {
+        const a = k / 8 * Math.PI * 2 + 0.3, p = { x: c.x + Math.cos(a) * r, y: c.y + Math.sin(a) * r };
+        if (!inPractice({ box }, p.x, p.y)) continue;
+        const i = Math.floor((p.y - g.y0) / CELL_T) * g.w + Math.floor((p.x - g.x0) / CELL_T), s = g.surf[i] ?? 0;
+        if (s !== SURF.green && s !== SURF.water && s !== SURF.bunker && (roughToo || s !== SURF.rough) && stands.every(q => Math.hypot(q.x - p.x, q.y - p.y) >= 1.5)) stands.push(p);
+      }
     }
     const state: PracticeState = chipB.m2 < CHIP_MIN ? 'small' : sandy(chipB) ? 'open' : 'nobunker';
     Object.assign(chipping, { state, m2: chipB.m2, centre: c, cups: [cup], stands });

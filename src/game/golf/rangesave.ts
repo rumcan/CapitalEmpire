@@ -6,6 +6,7 @@ import { JAM } from '../features';
 import { RANGE_PASS_POP } from './range';
 import { LOT_SHARE } from './rangelot';
 import { BALL_COST, CASES_A_DAY, CASE_BALLS, legacyBalls, newBalls, normalizeBalls, type BallSave } from './rangeballs';
+import type { StarterSave } from './practicestarter';
 export { LOT_SHARE } from './rangelot';
 /** the range's upgrades (plan P24 2.3) */
 export type RangeUpgradeId = 'bays8' | 'bays12' | 'bays24' | 'targets' | 'covered' | 'lights' | 'dispenser' | 'proshop'
@@ -76,6 +77,10 @@ export interface RangeBizSave { v: 1; owned: RangeUpgradeId[]; price: number; se
   /** T288: the practice area's rect (world tiles) where the player placed it; null: not placed yet (a bare start's); absent: the range plot's
    *  own spot beside the car park (a save from before T288) */
   practiceAt?: [number, number, number, number] | null;
+  /** #1281 (the owner: "when you place the practice area it should place some dirt greens we flags and a crappy bunker"): the practice area's starter set, laid
+   *  with it when it is placed (golf/practicestarter.ts: the seed its layout grows from, and the ids of the pieces proper facilities have replaced); absent: none
+   *  (a save from before it, or an area bought as land: those are as they were) */
+  starter?: StarterSave;
   /** T386 (#1043): the range's balls (golf/rangeballs.ts): the ball room's clean stock, the balls lying on the outfield, your basket, the range's till
    *  and the counts. Absent in a save from before T386: its load gives it legacyBalls (a stock for its bays) and, with the T133 cart, night picking */
   balls?: BallSave }
@@ -246,6 +251,9 @@ export function normalizeRangeBiz(x: unknown): RangeBizSave {
   if (o.built === false) out.built = false;
   if (isRect(o.home)) out.home = [o.home[0], o.home[1], o.home[2], o.home[3]];
   if (o.practiceAt === null) out.practiceAt = null; else if (isRect(o.practiceAt)) out.practiceAt = [o.practiceAt[0], o.practiceAt[1], o.practiceAt[2], o.practiceAt[3]];
+  // #1281: the practice area's starter set (its seed and the ids replaced), only on an area the save has placed
+  const sv = o.starter as Partial<StarterSave> | undefined;
+  if (sv && typeof sv === 'object' && typeof sv.seed === 'number' && Number.isFinite(sv.seed) && (out.practiceAt || o.practiceAt === undefined)) out.starter = { seed: Math.trunc(sv.seed) >>> 0, gone: Array.isArray(sv.gone) ? [...new Set(sv.gone.filter((n): n is number => Number.isInteger(n) && n >= 0 && n < 16))].sort((a, b) => a - b) : [] };
   // T386: the balls (a save from before the ball loop starts with a stock for its bays and a till of what it has taken, to a cap: legacyBalls)
   out.balls = normalizeBalls(o.balls) ?? legacyBalls(rangeStats(out).bays, out.total.takings);
   return out;
