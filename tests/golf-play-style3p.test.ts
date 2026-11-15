@@ -109,11 +109,13 @@ describe('T447 the view', () => {
 
 describe('T447 the time of day is a course setting', () => {
   const base = { town: { x: 10, y: 10 }, course: { x: 0, y: 0, w: 50, h: 50 }, clubhouse: { x: 5, y: 5 }, tees: [], pins: [], aims: [] } as unknown as Partial<GolfSave>;
-  it('golden hour by default; day is kept with the course; anything else reads as golden hour', () => {
-    assert.deepEqual(COURSE_TIMES_3P.map(t => t[0]), ['golden', 'day']);
+  it('golden hour by default; day, dusk and night are kept with the course; anything else reads as golden hour', () => {
+    assert.deepEqual(COURSE_TIMES_3P.map(t => t[0]), ['day', 'golden', 'dusk', 'night']);   // (the owner, 2026-11-15: all four lights)
+    assert.equal(normalizeGolfSave({ ...base, time3p: 'dusk' })!.time3p, 'dusk');
     assert.equal(normalizeGolfSave(base)!.time3p, undefined);
     assert.equal(normalizeGolfSave({ ...base, time3p: 'day' })!.time3p, 'day');
-    assert.equal(normalizeGolfSave({ ...base, time3p: 'night' as 'day' })!.time3p, undefined);
+    assert.equal(normalizeGolfSave({ ...base, time3p: 'night' })!.time3p, 'night');
+    assert.equal(normalizeGolfSave({ ...base, time3p: 'noon' as 'day' })!.time3p, undefined);
     assert.equal(JSON.parse(JSON.stringify(normalizeGolfSave({ ...base, time3p: 'day' }))).time3p, 'day', 'saved with the course');
   });
 });
