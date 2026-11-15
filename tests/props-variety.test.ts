@@ -107,7 +107,7 @@ test('the variety: each boulder shape is its own card (three shapes at each size
     const d = DECOR_BY_KEY.get(k)!; assert.ok(d && !d.hidden, k); assert.equal(d.mix!.length, n, `${k} picks`);
     for (const m of d.mix!) { assert.ok(LIB.has(m.id), m.id); assert.ok(DECOR_BY_KEY.has(m.key) && !DECOR_BY_KEY.get(m.key)!.mix, `${m.key} is a card`); }
   }
-  assert.equal(DECOR_BY_KEY.get('kit-rocks-mixed')!.group, 'stone'); for (const k of ['kit-shrubs-mixed', 'kit-mums-mixed', 'kit-palms-mixed']) assert.equal(DECOR_BY_KEY.get(k)!.group, 'plants');
+  assert.equal(DECOR_BY_KEY.get('kit-rocks-mixed')!.group, 'stone'); for (const k of ['kit-shrubs-mixed', 'kit-mums-mixed']) assert.equal(DECOR_BY_KEY.get(k)!.group, 'plants'); assert.equal(DECOR_BY_KEY.get('kit-palms-mixed')!.group, 'trees');
 });
 
 test('a mixed brush is deterministic per spot: the same pick at the same spot, every boulder over a field, never mirrored (the owner, 2026-10-28)', () => {
@@ -180,7 +180,7 @@ test('nothing mirrors (the owner, 2026-10-28: "make sure we never mirror a bush 
     // natural things are plants and stones only: never furniture, a sign, a building, a statue, a stand-in, anything lettered or laid as a run
     if (d.natural) {
       // (T289, found by T375: the desert and oasis group's natural things too: scrub, cacti, rocks, driftwood, and the pool and lilies of an oasis)
-      assert.ok(d.group === 'plants' || d.group === 'stone' || d.group === 'desert', `${d.key} ${d.group}`); assert.ok(d.kind === 'plant' || d.kind === 'stone' || (d.group === 'desert' && d.kind === 'water'), `${d.key} ${d.kind}`);
+      assert.ok(d.group === 'trees' || d.group === 'plants' || d.group === 'stone' || d.group === 'desert', `${d.key} ${d.group}`); assert.ok(d.kind === 'plant' || d.kind === 'stone' || (d.group === 'desert' && d.kind === 'water'), `${d.key} ${d.kind}`);
       assert.ok(!d.standIn && !d.run && !d.pond && !hasLettering(d.id, LIBRARY[LIB.get(d.id)!]!.name), d.key);
     }
     const h = host(), t = new PropsTool(h.ctx); if (d.run || d.pond) continue;

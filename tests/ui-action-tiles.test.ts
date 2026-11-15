@@ -19,7 +19,7 @@ const DIR = 'src/assets/ui/tiles', ALL = new Set<string>([...TOOL_TILES, ...ACTI
 /** the tiles cut but worn by nothing yet: each commit that places one takes it off this list (J13, #1277). the props tiles that no menu row wears wait for #1284's natural / man-made restructure of the Props menu (another coder's) and the Texture
  *  Painter's button (#1282's rename) */
 const NOT_YET: readonly string[] = [
-  'natural-props', 'fences', 'signs', 'fountain', 'texture-painter', 'clear-plants', 'nursery-plants',
+  'fences', 'texture-painter', 'clear-plants', 'nursery-plants', // (#1284: natural-props, signs and fountain are worn by the Props flyout)
   'walking-path', // (#1297, the owner, 2026-11-14: the guide's Lay a walking path step went: its tile, the step's only wearer, waits for another use)
 ];
 

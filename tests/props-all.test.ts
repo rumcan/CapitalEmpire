@@ -5,7 +5,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server.edge';
-import { DECOR, DECOR_GROUPS, placeableProps, propsCount, propsShown, shownIn, type DecorGroup, type PropsView } from '../src/game/golf/decor';
+import { DECOR, DECOR_GROUPS, newGroupOf, placeableProps, propsCount, propsShown, shownIn, type DecorGroup, type PropsView } from '../src/game/golf/decor';
 import { PropsTool, type PropsHostCtx } from '../src/game/golf/propstool';
 import { PropsPanel } from '../src/ui/course/PropsPanel';
 import { LIBRARY } from '../src/game/library';
@@ -34,8 +34,8 @@ test('the placeable props: every prop of the owner\'s new categories has its car
   // ...and no more: a card in a new group is a library New: item (the tournament kit moves seven of them to its own group, and the eight-view sets get one card each, their first view)
   const freshIds = new Set(fresh.map(i => i.id));
   for (const d of placeable) if (d.group.startsWith('new:') && !d.id.startsWith('object8:')) assert.ok(freshIds.has(d.id), `${d.key} is a library New: item`);
-  // every new category is a group of its own, in the groups' order
-  for (const cat of new Set(fresh.map(i => i.cat))) assert.ok(DECOR_GROUPS.some(g => g.id === `new:${cat.slice(5)}`), `${cat} is a group`);
+  // every new category is a group of its own (the tournament kit's), or (#1284: the owner's review sections) its pictures are in the groups they belong to
+  for (const it of fresh) { const g = newGroupOf(it); assert.ok(DECOR_GROUPS.some(x => x.id === g), `${it.id} (${it.cat}) is in group ${g}`); }
   // the kit's, the desert's and the catalogue's own items are all there: every picture a card, a variant or a mixed brush places
   const placed = new Set<string>(); for (const d of placeable) { placed.add(d.id); for (const v of d.variants ?? []) placed.add(v); for (const m of d.mix ?? []) placed.add(m.id); }
   for (const it of LIBRARY.filter(i => /^kit:(boulder|shrub|flowers|palm|lamp|granite|water-edge)/.test(i.id))) assert.ok(placed.has(it.id), `${it.id} can be placed`);
