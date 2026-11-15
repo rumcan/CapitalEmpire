@@ -920,13 +920,14 @@ function puttGrid() {
   }
   pgN = N; pgS = Int32Array.from(segs);
 }
-function gridPix(x, y, d, r, g, b, a) {   // a pixel of the grid on the full-size layer, on the ground only (a: how solid it is, of 255)
+function gridPut(x, y, d, c) {   // a pixel of the grid on the full-size layer, on the ground only (c: its colour, its alpha how solid it is)
   const gx = (x * RS) | 0, gy = (y * RS) | 0; if (gx < 0 || gy < 0 || gx >= VW || gy >= VH) return;
   const q = gy * VW + gx, dz = zbuf[q] - d * 100; if (dz > 70 || dz < -70 || sprM[q] || czS[q] === frame) return;   // (on the ground only: never over the golfer, the cart or the ball)
-  overPut(x, y, ((a << 24) | (b << 16) | (g << 8) | r) >>> 0);
+  overPut(x, y, c);
 }
+function gridPix(x, y, d, r, g, b, a) { gridPut(x, y, d, ((a << 24) | (b << 16) | (g << 8) | r) >>> 0); }   // (a: how solid it is, of 255)
 function drawPuttGrid() {
-  if (HP && HP.turn) { if (HP.turn.green && !bcam && ball.state === 0 && !HP.play) hostPuttGrid(); return; }   // (host mode: the host's green only, T423)
+  if (HP) { if (hostPuttTurn()) hostPuttGrid(); return; }   // (host mode: the host's green only, and only on his putt turn, T423; never this view's own grid, which once showed after the round's last putt)
   if (bcam || doneT || ball.state === 1 || ball.state === 3 || matAt(ball.x, ball.y) !== M_GREEN) return;
   puttGrid(); const N = pgN, S = pgS;
   for (let s = 0; s < S.length; s += 3) {
@@ -1065,7 +1066,7 @@ function plotZO(sx, sy, d, c) {   // a mark on the ground: hidden where the game
 // J5d (the owner, 2026-11-14: "can we also make sure the ribbon isnt behind trees when it should clearly end on the green? ribbon doesnt go above
 // trees"): the aim's marks are a guide drawn over the scenery. Only what stands at or nearer than the golfer and his ball (AIM_NZ: the farther of the
 // two, and 1.5 m) hides them: the golfer, the ball, anything between them and the camera. A tree, a rock or a hill out along the shot does not.
-// The putting grid stays a mark on the ground (plotZO).
+// The putting grid stays a mark on the ground (gridPut).
 let AIM_NZ = 0;
 const golB = [0, 0, -1, -1], balB = [0, 0, -1, -1];   // (J5d: the golfer's and the ball's boxes on the game's picture this frame: x0, y0, x1, y1)
 function aimFig(q, gx, gy) { return figS[q] === frame || (sprM[q] !== 0 && gx >= balB[0] && gx <= balB[2] && gy >= balB[1] && gy <= balB[3]); }   // (the golfer's and the ball's own pixels; the small ball by its box)

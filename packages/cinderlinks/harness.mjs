@@ -411,6 +411,20 @@ const HOST_PLAY = String.raw`
     hostMessage(turn([p0[0] - ux * 0.4, p0[1] - uy * 0.4], 0.6)); step(80); jumpToBall(); step(4); info.gimmeNear = canGimme(); gimme(); info.sent = hostLast && hostLast.t;
     hostMessage(turn([p0[0] - ux * 0.4, p0[1] - uy * 0.4], 0)); step(4); info.gimmeNone = canGimme();
     if (info.gimmeFar || !info.gimmeNear || info.sent !== 'gimme' || info.gimmeNone) errs.push('host green: the gimme does not follow the rule (' + JSON.stringify(info) + ')');
+    // the owner (2026-11-15: "the green slope indicators only showed up the moment the hole was completed"): on his putt turn the host's green is a mesh
+    // (lines between the lattice's neighbours, coloured by steepness) costing under 0.3 ms a frame; once the round is over nothing is drawn, the view's
+    // own grid least of all
+    { const R = 12, lat = []; for (let j = -R; j <= R; j++) for (let i = -R; i <= R; i++) { const x = p0[0] + 0.37 + i, y = p0[1] + 0.61 + j; if (Math.hypot(i, j) <= R && matAt(x * S, y * S) === M_GREEN) lat.push(x, y, 0.6, -0.8, (i + j) & 1 ? 0.004 : 0.03); }
+      const m = turn([p0[0] - ux * 6, p0[1] - uy * 6], 0); m.green = Object.assign({}, m.green, { pts: lat, step: 1 }); hostMessage(m); step(4); jumpToBall(); step(6); render();
+      const lit = () => { ob.fill(0); drawPuttGrid(); let n = 0, l = 0; for (let i = 0; i < ob.length; i++) if (ob[i]) { n++; if (ob[i] >>> 24 === GRID_LINE_A) l++; } return [n, l]; };
+      const M = hostPuttPts(HP.turn.green, hostS()), [px, lines] = lit();
+      for (let k = 0; k < 20; k++) drawPuttGrid(); let ms = 1e9; for (let r = 0; r < 15; r++) { const t0 = performance.now(); for (let k = 0; k < 10; k++) drawPuttGrid(); ms = Math.min(ms, (performance.now() - t0) / 10); }
+      const keep = [HP.turn, HP.over, ball.state]; HP.turn = null; HP.over = true; ball.state = 0; const [after] = lit(); HP.turn = keep[0]; HP.over = keep[1]; ball.state = keep[2]; ob.fill(0);
+      info.puttGrid = { pts: M.n, lines: M.e.length / 2, px, linePx: lines, gridMs: +ms.toFixed(4), afterRound: after };
+      if (!(M.e.length / 2 >= M.n)) errs.push('host green: the slope grid is not a mesh (' + JSON.stringify(info.puttGrid) + ')');
+      if (!(lines > 300)) errs.push('host green: the slope grid draws no lines on his putt turn (' + JSON.stringify(info.puttGrid) + ')');
+      if (!(ms < 0.3)) errs.push('host green: the slope grid costs ' + ms.toFixed(3) + ' ms a frame (budget 0.3 ms)');
+      if (after) errs.push('host green: a slope grid is drawn after the round is over (' + after + ' px)'); }
     return { errs, info };
   }
   // T430: a hole's end is said, and once it has been seen (about three seconds) the view answers holeDone for that hole, so the round goes on
