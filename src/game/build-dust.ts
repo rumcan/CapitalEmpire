@@ -13,7 +13,7 @@ export const DUST_CAP = 600;
 /** after a load (or a new game) no new dust for this long, and not until the town's lots are composed (ms) */
 export const QUIET_MS = 2000;
 /** the most spots one footprint or grid step puffs at */
-export const MAX_SPOTS = 48;
+export const MAX_SPOTS = 64;
 
 export interface Dust { x: number; y: number; vx: number; vy: number; vz: number; z: number; life: number; age: number; r: number }
 
@@ -150,7 +150,7 @@ const PER_SPOT: Record<DustKind, number> = { foot: 3, prop: 3, ground: 2 };
 export class BuildDust {
   readonly pool = new DustPool();
   readonly arm: DustArm = { quietUntil: Infinity, armed: false };
-  readonly buckets: Record<DustKind, Bucket> = { foot: bucket(96, 64), prop: bucket(10, 14), ground: bucket(40, 14) };
+  readonly buckets: Record<DustKind, Bucket> = { foot: bucket(96, 64), prop: bucket(10, 14), ground: bucket(64, 14) };
   private spots = new Float32Array(MAX_SPOTS * 2);
 
   /** a new thing's footprint (tiles) */
@@ -160,7 +160,7 @@ export class BuildDust {
   /** a new thing's outline (flat x, y pairs, tiles) */
   poly(now: number, pts: ArrayLike<number>, kind: DustKind) { this.emit(now, edgeSpots(pts, DUST_GAP, MAX_SPOTS, this.spots), kind, 0); }
   /** the edges of what a course grid step laid */
-  grid(now: number, d: GridDiffLike, surf: ArrayLike<number>, cell: number) { this.emit(now, gridSpots(d, surf, cell, MAX_SPOTS, this.spots), 'ground', 0); }
+  grid(now: number, d: GridDiffLike, surf: ArrayLike<number>, cell: number) { const k = gridSpots(d, surf, cell, MAX_SPOTS, this.spots); this.emit(now, k, 'ground', k >= 24 ? 1 : 0); } // (a big step, a hole: a thicker line)
 
   /** puffs at the first k spots, as many as the kind's bucket allows (thinned evenly over the spots) */
   private emit(now: number, k: number, kind: DustKind, extra: number) {

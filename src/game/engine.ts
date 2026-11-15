@@ -3677,6 +3677,7 @@ export class Game {
    *  (nothing is spent yet), the clock starts and the camera goes to the range. False (nothing laid) with no start to lay */
   private layStart(rs: RangeStart | null): boolean {
     const pk = this.startPick, g = this.golf; if (!pk || !g || !rs) return false;
+    disarm(this.dust.arm, performance.now()); this.dustLv.clear(); // (build-dust.ts: the new game's start is its first bake: no dust)
     const { road, site } = rs, next: RangeSave = { ...rs.save, progress: g.progress, ...(g.player ? { player: g.player } : {}) };
     this.golf = next; this.startPick = null; this.placing = null; this.hover = null; this.ghostMouse = null; // (the pick's pointer goes with it: a map point from the far view)
     this.townPts = [site.centre]; this.roadNames = new RoadNames(this.names, this.townPts);

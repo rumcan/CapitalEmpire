@@ -30,9 +30,18 @@ page.on('dialog', d => d.dismiss().catch(() => {}));
 const game = (fn, arg) => page.evaluate(([f, a]) => (0, eval)(`(${f})`)(window.__game, a), [fn.toString(), arg]);
 
 /** watches the dust pool every frame: the most particles alive since the last reset */
-const watch = () => page.evaluate(() => { window.__dustMax = 0; if (window.__dustWatch) return; window.__dustWatch = 1; const f = () => { const g = window.__game; if (g?.dust) window.__dustMax = Math.max(window.__dustMax, g.dust.pool.n); requestAnimationFrame(f); }; requestAnimationFrame(f); });
+const watch = () => page.evaluate(() => {
+  window.__dustMax = 0; if (window.__dustWatch) return; window.__dustWatch = 1; window.__dustWho = {};
+  // which hook puffed: the caller of BuildDust.rect / poly / grid, and the road builder's puff, counted since the last reset
+  const g = window.__game, d = g.dust;
+  const tag = m => { const s = (new Error().stack || '').split('\n')[3]?.trim().split(' ')[1] ?? '?', k = `${m} from ${s}`; window.__dustWho[k] = (window.__dustWho[k] || 0) + 1; };
+  for (const m of ['rect', 'poly', 'grid']) { const o = d[m].bind(d); d[m] = (...a) => { tag(m); return o(...a); }; }
+  const op = g.puff.bind(g); g.puff = (...a) => { tag('road puff'); return op(...a); };
+  const f = () => { window.__dustMax = Math.max(window.__dustMax, g.dust.pool.n); requestAnimationFrame(f); }; requestAnimationFrame(f);
+});
 const dustMax = () => page.evaluate(() => window.__dustMax ?? 0);
-const resetMax = () => page.evaluate(() => { window.__dustMax = 0; });
+const resetMax = () => page.evaluate(() => { window.__dustMax = 0; window.__dustWho = {}; });
+const who = () => page.evaluate(() => JSON.stringify(window.__dustWho ?? {}));
 const live = () => game(g => g.dust.pool.n);
 const quiet = async () => { for (let k = 0; k < 40 && (await live()) > 0; k++) await sleep(100); };
 /** the map picture now (the UI hidden) */
@@ -41,7 +50,9 @@ async function shot(name) {
   const f = resolve(OUT, `${JAMRUN ? 'jam-' : ''}${name}.png`); await page.screenshot({ path: f, type: 'png' }); await h.evaluate(e => e.remove()); console.log(`  shot ${f}`);
 }
 /** three frames of the dust after an action: at once, 0.3 s and 0.6 s */
-async function frames(name) { await shot(`${name}-a`); await sleep(150); await shot(`${name}-b`); await sleep(200); await shot(`${name}-c`); }
+/** the camera on the live dust (its middle), so the frames show it wherever the new thing stands */
+const focusDust = () => game(g => { const P = g.dust.pool; if (!P.n) return; let x = 0, y = 0; for (let i = 0; i < P.n; i++) { x += P.items[i].x; y += P.items[i].y; } g.camEase = null; g.lookAt(x / P.n, y / P.n, Math.max(g.cam.z, 0.3)); g.emit(); });
+async function frames(name) { await focusDust(); await shot(`${name}-a`); await sleep(150); await shot(`${name}-b`); await sleep(200); await shot(`${name}-c`); }
 const look = (p, z) => game((g, a) => { g.camEase = null; g.lookAt(a.x, a.y, a.z ?? g.cam.z); g.emit(); }, { ...p, z });
 const scr = p => game((g, a) => { const q = g.screen(a.x, a.y); return { x: q.x / g.dpr, y: q.y / g.dpr }; }, p);
 
@@ -56,23 +67,24 @@ async function start() {
     await shot('00-title-scene');
     await page.locator('[data-testid="title-new"]').click(); await sleep(1200);
   }
-  await page.waitForFunction(() => window.__game?.ready, null, { timeout: 240000 }); await watch();
+  await page.waitForFunction(() => window.__game?.ready, null, { timeout: 240000 }); await watch(); await resetMax();
   await page.waitForFunction(() => window.__game.firstViewBaked, null, { timeout: 180000 }).catch(() => console.log('  (the first view never counted as baked)'));
   await sleep(1500);
-  const who = page.locator('[data-testid="who-go"]'); await who.waitFor({ timeout: 90000 });
+  check((await dustMax()) === 0, 'no dust while the game loads and its first view bakes', `most live ${await dustMax()} ${await who()}`);
+  const go = page.locator('[data-testid="who-go"]'); await go.waitFor({ timeout: 90000 });
   await page.locator('[data-testid="who-name"]').fill('Dust').catch(() => {});
-  await who.click(); await sleep(1500);
+  await resetMax(); await go.click(); await sleep(1500);
   if (await page.locator('[data-testid="start-pick-card"]').count()) {
     await sleep(1200); await page.locator('[data-testid="start-pick-auto"]').click();
     await page.waitForFunction(() => window.__game.golf?.range?.home && !window.__game.startPick, null, { timeout: 90000 });
   }
-  await resetMax(); await sleep(3500);
+  await sleep(2500);
   for (let k = 0; k < 3; k++) {
     const off = page.locator('[data-testid="tour-off"]'); if (await off.count() && await off.isVisible().catch(() => false)) { await off.click().catch(() => {}); await sleep(300); }
     const wc = page.locator('[data-testid="welcome-card"] [aria-label="Close"]'); if (await wc.count()) { await wc.first().click().catch(() => {}); await sleep(300); }
   }
   const st = await game(g => ({ armed: g.dust.arm.armed, n: g.dust.pool.n, lots: g.lotQueue.size }));
-  check((await dustMax()) === 0, 'no dust while the new game loads, bakes and composes its lots', `most live ${await dustMax()}, armed ${st.armed}, lot queue ${st.lots}`);
+  check((await dustMax()) === 0, 'no dust while the new game\'s start is laid and bakes', `most live ${await dustMax()}, armed ${st.armed}, lot queue ${st.lots} ${await who()}`);
   await game(g => { g.setSpeed(0); g.traffic.money = Math.max(g.traffic.money ?? 0, 5e6); g.money = Math.max(g.money ?? 0, 5e6); g.emit(); });
   await page.waitForFunction(() => window.__game.dust.arm.armed, null, { timeout: 60000 }).catch(() => {});
   check(await game(g => g.dust.arm.armed), 'the dust is armed once the load has settled');
@@ -157,6 +169,13 @@ async function hole() {
   const m = await dustMax(), built = await game(g => new Set((g.golf?.pins ?? []).map(p => p.hole)).size);
   check(built >= 1, 'BUILD NOW built the hole');
   check(m >= 30, 'dust along the hole\'s edges', `most live ${m}`);
+  await quiet(); await resetMax();
+  await game(g => g.paint.undo()); await sleep(700); await shot('hole-undone');
+  const gone = await game(g => new Set((g.golf?.pins ?? []).map(p => p.hole)).size);
+  await game(g => g.paint.redo()); await sleep(700); await shot('hole-redone');
+  const back = await game(g => new Set((g.golf?.pins ?? []).map(p => p.hole)).size), u = await dustMax();
+  check(gone < built && back === built, 'the hole is undone and redone', `${built} > ${gone}, then ${back}`);
+  check(u === 0, 'no dust when the hole is undone and redone', `most live ${u} ${await who()}`);
   await game(g => { g.setTool('select'); g.emit(); });
 }
 
@@ -164,7 +183,7 @@ async function paint() {
   const h = await home(), c = { x: h.x + 40, y: h.y - 30 };
   await look(c, 0.3); await sleep(800); await quiet(); await resetMax();
   for (let k = 0; k < 16; k++) {
-    await game((g, a) => g.paint.gridEdit('Paint fairway', () => g.courseDab(a.x, a.y, a.x + 0.8, a.y + 0.4, 2.5, 1)), { x: c.x - 10 + k, y: c.y - 3 + k * 0.4 });
+    await game((g, a) => g.courseDab(a.x, a.y, a.x + 0.8, a.y + 0.4, 2.5, 1), { x: c.x - 10 + k, y: c.y - 3 + k * 0.4 });
     if (k === 5) await shot('paint-stroke-a');
     if (k === 11) await shot('paint-stroke-b');
     await sleep(60);
@@ -172,11 +191,6 @@ async function paint() {
   await shot('paint-stroke-c');
   const m = await dustMax();
   check(m > 0 && m <= 200, 'a light trail of dust along the painted stroke', `most live ${m}`);
-  await quiet(); await resetMax();
-  await game(g => g.paint.undo()); await sleep(500); await game(g => g.paint.redo()); await sleep(500);
-  const u = await dustMax();
-  check(u === 0, 'no dust when the paint is undone and redone', `most live ${u}`);
-  await shot('paint-after-undo-redo');
 }
 
 try {
