@@ -285,6 +285,8 @@ try {
     if (b.id && /^sound-.*-mute$/.test(b.id)) await click('settings', `${b.id} (back on)`, loc);
   }
   await esc();
+  // (#1354: Settings' Exit to main menu opens the title card over the HUD: Continue goes back to the game before the radio, which stands in the HUD)
+  if (await page.locator('[data-testid="title-card"]').isVisible().catch(() => false)) { await page.locator('[data-testid="title-continue"]').click(); await page.waitForTimeout(800); }
   // ---- J11: the radio: off until turned on; its pill (play), its card (previous, play, next, the music's mute), off again
   await click('radio', 'Radio (play)', page.locator('[data-testid="radio-play"]'), { wait: 800 });
   await click('radio', 'Radio card (the drop)', page.locator('[data-testid="radio-more"]'));
