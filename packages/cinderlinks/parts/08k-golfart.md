@@ -7,10 +7,12 @@ R: The art is lit by the time of day (its colours times the sun's colour against
 R: Nothing stalls: the pictures load in the background; a frame is made from them only when it is needed, a few milliseconds of it a step at most, and until it is made the nearest frame already made (or the voxel figure) stands in.
 R: J5b: while a golfer's art is still loading he is not drawn at all (never the voxel figure in his place); only art that failed to load gives the voxel figure. The picture and its frame table are fetched side by side.
 R: J6c: another golfer's downswing (the last tenth of his address, the club coming down to the ball) is drawn through the swing clip's downswing frames, not back through the backswing's.
+R: (the owner: "sprite falls through the floor mid backswing") Every frame of the swing and the putt stands on its own soles, found in the frame's own pixels as it is made (the club is not taken for a foot), so his feet stay at his ball through the whole swing and putt in every facing; frames painted lower or higher in their cell (golf_pro_m4's backswing frame 2 by 47 px) no longer sink him under the ground or lift him off it.
 File: game.js
 Check: function golferPic(
 Check: function artFrame(
 Check: function gaFix(
+Check: function gaStand(
 Check: GOLFART_IDS = [
 
 ````js file=game.js
@@ -84,19 +86,39 @@ function gaVoxel(K) {   // the voxel golfer's height at scale K, in sprite pixel
 }
 function gaTint() { const T = TOD[tmode], d = TOD[0].sun, s = tmode >= 3 ? T.sun.map((v, i) => T.sh[i] + (v - T.sh[i]) * 0.7) : T.sun; return [Math.min(1.15, s[0] / d[0]), Math.min(1.15, s[1] / d[1]), Math.min(1.15, s[2] / d[2])]; }   // the light of the hour against the day's
 function gaKey(id, clip, row, f, K) { return id + clip + row + '_' + f + '_' + K + '_' + tmode; }
+// The owner ("sprite falls through the floor mid backswing"): a clip has one anchor for all its frames, but its frames were not painted standing on one line. golf_pro_m4's side-on
+// backswing frame 2 (the meter from about 50% to 83%) has his soles 47 px lower in the cell than frames 1 and 3, so at 93% he stood at his ball and at 69% he was drawn lower than his
+// own shadow, his legs under the ground's depth; frame 4 and the follow-through drop the same way, golf_pro_m1's address from the front stands 24 px high, and the putt's front rows
+// stand 25 to 40 px under the anchor. Each frame of the swing and the putt is set on its own soles: near his middle (GA_BAND of the cell either side of the anchor), the bottom of the
+// lowest unbroken run of rows each at least GA_SOLE_W of his height wide, the run at least GA_SOLE_L of it tall: legs and shoes are; the club's shaft is too thin and its head too
+// short (it hangs from him by the shaft). The anchor then sits GA_SOLE_UP of his height above the soles, as the idle sheet has it. Counted in the pass that makes the frame (once a
+// frame is made, never while it is drawn); a frame with no such run, or one more than GA_SOLE_MAX of his height off the clip's anchor, keeps the clip's anchor.
+const GA_BAND = 0.16, GA_SOLE_W = 0.06, GA_SOLE_L = 0.1, GA_SOLE_UP = 0.024, GA_SOLE_MAX = 0.35;
+function gaSoles(cnt, h, H) {   // cnt: per row, the pixels drawn in the band about his middle; H: his height in rows. The soles' row, or -1
+  const T = Math.max(2, GA_SOLE_W * H), L = Math.max(3, Math.round(GA_SOLE_L * H)); let run = 0, bot = -1;
+  for (let y = h - 1; y >= 0; y--) { if (cnt[y] >= T) { if (!run) bot = y; if (++run >= L) return bot; } else run = 0; }
+  return -1;
+}
+function gaStand(cnt, h, H, ay0) {   // the frame's anchor row: on its soles; ay0 (the clip's) when they cannot be found or are too far off it
+  const so = gaSoles(cnt, h, H); if (so < 0) return ay0;
+  const ay = so - Math.round(GA_SOLE_UP * H); return Math.abs(ay - ay0) <= GA_SOLE_MAX * H ? ay : ay0;
+}
 function gaMake(id, clip, row, f, K) {   // one frame as a sculpture: the art scaled to the voxel figure's height, lit by the hour; null when it cannot be made yet
   const a = gaLoad(id, clip), s0 = gaLoad(id, 'sheet'); if (!a.ready || !s0.ready || !s0.personH) return null;
   if (frame !== gaFrame) { gaFrame = frame; gaSpent = 0; }
   if (gaSpent >= (coverOn ? 12 : GA_MS)) return null;   // (J5b: more a step behind the loading cover)
-  const t0 = performance.now(), m = a.meta, fw = m.frameWidth, fh = m.frameHeight, sc = gaVoxel(K) / s0.personH * gaFix(id, clip, row, a, s0);
+  const t0 = performance.now(), m = a.meta, fw = m.frameWidth, fh = m.frameHeight, H = gaVoxel(K), sc = H / s0.personH * gaFix(id, clip, row, a, s0);
   const w = Math.max(2, Math.ceil(fw * sc)), h = Math.max(2, Math.ceil(fh * sc)), c = gaCan(w, h);
   c.imageSmoothingEnabled = true; c.imageSmoothingQuality = 'high'; c.drawImage(a.img, f * fw, row * fh, fw, fh, 0, 0, w, h);
   const d = c.getImageData(0, 0, w, h).data, T = gaTint(), S = sculpt(w, h, Math.round(m.anchor.x * sc), Math.round(m.anchor.y * sc));
-  for (let i = 0; i < w * h; i++) {
+  const cnt = clip === 'sheet' ? null : new Int32Array(h), bx0 = Math.round((m.anchor.x - GA_BAND * fw) * sc), bx1 = Math.round((m.anchor.x + GA_BAND * fw) * sc);   // (the sheet's idle and walk stand on its anchor already)
+  for (let y = 0, i = 0; y < h; y++) for (let x = 0; x < w; x++, i++) {
     if (d[i * 4 + 3] < GA_ALPHA) continue;
+    if (cnt !== null && x >= bx0 && x <= bx1) cnt[y]++;
     const r = Math.min(255, Math.round(d[i * 4] * T[0])), g = Math.min(255, Math.round(d[i * 4 + 1] * T[1])), b = Math.min(255, Math.round(d[i * 4 + 2] * T[2]));
     S.px[i] = ((255 << 24) | (b << 16) | (g << 8) | r) >>> 0;   // (the light byte 255: the art's own colours, as the hour has lit them)
   }
+  if (cnt !== null) S.ay = gaStand(cnt, h, H, S.ay);   // (he stands on his own soles in this frame)
   sDone(S, 0); S.wind = null; S.art = true;
   if (gaSpr.size > GA_CACHE) gaSpr.clear();
   gaSpr.set(gaKey(id, clip, row, f, K), S); gaSpent += performance.now() - t0;
