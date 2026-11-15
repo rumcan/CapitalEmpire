@@ -28,7 +28,7 @@ import { STRUCT_COST, STRUCT_MAX, groundClass, highwayRoute, longestRun, splitBy
 import { CULL_MIN_PX, FULL_UV, GLRenderer, POINT_STRIDE, SHADOW_STRIDE, SPRITE_STRIDE, VECTOR_STRIDE } from './gl';
 import { GroundCache } from './ground-cache';
 import { GAME_BOOT, clampCentre, flatTerrain, type BootOptions } from './boot';
-import { SHOW_FARM_MONTH, SHOW_GOLFERS } from './showcase';
+import { SHOW_FARM_MONTH, SHOW_GOLFERS, SHOW_PEDS_PER_LOT, SHOW_RANGE_BALLS, SHOW_RANGE_RESIDENTS, SHOW_RANGE_WARM_S, SHOW_HOURS } from './showcase';
 import { TILE_BANDS, TILES_REVISION, anchorAt, bandAt, bandRange, bandsAhead, cellOf, cellsIn, coverageOf, drawnScale, nearUntil, nextBand, tiledFamily, tileIndex, tilePermutation, tileScreenPx, tileSize, tileSpec } from './painted-tiles';
 import { desertLeavesDev, onPaintedSurfaces, paintedSurfaces, setDesertSurfaces } from './painted-surfaces-live';
 import { borderDefault, crewBandLook, finishBorders, finishOf, finishStripeLook, mowSpec } from './course-finish';
@@ -102,7 +102,7 @@ import type { BayRowDef } from './event/rows';
 import { inQuad, type CurbDef } from './event/curb';
 import { CAR_SCALE, SpriteTiles, spriteRect, VECTOR, type Drawable } from './sprites';
 import { releaseVectorMeshData, vectorMeshData } from './shadow-vector';
-import { readSave, writeSave, withTourney, clearSave, backupTownSlot, SAVE_VERSION, segRec, exportSaveBytes, importSaveBytes, listSaveBackups, readBackup, deleteBackup, type SaveV5 } from './save';
+import { readSave, writeSave, withTourney, clearSave, backupTownSlot, saveSlot, setSaveSlot, SAVE_VERSION, segRec, exportSaveBytes, importSaveBytes, listSaveBackups, readBackup, deleteBackup, type SaveV5 } from './save';
 import { CAR_COLOURS, carHeading, facings } from './traffic';
 import { bayCar, bayFoot, isWagon } from './vehicles';
 import { memberPriceLadder, type CourseNow } from './golf/payback';
@@ -162,6 +162,7 @@ import { LATEST as LATEST_LOT_MODEL } from './lots/lot-models';
 import { stateOf, type PresetState } from './lots/presets';
 import { LotMap, endReach, ringClear } from './lots/lots';
 import * as ES from './golf/estate'; // T353 (#995): house lots
+import { BuildDust, armTick, disarm, drawDust, dustAllowed, grewTo } from './build-dust';
 import { EstateTool } from './golf/estatetool';
 import { PLACE_DEFS, duePlaces, familyPlaced, placeBox, placeDef, placeGeom, placeLand, placeName, placeTuples, placesFromTuples, reservedSite, upgradeSpots, type PlaceDef, type PlacedPlace, type SiteSeg } from './lots/iconic';
 import { TOWN_BLOCKS, TOWN_POP, townCentres, townGrid } from './lots/seedtowns';
@@ -248,7 +249,7 @@ import { seedOf } from './golf/play/view3p';
 import type { Actor, ActorsMsg, CliffsMsg, CourseMsg, CourseTime3p, Dress, HostMsg, PracticeMsg, Time3p, ViewInput } from './golf/play/protocol3p';
 import { cliffGrid, cliffHit, cliffMaskOf, keepCliffs, type CliffGrid, type CliffMask } from './golf/play/cliffs3p';
 import { Play3p, type Play3pOpts } from './golf/play/play3p'; // T418: the owner's play in the view from behind the golfer
-import { DEV_EARNED, earned, practiceEarned } from './golf/play/unlocks'; // T443
+import { ALL_EARNED, DEV_EARNED, earned, practiceEarned } from './golf/play/unlocks'; // T443 (#1314: a sandbox game has every shot unlock: ALL_EARNED)
 import { PracticeDriver, RANGE_HOLE, SHORT_HOLE, bareEarthRects, practiceCourse, practiceFlags, rangeSwingCycle, teeAreaOf, type PracticeCourse, type PracticePlace } from './golf/play/practice3p'; // J6
 import { DRILLS, DRILL_IDS, drillGains, drillProgress, recordDrill, type DrillCall, type DrillId } from './golf/play/drills'; // J6
 import { galleryActors } from './golf/play/gallery3p'; // T429: the galleries for the view
@@ -326,7 +327,7 @@ import { MapGridLayer } from './ext/map-grid/layer';
 import { MoneyFloats, addCash, drawMoneyFloats, rangeFloat, type MoneyEvent } from './moneyfloats';
 import { ColumnPlacer, PRI } from './label-place';
 import { LABEL_OUTLINE, WorldLabels } from './world-labels';
-import { FIRST_PAR3_M, JAM_ZONES, RANGE_CARD_SEEN, STUCK_PLAY_SEC, advanceProgress, computeProgressiveUiState, emptyProgress, fallbackTeeSpot, nextFirstRunHint, normalizeProgress, progressFacts, rampLock, rampToast, type FirstRunHint, type GuideFacts, type PlayerProgressFacts, type ProgressiveUiState } from './ext/progressive-ui';
+import { FIRST_PAR3_M, JAM_ZONES, RANGE_CARD_SEEN, makeSandbox, rangeLooks, sandboxTopUp, type SandboxSave, STUCK_PLAY_SEC, advanceProgress, computeProgressiveUiState, emptyProgress, fallbackTeeSpot, nextFirstRunHint, normalizeProgress, progressFacts, rampLock, rampToast, type FirstRunHint, type GuideFacts, type PlayerProgressFacts, type ProgressiveUiState } from './ext/progressive-ui';
 
 /** New hole's camera framing eases this long at most (ms; P23 4.4) */
 const CAM_EASE_MS = 400;
@@ -589,7 +590,6 @@ const LAND_BAND_COL = {
 const LABEL_KEY = { town: 1e6, growth: 2e6, stopped: 2.1e6, gallery: 3e6, waiting: 4e6, landHover: 6e6, stadium: 6e6 + 1 } as const; // (7e6: parking-overlay.ts's lots with no road)
 
 interface Build { legs: Leg[]; cls: RoadClass; t0: number; dur: number; total: number; cum: number[] }
-interface Particle { x: number; y: number; vx: number; vy: number; vz: number; z: number; life: number; age: number; r: number }
 export interface Toast { id: number; text: string; t: number; kind: 'info' | 'warn' | 'good'; /** T242: its Set the scene button opens this place's picture card */ scene?: SceneRef }
 export interface Camera { X: number; Y: number; z: number }
 const AUTO_TREES = ['world:tree_oak_1', 'ref:tree-maple-crimson', 'world:tree_oak_2', 'ref:tree-birch-gold'];
@@ -749,6 +749,13 @@ export class Game {
   /** T147, the money floats (moneyfloats.ts): green +$X rises where money comes in, red -$X where it goes out at a place or a sale is lost; on by
    *  default, remembered (the gear menu's Money floats). Set it with setShowMoneyFloats */
   showMoneyFloats = true;
+  /** J12: the menu scene's still (scripts/jam/menu-scene-motion.mjs --flow poster): the world drawn with nothing that moves (no cars, people, animals, carts or balls), so the
+   *  still under the title card is the live scene's first frame without its movers, and the swap to the live scene only brings them in */
+  stillLife = false;
+  /** J12: the menu scene's range warmed up (RangeHost.warm: its golfers already at the bays, not on their way from the map's edge); the scene only */
+  warmShowRange(simS = SHOW_RANGE_WARM_S) { if (this.show && this.golf?.start === 'range') this.showWarmed = this.range.warm(simS, SHOW_HOURS.start); }
+  /** the visits the scene's range had after its warm-up (-1: it could not be warmed; null: not asked: the checks read it) */
+  showWarmed: number | null = null;
   readonly floats = new MoneyFloats();
   /** T151, the map's world labels: collected over the overlay's frame, placed in one pass (none overlapping, stable) and written together; the
    *  money floats' columns are placed after them (floatCols) */
@@ -836,7 +843,7 @@ export class Game {
     money: () => this.money, spend: n => this.spendAt(this.rangeSpot(), 'construction', n), book: n => this.as('range', () => this.traffic.spend('business', -n)),
     month: () => this.golfMonthIndex(), payUpkeep: n => this.spendAt(this.rangeSpot(), 'upkeep', n), balls: n => this.spendAt(this.rangeSpot(), 'balls', n), // (T386: the supplier's balls)
     once: id => { const p = this.golf?.progress; if (!p || p.seen.includes(id)) return false; p.seen.push(id); this.scheduleSave(); return true; },
-    demand: () => ({ tier: this.golf?.tier ?? 1, exits: this.golf?.exits?.length ?? 2, residents: this.traffic.pop, propsAppeal: this.decor.appeal(), practiceAppeal: this.golf?.range ? practiceAppeal(this.golf.range) : 0 }),
+    demand: () => ({ tier: this.golf?.tier ?? 1, exits: this.golf?.exits?.length ?? 2, residents: this.traffic.pop + (this.show ? SHOW_RANGE_RESIDENTS : 0), propsAppeal: this.decor.appeal(), practiceAppeal: this.golf?.range ? practiceAppeal(this.golf.range) : 0 }),
     dayLen: () => this.traffic.dayLen, simT: () => this.traffic.simTime(performance.now()),
     pace: () => { const T = this.traffic; return this.golfMode && T.town.prof ? localRate(T.town, T.simTime(performance.now())) * T.dayLen / 1440 : 1; }, // (T266)
     clock: () => { const c = this.clock(); return { hour: c.hour + c.minute / 60, day: c.day }; },
@@ -1091,7 +1098,7 @@ export class Game {
   speed = 1; private lastSpeed = 1; private lastFrame = 0;
   /** the dev sandbox (URL ?grow=N, ?stamp=0|1, ?money=0|1; the dev server defaults to grow 1 (the game's, since 2026-10-27), no stamp, money on; the bench forces the game's): the growth speed (1 = the game's),
    *  whether a new valley's towns are stamped to their residents, and unlimited money (sent to the city worker at init) */
-  private sandboxGrow = 1; private stampOn = true; private sandboxMoney = false; private sandboxUnlock = false;
+  private sandboxGrow = 1; private stampOn = true; private sandboxMoney = false; private sandboxUnlock = false; /** the unlock-all the URL or the dev server asked for (?unlock): a sandbox game adds its own (applySandbox) */ private devUnlock = false;
   /** how a new game starts (?start=): 'range' (the default: the county road and the driving range, plan P22), 'town' (the old start: a seeded
    *  town, the old nine and the clubhouse) or 'valley' (the classic three towns) */
   private startMode: 'range' | 'town' | 'valley' = 'range';
@@ -1105,7 +1112,13 @@ export class Game {
   /** a Space press that panned (held with the drag) does not also pause on release */
   private spacePanned = false;
   // fx
-  builds: Build[] = []; particles: Particle[] = []; private growToast = -Infinity;
+  builds: Build[] = []; private growToast = -Infinity;
+  /** the construction dust (build-dust.ts): the road builder's and every new thing's, one pool; dustLv each lot's last stage (a lot that grew puffs) */
+  readonly dust = new BuildDust(); private dustLv = new Map<string, number>(); private dustQuad = new Float32Array(8); private dustHold = false;
+  private dustOk(): boolean { return !this.dustHold && dustAllowed(this.dust.arm, this.show, this.paint.restoring > 0); }
+  private dustProj = (x: number, y: number, o: { x: number; y: number }) => { const ze = this.cam.z * this.dpr; o.x = (worldX(x, y) - this.cam.X) * ze + this.cw / 2; o.y = (worldY(x, y) - this.cam.Y) * ze + this.ch / 2; };
+  /** dust round a lot's quad (origin o, along u for w, in along n for d) */
+  private dustLot(o: Pt, u: Pt, n: Pt, w: number, d: number) { const q = this.dustQuad; q[0] = o.x; q[1] = o.y; q[2] = o.x + u.x * w; q[3] = o.y + u.y * w; q[4] = q[2] + n.x * d; q[5] = q[3] + n.y * d; q[6] = o.x + n.x * d; q[7] = o.y + n.y * d; this.dust.poly(performance.now(), q, 'foot'); }
   toasts: Toast[] = []; toastId = 1;
   /** the city worker (cars, parcels, town): created with the game, so the town grows whenever the sim runs */
   traffic: SimClient;
@@ -1330,6 +1343,8 @@ export class Game {
   // ---------- T256 (#743): Range › Build, My holes ----------
   /** the Texture Painter (Range › Texture Painter, Facilities › Texture Painter): the course tool with the property's brush (the same painting tools as the holes,
    *  painting cells of no hole: the range, the practice area, the rest of your land) */
+  /** 2026-11-15: the jam Build menu's Trees and props card: the Props tool in hand (natural props painted, man-made placed) */
+  setPropsTool() { this.setTool('props'); this.emit(); }
   openPropertyPaint(kind: BrushKind = this.paint.brushKind === 'path' ? 'fairway' : this.paint.brushKind) {
     if (!this.golf || !this.courseGrid) { this.toast('Build paints a golf course\'s land', 'warn'); return; }
     if (this.range.cardOpen) this.openRangeCard(false);
@@ -1611,7 +1626,9 @@ export class Game {
     const p = this.placing, h = this.hover; if (!p || !h) return;
     const s = p.spot(h.x, h.y), v = placeVerdict(p, s, this.money);
     if (v.bad) { this.toast(v.label, 'warn'); return; }
-    if (p.build(s)) { this.placing = null; this.scheduleSave(); }
+    const foot = this.dustOk() ? p.polys(s) : null; this.dustHold = true; let ok = false; // (build-dust.ts: its outline puffs; the business it adds does not puff again)
+    try { ok = p.build(s); } finally { this.dustHold = false; }
+    if (ok) { this.placing = null; this.scheduleSave(); if (foot) for (const q of foot) this.dust.poly(performance.now(), q, 'foot'); }
     this.emit();
   }
   /** the build in hand's ghost at the pointer: its outline and parts, green where it may stand, red and hatched where not, its verdict by the
@@ -2650,6 +2667,7 @@ export class Game {
     const t0 = performance.now(), b = d ? diffBox(d) : null, g = this.courseGrid;
     if (b && d && g) {
       this.bunkerContourRev = -1; this.ground.bunkers.suspend();
+      if (this.dustOk()) this.dust.grid(performance.now(), d, g.surf, CELL_T); // (build-dust.ts: the edges of what was laid)
       if (this.contourOf === g) { this.contour.cells(g, d); this.areaWorker.cells(g, d); }
       if (!this.cgDirty) this.cgDirtyAt = t0;
       this.cgDirty = this.cgDirty ? [Math.min(this.cgDirty[0]!, b.x0), Math.min(this.cgDirty[1]!, b.y0), Math.max(this.cgDirty[2]!, b.x1), Math.max(this.cgDirty[3]!, b.y1)] : [b.x0, b.y0, b.x1, b.y1];
@@ -3180,6 +3198,8 @@ export class Game {
   private saveTimer = 0; private blocksTimer = 0;
   /** set when the slot holds a save we could neither read nor back up: never write over it (T042) */
   private saveBlocked = false;
+  /** #1314: no more saves from this page (the title card switches to the other save slot and reloads: nothing of this game may land in that slot meanwhile) */
+  holdSaves(): void { this.saveBlocked = true; clearTimeout(this.saveTimer); }
   /** J12 (#1271, the living scene behind the jam's title card, showcase.ts): the loader of the prepared world (set before init; its save, or null when it cannot be had) and
    *  whether this game is that scene: its world is the prepared save, never read from or written to the player's slot (saveBlocked), and nothing of the game's own
    *  shows or answers (no toasts, keys, clicks or wheel); onAfterDraw is called in the frame's task right after the picture is drawn (the director copies it for a cross-fade) */
@@ -3382,7 +3402,7 @@ export class Game {
     this.stampOn = q.has('stamp') ? q.get('stamp') === '1' : !dev;
     this.sandboxMoney = !JAM && (q.has('money') ? q.get('money') === '1' : dev); // JAM: never unlimited money
     // every road class, junction (the roundabout without its card), tunnel and signal tier open from the start (?unlock=0 plays the unlocks)
-    this.sandboxUnlock = !JAM && (q.has('unlock') ? q.get('unlock') === '1' : dev); // JAM: the progressive unlocks always play
+    this.sandboxUnlock = this.devUnlock = !JAM && (q.has('unlock') ? q.get('unlock') === '1' : dev); // JAM: the progressive unlocks always play (a sandbox game opens them all in any build: applySandbox)
     this.traffic.onGrow = (legs) => this.townGrow(legs);
     this.traffic.onNoRoom = () => { if (!JAM) this.toast('The town has no room left to grow: build a road to give it new lots'); }; // T292 (#877) (not in the jam MVP: it has no road tool)
     this.traffic.onTown = (events) => { for (const e of events) this.lotQueue.add(e.key); this.townFirsts(events); this.placesCheck(); this.roughCheck(); };
@@ -3428,7 +3448,7 @@ export class Game {
   async init(opts: { bench?: number } = {}) {
     const tick = (p: number) => { this.loadProgress = p; this.emit(); };
     if (opts.bench) this.disastersEnabled = false;
-    if (opts.bench) { this.sandboxGrow = 1; this.stampOn = true; this.sandboxMoney = false; this.sandboxUnlock = false; }
+    if (opts.bench) { this.sandboxGrow = 1; this.stampOn = true; this.sandboxMoney = false; this.sandboxUnlock = this.devUnlock = false; }
     this.traffic.sandbox(this.sandboxGrow, this.sandboxMoney); // before the terrain: the city worker reads its options from the first messages
     this.resize();
     // the atlas within GAME-PLAN's GPU budget (T080, atlas-pages.ts): a coarse mip of every page resident, the finer mips streamed per cell
@@ -3475,7 +3495,8 @@ export class Game {
     let showSave: SaveV5 | null = null;
     if (this.showcaseLoader && !fixName && !opts.bench && !this.osmSpec) { try { showSave = await this.showcaseLoader(); } catch { showSave = null; } if (this.dead) return; }
     if (showSave) this.saveBlocked = true;
-    const read = opts.bench || fixName || showSave || this.osmSpec || !this.boot.save ? null : await readSave(); if (this.dead) return;
+    let read = opts.bench || fixName || showSave || this.osmSpec || !this.boot.save ? null : await readSave(); if (this.dead) return;
+    if (read?.status === 'none' && saveSlot() === 'sandbox') { setSaveSlot('town'); read = await readSave(); if (this.dead) return; } // #1314: no sandbox save after all: the career slot
     const save = fixture ?? showSave ?? read?.save ?? null;
     // T357: a saved game's real ground unpacks (the platform's inflate is async) before load() reads it; one that does not unpack is a flat course, not a failed load
     this.landIn = save?.golf?.land ? await unpackLand(save.golf.land) : null; if (this.dead) return;
@@ -3498,7 +3519,7 @@ export class Game {
       setLotModel(LATEST_LOT_MODEL); this.farmModel = FARM_MODEL; this.farmsNew.clear(); this.golf = null; this.genTerrain(newSeed()); this.seedTowns();
     }
     else loaded = save;
-    if (showSave && loaded === showSave) { this.show = true; this.dayBusy = SHOW_GOLFERS; if (this.golf) delete this.golf.everyday; this.setFarmMonth(SHOW_FARM_MONTH); } // J12: the scene's course has a busy day (its golfers are always on the holes): its day book starts afresh, so the roster is the busy day's, not the quiet one the world was built on
+    if (showSave && loaded === showSave) { this.show = true; this.dayBusy = SHOW_GOLFERS; if (this.golf) delete this.golf.everyday; this.setFarmMonth(SHOW_FARM_MONTH); const sb = this.golf?.range?.balls; if (sb) sb.clean = Math.max(sb.clean, SHOW_RANGE_BALLS); } // J12: the scene's course has a busy day (its golfers are always on the holes): its day book starts afresh, so the roster is the busy day's, not the quiet one the world was built on
     tick(0.7);
     const tl = performance.now();
     this.ground.init(this.terrain);
@@ -3666,10 +3687,11 @@ export class Game {
    *  (nothing is spent yet), the clock starts and the camera goes to the range. False (nothing laid) with no start to lay */
   private layStart(rs: RangeStart | null): boolean {
     const pk = this.startPick, g = this.golf; if (!pk || !g || !rs) return false;
+    disarm(this.dust.arm, performance.now()); this.dustLv.clear(); // (build-dust.ts: the new game's start is its first bake: no dust)
     const { road, site } = rs, next: RangeSave = { ...rs.save, progress: g.progress, ...(g.player ? { player: g.player } : {}) };
     this.golf = next; this.startPick = null; this.placing = null; this.hover = null; this.ghostMouse = null; // (the pick's pointer goes with it: a map point from the far view)
     this.townPts = [site.centre]; this.roadNames = new RoadNames(this.names, this.townPts);
-    this.sendTerrain(); this.rangeMorning();
+    this.sendTerrain(); this.sandboxFunds(); this.rangeMorning(); // (#1314: the fresh books a sandbox game's start lays get its money again)
     this.edit.addLegs(road.legs, CLASS.road, 0, road.kinds, true); this.commitNetwork();
     this.setBizDefs([]); this.parkDefs = [];
     const b = next.range = { ...defaultRangeBiz(), setback: site.setback, built: false, home: [...site.rangePlot], practiceAt: null };
@@ -3923,7 +3945,7 @@ export class Game {
     if (o?.lift) p.lift = o.lift; // drawn above its spot (T133: the range's upper deck)
     if (bodyOf(item) >= 0) p.paint = paintAt(x, y); // a car's paint from where it stands (T228, car-paint.ts: a bay or a lot's spot keeps its colour)
     this.props.add(p); this.propGrid.add(p, [p.x0, p.y0, p.x1, p.y1]); this.sprites.add(p); this.casterTouched(p);
-    if (this.propLog) this.propLog.added.push(p);
+    if (this.propLog) { this.propLog.added.push(p); if (this.dustOk()) this.dust.rect(performance.now(), p.x0, p.y0, p.x1, p.y1, 'prop'); } // (build-dust.ts: the player's new prop)
     if (LIBRARY[item].kind === 'lamp') this.lampProps.add(p);
     if (LIBRARY[item].kind === 'fountain') this.fountainProps.add(p); // T231: the jets loop their frames (animateFountains)
     if (LIBRARY[item].big && LIBRARY[item].kind !== 'car') this.scheduleBlocks(isLotProp(p)); // cars are not building blocks (sendBlocks skips them)
@@ -4547,8 +4569,9 @@ export class Game {
     const v = st ? undefined : this.traffic.lots.get(key);
     this.townLotChanged(key, st ? lotBoxOf([st.g.o.x, st.g.o.y], [st.g.u.x, st.g.u.y], [st.g.n.x, st.g.n.y], st.g.w, st.g.d) : v ? lotBoxOf(v.o, v.u, v.n, v.w, v.d) : null);
     if (st) { this.placeLot(key, st.g, st.st); return; }
-    if (!v) { this.dropLot(key); return; }
+    if (!v) { this.dustLv.delete(key); this.dropLot(key); return; }
     const g: LotGeom = { o: { x: v.o[0], y: v.o[1] }, u: { x: v.u[0], y: v.u[1] }, n: { x: v.n[0], y: v.n[1] }, w: v.w, d: v.d };
+    const lv0 = this.dustLv.get(key); this.dustLv.set(key, v.level); if (grewTo(lv0, v.level, LV.BUILDING) && this.dustOk()) this.dustLot(g.o, g.u, g.n, g.w, g.d); // (build-dust.ts: the town grew a house)
     // an empty lot, or one a starter house stands on, keeps only its share of the fence grid (none on the golf land): a starter house's lot all
     // the lines it owns, an empty lot only those it shares with a lot that has a house
     const starter = v.level !== LV.EMPTY && this.starterIn(v);
@@ -4809,6 +4832,7 @@ export class Game {
    *  the town trees round it are planted again, the empty lots under it are drawn again (they draw nothing now) */
   private placePlace(pl: PlacedPlace) {
     const def = placeDef(pl.id); if (!def) return;
+    const fresh = !this.placeProps.has(pl.id); // (build-dust.ts: a new place puffs)
     this.dropPlace(pl.id);
     const box = placeBox(pl, def), key = 'place:' + pl.id, ps: Prop[] = [], seen = new Set<string>();
     const hits = new Set<Prop>(); this.propGrid.query(box, hits);
@@ -4824,6 +4848,7 @@ export class Game {
       if (src && si && !seen.has(src)) { seen.add(src); this.placeStandIns.push({ p, text: `Stand In for ${si}` }); }
     }
     this.placeProps.set(pl.id, ps); this.setLotGround(key, c?.ground ?? null);
+    if (fresh && this.dustOk()) this.dust.rect(performance.now(), box[0]!, box[1]!, box[2]!, box[3]!, 'foot');
     this.dropTownTrees(box[0], box[1], box[2], box[3]);
     for (const l of this.traffic.lots.values()) { const b = lotBoxOf(l.o, l.u, l.n, l.w, l.d); if (b[0]! < box[2] && b[2]! > box[0] && b[1]! < box[3] && b[3]! > box[1]) this.lotQueue.add(l.key); }
   }
@@ -5152,6 +5177,8 @@ export class Game {
   /** the course height changed in box: save, and the workers take the new heights and re-bake the ground there */
   private courseHeightChanged(box: CourseTileBox) { this.scheduleSave(); this.ground.courseHeight(this.courseHeight.data, box, this.realLand); }
   private afterLoad() {
+    disarm(this.dust.arm, performance.now()); this.dustLv.clear(); // (build-dust.ts: no dust while the load settles)
+    this.applySandbox(); // #1314: a sandbox game (loaded or new) opens everything; any other game plays the unlocks again
     const ops = this.edit.commit(true); this.lanes.update(this.net);
     // the city worker gets the whole network (the bench commits its own edits before this, so `ops` can be empty)
     this.ground.netOps(ops); this.traffic.netOps(netToOps(this.net)); this.syncPortals();
@@ -5218,7 +5245,7 @@ export class Game {
     private structureCheck(candidate: { typeId: string; x: number; y: number; mode: 'rent' | 'buy'; rotated?: boolean; facing?: ObjectFacingKey; visualTier?: string; moveId?: number }): StructurePlacementCheck {
     const g = this.golf!;
     const holes = this.courseStatsView() ? deriveHoles(this.courseAreaList(), g.tees, g.pins, g.aims) : [];
-    const check = checkStructurePlacement(candidate, { tier: g.tier, holes, existing: (g.structures ?? []).filter(s => s.id !== candidate.moveId), parcels: g.parcels ?? [g.parcel] });
+    const check = checkStructurePlacement(candidate, { tier: this.gateTier(), holes, existing: (g.structures ?? []).filter(s => s.id !== candidate.moveId), parcels: g.parcels ?? [g.parcel] });
     return candidate.moveId ? { ...check, cost: 0 } : check;
     }
     selectedEventStructure(): PlacedEventStructure | undefined { return this.golf?.structures?.find(s => this.golfStructureProps.get(s.id) === this.selected); }
@@ -6255,6 +6282,7 @@ export class Game {
     if (!welcomeReady(this.firstViewBaked, performance.now() - this.readyAt)) return null; // T188: the card waits for the ground
     if (this.startPick) return null; // (J9: and for the start)
     const g = this.golf, p = g?.progress;
+    if (p?.sandbox) return null; // #1314: no tutorial in a sandbox game
     if (!this.welcomeFreshNow() || !p || p.seen.includes('welcome') || this.playableHoles > 0) return null;
     if (!p.seen.includes('who')) return null; // T240: the "Who are you?" card first
     if (tourRunning(p.tour)) return null; // T293: then the start tutorial
@@ -6373,6 +6401,7 @@ export class Game {
   private prepCached: PrepView | null = null;
   private prepCheck(force = false) {
     if (!force && ++this.prepTick % 6) return; // about once a second
+    if (JAM) { this.prepCached = null; return; } // (jam-rc: the jam has no tournaments, so no Tournament prep checklist, even for an imported course's holes)
     const g = this.golf, f = this.prepFacts(); if (!g || !f) { this.prepCached = null; return; }
     if (!g.prep) { g.prep = { done: prepDue(f).map(s => s.id), skipped: [] }; this.scheduleSave(); return; }
     // T399 (#1077): before the course is playable there is no checklist, and no reward or toast either (a step built early pays once the course is there)
@@ -6414,7 +6443,7 @@ export class Game {
     if (!line.first) { this.toast('Place it where you like', 'info'); this.emit(); return; }
     const at = this.prepSpotTarget(step.target, step.typeId);
     const holes = this.courseStatsView() ? deriveHoles(this.courseAreaList(), g.tees, g.pins, g.aims) : [];
-    const opts = { tier: g.tier, holes, existing: g.structures ?? [], parcels: g.parcels ?? [g.parcel] };
+    const opts = { tier: this.gateTier(), holes, existing: g.structures ?? [], parcels: g.parcels ?? [g.parcel] };
     // the suggestion prefers open ground (no tree, prop or building standing in its rect); the player may still place it on any valid spot
     const valid = (x: number, y: number) => checkStructurePlacement({ ...pend, x, y }, opts).ok;
     const open = (x: number, y: number) => { const r = structureRect({ ...pend, x, y }); return valid(x, y) && !this.propGrid.query([r[0], r[1], r[0] + r[2], r[1] + r[3]]).size; };
@@ -6515,7 +6544,7 @@ export class Game {
    *  hears of it (setGolf) and a toast says which season's end holds the first tournament */
   private foundingCheck() {
     // (T459, the jam MVP: no tour, so no invitation and no tournament at a season's end)
-    const g = this.golf; if (JAM || g?.start !== 'range' || g.invited || ++this.foundTick % 30) return;
+    const g = this.golf; if (JAM || g?.start !== 'range' || g.invited || g.progress?.sandbox || ++this.foundTick % 30) return; // (#1314: no invitation in a sandbox game)
     if (!this.inviteCheck()?.met) return;
     const c = this.traffic.clockTime(performance.now()), next = Math.floor(c / GAME_DAY) * GAME_DAY + GAME_DAY;
     g.invited = { at: c };
@@ -7578,6 +7607,7 @@ export class Game {
   /** sets the placed businesses and the stadium's site from them (cached here, so the drawing needs no allocation) */
   private businessProps: Prop[] = [];
   private setBizDefs(defs: BizDef[]) {
+    if (this.dustOk()) for (const d of defs) if (!this.bizDefs.some(q => q.id === d.id)) this.dust.rect(performance.now(), d.x, d.y, d.x + d.w, d.y + d.h, 'foot'); // (build-dust.ts)
     for (const p of this.businessProps) this.sprites.remove(p);
     for (const d of [...this.bizDefs, ...defs]) this.dropTownTrees(d.x, d.y, d.x + d.w, d.y + d.h);
     this.bizDefs = defs; const s = defs.find(d => d.type === 'stadium') ?? defs.find(d => d.type === 'clubhouse') ?? defs.find(d => d.type === 'range'); this.stadiumSite = s ? siteAt(s.x, s.y, s.w, s.h) : null;
@@ -8430,13 +8460,27 @@ export class Game {
   get stamped(): boolean { return this.stampOn; }
   /** the dev sandbox's unlock-all (see sandboxUnlock) */
   get unlockAll(): boolean { return this.sandboxUnlock; }
+  // ---------- #1314: sandbox mode (ext/progressive-ui/sandbox.ts): a new game chosen as Sandbox on the title card, saved with it (GolfProgress.sandbox)
+  /** this game's sandbox options (null: a normal game; the top bar's Sandbox tag reads it) */
+  get sandboxMode(): SandboxSave | null { return this.golf?.progress?.sandbox ?? null; }
+  /** the unlocks this game plays: a sandbox game opens every tool, class, junction, tier and business (the dev unlock-all, sandboxUnlock), any other game the URL's
+   *  or the dev server's choice; the town lays its own streets when the sandbox game chose that (#1317), else only the player's roads grow it (T292) */
+  private applySandbox(): void {
+    const sb = this.benchMode ? null : this.sandboxMode;
+    this.sandboxUnlock = !!sb || this.devUnlock;
+    this.traffic.sandbox(this.sandboxGrow, this.sandboxMoney, !!sb?.townRoads);
+  }
+  /** a new sandbox game's fresh books get SANDBOX_MONEY (no ledger line, no float: the treasury simply starts there) */
+  private sandboxFunds(): void { if (this.sandboxMode) { const n = sandboxTopUp(this.traffic.budget.money); if (n > 0) this.traffic.fund(n); } }
+  /** the tournament tier a tier gate reads (night golf, the event structures): a sandbox game has them all open (tier 5) */
+  private gateTier(): number { const t = this.golf?.tier ?? 1; return this.sandboxMode ? Math.max(t, 5) : t; }
   get unlimited(): boolean { return this.traffic.unlimited; }
   /** the game day (from the city's books) */
   get day(): number { return this.traffic.day; }
   /** the last closed day's ledger, or null before the first day closes */
   get ledger(): Ledger | null { const h = this.traffic.budget.history; return h[h.length - 1] ?? null; }
   /** true once the city went too long in the red (the books stay so) */
-  get bankrupt() { return this.golf ? !this.traffic.unlimited && isBankrupt(this.finance, this.traffic.budget.money) : this.traffic.budget.bankrupt; } // (golf mode: the Bank's rule, golf/finance.ts isBankrupt; classic keeps the days in the red)
+  get bankrupt() { return this.golf ? !this.traffic.unlimited && !this.sandboxMode && isBankrupt(this.finance, this.traffic.budget.money) : this.traffic.budget.bankrupt; } // (golf mode: the Bank's rule, golf/finance.ts isBankrupt; classic keeps the days in the red)
   /** the index of the highest career milestone reached (see career.ts; the city worker's, mirrored) */
   get reached() { return this.traffic.career.reached; }
   /** true once the career is won (WIN_POP residents; it stays so) */
@@ -8641,7 +8685,8 @@ export class Game {
   playerProgressFacts(): PlayerProgressFacts | null {
     const g = this.golf, p = g?.progress, b = g?.start === 'range' ? g.range : undefined;
     // a range start's ramp (P24 Phase 4a, T132): the upgrades bought, the season's takings, and a prop placed near the range
-    const range = b ? { upgrades: b.owned.length, seasonTakings: b.season.takings, propsPlaced: this.decor.appeal() > 0 } : undefined;
+    // (#1305: and its looks, the "make it pretty" half of the course unlock: progressive-ui rangeLooks)
+    const props = !!b && this.decor.appeal() > 0, range = b ? { upgrades: b.owned.length, seasonTakings: b.season.takings, propsPlaced: props, looks: rangeLooks(b.owned, props, this.range.practiceFacts()?.putting === 'open') } : undefined;
     const f = p ? progressFacts(p, { holes: this.courseHoleViews().filter(h => h.par > 0).length, seasons: this.seasonsDone(), invited: !!g!.invited, range }) : null;
     const pr = f && this.range.practiceFacts(); if (f && pr) f.practice = pr; // a range start's practice facilities (T130): their hints and brushes
     if (f && this.practiceForSale()) f.practiceForSale = true; // T239: its hint says buy it first
@@ -9031,6 +9076,7 @@ export class Game {
   get lotsPending() { return this.lotQueue.size + this.staged.size; }
   async save() {
     if (this.benchMode || this.startPick) return 0; if (this.saveBlocked) return 0;
+    const slot = saveSlot(); if (!!this.sandboxMode !== (slot === 'sandbox')) return 0; // #1314: a sandbox game is written to its own slot only, a career game never to it
     // the tournament day under way (T209): the worker's snapshot of it, asked for first (only while a golf round is in its surge or eval: every other save
     // is written at once, as before, without it)
     const rs = this.traffic.round.stage, tourney = this.golf && (rs === 'surge' || rs === 'eval') ? await this.traffic.daySave() : null;
@@ -9063,7 +9109,8 @@ export class Game {
       speed: this.net.speedTier,
       golf: this.golf ? { ...this.golf, bunkers: this.bunkers.serialize(), teeSets: 1 as const, height: this.courseHeightChunks(), ...(landSave ? { land: landSave } : {}), grid: this.gridSave(), plans: this.golf.plans?.length ? this.golf.plans : undefined, play: this.golf.play && this.traffic.round.stage !== 'free' ? this.golf.play : undefined, everyday: this.dayBook?.save ?? this.golf.everyday, estate: ES.encodeEstate(this.estateRt) } : undefined,
     };
-    try { return await writeSave(withTourney(d, tourney)); } catch { return 0; }
+    if (saveSlot() !== slot || !!this.sandboxMode !== (slot === 'sandbox')) return 0; // (#1314: the slot or the game changed while this save waited: it is not this slot's any more)
+    try { return await writeSave(withTourney(d, tourney), slot); } catch { return 0; }
   }
   /** the course height as save chunks (undefined when flat), recomputed only when the field changed */
   private courseHeightChunks(): CourseHeightSaveChunk[] | undefined {
@@ -9171,10 +9218,12 @@ export class Game {
     this.traffic.setGolf(false, 1, 0);
     this.traffic.setBudget(null, null); this.showWin = false; this.route = []; this.selected = null; this.builds = [];
   }
-  newTown() {
+  /** a new game (o.sandbox: a sandbox game with those options: #1314, sandbox.ts) */
+  newTown(o: { sandbox?: SandboxSave } = {}) {
     this.reset(); const golf = this.newGame();
+    if (golf && o.sandbox && this.golf?.progress) makeSandbox(this.golf.progress, o.sandbox); // (before the first save and the first progress check)
     if (!golf) this.genTerrain(newSeed());
-    this.ground.terrain(this.terrain); this.sendTerrain();
+    this.ground.terrain(this.terrain); this.sendTerrain(); this.sandboxFunds();
     if (!golf) this.seedTowns(); // a golf game laid its road and range (or its town) in newGame
     this.afterLoad(); this.rangeMorning();
     if (this.stampPending) { this.stampPending = false; this.traffic.stamp(TOWN_POP); this.scheduleSave(); }
@@ -9412,7 +9461,7 @@ export class Game {
 
   // ---------- fx ----------
   puff(x: number, y: number, n: number) {
-    for (let i = 0; i < n; i++) this.particles.push({ x: x + (Math.random() - 0.5) * 1.5, y: y + (Math.random() - 0.5) * 1.5, vx: (Math.random() - 0.5) * 1.2, vy: (Math.random() - 0.5) * 1.2, vz: 0.6 + Math.random() * 1.2, z: 0, life: 0.6 + Math.random() * 0.6, age: 0, r: 0.25 + Math.random() * 0.3 });
+    this.dust.pool.puff(x, y, n);
   }
   private revealFront(b: Build, now: number) {
     const p = clamp((now - b.t0) / b.dur, 0, 1), e = p < 0.5 ? 2 * p * p : 1 - Math.pow(-2 * p + 2, 2) / 2;
@@ -9508,7 +9557,7 @@ export class Game {
         for (const l of this.traffic.lots.values()) if (l.level >= LV.BUILT) doors.push({ x: l.o[0] + l.u[0] * l.w / 2 + l.n[0], y: l.o[1] + l.u[1] * l.w / 2 + l.n[1], kind: l.use === 1 ? 0 : 1 });
         this.peds.setDoors(doors);
       }
-      this.peds.populate(Math.min(PED_MAX, built * 0.5));
+      this.peds.populate(Math.min(PED_MAX, built * (this.show ? SHOW_PEDS_PER_LOT : 0.5))); // (J12: the menu scene's town has more people out walking)
     }
     if (this.speed) this.peds.step(dt);
   }
@@ -11087,7 +11136,7 @@ export class Game {
    *  the flight (practiceEarned); the course still asks for them to be earned */
   private practiceStart3p(f: Frame3p): HostMsg[] {
     const pr = this.prac3p!, p = this.playerNow(), sk = this.yourSkills();
-    const base = this.devMode ? DEV_EARNED : earned({ skills: p?.skills ?? {}, bag: p?.bag ?? null, mech: MECH_IDS.filter(id => hasMech(sk, id)), drills: p?.drills?.done ?? null });
+    const base = this.devMode ? DEV_EARNED : this.sandboxMode ? ALL_EARNED : earned({ skills: p?.skills ?? {}, bag: p?.bag ?? null, mech: MECH_IDS.filter(id => hasMech(sk, id)), drills: p?.drills?.done ?? null });
     pr.course.view.cliffAt = this.cliffAtFor(() => this.course3pId(true));   // (#1345: the view's cliffs round the range, once it has sent them)
     pr.drv = new PracticeDriver(pr.course, pr.place, sk, (this.seed ^ Math.imul(++this.play3pN, 104729)) | 0, { drills: () => this.playerNow()?.drills ?? null, judged: (id, call) => this.drillJudged(id, call) });
     this.play3p = new Play3p({ view: pr.course.view, holes: [Math.max(0, pr.course.idx[pr.place])], skills: sk, earned: practiceEarned(base), driver: pr.drv, owner: this.youDress3p(), sex: p?.sex ?? 'm',
@@ -11168,7 +11217,7 @@ export class Game {
     const p = this.playerNow(), yr = this.view3pRound && !sh ? this.yourRound() : null;
     if (yr && !yr.match && !yr.over) {
       // T430: your round in the view: the game's own round (play/yours3p.ts), its strokes saved, its end recorded, its own gimme rule
-      const sk = this.yourSkills(), earn = this.devMode ? DEV_EARNED : earned({ skills: p?.skills ?? {}, bag: p?.bag ?? null, mech: MECH_IDS.filter(id => hasMech(sk, id)), drills: p?.drills?.done ?? null });   // (T455: the Developer toggle opens every shot unlock)
+      const sk = this.yourSkills(), earn = this.devMode ? DEV_EARNED : this.sandboxMode ? ALL_EARNED : earned({ skills: p?.skills ?? {}, bag: p?.bag ?? null, mech: MECH_IDS.filter(id => hasMech(sk, id)), drills: p?.drills?.done ?? null });   // (T455: the Developer toggle opens every shot unlock)
       const driver = yoursDriver(v, sk, this.seed, { get: () => this.yourRound(), set: r => this.setYourRound(r), played: (s, b, a, up) => this.yourPlayed3p(s, b, a, up), next: () => this.yourNextHole() });
       this.play3p = new Play3p({ view: v, holes: [idx], skills: sk, earned: earn, gimmeM: gimmeM(yr), driver, owner: this.youDress3p(), sex: p?.sex ?? 'm', seed: this.seed, frame: f,
         height: this.ballHeight, wind: () => this.windNow(), fit: putterFitName(p?.bag), gust: () => { const w = this.worldWind(); return w ? windView(this.windNow(), w, 1, 0).peak : null; } });
@@ -11176,7 +11225,7 @@ export class Game {
     }
     const mode = this.fair3p, sk = kitFor(mode, this.yourSkills());   // (T436: his own kit, or the level kit)
     // T443: what he has earned: his card's skills, his clubs' levels, his cards' mechanics (golf/play/unlocks.ts); the level kit has the level golfer's, no cards
-    const earn = this.devMode ? DEV_EARNED : mode === 'level' ? earned({ skills: LEVEL_PROFILE, bag: null, mech: [] }) : earned({ skills: p?.skills ?? {}, bag: p?.bag ?? null, mech: MECH_IDS.filter(id => hasMech(sk, id)), drills: p?.drills?.done ?? null });
+    const earn = this.devMode ? DEV_EARNED : this.sandboxMode ? ALL_EARNED : mode === 'level' ? earned({ skills: LEVEL_PROFILE, bag: null, mech: [] }) : earned({ skills: p?.skills ?? {}, bag: p?.bag ?? null, mech: MECH_IDS.filter(id => hasMech(sk, id)), drills: p?.drills?.done ?? null });
     const seed3p = (this.seed ^ Math.imul(n, 7919) ^ Math.imul(this.play3pN + 1, 104729)) | 0, ghost = this.ghostOpts3p(v, [idx]);   // (T433: a loaded ghost of this hole plays alongside)
     this.ghostMeta3p = { holes: [idx], seed: seed3p, skills: sk, sex: p?.sex ?? 'm', name: p?.name ?? 'You', mode, hcp: mode === 'level' ? levelHcp() : p ? handicapOf(p.skills) : levelHcp() };
     this.play3p = new Play3p({ view: v, holes: [idx], skills: sk, earned: earn, ...ghost, gimmeM: GIMME_RULES.find(r => r.id === DEFAULT_RULES.gimme)?.m ?? 0, /* (T423: a practice hole's rules: the leather) */ owner: this.youDress3p(), sex: p?.sex ?? 'm', seed: (this.seed ^ Math.imul(n, 7919) ^ Math.imul(++this.play3pN, 104729)) | 0, frame: f,
@@ -11347,7 +11396,7 @@ export class Game {
   private seasonMonthNow(now: number): number { return this.golfMonthAt(now) - this.seasonsDone() * 12; }
   /** each frame: an event's announcement (a month before its date; the card opens), and a day over that you did not play (its result) */
   private stepEvents(day: number, now: number) {
-    const g = this.golf; if (!g || !this.hasClubhouse) return;
+    const g = this.golf; if (JAM || !g || !this.hasClubhouse) return; // (jam-rc: no club events in the jam: no Mayor's Cup or Club Championship card)
     const ev = this.clubEv(), season = this.seasonsDone();
     const d = ev.today, r = g.player?.round;
     if (d && !d.done && day > d.day && !(r && eventOfMode(r.mode) === d.id && r.day === d.day)) this.finishEvent(null);
@@ -11355,7 +11404,7 @@ export class Game {
     const id = announceDue(ev, season, this.seasonMonthNow(now));
     // T449: night golf that cannot be hosted (not unlocked, or the course not lit) is announced with the reason, and no card opens
     const nw = id === 'night' ? this.nightWhy() : null;
-    if (id && nw) { ev.announced[id] = season; this.scheduleSave(); if (nightUnlocked(this.golf?.tier ?? 1)) this.toast(`${CLUB_EVENTS[id].name} (${eventWhen(id, season)}): ${nw}`, 'info'); this.emit(); }
+    if (id && nw) { ev.announced[id] = season; this.scheduleSave(); if (nightUnlocked(this.gateTier())) this.toast(`${CLUB_EVENTS[id].name} (${eventWhen(id, season)}): ${nw}`, 'info'); this.emit(); }
     else if (id) {
       ev.announced[id] = season; if (!this.eventCardOpen) this.eventCardOpen = id; this.scheduleSave(); // (a card already open stays: the toast names it)
       this.toast(`${CLUB_EVENTS[id].name}: ${eventWhen(id, season)} at your club`, 'info'); this.emit();
@@ -11363,7 +11412,7 @@ export class Game {
   }
   /** the day's round is built: is today an event's day? (once a town day; the field's scores again when the course changed) */
   private eventDayBuilt(day: number, view: CourseView, now: number) {
-    const dp = this.dayPlay; if (!dp || !this.golf) return;
+    const dp = this.dayPlay; if (JAM || !dp || !this.golf) return; // (jam-rc: no event days in the jam)
     const ev = this.clubEv(), season = this.seasonsDone();
     if (ev.today && ev.today.day === day) { if (!ev.today.done) { ev.today = eventDay(ev.today.id, ev.today.season, day, dp.view.plan, view, dp.base); this.darken(ev.today); } return; }
     if (this.evDayChecked === day) return;
@@ -11418,7 +11467,7 @@ export class Game {
   nightWhy(): string | null {
     const g = this.golf; if (!g) return 'No golf course';
     const holes = deriveHoles(this.courseAreaList(), g.tees, g.pins, g.aims ?? []).filter(h => h.line.length >= 2);
-    return hostWhy(g.tier ?? 1, holes, this.floodlights());
+    return hostWhy(this.gateTier(), holes, this.floodlights());
   }
   /** today's event, not over yet (null: none) */
   private eventToday(): ClubEventsSave['today'] | null {
@@ -12314,6 +12363,7 @@ export class Game {
     const l = this.estateHide ? undefined : this.estateRt?.lots.find(q => `estate:${q.id}` === key);
     if (!l) { this.townLotChanged(key, null); this.dropLot(key); this.estateDrawn.delete(key); return; }
     this.townLotChanged(key, lotBoxOf([l.o.x, l.o.y], [l.u.x, l.u.y], [l.n.x, l.n.y], l.w, l.d));
+    const st0 = this.dustLv.get(key); this.dustLv.set(key, l.st); if ((st0 === undefined || l.st > st0) && this.dustOk()) this.dustLot(l.o, l.u, l.n, l.w, l.d); // (build-dust.ts: laid, sold, building, built)
     if (l.st === ES.ST.BUILDING || l.st === ES.ST.BUILT) this.placeLot(key, { o: l.o, u: l.u, n: l.n, w: l.w, d: l.d }, this.estateLotState(l));
     else this.placeEstatePlot(key, l);
   }
@@ -13425,12 +13475,11 @@ export class Game {
       b.legs.forEach((l, i) => {
         const d = sub(l.b, l.a), len = vlen(d), rl = front - b.cum[i]; if (rl < 0 || rl > len) return;
         const u = mul(d, 1 / len), n = perp(u), f = add(l.a, mul(u, rl));
-        for (let k = 0; k < 3; k++) { const s = (Math.random() - 0.5) * 2 * b.cls.h, q = add(f, mul(n, s)); this.particles.push({ x: q.x, y: q.y, vx: (Math.random() - 0.5) * 1.5 - u.x * 0.4, vy: (Math.random() - 0.5) * 1.5 - u.y * 0.4, vz: 0.8 + Math.random() * 1.6, z: 0, life: 0.7 + Math.random() * 0.7, age: 0, r: 0.3 + Math.random() * 0.5 }); }
+        for (let k = 0; k < 3; k++) { const s = (Math.random() - 0.5) * 2 * b.cls.h, q = add(f, mul(n, s)); this.dust.pool.spawn(q.x, q.y, (Math.random() - 0.5) * 1.5 - u.x * 0.4, (Math.random() - 0.5) * 1.5 - u.y * 0.4, 0.8 + Math.random() * 1.6, 0.7 + Math.random() * 0.7, 0.3 + Math.random() * 0.5); }
       });
     }
     this.builds = this.builds.filter(b => now < b.t0 + b.dur + 150);
-    for (const p of this.particles) { p.age += dt; p.x += p.vx * dt; p.y += p.vy * dt; p.z += p.vz * dt; p.vz -= 0.8 * dt; p.r += 0.6 * dt; }
-    this.particles = this.particles.filter(p => p.age < p.life);
+    this.dust.pool.step(dt); armTick(this.dust.arm, performance.now(), this.lotQueue.size === 0); // (build-dust.ts: armed once a load has settled)
     this.traffic?.update(now);
     // T147: the money floats: the old ones go, then the city worker's money with its place (the range's comes as it steps)
     this.floats.frame(now / 1000);
@@ -13729,10 +13778,10 @@ export class Game {
       const bx0 = Math.min(...c.map(p => p.x)) - pad, by0 = Math.min(...c.map(p => p.y)) - pad, bx1 = Math.max(...c.map(p => p.x)) + pad, by1 = Math.max(...c.map(p => p.y)) + pad;
       this.viewTileBox = [bx0, by0, bx1, by1]; // (T228: the car parks' parked cars are looked at only on screen, syncParkCars)
       // (T192: with their brake lights from the closest zooms down to 8%, drawn in the sprite pass right after each car)
-      const cars: Drawable[] = this.traffic ? this.traffic.visible(bx0, by0, bx1, by1, cam.z >= 0.08) : [];
+      const cars: Drawable[] = this.traffic && !this.stillLife ? this.traffic.visible(bx0, by0, bx1, by1, cam.z >= 0.08) : [];
       // at the street tier the townspeople and the crowd (the galleries' fans, the queues, the walking parties) are the movers, merged in by depth
       let movers = cars;
-      if (tier === 'street') {
+      if (tier === 'street' && !this.stillLife) {
         const peds = this.peds.n ? this.pedMovers(bx0, by0, bx1, by1) : [], crowd = this.crowdMovers(bx0, by0, bx1, by1, now / 1000), range = this.range.movers_(bx0, by0, bx1, by1);
         // T312: the people on screen step round each other (spacing.ts: a drawn offset only; ?spacing=0, dev: off, the bench's before)
         const s0 = performance.now();
@@ -13751,7 +13800,7 @@ export class Game {
       // (T192: no car light overlay any more: no headlights, beams or turn signals; the brake lights are glow instances in the sprite stream)
       const vecOn = shadows || this.cast.on;
       // T386 (#1043): the balls lying on the outfield are one instanced draw of GL points (rangehost.ts fieldPoints: at most BALL_DRAW_MAX, thinned past it), in the same upload
-      const nBall = tier === 'street' && this.range.scene ? this.range.fieldPoints(this.ballPts, X0, Y0, X1, Y1) : 0;
+      const nBall = tier === 'street' && !this.stillLife && this.range.scene ? this.range.fieldPoints(this.ballPts, X0, Y0, X1, Y1) : 0;
       const [sAt, pAt, ...vAt] = gl.uploadParts([[f.shadows, shadows ? f.shadowFloats : 0], [f.stream, f.floats],
         ...f.vec.map(v => [v.data, vecOn ? v.floats : 0] as [Float32Array, number]), [this.ballPts, nBall * 2 * BALL_POINT_FLOATS]]);
       const bAt = vAt.pop()!;
@@ -14068,10 +14117,7 @@ export class Game {
     this.labels.begin(ctx, this.dpr);
     this.drawBalls(ctx);
     if (this.range.scene) { const o = { x: 0, y: 0 }, cx = this.cw / 2, cy = this.ch / 2; this.range.drawOver(ctx, (x, y) => { o.x = (worldX(x, y) - this.cam.X) * ze + cx; o.y = (worldY(x, y) - this.cam.Y) * ze + cy; return o; }, ze, this.cam.z, this.dpr, this.cw, this.ch, this.labels); }
-    for (const p of this.particles) {
-      const s = this.screen(p.x, p.y), a = (1 - p.age / p.life) * 0.5, r = p.r * HW * ze;
-      ctx.fillStyle = `rgba(214,190,150,${a.toFixed(3)})`; ctx.beginPath(); ctx.ellipse(s.x, s.y - p.z * HH * ze * 1.5, r, r * 0.7, 0, 0, Math.PI * 2); ctx.fill();
-    }
+    drawDust(ctx, this.dust.pool, this.dustProj, ze, HW, HH); // (build-dust.ts: the road's and every new thing's dust, lit from the upper right)
     this.drawNight(ctx, now);
   }
   private drawOverlay(now: number) {
@@ -14162,10 +14208,7 @@ export class Game {
         }
       });
     }
-    for (const p of this.particles) {
-      const s = this.screen(p.x, p.y), a = (1 - p.age / p.life) * 0.5, r = p.r * HW * ze;
-      ctx.fillStyle = `rgba(214,190,150,${a.toFixed(3)})`; ctx.beginPath(); ctx.ellipse(s.x, s.y - p.z * HH * ze * 1.5, r, r * 0.7, 0, 0, Math.PI * 2); ctx.fill();
-    }
+    drawDust(ctx, this.dust.pool, this.dustProj, ze, HW, HH); // (build-dust.ts: the road's and every new thing's dust, lit from the upper right)
     this.drawNight(ctx, now);
     // T147: the money floats over everything on the map (the night too), under the HUD
     // (T151: each float's column clear of the placed world labels)

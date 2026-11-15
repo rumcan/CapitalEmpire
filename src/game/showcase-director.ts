@@ -20,10 +20,11 @@ export interface ShowHost {
   traffic: { town: TownClock; simTime(now: number): number; setTownClock(c: TownClock): void };
 }
 
-/** what the director tells the page: 'first' (the first stop is baked and showing: the still picture fades out), 'cut' (a stop began), 'slow' (the machine is too slow for the scene:
+/** what the director tells the page: 'hour' (the town clock is set to the scene's morning: the page warms the range up, under the still), 'first' (the first stop is baked and showing: the still picture fades out), 'cut' (a stop began), 'slow' (the machine is too slow for the scene:
  *  the page gives way to its still picture), 'rest' (REST_AFTER_MS of play: the page stops the engine and the last picture stays) */
-export type ShowEvent = 'first' | 'cut' | 'slow' | 'rest';
+export type ShowEvent = 'first' | 'cut' | 'slow' | 'rest' | 'hour';
 
+/** firstHold (ms): the first stop holds its first view this long after it is shown (the still fades out over the same picture: the page passes POSTER_FADE_MS), then glides */
 export class ShowDirector {
   private i: number;
   private state: 'first' | 'play' | 'capture' | 'cover' = 'first';
@@ -36,7 +37,7 @@ export class ShowDirector {
   private fadeTimer = 0;
   /** the camera's scratch poses (this stop's, the next stop's for the warm-up): the frame hook allocates nothing */
   private pose: ShowPose = { X: 0, Y: 0, z: 0 }; private nextPose: ShowPose = { X: 0, Y: 0, z: 0 };
-  constructor(private g: ShowHost, private stops: readonly ShowStop[], start: number, private snap: HTMLCanvasElement, private emit: (e: ShowEvent) => void = () => {}) {
+  constructor(private g: ShowHost, private stops: readonly ShowStop[], start: number, private snap: HTMLCanvasElement, private emit: (e: ShowEvent) => void = () => {}, private firstHold = 0) {
     this.i = ((start % stops.length) + stops.length) % stops.length;
   }
 
@@ -78,10 +79,10 @@ export class ShowDirector {
     if (this.off) return;
     const g = this.g, gap = this.lastNow ? Math.min(100, now - this.lastNow) : 0; this.lastNow = now;
     // the town clock starts at the first golf hour once the worker's time is known (before its first frame the sim time reads 0)
-    if (!this.hourSet && g.traffic.simTime(now) > 0) { this.setHour(now, true); this.hourSet = true; }
+    if (!this.hourSet && g.traffic.simTime(now) > 0) { this.setHour(now, true); this.hourSet = true; this.emit('hour'); }
     if (this.state === 'first') {
       this.place(this.i, 0);
-      if (now - this.askedAt >= READY_MIN_MS && (g.viewReady(g.cam) || now - this.askedAt >= READY_MAX_MS * 2)) { this.state = 'play'; this.t0 = now; this.playSince = now; this.emit('first'); this.emit('cut'); }
+      if (now - this.askedAt >= READY_MIN_MS && (g.viewReady(g.cam) || now - this.askedAt >= READY_MAX_MS * 2)) { this.state = 'play'; this.t0 = now + this.firstHold; this.playSince = now; this.emit('first'); this.emit('cut'); }
       else g.warmView(g.cam, now);
       return;
     }

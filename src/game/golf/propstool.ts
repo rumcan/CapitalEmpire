@@ -19,7 +19,7 @@ import type { RangeScene } from './rangebiz';
 import { turned } from '../lots/preset-art';
 import { objectFacings } from '../object-eight';
 import { facingAt, type ObjectFacing } from '../object-eight-core';
-import { DECOR_BY_KEY, POND_R, SIZE_STEP, clampSize, decorAppeal, decorSpotWhy, familyKey, inPoly, isFlag, mixPick, sellBack, sizeText, sizedPrice, standsIn, type Box, type DecorGroup, type DecorItem, type DecorSpot, type PropKind } from './decor';
+import { DECOR_BY_KEY, POND_R, isBrushed, type PropSide, SIZE_STEP, clampSize, decorAppeal, decorSpotWhy, familyKey, inPoly, isFlag, mixPick, sellBack, sizeText, sizedPrice, standsIn, type Box, type DecorGroup, type DecorItem, type DecorSpot, type PropKind } from './decor';
 import { discCells, pondAt, pondHasStones, setPondEdge, shorePieces, type Pond, type PondPiece } from './ponds';
 import { KIT_FOUNTAIN } from '../kit';
 
@@ -70,6 +70,8 @@ const SNAP = 0.25;
 const snap = (v: number) => Math.round(v / SNAP) * SNAP;
 /** the appeal and the labels are worked out again this often (frames) */
 const SCAN_EVERY = 30;
+/** #1284: how far apart the natural brush's spots stand at each density (sparse, normal, dense), against the mixed brushes' step */
+const DENSITY_STEP = [1.8, 1, 0.7] as const;
 
 export class PropsTool {
   /** the item in hand (its key; null: none) and the view it is turned to (0..3; T231: a variant item's picture, 0..n-1) */
@@ -87,14 +89,18 @@ export class PropsTool {
   where: 'course' | 'town' = 'course'; group: DecorGroup | null = null; all = false;
   /** T193: the group the toolbar's flyout opened (Props ▸ Plants): the panel shows its cards alone; null: every group. T400: or a golf kind
    *  (Facilities ▸ Tournament structures): its groups */
-  focus: DecorGroup | PropKind | null = null;
+  focus: DecorGroup | PropKind | PropSide | null = null;
+  /** #1284: the natural brush's density (0 sparse, 1 as the mixed brushes lay, 2 dense): how far apart a stroke's spots stand */
+  density: 0 | 1 | 2 = 1;
+  /** #1284: sets the brush's density */
+  setDensity(n: 0 | 1 | 2): void { this.density = n; this.ctx.emit(); }
   /** T369: the panel's "All props" box: every group and every place. Ticked, it lets go of a group the flyout opened (it only widened the place
    *  before, so the box named "All props" showed that group alone); unticked, the place's own props, every group of them. T400: the town has no
    *  such box (Town decoration lists the town's props alone: the golf props are Facilities'), so it stays off there */
   setAll(on: boolean): void { this.all = on && this.where !== 'town'; if (this.all) this.focus = null; this.ctx.emit(); }
   /** T369: the flyout's group (Props ▸ Plants: that group alone; null, All props: every group of the place). A group picked takes the "All props"
    *  box off: the player chose that group, and a box ticked earlier would show every group instead */
-  setFocus(g: DecorGroup | PropKind | null): void { this.focus = g; if (g) this.all = false; }
+  setFocus(g: DecorGroup | PropKind | PropSide | null): void { this.focus = g; if (g) this.all = false; }
   /** opens the tool's view: its place and group (the item in hand goes down when the place changes) */
   setView(where: 'course' | 'town', group: DecorGroup | null = null): void {
     if (where !== this.where) { this.hand = null; this.ghost = null; this.ghosts = []; this.drag = null; this.runFrom = null; this.stroke = null; }
@@ -160,7 +166,9 @@ export class PropsTool {
       // T231: a run starts here and is laid when the button comes up (up)
       if (DECOR_BY_KEY.get(this.hand)?.run) { this.runFrom = { x: snapRun(t.x), y: snapRun(t.y) }; this.move(mx, my); this.ctx.emit(); return; }
       // T257: a mixed brush's stroke starts here; each spot it passes is laid when the button comes up (up)
-      if (DECOR_BY_KEY.get(this.hand)?.mix) { this.stroke = []; this.move(mx, my); this.ctx.emit(); return; }
+      // (#1284: and the natural brush: a tree, a shrub, a rock is painted on, a drag laying a scatter of it; a click lays one)
+      const hd = DECOR_BY_KEY.get(this.hand);
+      if (hd?.mix || (hd && isBrushed(hd))) { this.stroke = []; this.move(mx, my); this.ctx.emit(); return; }
       this.move(mx, my); this.place(); return;
     }
     const p = this.ctx.propAt(mx, my);
@@ -181,7 +189,7 @@ export class PropsTool {
       if (d.run) { this.runGhost(d, t); return; }
       if (d.pond === 'edge') { this.edgeGhost(d, t); return; }
       if (d.pond === 'make') { this.pondGhost(d, t); return; }
-      if (d.mix) { this.mixGhost(d, t); return; }
+      if (d.mix || isBrushed(d)) { this.mixGhost(d, t); return; }
       this.ghost = this.handGhost(d, snap(t.x), snap(t.y)); return;
     }
     this.ghost = null; this.ghosts = [];
@@ -262,7 +270,7 @@ export class PropsTool {
       const d = DECOR_BY_KEY.get(this.hand)!;
       if (!this.scales(d)) { this.ctx.toast(`${d.name}: laid at its own size`, 'info'); return; }
       this.size = clampSize(this.size + dir * SIZE_STEP);
-      if (this.ghost && !this.stroke) { const t = { x: this.ghost.x, y: this.ghost.y }; if (d.mix) this.mixGhost(d, t); else this.ghost = this.handGhost(d, t.x, t.y); }
+      if (this.ghost && !this.stroke) { const t = { x: this.ghost.x, y: this.ghost.y }; if (d.mix || isBrushed(d)) this.mixGhost(d, t); else this.ghost = this.handGhost(d, t.x, t.y); }
       this.ctx.emit(); return;
     }
     const s = this.selection(); if (!s || !this.scales(s.d)) return;
@@ -327,13 +335,17 @@ export class PropsTool {
   }
   /** the mixed brush at the cursor: its pick there; in a stroke, the spot joins the stroke when it stands clear of the stroke's other spots */
   private mixGhost(d: DecorItem, t: Pt): void {
-    const g = this.pickGhost(d, snap(t.x), snap(t.y));
+    // (#1284: the natural brush's spot: the picture in hand, jittered off the pointer's path by up to half its reach once a stroke has its first spot, so a drag lays a natural
+    // scatter, not a row; the jitter is the spot's own, the same at the same spot)
+    const st0 = this.stroke, jit = !d.mix && st0?.length ? this.jitter(d, snap(t.x), snap(t.y)) : { x: 0, y: 0 };
+    const g = d.mix ? this.pickGhost(d, snap(t.x), snap(t.y)) : this.handGhost(d, snap(t.x + jit.x), snap(t.y + jit.y));
     if (!this.stroke) { this.ghost = g; this.ghosts = []; return; }
     // (a stroke's spots stand a little apart, so the stones read as a scatter, not a wall: the next spot is as far from the last as the last's
-    // reach, the brush's biggest pick's and a gap, whatever is picked there, so a small pick is no likelier than a big one; and clear of all)
-    const st = this.stroke, cost = st.reduce((a, q) => a + (q.price ?? 0), 0), gap = 0.3, last = st[st.length - 1];
+    // reach, the brush's biggest pick's and a gap, whatever is picked there, so a small pick is no likelier than a big one; and clear of all.
+    // #1284: the density stretches or shrinks that step, and a dense stroke lets the spots' boxes touch)
+    const st = this.stroke, cost = st.reduce((a, q) => a + (q.price ?? 0), 0), gap = this.density === 2 ? 0 : 0.3, last = st[st.length - 1], step = DENSITY_STEP[this.density];
     const half = (q: DecorGhost) => Math.max(q.box[2] - q.box[0], q.box[3] - q.box[1]) / 2;
-    const far = (q: DecorGhost) => !last || Math.hypot(q.x - last.x, q.y - last.y) >= half(last) + this.mixReach(d) + gap;
+    const far = (q: DecorGhost) => !last || Math.hypot(q.x - last.x, q.y - last.y) >= (half(last) + this.mixReach(d) + gap) * step;
     if (g && !g.why && far(g) && cost + (g.price ?? 0) <= this.ctx.money() && !st.some(q => g.box[0] < q.box[2] + gap && g.box[2] > q.box[0] - gap && g.box[1] < q.box[3] + gap && g.box[3] > q.box[1] - gap)) st.push(g);
     const n = st.length, total = st.reduce((a, q) => a + (q.price ?? 0), 0);
     if (!n) { this.ghost = g; this.ghosts = []; return; }
@@ -342,15 +354,23 @@ export class PropsTool {
   }
   /** the half width (tiles) of a mixed brush's biggest pick's footprint at the hand's size */
   private mixReach(d: DecorItem): number {
-    const k = `${d.key}@${this.size}`; let r = this.reach.get(k);
+    const k = `${d.key}@${this.size}@${d.mix ? 0 : this.view}`; let r = this.reach.get(k);
     if (r === undefined) {
       r = 0;
-      for (const m of d.mix ?? []) { const pd = DECOR_BY_KEY.get(m.key), item = this.ctx.item(m.id); if (!pd || item === undefined) continue; const b = this.ctx.footprint(item, 0, 0, this.scaleAt(pd, item, this.size)); r = Math.max(r, (b[2] - b[0]) / 2, (b[3] - b[1]) / 2); }
+      // (#1284: the natural brush's one pick: the picture in hand)
+      const pic = d.mix ? undefined : this.pictureOf(d, this.view), picks = d.mix ?? (pic === undefined ? [] : [{ key: d.key, id: this.ctx.idOf({ item: pic } as Prop) }]);
+      for (const m of picks) { const pd = DECOR_BY_KEY.get(m.key), item = this.ctx.item(m.id); if (!pd || item === undefined) continue; const b = this.ctx.footprint(item, 0, 0, this.scaleAt(pd, item, this.size)); r = Math.max(r, (b[2] - b[0]) / 2, (b[3] - b[1]) / 2); }
       this.reach.set(k, r);
     }
     return r;
   }
   private reach = new Map<string, number>();
+  /** #1284: the natural brush's jitter at a spot (tiles): up to half the brush's reach each way, a hash of the spot (the same every time there) */
+  private jitter(d: DecorItem, x: number, y: number): Pt {
+    let h = Math.imul(Math.round(x * 4) | 0, 0x2c1b3c6d) ^ Math.imul(Math.round(y * 4) | 0, 0x297a2d39);
+    h ^= h >>> 15; h = Math.imul(h, 0x85ebca6b); h ^= h >>> 13; const u = (h >>> 0) / 4294967296; h = Math.imul(h, 0xc2b2ae35); h ^= h >>> 16; const v = (h >>> 0) / 4294967296;
+    const r = this.mixReach(d) * 0.5; return { x: (u - 0.5) * 2 * r, y: (v - 0.5) * 2 * r };
+  }
   /** lays the mixed brush's stroke (one undo step), or says why nothing could be */
   private placeStroke(): void {
     const d = this.hand ? DECOR_BY_KEY.get(this.hand) : undefined, st = this.stroke ?? [], why = this.ghost?.why;
@@ -358,7 +378,7 @@ export class PropsTool {
     if (!d || !st.length) { if (why) this.ctx.toast(why, 'warn'); this.ctx.emit(); return; }
     const cost = st.reduce((a, q) => a + (q.price ?? 0), 0);
     this.ctx.step(`Place ${d.name.toLowerCase()}`, () => { for (const q of st) { const p = this.ctx.addProp(q.item, q.x, q.y, q.scale, !!q.flip); p.decor = q.key ?? d.key; } this.ctx.spend(cost); return cost; });
-    this.ghost = null; this.changed(); this.ctx.toast(`${d.name}: ${st.length} placed (-$${cost.toLocaleString()})`, 'good');
+    this.ghost = null; this.changed(); this.ctx.toast(st.length === 1 ? `${DECOR_BY_KEY.get(st[0]!.key ?? d.key)?.name ?? d.name} placed (-$${cost.toLocaleString()})` : `${d.name}: ${st.length} placed (-$${cost.toLocaleString()})`, 'good');
   }
 
   // ---- T231: runs (the hedge)

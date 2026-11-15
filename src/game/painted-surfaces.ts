@@ -121,6 +121,11 @@ export function mowPatternSurfaces(f: SurfacesFile, pattern: MowPattern): Surfac
   return { ...f, course: { ...clampCourseFinish(f.course), pattern } };
 }
 export const oldMowSurfaces = (f: SurfacesFile): SurfacesFile => mowPatternSurfaces(f, 'along');
+/** #1326: the surfaces file with another default pattern for the greens' lines (course-finish `greenPattern`: the golf view's diagonal checker, 'diamond';
+ *  'along' is the fine stripes along the approach before #1326). The dev server's ?gmow=<pattern> lays it */
+export function greenPatternSurfaces(f: SurfacesFile, greenPattern: MowPattern): SurfacesFile {
+  return { ...f, course: { ...clampCourseFinish(f.course), greenPattern } };
+}
 /** what the game knows of a preset: its id, the golf surface it stands for, and the old painted set it named (T082) */
 export interface PresetRef { id: string; surface?: string | null; painted?: string | null }
 /** the look a texture is laid with, or null (its photo): a lawn slot's, a surface's (by its photo texture id, or a preset by its golf surface;

@@ -13,14 +13,38 @@ import { FRAME_TREE_KEY, FRAME_TREE_PRICE } from './holeframe';
 import { DESERT, type DesertType } from '../desert-props';
 import { KIT_BOULDERS, KIT_FLOWERS, KIT_FOUNTAIN, KIT_GREY_GRANITE, KIT_HEDGE, KIT_LAMPS, KIT_PALMS, KIT_POND_EDGE, KIT_SHRUBS, KIT_WATER_EDGE_PLANTS, type RunKit } from '../kit';
 
-/** the panel's groups, in order (T187: Buildings, the few the player adds to the town: Town decoration's) */
-export type DecorGroup = 'plants' | 'water' | 'stone' | 'desert' | 'furniture' | 'tournament' | 'buildings' | `new:${string}`;
-/** the owner's new props: one group per library category 'New: <category>' (art/new-props, prep-new-props.mjs), after Furniture */
-// (T401: the People props are no card, so their category is no group)
-const NEW_GROUPS: { id: DecorGroup; name: string }[] = [...new Set(LIBRARY.filter(i => i.cat.startsWith('New: ') && !isPerson(i)).map(i => i.cat))].map(cat => ({ id: `new:${cat.slice(5)}` as DecorGroup, name: cat }));
-export const DECOR_GROUPS: readonly { id: DecorGroup; name: string }[] = [
-  { id: 'plants', name: 'Plants' }, { id: 'water', name: 'Water' }, { id: 'stone', name: 'Stone' }, { id: 'desert', name: 'Desert & oasis' }, { id: 'furniture', name: 'Furniture' }, { id: 'tournament', name: 'Tournament dressing' }, ...NEW_GROUPS, { id: 'buildings', name: 'Buildings' },
+/** the panel's groups, in order. #1284 (the owner, 2026-11-14: "separate man made and natural props. natural props are paintable and man made you place one by one"; and of the
+ *  review sections: "Move the 'New course props' props into the appropriate places. that section was so i could see all the new art generated. remove it"): the natural groups first
+ *  (painted with the brush), then the man-made ones (placed one by one); no "New: " section is left: each new picture sits in the group it belongs to (REVIEW_GROUP).
+ *  T187: Buildings, the few the player adds to the town: Town decoration's */
+export type DecorGroup = 'trees' | 'plants' | 'stone' | 'desert' | 'planters' | 'water' | 'statues' | 'furniture' | 'signs' | 'lake' | 'tournament' | 'clubhouses' | 'buildings' | `new:${string}`;
+/** #1284: a prop's side: natural (trees, shrubs and flowers, rocks, the desert's plants: painted with the brush, a drag lays a scatter) or man-made (placed one by one) */
+export type PropSide = 'natural' | 'manmade';
+/** #1284: the two sides as the menus and the panel name them */
+export const PROP_SIDES: readonly { id: PropSide; name: string; desc: string }[] = [
+  { id: 'natural', name: 'Natural', desc: 'Trees, shrubs, flowers and rocks: paint them on with the brush' },
+  { id: 'manmade', name: 'Man-made', desc: 'Benches, signs, fountains, stalls and structures: placed one by one' },
 ];
+/** the owner's review categories (#1284): their pictures go to the groups they belong to, and the categories are no group of their own */
+const REVIEW_CATS: ReadonlySet<string> = new Set(['Course props', 'Trees', 'Lake props', 'Buildings', 'Eight-view objects']);
+/** the tournament kit's categories (art/tournament-kit-20261107) keep a group each (their ids are the library category's, `new:<category>`), named without the old "New: " */
+// (T401: the People props are no card, so their category is no group)
+const KIT_GROUPS: { id: DecorGroup; name: string; side: PropSide }[] = [...new Set(LIBRARY.filter(i => i.cat.startsWith('New: ') && !isPerson(i)).map(i => i.cat.slice(5)))]
+  .filter(cat => !REVIEW_CATS.has(cat)).map(cat => ({ id: `new:${cat}` as DecorGroup, name: cat === 'Range' ? 'Range props' : cat, side: 'manmade' as const }));
+export const DECOR_GROUPS: readonly { id: DecorGroup; name: string; side: PropSide }[] = [
+  { id: 'trees', name: 'Trees', side: 'natural' }, { id: 'plants', name: 'Shrubs & flowers', side: 'natural' }, { id: 'stone', name: 'Rocks', side: 'natural' }, { id: 'desert', name: 'Desert & oasis', side: 'natural' },
+  { id: 'planters', name: 'Planters & beds', side: 'manmade' }, { id: 'water', name: 'Fountains & ponds', side: 'manmade' }, { id: 'statues', name: 'Statues & stonework', side: 'manmade' },
+  { id: 'furniture', name: 'Benches, bins & lamps', side: 'manmade' }, { id: 'signs', name: 'Signs & markers', side: 'manmade' }, { id: 'lake', name: 'Docks, boats & bridges', side: 'manmade' },
+  { id: 'tournament', name: 'Tournament dressing', side: 'manmade' }, ...KIT_GROUPS, { id: 'clubhouses', name: 'Clubhouses & gates', side: 'manmade' }, { id: 'buildings', name: 'Buildings', side: 'manmade' },
+];
+const GROUP_SIDE: ReadonlyMap<string, PropSide> = new Map(DECOR_GROUPS.map(g => [g.id, g.side]));
+/** #1284: a group's side (a group not listed: man-made) */
+export const sideOfGroup = (g: string): PropSide => GROUP_SIDE.get(g) ?? 'manmade';
+/** #1284: whether an item is painted with the brush: a natural one (not a run, a pond action or a water-only piece, which keep their own ways) */
+export const isBrushed = (d: Pick<DecorItem, 'group' | 'run' | 'pond' | 'water'>): boolean => sideOfGroup(d.group) === 'natural' && !d.run && !d.pond && !d.water;
+/** the golf pictures among the mixed categories (New: Buildings: the clubhouse manor, the gate pillars, the old budget clubhouse and the other
+ *  object8 golf sets) are the course's whatever their category says */
+const GOLF_PICTURE = /^(newprop:(clubhouse-manor|gate-pillars)|object8:golf-)/;
 
 /** a catalogue item: its key (saved with the prop), plain name, group, library picture (the NE view of four-view art), price ($), appeal (a
  *  fraction), its size (absent: the studio's or the library's own) and, for a stand-in picture, the real thing it stands in for (the card and the
@@ -83,9 +107,9 @@ const MIX_PALMS = [...KIT_PALMS.windmill.map(id => ({ key: 'kit-palm-windmill', 
  *  turns them); their catalogue picture is the N view (the front facing screen down) */
 const CATALOGUE: readonly DecorItem[] = [
   // ---- plants: +1% each, one kind (each more counts less)
-  { key: 'pot-terracotta', name: 'Terracotta pot plant', group: 'plants', kind: 'plant', id: 'town:planter_terracotta', price: 120, appeal: APPEAL.plant, desc: 'A clipped shrub in a terracotta pot: line the shop front' },
-  { key: 'pot-palm', name: 'Potted palm', group: 'plants', kind: 'plant', id: 'arcade:arcade_v2_clutter_plant', price: 90, appeal: APPEAL.plant, desc: 'A leafy palm in a pot, for doors and corners' },
-  { key: 'planter-stone', name: 'Stone planter box', group: 'plants', kind: 'plant', id: 'town:planter_square', price: 250, appeal: APPEAL.plant, desc: 'A square civic planter in stone' },
+  { key: 'pot-terracotta', name: 'Terracotta pot plant', group: 'planters', kind: 'plant', id: 'town:planter_terracotta', price: 120, appeal: APPEAL.plant, desc: 'A clipped shrub in a terracotta pot: line the shop front' },
+  { key: 'pot-palm', name: 'Potted palm', group: 'planters', kind: 'plant', id: 'arcade:arcade_v2_clutter_plant', price: 90, appeal: APPEAL.plant, desc: 'A leafy palm in a pot, for doors and corners' },
+  { key: 'planter-stone', name: 'Stone planter box', group: 'planters', kind: 'plant', id: 'town:planter_square', price: 250, appeal: APPEAL.plant, desc: 'A square civic planter in stone' },
   { key: 'shrub-hydrangea', name: 'Hydrangea shrub', group: 'plants', kind: 'plant', id: 'town:hydrangea', natural: true, price: 60, appeal: APPEAL.plant, desc: 'An ornamental flowering shrub' },
   { key: 'grass-ornamental', name: 'Ornamental grass', group: 'plants', kind: 'plant', id: 'town:ornamental_grass', natural: true, price: 50, appeal: APPEAL.plant, desc: 'A tall clump of ornamental grass' },
   { key: 'fern', name: 'Fern clump', group: 'plants', kind: 'plant', id: 'town:fern', natural: true, price: 50, appeal: APPEAL.plant, desc: 'A soft green fern for shady beds' },
@@ -93,15 +117,15 @@ const CATALOGUE: readonly DecorItem[] = [
   // the town's bushes, ferns and grasses
   { key: 'bush-town', name: 'Garden bush', group: 'plants', kind: 'plant', id: 'world:bush_0', variants: ['world:bush_0', 'world:bush_1', 'world:bush_2'], natural: true, price: 60, appeal: APPEAL.plant, desc: "The town's garden bushes, three shapes (R: the next)" },
   { key: 'town-plants-mixed', name: 'Bushes and ferns, mixed', group: 'plants', kind: 'plant', id: 'town:fern', mix: [{ key: 'bush-town', id: 'world:bush_0' }, { key: 'bush-town', id: 'world:bush_1' }, { key: 'bush-town', id: 'world:bush_2' }, { key: 'fern', id: 'town:fern' }, { key: 'grass-ornamental', id: 'town:ornamental_grass' }, { key: 'shrub-hydrangea', id: 'town:hydrangea' }], natural: true, price: 60, appeal: APPEAL.plant, desc: "The town's bushes, ferns, grasses and hydrangeas, a different one at every spot: click, or drag a border" },
-  { key: 'hedge', name: 'Clipped hedge', group: 'plants', kind: 'plant', id: 'world:hedge', price: 80, appeal: APPEAL.plant, desc: 'A low box hedge: edge a path or a bed' },
-  { key: 'flower-bed', name: 'Flower bed', group: 'plants', kind: 'plant', id: 'landscape:flowerbed-daisies', price: 150, appeal: APPEAL.plant, desc: 'A bed of white daisies in a timber edge' },
-  { key: 'flower-bed-lavender', name: 'Lavender bed', group: 'plants', kind: 'plant', id: 'landscape:flowerbed-lavender', price: 160, appeal: APPEAL.plant, desc: 'A bed of lavender: colour and scent by the path' },
-  { key: 'flower-bed-marigold', name: 'Marigold bed', group: 'plants', kind: 'plant', id: 'landscape:flowerbed-marigolds', price: 150, appeal: APPEAL.plant, desc: 'A bed of orange marigolds' },
+  { key: 'hedge', name: 'Clipped hedge', group: 'planters', kind: 'plant', id: 'world:hedge', price: 80, appeal: APPEAL.plant, desc: 'A low box hedge: edge a path or a bed' },
+  { key: 'flower-bed', name: 'Flower bed', group: 'planters', kind: 'plant', id: 'landscape:flowerbed-daisies', price: 150, appeal: APPEAL.plant, desc: 'A bed of white daisies in a timber edge' },
+  { key: 'flower-bed-lavender', name: 'Lavender bed', group: 'planters', kind: 'plant', id: 'landscape:flowerbed-lavender', price: 160, appeal: APPEAL.plant, desc: 'A bed of lavender: colour and scent by the path' },
+  { key: 'flower-bed-marigold', name: 'Marigold bed', group: 'planters', kind: 'plant', id: 'landscape:flowerbed-marigolds', price: 150, appeal: APPEAL.plant, desc: 'A bed of orange marigolds' },
   { key: 'bush-green', name: 'Deep green bush', group: 'plants', kind: 'plant', id: 'landscape:bush-deep-green', natural: true, price: 70, appeal: APPEAL.plant, desc: 'A dense evergreen bush' },
   { key: 'bush-russet', name: 'Golden russet bush', group: 'plants', kind: 'plant', id: 'landscape:bush-golden-russet', natural: true, price: 70, appeal: APPEAL.plant, desc: 'A bush in autumn gold and russet' },
   { key: 'bush-sage', name: 'Sage bush', group: 'plants', kind: 'plant', id: 'landscape:bush-sage-round', natural: true, price: 70, appeal: APPEAL.plant, desc: 'A round soft sage-green bush' },
   { key: 'hydrangea-pale', name: 'Pale hydrangea', group: 'plants', kind: 'plant', id: 'landscape:hydrangea-pale', natural: true, price: 80, appeal: APPEAL.plant, desc: 'A hydrangea in pale blooms' },
-  { key: 'tree-maple', name: 'Ornamental maple', group: 'plants', kind: 'plant', id: 'ref:tree-maple-crimson', natural: true, price: 300, appeal: APPEAL.plant, desc: 'A crimson maple for shade and colour' },
+  { key: 'tree-maple', name: 'Ornamental maple', group: 'trees', kind: 'plant', id: 'ref:tree-maple-crimson', natural: true, price: 300, appeal: APPEAL.plant, desc: 'A crimson maple for shade and colour' },
   // T229: a tree of a hole's frame (the hole card's and New hole's Frame with trees, golf/holeframe.ts): a plant as the others (its appeal near the
   //       range, half its price back when bulldozed); not in the panel (hidden): its picture is whichever conifer or autumn tree the frame dealt
   { key: FRAME_TREE_KEY, name: 'Course tree', group: 'plants', kind: 'plant', id: 'gen:tree-maple-scarlet:ne', natural: true, price: FRAME_TREE_PRICE, appeal: APPEAL.plant, hidden: true, desc: "A tree of a hole's frame: conifers and autumn broadleaves along the rough's edge" },
@@ -109,13 +133,13 @@ const CATALOGUE: readonly DecorItem[] = [
   // (drag it like a fence). T257: the mixed brushes drop a different one at every spot of a click or a drag
   { key: 'kit-shrubs-mixed', name: 'Shrubs, mixed', group: 'plants', kind: 'plant', id: KIT_SHRUBS[3], mix: KIT_SHRUBS.map(id => ({ key: 'kit-shrub', id })), natural: true, price: 90, appeal: APPEAL.plant, desc: 'A different autumn shrub at every spot: click, or drag along a bed' },
   { key: 'kit-mums-mixed', name: 'Mums, mixed', group: 'plants', kind: 'plant', id: KIT_FLOWERS[1], mix: KIT_FLOWERS.map(id => ({ key: 'kit-mums', id })), natural: true, price: 50, appeal: APPEAL.plant, desc: 'A different flower clump at every spot: click, or drag along a bed' },
-  { key: 'kit-palms-mixed', name: 'Palms, mixed', group: 'plants', kind: 'plant', id: KIT_PALMS.canary[0], mix: MIX_PALMS, natural: true, price: 250, per: 'to $650', appeal: APPEAL.plant, desc: 'Windmill, Canary and dwarf fan palms, a different one at every spot: click, or drag' },
+  { key: 'kit-palms-mixed', name: 'Palms, mixed', group: 'trees', kind: 'plant', id: KIT_PALMS.canary[0], mix: MIX_PALMS, natural: true, price: 250, per: 'to $650', appeal: APPEAL.plant, desc: 'Windmill, Canary and dwarf fan palms, a different one at every spot: click, or drag' },
   { key: 'kit-shrub', name: 'Autumn shrub', group: 'plants', kind: 'plant', id: KIT_SHRUBS[0], variants: KIT_SHRUBS, natural: true, price: 90, appeal: APPEAL.plant, desc: 'Burning bush, golden spirea, boxwood, dogwood, juniper or plume grass (R: the next)' },
   { key: 'kit-mums', name: 'Mum clump', group: 'plants', kind: 'plant', id: KIT_FLOWERS[0], variants: KIT_FLOWERS, natural: true, price: 50, appeal: APPEAL.plant, desc: 'Chrysanthemums in red, yellow, orange, white or bronze, or black-eyed Susans (R: the next)' },
-  { key: 'kit-hedge', name: 'Hedge row', group: 'plants', kind: 'plant', id: KIT_HEDGE.x, run: KIT_HEDGE, price: 70, per: 'a piece', appeal: APPEAL.hedge, desc: 'A clipped box hedge: drag along a path or a bed to lay it, 4 m a piece' },
-  { key: 'kit-palm-windmill', name: 'Windmill palm', group: 'plants', kind: 'plant', id: KIT_PALMS.windmill[0], variants: KIT_PALMS.windmill, natural: true, price: 350, appeal: APPEAL.plant, desc: 'A hardy fan palm, 4 to 6 m (R: the next)' },
-  { key: 'kit-palm-canary', name: 'Canary palm', group: 'plants', kind: 'plant', id: KIT_PALMS.canary[0], variants: KIT_PALMS.canary, natural: true, price: 650, appeal: APPEAL.plant, desc: 'A Canary Island date palm, 6 to 10 m (R: the next)' },
-  { key: 'kit-palm-fan', name: 'Dwarf fan palm', group: 'plants', kind: 'plant', id: KIT_PALMS.fan[0], variants: KIT_PALMS.fan, natural: true, price: 250, appeal: APPEAL.plant, desc: 'A clump of dwarf fan palms, 2 to 3.5 m (R: the next)' },
+  { key: 'kit-hedge', name: 'Hedge row', group: 'planters', kind: 'plant', id: KIT_HEDGE.x, run: KIT_HEDGE, price: 70, per: 'a piece', appeal: APPEAL.hedge, desc: 'A clipped box hedge: drag along a path or a bed to lay it, 4 m a piece' },
+  { key: 'kit-palm-windmill', name: 'Windmill palm', group: 'trees', kind: 'plant', id: KIT_PALMS.windmill[0], variants: KIT_PALMS.windmill, natural: true, price: 350, appeal: APPEAL.plant, desc: 'A hardy fan palm, 4 to 6 m (R: the next)' },
+  { key: 'kit-palm-canary', name: 'Canary palm', group: 'trees', kind: 'plant', id: KIT_PALMS.canary[0], variants: KIT_PALMS.canary, natural: true, price: 650, appeal: APPEAL.plant, desc: 'A Canary Island date palm, 6 to 10 m (R: the next)' },
+  { key: 'kit-palm-fan', name: 'Dwarf fan palm', group: 'trees', kind: 'plant', id: KIT_PALMS.fan[0], variants: KIT_PALMS.fan, natural: true, price: 250, appeal: APPEAL.plant, desc: 'A clump of dwarf fan palms, 2 to 3.5 m (R: the next)' },
   // T274: individually selectable authored plants, never mirrored or substituted for existing plants.
   ...KIT_WATER_EDGE_PLANTS.map((p): DecorItem => ({ key: p.id.slice(4), name: p.name, group: 'plants', kind: 'plant', id: p.id, natural: true, price: 90, appeal: APPEAL.plant, desc: `Pond-edge planting, ${p.metres} m ${p.dimension === 'height' ? 'high' : 'across'}: soften a shoreline or tuck between stones` })),
   // ---- water
@@ -126,9 +150,9 @@ const CATALOGUE: readonly DecorItem[] = [
   { key: 'kit-pond', name: 'Fountain pond', group: 'water', kind: 'water', id: KIT_POND_EDGE.outer, pond: 'make', price: 9000, appeal: APPEAL.jet, desc: 'A round pond 14 m across with a stone edge and a jet: for the clubhouse or a square' },
   { key: 'kit-pond-stones', name: 'Stone pond edge', group: 'water', kind: 'stone', id: KIT_POND_EDGE.x, pond: 'edge', price: STONE_PRICE, per: 'a piece', appeal: APPEAL.pondEdge, desc: "Big boulders round a pond's shore with planting between them, and lily pads on its water; click the pond again for its natural edge" },
   // ---- stone
-  { key: 'statue', name: 'Golfer statue', group: 'stone', kind: 'statue', id: 'expansion:coin-horse-ride', price: 6000, appeal: APPEAL.statue, standIn: 'Bronze golfer statue', desc: 'A bronze golfer at the top of his swing, on a stone plinth' },
-  { key: 'pillar', name: 'Stone pillar', group: 'stone', kind: 'stone', id: 'world:grave_2', price: 400, appeal: APPEAL.pillar, standIn: 'Stone pillar', desc: 'A dressed stone column with a ball finial: pair them at a gate' },
-  { key: 'arch', name: 'Ivy garden arch', group: 'stone', kind: 'stone', id: 'expansion:ivy-arbor', price: 900, appeal: APPEAL.arch, desc: 'An arbor grown over with ivy: an entrance to walk through' },
+  { key: 'statue', name: 'Golfer statue', group: 'statues', kind: 'statue', id: 'expansion:coin-horse-ride', price: 6000, appeal: APPEAL.statue, standIn: 'Bronze golfer statue', desc: 'A bronze golfer at the top of his swing, on a stone plinth' },
+  { key: 'pillar', name: 'Stone pillar', group: 'statues', kind: 'stone', id: 'world:grave_2', price: 400, appeal: APPEAL.pillar, standIn: 'Stone pillar', desc: 'A dressed stone column with a ball finial: pair them at a gate' },
+  { key: 'arch', name: 'Ivy garden arch', group: 'statues', kind: 'stone', id: 'expansion:ivy-arbor', price: 900, appeal: APPEAL.arch, desc: 'An arbor grown over with ivy: an entrance to walk through' },
   // T231: rock features (36): three sizes, three shapes each. T257: each shape its own card (the owner: "where is the variety?"), and Rocks,
   // mixed: a different shape, size and turn at every spot of a click or a drag
   { key: 'kit-rocks-mixed', name: 'Rocks, mixed', group: 'stone', kind: 'stone', id: KIT_BOULDERS.medium[1], mix: MIX_ROCKS, natural: true, price: 150, per: 'to $800', appeal: APPEAL.boulder, desc: 'A different boulder at every spot, small to large, any shape, either way round: click, or drag' },
@@ -145,8 +169,8 @@ const CATALOGUE: readonly DecorItem[] = [
   // T231: the practice green's lamp posts (45): cast iron, glass lanterns, lit at night
   { key: 'kit-lamp', name: 'Practice green lamp', group: 'furniture', kind: 'small', id: KIT_LAMPS[0], price: 450, appeal: APPEAL.small, desc: 'A green cast-iron lamp post with a lantern, 3.5 m: lit at night' },
   { key: 'kit-lamp-twin', name: 'Twin lamp post', group: 'furniture', kind: 'small', id: KIT_LAMPS[1], price: 650, appeal: APPEAL.small, desc: 'A cast-iron lamp post with two lanterns: lit at night' },
-  { key: 'board', name: 'Welcome board', group: 'furniture', kind: 'sign', id: 'golf:leaderboard', price: 2500, appeal: APPEAL.board, scale: 0.45, desc: 'A tall board to greet golfers at the drive: four views' },
-  { key: 'flagpole', name: 'Flag pole', group: 'furniture', kind: 'sign', id: 'business:golf-pin-red', price: 500, appeal: APPEAL.flagpole, scale: 0.6, standIn: 'Club flag pole', desc: 'A tall white pole flying the club flag' },
+  { key: 'board', name: 'Welcome board', group: 'signs', kind: 'sign', id: 'golf:leaderboard', price: 2500, appeal: APPEAL.board, scale: 0.45, desc: 'A tall board to greet golfers at the drive: four views' },
+  { key: 'flagpole', name: 'Flag pole', group: 'signs', kind: 'sign', id: 'business:golf-pin-red', price: 500, appeal: APPEAL.flagpole, scale: 0.6, standIn: 'Club flag pole', desc: 'A tall white pole flying the club flag' },
   // ---- the town's buildings (T187, Town decoration › Buildings; the owner: "a few buildings that you can add to the town"): the library's own
   //      art only. Decoration: the game models no town attractiveness or land value for them to raise, so they add nothing but the look (appeal 0;
   //      the range's appeal counts the props near it alone). A bandstand (the library's gazebo is a stand-in), a statue and a town hall annex
@@ -161,10 +185,32 @@ const CATALOGUE: readonly DecorItem[] = [
 // (T401: an eight-view set of a person is never a card: the registry row's person tag, or a person's name)
 const EIGHT_ACTIVE = new Map(OBJECT_EIGHT_SETS.filter(s => !s.person && !isPersonId(s.subject)).map(s => [s.subject, s]));
 const EIGHT_FIRST = new Map([...EIGHT_ACTIVE.values()].map(s => [s.views.normalNE.id, s]));
+/** #1284: where a picture of the owner's Course props review section goes (by its newprop slug; one not listed: Benches, bins & lamps) */
+const REVIEW_GROUP: Readonly<Record<string, DecorGroup>> = {
+  'ball-washer': 'furniture', 'clock-post': 'furniture', 'golf-bag-trolley': 'furniture', 'park-bench': 'furniture', 'sprinkler': 'furniture',
+  'course-map-stand': 'signs', 'flag-pin': 'signs', 'gold-tee-markers': 'signs', 'leaderboard': 'signs', 'yardage-posts': 'signs',
+  'flower-bed': 'planters', 'flower-planter': 'planters', 'flowering-tree': 'trees', 'small-tree': 'trees',
+  'golf-cart': 'new:Vehicles', 'golf-cart-2': 'new:Vehicles', 'ride-mower-2': 'new:Vehicles',
+  'log-footbridge': 'lake', 'plank-bridge': 'lake', 'stone-bridge': 'lake', 'white-footbridge': 'lake', 'wooden-footbridge': 'lake',
+  'marshal': 'tournament', 'rope-barrier': 'tournament', 'rope-barrier-corner': 'tournament', 'rope-walkway': 'tournament', 'direction-signpost': 'tournament', 'hole-12-sign': 'tournament',
+};
+/** #1284: a new picture's group: the review sections' pictures where they belong (the trees with the trees, the lake's docks and boats with the bridges, the course props by what
+ *  they are, the new buildings with the town's or, a golf one, with the clubhouses), the tournament kit's in its own category's group */
+export function newGroupOf(i: { id: string; cat: string }): DecorGroup {
+  const cat = i.cat.slice(5), slug = i.id.startsWith('newprop:') ? i.id.slice('newprop:'.length) : '';
+  if (cat === 'Trees') return 'trees';
+  if (cat === 'Lake props') return 'lake';
+  if (cat === 'Course props') return REVIEW_GROUP[slug] ?? 'furniture';
+  if (cat === 'Buildings' || cat === 'Eight-view objects') return GOLF_PICTURE.test(i.id) ? 'clubhouses' : 'buildings';
+  return `new:${cat}`;
+}
 // (#1300: the shack props are never a card: golf/second-hand.ts; an old save's load as their replacement)
-const NEW_PROP_ITEMS: DecorItem[] = LIBRARY.filter(i => i.cat.startsWith('New: ') && !isPerson(i) && !isShackProp(i.id) && (!i.id.startsWith('object8:') || EIGHT_FIRST.has(i.id)) && (i.kind !== 'tree' || i.id.endsWith(':ne'))).map((i): DecorItem => i.kind === 'tree'
-  ? { key: `newprop-${i.id.slice('gen:tree-'.length, -':ne'.length)}`, name: i.name.replace(/ \(NE\)$/, ''), group: `new:${i.cat.slice(5)}` as DecorGroup, kind: 'plant', id: i.id, price: i.cost, appeal: 0, desc: 'A tree: plant it in the grounds (no appeal yet)' }
-  : { key: EIGHT_FIRST.has(i.id) ? `object8-${EIGHT_FIRST.get(i.id)!.subject}` : `newprop-${i.id.slice('newprop:'.length)}`, name: EIGHT_FIRST.get(i.id)?.name ?? i.name, group: `new:${i.cat.slice(5)}` as DecorGroup, kind: 'small', id: i.id, price: i.cost, appeal: 0, ...(EIGHT_FIRST.has(i.id) ? { scale: EIGHT_FIRST.get(i.id)!.baselineScale } : {}), desc: tierOfCat(i.cat) === 'second-hand' ? `${i.cat.slice(5)}: bought used, cheaper and a little older in style (no appeal yet)` : `${i.cat.slice(5)}: a new prop to place (no appeal yet)` });
+const NEW_PROP_ITEMS: DecorItem[] = LIBRARY.filter(i => i.cat.startsWith('New: ') && !isPerson(i) && !isShackProp(i.id) && (!i.id.startsWith('object8:') || EIGHT_FIRST.has(i.id)) && (i.kind !== 'tree' || i.id.endsWith(':ne'))).map((i): DecorItem => {
+  const group = newGroupOf(i);
+  if (i.kind === 'tree') return { key: `newprop-${i.id.slice('gen:tree-'.length, -':ne'.length)}`, name: i.name.replace(/ \(NE\)$/, ''), group, kind: 'plant', id: i.id, natural: true, price: i.cost, appeal: 0, desc: 'A tree: plant it in the grounds (no appeal yet)' };
+  return { key: EIGHT_FIRST.has(i.id) ? `object8-${EIGHT_FIRST.get(i.id)!.subject}` : `newprop-${i.id.slice('newprop:'.length)}`, name: EIGHT_FIRST.get(i.id)?.name ?? i.name, group, kind: sideOfGroup(group) === 'natural' ? 'plant' : 'small', id: i.id,
+    ...(sideOfGroup(group) === 'natural' ? { natural: true as const } : {}), price: i.cost, appeal: 0, ...(EIGHT_FIRST.has(i.id) ? { scale: EIGHT_FIRST.get(i.id)!.baselineScale } : {}), desc: tierOfCat(i.cat) === 'second-hand' ? `${i.cat.slice(5)}: bought used, cheaper and a little older in style (no appeal yet)` : `${i.cat.slice(5)}: a prop to place (no appeal yet)` };
+});
 /** #1300: each second-hand painting that has landed (golf/second-hand.ts SECOND_HAND_ITEMS, packed by prep-range-art.mjs): a card beside its new counterpart,
  *  in the same group, at SECOND_HAND_FACTOR of its price. None until the pictures land */
 const secondHandCards = (): DecorItem[] => SECOND_HAND_ITEMS.flatMap((s): DecorItem[] => {
@@ -246,9 +292,6 @@ export const CAT_PLACE: Readonly<Record<string, DecorPlace>> = {
   'New: Seating': 'course', 'New: Media': 'course', 'New: Range': 'course', 'New: Vehicles': 'course', 'New: People': 'course',
   'New: Buildings': 'town', 'New: Eight-view objects': 'town',
 };
-/** the golf pictures among the mixed categories (New: Buildings: the clubhouse manor, the gate pillars, the old budget clubhouse and the other
- *  object8 golf sets) are the course's whatever their category says */
-const GOLF_PICTURE = /^(newprop:(clubhouse-manor|gate-pillars)|object8:golf-)/;
 const CAT_OF = new Map(LIBRARY.map(i => [i.id, i.cat]));
 /** an item's place: a town building is the town's; a golf picture is the course's; else its picture's category's (CAT_PLACE), both when its
  *  category is not listed */
@@ -280,18 +323,18 @@ export const PROP_KINDS: readonly { id: Exclude<PropKind, 'general'>; name: stri
 /** the golf groups' kind (a group not listed is 'general') */
 const GROUP_KIND: Readonly<Record<string, PropKind>> = {
   'new:Event structures': 'structures', 'new:Event structures (second-hand)': 'structures', 'new:Stalls': 'structures', 'new:Stalls (second-hand)': 'structures', 'new:Seating': 'structures', 'new:Media': 'structures',
-  'new:Buildings': 'structures', // (its clubhouses and gate pillars for the course; its storefronts are the town's: Town decoration lists the group with them alone)
-  tournament: 'coursefurniture', 'new:Course props': 'coursefurniture',
+  clubhouses: 'structures', // (#1284: the New: Buildings section's clubhouses and gate pillars; its storefronts went to the town's Buildings)
+  tournament: 'coursefurniture',
   'new:Range': 'rangeprops', 'new:Vehicles': 'vehicles',
 };
 /** a group's kind */
 export const kindOfGroup = (g: string): PropKind => GROUP_KIND[g] ?? 'general';
 /** the order of a kind's groups in its flyout: the structures (the event ones, the stalls, the seating, the media, the clubhouses), then the furniture */
-const KIND_ORDER: readonly string[] = ['new:Event structures', 'new:Event structures (second-hand)', 'new:Stalls', 'new:Stalls (second-hand)', 'new:Seating', 'new:Media', 'new:Buildings', 'tournament', 'new:Course props', 'new:Range', 'new:Vehicles'];
+const KIND_ORDER: readonly string[] = ['new:Event structures', 'new:Event structures (second-hand)', 'new:Stalls', 'new:Stalls (second-hand)', 'new:Seating', 'new:Media', 'clubhouses', 'tournament', 'new:Range', 'new:Vehicles'];
 
 /** the panel's view of the catalogue: where it was opened from (Decoration the course, Town decoration the town), its group (Town decoration
  *  › Buildings), the "All props" box, and what a flyout opened (Props ▸ Plants: that group alone; T400: a golf kind, Tournament structures: its groups) */
-export interface PropsView { where: 'course' | 'town'; group: DecorGroup | null; all: boolean; focus: DecorGroup | PropKind | null }
+export interface PropsView { where: 'course' | 'town'; group: DecorGroup | null; all: boolean; focus: DecorGroup | PropKind | PropSide | null }
 /** every prop the tool can place: the catalogue less what the panel keeps out (a hole frame's tree, which Frame with trees plants) */
 export const placeableProps = (): readonly DecorItem[] => DECOR.filter(d => !d.hidden);
 /** T369 (the owner, 2026-11-08: "I also can't see all props when I click the checkbox"): the groups the Props panel lists, in the groups' order,
@@ -302,23 +345,29 @@ export const placeableProps = (): readonly DecorItem[] => DECOR.filter(d => !d.h
 export function propsShown(v: PropsView): { id: DecorGroup; name: string; items: DecorItem[] }[] {
   const buildings = v.where === 'town' && v.group === 'buildings', all = v.all && v.where !== 'town';
   return DECOR_GROUPS
-    .filter(g => (buildings ? g.id === 'buildings' : all || g.id !== 'buildings') && (buildings || all || !v.focus || g.id === v.focus || kindOfGroup(g.id) === v.focus))
+    .filter(g => (buildings ? g.id === 'buildings' : all || g.id !== 'buildings') && (buildings || all || !v.focus || g.id === v.focus || kindOfGroup(g.id) === v.focus || sideOfGroup(g.id) === v.focus))
     .map(g => ({ id: g.id, name: g.name, items: DECOR.filter(d => d.group === g.id && !d.hidden && (buildings || shownIn(d, v.where, all))) }))
     .filter(g => g.items.length > 0);
 }
-/** the groups with a card in a view, as the flyouts' rows (an id and a name each): a group with nothing to show there is no row (the town's Props
- *  lists no golf group) */
-function groupsWith(where: 'course' | 'town', kind?: (k: PropKind) => boolean): { id: DecorGroup; name: string }[] {
-  return DECOR_GROUPS.filter(g => g.id !== 'buildings' && (!kind || kind(kindOfGroup(g.id))) && DECOR.some(d => d.group === g.id && !d.hidden && shownIn(d, where))).map(g => ({ id: g.id, name: g.name }));
+/** a group as the flyouts' rows take it: its id, name, side (#1284: Natural or Man-made) and the picture its row wears where it has no painted tile (its first card's: no maple leaf) */
+export interface PropGroupRow { id: DecorGroup; name: string; side: PropSide; thumb: string }
+/** the groups with a card in a view, as the flyouts' rows: a group with nothing to show there is no row (the town's Props lists no golf group) */
+function groupsWith(where: 'course' | 'town', kind?: (k: PropKind) => boolean): PropGroupRow[] {
+  const out: PropGroupRow[] = [];
+  for (const g of DECOR_GROUPS) {
+    if (g.id === 'buildings' || (kind && !kind(kindOfGroup(g.id)))) continue;
+    const first = DECOR.find(d => d.group === g.id && !d.hidden && shownIn(d, where)); if (first) out.push({ id: g.id, name: g.name, side: g.side, thumb: first.id });
+  }
+  return out;
 }
 /** (the catalogue never changes once loaded: each list is worked out once, the menus ask for them every render) */
 const once = <T>(f: () => T): (() => T) => { let v: T | undefined; return () => (v ??= f()); };
 /** Town decoration ▸ Props: the town's groups (T400: no golf group, and none left empty) */
-export const townPropGroups = once((): { id: DecorGroup; name: string }[] => groupsWith('town'));
+export const townPropGroups = once((): PropGroupRow[] => groupsWith('town'));
 /** Facilities ▸ Decoration ▸ Props: the everyday groups with a card for the course (the golf kinds have their own rows) */
-export const facilityPropGroups = once((): { id: DecorGroup; name: string }[] => groupsWith('course', k => k === 'general'));
+export const facilityPropGroups = once((): PropGroupRow[] => groupsWith('course', k => k === 'general'));
 /** Facilities' golf rows: each kind with the groups it holds (the kinds with no card are left out) */
-export const facilityPropKinds = once((): { id: PropKind; name: string; groups: { id: DecorGroup; name: string }[] }[] =>
+export const facilityPropKinds = once((): { id: PropKind; name: string; groups: PropGroupRow[] }[] =>
   PROP_KINDS.map(k => ({ id: k.id, name: k.name, groups: groupsWith('course', q => q === k.id).sort((a, b) => KIND_ORDER.indexOf(a.id) - KIND_ORDER.indexOf(b.id)) })).filter(k => k.groups.length > 0));
 /** what the toolbar's menus take of the catalogue (App.tsx menuCtx): Facilities' everyday groups and golf kinds, and Town decoration's town groups */
 export const propMenuLists = () => ({ propGroups: facilityPropGroups(), townPropGroups: townPropGroups(), propKinds: facilityPropKinds() });

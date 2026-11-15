@@ -1,0 +1,83 @@
+{
+  "schema": 1,
+  "ticket": "#1304",
+  "source": "D:/AI/chatgpt-bridge/in/desert-litter-pieces-1view-e1.png",
+  "grid": [
+    4,
+    3
+  ],
+  "pieces": [
+    {
+      "k": 0,
+      "what": "a large rounded sandstone pebble",
+      "file": "src/assets/desert-litter/desert-litter-pieces-0.webp",
+      "sha256": "cfab2787126d10bd85522f66254d987097331aa626fcd0b7e5e8f09b781dd2df"
+    },
+    {
+      "k": 1,
+      "what": "a small grey-brown pebble",
+      "file": "src/assets/desert-litter/desert-litter-pieces-1.webp",
+      "sha256": "575d806d8ab91bf61396ff671547072a16052951616ffb660b800395cddefb3e"
+    },
+    {
+      "k": 2,
+      "what": "two small pebbles touching with a little grit",
+      "file": "src/assets/desert-litter/desert-litter-pieces-2.webp",
+      "sha256": "f490f43f9e080f2bbe4a061dd299907c92c3dcf04fdd0460be7ab6c910f0d72f"
+    },
+    {
+      "k": 3,
+      "what": "a soft clump of pale sand",
+      "file": "src/assets/desert-litter/desert-litter-pieces-3.webp",
+      "sha256": "039d9a17c781312e88950eefb037a25a99055fd00d1ec20547c7c9269ea5736e"
+    },
+    {
+      "k": 4,
+      "what": "a dry bleached twig with one fork",
+      "file": "src/assets/desert-litter/desert-litter-pieces-4.webp",
+      "sha256": "fb4947f7b81d95df56828787449a019e372c36662061db50f8aa45b93c59c435"
+    },
+    {
+      "k": 5,
+      "what": "a tuft of dry straw-coloured grass",
+      "file": "src/assets/desert-litter/desert-litter-pieces-5.webp",
+      "sha256": "8282d0e88b3e97d84bfa86c8bae95037c655a8583e03b2bb2062d1b78bbe7b05"
+    },
+    {
+      "k": 6,
+      "what": "a small round tumbleweed tangle of dry brown stems",
+      "file": "src/assets/desert-litter/desert-litter-pieces-6.webp",
+      "sha256": "22124662edcdd684c057267c3f15ce8d4fb1a7015da68d259fb00ca479c3d54e"
+    },
+    {
+      "k": 7,
+      "what": "a chunk of dry brown desert brush",
+      "file": "src/assets/desert-litter/desert-litter-pieces-7.webp",
+      "sha256": "1e352e20a0a80f493ec0dfbb30a648541c6f928eaa88749bb5b0d22a2b43ab30"
+    },
+    {
+      "k": 8,
+      "what": "a short tuft of grey-green sage",
+      "file": "src/assets/desert-litter/desert-litter-pieces-8.webp",
+      "sha256": "7b74f19c0225ccc19d6e1f35be8ab00613dd3b1fc94498597571b6571142fdf5"
+    },
+    {
+      "k": 9,
+      "what": "a small scatter of warm sand grains and tiny stones",
+      "file": "src/assets/desert-litter/desert-litter-pieces-9.webp",
+      "sha256": "5238d832530568ed3dceac1d2e70cd7d46d9d6fb56523021c86bb21246e09f9a"
+    },
+    {
+      "k": 10,
+      "what": "a flat streak of wind-blown pale sand",
+      "file": "src/assets/desert-litter/desert-litter-pieces-10.webp",
+      "sha256": "390156e892b194460cb76eb7df5b9b83bb41897c0dad2b5ccc0878940708137e"
+    },
+    {
+      "k": 11,
+      "what": "a dry curled brown seed pod",
+      "file": "src/assets/desert-litter/desert-litter-pieces-11.webp",
+      "sha256": "50718392d892fc0de66583a591605d30f3f58e17affa2c2ad3f12e366df8d2a3"
+    }
+  ]
+}

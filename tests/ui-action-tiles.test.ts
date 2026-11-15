@@ -14,12 +14,12 @@ import { RAIL } from '../src/ui/rail-items';
 import { menuOf, type MenuCtx, type MenuRow } from '../src/ui/flyout-menu';
 import { propMenuLists } from '../src/game/golf/decor';
 
-const DIR = 'src/assets/ui/tiles', ALL = new Set<string>([...TOOL_TILES, ...ACTION_TILES, ...PROP_TILES]);
+const DIR = 'src/assets/ui/tiles', ALL = new Set<string>([...TOOL_TILES, ...ACTION_TILES, ...PROP_TILES, ...T.ICON_TILES]);   // (#1304: the icon tiles, sheets v14 to v16)
 
 /** the tiles cut but worn by nothing yet: each commit that places one takes it off this list (J13, #1277). the props tiles that no menu row wears wait for #1284's natural / man-made restructure of the Props menu (another coder's) and the Texture
  *  Painter's button (#1282's rename) */
 const NOT_YET: readonly string[] = [
-  'natural-props', 'fences', 'signs', 'fountain', 'texture-painter', 'clear-plants', 'nursery-plants',
+  'fences', 'texture-painter', 'clear-plants', 'nursery-plants', // (#1284: natural-props, signs and fountain are worn by the Props flyout)
   'walking-path', // (#1297, the owner, 2026-11-14: the guide's Lay a walking path step went: its tile, the step's only wearer, waits for another use)
 ];
 
@@ -78,11 +78,13 @@ test('no row of the golf Course flyout shows the maple leaf where a tile fits: t
   const at = (path: string) => tiles.get(path), root = 'course > Facilities > Decoration > Props';
   assert.equal(at(root), 'all-props', root);
   assert.equal(at(`${root} > All props`), 'all-props', `${root} > All props`);
-  assert.equal(at(`${root} > Desert & oasis`), 'desert-oasis', `${root} > Desert & oasis`);
-  assert.equal(at(`${root} > New: Trees`), 'trees-mixed', `${root} > New: Trees`);
-  assert.equal(at(`${root} > New: Lake props`), 'lake-props', `${root} > New: Lake props`);
-  // the golf kind that showed the leaf (Course furniture) wears a tile on every row of it
-  for (const row of ['All course furniture', 'Tournament dressing', 'New: Course props']) assert.ok(at(`course > Facilities > Course furniture > ${row}`), row);
+  // (#1284: Natural and Man-made, each a level of its own; the New sections went into the groups their pictures belong to)
+  assert.equal(at(`${root} > Natural`), 'natural-props'); assert.equal(at(`${root} > Man-made`), 'man-made-props');
+  assert.equal(at(`${root} > Natural > Desert & oasis`), 'desert-oasis', `${root} > Natural > Desert & oasis`);
+  assert.equal(at(`${root} > Natural > Trees`), 'trees-mixed', `${root} > Natural > Trees`);
+  assert.equal(at(`${root} > Man-made > Docks, boats & bridges`), 'lake-props', `${root} > Man-made > Docks, boats & bridges`);
+  // the golf kind that showed the leaf (Course furniture, now the tournament dressing alone) wears its tile
+  assert.ok(at('course > Facilities > Course furniture'), 'Course furniture');
 });
 
 /** the files of the UI (and of the guide's step lists, whose steps carry their own tile) that may name a tile */

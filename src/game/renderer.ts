@@ -20,7 +20,7 @@ import savedDecals from './map-decals.json';
 import { HS, TC, type Waterway } from './terrain/types';
 import { makeNoise } from './terrain/noise';
 import { WOODLAND_TEX, barShape, classAlpha, rockAlpha, shadeField, shadeRGBA, slopeField, waterBox, waterShape } from './terrain-paint';
-import { crosscutLegs, cutPieces, fairwayStripeLook, flipBands, holeStripeLegs, legArea, ringPass, turnStripeLegs, type StripeLeg, type StripeLook } from './course-stripes';
+import { crosscutLegs, cutPieces, fairwayStripeLook, flipBands, holeStripeLegs, legArea, plaidLegs, ringPass, turnStripeLegs, type StripeLeg, type StripeLook } from './course-stripes';
 import { LIP, collarToneOf, finishMow, finishOf, lipRuns, mowSpec, tonedCollar, type CourseFinish } from './course-finish';
 import type { MowKind } from './mow-lines';
 import { BUNKER_WALL_MEAN, BUNKER_WALL_METRES, BUNKER_WALL_PICTURE, SAND_WALL_MEAN, TEE_WALL_EXPOSURE, bunkerWallContact, bunkerWallOverhang, teeWallShade } from './tee-wall';
@@ -52,7 +52,7 @@ import { SOFT, easeWeights, softAreaWidth, softDirt, softMaskImage, softRGBA, so
 import { BLEND_WAVES, blendAlpha, blendNoise, trimLru } from './painted-grass-lod';
 import { LEAF_DENSITY_DEFAULT, PIC_REACH, STAMP, layLeaves, leafSignature, type LeafRoad } from './leaf-fall';
 import { leafAtlasAt, type LeafAtlas } from './leaf-atlas';
-import { DESERT_FALL_SCALE, DESERT_LITTER_SCALE, DESERT_SHADOW_A, DESERT_TINTS, DESERT_TINT_LOOK, DESERT_TUFT } from './desert-litter';
+import { DESERT_FALL_SCALE, DESERT_LITTER_SCALE, DESERT_SHADOW_A, DESERT_TINTS, DESERT_TINT_LOOK, DESERT_TUFT, floorLitterCell, lotMarkShown, markOnVerge } from './desert-litter';
 import { SURVEY_COL, SURVEY_DASH, SURVEY_W } from './lots/survey';
 import { CROP_STATES, LANE_SURFACE, ROW_LOOK, cropArtTurn, cropSurface, rowSegments, rowStep } from './ext/farms/crops';
 import { DAMP_TINT, DESERT_BLOT_M, DUNE_TINT, LIVING_AO, LIVING_EDGE, maskContours, CasterStore, COURSE_GRASSY, COURSE_WATER, SHADOW_DIR, debugImage, grassyTex, influence, livingMasks, livingQueryBox, livingRes, livingSignature, waterTex, type Box, type InfluenceGrid, type LivingMasks, type RoadPiece, type WaterLine } from './living-ground';
@@ -3763,7 +3763,7 @@ export class GroundPainter {
     for (const e of st) {
       // (T359: this hole's lines: the finish's, with the look's own settings over them; none: this hole lays no lines)
       const spec = mowSpec(kind, e.m, fin, FAIRWAY_STRIPES); if (!spec) continue;
-      const look = spec.look, textured = spec.textured, pattern = spec.pattern, along = pattern === 'along' || pattern === 'wide' || pattern === 'collar' || pattern === 'halves';
+      const look = spec.look, textured = spec.textured, pattern = spec.pattern, along = pattern === 'along' || pattern === 'wide' || pattern === 'collar' || pattern === 'halves' || pattern === 'plaid';
       const ring = pattern === 'collar' && textured ? { path: ringOf(), pass: ringPass(look.w) } : undefined;
       let eb = b;
       if (e.runs) {
@@ -3780,12 +3780,14 @@ export class GroundPainter {
       // a green is mown one way, along the approach: its hole's last leg alone (no chevron where an aim point lies near it)
       // (T359: straight is one direction over the whole hole, its angle, from the tee; a checkerboard or a diamond follows the hole's line, its
       // squares across it, turned by the angle)
+      // (#1326: the criss-cross is two sets, each one leg over the whole hole: the main set along it, the fainter one across; the crew's cut flips the main)
       const sets: StripeLeg[][] = pattern === 'crosscut' ? crosscutLegs(holeStripeLegs(e.line, { ...look, across: true, l: look.l / 2, k: look.k * 0.54 }), spec.angle)
+        : pattern === 'plaid' ? plaidLegs(e.line, look, e.a)
         : [along ? holeStripeLegs(e.line, look, e.a) : pattern === 'straight' ? holeStripeLegs(e.line, look, spec.angle) : turnStripeLegs(holeStripeLegs(e.line, { ...look, across: true }), spec.angle)];
-      for (const all of sets) {
-        const legs = l.s === SURF.green ? [{ m: all[all.length - 1]!.m, cut: null }] : all;
+      for (let si = 0; si < sets.length; si++) {
+        const all = sets[si]!, legs = l.s === SURF.green ? [{ m: all[all.length - 1]!.m, cut: null }] : all;
         // T269: the grounds crew's cut (e.f): the hole's bands the other way, and today's fresh stripes behind the mower (the bands along the hole only)
-        const f = l.s === SURF.green || !along || pattern === 'halves' ? undefined : e.f;
+        const f = l.s === SURF.green || !along || pattern === 'halves' || si > 0 ? undefined : e.f;
         if (legs.length === 1 && !f) this.layBands(ctx, legs[0]!.m, eb, M, textured, ring);
         else for (let i = 0; i < legs.length; i++) {
           const q0 = legArea(legs, i, eb); if (!q0.length) continue;
@@ -4198,11 +4200,12 @@ export class GroundPainter {
   }
   /** the lots' flat decals: each centred on its ground point, scaled and mirrored; the top-down ones (flatSquash) at half height, lying on the ground */
   private drawMarks(ctx: C2D, patches: LotPatch[], L: number, M: DOMMatrix, box: BBox) {
-    const [tx0, ty0, tx1, ty1] = box, img = this.tex.lotDecals, dimg = this.tex.desertLotDecalSheet(); // (T384: in the desert the leaf decals are read from the desert litter's sheet)
+    const [tx0, ty0, tx1, ty1] = box, img = this.tex.lotDecals, dimg = this.tex.desertLotDecalSheet(), desert = this.tex.desertLitter; // (T384: in the desert the leaf decals are read from the desert litter's sheet)
     ctx.imageSmoothingEnabled = true; ctx.imageSmoothingQuality = 'high';
     for (const p of patches) for (let k = 0, m = p.marks ?? []; k + 4 < m.length; k += 5) {
       const d = LOT_DECALS[m[k]], x = m[k + 1], y = m[k + 2], s = m[k + 3];
       if (!d || x < tx0 - 4 || x > tx1 + 4 || y < ty0 - 4 || y > ty1 + 4) continue;
+      if (desert && !lotMarkShown(true, d.group, markOnVerge(p.pts, x, y))) continue; // (#1311: no dry grass on the desert's lot floor; the verge by the road keeps it)
       const S = M.transformPoint(new DOMPoint(x, y)), q = flatSquash(d.id, d.w, d.h);
       ctx.globalAlpha = m[k + 4]; ctx.setTransform(L * s, 0, 0, L * Math.abs(s) * q, S.x, S.y);
       ctx.drawImage(dimg && d.group === 'leaves' ? dimg : img, d.x, d.y, d.w, d.h, -d.w / 2, -d.h / 2, d.w, d.h);
@@ -4267,7 +4270,7 @@ export class GroundPainter {
     return a;
   }
   private drawLitter(ctx: C2D, net: FxView, L: number, M: DOMMatrix, box: BBox, W: number, H: number) {
-    const [tx0, ty0, tx1, ty1] = box, tex = this.tex, atlas = tex.litterSheet(), occAt = (x: number, y: number) => this.net.occAt(x, y); // (T384: the desert's litter in the desert theme)
+    const [tx0, ty0, tx1, ty1] = box, tex = this.tex, atlas = tex.litterSheet(), desertFloor = tex.desertLitter, occAt = (x: number, y: number) => this.net.occAt(x, y); // (T384: the desert's litter in the desert theme)
     const lb = this.buffer('leaves', W, H), g = ctx2d(lb); g.imageSmoothingEnabled = true; g.imageSmoothingQuality = 'high';
     const pxPerM = 45.25 * L * (tex.desertLitter ? DESERT_LITTER_SCALE : 1), shadowDx = 0.8 * L, shadowDy = 1.1 * L; // (T384: the desert's litter a little bigger than the leaves: the same places and counts)
     const draw = (x: number, y: number, ang: number, sizeM: number, idx: number, pass: number) => {
@@ -4281,7 +4284,8 @@ export class GroundPainter {
     const rx0 = Math.floor(tx0 / 8), rx1 = Math.floor(tx1 / 8), ry0 = Math.floor(ty0 / 8), ry1 = Math.floor(ty1 / 8);
     for (let ry = ry0; ry <= ry1; ry++) for (let rx = rx0; rx <= rx1; rx++) {
       const r = mulberry(((rx * 7919) ^ (ry * 104729) ^ 0x51ed) >>> 0), g2 = () => { let u = 0; while (!u) u = r(); return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * r()); };
-      const add = (x: number, y: number, sizeM: number) => { if (x < 0 || y < 0 || x >= MAP || y >= MAP || occAt(x, y)) return; if (this.terrain[Math.floor(y) * MAP + Math.floor(x)] > 1) return; inView.push({ x, y, ang: r() * Math.PI * 2, s: sizeM, idx: tex.pickLeaf(r, sizeM) }); };
+      // (#1311: in the desert the open floor lays no straw tufts; the roads' litter above keeps them. The picks are made as before, so every other piece stays put)
+      const add = (x: number, y: number, sizeM: number) => { if (x < 0 || y < 0 || x >= MAP || y >= MAP || occAt(x, y)) return; if (this.terrain[Math.floor(y) * MAP + Math.floor(x)] > 1) return; const ang = r() * Math.PI * 2, idx = tex.pickLeaf(r, sizeM); if (floorLitterCell(desertFloor, idx)) inView.push({ x, y, ang, s: sizeM, idx }); };
       const sizeOf = (k: string) => { const u = r(); return (k === 'stray' ? 0.96 : 1) * (u < 0.22 ? 0.11 + r() * 0.08 : u < 0.58 ? 0.2 + r() * 0.1 : u < 0.88 ? 0.32 + r() * 0.15 : 0.49 + r() * 0.16); };
       for (let i = 0; i < 30; i++) add(rx * 8 + r() * 8, ry * 8 + r() * 8, sizeOf('stray'));
       for (let c = 0; c < 2; c++) { if (r() > 0.6) continue; const X0 = rx * 8 + r() * 8, Y0 = ry * 8 + r() * 8, n = 4 + Math.floor(r() * r() * 22), sp = (0.35 + r() * 0.6) / 2; for (let i = 0; i < n; i++) add(X0 + g2() * sp, Y0 + g2() * sp, sizeOf('gutter')); }

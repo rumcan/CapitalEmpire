@@ -169,7 +169,9 @@ export class SimClient {
   /** the town's growth option by id (see GROWTH_OPTIONS) */
   setOption(id: string) { this.option = id; this.post({ t: 'option', id }); }
   /** the dev sandbox's options: the growth speed (1 = the game's) and unlimited money (spending does not move the treasury); stored as unlimited */
-  sandbox(grow: number, money: boolean) { this.unlimited = money; this.post({ t: 'sandbox', grow, money }); }
+  sandbox(grow: number, money: boolean, roads = false) { this.unlimited = money; this.post({ t: 'sandbox', grow, money, roads }); }
+  /** #1314: pays n $ into the treasury with no ledger line and no onSpend (a sandbox game's starting money: Engine.sandboxFunds) */
+  fund(n: number) { if (!(n > 0)) return; this.budget.money += n; this.post({ t: 'spend', kind: 'bank', n: -n }); }
   /** a saved town for the worker (its lots, the sim time, s, the clock's shift from it, and its books or the treasury of an old save): after the net ops of a load */
   townState(lots: LotTuple[], simT: number, budget?: BudgetSave, money = START_MONEY, career?: CareerSave, shift = 0, round?: RoundSave, biz?: BizStats[]) { this.post({ t: 'townState', lots, simT, budget, money, career, shift, round, biz }); }
   /** starts an event round (the stadium's crowd comes to kick-off at 18:00 of the clock, which freezes): the build comes first */

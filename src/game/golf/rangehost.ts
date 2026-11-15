@@ -252,6 +252,16 @@ export class RangeHost {
   }
 
   /** once a frame: the golfers move on by the sim time since the last frame, and their takings are booked every BOOK_EVERY sim s */
+  /** J12: the menu scene's range already busy when the camera reaches it: its golfers run on simS sim seconds at once, in a frame's half-second steps (never a skip, which
+   *  books the expected sales and clears them), at the hour given (else the clock as it reads now). A visit takes about two minutes from the map's edge to a bay on the scene's range */
+  warm(simS: number, hour?: number): number {
+    this.sync(); const b = this.ctx.biz(); if (!b || !this.scene || simS <= 0) return -1;
+    if (this.sim.book !== (b.balls ?? null)) this.sim.setBalls(b.balls ?? null);
+    // (at the hour given: a clock just set is the worker's to send back, so the town clock here may still read the hour before it)
+    const c0 = this.ctx.clock(), clock = hour === undefined ? c0 : { ...c0, hour }, dem = this.ctx.demand(), L = this.ctx.dayLen();
+    for (let left = simS; left > 1e-9; left -= 0.5) this.owed += this.sim.step(Math.min(0.5, left), clock, b, dem, L);
+    return this.sim.onFoot;
+  }
   step(): void {
     const b = this.ctx.biz(); if (!b || !this.scene) return;
     // T386: the sim sells and lands the range's balls: the save's book (a load or a new game brings a new one)

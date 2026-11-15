@@ -59,7 +59,7 @@ const RAIL_FULL: readonly RailItem[] = [
     // tile of this flyout, no rail button of its own
     { id: 'practice', label: 'Practice', key: '', icon: 'pin', only: 'golf', sub: 'Practice', within: 'facilities' },
     { id: 'paint', label: 'Plants', key: '', icon: 'trees', only: 'golf', sub: 'Plants', alt: true, within: 'facilities' },
-    { id: 'props', label: 'Props', key: 'Z', icon: 'leaf', only: 'golf', view: { where: 'course' }, sub: 'Decoration', within: 'facilities' },
+    { id: 'props', label: 'Props', key: 'Z', icon: 'trees', only: 'golf', view: { where: 'course' }, sub: 'Decoration', within: 'facilities' },
   ], extras: [{ id: 'event', label: 'Tournament', icon: 'calendar' }, { id: 'land', label: 'Land for sale', icon: 'terrain' }] },
   // T288 (#873, the owner 2026-10-31: "make cart paths and roads its own button above facilities in the main left menu"): the roads on the
   // player's own property (the course's cart paths and drives: the road tool on the course, T084; in Course since T206) and the town's roads
@@ -84,7 +84,7 @@ const RAIL_FULL: readonly RailItem[] = [
   ] },
   { id: 'towndecor', label: 'Town decoration', icon: 'terrain', key: 'A', section: 'town', group: 'paint', tools: [
     { id: 'paint', label: 'Paint', key: 'A', icon: 'terrain' },
-    { id: 'props', label: 'Props', key: 'Z', icon: 'leaf', only: 'golf', view: { where: 'town' } },
+    { id: 'props', label: 'Props', key: 'Z', icon: 'trees', only: 'golf', view: { where: 'town' } },
     // the few buildings the player adds to the town: a golf game's from the Props tool's Buildings (T187: decor.ts, the library's art); the
     // classic game's Business tool
     { id: 'props', label: 'Buildings', key: '', icon: 'buildings', only: 'golf', view: { where: 'town', group: 'buildings' } },

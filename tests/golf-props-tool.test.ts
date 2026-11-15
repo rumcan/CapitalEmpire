@@ -17,7 +17,8 @@ test('the catalogue: four groups of real library pictures (and the T187 town bui
   // (T289: the owner's desert and oasis props, a group of their own after the stone: desert-props.ts)
   const fresh = DECOR_GROUPS.map(g => g.id).filter(id => id.startsWith('new:'));
   assert.ok(fresh.length > 0, 'the new props have their groups');
-  assert.deepEqual(DECOR_GROUPS.map(g => g.id), ['plants', 'water', 'stone', 'desert', 'furniture', 'tournament', ...fresh, 'buildings']);
+  // (#1284: the natural groups, then the man-made ones; the owner's review sections' pictures sit in the groups they belong to)
+  assert.deepEqual(DECOR_GROUPS.map(g => g.id), ['trees', 'plants', 'stone', 'desert', 'planters', 'water', 'statues', 'furniture', 'signs', 'lake', 'tournament', ...fresh, 'clubhouses', 'buildings']);
   for (const g of DECOR_GROUPS) assert.ok(DECOR.some(d => d.group === g.id), g.id);
   assert.equal(new Set(DECOR.map(d => d.key)).size, DECOR.length, 'the keys are unique (they are saved)');
   for (const d of DECOR) {
@@ -25,7 +26,7 @@ test('the catalogue: four groups of real library pictures (and the T187 town bui
     // T187: the town's buildings are decoration (appeal 0) and a chapel costs more
     // the new props: their library price, no appeal yet (decor.ts), a plain name
     // (the tournament dressing is new props regrouped: the ropes, walkway, signs, map board and water stall, decor.ts TOURNAMENT_DRESSING)
-    if (d.group.startsWith('new:') || d.group === 'tournament') { assert.equal(d.appeal, 0, `${d.key} appeal`); assert.ok(d.price >= 0 && d.name && !/stand in/i.test(d.name), `${d.key}`); assert.equal(sellBack(d), Math.round(d.price / 2)); continue; }
+    if (d.key.startsWith('newprop-') || d.key.startsWith('object8-') || d.group.startsWith('new:') || d.group === 'tournament' || d.group === 'clubhouses') { assert.equal(d.appeal, 0, `${d.key} appeal`); assert.ok(d.price >= 0 && d.name && !/stand in/i.test(d.name), `${d.key}`); assert.equal(sellBack(d), Math.round(d.price / 2)); continue; }
     if (d.group === 'buildings') { assert.equal(d.appeal, 0, `${d.key} appeal`); assert.ok(d.price >= 500 && d.price <= 100000, `${d.key} price`); assert.equal(sellBack(d), Math.round(d.price / 2)); continue; }
     assert.ok(d.price >= 50 && d.price <= 15000, `${d.key} price`);
     assert.ok(d.appeal > 0 && d.appeal <= 0.15, `${d.key} appeal`);

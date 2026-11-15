@@ -1,6 +1,6 @@
 // The living scene behind the jam build's title card (J12, #1271; the owner, 2026-11-14: "animated town/golfcourse/farms etc behind the main menu like the
 // factorio main menu ... very pretty and zoomed in"). The real game runs behind the card: a prepared world (src/assets/showcase/menu.cesave, rebuilt by
-// scripts/jam/menu-scene-build.mjs) is loaded into the engine with saving switched off, and the camera glides across one place for 12 to 18 seconds, then
+// scripts/jam/menu-scene-build.mjs) is loaded into the engine with saving switched off, and the camera glides across one place for 8 to 14 seconds, then
 // cross-fades to the next (showcase-director.ts). This file is the pure part: the places (the stops), the camera at a moment of a stop, the order
 // of the visit and the rules of when the scene may run at all. No DOM, no engine: tests/showcase.test.ts runs it.
 import { MAP, ZOOM_MAX, ZOOM_MIN, worldX, worldY } from './iso';
@@ -16,7 +16,7 @@ export interface ShowStop {
   x: number; y: number; dx: number; dy: number;
   /** the zoom at the start and at the end (CSS zoom: 0.3 is the closest the game has; the log of the zoom glides) */
   z0: number; z1: number;
-  /** seconds on screen before the cross-fade (12 to 18) */
+  /** seconds on screen before the cross-fade (STAY_MIN_S to STAY_MAX_S: 8 to 14) */
   secs: number;
   /** the hour of the town day the stop looks best at (24 h clock: the director sets the town clock to it at the stop's cut when the day has run past the golf hours) */
   hour?: number;
@@ -35,8 +35,20 @@ export const FADE_MS = 1800, READY_MIN_MS = 500, READY_MAX_MS = 4000;
 export const POSTER_FADE_MS = 1400;
 /** how long before a cut the director asks for the next stop's ground and trees (ms) */
 export const WARM_MS = 3500;
-/** the golf hours the scene keeps the town clock in (hours of the day): it starts at the first, and a cut that finds the clock past the second sets it back */
-export const SHOW_HOURS = Object.freeze({ start: 7.0, end: 13.0 });
+/** the golf hours the scene keeps the town clock in (hours of the day): it starts at the first, and a cut that finds the clock past the second sets it back. 09:00 (was 07:00, when only
+ *  the first group was on the tee and the range had no one yet): the morning's groups are out on every hole */
+export const SHOW_HOURS = Object.freeze({ start: 9.0, end: 15.0 });
+/** the residents the scene's range draws on beyond the town's own (engine range demand, show only): the prepared world's small town brings a golfer to the range now and then; this keeps
+ *  most of its 12 bays busy without a crowd turned away at the counter (dayDemand: 0.0183 a resident a day, a bay held about a town hour; 6,000 filled 36 of the 44 car park bays) so the menu shows golfers hitting balls. Never the player's game */
+export const SHOW_RANGE_RESIDENTS = 2500;
+/** the sim seconds the scene's range is run on when the first view shows (engine warmShowRange): a golfer takes about 100 s from the map's edge to a bay there (the drive in, the
+ *  walk from the car park, the counter), so the range is busy by the time the lap reaches it */
+export const SHOW_RANGE_WARM_S = 240;
+/** the clean balls the scene's ball room is stocked with at load (engine, show only; the scene saves nothing). The prepared world's room held 791, less than one bucket on its
+ *  long town day (visitBalls: 40 balls a 600 s day), so every golfer drove off unserved ('balls') and the bays stayed empty */
+export const SHOW_RANGE_BALLS = 500_000;
+/** the townspeople on the scene's pavements, per built lot (the game has one per two: engine updatePeds): the owner wants people walking in the town behind the menu */
+export const SHOW_PEDS_PER_LOT = 2.5;
 /** the golfers a day the scene's course has (the sim's busiest ordinary day, so there are groups on every hole: engine dayInputs busy) */
 export const SHOW_GOLFERS = 80;
 /** the calendar month the scene's farms show (0 = January): September, the golden harvest (the saved world's own month is wherever its build stopped) */
@@ -47,16 +59,33 @@ export const SLOW_FRAME_MS = 42, SLOW_AFTER_MS = 4000;
  *  clock run on past its end (a season is 24 minutes at the normal speed); the engine stops drawing and the last picture stays under the card */
 export const REST_AFTER_MS = 10 * 60 * 1000;
 
-/** the places, in the order of a visit's lap (a visit starts at a different one each time and goes round). Each is looked at in the shots
- *  (docs/jam-shots/j12-*.jpg) and moved until it is pretty: the tile numbers are the prepared world's (scripts/jam/menu-scene-build.mjs) */
+/** the places, in the order of a visit's lap. Every visit starts at the first, the town, and goes round (the owner, 2026-11-15: "traffic driving and people walking
+ *  ... then it should swap to the course where people are playing golf. zoom it out a little bit so we have more houses. then show the desert driving range with
+ *  green grass"): the town, the club's car park, the course, the range. Each is looked at in the shots (scripts/jam/menu-scene-motion.mjs) and moved until it is pretty:
+ *  the tile numbers are the prepared world's (scripts/jam/menu-scene-build.mjs). The zooms are well out from the closest (0.3: the owner, later the same day, "zoom out a bit so
+ *  you can see more stuff and less flaws"), still in the street tier (DISTRICT_Z 0.12) where the people, cars and animals are drawn. (The farm stop went: its farmstead's
+ *  parked pickup stands under the farmhouse's porch, a flaw of the farm layout, ext/farms/farms.ts)
+ */
 export const SHOW_STOPS: readonly ShowStop[] = [
-  { id: 'range', name: 'The driving range on a busy morning', x: 1000, y: 1000, dx: -14, dy: -4, z0: 0.3, z1: 0.28, secs: 15 },
-  { id: 'arrive', name: 'Cars arriving at the club', x: 966, y: 1022, dx: 8, dy: -8, z0: 0.3, z1: 0.3, secs: 14 },
-  { id: 'fairway', name: 'From the first tee down the fairway', x: 936, y: 1000, dx: -14, dy: -48, z0: 0.28, z1: 0.25, secs: 17 },
-  { id: 'green', name: 'A green with its flag', x: 802, y: 992, dx: 6, dy: -10, z0: 0.3, z1: 0.3, secs: 14 },
-  { id: 'farm', name: 'A farm by the county road', x: 474, y: 978, dx: 6, dy: 4, z0: 0.25, z1: 0.27, secs: 15 },
-  { id: 'road', name: 'The county road: houses, traffic and the bridge', x: 1124, y: 1043, dx: -32, dy: -3, z0: 0.27, z1: 0.25, secs: 16 },
+  { id: 'road', name: 'The county road: houses, traffic and people walking', x: 1118, y: 1043, dx: -22, dy: -3, z0: 0.17, z1: 0.16, secs: 12 },
+  { id: 'arrive', name: 'Cars arriving at the club', x: 966, y: 1022, dx: 8, dy: -8, z0: 0.18, z1: 0.17, secs: 10 },
+  { id: 'fairway', name: 'Golfers playing down the first fairway', x: 932, y: 990, dx: -10, dy: -36, z0: 0.17, z1: 0.155, secs: 12 },
+  { id: 'green', name: 'A green with its flag', x: 802, y: 992, dx: 6, dy: -10, z0: 0.18, z1: 0.18, secs: 10 },
+  { id: 'range', name: 'The driving range on a busy morning', x: 1004, y: 990, dx: -10, dy: -4, z0: 0.17, z1: 0.16, secs: 12 },
 ];
+/** the shortest and longest stay at a stop (s) */
+export const STAY_MIN_S = 8, STAY_MAX_S = 14;
+
+/** the still of the first stop (src/assets/showcase/<id>.jpg) is a shot of the live scene's first view at this css size, its movers hidden (engine stillLife): the page lays it at
+ *  the live scene's own scale, its point of interest on the screen's anchor, so the still and the first live frame are the same picture and the swap only brings the movers in */
+export const POSTER_W = 2560, POSTER_H = 1440;
+/** where the still goes on a screen cssW x cssH (css px; scale 1 = the live scene's scale): its point of interest (the wide anchor of the poster's own size) on the screen's
+ *  anchor; on a screen the still cannot cover at scale 1, the least scale that covers, about that point */
+export function posterBox(cssW: number, cssH: number): { left: number; top: number; width: number; height: number } {
+  const a = anchorOf(cssW, cssH), p = anchorOf(POSTER_W, POSTER_H), px = p.x * POSTER_W, py = p.y * POSTER_H, sx = a.x * cssW, sy = a.y * cssH;
+  const s = Math.max(1, sx / px, (cssW - sx) / (POSTER_W - px), sy / py, (cssH - sy) / (POSTER_H - py));
+  return { left: sx - px * s, top: sy - py * s, width: POSTER_W * s, height: POSTER_H * s };
+}
 
 /** where the point of interest sits on a screen cssW x cssH (fractions of its width and height): right of the card on a wide screen, in the middle on a narrow or tall one */
 export function anchorOf(cssW: number, cssH: number): { x: number; y: number } {
@@ -84,7 +113,7 @@ export function pickStart(n: number, rnd: number, last: number | null): number {
 }
 
 /** the problems with a list of stops (an empty list: none): a point or its drift outside the map or too near its edge for the view, a zoom outside the
- *  game's range or past the closest, a stay outside 12 to 18 s, a repeated id */
+ *  game's range or past the closest, a stay outside 8 to 14 s, a repeated id */
 export function stopProblems(stops: readonly ShowStop[], margin = 60): string[] {
   const out: string[] = [], seen = new Set<string>();
   const inside = (x: number, y: number) => x >= margin && y >= margin && x <= MAP - margin && y <= MAP - margin;
@@ -94,7 +123,7 @@ export function stopProblems(stops: readonly ShowStop[], margin = 60): string[] 
     if (!inside(s.x, s.y)) out.push(`${s.id}: the start (${s.x}, ${s.y}) is outside the map`);
     if (!inside(s.x + s.dx, s.y + s.dy)) out.push(`${s.id}: the end (${s.x + s.dx}, ${s.y + s.dy}) is outside the map`);
     for (const z of [s.z0, s.z1]) if (z < ZOOM_MIN || z > ZOOM_MAX) out.push(`${s.id}: the zoom ${z} is outside the game's ${ZOOM_MIN} to ${ZOOM_MAX}`);
-    if (s.secs < 12 || s.secs > 18) out.push(`${s.id}: ${s.secs} s is not 12 to 18`);
+    if (s.secs < STAY_MIN_S || s.secs > STAY_MAX_S) out.push(`${s.id}: ${s.secs} s is not ${STAY_MIN_S} to ${STAY_MAX_S}`);
   }
   return out;
 }
@@ -106,19 +135,25 @@ export function showBoot(b: BootOptions = GAME_BOOT): BootOptions { return { ...
 
 /** what the player chose on the title card: a new game or the saved one. The page reloads with it in its address (`#play=new`, `#play=continue`) and the next
  *  boot is the game's own, as it always was, straight into it (the scene's world is never the player's, so the choice is carried over by a fresh page) */
-export type StartChoice = 'new' | 'continue';
+export type StartChoice = 'new' | 'continue' | 'sandbox' | 'sandbox-town';
 export const CHOICE_KEY = 'play';
+/** every choice (#1314: a sandbox game, where the player builds the town's roads, 'sandbox', or the town builds its own, 'sandbox-town': #1317) */
+export const START_CHOICES: readonly StartChoice[] = ['new', 'continue', 'sandbox', 'sandbox-town'];
 /** the choice in an address's hash, or null */
 export function choiceOf(hash: string): StartChoice | null {
-  const m = new RegExp(`(?:^#|&)${CHOICE_KEY}=(new|continue)(?:&|$)`).exec(hash);
+  const m = new RegExp(`(?:^#|&)${CHOICE_KEY}=(new|continue|sandbox-town|sandbox)(?:&|$)`).exec(hash);
   return m ? (m[1] as StartChoice) : null;
+}
+/** the sandbox game a choice starts (#1314), or null for New game and Continue */
+export function sandboxOf(c: StartChoice | null): { townRoads: boolean } | null {
+  return c === 'sandbox' ? { townRoads: false } : c === 'sandbox-town' ? { townRoads: true } : null;
 }
 /** the hash that carries a choice */
 export const choiceHash = (c: StartChoice): string => `#${CHOICE_KEY}=${c}`;
 /** the same choice in the tab's session storage, for a page that cannot change its address (a sandboxed frame): the page the reload starts reads it, and the effect that clears
  *  the address clears it too */
 export const CHOICE_STORE_KEY = 'fairwayfortune.choice';
-export const choiceFromStore = (v: string | null | undefined): StartChoice | null => (v === 'new' || v === 'continue' ? v : null);
+export const choiceFromStore = (v: string | null | undefined): StartChoice | null => ((START_CHOICES as readonly (string | null | undefined)[]).includes(v) ? v as StartChoice : null);
 
 /** what the page knows when it decides about the scene */
 export interface ShowEnv {
@@ -135,6 +170,15 @@ export function showWanted(e: ShowEnv): boolean { return e.jam && !e.chose && !e
 
 /** the sceneless flow: the address says so (`#scene=off`: the scene's world could not be had, so the page started again without it) */
 export const sceneOff = (hash: string): boolean => /(?:^#|&)scene=off(?:&|$)/.test(hash);
+
+/** the main menu page (the settings menu's Exit to main menu, in any build): the game is saved, then the page starts again with `#menu` in its address, so the title card
+ *  comes up over the living scene exactly as at the jam build's boot. The scene's world is never the player's (showBoot: no save read or written); Continue and New game
+ *  start the page again with the choice, as at boot, and the game loads the save it has just written */
+export const MENU_HASH = '#menu';
+/** the same, in the tab's session storage, for a page that cannot change its address (a sandboxed frame) */
+export const MENU_STORE_KEY = 'fairwayfortune.menu';
+/** the address asks for the main menu page */
+export const menuPageOf = (hash: string): boolean => /(?:^#|&)menu(?:&|$)/.test(hash);
 /** a machine too small for the scene (fewer than 4 GB of memory or 3 cores, or the browser asked for less data); what the browser does not say is not held against it */
 export function weakMachine(nav: { deviceMemory?: number; hardwareConcurrency?: number; connection?: { saveData?: boolean } }): boolean {
   return (nav.deviceMemory !== undefined && nav.deviceMemory < 4) || (nav.hardwareConcurrency !== undefined && nav.hardwareConcurrency < 3) || !!nav.connection?.saveData;

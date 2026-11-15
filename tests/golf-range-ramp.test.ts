@@ -1,5 +1,5 @@
 // From the range to the first hole (plan P24 Phase 4a, T132): the unlock order of a range start (the range card, the practice area after the first
-// upgrade, Props after the putting green, New hole at $20,000 of takings in a season or in season 2), the hint bar's words at each step (never
+// upgrade, Props after the putting green, New hole at $5,000 of takings in a season or in season 2: #1305), the hint bar's words at each step (never
 // "Step 1: Build your first hole" while the range is the job), the par-3 the first New hole suggests, the props' diminishing returns, the range
 // upgrades' upkeep, the range's name plate and the car park's counter, and the Select panel's words for a decor prop.
 import { test } from 'node:test';
@@ -24,6 +24,8 @@ const facts = (p: GolfProgress, c: CourseProgress, practice?: PlayerProgressFact
 const NONE = { putting: 'none', chipping: 'none' } as const, PUTT = { putting: 'open', chipping: 'none' } as const;
 const locked = (f: PlayerProgressFacts) => Object.fromEntries(computeProgressiveUiState(f).lockedTools.map(t => [t.id, t.why]));
 const visible = (f: PlayerProgressFacts) => computeProgressiveUiState(f).visibleTools;
+/** #1305: New hole's and the clubhouse's lock, with the takings so far */
+const WHY3 = (have: number) => `Unlocks when the range takes $5,000 in a season ($${have.toLocaleString('en-US')} so far), or in season 2`;
 
 test('the unlock order, step by step: the range card, the practice area, Props, then New hole; locked tools stay in place with their reason', () => {
   const p = fresh();
@@ -31,9 +33,9 @@ test('the unlock order, step by step: the range card, the practice area, Props, 
   const f0 = facts(p, course(), NONE), s0 = computeProgressiveUiState(f0);
   assert.equal(rampStep(f0), 0); assert.equal(s0.ramp, 0);
   // T288: the road tool is open from the start (the owner, 2026-11-04, asked whether to unlock it: "Yes, unlock it")
-  assert.deepEqual(locked(f0), { course: RAMP_WHY[1], path: RAMP_WHY[1], practice: RAMP_WHY[1], props: RAMP_WHY[2], buildings: RAMP_WHY[3], greenkeeping: 'Unlocks when your first hole is grown in', lane: 'Unlocks with your third hole or the tour\'s invitation', downgrade: 'Unlocks with your third hole or the tour\'s invitation', junction: 'Unlocks with your third hole or the tour\'s invitation', bus: 'Unlocks with your third hole or the tour\'s invitation', park: 'Unlocks with your third hole or the tour\'s invitation', toll: 'Unlocks with your third hole or the tour\'s invitation', paint: 'Unlocks with your first hole' });
+  assert.deepEqual(locked(f0), { course: RAMP_WHY[1], path: RAMP_WHY[1], practice: RAMP_WHY[1], props: RAMP_WHY[2], buildings: WHY3(0), greenkeeping: 'Unlocks when your first hole is grown in', lane: 'Unlocks with your third hole or the tour\'s invitation', downgrade: 'Unlocks with your third hole or the tour\'s invitation', junction: 'Unlocks with your third hole or the tour\'s invitation', bus: 'Unlocks with your third hole or the tour\'s invitation', park: 'Unlocks with your third hole or the tour\'s invitation', toll: 'Unlocks with your third hole or the tour\'s invitation', paint: 'Unlocks with your first hole' });
   assert.deepEqual(visible(f0), ['select', 'road', 'bulldoze']); // (T288: and the road tool, the owner 2026-11-04: "Yes, unlock it")
-  assert.equal(s0.newHoleLock, RAMP_WHY[3]);
+  assert.equal(s0.newHoleLock, WHY3(0)); assert.deepEqual(s0.newHoleProgress, { have: 0, need: RAMP_TAKINGS });
   assert.ok(s0.visibleGroups.includes('course'), 'the Course group stays on the rail, its tools locked in place');
   // the first upgrade: Holes (Shape by hand: Green and Bunker for the practice greens) and Paths open, with NEW badges; New hole still waits
   const f1 = facts(p, course({ upgrades: 1 }), NONE), s1 = computeProgressiveUiState(f1);
@@ -41,13 +43,17 @@ test('the unlock order, step by step: the range card, the practice area, Props, 
   assert.ok(visible(f1).includes('course') && visible(f1).includes('path'));
   assert.deepEqual(Object.keys(locked(f1)).filter(k => ['course', 'path', 'props', 'buildings'].includes(k)).sort(), ['buildings', 'props']);
   assert.equal(s1.shapeByHand, true); assert.deepEqual([...s1.visibleCourseBrushes].sort(), ['bunker', 'green']);
-  assert.equal(s1.newHoleLock, RAMP_WHY[3]); assert.ok(s1.newTools.includes('course') && s1.newTools.includes('path'));
+  assert.equal(s1.newHoleLock, WHY3(0)); assert.ok(s1.newTools.includes('course') && s1.newTools.includes('path'));
   // the putting green opens: Props
   const f2 = facts(p, course({ upgrades: 1 }), PUTT);
-  assert.equal(rampStep(f2), 2); assert.ok(visible(f2).includes('props')); assert.equal(locked(f2).buildings, RAMP_WHY[3]);
-  // $20,000 of takings in a season: New hole and Buildings; the stages go on as before (Paint waits for the first hole)
+  assert.equal(rampStep(f2), 2); assert.ok(visible(f2).includes('props')); assert.equal(locked(f2).buildings, WHY3(0));
+  // part of the way: the lock says how far, and the progress counts it
+  const fh = facts(p, course({ upgrades: 1, seasonTakings: 1234.6 }), PUTT), sh = computeProgressiveUiState(fh);
+  assert.equal(sh.newHoleLock, WHY3(1234)); assert.deepEqual(sh.newHoleProgress, { have: 1234, need: 5000 }); assert.equal(locked(fh).buildings, WHY3(1234));
+  // $5,000 of takings in a season (#1305): New hole and Buildings; the stages go on as before (Paint waits for the first hole)
+  assert.equal(RAMP_TAKINGS, 5000, 'the game build opens the course at $5,000 in a season');
   const f3 = facts(p, course({ upgrades: 1, seasonTakings: RAMP_TAKINGS }), PUTT), s3 = computeProgressiveUiState(f3);
-  assert.equal(rampStep(f3), 3); assert.equal(s3.newHoleLock, null); assert.ok(visible(f3).includes('buildings'));
+  assert.equal(rampStep(f3), 3); assert.equal(s3.newHoleLock, null); assert.equal(s3.newHoleProgress, null); assert.ok(visible(f3).includes('buildings'));
   assert.equal(locked(f3).paint, 'Unlocks with your first hole'); assert.equal(s3.stage, 1);
   assert.equal(rampEarned(facts(p, course({ upgrades: 1, seasonTakings: RAMP_TAKINGS - 1 }), PUTT)), 2, 'not a dollar short');
   // or the second season, whatever was bought; or a hole
@@ -96,8 +102,8 @@ test('the hint bar follows the ramp: never "Step 1: Build your first hole" while
   assert.equal(at(course({ upgrades: 1 }), NONE)?.id, 'hint-practice-putting');
   assert.equal(at(course({ upgrades: 1 }), PUTT)?.id, 'hint-range-props');
   assert.equal(at(course({ upgrades: 1, propsPlaced: true }), PUTT)?.id, 'hint-practice-chipping');
-  const wait = at(course({ upgrades: 2, propsPlaced: true, seasonTakings: 12345 }), { putting: 'open', chipping: 'open' })!;
-  assert.equal(wait.id, 'hint-range-wait'); assert.match(wait.body, /\$20,000 in a season \(\$12,345 so far\), or in season 2/); assert.ok(!wait.show);
+  const wait = at(course({ upgrades: 2, propsPlaced: true, seasonTakings: 1234 }), { putting: 'open', chipping: 'open' })!;
+  assert.equal(wait.id, 'hint-range-wait'); assert.match(wait.body, /\$5,000 in a season \(\$1,234 so far\), or in season 2/); assert.ok(!wait.show);
   // New hole open: a par-3 first
   const h3 = at(course({ upgrades: 2, seasonTakings: RAMP_TAKINGS }), { putting: 'open', chipping: 'open' })!;
   assert.equal(h3.id, 'hint-range-first-hole'); assert.match(h3.title, /par-3/); assert.match(h3.body, new RegExp(`${FIRST_PAR3_M} m par-3`)); assert.equal(h3.show, true);

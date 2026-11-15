@@ -251,3 +251,20 @@ test('parcel helpers: corners frame the parcel, and seedForParcel separates farm
   assert.notEqual(seedForParcel(p, 1), seedForParcel(q, 1));
   assert.equal(seedForParcel(p, 1), seedForParcel(p, 1));
 });
+
+test('the farmstead\'s parked cars stand wholly ahead of the farmhouse\'s front, clear of the house and its porch (the menu scene, 2026-11-15: a pickup stood under the porch)', () => {
+  let cars = 0;
+  for (const { p, seed } of FARMS) {
+    if (Math.abs(Math.abs(p.u.x) - 1) > 1e-9 && Math.abs(Math.abs(p.u.y) - 1) > 1e-9) continue; // (axis-aligned parcels: the footprint boxes map exactly into the parcel frame)
+    const c = composeFarm(p, seed), house = c.props.find(q => isHouse(q.id));
+    if (!house) continue;
+    const bRange = (q: Placed) => { const [x0, y0, x1, y1] = fpOf(q), bs = [[x0, y0], [x1, y0], [x0, y1], [x1, y1]].map(([x, y]) => frame(p, x!, y!).b); return [Math.min(...bs), Math.max(...bs)]; };
+    const [hb0] = bRange(house);
+    for (const q of c.props) {
+      if (byId.get(q.id)?.cat !== 'Vehicles' || q.id.startsWith('expansion:')) continue; // (the tractor before the barn and the trailer by the shed are not parked on the lane)
+      const [, cb1] = bRange(q); cars++;
+      assert.ok(cb1 <= hb0 - 0.4, `${p.key}: ${q.id} reaches b ${cb1.toFixed(2)}, the house's front is at ${hb0.toFixed(2)}`);
+    }
+  }
+  assert.ok(cars >= 20, `${cars} parked cars looked at`);
+});

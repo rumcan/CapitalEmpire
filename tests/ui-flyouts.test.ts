@@ -257,11 +257,14 @@ describe('the tool tiles (T233)', () => {
     assert.deepEqual(tiles(find(fac, 'Plants').children!), ['Trees=trees', 'Bushes=autumn-shrubs', 'Flowers=flower-bed']);
     assert.equal(find(fac, 'Plants', 'Bushes').swatch, '#3b5', 'the plant swatch stays available with the new tile');
     assert.deepEqual(tiles(find(fac, 'Decoration').children!), ['Props=all-props'], 'J13: the Props row wears the crate of mixed things');
-    assert.deepEqual(tiles(find(fac, 'Decoration', 'Props').children!), ['All props=all-props', 'Plants=flower-bed', 'Water=pond', 'Stone=rocks', 'Furniture=patio-table']);
+    // (#1284: a list of groups with no side, as this fixture's, stays flat; the game's own lists open Natural and Man-made: tests/props-split-1284.test.ts)
+    assert.deepEqual(tiles(find(fac, 'Decoration', 'Props').children!), ['All props=all-props', 'Plants=autumn-shrubs', 'Water=fountain', 'Stone=rocks', 'Furniture=patio-table']);
   });
   it("the town's menus and the range card stay lists; the tiles change no leaf, lock or path", () => {
     const all = (rs: readonly MenuRow[]): MenuRow[] => rs.flatMap(r => [r, ...all(r.children ?? [])]);
-    for (const id of ['select', 'range', 'traffic', 'towndecor', 'bulldoze']) assert.ok(!all(menuOf(RAIL.find(r => r.id === id)!, C)).some(r => r.tile), `${id}: no tiles`);
+    for (const id of ['select', 'range', 'traffic', 'bulldoze']) assert.ok(!all(menuOf(RAIL.find(r => r.id === id)!, C)).some(r => r.tile), `${id}: no tiles`);
+    // (#1284: Town decoration's own rows stay a list; its Props level wears the props' pictures, never the maple leaf)
+    assert.ok(!menuOf(RAIL.find(r => r.id === 'towndecor')!, C).some(r => r.tile), 'towndecor: its rows stay a list');
     const ui = uiOf(played(0), 0);
     for (const id of ['course']) { // (#1272: Facilities' rows are Course's)
       const rows = menuOf(RAIL.find(r => r.id === id)!, ctx(true, ui));

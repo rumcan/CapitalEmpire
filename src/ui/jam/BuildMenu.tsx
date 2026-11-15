@@ -11,13 +11,14 @@ import { Thumb } from '../Thumb';
 import { LIBRARY } from '../../game/library';
 import { money } from '../golf/money';
 import { BUILD_GROUPS, type BuildCard, type BuildGroupId, type BuildPic } from './build-menu';
+import { UnlockBar } from '../UnlockBar';
 
 const LIB_BY_ID = new Map(LIBRARY.map(it => [it.id, it]));
 const sceneOf = (p: BuildPic): string | undefined => ('scene' in p ? sceneUrl(p.scene) : undefined);
 
 export function BuildMenu({ cards, tab, onTab, onPick, onClose, onTips }: {
   cards: BuildCard[]; tab: BuildGroupId;
-  onTab: (g: BuildGroupId) => void; onPick: (c: BuildCard) => void; onClose: () => void; onTips: () => void;
+  onTab: (g: BuildGroupId) => void; onPick: (c: BuildCard) => void; onClose: () => void; /** Tips (none in a sandbox game: #1314) */ onTips?: (() => void) | undefined;
 }) {
   useEffect(() => {
     const k = (e: KeyboardEvent) => { if (e.key === 'Escape') { e.stopPropagation(); onClose(); } };
@@ -33,7 +34,7 @@ export function BuildMenu({ cards, tab, onTab, onPick, onClose, onTips }: {
           <div className="text-[12px] text-slate-400">Anything, in any order: you decide. Takings and payback are estimates.</div>
         </div>
         <div className="flex shrink-0 items-center gap-1">
-          <button className="chip" onClick={onTips} title="Tips: how the range, the course and the money work" data-testid="build-tips"><ActionTile tile="tips" size={TILE_SMALL} />Tips</button>
+          {onTips && <button className="chip" onClick={onTips} title="Tips: how the range, the course and the money work" data-testid="build-tips"><ActionTile tile="tips" size={TILE_SMALL} />Tips</button>}
           <button className="btn-icon" onClick={onClose} title="Close (Esc)" aria-label="Close the Build menu" data-testid="build-close"><Icon name="close" size={18} /></button>
         </div>
       </div>
@@ -82,6 +83,7 @@ function Card({ c, onPick }: { c: BuildCard; onPick: (c: BuildCard) => void }) {
           {p.extra >= 0.5 && <span className="font-normal text-slate-400">About <span className="text-emerald-300">+{money(p.extra)}</span> a month · </span>}{paybackWords(p)}</div>}
         {c.note && <div className="text-slate-500">{c.note}</div>}
         {c.why && <div className="mt-auto pt-1 text-amber-300/90" data-testid={`build-why-${c.id}`}>{c.why}</div>}
+        {c.why && c.progress && <UnlockBar have={c.progress.have} need={c.progress.need} testId={`build-progress-${c.id}`} />}
       </div>
     </button>
   );

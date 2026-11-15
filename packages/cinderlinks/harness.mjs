@@ -41,7 +41,8 @@ function el() {
 const els = {};
 const ctx = {
   document: { getElementById: (id) => (els[id] ||= el()), createElement: () => el(), querySelector: () => el(), querySelectorAll: () => [], body: el(), addEventListener() {} },
-  addEventListener() {}, removeEventListener() {}, requestAnimationFrame() { return 0; }, cancelAnimationFrame() {},
+  // (#1368: the window keeps its listeners in __L, so a check can fire the keys as a player presses them: the keydown listener itself, not a function behind it)
+  addEventListener(t, fn) { ((globalThis.__L ||= {})[t] ||= []).push(fn); }, removeEventListener() {}, requestAnimationFrame() { return 0; }, cancelAnimationFrame() {},
   localStorage: { getItem: () => null, setItem() {}, removeItem() {} }, location: { search: '?seed=' + optOf('--seed', '4242') + '&time=' + optOf('--time', '0') + '&course=' + optOf('--course', 'none') + '&biome=' + optOf('--biome', '') + '&type=' + optOf('--type', ''), hash: '' },
   innerWidth: 1280, innerHeight: 720, devicePixelRatio: 1,
 };
@@ -171,6 +172,18 @@ const HOST_PLAY = String.raw`
       if (!(up > 40) || !/on/.test(upCls)) errs.push('host play: Up taps did not raise the boost bar (' + JSON.stringify(info.boostBar) + ')');
       if (!(down < up / 2)) errs.push('host play: the boost bar did not fall when the taps stopped (' + JSON.stringify(info.boostBar) + ')');
       if (!(info.meterHeldMs < 0.1)) errs.push('host play: the swing bar with the boost costs ' + info.meterHeldMs + ' ms a tick (budget 0.1 ms)'); }
+    // #1368: Up, W and Shift tapped while held, through the keydown listener as a player taps them: only the boost rises. The power fills on as it would with no
+    // taps (the meter's time and u), and the aim, the club and the keys held stay as they were (a tap is never a step)
+    { const S = HP.sw; if (S) { S.lv = 0; S.t = 0.2 / S.spd; }
+      const L = globalThis.__L || {}, down = L.keydown || [], up = L.keyup || [], a1 = [aim.x, aim.y], c1 = club, t1 = S ? S.t : -1;
+      const fire = (fs, code) => { for (const f of fs) f({ code, key: code, repeat: false, preventDefault() {} }); };
+      for (const code of ['ArrowUp', 'KeyW', 'ShiftLeft', 'ArrowUp']) { fire(down, code); fire(up, code); step(1, 0); }
+      const S2 = HP.sw, dt = S2 ? S2.t - t1 : -1, uWant = S2 ? 0.5 - 0.5 * Math.cos(Math.PI * S2.t * S2.spd) : -1;
+      info.keyTaps = { listeners: down.length, lv: S2 ? +S2.lv.toFixed(3) : -1, dt: +dt.toFixed(5), u: S2 ? +S2.u.toFixed(4) : -1 };
+      if (!down.length) errs.push('host play: no keydown listener to tap the boost with');
+      else if (!S2 || S2.rel || !(S2.lv > 0.4)) errs.push('host play: Up, W and Shift tapped while held did not raise the boost (' + JSON.stringify(info.keyTaps) + ')');
+      else if (Math.abs(dt - 4 / 60) > 1e-9 || Math.abs(S2.u - uWant) > 1e-9) errs.push('host play: the boost taps moved the power held (' + JSON.stringify(info.keyTaps) + ')');
+      if (aim.x !== a1[0] || aim.y !== a1[1] || club !== c1 || keys.ArrowUp || keys.KeyW || keys.ShiftLeft) errs.push('host play: a boost tap moved the aim or the club, or held a key'); }
     if (HP.sw) HP.sw.t = 0.55 / HP.sw.spd;   // (the long hold above took the power past its peak: back to the middle of the fill)
     step(1, 0); if (HP.sw) HP.sw.lv = 0; hostBoostTap(); hostBoostTap(); hostBoostTap(); const held = HP.sw ? HP.sw.u : -1, want = Math.round(Math.min(1, 3 * HMETER.tap) * HDRAIN * HMETER.plain * 1e4) / 1e4; keys.Space = false;
     info.swing = { glide, u0, lined, held: +held.toFixed(4), want };

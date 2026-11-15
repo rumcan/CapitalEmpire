@@ -8,14 +8,14 @@ import { readFileSync, readdirSync, statSync } from 'node:fs';
 import { gunzipSync } from 'node:zlib';
 import { GAME_BOOT } from '../src/game/boot';
 import { HH, HW, MAP, ZOOM_MAX, ZOOM_MIN, worldX, worldY } from '../src/game/iso';
-import { CHOICE_KEY, FADE_MS, REST_AFTER_MS, choiceFromStore, READY_MAX_MS, READY_MIN_MS, SHOW_ANCHOR, SHOW_HOURS, SHOW_STOPS, SLOW_AFTER_MS, SLOW_FRAME_MS, WARM_MS, WIDE_MIN_W, choiceHash, choiceOf, pickStart, poseAt, sceneOff, showBoot, showWanted, stopProblems, weakMachine, type ShowEnv, type ShowStop } from '../src/game/showcase';
+import { CHOICE_KEY, MENU_HASH, POSTER_FADE_MS, POSTER_H, POSTER_W, anchorOf, menuPageOf, posterBox, FADE_MS, REST_AFTER_MS, choiceFromStore, READY_MAX_MS, READY_MIN_MS, SHOW_ANCHOR, SHOW_HOURS, SHOW_STOPS, SLOW_AFTER_MS, SLOW_FRAME_MS, WARM_MS, WIDE_MIN_W, choiceHash, choiceOf, pickStart, poseAt, sceneOff, showBoot, showWanted, stopProblems, weakMachine, type ShowEnv, type ShowStop } from '../src/game/showcase';
 import { ShowDirector, type ShowEvent, type ShowHost } from '../src/game/showcase-director';
 import { townClockFor, townTimeOf, type TownClock } from '../src/game/sim/townclock';
 
-const stop = (o: Partial<ShowStop> = {}): ShowStop => ({ id: 't', name: 'test', x: 1000, y: 1000, dx: 10, dy: -6, z0: 0.2, z1: 0.3, secs: 15, ...o });
+const stop = (o: Partial<ShowStop> = {}): ShowStop => ({ id: 't', name: 'test', x: 1000, y: 1000, dx: 10, dy: -6, z0: 0.2, z1: 0.3, secs: 12, ...o });
 const screenOf = (p: { X: number; Y: number; z: number }, x: number, y: number, w: number, h: number) => ({ sx: (worldX(x, y) - p.X) * p.z + w / 2, sy: (worldY(x, y) - p.Y) * p.z + h / 2 });
 
-test('the stops lie inside the map, within the game\'s zoom, stay 12 to 18 s and are not repeated', () => {
+test('the stops lie inside the map, within the game\'s zoom, stay 8 to 14 s and are not repeated', () => {
   assert.deepEqual(stopProblems(SHOW_STOPS), []);
   assert.ok(SHOW_STOPS.length >= 2, 'a lap has more than one place');
   // the checker itself catches what it is for
@@ -23,7 +23,7 @@ test('the stops lie inside the map, within the game\'s zoom, stay 12 to 18 s and
   assert.ok(stopProblems([stop({ x: MAP - 70, dx: 200 })]).some(p => /end .* outside/.test(p)));
   assert.ok(stopProblems([stop({ z1: ZOOM_MAX * 1.2 })]).some(p => /zoom/.test(p)));
   assert.ok(stopProblems([stop({ z0: ZOOM_MIN / 2 })]).some(p => /zoom/.test(p)));
-  assert.ok(stopProblems([stop({ secs: 9 })]).some(p => /12 to 18/.test(p)) && stopProblems([stop({ secs: 25 })]).some(p => /12 to 18/.test(p)));
+  assert.ok(stopProblems([stop({ secs: 7 })]).some(p => /8 to 14/.test(p)) && stopProblems([stop({ secs: 15 })]).some(p => /8 to 14/.test(p)));
   assert.ok(stopProblems([stop(), stop()]).some(p => /second stop/.test(p)));
   assert.ok(stopProblems([stop({ x: NaN })]).some(p => /finite/.test(p)));
 });
@@ -46,11 +46,11 @@ test('the stops lie in the prepared world: on the map, near the club\'s land and
   }
 });
 
-test('the scene adds at most 12 files and 8 MB to the build: the world and one still picture for each stop, nothing else', () => {
+test('the scene adds at most 2 files and 1 MB to the build: the world and the still of the first stop (every visit starts there), nothing else', () => {
   const dir = 'src/assets/showcase', files = readdirSync(dir);
-  assert.ok(files.length <= 12, `${files.length} files`);
-  assert.ok(files.reduce((n, f) => n + statSync(`${dir}/${f}`).size, 0) <= 8 * 1024 * 1024, 'over 8 MB');
-  assert.deepEqual([...files].sort(), ['menu.cesave', ...SHOW_STOPS.map(s => `${s.id}.jpg`)].sort(), 'the folder holds the world and the stops\' stills: a stop with no still shows the card over a bare start');
+  assert.ok(files.length <= 2, `${files.length} files`);
+  assert.ok(files.reduce((n, f) => n + statSync(`${dir}/${f}`).size, 0) <= 1024 * 1024, 'over 1 MB');
+  assert.deepEqual([...files].sort(), ['menu.cesave', `${SHOW_STOPS[0]!.id}.jpg`].sort(), 'the folder holds the world and the first stop\'s still: without it the card shows over a bare start');
 });
 
 test('the scene\'s overlay draws no label, badge, marker, outline or hint: only the world\'s own balls and dust, and the early return comes first', () => {
@@ -72,16 +72,45 @@ test('the engine of the scene boots with its camera already on the first place (
 test('starting a game from the title card gives the game it always gave: the scene leaves by a reload into the game\'s own boot, then New game / Continue as before', () => {
   const app = readFileSync('src/App.tsx', 'utf8').replace(/\r\n/g, '\n');
   // the one place a game starts from the card, as it was: a new game over a save is a new town, the card closes, the speed is the game's
-  assert.match(app, /const startGame = \(g: Game, fresh: boolean\) => \{ if \(fresh && hasSave\) g\.newTown\(\); setTitleOpen\(false\); g\.setSpeed\(1\); \};/);
+  // (#1314: a choice now, with the sandbox's own slot: New game is a new career game over a save or a sandbox game, else the booted game; Continue the career slot)
+  assert.match(app, /else if \(c === 'new'\) \{ setSaveSlot\('town'\); if \(hasSave \|\| cur !== 'town'\) g\.newTown\(\); \}\n    setTitleOpen\(false\); g\.setSpeed\(1\);/);
+  assert.match(app, /if \(c === 'continue' && cur !== 'town'\) \{ toSlot\(g, 'town'\); return; \}/);
+  // (the main menu page is left first: its mark and address cleared, so F5, or a reload into the other slot, does not bring the menu back)
+  assert.match(app, /const startGame = \(g: Game, c: TitleChoice\) => \{\n    leaveMenuPage\(\);/); assert.match(app, /const toSlot = \(g: Game, s: SaveSlot\) => \{ leaveMenuPage\(\); g\.holdSaves\(\);/);
   // the page the choice started: the game's own boot (never the scene's), the same new town (a save stood) or the saved game, at the normal speed
-  assert.match(app, /if \(choice === 'new' && had\) game\.newTown\(\); game\.setSpeed\(1\);/);
+  assert.match(app, /else if \(choice === 'new' && had\) game\.newTown\(\); game\.setSpeed\(1\);/);
+  // (#1314: a sandbox choice lays its new town in the sandbox's slot: an empty sandbox slot boots the career one, whose save the new town must never be written over)
+  assert.match(app, /sb = sandboxOf\(choice\); if \(sb\) \{ setSaveSlot\('sandbox'\); game\.newTown\(\{ sandbox: sb \}\); \}/);
   assert.match(app, /const \[boot\] = useState\(\(\) => \{ const b = bootFor\(location\.search, import\.meta\.env\.DEV\); return sceneWanted && b\.kind === 'game' \? showBoot\(b\) : b; \}\);/);
-  // in the scene the click touches none of the scene's world: it writes the choice into the address and reloads
-  const leave = /const leaveTitle = \(fresh: boolean\) => \{\n([\s\S]*?)\n  \};/.exec(app)?.[1] ?? '';
+  // in the scene the click touches none of the scene's world: it says which save slot the choice plays in, writes the choice into the address and reloads. Every choice,
+  // the sandbox's too (the main menu page runs the scene in any build, where the card offers them): Continue sandbox is Continue in the sandbox's slot
+  const leave = /const leaveTitle = \(c: TitleChoice\) => \{\n([\s\S]*?)\n  \};/.exec(app)?.[1] ?? '';
   const scene = /if \(sceneWanted\) \{[^\n]*\n([\s\S]*?)\n    \}\n/.exec(leave)?.[1] ?? '';
-  assert.match(scene, /choiceHash\(fresh \? 'new' : 'continue'\)/); assert.match(scene, /location\.reload\(\)/); assert.ok(!/game\./.test(scene), 'the scene\'s engine is not asked to start anything');
+  assert.match(scene, /const go: StartChoice = c === 'sandbox-continue' \? 'continue' : c;/); assert.match(scene, /setSaveSlot\(slotOf\(c\)\);/);
+  assert.match(scene, /choiceHash\(go\)/); assert.match(scene, /location\.reload\(\)/); assert.ok(!/game\./.test(scene), 'the scene\'s engine is not asked to start or save anything');
+  assert.match(app, /const slotOf = \(c: TitleChoice\): SaveSlot => \(c === 'new' \|\| c === 'continue' \? 'town' : 'sandbox'\);/);
   // a chosen start is never the scene: showWanted says no once a choice is in the address (tested above), and the title is not open for it
-  assert.match(app, /const \[titleOpen, setTitleOpen\] = useState\(JAM && !choice\);/);
+  assert.match(app, /const titleAtBoot = \(JAM \|\| menuPage\) && !choice;/); assert.match(app, /const \[titleOpen, setTitleOpen\] = useState\(titleAtBoot\);/);
+});
+
+test('Exit to main menu runs the living scene in any build without touching the player\'s save: it saves first, then the page starts again as the main menu page', () => {
+  assert.equal(menuPageOf(MENU_HASH), true); assert.equal(menuPageOf('#menu&scene=off'), true); assert.equal(menuPageOf('#a=1&menu'), true);
+  assert.equal(menuPageOf(''), false); assert.equal(menuPageOf('#menus'), false); assert.equal(menuPageOf('#scene=off'), false); assert.equal(menuPageOf('#play=continue'), false);
+  assert.equal(sceneOff('#menu&scene=off'), true, 'a menu page whose scene could not be had keeps the card over the player\'s own game');
+  const app = readFileSync('src/App.tsx', 'utf8').replace(/\r\n/g, '\n');
+  // the menu page is a title page in any build, and its scene boots the scene's world (showBoot: no save read or written), exactly as the jam build's boot
+  assert.match(app, /const \[menuPage\] = useState\(\(\) => \{ if \(choice\) return false;/);
+  assert.match(app, /const \[sceneWanted\] = useState\(\(\) => titleAtBoot && sceneAllowed\(\)\);/);
+  // the reload into the menu waits for the save to be written (bytes > 0), and a choice made on the card meanwhile cancels it
+  const exit = /data-testid="menu-exit-title"[\s\S]*?>Exit to main menu<\/button>/.exec(app)?.[0] ?? '';
+  assert.match(exit, /void game\.save\(\)\.then\(n => \{ if \(exitPending\.current && n > 0 && sceneAllowed\(\)\) toMenuPage\(\); \}\);/);
+  assert.ok(!/location\.reload/.test(exit), 'the button never reloads before the save');
+  assert.match(app, /const leaveTitle = \(c: TitleChoice\) => \{\n    if \(starting\) return;\n    exitPending\.current = false;/);
+  // outside the jam build only a choice the card itself stored starts a game (a #play= in a dev address does not)
+  assert.match(app, /return JAM \? choiceOf\(location\.hash\) \?\? kept : kept;/);
+  // every visit starts in the town (the owner's order: the town, then the course, then the range)
+  assert.equal(SHOW_STOPS[0]!.id, 'road');
+  const ids = SHOW_STOPS.map(s => s.id); assert.ok(ids.indexOf('road') < ids.indexOf('fairway') && ids.indexOf('fairway') < ids.indexOf('range'));
 });
 
 test('the camera holds the point of interest at the anchor (right of the card on a wide screen, in the middle on a narrow one) and glides to the stop\'s end', () => {
@@ -127,7 +156,7 @@ test('the scene boots with no save read or written and no money floats; the game
 test('the engine keeps the scene away from the player\'s slot: saving is blocked before anything could write, and the slot is not read', () => {
   const src = readFileSync('src/game/engine.ts', 'utf8').replace(/\r\n/g, '\n'); // (a Windows checkout has CRLF)
   const at = (re: RegExp) => { const m = re.exec(src); assert.ok(m, `engine.ts has ${re}`); return m!.index; };
-  const block = at(/if \(showSave\) this\.saveBlocked = true;/), read = at(/const read = opts\.bench \|\| fixName \|\| showSave \|\| this\.osmSpec \|\| !this\.boot\.save \? null : await readSave\(\)/), loaded = at(/const save = fixture \?\? showSave \?\? read\?\.save \?\? null;/);
+  const block = at(/if \(showSave\) this\.saveBlocked = true;/), read = at(/let read = opts\.bench \|\| fixName \|\| showSave \|\| this\.osmSpec \|\| !this\.boot\.save \? null : await readSave\(\)/), loaded = at(/const save = fixture \?\? showSave \?\? read\?\.save \?\? null;/);
   assert.ok(block < read && read < loaded, 'saveBlocked, then the (skipped) read, then the save chosen');
   // a scene's world that fails to load must not take the backup path (a copy of the player's slot) the stored save's failure takes
   assert.match(src, /if \(save && showSave\) this\.showFailed = true;[^\n]*\n\s*else if \(save\) \{ if \(await backupTownSlot\('loadfailed'\)\)/);
@@ -189,9 +218,9 @@ test('the director: waits for the first view, glides, cuts with a copy of the pi
   const d = new ShowDirector(g, stops, 0, snap, e => events.push(e)); d.begin(0);
   assert.equal(d.phase, 'first'); assert.ok(g.onFrame && g.onAfterDraw);
   // nothing shows until the first view is baked (and not before the least wait)
-  frame(g, 100); assert.equal(d.phase, 'first'); assert.deepEqual(events, []);
+  frame(g, 100); assert.equal(d.phase, 'first'); assert.deepEqual(events, ['hour'], 'the hour set, the range warmed under the still');
   g.setReady(true); frame(g, READY_MIN_MS - 1); assert.equal(d.phase, 'first');
-  frame(g, READY_MIN_MS + 10); assert.equal(d.phase, 'play'); assert.deepEqual(events, ['first', 'cut']);
+  frame(g, READY_MIN_MS + 10); assert.equal(d.phase, 'play'); assert.deepEqual(events, ['hour', 'first', 'cut']);
   // the camera glides: at the middle it is where poseAt says
   const t0 = READY_MIN_MS + 10; frame(g, t0 + 6000);
   const mid = poseAt(stops[0]!, 0.5, 1600, 900); assert.ok(Math.abs(g.cam.X - mid.X) < 1e-6 && Math.abs(g.cam.z - mid.z) < 1e-9);
@@ -203,7 +232,7 @@ test('the director: waits for the first view, glides, cuts with a copy of the pi
   // the copy stays opaque until the next stop's ground is baked and the least wait is over; then it fades and the new stop's own glide starts
   g.setReady(false); frame(g, t0 + 12000 + READY_MIN_MS + 50); assert.equal(d.phase, 'cover'); assert.equal(style.opacity, '1');
   g.setReady(true); frame(g, t0 + 12000 + READY_MIN_MS + 100); assert.equal(d.phase, 'play'); assert.equal(style.opacity, '0'); assert.match(style.transition, new RegExp(`opacity ${FADE_MS}ms`));
-  assert.deepEqual(events, ['first', 'cut', 'cut']);
+  assert.deepEqual(events, ['hour', 'first', 'cut', 'cut']);
   // the lap goes round
   const t1 = t0 + 12000 + READY_MIN_MS + 100; frame(g, t1 + 14000); assert.equal(d.index, 0); assert.equal(d.phase, 'cover');
   d.end(); assert.equal(g.onFrame, null); assert.equal(g.onAfterDraw, null);
@@ -255,4 +284,30 @@ test('the director: a machine too slow for the scene says so once, after the fir
     frame(g, play + SLOW_AFTER_MS + 100); frame(g, play + SLOW_AFTER_MS + 200);
     assert.equal(events.filter(e => e === 'slow').length, slow ? 1 : 0, `${ms} ms a frame`);
   }
+});
+
+test('the still is laid at the live scene\'s own scale with its point of interest on the screen\'s anchor, and the first view holds while it fades (the swap only brings the movers in)', () => {
+  // at a screen the still covers, scale 1 (the live scene's) and the poster's point of interest on the screen's anchor
+  for (const [w, h] of [[1600, 900], [1920, 1080], [1366, 768], [390, 844], [800, 1200]] as const) {
+    const b = posterBox(w, h), a = anchorOf(w, h), p = anchorOf(POSTER_W, POSTER_H);
+    assert.ok(b.left <= 0 && b.top <= 0 && b.left + b.width >= w && b.top + b.height >= h, `${w}x${h}: covered`);
+    assert.ok(Math.abs(b.left + p.x * b.width - a.x * w) < 1e-6 && Math.abs(b.top + p.y * b.height - a.y * h) < 1e-6, `${w}x${h}: the point of interest on the anchor`);
+    if (w <= POSTER_W * 0.7 && h <= POSTER_H * 0.8) assert.equal(b.width, POSTER_W, `${w}x${h}: the live scale`);
+  }
+  const big = posterBox(3840, 2160); assert.ok(big.width > POSTER_W && big.left <= 0 && big.left + big.width >= 3840, 'a screen larger than the still: the least scale that covers');
+  // the engine draws the still with no movers (stillLife), and the page shows it in place of object-fit
+  const eng = readFileSync('src/game/engine.ts', 'utf8');
+  assert.match(eng, /const cars: Drawable\[\] = this\.traffic && !this\.stillLife \?/); assert.match(eng, /if \(tier === 'street' && !this\.stillLife\) \{/); assert.match(eng, /tier === 'street' && !this\.stillLife && this\.range\.scene/);
+  assert.ok(!/object-cover/.test(readFileSync('src/ui/jam/MenuScene.tsx', 'utf8')), 'no cover crop: it would scale the still away from the live picture');
+  // and never the UI's Text size (index.css: .ui-root's children are zoomed by --ui-scale, 0.9 on a 900 px tall screen): the still is a picture of the world, at the canvas's scale
+  assert.match(readFileSync('src/ui/jam/MenuScene.tsx', 'utf8'), /className="ui-unscaled [^"]*" data-testid="menu-scene"/);
+  assert.match(readFileSync('src/index.css', 'utf8'), /\.ui-root > :not\(canvas\):not\(\.ui-unscaled\) \{ zoom: var\(--ui-scale, 1\); \}/);
+  // the first stop holds its first view for firstHold ms after it is shown, then glides
+  const s0 = stop({ id: 'a', secs: 12 }), s1 = stop({ id: 'b', x: 1300, secs: 12 }), { g, snap } = host();
+  const d = new ShowDirector(g, [s0, s1], 0, snap, () => {}, POSTER_FADE_MS); d.begin(0); g.setReady(true);
+  const frame = (t: number) => g.onFrame!(t, 16);
+  frame(READY_MIN_MS + 10); assert.equal(d.phase, 'play');
+  const first = poseAt(s0, 0, 1600, 900); frame(READY_MIN_MS + 10 + POSTER_FADE_MS - 50);
+  assert.ok(Math.abs(g.cam.X - first.X) < 1e-9 && Math.abs(g.cam.Y - first.Y) < 1e-9, 'still on the first view while the still fades');
+  frame(READY_MIN_MS + 10 + POSTER_FADE_MS + 3000); assert.ok(Math.abs(g.cam.X - first.X) > 1e-6, 'then it glides');
 });

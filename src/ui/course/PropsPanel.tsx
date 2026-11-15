@@ -1,5 +1,5 @@
 import type { Game } from '../../game/engine';
-import { DECOR, PROPS_APPEAL_RADIUS, PROPS_DECAY, PROP_KINDS, appealText, placeOf, placeableProps, propsCount, propsShown, sellBack, sizeText, sizedPrice, type DecorItem } from '../../game/golf/decor';
+import { DECOR, DECOR_BY_KEY, PROPS_APPEAL_RADIUS, PROPS_DECAY, PROP_KINDS, PROP_SIDES, appealText, isBrushed, sideOfGroup, placeOf, placeableProps, propsCount, propsShown, sellBack, sizeText, sizedPrice, type DecorItem } from '../../game/golf/decor';
 import { PROPS_APPEAL_CAP } from '../../game/golf/rangesave';
 import { LIBRARY } from '../../game/library';
 import { Thumb } from '../Thumb';
@@ -21,16 +21,20 @@ export function PropsPanel({ game }: { game: Game }) {
   // line under the box counts what is shown against every prop the tool can place (T229: a frame tree is not sold here)
   // T400 (#1078): the town's panel counts against the town's own props (the golf props are Facilities': Town decoration lists none of them, and has no All props box)
   const view = { where: t.where, group: t.group, all: t.all, focus: t.focus }, groups = propsShown(view), shown = propsCount(view), placeable = town ? propsCount({ where: 'town', group: null, all: false, focus: null }) : placeableProps().length;
-  const kind = PROP_KINDS.find(k => k.id === t.focus);
+  const kind = PROP_KINDS.find(k => k.id === t.focus), side = PROP_SIDES.find(s => s.id === t.focus);
+  // #1284: the hand's natural brush (a tree, a shrub, a rock is painted on): its density
+  const handD = t.hand ? DECOR_BY_KEY.get(t.hand) : undefined, brushed = !!handD && isBrushed(handD);
   return (
     <div className="tp" data-panel="props" data-place={buildings ? 'town-buildings' : t.where}>
       {buildings
         ? <ToolHead icon="buildings" title="Town buildings" desc="A few buildings for the town's parks, squares and roadsides: off your land and off its lots, on the grass between them" />
         : town
-          ? <ToolHead icon="leaf" title="Town props" desc="Benches, lamps, planters and beds for the town's streets and parks, off your land" />
+          ? <ToolHead icon="trees" title="Town props" desc="Benches, lamps, planters and beds for the town's streets and parks, off your land" />
           : kind
-            ? <ToolHead icon="leaf" title={kind.name} desc="The golf props for your course and its tournament days, by kind" />
-            : <ToolHead icon="leaf" title="Props" desc="Dress your venue: pot plants, fountains, statues, pillars and benches" />}
+            ? <ToolHead icon="trophy" title={kind.name} desc="The golf props for your course and its tournament days, by kind" />
+            : side
+              ? <ToolHead icon={side.id === 'natural' ? 'trees' : 'buildings'} title={`${side.name} props`} desc={side.desc} />
+              : <ToolHead icon="trees" title="Props" desc="Natural props are painted on with the brush; man-made ones are placed one by one" />}
       {buildings && <p className="sub-line mb-2 leading-snug" data-testid="town-buildings-note">Decoration: the town has no land value or attractiveness for them to raise yet, so they add the look alone.</p>}
       {!buildings && (
         <div className="mb-2" data-testid="props-all-box">
@@ -39,7 +43,7 @@ export function PropsPanel({ game }: { game: Game }) {
             All props (not only the course's)
           </label>}
           <div className="sub-line mt-0.5" data-testid="props-count" data-shown={shown} data-placeable={placeable}>
-            {`Showing ${shown} of ${placeable} props${t.focus && !t.all ? ` (${kind?.name ?? groups[0]?.name ?? t.focus} only)` : ''}`}
+            {`Showing ${shown} of ${placeable} props${t.focus && !t.all ? ` (${kind?.name ?? side?.name ?? groups[0]?.name ?? t.focus} only)` : ''}`}
           </div>
         </div>
       )}
@@ -62,14 +66,28 @@ export function PropsPanel({ game }: { game: Game }) {
           </div>
         </div>
       )}
-      {groups.map(g => (
-        <div key={g.id} className="mb-2" data-group={g.id}>
-          <div className="label-caps mb-1 text-slate-400">{g.name}</div>
-          <div className="grid grid-cols-2 gap-1.5">
-            {g.items.map(d => <Card key={d.key} game={game} d={d} />)}
-          </div>
+      {brushed && (
+        <div className="mb-2 flex items-center gap-1.5" data-testid="props-density">
+          <span className="sub-line">Brush</span>
+          {(['Sparse', 'Normal', 'Dense'] as const).map((n, i) => <button key={n} className={`chip ${t.density === i ? 'chip-on' : ''}`} aria-pressed={t.density === i} onClick={() => t.setDensity(i as 0 | 1 | 2)} title={`How close the brush lays them: ${n.toLowerCase()}`}>{n}</button>)}
         </div>
-      ))}
+      )}
+      {/* #1284 (the owner: "make the left menu cards and scrollable"): the cards in a list of their own that scrolls, a thin scroll bar, never sideways; the groups under their side */}
+      <div className="props-cards" data-testid="props-cards">
+        {PROP_SIDES.map(sd => { const gs = groups.filter(g => sideOfGroup(g.id) === sd.id); return gs.length ? (
+          <div key={sd.id} data-side={sd.id}>
+            <div className="mb-1 mt-1 flex items-baseline justify-between gap-2 border-b border-white/10 pb-0.5"><span className="font-semibold text-amber-200">{sd.name}</span><span className="sub-line">{sd.id === 'natural' ? 'paint with the brush' : 'placed one by one'}</span></div>
+            {gs.map(g => (
+              <div key={g.id} className="mb-2" data-group={g.id}>
+                <div className="label-caps mb-1 text-slate-400">{g.name}</div>
+                <div className="grid grid-cols-2 gap-1.5">
+                  {g.items.map(d => <Card key={d.key} game={game} d={d} />)}
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : null; })}
+      </div>
       <p className="mt-1 leading-snug">{t.hand ? (kitHint(DECOR.find(d => d.key === t.hand)) ?? (placeOf(DECOR.find(d => d.key === t.hand) ?? { group: 'plants', id: '' }) === 'town' || (town && placeOf(DECOR.find(d => d.key === t.hand) ?? { group: 'plants', id: '' }) === 'both') ? 'Click in the town (off your land, off its lots) to place it; R turns it, Esc puts it down.' : 'Click on your land to place it; R turns it, Esc puts it down.')) : 'Pick a prop to place it, or click one on the map to move, turn or sell it.'}</p>
     </div>
   );
@@ -85,6 +103,8 @@ function kitHint(d: DecorItem | undefined): string | null {
   if (d.water === 'in') return 'Click in a pond or a lake to place it; Esc puts it down.';
   // T257
   if (d.mix) return 'Click to drop one, or drag to lay a row: every spot gets its own; [ and ] size them; Esc puts it down.';
+  // #1284: the natural brush
+  if (isBrushed(d)) return `Paint it on: click for one, drag to lay a scatter (the brush's density above); ${d.variants && d.variants.length > 1 ? 'R shows the next picture; ' : ''}[ and ] size it; Esc puts it down.`;
   if (d.natural) return `Click to place it; ${d.variants && d.variants.length > 1 ? 'R shows the next picture; ' : ''}[ and ] size it (80% to 120%); Esc puts it down.`;
   if (d.variants) return 'Click to place it; R shows the next picture, Esc puts it down.';
   return null;
@@ -97,7 +117,7 @@ function Card({ game, d }: { game: Game; d: DecorItem }) {
   const tip = mode === 'views' ? ` · ${t.facingInfo(d).mode === 'eight' ? 'eight' : 'four'} views (R turns it)` : mode === 'pictures' ? ' · R shows the next picture' : '';
   return (
     <button className={`card gap-1 ${on ? 'card-on' : ''}`} data-card={`prop-${d.key}`} aria-pressed={on} onClick={() => t.pick(d.key)} title={`${d.desc}${tip}${t.scales(d) ? ' · [ ] size it' : ''}`}>
-      <div className="grid h-14 w-full place-items-center overflow-hidden rounded-lg bg-black/30">{it && <Thumb it={it} size={50} />}</div>
+      <div className="grid h-20 w-full place-items-center overflow-hidden rounded-lg bg-black/30">{it && <Thumb it={it} size={72} />}</div>
       <div className="w-full truncate font-semibold leading-tight">{d.name}</div>
       
       <div className="flex w-full items-baseline justify-between gap-1"><span className={poor ? 'text-rose-300' : 'text-amber-200'}>{poor ? `${statusIcon('fail')} ` : ''}{money(price)}{d.per ? <span className="sub-line"> {d.per}</span> : null}{on && Math.abs(size - 1) > 1e-9 ? <span className="sub-line"> {sizeText(size)}</span> : null}</span>{t.where === 'course' && <span className="sub-line">{appealText(d.appeal)}</span>}</div>

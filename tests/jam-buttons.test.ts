@@ -31,7 +31,7 @@ function stub(o: { cardOpen?: boolean; panel?: string | null } = {}): { g: ActHo
     range: { cardOpen: o.cardOpen ?? false, scene: { counter: { x: 10, y: 20 } } },
     openRangeCard: rec('openRangeCard'), placeRangePart: rec('placeRangePart'), lookAt: rec('lookAt'), buyRangeUpgrade: rec('buyRangeUpgrade'),
     setTool: rec('setTool'), paint: { setProperty: rec('paint.setProperty') }, startFirstHole: rec('startFirstHole'), placeClubhouse: rec('placeClubhouse'),
-    armPractice: rec('armPractice'), buyRange: rec('buyRange'), panel: o.panel ?? null, toggleMoneyPanel: rec('toggleMoneyPanel'), guideShowMe: rec('guideShowMe'),
+    armPractice: rec('armPractice'), buyRange: rec('buyRange'), panel: o.panel ?? null, toggleMoneyPanel: rec('toggleMoneyPanel'), guideShowMe: rec('guideShowMe'), openPropertyPaint: rec('openPropertyPaint'), setPropsTool: rec('setPropsTool'), startRealPlace: rec('startRealPlace'),
   };
   return { g, calls };
 }
@@ -86,6 +86,18 @@ test('every Build menu card that is not built has something to do', () => {
   for (const s of [src(), src({ clubhouse: { built: true, cost: 45000, upkeep: 150 } }), src({ money: 0 }), src({ locks: { newHole: 'Locked', buildings: 'Locked', path: null, practice: 'Locked' } })]) {
     for (const c of buildCards(s)) assert.ok(c.act || c.done, `${c.id}: neither an act nor built`);
   }
+});
+
+test('2026-11-15: the jam Build menu reaches the Texture Painter, the Props tool and every real course (each card reaches the engine)', async () => {
+  const { runBuildAct } = await import('../src/ui/jam/acts');
+  const src: BuildSource = { places: [], range: null, rangeUpkeep: 0, locks: { newHole: null, buildings: null, path: null, practice: null }, clubhouse: { built: true, cost: 45000, upkeep: 150 }, course: null, money: 75000,
+    real: [{ id: 'magnolia-national', name: 'Magnolia National', place: 'Augusta', holes: 18, par: 72 }] };
+  const cards = buildCards(src), byId = (id: string) => cards.find(c => c.id === id)!;
+  assert.ok(byId('texture') && byId('props') && byId('real-magnolia-national'));
+  const calls: string[] = [], game = { range: { cardOpen: false, scene: null }, paint: { setProperty: () => calls.push('setProperty') }, openRangeCard: () => {}, openPropertyPaint: () => calls.push('openPropertyPaint'), setPropsTool: () => calls.push('setPropsTool'), startRealPlace: (id: string) => calls.push('real ' + id) } as never;
+  const ui = { rail: () => {}, build: () => {}, tips: () => {} };
+  runBuildAct(game, byId('texture').act!, ui); runBuildAct(game, byId('props').act!, ui); runBuildAct(game, byId('real-magnolia-national').act!, ui);
+  assert.deepEqual(calls, ['setProperty', 'openPropertyPaint', 'setPropsTool', 'real magnolia-national']);
 });
 
 /** the <button ...> tags of a TSX source (braces balanced, so an arrow's > inside {} does not end the tag) */

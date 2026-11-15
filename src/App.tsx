@@ -24,7 +24,7 @@ import { freshStats } from './game/business/state';
 import { BUSINESS_IMAGE } from './game/business/art';
 import { BUSINESS_THUMBS } from './game/business-library';
 import type { SurgeView } from './game/event/surge';
-import { BUILD, readSave } from './game/save';
+import { BUILD, readSave, saveSlot, setSaveSlot, slotHasSave, type SaveSlot } from './game/save';
 import { DEM_CREDIT_DEFAULT, DEM_TILES_CREDIT } from './game/golf/osm/terrarium';
 import { bootFor } from './game/dev/lab-boot';
 import { PaintPanel } from './PaintPanel';
@@ -85,8 +85,9 @@ import { bendWords } from './game/route-input';
 import { COST_GROUPS, INCOME_LINES } from './game/golf/reports';
 import { debtOf } from './game/golf/finance';
 import { LOGO, TITLE, TitleCard } from './ui/jam/TitleCard';
+import LOADING_ART from './assets/ui/brand/loading.webp';
 import { MenuScene, posterOf } from './ui/jam/MenuScene';
-import { CHOICE_STORE_KEY, SHOW_STOPS, choiceFromStore, choiceHash, choiceOf, pickStart, poseAt, sceneOff, showBoot, showWanted, weakMachine, type StartChoice } from './game/showcase';
+import { CHOICE_STORE_KEY, MENU_HASH, MENU_STORE_KEY, POSTER_FADE_MS, SHOW_STOPS, choiceFromStore, choiceHash, choiceOf, menuPageOf, sandboxOf, poseAt, sceneOff, showBoot, showWanted, weakMachine, type StartChoice } from './game/showcase';
 import { ShowDirector } from './game/showcase-director';
 import { loadShowcaseSave } from './game/showcase-load';
 import { formatPercent } from './ui/TournamentResults';
@@ -189,6 +190,16 @@ const hod = (h: number) => `${String(h % 24).padStart(2, '0')}:00`;
 const DEV_KEY = 'capitalempire.dev';
 function devStart(): boolean { if (JAM) return false; try { return new URLSearchParams(location.search).has('debug') || localStorage.getItem(DEV_KEY) === '1'; } catch { return false; } }
 
+/** whether this page may run the living scene behind the title card (showcase.ts showWanted): motion allowed, a visible tab, a machine that can, no bench / fixture / lab
+ *  boot and the scene not switched off; else the card shows its still picture */
+function sceneAllowed(): boolean {
+  const q = new URLSearchParams(location.search), nav = navigator as Navigator & { deviceMemory?: number; connection?: { saveData?: boolean } };
+  let reduced = false; try { reduced = matchMedia('(prefers-reduced-motion: reduce)').matches; } catch { /* no media queries */ }
+  return showWanted({ jam: true, chose: false, reducedMotion: reduced, hidden: document.hidden, weak: weakMachine(nav), other: sceneOff(location.hash) || ['bench', 'fixture', 'osmcourse', 'lotlab', 'lotreview'].some(k => q.has(k)) });
+}
+/** what the title card can choose: a start (showcase.ts StartChoice) or Continue sandbox (#1314: the sandbox save slot's game) */
+type TitleChoice = StartChoice | 'sandbox-continue';
+
 export default function App() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const overlayRef = useRef<HTMLCanvasElement>(null);
@@ -196,65 +207,94 @@ export default function App() {
   const [game, setGame] = useState<Game | null>(null);
   // J12 (#1271): the living scene behind the jam's title card (game/showcase.ts). A choice made on the card reloads the page with it in the address (the scene's world is never the
   // player's), so a page that finds one starts the game at once, as it always did; else the scene runs when this page may spare it; else the card shows its still picture over the game's own boot
-  const [choice] = useState(() => { if (!JAM) return null; let kept: StartChoice | null = null; try { kept = choiceFromStore(sessionStorage.getItem(CHOICE_STORE_KEY)); } catch { /* no storage */ } return choiceOf(location.hash) ?? kept; });
-  const [sceneWanted] = useState(() => {
-    if (!JAM) return false;
-    const q = new URLSearchParams(location.search), nav = navigator as Navigator & { deviceMemory?: number; connection?: { saveData?: boolean } };
-    let reduced = false; try { reduced = matchMedia('(prefers-reduced-motion: reduce)').matches; } catch { /* no media queries */ }
-    return showWanted({ jam: true, chose: !!choice, reducedMotion: reduced, hidden: document.hidden, weak: weakMachine(nav), other: sceneOff(location.hash) || ['bench', 'fixture', 'osmcourse', 'lotlab', 'lotreview'].some(k => q.has(k)) });
-  });
+  // The main menu page (the settings menu's Exit to main menu, in any build: showcase.ts menuPageOf) is the same card over the same scene. Outside the jam build only a choice
+  // the card itself stored is taken (a #play= left in a dev address never starts a new game)
+  const [choice] = useState(() => { let kept: StartChoice | null = null; try { kept = choiceFromStore(sessionStorage.getItem(CHOICE_STORE_KEY)); } catch { /* no storage */ } return JAM ? choiceOf(location.hash) ?? kept : kept; });
+  const [menuPage] = useState(() => { if (choice) return false; let kept = false; try { kept = sessionStorage.getItem(MENU_STORE_KEY) === '1'; } catch { /* no storage */ } return menuPageOf(location.hash) || kept; });
+  /** the title card is up when the page starts: the jam build's boot, and the main menu page in any build */
+  const titleAtBoot = (JAM || menuPage) && !choice;
+  const [sceneWanted] = useState(() => titleAtBoot && sceneAllowed());
   /** what the engine boots with (T157): the lot lab's light boot under ?lotlab (dev builds), else the game's (the scene's: no save read or written, no money floats); the lab draws no HUD or minimap */
   const [boot] = useState(() => { const b = bootFor(location.search, import.meta.env.DEV); return sceneWanted && b.kind === 'game' ? showBoot(b) : b; });
   const lab = boot.kind === 'lab';
   const [, bump] = useReducer((x: number) => x + 1, 0);
   // the jam build's title card (ui/jam/TitleCard.tsx): shown over the game until New game / Continue; the game waits (paused) behind it (the scene's runs: engine.ts show)
-  const [titleOpen, setTitleOpen] = useState(JAM && !choice);
+  const [titleOpen, setTitleOpen] = useState(titleAtBoot);
   const [hasSave, setHasSave] = useState(false);
   const saveSeen = useRef<Promise<boolean> | null>(null);
   useEffect(() => { if (JAM) { document.title = TITLE; const p = readSave().then(r => r.status === 'ok'); saveSeen.current = p; void p.then(setHasSave); } }, []);
+  useEffect(() => { if (!JAM && (menuPage || choice)) { const p = readSave().then(r => r.status === 'ok'); saveSeen.current = p; void p.then(setHasSave); } }, []); // eslint-disable-line react-hooks/exhaustive-deps
   // the choice is read once: the address is cleared at once, so a reload of the game (F5) never starts a new one
   useEffect(() => { if (choice) { try { history.replaceState(null, '', location.pathname + location.search); } catch { /* the address stays */ } try { sessionStorage.removeItem(CHOICE_STORE_KEY); } catch { /* no storage */ } } }, [choice]);
   const titlePaused = useRef(false);
   useEffect(() => { if (game?.ready && titleOpen && !game.show && !titlePaused.current) { titlePaused.current = true; game.setSpeed(0); } }, [game?.ready, titleOpen, game]);
   /** the title card's choice made, and the game it starts once the engine is ready (a click before that waits for it, as the card was only there after it) */
   const [starting, setStarting] = useState(false);
-  const pending = useRef<boolean | null>(null);
-  const startGame = (g: Game, fresh: boolean) => { if (fresh && hasSave) g.newTown(); setTitleOpen(false); g.setSpeed(1); };
-  const leaveTitle = (fresh: boolean) => {
+  const pending = useRef<TitleChoice | null>(null);
+  /** #1314: which save slots hold a game (the career's and the sandbox's), read each time the title card opens */
+  const [slotSaves, setSlotSaves] = useState<Record<SaveSlot, boolean>>({ town: false, sandbox: false });
+  useEffect(() => { if (titleOpen) void Promise.all([slotHasSave('town'), slotHasSave('sandbox')]).then(([town, sandbox]) => setSlotSaves({ town, sandbox })); }, [titleOpen]);
+  /** the main menu page left (its address and stored mark cleared, so F5 in the game, or a reload into the other slot, does not bring the menu back) */
+  const leaveMenuPage = () => { try { sessionStorage.removeItem(MENU_STORE_KEY); } catch { /* no storage */ } if (menuPageOf(location.hash)) { try { history.replaceState(null, '', location.pathname + location.search); } catch { /* the address stays */ } } };
+  /** Exit to main menu asked for the scene: once the game is saved, the page starts again as the main menu page (cancelled by a choice made on the card meanwhile) */
+  const exitPending = useRef(false);
+  const toMenuPage = () => {
+    exitPending.current = false;
+    try { sessionStorage.setItem(MENU_STORE_KEY, '1'); } catch { /* no storage: the address carries it */ }
+    try { history.replaceState(null, '', location.pathname + location.search + MENU_HASH); } catch { /* the stored mark carries it */ }
+    location.reload();
+  };
+  /** #1314: the other save slot's game: this page saves nothing more, the slot is remembered and the page reloads into its game */
+  const toSlot = (g: Game, s: SaveSlot) => { leaveMenuPage(); g.holdSaves(); setSaveSlot(s); location.reload(); };
+  /** the save slot a choice plays in (#1314): the career's for New game and Continue, the sandbox's for a sandbox game and Continue sandbox */
+  const slotOf = (c: TitleChoice): SaveSlot => (c === 'new' || c === 'continue' ? 'town' : 'sandbox');
+  /** the choice made. New game: a new career game (when a save stood or a sandbox game is open; else the game booted fresh is it); Continue: the career game (from a
+   *  sandbox game its slot is loaded); a sandbox game (#1314): a new one in its own save slot (the career save untouched), or Continue sandbox */
+  const startGame = (g: Game, c: TitleChoice) => {
+    leaveMenuPage();
+    const sb = sandboxOf(c === 'sandbox-continue' ? null : c), cur = saveSlot();
+    if (c === 'continue' && cur !== 'town') { toSlot(g, 'town'); return; }
+    if (c === 'sandbox-continue') { if (cur !== 'sandbox') { toSlot(g, 'sandbox'); return; } }
+    else if (sb) { setSaveSlot('sandbox'); g.newTown({ sandbox: sb }); }
+    else if (c === 'new') { setSaveSlot('town'); if (hasSave || cur !== 'town') g.newTown(); }
+    setTitleOpen(false); g.setSpeed(1);
+  };
+  const leaveTitle = (c: TitleChoice) => {
     if (starting) return;
-    if (sceneWanted) { // the scene's world is not the player's: the page starts again with the choice in its address and the game boots as it always did
+    exitPending.current = false;
+    if (sceneWanted) { // the scene's world is not the player's: the page only says which slot the choice plays in (it writes no save), then starts again with the choice in its address and the game boots that slot's save as it always did
       setStarting(true);
-      try { sessionStorage.setItem(CHOICE_STORE_KEY, fresh ? 'new' : 'continue'); } catch { /* no storage */ }
-      try { history.replaceState(null, '', choiceHash(fresh ? 'new' : 'continue')); } catch { /* the address stays: the stored choice carries it */ }
+      const go: StartChoice = c === 'sandbox-continue' ? 'continue' : c; // (Continue sandbox: Continue, in the sandbox's slot)
+      setSaveSlot(slotOf(c));
+      try { sessionStorage.removeItem(MENU_STORE_KEY); } catch { /* no storage */ }
+      try { sessionStorage.setItem(CHOICE_STORE_KEY, go); } catch { /* no storage */ }
+      try { history.replaceState(null, '', choiceHash(go)); } catch { /* the address stays: the stored choice carries it */ }
       window.setTimeout(() => location.reload(), 60);
       return;
     }
-    if (!game?.ready) { pending.current = fresh; setStarting(true); return; }
-    startGame(game, fresh);
+    if (!game?.ready) { pending.current = c; setStarting(true); return; }
+    startGame(game, c);
   };
   useEffect(() => { if (game?.ready && pending.current !== null) { const f = pending.current; pending.current = null; setStarting(false); startGame(game, f); } }, [game?.ready]); // eslint-disable-line react-hooks/exhaustive-deps
-  // a page started by the card's choice: the game's own boot, then the new game (when a save stood) or the saved one, at the normal speed
+  // a page started by the card's choice: the game's own boot, then the new game (when a save stood) or the saved one, at the normal speed. A sandbox game is laid in its own
+  // slot (#1314): the page was booted in the slot the card set, but an empty sandbox slot boots the career one (engine), so the slot is set again before the new town
   const choiceDone = useRef(false);
   useEffect(() => {
     if (!game?.ready || !choice || choiceDone.current) return;
     choiceDone.current = true;
-    void (async () => { const had = await (saveSeen.current ?? Promise.resolve(false)); if (choice === 'new' && had) game.newTown(); game.setSpeed(1); })();
+    void (async () => { const had = await (saveSeen.current ?? Promise.resolve(false)), sb = sandboxOf(choice); if (sb) { setSaveSlot('sandbox'); game.newTown({ sandbox: sb }); } else if (choice === 'new' && had) game.newTown(); game.setSpeed(1); })();
   }, [game?.ready, choice, game]);
   // the scene: the director glides the camera over the prepared world; its first picture fades the still out; a machine too slow for it gives way to the still
   const snapRef = useRef<HTMLCanvasElement>(null);
   const [posterOn, setPosterOn] = useState(true);
-  const [startStop] = useState(() => {
-    if (choice) return 0; // (a page the card's choice started shows no card, so it does not use up a visit: the next visit still starts somewhere new)
-    let last: number | null = null; try { const v = localStorage.getItem('fairwayfortune.scene'); if (v !== null && Number.isFinite(Number(v))) last = Number(v); } catch { /* no storage */ }
-    const k = pickStart(SHOW_STOPS.length, Math.random(), last); try { localStorage.setItem('fairwayfortune.scene', String(k)); } catch { /* no storage */ }
-    return k;
-  });
+  /** every visit starts in the town and goes round: town, club, course, range, farm (the owner, 2026-11-15; showcase.ts SHOW_STOPS) */
+  const startStop = 0;
   const director = useRef<ShowDirector | null>(null);
   useEffect(() => {
     if (!game?.ready || !sceneWanted || director.current) return;
-    if (!game.show) { try { history.replaceState(null, '', '#scene=off'); } catch { /* none */ } location.reload(); return; } // the scene's world could not be had: start again without it
+    if (!game.show) { try { history.replaceState(null, '', menuPage ? `${MENU_HASH}&scene=off` : '#scene=off'); } catch { /* none */ } location.reload(); return; } // the scene's world could not be had: start again without it (the main menu page stays the menu, over the player's own game)
     if (!snapRef.current) return;
-    const d = new ShowDirector(game, SHOW_STOPS, startStop, snapRef.current, e => { if (e === 'first') setPosterOn(false); else if (e === 'slow') { d.end(); game.freeze(); setPosterOn(true); } else if (e === 'rest') { d.end(); game.freeze(); } });
+    const d = new ShowDirector(game, SHOW_STOPS, startStop, snapRef.current, e => { if (e === 'hour') game.warmShowRange(); else if (e === 'first') setPosterOn(false); else if (e === 'slow') { d.end(); game.freeze(); setPosterOn(true); } else if (e === 'rest') { d.end(); game.freeze(); } }, POSTER_FADE_MS); // (the first view holds while the still fades over it)
     director.current = d; d.begin(); Object.assign(window as unknown as Record<string, unknown>, { __showDirector: d, __showcase: { stops: SHOW_STOPS, poseAt } }); // (the checks' hooks, like __game: scripts/jam/menu-scene-shots.mjs)
   }, [game?.ready, sceneWanted, game, startStop]);
   useEffect(() => () => { director.current?.end(); director.current = null; }, []);
@@ -439,10 +479,11 @@ export default function App() {
     const ui = g.toolUi(), rv = g.range.view();
     return buildCards({
       places: g.rangePlaces(), range: rv, rangeUpkeep: rv?.upkeep ?? 0,
-      locks: { newHole: ui?.newHoleLock ?? g.toolLock('course'), buildings: g.toolLock('buildings'), path: g.toolLock('path'), practice: g.toolLock('practice') },
+      locks: { newHole: ui?.newHoleLock ?? g.toolLock('course'), buildings: g.toolLock('buildings'), path: g.toolLock('path'), practice: g.toolLock('practice'), progress: ui?.newHoleProgress ?? null },
       clubhouse: { built: g.bizDefs.some(d => d.type === 'clubhouse'), cost: CLUBHOUSE_RANGE_COST, upkeep: BUSINESS.clubhouse!.upkeepPerDay / MONTHS_A_SEASON },
       course: g.paybackCourse(), money: g.money,
       forSale: !!rv?.biz.forSale, junk: rv?.biz.junk?.length ? { n: rv.biz.junk.length, cost: JUNK_CLEAR_COST, first: rv.biz.junk[0]!.id } : undefined,
+      real: [...OSM_COURSES.map(c => ({ id: c.id, name: c.name, place: c.place, holes: c.holes, par: c.par })), ...keptCourses().map(r => ({ id: r.id, name: r.name, place: r.place || 'Downloaded', holes: r.holes ?? 0, par: r.par ?? 0 }))],
     });
   };
   /** J7: a Build menu card picked: the same placement the rail and the range card start; the menu shuts */
@@ -608,6 +649,10 @@ export default function App() {
     return { right: (c: StackCard) => stackRight(stackCol(open, c), panel, fit), guide: () => stackRight(stackCol({ ...open, player: false, bag: false }, 'bag'), panel, fit) };
   })();
 
+  /** jam-rc: the right-hand card's offset (the Range, hole, place and talk cards...): clear of the Budget panel (19.5rem) or the wider Bank panel (24rem, as
+   *  card-stack.ts's 'wide' column); the Bank opened from the tutorial stood under the Range card */
+  const mainRight = () => game?.panel === 'bank' ? 'right-[24rem]' : game?.panel ? 'right-[19.5rem]' : 'right-3';
+
   /** J9 (#1268): a new game's start is being chosen: the map and the card, nothing else (the rail, the top bar, the hint bar and the minimap wait for the start) */
   const picking = !!game?.startPick;
 
@@ -632,7 +677,8 @@ export default function App() {
 
       {fatal && <div className="absolute inset-0 z-50 flex items-center justify-center bg-[#15200f] p-8 text-center text-red-200">This game needs WebGL2 and OffscreenCanvas. {fatal}</div>}
       {game && !game.ready && !onTitle && (
-        <div className="absolute inset-0 z-50 flex flex-col items-center justify-center bg-[#15200f]">
+        <div className="absolute inset-0 z-50 flex flex-col items-center justify-center bg-[#15200f] bg-cover bg-center" style={{ backgroundImage: `linear-gradient(rgba(10,14,8,0.45), rgba(10,14,8,0.65)), url(${LOADING_ART})` }} data-testid="loading-screen">
+          {/* the owner, 2026-11-15: "a proper loading screen image" (the town and the club in autumn), darkened under the logo and the bar */}
           <img src={LOGO} alt={TITLE} className="block h-auto w-[min(420px,80vw)] drop-shadow-2xl" data-testid="loading-logo" />
           <div className="mt-1 text-sm uppercase tracking-[0.3em] text-amber-400/80">Build · Play · Run the club</div>
           <div className="mt-6 h-2 w-64 overflow-hidden rounded-full bg-white/10">
@@ -646,7 +692,8 @@ export default function App() {
       {onTitle && (
         <>
           <MenuScene poster={posterOf(SHOW_STOPS[startStop]!.id)} alt={SHOW_STOPS[startStop]!.name} posterOn={posterOn} snapRef={snapRef} />
-          <TitleCard canContinue={hasSave} starting={starting} onNew={() => leaveTitle(true)} onContinue={() => leaveTitle(false)} />
+          <TitleCard canContinue={saveSlot() === 'town' ? hasSave || slotSaves.town : slotSaves.town} starting={starting} onNew={() => leaveTitle('new')} onContinue={() => leaveTitle('continue')}
+            {...(JAM ? {} : { onSandbox: (o: { townRoads: boolean }) => leaveTitle(o.townRoads ? 'sandbox-town' : 'sandbox'), canContinueSandbox: slotSaves.sandbox || saveSlot() === 'sandbox', onContinueSandbox: () => leaveTitle('sandbox-continue') })} />
         </>
       )}
       {game && game.ready && !lab && !onTitle && (
@@ -706,13 +753,14 @@ export default function App() {
                   {!JAM && chip('holes') && <button className={`chip ${game.holesTool ? 'chip-on' : ''}`} onClick={() => { game.toggleHolesTool(); bump(); }} data-tip="Holes: move pins and tee markers" aria-label="Holes"><Icon name="pin" size={16} /><span className={WIDE}>Holes</span></button>}
  {!JAM && chip('event') && <button data-guide="chip-event" className={`chip ${game.eventTool ? 'chip-on' : ''}`} onClick={() => { game.toggleEventTool(); bump(); }} data-tip="Event: the event structures catalogue" aria-label="Event"><Icon name="buildings" size={16} /><span className={WIDE}>Event</span></button>}
                   {/* #1297: the Goal pill's chip (the jam has no goal): a click shows the full pill in a row of this bar, or folds it; the rail and the panels stand under the bar's last row, so it covers nothing */}
-                  {!JAM && <GoalChipInBar game={game} open={goalOpen} onToggle={() => setGoalOpen(saveGoalOpen(!goalOpen))} />}
+                  {!JAM && !game.sandboxMode && <GoalChipInBar game={game} open={goalOpen} onToggle={() => setGoalOpen(saveGoalOpen(!goalOpen))} />}
                 </>
               ) : game.eventMode
                 ? <Stat icon="trophy" label="Level" value={String(game.traffic.round.xp)} sub={`${game.traffic.round.cards.length} cards`} tone="text-amber-200" />
                 : <Stat icon="trophy" label="Career" {...careerStat(game)} tone="text-amber-200" />}
               {/* the classic town game's Treasury and figures (golf mode: the money chip and its drawer, T233) */}
               {!gv && <>{treasury(game)}{moreStats(game)}</>}
+              {game.sandboxMode && <span className="rounded-md border border-amber-300/60 bg-amber-400/20 px-1.5 py-0.5 text-[12px] font-bold uppercase tracking-wide text-amber-200" data-testid="sandbox-tag" data-tip={`Sandbox: everything unlocked, no tutorial; the town ${game.sandboxMode.townRoads ? 'builds its own roads' : 'grows along the roads you build'}`}>Sandbox</span>}
               {dev && <span className="rounded-md border border-sky-400/50 bg-sky-400/15 px-1.5 py-0.5 text-[12px] font-bold text-sky-200" data-tip="Developer panels are on (F3 hides them)">DEV</span>}
               {dev && (game.growth !== 1 || game.unlimited || !game.stamped) && (
                 <div className="rounded-md border border-amber-400/40 bg-amber-400/15 px-2 py-1 text-xs font-semibold text-amber-200" data-tip="Dev sandbox options (URL: ?grow=N, ?money=0|1, ?stamp=0|1)">
@@ -886,7 +934,12 @@ export default function App() {
                     </>}
                     {/* the owner, 2026-11-15: "the menu has no exit to main menu": saves, pauses and opens the title card over the living menu scene; Continue comes back */}
                     <button className="btn w-full" data-testid="menu-exit-title" data-tip="Save and go back to the main menu (Continue brings you back here)"
-                      onClick={() => { setMenu(false); void game.save(); titlePaused.current = false; setHasSave(true); setTitleOpen(true); }}>Exit to main menu</button>
+                      onClick={() => {
+                        setMenu(false); titlePaused.current = false; setHasSave(true); setTitleOpen(true); exitPending.current = true; // the card at once, over the paused game and the still picture
+                        // the living scene: only once this game is safely saved (bytes written) does the page start again as the main menu page; a game that cannot save
+                        // (the bench, a fixture, a start still being chosen) keeps the card over itself, as before
+                        void game.save().then(n => { if (exitPending.current && n > 0 && sceneAllowed()) toMenuPage(); });
+                      }}>Exit to main menu</button>
                     <button className="btn w-full" onClick={() => { setMenu(false); game.save(); }} data-tip="Saved automatically; force a save now"><ActionTile tile="save-game" size={TILE_SMALL} />Save</button>
                     <button className="btn w-full" onClick={() => { setMenu(false); void game.downloadSave(); }} data-tip="Download the save as a .cesave file (for a bug report, or to carry it to another computer)"><ActionTile tile="save-game" size={TILE_SMALL} />Download save</button>
                     <button className="btn w-full" onClick={() => saveFile.current?.click()} data-tip="Load a .cesave file in place of this game: this game is backed up first"><ActionTile tile="load-save" size={TILE_SMALL} />Load save file…</button>
@@ -913,7 +966,7 @@ export default function App() {
             </div>
             {/* #1297 (the owner: "goals cover menu ui. cant be closed either"): the full Goal pill is a row of this bar while it is open (its chip, in the bar's first row, shows and folds it): the bar's
                 bottom (--hud-top) is under it, so the rail, the panels, the flyouts and the cards all stand below it and it covers none of them. The row takes no clicks beyond the pill's own */}
-            {!JAM && gv && goalOpen && <div className="pointer-events-none order-last basis-full" data-testid="goal-row"><GoalRowInBar game={game} onFold={() => setGoalOpen(saveGoalOpen(false))} /></div>}
+            {!JAM && gv && goalOpen && !game.sandboxMode && <div className="pointer-events-none order-last basis-full" data-testid="goal-row"><GoalRowInBar game={game} onFold={() => setGoalOpen(saveGoalOpen(false))} /></div>}
           </div>
 
           {/* T174: the box round the rail and the panel takes no clicks itself (it is as tall as the rail, so it covered the map under a short panel) */}
@@ -1007,7 +1060,7 @@ export default function App() {
             <Rail {...rail} navRef={railRef} entries={drawerEntries(entries, 'side')} walk={game.you ? { on: game.youWalkMode, set: (on: boolean) => { setFly(null); activeRail.current = 'select'; if (game.range.cardOpen) game.openRangeCard(false); game.setYouWalk(on); } } : undefined} />
             {!up && flyouts}
             {/* J7 (#1225): the jam's Build menu, beside the rail */}
-            {JAM && build && game.golf && <BuildMenu cards={buildSource(game)} tab={build} onTab={setBuild} onPick={runBuild} onClose={() => setBuild(null)} onTips={() => { setTips(true); setBuild(null); }} />}
+            {JAM && build && game.golf && <BuildMenu cards={buildSource(game)} tab={build} onTab={setBuild} onPick={runBuild} onClose={() => setBuild(null)} onTips={game.sandboxMode ? undefined : () => { setTips(true); setBuild(null); }} />}
             {/* T255: a club tool's panel (and Select's) in the left tool panel; a town tool's is docked above the town footer (TownFooter) */}
             {dock === 'side' && (
             <div className={`glass tool-panel w-[330px] max-h-[calc(var(--vh-ui,100vh)-var(--hud-top,5.75rem)-8.25rem)] overflow-y-auto overflow-x-hidden p-3 ${sideFly || idle ? 'hidden' : ''}`} data-tool={game.uiTool} data-testid="tool-panel" data-dock="side">
@@ -1106,7 +1159,7 @@ export default function App() {
             <div className="text-[12px] text-slate-400">New costs a one-time fee shown on each card</div>
           </div>
           <div className="space-y-3 text-xs">
-          {eventSections(game, gv.tier).map(sec => (
+          {eventSections(game, game.sandboxMode ? Math.max(gv.tier, 5) : gv.tier).map(sec => (
           <div key={sec.id} className="space-y-1.5">
           <div className="text-[12px] font-semibold uppercase tracking-[0.2em] text-amber-300/80">{sec.name}</div>
           {sec.items.map(({ s, locked, needed, it }) => (
@@ -1144,15 +1197,15 @@ export default function App() {
           {game.site && game.resultsOpen() && <EvalScreen game={game} />}
           {game.site && game.playBoard() && <GolfLeaderboard game={game} />}
           {game.shotState() && <ShotPanel game={game} />}
-          {game.spinView() && <SpinBall game={game} right={game.panel ? 'right-[19.5rem]' : 'right-3'} />}
+          {game.spinView() && <SpinBall game={game} right={mainRight()} />}
           {game.seasonReport && game.traffic.round.stage === 'free' && <SeasonReportCard report={game.seasonReport} onContinue={() => game.dismissSeasonReport()} />}
           {(() => { const w = !game.seasonReport ? game.whoView() : null; return w && <WhoCard hidden={game.real.active} start={!!game.startPick} name={w.name} look={w.look} looks={w.looks} hcp={w.hcp} onDone={(n, l) => game.closeWho(n, l)} desert={game.desertTheme} onTheme={on => { game.setDesertTheme(on); bump(); }} course={{ featured: game.osmChoices(), current: game.osmGame()?.id ?? null, currentName: game.osmGame()?.name ?? null, onOwn: () => { void game.startRealCourse(null); }, onFeatured: id => { void game.startRealCourse(id); }, onBuild: (spec, land) => { void game.startRealCourse(spec, land); }, onPlace: (spec, land) => { void game.startRealPlaceSpec(spec, land); } }} />; })()}
-          {game.youTalk && <TalkCard talk={game.youTalk} right={game.panel ? 'right-[19.5rem]' : 'right-3'} onClose={() => game.closeYouTalk()} offer={game.matchOffer()} onChallenge={(st, n) => game.challengeMatch(st, n)} lesson={game.lessonView()} onLesson={() => game.bookLesson()} />}
-          {(() => { const c = !game.youTalk && !game.youTeeOpen && !game.eventCard() ? game.challengeView() : null; return c && <ReturnChallengeCard c={c} right={game.panel ? 'right-[19.5rem]' : 'right-3'} onAnswer={y => game.answerChallenge(y)} />; })()}
+          {game.youTalk && <TalkCard talk={game.youTalk} right={mainRight()} onClose={() => game.closeYouTalk()} offer={game.matchOffer()} onChallenge={(st, n) => game.challengeMatch(st, n)} lesson={game.lessonView()} onLesson={() => game.bookLesson()} />}
+          {(() => { const c = !game.youTalk && !game.youTeeOpen && !game.eventCard() ? game.challengeView() : null; return c && <ReturnChallengeCard c={c} right={mainRight()} onAnswer={y => game.answerChallenge(y)} />; })()}
           {game.matchResult && <MatchResultCard r={game.matchResult} onClose={() => game.closeMatchResult()} onMachine={() => game.openVending(true)} />}
-          {(() => { const tv = game.youTeeView(); return tv && <TeeCard view={tv} right={game.panel ? 'right-[19.5rem]' : 'right-3'} onJoin={() => game.youTeeJoin()} onBook={() => game.bookYourRound()} onStart={() => game.bookedStart()} onAuto={() => game.bookedAuto()} onTourney={() => game.tournamentStart()} onClose={() => game.closeYouTee()} play={game.yourRound() ? undefined : game.yourChoices()} onPlay={(c, p, ru) => game.yourRoundStart(c, p, ru)} />; })()}
-          {(() => { const ta = game.teeAskView(); return ta && <TeeAskCard tee={ta.tee} right={game.panel ? 'right-[19.5rem]' : 'right-3'} onPlay={() => game.bookedStart()} onAuto={() => game.bookedAuto()} onClose={() => game.closeTeeAsk()} />; })()}
-          {(() => { const ev = game.youTeeView() ? null : game.eventCard(); return ev && <EventCard view={ev} right={game.panel ? 'right-[19.5rem]' : 'right-3'} onClose={() => game.openEventCard(null)} onEnter={() => game.enterEvent(ev.id)} onPlay={() => game.eventStart(ev.id)} onMachine={() => game.openVending(true)} />; })()}
+          {(() => { const tv = game.youTeeView(); return tv && <TeeCard view={tv} right={mainRight()} onJoin={() => game.youTeeJoin()} onBook={() => game.bookYourRound()} onStart={() => game.bookedStart()} onAuto={() => game.bookedAuto()} onTourney={() => game.tournamentStart()} onClose={() => game.closeYouTee()} play={game.yourRound() ? undefined : game.yourChoices()} onPlay={(c, p, ru) => game.yourRoundStart(c, p, ru)} />; })()}
+          {(() => { const ta = game.teeAskView(); return ta && <TeeAskCard tee={ta.tee} right={mainRight()} onPlay={() => game.bookedStart()} onAuto={() => game.bookedAuto()} onClose={() => game.closeTeeAsk()} />; })()}
+          {(() => { const ev = game.youTeeView() ? null : game.eventCard(); return ev && <EventCard view={ev} right={mainRight()} onClose={() => game.openEventCard(null)} onEnter={() => game.enterEvent(ev.id)} onPlay={() => game.eventStart(ev.id)} onMachine={() => game.openVending(true)} />; })()}
           {(() => { const rv = game.yourRoundView(); if (!rv) return null;
             // T328 (#936): the bar starts right of the left rail and stops left of a right-hand card (event, tee, talk, challenge: 320 px at most)
             const side = game.panel ? '19.5rem' : '0.75rem', card = !!game.youTalk || !!game.youTeeView() || !!game.eventCard() || !!game.challengeView();
@@ -1172,18 +1225,18 @@ export default function App() {
             return gv && <RangeGuideCard view={gv} voiced right={stack!.guide()} onShow={id => { showGuide(game, id); bump(); }} onSkip={id => { game.skipGuideStep(id); bump(); }} onFold={f => { game.guideFolded = f; bump(); }} onScene={game.sceneArt('range') ? () => game.openScene({ kind: 'range', view: 'road' }) : undefined} />;
           })()}
           {/* J7 (#1225): the jam's optional tips (Build ▸ Tips), where the guided build's card stood */}
-          {JAM && tips && !game.seasonReport && <TipsCard right={stack!.guide()} onClose={() => setTips(false)} onShow={s => { showTip(game, s, () => runTipShow(game, s, actUi)); bump(); }} />}
+          {JAM && tips && !game.seasonReport && !game.sandboxMode && <TipsCard right={stack!.guide()} onClose={() => setTips(false)} onShow={s => { showTip(game, s, () => runTipShow(game, s, actUi)); bump(); }} />}
           {(() => { // the tournament prep checklist (golf/prep.ts), bottom right like the guide: on a free day only (the round is not running), after the tutorial and the guide
             const pv = !game.seasonReport && !game.sceneRef && !game.playerCardOpen && !game.cardsFolded() && game.traffic.round.stage === 'free' ? game.prepCardView() : null, busy = game.range.cardOpen || !!game.clubCard() || !!game.placeCard() || game.holeCardHole !== null;
             return pv && <RangeGuideCard view={pv} heading={pv.heading} tid="prep" foot="Each step pays once when it is done" offLabel="Hide this checklist" right={busy ? (game.panel ? 'right-[41rem]' : 'right-[23rem]') : game.eventTool ? (game.panel ? 'right-[40.25rem]' : 'right-[21.5rem]') : game.panel ? 'right-[19.5rem]' : 'right-3'} onShow={id => { showPrep(game, id, pv.lines.find(l => l.step.id === id)?.step); bump(); }} onSkip={id => { game.prepSkip(id); bump(); }} onFold={f => { game.prepFolded = f; bump(); }} />;
           })()}
           {/* (T459, the jam MVP: no Club card: its staff, members, dues and prices are "Future development"; the clubhouse takes its green fees by itself) */}
-          {!JAM && (() => { const cc = game.clubCard(); return cc && <ClubhouseCard view={cc} right={game.panel ? 'right-[19.5rem]' : 'right-3'} onClose={() => game.openClubCard(false)} onStaff={(r, d) => game.crewHire(r, d)} onPrice={p => game.setClubPrice(p)} onScene={game.sceneArt('club') ? () => game.openScene({ kind: 'club' }) : undefined} staffLine={game.staffLine()} onStaffCard={() => game.openStaffCard()} />; })()}
+          {!JAM && (() => { const cc = game.clubCard(); return cc && <ClubhouseCard view={cc} right={mainRight()} onClose={() => game.openClubCard(false)} onStaff={(r, d) => game.crewHire(r, d)} onPrice={p => game.setClubPrice(p)} onScene={game.sceneArt('club') ? () => game.openScene({ kind: 'club' }) : undefined} staffLine={game.staffLine()} onStaffCard={() => game.openStaffCard()} />; })()}
           {(() => { // T214: the Staff card, beside the Clubhouse card (to its left) when that is open
             const sv = game.staffCard(); if (!sv) return null;
             return <StaffCard view={sv} right={stack!.right('staff')} onClose={() => game.openStaffCard(false)} onHire={(r, at) => game.hireClubStaff(r, at)} onLetGo={k => game.letGoClubStaff(k)} />;
           })()}
-          {(() => { const rc = game.rangeCard(); return rc && <><RangeCard {...(JAM ? { ballFix: rc.biz.owned.includes('attendant') ? 'Walk out and pick' : `Hire a range attendant`, onBallFix: () => { game.fixRangeBalls(); bump(); }, ...(rc.biz.owned.includes('attendant') ? { attendantWage: rc.upgrades.find(u => u.id === 'attendant')!.upkeep, onLetGo: () => game.letAttendantGo() } : {}) } : {})} forSale={rc.biz.forSale ? { cost: RANGE_PLACE_COST, why: game.money < RANGE_PLACE_COST ? `Not enough cash: $${Math.round(RANGE_PLACE_COST - Math.max(0, game.money)).toLocaleString('en-US')} short (the Bank lends)` : null } : undefined} onBuyRange={() => game.buyRange()} junk={game.rangeJunk().map(j => ({ i: j.i, name: j.name, m: j.m, scrap: JUNK_BY_ID.get(j.id)?.scrap ?? 0 }))} junkCost={JUNK_CLEAR_COST} onClearJunk={rc.biz.forSale ? undefined : i => game.clearJunk(i)} view={rc} places={JAM ? game.rangePlaces().filter(q => q.id !== 'practice') : game.rangePlaces()} onPlace={id => game.placeRangePart(id)} right={game.panel ? 'right-[19.5rem]' : 'right-3'} onClose={() => game.openRangeCard(false)} onPrice={p => game.setRangePrice(p)} onBuy={id => game.buyRangeUpgrade(id)} onShowPractice={() => game.showPracticeArea()} focusPractice={game.range.practiceFocus} practiceSelected={game.range.practiceSelected} onBuildPractice={id => { game.openRangeCard(false); activeRail.current = 'course'; game.armPractice(id, true); }} practiceWhy={game.toolLock('practice')} onScene={game.sceneArt('range') ? () => game.openScene({ kind: 'range' }) : undefined} you={game.youRange(rc)} onPractise={k => game.youPractise(k)} onHit={pl => { game.openRangeCard(false); game.openPractice3p(pl); }} hitWhy={{ range: game.practice3pWhy('range'), short: game.practice3pWhy('short') }} drillsDone={game.playerNow()?.drills?.done.length ?? 0} onQuickPractice={id => game.quickPractice(id)} onProfile={() => game.openPlayerCard()} profileOpen={game.playerCardOpen} onTree={() => game.toggleBallTree()} treeOpen={rc.treeOpen} onOrderBalls={() => game.orderRangeBalls(1)} onShift={h => game.range.setShift(h)} />{rc.treeOpen && <BallTree view={rc} onBuy={id => game.buyRangeUpgrade(id)} onClose={() => game.toggleBallTree()} rightRem={game.panel ? 19.5 : 0.75} />}</>; })()}
+          {(() => { const rc = game.rangeCard(); return rc && <><RangeCard {...(JAM ? { ballFix: rc.biz.owned.includes('attendant') ? 'Walk out and pick' : `Hire a range attendant`, onBallFix: () => { game.fixRangeBalls(); bump(); }, ...(rc.biz.owned.includes('attendant') ? { attendantWage: rc.upgrades.find(u => u.id === 'attendant')!.upkeep, onLetGo: () => game.letAttendantGo() } : {}) } : {})} forSale={rc.biz.forSale ? { cost: RANGE_PLACE_COST, why: game.money < RANGE_PLACE_COST ? `Not enough cash: $${Math.round(RANGE_PLACE_COST - Math.max(0, game.money)).toLocaleString('en-US')} short (the Bank lends)` : null } : undefined} onBuyRange={() => game.buyRange()} junk={game.rangeJunk().map(j => ({ i: j.i, name: j.name, m: j.m, scrap: JUNK_BY_ID.get(j.id)?.scrap ?? 0 }))} junkCost={JUNK_CLEAR_COST} onClearJunk={rc.biz.forSale ? undefined : i => game.clearJunk(i)} view={rc} places={JAM ? game.rangePlaces().filter(q => q.id !== 'practice') : game.rangePlaces()} onPlace={id => game.placeRangePart(id)} right={mainRight()} onClose={() => game.openRangeCard(false)} onPrice={p => game.setRangePrice(p)} onBuy={id => game.buyRangeUpgrade(id)} onShowPractice={() => game.showPracticeArea()} focusPractice={game.range.practiceFocus} practiceSelected={game.range.practiceSelected} onBuildPractice={id => { game.openRangeCard(false); activeRail.current = 'course'; game.armPractice(id, true); }} practiceWhy={game.toolLock('practice')} onScene={game.sceneArt('range') ? () => game.openScene({ kind: 'range' }) : undefined} you={game.youRange(rc)} onPractise={k => game.youPractise(k)} onHit={pl => { game.openRangeCard(false); game.openPractice3p(pl); }} hitWhy={{ range: game.practice3pWhy('range'), short: game.practice3pWhy('short') }} drillsDone={game.playerNow()?.drills?.done.length ?? 0} onQuickPractice={id => game.quickPractice(id)} onProfile={() => game.openPlayerCard()} profileOpen={game.playerCardOpen} onTree={() => game.toggleBallTree()} treeOpen={rc.treeOpen} onOrderBalls={() => game.orderRangeBalls(1)} onShift={h => game.range.setShift(h)} />{rc.treeOpen && <BallTree view={rc} onBuy={id => game.buyRangeUpgrade(id)} onClose={() => game.toggleBallTree()} rightRem={game.panel ? 19.5 : 0.75} />}</>; })()}
           {(() => { // T241: your golf, left of the card on the right (the range's, the club's, a place's) when one is open
             const pv = game.playerCard(); if (!pv) return null;
             return <PlayerCard view={pv} right={stack!.right('player')} onClose={() => game.openPlayerCard(false)} onBook={() => game.bookYourRound()} onCancel={() => game.cancelYourRound()} onBag={() => game.openBagCard(true)} />;
@@ -1202,13 +1255,13 @@ export default function App() {
             const vv = game.vendingCard(); if (!vv) return null;
             return <VendingMachine v={vv} onSpin={g => game.spinVending(g)} onSettle={id => game.settleVending(id)} onEquip={() => game.equipWon()} onClose={() => game.openVending(false)} onBag={() => { game.openVending(false); game.openBagCard(true); }} />;
           })()}
-          {(() => { const pc = game.placeCard(); return pc && <PlaceCard view={pc} right={game.panel ? 'right-[19.5rem]' : 'right-3'} onClose={() => game.closePlaceCard()} onScene={game.placeSceneArt(pc.id) ? () => game.openScene({ kind: 'place', id: pc.id }) : undefined} />; })()}
+          {(() => { const pc = game.placeCard(); return pc && <PlaceCard view={pc} right={mainRight()} onClose={() => game.closePlaceCard()} onScene={game.placeSceneArt(pc.id) ? () => game.openScene({ kind: 'place', id: pc.id }) : undefined} />; })()}
           {(() => { // T242: the set-the-scene card, centred left of the card on the right (the range's, the club's, a place's) and the side panel
             const sc = game.sceneCard(); if (!sc) return null;
             const side = game.range.cardOpen || game.clubCardOpen || !!game.selectedPlace, base = game.panel ? 19.5 : 0.75;
             return <SceneCard view={sc} padRight={`${side ? base + 22 : Math.max(1, base + 0.75)}rem`} onView={v => game.sceneView(v)} onClose={() => game.closeScene()} />;
           })()}
-          {game.holeCardHole !== null && <HoleCard game={game} right={game.panel ? 'right-[19.5rem]' : 'right-3'} />}
+          {game.holeCardHole !== null && <HoleCard game={game} right={mainRight()} />}
           {game.view3pHole !== null && <View3pPanel game={game} />}
           {game.real.active && <RealPlaceHud game={game} />}
           {picking && <StartPickCard game={game} />}

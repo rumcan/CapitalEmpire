@@ -48,6 +48,11 @@ together), and the rest of the 25 candidates for mood, length or confidence.
 
 ## 3. Voices
 
+**The trailer's voice-over** (2026-11-15, in the video only, not shipped in the game): **Kokoro-82M** (hexgrad, https://huggingface.co/hexgrad/Kokoro-82M),
+licence **Apache-2.0**, run locally through kokoro-onnx (MIT) with its v1.0 ONNX model and voice pack (`F:/voices/kokoro_say.py`). Voice **am_michael** (US
+English), speed 0.95, the owner's pick. Made by `scripts/jam/trailer-voice.mjs` from the script `F:/ClaudeTemp/jam/voice/script.md` (17 lines), each line
+normalised to -16 LUFS (ffmpeg loudnorm). Apache-2.0 allows commercial use and asks no credit in the output; this entry is a courtesy.
+
 None are shipped yet. The tutorial's voice-over files are made by `scripts/jam/make-voice.mjs` with a local voice engine (one swappable command line); when they are
 made they are listed here with the engine, its licence and the date. Windows' built-in voices are never used.
 
@@ -63,7 +68,20 @@ VOICE_CMD='<engine> ... {textfile} ... {out}' node scripts/jam/make-voice.mjs --
 has no voice until the script is run again (it also removes the files of words no step has now). The script also writes the table below (the test checks every file under `public/audio/` is on this page).
 
 <!-- voices:start -->
-No voice files yet.
+Engine: Kokoro-82M am_michael (Apache-2.0) (its licence: see its own page). AI text to speech, run by the game's tooling over the game's own text.
+
+| File | Step | Engine | Made | Size |
+|---|---|---|---|---|
+| public/audio/voice/tour-town-1175c541.mp3 | tour-town | Kokoro-82M am_michael (Apache-2.0) | made 2026-11-15 | 134 KB, 22.8 s |
+| public/audio/voice/tour-room-571913e8.mp3 | tour-room | Kokoro-82M am_michael (Apache-2.0) | made 2026-11-15 | 63 KB, 10.6 s |
+| public/audio/voice/tour-golf-463b895f.mp3 | tour-golf | Kokoro-82M am_michael (Apache-2.0) | made 2026-11-15 | 74 KB, 12.6 s |
+| public/audio/voice/tour-town-535a00fb.mp3 | tour-town | Kokoro-82M am_michael (Apache-2.0) | made 2026-11-15 | 68 KB, 11.5 s |
+| public/audio/voice/tour-roads-5af12216.mp3 | tour-roads | Kokoro-82M am_michael (Apache-2.0) | made 2026-11-15 | 112 KB, 19 s |
+| public/audio/voice/tour-room-e41b178f.mp3 | tour-room | Kokoro-82M am_michael (Apache-2.0) | made 2026-11-15 | 87 KB, 14.7 s |
+| public/audio/voice/tour-golf-83d86c85.mp3 | tour-golf | Kokoro-82M am_michael (Apache-2.0) | made 2026-11-15 | 65 KB, 11 s |
+| public/audio/voice/guide-range-place-b1e50e07.mp3 | guide-range-place | Kokoro-82M am_michael (Apache-2.0) | made 2026-11-15 | 72 KB, 12.2 s |
+| public/audio/voice/guide-range-lot-4e6617f9.mp3 | guide-range-lot | Kokoro-82M am_michael (Apache-2.0) | made 2026-11-15 | 56 KB, 9.5 s |
+| public/audio/voice/guide-range-buckets-f5500e74.mp3 | guide-range-buckets | Kokoro-82M am_michael (Apache-2.0) | made 2026-11-15 | 125 KB, 21.3 s |
 <!-- voices:end -->
 
 

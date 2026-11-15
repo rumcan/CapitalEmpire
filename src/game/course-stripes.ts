@@ -18,7 +18,10 @@ export interface StripeLook { w: number; l: number; k: number; lc: string; dc: s
   check?: boolean;
   /** T365: two-tone halves: the bands along the line of play with their edge on the line itself (not centred on it), one band as wide as HALF_WIDTH:
    *  the left of the line one tone, the right the other */
-  half?: boolean }
+  half?: boolean;
+  /** #1326: one direction over the whole hole, no fold at a bend: the bands lie along the hole's longest leg (mainLegDeg) turned by this many degrees,
+   *  the tee's point in the middle of a light band (the criss-cross's main set; holeStripeLegs then gives one leg, so the crew's passes match it) */
+  straight?: number }
 
 /** the fairways' stripe look: the range outfield preset's Stripes (its numbers whether or not the outfield shows them; a missing preset: the
  *  presets' default Stripes) */
@@ -46,6 +49,7 @@ export function holeStripeLegs(line: ArrayLike<number>, look: StripeLook, angle?
     const a = (angle * Math.PI) / 180;
     return [{ m: bands(look, -Math.sin(a), Math.cos(a), line.length >= 2 ? line[0]! : 0, line.length >= 2 ? line[1]! : 0), cut: null }];
   }
+  if (look.straight !== undefined) return [straightLeg(line, look, mainLegDeg(line) + (Number.isFinite(look.straight) ? look.straight : 0))];
   const P: { x: number; y: number }[] = [];
   for (let k = 0; k + 1 < line.length; k += 2) {
     const x = line[k]!, y = line[k + 1]!, q = P[P.length - 1];
@@ -71,6 +75,35 @@ export function holeStripeLegs(line: ArrayLike<number>, look: StripeLook, angle?
     walked += len; px = dx; py = dy;
   }
   return legs;
+}
+
+/** #1326: the direction of a hole's longest leg (degrees in tile space, atan2 of the leg; the first of equal ones), DEFAULT_MOW_DIR's for a line of
+ *  under two points. A straight pattern lies along it over the whole hole, so the main stretch is mown true and a bend is crossed, not folded */
+export function mainLegDeg(line: ArrayLike<number>): number {
+  let best = 1e-3, dx = DEFAULT_MOW_DIR.x, dy = DEFAULT_MOW_DIR.y;
+  for (let k = 0; k + 3 < line.length; k += 2) {
+    const ax = line[k]!, ay = line[k + 1]!, bx = line[k + 2]!, by = line[k + 3]!;
+    if (!(Number.isFinite(ax) && Number.isFinite(ay) && Number.isFinite(bx) && Number.isFinite(by))) continue;
+    const L = Math.hypot(bx - ax, by - ay); if (L > best) { best = L; dx = bx - ax; dy = by - ay; }
+  }
+  return (Math.atan2(dy, dx) * 180) / Math.PI;
+}
+/** #1326: one leg of bands lying along `deg` (degrees in tile space) over the whole hole, centred on the line's first point (the tee: the middle of a
+ *  light band, as the golf view's plaid centres its stripes on the line), the map origin for a line with none */
+export function straightLeg(line: ArrayLike<number>, look: StripeLook, deg: number): StripeLeg {
+  const a = (deg * Math.PI) / 180, ux = -Math.sin(a), uy = Math.cos(a), w = Math.max(0.25, look.w);
+  const x = line.length >= 2 && Number.isFinite(line[0]!) ? line[0]! : 0, y = line.length >= 2 && Number.isFinite(line[1]!) ? line[1]! : 0;
+  return { m: bands(look, ux, uy, x - (ux * w) / 2, y - (uy * w) / 2), cut: null };
+}
+/** #1326: the criss-cross's shares of the look's strength: the main set (along the hole) and the fainter one crossing it, so that where the two agree the
+ *  lift and the multiply add up to about the look's own (the golf view's tones: +-8 +-6 on its lightness, with the main set's tone shift on top) */
+export const PLAID_MAIN = 0.62, PLAID_CROSS = 0.38;
+/** #1326: the criss-cross's two sets of bands, each one leg over the whole hole: the main set along the hole's longest leg turned by look.straight (or
+ *  `angle`, greenkeeping's mow angle, when set), the fainter set at right angles to it, both in the look's band width, so the fairway is a plaid in four
+ *  tones as the golf view's (05-ground.md plaid). The main set is holeStripeLegs' own for the look (the grounds crew mows its bands) */
+export function plaidLegs(line: ArrayLike<number>, look: StripeLook, angle?: number): [StripeLeg[], StripeLeg[]] {
+  const d = (angle !== undefined && Number.isFinite(angle) ? angle : mainLegDeg(line)) + (look.straight !== undefined && Number.isFinite(look.straight) ? look.straight : 0);
+  return [[straightLeg(line, { ...look, l: look.l * PLAID_MAIN, k: look.k * PLAID_MAIN }, d)], [straightLeg(line, { ...look, l: look.l * PLAID_CROSS, k: look.k * PLAID_CROSS }, d + 90)]];
 }
 
 /** T359 (#1006): a hole's legs with their bands turned by `deg` about each leg's origin (the checkerboard follows the hole's line of play, its
