@@ -42,7 +42,21 @@ try {
   const ctx = await browser.newContext({ viewport: { width: 1600, height: 900 }, deviceScaleFactor: 1 });
   const page = await ctx.newPage();
   page.on('pageerror', e => console.log('[pageerror]', e.message));
-  if (flow === 'poster') {
+  if (flow === 'probe') {
+    // the range's day as the scene runs (why the bays are full or empty): the town hour, the sim's day counts, the queue, the people on the range
+    await page.goto(base, { waitUntil: 'commit', timeout: 120000 });
+    await page.waitForFunction(() => window.__showDirector?.phase === 'play', null, { timeout: 240000 });
+    res.probe = [];
+    for (let k = 0; k < 9; k++) {
+      res.probe.push(await page.evaluate(() => {
+        const g = window.__game, R = g.range, S = R?.sim, T = g.traffic, st = T.simTime(performance.now()), c = T.town, m = c.m0 + (st - c.t0) * c.rate;
+        let movers = -1; try { movers = R.movers_(0, 0, 2048, 2048).length; } catch { /* none */ }
+        const b = g.golf?.range, bb = b?.balls; const stages = {}; for (const v of S?.visits ?? []) stages[v.stage] = (stages[v.stage] ?? 0) + 1;
+        return { stages, qMax: S?.qMax, desks: (S?.desks ?? []).map(d => d.id), bays: (S?.bayBusy ?? []).filter(Boolean).length + "/" + (S?.bayBusy ?? []).length, slots: (S?.slotBusy ?? []).filter(Boolean).length + "/" + (S?.slotBusy ?? []).length, entrance: !!S?.entrance, hour: +((m % 1440) / 60).toFixed(2), today: S?.today ? { ...S.today } : null, queue: S?.queue?.length ?? null, movers, balls: bb ? JSON.stringify(bb).slice(0, 200) : null, dem: (() => { try { return R.ctx.demand(); } catch { return null; } })() };
+      }));
+      await page.waitForTimeout(8000);
+    }
+  } else if (flow === 'poster') {
     // the still of the first stop: the live scene's own first view (its camera, zoom, hour and light) with nothing moving drawn (engine stillLife), at POSTER_W x POSTER_H
     // (showcase.ts) so the page can lay it at the live scene's exact scale; written to src/assets/showcase/<first stop>.jpg
     const pw = Number(opt('pw', 2560)), ph = Number(opt('ph', 1440));

@@ -28,7 +28,7 @@ import { STRUCT_COST, STRUCT_MAX, groundClass, highwayRoute, longestRun, splitBy
 import { CULL_MIN_PX, FULL_UV, GLRenderer, POINT_STRIDE, SHADOW_STRIDE, SPRITE_STRIDE, VECTOR_STRIDE } from './gl';
 import { GroundCache } from './ground-cache';
 import { GAME_BOOT, clampCentre, flatTerrain, type BootOptions } from './boot';
-import { SHOW_FARM_MONTH, SHOW_GOLFERS, SHOW_RANGE_RESIDENTS } from './showcase';
+import { SHOW_FARM_MONTH, SHOW_GOLFERS, SHOW_PEDS_PER_LOT, SHOW_RANGE_BALLS, SHOW_RANGE_RESIDENTS } from './showcase';
 import { TILE_BANDS, TILES_REVISION, anchorAt, bandAt, bandRange, bandsAhead, cellOf, cellsIn, coverageOf, drawnScale, nearUntil, nextBand, tiledFamily, tileIndex, tilePermutation, tileScreenPx, tileSize, tileSpec } from './painted-tiles';
 import { desertLeavesDev, onPaintedSurfaces, paintedSurfaces, setDesertSurfaces } from './painted-surfaces-live';
 import { borderDefault, crewBandLook, finishBorders, finishOf, finishStripeLook, mowSpec } from './course-finish';
@@ -3498,7 +3498,7 @@ export class Game {
       setLotModel(LATEST_LOT_MODEL); this.farmModel = FARM_MODEL; this.farmsNew.clear(); this.golf = null; this.genTerrain(newSeed()); this.seedTowns();
     }
     else loaded = save;
-    if (showSave && loaded === showSave) { this.show = true; this.dayBusy = SHOW_GOLFERS; if (this.golf) delete this.golf.everyday; this.setFarmMonth(SHOW_FARM_MONTH); } // J12: the scene's course has a busy day (its golfers are always on the holes): its day book starts afresh, so the roster is the busy day's, not the quiet one the world was built on
+    if (showSave && loaded === showSave) { this.show = true; this.dayBusy = SHOW_GOLFERS; if (this.golf) delete this.golf.everyday; this.setFarmMonth(SHOW_FARM_MONTH); const sb = this.golf?.range?.balls; if (sb) sb.clean = Math.max(sb.clean, SHOW_RANGE_BALLS); } // J12: the scene's course has a busy day (its golfers are always on the holes): its day book starts afresh, so the roster is the busy day's, not the quiet one the world was built on
     tick(0.7);
     const tl = performance.now();
     this.ground.init(this.terrain);
@@ -9490,7 +9490,7 @@ export class Game {
         for (const l of this.traffic.lots.values()) if (l.level >= LV.BUILT) doors.push({ x: l.o[0] + l.u[0] * l.w / 2 + l.n[0], y: l.o[1] + l.u[1] * l.w / 2 + l.n[1], kind: l.use === 1 ? 0 : 1 });
         this.peds.setDoors(doors);
       }
-      this.peds.populate(Math.min(PED_MAX, built * 0.5));
+      this.peds.populate(Math.min(PED_MAX, built * (this.show ? SHOW_PEDS_PER_LOT : 0.5))); // (J12: the menu scene's town has more people out walking)
     }
     if (this.speed) this.peds.step(dt);
   }

@@ -41,6 +41,11 @@ export const SHOW_HOURS = Object.freeze({ start: 9.0, end: 15.0 });
 /** the residents the scene's range draws on beyond the town's own (engine range demand, show only): the prepared world's small town brings a golfer to the range now and then; this keeps
  *  most of its bays busy (dayDemand: 0.0183 a resident a day, a bay held about a town hour) so the menu shows golfers hitting balls. Never the player's game */
 export const SHOW_RANGE_RESIDENTS = 6000;
+/** the clean balls the scene's ball room is stocked with at load (engine, show only; the scene saves nothing). The prepared world's room held 791, less than one bucket on its
+ *  long town day (visitBalls: 40 balls a 600 s day), so every golfer drove off unserved ('balls') and the bays stayed empty */
+export const SHOW_RANGE_BALLS = 500_000;
+/** the townspeople on the scene's pavements, per built lot (the game has one per two: engine updatePeds): the owner wants people walking in the town behind the menu */
+export const SHOW_PEDS_PER_LOT = 2.5;
 /** the golfers a day the scene's course has (the sim's busiest ordinary day, so there are groups on every hole: engine dayInputs busy) */
 export const SHOW_GOLFERS = 80;
 /** the calendar month the scene's farms show (0 = January): September, the golden harvest (the saved world's own month is wherever its build stopped) */
