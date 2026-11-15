@@ -10877,7 +10877,7 @@ export class Game {
    *  Null without a course */
   /** T447: the time of day the course is played at from behind the golfer (the hole card's choice, saved with the course; golden hour by default) */
   get time3p(): CourseTime3p { return this.golf?.time3p ?? 'golden'; }
-  setTime3p(t: CourseTime3p) { const g = this.golf; if (!g) return; if (t === 'day') g.time3p = 'day'; else delete g.time3p; this.scheduleSave(); }
+  setTime3p(t: CourseTime3p) { const g = this.golf; if (!g) return; if (t === 'golden') delete g.time3p; else g.time3p = t; this.scheduleSave(); }
   /** roundTime: the round's own time of day (a night-golf event, T449), which wins over the course's setting */
   /** T450b: the player in the view from behind the golfer: the clothes and the golfer art of the look he picked on the "Who are you?" card (youArt, the
    *  same look the map walks), for the course message's golfer and for his own figure among the actors */

@@ -47,7 +47,9 @@ export type CourseType = 'public' | 'private' | 'tour' | 'links';
 /** T447: the times of day the view can light a course at: golden hour (the default), day, dusk and night (night-golf events only) */
 export type Time3p = 'golden' | 'day' | 'dusk' | 'night';
 /** the times a course itself can be set to (the hole card's choice); dusk and night come only from a round */
-export const COURSE_TIMES_3P = [['golden', 'Golden hour'], ['day', 'Day']] as const;
+export const COURSE_TIMES_3P = [['day', 'Day'], ['golden', 'Golden hour'], ['dusk', 'Dusk'], ['night', 'Night']] as const;   // (the owner, 2026-11-15: "add the other time of day options": all four lights the view draws)
+/** a few words on each time of day (the picker's hint) */
+export const COURSE_TIME_HINT: Readonly<Record<CourseTime3p, string>> = { day: 'Full daylight, the sun high', golden: 'The low gold light of late afternoon (the default)', dusk: 'The sun down, the sky purple and fading', night: 'Under the stars, the course lit by lamps' };
 export type CourseTime3p = typeof COURSE_TIMES_3P[number][0];
 
 /** the course: the course file (export3p.ts, T412: shapes in metres and the packed height grid; typed loosely until that exporter lands), the

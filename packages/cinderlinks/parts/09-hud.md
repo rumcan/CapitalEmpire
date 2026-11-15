@@ -226,7 +226,7 @@ Check: function hostShapeAt(
 R: 2026-11-15 (the owner: "the weird circles", "these are drawn so badly"): the aim is one clean line of steady width from the ball to one ring lying on the ground where the ball is predicted to land (a true circle projected through the camera, sized from the spread, 0.9 to 4.5 m); the point aimed at is a small cross; the roll after the landing is a faint short dash; no separate wind trace.
 Check: function groundRing(
 Check: function aimSpreadR(
-R: 2026-11-15 (the owner: "the grid that shows slope is white. this grid is yellow. is there no slope?"): on his putt turn the green's lattice lines are a neutral faint white and the slope is shown by dots that flow downhill along it, their speed and colour (white, cyan, yellow, orange, red) by its steepness; the hole card says the break and the slope to the cup.
+R: 2026-11-15 (the owner: "the dots have to be on the grid. this is the same in every single golf game", "the grid must be green and red based on the slope ... like a heat map"): on his putt turn the green's lattice lines are a heat map of the slope (green on the flat, then yellow-green, yellow, orange, red as it steepens to 4%), and white dots ride the grid: each sits on its crossing and slides along the grid line that runs most downhill, farther where steeper, all in step, so they never leave the lines.
 Check: function pgNow(
 R: 2026-11-15: after each of his shots a short result fades by itself after about two seconds (carry, total, what is left to the pin).
 Check: function hostToast(
@@ -916,7 +916,11 @@ const GRID_RGB = [rgb(255, 255, 255), rgb(125, 211, 252), rgb(250, 204, 21), rgb
 // neutral, a faint thin white whatever the slope, and the slope is shown by dots that flow downhill along it, one to a point (phase-offset, so together they
 // read as a current), each running one lattice step down the slope and fading in and out, their speed and colour by how steep it is there: on the flat they
 // barely creep, white; then cyan, yellow, orange, red as it steepens. Worked out once a green (PG_MEMO); a frame only moves them on (pgNow).
-const GRID_LINE_A = 70, GRID_LINE = ((rgb(255, 255, 255) & 0xffffff) | (GRID_LINE_A << 24)) >>> 0;
+// 2026-11-15, again (the owner: "the dots have to be on the grid", "the grid must be green and red based on the slope ... like a heat map"): the lines are the heat map
+// (each line the colour of its two ends' mean slope: green flat .. red at 4%), the dots white, each on its crossing, sliding along the line from it that runs most downhill
+// (PG_RUN[0] + PG_RUN[1] x steepness of the line's length), all in step (PG_BEAT a second): never off the grid. A point with no line running downhill keeps its dot still
+const GRID_LINE_A = 150, GRID_HEAT = [rgb(74, 222, 128), rgb(190, 230, 70), rgb(250, 204, 21), rgb(249, 115, 22), rgb(239, 68, 68)].map((c) => ((c & 0xffffff) | (GRID_LINE_A << 24)) >>> 0);
+const GRID_LINE = GRID_HEAT[0], PG_DOT = 0xffffffff, PG_RUN = [0.1, 0.8], PG_BEAT = 0.6;
 const pgU = (s) => (s <= 0.002 ? 0 : Math.min(1, (s - 0.002) / 0.038));   // (green.ts breakBucket's scale: 0 flat .. 1 at a 4% slope)
 const pgBucket = (s) => { const u = pgU(s); return u <= 0 ? 0 : u < 0.25 ? 1 : u < 0.55 ? 2 : u < 0.85 ? 3 : 4; };
 const PG_MEMO = new WeakMap();   // T438: a green's grid worked out once a green, not each frame: its points on the land, the dots' runs, the lattice's lines
@@ -926,10 +930,10 @@ function hostPuttPts(G, S) {
   if (M && M.S === S && M.hv === hv) return M;
   const P = G.pts, n = Math.floor(P.length / 5), c = (G.step > 0 ? G.step : 1) * S, xyz = new Float64Array(n * 3), run = new Float64Array(n * 3), col = new Uint32Array(n), sp = new Float32Array(n), ph = new Float32Array(n);
   for (let p = 0; p < n; p++) {
-    const k = p * 5, x = P[k] * S, y = P[k + 1] * S, u = pgU(P[k + 4]), ex = x + P[k + 2] * c, ey = y + P[k + 3] * c;
+    const k = p * 5, x = P[k] * S, y = P[k + 1] * S;
     col[p] = GRID_RGB[pgBucket(P[k + 4])]; xyz[p * 3] = x; xyz[p * 3 + 1] = y; xyz[p * 3 + 2] = groundH(x, y) + 0.02;
-    run[p * 3] = ex; run[p * 3 + 1] = ey; run[p * 3 + 2] = groundH(ex, ey) + 0.02;   // (where its dot runs to: one step down the slope)
-    sp[p] = 0.05 + 1.15 * u; ph[p] = hash2(p, 17, 5);   // (lattice steps a second: a creep on the flat, over one at 4%)
+    run[p * 3] = x; run[p * 3 + 1] = y; run[p * 3 + 2] = xyz[p * 3 + 2];   // (its dot's run along the grid: set below, once the lines are known; none: it stays on its crossing)
+    sp[p] = PG_BEAT; ph[p] = 0;   // (all in step)
   }
   // the lattice's lines: each point to its neighbours one step away (found through a hash of step-sized buckets; the diagonals, 1.41 steps, are not lines)
   const B = new Map(), e = [], key = (i, j) => (i + 32768) * 65536 + (j + 32768);
@@ -941,26 +945,37 @@ function hostPuttPts(G, S) {
       for (const q of L) { if (q <= p) continue; const d = Math.hypot(xyz[q * 3] - x, xyz[q * 3 + 1] - y); if (d > c * 0.8 && d < c * 1.2) e.push(p, q); }
     }
   }
-  M = { S, hv, n, xyz, run, col, sp, ph, e: Int32Array.from(e), sx: new Int32Array(n), sy: new Int32Array(n), sd: new Float64Array(n), dots: 0 };
+  // each line's heat (its two ends' mean slope); each point's dot runs along its line that best follows the slope downhill (cos over 0.5), as far as the slope says
+  const ec = new Uint32Array(e.length / 2), best = new Float64Array(n).fill(0.5), nb = new Int32Array(n).fill(-1);
+  for (let k = 0; k < e.length; k += 2) {
+    const a = e[k], b = e[k + 1], u = (pgU(P[a * 5 + 4]) + pgU(P[b * 5 + 4])) / 2; ec[k / 2] = GRID_HEAT[u <= 0.1 ? 0 : u < 0.3 ? 1 : u < 0.55 ? 2 : u < 0.8 ? 3 : 4];
+    const dx = xyz[b * 3] - xyz[a * 3], dy = xyz[b * 3 + 1] - xyz[a * 3 + 1], L = Math.hypot(dx, dy) || 1;
+    const ca = (P[a * 5 + 2] * dx + P[a * 5 + 3] * dy) / L, cb = -(P[b * 5 + 2] * dx + P[b * 5 + 3] * dy) / L;   // (how well the line runs downhill from a, and from b)
+    if (pgU(P[a * 5 + 4]) > 0 && ca > best[a]) { best[a] = ca; nb[a] = b; }
+    if (pgU(P[b * 5 + 4]) > 0 && cb > best[b]) { best[b] = cb; nb[b] = a; }
+  }
+  for (let p = 0; p < n; p++) { const q = nb[p]; if (q < 0) continue; const f = Math.min(0.95, PG_RUN[0] + PG_RUN[1] * pgU(P[p * 5 + 4])), i3 = p * 3, q3 = q * 3;
+    run[i3] = xyz[i3] + (xyz[q3] - xyz[i3]) * f; run[i3 + 1] = xyz[i3 + 1] + (xyz[q3 + 1] - xyz[i3 + 1]) * f; run[i3 + 2] = xyz[i3 + 2] + (xyz[q3 + 2] - xyz[i3 + 2]) * f; }
+  M = { S, hv, n, xyz, run, col, sp, ph, nb, e: Int32Array.from(e), ec, sx: new Int32Array(n), sy: new Int32Array(n), sd: new Float64Array(n), dots: 0 };
   PG_MEMO.set(G, M); return M;
 }
 function hostPuttTurn() { const t = HP && HP.turn; return !!t && !!t.green && !hostBusy() && !bcam && ball.state === 0; }   // his putt turn: the ball at rest on the host's green, nothing in flight
 function hostPuttGrid() {
   const M = hostPuttPts(HP.turn.green, hostS()), X = M.xyz, Rn = M.run, n = M.n, SX = M.sx, SY = M.sy, SD = M.sd, E = M.e, t = pgNow();
   for (let p = 0; p < n; p++) { projectO(X[p * 3], X[p * 3 + 1], X[p * 3 + 2], PJ); SX[p] = PJ.x; SY[p] = PJ.y; SD[p] = PJ.s > 0 && PJ.d >= 1.5 ? PJ.d : 0; }   // (each point once a frame)
-  for (let k = 0; k < E.length; k += 2) {   // the lines between neighbours: neutral, faint
+  for (let k = 0; k < E.length; k += 2) {   // the lines between neighbours: the slope's heat map
     const a = E[k], b = E[k + 1], ad = SD[a], bd = SD[b]; if (!ad || !bd) continue;
     const ax = SX[a], ay = SY[a], dx = SX[b] - ax, dy = SY[b] - ay, m = Math.max(dx < 0 ? -dx : dx, dy < 0 ? -dy : dy);
     if (m < 2 || m > 700 || (ax < 0 && ax + dx < 0) || (ax >= OW && ax + dx >= OW) || (ay < 0 && ay + dy < 0) || (ay >= OH && ay + dy >= OH)) continue;
     const f = 1 / m, dd = bd - ad;
-    for (let i = 0; i < m; i++) { const u = i * f; gridPut(ax + Math.round(dx * u), ay + Math.round(dy * u), ad + dd * u, GRID_LINE); }   // (its far end is the next line's start)
+    const lc = M.ec[k >> 1]; for (let i = 0; i < m; i++) { const u = i * f; gridPut(ax + Math.round(dx * u), ay + Math.round(dy * u), ad + dd * u, lc); }   // (its far end is the next line's start)
   }
   let dots = 0;
-  for (let p = 0; p < n; p++) {   // the dots: each a step down the slope from its point, as far along as the clock has run it, fading in and out at the ends
+  for (let p = 0; p < n; p++) {   // the dots: each on its crossing, slid along its downhill line as far as the clock has run it
     if (!SD[p]) continue;
     let u = (M.ph[p] + t * M.sp[p]) % 1; if (u < 0) u += 1;
     const i3 = p * 3; projectO(X[i3] + (Rn[i3] - X[i3]) * u, X[i3 + 1] + (Rn[i3 + 1] - X[i3 + 1]) * u, X[i3 + 2] + (Rn[i3 + 2] - X[i3 + 2]) * u, PJ); if (PJ.s <= 0 || PJ.d < 1.5) continue;
-    const a = 96 + Math.round(159 * Math.min(1, Math.sin(Math.PI * u) * 1.6)), c = ((M.col[p] & 0xffffff) | (a << 24)) >>> 0, x = PJ.x, y = PJ.y, d = PJ.d;   // (never as faint as the lines: 96 and up)
+    const c = PG_DOT, x = PJ.x, y = PJ.y, d = PJ.d;   // (white, on the grid line it rides)
     gridPut(x - 1, y, d, c); gridPut(x, y, d, c); gridPut(x + 1, y, d, c); gridPut(x - 1, y - 1, d, c); gridPut(x, y - 1, d, c); gridPut(x + 1, y - 1, d, c); dots++;
   }
   M.dots = dots;
