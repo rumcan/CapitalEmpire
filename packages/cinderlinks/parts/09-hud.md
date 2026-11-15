@@ -443,7 +443,7 @@ function spinWords(ax, ay) {   // "Backspin 24% · left 8%", "Tap the arrows for
   const pc = (n) => Math.round(Math.min(1, Math.abs(n) * AIR_PER) * 100) + '%', v = ay < 0 ? 'Backspin ' + pc(ay) : ay > 0 ? 'Topspin ' + pc(ay) : '', sd = ax ? (ax < 0 ? 'left ' : 'right ') + pc(ax) : '';
   return v && sd ? v + ' · ' + sd : v || (sd ? sd[0].toUpperCase() + sd.slice(1) : 'Tap the arrows for spin');
 }
-// the spin readout beside the meter, his flight only: a small ball with the spin's dot (its distance from the middle the spin's share) and the words; drawn only when it changes
+// the spin readout beside the meter, his flight only: a small ball with the spin's dot (at the edge: all his club takes that way) and the words; drawn only when it changes
 const spinReadEl = document.createElement('div'), spinReadCv = document.createElement('canvas'), spinReadTx = document.createElement('span');
 spinReadEl.id = 'spinRead'; spinReadCv.width = 64; spinReadCv.height = 64; spinReadEl.appendChild(spinReadCv); spinReadEl.appendChild(spinReadTx);
 if (typeof hudEl !== 'undefined' && hudEl && hudEl.appendChild) hudEl.appendChild(spinReadEl);
@@ -454,10 +454,11 @@ function hostSpinShow() {
   spinReadEl.className = on ? 'on' : ''; if (!on) return;
   spinReadTx.textContent = spinWords(A.ax, A.ay);
   const c = spinReadCv.getContext ? spinReadCv.getContext('2d') : null; if (!c || !c.createRadialGradient) return;
-  c.clearRect(0, 0, 64, 64); const R = ballFace(c, 64, false), k = (n) => Math.max(-1, Math.min(1, n * AIR_PER)) * (R - 7);
+  const cap = A.cap || { side: 0, top: 0, back: 0 }, k = (n, m) => (m > 0 ? Math.max(-1, Math.min(1, n / m)) : 0) * (R - 7);   // (the dot's way to the edge is the share of what his club takes that way: at the edge, no more)
+  c.clearRect(0, 0, 64, 64); const R = ballFace(c, 64, false);
   c.strokeStyle = 'rgba(60, 54, 40, 0.35)'; c.lineWidth = 1; c.beginPath(); c.moveTo(32 - R * 0.85, 32); c.lineTo(32 + R * 0.85, 32); c.moveTo(32, 32 - R * 0.85); c.lineTo(32, 32 + R * 0.85); c.stroke();
   c.strokeStyle = 'rgba(0, 0, 0, 0.55)'; c.lineWidth = 2; c.beginPath(); c.arc(32, 32, R, 0, 6.2832); c.stroke();
-  c.fillStyle = '#e8573c'; c.strokeStyle = '#fff'; c.lineWidth = 2; c.beginPath(); c.arc(32 + k(A.ax), 32 - k(A.ay), 6, 0, 6.2832); c.fill(); c.stroke();
+  c.fillStyle = '#e8573c'; c.strokeStyle = '#fff'; c.lineWidth = 2; c.beginPath(); c.arc(32 + k(A.ax, cap.side), 32 - k(A.ay, A.ay < 0 ? cap.back : cap.top), 6, 0, 6.2832); c.fill(); c.stroke();
 }
 function hostLand(v) { sndLand(v); const m = matAt(ball.x, ball.y), gh = groundH(ball.x, ball.y); for (let k = 0; k < v; k++) addParticle(m === M_SAND ? P_SAND : P_TURF, ball.x, ball.y, gh + 0.04, (rnd() - 0.5) * 2.4, (rnd() - 0.5) * 2.4, 0.8 + rnd() * 2, 20 + rndi(24), rndi(6)); }
 function hostRest() {   // the playback is over: the ball lies at the host's rest (in the cup, in the water), the strokes are counted, held messages go on
@@ -636,9 +637,9 @@ function hostMeterShow() {   // the meter on the swing button: the power held, t
   if (!turn) { hostAimRead(null); return; }
   const pw = S ? S.u : on ? (HP.lastSw.u !== undefined ? HP.lastSw.u : HP.lastSw.power) : 0, boost = S ? hostSwBoost(S) : on ? HP.lastSw.boost : 0, putt0 = !!hostClub() && hostClub().club === 'putter';
   swingFill.style.width = (Math.max(0, Math.min(1, pw)) * 100).toFixed(1) + '%';
-  const txt = S && S.g ? 'Lining up ...' : S || on ? Math.round(pw * 100) + '%  ' + clubName(club) + (boost > 0 ? '  +' + (boost * 100).toFixed(1) + '% boost' : '') + (S && !S.rel ? (putt0 ? '  -  let go to hit' : '  -  tap ↑ boost, let go') : '') : !nearBall() ? 'Walk to your ball (J)' : 'Hold to swing (or Space)';
+  const txt = hostAirOn() ? 'In the air  -  tap the arrows for spin' : S && S.g ? 'Lining up ...' : S || on ? Math.round(pw * 100) + '%  ' + clubName(club) + (boost >= 0.005 ? '  +' + Math.round(boost * 100) + '% boost' : '') + (S && !S.rel ? (putt0 ? '  -  let go to hit' : '  -  tap ↑ boost, let go') : '') : !nearBall() ? 'Walk to your ball (J)' : 'Hold to swing (or Space)';
   if (swingTxt.textContent !== txt) swingTxt.textContent = txt;
-  { const bw = S && !putt0 && !S.g ? (Math.round(Math.max(0, Math.min(1, S.lv || 0)) * 200) / 2).toFixed(1) + '%' : '', bc = bw ? 'boostbar on' + (hostArmed() ? ' armed' : '') : 'boostbar';   // (#1336: the boost bar over the power, written only when it moves)
+  { const bw = S && !putt0 && !S.g ? Math.round(Math.max(0, Math.min(1, S.lv || 0)) * 100) + '%' : '', bc = bw ? 'boostbar on' + (hostArmed() ? ' armed' : '') : 'boostbar';   // (#1336: the boost bar over the power, written only when it moves)
     if (swingBoost.style.width !== bw) swingBoost.style.width = bw; if (swingBoost.className !== bc) swingBoost.className = bc; }
   // T456: the bar's marks: where the aim is (the fill that lands or rolls the ball there: hold to it and let go) and, on a putt, where the hole is
   const T = !on || S ? hostTarget() : null, C = hostClub(), putt = !!C && C.club === 'putter';
