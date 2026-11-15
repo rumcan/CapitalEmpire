@@ -64,6 +64,7 @@ try {
         .map(([id, name], i) => ({ id, name, goal: 'Stop 5 balls within 10 m of the 100 m flag: a long goal that wraps over two lines', got: i % 5, need: 5, done: i === 0, reward: '+2 Irons, +1 Accuracy', here: i < 4 }));
       const last = { kind: 'full', club: 'driver', carryM: 201.9, rollM: 16.2, totalM: 218.1, offM: -6.4, pinM: 30.2, holed: false, ballMph: 140, clubMph: 97, smash: 1.44, launchDeg: 11.4, apexM: 24.6, backRpm: 2750, sideRpm: -450,
         tips: ['Pulled 6.4 m left: early release', 'Boost had faded: release at the top of your taps'] };
+      { const h = await page.$('#help.on'); if (h) { const k = await page.$('#keys'); if (k) { await k.click(); await page.waitForTimeout(200); } } }   // (the help the run above opened: an overlay he asks for, shut here)
       await page.evaluate((m) => window.postMessage(m, '*'), { v: 1, t: 'practice', place: 'range', drills, active: 'shaping', note: 'Fade landed: 1 of 2', paid: null, flags: [], hcp: '18.2', balls: 11, last });
       await page.waitForTimeout(500);
       for (const fold of [false, true]) {

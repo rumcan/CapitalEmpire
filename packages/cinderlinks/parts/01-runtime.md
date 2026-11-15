@@ -117,7 +117,7 @@ body > .panel { border-radius: 0.9em; }
    header alone is a pill in the hole pill's look (the serif gold word, the place, the ball, the arrow). Long words wrap: never a sideways scroll bar */
 #prac { position: absolute; left: 1.4%; top: 20%; width: clamp(250px, 24vw, 340px); max-width: 40%; max-height: 64%; box-sizing: border-box; padding: 0.55em 0.7em; font-size: clamp(11px, 0.95vw, 14px); line-height: 1.35;
   pointer-events: auto; z-index: 5; overflow-y: auto; overflow-x: hidden; overscroll-behavior: contain; overflow-wrap: anywhere; }
-#prac .ph { display: flex; align-items: baseline; gap: 0.5em; margin: -0.1em 0 0.3em; padding: 0 0.1em 0.35em; border-bottom: 1px solid var(--line); cursor: pointer; white-space: nowrap; overflow-wrap: normal; min-width: 0; }
+#prac .ph { position: sticky; top: -0.55em; z-index: 1; display: flex; align-items: baseline; gap: 0.5em; margin: -0.55em -0.1em 0.3em; padding: 0.45em 0.2em 0.35em; background: #16171b; border-bottom: 1px solid var(--line); cursor: pointer; white-space: nowrap; overflow-wrap: normal; min-width: 0; }   /* (sticky: the fold is always at hand while the list scrolls) */
 #prac .ph b { font: 700 1.1em/1.2 var(--serif); color: var(--gold-hi); }
 #prac .ph i, #prac .ph em { font-style: normal; font-weight: 600; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
 #prac .ph i { color: var(--ink); } #prac .ph em { display: none; color: var(--muted); font-variant-numeric: tabular-nums; }
@@ -126,7 +126,7 @@ body > .panel { border-radius: 0.9em; }
 #prac .ph:hover b { color: var(--gold); } #prac .ph:hover s { color: var(--gold-hi); }
 #prac.fold { width: auto; max-width: min(24em, 40%); padding: 0.35em 0.8em 0.4em; border-radius: 1.1em; overflow: hidden; }
 #prac.fold > :not(.ph) { display: none; }
-#prac.fold .ph { margin: 0; padding: 0; border: 0; }
+#prac.fold .ph { position: static; margin: 0; padding: 0; border: 0; background: none; }
 #prac.fold .ph em { display: inline; }
 #prac.fold .ph s { transform: rotate(-90deg); }
 #prac.fold:hover { border-color: var(--gold-line); }
