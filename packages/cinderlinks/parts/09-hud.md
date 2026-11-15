@@ -309,6 +309,16 @@ function hostShot(m) {   // the owner's decided stroke: played back from its sam
   HP.wait = 0; ball.lx = ball.x; ball.ly = ball.y; ball.t = 0; ball.state = F.length ? 1 : 2;
   if (F.length && tL > 0.8) { bcam = 1; bcamT = 0; bcamYaw = camYaw; bcamD = camD; slowT = 30; }   // a full shot: a moment of slow time, and the camera goes with the ball
 }
+// (the owner, 2026-11-15: "the height of the golf ball at game play time seems to move up and down based on the ground height below. so if it travels over a
+// clif it goed higher when it gets over the cliff"): the host's flight heights are an arc over the straight line from the strike to the landing (shot3p.ts:
+// 0 at both ends), not over the ground under the ball. So the ball's base is the ground at the strike, sliding to the ground at the landing along the way
+// (by the share of the distance covered), never the ground under it: a cliff, a hill or a pond below no longer lifts or drops the ball in the air
+function flightBase(P, x, y) {
+  const F = P.F, S = P.S; if (!F.length) return groundH(x, y);
+  if (P.g0 === undefined) { const a = F[0], b = F[F.length - 1]; P.ax = a[0] * S; P.ay = a[1] * S; P.bx = b[0] * S; P.by = b[1] * S; P.g0 = groundH(P.ax, P.ay); P.g1 = groundH(P.bx, P.by); P.dl = Math.hypot(P.bx - P.ax, P.by - P.ay); }
+  const f = P.dl > 1e-6 ? Math.min(1, Math.max(0, Math.hypot(x - P.ax, y - P.ay) / P.dl)) : 1;
+  return P.g0 + (P.g1 - P.g0) * f;
+}
 function hostAt(T, P, t, o) {   // the point of a sampled path at time t (seconds from the strike): x, y and the height (m) between its samples
   let k = 0; while (k < T.length - 1 && T[k + 1] < t) k++;
   const a = P[k], b = P[Math.min(k + 1, P.length - 1)], t0 = T[k], t1 = T[Math.min(k + 1, T.length - 1)], u = t1 > t0 ? Math.min(1, Math.max(0, (t - t0) / (t1 - t0))) : 1;
@@ -321,7 +331,7 @@ function hostBall() {   // one step of the playback: the ball follows the host's
   P.t += dt; ball.t++;
   const x0 = ball.x, y0 = ball.y;
   if (P.F.length && P.t < P.tL) {                                     // in the air
-    hostAt(P.fT, P.F, P.t, HQ); ball.x = HQ.x * S; ball.y = HQ.y * S; ball.z = groundH(ball.x, ball.y) + HQ.h * S; ball.state = 1;
+    hostAt(P.fT, P.F, P.t, HQ); ball.x = HQ.x * S; ball.y = HQ.y * S; ball.z = flightBase(P, ball.x, ball.y) + HQ.h * S; ball.state = 1;
     if (tmode > 0 && (ball.t & 1)) addParticle(P_EMBER, ball.x, ball.y, ball.z, (rnd() - 0.5) * 0.3, (rnd() - 0.5) * 0.3, 0.2, 16 + rndi(14), 1);
   } else if (P.RT.length > 1 && P.t < P.RT[P.RT.length - 1]) {        // bouncing and rolling
     if (!P.landed) { P.landed = true; hostLand(8); }
@@ -687,10 +697,11 @@ function hostAimPreview(C, pw, hot, ph) {   // the preview's flight (scaled to t
   const m = pv.shot, S = hostS(), F = m.flight, n = F.length; if (n < 2) return false;
   const bx = ball.x, by = ball.y, k = pw, at = (p) => [bx + (p[0] * S - bx) * k, by + (p[1] * S - by) * k];
   ribStart();
+  const A0 = at(F[0]), A1 = at(F[n - 1]), g0 = aimH(A0[0], A0[1]), g1 = aimH(A1[0], A1[1]), dl0 = Math.hypot(A1[0] - A0[0], A1[1] - A0[1]);   // (the arc over the strike-to-landing line, as the ball flies it: flightBase)
   for (let i = 0; i < n; i++) {   // the curved flight: the blue ribbon (J5b), every other sample
     if ((i & 1) && i !== n - 1) continue;
-    const q = at(F[i]), gz = aimH(q[0], q[1]);
-    ribAdd(q[0], q[1], Math.max(gz + 0.03, gz + F[i][2] * S * k));
+    const q = at(F[i]), gz = aimH(q[0], q[1]), f = dl0 > 1e-6 ? Math.min(1, Math.hypot(q[0] - A0[0], q[1] - A0[1]) / dl0) : 1, base = g0 + (g1 - g0) * f;
+    ribAdd(q[0], q[1], Math.max(gz + 0.03, base + F[i][2] * S * k));
   }
   ribbonO(RIB_W * S, false);
   const L = at(F[n - 1]), dx0 = L[0] - bx, dy0 = L[1] - by, dl = Math.hypot(dx0, dy0) || 1, dx = dx0 / dl, dy = dy0 / dl, rx = -dy, ry = dx;
