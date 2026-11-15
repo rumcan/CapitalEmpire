@@ -102,7 +102,7 @@ function ProBuildingCard({ game, kind }: { game: Game; kind: 'prooffice' | 'teac
       <button className={`card mt-2 gap-1 ${placing ? 'card-on' : ''}`} data-card={kind} aria-pressed={placing} disabled={full} onClick={() => game.placePro(placing ? null : kind)}
         title={full ? (office ? "Your pro's office stands: there is one only" : `You have ${max} teaching huts: the most`) : placing ? `Placing the ${name.toLowerCase()} (click to put it down; R turns it, Esc puts it down)` : `Place the ${name.toLowerCase()}`}>
         <div className="flex w-full items-center gap-3">
-          {art && <div className="relative grid h-16 w-20 shrink-0 place-items-center overflow-hidden rounded-lg bg-black/30"><Thumb it={art} size={60} /><span className="absolute bottom-0 left-0 right-0 bg-black/60 text-center text-[9px] leading-tight text-slate-200">Stand In</span></div>}
+          {art && <div className="relative grid h-16 w-20 shrink-0 place-items-center overflow-hidden rounded-lg bg-black/30"><Thumb it={art} size={60} /></div>}
           <div className="min-w-0 flex-1">
             <div className="flex items-baseline justify-between gap-2"><span className="font-semibold">{name}</span><span className="text-amber-200">{full ? '✓ Built' : money(cost)}</span></div>
             <div className="sub-line">{`${B.footprint.w} × ${B.footprint.h} tiles · ${money(upkeep)} a month · ${office ? 'one only' : `${n} of ${max}`}`}</div>
@@ -136,7 +136,7 @@ function EstateCard({ game }: { game: Game }) {
       <button className={`card mt-2 gap-1 ${c.placing ? 'card-on' : ''}`} data-card="estate" aria-pressed={c.placing} onClick={() => game.placeEstate(!c.placing)}
         title={c.placing ? 'Laying house lots (click to put the tool down; Esc too)' : 'Lay house lots along a street on your land'}>
         <div className="flex w-full items-center gap-3">
-          {ESTATE_ART && <div className="relative grid h-16 w-20 shrink-0 place-items-center overflow-hidden rounded-lg bg-black/30"><Thumb it={ESTATE_ART} size={60} /><span className="absolute bottom-0 left-0 right-0 bg-black/60 text-center text-[9px] leading-tight text-slate-200">Stand In</span></div>}
+          {ESTATE_ART && <div className="relative grid h-16 w-20 shrink-0 place-items-center overflow-hidden rounded-lg bg-black/30"><Thumb it={ESTATE_ART} size={60} /></div>}
           <div className="min-w-0 flex-1">
             <div className="flex items-baseline justify-between gap-2"><span className="font-semibold">House lots</span><span className="text-amber-200">{money(LAY_COST)} a lot</span></div>
             <div className="sub-line" data-testid="estate-counts">{c.total ? `${c.sale} for sale · ${building} sold, building · ${c.built} built` : '20 × 30 m plots beside a street'}</div>

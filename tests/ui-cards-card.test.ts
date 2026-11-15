@@ -38,7 +38,7 @@ test('cards card: the 8 slots and the whole collection (what you have in colour,
   assert.ok(/In play · 2 of 8/.test(h), 'two in play');
   assert.ok(h.includes('data-testid="cards-inplay-power-mash"') && h.includes('data-testid="cards-inplay-flatstick"') && !h.includes('data-testid="cards-inplay-lead-tape"'), 'the collection marks the cards in play (and only those)'); assert.ok(/Power Mash/.test(h) && /Lie-Angle Balanced Flatstick/.test(h), 'the cards you have show their names');
   assert.equal((h.match(/\?\?\?/g) ?? []).length, CARDS.length - 3, 'the others are locked: no name, a ???');
-  assert.ok(!h.includes('Long Drive Shaft'), 'a card you have not won shows no name'); assert.ok(/Stand In for card art/.test(h), 'labelled stand-ins');
+  assert.ok(!h.includes('Long Drive Shaft'), 'a card you have not won shows no name'); assert.ok(!/stand[- ]?in/i.test(h), 'no stand-in text (the owner, 2026-11-15)');
   assert.ok(!/overflow-x-(auto|scroll)/.test(h) && /overflow-x-hidden/.test(h), 'never a sideways scrollbar');
   assert.ok(/data-testid="cards-machine"/.test(h) && !/disabled=""[^>]*data-testid="cards-machine"|data-testid="cards-machine"[^>]*disabled=""/.test(h), 'the machine’s button is on');
   assert.ok(/Space power-spam: unlocked/.test(h) && /Spin in the air: locked \(the Mid-Flight Whisper card\)/.test(h), 'the two mechanics: Power Mash is in a slot, the Whisper is not won');

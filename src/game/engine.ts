@@ -3287,7 +3287,7 @@ export class Game {
     this.traffic = new SimClient(boot.sim);
     try { this.disastersEnabled = localStorage.getItem('capitalempire.disasters') !== 'false'; } catch { /* default on */ }
     if (JAM) this.disastersEnabled = false; // the jam build's emergencies (golf/risk.ts) replace the natural disasters
-    try { this.showStandIns = !JAM && localStorage.getItem('capitalempire.standins') === 'true'; } catch { /* default off */ } // (the jam MVP: never: the owner, 2026-11-13, no STAND IN text)
+    this.showStandIns = false; // (the owner, 2026-11-15: "rather say nothing than say stand in anywhere": never, in every build; the switch is gone)
     try { this.showMoneyFloats = localStorage.getItem('capitalempire.moneyFloats') !== 'false'; } catch { /* default on */ }
     if (!boot.moneyFloats) this.showMoneyFloats = false;
     // T147: the money floats' sources: every spend (placed ones float), the range's sales and lost golfers
@@ -10310,7 +10310,7 @@ export class Game {
     ctx.lineWidth = 1.5 * dpr; ctx.strokeStyle = n >= cap && cap > 0 ? '#f87171' : '#4ade80'; ctx.stroke();
     ctx.fillStyle = '#f8fafc'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(text, sx, sy + 0.5 * dpr);
     // (the stand-ins: your walk and idle frames serve for every pick-up, and the rigs have no picture yet: GOLF-SPRITES, "The range ball loop")
-    const t = this.youInCart ? (kit.cart > 0 ? 'Stand In for pull-behind picker' : '') : picking ? (kit.push > 0 ? 'Stand In for push picker' : kit.tube ? 'Stand In for tube_pick clip' : 'Stand In for pick-up clip') : '';
+    const t = !this.showStandIns ? '' : this.youInCart ? (kit.cart > 0 ? 'Stand In for pull-behind picker' : '') : picking ? (kit.push > 0 ? 'Stand In for push picker' : kit.tube ? 'Stand In for tube_pick clip' : 'Stand In for pick-up clip') : '';
     if (t) { const f2 = Math.round(10 * dpr); ctx.font = `600 ${f2}px system-ui, sans-serif`; const w2 = ctx.measureText(t).width + 10 * dpr; ctx.beginPath(); ctx.roundRect(sx - w2 / 2, sy + h * 0.8, w2, f2 * 1.6, 5 * dpr); ctx.fillStyle = 'rgba(15,23,42,0.78)'; ctx.fill(); ctx.fillStyle = '#fde68a'; ctx.fillText(t, sx, sy + h * 0.8 + f2 * 0.82); }
     ctx.textAlign = 'start'; ctx.textBaseline = 'alphabetic';
   }
