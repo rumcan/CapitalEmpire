@@ -428,6 +428,8 @@ export class PaintTool {
   private held = 0;
   /** T359: depth of a setting change being applied (an action begun inside it does not close its gesture) */
   private applying = 0;
+  /** build-dust.ts: an undo or redo is putting things back (they do not puff) */
+  restoring = 0;
   /** T359: how many ground steps have been made (a setting change that makes one, a painted area restyled, is that step's, not a setting's) */
   private commits = 0;
   private tx: { before: AreaSnap; spent: number; depth: number; label: string; gd: GridDiff[]; plans: string; /** only looks changed (no shape: the holes' markers stay) */ looks?: boolean;
@@ -1708,7 +1710,8 @@ export class PaintTool {
   get undoLabel() { return this.canUndo ? (this.gesture?.dirty ? this.gesture.label : this.undos[this.undos.length - 1]!.label) : ''; }
   get redoLabel() { return this.canRedo ? this.redos[this.redos.length - 1]!.label : ''; }
   /** undoes the last action: its areas go back, its props are taken away or put back, its money is refunded */
-  undo() {
+  undo() { this.restoring++; try { this.undoStep(); } finally { this.restoring--; } }
+  private undoStep() {
     if (this.tx) return;
     this.endSetting(); // (T359: a setting change still open is the step to take back)
     const u = this.undos.pop(); if (!u) return;
@@ -1726,7 +1729,8 @@ export class PaintTool {
     this.redos.push(u); this.host.save(); this.host.toast(`Undone: ${u.label}`); this.host.emit();
   }
   /** redoes the last undone action */
-  redo() {
+  redo() { this.restoring++; try { this.redoStep(); } finally { this.restoring--; } }
+  private redoStep() {
     if (this.tx) return;
     this.endSetting();
     const u = this.redos.pop(); if (!u) return;

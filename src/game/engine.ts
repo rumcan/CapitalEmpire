@@ -162,6 +162,7 @@ import { LATEST as LATEST_LOT_MODEL } from './lots/lot-models';
 import { stateOf, type PresetState } from './lots/presets';
 import { LotMap, endReach, ringClear } from './lots/lots';
 import * as ES from './golf/estate'; // T353 (#995): house lots
+import { BuildDust, armTick, disarm, drawDust, dustAllowed, grewTo } from './build-dust';
 import { EstateTool } from './golf/estatetool';
 import { PLACE_DEFS, duePlaces, findSite, placeBox, placeDef, placeGeom, placeName, placeTuples, placesFromTuples, type PlacedPlace, type SiteSeg } from './lots/iconic';
 import { TOWN_BLOCKS, TOWN_POP, townCentres, townGrid } from './lots/seedtowns';
@@ -589,7 +590,6 @@ const LAND_BAND_COL = {
 const LABEL_KEY = { town: 1e6, growth: 2e6, stopped: 2.1e6, gallery: 3e6, waiting: 4e6, landHover: 6e6, stadium: 6e6 + 1 } as const; // (7e6: parking-overlay.ts's lots with no road)
 
 interface Build { legs: Leg[]; cls: RoadClass; t0: number; dur: number; total: number; cum: number[] }
-interface Particle { x: number; y: number; vx: number; vy: number; vz: number; z: number; life: number; age: number; r: number }
 export interface Toast { id: number; text: string; t: number; kind: 'info' | 'warn' | 'good'; /** T242: its Set the scene button opens this place's picture card */ scene?: SceneRef }
 export interface Camera { X: number; Y: number; z: number }
 const AUTO_TREES = ['world:tree_oak_1', 'ref:tree-maple-crimson', 'world:tree_oak_2', 'ref:tree-birch-gold'];
@@ -1109,7 +1109,13 @@ export class Game {
   /** a Space press that panned (held with the drag) does not also pause on release */
   private spacePanned = false;
   // fx
-  builds: Build[] = []; particles: Particle[] = []; private growToast = -Infinity;
+  builds: Build[] = []; private growToast = -Infinity;
+  /** the construction dust (build-dust.ts): the road builder's and every new thing's, one pool; dustLv each lot's last stage (a lot that grew puffs) */
+  readonly dust = new BuildDust(); private dustLv = new Map<string, number>(); private dustQuad = new Float32Array(8); private dustHold = false;
+  private dustOk(): boolean { return !this.dustHold && dustAllowed(this.dust.arm, this.show, this.paint.restoring > 0); }
+  private dustProj = (x: number, y: number, o: { x: number; y: number }) => { const ze = this.cam.z * this.dpr; o.x = (worldX(x, y) - this.cam.X) * ze + this.cw / 2; o.y = (worldY(x, y) - this.cam.Y) * ze + this.ch / 2; };
+  /** dust round a lot's quad (origin o, along u for w, in along n for d) */
+  private dustLot(o: Pt, u: Pt, n: Pt, w: number, d: number) { const q = this.dustQuad; q[0] = o.x; q[1] = o.y; q[2] = o.x + u.x * w; q[3] = o.y + u.y * w; q[4] = q[2] + n.x * d; q[5] = q[3] + n.y * d; q[6] = o.x + n.x * d; q[7] = o.y + n.y * d; this.dust.poly(performance.now(), q, 'foot'); }
   toasts: Toast[] = []; toastId = 1;
   /** the city worker (cars, parcels, town): created with the game, so the town grows whenever the sim runs */
   traffic: SimClient;
@@ -1617,7 +1623,9 @@ export class Game {
     const p = this.placing, h = this.hover; if (!p || !h) return;
     const s = p.spot(h.x, h.y), v = placeVerdict(p, s, this.money);
     if (v.bad) { this.toast(v.label, 'warn'); return; }
-    if (p.build(s)) { this.placing = null; this.scheduleSave(); }
+    const foot = this.dustOk() ? p.polys(s) : null; this.dustHold = true; let ok = false; // (build-dust.ts: its outline puffs; the business it adds does not puff again)
+    try { ok = p.build(s); } finally { this.dustHold = false; }
+    if (ok) { this.placing = null; this.scheduleSave(); if (foot) for (const q of foot) this.dust.poly(performance.now(), q, 'foot'); }
     this.emit();
   }
   /** the build in hand's ghost at the pointer: its outline and parts, green where it may stand, red and hatched where not, its verdict by the
@@ -2656,6 +2664,7 @@ export class Game {
     const t0 = performance.now(), b = d ? diffBox(d) : null, g = this.courseGrid;
     if (b && d && g) {
       this.bunkerContourRev = -1; this.ground.bunkers.suspend();
+      if (this.dustOk()) this.dust.grid(performance.now(), d, g.surf, CELL_T); // (build-dust.ts: the edges of what was laid)
       if (this.contourOf === g) { this.contour.cells(g, d); this.areaWorker.cells(g, d); }
       if (!this.cgDirty) this.cgDirtyAt = t0;
       this.cgDirty = this.cgDirty ? [Math.min(this.cgDirty[0]!, b.x0), Math.min(this.cgDirty[1]!, b.y0), Math.max(this.cgDirty[2]!, b.x1), Math.max(this.cgDirty[3]!, b.y1)] : [b.x0, b.y0, b.x1, b.y1];
@@ -3675,6 +3684,7 @@ export class Game {
    *  (nothing is spent yet), the clock starts and the camera goes to the range. False (nothing laid) with no start to lay */
   private layStart(rs: RangeStart | null): boolean {
     const pk = this.startPick, g = this.golf; if (!pk || !g || !rs) return false;
+    disarm(this.dust.arm, performance.now()); this.dustLv.clear(); // (build-dust.ts: the new game's start is its first bake: no dust)
     const { road, site } = rs, next: RangeSave = { ...rs.save, progress: g.progress, ...(g.player ? { player: g.player } : {}) };
     this.golf = next; this.startPick = null; this.placing = null; this.hover = null; this.ghostMouse = null; // (the pick's pointer goes with it: a map point from the far view)
     this.townPts = [site.centre]; this.roadNames = new RoadNames(this.names, this.townPts);
@@ -3932,7 +3942,7 @@ export class Game {
     if (o?.lift) p.lift = o.lift; // drawn above its spot (T133: the range's upper deck)
     if (bodyOf(item) >= 0) p.paint = paintAt(x, y); // a car's paint from where it stands (T228, car-paint.ts: a bay or a lot's spot keeps its colour)
     this.props.add(p); this.propGrid.add(p, [p.x0, p.y0, p.x1, p.y1]); this.sprites.add(p); this.casterTouched(p);
-    if (this.propLog) this.propLog.added.push(p);
+    if (this.propLog) { this.propLog.added.push(p); if (this.dustOk()) this.dust.rect(performance.now(), p.x0, p.y0, p.x1, p.y1, 'prop'); } // (build-dust.ts: the player's new prop)
     if (LIBRARY[item].kind === 'lamp') this.lampProps.add(p);
     if (LIBRARY[item].kind === 'fountain') this.fountainProps.add(p); // T231: the jets loop their frames (animateFountains)
     if (LIBRARY[item].big && LIBRARY[item].kind !== 'car') this.scheduleBlocks(isLotProp(p)); // cars are not building blocks (sendBlocks skips them)
@@ -4556,8 +4566,9 @@ export class Game {
     const v = st ? undefined : this.traffic.lots.get(key);
     this.townLotChanged(key, st ? lotBoxOf([st.g.o.x, st.g.o.y], [st.g.u.x, st.g.u.y], [st.g.n.x, st.g.n.y], st.g.w, st.g.d) : v ? lotBoxOf(v.o, v.u, v.n, v.w, v.d) : null);
     if (st) { this.placeLot(key, st.g, st.st); return; }
-    if (!v) { this.dropLot(key); return; }
+    if (!v) { this.dustLv.delete(key); this.dropLot(key); return; }
     const g: LotGeom = { o: { x: v.o[0], y: v.o[1] }, u: { x: v.u[0], y: v.u[1] }, n: { x: v.n[0], y: v.n[1] }, w: v.w, d: v.d };
+    const lv0 = this.dustLv.get(key); this.dustLv.set(key, v.level); if (grewTo(lv0, v.level, LV.BUILDING) && this.dustOk()) this.dustLot(g.o, g.u, g.n, g.w, g.d); // (build-dust.ts: the town grew a house)
     // an empty lot, or one a starter house stands on, keeps only its share of the fence grid (none on the golf land): a starter house's lot all
     // the lines it owns, an empty lot only those it shares with a lot that has a house
     const starter = v.level !== LV.EMPTY && this.starterIn(v);
@@ -4804,6 +4815,7 @@ export class Game {
    *  the town trees round it are planted again, the empty lots under it are drawn again (they draw nothing now) */
   private placePlace(pl: PlacedPlace) {
     const def = placeDef(pl.id); if (!def) return;
+    const fresh = !this.placeProps.has(pl.id); // (build-dust.ts: a new place puffs)
     this.dropPlace(pl.id);
     const g = placeGeom(pl, def), box = placeBox(pl, def), key = 'place:' + pl.id, c = composeWhole(g, def.preset, this.seed ^ 0x219), ps: Prop[] = [], seen = new Set<string>();
     const hits = new Set<Prop>(); this.propGrid.query(box, hits);
@@ -4815,6 +4827,7 @@ export class Game {
       if (src && si && !seen.has(src)) { seen.add(src); this.placeStandIns.push({ p, text: `Stand In for ${si}` }); }
     }
     this.placeProps.set(pl.id, ps); this.setLotGround(key, c.ground);
+    if (fresh && this.dustOk()) this.dust.rect(performance.now(), box[0]!, box[1]!, box[2]!, box[3]!, 'foot');
     this.dropTownTrees(box[0], box[1], box[2], box[3]);
     for (const l of this.traffic.lots.values()) { const b = lotBoxOf(l.o, l.u, l.n, l.w, l.d); if (b[0]! < box[2] && b[2]! > box[0] && b[1]! < box[3] && b[3]! > box[1]) this.lotQueue.add(l.key); }
   }
@@ -5143,6 +5156,7 @@ export class Game {
   /** the course height changed in box: save, and the workers take the new heights and re-bake the ground there */
   private courseHeightChanged(box: CourseTileBox) { this.scheduleSave(); this.ground.courseHeight(this.courseHeight.data, box, this.realLand); }
   private afterLoad() {
+    disarm(this.dust.arm, performance.now()); this.dustLv.clear(); // (build-dust.ts: no dust while the load settles)
     this.applySandbox(); // #1314: a sandbox game (loaded or new) opens everything; any other game plays the unlocks again
     const ops = this.edit.commit(true); this.lanes.update(this.net);
     // the city worker gets the whole network (the bench commits its own edits before this, so `ops` can be empty)
@@ -7572,6 +7586,7 @@ export class Game {
   /** sets the placed businesses and the stadium's site from them (cached here, so the drawing needs no allocation) */
   private businessProps: Prop[] = [];
   private setBizDefs(defs: BizDef[]) {
+    if (this.dustOk()) for (const d of defs) if (!this.bizDefs.some(q => q.id === d.id)) this.dust.rect(performance.now(), d.x, d.y, d.x + d.w, d.y + d.h, 'foot'); // (build-dust.ts)
     for (const p of this.businessProps) this.sprites.remove(p);
     for (const d of [...this.bizDefs, ...defs]) this.dropTownTrees(d.x, d.y, d.x + d.w, d.y + d.h);
     this.bizDefs = defs; const s = defs.find(d => d.type === 'stadium') ?? defs.find(d => d.type === 'clubhouse') ?? defs.find(d => d.type === 'range'); this.stadiumSite = s ? siteAt(s.x, s.y, s.w, s.h) : null;
@@ -9425,7 +9440,7 @@ export class Game {
 
   // ---------- fx ----------
   puff(x: number, y: number, n: number) {
-    for (let i = 0; i < n; i++) this.particles.push({ x: x + (Math.random() - 0.5) * 1.5, y: y + (Math.random() - 0.5) * 1.5, vx: (Math.random() - 0.5) * 1.2, vy: (Math.random() - 0.5) * 1.2, vz: 0.6 + Math.random() * 1.2, z: 0, life: 0.6 + Math.random() * 0.6, age: 0, r: 0.25 + Math.random() * 0.3 });
+    this.dust.pool.puff(x, y, n);
   }
   private revealFront(b: Build, now: number) {
     const p = clamp((now - b.t0) / b.dur, 0, 1), e = p < 0.5 ? 2 * p * p : 1 - Math.pow(-2 * p + 2, 2) / 2;
@@ -12327,6 +12342,7 @@ export class Game {
     const l = this.estateHide ? undefined : this.estateRt?.lots.find(q => `estate:${q.id}` === key);
     if (!l) { this.townLotChanged(key, null); this.dropLot(key); this.estateDrawn.delete(key); return; }
     this.townLotChanged(key, lotBoxOf([l.o.x, l.o.y], [l.u.x, l.u.y], [l.n.x, l.n.y], l.w, l.d));
+    const st0 = this.dustLv.get(key); this.dustLv.set(key, l.st); if ((st0 === undefined || l.st > st0) && this.dustOk()) this.dustLot(l.o, l.u, l.n, l.w, l.d); // (build-dust.ts: laid, sold, building, built)
     if (l.st === ES.ST.BUILDING || l.st === ES.ST.BUILT) this.placeLot(key, { o: l.o, u: l.u, n: l.n, w: l.w, d: l.d }, this.estateLotState(l));
     else this.placeEstatePlot(key, l);
   }
@@ -13438,12 +13454,11 @@ export class Game {
       b.legs.forEach((l, i) => {
         const d = sub(l.b, l.a), len = vlen(d), rl = front - b.cum[i]; if (rl < 0 || rl > len) return;
         const u = mul(d, 1 / len), n = perp(u), f = add(l.a, mul(u, rl));
-        for (let k = 0; k < 3; k++) { const s = (Math.random() - 0.5) * 2 * b.cls.h, q = add(f, mul(n, s)); this.particles.push({ x: q.x, y: q.y, vx: (Math.random() - 0.5) * 1.5 - u.x * 0.4, vy: (Math.random() - 0.5) * 1.5 - u.y * 0.4, vz: 0.8 + Math.random() * 1.6, z: 0, life: 0.7 + Math.random() * 0.7, age: 0, r: 0.3 + Math.random() * 0.5 }); }
+        for (let k = 0; k < 3; k++) { const s = (Math.random() - 0.5) * 2 * b.cls.h, q = add(f, mul(n, s)); this.dust.pool.spawn(q.x, q.y, (Math.random() - 0.5) * 1.5 - u.x * 0.4, (Math.random() - 0.5) * 1.5 - u.y * 0.4, 0.8 + Math.random() * 1.6, 0.7 + Math.random() * 0.7, 0.3 + Math.random() * 0.5); }
       });
     }
     this.builds = this.builds.filter(b => now < b.t0 + b.dur + 150);
-    for (const p of this.particles) { p.age += dt; p.x += p.vx * dt; p.y += p.vy * dt; p.z += p.vz * dt; p.vz -= 0.8 * dt; p.r += 0.6 * dt; }
-    this.particles = this.particles.filter(p => p.age < p.life);
+    this.dust.pool.step(dt); armTick(this.dust.arm, performance.now(), this.lotQueue.size === 0); // (build-dust.ts: armed once a load has settled)
     this.traffic?.update(now);
     // T147: the money floats: the old ones go, then the city worker's money with its place (the range's comes as it steps)
     this.floats.frame(now / 1000);
@@ -14081,10 +14096,7 @@ export class Game {
     this.labels.begin(ctx, this.dpr);
     this.drawBalls(ctx);
     if (this.range.scene) { const o = { x: 0, y: 0 }, cx = this.cw / 2, cy = this.ch / 2; this.range.drawOver(ctx, (x, y) => { o.x = (worldX(x, y) - this.cam.X) * ze + cx; o.y = (worldY(x, y) - this.cam.Y) * ze + cy; return o; }, ze, this.cam.z, this.dpr, this.cw, this.ch, this.labels); }
-    for (const p of this.particles) {
-      const s = this.screen(p.x, p.y), a = (1 - p.age / p.life) * 0.5, r = p.r * HW * ze;
-      ctx.fillStyle = `rgba(214,190,150,${a.toFixed(3)})`; ctx.beginPath(); ctx.ellipse(s.x, s.y - p.z * HH * ze * 1.5, r, r * 0.7, 0, 0, Math.PI * 2); ctx.fill();
-    }
+    drawDust(ctx, this.dust.pool, this.dustProj, ze, HW, HH); // (build-dust.ts: the road's and every new thing's dust, lit from the upper right)
     this.drawNight(ctx, now);
   }
   private drawOverlay(now: number) {
@@ -14175,10 +14187,7 @@ export class Game {
         }
       });
     }
-    for (const p of this.particles) {
-      const s = this.screen(p.x, p.y), a = (1 - p.age / p.life) * 0.5, r = p.r * HW * ze;
-      ctx.fillStyle = `rgba(214,190,150,${a.toFixed(3)})`; ctx.beginPath(); ctx.ellipse(s.x, s.y - p.z * HH * ze * 1.5, r, r * 0.7, 0, 0, Math.PI * 2); ctx.fill();
-    }
+    drawDust(ctx, this.dust.pool, this.dustProj, ze, HW, HH); // (build-dust.ts: the road's and every new thing's dust, lit from the upper right)
     this.drawNight(ctx, now);
     // T147: the money floats over everything on the map (the night too), under the HUD
     // (T151: each float's column clear of the placed world labels)
