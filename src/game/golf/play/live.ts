@@ -9,7 +9,7 @@ import { PUTT_V2, carryFor, puttEase, chooseShot, hitShot, luckyPutt, putt, rng,
 import { hasMech, kitOf, type ModCtx } from './mods';
 import { readShape, shapeEffect, type ShotShape } from './shape';
 import { holeFrom } from './courseview';
-import { BOOST, HOLD_PUTT_TOP, HOLD_V, METER, METER_ANG, MIN_SWING_POWER, TAP_BOOST, readSwing, swingEffect, type SwingOutcome } from './swing';
+import { BIG_BOOST_V, BOOST, HOLD_PUTT_TOP, HOLD_V, METER, METER_ANG, MIN_SWING_POWER, TAP_BOOST, readSwing, swingEffect, type SwingOutcome } from './swing';
 import { AIR, isAir, readSpin, spinEffect, type SpinInput } from './spin';
 import { readEnv, type ShotEnv } from './conditions';
 import type { Club, CourseView, Landing, Lie, PlayHole, Pt, RoundPlan, Shot } from './types';
@@ -47,9 +47,9 @@ function backToFairway(view: CourseView, hole: PlayHole, p: Pt, reach: number): 
   return null;
 }
 /** the shot model's current version (OwnerInput.v): 2 since T334 (the putting), 3 since T346 (the club's own run after landing: a shot with conditions rolls on by CLUB_RUN), 4 since 2026-11-15 (short putts
- *  much easier to sink: shot.ts PUTT_EASY), 5 since #1336 (the tapped boost for every golfer, capped at swing.ts TAP_BOOST.plain or BOOST.max with the Power Mash card,
+ *  much easier to sink: shot.ts PUTT_EASY), 6 since 2026-11-15 (the tapped boost counts TAP_BOOST.gain times), 5 since #1336 (the tapped boost for every golfer, capped at swing.ts TAP_BOOST.plain or BOOST.max with the Power Mash card,
  *  none on a putt; the spin tapped in the air, spin.ts AIR). An input below 5 keeps the old rules: the boost only with the card, the taps in the air dropped */
-export const MODEL_V = 5;
+export const MODEL_V = 6;
 /** #1336: the first model version with the tapped boost and the spin tapped in the air */
 export const TAP_V = 5;
 /** the owner's turn: his golfer, the hole (index, number, par), the stroke he plays, the minute he strikes, his lie, his ball and the pin (tiles), the
@@ -175,7 +175,9 @@ export function shotOutcome(view: CourseView, hole: PlayHole, from: Pt, plie: Li
   const card = hasMech(sk, 'boost'), held = !!sw0 && (sw0.v ?? 1) >= HOLD_V; // (#1336: the taps are the hold-and-release swing's; the 3-click meter's Space spam stays the card's)
   const bcap = !tapV ? (card ? BOOST.max : 0) : putting && held ? 0 : card ? BOOST.max : held ? TAP_BOOST.plain : 0;
   const sw = sw0 && sw0.boost > bcap ? { ...sw0, boost: bcap } : sw0;
-  const eff = sw ? swingEffect(sw, kit.skill, putting, kit.sweet, kit.miss, kit.speed) : null, miss = eff ? eff.deg * Math.PI / 180 : 0; // (the kit's skill is skillFor's, with the moment's mods; kit.miss: the Self-Correcting Ball's half; T345: kit.speed turns the sweet window in time into the arc's width)
+  const eff0 = sw ? swingEffect(sw, kit.skill, putting, kit.sweet, kit.miss, kit.speed) : null;
+  // (version 6, the owner: "make it bigger": a hold swing's tapped boost counts TAP_BOOST.gain times: +12% at the plain cap, +18% with the charge; its wider miss is swingEffect's, as before)
+  const eff = eff0 && sw && held && !putting && (input.v ?? 1) >= BIG_BOOST_V ? { ...eff0, power: eff0.power + sw.boost * (TAP_BOOST.gain - 1) } : eff0, miss = eff ? eff.deg * Math.PI / 180 : 0; // (the kit's skill is skillFor's, with the moment's mods; kit.miss: the Self-Correcting Ball's half; T345: kit.speed turns the sweet window in time into the arc's width)
   if (putting) {
     const pw = eff ? clamp(eff.power, MIN_SWING_POWER, (sw!.v === HOLD_V ? HOLD_PUTT_TOP : METER.top) + BOOST.max) : clamp(input.power, PUTT_POWER[0]!, PUTT_POWER[1]!);
     const dx = hole.pin.x - from.x, dy = hole.pin.y - from.y, L = Math.hypot(dx, dy), ux = L > 0 ? dx / L : 1, uy = L > 0 ? dy / L : 0;
