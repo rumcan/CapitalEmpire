@@ -299,6 +299,9 @@ test('the still is laid at the live scene\'s own scale with its point of interes
   const eng = readFileSync('src/game/engine.ts', 'utf8');
   assert.match(eng, /const cars: Drawable\[\] = this\.traffic && !this\.stillLife \?/); assert.match(eng, /if \(tier === 'street' && !this\.stillLife\) \{/); assert.match(eng, /tier === 'street' && !this\.stillLife && this\.range\.scene/);
   assert.ok(!/object-cover/.test(readFileSync('src/ui/jam/MenuScene.tsx', 'utf8')), 'no cover crop: it would scale the still away from the live picture');
+  // and never the UI's Text size (index.css: .ui-root's children are zoomed by --ui-scale, 0.9 on a 900 px tall screen): the still is a picture of the world, at the canvas's scale
+  assert.match(readFileSync('src/ui/jam/MenuScene.tsx', 'utf8'), /className="ui-unscaled [^"]*" data-testid="menu-scene"/);
+  assert.match(readFileSync('src/index.css', 'utf8'), /\.ui-root > :not\(canvas\):not\(\.ui-unscaled\) \{ zoom: var\(--ui-scale, 1\); \}/);
   // the first stop holds its first view for firstHold ms after it is shown, then glides
   const s0 = stop({ id: 'a', secs: 12 }), s1 = stop({ id: 'b', x: 1300, secs: 12 }), { g, snap } = host();
   const d = new ShowDirector(g, [s0, s1], 0, snap, () => {}, POSTER_FADE_MS); d.begin(0); g.setReady(true);

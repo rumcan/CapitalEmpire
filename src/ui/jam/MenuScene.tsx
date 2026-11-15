@@ -12,7 +12,7 @@ const posterStyleOf = () => { const b = posterBox(window.innerWidth, window.inne
 
 export function MenuScene({ poster, alt, posterOn, snapRef }: { poster: string | null; alt: string; posterOn: boolean; snapRef: RefObject<HTMLCanvasElement | null> }) {
   return (
-    <div className="pointer-events-none absolute inset-0 z-[55] overflow-hidden" data-testid="menu-scene">
+    <div className="ui-unscaled pointer-events-none absolute inset-0 z-[55] overflow-hidden" data-testid="menu-scene">
       {/* the copy of the last picture (opacity is the director's, set on the element) */}
       <canvas ref={snapRef} className="absolute inset-0 h-full w-full opacity-0" aria-hidden="true" />
       {poster && <img src={poster} alt={alt} className="absolute" style={{ ...posterStyleOf(), opacity: posterOn ? 1 : 0, transition: `opacity ${POSTER_FADE_MS}ms ease-in-out` }} data-testid="menu-still" draggable={false} />}
