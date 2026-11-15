@@ -77,7 +77,7 @@ test('drills: the save reads back, junk is dropped, and an old profile has none'
 });
 test('unlocks: the shaping drill opens the curve, flight the flight, putting the putt read; a new golfer has none; practice lets him try the curve and flight', () => {
   const none = earned({ skills: START_SKILLS });
-  assert.equal(none.draw, false); assert.equal(none.high, false); assert.equal(none.read, false);
+  assert.equal(none.draw, true, 'shaping is open to every golfer (the owner, 2026-11-15)'); assert.equal(none.high, true); assert.equal(none.read, false);
   assert.match(none.why.read!, /Putting drill/);
   const done = earned({ skills: START_SKILLS, drills: ['shaping', 'flight', 'putting'] });
   assert.equal(done.draw && done.fade && done.high && done.low && done.read, true);
