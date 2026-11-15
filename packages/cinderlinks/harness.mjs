@@ -1145,6 +1145,11 @@ try {
       if (res.golfArt.frames.length) res.errors.push('golfer art: frames ' + res.golfArt.frames.join(', '));
       if (res.golfArt.menu !== GOLFART_IDS.length + 1) res.errors.push('golfer art: the style menu offers ' + res.golfArt.menu + ' golfers');
       if (artIdOf({ art: 'golf_pro_w2' }) !== 'golf_pro_w2' || artIdOf({ art: 'nobody' }) || artIdOf(null)) res.errors.push('golfer art: the art of a dress is not read');
+      // "sprite falls through the floor mid backswing": each frame stands on its own soles (gaStand), not on the clip's one anchor. A figure 100 rows tall in a 170-row cell, as the
+      // band about his middle counts it: legs 20 wide, shoes 25, then the club's shaft (2) and its head (12 wide, 6 rows) hanging below his feet; the same frame painted 30 rows lower
+      const fig = (dy, head) => { const c = new Int32Array(170); for (let y = 60; y <= 120; y++) c[y + dy] = y >= 112 ? 25 : 20; for (let y = 121; y <= 127; y++) c[y + dy] = 2; if (head) for (let y = 128; y <= 133; y++) c[y + dy] = 12; return c; };
+      const st = [gaStand(fig(0, true), 170, 100, 118), gaStand(fig(30, true), 170, 100, 118), gaStand(fig(0, false), 170, 100, 110), gaStand(new Int32Array(170), 170, 100, 118), gaStand(fig(45, false), 170, 100, 118)].join(',');
+      res.golfArt.stand = st; if (st !== '118,148,118,118,118') res.errors.push('golfer art: a frame does not stand on its own soles (' + st + ', want 118,148,118,118,118: on his soles, not the club head; a frame painted 30 rows lower stands as low; none found or 45 rows off: the anchor of the clip)');
     }
     { const hc = hostCraftRun(); res.hostCraft = hc.info; res.errors.push(...hc.errs); }
     { const hq = hostPracRun(); res.hostPrac = hq.info; res.errors.push(...hq.errs); }
