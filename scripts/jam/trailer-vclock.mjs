@@ -50,7 +50,7 @@ function vclock(preludeSrc) {
     for (const tm of S.timers.values()) { const left = Math.max(0, tm.at - S.t); if (tm.rep) tm.rsi(tm.fn, tm.ms, ...tm.a); else tm.rst(tm.fn, left, ...tm.a); }
     S.timers.clear(); for (const w of S.workers) w.postMessage({ __vt: 'off' });
   };
-  /** n steps of dt ms; then, with settle (ms), the ground's bakes in flight waited for in real time and the frame drawn again at the same moment */
+  /** n steps of dt ms; then, with settle (ms), the ground's bakes in flight waited for in real time and the frame drawn once more at the same moment */
   W.__vtStep = async (n, dt, settle) => {
     for (let i = 0; i < n; i++) {
       S.t += dt;
@@ -59,13 +59,14 @@ function vclock(preludeSrc) {
         if (!best) break; if (best.rep) best.at += Math.max(1, best.ms); else S.timers.delete(best.id);
         try { best.fn(...best.a); } catch (e) { console.error('[vt] timer', e); }
       }
-      await Promise.all(S.workers.map(w => new Promise(res => { const to = rst(res, 4000); S.acks.set(w, () => { rct(to); res(); }); w.postMessage({ __vt: 'tick', t: S.t }); })));
+      await Promise.all(S.workers.map(w => new Promise(res => { const to = rst(() => { S.ackMiss = (S.ackMiss || 0) + 1; res(); }, 1500); S.acks.set(w, () => { rct(to); res(); }); w.postMessage({ __vt: 'tick', t: S.t }); })));
       await new Promise(r => rst(r, 0)); // (the worker's answers, posted before its ack, are handled before the frame is drawn)
       runRafs();
     }
     const g = W.__game, t0 = rp();
-    if (settle && g && g.ground) while (g.ground.busy > 0 && rp() - t0 < settle) { await new Promise(r => rst(r, 25)); runRafs(); }
-    return { t: S.t, wait: Math.round(rp() - t0) };
+    // (no drawing while it waits: each frame drawn asks for a few chunks ahead of the view, so busy would never reach 0; then one draw at the same moment)
+    if (settle && g && g.ground && g.ground.busy > 0) { while (g.ground.busy > 0 && rp() - t0 < settle) await new Promise(r => rst(r, 20)); runRafs(); }
+    return { t: S.t, wait: Math.round(rp() - t0), busy: g?.ground?.busy ?? 0, ackMiss: S.ackMiss || 0 };
   };
 }
 
