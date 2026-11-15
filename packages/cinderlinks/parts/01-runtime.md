@@ -45,13 +45,11 @@ start "" "%EDGE%" --app="file:///%~dp0index.html" --new-window --user-data-dir="
   <canvas id="view"></canvas>
   <canvas id="over"></canvas>
   <div id="hud">
-    <div id="card"></div>
-    <div id="wind"><div id="windArrow">&#10148;</div><div id="windTxt">wind</div></div>
+    <div id="card"><div id="cardLine"></div><div id="wind" title="Wind"><span id="windArrow">&#10148;</span><span id="windTxt"></span></div><div id="cardRead"></div><div id="cardMore"></div></div>
     <div id="minimap" title="Click to fold the hole map"><canvas id="mini" width="128" height="168"></canvas><span id="miniTag"></span></div>
     <div id="power"><div class="track"><i id="powerBar"></i></div><div id="powerTxt"></div></div>
     <div id="clubs"></div>
-    <div id="keys"></div>
-    <div id="style"><button id="styleBtn" type="button">Settings</button><div id="styleMenu"></div></div>
+    <div id="corner"><button id="keys" type="button" title="Keys and help (H)">?</button><div id="style"><button id="styleBtn" type="button" title="Settings">&#9881;</button><div id="styleMenu"></div></div></div>
     <button id="jump" type="button"><img src="tiles/jump-to-ball.webp" alt="" aria-hidden="true" draggable="false">Jump to ball <b>J</b></button>
     <button id="gimme" type="button"><img src="tiles/gimme.webp" alt="" aria-hidden="true" draggable="false">Gimme <b>Y</b></button>
     <div id="help"></div>
@@ -77,12 +75,14 @@ Check: --panel: rgba(20, 21, 25, 0.9)
 Check: body.host #minimap
 Check: #minimap.fold
 Check: #cover.on
-R: J5f: the shot panel's Curve and Flight are sliders (a track with a gold run from the middle to the thumb, a tick at the middle, the end he has not earned dimmed and struck through), and the aim's distance sits in a small panel above the club box.
-Check: #shotc input[type=range]
-Check: #shotc small img
-Check: #shotc .tab
-Check: #shotc .rc
+R: 2026-11-15 (the owner: "Stuff should be collapsed .. Icons are sliced off at the sides"): the HUD is collapsed by default and nothing runs off the picture at any size: the hole is a small pill (the hole, par, the way to the pin, the shot, the wind's arrow and mph) that a click opens to its facts (kept); the club in hand is one compact picker (previous and next arrows, the lie as a chip, the aim's distance above it, the whole bag folded above it); the shot is shaped on a ball in a panel the corner button opens; "?" (the keys) and the Settings gear sit in the bottom right corner.
+Check: #card.open #cardMore
+Check: #clubs .pick
+Check: #clubs .bagl
 Check: #clubs .club .ci
+Check: #shapeBall
+Check: #shotBtn
+Check: #corner
 Check: #aimd
 
 ````css file=style.css
@@ -105,7 +105,7 @@ button { font-family: var(--sans); }
 #hud { position: absolute; inset: 0; pointer-events: none; font-size: clamp(11px, 1.016cqw, 15px); line-height: 1.35; }
 
 /* the glass panels (CapitalEmpire's .glass): the card, the help, the shot panel, the settings menu, the leaderboard and match cards */
-.panel, #card, #keys, #help, #wind, #shotc, #styleMenu { background: var(--panel); border: 1px solid var(--line); border-radius: 1.1em; box-shadow: var(--shadow); color: var(--ink); }
+.panel, #card, #help, #shotc, #styleMenu { background: var(--panel); border: 1px solid var(--line); border-radius: 1.1em; box-shadow: var(--shadow); color: var(--ink); }
 body > .panel { border-radius: 0.9em; }
 #prac .ph { font-size: 0.85em; letter-spacing: 0.12em; color: var(--gold); margin-bottom: 0.35em; } #prac .pd { display: flex; gap: 0.7em; align-items: flex-start; padding: 0.5em 0.55em; margin: 0.35em 0; border: 1px solid var(--line); border-radius: 0.8em; background: rgba(0, 0, 0, 0.22); cursor: pointer; }
 #prac .pd.on { border-color: var(--gold-line); background: var(--gold-wash); } #prac .pd.off { opacity: 0.45; cursor: default; } #prac .pd.done .pt i { color: var(--good); } #prac .pd:hover:not(.off) { border-color: var(--line-hi); }
@@ -116,29 +116,32 @@ body > .panel { border-radius: 0.9em; }
 .pflag { padding: 0.1em 0.45em; border-radius: 0.5em; background: var(--panel); border: 1px solid var(--gold-line); color: var(--ink); font: 600 clamp(10px, 0.85vw, 13px) system-ui, sans-serif; white-space: nowrap; }
 body > .panel > b:first-child { font-size: 0.85em; letter-spacing: 0.12em; text-transform: uppercase; color: var(--gold); }
 
-/* the card: the hole in the serif, gold; its facts as CapitalEmpire's stat lines (muted name, bold cream figure) */
-#card { position: absolute; left: 1.4%; top: 2%; padding: 0.6em 0.85em 0.65em; min-width: 13em; pointer-events: auto; cursor: pointer; }
+/* 2026-11-15 (the owner: "Stuff should be collapsed"): the card is a small pill: the hole in the serif, gold, then par, the way to the pin and the shot, and the
+   wind (an arrow as the camera sees it and its mph, gold in a gust) in it; on the green the break under it. A click opens its facts beneath (CapitalEmpire's stat
+   lines: muted name, bold cream figure); the choice is kept */
+#card { position: absolute; left: 1.4%; top: 2%; box-sizing: border-box; max-width: min(26em, 44%); display: flex; flex-wrap: wrap; align-items: center; gap: 0.15em 0.6em; padding: 0.35em 0.8em 0.4em; border-radius: 1.1em; pointer-events: auto; cursor: pointer; }
 #card:hover { border-color: var(--gold-line); }
-#hud.min #card .row, #hud.min #card .course, #hud.min #card .credit, body:not(.host) #hud.min #minimap, #hud.min #wind, #hud.min #keys, #hud.min #clubs .club:not(.on) { display: none; }
-#hud.min #card { min-width: 0; padding: 0.4em 0.85em 0.45em; border-radius: 999px; }
-#hud.min #card .hole { border-bottom: 0; margin-bottom: 0; padding-bottom: 0; font-size: 1.15em; gap: 0.9em; }
-#card .hole { display: flex; justify-content: space-between; align-items: baseline; gap: 1em; margin-bottom: 0.35em; padding-bottom: 0.3em; border-bottom: 1px solid var(--line);
-  font: 700 1.3em/1.2 var(--serif); color: var(--gold-hi); }
-#card .hole span { font: 600 0.62em var(--sans); letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); }
-#card .course { font-size: 0.92em; font-weight: 700; color: var(--ink); margin-bottom: 0.15em; max-width: 17em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+#cardLine { display: flex; align-items: baseline; gap: 0.5em; white-space: nowrap; font-variant-numeric: tabular-nums; min-width: 0; }
+#cardLine b { font: 700 1.15em/1.2 var(--serif); color: var(--gold-hi); }
+#cardLine i { font-style: normal; font-weight: 600; color: var(--ink); }
+#cardLine i::before { content: '\00b7'; margin-right: 0.5em; color: var(--muted); }
+#cardLine s { text-decoration: none; color: var(--muted); font-size: 0.8em; }
+#card.open #cardLine s { display: inline-block; transform: rotate(180deg); }
+#wind { display: inline-flex; align-items: center; gap: 0.3em; padding: 0.05em 0.55em; border-radius: 999px; background: rgba(255, 255, 255, 0.06); border: 1px solid var(--line); color: var(--ink); font-weight: 700; font-size: 0.95em; white-space: nowrap; }
+#windArrow { display: inline-block; line-height: 1; transition: transform 0.25s; }
+#windTxt:empty { display: none; }
+#wind.gust { border-color: var(--gold); color: var(--gold-hi); background: var(--gold-wash); }
+#cardRead { flex-basis: 100%; font-size: 0.92em; font-weight: 600; color: var(--gold-hi); white-space: normal; }
+#cardRead:empty { display: none; }
+#cardMore { display: none; flex-basis: 100%; margin-top: 0.3em; padding-top: 0.3em; border-top: 1px solid var(--line); }
+#card.open #cardMore { display: block; }
+#card .course { font-size: 0.92em; font-weight: 700; color: var(--ink); margin-bottom: 0.15em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 #card .row { display: flex; justify-content: space-between; gap: 1.4em; font-size: 0.95em; }
-#card .row span { color: var(--muted); }
-#card .row b { color: var(--ink); font-variant-numeric: tabular-nums; text-align: right; }
-#card .credit { font-size: 0.78em; line-height: 1.3; color: var(--muted); margin-top: 0.45em; max-width: 15em; white-space: normal; }
-
-/* the wind: a small square tile; gold while a gust is on the golfer */
-#wind { position: absolute; right: calc(1.4% + var(--mapw, 12.1em) + 0.6em); top: 2%; width: 3.6em; padding: 0.25em 0 0.3em; text-align: center; color: var(--muted); border-radius: 0.9em; }
-#windTxt { font-size: 0.8em; }
-#windArrow { font-size: 1.6em; line-height: 1.25; color: var(--ink); transition: transform 0.25s; }
-#wind.gust #windArrow { color: var(--gold-hi); }
-#wind.gust { border-color: var(--gold); background: linear-gradient(var(--gold-wash), var(--gold-wash)), var(--panel); }
-/* (inside CapitalEmpire its own buttons, the ghost and share chips and the close button, run along the top right: the map and the wind sit below them) */
-body.host #minimap, body.host #wind { top: 56px; }
+#card .row span { color: var(--muted); white-space: nowrap; }
+#card .row b { color: var(--ink); font-variant-numeric: tabular-nums; text-align: right; font-weight: 600; }
+#card .note { margin-top: 0.35em; font-size: 0.8em; line-height: 1.3; color: var(--muted); white-space: normal; }
+/* (inside CapitalEmpire its own buttons, the round menu and the close button, run along the top right: the map sits below them) */
+body.host #minimap { top: 56px; }
 /* #1327 (the owner: "add minimap of the hole you are playing in the top right, that shows where you are and where you are aiming"): the hole's map, tee at the bottom and the green at the top as the camera
    looks down the hole, sized to the hole (--mapw, --mapb: its width, and how far down it reaches, in em, set with each hole; the wind sits left of it and the shot panel below it). The folded HUD does not hide it
    in CapitalEmpire; a click folds it to a small pill (kept). Only the dots and the line over it are redrawn. */
@@ -166,6 +169,10 @@ body.host #minimap, body.host #wind { top: 56px; }
 #swingBtn b.aimmk::after { content: ''; position: absolute; left: -4.5px; top: 0; border: 6px solid transparent; border-top-color: var(--gold-hi); }
 #swingBtn b.holemk { width: 2px; margin-left: -1px; background: #fff; opacity: 0.9; box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.45); }
 #swingBtn span { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 1.05em; font-weight: 700; white-space: nowrap; text-shadow: 0 1px 2px rgba(0, 0, 0, 0.85), 0 0 8px rgba(0, 0, 0, 0.5); }
+/* (room kept, 2026-11-15, for the follow-on job "Tap-to-boost while holding the swing": a thinner boost bar over the power, and a small spin-ball readout beside the
+   meter during the flight; nothing draws them yet) */
+#swingBtn u.boostbar { position: absolute; left: 0; right: 0; top: 0; height: 0.32em; display: none; text-decoration: none; background: rgba(255, 255, 255, 0.08); }
+#spinRead { position: absolute; bottom: 2.2%; left: calc(50% - 11.5em - 4.2em); width: 3.6em; height: 3.6em; display: none; pointer-events: none; }
 #powerTxt { display: inline-block; margin-top: 0.4em; padding: 0.15em 0.7em; border-radius: 999px; background: var(--panel); font-size: 0.95em; font-weight: 700; color: var(--ink); }
 #powerTxt:empty { display: none; }
 .track { position: relative; height: 1.1em; background: var(--panel); border: 1px solid var(--gold-line); border-radius: 999px; box-shadow: var(--shadow); overflow: hidden; }
@@ -176,63 +183,68 @@ body.host #minimap, body.host #wind { top: 56px; }
 #power .track b.sweet { background: rgba(116, 227, 164, 0.35); border-left: 1px solid #b8ffc8; border-right: 1px solid #b8ffc8; }
 #power .track b.top { width: 2px; margin-left: -1px; background: #fff; }
 
-/* #1301 (the owner: "these icons are too small to see what they are showing. make it a side menu and make them larger"): the shot panel is a side menu down the right of the view: its tiles are 64 px, its
-   sliders as wide as the panel, a tab on its left edge folds it away (the panel slides off, the tab stays), and what does not fit scrolls up and down inside it (never sideways). It keeps clear of the
-   ball, the aim and the swing bar (the middle of the view). #shotc is the frame that slides, .sb the panel that scrolls, .tab the handle. */
-#shotc { position: absolute; right: 0; top: max(15%, calc(56px + var(--mapb, 0em) / 0.92)); bottom: 7%; width: clamp(290px, 28vw, 380px); display: none; font-size: 0.92em; line-height: 1.35; pointer-events: none; transition: transform 0.22s ease; background: none; border: 0; box-shadow: none; border-radius: 0; }   /* (the frame itself takes no clicks: the panel and the tab do, so the view beside it still aims) */
+/* 2026-11-15 (the owner: "Why not make the draw and fade like normal golf games where you just move the dot on the ball?"): the shot is shaped on a ball. A small
+   button at the bottom right shows the ball with its dot and the shape picked; a click opens the panel above it (kept shut until asked, the choice kept): one big
+   ball to drag the dot on (left draw, right fade, up high, down low), the painted draw, fade, high and low tiles round it, a gold ring for his limit, a small arrow
+   that previews the shape, Reset, and, folded under it, the spin ball, Tour spin and Go for it. It never runs off the picture: it scrolls up and down inside. */
+#shotBtn { display: none; align-items: center; gap: 0.4em; height: 2.6em; box-sizing: border-box; padding: 0 0.75em 0 0.25em; border-radius: 999px; background: var(--panel); border: 1px solid var(--gold-line); box-shadow: var(--shadow); color: var(--ink); font: 700 1em/1 var(--sans); cursor: pointer; }
+#shotBtn.on { display: inline-flex; } #shotBtn:hover { border-color: var(--gold); } #shotBtn.open { background: linear-gradient(var(--gold-wash), var(--gold-wash)), var(--panel); border-color: var(--gold); }
+#shotBtn canvas { width: 2.1em; height: 2.1em; pointer-events: none; }
+#shotBtn span { white-space: nowrap; max-width: 10em; overflow: hidden; text-overflow: ellipsis; pointer-events: none; }
+#shotc { position: absolute; right: 1.4%; bottom: calc(2.4% + 3.3em); width: 17.5em; max-width: 46%; max-height: calc(97.6% - 3.3em - 56px - 1em); box-sizing: border-box; display: none; padding: 0.55em 0.7em 0.65em; overflow-y: auto; overflow-x: hidden; overscroll-behavior: contain; font-size: 0.92em; line-height: 1.35; pointer-events: auto; }
 #shotc.on { display: block; }
-#shotc.fold { transform: translateX(100%); }
-#shotc .sb { position: absolute; inset: 0; box-sizing: border-box; padding: 0.55em 0.7em 0.7em; overflow-y: auto; overflow-x: hidden; pointer-events: auto; background: var(--panel); border: 1px solid var(--line); border-right: 0; border-radius: 1.1em 0 0 1.1em; box-shadow: var(--shadow); color: var(--ink); }
-#shotc .tab { position: absolute; left: -2.1em; top: 0.4em; width: 2.1em; padding: 0.7em 0; text-align: center; cursor: pointer; pointer-events: auto; font-size: 0.85em; font-weight: 700; letter-spacing: 0.08em; color: var(--gold-hi); background: var(--panel); border: 1px solid var(--line); border-right: 0; border-radius: 0.8em 0 0 0.8em; writing-mode: vertical-rl; transform: rotate(180deg); }
-#shotc .tab:hover { border-color: var(--gold-line); }
-#shotc .sec { margin: 0.35em 0 0.6em; padding: 0.3em 0.4em 0.45em; border-radius: 0.8em; background: rgba(0, 0, 0, 0.25); }
-#shotc .sh { display: flex; justify-content: space-between; align-items: baseline; gap: 0.5em; margin-bottom: 0.2em; }
-#shotc .sh span { cursor: pointer; font-weight: 700; color: var(--ink); letter-spacing: 0.04em; }
-#shotc .sh em { font-style: normal; font-size: 0.9em; color: var(--gold-hi); text-align: right; }
-#shotc .sl { display: flex; align-items: flex-start; gap: 0.4em; }
-#shotc .sl small { flex: none; display: flex; flex-direction: column; align-items: center; gap: 0.15em; width: 64px; font-size: 0.85em; text-align: center; color: var(--muted); }
-#shotc .sl input[type=range] { flex: 1 1 auto; min-width: 0; margin-top: 22px; }
-#shotc small.lock { opacity: 0.45; text-decoration: line-through; }
-/* J8 (#1261), #1301: the painted tile at each end of Curve (draw, fade) and Flight (low, high) and on Tour spin and Go for it: 64 px, pictures only, never in the way of a click */
-#shotc small img, #shotc b img { width: 64px; height: 64px; border-radius: 12%; pointer-events: none; display: block; }
+#shotc .sh { display: flex; align-items: center; gap: 0.5em; }
+#shotc .sh > b { font-weight: 700; letter-spacing: 0.04em; color: var(--ink); white-space: nowrap; }
+#shotc .sh em { flex: 1; min-width: 0; font-style: normal; font-size: 0.9em; color: var(--gold-hi); text-align: right; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+#shotc .rst { flex: none; padding: 0.15em 0.55em; font: 600 0.85em/1.3 var(--sans); color: var(--ink); background: rgba(255, 255, 255, 0.06); border: 1px solid var(--line-hi); border-radius: 0.6em; cursor: pointer; }
+#shotc .rst:hover { border-color: var(--gold-line); }
+#shotc .bw { position: relative; width: 12em; height: 12em; margin: 0.35em auto 0.15em; }
+#shapeBall { position: absolute; left: 2.2em; top: 2.2em; width: 7.6em; height: 7.6em; cursor: grab; touch-action: none; }
+#shapeArc { position: absolute; right: -0.2em; bottom: -0.1em; width: 2.6em; height: 2.6em; pointer-events: none; }
+#shotc .bw img { position: absolute; width: 2.1em; height: 2.1em; border-radius: 12%; pointer-events: none; }
+#shotc .bw img.e-draw { left: 0; top: 4.95em; } #shotc .bw img.e-fade { right: 0; top: 4.95em; } #shotc .bw img.e-high { left: 4.95em; top: 0; } #shotc .bw img.e-low { left: 4.95em; bottom: 0; }
+#shotc .bw img.lock { opacity: 0.3; filter: grayscale(1); }
+#shotc .lab { text-align: center; font-size: 0.85em; color: var(--muted); }
+#shotc .lim { margin-top: 0.2em; text-align: center; font-size: 0.85em; color: var(--ink); cursor: help; }
+#shotc .lim:empty { display: none; }
+#shotc details { margin-top: 0.45em; padding-top: 0.35em; border-top: 1px solid var(--line); }
+#shotc summary { cursor: pointer; font-size: 0.88em; color: var(--muted); }
+#shotc summary:hover { color: var(--ink); }
+/* J8 (#1261), #1301: the painted tiles on Tour spin and Go for it: pictures only, never in the way of a click */
+#shotc b img { width: 2.6em; height: 2.6em; border-radius: 12%; pointer-events: none; display: block; }
 #shotc b { cursor: pointer; display: flex; align-items: center; gap: 0.6em; flex: 1; min-width: 0; padding: 0.25em 0.6em 0.25em 0.25em; border-radius: 0.7em; border: 1px solid var(--line); color: #d9d3c4; font-weight: 600; }
 #shotc b:hover { background: rgba(255, 255, 255, 0.06); }
 #shotc b.sel { background: var(--gold-btn); color: #1b1406; font-weight: 700; }
 #shotc b.lock { opacity: 0.6; cursor: not-allowed; }
 #shotc b.boost.sel { background: linear-gradient(#ef6a4a, #c2410c); border-color: transparent; color: #fff; }
 #shotc b.sel .lw { color: inherit; }
-#shotc .sp { display: flex; align-items: center; gap: 0.7em; }
-#shotc canvas { flex: none; width: 96px; height: 96px; cursor: crosshair; touch-action: none; }
+#shotc .sp { display: flex; align-items: center; gap: 0.7em; margin-top: 0.35em; }
+#shotc .sp canvas { flex: none; width: 4.6em; height: 4.6em; cursor: crosshair; touch-action: none; }
 #shotc .sp .st { display: flex; flex-direction: column; gap: 0.4em; flex: 1; min-width: 0; }
 #shotc .tx { display: flex; flex-direction: column; min-width: 0; } #shotc b.lock .nm { text-decoration: line-through; } #shotc .lw { font-style: normal; font-size: 0.8em; font-weight: 500; color: var(--warn); text-decoration: none; white-space: normal; }
-#shotc .sh span i { font-weight: 500; font-size: 0.8em; margin-left: 0.4em; }
 #shotc i { font-style: normal; font-size: 0.85em; color: var(--muted); }
-/* J5f: Curve and Flight are sliders: the track has a gold run from the middle to the thumb (--a to --b, set by the view) and a tick at the middle; a side he has not earned is dimmed
-   (--l, --r) and its end name struck through; the thumb is gold once the amount is off the middle. Each vendor's pseudo-elements get their own rule (one unknown one drops a list) */
-#shotc input[type=range] { -webkit-appearance: none; appearance: none; height: 1.6em; margin: 0; padding: 0; background: transparent; cursor: pointer; --a: 50%; --b: 50%; --l: rgba(255, 255, 255, 0.22); --r: rgba(255, 255, 255, 0.22);
-  --trk: linear-gradient(to right, transparent calc(50% - 1px), rgba(255, 255, 255, 0.7) calc(50% - 1px), rgba(255, 255, 255, 0.7) calc(50% + 1px), transparent calc(50% + 1px)),
-    linear-gradient(to right, transparent var(--a), var(--gold) var(--a), var(--gold) var(--b), transparent var(--b)), linear-gradient(to right, var(--l) 50%, var(--r) 50%); }
-#shotc input[type=range]:focus { outline: none; }
-#shotc input[type=range]::-webkit-slider-runnable-track { height: 0.6em; border-radius: 999px; background: var(--trk); }
-#shotc input[type=range]::-moz-range-track { height: 0.6em; border-radius: 999px; background: var(--trk); }
-#shotc input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 1.4em; height: 1.4em; margin-top: -0.4em; border-radius: 50%; border: 1px solid rgba(0, 0, 0, 0.6); background: #d9d3c4; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.55); }
-#shotc input[type=range]::-moz-range-thumb { width: 1.4em; height: 1.4em; box-sizing: border-box; border-radius: 50%; border: 1px solid rgba(0, 0, 0, 0.6); background: #d9d3c4; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.55); }
-#shotc input[type=range].on::-webkit-slider-thumb { background: var(--gold-btn); }
-#shotc input[type=range].on::-moz-range-thumb { background: var(--gold-btn); }
-/* #1301: how much of a draw or fade he can pull off: three bars on one scale of metres: a scratch golfer's full curve (faint, the whole width), his own full curve (soft), and the one picked now (gold),
-   and the words that say why it is small */
-#shotc .rc { position: relative; height: 0.5em; margin: 0.4em 0 0.15em; border-radius: 999px; background: rgba(255, 255, 255, 0.1); overflow: hidden; }
-#shotc .rc u { position: absolute; left: 0; top: 0; bottom: 0; text-decoration: none; border-radius: 999px; }
-#shotc .rc .me { background: rgba(255, 255, 255, 0.28); width: 70%; } #shotc .rc .pk { background: var(--gold); width: 0; }
-#shotc .why { font-size: 0.85em; color: var(--muted); white-space: normal; }
-#shotc .why b { display: inline; flex: none; padding: 0; border: 0; color: var(--ink); background: none; cursor: default; font-weight: 700; }
-#pickTxt { margin-top: 0.3em; padding-left: 0.2em; color: var(--gold-hi); }
 
-/* the clubs: CapitalEmpire's rail tabs, the one in hand ringed in gold on the gold wash */
-#clubs { position: absolute; left: 1.4%; bottom: 2.4%; display: flex; flex-wrap: wrap; gap: 0.45em; max-width: 64%; }
-#clubs.bag { gap: 0.3em; max-width: 34%; }   /* (his whole bag wraps in the left third: the power bar stays clear) */
+/* the clubs. The view's own play: CapitalEmpire's rail tabs, the one in hand ringed in gold on the gold wash. In the game (2026-11-15, the owner: "12 tiles always
+   open"): one compact picker, the club in hand (its tile, name and carry from this lie) between previous and next arrows, the lie as a small chip beside it
+   ("Rough 80%"), the aim's distance above; a click on the club opens his whole bag above it (a grid, never sideways), a click on one takes it */
+#clubs { position: absolute; left: 1.4%; bottom: 2.4%; display: flex; flex-wrap: wrap; gap: 0.45em; max-width: 34%; }
 #clubs .club { display: flex; align-items: center; gap: 0.4em; padding: 0.35em 0.7em 0.4em; border-radius: 0.8em; background: var(--panel); border: 1px solid var(--line); box-shadow: var(--shadow); font-size: 1em; font-weight: 600; color: #d9d3c4; line-height: 1.3; }
-#clubs.bag .club { padding: 0.25em 0.55em 0.3em; font-size: 0.88em; }
+#clubs.bag { flex-wrap: nowrap; align-items: center; max-width: calc(50% - 11.5em - 5.4em); }   /* (clear of the swing bar and the room kept beside it) */
+#clubs .pick { display: flex; align-items: stretch; flex: none; pointer-events: auto; background: var(--panel); border: 1px solid var(--gold-line); border-radius: 0.9em; box-shadow: var(--shadow); }
+#clubs .cb { flex: none; width: 1.8em; padding: 0; border: 0; background: none; color: var(--gold-hi); font: 700 1.35em/1 var(--sans); cursor: pointer; border-radius: 0.6em; }
+#clubs .cb:hover { background: rgba(255, 255, 255, 0.07); }
+#clubs .cur { display: flex; align-items: center; gap: 0.5em; padding: 0.3em 0.35em; cursor: pointer; min-width: 0; border-left: 1px solid var(--line); border-right: 1px solid var(--line); }
+#clubs .cur:hover { background: rgba(255, 255, 255, 0.05); }
+#clubs .cur .ci { flex: none; width: 2.3em; height: 2.3em; border-radius: 12%; pointer-events: none; }
+#clubs .cur span { display: flex; flex-direction: column; font-weight: 700; color: var(--gold-hi); line-height: 1.2; white-space: nowrap; pointer-events: none; }
+#clubs .cur span i { font-style: normal; font-weight: 600; font-size: 0.85em; color: var(--ink); font-variant-numeric: tabular-nums; }
+#clubs .lie { flex: none; pointer-events: auto; padding: 0.2em 0.65em; border-radius: 999px; background: var(--panel); border: 1px solid var(--line); box-shadow: var(--shadow); font-size: 0.9em; font-weight: 600; white-space: nowrap; color: var(--ink); }
+#clubs .lie.cut { color: var(--warn); border-color: rgba(251, 154, 75, 0.5); }
+#clubs .bagl { display: none; position: absolute; left: 0; bottom: calc(100% + 0.45em); grid-template-columns: repeat(3, max-content); gap: 0.3em; padding: 0.4em; max-height: 70cqh; overflow-y: auto; overflow-x: hidden; pointer-events: auto; background: var(--panel); border: 1px solid var(--line); border-radius: 1em; box-shadow: var(--shadow); }
+#clubs.open .bagl { display: grid; }
+#clubs.open #aimd { display: none; }
+#clubs .bagl .club { padding: 0.25em 0.55em 0.3em; font-size: 0.88em; cursor: pointer; box-shadow: none; }
+#clubs .bagl .club:hover { border-color: var(--gold-line); }
 #clubs .club.on { border-color: var(--gold); background: linear-gradient(var(--gold-wash), var(--gold-wash)), var(--panel); color: var(--gold-hi); box-shadow: var(--shadow), inset 0 0 12px rgba(245, 181, 46, 0.18); }
 #clubs .club .ci { flex: none; width: 2.5em; height: 2.5em; margin: -0.2em 0; border-radius: 12%; pointer-events: none; } #clubs.bag .club .ci { width: 2.2em; height: 2.2em; }   /* (J8: a club tab's painted tile, its club's: driver, wood, long iron, iron, wedge, putter) */
 #clubs .club b { margin-right: 0.1em; color: var(--muted); font-weight: 700; }
@@ -246,10 +258,13 @@ body.host #minimap, body.host #wind { top: 56px; }
 #aimd b { color: var(--gold-hi); font-weight: 700; }
 #aimd i { margin-left: 0.5em; font-style: normal; font-size: 0.78em; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); }
 
-/* the key hints and the help: CapitalEmpire's keycaps */
-#keys { position: absolute; right: 1.4%; bottom: 2.4%; padding: 0.35em 0.75em; border-radius: 999px; font-size: 0.9em; color: var(--muted); }
-#keys b { display: inline-block; min-width: 1.4em; padding: 0 0.3em; border-radius: 0.35em; border: 1px solid var(--line-hi); background: rgba(255, 255, 255, 0.06); font-weight: 700; line-height: 1.45; text-align: center; color: var(--ink); }
-#help { position: absolute; right: 1.4%; bottom: calc(2.4% + 2.9em); max-width: 58%; max-height: calc(100% - 2.4% - 2.9em - 2% - 5em); overflow-y: auto; overflow-x: hidden; overscroll-behavior: contain; pointer-events: auto; padding: 0.7em 0.95em; font-size: 0.9em; line-height: 1.6; display: none; white-space: pre-wrap; color: var(--ink); }
+/* the bottom right corner (2026-11-15): the shot button, then "?" (what can be done now, on hover; a click opens the keys) and the Settings gear, small round buttons */
+#corner { position: absolute; right: 1.4%; bottom: 2.4%; display: flex; align-items: center; gap: 0.45em; pointer-events: none; }
+#corner > * { pointer-events: auto; }
+#keys, #styleBtn { width: 2.4em; height: 2.4em; padding: 0; display: grid; place-items: center; border-radius: 50%; font: 700 1.1em/1 var(--sans); color: var(--ink); background: var(--panel); border: 1px solid var(--line-hi); box-shadow: var(--shadow); cursor: pointer; }
+#keys:hover, #styleBtn:hover, #keys.on { border-color: var(--gold-line); color: var(--gold-hi); }
+/* the help: CapitalEmpire's keycaps */
+#help { position: absolute; right: 1.4%; bottom: calc(2.4% + 3.3em); box-sizing: border-box; max-width: min(36em, 58%); max-height: calc(97.6% - 3.3em - 2% - 1em); overflow-y: auto; overflow-x: hidden; overscroll-behavior: contain; pointer-events: auto; padding: 0.7em 0.95em; font-size: 0.9em; line-height: 1.6; display: none; white-space: pre-wrap; color: var(--ink); }
 /* CapitalEmpire's thin scrollbar (src/index.css, T205): a light thumb, gold under the pointer, no arrows; never a sideways one */
 #help::-webkit-scrollbar { width: 8px; background: transparent; } #help::-webkit-scrollbar-button { display: none; width: 0; height: 0; }
 #help::-webkit-scrollbar-thumb { min-height: 28px; border: 2px solid transparent; border-radius: 999px; background: rgba(239, 233, 218, 0.26) padding-box; } #help::-webkit-scrollbar-thumb:hover { background: rgba(245, 181, 46, 0.85) padding-box; }
@@ -257,11 +272,9 @@ body.host #minimap, body.host #wind { top: 56px; }
 #help b { display: inline-block; min-width: 7.5em; margin-right: 0.6em; font-weight: 700; color: var(--gold-hi); }
 #help b.h { border: 0; background: none; padding: 0; font-size: 0.85em; letter-spacing: 0.12em; text-transform: uppercase; color: var(--gold); }
 
-/* the Settings button and its menu: CapitalEmpire's .btn and its flyout rows, section names in small caps */
-#style { position: absolute; top: 2%; left: 50%; transform: translateX(-50%); pointer-events: auto; text-align: center; }
-#styleBtn { display: inline-flex; align-items: center; gap: 0.4em; padding: 0.4em 0.9em; font-size: 1em; font-weight: 600; color: var(--ink); background: var(--panel); border: 1px solid var(--line-hi); border-radius: 0.8em; box-shadow: var(--shadow); cursor: pointer; }
-#styleBtn:hover { border-color: var(--gold-line); } #styleBtn b { color: var(--gold); margin-left: 0; font-size: 0.85em; }
-#styleMenu { display: none; margin-top: 0.4em; padding: 0.55em; gap: 0.9em; text-align: left; white-space: nowrap; border-radius: 1em; }
+/* the Settings gear and its menu: CapitalEmpire's flyout rows, section names in small caps; the menu opens above the gear, to its left */
+#style { position: relative; text-align: left; }
+#styleMenu { display: none; position: absolute; right: 0; bottom: calc(100% + 0.45em); padding: 0.55em; gap: 0.9em; text-align: left; white-space: nowrap; border-radius: 1em; }
 #styleMenu.on { display: flex; }
 #styleMenu .grp { display: flex; flex-direction: column; gap: 2px; }
 #styleMenu .dist { width: 12em; white-space: normal; } #styleMenu .dist input { width: 100%; margin: 0.4em 0 0.2em; accent-color: var(--gold); cursor: pointer; } #styleMenu .dist span { display: block; font-size: 0.95em; font-weight: 700; font-variant-numeric: tabular-nums; color: var(--ink); margin-left: 0.45em; } #styleMenu .dist label.simple { display: block; font-size: 0.9em; color: var(--ink); margin: 0.5em 0 0 0.35em; cursor: pointer; } #styleMenu .dist label.simple input { width: auto; margin: 0 0.4em 0 0; vertical-align: middle; }
@@ -271,11 +284,12 @@ body.host #minimap, body.host #wind { top: 56px; }
 #styleMenu button:hover { background: rgba(255, 255, 255, 0.07); } #styleMenu button.on { color: var(--gold-hi); background: var(--gold-wash); border-color: rgba(245, 181, 46, 0.45); }
 
 /* Jump to ball (.btn) and Gimme (the gold button: the thing to take now), each with its key as a keycap */
-#jump, #gimme { position: absolute; right: 1.4%; bottom: 8%; display: none; align-items: center; gap: 0.45em; padding: 0.45em 0.9em; font-size: 1em; font-weight: 600; color: var(--ink); background: var(--panel); border: 1px solid var(--line-hi); border-radius: 0.8em; box-shadow: var(--shadow); cursor: pointer; pointer-events: auto; }
+#jump, #gimme { position: absolute; right: 1.4%; bottom: calc(2.4% + 3.3em); display: none; align-items: center; gap: 0.45em; padding: 0.45em 0.9em; font-size: 1em; font-weight: 600; color: var(--ink); background: var(--panel); border: 1px solid var(--line-hi); border-radius: 0.8em; box-shadow: var(--shadow); cursor: pointer; pointer-events: auto; }
 #jump.on, #gimme.on { display: inline-flex; } #jump:hover { border-color: var(--gold-line); }
 #jump img, #gimme img { width: 2.1em; height: 2.1em; margin: -0.35em 0; border-radius: 12%; pointer-events: none; }   /* (J8: their painted tiles; a click on one is a click on the button) */
 #jump b, #gimme b { min-width: 1.4em; padding: 0 0.3em; border-radius: 0.35em; border: 1px solid var(--line-hi); background: rgba(255, 255, 255, 0.06); font-size: 0.85em; line-height: 1.45; color: var(--ink); }
-#gimme { bottom: calc(8% + 2.9em); background: var(--gold-btn); border-color: transparent; color: #1b1406; font-weight: 700; box-shadow: 0 2px 10px rgba(245, 181, 46, 0.35), var(--shadow); }
+#jump.on ~ #gimme { bottom: calc(2.4% + 6.3em); }
+#gimme { background: var(--gold-btn); border-color: transparent; color: #1b1406; font-weight: 700; box-shadow: 0 2px 10px rgba(245, 181, 46, 0.35), var(--shadow); }
 #gimme:hover { filter: brightness(1.06); } #gimme b { border-color: rgba(27, 20, 6, 0.35); background: rgba(27, 20, 6, 0.1); color: #1b1406; }
 
 /* the message line: the serif on a glass pill, only while there is something to say */

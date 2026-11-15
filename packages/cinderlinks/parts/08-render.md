@@ -1080,38 +1080,59 @@ function plotZA(sx, sy, d, c) {   // an aim mark: hidden only where something at
 // or over RIB_MAXPX px either side of its middle), drawn on the full-size layer. As the ground's marks do, it hides behind whatever stands nearer in the
 // picture, and it is never drawn over the golfer, the ball, the flag, the cart or a tree (sprM). It never covers another mark: the rings drawn before
 // it stay whole, and those drawn after it lie over it. The points go in with ribAdd (world metres, the height included); ribbonO draws them.
+// 2026-11-15 (the owner: "these are drawn so badly": thick near, a thin double outline far off, dots like noise): the line is one steady width on the
+// layer, near and far (RIB_HW px either side of its middle, a dark rim one px beyond), whatever the world's width; the roll after a landing is a faint dash
+// (soft 1) and a putt's way a faint solid line (soft 2). The wM argument is kept for the callers; the width no longer follows it.
 const rgba = (r, g, b, a) => (((a << 24) | (b << 16) | (g << 8) | r) >>> 0);
-const RIB_W = 0.35, RIB_MAXPX = 4.5,   /* (the owner, 2026-11-14: the ribbon half as thick) */ RIB_N = 1024, RIB = { n: 0, p: new Float64Array(3 * RIB_N) };
-const RIB_FILL = rgba(52, 140, 255, 140), RIB_EDGE = rgba(200, 230, 255, 235), RIB_RIM = rgba(8, 28, 72, 120);              // the aim's flight or roll
-const RIB_SOFT = rgba(110, 185, 255, 90), RIB_SOFT_EDGE = rgba(205, 232, 255, 165);                                         // the preview's bounce and roll after the landing
-const RSX = new Float32Array(RIB_N), RSY = new Float32Array(RIB_N), RSD = new Float32Array(RIB_N), RSH = new Float32Array(RIB_N), RQ = { x: 0, y: 0, d: 0, s: 0 };
+const RIB_W = 0.35, RIB_HW = 1.45, RIB_N = 1024, RIB = { n: 0, p: new Float64Array(3 * RIB_N) };
+const RIB_FILL = rgba(176, 218, 255, 236), RIB_EDGE = rgba(120, 186, 255, 210), RIB_RIM = rgba(10, 26, 60, 150);              // the aim's flight
+const RIB_SOFT = rgba(205, 230, 255, 128), RIB_SOFT_EDGE = rgba(205, 232, 255, 100);                                         // the roll after the landing, a putt's way
+const RSX = new Float32Array(RIB_N), RSY = new Float32Array(RIB_N), RSD = new Float32Array(RIB_N), RSL = new Float32Array(RIB_N), RQ = { x: 0, y: 0, d: 0, s: 0 };
 function ribStart() { RIB.n = 0; }
 function ribAdd(x, y, z) { if (RIB.n >= RIB_N) return; const i = RIB.n * 3; RIB.p[i] = x; RIB.p[i + 1] = y; RIB.p[i + 2] = z; RIB.n++; }
 function ribRank(c) { return c === RIB_FILL || c === RIB_SOFT ? 3 : c === RIB_EDGE || c === RIB_SOFT_EDGE ? 2 : c === RIB_RIM ? 1 : c === 0 ? 0 : 9; }   // (9: another mark: never covered)
-function ribbonO(wM, soft) {   // the band along the points added since ribStart, wM metres wide; soft: the fainter roll after a landing
-  const n = RIB.n, P = RIB.p, fill = soft ? RIB_SOFT : RIB_FILL, edge = soft ? RIB_SOFT_EDGE : RIB_EDGE;
-  for (let i = 0; i < n; i++) {   // each point on the layer, and the band's half width there (the world's width across the way, as the camera sees it)
-    const x = P[i * 3], y = P[i * 3 + 1], z = P[i * 3 + 2], j = i + 1 < n ? i + 1 : i - 1;
-    let tx = j >= 0 ? P[j * 3] - x : 1, ty = j >= 0 ? P[j * 3 + 1] - y : 0; if (j < i) { tx = -tx; ty = -ty; }
-    const tl = Math.sqrt(tx * tx + ty * ty) || 1;
-    projectO(x, y, z, PJ); RSX[i] = PJ.x; RSY[i] = PJ.y; RSD[i] = PJ.s > 0 ? PJ.d : -1; if (PJ.s <= 0) continue;
-    projectO(x - ty / tl * wM * 0.5, y + tx / tl * wM * 0.5, z, RQ);
-    const h = RQ.s > 0 ? Math.sqrt((RQ.x - PJ.x) * (RQ.x - PJ.x) + (RQ.y - PJ.y) * (RQ.y - PJ.y)) : 1.5; RSH[i] = h < 1.5 ? 1.5 : h > RIB_MAXPX ? RIB_MAXPX : h;
+function ribbonO(wM, soft) {   // the line along the points added since ribStart; soft: 1 the faint dashed roll, 2 a faint solid line
+  const n = RIB.n, P = RIB.p, fill = soft ? RIB_SOFT : RIB_FILL, hw = soft ? RIB_HW * 0.8 : RIB_HW, dash = soft === 1 || soft === true;
+  let L = 0;
+  for (let i = 0; i < n; i++) {   // each point on the layer, and how far along the line it lies there (px: for the dashes)
+    projectO(P[i * 3], P[i * 3 + 1], P[i * 3 + 2], PJ); RSX[i] = PJ.x; RSY[i] = PJ.y; RSD[i] = PJ.s > 0 ? PJ.d : -1;
+    if (i && RSD[i] >= 0 && RSD[i - 1] >= 0) L += Math.sqrt((RSX[i] - RSX[i - 1]) * (RSX[i] - RSX[i - 1]) + (RSY[i] - RSY[i - 1]) * (RSY[i] - RSY[i - 1])); RSL[i] = L;
   }
   for (let i = 0; i + 1 < n; i++) {   // each piece between two points: the pixels within the half width of its middle line (its ends round)
     if (RSD[i] < 0 || RSD[i + 1] < 0) continue;
-    const ax = RSX[i], ay = RSY[i], bx = RSX[i + 1], by = RSY[i + 1], ha = RSH[i], hb = RSH[i + 1], da = RSD[i], db = RSD[i + 1], vx = bx - ax, vy = by - ay, L2 = vx * vx + vy * vy, hm = (ha > hb ? ha : hb) + 1.5;
+    const ax = RSX[i], ay = RSY[i], bx = RSX[i + 1], by = RSY[i + 1], da = RSD[i], db = RSD[i + 1], vx = bx - ax, vy = by - ay, L2 = vx * vx + vy * vy, hm = hw + 1.5, la = RSL[i], lb = RSL[i + 1];
+    if (L2 > 640000) continue;   // (a piece across the whole picture is one the camera is too close to: never drawn)
     const x0 = Math.max(0, Math.floor((ax < bx ? ax : bx) - hm)), x1 = Math.min(OW - 1, Math.ceil((ax > bx ? ax : bx) + hm)), y0 = Math.max(0, Math.floor((ay < by ? ay : by) - hm)), y1 = Math.min(OH - 1, Math.ceil((ay > by ? ay : by) + hm));
     for (let py = y0; py <= y1; py++) for (let px = x0; px <= x1; px++) {
       let u = L2 > 0 ? ((px - ax) * vx + (py - ay) * vy) / L2 : 0; u = u < 0 ? 0 : u > 1 ? 1 : u;
-      const ex = px - ax - vx * u, ey = py - ay - vy * u, e2 = ex * ex + ey * ey, h = ha + (hb - ha) * u; if (e2 > (h + 1) * (h + 1)) continue;
-      const e = Math.sqrt(e2);
-      const c = e <= h - 1.1 ? fill : e <= h ? edge : RIB_RIM, o = py * OW + px; if (ribRank(ob[o]) >= ribRank(c)) continue;   // (the fill over the edge over the rim; never over another mark)
+      const ex = px - ax - vx * u, ey = py - ay - vy * u, e2 = ex * ex + ey * ey; if (e2 > (hw + 1) * (hw + 1)) continue;
+      if (dash && (((la + (lb - la) * u) / 6) | 0) % 2 === 1) continue;   // (the roll: 6 px on, 6 off)
+      const c = e2 <= hw * hw ? fill : RIB_RIM, o = py * OW + px; if (ribRank(ob[o]) >= ribRank(c)) continue;   // (the fill over the rim; never over another mark)
       const gx = (px * RS) | 0, gy = (py * RS) | 0; if (gx >= VW || gy >= VH) continue;
       const q = gy * VW + gx, z = zbuf[q]; if (czS[q] === frame || aimFig(q, gx, gy) || (sprM[q] === 0 && z < AIM_NZ && z < (da + (db - da) * u) * 100 - 40)) continue;   // (J5d: over the scenery; only the golfer, the ball and what is nearer than them hide it)
       overPut(px, py, c);
     }
   }
+}
+// 2026-11-15 (the owner: the rings "look pasted on and don't lie on the ground"): a mark on the ground is a true circle on it: GR_N points round it at the
+// ground's height, projected through the camera and joined (flatter far off, rounder near), a dark line under a coloured one. No allocation a frame.
+const GR_MIN = [14, 5], GR_N = 48, GRX = new Float32Array(GR_N + 1), GRY = new Float32Array(GR_N + 1), GRD = new Float32Array(GR_N + 1);
+function aimSeg(x0, y0, x1, y1, d, c, dark) {   // a line of the layer, a px wide (two when not dark), hidden as the aim's marks are (plotZA)
+  const dx = x1 - x0, dy = y1 - y0, m = Math.round(Math.max(Math.abs(dx), Math.abs(dy))); if (m > 700) return;
+  for (let i = 0; i <= m; i++) { const t = m ? i / m : 0, x = Math.round(x0 + dx * t), y = Math.round(y0 + dy * t); if (dark) { plotZA(x, y + 1, d, c); plotZA(x + 1, y + 1, d, c); } else { plotZA(x, y, d, c); plotZA(x + 1, y, d, c); } }
+}
+function groundRing(x, y, R, c) {   // a ring R m round (x, y), lying on the ground; far off, where it would be a sliver, held to a size that reads (GR_MIN), its shape kept
+  for (let k = 0; k <= GR_N; k++) { const a = k / GR_N * 6.2832, qx = x + Math.cos(a) * R, qy = y + Math.sin(a) * R; projectO(qx, qy, aimH(qx, qy) + 0.04, PJ); GRX[k] = PJ.x; GRY[k] = PJ.y; GRD[k] = PJ.s > 0 ? PJ.d - 0.3 : -1; }
+  projectO(x, y, aimH(x, y) + 0.04, PJ);
+  if (PJ.s > 0) { const cx = PJ.x, cy = PJ.y; let ex = 0, ey = 0; for (let k = 0; k < GR_N; k++) if (GRD[k] >= 0) { const ax = Math.abs(GRX[k] - cx), ay = Math.abs(GRY[k] - cy); if (ax > ex) ex = ax; if (ay > ey) ey = ay; }
+    const sx = ex > 0 && ex < GR_MIN[0] ? GR_MIN[0] / ex : 1, sy = ey > 0 && ey < GR_MIN[1] ? GR_MIN[1] / ey : 1;
+    if (sx > 1 || sy > 1) for (let k = 0; k <= GR_N; k++) { GRX[k] = cx + (GRX[k] - cx) * sx; GRY[k] = cy + (GRY[k] - cy) * sy; } }
+  for (let pass = 0; pass < 2; pass++) for (let k = 0; k < GR_N; k++) if (GRD[k] >= 0 && GRD[k + 1] >= 0) aimSeg(GRX[k], GRY[k], GRX[k + 1], GRY[k + 1], GRD[k], pass ? c : AIM_D, !pass);
+}
+function aimCross(x, y, c) {   // a small cross on the ground at (x, y): the point aimed at
+  projectO(x, y, aimH(x, y) + 0.04, PJ); if (PJ.s <= 0) return; const sx = PJ.x, sy = PJ.y, d = PJ.d - 0.3;
+  for (let k = -4; k <= 4; k++) { plotZA(sx + k, sy + 1, d, AIM_D); plotZA(sx + 1, sy + k, d, AIM_D); }
+  for (let k = -4; k <= 4; k++) { if (k === 0) continue; plotZA(sx + k, sy, d, c); plotZA(sx, sy + k, d, c); }
 }
 function aimH(x, y) {   // T438: the ground's height for the aim's marks: never made here (a far tile took ~2 ms, thirty of them a slow frame); a tile not made yet is
   const u = x * PPM, v = y * PPV, tx = Math.floor(u / TPX), ty = Math.floor(v / TPX);   // asked of the workers and the ball's height stands in until it comes
@@ -1136,14 +1157,9 @@ function drawAim() {   // the shot's shape: a steady blue ribbon along its fligh
     vz -= 9.81 / 60; vx *= 0.9986; vy *= 0.9986; x += vx / 60; y += vy / 60; z += vz / 60;
     const gz = aimH(x, y);
     if (k % 3 === 2 || z <= gz) ribAdd(x, y, z > gz + 0.03 ? z : gz + 0.03);
-    if (z <= gz) {                                                     // where it lands: the ribbon ends; two rings over it (the outer one breathes)
+    if (z <= gz) {                                                     // where it lands: the line ends; one ring on the ground there (2026-11-15: a true circle, not dots)
       ribbonO(RIB_W, false);
-      const rr = 1.3 + 0.2 * Math.sin(frame * 0.12);
-      for (let a = 0; a < 40; a++) {
-        const ca = Math.cos(a * 0.157), sa = Math.sin(a * 0.157);
-        let qx = x + ca * rr, qy = y + sa * rr; projectO(qx, qy, aimH(qx, qy) + 0.03, PJ); if (PJ.s > 0) { plotZA(PJ.x, PJ.y + 1, PJ.d - 0.3, AIM_D); plotZA(PJ.x, PJ.y, PJ.d - 0.3, a & 1 ? hot : AIM_W); plotZA(PJ.x + 1, PJ.y, PJ.d - 0.3, a & 1 ? hot : AIM_W); }
-        if (a & 1) { qx = x + ca * 0.55; qy = y + sa * 0.55; projectO(qx, qy, aimH(qx, qy) + 0.03, PJ); if (PJ.s > 0) { plotZA(PJ.x, PJ.y, PJ.d - 0.3, AIM_W); plotZA(PJ.x + 1, PJ.y, PJ.d - 0.3, AIM_W); } }
-      }
+      groundRing(x, y, 1.3, hot);
       break;
     }
   }
@@ -1314,7 +1330,7 @@ function render() {
   // the camera: behind the golfer (wherever "behind" has been turned to), raised over any ground that would hide him
   const p = player, gh = groundH(p.x, p.y), AD = !cart.on && addressAt() ? addressSpot() || [p.x, p.y] : null, gpx = AD ? AD[0] : p.x, gpy = AD ? AD[1] : p.y, gha = AD ? groundH(gpx, gpy) : gh;   // (J5b: at address he is drawn in the swing's stance)
   aimCam();
-  const fz = bcam ? ball.z - 0.9 : gh, up = bcam ? 1.7 : HC * camHk * camD / D0;   // (the ball camera looks at the ball, from a little above it)
+  const fz = bcam ? ball.z - 0.9 : gh, up = bcam ? 1.7 : Math.min(HC * camHk * camD / D0, camLim(camD) * 0.85);   // (the ball camera looks at the ball, from a little above it; 2026-11-15: never so high his feet leave the picture)
   let cz = fz + up;
   for (let k = 1; k < 8; k++) { const f = k / 8, g = groundH(camX + FX * camD * f, camY + FY * camD * f) + 0.5; const need = (g - (fz + 0.9) * f) / (1 - f); if (need > cz) cz = need; }
   const flat = fz + Math.max(1.2, up); if (cz > flat + 1.5) cz = flat + 1.5; if (cz < flat) cz = flat;
@@ -1324,6 +1340,10 @@ function render() {
     if (cz < clr + 0.4) cz = clr + 0.4;
     const dz = cz - camZ; camZ += dz * (Math.abs(dz) > 6 ? 1 : dz > 0 ? (bcam ? 0.3 : 0.16) : (bcam ? 0.12 : 0.07));
     if (camZ < clr - 0.7) camZ = clr - 0.7; }   // (only if the land comes up faster than it can glide: it never sinks into it)   // the camera never sinks into the land: it rides up over it
+  // 2026-11-15 (the owner: "the camera sits so high i cant see the player below"): backed against a bank so high that riding over it would take his feet
+  // off the picture, the camera comes in closer behind him; and the view pitches down (the horizon up the picture) so his feet stay in its lower part
+  if (!bcam && camZ - gha > camLim(camD) && camD > CAMMIN) camD = Math.max(CAMMIN, camD * 0.95);
+  HZ = camFeet(camZ, gha);
 
   const pf0 = performance.now();
   drawGround();

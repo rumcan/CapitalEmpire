@@ -70,14 +70,14 @@ game's golf model plays the stroke, the same model that plays the top view. So w
 
 A ghost is a round you played, kept as a small file that anyone can race.
 
-- After playing a hole, press **Save ghost** (top right in the view). Your browser downloads a file such as `ghost-hole-3.json`.
+- After playing a hole, open **Round** (top right in the view) and press **Save ghost**. Your browser downloads a file such as `ghost-hole-3.json`.
 - To race one, open the same hole and press **Ghost…**, then pick the file. The hole starts again. The ghost's golfer plays beside you, see-through, and his ball flies and rolls see-through too; neither gets in your way.
 - A ghost only plays on the course it was played on. The file knows which course that is, and a ghost from another course is refused with the reason.
 - The ghost file holds only the shots' inputs (club, aim, power, strike, conditions), so it replays exactly the same round on any machine.
 
 ## Shared courses
 
-- In the view, press **Share course**. Your browser downloads your course as a file such as `my-club.course.json`: its shapes, heights, paths and buildings, its biome and its look.
+- In the view, open **Round** and press **Share course**. Your browser downloads your course as a file such as `my-club.course.json`: its shapes, heights, paths and buildings, its biome and its look.
 - Send the file to a friend. On their hole card they press **Play a shared course…** and pick it. They play your course with their own golfer: their skills, their clubs and their cards.
 - A file that has been changed since it was made is refused, and so is a file that is not a course.
 - There is no server yet: sharing is by file only.

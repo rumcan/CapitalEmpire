@@ -199,6 +199,30 @@ const HOST_PLAY = String.raw`
     if (snapAt) { step(60, 0); jumpToBall(); step(30, 0); snapAt('host-rest'); }
     return { errs, info };
   }
+  // 2026-11-15 (the owner: "im supposed to see player on the tee when it loads ... the camera sits so high i cant see the player below"): a tee turn with a
+  // bank 3.5 m high behind the tee, a rise ahead that hides the target, and the camera left zoomed far out and up: he and his ball are drawn whole, his
+  // feet in the lower part of the picture (the camera did climb to 42 m back, 3.2 times as high, and his feet were drawn hundreds of rows below it)
+  function hostCamRun() {
+    const errs = [], info = {}, S = course.S, b0 = [hole.tee.x / S, hole.tee.y / S], p0 = [hole.pin.x / S, hole.pin.y / S], dl = Math.hypot(p0[0] - b0[0], p0[1] - b0[1]), ux = (p0[0] - b0[0]) / dl, uy = (p0[1] - b0[1]) / dl;
+    const kit = { club: 'driver', carryM: 230, scatterM: 40, longM: 24, playsM: 225, sideM: 2, loftDeg: 10.5, speed: 0.9, sweet: 0.08 };
+    const g0 = groundH, bx = b0[0] * S, by = b0[1] * S;
+    groundH = (x, y) => { const a = (x - bx) * ux + (y - by) * uy; return g0(x, y) + (a < -6 && a > -80 ? 3.5 : a > 30 && a < 90 ? 12 : 0); };
+    try {
+      for (const c of Object.keys(keys)) keys[c] = false; mouse.down = false; charging = false; if (HP) HP.sw = null; player.swing = -1; bcam = 0; step0(60);
+      camD = 42; camHk = 3.2;
+      hostMessage({ v: 1, t: 'turn', golfer: 0, holeIdx: 0, hole: holeN, par: hole.par, stroke: 1, at: 600, lie: 'tee', lieKind: 'tee', ball: b0, pin: p0, distM: dl, wind: { mph: 18, from: 90 }, slope: { up: 0, across: 0 },
+        clubs: [kit], suggested: { club: 'driver', aim: [b0[0] + ux * 220, b0[1] + uy * 220], power: 1 } });
+      info.sees = camSees(aim.x, aim.y, 1, D0); info.k = [+camK.d.toFixed(1), +camK.hk.toFixed(2)];
+      for (let k = 0; k < 40; k++) { tickGame(); render(); }
+      info.gol = golB.slice(); info.ball = balB.slice(); info.hz = HZ; info.vh = VH; info.camD = +camD.toFixed(1); info.up = +(camZ - groundH(player.x, player.y)).toFixed(2);
+      if (golB[2] < 0 || golB[1] < 0 || golB[3] > VH - 1 || golB[3] < VH * 0.55) errs.push('host camera: at a tee turn behind high ground the golfer is not whole in the lower part of the picture (' + JSON.stringify(info) + ')');
+      if (balB[2] < 0 || balB[3] > VH - 1 || balB[1] < 0) errs.push('host camera: at a tee turn behind high ground his ball is not in the picture (' + JSON.stringify(info) + ')');
+      if (info.sees) errs.push('host camera: the test rise does not hide the target');
+    } finally { groundH = g0; }
+    for (let k = 0; k < 4; k++) render();
+    return { errs, info };
+  }
+  function step0(n) { for (let k = 0; k < n; k++) tickGame(); }
   // T441 to T443: the picks go out in an aim message and the preview that answers it is drawn (its ring at its landing); a locked pick is refused and says why;
   // an armed boost is a full boost in the swing's outcome, and is spent
   function hostCraftRun(snapAt) {
@@ -252,6 +276,18 @@ const HOST_PLAY = String.raw`
       if (!/Fade is locked: Accuracy 60/.test(said1) || !/High is locked: Touch 60/.test(said2)) errs.push('host craft: a locked side did not say what unlocks it (' + said1 + ' / ' + said2 + ')');
       if (hostPickText() !== 'Draw 40%, low 25%') errs.push('host craft: the pick is not told with its amounts (' + hostPickText() + ')');
       step(12, 0); { const m = hostLast && hostLast.t === 'aim' ? hostLast.input.shape : null; if (!m || m.curve !== -0.4 || m.flight !== -0.25) errs.push('host craft: the sliders\' amounts did not go out in the aim (' + JSON.stringify(m) + ')'); }
+      // 2026-11-15: the ball's dot sends the same shape as the sliders did: the dot at 40% of the way to the ring on the draw side and 25% down is a 40% draw, 25% low,
+      // in the pick and in the aim that goes out; the ring is his limit (his bend against a scratch golfer's) and the dot stops at it, its edge his full amount
+      { hostPickAmt('curve', 0); hostPickAmt('flight', 0); step(12, 0);
+        const C0 = HP.clubs[club], keepB = C0.bend; C0.bend = { m: 6, scrM: 10, pulled: 0.6, scrPulled: 1, skill: 0.6, accuracy: 0.6 };
+        const rr = shapeRing(), a = shapeAmt(-0.4 * rr, -0.25 * rr, rr), got = hostShapeAt(a[0], a[1]); step(12, 0);
+        const sent = hostLast && hostLast.t === 'aim' ? hostLast.input.shape : null, edge = shapeAmt(-3, 0, rr), mid = shapeAmt(0.03, -0.02, rr), diag = shapeAmt(0.3, 0.3, rr);
+        info.ball = { rr, a, got, sent, edge, mid, diag };
+        if (Math.abs(rr - 0.6) > 1e-9) errs.push('host craft: the limit ring is not his bend against a scratch golfer\'s (' + rr + ')');
+        if (!got || got.curve !== -0.4 || got.flight !== -0.25 || !sent || sent.curve !== -0.4 || sent.flight !== -0.25) errs.push('host craft: the ball did not send the sliders\' shape (' + JSON.stringify(info.ball) + ')');
+        if (edge[0] !== -1 || edge[1] !== 0 || mid[0] !== 0 || mid[1] !== 0 || diag[0] !== 0.5 || diag[1] !== 0.5) errs.push('host craft: the dot is not held inside the ring (' + JSON.stringify(info.ball) + ')');
+        msgText = ''; hostShapeAt(0.5, 0.5); if (HP.pick.curve !== 0 || HP.pick.flight !== 0 || !/is locked/.test(msgText)) errs.push('host craft: the ball took a side he has not earned (' + JSON.stringify(HP.pick) + ')');
+        C0.bend = keepB; }
       hostPickAmt('curve', 0); hostPickAmt('flight', 0);
       const zs = [], xs = []; for (let k = 0; k < 3; k++) { hostPickSet('curve'); zs.push(HP.pick.curve); } for (let k = 0; k < 3; k++) { hostPickSet('flight'); xs.push(HP.pick.flight); }
       info.keys = { z: zs, x: xs };
@@ -391,7 +427,7 @@ const HOST_PLAY = String.raw`
     const step = (n) => { for (let k = 0; k < n; k++) tickGame(); };
     for (const c of Object.keys(keys)) keys[c] = false; mouse.down = false; charging = false;
     step(70); hostMessage(turn(b0, 0.6)); jumpToBall(); step(6); updateHud();
-    if (!/breaks right to left/.test(cardEl.innerHTML)) errs.push('host green: the read is not on the card');
+    if (![cardEl, cardRead, cardMore].some((e) => /breaks right to left/i.test(e.innerHTML || e.textContent || ''))) errs.push('host green: the read is not on the card');   // (2026-11-15: the pill's break line, and the Read row in its facts)
     const ends = (dAng) => { const pa = Math.atan2((p0[1] - b0[1]), (p0[0] - b0[0])) + dAng; aim.dx = Math.cos(pa); aim.dy = Math.sin(pa); aim.x = ball.x + aim.dx * Math.hypot(p0[0] - b0[0], p0[1] - b0[1]) * S; aim.y = ball.y + aim.dy * Math.hypot(p0[0] - b0[0], p0[1] - b0[1]) * S; render(); return HP.putt ? Math.hypot(HP.putt.x / S - p0[0], HP.putt.y / S - p0[1]) : null; };
     info.byRead = ends(a); info.atCup = ends(0);
     if (!(info.byRead !== null && info.byRead < 1e-6)) errs.push('host green: aimed along the read the putt does not end in the cup (' + info.byRead + ')');
@@ -420,6 +456,15 @@ const HOST_PLAY = String.raw`
       const M = hostPuttPts(HP.turn.green, hostS()), [px, lines] = lit();
       for (let k = 0; k < 20; k++) drawPuttGrid(); let ms = 1e9; for (let r = 0; r < 15; r++) { const t0 = performance.now(); for (let k = 0; k < 10; k++) drawPuttGrid(); ms = Math.min(ms, (performance.now() - t0) / 10); }
       const keep = [HP.turn, HP.over, ball.state]; HP.turn = null; HP.over = true; ball.state = 0; const [after] = lit(); HP.turn = keep[0]; HP.over = keep[1]; ball.state = keep[2]; ob.fill(0);
+      // 2026-11-15: the lines neutral (one faint white whatever the slope); the slope as dots that flow downhill: they move with the clock, faster where steeper,
+      // and are coloured by it (the lattice above: every other point flat, the rest 3%)
+      const pgKeep = pgNow, col = () => { ob.fill(0); drawPuttGrid(); const s = new Set(); for (let i = 0; i < ob.length; i++) if (ob[i] && ob[i] >>> 24 === 255) s.add(ob[i] & 0xffffff); return s; };
+      pgNow = () => 10; const c1 = col(), d1 = M.dots, at1 = Uint32Array.from(ob); pgNow = () => 10.25; col(); let moved = 0; for (let i = 0; i < ob.length; i++) if ((ob[i] >>> 24 === 255) !== (at1[i] >>> 24 === 255)) moved++; pgNow = pgKeep;
+      const lineCols = new Set(); for (let i = 0; i < ob.length; i++) if (ob[i] >>> 24 === GRID_LINE_A) lineCols.add(ob[i] & 0xffffff);
+      info.puttDots = { dots: d1, colours: c1.size, moved, lineColours: lineCols.size, flatSp: +M.sp[0].toFixed(3), steepSp: +Math.max(...M.sp).toFixed(3) };
+      if (!(d1 > 100) || c1.size < 2 || moved < 50) errs.push('host green: the slope dots do not flow downhill in its colours (' + JSON.stringify(info.puttDots) + ')');
+      if (lineCols.size !== 1) errs.push('host green: the grid lines are not one neutral colour (' + JSON.stringify(info.puttDots) + ')');
+      if (!(Math.max(...M.sp) > 4 * Math.min(...M.sp))) errs.push('host green: a steeper slope does not flow faster (' + JSON.stringify(info.puttDots) + ')');
       info.puttGrid = { pts: M.n, lines: M.e.length / 2, px, linePx: lines, gridMs: +ms.toFixed(4), afterRound: after };
       if (!(M.e.length / 2 >= M.n)) errs.push('host green: the slope grid is not a mesh (' + JSON.stringify(info.puttGrid) + ')');
       if (!(lines > 300)) errs.push('host green: the slope grid draws no lines on his putt turn (' + JSON.stringify(info.puttGrid) + ')');
@@ -1088,6 +1133,7 @@ try {
       hostMessage({ v: 1, t: 'actors', at: 600, actors: [] }); }
     // host play (T418 to T420): the turn, the bag, the ring, one input and a wait, the host's shot played back to its rest
     { const hp = hostPlayRun(null); res.hostPlay = hp.info; res.errors.push(...hp.errs); }
+    { const hm = hostCamRun(); res.hostCam = hm.info; res.errors.push(...hm.errs); }
     { // T450: the golfer art's frames and rows (the pictures themselves need a browser: here the voxel figure stands in)
       const F = (pose, ph, al, rel, putt) => artFrame(pose, ph, al, rel, putt).join(':'), want = [
         [F('i', 0, 0, false, false), 'sheet:0'], [F('w', 3, 0, false, false), 'sheet:4'], [F('w', 15, 0, false, false), 'sheet:8'],

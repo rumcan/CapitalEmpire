@@ -13,6 +13,7 @@ import { golfSound } from '../../game/sound/sfx'; // J11 (#1270)
 export function View3pPanel({ game }: { game: Game }) {
   const hole = game.view3pHole, box = useRef<HTMLDivElement>(null), bridge = useRef<View3p | null>(null);
   const [state, setState] = useState<'loading' | 'loaded' | string>('loading');
+  const [menu, setMenu] = useState(false);   // (the Round menu: ghosts, kit, sharing)
 
   useEffect(() => {
     if (hole === null || !box.current) return;
@@ -67,13 +68,17 @@ export function View3pPanel({ game }: { game: Game }) {
       )}
       {/* T433, T434: the round as a ghost file, a ghost to play alongside (the hole starts again with it), the course as a file to share */}
       {/* (T459, the jam MVP: no ghosts, kits or shared courses: docs/JAM.md "Future development"; J6: nor in practice) */}
-      {!JAM && !practice && <div className="absolute right-14 top-3 flex gap-1.5" data-testid="view3p-files">
-        <button className="chip bg-slate-950/70" title="Save the round you have played here as a ghost file" onClick={() => { const t = game.ghostSave3p(); if (t) downloadText(`ghost-hole-${hole}.json`, t); else game.toast('Play a shot first: the ghost is the round you play', 'info'); }}>Save ghost</button>
-        <button className="chip bg-slate-950/70" title="Play alongside a ghost round of this hole (the hole starts again)" onClick={() => { void pickText().then(t => { if (!t) return; const why = game.ghostLoad3p(t); if (why) game.toast(why, 'warn'); else bridge.current?.open(hole); }); }}>Ghost…</button>
-        {/* T436: own kit (your skills, clubs and cards, scored net of handicaps) or level kit (everyone the same golfer and bag); the hole starts again with it */}
-        <button className="chip bg-slate-950/70" data-testid="view3p-kit" title={game.fairMode3p === 'own' ? 'Own kit: your skills, clubs and cards; scored net of handicaps. Click for level kit: everyone the same golfer and bag' : 'Level kit: everyone the same golfer and bag; scored as played. Click for your own kit'}
-          onClick={() => { game.setFair3p(game.fairMode3p === 'own' ? 'level' : 'own'); bridge.current?.open(hole); }}>{game.fairMode3p === 'own' ? 'Own kit' : 'Level kit'}</button>
-        <button className="chip bg-slate-950/70" title="Save this course as a file another player can play" onClick={() => { const t = game.shareSave3p(); if (t) downloadText(`${fileName(JSON.parse(t).name ?? 'course')}.course.json`, t); }}>Share course</button>
+      {/* (2026-11-15, the owner: "Stuff should be collapsed .. Icons are sliced off at the sides": the four chips are one Round menu, opening down and to the left, so none runs off the edge) */}
+      {!JAM && !practice && <div className="absolute right-14 top-3" data-testid="view3p-files">
+        <button className="chip bg-slate-950/70" aria-haspopup="menu" aria-expanded={menu} onClick={() => setMenu(m => !m)} title="Ghosts, kit and sharing">Round ▾</button>
+        {menu && <div role="menu" className="absolute right-0 top-full mt-1.5 flex w-max min-w-[11rem] flex-col gap-1 rounded-xl border border-white/10 bg-slate-950/90 p-1.5 shadow-lg" onClick={() => setMenu(false)}>
+          <button role="menuitem" className="chip justify-start bg-transparent" title="Save the round you have played here as a ghost file" onClick={() => { const t = game.ghostSave3p(); if (t) downloadText(`ghost-hole-${hole}.json`, t); else game.toast('Play a shot first: the ghost is the round you play', 'info'); }}>Save ghost</button>
+          <button role="menuitem" className="chip justify-start bg-transparent" title="Play alongside a ghost round of this hole (the hole starts again)" onClick={() => { void pickText().then(t => { if (!t) return; const why = game.ghostLoad3p(t); if (why) game.toast(why, 'warn'); else bridge.current?.open(hole); }); }}>Race a ghost…</button>
+          {/* T436: own kit (your skills, clubs and cards, scored net of handicaps) or level kit (everyone the same golfer and bag); the hole starts again with it */}
+          <button role="menuitem" className="chip justify-start bg-transparent" data-testid="view3p-kit" title={game.fairMode3p === 'own' ? 'Own kit: your skills, clubs and cards; scored net of handicaps. Click for level kit: everyone the same golfer and bag' : 'Level kit: everyone the same golfer and bag; scored as played. Click for your own kit'}
+            onClick={() => { game.setFair3p(game.fairMode3p === 'own' ? 'level' : 'own'); bridge.current?.open(hole); }}>{game.fairMode3p === 'own' ? 'Kit: own (switch to level)' : 'Kit: level (switch to own)'}</button>
+          <button role="menuitem" className="chip justify-start bg-transparent" title="Save this course as a file another player can play" onClick={() => { const t = game.shareSave3p(); if (t) downloadText(`${fileName(JSON.parse(t).name ?? 'course')}.course.json`, t); }}>Share course</button>
+        </div>}
       </div>}
       <button className="btn-icon absolute right-3 top-3 bg-slate-950/70" onClick={() => bridge.current?.close('host')} title="Back to the course (Esc)" aria-label="Back to the course">
         <ActionTile tile="back-to-course" size={32} />

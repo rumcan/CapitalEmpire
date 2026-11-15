@@ -17,7 +17,8 @@ const RS = typeof RSCALE === 'number' && RSCALE >= 0.25 && RSCALE <= 1 ? RSCALE 
 const VW = Math.round(120 * RS) * 8, VH = Math.round(540 * RS);
 const PPM = 56, PPV = 28, ZP = 48;          // ground px per metre across and up the screen; px per metre of height
 const D0 = 14, HC = 3.6, FOC = PPM * D0 * RS, DS = D0 * RS, HZ0 = Math.round(190 * RS);   // (DS / distance: the size a sculpture is drawn at)
-let HZ = HZ0;                                // the horizon's screen row: it moves when the camera looks up or down   // the camera: metres behind the golfer, metres above his feet, the horizon's screen row, the focal length in px
+let HZ = HZ0, HZB = HZ0;                     // HZB: the row the player chose (drag, C); the render sets HZ from it each frame, pitched down when the golfer's feet would leave the picture (07-play.md camFeet)
+                                             // the horizon's screen row: it moves when the camera looks up or down   // the camera: metres behind the golfer, metres above his feet, the horizon's screen row, the focal length in px
 const SUNX = 0.546, SUNY = -0.496, SUNZ = 0.675;   // to the sun, in plan (x right, y toward the camera, z up)
 const SHU = -0.944, SHV = 0.429;            // a shadow's ground-px offset per px of height
 const LVX = 0.52, LVY = -0.62, LVZ = 0.59;  // the same sun for upright art (x right, y down the screen, z toward the camera)
