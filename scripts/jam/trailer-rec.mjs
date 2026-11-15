@@ -26,14 +26,25 @@ export const cursorScript = () => {
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', make); else make();
 };
 
-/** a recorder on one page: rec.start(name) ... rec.stop() writes raw/<name>/ (frames and times) and <name>.mp4 (FPS, CFR, no audio) under dir */
+/** a recorder on one page: rec.start(name) ... rec.stop() writes raw/<name>/ (its frames) and shots/<name>.mp4 (FPS, no audio) under dir.
+ *  step (the default, docs/jam/VIDEO.md): the page on the virtual clock (trailer-vclock.mjs), each frame stepped by 1/FPS s and its picture taken once the
+ *  ground is baked: rec.tick(n) makes n frames, and the robot's waits, pointer moves and swing holds go through it while rec.on.
+ *  realtime (--realtime): Chrome's screencast, each painted frame with its time (draft 1's way: frames drop when the PC is busy) */
 export class Recorder {
-  constructor(page, dir, { width = 1920, height = 1080, quality = 90 } = {}) { this.page = page; this.dir = dir; this.w = width; this.h = height; this.q = quality; this.cdp = null; this.shot = null; }
+  constructor(page, dir, { width = 1920, height = 1080, quality = 90, step = true, settle = 6000 } = {}) { this.page = page; this.dir = dir; this.w = width; this.h = height; this.q = quality; this.step = step; this.settle = settle; this.cdp = null; this.shot = null; this.on = false; }
   async start(name) {
     if (this.shot) await this.stop();
-    const raw = join(this.dir, 'raw', name); if (existsSync(raw)) rmSync(raw, { recursive: true, force: true }); mkdirSync(raw, { recursive: true });
+    let raw = join(this.dir, 'raw', name);
+    try { if (existsSync(raw)) rmSync(raw, { recursive: true, force: true }); } catch { raw = join(this.dir, 'raw', `${name}-${Date.now()}`); }
+    mkdirSync(raw, { recursive: true });
     this.cdp ??= await this.page.context().newCDPSession(this.page);
-    const shot = this.shot = { name, raw, frames: [], t0: null };
+    const shot = this.shot = { name, raw, frames: [], t0: null, waited: 0 };
+    if (this.step) {
+      // the first frame on a baked ground: the bakes in flight done (real time) before the clock stops for the shot
+      await this.page.evaluate(async () => { const g = window.__game, t0 = performance.now(); while (g?.ground?.busy > 0 && performance.now() - t0 < 15000) await new Promise(r => setTimeout(r, 50)); });
+      await this.page.evaluate(() => window.__vtOn());
+      this.on = true; await this.tick(1); return;
+    }
     this.onFrame = async ({ data, metadata, sessionId }) => {
       try { await this.cdp.send('Page.screencastFrameAck', { sessionId }); } catch { /* stopped */ }
       if (this.shot !== shot) return;
@@ -43,14 +54,38 @@ export class Recorder {
     this.cdp.on('Page.screencastFrame', this.onFrame);
     await this.cdp.send('Page.startScreencast', { format: 'jpeg', quality: this.q, maxWidth: this.w, maxHeight: this.h, everyNthFrame: 1 });
   }
+  /** step mode: n frames, each 1/FPS s on the clock (two half steps: the golf view moves on per animation frame, 60 a second), each one's picture written */
+  async tick(n = 1) {
+    const shot = this.shot; if (!this.on || !shot) return;
+    for (let i = 0; i < n; i++) {
+      const r = await this.page.evaluate(s => window.__vtStep(2, 1000 / 60, s), this.settle);
+      shot.waited += r?.wait ?? 0;
+      const { data } = await this.cdp.send('Page.captureScreenshot', { format: 'jpeg', quality: this.q, optimizeForSpeed: true });
+      const f = `${String(shot.frames.length).padStart(5, '0')}.jpg`; writeFileSync(join(shot.raw, f), Buffer.from(data, 'base64')); shot.frames.push([f, shot.frames.length / FPS]);
+    }
+  }
   /** ends the shot: the clip <name>.mp4, and how many frames it got over how long */
   async stop() {
     const shot = this.shot; if (!shot) return null;
+    if (this.step) {
+      this.on = false; this.shot = null;
+      try { await this.page.evaluate(() => window.__vtOff()); } catch { /* the page is gone */ }
+      return stepClip(this.dir, shot);
+    }
     try { await this.cdp.send('Page.stopScreencast'); } catch { /* gone */ }
     this.cdp.off('Page.screencastFrame', this.onFrame); this.shot = null;
     await new Promise(r => setTimeout(r, 150));
     return clipOf(this.dir, shot.name, shot.frames);
   }
+}
+
+/** step mode's clip: the numbered frames at exactly FPS */
+function stepClip(dir, shot) {
+  if (shot.frames.length < 2) return { name: shot.name, frames: shot.frames.length, secs: 0, out: null };
+  const out = join(dir, 'shots', `${shot.name}.mp4`); mkdirSync(join(dir, 'shots'), { recursive: true });
+  const r = spawnSync('ffmpeg', ['-y', '-loglevel', 'error', '-framerate', String(FPS), '-i', join(shot.raw, '%05d.jpg'), '-vf', 'format=yuv420p', '-c:v', 'libx264', '-preset', 'medium', '-crf', '16', '-r', String(FPS), out], { stdio: 'inherit' });
+  writeFileSync(join(shot.raw, 'times.json'), JSON.stringify(shot.frames));
+  return { name: shot.name, frames: shot.frames.length, secs: +(shot.frames.length / FPS).toFixed(2), bakeWaitS: +(shot.waited / 1000).toFixed(1), out: r.status === 0 ? out : null };
 }
 
 /** frames [file, seconds] -> dir/<name>.mp4 at FPS: each frame lasts until the next (the concat demuxer's durations), then a constant rate */

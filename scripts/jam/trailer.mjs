@@ -14,6 +14,7 @@ import { existsSync, mkdirSync, readFileSync, statSync, writeFileSync } from 'no
 import { join, resolve } from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { Recorder, cursorScript, FPS } from './trailer-rec.mjs';
+import { vclockSource } from './trailer-vclock.mjs';
 
 const args = process.argv.slice(2), phase = args[0] ?? 'help';
 const opt = (k, d) => { const i = args.indexOf(`--${k}`); return i >= 0 ? args[i + 1] : d; }, has = k => args.includes(`--${k}`);
@@ -31,6 +32,7 @@ async function launch() {
 async function newPage(browser, { cursor = true, fresh = true } = {}) {
   const ctx = await browser.newContext({ viewport: { width: W, height: H }, deviceScaleFactor: 1, acceptDownloads: true });
   if (fresh) await ctx.addInitScript(() => { if (!sessionStorage.getItem('trailer-fresh')) { try { localStorage.clear(); indexedDB.deleteDatabase?.('ce'); } catch { /* none */ } sessionStorage.setItem('trailer-fresh', '1'); } });
+  await ctx.addInitScript({ content: vclockSource }); // (the clips' clock: inert until a shot records, trailer-vclock.mjs)
   if (cursor) await ctx.addInitScript(cursorScript);
   const page = await ctx.newPage();
   page.on('pageerror', e => console.log('[pageerror]', e.message));

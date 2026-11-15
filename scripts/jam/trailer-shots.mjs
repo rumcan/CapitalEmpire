@@ -9,7 +9,8 @@ import { resolve } from 'node:path';
 const SHOTS = ['menu', 'range-build', 'town', 'hole-build', 'paint', 'decor', 'golf-tee', 'golf-draw', 'golf-putt', 'range-practice', 'times', 'night', 'alive']; // (and import, golf-real: a new game on a real course, recorded last)
 
 export async function record(env) {
-  const { OUT, SAVE, WORLD, opt, has, launch, newPage, preview, freePort, Recorder, wait } = env;
+  const { OUT, SAVE, WORLD, opt, has, launch, newPage, preview, freePort, Recorder, wait: realWait } = env;
+  const FR = 1000 / 30; // (a frame of the clip)
   const only = opt('only', null)?.split(',') ?? null, want = s => !only || only.includes(s);
   let server = null, base = opt('base', null);
   if (!base) {
@@ -27,6 +28,13 @@ export async function record(env) {
     try { await fn(); } catch (e) { console.log(`  ${name} failed: ${String(e?.message ?? e).split('\n')[0]}`); try { await rec?.stop(); } catch { /* none */ } done.push({ name, error: String(e?.message ?? e).split('\n')[0] }); }
   };
   const start = async n => { await rec.start(n); };
+  /** a wait: while a shot records (step mode) it is that many frames of the clip, else real time */
+  const wait = async ms => { if (rec?.on) await rec.tick(Math.max(1, Math.round(ms / FR))); else await realWait(ms); };
+  /** until fn (in the page) is true: frame by frame while recording, else polled; false after ms */
+  const stepUntil = async (fn, ms = 30000, arg) => {
+    if (rec?.on) { for (let i = 0; i < ms / FR; i++) { if (await page.evaluate(fn, arg)) return true; await rec.tick(1); } return false; }
+    return page.waitForFunction(fn, arg, { timeout: ms }).then(() => true, () => false);
+  };
   const stop = async () => { const r = await rec.stop(); if (r) { console.log('  ', JSON.stringify(r)); done.push(r); } return r; };
 
   // ---------- helpers on the current page
@@ -34,19 +42,24 @@ export async function record(env) {
   const ev = (fn, a) => page.evaluate(fn, a);
   /** the pointer glides to (x, y) over ms, eased, as a hand moves a mouse */
   const glide = async (x, y, ms = 600) => {
-    const from = await ev(() => window.__trailerMouse ?? { x: 960, y: 540 }), t0 = Date.now();
-    for (;;) { const t = Math.min(1, (Date.now() - t0) / ms), e = t < 0.5 ? 2 * t * t : 1 - (-2 * t + 2) ** 2 / 2; await page.mouse.move(from.x + (x - from.x) * e, from.y + (y - from.y) * e); if (t >= 1) break; await wait(20); }
+    const from = await ev(() => window.__trailerMouse ?? { x: 960, y: 540 }), t0 = Date.now(), ease = t => t < 0.5 ? 2 * t * t : 1 - (-2 * t + 2) ** 2 / 2;
+    if (rec?.on) { const n = Math.max(1, Math.round(ms / FR)); for (let i = 1; i <= n; i++) { const e = ease(i / n); await page.mouse.move(from.x + (x - from.x) * e, from.y + (y - from.y) * e); await rec.tick(1); } }
+    else for (;;) { const t = Math.min(1, (Date.now() - t0) / ms), e = t < 0.5 ? 2 * t * t : 1 - (-2 * t + 2) ** 2 / 2; await page.mouse.move(from.x + (x - from.x) * e, from.y + (y - from.y) * e); if (t >= 1) break; await wait(20); }
     await ev(p => { window.__trailerMouse = p; }, { x, y });
   };
   const clickAt = async (x, y, ms = 500) => { await glide(x, y, ms); await wait(120); await page.mouse.down(); await wait(70); await page.mouse.up(); };
   /** a stroke: press at the first point, drag through the rest */
   const stroke = async (pts, ms = 900) => {
     await glide(pts[0].x, pts[0].y, 400); await page.mouse.down();
-    for (let k = 1; k < pts.length; k++) { const a = pts[k - 1], b = pts[k], seg = ms / (pts.length - 1), t0 = Date.now(); for (;;) { const t = Math.min(1, (Date.now() - t0) / seg); await page.mouse.move(a.x + (b.x - a.x) * t, a.y + (b.y - a.y) * t); if (t >= 1) break; await wait(15); } }
+    for (let k = 1; k < pts.length; k++) { const a = pts[k - 1], b = pts[k], seg = ms / (pts.length - 1), t0 = Date.now();
+      if (rec?.on) { const n = Math.max(1, Math.round(seg / FR)); for (let i = 1; i <= n; i++) { await page.mouse.move(a.x + (b.x - a.x) * i / n, a.y + (b.y - a.y) * i / n); await rec.tick(1); } continue; }
+      for (;;) { const t = Math.min(1, (Date.now() - t0) / seg); await page.mouse.move(a.x + (b.x - a.x) * t, a.y + (b.y - a.y) * t); if (t >= 1) break; await wait(15); } }
     await page.mouse.up(); const l = pts[pts.length - 1]; await ev(p => { window.__trailerMouse = p; }, l);
   };
   const clickSel = async (sel, ms = 450) => {
-    const loc = page.locator(sel).first(); await loc.waitFor({ state: 'visible', timeout: 15000 });
+    const loc = page.locator(sel).first();
+    if (rec?.on) for (let i = 0; i < 150 && !(await loc.isVisible().catch(() => false)); i++) await rec.tick(1); // (the page's own timers run on the clip's clock)
+    await loc.waitFor({ state: 'visible', timeout: 15000 });
     const b = await loc.boundingBox(); await clickAt(b.x + b.width / 2, b.y + b.height / 2, ms);
   };
   /** tile -> CSS px on the page */
@@ -66,7 +79,7 @@ export async function record(env) {
   const cursor = on => ev(on => window.__trailerCursor?.(on), on);
   async function open(url) {
     if (page) { try { await rec?.stop(); } catch { /* none */ } await page.context().close().catch(() => {}); }
-    page = await newPage(browser); rec = new Recorder(page, OUT, { width: 1920, height: 1080, quality: 88 });
+    page = await newPage(browser); rec = new Recorder(page, OUT, { width: 1920, height: 1080, quality: 88, step: !has('realtime') });
     await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 180000 });
   }
   const ready = () => page.waitForFunction(() => window.__game?.ready && !window.__game.show, null, { timeout: 300000 });
@@ -95,12 +108,19 @@ export async function record(env) {
   const turnNow = () => F("const t=HP&&HP.turn; return t&&!HP.sw&&HP.target?{stroke:t.stroke,lie:t.lie,dist:t.distM,club:(hostClub()?hostClub().club:null),tu:HP.target.u,earned:t.earned}:null");
   /** the view's keys reach it once its window has the focus (the panel focuses it on load; a click on the page's cards takes it away) */
   const focusView = () => G(() => document.querySelector('iframe')?.contentWindow?.focus());
-  const untilTurn = async (ms = 30000) => { const t0 = Date.now(); while (Date.now() - t0 < ms) { const s = await turnNow().catch(() => null); if (s) return s; await wait(250); } return null; };
+  const untilTurn = async (ms = 30000) => { for (let k = 0; k < ms / 250; k++) { const s = await turnNow().catch(() => null); if (s) return s; await wait(250); } return null; };
   /** hold the swing until the meter reaches the aim's fill (the gold mark), tapping the boost meanwhile; then the spin taps in the air */
   async function swing({ boost = 0, spin = null, lead = 0.035 } = {}) {
     await focusView();
     if (!(await F('return nearBall()'))) { await page.keyboard.press('j'); await wait(1500); } // (J: to your ball, as the help says, when the golfer is not at it)
     await page.keyboard.down('Space');
+    if (rec?.on) { // (frame by frame: the meter is read after each frame; the boost tapped every third frame from the 14th)
+      const tgt = Math.min(0.995, ((await F('return HP.target ? HP.target.u : 1')) ?? 1) - lead); let taps = 0;
+      for (let i = 0; i < 240; i++) { await rec.tick(1); if (boost && i >= 13 && i % 3 === 0 && taps < boost) { await page.keyboard.press('ArrowUp'); taps++; } const u = await F('return HP.sw ? HP.sw.u : -1'); if (u >= tgt) break; }
+      await page.keyboard.up('Space');
+      if (spin) { await wait(spin.after ?? 1100); for (let i = 0; i < spin.n; i++) { await page.keyboard.press(spin.key); await wait(170); } }
+      return;
+    }
     const meter = F(`const tgt=Math.min(0.995,(HP.target?HP.target.u:1)-${lead}); return await new Promise(res=>{const t0=performance.now(); const f=()=>{const s=HP.sw; if(s&&s.u>=tgt){res(s.u);return;} if(performance.now()-t0>8000){res(-1);return;} requestAnimationFrame(f);}; f();});`);
     if (boost) { await wait(450); for (let i = 0; i < boost; i++) { await page.keyboard.press('ArrowUp'); await wait(85); } }
     await meter; await page.keyboard.up('Space');
@@ -116,7 +136,7 @@ export async function record(env) {
   }
   const leave = async () => { await page.keyboard.press('Escape'); await wait(1500); await G(() => { const g = window.__game; if (g.view3pHole !== null) g.close3p(); }); await cursor(true); };
   /** the ball at rest after a stroke: the next turn (its stroke count moved on from prev) */
-  const ballRest = async (prev = null, ms = 30000) => { await wait(1500); const t0 = Date.now(); while (Date.now() - t0 < ms) { const s = await turnNow().catch(() => null); if (s && (prev === null || s.stroke !== prev)) return s; await wait(250); } return null; };
+  const ballRest = async (prev = null, ms = 30000) => { await wait(1500); for (let k = 0; k < ms / 250; k++) { const s = await turnNow().catch(() => null); if (s && (prev === null || s.stroke !== prev)) return s; await wait(250); } return null; };
 
   const C = WORLD.view ?? {};
   const takes = +opt('takes', 3);
@@ -202,19 +222,21 @@ export async function record(env) {
     await shot('paint', async () => {
       await closeCards(); await cam(...P.at); await wait(3000);
       await start('paint'); await glide(1150, 760, 300);
-      await clickSel('[data-testid="rail"] button:has-text("Course")', 450); await wait(800);
+      await clickSel('[data-testid="rail"] button:has-text("Build")', 450); await wait(500); await clickSel('[data-testid="build-tab-course"]', 350); await wait(500); await clickSel('[data-testid="build-card-texture"]', 600); await wait(900); // (Build > Course > Texture Painter) await cam(...P.at); await wait(500); // (the card may move the view: back to this spot)
       for (const k of ['green', 'bunker', 'water']) { await tile(k[0].toUpperCase() + k.slice(1)); await stroke(P[k].map(([x, y]) => ({ x, y })), 1300); await wait(1000); }
       await wait(800); await stop();
     });
     await shot('decor', async () => {
       await closeCards(); await cam(...P.at); await wait(1500);
-      await start('decor');
-      await clickSel('[data-testid="rail"] button:has-text("Course")', 400); await wait(600);
-      await tile('Trees'); await stroke(P.trees.map(([x, y]) => ({ x, y })), 1400); await wait(800);
-      await page.keyboard.press('Escape'); await wait(300);
-      await page.keyboard.press('z'); await wait(900); // (Props: the Course tools' Props, key Z)
-      await clickSel('[data-testid="tool-panel"] button:has-text("Potted palm")', 450); await wait(400);
-      for (const [x, y] of P.props) { await clickAt(x, y, 350); await wait(250); }
+      await start('decor'); await glide(1150, 760, 300);
+      await clickSel('[data-testid="rail"] button:has-text("Build")', 450); await wait(500); await clickSel('[data-testid="build-tab-course"]', 350); await wait(500); await clickSel('[data-testid="build-card-props"]', 600); await wait(900); // (Build > Course > Trees and props)
+      await clickSel('[data-testid="tool-panel"] button:has-text("Ornamental maple")', 450); await wait(400);
+      await stroke(P.trees.map(([x, y]) => ({ x, y })), 1400); await wait(900); // (natural props: painted with the brush)
+      for (const [name, at] of [['Plaza fountain', P.props[0]], ['Park bench', P.props[2]]]) { // (man-made ones: placed one by one)
+        const b = page.locator('[data-testid="tool-panel"] button', { hasText: name }).first(); await b.scrollIntoViewIfNeeded().catch(() => {}); await wait(250);
+        const bb = await b.boundingBox(); if (!bb) continue; await clickAt(bb.x + bb.width / 2, bb.y + bb.height / 2, 450); await wait(400);
+        await clickAt(at[0], at[1], 600); await wait(500);
+      }
       await page.keyboard.press('Escape'); await wait(1500); await stop();
     });
     // ---------------- the golf view
@@ -244,10 +266,10 @@ export async function record(env) {
         const t = await play(4, 'day'); if (!t) throw new Error('no turn on hole 4');
         await wait(1200); await start(`golf-par3-${k}`); await cursor(true); await wait(500);
         // the shot shape: the ball button, then the dot dragged to the left (a draw)
-        const sb = (await viewBox('Straight')) ?? { x: 1745, y: 1034 }; { // (the ball button, bottom right: its box from the view, or where it is drawn at 1920x1080)
+        const sb = (await viewBox('Straight')) ?? { x: 1755, y: 1037 }; { // (the ball button, bottom right: its box from the view, or where it is drawn at 1920x1080)
           await clickAt(sb.x, sb.y, 500); await wait(800); }
-        const c = { x: 1772, y: 820 };
-        await glide(c.x, c.y, 500); await page.mouse.down(); await glide(c.x - 36, c.y + 2, 700); await page.mouse.up(); await wait(700);
+        const c = { x: 1785, y: 843 }; // (the shot-shape ball's centre at 1920x1080)
+        await glide(c.x, c.y, 500); await page.mouse.down(); await glide(c.x - 30, c.y + 1, 700); await page.mouse.up(); await wait(1200); await clickAt(sb.x, sb.y, 400); await wait(400);
         await cursor(false); await swing({ lead: 0.02 }); await ballRest(t.stroke); await wait(600);
         const n = await playOut(); console.log(`   par-3 take ${k}: ${n + 1} strokes`);
         await wait(2500); await stop(); await leave();
@@ -275,24 +297,47 @@ export async function record(env) {
       await cam(...A[0]); await wait(3000);
       await start('alive'); await cam(...A[1], 8000); await wait(8500); await stop(); await speed(1);
     });
-    // ---------------- a real course imported: a new game's "Who are you?" card, Your course > Change or find a course > a featured course (in the jam this is where real
-    // courses are: the Course flyout's Place a real course is not reachable there); the game starts on it and the camera rises over it. Then one of its holes played.
-    // (Last: the page leaves the showcase club for the new game.)
+    // ---------------- a real course placed into the running club (last: it replaces the club's own holes): Build > Course > the course's card, the course in hand
+    // moved over the map to a pose that takes no houses or roads (found by the game's own planner before the recording), a click, Place it; the camera rises over
+    // it. Then one of its holes played. (`--import new` instead films a new game's Who are you? card > Change or find a course > the course.)
     const realShots = async () => {
       if (!want('import') && !want('golf-real')) return;
-      await open(`${base}?real=1#play=new`); await ready();
-      const R = WORLD.realCourse ?? { name: 'Magnolia National', hole: 16, cam: [0.06, 0.03] };
+      const R = WORLD.realCourse ?? { id: 'magnolia-national', name: 'Magnolia National', hole: 16, cam: [0.05, 0.03] };
+      const viaNew = opt('import', 'club') === 'new';
+      if (viaNew) await open(`${base}?real=1#play=new`); else if (!page) await club();
+      await ready();
       await shot('import', async () => {
-        await page.locator('[data-testid="who-course-open"]').waitFor({ timeout: 120000 }); await wait(2500);
-        await start('import');
-        await clickSel('input[placeholder="Your name"]'); await page.keyboard.type('Sam', { delay: 50 });
-        await clickSel('[data-testid="who-course-open"]', 600); await wait(1600);
-        await clickSel(`button:has-text("${R.name}")`, 800); // (a featured course: the game starts on it)
-        await page.waitForFunction(() => new Set((window.__game?.golf?.pins ?? []).map(p => p.hole)).size >= 9, null, { timeout: 120000 });
+        if (viaNew) {
+          await page.locator('[data-testid="who-course-open"]').waitFor({ timeout: 120000 }); await wait(2500);
+          await start('import');
+          await clickSel('input[placeholder="Your name"]'); await page.keyboard.type('Sam', { delay: 50 });
+          await clickSel('[data-testid="who-course-open"]', 600); await wait(1600);
+          await clickSel(`button:has-text("${R.name}")`, 800);
+          await stepUntil(() => new Set((window.__game?.golf?.pins ?? []).map(p => p.hole)).size >= 9, 120000);
+        } else {
+          await closeCards(); await G(() => window.__game.close3p?.()); await cam(930, 900, 0.07); await wait(2000);
+          await start('import');
+          await clickSel('[data-testid="rail"] button:has-text("Build")', 450); await wait(500);
+          await clickSel('[data-testid="build-tab-course"]', 350); await wait(500);
+          await clickSel(`[data-testid="build-card-real-${R.id}"]`, 600);
+          await stepUntil(() => window.__game.real.active, 60000);
+          // the pose: the planner's own check over the map, no houses, no roads, clear of the club's buildings (turned back to how it came)
+          const pose = await G(() => { const R = window.__game.real, d0 = R.deg; let best = null;
+            for (let x = 300; x <= 1700; x += 100) for (let y = 300; y <= 1700; y += 100) { R.at = { x, y }; const pl = R.plan(true); if (!pl || pl.why || !pl.bounds) continue;
+              const c = pl.lots.houses + pl.lots.shops + pl.roads.segs * 3 + pl.over.club.length * 100 + Math.hypot(x - 900, y - 800) / 1000; if (!best || c < best.c) best = { x, y, c }; }
+            R.at = null; return best; });
+          if (!pose) throw new Error('no pose fits');
+          await cam(pose.x + 30, pose.y + 20, R.cam[0], 1500); await wait(1700);
+          const p = await scr(pose.x, pose.y);
+          await glide(p.x - 380, p.y + 220, 300); await glide(p.x, p.y, 1600); await wait(900);
+          await clickAt(p.x, p.y, 120); await wait(1800);
+          await clickSel('button:has-text("Place it")', 700);
+          await stepUntil(() => !window.__game.real.active, 60000);
+        }
         await wait(1500); await closeCards();
         const c = await G(() => { const ps = window.__game.golf.pins; let x = 0, y = 0; for (const p of ps) { x += p.x; y += p.y; } return [x / ps.length, y / ps.length]; });
-        await cam(c[0], c[1], R.cam[0]); await wait(2500); await closeCards();
-        await cam(c[0], c[1], R.cam[1], 6000); await wait(6500); await stop();
+        await cam(c[0], c[1], R.cam[0], 1200); await wait(1500); await closeCards();
+        await cam(c[0], c[1], R.cam[1], 5000); await wait(5500); await stop();
       });
       await shot('golf-real', async () => {
         for (let k = 0; k < takes; k++) {

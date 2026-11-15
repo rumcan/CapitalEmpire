@@ -8,28 +8,33 @@
     {
       "shot": "menu",
       "from": 0.5,
-      "to": 4.5
+      "to": 4.5,
+      "title": true,
+      "vo": 1
     },
     {
       "shot": "town",
       "from": 0.3,
       "to": 7.3,
-      "speed": 2,
-      "caption": "Build a golf club"
+      "speed": 1.6,
+      "caption": "Build a golf club",
+      "vo": 2
     },
     {
       "shot": "range-place",
       "from": 0.5,
       "to": 0,
-      "speed": 2.2,
-      "caption": "Pick a spot for your range"
+      "speed": 1.6,
+      "caption": "Pick a spot for your range",
+      "vo": 3
     },
     {
       "shot": "range-greens",
       "from": 0.6,
       "to": 0,
       "speed": 2.8,
-      "caption": "Build it up, piece by piece"
+      "caption": "Build it up, piece by piece",
+      "vo": 4
     },
     {
       "shot": "range-tee",
@@ -70,114 +75,127 @@
       "shot": "range-golfers",
       "from": 0.3,
       "to": 0,
-      "speed": 2.4,
-      "caption": "Golfers come to play"
+      "speed": 2.2,
+      "caption": "Golfers come to play",
+      "vo": 5
     },
     {
       "shot": "import",
-      "from": 18.5,
-      "to": 24.8,
-      "speed": 1.9,
-      "caption": "Import real courses"
-    },
-    {
-      "shot": "import",
-      "from": 29,
+      "from": 0.3,
       "to": 0,
-      "speed": 1.8
+      "speed": 1.8,
+      "caption": "Import real courses",
+      "vo": 6
     },
     {
       "shot": "hole-build",
-      "from": 9.8,
-      "to": 16.5,
-      "speed": 1.5,
-      "caption": "Build every hole"
-    },
-    {
-      "shot": "hole-build",
-      "from": 16.5,
+      "from": 0.3,
       "to": 0,
-      "speed": 4,
-      "caption": "Watch it grow in"
+      "speed": 2,
+      "caption": "Build every hole",
+      "vo": 7
     },
     {
       "shot": "paint",
       "from": 0.3,
       "to": 0,
-      "speed": 2.8,
-      "caption": "Paint greens, sand and water"
+      "speed": 2.4,
+      "caption": "Paint greens, sand and water",
+      "vo": 8
     },
     {
       "shot": "decor",
       "from": 0.3,
       "to": 0,
-      "speed": 2.6,
-      "caption": "Plant trees, dress it up"
+      "speed": 2.2,
+      "caption": "Plant trees, dress it up",
+      "vo": 9
     },
     {
       "shot": "golf-tee-0",
       "from": 0.2,
-      "to": 6.8,
-      "speed": 1.2,
-      "caption": "Play it from the tee"
+      "to": 0,
+      "speed": 1.1,
+      "caption": "Play it from the tee",
+      "vo": 10
     },
     {
       "shot": "golf-par3-0",
-      "from": 19,
-      "to": 32.5,
-      "speed": 2.6,
-      "caption": "Read the green, hole it"
+      "from": 0.2,
+      "to": 12,
+      "speed": 1.3,
+      "caption": "Shape it, spin it",
+      "vo": 11
     },
     {
-      "shot": "golf-real-1",
+      "shot": "golf-par3-0",
+      "from": 12,
+      "to": 0,
+      "speed": 2.4,
+      "caption": "Read the green, hole it",
+      "vo": 12
+    },
+    {
+      "shot": "golf-real-0",
       "from": 0.2,
-      "to": 21.5,
-      "speed": 2.5,
+      "to": 0,
+      "speed": 2.4,
       "caption": "Play the real ones too"
     },
     {
       "shot": "range-practice",
       "from": 0.2,
-      "to": 7.5,
-      "speed": 1.5,
-      "caption": "Practise on your own range"
+      "to": 0,
+      "speed": 1.4,
+      "caption": "Practise on your own range",
+      "vo": 13
     },
     {
       "shot": "time-day",
-      "from": 0.7,
-      "to": 2.1,
-      "caption": "Day to night"
+      "from": 0.5,
+      "to": 2.2,
+      "caption": "Day to night",
+      "vo": 14
     },
     {
       "shot": "time-golden",
-      "from": 0.7,
-      "to": 2.1
+      "from": 0.5,
+      "to": 2.2
     },
     {
       "shot": "time-dusk",
-      "from": 0.7,
-      "to": 2.1
+      "from": 0.5,
+      "to": 2.2
     },
     {
       "shot": "night-0",
       "from": 0.2,
       "to": 0,
-      "speed": 1.5,
-      "caption": "Golf under the moon"
+      "speed": 1.4,
+      "caption": "Golf under the lights",
+      "vo": 15
     },
     {
       "shot": "alive",
       "from": 0.2,
       "to": 0,
-      "speed": 1.6,
-      "caption": "A club that comes alive"
+      "speed": 1.4,
+      "caption": "A club that comes alive",
+      "vo": 16
     }
   ],
   "end": {
     "still": "alive",
-    "len": 4.5,
+    "len": 5.5,
     "jam": "Made for the Zoud GameLab game jam 2026",
-    "link": "Play free in your browser  ·  itch.io link here"
+    "link": "Play free in your browser  ·  itch.io link here",
+    "vo": 17
   },
-  "crf": 20
+  "crf": 20,
+  "voice": "am_michael",
+  "voiceDir": "F:/ClaudeTemp/jam/voice",
+  "duckDb": 10,
+  "voiceGap": 0.45,
+  "voiceLead": 0.25,
+  "musicVol": 0.9
 }

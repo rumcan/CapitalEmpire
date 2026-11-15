@@ -66,7 +66,23 @@ read from the golf view each frame. Every take is a real stroke by the game's go
 The pointer: headless Chrome draws no cursor, so the recorder draws a small arrow where the robot's mouse is (`trailer-rec.mjs cursorScript`),
 hidden inside the golf view, which has its own aim.
 
-Frames come from Chrome's screencast (each painted frame, with its time): about 13-21 a second at 1920x1080 on this PC, held to 30 fps by ffmpeg.
+## How a frame is made (frame stepping)
+
+Draft 1 was a real-time screencast, and it stuttered whenever the PC was busy (the owner: "the pc is slow so when you are showing stuff like the importing a map
+it doesnt translate"). Since draft 2 every shot is stepped (`scripts/jam/trailer-vclock.mjs`): while a shot records, the page, the golf view's frame and the sim
+worker run on a virtual clock that the robot moves on by exactly 1/30 s a frame (two 1/60 s steps: the golf view moves per animation frame). After each step
+the robot waits in real time until the ground's bakes in flight are done, draws again at the same moment, and takes the picture (CDP Page.captureScreenshot);
+ffmpeg makes the 30 fps clip from the numbered frames. A frame takes as long as the PC needs and the clip is still smooth (a 10 s shot takes a few minutes).
+The robot's waits, pointer moves and swing holds count frames while recording; between shots the clocks are the browser's own. `--realtime` records the old
+way (Chrome's screencast). Run recordings inside `bash E:/ClaudeTemp/heavy.sh` so nothing else heavy runs during a take.
+
+## The voice
+
+`node scripts/jam/trailer-voice.mjs --voice am_michael --speed 0.95` reads `F:/ClaudeTemp/jam/voice/script.md` (17 numbered lines, each tagged with its shot),
+says each with Kokoro-82M (Apache-2.0, local) and normalises it to -16 LUFS: `F:/ClaudeTemp/jam/voice/am_michael/NN.wav` and `lines.json`. In the cut, a part
+with `"vo": N` starts line N (0.25 s in); the parts up to the next line are stretched to the line plus 0.45 s (slower first, then more of the clip, then the
+last frame held), so a shot is never shorter than its line. The music is ducked 10 dB under each line with 0.25 s ramps. The owner chose am_michael
+(Michael, US) at 0.95.
 
 Found while recording (2026-11-15): #1368 (the tap boost); the Texture Painter and placing a real course into a running club are not reachable in the jam UI (the Course flyout is off there; the lead is opening it), Props only by key Z; town events (the Mayor's Cup, the Club Championship) leave a leaderboard on the map for months of game time, so the club is run on past it before filming.
 
@@ -75,6 +91,8 @@ Found while recording (2026-11-15): #1368 (the tap boost); the Texture Painter a
 `trailer-cut.json`: the parts in order, each `{ shot, from, to, speed, caption }` (a time-lapse is `speed` > 1), the title part (`title: true`: the
 logo `src/assets/ui/brand/logo.webp` over the menu scene, or the name in Georgia when there is no logo), the end card (the logo or the name, the jam,
 the play line: `--link` sets it) and the music. Captions are Bahnschrift, bottom left, fading in and out.
+
+Output: `trailer.mp4` (1920x1080, 30 fps), `trailer-720p.mp4` (under 30 MB, for a phone) and `trailer-voice.json` (where each line falls).
 
 Music: **Sunny Side Up 2** by Pro Sensory (Alex McCulloch), CC0 1.0, from OpenGameArt, the game's own radio track (docs/jam/AUDIO-CREDITS.md). CC0
 allows any use, a video included; the credit is a courtesy.

@@ -48,6 +48,11 @@ together), and the rest of the 25 candidates for mood, length or confidence.
 
 ## 3. Voices
 
+**The trailer's voice-over** (2026-11-15, in the video only, not shipped in the game): **Kokoro-82M** (hexgrad, https://huggingface.co/hexgrad/Kokoro-82M),
+licence **Apache-2.0**, run locally through kokoro-onnx (MIT) with its v1.0 ONNX model and voice pack (`F:/voices/kokoro_say.py`). Voice **am_michael** (US
+English), speed 0.95, the owner's pick. Made by `scripts/jam/trailer-voice.mjs` from the script `F:/ClaudeTemp/jam/voice/script.md` (17 lines), each line
+normalised to -16 LUFS (ffmpeg loudnorm). Apache-2.0 allows commercial use and asks no credit in the output; this entry is a courtesy.
+
 None are shipped yet. The tutorial's voice-over files are made by `scripts/jam/make-voice.mjs` with a local voice engine (one swappable command line); when they are
 made they are listed here with the engine, its licence and the date. Windows' built-in voices are never used.
 
