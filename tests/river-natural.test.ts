@@ -99,11 +99,16 @@ test('the game stamps the terrain model in its saves and builds the valley of a 
   assert.equal((e.match(/generateTerrain\(/g) ?? []).length, 1);
 });
 
-/** the old generator's maps (taken from lead/live before T360): the class grid's and the waterways' hashes, a seed each */
-const OLD: readonly [number, number, number][] = [
-  [1, 4203995818, 3996214917], [2, 3368225484, 3709549715], [3, 331651335, 3165639884], [7, 878236055, 2388974901], [13, 3826656724, 2006434788], [42, 2572766161, 3339362247], [100, 159438908, 4269907959],
-];
+/** the old generator's maps: the class grid's and the waterways' hashes, a seed each, for each size of map (MAP, iso.ts). A map is made to its size,
+ *  so a new size has maps of its own: 1024 taken from lead/live before T360, 2048 when T444 (#1186) put the 4 km map back (T453). A size with no pins
+ *  fails until they are taken: a change to model 1 at a size it already has is never a re-pin */
+const OLD_BY_MAP: Readonly<Record<number, readonly [number, number, number][]>> = {
+  1024: [[1, 4203995818, 3996214917], [2, 3368225484, 3709549715], [3, 331651335, 3165639884], [7, 878236055, 2388974901], [13, 3826656724, 2006434788], [42, 2572766161, 3339362247], [100, 159438908, 4269907959]],
+  2048: [[1, 913919798, 3084675992], [2, 3639503929, 1545176420], [3, 2553617037, 4228007293], [7, 277210184, 477496338], [13, 2384703000, 1921866944], [42, 922031303, 972935059], [100, 964974190, 4224430589]],
+};
+const OLD = OLD_BY_MAP[MAP] ?? [];
 test('model 1 (a save from before) is the old valley bit for bit: the same classes and the same river, no meander, no bar', () => {
+  assert.ok(OLD.length, `no model 1 maps pinned for a ${MAP}-tile map: take them (OLD_BY_MAP)`);
   for (const [seed, cls, waters] of OLD) {
     const t = gen(seed, 1);
     assert.equal(fnv(t.cls), cls, `seed ${seed}: the classes are the old ones`);
@@ -120,11 +125,15 @@ function hashWatersNat(ws: readonly Waterway[]): number {
   for (const w of ws) { f.push(w.kind === 'river' ? 1 : 2, w.pts.length); for (const p of w.pts) f.push(Math.round(p.x * 1000), Math.round(p.y * 1000), Math.round(p.w * 1000), Math.round((p.bar ?? 0) * 1000)); }
   return fnv(Float64Array.from(f));
 }
-/** model 2's maps as T360 made them: a save stamped 2 builds its valley again from these numbers, a seed each */
-const NAT_PINNED: readonly [number, number, number][] = [
-  [1, 2219442668, 403532857], [2, 459471939, 2387361220], [3, 1602431070, 530944695], [7, 4237105600, 1961143410], [13, 4003714651, 2200979767], [42, 3588255045, 3660263270], [100, 636312604, 776269099],
-];
+/** model 2's maps as T360 made them: a save stamped 2 builds its valley again from these numbers, a seed each, for each size of map (as OLD_BY_MAP:
+ *  1024 from T360, 2048 from T444's 4 km map, T453) */
+const NAT_BY_MAP: Readonly<Record<number, readonly [number, number, number][]>> = {
+  1024: [[1, 2219442668, 403532857], [2, 459471939, 2387361220], [3, 1602431070, 530944695], [7, 4237105600, 1961143410], [13, 4003714651, 2200979767], [42, 3588255045, 3660263270], [100, 636312604, 776269099]],
+  2048: [[1, 2012471539, 3562531204], [2, 2802673095, 3429922485], [3, 873401268, 2664025449], [7, 467364206, 3974975104], [13, 1640209502, 2010191335], [42, 61249503, 1006522760], [100, 2333486458, 1622934544]],
+};
+const NAT_PINNED = NAT_BY_MAP[MAP] ?? [];
 test('model 2 is a contract too: a save stamped 2 gets the same classes and the same river (a change to the natural river is a model 3, not an edit of model 2)', () => {
+  assert.ok(NAT_PINNED.length, `no model 2 maps pinned for a ${MAP}-tile map: take them (NAT_BY_MAP)`);
   for (const [seed, cls, waters] of NAT_PINNED) {
     const t = gen(seed, 2);
     assert.equal(fnv(t.cls), cls, `seed ${seed}: the classes of model 2 changed (make it a new terrain model, TERRAIN_MODEL + 1)`);
