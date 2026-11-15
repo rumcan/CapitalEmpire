@@ -160,6 +160,27 @@ export function upgradeSpots(old: PlacedPlace, oldDef: PlaceDef, def: PlaceDef):
   return out;
 }
 
+/** the top tier of a place's family (the place itself when it has no family) */
+export function familyTop(def: PlaceDef, defs: readonly PlaceDef[] = PLACE_DEFS): PlaceDef {
+  return def.group ? defs.filter(e => e.group === def.group).reduce((a, e) => ((e.tier ?? 0) > (a.tier ?? 0) ? e : a), def) : def;
+}
+/** #1369: the land a placed place holds (the town never builds there, nor another place): its footprint, or, with reserve (the normal build),
+ *  its family's top tier's footprint centred on it along its street, on the same street edge, so each higher tier grows in place */
+export function placeLand(p: PlacedPlace, def: PlaceDef, reserve: boolean, defs: readonly PlaceDef[] = PLACE_DEFS): Box4 {
+  const top = reserve ? familyTop(def, defs) : def;
+  if (top === def) return placeBox(p, def);
+  const g = placeGeom(p, def), [W] = frameSize(top, p.q), t = (g.w - W) / 2;
+  return placeBox({ id: top.id, x: g.o.x + g.u.x * t, y: g.o.y + g.u.y * t, q: p.q }, top);
+}
+/** #1369: a family place's site with its land kept (placeLand): with reserve, the site its top tier would take, the place centred in it; else
+ *  its own site (findSite) */
+export function reservedSite(def: PlaceDef, ctx: SiteCtx, reserve: boolean, defs: readonly PlaceDef[] = PLACE_DEFS): PlacedPlace | null {
+  const top = reserve ? familyTop(def, defs) : def;
+  if (top === def) return findSite(def, ctx);
+  const s = findSite(top, ctx);
+  return s ? upgradeSpots(s, top, def)[0]! : null;
+}
+
 /** the places as the save keeps them, and back (a tuple of an unknown place or a bad shape is dropped; one per id) */
 export const placeTuples = (list: readonly PlacedPlace[]): PlaceTuple[] => list.map(p => [p.id, p.x, p.y, p.q]);
 export function placesFromTuples(t: unknown, defs: readonly PlaceDef[] = PLACE_DEFS): PlacedPlace[] {

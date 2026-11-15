@@ -6,7 +6,7 @@
 // on them afterwards. npm test.
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
-import { PLACE_DEFS, duePlaces, familyPlaced, findSite, frameSize, placeBox, placeDef, placeGeom, placeTuples, placesFromTuples, upgradeSpots, type Box4, type PlaceDef, type PlacedPlace, type SiteSeg } from '../src/game/lots/iconic';
+import { PLACE_DEFS, duePlaces, familyPlaced, findSite, frameSize, placeBox, placeDef, placeGeom, placeLand, placeTuples, placesFromTuples, reservedSite, upgradeSpots, type Box4, type PlaceDef, type PlacedPlace, type SiteSeg } from '../src/game/lots/iconic';
 import { LIBRARY } from '../src/game/library';
 import { SPORTS_ART, sportsArtId } from '../src/game/sports-library';
 import { earnedTarget } from '../src/game/golf/towngrowth';
@@ -177,7 +177,7 @@ function grow(city: City, editor: NetEditor, pop: number) {
 }
 /** the engine's site search on the city's real streets (engine.ts placesCheck) and a free check of its land: in the map, off every road and its
  *  verge, off every lot that is not empty, off the golf land, 2 tiles from the other places */
-function siteOn(city: City, def: PlaceDef, places: PlacedPlace[], except?: PlacedPlace) {
+function siteOn(city: City, def: PlaceDef, places: PlacedPlace[], except?: PlacedPlace, reserve = true) {
   const I = city as unknown as Inside, segs: SiteSeg[] = [], roads: Box4[] = [];
   for (const s of city.net.segs) {
     if (s.kind !== 0) continue;
@@ -187,11 +187,11 @@ function siteOn(city: City, def: PlaceDef, places: PlacedPlace[], except?: Place
   }
   const built = [...I.town.states.values()].filter(st => st.level !== LV.EMPTY).map(st => lotBoxOf(I.lots.lots.get(st.key)!));
   const golf: Box4 = [PARCEL[0], PARCEL[1], PARCEL[0] + PARCEL[2], PARCEL[1] + PARCEL[3]];
-  const others = places.filter(p => p !== except).map(p => placeBox(p, placeDef(p.id)!));
+  const others = places.filter(p => p !== except).map(p => placeLand(p, placeDef(p.id)!, reserve));
   const free = (b: Box4) => b[0] >= 4 && b[1] >= 4 && b[2] <= MAP - 4 && b[3] <= MAP - 4 && !roads.some(r => overlap(r, b, -0.5)) && !built.some(r => overlap(r, b, -0.6))
     && !overlap(golf, b) && !others.some(o => overlap(o, b, 2));
   const old = except ? placeDef(except.id) : undefined;
-  const site = (except && old ? upgradeSpots(except, old, def).find(p => free(placeBox(p, def))) : undefined) ?? findSite(def, { segs, centre: SEED, seed: 3, free });
+  const site = (except && old ? upgradeSpots(except, old, def).find(p => free(placeLand(p, def, reserve))) : undefined) ?? reservedSite(def, { segs, centre: SEED, seed: 3, free }, reserve);
   return { site, roads, built, golf };
 }
 const lotBoxOf = (l: { o: Pt; u: Pt; n: Pt; w: number; d: number }): Box4 => {
@@ -200,29 +200,31 @@ const lotBoxOf = (l: { o: Pt; u: Pt; n: Pt; w: number; d: number }): Box4 => {
 };
 
 describe('on a grown town', () => {
-  it('lays both dirt fields off the roads, the lots, the course and the range, grows them into grass fields, and no lot builds on them', () => {
+  for (const reserve of [true, false]) it(`${reserve ? 'the normal build' : 'the jam'}: lays both dirt fields off the roads, the lots, the course and the range, no lot builds on their land, and ${reserve ? 'each grows in place' : 'the higher tiers find room'}`, () => {
     const { city, editor } = grownTown(FOOT[0]!.pop), I = city as unknown as Inside, places: PlacedPlace[] = [];
+    const landOf = (p: PlacedPlace) => placeLand(p, placeDef(p.id)!, reserve);
     assert.ok(I.town.pop >= FOOT[0]!.pop, `the town grew to ${I.town.pop}`);
     const check = (def: PlaceDef, except?: PlacedPlace) => {
-      const { site, roads, built, golf } = siteOn(city, def, places, except);
+      const { site, roads, built, golf } = siteOn(city, def, places, except, reserve);
       assert.ok(site, `${def.id} found a site`);
-      const b = placeBox(site!, def);
+      const b = placeLand(site!, def, reserve);
+      assert.ok(overlap(b, placeBox(site!, def)) && b[0] <= placeBox(site!, def)[0] && b[2] >= placeBox(site!, def)[2], 'its land holds its footprint');
       assert.ok(!roads.some(r => overlap(r, b, -0.5)), `${def.id} is off the roads`);
       assert.ok(!built.some(r => overlap(r, b, -0.6)), `${def.id} is off the built lots`);
       assert.ok(!overlap(golf, b), `${def.id} is off the golf land (the course and the range)`);
       const i = except ? places.indexOf(except) : -1; if (i >= 0) places.splice(i, 1);
       places.push(site!);
-      city.setPlaces(places.map(p => { const q = placeBox(p, placeDef(p.id)!); return [q[0], q[1], q[2] - q[0], q[3] - q[1]]; }));
+      city.setPlaces(places.map(p => { const q = landOf(p); return [q[0], q[1], q[2] - q[0], q[3] - q[1]]; }));
       return site!;
     };
     // deterministic: the same town and seed give the same site
-    const first = siteOn(city, BASE[0]!, []).site;
-    assert.deepEqual(siteOn(city, BASE[0]!, []).site, first);
+    const first = siteOn(city, BASE[0]!, [], undefined, reserve).site;
+    assert.deepEqual(siteOn(city, BASE[0]!, [], undefined, reserve).site, first);
     for (const id of sportsDue(I.town.pop, places.map(p => p.id))) check(placeDef(id)!);
     assert.deepEqual(places.map(p => p.id).sort(), ['baseball-sandlot', 'football-dirt']);
     // the town grows on; nothing is built on the grounds' land
     grow(city, editor, Math.max(BASE[1]!.pop, FOOT[1]!.pop));
-    const land = places.map(p => placeBox(p, placeDef(p.id)!));
+    const land = places.map(landOf);
     for (const st of I.town.states.values()) if (st.level !== LV.EMPTY) {
       const lb = lotBoxOf(I.lots.lots.get(st.key)!);
       assert.ok(!land.some(b => Math.min(lb[2], b[2]) - Math.max(lb[0], b[0]) > 0.5 && Math.min(lb[3], b[3]) - Math.max(lb[1], b[1]) > 0.5), `lot ${st.key} is not on a sports ground`);
@@ -230,9 +232,11 @@ describe('on a grown town', () => {
     // the grass tiers and the stadiums, on this town's land (the headless range start stops near 130 residents: its county road runs out of
     // frontage, so the tiers are asked for as the residents would): in place when they fit, else elsewhere; the lower tier goes
     for (const t of [1, 2]) for (const f of [BASE, FOOT]) {
-      const def = f[t]!, old = familyPlaced(def, places)!;
+      const def = f[t]!, old = familyPlaced(def, places)!, was = placeBox(old, placeDef(old.id)!);
       assert.equal(old.id, f[t - 1]!.id);
-      check(def, old);
+      const now = placeBox(check(def, old), def), q = old.q, front = (b: Box4) => [b[3], b[2], b[1], b[0]][q]!, along = (b: Box4) => (q % 2 ? b[1] + b[3] : b[0] + b[2]) / 2;
+      // the normal build kept its land: the higher tier stands on the same street edge, centred along it where the lower one was
+      if (reserve) { assert.ok(Math.abs(front(now) - front(was)) < 1e-6 && Math.abs(along(now) - along(was)) < 1e-6, `${def.id} grew in place`); assert.equal(places.at(-1)!.q, q); }
       assert.ok(places.some(p => p.id === def.id) && !places.some(p => p.id === old.id), `${old.id} grew into ${def.id}`);
     }
     assert.equal(places.length, 2);

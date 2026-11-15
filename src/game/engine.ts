@@ -163,7 +163,7 @@ import { stateOf, type PresetState } from './lots/presets';
 import { LotMap, endReach, ringClear } from './lots/lots';
 import * as ES from './golf/estate'; // T353 (#995): house lots
 import { EstateTool } from './golf/estatetool';
-import { PLACE_DEFS, duePlaces, familyPlaced, findSite, placeBox, placeDef, placeGeom, placeName, placeTuples, placesFromTuples, upgradeSpots, type PlacedPlace, type SiteSeg } from './lots/iconic';
+import { PLACE_DEFS, duePlaces, familyPlaced, placeBox, placeDef, placeGeom, placeLand, placeName, placeTuples, placesFromTuples, reservedSite, upgradeSpots, type PlacedPlace, type SiteSeg } from './lots/iconic';
 import { TOWN_BLOCKS, TOWN_POP, townCentres, townGrid } from './lots/seedtowns';
 import { Names, RoadNames } from './ext/names';
 import { FARM_MODEL, FarmMap, animalAt, animalBox, claimedLots, composeFarm, farmAnimals, farmSeason, farmStandIns, parcelCorners, type AnimalView, type FarmAnimal, type FarmModel, type FarmParcel } from './ext/farms';
@@ -648,6 +648,9 @@ const isLotProp = (p: Prop) => !!p.auto && (p.auto.startsWith('lot:') || p.auto.
 const FARMS_PER_FRAME = 4, FARM_FRAME_MS = 1;
 /** T219: how long a place with no free site waits before the next search (ms) */
 const PLACE_RETRY_MS = 30000;
+/** #1369: a sports ground keeps its top tier's land from its first tier (lots/iconic.ts placeLand), so it grows in place, in the normal build;
+ *  the jam's town (it tops out near 150 residents, below the grass tiers) keeps its road frontage for its lots */
+const SPORTS_RESERVE = !JAM;
 /** the lot fills by use * 4 + decline (EMPTY, RES green, COM blue, IND orange, TOUR magenta, GOV white), darker with each decline step */
 /** a business's rect fill by family (alpha 0.5): sports amber, leisure violet, tourism teal, transport sky blue, property lime */
 const FAMILY_FILL: Record<BusinessType['family'], string> = { sports: 'rgba(245,158,11,0.5)', leisure: 'rgba(139,92,246,0.5)', tourism: 'rgba(20,184,166,0.5)', transport: 'rgba(14,165,233,0.5)', property: 'rgba(132,204,22,0.5)' };
@@ -4730,10 +4733,10 @@ export class Game {
   }
   // ---------- T219 (P27): the iconic places (lots/iconic.ts)
   /** the iconic places' footprints (world tiles) */
-  private placeBoxes(): [number, number, number, number][] { const out: [number, number, number, number][] = []; for (const p of this.places) { const d = placeDef(p.id); if (d) out.push(placeBox(p, d)); } return out; }
+  private placeBoxes(): [number, number, number, number][] { const out: [number, number, number, number][] = []; for (const p of this.places) { const d = placeDef(p.id); if (d) out.push(placeLand(p, d, SPORTS_RESERVE)); } return out; }
   /** a box (tiles [x0, y0, x1, y1]) overlapping an iconic place (but `except`) by more than half a tile */
   private onPlace(b: ArrayLike<number>, except?: PlacedPlace): boolean {
-    for (const p of this.places) { if (p === except) continue; const d = placeDef(p.id); if (!d) continue; const q = placeBox(p, d); if (Math.min(b[2]!, q[2]) - Math.max(b[0]!, q[0]) > 0.5 && Math.min(b[3]!, q[3]) - Math.max(b[1]!, q[1]) > 0.5) return true; }
+    for (const p of this.places) { if (p === except) continue; const d = placeDef(p.id); if (!d) continue; const q = placeLand(p, d, SPORTS_RESERVE); if (Math.min(b[2]!, q[2]) - Math.max(b[0]!, q[0]) > 0.5 && Math.min(b[3]!, q[3]) - Math.max(b[1]!, q[1]) > 0.5) return true; }
     return false;
   }
   /** a golf town that has reached a place's residents and has not got it gets it now, on the best free frontage (findSite); one place a check,
@@ -4748,9 +4751,9 @@ export class Game {
       segs.push({ key: `${Math.round(s.a.x * 10)},${Math.round(s.a.y * 10)}|${Math.round(s.b.x * 10)},${Math.round(s.b.y * 10)}`, ax: s.a.x, ay: s.a.y, bx: s.b.x, by: s.b.y, off: s.cls.h + s.cls.walk, order: s.cls.order });
     }
     // #1369: a family's higher tier (a sports ground's grass field, its stadium) takes the lower one's site when it fits there (its land counted
-    // free), else the best free site anywhere; the lower tier goes as it opens
+    // free; in the normal build its land was kept for it: SPORTS_RESERVE), else the best free site anywhere; the lower tier goes as it opens
     const old = familyPlaced(def, this.places), oldDef = old ? placeDef(old.id) : undefined, free = (b: [number, number, number, number]) => this.placeFree(b, old);
-    const site = (old && oldDef ? upgradeSpots(old, oldDef, def).find(p => free(placeBox(p, def))) : undefined) ?? findSite(def, { segs, centre, seed: this.seed, free });
+    const site = (old && oldDef ? upgradeSpots(old, oldDef, def).find(p => free(placeLand(p, def, SPORTS_RESERVE))) : undefined) ?? reservedSite(def, { segs, centre, seed: this.seed, free }, SPORTS_RESERVE);
     if (!site) { this.placeTryAt = performance.now() + PLACE_RETRY_MS; return; }
     this.places = [...this.places.filter(p => p !== old), site];
     if (old && this.selectedPlace === old.id) this.selectedPlace = null;
