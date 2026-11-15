@@ -39,7 +39,10 @@ let camYaw = 0, camD = D0, camHk = 1, FX = 0, FY = -1, RX = 1, RY = 0;   // the 
 let bcam = 0, bcamT = 0, bcamYaw = 0, bcamD = 0, slowT = 0, breathT = 0, heartT = 0;   // the ball camera (on, its last steps, the view to go back to); slow steps left after impact; the held breath; steps to the next heartbeat
 function aimCam() { FX = Math.sin(camYaw); FY = -Math.cos(camYaw); RX = Math.cos(camYaw); RY = Math.sin(camYaw); const fx = bcam ? ball.x : player.x, fy = bcam ? ball.y : player.y; camX = fx - FX * camD; camY = fy - FY * camD; }
 function ballCam() {   // after a full shot the camera leaves the golfer and flies behind the ball until it lies still, then cuts back
-  if (!bcam) return;
+  if (!bcam) {   // (2026-11-15: a turn that came while the camera was away with the ball: once it is back, he is set at his ball, the camera behind him)
+    if (typeof HP !== 'undefined' && HP && HP.jumpPend && ball.state === 0 && player.swing < 0 && !charging) { HP.jumpPend = false; if (hostOnTurn()) jumpToBall(); }
+    return;
+  }
   const b = ball, sp = Math.hypot(b.vx, b.vy);
   if (sp > 0.8) { let dy = Math.atan2(b.vx, -b.vy) - camYaw; dy = Math.atan2(Math.sin(dy), Math.cos(dy)); camYaw += dy * 0.2; }
   camD += ((b.state === 1 ? 6.5 : 9) - camD) * 0.1;
@@ -169,7 +172,19 @@ function jumpToBall() {   // J: the golfer is set down beside his ball, facing t
 // shot's target. camSees: the line from the camera (camD behind him, HC x hk x camD / D0 above his feet, as the render places it) to a point 0.4 m over the
 // target clears the land all the way; camFrame raises the camera, then pulls it back, a step at a time, until it does (the heights R gives, up to x3.2,
 // the zoom's 42 m), and keeps what it chose (camK) for the swing's line-up to glide to, instead of the default view, which would hide it again.
+// The owner, 2026-11-15 ("i cant see the player ... the camera sits so high i cant see the player below"): over high ground camFrame climbed to x3.2 and
+// 42 m back to see the target, and with the horizon row fixed his feet fell hundreds of rows below the picture. Now the golfer comes first: the framing
+// stays modest (CAM_DMAX m back, x CAM_HKMAX high) and only one that keeps his feet in the lower part of the picture (camLim) is taken; when none shows the
+// target, the default view stays and the target is left hidden (the hole map shows it). The render (08-render.md) then pitches the view down rather
+// than up: the horizon moves up the picture until his feet sit at CAM_FEET of its height (camFeet).
 let camK = { d: D0, hk: 1 };
+const CAM_FEET = 0.86, CAM_HZMIN = 0.1, CAM_DMAX = 20, CAM_HKMAX = 1.6;
+function camLim(d) { return VH * (CAM_FEET - CAM_HZMIN) * d / FOC; }   // the most the camera may stand above his feet, d m behind him, and his feet still be in the picture's lower part
+function camFeet(camz, fz) {   // the horizon row this frame: the player's, pitched down (a smaller row) while his feet at fz would fall below CAM_FEET of the picture
+  if (bcam) return HZB;
+  const fr = HZB + (camz - fz) * FOC / Math.max(1, camD), lo = VH * CAM_FEET;
+  return fr > lo ? Math.max(Math.round(VH * CAM_HZMIN), Math.round(HZB - (fr - lo))) : HZB;
+}
 function camSees(tx, ty, hk, d) {
   const p = player, cx = p.x - FX * d, cy = p.y - FY * d, cz = groundH(p.x, p.y) + HC * hk * d / D0, tz = groundH(tx, ty) + 0.4;
   const L = Math.hypot(tx - cx, ty - cy), n = Math.max(8, Math.min(80, Math.ceil(L / 4)));
@@ -178,11 +193,11 @@ function camSees(tx, ty, hk, d) {
 }
 function camFrame(tx, ty) {
   if (!(Number.isFinite(tx) && Number.isFinite(ty)) || Math.hypot(tx - ball.x, ty - ball.y) < 3) { camK = { d: camD, hk: camHk }; return; }
-  camD = Math.max(camD, D0); camHk = Math.max(camHk, 1); aimCam();
+  camD = clamp(camD, D0, CAM_DMAX); camHk = clamp(camHk, 1, CAM_HKMAX); aimCam();   // (each turn starts from a modest view behind him, whatever the zoom was)
   if (!camSees(tx, ty, camHk, camD)) {
-    let ok = false;
-    for (const d of [camD, 20, 28, 36, 42]) { if (d < camD) continue; for (let hk = camHk; hk <= 3.2 + 1e-9 && !ok; hk = Math.min(3.2, hk * 1.15) + (hk >= 3.2 ? 1 : 0)) { camD = d; aimCam(); if (camSees(tx, ty, hk, d)) { camHk = hk; ok = true; } } if (ok) break; }
-    if (!ok) { camD = 42; camHk = 3.2; }   // (nothing clears it: the highest and farthest the player could take it)
+    let ok = false; const d0 = camD, h0 = camHk;
+    for (const d of [d0, 17, CAM_DMAX]) { if (d < d0) continue; for (let hk = h0; hk <= CAM_HKMAX + 1e-9 && !ok; hk *= 1.15) { if (HC * hk * d / D0 > camLim(d) * 0.85) break; camD = d; aimCam(); if (camSees(tx, ty, hk, d)) { camHk = hk; ok = true; } } if (ok) break; }
+    if (!ok) { camD = D0; camHk = 1; }   // (nothing modest clears it: he stays in view and the target is hidden; the hole map shows it)
     aimCam();
   }
   camK = { d: camD, hk: camHk };

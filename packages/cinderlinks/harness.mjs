@@ -199,6 +199,30 @@ const HOST_PLAY = String.raw`
     if (snapAt) { step(60, 0); jumpToBall(); step(30, 0); snapAt('host-rest'); }
     return { errs, info };
   }
+  // 2026-11-15 (the owner: "im supposed to see player on the tee when it loads ... the camera sits so high i cant see the player below"): a tee turn with a
+  // bank 3.5 m high behind the tee, a rise ahead that hides the target, and the camera left zoomed far out and up: he and his ball are drawn whole, his
+  // feet in the lower part of the picture (the camera did climb to 42 m back, 3.2 times as high, and his feet were drawn hundreds of rows below it)
+  function hostCamRun() {
+    const errs = [], info = {}, S = course.S, b0 = [hole.tee.x / S, hole.tee.y / S], p0 = [hole.pin.x / S, hole.pin.y / S], dl = Math.hypot(p0[0] - b0[0], p0[1] - b0[1]), ux = (p0[0] - b0[0]) / dl, uy = (p0[1] - b0[1]) / dl;
+    const kit = { club: 'driver', carryM: 230, scatterM: 40, longM: 24, playsM: 225, sideM: 2, loftDeg: 10.5, speed: 0.9, sweet: 0.08 };
+    const g0 = groundH, bx = b0[0] * S, by = b0[1] * S;
+    groundH = (x, y) => { const a = (x - bx) * ux + (y - by) * uy; return g0(x, y) + (a < -6 && a > -80 ? 3.5 : a > 30 && a < 90 ? 12 : 0); };
+    try {
+      for (const c of Object.keys(keys)) keys[c] = false; mouse.down = false; charging = false; if (HP) HP.sw = null; player.swing = -1; bcam = 0; step0(60);
+      camD = 42; camHk = 3.2;
+      hostMessage({ v: 1, t: 'turn', golfer: 0, holeIdx: 0, hole: holeN, par: hole.par, stroke: 1, at: 600, lie: 'tee', lieKind: 'tee', ball: b0, pin: p0, distM: dl, wind: { mph: 18, from: 90 }, slope: { up: 0, across: 0 },
+        clubs: [kit], suggested: { club: 'driver', aim: [b0[0] + ux * 220, b0[1] + uy * 220], power: 1 } });
+      info.sees = camSees(aim.x, aim.y, 1, D0); info.k = [+camK.d.toFixed(1), +camK.hk.toFixed(2)];
+      for (let k = 0; k < 40; k++) { tickGame(); render(); }
+      info.gol = golB.slice(); info.ball = balB.slice(); info.hz = HZ; info.vh = VH; info.camD = +camD.toFixed(1); info.up = +(camZ - groundH(player.x, player.y)).toFixed(2);
+      if (golB[2] < 0 || golB[1] < 0 || golB[3] > VH - 1 || golB[3] < VH * 0.55) errs.push('host camera: at a tee turn behind high ground the golfer is not whole in the lower part of the picture (' + JSON.stringify(info) + ')');
+      if (balB[2] < 0 || balB[3] > VH - 1 || balB[1] < 0) errs.push('host camera: at a tee turn behind high ground his ball is not in the picture (' + JSON.stringify(info) + ')');
+      if (info.sees) errs.push('host camera: the test rise does not hide the target');
+    } finally { groundH = g0; }
+    for (let k = 0; k < 4; k++) render();
+    return { errs, info };
+  }
+  function step0(n) { for (let k = 0; k < n; k++) tickGame(); }
   // T441 to T443: the picks go out in an aim message and the preview that answers it is drawn (its ring at its landing); a locked pick is refused and says why;
   // an armed boost is a full boost in the swing's outcome, and is spent
   function hostCraftRun(snapAt) {
@@ -1088,6 +1112,7 @@ try {
       hostMessage({ v: 1, t: 'actors', at: 600, actors: [] }); }
     // host play (T418 to T420): the turn, the bag, the ring, one input and a wait, the host's shot played back to its rest
     { const hp = hostPlayRun(null); res.hostPlay = hp.info; res.errors.push(...hp.errs); }
+    { const hm = hostCamRun(); res.hostCam = hm.info; res.errors.push(...hm.errs); }
     { // T450: the golfer art's frames and rows (the pictures themselves need a browser: here the voxel figure stands in)
       const F = (pose, ph, al, rel, putt) => artFrame(pose, ph, al, rel, putt).join(':'), want = [
         [F('i', 0, 0, false, false), 'sheet:0'], [F('w', 3, 0, false, false), 'sheet:4'], [F('w', 15, 0, false, false), 'sheet:8'],

@@ -282,7 +282,11 @@ function hostTurn(m) {   // the owner's turn: the ball and the pin where the mod
   HP.pick = kp ? kp.pick : null; HP.pv = null; HP.pvSig = ''; hostAimPin = kp ? kp.pin : false;   // (T441: each turn starts from a plain shot; T446: and the aim follows the mouse until a click sets it)
   const ax = (kp ? kp.ax : m.suggested.aim[0] * S) - ball.x, ay = (kp ? kp.ay : m.suggested.aim[1] * S) - ball.y, al = Math.hypot(ax, ay); if (al > 0.3) { aim.dx = ax / al; aim.dy = ay / al; }
   aim.x = kp ? kp.ax : m.suggested.aim[0] * S; aim.y = kp ? kp.ay : m.suggested.aim[1] * S;   // (J5c: the target too: it was left where the last turn, or the mouse passing, put it, and the strike went there)
-  if (pracLock() ? Math.hypot(player.x - ball.x, player.y - ball.y) > 0.3 : m.stroke === 1 && ball.state === 0 && !bcam) jumpToBall();   // (J5c: on the tee always: he stands at his ball facing down the aim, the camera behind him)   // (J6: practising, each ball is teed up where he stands)   // (on the tee he stands at his ball; later he walks to it, or J)
+  // (2026-11-15, the owner: "im supposed to see player on the tee when it loads"): every turn, not only the tee's, starts with him at his ball, facing down
+  // the aim, the camera behind him; a turn that comes while the camera is away with the ball waits for it to come back (ballCam, HP.jumpPend)
+  HP.jumpPend = false;
+  if (pracLock()) { if (Math.hypot(player.x - ball.x, player.y - ball.y) > 0.3) jumpToBall(); }
+  else if (ball.state === 0) { if (bcam || player.swing >= 0 || charging) HP.jumpPend = true; else jumpToBall(); }   // (J5c: on the tee always: he stands at his ball facing down the aim, the camera behind him)   // (J6: practising, each ball is teed up where he stands)   // (on the tee he stands at his ball; later he walks to it, or J)
 }
 function hostStrike() {   // the club meets the ball: the input goes to the host, and the ball waits for its answer
   const c = hostClub(), t = HP.turn, S = hostS(); if (!c || !t) return;
@@ -806,7 +810,7 @@ addEventListener('keydown', (e) => {
   if (HOST && e.code === 'F8') { e.preventDefault(); sndMsg('mute'); return; }   // (J11: the Mute key works in the view too: the host page mutes, or lifts every mute)
   keys[e.code] = true;
   if (e.code === 'KeyT') setTime((tmode + 1) % TOD.length);
-  else if (e.code === 'KeyC') { behindHole(); camD = D0; camHk = 1; HZ = HZ0; camK = { d: D0, hk: 1 }; }
+  else if (e.code === 'KeyC') { behindHole(); camD = D0; camHk = 1; HZ = HZB = HZ0; camK = { d: D0, hk: 1 }; }
   else if (e.code === 'KeyN' && !pracLock()) { SEED = (Math.random() * 1e9) | 0; total = 0; newHole(1, 0, 0); firstPicture(); }   // (on a real course: the same course, new trees and rough)
   else if (pracLock() && /^Key[BKLGJN]$/.test(e.code)) { /* (J6: practising, he stays on his spot) */ }
   else if (e.code === 'KeyB') dropBall();
@@ -831,7 +835,7 @@ addEventListener('blur', () => { for (const k of Object.keys(keys)) keys[k] = fa
 let camDrag = false;
 view.addEventListener('mousemove', (e) => {
   const r = view.getBoundingClientRect(); mouse.x = clamp((e.clientX - r.left) / r.width * VW, 0, VW - 1); mouse.y = clamp((e.clientY - r.top) / r.height * VH, 0, VH - 1);
-  if (camDrag) { camYaw -= (e.movementX || 0) * 0.005; HZ = Math.round(clamp(HZ + (e.movementY || 0) * 0.7 * RS, 40 * RS, SH * RS)); }   // (a whole row: the sky is read by row)   // the middle button holds the scene: drag it round, drag it up or down
+  if (camDrag) { camYaw -= (e.movementX || 0) * 0.005; HZ = HZB = Math.round(clamp(HZB + (e.movementY || 0) * 0.7 * RS, 40 * RS, SH * RS)); }   // (a whole row: the sky is read by row)   // the middle button holds the scene: drag it round, drag it up or down
 });
 view.addEventListener('mousedown', (e) => { const a = audio(); if (a && a.state === 'suspended') a.resume(); if (e.button === 1) { camDrag = true; if (e.preventDefault) e.preventDefault(); } else if (!e.button) {
   mouse.down = true;

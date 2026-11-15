@@ -1314,7 +1314,7 @@ function render() {
   // the camera: behind the golfer (wherever "behind" has been turned to), raised over any ground that would hide him
   const p = player, gh = groundH(p.x, p.y), AD = !cart.on && addressAt() ? addressSpot() || [p.x, p.y] : null, gpx = AD ? AD[0] : p.x, gpy = AD ? AD[1] : p.y, gha = AD ? groundH(gpx, gpy) : gh;   // (J5b: at address he is drawn in the swing's stance)
   aimCam();
-  const fz = bcam ? ball.z - 0.9 : gh, up = bcam ? 1.7 : HC * camHk * camD / D0;   // (the ball camera looks at the ball, from a little above it)
+  const fz = bcam ? ball.z - 0.9 : gh, up = bcam ? 1.7 : Math.min(HC * camHk * camD / D0, camLim(camD) * 0.85);   // (the ball camera looks at the ball, from a little above it; 2026-11-15: never so high his feet leave the picture)
   let cz = fz + up;
   for (let k = 1; k < 8; k++) { const f = k / 8, g = groundH(camX + FX * camD * f, camY + FY * camD * f) + 0.5; const need = (g - (fz + 0.9) * f) / (1 - f); if (need > cz) cz = need; }
   const flat = fz + Math.max(1.2, up); if (cz > flat + 1.5) cz = flat + 1.5; if (cz < flat) cz = flat;
@@ -1324,6 +1324,10 @@ function render() {
     if (cz < clr + 0.4) cz = clr + 0.4;
     const dz = cz - camZ; camZ += dz * (Math.abs(dz) > 6 ? 1 : dz > 0 ? (bcam ? 0.3 : 0.16) : (bcam ? 0.12 : 0.07));
     if (camZ < clr - 0.7) camZ = clr - 0.7; }   // (only if the land comes up faster than it can glide: it never sinks into it)   // the camera never sinks into the land: it rides up over it
+  // 2026-11-15 (the owner: "the camera sits so high i cant see the player below"): backed against a bank so high that riding over it would take his feet
+  // off the picture, the camera comes in closer behind him; and the view pitches down (the horizon up the picture) so his feet stay in its lower part
+  if (!bcam && camZ - gha > camLim(camD) && camD > CAMMIN) camD = Math.max(CAMMIN, camD * 0.95);
+  HZ = camFeet(camZ, gha);
 
   const pf0 = performance.now();
   drawGround();
