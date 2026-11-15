@@ -1,6 +1,6 @@
 // The living scene behind the jam build's title card (J12, #1271; the owner, 2026-11-14: "animated town/golfcourse/farms etc behind the main menu like the
 // factorio main menu ... very pretty and zoomed in"). The real game runs behind the card: a prepared world (src/assets/showcase/menu.cesave, rebuilt by
-// scripts/jam/menu-scene-build.mjs) is loaded into the engine with saving switched off, and the camera glides across one place for 12 to 18 seconds, then
+// scripts/jam/menu-scene-build.mjs) is loaded into the engine with saving switched off, and the camera glides across one place for 8 to 14 seconds, then
 // cross-fades to the next (showcase-director.ts). This file is the pure part: the places (the stops), the camera at a moment of a stop, the order
 // of the visit and the rules of when the scene may run at all. No DOM, no engine: tests/showcase.test.ts runs it.
 import { MAP, ZOOM_MAX, ZOOM_MIN, worldX, worldY } from './iso';
@@ -16,7 +16,7 @@ export interface ShowStop {
   x: number; y: number; dx: number; dy: number;
   /** the zoom at the start and at the end (CSS zoom: 0.3 is the closest the game has; the log of the zoom glides) */
   z0: number; z1: number;
-  /** seconds on screen before the cross-fade (12 to 18) */
+  /** seconds on screen before the cross-fade (STAY_MIN_S to STAY_MAX_S: 8 to 14) */
   secs: number;
   /** the hour of the town day the stop looks best at (24 h clock: the director sets the town clock to it at the stop's cut when the day has run past the golf hours) */
   hour?: number;
@@ -47,16 +47,20 @@ export const SLOW_FRAME_MS = 42, SLOW_AFTER_MS = 4000;
  *  clock run on past its end (a season is 24 minutes at the normal speed); the engine stops drawing and the last picture stays under the card */
 export const REST_AFTER_MS = 10 * 60 * 1000;
 
-/** the places, in the order of a visit's lap (a visit starts at a different one each time and goes round). Each is looked at in the shots
- *  (docs/jam-shots/j12-*.jpg) and moved until it is pretty: the tile numbers are the prepared world's (scripts/jam/menu-scene-build.mjs) */
+/** the places, in the order of a visit's lap. Every visit starts at the first, the town, and goes round (the owner, 2026-11-15: "traffic driving and people walking
+ *  ... then it should swap to the course where people are playing golf. zoom it out a little bit so we have more houses. then show the desert driving range with
+ *  green grass"): the town, the club's car park, the course, the range, a farm. Each is looked at in the shots (scripts/jam/menu-scene-shots.mjs) and moved until it
+ *  is pretty: the tile numbers are the prepared world's (scripts/jam/menu-scene-build.mjs). The zooms are a step out from the closest (0.3) so more of each place shows */
 export const SHOW_STOPS: readonly ShowStop[] = [
-  { id: 'range', name: 'The driving range on a busy morning', x: 1000, y: 1000, dx: -14, dy: -4, z0: 0.3, z1: 0.28, secs: 15 },
-  { id: 'arrive', name: 'Cars arriving at the club', x: 966, y: 1022, dx: 8, dy: -8, z0: 0.3, z1: 0.3, secs: 14 },
-  { id: 'fairway', name: 'From the first tee down the fairway', x: 936, y: 1000, dx: -14, dy: -48, z0: 0.28, z1: 0.25, secs: 17 },
-  { id: 'green', name: 'A green with its flag', x: 802, y: 992, dx: 6, dy: -10, z0: 0.3, z1: 0.3, secs: 14 },
-  { id: 'farm', name: 'A farm by the county road', x: 474, y: 978, dx: 6, dy: 4, z0: 0.25, z1: 0.27, secs: 15 },
-  { id: 'road', name: 'The county road: houses, traffic and the bridge', x: 1124, y: 1043, dx: -32, dy: -3, z0: 0.27, z1: 0.25, secs: 16 },
+  { id: 'road', name: 'The county road: houses, traffic and people walking', x: 1124, y: 1043, dx: -26, dy: -3, z0: 0.23, z1: 0.21, secs: 12 },
+  { id: 'arrive', name: 'Cars arriving at the club', x: 966, y: 1022, dx: 8, dy: -8, z0: 0.25, z1: 0.24, secs: 10 },
+  { id: 'fairway', name: 'Golfers playing down the first fairway', x: 936, y: 1000, dx: -12, dy: -40, z0: 0.24, z1: 0.21, secs: 12 },
+  { id: 'green', name: 'A green with its flag', x: 802, y: 992, dx: 6, dy: -10, z0: 0.25, z1: 0.25, secs: 10 },
+  { id: 'range', name: 'The driving range on a busy morning', x: 1000, y: 992, dx: -12, dy: -4, z0: 0.24, z1: 0.22, secs: 12 },
+  { id: 'farm', name: 'A farm by the county road', x: 474, y: 978, dx: 6, dy: 4, z0: 0.22, z1: 0.24, secs: 10 },
 ];
+/** the shortest and longest stay at a stop (s) */
+export const STAY_MIN_S = 8, STAY_MAX_S = 14;
 
 /** where the point of interest sits on a screen cssW x cssH (fractions of its width and height): right of the card on a wide screen, in the middle on a narrow or tall one */
 export function anchorOf(cssW: number, cssH: number): { x: number; y: number } {
@@ -84,7 +88,7 @@ export function pickStart(n: number, rnd: number, last: number | null): number {
 }
 
 /** the problems with a list of stops (an empty list: none): a point or its drift outside the map or too near its edge for the view, a zoom outside the
- *  game's range or past the closest, a stay outside 12 to 18 s, a repeated id */
+ *  game's range or past the closest, a stay outside 8 to 14 s, a repeated id */
 export function stopProblems(stops: readonly ShowStop[], margin = 60): string[] {
   const out: string[] = [], seen = new Set<string>();
   const inside = (x: number, y: number) => x >= margin && y >= margin && x <= MAP - margin && y <= MAP - margin;
@@ -94,7 +98,7 @@ export function stopProblems(stops: readonly ShowStop[], margin = 60): string[] 
     if (!inside(s.x, s.y)) out.push(`${s.id}: the start (${s.x}, ${s.y}) is outside the map`);
     if (!inside(s.x + s.dx, s.y + s.dy)) out.push(`${s.id}: the end (${s.x + s.dx}, ${s.y + s.dy}) is outside the map`);
     for (const z of [s.z0, s.z1]) if (z < ZOOM_MIN || z > ZOOM_MAX) out.push(`${s.id}: the zoom ${z} is outside the game's ${ZOOM_MIN} to ${ZOOM_MAX}`);
-    if (s.secs < 12 || s.secs > 18) out.push(`${s.id}: ${s.secs} s is not 12 to 18`);
+    if (s.secs < STAY_MIN_S || s.secs > STAY_MAX_S) out.push(`${s.id}: ${s.secs} s is not ${STAY_MIN_S} to ${STAY_MAX_S}`);
   }
   return out;
 }
@@ -135,6 +139,15 @@ export function showWanted(e: ShowEnv): boolean { return e.jam && !e.chose && !e
 
 /** the sceneless flow: the address says so (`#scene=off`: the scene's world could not be had, so the page started again without it) */
 export const sceneOff = (hash: string): boolean => /(?:^#|&)scene=off(?:&|$)/.test(hash);
+
+/** the main menu page (the settings menu's Exit to main menu, in any build): the game is saved, then the page starts again with `#menu` in its address, so the title card
+ *  comes up over the living scene exactly as at the jam build's boot. The scene's world is never the player's (showBoot: no save read or written); Continue and New game
+ *  start the page again with the choice, as at boot, and the game loads the save it has just written */
+export const MENU_HASH = '#menu';
+/** the same, in the tab's session storage, for a page that cannot change its address (a sandboxed frame) */
+export const MENU_STORE_KEY = 'fairwayfortune.menu';
+/** the address asks for the main menu page */
+export const menuPageOf = (hash: string): boolean => /(?:^#|&)menu(?:&|$)/.test(hash);
 /** a machine too small for the scene (fewer than 4 GB of memory or 3 cores, or the browser asked for less data); what the browser does not say is not held against it */
 export function weakMachine(nav: { deviceMemory?: number; hardwareConcurrency?: number; connection?: { saveData?: boolean } }): boolean {
   return (nav.deviceMemory !== undefined && nav.deviceMemory < 4) || (nav.hardwareConcurrency !== undefined && nav.hardwareConcurrency < 3) || !!nav.connection?.saveData;

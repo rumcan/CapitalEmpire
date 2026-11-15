@@ -8,14 +8,14 @@ import { readFileSync, readdirSync, statSync } from 'node:fs';
 import { gunzipSync } from 'node:zlib';
 import { GAME_BOOT } from '../src/game/boot';
 import { HH, HW, MAP, ZOOM_MAX, ZOOM_MIN, worldX, worldY } from '../src/game/iso';
-import { CHOICE_KEY, FADE_MS, REST_AFTER_MS, choiceFromStore, READY_MAX_MS, READY_MIN_MS, SHOW_ANCHOR, SHOW_HOURS, SHOW_STOPS, SLOW_AFTER_MS, SLOW_FRAME_MS, WARM_MS, WIDE_MIN_W, choiceHash, choiceOf, pickStart, poseAt, sceneOff, showBoot, showWanted, stopProblems, weakMachine, type ShowEnv, type ShowStop } from '../src/game/showcase';
+import { CHOICE_KEY, MENU_HASH, menuPageOf, FADE_MS, REST_AFTER_MS, choiceFromStore, READY_MAX_MS, READY_MIN_MS, SHOW_ANCHOR, SHOW_HOURS, SHOW_STOPS, SLOW_AFTER_MS, SLOW_FRAME_MS, WARM_MS, WIDE_MIN_W, choiceHash, choiceOf, pickStart, poseAt, sceneOff, showBoot, showWanted, stopProblems, weakMachine, type ShowEnv, type ShowStop } from '../src/game/showcase';
 import { ShowDirector, type ShowEvent, type ShowHost } from '../src/game/showcase-director';
 import { townClockFor, townTimeOf, type TownClock } from '../src/game/sim/townclock';
 
-const stop = (o: Partial<ShowStop> = {}): ShowStop => ({ id: 't', name: 'test', x: 1000, y: 1000, dx: 10, dy: -6, z0: 0.2, z1: 0.3, secs: 15, ...o });
+const stop = (o: Partial<ShowStop> = {}): ShowStop => ({ id: 't', name: 'test', x: 1000, y: 1000, dx: 10, dy: -6, z0: 0.2, z1: 0.3, secs: 12, ...o });
 const screenOf = (p: { X: number; Y: number; z: number }, x: number, y: number, w: number, h: number) => ({ sx: (worldX(x, y) - p.X) * p.z + w / 2, sy: (worldY(x, y) - p.Y) * p.z + h / 2 });
 
-test('the stops lie inside the map, within the game\'s zoom, stay 12 to 18 s and are not repeated', () => {
+test('the stops lie inside the map, within the game\'s zoom, stay 8 to 14 s and are not repeated', () => {
   assert.deepEqual(stopProblems(SHOW_STOPS), []);
   assert.ok(SHOW_STOPS.length >= 2, 'a lap has more than one place');
   // the checker itself catches what it is for
@@ -23,7 +23,7 @@ test('the stops lie inside the map, within the game\'s zoom, stay 12 to 18 s and
   assert.ok(stopProblems([stop({ x: MAP - 70, dx: 200 })]).some(p => /end .* outside/.test(p)));
   assert.ok(stopProblems([stop({ z1: ZOOM_MAX * 1.2 })]).some(p => /zoom/.test(p)));
   assert.ok(stopProblems([stop({ z0: ZOOM_MIN / 2 })]).some(p => /zoom/.test(p)));
-  assert.ok(stopProblems([stop({ secs: 9 })]).some(p => /12 to 18/.test(p)) && stopProblems([stop({ secs: 25 })]).some(p => /12 to 18/.test(p)));
+  assert.ok(stopProblems([stop({ secs: 7 })]).some(p => /8 to 14/.test(p)) && stopProblems([stop({ secs: 15 })]).some(p => /8 to 14/.test(p)));
   assert.ok(stopProblems([stop(), stop()]).some(p => /second stop/.test(p)));
   assert.ok(stopProblems([stop({ x: NaN })]).some(p => /finite/.test(p)));
 });
@@ -72,7 +72,7 @@ test('the engine of the scene boots with its camera already on the first place (
 test('starting a game from the title card gives the game it always gave: the scene leaves by a reload into the game\'s own boot, then New game / Continue as before', () => {
   const app = readFileSync('src/App.tsx', 'utf8').replace(/\r\n/g, '\n');
   // the one place a game starts from the card, as it was: a new game over a save is a new town, the card closes, the speed is the game's
-  assert.match(app, /const startGame = \(g: Game, fresh: boolean\) => \{ if \(fresh && hasSave\) g\.newTown\(\); setTitleOpen\(false\); g\.setSpeed\(1\); \};/);
+  assert.match(app, /const startGame = \(g: Game, fresh: boolean\) => \{ leaveMenuPage\(\); if \(fresh && hasSave\) g\.newTown\(\); setTitleOpen\(false\); g\.setSpeed\(1\); \};/);
   // the page the choice started: the game's own boot (never the scene's), the same new town (a save stood) or the saved game, at the normal speed
   assert.match(app, /if \(choice === 'new' && had\) game\.newTown\(\); game\.setSpeed\(1\);/);
   assert.match(app, /const \[boot\] = useState\(\(\) => \{ const b = bootFor\(location\.search, import\.meta\.env\.DEV\); return sceneWanted && b\.kind === 'game' \? showBoot\(b\) : b; \}\);/);
@@ -81,7 +81,27 @@ test('starting a game from the title card gives the game it always gave: the sce
   const scene = /if \(sceneWanted\) \{[^\n]*\n([\s\S]*?)\n    \}\n/.exec(leave)?.[1] ?? '';
   assert.match(scene, /choiceHash\(fresh \? 'new' : 'continue'\)/); assert.match(scene, /location\.reload\(\)/); assert.ok(!/game\./.test(scene), 'the scene\'s engine is not asked to start anything');
   // a chosen start is never the scene: showWanted says no once a choice is in the address (tested above), and the title is not open for it
-  assert.match(app, /const \[titleOpen, setTitleOpen\] = useState\(JAM && !choice\);/);
+  assert.match(app, /const titleAtBoot = \(JAM \|\| menuPage\) && !choice;/); assert.match(app, /const \[titleOpen, setTitleOpen\] = useState\(titleAtBoot\);/);
+});
+
+test('Exit to main menu runs the living scene in any build without touching the player\'s save: it saves first, then the page starts again as the main menu page', () => {
+  assert.equal(menuPageOf(MENU_HASH), true); assert.equal(menuPageOf('#menu&scene=off'), true); assert.equal(menuPageOf('#a=1&menu'), true);
+  assert.equal(menuPageOf(''), false); assert.equal(menuPageOf('#menus'), false); assert.equal(menuPageOf('#scene=off'), false); assert.equal(menuPageOf('#play=continue'), false);
+  assert.equal(sceneOff('#menu&scene=off'), true, 'a menu page whose scene could not be had keeps the card over the player\'s own game');
+  const app = readFileSync('src/App.tsx', 'utf8').replace(/\r\n/g, '\n');
+  // the menu page is a title page in any build, and its scene boots the scene's world (showBoot: no save read or written), exactly as the jam build's boot
+  assert.match(app, /const \[menuPage\] = useState\(\(\) => \{ if \(choice\) return false;/);
+  assert.match(app, /const \[sceneWanted\] = useState\(\(\) => titleAtBoot && sceneAllowed\(\)\);/);
+  // the reload into the menu waits for the save to be written (bytes > 0), and a choice made on the card meanwhile cancels it
+  const exit = /data-testid="menu-exit-title"[\s\S]*?>Exit to main menu<\/button>/.exec(app)?.[0] ?? '';
+  assert.match(exit, /void game\.save\(\)\.then\(n => \{ if \(exitPending\.current && n > 0 && sceneAllowed\(\)\) toMenuPage\(\); \}\);/);
+  assert.ok(!/location\.reload/.test(exit), 'the button never reloads before the save');
+  assert.match(app, /const leaveTitle = \(fresh: boolean\) => \{\n    if \(starting\) return;\n    exitPending\.current = false;/);
+  // outside the jam build only a choice the card itself stored starts a game (a #play= in a dev address does not)
+  assert.match(app, /return JAM \? choiceOf\(location\.hash\) \?\? kept : kept;/);
+  // every visit starts in the town (the owner's order: the town, then the course, then the range)
+  assert.equal(SHOW_STOPS[0]!.id, 'road');
+  const ids = SHOW_STOPS.map(s => s.id); assert.ok(ids.indexOf('road') < ids.indexOf('fairway') && ids.indexOf('fairway') < ids.indexOf('range'));
 });
 
 test('the camera holds the point of interest at the anchor (right of the card on a wide screen, in the middle on a narrow one) and glides to the stop\'s end', () => {
