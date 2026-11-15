@@ -189,6 +189,9 @@ export class City {
   budget = new Budget();
   /** dev sandbox: the growth speed (1 = the game's; see Town.speed) and unlimited money (see Budget.unlimited); each budget gets the money flag */
   growSpeed = 1; unlimited = false;
+  /** #1314/#1317: a sandbox game chose that the town lays its own gravel streets as it grows (the planner TOWN_BUILDS_ROADS switched off for every game: T292);
+   *  false: the player builds them */
+  townRoads = false;
   /** the town's career (career.ts): the milestones reached (their grants paid, their road classes, junctions and tunnels unlocked) and the win; a fresh one with each valley or book */
   career = new Career();
   private dayIdx = -1; private tradeAt = { arrived: 0, punctual: 0 };
@@ -834,7 +837,7 @@ export class City {
       // the new day's visits are planned now, or when the round is free again (step)
       this.visitDay = -1; if (this.round.stage === 'free') this.planVisits();
     }
-    const grow = this.planGrow(), noRoom = !TOWN_BUILDS_ROADS && this.checkRoom();
+    const grow = this.planGrow(), noRoom = !(TOWN_BUILDS_ROADS || this.townRoads) && this.checkRoom();
     return { events, grow, noRoom, ledger, milestones, won };
   }
 
@@ -1928,7 +1931,7 @@ export class City {
    *  (no net ops back yet: the next net batch clears it, and so does an hour, in case the engine skipped it). With towns, at most one
    *  every GRAVEL_EVERY_H game hours (growAt: the last one laid) */
   private planGrow(): Leg[] | null {
-    if (!TOWN_BUILDS_ROADS) return null;
+    if (!TOWN_BUILDS_ROADS && !this.townRoads) return null;
     const cls = this.cls;
     if (!cls) return null;
     // a range start's grown town plans every GROWN_PLAN_H game hours (T090: one leg an hour leaves its growth short of land from year 8)

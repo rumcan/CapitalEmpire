@@ -29,6 +29,8 @@ export interface BuildCard {
   /** why it cannot be built yet (null: it can); done: it is built ("Built"), the card then only opens what it is */
   why: string | null; done: string | null;
   act: BuildAct | null;
+  /** #1305: the progress toward the unlock that holds it (New hole and the clubhouse: the range's takings this season of what they need), drawn as a bar under why */
+  progress?: { have: number; need: number };
 }
 
 /** a typical jam hole (docs/JAM.md "Balance": the New hole wizard's defaults cost $18k to $37k, about $23k; $12k to $17k bare) and a typical hole's
@@ -57,7 +59,8 @@ export interface BuildSource {
   /** the range's business upkeep a month ($) */
   rangeUpkeep: number;
   /** the tools' locks (null: open): New hole, the Buildings tool (the clubhouse), the cart paths, the practice greens */
-  locks: { newHole: string | null; buildings: string | null; path: string | null; practice: string | null };
+  locks: { newHole: string | null; buildings: string | null; path: string | null; practice: string | null;
+    /** #1305: the takings toward New hole and the clubhouse while the range's ramp holds them (null: open) */ progress?: { have: number; need: number } | null };
   /** the clubhouse: built, its price and its upkeep a month */
   clubhouse: { built: boolean; cost: number; upkeep: number };
   /** the course now and whether the clubhouse stands (Engine.paybackCourse; null: no course) */
@@ -144,6 +147,7 @@ export function buildCards(s: BuildSource): BuildCard[] {
     payback: pc ? payback(HOLE_TYPICAL, HOLE_UPKEEP, holeExtra(pc.course, pc.clubhouse)) : null,
     note: pc && !pc.clubhouse ? 'Green fees start once your clubhouse stands.' : undefined,
     why: s.locks.newHole ?? shortWhy(HOLE_FROM, s.money), done: null, act: { k: 'newHole' },
+    ...(s.locks.newHole && s.locks.progress ? { progress: s.locks.progress } : {}),
   });
   out.push({
     id: 'paths', group: 'course', name: 'Cart paths', pic: { tile: 'cart-path' }, line: 'Paths for carts and walkers between the range, the car park and your holes.',
@@ -156,6 +160,7 @@ export function buildCards(s: BuildSource): BuildCard[] {
     payback: s.clubhouse.built || !pc ? null : payback(s.clubhouse.cost, s.clubhouse.upkeep, greenFeesMonth(pc.course)),
     note: s.clubhouse.built ? 'There is one clubhouse.' : pc && pc.course.holes < 1 ? 'No playable holes yet: green fees start when your first hole plays.' : undefined,
     why: s.clubhouse.built ? null : s.locks.buildings ?? shortWhy(s.clubhouse.cost, s.money), done: s.clubhouse.built ? 'Built' : null, act: s.clubhouse.built ? null : { k: 'clubhouse' },
+    ...(!s.clubhouse.built && s.locks.buildings && s.locks.progress ? { progress: s.locks.progress } : {}),
   });
   // ---- Practice (offered like everything else, never pushed)
   const prP = place('practice');

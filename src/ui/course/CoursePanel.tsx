@@ -16,6 +16,7 @@ import { OsmNote } from './OsmNote';
 import { TEXTURE_PAINTER } from '../flyout-menu';
 import { ActionTile, TILE_BIG, TILE_SMALL } from '../ActionTile'; // J8 (#1261): New hole, Seed, Sod and Edit Hole Layout wear painted tiles
 import { JAM } from '../../game/features';
+import { UnlockBar } from '../UnlockBar'; // #1305: a locked New hole shows how far the range is toward it
 
 /** the paint modes that live under More options (the brush is Shape by hand's; plan is New hole's) */
 const MORE_MODES = new Set(['draw', 'piece', 'height', 'plant', 'hole']);
@@ -49,10 +50,10 @@ export function CoursePanel({ game, looks = false, onLooks }: { game: Game; look
       </ToolHead>
       <OsmNote game={game} />
       {p.mode === 'myhole' && p.myHole ? <MyHolePlace game={game} /> : plan ? <HoleWizardPanel game={game} /> : (
-        <button className={`pill-gold ${lock ? 'opacity-50' : ''}`} data-primary="new-hole" data-guide="new-hole" aria-disabled={!!lock} title={lock ? `New hole: ${lock}` : 'Click the tee, then the green: the whole hole is planned, ready to shape and build'} onClick={() => newHole(game)}>
+        <button className={`pill-gold ${lock ? 'opacity-80' : ''}`} data-primary="new-hole" data-guide="new-hole" aria-disabled={!!lock} title={lock ? `New hole: ${lock}` : 'Click the tee, then the green: the whole hole is planned, ready to shape and build'} onClick={() => newHole(game)}>
           <span className="pill-plus" aria-hidden>{lock ? <LockMark size={12} /> : '+'}</span>
           <ActionTile tile="golf-hole" size={TILE_BIG - 20} className={lock ? 'opacity-60' : ''} />
-          <span className="min-w-0"><span className="block">New hole</span>{lock ? <small data-testid="new-hole-lock">{lock}</small> : !shape && <small>Click a tee, then a green</small>}</span>
+          <span className="min-w-0"><span className="block">New hole</span>{lock ? <small data-testid="new-hole-lock">{lock}</small> : !shape && <small>Click a tee, then a green</small>}{lock && ui?.newHoleProgress && <UnlockBar have={ui.newHoleProgress.have} need={ui.newHoleProgress.need} looks={ui.newHoleProgress.looks} testId="new-hole-progress" />}</span>
         </button>
       )}
       {!shape && !plan && (

@@ -18,7 +18,19 @@ import type { DaySave } from './event/daysave';
 import type { PedestrianIdentities } from './ext/pedestrians';
 import type { TreeCutSave } from './treecut';
 
-const DB ='capital-empire', STORE = 'saves', SLOT = 'town', V2_KEY = 'maple-falls-town-v2';
+const DB ='capital-empire', STORE = 'saves', V2_KEY = 'maple-falls-town-v2';
+/** #1314: the save slots: the career game's ('town', the one slot every save before had) and a sandbox game's ('sandbox': its own save, never mixed with the career
+ *  one). The slot in use is remembered in this browser (SLOT_KEY), so a reload opens the game last played; reading, writing, clearing, exporting and importing all
+ *  act on it */
+export type SaveSlot = 'town' | 'sandbox';
+export const SLOT_KEY = 'capitalempire.slot';
+let SLOT: SaveSlot = (() => { try { return globalThis.localStorage?.getItem(SLOT_KEY) === 'sandbox' ? 'sandbox' : 'town'; } catch { return 'town'; } })();
+/** the slot in use */
+export function saveSlot(): SaveSlot { return SLOT; }
+/** the slot to use from now on (remembered for the next page) */
+export function setSaveSlot(s: SaveSlot): void { SLOT = s; try { globalThis.localStorage?.setItem(SLOT_KEY, s); } catch { /* not remembered: this page only */ } }
+/** whether slot s holds a save (the title card's Continue and Continue sandbox) */
+export async function slotHasSave(s: SaveSlot): Promise<boolean> { try { return (await store.get(s)) !== undefined; } catch { return false; } }
 export const SAVE_VERSION = 5;
 /** the build that writes saves (P07/T044): the package version and the git sha; 'dev' when not built by Vite (the tests) */
 export const BUILD = typeof __BUILD__ !== 'undefined' && __BUILD__ ? __BUILD__ : { app: '0.0.0', sha: 'dev' };
@@ -179,7 +191,7 @@ async function readSlot(): Promise<SaveRead> {
   let buf: ArrayBuffer | undefined, idbOk = true;
   try { buf = await store.get(SLOT); } catch { idbOk = false; } // no IndexedDB (private window): the v2 save may still be in localStorage
   if (!buf) {
-    const v2 = migrateV2();
+    const v2 = SLOT === 'town' ? migrateV2() : null; // (the old v2 save is a career one)
     if (v2) return { save: v2, status: 'ok', version: SAVE_VERSION, migratedFrom: 2, backedUp: true };
     return { save: null, status: 'none', backedUp: idbOk }; // nothing in the slot to lose
   }
