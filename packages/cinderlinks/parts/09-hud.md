@@ -548,7 +548,7 @@ function aimSpreadR(across, along, S) { return Math.min(4.5 * S, Math.max(0.9 * 
 // #1336 (the owner, 2026-11-15: "the faster you spam the forward arrow key while you are holding the swing the more power you get ... The power boost power keeps dropping"):
 // while the swing is held, each tap of Up (or W, or Shift) adds HMETER.tap to a level that halves every HMETER.half seconds; the boost let go with is the level times
 // the cap (HMETER.plain for every golfer; HMETER.max with the Power Mash charge armed, I); a putt takes none. swing.ts TAP_BOOST holds the same numbers for the model
-const HMETER = { max: 0.06, v: 3, glide: 0.4, line: 0.07, tap: 0.14, half: 0.6, plain: 0.04 };   // (v: swing.ts HOLD_V; glide: seconds; line: radians the camera may be off and need no glide)
+const HMETER = { max: 0.06, v: 3, glide: 0.4, line: 0.07, tap: 0.14, half: 0.6, plain: 0.04, gain: 3 };   // (gain: swing.ts TAP_BOOST.gain: the carry a hold swing's boost adds is gain times the boost sent)   // (v: swing.ts HOLD_V; glide: seconds; line: radians the camera may be off and need no glide)
 const HDRAIN = Math.pow(0.5, 1 / 60 / HMETER.half);   // (the level's fall a step)
 function hostArmed() { return !!(HP && HP.pick && HP.pick.armed && hostEarned('boost') && hostCharges() > 0); }
 function hostSwBoost(S) { const C = hostClub(); if (!S || !C || C.club === 'putter') return 0; return Math.round(Math.max(0, Math.min(1, S.lv || 0)) * (hostArmed() ? HMETER.max : HMETER.plain) * 1e4) / 1e4; }
@@ -637,7 +637,7 @@ function hostMeterShow() {   // the meter on the swing button: the power held, t
   if (!turn) { hostAimRead(null); return; }
   const pw = S ? S.u : on ? (HP.lastSw.u !== undefined ? HP.lastSw.u : HP.lastSw.power) : 0, boost = S ? hostSwBoost(S) : on ? HP.lastSw.boost : 0, putt0 = !!hostClub() && hostClub().club === 'putter';
   swingFill.style.width = (Math.max(0, Math.min(1, pw)) * 100).toFixed(1) + '%';
-  const txt = hostAirOn() ? 'In the air  -  tap the arrows for spin' : S && S.g ? 'Lining up ...' : S || on ? Math.round(pw * 100) + '%  ' + clubName(club) + (boost >= 0.005 ? '  +' + Math.round(boost * 100) + '% boost' : '') + (S && !S.rel ? (putt0 ? '  -  let go to hit' : '  -  tap ↑ boost, let go') : '') : !nearBall() ? 'Walk to your ball (J)' : 'Hold to swing (or Space)';
+  const txt = hostAirOn() ? 'In the air  -  tap the arrows for spin' : S && S.g ? 'Lining up ...' : S || on ? Math.round(pw * 100) + '%  ' + clubName(club) + (boost >= 0.005 ? '  +' + Math.round(boost * (putt0 ? 1 : HMETER.gain) * 100) + '% boost' : '') + (S && !S.rel ? (putt0 ? '  -  let go to hit' : '  -  tap ↑ boost, let go') : '') : !nearBall() ? 'Walk to your ball (J)' : 'Hold to swing (or Space)';
   if (swingTxt.textContent !== txt) swingTxt.textContent = txt;
   { const bw = S && !putt0 && !S.g ? Math.round(Math.max(0, Math.min(1, S.lv || 0)) * 100) + '%' : '', bc = bw ? 'boostbar on' + (hostArmed() ? ' armed' : '') : 'boostbar';   // (#1336: the boost bar over the power, written only when it moves)
     if (swingBoost.style.width !== bw) swingBoost.style.width = bw; if (swingBoost.className !== bc) swingBoost.className = bc; }

@@ -41,7 +41,10 @@ export const BOOST = { per: 0.01, max: 0.06, narrow: 0.4, spread: 0.3 } as const
  *  adds `per` to a level (0..1) and the level halves every `half` seconds, so it follows how fast he taps; the level at the moment he lets go times the cap is the
  *  swing's `boost` (SwingOutcome.boost: BOOST's more carry and wider spread). The cap is `plain` for everyone; a Power Mash charge armed (the card's) raises it to
  *  BOOST.max. The save keeps the boost played, never the taps; a putt takes none */
-export const TAP_BOOST = { per: 0.14, half: 0.6, plain: 0.04 } as const;
+export const TAP_BOOST = { per: 0.14, half: 0.6, plain: 0.04, gain: 3 } as const;
+/** (the owner, 2026-11-15: "make it bigger": from model version 6 a hold swing's tapped boost adds TAP_BOOST.gain times what it is saved as to the power: +12% at
+ *  the plain cap, +18% with the Power Mash charge; the save keeps the same 0..BOOST.max number, so older inputs play as they did) */
+export const BIG_BOOST_V = 6;
 /** the level `dt` seconds on from `level`, with no tap: it halves every TAP_BOOST.half seconds */
 export const tapDrain = (level: number, dt: number): number => clamp(level, 0, 1) * 0.5 ** (Math.max(0, dt) / TAP_BOOST.half);
 /** the level just after a tap: TAP_BOOST.per more, at most 1 */
