@@ -35,8 +35,12 @@ export const FADE_MS = 1800, READY_MIN_MS = 500, READY_MAX_MS = 4000;
 export const POSTER_FADE_MS = 1400;
 /** how long before a cut the director asks for the next stop's ground and trees (ms) */
 export const WARM_MS = 3500;
-/** the golf hours the scene keeps the town clock in (hours of the day): it starts at the first, and a cut that finds the clock past the second sets it back */
-export const SHOW_HOURS = Object.freeze({ start: 7.0, end: 13.0 });
+/** the golf hours the scene keeps the town clock in (hours of the day): it starts at the first, and a cut that finds the clock past the second sets it back. 09:00 (was 07:00, when only
+ *  the first group was on the tee and the range had no one yet): the morning's groups are out on every hole */
+export const SHOW_HOURS = Object.freeze({ start: 9.0, end: 15.0 });
+/** the residents the scene's range draws on beyond the town's own (engine range demand, show only): the prepared world's small town brings a golfer to the range now and then; this keeps
+ *  most of its bays busy (dayDemand: 0.0183 a resident a day, a bay held about a town hour) so the menu shows golfers hitting balls. Never the player's game */
+export const SHOW_RANGE_RESIDENTS = 6000;
 /** the golfers a day the scene's course has (the sim's busiest ordinary day, so there are groups on every hole: engine dayInputs busy) */
 export const SHOW_GOLFERS = 80;
 /** the calendar month the scene's farms show (0 = January): September, the golden harvest (the saved world's own month is wherever its build stopped) */

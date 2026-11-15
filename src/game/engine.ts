@@ -28,7 +28,7 @@ import { STRUCT_COST, STRUCT_MAX, groundClass, highwayRoute, longestRun, splitBy
 import { CULL_MIN_PX, FULL_UV, GLRenderer, POINT_STRIDE, SHADOW_STRIDE, SPRITE_STRIDE, VECTOR_STRIDE } from './gl';
 import { GroundCache } from './ground-cache';
 import { GAME_BOOT, clampCentre, flatTerrain, type BootOptions } from './boot';
-import { SHOW_FARM_MONTH, SHOW_GOLFERS } from './showcase';
+import { SHOW_FARM_MONTH, SHOW_GOLFERS, SHOW_RANGE_RESIDENTS } from './showcase';
 import { TILE_BANDS, TILES_REVISION, anchorAt, bandAt, bandRange, bandsAhead, cellOf, cellsIn, coverageOf, drawnScale, nearUntil, nextBand, tiledFamily, tileIndex, tilePermutation, tileScreenPx, tileSize, tileSpec } from './painted-tiles';
 import { desertLeavesDev, onPaintedSurfaces, paintedSurfaces, setDesertSurfaces } from './painted-surfaces-live';
 import { borderDefault, crewBandLook, finishBorders, finishOf, finishStripeLook, mowSpec } from './course-finish';
@@ -836,7 +836,7 @@ export class Game {
     money: () => this.money, spend: n => this.spendAt(this.rangeSpot(), 'construction', n), book: n => this.as('range', () => this.traffic.spend('business', -n)),
     month: () => this.golfMonthIndex(), payUpkeep: n => this.spendAt(this.rangeSpot(), 'upkeep', n), balls: n => this.spendAt(this.rangeSpot(), 'balls', n), // (T386: the supplier's balls)
     once: id => { const p = this.golf?.progress; if (!p || p.seen.includes(id)) return false; p.seen.push(id); this.scheduleSave(); return true; },
-    demand: () => ({ tier: this.golf?.tier ?? 1, exits: this.golf?.exits?.length ?? 2, residents: this.traffic.pop, propsAppeal: this.decor.appeal(), practiceAppeal: this.golf?.range ? practiceAppeal(this.golf.range) : 0 }),
+    demand: () => ({ tier: this.golf?.tier ?? 1, exits: this.golf?.exits?.length ?? 2, residents: this.traffic.pop + (this.show ? SHOW_RANGE_RESIDENTS : 0), propsAppeal: this.decor.appeal(), practiceAppeal: this.golf?.range ? practiceAppeal(this.golf.range) : 0 }),
     dayLen: () => this.traffic.dayLen, simT: () => this.traffic.simTime(performance.now()),
     pace: () => { const T = this.traffic; return this.golfMode && T.town.prof ? localRate(T.town, T.simTime(performance.now())) * T.dayLen / 1440 : 1; }, // (T266)
     clock: () => { const c = this.clock(); return { hour: c.hour + c.minute / 60, day: c.day }; },
