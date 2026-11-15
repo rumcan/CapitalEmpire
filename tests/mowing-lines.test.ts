@@ -211,7 +211,7 @@ test('the Mowing lines section is in the panel of the fairway, the green, the te
     if (kind === 'tee' || kind === 'rough') p.undoTop(); // (and off again)
   }
   p.openSurface('fairway');
-  assert.match(panel(), /data-mow-on="on"[^>]*data-mow-pattern="plaid"/, 'the fairway: on, the criss-cross (#1326: the golf view's mowing is the default)');
+  assert.match(panel(), /data-mow-on="on"[^>]*data-mow-pattern="plaid"/, 'the fairway: on, the criss-cross (#1326: the golf view mowing is the default)');
   p.openSurface('tee'); assert.match(panel(), /data-mow-on="off"/, 'the tee: off, mown plain');
   assert.doesNotMatch(panel(), /aria-label="Light bands"/, 'and no sliders while it is off');
   p.openSurface('fairway'); p.setStyle({ mow: { pattern: 'check', width: 2 } });
