@@ -279,6 +279,7 @@ try {
   await click('top bar', 'Settings', page.locator('[data-tip="Settings"]').first());
   for (const b of await buttonsIn('div.relative:has(> button[data-tip="Settings"])')) {
     if (/New game|Load|Download|Save$|^Settings$/.test(b.label)) continue; // (they replace or download the game; the gear itself)
+    if (b.id === 'menu-exit-title') continue; // (jam-rc: Exit to main menu leaves the game for the title card: it has its own step below, with Continue)
     // (J11: the Music and Effects mutes have test ids, and an aria-label that is not their text: found by id; each is pressed twice, so the sound is left as it was)
     const loc = b.id ? page.locator(`[data-testid="${b.id}"]`).first() : page.locator('button').filter({ hasText: b.label }).first();
     await click('settings', b.id ?? b.label, loc, { same: /100%|USD/.test(b.label) ? 'already the setting' : undefined });
@@ -290,6 +291,16 @@ try {
   await click('radio', 'Radio card (the drop)', page.locator('[data-testid="radio-more"]'));
   await sweep('radio', '[data-testid="radio-card"]', async () => { await page.locator('[data-testid="radio-more"]').click(); }, { same: b => /^Mute/.test(b.label) ? 'a mute may already be as it is pressed' : undefined });
   await esc();
+  // ---- jam-rc: Settings > Exit to main menu (saves, the title card over the scene), then Continue back into the same game
+  try {
+    await page.locator('button[data-tip="Settings"]').first().click();
+    await click('settings', 'Exit to main menu', page.locator('[data-testid="menu-exit-title"]'), { wait: 800 });
+    await page.locator('[data-testid="title-continue"]').waitFor({ timeout: 10000 });
+    await click('title', 'Continue', page.locator('[data-testid="title-continue"]'), { wait: 800 });
+    await page.waitForFunction(() => !document.querySelector('[data-testid="title-card"]'), null, { timeout: 10000 });
+    row('title', 'back in the game', 'PASS', 'the title card gone after Continue');
+  } catch (e) { row('title', 'Exit to main menu and Continue', 'FAIL', String(e.message ?? e).split('
+')[0]); }
   if ((await page.locator('[data-testid="radio-play"]').getAttribute('aria-pressed')) === 'true') await click('radio', 'Radio (off)', page.locator('[data-testid="radio-play"]')); // (the card's own Play may have turned it off already)
   // ---- the speeds (#1275: the bar is collapsed by default: its chevron shows every speed, and shuts them again)
   await click('top bar', 'speed bar: show every speed', page.locator('[data-testid="speed-toggle"]'));
