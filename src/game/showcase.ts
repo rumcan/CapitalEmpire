@@ -106,19 +106,25 @@ export function showBoot(b: BootOptions = GAME_BOOT): BootOptions { return { ...
 
 /** what the player chose on the title card: a new game or the saved one. The page reloads with it in its address (`#play=new`, `#play=continue`) and the next
  *  boot is the game's own, as it always was, straight into it (the scene's world is never the player's, so the choice is carried over by a fresh page) */
-export type StartChoice = 'new' | 'continue';
+export type StartChoice = 'new' | 'continue' | 'sandbox' | 'sandbox-town';
 export const CHOICE_KEY = 'play';
+/** every choice (#1314: a sandbox game, where the player builds the town's roads, 'sandbox', or the town builds its own, 'sandbox-town': #1317) */
+export const START_CHOICES: readonly StartChoice[] = ['new', 'continue', 'sandbox', 'sandbox-town'];
 /** the choice in an address's hash, or null */
 export function choiceOf(hash: string): StartChoice | null {
-  const m = new RegExp(`(?:^#|&)${CHOICE_KEY}=(new|continue)(?:&|$)`).exec(hash);
+  const m = new RegExp(`(?:^#|&)${CHOICE_KEY}=(new|continue|sandbox-town|sandbox)(?:&|$)`).exec(hash);
   return m ? (m[1] as StartChoice) : null;
+}
+/** the sandbox game a choice starts (#1314), or null for New game and Continue */
+export function sandboxOf(c: StartChoice | null): { townRoads: boolean } | null {
+  return c === 'sandbox' ? { townRoads: false } : c === 'sandbox-town' ? { townRoads: true } : null;
 }
 /** the hash that carries a choice */
 export const choiceHash = (c: StartChoice): string => `#${CHOICE_KEY}=${c}`;
 /** the same choice in the tab's session storage, for a page that cannot change its address (a sandboxed frame): the page the reload starts reads it, and the effect that clears
  *  the address clears it too */
 export const CHOICE_STORE_KEY = 'fairwayfortune.choice';
-export const choiceFromStore = (v: string | null | undefined): StartChoice | null => (v === 'new' || v === 'continue' ? v : null);
+export const choiceFromStore = (v: string | null | undefined): StartChoice | null => ((START_CHOICES as readonly (string | null | undefined)[]).includes(v) ? v as StartChoice : null);
 
 /** what the page knows when it decides about the scene */
 export interface ShowEnv {

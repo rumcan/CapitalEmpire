@@ -4,6 +4,7 @@
 // import-cycle surprises).
 import { normalizeRangeGuide, rangeGuideCurrent, type RangeGuideSave } from './guide';
 import { normalizeTour, type TourSave } from './tour';
+import { normalizeSandbox, type SandboxSave } from './sandbox';
 import { NEW_BADGE_IDS, RAMP_TOOL_STEP, TOOL_GROUP, TOOL_STAGE, rampEarned, rampLock, resolveOnboardingStage, type OnboardingStage, type PlayerProgressFacts, type RampFacts, type RampStep, type UiToolId } from './index';
 
 /** what the player did in this golf game (saved in GolfSave.progress): course pieces placed, road builds, car parks, event structures, real play
@@ -16,7 +17,9 @@ export interface GolfProgress { pieces: number; roads: number; parks: number; st
   guide?: RangeGuideSave;
   /** T293: the start tutorial (tour.ts TOWN_TOUR: the steps done and skipped, skipped as a whole, the town roads built while it ran); missing: none
    *  (a save from before T293) */
-  tour?: TourSave }
+  tour?: TourSave;
+  /** #1314: a sandbox game (sandbox.ts: everything unlocked, no tutorial) and its options; missing: a normal game */
+  sandbox?: SandboxSave }
 
 /** a new game's progress: nothing done yet, stage 1 (a new range game sets ramp 0 itself) */
 export function emptyProgress(): GolfProgress { return { pieces: 0, roads: 0, parks: 0, structures: 0, playS: 0, dismissed: [], advanced: false, stage: 1, seen: [] }; }
@@ -46,6 +49,7 @@ export function normalizeProgress(p: Partial<GolfProgress> | null | undefined): 
   if (!old && typeof q.ramp === 'number' && Number.isFinite(q.ramp)) out.ramp = Math.min(3, Math.max(0, Math.floor(q.ramp))) as RampStep;
   const g = out.ramp !== undefined ? normalizeRangeGuide(q.guide) : null; if (g) out.guide = g; // T239: the guided build (a ramp's only)
   const t = normalizeTour(q.tour); if (t) out.tour = t; // T293: the start tutorial
+  const sb = normalizeSandbox(q.sandbox); if (sb) out.sandbox = sb; // #1314: a sandbox game stays one
   return out;
 }
 
@@ -65,6 +69,7 @@ export function progressFacts(p: GolfProgress, c: CourseProgress): PlayerProgres
     roadsBuilt: p.roads, carParksBuilt: p.parks, eventStructuresPlaced: p.structures, dismissedHints: p.dismissed,
   };
   if (c.range) f.ramp = { ...c.range, reached: p.ramp ?? 3, fresh: p.ramp !== undefined, cardSeen: p.seen.includes(RANGE_CARD_SEEN) };
+  if (p.sandbox) f.sandbox = true; // #1314: every lock and hint off
   // T239: the guided build's step while it runs (the unlocks follow it)
   const gs = c.range ? rangeGuideCurrent(p.guide) : undefined; if (gs !== undefined) f.guideStep = gs;
   return f;

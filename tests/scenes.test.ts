@@ -117,7 +117,7 @@ test('the town: a video store is any lot drawn as world:video or world:video_ren
   for (const id of ['world:video', 'world:video_rental', 'variation:world-video_rental-cc8c504f-plain:1', 'variation:world-video-0a1b2c3d-plain-corner:1']) assert.equal(lotPlaceOf(id)?.id, 'video', id);
   assert.equal(lotPlaceOf('world:diner')?.id, 'diner'); assert.equal(lotPlaceOf('variation:world-diner-c9878d46-plain:1')?.id, 'diner');
   assert.equal(lotPlaceOf('world:house_4'), null); assert.equal(lotPlaceOf('variation:world-house_0-51fa4b80-plain:1'), null);
-  const video = LOT_PLACES.find(p => p.id === 'video')!, f = { jobs: 3, town: 'Maple Falls', pop: 1200 };
+  const video = LOT_PLACES.find(p => p.id === 'video')!, f = { jobs: 3, town: 'Pine Falls', pop: 1200 };
   assert.ok(lotPlaceHasArt(video));
   const built = lotScene(video, { level: 2, decline: 0, ...f })!;
   assert.deepEqual(built.views.map(v => `${v.id}:${v.slug}:${v.state}`), ['outside:video-store-outside:rundown', 'inside:video-store-inside:rundown'], 'built, not upgraded: hard times');
@@ -136,7 +136,7 @@ test('a farm: the farmhouse kitchen in the town\'s fortunes, in a farm\'s words;
   assert.deepEqual(townFortune(lots(2, 1, 4)), { built: 7, up: 2, down: 1, good: false }, 'under 10 buildings: hard times');
   assert.equal(townFortune(lots(5, 2, 10)).good, true); assert.equal(townFortune(lots(3, 2, 10)).good, false, 'under a quarter upgraded');
   assert.equal(townFortune(lots(5, 6, 10)).good, false, 'more declining than upgraded');
-  const hard = farmScene({ ha: 12.3, town: 'Maple Falls', fortune: townFortune(lots(1, 3, 10)) })!, good = farmScene({ ha: 12.3, town: 'Maple Falls', fortune: townFortune(lots(6, 1, 10)) })!;
+  const hard = farmScene({ ha: 12.3, town: 'Pine Falls', fortune: townFortune(lots(1, 3, 10)) })!, good = farmScene({ ha: 12.3, town: 'Pine Falls', fortune: townFortune(lots(6, 1, 10)) })!;
   assert.equal(hard.views[0]!.pic.file, 'home-farmhouse-rundown.webp'); assert.equal(hard.views[0]!.line, FARM_LINES.rundown);
   assert.equal(good.views[0]!.pic.file, 'home-farmhouse-upgraded.webp'); assert.equal(good.views[0]!.line, FARM_LINES.upgraded);
   assert.equal(good.views[0]!.tiles[0]!.value, '12.3 ha');

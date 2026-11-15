@@ -5,11 +5,12 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server.edge';
-import { DECOR, DECOR_GROUPS, placeableProps, propsCount, propsShown, shownIn, type DecorGroup, type PropsView } from '../src/game/golf/decor';
+import { DECOR, DECOR_GROUPS, newGroupOf, placeableProps, propsCount, propsShown, shownIn, type DecorGroup, type PropsView } from '../src/game/golf/decor';
 import { PropsTool, type PropsHostCtx } from '../src/game/golf/propstool';
 import { PropsPanel } from '../src/ui/course/PropsPanel';
 import { LIBRARY } from '../src/game/library';
 import { isPerson } from '../src/game/person';
+import { isShackProp } from '../src/game/golf/second-hand'; // (#1300: the shack props are no card)
 import type { Game } from '../src/game/engine';
 
 const LIB = new Map(LIBRARY.map((it, i) => [it.id, i]));
@@ -23,19 +24,19 @@ const groupsIn = (h: string) => [...h.matchAll(/data-group="([^"]+)"/g)].map(m =
 
 test('the placeable props: every prop of the owner\'s new categories has its card, and the catalogue\'s count is the panel\'s every-prop count', () => {
   const placeable = placeableProps();
-  assert.ok(placeable.length > 300, `${placeable.length} placeable props`);
+  assert.ok(placeable.length >= 280, `${placeable.length} placeable props`); // (#1300 took the shack props off: 300 on 2026-11-15)
   assert.equal(new Set(placeable.map(d => d.key)).size, placeable.length, 'one card each');
   // the library's own list of the new props (every "New: " category: one card a prop, a tree one card for its four views): none is left out
   // (T375: the eight-view art's rows, category "New: Eight-view objects", are the views the lots draw a building with, not props: no card)
   // (T401: the People props are no card: people are never placed)
-  const fresh = LIBRARY.filter(i => i.cat.startsWith('New: ') && !isPerson(i) && !i.id.startsWith('object8:') && (i.kind !== 'tree' || i.id.endsWith(':ne')));
+  const fresh = LIBRARY.filter(i => i.cat.startsWith('New: ') && !isPerson(i) && !isShackProp(i.id) && !i.id.startsWith('object8:') && (i.kind !== 'tree' || i.id.endsWith(':ne')));
   const cards = new Set(placeable.map(d => d.id));
   for (const it of fresh) assert.ok(cards.has(it.id), `${it.id} (${it.cat}) has a card`);
   // ...and no more: a card in a new group is a library New: item (the tournament kit moves seven of them to its own group, and the eight-view sets get one card each, their first view)
   const freshIds = new Set(fresh.map(i => i.id));
   for (const d of placeable) if (d.group.startsWith('new:') && !d.id.startsWith('object8:')) assert.ok(freshIds.has(d.id), `${d.key} is a library New: item`);
-  // every new category is a group of its own, in the groups' order
-  for (const cat of new Set(fresh.map(i => i.cat))) assert.ok(DECOR_GROUPS.some(g => g.id === `new:${cat.slice(5)}`), `${cat} is a group`);
+  // every new category is a group of its own (the tournament kit's), or (#1284: the owner's review sections) its pictures are in the groups they belong to
+  for (const it of fresh) { const g = newGroupOf(it); assert.ok(DECOR_GROUPS.some(x => x.id === g), `${it.id} (${it.cat}) is in group ${g}`); }
   // the kit's, the desert's and the catalogue's own items are all there: every picture a card, a variant or a mixed brush places
   const placed = new Set<string>(); for (const d of placeable) { placed.add(d.id); for (const v of d.variants ?? []) placed.add(v); for (const m of d.mix ?? []) placed.add(m.id); }
   for (const it of LIBRARY.filter(i => /^kit:(boulder|shrub|flowers|palm|lamp|granite|water-edge)/.test(i.id))) assert.ok(placed.has(it.id), `${it.id} can be placed`);
@@ -97,7 +98,7 @@ test('the panel: the cards on screen are the count it says, in their groups, and
   t.setView('course'); t.setFocus('plants');
   let h = html(t);
   assert.equal(cardsIn(h), DECOR.filter(d => d.group === 'plants' && !d.hidden).length); assert.deepEqual(groupsIn(h), ['plants']);
-  assert.match(h, /Showing \d+ of \d+ props \(Plants only\)/);
+  assert.match(h, /Showing \d+ of \d+ props \(Shrubs &amp; flowers only\)/);
   t.setAll(true); h = html(t);
   assert.equal(cardsIn(h), all, 'the cards shown equal the placeable count');
   assert.deepEqual(groupsIn(h), DECOR_GROUPS.map(g => g.id), 'in their groups');

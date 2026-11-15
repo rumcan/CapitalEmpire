@@ -1,7 +1,7 @@
 // The welcome card of a new range game (plan P22 2.8, T095): once per game, over the range at street zoom. It names the road the range stands
 // on and says what the game is; its button follows P24's ramp: Open the range while New hole waits (the range card is the ramp's first step),
 // Build the first hole once New hole is open (Course on New hole, the camera on the tee ring). The clock never stops for it.
-import { RAMP_TAKINGS } from '../../game/ext/progressive-ui';
+import { LOOKS_NEEDED, RAMP_TAKINGS } from '../../game/ext/progressive-ui';
 import { Icon } from '../Icon';
 
 /** the card over the map (centred, like the season card) */
@@ -19,7 +19,7 @@ export function WelcomeCard({ road, newHole, guide = false, placed = false, onGo
         <p className="text-sm text-slate-300">{bare ? 'Place a driving range and drivers stop to hit a bucket. Build a course behind it, and a town will grow around you.' : 'Drivers stop to hit a bucket. Build a course behind it, and a town will grow around you.'}</p>
         {bare ? <p className="text-xs text-slate-400">It is a bare start: only your trailer on your plot. You place everything you buy (the range, its car park, the practice area, every upgrade); the guide in the corner walks you through it, step by step.</p>
           : guide ? <p className="text-xs text-slate-400">You chose where to start: your land, your house and the range are yours. You place everything else you buy (its car park, the practice area, every upgrade); the guide in the corner walks you through it, step by step.</p>
-          : !newHole && <p className="text-xs text-slate-400">Grow the range first: its upgrades open the practice area, and New hole opens when it takes ${RAMP_TAKINGS.toLocaleString('en-US')} in a season, or in season 2.</p>}
+          : !newHole && <p className="text-xs text-slate-400">Grow the range first: its upgrades open the practice area, and New hole opens when it takes ${RAMP_TAKINGS.toLocaleString('en-US')} in a season{LOOKS_NEEDED ? ` and looks cared for (${LOOKS_NEEDED} of: target greens, tee turf, outfield grass, car park gravel, props, a putting green)` : ''}, or in season 2.</p>}
         <button className="btn-gold w-full py-2 text-sm" onClick={onGo} data-testid="welcome-go"><Icon name={guide ? 'income' : newHole ? 'pin' : 'income'} size={18} />{guide ? (bare ? 'Show me the first step' : 'Show me the next step') : newHole ? 'Build the first hole' : 'Open the range'}</button>
       </div>
     </div>

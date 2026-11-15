@@ -51,7 +51,7 @@ test('computeYearEnd stays at current tier when course lacks next tier requireme
   const res = computeYearEnd(1, 55, makeMockResult(500, 500), courseFacts, 0);
 
   assert.equal(res.tier, 1, 'should remain at Tier 1 due to missing requirements');
-  assert.equal(res.verdictText, 'Stay at Maple Falls Club Championship');
+  assert.equal(res.verdictText, 'Stay at Pine Falls Club Championship');
 });
 
 test('computeYearEnd demotes on second consecutive poor year when above Tier 1', () => {
@@ -75,7 +75,7 @@ test('computeYearEnd demotes on second consecutive poor year when above Tier 1',
   const year2 = computeYearEnd(2, year1.rep, poorResult, courseFacts, year1.poorYears);
   assert.equal(year2.tier, 1, 'should demote to Tier 1 after 2 consecutive poor years');
   assert.equal(year2.poorYears, 0);
-  assert.equal(year2.verdictText, 'Demoted to Maple Falls Club Championship next year');
+  assert.equal(year2.verdictText, 'Demoted to Pine Falls Club Championship next year');
 });
 
 test('computeYearEnd uses sensible defaults for unmeasured exit, queue, and viewing metrics', () => {

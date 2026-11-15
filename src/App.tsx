@@ -24,7 +24,7 @@ import { freshStats } from './game/business/state';
 import { BUSINESS_IMAGE } from './game/business/art';
 import { BUSINESS_THUMBS } from './game/business-library';
 import type { SurgeView } from './game/event/surge';
-import { BUILD, readSave } from './game/save';
+import { BUILD, readSave, saveSlot, setSaveSlot, slotHasSave, type SaveSlot } from './game/save';
 import { DEM_CREDIT_DEFAULT, DEM_TILES_CREDIT } from './game/golf/osm/terrarium';
 import { bootFor } from './game/dev/lab-boot';
 import { PaintPanel } from './PaintPanel';
@@ -84,9 +84,9 @@ import { BEND_45 } from './game/route-legs';
 import { bendWords } from './game/route-input';
 import { COST_GROUPS, INCOME_LINES } from './game/golf/reports';
 import { debtOf } from './game/golf/finance';
-import { TitleCard } from './ui/jam/TitleCard';
+import { LOGO, TITLE, TitleCard } from './ui/jam/TitleCard';
 import { MenuScene, posterOf } from './ui/jam/MenuScene';
-import { CHOICE_STORE_KEY, SHOW_STOPS, choiceFromStore, choiceHash, choiceOf, pickStart, poseAt, sceneOff, showBoot, showWanted, weakMachine, type StartChoice } from './game/showcase';
+import { CHOICE_STORE_KEY, SHOW_STOPS, choiceFromStore, choiceHash, choiceOf, pickStart, sandboxOf, poseAt, sceneOff, showBoot, showWanted, weakMachine, type StartChoice } from './game/showcase';
 import { ShowDirector } from './game/showcase-director';
 import { loadShowcaseSave } from './game/showcase-load';
 import { formatPercent } from './ui/TournamentResults';
@@ -169,7 +169,7 @@ function menuCtx(game: Game): MenuCtx {
     practice: [{ id: 'putting', name: 'Putting green' }, { id: 'chipping', name: 'Chipping green and bunker' }].map(f => ({ ...f, why: game.range.scene ? null : 'Comes with a driving range (its practice area)' })),
     newHoleWhy: ui?.newHoleLock ?? null,
     // T356: Course > Place a real course: the shipped map-data courses, then the player's downloaded ones (T358: kept in this browser)
-    real: JAM ? [] : [
+    real: [   // (the owner, 2026-11-15: the real courses are in the jam build too: the trailer features importing them)
       ...OSM_COURSES.map(c => ({ id: c.id, name: c.name, place: c.place, holes: c.holes, par: c.par })),
       ...keptCourses().map(r => ({ id: r.id, name: r.name, place: r.place || 'Downloaded', holes: r.holes ?? 0, par: r.par ?? 0, kept: true })),
     ],
@@ -188,6 +188,9 @@ const hod = (h: number) => `${String(h % 24).padStart(2, '0')}:00`;
 /** the Developer toggle (T035): the perf panel, the dev badge, the Studio button and the cars/growth controls; F3 flips it, ?debug forces it on, remembered in localStorage, off by default */
 const DEV_KEY = 'capitalempire.dev';
 function devStart(): boolean { if (JAM) return false; try { return new URLSearchParams(location.search).has('debug') || localStorage.getItem(DEV_KEY) === '1'; } catch { return false; } }
+
+/** what the title card can choose: a start (showcase.ts StartChoice) or Continue sandbox (#1314: the sandbox save slot's game) */
+type TitleChoice = StartChoice | 'sandbox-continue';
 
 export default function App() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -211,26 +214,40 @@ export default function App() {
   const [titleOpen, setTitleOpen] = useState(JAM && !choice);
   const [hasSave, setHasSave] = useState(false);
   const saveSeen = useRef<Promise<boolean> | null>(null);
-  useEffect(() => { if (JAM) { document.title = 'Fairway Fortune'; const p = readSave().then(r => r.status === 'ok'); saveSeen.current = p; void p.then(setHasSave); } }, []);
+  useEffect(() => { if (JAM) { document.title = TITLE; const p = readSave().then(r => r.status === 'ok'); saveSeen.current = p; void p.then(setHasSave); } }, []);
   // the choice is read once: the address is cleared at once, so a reload of the game (F5) never starts a new one
   useEffect(() => { if (choice) { try { history.replaceState(null, '', location.pathname + location.search); } catch { /* the address stays */ } try { sessionStorage.removeItem(CHOICE_STORE_KEY); } catch { /* no storage */ } } }, [choice]);
   const titlePaused = useRef(false);
   useEffect(() => { if (game?.ready && titleOpen && !game.show && !titlePaused.current) { titlePaused.current = true; game.setSpeed(0); } }, [game?.ready, titleOpen, game]);
   /** the title card's choice made, and the game it starts once the engine is ready (a click before that waits for it, as the card was only there after it) */
   const [starting, setStarting] = useState(false);
-  const pending = useRef<boolean | null>(null);
-  const startGame = (g: Game, fresh: boolean) => { if (fresh && hasSave) g.newTown(); setTitleOpen(false); g.setSpeed(1); };
-  const leaveTitle = (fresh: boolean) => {
+  const pending = useRef<TitleChoice | null>(null);
+  /** #1314: which save slots hold a game (the career's and the sandbox's), read each time the title card opens */
+  const [slotSaves, setSlotSaves] = useState<Record<SaveSlot, boolean>>({ town: false, sandbox: false });
+  useEffect(() => { if (titleOpen) void Promise.all([slotHasSave('town'), slotHasSave('sandbox')]).then(([town, sandbox]) => setSlotSaves({ town, sandbox })); }, [titleOpen]);
+  /** #1314: the other save slot's game: this page saves nothing more, the slot is remembered and the page reloads into its game */
+  const toSlot = (g: Game, s: SaveSlot) => { g.holdSaves(); setSaveSlot(s); location.reload(); };
+  /** the choice made. New game: a new career game (when a save stood or a sandbox game is open; else the game booted fresh is it); Continue: the career game (from a
+   *  sandbox game its slot is loaded); a sandbox game (#1314): a new one in its own save slot (the career save untouched), or Continue sandbox */
+  const startGame = (g: Game, c: TitleChoice) => {
+    const sb = sandboxOf(c === 'sandbox-continue' ? null : c), cur = saveSlot();
+    if (c === 'continue' && cur !== 'town') { toSlot(g, 'town'); return; }
+    if (c === 'sandbox-continue') { if (cur !== 'sandbox') { toSlot(g, 'sandbox'); return; } }
+    else if (sb) { setSaveSlot('sandbox'); g.newTown({ sandbox: sb }); }
+    else if (c === 'new') { setSaveSlot('town'); if (hasSave || cur !== 'town') g.newTown(); }
+    setTitleOpen(false); g.setSpeed(1);
+  };
+  const leaveTitle = (c: TitleChoice) => {
     if (starting) return;
-    if (sceneWanted) { // the scene's world is not the player's: the page starts again with the choice in its address and the game boots as it always did
+    if (sceneWanted && c !== 'sandbox-continue') { // the scene's world is not the player's: the page starts again with the choice in its address and the game boots as it always did
       setStarting(true);
-      try { sessionStorage.setItem(CHOICE_STORE_KEY, fresh ? 'new' : 'continue'); } catch { /* no storage */ }
-      try { history.replaceState(null, '', choiceHash(fresh ? 'new' : 'continue')); } catch { /* the address stays: the stored choice carries it */ }
+      try { sessionStorage.setItem(CHOICE_STORE_KEY, c); } catch { /* no storage */ }
+      try { history.replaceState(null, '', choiceHash(c)); } catch { /* the address stays: the stored choice carries it */ }
       window.setTimeout(() => location.reload(), 60);
       return;
     }
-    if (!game?.ready) { pending.current = fresh; setStarting(true); return; }
-    startGame(game, fresh);
+    if (!game?.ready) { pending.current = c; setStarting(true); return; }
+    startGame(game, c);
   };
   useEffect(() => { if (game?.ready && pending.current !== null) { const f = pending.current; pending.current = null; setStarting(false); startGame(game, f); } }, [game?.ready]); // eslint-disable-line react-hooks/exhaustive-deps
   // a page started by the card's choice: the game's own boot, then the new game (when a save stood) or the saved one, at the normal speed
@@ -238,7 +255,7 @@ export default function App() {
   useEffect(() => {
     if (!game?.ready || !choice || choiceDone.current) return;
     choiceDone.current = true;
-    void (async () => { const had = await (saveSeen.current ?? Promise.resolve(false)); if (choice === 'new' && had) game.newTown(); game.setSpeed(1); })();
+    void (async () => { const had = await (saveSeen.current ?? Promise.resolve(false)), sb = sandboxOf(choice); if (sb) game.newTown({ sandbox: sb }); else if (choice === 'new' && had) game.newTown(); game.setSpeed(1); })();
   }, [game?.ready, choice, game]);
   // the scene: the director glides the camera over the prepared world; its first picture fades the still out; a machine too slow for it gives way to the still
   const snapRef = useRef<HTMLCanvasElement>(null);
@@ -439,7 +456,7 @@ export default function App() {
     const ui = g.toolUi(), rv = g.range.view();
     return buildCards({
       places: g.rangePlaces(), range: rv, rangeUpkeep: rv?.upkeep ?? 0,
-      locks: { newHole: ui?.newHoleLock ?? g.toolLock('course'), buildings: g.toolLock('buildings'), path: g.toolLock('path'), practice: g.toolLock('practice') },
+      locks: { newHole: ui?.newHoleLock ?? g.toolLock('course'), buildings: g.toolLock('buildings'), path: g.toolLock('path'), practice: g.toolLock('practice'), progress: ui?.newHoleProgress ?? null },
       clubhouse: { built: g.bizDefs.some(d => d.type === 'clubhouse'), cost: CLUBHOUSE_RANGE_COST, upkeep: BUSINESS.clubhouse!.upkeepPerDay / MONTHS_A_SEASON },
       course: g.paybackCourse(), money: g.money,
       forSale: !!rv?.biz.forSale, junk: rv?.biz.junk?.length ? { n: rv.biz.junk.length, cost: JUNK_CLEAR_COST, first: rv.biz.junk[0]!.id } : undefined,
@@ -637,12 +654,12 @@ export default function App() {
       {fatal && <div className="absolute inset-0 z-50 flex items-center justify-center bg-[#15200f] p-8 text-center text-red-200">This game needs WebGL2 and OffscreenCanvas. {fatal}</div>}
       {game && !game.ready && !onTitle && (
         <div className="absolute inset-0 z-50 flex flex-col items-center justify-center bg-[#15200f]">
-          <div className="text-3xl font-bold tracking-tight text-amber-200" style={JAM ? { fontFamily: 'Georgia, serif' } : undefined}>{JAM ? 'Fairway Fortune' : 'Maple Falls'}</div>
-          <div className="mt-1 text-sm uppercase tracking-[0.3em] text-amber-400/80">{JAM ? 'A golf club money game' : 'Town Builder'}</div>
+          <img src={LOGO} alt={TITLE} className="block h-auto w-[min(420px,80vw)] drop-shadow-2xl" data-testid="loading-logo" />
+          <div className="mt-1 text-sm uppercase tracking-[0.3em] text-amber-400/80">Build · Play · Run the club</div>
           <div className="mt-6 h-2 w-64 overflow-hidden rounded-full bg-white/10">
             <div className="h-full bg-amber-400 transition-all" style={{ width: `${Math.round(game.loadProgress * 100)}%` }} />
           </div>
-          <div className="mt-2 text-xs text-slate-400">{JAM ? 'Mowing the fairways and filling the ball buckets…' : 'Painting ground textures and unpacking sprites…'}</div>
+          <div className="mt-2 text-xs text-slate-400">Mowing the fairways and filling the ball buckets…</div>
         </div>
       )}
 
@@ -650,7 +667,8 @@ export default function App() {
       {onTitle && (
         <>
           <MenuScene poster={posterOf(SHOW_STOPS[startStop]!.id)} alt={SHOW_STOPS[startStop]!.name} posterOn={posterOn} snapRef={snapRef} />
-          <TitleCard canContinue={hasSave} starting={starting} onNew={() => leaveTitle(true)} onContinue={() => leaveTitle(false)} />
+          <TitleCard canContinue={saveSlot() === 'town' ? hasSave || slotSaves.town : slotSaves.town} starting={starting} onNew={() => leaveTitle('new')} onContinue={() => leaveTitle('continue')}
+            {...(JAM ? {} : { onSandbox: (o: { townRoads: boolean }) => leaveTitle(o.townRoads ? 'sandbox-town' : 'sandbox'), canContinueSandbox: slotSaves.sandbox || saveSlot() === 'sandbox', onContinueSandbox: () => leaveTitle('sandbox-continue') })} />
         </>
       )}
       {game && game.ready && !lab && !onTitle && (
@@ -666,7 +684,7 @@ export default function App() {
                   <div className="max-[1899px]:hidden">{/* the golf bar's title from 1900 px (T135: one row) */}<ClubTitleText title={title} /></div>
                 ) : (
                   <div className="max-[1599px]:hidden">
-                    <div className="max-w-[12rem] truncate whitespace-nowrap font-display text-2xl font-bold leading-tight text-[var(--gold-hi)]" data-testid="title-name">Maple Falls</div>
+                    <div className="max-w-[12rem] truncate whitespace-nowrap font-display text-2xl font-bold leading-tight text-[var(--gold-hi)]" data-testid="title-name">{TITLE}</div>
                     <div className="label-caps max-w-[12rem] truncate whitespace-nowrap">Town Builder</div>
                   </div>
                 )}
@@ -710,13 +728,14 @@ export default function App() {
                   {!JAM && chip('holes') && <button className={`chip ${game.holesTool ? 'chip-on' : ''}`} onClick={() => { game.toggleHolesTool(); bump(); }} data-tip="Holes: move pins and tee markers" aria-label="Holes"><Icon name="pin" size={16} /><span className={WIDE}>Holes</span></button>}
  {!JAM && chip('event') && <button data-guide="chip-event" className={`chip ${game.eventTool ? 'chip-on' : ''}`} onClick={() => { game.toggleEventTool(); bump(); }} data-tip="Event: the event structures catalogue" aria-label="Event"><Icon name="buildings" size={16} /><span className={WIDE}>Event</span></button>}
                   {/* #1297: the Goal pill's chip (the jam has no goal): a click shows the full pill in a row of this bar, or folds it; the rail and the panels stand under the bar's last row, so it covers nothing */}
-                  {!JAM && <GoalChipInBar game={game} open={goalOpen} onToggle={() => setGoalOpen(saveGoalOpen(!goalOpen))} />}
+                  {!JAM && !game.sandboxMode && <GoalChipInBar game={game} open={goalOpen} onToggle={() => setGoalOpen(saveGoalOpen(!goalOpen))} />}
                 </>
               ) : game.eventMode
                 ? <Stat icon="trophy" label="Level" value={String(game.traffic.round.xp)} sub={`${game.traffic.round.cards.length} cards`} tone="text-amber-200" />
                 : <Stat icon="trophy" label="Career" {...careerStat(game)} tone="text-amber-200" />}
               {/* the classic town game's Treasury and figures (golf mode: the money chip and its drawer, T233) */}
               {!gv && <>{treasury(game)}{moreStats(game)}</>}
+              {game.sandboxMode && <span className="rounded-md border border-amber-300/60 bg-amber-400/20 px-1.5 py-0.5 text-[12px] font-bold uppercase tracking-wide text-amber-200" data-testid="sandbox-tag" data-tip={`Sandbox: everything unlocked, no tutorial; the town ${game.sandboxMode.townRoads ? 'builds its own roads' : 'grows along the roads you build'}`}>Sandbox</span>}
               {dev && <span className="rounded-md border border-sky-400/50 bg-sky-400/15 px-1.5 py-0.5 text-[12px] font-bold text-sky-200" data-tip="Developer panels are on (F3 hides them)">DEV</span>}
               {dev && (game.growth !== 1 || game.unlimited || !game.stamped) && (
                 <div className="rounded-md border border-amber-400/40 bg-amber-400/15 px-2 py-1 text-xs font-semibold text-amber-200" data-tip="Dev sandbox options (URL: ?grow=N, ?money=0|1, ?stamp=0|1)">
@@ -917,7 +936,7 @@ export default function App() {
             </div>
             {/* #1297 (the owner: "goals cover menu ui. cant be closed either"): the full Goal pill is a row of this bar while it is open (its chip, in the bar's first row, shows and folds it): the bar's
                 bottom (--hud-top) is under it, so the rail, the panels, the flyouts and the cards all stand below it and it covers none of them. The row takes no clicks beyond the pill's own */}
-            {!JAM && gv && goalOpen && <div className="pointer-events-none order-last basis-full" data-testid="goal-row"><GoalRowInBar game={game} onFold={() => setGoalOpen(saveGoalOpen(false))} /></div>}
+            {!JAM && gv && goalOpen && !game.sandboxMode && <div className="pointer-events-none order-last basis-full" data-testid="goal-row"><GoalRowInBar game={game} onFold={() => setGoalOpen(saveGoalOpen(false))} /></div>}
           </div>
 
           {/* T174: the box round the rail and the panel takes no clicks itself (it is as tall as the rail, so it covered the map under a short panel) */}
@@ -1011,7 +1030,7 @@ export default function App() {
             <Rail {...rail} navRef={railRef} entries={drawerEntries(entries, 'side')} walk={game.you ? { on: game.youWalkMode, set: (on: boolean) => { setFly(null); activeRail.current = 'select'; if (game.range.cardOpen) game.openRangeCard(false); game.setYouWalk(on); } } : undefined} />
             {!up && flyouts}
             {/* J7 (#1225): the jam's Build menu, beside the rail */}
-            {JAM && build && game.golf && <BuildMenu cards={buildSource(game)} tab={build} onTab={setBuild} onPick={runBuild} onClose={() => setBuild(null)} onTips={() => { setTips(true); setBuild(null); }} />}
+            {JAM && build && game.golf && <BuildMenu cards={buildSource(game)} tab={build} onTab={setBuild} onPick={runBuild} onClose={() => setBuild(null)} onTips={game.sandboxMode ? undefined : () => { setTips(true); setBuild(null); }} />}
             {/* T255: a club tool's panel (and Select's) in the left tool panel; a town tool's is docked above the town footer (TownFooter) */}
             {dock === 'side' && (
             <div className={`glass tool-panel w-[330px] max-h-[calc(var(--vh-ui,100vh)-var(--hud-top,5.75rem)-8.25rem)] overflow-y-auto overflow-x-hidden p-3 ${sideFly || idle ? 'hidden' : ''}`} data-tool={game.uiTool} data-testid="tool-panel" data-dock="side">
@@ -1110,7 +1129,7 @@ export default function App() {
             <div className="text-[12px] text-slate-400">New costs a one-time fee shown on each card</div>
           </div>
           <div className="space-y-3 text-xs">
-          {eventSections(game, gv.tier).map(sec => (
+          {eventSections(game, game.sandboxMode ? Math.max(gv.tier, 5) : gv.tier).map(sec => (
           <div key={sec.id} className="space-y-1.5">
           <div className="text-[12px] font-semibold uppercase tracking-[0.2em] text-amber-300/80">{sec.name}</div>
           {sec.items.map(({ s, locked, needed, it }) => (
@@ -1176,7 +1195,7 @@ export default function App() {
             return gv && <RangeGuideCard view={gv} voiced right={stack!.guide()} onShow={id => { showGuide(game, id); bump(); }} onSkip={id => { game.skipGuideStep(id); bump(); }} onFold={f => { game.guideFolded = f; bump(); }} onScene={game.sceneArt('range') ? () => game.openScene({ kind: 'range', view: 'road' }) : undefined} />;
           })()}
           {/* J7 (#1225): the jam's optional tips (Build ▸ Tips), where the guided build's card stood */}
-          {JAM && tips && !game.seasonReport && <TipsCard right={stack!.guide()} onClose={() => setTips(false)} onShow={s => { showTip(game, s, () => runTipShow(game, s, actUi)); bump(); }} />}
+          {JAM && tips && !game.seasonReport && !game.sandboxMode && <TipsCard right={stack!.guide()} onClose={() => setTips(false)} onShow={s => { showTip(game, s, () => runTipShow(game, s, actUi)); bump(); }} />}
           {(() => { // the tournament prep checklist (golf/prep.ts), bottom right like the guide: on a free day only (the round is not running), after the tutorial and the guide
             const pv = !game.seasonReport && !game.sceneRef && !game.playerCardOpen && !game.cardsFolded() && game.traffic.round.stage === 'free' ? game.prepCardView() : null, busy = game.range.cardOpen || !!game.clubCard() || !!game.placeCard() || game.holeCardHole !== null;
             return pv && <RangeGuideCard view={pv} heading={pv.heading} tid="prep" foot="Each step pays once when it is done" offLabel="Hide this checklist" right={busy ? (game.panel ? 'right-[41rem]' : 'right-[23rem]') : game.eventTool ? (game.panel ? 'right-[40.25rem]' : 'right-[21.5rem]') : game.panel ? 'right-[19.5rem]' : 'right-3'} onShow={id => { showPrep(game, id, pv.lines.find(l => l.step.id === id)?.step); bump(); }} onSkip={id => { game.prepSkip(id); bump(); }} onFold={f => { game.prepFolded = f; bump(); }} />;
@@ -2384,7 +2403,7 @@ function Help({ onClose, tab, onTab, keys, lab, onTour, cards }: { onClose: () =
           <span className="ml-auto text-[12px] text-slate-400"><span className="keycap">?</span> or <span className="keycap">F1</span> opens this · <span className="keycap">Esc</span> closes</span>
         </div>
         {tab === 'keys' ? <KeysSheet sections={keys} /> : tab === 'cards' && cards ? <CardsHelp owned={cards} /> : <>
-        <div className="mt-3 text-lg font-bold text-amber-200">How Maple Falls works</div>
+        <div className="mt-3 text-lg font-bold text-amber-200">How {TITLE} works</div>
         <ul className="mt-3 list-disc space-y-1.5 pl-5 text-slate-300">
           <li><b>Roads</b> are drawn as connected routes, exactly like the town builder: click points, finish with Enter or a double-click. Everything on the ground — asphalt, kerbs, sidewalk slabs, rounded corners, crossings, centre lines, manholes and drains — is generated geometry, so a new road appears instantly, no ground rebuild.</li>
           <li>The surfaces are <b>lit relief</b>, like the builder's bake: the asphalt is a cracked mosaic of facets and the sidewalk is slabs, each with a height-field; a cold key light from the upper-left shades them and puts specular glints on the facets that face it, markings are painted into the relief, kerbs get a bright top edge and a gutter shadow, and fallen leaves pile up against every kerb.</li>

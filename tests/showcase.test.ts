@@ -72,14 +72,16 @@ test('the engine of the scene boots with its camera already on the first place (
 test('starting a game from the title card gives the game it always gave: the scene leaves by a reload into the game\'s own boot, then New game / Continue as before', () => {
   const app = readFileSync('src/App.tsx', 'utf8').replace(/\r\n/g, '\n');
   // the one place a game starts from the card, as it was: a new game over a save is a new town, the card closes, the speed is the game's
-  assert.match(app, /const startGame = \(g: Game, fresh: boolean\) => \{ if \(fresh && hasSave\) g\.newTown\(\); setTitleOpen\(false\); g\.setSpeed\(1\); \};/);
+  // (#1314: a choice now, with the sandbox's own slot: New game is a new career game over a save or a sandbox game, else the booted game; Continue the career slot)
+  assert.match(app, /else if \(c === 'new'\) \{ setSaveSlot\('town'\); if \(hasSave \|\| cur !== 'town'\) g\.newTown\(\); \}\n    setTitleOpen\(false\); g\.setSpeed\(1\);/);
+  assert.match(app, /if \(c === 'continue' && cur !== 'town'\) \{ toSlot\(g, 'town'\); return; \}/);
   // the page the choice started: the game's own boot (never the scene's), the same new town (a save stood) or the saved game, at the normal speed
-  assert.match(app, /if \(choice === 'new' && had\) game\.newTown\(\); game\.setSpeed\(1\);/);
+  assert.match(app, /else if \(choice === 'new' && had\) game\.newTown\(\); game\.setSpeed\(1\);/);
   assert.match(app, /const \[boot\] = useState\(\(\) => \{ const b = bootFor\(location\.search, import\.meta\.env\.DEV\); return sceneWanted && b\.kind === 'game' \? showBoot\(b\) : b; \}\);/);
   // in the scene the click touches none of the scene's world: it writes the choice into the address and reloads
-  const leave = /const leaveTitle = \(fresh: boolean\) => \{\n([\s\S]*?)\n  \};/.exec(app)?.[1] ?? '';
-  const scene = /if \(sceneWanted\) \{[^\n]*\n([\s\S]*?)\n    \}\n/.exec(leave)?.[1] ?? '';
-  assert.match(scene, /choiceHash\(fresh \? 'new' : 'continue'\)/); assert.match(scene, /location\.reload\(\)/); assert.ok(!/game\./.test(scene), 'the scene\'s engine is not asked to start anything');
+  const leave = /const leaveTitle = \(c: TitleChoice\) => \{\n([\s\S]*?)\n  \};/.exec(app)?.[1] ?? '';
+  const scene = /if \(sceneWanted && c !== 'sandbox-continue'\) \{[^\n]*\n([\s\S]*?)\n    \}\n/.exec(leave)?.[1] ?? '';
+  assert.match(scene, /choiceHash\(c\)/); assert.match(scene, /location\.reload\(\)/); assert.ok(!/game\./.test(scene), 'the scene\'s engine is not asked to start anything');
   // a chosen start is never the scene: showWanted says no once a choice is in the address (tested above), and the title is not open for it
   assert.match(app, /const \[titleOpen, setTitleOpen\] = useState\(JAM && !choice\);/);
 });
@@ -127,7 +129,7 @@ test('the scene boots with no save read or written and no money floats; the game
 test('the engine keeps the scene away from the player\'s slot: saving is blocked before anything could write, and the slot is not read', () => {
   const src = readFileSync('src/game/engine.ts', 'utf8').replace(/\r\n/g, '\n'); // (a Windows checkout has CRLF)
   const at = (re: RegExp) => { const m = re.exec(src); assert.ok(m, `engine.ts has ${re}`); return m!.index; };
-  const block = at(/if \(showSave\) this\.saveBlocked = true;/), read = at(/const read = opts\.bench \|\| fixName \|\| showSave \|\| this\.osmSpec \|\| !this\.boot\.save \? null : await readSave\(\)/), loaded = at(/const save = fixture \?\? showSave \?\? read\?\.save \?\? null;/);
+  const block = at(/if \(showSave\) this\.saveBlocked = true;/), read = at(/let read = opts\.bench \|\| fixName \|\| showSave \|\| this\.osmSpec \|\| !this\.boot\.save \? null : await readSave\(\)/), loaded = at(/const save = fixture \?\? showSave \?\? read\?\.save \?\? null;/);
   assert.ok(block < read && read < loaded, 'saveBlocked, then the (skipped) read, then the save chosen');
   // a scene's world that fails to load must not take the backup path (a copy of the player's slot) the stored save's failure takes
   assert.match(src, /if \(save && showSave\) this\.showFailed = true;[^\n]*\n\s*else if \(save\) \{ if \(await backupTownSlot\('loadfailed'\)\)/);

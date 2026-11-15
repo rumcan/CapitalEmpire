@@ -65,12 +65,14 @@ export const PLANT_TILE: Readonly<Partial<Record<string, ToolTile>>> = { trees: 
 export const PRACTICE_TILE: Readonly<Partial<Record<string, ToolTile>>> = { putting: 'green', chipping: 'chipping-green' };
 /** Actual DECOR_GROUPS ids; Furniture is represented by its table and chairs. */
 export const PROP_GROUP_TILE: Readonly<Partial<Record<string, ToolTile>>> = {
-  stone: 'rocks', water: 'pond', plants: 'flower-bed', furniture: 'patio-table',
-  // J13 (#1277, the tiles half of #1284): the groups whose rows showed the maple leaf (Desert & oasis, New: Trees, New: Lake props)
-  desert: 'desert-oasis', 'new:Trees': 'trees-mixed', 'new:Lake props': 'lake-props',
-  // (stand-ins for the golf kinds' groups until their own are painted: the tournament dressing by the scoreboard stand, the course props by the tidy bench and lamp post)
-  tournament: 'grandstand-scoreboard', 'new:Course props': 'man-made-props',
+  // #1284: the natural groups (painted with the brush) and the man-made ones (placed one by one); a group with no painted tile wears its first card's picture (flyout-menu.ts)
+  trees: 'trees-mixed', plants: 'autumn-shrubs', stone: 'rocks', desert: 'desert-oasis',
+  planters: 'flower-bed', water: 'fountain', furniture: 'patio-table', signs: 'signs', lake: 'lake-props', clubhouses: 'clubhouse',
+  // (a stand-in for the golf kinds' group until its own is painted: the tournament dressing by the scoreboard stand)
+  tournament: 'grandstand-scoreboard',
 };
+/** #1284: the Props flyout's two sides: Natural (painted) and Man-made (placed) */
+export const PROP_SIDE_TILE: Readonly<Record<'natural' | 'manmade', ToolTile>> = { natural: 'natural-props', manmade: 'man-made-props' };
 /** T400 (#1078): the golf props' kinds in Facilities (decor.ts PROP_KINDS): the structures by the scoreboard stand, the furniture by the table and chairs,
  *  the range's props by its bays, the vehicles by the cart path. */
 export const PROP_KIND_TILE: Readonly<Partial<Record<string, ToolTile>>> = { structures: 'grandstand-scoreboard', coursefurniture: 'patio-table', rangeprops: 'range-bays', vehicles: 'cart-path' };
