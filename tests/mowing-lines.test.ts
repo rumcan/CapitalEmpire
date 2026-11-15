@@ -20,7 +20,9 @@ import { renderToStaticMarkup } from 'react-dom/server.edge';
 import type { Game } from '../src/game/engine';
 import { SurfaceSwatches } from '../src/ui/course/BrushControls';
 
-const FIN = DEFAULT_COURSE_FINISH, BASE = fairwayStripeLook();
+// (#1326: the fairway's default is the criss-cross and the green's a diagonal checker now, tests/mow-plaid.test.ts; these tests guard the looks before it,
+// wide stripes and the green's fine stripes, which stay a setting)
+const FIN = { ...DEFAULT_COURSE_FINISH, pattern: 'wide' as const, greenPattern: 'along' as const }, BASE = fairwayStripeLook();
 // (T365: the fairway's pattern with no look naming one is the finish's: wide stripes. The finish's own bands along the hole, T359's default, are the pattern 'along')
 const ALONG = { ...FIN, pattern: 'along' as const };
 const P = (id: string) => MOW_PATTERNS.findIndex(q => q.id === id);
@@ -34,7 +36,7 @@ test('mowing lines are held to their ranges; a bad or empty setting is left out 
   assert.deepEqual(clampMow({ on: true, pattern: 'check', width: 99, light: 2, dark: -1, angle: 200, extra: 5 }), { on: true, pattern: 'check', width: 16, light: 1, dark: 0, angle: 90 });
   assert.deepEqual(clampMow({ width: 0.1, angle: -200 }), { width: 0.5, angle: -90 });
   assert.deepEqual(clampMow({ width: 3.1, light: 0.123, angle: 12.4 }), { width: 3, light: 0.12, angle: 12 }, 'rounded to a quarter tile, a percent, a degree');
-  assert.deepEqual(MOW_PATTERNS.map(p => p.id), ['along', 'wide', 'crosscut', 'halves', 'collar', 'straight', 'check', 'diamond']);
+  assert.deepEqual(MOW_PATTERNS.map(p => p.id), ['along', 'wide', 'crosscut', 'halves', 'collar', 'straight', 'check', 'diamond', 'plaid']);
   assert.deepEqual([...MOW_KINDS], ['fairway', 'green', 'tee', 'rough']);
 });
 
@@ -205,11 +207,11 @@ test('the Mowing lines section is in the panel of the fairway, the green, the te
     if (kind === 'tee' || kind === 'rough') p.setStyle({ mow: { on: true } });
     const html = panel();
     assert.match(html, new RegExp(`data-mowing="${kind}"`), `${kind}: Mowing lines`);
-    for (const w of ['Mowing lines', 'Along the hole', 'Wide stripes', 'Crosscut', 'Two-tone halves', 'Collar ring', 'Straight', 'Checkerboard', 'Diamond', 'Band width', 'Contrast', 'Light', 'Dark', 'Angle']) assert.ok(html.includes(w), `${kind}: ${w}`);
+    for (const w of ['Mowing lines', 'Along the hole', 'Wide stripes', 'Crosscut', 'Two-tone halves', 'Collar ring', 'Straight', 'Checkerboard', 'Diamond', 'Criss-cross', 'Band width', 'Contrast', 'Light', 'Dark', 'Angle']) assert.ok(html.includes(w), `${kind}: ${w}`);
     if (kind === 'tee' || kind === 'rough') p.undoTop(); // (and off again)
   }
   p.openSurface('fairway');
-  assert.match(panel(), /data-mow-on="on"[^>]*data-mow-pattern="wide"/, 'the fairway: on, wide stripes (T365: the strongest look is the default)');
+  assert.match(panel(), /data-mow-on="on"[^>]*data-mow-pattern="plaid"/, 'the fairway: on, the criss-cross (#1326: the golf view's mowing is the default)');
   p.openSurface('tee'); assert.match(panel(), /data-mow-on="off"/, 'the tee: off, mown plain');
   assert.doesNotMatch(panel(), /aria-label="Light bands"/, 'and no sliders while it is off');
   p.openSurface('fairway'); p.setStyle({ mow: { pattern: 'check', width: 2 } });

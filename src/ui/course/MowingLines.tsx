@@ -14,7 +14,7 @@ import { CROSS_RANGE, MOW_KINDS, MOW_PATTERNS, MOW_RANGES, type MowKind, type Mo
 
 /** the patterns whose Angle means something: straight (the direction), the checkerboard and the diamond (the turn from the hole's line), the crosscut
  *  (the angle its two sets cross at); the others follow the hole's line of play */
-const ANGLED: readonly MowPattern[] = ['straight', 'check', 'diamond', 'crosscut'];
+const ANGLED: readonly MowPattern[] = ['straight', 'check', 'diamond', 'crosscut', 'plaid'];   // (#1326: the criss-cross turned from the hole's longest leg)
 
 /** whether a surface has mowing lines to edit */
 export const hasMowing = (kind: BrushKind): kind is MowKind => (MOW_KINDS as readonly string[]).includes(kind);

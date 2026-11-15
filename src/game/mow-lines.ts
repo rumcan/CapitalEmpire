@@ -14,7 +14,11 @@
  *  (the fairway split down the line of play, one half light and the other dark, T365); a collar ring (two passes of stripes round the fairway's
  *  edge, the wide stripes inside them, T365); parallel bands at an angle (one direction over the whole hole); a checkerboard of squares as wide as a
  *  band; a diamond (the checkerboard turned a quarter) */
-export type MowPattern = 'along' | 'wide' | 'crosscut' | 'halves' | 'collar' | 'straight' | 'check' | 'diamond';
+// #1326 (the owner, 2026-11-15: "can we get the mowing lines on fairway the same as in the golf gameplay where we have a better multiple stripes that
+// cross"): the golf view's plaid (packages/cinderlinks/parts/05-ground.md plaid(): 3.6 m stripes along the hole, light and dark by turns, crossed at right
+// angles by a fainter set, four tones), laid over the whole hole in one direction (its longest leg's: no chevron at a bend), is the fairway's default;
+// wide stripes, the default before, stay a pattern (the dev server's ?mow=wide). Appended to the list, so a saved look's pattern index keeps its meaning.
+export type MowPattern = 'along' | 'wide' | 'crosscut' | 'halves' | 'collar' | 'straight' | 'check' | 'diamond' | 'plaid';
 export const MOW_PATTERNS: readonly { id: MowPattern; name: string; note: string }[] = [
   { id: 'along', name: 'Along the hole', note: 'The bands follow the hole: the line of play runs down the middle of one' },
   { id: 'wide', name: 'Wide stripes', note: "Bold bands about 10 m across along the hole, strongly light and dark: a tournament fairway's broad stripes" },
@@ -24,6 +28,7 @@ export const MOW_PATTERNS: readonly { id: MowPattern; name: string; note: string
   { id: 'straight', name: 'Straight', note: 'Parallel bands at the angle you set, the same way over the whole hole' },
   { id: 'check', name: 'Checkerboard', note: "Squares as wide as a band, light and dark, across the hole's line of play; the angle turns them" },
   { id: 'diamond', name: 'Diamond', note: "The checkerboard turned a quarter: diamonds on the hole's line, then the angle on top" },
+  { id: 'plaid', name: 'Criss-cross', note: "The golf view's mowing: narrow stripes along the hole crossed by a fainter set at right angles, straight over the whole hole; the angle turns them" },
 ];
 /** the surfaces that have mowing lines: the fairway (on by default, the finish's bands), the green (the finish's fine stripes), the tee and the
  *  rough (off by default: the tee wears the green's grass with no lines, the owner's calls of 2026-10-29 and 2026-11-08) */
@@ -47,14 +52,20 @@ export const PATTERN_LOOKS: Readonly<Partial<Record<MowPattern, PatternLook>>> =
   crosscut: { w: 4, l: 1, k: 1, f: 0.1, angle: CROSS_DEFAULT },
   halves: { l: 1, k: 1 },
   collar: { w: 5, l: 1, k: 1, f: 0.08 },
+  // #1326: the golf view's 3.6 m stripe (MOW_W) in 2 m tiles, at the finish's own strength split between the two sets (course-stripes plaidLegs)
+  plaid: { w: 1.8, l: 0.8, k: 0.8, f: 0.1 },
 };
 /** the patterns laid as bands along the hole's line of play, one band a pass of the grounds crew's mower (engine crewGroundsNow, course-finish crewBandLook):
  *  the bands along the hole, wide stripes and a collar ring's inside; the halves, the crosscut and the straight, checkered and diamond patterns are
  *  not mown pass by pass */
-export const BAND_PATTERNS: readonly MowPattern[] = ['along', 'wide', 'collar'];
-/** the pattern a fairway lays when its look sets none, as the course finish ships it (course-finish.ts `pattern`): the strongest look, wide stripes;
- *  the old look, the bands along the hole at the finish's own width and strength, is the pattern 'along' (the dev server's ?mow=along lays it) */
-export const DEFAULT_FAIRWAY_PATTERN: MowPattern = 'wide';
+export const BAND_PATTERNS: readonly MowPattern[] = ['along', 'wide', 'collar', 'plaid'];
+/** the pattern a fairway lays when its look sets none, as the course finish ships it (course-finish.ts `pattern`): #1326, the golf view's criss-cross
+ *  (T365's wide stripes before it: ?mow=wide); the look before T365, the bands along the hole at the finish's own width and strength, is the pattern
+ *  'along' (the dev server's ?mow=along lays it) */
+export const DEFAULT_FAIRWAY_PATTERN: MowPattern = 'plaid';
+/** #1326: the pattern a green lays when its look sets none (course-finish.ts `greenPattern`): the golf view's green, a fine checker on the diagonal of
+ *  the hole's line (05-ground.md greenSt), the map's 'diamond' at the finish's green width; 'along' is its fine stripes before (?gmow=along) */
+export const DEFAULT_GREEN_PATTERN: MowPattern = 'diamond';
 
 /** a number held to its range and rounded to a step (q), or undefined when it is not one */
 function num(v: unknown, range: readonly [number, number], q: number): number | undefined {
