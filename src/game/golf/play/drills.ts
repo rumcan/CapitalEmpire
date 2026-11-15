@@ -26,9 +26,9 @@ export const DRILLS: Readonly<Record<DrillId, Drill>> = {
   distance: { id: 'distance', name: 'Distance control', spot: 'range', goal: 'Stop 5 balls within 10 m of the 100 m flag', need: 5, greenM: 100, withinM: 10,
     reward: { gains: { irons: 4, accuracy: 4 }, text: 'Irons +4, Accuracy +4' } },
   shaping: { id: 'shaping', name: 'Shot shaping', spot: 'range', goal: 'Land a draw and a fade on the 150 m green (slide Curve at least halfway, or press Z)', need: 2, greenM: 150, withinM: 3,
-    reward: { gains: { accuracy: 3 }, opens: 'curve', text: 'Draw and fade on the course, Accuracy +3' } },
+    reward: { gains: { accuracy: 5 }, opens: 'curve', text: 'Accuracy +5: you bend it further' } },   // (2026-11-15: shaping is every golfer's now (unlocks.ts), so the drill grows how far he bends it)
   flight: { id: 'flight', name: 'Flight', spot: 'range', goal: 'Land a high and a low ball on a target green (slide Flight at least halfway, or press X)', need: 2, withinM: 3,
-    reward: { gains: { touch: 3 }, opens: 'flight', text: 'High and low on the course, Touch +3' } },
+    reward: { gains: { touch: 5 }, opens: 'flight', text: 'Touch +5: more control of the height' } },
   junk: { id: 'junk', name: 'Junk targets', spot: 'range', goal: 'Hit three of the junk piles on the outfield (a ball that lands on one, or stops by it)', need: 3,
     reward: { gains: { accuracy: 2, power: 2 }, text: 'Accuracy +2, Power +2' } },
   updown: { id: 'updown', name: 'Up and down', spot: 'chip', goal: 'Chip to within 2 m of the pin, 3 times', need: 3, withinM: 2,
