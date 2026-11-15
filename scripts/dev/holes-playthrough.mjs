@@ -395,7 +395,7 @@ async function buildnow(S) {
   let geo = await bnGeo(page);
   check(!!geo && geo.on, 'BUILD NOW stands on the map with the plan');
   if (!geo) return;
-  check(/^BUILD NOW · \$[\d,]+$/.test(geo.head) && geo.disabled === 'false' && geo.tile, `it says the price and wears the golf-hole picture: "${geo.head}"`);
+  check(/^BUILD NOW · \$[\d,]+$/.test(geo.head) && geo.disabled === 'false' && !geo.tile, `it says the price, with no icon (the owner, 2026-11-15): "${geo.head}"`);
   bnClear(geo, 'planned');
   const beside = !overlaps(geo.r, geo.outline, -2);
   check(beside || (geo.r.l >= 0), `BUILD NOW is beside the outline (outline ${Math.round(geo.outline.l)},${Math.round(geo.outline.t)} to ${Math.round(geo.outline.r)},${Math.round(geo.outline.b)}; button ${Math.round(geo.r.l)},${Math.round(geo.r.t)}; ${beside ? 'clear of it' : 'the outline fills the free map: held inside it, off the tee and the green'})`);

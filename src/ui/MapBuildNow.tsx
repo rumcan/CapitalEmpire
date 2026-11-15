@@ -5,7 +5,6 @@
 // greyed with the reason when it cannot be built); where it stands follows the outline every frame (buildNowPlace gives the outline's screen box into one reused object; placeBuildNow,
 // build-now.ts, picks the side; one transform write a frame, and only when it moved). The panels' rectangles are read a few times a second, not every frame.
 import { useEffect, useLayoutEffect, useRef } from 'react';
-import { ActionTile, TILE_ROW } from './ActionTile';
 import { newPlace, panelsLeft, placeBuildNow, type BuildNowInfo, type BuildNowPlace, type Rect } from './build-now';
 import { currentUiScale } from './uiScale';
 import './build-now.css';
@@ -69,7 +68,7 @@ export function MapBuildNow({ game }: { game: BuildNowGame }) {
     <div ref={box} className="build-now-wrap ui-unscaled" data-build-now={info.id} data-testid="build-now" style={{ visibility: 'hidden' }}>
       <button ref={btn} type="button" className="build-now" data-ok={info.ok ? '1' : '0'} aria-disabled={!info.ok} title={info.ok ? `Build it now: ${info.price}` : info.why}
         onClick={() => infoRef.current?.build()} onPointerDown={e => e.stopPropagation()}>
-        <ActionTile tile={info.tile} size={TILE_ROW} />
+        {/* (the owner, 2026-11-15: "can we remove that icon please": words and the price only) */}
         <span className="build-now-words">
           <span className="build-now-head" data-testid="build-now-head">BUILD NOW{info.ok ? ` · ${info.price}` : ''}</span>
           {!info.ok && <span className="build-now-why" data-testid="build-now-why">{info.why}</span>}
