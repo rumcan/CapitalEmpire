@@ -275,12 +275,13 @@ export default function App() {
     startGame(game, c);
   };
   useEffect(() => { if (game?.ready && pending.current !== null) { const f = pending.current; pending.current = null; setStarting(false); startGame(game, f); } }, [game?.ready]); // eslint-disable-line react-hooks/exhaustive-deps
-  // a page started by the card's choice: the game's own boot, then the new game (when a save stood) or the saved one, at the normal speed
+  // a page started by the card's choice: the game's own boot, then the new game (when a save stood) or the saved one, at the normal speed. A sandbox game is laid in its own
+  // slot (#1314): the page was booted in the slot the card set, but an empty sandbox slot boots the career one (engine), so the slot is set again before the new town
   const choiceDone = useRef(false);
   useEffect(() => {
     if (!game?.ready || !choice || choiceDone.current) return;
     choiceDone.current = true;
-    void (async () => { const had = await (saveSeen.current ?? Promise.resolve(false)), sb = sandboxOf(choice); if (sb) game.newTown({ sandbox: sb }); else if (choice === 'new' && had) game.newTown(); game.setSpeed(1); })();
+    void (async () => { const had = await (saveSeen.current ?? Promise.resolve(false)), sb = sandboxOf(choice); if (sb) { setSaveSlot('sandbox'); game.newTown({ sandbox: sb }); } else if (choice === 'new' && had) game.newTown(); game.setSpeed(1); })();
   }, [game?.ready, choice, game]);
   // the scene: the director glides the camera over the prepared world; its first picture fades the still out; a machine too slow for it gives way to the still
   const snapRef = useRef<HTMLCanvasElement>(null);

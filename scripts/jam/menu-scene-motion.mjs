@@ -18,7 +18,7 @@ const res = { base, flow }; let failed = '';
 const shot = async (page, name) => { const f = join(out, `${tag}-${name}.jpg`); writeFileSync(f, await sharp(await page.screenshot({ type: 'png' })).jpeg({ quality: 80 }).toBuffer()); console.log('  shot', f); return f; };
 const stat = a => { const s = [...a].sort((x, y) => x - y), n = s.length; if (!n) return null; const mean = s.reduce((x, y) => x + y, 0) / n; return { frames: n, meanMs: +mean.toFixed(2), p95Ms: +s[Math.floor(n * 0.95)].toFixed(2), worstMs: +s[n - 1].toFixed(2), over20: +(s.filter(v => v > 20).length / n).toFixed(3), fps: +(1000 / mean).toFixed(1) }; };
 /** the player's save, as stored (IndexedDB capital-empire/saves/town): its size and a checksum */
-const savePrint = page => page.evaluate(() => new Promise(res => { const r = indexedDB.open('capital-empire', 1); r.onerror = () => res('no-db'); r.onsuccess = () => { try { const q = r.result.transaction('saves').objectStore('saves').get('town'); q.onerror = () => res('no-read'); q.onsuccess = async () => { const v = q.result; if (v == null) { res('none'); return; } const b = v instanceof Blob ? new Uint8Array(await v.arrayBuffer()) : v instanceof ArrayBuffer ? new Uint8Array(v) : ArrayBuffer.isView(v) ? new Uint8Array(v.buffer) : new TextEncoder().encode(typeof v === 'string' ? v : JSON.stringify(v)); let h = 2166136261; for (let i = 0; i < b.length; i++) { h ^= b[i]; h = Math.imul(h, 16777619) >>> 0; } res(`${b.length}:${h.toString(16)}`); }; } catch (e) { res('err ' + e); } }; }));
+const savePrint = (page, slot = 'town') => page.evaluate(slot => new Promise(res => { const r = indexedDB.open('capital-empire', 1); r.onerror = () => res('no-db'); r.onsuccess = () => { try { const q = r.result.transaction('saves').objectStore('saves').get(slot); q.onerror = () => res('no-read'); q.onsuccess = async () => { const v = q.result; if (v == null) { res('none'); return; } const b = v instanceof Blob ? new Uint8Array(await v.arrayBuffer()) : v instanceof ArrayBuffer ? new Uint8Array(v) : ArrayBuffer.isView(v) ? new Uint8Array(v.buffer) : new TextEncoder().encode(typeof v === 'string' ? v : JSON.stringify(v)); let h = 2166136261; for (let i = 0; i < b.length; i++) { h ^= b[i]; h = Math.imul(h, 16777619) >>> 0; } res(`${b.length}:${h.toString(16)}`); }; } catch (e) { res('err ' + e); } }; }), slot);
 /** the lap as the director plays it: two frames ~4 s apart at each stop, and the frame times between the shots */
 async function lap(page, label) {
   await page.waitForFunction(() => window.__showDirector?.phase === 'play', null, { timeout: 240000 });
@@ -42,7 +42,35 @@ try {
   const ctx = await browser.newContext({ viewport: { width: 1600, height: 900 }, deviceScaleFactor: 1 });
   const page = await ctx.newPage();
   page.on('pageerror', e => console.log('[pageerror]', e.message));
-  if (flow === 'probe') {
+  if (flow === 'slots') {
+    // #1314 with the menu page: the career and the sandbox games each in their own save slot, through Exit to main menu (the scene page writes neither slot)
+    const prints = async () => ({ town: await savePrint(page, 'town'), sandbox: await savePrint(page, 'sandbox'), slot: await page.evaluate(() => localStorage.getItem('capitalempire.slot')) });
+    const ready = async () => { await page.waitForFunction(() => window.__game?.ready && !window.__game.show, null, { timeout: 240000 }); await page.waitForTimeout(2500); await page.evaluate(() => { const g = window.__game; if (g.startPick && g.startPickAuto) g.startPickAuto(); }); await page.waitForFunction(() => !window.__game.startPick, null, { timeout: 60000 }); await page.waitForTimeout(2000); };
+    const toMenu = async tag => {
+      await page.locator('[data-tip="Settings"]').first().click(); await page.locator('[data-testid=menu-exit-title]').click();
+      await page.waitForFunction(() => window.__game?.ready && window.__game.show && location.hash.includes('menu'), null, { timeout: 240000 });
+      const a = await prints(); await page.waitForTimeout(8000); const b = await prints(); await shot(page, `menu-${tag}`);
+      res[`menu-${tag}`] = { before: a, afterScene: b }; if (a.town !== b.town || a.sandbox !== b.sandbox) failed ||= `the scene page changed a save (${tag})`;
+      return b;
+    };
+    await page.goto(base, { timeout: 120000 }); await ready();
+    await page.evaluate(async () => { await window.__game.save(); }); res.townSeed = await page.evaluate(() => window.__game.seed);
+    const m1 = await toMenu('1');
+    await page.locator('[data-testid=title-sandbox]').click(); await page.locator('[data-testid=title-sandbox-start]').click();
+    await ready(); await page.evaluate(async () => { await window.__game.save(); }); res.sandboxSeed = await page.evaluate(() => window.__game.seed);
+    res.afterNewSandbox = await prints(); if (res.afterNewSandbox.town !== m1.town) failed ||= 'the new sandbox game wrote the career slot'; if (res.afterNewSandbox.slot !== 'sandbox') failed ||= 'the new sandbox game is not in its slot';
+    await toMenu('2');
+    await page.locator('[data-testid=title-continue]').click(); await ready();
+    res.continued = await page.evaluate(() => ({ seed: window.__game.seed, slot: localStorage.getItem('capitalempire.slot'), url: location.href, card: !!document.querySelector('[data-testid=title-card]') }));
+    if (res.continued.seed !== res.townSeed || res.continued.slot !== 'town' || res.continued.card) failed ||= 'Continue did not bring the career game back';
+    await shot(page, 'continued-career');
+    await toMenu('3');
+    await page.locator('[data-testid=title-sandbox]').click(); await page.locator('[data-testid=title-sandbox-continue]').click(); await ready();
+    res.continuedSandbox = await page.evaluate(() => ({ seed: window.__game.seed, slot: localStorage.getItem('capitalempire.slot'), url: location.href, card: !!document.querySelector('[data-testid=title-card]') }));
+    if (res.continuedSandbox.seed !== res.sandboxSeed || res.continuedSandbox.slot !== 'sandbox' || res.continuedSandbox.card) failed ||= 'Continue sandbox did not bring the sandbox game back';
+    await shot(page, 'continued-sandbox');
+    res.final = await prints();
+  } else if (flow === 'probe') {
     // the range's day as the scene runs (why the bays are full or empty): the town hour, the sim's day counts, the queue, the people on the range
     await page.goto(base, { waitUntil: 'commit', timeout: 120000 });
     await page.waitForFunction(() => window.__showDirector?.phase === 'play', null, { timeout: 240000 });

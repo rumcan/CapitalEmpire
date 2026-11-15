@@ -79,6 +79,8 @@ test('starting a game from the title card gives the game it always gave: the sce
   assert.match(app, /const startGame = \(g: Game, c: TitleChoice\) => \{\n    leaveMenuPage\(\);/); assert.match(app, /const toSlot = \(g: Game, s: SaveSlot\) => \{ leaveMenuPage\(\); g\.holdSaves\(\);/);
   // the page the choice started: the game's own boot (never the scene's), the same new town (a save stood) or the saved game, at the normal speed
   assert.match(app, /else if \(choice === 'new' && had\) game\.newTown\(\); game\.setSpeed\(1\);/);
+  // (#1314: a sandbox choice lays its new town in the sandbox's slot: an empty sandbox slot boots the career one, whose save the new town must never be written over)
+  assert.match(app, /sb = sandboxOf\(choice\); if \(sb\) \{ setSaveSlot\('sandbox'\); game\.newTown\(\{ sandbox: sb \}\); \}/);
   assert.match(app, /const \[boot\] = useState\(\(\) => \{ const b = bootFor\(location\.search, import\.meta\.env\.DEV\); return sceneWanted && b\.kind === 'game' \? showBoot\(b\) : b; \}\);/);
   // in the scene the click touches none of the scene's world: it says which save slot the choice plays in, writes the choice into the address and reloads. Every choice,
   // the sandbox's too (the main menu page runs the scene in any build, where the card offers them): Continue sandbox is Continue in the sandbox's slot
