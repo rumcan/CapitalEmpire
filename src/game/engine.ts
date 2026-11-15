@@ -163,7 +163,7 @@ import { stateOf, type PresetState } from './lots/presets';
 import { LotMap, endReach, ringClear } from './lots/lots';
 import * as ES from './golf/estate'; // T353 (#995): house lots
 import { EstateTool } from './golf/estatetool';
-import { PLACE_DEFS, duePlaces, familyPlaced, placeBox, placeDef, placeGeom, placeLand, placeName, placeTuples, placesFromTuples, reservedSite, upgradeSpots, type PlacedPlace, type SiteSeg } from './lots/iconic';
+import { PLACE_DEFS, duePlaces, familyPlaced, placeBox, placeDef, placeGeom, placeLand, placeName, placeTuples, placesFromTuples, reservedSite, upgradeSpots, type PlaceDef, type PlacedPlace, type SiteSeg } from './lots/iconic';
 import { TOWN_BLOCKS, TOWN_POP, townCentres, townGrid } from './lots/seedtowns';
 import { Names, RoadNames } from './ext/names';
 import { FARM_MODEL, FarmMap, animalAt, animalBox, claimedLots, composeFarm, farmAnimals, farmSeason, farmStandIns, parcelCorners, type AnimalView, type FarmAnimal, type FarmModel, type FarmParcel } from './ext/farms';
@@ -4743,7 +4743,7 @@ export class Game {
    *  and none while no site is free (tried again PLACE_RETRY_MS later). Classic games have none */
   private placesCheck() {
     if (!this.golf || !this.terrain || this.benchMode || performance.now() < this.placeTryAt) return;
-    const def = duePlaces(this.traffic.pop, new Set(this.places.map(p => p.id)))[0]; if (!def) return;
+    const due = duePlaces(this.traffic.pop, new Set(this.places.map(p => p.id))); if (!due.length) return;
     const centre = this.townPts[0] ?? this.townCentreOfLots(); if (!centre) return;
     const segs: SiteSeg[] = [];
     for (const s of this.net.segs) {
@@ -4752,9 +4752,17 @@ export class Game {
     }
     // #1369: a family's higher tier (a sports ground's grass field, its stadium) takes the lower one's site when it fits there (its land counted
     // free; in the normal build its land was kept for it: SPORTS_RESERVE), else the best free site anywhere; the lower tier goes as it opens
-    const old = familyPlaced(def, this.places), oldDef = old ? placeDef(old.id) : undefined, free = (b: [number, number, number, number]) => this.placeFree(b, old);
-    const site = (old && oldDef ? upgradeSpots(old, oldDef, def).find(p => free(placeLand(p, def, SPORTS_RESERVE))) : undefined) ?? reservedSite(def, { segs, centre, seed: this.seed, free }, SPORTS_RESERVE);
-    if (!site) { this.placeTryAt = performance.now() + PLACE_RETRY_MS; return; }
+    // (each due place in turn, the smallest first, until one finds a site: a big place with no room, a drive-in on a full town, no longer holds
+    // up the ones after it; one place a check)
+    for (const def of due) {
+      const old = familyPlaced(def, this.places), oldDef = old ? placeDef(old.id) : undefined, free = (b: [number, number, number, number]) => this.placeFree(b, old);
+      const site = (old && oldDef ? upgradeSpots(old, oldDef, def).find(p => free(placeLand(p, def, SPORTS_RESERVE))) : undefined) ?? reservedSite(def, { segs, centre, seed: this.seed, free }, SPORTS_RESERVE);
+      if (site) { this.openPlace(def, site, old, oldDef); return; }
+    }
+    this.placeTryAt = performance.now() + PLACE_RETRY_MS;
+  }
+  /** a place opens on its site, the family member it replaces (old) gone */
+  private openPlace(def: PlaceDef, site: PlacedPlace, old: PlacedPlace | undefined, oldDef: PlaceDef | undefined) {
     this.places = [...this.places.filter(p => p !== old), site];
     if (old && this.selectedPlace === old.id) this.selectedPlace = null;
     this.syncPlaces(); this.scheduleSave();
