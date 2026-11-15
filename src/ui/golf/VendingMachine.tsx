@@ -180,7 +180,6 @@ export function VendingMachine({ v, onSpin, onSettle, onEquip, onClose, onBag, i
         </div>
         {v.why && !spinning && <p className="text-[11px] text-amber-200" data-testid="vending-why">{v.why}</p>}
         {odds && <Odds v={v} grade={grade} />}
-        <p className="text-[9px] text-slate-500">Copied from TrickOrTreat’s prize machine · Stand In for card art</p>
       </div>
     </div>
   );

@@ -154,7 +154,6 @@ export function BagCard({ view, onClose, onUpgrade, onFit, onThird, right = 'rig
           </div>
         ))}
         <p className="text-[11px] text-slate-400">Click a club for its carry, launch, spin and forgiveness, and to upgrade it. The putter takes shafts and heads that trade feel, line and luck.</p>
-        <p className="text-[9px] text-slate-500">Stand In for club icons</p>
       </div>
     </div>
   );
