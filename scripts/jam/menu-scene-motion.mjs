@@ -52,7 +52,9 @@ try {
         const g = window.__game, R = g.range, S = R?.sim, T = g.traffic, st = T.simTime(performance.now()), c = T.town, m = c.m0 + (st - c.t0) * c.rate;
         let movers = -1; try { movers = R.movers_(0, 0, 2048, 2048).length; } catch { /* none */ }
         const b = g.golf?.range, bb = b?.balls; const stages = {}; for (const v of S?.visits ?? []) stages[v.stage] = (stages[v.stage] ?? 0) + 1;
-        return { stages, qMax: S?.qMax, desks: (S?.desks ?? []).map(d => d.id), bays: (S?.bayBusy ?? []).filter(Boolean).length + "/" + (S?.bayBusy ?? []).length, slots: (S?.slotBusy ?? []).filter(Boolean).length + "/" + (S?.slotBusy ?? []).length, entrance: !!S?.entrance, hour: +((m % 1440) / 60).toFixed(2), today: S?.today ? { ...S.today } : null, queue: S?.queue?.length ?? null, movers, balls: bb ? JSON.stringify(bb).slice(0, 200) : null, dem: (() => { try { return R.ctx.demand(); } catch { return null; } })() };
+        const walks = (S?.visits ?? []).filter(v => v.stage === 1).slice(0, 3).map(v => ({ t: +v.t.toFixed(1), end: +v.r.at[v.r.at.length - 1].toFixed(1), n: v.r.pts.length, len: +v.r.len[v.r.len.length - 1].toFixed(1) }));
+        const pace = (() => { try { return +R.ctx.pace().toFixed(3); } catch { return null; } })(), dayLen = (() => { try { return R.ctx.dayLen(); } catch { return null; } })();
+        return { warmed: g.showWarmed, walks, pace, dayLen, stages, qMax: S?.qMax, desks: (S?.desks ?? []).map(d => d.id), bays: (S?.bayBusy ?? []).filter(Boolean).length + "/" + (S?.bayBusy ?? []).length, slots: (S?.slotBusy ?? []).filter(Boolean).length + "/" + (S?.slotBusy ?? []).length, entrance: !!S?.entrance, hour: +((m % 1440) / 60).toFixed(2), today: S?.today ? { ...S.today } : null, queue: S?.queue?.length ?? null, movers, balls: bb ? JSON.stringify(bb).slice(0, 200) : null, dem: (() => { try { return R.ctx.demand(); } catch { return null; } })() };
       }));
       await page.waitForTimeout(8000);
     }

@@ -209,9 +209,9 @@ test('the director: waits for the first view, glides, cuts with a copy of the pi
   const d = new ShowDirector(g, stops, 0, snap, e => events.push(e)); d.begin(0);
   assert.equal(d.phase, 'first'); assert.ok(g.onFrame && g.onAfterDraw);
   // nothing shows until the first view is baked (and not before the least wait)
-  frame(g, 100); assert.equal(d.phase, 'first'); assert.deepEqual(events, []);
+  frame(g, 100); assert.equal(d.phase, 'first'); assert.deepEqual(events, ['hour'], 'the hour set, the range warmed under the still');
   g.setReady(true); frame(g, READY_MIN_MS - 1); assert.equal(d.phase, 'first');
-  frame(g, READY_MIN_MS + 10); assert.equal(d.phase, 'play'); assert.deepEqual(events, ['first', 'cut']);
+  frame(g, READY_MIN_MS + 10); assert.equal(d.phase, 'play'); assert.deepEqual(events, ['hour', 'first', 'cut']);
   // the camera glides: at the middle it is where poseAt says
   const t0 = READY_MIN_MS + 10; frame(g, t0 + 6000);
   const mid = poseAt(stops[0]!, 0.5, 1600, 900); assert.ok(Math.abs(g.cam.X - mid.X) < 1e-6 && Math.abs(g.cam.z - mid.z) < 1e-9);
@@ -223,7 +223,7 @@ test('the director: waits for the first view, glides, cuts with a copy of the pi
   // the copy stays opaque until the next stop's ground is baked and the least wait is over; then it fades and the new stop's own glide starts
   g.setReady(false); frame(g, t0 + 12000 + READY_MIN_MS + 50); assert.equal(d.phase, 'cover'); assert.equal(style.opacity, '1');
   g.setReady(true); frame(g, t0 + 12000 + READY_MIN_MS + 100); assert.equal(d.phase, 'play'); assert.equal(style.opacity, '0'); assert.match(style.transition, new RegExp(`opacity ${FADE_MS}ms`));
-  assert.deepEqual(events, ['first', 'cut', 'cut']);
+  assert.deepEqual(events, ['hour', 'first', 'cut', 'cut']);
   // the lap goes round
   const t1 = t0 + 12000 + READY_MIN_MS + 100; frame(g, t1 + 14000); assert.equal(d.index, 0); assert.equal(d.phase, 'cover');
   d.end(); assert.equal(g.onFrame, null); assert.equal(g.onAfterDraw, null);

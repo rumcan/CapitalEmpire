@@ -39,8 +39,11 @@ export const WARM_MS = 3500;
  *  the first group was on the tee and the range had no one yet): the morning's groups are out on every hole */
 export const SHOW_HOURS = Object.freeze({ start: 9.0, end: 15.0 });
 /** the residents the scene's range draws on beyond the town's own (engine range demand, show only): the prepared world's small town brings a golfer to the range now and then; this keeps
- *  most of its bays busy (dayDemand: 0.0183 a resident a day, a bay held about a town hour) so the menu shows golfers hitting balls. Never the player's game */
-export const SHOW_RANGE_RESIDENTS = 6000;
+ *  most of its 12 bays busy without a crowd turned away at the counter (dayDemand: 0.0183 a resident a day, a bay held about a town hour; 6,000 filled 36 of the 44 car park bays) so the menu shows golfers hitting balls. Never the player's game */
+export const SHOW_RANGE_RESIDENTS = 2500;
+/** the sim seconds the scene's range is run on when the first view shows (engine warmShowRange): a golfer takes about 100 s from the map's edge to a bay there (the drive in, the
+ *  walk from the car park, the counter), so the range is busy by the time the lap reaches it */
+export const SHOW_RANGE_WARM_S = 240;
 /** the clean balls the scene's ball room is stocked with at load (engine, show only; the scene saves nothing). The prepared world's room held 791, less than one bucket on its
  *  long town day (visitBalls: 40 balls a 600 s day), so every golfer drove off unserved ('balls') and the bays stayed empty */
 export const SHOW_RANGE_BALLS = 500_000;

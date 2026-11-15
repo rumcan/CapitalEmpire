@@ -28,7 +28,7 @@ import { STRUCT_COST, STRUCT_MAX, groundClass, highwayRoute, longestRun, splitBy
 import { CULL_MIN_PX, FULL_UV, GLRenderer, POINT_STRIDE, SHADOW_STRIDE, SPRITE_STRIDE, VECTOR_STRIDE } from './gl';
 import { GroundCache } from './ground-cache';
 import { GAME_BOOT, clampCentre, flatTerrain, type BootOptions } from './boot';
-import { SHOW_FARM_MONTH, SHOW_GOLFERS, SHOW_PEDS_PER_LOT, SHOW_RANGE_BALLS, SHOW_RANGE_RESIDENTS } from './showcase';
+import { SHOW_FARM_MONTH, SHOW_GOLFERS, SHOW_PEDS_PER_LOT, SHOW_RANGE_BALLS, SHOW_RANGE_RESIDENTS, SHOW_RANGE_WARM_S, SHOW_HOURS } from './showcase';
 import { TILE_BANDS, TILES_REVISION, anchorAt, bandAt, bandRange, bandsAhead, cellOf, cellsIn, coverageOf, drawnScale, nearUntil, nextBand, tiledFamily, tileIndex, tilePermutation, tileScreenPx, tileSize, tileSpec } from './painted-tiles';
 import { desertLeavesDev, onPaintedSurfaces, paintedSurfaces, setDesertSurfaces } from './painted-surfaces-live';
 import { borderDefault, crewBandLook, finishBorders, finishOf, finishStripeLook, mowSpec } from './course-finish';
@@ -749,6 +749,10 @@ export class Game {
   /** J12: the menu scene's still (scripts/jam/menu-scene-motion.mjs --flow poster): the world drawn with nothing that moves (no cars, people, animals, carts or balls), so the
    *  still under the title card is the live scene's first frame without its movers, and the swap to the live scene only brings them in */
   stillLife = false;
+  /** J12: the menu scene's range warmed up (RangeHost.warm: its golfers already at the bays, not on their way from the map's edge); the scene only */
+  warmShowRange(simS = SHOW_RANGE_WARM_S) { if (this.show && this.golf?.start === 'range') this.showWarmed = this.range.warm(simS, SHOW_HOURS.start); }
+  /** the visits the scene's range had after its warm-up (-1: it could not be warmed; null: not asked: the checks read it) */
+  showWarmed: number | null = null;
   readonly floats = new MoneyFloats();
   /** T151, the map's world labels: collected over the overlay's frame, placed in one pass (none overlapping, stable) and written together; the
    *  money floats' columns are placed after them (floatCols) */
