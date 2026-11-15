@@ -46,11 +46,11 @@ test('the stops lie in the prepared world: on the map, near the club\'s land and
   }
 });
 
-test('the scene adds at most 12 files and 8 MB to the build: the world and one still picture for each stop, nothing else', () => {
+test('the scene adds at most 2 files and 1 MB to the build: the world and the still of the first stop (every visit starts there), nothing else', () => {
   const dir = 'src/assets/showcase', files = readdirSync(dir);
-  assert.ok(files.length <= 12, `${files.length} files`);
-  assert.ok(files.reduce((n, f) => n + statSync(`${dir}/${f}`).size, 0) <= 8 * 1024 * 1024, 'over 8 MB');
-  assert.deepEqual([...files].sort(), ['menu.cesave', ...SHOW_STOPS.map(s => `${s.id}.jpg`)].sort(), 'the folder holds the world and the stops\' stills: a stop with no still shows the card over a bare start');
+  assert.ok(files.length <= 2, `${files.length} files`);
+  assert.ok(files.reduce((n, f) => n + statSync(`${dir}/${f}`).size, 0) <= 1024 * 1024, 'over 1 MB');
+  assert.deepEqual([...files].sort(), ['menu.cesave', `${SHOW_STOPS[0]!.id}.jpg`].sort(), 'the folder holds the world and the first stop\'s still: without it the card shows over a bare start');
 });
 
 test('the scene\'s overlay draws no label, badge, marker, outline or hint: only the world\'s own balls and dust, and the early return comes first', () => {
