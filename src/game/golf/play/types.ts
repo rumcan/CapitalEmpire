@@ -6,15 +6,19 @@ import type { LieKind } from './lies';
 import type { MechId, Mod } from './mods';
 export type { Pt };
 
-/** the surface a ball lies on: tee, fairway, rough, fescue (deep grass), bunker, green, water, or out of bounds */
-export type Lie = 'tee' | 'fairway' | 'rough' | 'fescue' | 'bunker' | 'green' | 'water' | 'out';
+/** the surface a ball lies on: tee, fairway, rough, fescue (deep grass), bunker, green, water, or out of bounds. #1345: cliff, the rocks of the view's own relief
+ *  (cliffs3p.ts: the view's cliff mask; from model version 7 a lateral hazard, live.ts CLIFF_V): a ball never stays there, it is dropped at the edge */
+export type Lie = 'tee' | 'fairway' | 'rough' | 'fescue' | 'bunker' | 'green' | 'water' | 'out' | 'cliff';
 /** one hole to play: its number, par, tee, pin and playing line (the tee, the aim points, the pin; the tee set furthest back). T254: sets, each
  *  tee set's tee and line, back (blue) to front (red) (absent: the one tee) */
 export interface PlayHole { n: number; par: 3 | 4 | 5; tee: Pt; pin: Pt; line: Pt[]; sets?: { kind: TeeKind; tee: Pt; line: Pt[] }[] }
 /** the course a round is played on: the holes in play order (a 9-hole course is listed twice) and the lie at any point */
 export interface CourseView { holes: PlayHole[]; lieAt(x: number, y: number): Lie;
   /** T334: the finer lie at a point (lies.ts LieKind: the first cut, the deep rough); absent: the coarse lie's own (a view made by hand) */
-  kindAt?(x: number, y: number): LieKind }
+  kindAt?(x: number, y: number): LieKind;
+  /** #1345: whether the view from behind the golfer stands a cliff of its own relief at the point (cliffs3p.ts: its mask, sent once per course); absent, or no mask
+   *  yet: none. Only the owner's shots under model version 7 read it (live.ts shotOutcome) */
+  cliffAt?(x: number, y: number): boolean }
 /** a golfer's sex: the field's looks come from the golfer art of the matching sex */
 export type Sex = 'm' | 'w';
 /** T241: a golfer's skill by part of the game (0..1 each), as the shot model reads it (shot.ts skillFor): driving (the driver and the 3-wood), irons

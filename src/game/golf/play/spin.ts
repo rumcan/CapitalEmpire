@@ -38,9 +38,9 @@ export const AIR = { per: 0.08, max: 15, plain: 0.6 } as const;
 /** the most backspin each club takes (a driver barely checks, the wedges spin back); the putter takes no spin */
 export const SPIN_BACK_CAP: Readonly<Record<Club, number>> = { driver: 0.12, wood3: 0.2, wood5: 0.27, hybrid: 0.3, iron4: 0.35, iron5: 0.42, iron6: 0.5, iron7: 0.6, iron8: 0.7, iron9: 0.8, pw: 0.9, gw: 0.95, sw: 1, lw: 1, putter: 0 };
 /** the share of the spin the lie it is played from lets on the ball (grass between the face and the ball cuts it) */
-export const SPIN_LIE: Readonly<Record<Lie, number>> = { tee: 1, fairway: 1, green: 1, rough: 0.45, fescue: 0.25, bunker: 0.6, water: 0, out: 0 };
+export const SPIN_LIE: Readonly<Record<Lie, number>> = { tee: 1, fairway: 1, green: 1, rough: 0.45, fescue: 0.25, bunker: 0.6, water: 0, out: 0, cliff: 0 };
 /** how far (m) full backspin pulls the ball back from where it would have stopped, by the surface it lands on (a green grips, the rough smothers it) */
-export const BACK_M: Readonly<Record<Lie, number>> = { green: 6, fairway: 2.5, tee: 2.5, rough: 0.4, fescue: 0, bunker: 0, water: 0, out: 0 };
+export const BACK_M: Readonly<Record<Lie, number>> = { green: 6, fairway: 2.5, tee: 2.5, rough: 0.4, fescue: 0, bunker: 0, water: 0, out: 0, cliff: 0 };
 /** the flight's curve grows with the carry: carry / 200 m, between these */
 const CURVE_K = [0.4, 1.2] as const;
 

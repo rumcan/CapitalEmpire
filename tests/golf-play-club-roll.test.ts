@@ -100,7 +100,7 @@ test('back-compat: a shot with conditions but not the club’s run (an input sav
   let n = 0;
   for (const club of clubs) for (const lie of lies) for (const sk of [0.3, 0.8]) {
     n++;
-    const env: ShotEnv = { lie: lie === 'tee' ? 'tee' : lie === 'rough' && n % 4 === 0 ? 'firstcut' : lie, wind: { mph: 4 + (n % 9), from: (n * 47) % 360 }, slope: { up: ((n % 5) - 2) * 0.01, across: ((n % 7) - 3) * 0.01 } };
+    const env: ShotEnv = { lie: lie === 'tee' ? 'tee' : lie === 'rough' && n % 4 === 0 ? 'firstcut' : lie as NonNullable<ShotEnv['lie']>, wind: { mph: 4 + (n % 9), from: (n * 47) % 360 }, slope: { up: ((n % 5) - 2) * 0.01, across: ((n % 7) - 3) * 0.01 } };
     const o = hitShot(rng(7, n, 11), sk, lie, { x: 0, y: 0 }, { x: 90, y: 4 }, club, flat('fairway'), { env, run: false });
     g1.push([club, lie, sk, r6(o.to.x), r6(o.to.y), o.lie, o.penalty, r6(o.landing.at.x), r6(o.landing.at.y), o.landing.lie]);
   }
@@ -120,7 +120,7 @@ test('back-compat: a shot with conditions but not the club’s run (an input sav
   const old = play(), old2 = play(2), now = play(MODEL_V);
   assert.equal(fnv(JSON.stringify(old.pl.shots)), '1a8e4b80', 'the live group with conditions and no version: the same shots'); assert.equal(old.lg.inputs.length, 90);
   assert.equal(fnv(JSON.stringify(old2.pl.shots)), '54037f2f', 'version 2 (the putting): the same shots, the club’s run came with 3');
-  assert.notEqual(JSON.stringify(now.pl.shots), JSON.stringify(old.pl.shots), 'version 3 runs by club'); assert.equal(MODEL_V, 6);
+  assert.notEqual(JSON.stringify(now.pl.shots), JSON.stringify(old.pl.shots), 'version 3 runs by club'); assert.equal(MODEL_V, 7);   // (#1345: 7, the view's cliffs)
   assert.deepEqual(old.lg.inputs.map(i => i.v), old.lg.inputs.map(() => undefined)); assert.deepEqual(old2.lg.inputs.map(i => i.v), old2.lg.inputs.map(() => 2)); assert.deepEqual(now.lg.inputs.map(i => i.v), now.lg.inputs.map(() => MODEL_V), 'each input keeps the version it was played under');
   // and the saved inputs replay to the same round, whatever the model's version is now (through JSON: what a save does)
   for (const a of [old, old2, now]) {

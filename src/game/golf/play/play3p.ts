@@ -124,7 +124,8 @@ export function liveOn(plan: RoundPlan, view: CourseView, live: LiveGroup, me: n
 export function holesView(view: CourseView, idx: readonly number[]): CourseView {
   const holes = idx.map(i => { const h = view.holes[i]; if (!h) throw new Error(`play3p: no hole ${i}`); return h; });
   const kindAt = view.kindAt;
-  return { holes, lieAt: (x: number, y: number): Lie => view.lieAt(x, y), ...(kindAt ? { kindAt: (x: number, y: number) => kindAt.call(view, x, y) } : {}) };
+  // (#1345: the view's cliffs go along, read when asked: a mask that comes after the session has started counts from then)
+  return { holes, lieAt: (x: number, y: number): Lie => view.lieAt(x, y), ...(kindAt ? { kindAt: (x: number, y: number) => kindAt.call(view, x, y) } : {}), cliffAt: (x: number, y: number) => !!view.cliffAt?.(x, y) };
 }
 
 /** one owner's play in the view: build it when the view has loaded the course, send start()'s messages, and input()'s for each input the view sends */

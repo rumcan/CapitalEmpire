@@ -36,7 +36,7 @@ export function lieKindOfSurface(s: GolfSurface): LieKind {
   }
 }
 /** the kind a coarse lie plays as when nothing finer is known (a view without kindAt, the field's old models): the fescue lie as fescue, the rough as rough */
-export const kindOfLie = (l: Lie): LieKind => l;
+export const kindOfLie = (l: Lie): LieKind => (l === 'cliff' ? 'out' : l);   // (#1345: a ball is never played from the rocks; were it read, it plays as no ground)
 /** whether a kind can be the finer reading of a coarse lie (the first cut is a fairway lie or a rough one, the deep rough a fescue lie or a rough one) */
 export function kindFits(k: LieKind, l: Lie): boolean {
   if (k === l) return true;

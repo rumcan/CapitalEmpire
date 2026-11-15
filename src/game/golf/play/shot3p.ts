@@ -85,12 +85,14 @@ export function shotMsg(o: ShotOutcome, frame: Frame3p | Pt, sampleHz = 30): Sho
     holed: s.holed, penalty: s.penalty, at: s.t };
   if (putting || !s.landing) {
     // a putt (or a shot with no landing kept: a plan made by hand): no flight; it rolls from the ball to its rest along the green's break (BallRoll.line)
-    const path = new BallRoll().line(s.from, s.to, o.height ?? null), Lm = Math.hypot(s.to.x - s.from.x, s.to.y - s.from.y) * TILE_M;
+    // (#1345: a putt into the rocks rolls to its rest there, then is dropped: the model keeps that rest as the putt's landing)
+    const rk = putting && s.penalty && s.landing?.restLie === 'cliff' ? s.landing : null, end = rk ? rk.rest : s.to;
+    const path = new BallRoll().line(s.from, end, o.height ?? null), Lm = Math.hypot(end.x - s.from.x, end.y - s.from.y) * TILE_M;
     const T = Lm > 1e-6 ? PUTT_T.t0 + PUTT_T.k * Math.sqrt(Lm) : 0, n = Math.max(1, Math.ceil(T * hz)), p: RollPoint = { x: 0, y: 0, h: 0 };
     const roll: ViewPt[] = [], rollT: number[] = [], rollZ: number[] = [];
     for (let k = 0; k <= n; k++) { const u = k / n; path.along(u * (2 - u), p); roll.push(vp(p, c)); rollT.push(T * u); rollZ.push(0); } // (it slows to a stop)
-    roll[roll.length - 1] = vp(s.to, c); // (the model's rest, exactly)
-    return { ...base, flight: [], flightT: [], bounces: [], bounceLies: [], roll, rollT, rollZ, rest: vp(s.to, c), restLie: s.lie };
+    roll[roll.length - 1] = vp(end, c); // (the model's rest, exactly)
+    return { ...base, flight: [], flightT: [], bounces: [], bounceLies: [], roll, rollT, rollZ, rest: vp(end, c), restLie: rk ? 'cliff' : s.lie, ...(rk ? { drop: vp(s.to, c), dropLie: s.lie } : {}) };
   }
   const lg: Landing = s.landing, from = s.from, land = lg.at;
   // ---- the flight (drawn to fit the model's landing) ----

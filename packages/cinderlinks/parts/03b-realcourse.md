@@ -6,12 +6,18 @@ R: Each stretch of water lies at its own level (the lowest ground on its rim); t
 R: A mapped stream or river is water about 2.6 m wide along its line, running at the level of the ground under it and never uphill; its surface is level within each tile, so on a slope it comes down in small steps.
 R: A hole's tee is the start of its mapped line, its pin the mapped pin (else the line's end), its par the mapped par. A hole with no mapped green gets a round one at its pin.
 R: The game's own cliffs and plateaus stand only well away from the course's ground, round the outside.
+R: (#1345, the owner: "the game adds the cliffs randomly and added it right in front of the tee box") Nor do they stand on a hole's line of play: along each hole's line (tee, aims, pin) a corridor 42 m either side (true size), and 55 m round the tee and the green, has none of the game's own relief at all, so the ground there is the course's own heights; outside it the relief comes back smoothly over 20 m, so the cliffs frame the holes from the sides. The corridor is a distance map made once when the course is loaded.
+R: (#1345) The game's own relief on a course is grown from the course itself (its id and its holes' lines), never from the page's seed: the same course gives the same land on every visit, every hole, after N and after a save.
+R: (#1345) In host mode the view tells the host where its own relief is a cliff (a 2 m cell over which it rises or falls 1 m or more), once per course, so the host's model can play a ball that comes to rest there as a lateral hazard.
 R: The credit for the map data (OpenStreetMap contributors) and for the heights is shown on the card while a real course is played.
 R: The game starts on Woodhill. K steps through the courses and back to the invented one; `?course=<id>` starts on another, `?course=none` on the invented one.
 File: game.js
 Check: function loadCourse(
 Check: function fieldCourse(
 Check: function courseHole(
+Check: function courseCor(
+Check: function wildLand(
+Check: function cliffMask(
 
 ````js file=game.js
 
@@ -103,7 +109,7 @@ function loadCourse(id) {   // make a saved course ready to play; false if there
   const D = MORE_COURSES.find((c) => c.id === id) || courseList().find((c) => c.id === id); if (!D) return false;   // (one handed over or fetched in this visit wins over a saved one of the same id)
   const S = D.scale > 0 ? +D.scale : CSCALE, sc = (a) => { const o = new Float32Array(a.length); for (let k = 0; k < a.length; k++) o[k] = a[k] * S; return o; };
   const C = { id: D.id, name: D.name, place: D.place, credit: D.credit, hcredit: D.hg ? D.hg.src : '', S, holes: [], gx0: 0, gy0: 0, gw: 0, gh: 0, sF: null, sG: null, sB: null, sT: null, sP: null, mw: null, ma: null, md: null, wlG: null,
-    hx0: 0, hy0: 0, hstep: 1, hw: 0, hh: 0, hm: null, streams: [], raw: D.fetched ? D : null, lk: null, ht: null };   // (raw: a fetched course's data, for the workers, which do not have it)
+    hx0: 0, hy0: 0, hstep: 1, hw: 0, hh: 0, hm: null, streams: [], raw: D.fetched ? D : null, lk: null, ht: null, cor: null, rs: 0, corF: 20 };   // (raw: a fetched course's data, for the workers, which do not have it)   // (#1345: cor, the line-of-play corridor's clearance map; rs, the seed its own relief grows from)
   if (D.lk && Array.isArray(D.lk.r)) C.lk = lieGrid(D.lk, S);   // (T422: a host page's lies)
   if (D.trees && Array.isArray(D.trees.t) && Array.isArray(D.trees.box)) C.ht = hostTrees(D.trees, S);   // (T451: a host page's trees)
   if (D.hg) {                                                       // the heights: metres above the grid's lowest
@@ -155,36 +161,113 @@ function loadCourse(id) {   // make a saved course ready to play; false if there
       const g = j * C.gw + i, d = Math.sqrt(best); if (d < C.md[g]) { C.md[g] = d; C.mw[g] = lat; C.ma[g] = along; }
     }
   }
-  course = C;
+  courseCor(C);
+  course = C; cliffDue = !!(D.fetched && D.hv);   // (#1345: a course handed over by a host page (its hand-over number hv): its cliff mask is sent once it is on screen, render)
   return true;
 }
+// #1345: the line of play is kept clear of the game's own relief. COR_W: the corridor's half width either side of a hole's line, COR_END: its radius round
+// the tee and the pin, COR_FADE: how far past its edge the relief takes to come back (true metres; a course drawn smaller has them smaller, never under 60%)
+const COR_W = 42, COR_END = 55, COR_FADE = 20;
+function courseCor(C) {   // the corridor's clearance in every cell (metres past its edge; 0 and below: inside it) and the seed the course's own relief grows from
+  const n = C.gw * C.gh, cor = new Float32Array(n).fill(999), k = Math.max(0.6, C.S), RW = COR_W * k, RE = COR_END * k, RF = COR_FADE * k, reach = RE + RF + 3;
+  let h = 0x811c9dc5; const mix = (v) => { h ^= v & 0xffff; h = Math.imul(h, 0x01000193); h ^= (v >>> 16) & 0xffff; h = Math.imul(h, 0x01000193); };
+  for (let i = 0; i < C.id.length; i++) mix(C.id.charCodeAt(i));
+  for (const H of C.holes) {
+    const L = H.line, m = L.length >> 1, tx = L[0], ty = L[1], px = H.pin[0], py = H.pin[1];
+    mix(H.n | 0); for (let q = 0; q < L.length; q++) mix(Math.round(L[q] / C.S) | 0);   // (the holes' lines in true metres: the same course at another scale is the same land)
+    let x0 = Math.min(px, tx), x1 = Math.max(px, tx), y0 = Math.min(py, ty), y1 = Math.max(py, ty);
+    for (let q = 0; q < m; q++) { x0 = Math.min(x0, L[q * 2]); x1 = Math.max(x1, L[q * 2]); y0 = Math.min(y0, L[q * 2 + 1]); y1 = Math.max(y1, L[q * 2 + 1]); }
+    const i0 = Math.max(0, Math.floor((x0 - reach - C.gx0) / CRES)), i1 = Math.min(C.gw - 1, Math.ceil((x1 + reach - C.gx0) / CRES)), j0 = Math.max(0, Math.floor((y0 - reach - C.gy0) / CRES)), j1 = Math.min(C.gh - 1, Math.ceil((y1 + reach - C.gy0) / CRES));
+    for (let j = j0; j <= j1; j++) for (let i = i0; i <= i1; i++) {
+      const x = C.gx0 + i * CRES, y = C.gy0 + j * CRES; let best = 1e18;
+      for (let q = 0; q < m - 1; q++) { const ax = L[q * 2], ay = L[q * 2 + 1], ex = L[q * 2 + 2] - ax, ey = L[q * 2 + 3] - ay, l2 = ex * ex + ey * ey; let t = l2 > 0 ? ((x - ax) * ex + (y - ay) * ey) / l2 : 0; t = t < 0 ? 0 : t > 1 ? 1 : t; const dx = x - ax - ex * t, dy = y - ay - ey * t, d = dx * dx + dy * dy; if (d < best) best = d; }
+      const c = Math.min(Math.sqrt(best) - RW, Math.hypot(x - tx, y - ty) - RE, Math.hypot(x - px, y - py) - RE), g = j * C.gw + i;
+      if (c < cor[g]) cor[g] = c;
+    }
+  }
+  C.cor = cor; C.rs = h | 0; C.corF = RF;
+}
+function corAt(C, x, y) {   // the corridor's clearance at a point, read between the cells (far from every hole past the map)
+  const gx = (x - C.gx0) / CRES, gy = (y - C.gy0) / CRES; if (!(gx >= 0 && gy >= 0 && gx < C.gw - 1 && gy < C.gh - 1)) return 999;
+  const i = gx | 0, j = gy | 0, a = gx - i, b = gy - j, k = j * C.gw + i, k1 = k + C.gw, G = C.cor;
+  return (G[k] * (1 - a) + G[k + 1] * a) * (1 - b) + (G[k1] * (1 - a) + G[k1 + 1] * a) * b;
+}
+let WILD_TAL = 0;   // (wildLand's fallen-rock share at the point it last read)
+// the game's own relief at a point of a course (#1345: grown from the course's seed rs): plateaus in two lifts with sheer edges and fallen rock at their feet.
+// wm: how much of it stands here (0: none, 1: all); w1, w2: the course's own small warps. Returns the height it adds; WILD_TAL, the fallen rock's share
+function wildLand(rs, x, y, wm, w1, w2) {
+  WILD_TAL = 0; if (!(wm > 0)) return 0;
+  const wx = x + 9 * (vnoise(x / 21 + 3.7, y / 21, rs + 40) - 0.5), wy = y + 9 * (vnoise(x / 21, y / 21 + 8.2, rs + 41) - 0.5);
+  const m = fbm(wx / 48, wy / 48, rs + 31, 3) + 0.03 * w1 + 0.012 * w2 - (1 - wm) * 0.22;
+  const foot = m < 0.561 ? sstep(0.52, 0.555, m) * (1 - sstep(0.555, 0.561, m)) : m > 0.6 && m < 0.661 ? sstep(0.624, 0.655, m) * (1 - sstep(0.655, 0.661, m)) : 0;
+  const out = m < 0.555 ? sstep(0.47, 0.53, m) : m > 0.6 && m < 0.655 ? sstep(0.6, 0.635, m) : 0;
+  let h = 0;
+  if (foot > 0 || out > 0) { const pile = sstep(0.3, 0.6, vnoise(x / 6.1 + 2.3, y / 6.1 - 4.4, rs + 45)); WILD_TAL = Math.max(foot * pile, 0.16 * out * (0.4 + 0.6 * pile)); h += foot * foot * pile * (0.18 + 0.8 * vnoise(x / 1.6 + 7.7, y / 1.6 + 1.2, rs + 46)) * 0.95; }
+  return h + 2.5 * sstep(0.555, 0.561, m) + 1.9 * sstep(0.573, 0.579, m) + 1.8 * sstep(0.655, 0.661, m) + 1.4 * sstep(0.672, 0.678, m);
+}
+function courseWm(C, x, y, dmin) {   // how much of the game's own relief stands at a point: away from the course's ground (dmin), and off every line of play
+  let wm = sstep(16, 34, dmin); if (wm > 0) { const c = corAt(C, x, y); if (c < C.corF) wm *= sstep(0, C.corF, c); }
+  return wm;
+}
+function courseWild(x, y) {   // the game's own relief at a point of the course being played (m; the harness and the cliff mask read it)
+  const C = course, rs = C.rs, w1 = vnoise(x / 5.3 + 1.1, y / 5.3 + 7.7, rs + 60) - 0.5, w2 = vnoise(x / 1.7 + 4.2, y / 1.7 - 2.9, rs + 61) - 0.5;
+  const dF = sdfAt(C, C.sF, x, y) + 1.1 * w1 + 0.4 * w2, dG = sdfAt(C, C.sG, x, y) - 0.5 + 0.5 * w1 + 0.2 * w2, dB = sdfAt(C, C.sB, x, y) - 0.3 + 0.5 * (vnoise(x / 2.9, y / 2.9, rs + 63) - 0.5) + 0.2 * w2;
+  const dT = sdfAt(C, C.sT, x, y) - 0.3 + 0.3 * w2, dP = sdfAt(C, C.sP, x, y) + 0.8 * w1 + 0.3 * w2;
+  return wildLand(rs, x, y, courseWm(C, x, y, Math.min(dF, dG, dB, dT, dP)), w1, w2);
+}
+// #1345: where the game's own relief is a cliff: a 2 m cell (true size) over whose corners it rises or falls CLIFF_STEP or more (a plateau's wall, a rock face;
+// the fallen rock at their feet stays under it). The host's model plays a ball at rest in one as a lateral hazard. In the host's frame (true metres), run-length
+// coded as the host's lies are: [value, count, ...] row by row from the north-west, cut to the box of its marked cells. Only within CLIFF_REACH of a hole's line
+// (true metres): farther out the host's model has the ball out of bounds anyway (courseview.ts OUT_TILES, 80 m). Made once per course (kept by its id and seed)
+const CLIFF_STEP = 1, CLIFF_REACH = 100, CLIFF_MEMO = new Map();
+function cliffMask() {
+  const C = course; if (!C || !C.cor) return null;
+  const key = C.id + ':' + C.rs + ':' + C.S; if (CLIFF_MEMO.has(key)) return CLIFF_MEMO.get(key);
+  const cell = 2 * C.S, x0 = C.gx0, y0 = C.gy0, w = Math.max(1, Math.floor((C.gw - 1) * CRES / cell)), hgt = Math.max(1, Math.floor((C.gh - 1) * CRES / cell)), far = (CLIFF_REACH - COR_W) * Math.max(0.6, C.S);
+  let row0 = new Float32Array(w + 1), row1 = new Float32Array(w + 1); const g = new Uint8Array(w * hgt); let i0 = w, i1 = -1, j0 = hgt, j1 = -1;
+  const node = (dst, j) => { for (let i = 0; i <= w; i++) { const x = x0 + i * cell, y = y0 + j * cell, c = corAt(C, x, y); dst[i] = c <= 0 ? 0 : c > far ? NaN : courseWild(x, y); } };   // (NaN: past the reach; a cell touching one is never marked, so the reach's own edge is no cliff)
+  node(row0, 0);
+  for (let j = 0; j < hgt; j++) {
+    node(row1, j + 1);
+    for (let i = 0; i < w; i++) {
+      const a = row0[i], b = row0[i + 1], c = row1[i], d = row1[i + 1];
+      if (Math.max(a, b, c, d) - Math.min(a, b, c, d) >= CLIFF_STEP) {   // (with a NaN corner both are NaN and the test fails)
+        g[j * w + i] = 1; if (i < i0) i0 = i; if (i > i1) i1 = i; if (j < j0) j0 = j; if (j > j1) j1 = j; }
+    }
+    const t = row0; row0 = row1; row1 = t;
+  }
+  if (i1 < 0) { i0 = j0 = 0; i1 = j1 = 0; }   // (no cliff at all: one empty cell)
+  const r = []; let last = -1, run = 0, marked = 0;
+  for (let j = j0; j <= j1; j++) for (let i = i0; i <= i1; i++) { const v = g[j * w + i]; if (v) marked++; if (v === last) run++; else { if (run) r.push(last, run); last = v; run = 1; } }
+  if (run) r.push(last, run);
+  const M = { course: C.id, x0: (x0 + i0 * cell) / C.S, y0: (y0 + j0 * cell) / C.S, cell: 2, w: i1 - i0 + 1, h: j1 - j0 + 1, r, marked };
+  CLIFF_MEMO.set(key, M); return M;
+}
+function hostCliffs() {   // #1345: the cliff mask to the host, once a course is on screen
+  const t0 = performance.now(), M = cliffMask(); if (!M) return;
+  const keep = hostLast; hostSend({ t: 'cliffs', course: M.course, x0: M.x0, y0: M.y0, cell: M.cell, w: M.w, h: M.h, r: M.r }); cliffLast = hostLast; hostLast = keep;   // (no answer to read: the last answer stays the last, as a sound leaves it)
+  cliffMs = performance.now() - t0;
+}
+let cliffMs = 0, cliffDue = false, cliffLast = null;   // (how long the last mask took: the harness reads it; a mask is due to the host)
 // everything the land is at one point of a real course (the invented course's function, with the course's shapes and heights in place of the invented hole's)
 function fieldCourse(x, y, o) {
-  const C = course, w1 = vnoise(x / 5.3 + 1.1, y / 5.3 + 7.7, SEED + 60) - 0.5, w2 = vnoise(x / 1.7 + 4.2, y / 1.7 - 2.9, SEED + 61) - 0.5;
+  const C = course, rs = C.rs, w1 = vnoise(x / 5.3 + 1.1, y / 5.3 + 7.7, rs + 60) - 0.5, w2 = vnoise(x / 1.7 + 4.2, y / 1.7 - 2.9, rs + 61) - 0.5;   // (#1345: the land's noise is the course's own, rs, never the page's SEED)
   let dF = 60, dG = 60, dB = 60, dT = 60, dP = 60, mow = 0, mow2 = 0, wl = -99;
   const gx = (x - C.gx0) / CRES, gy = (y - C.gy0) / CRES;
   if (gx >= 0 && gy >= 0 && gx < C.gw - 1 && gy < C.gh - 1) {
     const i = gx | 0, j = gy | 0, a = gx - i, b = gy - j, k = j * C.gw + i, k1 = k + C.gw, w00 = (1 - a) * (1 - b), w10 = a * (1 - b), w01 = (1 - a) * b, w11 = a * b, kn = (b < 0.5 ? k : k1) + (a < 0.5 ? 0 : 1);
     dF = C.sF[k] * w00 + C.sF[k + 1] * w10 + C.sF[k1] * w01 + C.sF[k1 + 1] * w11 + 1.1 * w1 + 0.4 * w2;      // (the edges are the map's, bent a little so none is a ruled line)
     dG = C.sG[k] * w00 + C.sG[k + 1] * w10 + C.sG[k1] * w01 + C.sG[k1 + 1] * w11 - 0.5 + 0.5 * w1 + 0.2 * w2;   // (greens and bunkers a little larger than scale)
-    dB = C.sB[k] * w00 + C.sB[k + 1] * w10 + C.sB[k1] * w01 + C.sB[k1 + 1] * w11 - 0.3 + 0.5 * (vnoise(x / 2.9, y / 2.9, SEED + 63) - 0.5) + 0.2 * w2;
+    dB = C.sB[k] * w00 + C.sB[k + 1] * w10 + C.sB[k1] * w01 + C.sB[k1 + 1] * w11 - 0.3 + 0.5 * (vnoise(x / 2.9, y / 2.9, rs + 63) - 0.5) + 0.2 * w2;
     dT = C.sT[k] * w00 + C.sT[k + 1] * w10 + C.sT[k1] * w01 + C.sT[k1 + 1] * w11 - 0.3 + 0.3 * w2;
     dP = C.sP[k] * w00 + C.sP[k + 1] * w10 + C.sP[k1] * w01 + C.sP[k1 + 1] * w11 + 0.8 * w1 + 0.3 * w2;
     { const m0 = C.mw[k], m1 = C.mw[k + 1], m2 = C.mw[k1], m3 = C.mw[k1 + 1], lo = Math.min(m0, m1, m2, m3), hi = Math.max(m0, m1, m2, m3); const ok = hi - lo < 9; mow = ok ? m0 * w00 + m1 * w10 + m2 * w01 + m3 * w11 : C.mw[kn]; mow2 = ok ? C.ma[k] * w00 + C.ma[k + 1] * w10 + C.ma[k1] * w01 + C.ma[k1 + 1] * w11 : C.ma[kn]; }   // (read smoothly, so a stripe's edge is a straight line, not steps; where two holes' lines meet, the nearest cell's)
     wl = C.wlG[kn];
   }
   let h = courseH(C, x, y);
-  h += 0.7 * (fbm(x / 15 + 2.2, y / 15 + 6.1, SEED + 7, 3) - 0.5) * (0.25 + 0.75 * sstep(-1, 4, dG));   // the game's own small roll (the height grid is smooth); the green is the calmest ground
-  const wm = sstep(16, 34, Math.min(dF, dG, dB, dT, dP));
-  let tal = 0;
-  if (wm > 0) {                    // the game's plateaus and cliffs, only well away from the course's ground
-    const wx = x + 9 * (vnoise(x / 21 + 3.7, y / 21, SEED + 40) - 0.5), wy = y + 9 * (vnoise(x / 21, y / 21 + 8.2, SEED + 41) - 0.5);
-    const m = fbm(wx / 48, wy / 48, SEED + 31, 3) + 0.03 * w1 + 0.012 * w2 - (1 - wm) * 0.22;
-    const foot = m < 0.561 ? sstep(0.52, 0.555, m) * (1 - sstep(0.555, 0.561, m)) : m > 0.6 && m < 0.661 ? sstep(0.624, 0.655, m) * (1 - sstep(0.655, 0.661, m)) : 0;
-    const out = m < 0.555 ? sstep(0.47, 0.53, m) : m > 0.6 && m < 0.655 ? sstep(0.6, 0.635, m) : 0;
-    if (foot > 0 || out > 0) { const pile = sstep(0.3, 0.6, vnoise(x / 6.1 + 2.3, y / 6.1 - 4.4, SEED + 45)); tal = Math.max(foot * pile, 0.16 * out * (0.4 + 0.6 * pile)); h += foot * foot * pile * (0.18 + 0.8 * vnoise(x / 1.6 + 7.7, y / 1.6 + 1.2, SEED + 46)) * 0.95; }
-    h += 2.5 * sstep(0.555, 0.561, m) + 1.9 * sstep(0.573, 0.579, m) + 1.8 * sstep(0.655, 0.661, m) + 1.4 * sstep(0.672, 0.678, m);
-  }
+  h += 0.7 * (fbm(x / 15 + 2.2, y / 15 + 6.1, rs + 7, 3) - 0.5) * (0.25 + 0.75 * sstep(-1, 4, dG));   // the game's own small roll (the height grid is smooth); the green is the calmest ground
+  const wm = courseWm(C, x, y, Math.min(dF, dG, dB, dT, dP));   // the game's plateaus and cliffs, only well away from the course's ground and off every line of play (#1345)
+  h += wildLand(rs, x, y, wm, w1, w2); const tal = WILD_TAL;
   if (dB < 1.2) h += 0.12 * Math.max(0, 1 - Math.abs(dB - 0.4) / 0.7) - 0.6 * (1 - sstep(-1.8, 0.1, dB));   // a bunker: a lip, then the hollow
   if (wl > -90) {
     if (dP < 18 && dP > 2.4) { const bank = wl + 0.16 - Math.max(0, dP - 6) * 0.3; if (h < bank) h = bank; }   // a bank holds the water in where the land lies lower

@@ -23,3 +23,4 @@ export * from './mods';
 export * from './shape';
 export * from './bag';
 export * from './tools';
+export * from './cliffs3p';

@@ -207,6 +207,6 @@ export function shotReport(s: Shot, eff: Pick<SwingEffect, 'shape' | 'deg'> | nu
     return { club: s.club, shape, carryM: null, totalM, text: `${head} · ${s.holed ? 'holed' : s.penalty ? 'off the green, +1' : `rolled ${totalM!.toFixed(1)} m`}` };
   }
   const carryM = s.landing ? m(s.from, s.landing.at) : null, totalM = s.penalty ? null : s.landing ? m(s.from, s.landing.rest) : m(s.from, s.to);
-  const where = s.penalty ? (s.landing?.restLie === 'water' ? 'in the water, +1' : 'out of bounds, +1') : `total ${Math.round(totalM!)} m`;
+  const where = s.penalty ? (s.landing?.restLie === 'water' ? 'in the water, +1' : s.landing?.restLie === 'cliff' ? 'into the rocks, +1, drop' : 'out of bounds, +1') : `total ${Math.round(totalM!)} m`;
   return { club: s.club, shape, carryM, totalM, text: `${head} · ${carryM !== null ? `carry ${Math.round(carryM)} m, ` : ''}${where}${s.holed ? ', holed!' : ''}${tail}` };
 }
