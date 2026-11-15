@@ -332,7 +332,7 @@ export async function record(env) {
       for (let k = 0; k < takes; k++) {
         const t = await play(1, 'golden'); if (!t) throw new Error('no turn on hole 1');
         await wait(1500); await start(`golf-tee-${k}`); await wait(800);
-        await swing({ boost: +opt('boost', 4), spin: { key: 'ArrowUp', n: 3, after: 1300 }, lead: 0 }); await ballRest(t.stroke); // (boost taps on: #1368 was the robot's late release, fixed above) await wait(1200); await stop();
+        await swing({ boost: +opt('boost', 4), spin: { key: 'ArrowUp', n: 3, after: 1300 }, lead: 0 }); await ballRest(t.stroke); await wait(1200); await stop(); // (boost taps on: #1368 was the robot's late release, fixed above)
         await leave();
       }
     });
