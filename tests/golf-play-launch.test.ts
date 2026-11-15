@@ -5,7 +5,7 @@ import assert from 'node:assert/strict';
 import { TILE_M } from '../src/game/golf/types';
 import type { Club, GameSkills, Pt } from '../src/game/golf/play';
 import { carryFor } from '../src/game/golf/play/shot';
-import { KMH_PER_MPH, lastBall, smashOf, type LaunchIn, type Played } from '../src/game/golf/play/launch';
+import { KMH_PER_MPH, lastBall, smashOf, type LastBall, type LaunchIn, type Played } from '../src/game/golf/play/launch';
 import { LOFT } from '../src/game/golf/play/bag';
 import { PracticeDriver, practiceCourse, type PracticeIn } from '../src/game/golf/play/practice3p';
 import { Play3p } from '../src/game/golf/play/play3p';
@@ -98,9 +98,9 @@ test('practice3p: each ball leaves its readout (full on the range, a chip and a 
     const c = practiceCourse(input), drv = new PracticeDriver(c, 'range', sk, 5, { drills: () => null, judged: () => {} });
     const play = new Play3p({ view: c.view, holes: [0], skills: sk, sex: 'm', seed: 1, frame: { x: 60, y: 30 }, driver: drv });
     const t = play.start().filter((x): x is TurnMsg => x.t === 'turn').pop()!;
-    assert.equal(drv.last, null);
+    assert.ok(!drv.last, "no readout before a ball");
     play.input({ holeIdx: t.holeIdx, stroke: t.stroke, club: t.suggested.club, aim: t.suggested.aim, power: t.suggested.power, swing: { power: 1, acc: 0, boost: 0, v: 3 } });
-    return drv.last;
+    return drv.last as LastBall | null;   // (play.input sets it: the assert above narrowed it)
   };
   const a = run()!;
   assert.equal(a.kind, 'full'); assert.ok(a.carryM > 40 && a.ballMph! > 40 && a.clubMph! > 30 && a.backRpm! > 1000, JSON.stringify(a)); assert.ok(a.tips.length >= 1 && a.tips.length <= 2);
