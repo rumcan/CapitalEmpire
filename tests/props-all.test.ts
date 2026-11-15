@@ -23,7 +23,7 @@ const groupsIn = (h: string) => [...h.matchAll(/data-group="([^"]+)"/g)].map(m =
 
 test('the placeable props: every prop of the owner\'s new categories has its card, and the catalogue\'s count is the panel\'s every-prop count', () => {
   const placeable = placeableProps();
-  assert.ok(placeable.length > 300, `${placeable.length} placeable props`);
+  assert.ok(placeable.length >= 280, `${placeable.length} placeable props`); // (#1300 took the shack props off: 300 on 2026-11-15)
   assert.equal(new Set(placeable.map(d => d.key)).size, placeable.length, 'one card each');
   // the library's own list of the new props (every "New: " category: one card a prop, a tree one card for its four views): none is left out
   // (T375: the eight-view art's rows, category "New: Eight-view objects", are the views the lots draw a building with, not props: no card)
