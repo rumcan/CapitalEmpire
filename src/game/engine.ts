@@ -11047,10 +11047,10 @@ export class Game {
   }
   /** the practice panel's message: the drills and their progress, the one being played, the last ball's line, a reward to say once, the range's flags */
   private practiceMsg3p(): PracticeMsg {
-    const pr = this.prac3p!, d = pr.drv, p = this.playerNow(), f = this.view3pFrame, paid = pr.paid, hit = d?.hitJunk ?? null; pr.paid = null; if (d) d.hitJunk = null;   // (each said once)
+    const pr = this.prac3p!, d = pr.drv, p = this.playerNow(), f = this.view3pFrame, paid = pr.paid, hit = d?.hitJunk ?? null, last = d?.last ?? null; pr.paid = null; if (d) { d.hitJunk = null; d.last = null; }   // (each said once; #1344: the last ball's readout too)
     return { v: 1, t: 'practice', place: pr.place, drills: DRILL_IDS.filter(id => id !== 'junk' || pr.course.junk.length > 0).map(id => {   /* (J6b: the junk drill only on a range with junk) */ const g = drillProgress(p?.drills, id), D = DRILLS[id]; return { id, name: D.name, goal: D.goal, got: g.got, need: g.need, done: g.done, reward: D.reward.text, here: !!d && d.canPlay(id) }; }),
       active: d?.active ?? null, note: d?.note ?? null, paid, flags: f ? practiceFlags(pr.course, pr.place, { x: f.cx, y: f.cy }) : [], hcp: p ? hcpText(handicapOf(p.skills)) : '', balls: d?.balls ?? 0, ...(pr.place === 'range' && (this.range.scene?.targets.length ?? 0) > 0 ? { pics: true as const } : {}),
-      ...(hit ? { hit } : {}) };   // (J6b: the flags are the range's own pictures)
+      ...(hit ? { hit } : {}), ...(last ? { last } : {}) };   // (J6b: the flags are the range's own pictures)
   }
   /** the view's drill picked in the practice panel: the panel again and the next ball from the drill's spot (nothing when no practice is open or it is not here) */
   pick3p(id: string): HostMsg[] {
