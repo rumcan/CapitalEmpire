@@ -260,7 +260,7 @@ export default function App() {
   useEffect(() => { if (JAM) { try { performance.mark('ff-title-card'); } catch { /* no marks */ } } }, []);
   useEffect(() => { if (game?.ready) { try { performance.mark('ff-game-ready'); } catch { /* no marks */ } } }, [game?.ready]);
   /** the jam's title card is up (and the HUD behind it hidden: the picture is the scene's, or the still's) */
-  const onTitle = JAM && titleOpen && !lab && !fatal; // (no card over the "needs WebGL2" message: there is no game to start)
+  const onTitle = titleOpen && !lab && !fatal; // (no card over the "needs WebGL2" message: there is no game to start; the title opens at boot only in the jam build, and in any build from the menu's Exit to main menu)
   // T356: the downloaded courses (T358's library) the Course flyout offers under Place a real course: listed when the page starts and each time that flyout opens (openFly); a change draws the menu again
   useEffect(() => { void refreshKept(); return watchKept(bump); }, []);
   const [help, setHelp] = useState(false);
@@ -883,6 +883,9 @@ export default function App() {
                     {!JAM && <GradePanel game={game} bump={bump} />}
                     {!JAM && <NightPanel game={game} bump={bump} />}
                     </>}
+                    {/* the owner, 2026-11-15: "the menu has no exit to main menu": saves, pauses and opens the title card over the living menu scene; Continue comes back */}
+                    <button className="btn w-full" data-testid="menu-exit-title" data-tip="Save and go back to the main menu (Continue brings you back here)"
+                      onClick={() => { setMenu(false); void game.save(); titlePaused.current = false; setHasSave(true); setTitleOpen(true); }}>Exit to main menu</button>
                     <button className="btn w-full" onClick={() => { setMenu(false); game.save(); }} data-tip="Saved automatically; force a save now"><ActionTile tile="save-game" size={TILE_SMALL} />Save</button>
                     <button className="btn w-full" onClick={() => { setMenu(false); void game.downloadSave(); }} data-tip="Download the save as a .cesave file (for a bug report, or to carry it to another computer)"><ActionTile tile="save-game" size={TILE_SMALL} />Download save</button>
                     <button className="btn w-full" onClick={() => saveFile.current?.click()} data-tip="Load a .cesave file in place of this game: this game is backed up first"><ActionTile tile="load-save" size={TILE_SMALL} />Load save file…</button>
