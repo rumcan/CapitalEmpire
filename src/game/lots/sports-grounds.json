@@ -1,0 +1,200 @@
+{
+ "notes": [
+  "#1369: the town's sports grounds, iconic places of two families (group): each sport's highest tier its town's residents (pop) call for stands, the dirt field first, then the grass field, then the stadium; a higher tier takes the lower one's site when it fits there, else a new site (lots/iconic.ts duePlaces, upgradeSpots).",
+  "Each is drawn as its one picture (art: the library id, sports-library.ts, scripts/assets/prep-sports-art.mjs) at its footprint's centre; fixed: the footprint never turns (w along the map's X, d along Y, tiles of 2 m), as the picture is one view. Thresholds: the jam's town tops out near 150 residents (both dirt fields), a stamped town (1000) has both grass fields, the stadiums come in a long game."
+ ],
+ "places": [
+  {
+   "id": "baseball-sandlot",
+   "name": "{town} Sandlot",
+   "kind": "Baseball sandlot",
+   "alone": "The Sandlot",
+   "pop": 50,
+   "group": "baseball",
+   "tier": 0,
+   "art": "sports:baseball-sandlot",
+   "fixed": true,
+   "standIns": {},
+   "preset": {
+    "id": "place:baseball-sandlot",
+    "use": "civic",
+    "state": "built",
+    "w": 45,
+    "d": 45,
+    "road": 0,
+    "whole": true,
+    "curated": true,
+    "props": [
+     {
+      "id": "sports:baseball-sandlot",
+      "x": 22.5,
+      "y": 22.5,
+      "scale": 1,
+      "view": 0
+     }
+    ],
+    "patches": []
+   }
+  },
+  {
+   "id": "baseball-field",
+   "name": "{town} Ball Field",
+   "kind": "Baseball field",
+   "alone": "The Ball Field",
+   "pop": 450,
+   "group": "baseball",
+   "tier": 1,
+   "art": "sports:baseball-field",
+   "fixed": true,
+   "standIns": {},
+   "preset": {
+    "id": "place:baseball-field",
+    "use": "civic",
+    "state": "built",
+    "w": 55,
+    "d": 55,
+    "road": 0,
+    "whole": true,
+    "curated": true,
+    "props": [
+     {
+      "id": "sports:baseball-field",
+      "x": 27.5,
+      "y": 27.5,
+      "scale": 1,
+      "view": 0
+     }
+    ],
+    "patches": []
+   }
+  },
+  {
+   "id": "baseball-stadium",
+   "name": "{town} Ballpark",
+   "kind": "Baseball stadium",
+   "alone": "The Ballpark",
+   "pop": 1800,
+   "group": "baseball",
+   "tier": 2,
+   "art": "sports:baseball-stadium",
+   "fixed": true,
+   "standIns": {},
+   "preset": {
+    "id": "place:baseball-stadium",
+    "use": "civic",
+    "state": "built",
+    "w": 75,
+    "d": 75,
+    "road": 0,
+    "whole": true,
+    "curated": true,
+    "props": [
+     {
+      "id": "sports:baseball-stadium",
+      "x": 37.5,
+      "y": 37.5,
+      "scale": 1,
+      "view": 0
+     }
+    ],
+    "patches": []
+   }
+  },
+  {
+   "id": "football-dirt",
+   "name": "{town} Practice Field",
+   "kind": "Football field (dirt)",
+   "alone": "The Practice Field",
+   "pop": 100,
+   "group": "football",
+   "tier": 0,
+   "art": "sports:football-dirt",
+   "fixed": true,
+   "standIns": {},
+   "preset": {
+    "id": "place:football-dirt",
+    "use": "civic",
+    "state": "built",
+    "w": 60,
+    "d": 32.5,
+    "road": 0,
+    "whole": true,
+    "curated": true,
+    "props": [
+     {
+      "id": "sports:football-dirt",
+      "x": 30,
+      "y": 16.25,
+      "scale": 1,
+      "view": 0
+     }
+    ],
+    "patches": []
+   }
+  },
+  {
+   "id": "football-field",
+   "name": "{town} Football Field",
+   "kind": "Football field",
+   "alone": "The Football Field",
+   "pop": 700,
+   "group": "football",
+   "tier": 1,
+   "art": "sports:football-field",
+   "fixed": true,
+   "standIns": {},
+   "preset": {
+    "id": "place:football-field",
+    "use": "civic",
+    "state": "built",
+    "w": 65,
+    "d": 40,
+    "road": 0,
+    "whole": true,
+    "curated": true,
+    "props": [
+     {
+      "id": "sports:football-field",
+      "x": 32.5,
+      "y": 20,
+      "scale": 1,
+      "view": 0
+     }
+    ],
+    "patches": []
+   }
+  },
+  {
+   "id": "football-stadium",
+   "name": "{town} Stadium",
+   "kind": "Football stadium",
+   "alone": "The Stadium",
+   "pop": 2600,
+   "group": "football",
+   "tier": 2,
+   "art": "sports:football-stadium",
+   "fixed": true,
+   "standIns": {},
+   "preset": {
+    "id": "place:football-stadium",
+    "use": "civic",
+    "state": "built",
+    "w": 80,
+    "d": 57.5,
+    "road": 0,
+    "whole": true,
+    "curated": true,
+    "props": [
+     {
+      "id": "sports:football-stadium",
+      "x": 40,
+      "y": 28.75,
+      "scale": 1,
+      "view": 0
+     }
+    ],
+    "patches": []
+   }
+  }
+ ]
+}

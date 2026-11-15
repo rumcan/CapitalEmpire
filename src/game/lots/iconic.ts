@@ -4,6 +4,7 @@
 // and the place). It faces its street: the preset frame turned to the street's side (four-view art its turned view), never mirrored. Pure, no
 // DOM: the engine gives the streets and says which land is free (findSite), and draws the place with compose.ts composeWhole.
 import PLACES_JSON from './iconic-places.json';
+import SPORTS_JSON from './sports-grounds.json';
 import { parsePresets } from './preset-read';
 import type { LotPreset } from './presets';
 
@@ -13,7 +14,16 @@ export interface Pt { x: number; y: number }
 export type Box4 = [number, number, number, number];
 /** a place as its file holds it: id, name ('{town}' is the town's name), what it is, the name it takes in a town with no name yet, the residents
  *  its town needs before it opens, the stand-ins (library id: the art it waits for; the map labels the first of each), and its whole preset */
-export interface PlaceDef { id: string; name: string; kind: string; alone: string; pop: number; standIns: Readonly<Record<string, string>>; preset: LotPreset }
+export interface PlaceDef {
+  id: string; name: string; kind: string; alone: string; pop: number; standIns: Readonly<Record<string, string>>; preset: LotPreset;
+  /** #1369: a place of a growing family (the sports grounds: 'baseball', 'football'): one of its tiers stands at a time, the highest its town's
+   *  residents call for; a higher tier takes the lower one's site when it fits there (upgradeSpots), else a new one */
+  group?: string; tier?: number;
+  /** #1369: the place is drawn as this one library picture (a one-view sprite at the footprint's centre), not composed from its preset */
+  art?: string;
+  /** #1369: its footprint never turns (one-view art): the preset's w runs along the map's X and d along Y, whichever side of a street it takes */
+  fixed?: boolean;
+}
 /** a place on the map: its id, its front corner (the preset frame's origin: x = 0 at the street edge, world tiles) and its quarter turn q (the
  *  street's side: 0 on +y, 1 on +x, 2 on -y, 3 on -x; preset-frame.ts facingOf) */
 export interface PlacedPlace { id: string; x: number; y: number; q: 0 | 1 | 2 | 3 }
@@ -28,39 +38,56 @@ export function placeDefsFrom(json: unknown): PlaceDef[] {
   if (!isObj(json) || !Array.isArray(json.places)) return out;
   for (const v of json.places) {
     if (!isObj(v)) continue;
-    const { id, name, kind, alone, pop, standIns, preset } = v;
+    const { id, name, kind, alone, pop, standIns, preset, group, tier, art, fixed } = v;
     if (typeof id !== 'string' || !id || typeof name !== 'string' || typeof kind !== 'string' || typeof pop !== 'number' || !Number.isFinite(pop) || pop < 0) continue;
     if (out.some(p => p.id === id)) continue;
     const p = parsePresets([preset]).presets[0];
     if (!p || !p.whole) continue;
     const si: Record<string, string> = {};
     if (isObj(standIns)) for (const [k, s] of Object.entries(standIns)) if (typeof s === 'string') si[k] = s;
-    out.push({ id, name, kind, alone: typeof alone === 'string' ? alone : `The ${kind}`, pop, standIns: si, preset: p });
+    out.push({ id, name, kind, alone: typeof alone === 'string' ? alone : `The ${kind}`, pop, standIns: si, preset: p,
+      ...(typeof group === 'string' && group ? { group, tier: typeof tier === 'number' && Number.isFinite(tier) ? tier : 0 } : {}),
+      ...(typeof art === 'string' && art ? { art } : {}), ...(fixed === true ? { fixed: true } : {}) });
   }
   return out;
 }
-/** the places every map gets, in the file's order */
-export const PLACE_DEFS: readonly PlaceDef[] = placeDefsFrom(PLACES_JSON);
+/** the places every map gets, in the files' order: the iconic places, then the sports grounds (#1369; an id already taken is dropped) */
+export const PLACE_DEFS: readonly PlaceDef[] = placeDefsFrom({ places: [...PLACES_JSON.places, ...SPORTS_JSON.places] });
 export const placeDef = (id: string, defs: readonly PlaceDef[] = PLACE_DEFS): PlaceDef | undefined => defs.find(d => d.id === id);
 
 /** a place's name in its town: '{town} Drive-In' with the town's name, or its name alone ("The Drive-In") while the town has none */
 export function placeName(def: PlaceDef, town: string | null): string { return town ? def.name.split('{town}').join(town) : def.alone; }
 
-/** the places due in a town of pop residents that this map has not placed (placed: their ids), the smallest first: each is placed once */
+/** the places due in a town of pop residents that this map has not placed (placed: their ids), the smallest first: each is placed once. Of a
+ *  family (group) only its highest tier the residents call for is due, and only while no tier as high stands (a town that jumps, a stamped one,
+ *  gets the stadium without the dirt field first; a family never steps down) */
 export function duePlaces(pop: number, placed: ReadonlySet<string>, defs: readonly PlaceDef[] = PLACE_DEFS): PlaceDef[] {
-  return defs.filter(d => pop >= d.pop && !placed.has(d.id)).sort((a, b) => a.pop - b.pop);
+  return defs.filter(d => {
+    if (pop < d.pop || placed.has(d.id)) return false;
+    if (!d.group) return true;
+    const fam = defs.filter(e => e.group === d.group), top = fam.filter(e => pop >= e.pop).reduce((a, e) => ((e.tier ?? 0) > (a.tier ?? 0) ? e : a), d);
+    return top === d && !fam.some(e => placed.has(e.id) && (e.tier ?? 0) >= (d.tier ?? 0));
+  }).sort((a, b) => a.pop - b.pop);
+}
+/** the placed member of a place's family (the tier a due one replaces), or undefined */
+export function familyPlaced(def: PlaceDef, placed: readonly PlacedPlace[], defs: readonly PlaceDef[] = PLACE_DEFS): PlacedPlace | undefined {
+  return def.group ? placed.find(p => p.id !== def.id && placeDef(p.id, defs)?.group === def.group) : undefined;
 }
 
 /** the away vector (from the street into the place) of each quarter turn */
 const AWAY: readonly Pt[] = [{ x: 0, y: -1 }, { x: -1, y: 0 }, { x: 0, y: 1 }, { x: 1, y: 0 }];
 /** a placed place's frame as a lot's (compose.ts LotGeom): origin, along u (the preset's x: n turned a quarter, so preset-frame.ts frameOf keeps
  *  the origin), away n and its size (tiles) */
-export function placeGeom(p: PlacedPlace, def: { preset: { w: number; d: number } }): { o: Pt; u: Pt; n: Pt; w: number; d: number } {
-  const n = AWAY[p.q]!;
-  return { o: { x: p.x, y: p.y }, u: { x: -n.y, y: n.x }, n: { x: n.x, y: n.y }, w: def.preset.w, d: def.preset.d };
+export function placeGeom(p: PlacedPlace, def: { preset: { w: number; d: number }; fixed?: boolean }): { o: Pt; u: Pt; n: Pt; w: number; d: number } {
+  const n = AWAY[p.q]!, [w, d] = frameSize(def, p.q);
+  return { o: { x: p.x, y: p.y }, u: { x: -n.y, y: n.x }, n: { x: n.x, y: n.y }, w, d };
+}
+/** a place's frame size at quarter turn q: along its street (w) and away from it (d); a fixed footprint's preset w stays along X, d along Y */
+export function frameSize(def: { preset: { w: number; d: number }; fixed?: boolean }, q: number): [number, number] {
+  return def.fixed && q % 2 === 1 ? [def.preset.d, def.preset.w] : [def.preset.w, def.preset.d];
 }
 /** a place's footprint (world tiles) */
-export function placeBox(p: PlacedPlace, def: { preset: { w: number; d: number } }): Box4 {
+export function placeBox(p: PlacedPlace, def: { preset: { w: number; d: number }; fixed?: boolean }): Box4 {
   const g = placeGeom(p, def), ax = g.o.x + g.u.x * g.w, ay = g.o.y + g.u.y * g.w, bx = g.o.x + g.n.x * g.d, by = g.o.y + g.n.y * g.d, cx = ax + g.n.x * g.d, cy = ay + g.n.y * g.d;
   return [Math.min(g.o.x, ax, bx, cx), Math.min(g.o.y, ay, by, cy), Math.max(g.o.x, ax, bx, cx), Math.max(g.o.y, ay, by, cy)];
 }
@@ -87,12 +114,14 @@ interface Spot { p: PlacedPlace; score: number; box: Box4; tie: string }
  *  the centre and a jitter seeded by the map seed, the place and the spot; the spots tried best first, the first free one taken. null: none free.
  *  The same streets, seed and free land give the same site */
 export function findSite(def: PlaceDef, ctx: SiteCtx): PlacedPlace | null {
-  const W = def.preset.w, D = def.preset.d, reach = ctx.reach ?? SITE_REACH, spots: Spot[] = [];
+  const reach = ctx.reach ?? SITE_REACH, spots: Spot[] = [];
   for (const s of ctx.segs) {
     const dx = s.bx - s.ax, dy = s.by - s.ay, L = Math.hypot(dx, dy);
     if (L < 1) continue;
     const alongX = Math.abs(dy) <= SITE_SKEW * L, alongY = Math.abs(dx) <= SITE_SKEW * L;
     if (!alongX && !alongY) continue;
+    // the frame's size along this street and away from it (a fixed footprint keeps its w along X)
+    const [W, D] = frameSize(def, alongX ? 0 : 1);
     // the line's across coordinate (its mean), its along range
     const across = alongX ? (s.ay + s.by) / 2 : (s.ax + s.bx) / 2, lo = alongX ? Math.min(s.ax, s.bx) : Math.min(s.ay, s.by), hi = lo + L;
     for (const side of [-1, 1] as const) {
@@ -117,6 +146,39 @@ export function findSite(def: PlaceDef, ctx: SiteCtx): PlacedPlace | null {
   const n = Math.min(spots.length, SITE_TRIES);
   for (let i = 0; i < n; i++) if (ctx.free(spots[i]!.box)) return spots[i]!.p;
   return null;
+}
+
+/** #1369: the spots a family's higher tier may take on the lower tier's site: the same street edge and quarter turn, the bigger frame centred on
+ *  the old one along the street, then flush with its start, then with its end (the engine takes the first whose land is free, the old place's
+ *  own land counted free) */
+export function upgradeSpots(old: PlacedPlace, oldDef: PlaceDef, def: PlaceDef): PlacedPlace[] {
+  const g = placeGeom(old, oldDef), [w] = frameSize(def, old.q), out: PlacedPlace[] = [];
+  for (const t of [(g.w - w) / 2, 0, g.w - w]) {
+    const x = g.o.x + g.u.x * t, y = g.o.y + g.u.y * t;
+    if (!out.some(p => p.x === x && p.y === y)) out.push({ id: def.id, x, y, q: old.q });
+  }
+  return out;
+}
+
+/** the top tier of a place's family (the place itself when it has no family) */
+export function familyTop(def: PlaceDef, defs: readonly PlaceDef[] = PLACE_DEFS): PlaceDef {
+  return def.group ? defs.filter(e => e.group === def.group).reduce((a, e) => ((e.tier ?? 0) > (a.tier ?? 0) ? e : a), def) : def;
+}
+/** #1369: the land a placed place holds (the town never builds there, nor another place): its footprint, or, with reserve (the normal build),
+ *  its family's top tier's footprint centred on it along its street, on the same street edge, so each higher tier grows in place */
+export function placeLand(p: PlacedPlace, def: PlaceDef, reserve: boolean, defs: readonly PlaceDef[] = PLACE_DEFS): Box4 {
+  const top = reserve ? familyTop(def, defs) : def;
+  if (top === def) return placeBox(p, def);
+  const g = placeGeom(p, def), [W] = frameSize(top, p.q), t = (g.w - W) / 2;
+  return placeBox({ id: top.id, x: g.o.x + g.u.x * t, y: g.o.y + g.u.y * t, q: p.q }, top);
+}
+/** #1369: a family place's site with its land kept (placeLand): with reserve, the site its top tier would take, the place centred in it; else
+ *  its own site (findSite) */
+export function reservedSite(def: PlaceDef, ctx: SiteCtx, reserve: boolean, defs: readonly PlaceDef[] = PLACE_DEFS): PlacedPlace | null {
+  const top = reserve ? familyTop(def, defs) : def;
+  if (top === def) return findSite(def, ctx);
+  const s = findSite(top, ctx);
+  return s ? upgradeSpots(s, top, def)[0]! : null;
 }
 
 /** the places as the save keeps them, and back (a tuple of an unknown place or a bad shape is dropped; one per id) */

@@ -107,7 +107,7 @@ export function findRangeArt(gen = GEN, items = ITEMS) {
   });
 }
 /** the keyed picture trimmed: its largest piece and every piece of 200+ px (smaller specks dropped), as rgba */
-async function cutOne(png) {
+export async function cutOne(png) {
   const { data, info } = await sharp(png).ensureAlpha().raw().toBuffer({ resolveWithObject: true }), W = info.width, H = info.height;
   const lab = new Int32Array(W * H).fill(-1), stack = new Int32Array(W * H), sizes = [];
   for (let s = 0; s < W * H; s++) {
@@ -160,7 +160,7 @@ export function decontaminate(p, depth = 6, reach = 9) {
   out.copy(rgba); return n;
 }
 /** the lowest opaque pixel (alpha > 128) in a trimmed picture's 3 outermost columns each side (its left and right ground corners) */
-function corners(p, below = 0.4) {
+export function corners(p, below = 0.4) {
   const low = xs => { let y = -1; for (const x of xs) for (let r = p.h - 1; r >= 0; r--) if (p.rgba[(r * p.w + x) * 4 + 3] > 128) { y = Math.max(y, r); break; } return y; };
   // (an overhanging roof's eave reaches past the walls: an edge column with nothing below `below` of the height (a roof's eave, an awning) is skipped,
   // up to 35% of the width in (a sign's posts stand well inside its board), so the ground corner is the wall's; an item's wallBelow in range-art-items.json sets it: the coffee

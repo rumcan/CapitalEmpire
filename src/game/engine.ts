@@ -164,7 +164,7 @@ import { LotMap, endReach, ringClear } from './lots/lots';
 import * as ES from './golf/estate'; // T353 (#995): house lots
 import { BuildDust, armTick, disarm, drawDust, dustAllowed, grewTo } from './build-dust';
 import { EstateTool } from './golf/estatetool';
-import { PLACE_DEFS, duePlaces, findSite, placeBox, placeDef, placeGeom, placeName, placeTuples, placesFromTuples, type PlacedPlace, type SiteSeg } from './lots/iconic';
+import { PLACE_DEFS, duePlaces, familyPlaced, placeBox, placeDef, placeGeom, placeLand, placeName, placeTuples, placesFromTuples, reservedSite, upgradeSpots, type PlaceDef, type PlacedPlace, type SiteSeg } from './lots/iconic';
 import { TOWN_BLOCKS, TOWN_POP, townCentres, townGrid } from './lots/seedtowns';
 import { Names, RoadNames } from './ext/names';
 import { FARM_MODEL, FarmMap, animalAt, animalBox, claimedLots, composeFarm, farmAnimals, farmSeason, farmStandIns, parcelCorners, type AnimalView, type FarmAnimal, type FarmModel, type FarmParcel } from './ext/farms';
@@ -648,6 +648,9 @@ const isLotProp = (p: Prop) => !!p.auto && (p.auto.startsWith('lot:') || p.auto.
 const FARMS_PER_FRAME = 4, FARM_FRAME_MS = 1;
 /** T219: how long a place with no free site waits before the next search (ms) */
 const PLACE_RETRY_MS = 30000;
+/** #1369: a sports ground keeps its top tier's land from its first tier (lots/iconic.ts placeLand), so it grows in place, in the normal build;
+ *  the jam's town (it tops out near 150 residents, below the grass tiers) keeps its road frontage for its lots */
+const SPORTS_RESERVE = !JAM;
 /** the lot fills by use * 4 + decline (EMPTY, RES green, COM blue, IND orange, TOUR magenta, GOV white), darker with each decline step */
 /** a business's rect fill by family (alpha 0.5): sports amber, leisure violet, tourism teal, transport sky blue, property lime */
 const FAMILY_FILL: Record<BusinessType['family'], string> = { sports: 'rgba(245,158,11,0.5)', leisure: 'rgba(139,92,246,0.5)', tourism: 'rgba(20,184,166,0.5)', transport: 'rgba(14,165,233,0.5)', property: 'rgba(132,204,22,0.5)' };
@@ -4753,27 +4756,41 @@ export class Game {
   }
   // ---------- T219 (P27): the iconic places (lots/iconic.ts)
   /** the iconic places' footprints (world tiles) */
-  private placeBoxes(): [number, number, number, number][] { const out: [number, number, number, number][] = []; for (const p of this.places) { const d = placeDef(p.id); if (d) out.push(placeBox(p, d)); } return out; }
-  /** a box (tiles [x0, y0, x1, y1]) overlapping an iconic place by more than half a tile */
-  private onPlace(b: ArrayLike<number>): boolean {
-    for (const q of this.placeBoxes()) if (Math.min(b[2]!, q[2]) - Math.max(b[0]!, q[0]) > 0.5 && Math.min(b[3]!, q[3]) - Math.max(b[1]!, q[1]) > 0.5) return true;
+  private placeBoxes(): [number, number, number, number][] { const out: [number, number, number, number][] = []; for (const p of this.places) { const d = placeDef(p.id); if (d) out.push(placeLand(p, d, SPORTS_RESERVE)); } return out; }
+  /** a box (tiles [x0, y0, x1, y1]) overlapping an iconic place (but `except`) by more than half a tile */
+  private onPlace(b: ArrayLike<number>, except?: PlacedPlace): boolean {
+    for (const p of this.places) { if (p === except) continue; const d = placeDef(p.id); if (!d) continue; const q = placeLand(p, d, SPORTS_RESERVE); if (Math.min(b[2]!, q[2]) - Math.max(b[0]!, q[0]) > 0.5 && Math.min(b[3]!, q[3]) - Math.max(b[1]!, q[1]) > 0.5) return true; }
     return false;
   }
   /** a golf town that has reached a place's residents and has not got it gets it now, on the best free frontage (findSite); one place a check,
    *  and none while no site is free (tried again PLACE_RETRY_MS later). Classic games have none */
   private placesCheck() {
     if (!this.golf || !this.terrain || this.benchMode || performance.now() < this.placeTryAt) return;
-    const def = duePlaces(this.traffic.pop, new Set(this.places.map(p => p.id)))[0]; if (!def) return;
+    const due = duePlaces(this.traffic.pop, new Set(this.places.map(p => p.id))); if (!due.length) return;
     const centre = this.townPts[0] ?? this.townCentreOfLots(); if (!centre) return;
     const segs: SiteSeg[] = [];
     for (const s of this.net.segs) {
       if (s.kind !== 0 || s.cls.family === 'course' || s.cls.family === 'cart') continue;
       segs.push({ key: `${Math.round(s.a.x * 10)},${Math.round(s.a.y * 10)}|${Math.round(s.b.x * 10)},${Math.round(s.b.y * 10)}`, ax: s.a.x, ay: s.a.y, bx: s.b.x, by: s.b.y, off: s.cls.h + s.cls.walk, order: s.cls.order });
     }
-    const site = findSite(def, { segs, centre, seed: this.seed, free: b => this.placeFree(b) });
-    if (!site) { this.placeTryAt = performance.now() + PLACE_RETRY_MS; return; }
-    this.places.push(site); this.syncPlaces(); this.scheduleSave();
-    this.toast(`${placeName(def, this.townName(0))} has opened`);
+    // #1369: a family's higher tier (a sports ground's grass field, its stadium) takes the lower one's site when it fits there (its land counted
+    // free; in the normal build its land was kept for it: SPORTS_RESERVE), else the best free site anywhere; the lower tier goes as it opens
+    // (each due place in turn, the smallest first, until one finds a site: a big place with no room, a drive-in on a full town, no longer holds
+    // up the ones after it; one place a check)
+    for (const def of due) {
+      const old = familyPlaced(def, this.places), oldDef = old ? placeDef(old.id) : undefined, free = (b: [number, number, number, number]) => this.placeFree(b, old);
+      const site = (old && oldDef ? upgradeSpots(old, oldDef, def).find(p => free(placeLand(p, def, SPORTS_RESERVE))) : undefined) ?? reservedSite(def, { segs, centre, seed: this.seed, free }, SPORTS_RESERVE);
+      if (site) { this.openPlace(def, site, old, oldDef); return; }
+    }
+    this.placeTryAt = performance.now() + PLACE_RETRY_MS;
+  }
+  /** a place opens on its site, the family member it replaces (old) gone */
+  private openPlace(def: PlaceDef, site: PlacedPlace, old: PlacedPlace | undefined, oldDef: PlaceDef | undefined) {
+    this.places = [...this.places.filter(p => p !== old), site];
+    if (old && this.selectedPlace === old.id) this.selectedPlace = null;
+    this.syncPlaces(); this.scheduleSave();
+    const town = this.townName(0);
+    this.toast(old && oldDef ? `${placeName(oldDef, town)} has grown into ${placeName(def, town)}` : `${placeName(def, town)} has opened`);
   }
   /** the centre of the town's built lots (a game without a town point), or null */
   private townCentreOfLots(): { x: number; y: number } | null {
@@ -4783,17 +4800,17 @@ export class Game {
   }
   /** is a place's footprint free: on the map, no road (its verge included), water, golf land, stadium site, business, car park, painted area,
    *  other place, lot that is not EMPTY, or a prop that is neither a lot's nor an auto tree */
-  private placeFree(b: [number, number, number, number]): boolean {
+  private placeFree(b: [number, number, number, number], except?: PlacedPlace): boolean {
     if (b[0] < 4 || b[1] < 4 || b[2] > MAP - 4 || b[3] > MAP - 4) return false;
     if (this.net.rectOcc(b[0] + 0.5, b[1] + 0.5, b[2] - 0.5, b[3] - 0.5) > 0) return false;
     for (let y = Math.floor(b[1]); y < b[3]; y += 2) for (let x = Math.floor(b[0]); x < b[2]; x += 2) { const c = this.terrain.cls[y * MAP + x]; if (c === TC.WATER || c === TC.CREEK || c === TC.BANK) return false; }
-    if (this.onGolfLand(b) || this.onPlace([b[0] - 2, b[1] - 2, b[2] + 2, b[3] + 2])) return false;
+    if (this.onGolfLand(b) || this.onPlace([b[0] - 2, b[1] - 2, b[2] + 2, b[3] + 2], except)) return false;
     const hit = (x: number, y: number, w: number, h: number, m: number) => x - m < b[2] && x + w + m > b[0] && y - m < b[3] && y + h + m > b[1];
     if (this.bizDefs.some(d => hit(d.x, d.y, d.w, d.h, 2)) || this.parkDefs.some(d => hit(d.x, d.y, d.w, d.h, 2))) return false;
     if (this.paint.areas.some(a => { const q = ptsBox(a.pts); return hit(q[0]!, q[1]!, q[2]! - q[0]!, q[3]! - q[1]!, 1); })) return false;
     if (this.lotsUnder({ x: b[0] + 0.6, y: b[1] + 0.6, w: b[2] - b[0] - 1.2, h: b[3] - b[1] - 1.2 })) return false;
     const hits = new Set<Prop>(); this.propGrid.query(b, hits);
-    for (const p of hits) { if (p.auto?.startsWith('lot:')) continue; if (!p.auto || LIBRARY[p.item]!.kind !== 'tree') return false; }
+    for (const p of hits) { if (p.auto?.startsWith('lot:') || (except && p.auto === 'place:' + except.id)) continue; if (!p.auto || LIBRARY[p.item]!.kind !== 'tree') return false; }
     return true;
   }
   /** the places' land to the city worker (the town never builds there), and each place's props and ground composed again */
@@ -4817,16 +4834,20 @@ export class Game {
     const def = placeDef(pl.id); if (!def) return;
     const fresh = !this.placeProps.has(pl.id); // (build-dust.ts: a new place puffs)
     this.dropPlace(pl.id);
-    const g = placeGeom(pl, def), box = placeBox(pl, def), key = 'place:' + pl.id, c = composeWhole(g, def.preset, this.seed ^ 0x219), ps: Prop[] = [], seen = new Set<string>();
+    const box = placeBox(pl, def), key = 'place:' + pl.id, ps: Prop[] = [], seen = new Set<string>();
     const hits = new Set<Prop>(); this.propGrid.query(box, hits);
     for (const p of hits) if (p.auto && !p.auto.startsWith('place:') && !p.auto.startsWith('lot:') && LIBRARY[p.item]?.kind === 'tree') { this.removeProp(p); if (this.autoByKey.get(p.auto) === p) this.autoByKey.delete(p.auto); }
-    for (const q of c.props) {
+    // #1369: a place of one picture (a sports ground) is that picture at its footprint's centre, never turned or mirrored, on the ground as it is
+    const art = def.art !== undefined ? LIB_INDEX.get(def.art) : undefined;
+    const c = art !== undefined ? null : composeWhole(placeGeom(pl, def), def.preset, this.seed ^ 0x219);
+    if (art !== undefined) ps.push(this.addProp(art, (box[0] + box[2]) / 2, (box[1] + box[3]) / 2, false, 1, key));
+    for (const q of c?.props ?? []) {
       const i = LIB_INDEX.get(q.id); if (i === undefined) continue;
       const p = this.addProp(i, q.x, q.y, q.flip, q.scale, key, q.foot ? { foot: q.foot } : undefined); ps.push(p); // q.foot: a picture fixed in art-fix.ts stands on its true footprint
       const src = q.from ? def.preset.props[q.from.prop]?.id : undefined, si = src ? def.standIns[src] : undefined;
       if (src && si && !seen.has(src)) { seen.add(src); this.placeStandIns.push({ p, text: `Stand In for ${si}` }); }
     }
-    this.placeProps.set(pl.id, ps); this.setLotGround(key, c.ground);
+    this.placeProps.set(pl.id, ps); this.setLotGround(key, c?.ground ?? null);
     if (fresh && this.dustOk()) this.dust.rect(performance.now(), box[0]!, box[1]!, box[2]!, box[3]!, 'foot');
     this.dropTownTrees(box[0], box[1], box[2], box[3]);
     for (const l of this.traffic.lots.values()) { const b = lotBoxOf(l.o, l.u, l.n, l.w, l.d); if (b[0]! < box[2] && b[2]! > box[0] && b[1]! < box[3] && b[3]! > box[1]) this.lotQueue.add(l.key); }
