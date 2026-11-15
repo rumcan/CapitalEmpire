@@ -460,6 +460,7 @@ export default function App() {
       clubhouse: { built: g.bizDefs.some(d => d.type === 'clubhouse'), cost: CLUBHOUSE_RANGE_COST, upkeep: BUSINESS.clubhouse!.upkeepPerDay / MONTHS_A_SEASON },
       course: g.paybackCourse(), money: g.money,
       forSale: !!rv?.biz.forSale, junk: rv?.biz.junk?.length ? { n: rv.biz.junk.length, cost: JUNK_CLEAR_COST, first: rv.biz.junk[0]!.id } : undefined,
+      real: [...OSM_COURSES.map(c => ({ id: c.id, name: c.name, place: c.place, holes: c.holes, par: c.par })), ...keptCourses().map(r => ({ id: r.id, name: r.name, place: r.place || 'Downloaded', holes: r.holes ?? 0, par: r.par ?? 0 }))],
     });
   };
   /** J7: a Build menu card picked: the same placement the rail and the range card start; the menu shuts */

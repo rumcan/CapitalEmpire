@@ -1327,6 +1327,8 @@ export class Game {
   // ---------- T256 (#743): Range › Build, My holes ----------
   /** the Texture Painter (Range › Texture Painter, Facilities › Texture Painter): the course tool with the property's brush (the same painting tools as the holes,
    *  painting cells of no hole: the range, the practice area, the rest of your land) */
+  /** 2026-11-15: the jam Build menu's Trees and props card: the Props tool in hand (natural props painted, man-made placed) */
+  setPropsTool() { this.setTool('props'); this.emit(); }
   openPropertyPaint(kind: BrushKind = this.paint.brushKind === 'path' ? 'fairway' : this.paint.brushKind) {
     if (!this.golf || !this.courseGrid) { this.toast('Build paints a golf course\'s land', 'warn'); return; }
     if (this.range.cardOpen) this.openRangeCard(false);
