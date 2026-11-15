@@ -40,8 +40,8 @@
   "chatgpt": {
     "S": {
       "picture": "golf_am_m1~S-golfers.png",
-      "date": "2026-11-13",
-      "scale": 0.6
+      "date": "2026-11-15",
+      "scale": 0.7
     },
     "SW": {
       "picture": "golf_am_m1~SW-golfers.png",
@@ -60,8 +60,8 @@
     },
     "N": {
       "picture": "golf_am_m1~N-golfers.png",
-      "date": "2026-11-13",
-      "scale": 0.6531
+      "date": "2026-11-15",
+      "scale": 0.6967
     },
     "NE": {
       "picture": "golf_am_m1~NE-golfers.png",
