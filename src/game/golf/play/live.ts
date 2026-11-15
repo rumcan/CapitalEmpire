@@ -5,7 +5,7 @@
 import { TILE_M } from '../types';
 import { appendShots, FLIGHT_TIME, liveField, PUTT_FLIGHT } from './round';
 import type { Due, Field, HoleRun, PlayCtx, Player } from './round';
-import { PUTT_V2, carryFor, chooseShot, hitShot, luckyPutt, putt, rng, type ShotSkill } from './shot';
+import { PUTT_V2, carryFor, puttEase, chooseShot, hitShot, luckyPutt, putt, rng, type ShotSkill } from './shot';
 import { hasMech, kitOf, type ModCtx } from './mods';
 import { readShape, shapeEffect, type ShotShape } from './shape';
 import { holeFrom } from './courseview';
@@ -46,8 +46,9 @@ function backToFairway(view: CourseView, hole: PlayHole, p: Pt, reach: number): 
   for (let s = 1; s <= reach && s <= bd + 1; s++) { const q = { x: p.x + ux * s, y: p.y + uy * s }; if (view.lieAt(q.x, q.y) === 'fairway') return q; }
   return null;
 }
-/** the shot model's current version (OwnerInput.v): 2 since T334 (the putting), 3 since T346 (the club's own run after landing: a shot with conditions rolls on by CLUB_RUN) */
-export const MODEL_V = 3;
+/** the shot model's current version (OwnerInput.v): 2 since T334 (the putting), 3 since T346 (the club's own run after landing: a shot with conditions rolls on by CLUB_RUN), 4 since 2026-11-15 (short putts
+ *  much easier to sink: shot.ts PUTT_EASY) */
+export const MODEL_V = 4;
 /** the owner's turn: his golfer, the hole (index, number, par), the stroke he plays, the minute he strikes, his lie, his ball and the pin (tiles), the
  *  distance to the pin (metres), and the suggested shot: the model's club and aim, and the power that carries to the aim (1 on the green) */
 export interface OwnerTurn { golfer: number; holeIdx: number; hole: number; par: number; stroke: number; t: number; lie: Lie; ball: Pt; pin: Pt; distM: number;
@@ -162,11 +163,13 @@ export function shotOutcome(view: CourseView, hole: PlayHole, from: Pt, plie: Li
     const distM = L * TILE_M, v2 = (input.v ?? 1) >= 2, deg = Math.abs(e) * 180 / Math.PI;
     // (T334: v2: the aim's tolerance is the cup's angle at this distance, and the power's error is in metres: shot.ts PUTT_V2)
     // (T335: `line`, the putter's accuracy on the line: the angle a putt may be off and still drop is the cup's angle times it; 1: as before)
-    const tol = (v2 ? Math.min(PUTT_V2.maxDeg, Math.max(PUTT_V2.minDeg, Math.atan(PUTT_V2.cupM / Math.max(distM, 0.25)) * 180 / Math.PI)) : AIM_DEG) * kit.line;
+    // (v4: short putts get PUTT_EASY's help, fading to none at its nearM: a wider cup, a wider pace window, a later fall of the make chance)
+    const ez = (input.v ?? 1) >= 4 ? puttEase(distM) : PUTT_V2;
+    const tol = (v2 ? Math.min(ez.maxDeg, Math.max(PUTT_V2.minDeg, Math.atan(ez.cupM / Math.max(distM, 0.25)) * 180 / Math.PI)) : AIM_DEG) * kit.line;
     // (T335: `feel`, the putter's distance control: the pace error counts for 1 / feel of what it was, in the window and in the leave; 1: as before)
     const paceErr = Math.abs(pw - 1) / kit.feel;
-    const factor = deg <= tol ? (v2 ? Math.max(0, 1 - paceErr * distM / PUTT_V2.windowM) : Math.max(0, 1 - 4 * paceErr)) : 0;
-    let k = putt(r, kit.skill, distM, factor, v2);
+    const factor = deg <= tol ? (v2 ? Math.max(0, 1 - paceErr * distM / ez.windowM) : Math.max(0, 1 - 4 * paceErr)) : 0;
+    let k = putt(r, kit.skill, distM, factor, v2, v2 ? ez.offsetM : undefined);
     k = luckyPutt(r, k, distM, kit.luck); // (T335: a lucky drop or a lip-out: one more draw, only for a putter with luck)
     k.leaveM *= kit.spread; // (T334 part 2: touch tightens the leave)
     if (k.holed) { to = { x: hole.pin.x, y: hole.pin.y }; lie = 'green'; holed = true; }
