@@ -158,7 +158,7 @@ function actorArt(r, fa, ps, K) {
 // the style menu's Golfer column (without a host: in host mode he is the golfer of his player card)
 function golferCol() {
   const b = (id, name) => '<button type="button" data-kind="g" data-id="' + id + '"' + ((gaSolo || 'voxel') === id ? ' class="on"' : '') + '>' + name + '</button>';
-  return '<div class="grp"><i>Golfer</i>' + b('voxel', 'Cinderlinks') + GOLFART_IDS.map((id) => b(id, gaName(id))).join('') + '</div>';
+  return '<div class="grp"><i>Golfer</i>' + b('voxel', 'Classic') + GOLFART_IDS.map((id) => b(id, gaName(id))).join('') + '</div>';
 }
 function golferPick(id) {
   gaSolo = GOLFART_IDS.includes(id) ? id : '';

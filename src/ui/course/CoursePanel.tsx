@@ -38,7 +38,7 @@ export function CoursePanel({ game, looks = false, onLooks }: { game: Game; look
   // New hole's editor on screen (T238: Edit hole with a brush in hand too): its card in New hole's place, Shape by hand under it hidden
   const shape = !ui || ui.shapeByHand, plan = p.planOpen, lock = ui?.newHoleLock ?? null;
   // #1296 (docs/JAM.md "Future development": Shape by hand is hidden in the jam, holes come from New hole): the Holes strip stays, the brushes and More options go
-  const hand = shape && !JAM;
+  const hand = shape;   // (2026-11-15: painting by hand in the jam build too)
   // ↶ ↷ name what they take back (P23 4.3); in New hole its own clicks and drags come first (P23 4.4, T119)
   const un = p.topUndo, re = p.topRedo;
   // T256 (#743): Range › Build: the same painting tools, on your property (cells of no hole)

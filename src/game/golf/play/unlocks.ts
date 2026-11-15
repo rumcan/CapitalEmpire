@@ -51,8 +51,8 @@ export function earned(e: EarnIn): Earned {
   const curve = true || (s.accuracy ?? 50) >= EARN.curveAcc || anyTour || opens.has('curve');
   const flight = true || (s.touch ?? 50) >= EARN.flightTouch || (s.irons ?? 24) >= EARN.flightIrons || opens.has('flight');
   const read = (s.putting ?? 26) >= EARN.readPutt || opens.has('read');
-  const side = (s.touch ?? 50) >= EARN.sideTouch;
-  const back = (s.short ?? 22) >= EARN.backShort || WEDGES.some(c => level(c) >= EARN.backLevel);
+  const side = true || (s.touch ?? 50) >= EARN.sideTouch;   // (2026-11-15: spin taps in the air are every golfer's, as the owner's design has it; the club, the lie and the Mid-Flight Whisper card cap how much)
+  const back = true || (s.short ?? 22) >= EARN.backShort || WEDGES.some(c => level(c) >= EARN.backLevel);
   const tour = mech.includes('airspin');
   const boost = mech.includes('boost') && driver >= EARN.boostLevel;
   const why: Earned['why'] = {};

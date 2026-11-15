@@ -1,5 +1,6 @@
-// T336 (#962): the cards' pictures. A card with a TrickOrTreat painting (`art`: src/assets/cards/<art>.webp, cut by scripts/assets/prep-card-art.mjs) shows it; every other card is a drawn glyph on a dark frame lit from the
-// upper right (the owner's single sun): a labelled stand-in ("Stand In for card art"; docs/GOLF-SPRITES.md asks for the real paintings). Plain SVG, no atlas page. The vending machine's duds (golf junk) are glyphs too, in grey.
+// T336 (#962), #1286: the cards' pictures. Every card has a painting (`art`: src/assets/cards/<art>.webp, cut by scripts/assets/prep-card-art.mjs from TrickOrTreat's treats and
+// four ChatGPT sheets); a card whose painting is missing (or the jam build, which bundles only three: vite.config.ts jamCut) falls back to a drawn glyph on a dark frame lit from
+// the upper right (the owner's single sun). Plain SVG, no atlas page. The vending machine's duds (golf junk) are glyphs, in grey.
 import type { ReactNode } from 'react';
 import type { Glyph } from '../../game/golf/cards';
 

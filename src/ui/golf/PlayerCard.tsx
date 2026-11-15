@@ -3,6 +3,7 @@
 // Opened from the range card's "Your golf" block or the top bar's You chip; T240 (your character) adds the looks and the name.
 import type { PlayerCardView } from '../../game/golf/player';
 import { Icon } from '../Icon';
+import { Emblem, emblemOfTitle } from '../Emblem';
 
 const clock = (m: number) => `${String(Math.floor(m / 60) % 24).padStart(2, '0')}:${String(Math.floor(m % 60)).padStart(2, '0')}`;
 const hcp = (h: number) => h < 0 ? `+${(-h).toFixed(1)}` : h.toFixed(1);
@@ -70,7 +71,7 @@ export function PlayerCard({ view, onClose, onBook, onCancel, onBag, right = 'ri
       <div className="space-y-1" data-testid="player-titles">
         <div className="text-[12px] uppercase text-slate-400">Titles</div>
         {view.titles.length ? view.titles.map((t, i) => (
-          <div key={i} className="flex items-center gap-1.5 text-[12px] font-semibold text-amber-200"><Icon name="trophy" size={13} /><span>{t}</span></div>
+          <div key={i} className="flex items-center gap-1.5 text-[12px] font-semibold text-amber-200"><Emblem id={emblemOfTitle(t)} size={22} fallback={<Icon name="trophy" size={13} />} /><span>{t}</span></div>
         )) : <div className="text-[12px] text-slate-400">None yet. Win the Club Championship (May, handicap 18.0 or less) or the Mayor's Cup (October) at your club.</div>}
       </div>
     </div>

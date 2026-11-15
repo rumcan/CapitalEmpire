@@ -18,7 +18,7 @@ const facts = (o: Partial<ClubTitleFacts> = {}): ClubTitleFacts => ({ seed: 1234
 
 describe("the club's name at each stage (golf/clubtitle.ts)", () => {
   it('a range start with no hole is its driving range; with a hole a golf club; from the tier 4 a golf and country club', () => {
-    assert.equal(MAP_NAME, 'Maple Falls');
+    assert.equal(MAP_NAME, 'Pine Falls');
     assert.equal(clubStage({ range: true, holes: 0, tier: 1 }), 'range');
     assert.equal(clubStage({ range: true, holes: 1, tier: 1 }), 'club', 'the first hole makes it a club');
     assert.equal(clubStage({ range: true, holes: 9, tier: 3 }), 'club');
@@ -29,25 +29,25 @@ describe("the club's name at each stage (golf/clubtitle.ts)", () => {
   });
   it("the tier boundary is the first tier with hospitality and hotel rooms: the Classic, tier 4", () => {
     assert.equal(COUNTRY_CLUB_TIER, 4);
-    assert.equal(TIERS[COUNTRY_CLUB_TIER - 1]!.name, 'Maple Falls Classic');
+    assert.equal(TIERS[COUNTRY_CLUB_TIER - 1]!.name, 'Pine Falls Classic');
     assert.ok(!TIERS[COUNTRY_CLUB_TIER - 2]!.needs.includes('hospitality'), 'the tier below has none');
     assert.ok(TIERS[COUNTRY_CLUB_TIER - 1]!.needs.includes('hospitality') && TIERS[COUNTRY_CLUB_TIER - 1]!.needs.includes('hotelRooms'));
   });
   it('the names, full and short', () => {
-    assert.equal(clubName('range'), 'Maple Falls Driving Range');
-    assert.equal(clubName('club'), 'Maple Falls Golf Club');
-    assert.equal(clubName('country'), 'Maple Falls Golf & Country Club', "the concept's title");
-    assert.equal(clubName('range', true), 'Maple Falls Range');
-    assert.equal(clubName('club', true), 'Maple Falls GC');
-    assert.equal(clubName('country', true), 'Maple Falls G&CC');
+    assert.equal(clubName('range'), 'Pine Falls Driving Range');
+    assert.equal(clubName('club'), 'Pine Falls Golf Club');
+    assert.equal(clubName('country'), 'Pine Falls Golf & Country Club', "the concept's title");
+    assert.equal(clubName('range', true), 'Pine Falls Range');
+    assert.equal(clubName('club', true), 'Pine Falls GC');
+    assert.equal(clubName('country', true), 'Pine Falls G&CC');
     assert.equal(clubName('club', false, 'Pine Hollow'), 'Pine Hollow Golf Club', 'any map name');
   });
   it('the title carries the name for the facts: a range start, a club with holes, a top-tier club', () => {
-    assert.equal(clubTitle(facts({ range: true, holes: 0 })).name, 'Maple Falls Driving Range');
-    assert.equal(clubTitle(facts({ range: true, holes: 3 })).name, 'Maple Falls Golf Club');
-    assert.equal(clubTitle(facts({ tier: 2 })).name, 'Maple Falls Golf Club');
-    assert.equal(clubTitle(facts({ tier: 5 })).name, 'Maple Falls Golf & Country Club');
-    assert.equal(clubTitle(facts({ tier: 5 })).short, 'Maple Falls G&CC');
+    assert.equal(clubTitle(facts({ range: true, holes: 0 })).name, 'Pine Falls Driving Range');
+    assert.equal(clubTitle(facts({ range: true, holes: 3 })).name, 'Pine Falls Golf Club');
+    assert.equal(clubTitle(facts({ tier: 2 })).name, 'Pine Falls Golf Club');
+    assert.equal(clubTitle(facts({ tier: 5 })).name, 'Pine Falls Golf & Country Club');
+    assert.equal(clubTitle(facts({ tier: 5 })).short, 'Pine Falls G&CC');
     assert.equal(clubTitle(facts({ range: true, holes: 0 })).stage, 'range');
   });
 });
@@ -94,7 +94,7 @@ describe('the date line: Year N • Month • Weather temp°C', () => {
     assert.ok(seen.size > 3, 'the weather and the temperature vary with the map');
   });
   it('the road a range stands on is in its tooltip, only while it is the range', () => {
-    assert.match(clubTitle(facts({ range: true, holes: 0, road: 'County Road 75' })).tip, /^Maple Falls Driving Range, on County Road 75 · Year 1/);
+    assert.match(clubTitle(facts({ range: true, holes: 0, road: 'County Road 75' })).tip, /^Pine Falls Driving Range, on County Road 75 · Year 1/);
     assert.doesNotMatch(clubTitle(facts({ range: true, holes: 2, road: 'County Road 75' })).tip, /County Road/);
   });
 });
@@ -144,7 +144,7 @@ describe('the width rule: the compact title below 2560 px, the full from 2560 px
   const html = renderToStaticMarkup(createElement(ClubTitleText, { title: t }));
   const css = readFileSync('src/index.css', 'utf8'), app = readFileSync('src/App.tsx', 'utf8');
   it('both forms are in the markup, the width picks one (nothing is measured in script)', () => {
-    assert.match(html, /data-testid="title-name"><span class="title-full">Maple Falls Golf &amp; Country Club<\/span><span class="title-compact">Maple Falls G&amp;CC<\/span><\/div>/);
+    assert.match(html, /data-testid="title-name"><span class="title-full">Pine Falls Golf &amp; Country Club<\/span><span class="title-compact">Pine Falls G&amp;CC<\/span><\/div>/);
     assert.match(html, /data-testid="title-sub"><span class="title-full">Year 3 • October<\/span><span class="title-compact">Year 3 • Oct<\/span><span> • <\/span><span class="club-title-weather">(Sunny|Overcast|Rain|Storm|Hot) −?\d+°C<\/span><\/div>/);
   });
   it('index.css: the compact form shows by default and the full one from TITLE_FULL_FROM', () => {
@@ -156,7 +156,7 @@ describe('the width rule: the compact title below 2560 px, the full from 2560 px
     assert.match(css, /\.club-title-name \{[^}]*overflow: hidden; text-overflow: ellipsis;/, 'never wraps: cut with an ellipsis');
   });
   it('the compact title is no wider than the bar allows where it is full (2200 to 2559 px, about 180 px): its words are short', () => {
-    // measured in the browser at 18 px / 12 px (the PR's screenshots): the compact name and line are 172 px for "Maple Falls Range" over a Sep line; the
+    // measured in the browser at 18 px / 12 px (the PR's screenshots): the compact name and line are 172 px for "Pine Falls Range" over a Sep line; the
     // budget is in characters here: the longest compact name 17, the longest compact line "Year 12 • Sep • Overcast −12°C" (30)
     for (const stage of ['range', 'club', 'country'] as const) assert.ok(clubName(stage, true).length <= 17, `${stage}: ${clubName(stage, true)}`);
     let longest = 0;
@@ -174,7 +174,7 @@ describe('the width rule: the compact title below 2560 px, the full from 2560 px
     assert.match(readFileSync('src/game/engine.ts', 'utf8'), /titleName\(holes: number = this\.inviteCheck\(\)\?\.holes \?\? 0\): ClubTitle \| null \{\s*const g = this\.golf; if \(!g\) return null;/, 'null outside golf mode');
   });
   it("the tooltip holds the whole title: name · line, and the range's road", () => {
-    assert.equal(t.tip, `Maple Falls Golf & Country Club · ${t.sub}`);
+    assert.equal(t.tip, `Pine Falls Golf & Country Club · ${t.sub}`);
     assert.ok(t.sub.startsWith('Year 3 • October • '));
   });
 });

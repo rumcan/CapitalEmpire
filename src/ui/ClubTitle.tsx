@@ -1,6 +1,6 @@
 // The golf top bar's title (T235, #690; the concept's): the club's name in the serif over "Year 3 • October • Sunny 16°C", the weather in gold.
-// golf/clubtitle.ts words it. The owner's one-row rule (T135, T233) holds: from 2560 px the full name ("Maple Falls Golf & Country Club") and the
-// month in full; narrower the compact title ("Maple Falls G&CC", "Year 3 • Oct", the name and the line a size smaller), which is no wider than
+// golf/clubtitle.ts words it. The owner's one-row rule (T135, T233) holds: from 2560 px the full name ("Pine Falls Golf & Country Club") and the
+// month in full; narrower the compact title ("Pine Falls G&CC", "Year 3 • Oct", the name and the line a size smaller), which is no wider than
 // the old two-line title was at the widths where the bar is full (2200 to 2559 px: the chips' words and the tier's line are in); below 1900 px
 // the words are hidden (App). Both forms are in the markup and the width picks one (index.css .title-full / .title-compact), so nothing is
 // measured in script. The full text is the block's tooltip (the App puts it on the leaf too, so it is there where the words are hidden).

@@ -5,7 +5,7 @@
   "sets": [
     {
       "subject": "golf:clubhouse-shanty",
-      "name": "Starter clubhouse (a tin and tarp shack)",
+      "name": "Retired starter clubhouse (old style)",
       "version": 1,
       "review": "approved",
       "reviewBasis": "Reuse already-registered native art; no owner flag or held source; source hashes reverified 2026-11-07. No new approval of candidate art.",
@@ -5009,7 +5009,7 @@
     },
     {
       "subject": "town:firestation",
-      "name": "Maple Falls Fire House",
+      "name": "Pine Falls Fire House",
       "version": 1,
       "review": "approved",
       "reviewBasis": "Reuse already-registered native art; no owner flag or held source; source hashes reverified 2026-11-07. No new approval of candidate art.",

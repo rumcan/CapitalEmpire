@@ -257,14 +257,23 @@ function atlasKtx2(): Plugin {
 }
 
 /** the jam build's asset cut (docs/JAM.md; itch.io's 500 MB): files that only a switched-off feature loads are not bundled. Greenkeeping is off (features.ts), so its
- *  condition-layer pictures (src/assets/ground/grass-management, about 160 MB) are never fetched: the ground worker's glob is pointed at nothing. */
+ *  condition-layer pictures (src/assets/ground/grass-management, about 160 MB) are never fetched: the ground worker's glob is pointed at nothing.
+ *  #1286: the Prize Machine and the Cards card are hidden in the jam (App.tsx), so of the card paintings (src/assets/cards, inlined there: each is under 128 KB) only the
+ *  three the jam always had are bundled, for the help sheet's Cards tab; every other card draws its glyph there, as before. */
+const JAM_CARD_ART = "'../../assets/cards/{batteries,masher,yoyo}.webp'";
 function jamCut(): Plugin {
   return {
     name: "capitalempire-jam-cut",
     apply: "build",
     enforce: "pre",
     transform(code, id) {
-      if (!JAM_BUILD || !id.endsWith("src/game/ground.worker.ts")) return null;
+      if (!JAM_BUILD) return null;
+      if (id.endsWith("src/ui/golf/CardArt.tsx")) {
+        const from = "'../../assets/cards/*.webp'";
+        if (!code.includes(from)) throw new Error("jam cut: CardArt's card-painting glob moved; update vite.config.ts jamCut");
+        return code.replace(from, JAM_CARD_ART);
+      }
+      if (!id.endsWith("src/game/ground.worker.ts")) return null;
       const from = "'../assets/ground/grass-management/**/*.{webp,png}'";
       if (!code.includes(from)) throw new Error("jam cut: the ground worker's grass-management glob moved; update vite.config.ts jamCut");
       return code.replace(from, "'../assets/ground/grass-management/__jam_none__/*.png'");
@@ -274,7 +283,7 @@ function jamCut(): Plugin {
 
 /** J7c (#1230): the jam build's page is Fairway Fortune from the first moment (index.html's own title is the town builder's) */
 function jamTitle(): Plugin {
-  return { name: "capitalempire-jam-title", transformIndexHtml: (html) => (JAM_BUILD ? html.replace(/<title>[^<]*<\/title>/, "<title>Fairway Fortune</title>") : html) };
+  return { name: "capitalempire-jam-title", transformIndexHtml: (html) => (JAM_BUILD ? html.replace(/<title>[^<]*<\/title>/, "<title>Golf Manager 2026</title>") : html) };
 }
 
 // https://vite.dev/config/

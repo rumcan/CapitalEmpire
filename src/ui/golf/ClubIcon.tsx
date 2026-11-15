@@ -1,6 +1,8 @@
 // T335 (#961): the bag's club icons. A drawn stand-in ("Stand In for club icons", docs/GOLF-SPRITES.md asks for the real ones): a shaft and a head by the club's family, the head tinted by its upgrade level
 // (Garage-sale slate, Club sky, Tour green, Prototype gold), lit from the upper right (the owner's single sun). Plain SVG, no atlas page.
 import type { Club } from '../../game/golf/play';
+import { CLUB_TILE, tileUrl } from '../tool-tiles';
+import { paintedUi } from '../ui-art-look';
 
 /** the head's colour by level: Garage-sale, Club, Tour, Prototype */
 export const LEVEL_COLOR: readonly string[] = ['#94a3b8', '#38bdf8', '#34d399', '#fbbf24'];
@@ -8,6 +10,9 @@ export const LEVEL_COLOR: readonly string[] = ['#94a3b8', '#38bdf8', '#34d399', 
 /** a club's icon: `level` tints the head (0..3), `size` is its side in px */
 export function ClubIcon({ club, level = 0, size = 28 }: { club: Club; level?: number; size?: number }) {
   const c = LEVEL_COLOR[Math.min(3, Math.max(0, level))]!, rim = 'rgba(15,23,42,0.85)';
+  // #1304: the painted club tile (sheet v8, tool-tiles.ts CLUB_TILE) with the level's colour as its ring; the drawn club stays the old look's (ui-art-look.ts)
+  const tile = paintedUi() ? tileUrl(CLUB_TILE[club]!) : undefined;
+  if (tile) return <img src={tile} width={size} height={size} alt="" aria-hidden="true" draggable={false} data-club-tile={CLUB_TILE[club]} className="shrink-0 select-none rounded-[14%]" style={{ boxShadow: `0 0 0 2px ${c}` }} />;
   let head;
   switch (club) {
     case 'driver': head = <ellipse cx="10" cy="24.5" rx="8.6" ry="5" transform="rotate(-22 10 24.5)" fill={c} stroke={rim} strokeWidth="1.2" />; break;

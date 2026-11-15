@@ -36,7 +36,7 @@ start "" "%EDGE%" --app="file:///%~dp0index.html" --new-window --user-data-dir="
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<title>Cinderlinks</title>
+<title>Golf Manager 2026</title>
 <link rel="stylesheet" href="style.css">
 <link rel="icon" href="data:,">
 </head>
@@ -105,13 +105,13 @@ button { font-family: var(--sans); }
 #hud { position: absolute; inset: 0; pointer-events: none; font-size: clamp(11px, 1.016cqw, 15px); line-height: 1.35; }
 
 /* the glass panels (CapitalEmpire's .glass): the card, the help, the shot panel, the settings menu, the leaderboard and match cards */
-.panel, #card, #help, #shotc, #styleMenu { background: var(--panel); border: 1px solid var(--line); border-radius: 1.1em; box-shadow: var(--shadow); color: var(--ink); }
-body > .panel { border-radius: 0.9em; }
-#prac .pd { display: flex; gap: 0.7em; align-items: flex-start; padding: 0.5em 0.55em; margin: 0.35em 0; border: 1px solid var(--line); border-radius: 0.8em; background: rgba(0, 0, 0, 0.22); cursor: pointer; }
+.panel, #card, #help, #shotc, #styleMenu { background: var(--panel); border: 1px solid var(--line); border-radius: 0; box-shadow: var(--shadow); color: var(--ink); }
+body > .panel { border-radius: 0; }
+#prac .pd { display: flex; gap: 0.7em; align-items: flex-start; padding: 0.5em 0.55em; margin: 0.35em 0; border: 1px solid var(--line); border-radius: 0; background: rgba(0, 0, 0, 0.22); cursor: pointer; }
 #prac .pd.on { border-color: var(--gold-line); background: var(--gold-wash); } #prac .pd.off { opacity: 0.45; cursor: default; } #prac .pd.done .pt i { color: var(--good); } #prac .pd:hover:not(.off) { border-color: var(--line-hi); }
 #prac .pt { display: flex; justify-content: space-between; gap: 0.5em; } #prac .pt b { color: var(--ink); } #prac .pt i { font-style: normal; color: var(--gold-hi); } #prac .pg { color: var(--ink); font-size: 0.92em; margin-top: 0.15em; } #prac .pr { color: var(--muted); font-size: 0.85em; } #prac .pw { color: var(--warn); font-size: 0.85em; margin-top: 0.1em; }
 #prac .pb { height: 0.4em; margin: 0.25em 0; border-radius: 999px; background: rgba(255, 255, 255, 0.1); overflow: hidden; } #prac .pb u { display: block; height: 100%; text-decoration: none; border-radius: 999px; background: var(--gold); } #prac .pd.done .pb u { background: var(--good); }
-#prac .pi { flex: none; width: 64px; height: 64px; border-radius: 12%; pointer-events: none; } #prac .px { flex: 1; min-width: 0; }   /* (J8: a drill's tile at the left of its words; #1301: 64 px, a card) */
+#prac .pi { flex: none; width: 64px; height: 64px; border-radius: 0; pointer-events: none; } #prac .px { flex: 1; min-width: 0; }   /* (J8: a drill's tile at the left of its words; #1301: 64 px, a card) */
 #prac .pn { margin-top: 0.45em; color: var(--gold-hi); } #prac .pf { margin-top: 0.25em; color: var(--muted); font-size: 0.88em; }
 /* #1344 (the owner: "make the 'practice - the range' window shrink and expand"): the practice panel's place and size live here so it can fold. Its header folds it; folded, the
    header alone is a pill in the hole pill's look (the serif gold word, the place, the ball, the arrow). Long words wrap: never a sideways scroll bar */
@@ -124,7 +124,7 @@ body > .panel { border-radius: 0.9em; }
 #prac .ph i::before, #prac .ph em::before { content: '\00b7'; margin-right: 0.5em; color: var(--muted); }
 #prac .ph s { margin-left: auto; padding-left: 0.3em; text-decoration: none; color: var(--muted); font-size: 0.8em; }
 #prac .ph:hover b { color: var(--gold); } #prac .ph:hover s { color: var(--gold-hi); }
-#prac.fold { width: auto; max-width: min(24em, 40%); padding: 0.35em 0.8em 0.4em; border-radius: 1.1em; overflow: hidden; }
+#prac.fold { width: auto; max-width: min(24em, 40%); padding: 0.35em 0.8em 0.4em; border-radius: 0; overflow: hidden; }
 #prac.fold > :not(.ph) { display: none; }
 #prac.fold .ph { position: static; margin: 0; padding: 0; border: 0; background: none; }
 #prac.fold .ph em { display: inline; }
@@ -145,7 +145,7 @@ body > .panel { border-radius: 0.9em; }
 /* #1344 (the owner: "add some info about the ball you just hit. center top"): the last ball's launch-monitor strip, at the top centre under the edge, between the hole pill (left, at most
    26em wide) and the map (right): the club, a row of cells (a small caps name over the number) that wraps, and one or two tips. Only while there is a last ball */
 #lastBall { position: absolute; left: 50%; top: 2%; transform: translateX(-50%); display: none; box-sizing: border-box; width: max-content; max-width: min(40em, calc(100% - 2 * (1.4% + 27em)));
-  padding: 0.4em 0.65em 0.45em; border-radius: 1.1em; pointer-events: auto; font-size: 0.92em; line-height: 1.3; overflow-wrap: anywhere; }
+  padding: 0.4em 0.65em 0.45em; border-radius: 0; pointer-events: auto; font-size: 0.92em; line-height: 1.3; overflow-wrap: anywhere; }
 #lastBall.on { display: block; }
 #lastBall .lbh { display: flex; align-items: center; gap: 0.5em; white-space: nowrap; overflow-wrap: normal; }
 #lastBall .lbh b { font: 700 1.05em/1.2 var(--serif); color: var(--gold-hi); }
@@ -154,19 +154,19 @@ body > .panel { border-radius: 0.9em; }
 #lastBall .lbx { flex: none; width: 1.55em; height: 1.55em; padding: 0; display: grid; place-items: center; border: 1px solid var(--line-hi); border-radius: 50%; background: rgba(255, 255, 255, 0.06); color: var(--muted); font: 700 0.95em/1 var(--sans); cursor: pointer; }
 #lastBall .lbx:hover { color: var(--gold-hi); border-color: var(--gold-line); }
 #lastBall .lbr { display: flex; flex-wrap: wrap; gap: 0.3em; margin-top: 0.3em; }
-#lastBall .lbr span { display: flex; flex-direction: column; flex: 1 0 auto; min-width: 4.4em; padding: 0.12em 0.5em 0.18em; border-radius: 0.6em; background: rgba(0, 0, 0, 0.25); border: 1px solid var(--line); }
+#lastBall .lbr span { display: flex; flex-direction: column; flex: 1 0 auto; min-width: 4.4em; padding: 0.12em 0.5em 0.18em; border-radius: 0; background: rgba(0, 0, 0, 0.25); border: 1px solid var(--line); }
 #lastBall .lbr i { font-style: normal; font-size: 0.7em; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); white-space: nowrap; }
 #lastBall .lbr b { font-weight: 700; color: var(--ink); font-variant-numeric: tabular-nums; white-space: nowrap; }
 #lastBall .lbt { margin-top: 0.3em; font-size: 0.95em; }
 #lastBall .lbt div::before { content: '\203a'; margin-right: 0.4em; color: var(--muted); }
 #lastBall .lbt .tip { color: var(--gold-hi); } #lastBall .lbt .good { color: var(--good); }
-.pflag { padding: 0.1em 0.45em; border-radius: 0.5em; background: var(--panel); border: 1px solid var(--gold-line); color: var(--ink); font: 600 clamp(10px, 0.85vw, 13px) system-ui, sans-serif; white-space: nowrap; }
+.pflag { padding: 0.1em 0.45em; border-radius: 0; background: var(--panel); border: 1px solid var(--gold-line); color: var(--ink); font: 600 clamp(10px, 0.85vw, 13px) system-ui, sans-serif; white-space: nowrap; }
 body > .panel > b:first-child { font-size: 0.85em; letter-spacing: 0.12em; text-transform: uppercase; color: var(--gold); }
 
 /* 2026-11-15 (the owner: "Stuff should be collapsed"): the card is a small pill: the hole in the serif, gold, then par, the way to the pin and the shot, and the
    wind (an arrow as the camera sees it and its mph, gold in a gust) in it; on the green the break under it. A click opens its facts beneath (CapitalEmpire's stat
    lines: muted name, bold cream figure); the choice is kept */
-#card { position: absolute; left: 1.4%; top: 2%; box-sizing: border-box; max-width: min(26em, 44%); display: flex; flex-wrap: wrap; align-items: center; gap: 0.15em 0.6em; padding: 0.35em 0.8em 0.4em; border-radius: 1.1em; pointer-events: auto; cursor: pointer; }
+#card { position: absolute; left: 1.4%; top: 2%; box-sizing: border-box; max-width: min(26em, 44%); display: flex; flex-wrap: wrap; align-items: center; gap: 0.15em 0.6em; padding: 0.35em 0.8em 0.4em; border-radius: 0; pointer-events: auto; cursor: pointer; }
 #card:hover { border-color: var(--gold-line); }
 #cardLine { display: flex; align-items: baseline; gap: 0.5em; white-space: nowrap; font-variant-numeric: tabular-nums; min-width: 0; }
 #cardLine b { font: 700 1.15em/1.2 var(--serif); color: var(--gold-hi); }
@@ -192,9 +192,9 @@ body.host #minimap { top: 56px; }
 /* #1327 (the owner: "add minimap of the hole you are playing in the top right, that shows where you are and where you are aiming"): the hole's map, tee at the bottom and the green at the top as the camera
    looks down the hole, sized to the hole (--mapw, --mapb: its width, and how far down it reaches, in em, set with each hole; the wind sits left of it and the shot panel below it). The folded HUD does not hide it
    in CapitalEmpire; a click folds it to a small pill (kept). Only the dots and the line over it are redrawn. */
-#minimap { position: absolute; right: 1.4%; top: 2%; padding: 0.25em; line-height: 0; pointer-events: auto; cursor: pointer; background: var(--panel); border: 1px solid var(--line-hi); border-radius: 0.9em; box-shadow: var(--shadow); }
+#minimap { position: absolute; right: 1.4%; top: 2%; padding: 0.25em; line-height: 0; pointer-events: auto; cursor: pointer; background: var(--panel); border: 1px solid var(--line-hi); border-radius: 0; box-shadow: var(--shadow); }
 #minimap:hover { border-color: var(--gold-line); }
-#mini { display: block; image-rendering: pixelated; border-radius: 0.65em; }
+#mini { display: block; image-rendering: pixelated; border-radius: 0; }
 #miniTag { position: absolute; right: 0.5em; top: 0.5em; width: 1.35em; height: 1.35em; border-radius: 50%; background: var(--panel); border: 1px solid var(--line-hi); color: var(--gold-hi); font: 700 0.85em/1.25em var(--sans); text-align: center; }
 #minimap.fold { padding: 0.3em 0.8em; border-radius: 999px; line-height: 1.35; }
 #minimap.fold #mini { display: none; }
@@ -204,7 +204,7 @@ body.host #minimap { top: 56px; }
 #power { position: absolute; left: 36%; right: 36%; bottom: 8%; opacity: 0; transition: opacity 0.15s; text-align: center; }
 #power.on { opacity: 1; }
 #swingBtn { position: absolute; left: 50%; bottom: 2.2%; transform: translateX(-50%); width: 23em; height: 3.6em; display: none; pointer-events: auto; cursor: pointer; touch-action: none; user-select: none; overflow: hidden;
-  background: var(--panel); border: 1px solid var(--gold-line); border-radius: 1em; box-shadow: var(--shadow); color: var(--ink); }
+  background: var(--panel); border: 1px solid var(--gold-line); border-radius: 0; box-shadow: var(--shadow); color: var(--ink); }
 #swingBtn.on { display: block; }
 #swingBtn.on:hover { border-color: var(--gold); }
 #swingBtn.idle { opacity: 0.6; cursor: default; border-color: var(--line); }
@@ -218,7 +218,7 @@ body.host #minimap { top: 56px; }
 #swingBtn span { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 1.05em; font-weight: 700; white-space: nowrap; text-shadow: 0 1px 2px rgba(0, 0, 0, 0.85), 0 0 8px rgba(0, 0, 0, 0.5); }
 /* #1336: the tapped boost, a thin bar over the power that rises with each tap of Up and falls when he stops (orange; red with the Power Mash charge armed), and the
    spin readout beside the meter during his flight: a small ball with the spin's dot, its words above it */
-#swingBtn u.boostbar { position: absolute; left: 0; top: 0; width: 0; height: 0.32em; display: none; text-decoration: none; border-radius: 1em 0 0 0; background: linear-gradient(90deg, rgba(255, 196, 96, 0.75), #ff9b3d); box-shadow: 0 0 6px rgba(255, 155, 61, 0.6); }
+#swingBtn u.boostbar { position: absolute; left: 0; top: 0; width: 0; height: 0.32em; display: none; text-decoration: none; border-radius: 0; background: linear-gradient(90deg, rgba(255, 196, 96, 0.75), #ff9b3d); box-shadow: 0 0 6px rgba(255, 155, 61, 0.6); }
 #swingBtn u.boostbar.on { display: block; }
 #swingBtn u.boostbar.armed { background: linear-gradient(90deg, #ff9b3d, #e8573c); box-shadow: 0 0 8px rgba(232, 87, 60, 0.75); }
 #spinRead { position: absolute; bottom: 2.2%; left: calc(50% - 11.5em - 4.2em); width: 3.6em; height: 3.6em; display: none; pointer-events: none; }
@@ -248,12 +248,12 @@ body.host #minimap { top: 56px; }
 #shotc .sh { display: flex; align-items: center; gap: 0.5em; }
 #shotc .sh > b { font-weight: 700; letter-spacing: 0.04em; color: var(--ink); white-space: nowrap; }
 #shotc .sh em { flex: 1; min-width: 0; font-style: normal; font-size: 0.9em; color: var(--gold-hi); text-align: right; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-#shotc .rst { flex: none; padding: 0.15em 0.55em; font: 600 0.85em/1.3 var(--sans); color: var(--ink); background: rgba(255, 255, 255, 0.06); border: 1px solid var(--line-hi); border-radius: 0.6em; cursor: pointer; }
+#shotc .rst { flex: none; padding: 0.15em 0.55em; font: 600 0.85em/1.3 var(--sans); color: var(--ink); background: rgba(255, 255, 255, 0.06); border: 1px solid var(--line-hi); border-radius: 0; cursor: pointer; }
 #shotc .rst:hover { border-color: var(--gold-line); }
 #shotc .bw { position: relative; width: 12em; height: 12em; margin: 0.35em auto 0.15em; }
 #shapeBall { position: absolute; left: 2.2em; top: 2.2em; width: 7.6em; height: 7.6em; cursor: grab; touch-action: none; }
 #shapeArc { position: absolute; right: -0.2em; bottom: -0.1em; width: 2.6em; height: 2.6em; pointer-events: none; }
-#shotc .bw img { position: absolute; width: 2.1em; height: 2.1em; border-radius: 12%; pointer-events: none; }
+#shotc .bw img { position: absolute; width: 2.1em; height: 2.1em; border-radius: 0; pointer-events: none; }
 #shotc .bw img.e-draw { left: 0; top: 4.95em; } #shotc .bw img.e-fade { right: 0; top: 4.95em; } #shotc .bw img.e-high { left: 4.95em; top: 0; } #shotc .bw img.e-low { left: 4.95em; bottom: 0; }
 #shotc .bw img.lock { opacity: 0.3; filter: grayscale(1); }
 /* #1344: a locked side's lock badge (on its tile's corner), the lock line under the ball (always there while anything is locked), and a refused drag's shake and flash */
@@ -261,7 +261,7 @@ body.host #minimap { top: 56px; }
 #shotc .lkb svg { display: block; width: 0.78em; height: 0.78em; }
 #shotc .lkb.lk-draw { left: 1.45em; top: 4.4em; } #shotc .lkb.lk-fade { right: 1.45em; top: 4.4em; } #shotc .lkb.lk-high { left: 6.45em; top: -0.2em; } #shotc .lkb.lk-low { left: 6.45em; top: 9.45em; }
 #shotc.no-draw .lk-draw, #shotc.no-fade .lk-fade, #shotc.no-high .lk-high, #shotc.no-low .lk-low { display: grid; }
-#shotc .lock { margin-top: 0.25em; padding: 0.2em 0.45em; border-radius: 0.6em; text-align: center; font-size: 0.85em; font-weight: 600; line-height: 1.35; color: var(--warn); background: rgba(251, 154, 75, 0.08); white-space: pre-line; cursor: help; }
+#shotc .lock { margin-top: 0.25em; padding: 0.2em 0.45em; border-radius: 0; text-align: center; font-size: 0.85em; font-weight: 600; line-height: 1.35; color: var(--warn); background: rgba(251, 154, 75, 0.08); white-space: pre-line; cursor: help; }
 #shotc .lock:empty { display: none; }
 #shotc .lock.flash { animation: lockFlash 0.45s ease-out; }
 #shapeBall.shake { animation: shapeShake 0.4s ease-in-out; }
@@ -274,15 +274,15 @@ body.host #minimap { top: 56px; }
 #shotc summary { cursor: pointer; font-size: 0.88em; color: var(--muted); }
 #shotc summary:hover { color: var(--ink); }
 /* J8 (#1261), #1301: the painted tile on Go for it: pictures only, never in the way of a click */
-#shotc b img { width: 2.6em; height: 2.6em; border-radius: 12%; pointer-events: none; display: block; }
-#shotc b { cursor: pointer; display: flex; align-items: center; gap: 0.6em; flex: 1; min-width: 0; padding: 0.25em 0.6em 0.25em 0.25em; border-radius: 0.7em; border: 1px solid var(--line); color: #d9d3c4; font-weight: 600; }
+#shotc b img { width: 2.6em; height: 2.6em; border-radius: 0; pointer-events: none; display: block; }
+#shotc b { cursor: pointer; display: flex; align-items: center; gap: 0.6em; flex: 1; min-width: 0; padding: 0.25em 0.6em 0.25em 0.25em; border-radius: 0; border: 1px solid var(--line); color: #d9d3c4; font-weight: 600; }
 #shotc b:hover { background: rgba(255, 255, 255, 0.06); }
 #shotc b.sel { background: var(--gold-btn); color: #1b1406; font-weight: 700; }
 #shotc b.lock { opacity: 0.6; cursor: not-allowed; }
 #shotc b.boost.sel { background: linear-gradient(#ef6a4a, #c2410c); border-color: transparent; color: #fff; }
 #shotc b.sel .lw { color: inherit; }
 #shotc .hw { display: flex; align-items: flex-start; gap: 0.6em; margin-top: 0.4em; font-size: 0.85em; line-height: 1.35; color: #d9d3c4; }
-#shotc .hw img { flex: none; width: 2.4em; height: 2.4em; border-radius: 12%; pointer-events: none; }
+#shotc .hw img { flex: none; width: 2.4em; height: 2.4em; border-radius: 0; pointer-events: none; }
 #shotc .hw b.k { display: inline; padding: 0; border: 0; cursor: default; color: var(--gold-hi); font-weight: 700; }
 #shotc .hw b.k:hover { background: none; }
 #shotc .st { display: flex; flex-direction: column; gap: 0.4em; margin-top: 0.45em; }
@@ -293,32 +293,32 @@ body.host #minimap { top: 56px; }
    open"): one compact picker, the club in hand (its tile, name and carry from this lie) between previous and next arrows, the lie as a small chip beside it
    ("Rough 80%"), the aim's distance above; a click on the club opens his whole bag above it (a grid, never sideways), a click on one takes it */
 #clubs { position: absolute; left: 1.4%; bottom: 2.4%; display: flex; flex-wrap: wrap; gap: 0.45em; max-width: 34%; }
-#clubs .club { display: flex; align-items: center; gap: 0.4em; padding: 0.35em 0.7em 0.4em; border-radius: 0.8em; background: var(--panel); border: 1px solid var(--line); box-shadow: var(--shadow); font-size: 1em; font-weight: 600; color: #d9d3c4; line-height: 1.3; }
+#clubs .club { display: flex; align-items: center; gap: 0.4em; padding: 0.35em 0.7em 0.4em; border-radius: 0; background: var(--panel); border: 1px solid var(--line); box-shadow: var(--shadow); font-size: 1em; font-weight: 600; color: #d9d3c4; line-height: 1.3; }
 #clubs.bag { flex-wrap: nowrap; align-items: center; max-width: calc(50% - 11.5em - 5.4em); }   /* (clear of the swing bar and the room kept beside it) */
-#clubs .pick { display: flex; align-items: stretch; flex: none; pointer-events: auto; background: var(--panel); border: 1px solid var(--gold-line); border-radius: 0.9em; box-shadow: var(--shadow); }
-#clubs .cb { flex: none; width: 1.8em; padding: 0; border: 0; background: none; color: var(--gold-hi); font: 700 1.35em/1 var(--sans); cursor: pointer; border-radius: 0.6em; }
+#clubs .pick { display: flex; align-items: stretch; flex: none; pointer-events: auto; background: var(--panel); border: 1px solid var(--gold-line); border-radius: 0; box-shadow: var(--shadow); }
+#clubs .cb { flex: none; width: 1.8em; padding: 0; border: 0; background: none; color: var(--gold-hi); font: 700 1.35em/1 var(--sans); cursor: pointer; border-radius: 0; }
 #clubs .cb:hover { background: rgba(255, 255, 255, 0.07); }
 #clubs .cur { display: flex; align-items: center; gap: 0.5em; padding: 0.3em 0.35em; cursor: pointer; min-width: 0; border-left: 1px solid var(--line); border-right: 1px solid var(--line); }
 #clubs .cur:hover { background: rgba(255, 255, 255, 0.05); }
-#clubs .cur .ci { flex: none; width: 2.3em; height: 2.3em; border-radius: 12%; pointer-events: none; }
+#clubs .cur .ci { flex: none; width: 2.3em; height: 2.3em; border-radius: 0; pointer-events: none; }
 #clubs .cur span { display: flex; flex-direction: column; font-weight: 700; color: var(--gold-hi); line-height: 1.2; white-space: nowrap; pointer-events: none; }
 #clubs .cur span i { font-style: normal; font-weight: 600; font-size: 0.85em; color: var(--ink); font-variant-numeric: tabular-nums; }
 #clubs .lie { flex: none; pointer-events: auto; padding: 0.2em 0.65em; border-radius: 999px; background: var(--panel); border: 1px solid var(--line); box-shadow: var(--shadow); font-size: 0.9em; font-weight: 600; white-space: nowrap; color: var(--ink); }
 #clubs .lie.cut { color: var(--warn); border-color: rgba(251, 154, 75, 0.5); }
-#clubs .bagl { display: none; position: absolute; left: 0; bottom: calc(100% + 0.45em); grid-template-columns: repeat(3, max-content); gap: 0.3em; padding: 0.4em; max-height: 70cqh; overflow-y: auto; overflow-x: hidden; pointer-events: auto; background: var(--panel); border: 1px solid var(--line); border-radius: 1em; box-shadow: var(--shadow); }
+#clubs .bagl { display: none; position: absolute; left: 0; bottom: calc(100% + 0.45em); grid-template-columns: repeat(3, max-content); gap: 0.3em; padding: 0.4em; max-height: 70cqh; overflow-y: auto; overflow-x: hidden; pointer-events: auto; background: var(--panel); border: 1px solid var(--line); border-radius: 0; box-shadow: var(--shadow); }
 #clubs.open .bagl { display: grid; }
 #clubs.open #aimd { display: none; }
 #clubs .bagl .club { padding: 0.25em 0.55em 0.3em; font-size: 0.88em; cursor: pointer; box-shadow: none; }
 #clubs .bagl .club:hover { border-color: var(--gold-line); }
 #clubs .club.on { border-color: var(--gold); background: linear-gradient(var(--gold-wash), var(--gold-wash)), var(--panel); color: var(--gold-hi); box-shadow: var(--shadow), inset 0 0 12px rgba(245, 181, 46, 0.18); }
-#clubs .club .ci { flex: none; width: 2.5em; height: 2.5em; margin: -0.2em 0; border-radius: 12%; pointer-events: none; } #clubs.bag .club .ci { width: 2.2em; height: 2.2em; }   /* (J8: a club tab's painted tile, its club's: driver, wood, long iron, iron, wedge, putter) */
+#clubs .club .ci { flex: none; width: 2.5em; height: 2.5em; margin: -0.2em 0; border-radius: 0; pointer-events: none; } #clubs.bag .club .ci { width: 2.2em; height: 2.2em; }   /* (J8: a club tab's painted tile, its club's: driver, wood, long iron, iron, wedge, putter) */
 #clubs .club b { margin-right: 0.1em; color: var(--muted); font-weight: 700; }
 #clubs .club.on b { color: var(--gold); }
 #clubs .club i { display: block; font-style: normal; font-weight: 500; font-size: 0.85em; color: var(--muted); font-variant-numeric: tabular-nums; }
 #clubs .club.cut i { color: var(--warn); }
 /* J5f: the aim's distance ("Aim 128 m", written by the view's hostAimRead): a small panel above the club box, whatever height the box is (it is the box's own last child, the box
    is the positioned parent); hidden while empty */
-#aimd { position: absolute; left: 0; bottom: calc(100% + 0.45em); padding: 0.3em 0.75em 0.35em; border-radius: 0.8em; background: var(--panel); border: 1px solid var(--gold-line); box-shadow: var(--shadow); font-size: 1em; font-weight: 600; color: var(--muted); white-space: nowrap; font-variant-numeric: tabular-nums; }
+#aimd { position: absolute; left: 0; bottom: calc(100% + 0.45em); padding: 0.3em 0.75em 0.35em; border-radius: 0; background: var(--panel); border: 1px solid var(--gold-line); box-shadow: var(--shadow); font-size: 1em; font-weight: 600; color: var(--muted); white-space: nowrap; font-variant-numeric: tabular-nums; }
 #aimd:empty { display: none; }
 #aimd b { color: var(--gold-hi); font-weight: 700; }
 #aimd i { margin-left: 0.5em; font-style: normal; font-size: 0.78em; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); }
@@ -337,20 +337,20 @@ body.host #minimap { top: 56px; }
 
 /* the Settings gear and its menu: CapitalEmpire's flyout rows, section names in small caps; the menu opens above the gear, to its left */
 #style { position: relative; text-align: left; }
-#styleMenu { display: none; position: absolute; right: 0; bottom: calc(100% + 0.45em); padding: 0.55em; gap: 0.9em; text-align: left; white-space: nowrap; border-radius: 1em; }
+#styleMenu { display: none; position: absolute; right: 0; bottom: calc(100% + 0.45em); padding: 0.55em; gap: 0.9em; text-align: left; white-space: nowrap; border-radius: 0; }
 #styleMenu.on { display: flex; }
 #styleMenu .grp { display: flex; flex-direction: column; gap: 2px; }
 #styleMenu .dist { width: 12em; white-space: normal; } #styleMenu .dist input { width: 100%; margin: 0.4em 0 0.2em; accent-color: var(--gold); cursor: pointer; } #styleMenu .dist span { display: block; font-size: 0.95em; font-weight: 700; font-variant-numeric: tabular-nums; color: var(--ink); margin-left: 0.45em; } #styleMenu .dist label.simple { display: block; font-size: 0.9em; color: var(--ink); margin: 0.5em 0 0 0.35em; cursor: pointer; } #styleMenu .dist label.simple input { width: auto; margin: 0 0.4em 0 0; vertical-align: middle; }
 #styleMenu .dist em { display: block; font-style: normal; font-size: 0.85em; line-height: 1.35; color: var(--muted); margin: 0.35em 0 0 0.45em; }
 #styleMenu .grp > i { display: block; font-style: normal; font-size: 0.8em; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); margin: 0.1em 0 0.25em 0.45em; }
-#styleMenu button { display: block; width: 100%; padding: 0.3em 0.55em; font-size: 0.95em; text-align: left; color: var(--ink); background: none; border: 1px solid transparent; border-radius: 0.6em; cursor: pointer; }
+#styleMenu button { display: block; width: 100%; padding: 0.3em 0.55em; font-size: 0.95em; text-align: left; color: var(--ink); background: none; border: 1px solid transparent; border-radius: 0; cursor: pointer; }
 #styleMenu button:hover { background: rgba(255, 255, 255, 0.07); } #styleMenu button.on { color: var(--gold-hi); background: var(--gold-wash); border-color: rgba(245, 181, 46, 0.45); }
 
 /* Jump to ball (.btn) and Gimme (the gold button: the thing to take now), each with its key as a keycap */
-#jump, #gimme { position: absolute; right: 1.4%; bottom: calc(2.4% + 3.3em); display: none; align-items: center; gap: 0.45em; padding: 0.45em 0.9em; font-size: 1em; font-weight: 600; color: var(--ink); background: var(--panel); border: 1px solid var(--line-hi); border-radius: 0.8em; box-shadow: var(--shadow); cursor: pointer; pointer-events: auto; }
+#jump, #gimme { position: absolute; right: 1.4%; bottom: calc(2.4% + 3.3em); display: none; align-items: center; gap: 0.45em; padding: 0.45em 0.9em; font-size: 1em; font-weight: 600; color: var(--ink); background: var(--panel); border: 1px solid var(--line-hi); border-radius: 0; box-shadow: var(--shadow); cursor: pointer; pointer-events: auto; }
 #jump.on, #gimme.on { display: inline-flex; } #jump:hover { border-color: var(--gold-line); }
-#jump img, #gimme img { width: 2.1em; height: 2.1em; margin: -0.35em 0; border-radius: 12%; pointer-events: none; }   /* (J8: their painted tiles; a click on one is a click on the button) */
-#jump b, #gimme b { min-width: 1.4em; padding: 0 0.3em; border-radius: 0.35em; border: 1px solid var(--line-hi); background: rgba(255, 255, 255, 0.06); font-size: 0.85em; line-height: 1.45; color: var(--ink); }
+#jump img, #gimme img { width: 2.1em; height: 2.1em; margin: -0.35em 0; border-radius: 0; pointer-events: none; }   /* (J8: their painted tiles; a click on one is a click on the button) */
+#jump b, #gimme b { min-width: 1.4em; padding: 0 0.3em; border-radius: 0; border: 1px solid var(--line-hi); background: rgba(255, 255, 255, 0.06); font-size: 0.85em; line-height: 1.45; color: var(--ink); }
 #jump.on ~ #gimme { bottom: calc(2.4% + 6.3em); }
 #gimme { background: var(--gold-btn); border-color: transparent; color: #1b1406; font-weight: 700; box-shadow: 0 2px 10px rgba(245, 181, 46, 0.35), var(--shadow); }
 #gimme:hover { filter: brightness(1.06); } #gimme b { border-color: rgba(27, 20, 6, 0.35); background: rgba(27, 20, 6, 0.1); color: #1b1406; }
@@ -364,7 +364,7 @@ body.host #minimap { top: 56px; }
 #cover { position: absolute; inset: 0; display: none; place-items: center; z-index: 5; background: radial-gradient(ellipse at center, rgba(20, 21, 25, 0.92), rgba(8, 9, 12, 0.99)); font-size: clamp(11px, 1.016cqw, 15px); }
 #cover.on { display: grid; }
 body:has(#cover.on) > .panel { visibility: hidden; }   /* (J5c: the panels outside the picture, the practice drills, the leaderboard, the match, wait behind the cover too) */
-#cover .cv { min-width: 19em; padding: 1.1em 1.4em 1.2em; text-align: center; background: var(--panel); border: 1px solid var(--line); border-radius: 1.1em; box-shadow: var(--shadow); color: var(--ink); }
+#cover .cv { min-width: 19em; padding: 1.1em 1.4em 1.2em; text-align: center; background: var(--panel); border: 1px solid var(--line); border-radius: 0; box-shadow: var(--shadow); color: var(--ink); }
 #cover i { display: block; font-style: normal; font-size: 0.8em; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: var(--gold); }
 #cover b { display: block; margin-top: 0.25em; font: 700 1.5em/1.25 var(--serif); color: var(--gold-hi); }
 #cover s { display: block; height: 0.45em; margin: 0.9em 0 0.55em; border-radius: 999px; background: rgba(255, 255, 255, 0.08); overflow: hidden; }

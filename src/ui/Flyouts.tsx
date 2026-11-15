@@ -17,16 +17,27 @@ import { columnsOf, navKey, type MenuRow, type NavState } from './flyout-menu';
 import { currentUiScale } from './uiScale';
 import { SurfaceMark } from './course/SurfaceMark';
 import { tileUrl } from './tool-tiles';
+import { Thumb } from './Thumb';
+import { LIBRARY } from '../game/library';
+import type { LibItem } from '../game/types';
 
 /** a column's width (local px, at 100%), a tile grid's (T233: three tiles across), the narrowest either may get (a grid: two across), the gap
  *  between columns, and the room kept under the screen's bottom */
 const COL_W = 232, TILE_COL_W = 280, COL_MIN = 184, GAP = 6, BOTTOM = 12;
-/** whether a column is a grid of tiles (T233: any of its rows has one) */
-export const isTileGrid = (col: readonly MenuRow[]): boolean => col.some(r => !!r.tile);
+/** #1284 (the owner, of the Props flyout: "these icons are too small to see what they are showing. make it a side menu and make them larger"): a props column's width, its tiles two
+ *  across and twice the size */
+const BIG_COL_W = 340;
+/** whether a column is a grid of tiles (T233: any of its rows has one; #1284: or a picture of a library item) */
+export const isTileGrid = (col: readonly MenuRow[]): boolean => col.some(r => !!r.tile || !!r.thumb);
+/** #1284: whether a column is the Props flyout's (its leaves open the Props tool on a group or a side): its tiles are drawn large */
+export const isBigGrid = (col: readonly MenuRow[]): boolean => isTileGrid(col) && col.every(r => r.caption || r.leaf?.act?.k === 'props' || r.key.startsWith('side:'));
+/** the library pictures by id (the rows' thumbs) */
+let BY_ID: Map<string, LibItem> | null = null;
+const libItem = (id: string): LibItem | undefined => (BY_ID ??= new Map(LIBRARY.map(i => [i.id, i]))).get(id);
 /** the columns' widths (local px) in the room there is: each its own (a list's or a grid's), all narrowed alike when they would pass the right
  *  edge, never under COL_MIN */
 export function columnWidths(cols: readonly (readonly MenuRow[])[], room: number): number[] {
-  const want = cols.map(c => (isTileGrid(c) ? TILE_COL_W : COL_W)), sum = want.reduce((a, b) => a + b, 0), fit = room - GAP * cols.length;
+  const want = cols.map(c => (isBigGrid(c) ? BIG_COL_W : isTileGrid(c) ? TILE_COL_W : COL_W)), sum = want.reduce((a, b) => a + b, 0), fit = room - GAP * cols.length;
   const k = sum > fit ? Math.max(0, fit) / sum : 1;
   return want.map(w => Math.max(COL_MIN, Math.floor(w * k)));
 }
@@ -135,18 +146,20 @@ export function Flyouts({ rows, top, left, up = false, startPath = [], keyboard 
   };
   return (
     <div ref={box} className={`flyouts ${up ? 'flyouts-up' : ''}`} style={up ? { left: room.x, height: room.h } : { left }} data-testid="flyouts" data-up={up || undefined} role="presentation">
-      {cols.map((col, level) => { const grid = isTileGrid(col); return (
-        <div key={level} role="menu" aria-orientation="vertical" data-flyout-col={level} className={`flyout glass ${grid ? 'flyout-grid' : ''}`} style={{ top: tops[level] ?? (level ? 0 : top), width: widths[level], maxHeight: room.h }}>
+      {cols.map((col, level) => { const grid = isTileGrid(col), big = isBigGrid(col); return (
+        <div key={level} role="menu" aria-orientation="vertical" data-flyout-col={level} className={`flyout glass ${grid ? 'flyout-grid' : ''}${big ? ' flyout-grid-big' : ''}`} style={{ top: tops[level] ?? (level ? 0 : top), width: widths[level], maxHeight: room.h }}>
           {col.map((r, index) => {
             if (r.caption) return <div key={r.key} className="flyout-caption" role="presentation">{r.label}</div>;
             const opened = nav.path[level] === index && !!r.children, focused = nav.focus?.level === level && nav.focus.index === index;
             // T233: a tile: the picture (or the row's icon on the navy square), its lock, NEW and more marks on it, the name and the reason under it
-            const pic = r.tile ? tileUrl(r.tile) : undefined, mark = r.mark ? <SurfaceMark kind={r.mark} size={grid ? 40 : 22} /> : r.swatch ? <span className="flyout-swatch" style={{ background: r.swatch }} /> : r.icon ? <Icon name={r.icon} size={grid ? 36 : 20} /> : null;
+            // (#1284: a row with no painted tile but a library picture, a props group's first card, wears that picture: never the leaf icon)
+            const pic = r.tile ? tileUrl(r.tile) : undefined, th = !pic && r.thumb ? libItem(r.thumb) : undefined, mark = r.mark ? <SurfaceMark kind={r.mark} size={grid ? 40 : 22} /> : r.swatch ? <span className="flyout-swatch" style={{ background: r.swatch }} /> : r.icon ? <Icon name={r.icon} size={grid ? 36 : 20} /> : null;
             return (
               <button key={r.key} type="button" role="menuitem" data-row={`${level}:${index}`} data-key={r.key} tabIndex={focused ? 0 : -1}
                 data-guide={r.guide ?? (r.leaf ? `tool-${r.leaf.entry.view?.group ?? r.leaf.entry.id}` : undefined)}
                 {...(grid && r.why ? { 'data-tip': `${r.label}: ${r.why}` } : r.note && !r.why ? { 'data-tip': r.note } : {})}
                 {...(grid && r.tile ? { 'data-tile': r.tile } : {})}
+                {...(grid && th ? { 'data-thumb': r.thumb } : {})}
                 aria-haspopup={r.children ? 'menu' : undefined} aria-expanded={r.children ? opened : undefined} aria-disabled={r.why ? true : undefined}
                 className={`flyout-row ${grid ? 'flyout-tile' : ''} ${opened ? 'flyout-row-open' : ''} ${r.why ? 'flyout-row-locked' : ''}${r.gold ? ' flyout-row-gold' : ''}`}
                 onMouseEnter={() => (r.children && !r.why ? open(level, index, false) : shut(level))}
@@ -157,8 +170,8 @@ export function Flyouts({ rows, top, left, up = false, startPath = [], keyboard 
                   onLeaf(r);
                 }}>
                 {grid ? <>
-                  <span className={`flyout-pic ${pic ? '' : 'flyout-pic-icon'}`}>
-                    {pic ? <img src={pic} alt="" draggable={false} /> : mark}
+                  <span className={`flyout-pic ${pic ? '' : th ? 'flyout-pic-thumb' : 'flyout-pic-icon'}`}>
+                    {pic ? <img src={pic} alt="" draggable={false} /> : th ? <Thumb it={th} size={big ? 112 : 60} /> : mark}
                     {r.why && <span className="flyout-pic-lock"><LockMark size={13} /></span>}
                     {r.isNew && !r.why && <NewBadge className="flyout-pic-new" />}
                     {r.children && <span className="flyout-pic-more" aria-hidden>▸</span>}
