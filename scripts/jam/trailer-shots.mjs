@@ -6,7 +6,7 @@
 import { existsSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 
-const SHOTS = ['menu', 'range-build', 'town', 'hole-build', 'paint', 'decor', 'golf-tee', 'golf-draw', 'golf-putt', 'range-practice', 'times', 'night', 'alive']; // (and import, golf-real: a new game on a real course, recorded last)
+const SHOTS = ['menu', 'range-build', 'town-grow', 'town', 'hole-full', 'golf-new', 'texture', 'props-range', 'traffic', 'hole-build', 'paint', 'decor', 'golf-tee', 'golf-draw', 'golf-putt', 'range-practice', 'times', 'night', 'alive']; // (and import, golf-real: a new game on a real course, recorded last)
 
 export async function record(env) {
   const { OUT, SAVE, WORLD, opt, has, launch, newPage, preview, freePort, Recorder, wait: realWait } = env;
@@ -142,7 +142,7 @@ export async function record(env) {
   const takes = +opt('takes', 3);
   try {
     // ---------------- the title card over the living menu scene, then a new game: the range placed and built up in stages
-    if (want('menu') || want('range-build')) {
+    if (want('menu') || want('range-build') || want('town-grow')) {
       await open(base);
       await page.locator('[data-testid="title-card"]').waitFor({ timeout: 180000 }); await wait(9000);
       await shot('menu', async () => { await cursor(false); await start('menu'); await wait(7000); await stop(); await cursor(true); });
@@ -191,53 +191,126 @@ export async function record(env) {
         // the golfers come: a time-lapse at the top speed, the camera where it was
         await start('range-golfers'); await hold(); await speed(20); await wait(9000); await speed(1); await stop();
       });
+      // the town growing (the owner: "see a beginning and later stages of the town"): one camera on the town by the county road, a few seconds as it is,
+      // then years at the top speed as a time-lapse (C.townLapse frames, each C.townEvery frames of the clock), the club's cards put away as they come
+      await shot('town-grow', async () => {
+        await closeCards(); const c = await G(() => window.__game.golf.town ?? window.__game.golf.home ?? null); if (!c) throw new Error('no town');
+        const o = C.townGrowOff ?? [-30, -10], z = C.townGrowZoom ?? 0.1;
+        await cam(c.x + o[0], c.y + o[1], z); await wait(2500); await speed(1);
+        await start('town-grow'); await wait(2500);
+        await speed(20);
+        const frames = C.townLapse ?? 600, every = C.townEvery ?? 16;
+        for (let i = 0; i < frames; i += 30) {
+          await rec.tick(Math.min(30, frames - i), every);
+          await G(() => { const g = window.__game; if (g.seasonReport) g.seasonReport = null; }); await closeCards(); // (the season's report card: closed as a player closes it)
+          if (await G(() => window.__game.speed !== 20)) await speed(20);
+        }
+        await speed(1); await wait(1500); await stop();
+      });
     }
     // ---------------- the showcase club
-    if (SHOTS.slice(2).some(want)) await club();
+    if (SHOTS.slice(3).some(want)) await club();
     await shot('town', async () => {
       // the town along the county road and the club in front of it, low and wide, then nearer over the range and the holes
       await speed(2); await cam(...(C.townA ?? [1010, 1110, 0.09])); await wait(4000);
       await start('town'); await cam(...(C.townB ?? [930, 960, 0.16]), 7000); await wait(7500); await cam(...(C.townC ?? [880, 880, 0.24]), 5000); await wait(5500); await stop();
     });
-    await shot('hole-build', async () => {
-      const h = WORLD.stageHole, mid = { x: (h.tee.x + h.green.x) / 2, y: (h.tee.y + h.green.y) / 2 };
-      const z = C.holeZoom ?? 0.12, fix = () => cam(mid.x + 18, mid.y - 6, z);
-      await closeCards(); await fix(); await wait(3000); await speed(1);
-      await start('hole-build');
-      await clickSel('[data-testid="rail"] button:has-text("Build")', 450); await wait(400);
-      await clickSel('[data-testid="build-tab-course"]', 300); await wait(400);
-      await clickSel('[data-testid="build-card-hole"]', 450); await wait(300); await fix(); await wait(600); // (the card centres the camera on the club: back to this spot)
-      let p = await scr(h.tee.x, h.tee.y); await clickAt(p.x, p.y, 700); await wait(700);
-      p = await scr(h.green.x, h.green.y); await glide(p.x, p.y, 1300); await wait(300); await clickAt(p.x, p.y, 100); await wait(1800);
-      await clickSel('[data-testid="build-now"]', 700); await wait(3000);
-      await page.keyboard.press('Escape'); await wait(400); await closeCards(); await glide(1700, 900, 500);
-      await speed(20); await wait(12000); await speed(1); await closeCards(); await wait(1500); await stop();
-    });
-    // Shape by hand (the Holes panel's brushes): a green, a bunker beside it and a pond, a stroke or two each, the camera fixed and close. The strokes are
-    // in screen pixels for this camera (trailer-world.json view.paint: tile x, y, zoom; the open strip between hole 1 and the range on the seed-11 map)
-    const P = C.paint ?? { at: [948, 905, 0.3], green: [[1400, 420], [1520, 440], [1560, 500], [1480, 540], [1380, 500], [1420, 450], [1500, 470], [1470, 500]],
-      bunker: [[1300, 470], [1350, 455], [1370, 490], [1330, 510], [1300, 490], [1335, 480]], water: [[1600, 330], [1700, 350], [1730, 410], [1650, 440], [1580, 400], [1620, 370], [1680, 390]],
-      trees: [[1100, 620], [1180, 640], [1250, 660], [1320, 690]], props: [[1500, 560], [1560, 590], [1620, 620], [1680, 650]] };
-    const tile = async name => { const back = page.locator('[data-testid="tool-panel"] button:has-text("All surfaces")').first(); if (await back.isVisible().catch(() => false)) { await clickSel('[data-testid="tool-panel"] button:has-text("All surfaces")', 350); await wait(350); } await clickSel(`[data-testid="tool-panel"] button:has-text("${name}")`, 450); await wait(450); };
-    await shot('paint', async () => {
-      await closeCards(); await cam(...P.at); await wait(3000);
-      await start('paint'); await glide(1150, 760, 300);
-      await clickSel('[data-testid="rail"] button:has-text("Build")', 450); await wait(500); await clickSel('[data-testid="build-tab-course"]', 350); await wait(500); await clickSel('[data-testid="build-card-texture"]', 600); await wait(900); // (Build > Course > Texture Painter) await cam(...P.at); await wait(500); // (the card may move the view: back to this spot)
-      for (const k of ['green', 'bunker', 'water']) { await tile(k[0].toUpperCase() + k.slice(1)); await stroke(P[k].map(([x, y]) => ({ x, y })), 1300); await wait(1000); }
-      await wait(800); await stop();
-    });
-    await shot('decor', async () => {
-      await closeCards(); await cam(...P.at); await wait(1500);
-      await start('decor'); await glide(1150, 760, 300);
-      await clickSel('[data-testid="rail"] button:has-text("Build")', 450); await wait(500); await clickSel('[data-testid="build-tab-course"]', 350); await wait(500); await clickSel('[data-testid="build-card-props"]', 600); await wait(900); // (Build > Course > Trees and props)
-      await clickSel('[data-testid="tool-panel"] button:has-text("Ornamental maple")', 450); await wait(400);
-      await stroke(P.trees.map(([x, y]) => ({ x, y })), 1400); await wait(900); // (natural props: painted with the brush)
-      for (const [name, at] of [['Plaza fountain', P.props[0]], ['Park bench', P.props[2]]]) { // (man-made ones: placed one by one)
-        const b = page.locator('[data-testid="tool-panel"] button', { hasText: name }).first(); await b.scrollIntoViewIfNeeded().catch(() => {}); await wait(250);
-        const bb = await b.boundingBox(); if (!bb) continue; await clickAt(bb.x + bb.width / 2, bb.y + bb.height / 2, 450); await wait(400);
-        await clickAt(at[0], at[1], 600); await wait(500);
+    // ---------------- a hole built properly (the owner, 2026-11-15: "build a hole with bunkers and water and a green and trees etc properly"): New hole (tee, green,
+    // BUILD NOW), then shaped by hand on the Holes panel (bunkers by the green, a pond in front, the green widened, long grass along the edges), the Trees and
+    // props brush and a bench and a fountain by the tee, then the hole grown in (a time-lapse) from the same camera; then its tee shot from behind the golfer
+    /** a scribble filling a disc (tile coords), as a hand fills a shape with the brush */
+    const disc = (cx, cy, r) => { const p = []; for (let a = 0; a <= Math.PI * 6; a += 0.45) { const rr = r * (0.25 + 0.75 * a / (Math.PI * 6)); p.push([cx + Math.cos(a) * rr, cy + Math.sin(a) * rr]); } return p; };
+    const tiles = async pts => ev(pts => { const g = window.__game, d = g.dpr || 1; return pts.map(([x, y]) => { const s = g.screen(x, y); return { x: s.x / d, y: s.y / d }; }); }, pts);
+    const surface = async name => { // (the Holes panel's surface tiles: back to all of them when one is open)
+      const back = page.locator('[data-testid="tool-panel"] button:has-text("All surfaces")').first(); if (await back.isVisible().catch(() => false)) { await clickSel('[data-testid="tool-panel"] button:has-text("All surfaces")', 300); await wait(300); }
+      await clickSel(`[data-testid="tool-panel"] button:has-text("${name}")`, 400); await wait(350);
+    };
+    const buildCard = async id => { await clickSel('[data-testid="rail"] button:has-text("Build")', 450); await wait(450); await clickSel('[data-testid="build-tab-course"]', 300); await wait(450); await clickSel(`[data-testid="build-card-${id}"]`, 550); await wait(700); };
+    let newHole = null;
+    await shot('hole-full', async () => {
+      const h = WORLD.stageHole, mid = { x: (h.tee.x + h.green.x) / 2, y: (h.tee.y + h.green.y) / 2 }, z = C.holeZoom ?? 0.12;
+      const fix = (x = mid.x + 18, y = mid.y - 6, zz = z) => ev(([x, y, z]) => { const g = window.__game; g.lookAt(x, y, z); g.camEase = null; }, [x, y, zz]);
+      await closeCards(); await G(() => window.__game.close3p?.()); await fix(); await wait(2500); await speed(1);
+      await start('hole-full');
+      await buildCard('hole'); await wait(400); await fix(); await wait(300); // (the card fits the view on its next frame: back to this spot)
+      let p = await scr(h.tee.x, h.tee.y); await clickAt(p.x, p.y, 700); await wait(600);
+      p = await scr(h.green.x, h.green.y); await glide(p.x, p.y, 1200); await wait(250); await clickAt(p.x, p.y, 100); await wait(1600);
+      await clickSel('[data-testid="build-now"]', 700); await wait(2200);
+      await page.keyboard.press('Escape'); await wait(300); await closeCards();
+      // the hole as the game laid it: its tee and its pin
+      newHole = await G(() => { const G = window.__game.golf, n = Math.max(...G.pins.map(q => q.hole)), pin = G.pins.find(q => q.hole === n), tee = (G.tees || []).find(q => q.hole === n); return { n, g: { x: pin.x, y: pin.y }, t: tee ? { x: tee.x, y: tee.y } : null }; });
+      const T = newHole.t ?? h.tee, Gp = newHole.g, L = Math.hypot(Gp.x - T.x, Gp.y - T.y), u = { x: (Gp.x - T.x) / L, y: (Gp.y - T.y) / L }, v = { x: -u.y, y: u.x };
+      const at = (a, b) => [Gp.x + u.x * a + v.x * b, Gp.y + u.y * a + v.y * b], atT = (a, b) => [T.x + u.x * a + v.x * b, T.y + u.y * a + v.y * b];
+      const whole = () => fix((T.x + Gp.x) / 2 + 14, (T.y + Gp.y) / 2 - 4, z);
+      await whole(); await wait(300);
+      // the green end, closer
+      await fix(Gp.x - u.x * 8, Gp.y - u.y * 8, C.greenZoom ?? 0.22); await wait(500);
+      await clickSel('[data-testid="rail"] button:has-text("Course")', 400); await wait(700);
+      await clickSel('[data-testid="tool-panel"] button:has-text("Round")', 300).catch(() => {});
+      await clickSel('[data-testid="tool-panel"] button:has-text("4×4")', 300).catch(() => {});
+      await surface('Green'); await stroke(await tiles(disc(...at(0, 0), 6)), 1600); await wait(400);
+      await surface('Bunker'); await stroke(await tiles(disc(...at(2, 11), 3.5)), 1400); await wait(250); await stroke(await tiles(disc(...at(-4, -10), 3)), 1200); await wait(400);
+      await surface('Water'); await stroke(await tiles(disc(...at(-19, 2), 6)), 1800); await wait(500);
+      // the whole hole again: long grass along both edges, then the trees and the props
+      await whole(); await wait(500);
+      await surface('Long grass');
+      for (const s of [1, -1]) { await stroke(await tiles([atT(25, 16 * s), at(-L / 2, 16 * s), at(-25, 16 * s)]), 1500); await wait(250); }
+      await page.keyboard.press('Escape'); await wait(300);
+      await buildCard('props'); await clickSel('[data-testid="tool-panel"] button:has-text("Ornamental maple")', 400); await wait(300);
+      for (const s of [1, -1]) { await stroke(await tiles([atT(30, 22 * s), at(-L / 2, 23 * s), at(-30, 22 * s)]), 1300); await wait(250); }
+      for (const [name, a, b] of [['Park bench', -6, 7], ['Plaza fountain', -4, -9]]) {
+        const btn = page.locator('[data-testid="tool-panel"] button', { hasText: name }).first(); await btn.scrollIntoViewIfNeeded().catch(() => {}); await wait(250);
+        const bb = await btn.boundingBox(); if (!bb) continue; await clickAt(bb.x + bb.width / 2, bb.y + bb.height / 2, 400); await wait(300);
+        const q = (await tiles([atT(a, b)]))[0]; await clickAt(q.x, q.y, 600); await wait(400);
       }
-      await page.keyboard.press('Escape'); await wait(1500); await stop();
+      await page.keyboard.press('Escape'); await wait(400); await closeCards(); await glide(1800, 980, 400);
+      // grown in: a time-lapse, the same camera
+      await speed(20); await rec.tick(C.growFrames ?? 240, C.growEvery ?? 6); await speed(1); await closeCards(); await wait(1200); await stop();
+    });
+    await shot('golf-new', async () => {
+      if (!newHole) throw new Error('no new hole');
+      for (let k = 0; k < Math.min(2, takes); k++) {
+        const t = await play(newHole.n, 'golden'); if (!t) throw new Error(`hole ${newHole.n} not playable yet`);
+        await wait(1200); await start(`golf-new-${k}`); await wait(600); await swing({ lead: 0 }); await ballRest(t.stroke); await wait(800); await stop(); await leave();
+      }
+    });
+    // ---------------- a texture chosen (the owner: "show how you customise a texture"): the Texture Painter, a surface, its Main texture opened, another look picked
+    // and painted with; then a second look
+    await shot('texture', async () => {
+      const TC = C.textureCam ?? [948, 905, 0.3];
+      await closeCards(); await cam(...TC); await wait(2000);
+      await start('texture'); await glide(1150, 760, 300);
+      await buildCard('texture'); await cam(...TC); await wait(400);
+      const P2 = C.texture ?? { a: [[1420, 430], [1530, 450], [1560, 510], [1470, 540], [1390, 500], [1440, 460], [1510, 480]], b: [[1600, 600], [1700, 620], [1760, 680], [1660, 700], [1590, 650], [1650, 640]] };
+      for (const [surf, look, pts] of [['Fairway', 'Fescue', P2.a], ['Bunker', 'Worn path', P2.b]]) {
+        await surface(surf);
+        await clickSel('[data-testid="tool-panel"] button[aria-haspopup]', 500); await wait(700); // (Main texture: the looks, as pictures)
+        await clickSel(`[data-testid="tool-panel"] button:has-text("${look}")`, 600); await wait(600);
+        await stroke(pts.map(([x, y]) => ({ x, y })), 1500); await wait(700);
+      }
+      await page.keyboard.press('Escape'); await wait(800); await stop();
+    });
+    // ---------------- the props (the owner: "how many props we have"): the Trees and props card, its list scrolled from the trees to the media, then a few placed
+    await shot('props-range', async () => {
+      await closeCards(); await cam(...(C.propsCam ?? [940, 1000, 0.3])); await wait(2000);
+      await start('props-range'); await glide(1150, 760, 300);
+      await buildCard('props');
+      const box = await page.locator('[data-testid="tool-panel"]').first().boundingBox();
+      await glide(box.x + box.width / 2, box.y + box.height * 0.6, 400);
+      for (let i = 0; i < (C.propsScroll ?? 26); i++) { await page.mouse.wheel(0, 420); await wait(130); }
+      await wait(400);
+      for (const [name, x, y] of C.propsPlace ?? [['Golfer statue', 1250, 560], ['Flower planter', 1380, 620], ['Lamp post', 1150, 640]]) {
+        const btn = page.locator('[data-testid="tool-panel"] button', { hasText: name }).first(); await btn.scrollIntoViewIfNeeded().catch(() => {}); await wait(300);
+        const bb = await btn.boundingBox(); if (!bb) continue; await clickAt(bb.x + bb.width / 2, bb.y + bb.height / 2, 450); await wait(300); await clickAt(x, y, 600); await wait(500);
+      }
+      await page.keyboard.press('Escape'); await wait(1200); await stop();
+    });
+    // ---------------- the town: traffic in its streets, close (the owner: "how traffic actually works")
+    await shot('traffic', async () => {
+      await closeCards(); const c = await G(() => window.__game.golf.town); await speed(1);
+      const o = C.trafficOff ?? [0, 0], z = C.trafficZoom ?? 0.42;
+      await cam(c.x + o[0], c.y + o[1], z); await wait(2500);
+      await start('traffic'); await wait(2500); await cam(c.x + o[0] + 12, c.y + o[1] - 6, z * 1.1, 6000); await wait(6200); await stop();
     });
     // ---------------- the golf view
     await shot('golf-tee', async () => {

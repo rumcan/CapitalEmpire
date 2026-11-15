@@ -38,7 +38,9 @@ function vclock(preludeSrc) {
     const pre = URL.createObjectURL(new Blob([`(${preludeSrc})();`], { type: 'text/javascript' }));
     const src = mod ? `import ${JSON.stringify(pre)};\nimport ${JSON.stringify(abs)};\n` : `importScripts(${JSON.stringify(pre)}, ${JSON.stringify(abs)});\n`;
     const w = new RW(URL.createObjectURL(new Blob([src], { type: 'text/javascript' })), opts);
+    w.__vt = u; // (the URL it was made from: the robot can see which workers are on the clock)
     w.addEventListener('message', e => { const d = e.data; if (d && d.__vtAck !== undefined) { e.stopImmediatePropagation(); const r = S.acks.get(w); if (r) { S.acks.delete(w); r(); } } });
+    const term = w.terminate.bind(w); w.terminate = () => { const i = S.workers.indexOf(w); if (i >= 0) S.workers.splice(i, 1); S.acks.delete(w); term(); }; // (the game ends a sim worker when a game is reset or loaded)
     S.workers.push(w); return w;
   };
   Wrapped.prototype = RW.prototype; W.Worker = Wrapped;
@@ -59,7 +61,7 @@ function vclock(preludeSrc) {
         if (!best) break; if (best.rep) best.at += Math.max(1, best.ms); else S.timers.delete(best.id);
         try { best.fn(...best.a); } catch (e) { console.error('[vt] timer', e); }
       }
-      await Promise.all(S.workers.map(w => new Promise(res => { const to = rst(() => { S.ackMiss = (S.ackMiss || 0) + 1; res(); }, 1500); S.acks.set(w, () => { rct(to); res(); }); w.postMessage({ __vt: 'tick', t: S.t }); })));
+      await Promise.all(S.workers.map(w => new Promise(res => { const to = rst(() => { S.ackMiss = (S.ackMiss || 0) + 1; S.acks.delete(w); const k = S.workers.indexOf(w); if (k >= 0) S.workers.splice(k, 1); res(); }, 1500); /* (no answer: a worker gone, left out from now on) */ S.acks.set(w, () => { rct(to); res(); }); w.postMessage({ __vt: 'tick', t: S.t }); })));
       await new Promise(r => rst(r, 0)); // (the worker's answers, posted before its ack, are handled before the frame is drawn)
       runRafs();
     }
@@ -82,7 +84,7 @@ function prelude() {
     if (d.__vt === 'on') { vt = d.t; t0 = d.t; d0 = rdn(); for (const e of iv) e.next = vt + e.ms; }
     else if (d.__vt === 'off') vt = null;
     else if (d.__vt === 'tick') { vt = d.t; for (const e of iv) { let n = 0; while (e.next <= vt && n++ < 50) { e.next += e.ms; try { e.fn(...e.a); } catch (err) { console.error('[vt] worker', err); } } } }
-    self.postMessage({ __vtAck: d.t });
+    self.postMessage({ __vtAck: 1, t: d.t ?? null }); // (always a value: an ack without one would reach the game)
   });
 }
 

@@ -1,10 +1,11 @@
 // scripts/jam/trailer-voice.mjs: the trailer's voice-over lines (docs/jam/VIDEO.md "The voice"). Reads the script (numbered lines, each "N. [the shot] words"),
 // says each line with Kokoro-82M (Apache-2.0, local: F:/voices/kokoro_say.py), and normalises it to -16 LUFS (ffmpeg loudnorm, two passes), one wav a line:
-// <out>/<voice>/NN.wav, with lines.json (the words, the shot, the length). trailer-edit.mjs places line N at the start of the cut part that has "vo": N.
+// <out>/<voice>/NN.wav (a line already said, by its words, voice and speed, is not said again: only changed lines are re-voiced), with lines.json (the words, the shot, the length). trailer-edit.mjs places line N at the start of the cut part that has "vo": N.
 //   node scripts/jam/trailer-voice.mjs [--script F:/ClaudeTemp/jam/voice/script.md] [--voice am_michael] [--speed 0.95] [--out F:/ClaudeTemp/jam/voice]
 import { mkdirSync, readFileSync, writeFileSync, existsSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { spawnSync } from 'node:child_process';
+import { createHash } from 'node:crypto';
 
 const args = process.argv.slice(2), opt = (k, d) => { const i = args.indexOf(`--${k}`); return i >= 0 ? args[i + 1] : d; };
 const SCRIPT = resolve(opt('script', 'F:/ClaudeTemp/jam/voice/script.md')), VOICE = opt('voice', 'am_michael'), SPEED = opt('speed', '0.95');
@@ -14,7 +15,7 @@ const lines = readFileSync(SCRIPT, 'utf8').split('\n').map(l => /^(\d+)\.\s*\[([
 const probe = f => +spawnSync('ffprobe', ['-v', 'error', '-show_entries', 'format=duration', '-of', 'csv=p=0', f], { encoding: 'utf8' }).stdout.trim();
 const out = [];
 for (const l of lines) {
-  const nn = String(l.n).padStart(2, '0'), txt = join(OUT, `${nn}.txt`), raw = join(OUT, `${nn}-raw.wav`), wav = join(OUT, `${nn}.wav`);
+  const nn = String(l.n).padStart(2, '0'), txt = join(OUT, `${nn}.txt`), raw = join(OUT, `said-${createHash('sha1').update(`${VOICE}|${SPEED}|${l.text}`).digest('hex').slice(0, 10)}.wav`), wav = join(OUT, `${nn}.wav`);
   writeFileSync(txt, l.text);
   if (!existsSync(raw) || opt('again', null)) { const r = spawnSync(PY, [SAY, txt, raw, VOICE, SPEED], { encoding: 'utf8' }); if (r.status !== 0) { console.error(`line ${l.n}: ${r.stderr.slice(-400)}`); process.exit(1); } }
   // loudness: measure, then apply (linear), -16 LUFS integrated, -1.5 dBTP; 48 kHz stereo for the mix
