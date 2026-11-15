@@ -7,6 +7,7 @@ import type { AimPoint, CourseArea, GolfSurface, Pin, TeeMark } from '../types';
 import { exportCourse3p, type Export3pInput } from './export3p';
 import { shareCourseMsg, shareOf, shareView } from './share3p';
 import { Play3p } from './play3p';
+import type { OwnerInput } from './live';
 import { toView, type CourseMsg, type HostMsg, type ViewInput, type ViewPt } from './protocol3p';
 import type { GameSkills, Shot } from './types';
 
@@ -33,6 +34,8 @@ export interface ScriptHost {
   /** the model's strokes of the owner so far, as the view's frame has them: where each started and came to rest (rest: the ball's own rest; next: where
    *  the next stroke is played from, the drop after a penalty), and whether it went in */
   strokes(): { hole: number; stroke: number; from: ViewPt; rest: ViewPt; next: ViewPt; holed: boolean }[];
+  /** #1336: every input the host has played, in order (the save) */
+  inputs(): readonly OwnerInput[];
 }
 
 export async function scriptedHost(skills: GameSkills = { driving: 0.75, irons: 0.75, short: 0.75, putting: 0.75 }, seed = 4242): Promise<ScriptHost> {
@@ -44,6 +47,7 @@ export async function scriptedHost(skills: GameSkills = { driving: 0.75, irons: 
     courseMsg,
     start: () => play.start(),
     input: (vi) => play.input(vi),
+    inputs: () => play.inputs,
     strokes: () => play.plan.shots.filter(s => s.golfer === play.me).sort((a, b) => a.t - b.t)
       .map(s => ({ hole: view.holes[s.hole]?.n ?? s.hole + 1, stroke: s.stroke, from: toView(s.from, c), rest: toView(restOf(s), c), next: toView(s.to, c), holed: s.holed })),
   };

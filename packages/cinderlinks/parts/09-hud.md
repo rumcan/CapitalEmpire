@@ -56,7 +56,7 @@ try { cardOpen = localStorage.getItem('cinderlinks.card') === 'open'; } catch (e
 function setUi(min) { cardOpen = !min; cardEl.className = cardOpen ? 'open' : ''; try { localStorage.setItem('cinderlinks.card', cardOpen ? 'open' : 'pill'); } catch (e) {} }
 cardEl.className = cardOpen ? 'open' : ''; cardEl.title = 'Click, or press U: the hole\'s facts';
 cardEl.addEventListener('click', () => setUi(cardOpen));
-const HELP = [['W S', 'walk forward, back (shift: run)'], ['A D', 'turn'], ['Q E', 'step sideways'], ['mouse', 'aim, beside the ball'], ['hold click', 'power, let go to swing'], ['1-9 or [ ]', 'club (or the arrows on the club picker; the wheel over it)'], ['J', 'jump to the ball'], ['Y', 'take a gimme (a short putt, given)'], ['M', 'biome: parkland, coastal, beachside, desert, savanna, jungle, snow'], ['V', 'course type: links, tour, private, public'], ['U', 'the hole card: open or fold'], ['P', 'picture scale: 75, 50, 100%'], ['G', 'golf cart: in and out (W S go and brake, A D steer)'], ['middle drag', 'look around (the camera comes back behind you when you move)'], ['wheel', 'zoom: nearer, farther'], ['R F', 'raise, lower the camera'], ['C', 'camera behind the hole'], ['B', 'drop the ball by you'], ['T', 'time of day'], ['N', 'new land'], ['K', 'real courses: next'], ['L', 'find a real course by name'], ['H', 'hide this']];
+const HELP = [['W S', 'walk forward, back (shift: run)'], ['A D', 'turn'], ['Q E', 'step sideways'], ['mouse', 'aim, beside the ball'], ['hold click', 'power, let go to swing'], ['up (holding the swing)', 'tap fast for boost (or W); let go at the peak'], ['arrows (ball in the air)', 'spin: down back, up top, left and right side; the opposite arrow takes it off'], ['1-9 or [ ]', 'club (or the arrows on the club picker; the wheel over it)'], ['J', 'jump to the ball'], ['Y', 'take a gimme (a short putt, given)'], ['M', 'biome: parkland, coastal, beachside, desert, savanna, jungle, snow'], ['V', 'course type: links, tour, private, public'], ['U', 'the hole card: open or fold'], ['P', 'picture scale: 75, 50, 100%'], ['G', 'golf cart: in and out (W S go and brake, A D steer)'], ['middle drag', 'look around (the camera comes back behind you when you move)'], ['wheel', 'zoom: nearer, farther'], ['R F', 'raise, lower the camera'], ['C', 'camera behind the hole'], ['B', 'drop the ball by you'], ['T', 'time of day'], ['N', 'new land'], ['K', 'real courses: next'], ['L', 'find a real course by name'], ['H', 'hide this']];
 if (!CART_SHOWN) { const gi = HELP.findIndex((h) => h[0] === 'G'); if (gi >= 0) HELP.splice(gi, 1); }   // (the cart is hidden for now: 08i-cart.md)
 helpEl.innerHTML = HELP.map((h) => '<b>' + h[0] + '</b>' + h[1]).join('\n');
 function helpShow(on) { helpOn = on; helpEl.className = on ? 'on' : ''; keysEl.className = on ? 'on' : ''; }
@@ -183,7 +183,7 @@ function updateHud() {
   const hint = msgT > 0 ? msgText : '';
   if (hint !== shownMsg) { msgEl.textContent = hint; shownMsg = hint; }
   // (2026-11-15: the hints are the "?" button's tooltip; a click opens the keys. The owner: "says Wheel to change clubs but thats to zoom the camera?": no hint names a control that does something else where it is used)
-  const kh = (cart.on ? 'G get out · W S go, brake · A D steer' : byCart ? 'G drive the cart' : nearBall() ? (HP ? 'Hold Space or the bar: swing · 1-9 or [ ] club · wheel zoom · Z X shape · I boost' : 'Hold click: swing · 1-4 or [ ] club · wheel zoom') : 'W walk · A D turn · to the ball (J)') + ' · H all keys';
+  const kh = (cart.on ? 'G get out · W S go, brake · A D steer' : byCart ? 'G drive the cart' : nearBall() ? (HP ? 'Hold Space or the bar: swing · 1-9 or [ ] club · wheel zoom · Z X shape · tap ↑ boost · I raise it' : 'Hold click: swing · 1-4 or [ ] club · wheel zoom') : 'W walk · A D turn · to the ball (J)') + ' · H all keys';
   if (kh !== shownKeys) { keysEl.title = kh; shownKeys = kh; }
   if (shownStyle !== biomeId || shownType !== ctypeId) styleShow();
   { const gm = canGimme() ? 'on' : ''; if (gimmeEl.className !== gm) gimmeEl.className = gm; }   // the gimme button shows when the putt left is short enough to be given
@@ -217,7 +217,7 @@ R: J8 (#1261; the owner: "add ALOT more images to the UI. especially on stuff yo
 Check: tiles/shot-spin.webp
 R: J8: and each club tab wears its club's painted tile (club-driver, club-wood, club-long-iron for a hybrid and a 4-iron, club-iron, club-wedge, club-putter) at the left of its number, name and carry; Go for it wears go-for-it, and the page's Jump to ball and Gimme buttons jump-to-ball and gimme. Pictures only: a click on one is a click on its tab or button, and the tabs keep their class, number and carry (the host and the harness read them).
 Check: function clubTile(
-R: 2026-11-15 (the owner: "Why not make the draw and fade like normal golf games where you just move the dot on the ball?"): in host mode the curve and the flight (J5f's amounts, -1 to 1) are set by dragging a dot on a ball: left a draw, right a fade, up high, down low; the painted draw, fade, high and low tiles sit round it and dim for a side he has not earned; a gold ring marks his limit (his full bend against a scratch golfer's) and the dot stops at it, its edge his full amount; a small arrow beside it previews the shape; Reset (or a double click) is straight. It sends the same shape the sliders sent; Z and X still step through them. The spin ball, Tour spin and Go for it are folded under it.
+R: 2026-11-15 (the owner: "Why not make the draw and fade like normal golf games where you just move the dot on the ball?"): in host mode the curve and the flight (J5f's amounts, -1 to 1) are set by dragging a dot on a ball: left a draw, right a fade, up high, down low; the painted draw, fade, high and low tiles sit round it and dim for a side he has not earned; a gold ring marks his limit (his full bend against a scratch golfer's) and the dot stops at it, its edge his full amount; a small arrow beside it previews the shape; Reset (or a double click) is straight. It sends the same shape the sliders sent; Z and X still step through them. Folded under it: how to boost and spin, and Go for it.
 Check: function shapeAmt(
 Check: function hostShapeAt(
 R: 2026-11-15 (the owner: "the weird circles", "these are drawn so badly"): the aim is one clean line of steady width from the ball to one ring lying on the ground where the ball is predicted to land (a true circle projected through the camera, sized from the spread, 0.9 to 4.5 m); the point aimed at is a small cross; the roll after the landing is a faint short dash; no separate wind trace.
@@ -227,6 +227,15 @@ R: 2026-11-15 (the owner: "the grid that shows slope is white. this grid is yell
 Check: function pgNow(
 R: 2026-11-15: after each of his shots a short result fades by itself after about two seconds (carry, total, what is left to the pin).
 Check: function hostToast(
+R: #1336 (the owner, 2026-11-15: "like in the tiger woods games where you spam a button"): in host mode, while the swing is held, each tap of Up (or W, or Shift) adds to a boost level that halves every 0.6 s; the boost let go with is the level times the cap (+4% for everyone, +6% with the Power Mash charge armed by I or Go for it); a putt takes none. A thin bar over the power shows the level rising and falling, and the bar says "tap ↑ boost". Up and W never walk him while the swing is held.
+Check: function hostBoostTap(
+Check: function hostSwBoost(
+R: #1336: while his full shot is in the air, the arrows tap spin in: Down backspin, Up topspin, Left and Right side spin, one step a tap, the opposite arrow taking one off; nothing drains; the count is held to the taps his club takes from this lie (turn.clubs[].air) and a way he has not earned says what unlocks it. A small ball beside the meter shows the spin's dot and words during the flight. The arrows never walk or turn him then. The pre-shot spin ball and Tour spin are gone: this is the one way to spin.
+Check: function hostSpinTap(
+Check: function hostSpinShow(
+R: #1336: a full shot's input goes with fly: true; the host answers with the flight only (air: true); the view flies it and at the landing sends the same input again with the spin's totals (spin.ax, spin.ay), holding the ball at the landing until the stroke comes; the stroke's bounce and roll then play on from there (hostShotLand). A host that sends no taps for the club (no turn.clubs[].air) is sent a plain input, as before.
+Check: function hostShotLand(
+Check: function hostAirLand(
 
 ````js file=game.js
 
@@ -308,6 +317,7 @@ function clubName(k) { const c = HP && HP.clubs[k]; return c ? CLUB_NAME[c.club]
 function hostPlayMsg(m) {   // a play message from the host: a turn, a shot, the hole's end; held while a shot is being played back
   if (!HP) HP = { turn: null, clubs: [], wait: 0, play: null, q: [], over: false };
   if (m.t === 'preview') { if (m.key === HP.pvKey) HP.pv = Object.assign({}, m, { sig: HP.pvSig, club: hostClub() ? hostClub().club : '' }); return; }   // (T441: the answer to the latest `aim` only)
+  if (m.t === 'shot' && !m.air && HP.play && HP.play.air && m.golfer === HP.play.m.golfer && m.hole === HP.play.m.hole && m.stroke === HP.play.m.stroke) { hostShotLand(m); return; }   // (#1336: the stroke for the flight in the air)
   if (m.t === 'shot') { if (groupOther(m) && !groupPlays(m)) return;   /* (T425: his group's strokes are played too: 08e-group.md) */ if (HP.play) { HP.q.push(m); return; } hostShot(m); return; }   // (anyone else's stroke: shown from T425)
   if (HP.play || HP.q.length) { HP.q.push(m); return; }
   if (m.t === 'turn') hostTurn(m); else if (m.t === 'holeEnd') hostHoleEnd(m);
@@ -333,7 +343,11 @@ function hostStrike() {   // the club meets the ball: the input goes to the host
   const c = hostClub(), t = HP.turn, S = hostS(); if (!c || !t) return;
   const putt = c.club === 'putter', m = matAt(ball.x, ball.y);
   const sw = HP.out; HP.out = null;   // (T421: the meter's outcome; the power is then only what it would be without one)
-  hostSend({ t: 'input', input: Object.assign({ holeIdx: t.holeIdx, stroke: t.stroke, club: c.club, aim: [aim.x / S, aim.y / S], power: sw ? Math.min(putt ? HOLD_PUTT_TOP : 1, Math.max(putt ? 0.05 : 0.3, sw.power)) : hostPower(power, putt) }, sw ? { swing: { power: sw.power, acc: sw.acc, boost: sw.boost, v: sw.v } } : {}, hostShotIn()) });   // (T441, T442: the shape and spin picked)
+  const inp = Object.assign({ holeIdx: t.holeIdx, stroke: t.stroke, club: c.club, aim: [aim.x / S, aim.y / S], power: sw ? Math.min(putt ? HOLD_PUTT_TOP : 1, Math.max(putt ? 0.05 : 0.3, sw.power)) : hostPower(power, putt) }, sw ? { swing: { power: sw.power, acc: sw.acc, boost: sw.boost, v: sw.v } } : {}, hostShotIn());   // (T441: the shape picked)
+  // #1336: a full shot goes with `fly` (a host that sends the taps each club takes, turn.clubs[].air): the host answers with the flight, he taps the spin in while it flies,
+  // and at the landing the same input goes again with the taps' totals (hostAirLand), answered with the stroke
+  const fly = !putt && !!c.air; HP.air = fly ? { ax: 0, ay: 0, cap: c.air, inp, sent: false, n: 0 } : null;
+  hostSend({ t: 'input', input: fly ? Object.assign({ fly: true }, inp) : inp });
   if (HP.pick) HP.pick.armed = false;   // (spin and shape: T441, T442)
   pracSave(c);   // (#1308: what the next practice ball starts from)
   HP.wait = 1;
@@ -345,14 +359,24 @@ function hostStrike() {   // the club meets the ball: the input goes to the host
 }
 function hostShot(m) {   // the owner's decided stroke: played back from its samples (hostBall)
   groupShotStart(m);   // (T425: another's stroke: the owner's ball and score put aside, 08e-group.md)
+  const P = hostPlayOf(m), F = P.F, tL = P.tL;
+  HP.play = P;
+  HP.wait = 0; ball.lx = ball.x; ball.ly = ball.y; ball.t = 0; ball.state = F.length ? 1 : 2;
+  if (F.length && tL > 0.8) { bcam = 1; bcamT = 0; bcamYaw = camYaw; bcamD = camD; slowT = 30; }   // a full shot: a moment of slow time, and the camera goes with the ball
+}
+// #1336: the stroke for the flight in hand (its bounce and roll, worked out now the spin is in): the playback goes on from where it is, on the stroke's samples (its
+// flight is the one flown: the spin never moves the landing)
+function hostShotLand(m) {
+  const P = HP.play, Q = hostPlayOf(m); Q.t = Math.min(P.t, Q.tL); Q.landed = P.landed;
+  HP.play = Q; HP.wait = 0; if (HP.air) HP.air.done = true;
+}
+function hostPlayOf(m) {   // the playback of a stroke from its samples: the flight's and the roll's points and times, the bounces' times
   const S = hostS(), F = Array.isArray(m.flight) ? m.flight : [], R = Array.isArray(m.roll) ? m.roll : [];
   const fT = Array.isArray(m.flightT) && m.flightT.length === F.length ? m.flightT : F.map((_, k) => k / 30);   // (an older host: 30 samples a second)
   const tL = F.length ? fT[F.length - 1] : 0, rT = Array.isArray(m.rollT) && m.rollT.length === R.length ? m.rollT : R.map((_, k) => tL + (k + 1) * 0.12);
   const bT = (m.bounces || []).map((b) => { let bi = -1, bd = 1e9; for (let k = 0; k < R.length; k++) { const d = Math.hypot(R[k][0] - b[0], R[k][1] - b[1]); if (d < bd) { bd = d; bi = k; } } return bi >= 0 ? rT[bi] : tL; }).sort((a, b) => a - b);
   const start = F.length ? [F[F.length - 1][0], F[F.length - 1][1], 0] : [m.from[0], m.from[1], 0];
-  HP.play = { m, S, F, fT, tL, bT, bi: 0, t: 0, landed: !F.length, RT: [tL].concat(rT), RQ: [start].concat(R.map((p, k) => [p[0], p[1], Array.isArray(m.rollZ) && m.rollZ.length === R.length ? m.rollZ[k] : 0])) };
-  HP.wait = 0; ball.lx = ball.x; ball.ly = ball.y; ball.t = 0; ball.state = F.length ? 1 : 2;
-  if (F.length && tL > 0.8) { bcam = 1; bcamT = 0; bcamYaw = camYaw; bcamD = camD; slowT = 30; }   // a full shot: a moment of slow time, and the camera goes with the ball
+  return { m, S, F, fT, tL, bT, bi: 0, t: 0, landed: !F.length, air: m.air === true && F.length > 0, RT: [tL].concat(rT), RQ: [start].concat(R.map((p, k) => [p[0], p[1], Array.isArray(m.rollZ) && m.rollZ.length === R.length ? m.rollZ[k] : 0])) };
 }
 // (the owner, 2026-11-15: "the height of the golf ball at game play time seems to move up and down based on the ground height below. so if it travels over a
 // clif it goed higher when it gets over the cliff"): the host's flight heights are an arc over the straight line from the strike to the landing (shot3p.ts:
@@ -378,6 +402,10 @@ function hostBall() {   // one step of the playback: the ball follows the host's
   if (P.F.length && P.t < P.tL) {                                     // in the air
     hostAt(P.fT, P.F, P.t, HQ); ball.x = HQ.x * S; ball.y = HQ.y * S; ball.z = flightBase(P, ball.x, ball.y) + HQ.h * S; ball.state = 1;
     if (tmode > 0 && (ball.t & 1)) addParticle(P_EMBER, ball.x, ball.y, ball.z, (rnd() - 0.5) * 0.3, (rnd() - 0.5) * 0.3, 0.2, 16 + rndi(14), 1);
+  } else if (P.air) {                                                  // #1336: landed with only the flight in hand: the taps go to the host, the ball waits at the landing for the stroke
+    P.t = P.tL; const L = P.F[P.F.length - 1]; ball.x = L[0] * S; ball.y = L[1] * S; ball.z = flightBase(P, ball.x, ball.y); ball.state = 2;
+    if (!P.landed) { P.landed = true; hostLand(8); }
+    if (!P.sent) { P.sent = true; hostAirLand(); }
   } else if (P.RT.length > 1 && P.t < P.RT[P.RT.length - 1]) {        // bouncing and rolling
     if (!P.landed) { P.landed = true; hostLand(8); }
     while (P.bi < P.bT.length && P.bT[P.bi] <= P.t) { P.bi++; if (P.bi > 1) hostLand(4); }   // (the first bounce is the landing)
@@ -387,6 +415,49 @@ function hostBall() {   // one step of the playback: the ball follows the host's
       if (Math.hypot(vx, vy) > 1e-4) { P.ldx = vx; P.ldy = vy; } }
   } else { hostRest(); return; }
   ball.vx = (ball.x - x0) / dt; ball.vy = (ball.y - y0) / dt; ball.vz = 0;   // (for the ball camera's turn)
+}
+// #1336 (the owner, 2026-11-15: "pick a direction on the arrow keys and spam it to induce side or back or front spin ... the spin one does not drop like power and you can
+// reverse how much spin you added by spamming the opposite direction key"): while his ball is in the air the arrows tap spin in: Down backspin, Up topspin, Left and
+// Right side spin, one step a tap (spin.ts AIR.per), the opposite arrow taking one off; the count is held to the taps his club takes from this lie (turn.clubs[].air)
+// and to what he has earned (side spin, backspin: a locked way says what unlocks it). Nothing drains. At the landing the totals go to the host (hostAirLand)
+const AIR_PER = 0.08;   // (spin.ts AIR.per: a tap's share of full spin, for the readout)
+function hostAirOn() { const P = HP && HP.play; return !!(P && P.air && !P.sent && HP.air && P.t < P.tL); }
+function hostSpinTap(d) {   // one arrow tapped in the air ('up', 'down', 'left', 'right'); false when it did nothing
+  if (!hostAirOn()) return false;
+  const A = HP.air, c = A.cap || { side: 0, top: 0, back: 0 }, was = A.ax + ',' + A.ay;
+  if (d === 'down') { if (A.ay > 0) A.ay--; else if (!hostEarned('back')) say('Backspin is locked: ' + (hostWhy('back') || 'not earned yet'), 150); else if (-A.ay < c.back) A.ay--; }
+  else if (d === 'up') { if (A.ay < 0) A.ay++; else if (A.ay < c.top) A.ay++; }
+  else if (d === 'left' || d === 'right') {
+    const sg = d === 'left' ? -1 : 1;
+    if (A.ax * sg < 0) A.ax += sg; else if (!hostEarned('side')) say('Side spin is locked: ' + (hostWhy('side') || 'not earned yet'), 150); else if (Math.abs(A.ax) < c.side) A.ax += sg;
+  }
+  if (A.ax + ',' + A.ay === was) return false;
+  A.n++; return true;
+}
+function hostAirLand() {   // the landing: the input again, with the spin's totals (no tap times), and the wait for the stroke
+  const A = HP.air; if (!A || A.sent) return;
+  A.sent = true; HP.wait = 1;
+  hostSend({ t: 'input', input: Object.assign({}, A.inp, { spin: { x: 0, y: 0, pump: 0, ax: A.ax, ay: A.ay } }) });
+}
+function spinWords(ax, ay) {   // "Backspin 24% · left 8%", "Tap the arrows for spin"
+  const pc = (n) => Math.round(Math.min(1, Math.abs(n) * AIR_PER) * 100) + '%', v = ay < 0 ? 'Backspin ' + pc(ay) : ay > 0 ? 'Topspin ' + pc(ay) : '', sd = ax ? (ax < 0 ? 'left ' : 'right ') + pc(ax) : '';
+  return v && sd ? v + ' · ' + sd : v || (sd ? sd[0].toUpperCase() + sd.slice(1) : 'Tap the arrows for spin');
+}
+// the spin readout beside the meter, his flight only: a small ball with the spin's dot (its distance from the middle the spin's share) and the words; drawn only when it changes
+const spinReadEl = document.createElement('div'), spinReadCv = document.createElement('canvas'), spinReadTx = document.createElement('span');
+spinReadEl.id = 'spinRead'; spinReadCv.width = 64; spinReadCv.height = 64; spinReadEl.appendChild(spinReadCv); spinReadEl.appendChild(spinReadTx);
+if (typeof hudEl !== 'undefined' && hudEl && hudEl.appendChild) hudEl.appendChild(spinReadEl);
+let spinShown = '';
+function hostSpinShow() {
+  const A = HP && HP.air, P = HP && HP.play, on = !!(A && P && P.air && !A.done), sig = on ? A.ax + ',' + A.ay : '';
+  if (sig === spinShown) return; spinShown = sig;
+  spinReadEl.className = on ? 'on' : ''; if (!on) return;
+  spinReadTx.textContent = spinWords(A.ax, A.ay);
+  const c = spinReadCv.getContext ? spinReadCv.getContext('2d') : null; if (!c || !c.createRadialGradient) return;
+  c.clearRect(0, 0, 64, 64); const R = ballFace(c, 64, false), k = (n) => Math.max(-1, Math.min(1, n * AIR_PER)) * (R - 7);
+  c.strokeStyle = 'rgba(60, 54, 40, 0.35)'; c.lineWidth = 1; c.beginPath(); c.moveTo(32 - R * 0.85, 32); c.lineTo(32 + R * 0.85, 32); c.moveTo(32, 32 - R * 0.85); c.lineTo(32, 32 + R * 0.85); c.stroke();
+  c.strokeStyle = 'rgba(0, 0, 0, 0.55)'; c.lineWidth = 2; c.beginPath(); c.arc(32, 32, R, 0, 6.2832); c.stroke();
+  c.fillStyle = '#e8573c'; c.strokeStyle = '#fff'; c.lineWidth = 2; c.beginPath(); c.arc(32 + k(A.ax), 32 - k(A.ay), 6, 0, 6.2832); c.fill(); c.stroke();
 }
 function hostLand(v) { sndLand(v); const m = matAt(ball.x, ball.y), gh = groundH(ball.x, ball.y); for (let k = 0; k < v; k++) addParticle(m === M_SAND ? P_SAND : P_TURF, ball.x, ball.y, gh + 0.04, (rnd() - 0.5) * 2.4, (rnd() - 0.5) * 2.4, 0.8 + rnd() * 2, 20 + rndi(24), rndi(6)); }
 function hostRest() {   // the playback is over: the ball lies at the host's rest (in the cup, in the water), the strokes are counted, held messages go on
@@ -414,7 +485,7 @@ function hostHoleEnd(m) {   // the hole is over: its score is said; after the la
   say(name + '  -  hole ' + m.hole + ' in ' + m.strokes + (m.last ? '  -  Esc goes back to the course' : '  -  on to the next tee'), m.last ? 100000 : 330);
 }
 function hostTick() {   // each step: the playback, the meter, and the wait for an answer
-  hostBall(); hostMeterShow(); hostShotShow(); hostAimAsk(); pracTick();
+  hostBall(); hostMeterShow(); hostShotShow(); hostSpinShow(); hostAimAsk(); pracTick();
   if (HP.doneAt > 0 && --HP.doneAt === 0) hostSend({ t: 'holeDone', holeIdx: HP.doneHole });
   if (HP.wait > 0 && ++HP.wait > HOST_WAIT && (HP.wait - HOST_WAIT) % 120 === 1) say('Waiting for the course...', 130);
 }
@@ -422,7 +493,7 @@ function hostAim() {   // T420: the aim tells the truth: the arc to where the mo
   // the wind's push off the line), and a ring at one standard deviation of where it lands (shot.ts SHOT_SCATTER: across the line and along it). A better
   // club or a steadier golfer draws a smaller ring. Its numbers come from the host's kit for the club (turn.clubs), worked out along the suggested line
   const C = hostClub(), t = HP.turn; if (!C || !t) return;
-  const sw = HP.sw, u = sw ? sw.u : 1, b = sw ? hostBoost(sw.presses) : 0;   // (T421, T446: what the swing has set so far: the power held, and the boost added)
+  const sw = HP.sw, u = sw ? sw.u : 1, b = sw ? hostSwBoost(sw) : 0;   // (T421, T446: what the swing has set so far: the power held, and the boost added)
   const T = hostTarget();   // (T456: the aimed point on the ground)
   const S = hostS(), putt = C.club === 'putter', pw = sw ? (putt ? u * hostPuttTop() : u) + b : T ? T.pw : 1, hot = charging ? AIM_R : AIM_G, ph = (frame >> 1) % 6;   // (T456: a putt's meter reaches past the hole. J5f: before the swing the way is drawn at the aim's strength, so the ribbon ends on the aim ring and not at the club's full carry; held, it grows with the meter and is the same at the gold mark)
   if (T) hostTargetRing(T, C); else HP.target = null;
@@ -473,8 +544,17 @@ function aimSpreadR(across, along, S) { return Math.min(4.5 * S, Math.max(0.9 * 
 // no accuracy click: how straight it goes is the model's own spread for the golfer's skill (swing.ts HOLD_V), so the shot comes only from the host.
 // Shift tapped while holding adds the boost (the host counts it only for a golfer with the card); I arms the full boost. A click on the course sets the
 // aim and holds it there (so the mouse can go down to the button); before a click the aim follows the mouse, as it did.
-const HMETER = { per: 0.01, max: 0.06, v: 3, glide: 0.4, line: 0.07 };   // (v: swing.ts HOLD_V; glide: seconds; line: radians the camera may be off and need no glide)
-function hostBoost(n) { return Math.min(HMETER.max, Math.max(0, n) * HMETER.per); }
+// #1336 (the owner, 2026-11-15: "the faster you spam the forward arrow key while you are holding the swing the more power you get ... The power boost power keeps dropping"):
+// while the swing is held, each tap of Up (or W, or Shift) adds HMETER.tap to a level that halves every HMETER.half seconds; the boost let go with is the level times
+// the cap (HMETER.plain for every golfer; HMETER.max with the Power Mash charge armed, I); a putt takes none. swing.ts TAP_BOOST holds the same numbers for the model
+const HMETER = { max: 0.06, v: 3, glide: 0.4, line: 0.07, tap: 0.14, half: 0.6, plain: 0.04 };   // (v: swing.ts HOLD_V; glide: seconds; line: radians the camera may be off and need no glide)
+const HDRAIN = Math.pow(0.5, 1 / 60 / HMETER.half);   // (the level's fall a step)
+function hostArmed() { return !!(HP && HP.pick && HP.pick.armed && hostEarned('boost') && hostCharges() > 0); }
+function hostSwBoost(S) { const C = hostClub(); if (!S || !C || C.club === 'putter') return 0; return Math.round(Math.max(0, Math.min(1, S.lv || 0)) * (hostArmed() ? HMETER.max : HMETER.plain) * 1e4) / 1e4; }
+function hostBoostTap() {   // one tap while the swing is held (not on a putt, not once let go): the level up by HMETER.tap, at most full
+  const S = HP && HP.sw, C = hostClub(); if (!S || S.rel || !C || C.club === 'putter') return false;
+  S.lv = Math.min(1, (S.lv || 0) + HMETER.tap); S.taps = (S.taps || 0) + 1; return true;
+}
 // T456 (the owner, 2026-11-13: "the putting stroke should go past the hole"): a putt's meter reaches well past the hole: its top is 1.6 times the way to the
 // hole, and at least 3 m past it (swing.ts HOLD_PUTT_TOP: never more than 5 times). A full shot's top is the club's full carry, as before.
 const HOLD_PUTT_TOP = 5;
@@ -521,10 +601,11 @@ function hostSwing(p) {   // one step of the swing; true while it holds the golf
     HP.pend = false;
     let dy = Math.atan2(aim.dy, aim.dx) + 1.5708 - camYaw; dy = Math.atan2(Math.sin(dy), Math.cos(dy));   // (the camera behind him looks his way: its yaw is his heading plus a quarter turn)
     const g = Math.abs(dy) > HMETER.line || Math.abs(camD - camK.d) > 0.5 || Math.abs(camHk - camK.hk) > 0.05 ? { t: 0, y0: camYaw, dy, d0: camD, h0: camHk } : null;   // (J5e: to the framing the tee chose, not the default view)
-    HP.sw = { t: 0, u: 0, presses: 0, spd: Math.max(0.3, C.speed > 0 ? C.speed : 1), g, rel: false };   // (J5e: never a meter too slow to see move) heartT = 0; charging = true; power = 0; hostAimPin = true;
+    HP.sw = { t: 0, u: 0, lv: 0, spd: Math.max(0.3, C.speed > 0 ? C.speed : 1), g, rel: false };   // (J5e: never a meter too slow to see move) heartT = 0; charging = true; power = 0; hostAimPin = true;
     if (HP.ring) prewarmAt(HP.ring.x, HP.ring.y);   // (the land where it will come down is made while he lines up and swings)
     return true;
   }
+  if (S.lv && !S.rel) S.lv = S.lv * HDRAIN < 1e-4 ? 0 : S.lv * HDRAIN;   // (#1336: the boost falls all the time; taps hold it up)
   const fx = -aim.dy, fy = aim.dx;                                     // he stands side-on: the target is to his left
   p.x += (ball.x - fx * 0.64 - p.x) * 0.3; p.y += (ball.y - fy * 0.64 - p.y) * 0.3; p.th = Math.atan2(fy, fx); p.fa = Math.round(p.th / 6.2832 * 16 + 16) % 16; p.moving = false;
   if (S.rel) {                                                         // the downswing: the club comes down from where it was; the ball is struck as it passes
@@ -542,7 +623,7 @@ function hostSwing(p) {   // one step of the swing; true while it holds the golf
     return true;
   }
   if (S.u < 0.02) { HP.sw = null; charging = false; power = 0; p.al = 0; return true; }   // (J5e: let go before the meter moved: no swing, not a stroke spent at 0%)
-  HP.out = { power: S.u * (C.club === 'putter' ? hostPuttTop() : 1), u: S.u, acc: 0, boost: HP.pick && HP.pick.armed && hostEarned('boost') && hostCharges() > 0 ? HMETER.max : hostBoost(S.presses), v: HMETER.v }; HP.lastSw = HP.out;
+  HP.out = { power: S.u * (C.club === 'putter' ? hostPuttTop() : 1), u: S.u, acc: 0, boost: hostSwBoost(S), v: HMETER.v }; HP.lastSw = HP.out;
   S.rel = true; charging = false; if (C.club !== 'putter') sndBreath();   // (let go: he draws a breath and swings down)
   sndMsg('swish', { club: C.club, p: S.u });   // (J11: and the club comes down through the air: its swish, by the club)
   return true;
@@ -553,10 +634,12 @@ function hostMeterShow() {   // the meter on the swing button: the power held, t
   const cls = turn ? (on ? 'on swinging' : hostBusy() || !nearBall() ? 'on idle' : 'on') : '';
   if (swingBtn.className !== cls) swingBtn.className = cls;
   if (!turn) { hostAimRead(null); return; }
-  const pw = S ? S.u : on ? (HP.lastSw.u !== undefined ? HP.lastSw.u : HP.lastSw.power) : 0, boost = S ? (HP.pick && HP.pick.armed ? HMETER.max : hostBoost(S.presses)) : on ? HP.lastSw.boost : 0;
+  const pw = S ? S.u : on ? (HP.lastSw.u !== undefined ? HP.lastSw.u : HP.lastSw.power) : 0, boost = S ? hostSwBoost(S) : on ? HP.lastSw.boost : 0, putt0 = !!hostClub() && hostClub().club === 'putter';
   swingFill.style.width = (Math.max(0, Math.min(1, pw)) * 100).toFixed(1) + '%';
-  const txt = S && S.g ? 'Lining up ...' : S || on ? Math.round(pw * 100) + '%  ' + clubName(club) + (boost > 0 ? '  +' + Math.round(boost * 100) + '% boost' : '') + (S && !S.rel ? '  -  let go to hit' : '') : !nearBall() ? 'Walk to your ball (J)' : 'Hold to swing (or Space)';
+  const txt = S && S.g ? 'Lining up ...' : S || on ? Math.round(pw * 100) + '%  ' + clubName(club) + (boost > 0 ? '  +' + (boost * 100).toFixed(1) + '% boost' : '') + (S && !S.rel ? (putt0 ? '  -  let go to hit' : '  -  tap ↑ boost, let go') : '') : !nearBall() ? 'Walk to your ball (J)' : 'Hold to swing (or Space)';
   if (swingTxt.textContent !== txt) swingTxt.textContent = txt;
+  { const bw = S && !putt0 && !S.g ? (Math.round(Math.max(0, Math.min(1, S.lv || 0)) * 200) / 2).toFixed(1) + '%' : '', bc = bw ? 'boostbar on' + (hostArmed() ? ' armed' : '') : 'boostbar';   // (#1336: the boost bar over the power, written only when it moves)
+    if (swingBoost.style.width !== bw) swingBoost.style.width = bw; if (swingBoost.className !== bc) swingBoost.className = bc; }
   // T456: the bar's marks: where the aim is (the fill that lands or rolls the ball there: hold to it and let go) and, on a putt, where the hole is
   const T = !on || S ? hostTarget() : null, C = hostClub(), putt = !!C && C.club === 'putter';
   hostAimRead(T && nearBall() && !hostBusy() ? T : null);   // (J5f: the aim's distance, above the club box, while the ring is drawn)
@@ -573,8 +656,8 @@ function hostAimRead(T) {
   if (txt !== aimShown) { aimShown = txt; aimEl.innerHTML = txt; }
 }
 // the swing button: held with the mouse (or a finger) it swings; its presses never reach the course (so they never set the aim either)
-const swingBtn = document.createElement('div'), swingFill = document.createElement('i'), swingTxt = document.createElement('span'), swingAimMk = document.createElement('b'), swingHoleMk = document.createElement('b');
-swingBtn.id = 'swingBtn'; swingAimMk.className = 'aimmk'; swingHoleMk.className = 'holemk'; swingBtn.appendChild(swingFill); swingBtn.appendChild(swingHoleMk); swingBtn.appendChild(swingAimMk); swingBtn.appendChild(swingTxt);   // (T456: the aim's and the hole's marks on the bar)
+const swingBtn = document.createElement('div'), swingFill = document.createElement('i'), swingTxt = document.createElement('span'), swingAimMk = document.createElement('b'), swingHoleMk = document.createElement('b'), swingBoost = document.createElement('u');
+swingBtn.id = 'swingBtn'; swingAimMk.className = 'aimmk'; swingHoleMk.className = 'holemk'; swingBoost.className = 'boostbar'; swingBtn.appendChild(swingFill); swingBtn.appendChild(swingBoost); swingBtn.appendChild(swingHoleMk); swingBtn.appendChild(swingAimMk); swingBtn.appendChild(swingTxt);   // (T456: the aim's and the hole's marks on the bar)
 {
   const up = (e) => { swingBtnDown = false; if (e && e.stopPropagation) e.stopPropagation(); };
   swingBtn.addEventListener('pointerdown', (e) => {
@@ -606,15 +689,15 @@ function hostWindDir() {   // the way the host's wind blows (toward), on the gro
 }
 // T441, T442, T443: the shot he picks before the swing, the model's preview of it, and what he has earned.
 // - The shape (shape.ts ShotShape): the curve (draw, straight, fade; Z steps through them) and the flight (normal, high, low; X).
-// - The ball control (spin.ts SpinInput): a strike point picked on the ball (low for backspin, high to run on, left and right for side spin); tour spin
-//   adds the clicks in the air a card allows. A click on the ball's middle takes the spin off.
-// - The boost (I, or the button): armed, the swing is a "go for it" (swing.ts BOOST.max: more carry, a narrower sweet band, a wider miss), one charge.
+// - The spin is no longer picked here (#1336): it is tapped in with the arrows while the ball is in the air (hostSpinTap), the one way to spin.
+// - The boost (I, or the button): armed, the Power Mash charge raises the tapped boost's cap to swing.ts BOOST.max (more carry, a wider miss), one charge (#1336: the
+//   boost itself is tapped in with Up while the swing is held, hostBoostTap).
 // What he has not earned (turn.earned, unlocks.ts) is greyed and says what unlocks it; the host takes it out of an input anyway.
 // The aim draws the host's preview: the model's shot for this pick with no luck in it (its curve, its landing, then its bounce and roll as a fainter line).
 function hostEarned(k) { const e = HP && HP.turn && HP.turn.earned; return !e || !!e[k]; }   // (an older host sends none: everything)
 function hostWhy(k) { const e = HP && HP.turn && HP.turn.earned; return (e && e.why && e.why[k]) || ''; }
 function hostCharges() { const t = HP && HP.turn; return t && t.charges !== undefined ? t.charges : hostEarned('boost') ? 1 : 0; }
-function hostPick() { if (!HP.pick) HP.pick = { curve: 0, flight: 0, sx: 0, sy: 0, tour: false, armed: false }; return HP.pick; }
+function hostPick() { if (!HP.pick) HP.pick = { curve: 0, flight: 0, armed: false }; return HP.pick; }
 function hostLock(n) { say(n[0].toUpperCase() + n.slice(1) + ' is locked: ' + (hostWhy(n) || 'not earned yet'), 200); return false; }
 // J5f (the owner, 2026-11-14: "add a slider so you can increase and decrease the draw or fade. low or high flight too"): the curve and the flight are amounts, -1 to 1 (a full
 // draw .. straight .. a full fade; low .. normal .. high), set by the panel's sliders (hostPickAmt) and sent as they are; the old picks are the ends and the middle.
@@ -624,7 +707,6 @@ function hostPickSet(k) {   // a pick from a button or a key; a locked one says 
   else if (k === 'straight') P.curve = 0;
   else if (k === 'high' || k === 'low') { if (!hostEarned(k)) return hostLock(k); P.flight = P.flight === (k === 'high' ? 1 : -1) ? 0 : k === 'high' ? 1 : -1; }
   else if (k === 'normal') P.flight = 0;
-  else if (k === 'tour') { if (!hostEarned('tour')) return hostLock('tour'); P.tour = !P.tour; }
   else if (k === 'boost') { if (!hostEarned('boost')) return hostLock('boost'); if (!P.armed && hostCharges() <= 0) { say('No boost left on this hole', 150); return false; } P.armed = !P.armed; }
   else if (k === 'curve') return hostStep('curve', P.curve, [-1, 1], ['draw', 'fade']);
   else if (k === 'flight') return hostStep('flight', P.flight, [1, -1], ['high', 'low']);
@@ -642,27 +724,20 @@ function hostPickAmt(kind, v) {   // J5f: a slider's amount (kind 'curve' or 'fl
   P[cv ? 'curve' : 'flight'] = Math.abs(a) < 0.02 ? 0 : a;   // (shape.ts SHAPE_MIN: a hair off the middle is none)
   shotShown = ''; return P[cv ? 'curve' : 'flight'];
 }
-function hostSpinAt(fx, fy) {   // the strike point on the ball (-1..1 each, y up): side spin and backspin only when earned
-  const P = hostPick(), r = Math.hypot(fx, fy); let x = fx, y = fy; if (r > 1) { x /= r; y /= r; } if (r < 0.18) { x = 0; y = 0; }
-  if (x && !hostEarned('side')) { say('Side spin is locked: ' + hostWhy('side'), 200); x = 0; }
-  if (y < 0 && !hostEarned('back')) { say('Backspin is locked: ' + hostWhy('back'), 200); y = 0; }
-  P.sx = +x.toFixed(2); P.sy = +y.toFixed(2); shotShown = '';
-}
 function hostPickText() {   // (J5f: a part amount says how much, as shape.ts pickText does: "Draw 40%"; a full one is just "Draw")
-  const P = hostPick(), pc = (v) => (Math.abs(v) >= 0.995 ? '' : ' ' + Math.round(Math.abs(v) * 100) + '%'), c = P.curve < 0 ? 'Draw' + pc(P.curve) : P.curve > 0 ? 'Fade' + pc(P.curve) : '', f = P.flight > 0 ? 'high' + pc(P.flight) : P.flight < 0 ? 'low' + pc(P.flight) : '', sp = Math.round(Math.hypot(P.sx, P.sy) * 100);
-  const spin = sp ? (P.sy < -0.2 ? 'backspin' : P.sy > 0.2 ? 'topspin' : 'side spin') + ' ' + sp + '%' + (P.tour ? ' + tour' : '') : '';
-  return [c && f ? c + ', ' + f : c || (f ? f[0].toUpperCase() + f.slice(1) : 'Straight'), spin, P.armed ? 'boost' : ''].filter(Boolean).join(' · ');
+  const P = hostPick(), pc = (v) => (Math.abs(v) >= 0.995 ? '' : ' ' + Math.round(Math.abs(v) * 100) + '%'), c = P.curve < 0 ? 'Draw' + pc(P.curve) : P.curve > 0 ? 'Fade' + pc(P.curve) : '', f = P.flight > 0 ? 'high' + pc(P.flight) : P.flight < 0 ? 'low' + pc(P.flight) : '';
+  return [c && f ? c + ', ' + f : c || (f ? f[0].toUpperCase() + f.slice(1) : 'Straight'), P.armed ? 'boost cap up' : ''].filter(Boolean).join(' · ');
 }
 function hostShotIn() {   // what the pick adds to an input (none for a putt)
   const P = hostPick(), c = hostClub(); if (!c || c.club === 'putter') return {};
-  const o = {}; if (P.curve || P.flight) o.shape = { curve: P.curve, flight: P.flight }; if (P.sx || P.sy || P.tour) o.spin = { x: P.sx, y: P.sy, pump: P.tour ? 4 : 0 }; return o;
+  const o = {}; if (P.curve || P.flight) o.shape = { curve: P.curve, flight: P.flight }; return o;   // (#1336: the spin is tapped in the air, not picked)
 }
 // 2026-11-15 (the owner: "Why not make the draw and fade like normal golf games where you just move the dot on the ball?"): the shot is shaped on a ball, as golf
 // games do: a dot dragged across it, left a draw and right a fade (the curve), up high and down low (the flight). It sends what the sliders did (hostPickAmt: the
 // curve and the flight, -1..1, a side he has not earned held at the middle with its message), so the model is unchanged. The gold ring is his limit
 // (turn.clubs[].bend: his full bend against a scratch golfer's): the dot cannot pass it, and at the ring the amount is his full 1, which the model turns into the
-// share he pulls off, as before. The spin (the strike point on the small ball), Tour spin and Go for it are folded under it, wired as they were (a follow-on job
-// moves the spin to the arrow keys in the air). The panel is shut until the corner button opens it, and the choice is kept (cl_shotopen).
+// share he pulls off, as before. Folded under it: how to boost and spin (#1336: Up tapped while the swing is held, the arrows in the air) and Go for it, which arms the
+// Power Mash charge (the boost's higher cap). The panel is shut until the corner button opens it, and the choice is kept (cl_shotopen).
 const shotEl = document.createElement('div'); shotEl.id = 'shotc';
 const shotBtn = document.createElement('button'); shotBtn.type = 'button'; shotBtn.id = 'shotBtn'; shotBtn.title = 'Shape the shot: draw, fade, high, low';
 shotBtn.innerHTML = '<canvas width="64" height="64"></canvas><span>Straight</span>';
@@ -671,12 +746,13 @@ const tileImg = (k) => '<img class="e-' + k + '" data-e="' + k + '" src="tiles/s
 shotEl.innerHTML = '<div class="sh"><b>Shot shape</b><em id="pickTxt"></em><button type="button" class="rst" data-k="reset" title="Back to a straight shot (or double-click the ball)">Reset</button></div>'
   + '<div class="bw">' + tileImg('draw') + tileImg('fade') + tileImg('high') + tileImg('low') + '<canvas id="shapeBall" width="192" height="192"></canvas><canvas id="shapeArc" width="64" height="64"></canvas></div>'
   + '<div class="lab">' + SHAPE_LAB + '</div><div class="lim" id="limTxt"></div>'
-  + '<details><summary>Spin and boost</summary><div class="sp"><canvas id="spinBall" width="192" height="192" title="Click or drag on the ball: where you strike it. Top to run on, bottom for backspin, left or right for side spin. Right-click: none"></canvas><div class="st"><b data-k="tour"><img src="tiles/shot-spin.webp" alt="" aria-hidden="true" draggable="false"><span class="tx"><span class="nm">Tour spin</span><em class="lw"></em></span></b><b data-k="boost" class="boost"><img src="tiles/go-for-it.webp" alt="" aria-hidden="true" draggable="false"><span class="tx"><span class="nm">Go for it</span><em class="lw" id="boostTxt"></em></span></b></div></div><div class="lim" id="spinTxt"></div></details>';
+  + '<details><summary>Spin and boost</summary><div class="hw"><img src="tiles/shot-spin.webp" alt="" aria-hidden="true" draggable="false"><span><b class="k">Boost</b> hold the swing and tap ↑ (or W) fast; it falls when you stop, so let go at the peak.<br><b class="k">Spin</b> while the ball flies tap ↓ back, ↑ top, ← → side; the opposite arrow takes it off.</span></div>'
+  + '<div class="st"><b data-k="boost" class="boost"><img src="tiles/go-for-it.webp" alt="" aria-hidden="true" draggable="false"><span class="tx"><span class="nm">Go for it (I)</span><em class="lw" id="boostTxt"></em></span></b></div><div class="lim" id="spinTxt"></div></details>';
 if (typeof hudEl !== 'undefined' && hudEl.appendChild) hudEl.appendChild(shotEl);
 if (cornerEl && cornerEl.insertBefore) cornerEl.insertBefore(shotBtn, cornerEl.firstChild);
 const q1 = (el, s) => (el && el.querySelector ? el.querySelector(s) : null), c2d = (cv) => (cv && cv.getContext ? cv.getContext('2d') : null);
-const spinBall = q1(shotEl, '#spinBall'), sctx = c2d(spinBall), shapeBall = q1(shotEl, '#shapeBall'), shctx = c2d(shapeBall), arcCtx = c2d(q1(shotEl, '#shapeArc')), btnCtx = c2d(q1(shotBtn, 'canvas')), btnTxt = q1(shotBtn, 'span');
-let shotShown = '', shotOpen = false, spinDrag = false, shapeDrag = false, tipShown = false;
+const shapeBall = q1(shotEl, '#shapeBall'), shctx = c2d(shapeBall), arcCtx = c2d(q1(shotEl, '#shapeArc')), btnCtx = c2d(q1(shotBtn, 'canvas')), btnTxt = q1(shotBtn, 'span');
+let shotShown = '', shotOpen = false, shapeDrag = false, tipShown = false;
 try { shotOpen = localStorage.getItem('cl_shotopen') === '1'; } catch (e) { /* (no storage: shut) */ }
 function shapeRing() { const C = hostClub(), B = C && C.bend; return B && B.scrM > 0 ? clamp(B.m / B.scrM, 0.3, 1) : 1; }   // his limit's ring, as a share of the ball's radius (a scratch golfer's full bend: the whole ball)
 function shapeAmt(px, py, rr) {   // a point on the ball (-1..1 each, y up; the ball's edge at 1) -> [curve, flight]: held inside the ring, the ring's edge a full 1, a dot near the middle none
@@ -686,17 +762,16 @@ function shapeAmt(px, py, rr) {   // a point on the ball (-1..1 each, y up; the 
 }
 function hostShapeAt(c, f) { hostPickAmt('curve', c); hostPickAmt('flight', f); return hostShotIn().shape || null; }   // (the ball's dot: the same two amounts the sliders sent)
 function shapeFrom(e) { if (!HP || !shapeBall || !shapeBall.getBoundingClientRect) return; const r = shapeBall.getBoundingClientRect(), k = 192 / 88; const a = shapeAmt(((e.clientX - r.left) / r.width - 0.5) * k, -((e.clientY - r.top) / r.height - 0.5) * k, shapeRing()); hostShapeAt(a[0], a[1]); }
-function spinFrom(e) { if (!HP || !spinBall || !spinBall.getBoundingClientRect) return; const r = spinBall.getBoundingClientRect(); hostSpinAt(((e.clientX - r.left) / r.width - 0.5) * 2.2, -((e.clientY - r.top) / r.height - 0.5) * 2.2); }
 if (typeof addEventListener === 'function') {   // #1301: a drag that began on a ball goes on past its edge; let go anywhere
-  addEventListener('mousemove', (e) => { if (spinDrag) spinFrom(e); if (shapeDrag) shapeFrom(e); });
-  addEventListener('mouseup', () => { spinDrag = false; shapeDrag = false; });
+  addEventListener('mousemove', (e) => { if (shapeDrag) shapeFrom(e); });
+  addEventListener('mouseup', () => { shapeDrag = false; });
 }
 if (shotBtn.addEventListener) {
   shotBtn.addEventListener('mousedown', (e) => { if (e.preventDefault) e.preventDefault(); if (e.stopPropagation) e.stopPropagation(); });   // (no focus left on it: Space swings)
   shotBtn.addEventListener('click', () => { shotOpen = !shotOpen; try { localStorage.setItem('cl_shotopen', shotOpen ? '1' : '0'); } catch (err) { /* (not kept) */ } shotShown = ''; });
 }
 if (shotEl.addEventListener) {
-  shotEl.addEventListener('contextmenu', (e) => { if (e.preventDefault) e.preventDefault(); if (!HP) return; if (e.target === spinBall) hostSpinAt(0, 0); else if (e.target === shapeBall) hostShapeAt(0, 0); });   // (right-click on a ball: none)
+  shotEl.addEventListener('contextmenu', (e) => { if (e.preventDefault) e.preventDefault(); if (!HP) return; if (e.target === shapeBall) hostShapeAt(0, 0); });   // (right-click on a ball: none)
   shotEl.addEventListener('dblclick', (e) => { if (HP && e.target === shapeBall) hostShapeAt(0, 0); });
   shotEl.addEventListener('mousedown', (e) => {
     if (e.stopPropagation) e.stopPropagation();
@@ -704,7 +779,6 @@ if (shotEl.addEventListener) {
     if (e.preventDefault) e.preventDefault();
     if (!t || !HP) return;
     if (t === shapeBall) { if ((e.button | 0) === 0) { shapeDrag = true; shapeFrom(e); } return; }
-    if (t === spinBall) { if ((e.button | 0) === 0) { spinDrag = true; spinFrom(e); } return; }
     while (t && t !== shotEl && !(t.dataset && t.dataset.k)) t = t.parentNode;
     if (!t || t === shotEl) return;
     if (t.dataset.k === 'reset') hostShapeAt(0, 0); else hostPickSet(t.dataset.k);
@@ -716,7 +790,7 @@ function shapeWords(P) {   // (J5f: a part amount says how much, as shape.ts pic
 }
 function hostShotShow() {   // the button and the panel, written only when something changed
   const C = hostClub(), on = hostOnTurn() && !hostBusy() && !HP.sw && nearBall() && !!C && C.club !== 'putter', P = hostPick();
-  const sig = on ? [P.curve, P.flight, P.sx, P.sy, P.tour, P.armed, hostCharges(), club, shotOpen, JSON.stringify((HP.turn && HP.turn.earned) || '')].join('|') : 'off';
+  const sig = on ? [P.curve, P.flight, P.armed, hostCharges(), club, shotOpen, JSON.stringify((HP.turn && HP.turn.earned) || '')].join('|') : 'off';
   if (sig === shotShown) return; shotShown = sig;
   shotEl.className = on && shotOpen ? 'on' : ''; shotBtn.className = on ? 'on' + (shotOpen ? ' open' : '') : '';
   if (!on) return;
@@ -724,10 +798,9 @@ function hostShotShow() {   // the button and the panel, written only when somet
   if (btnTxt) btnTxt.textContent = shapeWords(P);
   if (btnCtx && btnCtx.createRadialGradient) paintShape(btnCtx, 64, P, false);
   if (!shotOpen || !shotEl.querySelectorAll) return;
-  for (const b of shotEl.querySelectorAll('b[data-k]')) {   // (the Tour and Go for it buttons)
-    const k = b.dataset.k, earnedK = hostEarned(k), sel = (k === 'tour' && P.tour) || (k === 'boost' && P.armed);
-    b.className = (k === 'boost' ? 'boost ' : '') + (sel ? 'sel' : '') + (earnedK ? '' : ' lock'); b.title = earnedK ? '' : 'Locked: ' + hostWhy(k);
-    if (k === 'tour') { const lw = b.querySelector('.lw'); if (lw) lw.textContent = earnedK ? (P.tour ? 'on' : '') : 'Locked: ' + hostWhy(k); }   // (#1301: a locked one says what unlocks it, in words)
+  for (const b of shotEl.querySelectorAll('b[data-k]')) {   // (the Go for it button)
+    const k = b.dataset.k, earnedK = hostEarned(k), sel = k === 'boost' && P.armed;
+    b.className = (k === 'boost' ? 'boost ' : '') + (sel ? 'sel' : '') + (earnedK ? '' : ' lock'); b.title = earnedK ? 'Arms the Power Mash charge: the tapped boost may go to +6% (the plain cap is +4%)' : 'Locked: ' + hostWhy(k);
   }
   for (const e of shotEl.querySelectorAll('img[data-e]')) { const ok = hostEarned(e.dataset.e); e.className = 'e-' + e.dataset.e + (ok ? '' : ' lock'); }   // (a side he has not earned: its tile dimmed)
   const set = (id, t) => { const el = q1(shotEl, id); if (el) el.textContent = t; return el; };
@@ -741,11 +814,10 @@ function hostShotShow() {   // the button and the panel, written only when somet
   }
   const le = set('#limTxt', lim || lockTxt); if (le) le.title = [why, lim ? lockTxt : ''].filter(Boolean).join(' ');
   if (shapeBall) shapeBall.title = SHAPE_LAB + '. Double-click: straight.' + (why ? ' ' + why : '') + (lockTxt ? ' ' + lockTxt : '');
-  const sp = Math.round(Math.hypot(P.sx, P.sy) * 100); set('#spinTxt', 'Spin: ' + (sp ? (P.sy < -0.2 ? 'backspin ' : P.sy > 0.2 ? 'topspin ' : 'side spin ') + sp + '%' + (P.tour ? ' + tour' : '') : P.tour ? 'tour only' : 'none'));
-  const bt = q1(shotEl, '#boostTxt'); if (bt) bt.textContent = hostEarned('boost') ? hostCharges() + ' left this hole' : 'Locked: ' + hostWhy('boost');
+  const lk = ['side', 'back'].filter((k) => !hostEarned(k)); set('#spinTxt', lk.length ? 'Locked: ' + lk.map((k) => (k === 'side' ? 'side spin' : 'backspin') + ' (' + (hostWhy(k) || 'not earned yet') + ')').join(', ') : '');   // (#1301: what is locked, in words)
+  const bt = q1(shotEl, '#boostTxt'); if (bt) bt.textContent = hostEarned('boost') ? (P.armed ? 'armed: cap +6%' : 'raises the cap') + ' · ' + hostCharges() + ' left this hole' : 'Locked: ' + hostWhy('boost');
   if (shctx && shctx.createRadialGradient) paintShape(shctx, 192, P, true);
   if (arcCtx && arcCtx.quadraticCurveTo) paintArc(arcCtx, P);
-  if (sctx && sctx.createRadialGradient) paintBall(P);
 }
 function ballFace(c, W, big) {   // a lit golf ball filling a W x W canvas (the light at the upper right), with dimples when big
   const R = W * 88 / 192, cx = W / 2, cy = W / 2, g = c.createRadialGradient(cx + R * 0.32, cy - R * 0.34, R * 0.07, cx, cy, R);
@@ -767,17 +839,9 @@ function paintArc(c, P) {   // the small arrow beside the ball: the shape picked
   const ax = x1 - mx, ay = y1 - my, al = Math.hypot(ax, ay) || 1, ux = ax / al, uy = ay / al; c.fillStyle = '#f5b52e'; c.strokeStyle = 'rgba(0, 0, 0, 0.55)'; c.lineWidth = 1.5;
   c.beginPath(); c.moveTo(x1 + ux * 6, y1 + uy * 6); c.lineTo(x1 - ux * 4 - uy * 6, y1 - uy * 4 + ux * 6); c.lineTo(x1 - ux * 4 + uy * 6, y1 - uy * 4 - ux * 6); c.closePath(); c.fill(); c.stroke();
 }
-// #1301: the spin ball: a lit sphere with dimples; the strike point where he picked it (red); the parts he has not earned dimmed
-function paintBall(P) {
-  const c = sctx; c.clearRect(0, 0, 192, 192); const R = ballFace(c, 192, true), cx = 96, cy = 96;
-  if (c.save && c.clip) { c.save(); c.beginPath(); c.arc(cx, cy, R, 0, 6.2832); c.clip(); c.fillStyle = 'rgba(20, 21, 25, 0.5)'; if (!hostEarned('back')) c.fillRect(0, cy, 192, 96); if (!hostEarned('side')) { c.fillRect(0, 0, 34, 192); c.fillRect(158, 0, 34, 192); } c.restore(); }
-  c.strokeStyle = 'rgba(60, 54, 40, 0.35)'; c.lineWidth = 1.5; c.beginPath(); c.moveTo(cx - R + 10, cy); c.lineTo(cx + R - 10, cy); c.moveTo(cx, cy - R + 10); c.lineTo(cx, cy + R - 10); c.stroke();
-  c.strokeStyle = 'rgba(0, 0, 0, 0.55)'; c.lineWidth = 3; c.beginPath(); c.arc(cx, cy, R, 0, 6.2832); c.stroke();
-  c.fillStyle = '#e8573c'; c.strokeStyle = '#fff'; c.lineWidth = 3; c.beginPath(); c.arc(cx + P.sx * (R - 14), cy - P.sy * (R - 14), 9, 0, 6.2832); c.fill(); c.stroke();
-}
 function hostLockWords(neg, pos) { const lo = hostEarned(neg), hi = hostEarned(pos); return lo && hi ? '' : ' Locked: ' + [lo ? '' : neg + ' (' + (hostWhy(neg) || 'not earned yet') + ')', hi ? '' : pos + ' (' + (hostWhy(pos) || 'not earned yet') + ')'].filter(Boolean).join(', ') + '.'; }   // (#1301: what is locked, and what unlocks it, in words)
 // the preview: asked for when the pick, the club or the line changes (a few times a second at most), drawn when the answer is for what is picked now
-function hostAimSig() { const c = hostClub(), P = hostPick(); return c ? [c.club, P.curve, P.flight, P.sx, P.sy, P.tour, P.armed, Math.round(Math.atan2(aim.dy, aim.dx) * 360 / Math.PI)].join('|') : ''; }
+function hostAimSig() { const c = hostClub(), P = hostPick(); return c ? [c.club, P.curve, P.flight, P.armed, Math.round(Math.atan2(aim.dy, aim.dx) * 360 / Math.PI)].join('|') : ''; }
 function hostAimAsk() {
   if (!hostOnTurn() || hostBusy() || HP.sw || !nearBall() || !hostClub() || hostClub().club === 'putter') return;
   const sig = hostAimSig(); HP.tk = (HP.tk || 0) + 1; if (sig === HP.pvSig || HP.tk - (HP.pvAt || -99) < 8) return;
@@ -913,7 +977,8 @@ clubsEl.addEventListener('wheel', (e) => { if (!HP || !HP.clubs.length) return; 
 // ---- loop
 addEventListener('keydown', (e) => {
   if (e.repeat) return;
-  if (HP && HP.sw && (e.code === 'ShiftLeft' || e.code === 'ShiftRight')) { HP.sw.presses++; return; }   // (host mode: the boost, tapped while the swing is held: T421, T443; Shift since T446, Space now swings)
+  if (HP && HP.sw && !HP.sw.rel && (e.code === 'ArrowUp' || e.code === 'KeyW' || e.code === 'ShiftLeft' || e.code === 'ShiftRight')) { hostBoostTap(); if (e.preventDefault) e.preventDefault(); return; }   // (#1336: the boost, tapped while the swing is held: Up or W, Shift as before; never a step)
+  if (HP && hostAirOn() && /^Arrow(Up|Down|Left|Right)$/.test(e.code)) { hostSpinTap(e.code.slice(5).toLowerCase()); if (e.preventDefault) e.preventDefault(); return; }   // (#1336: spin, tapped while his ball is in the air; never a step or a turn)
   if (HP && HP.turn && !HP.sw && (e.code === 'KeyZ' || e.code === 'KeyX' || e.code === 'KeyI')) { hostPickSet(e.code === 'KeyZ' ? 'curve' : e.code === 'KeyX' ? 'flight' : 'boost'); return; }   // (T441, T443: the shape and the boost)
   if (HOST && e.code === 'Escape') { hostSend({ t: 'exit' }); return; }   // (the host page closes the view)
   if (HOST && e.code === 'F8') { e.preventDefault(); sndMsg('mute'); return; }   // (J11: the Mute key works in the view too: the host page mutes, or lifts every mute)
