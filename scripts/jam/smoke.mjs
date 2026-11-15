@@ -303,7 +303,10 @@ try {
   if ((await page.locator('[data-testid="radio-play"]').getAttribute('aria-pressed')) === 'true') await click('radio', 'Radio (off)', page.locator('[data-testid="radio-play"]')); // (the card's own Play may have turned it off already)
   // ---- the speeds (#1275: the bar is collapsed by default: its chevron shows every speed, and shuts them again)
   await click('top bar', 'speed bar: show every speed', page.locator('[data-testid="speed-toggle"]'));
-  for (const s of ['1', '4', '20']) await click('top bar', `speed ${s}x`, page.locator(`[data-testid="speed-${s}"]`));
+  for (const s of ['1', '4', '20']) { // (jam-rc: Continue after Exit to main menu leaves the game at 1x: a speed already on changes nothing)
+    const cur = await game(() => window.__game?.speed);
+    await click('top bar', `speed ${s}x`, page.locator(`[data-testid="speed-${s}"]`), { same: cur === Number(s) ? 'already this speed' : undefined });
+  }
   await click('top bar', 'speed bar: hide the speeds', page.locator('[data-testid="speed-toggle"]'));
   await click('top bar', 'pause', page.locator('[data-tip="Pause (Space)"]').first());
 } finally {
