@@ -153,6 +153,8 @@ const TREES = cat(i => i.kind === 'tree' && !/dead/.test(i.id)), BUSHES = cat(i 
 const ORCHARD = names(['ref:tree-birch-gold', 'ref:tree-maple-crimson', 'world:tree_oak_0', 'world:tree_oak_1']);
 const CARS = cat(i => i.cat === 'Vehicles' && /_[news](-v2)?$/.test(i.id)), PICKUPS = CARS.filter(id => /pickup|van/.test(id));
 const FACE: Record<string, Pt> = { n: { x: 0, y: -1 }, s: { x: 0, y: 1 }, e: { x: 1, y: 0 }, w: { x: -1, y: 0 } };
+/** the gap between a farmstead's parked car and its house's front (parcel units): the car stands clear of the house and its porch */
+const HOUSE_CAR_GAP = 0.8;
 interface Pair { x: string; y: string }
 /** The farm fence (timber posts and wire, T291; art coming from RUN.world). When set, the frontage and yard runs use it (with the drive's
  *  gate gap) instead of nothing; null leaves those runs out. Farms never use the town's wood fences (the owner, 2026-11-01: "remove wood
@@ -299,8 +301,9 @@ class FB {
     else for (let a = a0 + ROW / 2; a < a1 - 0.2 && out.length < 480; a += ROW) { const x = this.P(a, b0 + 0.3), y = this.P(a, b1 - 0.3); out.push(x.x, x.y, y.x, y.y); }
     return out;
   }
-  /** a car or pickup from a pool, the one whose facing suits the road best, its near edge at b0 along the lane at a */
-  vehicle(pool: string[], a: number, b0: number): number {
+  /** a car or pickup from a pool, the one whose facing suits the road best, its near edge at b0 along the lane at a (with bMax: moved back towards the road so its far
+   *  edge is no deeper than bMax, never past b 0; the same draws either way). Returns its length along the lane, and its near edge in `at` */
+  vehicle(pool: string[], a: number, b0: number, bMax = Infinity, at?: { b0: number }): number {
     if (!pool.length) return 0;
     let best = -2; const ties: string[] = [];
     for (const id of pool) {
@@ -310,8 +313,8 @@ class FB {
     }
     const g = this.spec(pick(this.r, ties));
     if (!g) return 0;
-    const span = 2 * this.eb(g);
-    this.atW(g, this.P(a, b0 + span / 2));
+    const span = 2 * this.eb(g), n0 = Math.max(0, Math.min(b0, bMax - span));
+    this.atW(g, this.P(a, n0 + span / 2)); if (at) at.b0 = n0;
     return span;
   }
   /** n sprites from a pool at seeded points of a parcel-frame rectangle */
@@ -748,7 +751,9 @@ function composeFarm2(p: FarmParcel, seed: number, month: number): Composition {
   if (r() < 0.75) B.put('expansion:farm-tractor', L.ba, L.bb - L.bd / 2 - 1.8, { veh: true });
   if (r() < 0.35) B.put('expansion:utility-trailer', clamp(L.ba + L.bw / 2 + 1.6, 1.6, W - 1.6), L.bb + L.bd / 2 + 1.2, { veh: true });
   // (T236: the yard's pickup is the yellow or the rusty one) parked on the yard's drive in front of the house
-  if (r() < 0.85) { const span = B.vehicle(PICKUPS.length ? [...PICKUPS, ...Object.keys(RUSTY_PICKUPS)] : CARS, L.laneA, L.yardB0 + 0.6); if (span && r() < 0.3) B.vehicle(CARS, L.laneA, L.yardB0 + 0.8 + span); }
+  // (the menu scene, 2026-11-15: the lane runs 1.7 m from the house's wall, so a pickup alongside the house's front stood under its porch: it parks wholly ahead of the front, a
+  // second car ahead of it, nearer the road)
+  if (r() < 0.85) { const at = { b0: 0 }, span = B.vehicle(PICKUPS.length ? [...PICKUPS, ...Object.keys(RUSTY_PICKUPS)] : CARS, L.laneA, L.yardB0 + 0.6, L.front - HOUSE_CAR_GAP, at); if (span && r() < 0.3) B.vehicle(CARS, L.laneA, at.b0 - 0.2, at.b0 - 0.2); }
   B.scatter(names(['expansion:lumber-bundle', 'expansion:pallet-stack', 'expansion:oil-drums']), Math.max(1, L.ba - L.bw / 2), L.bb + L.bd / 2 + 0.8, Math.min(W - 1, L.ba + L.bw / 2), Math.min(D - 1, L.yardB1), 2);
   // (the windmill in the yard's back corner on the barn's side: the fields reach the parcel's sides)
   if (r() < 0.25) B.put('ref:landmark-windmill', L.side > 0 ? L.yA0 + 1.4 : L.yA1 - 1.4, L.yardB1 - 1.8);
