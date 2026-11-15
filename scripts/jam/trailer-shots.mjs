@@ -6,7 +6,7 @@
 import { existsSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 
-const SHOTS = ['menu', 'range-build', 'town', 'import', 'hole-build', 'paint', 'decor', 'golf-tee', 'golf-draw', 'golf-putt', 'range-practice', 'times', 'night', 'alive'];
+const SHOTS = ['menu', 'range-build', 'town', 'hole-build', 'paint', 'decor', 'golf-tee', 'golf-draw', 'golf-putt', 'range-practice', 'times', 'night', 'alive']; // (and import, golf-real: a new game on a real course, recorded last)
 
 export async function record(env) {
   const { OUT, SAVE, WORLD, opt, has, launch, newPage, preview, freePort, Recorder, wait } = env;
@@ -65,6 +65,7 @@ export async function record(env) {
   });
   const cursor = on => ev(on => window.__trailerCursor?.(on), on);
   async function open(url) {
+    if (page) { try { await rec?.stop(); } catch { /* none */ } await page.context().close().catch(() => {}); }
     page = await newPage(browser); rec = new Recorder(page, OUT, { width: 1920, height: 1080, quality: 88 });
     await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 180000 });
   }
@@ -118,6 +119,7 @@ export async function record(env) {
   const ballRest = async (prev = null, ms = 30000) => { await wait(1500); const t0 = Date.now(); while (Date.now() - t0 < ms) { const s = await turnNow().catch(() => null); if (s && (prev === null || s.stroke !== prev)) return s; await wait(250); } return null; };
 
   const C = WORLD.view ?? {};
+  const takes = +opt('takes', 3);
   try {
     // ---------------- the title card over the living menu scene, then a new game: the range placed and built up in stages
     if (want('menu') || want('range-build')) {
@@ -177,17 +179,6 @@ export async function record(env) {
       await speed(2); await cam(...(C.townA ?? [1010, 1110, 0.09])); await wait(4000);
       await start('town'); await cam(...(C.townB ?? [930, 960, 0.16]), 7000); await wait(7500); await cam(...(C.townC ?? [880, 880, 0.24]), 5000); await wait(5500); await stop();
     });
-    await shot('import', async () => {
-      await cam(...(C.importCam ?? [1080, 560, 0.06])); await wait(3000);
-      await start('import');
-      await clickSel('[data-testid="rail"] button:has-text("Course")', 450); await wait(700);
-      await clickSel('text=Place a real course', 450); await wait(600);
-      await clickSel('text=Magnolia National', 450); await wait(2500);
-      const at = C.importAt ?? [1400, 760], p = await scr(at[0], at[1]);
-      await glide(p.x - 250, p.y + 120, 900); await wait(500); await glide(p.x, p.y, 1200); await wait(900);
-      await clickAt(p.x, p.y, 150); await wait(1200);
-      await clickSel('button:has-text("Place it")', 500); await wait(7000); await stop();
-    });
     await shot('hole-build', async () => {
       const h = WORLD.stageHole, mid = { x: (h.tee.x + h.green.x) / 2, y: (h.tee.y + h.green.y) / 2 };
       const z = C.holeZoom ?? 0.12, fix = () => cam(mid.x + 18, mid.y - 6, z);
@@ -202,31 +193,31 @@ export async function record(env) {
       await page.keyboard.press('Escape'); await wait(400); await closeCards(); await glide(1700, 900, 500);
       await speed(20); await wait(12000); await speed(1); await closeCards(); await wait(1500); await stop();
     });
+    // Shape by hand (the Holes panel's brushes): a green, a bunker beside it and a pond, a stroke or two each, the camera fixed and close. The strokes are
+    // in screen pixels for this camera (trailer-world.json view.paint: tile x, y, zoom; the open strip between hole 1 and the range on the seed-11 map)
+    const P = C.paint ?? { at: [948, 905, 0.3], green: [[1400, 420], [1520, 440], [1560, 500], [1480, 540], [1380, 500], [1420, 450], [1500, 470], [1470, 500]],
+      bunker: [[1300, 470], [1350, 455], [1370, 490], [1330, 510], [1300, 490], [1335, 480]], water: [[1600, 330], [1700, 350], [1730, 410], [1650, 440], [1580, 400], [1620, 370], [1680, 390]],
+      trees: [[1100, 620], [1180, 640], [1250, 660], [1320, 690]], props: [[1500, 560], [1560, 590], [1620, 620], [1680, 650]] };
+    const tile = async name => { const back = page.locator('[data-testid="tool-panel"] button:has-text("All surfaces")').first(); if (await back.isVisible().catch(() => false)) { await clickSel('[data-testid="tool-panel"] button:has-text("All surfaces")', 350); await wait(350); } await clickSel(`[data-testid="tool-panel"] button:has-text("${name}")`, 450); await wait(450); };
     await shot('paint', async () => {
-      const P = C.paint ?? { at: [990, 1100], green: [[985, 1095], [995, 1098], [992, 1104], [984, 1102]], bunker: [[1000, 1094], [1004, 1097]], water: [[975, 1110], [985, 1116], [978, 1120]] };
-      await cam(P.at[0], P.at[1], 0.3); await wait(3000);
-      await start('paint');
-      for (const [name, pts] of [['Green', P.green], ['Bunker', P.bunker], ['Water', P.water]]) {
-        await clickSel('[data-testid="rail"] button:has-text("Course")', 400); await wait(500);
-        await clickSel('text=Shape by hand', 400); await wait(500);
-        await clickSel(`text=${name}`, 400); await wait(400);
-        const sp = []; for (const [x, y] of pts) sp.push(await scr(x, y));
-        await stroke(sp, 1400); await wait(900);
-      }
-      await stop();
+      await closeCards(); await cam(...P.at); await wait(3000);
+      await start('paint'); await glide(1150, 760, 300);
+      await clickSel('[data-testid="rail"] button:has-text("Course")', 450); await wait(800);
+      for (const k of ['green', 'bunker', 'water']) { await tile(k[0].toUpperCase() + k.slice(1)); await stroke(P[k].map(([x, y]) => ({ x, y })), 1300); await wait(1000); }
+      await wait(800); await stop();
     });
     await shot('decor', async () => {
-      const D = C.decor ?? { at: [960, 1000], trees: [[955, 995], [962, 990], [968, 998]] };
-      await cam(D.at[0], D.at[1], 0.28); await wait(2500);
+      await closeCards(); await cam(...P.at); await wait(1500);
       await start('decor');
-      await clickSel('[data-testid="rail"] button:has-text("Course")', 400); await wait(500);
-      await clickSel('text=Plants', 400); await wait(600);
-      const firstLeaf = page.locator('[role="menuitem"]').first(); if (await firstLeaf.isVisible().catch(() => false)) { const b = await firstLeaf.boundingBox(); await clickAt(b.x + b.width / 2, b.y + b.height / 2, 300); }
-      for (const [x, y] of D.trees) { const p = await scr(x, y); await clickAt(p.x, p.y, 450); await wait(250); }
+      await clickSel('[data-testid="rail"] button:has-text("Course")', 400); await wait(600);
+      await tile('Trees'); await stroke(P.trees.map(([x, y]) => ({ x, y })), 1400); await wait(800);
+      await page.keyboard.press('Escape'); await wait(300);
+      await page.keyboard.press('z'); await wait(900); // (Props: the Course tools' Props, key Z)
+      await clickSel('[data-testid="tool-panel"] button:has-text("Potted palm")', 450); await wait(400);
+      for (const [x, y] of P.props) { await clickAt(x, y, 350); await wait(250); }
       await page.keyboard.press('Escape'); await wait(1500); await stop();
     });
     // ---------------- the golf view
-    const takes = +opt('takes', 3);
     await shot('golf-tee', async () => {
       for (let k = 0; k < takes; k++) {
         const t = await play(1, 'golden'); if (!t) throw new Error('no turn on hole 1');
@@ -283,6 +274,34 @@ export async function record(env) {
       await cam(...A[0]); await wait(3000);
       await start('alive'); await cam(...A[1], 8000); await wait(8500); await stop(); await speed(1);
     });
+    // ---------------- a real course imported: a new game's "Who are you?" card, Your course > Change or find a course > a featured course (in the jam this is where real
+    // courses are: the Course flyout's Place a real course is not reachable there); the game starts on it and the camera rises over it. Then one of its holes played.
+    // (Last: the page leaves the showcase club for the new game.)
+    const realShots = async () => {
+      if (!want('import') && !want('golf-real')) return;
+      await open(`${base}?real=1#play=new`); await ready();
+      const R = WORLD.realCourse ?? { name: 'Magnolia National', hole: 16, cam: [0.06, 0.03] };
+      await shot('import', async () => {
+        await page.locator('[data-testid="who-course-open"]').waitFor({ timeout: 120000 }); await wait(2500);
+        await start('import');
+        await clickSel('input[placeholder="Your name"]'); await page.keyboard.type('Sam', { delay: 50 });
+        await clickSel('[data-testid="who-course-open"]', 600); await wait(1600);
+        await clickSel(`button:has-text("${R.name}")`, 800); // (a featured course: the game starts on it)
+        await page.waitForFunction(() => new Set((window.__game?.golf?.pins ?? []).map(p => p.hole)).size >= 9, null, { timeout: 120000 });
+        await wait(1500); await closeCards();
+        const c = await G(() => { const ps = window.__game.golf.pins; let x = 0, y = 0; for (const p of ps) { x += p.x; y += p.y; } return [x / ps.length, y / ps.length]; });
+        await cam(c[0], c[1], R.cam[0]); await wait(2500); await closeCards();
+        await cam(c[0], c[1], R.cam[1], 6000); await wait(6500); await stop();
+      });
+      await shot('golf-real', async () => {
+        for (let k = 0; k < takes; k++) {
+          const t = await play(R.hole, 'golden'); if (!t) throw new Error(`no turn on ${R.name} ${R.hole}`);
+          await wait(1500); await start(`golf-real-${k}`); await swing({ lead: 0.02 }); await ballRest(t.stroke); await wait(600);
+          const n = await playOut(); console.log(`   ${R.name} ${R.hole} take ${k}: ${n + 1} strokes`); await wait(2000); await stop(); await leave();
+        }
+      });
+    };
+    await realShots();
   } finally {
     await browser.close(); if (server) await new Promise(r => server.httpServer.close(r));
   }
