@@ -47,7 +47,7 @@ Your takings pay for every hole. Click your cash for the Bank: borrow (the payme
 
 ### Controls
 - **Builder:** the mouse. Tool rail on the left, cards on the right; click to place, **R** to turn, the wheel to zoom, drag to pan. Click your cash for the Bank. "Pick a spot for me" places your range for you.
-- **Golf view:** hold the swing button (or **Space**) and let go; **tap Up** while holding to boost; **arrows** spin the ball in flight; click the ground to aim; **1-9** or the wheel for clubs; **Esc** back to the course.
+- **Golf view:** hold the swing button (or **Space**) and let go; **tap Up** (or W) while holding to boost; **arrows** spin the ball in flight; click the ground to aim; **1-9**, **[ ]** or the wheel over the club tabs for clubs; **Z** shot shape, **X** flight, **I** Go for it; **J** jump to your ball, **Y** gimme, **T** time of day; **Esc** back to the course.
 - **Settings (the gear):** Exit to main menu (your game is saved; Continue brings you back), text size, US dollars or UAE dirhams, music.
 - Tip: the speed buttons at the top run time faster while your range earns.
 
