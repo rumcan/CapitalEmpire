@@ -54,8 +54,8 @@ Limits found while building it (2026-11-15):
 | traffic | the grown town's built houses, close, at 1x, a slow move | cars and people in the streets |
 | import | Build > Course > Magnolia National (the card per real course): the course in hand, moved to a pose the planner allows (no houses, no roads), a click, Place it; the camera rises over it. (It replaces the club's holes, so it is the last club shot.) `--import new`: from a new game's Who are you? card instead | a real course laid into the running club |
 | golf-real | Magnolia National hole 16 (par 3 over water), Golden hour, played out | a real course from behind the golfer |
-| golf-tee | Hole 1's card, Golden hour, Play this hole; a drive held to the aim's fill, Up tapped in the air (topspin). `--boost N` taps the boost during the hold: off by default while #1368 (the tap boost makes a 30-40 m duff) is open | the tee shot, spin in the air, the minimap |
-| golf-draw | Hole 4 (par 3), Day; the ball button, the dot dragged left (a draw), the tee shot, then the hole played out to the cup | shot shaping, the approach, the putting grid, the holed putt |
+| golf-tee | Hole 1's card, Golden hour, Play this hole; a drive held to the aim's fill with 4 taps of Up during the hold (the boost bar rising; `--boost N`), Up tapped in the air (topspin). (#1368 was the robot letting go late on the falling meter, not the game: fixed in #1379; a boosted drive carries about 193 m against 178 m) | the tee shot, the boost, spin in the air, the minimap |
+| golf-draw | Hole 4 (par 3), Day; the ball button, the dot dragged left (a draw), the tee shot with Down tapped 4 times in the air (backspin: the ball checks on the green; `--backspin N`), then the hole played out to the cup | shot shaping, the approach, the putting grid, the holed putt |
 | range-practice | the range's practice mode, two balls | the Last ball readout |
 | times | hole 4's tee at Day, Golden hour, Dusk, Night | the four lights |
 | night | hole 2 at Night, the tee shot | night golf |

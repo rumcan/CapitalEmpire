@@ -358,7 +358,7 @@ export async function record(env) {
           await clickAt(sb.x, sb.y, 500); await wait(800); }
         const c = { x: 1785, y: 843 }; // (the shot-shape ball's centre at 1920x1080)
         await glide(c.x, c.y, 500); await page.mouse.down(); await glide(c.x - 30, c.y + 1, 700); await page.mouse.up(); await wait(1200); await clickAt(sb.x, sb.y, 400); await wait(400);
-        await cursor(false); await swing({ lead: 0.02 }); await ballRest(t.stroke); await wait(600);
+        await cursor(false); await swing({ lead: 0.02, spin: { key: 'ArrowDown', n: +opt('backspin', 4), after: 900 } }); await ballRest(t.stroke); await wait(600); // (backspin tapped in the air: the ball checks on the green)
         const n = await playOut(); console.log(`   par-3 take ${k}: ${n + 1} strokes`);
         await wait(2500); await stop(); await leave();
       }
