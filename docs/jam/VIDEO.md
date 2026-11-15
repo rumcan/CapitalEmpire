@@ -47,11 +47,12 @@ Limits found while building it (2026-11-15):
 | menu | opens the jam build: the title card over the living menu scene | the title card |
 | range-build | New game, Who are you, the start pick (the pointer looks for a green ghost, a click), then the Build menu's range cards one by one (each a ghost and a click on the outfield), the camera fixed; then 20x | the bare range, then grass, tee turf, target greens, bays, roof, dispenser, car park; golfers coming in |
 | town | the showcase club; the camera glides from the town over the range to the holes | the club and the town |
-| import | Course > Place a real course > Magnolia National, the course in hand moved over the map, a click, Place it | a real course laid |
+| import | a new game: Who are you?, Your course > Change or find a course > Magnolia National (in the jam the real courses are on this card); the camera rises over it | a real course laid on the map |
+| golf-real | Magnolia National hole 16 (par 3 over water), Golden hour, played out | a real course from behind the golfer |
 | hole-build | Build > Course > New hole, a click for the tee and one for the green, BUILD NOW, then 20x | the outline, BUILD NOW, the hole with its trees and contoured green growing in |
-| paint | Course > Shape by hand > Green, Bunker, Water, a stroke or two each | painting greens, sand and water |
-| decor | Course > Plants, trees clicked in | trees and props going in |
-| golf-tee | Hole 1's card, Golden hour, Play this hole; a drive held to the aim's fill with taps of Up (the boost), Up in the air (topspin) | the tee shot, the boost bar, spin in the air, the minimap |
+| paint | Course (the Holes panel) > Shape by hand: the Green tile, a stroke; All surfaces > Bunker, a stroke; Water, a stroke (strokes in screen pixels for the fixed camera, `view.paint`) | a green with its fringe, a bunker with its lip, a pond with its edge |
+| decor | the Trees brush, a stroke; Props (key Z) > Potted palm, clicks on the map | trees and props going in |
+| golf-tee | Hole 1's card, Golden hour, Play this hole; a drive held to the aim's fill, Up tapped in the air (topspin). `--boost N` taps the boost during the hold: off by default while #1368 (the tap boost makes a 30-40 m duff) is open | the tee shot, spin in the air, the minimap |
 | golf-draw | Hole 4 (par 3), Day; the ball button, the dot dragged left (a draw), the tee shot, then the hole played out to the cup | shot shaping, the approach, the putting grid, the holed putt |
 | range-practice | the range's practice mode, two balls | the Last ball readout |
 | times | hole 4's tee at Day, Golden hour, Dusk, Night | the four lights |
@@ -66,6 +67,8 @@ The pointer: headless Chrome draws no cursor, so the recorder draws a small arro
 hidden inside the golf view, which has its own aim.
 
 Frames come from Chrome's screencast (each painted frame, with its time): about 13-21 a second at 1920x1080 on this PC, held to 30 fps by ffmpeg.
+
+Found while recording (2026-11-15): #1368 (the tap boost); the Texture Painter and placing a real course into a running club are not reachable in the jam UI (the Course flyout is off there; the lead is opening it), Props only by key Z; town events (the Mayor's Cup, the Club Championship) leave a leaderboard on the map for months of game time, so the club is run on past it before filming.
 
 ## The cut (`edit`)
 

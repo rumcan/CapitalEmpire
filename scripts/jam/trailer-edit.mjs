@@ -42,7 +42,7 @@ export async function edit({ OUT, FPS, opt }) {
       if (p.caption) vf.push(caption(p.caption, len, i));
       args = ['-ss', String(p.from), '-t', String(p.to - p.from), '-i', src, '-vf', vf.join(','), '-t', len.toFixed(3)];
     }
-    ff([...args, '-an', '-c:v', 'libx264', '-preset', 'medium', '-crf', '17', '-pix_fmt', 'yuv420p', '-r', String(FPS), out], E);
+    ff([...args, '-an', '-c:v', 'libx264', '-preset', 'medium', '-crf', String(cut.crf ?? 17), '-pix_fmt', 'yuv420p', '-r', String(FPS), out], E);
     parts.push({ out, len, shot: p.shot, caption: p.caption ?? (p.title ? '(title)' : '') });
   });
   // the end card: a still of the club, darkened, the logo (or the name), the jam and the play line
@@ -50,11 +50,11 @@ export async function edit({ OUT, FPS, opt }) {
   {
     const n = text('end-name.txt', cut.name ?? 'Golf Manager 2026'), j = text('end-jam.txt', cut.end?.jam ?? 'Made for the Zoud GameLab game jam 2026'), l = text('end-link.txt', opt('link', null) ?? cut.end?.link ?? 'Play free in your browser  ·  itch.io link here');
     const base = existsSync(endSrc) ? ['-ss', '1', '-t', String(endLen), '-i', endSrc] : ['-f', 'lavfi', '-t', String(endLen), '-i', `color=c=0x10202a:s=${W}x${H}:r=${FPS}`];
-    const words = `drawtext=fontfile=fonts/bahnschrift.ttf:textfile=${j}:fontsize=44:fontcolor=white@0.92:x=(w-tw)/2:y=h*0.70,drawtext=fontfile=fonts/bahnschrift.ttf:textfile=${l}:fontsize=52:fontcolor=0xFFD66B:x=(w-tw)/2:y=h*0.79`;
+    const words = `drawtext=fontfile=fonts/bahnschrift.ttf:textfile=${j}:fontsize=44:fontcolor=white@0.92:x=(w-tw)/2:y=h*0.74,drawtext=fontfile=fonts/bahnschrift.ttf:textfile=${l}:fontsize=52:fontcolor=0xFFD66B:x=(w-tw)/2:y=h*0.83`;
     const fc = hasLogo
-      ? `[0:v]scale=${W}:${H},fps=${FPS},boxblur=12:2,eq=brightness=-0.18[b];[1:v]format=rgba[l];[b][l]overlay=(W-w)/2:H*0.16,${words},fade=in:st=0:d=0.5,fade=out:st=${endLen - 0.8}:d=0.8[v]`
+      ? `[0:v]scale=${W}:${H},fps=${FPS},boxblur=12:2,eq=brightness=-0.18[b];[1:v]format=rgba[l];[b][l]overlay=(W-w)/2:H*0.10,${words},fade=in:st=0:d=0.5,fade=out:st=${endLen - 0.8}:d=0.8[v]`
       : `[0:v]scale=${W}:${H},fps=${FPS},boxblur=12:2,eq=brightness=-0.18,drawtext=fontfile=fonts/georgiab.ttf:textfile=${n}:fontsize=140:fontcolor=0xFFE7A0:x=(w-tw)/2:y=h*0.32:shadowcolor=black@0.7:shadowx=4:shadowy=5,${words},fade=in:st=0:d=0.5,fade=out:st=${endLen - 0.8}:d=0.8[v]`;
-    ff([...base, ...(hasLogo ? ['-loop', '1', '-i', 'logo.png'] : []), '-filter_complex', fc, '-map', '[v]', '-t', String(endLen), '-an', '-c:v', 'libx264', '-crf', '17', '-pix_fmt', 'yuv420p', '-r', String(FPS), 'end.mp4'], E);
+    ff([...base, ...(hasLogo ? ['-loop', '1', '-i', 'logo.png'] : []), '-filter_complex', fc, '-map', '[v]', '-t', String(endLen), '-an', '-c:v', 'libx264', '-crf', String(cut.crf ?? 17), '-pix_fmt', 'yuv420p', '-r', String(FPS), 'end.mp4'], E);
     parts.push({ out: 'end.mp4', len: endLen, shot: 'end card', caption: '' });
   }
   writeFileSync(join(E, 'list.txt'), parts.map(p => `file '${p.out}'`).join('\n') + '\n');

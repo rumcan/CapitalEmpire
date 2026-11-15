@@ -232,7 +232,7 @@ export async function record(env) {
     const playOut = async (max = 9) => {
       let strokes = 0;
       for (let s = 0; s < max; s++) {
-        const t = await untilTurn(30000); if (!t) break;
+        const t = await untilTurn(12000); if (!t) break;
         if (s > 0 && t.lie === 'tee' && t.stroke === 1) break; // (holed: the view is on the next tee)
         await wait(t.club === 'putter' ? 2200 : 1300);
         await swing({ lead: t.club === 'putter' ? 0.0 : 0.03 }); strokes++; await ballRest(t.stroke); await wait(t.club === 'putter' ? 1500 : 500);
@@ -244,7 +244,8 @@ export async function record(env) {
         const t = await play(4, 'day'); if (!t) throw new Error('no turn on hole 4');
         await wait(1200); await start(`golf-par3-${k}`); await cursor(true); await wait(500);
         // the shot shape: the ball button, then the dot dragged to the left (a draw)
-        const sb = await viewBox('Straight'); if (sb) { await clickAt(sb.x, sb.y, 500); await wait(800); }
+        const sb = (await viewBox('Straight')) ?? { x: 1745, y: 1034 }; { // (the ball button, bottom right: its box from the view, or where it is drawn at 1920x1080)
+          await clickAt(sb.x, sb.y, 500); await wait(800); }
         const c = { x: 1772, y: 820 };
         await glide(c.x, c.y, 500); await page.mouse.down(); await glide(c.x - 36, c.y + 2, 700); await page.mouse.up(); await wait(700);
         await cursor(false); await swing({ lead: 0.02 }); await ballRest(t.stroke); await wait(600);
