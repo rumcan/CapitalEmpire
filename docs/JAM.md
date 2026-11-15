@@ -306,7 +306,13 @@ The painted ground and the game's own ground had no shared rule for who is on to
     stop is 10 to 12 s (8 to 14 allowed), at 15.5 to 18% zoom (the owner, later: "zoom out a bit so you can see more stuff and less flaws"). That is still the street tier (12% and closer),
     where the people, cars and animals are drawn.
   - **The farm stop went**: the farmstead's parked pickup stands under the farmhouse's porch. The yard's pickup is parked on the lane at the yard's front edge (`ext/farms/farms.ts`, the
-    farmstead's "parked on the yard's drive in front of the house" `B.vehicle`). That is a fault of the farm layout in every game, left for a follow-up.
+    farmstead's "parked on the yard's drive in front of the house" `B.vehicle`), which runs 1.7 m from the house's wall, so its length ran alongside the house's front. Fixed in every
+    game: it parks wholly ahead of the front (`HOUSE_CAR_GAP`), with the same random draws, so nothing else on a farm moves (`tests/ext-farms.test.ts`).
+  - **A busy scene** (the scene only; it saves nothing). It starts at 09:00, so the morning's groups are on every hole (at 07:00 one group was walking to the first tee), and 2.5
+    townspeople walk per built lot (the game: 0.5). **The range**: the prepared world's ball room held 791 balls, less than one bucket on its day, so every golfer drove off unserved. The scene
+    stocks it (`SHOW_RANGE_BALLS`) and gives the range's demand 2,500 more residents. A golfer takes about 100 s from the map's edge to a bay there, so when the director sets the morning
+    (its `hour` event, under the still), the engine runs the range 240 sim s on (`RangeHost.warm`). All 12 bays are taken at the start, and 5 to 7 through the lap.
+    `menu-scene-motion.mjs --flow probe` logs the range's day as the scene runs.
   - **No jump from the still to the live scene** (the owner: "a still of a farm and then it suddenly changes to a farm animation"). The still is the live scene's own first view (the same camera,
     zoom and hour) drawn with nothing moving: the engine's `stillLife` leaves out the cars, people, animals, carts and balls. It is shot at 2560 x 1440 by
     `menu-scene-motion.mjs --flow poster`, and the page lays it at the live scene's scale with its point of interest where the camera puts it (`showcase.ts posterBox`; no cover crop). The
