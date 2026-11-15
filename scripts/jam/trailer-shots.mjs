@@ -130,7 +130,9 @@ export async function record(env) {
       return;
     }
     const meter = F(`const tgt=Math.min(0.995,(HP.target?HP.target.u:1)-${lead}); return await new Promise(res=>{const t0=performance.now(); const f=()=>{const s=HP.sw; if(s&&s.u>=tgt){res(s.u);return;} if(performance.now()-t0>8000){res(-1);return;} requestAnimationFrame(f);}; f();});`);
-    if (boost) { await wait(450); for (let i = 0; i < boost; i++) { await page.keyboard.press('ArrowUp'); await wait(85); } }
+    // (#1368: tap while the meter rises and let go at the mark: tapping first and releasing after was a late release on the falling meter, the 30-40 m 'duff')
+    let done = false; meter.then(() => { done = true; });
+    if (boost) { await wait(150); for (let i = 0; i < boost && !done; i++) { await page.keyboard.press('ArrowUp'); await wait(60); } }
     await meter; await page.keyboard.up('Space');
     if (spin) { await wait(spin.after ?? 1100); for (let i = 0; i < spin.n; i++) { await page.keyboard.press(spin.key); await wait(170); } }
   }
@@ -330,7 +332,7 @@ export async function record(env) {
       for (let k = 0; k < takes; k++) {
         const t = await play(1, 'golden'); if (!t) throw new Error('no turn on hole 1');
         await wait(1500); await start(`golf-tee-${k}`); await wait(800);
-        await swing({ boost: +opt('boost', 0), spin: { key: 'ArrowUp', n: 3, after: 1300 }, lead: 0 }); await ballRest(t.stroke); // (no boost taps by default: #1368, the tap boost makes a 30-40 m duff) await wait(1200); await stop();
+        await swing({ boost: +opt('boost', 4), spin: { key: 'ArrowUp', n: 3, after: 1300 }, lead: 0 }); await ballRest(t.stroke); // (boost taps on: #1368 was the robot's late release, fixed above) await wait(1200); await stop();
         await leave();
       }
     });
