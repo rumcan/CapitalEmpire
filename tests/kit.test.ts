@@ -106,7 +106,7 @@ test("the menus: Facilities > Plants has the palms among the Trees (T342: no Pal
   assert.ok(!labels.some(l => /Palms$/.test(l)), `no Palms in the Facilities menu: ${labels.join(' | ')}`);
   assert.ok(labels.some(l => /^plants > .* > Trees$/.test(l)), `Trees in the Facilities menu: ${labels.join(' | ')}`);
   // the catalogue: the kit's items by group, each a library picture, priced and with an appeal as decor.ts's rules
-  const want: [string, string][] = [['kit-shrub', 'plants'], ['kit-mums', 'plants'], ['kit-hedge', 'plants'], ['kit-palm-windmill', 'plants'], ['kit-palm-canary', 'plants'], ['kit-palm-fan', 'plants'],
+  const want: [string, string][] = [['kit-shrub', 'plants'], ['kit-mums', 'plants'], ['kit-hedge', 'planters'], ['kit-palm-windmill', 'trees'], ['kit-palm-canary', 'trees'], ['kit-palm-fan', 'trees'],
     ['kit-fountain', 'water'], ['kit-pond', 'water'], ['kit-pond-stones', 'water'], ['kit-boulder-s', 'stone'], ['kit-boulder-m', 'stone'], ['kit-boulder-l', 'stone'], ['kit-lamp', 'furniture'], ['kit-lamp-twin', 'furniture']];
   for (const [k, g] of want) {
     const d = DECOR_BY_KEY.get(k); assert.ok(d, k); assert.equal(d!.group, g, `${k} group`); assert.ok(!d!.hidden, `${k} is in the panel`);
