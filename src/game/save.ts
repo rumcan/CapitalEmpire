@@ -18,7 +18,19 @@ import type { DaySave } from './event/daysave';
 import type { PedestrianIdentities } from './ext/pedestrians';
 import type { TreeCutSave } from './treecut';
 
-const DB ='capital-empire', STORE = 'saves', SLOT = 'town', V2_KEY = 'maple-falls-town-v2';
+const DB ='capital-empire', STORE = 'saves', V2_KEY = 'maple-falls-town-v2';
+/** #1314: the save slots: the career game's ('town', the one slot every save before had) and a sandbox game's ('sandbox': its own save, never mixed with the career
+ *  one). The slot in use is remembered in this browser (SLOT_KEY), so a reload opens the game last played; reading, writing, clearing, exporting and importing all
+ *  act on it */
+export type SaveSlot = 'town' | 'sandbox';
+export const SLOT_KEY = 'capitalempire.slot';
+let SLOT: SaveSlot = (() => { try { return globalThis.localStorage?.getItem(SLOT_KEY) === 'sandbox' ? 'sandbox' : 'town'; } catch { return 'town'; } })();
+/** the slot in use */
+export function saveSlot(): SaveSlot { return SLOT; }
+/** the slot to use from now on (remembered for the next page) */
+export function setSaveSlot(s: SaveSlot): void { SLOT = s; try { globalThis.localStorage?.setItem(SLOT_KEY, s); } catch { /* not remembered: this page only */ } }
+/** whether slot s holds a save (the title card's Continue and Continue sandbox) */
+export async function slotHasSave(s: SaveSlot): Promise<boolean> { try { return (await store.get(s)) !== undefined; } catch { return false; } }
 export const SAVE_VERSION = 5;
 /** the build that writes saves (P07/T044): the package version and the git sha; 'dev' when not built by Vite (the tests) */
 export const BUILD = typeof __BUILD__ !== 'undefined' && __BUILD__ ? __BUILD__ : { app: '0.0.0', sha: 'dev' };
@@ -153,7 +165,8 @@ const V2_IDS = ['world:house_1', 'world:house_3', 'world:house_4', 'gen:house-du
 /** the save with the tournament day under way (T209, SaveV5.tourney) added last; with none, the very same object, so every other save is byte for byte
  *  as before */
 export function withTourney(d: SaveV5, tourney: DaySave | null): SaveV5 { return tourney ? { ...d, tourney } : d; }
-export async function writeSave(d: SaveV5) { const buf = await gzip(JSON.stringify({ ...d, build: BUILD })); await store.put(SLOT, buf); return buf.byteLength; }
+/** writes a save to `slot` (#1314: the slot the save was made for, so a save still in flight when the title card switches slots never lands in the other one; default: the slot in use) */
+export async function writeSave(d: SaveV5, slot: SaveSlot = SLOT) { const buf = await gzip(JSON.stringify({ ...d, build: BUILD })); await store.put(slot, buf); return buf.byteLength; }
 /** the save migrations, one step per version: step `from` turns a save of that version into the next one's shape; upgradeSave runs them in order */
 export const MIGRATIONS: { from: number; up(d: any): any }[] = [
   // v3: the same town with the painted terrain dropped; the seed came in v3 but was optional, so default to 1
@@ -179,7 +192,7 @@ async function readSlot(): Promise<SaveRead> {
   let buf: ArrayBuffer | undefined, idbOk = true;
   try { buf = await store.get(SLOT); } catch { idbOk = false; } // no IndexedDB (private window): the v2 save may still be in localStorage
   if (!buf) {
-    const v2 = migrateV2();
+    const v2 = SLOT === 'town' ? migrateV2() : null; // (the old v2 save is a career one)
     if (v2) return { save: v2, status: 'ok', version: SAVE_VERSION, migratedFrom: 2, backedUp: true };
     return { save: null, status: 'none', backedUp: idbOk }; // nothing in the slot to lose
   }
