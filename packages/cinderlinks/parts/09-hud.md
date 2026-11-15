@@ -671,33 +671,58 @@ function hostAimPreview(C, pw, hot, ph) {   // the preview's flight (scaled to t
   return true;
 }
 // T423: the green as the host reads it. Its slope grid is the host's (its own heights: the view's are raised and roughened for the look), drawn as a
-// dot every metre with a tick downhill, white on the flat, then cyan, yellow, orange as it steepens (green.ts BREAK_COLOURS). A putt is aimed as one is
+// mesh, a dot every metre with a tick downhill, white on the flat, then cyan, yellow, orange as it steepens (green.ts BREAK_COLOURS). A putt is aimed as one is
 // read: the aim shows the way a putt struck along it takes (the host's holed way, turned with the aim and stretched with the pace), and the model judges
 // it against the read's start line (green3p.ts), so a putt started along the read and struck at the right pace goes in.
 const GRID_RGB = [rgb(255, 255, 255), rgb(125, 211, 252), rgb(250, 204, 21), rgb(249, 115, 22)];
-const PG_MEMO = new WeakMap();   // T438: a green's grid points on the land (x, y, height; 0 or 4 tick points after each), worked out once a green, not each frame
+// The owner (2026-11-15: "the green slope indicators only showed up the moment the hole was completed"): dots alone were too faint to see while he
+// putted, and the view's own line mesh showed after the round's last putt. So in host mode the view's grid is never drawn (drawPuttGrid), and the host's
+// points are joined into a mesh like it: a thin line to each neighbour on the host's square lattice (a point every green.step m), coloured by how steep
+// it is, with the dot and its downhill tick at each point, on the ground only (gridPut), and only on his putt turn (hostPuttTurn).
+const GRID_LINE_A = 150;   // (how solid the mesh's lines are, of 255: the dots and ticks are solid)
+const pgBucket = (s) => { const u = s <= 0.002 ? 0 : Math.min(1, (s - 0.002) / 0.038); return u <= 0 ? 0 : u < 0.3 ? 1 : u < 0.65 ? 2 : 3; };   // (green.ts breakBucket)
+const PG_MEMO = new WeakMap();   // T438: a green's grid worked out once a green, not each frame: its points on the land, their ticks, the lattice's lines
 function hostPuttPts(G, S) {
   const hv = course && course.raw ? course.raw.hv : 0; let M = PG_MEMO.get(G);
   if (M && M.S === S && M.hv === hv) return M;
-  const P = G.pts, xyz = [], col = [], nt = [];
-  for (let k = 0; k + 4 < P.length; k += 5) {
-    const x = P[k] * S, y = P[k + 1] * S, s = P[k + 4], u = s <= 0.002 ? 0 : Math.min(1, (s - 0.002) / 0.038);
-    col.push(GRID_RGB[u <= 0 ? 0 : u < 0.3 ? 1 : u < 0.65 ? 2 : 3]); xyz.push(x, y, groundH(x, y) + 0.02);
-    if (u > 0) {   // the tick downhill: longer where steeper
-      const L = (0.12 + 0.3 * u) * S, ex = x + P[k + 2] * L, ey = y + P[k + 3] * L;
-      for (let t = 0.25; t <= 1; t += 0.25) { const qx = x + (ex - x) * t, qy = y + (ey - y) * t; xyz.push(qx, qy, groundH(qx, qy) + 0.02); }
-      nt.push(4);
-    } else nt.push(0);
+  const P = G.pts, n = Math.floor(P.length / 5), xyz = new Float64Array(n * 3), col = new Uint32Array(n), t0 = new Int32Array(n), tk = [];
+  for (let p = 0; p < n; p++) {
+    const k = p * 5, x = P[k] * S, y = P[k + 1] * S, s = P[k + 4], u = s <= 0.002 ? 0 : Math.min(1, (s - 0.002) / 0.038);
+    col[p] = GRID_RGB[pgBucket(s)]; xyz[p * 3] = x; xyz[p * 3 + 1] = y; xyz[p * 3 + 2] = groundH(x, y) + 0.02; t0[p] = -1;
+    if (u > 0) {   // the tick downhill: longer where steeper (4 points along it)
+      const L = (0.12 + 0.3 * u) * S, ex = x + P[k + 2] * L, ey = y + P[k + 3] * L; t0[p] = tk.length;
+      for (let t = 0.25; t <= 1; t += 0.25) { const qx = x + (ex - x) * t, qy = y + (ey - y) * t; tk.push(qx, qy, groundH(qx, qy) + 0.02); }
+    }
   }
-  M = { S, hv, xyz: Float64Array.from(xyz), col, nt }; PG_MEMO.set(G, M); return M;
+  // the lattice's lines: each point to its neighbours one step away (found through a hash of step-sized buckets; the diagonals, 1.41 steps, are not lines)
+  const c = (G.step > 0 ? G.step : 1) * S, B = new Map(), e = [], ec = [], key = (i, j) => (i + 32768) * 65536 + (j + 32768);
+  for (let p = 0; p < n; p++) { const kk = key(Math.floor(xyz[p * 3] / c), Math.floor(xyz[p * 3 + 1] / c)); let L = B.get(kk); if (!L) B.set(kk, L = []); L.push(p); }
+  for (let p = 0; p < n; p++) {
+    const x = xyz[p * 3], y = xyz[p * 3 + 1], i = Math.floor(x / c), j = Math.floor(y / c);
+    for (let dj = -1; dj <= 1; dj++) for (let di = -1; di <= 1; di++) {
+      const L = B.get(key(i + di, j + dj)); if (!L) continue;
+      for (const q of L) { if (q <= p) continue; const d = Math.hypot(xyz[q * 3] - x, xyz[q * 3 + 1] - y); if (d > c * 0.8 && d < c * 1.2) { e.push(p, q); ec.push(((GRID_RGB[pgBucket((P[p * 5 + 4] + P[q * 5 + 4]) * 0.5)] & 0xffffff) | (GRID_LINE_A << 24)) >>> 0); } }
+    }
+  }
+  M = { S, hv, n, xyz, col, t0, tk: Float64Array.from(tk), e: Int32Array.from(e), ec: Uint32Array.from(ec), sx: new Int32Array(n), sy: new Int32Array(n), sd: new Float64Array(n) };
+  PG_MEMO.set(G, M); return M;
 }
+function hostPuttTurn() { const t = HP && HP.turn; return !!t && !!t.green && !hostBusy() && !bcam && ball.state === 0; }   // his putt turn: the ball at rest on the host's green, nothing in flight
 function hostPuttGrid() {
-  const M = hostPuttPts(HP.turn.green, hostS()), X = M.xyz;
-  for (let p = 0, q = 0; p < M.col.length; p++) {
-    const c = M.col[p], n = M.nt[p], q0 = q; q += 3 * (1 + n);
-    projectO(X[q0], X[q0 + 1], X[q0 + 2], PJ); if (PJ.s <= 0 || PJ.d < 1.5) continue;
-    plotZO(PJ.x, PJ.y, PJ.d - 0.2, c); plotZO(PJ.x + 1, PJ.y, PJ.d - 0.2, c);
-    for (let t = 1; t <= n; t++) { const r = q0 + 3 * t; projectO(X[r], X[r + 1], X[r + 2], PJ); if (PJ.s > 0) plotZO(PJ.x, PJ.y, PJ.d - 0.2, c); }
+  const M = hostPuttPts(HP.turn.green, hostS()), X = M.xyz, n = M.n, SX = M.sx, SY = M.sy, SD = M.sd, E = M.e, EC = M.ec, T = M.tk;
+  for (let p = 0; p < n; p++) { projectO(X[p * 3], X[p * 3 + 1], X[p * 3 + 2], PJ); SX[p] = PJ.x; SY[p] = PJ.y; SD[p] = PJ.s > 0 && PJ.d >= 1.5 ? PJ.d : 0; }   // (each point once a frame)
+  for (let k = 0; k < E.length; k += 2) {   // the lines between neighbours (their ends are left to the dots)
+    const a = E[k], b = E[k + 1], ad = SD[a], bd = SD[b]; if (!ad || !bd) continue;
+    const ax = SX[a], ay = SY[a], dx = SX[b] - ax, dy = SY[b] - ay, m = Math.max(dx < 0 ? -dx : dx, dy < 0 ? -dy : dy);
+    if (m < 2 || m > 700 || (ax < 0 && ax + dx < 0) || (ax >= OW && ax + dx >= OW) || (ay < 0 && ay + dy < 0) || (ay >= OH && ay + dy >= OH)) continue;
+    const c = EC[k >> 1], f = 1 / m, dd = bd - ad;
+    for (let i = 1; i < m; i++) { const t = i * f; gridPut(ax + Math.round(dx * t), ay + Math.round(dy * t), ad + dd * t, c); }
+  }
+  for (let p = 0; p < n; p++) {   // the dot at each point, and its tick downhill
+    const d = SD[p]; if (!d) continue;
+    const c = M.col[p], x = SX[p], y = SY[p]; gridPut(x, y, d, c); gridPut(x + 1, y, d, c);
+    const r0 = M.t0[p]; if (r0 < 0) continue;
+    for (let r = r0; r < r0 + 12; r += 3) { projectO(T[r], T[r + 1], T[r + 2], PJ); if (PJ.s > 0) gridPut(PJ.x, PJ.y, PJ.d, c); }
   }
 }
 function hostPuttAim(pw, hot, ph) {   // the putt's way as the model would draw it for this aim and pace; false without the host's green
