@@ -10,6 +10,7 @@ import { appendGolf, appendKit, appendRangeArt, appendLandscapeArt } from './gol
 import { appendNewProps } from './new-props-library';
 import { appendAnimals } from './animals-library';
 import { appendObjectEight } from './object-eight-library';
+import { appendSports } from './sports-library';
 import { appendViews } from './views-library';
 import { appendTrees } from './trees-library';
 import { appendAxisViews } from './axis-library';
@@ -1117,3 +1118,5 @@ for (let i = 0; i < STAFF_WF.length / 9; i++) {
   const p = STAFF_PEOPLE[Math.floor(i / (WALK_DIRS.length * STAFF_FRAMES))], o = i * 9;
   LIBRARY.push({ id: `${p.id}:${i % (WALK_DIRS.length * STAFF_FRAMES)}`, name: p.id, cat: 'Staff', kind: 'walker', w: p.w, h: p.h, ax: p.ax, ay: p.ay, boxes: [{ hx: 0.25, hy: 0.25, dx: 0, dy: 0 }], solid: 0, big: false, door: false, cost: 0, tex: [STAFF_WF[o], STAFF_WF[o + 1], STAFF_WF[o + 2], STAFF_WF[o + 3], STAFF_WF[o + 4]], quad: [STAFF_WF[o + 5], STAFF_WF[o + 6], STAFF_WF[o + 7], STAFF_WF[o + 8]] });
 }
+// #1369: the town's sports grounds (prep-sports-art.mjs): their own pages, after everything else, so no saved index moves
+appendSports(LIBRARY, ATLAS_PAGES);

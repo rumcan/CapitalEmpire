@@ -4,7 +4,7 @@
 // its footprint at each of the four facings; and the save keeps it. Headless.
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
-import { PLACE_DEFS, duePlaces, findSite, placeBox, placeDef, placeDefsFrom, placeGeom, placeName, placeTuples, placesFromTuples, SITE_GAP, type Box4, type PlacedPlace, type SiteSeg } from '../src/game/lots/iconic';
+import { PLACE_DEFS, duePlaces as duePlacesOf, findSite, placeBox, placeDef, placeDefsFrom, placeGeom, placeName, placeTuples, placesFromTuples, SITE_GAP, type Box4, type PlacedPlace, type SiteSeg } from '../src/game/lots/iconic';
 import { composeWhole } from '../src/game/lots/compose';
 import { frameOf } from '../src/game/lots/preset-frame';
 import { hasSprite } from '../src/game/lots/preset-art';
@@ -62,6 +62,8 @@ describe('the place file', () => {
 
 describe('when a place is due', () => {
   it('is never placed before its size, and once per map', () => {
+    // (the sports grounds, families of tiers, have their own tests: tests/sports-grounds.test.ts)
+    const ICONIC = PLACE_DEFS.filter(d => !d.group), duePlaces = (pop: number, placed: ReadonlySet<string>) => duePlacesOf(pop, placed, ICONIC);
     assert.deepEqual(duePlaces(0, new Set()), []);
     assert.deepEqual(duePlaces(1499, new Set()), []);
     assert.deepEqual(duePlaces(1500, new Set()).map(d => d.id), ['drive-in']);
