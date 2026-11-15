@@ -1,7 +1,7 @@
 // Your cards (T336, #962; the owner, 2026-11-04: "8 cards slots and you get cards when you win tournaments"): the Cards card shows the 8 slots on your player (the cards in play) and your collection (every card of the
 // catalogue, the ones you have won in colour and the rest locked), the pulls waiting at the vending machine and the machine's button. A click on a card opens its detail in a flyout to the card's left (the owner's rule: side-opening
 // flyouts, no sideways scrollbar, no one long column): its rarity, what it does, its flavour and its inspiration, and Equip or Unequip. A card goes into the first free slot, or into the slot you click while it is picked (the card
-// there goes back to the collection). Cards swap between rounds, never in one: the card says why not out on the course. The pictures are TrickOrTreat's paintings where there are some and drawn stand-ins ("Stand In for card art").
+// there goes back to the collection). Cards swap between rounds, never in one: the card says why not out on the course. Every card shows its painting (#1286; CardArt draws a glyph only when one is missing).
 import { useState } from 'react';
 import { GRADE_NAME, GRADES, SLOTS, type CardTile, type CardsView, type Earn, type Grade } from '../../game/golf/cards';
 import { Icon } from '../Icon';
