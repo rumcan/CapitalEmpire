@@ -63,7 +63,7 @@ Made by **Francois Smit** (South Africa), solo creator, with AI coding and art t
 
 **Sound:** every sound effect is synthesized in the game's own code. The radio plays eleven free CC0 tracks from OpenGameArt.org: "Bossa Town" and "Seaside Village" by KarateStudios; "All into Harmony" and "Sunny Side Up 2" by Pro Sensory (Alex McCulloch); "Blue Intermission" and "Two Left Socks" by congusbongus; and five chiptunes ("Title Screen", "Level 1" to "Level 3", "Ending") by Juhani Junkala (SubspaceAudio). Details in docs/jam/AUDIO-CREDITS.md.
 
-**Map data:** real courses © OpenStreetMap contributors (ODbL 1.0).
+**Map data:** real courses © OpenStreetMap contributors (ODbL 1.0). Real-course ground height: USGS 3DEP, GMTED2010 and SRTM data, courtesy of the U.S. Geological Survey.
 
 ## Jam submission form (itch.io/jam/zoud-gamelab)
 - Team: Francois Smit (solo), South Africa

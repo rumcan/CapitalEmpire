@@ -11,6 +11,7 @@ import { CLASS, KEY_CLASSES } from '../game/network';
 import { RAIL, drawerOf, railEntries, toolLock, toolsIn, type RailItem } from './rail-items';
 import { BEND_45 } from '../game/route-legs';
 import { bendWords } from '../game/route-input';
+import { JAM } from '../game/features';
 
 /** a row: its keys (as shown: 'R', 'Ctrl+Z', '1 – 6'), what they do, the tool they pick (a tool key), and why it is locked (null: open) */
 export interface KeyRow { keys: string; what: string; tool?: Tool; why?: string | null }
@@ -64,8 +65,9 @@ const inHand = (bend45: boolean): { title: string; tool: Tool; alt?: true; rows:
 const general = (): { id: string; title: string; rows: [string, string][] }[] => [
   { id: 'anywhere', title: 'Anywhere', rows: [['Esc', 'close the top card or menu, then put down what is in hand, then back to Select (a right click on the map does the same)'], ['Ctrl+Z / Ctrl+Y', 'undo / redo (the course, the paint, the props, roads, paths and junctions, the menu settings)'], ['Delete', 'remove or sell what is picked'], ['? / F1', 'these keys']] },
   { id: 'camera', title: 'Camera', rows: [['W A S D, arrows', 'pan'], ['Space + drag, right drag', 'pan'], ['+ / −, the wheel', 'zoom in / out']] },
-  { id: 'speed', title: 'Speed', rows: [['Space (tap)', 'pause / go on'], [', / .', 'slower / faster'], ['H', 'skip to the next rush hour']] },
-  { id: 'views', title: 'Views and panels', rows: [['G', 'the grid'], ['F', 'traffic flow and the junctions\' service'], ['B', 'the worst bottlenecks'], ['L', 'the lanes'], ['K', 'the lots'], ['O', 'the access paths']] },
+  { id: 'speed', title: 'Speed', rows: [['Space (tap)', 'pause / go on'], [', / .', 'slower / faster'], ...(JAM ? [] : [['H', 'skip to the next rush hour'] as [string, string]])] },
+  // (jam-rc: the jam has no traffic tools and no rush-hour skip, so its sheet lists neither)
+  ...(JAM ? [] : [{ id: 'views', title: 'Views and panels', rows: [['G', 'the grid'], ['F', 'traffic flow and the junctions\' service'], ['B', 'the worst bottlenecks'], ['L', 'the lanes'], ['K', 'the lots'], ['O', 'the access paths']] as [string, string][] }]),
 ];
 
 /** the lot lab's key table (lot-lab-ui.ts KEYS: [section, [keys, what][]][]) */
@@ -85,7 +87,8 @@ export function keySheet(o: { golf: boolean; ui: ProgressiveUiState | null; rang
   seen.add(sel.id);
   for (const r of groups) (drawerOf(r) === 'footer' ? foot : side).push({ keys: String(groups.indexOf(r) + 1), what: menuless(r) ? r.label : `the ${r.label} menu`, why: locks.get(r.id) ?? null });
   for (const r of RAIL) if (r.section === null && r.id !== 'select' && (!r.only || r.only === game)) for (const t of toolsIn(r, o.golf)) if (t.key && !seen.has(t.id)) { seen.add(t.id); side.push(toolRow(t)); }
-  out.push({ id: 'drawer', title: 'The course drawer (left)', part: 'top', rows: side }, { id: 'footer', title: 'The town footer (bottom)', part: 'top', rows: foot });
+  out.push({ id: 'drawer', title: 'The course drawer (left)', part: 'top', rows: side });
+  if (foot.length || !JAM) out.push({ id: 'footer', title: 'The town footer (bottom)', part: 'top', rows: foot }); // (jam-rc: no empty footer card in the jam)
   // Course and Town: each group's tools with a key, then the keys of their tools in hand
   const shown = new Set<Tool>(), held = new Set<string>();
   for (const part of ['course', 'town'] as const) {
@@ -111,7 +114,7 @@ export function keySheet(o: { golf: boolean; ui: ProgressiveUiState | null; rang
   }
   for (const s of general()) {
     const sec: KeySection = { id: s.id, title: s.title, part: s.id === 'anywhere' ? 'top' : 'general', rows: s.rows.map(([k, w]) => ({ keys: k, what: w })) };
-    if (sec.part === 'top') out.splice(2, 0, sec); else out.push(sec); // after the two drawers' cards
+    if (sec.part === 'top') out.splice(out.filter(x => x.id === 'drawer' || x.id === 'footer').length, 0, sec); else out.push(sec); // after the drawers' cards
   }
   return out;
 }

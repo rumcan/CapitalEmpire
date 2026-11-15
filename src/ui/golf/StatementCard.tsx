@@ -7,6 +7,7 @@ import { NetWorthChart } from './NetWorthChart';
 import { ActionTile, TILE_BIG, TILE_ROW } from '../ActionTile'; // J8 (#1261): the statement's toast and card wear its painted tile
 import { money, onFinlit, signed } from './finevents';
 import { sfx } from '../../game/sound/sfx'; // J11 (#1270)
+import { JAM } from '../../game/features';
 
 const TOAST_MS = 10_000;
 
@@ -104,7 +105,7 @@ export function StatementCard({ history }: { history: readonly Report[] }) {
           </div>
           {s.emergencies.map(e => <div key={e.id + e.cost} className="rounded-xl border border-amber-400/30 bg-amber-400/10 p-2 text-xs text-amber-100">{emergencyLine(e)}</div>)}
           {em.count > 0 && <div className="text-xs text-slate-400">Emergencies so far: {em.count}. Insurance paid {money(em.covered)}; you paid {money(em.outOfPocket)}.</div>}
-          <NetWorthChart series={netWorthSeries(history)} goal={GOAL.netWorth} />
+          <NetWorthChart series={netWorthSeries(history)} goal={JAM ? undefined : GOAL.netWorth} />{/* (jam-rc: the MVP hides the goal, so no goal line) */}
           <button type="button" className="btn-gold w-full py-2 text-sm" onClick={() => setFull(null)}>Close</button>
         </div>
       </div>

@@ -62,6 +62,9 @@ so this page does not say whether they were hand-made or AI-made.
 - **OpenStreetMap:** the real-course catalogue (`public/catalogue/*.json`) and the real courses in the golf view's package carry
   "© OpenStreetMap contributors, ODbL 1.0". Real-course import is part of the jam build, so the credit ships with it (the game's credits and this page).
 
+- **Elevation data:** real-course ground height from the United States 3DEP (formerly NED) and global GMTED2010 and SRTM terrain data,
+  courtesy of the U.S. Geological Survey (credited in the game's Settings, beside OpenStreetMap).
+
 ## For the jam form (short)
 
 > Yes. **Code:** written with AI coding agents, mostly Anthropic's Claude (Claude Code), some OpenAI Codex, under the creator's design and review.
