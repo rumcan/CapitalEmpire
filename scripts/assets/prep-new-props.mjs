@@ -38,7 +38,9 @@ const PERSON_PROPS = new Set(['Marshal', 'Course worker', 'Catering staff']);
 // (measured from its alpha: the pole x 16..23 and the ring rows 134..153 of its 77 x 156 atlas crop), so a pin placed on a cup stands in it
 const FOOT = { 'newprop:flag-pin': [32.5, 240] };
 /** the library's price by manifest category ($): decor 50, stalls and tents 500, structures 1500, vehicles 800 */
-const COST = { 'Course props': 50, 'People': 50, 'Seating': 50, 'Stalls': 500, 'Stalls (shabby)': 500, 'Event structures': 500, 'Event structures (shabby)': 500, 'Lake props': 500, 'Vehicles': 800, 'Buildings': 1500, 'Range': 1500, 'Media': 1500 };
+// #1300: the shabby sheets are the second-hand tier (golf/second-hand.ts): named so, at 60% of the new price
+const CAT_NAME = { 'Stalls (shabby)': 'Stalls (second-hand)', 'Event structures (shabby)': 'Event structures (second-hand)' };
+const COST = { 'Course props': 50, 'People': 50, 'Seating': 50, 'Stalls': 500, 'Stalls (shabby)': 300, 'Event structures': 500, 'Event structures (shabby)': 300, 'Lake props': 500, 'Vehicles': 800, 'Buildings': 1500, 'Range': 1500, 'Media': 1500 };
 /** the trees' species, by the sheet's id (the eight hex digits after exec-): its name, and its kind (conifer, maple, oak or birch: the reference) */
 const TREE_SPECIES = {
   '07b7ef26': ['dark fir', 'conifer'], '2a49c706': ['blue spruce', 'conifer'], '2da5b0af': ['thin blue fir', 'conifer'],
@@ -165,7 +167,7 @@ for (const s of manifest.sheets) {
   for (const p of parts) {
     let slug = slugOf(p.name); const base = slug; let n = 1; while (slugs.has(slug)) slug = `${base}-${++n}`; slugs.add(slug);
     await sharp(p.png).webp({ quality: 95, alphaQuality: 100 }).toFile(path.join(DIR, `${slug}.webp`));
-    const meta = await sharp(p.png).metadata(), it = { id: `newprop:${slug}`, slug, name: p.name, cat: `New: ${s.cat}`, kind: isTree ? 'tree' : 'decor', hx: s.hx, hy: s.hx, sheet: s.sheet, cell: p.cell, rect: p.rect, cutOff: p.cutOff, png: p.png };
+    const meta = await sharp(p.png).metadata(), it = { id: `newprop:${slug}`, slug, name: p.name, cat: `New: ${CAT_NAME[s.cat] ?? s.cat}`, kind: isTree ? 'tree' : 'decor', hx: s.hx, hy: s.hx, sheet: s.sheet, cell: p.cell, rect: p.rect, cutOff: p.cutOff, png: p.png };
     if (isTree) {
       const { data: d, info: fi } = await sharp(p.png).ensureAlpha().raw().toBuffer({ resolveWithObject: true });
       let fx = 0, nf = 0; for (let y = fi.height - 1; y >= fi.height - 3 && y >= 0; y--) for (let x = 0; x < fi.width; x++) if (d[(y * fi.width + x) * 4 + 3] > 128) { fx += x; nf++; }
@@ -312,7 +314,7 @@ const sheet = async (list, cell, box, cols, file) => {
   await sharp({ create: { width: cols * CW, height: Math.ceil(list.length / cols) * CH, channels: 4, background: '#d8e0e3' } }).composite(comp).flatten({ background: '#d8e0e3' }).jpeg({ quality: 85 }).toFile(file);
 };
 await sheet(items, 260, 240, 8, path.join(review, 'contact-v2.jpg'));
-const BUILDINGS = new Set(['Buildings', 'Event structures', 'Event structures (shabby)', 'Range']);
+const BUILDINGS = new Set(['Buildings', 'Event structures', 'Event structures (second-hand)', 'Range']);
 await sheet(items.filter(it => BUILDINGS.has(it.cat.slice(5))), 420, 400, 4, path.join(review, 'contact-buildings.jpg'));
 
 const cutOff = items.filter(it => it.cutOff).map(it => it.id);

@@ -293,7 +293,7 @@ function fenceRuns(pieces: readonly FencePiece[]): BuildingIn[] {
  *  big pictures (the shop, the coffee kiosk, the ball dispenser, the caravan, a shed, the hitting deck, a house) go to the view as its own boxes instead: its real footprint (the library box, metres: 2 hx
  *  by 2 hy, the picture's views turn it), upright and square on its spot, a height and the picture's colours by the piece. Anything else stays a picture (signs, boards, bins, chairs, flags: flat things) */
 export const BOX_LOOKS: readonly { re: RegExp; use: BuildingUse; h: number; wall: string; roofColour: string; roof?: Roof; floors?: number }[] = [
-  { re: /clubhouse-shanty|golf-pro-shop/i, use: 'hut', h: 2.7, wall: '#e8e0c6', roofColour: '#8e9694' },       // (cream asbestos panels, a corrugated grey roof)
+  { re: /clubhouse-shanty|clubhouse-1950-budget|golf-pro-shop/i, use: 'hut', h: 2.7, wall: '#e8e0c6', roofColour: '#8e9694' },       // (cream asbestos panels, a corrugated grey roof)
   { re: /coffee-kiosk|rental-kiosk/i, use: 'hut', h: 2.7, wall: '#d9c8a2', roofColour: '#6b4a34' },
   { re: /ball-dispenser|utility-cabinet/i, use: 'hut', h: 1.8, wall: '#6f8794', roofColour: '#58707c' },
   { re: /pop-up-caravan/i, use: 'hut', h: 2.3, wall: '#efece2', roofColour: '#cfd6d8' },

@@ -62,6 +62,7 @@ import { roomLine } from './game/golf/towngrowth';
 import { formatMultiDayStatus } from './game/golf/multiday';
 import { decorInfo } from './game/golf/decor';
 import { Icon, type IconName } from './ui/Icon';
+import { Emblem } from './ui/Emblem';
 import { ActionTile, TILE_ROW, TILE_SMALL } from './ui/ActionTile'; // J8 (#1261): Settings, Save, Load and New game wear painted tiles
 import { NightPanel } from './ui/NightPanel';
 import { GradePanel } from './ui/GradePanel';
@@ -656,7 +657,7 @@ export default function App() {
               {/* T235 (#690, the concept's title): in a golf game the club's name over "Year 3 • October • Sunny 16°C" (ui/ClubTitle.tsx); its full
                   text is the tooltip, on the leaf too, so it is there where the words are hidden. The classic town game keeps its old line */}
               <div className="flex items-center gap-2.5" data-tip={title?.tip} data-testid="title-block">
-                <Icon name="leaf" size={38} />
+                <Emblem id="club-crest" size={38} fallback={<Icon name="leaf" size={38} />} />
                 {title ? (
                   <div className="max-[1899px]:hidden">{/* the golf bar's title from 1900 px (T135: one row) */}<ClubTitleText title={title} /></div>
                 ) : (
@@ -1094,15 +1095,15 @@ export default function App() {
               {game.eventUpgradeInfo() && <button className="chip" disabled={!game.eventUpgradeInfo()!.available} title={game.eventUpgradeInfo()!.reason}
                 onClick={() => game.upgradeSelectedFacility()} data-testid="event-upgrade">Improve · ${game.eventUpgradeInfo()!.cost.toLocaleString()}</button>}
             </div>
-            {game.selectedEventStructure() && (STRUCTURE[game.selectedEventStructure()!.typeId]?.requiresEightArt || hasUpgradedArt(game.selectedEventStructure()!.typeId)) && <div>{game.selectedEventStructure()!.visualTier === 'upgraded' ? 'Upgraded' : 'Budget / worn'}</div>}
+            {game.selectedEventStructure() && (STRUCTURE[game.selectedEventStructure()!.typeId]?.requiresEightArt || hasUpgradedArt(game.selectedEventStructure()!.typeId)) && <div>{game.selectedEventStructure()!.visualTier === 'upgraded' ? 'New' : 'Second-hand'}</div>}
           </div>}
           <div className="space-y-1 rounded-lg bg-white/5 p-2 text-xs" data-testid="event-condition-controls">
             <div className="text-slate-400">Condition for new structures</div>
             <div className="flex gap-1.5">
-              <button className={`chip ${game.eventCondition === 'budget' ? 'chip-on' : ''}`} onClick={() => game.setEventCondition('budget')}>Budget / worn</button>
-              <button className={`chip ${game.eventCondition === 'upgraded' ? 'chip-on' : ''}`} onClick={() => game.setEventCondition('upgraded')}>Upgraded</button>
+              <button className={`chip ${game.eventCondition === 'budget' ? 'chip-on' : ''}`} onClick={() => game.setEventCondition('budget')}>Second-hand</button>
+              <button className={`chip ${game.eventCondition === 'upgraded' ? 'chip-on' : ''}`} onClick={() => game.setEventCondition('upgraded')}>New</button>
             </div>
-            <div className="text-[12px] text-slate-400">Upgraded costs a one-time fee shown on each card</div>
+            <div className="text-[12px] text-slate-400">New costs a one-time fee shown on each card</div>
           </div>
           <div className="space-y-3 text-xs">
           {eventSections(game, gv.tier).map(sec => (
@@ -1412,7 +1413,7 @@ function RoundPanel({ game }: { game: Game }) {
   const clock = r.stage === 'build' ? `Build ${mmss(Math.ceil(r.buildLeft))}` : r.stage === 'surge' ? `${golf ? 'Tee-off' : 'Kick-off'} ${mmss(Math.ceil(r.surgeLeft))}` : '';
   if (min) return (
     <button className={`pointer-events-auto absolute ${game.panel ? 'right-[19.5rem]' : 'right-3'} top-[var(--hud-top,6rem)] z-20 glass flex items-center gap-2 px-3 py-1.5 text-sm`} title="Show the event" onClick={() => minimize(false)}>
-      <Icon name="trophy" size={18} />
+      <Emblem id="tour-event" size={22} fallback={<Icon name="trophy" size={18} />} />
       <span className="font-semibold text-[var(--gold-hi)]">{gv ? `T${gv.tier}` : `Level ${r.level}`}</span>
       <span>{gv ? gv.month : `Run ${r.runs + 1}`}</span>
       {clock && <span className="font-bold tabular-nums text-[var(--gold-hi)]">{clock}</span>}
@@ -1426,7 +1427,7 @@ function RoundPanel({ game }: { game: Game }) {
       <div className="relative p-3">
         <button className="btn-icon absolute right-2 top-2 z-10" title="Minimize the event (click the pill to show it again)" onClick={() => minimize(true)}><Icon name="up" size={16} /></button>
         <div className="flex items-start gap-2">
-          <Icon name="trophy" size={34} />
+          <Emblem id="tour-event" size={40} fallback={<Icon name="trophy" size={34} />} />
           <div className="min-w-0">
             <div className="flex items-center gap-2">
               <span className="font-display text-base font-bold tracking-wide text-[var(--gold-hi)] uppercase">{gv ? gv.tierName : 'Event: Stadium'}</span>

@@ -343,7 +343,7 @@ export function rangeScene(plot: Rect, facing: 0 | 1 | 2 | 3, s: RangeBizSave, o
   if (st.proShop) put('shop', 'business:golf-pro-shop', SHOP.u, SHOP.v, toRange);
   // the tin-and-tarp shack (golf:clubhouse-shanty) has no four views yet, and a building without them is drawn as the grand clubhouse (newart.ts):
   // the rusty lean-to shed stands in for it, turned to face the golfers (T258: until the owner's two views land)
-  else { const a = art('golf-clubhouse-shanty', toRange); if (a) put('shop', a, SHOP.u, SHOP.v); else put('shop', 'expansion:lean-to-shed', SHOP.u, SHOP.v, toRange, { label: 'Stand In for the tin-and-tarp pro shop' }); }
+  else { const a = art('golf-clubhouse-shanty', toRange); if (a) put('shop', a, SHOP.u, SHOP.v); else put('shop', 'expansion:lean-to-shed', SHOP.u, SHOP.v, toRange, { label: 'Stand In for the range site hut' }); }
   // ---- the boundary: chain-link down both sides and across the far end
   fenceRun(pieces, P, 'side-a', SIDE_U[0], 17, SIDE_U[0], FAR_V, 'chain'); fenceRun(pieces, P, 'side-b', SIDE_U[1], 19, SIDE_U[1], FAR_V, 'chain');
   fenceRun(pieces, P, 'far', SIDE_U[0], FAR_V, SIDE_U[1], FAR_V, 'chain');

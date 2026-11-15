@@ -147,7 +147,7 @@ export function VendingMachine({ v, onSpin, onSettle, onEquip, onClose, onBag, i
     <div className="pointer-events-auto absolute inset-0 z-40 flex items-center justify-center overflow-hidden bg-black/75 p-3" data-testid="vending-root">
       <div ref={modal} className="vm-machine max-h-full w-[min(1020px,100%)] space-y-3 overflow-y-auto overflow-x-hidden rounded-2xl border border-amber-300/40 p-4 text-slate-200 shadow-2xl" role="dialog" aria-modal="true" aria-label="The pro shop prize machine" data-testid="vending-machine">
         <header className="flex items-start gap-3">
-          <CardArt glyph="star" art="token" color="#ff9d1e" className="hidden h-16 w-28 shrink-0 rounded-lg border border-white/10 sm:block" />
+          <CardArt glyph="star" art="machine" color="#ff9d1e" className="hidden h-16 w-28 shrink-0 rounded-lg border border-white/10 sm:block" />
           <div className="min-w-0 flex-1">
             <div className="text-[11px] font-semibold uppercase tracking-[0.2em] text-amber-400/80">Pro shop · prizes for the winners</div>
             <h2 className="font-display text-2xl font-bold text-[var(--gold-hi)]">The Prize Machine</h2>

@@ -12,6 +12,7 @@ import type { Game, ShotState } from '../game/engine';
 import { BOOST, CLUB_GROUPS, CLUB_NAME, CLUB_SHORT, LEVEL_NAME, METER, SwingMeter, allowedClubs, compassOf, meterMark, pickText, shapeText, sweetSpot, swingEffect, type Lie, type SwingPhase } from '../game/golf/play';
 import { LEVEL_COLOR } from './golf/ClubIcon';
 import { TILE_M } from '../game/golf/types';
+import { paintedArt } from './painted-art';
 
 /** the lies as the panel names them */
 const LIE_NAME: Record<Lie, string> = { tee: 'Tee', fairway: 'Fairway', rough: 'Rough', fescue: 'Fescue', bunker: 'Bunker', green: 'Green', water: 'Water', out: 'Out of bounds', cliff: 'Rocks' };
@@ -49,6 +50,10 @@ function drawMeter(c: HTMLCanvasElement, m: SwingMeter | null, t: number, look: 
   const band = (u0: number, u1: number, col: string, w: number) => { ctx.beginPath(); ctx.arc(CX, CY, R, -ang(u0), -ang(u1), true); ctx.strokeStyle = col; ctx.lineWidth = w; ctx.lineCap = 'butt'; ctx.stroke(); };
   const tick = (u: number, r0: number, r1: number, col: string, w: number) => { const [x0, y0] = pt(u, r0), [x1, y1] = pt(u, r1); ctx.beginPath(); ctx.moveTo(x0, y0); ctx.lineTo(x1, y1); ctx.strokeStyle = col; ctx.lineWidth = w; ctx.lineCap = 'butt'; ctx.stroke(); };
   const label = (u: number, r: number, text: string, col: string, size = 10) => { const [x, y] = pt(u, r); ctx.fillStyle = col; ctx.font = `600 ${size}px system-ui, sans-serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(text, x, y); };
+  // #1304: the painted gauge face (src/assets/ui/art/swing-meter-face.webp, the empty brass half-ring) under the live bands, ticks and marker; none
+  // (not painted yet, or the old look): the bands on the panel as before
+  const face = paintedArt('swing-meter-face');
+  if (face) ctx.drawImage(face, 0, 0, CW, CH);
   // the arc: past the snap (a late click: right), the power side, the overswing; the sweet spot over the snap line
   band(METER.low, 0, 'rgba(244,114,182,0.45)', 16);
   band(0, 1, 'rgba(56,189,248,0.35)', 16);

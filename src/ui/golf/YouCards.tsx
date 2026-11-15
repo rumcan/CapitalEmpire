@@ -96,7 +96,7 @@ export function WhoCard({ name, look, looks, hcp, onDone, desert, onTheme, cours
           <span className="text-xs uppercase text-slate-400">Starting handicap</span>
           <span className="text-lg font-bold text-white" data-testid="who-hcp">{hcp}</span>
         </div>
-        <p className="text-xs text-slate-400">{start ? 'Next you choose where to start; you stand beside your shack there. ' : 'You stand beside the shack. '}With Walk (the walking figure on the left; Alt swaps it with Select) click the ground to walk, a person to talk, a building to look, the range to hit a bucket. WASD walk too; the arrows pan. C calls your golf cart, E gets in.</p>
+        <p className="text-xs text-slate-400">{start ? 'Next you choose where to start; you stand beside your hut there. ' : 'You stand beside the hut. '}With Walk (the walking figure on the left; Alt swaps it with Select) click the ground to walk, a person to talk, a building to look, the range to hit a bucket. WASD walk too; the arrows pan. C calls your golf cart, E gets in.</p>
         <button className="btn-gold w-full py-2 text-sm" onClick={() => onDone(n, l)} data-testid="who-go"><Icon name="people" size={18} />That's me</button>
       </div>
       {course && !JAM && pick && <CoursePicker featured={course.featured} current={course.current} onOwn={course.onOwn} onFeatured={course.onFeatured} onBuild={course.onBuild} onPlace={course.onPlace} onClose={() => setPick(false)} />}

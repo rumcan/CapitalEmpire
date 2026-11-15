@@ -19,7 +19,31 @@ export const TOOL_TILES_V11 = ['ball-polisher', 'robot-pickers', 'robots-4', 'ro
 export const TOOL_TILES_V12 = ['stamped-balls', 'swing-video', 'fans-lemonade', 'weighted-clubs', 'launch-monitor', 'ball-tracker', 'floodlights', 'bays-24', 'pro-shop', 'coffee-kiosk', 'range-till', 'home-caravan'] as const;
 // the props menu's tiles and the Texture Painter's (sheet v13; #1284's tiles half)
 export const TOOL_TILES_V13 = ['all-props', 'natural-props', 'man-made-props', 'desert-oasis', 'trees-mixed', 'lake-props', 'fences', 'signs', 'fountain', 'texture-painter', 'clear-plants', 'nursery-plants'] as const;
-export type ToolTile = typeof TOOL_TILES_V1[number] | typeof TOOL_TILES_V2[number] | typeof TOOL_TILES_V3[number] | typeof TOOL_TILES_V4[number] | typeof TOOL_TILES_V5[number] | typeof TOOL_TILES_V6[number] | typeof TOOL_TILES_V7[number] | typeof TOOL_TILES_V8[number] | typeof TOOL_TILES_V9[number] | typeof TOOL_TILES_V10[number] | typeof TOOL_TILES_V11[number] | typeof TOOL_TILES_V12[number] | typeof TOOL_TILES_V13[number];
+// #1304 (the owner, 2026-11-14: "im hoping we still waiting on these icons"): the old 64 px gold icons (Icon.tsx) still on screen as painted tiles, three
+// sheets (queue-icons1304.json; scripts/assets/art-1304-1300.mjs ICON_SHEETS): v14 the top bar's chips and stats, v15 the buttons, v16 the map tools and roads
+export const TOOL_TILES_V14 = ['rating-leaf', 'club-house', 'golfers', 'golf-bag', 'takings', 'trophy', 'calendar', 'card-deck', 'compass', 'hole-flag', 'buildings', 'reputation'] as const;
+export const TOOL_TILES_V15 = ['pause', 'play', 'fast', 'skip', 'rewind', 'forward', 'zoom-in', 'zoom-out', 'info', 'close', 'up', 'down'] as const;
+export const TOOL_TILES_V16 = ['left', 'right', 'swap', 'road', 'one-way', 'sidewalk', 'junction', 'bus', 'wooded-road', 'locked', 'windsock', 'new-look'] as const;
+export type ToolTile = typeof TOOL_TILES_V1[number] | typeof TOOL_TILES_V2[number] | typeof TOOL_TILES_V3[number] | typeof TOOL_TILES_V4[number] | typeof TOOL_TILES_V5[number] | typeof TOOL_TILES_V6[number] | typeof TOOL_TILES_V7[number] | typeof TOOL_TILES_V8[number] | typeof TOOL_TILES_V9[number] | typeof TOOL_TILES_V10[number] | typeof TOOL_TILES_V11[number] | typeof TOOL_TILES_V12[number] | typeof TOOL_TILES_V13[number]
+  | typeof TOOL_TILES_V14[number] | typeof TOOL_TILES_V15[number] | typeof TOOL_TILES_V16[number];
+/** #1304: the icon tiles (sheets v14 to v16) */
+export const ICON_TILES: readonly ToolTile[] = [...TOOL_TILES_V14, ...TOOL_TILES_V15, ...TOOL_TILES_V16];
+/** #1304: each Icon name's painted tile (Icon.tsx draws it in place of the gold icon once the tile's file exists, unless ui-art-look.ts says 'vector').
+ *  Eight reuse a tile already painted with the same meaning; the ones never rendered (power, civic, camera, start, road-edge, hills, fullscreen,
+ *  back2, open) have none and keep the gold icon */
+export const ICON_TILE: Readonly<Record<string, ToolTile>> = {
+  leaf: 'rating-leaf', house: 'club-house', people: 'golfers', briefcase: 'golf-bag', income: 'takings', trophy: 'trophy', calendar: 'calendar', layers: 'card-deck',
+  compass: 'compass', pin: 'hole-flag', buildings: 'buildings', chart: 'reputation',
+  pause: 'pause', play: 'play', fast: 'fast', skip: 'skip', rewind: 'rewind', forward2: 'forward', 'zoom-in': 'zoom-in', 'zoom-out': 'zoom-out', info: 'info', close: 'close', up: 'up', down: 'down',
+  left: 'left', right: 'right', swap: 'swap', road: 'road', oneway: 'one-way', sidewalk: 'sidewalk', junction: 'junction', bus: 'bus', forest: 'wooded-road',
+  // the tiles already painted with the same meaning
+  bank: 'bank', gear: 'settings', bulldozer: 'bulldoze', trees: 'trees', tree: 'trees', sun: 'daylight', terrain: 'earthworks', help: 'how-to-play',
+};
+/** #1304: the bag's clubs (ClubIcon.tsx, "Stand In for club icons") by sheet v8's club tiles */
+export const CLUB_TILE: Readonly<Record<string, ToolTile>> = {
+  driver: 'club-driver', wood3: 'club-wood', wood5: 'club-wood', hybrid: 'club-long-iron', iron4: 'club-long-iron', iron5: 'club-long-iron',
+  iron6: 'club-iron', iron7: 'club-iron', iron8: 'club-iron', iron9: 'club-iron', pw: 'club-wedge', gw: 'club-wedge', sw: 'club-wedge', lw: 'club-wedge', putter: 'club-putter',
+};
 /** Row-major sheet identities; v1 asset files remain byte-for-byte unchanged. These are the Course and Facilities flyouts' tiles (ui-flyouts.test.ts
  *  checks each is on a tool): the action tiles of sheets v3 to v6 are ACTION_TILES. */
 export const TOOL_TILES: readonly ToolTile[] = [...TOOL_TILES_V1, ...TOOL_TILES_V2];

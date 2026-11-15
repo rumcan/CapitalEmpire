@@ -139,7 +139,7 @@ export const RANGE_UPGRADES: readonly RangeUpgrade[] = [
   { id: 'covered', name: 'Covered bays', cost: 18000, upkeep: 120, effect: 'A roof over the mats: +15% visitors, golfers pay $2 more without grumbling' },
   { id: 'lights', name: 'Floodlights', cost: 24000, upkeep: 250, effect: 'Open till 22:00: the after-work crowd stays into the evening' },
   { id: 'dispenser', name: 'Ball dispenser', cost: 5000, upkeep: 30, effect: 'Buckets in a second: the queue at the shop clears, +5% visitors; no attendant is needed at the counter' },
-  { id: 'proshop', name: 'Pro shop', cost: 45000, upkeep: 400, effect: 'The shack becomes a real pro shop: gear sales +$2 a golfer, +15% visitors' },
+  { id: 'proshop', name: 'Pro shop', cost: 45000, upkeep: 400, effect: 'The second-hand hut becomes a new pro shop: gear sales +$2 a golfer, +15% visitors' },
   // the World of Golf extras (plan P24 Phase 4b, T133)
   { id: 'kiosk', name: 'Coffee kiosk', cost: 9000, upkeep: 80, effect: 'A coffee kiosk by the shop: 40% of golfers buy a $3 coffee after their bucket, +3% visitors' },
   // T386 (#1043): the ball loop's tools, bought with the range's till: a ball tube, a bigger basket, a push picker, the T133 picker cart (you tow it

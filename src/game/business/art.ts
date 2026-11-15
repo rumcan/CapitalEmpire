@@ -5,6 +5,9 @@ import { drawnAs } from '../mirror';
 import { footprintSpan, maxDrawScale } from '../newart';
 import { OWNER_SCALE, STUDIO_SCALE } from '../lots/scales';
 
+/** #1300: the first (tier 1) clubhouse's picture: the eight-view 1950s budget clubhouse's north-east view (object-eight-library.ts), the second-hand one */
+export const FIRST_CLUBHOUSE = 'object8:golf-clubhouse-1950-budget-09bf7d81-v1:normalNE';
+
 /** The representative delivered sprite for each business's catalogue card. */
 export const BUSINESS_IMAGE: Record<BusinessId, string> = { stadium: 'stadium', sportsbar: 'sportsbar', buscompany: 'buscompany', diner: 'diner', taxi: 'taxi', golf: 'golf-clubhouse', estate: 'estate-villa', fishing: 'fishing-lodge', tackle: 'tackle', casino: 'casino', hotel: 'hotel', motel: 'motel', clubhouse: 'golf-clubhouse', range: 'golf-driving-range' , halfway: 'golf-halfway-pavilion', prooffice: 'golf-pro-shop', teachhut: 'expansion:lean-to-shed' };
 // Positions and sizes are fractions of the canonical parcel; R exchanges its world axes. A size of 0 draws the sprite at its own map size (the
@@ -27,9 +30,10 @@ const LAYOUT: Record<BusinessId, Piece[]> = {
     ['golf-halfway-pavilion', .08, .55, .09], ['golf-driving-range', .84, .4, .14], ['golf-practice-net', .88, .5, .05],
     ['golf-patio-table', .69, .83, .035], ['golf-bench-course-map', .7, .7, .04], ['golf-cart-sw', .7, .9, .04],
   ],
-  // the starting clubhouse is a tin-and-tarp shack (the owner, 2026-10-22: start with a poor clubhouse; the grand clubhouse, the pro shop and the
-  // cart garage are built later), at its own size
-  clubhouse: [['golf:clubhouse-shanty', .5, .5, 0]],
+  // the starting clubhouse is a modest one (the owner, 2026-10-22: start with a poor clubhouse; the grand clubhouse, the pro shop and the cart garage
+  // are built later), at its own size. #1300 (the owner, 2026-11-14: "remove all shack art"): the second-hand 1950s budget clubhouse (object-eight),
+  // never the old tin-and-tarp shack
+  clubhouse: [[FIRST_CLUBHOUSE, .5, .5, 0]],
   // the halfway house (T187): the pavilion, at its own size
   halfway: [['golf-halfway-pavilion', .5, .5, 0]],
   // T214 (P26 3.1): the pro's office (Stand In: the pro shop, fitted to its 8 m, with the membership desk sign's stand-in at its door) and the
