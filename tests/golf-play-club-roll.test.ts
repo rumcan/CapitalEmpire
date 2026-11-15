@@ -120,7 +120,7 @@ test('back-compat: a shot with conditions but not the club’s run (an input sav
   const old = play(), old2 = play(2), now = play(MODEL_V);
   assert.equal(fnv(JSON.stringify(old.pl.shots)), '1a8e4b80', 'the live group with conditions and no version: the same shots'); assert.equal(old.lg.inputs.length, 90);
   assert.equal(fnv(JSON.stringify(old2.pl.shots)), '54037f2f', 'version 2 (the putting): the same shots, the club’s run came with 3');
-  assert.notEqual(JSON.stringify(now.pl.shots), JSON.stringify(old.pl.shots), 'version 3 runs by club'); assert.equal(MODEL_V, 3);
+  assert.notEqual(JSON.stringify(now.pl.shots), JSON.stringify(old.pl.shots), 'version 3 runs by club'); assert.equal(MODEL_V, 4);
   assert.deepEqual(old.lg.inputs.map(i => i.v), old.lg.inputs.map(() => undefined)); assert.deepEqual(old2.lg.inputs.map(i => i.v), old2.lg.inputs.map(() => 2)); assert.deepEqual(now.lg.inputs.map(i => i.v), now.lg.inputs.map(() => MODEL_V), 'each input keeps the version it was played under');
   // and the saved inputs replay to the same round, whatever the model's version is now (through JSON: what a save does)
   for (const a of [old, old2, now]) {

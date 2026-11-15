@@ -200,11 +200,20 @@ export function hitShot(r: () => number, sk: ShotSkill, lie: Lie, from: Pt, aim:
  *  at a metre, held between minDeg and maxDeg) where it was a flat 3 degrees, and the power's error counts in metres past or short of the hole (windowM: a ball 0.9 m out of its
  *  pace has no chance) where it was 25% of the putt, whatever its length. A shot played under it says so (live.ts OwnerInput.v 2); a saved input without it is version 1, as before */
 export const PUTT_V2 = { offsetM: 0.6, cupM: 0.09, minDeg: 1.5, maxDeg: 8, windowM: 0.9 } as const;
+/** the putting's fourth model version (MODEL_V 4; the owner, 2026-11-15: "make sinking the ball at close range alot easier"): inside nearM the putt gets help that
+ *  fades to none at nearM (n = 1 - dist / nearM): the make chance falls only from a longer offset (offsetM: 2.8 m of help at a metre, so a putt of a metre or two drops nearly
+ *  always), the aim may be off by the angle of a wider cup (cupM, up to maxDeg) and the pace window is wider (windowM). From nearM on it is PUTT_V2, unchanged */
+export const PUTT_EASY = { nearM: 4, offsetM: 3.5, cupM: 0.25, maxDeg: 20, windowM: 3 } as const;
+/** PUTT_V2 with PUTT_EASY's help for a putt of distM metres (n: the help, 1 at the cup, 0 from PUTT_EASY.nearM on) */
+export function puttEase(distM: number): { offsetM: number; cupM: number; maxDeg: number; windowM: number } {
+  const n = Math.min(1, Math.max(0, 1 - (Number.isFinite(distM) ? distM : PUTT_EASY.nearM) / PUTT_EASY.nearM)), mix = (a: number, b: number) => a + (b - a) * n;
+  return { offsetM: mix(PUTT_V2.offsetM, PUTT_EASY.offsetM), cupM: mix(PUTT_V2.cupM, PUTT_EASY.cupM), maxDeg: mix(PUTT_V2.maxDeg, PUTT_EASY.maxDeg), windowM: mix(PUTT_V2.windowM, PUTT_EASY.windowM) };
+}
 
 /** a putt from distM metres: the make chance falls with distance and rises with skill; a miss leaves the ball at least 0.3 m from the hole,
  *  at a share of the putt that is tighter for better putters. T334: v2, the model's second version (PUTT_V2's make chance) */
-export function putt(r: () => number, skill: number, distM: number, factor = 1, v2 = false): { holed: boolean; leaveM: number } {
-  const p = Math.min(0.99, Math.exp(-Math.max(0, distM - (v2 ? PUTT_V2.offsetM : 0.3)) / (2.0 + 1.5 * skill)));
+export function putt(r: () => number, skill: number, distM: number, factor = 1, v2 = false, offsetM?: number): { holed: boolean; leaveM: number } {
+  const p = Math.min(0.99, Math.exp(-Math.max(0, distM - (offsetM ?? (v2 ? PUTT_V2.offsetM : 0.3))) / (2.0 + 1.5 * skill)));
   if (r() < p * factor) return { holed: true, leaveM: 0 };
   return { holed: false, leaveM: Math.max(0.3, distM * (0.05 + (0.07 + 0.15 * (1 - skill)) * r())) };
 }
