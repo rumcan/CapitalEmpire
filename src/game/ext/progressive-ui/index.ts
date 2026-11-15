@@ -291,9 +291,15 @@ export const GAME_RAMP_TAKINGS = 5_000;
 /** #1305: what makes the range look cared for, the other half of the course unlock in the game build: the target greens placed, the tee box turfed, the outfield
  *  grassed (the desert start's), the car park gravelled (or paved), props placed by the range and a putting green open. LOOKS_NEEDED of them, in any order */
 export type RangeLook = 'greens' | 'teeturf' | 'grass' | 'gravel' | 'props' | 'putting';
-export const RANGE_LOOKS: readonly { id: RangeLook; label: string }[] = [
-  { id: 'greens', label: 'Place the target greens' }, { id: 'teeturf', label: 'Turf the tee box' }, { id: 'grass', label: 'Grass the outfield' },
-  { id: 'gravel', label: 'Gravel the car park' }, { id: 'props', label: 'Dress the range with props' }, { id: 'putting', label: 'Open a putting green' },
+/** each look's line on the checklist, the hint whose Show me leads to it (Engine.showHint: the range card for the upgrades, the Props tool, the practice area) and how */
+export interface RangeLookLine { id: RangeLook; label: string; hint: string; how: string }
+export const RANGE_LOOKS: readonly RangeLookLine[] = [
+  { id: 'greens', label: 'Place the target greens', hint: 'hint-range-upgrade', how: 'An upgrade on the range card: click the range, then its upgrades.' },
+  { id: 'teeturf', label: 'Turf the tee box', hint: 'hint-range-upgrade', how: 'An upgrade on the range card: click the range, then its upgrades.' },
+  { id: 'grass', label: 'Grass the outfield', hint: 'hint-range-upgrade', how: 'An upgrade on the range card: click the range, then its upgrades.' },
+  { id: 'gravel', label: 'Gravel the car park', hint: 'hint-range-upgrade', how: 'The car park on the range card: gravel the packed dirt.' },
+  { id: 'props', label: 'Dress the range with props', hint: 'hint-range-props', how: 'Props (Z): pot plants, a fountain, a statue within 15 tiles of the shop or the mats.' },
+  { id: 'putting', label: 'Open a putting green', hint: 'hint-practice-putting', how: 'Place the practice area, then paint a putting green on it.' },
 ];
 /** #1305 (the owner: "play the range for a bit first and make it pretty"): the looks the range needs besides its takings before the course opens: 3 in the game; none
  *  in the jam (its balance, docs/JAM.md, was measured with the takings alone, and its rule stays as it is) */
@@ -357,7 +363,7 @@ export function rampStep(f: PlayerProgressFacts): RampStep | null {
 function looksDone(r: RampFacts): number { return r.looks ? new Set(r.looks).size : LOOKS_NEEDED; }
 /** the progress toward the course building unlock (#1305): have, this season's range takings ($, whole), of need, RAMP_TAKINGS; and in the game build the range's looks
  *  (done of need, and each look with whether it is done: the Holes panel's checklist) */
-export interface RampProgress { have: number; need: number; looks?: { done: number; need: number; items: { id: RangeLook; label: string; done: boolean }[] } }
+export interface RampProgress { have: number; need: number; looks?: { done: number; need: number; items: (RangeLookLine & { done: boolean })[] } }
 /** the progress toward New hole and the clubhouse while the ramp holds them (null: open, not a range start, every tool shown, or a sandbox game) */
 export function rampProgress(f: PlayerProgressFacts): RampProgress | null {
   const s = rampStep(f); if (s === null || s >= 3 || f.advancedMode) return null;

@@ -48,6 +48,7 @@ try {
   let f = await facts(); console.log('normal', JSON.stringify(f));
   check(!f.sandbox && !f.unlockAll && !!f.lock && f.progress?.have === 1250 && f.progress?.need === 5000 && f.progress?.looks?.done === 1, 'a normal new game: New hole locked with $1,250 of $5,000 and 1 of 3 looks');
   check(await page.locator('[data-testid="new-hole-progress"]').isVisible(), 'the Holes panel shows the progress under the locked New hole');
+  check(await page.locator('[data-testid="look-show-props"]').isVisible() && !(await page.locator('[data-testid="look-show-greens"]').count()), 'each open look has a Show me (none on the done ones)');
   await shot('03-normal-new-hole-locked.png');
   // ---- the unlock happening: the takings reach $5,000 and the range gets its third look
   await game(() => { const b = window.__game.golf.range; for (const id of ['gravel', 'teeturf']) if (!b.owned.includes(id)) b.owned.push(id); b.season.takings = 5000; });

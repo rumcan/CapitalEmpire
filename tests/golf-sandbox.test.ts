@@ -4,7 +4,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
-  LOOKS_NEEDED, NEW_BADGE_IDS, RAMP_TAKINGS, rangeLooks, SANDBOX_MONEY, computeProgressiveUiState, emptyProgress, makeSandbox, newRangeGuide, newTour, nextFirstRunHint, normalizeProgress,
+  LOOKS_NEEDED, NEW_BADGE_IDS, PRACTICE_HINTS, RAMP_TAKINGS, RANGE_HINTS, RANGE_LOOKS, rangeLooks, SANDBOX_MONEY, computeProgressiveUiState, emptyProgress, makeSandbox, newRangeGuide, newTour, nextFirstRunHint, normalizeProgress,
   normalizeSandbox, progressFacts, rampProgress, sandboxTopUp, type CourseProgress, type GolfProgress,
 } from '../src/game/ext/progressive-ui';
 import { START_CHOICES, choiceFromStore, choiceHash, choiceOf, sandboxOf } from '../src/game/showcase';
@@ -85,6 +85,9 @@ test('the game build also wants the range made pretty (#1305): 3 looks besides t
   assert.ok(computeProgressiveUiState(progressFacts(fresh(), course({ upgrades: 2, seasonTakings: 10, looks: ['greens', 'gravel', 'props'] }))).newHoleLock);
   // season 2 opens it whatever the range looks like
   assert.equal(computeProgressiveUiState(progressFacts(fresh(), course({ looks: [] }, { seasons: 1 }))).newHoleLock, null);
+  // each look's Show me leads where it is done: a hint the engine shows with a Show me (the range card, the Props tool, the practice area)
+  const shown = new Map([...Object.values(RANGE_HINTS), ...PRACTICE_HINTS].map(h => [h.id, h]));
+  for (const l of RANGE_LOOKS) { assert.ok(shown.get(l.hint)?.show, `${l.id}: ${l.hint} has a Show me`); assert.ok(l.how.length > 10, l.id); }
   // a sandbox game never waits for either
   assert.equal(computeProgressiveUiState(progressFacts(makeSandbox(fresh(), { townRoads: false }), course({ looks: [] }))).newHoleLock, null);
 });
