@@ -1,6 +1,7 @@
 // npm run cinder:hudfit: the golf view's HUD in a real browser (Chrome, through playwright-core) at 1280x720, 1366x768, 1753x995 and 1920x1080, at 100% and
 // 125% (the device scale), in host mode on Woodhill's 2nd hole with a tee turn: every box (the hole pill and its facts opened, the club picker and the bag
-// opened, the shot panel opened, the help, the settings; #1336: the boost bar while held, the spin readout in flight) must lie inside the picture, and the golfer must be in it, his feet in its lower part.
+// opened, the shot panel opened, the help, the settings; #1336: the boost bar while held, the spin readout in flight; #1344: practising, the drills panel open and folded and the
+// last ball's strip at the top centre, clear of the hole pill, the map and the swing bar) must lie inside the picture, and the golfer must be in it, his feet in its lower part.
 // (2026-11-15, the owner: "Icons are sliced off at the sides .. I cant see the player".) Fails (exit 1) on the first size that does not fit.
 //   node packages/cinderlinks/tools/hud-fit.mjs [public/cinderlinks]
 import http from 'node:http'; import fs from 'node:fs'; import path from 'node:path';
@@ -22,6 +23,7 @@ const fits = () => {   // every box shown in the HUD inside the picture (half a 
   for (const e of document.querySelectorAll('#hud, #hud *')) {
     if (e.closest('#help') && e.id !== 'help') continue;   // (inside the help it scrolls up and down)
     if (e.closest('#shotc') && e.id !== 'shotc') continue;   // (inside the shot panel likewise)
+    if (e.closest('#prac') && e.id !== 'prac') continue;   // (#1344: and inside the practice panel)
     const b = e.getBoundingClientRect(), cs = getComputedStyle(e); if (b.width < 1 || b.height < 1 || cs.display === 'none' || cs.visibility === 'hidden') continue;
     if (b.left < st.left - 0.5 || b.top < st.top - 0.5 || b.right > st.right + 0.5 || b.bottom > st.bottom + 0.5) off.push((e.id || e.className || e.tagName) + ' ' + [b.left, b.top, b.right, b.bottom].map(Math.round).join(','));
   }
@@ -54,6 +56,31 @@ try {
       ['air', 'HP.air = { ax: -3, ay: -5, cap: { side: 8, top: 8, back: 8 }, inp: {}, sent: false, n: 0 }; const keep = HP.play; HP.play = { air: true, t: 0, tL: 9 }; hostSpinShow(); HP.play = keep;']]) {
       const r = await page.evaluate('(() => { ' + setup + ' const on = (document.querySelector("#swingBtn u.boostbar.on") || document.querySelector("#spinRead.on")) ? 1 : 0, r = (' + fits.toString() + ')(); HP.sw = null; HP.air = null; hostMeterShow(); hostSpinShow(); return Object.assign(r, { on }); })()');
       if (!r.on) errs.push(name + ': not shown'); if (r.off.length) errs.push(name + ': off the picture: ' + r.off.join(' | '));
+    }
+    // #1344: practising on the range: the drills panel open and folded to its pill, and the last ball's strip at the top centre. All inside the picture; the strip over none of the
+    // hole pill, the map, the swing bar, the club picker or the panels; the panel never wider than itself (no sideways scroll bar)
+    {
+      const drills = [['distance', 'Distance control'], ['shaping', 'Shot shaping'], ['flight', 'Flight'], ['junk', 'Junk targets'], ['updown', 'Up and down'], ['putting', 'Putting'], ['bunker', 'Bunker']]
+        .map(([id, name], i) => ({ id, name, goal: 'Stop 5 balls within 10 m of the 100 m flag: a long goal that wraps over two lines', got: i % 5, need: 5, done: i === 0, reward: '+2 Irons, +1 Accuracy', here: i < 4 }));
+      const last = { kind: 'full', club: 'driver', carryM: 201.9, rollM: 16.2, totalM: 218.1, offM: -6.4, pinM: 30.2, holed: false, ballMph: 140, clubMph: 97, smash: 1.44, launchDeg: 11.4, apexM: 24.6, backRpm: 2750, sideRpm: -450,
+        tips: ['Pulled 6.4 m left: early release', 'Boost had faded: release at the top of your taps'] };
+      { const h = await page.$('#help.on'); if (h) { const k = await page.$('#keys'); if (k) { await k.click(); await page.waitForTimeout(200); } } }   // (the help the run above opened: an overlay he asks for, shut here)
+      await page.evaluate((m) => window.postMessage(m, '*'), { v: 1, t: 'practice', place: 'range', drills, active: 'shaping', note: 'Fade landed: 1 of 2', paid: null, flags: [], hcp: '18.2', balls: 11, last });
+      await page.waitForTimeout(500);
+      for (const fold of [false, true]) {
+        const r = await page.evaluate('(() => { pracFoldSet(' + fold + '); const fit = (' + fits.toString() + ')(); ' +
+          'const box = (s) => { const e = document.querySelector(s); if (!e) return null; const cs = getComputedStyle(e); if (cs.display === "none" || cs.visibility === "hidden") return null; const b = e.getBoundingClientRect(); return b.width > 0 && b.height > 0 ? b : null; }; ' +
+          'const lb = box("#lastBall"), pe = document.getElementById("prac"), over = []; ' +
+          'for (const s of ["#card", "#minimap", "#swingBtn", "#prac", "#clubs", "#corner", "#shotc", "#help"]) { const b = box(s); if (lb && b && lb.left < b.right - 0.5 && b.left < lb.right - 0.5 && lb.top < b.bottom - 0.5 && b.top < lb.bottom - 0.5) over.push(s); } ' +
+          'return { off: fit.off, lb: !!lb, prac: !!box("#prac"), over, sideways: pe ? pe.scrollWidth > pe.clientWidth + 1 : true, fold: pe ? pe.className : "" }; })()');
+        const nm = 'practice' + (fold ? ' folded' : '');
+        if (!r.lb || !r.prac) errs.push(nm + ': the readout or the panel is not shown');
+        if (r.fold !== (fold ? 'panel fold' : 'panel')) errs.push(nm + ': the panel did not ' + (fold ? 'fold' : 'open') + ' (' + r.fold + ')');
+        if (r.off.length) errs.push(nm + ': off the picture: ' + r.off.join(' | '));
+        if (r.over.length) errs.push(nm + ': the last-ball readout is over ' + r.over.join(', '));
+        if (r.sideways) errs.push(nm + ': the practice panel scrolls sideways');
+      }
+      await page.evaluate(() => pracFoldSet(false));
     }
     console.log((errs.length ? 'FAIL ' : 'ok   ') + W + 'x' + H + ' @' + Math.round(k * 100) + '%' + (errs.length ? ': ' + errs.join(' ;; ') : ''));
     if (errs.length) bad++;

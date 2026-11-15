@@ -27,6 +27,9 @@ export interface Earned {
   charges: number;
   /** for each locked option, what unlocks it */
   why: Partial<Record<'draw' | 'fade' | 'high' | 'low' | 'side' | 'back' | 'tour' | 'boost' | 'read', string>>;
+  /** #1344 (the owner: "doesnt say this is locked and i cant use it to draw or fade"): the shot shape's locks in one short line each, for the line the shot panel always shows
+   *  while a side is locked: the stat that unlocks it, what he has, and the drill that opens it ("Accuracy 60 (you have 48) · practise Shot shaping"); absent: not locked (or an older host) */
+  lock?: { curve?: string; flight?: string };
 }
 
 /** what earning reads: the player card's skills (0..100; absent ones as a new save's), the bag as saved, and the mechanics his cards give (absent: none) */
@@ -54,13 +57,16 @@ export function earned(e: EarnIn): Earned {
   const boost = mech.includes('boost') && driver >= EARN.boostLevel;
   const why: Earned['why'] = {};
   if (!curve) why.draw = why.fade = `Accuracy ${EARN.curveAcc}, any club at Tour level, or the Shot shaping drill`;
+  const have = (v: number | undefined, d: number) => Math.round(v ?? d), lock: NonNullable<Earned['lock']> = {};   // (#1344: the panel's short lines: the stat, what he has, the drill)
+  if (!curve) lock.curve = `Accuracy ${EARN.curveAcc} (you have ${have(s.accuracy, 50)}) · practise Shot shaping`;
+  if (!flight) lock.flight = `Touch ${EARN.flightTouch} (you have ${have(s.touch, 50)}) · practise Flight`;
   if (!flight) why.high = why.low = `Touch ${EARN.flightTouch}, Irons ${EARN.flightIrons}, or the Flight drill`;
   if (!read) why.read = `Putting ${EARN.readPutt}, or the Putting drill`;
   if (!side) why.side = `Touch ${EARN.sideTouch}`;
   if (!back) why.back = `Short game ${EARN.backShort}, or a wedge at Club level`;
   if (!tour) why.tour = 'The Mid-Flight Whisper card';
   if (!boost) why.boost = mech.includes('boost') ? 'A Tour driver' : driver >= EARN.boostLevel ? 'The Power Mash card' : 'The Power Mash card and a Tour driver';
-  return { draw: curve, fade: curve, high: flight, low: flight, side, back, tour, boost, read, charges: boost ? (driver >= EARN.boost2Level ? 2 : 1) : 0, why };
+  return { draw: curve, fade: curve, high: flight, low: flight, side, back, tour, boost, read, charges: boost ? (driver >= EARN.boost2Level ? 2 : 1) : 0, why, ...(lock.curve || lock.flight ? { lock } : {}) };
 }
 
 /** T455 (the owner, 2026-11-13: "unlock shot shaping in dev mode"): the Developer toggle (F3, App.tsx) opens everything for testing without the cards, the skills or the clubs: the curve, the flight, the spins, the boost, and two boost charges */
@@ -73,5 +79,6 @@ export const ALL_EARNED: Readonly<Earned> = { draw: true, fade: true, high: true
  *  the course still asks for them to be earned) */
 export function practiceEarned(e: Earned): Earned {
   const why = { ...e.why }; delete why.draw; delete why.fade; delete why.high; delete why.low;
-  return { ...e, draw: true, fade: true, high: true, low: true, why };
+  const { lock: _l, ...rest } = e; void _l;   // (#1344: nothing of the shape is locked here)
+  return { ...rest, draw: true, fade: true, high: true, low: true, why };
 }

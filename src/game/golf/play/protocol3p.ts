@@ -19,6 +19,7 @@ import type { FeaturesFile } from './features3p';
 import type { Earned } from './unlocks';
 import type { Green3p } from './green3p';
 import type { LieGrid } from './lies3p';
+import type { LastBall } from './launch';
 
 /** the protocol's version: every message carries it, and a message of another version is refused (isHostMsg / isViewMsg) */
 export const PROTOCOL_V = 1;
@@ -203,7 +204,11 @@ export interface PracticeMsg { v: 1; t: 'practice'; place: 'range' | 'short';
   /** J6b: the junk pile the last ball hit, to say ("Hit the old car!"; absent: none) */
   hit?: string;
   /** J6b: the range's own flags stand among the course's things as the game's pictures: the view draws only their distance labels (absent: it draws flags too) */
-  pics?: true }
+  pics?: true;
+  /** #1344: the ball just played, once, in the message after it (launch.ts lastBall: carry, roll, total and offline in metres, ball and club speed in mph and the smash, the launch,
+   *  apex, backspin and side spin, a putt's length, leave and line, and one or two tips). The view shows it top centre once the ball rests, until the next ball. Absent: no new ball
+   *  (a pick, the first message; an older host) */
+  last?: LastBall }
 
 export type HostMsg = CourseMsg | ActorsMsg | BoardMsg | MatchMsg | TurnMsg | ShotMsg | HoleEndMsg | PreviewMsg | ClockMsg | LeaveMsg | LiesMsg | PracticeMsg;
 

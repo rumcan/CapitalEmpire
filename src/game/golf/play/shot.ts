@@ -144,7 +144,10 @@ export interface HitMod { maxF?: number; spread?: number; angF?: number; roll?: 
  *  penalty too, and the ball goes back to where it was struck from, the same lie (stroke and distance). T251: also where it landed and where
  *  its roll stopped, with their lies (landing: the bounce and the roll are drawn from them; the same draws and lies as before). T241: the skill is the
  *  club's part of the game's (skillFor) */
-export function hitShot(r: () => number, sk: ShotSkill, lie: Lie, from: Pt, aim: Pt, club: Club, view: CourseView, mod?: HitMod): { to: Pt; lie: Lie; penalty: 0 | 1; holed: false; landing: Landing } {
+/** #1344: how a full shot was struck, for the practice readout (play/launch.ts): a mishit and the share of its carry it kept (1: none), a flier, and the metres it flew before the wind
+ *  (its still-air flight: the lie, the slope, the shape and the scatter in it). Read off the draws hitShot takes anyway: no draw of its own */
+export interface Strike { mis: boolean; mf: number; flier: boolean; stillM: number }
+export function hitShot(r: () => number, sk: ShotSkill, lie: Lie, from: Pt, aim: Pt, club: Club, view: CourseView, mod?: HitMod): { to: Pt; lie: Lie; penalty: 0 | 1; holed: false; landing: Landing; strike: Strike } {
   // (T334 part 2: the golfer's kit for the club: his skill for it after the mods, and the factors his stats and mods put on the carry, the scatter and the roll, and a mishit's chance; a plain skill: none)
   const kit = typeof sk === 'number' ? null : applyMods(sk, club, mod?.ctx), skill = typeof sk === 'number' ? sk : kit!.skill, dM = Math.hypot(aim.x - from.x, aim.y - from.y) * TILE_M, shape = mod?.shape;
   const sand = lie === 'bunker' && (club === 'sw' || club === 'lw') && dM < SAND_M; // (T335: the lob wedge splashes out as the sand wedge does)
@@ -163,6 +166,7 @@ export function hitShot(r: () => number, sk: ShotSkill, lie: Lie, from: Pt, aim:
   const sp = mod?.spin && mod.spin.amount > 0 && !flier ? mod.spin : null; // (T318: the curve and the roll below; no draws. T334: a flier has no spin)
   const ang = Math.atan2(aim.y - from.y, aim.x - from.x) + gauss(r) * sA + (mis ? gauss(r) * MISHIT.deg * Math.PI / 180 : 0) + (sp ? curveOf(sp, carry) : 0) + (slope ? slope.deg * Math.PI / 180 : 0) + (shape ? shape.curve : 0);
   let flown = Math.max(0, carry + gauss(r) * sD);
+  const strike: Strike = { mis, mf, flier, stillM: flown }; // (#1344: before the wind)
   const cs = Math.cos(ang), sn = Math.sin(ang);
   // T334: the wind along the shot's line shortens or lengthens the carry, across it drifts the ball (a high flight, a bunker shot, feels more of it)
   const wf = env?.wind ? windEffect(env.wind, club, cs, sn, (lx ? lx.high : 1) * (shape ? shape.wind : 1) * (kit ? kit.wind : 1)) : null; // (T337: his wind factor: the Wind Whisperer's half)
@@ -181,7 +185,7 @@ export function hitShot(r: () => number, sk: ShotSkill, lie: Lie, from: Pt, aim:
   }
   const end = { x: land.x + rc * roll, y: land.y + rs * roll }, endLie = view.lieAt(end.x, end.y), landing: Landing = { at: land, lie: landLie, rest: end, restLie: endLie };
   if (spinM !== undefined) { landing.spin = spinM; if (check) landing.check = check; }
-  if (endLie === 'out') return { to: { x: from.x, y: from.y }, lie, penalty: 1, holed: false, landing };
+  if (endLie === 'out') return { to: { x: from.x, y: from.y }, lie, penalty: 1, holed: false, landing, strike };
   if (endLie === 'water') {
     // walk back from the water in half-tile steps: the first point that is not water is where the ball drops
     const L = Math.hypot(end.x - from.x, end.y - from.y);
@@ -190,9 +194,9 @@ export function hitShot(r: () => number, sk: ShotSkill, lie: Lie, from: Pt, aim:
       const p = { x: from.x + (end.x - from.x) * d / L, y: from.y + (end.y - from.y) * d / L }, l = view.lieAt(p.x, p.y);
       if (l !== 'water') { drop = p; dl = l; break; }
     }
-    return { to: drop, lie: PLAYABLE.has(dl) ? dl : 'rough', penalty: 1, holed: false, landing };
+    return { to: drop, lie: PLAYABLE.has(dl) ? dl : 'rough', penalty: 1, holed: false, landing, strike };
   }
-  return { to: end, lie: endLie, penalty: 0, holed: false, landing };
+  return { to: end, lie: endLie, penalty: 0, holed: false, landing, strike };
 }
 
 /** T334 (#960): the putting model's second version (the play pass's playtest: a 0.5 m putt was missed one time in four, and half the holes took three putts or more): the make

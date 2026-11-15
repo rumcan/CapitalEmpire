@@ -219,6 +219,9 @@ R: J8: and each club tab wears its club's painted tile (club-driver, club-wood, 
 Check: function clubTile(
 R: 2026-11-15 (the owner: "Why not make the draw and fade like normal golf games where you just move the dot on the ball?"): in host mode the curve and the flight (J5f's amounts, -1 to 1) are set by dragging a dot on a ball: left a draw, right a fade, up high, down low; the painted draw, fade, high and low tiles sit round it and dim for a side he has not earned; a gold ring marks his limit (his full bend against a scratch golfer's) and the dot stops at it, its edge his full amount; a small arrow beside it previews the shape; Reset (or a double click) is straight. It sends the same shape the sliders sent; Z and X still step through them. Folded under it: how to boost and spin, and Go for it.
 Check: function shapeAmt(
+R: #1344 (the owner: "doesnt say this is locked and i cant use it to draw or fade. it only says the height is still locked"): every side he has not earned shows as locked: its tile dimmed with a small lock badge on it, and that half of the ball greyed and hatched, so the dot plainly cannot go there. While anything is locked a line under the ball always says it, one per group, with what unlocks it (the host's turn.earned.lock: "Draw/fade locked: Accuracy 60 (you have 48) · practise Shot shaping", "High/low locked: Touch 60 (you have 52) · practise Flight"; an older host's why); nothing locked, no line. A drag onto a locked side is refused: the dot stays at the middle that way, the ball shakes and the lock line flashes. The gold ring is said plainly: "Gold ring: the most you can bend it (8.0 m; a pro bends 10.7 m)".
+Check: function hostShapeLocks(
+Check: function shapeRefused(
 Check: function hostShapeAt(
 R: 2026-11-15 (the owner: "the weird circles", "these are drawn so badly"): the aim is one clean line of steady width from the ball to one ring lying on the ground where the ball is predicted to land (a true circle projected through the camera, sized from the spread, 0.9 to 4.5 m); the point aimed at is a small cross; the roll after the landing is a faint short dash; no separate wind trace.
 Check: function groundRing(
@@ -743,17 +746,18 @@ const shotEl = document.createElement('div'); shotEl.id = 'shotc';
 const shotBtn = document.createElement('button'); shotBtn.type = 'button'; shotBtn.id = 'shotBtn'; shotBtn.title = 'Shape the shot: draw, fade, high, low';
 shotBtn.innerHTML = '<canvas width="64" height="64"></canvas><span>Straight</span>';
 const SHAPE_LAB = 'Drag the dot: left draw, right fade, up high, down low';
+const lockBadge = (k) => '<i class="lkb lk-' + k + '" aria-hidden="true"><svg viewBox="0 0 12 12"><rect x="2.2" y="5.2" width="7.6" height="5.6" rx="1.2" fill="currentColor"/><path d="M4 5.4V3.9a2 2 0 0 1 4 0v1.5" fill="none" stroke="currentColor" stroke-width="1.4"/></svg></i>';   // (#1344: on a locked side's tile)
 const tileImg = (k) => '<img class="e-' + k + '" data-e="' + k + '" src="tiles/shot-' + k + '.webp" alt="" aria-hidden="true" draggable="false">';
 shotEl.innerHTML = '<div class="sh"><b>Shot shape</b><em id="pickTxt"></em><button type="button" class="rst" data-k="reset" title="Back to a straight shot (or double-click the ball)">Reset</button></div>'
-  + '<div class="bw">' + tileImg('draw') + tileImg('fade') + tileImg('high') + tileImg('low') + '<canvas id="shapeBall" width="192" height="192"></canvas><canvas id="shapeArc" width="64" height="64"></canvas></div>'
-  + '<div class="lab">' + SHAPE_LAB + '</div><div class="lim" id="limTxt"></div>'
+  + '<div class="bw">' + tileImg('draw') + tileImg('fade') + tileImg('high') + tileImg('low') + lockBadge('draw') + lockBadge('fade') + lockBadge('high') + lockBadge('low') + '<canvas id="shapeBall" width="192" height="192"></canvas><canvas id="shapeArc" width="64" height="64"></canvas></div>'
+  + '<div class="lab">' + SHAPE_LAB + '</div><div class="lock" id="lockTxt"></div><div class="lim" id="limTxt"></div>'
   + '<details><summary>Spin and boost</summary><div class="hw"><img src="tiles/shot-spin.webp" alt="" aria-hidden="true" draggable="false"><span><b class="k">Boost</b> hold the swing and tap ↑ (or W) fast; it falls when you stop, so let go at the peak.<br><b class="k">Spin</b> while the ball flies tap ↓ back, ↑ top, ← → side; the opposite arrow takes it off.</span></div>'
   + '<div class="st"><b data-k="boost" class="boost"><img src="tiles/go-for-it.webp" alt="" aria-hidden="true" draggable="false"><span class="tx"><span class="nm">Go for it (I)</span><em class="lw" id="boostTxt"></em></span></b></div><div class="lim" id="spinTxt"></div></details>';
 if (typeof hudEl !== 'undefined' && hudEl.appendChild) hudEl.appendChild(shotEl);
 if (cornerEl && cornerEl.insertBefore) cornerEl.insertBefore(shotBtn, cornerEl.firstChild);
 const q1 = (el, s) => (el && el.querySelector ? el.querySelector(s) : null), c2d = (cv) => (cv && cv.getContext ? cv.getContext('2d') : null);
 const shapeBall = q1(shotEl, '#shapeBall'), shctx = c2d(shapeBall), arcCtx = c2d(q1(shotEl, '#shapeArc')), btnCtx = c2d(q1(shotBtn, 'canvas')), btnTxt = q1(shotBtn, 'span');
-let shotShown = '', shotOpen = false, shapeDrag = false, tipShown = false;
+let shotShown = '', shotOpen = false, shapeDrag = false, tipShown = false, shapeLockTxt = '', shapeShakeT = 0, shapeRefusals = 0;   // (#1344: the lock line shown, the shake's timer, the drags refused)
 try { shotOpen = localStorage.getItem('cl_shotopen') === '1'; } catch (e) { /* (no storage: shut) */ }
 function shapeRing() { const C = hostClub(), B = C && C.bend; return B && B.scrM > 0 ? clamp(B.m / B.scrM, 0.3, 1) : 1; }   // his limit's ring, as a share of the ball's radius (a scratch golfer's full bend: the whole ball)
 function shapeAmt(px, py, rr) {   // a point on the ball (-1..1 each, y up; the ball's edge at 1) -> [curve, flight]: held inside the ring, the ring's edge a full 1, a dot near the middle none
@@ -762,7 +766,22 @@ function shapeAmt(px, py, rr) {   // a point on the ball (-1..1 each, y up; the 
   return [Math.round(x / rr * 100) / 100, Math.round(y / rr * 100) / 100];
 }
 function hostShapeAt(c, f) { hostPickAmt('curve', c); hostPickAmt('flight', f); return hostShotIn().shape || null; }   // (the ball's dot: the same two amounts the sliders sent)
-function shapeFrom(e) { if (!HP || !shapeBall || !shapeBall.getBoundingClientRect) return; const r = shapeBall.getBoundingClientRect(), k = 192 / 88; const a = shapeAmt(((e.clientX - r.left) / r.width - 0.5) * k, -((e.clientY - r.top) / r.height - 0.5) * k, shapeRing()); hostShapeAt(a[0], a[1]); }
+function shapeFrom(e) { if (!HP || !shapeBall || !shapeBall.getBoundingClientRect) return; const r = shapeBall.getBoundingClientRect(), k = 192 / 88; shapeDragTo(((e.clientX - r.left) / r.width - 0.5) * k, -((e.clientY - r.top) / r.height - 0.5) * k); }
+function shapeDragTo(x, y) { const a = shapeAmt(x, y, shapeRing()); if (shapeBlocked(a[0], a[1])) shapeRefused(); return hostShapeAt(a[0], a[1]); }   // (#1344: the dot dragged to (x, y) on the ball, -1..1, y up: a locked side refused with a shake)
+function shapeBlocked(c, f) { return (c < 0 && !hostEarned('draw')) || (c > 0 && !hostEarned('fade')) || (f > 0 && !hostEarned('high')) || (f < 0 && !hostEarned('low')); }   // (#1344: a dot asked for on a side he has not earned)
+function hostShapeLocks() {   // #1344: the shape's sides he has not earned, and one line per locked group (draw/fade, high/low) with what unlocks it (the host's short line, else its why)
+  const e = HP && HP.turn && HP.turn.earned, L = (e && e.lock) || {}, sides = ['draw', 'fade', 'high', 'low'].filter((k) => !hostEarned(k)), lines = [];
+  for (const [g, a, b] of [['curve', 'draw', 'fade'], ['flight', 'high', 'low']]) {
+    const la = sides.indexOf(a) >= 0, lb = sides.indexOf(b) >= 0, cap = (w) => w[0].toUpperCase() + w.slice(1); if (!la && !lb) continue;
+    lines.push((la && lb ? cap(a) + '/' + b : cap(la ? a : b)) + ' locked: ' + (L[g] || hostWhy(la ? a : b) || 'not earned yet'));
+  }
+  return { sides, lines };
+}
+function shapeRefused() {   // #1344: a drag onto a locked side: the ball shakes and the lock line flashes (the dot has stayed at the middle that way)
+  shapeRefusals++; if (shapeShakeT || typeof setTimeout !== 'function') return;
+  const le = q1(shotEl, '#lockTxt'); if (shapeBall) shapeBall.className = 'shake'; if (le) le.className = 'lock flash';
+  shapeShakeT = setTimeout(() => { shapeShakeT = 0; if (shapeBall) shapeBall.className = ''; if (le) le.className = 'lock'; }, 450);
+}
 if (typeof addEventListener === 'function') {   // #1301: a drag that began on a ball goes on past its edge; let go anywhere
   addEventListener('mousemove', (e) => { if (shapeDrag) shapeFrom(e); });
   addEventListener('mouseup', () => { shapeDrag = false; });
@@ -793,7 +812,8 @@ function hostShotShow() {   // the button and the panel, written only when somet
   const C = hostClub(), on = hostOnTurn() && !hostBusy() && !HP.sw && nearBall() && !!C && C.club !== 'putter', P = hostPick();
   const sig = on ? [P.curve, P.flight, P.armed, hostCharges(), club, shotOpen, JSON.stringify((HP.turn && HP.turn.earned) || '')].join('|') : 'off';
   if (sig === shotShown) return; shotShown = sig;
-  shotEl.className = on && shotOpen ? 'on' : ''; shotBtn.className = on ? 'on' + (shotOpen ? ' open' : '') : '';
+  const LK = hostShapeLocks(); shapeLockTxt = on ? LK.lines.join('\n') : '';   // (#1344: the locked sides as badges and a hatched half, and the lock line)
+  shotEl.className = on && shotOpen ? 'on' + LK.sides.map((k) => ' no-' + k).join('') : ''; shotBtn.className = on ? 'on' + (shotOpen ? ' open' : '') : '';
   if (!on) return;
   if (!tipShown) { tipShown = true; try { if (!localStorage.getItem('cinderlinks.tip')) { localStorage.setItem('cinderlinks.tip', '1'); say('Shape the shot on the ball, bottom right  ·  ? shows the keys', 320); } } catch (e) { /* (no storage: no tip) */ } }   // (once: help is a hint, never paragraphs)
   if (btnTxt) btnTxt.textContent = shapeWords(P);
@@ -806,14 +826,15 @@ function hostShotShow() {   // the button and the panel, written only when somet
   for (const e of shotEl.querySelectorAll('img[data-e]')) { const ok = hostEarned(e.dataset.e); e.className = 'e-' + e.dataset.e + (ok ? '' : ' lock'); }   // (a side he has not earned: its tile dimmed)
   const set = (id, t) => { const el = q1(shotEl, id); if (el) el.textContent = t; return el; };
   set('#pickTxt', shapeWords(P));
-  const B = C.bend, locked = ['draw', 'fade', 'high', 'low'].filter((k) => !hostEarned(k)), lockTxt = locked.length ? 'Locked: ' + locked.map((k) => k + ' (' + (hostWhy(k) || 'not earned yet') + ')').join(', ') : '';
+  const B = C.bend, lockTxt = shapeLockTxt.replace(/\n/g, '. ');
   let lim = '', why = '';
   if (B && B.scrM > 0) {   // #1301 (the owner: "indicate if that is my handicap limit or not"): one short line; the why on hover
     const mine = B.pulled < B.scrPulled - 0.02;
-    lim = mine ? 'Gold ring: your limit, ' + B.m.toFixed(1) + ' m of bend (a pro ' + B.scrM.toFixed(1) + ' m)' : 'Full bend ' + B.m.toFixed(1) + ' m at ' + Math.round(C.carryM) + ' m';
+    lim = mine ? 'Gold ring: the most you can bend it (' + B.m.toFixed(1) + ' m; a pro bends ' + B.scrM.toFixed(1) + ' m)' : 'Full bend ' + B.m.toFixed(1) + ' m at ' + Math.round(C.carryM) + ' m';   // (#1344: in plain words)
     why = mine ? 'You pull off ' + Math.round(B.pulled * 100) + '% of a shaped shot (club skill ' + Math.round(B.skill * 100) + ', accuracy ' + Math.round(B.accuracy * 100) + '): the dot stops at the ring. Practise Shot shaping to widen it.' : 'As much as a scratch golfer: the game bends a shot a few degrees at most.';
   }
-  const le = set('#limTxt', lim || lockTxt); if (le) le.title = [why, lim ? lockTxt : ''].filter(Boolean).join(' ');
+  const le = set('#limTxt', lim); if (le) le.title = why;
+  const lt = set('#lockTxt', shapeLockTxt); if (lt) lt.title = LK.sides.map((k) => k + ': ' + (hostWhy(k) || 'not earned yet')).join('. ');   // (#1344: always there while anything is locked; the host's full why on hover)
   if (shapeBall) shapeBall.title = SHAPE_LAB + '. Double-click: straight.' + (why ? ' ' + why : '') + (lockTxt ? ' ' + lockTxt : '');
   const lk = ['side', 'back'].filter((k) => !hostEarned(k)); set('#spinTxt', lk.length ? 'Locked: ' + lk.map((k) => (k === 'side' ? 'side spin' : 'backspin') + ' (' + (hostWhy(k) || 'not earned yet') + ')').join(', ') : '');   // (#1301: what is locked, in words)
   const bt = q1(shotEl, '#boostTxt'); if (bt) bt.textContent = hostEarned('boost') ? (P.armed ? 'armed: cap +6%' : 'raises the cap') + ' · ' + hostCharges() + ' left this hole' : 'Locked: ' + hostWhy('boost');
@@ -828,7 +849,18 @@ function ballFace(c, W, big) {   // a lit golf ball filling a W x W canvas (the 
 }
 function paintShape(c, W, P, big) {   // the shape ball: the sides he has not earned dimmed, the cross, the gold ring of his limit, the dot
   c.clearRect(0, 0, W, W); const R = ballFace(c, W, big), cx = W / 2, cy = W / 2, rr = shapeRing();
-  if (c.save && c.clip) { c.save(); c.beginPath(); c.arc(cx, cy, R, 0, 6.2832); c.clip(); c.fillStyle = 'rgba(20, 21, 25, 0.5)'; if (!hostEarned('draw')) c.fillRect(0, 0, cx, W); if (!hostEarned('fade')) c.fillRect(cx, 0, W - cx, W); if (!hostEarned('high')) c.fillRect(0, 0, W, cy); if (!hostEarned('low')) c.fillRect(0, cy, W, W - cy); c.restore(); }
+  if (c.save && c.clip) {
+    c.save(); c.beginPath(); c.arc(cx, cy, R, 0, 6.2832); c.clip(); c.fillStyle = 'rgba(20, 21, 25, 0.5)';
+    const half = { draw: [0, 0, cx, W], fade: [cx, 0, W - cx, W], high: [0, 0, W, cy], low: [0, cy, W, W - cy] };
+    for (const k of ['draw', 'fade', 'high', 'low']) {
+      if (hostEarned(k)) continue; const h = half[k]; c.fillRect(h[0], h[1], h[2], h[3]);
+      if (big && c.rect) {   // (#1344: and hatched, so the dot plainly cannot go there)
+        c.save(); c.beginPath(); c.rect(h[0], h[1], h[2], h[3]); c.clip(); c.strokeStyle = 'rgba(251, 154, 75, 0.5)'; c.lineWidth = 2; c.beginPath();
+        for (let d = -W; d < W; d += 11) { c.moveTo(d, W); c.lineTo(d + W, 0); } c.stroke(); c.restore();
+      }
+    }
+    c.restore();
+  }
   c.strokeStyle = 'rgba(60, 54, 40, 0.35)'; c.lineWidth = big ? 1.5 : 1; c.beginPath(); c.moveTo(cx - R * 0.88, cy); c.lineTo(cx + R * 0.88, cy); c.moveTo(cx, cy - R * 0.88); c.lineTo(cx, cy + R * 0.88); c.stroke();
   if (big && rr < 0.995) { c.strokeStyle = '#f5b52e'; c.lineWidth = 2.5; if (c.setLineDash) c.setLineDash([7, 5]); c.beginPath(); c.arc(cx, cy, R * rr, 0, 6.2832); c.stroke(); if (c.setLineDash) c.setLineDash([]); }
   c.strokeStyle = 'rgba(0, 0, 0, 0.55)'; c.lineWidth = big ? 3 : 2; c.beginPath(); c.arc(cx, cy, R, 0, 6.2832); c.stroke();
