@@ -4,6 +4,7 @@
 import type { EventCardView } from '../../game/engine';
 import { clock } from '../../game/golf/player';
 import { Icon } from '../Icon';
+import { EVENT_EMBLEM, Emblem } from '../Emblem';
 import { PullBanner } from './CardsCard';
 
 export function EventCard({ view: v, right, onClose, onEnter, onPlay, onMachine }: { view: EventCardView; right: string; onClose: () => void; onEnter: () => void; onPlay: () => void; /** T336: opens the vending machine (the card pull this result paid) */ onMachine?: () => void }) {
@@ -15,7 +16,7 @@ export function EventCard({ view: v, right, onClose, onEnter, onPlay, onMachine 
     <div className={`pointer-events-auto absolute ${right} top-[var(--hud-top,6rem)] z-20 w-[320px] space-y-2 rounded-xl border border-amber-300/20 bg-slate-950/90 p-3 text-slate-200 shadow-2xl backdrop-blur`} data-testid="event-card">
       <div className="flex items-center justify-between border-b border-white/10 pb-2">
         <div>
-          <div className="flex items-center gap-1.5 font-semibold text-amber-200"><Icon name="trophy" size={16} />{v.name}</div>
+          <div className="flex items-center gap-1.5 font-semibold text-amber-200"><Emblem id={EVENT_EMBLEM[v.id]} size={44} fallback={<Icon name="trophy" size={16} />} />{v.name}</div>
           <div className="text-[12px] text-slate-400">{v.phase === 'today' ? `Today at your club · ${v.when}` : v.phase === 'result' ? `The result · ${v.when}` : `${v.when} at your club`}</div>
         </div>
         <button className="btn-icon" onClick={onClose} title="Close"><Icon name="close" size={18} /></button>

@@ -66,14 +66,17 @@ const facts = (o: Partial<RangeSceneFacts> = {}): RangeSceneFacts => ({
 const shown = (f: RangeSceneFacts) => Object.fromEntries(rangeScene(f)!.views.map(v => [v.id, `${v.slug}:${v.state}`]));
 
 test('the range: run-down at the start, each view upgraded once its upgrades are built (all of them)', () => {
-  assert.deepEqual(shown(facts()), { road: 'range-road:rundown', bays: 'hitting-bays:rundown', shop: 'pro-shop-inside:rundown', green: 'practice-green:rundown', home: 'home-caravan:rundown' });
+  // (#1300: the road, the shop and the green never show their shack pictures: the second-hand painting, or the upgraded picture until it lands)
+  const hard = (slug: string) => `${slug}:${pickPicture(slug, HARD_TIMES)!.state}`;
+  for (const slug of ['range-road', 'pro-shop-inside', 'practice-green']) assert.notEqual(hard(slug), `${slug}:rundown`);
+  assert.deepEqual(shown(facts()), { road: hard('range-road'), bays: 'hitting-bays:rundown', shop: hard('pro-shop-inside'), green: hard('practice-green'), home: 'home-caravan:rundown' });
   const c = rangeScene(facts())!;
-  assert.equal(c.views.find(v => v.id === 'shop')!.label, 'The shack, inside');
+  assert.equal(c.views.find(v => v.id === 'shop')!.label, 'The hut, inside');
   assert.equal(c.views.find(v => v.id === 'home')!.label, 'Your caravan');
   assert.deepEqual(c.views.find(v => v.id === 'green')!.tiles.map(t => t.value), ['Not built']);
   for (const v of c.views) assert.equal(v.line, LINES[v.slug]!.rundown, `${v.id}'s line`);
   // part of the road's upgrades: still run-down; all three: upgraded
-  assert.equal(shown(facts({ owned: ['grass', 'pave'] })).road, 'range-road:rundown');
+  assert.equal(shown(facts({ owned: ['grass', 'pave'] })).road, hard('range-road'));
   assert.equal(shown(facts({ owned: [...RANGE_GOOD_WHEN.road] })).road, 'range-road:upgraded');
   assert.equal(shown(facts({ owned: ['covered'] })).bays, 'hitting-bays:rundown', 'the bays need their turf too');
   assert.equal(shown(facts({ owned: ['covered', 'teeturf'] })).bays, 'hitting-bays:upgraded');
@@ -101,8 +104,9 @@ test('a range piece opens its own view; the events: a picture that turns is news
   for (const [k, v] of [['caravan', 'home'], ['house', 'home'], ['chair1', 'home'], ['bed3', 'home'], ['shop', 'shop'], ['dispenser', 'shop'], ['roof2', 'bays'], ['light0', 'bays'], ['deck', 'bays'], ['putting-clip', 'green'], ['sign', 'road'], ['carpark', 'road'], ['flag1', 'road']] as const) assert.equal(rangeViewOfKey(k), v, k);
   const a = { owned: [] as string[], putting: false, home: 0 as const, lifetime: 0 };
   const k0 = rangeSceneKeys(a), k1 = rangeSceneKeys({ ...a, owned: ['proshop'] });
-  assert.notEqual(k0.shop, k1.shop); assert.equal(k0.road, k1.road);
-  assert.equal(rangeNews('shop', { ...a, owned: ['proshop'] }), 'The shack is a pro shop now');
+  // (#1300: until the second-hand shop picture lands the hard times show the upgraded one, so the shop's picture turns only once it has)
+  if (pickPicture('pro-shop-inside', HARD_TIMES)?.state === 'second-hand') assert.notEqual(k0.shop, k1.shop); assert.equal(k0.road, k1.road);
+  assert.equal(rangeNews('shop', { ...a, owned: ['proshop'] }), 'The hut is a new pro shop now');
   const c0 = rangeSceneKeys({ ...a, home: 1, lifetime: 100000 }), c1 = rangeSceneKeys({ ...a, home: 1, lifetime: 300000 });
   assert.equal(c0.home, c1.home, 'the cottage smartening shows the same picture: no news');
   assert.notEqual(rangeSceneKeys(a).home, c0.home, 'a move is news');

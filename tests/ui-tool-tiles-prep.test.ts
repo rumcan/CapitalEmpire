@@ -27,7 +27,9 @@ test('each sheet keeps its subject identity; unknown or contradictory versions f
   assert.equal(PROP_TILES.length, 12);
   assert.equal(new Set([...TOOL_TILES, ...ACTION_TILES, ...PROP_TILES]).size, 156, 'one hundred and fifty-six different names');
   for (const v of ['v1', 'v2', 'v3', 'v4', 'v5', 'v6', 'v7', 'v8', 'v9', 'v10', 'v11', 'v12', 'v13']) assert.equal(prep.sheetVersion(`golf-build-tool-tiles-sheet-${v}.png`), v);
-  assert.throws(() => prep.sheetVersion('golf-build-tool-tiles-sheet-v14.png'), /specify --version/);
+  // #1304: the icon sheets v14 to v16 are known; v17 is not
+  for (const v of ['v14', 'v15', 'v16']) assert.equal(prep.sheetVersion(`golf-build-tool-tiles-sheet-${v}.png`), v);
+  assert.throws(() => prep.sheetVersion('golf-build-tool-tiles-sheet-v17.png'), /specify --version/);
   assert.throws(() => prep.sheetVersion('golf-build-tool-tiles-sheet-v10.png', 'v1'), /not v1/);
   assert.throws(() => prep.sheetVersion('unknown.png'), /specify --version/);
   assert.throws(() => prep.sheetVersion('golf-build-tool-tiles-sheet-v2.png', 'v1'), /not v1/);

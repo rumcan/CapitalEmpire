@@ -53,7 +53,7 @@ export function RangeCard({ ballFix, onBallFix, attendantWage, onLetGo, forSale,
       <div className="win-head win-head-slate flex items-center justify-between">
         <div>
           <div className="font-semibold text-amber-200">Driving range</div>
-          <div className="text-[12px] text-slate-400">{st.proShop ? 'Pro shop' : 'The shack (a crappy pro shop)'} · {st.tier2 ? `${st.lowerBays} + ${st.bays - st.lowerBays} upstairs` : st.bays} bays · {st.counters} {st.counters === 1 ? 'counter' : 'counters'} · open {view.hours}</div>
+          <div className="text-[12px] text-slate-400">{st.proShop ? 'Pro shop' : 'A second-hand site hut (your first pro shop)'} · {st.tier2 ? `${st.lowerBays} + ${st.bays - st.lowerBays} upstairs` : st.bays} bays · {st.counters} {st.counters === 1 ? 'counter' : 'counters'} · open {view.hours}</div>
         </div>
         <div className="flex shrink-0 items-center gap-1">
           {onScene && <button className="chip" onClick={onScene} title="Set the scene: a picture of your range as it stands" data-testid="range-scene"><ActionTile tile="scene" size={TILE_SMALL} />Scene</button>}

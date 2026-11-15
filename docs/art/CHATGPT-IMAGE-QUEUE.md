@@ -20,6 +20,14 @@ The approved look is batch 1 (made on RUN before the switch): `E:/ClaudeTemp/ART
 
 The rest of the list (items 224-327, the portraits 230-232) follows the same pattern: shared block S or Q in GOLF-ART-LIST section 13, plus the item's words. The lead adds them here batch by batch.
 
+## #1304 and #1300 (2026-11-15): icons, emblems, stand-in vectors and the second-hand buildings
+Run through the bridge (D:/AI/chatgpt-bridge, its README has a note per queue): `queue-icons1304.json` (13: three 4 x 3 icon tile sheets v14-v16, five
+emblems, the swing meter's face, the spin ball, tee markers, two desert litter sheets), `queue-shack1300.json` (16) and `queue-shack1300b.json` (13)
+second-hand buildings in two views from the style picture and a 2:1 guide box (scripts/assets/iso-guide-box.mjs), `queue-shack1300c.json` (3) the range's
+scenes as second-hand places. The table is scripts/assets/art-1304-1300.mjs; the queues are rebuilt by scripts/assets/chatgpt-queues/build-1304-1300.mjs.
+Import: `node scripts/assets/prep-1304-1300.mjs --dry`, then without `--dry` (it runs prep-range-art.mjs for the buildings). The game already looks for
+each file and keeps the old look until it lands; `?uilook=vector` (localStorage `ui-art-look`) keeps the old look as an option.
+
 ## First: the menu tiles (item 181; the owner, 2026-10-29: "some menu items stuff waiting for a cute mini isometric icon")
 One picture. Start a new chat and attach **`art/theme-consistency/generated/ui/golf-build-tool-tiles-sheet-v1.png`** (the twelve tiles in
 the game now) as the style to match; the two usual references are not needed. Ask for a **4:3 landscape** picture, about 1536 x 1152 or larger.

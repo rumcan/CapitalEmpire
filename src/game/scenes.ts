@@ -41,7 +41,11 @@ export type SceneRef =
 /** the states a place in good or hard times may show, best first */
 export const GOOD_TIMES: readonly string[] = ['upgraded', 'rundown', 'one'], HARD_TIMES: readonly string[] = ['rundown', 'one'];
 /** the picture of a slug in the first of the wanted states the art has, or null */
+/** #1300 (the owner, 2026-11-14: "remove all shack art"): your own range's run-down pictures that show the old tin-and-tarp shack are never drawn: their
+ *  second-hand painting (state 'second-hand', queue-shack1300c.json) is, or until it lands the upgraded picture */
+export const SHACK_SCENES: ReadonlySet<string> = new Set(['range-road', 'pro-shop-inside', 'practice-green']);
 export function pickPicture(slug: string, want: readonly string[], m: SceneManifest = SCENE_MANIFEST): ScenePic | null {
+  if (SHACK_SCENES.has(slug)) want = want.flatMap(s => s === 'rundown' ? ['second-hand', 'upgraded'] : [s]);
   for (const s of want) { const p = m.pictures.find(q => q.slug === slug && q.state === s && !q.subject && !q.instanceKey); if (p) return p; }
   return null;
 }
@@ -53,7 +57,7 @@ const money = (n: number) => '$' + Math.round(n).toLocaleString('en-US');
 // ---------- the lines (the game's voice: warm, specific, 1985), by slug and state; a view's line for its picture's state
 export const LINES: Readonly<Record<string, Readonly<Record<'rundown' | 'upgraded', string>>>> = {
   'range-road': {
-    rundown: 'A hand-painted sign, a tin-and-tarp shack and four mats on the dirt. Most drivers on the county road slow down, look, and keep going.',
+    rundown: 'A hand-painted sign, a second-hand site hut and four mats on the dirt. Most drivers on the county road slow down, look, and keep going.',
     upgraded: 'Covered bays, a striped outfield with flags to aim at and a paved lot. Folks pull off the county road on purpose now.',
   },
   'hitting-bays': {
@@ -61,11 +65,11 @@ export const LINES: Readonly<Record<string, Readonly<Record<'rundown' | 'upgrade
     upgraded: 'A roof over every mat, fresh turf underfoot and tokens at the dispenser. The after-work crowd stays till the lights go off.',
   },
   'pro-shop-inside': {
-    rundown: 'Inside the shack: a plywood counter, a cash box and a few used clubs in an oil drum. The old man at the counter knows every regular by name.',
+    rundown: 'Inside the hut: a second-hand counter, a cash box and a few used clubs in a barrel. The old man at the counter knows every regular by name.',
     upgraded: 'Panelled walls, a glass counter of gloves and tees, new irons on the rack. They come in for a bucket and leave with a sweater.',
   },
   'practice-green': {
-    rundown: 'A patchy green behind the shack with one tattered flag. You can putt on it, if you can read the weeds.',
+    rundown: 'A patchy green behind the hut with one faded flag. You can putt on it, if you can read the weeds.',
     upgraded: 'A manicured putting green, three flags and a bench by the hedge. Somebody is always working on a four-footer.',
   },
   'home-caravan': {
@@ -110,7 +114,7 @@ function lineOf(slug: string, state: string, fallback?: Readonly<Record<'rundown
 /** a view of a place with its picture for the state (null: no art for it) */
 function viewOf(id: string, label: string, slug: string, good: boolean, tiles: SceneTile[], lines?: Readonly<Record<'rundown' | 'upgraded', string>>, want?: readonly string[]): SceneView | null {
   const pic = pickPicture(slug, want ?? (good ? GOOD_TIMES : HARD_TIMES)); if (!pic) return null;
-  return { id, label, slug, state: pic.state, good: pic.state === 'upgraded' || /^tier/.test(pic.state) ? good : false, line: lines ? lineOf('', pic.state, lines) : lineOf(slug, pic.state), pic, tiles };
+  return { id, label, slug, state: pic.state, good: pic.state === 'upgraded' || /^tier/.test(pic.state) ? good : false, line: lines ? lineOf('', pic.state, lines) : lineOf(slug, !good && SHACK_SCENES.has(slug) ? 'rundown' : pic.state), pic, tiles };
 }
 const card = (title: string, kicker: string, views: (SceneView | null)[], want?: string): SceneCardView | null => {
   const vs = views.filter((v): v is SceneView => !!v); if (!vs.length) return null;
@@ -166,7 +170,7 @@ export function rangeScene(f: RangeSceneFacts, want?: string): SceneCardView | n
       { label: 'Drove on', value: `${Math.round(f.lost)}`, sub: 'today', tone: f.lost > 0 ? 'bad' : undefined },
       { label: 'Covered', value: f.owned.includes('covered') ? 'Yes' : 'Not yet', sub: f.owned.includes('teeturf') ? 'turf under the mats' : 'mats on the dirt' },
     ]),
-    viewOf('shop', shopGood ? 'The pro shop' : 'The shack, inside', 'pro-shop-inside', shopGood, [
+    viewOf('shop', shopGood ? 'The pro shop' : 'The hut, inside', 'pro-shop-inside', shopGood, [
       { label: 'Season takings', value: money(f.seasonTakings), tone: 'good' },
       { label: 'Shop spend', value: f.shopExtra > 0 ? `+${money(f.shopExtra)}` : 'None', sub: f.shopExtra > 0 ? 'a golfer' : 'build the pro shop' },
       { label: 'Bucket', value: money(f.price), sub: 'at the counter' },
@@ -237,7 +241,7 @@ export function lotPlaceHasArt(p: LotPlace): boolean { return [`${p.slug}-outsid
 export interface LotSceneFacts { level: number; decline: number; jobs: number; town: string; pop: number }
 export const LOT_UPGRADED = 3, LOT_BUILT = 2;
 export function lotGood(f: Pick<LotSceneFacts, 'level' | 'decline'>): boolean { return f.level >= LOT_UPGRADED && f.decline === 0; }
-export const CONDITION: readonly string[] = ['In good repair', 'Shabby', 'Boarded up', 'Derelict'];
+export const CONDITION: readonly string[] = ['In good repair', 'Worn', 'Boarded up', 'Derelict']; // (#1300: no 'Shabby' on screen)
 export function lotScene(p: LotPlace, f: LotSceneFacts, want?: string): SceneCardView | null {
   if (f.level < LOT_BUILT) return null; // nothing built yet: nothing to see inside
   const good = lotGood(f), tiles: SceneTile[] = [
@@ -291,7 +295,7 @@ export function objectScene(f: { key: string; subject: string; name: string; goo
     const selected = f.good === undefined ? candidates.filter((p, i) => candidates.findIndex(q => q.state === p.state) === i)
       : [propertyPicture({ ...f, slug: '__exact-object__', good: f.good, home: true }, id, m)].filter((p): p is ScenePic => !!p);
     for (const pic of selected) {
-      const condition = pic.state === 'upgraded' ? 'Upgraded' : pic.state === 'rundown' ? 'Run-down' : pic.state;
+      const condition = pic.state === 'upgraded' ? 'Upgraded' : pic.state === 'rundown' ? 'Run-down' : pic.state === 'second-hand' ? 'Second-hand' : pic.state;
       views.push({ id: f.good === undefined ? `${id}:${pic.state}` : id, label: `${id === 'outside' ? 'Outside' : 'Inside'}${f.good === undefined && pic.state !== 'one' ? ` · ${condition}` : ''}`,
         slug: pic.slug, state: pic.state, good: pic.state === 'upgraded', pic, tiles: f.tiles ?? [],
         line: f.good === undefined ? 'An illustrated look at this building.' : lineOf(pic.slug, pic.state) });
@@ -375,7 +379,7 @@ export function rangeNews(view: RangeSceneView, f: Pick<RangeSceneFacts, 'owned'
   switch (view) {
     case 'road': return good ? 'Your range looks the part from the county road now' : 'Your range from the road';
     case 'bays': return good ? 'Your hitting bays are roofed and turfed' : 'Your hitting bays';
-    case 'shop': return good ? 'The shack is a pro shop now' : 'The shack';
+    case 'shop': return good ? 'The hut is a new pro shop now' : 'The second-hand hut';
     case 'green': return good ? 'Your putting green is open' : 'Your practice green';
     default: return good ? 'Home has smartened up' : 'Your new home';
   }
