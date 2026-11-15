@@ -4,6 +4,7 @@ R: The card shows the hole, par, strokes (and the score against par), the round,
 R: Each club's tab shows how far it carries. A wind arrow shows the wind as the camera sees it and turns gold while a gust is on the golfer.
 R: One line of hints says what can be done right now; H opens the full list of keys.
 R: The map shows the hole from above with the tee, the pin, the ball and the golfer.
+R: #1327 (the owner, 2026-11-15), host mode: the hole's map stands at the top right under CapitalEmpire's buttons, folded HUD or not: the whole hole, tee at the bottom and the green at the top, its fairway, rough, bunkers, water and trees painted once a hole; over it the ball (white), the aim ring's centre (HP.target, a gold ring) with a thin line from the ball, the pin and the others of the group, redrawn only when one moves a pixel. A click folds it to a small pill (kept in cinderlinks.map); the wind and the shot panel keep clear of it.
 File: game.js
 Check: function updateHud(
 R: J5b: in host mode a CapitalEmpire card covers the picture from the course's coming until the pictures it opens on are in (the tree species within the render distance of the tee, his golfer's clips), at most 20 s; every other species is fetched at once behind it, and nothing stands in for a picture still loading.
@@ -55,22 +56,69 @@ const HELP = [['W S', 'walk forward, back (shift: run)'], ['A D', 'turn'], ['Q E
 if (!CART_SHOWN) { const gi = HELP.findIndex((h) => h[0] === 'G'); if (gi >= 0) HELP.splice(gi, 1); }   // (the cart is hidden for now: 08i-cart.md)
 helpEl.innerHTML = HELP.map((h) => '<b>' + h[0] + '</b>' + h[1]).join('\n');
 const MINI = [[42, 105, 160], [98, 190, 116], [232, 205, 149], [117, 196, 114], [68, 149, 76], [58, 128, 66], [44, 100, 58], [84, 120, 60], [26, 66, 56], [110, 112, 72], [120, 113, 134], [120, 113, 134], [102, 73, 55]];
-let miniImg = null, miniS = 1, miniX0 = 0, miniY0 = 0, shownClub = -2, shownMsg = null, shownCard = '';
+let miniImg = null, shownClub = -2, shownMsg = null, shownCard = '';
+// #1327: the hole's map. North is not up: the hole runs up the map, tee at the bottom and the green at the top, as the camera looks down the hole. The terrain is painted once a hole (drawMini); each frame
+// miniDots checks the few numbers the dots depend on (the ball, the aim, the pin, the group) and only when one moved puts the picture back and draws the dots and the line over it.
+// MG is the map's geometry (the harness reads it with MD, what was last drawn): world point (x, y) -> canvas px = (cw/2 + u s, ch/2 - v s) with u = (p - c).right, v = (p - c).forward.
+const MINI_W = 128, MINI_H = 168, EM = 13;
+const MG = { cx: 0, cy: 0, fx: 1, fy: 0, rx: 0, ry: 1, s: 1, cw: MINI_W, ch: MINI_H }, MD = { n: 0, h: 0, ball: null, aim: null, pin: null, others: 0 }, MP = { x: 0, y: 0 };
+const miniBox = $('minimap'), miniTag = $('miniTag');
+let miniFold = false; try { miniFold = localStorage.getItem('cinderlinks.map') === 'fold'; } catch (e) {}
+function miniXY(x, y, o) { const dx = x - MG.cx, dy = y - MG.cy; o.x = MG.cw / 2 + (dx * MG.rx + dy * MG.ry) * MG.s; o.y = MG.ch / 2 - (dx * MG.fx + dy * MG.fy) * MG.s; return o; }
+function miniLay() {   // the box's face (open or folded) and what the wind and the shot panel clear (em of the HUD)
+  if (miniBox) miniBox.className = miniFold ? 'fold' : ''; if (miniTag) miniTag.textContent = miniFold ? 'Hole map +' : '−';
+  if (hudEl && hudEl.style && hudEl.style.setProperty) { hudEl.style.setProperty('--mapw', miniFold ? '7.4em' : (MG.cw / EM + 0.8).toFixed(2) + 'em'); hudEl.style.setProperty('--mapb', miniFold ? '2.4em' : (MG.ch / EM + 1.9).toFixed(2) + 'em'); }
+  MD.h = 0;
+}
+miniLay();
+if (miniBox && miniBox.addEventListener) miniBox.addEventListener('click', () => { miniFold = !miniFold; try { localStorage.setItem('cinderlinks.map', miniFold ? 'fold' : 'open'); } catch (e) {} miniLay(); });
 function drawMini() {
-  const H = hole, x0 = Math.min(H.tee.x, H.pin.x) - 22, x1 = Math.max(H.tee.x, H.pin.x) + 22, y0 = Math.min(H.tee.y, H.pin.y) - 22, y1 = Math.max(H.tee.y, H.pin.y) + 22, w = Math.max(x1 - x0, y1 - y0);
-  miniS = 150 / w; miniX0 = (x0 + x1) / 2 - w / 2; miniY0 = (y0 + y1) / 2 - w / 2;
-  miniImg = mctx.createImageData(150, 150);
+  const H = hole, tx = H.tee.x, ty = H.tee.y; let fx = H.pin.x - tx, fy = H.pin.y - ty; { const l = Math.hypot(fx, fy) || 1; fx /= l; fy /= l; }
+  const rx = -fy, ry = fx, M = (H.halfW || 7) + 14;
+  let u0 = 0, u1 = 0, v0 = 0, v1 = 0;   // the hole's extent in its own frame (u across to the right, v along), from the tee: its path, the tee and the pin
+  const grow = (x, y) => { const dx = x - tx, dy = y - ty, u = dx * rx + dy * ry, v = dx * fx + dy * fy; if (u < u0) u0 = u; if (u > u1) u1 = u; if (v < v0) v0 = v; if (v > v1) v1 = v; };
+  grow(H.pin.x, H.pin.y); if (H.path) for (let k = 0; k + 1 < H.path.length; k += 2) grow(H.path[k], H.path[k + 1]);
+  const vs = v1 - v0 + 2 * M, us = Math.max(u1 - u0 + 2 * M, 70, vs * 0.55), s = Math.min(MINI_W / us, MINI_H / vs), cu = (u0 + u1) / 2, cv = (v0 + v1) / 2;
+  const cw = Math.max(2, Math.round(us * s / 2) * 2), ch = Math.max(2, Math.round(vs * s / 2) * 2);
+  MG.s = s; MG.cw = cw; MG.ch = ch; MG.fx = fx; MG.fy = fy; MG.rx = rx; MG.ry = ry; MG.cx = tx + rx * cu + fx * cv; MG.cy = ty + ry * cu + fy * cv;
+  miniEl.width = cw; miniEl.height = ch; miniEl.style.width = (cw / EM).toFixed(2) + 'em'; miniEl.style.height = (ch / EM).toFixed(2) + 'em';
+  miniImg = mctx.createImageData(cw, ch);
   const d = miniImg.data;
-  for (let j = 0; j < 75; j++) for (let i = 0; i < 75; i++) {
-    const x = miniX0 + (i + 0.5) * 2 / miniS, y = miniY0 + (j + 0.5) * 2 / miniS;
+  for (let j = 0; j < ch / 2; j++) for (let i = 0; i < cw / 2; i++) {
+    const u = (i * 2 + 1 - cw / 2) / s, v = -(j * 2 + 1 - ch / 2) / s, x = MG.cx + rx * u + fx * v, y = MG.cy + ry * u + fy * v;
     field(x, y, FO);
     let c = MINI[matOf(FO.h, 0, FO.dF, FO.dG, FO.dB, FO.dT, FO.dP, FO.wood, FO.dry, 0, 0)];
     const up = FO.h - baseH(x, y);
     const k = FO.dT < 0 ? 1.1 : up > 5 ? 1.25 : up > 2 ? 1.12 : 0.92 + hash2(i, j, 7) * 0.1;
-    for (let q = 0; q < 4; q++) { const o = ((j * 2 + (q >> 1)) * 150 + i * 2 + (q & 1)) * 4; d[o] = Math.min(255, c[0] * k); d[o + 1] = Math.min(255, c[1] * k); d[o + 2] = Math.min(255, c[2] * k); d[o + 3] = 255; }
+    for (let q = 0; q < 4; q++) { const o = ((j * 2 + (q >> 1)) * cw + i * 2 + (q & 1)) * 4; d[o] = Math.min(255, c[0] * k); d[o + 1] = Math.min(255, c[1] * k); d[o + 2] = Math.min(255, c[2] * k); d[o + 3] = 255; }
   }
+  miniLay();
 }
-function miniDot(x, y, col, s) { mctx.fillStyle = col; mctx.fillRect(Math.round((x - miniX0) * miniS) - (s >> 1), Math.round((y - miniY0) * miniS) - (s >> 1), s, s); }
+function miniDot(x, y, col, r) { miniXY(x, y, MP); mctx.beginPath(); mctx.arc(Math.round(MP.x), Math.round(MP.y), r, 0, 6.2832); mctx.fillStyle = col; mctx.fill(); }
+let MH = 17;
+function miniHash(x, y) { miniXY(x, y, MP); MH = (Math.imul(MH, 31) + Math.round(MP.x)) | 0; MH = (Math.imul(MH, 31) + Math.round(MP.y)) | 0; }
+function miniDots() {   // each frame, from updateHud: nothing is drawn unless a dot moved a pixel
+  if (!miniImg || miniFold) return;   // (folded: nothing to draw)
+  const H = hole, T = HP && HP.target && !hostBusy() ? HP.target : null;
+  MH = 17; miniHash(ball.x, ball.y); miniHash(H.pin.x, H.pin.y); if (T) miniHash(T.x, T.y); if (!HP) miniHash(player.x, player.y);
+  let n = 0; if (actors.size) for (const r of actors.values()) if (r.role === 'golfer' && !r.ghost) { miniHash(r.cx, r.cy); n++; }
+  MH = (Math.imul(MH, 31) + n + (T ? 977 : 0)) | 0;
+  if (MH === MD.h) return; MD.h = MH;
+  mctx.putImageData(miniImg, 0, 0); MD.n++; MD.others = 0;
+  miniDot(H.tee.x, H.tee.y, '#f8dc6c', 2);
+  for (const r of actors.values()) if (r.role === 'golfer' && !r.ghost) { miniXY(r.cx, r.cy, MP); if (MP.x >= 0 && MP.y >= 0 && MP.x < MG.cw && MP.y < MG.ch) { miniDot(r.cx, r.cy, '#82fff6', 2); MD.others++; } }   // (the others of the group, small; one off the map is not drawn)
+  miniXY(H.pin.x, H.pin.y, MP); MD.pin = [MP.x, MP.y]; miniDot(H.pin.x, H.pin.y, '#ff5a30', 3.5); mctx.strokeStyle = '#fff'; mctx.lineWidth = 1; mctx.beginPath(); mctx.arc(Math.round(MP.x), Math.round(MP.y), 3.5, 0, 6.2832); mctx.stroke();
+  miniXY(ball.x, ball.y, MP); const bx = Math.round(MP.x), by = Math.round(MP.y); MD.ball = [MP.x, MP.y]; MD.aim = null;
+  if (T) {   // the aim: a thin line from the ball to the aim ring's centre, and a ringed gold dot there
+    miniXY(T.x, T.y, MP); MD.aim = [MP.x, MP.y]; const ax = Math.round(MP.x), ay = Math.round(MP.y);
+    mctx.lineWidth = 3; mctx.strokeStyle = 'rgba(0,0,0,0.55)'; mctx.beginPath(); mctx.moveTo(bx, by); mctx.lineTo(ax, ay); mctx.stroke();
+    mctx.lineWidth = 1; mctx.strokeStyle = '#ffd166'; mctx.beginPath(); mctx.moveTo(bx, by); mctx.lineTo(ax, ay); mctx.stroke();
+    mctx.lineWidth = 3; mctx.strokeStyle = '#000'; mctx.beginPath(); mctx.arc(ax, ay, 4, 0, 6.2832); mctx.stroke();
+    mctx.lineWidth = 1.5; mctx.strokeStyle = '#ffd166'; mctx.beginPath(); mctx.arc(ax, ay, 4, 0, 6.2832); mctx.stroke(); miniDot(T.x, T.y, '#ffd166', 1.5);
+  }
+  if (!HP) miniDot(player.x, player.y, '#82fff6', 2.5);
+  mctx.lineWidth = 1.5; mctx.strokeStyle = '#000'; mctx.beginPath(); mctx.arc(bx, by, 3.5, 0, 6.2832); mctx.stroke(); miniDot(ball.x, ball.y, '#ffffff', 3);   // (the ball: white with a dark rim, over the line)
+}
 // J5b: the loading cover (host mode). From the course's coming until CapitalEmpire's pictures are in (every tree species with a picture made for this
 // light, and his golfer's three clips), a CapitalEmpire card covers the picture: the hole, "Walking out to the tee" and how many pictures are in. The
 // game draws on under it (the land is made, the golfer's frames are cut), so it lifts on a finished picture. At most COVER_MAX ms: then it lifts anyway,
@@ -112,10 +160,7 @@ function updateHud() {
   { const far = ball.state === 0 && !bcam && player.swing < 0 && Math.hypot(player.x - ball.x, player.y - ball.y) > 4 ? 'on' : ''; if (jumpEl.className !== far) jumpEl.className = far; }   // the button shows when the ball lies still and the golfer is away from it
   { const hw = hostWindDir(), wdx = hw ? hw[0] : WDX, wdy = hw ? hw[1] : WDY, wr = wdx * RX + wdy * RY, wf = wdx * FX + wdy * FY, deg = Math.round(Math.atan2(-wf, wr) * 57.3 / 5) * 5, gu = WG[(((Math.round(player.y * PPV) >> 5) & 127) << 7) | ((Math.round(player.x * PPM) >> 6) & 127)] > 110, ws = deg + (gu ? 'g' : '');   // the wind as the camera sees it; gold while a gust is on the golfer
     if (ws !== shownWind) { windArrow.style.transform = 'rotate(' + deg + 'deg)'; windEl.className = gu ? 'gust' : ''; shownWind = ws; } }
-  if (miniImg) {
-    mctx.putImageData(miniImg, 0, 0);
-    miniDot(H.tee.x, H.tee.y, '#f8dc6c', 3); miniDot(H.pin.x, H.pin.y, '#ff5a30', 5); miniDot(ball.x, ball.y, '#ffffff', 3); miniDot(player.x, player.y, '#82fff6', 4);
-  }
+  miniDots();
 }
 ````
 
@@ -189,6 +234,7 @@ function hostLies(L) {   // T438: the host's lies, after the course: the grass b
   course.lk = lieGrid(L, course.S);
   treeMemo.clear(); tiles.clear(); chunks.clear(); ocells.clear(); ftiles.clear(); farQ.length = 0; tileQ.length = 0; tileQset.clear(); pwAt = 1e9; lastTK = NaN; lastCK = NaN; lastTile = lastChunk = null;
   wkInit();
+  if (typeof hole !== 'undefined' && hole && hole.tee) drawMini();   // (#1327: the map's grass by the lies too)
 }
 function hostStart() {
   HOST = true; hostOff = true;   // (nothing is drawn until a course comes)

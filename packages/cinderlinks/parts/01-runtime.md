@@ -21,6 +21,7 @@ File: index.html
 Check: id="view"
 Check: id="hud"
 Check: id="mini"
+Check: id="minimap"
 
 ````cmd file=launch.cmd
 @echo off
@@ -46,7 +47,7 @@ start "" "%EDGE%" --app="file:///%~dp0index.html" --new-window --user-data-dir="
   <div id="hud">
     <div id="card"></div>
     <div id="wind"><div id="windArrow">&#10148;</div><div id="windTxt">wind</div></div>
-    <canvas id="mini" width="150" height="150"></canvas>
+    <div id="minimap" title="Click to fold the hole map"><canvas id="mini" width="128" height="168"></canvas><span id="miniTag"></span></div>
     <div id="power"><div class="track"><i id="powerBar"></i></div><div id="powerTxt"></div></div>
     <div id="clubs"></div>
     <div id="keys"></div>
@@ -73,7 +74,8 @@ R: Inside CapitalEmpire (host mode: the body carries the class host) the hole ma
 File: style.css
 Check: image-rendering: pixelated
 Check: --panel: rgba(20, 21, 25, 0.9)
-Check: body.host #mini
+Check: body.host #minimap
+Check: #minimap.fold
 Check: #cover.on
 R: J5f: the shot panel's Curve and Flight are sliders (a track with a gold run from the middle to the thumb, a tick at the middle, the end he has not earned dimmed and struck through), and the aim's distance sits in a small panel above the club box.
 Check: #shotc input[type=range]
@@ -117,7 +119,7 @@ body > .panel > b:first-child { font-size: 0.85em; letter-spacing: 0.12em; text-
 /* the card: the hole in the serif, gold; its facts as CapitalEmpire's stat lines (muted name, bold cream figure) */
 #card { position: absolute; left: 1.4%; top: 2%; padding: 0.6em 0.85em 0.65em; min-width: 13em; pointer-events: auto; cursor: pointer; }
 #card:hover { border-color: var(--gold-line); }
-#hud.min #card .row, #hud.min #card .course, #hud.min #card .credit, #hud.min #mini, #hud.min #wind, #hud.min #keys, #hud.min #clubs .club:not(.on) { display: none; }
+#hud.min #card .row, #hud.min #card .course, #hud.min #card .credit, body:not(.host) #hud.min #minimap, #hud.min #wind, #hud.min #keys, #hud.min #clubs .club:not(.on) { display: none; }
 #hud.min #card { min-width: 0; padding: 0.4em 0.85em 0.45em; border-radius: 999px; }
 #hud.min #card .hole { border-bottom: 0; margin-bottom: 0; padding-bottom: 0; font-size: 1.15em; gap: 0.9em; }
 #card .hole { display: flex; justify-content: space-between; align-items: baseline; gap: 1em; margin-bottom: 0.35em; padding-bottom: 0.3em; border-bottom: 1px solid var(--line);
@@ -130,14 +132,23 @@ body > .panel > b:first-child { font-size: 0.85em; letter-spacing: 0.12em; text-
 #card .credit { font-size: 0.78em; line-height: 1.3; color: var(--muted); margin-top: 0.45em; max-width: 15em; white-space: normal; }
 
 /* the wind: a small square tile; gold while a gust is on the golfer */
-#wind { position: absolute; right: calc(1.4% + 12.1em); top: 2%; width: 3.6em; padding: 0.25em 0 0.3em; text-align: center; color: var(--muted); border-radius: 0.9em; }
+#wind { position: absolute; right: calc(1.4% + var(--mapw, 12.1em) + 0.6em); top: 2%; width: 3.6em; padding: 0.25em 0 0.3em; text-align: center; color: var(--muted); border-radius: 0.9em; }
 #windTxt { font-size: 0.8em; }
 #windArrow { font-size: 1.6em; line-height: 1.25; color: var(--ink); transition: transform 0.25s; }
 #wind.gust #windArrow { color: var(--gold-hi); }
 #wind.gust { border-color: var(--gold); background: linear-gradient(var(--gold-wash), var(--gold-wash)), var(--panel); }
 /* (inside CapitalEmpire its own buttons, the ghost and share chips and the close button, run along the top right: the map and the wind sit below them) */
-body.host #mini, body.host #wind { top: 56px; }
-#mini { position: absolute; right: 1.4%; top: 2%; width: 11.5em; height: 11.5em; image-rendering: pixelated; border: 1px solid var(--line-hi); border-radius: 0.9em; box-shadow: var(--shadow); }
+body.host #minimap, body.host #wind { top: 56px; }
+/* #1327 (the owner: "add minimap of the hole you are playing in the top right, that shows where you are and where you are aiming"): the hole's map, tee at the bottom and the green at the top as the camera
+   looks down the hole, sized to the hole (--mapw, --mapb: its width, and how far down it reaches, in em, set with each hole; the wind sits left of it and the shot panel below it). The folded HUD does not hide it
+   in CapitalEmpire; a click folds it to a small pill (kept). Only the dots and the line over it are redrawn. */
+#minimap { position: absolute; right: 1.4%; top: 2%; padding: 0.25em; line-height: 0; pointer-events: auto; cursor: pointer; background: var(--panel); border: 1px solid var(--line-hi); border-radius: 0.9em; box-shadow: var(--shadow); }
+#minimap:hover { border-color: var(--gold-line); }
+#mini { display: block; image-rendering: pixelated; border-radius: 0.65em; }
+#miniTag { position: absolute; right: 0.5em; top: 0.5em; width: 1.35em; height: 1.35em; border-radius: 50%; background: var(--panel); border: 1px solid var(--line-hi); color: var(--gold-hi); font: 700 0.85em/1.25em var(--sans); text-align: center; }
+#minimap.fold { padding: 0.3em 0.8em; border-radius: 999px; line-height: 1.35; }
+#minimap.fold #mini { display: none; }
+#minimap.fold #miniTag { position: static; display: block; width: auto; height: auto; border: 0; border-radius: 0; background: none; font: 600 0.95em/1.35 var(--sans); color: var(--ink); }
 
 /* the power bar (the view's own play) and the swing button (in CapitalEmpire): a rounded track, the fill from green to gold, the gold aim mark and the white hole mark */
 #power { position: absolute; left: 36%; right: 36%; bottom: 8%; opacity: 0; transition: opacity 0.15s; text-align: center; }
@@ -168,7 +179,7 @@ body.host #mini, body.host #wind { top: 56px; }
 /* #1301 (the owner: "these icons are too small to see what they are showing. make it a side menu and make them larger"): the shot panel is a side menu down the right of the view: its tiles are 64 px, its
    sliders as wide as the panel, a tab on its left edge folds it away (the panel slides off, the tab stays), and what does not fit scrolls up and down inside it (never sideways). It keeps clear of the
    ball, the aim and the swing bar (the middle of the view). #shotc is the frame that slides, .sb the panel that scrolls, .tab the handle. */
-#shotc { position: absolute; right: 0; top: 15%; bottom: 7%; width: clamp(290px, 28vw, 380px); display: none; font-size: 0.92em; line-height: 1.35; pointer-events: none; transition: transform 0.22s ease; background: none; border: 0; box-shadow: none; border-radius: 0; }   /* (the frame itself takes no clicks: the panel and the tab do, so the view beside it still aims) */
+#shotc { position: absolute; right: 0; top: max(15%, calc(56px + var(--mapb, 0em) / 0.92)); bottom: 7%; width: clamp(290px, 28vw, 380px); display: none; font-size: 0.92em; line-height: 1.35; pointer-events: none; transition: transform 0.22s ease; background: none; border: 0; box-shadow: none; border-radius: 0; }   /* (the frame itself takes no clicks: the panel and the tab do, so the view beside it still aims) */
 #shotc.on { display: block; }
 #shotc.fold { transform: translateX(100%); }
 #shotc .sb { position: absolute; inset: 0; box-sizing: border-box; padding: 0.55em 0.7em 0.7em; overflow-y: auto; overflow-x: hidden; pointer-events: auto; background: var(--panel); border: 1px solid var(--line); border-right: 0; border-radius: 1.1em 0 0 1.1em; box-shadow: var(--shadow); color: var(--ink); }
