@@ -285,6 +285,8 @@ try {
     if (b.id && /^sound-.*-mute$/.test(b.id)) await click('settings', `${b.id} (back on)`, loc);
   }
   await esc();
+  // (#1354: Settings' Exit to main menu opens the title card over the HUD: Continue goes back to the game before the radio, which stands in the HUD)
+  if (await page.locator('[data-testid="title-card"]').isVisible().catch(() => false)) { await page.locator('[data-testid="title-continue"]').click(); await page.waitForTimeout(800); }
   // ---- J11: the radio: off until turned on; its pill (play), its card (previous, play, next, the music's mute), off again
   await click('radio', 'Radio (play)', page.locator('[data-testid="radio-play"]'), { wait: 800 });
   await click('radio', 'Radio card (the drop)', page.locator('[data-testid="radio-more"]'));
@@ -292,8 +294,9 @@ try {
   await esc();
   if ((await page.locator('[data-testid="radio-play"]').getAttribute('aria-pressed')) === 'true') await click('radio', 'Radio (off)', page.locator('[data-testid="radio-play"]')); // (the card's own Play may have turned it off already)
   // ---- the speeds (#1275: the bar is collapsed by default: its chevron shows every speed, and shuts them again)
+  // (4x first: the title card's Continue (#1354, above) leaves the game at 1x, so a 1x click first changed nothing)
   await click('top bar', 'speed bar: show every speed', page.locator('[data-testid="speed-toggle"]'));
-  for (const s of ['1', '4', '20']) await click('top bar', `speed ${s}x`, page.locator(`[data-testid="speed-${s}"]`));
+  for (const s of ['4', '1', '20']) await click('top bar', `speed ${s}x`, page.locator(`[data-testid="speed-${s}"]`));
   await click('top bar', 'speed bar: hide the speeds', page.locator('[data-testid="speed-toggle"]'));
   await click('top bar', 'pause', page.locator('[data-tip="Pause (Space)"]').first());
 } finally {

@@ -6,10 +6,10 @@ import { mulberry } from '../iso';
 import { MONTH_NAMES } from './calendar';
 import { getTournamentWeather, weatherSeed, type WeatherCondition } from './weather';
 
-/** the map's name: the club carries it ("Maple Falls Golf Club"), as the minimap's overview does; the town keeps its own name on the minimap */
-export const MAP_NAME = 'Maple Falls';
+/** the map's name: the club carries it ("Pine Falls Golf Club"), as the minimap's overview does; the town keeps its own name on the minimap */
+export const MAP_NAME = 'Pine Falls';
 
-/** the first tier at which the club is a golf and country club: tier 4, the Maple Falls Classic, is the first with hospitality, media and hotel
+/** the first tier at which the club is a golf and country club: tier 4, the Pine Falls Classic, is the first with hospitality, media and hotel
  *  rooms (golf/tour.ts OWN_NEEDS); tiers 1 to 3 (the Club Championship, the County Amateur, the State Open) are a golf club's tournaments */
 export const COUNTRY_CLUB_TIER = 4;
 
@@ -22,8 +22,8 @@ export function clubStage(f: { range: boolean; holes: number; tier: number }): C
   return f.tier >= COUNTRY_CLUB_TIER ? 'country' : 'club';
 }
 
-/** the club's name: map + "Driving Range" | "Golf Club" | "Golf & Country Club"; short: the form for a narrow bar ("Maple Falls Range",
- *  "Maple Falls GC", "Maple Falls G&CC") */
+/** the club's name: map + "Driving Range" | "Golf Club" | "Golf & Country Club"; short: the form for a narrow bar ("Pine Falls Range",
+ *  "Pine Falls GC", "Pine Falls G&CC") */
 export function clubName(stage: ClubStage, short = false, map: string = MAP_NAME): string {
   return `${map} ${stage === 'range' ? (short ? 'Range' : 'Driving Range') : stage === 'club' ? (short ? 'GC' : 'Golf Club') : short ? 'G&CC' : 'Golf & Country Club'}`;
 }
@@ -71,7 +71,7 @@ export interface ClubTitle { stage: ClubStage; name: string; short: string; when
 /** the club's year: season n played is year n + 1 (year 1 is the first season, September to the tournament in August) */
 export const clubYear = (seasons: number): number => Math.max(0, Math.floor(seasons)) + 1;
 
-/** the title for the facts: "Maple Falls Golf Club" over "Year 3 • October • Sunny 16°C". The weather is the month's: the tournament's own
+/** the title for the facts: "Pine Falls Golf Club" over "Year 3 • October • Sunny 16°C". The weather is the month's: the tournament's own
  *  (golf/weather.ts getTournamentWeather) for the month it falls in (August), so the title and the tournament chip say the same */
 export function clubTitle(f: ClubTitleFacts): ClubTitle {
   const stage = clubStage(f), month = Math.min(11, Math.max(0, Math.floor(f.month))), w = getTournamentWeather(f.seed, f.run, 0, month).condition;

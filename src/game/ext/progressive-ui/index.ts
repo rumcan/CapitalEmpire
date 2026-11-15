@@ -70,6 +70,8 @@ export interface PlayerProgressFacts {
   /** the town's streets are jammed (T178): at least JAM_ZONES zones with built lots are over the decline line (the engine's access, the
    *  access overlay's red); missing = no */
   townJammed?: boolean;
+  /** #1314: a sandbox game (sandbox.ts): every tool open, no ramp, no hints, whatever the course and the range have done; missing = no */
+  sandbox?: boolean;
 }
 
 /** a range start's ramp step (P24 Phase 4a): 0 the range card, 1 the practice area (after the first range upgrade), 2 Props (after the putting
@@ -85,6 +87,8 @@ export interface RampFacts {
   cardSeen: boolean;
   /** a Props tool prop stands near the range (its hint is done) */
   propsPlaced: boolean;
+  /** #1305: the range's looks done (rangeLooks: the "make it pretty" half of the course unlock in the game build); missing: not known, counted as enough */
+  looks?: readonly RangeLook[];
   /** a new game's ramp: its tools carry NEW badges as they open (an old save's do not: it had them all) */
   fresh: boolean;
 }
@@ -131,8 +135,11 @@ export interface ProgressiveUiState {
   activeHint: FirstRunHint | null;
   /** a range start's ramp step in force (T132; null outside range starts, and with "Show every tool now": every step open) */
   ramp: RampStep | null;
-  /** why New hole is not open yet (a range start before ramp step 3: the Holes panel shows the button locked with it), or null */
+  /** why New hole is not open yet (a range start before ramp step 3: the Holes panel shows the button locked with it, with the takings so far), or null */
   newHoleLock: string | null;
+  /** #1305: the progress toward New hole and the clubhouse while newHoleLock holds them (the range's takings this season and the RAMP_TAKINGS they need: the Holes
+   *  panel and the Build menu draw it as a bar), or null when they are open */
+  newHoleProgress: RampProgress | null;
   /** T239: why a top-bar chip is held back other than by its stage (the guided build held Land for sale until its practice area step: #1297 took that step out; none is set now) */
   chipLocks?: Partial<Record<GolfChipId, string>>;
 }
@@ -277,8 +284,40 @@ export function isStuck(f: PlayerProgressFacts): boolean {
 
 // ---------------------------------------------------------------- a range start's ramp (plan P24 Phase 4a, T132)
 
-/** the range's takings in one season that open New hole ($) */
-export const RAMP_TAKINGS = JAM ? JAM_RAMP_TAKINGS : 20000; // (T459: the jam opens New hole sooner: features.ts JAM_RAMP_TAKINGS)
+/** #1305 (the owner, 2026-11-14: "make course building an unlock later. let the guy play the range for a bit first and make it pretty and then he can build the course"):
+ *  the range's takings in one season that open New hole and the clubhouse in the game ($5,000; it was $20,000, which a range taking $0 to $1,200 a month (docs/JAM.md
+ *  "Balance") never reached before season 2 opened them anyway, so the rule was a wait, not a goal). The jam keeps its own (features.ts JAM_RAMP_TAKINGS, $2,000) */
+export const GAME_RAMP_TAKINGS = 5_000;
+/** #1305: what makes the range look cared for, the other half of the course unlock in the game build: the target greens placed, the tee box turfed, the outfield
+ *  grassed (the desert start's), the car park gravelled (or paved), props placed by the range and a putting green open. LOOKS_NEEDED of them, in any order */
+export type RangeLook = 'greens' | 'teeturf' | 'grass' | 'gravel' | 'props' | 'putting';
+/** each look's line on the checklist, the hint whose Show me leads to it (Engine.showHint: the range card for the upgrades, the Props tool, the practice area) and how */
+export interface RangeLookLine { id: RangeLook; label: string; hint: string; how: string }
+export const RANGE_LOOKS: readonly RangeLookLine[] = [
+  { id: 'greens', label: 'Place the target greens', hint: 'hint-range-upgrade', how: 'An upgrade on the range card: click the range, then its upgrades.' },
+  { id: 'teeturf', label: 'Turf the tee box', hint: 'hint-range-upgrade', how: 'An upgrade on the range card: click the range, then its upgrades.' },
+  { id: 'grass', label: 'Grass the outfield', hint: 'hint-range-upgrade', how: 'An upgrade on the range card: click the range, then its upgrades.' },
+  { id: 'gravel', label: 'Gravel the car park', hint: 'hint-range-upgrade', how: 'The car park on the range card: gravel the packed dirt.' },
+  { id: 'props', label: 'Dress the range with props', hint: 'hint-range-props', how: 'Props (Z): pot plants, a fountain, a statue within 15 tiles of the shop or the mats.' },
+  { id: 'putting', label: 'Open a putting green', hint: 'hint-practice-putting', how: 'Place the practice area, then paint a putting green on it.' },
+];
+/** #1305 (the owner: "play the range for a bit first and make it pretty"): the looks the range needs besides its takings before the course opens: 3 in the game; none
+ *  in the jam (its balance, docs/JAM.md, was measured with the takings alone, and its rule stays as it is) */
+export const LOOKS_NEEDED = JAM ? 0 : 3;
+/** the looks a range has: its upgrades owned (the target greens, the tee turf, the outfield grass, the gravel or the paving), props by it and a putting green open */
+export function rangeLooks(owned: readonly string[], props: boolean, putting: boolean): RangeLook[] {
+  const has = new Set(owned), out: RangeLook[] = [];
+  if (has.has('greens') || has.has('targets')) out.push('greens');
+  if (has.has('teeturf')) out.push('teeturf');
+  if (has.has('grass')) out.push('grass');
+  if (has.has('gravel') || has.has('pave')) out.push('gravel');
+  if (props) out.push('props');
+  if (putting) out.push('putting');
+  return out;
+}
+/** the range's takings in one season that open New hole and the clubhouse ($): the course building unlock (#1305), with LOOKS_NEEDED looks. Season 2 opens them too, and so does a hole
+ *  already on the course (an old save); a sandbox game never waits (sandbox.ts) */
+export const RAMP_TAKINGS = JAM ? JAM_RAMP_TAKINGS : GAME_RAMP_TAKINGS; // (T459: the jam opens New hole sooner: features.ts JAM_RAMP_TAKINGS)
 /** the ramp step each tool opens at in a range start (the rest follow the stages): Holes and Paths with the first upgrade (to paint the
  *  practice greens), Props once the putting green opens, Buildings (the clubhouse) with New hole */
 export const RAMP_TOOL_STEP: Readonly<Partial<Record<UiToolId, RampStep>>> = JAM ? Object.freeze({ course: 1, props: 2, buildings: 3 }) : Object.freeze({ course: 1, path: 1, practice: 1, props: 2, buildings: 3 }); // (J7 #1225: in the jam the paths and the practice greens are open from the start: the Build menu offers them, nothing waits on a step) // T206: the practice tools open with the first range upgrade, as the brushes that painted them did
@@ -290,13 +329,13 @@ export const RAMP_WHY: Readonly<Record<RampStep, string>> = Object.freeze({
   0: '',
   1: 'Unlocks with your first range upgrade',
   2: 'Unlocks when your putting green opens',
-  3: `Unlocks when the range takes $${RAMP_TAKINGS.toLocaleString('en-US')} in a season, or in season 2`,
+  3: `Unlocks when the range takes $${RAMP_TAKINGS.toLocaleString('en-US')} in a season${LOOKS_NEEDED ? ' and looks cared for' : ''}, or in season 2`,
 });
 /** the toast as each ramp step opens */
 export const RAMP_TOAST: Readonly<Partial<Record<RampStep, string>>> = JAM ? Object.freeze({ 3: 'New hole and the clubhouse are open in Build' }) : Object.freeze({ // (J7: the jam's toasts say what opened, never what to build)
   1: `The Practice area opens: place it on your land (Range ▸ Place the practice area), then build a putting green on it (${practicePath()})`,
   2: 'Props are open (Z): dress the range to draw more golfers',
-  3: 'New hole is open: build your first hole, a par-3',
+  3: 'Your range is ready. Now build your course: New hole and the clubhouse are open', // (#1305: the celebration as the course opens)
 });
 /** the toast as the ramp's step rises from was to now (T132), or null: none when it did not rise, when its tools were open already ("Show every
  *  tool now", or the dev unlock: T095), and none for New hole once a hole exists (it says "build your first hole") */
@@ -311,19 +350,39 @@ export const FIRST_PAR3_M = 150;
  *  the putting green open; 1 with a range upgrade; else 0 (outside range starts: 3) */
 export function rampEarned(f: PlayerProgressFacts): RampStep {
   const r = f.ramp; if (!r) return 3;
-  if (f.playableHoles >= 1 || f.seasonsDone >= 1 || r.seasonTakings >= RAMP_TAKINGS) return 3;
+  if (f.playableHoles >= 1 || f.seasonsDone >= 1 || (r.seasonTakings >= RAMP_TAKINGS && looksDone(r) >= LOOKS_NEEDED)) return 3;
   if (f.practice?.putting === 'open') return 2;
   if (r.upgrades >= 1) return 1;
   return 0;
 }
-/** the ramp step in force: the earned one, never below the step reached (null outside range starts) */
+/** the ramp step in force: the earned one, never below the step reached (null outside range starts, and in a sandbox game: nothing waits) */
 export function rampStep(f: PlayerProgressFacts): RampStep | null {
-  return f.ramp ? (Math.max(f.ramp.reached, rampEarned(f)) as RampStep) : null;
+  return f.ramp && !f.sandbox ? (Math.max(f.ramp.reached, rampEarned(f)) as RampStep) : null;
 }
-/** why tool t is held back by the ramp, or null (open, not a range start, or every tool shown) */
+/** the looks a ramp's range has done (missing: not known, counted as LOOKS_NEEDED) */
+function looksDone(r: RampFacts): number { return r.looks ? new Set(r.looks).size : LOOKS_NEEDED; }
+/** the progress toward the course building unlock (#1305): have, this season's range takings ($, whole), of need, RAMP_TAKINGS; and in the game build the range's looks
+ *  (done of need, and each look with whether it is done: the Holes panel's checklist) */
+export interface RampProgress { have: number; need: number; looks?: { done: number; need: number; items: (RangeLookLine & { done: boolean })[] } }
+/** the progress toward New hole and the clubhouse while the ramp holds them (null: open, not a range start, every tool shown, or a sandbox game) */
+export function rampProgress(f: PlayerProgressFacts): RampProgress | null {
+  const s = rampStep(f); if (s === null || s >= 3 || f.advancedMode) return null;
+  const r = f.ramp!, p: RampProgress = { have: Math.max(0, Math.min(RAMP_TAKINGS, Math.floor(r.seasonTakings))), need: RAMP_TAKINGS };
+  if (LOOKS_NEEDED > 0 && r.looks) { const has = new Set(r.looks); p.looks = { done: Math.min(LOOKS_NEEDED, has.size), need: LOOKS_NEEDED, items: RANGE_LOOKS.map(l => ({ ...l, done: has.has(l.id) })) }; }
+  return p;
+}
+/** what opens ramp step `need` as a lock says it now: New hole's (step 3) with the takings so far and, in the game build, the looks ("... takes $5,000 in a season ($1,234
+ *  so far) and looks cared for (1 of 3), or in season 2") */
+export function rampWhyNow(f: PlayerProgressFacts, need: RampStep): string {
+  const p = need === 3 ? rampProgress(f) : null;
+  if (!p) return RAMP_WHY[need];
+  const looks = p.looks ? ` and looks cared for (${p.looks.done} of ${p.looks.need})` : '';
+  return `Unlocks when the range takes ${dollars(p.need)} in a season (${dollars(p.have)} so far)${looks}, or in season 2`;
+}
+/** why tool t is held back by the ramp, or null (open, not a range start, every tool shown, or a sandbox game) */
 export function rampLock(f: PlayerProgressFacts, t: UiToolId): string | null {
   const s = rampStep(f), need = RAMP_TOOL_STEP[t];
-  return s === null || f.advancedMode || need === undefined || s >= need ? null : RAMP_WHY[need];
+  return s === null || f.advancedMode || need === undefined || s >= need ? null : rampWhyNow(f, need);
 }
 
 /** the ramp's hints (the hint bar's Show me does what each says: Engine.showHint) */
@@ -345,7 +404,8 @@ function rampHint(f: PlayerProgressFacts, dismissed: ReadonlySet<string>): First
   if (s === 1) return pick(pr?.putting !== 'open' && pp);
   if (s === 2) {
     const h = pick(!r.propsPlaced && H.props, chip, H.wait);
-    return h?.id === H.wait.id ? { ...h, body: `New hole opens when the range takes ${dollars(RAMP_TAKINGS)} in a season (${dollars(r.seasonTakings)} so far), or in season 2. Grow the range meanwhile.` } : h;
+    const lp = rampProgress(f)?.looks, looks = lp ? ` and looks cared for (${lp.done} of ${lp.need}: ${lp.items.filter(l => !l.done).map(l => l.label.toLowerCase()).join(', ')})` : '';
+    return h?.id === H.wait.id ? { ...h, body: `New hole opens when the range takes ${dollars(RAMP_TAKINGS)} in a season (${dollars(r.seasonTakings)} so far)${looks}, or in season 2. Grow the range and make it pretty meanwhile.` } : h;
   }
   return pick(H.firstHole, pr && pr.putting !== 'open' && pp, chip);
 }
@@ -365,6 +425,7 @@ export function resolveOnboardingStage(f: PlayerProgressFacts): OnboardingStage 
 
 /** selects the next undismissed first-run hint: the stuck player's New hole, Step 1 until the first hole, then (at stage 3) the town's tools */
 export function nextFirstRunHint(f: PlayerProgressFacts): FirstRunHint | null {
+  if (f.sandbox) return null; // #1314: a sandbox game has no tutorial
   const dismissed = new Set(f.dismissedHints ?? []), stage = resolveOnboardingStage(f), [h1, h2, h3, h4] = FIRST_RUN_HINTS;
   if (isStuck(f) && !dismissed.has(STUCK_HINT.id)) return STUCK_HINT;
   // the jam's hint points at the Junction tool, so only once it is open
@@ -399,13 +460,13 @@ function lockedAt<T extends string>(table: Readonly<Partial<Record<T, Onboarding
  *  opened, or an old save, which sees every tool) it never closes again; null when open (every tool shown too), else the why the rail's tooltip
  *  and a click say, in the ramp's words */
 export function greenkeepingLock(f: PlayerProgressFacts): string | null {
-  if (f.advancedMode || (f.seen ?? []).includes('greenkeeping') || (f.grownHoles ?? f.playableHoles) >= 1) return null;
+  if (f.advancedMode || f.sandbox || (f.seen ?? []).includes('greenkeeping') || (f.grownHoles ?? f.playableHoles) >= 1) return null;
   return `Unlocks when your first hole is grown in${f.firstReady ? ` (${f.firstReady})` : ''}`;
 }
 
 /** computes the complete progressive-exposure UI state from player progress facts */
 export function computeProgressiveUiState(f: PlayerProgressFacts): ProgressiveUiState {
-  const stage = resolveOnboardingStage(f), adv = Boolean(f.advancedMode), seen = new Set(f.seen ?? []), ramp = adv ? null : rampStep(f);
+  const stage = resolveOnboardingStage(f), adv = Boolean(f.advancedMode || f.sandbox), seen = new Set(f.seen ?? []), ramp = adv ? null : rampStep(f);
   const visibleGroups = openAt(GROUP_STAGE, stage, adv);
   // a range start's ramp (T132) holds back Holes, Paths, Props and Buildings until their step: in place, with its why, besides the stages
   // Greenkeeping (T175) waits for the first grown hole, in place, with its why
@@ -431,10 +492,11 @@ export function computeProgressiveUiState(f: PlayerProgressFacts): ProgressiveUi
     shapeByHand: adv || stage >= 2 || !!f.practice,
     lockedCourseClasses: lockedAt(COURSE_CLASS_STAGE, stage, adv),
     visibleFineControls: adv ? ALL_FINE_CONTROLS.slice() : [],
-    stageLabel: adv ? 'Every tool shown (Settings)' : `Stage ${stage}: ${STAGE_NAME[stage]}`,
+    stageLabel: f.sandbox ? 'Sandbox: every tool open' : adv ? 'Every tool shown (Settings)' : `Stage ${stage}: ${STAGE_NAME[stage]}`,
     activeHint: nextFirstRunHint(f),
     ramp,
-    newHoleLock: ramp !== null && ramp < 3 ? RAMP_WHY[3] : null,
+    newHoleLock: ramp !== null && ramp < 3 ? rampWhyNow(f, 3) : null,
+    newHoleProgress: ramp !== null && ramp < 3 ? rampProgress(f) : null,
   };
 }
 
@@ -446,4 +508,6 @@ export * from './transport';
 
 /** the guided Year 1 (P06/T045) */
 export * from './guide';
+/** #1314: sandbox mode */
+export * from './sandbox';
 export * from './tour';

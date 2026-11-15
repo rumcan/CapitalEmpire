@@ -13,7 +13,7 @@ const ASK = 20;
 /** an answer is kept this long, ms (a week: courses do not move) */
 export const ANSWER_TTL_MS = 7 * 24 * 3600 * 1000;
 /** the game's name, sent as a header where the browser allows it (Nominatim's CORS answer allows X-Requested-With); the Referer says where the game is served */
-export const APP_NAME = 'CapitalEmpire-golf';
+export const APP_NAME = 'GolfManager2026';
 
 /** a Nominatim result (format=jsonv2, addressdetails=1), the fields read */
 export interface NomResult {

@@ -9,7 +9,7 @@
    floor); secondary text (sub-lines, labels, key hints) is 12 px, the old 9 to 11 px sizes raised to it. */
 @theme { --text-xs: 0.8125rem; --text-xs--line-height: 1.3; }
 
-/* The Maple Falls look (the owner's mockup, docs/ui/mockup-road-panel.webp): dark charcoal glass panels, gold accents and outlines,
+/* The Pine Falls look (the owner's mockup, docs/ui/mockup-road-panel.webp): dark charcoal glass panels, gold accents and outlines,
    a serif display face for the logo and panel titles, small caps section labels. */
 :root {
   --gold: #f5b52e;
@@ -87,7 +87,7 @@ button.stat-chip:hover { background: rgba(255, 255, 255, 0.06); }
 .rail-tab { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0.2rem; width: 4.8rem; height: 4.2rem; border-radius: 0.8rem; border: 1px solid transparent; font-size: 0.7rem; color: #d9d3c4; }
 .rail-tab:hover { background: rgba(255, 255, 255, 0.05); }
 .rail-tab-on { border-color: var(--gold); background: var(--gold-wash); color: var(--gold-hi); box-shadow: inset 0 0 12px rgba(245, 181, 46, 0.18); }
-.rail-tab-half { height: 3.4rem; } /* T323: the Select slot's two cursors (pointer, walking figure) */
+.rail-tab-half { height: 4.4rem; } /* T323: the Select slot's two cursors (pointer, walking figure) */
 
 .seg { display: flex; gap: 0.25rem; border-radius: 0.7rem; background: rgba(0, 0, 0, 0.25); padding: 0.2rem; }
 .seg > button { flex: 1; display: inline-flex; align-items: center; justify-content: center; gap: 0.3rem; border-radius: 0.55rem; padding: 0.3rem 0.4rem; font-size: 0.75rem; color: #d9d3c4; }
@@ -118,7 +118,7 @@ button.stat-chip:hover { background: rgba(255, 255, 255, 0.06); }
 
 /* the rail: key letters, the Course and Town headings, locked tools dimmed in place with a lock, NEW badges; 52 px items under 800 px tall */
 /* the items share the height under the top bar (which may wrap) and above the minimap: 60 px at most, 52 px at most under 800 px tall */
-.rail-tab { position: relative; height: clamp(42px, calc((100vh - var(--hud-top, 5.75rem) - 222px) / 9), 58px); font-size: 12px; }
+.rail-tab { position: relative; height: clamp(58px, calc((100vh - var(--hud-top, 5.75rem) - 160px) / 9), 80px);   /* the owner, 2026-11-15: "the images are needlessly small in this side menu" */ font-size: 12px; }
 .rail-nav { max-height: calc(var(--vh-ui, 100vh) - var(--hud-top, 5.75rem) - 9rem); overflow-y: auto; overflow-x: hidden; } /* its scrollbar: the global one (T205) */
 .rail-tab-locked { opacity: 0.42; }
 .rail-tab-locked:hover { background: rgba(255, 255, 255, 0.03); }
@@ -134,7 +134,7 @@ button.stat-chip:hover { background: rgba(255, 255, 255, 0.06); }
 :root { --foot-top: 0px; }
 .rail-foot { display: flex; align-items: center; gap: 0.25rem; width: max-content; padding: 0.25rem 0.3rem; }
 .rail-tab.rail-tab-foot { flex-direction: row; gap: 0.45rem; width: auto; height: 42px; padding: 0 0.8rem 0 0.55rem; font-size: 13px; white-space: nowrap; }
-.rail-tab.rail-tab-foot img { width: 24px; height: 24px; }
+.rail-tab.rail-tab-foot img { width: 34px; height: 34px; }
 .rail-foot-compact .rail-tab.rail-tab-foot { width: 46px; padding: 0; justify-content: center; }
 .rail-heading.rail-heading-foot { padding: 0 0.3rem 0 0.4rem; }
 .rail-foot-compact .rail-heading.rail-heading-foot { padding: 0; writing-mode: vertical-rl; transform: rotate(180deg); font-size: 10px; letter-spacing: 0.1em; line-height: 1; }
@@ -149,8 +149,8 @@ button.stat-chip:hover { background: rgba(255, 255, 255, 0.06); }
 .tool-panel-foot[data-place="side"] { bottom: auto; max-height: calc(var(--vh-ui, 100vh) - var(--hud-top, 5.75rem) - 8.25rem); }
 .new-badge { display: inline-block; border-radius: 999px; background: linear-gradient(#ffd166, #f0a91e); padding: 0 0.3rem; font-size: 9px; font-weight: 800; letter-spacing: 0.04em; line-height: 14px; color: #1b1406; box-shadow: 0 1px 4px rgba(0, 0, 0, 0.4); }
 @media (max-height: 799px) {
-  .rail-tab { height: clamp(42px, calc((100vh - var(--hud-top, 5.75rem) - 222px) / 9), 52px); gap: 0.1rem; }
-  .rail-tab img { width: 24px; height: 24px; }
+  .rail-tab { height: clamp(52px, calc((100vh - var(--hud-top, 5.75rem) - 160px) / 9), 70px); gap: 0.1rem; }
+  .rail-tab img { width: 38px; height: 38px; }
   .rail-heading { padding-top: 0; font-size: 12px; }
 }
 
@@ -279,6 +279,18 @@ button.stat-chip:hover { background: rgba(255, 255, 255, 0.06); }
 .flyout-pic { position: relative; display: grid; place-items: center; width: 100%; aspect-ratio: 1; border-radius: 0.5rem; background: #1e2a44; box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.06); }
 .flyout-pic img { width: 100%; height: 100%; border-radius: 0.5rem; object-fit: cover; }
 .flyout-pic-icon > img { width: 36px; height: 36px; }
+/* #1284 (the owner: "these icons are too small to see what they are showing ... make them larger"): the Props flyout's levels, two big tiles across; a group with no painted
+   tile shows its first card's picture, whole, on the tile's navy square */
+.flyout-grid-big { grid-template-columns: repeat(auto-fill, minmax(132px, 1fr)); gap: 8px; }
+.flyout-grid-big .flyout-tile .flyout-label { font-size: 13px; }
+.flyout-pic-thumb { overflow: hidden; background: radial-gradient(circle at 60% 35%, #2b3b5e, #1e2a44 70%); }
+.flyout-pic-thumb > img, .flyout-pic-thumb > div { max-width: 88%; max-height: 88%; object-fit: contain; border-radius: 0; }
+/* #1284 (the owner: "make the left menu cards and scrollable"): a thin, styled scroll bar on the flyouts and the Props panel's card list, never a sideways one */
+.flyout, .props-cards { scrollbar-width: thin; scrollbar-color: rgba(245, 181, 46, 0.45) transparent; }
+.flyout::-webkit-scrollbar, .props-cards::-webkit-scrollbar { width: 6px; height: 0; }
+.flyout::-webkit-scrollbar-thumb, .props-cards::-webkit-scrollbar-thumb { background: rgba(245, 181, 46, 0.45); border-radius: 999px; }
+.flyout::-webkit-scrollbar-track, .props-cards::-webkit-scrollbar-track { background: transparent; }
+.props-cards { max-height: min(56vh, 560px); overflow-y: auto; overflow-x: hidden; overscroll-behavior: contain; padding-right: 4px; }
 .flyout-pic .flyout-swatch { width: 30px; height: 30px; border-radius: 8px; }
 .flyout-pic-lock { position: absolute; left: 4px; top: 4px; display: grid; place-items: center; width: 20px; height: 20px; border-radius: 999px; background: rgba(2, 6, 23, 0.85); color: var(--ink); }
 .flyout-pic-new { position: absolute; right: 3px; top: 3px; }
@@ -380,3 +392,9 @@ button.stat-chip:hover { background: rgba(255, 255, 255, 0.06); }
 
 /* T366 (#1021: "fix main menu. we can't have text going in 2 lines"): a rail label is one line (rail-items.ts railLabel shortens the long one) */
 .rail-tab span { white-space: nowrap; }
+
+/* The owner, 2026-11-15: "remove the rounded edges from the game UI. its not working in alot of places": square corners everywhere, Tailwind's rounded-*
+   classes and inline border radii alike. Real circles stay round: rounded-full, .keep-round, and inline 50% / 9999px radii (dots, swatches, round buttons) */
+*:not(.rounded-full):not(.keep-round):not([style*="50%"]):not([style*="9999"]),
+*:not(.rounded-full):not(.keep-round)::before, *:not(.rounded-full):not(.keep-round)::after { border-radius: 0 !important; }
+::-webkit-scrollbar-thumb, ::-webkit-scrollbar-track { border-radius: 0 !important; }

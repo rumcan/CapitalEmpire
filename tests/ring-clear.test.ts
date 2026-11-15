@@ -94,7 +94,7 @@ test('a roundabout over the drive-in is refused, naming it, with its footprint o
   const def = placeDef('drive-in')!, box = placeBox({ id: 'drive-in', x: C.x + 12, y: C.y - 15, q: 3 }, def); // 20 by 30 tiles, its near edge 12 tiles east of the junction
   const name = inSentence(placeName(def, null));
   assert.equal(name, 'the Drive-In');
-  assert.equal(inSentence(placeName(def, 'Maple Falls')), 'Maple Falls Drive-In', 'a town\'s own name keeps its capital');
+  assert.equal(inSentence(placeName(def, 'Pine Falls')), 'Pine Falls Drive-In', 'a town\'s own name keeps its capital');
   const obstacles = routeObstacles({ course: false, biz: [], parks: [], places: [{ name, box }] });
   const e = crossing('street'), lm = new LotMap(); lm.update(e.net, null);
   const n = e.net.nodeAt(C)!, { hs, walk } = arms(n), lots = [...lm.lots.values()].map(l => asRing(l, LV.BUILT));

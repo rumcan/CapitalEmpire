@@ -21,6 +21,10 @@ export interface ActHost {
   panel: string | null;
   toggleMoneyPanel(): void;
   guideShowMe(id: string): void;
+  /** 2026-11-15: the Texture Painter, the Props tool, a real course in hand */
+  openPropertyPaint(): void;
+  setPropsTool(): void;
+  startRealPlace(id: string): unknown;
 }
 /** the UI state a card or a tip touches: the rail item to light, the Build menu (null: shut; else the tab), the tips card */
 export interface ActUi { rail(id: string | null): void; build(tab: string | null): void; tips(open: boolean): void }
@@ -39,6 +43,9 @@ export function runBuildAct(game: ActHost, a: BuildAct, ui: ActUi): string {
     case 'green': ui.rail(null); game.armPractice(a.id, true); return `green ${a.id}`;
     case 'buyRange': game.buyRange(); return 'buy range';
     case 'junk': ui.rail('range'); game.setTool('select'); game.openRangeCard(true); return 'junk';
+    case 'texture': ui.rail(null); game.paint.setProperty(true); game.openPropertyPaint(); return 'texture painter';
+    case 'props': ui.rail('course'); game.setPropsTool(); return 'props';
+    case 'real': ui.rail('course'); void game.startRealPlace(a.id); return `real ${a.id}`;
   }
 }
 

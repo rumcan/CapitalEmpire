@@ -20,7 +20,9 @@ export type BuildAct =
   | { k: 'place'; id: 'range' | 'carpark' | 'practice' } | { k: 'upgrade'; id: RangeUpgradeId } | { k: 'rangeCard' }
   | { k: 'newHole' } | { k: 'paths' } | { k: 'clubhouse' } | { k: 'green'; id: 'putting' | 'chipping' }
   /** J7: buy the old range standing for sale; open the range card at its junk list */
-  | { k: 'buyRange' } | { k: 'junk' };
+  | { k: 'buyRange' } | { k: 'junk' }
+  /** 2026-11-15 (the jam build gained them, the owner wants them shown): the Texture Painter, the Props tool (natural painted, man-made placed), a real course placed on the map */
+  | { k: 'texture' } | { k: 'props' } | { k: 'real'; id: string };
 export interface BuildCard {
   id: string; group: BuildGroupId; name: string; line: string; pic: BuildPic;
   /** the price ($; null: priced as it is laid, costNote says how) */ cost: number | null; costNote?: string;
@@ -29,6 +31,8 @@ export interface BuildCard {
   /** why it cannot be built yet (null: it can); done: it is built ("Built"), the card then only opens what it is */
   why: string | null; done: string | null;
   act: BuildAct | null;
+  /** #1305: the progress toward the unlock that holds it (New hole and the clubhouse: the range's takings this season of what they need), drawn as a bar under why */
+  progress?: { have: number; need: number };
 }
 
 /** a typical jam hole (docs/JAM.md "Balance": the New hole wizard's defaults cost $18k to $37k, about $23k; $12k to $17k bare) and a typical hole's
@@ -52,12 +56,15 @@ const UPGRADE_PIC: Readonly<Record<string, BuildPic>> = {
 export interface BuildSource {
   /** the range's placements (Engine.rangePlaces: the range, its car park, the practice area) */
   places: readonly { id: 'range' | 'carpark' | 'practice'; name: string; cost: number; done: boolean; why: string }[];
+  /** the real courses that can be placed on the map (absent: none) */
+  real?: readonly { id: string; name: string; place: string; holes: number; par: number }[];
   /** the range's view (RangeHost.view; null: no range in this game) */
   range: RangeCardView | null;
   /** the range's business upkeep a month ($) */
   rangeUpkeep: number;
   /** the tools' locks (null: open): New hole, the Buildings tool (the clubhouse), the cart paths, the practice greens */
-  locks: { newHole: string | null; buildings: string | null; path: string | null; practice: string | null };
+  locks: { newHole: string | null; buildings: string | null; path: string | null; practice: string | null;
+    /** #1305: the takings toward New hole and the clubhouse while the range's ramp holds them (null: open) */ progress?: { have: number; need: number } | null };
   /** the clubhouse: built, its price and its upkeep a month */
   clubhouse: { built: boolean; cost: number; upkeep: number };
   /** the course now and whether the clubhouse stands (Engine.paybackCourse; null: no course) */
@@ -144,10 +151,23 @@ export function buildCards(s: BuildSource): BuildCard[] {
     payback: pc ? payback(HOLE_TYPICAL, HOLE_UPKEEP, holeExtra(pc.course, pc.clubhouse)) : null,
     note: pc && !pc.clubhouse ? 'Green fees start once your clubhouse stands.' : undefined,
     why: s.locks.newHole ?? shortWhy(HOLE_FROM, s.money), done: null, act: { k: 'newHole' },
+    ...(s.locks.newHole && s.locks.progress ? { progress: s.locks.progress } : {}),
   });
   out.push({
     id: 'paths', group: 'course', name: 'Cart paths', pic: { tile: 'cart-path' }, line: 'Paths for carts and walkers between the range, the car park and your holes.',
     cost: null, costNote: 'Priced by its length as you lay it', upkeep: null, payback: null, why: s.locks.path, done: null, act: { k: 'paths' },
+  });
+  out.push({
+    id: 'texture', group: 'course', name: 'Texture Painter', pic: { tile: 'surveyor-turf' }, line: 'Paint grass, sand, water and more anywhere on your property, apart from the holes.',
+    cost: null, costNote: 'Priced by the area you paint', upkeep: null, payback: null, why: null, done: null, act: { k: 'texture' },
+  });
+  out.push({
+    id: 'props', group: 'course', name: 'Trees and props', pic: { tile: 'all-props' }, line: 'Paint trees, shrubs and rocks with a brush; place benches, signs, fountains and statues one by one.',
+    cost: null, costNote: 'Priced by each piece', upkeep: null, payback: null, why: null, done: null, act: { k: 'props' },
+  });
+  for (const r of s.real ?? []) out.push({
+    id: `real-${r.id}`, group: 'course', name: r.name, pic: { tile: 'golf-hole' }, line: `A real course from map data: ${r.place}, ${r.holes} holes, par ${r.par}. Place it on your land.`,
+    cost: null, costNote: 'Laid as its holes are built', upkeep: null, payback: null, why: null, done: null, act: { k: 'real', id: r.id },
   });
   // ---- Club
   out.push({
@@ -156,6 +176,7 @@ export function buildCards(s: BuildSource): BuildCard[] {
     payback: s.clubhouse.built || !pc ? null : payback(s.clubhouse.cost, s.clubhouse.upkeep, greenFeesMonth(pc.course)),
     note: s.clubhouse.built ? 'There is one clubhouse.' : pc && pc.course.holes < 1 ? 'No playable holes yet: green fees start when your first hole plays.' : undefined,
     why: s.clubhouse.built ? null : s.locks.buildings ?? shortWhy(s.clubhouse.cost, s.money), done: s.clubhouse.built ? 'Built' : null, act: s.clubhouse.built ? null : { k: 'clubhouse' },
+    ...(!s.clubhouse.built && s.locks.buildings && s.locks.progress ? { progress: s.locks.progress } : {}),
   });
   // ---- Practice (offered like everything else, never pushed)
   const prP = place('practice');

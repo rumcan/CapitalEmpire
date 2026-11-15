@@ -1,7 +1,7 @@
 // T437 (docs/CINDERLINKS-PORT.md, one look): the view from behind the golfer dressed as the manager game is. One list of the biomes and course types the
 // view knows, with the names both views show (the view's own lists, packages/cinderlinks parts 05-ground and 07-play, must match: the test reads them),
 // and the rules section 2 of the plan gives:
-// - the biome from the map's setting: Maple Falls is a northern valley with maples (clubtitle.ts MONTH_HIGH_C): parkland, under snow in a month whose
+// - the biome from the map's setting: Pine Falls is a northern valley with maples (clubtitle.ts MONTH_HIGH_C): parkland, under snow in a month whose
 //   usual high is at or below freezing;
 // - the course type from how the course is kept: a tournament day (the tour's set-up) plays as Tour; a course in good condition (the crew's work, staff.ts
 //   courseCondition) as Private; a neglected one as Public. (The game has no superintendent cards yet: when it does, they feed the condition.)
@@ -55,7 +55,7 @@ export interface TypeFacts3p { tournament: boolean; condition: number; tier: num
 export const DESERT_SAND = 0.15, BEACH_SAND = 0.06;
 /** a links course: by the sea, at most this many planted trees a hectare, and at least this share of sand */
 export const LINKS_TREES_PER_HA = 1, LINKS_SAND = 0.03;
-/** the tour tier (golf/tour.ts TIERS) from which the club is a tour venue: the Maple Falls Classic and the Open */
+/** the tour tier (golf/tour.ts TIERS) from which the club is a tour venue: the Pine Falls Classic and the Open */
 export const TOUR_TIER = 4;
 /** latitude bands, degrees from the equator: snow at or beyond SNOW_LAT, jungle within JUNGLE_LAT, savanna within SAVANNA_LAT */
 export const SNOW_LAT = 60, JUNGLE_LAT = 12, SAVANNA_LAT = 30;

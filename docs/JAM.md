@@ -1,7 +1,7 @@
 # Zoud GameLab FinLit jam build: "Fairway Fortune"
 
 The owner registered CapitalEmpire for the Zoud GameLab financial-literacy jam (2026-11-13). The lead owns the submission.
-**Deadline: 15 Nov 2026 23:59 AoE = Mon 16 Nov 13:59 SAST. Code freeze: Sun 15 Nov 18:00 SAST** (after that only fixes the lead asks for).
+**Deadline: 15 Nov 2026 23:59 AoE = Mon 16 Nov 13:59 SAST. Code freeze: Mon 16 Nov 10:00 SAST** (the owner moved it from Sun 15 Nov 18:00; after it only fixes the lead asks for; the final jam build, smoke test and play-through 10:00 to 11:00, the owner uploads by about 12:00).
 Jam rules that bind us: the video shows only the submitted build; nothing broken ships; disclose AI use; the build plays in a browser on itch.io
 (at most 1,000 files, 500 MB unpacked, 200 MB a file, paths of 240 characters).
 

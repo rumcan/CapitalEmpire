@@ -272,7 +272,7 @@ export async function exportCourse3p(inp: Export3pInput, opts: { deflate?: boole
   for (const [k, v] of Object.entries(features)) counts[k] = v.length;
   const file: CourseFile = {
     meta: {
-      id: inp.id ?? 'painted', course: { name: inp.name ?? 'Your course' }, credit: 'CapitalEmpire', attribution: 'Painted in CapitalEmpire; exported by src/game/golf/play/export3p.ts (T412)',
+      id: inp.id ?? 'painted', course: { name: inp.name ?? 'Your course' }, credit: 'Golf Manager 2026', attribution: 'Painted in Golf Manager 2026; exported by src/game/golf/play/export3p.ts (T412)',
       sizeM: [r1(land[2] - land[0]), r1(land[3] - land[1])], counts,
     },
     boundary: { polys: [{ outer: [[land[0], land[1]], [land[2], land[1]], [land[2], land[3]], [land[0], land[3]]], inner: [] }] },

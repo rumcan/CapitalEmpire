@@ -36,20 +36,20 @@ test('the UI scale: 90, 100, 110 and 125%; anything else to the nearest, nonsens
   assert.deepEqual([...UI_SCALES], [0.9, 1, 1.1, 1.25]);
   assert.equal(clampUiScale(1.25), 1.25); assert.equal(clampUiScale('0.9'), 0.9);
   assert.equal(clampUiScale(2), 1.25); assert.equal(clampUiScale(0.5), 0.9); assert.equal(clampUiScale(1.04), 1); assert.equal(clampUiScale(1.07), 1.1);
-  for (const bad of [NaN, Infinity, 'big', '', null, undefined, {}]) assert.equal(clampUiScale(bad), 1, String(bad));
+  for (const bad of [NaN, Infinity, 'big', '', null, undefined, {}]) assert.equal(clampUiScale(bad), 0.9, String(bad));   // (the default is 90% since 2026-11-15)
 });
 
 test('the UI scale is kept per browser, and falls back to 100% when storage is missing, holds nonsense, or throws', () => {
   const mem = new Map<string, string>(), store = { getItem: (k: string) => mem.get(k) ?? null, setItem: (k: string, v: string) => void mem.set(k, v) };
-  assert.equal(loadUiScale(store), 1, 'nothing stored');
+  assert.equal(loadUiScale(store), 0.9, 'nothing stored: the 90% default');
   assert.equal(saveUiScale(1.25, store), 1.25); assert.equal(mem.get(UI_SCALE_KEY), '1.25');
   assert.equal(loadUiScale(store), 1.25);
   assert.equal(saveUiScale(3, store), 1.25, 'stored clamped');
-  mem.set(UI_SCALE_KEY, 'huge'); assert.equal(loadUiScale(store), 1);
+  mem.set(UI_SCALE_KEY, 'huge'); assert.equal(loadUiScale(store), 0.9);
   const broken = { getItem: () => { throw new Error('blocked'); }, setItem: () => { throw new Error('blocked'); } };
-  assert.equal(loadUiScale(broken), 1, 'a private window: 100%');
+  assert.equal(loadUiScale(broken), 0.9, 'a private window: the 90% default');
   assert.equal(saveUiScale(0.9, broken), 0.9, 'saving does not throw');
-  assert.equal(loadUiScale(null), 1, 'no storage at all');
+  assert.equal(loadUiScale(null), 0.9, 'no storage at all');
 });
 
 // T250 (#721): the rail split into the course drawer (left) and the town footer (bottom): both are named navigation landmarks, the footer's

@@ -40,7 +40,7 @@ function CursorPair({ walk, sel }: { walk: RailWalk; sel: boolean }) {
         onClick={() => walk.set(isWalk)} aria-pressed={lit} aria-label={isWalk ? 'Walk' : 'Select'}
         {...tipAttrs({ name: isWalk ? 'Walk: a click walks your character there and uses what you clicked (Ctrl+click looks at once); WASD walk you, the arrows pan' : 'Select: a click inspects what is there; WASD still walk you, the arrows pan', key: 'Alt' })}
         className={`rail-tab rail-tab-half ${lit ? 'rail-tab-on' : ''}`}>
-        <ActionTile tile={isWalk ? 'walk' : 'select-tool'} size={30} />
+        <ActionTile tile={isWalk ? 'walk' : 'select-tool'} size={46} />
         <span>{isWalk ? 'Walk' : 'Select'}</span>
       </button>
     );
@@ -74,7 +74,7 @@ export function Rail({ walk, entries, onPick, onLocked, onHover, open = null, na
           >
             {locked && <span className="rail-lock"><LockMark /></span>}
             {isNew && <NewBadge className="rail-new" />}
-            {r.tile && tileUrl(r.tile) ? <ActionTile tile={r.tile} size={foot ? 24 : 30} /> : <Icon name={r.icon} size={foot ? 24 : 28} />}
+            {r.tile && tileUrl(r.tile) ? <ActionTile tile={r.tile} size={foot ? 38 : 46} /> : <Icon name={r.icon} size={foot ? 24 : 28} />}
             {!(foot && compact) && <span>{railLabel(r)}</span>}
           </button>}
         </div>

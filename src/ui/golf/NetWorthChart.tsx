@@ -3,7 +3,7 @@ import type { Point } from '../../game/golf/reports';
 import { money } from './finevents';
 
 export function NetWorthChart({ series, goal, height = 120 }: { series: readonly Point[]; goal?: number; height?: number }) {
-  const W = 360, H = height, L = 8, R = 8, T = 10, B = 18;
+  const W = 360, H = height, L = 8, R = 8, T = 20, B = 18;   // (T 20: room for the goal label above its line, the owner 2026-11-15)
   if (series.length < 2) {
     return <div className="rounded-xl border border-white/10 bg-white/5 p-3 text-center text-xs text-slate-400" data-testid="networth-chart">The chart draws once you have two month ends.</div>;
   }
@@ -20,7 +20,7 @@ export function NetWorthChart({ series, goal, height = 120 }: { series: readonly
         <line x1={L} x2={W - R} y1={y(0)} y2={y(0)} stroke="currentColor" strokeOpacity="0.25" />
         {goal !== undefined && <>
           <line x1={L} x2={W - R} y1={y(goal)} y2={y(goal)} stroke="#fbbf24" strokeOpacity="0.7" strokeDasharray="4 4" />
-          <text x={W - R} y={y(goal) - 3} textAnchor="end" fontSize="10" fill="#fbbf24">goal {money(goal)}</text>
+          <text x={W - R} y={y(goal) - 6} textAnchor="end" fontSize="10" fill="#fbbf24" stroke="#0b1220" strokeWidth="4" paintOrder="stroke" data-testid="networth-goal">goal {money(goal)}</text>
         </>}
         <path d={path} fill="none" stroke="#34d399" strokeWidth="2" strokeLinejoin="round" strokeLinecap="round" />
         <circle cx={x(series.length - 1)} cy={y(last.value)} r="3.5" fill="#34d399" />

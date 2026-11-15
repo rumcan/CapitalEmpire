@@ -39,11 +39,11 @@ const OWN_NEEDS: Need[][] = [
 
 /** the five tiers (GOLF-PLAN 5.1 and 8.2): TIERS[t - 1] is tier t. Names are fictional on purpose */
 export const TIERS: readonly Tier[] = [
-  { tier: 1, name: 'Maple Falls Club Championship', practiceDays: 0, days: 1, spectators: [300, 600], holes: 9, minLengthM: 0, needs: OWN_NEEDS[0], ticket: 0, purse: 2000, sponsor: 0, tv: 0, reputation: 0 },
+  { tier: 1, name: 'Pine Falls Club Championship', practiceDays: 0, days: 1, spectators: [300, 600], holes: 9, minLengthM: 0, needs: OWN_NEEDS[0], ticket: 0, purse: 2000, sponsor: 0, tv: 0, reputation: 0 },
   { tier: 2, name: 'County Amateur', practiceDays: 0, days: 2, spectators: [1500, 2500], holes: 9, minLengthM: 0, needs: OWN_NEEDS.slice(0, 2).flat(), ticket: 5, purse: 10000, sponsor: 10000, tv: 0, reputation: 55 },
   { tier: 3, name: 'State Open', practiceDays: 1, days: 3, spectators: [4000, 8000], holes: 18, minLengthM: 5800, needs: OWN_NEEDS.slice(0, 3).flat(), ticket: 10, purse: 60000, sponsor: 50000, tv: 0, reputation: 65 },
-  { tier: 4, name: 'Maple Falls Classic', practiceDays: 2, days: 4, spectators: [12000, 25000], holes: 18, minLengthM: 6400, needs: OWN_NEEDS.slice(0, 4).flat(), ticket: 20, purse: 400000, sponsor: 250000, tv: 300000, reputation: 75 },
-  { tier: 5, name: 'The Maple Falls Open', practiceDays: 3, days: 4, spectators: [30000, 50000], holes: 18, minLengthM: 6700, needs: OWN_NEEDS.slice(0, 5).flat(), ticket: 35, purse: 1000000, sponsor: 1000000, tv: 1500000, reputation: 85 },
+  { tier: 4, name: 'Pine Falls Classic', practiceDays: 2, days: 4, spectators: [12000, 25000], holes: 18, minLengthM: 6400, needs: OWN_NEEDS.slice(0, 4).flat(), ticket: 20, purse: 400000, sponsor: 250000, tv: 300000, reputation: 75 },
+  { tier: 5, name: 'The Pine Falls Open', practiceDays: 3, days: 4, spectators: [30000, 50000], holes: 18, minLengthM: 6700, needs: OWN_NEEDS.slice(0, 5).flat(), ticket: 35, purse: 1000000, sponsor: 1000000, tv: 1500000, reputation: 85 },
 ];
 
 /** the tier's row of TIERS (the tier clamped to 1..5) */

@@ -37,7 +37,9 @@ test('props by place: the category table, the filter by the group opened from, A
   // every catalogue item has its picture in the library, the town's buildings too
   const ids = new Set(LIBRARY.map(i => i.id));
   for (const d of DECOR) assert.ok(ids.has(d.id), d.key);
-  assert.deepEqual(DECOR.filter(d => d.group === 'buildings').map(d => [d.key, d.appeal]), [['town-fountain', 0], ['bus-shelter', 0], ['toilet-block', 0], ['chapel', 0]], 'decoration: no economy');
+  // (#1284: the New: Buildings section's town buildings and the eight-view houses and shops joined them)
+  assert.deepEqual(DECOR.filter(d => d.group === 'buildings' && !/^(newprop|object8)-/.test(d.key)).map(d => [d.key, d.appeal]), [['town-fountain', 0], ['bus-shelter', 0], ['toilet-block', 0], ['chapel', 0]], 'decoration: no economy');
+  assert.ok(DECOR.filter(d => d.group === 'buildings').every(d => d.appeal === 0), 'none of them has an appeal');
   // the library's own art only: none of the town's buildings is drawn as a stand-in (the library's gazebo is one, so it is not offered)
   const idx = new Map(LIBRARY.map((i, k) => [i.id, k]));
   for (const d of DECOR.filter(q => q.group === 'buildings')) assert.equal(drawnAsStandIn(idx.get(d.id)!), false, d.key);
