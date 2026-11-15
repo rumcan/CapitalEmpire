@@ -6352,6 +6352,7 @@ export class Game {
   private prepCached: PrepView | null = null;
   private prepCheck(force = false) {
     if (!force && ++this.prepTick % 6) return; // about once a second
+    if (JAM) { this.prepCached = null; return; } // (jam-rc: the jam has no tournaments, so no Tournament prep checklist, even for an imported course's holes)
     const g = this.golf, f = this.prepFacts(); if (!g || !f) { this.prepCached = null; return; }
     if (!g.prep) { g.prep = { done: prepDue(f).map(s => s.id), skipped: [] }; this.scheduleSave(); return; }
     // T399 (#1077): before the course is playable there is no checklist, and no reward or toast either (a step built early pays once the course is there)
@@ -11326,7 +11327,7 @@ export class Game {
   private seasonMonthNow(now: number): number { return this.golfMonthAt(now) - this.seasonsDone() * 12; }
   /** each frame: an event's announcement (a month before its date; the card opens), and a day over that you did not play (its result) */
   private stepEvents(day: number, now: number) {
-    const g = this.golf; if (!g || !this.hasClubhouse) return;
+    const g = this.golf; if (JAM || !g || !this.hasClubhouse) return; // (jam-rc: no club events in the jam: no Mayor's Cup or Club Championship card)
     const ev = this.clubEv(), season = this.seasonsDone();
     const d = ev.today, r = g.player?.round;
     if (d && !d.done && day > d.day && !(r && eventOfMode(r.mode) === d.id && r.day === d.day)) this.finishEvent(null);
@@ -11342,7 +11343,7 @@ export class Game {
   }
   /** the day's round is built: is today an event's day? (once a town day; the field's scores again when the course changed) */
   private eventDayBuilt(day: number, view: CourseView, now: number) {
-    const dp = this.dayPlay; if (!dp || !this.golf) return;
+    const dp = this.dayPlay; if (JAM || !dp || !this.golf) return; // (jam-rc: no event days in the jam)
     const ev = this.clubEv(), season = this.seasonsDone();
     if (ev.today && ev.today.day === day) { if (!ev.today.done) { ev.today = eventDay(ev.today.id, ev.today.season, day, dp.view.plan, view, dp.base); this.darken(ev.today); } return; }
     if (this.evDayChecked === day) return;
