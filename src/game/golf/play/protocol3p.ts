@@ -147,7 +147,7 @@ export interface TurnMsg { v: 1; t: 'turn'; golfer: number; holeIdx: number; hol
 
 /** a decided shot, the owner's or anyone's: who, the hole (1-based) and stroke, the club, where it was struck from, the flight's samples (x, y and
  *  the height, evenly spaced in time from the strike to the landing; a putt has none), the bounces (each touch of the ground after the landing),
- *  the roll's path to rest, the rest and its lie, whether it was holed, a penalty stroke (water or out), and the game minute it was struck */
+ *  the roll's path to rest, the rest and its lie, whether it was holed, a penalty stroke (water, out, or #1345 the rocks: restLie 'cliff', the drop at their edge), and the game minute it was struck */
 export interface ShotMsg { v: 1; t: 'shot'; golfer: number; hole: number; stroke: number; club: Club; from: ViewPt; flight: ViewPt3[];
   bounces: ViewPt[]; roll: ViewPt[]; rest: ViewPt; restLie: Lie; holed: boolean; penalty: 0 | 1; at: number;
   /** T418 (shot3p.ts; optional so an older host's message still reads): the seconds from the strike of each flight sample (rising; the last is the landing), the
@@ -263,11 +263,16 @@ export interface PickMsg { v: 1; t: 'pick'; drill: string }
  *  breath, applause, groan, and mute (the Mute key, F8, pressed in the view: the host toggles every mute); club: the model's club id; mat: fairway, green, sand, water, rough or rock; p: how hard, 0..1 */
 export interface SoundMsg { v: 1; t: 'sound'; k: 'swish' | 'strike' | 'tap' | 'land' | 'cup' | 'heart' | 'breath' | 'applause' | 'groan' | 'mute'; club?: string; mat?: string; p?: number; drop?: boolean }
 
-export type ViewMsg = ReadyMsg | LoadedMsg | ErrorMsg | InputMsg | AimMsg | WalkedMsg | GimmeMsg | HoleDoneMsg | ExitMsg | PickMsg | SoundMsg;
+/** #1345: where the view's own relief is a cliff (the plateaus' walls and rock faces it grows round the course, never on a line of play), sent once a course is on
+ *  screen: the course message's id, the north-west corner of the first cell (the view's frame, metres), the cell (m), the width and height in cells, and the cells
+ *  run-length coded row by row ([value, count, ...]; 1: a cliff). The host's model plays a ball at rest in one as a lateral hazard (cliffs3p.ts, live.ts CLIFF_V) */
+export interface CliffsMsg { v: 1; t: 'cliffs'; course: string; x0: number; y0: number; cell: number; w: number; h: number; r: number[] }
+
+export type ViewMsg = ReadyMsg | LoadedMsg | ErrorMsg | InputMsg | AimMsg | WalkedMsg | GimmeMsg | HoleDoneMsg | ExitMsg | PickMsg | SoundMsg | CliffsMsg;
 
 /** the message types each side sends */
 export const HOST_TYPES: readonly HostMsg['t'][] = ['course', 'actors', 'board', 'match', 'turn', 'shot', 'holeEnd', 'preview', 'clock', 'leave', 'lies', 'practice'];
-export const VIEW_TYPES: readonly ViewMsg['t'][] = ['ready', 'loaded', 'error', 'input', 'aim', 'walked', 'gimme', 'holeDone', 'exit', 'pick', 'sound'];
+export const VIEW_TYPES: readonly ViewMsg['t'][] = ['ready', 'loaded', 'error', 'input', 'aim', 'walked', 'gimme', 'holeDone', 'exit', 'pick', 'sound', 'cliffs'];
 
 const isMsg = (m: unknown, types: readonly string[]): boolean =>
   typeof m === 'object' && m !== null && (m as { v?: unknown }).v === PROTOCOL_V && types.includes((m as { t?: unknown }).t as string);

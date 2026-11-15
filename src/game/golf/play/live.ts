@@ -5,7 +5,7 @@
 import { TILE_M } from '../types';
 import { appendShots, FLIGHT_TIME, liveField, PUTT_FLIGHT } from './round';
 import type { Due, Field, HoleRun, PlayCtx, Player } from './round';
-import { PUTT_V2, carryFor, puttEase, chooseShot, hitShot, luckyPutt, putt, rng, type ShotSkill, type Strike } from './shot';
+import { PUTT_V2, carryFor, cliffDrop, puttEase, chooseShot, hitShot, luckyPutt, putt, rng, type ShotSkill, type Strike } from './shot';
 import { hasMech, kitOf, type ModCtx } from './mods';
 import { readShape, shapeEffect, type ShotShape } from './shape';
 import { holeFrom } from './courseview';
@@ -48,8 +48,18 @@ function backToFairway(view: CourseView, hole: PlayHole, p: Pt, reach: number): 
 }
 /** the shot model's current version (OwnerInput.v): 2 since T334 (the putting), 3 since T346 (the club's own run after landing: a shot with conditions rolls on by CLUB_RUN), 4 since 2026-11-15 (short putts
  *  much easier to sink: shot.ts PUTT_EASY), 6 since 2026-11-15 (the tapped boost counts TAP_BOOST.gain times), 5 since #1336 (the tapped boost for every golfer, capped at swing.ts TAP_BOOST.plain or BOOST.max with the Power Mash card,
- *  none on a putt; the spin tapped in the air, spin.ts AIR). An input below 5 keeps the old rules: the boost only with the card, the taps in the air dropped */
-export const MODEL_V = 6;
+ *  none on a putt; the spin tapped in the air, spin.ts AIR). An input below 5 keeps the old rules: the boost only with the card, the taps in the air dropped. 7 since #1345: a ball
+ *  at rest in the rocks of the view's own relief (CourseView.cliffAt, the view's cliff mask) is a lateral hazard (CLIFF_V) */
+export const MODEL_V = 7;
+/** #1345: the first model version that reads the view's cliffs: a ball at rest in them takes a penalty stroke and is dropped at their edge (shot.ts cliffDrop). Below it, and
+ *  on a view with no mask (an older view, the harness, a course the view has not drawn), there are none */
+export const CLIFF_V = 7;
+/** #1345: the course as a shot under version 7 reads it: the view's cliffs as the lie 'cliff' (out of bounds and water stay what they are); the view itself when it has none */
+export function cliffView(view: CourseView): CourseView {
+  const at = view.cliffAt; if (!at) return view;
+  return { holes: view.holes, lieAt: (x: number, y: number): Lie => { const l = view.lieAt(x, y); return l === 'out' || l === 'water' || !at.call(view, x, y) ? l : 'cliff'; },
+    ...(view.kindAt ? { kindAt: view.kindAt.bind(view) } : {}), cliffAt: at.bind(view) };
+}
 /** #1336: the first model version with the tapped boost and the spin tapped in the air */
 export const TAP_V = 5;
 /** the owner's turn: his golfer, the hole (index, number, par), the stroke he plays, the minute he strikes, his lie, his ball and the pin (tiles), the
@@ -159,6 +169,7 @@ export function shotOutcome(view: CourseView, hole: PlayHole, from: Pt, plie: Li
     played: { power: number; fullM: number; boost: number; held: boolean; strike: Strike | null; fx: SpinEffect | null } } {
   const putting = input.club === 'putter';
   let to: Pt, lie: Lie, penalty: 0 | 1 = 0, holed = false, landing: Landing | undefined, played = { power: 0, fullM: 0, boost: 0, held: false, strike: null as Strike | null, fx: null as SpinEffect | null };
+  if ((input.v ?? 1) >= CLIFF_V) view = cliffView(view);   // #1345: the view's cliffs are a lateral hazard from version 7 (an older input plays as it did)
   // T316: the swing meter's outcome (when he swung it): its power, its miss (radians off the aim, + right as he faces it) and spread
   const tapV = (input.v ?? 1) >= TAP_V; // (#1336: the tapped boost and the spin tapped in the air are version 5's)
   const spinR = !putting && input.spin ? readSpin(input.spin) : null; // (T318: a putt takes no spin)
@@ -207,6 +218,7 @@ export function shotOutcome(view: CourseView, hole: PlayHole, from: Pt, plie: Li
       lie = view.lieAt(to.x, to.y);
       // a putt into water or out of bounds is a stroke and distance (hitShot's drop is for full shots)
       if (lie === 'water' || lie === 'out') { to = { x: from.x, y: from.y }; lie = plie; penalty = 1; }
+      else if (lie === 'cliff') { const rest = to, d = cliffDrop(view, [from, rest], hole.pin, from, plie); to = d.to; lie = d.lie; penalty = 1; landing = { at: rest, lie: 'cliff', rest, restLie: 'cliff' }; }   // #1345: into the rocks, as a full shot
     }
   } else {
     // the intended carry along the aim's direction (the pin's when the aim is on the ball), then the hit model from there: spread, mishits, lies,
@@ -226,7 +238,7 @@ export function shotOutcome(view: CourseView, hole: PlayHole, from: Pt, plie: Li
     // (T318: the spin, from the lie it is played from: the curve, the check, the release; none without it)
     const sp = spin ? spinEffect(spin, input.club, lieP, envP?.lie, kit.spin, airShare) : null; // (#1336: the taps in the air held to the card's share) // (T334: the lie's finer kind scales the spin; T335: his clubs' grooves)
     // (T346: the club's own run after landing is version 3's: an input saved before it keeps its conditions and rolls as it did)
-    const mod = { ...(eff ? { maxF: Math.max(1, pw), spread: eff.spread, angF: sw!.v === HOLD_V ? 1 : METER_ANG, roll: eff.roll } : {}), ...(sp ? { spin: sp } : {}), ...(envP ? { env: envP } : {}), ...((input.v ?? 1) < 3 ? { run: false } : {}), ...(shape ? { shape: fx } : {}), ctx: mctx };
+    const mod = { ...(eff ? { maxF: Math.max(1, pw), spread: eff.spread, angF: sw!.v === HOLD_V ? 1 : METER_ANG, roll: eff.roll } : {}), ...(sp ? { spin: sp } : {}), ...(envP ? { env: envP } : {}), ...((input.v ?? 1) < 3 ? { run: false } : {}), ...(shape ? { shape: fx } : {}), ctx: mctx, pin: hole.pin };   // (#1345: pin, for a drop from the rocks)
     let o = hitShot(r, sk, lieP, from, at, input.club, view, mod);
     // (T337: the Scramble Captain: a second ball from the tee, the same strike with its own luck: the one in play, then the nearer the cup, stands)
     if (input.scr === true && plie === 'tee' && hasMech(sk, 'scramble')) {

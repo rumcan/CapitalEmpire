@@ -471,7 +471,7 @@ function hostRest() {   // the playback is over: the ball lies at the host's res
   ball.x = m.rest[0] * S; ball.y = m.rest[1] * S; ballRest();
   strokes = m.stroke + (m.penalty || 0); total += 1 + (m.penalty || 0);
   if (m.holed) { sndMsg('cup', { drop: true }); ball.state = 3; ball.x = hole.pin.x; ball.y = hole.pin.y; for (let k = 0; k < 120; k++) addParticle(k & 1 ? P_SPARK : P_EMBER, hole.pin.x, hole.pin.y, ball.z + 0.1, (rnd() - 0.5) * 3, (rnd() - 0.5) * 3, 2 + rnd() * 5, 40 + rndi(70), rndi(4)); }
-  else if (m.penalty) { splash(ball.x, ball.y, wlAt(ball.x, ball.y), 26); say(m.restLie === 'water' ? 'Water: one stroke, and a drop' : 'Out of bounds: one stroke', 260); }
+  else if (m.penalty) { if (m.restLie !== 'cliff') splash(ball.x, ball.y, wlAt(ball.x, ball.y), 26); say(m.restLie === 'water' ? 'Water: one stroke, and a drop' : m.restLie === 'cliff' ? 'Into the rocks: 1 penalty stroke, drop' : 'Out of bounds: one stroke', 260); }   // (#1345: the view's own rocks: a lateral drop, no splash)
   groupShotEnd(m);   // (T425: after another's stroke the owner's ball and score come back, 08e-group.md)
   galleryReact(m);   // (T429: the crowd near it cheers a holed putt, groans at a short miss: 08f-gallery.md)
   while (HP.q.length && !HP.play) { const q = HP.q.shift(); if (q.t === 'shot') hostShot(q); else if (q.t === 'turn') hostTurn(q); else if (q.t === 'holeEnd') hostHoleEnd(q); else if (q.t === 'practice') pracShow(q); }

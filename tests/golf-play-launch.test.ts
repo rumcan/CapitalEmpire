@@ -116,10 +116,9 @@ test('practice3p: each ball leaves its readout (full on the range, a chip and a 
 });
 // #1344: the shot shape's lock lines: the stat, what he has, the drill; none once earned, and none at practice (where the shape is open)
 import { earned, practiceEarned } from '../src/game/golf/play/unlocks';
-test('unlocks: a locked curve or flight carries its short line for the shot panel', () => {
+test('unlocks: no curve or flight lock for the shot panel (shaping is open to every golfer since 2026-11-15; the handicap ring limits it)', () => {
   const e = earned({ skills: { accuracy: 48, touch: 52.4, irons: 20 } });
-  assert.deepEqual(e.lock, { curve: 'Accuracy 60 (you have 48) · practise Shot shaping', flight: 'Touch 60 (you have 52) · practise Flight' });
-  assert.deepEqual(earned({ skills: { accuracy: 61, touch: 52, irons: 20 } }).lock, { flight: 'Touch 60 (you have 52) · practise Flight' });
-  assert.equal(earned({ skills: { accuracy: 61, touch: 61 } }).lock, undefined);
+  assert.equal(e.draw && e.fade && e.high && e.low, true);
+  assert.equal(e.lock, undefined, 'nothing to show as locked');
   assert.equal(practiceEarned(e).lock, undefined);
 });

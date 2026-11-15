@@ -10,6 +10,7 @@ import type { GolfProgress } from '../ext/progressive-ui';
 import type { GridSave } from '../ext/course-grid';
 import type { BunkerState } from '../ext/bunker-look/controller';
 import type { OwnerInput } from './play/live';
+import type { CliffMask } from './play/cliffs3p';
 import { normalizeRangeBiz, type RangeBizSave } from './rangesave';
 import { normalizeDaySave, type DaySave } from './everyday';
 import { normalizeBook, type LookBook } from './looks';
@@ -131,6 +132,9 @@ export interface GolfSave {
  estate?: EstateSave;
  /** T447: the time of day the course is played at from behind the golfer (protocol3p.ts CourseTime3p). Missing: golden hour, the default */
  time3p?: 'day' | 'dusk' | 'night';
+ /** #1345: where the view from behind the golfer stands cliffs of its own relief, by course (play/cliffs3p.ts: the view's mask in tiles, the newest first). The model reads
+  *  them for the owner's shots from version 7, a replay too, so they are kept with the course. Missing: none known (no cliffs) */
+ cliffs3p?: CliffMask[];
 }
 
 /** the owner's play as saved (GolfSave.play): the tournament's key (the round's count), his sex, the inputs he played in order, and how many of them

@@ -16,7 +16,7 @@ export const CLUB_ORDER: readonly Club[] = ['driver', 'wood3', 'wood5', 'hybrid'
 /** the full-shot clubs, shortest first: the first whose carry reaches the wanted distance is picked */
 const SHORT_TO_LONG: Club[] = ['sw', 'pw', 'iron8', 'iron6', 'iron4', 'wood3', 'driver'];
 /** the share of a shot's carry that rolls on, by the lie it lands on (the fairway runs, the rough and the sand stop it) */
-const ROLL: Record<Lie, number> = { tee: 0.08, fairway: 0.08, rough: 0.02, green: 0.03, fescue: 0.01, bunker: 0, water: 0, out: 0 };
+const ROLL: Record<Lie, number> = { tee: 0.08, fairway: 0.08, rough: 0.02, green: 0.03, fescue: 0.01, bunker: 0, water: 0, out: 0, cliff: 0 };   // (#1345: a ball in the rocks stops there)
 /** T346 (#988): the run each club has after landing, a factor on that share by what the club launches and spins. The playtest: ROLL is a share of the carry by the surface alone, so a driver and a sand wedge rolled the same 8% on
  *  a fairway (an 80 m wedge 6 m, a 250 m drive only 20 m); real balls: a driver runs 8 to 12%, a wedge checks. A driver launches low (10.5 degrees, LOFT) with little backspin (SPIN_BACK_CAP 0.12) and runs on (x1.3: 10.4% of its carry
  *  on a fairway), a sand wedge launches high (54 degrees) with all the spin it can take and checks (x0.3: 2.4%). It falls with the loft and with the backspin the club can take across the whole bag: the original seven clubs are the issue's
@@ -25,11 +25,11 @@ const ROLL: Record<Lie, number> = { tee: 0.08, fairway: 0.08, rough: 0.02, green
  *  saved before it, a field's day from before it): a shot without conditions rolls by the surface alone, as it always did. The putter's 1 is never read (a putt does not come through hitShot) */
 export const CLUB_RUN: Readonly<Record<Club, number>> = { driver: 1.3, wood3: 1.2, wood5: 1.12, hybrid: 1.07, iron4: 1, iron5: 0.93, iron6: 0.85, iron7: 0.75, iron8: 0.65, iron9: 0.55, pw: 0.45, gw: 0.375, sw: 0.3, lw: 0.22, putter: 1 };
 /** the carry factor by the lie the ball is played from (grass slows the ball) */
-const CARRY_F: Record<Lie, number> = { tee: 1, fairway: 1, rough: 0.88, green: 1, fescue: 0.75, bunker: 0.7, water: 1, out: 1 };
+const CARRY_F: Record<Lie, number> = { tee: 1, fairway: 1, rough: 0.88, green: 1, fescue: 0.75, bunker: 0.7, water: 1, out: 1, cliff: 1 };
 /** the spread factor by the lie the ball is played from (the rough and the sand scatter it) */
-const SPREAD_F: Record<Lie, number> = { tee: 1, fairway: 1, rough: 1.3, green: 1, fescue: 1.5, bunker: 1.4, water: 1, out: 1 };
-/** the lies a ball can be played from (not water, not out of bounds) */
-const PLAYABLE = new Set<Lie>(['tee', 'fairway', 'rough', 'fescue', 'bunker', 'green']);
+const SPREAD_F: Record<Lie, number> = { tee: 1, fairway: 1, rough: 1.3, green: 1, fescue: 1.5, bunker: 1.4, water: 1, out: 1, cliff: 1 };
+/** the lies a ball can be played from (not water, not out of bounds, not the rocks) */
+export const PLAYABLE = new Set<Lie>(['tee', 'fairway', 'rough', 'fescue', 'bunker', 'green']);
 /** a greenside bunker is a wedge shot, and a wedge from sand within this many metres of the aim carries exactly the distance */
 const SAND_M = 40;
 /** a mishit (the amateurs' topped and sliced shots): the chance per shot is base + skillK * (1 - skill)^2, it carries a share of the shot
@@ -127,6 +127,8 @@ export function chooseShot(lie: Lie, from: Pt, hole: PlayHole, skill: ShotSkill,
  *  miss takes over the direction), roll the roll (a hook runs on). T318: spin, the owner's spin (spin.ts): its side spin curves the flight and kicks the
  *  bounce, its topspin and backspin lengthen or shorten the roll (a spin back past the landing); no draws, so the stream is the same with it or without */
 export interface HitMod { maxF?: number; spread?: number; angF?: number; roll?: number; spin?: SpinEffect;
+  /** #1345: the pin, for a drop from the rocks (no nearer the hole); absent: the drop is the edge's nearest playable point, nearer or not */
+  pin?: Pt;
   /** T334: the conditions the shot is struck in (conditions.ts: the wind, the lie's kind, the slope under the ball): the lie's carry, spread and run, a flier or a wild
    *  strike from the grass, the slope's pull and carry, the wind's drift and carry. Absent: none of it, the same draws and the same numbers as before T334. The wind and
    *  the slope take no draws; the flier takes one only from a lie that can give it */
@@ -177,7 +179,7 @@ export function hitShot(r: () => number, sk: ShotSkill, lie: Lie, from: Pt, aim:
   // T346: the club's own run (CLUB_RUN): with conditions (and not an old input's: mod.run false) the ball rolls on by what its club launches and spins; the bag's T335 character (CLUB_BASE.roll, in kit.roll) is replaced by it
   const byClub = !!env && mod?.run !== false, baseRun = CLUB_BASE[club]?.roll ?? 1;
   let roll = flown * ROLL[landLie] * (mod?.roll ?? 1) * (lx && slope ? lx.run * slope.run * (flier ? FLIER.run : 1) : 1) * (kit ? (byClub ? kit.roll / baseRun : kit.roll) : 1) * (byClub ? CLUB_RUN[club] : 1) * (shape ? shape.run : 1) / TILE_M, rc = cs, rs = sn, spinM: number | undefined, check: Pt | undefined;
-  if (sp && landLie !== 'water' && landLie !== 'bunker') {
+  if (sp && landLie !== 'water' && landLie !== 'bunker' && landLie !== 'cliff') {   // (#1345: nor in the rocks: the view's lie 'cliff' comes only under model version 7)
     // T318: the spin on the first bounce: topspin runs on, backspin checks (and spins back past the landing), side spin kicks the way of the spin
     const m0 = roll * TILE_M, m = spinRollM(sp, m0, landLie), k = sp.side * SPIN.kickDeg * Math.PI / 180, c = Math.cos(k), q = Math.sin(k);
     rc = cs * c - sn * q; rs = cs * q + sn * c; roll = m / TILE_M; spinM = m - m0;
@@ -196,7 +198,40 @@ export function hitShot(r: () => number, sk: ShotSkill, lie: Lie, from: Pt, aim:
     }
     return { to: drop, lie: PLAYABLE.has(dl) ? dl : 'rough', penalty: 1, holed: false, landing, strike };
   }
+  if (endLie === 'cliff') { const d = cliffDrop(view, [from, land, end], mod?.pin ?? null, from, lie); return { to: d.to, lie: d.lie, penalty: 1, holed: false, landing, strike }; }   // #1345: a lateral hazard
   return { to: end, lie: endLie, penalty: 0, holed: false, landing, strike };
+}
+
+/** #1345: how far from the edge a ball out of the rocks may be dropped: two club lengths (tiles) */
+export const CLIFF_DROP_TILES = 2.3 / TILE_M;
+/** #1345 (the owner: "ball hit into the cliff just sits there and you have to play it from the side of a cliff. can we make Cliff balls a lateral penalty with a drop"): where a
+ *  ball at rest in the rocks of the view's relief (view.lieAt 'cliff') is dropped, under one penalty stroke (the caller counts it). The ball's way, `path` (the strike, the landing,
+ *  the rest), is walked back from the rest in quarter-tile steps to the edge where it went in: the last point of the flight or the roll outside the rocks. The drop is the
+ *  nearest point to that edge within CLIFF_DROP_TILES that lies on playable ground (not the rocks, water or out of bounds) and no nearer the pin (when known); the edge
+ *  itself when it qualifies. None there: the next such point further back along the way; none at all: the stroke again from `from` (its lie `fromLie`). No draws */
+export function cliffDrop(view: CourseView, path: readonly Pt[], pin: Pt | null, from: Pt, fromLie: Lie): { to: Pt; lie: Lie } {
+  const ok = (p: Pt, edge: Pt): Lie | null => {
+    const l = view.lieAt(p.x, p.y); if (!PLAYABLE.has(l)) return null;
+    if (pin && Math.hypot(p.x - pin.x, p.y - pin.y) < Math.hypot(edge.x - pin.x, edge.y - pin.y) - 1e-9) return null;
+    return l;
+  };
+  const near = (edge: Pt): { to: Pt; lie: Lie } | null => {
+    const l0 = ok(edge, edge); if (l0) return { to: { x: edge.x, y: edge.y }, lie: l0 };
+    for (let r = 0.25; r <= CLIFF_DROP_TILES + 1e-9; r += 0.25)
+      for (let k = 0; k < 16; k++) { const a = k * Math.PI / 8, p = { x: edge.x + Math.cos(a) * r, y: edge.y + Math.sin(a) * r }, l = ok(p, edge); if (l) return { to: p, lie: l }; }
+    return null;
+  };
+  let edge: Pt | null = null;
+  for (let s = path.length - 1; s > 0; s--) {
+    const a = path[s - 1]!, b = path[s]!, L = Math.hypot(b.x - a.x, b.y - a.y);
+    for (let d = L; d >= 0; d -= 0.25) {
+      const p = L > 0 ? { x: a.x + (b.x - a.x) * d / L, y: a.y + (b.y - a.y) * d / L } : { x: a.x, y: a.y };
+      if (view.lieAt(p.x, p.y) === 'cliff') continue;
+      if (!edge) { edge = p; const n = near(p); if (n) return n; }   // (the edge where it went in)
+      else { const l = ok(p, edge); if (l) return { to: p, lie: l }; }   // (further back along its way)
+    }
+  }
+  return { to: { x: from.x, y: from.y }, lie: fromLie };
 }
 
 /** T334 (#960): the putting model's second version (the play pass's playtest: a 0.5 m putt was missed one time in four, and half the holes took three putts or more): the make

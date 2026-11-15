@@ -571,6 +571,43 @@ const HOST_PLAY = String.raw`
     return { errs, info };
   }
   // T422: a host page's lies: three fairway points of hole 1 handed over as rough, deep rough and first cut are drawn so
+  // #1345: the view's own relief on a host course: none on any hole's line of play, the same land every time, and the cliff mask sent to the host.
+  // Woodhill with its fairways taken out (the owner's desert course: open ground from the tee to the fairway, where the plateaus grew before)
+  function hostCliffRun() {
+    const errs = [], info = {}, bare = () => { const m = hostMsg(); m.course.id = 'woodhill-bare'; m.course.polys = Object.assign({}, m.course.polys, { F: [] }); m.biome = 'desert'; return m; };
+    const pts = []; for (let k = 0; k < 600; k++) pts.push([((k * 7919) % 1000) / 1000, ((k * 104729) % 997) / 997]);
+    const sample = () => { const C = course, X = C.gx0 + 10, Y = C.gy0 + 10, W = (C.gw - 1) * CRES - 20, H = (C.gh - 1) * CRES - 20; return pts.map((p) => +courseWild(X + p[0] * W, Y + p[1] * H).toFixed(4)); };
+    hostMessage(bare()); const a = sample(), rs = course.rs; render();
+    const M = cliffLast && cliffLast.t === 'cliffs' ? cliffLast : null; info.maskMs = +cliffMs.toFixed(1);
+    // the same course again, after another course, a new page seed (N) and another hole: the same land
+    hostMessage(hostMsg()); SEED = 99; const m2 = bare(); m2.hole = 3; hostMessage(m2); const b = sample();
+    let differ = 0; for (let k = 0; k < a.length; k++) if (a[k] !== b[k]) differ++;
+    info.same = { rs: [rs, course.rs], differ, wild: a.filter((v) => v > 1.5).length };
+    if (differ || rs !== course.rs) errs.push('host cliffs: the same course gave other land (' + differ + ' of ' + a.length + ' points differ)');
+    if (!info.same.wild) errs.push('host cliffs: the bare course has no relief of its own at all (the check checks nothing)');
+    // on every hole's line of play (30 m either side, 40 m round the tee and the pin): no relief of the view's own over 1.5 m, no step over 1.5 m in 2 m
+    const C = course, near = (h, x, y) => { const L = h.line; if (Math.hypot(x - L[0], y - L[1]) <= 40 * C.S || Math.hypot(x - h.pin[0], y - h.pin[1]) <= 40 * C.S) return true;
+      for (let k = 0; k + 3 < L.length; k += 2) { const ax = L[k], ay = L[k + 1], ex = L[k + 2] - ax, ey = L[k + 3] - ay, l2 = ex * ex + ey * ey; let t = l2 ? ((x - ax) * ex + (y - ay) * ey) / l2 : 0; t = t < 0 ? 0 : t > 1 ? 1 : t; if (Math.hypot(x - ax - ex * t, y - ay - ey * t) <= 30 * C.S) return true; } return false; };
+    let hi = 0, step = 0, n = 0;
+    for (const h of C.holes) { const L = h.line, ux = L[2] - L[0], uy = L[3] - L[1], ul = Math.hypot(ux, uy) || 1;
+      for (let d = -40; d <= 160; d += 2) for (let s = -30; s <= 30; s += 2) { const x = L[0] + (ux * d - uy * s) / ul, y = L[1] + (uy * d + ux * s) / ul; if (!near(h, x, y)) continue;
+        const v = courseWild(x, y), st = Math.max(Math.abs(courseWild(x + 2, y) - v), Math.abs(courseWild(x, y + 2) - v)); n++; if (v > hi) hi = v; if (st > step) step = st; } }
+    info.corridor = { points: n, maxM: +hi.toFixed(2), maxStepM: +step.toFixed(2) };
+    if (hi > 1.5 || step > 1.5) errs.push('host cliffs: the view\'s own relief stands on a line of play (' + JSON.stringify(info.corridor) + ')');
+    // the mask: sent once the course was on screen, its cells only off the lines of play
+    if (!M) errs.push('host cliffs: no cliff mask was sent');
+    else {
+      let at = 0, marked = 0, onLine = 0;
+      for (let k = 0; k + 1 < M.r.length; k += 2) { if (M.r[k]) for (let q = 0; q < M.r[k + 1]; q++) { const c = at + q, x = (M.x0 + ((c % M.w) + 0.5) * M.cell) * C.S, y = (M.y0 + (Math.floor(c / M.w) + 0.5) * M.cell) * C.S; marked++; if (C.holes.some((h) => near(h, x, y))) onLine++; } at += M.r[k + 1]; }
+      info.mask = { course: M.course, w: M.w, h: M.h, cell: M.cell, runs: M.r.length / 2, cells: at, marked, onLine };
+      if (M.course !== 'woodhill-bare' || at !== M.w * M.h) errs.push('host cliffs: the mask is not the course\'s, or its runs do not fill it (' + JSON.stringify(info.mask) + ')');
+      if (!marked) errs.push('host cliffs: the mask marks no cliff at all');
+      if (onLine) errs.push('host cliffs: the mask marks ' + onLine + ' cells on a line of play');
+      if (hostLast && hostLast.t === 'cliffs') errs.push('host cliffs: the mask took the place of the last answer');
+    }
+    SEED = 4242; render();
+    return { errs, info };
+  }
   function hostLieRun() {
     const errs = [], info = {}, msg = hostMsg(), pts = [];
     for (let t = 0.3; t < 0.8 && pts.length < 3; t += 0.02) { const k = Math.min(23, Math.floor(t * 24)), x = hole.path[k * 2], y = hole.path[k * 2 + 1]; if (matAt(x, y) === M_FAIR && pts.every((q) => Math.hypot(q[0] - x, q[1] - y) > 8)) pts.push([x, y]); }
@@ -1257,6 +1294,7 @@ try {
     { const hg = hostGreenRun(); res.hostGreen = hg.info; res.errors.push(...hg.errs); }
     { const hd = hostDoneRun(); res.hostDone = hd.info; res.errors.push(...hd.errs); }
     { const hl = hostLieRun(); res.hostLies = hl.info; res.errors.push(...hl.errs); }
+    { const hc = hostCliffRun(); res.hostCliffs = hc.info; res.errors.push(...hc.errs); }   // (#1345)
     // T439: the scripted host's three holes, every rest against the model
     { const sr = scriptRun(SCRIPT, null); res.script = sr.info; res.errors.push(...sr.errs); }   // (last: it loads a course of its own)
     return res;

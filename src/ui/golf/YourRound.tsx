@@ -7,7 +7,7 @@ import { Icon } from '../Icon';
 import { MatchRows, MatchStrip } from './MatchCards';
 
 const toPar = (d: number): string => d === 0 ? 'E' : d > 0 ? `+${d}` : `${d}`;
-const LIE: Record<string, string> = { tee: 'on the tee', fairway: 'in the fairway', rough: 'in the rough', fescue: 'in the deep grass', bunker: 'in a bunker', green: 'on the green', water: 'in the water', out: 'out of bounds' };
+const LIE: Record<string, string> = { tee: 'on the tee', fairway: 'in the fairway', rough: 'in the rough', fescue: 'in the deep grass', bunker: 'in a bunker', green: 'on the green', water: 'in the water', out: 'out of bounds', cliff: 'in the rocks' };
 
 /** the first tee's choice (the owner: "you should be asked if you are playing all the holes"): all of them, the front 9, the back 9, or a pick */
 export function HoleChoiceBox({ choices, onStart }: { choices: { options: { id: HoleChoice; label: string; holes: number[] }[]; holes: { i: number; n: number; par: number }[]; why: string | null }; onStart: (c: HoleChoice, picked: number[], rules: RoundRules) => void }) {

@@ -1326,6 +1326,7 @@ function farHas(x, y) { const F = ftiles.get((Math.floor(x / FTS) + 32768) * 655
 function render() {
   golB[2] = golB[3] = balB[2] = balB[3] = -1;   // (J5d: set again as the golfer and the ball are drawn)
   frame++; madeThisFrame = 0; smallMade = 0; genUsed = 0; sprM.fill(0);
+  if (cliffDue && !fpNear && course) { cliffDue = false; hostCliffs(); }   // (#1345: the cliff mask goes to the host on the first frame after the course's first picture: 03b-realcourse.md)
   if (Math.abs(camX - stX) + Math.abs(camY - stY) > 0.02 || Math.abs(camYaw - stYaw) > 0.002) stillF = 0; else stillF++; stX = camX; stY = camY; stYaw = camYaw;
   // the camera: behind the golfer (wherever "behind" has been turned to), raised over any ground that would hide him
   const p = player, gh = groundH(p.x, p.y), AD = !cart.on && addressAt() ? addressSpot() || [p.x, p.y] : null, gpx = AD ? AD[0] : p.x, gpy = AD ? AD[1] : p.y, gha = AD ? groundH(gpx, gpy) : gh;   // (J5b: at address he is drawn in the swing's stance)

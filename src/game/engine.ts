@@ -244,7 +244,8 @@ const PAD_SURF: Partial<Record<string, PathSurface>> = { concrete: 'concrete', a
 const MAT_T: readonly [number, number] = [0.9, 0.75];
 import { courseEntry3p } from './golf/play/entry3p';
 import { seedOf } from './golf/play/view3p';
-import type { Actor, ActorsMsg, CourseMsg, CourseTime3p, Dress, HostMsg, PracticeMsg, Time3p, ViewInput } from './golf/play/protocol3p';
+import type { Actor, ActorsMsg, CliffsMsg, CourseMsg, CourseTime3p, Dress, HostMsg, PracticeMsg, Time3p, ViewInput } from './golf/play/protocol3p';
+import { cliffGrid, cliffHit, cliffMaskOf, keepCliffs, type CliffGrid, type CliffMask } from './golf/play/cliffs3p';
 import { Play3p, type Play3pOpts } from './golf/play/play3p'; // T418: the owner's play in the view from behind the golfer
 import { DEV_EARNED, earned, practiceEarned } from './golf/play/unlocks'; // T443
 import { PracticeDriver, RANGE_HOLE, SHORT_HOLE, bareEarthRects, practiceCourse, practiceFlags, rangeSwingCycle, teeAreaOf, type PracticeCourse, type PracticePlace } from './golf/play/practice3p'; // J6
@@ -10912,13 +10913,35 @@ export class Game {
   /** T450b: the player in the view from behind the golfer: the clothes and the golfer art of the look he picked on the "Who are you?" card (youArt, the
    *  same look the map walks), for the course message's golfer and for his own figure among the actors */
   private youDress3p(): Dress { return playerDress(GOLFER_PEOPLE[this.youArt()]?.id, this.golf?.player?.sex ?? 'm'); }
+  /** the course message's id for the club's course (or its practice course): from the course's name, so a course keeps it on every visit */
+  private course3pId(practice: boolean): string {
+    const name = this.titleName()?.name ?? 'Your course';
+    return 'ce-' + (name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'course') + (practice ? '-practice' : '');
+  }
+  /** #1345: the id of the course last sent to the view (a shared course's own) */
+  private view3pCourseId: string | null = null;
+  /** #1345: the view's cliff mask for the course it shows (protocol3p.ts CliffsMsg): turned into tiles in the frame the course was sent in and kept with the course in the save */
+  cliffs3p(m: CliffsMsg): void {
+    const g = this.golf, f = this.view3pFrame; if (!g || !f) return;
+    const M = cliffMaskOf(m, { x: f.cx, y: f.cy }); if (!M) return;
+    g.cliffs3p = keepCliffs(g.cliffs3p, M); this.scheduleSave();
+  }
+  private cliffGrids = new WeakMap<CliffMask, CliffGrid>();
+  /** #1345: a course view's cliffAt: the saved mask of the course `id()` names, read when asked (none saved: no cliffs) */
+  private cliffAtFor(id: () => string | null): (x: number, y: number) => boolean {
+    return (x, y) => {
+      const k = id(), M = k ? this.golf?.cliffs3p?.find(c => c.course === k) : undefined; if (!M) return false;
+      let G = this.cliffGrids.get(M); if (!G) { G = cliffGrid(M); this.cliffGrids.set(M, G); }
+      return cliffHit(G, x, y);
+    };
+  }
   async course3pMsg(n: number, roundTime?: Time3p): Promise<CourseMsg | null> {
     const sh = this.shared3p; this.lies3pRun(null);
     const golfer = this.youDress3p();   // (T437: the golfer in the player card's clothes; T450b: drawn as the golfer he picked)
-    if (sh) { this.view3pFrame = sh.frame; this.course3pShare = sh.share; return { ...(await shareCourseMsg(sh.share, sh.view, n)), golfer, time: roundTime ?? this.time3p }; }   // (T434: a shared course)
+    if (sh) { this.view3pFrame = sh.frame; this.course3pShare = sh.share; const sm = await shareCourseMsg(sh.share, sh.view, n); this.view3pCourseId = typeof sm.course.id === 'string' ? sm.course.id : null; return { ...sm, golfer, time: roundTime ?? this.time3p }; }   // (T434: a shared course)
     const g = this.golf; if (!g) return null;
     const pr = this.prac3p;   // (J6: a practice session: the range and the short game area as a course of their own, practice3p.ts)
-    const name = this.titleName()?.name ?? 'Your course', id = 'ce-' + (name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'course') + (pr ? '-practice' : '');
+    const name = this.titleName()?.name ?? 'Your course', id = this.course3pId(!!pr);
     const inp = pr ? { ...pr.course.input } : export3pInputOf(this, name); if (!inp) return null;
     inp.id = id;
     const f = frame3p(inp), file = await exportCourse3p(inp, { deflate: false }), course = await courseEntry3p(file);   // (T438: the heights deflated after, for the share file)
@@ -10952,6 +10975,7 @@ export class Game {
     this.course3pShare = null; const sg = this.lies3pGen;
     if (!pr) void (file.height ? fillPack(file.height) : Promise.resolve()).then(() => { if (sg === this.lies3pGen) this.course3pShare = shareOf(file, features, { name, biome, type, seed: seedOf(name) }); });
     const night = this.golf?.player?.round?.mode === 'night-golf';   // (T449: a night-golf round is played at night)
+    this.view3pCourseId = id;
     return { v: 1, t: 'course', course: course as unknown as Record<string, unknown>, features, biome, type, seed: seedOf(name), scale: 1, hole: n, golfer, time: roundTime ?? (night ? 'night' : this.time3p) };
   }
   // ---------- J6 (#1223): practice from behind the golfer: the range's mats and the short game area (golf/play/practice3p.ts, drills.ts) ----------
@@ -11041,6 +11065,7 @@ export class Game {
   private practiceStart3p(f: Frame3p): HostMsg[] {
     const pr = this.prac3p!, p = this.playerNow(), sk = this.yourSkills();
     const base = this.devMode ? DEV_EARNED : earned({ skills: p?.skills ?? {}, bag: p?.bag ?? null, mech: MECH_IDS.filter(id => hasMech(sk, id)), drills: p?.drills?.done ?? null });
+    pr.course.view.cliffAt = this.cliffAtFor(() => this.course3pId(true));   // (#1345: the view's cliffs round the range, once it has sent them)
     pr.drv = new PracticeDriver(pr.course, pr.place, sk, (this.seed ^ Math.imul(++this.play3pN, 104729)) | 0, { drills: () => this.playerNow()?.drills ?? null, judged: (id, call) => this.drillJudged(id, call) });
     this.play3p = new Play3p({ view: pr.course.view, holes: [Math.max(0, pr.course.idx[pr.place])], skills: sk, earned: practiceEarned(base), driver: pr.drv, owner: this.youDress3p(), sex: p?.sex ?? 'm',
       seed: this.seed, frame: f, height: this.ballHeight, wind: () => this.windNow(), fit: putterFitName(p?.bag) });
@@ -11176,6 +11201,7 @@ export class Game {
   async shareLoad3p(text: string): Promise<string | null> {
     const r = readShare(text); if ('why' in r) return r.why;
     const sv = await shareView(r.share); this.shared3p = { share: r.share, ...sv };
+    sv.view.cliffAt = this.cliffAtFor(() => (this.shared3p?.view === sv.view ? this.view3pCourseId : null));   // (#1345: the view's cliffs on the shared course, once it has sent them)
     if (this.view3pHole !== null) { this.view3pHole = null; this.emit(); }
     this.releaseKeys(); this.view3pSpeed = this.speed; if (this.speed) this.setSpeed(0);
     this.view3pHole = sv.view.holes[0]?.n ?? 1; this.emit();
@@ -13002,7 +13028,9 @@ export class Game {
     // T269: play reads the day's cups (golf/daypins.ts): the pin and the end of each line; the par and the tees are the placed pin's
     // T353: a ball that comes to rest on a house lot is out of bounds (golf/estate.ts lotAt)
     const lots = this.estateRt;
-    return withDayPins(makeCourseView(deriveHoles(areas, g.tees, g.pins, g.aims), surfAt, lots && lots.lots.length ? (x, y) => !!ES.lotAt(lots, x, y) : undefined), n => this.todayPin(n));
+    const view = withDayPins(makeCourseView(deriveHoles(areas, g.tees, g.pins, g.aims), surfAt, lots && lots.lots.length ? (x, y) => !!ES.lotAt(lots, x, y) : undefined), n => this.todayPin(n));
+    view.cliffAt = this.cliffAtFor(() => this.course3pId(false));   // (#1345: the view's cliffs, as it last sent them for this course; a replay reads the same saved ones)
+    return view;
   }
   /** the round of a tournament key from the save: the save's owner play when it is this tournament's (buildPlay replays his inputs). A save the course no
    *  longer fits (its inputs throw) is dropped, and the day is played without him */

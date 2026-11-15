@@ -62,7 +62,7 @@ test('tap boost in the model (version 5): every golfer\'s hold swing plays it up
   assert.equal(carry(card, BOOST.max, 4).boost, BOOST.max);
   // version 6 (the owner, 2026-11-15: "make it bigger"): the same saved boost carries TAP_BOOST.gain times as far as it did under version 5
   { const gain6 = plain.at - none.at, gain5 = carry(noCard, TAP_BOOST.plain, 5).at - carry(noCard, 0, 5).at;
-    assert.equal(MODEL_V, 6); assert.ok(gain6 > gain5 * 2.4 && gain6 < gain5 * 5, `${TAP_BOOST.gain}x the power: well over twice the carry gain: v6 ${gain6.toFixed(1)} m, v5 ${gain5.toFixed(1)} m`); }
+    assert.equal(MODEL_V, 7); assert.ok(gain6 > gain5 * 2.4 && gain6 < gain5 * 5, `${TAP_BOOST.gain}x the power: well over twice the carry gain: v6 ${gain6.toFixed(1)} m, v5 ${gain5.toFixed(1)} m`); }
   // a putt takes none (a hold putt's power is its share of the way to the hole)
   const putt = shotOutcome(view, hole, { x: 290, y: 100 }, 'green', card, { club: 'putter', aim: hole.pin, power: 1, swing: HOLD(1, BOOST.max), v: MODEL_V }, () => 0.5);
   assert.equal(putt.sw!.boost, 0, 'no boost on a putt');

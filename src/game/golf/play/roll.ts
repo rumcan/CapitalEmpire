@@ -19,6 +19,7 @@ export const ballRoll = { on: true };
 export const BOUNCE: Record<Lie, { h: number; second: number }> = {
   tee: { h: 1.9, second: 0.35 }, fairway: { h: 1.9, second: 0.35 }, green: { h: 0.7, second: 0.22 }, rough: { h: 0.45, second: 0 },
   fescue: { h: 0.18, second: 0 }, out: { h: 0.45, second: 0 }, bunker: { h: 0, second: 0 }, water: { h: 0, second: 0 },
+  cliff: { h: 0.3, second: 0 },   // (#1345: a knock off the rocks; the ball is dropped at their edge)
 };
 /** the carry (m) whose bounce is BOUNCE's height; a shorter one bounces lower, by its share of it (at least CARRY_MIN of it, at most CARRY_MAX) */
 const CARRY_REF = 200, CARRY_MIN = 0.25, CARRY_MAX = 1.15;

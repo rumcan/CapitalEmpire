@@ -14,7 +14,7 @@ import { LEVEL_COLOR } from './golf/ClubIcon';
 import { TILE_M } from '../game/golf/types';
 
 /** the lies as the panel names them */
-const LIE_NAME: Record<Lie, string> = { tee: 'Tee', fairway: 'Fairway', rough: 'Rough', fescue: 'Fescue', bunker: 'Bunker', green: 'Green', water: 'Water', out: 'Out of bounds' };
+const LIE_NAME: Record<Lie, string> = { tee: 'Tee', fairway: 'Fairway', rough: 'Rough', fescue: 'Fescue', bunker: 'Bunker', green: 'Green', water: 'Water', out: 'Out of bounds', cliff: 'Rocks' };
 /** yards per metre */
 const YARDS = 1.09361;
 /** how long (ms) the finished meter holds before the shot is played (so the player sees where his clicks landed) */
