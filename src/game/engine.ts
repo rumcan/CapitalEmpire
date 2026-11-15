@@ -9029,7 +9029,7 @@ export class Game {
   get lotsPending() { return this.lotQueue.size + this.staged.size; }
   async save() {
     if (this.benchMode || this.startPick) return 0; if (this.saveBlocked) return 0;
-    if (!!this.sandboxMode !== (saveSlot() === 'sandbox')) return 0; // #1314: a sandbox game is written to its own slot only, a career game never to it
+    const slot = saveSlot(); if (!!this.sandboxMode !== (slot === 'sandbox')) return 0; // #1314: a sandbox game is written to its own slot only, a career game never to it
     // the tournament day under way (T209): the worker's snapshot of it, asked for first (only while a golf round is in its surge or eval: every other save
     // is written at once, as before, without it)
     const rs = this.traffic.round.stage, tourney = this.golf && (rs === 'surge' || rs === 'eval') ? await this.traffic.daySave() : null;
@@ -9062,7 +9062,8 @@ export class Game {
       speed: this.net.speedTier,
       golf: this.golf ? { ...this.golf, bunkers: this.bunkers.serialize(), teeSets: 1 as const, height: this.courseHeightChunks(), ...(landSave ? { land: landSave } : {}), grid: this.gridSave(), plans: this.golf.plans?.length ? this.golf.plans : undefined, play: this.golf.play && this.traffic.round.stage !== 'free' ? this.golf.play : undefined, everyday: this.dayBook?.save ?? this.golf.everyday, estate: ES.encodeEstate(this.estateRt) } : undefined,
     };
-    try { return await writeSave(withTourney(d, tourney)); } catch { return 0; }
+    if (saveSlot() !== slot || !!this.sandboxMode !== (slot === 'sandbox')) return 0; // (#1314: the slot or the game changed while this save waited: it is not this slot's any more)
+    try { return await writeSave(withTourney(d, tourney), slot); } catch { return 0; }
   }
   /** the course height as save chunks (undefined when flat), recomputed only when the field changed */
   private courseHeightChunks(): CourseHeightSaveChunk[] | undefined {

@@ -10,6 +10,7 @@ import {
 import { START_CHOICES, choiceFromStore, choiceHash, choiceOf, sandboxOf } from '../src/game/showcase';
 import { buildCards } from '../src/ui/jam/build-menu';
 import { unlockPct } from '../src/ui/unlock-bar';
+import { readSave, saveSlot, setSaveSlot, setSaveStore, slotHasSave, writeSave, type SaveStore, type SaveV5 } from '../src/game/save';
 
 /** a new range game's progress, as Engine.newRangeGame makes it (the ramp at 0, the guided build and the start tutorial running) */
 const fresh = (): GolfProgress => ({ ...emptyProgress(), ramp: 0, guide: newRangeGuide(), tour: newTour() });
@@ -109,4 +110,27 @@ test('the sandbox treasury and the title card choice: SANDBOX_MONEY, and Sandbox
   assert.deepEqual(sandboxOf('sandbox'), { townRoads: false }); assert.deepEqual(sandboxOf('sandbox-town'), { townRoads: true });
   assert.equal(sandboxOf('new'), null); assert.equal(sandboxOf('continue'), null); assert.equal(sandboxOf(null), null);
   assert.equal(choiceOf('#play=sandboxes'), null); assert.equal(choiceFromStore('sandbox-x'), null);
+});
+
+test('a sandbox game has its own save slot: the career save is never written while it runs, and each slot reads back its own game', async () => {
+  const mem = new Map<string, ArrayBuffer>();
+  const store: SaveStore = { get: async k => mem.get(k), put: async (k, v) => { mem.set(k, v); }, del: async k => { mem.delete(k); }, keys: async () => [...mem.keys()] };
+  setSaveStore(store);
+  const save = (seed: number, sandbox: boolean) => ({ version: 5, map: 2048, seed, segs: [], nodes: [], props: [], money: 1, day: 1, cam: { X: 0, Y: 0, z: 1 },
+    golf: sandbox ? { progress: { sandbox: { townRoads: true } } } : undefined }) as unknown as SaveV5;
+  const was = saveSlot();
+  try {
+    setSaveSlot('town'); await writeSave(save(11, false));
+    const career = new Uint8Array(mem.get('town')!).slice();
+    setSaveSlot('sandbox'); assert.equal(saveSlot(), 'sandbox');
+    await writeSave(save(22, true));
+    assert.deepEqual(new Uint8Array(mem.get('town')!), career, 'the career slot is untouched');
+    assert.ok(await slotHasSave('town')); assert.ok(await slotHasSave('sandbox'));
+    const sb = await readSave(); assert.equal(sb.status, 'ok'); assert.equal(sb.save?.seed, 22);
+    assert.deepEqual((sb.save?.golf as { progress?: { sandbox?: unknown } } | undefined)?.progress?.sandbox, { townRoads: true });
+    // a save made for the career slot (in flight when the slot switched) still lands there, never in the sandbox's
+    await writeSave(save(33, false), 'town');
+    assert.equal((await readSave()).save?.seed, 22, 'the sandbox slot still holds the sandbox game');
+    setSaveSlot('town'); assert.equal((await readSave()).save?.seed, 33);
+  } finally { setSaveSlot(was); }
 });

@@ -165,7 +165,8 @@ const V2_IDS = ['world:house_1', 'world:house_3', 'world:house_4', 'gen:house-du
 /** the save with the tournament day under way (T209, SaveV5.tourney) added last; with none, the very same object, so every other save is byte for byte
  *  as before */
 export function withTourney(d: SaveV5, tourney: DaySave | null): SaveV5 { return tourney ? { ...d, tourney } : d; }
-export async function writeSave(d: SaveV5) { const buf = await gzip(JSON.stringify({ ...d, build: BUILD })); await store.put(SLOT, buf); return buf.byteLength; }
+/** writes a save to `slot` (#1314: the slot the save was made for, so a save still in flight when the title card switches slots never lands in the other one; default: the slot in use) */
+export async function writeSave(d: SaveV5, slot: SaveSlot = SLOT) { const buf = await gzip(JSON.stringify({ ...d, build: BUILD })); await store.put(slot, buf); return buf.byteLength; }
 /** the save migrations, one step per version: step `from` turns a save of that version into the next one's shape; upgradeSave runs them in order */
 export const MIGRATIONS: { from: number; up(d: any): any }[] = [
   // v3: the same town with the painted terrain dropped; the seed came in v3 but was optional, so default to 1

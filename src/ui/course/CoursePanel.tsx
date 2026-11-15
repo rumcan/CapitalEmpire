@@ -53,9 +53,11 @@ export function CoursePanel({ game, looks = false, onLooks }: { game: Game; look
         <button className={`pill-gold ${lock ? 'opacity-80' : ''}`} data-primary="new-hole" data-guide="new-hole" aria-disabled={!!lock} title={lock ? `New hole: ${lock}` : 'Click the tee, then the green: the whole hole is planned, ready to shape and build'} onClick={() => newHole(game)}>
           <span className="pill-plus" aria-hidden>{lock ? <LockMark size={12} /> : '+'}</span>
           <ActionTile tile="golf-hole" size={TILE_BIG - 20} className={lock ? 'opacity-60' : ''} />
-          <span className="min-w-0"><span className="block">New hole</span>{lock ? <small data-testid="new-hole-lock">{lock}</small> : !shape && <small>Click a tee, then a green</small>}{lock && ui?.newHoleProgress && <UnlockBar have={ui.newHoleProgress.have} need={ui.newHoleProgress.need} looks={ui.newHoleProgress.looks} testId="new-hole-progress" />}</span>
+          <span className="min-w-0"><span className="block">New hole</span>{lock ? <small data-testid="new-hole-lock">{lock}</small> : !shape && <small>Click a tee, then a green</small>}</span>
         </button>
       )}
+      {/* #1305: how far the range is toward New hole: the takings bar and the looks checklist, on the panel's dark ground under the gold button (on the gold they could not be read) */}
+      {!plan && lock && ui?.newHoleProgress && <div className="mt-2 rounded-lg border border-white/10 bg-black/30 px-2.5 py-2"><UnlockBar have={ui.newHoleProgress.have} need={ui.newHoleProgress.need} looks={ui.newHoleProgress.looks} testId="new-hole-progress" /></div>}
       {!shape && !plan && (
         <>
           <p className="mt-2.5 leading-snug">The whole hole is planned for you: fairway, green, tee and rough. Nothing is paid until you press Build.</p>

@@ -56,11 +56,11 @@ try {
   check(f.lock === null && !f.locked.includes('buildings'), 'the unlock: New hole and the clubhouse open at $5,000 and 3 looks');
   check(await game(() => window.__game.toasts.some(t => /range is ready/i.test(t.text))), 'the celebration toast says the range is ready');
   await shot('04-unlock.png');
-  await game(() => window.__game.save()); await settle(800);
-  const before = await careerDigest(); console.log('career save', before);
   // ---- Settings > Exit to main menu: the title card, Sandbox open
   await page.locator('button[data-tip="Settings"]').click(); await settle(400);
   await page.locator('[data-testid="menu-exit-title"]').click(); await page.locator('[data-testid="title-card"]').waitFor({ timeout: 20000 }); await settle(600);
+  await settle(2000); const before = await careerDigest(); console.log('career save after Exit to main menu', before); // (the exit saves the career game: its bytes from here)
+  check(before !== null, 'the career game is saved');
   await page.locator('[data-testid="title-sandbox"]').click(); await settle(400);
   if (has('town')) await page.locator('[data-testid="sandbox-roads-town"]').check();
   check(await page.locator('[data-testid="sandbox-options"]').isVisible(), 'the title card offers Sandbox with its town roads choice');
