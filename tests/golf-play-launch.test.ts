@@ -114,3 +114,12 @@ test('practice3p: each ball leaves its readout (full on the range, a chip and a 
   sp.input({ holeIdx: t.holeIdx, stroke: t.stroke, club: 'putter', aim: t.suggested.aim, power: 1 });
   assert.equal(sd.last!.kind, 'putt'); assert.ok(sd.last!.puttM! >= 2.9 && sd.last!.puttM! <= 6.1, `putt ${sd.last!.puttM}`);
 });
+// #1344: the shot shape's lock lines: the stat, what he has, the drill; none once earned, and none at practice (where the shape is open)
+import { earned, practiceEarned } from '../src/game/golf/play/unlocks';
+test('unlocks: a locked curve or flight carries its short line for the shot panel', () => {
+  const e = earned({ skills: { accuracy: 48, touch: 52.4, irons: 20 } });
+  assert.deepEqual(e.lock, { curve: 'Accuracy 60 (you have 48) · practise Shot shaping', flight: 'Touch 60 (you have 52) · practise Flight' });
+  assert.deepEqual(earned({ skills: { accuracy: 61, touch: 52, irons: 20 } }).lock, { flight: 'Touch 60 (you have 52) · practise Flight' });
+  assert.equal(earned({ skills: { accuracy: 61, touch: 61 } }).lock, undefined);
+  assert.equal(practiceEarned(e).lock, undefined);
+});
