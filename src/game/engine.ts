@@ -745,6 +745,9 @@ export class Game {
   /** T147, the money floats (moneyfloats.ts): green +$X rises where money comes in, red -$X where it goes out at a place or a sale is lost; on by
    *  default, remembered (the gear menu's Money floats). Set it with setShowMoneyFloats */
   showMoneyFloats = true;
+  /** J12: the menu scene's still (scripts/jam/menu-scene-motion.mjs --flow poster): the world drawn with nothing that moves (no cars, people, animals, carts or balls), so the
+   *  still under the title card is the live scene's first frame without its movers, and the swap to the live scene only brings them in */
+  stillLife = false;
   readonly floats = new MoneyFloats();
   /** T151, the map's world labels: collected over the overlay's frame, placed in one pass (none overlapping, stable) and written together; the
    *  money floats' columns are placed after them (floatCols) */
@@ -13706,10 +13709,10 @@ export class Game {
       const bx0 = Math.min(...c.map(p => p.x)) - pad, by0 = Math.min(...c.map(p => p.y)) - pad, bx1 = Math.max(...c.map(p => p.x)) + pad, by1 = Math.max(...c.map(p => p.y)) + pad;
       this.viewTileBox = [bx0, by0, bx1, by1]; // (T228: the car parks' parked cars are looked at only on screen, syncParkCars)
       // (T192: with their brake lights from the closest zooms down to 8%, drawn in the sprite pass right after each car)
-      const cars: Drawable[] = this.traffic ? this.traffic.visible(bx0, by0, bx1, by1, cam.z >= 0.08) : [];
+      const cars: Drawable[] = this.traffic && !this.stillLife ? this.traffic.visible(bx0, by0, bx1, by1, cam.z >= 0.08) : [];
       // at the street tier the townspeople and the crowd (the galleries' fans, the queues, the walking parties) are the movers, merged in by depth
       let movers = cars;
-      if (tier === 'street') {
+      if (tier === 'street' && !this.stillLife) {
         const peds = this.peds.n ? this.pedMovers(bx0, by0, bx1, by1) : [], crowd = this.crowdMovers(bx0, by0, bx1, by1, now / 1000), range = this.range.movers_(bx0, by0, bx1, by1);
         // T312: the people on screen step round each other (spacing.ts: a drawn offset only; ?spacing=0, dev: off, the bench's before)
         const s0 = performance.now();
@@ -13728,7 +13731,7 @@ export class Game {
       // (T192: no car light overlay any more: no headlights, beams or turn signals; the brake lights are glow instances in the sprite stream)
       const vecOn = shadows || this.cast.on;
       // T386 (#1043): the balls lying on the outfield are one instanced draw of GL points (rangehost.ts fieldPoints: at most BALL_DRAW_MAX, thinned past it), in the same upload
-      const nBall = tier === 'street' && this.range.scene ? this.range.fieldPoints(this.ballPts, X0, Y0, X1, Y1) : 0;
+      const nBall = tier === 'street' && !this.stillLife && this.range.scene ? this.range.fieldPoints(this.ballPts, X0, Y0, X1, Y1) : 0;
       const [sAt, pAt, ...vAt] = gl.uploadParts([[f.shadows, shadows ? f.shadowFloats : 0], [f.stream, f.floats],
         ...f.vec.map(v => [v.data, vecOn ? v.floats : 0] as [Float32Array, number]), [this.ballPts, nBall * 2 * BALL_POINT_FLOATS]]);
       const bAt = vAt.pop()!;

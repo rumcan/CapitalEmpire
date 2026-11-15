@@ -23,6 +23,8 @@ const savePrint = page => page.evaluate(() => new Promise(res => { const r = ind
 async function lap(page, label) {
   await page.waitForFunction(() => window.__showDirector?.phase === 'play', null, { timeout: 240000 });
   res[`${label}FirstLiveMs`] = await page.evaluate(() => Math.round(performance.now()));
+  // the swap: the still fading out over the live first frame (the movers come in; nothing else may change)
+  await shot(page, `${label}-swap-0`); await page.waitForTimeout(600); await shot(page, `${label}-swap-1`); await page.waitForTimeout(1000); await shot(page, `${label}-swap-2`);
   const frames = [], engine = [];
   for (let k = 0; k < nStops; k++) {
     const id = await page.evaluate(() => window.__showDirector.stop.id), i0 = await page.evaluate(() => window.__showDirector.index);
@@ -40,7 +42,25 @@ try {
   const ctx = await browser.newContext({ viewport: { width: 1600, height: 900 }, deviceScaleFactor: 1 });
   const page = await ctx.newPage();
   page.on('pageerror', e => console.log('[pageerror]', e.message));
-  if (flow === 'boot') {
+  if (flow === 'poster') {
+    // the still of the first stop: the live scene's own first view (its camera, zoom, hour and light) with nothing moving drawn (engine stillLife), at POSTER_W x POSTER_H
+    // (showcase.ts) so the page can lay it at the live scene's exact scale; written to src/assets/showcase/<first stop>.jpg
+    const pw = Number(opt('pw', 2560)), ph = Number(opt('ph', 1440));
+    await page.setViewportSize({ width: pw, height: ph });
+    await page.goto(base, { waitUntil: 'commit', timeout: 120000 });
+    await page.waitForFunction(() => window.__showDirector?.phase === 'play', null, { timeout: 240000 });
+    const id = await page.evaluate(() => {
+      const d = window.__showDirector, g = window.__game, s = window.__showcase.stops[0], T = g.traffic; d.end();
+      g.stillLife = true; T.setTownClock({ ...T.town, t0: T.simTime(performance.now()) }); // (the hour the director set at the first frame: the golf morning's start)
+      const p = window.__showcase.poseAt(s, 0, innerWidth, innerHeight); g.cam.X = p.X; g.cam.Y = p.Y; g.cam.z = p.z; g.clampCam(); return s.id;
+    });
+    const t0 = Date.now(); while (Date.now() - t0 < 60000 && !(await page.evaluate(() => window.__game.viewReady(window.__game.cam)))) await page.waitForTimeout(300);
+    await page.waitForTimeout(2500);
+    await page.addStyleTag({ content: '[data-testid=title-card], [data-testid=menu-scene] { display: none !important; }' }); await page.waitForTimeout(300);
+    const buf = await sharp(await page.screenshot({ type: 'png' })).jpeg({ quality: Number(opt('quality', 62)), mozjpeg: true }).toBuffer();
+    const file = opt('poster', `src/assets/showcase/${id}.jpg`); writeFileSync(file, buf); res.poster = { file, bytes: buf.length, w: pw, h: ph };
+    writeFileSync(join(out, `poster-${id}.jpg`), buf);
+  } else if (flow === 'boot') {
     await page.goto(base, { waitUntil: 'commit', timeout: 120000 });
     await page.waitForSelector('[data-testid=title-card]', { timeout: 120000 });
     await page.waitForTimeout(300); await shot(page, 'boot-poster');
@@ -54,13 +74,14 @@ try {
     await page.waitForFunction(() => !window.__game.startPick, null, { timeout: 60000 }); await page.waitForTimeout(2000);
     res.savedBytes = await page.evaluate(async () => await window.__game.save());
     res.seed = await page.evaluate(() => window.__game.seed);
-    res.saveBefore = await savePrint(page);
+    res.saveBeforeExit = await savePrint(page);
     // Exit to main menu (the settings menu)
     await page.locator('[data-tip="Settings"]').first().click(); await page.locator('[data-testid=menu-exit-title]').click();
     await page.waitForSelector('[data-testid=title-card]', { timeout: 30000 });
     await page.waitForURL(/#menu/, { timeout: 60000 }); res.menuUrl = page.url();
-    await page.waitForFunction(() => window.__game?.ready, null, { timeout: 240000 });
+    await page.waitForFunction(() => window.__game?.ready && window.__game.show, null, { timeout: 240000 });
     res.sceneWorld = await page.evaluate(() => !!window.__game.show);
+    res.saveBefore = await savePrint(page); // (the save Exit to main menu wrote, on the menu page: the scene must leave it as it is)
     await lap(page, 'exit');
     res.saveAfterScene = await savePrint(page);
     // Continue: the player's own game again

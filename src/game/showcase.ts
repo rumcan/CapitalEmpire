@@ -49,18 +49,31 @@ export const REST_AFTER_MS = 10 * 60 * 1000;
 
 /** the places, in the order of a visit's lap. Every visit starts at the first, the town, and goes round (the owner, 2026-11-15: "traffic driving and people walking
  *  ... then it should swap to the course where people are playing golf. zoom it out a little bit so we have more houses. then show the desert driving range with
- *  green grass"): the town, the club's car park, the course, the range, a farm. Each is looked at in the shots (scripts/jam/menu-scene-shots.mjs) and moved until it
- *  is pretty: the tile numbers are the prepared world's (scripts/jam/menu-scene-build.mjs). The zooms are a step out from the closest (0.3) so more of each place shows */
+ *  green grass"): the town, the club's car park, the course, the range. Each is looked at in the shots (scripts/jam/menu-scene-motion.mjs) and moved until it is pretty:
+ *  the tile numbers are the prepared world's (scripts/jam/menu-scene-build.mjs). The zooms are well out from the closest (0.3: the owner, later the same day, "zoom out a bit so
+ *  you can see more stuff and less flaws"), still in the street tier (DISTRICT_Z 0.12) where the people, cars and animals are drawn. (The farm stop went: its farmstead's
+ *  parked pickup stands under the farmhouse's porch, a flaw of the farm layout, ext/farms/farms.ts)
+ */
 export const SHOW_STOPS: readonly ShowStop[] = [
-  { id: 'road', name: 'The county road: houses, traffic and people walking', x: 1124, y: 1043, dx: -26, dy: -3, z0: 0.23, z1: 0.21, secs: 12 },
-  { id: 'arrive', name: 'Cars arriving at the club', x: 966, y: 1022, dx: 8, dy: -8, z0: 0.25, z1: 0.24, secs: 10 },
-  { id: 'fairway', name: 'Golfers playing down the first fairway', x: 936, y: 1000, dx: -12, dy: -40, z0: 0.24, z1: 0.21, secs: 12 },
-  { id: 'green', name: 'A green with its flag', x: 802, y: 992, dx: 6, dy: -10, z0: 0.25, z1: 0.25, secs: 10 },
-  { id: 'range', name: 'The driving range on a busy morning', x: 1000, y: 992, dx: -12, dy: -4, z0: 0.24, z1: 0.22, secs: 12 },
-  { id: 'farm', name: 'A farm by the county road', x: 474, y: 978, dx: 6, dy: 4, z0: 0.22, z1: 0.24, secs: 10 },
+  { id: 'road', name: 'The county road: houses, traffic and people walking', x: 1118, y: 1043, dx: -22, dy: -3, z0: 0.17, z1: 0.16, secs: 12 },
+  { id: 'arrive', name: 'Cars arriving at the club', x: 966, y: 1022, dx: 8, dy: -8, z0: 0.18, z1: 0.17, secs: 10 },
+  { id: 'fairway', name: 'Golfers playing down the first fairway', x: 932, y: 990, dx: -10, dy: -36, z0: 0.17, z1: 0.155, secs: 12 },
+  { id: 'green', name: 'A green with its flag', x: 802, y: 992, dx: 6, dy: -10, z0: 0.18, z1: 0.18, secs: 10 },
+  { id: 'range', name: 'The driving range on a busy morning', x: 1004, y: 990, dx: -10, dy: -4, z0: 0.17, z1: 0.16, secs: 12 },
 ];
 /** the shortest and longest stay at a stop (s) */
 export const STAY_MIN_S = 8, STAY_MAX_S = 14;
+
+/** the still of the first stop (src/assets/showcase/<id>.jpg) is a shot of the live scene's first view at this css size, its movers hidden (engine stillLife): the page lays it at
+ *  the live scene's own scale, its point of interest on the screen's anchor, so the still and the first live frame are the same picture and the swap only brings the movers in */
+export const POSTER_W = 2560, POSTER_H = 1440;
+/** where the still goes on a screen cssW x cssH (css px; scale 1 = the live scene's scale): its point of interest (the wide anchor of the poster's own size) on the screen's
+ *  anchor; on a screen the still cannot cover at scale 1, the least scale that covers, about that point */
+export function posterBox(cssW: number, cssH: number): { left: number; top: number; width: number; height: number } {
+  const a = anchorOf(cssW, cssH), p = anchorOf(POSTER_W, POSTER_H), px = p.x * POSTER_W, py = p.y * POSTER_H, sx = a.x * cssW, sy = a.y * cssH;
+  const s = Math.max(1, sx / px, (cssW - sx) / (POSTER_W - px), sy / py, (cssH - sy) / (POSTER_H - py));
+  return { left: sx - px * s, top: sy - py * s, width: POSTER_W * s, height: POSTER_H * s };
+}
 
 /** where the point of interest sits on a screen cssW x cssH (fractions of its width and height): right of the card on a wide screen, in the middle on a narrow or tall one */
 export function anchorOf(cssW: number, cssH: number): { x: number; y: number } {

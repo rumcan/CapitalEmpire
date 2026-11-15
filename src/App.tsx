@@ -85,7 +85,7 @@ import { COST_GROUPS, INCOME_LINES } from './game/golf/reports';
 import { debtOf } from './game/golf/finance';
 import { TitleCard } from './ui/jam/TitleCard';
 import { MenuScene, posterOf } from './ui/jam/MenuScene';
-import { CHOICE_STORE_KEY, MENU_HASH, MENU_STORE_KEY, SHOW_STOPS, choiceFromStore, choiceHash, choiceOf, menuPageOf, poseAt, sceneOff, showBoot, showWanted, weakMachine, type StartChoice } from './game/showcase';
+import { CHOICE_STORE_KEY, MENU_HASH, MENU_STORE_KEY, POSTER_FADE_MS, SHOW_STOPS, choiceFromStore, choiceHash, choiceOf, menuPageOf, poseAt, sceneOff, showBoot, showWanted, weakMachine, type StartChoice } from './game/showcase';
 import { ShowDirector } from './game/showcase-director';
 import { loadShowcaseSave } from './game/showcase-load';
 import { formatPercent } from './ui/TournamentResults';
@@ -270,7 +270,7 @@ export default function App() {
     if (!game?.ready || !sceneWanted || director.current) return;
     if (!game.show) { try { history.replaceState(null, '', menuPage ? `${MENU_HASH}&scene=off` : '#scene=off'); } catch { /* none */ } location.reload(); return; } // the scene's world could not be had: start again without it (the main menu page stays the menu, over the player's own game)
     if (!snapRef.current) return;
-    const d = new ShowDirector(game, SHOW_STOPS, startStop, snapRef.current, e => { if (e === 'first') setPosterOn(false); else if (e === 'slow') { d.end(); game.freeze(); setPosterOn(true); } else if (e === 'rest') { d.end(); game.freeze(); } });
+    const d = new ShowDirector(game, SHOW_STOPS, startStop, snapRef.current, e => { if (e === 'first') setPosterOn(false); else if (e === 'slow') { d.end(); game.freeze(); setPosterOn(true); } else if (e === 'rest') { d.end(); game.freeze(); } }, POSTER_FADE_MS); // (the first view holds while the still fades over it)
     director.current = d; d.begin(); Object.assign(window as unknown as Record<string, unknown>, { __showDirector: d, __showcase: { stops: SHOW_STOPS, poseAt } }); // (the checks' hooks, like __game: scripts/jam/menu-scene-shots.mjs)
   }, [game?.ready, sceneWanted, game, startStop]);
   useEffect(() => () => { director.current?.end(); director.current = null; }, []);

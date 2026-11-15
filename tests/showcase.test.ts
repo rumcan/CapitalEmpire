@@ -8,7 +8,7 @@ import { readFileSync, readdirSync, statSync } from 'node:fs';
 import { gunzipSync } from 'node:zlib';
 import { GAME_BOOT } from '../src/game/boot';
 import { HH, HW, MAP, ZOOM_MAX, ZOOM_MIN, worldX, worldY } from '../src/game/iso';
-import { CHOICE_KEY, MENU_HASH, menuPageOf, FADE_MS, REST_AFTER_MS, choiceFromStore, READY_MAX_MS, READY_MIN_MS, SHOW_ANCHOR, SHOW_HOURS, SHOW_STOPS, SLOW_AFTER_MS, SLOW_FRAME_MS, WARM_MS, WIDE_MIN_W, choiceHash, choiceOf, pickStart, poseAt, sceneOff, showBoot, showWanted, stopProblems, weakMachine, type ShowEnv, type ShowStop } from '../src/game/showcase';
+import { CHOICE_KEY, MENU_HASH, POSTER_FADE_MS, POSTER_H, POSTER_W, anchorOf, menuPageOf, posterBox, FADE_MS, REST_AFTER_MS, choiceFromStore, READY_MAX_MS, READY_MIN_MS, SHOW_ANCHOR, SHOW_HOURS, SHOW_STOPS, SLOW_AFTER_MS, SLOW_FRAME_MS, WARM_MS, WIDE_MIN_W, choiceHash, choiceOf, pickStart, poseAt, sceneOff, showBoot, showWanted, stopProblems, weakMachine, type ShowEnv, type ShowStop } from '../src/game/showcase';
 import { ShowDirector, type ShowEvent, type ShowHost } from '../src/game/showcase-director';
 import { townClockFor, townTimeOf, type TownClock } from '../src/game/sim/townclock';
 
@@ -275,4 +275,27 @@ test('the director: a machine too slow for the scene says so once, after the fir
     frame(g, play + SLOW_AFTER_MS + 100); frame(g, play + SLOW_AFTER_MS + 200);
     assert.equal(events.filter(e => e === 'slow').length, slow ? 1 : 0, `${ms} ms a frame`);
   }
+});
+
+test('the still is laid at the live scene\'s own scale with its point of interest on the screen\'s anchor, and the first view holds while it fades (the swap only brings the movers in)', () => {
+  // at a screen the still covers, scale 1 (the live scene's) and the poster's point of interest on the screen's anchor
+  for (const [w, h] of [[1600, 900], [1920, 1080], [1366, 768], [390, 844], [800, 1200]] as const) {
+    const b = posterBox(w, h), a = anchorOf(w, h), p = anchorOf(POSTER_W, POSTER_H);
+    assert.ok(b.left <= 0 && b.top <= 0 && b.left + b.width >= w && b.top + b.height >= h, `${w}x${h}: covered`);
+    assert.ok(Math.abs(b.left + p.x * b.width - a.x * w) < 1e-6 && Math.abs(b.top + p.y * b.height - a.y * h) < 1e-6, `${w}x${h}: the point of interest on the anchor`);
+    if (w <= POSTER_W * 0.7 && h <= POSTER_H * 0.8) assert.equal(b.width, POSTER_W, `${w}x${h}: the live scale`);
+  }
+  const big = posterBox(3840, 2160); assert.ok(big.width > POSTER_W && big.left <= 0 && big.left + big.width >= 3840, 'a screen larger than the still: the least scale that covers');
+  // the engine draws the still with no movers (stillLife), and the page shows it in place of object-fit
+  const eng = readFileSync('src/game/engine.ts', 'utf8');
+  assert.match(eng, /const cars: Drawable\[\] = this\.traffic && !this\.stillLife \?/); assert.match(eng, /if \(tier === 'street' && !this\.stillLife\) \{/); assert.match(eng, /tier === 'street' && !this\.stillLife && this\.range\.scene/);
+  assert.ok(!/object-cover/.test(readFileSync('src/ui/jam/MenuScene.tsx', 'utf8')), 'no cover crop: it would scale the still away from the live picture');
+  // the first stop holds its first view for firstHold ms after it is shown, then glides
+  const s0 = stop({ id: 'a', secs: 12 }), s1 = stop({ id: 'b', x: 1300, secs: 12 }), { g, snap } = host();
+  const d = new ShowDirector(g, [s0, s1], 0, snap, () => {}, POSTER_FADE_MS); d.begin(0); g.setReady(true);
+  const frame = (t: number) => g.onFrame!(t, 16);
+  frame(READY_MIN_MS + 10); assert.equal(d.phase, 'play');
+  const first = poseAt(s0, 0, 1600, 900); frame(READY_MIN_MS + 10 + POSTER_FADE_MS - 50);
+  assert.ok(Math.abs(g.cam.X - first.X) < 1e-9 && Math.abs(g.cam.Y - first.Y) < 1e-9, 'still on the first view while the still fades');
+  frame(READY_MIN_MS + 10 + POSTER_FADE_MS + 3000); assert.ok(Math.abs(g.cam.X - first.X) > 1e-6, 'then it glides');
 });
