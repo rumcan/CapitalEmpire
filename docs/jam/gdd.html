@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en"><head><meta charset="utf-8"><title>Fairway Fortune: Game Design Document</title>
+<html lang="en"><head><meta charset="utf-8"><title>Golf Manager 2026: Game Design Document</title>
 <style>
 @page { size: A4; margin: 16mm 16mm 18mm; }
 :root { --ink:#1d2a22; --soft:#4b5a50; --line:#cfd8cf; --acc:#2f6b3f; --gold:#b8862b; --bg:#f6f8f4; }
@@ -21,46 +21,69 @@ tr { break-inside: avoid; }
 .foot { color: var(--soft); font-size: 8.5pt; margin-top: 14px; }
 </style></head><body>
 
-<h1>Fairway Fortune</h1>
-<div class="sub">Build a golf club from a driving range, manage its money, and play the holes you built.</div>
+<h1>Golf Manager 2026</h1>
+<div class="sub">Pick your spot, open a driving range, build a golf course hole by hole, then walk out and play it from the tee.</div>
 <div class="box meta">
-  <div><b>Genre:</b> management simulation with arcade golf</div>
+  <div><b>Genre:</b> golf course builder and tycoon, with arcade golf you play yourself</div>
   <div><b>Platform:</b> web browser (desktop) for the jam; PC (Steam) and tablets next</div>
-  <div><b>Audience:</b> players 16+ who like tycoon, builder and sports games; schools and financial-education programmes</div>
+  <div><b>Audience:</b> players 16+ who like theme-park, tycoon, builder and sports games; schools and financial-education programmes</div>
   <div><b>Session:</b> 20 to 40 minutes to grow the first holes; open-ended after that</div>
   <div><b>Jam:</b> Zoud GameLab, theme "Make FinLit Fun"</div>
   <div><b>Build:</b> the jam MVP, November 2026</div>
 </div>
 
 <h2>1. Game overview</h2>
-<p>You have $75,000, and by a country road stands an old driving range for sale: a dirt car park, four mats, a ball picker, a part-time
-attendant and an outfield full of junk. Buy it, and golfers start to drive in, buy buckets and hit balls. That small, steady income is your
-business. Run it well (set the bucket price, clear the junk, upgrade the bays) and it pays for a golf course, one hole at a time, and a
-clubhouse that charges green fees. Nothing is forced: a Build menu with pictures shows every option, its price and its payback, in any order.</p>
-<p>Then you walk out and <b>play the holes you built</b> in a painted, behind-the-golfer golf view. Between rounds you practise on your own
-range and chipping green: drills unlock shot shaping, flight control and the putt read, and lower your handicap.</p>
-<p>Every step is a money decision you make yourself: what to charge, what to build next, whether an upgrade will pay for itself, and whether
-to wait and save or borrow now and pay interest. Each month ends with a short statement of what came in, what went out and what you are worth.</p>
+<p>Golf Manager 2026 is a golf club you build and then play. A new game opens on an empty valley: you <b>place your driving range</b> where you
+like (or let the game pick a spot), and that one click buys the land, lays the county road past it, sets down your home and opens an old range
+with a dirt car park, four mats and an outfield full of junk. Golfers start to drive in, park, buy a bucket and hit balls at the target greens,
+and a small town across the road grows as your club does.</p>
+<p>The range is your first business. Clear the junk, upgrade the bays and the ball room, paint and prop the outfield, set the bucket price.
+When it has earned its keep the course opens: the <b>New hole</b> tool lays a hole from a tee and a green you click on your land, with natural
+contours on its green, and a big BUILD NOW button builds it. Then make it yours: paint greens, fairways, bunkers and water by hand, paint the ground
+with the Texture Painter, plant trees and flower beds and place course props. Or <b>import a real golf course</b> and play it. Add a clubhouse,
+and every round pays green fees.</p>
+<p>Then the best part: <b>play the holes you built</b>, from the tee, in a painted behind-the-golfer golf view. Hold to swing and tap to boost
+the power; shape the shot with draw, fade and flight; spin the ball in the air with the arrow keys; read the green on a slope grid coloured
+like a heat map; play in daylight, golden hour, dusk or at night. Between rounds, practise on your own range and chipping green: a launch-monitor
+readout after every ball and six drills that unlock skills and lower your handicap.</p>
+<p>Every build is paid from your own takings, a bank loan or your savings. The money is always on screen, but it never gets in the way:
+what to build next, whether to wait or borrow, and what each thing earns are the player's own calls.</p>
 
 <h2>2. Core gameplay</h2>
-<div class="loop"><span>Run the range</span><b>→</b><span>Set prices, fetch balls</span><b>→</b><span>Save or borrow</span><b>→</b><span>Build holes and a clubhouse</span><b>→</b><span>Green fees</span><b>→</b><span>Play your holes</span><b>→</b><span>Practise, earn skills</span><b>→</b><span>Month-end statement</span><b>↺</b></div>
-<h3>Run the business</h3>
+<div class="loop"><span>Place your range</span><b>→</b><span>Run and grow it</span><b>→</b><span>Build holes and a clubhouse</span><b>→</b><span>Play your holes from the tee</span><b>→</b><span>Practise, earn skills</span><b>→</b><span>Green fees, the month's statement</span><b>↺</b></div>
+<h3>Build</h3>
 <ul>
-<li><b>Driving range:</b> buy the old range (it comes with a dirt car park, a picker and an attendant whose wage is a monthly cost), clear the junk for a little scrap, set the bucket price, buy range upgrades.</li>
-<li><b>Course:</b> the New hole tool lays a hole from tee to green on your land; holes open once the range has proved itself.</li>
-<li><b>Clubhouse:</b> golfers pay green fees for every round; more holes, more fees.</li>
-<li><b>The Bank:</b> opened when you choose: borrow (the monthly payment, the rate and the total interest are shown before you sign), repay early, or move cash into savings that earn interest.</li>
+<li><b>Choose where to start:</b> the driving range is in hand, green where it fits and red with the reason where it does not; R turns it,
+and "Pick a spot for me" places it for you. The click buys the land, the home, the road and the old range ($15,000 of the $75,000 start).</li>
+<li><b>Driving range:</b> clear the junk for a little scrap, set the bucket price, buy upgrades in the ball room tree (pickers, staff, supply),
+paint the outfield, place props and flags. Golfers and staff walk your paths.</li>
+<li><b>Build menu:</b> picture cards for everything you can build, each with its price, its monthly upkeep and when it pays for itself; build in any order.</li>
+<li><b>Course:</b> New hole lays a hole from a tee and a green you click (BUILD NOW on the map builds it); its green gets natural contours.
+Holes and the clubhouse open after about two months of range takings.</li>
+<li><b>Shape it by hand:</b> paint greens, fairways, bunkers and water with brushes; the Texture Painter paints the ground's look; Plants (trees
+and flower beds) and Props (course furniture and decoration) dress the course.</li>
+<li><b>Real courses:</b> import a real golf course (from OpenStreetMap data) and play it in the golf view.</li>
+<li><b>The Bank:</b> click your cash: borrow (the payment, the rate and the total interest shown before you sign), repay early, or save.</li>
 </ul>
-<h3>Play and practise</h3>
+<h3>Play</h3>
 <ul>
-<li>"Play this hole" opens the exact hole you built, with its trees, slopes and hazards. Hold to swing and release at the right strength;
-click the ground to aim; a 14-club bag; rough and sand cost distance, so you club up.</li>
-<li>"Hit balls" and "Chip and putt" put your golfer on a range mat or at the chipping green. Six drills (distance control, shot shaping,
-flight, up and down, putting, bunker) each grant skill once: shaping, flight and the putt read then work on the course, and the handicap drops.</li>
+<li><b>Play this hole</b> opens the exact hole you built, with its trees, slopes, sand and water, in the painted golf view. A hole minimap at the
+top right, a collapsed HUD that keeps the golfer in view, and a shot panel that folds away at the side.</li>
+<li><b>The swing:</b> hold to swing and release; tap Up while holding to boost (a little more power, more with the Go for it charge); click the
+ground to aim; 14 clubs; rough and sand cost distance. While the ball flies, the arrows add backspin, topspin or side spin.</li>
+<li><b>Shot shaping:</b> move the dot on the ball for a draw or a fade and choose a high or low flight; what a golfer can do grows with his handicap.</li>
+<li><b>Putting:</b> a grid over the green, each line green on the flat through yellow to red where it is steep, with dots that run downhill along it.</li>
+<li><b>Hazards:</b> the cliffs and rock beside the holes are a lateral hazard: a penalty stroke and a drop.</li>
+<li><b>Time of day:</b> day, golden hour, dusk or night, picked on the hole card.</li>
+<li><b>Practice:</b> "Hit balls" and "Chip and putt" put your golfer on a range mat or the chipping green. After each ball a readout shows carry,
+total, ball and club speed, spin and a tip. Six drills (distance, shaping, flight, up and down, putting, bunker) each grant a skill once.</li>
 </ul>
 <h3>Controls</h3>
-<p>Mouse throughout: the tool rail on the left, one card at a time on the right, click to build. In the golf view: hold the swing button (or Space)
-and release; click the ground to aim; number keys or the wheel for clubs.</p>
+<p>Builder: the mouse throughout (the tool rail at the left, one card at a time at the right, click to build; R turns what you place; the wheel zooms,
+a drag pans). Golf view: hold the swing button or Space and let go; tap Up (or W) while holding to boost; the arrows spin the ball in flight; click the
+ground to aim; 1 to 9, [ ] or the wheel over the club tabs for clubs; Z shot shape, X flight, I Go for it; J jump to your ball, Y gimme, T time of day;
+Esc back to the course. Settings: Exit to main menu (it saves), text size, US dollars or UAE dirhams,
+the radio's music.</p>
 
 <h2>3. Financial literacy integration</h2>
 <p>The game teaches through the money the player manages, not through lessons. There are no quizzes or text screens: the consequences arrive
@@ -89,10 +112,14 @@ fixed peg of 3.6725 AED per US dollar. Numbers are simplified for play.</p>
 
 <h2>4. Visual style and player experience</h2>
 <ul>
-<li><b>World:</b> a hand-painted isometric countryside in autumn or desert, with a single sun at the upper right and a living range: golfers
-drive in, park, queue at the shop and hit balls that land on the target greens.</li>
-<li><b>Golf view:</b> a painted pixel look with an anti-flicker filter, using the same golfer art as the builder and the same interface style.</li>
-<li><b>First minutes:</b> a title card, a short three-step welcome and optional tips; the player decides what to build and when.</li>
+<li><b>World:</b> a hand-painted isometric countryside, with a single sun at the upper right and a living club: golfers drive in, park,
+walk the paths, queue at the shop and hit balls that land on the target greens; farm animals in the fields and a town across the road.</li>
+<li><b>Golf view:</b> a painted pixel look behind the golfer, the course you built with its contours, cliffs and rocks, four lights from
+day to night, and the same golfer art and interface style as the builder.</li>
+<li><b>Sound:</b> every effect synthesized in code (the swish and strike of each club, the landings, the cup, the crowd) and a radio in the top bar
+with free CC0 music.</li>
+<li><b>First minutes:</b> a title card over a living scene of a club (New game, Continue), who-are-you, then placing the driving range; a short
+three-step tutorial with a "Show me" on each step, and optional tips; the player decides what to build and when.</li>
 <li><b>Accessibility:</b> adjustable text size; gains and losses marked by sign and arrow, not only by colour; US dollars or UAE dirhams;
 mouse-only play.</li>
 </ul>
@@ -100,19 +127,21 @@ mouse-only play.</li>
 <h2>5. Development and future plans</h2>
 <h3>The jam MVP</h3>
 <p>The course-building engine and the golf view existed as a work in progress before the jam. During the jam they were cut down to a tested
-core loop and rebuilt around the money the player manages: the Bank and monthly accounts, payback and price readouts, the month-end
-statement, the practice mode with its skill drills, a new title card and tutorial, and a single interface style across the builder and the golf view.
-Systems that were built but not yet tested enough were hidden from the jam build; they are the roadmap below.</p>
+core loop: choosing where to start, the range and its upgrades, New hole with BUILD NOW, painting the course by hand, the Texture Painter,
+Plants and Props, real-course import, the golf view's new interface (boost, air spin,
+shaping, the putting grid, the time of day, cliffs as a lateral hazard), the practice mode with its readout and drills, the Bank and the month's
+statement, a title card over a living scene, the radio, and a painted picture on every action. Systems that were built but not yet tested enough
+were hidden from the jam build; they are the roadmap below.</p>
 <h3>Roadmap</h3>
 <table>
 <tr><th style="width:24%">Area</th><th>Built, to be finished and tested after the jam</th></tr>
 <tr><td>Money</td><td>Random emergencies and insurance (premium, deductible, an emergency fund); murabaha financing beside bank loans; a two-season challenge
 with a graded report card; one-line "money moments" when a consequence first happens; a glossary of money words.</td></tr>
 <tr><td>Range</td><td>Coffee kiosk and golf academy; more bays, floodlights, a pro shop and a second tier; decoration that draws golfers.</td></tr>
-<tr><td>Course</td><td>Shaping greens, fairways, bunkers and water by hand; tee sets; buying neighbouring land; raising and lowering the ground; trees,
-flower beds and course furniture; a halfway house and teaching huts.</td></tr>
+<tr><td>Course</td><td>Tee sets; buying neighbouring land; raising and lowering the ground; a halfway house and teaching huts.</td></tr>
 <tr><td>Club and golfer</td><td>Staff with wages; members and dues; setting the green fee; the golfer's bag, club upgrades and collectable cards.</td></tr>
-<tr><td>Seasons and events</td><td>Season-end tournaments with sponsors and prize purses; night golf under floodlights; watching rounds play out.</td></tr>
+<tr><td>Town and roads</td><td>The town across the road grows into a city; the player builds and upgrades its roads, junctions and transport, and its traffic jams are the player's to fix.</td></tr>
+<tr><td>Seasons and events</td><td>Season-end tournaments with sponsors and prize purses; night golf on the range and the course under floodlights; watching rounds play out.</td></tr>
 <tr><td>Reach</td><td>Arabic localisation with right-to-left layout; a classroom mode with fixed scenarios and a teacher dashboard; Steam and tablets.</td></tr>
 </table>
 <p>The production plan and costs are in the separate budget document.</p>
@@ -124,5 +153,5 @@ flower beds and course furniture; a halfway house and teaching huts.</td></tr>
 </table>
 <p>A solo creator working with AI coding and art tools under his direction; their use is disclosed in the submission.</p>
 
-<div class="foot">Fairway Fortune · Zoud GameLab FinLit Jam 2026 · Game Design Document (jam MVP)</div>
+<div class="foot">Golf Manager 2026 · Zoud GameLab FinLit Jam 2026 · Game Design Document (jam MVP)</div>
 </body></html>
