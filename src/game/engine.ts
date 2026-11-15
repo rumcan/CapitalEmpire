@@ -436,6 +436,8 @@ function seeThrough(d: Drawable, g: Drawable): Drawable {
 type ProBeatRow = { k: number; role: ClubRole; name: string; beat: ProBeat };
 /** how many times a person's pace you and your cart may go at a fast game speed (engine frame: youStep) */
 const YOU_PACE_MAX = 8;
+/** the auto key of the chipping green's cup flag pictures (golf/rangehost.ts: 'range:' + `practice-chipping${i}`), left out of the practice view, which draws its own pin */
+export const CHIP_FLAG_AUTO = 'range:practice-chipping';
 const CADDIE_ART = Math.max(0, SPECTATOR_PEOPLE.findIndex(p => p.id === 'spectator:spec_m_polo_visor')), CADDIE_LABEL = 'Stand In for caddie';
 /** #1235: the painted caddie (staff_role_caddie), -1 until packed: then the stand-in above and its label */
 const CADDIE_STAFF = staffPerson('staff_role_caddie');
@@ -10818,7 +10820,8 @@ export class Game {
     const tb3 = tileBox(inp);   // (T451: the course's own box, which its trees are gathered round)
     const look = pr ? this.practiceRange3p() : null;   // (J6b: the range as built: its props as pictures, its ground pads)
     const fin = gatherFeatures3p({ course: id, segs: this.net.segs, bizDefs: this.bizDefs, structures: g.structures ?? [], lots: this.estateRt?.lots ?? [],
-      props: [...this.props].map(p => { const l = lookOf(p); return { item: l.item, x: p.x, y: p.y, scale: l.scale, ...(p.auto ? { auto: p.auto } : {}) }; }), library: LIBRARY,   // (T454: each prop as the game draws it)
+      // (the owner, 2026-11-15: "two flags at the practice chipping green": the view stands its own pin in the cup he plays, so the chipping green's cup flag picture stays out of it)
+      props: [...this.props].filter(p => !(pr && p.auto?.startsWith(CHIP_FLAG_AUTO))).map(p => { const l = lookOf(p); return { item: l.item, x: p.x, y: p.y, scale: l.scale, ...(p.auto ? { auto: p.auto } : {}) }; }), library: LIBRARY,   // (T454: each prop as the game draws it)
       ...(box ? { box } : {}), ...(tb3 ? { courseBox: tb3, trees: this.trees3p([tb3[0] - MARGIN_T, tb3[1] - MARGIN_T, tb3[2] + MARGIN_T, tb3[3] + MARGIN_T]) } : {}),
       pages: ATLAS_PAGES, ...(look ? { things: look.box } : {}) });   // (T451: every tree on the course and 150 m round it, with the game's pictures of them)
     // J6b: in practice the range's business site (one block over its whole front) gives way to the range as the game draws it: its shop, sign, fences,
